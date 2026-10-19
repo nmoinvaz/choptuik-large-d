@@ -103,13 +103,29 @@ class _F64:
         return self.R.jacobian(z)
 
 
-def profile(R, zh, zl, deltas, **kw):
-    """phi(Delta) = min over the other unknowns of |F|, at each Delta in `deltas` (warm-started from the
-    previous point). The selected period is the minimiser of phi; phi^2 is quadratic near it."""
+def valley_tangent(R, z, rcond=1e-12):
+    """dz/dDelta along the solution valley: the least-squares solution of J_rest t = -J_Delta, so that
+    z + t (Delta - z[-1]) is a first-order solution at the displaced Delta."""
+    _, J = R.jacobian(np.asarray(z, float))
+    t = -np.linalg.lstsq(J[:, :-1], J[:, -1], rcond=rcond)[0]
+    return np.append(t, 1.0)
+
+
+def profile(R, zh, zl, deltas, tangent=True, **kw):
+    """phi(Delta) = min over the other unknowns of |F|, at each Delta in `deltas`. Each fixed-Delta solve
+    starts from z moved along the valley tangent (tangent=True), which keeps the solves converging for
+    displacements far larger than the free solver tolerates. The selected period is the minimiser of phi;
+    phi^2 is quadratic near it."""
     out = []
-    h, l = np.array(zh, float), np.array(zl, float)
+    zh = np.array(zh, float); zl = np.array(zl, float)
+    t = valley_tangent(R, zh) if tangent else None
+    h, l = zh, zl
     for d in deltas:
-        h = h.copy(); l = l.copy(); h[-1] = d; l[-1] = 0.0
+        if tangent:
+            h = zh + t * (d - zh[-1]); l = zl.copy()
+        else:
+            h = h.copy(); l = l.copy()
+        h[-1] = d; l[-1] = 0.0
         h, l, nF, _ = dd_solve(R, h, l, fix_delta=True, **kw)
         out.append((d, nF))
     return np.array(out), h, l

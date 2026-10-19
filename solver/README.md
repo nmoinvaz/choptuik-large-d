@@ -26,6 +26,7 @@ Install the kernel first (`pip install .` at the repo root), then run scripts fr
 | `gamma_root.py`, `gamma.py` | The same with the Python mode matrix (reference, ~4 min per D) |
 | `prof_test.py` | Profile minimum of Δ at one D: `python prof_test.py D seeds/longB_D30.0503.npy 0.6 3e-4 20` |
 | `det_test.py` | Displacement test (displace Δ, re-solve). It measures the solver, not the data; see below |
+| `floor_anatomy.py` | Where the residual floor sits, block by block and harmonic by harmonic |
 | `rust_gamma_check.py` | Validation of the Rust Jacobian and mode matrix against the Python reference |
 | `data_best.py`, `formula_zoo.py` | Load the best available Δ(D), γ(D) |
 | `fit_inf.py`, `formula_fit.py`, `fit_gamma.py`, `deriv_diag.py`, `plot_convergence.py` | Fits, hold-out tests, slope diagnostics, figure |
@@ -49,24 +50,26 @@ scans or profiles from.
 
 ## How well Δ is determined
 
-The period is selected by an effect that weakens exponentially with D, so Δ sits in a long, nearly flat, curved
-valley of the residual. A free Levenberg–Marquardt solve converges to the right place when started nearby, but
-it cannot walk back along the valley from a displaced start. That is why the displacement test (`det_test.py`)
-wrongly suggested Δ is unpinned above D ≈ 26.
+**Reliable up to D ≈ 25–26 only.** The period is selected by an effect that weakens exponentially with D. Above
+D ≈ 26 the current discretisation and solver cannot pin it: the values in `scan_longB.jsonl` and
+`scan_long7.jsonl` above D ≈ 26 lie somewhere along a nearly flat valley and are not determined to better than
+~1e-3. Do not fit them.
 
-The **profile method** asks the right question: hold Δ fixed, minimise |F| over everything else, and look at
-φ(Δ). It has a sharp V-shaped minimum. At D = 28.0, 30.05 and 31.3 the minimum agrees with the scan values to
-3–5e-6, and two different matching points (x_K = 0.6 and 0.7) agree at D = 30 to 9e-6. So the scan values in
-`scan_longB.jsonl` up to D = 31.3 are good to about 1e-5. Run-to-run spread of re-converged points is ~1e-8
-below D = 20 and ~1e-6 near D = 28.
+How this was established (`dd_solver.profile` with valley-tangent starts): hold Δ fixed, minimise |F| over
+everything else, and look at φ(Δ). At D = 24.5 φ is V-shaped (3.3e-10 at the minimum, 4e-9 at ±2e-4), so Δ is
+pinned to ~1e-5. At D = 28 and 30 φ is flat to 1% over ±2e-4. Two earlier tests (`det_test.py`, and profiles
+without the tangent start) gave misleading answers because the solver could not follow the valley; both are
+superseded.
 
-Rounding is not yet the limit: at D = 30 the f64 residual's noise is 1.3e-11 while the floor of |F| (from
-near-null high-harmonic directions at the centre) is 1.8e-10 (x_K = 0.7) to 2e-7 (x_K = 0.6). The double-double
-residual (noise ~1e-27) is there for higher D.
+Why: the residual floor sits in the last two blocks (interior solution vs. horizon series at x_K), in low odd
+harmonics (`floor_anatomy.py`). It is the part of the interior solution that the regular horizon series cannot
+represent, the singular horizon modes u^σ with Re σ = s0, damped by u_K^{s0} at the matching point. The unknowns
+that remove it (Δ and the slow "shape" directions) are nearly null, so the solver cannot drive it out, and the
+floor grows from 2.4e-10 (D = 24.5) to 1.5e-8 (D = 28) to 3e-7 (D = 31). Rounding is not the limit (f64 noise is
+1e-11 at D = 30; `residual_dd` lowers it to 1e-27 without changing the floor).
 
 ## Current results
 
-- Δ(D) up to D ≈ 26 follows Δ∞ + a/(D−2) + b/(D−2)^{3/2} + c/(D−2)² + … with Δ∞ ≈ 1.64 ± 0.01, a ≈ 11–12, and no
-  (D−2)^{−1/2} term. Above D ≈ 27 the data fall below that form, by up to 7e-4 at D = 31.3, which is about 70 times
-  the error bar. The large-D law is therefore still open.
+- Δ(D) up to D ≈ 25 follows Δ∞ + a/(D−2) + b/(D−2)^{3/2} + c/(D−2)² + … with Δ∞ ≈ 1.64 ± 0.01, a ≈ 11–12, and
+  no (D−2)^{−1/2} term. Beyond D ≈ 26 the data do not yet constrain the law.
 - γ(D) → 0.500–0.505 (D ≤ 24.9). 1/2 − γ shrinks like (D−2)^{−p} with p rising from 0.63 to 0.71 so far.

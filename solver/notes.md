@@ -161,3 +161,16 @@ light ray. Note the factor √(2π) between the simulation's field (G = 1) and t
   (floor 1.8e-7), x_K=0.7 ~5e-6 per unit Delta (floor 1.8e-10).
   => scan values to D=31.3 are good to ~1e-5, and the bend (up to 7e-4 below the D<26 asymptotic fit at D=31) is REAL.
 - gamma law (consistent Rust data D<=24.9): limit 0.500-0.505 depending on family; 1/2-gamma local exponent 0.63->0.71.
+- CORRECTION #3 (22:40): the V-shaped profiles above were ALSO a solver artefact. The fixed-Delta inner solves were
+  warm-started from the neighbouring Delta and did not converge for displaced Delta, so phi rose artificially.
+  Starting each inner solve on the valley tangent (dd_solver.valley_tangent: J_rest t = -J_Delta) they converge:
+  D=24.5: phi 3.3e-10 at the centre, 4e-9 at +-2e-4 -> V-shaped, Delta pinned (~1e-5).
+  D=28.0: phi = 1.49e-8 +-1% over +-2e-4 -> flat, Delta NOT pinned. D=30 (x_K=0.7): flat/monotonic, not pinned.
+  => Reliable Delta only up to D ~ 25-26. The "bend" above 26 is NOT established.
+- Where the floor sits (floor_anatomy.py): almost entirely in the last two blocks (0.5->0.6 segment and horizon
+  series->0.6), equal size, low odd harmonics (k=5,7 at D=24.5: 2.4e-10; k=3 at D=31.3: 3.2e-7). It is the mismatch
+  between the interior solution and the regular horizon series at x_K: the singular horizon modes u^{sigma_k}
+  (Re sigma_k = s0) that the regular series cannot represent, suppressed by u_K^{s0}. The parameters that remove them
+  (Delta and the shape modes) are the near-null directions, so LM cannot remove them and the selection drowns in the
+  floor around D ~ 26. Fix needs the singular-mode amplitudes as explicit, O(1)-scaled conditions (precondition by
+  u_K^{-sigma_k}), or a matching point further from the horizon (needs many more series terms).
