@@ -35,6 +35,12 @@ pub struct Ctx<const B: usize> {
     pub kc: usize,
     /// horizon series order
     pub ks: usize,
+    /// Optional (Pi_low, Pi_high): projectors onto the low / high tau-harmonics of an odd field on the half grid.
+    /// With it, the horizon block's p rows become Pi_low (p mismatch) + Pi_high p1: the high harmonics of the p
+    /// matching are dropped and the high harmonics of p1 pinned to zero instead. Those p1 harmonics reach the matching
+    /// point only through exponentially small couplings (the near-null directions), and their effect on Delta is
+    /// below 1e-12 per unit change.
+    pub freeze: Option<(DMat<B>, DMat<B>)>,
 }
 
 impl<const B: usize> Ctx<B> {
@@ -473,10 +479,14 @@ pub fn residual<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool)
     let states: Vec<State<DV, B>> = if par { (0..nb).into_par_iter().map(one_block).collect() } else { (0..nb).map(one_block).collect() };
     let mut fh = vec![0.0; l];
     let mut fl = vec![0.0; l];
+    let kb = ctx.k();
     for (b, s) in states.iter().enumerate() {
         let t = ctx.block_target(b);
         for q in 0..4 {
-            let d = s[q] - ctx.fld(zh, zl, t + q * m);
+            let mut d = s[q] - ctx.fld(zh, zl, t + q * m);
+            if let (true, 0, Some((lo, hi))) = (b == kb, q, &ctx.freeze) {
+                d = lo.apply(&d) + hi.apply(&ctx.fld(zh, zl, 0));
+            }
             let o = b * 4 * m + q * m;
             d.store(&mut fh[o..o + m], &mut fl[o..o + m]);
         }
@@ -528,7 +538,10 @@ pub fn jacobian<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool)
         let s = block_state::<Du, B>(ctx, b, &inp, d, &lus);
         let mut out = Vec::with_capacity(4 * m);
         for q in 0..4 {
-            let t = s[q].tan();
+            let mut t = s[q].tan();
+            if let (true, 0, Some((lo, _))) = (b == ctx.k(), q, &ctx.freeze) {
+                t = lo.apply(&t);
+            }
             for i in 0..m {
                 out.push(t.get(i));
             }
@@ -548,6 +561,20 @@ pub fn jacobian<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool)
     for b in 0..nb {
         let t = ctx.block_target(b);
         for r in 0..4 * m {
+            if let (true, Some((lo, hi))) = (b == ctx.k() && r < m, &ctx.freeze) {
+                // p rows of the horizon block: -Pi_low on the target node's p, +Pi_high on p1
+                for j in 0..m {
+                    let idx = (t + j) * ld + b * 4 * m + r;
+                    let v = DD { hi: jh[idx], lo: jl[idx] } - lo.cols[j].get(r);
+                    jh[idx] = v.hi;
+                    jl[idx] = v.lo;
+                    let idx = j * ld + b * 4 * m + r;
+                    let v = DD { hi: jh[idx], lo: jl[idx] } + hi.cols[j].get(r);
+                    jh[idx] = v.hi;
+                    jl[idx] = v.lo;
+                }
+                continue;
+            }
             let idx = (t + r) * ld + b * 4 * m + r;
             let v = DD { hi: jh[idx], lo: jl[idx] } - DD::ONE;
             jh[idx] = v.hi;

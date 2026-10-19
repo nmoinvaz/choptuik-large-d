@@ -130,8 +130,26 @@ struct Solver {
     lu: Option<DDLu>,
 }
 
+fn freeze_pair<const B: usize>(p: &Option<(Vec<f64>, Vec<f64>)>) -> Option<(DMat<B>, DMat<B>)> {
+    p.as_ref().map(|(h, l)| {
+        let m = 8 * B;
+        let lo = DMat::<B>::from_rows(h, l);
+        // Pi_high = I - Pi_low
+        let mut hh = vec![0.0; m * m];
+        let mut hl = vec![0.0; m * m];
+        for i in 0..m {
+            for j in 0..m {
+                let v = DD::from_f64(if i == j { 1.0 } else { 0.0 }) - DD { hi: h[i * m + j], lo: l[i * m + j] };
+                hh[i * m + j] = v.hi;
+                hl[i * m + j] = v.lo;
+            }
+        }
+        (lo, DMat::<B>::from_rows(&hh, &hl))
+    })
+}
+
 macro_rules! make_ctx {
-    ($b:expr, $n:expr, $dh:expr, $dl:expr, $ph:expr, $pl:expr, $nodes:expr, $segs:expr, $kt:expr, $kc:expr, $ks:expr, [$($bb:literal),*]) => {
+    ($b:expr, $n:expr, $dh:expr, $dl:expr, $ph:expr, $pl:expr, $nodes:expr, $segs:expr, $kt:expr, $kc:expr, $ks:expr, $plow:expr, [$($bb:literal),*]) => {
         match $b {
             $( $bb => Box::new(Ctx::<$bb> {
                 n: $n,
@@ -142,6 +160,7 @@ macro_rules! make_ctx {
                 kt: $kt,
                 kc: $kc,
                 ks: $ks,
+                freeze: freeze_pair::<$bb>(&$plow),
             }) as Box<dyn Api>, )*
             _ => return Err(PyValueError::new_err("M must be one of 8, 16, 32, 48, 64, 80, 96, 128")),
         }
@@ -151,7 +170,7 @@ macro_rules! make_ctx {
 #[pymethods]
 impl Solver {
     #[new]
-    #[pyo3(signature = (m, n_hi, n_lo, dmat_hi, dmat_lo, phase_hi, phase_lo, nodes, segs, kt, kc, ks, threads=0))]
+    #[pyo3(signature = (m, n_hi, n_lo, dmat_hi, dmat_lo, phase_hi, phase_lo, nodes, segs, kt, kc, ks, threads=0, plow_hi=None, plow_lo=None))]
     #[allow(clippy::too_many_arguments)]
     fn new(
         m: usize,
@@ -167,6 +186,8 @@ impl Solver {
         kc: usize,
         ks: usize,
         threads: usize,
+        plow_hi: Option<PyReadonlyArray2<f64>>,
+        plow_lo: Option<PyReadonlyArray2<f64>>,
     ) -> PyResult<Self> {
         if m % 8 != 0 {
             return Err(PyValueError::new_err("M must be a multiple of 8"));
@@ -185,8 +206,18 @@ impl Solver {
             return Err(PyValueError::new_err("need at least two nodes"));
         }
         let n = DD::new(n_hi, n_lo);
+        let plow: Option<(Vec<f64>, Vec<f64>)> = match (plow_hi, plow_lo) {
+            (Some(a), Some(b)) => {
+                let (a, b) = (a.as_slice().map_err(|_| PyValueError::new_err("plow"))?, b.as_slice().map_err(|_| PyValueError::new_err("plow"))?);
+                if a.len() != m * m || b.len() != m * m {
+                    return Err(PyValueError::new_err("plow must be (M, M)"));
+                }
+                Some((a.to_vec(), b.to_vec()))
+            }
+            _ => None,
+        };
         let mut api: Box<dyn Api> =
-            make_ctx!(m / 8, n, dh, dl, ph, pl, nodes.clone(), vec![], kt, kc, ks, [1, 2, 4, 6, 8, 10, 12, 16]);
+            make_ctx!(m / 8, n, dh, dl, ph, pl, nodes.clone(), vec![], kt, kc, ks, plow, [1, 2, 4, 6, 8, 10, 12, 16]);
         let segs = if segs.is_empty() { (1..nodes.len()).map(|b| vec![nodes[b - 1], nodes[b]]).collect() } else { segs };
         api.set_segs(segs).map_err(PyValueError::new_err)?;
         let t = if threads == 0 { std::thread::available_parallelism().map(|v| v.get()).unwrap_or(1) } else { threads };

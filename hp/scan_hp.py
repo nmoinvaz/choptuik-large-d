@@ -15,7 +15,7 @@ import time
 
 import numpy as np
 
-from hpkernel.driver import hermite, lm_solve, load, make_solver, newton_solve, predict, renode, resample_z, save, tangent
+from hpkernel.driver import deflated_newton, hermite, lm_solve, load, make_solver, newton_solve, plow_odd, predict, renode, resample_z, save, tangent
 
 
 def tails(s, zh, zl, nodes, M):
@@ -40,11 +40,26 @@ def sensitivity(s, M):
     return [float(np.abs(yh[b * 4 * M:(b + 1) * 4 * M]).max()) for b in range(nb)]
 
 
+def freeze_p1(zh, zl, a, M):
+    """p1's harmonics above kfreeze set to zero (they are pinned there by the frozen formulation)"""
+    if not a.kfreeze:
+        return zh, zl
+    lo, lo2 = plow_odd(M, a.kfreeze)
+    zh = zh.copy()
+    zl = zl.copy()
+    zh[:M] = (lo + lo2) @ (zh[:M] + zl[:M])
+    zl[:M] = 0.0
+    return zh, zl
+
+
 def solve_at(D, zh, zl, a, nodes, M, it_max):
-    s = make_solver(D, M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks, threads=a.threads)
+    s = make_solver(D, M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks, threads=a.threads, kfreeze=a.kfreeze)
     s.set_segs(s.plan(zh, zl, a.tol_step, a.hmax))
     t0 = time.time()
-    zh2, zl2, hist = newton_solve(s, zh, zl, tol=a.tol, it_max=it_max, verbose=a.verbose)
+    if a.corrector == "dn":
+        zh2, zl2, hist = deflated_newton(s, zh, zl, tol=a.tol, it_max=it_max, w=a.w, verbose=a.verbose)
+    else:
+        zh2, zl2, hist = newton_solve(s, zh, zl, tol=a.tol, it_max=it_max, verbose=a.verbose)
     ok = hist and hist[-1]["F"] < a.tol
     if not ok and a.lm:
         print(f"   D={D}: Newton stopped at |F| {hist[-1]['F']:.1e}; Levenberg-Marquardt from the predictor", flush=True)
@@ -79,6 +94,10 @@ def main():
     ap.add_argument("--it_max", type=int, default=8)
     ap.add_argument("--threads", type=int, default=0)
     ap.add_argument("--verbose", action="store_true")
+    ap.add_argument("--kfreeze", type=int, default=None, help="pin p1 harmonics above this to zero and drop the matching of "
+                    "p's harmonics above it at the horizon block (removes the near-null centre directions)")
+    ap.add_argument("--corrector", default="dn", choices=["dn", "newton"], help="dn: deflated Newton (default)")
+    ap.add_argument("--w", type=int, default=24, help="weak directions frozen in the deflated phase")
     ap.add_argument("--lm", type=int, default=15, help="Levenberg-Marquardt iterations after a failed Newton (0: off)")
     ap.add_argument("--Dlist", default="", help="explicit D values to visit in order (comma list or @file); "
                     "D_end is then ignored")
@@ -94,6 +113,7 @@ def main():
     if nodes != nodes0:
         s0 = make_solver(D, M, nodes=nodes0, kt=a.kt, kc=a.kc, ks=a.ks, threads=a.threads)
         zh, zl = renode(s0, zh, zl, nodes0, nodes, M)
+    zh, zl = freeze_p1(zh, zl, a, M)
     s, zh, zl, hist, ok, dt = solve_at(D, zh, zl, a, nodes, M, a.it_max)
     print(f"(re-)converged start D={D} M={M} nodes={nodes}: Delta {zh[-1]:.16f} ok {ok} ({dt:.0f}s)", flush=True)
     if not ok:
@@ -104,7 +124,7 @@ def main():
         sched.append((float(d), [float(v) for v in xs.split(",")]))
     sched.sort()
     outdir = os.path.dirname(os.path.abspath(a.out))
-    s_of = lambda Dx: make_solver(Dx, M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks, threads=a.threads)
+    s_of = lambda Dx: make_solver(Dx, M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks, threads=a.threads, kfreeze=a.kfreeze)
     hist_z = []
     for f in filter(None, a.history.split(",")):
         hh, hl, hm = load(f)
@@ -113,6 +133,7 @@ def main():
         if list(hm["nodes"]) != nodes:
             s0 = make_solver(hm["D"], M, nodes=list(hm["nodes"]), kt=a.kt, kc=a.kc, ks=a.ks, threads=a.threads)
             hh, hl = renode(s0, hh, hl, list(hm["nodes"]), nodes, M)
+        hh, hl = freeze_p1(hh, hl, a, M)
         sh, hh, hl, hst, okh, _ = solve_at(hm["D"], hh, hl, a, nodes, M, a.it_max)
         print(f"history point D={hm['D']}: ok {okh}, Delta {hh[-1]:.16f}", flush=True)
         if okh:
@@ -166,9 +187,9 @@ def main():
         if th > 1e-33:
             a.ks = int(a.ks * 1.25) + 2
             print(f"   horizon series tail {th:.1e}: ks -> {a.ks}", flush=True)
-        if len(hist) <= 5:
+        if len(hist) <= 8:
             dD = min(a.maxdD, dD * 1.25)
-        elif len(hist) >= 8:
+        elif len(hist) >= 14:
             dD *= 0.8
         while sched and (D - sched[0][0]) * direction >= -1e-9:
             new_nodes = sched.pop(0)[1]
@@ -185,7 +206,7 @@ def main():
                                         sens=sensitivity(s, M), tail_c=tails(s, zh, zl, new_nodes, M)[0],
                                         tail_h=tails(s, zh, zl, new_nodes, M)[1])) + "\n")
             nodes = new_nodes
-            s_of = lambda Dx: make_solver(Dx, M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks, threads=a.threads)
+            s_of = lambda Dx: make_solver(Dx, M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks, threads=a.threads, kfreeze=a.kfreeze)
             hist_z = [(D, zh + zl, tangent(s_of, s, D, zh, zl))]   # one point: Euler with the tangent
             dD = min(dD, 0.5)
 

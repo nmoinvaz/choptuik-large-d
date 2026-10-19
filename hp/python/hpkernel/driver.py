@@ -70,12 +70,39 @@ def phase_weights(M, dps=40):
         return dd_from_mp([mp.sin(mp.pi * j / M) for j in range(M)])
 
 
-def make_solver(D, M, nodes=None, kt=36, kc=40, ks=120, segs=None, threads=0):
+_PLOW = {}
+
+
+def plow_odd(M, kf, dps=40):
+    """Projector onto the odd harmonics k <= kf of an odd field on the half grid (double-double, row-major)."""
+    key = (M, kf)
+    if key not in _PLOW:
+        with mp.workdps(dps):
+            N = 2 * M
+            th = [2 * mp.pi * j / N for j in range(M)]
+            out = []
+            for i in range(M):
+                for j in range(M):
+                    # full-grid interpolation of an antiperiodic field restricted to odd k <= kf, folded
+                    v = mp.mpf(0)
+                    for k in range(1, kf + 1, 2):
+                        v += 4 * mp.cos(k * (th[i] - th[j])) / N
+                    out.append(v)
+            _PLOW[key] = tuple(a.reshape(M, M) for a in dd_from_mp(out))
+    return _PLOW[key]
+
+
+def make_solver(D, M, nodes=None, kt=36, kc=40, ks=120, segs=None, threads=0, kfreeze=None):
+    """kfreeze: pin the p1 harmonics k > kfreeze to zero and drop the matching of p's harmonics k > kfreeze at the
+    horizon block (see model.rs Ctx::freeze)."""
     nodes = list(NODES_OLD if nodes is None else nodes)
     with mp.workdps(40):
         nh, nl = dd_from_mp([mp.mpf(D) - 2])
     dh, dl = dmat_odd(M)
     ph, pl = phase_weights(M)
+    if kfreeze:
+        a, b = plow_odd(M, kfreeze)
+        return Solver(M, float(nh[0]), float(nl[0]), dh, dl, ph, pl, nodes, segs or [], kt, kc, ks, threads, a, b)
     return Solver(M, float(nh[0]), float(nl[0]), dh, dl, ph, pl, nodes, segs or [], kt, kc, ks, threads)
 
 
@@ -309,4 +336,68 @@ def lm_solve(s, zh, zl, tol=1e-27, it_max=20, mus=(0.0, 1e-8, 1e-6, 1e-4, 1e-3, 
         if n1 < newton_after:
             zh, zl, h2 = newton_solve(s, zh, zl, tol=tol, it_max=8, verbose=verbose)
             return zh, zl, hist + h2
+    return zh, zl, hist
+
+
+def weak_subspace(s, w, iters=8, seed=0):
+    """Orthonormal basis (L, w) of the w weakest right singular directions of the Jacobian whose LU is stored in s
+    (inverse subspace iteration on (J^T J)^-1, f64 directions)."""
+    L = s.size
+    zl = np.zeros(L)
+    V = np.linalg.qr(np.random.default_rng(seed).standard_normal((L, w)))[0]
+    for _ in range(iters):
+        W = np.empty_like(V)
+        for j in range(w):
+            y = np.asarray(s.lu_solve_t(np.ascontiguousarray(V[:, j]), zl)[0])
+            W[:, j] = np.asarray(s.lu_solve(np.ascontiguousarray(y), zl)[0])
+        V = np.linalg.qr(W)[0]
+    return V
+
+
+def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_halvings=12):
+    """Newton in two modes. Deflated: the step J^-1(-F) with its component in the w weakest right singular directions
+    removed (those directions frozen), so the well-determined part converges without its second-order error leaking
+    into them. Full: the plain Newton step, once the deflated steps stop reducing |F|. Both with backtracking."""
+    hist = []
+    t0 = time.time()
+    V = None
+    mode = "deflated"
+    n_prev = None
+    for it in range(it_max):
+        dh, dl, Fh, Fl, pmin, pmax = s.newton(zh, zl)
+        nF = dd_norm(Fh, Fl)
+        n0 = rnorm(Fh, Fl)
+        if nF < tol:
+            hist.append(dict(it=it, F=nF, Delta=float(zh[-1]), piv=(pmin, pmax), mode=mode, t=round(time.time() - t0, 1)))
+            if verbose:
+                print(f"  dn {it}: |F| {nF:.2e} converged, Delta {zh[-1]:.15f}", flush=True)
+            break
+        if mode == "deflated" and n_prev is not None and n0 > 0.3 * n_prev:
+            mode = "full"
+        if mode == "deflated":
+            if V is None:
+                V = weak_subspace(s, w)
+            d = dh + dl
+            d = d - V @ (V.T @ d)
+            dh, dl = d, np.zeros_like(d)
+        lam, accepted = 1.0, False
+        for _ in range(max_halvings + 1):
+            th, tl = dd_add(zh, zl, dh * lam, dl * lam)
+            Th, Tl = s.residual(th, tl)
+            n1 = rnorm(Th, Tl)
+            if np.isfinite(n1) and n1 <= (1 - 1e-4 * lam) * n0:
+                accepted = True
+                break
+            lam *= 0.5
+        if verbose:
+            print(f"  dn {it} [{mode}]: |F| {nF:.2e} -> {dd_norm(Th, Tl) if accepted else float('nan'):.2e} lam {lam:.3g} "
+                  f"Delta {th[-1]:.15f} t {time.time() - t0:.0f}s", flush=True)
+        hist.append(dict(it=it, F=nF, mode=mode, lam=lam, Delta=float(th[-1]), piv=(pmin, pmax), t=round(time.time() - t0, 1)))
+        if not accepted:
+            if mode == "full":
+                break
+            mode = "full"
+            continue
+        zh, zl = th, tl
+        n_prev = n0
     return zh, zl, hist
