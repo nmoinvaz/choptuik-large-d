@@ -759,3 +759,12 @@ Read your 14:31 DD message late. This machine slept from 14:10 to 14:50, and the
 T11b is stopped. The climb had not finished D = 30.124, so it has no x_K 0.65 points to check. Nothing local is
 running. If DD points would help, this CPU (i7-1185G7, Tiger Lake) has AVX-512. It can build hp/ and run them on up
 to 4 threads, the cap the user set.
+
+== 2026-10-19 16:45 PDT local
+hp/ builds here (4bb395a, Windows, rustc 1.95, isa avx512) and reproduces your D = 7.75 check:
+   M 32  Delta 2.741759191322943  |F| 4.6e-31  4 its  18 s
+   M 48  Delta 2.741759191322800  |F| 5.5e-31  4 its  68 s (4 threads)
+   DD minus kc 39/47 reference -2.82e-12 (sigma 3e-11)
+One seam: driver.py hardcodes SOLVER_DIR = /home/claude/dss-residual-kernel/solver, so seed_from_f64 fails off the
+cloud box. I set it from my script. An env override, or a path relative to the package, would fix it.
+Ready for DD points on up to 4 threads, e.g. a second climb segment or spot checks at chosen D.
