@@ -37,13 +37,16 @@ D spacetime dimensions (n = D − 2), in particular the D → ∞ behaviour.
   beyond-all-orders selection problem, like Saffman–Taylor finger selection; an analytic Δ∞ would come from
   exponential asymptotics of the leading-order family, not from the 1/D series.
 
-## Current best formula (2026-10-19, 02:45)
+## Current best formula (2026-10-19, 04:30)
 
-Δ(D) = c₀ + c₁/D + c₂/D² + … (equivalently in 1/(D−1) or 1/(D−2); the variables differ only from c₂ on). Fitted on
-the step-converged set D = 8–22.4 (RK x2 + Richardson, junk-solved above 17.2), in the scaled variable x/max(x):
-rms 2e-11, Δ∞ = 1.6440 ± 0.0002 (1.64389–1.64407 across variables), c₁ ≈ 10.3. Forcing π²/6 = 1.64493 raises the
-rms 3–13×; 2π/j₁,₁ and √e are far outside. γ(D) on the same points: free limit 0.49987–0.49994; with γ∞ = 1/2 the
-1/D coefficient is −0.756…−0.758.
+Step-converged data D = 8–30.3 (x_K 0.6 RK x2 + Richardson, junk-solved above 17.2; x_K 0.7 RK x4 above 30.2),
+`final_fit.py`, weighted fits in x/max(x) over x = 1/D, 1/(D−1), 1/(D−2), degrees 8–11:
+
+  **Δ(D) = Δ∞ + c₁/D + c₂/D² + …, Δ∞ = 1.64394 ± 0.00005**, c₁ ≈ 10.3
+  **γ(D) = 1/2 − 0.7577/D + …** (free fit: γ∞ = 0.49995–0.50016)
+
+π²/6 = 1.64493 is excluded (forcing it: χ²/dof 140–1300 against ~4); 2π/j₁,₁ and √e are far outside.
+ω∞ = 2π/Δ∞ = 3.82205.
 
 Hard-won lessons for these fits:
 - fit in x/max(x): an unscaled degree-10 Vandermonde loses ~1e-9 and made the limit wander (`series_factory.py`,

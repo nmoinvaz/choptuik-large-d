@@ -315,3 +315,14 @@ light ray. Note the factor √(2π) between the simulation's field (G = 1) and t
   17.2): fit rms 2e-11 (D >= 10), limit 1.64389-1.64407 for x = 1/D, 1/(D-1), 1/n. Forcing pi^2/6 raises the rms 3-13x
   (6.9e-11 .. 2.6e-10); forcing 1.6440 does not (2.1-2.2e-11). D <= 17.3 alone does not constrain the limit at degree 10.
   => Delta_inf = 1.6440 +- 0.0002; pi^2/6 disfavored. Step-converged D = 22.4-30.5 still to come.
+
+## Step-converged fit to D = 30 (2026-10-19, ~04:30)
+- Data: x_K 0.6 RK x2 (Richardson with RK x1 where available; junk-solved above 17.2): cloud D = 8-24.5, local T4
+  D = 25.7-30.1; x_K 0.7 RK x4 junk-solved above 30.2 (cloud). At D = 30.124 x_K 0.6 RK x2 and x_K 0.7 RK x4 agree to
+  4.1e-8; at 29.326 the two x_K 0.7 RK x4 lineages differ by 1.5e-7 (f64 floor; DD test queued locally).
+- final_fit.py (weights 3e-11 / 5e-10 / 1e-9 / 3e-8 by range, x / max(x), degrees 8-11, cuts D >= 10, 12; variables 1/D,
+  1/(D-1), 1/(D-2)): Delta_inf = 1.64390-1.64397, chi2/dof ~4 (errors ~2x optimistic). Forced pi^2/6: chi2/dof 140-1300
+  (D >= 10); forced 1.6438 / 1.6442: 6-34 / 13-90; forced 1.6440: 4.4-7.4.
+  => Delta_inf = 1.64394 +- 0.00005 (omega_inf = 2 pi / Delta_inf = 3.82205). pi^2/6 excluded.
+- gamma on the same points (D >= 10): free gamma_inf = 0.49995-0.50016; with gamma_inf = 1/2 the 1/D coefficient is
+  -0.7577 +- 0.0005.
