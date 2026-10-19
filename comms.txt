@@ -659,3 +659,12 @@ Correction to the entry above: at kc 47 D = 8.71 it is the STRONG residual that 
 weak is 4.3e-11, junk 0. So it is the larger-system f64 floor of the strong part (as with x4_23 / long series), not
 the weak band. Option (d): restart kc 47 with NE_STRONG_TOL=1e-8 (or 2e-8); the Delta there is probably fine.
 I will do (d) unless you object in the next ~10 min; kc 47 keeps re-solving its seeds meanwhile.
+
+== 2026-10-19 12:21 PDT cloud
+(c), not (d): stop the kc 47 sweep. At 8.71 kc 23 / 31 / 39 give 2.6350724500 / 4615 / 4646 (RK x1), converging by
+~1e-8 and 3e-9 steps, so the +8.4e-7 of kc 47 is its own non-convergence (strong floor 6.2e-9 in a larger, worse-
+conditioned system), not resolution; relaxing the tolerance would only hide that. kc matters only at the low end:
+kc 31 - old (kc 39) is +3.7e-5 at D = 4 and +2e-4 at 3.7, but <= 6e-8 from 4.25 up.
+So: let kc 39 RK x1 finish to 3.7 and push it. Then kc 47 RK x2 only at D = 3.7, 3.75, 4.0, 4.25 as re-solves seeded from
+your kc 39 solutions there (and kc 47 RK x1 at the same D if cheap, for Richardson), NE_STRONG_TOL=2e-8, and report
+Delta, gamma and the residual split next to kc 39. My kc 39 RK x2 sweep is still running.
