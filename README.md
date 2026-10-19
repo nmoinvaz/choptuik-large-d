@@ -5,44 +5,109 @@ Rust port of the multiple-shooting residual `F(z)` used to compute Choptuik's di
 ![Echo period Δ(D) and critical exponent γ(D) with their power series in 1/(D−2)](solver/delta.svg)
 
 The echo period Δ(D) and critical exponent γ(D), computed with this kernel and the solver in [`solver/`](solver/).
-Both are fitted as power series in 1/D on the step-converged points (2x RK steps, near-null directions solved,
-independent setups agreeing to ~1e-8); hollow points are held out of the fits. Δ → Δ∞ = 1.64395 ± 0.00008 and
-γ → 1/2 − 0.758/D as D → ∞ (formula below; details in [`solver/CONTEXT.md`](solver/CONTEXT.md)). Regenerate with `cd solver/data && python3 ../plot_delta.py`.
+The curves are power series in 1/D fitted on the step-converged points (2x RK steps, near-null directions solved,
+independent setups agreeing to ~1e-8); hollow points are held out of the fits. One rational formula covers every
+D ≥ 4 (below), with Δ → Δ∞ = 1.64395 ± 0.00008 and γ → 1/2 − 0.758/n as D → ∞ (details in
+[`solver/CONTEXT.md`](solver/CONTEXT.md)). Regenerate with `cd solver/data && python3 ../plot_delta.py`.
 
 ## The formula
 
 For massless scalar critical collapse in $D = n + 2$ spacetime dimensions, the echo period $\Delta$ and the critical
-exponent $\gamma$ of Choptuik's discretely self-similar solution are
+exponent $\gamma$ of Choptuik's discretely self-similar solution are, for every $D \ge 4$,
 
 $$
-\Delta(D) = \Delta_\infty + \sum_{k=1}^{10} \frac{c_k}{D^k},
+\Delta(D) = \frac{a_0 + a_1 x + a_2 x^2 + \cdots + a_7 x^7}{1 + b_1 x + b_2 x^2},
 \qquad
-\gamma(D) = \frac{1}{2} + \sum_{k=1}^{10} \frac{g_k}{D^k},
+\gamma(D) = \frac{\tfrac{1}{2} + e_1 x + e_2 x^2 + \cdots + e_7 x^7}{1 + f_1 x + f_2 x^2},
+\qquad
+x = \frac{1}{n} = \frac{1}{D-2},
 $$
 
-with the limits
+| $k$ | $a_k$ ($\Delta$, numerator) | $b_k$ ($\Delta$, denominator) | $e_k$ ($\gamma$, numerator) | $f_k$ ($\gamma$, denominator) |
+|---|---|---|---|---|
+| 0 | $+1.6439519063$ | $1$ | $+0.5$ (fixed) | $1$ |
+| 1 | $+3.5069301084 \times 10^{1}$ | $+1.5025785698 \times 10^{1}$ | $+1.7944916810 \times 10^{1}$ | $+3.7406242929 \times 10^{1}$ |
+| 2 | $+1.7536334247 \times 10^{2}$ | $+4.1533174318 \times 10^{1}$ | $+1.5041854797 \times 10^{2}$ | $+3.3804150415 \times 10^{2}$ |
+| 3 | $+7.9431044608 \times 10^{1}$ | | $-5.1656087202 \times 10^{1}$ | |
+| 4 | $-1.2548697786 \times 10^{2}$ | | $+9.7434722283$ | |
+| 5 | $+2.7375300047$ | | $-9.7142684561 \times 10^{1}$ | |
+| 6 | $+1.7288857327 \times 10^{1}$ | | $+7.3735473943 \times 10^{1}$ | |
+| 7 | $-4.5448735894 \times 10^{1}$ | | $-4.7840451081 \times 10^{1}$ | |
+
+Ten numbers for $\Delta$ and nine for $\gamma$, with no singularity at any physical $D$ (the denominators vanish only at
+$D = -1.65, -9.37$ and $D = -13.3, -20.1$). They are the smallest rational forms that reproduce every computed point
+within its own precision (`solver/rational_fit.py`, `solver/formula_all.py`), fitted on $4 \le D \le 30.2$:
+
+| $D$ | $\Delta$: formula − computed | precision of the points | $\gamma$: formula − computed | precision of the points |
+|---|---|---|---|---|
+| 4 – 4.3 | $1.6\times10^{-6}$ | $3\times10^{-6}$ | $3.9\times10^{-7}$ | $5\times10^{-7}$ |
+| 4.3 – 5 | $4\times10^{-8}$ | $2\times10^{-7}$ | $4\times10^{-8}$ | $7\times10^{-8}$ |
+| 5 – 30 | $\le 5\times10^{-8}$ | $3\times10^{-11}$ – $3\times10^{-8}$ | $\le 4.5\times10^{-9}$ | $\sim 10^{-9}$ |
+| 34 – 40, never seen by the fit | $\le 1.3\times10^{-6}$ | $1$ – $3\times10^{-6}$ | $\le 5\times10^{-7}$ up to $D = 35.8$ | |
+
+Near $D = 4$ the points themselves are the limit: there the solution needs many Fourier modes in time, and the
+values move by $-4.3\times10^{-4}$ and $-3.4\times10^{-5}$ from 23 to 31 to 39 modes. Above $D \approx 36$ the computed
+$\gamma$ scatter by up to $6\times10^{-5}$ around both this formula and the power series below, which agree with each
+other; the growth-rate solve is not reliable there. Below $D \approx 3.8$, where $\Delta(D)$ turns over (maximum
+$\approx 3.4661$ near $D = 3.8$), the formula does not apply.
+
+As $D \to \infty$ ($x \to 0$):
+
+$$
+\Delta(D) = a_0 + \frac{a_1 - a_0 b_1}{n} + \cdots \approx 1.64395 + \frac{10.37}{n} + \cdots,
+\qquad
+\gamma(D) = \frac{1}{2} + \frac{e_1 - f_1/2}{n} + \cdots \approx \frac{1}{2} - \frac{0.758}{n} + \cdots
+$$
 
 $$
 \Delta_\infty = 1.64395 \pm 0.00008,
 \qquad
 \omega_\infty = \frac{2\pi}{\Delta_\infty} = 3.8220 \pm 0.0002,
 \qquad
-\gamma_\infty = \frac{1}{2},
+\gamma_\infty = \frac{1}{2} .
+$$
+
+This formula's own limit is $a_0 = 1.643952$; the quoted range $1.64388$–$1.64403$ covers all acceptable fits (power
+series and rational forms in $1/D$, $1/(D-1)$, $1/(D-2)$ over several degrees and ranges, $\chi^2/\mathrm{dof} \le 1$).
+The coefficients of one fit are not physical constants (they are correlated); only the function is.
+
+**Values.**
+
+| $D$ | $\Delta$ | $\gamma$ |
+|---|---|---|
+| 4 | 3.445457 (±3e-6) | 0.373960 (±5e-7) |
+| 5 | 3.2217019 | 0.4131269 |
+| 6 | 3.0094833 | 0.4300795 |
+| 7 | 2.8427532 | 0.4399912 |
+| 8 | 2.7117900 | 0.4467164 |
+| 10 | 2.5210790 | 0.4555879 |
+| 12 | 2.3891886 | 0.4614056 |
+| 15 | 2.2530984 | 0.4673656 |
+| 20 | 2.1120802 | 0.4737107 |
+| 30 | 1.9649579 | 0.4807927 |
+| 40 | 1.888569 | 0.484776 |
+| 50 | 1.84166 | 0.48736 |
+| 100 | 1.74504 | 0.49313 |
+| 1000 | 1.6543 | 0.4992 |
+| $\infty$ | $1.64395 \pm 0.00008$ | $1/2$ |
+
+Up to $D = 40$ these are within the precision of the computed points; above $D = 40$ they are extrapolations.
+
+<details>
+<summary>Power series in 1/D for D ≥ 10 (the earlier form)</summary>
+
+$$
+\Delta(D) = \Delta_\infty + \sum_{k=1}^{10} \frac{c_k}{D^k},
 \qquad
-g_1 = -0.758 \pm 0.003 .
-$$
-
-The leading terms are
-
-$$
-\Delta(D) \approx 1.64395 + \frac{10.4}{D} - \frac{28.4}{D^2} + \frac{239}{D^3} - \frac{2245}{D^4} + \cdots,
+\gamma(D) = \frac{1}{2} + \sum_{k=1}^{10} \frac{g_k}{D^k},
 \qquad
-\gamma(D) \approx \frac{1}{2} - \frac{0.758}{D} + \frac{8.28}{D^2} - \frac{126}{D^3} + \frac{1845}{D^4} - \cdots
+\Delta(D) \approx 1.64395 + \frac{10.4}{D} - \frac{28.4}{D^2} + \frac{239}{D^3} - \cdots
 $$
 
-The coefficients grow about tenfold per order with alternating signs (a radius of convergence near $D \approx 10$),
-so the series must not be cut short: the first five terms are off by up to $4\times10^{-3}$ even at $D \ge 20$. Use
-all eleven coefficients (the degree-10 fit drawn in the graph, `solver/formula.py`):
+Fitted on $10 \le D \le 30.2$ (`solver/formula.py`, the curve in the graph above); it reproduces the points there to
+$1.6\times10^{-8}$ ($\Delta$) and $2.3\times10^{-9}$ ($\gamma$). The coefficients grow about ninefold per order with
+alternating signs: a pole near $D \approx -9$, the same one the rational form carries in its denominator. That pole
+limits the series to $D \gtrsim 10$ and forbids cutting it short (five terms are off by $4\times10^{-3}$ at $D \ge 20$).
 
 | $k$ | $c_k$ (for $\Delta$) | $g_k$ (for $\gamma$) |
 |---|---|---|
@@ -58,12 +123,7 @@ all eleven coefficients (the degree-10 fit drawn in the graph, `solver/formula.p
 | 9 | $+1.2046388629 \times 10^{7}$ | $-4.9128734266 \times 10^{7}$ |
 | 10 | $-1.5266460427 \times 10^{7}$ | $+7.7494021741 \times 10^{7}$ |
 
-**Accuracy.** On the fitted range $10 \le D \le 30.2$ the two polynomials reproduce the computed values to
-$1.6\times10^{-8}$ ($\Delta$) and $2.3\times10^{-9}$ ($\gamma$). Points computed later at $D = 34$–$38$, never seen by
-the fit, agree with the $\Delta$ formula to $2\times10^{-6}$, which is their own precision there. Below $D \approx 10$
-the series does not apply; use the computed values. The individual $c_k$ of one fit are not physical constants (they
-are correlated); $\Delta_\infty$ is quoted as the range over all acceptable fits (variable $1/D$, $1/(D-1)$, $1/(D-2)$,
-degree 8–11, lower cut $D \ge 10$ or $12$, $\chi^2/\mathrm{dof} \le 1$): $1.64388$–$1.64403$.
+</details>
 
 **Candidate constants for $\Delta_\infty$.** Each candidate is forced as $c_0$ in 12 fits (variable $1/D$, $1/(D-1)$,
 $1/(D-2)$; degree 9 and 10; lower cut $D \ge 10$ or $12$). The table gives the fit quality, as $\chi^2/\mathrm{dof}$ of the
@@ -98,25 +158,6 @@ and the first Bessel zeros), $2\pi/(r b)$ and $r \ln b$. None has a reason to ap
 cannot tell them apart: they move $\Delta(D)$ by less than $10^{-6}$ for $D \le 40$, below the precision of the held-out
 points. Forcing a constant can exclude it but not select it; identifying $\Delta_\infty$ would take about eight digits,
 from the $D \to \infty$ limit of the equations rather than from larger $D$.
-
-**Values.**
-
-| $D$ | $\Delta$ | $\gamma$ | |
-|---|---|---|---|
-| 4 | 3.4454524 | 0.3739609 | computed |
-| 5 | 3.2217019 | 0.4131269 | computed |
-| 6 | 3.0094832 | 0.4300795 | computed |
-| 7 | 2.8427541 | 0.4399913 | computed |
-| 8 | 2.7117900 | 0.4467164 | computed |
-| 10 | 2.521079 | 0.455588 | formula |
-| 12 | 2.3891886 | 0.4614056 | formula |
-| 15 | 2.2530984 | 0.4673656 | formula |
-| 20 | 2.1120802 | 0.4737107 | formula |
-| 30 | 1.9649579 | 0.4807927 | formula |
-| 40 | 1.888568 | 0.48478 | formula (computed points to $D = 38$ agree to $2\times10^{-6}$) |
-| 50 | 1.84166 | 0.4874 | extrapolated |
-| 100 | 1.7450 | 0.4931 | extrapolated |
-| $\infty$ | $1.64395 \pm 0.00008$ | $1/2$ | limit |
 
 ## Backends
 
