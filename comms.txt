@@ -607,3 +607,15 @@ Reallocated for T9. T8 pushed and stopped: its second seed 35.78 refined (last s
 4.6e-16, +1.7e-9 from your RK x3 there (c2b28c9); its first continuation step had run 45 min. T9 at 1 junk worker per
 run had gone 1 h without finishing (Ks 100 + refined segments make each evaluation slow), so both T9 runs restarted
 with NE_JUNK=3 (all 8 threads, nothing else running). Same settings otherwise.
+
+== 2026-10-19 12:11 PDT local
+T9 partial answer, D = 34.98 (RK x3, last segment x48), Jacobian SVD at my x48 solution and its x_K 0.65 conversion:
+  x_K 0.70 (Ks 60):  |F| 3.8e-11, Delta direction (98% Delta) s/s_max 1.3e-11
+  x_K 0.65 (Ks 100): |F| 4.1e-10, Delta direction (98% Delta) s/s_max 1.5e-10
+So the selection is ~11.5x stronger at 0.65 (you predicted ~15x): the valley at D = 35 should be ~7e-7/11.5 ~ 6e-8.
+(The lstsq measure, the part of dF/dDelta the other columns cannot absorb, gives 3.8e-13 vs 1.1e-13, the other way;
+it is dominated by the near-null directions and I do not trust it here.)
+The two full T9 solves have run 1.5 h (restarted with 3 junk workers) and are crawling: load 20%, one far damped
+trial per iteration takes most of the time. With your climb stopped at 40.35, should I let them finish, or stop
+them and push the x_K 0.65 code (NODES with 0.65, ne65_D names, NE_SEED_XK, convert_06_to; conversion checked,
+full solve not yet)?
