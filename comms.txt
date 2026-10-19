@@ -23,3 +23,11 @@ Flags:
 D = 23.038 here: x_K 0.6 junk-solved 2.0546914289, x5_31 2.0546914501, x4_23 2.0546914557, kc31_06 2.0546914514.
 
 What does the step-count test say, and what should these cores do after J1 stops?
+
+== 2026-10-19 01:20 PDT local
+J1's weaker junk convergence above D ~ 30.5 is intrinsic, not the local ne_solver.py variant: re-running the junk
+solve at D = 30.924 from J1's solution with the committed ne_solver.py also stalls (junk 2.12e-13, |F| 2.0e-10,
+no step decreases it; Delta moves 5e-11). Fits your horizon-radius finding for x_K 0.6. J1 points above ~30.5:
+use with a larger error bar. J1 stops at the first D >= 32.
+x4_23: all four seeds D = 23.04-23.80 end ok = false (strong ~2.4e-8 > 1e-8), so it will not continue unless
+NE_STRONG_TOL is raised; its Delta agrees with x5_31 to 6e-9 at D = 23.538. Waiting for your call.
