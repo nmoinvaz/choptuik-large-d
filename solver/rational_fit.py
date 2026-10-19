@@ -121,3 +121,67 @@ def compact(targets=(1e-5, 1e-6, 1e-7, 1e-8), Dmin=4.0, npar_max=13):
             print("   q = 1", " ".join(f"{v:+.10e}" for v in q))
         else:
             print(f"target {tgt:.0e}: none up to {npar_max} parameters")
+
+
+def fit_rational_p0(x, y, w, m, k, p0):
+    """As fit_rational with P(0) = p0 fixed (gamma: p0 = 1/2)."""
+    sc = x.max()
+    t = x / sc
+    A = np.hstack([np.vander(t, m + 1, increasing=True)[:, 1:], -(y[:, None] * np.vander(t, k + 1, increasing=True)[:, 1:])])
+    c0, *_ = np.linalg.lstsq(A * w[:, None], (y - p0) * w, rcond=None)
+    f = lambda c: (rat(np.r_[p0, c[:m]], c[m:], t) - y) * w
+    r = least_squares(f, c0, method="lm", xtol=1e-15, ftol=1e-15, gtol=1e-15, max_nfev=20000)
+    c = r.x
+    chi = np.sum(r.fun ** 2) / (len(y) - m - k)
+    p = np.r_[p0, c[:m]] / sc ** np.arange(m + 1)
+    q = c[m:] / sc ** np.arange(1, k + 1)
+    return p, q, chi
+
+
+def gamma_data():
+    """(D, gamma, sigma): kc 39 RK x2 below D = 8 (sigma from the kc 31 -> 39 step), step-converged points above
+    (sigma 1e-9, x_K 0.7 points above 30.2: 1e-7)."""
+    from data_all import _load
+    D, y, s, g = data()
+    k31, k39 = _load("scan_ne6_lowD_kc31_rk2.jsonl"), _load("scan_ne6_lowD_kc39_rk2.jsonl")
+    sg = []
+    for d in D:
+        k = round(d, 4)
+        if d < 8 and k in k31 and k in k39 and k31[k].get("gamma") and k39[k].get("gamma"):
+            sg.append(max(1e-9, abs(k39[k]["gamma"] - k31[k]["gamma"]) / 13))
+        else:
+            sg.append(1e-9 if d <= FIT_MAX else 1e-7)
+    m = np.isfinite(g)
+    return D[m], g[m], np.array(sg)[m]
+
+
+def compact_gamma(targets=(1e-6, 1e-7, 1e-8), Dmin=4.0, npar_max=11):
+    """Smallest rational form with gamma_inf = 1/2 reproducing every gamma for D >= Dmin to a target accuracy."""
+    D, g, s = gamma_data()
+    fit, hold = (D <= FIT_MAX) & (D >= Dmin), D > FIT_MAX
+    for tgt in targets:
+        best = None
+        for npar in range(2, npar_max + 1):
+            for xn, xf in (("1/D", lambda d: 1 / d), ("1/(D-1)", lambda d: 1 / (d - 1)), ("1/(D-2)", lambda d: 1 / (d - 2))):
+                for m in range(1, npar):
+                    k = npar - m
+                    try:
+                        p, q, chi = fit_rational_p0(xf(D[fit]), g[fit], 1 / np.maximum(s[fit], tgt), m, k, 0.5)
+                    except Exception:
+                        continue
+                    poles = np.roots(np.r_[1.0, q][::-1])
+                    if any(abs(r.imag) < 1e-9 and r.real > 0 for r in poles):
+                        continue
+                    dev = np.abs(rat(p, q, xf(D[fit])) - g[fit])
+                    if np.all(dev <= np.maximum(tgt, 2 * s[fit])) and (best is None or dev.max() < best[0]):
+                        best = (dev.max(), xn, m, k, p, q, np.abs(rat(p, q, xf(D[hold])) - g[hold]).max() if hold.any() else np.nan)
+            if best:
+                break
+        if best:
+            err, xn, m, k, p, q, ho = best
+            print(f"gamma target {tgt:.0e}: {m + k} free parameters, P{m}/Q{k} in {xn} (P(0) = 1/2): max error {err:.1e} on "
+                  f"D = {Dmin}..30.2, held-out max {ho:.1e}")
+            print("   p =", " ".join(f"{v:+.10e}" for v in p))
+            print("   q = 1", " ".join(f"{v:+.10e}" for v in q))
+        else:
+            print(f"gamma target {tgt:.0e}: none up to {npar_max} parameters")
