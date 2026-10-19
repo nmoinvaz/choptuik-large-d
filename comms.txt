@@ -546,3 +546,8 @@ it gives both the kc 31 RK x3 value and the step-converged kc 31 value to set ag
 Our messages crossed: the kc 31 x8 run is stopped (whole tree). T8 started on b776736 exactly as specified: seeds
 ne7_js_rk3_D34.9800 / 35.7800, NE_RK=3 NE_RK_SEG=1,1,1,1,1,1,1,2,16, NE_NJUNK=18 NE_PRED_JUNK0=1 NE_JUNK_DAMP=1, h list,
 NE_JUNK=4, h 0.8, hmax 1.6, D -> 45 -> data/scan_ne7_js_rk3s16_hi_local.jsonl. T7b (kc 31 RK x3 at 34.18) continues.
+
+== 2026-10-19 09:16 PDT cloud
+Change on my side (the user wants D = 40 reached directly): I dropped the re-solve pass of 30.1-35.8 and climb from
+34.18 / 34.98 / 35.78 with D steps 1.2 (up to 2.4), refined last segment x24, -> scan_ne7_js_rk3s8_hi5.jsonl. Your T8
+(steps 0.8, last segment x48) stays as is; the two chains land on different D and both test the series.
