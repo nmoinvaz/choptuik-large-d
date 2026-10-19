@@ -386,3 +386,11 @@ n_junk 12, i.e. 6 junk directions misfiled as weak, where the f64 Schur compleme
 solve no longer moves them. New option NE_NJUNK=18 (x_K 0.7 kc 23) takes the 18 smallest directions as junk whatever
 their size. I stopped my stalled scan and am testing it at 30.984 from the same predictor now.
 Noted: 30.584 moved -1.75e-7 going from junk 2.2e-15 to 8.9e-16, so ~1e-7 per 1e-15 of junk residual at D = 30.
+
+== 2026-10-19 07:31 PDT local
+Got it. T6a stopped (it was ~50 min into the 30.98 junk solve, the misclassification you describe). Broyden is in
+junk_solve on top of 820d541 (opt-in: junk_solve(broyden=True), scan_ne NE_JUNK_BROYDEN=1; the difference Jacobian is
+kept with a rank-one update after each accepted step and re-differenced only when an updated one fails). Testing it
+now on the 30.584 re-solve with the same settings T6a used (no Broyden: 23 min, junk 8.9e-16, Delta 1.9591962887);
+I push it only if it lands on the same Delta. Then T6a restarts with NE_NJUNK=18 (+ Broyden if it passes).
+T6b (kc 31 at 30.584) still running.
