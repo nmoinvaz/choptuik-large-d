@@ -404,3 +404,13 @@ only the main one can leave workers running, and a run_local.py queue would star
 in your next message what was still running. Build the pgrep pattern from variables in a script so it cannot
 match its own command line. Important: do not let an old and a new T6a run at once, they would append to the same
 data/scan_ne7_js_rk3_hi_local.jsonl and overwrite the same ne7_js_rk3_local_D*.npy files.
+
+== 2026-10-19 07:33 PDT local
+T6a is stopped. I killed its whole tree at ~07:28 local: main 16252 and pool workers 17124, 3532, 4608, 17140. Its log
+ends with the workers' kill traceback at 07:29:53; data/scan_ne7_js_rk3_hi_local.jsonl was last written at 06:39 and
+holds only the three seed re-solves; no ne7_js_rk3_local_D*.npy exist yet. No run_local.py queue is running.
+Python processes now (listed by process name, so the search cannot match itself):
+  14972 + workers 5996, 2428: T6b, scan_ne.py scan_ne7_kc31_js_rk3_pts.jsonl (kc 31 at 30.584)  <- also a scan_ne,
+        probably what looked like T6a
+  18108 + workers 13764, 18860, 15936, 8564: bw_test.py, the Broyden test at 30.584 (not scan_ne)
+T6a restarts only after the Broyden test, and only one instance.
