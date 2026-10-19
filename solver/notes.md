@@ -218,3 +218,20 @@ light ray. Note the factor √(2π) between the simulation's field (G = 1) and t
   1.1e-12 stay); Delta of the second moves only to 2.0546984. Open.
 - x_K = 0.7 minus x_K = 0.6 (both NE continuation, cmp_setups.py): +8e-6 (D = 23) .. +1.6e-5 (24.5); gamma -1e-6 .. -2e-6.
   This spread is the current error bar on Delta above D ~ 18.
+
+## Junk sector: what it is not (2026-10-19, ~00:10)
+- Matching at x_K = 0.4 with Ks = 150 (xk04_dbg.py, D = 23.04): the x_K = 0.6 NE solution leaves 2.2e-6 in the series
+  block (singular content seen ~150x more strongly at u = 0.6), but the junk band of J does NOT move (smallest s/smax
+  still 2e-14 .. 2e-18; weak band slightly lifted to 1e-10 .. 2e-11). Also the horizon series is not converged at u = 0.6
+  with 150 terms: |c_k| u^k = 5e-11 at k = 150 (ratio ~0.886 per term, radius ~0.68), would need Ks ~ 260.
+  So the junk is not controlled by the strength of horizon regularity; x_K = 0.4 is not the fix.
+- mode_spectrum.py (D = 23.04): the smallest singular values of M(lambda) are 1e-17..1e-18 relative for EVERY real
+  lambda in [-3, 0.3]: no isolated weakly damped modes; the near-null sector is lambda-independent (high-k sector,
+  where d/dtau ~ i k omega >> lambda). Origin still open (candidates: centre-regular and horizon-regular high-k
+  solutions nearly parallel at the match; truncation/dealiasing of the top harmonics).
+- Consequence: the junk equations' residual (~1e-13) is at the level of discretisation errors, so their 'solution'
+  is noise, and that noise moves Delta. smooth_junk (prior: small high centre harmonics) is the regularisation in
+  use; the local matrix (kc 31, smooth vs frozen, x_K 0.6/0.7) measures how much the answer depends on it.
+- Continuation drift: the x_K = 0.7 NE scan reached D = 40, but its slope steepens from -0.0117 (D = 37) to -0.033
+  (D = 40) with junk residual 1-3e-9: the branch runs off above D ~ 38. x_K = 0.6 blew up at D = 35.15 (|F| 1.5e4) and
+  is retrying. Values above D ~ 26 are not trustworthy beyond ~1e-3.

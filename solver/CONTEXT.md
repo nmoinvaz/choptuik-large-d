@@ -65,12 +65,15 @@ directions (SVD at D = 28, x_K = 0.6, s/s_max):
      to 6e-8 (2.0546955), but x_K = 0.6 then gives 2.0546914 (4e-6 apart).
    - `ne_dd.py` (double-double unknowns, DD differences for the 22 near-null directions) drives the strong residual
      to 1e-28 but its outer Newton step does not reduce the junk residual.
-   - Being tested: matching closer to the centre (x_K = 0.4, Ks = 150; `xk04_test.py`), which strengthens every
-     horizon-regularity condition by (u_K/0.4)^{s0} ≈ 150× at D = 23. The horizon series radius is ≈ 0.74 in u
-     (D ≈ 19), so u = 0.6 needs Ks ≈ 150–220.
+   - Matching closer to the centre (x_K = 0.4, Ks = 150; `scratch/xk04_dbg.py`) does NOT lift the junk band (only
+     the weak band, slightly), and the horizon series needs Ks ≈ 260 at u = 0.6. Not the fix.
+   - The near-null sector is the same for every growth rate λ in [−3, 0.3] (`scratch/mode_spectrum.py`): it is not a
+     set of weakly damped modes, it is the high-k sector itself. Its origin is open; the junk equations' residual
+     (~1e-13) is at the level of the discretisation errors, so their "solution" is noise that moves Δ.
 
-So: Δ is good to ~1e-12 up to D ≈ 17.5, ~1e-5 up to D ≈ 25, and only ~1e-4 around D ≈ 29–40 until the junk
-directions are resolved.
+So: Δ is good to ~1e-12 up to D ≈ 17.5, ~1e-5 up to D ≈ 25, and only ~1e-3 above D ≈ 29 until the junk
+directions are resolved. The continuation scans also run off: x_K = 0.7 steepens from slope −0.0117 (D = 37) to
+−0.033 (D = 40), and x_K = 0.6 blew up at D = 35.15.
 
 ## Data (solver/data)
 
@@ -106,9 +109,9 @@ directory that holds the seeds.
 
 ## Next steps
 
-1. Resolve the junk directions: the x_K = 0.4 / Ks = 150 test; if it lifts the junk band, rescan D = 17–40 with it.
-   Otherwise, a smoothness criterion justified by the continuum problem, or a formulation where centre data for
-   high harmonics are not free unknowns.
+1. Resolve the junk directions. Find out why the high-k sector is near-null (compare the centre-regular and
+   horizon-regular high-k solutions at the match; vary kc and the dealiasing). Meanwhile the smoothness prior
+   (`smooth_junk.py`, `NE_SMOOTH=1`) is the regularisation in use, and the local job matrix measures its effect.
 2. Error bars from at least three discretisations per D (x_K 0.6 / 0.7 / 0.4, kc 23 / 31). Refit Δ∞ with them.
    Discriminate 2π/j₁,₁, π²/6, √e.
 3. γ: redo with the final solutions. Fit 1/2 − γ.
