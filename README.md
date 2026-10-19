@@ -75,6 +75,23 @@ This formula's own limit is $a_0 = 1.643898$; the quoted range $1.64388$–$1.64
 series and rational forms in $1/D$, $1/(D-1)$, $1/(D-2)$ over several degrees and ranges, $\chi^2/\mathrm{dof} \le 1$).
 The coefficients of one fit are not physical constants (they are correlated); only the function is.
 
+**The limit rests on an assumption.** $\Delta_\infty = 1.64395 \pm 0.00008$ holds if $\Delta(D)$ is analytic in $1/D$
+at $D = \infty$: no half-integer powers $n^{-1/2}$, no $\log n$, and no new scale far beyond the computed range. The
+data do not test that. Formulas with those features reproduce every computed point from $D = 4$ to $40$ (fit and held
+out) just as well: a series in $n^{-1/2}$ gives limits from $1.607$ to $1.691$ depending on its degree; adding one
+$n^{-1/2}$ or $\log n / n$ term to the $1/D$ series moves the limit to $1.6437$–$1.6448$; and the rational form with
+its limit forced to $\pi^2/6$ or $\sqrt e$ fits too, by placing a pole at $D \approx -440$ or $-5900$, a slow bend
+that starts in the hundreds. All of these agree with the formula above to $10^{-5}$ up to $D \approx 60$ and fan out
+above $D \approx 100$:
+
+![Formulas that all fit the computed points, extended to D = 100000](solver/extrapolation.svg)
+
+The analytic form is the natural default (the large-$D$ expansion of the equations has no other scale, and the only
+structure the data show is the pole near $D \approx -9$), but it is not proven: the period is selected by an
+exponentially small effect that the $1/D$ expansion never sees, and Ecker, Ecker and Grumiller argue for $\Delta \to 0$.
+Settling it needs either points at $D$ in the hundreds or the $D \to \infty$ equations themselves.
+`solver/plot_extrapolation.py` draws the graph.
+
 **Values.**
 
 | $D$ | $\Delta$ | $\gamma$ |
@@ -95,7 +112,9 @@ The coefficients of one fit are not physical constants (they are correlated); on
 | 1000 | 1.6542 | 0.4992 |
 | $\infty$ | $1.64395 \pm 0.00008$ | $1/2$ |
 
-Up to $D = 40$ these are within the precision of the computed points; above $D = 40$ they are extrapolations.
+Up to $D = 40$ these are within the precision of the computed points. $D = 50$ is an extrapolation that every form
+above agrees on to $10^{-5}$; $D = 100$ and $1000$ assume analyticity in $1/D$ (the other forms differ by up to
+$2\times10^{-4}$ at $D = 100$ and $0.02$ at $D = 1000$).
 
 <details>
 <summary>Power series in 1/D for D ≥ 10 (the earlier form)</summary>
@@ -130,7 +149,8 @@ limits the series to $D \gtrsim 10$ and forbids cutting it short (five terms are
 </details>
 
 **Candidate constants for $\Delta_\infty$.** Each candidate is forced as $c_0$ in 12 fits (variable $1/D$, $1/(D-1)$,
-$1/(D-2)$; degree 9 and 10; lower cut $D \ge 10$ or $12$). The table gives the fit quality, as $\chi^2/\mathrm{dof}$ of the
+$1/(D-2)$; degree 9 and 10; lower cut $D \ge 10$ or $12$), so the test assumes analyticity in $1/D$ (above). The
+table gives the fit quality, as $\chi^2/\mathrm{dof}$ of the
 best and the worst of the 12 (0.62 is the unconstrained fit), and the rms error on the held-out points at
 $D = 34$–$39.5$, which the fits never saw.
 
@@ -142,17 +162,21 @@ $D = 34$–$39.5$, which the fits never saw.
 | $\frac{7}{2}\sqrt{\ln 2/\pi}$ | 1.6440152 | 0.62 .. 26 | $1.2\times10^{-6}$ | fits, contrived |
 | $\frac{9}{8}\sqrt{j_{2,1}/j_{0,1}}$ | 1.6440207 | 0.62 .. 30 | $1.2\times10^{-6}$ | fits, contrived |
 | $\frac{10}{9}\sqrt{j_{0,1}/\ln 3}$ | 1.6439063 | 0.62 .. 118 | $1.5\times10^{-6}$ | fits, contrived |
-| $\pi^2/6 = \zeta(2)$ | 1.6449341 | 3.6 .. 13000 | $1.9\times10^{-6}$ | excluded |
-| $2\pi/j_{1,1}$ | 1.6397878 | 67 .. $3\times10^{5}$ | $1.3\times10^{-5}$ | excluded |
-| $\sqrt{e}$ | 1.6487213 | 82 .. $3\times10^{5}$ | $1.3\times10^{-5}$ | excluded |
-| $\varphi = (1+\sqrt5)/2$ | 1.6180340 | 2500 .. $10^{7}$ | $7.7\times10^{-5}$ | excluded |
+| $\pi^2/6 = \zeta(2)$ | 1.6449341 | 3.6 .. 13000 | $1.9\times10^{-6}$ | excluded if analytic in $1/D$ |
+| $2\pi/j_{1,1}$ | 1.6397878 | 67 .. $3\times10^{5}$ | $1.3\times10^{-5}$ | excluded if analytic in $1/D$ |
+| $\sqrt{e}$ | 1.6487213 | 82 .. $3\times10^{5}$ | $1.3\times10^{-5}$ | excluded if analytic in $1/D$ |
+| $\varphi = (1+\sqrt5)/2$ | 1.6180340 | 2500 .. $10^{7}$ | $7.7\times10^{-5}$ | excluded if analytic in $1/D$ |
 
 ![How far each candidate constant moves Δ(D) over the computed range](solver/candidates.svg)
 
 The graph shows, for every candidate, how much fixing $\Delta_\infty$ to it changes the fitted $\Delta(D)$ over the computed
 range ($|\text{forced fit} - \text{free fit}|$, log scale), against the precision of the computed points (shaded).
 The five forms inside the window stay at the level of the data; $\pi^2/6$ sits 10–100 times above it at
-$D = 10$–$30$, and $2\pi/j_{1,1}$, $\sqrt e$ and $\varphi$ climb further out. Regenerate with
+$D = 10$–$30$, and $2\pi/j_{1,1}$, $\sqrt e$ and $\varphi$ climb further out. Every curve has the same shape: forcing the
+limit is a linear constraint on a weighted least-squares fit, so forced minus free is (candidate − free limit) times one
+influence function $h(D)$ with $h(\infty) = 1$. It is $\sim 10^{-7}$ where the points are known to $3\times10^{-11}$
+($D \le 22$), rises where their error bars step up ($D = 22$, $29.5$), and climbs toward 1 past the data:
+$h(40) = 3.8\times10^{-3}$, $h(100) = 0.17$, $h(1000) = 0.85$. Regenerate with
 `cd solver/data && python3 ../plot_candidates.py`.
 
 $G$ is Catalan's constant and $j_{\nu,k}$ the $k$-th zero of the Bessel function $J_\nu$. The five that fit are all that a
@@ -160,8 +184,10 @@ search finds in the window $1.64388$–$1.64403$ among products $r\, b_1^{p_1} b
 $p = \pm\tfrac12, \pm1, \pm2$; $b$ from $\pi$, $e$, $\sqrt2$, $\sqrt3$, $\ln 2$, $\ln 3$, Euler's $\gamma$, $\zeta(3)$, $\varphi$, $G$
 and the first Bessel zeros), $2\pi/(r b)$ and $r \ln b$. None has a reason to appear here, and inside the window the data
 cannot tell them apart: they move $\Delta(D)$ by less than $10^{-6}$ for $D \le 40$, below the precision of the held-out
-points. Forcing a constant can exclude it but not select it; identifying $\Delta_\infty$ would take about eight digits,
-from the $D \to \infty$ limit of the equations rather than from larger $D$.
+points. Forcing a constant can exclude it but not select it, and only under the analytic assumption: with a
+non-analytic or slow large-$D$ term allowed, $\pi^2/6$ and $\sqrt e$ fit as well (graph above). Identifying
+$\Delta_\infty$ would take about eight digits and a settled large-$D$ form, from the $D \to \infty$ limit of the equations
+rather than from larger $D$.
 
 ## Backends
 

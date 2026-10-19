@@ -389,3 +389,18 @@ light ray. Note the factor √(2π) between the simulation's field (G = 1) and t
   <= 5e-7; above D ~ 36 the computed gamma scatter by up to 6e-5 around both this and the 1/D series (unreliable growth-
   rate solves there). formula_all.py; README "The formula"; delta.svg draws it.
 - Covering D >= 3.7 (below the maximum) costs more (P3/Q6 at 1e-6, P8/Q2 at 1e-7 with 1.1e-6 at 3.7).
+
+## The limit is conditional on analyticity in 1/D (2026-10-19, ~13:00)
+- Forcing a candidate as the limit of the all-D rational formula with the denominator free: P8/Q2 cannot reach pi^2/6 or
+  sqrt(e) without a pole at a physical D (sqrt e: +298), but P8/Q3 fits D = 4-30.2 AND the held-out D = 34-40 for pi^2/6
+  (pole at D ~ -436; held-out chi2 0.3) and sqrt(e) (pole ~ -5854; 0.4); 2 pi/j11 (-588; 5.7) and phi (-5002; 3.9) are
+  only mildly disfavored. A distant pole is a slow bend that starts at D in the hundreds.
+- Non-analytic forms fit equally: series in n^(-1/2) of degree 14 / 16 / 18 on 10 <= D <= 30.2 have chi2/dof 0.66-0.71
+  (1/D series 0.63), held-out chi2 1.0-1.4, limits 1.6908 / 1.6659 / 1.6075. Adding one n^(-1/2), log(n)/n or n^(-3/2)
+  term to the 1/D series: chi2 unchanged, limit 1.6437-1.6448.
+- All of these agree with the analytic formulas to 1e-5 up to D ~ 60 (2e-4 at D = 100, 0.02 at D = 1000).
+- So Delta_inf = 1.64395 +- 0.00008 holds under analyticity in 1/D at D = infinity (natural: no other scale in the
+  large-D expansion, only the D ~ -9 pole in the data; not proven: the period is selected beyond all orders, and EEG
+  argue Delta -> 0). The candidate exclusions are conditional on it. plot_extrapolation.py / extrapolation.svg.
+- Influence function of the forced-limit fits (power series): forced - free = (candidate - free limit) h(D), h ~ 1e-7 for
+  D <= 22, ~1e-5 at 24-28 (error bars step up at 22 and 29.5), h(30) 7.5e-5, h(40) 3.8e-3, h(100) 0.17, h(1000) 0.85.

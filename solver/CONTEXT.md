@@ -48,7 +48,10 @@ above; kc 47 extrapolated in the mode count at D <= 4.25), within the precision 
 <= 1e-8 on 4-30, gamma <= 3e-8 on 4.3-30) and predicting the held-out D = 34-40 points to 1.9e-6. Delta(4) = 3.4454524,
 gamma(4) = 0.3739610. **Delta_inf = 1.64395 +- 0.00008** (this formula: 1.643898), omega_inf = 3.8220,
 gamma = 1/2 - 0.758/n + ... The 1/D power series (degree 10, D >= 10, `formula.py`) is kept as the earlier form.
-pi^2/6, 2 pi/j11, sqrt(e), phi are excluded; five contrived forms fit inside the window (README table, candidates.svg).
+pi^2/6, 2 pi/j11, sqrt(e), phi are excluded IF Delta(D) is analytic in 1/D at D = infinity; five contrived forms fit inside
+the window (README table, candidates.svg). Without that assumption the data D <= 40 do not fix the limit: n^(-1/2) series,
+a log n / n term or a distant pole fit equally and give 1.61-1.69 (notes.md, extrapolation.svg). Settling it needs D in
+the hundreds or the D -> infinity equations.
 
 Hard-won lessons for these fits:
 - fit in x/max(x): an unscaled degree-10 Vandermonde loses ~1e-9 and made the limit wander (`series_factory.py`,
