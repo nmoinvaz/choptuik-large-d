@@ -13,10 +13,13 @@ import numpy as np
 from data_best import load as old_load
 
 
-def step_converged(Dmin=8.0, hi_from=30.2, hi_junk=1.2e-15):
+def step_converged(Dmin=8.0, hi_from=30.2, hi_junk=1.2e-15, hi_refined=True):
     """(D, Delta, sigma, gamma) arrays: x_K 0.6 RK x2 (+ Richardson) up to hi_from, x_K 0.7 RK x3+ junk-solved above,
-    only points driven to junk <= hi_junk (one left at ~2e-15 can sit ~2e-7 up the flat valley), the lowest-junk run
-    per D."""
+    only points driven to junk <= hi_junk (one left at ~2e-15 can sit ~2e-7 up the flat valley).
+    Above hi_from the RK error of the last segment (x = 0.6 -> 0.7) grows ~2x per 0.8 in D (RK x3: +4.0e-7 at 34.18,
+    +1.5e-6 at 35.78); runs with that segment refined (rk_seg, NE_RK_SEG) are step-converged (34.18: x24 = x48 to
+    1e-10). Per D the best class wins (refined > RK x6+ > RK x3-4), then the lowest junk. hi_refined: use only refined
+    runs above hi_from."""
     o = old_load()
     rk1 = {k: r["Delta"] for k, r in o.items() if k < 17.2}
     rk2, hi, gam = {}, {}, {}
@@ -36,8 +39,11 @@ def step_converged(Dmin=8.0, hi_from=30.2, hi_junk=1.2e-15):
                     if r.get("js") or k not in rk1:
                         rk1[k] = r["Delta"]
             elif abs(xk - 0.7) < 1e-9 and rk >= 3 and r.get("js") and k > hi_from and r.get("junk", 1) <= hi_junk:
-                if k not in hi or r["junk"] < hi[k][1]:      # several runs per D: the one deepest in the junk valley
-                    hi[k] = (r["Delta"], r["junk"])
+                cls = 2 if r.get("rk_seg") else 1 if rk >= 6 else 0
+                if hi_refined and cls < 2:
+                    continue
+                if k not in hi or (cls, -r["junk"]) > (hi[k][2], -hi[k][1]):
+                    hi[k] = (r["Delta"], r["junk"], cls)
                     gam[k] = r.get("gamma")
     D, y, s, g = [], [], [], []
     for k in sorted(rk2):
