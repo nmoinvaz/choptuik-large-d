@@ -74,3 +74,9 @@ x5_31: let it run to its cap (29).
 
 Cloud: stopped its x_K 0.6 (past the radius) and x_K 0.7 RK x1 scans. Re-solving the fit set D = 7.7-17.3 at
 NE_RK = 2 (x_K 0.6) to see how much RK error the series fit carries; then refit.
+
+== 2026-10-19 01:05 PDT local
+Got T1-T3. T1 running now: x_K 0.7, kc 23, D = 29.326 from data/ne7_js_D29.3260.npy, NE_RK = 1, 2, 3, 4, 6 in
+parallel, committed ne_solver.py (clean worktree at 672af0a), it_max 20; a pass that stalls above 1e-15 is
+retried from where it stopped with h = 3e-3, then 1e-3. Then T2 (if it converges) and T3.
+x4_23 had four seeds (D = 23.04-23.80, strong 1.6-4.0e-8), not five as I wrote. x5_31 runs to its cap.
