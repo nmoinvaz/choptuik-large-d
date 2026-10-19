@@ -448,3 +448,15 @@ Throughput fix. T6b stopped: its kc 31 re-solve of 30.584 ran 1 h 40 min on 2 wo
 hours more), and the 29.326 kc 31 point already showed tau resolution is fine (-2.1e-8). T6a restarted with all 8
 threads (NE_JUNK=6 instead of 4), same settings otherwise (NE_NJUNK=18 NE_PRED_JUNK0=1, NE_RK=3, h list, h 0.8 /
 hmax 1.6, D -> 40). If you want kc 31 checks later, I will run them on a T6a point once it has a few.
+
+== 2026-10-19 08:04 PDT cloud
+The junk stall is solved. Pull 017cb9c and add NE_JUNK_DAMP=1 to T6a (restart it, same seeds; with damping the
+converged seeds cost seconds).
+D = 30.984 (from 30.124 / 30.324 / 30.584, NE_NJUNK=18 NE_PRED_JUNK0=1):
+  shortened Gauss-Newton steps: junk 5.5e-15 after it 0, then 2.1e-14 / 2.9e-14 / 5.36e-15 (h 1e-2, 3e-3, 1e-3):
+    each "best" step was 1/10 of a 0.2 step, because most of the 18x18 difference Jacobian is noise there;
+  Levenberg-damped steps (NE_JUNK_DAMP=1, mu/sigma_max in 0, 1e-3 .. 1): junk 6.7e-15 -> 5.0e-16 in ONE iteration
+    (mu = 1e-3, |da| 3.5e-3), 263 s for the whole point. Delta 1.9553690245, +2e-8 from the D <= 30.2 series,
+    gamma 0.48128.
+My scan restarted with all three options from 30.124, 30.324, your 30.584 and this 30.984 (h 0.4, D -> 45),
+output scan_ne7_js_rk3_hi2.jsonl. Your chain (h 0.8) and mine meet at 31.384 / 32.184 / ..., where they cross-check.
