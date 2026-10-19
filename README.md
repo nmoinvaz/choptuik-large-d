@@ -65,9 +65,31 @@ the series does not apply; use the computed values. The individual $c_k$ of one 
 are correlated); $\Delta_\infty$ is quoted as the range over all acceptable fits (variable $1/D$, $1/(D-1)$, $1/(D-2)$,
 degree 8–11, lower cut $D \ge 10$ or $12$, $\chi^2/\mathrm{dof} \le 1$): $1.64388$–$1.64403$.
 
-**Excluded limits.** $\pi^2/6 = 1.64493$ (forcing it raises $\chi^2/\mathrm{dof}$ from 0.6 to between 3.6 and 800),
-$2\pi/j_{1,1} = 1.63979$ and $\sqrt{e} = 1.64872$. Whether $\Delta_\infty$ has a closed form is open; four to five digits
-cannot decide it.
+**Candidate constants for $\Delta_\infty$.** Each candidate is forced as $c_0$ in 12 fits (variable $1/D$, $1/(D-1)$,
+$1/(D-2)$; degree 9 and 10; lower cut $D \ge 10$ or $12$). The table gives the fit quality, as $\chi^2/\mathrm{dof}$ of the
+best and the worst of the 12 (0.62 is the unconstrained fit), and the rms error on the held-out points at
+$D = 34$–$39.5$, which the fits never saw.
+
+| Candidate | Value | $\chi^2/\mathrm{dof}$ (best .. worst) | Held-out rms | Verdict |
+|---|---|---|---|---|
+| none (free fit) | $1.64395 \pm 0.00008$ | 0.62 .. 3.4 | $1.4\times10^{-6}$ | |
+| $\frac{5}{7}\sqrt{G}\, j_{0,1}$ | 1.6439747 | 0.62 .. 8.6 | $1.3\times10^{-6}$ | fits, contrived |
+| $\frac{7}{5}\,(\ln 2)^{-2}\,\pi^{-1/2}$ | 1.6440014 | 0.62 .. 18 | $1.2\times10^{-6}$ | fits, contrived |
+| $\frac{7}{2}\sqrt{\ln 2/\pi}$ | 1.6440152 | 0.62 .. 26 | $1.2\times10^{-6}$ | fits, contrived |
+| $\frac{9}{8}\sqrt{j_{2,1}/j_{0,1}}$ | 1.6440207 | 0.62 .. 30 | $1.2\times10^{-6}$ | fits, contrived |
+| $\frac{10}{9}\sqrt{j_{0,1}/\ln 3}$ | 1.6439063 | 0.62 .. 118 | $1.5\times10^{-6}$ | fits, contrived |
+| $\pi^2/6 = \zeta(2)$ | 1.6449341 | 3.6 .. 13000 | $1.9\times10^{-6}$ | excluded |
+| $2\pi/j_{1,1}$ | 1.6397878 | 67 .. $3\times10^{5}$ | $1.3\times10^{-5}$ | excluded |
+| $\sqrt{e}$ | 1.6487213 | 82 .. $3\times10^{5}$ | $1.3\times10^{-5}$ | excluded |
+| $\varphi = (1+\sqrt5)/2$ | 1.6180340 | 2500 .. $10^{7}$ | $7.7\times10^{-5}$ | excluded |
+
+$G$ is Catalan's constant and $j_{\nu,k}$ the $k$-th zero of the Bessel function $J_\nu$. The five that fit are all that a
+search finds in the window $1.64388$–$1.64403$ among products $r\, b_1^{p_1} b_2^{p_2}$ ($r = i/j$ with $i, j \le 12$;
+$p = \pm\tfrac12, \pm1, \pm2$; $b$ from $\pi$, $e$, $\sqrt2$, $\sqrt3$, $\ln 2$, $\ln 3$, Euler's $\gamma$, $\zeta(3)$, $\varphi$, $G$
+and the first Bessel zeros), $2\pi/(r b)$ and $r \ln b$. None has a reason to appear here, and inside the window the data
+cannot tell them apart: they move $\Delta(D)$ by less than $10^{-6}$ for $D \le 40$, below the precision of the held-out
+points. Forcing a constant can exclude it but not select it; identifying $\Delta_\infty$ would take about eight digits,
+from the $D \to \infty$ limit of the equations rather than from larger $D$.
 
 **Values.**
 
