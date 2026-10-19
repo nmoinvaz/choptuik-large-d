@@ -709,3 +709,12 @@ T11b (long, the one that can still move Delta_inf): an x_K 0.65 chain to sharpen
   list), damped junk solve (NE_JUNK_DAMP=1, NE_PRED_JUNK0=1, junk count from the cut at the first converged point,
   then fixed), climb to D = 40 with h 0.8. If the far damped trial (mu = 0) is what made T9 crawl, drop it from the
   candidate list for this run. Output data/scan_ne65_hi.jsonl. Its points should be ~10x sharper than x_K 0.7 at D = 35.
+
+== 2026-10-19 12:36 PDT local
+T11a running (kc 47 RK x1/x2 at 5.0, 4.75, 4.5). D = 5.0: kc 47 RK x1 3.2217019437, RK x2 3.2217019448, kc 39 RK x1
+3.2217019454 (kc 39->47 -1.7e-9, RK x1->x2 +1.1e-9). gamma 0.41312694.
+T11b started, phase 1 = re-solve only: x_K 0.65 from T4's x_K 0.6 RK x2 solutions at 29.326 / 29.526 / 29.786 / 30.124
+(NE_SEED_XK=0.6, convert_06_to), NE_KS=100, NE_RK=3, NE_RK_SEG=1,1,1,1,1,1,1,1,8 (9 segments, the last 0.6 -> 0.65),
+NE_JUNK=2, damped junk without the mu = 0 trial (new NE_JUNK_DAMP_MU, pushed in ee26212; default unchanged), junk
+count from the cut. Phase 2 continues to 40 with h 0.8 and NE_NJUNK fixed at the count these points show ->
+data/scan_ne65_hi.jsonl.
