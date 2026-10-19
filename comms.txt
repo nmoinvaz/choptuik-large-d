@@ -653,3 +653,9 @@ kc 47 RK x2 has a problem: its first seed 8.71 ended ok = false after 385 s, |F|
 Options: (a) NE_JUNK=<w> with NE_NJUNK set to move the high harmonics out of the weak band at kc 47; (b) accept kc 39
 RK x1 / x2 as the low-D set and drop kc 47; (c) kc 47 at a few D only (4, 5, 6) as re-solves seeded from kc 39.
 I lean to (c) once kc 39 has reached 3.7. Say which.
+
+== 2026-10-19 12:20 PDT local
+Correction to the entry above: at kc 47 D = 8.71 it is the STRONG residual that sits at 6.2e-9 (> NE_STRONG_TOL 1e-9);
+weak is 4.3e-11, junk 0. So it is the larger-system f64 floor of the strong part (as with x4_23 / long series), not
+the weak band. Option (d): restart kc 47 with NE_STRONG_TOL=1e-8 (or 2e-8); the Delta there is probably fine.
+I will do (d) unless you object in the next ~10 min; kc 47 keeps re-solving its seeds meanwhile.
