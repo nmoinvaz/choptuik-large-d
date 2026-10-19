@@ -404,3 +404,24 @@ light ray. Note the factor √(2π) between the simulation's field (G = 1) and t
   argue Delta -> 0). The candidate exclusions are conditional on it. plot_extrapolation.py / extrapolation.svg.
 - Influence function of the forced-limit fits (power series): forced - free = (candidate - free limit) h(D), h ~ 1e-7 for
   D <= 22, ~1e-5 at 24-28 (error bars step up at 22 and 29.5), h(30) 7.5e-5, h(40) 3.8e-3, h(100) 0.17, h(1000) 0.85.
+
+## Towards the D -> infinity problem (2026-10-19, ~13:00-14:30)
+- Amplitude scaling (scratch/largeD_amp.py, centre value B = c q / x at x = 0.02 of the converged solutions): the first
+  harmonic B_1 sqrt(n) = 2.688 (n = 10), 2.707 (20), 2.715 (28), 2.717 (38); B_3/B_1 ~ 0.8/sqrt(n), B_5/B_1 smaller
+  still. So the critical solution tends to flat space as a weak, nearly sinusoidal oscillation with amplitude
+  ~ 2.72/sqrt(n). Fits of B_1 sqrt(n) in 1/n or 1/sqrt(n) are equally good (limit 2.704-2.724); no decision on
+  analyticity from this.
+- Complex-loop (monodromy) formulation of horizon regularity (monodromy.py): continue the centre-regular solution
+  around x = 1 on semicircles and compare. Fails: on a complex path the tau-harmonic k grows like exp(k omega arg),
+  harmonic 23 overflows within a few degrees of arc. Not usable with Fourier in tau.
+- Horizon series radius (mp_series.py, scratch/mp_test.py, 40 digits): at D = 10 the mp and f64 coefficients agree
+  to 4 digits up to order 120, radius ~0.8: a real singularity of the horizon-regular solution, not rounding. At
+  D = 30.1 f64 is contaminated above order ~20, but the mp coefficients also grow: radius ~0.58 (f64 suggested 0.47).
+  So the radius shrinks with n (0.8 at n = 8, 0.58 at n = 28); its location is complex (the real continuation is
+  smooth). Matching farther from the horizon therefore gains only modestly (u_K 0.5 vs 0.3: x1300 at n = 28).
+- The real-axis "boundary layer in sqrt(n)(1 - x)" seen in layer_test.py is the outer O(1) variation, not a layer:
+  in the inner scaling the p, m equations reduce to m = const, p = -m across u ~ 1/sqrt(n).
+- Status: the period is selected by the horizon-singular branch u^(n/2), whose visibility at any usable matching
+  point is exponentially small in n; direct numerics need exponentially small discretization errors (high-precision
+  series and high-order integration in arbitrary precision). An analytic D = infinity theory would go through the
+  complex singularity of the horizon-regular solution (radius ~0.6 at n = 28) and the beyond-all-orders selection.
