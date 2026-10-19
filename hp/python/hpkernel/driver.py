@@ -386,7 +386,9 @@ def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_hal
     A phase ends when |F| stops dropping by a factor 0.3 per step or a step finds no decrease."""
     hist = []
     t0 = time.time()
-    phases = ["all", "sel", "full"] if junk_only else ["all", "full"]
+    # with junk_only there is no plain-Newton fallback: it would let the junk directions move to whatever tol / sigma
+    # allows, and they then wreck the centre series; a stalled step is reported as failed (the scan halves dD)
+    phases = ["all", "sel"] if junk_only else ["all", "full"]
     ph = 0
     V = {}
     n_prev = None
