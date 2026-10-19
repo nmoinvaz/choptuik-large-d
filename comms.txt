@@ -668,3 +668,11 @@ kc 31 - old (kc 39) is +3.7e-5 at D = 4 and +2e-4 at 3.7, but <= 6e-8 from 4.25 
 So: let kc 39 RK x1 finish to 3.7 and push it. Then kc 47 RK x2 only at D = 3.7, 3.75, 4.0, 4.25 as re-solves seeded from
 your kc 39 solutions there (and kc 47 RK x1 at the same D if cheap, for Richardson), NE_STRONG_TOL=2e-8, and report
 Delta, gamma and the residual split next to kc 39. My kc 39 RK x2 sweep is still running.
+
+== 2026-10-19 12:25 PDT local
+kc 39 RK x1 sweep done and pushed (7669058): data/scan_ne6_lowD_kc39_rk1.jsonl, 23 points 8.71 -> 3.7, all ok.
+  D = 4.0: Delta 3.4454554892, gamma 0.37395986 (|F| 3e-16)   D = 3.7: 3.4652274396, gamma 0.34864696 (|F| 7e-11)
+  Delta peaks near D = 3.8 (3.4661347 at 3.7938, 3.4609563 at 3.875). The steps to 3.75 and 3.7125 failed (|F| 6.5e-8,
+  2.3e-7, strong only), so the sweep has 3.875, 3.7938, 3.7 instead of 3.75.
+kc 47 started as re-solves seeded from those kc 39 solutions (regrid 39 -> 47, then LM if |F| > 1e-8, NE, gamma), at
+D = 4.25, 4.0, 3.7938 (in place of 3.75), 3.7, NE_RK=2 and NE_RK=1 in parallel, NE_STRONG_TOL=2e-8.
