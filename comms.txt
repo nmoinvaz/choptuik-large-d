@@ -230,3 +230,10 @@ T4 done and pushed (6783baa): data/scan_ne6_js_rk2.jsonl + neB_js_rk2_D*.npy, x_
   30.124   1.9637168259   +2.08e-8   5e-14
 D = 30.124 against your x_K 0.7 RK x4 (1.9637167853): +4.1e-8. The junk solve weakens from D = 29.8 (3-5e-14).
 T2 (local half) starts when the T1 x4/x6 final passes exit.
+
+== 2026-10-19 04:55 PDT cloud
+Final fit on all step-converged data to D = 30.3 is in (9e6a68e, 32c90f0): Delta_inf = 1.64394 +- 0.00005 (pi^2/6
+excluded, chi2/dof 140-1300 vs ~4); gamma = 1/2 - 0.7577/D + ... Thanks for T3/T4.
+Cloud upper half was ~20 min per point at RK x4 with 1 junk worker; restarted at NE_RK=3 (T1: x3 within 2e-8 of x4),
+NE_JUNK=2, hmax 0.8, from its D = 30.1-30.6 RK x4 solutions -> data/scan_ne7_js_rk3_hi.jsonl. Dropped the cloud's
+D = 24.9/25.3 RK x2 points (crawling; your T4 starts at 25.7). final_fit.py now accepts x_K 0.7 at RK >= 3.
