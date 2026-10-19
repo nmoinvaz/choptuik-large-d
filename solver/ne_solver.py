@@ -25,8 +25,11 @@ def _res(R, z, dd):
 
 
 def ne_solve(R, z, cut_strong=1e-10, cut_junk=3e-14, outer_max=25, inner_max=10, inner_tol=1e-15, tol_w=1e-15,
-             fix_delta=None, dd=True, verbose=False, basis=None):
-    """fix_delta: if a number, Delta is held at that value (its column removed before the SVD)."""
+             fix_delta=None, dd=True, verbose=False, basis=None, n_junk=None):
+    """fix_delta: if a number, Delta is held at that value (its column removed before the SVD).
+    n_junk: if given, the junk set is the n_junk smallest singular directions instead of s/s_max < cut_junk. Away from
+    the valley bottom (a continuation predictor) the junk singular values smear up past 3e-14 (D = 30.98: 6 of the 18
+    junk directions, which then sit in the weak set where the f64 Schur complement cannot resolve them)."""
     z = np.array(z, float)
     if fix_delta is not None:
         z[-1] = fix_delta
@@ -39,6 +42,8 @@ def ne_solve(R, z, cut_strong=1e-10, cut_junk=3e-14, outer_max=25, inner_max=10,
         U, s, Vt = basis
     r = s / s[0]
     Si, Wi = r >= cut_strong, (r < cut_strong) & (r >= cut_junk)
+    if n_junk is not None:
+        Wi = (r < cut_strong) & (np.arange(len(r)) < len(r) - n_junk)
     n = len(z) if fix_delta is None else len(z) - 1
     pad = np.zeros(U.shape[1] - len(s), bool)          # fixed Delta: one more equation than unknowns
     Us, Uw = U[:, np.r_[Si, pad]], U[:, np.r_[Wi, pad]]

@@ -10,6 +10,8 @@ env NE_SEED_MAX: re-solve only the seeds up to this D, then continue from those 
 env NE_JUNK_H: step of the junk solve's forward-difference Jacobian (default 1e-2; 1e-3 reaches the bottom of the flat
   valley at D ~ 29, where 1e-2 can stop 1e-7 short in Delta). A comma list (1e-2,3e-3,1e-3) is tried in turn.
 env NE_RK: multiply all RK4 step counts (x_K = 0.7 needs 4).
+env NE_NJUNK: the junk set is this many smallest singular directions, not s/s_max < 3e-14 (x_K 0.7 kc 23: 18). At a
+    continuation predictor the junk singular values smear above 3e-14 and the misfiled ones stall the junk solve.
 env NE_KS: horizon series terms (default 60; x_K = 0.5 needs ~120).
 env NE_SMOOTH=1: after each solve, fix the junk directions by smoothness (smooth_junk.py) and re-solve, until
   Delta changes by < 1e-10 (at most 8 rounds).
@@ -47,6 +49,7 @@ SMOOTH = os.environ.get("NE_SMOOTH", "0") == "1"
 if SMOOTH:
     OUTP = OUTP.replace("_D", "_sj_D")
 JUNK = int(os.environ.get("NE_JUNK", "0"))
+NJUNK = int(os.environ["NE_NJUNK"]) if os.environ.get("NE_NJUNK") else None   # fixed junk count (ne_solve n_junk)
 if JUNK:
     OUTP = OUTP.replace("_D", "_js_D")
 RK = int(os.environ.get("NE_RK", "1"))
@@ -122,14 +125,14 @@ def solve(D, z0, lam_guess, t0, src, Delta_old=None):
         z0 = convert_seed(z0, D)
     if np.linalg.norm(R(z0)) > 1e-8:           # predictor or old seed far off: damped LM first, then NE polishes
         z0, _, _, _ = dd_solve(R, z0, maxjac=12, use_dd=False, stall=3)
-    z, info = ne_solve(R, z0)
+    z, info = ne_solve(R, z0, n_junk=NJUNK)
     if SMOOTH:                                   # alternate until Delta stops moving (3-5 rounds at D = 23)
         for _ in range(8):
             d_prev = z[-1]
             z, _, _ = smooth_junk(R, S, z)
             if np.linalg.norm(R(z)) > 1e-8:      # the junk move is only linearly null: its 2nd-order residual
                 z, _, _, _ = dd_solve(R, z, maxjac=20, use_dd=False, stall=4, cut=3e-14)   # LM that leaves junk alone
-            z, info = ne_solve(R, z)
+            z, info = ne_solve(R, z, n_junk=NJUNK)
             if abs(z[-1] - d_prev) < 1e-10:
                 break
     h_ = info["hist"][-1]
@@ -137,7 +140,8 @@ def solve(D, z0, lam_guess, t0, src, Delta_old=None):
     if JUNK:
         from junk_solve import junk_solve
         Delta_ne = float(z[-1])
-        z, ji = junk_solve(D, z, NODES, KC, JUNK, Ks=KS, h=[float(x) for x in os.environ.get("NE_JUNK_H", "1e-2").split(",")])
+        z, ji = junk_solve(D, z, NODES, KC, JUNK, Ks=KS, h=[float(x) for x in os.environ.get("NE_JUNK_H", "1e-2").split(",")],
+                           n_junk=NJUNK)
         F, junk = ji["F"], ji["r"]
         js = dict(js=True, Delta_ne=Delta_ne, junk_ne=ji["r0"], n_junk=ji["n_junk"], junk_its=ji["its"])
     ok = h_[2] < 1e-12 and h_[1] < STRONG_TOL and F < 1e-7

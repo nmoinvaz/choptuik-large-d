@@ -16,11 +16,11 @@ CUT = 3e-14
 _W = {}
 
 
-def _setup(D, Delta, nodes, kc, Ks, basis, zb, Vj, Uj):
+def _setup(D, Delta, nodes, kc, Ks, basis, zb, Vj, Uj, n_junk=None):
     import fast; fast.install()
     from rust_solver import make
     S, R = make(D, Delta, nodes=nodes, threads=1, kc=kc, Ks=Ks)
-    _W.update(R=R, basis=basis, zb=zb, Vj=Vj, Uj=Uj)
+    _W.update(R=R, basis=basis, zb=zb, Vj=Vj, Uj=Uj, n_junk=n_junk)
 
 
 def _eval(a):
@@ -28,7 +28,7 @@ def _eval(a):
     from ne_solver import ne_solve
     R = _W["R"]
     try:
-        z, info = ne_solve(R, _W["zb"] + _W["Vj"].T @ a, basis=_W["basis"])
+        z, info = ne_solve(R, _W["zb"] + _W["Vj"].T @ a, basis=_W["basis"], n_junk=_W["n_junk"])
         h, l = R.residual_dd(z)
         r = _W["Uj"].T @ (h + l)
     except (ValueError, np.linalg.LinAlgError):     # a step far outside the valley: NaN in the inner solve
@@ -38,16 +38,19 @@ def _eval(a):
     return r, z, info
 
 
-def junk_solve(D, z0, nodes, kc=23, workers=None, h=1e-2, it_max=8, tol=1e-15, verbose=False, Ks=60):
+def junk_solve(D, z0, nodes, kc=23, workers=None, h=1e-2, it_max=8, tol=1e-15, verbose=False, Ks=60, n_junk=None):
     """Returns (z, info): info has r0 / r (junk residual before / after), F, its (iterations) and hist.
     h: the difference step, or several tried in turn, each from where the previous one stopped, until tol is met.
-    At D ~ 27 a step of 1e-3 can stall where 1e-2 converges; at D ~ 29 1e-2 stops short of the valley bottom."""
+    At D ~ 27 a step of 1e-3 can stall where 1e-2 converges; at D ~ 29 1e-2 stops short of the valley bottom.
+    n_junk: take the n_junk smallest singular directions as the junk set (see ne_solve) instead of s/s_max < CUT."""
     from rust_solver import make
     S, R = make(D, z0[-1], nodes=nodes, threads=2, kc=kc, Ks=Ks)
     _, J = R.jacobian(z0)
     U, s, Vt = np.linalg.svd(J)
     jm = s / s[0] < CUT
-    args = (D, z0[-1], nodes, kc, Ks, (U, s, Vt), z0, Vt[jm], U[:, jm])
+    if n_junk is not None:
+        jm = np.arange(len(s)) >= len(s) - n_junk
+    args = (D, z0[-1], nodes, kc, Ks, (U, s, Vt), z0, Vt[jm], U[:, jm], n_junk)
     _setup(*args)
     t0 = time.time()
     a = np.zeros(jm.sum())
