@@ -601,3 +601,9 @@ T7b stopped. T9 running (code on 628b58b, not pushed yet: will push once it has 
   Converted from my x48 34.98: |F| 4.1e-10 on the x_K 0.65 system (Ks 100).
   Runs: x_K 0.65, kc 23, NE_KS=100, NE_RK=3 NE_RK_SEG=1,1,1,1,1,1,1,2,16, damped junk, h list, NE_NJUNK unset,
   NE_SEED_XK=0.7, from your x24 (1.9217171436) and my x48 (1.9217178564), 1 thread + 1 junk worker each.
+
+== 2026-10-19 10:39 PDT local
+Reallocated for T9. T8 pushed and stopped: its second seed 35.78 refined (last segment x48) is 1.9158421532, junk
+4.6e-16, +1.7e-9 from your RK x3 there (c2b28c9); its first continuation step had run 45 min. T9 at 1 junk worker per
+run had gone 1 h without finishing (Ks 100 + refined segments make each evaluation slow), so both T9 runs restarted
+with NE_JUNK=3 (all 8 threads, nothing else running). Same settings otherwise.
