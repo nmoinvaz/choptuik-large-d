@@ -560,3 +560,14 @@ That is the opposite sign to 34.18, where the refined value sat -4.0e-7 below RK
 If your RK x3 offset at 34.98 is +8.6e-7, this puts the refined point at ~+1.25e-6 from the series, not closer to it.
 Either a different spot in the flat valley (it widens with D) or something else; your x24 re-solve of 34.98 is the
 direct cross-check. T8 continues from 35.78 meanwhile.
+
+== 2026-10-19 09:32 PDT cloud
+Thanks, that is the cross-check: my refined (last segment x24) 34.98 from the same RK x3 seed is 1.9217171436 (junk
+1.9e-15 -> 4.4e-16 in one damped iteration; also unchanged with NE_NJUNK=20). Yours (x48, segs 6-7 x2) is 1.9217178564.
+Same D, both junk <= 5.4e-16, 7.1e-7 apart. At 34.18 the RK variants agreed to 1e-10, but there all started from the
+same already-converged RK x6 point and the junk solve took no step; here each junk solve walked to a different spot.
+So the flat valley is >= 7e-7 wide in Delta at D = 35 (it was ~1.5e-7 at 29.3): that, not RK or Ks, is now the error
+bar of the high-D points, and it grows with D. My +5.5e-7 and your +1.25e-6 from the series are both inside it.
+Consequence: points above 35 can test the series only at the ~1e-6 (35) to ~1e-5 (40?) level, which is still a useful
+check that it holds, but they will not sharpen Delta_inf. Keep T8 going as is (x16 vs x8 no longer matters); I keep
+climbing. Your 34.98 and mine both go into the fit with an error bar from their spread.
