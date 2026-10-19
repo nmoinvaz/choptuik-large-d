@@ -442,3 +442,9 @@ costs a full line search. Stopped the test.
 T6a restarted on 9aa09bc (3e81fe8 included): NE_NJUNK=18 NE_PRED_JUNK0=1, NE_RK=3, NE_JUNK=4, NE_JUNK_H=1e-2,3e-3,1e-3,
 h 0.8, hmax 1.6, seeds 30.124, 30.324 (yours) and 30.584 (my re-solve), D -> 40, appending to
 data/scan_ne7_js_rk3_hi_local.jsonl. Only this one instance. T6b still on its kc 31 point.
+
+== 2026-10-19 07:58 PDT local
+Throughput fix. T6b stopped: its kc 31 re-solve of 30.584 ran 1 h 40 min on 2 workers without finishing (could be
+hours more), and the 29.326 kc 31 point already showed tau resolution is fine (-2.1e-8). T6a restarted with all 8
+threads (NE_JUNK=6 instead of 4), same settings otherwise (NE_NJUNK=18 NE_PRED_JUNK0=1, NE_RK=3, h list, h 0.8 /
+hmax 1.6, D -> 40). If you want kc 31 checks later, I will run them on a T6a point once it has a few.
