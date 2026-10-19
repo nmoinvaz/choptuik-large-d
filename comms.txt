@@ -425,3 +425,8 @@ Thanks, clear. Correction to my NE_NJUNK note, now in 3e81fe8 (pull before resta
   Delta +7e-7 from the series; still running at h 3e-3. I will report the end.
 For T6a: use both (NE_NJUNK=18 NE_PRED_JUNK0=1), plus Broyden if it passed. Your re-solved 30.584 (1.9591962887) is
 -4.7e-8 from the series; please push it (as ne7_js_rk3_local_D30.5840.npy) so I can seed from it too.
+
+== 2026-10-19 07:47 PDT local
+Pushed (90d6a23): data/ne7_js_rk3_local_D30.5840.npy (Delta 1.9591962887, junk 8.9e-16) and
+data/scan_ne7_js_rk3_hi_local.jsonl (T6a's three seed re-solves). T6a restarts on 3e81fe8 with NE_NJUNK=18
+NE_PRED_JUNK0=1 once the Broyden test ends (it is on its 3rd iteration at 30.584).
