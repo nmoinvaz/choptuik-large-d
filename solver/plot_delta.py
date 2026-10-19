@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Graph the echo period Delta(D) as an SVG.
+"""Graph the echo period Delta(D) and the critical exponent gamma(D) as an SVG.
 
-Three panels: Delta against D with the large-D fits, Delta against 1/sqrt(D-2) (D = infinity is the left
-edge, so the limit is the intercept), and the local power-law exponent -dlnDelta/dln(D-2). Points above
-PINNED_MAX are drawn hollow and shaded: the solver does not pin Delta there yet, and the fits ignore them.
+Three panels: Delta against D with the power series in 1/(D-2) and its limit, Delta against 1/(D-2) (D = infinity
+is the left edge, so the limit is the intercept), and gamma against 1/(D-2) with gamma_inf = 1/2. The series are
+fitted on D <= FIT_MAX, where the independent setups agree to ~1e-8; the points above are drawn hollow and are held
+out of every fit, so the graph shows how well the formula predicts them.
 
 Usage (from solver/data, where the scan files live):
     python3 ../plot_delta.py [-o ../delta.svg]
@@ -12,17 +13,17 @@ The SVG is written by hand in the style of zlib-ng/codecbench's graph scripts: f
 a light surface with a prefers-color-scheme dark override, 2px lines, ringed markers with hover tooltips.
 """
 import argparse
+import json
 import math
 import os
 import sys
 
 import numpy as np
-from scipy.optimize import least_squares
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from data_best import load  # noqa: E402
+from data_ne import load  # noqa: E402
 
-PINNED_MAX = 25.5   # above this the profile test shows Delta is not pinned by the current solver
+FIT_MAX = 25.5      # setups agree to ~1e-8 below this; points above are held out of the fits
 
 SURFACE = "#fcfcfb"
 INK = "#0b0b0b"
@@ -174,110 +175,140 @@ class Panel:
         self.kx = x + 6.0 * len(label) + 18
 
 
+def series_fit(x, y, w, m, c0=None):
+    """Weighted polynomial in x of degree m; c0 fixed if given. Returns coefficients c0..cm."""
+    A = np.vander(x, m + 1, increasing=True)
+    if c0 is None:
+        c, *_ = np.linalg.lstsq(A * w[:, None], y * w, rcond=None)
+        return c
+    c, *_ = np.linalg.lstsq(A[:, 1:] * w[:, None], (y - c0) * w, rcond=None)
+    return np.r_[c0, c]
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("-o", "--output", default="../delta.svg")
     args = ap.parse_args()
 
-    rows = load()
-    Dall = np.array(sorted(d for d in rows if d >= 3.69))
-    yall = np.array([rows[d]["Delta"] for d in Dall])
-    rel = Dall <= PINNED_MAX
-    D, y = Dall[rel], yall[rel]
-    n = D - 2
+    # Points: below FIT_MAX the setups agree to ~1e-8 (x_K 0.4 / 0.5 / 0.6, kc 23 / 31); above it, the strongly
+    # selecting smoothed scans, held out of every fit.
+    base = load()
+    Dfit = np.array(sorted(d for d in base if 3.69 <= d <= FIT_MAX))
+    yfit = np.array([base[d]["Delta"] for d in Dfit])
+    hold = {}
+    for setup in (dict(xK=0.6, kc=31, smooth=True), dict(xK=0.5, smooth=True), dict(xK=0.4, smooth=True)):
+        for k, r in load(**setup).items():
+            if k > FIT_MAX and r["src"] == "ne":
+                hold.setdefault(k, r)
+    Dh = np.array(sorted(hold)); yh = np.array([hold[k]["Delta"] for k in Dh])
 
-    # Fits on the pinned points only
-    m8 = D >= 8
-    A8 = np.stack([np.ones(m8.sum())] + [n[m8] ** -p for p in (1, 1.5, 2)], 1)
-    cL, *_ = np.linalg.lstsq(A8, y[m8], rcond=None)
-    def fL(nn):
-        return cL[0] + cL[1] / nn + cL[2] * nn ** -1.5 + cL[3] / nn ** 2
-    m10 = D >= 10
-    def f2(p, nn):
-        return p[0] + p[1] * nn ** -p[2] * (1 + p[3] / nn)
-    p2 = least_squares(lambda p: f2(p, n[m10]) - y[m10], [1.5, 2, 0.5, 0]).x
+    # Delta: power series in 1/(D-2), degree 9, fitted on 8 <= D <= FIT_MAX (errors 1e-8 below 17.2, 3e-8 above)
+    m8 = Dfit >= 8
+    w = np.where(Dfit[m8] < 17.2, 1e8, 1 / 3e-8)
+    cD = series_fit(1 / (Dfit[m8] - 2), yfit[m8], w, 9)
+    fD = lambda d: np.polyval(cD[::-1], 1 / (np.asarray(d) - 2))
+    hold_err = np.abs(fD(Dh) - yh).max() if len(Dh) else np.nan
 
-    fitL = (f"Δ∞ + a/(D−2) + b/(D−2)^1.5 + c/(D−2)², Δ∞ = {cL[0]:.4f}, "
-            f"a = {cL[1]:.3f}, b = {cL[2]:.3f}, c = {cL[3]:.3f} (D ≥ 8)")
-    fit2 = f"L + A(D−2)^−α (1 + b/(D−2)), L = {p2[0]:.4f}, A = {p2[1]:.3f}, α = {p2[2]:.3f}, b = {p2[3]:.3f} (D ≥ 10)"
+    # gamma: Rust mode-matrix values below 17.2, NE above; series with gamma_inf = 1/2
+    graw = {k: r["gamma"] for k, r in base.items() if r.get("gamma") and 3.69 <= k < 17.2}
+    try:
+        for l in open("gamma_rust.jsonl"):
+            r = json.loads(l)
+            if r.get("gamma") and 3.69 <= r["D"] < 17.2:
+                graw[round(r["D"], 4)] = r["gamma"]
+    except OSError:
+        pass
+    for k, r in base.items():
+        if 17.2 <= k <= FIT_MAX and r.get("gamma"):
+            graw[k] = r["gamma"]
+    Dg = np.array(sorted(graw)); g = np.array([graw[k] for k in Dg])
+    gh = {k: r["gamma"] for k, r in hold.items() if r.get("gamma")}
+    Dgh = np.array(sorted(gh)); ggh = np.array([gh[k] for k in Dgh])
+    mg = Dg >= 8
+    cG = series_fit(1 / (Dg[mg] - 2), g[mg], np.ones(mg.sum()), 9, c0=0.5)
+    fG = lambda d: np.polyval(cG[::-1], 1 / (np.asarray(d) - 2))
+
+    fitD = "Δ = " + " ".join(f"{c:+.4g}/(D−2)^{k}" if k else f"{c:.5f}" for k, c in enumerate(cD[:5])) + " … (degree 9, fit 8 ≤ D ≤ %g)" % FIT_MAX
+    fitG = "γ = 1/2 " + " ".join(f"{c:+.4g}/(D−2)^{k}" for k, c in enumerate(cG[:5]) if k) + " … (degree 9, fit 8 ≤ D ≤ %g)" % FIT_MAX
+    zeta2 = np.pi ** 2 / 6
 
     width = 1080
     svg = Svg(width)
-    svg.text(16, 28, "Choptuik echo period Δ(D) of massless scalar critical collapse", size=15, fill=INK, weight="bold")
-    svg.text(16, 48, f"{len(Dall)} computed solutions, D = {Dall.min():.1f} to {Dall.max():.1f}; "
-                     f"the {rel.sum()} pinned points (D ≤ {PINNED_MAX:g}) carry the fits, hollow points are not pinned yet",
+    svg.text(16, 28, "Choptuik echo period Δ(D) and critical exponent γ(D) of massless scalar collapse", size=15, fill=INK, weight="bold")
+    svg.text(16, 48, f"Power series in 1/(D−2) fitted on D ≤ {FIT_MAX:g} ({len(Dfit)} points); "
+                     f"the {len(Dh)} hollow points above D = {FIT_MAX:g} are held out and match it to {hold_err:.0e}",
              size=12)
 
     # Panel A: Delta against D, full width
-    A = Panel(svg, 78, 120, 984, 300, (3, 60), (1.2, 3.6),
-              "Δ levels off at a finite value instead of falling to zero",
+    A = Panel(svg, 78, 120, 984, 300, (3, 60), (1.4, 3.6),
+              f"Δ levels off at Δ∞ ≈ {cD[0]:.4f} instead of falling to zero",
               "spacetime dimension D", "echo period Δ")
-    A.band(PINNED_MAX, Dall.max() + 0.3, "not pinned")
+    if len(Dh):
+        A.band(FIT_MAX, Dh.max() + 0.3, "held out")
+    svg.line(A.sx(3), A.sy(cD[0]), A.sx(60), A.sy(cD[0]), SERIES[1], width=1, opacity=0.6)
+    svg.line(A.sx(3), A.sy(zeta2), A.sx(60), A.sy(zeta2), NEUTRAL, width=1, dash="2 3")
     DD = np.linspace(8, 60, 400)
-    svg.line(A.sx(3), A.sy(cL[0]), A.sx(60), A.sy(cL[0]), SERIES[1], width=1, opacity=0.5)
-    A.curve(DD, fL(DD - 2), SERIES[1], dash="6 4", title=fitL)
-    D2 = np.linspace(10, 60, 400)
-    A.curve(D2, f2(p2, D2 - 2), SERIES[2], dash="6 4", title=fit2)
-    D3 = np.linspace(3, 60, 400)
-    A.curve(D3, 4.24 * (D3 - 2) ** -0.25, NEUTRAL, dash="2 3", width=1.5, title="old crossover law 4.24 (D−2)^−1/4")
-    for d, v, ok in zip(Dall, yall, rel):
-        marker(svg, A.sx(d), A.sy(v), SERIES[0], f"D = {d:.4f}, Δ = {v:.10f}" + ("" if ok else " (not pinned)"), hollow=not ok)
-    svg.text(A.sx(34), A.sy(cL[0]) + 16, f"Δ∞ ≈ {cL[0]:.3f}  (fit limit)", size=11, fill=INK)
-    A.key("dot", SERIES[0], "computed, pinned")
-    A.key("hollow", SERIES[0], "computed, not pinned")
-    A.key("line", SERIES[1], "Δ∞ + a/(D−2) + b/(D−2)^1.5 + c/(D−2)²", dash="6 4")
-    A.key("line", SERIES[2], "L + A(D−2)^−α(1 + b/(D−2))", dash="6 4")
-    A.key("line", NEUTRAL, "old law 4.24 (D−2)^−1/4", dash="2 3")
+    A.curve(DD, fD(DD), SERIES[1], dash="6 4", title=fitD)
+    for d, v in zip(Dfit, yfit):
+        marker(svg, A.sx(d), A.sy(v), SERIES[0], f"D = {d:.4f}, Δ = {v:.10f}")
+    for d, v in zip(Dh, yh):
+        marker(svg, A.sx(d), A.sy(v), SERIES[0], f"D = {d:.4f}, Δ = {v:.10f} (held out; series {fD(d) - v:+.1e})", hollow=True)
+    svg.text(A.sx(44), A.sy(cD[0]) + 16, f"Δ∞ ≈ {cD[0]:.4f}  (series limit)", size=11, fill=INK)
+    svg.text(A.sx(44), A.sy(zeta2) - 8, f"π²/6 = {zeta2:.4f}", size=10)
+    A.key("dot", SERIES[0], "computed, in the fit")
+    A.key("hollow", SERIES[0], "computed, held out")
+    A.key("line", SERIES[1], "power series in 1/(D−2), extended to D = 60", dash="6 4")
+    A.key("line", NEUTRAL, "π²/6 for reference", dash="2 3")
 
-    # Panel B: Delta against 1/sqrt(D-2), D = infinity at the left edge
-    B = Panel(svg, 78, 540, 452, 280, (0, 0.8), (1.4, 3.6),
-              "Against 1/√(D−2) the curve runs into a finite intercept",
-              "1/√(D−2)   (D = ∞ at the left edge)", "echo period Δ", xfmt="{:.2f}")
-    B.band((Dall.max() - 2) ** -0.5 - 0.004, (PINNED_MAX - 2) ** -0.5)
-    X = np.linspace(1e-3, 0.41, 300)
-    B.curve(np.r_[0, X], np.r_[cL[0], fL(X ** -2)], SERIES[1], dash="6 4", title=fitL)
-    for d, v, ok in zip(Dall, yall, rel):
-        marker(svg, B.sx((d - 2) ** -0.5), B.sy(v), SERIES[0], f"D = {d:.4f}, Δ = {v:.10f}" + ("" if ok else " (not pinned)"),
-               hollow=not ok, r=3.8)
-    marker(svg, B.sx(0), B.sy(cL[0]), SERIES[1], f"D = ∞: Δ∞ = {cL[0]:.4f} (fit)", shape="diamond")
-    svg.text(B.sx(0) + 12, B.sy(cL[0]) + 18, f"D = ∞:  Δ∞ ≈ {cL[0]:.3f}", size=11, fill=INK)
-    for d in (4, 6, 10, 18):
-        xv = (d - 2) ** -0.5
-        yv = np.interp(xv, (n ** -0.5)[::-1], y[::-1])
-        svg.text(B.sx(xv) + 6, B.sy(yv) + 16, f"D={d}", size=10)
-    B.key("dot", SERIES[0], "computed, pinned")
-    B.key("hollow", SERIES[0], "not pinned")
-    B.key("line", SERIES[1], "fit (D ≥ 8) extended to D = ∞", dash="6 4")
+    # Panel B: Delta against 1/(D-2), D = infinity at the left edge
+    B = Panel(svg, 78, 540, 452, 280, (0, 0.6), (1.4, 3.6),
+              "Against 1/(D−2), Δ runs into a finite intercept",
+              "1/(D−2)   (D = ∞ at the left edge)", "echo period Δ", xfmt="{:.1f}")
+    X = np.linspace(0, 1 / 6, 300)
+    B.curve(X, np.polyval(cD[::-1], X), SERIES[1], dash="6 4", title=fitD)
+    for d, v in zip(Dfit, yfit):
+        marker(svg, B.sx(1 / (d - 2)), B.sy(v), SERIES[0], f"D = {d:.4f}, Δ = {v:.10f}", r=3.8)
+    for d, v in zip(Dh, yh):
+        marker(svg, B.sx(1 / (d - 2)), B.sy(v), SERIES[0], f"D = {d:.4f}, Δ = {v:.10f} (held out)", hollow=True, r=3.8)
+    marker(svg, B.sx(0), B.sy(cD[0]), SERIES[1], f"D = ∞: Δ∞ = {cD[0]:.5f} (series)", shape="diamond")
+    svg.text(B.sx(0) + 12, B.sy(cD[0]) + 18, f"D = ∞:  Δ∞ ≈ {cD[0]:.4f}", size=11, fill=INK)
+    for d in (4, 6, 10, 20):
+        svg.text(B.sx(1 / (d - 2)) + 6, B.sy(np.interp(1 / (d - 2), (1 / (Dfit - 2))[::-1], yfit[::-1])) + 16, f"D={d}", size=10)
+    B.key("dot", SERIES[0], "in the fit")
+    B.key("hollow", SERIES[0], "held out")
+    B.key("line", SERIES[1], "series, D ≥ 8", dash="6 4")
 
-    # Panel C: local exponent
-    nall = Dall - 2
-    q = -np.gradient(np.log(yall), np.log(nall))
-    C = Panel(svg, 610, 540, 452, 280, (3, 32), (0.1, 0.3),
-              "Local exponent −d ln Δ / d ln(D−2) peaks near D ≈ 7, then falls",
-              "spacetime dimension D", "local exponent", yfmt="{:.2f}")
-    C.band(PINNED_MAX, 32, "not pinned")
-    C.curve([3, 32], [0.25, 0.25], NEUTRAL, dash="2 3", width=1.5, title="1/4, the old crossover law")
-    svg.text(C.sx(31.5), C.sy(0.25) - 6, "¼ (old law)", size=10, anchor="end")
-    C.curve(Dall[rel], q[rel], SERIES[0], width=2, opacity=0.65)
-    for d, v, ok in zip(Dall, q, rel):
-        if C.inside(d, v):
-            marker(svg, C.sx(d), C.sy(v), SERIES[0], f"D = {d:.4f}, exponent {v:.4f}" + ("" if ok else " (not pinned)"),
-                   hollow=not ok, r=3.5)
-    C.key("dot", SERIES[0], "pinned")
-    C.key("hollow", SERIES[0], "not pinned")
-    C.key("line", NEUTRAL, "¼", dash="2 3")
+    # Panel C: gamma against 1/(D-2)
+    C = Panel(svg, 610, 540, 452, 280, (0, 0.6), (0.36, 0.52),
+              "γ runs into 1/2 as D → ∞",
+              "1/(D−2)   (D = ∞ at the left edge)", "critical exponent γ", xfmt="{:.1f}", yfmt="{:.2f}")
+    C.curve([0, 0.6], [0.5, 0.5], NEUTRAL, dash="2 3", width=1.5, title="1/2")
+    C.curve(X, np.polyval(cG[::-1], X), SERIES[1], dash="6 4", title=fitG)
+    for d, v in zip(Dg, g):
+        if C.inside(1 / (d - 2), v):
+            marker(svg, C.sx(1 / (d - 2)), C.sy(v), SERIES[0], f"D = {d:.4f}, γ = {v:.10f}", r=3.8)
+    for d, v in zip(Dgh, ggh):
+        marker(svg, C.sx(1 / (d - 2)), C.sy(v), SERIES[0], f"D = {d:.4f}, γ = {v:.10f} (held out; series {fG(d) - v:+.1e})", hollow=True, r=3.8)
+    marker(svg, C.sx(0), C.sy(0.5), SERIES[1], "D = ∞: γ = 1/2", shape="diamond")
+    svg.text(C.sx(0) + 12, C.sy(0.5) + 18, "D = ∞:  γ = 1/2", size=11, fill=INK)
+    for d in (4, 6, 10):
+        if 1 / (d - 2) <= 0.6 and Dg.min() <= d:
+            svg.text(C.sx(1 / (d - 2)) + 6, C.sy(np.interp(1 / (d - 2), (1 / (Dg - 2))[::-1], g[::-1])) + 16, f"D={d}", size=10)
+    C.key("dot", SERIES[0], "in the fit")
+    C.key("hollow", SERIES[0], "held out")
+    C.key("line", SERIES[1], "series with γ∞ = 1/2", dash="6 4")
 
     # Footnote and repository link
     height = 540 + 280 + 80
-    svg.text(16, height - 12, "Δ from spectral multiple shooting (solver/README.md); "
+    svg.text(16, height - 12, "Spectral multiple shooting with nonlinear elimination (solver/CONTEXT.md); "
                               "hover a point for its value, a curve for its coefficients", size=10)
     svg.add(f'<a href="{REPO_URL}"><text x="{width - 16}" y="{height - 12}" font-size="10" fill="{INK_SOFT}" '
             f'text-anchor="end" text-decoration="underline">{esc(REPO_URL.removeprefix("https://"))}</text></a>')
     with open(args.output, "w") as f:
         f.write(svg.finish(height))
-    print(f"wrote {args.output}: {len(Dall)} points, {rel.sum()} pinned")
-    print(f"fit 1: {fitL}")
-    print(f"fit 2: {fit2}")
+    print(f"wrote {args.output}: {len(Dfit)} fitted + {len(Dh)} held-out points (max series error {hold_err:.1e})")
+    print(fitD)
+    print(fitG)
 
 
 if __name__ == "__main__":

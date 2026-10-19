@@ -2,12 +2,12 @@
 
 Rust port of the multiple-shooting residual `F(z)` used to compute Choptuik's discretely self-similar critical solution in D = n + 2 dimensions. It covers the centre series, the RK4 shooting segments and the horizon series on a 941-unknown spectral layout, and is called from Python through PyO3 as a drop-in for `S.residual`.
 
-![Echo period Δ(D): computed values, large-D fits, and the local exponent](solver/delta.svg)
+![Echo period Δ(D) and critical exponent γ(D) with their power series in 1/(D−2)](solver/delta.svg)
 
-The echo period Δ(D) computed with this kernel and the solver in [`solver/`](solver/). Points up to D ≈ 25.5
-are pinned and carry the fits; the hollow points above are not pinned yet (see
-[`solver/README.md`](solver/README.md#how-well-δ-is-determined)). Regenerate with
-`cd solver/data && python3 ../plot_delta.py`.
+The echo period Δ(D) and critical exponent γ(D), computed with this kernel and the solver in [`solver/`](solver/).
+Both are fitted as power series in 1/(D−2) on D ≤ 25.5, where independent setups agree to ~1e-8; the hollow points
+above are held out of the fits and match the series to ~3e-7. Δ → Δ∞ ≈ 1.6441 and γ → 1/2 as D → ∞ (see
+[`solver/CONTEXT.md`](solver/CONTEXT.md)). Regenerate with `cd solver/data && python3 ../plot_delta.py`.
 
 ## Backends
 
