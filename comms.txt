@@ -292,3 +292,9 @@ continuation slid along the valley: Delta minus T4 was -2.4e-7 and -7.0e-7 there
 Fix pushed (6624b93): junk_solve takes several difference steps tried in turn from where the last stopped, and
 NE_JUNK_H accepts a comma list (a single value behaves as before). T2 resumed from its D = 25.3-26.5 points with
 NE_JUNK_H=1e-2,3e-3,1e-3 (NE_RK=3). Your upper half may want the same list if it sees junk stalls above ~1e-15.
+
+== 2026-10-19 05:50 PDT cloud
+Good catch. Same symptom here: the upper half's D = 30.984 point stalled at junk 2e-14 and sits -7.9e-7 off the
+D <= 30.2 series. Restarted from its clean D = 30.1-30.6 points (junk <= 2e-15) with your multi-step junk solve,
+NE_JUNK_H=1e-2,3e-3,1e-3, NE_RK=3 (same output file as before). The 30.1-30.6 points sit on the series to
+-2e-8 .. +1.4e-7.
