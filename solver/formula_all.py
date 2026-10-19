@@ -74,3 +74,37 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+def _tex(v):
+    if v == 0.5:
+        return "$+0.5$ (fixed)"
+    e = int(np.floor(np.log10(abs(v))))
+    if e in (0,):
+        return f"${v:+.10f}$"
+    return f"${v / 10 ** e:+.10f} \\times 10^{{{e}}}$"
+
+
+def readme_tables():
+    """The README coefficient table and values table for the current fit (markdown)."""
+    pd, qd = fit_delta()
+    pg, qg = fit_gamma()
+    rows = ["| $k$ | $a_k$ ($\\Delta$, numerator) | $b_k$ ($\\Delta$, denominator) | $e_k$ ($\\gamma$, numerator) | "
+            "$f_k$ ($\\gamma$, denominator) |", "|---|---|---|---|---|"]
+    for k in range(max(len(pd), len(pg))):
+        a = _tex(pd[k]) if k < len(pd) else ""
+        b = "$1$" if k == 0 else (_tex(qd[k - 1]) if k - 1 < len(qd) else "")
+        e = _tex(pg[k]) if k < len(pg) else ""
+        f = "$1$" if k == 0 else (_tex(qg[k - 1]) if k - 1 < len(qg) else "")
+        rows.append(f"| {k} | {a} | {b} | {e} | {f} |")
+    print("\n".join(rows))
+    print()
+    vals = ["| $D$ | $\\Delta$ | $\\gamma$ |", "|---|---|---|"]
+    for d, nd in ((4, 7), (5, 7), (6, 7), (7, 7), (8, 7), (10, 7), (12, 7), (15, 7), (20, 7), (30, 7), (40, 6), (50, 5),
+                  (100, 5), (1000, 4)):
+        vals.append(f"| {d} | {rat(pd, qd, 1 / (d - 2)):.{nd}f} | {rat(pg, qg, 1 / (d - 2)):.{nd}f} |")
+    vals.append("| $\\infty$ | $1.64395 \\pm 0.00008$ | $1/2$ |")
+    print("\n".join(vals))
+    print("\nlimit a0 =", f"{pd[0]:.6f}", " poles:", [round(2 + 1 / r.real, 2) for r in np.roots(np.r_[1, qd][::-1])],
+          [round(2 + 1 / r.real, 2) for r in np.roots(np.r_[1, qg][::-1])],
+          " leading: Delta", f"{pd[1] - pd[0] * qd[0]:.3f}/n, gamma", f"{pg[1] - qg[0] / 2:.4f}/n")

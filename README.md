@@ -25,14 +25,15 @@ $$
 
 | $k$ | $a_k$ ($\Delta$, numerator) | $b_k$ ($\Delta$, denominator) | $e_k$ ($\gamma$, numerator) | $f_k$ ($\gamma$, denominator) |
 |---|---|---|---|---|
-| 0 | $+1.6439519063$ | $1$ | $+0.5$ (fixed) | $1$ |
-| 1 | $+3.5069301084 \times 10^{1}$ | $+1.5025785698 \times 10^{1}$ | $+1.7944916810 \times 10^{1}$ | $+3.7406242929 \times 10^{1}$ |
-| 2 | $+1.7536334247 \times 10^{2}$ | $+4.1533174318 \times 10^{1}$ | $+1.5041854797 \times 10^{2}$ | $+3.3804150415 \times 10^{2}$ |
-| 3 | $+7.9431044608 \times 10^{1}$ | | $-5.1656087202 \times 10^{1}$ | |
-| 4 | $-1.2548697786 \times 10^{2}$ | | $+9.7434722283$ | |
-| 5 | $+2.7375300047$ | | $-9.7142684561 \times 10^{1}$ | |
-| 6 | $+1.7288857327 \times 10^{1}$ | | $+7.3735473943 \times 10^{1}$ | |
-| 7 | $-4.5448735894 \times 10^{1}$ | | $-4.7840451081 \times 10^{1}$ | |
+| 0 | $+1.6438975180$ | $1$ | $+0.5$ (fixed) | $1$ |
+| 1 | $+4.0378045077 \times 10^{1}$ | $+1.8251453626 \times 10^{1}$ | $+1.8083629635 \times 10^{1}$ | $+3.7683686025 \times 10^{1}$ |
+| 2 | $+2.5233285989 \times 10^{2}$ | $+6.8182050167 \times 10^{1}$ | $+1.5241588758 \times 10^{2}$ | $+3.4245505235 \times 10^{2}$ |
+| 3 | $+2.0673502321 \times 10^{2}$ |  | $-5.2341588541 \times 10^{1}$ |  |
+| 4 | $-3.5709850575 \times 10^{2}$ |  | $+9.9259594505$ |  |
+| 5 | $+3.1347320996 \times 10^{2}$ |  | $-9.8386450353 \times 10^{1}$ |  |
+| 6 | $-4.1891374574 \times 10^{2}$ |  | $+7.4529506074 \times 10^{1}$ |  |
+| 7 | $+3.2695252782 \times 10^{2}$ |  | $-4.8272358903 \times 10^{1}$ |  |
+| 8 | $-1.6050467699 \times 10^{2}$ |  |  |  |
 
 Ten numbers for $\Delta$ and nine for $\gamma$, with no singularity at any physical $D$ (the denominators vanish only at
 $D = -1.65, -9.37$ and $D = -13.3, -20.1$). They are the smallest rational forms that reproduce every computed point
@@ -40,10 +41,10 @@ within its own precision (`solver/rational_fit.py`, `solver/formula_all.py`), fi
 
 | $D$ | $\Delta$: formula − computed | precision of the points | $\gamma$: formula − computed | precision of the points |
 |---|---|---|---|---|
-| 4 – 4.3 | $1.6\times10^{-6}$ | $3\times10^{-6}$ | $3.9\times10^{-7}$ | $5\times10^{-7}$ |
-| 4.3 – 5 | $4\times10^{-8}$ | $2\times10^{-7}$ | $4\times10^{-8}$ | $7\times10^{-8}$ |
-| 5 – 30 | $\le 5\times10^{-8}$ | $3\times10^{-11}$ – $3\times10^{-8}$ | $\le 4.5\times10^{-9}$ | $\sim 10^{-9}$ |
-| 34 – 40, never seen by the fit | $\le 1.3\times10^{-6}$ | $1$ – $3\times10^{-6}$ | $\le 5\times10^{-7}$ up to $D = 35.8$ | |
+| 4 – 4.3 | $5\times10^{-10}$ | $3\times10^{-7}$ | $3.4\times10^{-7}$ | $5\times10^{-7}$ |
+| 4.3 – 20 | $\le 4\times10^{-9}$ | $3\times10^{-11}$ – $4\times10^{-9}$ | $\le 3.3\times10^{-8}$ | $\le 7\times10^{-8}$ |
+| 20 – 30 | $\le 1\times10^{-8}$ | $\le 3\times10^{-8}$ | $\le 2.3\times10^{-9}$ | $\sim 10^{-9}$ |
+| 34 – 40, never seen by the fit | $\le 2.1\times10^{-6}$ | $1$ – $3\times10^{-6}$ | $\le 5\times10^{-7}$ up to $D = 35.8$ | |
 
 Near $D = 4$ the points themselves are the limit: there the solution needs many Fourier modes in time, and the
 values move by $-4.3\times10^{-4}$ and $-3.4\times10^{-5}$ from 23 to 31 to 39 modes. Above $D \approx 36$ the computed
@@ -75,20 +76,20 @@ The coefficients of one fit are not physical constants (they are correlated); on
 
 | $D$ | $\Delta$ | $\gamma$ |
 |---|---|---|
-| 4 | 3.445457 (±3e-6) | 0.373960 (±5e-7) |
+| 4 | 3.4454524 | 0.3739610 |
 | 5 | 3.2217019 | 0.4131269 |
-| 6 | 3.0094833 | 0.4300795 |
+| 6 | 3.0094832 | 0.4300795 |
 | 7 | 2.8427532 | 0.4399912 |
-| 8 | 2.7117900 | 0.4467164 |
-| 10 | 2.5210790 | 0.4555879 |
+| 8 | 2.7117901 | 0.4467164 |
+| 10 | 2.5210789 | 0.4555879 |
 | 12 | 2.3891886 | 0.4614056 |
 | 15 | 2.2530984 | 0.4673656 |
 | 20 | 2.1120802 | 0.4737107 |
 | 30 | 1.9649579 | 0.4807927 |
-| 40 | 1.888569 | 0.484776 |
+| 40 | 1.888568 | 0.484776 |
 | 50 | 1.84166 | 0.48736 |
-| 100 | 1.74504 | 0.49313 |
-| 1000 | 1.6543 | 0.4992 |
+| 100 | 1.74503 | 0.49313 |
+| 1000 | 1.6542 | 0.4992 |
 | $\infty$ | $1.64395 \pm 0.00008$ | $1/2$ |
 
 Up to $D = 40$ these are within the precision of the computed points; above $D = 40$ they are extrapolations.

@@ -45,8 +45,8 @@ One rational formula for all D >= 4 (README "The formula", `formula_all.py`), x 
 
 fitted on every computed point 4 <= D <= 30.2 (`data_all.load_all`: kc 39 + Richardson below D = 8, step-converged
 above; kc 47 extrapolated in the mode count at D <= 4.25), within the precision of the points everywhere (Delta
-<= 2e-8 on 4-30, gamma <= 3e-9 on 5-30) and predicting the held-out D = 34-40 points to 1.9e-6. Delta(4) = 3.4454524,
-gamma(4) = 0.3739610. **Delta_inf = 1.64395 +- 0.00008** (this formula: 1.643912), omega_inf = 3.8220,
+<= 1e-8 on 4-30, gamma <= 3e-8 on 4.3-30) and predicting the held-out D = 34-40 points to 1.9e-6. Delta(4) = 3.4454524,
+gamma(4) = 0.3739610. **Delta_inf = 1.64395 +- 0.00008** (this formula: 1.643898), omega_inf = 3.8220,
 gamma = 1/2 - 0.758/n + ... The 1/D power series (degree 10, D >= 10, `formula.py`) is kept as the earlier form.
 pi^2/6, 2 pi/j11, sqrt(e), phi are excluded; five contrived forms fit inside the window (README table, candidates.svg).
 
