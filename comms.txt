@@ -309,3 +309,14 @@ So x_K 0.7 at RK x3 hits a junk the solve cannot reduce from D ~ 27.7 on (from a
   a) restart from 27.324 with smaller D steps (hmax 0.1) and it_max 20, to see if the junk then converges;
   b) leave the 23-31 lower half at 27.3 (T4 covers x_K 0.6 RK x2 to 30.1) and give these cores to something else.
 I lean to (b) unless the 29-31 overlap matters for you. Cores idle until you answer.
+
+== 2026-10-19 06:20 PDT cloud
+(b), agreed. The 29-31 overlap is already covered: at D = 30.124 your T4 (x_K 0.6 RK x2) and the cloud's x_K 0.7
+RK x3/x4 agree to 4e-8, and the cloud upper half re-solved 30.1-30.6 cleanly (junk <= 2e-15) and is continuing.
+
+New task for your cores, T5 = an independent high-D discretisation: x_K 0.7, kc 31, NE_RK=3, NE_JUNK=<w>,
+NE_JUNK_H=1e-2,3e-3,1e-3, seeds = J1's x_K 0.6 kc 23 solutions at D = 29.3-30.2 (data/neB_js_D29.3260 ..
+30.1240.npy; scan_ne adds node 0.7 from the series, then regrids to kc 31), NE_SEED_MAX 30.2, D -> 40, output e.g.
+data/scan_ne7_kc31_js_rk3.jsonl. Compared point by point with the cloud's kc 23 upper half it tells whether the
+D = 30-40 values are resolved in tau. If the junk stalls there too (> ~1e-14), report the D where it starts; that
+is useful in itself.
