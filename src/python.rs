@@ -2,7 +2,7 @@
 
 use crate::dispatch::{self, with_exec, with_plain_exec, Exec, Isa, Target};
 use crate::model::{Backend, Ctx, Generic};
-use crate::scalar::{Fld, Sc};
+use crate::scalar::{Fld, Sc, DD};
 use num_complex::Complex64;
 use numpy::ndarray::Array2;
 use numpy::{IntoPyArray, PyArray2, PyReadonlyArray1, PyReadonlyArray2, PyUntypedArrayMethods};
@@ -259,6 +259,39 @@ impl Kernel {
             AnyCtx::F72(c) => run_generic(c, z, &mut out, threads, dedup),
         });
         Ok(Array2::from_shape_vec((b, self.len), out).unwrap().into_pyarray(py))
+    }
+
+    /// Residual in double-double arithmetic (about 32 digits): z = zb_hi + zb_lo, (B, L) each ->
+    /// (F_hi, F_lo). Plain loops for the best instruction set.
+    #[pyo3(signature = (zb_hi, zb_lo, threads=1, dedup=false))]
+    fn residual_dd<'py>(
+        &self,
+        py: Python<'py>,
+        zb_hi: PyReadonlyArray2<'py, f64>,
+        zb_lo: PyReadonlyArray2<'py, f64>,
+        threads: usize,
+        dedup: bool,
+    ) -> PyResult<(Bound<'py, PyArray2<f64>>, Bound<'py, PyArray2<f64>>)> {
+        let sh = zb_hi.shape();
+        if sh[1] != self.len || zb_lo.shape() != sh {
+            return Err(PyValueError::new_err(format!("expected two (B, {}) arrays of the same shape", self.len)));
+        }
+        let b = sh[0];
+        let hi = zb_hi.as_slice().map_err(|_| PyValueError::new_err("zb_hi must be C-contiguous"))?;
+        let lo = zb_lo.as_slice().map_err(|_| PyValueError::new_err("zb_lo must be C-contiguous"))?;
+        let z: Vec<DD> = hi.iter().zip(lo).map(|(&h, &l)| DD::new(h, l)).collect();
+        let mut out = vec![DD::from_f64(0.0); b * self.len];
+        let ctx = &self.ctx;
+        py.detach(|| match ctx {
+            AnyCtx::F40(c) => run_generic(c, &z, &mut out, threads, dedup),
+            AnyCtx::F72(c) => run_generic(c, &z, &mut out, threads, dedup),
+        });
+        let fh: Vec<f64> = out.iter().map(|x| x.hi).collect();
+        let fl: Vec<f64> = out.iter().map(|x| x.lo).collect();
+        Ok((
+            Array2::from_shape_vec((b, self.len), fh).unwrap().into_pyarray(py),
+            Array2::from_shape_vec((b, self.len), fl).unwrap().into_pyarray(py),
+        ))
     }
 
     /// Exact Jacobian dF/dz at z (forward-mode `Dual` arithmetic, plain loops for the best

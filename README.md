@@ -40,9 +40,18 @@ F = R(Zb)                                     # (B, 941) -> (B, 941), same as S.
 F = R(Zb, backend="avx2")                     # force a backend for this call
 F = R(Zb, dedup=True)                         # block reuse for finite-difference batches
 Fc = R.residual_complex(Zb.astype(complex))   # complex-step derivatives
+Fh, Fl = R.residual_dd(z_hi, z_lo)            # double-double residual (~32 digits)
 F0, J = R.jacobian(z)                         # exact Jacobian, (941, 941)
 M = R.mode_matrix(z, lam)                     # growth-mode matrix, as DSSSpec.mode_matrix(z, lam)
 ```
+
+## Double-double residual
+
+Above D ≈ 26 the period Δ is selected by an effect that falls below f64 rounding noise, so the f64
+residual can no longer pin it. `residual_dd` evaluates the same residual in double-double arithmetic
+(`scalar::DD`: hi + lo with two-sum / FMA two-product, about 32 digits) on plain loops. At D = 30 the
+residual's rounding noise drops from 1.3e-11 (f64) to about 1e-27, at 8–9× the cost of the SIMD f64
+residual (15 ms per evaluation).
 
 ## Exact Jacobian and growth-mode matrix
 
@@ -95,7 +104,7 @@ One residual of a synthetic production-sized configuration (`tests/test_bindings
 src/
 ├── model.rs        residual blocks, centre and horizon series, RK4, LU, plain-loop backend,
 │                   forward-mode linearization (Jacobian, growth-mode matrix)
-├── scalar.rs       f64 / Complex64 / Dual scalar trait, 64-byte aligned field type
+├── scalar.rs       f64 / Complex64 / Dual / DD scalar trait, 64-byte aligned field type
 ├── dispatch.rs     runtime instruction-set detection and target_feature entry points
 ├── avx512.rs       hand-written AVX-512 backend
 ├── simd/

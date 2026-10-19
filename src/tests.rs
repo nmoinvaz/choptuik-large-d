@@ -287,3 +287,36 @@ fn growth_mode_shift() {
         assert!((tan - r.0[j].d).abs() < 1e-9, "tangent equation {j}: {}", tan - r.0[j].d);
     }
 }
+
+/// The double-double residual agrees with the f64 one to f64 rounding, and its own rounding noise is
+/// far below f64's: a perturbation carried only in the low word must change it smoothly.
+#[test]
+fn double_double_residual() {
+    use crate::scalar::DD;
+    let mut rng = Rng(0x510e_527f_ade6_82d1);
+    let ctx = test_ctx::<40>(36, &mut rng);
+    let z = first_row(&ctx, &test_batch(&ctx, &mut rng));
+    let t = Target::best_plain();
+    let mut f = vec![0.0; z.len()];
+    dispatch::residual(Target::plain(Isa::Baseline).unwrap(), &ctx, &z, &mut f, None, false);
+    let run = |dz: f64| {
+        let zd: Vec<DD> = z.iter().enumerate().map(|(i, &v)| DD::new(v, if i == 30 { dz } else { 0.0 })).collect();
+        let mut out = vec![DD::from_f64(0.0); zd.len()];
+        dispatch::residual_plain(t, &ctx, &zd, &mut out, None, false);
+        out
+    };
+    let f0 = run(0.0);
+    let scale = f.iter().fold(0.0f64, |m, v| m.max(v.abs()));
+    for (a, b) in f.iter().zip(&f0) {
+        assert!((a - b.hi).abs() <= 1e-12 * scale, "f64 {a:e} vs dd {:e}", b.hi);
+    }
+    // a 1e-20 change of one unknown, invisible to f64, must show up linearly in the dd residual
+    let (fp, fm) = (run(1e-20), run(-1e-20));
+    let d: Vec<f64> = fp.iter().zip(&fm).map(|(p, m)| ((p.hi - m.hi) + (p.lo - m.lo)) / 2e-20).collect();
+    let jac = dispatch::linearization(t, &ctx, &z, 0.0, true, None);
+    let l = ctx.len;
+    for i in 0..l {
+        let want = jac[i * l + 30];
+        assert!((d[i] - want).abs() <= 1e-6 * scale.max(1.0), "row {i}: dd difference quotient {:e} vs dual {want:e}", d[i]);
+    }
+}

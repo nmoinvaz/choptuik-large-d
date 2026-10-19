@@ -124,6 +124,16 @@ class RustResidual:
                                  self.dedup if dedup is None else dedup)
         return F[0] if one else F
 
+    def residual_dd(self, Zhi, Zlo=None, threads=None, dedup=None):
+        """Residual in double-double arithmetic (~32 digits) at Zhi + Zlo. Returns (F_hi, F_lo)."""
+        Zhi = np.asarray(Zhi)
+        one = Zhi.ndim == 1
+        H = np.ascontiguousarray(Zhi[None, :] if one else Zhi, dtype=np.float64)
+        Lo = np.zeros_like(H) if Zlo is None else np.ascontiguousarray(np.asarray(Zlo).reshape(H.shape), dtype=np.float64)
+        Fh, Fl = self.kernel.residual_dd(H, Lo, self.threads if threads is None else threads,
+                                         self.dedup if dedup is None else dedup)
+        return (Fh[0], Fl[0]) if one else (Fh, Fl)
+
     def jacobian(self, z, threads=None):
         """Exact Jacobian dF/dz at z (forward-mode derivatives), (L, L), phase row and Delta column
         included. Returns (F(z), J)."""

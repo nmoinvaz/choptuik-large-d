@@ -1,5 +1,5 @@
-//! Scalar abstraction (f64, Complex64 and the forward-mode `Dual`) and the 64-byte aligned
-//! per-tau-point field type.
+//! Scalar abstraction (f64, Complex64, the forward-mode `Dual` and the double-double `DD`) and the
+//! 64-byte aligned per-tau-point field type.
 
 use num_complex::Complex64;
 use std::fmt::Debug;
@@ -229,6 +229,164 @@ impl Sc for Dual {
     #[inline(always)]
     fn from_parts(v: f64, d: f64) -> Self {
         Dual::new(v, d)
+    }
+}
+
+/// Double-double number hi + lo (|lo| <= ulp(hi)/2), about 32 significant digits, with the usual
+/// error-free transformations (Dekker / Knuth two-sum, FMA two-product). Used to evaluate the residual
+/// far below f64 rounding noise, where the weakly selected period Delta is no longer pinned in f64.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct DD {
+    pub hi: f64,
+    pub lo: f64,
+}
+
+#[inline(always)]
+fn two_sum(a: f64, b: f64) -> (f64, f64) {
+    let s = a + b;
+    let bb = s - a;
+    (s, (a - (s - bb)) + (b - bb))
+}
+
+#[inline(always)]
+fn quick_two_sum(a: f64, b: f64) -> (f64, f64) {
+    let s = a + b;
+    (s, b - (s - a))
+}
+
+#[inline(always)]
+fn two_prod(a: f64, b: f64) -> (f64, f64) {
+    let p = a * b;
+    (p, a.mul_add(b, -p))
+}
+
+impl DD {
+    #[inline(always)]
+    pub fn new(hi: f64, lo: f64) -> Self {
+        let (h, l) = quick_two_sum(hi, lo);
+        DD { hi: h, lo: l }
+    }
+    #[inline(always)]
+    pub fn from_f64(x: f64) -> Self {
+        DD { hi: x, lo: 0.0 }
+    }
+    #[inline(always)]
+    fn mul_f64(self, b: f64) -> DD {
+        let (p, e) = two_prod(self.hi, b);
+        let (h, l) = quick_two_sum(p, self.lo.mul_add(b, e));
+        DD { hi: h, lo: l }
+    }
+    #[inline(always)]
+    fn add_f64(self, b: f64) -> DD {
+        let (s, e) = two_sum(self.hi, b);
+        let (h, l) = quick_two_sum(s, e + self.lo);
+        DD { hi: h, lo: l }
+    }
+}
+
+impl Add for DD {
+    type Output = DD;
+    #[inline(always)]
+    fn add(self, o: DD) -> DD {
+        let (s, e) = two_sum(self.hi, o.hi);
+        let (t, f) = two_sum(self.lo, o.lo);
+        let (s, e) = quick_two_sum(s, e + t);
+        let (h, l) = quick_two_sum(s, e + f);
+        DD { hi: h, lo: l }
+    }
+}
+impl Neg for DD {
+    type Output = DD;
+    #[inline(always)]
+    fn neg(self) -> DD {
+        DD { hi: -self.hi, lo: -self.lo }
+    }
+}
+impl Sub for DD {
+    type Output = DD;
+    #[inline(always)]
+    fn sub(self, o: DD) -> DD {
+        self + (-o)
+    }
+}
+impl Mul for DD {
+    type Output = DD;
+    #[inline(always)]
+    fn mul(self, o: DD) -> DD {
+        let (p, e) = two_prod(self.hi, o.hi);
+        let e = self.hi.mul_add(o.lo, self.lo.mul_add(o.hi, e));
+        let (h, l) = quick_two_sum(p, e);
+        DD { hi: h, lo: l }
+    }
+}
+impl Div for DD {
+    type Output = DD;
+    #[inline(always)]
+    fn div(self, o: DD) -> DD {
+        // long division: q1 + q2 with one correction (Bailey's QD dd_real accurate division)
+        let q1 = self.hi / o.hi;
+        let r = self - o.mul_f64(q1);
+        let q2 = r.hi / o.hi;
+        let r = r - o.mul_f64(q2);
+        let q3 = r.hi / o.hi;
+        let (h, l) = quick_two_sum(q1, q2);
+        DD { hi: h, lo: l }.add_f64(q3)
+    }
+}
+impl Mul<f64> for DD {
+    type Output = DD;
+    #[inline(always)]
+    fn mul(self, a: f64) -> DD {
+        self.mul_f64(a)
+    }
+}
+impl Div<f64> for DD {
+    type Output = DD;
+    #[inline(always)]
+    fn div(self, a: f64) -> DD {
+        self / DD::from_f64(a)
+    }
+}
+impl Add<f64> for DD {
+    type Output = DD;
+    #[inline(always)]
+    fn add(self, a: f64) -> DD {
+        self.add_f64(a)
+    }
+}
+impl Sub<f64> for DD {
+    type Output = DD;
+    #[inline(always)]
+    fn sub(self, a: f64) -> DD {
+        self.add_f64(-a)
+    }
+}
+
+impl Sc for DD {
+    #[inline(always)]
+    fn zero() -> Self {
+        DD { hi: 0.0, lo: 0.0 }
+    }
+    #[inline(always)]
+    fn re(x: f64) -> Self {
+        DD::from_f64(x)
+    }
+    #[inline(always)]
+    fn fma_r(self, a: f64, acc: Self) -> Self {
+        acc + self.mul_f64(a)
+    }
+    #[inline(always)]
+    fn fma(self, b: Self, acc: Self) -> Self {
+        acc + self * b
+    }
+    #[inline(always)]
+    fn mag(self) -> f64 {
+        self.hi.abs()
+    }
+    #[inline(always)]
+    fn push_bits(self, v: &mut Vec<u64>) {
+        v.push(self.hi.to_bits());
+        v.push(self.lo.to_bits());
     }
 }
 
