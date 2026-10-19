@@ -14,7 +14,7 @@ from data_best import load as old_load
 
 
 def step_converged(Dmin=8.0, hi_from=30.2):
-    """(D, Delta, sigma, gamma) arrays: x_K 0.6 RK x2 (+ Richardson) up to hi_from, x_K 0.7 RK x4 junk-solved above."""
+    """(D, Delta, sigma, gamma) arrays: x_K 0.6 RK x2 (+ Richardson) up to hi_from, x_K 0.7 RK x3+ junk-solved above."""
     o = old_load()
     rk1 = {k: r["Delta"] for k, r in o.items() if k < 17.2}
     rk2, hi, gam = {}, {}, {}
@@ -33,7 +33,7 @@ def step_converged(Dmin=8.0, hi_from=30.2):
                 elif rk == 1 and (r.get("js") or (17.2 <= k <= 23.4)):
                     if r.get("js") or k not in rk1:
                         rk1[k] = r["Delta"]
-            elif abs(xk - 0.7) < 1e-9 and rk >= 4 and r.get("js") and k > hi_from:
+            elif abs(xk - 0.7) < 1e-9 and rk >= 3 and r.get("js") and k > hi_from:
                 hi[k] = r["Delta"]
                 gam[k] = r.get("gamma")
     D, y, s, g = [], [], [], []
