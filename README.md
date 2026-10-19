@@ -6,8 +6,87 @@ Rust port of the multiple-shooting residual `F(z)` used to compute Choptuik's di
 
 The echo period Δ(D) and critical exponent γ(D), computed with this kernel and the solver in [`solver/`](solver/).
 Both are fitted as power series in 1/D on the step-converged points (2x RK steps, near-null directions solved,
-independent setups agreeing to ~1e-8); hollow points are held out of the fits. Δ → Δ∞ = 1.64394 ± 0.00005 and
-γ → 1/2 − 0.758/D as D → ∞ (see [`solver/CONTEXT.md`](solver/CONTEXT.md)). Regenerate with `cd solver/data && python3 ../plot_delta.py`.
+independent setups agreeing to ~1e-8); hollow points are held out of the fits. Δ → Δ∞ = 1.64395 ± 0.00008 and
+γ → 1/2 − 0.758/D as D → ∞ (formula below; details in [`solver/CONTEXT.md`](solver/CONTEXT.md)). Regenerate with `cd solver/data && python3 ../plot_delta.py`.
+
+## The formula
+
+For massless scalar critical collapse in $D = n + 2$ spacetime dimensions, the echo period $\Delta$ and the critical
+exponent $\gamma$ of Choptuik's discretely self-similar solution are
+
+$$
+\Delta(D) = \Delta_\infty + \sum_{k=1}^{10} \frac{c_k}{D^k},
+\qquad
+\gamma(D) = \frac{1}{2} + \sum_{k=1}^{10} \frac{g_k}{D^k},
+$$
+
+with the limits
+
+$$
+\Delta_\infty = 1.64395 \pm 0.00008,
+\qquad
+\omega_\infty = \frac{2\pi}{\Delta_\infty} = 3.8220 \pm 0.0002,
+\qquad
+\gamma_\infty = \frac{1}{2},
+\qquad
+g_1 = -0.758 \pm 0.003 .
+$$
+
+The leading terms are
+
+$$
+\Delta(D) \approx 1.64395 + \frac{10.4}{D} - \frac{28.4}{D^2} + \frac{239}{D^3} - \frac{2245}{D^4} + \cdots,
+\qquad
+\gamma(D) \approx \frac{1}{2} - \frac{0.758}{D} + \frac{8.28}{D^2} - \frac{126}{D^3} + \frac{1845}{D^4} - \cdots
+$$
+
+The coefficients grow about tenfold per order with alternating signs (a radius of convergence near $D \approx 10$),
+so the series must not be cut short: the first five terms are off by up to $4\times10^{-3}$ even at $D \ge 20$. Use
+all eleven coefficients (the degree-10 fit drawn in the graph, `solver/formula.py`):
+
+| $k$ | $c_k$ (for $\Delta$) | $g_k$ (for $\gamma$) |
+|---|---|---|
+| 0 | $+1.6438931360$ | $+0.5$ (fixed) |
+| 1 | $+1.0374964007 \times 10^{1}$ | $-7.5854191958 \times 10^{-1}$ |
+| 2 | $-2.8355347834 \times 10^{1}$ | $+8.2843462006$ |
+| 3 | $+2.3900833130 \times 10^{2}$ | $-1.2603029673 \times 10^{2}$ |
+| 4 | $-2.2446858552 \times 10^{3}$ | $+1.8446582182 \times 10^{3}$ |
+| 5 | $+2.0424472078 \times 10^{4}$ | $-2.5165496284 \times 10^{4}$ |
+| 6 | $-1.6230686158 \times 10^{5}$ | $+2.8434887038 \times 10^{5}$ |
+| 7 | $+1.0037347608 \times 10^{6}$ | $-2.4157799331 \times 10^{6}$ |
+| 8 | $-4.4127962953 \times 10^{6}$ | $+1.4042658549 \times 10^{7}$ |
+| 9 | $+1.2046388629 \times 10^{7}$ | $-4.9128734266 \times 10^{7}$ |
+| 10 | $-1.5266460427 \times 10^{7}$ | $+7.7494021741 \times 10^{7}$ |
+
+**Accuracy.** On the fitted range $10 \le D \le 30.2$ the two polynomials reproduce the computed values to
+$1.6\times10^{-8}$ ($\Delta$) and $2.3\times10^{-9}$ ($\gamma$). Points computed later at $D = 34$–$38$, never seen by
+the fit, agree with the $\Delta$ formula to $2\times10^{-6}$, which is their own precision there. Below $D \approx 10$
+the series does not apply; use the computed values. The individual $c_k$ of one fit are not physical constants (they
+are correlated); $\Delta_\infty$ is quoted as the range over all acceptable fits (variable $1/D$, $1/(D-1)$, $1/(D-2)$,
+degree 8–11, lower cut $D \ge 10$ or $12$, $\chi^2/\mathrm{dof} \le 1$): $1.64388$–$1.64403$.
+
+**Excluded limits.** $\pi^2/6 = 1.64493$ (forcing it raises $\chi^2/\mathrm{dof}$ from 0.6 to between 3.6 and 800),
+$2\pi/j_{1,1} = 1.63979$ and $\sqrt{e} = 1.64872$. Whether $\Delta_\infty$ has a closed form is open; four to five digits
+cannot decide it.
+
+**Values.**
+
+| $D$ | $\Delta$ | $\gamma$ | |
+|---|---|---|---|
+| 4 | 3.4454524 | 0.3739609 | computed |
+| 5 | 3.2217019 | 0.4131269 | computed |
+| 6 | 3.0094832 | 0.4300795 | computed |
+| 7 | 2.8427541 | 0.4399913 | computed |
+| 8 | 2.7117900 | 0.4467164 | computed |
+| 10 | 2.521079 | 0.455588 | formula |
+| 12 | 2.3891886 | 0.4614056 | formula |
+| 15 | 2.2530984 | 0.4673656 | formula |
+| 20 | 2.1120802 | 0.4737107 | formula |
+| 30 | 1.9649579 | 0.4807927 | formula |
+| 40 | 1.888568 | 0.48478 | formula (computed points to $D = 38$ agree to $2\times10^{-6}$) |
+| 50 | 1.84166 | 0.4874 | extrapolated |
+| 100 | 1.7450 | 0.4931 | extrapolated |
+| $\infty$ | $1.64395 \pm 0.00008$ | $1/2$ | limit |
 
 ## Backends
 
