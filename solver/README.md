@@ -30,6 +30,7 @@ Install the kernel first (`pip install .` at the repo root), then run scripts fr
 | `rust_gamma_check.py` | Validation of the Rust Jacobian and mode matrix against the Python reference |
 | `data_best.py`, `formula_zoo.py` | Load the best available Δ(D), γ(D) |
 | `fit_inf.py`, `formula_fit.py`, `fit_gamma.py`, `deriv_diag.py`, `plot_convergence.py` | Fits, hold-out tests, slope diagnostics, figure |
+| `plot_delta.py` | The Δ(D) graph `delta.svg` (hand-written SVG, light and dark): `cd data && python3 ../plot_delta.py` |
 | `notes.md` | Lab notebook: every finding, check and correction, in order |
 
 ## Data (`data/`, `seeds/`)
@@ -69,6 +70,9 @@ floor grows from 2.4e-10 (D = 24.5) to 1.5e-8 (D = 28) to 3e-7 (D = 31). Roundin
 1e-11 at D = 30; `residual_dd` lowers it to 1e-27 without changing the floor).
 
 ## Current results
+
+![Echo period Δ(D)](delta.svg)
+
 
 - Δ(D) up to D ≈ 25 follows Δ∞ + a/(D−2) + b/(D−2)^{3/2} + c/(D−2)² + … with Δ∞ ≈ 1.64 ± 0.01, a ≈ 11–12, and
   no (D−2)^{−1/2} term. Beyond D ≈ 26 the data do not yet constrain the law.
