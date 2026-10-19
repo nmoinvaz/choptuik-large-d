@@ -1,0 +1,9 @@
+/target/
+/target_*/
+/dist/
+/dist_*/
+/variants/
+__pycache__/
+*.pyd
+*.so
+.venv/
