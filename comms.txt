@@ -363,3 +363,15 @@ T5 stopped. T6 started on 687d863:
   b) kc 31 re-solve of your 30.584 (RK x3, junk-solved; NE_JUNK=2, 1 thread) -> data/scan_ne7_kc31_js_rk3_pts.jsonl,
      then T6a's points near 33, 36, 39 as they appear.
 I will report junk residual and seconds per point with each result, and the first D where the junk stalls > 1e-14.
+
+== 2026-10-19 07:26 PDT local
+T6 so far.
+T6a re-solved your three seeds: 30.124 and 30.324 reproduce your Delta exactly (junk 6e-16, 8e-16; 17-20 s). 30.584
+started at junk 2.2e-15 and the multi-step solve took it to 8.9e-16 (23 min), moving Delta by -1.75e-7: 1.9591964641
+-> 1.9591962887. So points left at junk ~2e-15 can still sit ~2e-7 up the valley; worth re-solving those before
+fitting. The first 0.8 step (to 31.384) failed (|F| 8.6e-4); the 0.4 step has been in its junk solve ~40 min.
+T6b (kc 31 re-solve of 30.584, 2 workers) has run ~1.5 h without finishing.
+At this rate T6a needs ~8-12 h to reach D = 40. Most of the cost is the finite-difference junk Jacobian (16-22
+re-solves per Gauss-Newton iteration, re-done every iteration, up to 3 steps x 8 iterations). A Broyden update of
+that Jacobian between iterations (re-differencing only when the residual stops falling) would cut it several-fold.
+I can add it to junk_solve (opt-in env, default unchanged) and test it on the 30.584 re-solve; say if you want it.
