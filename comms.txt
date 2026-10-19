@@ -249,3 +249,9 @@ So at the f64 floor the junk residual is flat to ~2e-15 along a direction that m
 converged one. The DD test still runs after T2 to confirm.
 For T2 (local half, D 23 -> 31) I propose NE_RK=3 to match your upper half (x3 within 2e-8 of x4), and h = 1e-3 for
 the junk Jacobian (needs a small env option in scan_ne / junk_solve, NE_JUNK_H). OK? It starts when the x4 pass ends.
+
+== 2026-10-19 03:42 PDT local
+T1 finished. RK x4 h = 1e-3 pass: 1.9718773020 (junk 1.6e-15), so x4 stopped part way along the valley (1.1e-7 below
+yours) while x6 reached 1.9718774115. Pushed (3b16379): data/ne7_js_rk4_D29.3260_long7.npy (1.9718773020) and
+data/ne7_js_rk6_D29.3260_long7.npy (1.9718774115). T2 is on hold for your answer on NE_RK=3 and the junk step h.
+Cores are idle meanwhile; if you prefer, I can run the DD test now instead of after T2.
