@@ -62,6 +62,11 @@ def main():
     ap.add_argument("--dD", type=float, default=0.5)
     ap.add_argument("--maxdD", type=float, default=1.0)
     ap.add_argument("--dD0", type=float, default=None, help="first step (default dD)")
+    ap.add_argument("--history", default="", help="comma list of converged npz files at earlier D (same M), oldest first: "
+                    "re-noded to the scan's layout and used for the predictor")
+    ap.add_argument("--predictor", default="lagrange", choices=["lagrange", "hermite"],
+                    help="lagrange: extrapolation through the last 4 converged points (default; the J-based tangent "
+                    "is unreliable along near-null directions at larger D); hermite: exact tangent + cubic Hermite")
     ap.add_argument("--M", type=int, default=None)
     ap.add_argument("--kt", type=int, default=36)
     ap.add_argument("--kc", type=int, default=40)
@@ -100,7 +105,20 @@ def main():
     sched.sort()
     outdir = os.path.dirname(os.path.abspath(a.out))
     s_of = lambda Dx: make_solver(Dx, M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks, threads=a.threads)
-    hist_z = [(D, zh + zl, tangent(s_of, s, D, zh, zl))]
+    hist_z = []
+    for f in filter(None, a.history.split(",")):
+        hh, hl, hm = load(f)
+        if hm["M"] != M:
+            raise SystemExit(f"{f}: M {hm['M']} != {M}")
+        if list(hm["nodes"]) != nodes:
+            s0 = make_solver(hm["D"], M, nodes=list(hm["nodes"]), kt=a.kt, kc=a.kc, ks=a.ks, threads=a.threads)
+            hh, hl = renode(s0, hh, hl, list(hm["nodes"]), nodes, M)
+        sh, hh, hl, hst, okh, _ = solve_at(hm["D"], hh, hl, a, nodes, M, a.it_max)
+        print(f"history point D={hm['D']}: ok {okh}, Delta {hh[-1]:.16f}", flush=True)
+        if okh:
+            hist_z.append((hm["D"], hh + hl, None))
+    t0_ = tangent(s_of, s, D, zh, zl) if a.predictor == "hermite" or not hist_z else None
+    hist_z.append((D, zh + zl, t0_))
     dD = a.dD0 or a.dD
     targets = []
     if a.Dlist:
@@ -114,7 +132,9 @@ def main():
         goal = targets[0] if targets else a.D_end
         Dn = D + direction * min(dD, abs(goal - D))
         Dn = round(Dn, 6)
-        if len(hist_z) > 1:
+        if a.predictor == "lagrange" and len(hist_z) > 1:
+            zp = predict([(h_[0], h_[1]) for h_ in hist_z], Dn)
+        elif len(hist_z) > 1 and hist_z[-2][2] is not None:
             (D0, z0, t0), (D1, z1, t1) = hist_z[-2], hist_z[-1]
             zp = hermite(D0, z0, t0, D1, z1, t1, Dn)
         else:
@@ -128,7 +148,7 @@ def main():
                 raise SystemExit("step too small")
             continue
         D, zh, zl = Dn, zh2, zl2
-        hist_z.append((D, zh + zl, tangent(s_of, s, D, zh, zl)))
+        hist_z.append((D, zh + zl, tangent(s_of, s, D, zh, zl) if a.predictor == "hermite" else None))
         # the stored LU is from the last Newton call, made at the converged z
         sens = sensitivity(s, M)
         tc, th = tails(s, zh, zl, nodes, M)
@@ -166,7 +186,7 @@ def main():
                                         tail_h=tails(s, zh, zl, new_nodes, M)[1])) + "\n")
             nodes = new_nodes
             s_of = lambda Dx: make_solver(Dx, M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks, threads=a.threads)
-            hist_z = [(D, zh + zl, tangent(s_of, s, D, zh, zl))]
+            hist_z = [(D, zh + zl, tangent(s_of, s, D, zh, zl))]   # one point: Euler with the tangent
             dD = min(dD, 0.5)
 
 
