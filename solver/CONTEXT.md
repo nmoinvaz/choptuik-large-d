@@ -37,13 +37,27 @@ D spacetime dimensions (n = D − 2), in particular the D → ∞ behaviour.
   beyond-all-orders selection problem, like Saffman–Taylor finger selection; an analytic Δ∞ would come from
   exponential asymptotics of the leading-order family, not from the 1/D series.
 
-## Current best formula (2026-10-19, 00:40)
+## Current best formula (2026-10-19, 02:45)
 
-Δ(D) = c₀ + c₁/(D−2) + c₂/(D−2)² + … fitted on D = 8–25.5 (where x_K = 0.4, 0.5, 0.6 and kc 23/31 agree to ~1e-8):
-c₀ = 1.64407–1.64409, c₁ = 10.35, c₂ ≈ −47 (`series_factory.py`). It predicts the unseen kc = 31 smoothed points at
-D = 28, 30, 32 to 1e-7–2e-7. Δ∞ ≈ 1.6441 (all integer-power variants: 1.6432–1.6445). π²/6 = 1.64493 fits the
-range but misses D = 32 by 3.6e-6; 2π/j₁,₁ and √e are excluded within this model. Pending: x_K = 0.5 / 0.4
-values above D = 26 to confirm the hold-out points, then D = 35–40 (where the candidate forms differ by 2e-5).
+Δ(D) = c₀ + c₁/D + c₂/D² + … (equivalently in 1/(D−1) or 1/(D−2); the variables differ only from c₂ on). Fitted on
+the step-converged set D = 8–22.4 (RK x2 + Richardson, junk-solved above 17.2), in the scaled variable x/max(x):
+rms 2e-11, Δ∞ = 1.6440 ± 0.0002 (1.64389–1.64407 across variables), c₁ ≈ 10.3. Forcing π²/6 = 1.64493 raises the
+rms 3–13×; 2π/j₁,₁ and √e are far outside. γ(D) on the same points: free limit 0.49987–0.49994; with γ∞ = 1/2 the
+1/D coefficient is −0.756…−0.758.
+
+Hard-won lessons for these fits:
+- fit in x/max(x): an unscaled degree-10 Vandermonde loses ~1e-9 and made the limit wander (`series_factory.py`,
+  `refit_rk.py`, `constr_test.py` are fixed);
+- RK x1 data carry a ±2e-8 sawtooth in D (the ceil() in freeze_steps), RK x2 is ~16x smaller: use NE_RK = 2 (and
+  Richardson RK2 + (RK2 − RK1)/15);
+- above D ≈ 17.5 the junk directions must be solved (`junk_solve.py`, NE_JUNK) or fixed by smoothness (NE_SMOOTH).
+
+High D: x_K 0.6 is limited by the horizon-series radius (≈ 0.47 at D = 30, 0.43 at 36); x_K 0.7 converges there but
+needs NE_RK ≥ 3–4 (D = 29.3: RK x1 −7.9e-6, x2 −3.7e-7, x3 ~−1e-7 from the limit). The local runner's T2 is the
+x_K 0.7, NE_RK = 4, junk-solved scan to D = 45.
+
+Coordination: `comms.txt` at the repo root is the message log between the cloud session and the local runner
+(append only, pull before writing, commit only that file with the message).
 
 **Shape of the solution at large D** (a lead for the exact value): the centre field's first harmonic falls like
 ~n^(−1/2) (h1·√n = 2.64 at D = 7.75, 1.59 at 32.5, still drifting), the profile becomes sinusoidal (h3/h1 = 0.25 →
