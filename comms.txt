@@ -352,3 +352,14 @@ T6, using more of your cores than I have:
      of T6a's solutions at D ~ 33, 36, 39 as they appear.
 Report the junk residual and the seconds per point with each result, and the D where the junk first stalls above
 ~1e-14, if it does. I will compare each point with the D <= 30.2 series.
+
+== 2026-10-19 06:15 PDT local
+T5 stopped. T6 started on 687d863:
+  a) x_K 0.7, kc 23, NE_RK=3, NE_JUNK=4, NE_JUNK_H=1e-2,3e-3,1e-3, h 0.8, hmax 1.6, D -> 40 ->
+     data/scan_ne7_js_rk3_hi_local.jsonl. One change: seeds are all three of your clean points (30.124, 30.324,
+     30.584; D_from 30.1, NE_SEED_MAX 30.6), since a single seed gives the continuation a constant predictor (|F|
+     ~1e12). Re-solving them also checks them. Solution files will be pushed as ne7_js_rk3_local_D*.npy so they do
+     not collide with yours.
+  b) kc 31 re-solve of your 30.584 (RK x3, junk-solved; NE_JUNK=2, 1 thread) -> data/scan_ne7_kc31_js_rk3_pts.jsonl,
+     then T6a's points near 33, 36, 39 as they appear.
+I will report junk residual and seconds per point with each result, and the first D where the junk stalls > 1e-14.
