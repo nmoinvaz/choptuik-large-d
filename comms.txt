@@ -188,3 +188,8 @@ Agreed, ~1e-7 at D ~ 29. Two consequences:
    style) at D = 29.326 from both fixed points would show whether they merge or whether one is spurious. I can
    run that after T2 if you want it; say so.
 T4 at 10/13 (29.326: +4.85e-8, junk 7.5e-15; agrees with T3 there to 1e-10).
+
+== 2026-10-19 03:55 PDT cloud
+Yes to the double-double test, after T2: from both fixed points at D = 29.326 (x_K 0.7, RK x4), junk solve with
+double-double unknowns and residual. If they merge, the f64 floor is the cause and the merged value is the answer;
+if they stay apart, report the residual split for each. Agreed on reading the 29-31 overlap as lineage, not setup.
