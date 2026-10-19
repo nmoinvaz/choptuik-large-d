@@ -374,8 +374,17 @@ def junk_subspace(s, w, delta_max=1e-9, iters=8):
     return np.linalg.qr(X[:, keep])[0] if keep.any() else np.zeros((L, 0)), sig[keep], sig[~keep]
 
 
+def delta_correction(s, Fh, Fl):
+    """Linearised Delta correction -y.F, y = J^-T e_Delta, with the LU stored by the last s.newton call."""
+    L = s.size
+    e = np.zeros(L)
+    e[-1] = 1.0
+    yh, yl = s.lu_solve_t(e, np.zeros(L))
+    return float(-(np.asarray(yh) + np.asarray(yl)) @ (np.asarray(Fh) + np.asarray(Fl)))
+
+
 def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_halvings=12, junk_only=False,
-                    delta_max=1e-9):
+                    delta_max=1e-9, delta_tol=1e-14):
     """Newton in phases, all with backtracking on |F|_2:
     1. 'all': the step J^-1(-F) with its component in the w weakest right singular directions removed, so the
        well-determined part converges without its second-order error leaking into them;
@@ -398,9 +407,19 @@ def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_hal
         n0 = rnorm(Fh, Fl)
         mode = phases[ph]
         if nF < tol:
-            hist.append(dict(it=it, F=nF, Delta=float(zh[-1]), piv=(pmin, pmax), mode=mode, t=round(time.time() - t0, 1)))
+            hist.append(dict(it=it, F=nF, Delta=float(zh[-1]), piv=(pmin, pmax), mode=mode, accepted=True,
+                             dDelta_est=delta_correction(s, Fh, Fl), t=round(time.time() - t0, 1)))
             if verbose:
                 print(f"  dn {it}: |F| {nF:.2e} converged, Delta {zh[-1]:.15f}", flush=True)
+            break
+        if junk_only and mode == "sel" and n_prev is not None and n0 > 0.3 * n_prev:
+            # stalled with the junk frozen: accept if Delta no longer moves (the floor is junk residual)
+            dd = delta_correction(s, Fh, Fl)
+            hist.append(dict(it=it, F=nF, Delta=float(zh[-1]), piv=(pmin, pmax), mode=mode, dDelta_est=dd,
+                             accepted=abs(dd) < delta_tol, t=round(time.time() - t0, 1)))
+            if verbose:
+                print(f"  dn {it}: stalled at |F| {nF:.1e} with junk frozen; Delta correction {dd:+.1e} -> "
+                      f"{'accepted' if abs(dd) < delta_tol else 'failed'}", flush=True)
             break
         if n_prev is not None and n0 > 0.3 * n_prev and ph < len(phases) - 1:
             ph += 1

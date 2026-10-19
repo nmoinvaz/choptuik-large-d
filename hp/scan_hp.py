@@ -58,10 +58,10 @@ def solve_at(D, zh, zl, a, nodes, M, it_max):
     t0 = time.time()
     if a.corrector == "dn":
         zh2, zl2, hist = deflated_newton(s, zh, zl, tol=a.tol, it_max=it_max, w=a.w, verbose=a.verbose,
-                                         junk_only=a.junk_only)
+                                         junk_only=a.junk_only, delta_tol=a.delta_tol)
     else:
         zh2, zl2, hist = newton_solve(s, zh, zl, tol=a.tol, it_max=it_max, verbose=a.verbose)
-    ok = hist and hist[-1]["F"] < a.tol
+    ok = bool(hist) and (hist[-1]["F"] < a.tol or bool(hist[-1].get("accepted")))
     if not ok and a.lm:
         print(f"   D={D}: Newton stopped at |F| {hist[-1]['F']:.1e}; Levenberg-Marquardt from the predictor", flush=True)
         zh2, zl2, h2 = lm_solve(s, zh, zl, tol=a.tol, it_max=a.lm, verbose=a.verbose, newton_after=1e-22)
@@ -99,6 +99,8 @@ def main():
                     "p's harmonics above it at the horizon block (removes the near-null centre directions)")
     ap.add_argument("--corrector", default="dn", choices=["dn", "newton"], help="dn: deflated Newton (default)")
     ap.add_argument("--w", type=int, default=24, help="weak directions frozen in the deflated phase")
+    ap.add_argument("--delta_tol", type=float, default=1e-14, help="junk_only: accept a stalled step if the linearised "
+                    "Delta correction is below this")
     ap.add_argument("--junk_only", action="store_true", help="freeze only weak directions without Delta content, and keep "
                     "them frozen (they stay on the predictor's smooth trend)")
     ap.add_argument("--lm", type=int, default=15, help="Levenberg-Marquardt iterations after a failed Newton (0: off)")
@@ -178,7 +180,7 @@ def main():
         tc, th = tails(s, zh, zl, nodes, M)
         rec = dict(D=D, Delta=float(zh[-1]), Delta_lo=float(zl[-1]), F=hist[-1]["F"], its=len(hist), seconds=round(dt, 1),
                    M=M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks, tol_step=a.tol_step, steps=sum(len(g) - 1 for g in s.get_segs()),
-                   piv=hist[0].get("piv"), sens=sens, tail_c=tc, tail_h=th)
+                   piv=hist[0].get("piv"), sens=sens, tail_c=tc, tail_h=th, dDelta_est=hist[-1].get("dDelta_est"))
         with open(a.out, "a") as f:
             f.write(json.dumps(rec) + "\n")
         save(os.path.join(outdir, f"{a.tag}_D{D:.4f}.npz"), zh, zl, dict(D=D, M=M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks))
