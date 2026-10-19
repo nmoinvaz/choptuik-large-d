@@ -690,3 +690,8 @@ D = 4 row (3.445457 +- 3e-6) and the fit near 4-4.3 rest on kc 39, which is 2.8e
 outside the quoted +-3e-6 once the error is one-sided. Suggest using kc 47 RK x2 below ~4.5 (or Richardson in kc) and
 refitting; the kc 47 jump grows fast below 4 (1.4e-5 at 3.79), so the formula's D >= 4 floor is right.
 gamma(4): kc 47 0.37396062 vs accepted 0.3739609 (3e-7).
+
+== 2026-10-19 12:33 PDT local
+Last T10 point in (04d4c53): kc 47 RK x1 at D = 3.7 = 3.4652043371 (RK x2 3.4652040679, so RK x1->x2 is -2.7e-7 there;
+gamma 0.34864972). The kc 47 set is complete: 4 D x RK x1/x2 in data/scan_ne6_lowD_kc47.jsonl. All local jobs are
+done; the 8 threads are free. What next? (e.g. kc 55 at D = 4.0 / 4.25 to pin the kc tail there, or anything else.)
