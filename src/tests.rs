@@ -76,6 +76,7 @@ fn test_ctx<const N: usize>(nh: usize, rng: &mut Rng) -> Ctx<N> {
         len,
         phase_idx: 3,
         lam: 0.0,
+        match_node: kn - 1,
     }
 }
 
@@ -318,5 +319,49 @@ fn double_double_residual() {
     for i in 0..l {
         let want = jac[i * l + 30];
         assert!((d[i] - want).abs() <= 1e-6 * scale.max(1.0), "row {i}: dd difference quotient {:e} vs dual {want:e}", d[i]);
+    }
+}
+
+/// Matching away from the horizon (segments beyond the match node run inwards): every backend still
+/// agrees bit for bit, and the Dual Jacobian still matches the complex step.
+#[test]
+fn inward_segments() {
+    let mut rng = Rng(0x9b05_688c_2b3e_6c1f);
+    let mut ctx = test_ctx::<40>(36, &mut rng);
+    ctx.match_node = 3;
+    let zb = test_batch(&ctx, &mut rng);
+    let mut want = vec![0.0; zb.len()];
+    dispatch::residual(Target::plain(Isa::Baseline).unwrap(), &ctx, &zb, &mut want, None, false);
+    for t in Target::all() {
+        for dedup in [false, true] {
+            let mut got = vec![0.0; zb.len()];
+            dispatch::residual(t, &ctx, &zb, &mut got, None, dedup);
+            assert_bits_eq(&want, &got, &format!("inward {} dedup={dedup}", t.name()));
+        }
+    }
+    // the inward layout really differs from the outward one
+    let mut out_ctx = ctx.clone();
+    out_ctx.match_node = ctx.nodes.len() - 1;
+    let mut outward = vec![0.0; zb.len()];
+    dispatch::residual(Target::plain(Isa::Baseline).unwrap(), &out_ctx, &zb, &mut outward, None, false);
+    assert!(want.iter().zip(&outward).any(|(a, b)| a != b));
+    let z = first_row(&ctx, &zb);
+    let l = ctx.len;
+    let t = Target::best_plain();
+    let jac = dispatch::linearization(t, &ctx, &z, 0.0, true, None);
+    let scale = jac.iter().fold(0.0f64, |m, v| m.max(v.abs()));
+    let h = 1e-30;
+    let cols: Vec<usize> = (0..l).step_by(5).chain([l - 1]).collect();
+    let mut zc = Vec::with_capacity(cols.len() * l);
+    for &j in &cols {
+        zc.extend(z.iter().enumerate().map(|(i, &v)| Complex64::new(v, if i == j { h } else { 0.0 })));
+    }
+    let mut fc = vec![Complex64::new(0.0, 0.0); zc.len()];
+    dispatch::residual_plain(t, &ctx, &zc, &mut fc, None, false);
+    for (k, &j) in cols.iter().enumerate() {
+        for i in 0..l {
+            let (cs, fd) = (fc[k * l + i].im / h, jac[i * l + j]);
+            assert!((cs - fd).abs() <= 1e-9 * scale, "inward J[{i},{j}]: dual {fd:e} vs complex step {cs:e}");
+        }
     }
 }

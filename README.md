@@ -43,7 +43,14 @@ Fc = R.residual_complex(Zb.astype(complex))   # complex-step derivatives
 Fh, Fl = R.residual_dd(z_hi, z_lo)            # double-double residual (~32 digits)
 F0, J = R.jacobian(z)                         # exact Jacobian, (941, 941)
 M = R.mode_matrix(z, lam)                     # growth-mode matrix, as DSSSpec.mode_matrix(z, lam)
+R5 = RustResidual(S, match_node=5)            # segments beyond node 5 integrate inward (see below)
 ```
+
+`match_node=m` moves the point where the centre and horizon integrations meet to node m: segments
+b ≤ m integrate outward (node b−1 → b), segments b > m inward (node b → b−1), so the horizon data are
+carried towards the centre instead of the centre data towards the horizon. The unknowns and the solution
+are the same; only the conditioning of the matching rows changes. The default (`None`) is the last node,
+identical to the Python reference.
 
 ## Double-double residual
 

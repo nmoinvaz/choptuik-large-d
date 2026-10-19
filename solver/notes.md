@@ -174,3 +174,17 @@ light ray. Note the factor √(2π) between the simulation's field (G = 1) and t
   (Delta and the shape modes) are the near-null directions, so LM cannot remove them and the selection drowns in the
   floor around D ~ 26. Fix needs the singular-mode amplitudes as explicit, O(1)-scaled conditions (precondition by
   u_K^{-sigma_k}), or a matching point further from the horizon (needs many more series terms).
+
+## Attempts to pin Delta above D ~ 26 (2026-10-18, night)
+- regular_newton.py: Newton with the matching rows split into the part the horizon data absorb (Q_reg^T d) and the
+  singular-mode content (W Q_perp^T d, W = Sigma^-1 U^T). Did not converge: steps that include the near-null
+  directions are far outside the linear range; with a 1e-9 cut the decrease is small.
+- Kernel option match_node (inward segments beyond the match node). Reproduces Delta at D=20.446 to 2.7e-8
+  (match at x = 0.5/0.4/0.3). At D=27.96 the profile is still flat (phi 1.94-2.03e-8 over +-1e-4, match at 0.4 and 0.3).
+- floor_anat2.py (match at 0.3, D=27.96): the whole floor (2.0e-8) moves to the series->0.6 block (k=3 harmonic
+  1e-8); all shooting blocks <= 7e-11. In the SVD of J the floor lies in 4 directions with sigma/sigma_max in
+  [1e-13, 1e-10) (Delta + shape modes), 6e-10 in the 18 junk directions, 1e-9 in the well-conditioned rest.
+- Reading of the floor size: if it were singular-mode content at a fixed amplitude it would scale like u_K^{s0}
+  ~ e^{-0.55 D}; instead it GROWS ~e^{+D} (2.4e-10, 1.5e-8, 3.2e-7 at D = 24.5, 28, 31.3). The old Ks/RK4/kc checks
+  compared free-solve Delta only, which is not informative here (Delta is not pinned). floor_test.py re-does them
+  comparing the floor itself.

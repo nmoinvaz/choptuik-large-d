@@ -107,6 +107,11 @@ pub struct Ctx<const N: usize> {
     /// Growth rate of the perturbation mode (perturbations ~ exp(lam tau)). Only tangent scalars
     /// (`Dual`) see it: their tau-derivatives become D + lam on the tangent. 0 for the residual.
     pub lam: f64,
+    /// Node where the integration from the centre meets the integration from the horizon. Segments up to
+    /// it run outwards (node b-1 -> node b); segments beyond it run inwards from the horizon side
+    /// (node b -> node b-1). Matching further from the horizon strengthens the regularity (selection)
+    /// signal u^s0 at the match. nodes.len() - 1 (the default) is the original all-outward layout.
+    pub match_node: usize,
 }
 
 impl<const N: usize> Ctx<N> {
@@ -765,6 +770,26 @@ fn node_state<T: Sc, B: Backend<T, N>, const N: usize>(ctx: &Ctx<N>, z: &[T], i:
     ]
 }
 
+/// Whether shooting segment b (between node b-1 and node b, 1 <= b < K) runs inwards, from node b to
+/// node b-1 (beyond the match node).
+#[inline(always)]
+pub fn seg_inward<const N: usize>(ctx: &Ctx<N>, b: usize) -> bool {
+    b > ctx.match_node
+}
+
+/// Node whose state block b's mismatch is measured against.
+#[inline(always)]
+pub fn block_target<const N: usize>(ctx: &Ctx<N>, b: usize) -> usize {
+    let kn = ctx.nodes.len();
+    if b == 0 {
+        0
+    } else if b < kn {
+        if seg_inward(ctx, b) { b - 1 } else { b }
+    } else {
+        kn - 1
+    }
+}
+
 /// Range of z (part indices -> offsets) that block b's integration / series depends on (besides Delta).
 pub fn block_input_range<const N: usize>(ctx: &Ctx<N>, b: usize) -> (usize, usize) {
     let kn = ctx.nodes.len();
@@ -772,7 +797,8 @@ pub fn block_input_range<const N: usize>(ctx: &Ctx<N>, b: usize) -> (usize, usiz
     if b == 0 {
         (ctx.offs[0], ctx.offs[2])
     } else if b < kn {
-        (ctx.offs[2 + 4 * (b - 1)], ctx.offs[2 + 4 * b])
+        let start = if seg_inward(ctx, b) { b } else { b - 1 };
+        (ctx.offs[2 + 4 * start], ctx.offs[2 + 4 * (start + 1)])
     } else {
         (ctx.offs[ns - 2], ctx.offs[ns])
     }
@@ -802,8 +828,10 @@ pub fn block_state<T: Sc, B: Backend<T, N>, const N: usize>(ctx: &Ctx<N>, z: &[T
         let h = (xb.ln() - xa.ln()) / ctx.log_steps as f64;
         (s, Var::Log, xa.ln(), h, ctx.log_steps)
     } else {
-        let s = node_state::<T, B, N>(ctx, z, b - 1);
-        let (xa, xb) = (ctx.nodes[b - 1], ctx.nodes[b]);
+        // outward: node b-1 -> node b; inward (beyond the match node): node b -> node b-1
+        let (from, to) = if seg_inward(ctx, b) { (b, b - 1) } else { (b - 1, b) };
+        let s = node_state::<T, B, N>(ctx, z, from);
+        let (xa, xb) = (ctx.nodes[from], ctx.nodes[to]);
         let steps = ctx.seg_steps[b - 1];
         if ctx.seg_u[b - 1] {
             let (ya, yb) = ((1.0 - xa).ln(), (1.0 - xb).ln());
@@ -819,8 +847,7 @@ pub fn block_state<T: Sc, B: Backend<T, N>, const N: usize>(ctx: &Ctx<N>, z: &[T
 /// The cheap part: mismatch with the target node state, converted to spectral coefficients.
 #[inline(always)]
 pub fn block_out<T: Sc, B: Backend<T, N>, const N: usize>(ctx: &Ctx<N>, z: &[T], b: usize, s: &State<T, N>, out: &mut [T]) {
-    let kn = ctx.nodes.len();
-    let tgt = node_state::<T, B, N>(ctx, z, b.min(kn - 1));
+    let tgt = node_state::<T, B, N>(ctx, z, block_target(ctx, b));
     let (no, ne, nh) = (ctx.no, ctx.ne, ctx.nh);
     spec(&ctx.spec_odd_t, nh, &(s[0] - tgt[0]), &mut out[0..no]);
     spec(&ctx.spec_odd_t, nh, &(s[1] - tgt[1]), &mut out[no..2 * no]);
@@ -828,7 +855,8 @@ pub fn block_out<T: Sc, B: Backend<T, N>, const N: usize>(ctx: &Ctx<N>, z: &[T],
     spec(&ctx.spec_even_t, nh, &(s[3] - tgt[3]), &mut out[2 * no + ne..2 * no + 2 * ne]);
 }
 
-/// Residual block b (0: centre -> node 0, 1..K-1: node b-1 -> node b, K: horizon series - node K-1)
+/// Residual block b (0: centre -> node 0, 1..K-1: segment between nodes b-1 and b (outward up to the
+/// match node, inward beyond it), K: horizon series - node K-1)
 /// of one batch row z; writes block_len() spectral values to out.
 #[inline(always)]
 pub fn block<T: Sc, B: Backend<T, N>, const N: usize>(ctx: &Ctx<N>, z: &[T], b: usize, out: &mut [T]) {
@@ -938,7 +966,6 @@ pub fn linearization<E: Exec<Dual, N>, const N: usize>(
     let l = ctx.len;
     let bl = ctx.block_len();
     let nb = ctx.nblocks();
-    let kn = ctx.nodes.len();
     let m = if with_delta { l } else { l - 1 };
     let mut tasks: Vec<(usize, usize)> = Vec::new(); // (block, unknown)
     for b in 0..nb {
@@ -977,7 +1004,7 @@ pub fn linearization<E: Exec<Dual, N>, const N: usize>(
     let (no, ne) = (ctx.no, ctx.ne);
     let fields = [(0, &sp_odd), (no, &sp_odd), (2 * no, &sp_even), (2 * no + ne, &sp_even)];
     for b in 0..nb {
-        let tgt = ctx.offs[2 + 4 * b.min(kn - 1)];
+        let tgt = ctx.offs[2 + 4 * block_target(ctx, b)];
         for &(off, spq) in &fields {
             for (r, row) in spq.iter().enumerate() {
                 for (k, v) in row.iter().enumerate() {

@@ -85,8 +85,10 @@ def _matrices(S, folded):
     )
 
 
-def kernel_args(S, folded=True):
-    """Positional arguments for Kernel(...) extracted from a DSSSpec instance S."""
+def kernel_args(S, folded=True, match_node=None):
+    """Positional arguments for Kernel(...) extracted from a DSSSpec instance S. match_node: index of the
+    node where the outward (centre) and inward (horizon) integrations meet; None = the last node (all
+    segments outward, as the Python reference)."""
     qn = getattr(getattr(S._ssh_to_last, "__func__", S._ssh_to_last), "__qualname__", "")
     if "make_long" not in qn:
         raise NotImplementedError("only the spec_long.make_long variant (_ssh_to_last without integration) is ported")
@@ -102,18 +104,20 @@ def kernel_args(S, folded=True):
         c(M["phys_odd"]), c(M["phys_even"]), c(M["spec_odd"]), c(M["spec_even"]),
         float(S.x0), [float(x) for x in S.nodes], int(S.log_steps), steps, is_u,
         float(S.u0), int(S.Kc), int(S.Ks), [int(s) for s in sizes], int(len(S.kodd)),
+        None if match_node is None else int(match_node),
     )
 
 
 class RustResidual:
     """Callable drop-in for S.residual, plus the exact Jacobian and the growth-mode matrix."""
 
-    def __init__(self, S, folded=True, threads=2, backend="simd", dedup=False, kernel_cls=None):
+    def __init__(self, S, folded=True, threads=2, backend="simd", dedup=False, kernel_cls=None, match_node=None):
         self.folded = folded
+        self.match_node = match_node
         self.threads = threads
         self.dedup = dedup
         self.backend = backend if (backend != "simd" or simd_available()) else "auto"
-        self.kernel = (kernel_cls or Kernel)(*kernel_args(S, folded))
+        self.kernel = (kernel_cls or Kernel)(*kernel_args(S, folded, match_node))
         self.L = S.layout()[2]
 
     def __call__(self, Zb, threads=None, backend=None, dedup=None):

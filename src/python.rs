@@ -70,6 +70,7 @@ struct Params<'a, 'py> {
     ks_terms: usize,
     sizes: Vec<usize>,
     phase_idx: usize,
+    match_node: Option<usize>,
 }
 
 fn build_ctx<const N: usize>(p: &Params) -> PyResult<Ctx<N>> {
@@ -91,6 +92,9 @@ fn build_ctx<const N: usize>(p: &Params) -> PyResult<Ctx<N>> {
         v.extend_from_slice(&[no, ne]);
         v
     };
+    if p.match_node.is_some_and(|m| m >= kn) {
+        return Err(PyValueError::new_err(format!("match_node must be < {kn}")));
+    }
     if p.sizes != expect {
         return Err(PyValueError::new_err(format!("unexpected layout sizes {:?}", p.sizes)));
     }
@@ -123,6 +127,7 @@ fn build_ctx<const N: usize>(p: &Params) -> PyResult<Ctx<N>> {
         len,
         phase_idx: p.phase_idx,
         lam: 0.0,
+        match_node: p.match_node.unwrap_or(kn - 1),
     })
 }
 
@@ -160,7 +165,7 @@ where
 impl Kernel {
     #[new]
     #[pyo3(signature = (n, nh, d_odd, t_odd, t_even, phys_odd, phys_even, spec_odd, spec_even, x0, nodes,
-                        log_steps, seg_steps, seg_u, u0, kc_terms, ks_terms, sizes, phase_idx))]
+                        log_steps, seg_steps, seg_u, u0, kc_terms, ks_terms, sizes, phase_idx, match_node=None))]
     #[allow(clippy::too_many_arguments)]
     fn new(
         n: f64,
@@ -182,6 +187,7 @@ impl Kernel {
         ks_terms: usize,
         sizes: Vec<usize>,
         phase_idx: usize,
+        match_node: Option<usize>,
     ) -> PyResult<Self> {
         let p = Params {
             n,
@@ -203,6 +209,7 @@ impl Kernel {
             ks_terms,
             sizes,
             phase_idx,
+            match_node,
         };
         let ctx = if nh <= 40 {
             AnyCtx::F40(build_ctx::<40>(&p)?)
