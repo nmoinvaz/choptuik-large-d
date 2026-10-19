@@ -354,31 +354,68 @@ def weak_subspace(s, w, iters=8, seed=0):
     return V
 
 
-def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_halvings=12):
-    """Newton in two modes. Deflated: the step J^-1(-F) with its component in the w weakest right singular directions
-    removed (those directions frozen), so the well-determined part converges without its second-order error leaking
-    into them. Full: the plain Newton step, once the deflated steps stop reducing |F|. Both with backtracking."""
+def junk_subspace(s, w, delta_max=1e-9, iters=8):
+    """Rayleigh-Ritz on the w weakest right singular directions; keep those whose Delta component is below delta_max
+    (the near-null centre directions, which the equations fix only to tol / sigma and Delta does not feel).
+    Returns (orthonormal basis, sigmas kept, sigmas dropped)."""
+    L = s.size
+    zl = np.zeros(L)
+    V = weak_subspace(s, w, iters=iters)
+    W = np.empty_like(V)
+    for j in range(w):
+        y = np.asarray(s.lu_solve_t(np.ascontiguousarray(V[:, j]), zl)[0])
+        W[:, j] = np.asarray(s.lu_solve(np.ascontiguousarray(y), zl)[0])
+    H = V.T @ W
+    ev, U = np.linalg.eigh((H + H.T) / 2)
+    X = V @ U
+    X /= np.linalg.norm(X, axis=0)
+    sig = 1 / np.sqrt(np.maximum(ev, 1e-300))
+    keep = np.abs(X[-1, :]) < delta_max
+    return np.linalg.qr(X[:, keep])[0] if keep.any() else np.zeros((L, 0)), sig[keep], sig[~keep]
+
+
+def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_halvings=12, junk_only=False,
+                    delta_max=1e-9):
+    """Newton in phases, all with backtracking on |F|_2:
+    1. 'all': the step J^-1(-F) with its component in the w weakest right singular directions removed, so the
+       well-determined part converges without its second-order error leaking into them;
+    2. 'sel' (junk_only): only the weak directions without Delta content (|Delta component| < delta_max) are removed,
+       so the selection directions converge while the near-null centre ("junk") directions stay on the predictor's
+       smooth trend (the equations fix them only to tol / sigma, and Delta does not feel them);
+    3. 'full': plain Newton, if the previous phase stalls above tol.
+    A phase ends when |F| stops dropping by a factor 0.3 per step or a step finds no decrease."""
     hist = []
     t0 = time.time()
-    V = None
-    mode = "deflated"
+    phases = ["all", "sel", "full"] if junk_only else ["all", "full"]
+    ph = 0
+    V = {}
     n_prev = None
     for it in range(it_max):
         dh, dl, Fh, Fl, pmin, pmax = s.newton(zh, zl)
         nF = dd_norm(Fh, Fl)
         n0 = rnorm(Fh, Fl)
+        mode = phases[ph]
         if nF < tol:
             hist.append(dict(it=it, F=nF, Delta=float(zh[-1]), piv=(pmin, pmax), mode=mode, t=round(time.time() - t0, 1)))
             if verbose:
                 print(f"  dn {it}: |F| {nF:.2e} converged, Delta {zh[-1]:.15f}", flush=True)
             break
-        if mode == "deflated" and n_prev is not None and n0 > 0.3 * n_prev:
-            mode = "full"
-        if mode == "deflated":
-            if V is None:
-                V = weak_subspace(s, w)
+        if n_prev is not None and n0 > 0.3 * n_prev and ph < len(phases) - 1:
+            ph += 1
+            mode = phases[ph]
+            if verbose:
+                print(f"  dn: phase '{phases[ph - 1]}' stalled at |F| {nF:.1e}; phase '{mode}'", flush=True)
+        if mode in ("all", "sel"):
+            if mode not in V:
+                if mode == "all":
+                    V[mode] = weak_subspace(s, w)
+                else:
+                    V[mode], sk, sd = junk_subspace(s, w, delta_max)
+                    if verbose:
+                        print(f"  dn: {V[mode].shape[1]} junk directions frozen (sigma {sk.min() if len(sk) else 0:.0e}.."
+                              f"{sk.max() if len(sk) else 0:.0e}), {len(sd)} weak ones with Delta content solved", flush=True)
             d = dh + dl
-            d = d - V @ (V.T @ d)
+            d = d - V[mode] @ (V[mode].T @ d)
             dh, dl = d, np.zeros_like(d)
         lam, accepted = 1.0, False
         for _ in range(max_halvings + 1):
@@ -394,9 +431,10 @@ def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_hal
                   f"Delta {th[-1]:.15f} t {time.time() - t0:.0f}s", flush=True)
         hist.append(dict(it=it, F=nF, mode=mode, lam=lam, Delta=float(th[-1]), piv=(pmin, pmax), t=round(time.time() - t0, 1)))
         if not accepted:
-            if mode == "full":
+            if ph == len(phases) - 1:
                 break
-            mode = "full"
+            ph += 1
+            n_prev = None
             continue
         zh, zl = th, tl
         n_prev = n0

@@ -57,7 +57,8 @@ def solve_at(D, zh, zl, a, nodes, M, it_max):
     s.set_segs(s.plan(zh, zl, a.tol_step, a.hmax))
     t0 = time.time()
     if a.corrector == "dn":
-        zh2, zl2, hist = deflated_newton(s, zh, zl, tol=a.tol, it_max=it_max, w=a.w, verbose=a.verbose)
+        zh2, zl2, hist = deflated_newton(s, zh, zl, tol=a.tol, it_max=it_max, w=a.w, verbose=a.verbose,
+                                         junk_only=a.junk_only)
     else:
         zh2, zl2, hist = newton_solve(s, zh, zl, tol=a.tol, it_max=it_max, verbose=a.verbose)
     ok = hist and hist[-1]["F"] < a.tol
@@ -98,6 +99,8 @@ def main():
                     "p's harmonics above it at the horizon block (removes the near-null centre directions)")
     ap.add_argument("--corrector", default="dn", choices=["dn", "newton"], help="dn: deflated Newton (default)")
     ap.add_argument("--w", type=int, default=24, help="weak directions frozen in the deflated phase")
+    ap.add_argument("--junk_only", action="store_true", help="freeze only weak directions without Delta content, and keep "
+                    "them frozen (they stay on the predictor's smooth trend)")
     ap.add_argument("--lm", type=int, default=15, help="Levenberg-Marquardt iterations after a failed Newton (0: off)")
     ap.add_argument("--Dlist", default="", help="explicit D values to visit in order (comma list or @file); "
                     "D_end is then ignored")
