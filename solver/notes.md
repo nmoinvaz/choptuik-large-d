@@ -276,3 +276,11 @@ light ray. Note the factor √(2π) between the simulation's field (G = 1) and t
 - pade_fit.py (rational in x = 1/n, fit D = 8..25.5): Delta [4/3]: Delta_inf = 1.643883, fit rms 2e-8, hold-out max
   2.1e-7; [3/3]: 1.644131 (hold-out 2.6e-6). gamma [3/3]: gamma_inf = 0.499995, fit rms 1e-9, hold-out 1.6e-7.
   => gamma_inf = 1/2 to ~1e-5; Delta_inf = 1.6439..1.6442.
+- Shape of the critical solution with D (centre data, kc 23 below 25.5, kc 31 smoothed above): first harmonic of the
+  centre field h1 = 1.10 (D = 7.75), 0.49 (16), 0.36 (23.7), 0.29 (32.5): h1 sqrt(n) = 2.64 -> 1.59, still falling
+  slowly; h3/h1 = 0.25 -> 0.10 (profile becoming sinusoidal); 1 - min(a0) = 0.58 -> 0.18 (~ n^-0.43..-0.58);
+  mean(1 - a0) * n ~ 3.0-3.2 (metric deviation ~ 1/n on average). => the D -> infinity critical solution looks
+  weak-amplitude and single-harmonic: Delta_inf may be an eigenvalue of a (weakly nonlinear) problem about flat
+  space, which would be the analytic route to the exact value.
+- The x_K = 0.6 kc 23 PLAIN continuation above D ~ 26 drifted into a distorted solution (h3/h1 0.29, h5/h3 0.64 at
+  D = 29.3): its Delta values there are wrong (up to 3e-5). Use only the smoothed / x_K <= 0.5 scans above 25.5.

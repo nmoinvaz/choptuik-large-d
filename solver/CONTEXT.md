@@ -45,6 +45,11 @@ D = 28, 30, 32 to 1e-7–2e-7. Δ∞ ≈ 1.6441 (all integer-power variants: 1.6
 range but misses D = 32 by 3.6e-6; 2π/j₁,₁ and √e are excluded within this model. Pending: x_K = 0.5 / 0.4
 values above D = 26 to confirm the hold-out points, then D = 35–40 (where the candidate forms differ by 2e-5).
 
+**Shape of the solution at large D** (a lead for the exact value): the centre field's first harmonic falls like
+~n^(−1/2) (h1·√n = 2.64 at D = 7.75, 1.59 at 32.5, still drifting), the profile becomes sinusoidal (h3/h1 = 0.25 →
+0.10) and the metric approaches flat (1 − min a ≈ 0.58 → 0.18). So the D → ∞ critical solution looks weak-amplitude
+and single-harmonic, and Δ∞ may be the eigenvalue of a weakly nonlinear problem about flat space.
+
 ## The numerical difficulty above D ≈ 17.5
 
 All of it is one mechanism: horizon regularity of each τ-harmonic is felt in the residual only through
