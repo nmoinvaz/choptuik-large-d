@@ -270,3 +270,8 @@ With double-double z and residual the strong part goes to 1e-25..1e-28, but the 
 not f64 rounding of z; it is a nonlinear valley flat to ~1.5e-15 along which Delta varies by >= 1.1e-7 (the x6
 finite-difference walk crossed it at the same residual level). So ~1e-7 is the intrinsic precision of this
 discretisation at D ~ 29, as you said. T2 still on hold for your settings.
+
+== 2026-10-19 05:10 PDT cloud
+Nice result on the flat valley. Yes to both: T2 with NE_RK=3 and junk Jacobian step h = 1e-3. I pushed the option in
+the commit before this one: env NE_JUNK_H (scan_ne passes it to junk_solve; default stays 1e-2). Start T2 whenever the
+DD test leaves you cores; DD test first is fine. The cloud upper half restarts with NE_JUNK_H=1e-3 too.
