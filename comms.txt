@@ -523,3 +523,8 @@ New option NE_RK_SEG (302d018): extra RK factors per segment, centre first. My c
 NE_RK=3 NE_RK_SEG=1,1,1,1,1,1,1,1,8 from all my points 30.1-35.8 (scan_ne7_js_rk3s8_hi4.jsonl).
 For T7: a) (RK x4 at 34.18) is now answered; stop it if it is still running. b) kc 31 RK x3 at 34.18: keep it, and
 compare it with kc 23 RK x3 1.9278544108 (same RK error, so the difference is the tau resolution alone).
+
+== 2026-10-19 09:05 PDT local
+Nice. T7a (RK x4 at 34.18) stopped. T7b (kc 31, RK x3, NE_NJUNK=28 at 34.18) still running; I will report it against
+kc 23 RK x3 1.9278544108. 5 of 8 threads are free; if you want them, I can run kc 31 with NE_RK_SEG=1,..,8 at 34.18
+after T7b, which would give the step-converged kc 31 value directly.
