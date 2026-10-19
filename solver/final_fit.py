@@ -51,12 +51,12 @@ def step_converged(Dmin=8.0, hi_from=30.2, hi_junk=1.2e-15, hi_refined=True):
             continue
         D.append(k)
         y.append(rk2[k] + ((rk2[k] - rk1[k]) / 15 if k in rk1 else 0.0))
-        s.append(3e-11 if k < 22 else 5e-10 if k < 26 else 1e-9 if k < 29.5 else 3e-8)
+        s.append(3e-11 if k < 22 else 2e-9 if k < 26 else 1.5e-9 if k < 29.5 else 3e-8)   # rms fit residual per range
         g.append(gam.get(k))
     for k in sorted(hi):
         D.append(k)
         y.append(hi[k][0])
-        s.append(1e-7)
+        s.append(1.5e-7 * np.exp(0.27 * (k - 29.3)))   # flat-valley width: ~1.5e-7 at 29.3, >= 7e-7 at 34.98 (x_K 0.7)
         g.append(gam.get(k))
     return np.array(D), np.array(y), np.array(s), np.array([np.nan if v is None else v for v in g], float)
 
