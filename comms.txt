@@ -537,3 +537,7 @@ chain from D = 35.78 up, so my chain (re-solving 30.1-35.8 now, then on with h 0
   may leave ~1e-6 at D = 45, x16 ~7e-8), NE_NJUNK=18 NE_PRED_JUNK0=1 NE_JUNK_DAMP=1, h list, NE_JUNK=4,
   h 0.8, hmax 1.6, D -> 45, output data/scan_ne7_js_rk3s16_hi_local.jsonl.
 Where our D values come close, the x8 / x16 difference also shows whether x8 is still enough.
+== 2026-10-19 09:06 PDT local
+Started the kc 31 step-converged run on the free threads without waiting: kc 31, NE_RK=3 NE_RK_SEG=1,1,1,1,1,1,1,1,8,
+NE_NJUNK=28, at 34.18 from your ne7_js_rk3_D34.1800.npy (on 686cf81, 1 thread + 3 junk workers). With T7b (kc 31 RK x3)
+it gives both the kc 31 RK x3 value and the step-converged kc 31 value to set against 1.9278540086.
