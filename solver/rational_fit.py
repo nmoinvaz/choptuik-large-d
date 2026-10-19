@@ -16,7 +16,14 @@ FIT_MAX = 30.2
 
 
 def data():
-    """(D, Delta, sigma, gamma): old single-setup values for 3.69 <= D < 8 (Delta to ~1e-12), step-converged above."""
+    """(D, Delta, sigma, gamma) over D = 3.7 .. 40: data_all.load_all (kc 39 + Richardson below D = 8)."""
+    from data_all import load_all
+    return load_all()
+
+
+def data_old():
+    """(D, Delta, sigma, gamma): old single-setup values for 3.69 <= D < 8 (scatter ~5e-7: D = 6.75-7.5 off by up to
+    3.8e-6, D = 4.1-4.75 at kc 31, under-resolved by up to 8e-6), step-converged above."""
     D, y, s, g = step_converged(Dmin=8.0)
     o = old_load()
     lo = np.array(sorted(d for d in o if 3.69 <= d < 8.0))
@@ -100,8 +107,9 @@ def compact(targets=(1e-5, 1e-6, 1e-7, 1e-8), Dmin=4.0, npar_max=13):
                     poles = np.roots(np.r_[1.0, q][::-1])
                     if any(abs(r.imag) < 1e-9 and r.real > 0 for r in poles):
                         continue
-                    err = np.abs(rat(p, q, xf(D[fit])) - y[fit]).max()
-                    if err <= tgt and (best is None or err < best[0]):
+                    dev = np.abs(rat(p, q, xf(D[fit])) - y[fit])
+                    err = dev.max()
+                    if np.all(dev <= np.maximum(tgt, 2 * s[fit])) and (best is None or err < best[0]):
                         best = (err, xn, m, k, p, q, np.abs(rat(p, q, xf(D[hold])) - y[hold]).max())
             if best:
                 break
