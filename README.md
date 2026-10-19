@@ -119,6 +119,7 @@ tests/              bindings test
 
 ## Limits
 
+- The Python solver, scans and fits live in `solver/` (see `solver/README.md`).
 - `jacobian` and `mode_matrix` use plain loops (no explicit SIMD) and the parity-folded layout's
   generic path; the residual itself uses the SIMD backends.
 - Only the long-horizon-series variant with frozen RK4 step counts is ported.
