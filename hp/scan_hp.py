@@ -62,7 +62,7 @@ def main():
     ap.add_argument("--ks", type=int, default=100)
     ap.add_argument("--nodes", default=None)
     ap.add_argument("--tag", default="hp")
-    ap.add_argument("--tol", type=float, default=1e-29)
+    ap.add_argument("--tol", type=float, default=1e-27)
     ap.add_argument("--tol_step", type=float, default=1e-32)
     ap.add_argument("--hmax", type=float, default=0.05)
     ap.add_argument("--it_max", type=int, default=8)

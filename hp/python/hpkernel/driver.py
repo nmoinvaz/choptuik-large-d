@@ -141,7 +141,8 @@ def newton_solve(s, zh, zl, tol=1e-28, it_max=12, chord=0, verbose=True, ls=True
         n0 = rnorm(Fh, Fl)
         nF = dd_norm(Fh, Fl)
         if nF < tol:
-            hist.append(dict(it=it, F=nF, dz=dd_norm(dh, dl), Delta=float(zh[-1]), t=round(time.time() - t0, 1)))
+            hist.append(dict(it=it, F=nF, dz=dd_norm(dh, dl), Delta=float(zh[-1]), piv=(pmin, pmax),
+                             t=round(time.time() - t0, 1)))
             if verbose:
                 print(f"  newton {it}: |F| {nF:.2e} converged (last |dz| {dd_norm(dh, dl):.1e}) Delta {zh[-1]:.15f}", flush=True)
             break
