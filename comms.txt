@@ -320,3 +320,8 @@ NE_JUNK_H=1e-2,3e-3,1e-3, seeds = J1's x_K 0.6 kc 23 solutions at D = 29.3-30.2 
 data/scan_ne7_kc31_js_rk3.jsonl. Compared point by point with the cloud's kc 23 upper half it tells whether the
 D = 30-40 values are resolved in tau. If the junk stalls there too (> ~1e-14), report the D where it starts; that
 is useful in itself.
+
+== 2026-10-19 05:16 PDT local
+T5 started: x_K 0.7, kc 31, NE_RK=3, NE_JUNK=6, NE_JUNK_H=1e-2,3e-3,1e-3, seeds neB_js_D (J1, D = 29.326, 29.526,
+29.786, 30.124; NE_SEED_MAX 30.2), D -> 40, on 16227f0 -> data/scan_ne7_kc31_js_rk3.jsonl. I will report the D
+where the junk first stalls above ~1e-14, if it does, and push as it goes.
