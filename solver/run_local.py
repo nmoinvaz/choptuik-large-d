@@ -1,24 +1,25 @@
 #!/usr/bin/env python3
 """Run a matrix of nonlinear-elimination D scans on this machine, several at a time.
 
-The period is selected by horizon regularity, felt through u_K^s0 (u_K = 1 - x_K, s0 ~ 0.53 (D-2)), so matching
-further from the horizon (smaller x_K) selects Delta far more strongly and makes the answer less sensitive to
-discretisation error; it needs more horizon-series terms (radius ~0.7 in u). At D = 23 x_K = 0.6, 0.5 and 0.4 agree
-to 3e-8, while x_K = 0.7 is off by 1e-5 (CONTEXT.md). Jobs:
+Two constraints decide the setup (CONTEXT.md):
+* the horizon series converges only for u = 1 - x_K below a radius that shrinks with D (0.70 at D = 23, 0.47 at 30,
+  0.43 at 36): x_K = 0.4 fails above D ~ 25.5, x_K = 0.5 above ~29, x_K = 0.6 degrades above ~32;
+* the period is selected through u_K^s0, so a larger x_K selects more weakly and needs finer resolution (kc) and the
+  smoothness fix of the junk directions.
+So the high-D jobs match at x_K = 0.7 with kc 31 / 39 and smoothing. Jobs:
 
-    x4_23     x_K = 0.4, Ks = 260, kc = 23, smoothed (strongest selection; slowest) -> data/scan_ne4.jsonl
-    x5_31     x_K = 0.5, Ks = 120, kc = 31, smoothed                           -> data/scan_ne5_kc31.jsonl
-    sj_06     x_K = 0.6, kc = 23, junk fixed by smoothness                     -> data/scan_ne6_sj.jsonl
-    kc31_06   x_K = 0.6, kc = 31                                               -> data/scan_ne6_kc31.jsonl
-  (also available: kc31_07, sj_07 at x_K = 0.7, the weakly selecting setup)
+    sj_07      x_K = 0.7, kc = 23, smoothed      D 23 -> 45     -> data/scan_ne7_sj.jsonl
+    kc39_07    x_K = 0.7, kc = 39, smoothed      D 23 -> 45     -> data/scan_ne7_kc39_sj.jsonl (slowest)
+    sj_06      x_K = 0.6, kc = 23, smoothed      D 23 -> 34     -> data/scan_ne6_sj.jsonl
+    kc31_06    x_K = 0.6, kc = 31                D 23 -> 34     -> data/scan_ne6_kc31.jsonl
+  (x4_23, x5_31, kc31_07, kc31_07_sj also available; the cloud runs x_K = 0.7, kc = 31, smoothed)
 
-The cloud runs x_K = 0.5 (Ks = 120, kc = 23) and x_K = 0.6 kc = 31 with smoothing. Each job re-solves stored seeds
-for D = 23-24, then continues in D up to 40 (about 80 points), one JSON line per point (Delta, residual split,
-gamma), solution vectors in data/. Expect 1-4 hours per job on one core.
+Each job re-solves stored seeds for D = 23-24, then continues in D, one JSON line per point (Delta, residual split,
+gamma), solution vectors in data/.
 
 Usage (repo root, after `pip install .`):
     python solver/run_local.py                      # the four jobs above, one thread each, four at a time
-    python solver/run_local.py --only x4_23 --threads 2
+    python solver/run_local.py --only kc39_07 --threads 2
 Commit solver/data/ and push whenever you like (partial results are useful); rerunning a job appends.
 """
 import argparse
@@ -32,15 +33,18 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, "data")
 
 # name: (output, scan_ne.py arguments, last seed to re-solve before continuing, extra environment)
+SJ = {"NE_SMOOTH": "1", "NE_STRONG_TOL": "1e-8"}
 JOBS = {
-    "x4_23": ("scan_ne4.jsonl", ["23", "40", "0.2", "0.4", "0.4", "../seeds/neB_D", "23"], "24.0", {"NE_KS": "260", "NE_SMOOTH": "1"}),
-    "x5_31": ("scan_ne5_kc31.jsonl", ["23", "40", "0.2", "0.4", "0.5", "../seeds/neB_D", "31"], "24.0", {"NE_KS": "120", "NE_SMOOTH": "1"}),
-    "sj_06": ("scan_ne6_sj.jsonl", ["23", "40", "0.2", "0.4", "0.6", "../seeds/neB_D", "23"], "24.0", {"NE_SMOOTH": "1"}),
-    "kc31_06": ("scan_ne6_kc31.jsonl", ["23", "40", "0.2", "0.4", "0.6", "../seeds/neB_D", "31"], "24.0", {}),
+    "sj_07": ("scan_ne7_sj.jsonl", ["23", "45", "0.2", "0.4", "0.7", "../seeds/long7_D", "23"], "24.0", SJ),
+    "kc39_07": ("scan_ne7_kc39_sj.jsonl", ["23", "45", "0.2", "0.4", "0.7", "../seeds/long7_D", "39"], "24.0", SJ),
+    "sj_06": ("scan_ne6_sj.jsonl", ["23", "34", "0.2", "0.4", "0.6", "../seeds/neB_D", "23"], "24.0", SJ),
+    "kc31_06": ("scan_ne6_kc31.jsonl", ["23", "34", "0.2", "0.4", "0.6", "../seeds/neB_D", "31"], "24.0", {}),
+    "kc31_07_sj": ("scan_ne7_kc31_sj.jsonl", ["23", "45", "0.2", "0.4", "0.7", "../seeds/long7_D", "31"], "24.0", SJ),
     "kc31_07": ("scan_ne7_kc31.jsonl", ["23", "40", "0.2", "0.4", "0.7", "../seeds/long7_D", "31"], "24.0", {}),
-    "sj_07": ("scan_ne7_sj.jsonl", ["23", "40", "0.2", "0.4", "0.7", "../seeds/long7_D", "23"], "24.0", {"NE_SMOOTH": "1"}),
+    "x4_23": ("scan_ne4.jsonl", ["23", "25.5", "0.2", "0.4", "0.4", "../seeds/neB_D", "23"], "24.0", dict(SJ, NE_KS="260")),
+    "x5_31": ("scan_ne5_kc31.jsonl", ["23", "29", "0.2", "0.4", "0.5", "../seeds/neB_D", "31"], "24.0", dict(SJ, NE_KS="120")),
 }
-DEFAULT = ["x4_23", "x5_31", "sj_06", "kc31_06"]
+DEFAULT = ["sj_07", "kc39_07", "sj_06", "kc31_06"]
 
 
 def last_record(log):

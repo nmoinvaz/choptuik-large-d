@@ -321,3 +321,14 @@ light ray. Note the factor √(2π) between the simulation's field (G = 1) and t
   7.4e-7 off, smoothed 4.2e-6. The junk residual converges quadratically to 1e-16 with a 16x16 Jacobian of rank 16,
   so it is a deterministic equation rather than noise, and solving it is the better-defined fix for the weak setups.
 - scan_ne NE_JUNK=<workers> junk-solves every point (records js, Delta_ne, junk_ne). Running x_K 0.6 and 0.7, D = 23-40.
+
+## The horizon series' radius shrinks with D (2026-10-19, ~01:30)
+- Radius of convergence (in u = 1 - x) of the regular horizon series, from coefficient growth (k = 60..160), the same for
+  every tau-harmonic (so a property of the solution): 0.70 (D = 23), 0.60 (25.7), 0.47 (30.1), 0.49 (33.1), 0.43 (36.0);
+  roughly r ~ 2.5 / sqrt(n) above D ~ 30 (a near-horizon layer of width ~ n^-1/2).
+- Consequences: x_K = 0.4 (u = 0.6) is outside the radius above D ~ 25.5, x_K = 0.5 above ~29 (at D = 34 the x_K = 0.5
+  residual from the x_K = 0.6 solution is 6e3), and x_K = 0.6 (u = 0.4) approaches it by D ~ 36 (u/r = 0.92): this is
+  why the kc 31 smoothed x_K = 0.6 scan departs from the D <= 25.5 series above D ~ 32 (-1e-6 at 34, -4e-6 at 36) and
+  why the plain x_K = 0.5 scan scattered by 3e-7 near D ~ 27. High D needs x_K -> 1 as ~1 - 1.6 / sqrt(n).
+- The cloud x_K = 0.5 smoothed scan is replaced by x_K = 0.7, kc 31, smoothed (to D = 45). Local jobs x4_23 / x5_31 are
+  pointless above D ~ 25 / 29.
