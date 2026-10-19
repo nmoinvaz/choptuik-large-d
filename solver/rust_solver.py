@@ -5,6 +5,7 @@ jacobian_rust(S, R, z) -> (F0, J): central differences for all node/centre colum
                          (each perturbed row only recomputes the block whose inputs changed); the horizon-series
                          columns and the whole Delta column by complex step (exact), also via one deduplicated batch.
 """
+import os
 import numpy as np
 from rustkernel import RustResidual
 from spec_long import make_long
@@ -13,9 +14,21 @@ from spec_c import freeze_steps
 NODES_L = [0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6]
 
 
-def make(D, Delta_ref, Ks=60, nodes=NODES_L, threads=2, kc=23):
+def make(D, Delta_ref, Ks=60, nodes=NODES_L, threads=2, kc=23, rk=None):
+    """rk: multiply every RK4 step count (default: env NE_RK, else 1). The near-horizon u-segments dominate the
+    error at x_K = 0.7: D = 29.3, Delta moves -7.9e-6 -> -3.7e-7 (vs x_K = 0.6) going from 1x to 2x steps."""
     S = freeze_steps(make_long(kc, D - 2, nodes=nodes, Ks=Ks), Delta_ref)
-    R = RustResidual(S, threads=threads, backend="simd")
+    mult = int(rk if rk is not None else os.environ.get("NE_RK", "1"))
+    if mult == 1:
+        R = RustResidual(S, threads=threads, backend="simd")
+    else:
+        import rustkernel as _rk
+        orig = _rk.step_counts
+        _rk.step_counts = lambda S_: (lambda s: ([mult * k for k in s[0]], s[1]))(orig(S_))
+        try:
+            R = RustResidual(S, threads=threads, backend="simd")
+        finally:
+            _rk.step_counts = orig
     return S, R
 
 

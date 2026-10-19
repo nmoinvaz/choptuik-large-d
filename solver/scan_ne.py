@@ -7,6 +7,7 @@ the weak singular values, and gamma = 1/lambda from the Rust growth-mode matrix.
 usage: python3 scan_ne.py out.jsonl D_from D_end h hmax [xK=0.6|0.7] [seed prefixes, comma separated] [kc=23]
 Seeds are kc = 23 solutions; for another kc they are regridded. Threads per process: env NE_THREADS (2).
 env NE_SEED_MAX: re-solve only the seeds up to this D, then continue from those solutions.
+env NE_RK: multiply all RK4 step counts (x_K = 0.7 needs 4).
 env NE_KS: horizon series terms (default 60; x_K = 0.5 needs ~120).
 env NE_SMOOTH=1: after each solve, fix the junk directions by smoothness (smooth_junk.py) and re-solve, until
   Delta changes by < 1e-10 (at most 8 rounds).
@@ -46,6 +47,9 @@ if SMOOTH:
 JUNK = int(os.environ.get("NE_JUNK", "0"))
 if JUNK:
     OUTP = OUTP.replace("_D", "_js_D")
+RK = int(os.environ.get("NE_RK", "1"))
+if RK != 1:
+    OUTP = OUTP.replace("_D", f"_rk{RK}_D")
 _g = [json.loads(l) for l in open("gamma_rust.jsonl")]
 _gD = np.array([r["D"] for r in _g if r.get("lam")]); _gl = np.array([r["lam"] for r in _g if r.get("lam")])
 
@@ -130,7 +134,7 @@ def solve(D, z0, lam_guess, t0, src, Delta_old=None):
         js = dict(js=True, Delta_ne=Delta_ne, junk_ne=ji["r0"], n_junk=ji["n_junk"], junk_its=ji["its"])
     ok = h_[2] < 1e-12 and h_[1] < STRONG_TOL and F < 1e-7
     lam = gamma_of(R, z, lam_guess) if ok else None
-    rec = dict(D=D, xK=XK, kc=KC, Ks=KS, smooth=SMOOTH, Delta=float(z[-1]), Delta_old=Delta_old, F=F, strong=h_[1], weak=h_[2], junk=junk,
+    rec = dict(D=D, xK=XK, kc=KC, Ks=KS, rk=RK, smooth=SMOOTH, Delta=float(z[-1]), Delta_old=Delta_old, F=F, strong=h_[1], weak=h_[2], junk=junk,
                n_weak=info["n_weak"], weak_s=[float(f"{x:.2e}") for x in info["weak_s"]], n_outer=len(info["hist"]),
                lam=lam, gamma=(1 / lam if lam else None), ok=bool(ok), source=src, **js, seconds=round(time.time() - t0))
     return z, rec

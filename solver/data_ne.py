@@ -13,7 +13,7 @@ import numpy as np
 from data_best import load as _old
 
 
-def ne_records(xK=0.6, kc=23, smooth=False, js=False):
+def ne_records(xK=0.6, kc=23, smooth=False, js=False, rk=1):
     recs = []
     for fn in sorted(glob.glob("scan_ne*.jsonl")):
         for l in open(fn):
@@ -23,18 +23,18 @@ def ne_records(xK=0.6, kc=23, smooth=False, js=False):
             if abs(r.get("xK", 0.6) - xK) > 1e-9:
                 continue
             rkc = r.get("kc", 31 if "kc31" in fn else 23)
-            if rkc != kc or bool(r.get("smooth", False)) != smooth or bool(r.get("js", False)) != js:
+            if rkc != kc or bool(r.get("smooth", False)) != smooth or bool(r.get("js", False)) != js or r.get("rk", 1) != rk:
                 continue
             recs.append(r)
     return recs
 
 
-def load(xK=0.6, kc=23, dmin_ne=17.2, smooth=False, js=False):
+def load(xK=0.6, kc=23, dmin_ne=17.2, smooth=False, js=False, rk=1):
     by = {}
-    for r in ne_records(xK, kc, smooth, js):
+    for r in ne_records(xK, kc, smooth, js, rk):
         by.setdefault(round(r["D"], 4), []).append(r)
     rows = {}
-    if xK == 0.6 and kc == 23 and not smooth and not js:
+    if xK == 0.6 and kc == 23 and not smooth and not js and rk == 1:
         for k, r in _old().items():
             if k < dmin_ne and r.get("Delta") is not None:
                 rows[k] = dict(D=r["D"], Delta=r["Delta"], gamma=r.get("gamma"), src="old", spread=0.0)
