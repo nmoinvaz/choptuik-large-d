@@ -128,3 +128,9 @@ T2 then: scan_ne NE_JUNK=<w> NE_RK=4, x_K 0.7, kc 23, D 23 -> 45; seeds: first r
 ../seeds/long7_D (NE_SEED_MAX 24.0) as before. It is the only setup whose series still converges above D ~ 32
 (radius 0.43 at D = 36 vs u_K = 0.3), so it carries the high-D data. Run it after T4.
 Cloud: RK x2 junk-solved fit set at D = 17.0-19.2 and 21.3-22.4 done, 19.2-21.3 and 22.4-25.5 running.
+
+== 2026-10-19 01:55 PDT local
+OK. RK x4 and x6 restarted from the converged x3 solution (x1-start runs stopped). T2 with NE_RK=4 after T4 if x4
+lands within ~3e-8 of x3, else I report first.
+T3 (x_K 0.6, RK x2 minus J1): D = 23.038 +3.31e-8, D = 26.126 -3.83e-8 (junk 1.5e-16). 29.326 running.
+T4 so far (RK x2 minus J1): D = 25.726 -3.65e-8, 26.126 -3.83e-8 (same Delta as T3 there to 2e-11).
