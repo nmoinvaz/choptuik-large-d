@@ -23,7 +23,7 @@ import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from data_ne import load  # noqa: E402
 
-FIT_MAX = 25.5      # setups agree to ~1e-8 below this; points above are held out of the fits
+FIT_MAX = 30.2      # step-converged x_K 0.6 data reach this; points above (x_K 0.7) are held out of the fits
 
 SURFACE = "#fcfcfb"
 INK = "#0b0b0b"
@@ -190,54 +190,42 @@ def main():
     ap.add_argument("-o", "--output", default="../delta.svg")
     args = ap.parse_args()
 
-    # Points: below FIT_MAX the setups agree to ~1e-8 (x_K 0.4 / 0.5 / 0.6, kc 23 / 31); above it, the strongly
-    # selecting smoothed scans, held out of every fit.
+    # Points: the step-converged set (x_K 0.6 RK x2 + Richardson to D = 30.2, x_K 0.7 RK x4 above, junk-solved above
+    # 17.2) from final_fit.step_converged; below D = 8 the older single-setup values. Points above FIT_MAX are held
+    # out of every fit.
+    from final_fit import step_converged, weighted_series
+    Dsc, ysc, ssc, gsc = step_converged(Dmin=8.0)
     base = load()
-    Dfit = np.array(sorted(d for d in base if 3.69 <= d <= FIT_MAX))
-    yfit = np.array([base[d]["Delta"] for d in Dfit])
-    hold = {}
-    for setup in (dict(xK=0.6, kc=31, smooth=True), dict(xK=0.5, smooth=True), dict(xK=0.4, smooth=True)):
-        for k, r in load(**setup).items():
-            if k > FIT_MAX and r["src"] == "ne":
-                hold.setdefault(k, r)
-    Dh = np.array(sorted(hold)); yh = np.array([hold[k]["Delta"] for k in Dh])
+    low = np.array(sorted(d for d in base if 3.69 <= d < 8.0))
+    Dfit = np.r_[low, Dsc[Dsc <= FIT_MAX]]
+    yfit = np.r_[[base[d]["Delta"] for d in low], ysc[Dsc <= FIT_MAX]]
+    Dh, yh = Dsc[Dsc > FIT_MAX], ysc[Dsc > FIT_MAX]
 
-    # Delta: power series in 1/(D-2), degree 9, fitted on 8 <= D <= FIT_MAX (errors 1e-8 below 17.2, 3e-8 above)
-    m8 = Dfit >= 8
-    w = np.where(Dfit[m8] < 17.2, 1e8, 1 / 3e-8)
-    cD = series_fit(1 / (Dfit[m8] - 2), yfit[m8], w, 9)
-    fD = lambda d: np.polyval(cD[::-1], 1 / (np.asarray(d) - 2))
+    # Delta: weighted power series in 1/D, degree 10, fitted on 10 <= D <= FIT_MAX
+    mfit = (Dsc >= 10) & (Dsc <= FIT_MAX)
+    cD, _ = weighted_series(1 / Dsc[mfit], ysc[mfit], 1 / ssc[mfit], 10)
+    fD = lambda d: np.polyval(cD[::-1], 1 / np.asarray(d, float))
     hold_err = np.abs(fD(Dh) - yh).max() if len(Dh) else np.nan
 
-    # gamma: Rust mode-matrix values below 17.2, NE above; series with gamma_inf = 1/2
-    graw = {k: r["gamma"] for k, r in base.items() if r.get("gamma") and 3.69 <= k < 17.2}
-    try:
-        for l in open("gamma_rust.jsonl"):
-            r = json.loads(l)
-            if r.get("gamma") and 3.69 <= r["D"] < 17.2:
-                graw[round(r["D"], 4)] = r["gamma"]
-    except OSError:
-        pass
-    for k, r in base.items():
-        if 17.2 <= k <= FIT_MAX and r.get("gamma"):
-            graw[k] = r["gamma"]
-    Dg = np.array(sorted(graw)); g = np.array([graw[k] for k in Dg])
-    gh = {k: r["gamma"] for k, r in hold.items() if r.get("gamma")}
-    Dgh = np.array(sorted(gh)); ggh = np.array([gh[k] for k in Dgh])
-    mg = Dg >= 8
-    cG = series_fit(1 / (Dg[mg] - 2), g[mg], np.ones(mg.sum()), 9, c0=0.5)
-    fG = lambda d: np.polyval(cG[::-1], 1 / (np.asarray(d) - 2))
+    # gamma: same points (gamma per point), older values below D = 8; series with gamma_inf = 1/2
+    gm = np.isfinite(gsc)
+    Dg = np.r_[low[[base[d].get("gamma") is not None for d in low]], Dsc[gm & (Dsc <= FIT_MAX)]]
+    g = np.r_[[base[d]["gamma"] for d in low if base[d].get("gamma") is not None], gsc[gm & (Dsc <= FIT_MAX)]]
+    Dgh, ggh = Dsc[gm & (Dsc > FIT_MAX)], gsc[gm & (Dsc > FIT_MAX)]
+    mg = (Dsc >= 10) & (Dsc <= FIT_MAX) & gm
+    cG, _ = weighted_series(1 / Dsc[mg], gsc[mg], np.ones(mg.sum()), 10, c0=0.5)
+    fG = lambda d: np.polyval(cG[::-1], 1 / np.asarray(d, float))
 
-    fitD = "Δ = " + " ".join(f"{c:+.4g}/(D−2)^{k}" if k else f"{c:.5f}" for k, c in enumerate(cD[:5])) + " … (degree 9, fit 8 ≤ D ≤ %g)" % FIT_MAX
-    fitG = "γ = 1/2 " + " ".join(f"{c:+.4g}/(D−2)^{k}" for k, c in enumerate(cG[:5]) if k) + " … (degree 9, fit 8 ≤ D ≤ %g)" % FIT_MAX
+    fitD = "Δ = " + " ".join(f"{c:+.4g}/D^{k}" if k else f"{c:.5f}" for k, c in enumerate(cD[:5])) + " … (degree 10, fit 10 ≤ D ≤ %g)" % FIT_MAX
+    fitG = "γ = 1/2 " + " ".join(f"{c:+.4g}/D^{k}" for k, c in enumerate(cG[:5]) if k) + " … (degree 10, fit 10 ≤ D ≤ %g)" % FIT_MAX
     zeta2 = np.pi ** 2 / 6
 
     width = 1080
     svg = Svg(width)
     svg.text(16, 28, "Choptuik echo period Δ(D) and critical exponent γ(D) of massless scalar collapse", size=15, fill=INK, weight="bold")
-    svg.text(16, 48, f"Power series in 1/(D−2) fitted on D ≤ {FIT_MAX:g} ({len(Dfit)} points); "
-                     f"the {len(Dh)} hollow points above D = {FIT_MAX:g} are held out and match it to {hold_err:.0e}",
-             size=12)
+    svg.text(16, 48, f"Power series in 1/D fitted on the step-converged points 10 ≤ D ≤ {FIT_MAX:g}; "
+                     + (f"the {len(Dh)} hollow point{'s' if len(Dh) > 1 else ''} above {'are' if len(Dh) > 1 else 'is'} held out and match{'' if len(Dh) > 1 else 'es'} it to {hold_err:.0e}" if len(Dh) else "")
+                     + f";  Δ∞ ≈ {cD[0]:.5f}, γ∞ = 1/2", size=12)
 
     # Panel A: Delta against D, full width
     A = Panel(svg, 78, 120, 984, 300, (3, 60), (1.4, 3.6),
@@ -257,43 +245,43 @@ def main():
     svg.text(A.sx(44), A.sy(zeta2) - 8, f"π²/6 = {zeta2:.4f}", size=10)
     A.key("dot", SERIES[0], "computed, in the fit")
     A.key("hollow", SERIES[0], "computed, held out")
-    A.key("line", SERIES[1], "power series in 1/(D−2), extended to D = 60", dash="6 4")
+    A.key("line", SERIES[1], "power series in 1/D, extended to D = 60", dash="6 4")
     A.key("line", NEUTRAL, "π²/6 for reference", dash="2 3")
 
     # Panel B: Delta against 1/(D-2), D = infinity at the left edge
-    B = Panel(svg, 78, 540, 452, 280, (0, 0.6), (1.4, 3.6),
-              "Against 1/(D−2), Δ runs into a finite intercept",
-              "1/(D−2)   (D = ∞ at the left edge)", "echo period Δ", xfmt="{:.1f}")
-    X = np.linspace(0, 1 / 6, 300)
+    B = Panel(svg, 78, 540, 452, 280, (0, 0.3), (1.4, 3.6),
+              "Against 1/D, Δ runs into a finite intercept",
+              "1/D   (D = ∞ at the left edge)", "echo period Δ", xfmt="{:.2f}")
+    X = np.linspace(0, 1 / 9, 300)
     B.curve(X, np.polyval(cD[::-1], X), SERIES[1], dash="6 4", title=fitD)
     for d, v in zip(Dfit, yfit):
-        marker(svg, B.sx(1 / (d - 2)), B.sy(v), SERIES[0], f"D = {d:.4f}, Δ = {v:.10f}", r=3.8)
+        marker(svg, B.sx(1 / d), B.sy(v), SERIES[0], f"D = {d:.4f}, Δ = {v:.10f}", r=3.8)
     for d, v in zip(Dh, yh):
-        marker(svg, B.sx(1 / (d - 2)), B.sy(v), SERIES[0], f"D = {d:.4f}, Δ = {v:.10f} (held out)", hollow=True, r=3.8)
-    marker(svg, B.sx(0), B.sy(cD[0]), SERIES[1], f"D = ∞: Δ∞ = {cD[0]:.5f} (series)", shape="diamond")
+        marker(svg, B.sx(1 / d), B.sy(v), SERIES[0], f"D = {d:.4f}, Δ = {v:.10f} (held out)", hollow=True, r=3.8)
+    marker(svg, B.sx(0), B.sy(cD[0]), SERIES[1], f"D = ∞: Δ∞ = {cD[0]:.5f} (series; 1.64394 ± 0.00005 over variables and degrees)", shape="diamond")
     svg.text(B.sx(0) + 12, B.sy(cD[0]) + 18, f"D = ∞:  Δ∞ ≈ {cD[0]:.4f}", size=11, fill=INK)
     for d in (4, 6, 10, 20):
-        svg.text(B.sx(1 / (d - 2)) + 6, B.sy(np.interp(1 / (d - 2), (1 / (Dfit - 2))[::-1], yfit[::-1])) + 16, f"D={d}", size=10)
+        svg.text(B.sx(1 / d) + 6, B.sy(np.interp(1 / d, (1 / Dfit)[::-1], yfit[::-1])) + 16, f"D={d}", size=10)
     B.key("dot", SERIES[0], "in the fit")
     B.key("hollow", SERIES[0], "held out")
-    B.key("line", SERIES[1], "series, D ≥ 8", dash="6 4")
+    B.key("line", SERIES[1], "series, D ≥ 10", dash="6 4")
 
     # Panel C: gamma against 1/(D-2)
-    C = Panel(svg, 610, 540, 452, 280, (0, 0.6), (0.36, 0.52),
+    C = Panel(svg, 610, 540, 452, 280, (0, 0.3), (0.36, 0.52),
               "γ runs into 1/2 as D → ∞",
-              "1/(D−2)   (D = ∞ at the left edge)", "critical exponent γ", xfmt="{:.1f}", yfmt="{:.2f}")
-    C.curve([0, 0.6], [0.5, 0.5], NEUTRAL, dash="2 3", width=1.5, title="1/2")
+              "1/D   (D = ∞ at the left edge)", "critical exponent γ", xfmt="{:.2f}", yfmt="{:.2f}")
+    C.curve([0, 0.3], [0.5, 0.5], NEUTRAL, dash="2 3", width=1.5, title="1/2")
     C.curve(X, np.polyval(cG[::-1], X), SERIES[1], dash="6 4", title=fitG)
     for d, v in zip(Dg, g):
-        if C.inside(1 / (d - 2), v):
-            marker(svg, C.sx(1 / (d - 2)), C.sy(v), SERIES[0], f"D = {d:.4f}, γ = {v:.10f}", r=3.8)
+        if C.inside(1 / d, v):
+            marker(svg, C.sx(1 / d), C.sy(v), SERIES[0], f"D = {d:.4f}, γ = {v:.10f}", r=3.8)
     for d, v in zip(Dgh, ggh):
-        marker(svg, C.sx(1 / (d - 2)), C.sy(v), SERIES[0], f"D = {d:.4f}, γ = {v:.10f} (held out; series {fG(d) - v:+.1e})", hollow=True, r=3.8)
+        marker(svg, C.sx(1 / d), C.sy(v), SERIES[0], f"D = {d:.4f}, γ = {v:.10f} (held out; series {fG(d) - v:+.1e})", hollow=True, r=3.8)
     marker(svg, C.sx(0), C.sy(0.5), SERIES[1], "D = ∞: γ = 1/2", shape="diamond")
     svg.text(C.sx(0) + 12, C.sy(0.5) + 18, "D = ∞:  γ = 1/2", size=11, fill=INK)
     for d in (4, 6, 10):
-        if 1 / (d - 2) <= 0.6 and Dg.min() <= d:
-            svg.text(C.sx(1 / (d - 2)) + 6, C.sy(np.interp(1 / (d - 2), (1 / (Dg - 2))[::-1], g[::-1])) + 16, f"D={d}", size=10)
+        if Dg.min() <= d:
+            svg.text(C.sx(1 / d) + 6, C.sy(np.interp(1 / d, (1 / Dg)[::-1], g[::-1])) + 16, f"D={d}", size=10)
     C.key("dot", SERIES[0], "in the fit")
     C.key("hollow", SERIES[0], "held out")
     C.key("line", SERIES[1], "series with γ∞ = 1/2", dash="6 4")

@@ -2,8 +2,8 @@
 <style>@media (prefers-color-scheme: dark){[fill="#fcfcfb"]{fill:#201f1d}[stroke="#fcfcfb"]{stroke:#201f1d}[fill="#0b0b0b"]{fill:#e8e6e3}[stroke="#0b0b0b"]{stroke:#e8e6e3}[fill="#52514e"]{fill:#a8a49d}[stroke="#52514e"]{stroke:#a8a49d}[fill="#e7e6e2"]{fill:#343230}[stroke="#e7e6e2"]{stroke:#343230}[fill="#efeeea"]{fill:#2a2927}[stroke="#efeeea"]{stroke:#2a2927}[fill="#eb6834"]{fill:#dd5c26}[stroke="#eb6834"]{stroke:#dd5c26}[fill="#7a7668"]{fill:#948e82}[stroke="#7a7668"]{stroke:#948e82}}</style>
 <rect width="1080" height="900" fill="#fcfcfb"/>
 <text x="16.0" y="28.0" font-size="15" fill="#0b0b0b" text-anchor="start" font-weight="bold">Choptuik echo period Δ(D) and critical exponent γ(D) of massless scalar collapse</text>
-<text x="16.0" y="48.0" font-size="12" fill="#52514e" text-anchor="start" font-weight="normal">Power series in 1/(D−2) fitted on D ≤ 25.5 (80 points); the 20 hollow points above D = 25.5 are held out and match it to 3e-07</text>
-<text x="78.0" y="80.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">Δ levels off at Δ∞ ≈ 1.6441 instead of falling to zero</text>
+<text x="16.0" y="48.0" font-size="12" fill="#52514e" text-anchor="start" font-weight="normal">Power series in 1/D fitted on the step-converged points 10 ≤ D ≤ 30.2; the 1 hollow point above is held out and matches it to 6e-08;  Δ∞ ≈ 1.64394, γ∞ = 1/2</text>
+<text x="78.0" y="80.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">Δ levels off at Δ∞ ≈ 1.6439 instead of falling to zero</text>
 <line x1="78.0" y1="406.4" x2="1062.0" y2="406.4" stroke="#e7e6e2" stroke-width="1"/>
 <text x="70.0" y="410.4" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">1.5</text>
 <line x1="78.0" y1="338.2" x2="1062.0" y2="338.2" stroke="#e7e6e2" stroke-width="1"/>
@@ -29,11 +29,11 @@
 <line x1="78.0" y1="420.0" x2="1062.0" y2="420.0" stroke="#52514e" stroke-width="1"/>
 <text x="570.0" y="456.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal">spacetime dimension D</text>
 <text x="34.0" y="270.0" font-size="11" fill="#52514e" text-anchor="middle" transform="rotate(-90 34.0 270.0)">echo period Δ</text>
-<rect x="466.4" y="120.0" width="136.8" height="300.0" fill="#efeeea"/>
-<text x="534.8" y="134.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">held out</text>
+<rect x="547.6" y="120.0" width="7.3" height="300.0" fill="#efeeea"/>
+<text x="551.2" y="134.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">held out</text>
 <line x1="78.0" y1="386.7" x2="1062.0" y2="386.7" stroke="#eb6834" stroke-width="1" stroke-opacity="0.6"/>
 <line x1="78.0" y1="386.6" x2="1062.0" y2="386.6" stroke="#7a7668" stroke-width="1" stroke-dasharray="2 3"/>
-<g><path d="M164.3,241.1 L166.6,243.2 L168.8,245.1 L171.1,247.1 L173.3,249.0 L175.6,250.8 L177.8,252.6 L180.1,254.3 L182.3,256.0 L184.6,257.6 L186.8,259.2 L189.1,260.8 L191.3,262.3 L193.6,263.8 L195.8,265.2 L198.1,266.6 L200.3,268.0 L202.6,269.4 L204.8,270.7 L207.1,272.0 L209.3,273.2 L211.6,274.5 L213.8,275.7 L216.1,276.8 L218.3,278.0 L220.6,279.1 L222.8,280.2 L225.1,281.3 L227.3,282.4 L229.6,283.4 L231.8,284.4 L234.1,285.4 L236.3,286.4 L238.6,287.3 L240.8,288.3 L243.1,289.2 L245.3,290.1 L247.6,291.0 L249.8,291.9 L252.1,292.7 L254.3,293.6 L256.6,294.4 L258.8,295.2 L261.1,296.0 L263.3,296.8 L265.6,297.5 L267.8,298.3 L270.1,299.0 L272.3,299.7 L274.6,300.5 L276.8,301.2 L279.1,301.9 L281.3,302.5 L283.6,303.2 L285.8,303.9 L288.1,304.5 L290.3,305.1 L292.6,305.8 L294.8,306.4 L297.1,307.0 L299.3,307.6 L301.6,308.2 L303.8,308.8 L306.1,309.3 L308.3,309.9 L310.6,310.5 L312.8,311.0 L315.1,311.5 L317.3,312.1 L319.6,312.6 L321.8,313.1 L324.1,313.6 L326.3,314.1 L328.6,314.6 L330.8,315.1 L333.1,315.6 L335.3,316.1 L337.6,316.5 L339.8,317.0 L342.1,317.4 L344.3,317.9 L346.6,318.3 L348.8,318.8 L351.1,319.2 L353.3,319.6 L355.6,320.1 L357.8,320.5 L360.1,320.9 L362.3,321.3 L364.6,321.7 L366.8,322.1 L369.1,322.5 L371.3,322.9 L373.6,323.3 L375.8,323.6 L378.1,324.0 L380.3,324.4 L382.5,324.7 L384.8,325.1 L387.0,325.4 L389.3,325.8 L391.5,326.1 L393.8,326.5 L396.0,326.8 L398.3,327.2 L400.5,327.5 L402.8,327.8 L405.0,328.1 L407.3,328.5 L409.5,328.8 L411.8,329.1 L414.0,329.4 L416.3,329.7 L418.5,330.0 L420.8,330.3 L423.0,330.6 L425.3,330.9 L427.5,331.2 L429.8,331.5 L432.0,331.8 L434.3,332.0 L436.5,332.3 L438.8,332.6 L441.0,332.9 L443.3,333.1 L445.5,333.4 L447.8,333.7 L450.0,333.9 L452.3,334.2 L454.5,334.5 L456.8,334.7 L459.0,335.0 L461.3,335.2 L463.5,335.5 L465.8,335.7 L468.0,335.9 L470.3,336.2 L472.5,336.4 L474.8,336.7 L477.0,336.9 L479.3,337.1 L481.5,337.4 L483.8,337.6 L486.0,337.8 L488.3,338.0 L490.5,338.2 L492.8,338.5 L495.0,338.7 L497.3,338.9 L499.5,339.1 L501.8,339.3 L504.0,339.5 L506.3,339.7 L508.5,339.9 L510.8,340.1 L513.0,340.3 L515.3,340.5 L517.5,340.7 L519.8,340.9 L522.0,341.1 L524.3,341.3 L526.5,341.5 L528.8,341.7 L531.0,341.9 L533.3,342.1 L535.5,342.3 L537.8,342.5 L540.0,342.6 L542.3,342.8 L544.5,343.0 L546.8,343.2 L549.0,343.3 L551.3,343.5 L553.5,343.7 L555.8,343.9 L558.0,344.0 L560.3,344.2 L562.5,344.4 L564.8,344.5 L567.0,344.7 L569.3,344.9 L571.5,345.0 L573.8,345.2 L576.0,345.4 L578.3,345.5 L580.5,345.7 L582.8,345.8 L585.0,346.0 L587.3,346.1 L589.5,346.3 L591.8,346.4 L594.0,346.6 L596.3,346.7 L598.5,346.9 L600.8,347.0 L603.0,347.2 L605.3,347.3 L607.5,347.5 L609.8,347.6 L612.0,347.8 L614.3,347.9 L616.5,348.0 L618.8,348.2 L621.0,348.3 L623.3,348.4 L625.5,348.6 L627.8,348.7 L630.0,348.9 L632.3,349.0 L634.5,349.1 L636.8,349.3 L639.0,349.4 L641.3,349.5 L643.5,349.6 L645.8,349.8 L648.0,349.9 L650.3,350.0 L652.5,350.1 L654.8,350.3 L657.0,350.4 L659.3,350.5 L661.5,350.6 L663.8,350.8 L666.0,350.9 L668.3,351.0 L670.5,351.1 L672.8,351.2 L675.0,351.3 L677.3,351.5 L679.5,351.6 L681.8,351.7 L684.0,351.8 L686.3,351.9 L688.5,352.0 L690.8,352.1 L693.0,352.3 L695.3,352.4 L697.5,352.5 L699.8,352.6 L702.0,352.7 L704.3,352.8 L706.5,352.9 L708.8,353.0 L711.0,353.1 L713.3,353.2 L715.5,353.3 L717.8,353.4 L720.0,353.5 L722.3,353.6 L724.5,353.7 L726.8,353.8 L729.0,353.9 L731.3,354.0 L733.5,354.1 L735.8,354.2 L738.0,354.3 L740.3,354.4 L742.5,354.5 L744.8,354.6 L747.0,354.7 L749.3,354.8 L751.5,354.9 L753.8,355.0 L756.0,355.1 L758.3,355.2 L760.5,355.3 L762.8,355.4 L765.0,355.5 L767.3,355.5 L769.5,355.6 L771.8,355.7 L774.0,355.8 L776.3,355.9 L778.5,356.0 L780.8,356.1 L783.0,356.2 L785.3,356.3 L787.5,356.3 L789.8,356.4 L792.0,356.5 L794.3,356.6 L796.5,356.7 L798.8,356.8 L801.0,356.8 L803.3,356.9 L805.5,357.0 L807.8,357.1 L810.0,357.2 L812.3,357.2 L814.5,357.3 L816.8,357.4 L819.0,357.5 L821.3,357.6 L823.5,357.6 L825.8,357.7 L828.0,357.8 L830.3,357.9 L832.5,358.0 L834.8,358.0 L837.0,358.1 L839.3,358.2 L841.5,358.3 L843.8,358.3 L846.0,358.4 L848.3,358.5 L850.5,358.6 L852.8,358.6 L855.0,358.7 L857.3,358.8 L859.5,358.8 L861.8,358.9 L864.0,359.0 L866.3,359.1 L868.5,359.1 L870.8,359.2 L873.0,359.3 L875.3,359.3 L877.5,359.4 L879.8,359.5 L882.0,359.6 L884.3,359.6 L886.5,359.7 L888.8,359.8 L891.0,359.8 L893.3,359.9 L895.5,360.0 L897.8,360.0 L900.0,360.1 L902.3,360.2 L904.5,360.2 L906.8,360.3 L909.0,360.3 L911.3,360.4 L913.5,360.5 L915.8,360.5 L918.0,360.6 L920.3,360.7 L922.5,360.7 L924.8,360.8 L927.0,360.9 L929.3,360.9 L931.5,361.0 L933.8,361.0 L936.0,361.1 L938.3,361.2 L940.5,361.2 L942.8,361.3 L945.0,361.3 L947.3,361.4 L949.5,361.5 L951.8,361.5 L954.0,361.6 L956.3,361.6 L958.5,361.7 L960.8,361.8 L963.0,361.8 L965.3,361.9 L967.5,361.9 L969.8,362.0 L972.0,362.0 L974.3,362.1 L976.5,362.1 L978.8,362.2 L981.0,362.3 L983.3,362.3 L985.5,362.4 L987.8,362.4 L990.0,362.5 L992.3,362.5 L994.5,362.6 L996.8,362.6 L999.0,362.7 L1001.3,362.7 L1003.5,362.8 L1005.8,362.9 L1008.0,362.9 L1010.3,363.0 L1012.5,363.0 L1014.8,363.1 L1017.0,363.1 L1019.3,363.2 L1021.5,363.2 L1023.8,363.3 L1026.0,363.3 L1028.3,363.4 L1030.5,363.4 L1032.8,363.5 L1035.0,363.5 L1037.3,363.6 L1039.5,363.6 L1041.8,363.7 L1044.0,363.7 L1046.3,363.8 L1048.5,363.8 L1050.8,363.9 L1053.0,363.9 L1055.3,364.0 L1057.5,364.0 L1059.8,364.1 L1062.0,364.1" fill="none" stroke="#eb6834" stroke-width="2" stroke-opacity="0.85" stroke-linejoin="round" stroke-dasharray="6 4"/><title>Δ = 1.64407 +10.35/(D−2)^1 -47.43/(D−2)^2 +330.5/(D−2)^3 -2493/(D−2)^4 … (degree 9, fit 8 ≤ D ≤ 25.5)</title></g>
+<g><path d="M164.3,241.1 L166.6,243.2 L168.8,245.1 L171.1,247.1 L173.3,249.0 L175.6,250.8 L177.8,252.6 L180.1,254.3 L182.3,256.0 L184.6,257.6 L186.8,259.2 L189.1,260.8 L191.3,262.3 L193.6,263.8 L195.8,265.2 L198.1,266.6 L200.3,268.0 L202.6,269.4 L204.8,270.7 L207.1,272.0 L209.3,273.2 L211.6,274.5 L213.8,275.7 L216.1,276.8 L218.3,278.0 L220.6,279.1 L222.8,280.2 L225.1,281.3 L227.3,282.4 L229.6,283.4 L231.8,284.4 L234.1,285.4 L236.3,286.4 L238.6,287.3 L240.8,288.3 L243.1,289.2 L245.3,290.1 L247.6,291.0 L249.8,291.9 L252.1,292.7 L254.3,293.6 L256.6,294.4 L258.8,295.2 L261.1,296.0 L263.3,296.8 L265.6,297.5 L267.8,298.3 L270.1,299.0 L272.3,299.7 L274.6,300.5 L276.8,301.2 L279.1,301.9 L281.3,302.5 L283.6,303.2 L285.8,303.9 L288.1,304.5 L290.3,305.1 L292.6,305.8 L294.8,306.4 L297.1,307.0 L299.3,307.6 L301.6,308.2 L303.8,308.8 L306.1,309.3 L308.3,309.9 L310.6,310.5 L312.8,311.0 L315.1,311.5 L317.3,312.1 L319.6,312.6 L321.8,313.1 L324.1,313.6 L326.3,314.1 L328.6,314.6 L330.8,315.1 L333.1,315.6 L335.3,316.1 L337.6,316.5 L339.8,317.0 L342.1,317.4 L344.3,317.9 L346.6,318.3 L348.8,318.8 L351.1,319.2 L353.3,319.6 L355.6,320.1 L357.8,320.5 L360.1,320.9 L362.3,321.3 L364.6,321.7 L366.8,322.1 L369.1,322.5 L371.3,322.9 L373.6,323.3 L375.8,323.6 L378.1,324.0 L380.3,324.4 L382.5,324.7 L384.8,325.1 L387.0,325.4 L389.3,325.8 L391.5,326.1 L393.8,326.5 L396.0,326.8 L398.3,327.2 L400.5,327.5 L402.8,327.8 L405.0,328.1 L407.3,328.5 L409.5,328.8 L411.8,329.1 L414.0,329.4 L416.3,329.7 L418.5,330.0 L420.8,330.3 L423.0,330.6 L425.3,330.9 L427.5,331.2 L429.8,331.5 L432.0,331.8 L434.3,332.0 L436.5,332.3 L438.8,332.6 L441.0,332.9 L443.3,333.1 L445.5,333.4 L447.8,333.7 L450.0,333.9 L452.3,334.2 L454.5,334.5 L456.8,334.7 L459.0,335.0 L461.3,335.2 L463.5,335.5 L465.8,335.7 L468.0,335.9 L470.3,336.2 L472.5,336.4 L474.8,336.7 L477.0,336.9 L479.3,337.1 L481.5,337.4 L483.8,337.6 L486.0,337.8 L488.3,338.0 L490.5,338.2 L492.8,338.5 L495.0,338.7 L497.3,338.9 L499.5,339.1 L501.8,339.3 L504.0,339.5 L506.3,339.7 L508.5,339.9 L510.8,340.1 L513.0,340.3 L515.3,340.5 L517.5,340.7 L519.8,340.9 L522.0,341.1 L524.3,341.3 L526.5,341.5 L528.8,341.7 L531.0,341.9 L533.3,342.1 L535.5,342.3 L537.8,342.5 L540.0,342.6 L542.3,342.8 L544.5,343.0 L546.8,343.2 L549.0,343.3 L551.3,343.5 L553.5,343.7 L555.8,343.9 L558.0,344.0 L560.3,344.2 L562.5,344.4 L564.8,344.5 L567.0,344.7 L569.3,344.9 L571.5,345.0 L573.8,345.2 L576.0,345.4 L578.3,345.5 L580.5,345.7 L582.8,345.8 L585.0,346.0 L587.3,346.1 L589.5,346.3 L591.8,346.4 L594.0,346.6 L596.3,346.7 L598.5,346.9 L600.8,347.0 L603.0,347.2 L605.3,347.3 L607.5,347.5 L609.8,347.6 L612.0,347.8 L614.3,347.9 L616.5,348.0 L618.8,348.2 L621.0,348.3 L623.3,348.4 L625.5,348.6 L627.8,348.7 L630.0,348.9 L632.3,349.0 L634.5,349.1 L636.8,349.3 L639.0,349.4 L641.3,349.5 L643.5,349.6 L645.8,349.8 L648.0,349.9 L650.3,350.0 L652.5,350.1 L654.8,350.3 L657.0,350.4 L659.3,350.5 L661.5,350.6 L663.8,350.8 L666.0,350.9 L668.3,351.0 L670.5,351.1 L672.8,351.2 L675.0,351.3 L677.3,351.5 L679.5,351.6 L681.8,351.7 L684.0,351.8 L686.3,351.9 L688.5,352.0 L690.8,352.1 L693.0,352.3 L695.3,352.4 L697.5,352.5 L699.8,352.6 L702.0,352.7 L704.3,352.8 L706.5,352.9 L708.8,353.0 L711.0,353.1 L713.3,353.2 L715.5,353.3 L717.8,353.4 L720.0,353.5 L722.3,353.6 L724.5,353.7 L726.8,353.8 L729.0,353.9 L731.3,354.0 L733.5,354.1 L735.8,354.2 L738.0,354.3 L740.3,354.4 L742.5,354.5 L744.8,354.6 L747.0,354.7 L749.3,354.8 L751.5,354.9 L753.8,355.0 L756.0,355.1 L758.3,355.2 L760.5,355.3 L762.8,355.4 L765.0,355.5 L767.3,355.5 L769.5,355.6 L771.8,355.7 L774.0,355.8 L776.3,355.9 L778.5,356.0 L780.8,356.1 L783.0,356.2 L785.3,356.3 L787.5,356.3 L789.8,356.4 L792.0,356.5 L794.3,356.6 L796.5,356.7 L798.8,356.8 L801.0,356.8 L803.3,356.9 L805.5,357.0 L807.8,357.1 L810.0,357.2 L812.3,357.2 L814.5,357.3 L816.8,357.4 L819.0,357.5 L821.3,357.6 L823.5,357.6 L825.8,357.7 L828.0,357.8 L830.3,357.9 L832.5,358.0 L834.8,358.0 L837.0,358.1 L839.3,358.2 L841.5,358.3 L843.8,358.3 L846.0,358.4 L848.3,358.5 L850.5,358.6 L852.8,358.6 L855.0,358.7 L857.3,358.8 L859.5,358.8 L861.8,358.9 L864.0,359.0 L866.3,359.1 L868.5,359.1 L870.8,359.2 L873.0,359.3 L875.3,359.3 L877.5,359.4 L879.8,359.5 L882.0,359.6 L884.3,359.6 L886.5,359.7 L888.8,359.8 L891.0,359.8 L893.3,359.9 L895.5,360.0 L897.8,360.0 L900.0,360.1 L902.3,360.2 L904.5,360.2 L906.8,360.3 L909.0,360.3 L911.3,360.4 L913.5,360.5 L915.8,360.5 L918.0,360.6 L920.3,360.7 L922.5,360.7 L924.8,360.8 L927.0,360.9 L929.3,360.9 L931.5,361.0 L933.8,361.0 L936.0,361.1 L938.3,361.2 L940.5,361.2 L942.8,361.3 L945.0,361.3 L947.3,361.4 L949.5,361.5 L951.8,361.5 L954.0,361.6 L956.3,361.6 L958.5,361.7 L960.8,361.8 L963.0,361.8 L965.3,361.9 L967.5,361.9 L969.8,362.0 L972.0,362.0 L974.3,362.1 L976.5,362.2 L978.8,362.2 L981.0,362.3 L983.3,362.3 L985.5,362.4 L987.8,362.4 L990.0,362.5 L992.3,362.5 L994.5,362.6 L996.8,362.6 L999.0,362.7 L1001.3,362.8 L1003.5,362.8 L1005.8,362.9 L1008.0,362.9 L1010.3,363.0 L1012.5,363.0 L1014.8,363.1 L1017.0,363.1 L1019.3,363.2 L1021.5,363.2 L1023.8,363.3 L1026.0,363.3 L1028.3,363.4 L1030.5,363.4 L1032.8,363.5 L1035.0,363.5 L1037.3,363.6 L1039.5,363.6 L1041.8,363.7 L1044.0,363.7 L1046.3,363.8 L1048.5,363.8 L1050.8,363.9 L1053.0,363.9 L1055.3,364.0 L1057.5,364.0 L1059.8,364.1 L1062.0,364.1" fill="none" stroke="#eb6834" stroke-width="2" stroke-opacity="0.85" stroke-linejoin="round" stroke-dasharray="6 4"/><title>Δ = 1.64394 +10.37/D^1 -27.87/D^2 +218.9/D^3 -1699/D^4 … (degree 10, fit 10 ≤ D ≤ 30.2)</title></g>
 <g><circle cx="90.1" cy="138.4" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.7000, Δ = 3.4652039823</title></g>
 <g><circle cx="90.9" cy="138.2" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.7500, Δ = 3.4667583720</title></g>
 <g><circle cx="91.1" cy="138.2" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.7600, Δ = 3.4667651801</title></g>
@@ -56,95 +56,87 @@
 <g><circle cx="151.4" cy="228.1" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 7.2500, Δ = 2.8070897278</title></g>
 <g><circle cx="155.7" cy="232.7" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 7.5000, Δ = 2.7734800070</title></g>
 <g><circle cx="160.0" cy="237.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 7.7500, Δ = 2.7417591886</title></g>
-<g><circle cx="164.3" cy="241.1" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 8.0000, Δ = 2.7117900432</title></g>
-<g><circle cx="168.6" cy="245.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 8.2500, Δ = 2.6834342790</title></g>
-<g><circle cx="172.1" cy="247.9" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 8.4500, Δ = 2.6618284698</title></g>
-<g><circle cx="176.6" cy="251.6" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 8.7100, Δ = 2.6350724500</title></g>
-<g><circle cx="182.4" cy="256.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 9.0480, Δ = 2.6023641985</title></g>
-<g><circle cx="190.0" cy="261.4" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 9.4874, Δ = 2.5630056843</title></g>
-<g><circle cx="196.2" cy="265.5" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 9.8460, Δ = 2.5332568818</title></g>
-<g><circle cx="198.6" cy="267.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 9.9874, Δ = 2.5220624355</title></g>
-<g><circle cx="207.3" cy="272.1" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 10.4874, Δ = 2.4846958487</title></g>
-<g><circle cx="211.6" cy="274.5" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 10.7374, Δ = 2.4672098948</title></g>
-<g><circle cx="217.2" cy="277.4" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 11.0624, Δ = 2.4455641413</title></g>
-<g><circle cx="224.5" cy="281.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 11.4849, Δ = 2.4191117947</title></g>
-<g><circle cx="233.1" cy="285.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 11.9849, Δ = 2.3900319686</title></g>
-<g><circle cx="237.4" cy="286.9" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 12.2349, Δ = 2.3763154048</title></g>
-<g><circle cx="243.0" cy="289.2" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 12.5599, Δ = 2.3592386995</title></g>
-<g><circle cx="250.3" cy="292.1" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 12.9824, Δ = 2.3382226715</title></g>
-<g><circle cx="254.6" cy="293.7" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 13.2324, Δ = 2.3263726692</title></g>
-<g><circle cx="260.3" cy="295.7" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 13.5574, Δ = 2.3115734526</title></g>
-<g><circle cx="267.5" cy="298.2" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 13.9774, Δ = 2.2933946396</title></g>
-<g><circle cx="274.8" cy="300.5" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 14.3974, Δ = 2.2762014278</title></g>
-<g><circle cx="282.0" cy="302.7" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 14.8174, Δ = 2.2599147264</title></g>
-<g><circle cx="289.3" cy="304.8" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 15.2374, Δ = 2.2444637332</title></g>
-<g><circle cx="296.5" cy="306.8" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 15.6574, Δ = 2.2297848879</title></g>
-<g><circle cx="303.8" cy="308.8" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 16.0774, Δ = 2.2158209594</title></g>
-<g><circle cx="308.1" cy="309.8" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 16.3274, Δ = 2.2078270873</title></g>
-<g><circle cx="313.7" cy="311.2" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 16.6524, Δ = 2.1977697717</title></g>
-<g><circle cx="320.9" cy="312.9" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 17.0724, Δ = 2.1853021416</title></g>
-<g><circle cx="324.6" cy="313.7" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 17.2824, Δ = 2.1792805023</title></g>
-<g><circle cx="326.9" cy="314.3" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 17.4189, Δ = 2.1754391295</title></g>
-<g><circle cx="330.4" cy="315.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 17.6189, Δ = 2.1699111421</title></g>
-<g><circle cx="334.9" cy="316.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 17.8789, Δ = 2.1628975378</title></g>
-<g><circle cx="340.7" cy="317.2" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 18.2169, Δ = 2.1540597264</title></g>
-<g><circle cx="345.0" cy="318.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 18.4669, Δ = 2.1477175662</title></g>
-<g><circle cx="350.6" cy="319.1" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 18.7919, Δ = 2.1397088468</title></g>
-<g><circle cx="357.9" cy="320.5" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 19.2144, Δ = 2.1296768453</title></g>
-<g><circle cx="362.7" cy="321.4" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 19.4890, Δ = 2.1233751144</title></g>
-<g><circle cx="368.8" cy="322.4" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 19.8460, Δ = 2.1154267729</title></g>
-<g><circle cx="369.8" cy="322.6" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 19.9041, Δ = 2.1141584977</title></g>
-<g><circle cx="371.1" cy="322.8" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 19.9795, Δ = 2.1125228822</title></g>
-<g><circle cx="372.8" cy="323.1" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.0775, Δ = 2.1104142217</title></g>
-<g><circle cx="374.0" cy="323.3" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.1460, Δ = 2.1089517274</title></g>
-<g><circle cx="375.0" cy="323.5" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.2050, Δ = 2.1076995108</title></g>
-<g><circle cx="377.9" cy="324.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.3707, Δ = 2.1042190630</title></g>
-<g><circle cx="378.8" cy="324.1" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.4245, Δ = 2.1031004066</title></g>
-<g><circle cx="379.2" cy="324.2" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.4460, Δ = 2.1026549034</title></g>
-<g><circle cx="382.5" cy="324.7" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.6410, Δ = 2.0986540432</title></g>
-<g><circle cx="387.7" cy="325.5" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.9410, Δ = 2.0926354196</title></g>
-<g><circle cx="394.5" cy="326.6" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 21.3310, Δ = 2.0850488908</title></g>
-<g><circle cx="403.2" cy="327.9" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 21.8380, Δ = 2.0755671510</title></g>
-<g><circle cx="413.6" cy="329.3" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 22.4380, Δ = 2.0648669354</title></g>
-<g><circle cx="423.9" cy="330.7" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 23.0380, Δ = 2.0546914291</title></g>
-<g><circle cx="429.1" cy="331.4" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 23.3380, Δ = 2.0497884029</title></g>
-<g><circle cx="432.6" cy="331.8" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 23.5380, Δ = 2.0465850925</title></g>
-<g><circle cx="437.0" cy="332.4" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 23.7980, Δ = 2.0424966014</title></g>
-<g><circle cx="442.9" cy="333.1" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 24.1360, Δ = 2.0373056450</title></g>
-<g><circle cx="449.8" cy="333.9" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 24.5360, Δ = 2.0313367018</title></g>
-<g><circle cx="456.7" cy="334.7" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 24.9360, Δ = 2.0255483826</title></g>
-<g><circle cx="463.6" cy="335.5" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 25.3360, Δ = 2.0199325384</title></g>
-<g><circle cx="470.3" cy="336.2" r="4.5" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 25.7260, Δ = 2.0146158124 (held out; series -6.3e-08)</title></g>
-<g><circle cx="477.2" cy="336.9" r="4.5" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 26.1260, Δ = 2.0093184847 (held out; series -7.6e-08)</title></g>
-<g><circle cx="484.1" cy="337.6" r="4.5" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 26.5260, Δ = 2.0041721058 (held out; series -8.6e-08)</title></g>
-<g><circle cx="491.0" cy="338.3" r="4.5" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 26.9260, Δ = 1.9991702576 (held out; series -9.4e-08)</title></g>
-<g><circle cx="497.9" cy="339.0" r="4.5" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 27.3260, Δ = 1.9943068839 (held out; series -1.0e-07)</title></g>
-<g><circle cx="504.8" cy="339.6" r="4.5" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 27.7260, Δ = 1.9895762652 (held out; series -1.1e-07)</title></g>
-<g><circle cx="511.8" cy="340.2" r="4.5" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 28.1260, Δ = 1.9849729955 (held out; series -1.2e-07)</title></g>
-<g><circle cx="518.7" cy="340.8" r="4.5" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 28.5260, Δ = 1.9804919590 (held out; series -1.4e-07)</title></g>
-<g><circle cx="525.6" cy="341.4" r="4.5" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 28.9260, Δ = 1.9761283117 (held out; series -1.6e-07)</title></g>
-<g><circle cx="532.5" cy="342.0" r="4.5" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 29.3260, Δ = 1.9718774619 (held out; series -1.8e-07)</title></g>
-<g><circle cx="539.4" cy="342.6" r="4.5" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 29.7260, Δ = 1.9677350543 (held out; series -2.0e-07)</title></g>
-<g><circle cx="546.3" cy="343.1" r="4.5" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 30.1260, Δ = 1.9636969540 (held out; series -2.2e-07)</title></g>
-<g><circle cx="553.2" cy="343.7" r="4.5" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 30.5260, Δ = 1.9597592350 (held out; series -2.2e-07)</title></g>
-<g><circle cx="560.1" cy="344.2" r="4.5" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 30.9260, Δ = 1.9559181673 (held out; series -2.1e-07)</title></g>
-<g><circle cx="567.0" cy="344.7" r="4.5" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 31.3260, Δ = 1.9521702061 (held out; series -1.8e-07)</title></g>
-<g><circle cx="573.9" cy="345.2" r="4.5" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 31.7260, Δ = 1.9485119783 (held out; series -1.3e-07)</title></g>
-<g><circle cx="580.8" cy="345.7" r="4.5" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 32.1260, Δ = 1.9449402715 (held out; series -6.2e-08)</title></g>
-<g><circle cx="587.7" cy="346.2" r="4.5" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 32.5260, Δ = 1.9414520253 (held out; series +3.9e-08)</title></g>
-<g><circle cx="594.6" cy="346.6" r="4.5" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 32.9260, Δ = 1.9380443133 (held out; series +1.8e-07)</title></g>
-<g><circle cx="598.1" cy="346.9" r="4.5" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 33.1260, Δ = 1.9363697803 (held out; series +2.7e-07)</title></g>
-<text x="785.8" y="402.7" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Δ∞ ≈ 1.6441  (series limit)</text>
+<g><circle cx="164.3" cy="241.1" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 8.0000, Δ = 2.7117900548</title></g>
+<g><circle cx="168.6" cy="245.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 8.2500, Δ = 2.6834342963</title></g>
+<g><circle cx="172.1" cy="247.9" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 8.4500, Δ = 2.6618284892</title></g>
+<g><circle cx="176.6" cy="251.6" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 8.7100, Δ = 2.6350724671</title></g>
+<g><circle cx="182.4" cy="256.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 9.0480, Δ = 2.6023642106</title></g>
+<g><circle cx="190.0" cy="261.4" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 9.4874, Δ = 2.5630056855</title></g>
+<g><circle cx="196.2" cy="265.5" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 9.8460, Δ = 2.5332568762</title></g>
+<g><circle cx="198.6" cy="267.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 9.9874, Δ = 2.5220624272</title></g>
+<g><circle cx="207.3" cy="272.1" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 10.4874, Δ = 2.4846958373</title></g>
+<g><circle cx="211.6" cy="274.5" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 10.7374, Δ = 2.4672098865</title></g>
+<g><circle cx="217.2" cy="277.4" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 11.0624, Δ = 2.4455641384</title></g>
+<g><circle cx="224.5" cy="281.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 11.4849, Δ = 2.4191118012</title></g>
+<g><circle cx="233.1" cy="285.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 11.9849, Δ = 2.3900319852</title></g>
+<g><circle cx="237.4" cy="286.9" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 12.2349, Δ = 2.3763154229</title></g>
+<g><circle cx="243.0" cy="289.2" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 12.5599, Δ = 2.3592387181</title></g>
+<g><circle cx="250.3" cy="292.1" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 12.9824, Δ = 2.3382226852</title></g>
+<g><circle cx="254.6" cy="293.7" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 13.2324, Δ = 2.3263726766</title></g>
+<g><circle cx="260.3" cy="295.7" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 13.5574, Δ = 2.3115734515</title></g>
+<g><circle cx="267.5" cy="298.2" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 13.9774, Δ = 2.2933946268</title></g>
+<g><circle cx="274.8" cy="300.5" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 14.3974, Δ = 2.2762014077</title></g>
+<g><circle cx="282.0" cy="302.7" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 14.8174, Δ = 2.2599147033</title></g>
+<g><circle cx="289.3" cy="304.8" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 15.2374, Δ = 2.2444637157</title></g>
+<g><circle cx="296.5" cy="306.8" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 15.6574, Δ = 2.2297848798</title></g>
+<g><circle cx="303.8" cy="308.8" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 16.0774, Δ = 2.2158209626</title></g>
+<g><circle cx="308.1" cy="309.8" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 16.3274, Δ = 2.2078270982</title></g>
+<g><circle cx="313.7" cy="311.2" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 16.6524, Δ = 2.1977697896</title></g>
+<g><circle cx="320.9" cy="312.9" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 17.0724, Δ = 2.1853021663</title></g>
+<g><circle cx="324.6" cy="313.7" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 17.2824, Δ = 2.1792805283</title></g>
+<g><circle cx="326.9" cy="314.3" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 17.4189, Δ = 2.1754391554</title></g>
+<g><circle cx="330.4" cy="315.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 17.6189, Δ = 2.1699111665</title></g>
+<g><circle cx="334.9" cy="316.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 17.8789, Δ = 2.1628975582</title></g>
+<g><circle cx="340.7" cy="317.2" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 18.2169, Δ = 2.1540597377</title></g>
+<g><circle cx="345.0" cy="318.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 18.4669, Δ = 2.1477175704</title></g>
+<g><circle cx="350.6" cy="319.1" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 18.7919, Δ = 2.1397088408</title></g>
+<g><circle cx="357.9" cy="320.5" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 19.2144, Δ = 2.1296768268</title></g>
+<g><circle cx="362.7" cy="321.4" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 19.4890, Δ = 2.1233750894</title></g>
+<g><circle cx="368.8" cy="322.4" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 19.8460, Δ = 2.1154267448</title></g>
+<g><circle cx="369.8" cy="322.6" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 19.9041, Δ = 2.1141584691</title></g>
+<g><circle cx="371.1" cy="322.8" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 19.9795, Δ = 2.1125228533</title></g>
+<g><circle cx="372.8" cy="323.1" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.0775, Δ = 2.1104141926</title></g>
+<g><circle cx="374.0" cy="323.3" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.1460, Δ = 2.1089516983</title></g>
+<g><circle cx="375.0" cy="323.5" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.2050, Δ = 2.1076994820</title></g>
+<g><circle cx="377.9" cy="324.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.3707, Δ = 2.1042190353</title></g>
+<g><circle cx="378.8" cy="324.1" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.4245, Δ = 2.1031003794</title></g>
+<g><circle cx="379.2" cy="324.2" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.4460, Δ = 2.1026548765</title></g>
+<g><circle cx="382.5" cy="324.7" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.6410, Δ = 2.0986540193</title></g>
+<g><circle cx="387.7" cy="325.5" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.9410, Δ = 2.0926354025</title></g>
+<g><circle cx="394.5" cy="326.6" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 21.3310, Δ = 2.0850488856</title></g>
+<g><circle cx="403.2" cy="327.9" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 21.8380, Δ = 2.0755671625</title></g>
+<g><circle cx="413.6" cy="329.3" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 22.4380, Δ = 2.0648669632</title></g>
+<g><circle cx="423.9" cy="330.7" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 23.0380, Δ = 2.0546914641</title></g>
+<g><circle cx="429.1" cy="331.4" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 23.3380, Δ = 2.0497884374</title></g>
+<g><circle cx="432.6" cy="331.8" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 23.5380, Δ = 2.0465851235</title></g>
+<g><circle cx="437.0" cy="332.4" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 23.7980, Δ = 2.0424966270</title></g>
+<g><circle cx="442.9" cy="333.1" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 24.1360, Δ = 2.0373056648</title></g>
+<g><circle cx="449.8" cy="333.9" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 24.5360, Δ = 2.0313367083</title></g>
+<g><circle cx="470.3" cy="336.2" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 25.7260, Δ = 2.0146157948</title></g>
+<g><circle cx="477.2" cy="336.9" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 26.1260, Δ = 2.0093184659</title></g>
+<g><circle cx="484.1" cy="337.6" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 26.5260, Δ = 2.0041720892</title></g>
+<g><circle cx="491.0" cy="338.3" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 26.9260, Δ = 1.9991702451</title></g>
+<g><circle cx="497.9" cy="339.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 27.3260, Δ = 1.9943068767</title></g>
+<g><circle cx="504.8" cy="339.6" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 27.7260, Δ = 1.9895762621</title></g>
+<g><circle cx="511.8" cy="340.2" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 28.1260, Δ = 1.9849729927</title></g>
+<g><circle cx="518.7" cy="340.8" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 28.5260, Δ = 1.9804919522</title></g>
+<g><circle cx="525.6" cy="341.4" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 28.9260, Δ = 1.9761282924</title></g>
+<g><circle cx="532.5" cy="342.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 29.3260, Δ = 1.9718774345</title></g>
+<g><circle cx="535.9" cy="342.3" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 29.5260, Δ = 1.9697929327</title></g>
+<g><circle cx="540.4" cy="342.7" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 29.7860, Δ = 1.9671227357</title></g>
+<g><circle cx="546.2" cy="343.1" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 30.1240, Δ = 1.9637168273</title></g>
+<g><circle cx="549.7" cy="343.4" r="4.5" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 30.3240, Δ = 1.9617353646 (held out; series +6.5e-08)</title></g>
+<text x="785.8" y="402.7" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Δ∞ ≈ 1.6439  (series limit)</text>
 <text x="785.8" y="378.6" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">π²/6 = 1.6449</text>
 <g><circle cx="83.0" cy="96.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>computed, in the fit</title></g>
 <text x="92.0" y="100.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">computed, in the fit</text>
 <g><circle cx="235.0" cy="96.0" r="4.5" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>computed, held out</title></g>
 <text x="244.0" y="100.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">computed, held out</text>
 <line x1="370.0" y1="96.0" x2="392.0" y2="96.0" stroke="#eb6834" stroke-width="2" stroke-dasharray="6 4"/>
-<text x="398.0" y="100.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">power series in 1/(D−2), extended to D = 60</text>
-<line x1="674.0" y1="96.0" x2="696.0" y2="96.0" stroke="#7a7668" stroke-width="2" stroke-dasharray="2 3"/>
-<text x="702.0" y="100.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">π²/6 for reference</text>
-<text x="78.0" y="500.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">Against 1/(D−2), Δ runs into a finite intercept</text>
+<text x="398.0" y="100.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">power series in 1/D, extended to D = 60</text>
+<line x1="650.0" y1="96.0" x2="672.0" y2="96.0" stroke="#7a7668" stroke-width="2" stroke-dasharray="2 3"/>
+<text x="678.0" y="100.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">π²/6 for reference</text>
+<text x="78.0" y="500.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">Against 1/D, Δ runs into a finite intercept</text>
 <line x1="78.0" y1="807.3" x2="530.0" y2="807.3" stroke="#e7e6e2" stroke-width="1"/>
 <text x="70.0" y="811.3" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">1.5</text>
 <line x1="78.0" y1="743.6" x2="530.0" y2="743.6" stroke="#e7e6e2" stroke-width="1"/>
@@ -156,135 +148,127 @@
 <line x1="78.0" y1="552.7" x2="530.0" y2="552.7" stroke="#e7e6e2" stroke-width="1"/>
 <text x="70.0" y="556.7" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">3.5</text>
 <line x1="78.0" y1="540.0" x2="78.0" y2="820.0" stroke="#e7e6e2" stroke-width="1"/>
-<text x="78.0" y="836.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.0</text>
+<text x="78.0" y="836.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.00</text>
 <line x1="153.3" y1="540.0" x2="153.3" y2="820.0" stroke="#e7e6e2" stroke-width="1"/>
-<text x="153.3" y="836.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.1</text>
+<text x="153.3" y="836.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.05</text>
 <line x1="228.7" y1="540.0" x2="228.7" y2="820.0" stroke="#e7e6e2" stroke-width="1"/>
-<text x="228.7" y="836.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.2</text>
+<text x="228.7" y="836.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.10</text>
 <line x1="304.0" y1="540.0" x2="304.0" y2="820.0" stroke="#e7e6e2" stroke-width="1"/>
-<text x="304.0" y="836.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.3</text>
+<text x="304.0" y="836.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.15</text>
 <line x1="379.3" y1="540.0" x2="379.3" y2="820.0" stroke="#e7e6e2" stroke-width="1"/>
-<text x="379.3" y="836.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.4</text>
+<text x="379.3" y="836.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.20</text>
 <line x1="454.7" y1="540.0" x2="454.7" y2="820.0" stroke="#e7e6e2" stroke-width="1"/>
-<text x="454.7" y="836.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.5</text>
+<text x="454.7" y="836.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.25</text>
 <line x1="530.0" y1="540.0" x2="530.0" y2="820.0" stroke="#e7e6e2" stroke-width="1"/>
-<text x="530.0" y="836.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.6</text>
+<text x="530.0" y="836.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.30</text>
 <line x1="78.0" y1="820.0" x2="530.0" y2="820.0" stroke="#52514e" stroke-width="1"/>
-<text x="304.0" y="856.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal">1/(D−2)   (D = ∞ at the left edge)</text>
+<text x="304.0" y="856.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal">1/D   (D = ∞ at the left edge)</text>
 <text x="34.0" y="680.0" font-size="11" fill="#52514e" text-anchor="middle" transform="rotate(-90 34.0 680.0)">echo period Δ</text>
-<g><path d="M78.0,788.9 L78.4,788.2 L78.8,787.5 L79.3,786.8 L79.7,786.0 L80.1,785.3 L80.5,784.6 L80.9,783.9 L81.4,783.2 L81.8,782.5 L82.2,781.8 L82.6,781.1 L83.0,780.4 L83.5,779.7 L83.9,779.0 L84.3,778.3 L84.7,777.6 L85.1,777.0 L85.6,776.3 L86.0,775.6 L86.4,774.9 L86.8,774.3 L87.2,773.6 L87.7,773.0 L88.1,772.3 L88.5,771.7 L88.9,771.0 L89.3,770.4 L89.8,769.7 L90.2,769.1 L90.6,768.4 L91.0,767.8 L91.4,767.2 L91.9,766.5 L92.3,765.9 L92.7,765.3 L93.1,764.6 L93.5,764.0 L94.0,763.4 L94.4,762.8 L94.8,762.2 L95.2,761.6 L95.6,761.0 L96.1,760.3 L96.5,759.7 L96.9,759.1 L97.3,758.5 L97.7,757.9 L98.2,757.3 L98.6,756.8 L99.0,756.2 L99.4,755.6 L99.8,755.0 L100.3,754.4 L100.7,753.8 L101.1,753.3 L101.5,752.7 L101.9,752.1 L102.4,751.5 L102.8,751.0 L103.2,750.4 L103.6,749.8 L104.0,749.3 L104.5,748.7 L104.9,748.1 L105.3,747.6 L105.7,747.0 L106.1,746.5 L106.6,745.9 L107.0,745.4 L107.4,744.8 L107.8,744.3 L108.2,743.7 L108.7,743.2 L109.1,742.6 L109.5,742.1 L109.9,741.6 L110.3,741.0 L110.8,740.5 L111.2,740.0 L111.6,739.4 L112.0,738.9 L112.4,738.4 L112.9,737.9 L113.3,737.3 L113.7,736.8 L114.1,736.3 L114.5,735.8 L115.0,735.3 L115.4,734.8 L115.8,734.2 L116.2,733.7 L116.6,733.2 L117.1,732.7 L117.5,732.2 L117.9,731.7 L118.3,731.2 L118.7,730.7 L119.2,730.2 L119.6,729.7 L120.0,729.2 L120.4,728.7 L120.8,728.2 L121.3,727.7 L121.7,727.2 L122.1,726.7 L122.5,726.3 L122.9,725.8 L123.4,725.3 L123.8,724.8 L124.2,724.3 L124.6,723.8 L125.0,723.4 L125.5,722.9 L125.9,722.4 L126.3,721.9 L126.7,721.5 L127.1,721.0 L127.6,720.5 L128.0,720.1 L128.4,719.6 L128.8,719.1 L129.2,718.7 L129.6,718.2 L130.1,717.7 L130.5,717.3 L130.9,716.8 L131.3,716.4 L131.7,715.9 L132.2,715.5 L132.6,715.0 L133.0,714.6 L133.4,714.1 L133.8,713.7 L134.3,713.2 L134.7,712.8 L135.1,712.3 L135.5,711.9 L135.9,711.4 L136.4,711.0 L136.8,710.5 L137.2,710.1 L137.6,709.7 L138.0,709.2 L138.5,708.8 L138.9,708.4 L139.3,707.9 L139.7,707.5 L140.1,707.1 L140.6,706.6 L141.0,706.2 L141.4,705.8 L141.8,705.3 L142.2,704.9 L142.7,704.5 L143.1,704.1 L143.5,703.7 L143.9,703.2 L144.3,702.8 L144.8,702.4 L145.2,702.0 L145.6,701.6 L146.0,701.1 L146.4,700.7 L146.9,700.3 L147.3,699.9 L147.7,699.5 L148.1,699.1 L148.5,698.7 L149.0,698.3 L149.4,697.9 L149.8,697.5 L150.2,697.1 L150.6,696.7 L151.1,696.3 L151.5,695.9 L151.9,695.5 L152.3,695.1 L152.7,694.7 L153.2,694.3 L153.6,693.9 L154.0,693.5 L154.4,693.1 L154.8,692.7 L155.3,692.3 L155.7,691.9 L156.1,691.5 L156.5,691.1 L156.9,690.7 L157.4,690.3 L157.8,690.0 L158.2,689.6 L158.6,689.2 L159.0,688.8 L159.5,688.4 L159.9,688.1 L160.3,687.7 L160.7,687.3 L161.1,686.9 L161.6,686.5 L162.0,686.2 L162.4,685.8 L162.8,685.4 L163.2,685.0 L163.7,684.7 L164.1,684.3 L164.5,683.9 L164.9,683.6 L165.3,683.2 L165.8,682.8 L166.2,682.4 L166.6,682.1 L167.0,681.7 L167.4,681.4 L167.9,681.0 L168.3,680.6 L168.7,680.3 L169.1,679.9 L169.5,679.5 L170.0,679.2 L170.4,678.8 L170.8,678.5 L171.2,678.1 L171.6,677.8 L172.1,677.4 L172.5,677.1 L172.9,676.7 L173.3,676.3 L173.7,676.0 L174.2,675.6 L174.6,675.3 L175.0,674.9 L175.4,674.6 L175.8,674.3 L176.3,673.9 L176.7,673.6 L177.1,673.2 L177.5,672.9 L177.9,672.5 L178.4,672.2 L178.8,671.8 L179.2,671.5 L179.6,671.2 L180.0,670.8 L180.5,670.5 L180.9,670.2 L181.3,669.8 L181.7,669.5 L182.1,669.1 L182.6,668.8 L183.0,668.5 L183.4,668.1 L183.8,667.8 L184.2,667.5 L184.7,667.1 L185.1,666.8 L185.5,666.5 L185.9,666.2 L186.3,665.8 L186.8,665.5 L187.2,665.2 L187.6,664.9 L188.0,664.5 L188.4,664.2 L188.9,663.9 L189.3,663.6 L189.7,663.2 L190.1,662.9 L190.5,662.6 L191.0,662.3 L191.4,662.0 L191.8,661.7 L192.2,661.3 L192.6,661.0 L193.1,660.7 L193.5,660.4 L193.9,660.1 L194.3,659.8 L194.7,659.4 L195.2,659.1 L195.6,658.8 L196.0,658.5 L196.4,658.2 L196.8,657.9 L197.3,657.6 L197.7,657.3 L198.1,657.0 L198.5,656.7 L198.9,656.4 L199.4,656.1 L199.8,655.8 L200.2,655.4 L200.6,655.1 L201.0,654.8 L201.5,654.5 L201.9,654.2 L202.3,653.9 L202.7,653.6 L203.1,653.3 L203.6,653.0" fill="none" stroke="#eb6834" stroke-width="2" stroke-opacity="0.85" stroke-linejoin="round" stroke-dasharray="6 4"/><title>Δ = 1.64407 +10.35/(D−2)^1 -47.43/(D−2)^2 +330.5/(D−2)^3 -2493/(D−2)^4 … (degree 9, fit 8 ≤ D ≤ 25.5)</title></g>
-<g><circle cx="521.1" cy="557.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.7000, Δ = 3.4652039823</title></g>
-<g><circle cx="508.5" cy="557.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.7500, Δ = 3.4667583720</title></g>
-<g><circle cx="506.0" cy="557.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.7600, Δ = 3.4667651801</title></g>
-<g><circle cx="496.5" cy="557.1" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.8000, Δ = 3.4658975109</title></g>
-<g><circle cx="474.5" cy="558.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.9000, Δ = 3.4584885955</title></g>
+<g><path d="M78.0,789.0 L78.6,788.5 L79.1,788.0 L79.7,787.5 L80.2,787.0 L80.8,786.5 L81.4,786.0 L81.9,785.5 L82.5,785.1 L83.0,784.6 L83.6,784.1 L84.2,783.6 L84.7,783.1 L85.3,782.7 L85.8,782.2 L86.4,781.7 L87.0,781.2 L87.5,780.8 L88.1,780.3 L88.6,779.8 L89.2,779.3 L89.8,778.9 L90.3,778.4 L90.9,777.9 L91.4,777.4 L92.0,777.0 L92.6,776.5 L93.1,776.0 L93.7,775.6 L94.2,775.1 L94.8,774.6 L95.4,774.2 L95.9,773.7 L96.5,773.3 L97.0,772.8 L97.6,772.3 L98.2,771.9 L98.7,771.4 L99.3,771.0 L99.8,770.5 L100.4,770.0 L101.0,769.6 L101.5,769.1 L102.1,768.7 L102.6,768.2 L103.2,767.8 L103.8,767.3 L104.3,766.9 L104.9,766.4 L105.4,766.0 L106.0,765.5 L106.6,765.1 L107.1,764.6 L107.7,764.2 L108.2,763.7 L108.8,763.3 L109.4,762.8 L109.9,762.4 L110.5,761.9 L111.0,761.5 L111.6,761.0 L112.2,760.6 L112.7,760.1 L113.3,759.7 L113.8,759.3 L114.4,758.8 L115.0,758.4 L115.5,757.9 L116.1,757.5 L116.6,757.1 L117.2,756.6 L117.8,756.2 L118.3,755.7 L118.9,755.3 L119.4,754.9 L120.0,754.4 L120.6,754.0 L121.1,753.6 L121.7,753.1 L122.2,752.7 L122.8,752.3 L123.4,751.8 L123.9,751.4 L124.5,751.0 L125.0,750.5 L125.6,750.1 L126.2,749.7 L126.7,749.3 L127.3,748.8 L127.8,748.4 L128.4,748.0 L129.0,747.5 L129.5,747.1 L130.1,746.7 L130.6,746.3 L131.2,745.8 L131.7,745.4 L132.3,745.0 L132.9,744.6 L133.4,744.1 L134.0,743.7 L134.5,743.3 L135.1,742.9 L135.7,742.5 L136.2,742.0 L136.8,741.6 L137.3,741.2 L137.9,740.8 L138.5,740.3 L139.0,739.9 L139.6,739.5 L140.1,739.1 L140.7,738.7 L141.3,738.3 L141.8,737.8 L142.4,737.4 L142.9,737.0 L143.5,736.6 L144.1,736.2 L144.6,735.8 L145.2,735.4 L145.7,734.9 L146.3,734.5 L146.9,734.1 L147.4,733.7 L148.0,733.3 L148.5,732.9 L149.1,732.5 L149.7,732.1 L150.2,731.6 L150.8,731.2 L151.3,730.8 L151.9,730.4 L152.5,730.0 L153.0,729.6 L153.6,729.2 L154.1,728.8 L154.7,728.4 L155.3,728.0 L155.8,727.6 L156.4,727.2 L156.9,726.7 L157.5,726.3 L158.1,725.9 L158.6,725.5 L159.2,725.1 L159.7,724.7 L160.3,724.3 L160.9,723.9 L161.4,723.5 L162.0,723.1 L162.5,722.7 L163.1,722.3 L163.7,721.9 L164.2,721.5 L164.8,721.1 L165.3,720.7 L165.9,720.3 L166.5,719.9 L167.0,719.5 L167.6,719.1 L168.1,718.7 L168.7,718.3 L169.3,717.9 L169.8,717.5 L170.4,717.1 L170.9,716.7 L171.5,716.3 L172.1,715.9 L172.6,715.5 L173.2,715.1 L173.7,714.7 L174.3,714.3 L174.9,713.9 L175.4,713.5 L176.0,713.2 L176.5,712.8 L177.1,712.4 L177.7,712.0 L178.2,711.6 L178.8,711.2 L179.3,710.8 L179.9,710.4 L180.5,710.0 L181.0,709.6 L181.6,709.2 L182.1,708.8 L182.7,708.4 L183.3,708.1 L183.8,707.7 L184.4,707.3 L184.9,706.9 L185.5,706.5 L186.1,706.1 L186.6,705.7 L187.2,705.3 L187.7,704.9 L188.3,704.6 L188.9,704.2 L189.4,703.8 L190.0,703.4 L190.5,703.0 L191.1,702.6 L191.7,702.2 L192.2,701.9 L192.8,701.5 L193.3,701.1 L193.9,700.7 L194.5,700.3 L195.0,699.9 L195.6,699.5 L196.1,699.2 L196.7,698.8 L197.3,698.4 L197.8,698.0 L198.4,697.6 L198.9,697.2 L199.5,696.9 L200.1,696.5 L200.6,696.1 L201.2,695.7 L201.7,695.3 L202.3,695.0 L202.9,694.6 L203.4,694.2 L204.0,693.8 L204.5,693.4 L205.1,693.1 L205.7,692.7 L206.2,692.3 L206.8,691.9 L207.3,691.5 L207.9,691.2 L208.5,690.8 L209.0,690.4 L209.6,690.0 L210.1,689.7 L210.7,689.3 L211.3,688.9 L211.8,688.5 L212.4,688.2 L212.9,687.8 L213.5,687.4 L214.1,687.0 L214.6,686.6 L215.2,686.3 L215.7,685.9 L216.3,685.5 L216.9,685.2 L217.4,684.8 L218.0,684.4 L218.5,684.0 L219.1,683.7 L219.7,683.3 L220.2,682.9 L220.8,682.5 L221.3,682.2 L221.9,681.8 L222.5,681.4 L223.0,681.1 L223.6,680.7 L224.1,680.3 L224.7,679.9 L225.3,679.6 L225.8,679.2 L226.4,678.8 L226.9,678.5 L227.5,678.1 L228.1,677.7 L228.6,677.4 L229.2,677.0 L229.7,676.6 L230.3,676.2 L230.9,675.9 L231.4,675.5 L232.0,675.1 L232.5,674.8 L233.1,674.4 L233.6,674.0 L234.2,673.7 L234.8,673.3 L235.3,672.9 L235.9,672.6 L236.4,672.2 L237.0,671.8 L237.6,671.5 L238.1,671.1 L238.7,670.8 L239.2,670.4 L239.8,670.0 L240.4,669.7 L240.9,669.3 L241.5,668.9 L242.0,668.6 L242.6,668.2 L243.2,667.8 L243.7,667.5 L244.3,667.1 L244.8,666.8 L245.4,666.4" fill="none" stroke="#eb6834" stroke-width="2" stroke-opacity="0.85" stroke-linejoin="round" stroke-dasharray="6 4"/><title>Δ = 1.64394 +10.37/D^1 -27.87/D^2 +218.9/D^3 -1699/D^4 … (degree 10, fit 10 ≤ D ≤ 30.2)</title></g>
+<g><circle cx="485.2" cy="557.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.7000, Δ = 3.4652039823</title></g>
+<g><circle cx="479.8" cy="557.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.7500, Δ = 3.4667583720</title></g>
+<g><circle cx="478.7" cy="557.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.7600, Δ = 3.4667651801</title></g>
+<g><circle cx="474.5" cy="557.1" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.8000, Δ = 3.4658975109</title></g>
+<g><circle cx="464.3" cy="558.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.9000, Δ = 3.4584885955</title></g>
 <g><circle cx="454.7" cy="559.7" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 4.0000, Δ = 3.4454523972</title></g>
-<g><circle cx="436.7" cy="561.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 4.1000, Δ = 3.4285212723</title></g>
-<g><circle cx="412.8" cy="565.7" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 4.2500, Δ = 3.3982817569</title></g>
-<g><circle cx="379.3" cy="572.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 4.5000, Δ = 3.3411395461</title></g>
-<g><circle cx="351.9" cy="580.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 4.7500, Δ = 3.2811679677</title></g>
-<g><circle cx="329.1" cy="588.1" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 5.0000, Δ = 3.2217019415</title></g>
-<g><circle cx="309.8" cy="595.5" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 5.2500, Δ = 3.1643092783</title></g>
-<g><circle cx="293.2" cy="602.4" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 5.5000, Δ = 3.1096825634</title></g>
-<g><circle cx="278.9" cy="609.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 5.7500, Δ = 3.0580684612</title></g>
-<g><circle cx="266.3" cy="615.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 6.0000, Δ = 3.0094831820</title></g>
-<g><circle cx="255.3" cy="621.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 6.2500, Δ = 2.9638258660</title></g>
-<g><circle cx="245.4" cy="626.4" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 6.5000, Δ = 2.9209394654</title></g>
-<g><circle cx="236.6" cy="631.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 6.7500, Δ = 2.8806438921</title></g>
-<g><circle cx="228.7" cy="636.4" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 7.0000, Δ = 2.8427541061</title></g>
-<g><circle cx="221.5" cy="640.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 7.2500, Δ = 2.8070897278</title></g>
-<g><circle cx="215.0" cy="645.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 7.5000, Δ = 2.7734800070</title></g>
-<g><circle cx="209.0" cy="649.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 7.7500, Δ = 2.7417591886</title></g>
-<g><circle cx="203.6" cy="653.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 8.0000, Δ = 2.7117900432</title></g>
-<g><circle cx="198.5" cy="656.7" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 8.2500, Δ = 2.6834342790</title></g>
-<g><circle cx="194.8" cy="659.4" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 8.4500, Δ = 2.6618284698</title></g>
-<g><circle cx="190.3" cy="662.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 8.7100, Δ = 2.6350724500</title></g>
-<g><circle cx="184.9" cy="667.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 9.0480, Δ = 2.6023641985</title></g>
-<g><circle cx="178.6" cy="672.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 9.4874, Δ = 2.5630056843</title></g>
-<g><circle cx="174.0" cy="675.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 9.8460, Δ = 2.5332568818</title></g>
-<g><circle cx="172.3" cy="677.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 9.9874, Δ = 2.5220624355</title></g>
-<g><circle cx="166.8" cy="681.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 10.4874, Δ = 2.4846958487</title></g>
-<g><circle cx="164.2" cy="684.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 10.7374, Δ = 2.4672098948</title></g>
-<g><circle cx="161.1" cy="686.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 11.0624, Δ = 2.4455641413</title></g>
-<g><circle cx="157.4" cy="690.3" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 11.4849, Δ = 2.4191117947</title></g>
-<g><circle cx="153.4" cy="694.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 11.9849, Δ = 2.3900319686</title></g>
-<g><circle cx="151.6" cy="695.7" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 12.2349, Δ = 2.3763154048</title></g>
-<g><circle cx="149.3" cy="697.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 12.5599, Δ = 2.3592386995</title></g>
-<g><circle cx="146.6" cy="700.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 12.9824, Δ = 2.3382226715</title></g>
-<g><circle cx="145.1" cy="702.1" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 13.2324, Δ = 2.3263726692</title></g>
-<g><circle cx="143.2" cy="704.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 13.5574, Δ = 2.3115734526</title></g>
-<g><circle cx="140.9" cy="706.3" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 13.9774, Δ = 2.2933946396</title></g>
-<g><circle cx="138.8" cy="708.5" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 14.3974, Δ = 2.2762014278</title></g>
-<g><circle cx="136.8" cy="710.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 14.8174, Δ = 2.2599147264</title></g>
-<g><circle cx="134.9" cy="712.5" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 15.2374, Δ = 2.2444637332</title></g>
-<g><circle cx="133.2" cy="714.4" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 15.6574, Δ = 2.2297848879</title></g>
-<g><circle cx="131.5" cy="716.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 16.0774, Δ = 2.2158209594</title></g>
-<g><circle cx="130.6" cy="717.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 16.3274, Δ = 2.2078270873</title></g>
-<g><circle cx="129.4" cy="718.5" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 16.6524, Δ = 2.1977697717</title></g>
-<g><circle cx="128.0" cy="720.1" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 17.0724, Δ = 2.1853021416</title></g>
-<g><circle cx="127.3" cy="720.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 17.2824, Δ = 2.1792805023</title></g>
-<g><circle cx="126.9" cy="721.3" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 17.4189, Δ = 2.1754391295</title></g>
-<g><circle cx="126.2" cy="722.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 17.6189, Δ = 2.1699111421</title></g>
-<g><circle cx="125.4" cy="722.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 17.8789, Δ = 2.1628975378</title></g>
-<g><circle cx="124.5" cy="724.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 18.2169, Δ = 2.1540597264</title></g>
-<g><circle cx="123.7" cy="724.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 18.4669, Δ = 2.1477175662</title></g>
-<g><circle cx="122.9" cy="725.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 18.7919, Δ = 2.1397088468</title></g>
-<g><circle cx="121.8" cy="727.1" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 19.2144, Δ = 2.1296768453</title></g>
-<g><circle cx="121.1" cy="727.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 19.4890, Δ = 2.1233751144</title></g>
-<g><circle cx="120.2" cy="728.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 19.8460, Δ = 2.1154267729</title></g>
-<g><circle cx="120.1" cy="729.1" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 19.9041, Δ = 2.1141584977</title></g>
-<g><circle cx="119.9" cy="729.3" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 19.9795, Δ = 2.1125228822</title></g>
-<g><circle cx="119.7" cy="729.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.0775, Δ = 2.1104142217</title></g>
-<g><circle cx="119.5" cy="729.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.1460, Δ = 2.1089517274</title></g>
-<g><circle cx="119.4" cy="729.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.2050, Δ = 2.1076995108</title></g>
-<g><circle cx="119.0" cy="730.4" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.3707, Δ = 2.1042190630</title></g>
-<g><circle cx="118.9" cy="730.5" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.4245, Δ = 2.1031004066</title></g>
-<g><circle cx="118.8" cy="730.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.4460, Δ = 2.1026549034</title></g>
-<g><circle cx="118.4" cy="731.1" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.6410, Δ = 2.0986540432</title></g>
-<g><circle cx="117.8" cy="731.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.9410, Δ = 2.0926354196</title></g>
-<g><circle cx="117.0" cy="732.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 21.3310, Δ = 2.0850488908</title></g>
-<g><circle cx="116.0" cy="734.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 21.8380, Δ = 2.0755671510</title></g>
-<g><circle cx="114.9" cy="735.4" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 22.4380, Δ = 2.0648669354</title></g>
-<g><circle cx="113.8" cy="736.7" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 23.0380, Δ = 2.0546914291</title></g>
-<g><circle cx="113.3" cy="737.3" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 23.3380, Δ = 2.0497884029</title></g>
-<g><circle cx="113.0" cy="737.7" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 23.5380, Δ = 2.0465850925</title></g>
-<g><circle cx="112.6" cy="738.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 23.7980, Δ = 2.0424966014</title></g>
-<g><circle cx="112.0" cy="738.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 24.1360, Δ = 2.0373056450</title></g>
-<g><circle cx="111.4" cy="739.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 24.5360, Δ = 2.0313367018</title></g>
-<g><circle cx="110.8" cy="740.4" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 24.9360, Δ = 2.0255483826</title></g>
-<g><circle cx="110.3" cy="741.1" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 25.3360, Δ = 2.0199325384</title></g>
-<g><circle cx="109.8" cy="741.8" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 25.7260, Δ = 2.0146158124 (held out)</title></g>
-<g><circle cx="109.2" cy="742.5" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 26.1260, Δ = 2.0093184847 (held out)</title></g>
-<g><circle cx="108.7" cy="743.1" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 26.5260, Δ = 2.0041721058 (held out)</title></g>
-<g><circle cx="108.2" cy="743.7" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 26.9260, Δ = 1.9991702576 (held out)</title></g>
-<g><circle cx="107.7" cy="744.4" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 27.3260, Δ = 1.9943068839 (held out)</title></g>
-<g><circle cx="107.3" cy="745.0" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 27.7260, Δ = 1.9895762652 (held out)</title></g>
-<g><circle cx="106.8" cy="745.5" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 28.1260, Δ = 1.9849729955 (held out)</title></g>
-<g><circle cx="106.4" cy="746.1" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 28.5260, Δ = 1.9804919590 (held out)</title></g>
-<g><circle cx="106.0" cy="746.7" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 28.9260, Δ = 1.9761283117 (held out)</title></g>
-<g><circle cx="105.6" cy="747.2" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 29.3260, Δ = 1.9718774619 (held out)</title></g>
-<g><circle cx="105.2" cy="747.7" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 29.7260, Δ = 1.9677350543 (held out)</title></g>
-<g><circle cx="104.8" cy="748.3" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 30.1260, Δ = 1.9636969540 (held out)</title></g>
-<g><circle cx="104.4" cy="748.8" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 30.5260, Δ = 1.9597592350 (held out)</title></g>
-<g><circle cx="104.0" cy="749.2" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 30.9260, Δ = 1.9559181673 (held out)</title></g>
-<g><circle cx="103.7" cy="749.7" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 31.3260, Δ = 1.9521702061 (held out)</title></g>
-<g><circle cx="103.3" cy="750.2" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 31.7260, Δ = 1.9485119783 (held out)</title></g>
-<g><circle cx="103.0" cy="750.6" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 32.1260, Δ = 1.9449402715 (held out)</title></g>
-<g><circle cx="102.7" cy="751.1" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 32.5260, Δ = 1.9414520253 (held out)</title></g>
-<g><circle cx="102.4" cy="751.5" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 32.9260, Δ = 1.9380443133 (held out)</title></g>
-<g><circle cx="102.2" cy="751.7" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 33.1260, Δ = 1.9363697803 (held out)</title></g>
-<g><polygon points="78.0,782.9 84.0,788.9 78.0,794.9 72.0,788.9" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = ∞: Δ∞ = 1.64407 (series)</title></g>
-<text x="90.0" y="806.9" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">D = ∞:  Δ∞ ≈ 1.6441</text>
+<g><circle cx="445.5" cy="561.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 4.1000, Δ = 3.4285212723</title></g>
+<g><circle cx="432.5" cy="565.7" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 4.2500, Δ = 3.3982817569</title></g>
+<g><circle cx="412.8" cy="572.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 4.5000, Δ = 3.3411395461</title></g>
+<g><circle cx="395.2" cy="580.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 4.7500, Δ = 3.2811679677</title></g>
+<g><circle cx="379.3" cy="588.1" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 5.0000, Δ = 3.2217019415</title></g>
+<g><circle cx="365.0" cy="595.5" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 5.2500, Δ = 3.1643092783</title></g>
+<g><circle cx="351.9" cy="602.4" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 5.5000, Δ = 3.1096825634</title></g>
+<g><circle cx="340.0" cy="609.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 5.7500, Δ = 3.0580684612</title></g>
+<g><circle cx="329.1" cy="615.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 6.0000, Δ = 3.0094831820</title></g>
+<g><circle cx="319.1" cy="621.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 6.2500, Δ = 2.9638258660</title></g>
+<g><circle cx="309.8" cy="626.4" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 6.5000, Δ = 2.9209394654</title></g>
+<g><circle cx="301.2" cy="631.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 6.7500, Δ = 2.8806438921</title></g>
+<g><circle cx="293.2" cy="636.4" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 7.0000, Δ = 2.8427541061</title></g>
+<g><circle cx="285.8" cy="640.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 7.2500, Δ = 2.8070897278</title></g>
+<g><circle cx="278.9" cy="645.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 7.5000, Δ = 2.7734800070</title></g>
+<g><circle cx="272.4" cy="649.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 7.7500, Δ = 2.7417591886</title></g>
+<g><circle cx="266.3" cy="653.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 8.0000, Δ = 2.7117900548</title></g>
+<g><circle cx="260.6" cy="656.7" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 8.2500, Δ = 2.6834342963</title></g>
+<g><circle cx="256.3" cy="659.4" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 8.4500, Δ = 2.6618284892</title></g>
+<g><circle cx="251.0" cy="662.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 8.7100, Δ = 2.6350724671</title></g>
+<g><circle cx="244.5" cy="667.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 9.0480, Δ = 2.6023642106</title></g>
+<g><circle cx="236.8" cy="672.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 9.4874, Δ = 2.5630056855</title></g>
+<g><circle cx="231.0" cy="675.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 9.8460, Δ = 2.5332568762</title></g>
+<g><circle cx="228.9" cy="677.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 9.9874, Δ = 2.5220624272</title></g>
+<g><circle cx="221.7" cy="681.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 10.4874, Δ = 2.4846958373</title></g>
+<g><circle cx="218.3" cy="684.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 10.7374, Δ = 2.4672098865</title></g>
+<g><circle cx="214.2" cy="686.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 11.0624, Δ = 2.4455641384</title></g>
+<g><circle cx="209.2" cy="690.3" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 11.4849, Δ = 2.4191118012</title></g>
+<g><circle cx="203.7" cy="694.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 11.9849, Δ = 2.3900319852</title></g>
+<g><circle cx="201.1" cy="695.7" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 12.2349, Δ = 2.3763154229</title></g>
+<g><circle cx="198.0" cy="697.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 12.5599, Δ = 2.3592387181</title></g>
+<g><circle cx="194.1" cy="700.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 12.9824, Δ = 2.3382226852</title></g>
+<g><circle cx="191.9" cy="702.1" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 13.2324, Δ = 2.3263726766</title></g>
+<g><circle cx="189.1" cy="704.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 13.5574, Δ = 2.3115734515</title></g>
+<g><circle cx="185.8" cy="706.3" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 13.9774, Δ = 2.2933946268</title></g>
+<g><circle cx="182.6" cy="708.5" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 14.3974, Δ = 2.2762014077</title></g>
+<g><circle cx="179.7" cy="710.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 14.8174, Δ = 2.2599147033</title></g>
+<g><circle cx="176.9" cy="712.5" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 15.2374, Δ = 2.2444637157</title></g>
+<g><circle cx="174.2" cy="714.4" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 15.6574, Δ = 2.2297848798</title></g>
+<g><circle cx="171.7" cy="716.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 16.0774, Δ = 2.2158209626</title></g>
+<g><circle cx="170.3" cy="717.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 16.3274, Δ = 2.2078270982</title></g>
+<g><circle cx="168.5" cy="718.5" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 16.6524, Δ = 2.1977697896</title></g>
+<g><circle cx="166.3" cy="720.1" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 17.0724, Δ = 2.1853021663</title></g>
+<g><circle cx="165.2" cy="720.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 17.2824, Δ = 2.1792805283</title></g>
+<g><circle cx="164.5" cy="721.3" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 17.4189, Δ = 2.1754391554</title></g>
+<g><circle cx="163.5" cy="722.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 17.6189, Δ = 2.1699111665</title></g>
+<g><circle cx="162.3" cy="722.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 17.8789, Δ = 2.1628975582</title></g>
+<g><circle cx="160.7" cy="724.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 18.2169, Δ = 2.1540597377</title></g>
+<g><circle cx="159.6" cy="724.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 18.4669, Δ = 2.1477175704</title></g>
+<g><circle cx="158.2" cy="725.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 18.7919, Δ = 2.1397088408</title></g>
+<g><circle cx="156.4" cy="727.1" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 19.2144, Δ = 2.1296768268</title></g>
+<g><circle cx="155.3" cy="727.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 19.4890, Δ = 2.1233750894</title></g>
+<g><circle cx="153.9" cy="728.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 19.8460, Δ = 2.1154267448</title></g>
+<g><circle cx="153.7" cy="729.1" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 19.9041, Δ = 2.1141584691</title></g>
+<g><circle cx="153.4" cy="729.3" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 19.9795, Δ = 2.1125228533</title></g>
+<g><circle cx="153.0" cy="729.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.0775, Δ = 2.1104141926</title></g>
+<g><circle cx="152.8" cy="729.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.1460, Δ = 2.1089516983</title></g>
+<g><circle cx="152.6" cy="729.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.2050, Δ = 2.1076994820</title></g>
+<g><circle cx="152.0" cy="730.4" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.3707, Δ = 2.1042190353</title></g>
+<g><circle cx="151.8" cy="730.5" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.4245, Δ = 2.1031003794</title></g>
+<g><circle cx="151.7" cy="730.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.4460, Δ = 2.1026548765</title></g>
+<g><circle cx="151.0" cy="731.1" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.6410, Δ = 2.0986540193</title></g>
+<g><circle cx="149.9" cy="731.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.9410, Δ = 2.0926354025</title></g>
+<g><circle cx="148.6" cy="732.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 21.3310, Δ = 2.0850488856</title></g>
+<g><circle cx="147.0" cy="734.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 21.8380, Δ = 2.0755671625</title></g>
+<g><circle cx="145.1" cy="735.4" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 22.4380, Δ = 2.0648669632</title></g>
+<g><circle cx="143.4" cy="736.7" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 23.0380, Δ = 2.0546914641</title></g>
+<g><circle cx="142.6" cy="737.3" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 23.3380, Δ = 2.0497884374</title></g>
+<g><circle cx="142.0" cy="737.7" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 23.5380, Δ = 2.0465851235</title></g>
+<g><circle cx="141.3" cy="738.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 23.7980, Δ = 2.0424966270</title></g>
+<g><circle cx="140.4" cy="738.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 24.1360, Δ = 2.0373056648</title></g>
+<g><circle cx="139.4" cy="739.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 24.5360, Δ = 2.0313367083</title></g>
+<g><circle cx="136.6" cy="741.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 25.7260, Δ = 2.0146157948</title></g>
+<g><circle cx="135.7" cy="742.5" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 26.1260, Δ = 2.0093184659</title></g>
+<g><circle cx="134.8" cy="743.1" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 26.5260, Δ = 2.0041720892</title></g>
+<g><circle cx="134.0" cy="743.7" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 26.9260, Δ = 1.9991702451</title></g>
+<g><circle cx="133.1" cy="744.4" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 27.3260, Δ = 1.9943068767</title></g>
+<g><circle cx="132.3" cy="745.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 27.7260, Δ = 1.9895762621</title></g>
+<g><circle cx="131.6" cy="745.5" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 28.1260, Δ = 1.9849729927</title></g>
+<g><circle cx="130.8" cy="746.1" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 28.5260, Δ = 1.9804919522</title></g>
+<g><circle cx="130.1" cy="746.7" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 28.9260, Δ = 1.9761282924</title></g>
+<g><circle cx="129.4" cy="747.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 29.3260, Δ = 1.9718774345</title></g>
+<g><circle cx="129.0" cy="747.5" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 29.5260, Δ = 1.9697929327</title></g>
+<g><circle cx="128.6" cy="747.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 29.7860, Δ = 1.9671227357</title></g>
+<g><circle cx="128.0" cy="748.3" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 30.1240, Δ = 1.9637168273</title></g>
+<g><circle cx="127.7" cy="748.5" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 30.3240, Δ = 1.9617353646 (held out)</title></g>
+<g><polygon points="78.0,783.0 84.0,789.0 78.0,795.0 72.0,789.0" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = ∞: Δ∞ = 1.64394 (series; 1.64394 ± 0.00005 over variables and degrees)</title></g>
+<text x="90.0" y="807.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">D = ∞:  Δ∞ ≈ 1.6439</text>
 <text x="460.7" y="575.7" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">D=4</text>
-<text x="272.3" y="631.2" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">D=6</text>
-<text x="178.2" y="693.3" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">D=10</text>
-<text x="125.9" y="745.4" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">D=20</text>
+<text x="335.1" y="631.2" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">D=6</text>
+<text x="234.7" y="693.3" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">D=10</text>
+<text x="159.3" y="745.4" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">D=20</text>
 <g><circle cx="83.0" cy="516.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>in the fit</title></g>
 <text x="92.0" y="520.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">in the fit</text>
 <g><circle cx="175.0" cy="516.0" r="4.5" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>held out</title></g>
 <text x="184.0" y="520.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">held out</text>
 <line x1="250.0" y1="516.0" x2="272.0" y2="516.0" stroke="#eb6834" stroke-width="2" stroke-dasharray="6 4"/>
-<text x="278.0" y="520.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">series, D ≥ 8</text>
+<text x="278.0" y="520.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">series, D ≥ 10</text>
 <text x="610.0" y="500.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">γ runs into 1/2 as D → ∞</text>
 <line x1="610.0" y1="750.0" x2="1062.0" y2="750.0" stroke="#e7e6e2" stroke-width="1"/>
 <text x="602.0" y="754.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">0.40</text>
@@ -293,124 +277,116 @@
 <line x1="610.0" y1="575.0" x2="1062.0" y2="575.0" stroke="#e7e6e2" stroke-width="1"/>
 <text x="602.0" y="579.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">0.50</text>
 <line x1="610.0" y1="540.0" x2="610.0" y2="820.0" stroke="#e7e6e2" stroke-width="1"/>
-<text x="610.0" y="836.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.0</text>
+<text x="610.0" y="836.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.00</text>
 <line x1="685.3" y1="540.0" x2="685.3" y2="820.0" stroke="#e7e6e2" stroke-width="1"/>
-<text x="685.3" y="836.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.1</text>
+<text x="685.3" y="836.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.05</text>
 <line x1="760.7" y1="540.0" x2="760.7" y2="820.0" stroke="#e7e6e2" stroke-width="1"/>
-<text x="760.7" y="836.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.2</text>
+<text x="760.7" y="836.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.10</text>
 <line x1="836.0" y1="540.0" x2="836.0" y2="820.0" stroke="#e7e6e2" stroke-width="1"/>
-<text x="836.0" y="836.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.3</text>
+<text x="836.0" y="836.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.15</text>
 <line x1="911.3" y1="540.0" x2="911.3" y2="820.0" stroke="#e7e6e2" stroke-width="1"/>
-<text x="911.3" y="836.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.4</text>
+<text x="911.3" y="836.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.20</text>
 <line x1="986.7" y1="540.0" x2="986.7" y2="820.0" stroke="#e7e6e2" stroke-width="1"/>
-<text x="986.7" y="836.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.5</text>
+<text x="986.7" y="836.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.25</text>
 <line x1="1062.0" y1="540.0" x2="1062.0" y2="820.0" stroke="#e7e6e2" stroke-width="1"/>
-<text x="1062.0" y="836.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.6</text>
+<text x="1062.0" y="836.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.30</text>
 <line x1="610.0" y1="820.0" x2="1062.0" y2="820.0" stroke="#52514e" stroke-width="1"/>
-<text x="836.0" y="856.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal">1/(D−2)   (D = ∞ at the left edge)</text>
+<text x="836.0" y="856.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal">1/D   (D = ∞ at the left edge)</text>
 <text x="566.0" y="680.0" font-size="11" fill="#52514e" text-anchor="middle" transform="rotate(-90 566.0 680.0)">critical exponent γ</text>
 <g><path d="M610.0,575.0 L1062.0,575.0" fill="none" stroke="#7a7668" stroke-width="1.5" stroke-opacity="0.85" stroke-linejoin="round" stroke-dasharray="2 3"/><title>1/2</title></g>
-<g><path d="M610.0,575.0 L610.4,575.7 L610.8,576.4 L611.3,577.2 L611.7,577.9 L612.1,578.6 L612.5,579.2 L612.9,579.9 L613.4,580.6 L613.8,581.2 L614.2,581.9 L614.6,582.5 L615.0,583.2 L615.5,583.8 L615.9,584.4 L616.3,585.0 L616.7,585.6 L617.1,586.2 L617.6,586.8 L618.0,587.4 L618.4,588.0 L618.8,588.5 L619.2,589.1 L619.7,589.7 L620.1,590.2 L620.5,590.8 L620.9,591.3 L621.3,591.8 L621.8,592.4 L622.2,592.9 L622.6,593.4 L623.0,593.9 L623.4,594.4 L623.9,594.9 L624.3,595.4 L624.7,595.9 L625.1,596.4 L625.5,596.9 L626.0,597.4 L626.4,597.9 L626.8,598.4 L627.2,598.8 L627.6,599.3 L628.1,599.7 L628.5,600.2 L628.9,600.7 L629.3,601.1 L629.7,601.5 L630.2,602.0 L630.6,602.4 L631.0,602.9 L631.4,603.3 L631.8,603.7 L632.3,604.1 L632.7,604.6 L633.1,605.0 L633.5,605.4 L633.9,605.8 L634.4,606.2 L634.8,606.6 L635.2,607.0 L635.6,607.4 L636.0,607.8 L636.5,608.2 L636.9,608.6 L637.3,609.0 L637.7,609.4 L638.1,609.7 L638.6,610.1 L639.0,610.5 L639.4,610.9 L639.8,611.2 L640.2,611.6 L640.7,612.0 L641.1,612.3 L641.5,612.7 L641.9,613.1 L642.3,613.4 L642.8,613.8 L643.2,614.1 L643.6,614.5 L644.0,614.8 L644.4,615.2 L644.9,615.5 L645.3,615.9 L645.7,616.2 L646.1,616.5 L646.5,616.9 L647.0,617.2 L647.4,617.6 L647.8,617.9 L648.2,618.2 L648.6,618.5 L649.1,618.9 L649.5,619.2 L649.9,619.5 L650.3,619.8 L650.7,620.2 L651.2,620.5 L651.6,620.8 L652.0,621.1 L652.4,621.4 L652.8,621.7 L653.3,622.0 L653.7,622.4 L654.1,622.7 L654.5,623.0 L654.9,623.3 L655.4,623.6 L655.8,623.9 L656.2,624.2 L656.6,624.5 L657.0,624.8 L657.5,625.1 L657.9,625.4 L658.3,625.7 L658.7,626.0 L659.1,626.2 L659.6,626.5 L660.0,626.8 L660.4,627.1 L660.8,627.4 L661.2,627.7 L661.6,628.0 L662.1,628.3 L662.5,628.5 L662.9,628.8 L663.3,629.1 L663.7,629.4 L664.2,629.7 L664.6,629.9 L665.0,630.2 L665.4,630.5 L665.8,630.8 L666.3,631.0 L666.7,631.3 L667.1,631.6 L667.5,631.8 L667.9,632.1 L668.4,632.4 L668.8,632.6 L669.2,632.9 L669.6,633.2 L670.0,633.4 L670.5,633.7 L670.9,634.0 L671.3,634.2 L671.7,634.5 L672.1,634.7 L672.6,635.0 L673.0,635.3 L673.4,635.5 L673.8,635.8 L674.2,636.0 L674.7,636.3 L675.1,636.5 L675.5,636.8 L675.9,637.1 L676.3,637.3 L676.8,637.6 L677.2,637.8 L677.6,638.1 L678.0,638.3 L678.4,638.6 L678.9,638.8 L679.3,639.1 L679.7,639.3 L680.1,639.5 L680.5,639.8 L681.0,640.0 L681.4,640.3 L681.8,640.5 L682.2,640.8 L682.6,641.0 L683.1,641.2 L683.5,641.5 L683.9,641.7 L684.3,642.0 L684.7,642.2 L685.2,642.4 L685.6,642.7 L686.0,642.9 L686.4,643.2 L686.8,643.4 L687.3,643.6 L687.7,643.9 L688.1,644.1 L688.5,644.3 L688.9,644.6 L689.4,644.8 L689.8,645.0 L690.2,645.3 L690.6,645.5 L691.0,645.7 L691.5,646.0 L691.9,646.2 L692.3,646.4 L692.7,646.6 L693.1,646.9 L693.6,647.1 L694.0,647.3 L694.4,647.6 L694.8,647.8 L695.2,648.0 L695.7,648.2 L696.1,648.5 L696.5,648.7 L696.9,648.9 L697.3,649.1 L697.8,649.4 L698.2,649.6 L698.6,649.8 L699.0,650.0 L699.4,650.2 L699.9,650.5 L700.3,650.7 L700.7,650.9 L701.1,651.1 L701.5,651.4 L702.0,651.6 L702.4,651.8 L702.8,652.0 L703.2,652.2 L703.6,652.4 L704.1,652.7 L704.5,652.9 L704.9,653.1 L705.3,653.3 L705.7,653.5 L706.2,653.8 L706.6,654.0 L707.0,654.2 L707.4,654.4 L707.8,654.6 L708.3,654.8 L708.7,655.0 L709.1,655.3 L709.5,655.5 L709.9,655.7 L710.4,655.9 L710.8,656.1 L711.2,656.3 L711.6,656.5 L712.0,656.7 L712.5,657.0 L712.9,657.2 L713.3,657.4 L713.7,657.6 L714.1,657.8 L714.6,658.0 L715.0,658.2 L715.4,658.4 L715.8,658.6 L716.2,658.9 L716.7,659.1 L717.1,659.3 L717.5,659.5 L717.9,659.7 L718.3,659.9 L718.8,660.1 L719.2,660.3 L719.6,660.5 L720.0,660.7 L720.4,660.9 L720.9,661.1 L721.3,661.3 L721.7,661.5 L722.1,661.8 L722.5,662.0 L723.0,662.2 L723.4,662.4 L723.8,662.6 L724.2,662.8 L724.6,663.0 L725.1,663.2 L725.5,663.4 L725.9,663.6 L726.3,663.8 L726.7,664.0 L727.2,664.2 L727.6,664.4 L728.0,664.6 L728.4,664.8 L728.8,665.0 L729.3,665.2 L729.7,665.4 L730.1,665.6 L730.5,665.8 L730.9,666.0 L731.4,666.2 L731.8,666.4 L732.2,666.6 L732.6,666.8 L733.0,667.0 L733.5,667.2 L733.9,667.4 L734.3,667.6 L734.7,667.8 L735.1,668.0 L735.6,668.2" fill="none" stroke="#eb6834" stroke-width="2" stroke-opacity="0.85" stroke-linejoin="round" stroke-dasharray="6 4"/><title>γ = 1/2 -0.7526/(D−2)^1 +9.07/(D−2)^2 -121.2/(D−2)^3 +1312/(D−2)^4 … (degree 9, fit 8 ≤ D ≤ 25.5)</title></g>
+<g><path d="M610.0,575.0 L610.6,575.5 L611.1,576.0 L611.7,576.5 L612.2,576.9 L612.8,577.4 L613.4,577.9 L613.9,578.4 L614.5,578.8 L615.0,579.3 L615.6,579.7 L616.2,580.2 L616.7,580.6 L617.3,581.1 L617.8,581.5 L618.4,582.0 L619.0,582.4 L619.5,582.9 L620.1,583.3 L620.6,583.7 L621.2,584.1 L621.8,584.6 L622.3,585.0 L622.9,585.4 L623.4,585.8 L624.0,586.2 L624.6,586.6 L625.1,587.1 L625.7,587.5 L626.2,587.9 L626.8,588.3 L627.4,588.7 L627.9,589.1 L628.5,589.4 L629.0,589.8 L629.6,590.2 L630.2,590.6 L630.7,591.0 L631.3,591.4 L631.8,591.7 L632.4,592.1 L633.0,592.5 L633.5,592.9 L634.1,593.2 L634.6,593.6 L635.2,594.0 L635.8,594.3 L636.3,594.7 L636.9,595.1 L637.4,595.4 L638.0,595.8 L638.6,596.1 L639.1,596.5 L639.7,596.8 L640.2,597.2 L640.8,597.5 L641.4,597.9 L641.9,598.2 L642.5,598.6 L643.0,598.9 L643.6,599.2 L644.2,599.6 L644.7,599.9 L645.3,600.2 L645.8,600.6 L646.4,600.9 L647.0,601.2 L647.5,601.6 L648.1,601.9 L648.6,602.2 L649.2,602.5 L649.8,602.8 L650.3,603.2 L650.9,603.5 L651.4,603.8 L652.0,604.1 L652.6,604.4 L653.1,604.7 L653.7,605.1 L654.2,605.4 L654.8,605.7 L655.4,606.0 L655.9,606.3 L656.5,606.6 L657.0,606.9 L657.6,607.2 L658.2,607.5 L658.7,607.8 L659.3,608.1 L659.8,608.4 L660.4,608.7 L661.0,609.0 L661.5,609.3 L662.1,609.6 L662.6,609.9 L663.2,610.2 L663.7,610.5 L664.3,610.8 L664.9,611.0 L665.4,611.3 L666.0,611.6 L666.5,611.9 L667.1,612.2 L667.7,612.5 L668.2,612.8 L668.8,613.0 L669.3,613.3 L669.9,613.6 L670.5,613.9 L671.0,614.2 L671.6,614.4 L672.1,614.7 L672.7,615.0 L673.3,615.3 L673.8,615.5 L674.4,615.8 L674.9,616.1 L675.5,616.4 L676.1,616.6 L676.6,616.9 L677.2,617.2 L677.7,617.4 L678.3,617.7 L678.9,618.0 L679.4,618.2 L680.0,618.5 L680.5,618.8 L681.1,619.0 L681.7,619.3 L682.2,619.6 L682.8,619.8 L683.3,620.1 L683.9,620.3 L684.5,620.6 L685.0,620.9 L685.6,621.1 L686.1,621.4 L686.7,621.6 L687.3,621.9 L687.8,622.2 L688.4,622.4 L688.9,622.7 L689.5,622.9 L690.1,623.2 L690.6,623.4 L691.2,623.7 L691.7,623.9 L692.3,624.2 L692.9,624.4 L693.4,624.7 L694.0,624.9 L694.5,625.2 L695.1,625.4 L695.7,625.7 L696.2,625.9 L696.8,626.2 L697.3,626.4 L697.9,626.7 L698.5,626.9 L699.0,627.2 L699.6,627.4 L700.1,627.7 L700.7,627.9 L701.3,628.2 L701.8,628.4 L702.4,628.6 L702.9,628.9 L703.5,629.1 L704.1,629.4 L704.6,629.6 L705.2,629.9 L705.7,630.1 L706.3,630.3 L706.9,630.6 L707.4,630.8 L708.0,631.1 L708.5,631.3 L709.1,631.5 L709.7,631.8 L710.2,632.0 L710.8,632.3 L711.3,632.5 L711.9,632.7 L712.5,633.0 L713.0,633.2 L713.6,633.4 L714.1,633.7 L714.7,633.9 L715.3,634.1 L715.8,634.4 L716.4,634.6 L716.9,634.9 L717.5,635.1 L718.1,635.3 L718.6,635.6 L719.2,635.8 L719.7,636.0 L720.3,636.3 L720.9,636.5 L721.4,636.7 L722.0,637.0 L722.5,637.2 L723.1,637.4 L723.7,637.7 L724.2,637.9 L724.8,638.1 L725.3,638.3 L725.9,638.6 L726.5,638.8 L727.0,639.0 L727.6,639.3 L728.1,639.5 L728.7,639.7 L729.3,640.0 L729.8,640.2 L730.4,640.4 L730.9,640.7 L731.5,640.9 L732.1,641.1 L732.6,641.3 L733.2,641.6 L733.7,641.8 L734.3,642.0 L734.9,642.3 L735.4,642.5 L736.0,642.7 L736.5,642.9 L737.1,643.2 L737.7,643.4 L738.2,643.6 L738.8,643.9 L739.3,644.1 L739.9,644.3 L740.5,644.5 L741.0,644.8 L741.6,645.0 L742.1,645.2 L742.7,645.4 L743.3,645.7 L743.8,645.9 L744.4,646.1 L744.9,646.4 L745.5,646.6 L746.1,646.8 L746.6,647.0 L747.2,647.3 L747.7,647.5 L748.3,647.7 L748.9,647.9 L749.4,648.2 L750.0,648.4 L750.5,648.6 L751.1,648.8 L751.7,649.1 L752.2,649.3 L752.8,649.5 L753.3,649.8 L753.9,650.0 L754.5,650.2 L755.0,650.4 L755.6,650.7 L756.1,650.9 L756.7,651.1 L757.3,651.3 L757.8,651.6 L758.4,651.8 L758.9,652.0 L759.5,652.2 L760.1,652.5 L760.6,652.7 L761.2,652.9 L761.7,653.2 L762.3,653.4 L762.9,653.6 L763.4,653.8 L764.0,654.1 L764.5,654.3 L765.1,654.5 L765.6,654.7 L766.2,655.0 L766.8,655.2 L767.3,655.4 L767.9,655.7 L768.4,655.9 L769.0,656.1 L769.6,656.3 L770.1,656.6 L770.7,656.8 L771.2,657.0 L771.8,657.2 L772.4,657.5 L772.9,657.7 L773.5,657.9 L774.0,658.2 L774.6,658.4 L775.2,658.6 L775.7,658.8 L776.3,659.1 L776.8,659.3 L777.4,659.5" fill="none" stroke="#eb6834" stroke-width="2" stroke-opacity="0.85" stroke-linejoin="round" stroke-dasharray="6 4"/><title>γ = 1/2 -0.7585/D^1 +8.284/D^2 -126/D^3 +1845/D^4 … (degree 10, fit 10 ≤ D ≤ 30.2)</title></g>
 <g><circle cx="986.7" cy="795.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 4.0000, γ = 0.3739609000</title></g>
-<g><circle cx="968.7" cy="784.7" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 4.1000, γ = 0.3801568815</title></g>
-<g><circle cx="944.8" cy="770.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 4.2500, γ = 0.3880709389</title></g>
-<g><circle cx="911.3" cy="752.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 4.5000, γ = 0.3985376085</title></g>
-<g><circle cx="883.9" cy="738.4" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 4.7500, γ = 0.4066406765</title></g>
-<g><circle cx="861.1" cy="727.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 5.0000, γ = 0.4131269359</title></g>
-<g><circle cx="841.8" cy="717.7" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 5.2500, γ = 0.4184579805</title></g>
-<g><circle cx="825.2" cy="709.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 5.5000, γ = 0.4229346829</title></g>
-<g><circle cx="810.9" cy="703.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 5.7500, γ = 0.4267608191</title></g>
-<g><circle cx="798.3" cy="697.4" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 6.0000, γ = 0.4300794836</title></g>
-<g><circle cx="787.3" cy="692.3" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 6.2500, γ = 0.4329940655</title></g>
-<g><circle cx="777.4" cy="687.7" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 6.5000, γ = 0.4355811433</title></g>
-<g><circle cx="768.6" cy="683.7" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 6.7500, γ = 0.4378986703</title></g>
-<g><circle cx="760.7" cy="680.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 7.0000, γ = 0.4399913370</title></g>
-<g><circle cx="753.5" cy="676.7" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 7.2500, γ = 0.4418941733</title></g>
-<g><circle cx="747.0" cy="673.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 7.5000, γ = 0.4436350394</title></g>
-<g><circle cx="741.0" cy="670.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 7.7500, γ = 0.4452361886</title></g>
-<g><circle cx="735.6" cy="668.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 8.0000, γ = 0.4467163858</title></g>
-<g><circle cx="730.5" cy="665.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 8.2500, γ = 0.4480905597</title></g>
-<g><circle cx="726.8" cy="664.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 8.4500, γ = 0.4491220948</title></g>
-<g><circle cx="722.3" cy="661.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 8.7100, γ = 0.4503827094</title></g>
-<g><circle cx="716.9" cy="659.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 9.0480, γ = 0.4519011893</title></g>
-<g><circle cx="710.6" cy="656.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 9.4874, γ = 0.4536999976</title></g>
-<g><circle cx="706.0" cy="653.7" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 9.8460, γ = 0.4550422094</title></g>
-<g><circle cx="704.3" cy="652.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 9.9874, γ = 0.4555439404</title></g>
-<g><circle cx="698.8" cy="649.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 10.4874, γ = 0.4572074670</title></g>
-<g><circle cx="696.2" cy="648.5" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 10.7374, γ = 0.4579808599</title></g>
-<g><circle cx="693.1" cy="646.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 11.0624, γ = 0.4589346389</title></g>
-<g><circle cx="689.4" cy="644.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 11.4849, γ = 0.4600959118</title></g>
-<g><circle cx="685.4" cy="642.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 11.9849, γ = 0.4613687116</title></g>
-<g><circle cx="683.6" cy="641.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 12.2349, γ = 0.4619682159</title></g>
-<g><circle cx="681.3" cy="640.3" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 12.5599, γ = 0.4627142209</title></g>
-<g><circle cx="678.6" cy="638.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 12.9824, γ = 0.4636323109</title></g>
-<g><circle cx="677.1" cy="637.7" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 13.2324, γ = 0.4641502321</title></g>
-<g><circle cx="675.2" cy="636.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 13.5574, γ = 0.4647975539</title></g>
-<g><circle cx="672.9" cy="635.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 13.9774, γ = 0.4655938179</title></g>
-<g><circle cx="670.8" cy="633.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 14.3974, γ = 0.4663484517</title></g>
-<g><circle cx="668.8" cy="632.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 14.8174, γ = 0.4670650600</title></g>
-<g><circle cx="666.9" cy="631.4" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 15.2374, γ = 0.4677468110</title></g>
-<g><circle cx="665.2" cy="630.3" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 15.6574, γ = 0.4683965035</title></g>
-<g><circle cx="663.5" cy="629.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 16.0774, γ = 0.4690166220</title></g>
-<g><circle cx="662.6" cy="628.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 16.3274, γ = 0.4693726183</title></g>
-<g><circle cx="661.4" cy="627.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 16.6524, γ = 0.4698216260</title></g>
-<g><circle cx="660.0" cy="626.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 17.0724, γ = 0.4703800985</title></g>
-<g><circle cx="659.3" cy="626.4" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 17.2824, γ = 0.4706506141</title></g>
-<g><circle cx="658.9" cy="626.1" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 17.4189, γ = 0.4708234629</title></g>
-<g><circle cx="658.2" cy="625.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 17.6189, γ = 0.4710725979</title></g>
-<g><circle cx="657.4" cy="625.1" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 17.8789, γ = 0.4713893779</title></g>
-<g><circle cx="656.5" cy="624.4" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 18.2169, γ = 0.4717896987</title></g>
-<g><circle cx="655.7" cy="623.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 18.4669, γ = 0.4720777976</title></g>
-<g><circle cx="654.9" cy="623.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 18.7919, γ = 0.4724426254</title></g>
-<g><circle cx="653.8" cy="622.4" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 19.2144, γ = 0.4729013044</title></g>
-<g><circle cx="653.1" cy="621.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 19.4890, γ = 0.4731904275</title></g>
-<g><circle cx="652.2" cy="621.3" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 19.8460, γ = 0.4735562405</title></g>
-<g><circle cx="652.1" cy="621.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 19.9041, γ = 0.4736147325</title></g>
-<g><circle cx="651.9" cy="621.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 19.9795, γ = 0.4736902159</title></g>
-<g><circle cx="651.7" cy="620.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.0775, γ = 0.4737876141</title></g>
-<g><circle cx="651.5" cy="620.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.1460, γ = 0.4738552222</title></g>
-<g><circle cx="651.4" cy="620.7" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.2050, γ = 0.4739131462</title></g>
-<g><circle cx="651.0" cy="620.4" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.3707, γ = 0.4740743214</title></g>
-<g><circle cx="650.9" cy="620.3" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.4245, γ = 0.4741261816</title></g>
-<g><circle cx="650.8" cy="620.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.4460, γ = 0.4741468425</title></g>
-<g><circle cx="650.4" cy="619.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.6410, γ = 0.4743325880</title></g>
-<g><circle cx="649.8" cy="619.4" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.9410, γ = 0.4746126962</title></g>
-<g><circle cx="649.0" cy="618.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 21.3310, γ = 0.4749669795</title></g>
-<g><circle cx="648.0" cy="618.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 21.8380, γ = 0.4754117219</title></g>
-<g><circle cx="646.9" cy="617.1" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 22.4380, γ = 0.4759163340</title></g>
-<g><circle cx="645.8" cy="616.3" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 23.0380, γ = 0.4763989925</title></g>
-<g><circle cx="645.3" cy="615.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 23.3380, γ = 0.4766325670</title></g>
-<g><circle cx="645.0" cy="615.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 23.5380, γ = 0.4767855318</title></g>
-<g><circle cx="644.6" cy="615.3" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 23.7980, γ = 0.4769811898</title></g>
-<g><circle cx="644.0" cy="614.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 24.1360, γ = 0.4772303031</title></g>
-<g><circle cx="643.4" cy="614.3" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 24.5360, γ = 0.4775177348</title></g>
-<g><circle cx="642.8" cy="613.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 24.9360, γ = 0.4777974956</title></g>
-<g><circle cx="642.3" cy="613.4" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 25.3360, γ = 0.4780699093</title></g>
-<g><circle cx="641.8" cy="612.9" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 25.7260, γ = 0.4783287360 (held out; series +3.5e-08)</title></g>
-<g><circle cx="641.2" cy="612.5" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 26.1260, γ = 0.4785875196 (held out; series +5.2e-08)</title></g>
-<g><circle cx="640.7" cy="612.0" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 26.5260, γ = 0.4788398127 (held out; series +7.3e-08)</title></g>
-<g><circle cx="640.2" cy="611.6" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 26.9260, γ = 0.4790858717 (held out; series +9.7e-08)</title></g>
-<g><circle cx="639.7" cy="611.2" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 27.3260, γ = 0.4793259387 (held out; series +1.3e-07)</title></g>
-<g><circle cx="639.3" cy="610.8" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 27.7260, γ = 0.4795602428 (held out; series +1.6e-07)</title></g>
-<g><circle cx="638.8" cy="610.4" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 28.1260, γ = 0.4797890007 (held out; series +1.9e-07)</title></g>
-<g><circle cx="638.4" cy="610.0" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 28.5260, γ = 0.4800124191 (held out; series +2.3e-07)</title></g>
-<g><circle cx="638.0" cy="609.6" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 28.9260, γ = 0.4802306939 (held out; series +2.7e-07)</title></g>
-<g><circle cx="637.6" cy="609.2" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 29.3260, γ = 0.4804440096 (held out; series +3.1e-07)</title></g>
-<g><circle cx="637.2" cy="608.9" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 29.7260, γ = 0.4806525415 (held out; series +3.6e-07)</title></g>
-<g><circle cx="636.8" cy="608.5" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 30.1260, γ = 0.4808564614 (held out; series +4.1e-07)</title></g>
-<g><circle cx="636.4" cy="608.2" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 30.5260, γ = 0.4810559184 (held out; series +4.6e-07)</title></g>
-<g><circle cx="636.0" cy="607.8" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 30.9260, γ = 0.4812510865 (held out; series +5.0e-07)</title></g>
-<g><circle cx="635.7" cy="607.5" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 31.3260, γ = 0.4814420783 (held out; series +5.6e-07)</title></g>
-<g><circle cx="635.3" cy="607.1" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 31.7260, γ = 0.4816290536 (held out; series +6.2e-07)</title></g>
-<g><circle cx="635.0" cy="606.8" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 32.1260, γ = 0.4818121401 (held out; series +6.8e-07)</title></g>
-<g><circle cx="634.7" cy="606.5" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 32.5260, γ = 0.4819914485 (held out; series +7.5e-07)</title></g>
-<g><circle cx="634.4" cy="606.2" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 32.9260, γ = 0.4821671250 (held out; series +8.2e-07)</title></g>
-<g><circle cx="634.2" cy="606.1" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 33.1260, γ = 0.4822536387 (held out; series +8.4e-07)</title></g>
+<g><circle cx="977.5" cy="784.7" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 4.1000, γ = 0.3801568815</title></g>
+<g><circle cx="964.5" cy="770.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 4.2500, γ = 0.3880709389</title></g>
+<g><circle cx="944.8" cy="752.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 4.5000, γ = 0.3985376085</title></g>
+<g><circle cx="927.2" cy="738.4" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 4.7500, γ = 0.4066406765</title></g>
+<g><circle cx="911.3" cy="727.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 5.0000, γ = 0.4131269359</title></g>
+<g><circle cx="897.0" cy="717.7" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 5.2500, γ = 0.4184579805</title></g>
+<g><circle cx="883.9" cy="709.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 5.5000, γ = 0.4229346829</title></g>
+<g><circle cx="872.0" cy="703.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 5.7500, γ = 0.4267608191</title></g>
+<g><circle cx="861.1" cy="697.4" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 6.0000, γ = 0.4300794836</title></g>
+<g><circle cx="851.1" cy="692.3" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 6.2500, γ = 0.4329940655</title></g>
+<g><circle cx="841.8" cy="687.7" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 6.5000, γ = 0.4355811433</title></g>
+<g><circle cx="833.2" cy="683.7" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 6.7500, γ = 0.4378986703</title></g>
+<g><circle cx="825.2" cy="680.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 7.0000, γ = 0.4399913370</title></g>
+<g><circle cx="817.8" cy="676.7" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 7.2500, γ = 0.4418941733</title></g>
+<g><circle cx="810.9" cy="673.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 7.5000, γ = 0.4436350394</title></g>
+<g><circle cx="804.4" cy="670.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 7.7500, γ = 0.4452361940</title></g>
+<g><circle cx="798.3" cy="668.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 8.0000, γ = 0.4467163889</title></g>
+<g><circle cx="792.6" cy="665.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 8.2500, γ = 0.4480905620</title></g>
+<g><circle cx="788.3" cy="664.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 8.4500, γ = 0.4491220963</title></g>
+<g><circle cx="783.0" cy="661.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 8.7100, γ = 0.4503827094</title></g>
+<g><circle cx="776.5" cy="659.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 9.0480, γ = 0.4519011877</title></g>
+<g><circle cx="768.8" cy="656.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 9.4874, γ = 0.4536999947</title></g>
+<g><circle cx="763.0" cy="653.7" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 9.8460, γ = 0.4550422063</title></g>
+<g><circle cx="760.9" cy="652.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 9.9874, γ = 0.4555439374</title></g>
+<g><circle cx="753.7" cy="649.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 10.4874, γ = 0.4572074651</title></g>
+<g><circle cx="750.3" cy="648.5" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 10.7374, γ = 0.4579808590</title></g>
+<g><circle cx="746.2" cy="646.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 11.0624, γ = 0.4589346392</title></g>
+<g><circle cx="741.2" cy="644.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 11.4849, γ = 0.4600959133</title></g>
+<g><circle cx="735.7" cy="642.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 11.9849, γ = 0.4613687138</title></g>
+<g><circle cx="733.1" cy="641.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 12.2349, γ = 0.4619682179</title></g>
+<g><circle cx="730.0" cy="640.3" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 12.5599, γ = 0.4627142226</title></g>
+<g><circle cx="726.1" cy="638.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 12.9824, γ = 0.4636323118</title></g>
+<g><circle cx="723.9" cy="637.7" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 13.2324, γ = 0.4641502324</title></g>
+<g><circle cx="721.1" cy="636.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 13.5574, γ = 0.4647975536</title></g>
+<g><circle cx="717.8" cy="635.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 13.9774, γ = 0.4655938169</title></g>
+<g><circle cx="714.6" cy="633.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 14.3974, γ = 0.4663484505</title></g>
+<g><circle cx="711.7" cy="632.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 14.8174, γ = 0.4670650589</title></g>
+<g><circle cx="708.9" cy="631.4" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 15.2374, γ = 0.4677468102</title></g>
+<g><circle cx="706.2" cy="630.3" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 15.6574, γ = 0.4683965032</title></g>
+<g><circle cx="703.7" cy="629.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 16.0774, γ = 0.4690166218</title></g>
+<g><circle cx="702.3" cy="628.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 16.3274, γ = 0.4693726183</title></g>
+<g><circle cx="700.5" cy="627.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 16.6524, γ = 0.4698216262</title></g>
+<g><circle cx="698.3" cy="626.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 17.0724, γ = 0.4703800989</title></g>
+<g><circle cx="697.2" cy="626.4" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 17.2824, γ = 0.4706506146</title></g>
+<g><circle cx="696.5" cy="626.1" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 17.4189, γ = 0.4708234635</title></g>
+<g><circle cx="695.5" cy="625.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 17.6189, γ = 0.4710725986</title></g>
+<g><circle cx="694.3" cy="625.1" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 17.8789, γ = 0.4713893787</title></g>
+<g><circle cx="692.7" cy="624.4" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 18.2169, γ = 0.4717896996</title></g>
+<g><circle cx="691.6" cy="623.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 18.4669, γ = 0.4720777986</title></g>
+<g><circle cx="690.2" cy="623.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 18.7919, γ = 0.4724426264</title></g>
+<g><circle cx="688.4" cy="622.4" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 19.2144, γ = 0.4729013054</title></g>
+<g><circle cx="687.3" cy="621.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 19.4890, γ = 0.4731904283</title></g>
+<g><circle cx="685.9" cy="621.3" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 19.8460, γ = 0.4735562408</title></g>
+<g><circle cx="685.7" cy="621.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 19.9041, γ = 0.4736147327</title></g>
+<g><circle cx="685.4" cy="621.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 19.9795, γ = 0.4736902160</title></g>
+<g><circle cx="685.0" cy="620.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.0775, γ = 0.4737876141</title></g>
+<g><circle cx="684.8" cy="620.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.1460, γ = 0.4738552220</title></g>
+<g><circle cx="684.6" cy="620.7" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.2050, γ = 0.4739131459</title></g>
+<g><circle cx="684.0" cy="620.4" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.3707, γ = 0.4740743208</title></g>
+<g><circle cx="683.8" cy="620.3" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.4245, γ = 0.4741261809</title></g>
+<g><circle cx="683.7" cy="620.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.4460, γ = 0.4741468418</title></g>
+<g><circle cx="683.0" cy="619.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.6410, γ = 0.4743325870</title></g>
+<g><circle cx="681.9" cy="619.4" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.9410, γ = 0.4746126946</title></g>
+<g><circle cx="680.6" cy="618.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 21.3310, γ = 0.4749669774</title></g>
+<g><circle cx="679.0" cy="618.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 21.8380, γ = 0.4754117198</title></g>
+<g><circle cx="677.1" cy="617.1" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 22.4380, γ = 0.4759163325</title></g>
+<g><circle cx="675.4" cy="616.3" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 23.0380, γ = 0.4763989925</title></g>
+<g><circle cx="674.6" cy="615.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 23.3380, γ = 0.4766325678</title></g>
+<g><circle cx="674.0" cy="615.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 23.5380, γ = 0.4767855332</title></g>
+<g><circle cx="673.3" cy="615.3" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 23.7980, γ = 0.4769811918</title></g>
+<g><circle cx="672.4" cy="614.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 24.1360, γ = 0.4772303059</title></g>
+<g><circle cx="671.4" cy="614.3" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 24.5360, γ = 0.4775177378</title></g>
+<g><circle cx="668.6" cy="612.9" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 25.7260, γ = 0.4783287351</title></g>
+<g><circle cx="667.7" cy="612.5" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 26.1260, γ = 0.4785875177</title></g>
+<g><circle cx="666.8" cy="612.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 26.5260, γ = 0.4788398097</title></g>
+<g><circle cx="666.0" cy="611.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 26.9260, γ = 0.4790858674</title></g>
+<g><circle cx="665.1" cy="611.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 27.3260, γ = 0.4793259330</title></g>
+<g><circle cx="664.3" cy="610.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 27.7260, γ = 0.4795602355</title></g>
+<g><circle cx="663.6" cy="610.4" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 28.1260, γ = 0.4797889911</title></g>
+<g><circle cx="662.8" cy="610.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 28.5260, γ = 0.4800124079</title></g>
+<g><circle cx="662.1" cy="609.6" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 28.9260, γ = 0.4802306795</title></g>
+<g><circle cx="661.4" cy="609.2" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 29.3260, γ = 0.4804439896</title></g>
+<g><circle cx="661.0" cy="609.0" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 29.5260, γ = 0.4805488382</title></g>
+<g><circle cx="660.6" cy="608.8" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 29.7860, γ = 0.4806833904</title></g>
+<g><circle cx="660.0" cy="608.5" r="3.8" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 30.1240, γ = 0.4808554116</title></g>
+<g><circle cx="659.7" cy="608.3" r="3.8" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>D = 30.3240, γ = 0.4809557056 (held out; series -7.5e-09)</title></g>
 <g><polygon points="610.0,569.0 616.0,575.0 610.0,581.0 604.0,575.0" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = ∞: γ = 1/2</title></g>
 <text x="622.0" y="593.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">D = ∞:  γ = 1/2</text>
 <text x="992.7" y="811.6" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">D=4</text>
-<text x="804.3" y="713.4" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">D=6</text>
-<text x="710.2" y="668.7" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">D=10</text>
+<text x="867.1" y="713.4" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">D=6</text>
+<text x="766.7" y="668.7" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">D=10</text>
 <g><circle cx="615.0" cy="516.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>in the fit</title></g>
 <text x="624.0" y="520.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">in the fit</text>
 <g><circle cx="707.0" cy="516.0" r="4.5" fill="#fcfcfb" stroke="#2a78d6" stroke-width="1.6"/><title>held out</title></g>

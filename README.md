@@ -5,9 +5,9 @@ Rust port of the multiple-shooting residual `F(z)` used to compute Choptuik's di
 ![Echo period Δ(D) and critical exponent γ(D) with their power series in 1/(D−2)](solver/delta.svg)
 
 The echo period Δ(D) and critical exponent γ(D), computed with this kernel and the solver in [`solver/`](solver/).
-Both are fitted as power series in 1/(D−2) on D ≤ 25.5, where independent setups agree to ~1e-8; the hollow points
-above are held out of the fits and match the series to ~3e-7. Δ → Δ∞ ≈ 1.6441 and γ → 1/2 as D → ∞ (see
-[`solver/CONTEXT.md`](solver/CONTEXT.md)). Regenerate with `cd solver/data && python3 ../plot_delta.py`.
+Both are fitted as power series in 1/D on the step-converged points (2x RK steps, near-null directions solved,
+independent setups agreeing to ~1e-8); hollow points are held out of the fits. Δ → Δ∞ = 1.64394 ± 0.00005 and
+γ → 1/2 − 0.758/D as D → ∞ (see [`solver/CONTEXT.md`](solver/CONTEXT.md)). Regenerate with `cd solver/data && python3 ../plot_delta.py`.
 
 ## Backends
 
