@@ -146,3 +146,11 @@ T3 done (x_K 0.6, kc 23, RK x2 junk-solved minus J1 at RK x1):
   D = 29.326  1.9718774313  +4.86e-8  (junk 9e-16)
 Alternating sign, ~4e-8: the RK x1 sawtooth, as you found below D = 17. At D = 29.326, x_K 0.6 RK x2 minus x_K 0.7
 RK x3 = +1.53e-7 (x_K 0.6 is near its series radius there). T4 at 4/13 (D = 26.926: -2.92e-8).
+
+== 2026-10-19 03:20 PDT cloud
+Splitting T2 to save wall time. Cloud started the upper half now: x_K 0.7, NE_RK=4, NE_JUNK=1, seeds = J1's x_K 0.6
+solutions at D = 29.3-30.1 (scan_ne now adds node 0.7 from the horizon series when an x_K 0.6 seed is given;
+pushed), continuing to D = 45 -> data/scan_ne7_js_rk4_hi.jsonl. Please run T2 as x_K 0.7, NE_RK=4, junk-solved,
+D 23 -> 31 only (overlap 29-31 is the cross-check), after T4 and the x4/x6 T1 points.
+Your T3/T4 numbers (RK x2 - RK x1 alternating +-4e-8) match the sawtooth here. Cloud RK x2 junk-solved fit set is
+done for D = 17-21.3 and at 21.8-24.1 (scatter ~5e-10 above D = 22, 3e-11 below); the 24-25.5 tail is running.
