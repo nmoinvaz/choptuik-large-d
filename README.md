@@ -16,7 +16,7 @@ For massless scalar critical collapse in $D = n + 2$ spacetime dimensions, the e
 exponent $\gamma$ of Choptuik's discretely self-similar solution are, for every $D \ge 4$,
 
 $$
-\Delta(D) = \frac{a_0 + a_1 x + a_2 x^2 + \cdots + a_7 x^7}{1 + b_1 x + b_2 x^2},
+\Delta(D) = \frac{a_0 + a_1 x + a_2 x^2 + \cdots + a_8 x^8}{1 + b_1 x + b_2 x^2},
 \qquad
 \gamma(D) = \frac{\tfrac{1}{2} + e_1 x + e_2 x^2 + \cdots + e_7 x^7}{1 + f_1 x + f_2 x^2},
 \qquad
@@ -35,9 +35,10 @@ $$
 | 7 | $+3.2695252782 \times 10^{2}$ |  | $-4.8272358903 \times 10^{1}$ |  |
 | 8 | $-1.6050467699 \times 10^{2}$ |  |  |  |
 
-Ten numbers for $\Delta$ and nine for $\gamma$, with no singularity at any physical $D$ (the denominators vanish only at
-$D = -1.65, -9.37$ and $D = -13.3, -20.1$). They are the smallest rational forms that reproduce every computed point
-within its own precision (`solver/rational_fit.py`, `solver/formula_all.py`), fitted on $4 \le D \le 30.2$:
+Eleven numbers for $\Delta$ and nine for $\gamma$, with no singularity at any physical $D$ (the denominators vanish only
+at $D = -3.2, -11.0$ and $D = -13.3, -20.4$). Fitted on every computed point $4 \le D \le 30.2$ (`solver/formula_all.py`;
+`solver/rational_fit.py` searches the forms: for $\Delta$ one numerator term beyond the smallest adequate form makes it
+ten times tighter), they reproduce each point within its own precision:
 
 | $D$ | $\Delta$: formula − computed | precision of the points | $\gamma$: formula − computed | precision of the points |
 |---|---|---|---|---|
@@ -46,16 +47,18 @@ within its own precision (`solver/rational_fit.py`, `solver/formula_all.py`), fi
 | 20 – 30 | $\le 1\times10^{-8}$ | $\le 3\times10^{-8}$ | $\le 2.3\times10^{-9}$ | $\sim 10^{-9}$ |
 | 34 – 40, never seen by the fit | $\le 2.1\times10^{-6}$ | $1$ – $3\times10^{-6}$ | $\le 5\times10^{-7}$ up to $D = 35.8$ | |
 
-Near $D = 4$ the points themselves are the limit: there the solution needs many Fourier modes in time, and the
-values move by $-4.3\times10^{-4}$ and $-3.4\times10^{-5}$ from 23 to 31 to 39 modes. Above $D \approx 36$ the computed
-$\gamma$ scatter by up to $6\times10^{-5}$ around both this formula and the power series below, which agree with each
-other; the growth-rate solve is not reliable there. Below $D \approx 3.8$, where $\Delta(D)$ turns over (maximum
-$\approx 3.4661$ near $D = 3.8$), the formula does not apply.
+At $D = 4$ the formula gives $\Delta = 3.4454524$ and $\gamma = 0.3739610$, the accepted four-dimensional values.
+Near $D = 4$ the points themselves set the limit: the solution needs many Fourier modes in time there, and $\Delta(4)$
+moves by $-4.3\times10^{-4}$, $-3.4\times10^{-5}$ and $-2.8\times10^{-6}$ from 23 to 31 to 39 to 47 modes, so the points
+below $D = 5$ are extrapolations in the mode count. Above $D \approx 36$ the computed $\gamma$ scatter by up to
+$6\times10^{-5}$ around both this formula and the power series below, which agree with each other; the growth-rate solve
+is not reliable there. Below $D \approx 3.8$, where $\Delta(D)$ turns over (maximum $\approx 3.46612$ near $D = 3.79$),
+the formula does not apply.
 
 As $D \to \infty$ ($x \to 0$):
 
 $$
-\Delta(D) = a_0 + \frac{a_1 - a_0 b_1}{n} + \cdots \approx 1.64395 + \frac{10.37}{n} + \cdots,
+\Delta(D) = a_0 + \frac{a_1 - a_0 b_1}{n} + \cdots \approx 1.6439 + \frac{10.37}{n} + \cdots,
 \qquad
 \gamma(D) = \frac{1}{2} + \frac{e_1 - f_1/2}{n} + \cdots \approx \frac{1}{2} - \frac{0.758}{n} + \cdots
 $$
@@ -68,7 +71,7 @@ $$
 \gamma_\infty = \frac{1}{2} .
 $$
 
-This formula's own limit is $a_0 = 1.643952$; the quoted range $1.64388$–$1.64403$ covers all acceptable fits (power
+This formula's own limit is $a_0 = 1.643898$; the quoted range $1.64388$–$1.64403$ covers all acceptable fits (power
 series and rational forms in $1/D$, $1/(D-1)$, $1/(D-2)$ over several degrees and ranges, $\chi^2/\mathrm{dof} \le 1$).
 The coefficients of one fit are not physical constants (they are correlated); only the function is.
 
