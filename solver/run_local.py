@@ -1,23 +1,24 @@
 #!/usr/bin/env python3
 """Run a matrix of nonlinear-elimination D scans on this machine, several at a time.
 
-The cloud runs x_K = 0.6 and 0.7 at kc = 23 with the junk directions frozen. These jobs add the other
-discretisations and the smoothness-fixed junk treatment, so that every D from 23 to 40 gets several independent
-answers; their spread is the error bar on Delta (see CONTEXT.md, "junk ambiguity"):
+The period is selected by horizon regularity, felt through u_K^s0 (u_K = 1 - x_K, s0 ~ 0.53 (D-2)), so matching
+further from the horizon (smaller x_K) selects Delta far more strongly and makes the answer less sensitive to
+discretisation error; it needs more horizon-series terms (radius ~0.7 in u). At D = 23 x_K = 0.6, 0.5 and 0.4 agree
+to 3e-8, while x_K = 0.7 is off by 1e-5 (CONTEXT.md). Jobs:
 
-    kc31_06     x_K = 0.6, kc = 31                      -> data/scan_ne6_kc31.jsonl
-    kc31_07     x_K = 0.7, kc = 31                      -> data/scan_ne7_kc31.jsonl
-    sj_06       x_K = 0.6, kc = 23, junk by smoothness  -> data/scan_ne6_sj.jsonl
-    sj_07       x_K = 0.7, kc = 23, junk by smoothness  -> data/scan_ne7_sj.jsonl
+    x4_23     x_K = 0.4, Ks = 260, kc = 23   (strongest selection; slowest)   -> data/scan_ne4.jsonl
+    x5_31     x_K = 0.5, Ks = 120, kc = 31                                     -> data/scan_ne5_kc31.jsonl
+    sj_06     x_K = 0.6, kc = 23, junk fixed by smoothness                     -> data/scan_ne6_sj.jsonl
+    kc31_06   x_K = 0.6, kc = 31                                               -> data/scan_ne6_kc31.jsonl
+  (also available: kc31_07, sj_07 at x_K = 0.7, the weakly selecting setup)
 
-Each re-solves its stored seeds for D = 23-24, then continues in D up to 40 from those (about 80 points), writing
-one JSON line per point (Delta, residual split, gamma) and the solution vectors (data/ne*_D*.npy). Expect roughly
-1-3 hours per job on one core (kc = 31 is the slowest).
+The cloud runs x_K = 0.5 (Ks = 120, kc = 23) and x_K = 0.6 kc = 31 with smoothing. Each job re-solves stored seeds
+for D = 23-24, then continues in D up to 40 (about 80 points), one JSON line per point (Delta, residual split,
+gamma), solution vectors in data/. Expect 1-4 hours per job on one core.
 
-Usage (repo root, after `pip install .` so the kernel matches the Python side):
-    python solver/run_local.py                      # all four, one thread each, four at a time
-    python solver/run_local.py --parallel 2 --threads 2
-    python solver/run_local.py --only sj_07 --only sj_06
+Usage (repo root, after `pip install .`):
+    python solver/run_local.py                      # the four jobs above, one thread each, four at a time
+    python solver/run_local.py --only x4_23 --threads 2
 Commit solver/data/ and push whenever you like (partial results are useful); rerunning a job appends.
 """
 import argparse
@@ -32,11 +33,14 @@ DATA = os.path.join(HERE, "data")
 
 # name: (output, scan_ne.py arguments, last seed to re-solve before continuing, extra environment)
 JOBS = {
-    "kc31_06": ("scan_ne6_kc31.jsonl", ["23", "40", "0.2", "0.4", "0.6", "../seeds/longB_D", "31"], "24.0", {}),
+    "x4_23": ("scan_ne4.jsonl", ["23", "40", "0.2", "0.4", "0.4", "../seeds/neB_D", "23"], "24.0", {"NE_KS": "260"}),
+    "x5_31": ("scan_ne5_kc31.jsonl", ["23", "40", "0.2", "0.4", "0.5", "../seeds/neB_D", "31"], "24.0", {"NE_KS": "120"}),
+    "sj_06": ("scan_ne6_sj.jsonl", ["23", "40", "0.2", "0.4", "0.6", "../seeds/neB_D", "23"], "24.0", {"NE_SMOOTH": "1"}),
+    "kc31_06": ("scan_ne6_kc31.jsonl", ["23", "40", "0.2", "0.4", "0.6", "../seeds/neB_D", "31"], "24.0", {}),
     "kc31_07": ("scan_ne7_kc31.jsonl", ["23", "40", "0.2", "0.4", "0.7", "../seeds/long7_D", "31"], "24.0", {}),
-    "sj_06": ("scan_ne6_sj.jsonl", ["23", "40", "0.2", "0.4", "0.6", "../seeds/longB_D", "23"], "24.0", {"NE_SMOOTH": "1"}),
     "sj_07": ("scan_ne7_sj.jsonl", ["23", "40", "0.2", "0.4", "0.7", "../seeds/long7_D", "23"], "24.0", {"NE_SMOOTH": "1"}),
 }
+DEFAULT = ["x4_23", "x5_31", "sj_06", "kc31_06"]
 
 
 def last_record(log):
@@ -54,7 +58,7 @@ def main():
     ap.add_argument("--parallel", type=int, default=4, help="scans running at once (default 4)")
     ap.add_argument("--only", choices=sorted(JOBS), action="append", help="run only this scan (repeatable)")
     args = ap.parse_args()
-    names = args.only or list(JOBS)
+    names = args.only or DEFAULT
     env = dict(os.environ, OPENBLAS_NUM_THREADS="1", OMP_NUM_THREADS="1", MKL_NUM_THREADS="1",
                NE_THREADS=str(args.threads))
     procs, queue = {}, list(names)

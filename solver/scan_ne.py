@@ -7,6 +7,7 @@ the weak singular values, and gamma = 1/lambda from the Rust growth-mode matrix.
 usage: python3 scan_ne.py out.jsonl D_from D_end h hmax [xK=0.6|0.7] [seed prefixes, comma separated] [kc=23]
 Seeds are kc = 23 solutions; for another kc they are regridded. Threads per process: env NE_THREADS (2).
 env NE_SEED_MAX: re-solve only the seeds up to this D, then continue from those solutions.
+env NE_KS: horizon series terms (default 60; x_K = 0.5 needs ~120).
 env NE_SMOOTH=1: after each solve, fix the junk directions by smoothness (smooth_junk.py) and re-solve, until
   Delta changes by < 1e-10 (at most 8 rounds).
 Run from the directory holding gamma_rust.jsonl; seed prefixes may include a directory (../seeds/long7_D).
@@ -25,8 +26,13 @@ from smooth_junk import smooth_junk
 
 out, D_from, D_end, h, hmax = sys.argv[1], float(sys.argv[2]), float(sys.argv[3]), float(sys.argv[4]), float(sys.argv[5])
 XK = float(sys.argv[6]) if len(sys.argv) > 6 else 0.6
-NODES = NODES_L + ([0.7] if XK > 0.65 else [])
-SEED, OUTP = ("long7_D", "ne7_D") if XK > 0.65 else ("longB_D", "neB_D")
+NODES = [x for x in NODES_L + [0.7] if x <= XK + 1e-9]           # x_K = 0.5, 0.6 or 0.7
+KS = int(os.environ.get("NE_KS", "60"))                          # horizon series terms (x_K = 0.5: ~120)
+# a longer series has larger coefficients: f64 rounding of z leaves strong residuals ~1e-9 (harmless for Delta:
+# x_K = 0.4 with 3.6e-9 agrees with x_K = 0.5 to 4e-10 at D = 23)
+STRONG_TOL = float(os.environ.get("NE_STRONG_TOL", "1e-8" if KS > 60 else "1e-9"))
+SEED = "long7_D" if XK > 0.65 else "longB_D"
+OUTP = {6: "neB_D"}.get(int(round(XK * 10)), f"ne{int(round(XK * 10))}_D")   # ne4_D, ne5_D, neB_D, ne7_D
 PREFIXES = sys.argv[7].split(",") if len(sys.argv) > 7 else [SEED]
 KC = int(sys.argv[8]) if len(sys.argv) > 8 else 23
 THREADS = int(os.environ.get("NE_THREADS", "2"))
@@ -64,6 +70,23 @@ def gamma_of(R, z, g0):
     return None
 
 
+def convert_seed(z0, D):
+    """kc = 23 seed on NODES_L or NODES_L + [0.7] -> this setup: drop node blocks beyond x_K, regrid to KC."""
+    for src in (NODES_L, NODES_L + [0.7], NODES):
+        S0 = make_long(23, D - 2, nodes=src, Ks=60)
+        sizes, K, L = S0.layout()
+        if L == len(z0):
+            break
+    else:
+        raise ValueError(f"seed of length {len(z0)} matches no known layout")
+    offs = np.concatenate([[0], np.cumsum(sizes)])
+    j0, j1 = 2 + 4 * len(NODES), 2 + 4 * K
+    z0 = np.r_[z0[:offs[j0]], z0[offs[j1]:]]
+    if KC != 23:
+        z0 = make_long(KC, D - 2, nodes=NODES, Ks=60).regrid(z0, make_long(23, D - 2, nodes=NODES, Ks=60))
+    return z0
+
+
 def extrap(Ds, vals, Dt):
     Ds, vals = Ds[-4:], vals[-4:]
     o = 0
@@ -77,9 +100,9 @@ def extrap(Ds, vals, Dt):
 
 
 def solve(D, z0, lam_guess, t0, src, Delta_old=None):
-    S, R = make(D, z0[-1], nodes=NODES, threads=THREADS, kc=KC)
-    if len(z0) != S.layout()[2]:            # a kc = 23 seed for another kc
-        z0 = S.regrid(z0, make_long(23, D - 2, nodes=NODES, Ks=60))
+    S, R = make(D, z0[-1], nodes=NODES, threads=THREADS, kc=KC, Ks=KS)
+    if len(z0) != S.layout()[2]:            # a seed with other nodes (drop the outer node blocks) and/or kc = 23
+        z0 = convert_seed(z0, D)
     if np.linalg.norm(R(z0)) > 1e-8:           # predictor or old seed far off: damped LM first, then NE polishes
         z0, _, _, _ = dd_solve(R, z0, maxjac=12, use_dd=False, stall=3)
     z, info = ne_solve(R, z0)
@@ -91,9 +114,9 @@ def solve(D, z0, lam_guess, t0, src, Delta_old=None):
             if abs(z[-1] - d_prev) < 1e-10:
                 break
     h_ = info["hist"][-1]
-    ok = h_[2] < 1e-12 and h_[1] < 1e-9 and info["F"] < 1e-7
+    ok = h_[2] < 1e-12 and h_[1] < STRONG_TOL and info["F"] < 1e-7
     lam = gamma_of(R, z, lam_guess) if ok else None
-    rec = dict(D=D, xK=XK, kc=KC, smooth=SMOOTH, Delta=float(z[-1]), Delta_old=Delta_old, F=info["F"], strong=h_[1], weak=h_[2], junk=h_[3],
+    rec = dict(D=D, xK=XK, kc=KC, Ks=KS, smooth=SMOOTH, Delta=float(z[-1]), Delta_old=Delta_old, F=info["F"], strong=h_[1], weak=h_[2], junk=h_[3],
                n_weak=info["n_weak"], weak_s=[float(f"{x:.2e}") for x in info["weak_s"]], n_outer=len(info["hist"]),
                lam=lam, gamma=(1 / lam if lam else None), ok=bool(ok), source=src, seconds=round(time.time() - t0))
     return z, rec

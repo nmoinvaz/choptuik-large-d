@@ -249,3 +249,11 @@ light ray. Note the factor √(2π) between the simulation's field (G = 1) and t
   a smooth (analytic in tau) solution its true size is small, so the smoothness prior should cost < ~1e-8 in Delta
   from that source. The 4.2e-6 between x_K 0.6 / 0.7 (smoothed) is something else (discretisation of the weak part).
 - Running in the cloud: kc = 31 with smoothing, x_K 0.6 and 0.7 (scan_ne6_kc31_sj, scan_ne7_kc31_sj).
+- D = 23.038 with smoothing: x_K 0.6 / kc 23: 2.0546914107; 0.6 / 31: 2.0546914340; 0.7 / 31: 2.0546917021;
+  0.7 / 23: 2.0546955863 (kmin 9) or 2.0546959388 (kmin 13). Three setups agree within 3e-7; x_K = 0.7 at kc = 23
+  is an outlier (+4e-6), whatever the smoothing threshold. Likely a constrained direction falls below cut_junk there.
+- consensus.py: x_K = 0.6 plain continuation (kc 23) agrees with kc 31 + smoothing to ~1e-8 up to D = 25.7. The outlier
+  is x_K = 0.7 at kc = 23 (+1e-5), plain or smoothed. Explanation: at x_K = 0.7 the selection strength s_Delta is ~700x
+  weaker (2e-8 vs 1.6e-5 at D = 28), so the same discretisation error (kc truncation) moves Delta 700x more; kc 31
+  shrinks that error and 0.7/31 agrees again (3e-7). => smaller x_K is better, provided the horizon series converges
+  there: x_K = 0.5 needs Ks ~ 120, x_K = 0.4 needs Ks ~ 260 (radius ~0.68-0.74 in u).
