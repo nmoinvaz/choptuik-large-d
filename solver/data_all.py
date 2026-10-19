@@ -38,9 +38,11 @@ def low_d():
     k31 = [_load("scan_ne6_lowD_kc31_rk1.jsonl"), _load("scan_ne6_lowD_kc31_rk2.jsonl")]
     k39 = [_load("scan_ne6_lowD_kc39_rk1.jsonl"), _load("scan_ne6_lowD_kc39_rk2.jsonl")]
     k47 = [{}, {}]
-    for f in glob.glob("scan_ne6_lowD_kc47*.jsonl"):
-        for d, r in _load(f).items():
-            k47[0 if r.get("rk", 1) == 1 else 1][d] = r
+    for f in glob.glob("scan_ne6_lowD_kc47*.jsonl"):          # RK x1 and x2 records may share one file
+        for l in open(f):
+            r = json.loads(l)
+            if r.get("ok") and r.get("kc", 47) == 47:
+                k47[0 if r.get("rk", 1) == 1 else 1][round(r["D"], 4)] = r
     out = {}
     for d in sorted(set(k39[0]) & set(k39[1])):
         if d >= 8.0:

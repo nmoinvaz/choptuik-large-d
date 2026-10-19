@@ -1,10 +1,11 @@
 """One formula for all D >= 4: rational functions of x = 1/n = 1/(D - 2), fitted on every computed point 4 <= D <= 30.2
 (data_all.load_all: kc 39 + Richardson below D = 8, step-converged above), checked on the held-out points D = 34-40.
 
-    Delta(D) = P7(x) / Q2(x),          10 coefficients
+    Delta(D) = P8(x) / Q2(x),          11 coefficients
     gamma(D) = P7(x) / Q2(x), P7(0) = 1/2,  9 coefficients
 
-Found by rational_fit.compact / compact_gamma as the smallest forms that reproduce every point within its precision.
+rational_fit.compact / compact_gamma find the smallest forms within the point precision (Delta: P7/Q2, 10 numbers, to
+~2e-7); one more numerator term makes Delta ten times tighter (<= 2e-8 on 4-30), so that is the one used.
 
     python3 ../formula_all.py            (from solver/data)
     from formula_all import delta, gamma
@@ -19,7 +20,7 @@ FIT_MIN, FIT_MAX = 4.0, 30.2
 def fit_delta():
     D, y, s, _ = data()
     m = (D >= FIT_MIN) & (D <= FIT_MAX)
-    p, q, chi = fit_rational(1 / (D[m] - 2), y[m], 1 / np.maximum(s[m], 1e-7), 7, 2)
+    p, q, chi = fit_rational(1 / (D[m] - 2), y[m], 1 / np.maximum(s[m], 1e-7), 8, 2)   # P7/Q2: 2e-7, P8/Q2: 2e-8
     return p, q
 
 
