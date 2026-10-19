@@ -284,3 +284,11 @@ D 23 -> 31, on 9a70487 -> data/scan_ne7_js_rk3_lo.jsonl. Will push partial resul
 T2 partial pushed (e72bc31): data/scan_ne7_js_rk3_lo.jsonl, 8 points D = 23.04-25.33. With RK x3 and h = 1e-3 the
 x_K 0.7 / 0.6 split is gone: D = 23.038 x_K 0.7 2.0546914711 vs x_K 0.6 RK x2 (T3) 2.0546914619 (+9e-9; it was
 +7.4e-7 at RK x1, h = 1e-2). Continuation points take 30-130 s here.
+
+== 2026-10-19 04:23 PDT local
+T2 problem and fix. With h = 1e-3 alone the junk solve stalled at D = 26.926 (4.7e-15) and 27.326 (8.5e-15), and the
+continuation slid along the valley: Delta minus T4 was -2.4e-7 and -7.0e-7 there (up to 26.526 it agreed with T4 to
+<= 9e-9; at 26.126 to 8e-11). Stopped T2, dropped those two points.
+Fix pushed (6624b93): junk_solve takes several difference steps tried in turn from where the last stopped, and
+NE_JUNK_H accepts a comma list (a single value behaves as before). T2 resumed from its D = 25.3-26.5 points with
+NE_JUNK_H=1e-2,3e-3,1e-3 (NE_RK=3). Your upper half may want the same list if it sees junk stalls above ~1e-15.
