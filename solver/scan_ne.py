@@ -61,8 +61,11 @@ JUNK_DAMP = os.environ.get("NE_JUNK_DAMP", "0") == "1"           # Levenberg-dam
 if JUNK:
     OUTP = OUTP.replace("_D", "_js_D")
 RK = int(os.environ.get("NE_RK", "1"))
+RK_SEG = os.environ.get("NE_RK_SEG", "")                         # per-segment extra RK factors (rust_solver.make)
 if RK != 1:
     OUTP = OUTP.replace("_D", f"_rk{RK}_D")
+if RK_SEG:
+    OUTP = OUTP.replace("_D", "_s" + RK_SEG.replace(",", "") + "_D")
 _g = [json.loads(l) for l in open("gamma_rust.jsonl")]
 _gD = np.array([r["D"] for r in _g if r.get("lam")]); _gl = np.array([r["lam"] for r in _g if r.get("lam")])
 
@@ -170,7 +173,7 @@ def solve(D, z0, lam_guess, t0, src, Delta_old=None):
         js = dict(js=True, Delta_ne=Delta_ne, junk_ne=ji["r0"], n_junk=ji["n_junk"], junk_its=ji["its"])
     ok = h_[2] < 1e-12 and h_[1] < STRONG_TOL and F < 1e-7
     lam = gamma_of(R, z, lam_guess) if ok else None
-    rec = dict(D=D, xK=XK, kc=KC, Ks=KS, rk=RK, smooth=SMOOTH, Delta=float(z[-1]), Delta_old=Delta_old, F=F, strong=h_[1], weak=h_[2], junk=junk,
+    rec = dict(D=D, xK=XK, kc=KC, Ks=KS, rk=RK, rk_seg=RK_SEG or None, smooth=SMOOTH, Delta=float(z[-1]), Delta_old=Delta_old, F=F, strong=h_[1], weak=h_[2], junk=junk,
                n_weak=info["n_weak"], weak_s=[float(f"{x:.2e}") for x in info["weak_s"]], n_outer=len(info["hist"]),
                lam=lam, gamma=(1 / lam if lam else None), ok=bool(ok), source=src, **js, seconds=round(time.time() - t0))
     return z, rec

@@ -16,15 +16,24 @@ NODES_L = [0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6]
 
 def make(D, Delta_ref, Ks=60, nodes=NODES_L, threads=2, kc=23, rk=None):
     """rk: multiply every RK4 step count (default: env NE_RK, else 1). The near-horizon u-segments dominate the
-    error at x_K = 0.7: D = 29.3, Delta moves -7.9e-6 -> -3.7e-7 (vs x_K = 0.6) going from 1x to 2x steps."""
+    error at x_K = 0.7: D = 29.3, Delta moves -7.9e-6 -> -3.7e-7 (vs x_K = 0.6) going from 1x to 2x steps.
+    env NE_RK_SEG: comma list of extra factors per segment, centre first (x_K 0.7: 9 segments, the last three in
+    u = 1 - x); missing entries are 1. At D = 34.18 the linearised Delta response to the RK x3 error is entirely the
+    last segment (x = 0.6 -> 0.7), next to the horizon series' radius of convergence."""
     S = freeze_steps(make_long(kc, D - 2, nodes=nodes, Ks=Ks), Delta_ref)
     mult = int(rk if rk is not None else os.environ.get("NE_RK", "1"))
-    if mult == 1:
+    seg = [int(x) for x in os.environ.get("NE_RK_SEG", "").split(",") if x]   # extra per-segment factors (centre -> x_K)
+    if mult == 1 and not seg:
         R = RustResidual(S, threads=threads, backend="simd")
     else:
         import rustkernel as _rk
         orig = _rk.step_counts
-        _rk.step_counts = lambda S_: (lambda s: ([mult * k for k in s[0]], s[1]))(orig(S_))
+
+        def counts(S_):
+            s = orig(S_)
+            f = seg + [1] * (len(s[0]) - len(seg))
+            return [mult * fi * k for fi, k in zip(f, s[0])], s[1]
+        _rk.step_counts = counts
         try:
             R = RustResidual(S, threads=threads, backend="simd")
         finally:
