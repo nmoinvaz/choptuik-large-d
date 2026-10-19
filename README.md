@@ -83,6 +83,14 @@ $D = 34$–$39.5$, which the fits never saw.
 | $\sqrt{e}$ | 1.6487213 | 82 .. $3\times10^{5}$ | $1.3\times10^{-5}$ | excluded |
 | $\varphi = (1+\sqrt5)/2$ | 1.6180340 | 2500 .. $10^{7}$ | $7.7\times10^{-5}$ | excluded |
 
+![How far each candidate constant moves Δ(D) over the computed range](solver/candidates.svg)
+
+The graph shows, for every candidate, how much fixing $\Delta_\infty$ to it changes the fitted $\Delta(D)$ over the computed
+range ($|\text{forced fit} - \text{free fit}|$, log scale), against the precision of the computed points (shaded).
+The five forms inside the window stay at the level of the data; $\pi^2/6$ sits 10–100 times above it at
+$D = 10$–$30$, and $2\pi/j_{1,1}$, $\sqrt e$ and $\varphi$ climb further out. Regenerate with
+`cd solver/data && python3 ../plot_candidates.py`.
+
 $G$ is Catalan's constant and $j_{\nu,k}$ the $k$-th zero of the Bessel function $J_\nu$. The five that fit are all that a
 search finds in the window $1.64388$–$1.64403$ among products $r\, b_1^{p_1} b_2^{p_2}$ ($r = i/j$ with $i, j \le 12$;
 $p = \pm\tfrac12, \pm1, \pm2$; $b$ from $\pi$, $e$, $\sqrt2$, $\sqrt3$, $\ln 2$, $\ln 3$, Euler's $\gamma$, $\zeta(3)$, $\varphi$, $G$
