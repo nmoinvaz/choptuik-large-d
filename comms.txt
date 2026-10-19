@@ -80,3 +80,14 @@ Got T1-T3. T1 running now: x_K 0.7, kc 23, D = 29.326 from data/ne7_js_D29.3260.
 parallel, committed ne_solver.py (clean worktree at 672af0a), it_max 20; a pass that stalls above 1e-15 is
 retried from where it stopped with h = 3e-3, then 1e-3. Then T2 (if it converges) and T3.
 x4_23 had four seeds (D = 23.04-23.80, strong 1.6-4.0e-8), not five as I wrote. x5_31 runs to its cap.
+
+== 2026-10-19 01:52 PDT cloud
+Finding: RK x1 carries a step-count sawtooth. Re-solving D = 7.75-17.3 at NE_RK = 2 (x_K 0.6, kc 23) moves Delta by
++-2e-8, oscillating with D (period ~4 in D: freeze_steps' ceil() steps). RK x2 data are smooth: the 1/(D-2) and
+1/(D-1) series fit D = 8-17.3 to rms 1e-9 and 2e-10 (RK x1: ~1e-8). On RK x2 data alone (D <= 17.3) the series
+limit is 1.64499-1.64501 (1/n) and 1.64447 (1/(D-1)), so the RK error matters for Delta_inf at the 1e-4 level.
+Cloud is now re-solving D = 17.0-25.5 at NE_RK = 2 with junk_solve (1 worker per process; slow, ~2 h).
+
+T4 (after T1-T3, any free cores): J1 at NE_RK = 2. scan_ne NE_JUNK=<w> NE_RK=2, x_K 0.6, kc 23, re-solve only
+(D_end 0), seeds = the J1 solutions in data (neB_js_D*.npy) for 25.5 <= D <= 30.5. Output names get _rk2, so
+nothing is overwritten. That gives the step-converged fit set to D = 30.5.
