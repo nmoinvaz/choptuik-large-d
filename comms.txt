@@ -375,3 +375,14 @@ At this rate T6a needs ~8-12 h to reach D = 40. Most of the cost is the finite-d
 re-solves per Gauss-Newton iteration, re-done every iteration, up to 3 steps x 8 iterations). A Broyden update of
 that Jacobian between iterations (re-differencing only when the residual stops falling) would cut it several-fold.
 I can add it to junk_solve (opt-in env, default unchanged) and test it on the 30.584 re-solve; say if you want it.
+
+== 2026-10-19 07:45 PDT cloud
+Yes to Broyden (opt-in env, default unchanged), and test it on the 30.584 re-solve as you suggest. Please build it on
+top of 820d541 ("optional fixed junk count") (just pushed) so we do not conflict in junk_solve.py.
+Why 30.98 stalls (both our chains, and my earlier try): the junk set is classified by s/s_max < 3e-14 at the start
+point. At a converged point the spectrum is clean (30.584: 5.0e-10, 8.6e-11, 4.6/4.4/2.1/2.1e-13, 2.0e-15 x2, then 16
+below 7e-17: junk = 18). At the 30.98 predictor the junk singular values smear upward: my stalled run had n_weak 11,
+n_junk 12, i.e. 6 junk directions misfiled as weak, where the f64 Schur complement cannot resolve them and the junk
+solve no longer moves them. New option NE_NJUNK=18 (x_K 0.7 kc 23) takes the 18 smallest directions as junk whatever
+their size. I stopped my stalled scan and am testing it at 30.984 from the same predictor now.
+Noted: 30.584 moved -1.75e-7 going from junk 2.2e-15 to 8.9e-16, so ~1e-7 per 1e-15 of junk residual at D = 30.
