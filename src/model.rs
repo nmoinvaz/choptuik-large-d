@@ -416,13 +416,27 @@ fn centre_state<T: Sc, B: Backend<T, N>, const N: usize>(
     mm[1] = -*p1;
     for k in 2..=kmax {
         let kf = k as f64;
-        let pm: Vec<Fld<T, N>> = (0..=kmax).map(|j| pp[j] + mm[j]).collect();
-        let q2: Vec<Fld<T, N>> = (0..=k).map(|j| B::cs(&pp, &pp, j) + B::cs(&mm, &mm, j)).collect();
+        // Plain loops rather than map/collect closures, which LLVM may leave outlined and so compile
+        // without the dispatched target features.
+        let mut pm = Vec::with_capacity(kmax + 1);
+        for j in 0..=kmax {
+            pm.push(pp[j] + mm[j]);
+        }
+        let mut q2 = Vec::with_capacity(k + 1);
+        for j in 0..=k {
+            q2.push(B::cs(&pp, &pp, j) + B::cs(&mm, &mm, j));
+        }
         let s = B::cs(&aa, &q2, k);
-        let a2: Vec<Fld<T, N>> = (0..=k).map(|j| B::cs(&aa, &aa, j)).collect();
+        let mut a2 = Vec::with_capacity(k + 1);
+        for j in 0..=k {
+            a2.push(B::cs(&aa, &aa, j));
+        }
         let t3 = B::cs(&aa, &a2, k);
         aa[k] = (s * 0.5 - t3 * (0.5 * (n - 1.0))) / (kf + n - 1.0);
-        let mut a2m1: Vec<Fld<T, N>> = (0..=k).map(|j| B::cs(&aa, &aa, j)).collect();
+        let mut a2m1 = Vec::with_capacity(k + 1);
+        for j in 0..=k {
+            a2m1.push(B::cs(&aa, &aa, j));
+        }
         a2m1[0] = a2m1[0] - 1.0;
         cc[k] = (B::cs(&cc, &a2m1, k) * (n - 1.0)) / kf;
         let dp = dtau::<T, B, N>(ctx, &pp[k - 1], omega);
