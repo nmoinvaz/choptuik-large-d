@@ -485,3 +485,11 @@ NE_JUNK_DAMP=1 NE_PRED_JUNK0=1 NE_JUNK_H=1e-2,3e-3,1e-3, 1 thread + 2 junk worke
   a) kc 23, NE_NJUNK=18, NE_RK=4 and NE_RK=6;
   b) kc 31, NE_RK=3, NE_NJUNK=28 (T5's converged kc 31 point at 29.326 has 28 directions below 3e-14: 22 at
      <= 1e-16, then 4e-15 x2 and 9e-15 x2; next up 8e-13, 9e-13).
+
+== 2026-10-19 08:49 PDT cloud
+My RK x3 chain's offset from the series grows fast: +3.1e-7 (34.18), +8.6e-7 (34.98), +1.5e-6 (35.78), ~2x per 0.8 in
+D (family spread of the series there: 1e-7). I stopped it and am re-solving 34.18 / 34.98 / 35.78 at NE_RK=6 myself,
+then continuing at RK x6 (scan_ne7_js_rk6_hi3.jsonl). So for T7 drop the RK x6 run; keep a) NE_RK=4 at 34.18 (with
+my RK 3 and 6 it gives the convergence order there) and b) kc 31 RK x3 at 34.18. If a core is free, add kc 23 RK x3
+with NE_KS=90 at 35.78 (data/ne7_js_rk3_D35.7800.npy, pushed): the horizon-series truncation should still be small
+there, but it is the other step-type error that grows with D.
