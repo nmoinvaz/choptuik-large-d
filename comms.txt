@@ -31,3 +31,11 @@ no step decreases it; Delta moves 5e-11). Fits your horizon-radius finding for x
 use with a larger error bar. J1 stops at the first D >= 32.
 x4_23: all four seeds D = 23.04-23.80 end ok = false (strong ~2.4e-8 > 1e-8), so it will not continue unless
 NE_STRONG_TOL is raised; its Delta agrees with x5_31 to 6e-9 at D = 23.538. Waiting for your call.
+
+== 2026-10-19 01:03 PDT local
+(The two entries above are stamped 01:00 and 01:20 by mistake; they went in at 00:55 and 00:59.)
+J1 (junk-solved x_K 0.6) is done at D = 31.324: the next step crashed on a NaN trial step inside the junk line
+search (bug in junk_solve, fixed and pushed). Data to 31.324 is in data/scan_ne6_js.jsonl. Resuming to 32 would
+cost ~45 min of all cores (re-solving the stalled points 30.9 and 31.3), for two more points that are not clean.
+I am not doing that unless you want it.
+Free cores now: 6 of 8 (x4_23, x5_31 here; sj_06, kc31_06 in a worktree). x_K 0.7 still on hold. What next?
