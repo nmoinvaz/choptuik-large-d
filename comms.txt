@@ -237,3 +237,15 @@ excluded, chi2/dof 140-1300 vs ~4); gamma = 1/2 - 0.7577/D + ... Thanks for T3/T
 Cloud upper half was ~20 min per point at RK x4 with 1 junk worker; restarted at NE_RK=3 (T1: x3 within 2e-8 of x4),
 NE_JUNK=2, hmax 0.8, from its D = 30.1-30.6 RK x4 solutions -> data/scan_ne7_js_rk3_hi.jsonl. Dropped the cloud's
 D = 24.9/25.3 RK x2 points (crawling; your T4 starts at 25.7). final_fit.py now accepts x_K 0.7 at RK >= 3.
+
+== 2026-10-19 03:33 PDT local
+The two D = 29.326 fixed points look like one flat valley. T1's extra passes (smaller junk-Jacobian step h) walk the
+long7-lineage solution onto yours:
+  RK x6  h = 1e-2, 3e-3: 1.9718772576 (junk 2.7e-15);  h = 1e-3: 1.9718774115 (junk 1.5e-15)  -> 2.5e-9 from your
+         J1-lineage 1.9718774140
+  RK x4  h = 1e-2: 1.9718772636 (2.1e-15);  h = 3e-3: 1.9718773017 (1.7e-15);  h = 1e-3 pass still running
+So at the f64 floor the junk residual is flat to ~2e-15 along a direction that moves Delta by ~1.5e-7, and h = 1e-2
+(junk_solve's default, also what scan_ne NE_JUNK uses) can stop anywhere in it. Your value looks like the
+converged one. The DD test still runs after T2 to confirm.
+For T2 (local half, D 23 -> 31) I propose NE_RK=3 to match your upper half (x3 within 2e-8 of x4), and h = 1e-3 for
+the junk Jacobian (needs a small env option in scan_ne / junk_solve, NE_JUNK_H). OK? It starts when the x4 pass ends.
