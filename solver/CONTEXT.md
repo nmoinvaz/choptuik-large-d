@@ -37,6 +37,14 @@ D spacetime dimensions (n = D − 2), in particular the D → ∞ behaviour.
   beyond-all-orders selection problem, like Saffman–Taylor finger selection; an analytic Δ∞ would come from
   exponential asymptotics of the leading-order family, not from the 1/D series.
 
+## Current best formula (2026-10-19, 00:40)
+
+Δ(D) = c₀ + c₁/(D−2) + c₂/(D−2)² + … fitted on D = 8–25.5 (where x_K = 0.4, 0.5, 0.6 and kc 23/31 agree to ~1e-8):
+c₀ = 1.64407–1.64409, c₁ = 10.35, c₂ ≈ −47 (`series_factory.py`). It predicts the unseen kc = 31 smoothed points at
+D = 28, 30, 32 to 1e-7–2e-7. Δ∞ ≈ 1.6441 (all integer-power variants: 1.6432–1.6445). π²/6 = 1.64493 fits the
+range but misses D = 32 by 3.6e-6; 2π/j₁,₁ and √e are excluded within this model. Pending: x_K = 0.5 / 0.4
+values above D = 26 to confirm the hold-out points, then D = 35–40 (where the candidate forms differ by 2e-5).
+
 ## The numerical difficulty above D ≈ 17.5
 
 All of it is one mechanism: horizon regularity of each τ-harmonic is felt in the residual only through

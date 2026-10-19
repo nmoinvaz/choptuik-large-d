@@ -257,3 +257,16 @@ light ray. Note the factor √(2π) between the simulation's field (G = 1) and t
   weaker (2e-8 vs 1.6e-5 at D = 28), so the same discretisation error (kc truncation) moves Delta 700x more; kc 31
   shrinks that error and 0.7/31 agrees again (3e-7). => smaller x_K is better, provided the horizon series converges
   there: x_K = 0.5 needs Ks ~ 120, x_K = 0.4 needs Ks ~ 260 (radius ~0.68-0.74 in u).
+
+## A series that predicts unseen points (2026-10-19, ~00:40)
+- Agreement of setups: x_K = 0.5 (Ks 120) vs 0.6 (kc 23 plain / kc 31 smoothed) within 1e-8..1e-7 for D <= 25.5;
+  x_K = 0.4 (Ks 260) = 2.0546914639 at D = 23.04 (x_K 0.5: 2.0546914635). Above 26, x_K = 0.6 kc 23 plain drifts
+  (+3e-5 at D = 30 vs kc 31 smoothed).
+- series_factory.py / coeff_stab.py: weighted polynomial fits in x = 1/n (and 1/(D-1)) on D = 8..25.5 (errors 1e-8 below
+  17.2, 3e-8 above). Converge (chi2/dof 0.6-0.9) at degree 9-10: c0 = 1.64407-1.64409, c1 = 10.35, c2 ~ -47 (1/n);
+  c0 stable for Dmax 25.5 / 29 / 32 and lower cuts 8-12 (1.6432-1.6445 across all variants). 1/sqrt(n) series unstable
+  (half-integer powers not supported by the data).
+- Hold-out: the D <= 25.5 series predicts the kc 31 smoothed points at D = 28, 30, 32 to 1e-7..2e-7 (1/(D-1) series: 2e-8
+  at 28 and 30). Forcing Delta_inf = pi^2/6 (chi2/dof 1.0 on the fit range) misses by +6.6e-7, 1.7e-6, 3.6e-6; the
+  half-integer family (L = 1.6418) by -1.1e-6, -2.7e-6, -4.9e-6. Forcing 2pi/j11 or sqrt(e): chi2/dof 25-70.
+  => Delta_inf ~ 1.6441 (pending the x_K = 0.5 / 0.4 values above D = 26). c1/c0 = 6.295 (2 pi = 6.283).
