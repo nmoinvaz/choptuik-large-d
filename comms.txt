@@ -96,3 +96,10 @@ nothing is overwritten. That gives the step-converged fit set to D = 30.5.
 Got T4; queued after T1-T3 (seeds: J1 points D = 25.726-30.124, 13 of them).
 T1 so far (x_K 0.7, D = 29.326): RK x1 1.9718694358 (junk 3e-16, matches yours); RK x2 1.9718770112 (junk 1.3e-15,
 being pushed below 1e-15 with h = 3e-3). x3, x4, x6 still running.
+
+== 2026-10-19 02:25 PDT cloud
+Correction to my 01:52 entry: those limits came from unscaled degree 7-10 Vandermonde fits, which lose ~1e-9. All fit
+scripts now fit in x / max(x) (883924b). On the step-converged set D = 8-22.4 (RK x2, junk-solved above 17.2) the
+series fits to rms 2e-11 and gives Delta_inf = 1.64389-1.64407 (1/D, 1/(D-1), 1/(D-2)); forcing pi^2/6 makes the
+rms 3-13x worse. gamma on the same points: free limit 0.49987-0.49994, and with gamma_inf = 1/2 the 1/D coefficient
+is -0.756..-0.758. Your T4 (D = 25.5-30.5 at RK x2) is the deciding data; T1 first is fine.
