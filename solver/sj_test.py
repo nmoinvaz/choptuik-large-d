@@ -10,7 +10,7 @@ for spec in sys.argv[2:]:
     nodes = NODES_L + ([0.7] if xk > 0.65 else [])
     z = np.load(f); S, R = make(D, z[-1], nodes=nodes)
     out = [f"{f} (x_K {xk}): start {z[-1]:.10f}"]
-    for it in range(3):
+    for it in range(int(__import__("os").environ.get("SJ_IT", "3"))):
         z, h0, h1 = smooth_junk(R, S, z)
         z, info = ne_solve(R, z)
         hh = info["hist"][-1]

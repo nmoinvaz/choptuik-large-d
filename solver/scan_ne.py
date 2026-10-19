@@ -7,7 +7,8 @@ the weak singular values, and gamma = 1/lambda from the Rust growth-mode matrix.
 usage: python3 scan_ne.py out.jsonl D_from D_end h hmax [xK=0.6|0.7] [seed prefixes, comma separated] [kc=23]
 Seeds are kc = 23 solutions; for another kc they are regridded. Threads per process: env NE_THREADS (2).
 env NE_SEED_MAX: re-solve only the seeds up to this D, then continue from those solutions.
-env NE_SMOOTH=1: after each solve, fix the junk directions by smoothness (smooth_junk.py) and re-solve, twice.
+env NE_SMOOTH=1: after each solve, fix the junk directions by smoothness (smooth_junk.py) and re-solve, until
+  Delta changes by < 1e-10 (at most 8 rounds).
 Run from the directory holding gamma_rust.jsonl; seed prefixes may include a directory (../seeds/long7_D).
 (D_end below the last seed: re-solve only, no continuation)
 """
@@ -82,10 +83,13 @@ def solve(D, z0, lam_guess, t0, src, Delta_old=None):
     if np.linalg.norm(R(z0)) > 1e-8:           # predictor or old seed far off: damped LM first, then NE polishes
         z0, _, _, _ = dd_solve(R, z0, maxjac=12, use_dd=False, stall=3)
     z, info = ne_solve(R, z0)
-    if SMOOTH:
-        for _ in range(2):
+    if SMOOTH:                                   # alternate until Delta stops moving (3-5 rounds at D = 23)
+        for _ in range(8):
+            d_prev = z[-1]
             z, _, _ = smooth_junk(R, S, z)
             z, info = ne_solve(R, z)
+            if abs(z[-1] - d_prev) < 1e-10:
+                break
     h_ = info["hist"][-1]
     ok = h_[2] < 1e-12 and h_[1] < 1e-9 and info["F"] < 1e-7
     lam = gamma_of(R, z, lam_guess) if ok else None

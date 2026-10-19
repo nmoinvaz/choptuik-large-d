@@ -235,3 +235,8 @@ light ray. Note the factor √(2π) between the simulation's field (G = 1) and t
 - Continuation drift: the x_K = 0.7 NE scan reached D = 40, but its slope steepens from -0.0117 (D = 37) to -0.033
   (D = 40) with junk residual 1-3e-9: the branch runs off above D ~ 38. x_K = 0.6 blew up at D = 35.15 (|F| 1.5e4) and
   is retrying. Values above D ~ 26 are not trustworthy beyond ~1e-3.
+- sj_test.py with 8 rounds (D = 23.04): smoothing + NE alternation converges in ~4 rounds. x_K = 0.7 -> 2.0546955863
+  (all centre harmonics k >= 9 -> 0); x_K = 0.6 -> 2.0546914107 (7.3e-6 of k >= 9 content stays: it lies in weak, not
+  junk, directions there). 4.2e-6 apart: the prior is not the same constraint in both setups. scan_ne NE_SMOOTH now
+  iterates to |dDelta| < 1e-10.
+- x_K = 0.6 continuation stopped at D = 34.94 (steps shrinking, |F| 4.7e-8).
