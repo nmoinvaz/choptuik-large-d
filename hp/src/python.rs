@@ -319,6 +319,56 @@ impl Solver {
         Ok((arr(py, b.iter().map(|v| v.hi).collect()), arr(py, b.iter().map(|v| v.lo).collect())))
     }
 
+    /// Levenberg-Marquardt steps: J at z, G = J^T J, g = -J^T F; for each mu, dz = (G + mu^2 diag(G))^-1 g.
+    /// Returns ([(dz_hi, dz_lo) per mu], F_hi, F_lo). Also stores the plain LU of J (for chord / transpose solves).
+    #[allow(clippy::type_complexity)]
+    fn lm_steps<'py>(
+        &mut self,
+        py: Python<'py>,
+        zh: PyReadonlyArray1<'py, f64>,
+        zl: PyReadonlyArray1<'py, f64>,
+        mus: Vec<f64>,
+    ) -> PyResult<(Vec<(Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<f64>>)>, Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<f64>>)> {
+        let (h, l) = (slice(&zh, "zh")?, slice(&zl, "zl")?);
+        let (api, pool) = (&self.api, &self.pool);
+        let n = api.len();
+        let res = py
+            .detach(|| {
+                pool.install(|| -> Result<_, String> {
+                    let (fh, fl) = api.residual(h, l)?;
+                    let (jh, jl, ld) = api.jacobian(h, l)?;
+                    let nfh: Vec<f64> = fh.iter().map(|v| -v).collect();
+                    let nfl: Vec<f64> = fl.iter().map(|v| -v).collect();
+                    let (gh, gl, g) = crate::linalg::gram(n, ld, &jh, &jl, &nfh, &nfl);
+                    let mut steps = Vec::new();
+                    for &mu in &mus {
+                        let mut ah = gh.clone();
+                        let mut al = gl.clone();
+                        for i in 0..n {
+                            let d = DD { hi: ah[i * ld + i], lo: al[i * ld + i] };
+                            let v = d + d.mul_f(mu * mu);
+                            ah[i * ld + i] = v.hi;
+                            al[i * ld + i] = v.lo;
+                        }
+                        let lu = DDLu::factor(n, ld, ah, al, true)?;
+                        let mut b = g.clone();
+                        lu.solve(&mut b);
+                        steps.push(b);
+                    }
+                    let lu = DDLu::factor(n, ld, jh, jl, true)?;
+                    Ok((steps, fh, fl, lu))
+                })
+            })
+            .map_err(PyValueError::new_err)?;
+        let (steps, fh, fl, lu) = res;
+        self.lu = Some(lu);
+        let out = steps
+            .into_iter()
+            .map(|b| (arr(py, b.iter().map(|v| v.hi).collect()), arr(py, b.iter().map(|v| v.lo).collect())))
+            .collect();
+        Ok((out, arr(py, fh), arr(py, fl)))
+    }
+
     /// Solve with the transpose of the stored LU: y = J0^-T r. With r = e_Delta, y is dDelta/dF: the change of the
     /// converged Delta caused by a residual perturbation dF is -y . dF.
     fn lu_solve_t<'py>(

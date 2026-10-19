@@ -198,5 +198,48 @@ impl DDLu {
     }
 }
 
+/// Gram matrix G = J^T J and g = J^T b for a column-major J (n x n, leading dimension ld): G column-major with
+/// leading dimension ld (only what LU needs; G is symmetric and filled completely).
+pub fn gram(n: usize, ld: usize, jh: &[f64], jl: &[f64], bh: &[f64], bl: &[f64]) -> (Vec<f64>, Vec<f64>, Vec<DD>) {
+    let dot = |a: usize, bh2: &[f64], bl2: &[f64]| -> DD {
+        let mut acc = dv::DotAcc::zero();
+        let mut i = 0;
+        while i < ld {
+            let x = DV::load(&jh[a * ld + i..a * ld + i + 8], &jl[a * ld + i..a * ld + i + 8]);
+            let y = DV::load(&bh2[i..i + 8], &bl2[i..i + 8]);
+            acc = acc.add_prod(x, y);
+            i += 8;
+        }
+        let v = acc.finish();
+        let (h, l) = (v.hi.to_array(), v.lo.to_array());
+        let mut s = DD::ZERO;
+        for k in 0..8 {
+            s = s + DD { hi: h[k], lo: l[k] };
+        }
+        s
+    };
+    let cols: Vec<Vec<DD>> = (0..n)
+        .into_par_iter()
+        .map(|c| (0..=c).map(|r| dot(r, &jh[c * ld..c * ld + ld], &jl[c * ld..c * ld + ld])).collect())
+        .collect();
+    let mut gh = vec![0.0; ld * n];
+    let mut gl = vec![0.0; ld * n];
+    for c in 0..n {
+        for r in 0..=c {
+            let v = cols[c][r];
+            gh[c * ld + r] = v.hi;
+            gl[c * ld + r] = v.lo;
+            gh[r * ld + c] = v.hi;
+            gl[r * ld + c] = v.lo;
+        }
+    }
+    let mut bpad_h = vec![0.0; ld];
+    let mut bpad_l = vec![0.0; ld];
+    bpad_h[..n].copy_from_slice(&bh[..n]);
+    bpad_l[..n].copy_from_slice(&bl[..n]);
+    let g: Vec<DD> = (0..n).into_par_iter().map(|c| dot(c, &bpad_h, &bpad_l)).collect();
+    (gh, gl, g)
+}
+
 #[allow(dead_code)]
 fn _unused(_: V8) {}

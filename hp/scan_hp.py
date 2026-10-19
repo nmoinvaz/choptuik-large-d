@@ -15,7 +15,7 @@ import time
 
 import numpy as np
 
-from hpkernel.driver import hermite, load, make_solver, newton_solve, predict, renode, resample_z, save, tangent
+from hpkernel.driver import hermite, lm_solve, load, make_solver, newton_solve, predict, renode, resample_z, save, tangent
 
 
 def tails(s, zh, zl, nodes, M):
@@ -46,6 +46,11 @@ def solve_at(D, zh, zl, a, nodes, M, it_max):
     t0 = time.time()
     zh2, zl2, hist = newton_solve(s, zh, zl, tol=a.tol, it_max=it_max, verbose=a.verbose)
     ok = hist and hist[-1]["F"] < a.tol
+    if not ok and a.lm:
+        print(f"   D={D}: Newton stopped at |F| {hist[-1]['F']:.1e}; Levenberg-Marquardt from the predictor", flush=True)
+        zh2, zl2, h2 = lm_solve(s, zh, zl, tol=a.tol, it_max=a.lm, verbose=a.verbose, newton_after=1e-22)
+        hist = hist + h2
+        ok = hist[-1]["F"] < a.tol
     return s, zh2, zl2, hist, ok, time.time() - t0
 
 
@@ -56,6 +61,7 @@ def main():
     ap.add_argument("D_end", type=float)
     ap.add_argument("--dD", type=float, default=0.5)
     ap.add_argument("--maxdD", type=float, default=1.0)
+    ap.add_argument("--dD0", type=float, default=None, help="first step (default dD)")
     ap.add_argument("--M", type=int, default=None)
     ap.add_argument("--kt", type=int, default=36)
     ap.add_argument("--kc", type=int, default=40)
@@ -68,6 +74,7 @@ def main():
     ap.add_argument("--it_max", type=int, default=8)
     ap.add_argument("--threads", type=int, default=0)
     ap.add_argument("--verbose", action="store_true")
+    ap.add_argument("--lm", type=int, default=15, help="Levenberg-Marquardt iterations after a failed Newton (0: off)")
     ap.add_argument("--Dlist", default="", help="explicit D values to visit in order (comma list or @file); "
                     "D_end is then ignored")
     ap.add_argument("--schedule", default="", help="node changes during the scan: 'D1=x,x,...;D2=x,x,...' "
@@ -94,7 +101,7 @@ def main():
     outdir = os.path.dirname(os.path.abspath(a.out))
     s_of = lambda Dx: make_solver(Dx, M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks, threads=a.threads)
     hist_z = [(D, zh + zl, tangent(s_of, s, D, zh, zl))]
-    dD = a.dD
+    dD = a.dD0 or a.dD
     targets = []
     if a.Dlist:
         txt = open(a.Dlist[1:]).read() if a.Dlist.startswith("@") else a.Dlist
@@ -139,8 +146,10 @@ def main():
         if th > 1e-33:
             a.ks = int(a.ks * 1.25) + 2
             print(f"   horizon series tail {th:.1e}: ks -> {a.ks}", flush=True)
-        if len(hist) <= 4:
+        if len(hist) <= 5:
             dD = min(a.maxdD, dD * 1.25)
+        elif len(hist) >= 8:
+            dD *= 0.8
         while sched and (D - sched[0][0]) * direction >= -1e-9:
             new_nodes = sched.pop(0)[1]
             if new_nodes == nodes:

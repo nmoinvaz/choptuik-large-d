@@ -279,3 +279,34 @@ def hermite(D0, z0, t0, D1, z1, t1, D):
     h01 = -2 * u ** 3 + 3 * u ** 2
     h11 = u ** 3 - u ** 2
     return h00 * z0 + h10 * h * t0 + h01 * z1 + h11 * h * t1
+
+
+def lm_solve(s, zh, zl, tol=1e-27, it_max=20, mus=(0.0, 1e-8, 1e-6, 1e-4, 1e-3, 1e-2, 1e-1, 1.0), verbose=True,
+             newton_after=1e-12):
+    """Levenberg-Marquardt (Marquardt scaling) in double-double: each iteration tries every mu and keeps the
+    step with the smallest |F|_2; once |F| < newton_after it hands over to newton_solve. Returns zh, zl, history."""
+    hist = []
+    t0 = time.time()
+    for it in range(it_max):
+        steps, Fh, Fl = s.lm_steps(zh, zl, list(mus))
+        n0 = rnorm(Fh, Fl)
+        best = None
+        for mu, (dh, dl) in zip(mus, steps):
+            th, tl = dd_add(zh, zl, np.asarray(dh), np.asarray(dl))
+            Th, Tl = s.residual(th, tl)
+            n1 = rnorm(Th, Tl)
+            if np.isfinite(n1) and (best is None or n1 < best[0]):
+                best = (n1, mu, th, tl, dd_norm(np.asarray(dh), np.asarray(dl)))
+        hist.append(dict(it=it, F=dd_norm(Fh, Fl), lm=True, t=round(time.time() - t0, 1)))
+        if best is None or best[0] >= n0:
+            if verbose:
+                print(f"  lm {it}: |F|_2 {n0:.2e}: no mu decreases it", flush=True)
+            break
+        n1, mu, zh, zl, dz = best
+        if verbose:
+            print(f"  lm {it}: |F|_2 {n0:.2e} -> {n1:.2e} (mu {mu:g}, |dz| {dz:.1e}) Delta {zh[-1]:.15f} t {time.time() - t0:.0f}s",
+                  flush=True)
+        if n1 < newton_after:
+            zh, zl, h2 = newton_solve(s, zh, zl, tol=tol, it_max=8, verbose=verbose)
+            return zh, zl, hist + h2
+    return zh, zl, hist
