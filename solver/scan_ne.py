@@ -5,6 +5,8 @@ last one with a cubic predictor up to D_end. For every point: Delta, the residua
 the weak singular values, and gamma = 1/lambda from the Rust growth-mode matrix.
 
 usage: python3 scan_ne.py out.jsonl D_from D_end h hmax [xK=0.6|0.7] [seed prefixes, comma separated] [kc=23]
+(D_end < D_from: downward sweep, seeds between env NE_SEED_MIN and D_from re-solved from the top down, then continued
+down to D_end)
 Seeds are kc = 23 solutions; for another kc they are regridded. Threads per process: env NE_THREADS (2).
 env NE_SEED_MAX: re-solve only the seeds up to this D, then continue from those solutions.
 env NE_JUNK_H: step of the junk solve's forward-difference Jacobian (default 1e-2; 1e-3 reaches the bottom of the flat
@@ -183,12 +185,17 @@ if __name__ == "__main__":                     # junk_solve's process pool re-im
     hist = []
     seeds = sorted((float(f[len(p):-4]), f) for p in PREFIXES for f in glob.glob(p + "*.npy") if f[len(p):-4].replace(".", "").isdigit())
     SEED_MAX = float(os.environ.get("NE_SEED_MAX", "inf"))   # re-solve seeds only up to here, then continue
-    seeds = [(D, f) for D, f in seeds if D_from - 1e-9 <= D <= SEED_MAX]
+    DOWN = D_end < D_from                      # downward sweep: seeds from D_from down to NE_SEED_MIN, then continue down
+    if DOWN:
+        SEED_MIN = float(os.environ.get("NE_SEED_MIN", "-inf"))
+        seeds = sorted([(D, f) for D, f in seeds if SEED_MIN - 1e-9 <= D <= D_from + 1e-9], reverse=True)
+    else:
+        seeds = [(D, f) for D, f in seeds if D_from - 1e-9 <= D <= SEED_MAX]
     lam_g = 2.0
     for D, f in seeds:
         t0 = time.time()
         z0 = np.load(f)
-        lam_g = extrap([r[0] for r in hist], [r[2] for r in hist], D) if len(hist) >= 4 and D > _gD[-1] else lam_table(D)
+        lam_g = extrap([r[0] for r in hist], [r[2] for r in hist], D) if len(hist) >= 4 and (D > _gD[-1] or D < _gD[0]) else lam_table(D)
         z, rec = solve(D, z0, lam_g, t0, f, Delta_old=float(z0[-1]))
         print(json.dumps(rec), flush=True)
         open(out, "a").write(json.dumps(rec) + "\n")
@@ -197,8 +204,8 @@ if __name__ == "__main__":                     # junk_solve's process pool re-im
             hist.append([D, z, rec["lam"]])
 
     D = hist[-1][0] if hist else D_end
-    while D < D_end - 1e-9:
-        Dt = min(D + h, D_end)
+    while (D > D_end + 1e-9) if DOWN else (D < D_end - 1e-9):
+        Dt = max(D - h, D_end) if DOWN else min(D + h, D_end)
         t0 = time.time()
         Ds = [r[0] for r in hist]
         z, rec = solve(Dt, predict(hist, Dt), extrap(Ds, [r[2] for r in hist], Dt), t0, "continuation")
