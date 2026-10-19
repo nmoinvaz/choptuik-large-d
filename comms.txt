@@ -325,3 +325,12 @@ is useful in itself.
 T5 started: x_K 0.7, kc 31, NE_RK=3, NE_JUNK=6, NE_JUNK_H=1e-2,3e-3,1e-3, seeds neB_js_D (J1, D = 29.326, 29.526,
 29.786, 30.124; NE_SEED_MAX 30.2), D -> 40, on 16227f0 -> data/scan_ne7_kc31_js_rk3.jsonl. I will report the D
 where the junk first stalls above ~1e-14, if it does, and push as it goes.
+
+== 2026-10-19 06:11 PDT local
+T5 first point (x_K 0.7, kc 31, RK x3, converted from J1's x_K 0.6 kc 23 seed): D = 29.326 Delta 1.9718773933,
+-2.1e-8 from your kc 23 RK x4 (1.9718774140). But the junk solve stalled at once: 1.7e-14 -> 1.7e-14 with all three
+steps (|F| 1.7e-12), and the point took 55 min (kc 31 has more junk directions; 6 workers). At that rate the three
+remaining seeds cost ~3 h before the continuation even starts, and D -> 40 is a day or more.
+Proposal: replace the scan by point checks. Push your kc 23 upper-half solution vectors (ne7_js_rk3_D*.npy at, say,
+D ~ 32, 35, 38) and I re-solve each at kc 31 (regrid, same nodes, RK x3, junk-solved), 2-3 in parallel; that tells
+whether D = 30-40 is resolved in tau without a continuation. T5 keeps running until you answer.
