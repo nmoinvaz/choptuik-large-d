@@ -270,3 +270,9 @@ light ray. Note the factor √(2π) between the simulation's field (G = 1) and t
   at 28 and 30). Forcing Delta_inf = pi^2/6 (chi2/dof 1.0 on the fit range) misses by +6.6e-7, 1.7e-6, 3.6e-6; the
   half-integer family (L = 1.6418) by -1.1e-6, -2.7e-6, -4.9e-6. Forcing 2pi/j11 or sqrt(e): chi2/dof 25-70.
   => Delta_inf ~ 1.6441 (pending the x_K = 0.5 / 0.4 values above D = 26). c1/c0 = 6.295 (2 pi = 6.283).
+- gamma_series.py: gamma = g0 + c1/n + ... on D = 8..25.5 (Rust gamma below 17.2, NE above), hold-out kc 31 smoothed
+  D = 25.5..33: free g0 -> 0.4997..0.4998 (1/n, 1/(D-1)), with g0 = 1/2 fixed: c1 = -0.755 (-0.7550 1/n, -0.7552 1/(D-1)),
+  c2 ~ +9, c3 ~ -120; hold-out max 1.1e-7..1.5e-7. Forcing c1 = -3/4 makes the hold-out worse (1-2e-6).
+- pade_fit.py (rational in x = 1/n, fit D = 8..25.5): Delta [4/3]: Delta_inf = 1.643883, fit rms 2e-8, hold-out max
+  2.1e-7; [3/3]: 1.644131 (hold-out 2.6e-6). gamma [3/3]: gamma_inf = 0.499995, fit rms 1e-9, hold-out 1.6e-7.
+  => gamma_inf = 1/2 to ~1e-5; Delta_inf = 1.6439..1.6442.
