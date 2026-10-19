@@ -1,0 +1,125 @@
+#!/usr/bin/env python3
+"""Continuation in D with the double-double solver.
+
+    python3 scan_hp.py OUT.jsonl START.npz D_END [--dD 0.5] [--M 48] [--kt 36] [--kc 40] [--ks 100]
+                       [--nodes 0.02,0.05,...] [--tag name] [--maxdD 1.0]
+
+START.npz: a converged solution (hpkernel.driver.save format: zh, zl, meta with D, M, nodes). Every converged point
+is appended to OUT.jsonl and saved as <tag>_D<D>.npz next to OUT. A --nodes / --M different from the start file's
+re-nodes / resamples the start solution first (and re-converges it at its own D).
+"""
+import argparse
+import json
+import os
+import time
+
+import numpy as np
+
+from hpkernel.driver import load, make_solver, newton_solve, predict, renode, resample_z, save
+
+
+def tails(s, zh, zl, nodes, M):
+    """max over fields/lanes of |c_k| x^k for the last 3 orders: centre series at nodes[0], horizon series at
+    u = 1 - nodes[-1]"""
+    out = []
+    for which, x in ((0, nodes[0]), (1, 1 - nodes[-1])):
+        h, l = s.series(zh, zl, which)
+        c = np.abs((h + l).reshape(-1, 4, M)).max(axis=(1, 2))
+        k = np.arange(len(c))
+        out.append(float((c * x ** k)[-3:].max()))
+    return out
+
+
+def sensitivity(s, M):
+    """dDelta/dF (needs the LU of the last Newton step): max |y| per residual block"""
+    L = s.size
+    e = np.zeros(L)
+    e[-1] = 1.0
+    yh, yl = s.lu_solve_t(e, np.zeros(L))
+    nb = (L - 1) // (4 * M)
+    return [float(np.abs(yh[b * 4 * M:(b + 1) * 4 * M]).max()) for b in range(nb)]
+
+
+def solve_at(D, zh, zl, a, nodes, M, it_max):
+    s = make_solver(D, M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks, threads=a.threads)
+    s.set_segs(s.plan(zh, zl, a.tol_step, a.hmax))
+    t0 = time.time()
+    zh2, zl2, hist = newton_solve(s, zh, zl, tol=a.tol, it_max=it_max, verbose=a.verbose)
+    ok = hist and hist[-1]["F"] < a.tol
+    return s, zh2, zl2, hist, ok, time.time() - t0
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("out")
+    ap.add_argument("start")
+    ap.add_argument("D_end", type=float)
+    ap.add_argument("--dD", type=float, default=0.5)
+    ap.add_argument("--maxdD", type=float, default=1.0)
+    ap.add_argument("--M", type=int, default=None)
+    ap.add_argument("--kt", type=int, default=36)
+    ap.add_argument("--kc", type=int, default=40)
+    ap.add_argument("--ks", type=int, default=100)
+    ap.add_argument("--nodes", default=None)
+    ap.add_argument("--tag", default="hp")
+    ap.add_argument("--tol", type=float, default=1e-29)
+    ap.add_argument("--tol_step", type=float, default=1e-32)
+    ap.add_argument("--hmax", type=float, default=0.05)
+    ap.add_argument("--it_max", type=int, default=8)
+    ap.add_argument("--threads", type=int, default=0)
+    ap.add_argument("--verbose", action="store_true")
+    a = ap.parse_args()
+    zh, zl, meta = load(a.start)
+    D, M0, nodes0 = meta["D"], meta["M"], list(meta["nodes"])
+    M = a.M or M0
+    nodes = [float(v) for v in a.nodes.split(",")] if a.nodes else nodes0
+    if M != M0:
+        zh, zl = resample_z(zh, M0, M, len(nodes0))
+    if nodes != nodes0:
+        s0 = make_solver(D, M, nodes=nodes0, kt=a.kt, kc=a.kc, ks=a.ks, threads=a.threads)
+        zh, zl = renode(s0, zh, zl, nodes0, nodes, M)
+    if M != M0 or nodes != nodes0:
+        s, zh, zl, hist, ok, dt = solve_at(D, zh, zl, a, nodes, M, a.it_max)
+        print(f"re-converged start D={D} M={M} nodes={nodes}: Delta {zh[-1]:.16f} ok {ok} ({dt:.0f}s)", flush=True)
+        if not ok:
+            raise SystemExit("start did not re-converge")
+    outdir = os.path.dirname(os.path.abspath(a.out))
+    hist_z = [(D, zh + zl)]
+    dD = a.dD
+    direction = 1.0 if a.D_end > D else -1.0
+    while (a.D_end - D) * direction > 1e-12:
+        Dn = D + direction * min(dD, abs(a.D_end - D))
+        Dn = round(Dn, 6)
+        zp = predict(hist_z, Dn) if len(hist_z) > 1 else hist_z[-1][1]
+        s, zh2, zl2, hist, ok, dt = solve_at(Dn, zp, np.zeros_like(zp), a, nodes, M, a.it_max)
+        if not ok:
+            print(f"D={Dn}: no convergence (|F| {hist[-1]['F'] if hist else float('nan'):.1e}); dD {dD} -> {dD / 2}", flush=True)
+            dD /= 2
+            if dD < 1e-3:
+                raise SystemExit("step too small")
+            continue
+        D, zh, zl = Dn, zh2, zl2
+        hist_z.append((D, zh + zl))
+        # the stored LU is from the last Newton call, made at the converged z
+        sens = sensitivity(s, M)
+        tc, th = tails(s, zh, zl, nodes, M)
+        rec = dict(D=D, Delta=float(zh[-1]), Delta_lo=float(zl[-1]), F=hist[-1]["F"], its=len(hist), seconds=round(dt, 1),
+                   M=M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks, tol_step=a.tol_step, steps=sum(len(g) - 1 for g in s.get_segs()),
+                   piv=hist[0].get("piv"), sens=sens, tail_c=tc, tail_h=th)
+        with open(a.out, "a") as f:
+            f.write(json.dumps(rec) + "\n")
+        save(os.path.join(outdir, f"{a.tag}_D{D:.4f}.npz"), zh, zl, dict(D=D, M=M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks))
+        print(f"D={D:.4f} Delta={zh[-1]:.16f}{zl[-1]:+.2e} its {len(hist)} |F| {hist[-1]['F']:.1e} {dt:.0f}s "
+              f"piv {rec['piv'][0]:.1e}..{rec['piv'][1]:.1e} dDelta/dF max {max(sens):.1e} tails {tc:.0e} {th:.0e}", flush=True)
+        if tc > 1e-33:
+            a.kc = int(a.kc * 1.25) + 2
+            print(f"   centre series tail {tc:.1e}: kc -> {a.kc}", flush=True)
+        if th > 1e-33:
+            a.ks = int(a.ks * 1.25) + 2
+            print(f"   horizon series tail {th:.1e}: ks -> {a.ks}", flush=True)
+        if len(hist) <= 4:
+            dD = min(a.maxdD, dD * 1.25)
+
+
+if __name__ == "__main__":
+    main()

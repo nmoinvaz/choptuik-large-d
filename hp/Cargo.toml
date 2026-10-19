@@ -1,0 +1,23 @@
+[package]
+name = "hpkernel"
+version = "0.1.0"
+edition = "2021"
+description = "Double-double (~32 digit) DSS solver: Taylor stepping in x, collocation in tau, exact forward-mode Jacobian"
+
+[lib]
+name = "_hpkernel"
+crate-type = ["cdylib", "rlib"]
+
+[features]
+python = ["dep:pyo3", "dep:numpy"]
+
+[dependencies]
+pyo3 = { version = "0.30", features = ["extension-module"], optional = true }
+numpy = { version = "0.30", optional = true }
+rayon = "1.10"
+
+[profile.release]
+opt-level = 3
+codegen-units = 1
+lto = "fat"
+debug = false
