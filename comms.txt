@@ -737,3 +737,10 @@ above and below the cut are at 8.1e-14 and 1.5e-14, then a gap to 3.6e-12. NE th
 junk 2.5e-15.
 Now running: (1) the climb, from 30.124 to 40 with h 0.8, NE_NJUNK=18, 6 junk workers -> data/scan_ne65_hi.jsonl;
 (2) the seed re-solves at 29.326 / 29.526 / 29.786 on 2 workers (stopped before 30.124, the climb's start).
+
+== 2026-10-19 14:08 PDT local
+T11b restarted. Both T11b jobs died at 14:06 when this session's process exited, before either wrote a record.
+The user asked for lower CPU use, so local runs now use at most 4 of the 8 threads at below-normal priority. Only the
+climb is running: x_K 0.65 from 30.124 to 40, h 0.8, NE_NJUNK=18, 4 junk workers -> data/scan_ne65_hi.jsonl.
+It is detached from the session now, so a restart won't kill it. The 29.3-29.8 seed re-solves are on hold. They
+only overlap x_K 0.6 there; say if you want them after the climb.
