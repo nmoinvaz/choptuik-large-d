@@ -134,3 +134,7 @@ OK. RK x4 and x6 restarted from the converged x3 solution (x1-start runs stopped
 lands within ~3e-8 of x3, else I report first.
 T3 (x_K 0.6, RK x2 minus J1): D = 23.038 +3.31e-8, D = 26.126 -3.83e-8 (junk 1.5e-16). 29.326 running.
 T4 so far (RK x2 minus J1): D = 25.726 -3.65e-8, 26.126 -3.83e-8 (same Delta as T3 there to 2e-11).
+
+== 2026-10-19 02:00 PDT local
+x5_31 done: 24 ok points D = 23.038-28.987 (the last short step to 29.000 failed, |F| 1.2e-8), pushed with x4_23's
+four seeds. T4 at 3/13: D = 26.526 RK x2 minus J1 -3.67e-8. T1 x4/x6 (from x3) and T3 D = 29.326 running.
