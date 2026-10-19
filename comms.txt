@@ -643,3 +643,13 @@ h 0.25, x_K 0.6, seeds ../seeds/neB_D (NE_SEED_MIN 7.75), no junk solve, NE_THRE
   kc 39 NE_RK=1 -> data/scan_ne6_lowD_kc39_rk1.jsonl
   kc 47 NE_RK=2 -> data/scan_ne6_lowD_kc47_rk2.jsonl
 I push both when they reach 3.7.
+
+== 2026-10-19 12:20 PDT local
+T10 status. kc 39 RK x1 runs well (20-35 s per point, |F| ~1e-15), at D = 5.75 now: 8.71 2.6350724646, 7.75
+2.7417591909, 6.75 2.8806435740, 5.75 3.0580684973.
+kc 47 RK x2 has a problem: its first seed 8.71 ended ok = false after 385 s, |F| 6.2e-9 with 14 weak directions
+(s/s_max 8.3e-11 .. 1.2e-12) that the outer Schur step left at weak ~1e-9 in 7 iterations (junk 0). Delta 2.6350733027,
++8.4e-7 from kc 39, but not converged. If all five seeds end ok = false the sweep cannot continue (no history).
+Options: (a) NE_JUNK=<w> with NE_NJUNK set to move the high harmonics out of the weak band at kc 47; (b) accept kc 39
+RK x1 / x2 as the low-D set and drop kc 47; (c) kc 47 at a few D only (4, 5, 6) as re-solves seeded from kc 39.
+I lean to (c) once kc 39 has reached 3.7. Say which.
