@@ -101,6 +101,8 @@ def main():
     ap.add_argument("--w", type=int, default=24, help="weak directions frozen in the deflated phase")
     ap.add_argument("--delta_tol", type=float, default=1e-14, help="junk_only: accept a stalled step if the linearised "
                     "Delta correction is below this")
+    ap.add_argument("--junk_hold", type=int, default=None, help="predictor: carry p1 harmonics above this over from the "
+                    "last point instead of extrapolating them")
     ap.add_argument("--junk_only", action="store_true", help="freeze only weak directions without Delta content, and keep "
                     "them frozen (they stay on the predictor's smooth trend)")
     ap.add_argument("--lm", type=int, default=15, help="Levenberg-Marquardt iterations after a failed Newton (0: off)")
@@ -160,6 +162,14 @@ def main():
         Dn = round(Dn, 6)
         if a.predictor == "lagrange" and len(hist_z) > 1:
             zp = predict([(h_[0], h_[1]) for h_ in hist_z], Dn)
+            if a.junk_hold:
+                # p1 harmonics above junk_hold: carried over from the last point (they are frozen junk; extrapolating
+                # them compounds their noise from point to point)
+                lo, lo2 = plow_odd(M, a.junk_hold)
+                P = lo + lo2
+                zlast = hist_z[-1][1]
+                zp = zp.copy()
+                zp[:M] = P @ zp[:M] + (zlast[:M] - P @ zlast[:M])
         elif len(hist_z) > 1 and hist_z[-2][2] is not None:
             (D0, z0, t0), (D1, z1, t1) = hist_z[-2], hist_z[-1]
             zp = hermite(D0, z0, t0, D1, z1, t1, Dn)

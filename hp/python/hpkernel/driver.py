@@ -452,6 +452,13 @@ def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_hal
                   f"Delta {th[-1]:.15f} t {time.time() - t0:.0f}s", flush=True)
         hist.append(dict(it=it, F=nF, mode=mode, lam=lam, Delta=float(th[-1]), piv=(pmin, pmax), t=round(time.time() - t0, 1)))
         if not accepted:
+            if junk_only and mode == "sel":
+                dd = delta_correction(s, Fh, Fl)
+                hist.append(dict(it=it, F=nF, Delta=float(zh[-1]), piv=(pmin, pmax), mode=mode, dDelta_est=dd,
+                                 accepted=abs(dd) < delta_tol, t=round(time.time() - t0, 1)))
+                if verbose:
+                    print(f"  dn {it}: no decrease with junk frozen at |F| {nF:.1e}; Delta correction {dd:+.1e}", flush=True)
+                break
             if ph == len(phases) - 1:
                 break
             ph += 1
