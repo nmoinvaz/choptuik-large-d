@@ -19,6 +19,7 @@ env NE_NJUNK: in the junk solve, the junk set is this many smallest singular dir
     (x_K 0.7 kc 23: 18). Off the valley bottom the junk singular values smear above 3e-14 and the misfiled ones stall
     the junk solve (D = 30.98). The first NE solve keeps the cut.
 env NE_JUNK_DAMP=1: the junk solve tries Levenberg-damped steps instead of shortened Gauss-Newton steps.
+env NE_JUNK_DAMP_MU: comma list of the damping values mu / sigma_max tried (default 0,1e-3,1e-2,0.1,0.3,1).
 env NE_PRED_JUNK0=1: the continuation predictor extrapolates only the non-junk coordinates and keeps the junk
     coordinates of the last solution (SVD there). The junk coordinates are not smooth in D (each point stops at a
     different place in the flat valley: 0.1 apart between 30.32 and 30.58), so extrapolating them throws the
@@ -65,6 +66,7 @@ JUNK = int(os.environ.get("NE_JUNK", "0"))
 NJUNK = int(os.environ["NE_NJUNK"]) if os.environ.get("NE_NJUNK") else None   # fixed junk count in the junk solve
 PRED_JUNK0 = os.environ.get("NE_PRED_JUNK0", "0") == "1"
 JUNK_DAMP = os.environ.get("NE_JUNK_DAMP", "0") == "1"           # Levenberg-damped junk steps (junk_solve damp)
+JUNK_DAMP_MU = [float(x) for x in os.environ.get("NE_JUNK_DAMP_MU", "0,1e-3,1e-2,0.1,0.3,1").split(",")]
 if JUNK:
     OUTP = OUTP.replace("_D", "_js_D")
 RK = int(os.environ.get("NE_RK", "1"))
@@ -195,7 +197,7 @@ def solve(D, z0, lam_guess, t0, src, Delta_old=None):
         from junk_solve import junk_solve
         Delta_ne = float(z[-1])
         z, ji = junk_solve(D, z, NODES, KC, JUNK, Ks=KS, h=[float(x) for x in os.environ.get("NE_JUNK_H", "1e-2").split(",")],
-                           n_junk=NJUNK, damp=JUNK_DAMP)
+                           n_junk=NJUNK, damp=JUNK_DAMP, damp_mu=JUNK_DAMP_MU)
         F, junk = ji["F"], ji["r"]
         js = dict(js=True, Delta_ne=Delta_ne, junk_ne=ji["r0"], n_junk=ji["n_junk"], junk_its=ji["its"])
     ok = h_[2] < 1e-12 and h_[1] < STRONG_TOL and F < 1e-7

@@ -39,7 +39,7 @@ def _eval(a):
 
 
 def junk_solve(D, z0, nodes, kc=23, workers=None, h=1e-2, it_max=8, tol=1e-15, verbose=False, Ks=60, n_junk=None,
-               damp=False):
+               damp=False, damp_mu=(0.0, 1e-3, 1e-2, 0.1, 0.3, 1.0)):
     """Returns (z, info): info has r0 / r (junk residual before / after), F, its (iterations) and hist.
     h: the difference step, or several tried in turn, each from where the previous one stopped, until tol is met.
     At D ~ 27 a step of 1e-3 can stall where 1e-2 converges; at D ~ 29 1e-2 stops short of the valley bottom.
@@ -47,7 +47,9 @@ def junk_solve(D, z0, nodes, kc=23, workers=None, h=1e-2, it_max=8, tol=1e-15, v
     damp: instead of shortening the Gauss-Newton step (1, 1/2, 1/4, 1/10), try Levenberg-damped steps
     -sum_i sigma_i / (sigma_i^2 + mu^2) q_i p_i^T r for mu / sigma_max in (0, 1e-3, 1e-2, 0.1, 0.3, 1). Near the valley
     bottom most of the difference Jacobian is noise (D = 30.98, h = 1e-2..3e-3: full steps of 0.2-0.6 whose best tenth
-    still raised the junk residual from 5.5e-15 to 2-3e-14); damping cuts the noisy directions, not the whole step."""
+    still raised the junk residual from 5.5e-15 to 2-3e-14); damping cuts the noisy directions, not the whole step.
+    damp_mu: the mu / sigma_max values tried. The undamped trial (0) is the far one whose inner solve can take most of an
+    iteration's time (x_K 0.65, Ks 100), so a run may leave it out."""
     from rust_solver import make
     S, R = make(D, z0[-1], nodes=nodes, threads=2, kc=kc, Ks=Ks)
     _, J = R.jacobian(z0)
@@ -72,7 +74,7 @@ def junk_solve(D, z0, nodes, kc=23, workers=None, h=1e-2, it_max=8, tol=1e-15, v
                     break
                 if damp:
                     P, sg, Qt = np.linalg.svd(Jr)
-                    steps = (0.0, 1e-3, 1e-2, 0.1, 0.3, 1.0)
+                    steps = tuple(damp_mu)
                     das = [-Qt.T @ ((sg / (sg ** 2 + (m * sg[0]) ** 2)) * (P.T @ r)) for m in steps]
                 else:
                     da = -np.linalg.lstsq(Jr, r, rcond=1e-10)[0]
