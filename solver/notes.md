@@ -188,3 +188,19 @@ light ray. Note the factor √(2π) between the simulation's field (G = 1) and t
   ~ e^{-0.55 D}; instead it GROWS ~e^{+D} (2.4e-10, 1.5e-8, 3.2e-7 at D = 24.5, 28, 31.3). The old Ks/RK4/kc checks
   compared free-solve Delta only, which is not informative here (Delta is not pinned). floor_test.py re-does them
   comparing the floor itself.
+
+## The floor is a solver failure: nonlinear elimination (2026-10-18, ~23:00)
+- floor_test.py (D=27.96): converged |F| unchanged by Ks 60/90/120, RK4 steps x2, log_steps x2 (1.485-1.489e-8).
+  Not a discretisation floor.
+- weak_dirs.py: the 1.5e-8 lies in ONE pair of directions, s/smax = 4.1e-11 / 3.9e-11, mostly centre-data p, k = 3
+  (cos/sin), with Gauss-Newton step only 3.8e-4 / 4.2e-5. The Delta direction (s/smax 8.5e-9) carries ~0. Next pair
+  (k = 5, 1.8e-13) carries 6.5e-10; below 7e-14 junk (high centre harmonics). LM could not take the k = 3 step: it
+  is outside the linear range of the stiff part.
+- ne_solver.py: nonlinear elimination. Strong equations (s/smax >= 1e-10) solved exactly by Newton for each value of
+  the weak coordinates (1e-10 > s/smax >= 3e-14), weak equations by Newton on the Schur complement; junk frozen.
+  D=27.96: weak residual 1.48e-8 -> 3.4e-11 -> 1.8e-14 in 2 outer steps; |F| = 3.8e-10, all of it junk.
+  Delta 1.9868678268 -> 1.9868672129 (-6.1e-7).
+- Fixed-Delta profile with NE (ne_prof.py): inner solves converge only within ~1e-5 of Delta*, selection residual
+  4e-13 (0), 4.5e-11 (+1e-5), 3e-12 (-1e-5); further out the weak equations stall at ~1e-9. Not a clean V; the
+  selection signal (~1e-11 per 1e-5) is comparable to the junk residual (1e-10). Robustness of Delta is being
+  tested instead by changing the discretisation (ne_disc.py).

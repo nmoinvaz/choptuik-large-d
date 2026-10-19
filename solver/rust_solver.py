@@ -1,4 +1,4 @@
-"""Solver plumbing on top of the Rust residual kernel (the rustkernel package at the root of this repo).
+"""Solver plumbing on top of the Rust residual kernel (/home/claude/rustkernel).
 
 make(D, Delta_ref)    -> (S, R): frozen Python DSSSpec (layout, diagnostics) + RustResidual R (threads=2, AVX-512)
 jacobian_rust(S, R, z) -> (F0, J): central differences for all node/centre columns via one deduplicated batch
@@ -13,8 +13,8 @@ from spec_c import freeze_steps
 NODES_L = [0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6]
 
 
-def make(D, Delta_ref, Ks=60, nodes=NODES_L, threads=2):
-    S = freeze_steps(make_long(23, D - 2, nodes=nodes, Ks=Ks), Delta_ref)
+def make(D, Delta_ref, Ks=60, nodes=NODES_L, threads=2, kc=23):
+    S = freeze_steps(make_long(kc, D - 2, nodes=nodes, Ks=Ks), Delta_ref)
     R = RustResidual(S, threads=threads, backend="simd")
     return S, R
 
