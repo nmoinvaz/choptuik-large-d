@@ -8,8 +8,9 @@ spec_c.freeze_steps step counts).
     Fc = R.residual_complex(Zb_complex) # complex-step capable (generic backend)
 
 backend="simd" (default) runs the best explicit SIMD kernels this CPU supports, picked at runtime
-(AVX-512 on x86_64); "auto" runs plain loops compiled for the best instruction set, "baseline" plain
-loops without extra features, and an instruction set name ("avx512") forces those kernels.
+(AVX-512, else AVX2 on x86_64, NEON on aarch64); "auto" runs plain loops compiled for the best
+instruction set, "baseline" plain loops without extra features, and an instruction set name
+("avx512", "avx2", "neon") forces those kernels.
 available_backends() lists what this CPU can run, and RUSTKERNEL_ISA=avx2 (or baseline) caps the
 instruction set for the whole process.
 

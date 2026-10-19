@@ -7,6 +7,7 @@ pub mod scalar;
 
 #[cfg(target_arch = "x86_64")]
 mod avx512;
+mod simd;
 
 #[cfg(feature = "python")]
 mod python;

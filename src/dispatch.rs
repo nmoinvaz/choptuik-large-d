@@ -20,6 +20,8 @@ pub enum Isa {
     Avx2,
     /// x86_64 AVX-512F, with AVX2 and FMA.
     Avx512,
+    /// aarch64 Advanced SIMD (part of the aarch64 baseline, so only its explicit kernels differ).
+    Neon,
 }
 
 impl Isa {
@@ -29,7 +31,11 @@ impl Isa {
         {
             &[Isa::Avx512, Isa::Avx2, Isa::Baseline]
         }
-        #[cfg(not(target_arch = "x86_64"))]
+        #[cfg(target_arch = "aarch64")]
+        {
+            &[Isa::Neon, Isa::Baseline]
+        }
+        #[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]
         {
             &[Isa::Baseline]
         }
@@ -43,6 +49,8 @@ impl Isa {
             Isa::Avx2 => is_x86_feature_detected!("avx2") && is_x86_feature_detected!("fma"),
             #[cfg(target_arch = "x86_64")]
             Isa::Avx512 => Isa::Avx2.available() && is_x86_feature_detected!("avx512f"),
+            #[cfg(target_arch = "aarch64")]
+            Isa::Neon => std::arch::is_aarch64_feature_detected!("neon"),
             #[allow(unreachable_patterns)]
             _ => false,
         }
@@ -50,7 +58,11 @@ impl Isa {
 
     /// Whether this build has explicit SIMD kernels for the instruction set.
     pub fn has_simd_backend(self) -> bool {
-        matches!(self, Isa::Avx512) && cfg!(target_arch = "x86_64")
+        match self {
+            Isa::Avx512 | Isa::Avx2 => cfg!(target_arch = "x86_64"),
+            Isa::Neon => cfg!(target_arch = "aarch64"),
+            Isa::Baseline => false,
+        }
     }
 
     /// Whether the instruction set may be used: the CPU supports it, and RUSTKERNEL_ISA (e.g.
@@ -75,6 +87,7 @@ impl Isa {
             Isa::Baseline => "baseline",
             Isa::Avx2 => "avx2",
             Isa::Avx512 => "avx512",
+            Isa::Neon => "neon",
         }
     }
 
@@ -83,6 +96,7 @@ impl Isa {
             "baseline" | "scalar" => Some(Isa::Baseline),
             "avx2" => Some(Isa::Avx2),
             "avx512" | "avx512f" => Some(Isa::Avx512),
+            "neon" => Some(Isa::Neon),
             _ => None,
         }
     }
@@ -279,6 +293,8 @@ level!(OnBaseline, Isa::Baseline);
 level!(#[target_feature(enable = "avx2,fma")] OnAvx2, Isa::Avx2);
 #[cfg(target_arch = "x86_64")]
 level!(#[target_feature(enable = "avx512f,avx2,fma")] OnAvx512, Isa::Avx512);
+#[cfg(target_arch = "aarch64")]
+level!(#[target_feature(enable = "neon")] OnNeon, Isa::Neon);
 
 /// Backend B run under level L.
 pub struct On<B, L>(PhantomData<fn() -> (B, L)>);
@@ -333,8 +349,23 @@ macro_rules! with_exec {
                 $body
             }
             #[cfg(target_arch = "x86_64")]
-            (Isa::Avx2, _) => {
+            (Isa::Avx2, true) => {
+                let $e = unsafe { On::<$crate::simd::avx2::Avx2, $crate::dispatch::OnAvx2>::new() };
+                $body
+            }
+            #[cfg(target_arch = "x86_64")]
+            (Isa::Avx2, false) => {
                 let $e = unsafe { On::<$crate::model::Generic, $crate::dispatch::OnAvx2>::new() };
+                $body
+            }
+            #[cfg(target_arch = "aarch64")]
+            (Isa::Neon, true) => {
+                let $e = unsafe { On::<$crate::simd::neon::Neon, $crate::dispatch::OnNeon>::new() };
+                $body
+            }
+            #[cfg(target_arch = "aarch64")]
+            (Isa::Neon, false) => {
+                let $e = unsafe { On::<$crate::model::Generic, $crate::dispatch::OnNeon>::new() };
                 $body
             }
             _ => {
@@ -360,6 +391,11 @@ macro_rules! with_plain_exec {
             #[cfg(target_arch = "x86_64")]
             Isa::Avx2 => {
                 let $e = unsafe { On::<$crate::model::Generic, $crate::dispatch::OnAvx2>::new() };
+                $body
+            }
+            #[cfg(target_arch = "aarch64")]
+            Isa::Neon => {
+                let $e = unsafe { On::<$crate::model::Generic, $crate::dispatch::OnNeon>::new() };
                 $body
             }
             _ => {

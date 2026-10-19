@@ -219,7 +219,8 @@ impl Kernel {
 
     /// Residual of a batch: zb (B, L) float64 -> (B, L) float64.
     /// threads: 1 = sequential, >1 = rayon pool over (batch row, shooting block).
-    /// backend: 'simd' (best explicit SIMD backend for this CPU), an instruction set ('avx512'),
+    /// backend: 'simd' (best explicit SIMD backend for this CPU), an instruction set ('avx512',
+    /// 'avx2', 'neon'),
     /// 'auto' (plain loops, compiler-vectorised for the best instruction set) or 'baseline'.
     /// dedup: compute each block once per distinct block input (bitwise-identical output).
     #[pyo3(signature = (zb, threads=1, backend="simd", dedup=false))]
