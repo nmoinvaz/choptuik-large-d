@@ -359,3 +359,16 @@ light ray. Note the factor √(2π) between the simulation's field (G = 1) and t
   ~2e-7 up the valley.
 - kc 31 at D = 29.326 (local T5, x_K 0.7 RK x3, junk stalled at 1.7e-14 under the old settings): -2.1e-8 from kc 23
   RK x4. The tau resolution is fine there.
+
+## Forcing candidate constants as Delta_inf (2026-10-19, ~11:10)
+- Search: r b1^p1 b2^p2 (r = i/j, i, j <= 12; p in +-1/2, +-1, +-2; pi, e, sqrt2, sqrt3, ln2, ln3, Euler gamma, zeta(3),
+  golden ratio, Catalan, first Bessel zeros j01, j11, j21, j02, j12, y01, j_{3/2,1}, j_{5/2,1}), plus 2 pi / (r b) and
+  r ln b: only 5 expressions land in 1.64388-1.64403, all contrived (7/5 ln2^-2 pi^-1/2 = 1.6440014,
+  7/2 sqrt(ln2/pi) = 1.6440152, 9/8 sqrt(j21/j01) = 1.6440207, 5/7 sqrt(Catalan) j01 = 1.6439747,
+  10/9 sqrt(j01/ln3) = 1.6439063).
+- Forced as c0 in 12 fits (1/D, 1/(D-1), 1/(D-2); degree 9, 10; D >= 10, 12), chi2/dof min .. max and the rms offset of
+  the held-out D = 34-39.5 points: free fit 0.62 .. 3.4, 1.4e-6; the five above 0.62 .. 9-118, 1.2-1.5e-6 (as good as
+  free); pi^2/6 3.6 .. 13000, 1.9e-6; sqrt(e) 82 .. 3e5, 1.3e-5; 2 pi/j11 67 .. 3e5, 1.3e-5; golden ratio 2500 .. 1e7.
+- So forcing a constant can exclude one (pi^2/6, sqrt e, 2 pi/j11, phi) but not select one: everything inside the window
+  fits equally well, and the candidates differ at D <= 40 by less than the held-out points' own error (~2e-6). Telling
+  them apart needs Delta_inf to ~1e-8, i.e. the D = infinity problem itself.
