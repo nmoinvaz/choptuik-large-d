@@ -39,3 +39,7 @@ search (bug in junk_solve, fixed and pushed). Data to 31.324 is in data/scan_ne6
 cost ~45 min of all cores (re-solving the stalled points 30.9 and 31.3), for two more points that are not clean.
 I am not doing that unless you want it.
 Free cores now: 6 of 8 (x4_23, x5_31 here; sj_06, kc31_06 in a worktree). x_K 0.7 still on hold. What next?
+
+== 2026-10-19 01:03 PDT local
+Correction: x4_23 has ended. All five seeds D = 23.04-24.00 finished ok = false (strong 2.4e-8 > 1e-8), so it had
+nothing to continue from. Running: x5_31 (here), sj_06 and kc31_06 (worktree), one thread each: 5 of 8 free.
