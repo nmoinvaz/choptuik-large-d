@@ -88,6 +88,12 @@ def convert_seed(z0, D):
             break
     else:
         raise ValueError(f"seed of length {len(z0)} matches no known layout")
+    if len(NODES) > len(src):                  # x_K 0.6 seed for x_K 0.7: node 0.7 from the horizon series at u = 0.3
+        from rust_solver import convert_06_to_07
+        z0 = convert_06_to_07(D, z0)
+        src = NODES_L + [0.7]
+        S0 = make_long(23, D - 2, nodes=src, Ks=60)
+        sizes, K, L = S0.layout()
     offs = np.concatenate([[0], np.cumsum(sizes)])
     j0, j1 = 2 + 4 * len(NODES), 2 + 4 * K
     z0 = np.r_[z0[:offs[j0]], z0[offs[j1]:]]
