@@ -27,9 +27,15 @@ def _eval(a):
     """Re-solve strong and weak with the junk coordinates at a; return the junk residual and the solution."""
     from ne_solver import ne_solve
     R = _W["R"]
-    z, info = ne_solve(R, _W["zb"] + _W["Vj"].T @ a, basis=_W["basis"])
-    h, l = R.residual_dd(z)
-    return _W["Uj"].T @ (h + l), z, info
+    try:
+        z, info = ne_solve(R, _W["zb"] + _W["Vj"].T @ a, basis=_W["basis"])
+        h, l = R.residual_dd(z)
+        r = _W["Uj"].T @ (h + l)
+    except (ValueError, np.linalg.LinAlgError):     # a step far outside the valley: NaN in the inner solve
+        r = None
+    if r is None or not np.all(np.isfinite(r)):
+        return np.full(len(a), np.inf), _W["zb"], dict(F=np.inf)
+    return r, z, info
 
 
 def junk_solve(D, z0, nodes, kc=23, workers=None, h=1e-2, it_max=8, tol=1e-15, verbose=False, Ks=60):
@@ -51,6 +57,8 @@ def junk_solve(D, z0, nodes, kc=23, workers=None, h=1e-2, it_max=8, tol=1e-15, v
                 break
             cols = pool.map(_eval, [a + h * e for e in np.eye(len(a))])
             Jr = np.stack([(c[0] - r) / h for c in cols], 1)
+            if not np.all(np.isfinite(Jr)):
+                break
             da = -np.linalg.lstsq(Jr, r, rcond=1e-10)[0]
             steps = (1.0, 0.5, 0.25, 0.1)
             t, (rt, zt, it_inf) = min(zip(steps, pool.map(_eval, [a + t * da for t in steps])),
