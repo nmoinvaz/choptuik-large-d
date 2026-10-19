@@ -289,39 +289,6 @@ light ray. Note the factor √(2π) between the simulation's field (G = 1) and t
   junk directions excluded (dd_solve cut = 3e-14), then NE. D = 24.596: 0.12 -> 4e-5 -> 4e-10, converged in 3 rounds,
   Delta = 2.0304571464.
 
-## The junk coordinates set Delta; solving them (2026-10-19, ~00:00-01:30, local i7-1185G7)
-- run_local scans: x_K 0.7 reached D = 40. cmp_setups x_K 0.7 - 0.6: +8e-6 (23), +1.8e-5 (25.3), 0 (26.9), -1.8e-4 (28.9).
-  kc 31 - 23: -1.7e-6 .. -3.9e-6 (23-25).
-- ne_disc.py: the stored seeds have |F| 1e-4..7e-3 on the current kernel, so NE straight from them does not converge; far
-  starts now get the damped LM pre-solve, variants start from the converged base, and j<scale> moves the start along the
-  junk directions. Change of Delta from the x_K = 0.6 base:
-    D        xK07     kc31     Ks90     RK4 x2   d+1e-4   d-1e-4   j+0.05   j-0.05
-    24.535   +2.5e-6  -1.1e-8  +1.6e-9  -2.1e-8  +6.8e-9  -3.8e-9  -3.6e-7  +3.6e-7
-    26.892   -1.8e-6  +2.5e-8  +1.1e-8  +3.2e-8  +5.7e-7  -5.5e-7  -6.9e-6  +6.9e-6
-    27.962   +5.2e-6  +2.9e-7  +1.7e-7  +3.4e-7  +7.3e-7  -3.8e-7  -6.8e-6  +6.6e-6
-    30.050   -9.6e-6  (base 1.9644572, weak residual stalled at 1e-13)
-  Delta is pinned once the junk coordinates are fixed, and the resolution is converged to < 4e-7 up to D = 28. The junk
-  coordinates move Delta linearly, ~20x more at D = 27 than at 24.5. The scan-to-scan spread is mostly this.
-- The junk directions are the centre-p harmonics k >= 7 (D = 28: 16 directions, 97% c.p, s/smax 6e-18..3e-15). The seeds
-  carry a bump at k = 7..9 growing from 2e-3 (D = 19) to 0.2 (D = 30): undetermined coordinates drifting through the cubic
-  predictor.
-- Smooth gauge (those harmonics zeroed, or minimised along the junk directions) rejected: it leaves the junk residual at
-  2e-11, against 1e-13..1e-14 for the best NE solutions. The equations do fix the junk coordinates, at finite amplitude,
-  where the f64 Jacobian cannot see them.
-- junk_solve.py: Gauss-Newton on the junk coordinates with a forward-difference Jacobian (h = 1e-2, columns on a process
-  pool) and the strong and weak equations re-solved by ne_solve at every evaluation. Converges quadratically. D = 23.038:
-    setup          Delta (NE)     junk res   Delta (junk-solved)   junk res
-    x_K 0.6 kc 23  2.0546896840   2.0e-11    2.0546914289          7.6e-17
-    x_K 0.6 kc 31  2.0546897062   2.0e-11    2.0546914511          8.0e-16
-    x_K 0.7 kc 23  2.0546996631   1.1e-12    2.0546921687          2.1e-16
-  The setup spread drops from 1.0e-5 to 7.4e-7 (x_K) and 2.2e-8 (kc). The cloud x_K = 0.6 scan (junk 1e-13) was already
-  right at D = 23; the local LM-then-NE path left 1e-12 and was 7.5e-6 high.
-- Against the smoothness prior (smooth_junk, previous section): x_K 0.6 junk-solved 2.0546914289 vs smoothed
-  2.0546914107 (1.8e-8), and both match the x_K 0.4 / 0.5 / 0.6 consensus 2.05469146 to 3e-8. x_K 0.7 junk-solved is
-  7.4e-7 off, smoothed 4.2e-6. The junk residual converges quadratically to 1e-16 with a 16x16 Jacobian of rank 16,
-  so it is a deterministic equation rather than noise, and solving it is the better-defined fix for the weak setups.
-- scan_ne NE_JUNK=<workers> junk-solves every point (records js, Delta_ne, junk_ne). Running x_K 0.6 and 0.7, D = 23-40.
-
 ## The horizon series' radius shrinks with D (2026-10-19, ~01:30)
 - Radius of convergence (in u = 1 - x) of the regular horizon series, from coefficient growth (k = 60..160), the same for
   every tau-harmonic (so a property of the solution): 0.70 (D = 23), 0.60 (25.7), 0.47 (30.1), 0.49 (33.1), 0.43 (36.0);
@@ -332,3 +299,13 @@ light ray. Note the factor √(2π) between the simulation's field (G = 1) and t
   why the plain x_K = 0.5 scan scattered by 3e-7 near D ~ 27. High D needs x_K -> 1 as ~1 - 1.6 / sqrt(n).
 - The cloud x_K = 0.5 smoothed scan is replaced by x_K = 0.7, kc 31, smoothed (to D = 45). Local jobs x4_23 / x5_31 are
   pointless above D ~ 25 / 29.
+
+## RK step error (2026-10-19, ~01:30-02:00, cloud + local)
+- x_K 0.7 junk-solved at D = 29.326 vs J1 (x_K 0.6): RK x1 -7.9e-6, x2 -3.7e-7 (consistent with h^4), x4 -1.0e-5 but with
+  junk 2e-13 (unconverged, spoiled). Local runner T1 is settling it (RK 1, 2, 3, 4, 6, junk <= 1e-15). Option NE_RK.
+- RK x2 re-solve of the fit set D = 7.75-17.3 (x_K 0.6, kc 23): RK2 - RK1 oscillates +-2e-8 with D (period ~4 in D: the
+  ceil() in freeze_steps). RK2 data are smooth: series fits D = 8-17.3 to rms 1e-9 (1/n) and 2e-10 (1/(D-1)), 3e-11 with
+  D >= 10 and Richardson (RK2 + (RK2 - RK1)/15).
+- Limit from the step-converged D <= 17.3 data alone, across variables 1/D, 1/(D-1), 1/(D-3/2), 1/n and cuts D >= 8-11:
+  1.6441-1.6450 (1/D lowest, 1/n highest): Delta_inf = 1.6446 +- 0.0004; pi^2/6 inside again. The earlier 1.6441 used RK x1
+  data to 25.5. Step-converged D = 17-30.5 data (cloud: 17-25.5 RK2 junk-solved; local T4: 25.5-30.5) will narrow it.
