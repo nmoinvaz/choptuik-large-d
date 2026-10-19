@@ -204,3 +204,17 @@ light ray. Note the factor √(2π) between the simulation's field (G = 1) and t
   4e-13 (0), 4.5e-11 (+1e-5), 3e-12 (-1e-5); further out the weak equations stall at ~1e-9. Not a clean V; the
   selection signal (~1e-11 per 1e-5) is comparable to the junk residual (1e-10). Robustness of Delta is being
   tested instead by changing the discretisation (ne_disc.py).
+
+## NE scans and the junk ambiguity (2026-10-18, ~23:20)
+- scan_ne.py runs: re-solve of all stored seeds (D = 7.75-23.3) and continuation with NE (x_K = 0.6 from 23.3, x_K = 0.7
+  from 24.0), ~15 s per point, gamma per point. LM pre-solve needed for continuation predictors (|F| ~ 1e-2).
+- Below D ~ 17.5 NE agrees with the old data to 1e-13. Above, the old values were higher by 1e-6 (D = 18) to 1.2e-5 (D = 23).
+- BUT the NE answer is not unique either: at D = 23.038 (x_K = 0.7) NE from the seed gives Delta 2.0546921187 (|F| 9e-14,
+  junk 1e-14), LM then NE gives 2.0546996221 (|F| 1.2e-12, junk 1.1e-12). junk_delta.py: the two differ by 0.097 in the 16
+  junk directions (centre p harmonics k ~ 7-19, changes 1e-2..5e-2), 5e-4 in the weak ones. Junk coordinates move F by
+  only ~1e-12 but move Delta by 7.5e-6: Delta resolution needs junk residual << 1e-14.
+- ne_dd.py (double-double z and residual, DD central differences for J V_o in the 22 weak+junk directions, Schur
+  complement): strong residual -> 1e-25..1e-28, but the outer Newton step does not reduce the junk residual (1.0e-14 and
+  1.1e-12 stay); Delta of the second moves only to 2.0546984. Open.
+- x_K = 0.7 minus x_K = 0.6 (both NE continuation, cmp_setups.py): +8e-6 (D = 23) .. +1.6e-5 (24.5); gamma -1e-6 .. -2e-6.
+  This spread is the current error bar on Delta above D ~ 18.
