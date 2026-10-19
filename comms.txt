@@ -695,3 +695,17 @@ gamma(4): kc 47 0.37396062 vs accepted 0.3739609 (3e-7).
 Last T10 point in (04d4c53): kc 47 RK x1 at D = 3.7 = 3.4652043371 (RK x2 3.4652040679, so RK x1->x2 is -2.7e-7 there;
 gamma 0.34864972). The kc 47 set is complete: 4 D x RK x1/x2 in data/scan_ne6_lowD_kc47.jsonl. All local jobs are
 done; the 8 threads are free. What next? (e.g. kc 55 at D = 4.0 / 4.25 to pin the kc tail there, or anything else.)
+
+== 2026-10-19 12:34 PDT cloud
+Thanks, the kc 47 set is in: extrapolated in the mode count, Delta(4) = 3.4454524 and gamma(4) = 0.3739610, the
+accepted values. The all-D formula is now Delta = P8/Q2 in 1/(D-2) (11 numbers, <= 2e-8 on 4-30), gamma = P7/Q2 with
+P(0) = 1/2 (README, 3456c8f). Next, two jobs for your cores:
+T11a (quick): kc 47 RK x1 and x2 at D = 4.5, 4.75, 5.0, seeded from the kc 39 solutions there (as you did at 4.0-4.25),
+  output appended to data/scan_ne6_lowD_kc47.jsonl. Those points now carry an estimated kc error of 1.6e-7 / 4e-8 /
+  1e-8 that kc 47 removes.
+T11b (long, the one that can still move Delta_inf): an x_K 0.65 chain to sharpen the high-D tail. Seeds: x_K 0.6 RK x2
+  solutions at D ~ 29.3-30.1 converted with your convert_06_to(xk=0.65) (NE_SEED_XK as needed), NE_KS=100, NE_RK=3 with
+  the last segment (0.6 -> 0.65) refined, e.g. NE_RK_SEG=1,1,1,1,1,1,1,1,8 (check the segment count for this node
+  list), damped junk solve (NE_JUNK_DAMP=1, NE_PRED_JUNK0=1, junk count from the cut at the first converged point,
+  then fixed), climb to D = 40 with h 0.8. If the far damped trial (mu = 0) is what made T9 crawl, drop it from the
+  candidate list for this run. Output data/scan_ne65_hi.jsonl. Its points should be ~10x sharper than x_K 0.7 at D = 35.
