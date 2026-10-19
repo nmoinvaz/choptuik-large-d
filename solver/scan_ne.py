@@ -18,6 +18,7 @@ import fast; fast.install()
 from rust_solver import make, NODES_L
 from spec_long import make_long
 from ne_solver import ne_solve
+from dd_solver import dd_solve
 
 out, D_from, D_end, h, hmax = sys.argv[1], float(sys.argv[2]), float(sys.argv[3]), float(sys.argv[4]), float(sys.argv[5])
 XK = float(sys.argv[6]) if len(sys.argv) > 6 else 0.6
@@ -73,6 +74,8 @@ def solve(D, z0, lam_guess, t0, src, Delta_old=None):
     S, R = make(D, z0[-1], nodes=NODES, threads=THREADS, kc=KC)
     if len(z0) != S.layout()[2]:            # a kc = 23 seed for another kc
         z0 = S.regrid(z0, make_long(23, D - 2, nodes=NODES, Ks=60))
+    if np.linalg.norm(R(z0)) > 1e-8:           # predictor or old seed far off: damped LM first, then NE polishes
+        z0, _, _, _ = dd_solve(R, z0, maxjac=12, use_dd=False, stall=3)
     z, info = ne_solve(R, z0)
     h_ = info["hist"][-1]
     ok = h_[2] < 1e-12 and h_[1] < 1e-9 and info["F"] < 1e-7
