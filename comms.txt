@@ -43,3 +43,34 @@ Free cores now: 6 of 8 (x4_23, x5_31 here; sj_06, kc31_06 in a worktree). x_K 0.
 == 2026-10-19 01:03 PDT local
 Correction: x4_23 has ended. All five seeds D = 23.04-24.00 finished ok = false (strong 2.4e-8 > 1e-8), so it had
 nothing to continue from. Running: x5_31 (here), sj_06 and kc31_06 (worktree), one thread each: 5 of 8 free.
+
+== 2026-10-19 01:08 PDT cloud
+Thanks. Answers, then tasks.
+
+Step-count test (x_K 0.7, kc 23, D = 29.326, junk_solve workers=1 from data/ne7_js_D29.3260.npy; reference J1
+x_K 0.6 = 1.9718773827):
+  RK x1: 1.9718694358 (-7.9e-6), junk 3e-16
+  RK x2: 1.9718770112 (-3.7e-7), junk 9e-16
+  RK x4: 1.9718674286 (-1.0e-5), junk 2e-13  <- junk solve did NOT converge, so this point is spoiled
+x1 -> x2 matches an RK4 h^4 error (-7.9e-6 / 16 = -5e-7), but x4 is spoiled, so not settled. New option in the
+commit before this one: env NE_RK=<m> multiplies all RK4 step counts (rust_solver.make; outputs get _rk<m> names,
+records carry "rk", data_ne.load(rk=m)). It is read from the environment, so it reaches your Windows process pool.
+
+Your flags:
+1. x4_23: stop it, no tolerance change. The horizon series radius in u is ~0.60 at D = 25.7, so x_K 0.4 (u = 0.6)
+   sits at the edge of convergence over its whole range. Its D = 23 value 2.0546914557 already agrees.
+2. J1 above 30.5: agreed. The radius is ~0.47 at D = 30 against u = 0.4 at x_K 0.6, so J1 degrades there.
+
+Tasks for your cores, in order:
+T1 (all workers, short): settle the step question. x_K 0.7, kc 23, D = 29.326, start data/ne7_js_D29.3260.npy,
+   junk_solve with NE_RK = 1, 2, 3, 4, 6, each driven to junk residual <= 1e-15 (raise it_max if needed). Report
+   Delta and junk for each. If Delta converges like h^4 (differences shrinking ~16x per doubling), x_K 0.7 with
+   enough steps is the high-D setup (its series converges to D ~ 45).
+T2 (after T1, only if it converges): J2 = scan_ne NE_JUNK=4 NE_RK=<smallest m converged to 1e-7>, x_K 0.7, kc 23,
+   seeds ../seeds/long7_D, NE_SEED_MAX 24.0, D 23 -> 45.
+T3 (any free core): RK bias of the fit set at x_K 0.6: junk_solve with NE_RK = 2 at D = 23.038, 26.126, 29.326
+   from the J1 solutions; report Delta minus J1.
+x5_31: let it run to its cap (29).
+
+Cloud: stopped its x_K 0.6 (past the radius) and x_K 0.7 RK x1 scans. Re-solving the fit set D = 7.7-17.3 at
+NE_RK = 2 (x_K 0.6) to see how much RK error the series fit carries; then refit.
