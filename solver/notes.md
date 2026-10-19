@@ -332,3 +332,30 @@ light ray. Note the factor √(2π) between the simulation's field (G = 1) and t
   but the weak+junk residual stays at ~1.5e-15 and neither point moves: a nonlinear valley flat to ~1.5e-15 along which
   Delta varies by >= 1.1e-7. ~1e-7 is the intrinsic precision of this discretisation at D ~ 29. Runs from here use
   NE_RK = 3 and NE_JUNK_H = 1e-3 (cloud D 30-45, local T2 D 23-31).
+
+## The junk stall above D ~ 27-31 and its fix (2026-10-19, ~06:00-08:05, cloud + local)
+- Symptom: the junk solve (finite-difference Gauss-Newton, steps 1e-2, 3e-3, 1e-3) stalls at junk 1.7-4e-14 and takes
+  hours: local T2 (x_K 0.7 RK x3) from D = 27.7, J1 (x_K 0.6) at 29.8-30.1, local T5 (kc 31) at 29.3, the cloud x_K 0.7
+  RK x3 chain twice at 30.984 (2.5 h, Delta 1.7e-4 off the series at its NE start).
+- Three causes, each fixed by an opt-in option of scan_ne / junk_solve:
+  1. Misfiled junk directions. The junk set was s/s_max < 3e-14 at the start point. Converged points have a clean
+     spectrum (30.584: 5.0e-10, 8.6e-11, 4.6/4.4/2.1/2.1e-13, 2.0e-15 x2, then 16 below 7e-17: 18 junk), but at a
+     predictor the junk singular values smear upward (30.984: 6 of the 18 above 3e-14), land in the weak set, where the
+     f64 Schur complement cannot resolve them, and the junk solve no longer moves them. NE_NJUNK=18: the junk solve
+     takes the 18 smallest directions (the first NE solve keeps the cut, which pulls the smeared ones down).
+  2. Predictor. The junk coordinates are not smooth in D (each point stops at a different place in the flat valley:
+     30.324 and 30.584 are 0.1 apart in them), so the cubic predictor is 0.36 off there (linear: 0.16), and freezing all
+     18 from that start leaves |F| at 0.04. NE_PRED_JUNK0=1: extrapolate the non-junk coordinates only, keep the junk
+     coordinates of the last solution.
+  3. Step control. Near the valley bottom most of the 18 x 18 difference Jacobian is noise: the Gauss-Newton steps
+     were 0.2-0.6 long and the best of (1, 1/2, 1/4, 1/10) of them still raised the junk residual from 5.5e-15 to
+     2-3e-14 (h 1e-2, 3e-3) or barely lowered it (h 1e-3: 5.36e-15). NE_JUNK_DAMP=1: Levenberg-damped steps,
+     mu / sigma_max in (0, 1e-3, 1e-2, 0.1, 0.3, 1), evaluated in parallel. A Broyden update (local test at 30.584) did
+     not help: the steps are short and an updated Jacobian does not predict the next one.
+- With all three at D = 30.984: junk 6.7e-15 -> 5.0e-16 in one iteration (mu = 1e-3, |da| = 3.5e-3), 263 s for the
+  whole point; Delta = 1.9553690245, +2e-8 from the D <= 30.2 series; gamma = 0.48128.
+- Valley sensitivity: the local re-solve of 30.584 from junk 2.2e-15 to 8.9e-16 moved Delta by -1.75e-7 (to
+  1.9591962887, -4.7e-8 from the series). So points must be driven to <= 1e-15, and older points left at ~2e-15 can be
+  ~2e-7 up the valley.
+- kc 31 at D = 29.326 (local T5, x_K 0.7 RK x3, junk stalled at 1.7e-14 under the old settings): -2.1e-8 from kc 23
+  RK x4. The tau resolution is fine there.
