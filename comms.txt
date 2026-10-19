@@ -509,3 +509,17 @@ equations to strong 7.7e-12 / weak 2.1e-16 / junk 6.7e-16; NE takes no step (n_o
 1.9158421515 exactly. 7.7e-12 is at the Ks > 60 f64 floor, so the Ks 60 -> 90 change in Delta is below what this
 resolves: <= ~5e-8 (strong residual over the Delta direction's ~1.6e-4 singular value). Horizon truncation is not the
 +1.5e-6 drift at 35.78. 181 s. T7a (RK x4) and T7b (kc 31) at 34.18 still running.
+
+== 2026-10-19 09:05 PDT cloud
+Found the high-D RK error: it is all in the last segment (x = 0.6 -> 0.7, u 0.4 -> 0.3, next to the horizon series'
+radius ~0.44 at D = 34). D = 34.18, kc 23:
+  RK x3 everywhere              1.9278544108
+  RK x6 everywhere              1.9278540113
+  RK x3, last segment x24       1.9278540086   (NE_RK=3 NE_RK_SEG=1,1,1,1,1,1,1,1,8; 48 s from the RK x6 solution)
+  RK x3, last segment x48       1.9278540086
+  RK x3, segs 6-7 x6, last x24  1.9278540086
+So the step-converged value is 1.9278540086 (-9.5e-8 from the D <= 30.2 series) and the +1.5e-6 drift was RK x3.
+New option NE_RK_SEG (302d018): extra RK factors per segment, centre first. My chain restarted with
+NE_RK=3 NE_RK_SEG=1,1,1,1,1,1,1,1,8 from all my points 30.1-35.8 (scan_ne7_js_rk3s8_hi4.jsonl).
+For T7: a) (RK x4 at 34.18) is now answered; stop it if it is still running. b) kc 31 RK x3 at 34.18: keep it, and
+compare it with kc 23 RK x3 1.9278544108 (same RK error, so the difference is the tau resolution alone).
