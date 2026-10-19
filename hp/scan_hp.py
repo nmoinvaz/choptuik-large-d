@@ -68,6 +68,8 @@ def main():
     ap.add_argument("--it_max", type=int, default=8)
     ap.add_argument("--threads", type=int, default=0)
     ap.add_argument("--verbose", action="store_true")
+    ap.add_argument("--schedule", default="", help="node changes during the scan: 'D1=x,x,...;D2=x,x,...' "
+                    "(at the first converged point with D >= D_i the solution is re-noded and re-converged)")
     a = ap.parse_args()
     zh, zl, meta = load(a.start)
     D, M0, nodes0 = meta["D"], meta["M"], list(meta["nodes"])
@@ -83,6 +85,11 @@ def main():
         print(f"re-converged start D={D} M={M} nodes={nodes}: Delta {zh[-1]:.16f} ok {ok} ({dt:.0f}s)", flush=True)
         if not ok:
             raise SystemExit("start did not re-converge")
+    sched = []
+    for item in filter(None, a.schedule.split(";")):
+        d, xs = item.split("=")
+        sched.append((float(d), [float(v) for v in xs.split(",")]))
+    sched.sort()
     outdir = os.path.dirname(os.path.abspath(a.out))
     hist_z = [(D, zh + zl)]
     dD = a.dD
@@ -119,6 +126,23 @@ def main():
             print(f"   horizon series tail {th:.1e}: ks -> {a.ks}", flush=True)
         if len(hist) <= 4:
             dD = min(a.maxdD, dD * 1.25)
+        while sched and (D - sched[0][0]) * direction >= -1e-9:
+            new_nodes = sched.pop(0)[1]
+            if new_nodes == nodes:
+                continue
+            zh, zl = renode(s, zh, zl, nodes, new_nodes, M)
+            s, zh, zl, hist, ok, dt = solve_at(D, zh, zl, a, new_nodes, M, a.it_max + 4)
+            print(f"re-noded at D={D}: {nodes} -> {new_nodes}: Delta {zh[-1]:.16f} ok {ok} ({dt:.0f}s)", flush=True)
+            if not ok:
+                raise SystemExit("re-noding did not converge")
+            with open(a.out, "a") as f:
+                f.write(json.dumps(dict(D=D, Delta=float(zh[-1]), Delta_lo=float(zl[-1]), F=hist[-1]["F"], its=len(hist),
+                                        M=M, nodes=new_nodes, kt=a.kt, kc=a.kc, ks=a.ks, renoded=True,
+                                        sens=sensitivity(s, M), tail_c=tails(s, zh, zl, new_nodes, M)[0],
+                                        tail_h=tails(s, zh, zl, new_nodes, M)[1])) + "\n")
+            nodes = new_nodes
+            hist_z = [(D, zh + zl)]
+            dD = min(dD, 0.5)
 
 
 if __name__ == "__main__":
