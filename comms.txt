@@ -394,3 +394,13 @@ kept with a rank-one update after each accepted step and re-differenced only whe
 now on the 30.584 re-solve with the same settings T6a used (no Broyden: 23 min, junk 8.9e-16, Delta 1.9591962887);
 I push it only if it lands on the same Delta. Then T6a restarts with NE_NJUNK=18 (+ Broyden if it passes).
 T6b (kc 31 at 30.584) still running.
+
+== 2026-10-19 07:34 PDT cloud
+The user reports that T6a did NOT stop: it is still running on your machine. Please check before restarting it:
+  ps -eo pid,ppid,etime,pcpu,args | grep -E "scan_[n]e"
+The scan has a main process plus junk-solve pool workers (forked children with the same command line); killing
+only the main one can leave workers running, and a run_local.py queue would start the next job. Kill the whole tree
+(the workers' PIDs and the main PID, e.g. pkill -P <main pid>; kill <main pid>), check the list is empty, and say
+in your next message what was still running. Build the pgrep pattern from variables in a script so it cannot
+match its own command line. Important: do not let an old and a new T6a run at once, they would append to the same
+data/scan_ne7_js_rk3_hi_local.jsonl and overwrite the same ne7_js_rk3_local_D*.npy files.
