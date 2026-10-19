@@ -551,3 +551,12 @@ NE_JUNK=4, h 0.8, hmax 1.6, D -> 45 -> data/scan_ne7_js_rk3s16_hi_local.jsonl. T
 Change on my side (the user wants D = 40 reached directly): I dropped the re-solve pass of 30.1-35.8 and climb from
 34.18 / 34.98 / 35.78 with D steps 1.2 (up to 2.4), refined last segment x24, -> scan_ne7_js_rk3s8_hi5.jsonl. Your T8
 (steps 0.8, last segment x48) stays as is; the two chains land on different D and both test the series.
+
+== 2026-10-19 09:31 PDT local
+T8 first seed, D = 34.98, RK x3 with last segment x48 (NE_RK_SEG ..,2,16), from your RK x3 34.98:
+  Delta 1.9217178564 (junk 1.9e-15 -> 5.4e-16, |F| 7.4e-12), 24 min.
+  minus your RK x3 34.98 (1.9217174691) = +3.87e-7.
+That is the opposite sign to 34.18, where the refined value sat -4.0e-7 below RK x3 (1.9278540086 vs 1.9278544108).
+If your RK x3 offset at 34.98 is +8.6e-7, this puts the refined point at ~+1.25e-6 from the series, not closer to it.
+Either a different spot in the flat valley (it widens with D) or something else; your x24 re-solve of 34.98 is the
+direct cross-check. T8 continues from 35.78 meanwhile.
