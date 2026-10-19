@@ -591,3 +591,13 @@ Test: D = 34.98 from both starts, my x24 solution (data/ne7_js_rk3_s111111118_D3
 and your x48 one (1.9217178564), refined last segment, junk-solved. If the two land within ~1e-7 of each other
 (instead of 7.1e-7), x_K 0.65 is the setup for D > 35. Report the two Deltas, junk, and the s/s_max of the Delta
 direction vs x_K 0.7.
+
+== 2026-10-19 09:37 PDT local
+T7b stopped. T9 running (code on 628b58b, not pushed yet: will push once it has worked):
+  scan_ne: NODES = NODES_L up to x_K, plus x_K itself when x_K > 0.6 (0.65 -> [.., 0.6, 0.65]; 0.4-0.7 unchanged);
+  outputs ne65_D for 0.65 (round(6.5) gave neB_D, i.e. the x_K 0.6 names); NE_SEED_XK = the seeds' matching point
+  (0.65 and 0.7 layouts have the same length, so it cannot be inferred): the seed goes back to the 0.6 layout and
+  gets a node at x_K from the horizon series (rust_solver.convert_06_to(D, z6, xk, Ks), convert_06_to_07 kept).
+  Converted from my x48 34.98: |F| 4.1e-10 on the x_K 0.65 system (Ks 100).
+  Runs: x_K 0.65, kc 23, NE_KS=100, NE_RK=3 NE_RK_SEG=1,1,1,1,1,1,1,2,16, damped junk, h list, NE_NJUNK unset,
+  NE_SEED_XK=0.7, from your x24 (1.9217171436) and my x48 (1.9217178564), 1 thread + 1 junk worker each.
