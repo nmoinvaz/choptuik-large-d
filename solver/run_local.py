@@ -6,8 +6,8 @@ further from the horizon (smaller x_K) selects Delta far more strongly and makes
 discretisation error; it needs more horizon-series terms (radius ~0.7 in u). At D = 23 x_K = 0.6, 0.5 and 0.4 agree
 to 3e-8, while x_K = 0.7 is off by 1e-5 (CONTEXT.md). Jobs:
 
-    x4_23     x_K = 0.4, Ks = 260, kc = 23   (strongest selection; slowest)   -> data/scan_ne4.jsonl
-    x5_31     x_K = 0.5, Ks = 120, kc = 31                                     -> data/scan_ne5_kc31.jsonl
+    x4_23     x_K = 0.4, Ks = 260, kc = 23, smoothed (strongest selection; slowest) -> data/scan_ne4.jsonl
+    x5_31     x_K = 0.5, Ks = 120, kc = 31, smoothed                           -> data/scan_ne5_kc31.jsonl
     sj_06     x_K = 0.6, kc = 23, junk fixed by smoothness                     -> data/scan_ne6_sj.jsonl
     kc31_06   x_K = 0.6, kc = 31                                               -> data/scan_ne6_kc31.jsonl
   (also available: kc31_07, sj_07 at x_K = 0.7, the weakly selecting setup)
@@ -33,8 +33,8 @@ DATA = os.path.join(HERE, "data")
 
 # name: (output, scan_ne.py arguments, last seed to re-solve before continuing, extra environment)
 JOBS = {
-    "x4_23": ("scan_ne4.jsonl", ["23", "40", "0.2", "0.4", "0.4", "../seeds/neB_D", "23"], "24.0", {"NE_KS": "260"}),
-    "x5_31": ("scan_ne5_kc31.jsonl", ["23", "40", "0.2", "0.4", "0.5", "../seeds/neB_D", "31"], "24.0", {"NE_KS": "120"}),
+    "x4_23": ("scan_ne4.jsonl", ["23", "40", "0.2", "0.4", "0.4", "../seeds/neB_D", "23"], "24.0", {"NE_KS": "260", "NE_SMOOTH": "1"}),
+    "x5_31": ("scan_ne5_kc31.jsonl", ["23", "40", "0.2", "0.4", "0.5", "../seeds/neB_D", "31"], "24.0", {"NE_KS": "120", "NE_SMOOTH": "1"}),
     "sj_06": ("scan_ne6_sj.jsonl", ["23", "40", "0.2", "0.4", "0.6", "../seeds/neB_D", "23"], "24.0", {"NE_SMOOTH": "1"}),
     "kc31_06": ("scan_ne6_kc31.jsonl", ["23", "40", "0.2", "0.4", "0.6", "../seeds/neB_D", "31"], "24.0", {}),
     "kc31_07": ("scan_ne7_kc31.jsonl", ["23", "40", "0.2", "0.4", "0.7", "../seeds/long7_D", "31"], "24.0", {}),
