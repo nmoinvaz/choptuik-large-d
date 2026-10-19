@@ -10,6 +10,8 @@ env NE_SEED_MAX: re-solve only the seeds up to this D, then continue from those 
 env NE_KS: horizon series terms (default 60; x_K = 0.5 needs ~120).
 env NE_SMOOTH=1: after each solve, fix the junk directions by smoothness (smooth_junk.py) and re-solve, until
   Delta changes by < 1e-10 (at most 8 rounds).
+env NE_JUNK: solve the junk equations too (junk_solve.py) on a pool of this many processes. Without it the junk
+  coordinates keep whatever values the start had, which moves Delta by up to 1e-5 at D = 23 and more above.
 Run from the directory holding gamma_rust.jsonl; seed prefixes may include a directory (../seeds/long7_D).
 (D_end below the last seed: re-solve only, no continuation)
 """
@@ -41,6 +43,9 @@ if KC != 23:
 SMOOTH = os.environ.get("NE_SMOOTH", "0") == "1"
 if SMOOTH:
     OUTP = OUTP.replace("_D", "_sj_D")
+JUNK = int(os.environ.get("NE_JUNK", "0"))
+if JUNK:
+    OUTP = OUTP.replace("_D", "_js_D")
 _g = [json.loads(l) for l in open("gamma_rust.jsonl")]
 _gD = np.array([r["D"] for r in _g if r.get("lam")]); _gl = np.array([r["lam"] for r in _g if r.get("lam")])
 
@@ -116,46 +121,54 @@ def solve(D, z0, lam_guess, t0, src, Delta_old=None):
             if abs(z[-1] - d_prev) < 1e-10:
                 break
     h_ = info["hist"][-1]
-    ok = h_[2] < 1e-12 and h_[1] < STRONG_TOL and info["F"] < 1e-7
+    F, junk, js = info["F"], h_[3], {}
+    if JUNK:
+        from junk_solve import junk_solve
+        Delta_ne = float(z[-1])
+        z, ji = junk_solve(D, z, NODES, KC, JUNK, Ks=KS)
+        F, junk = ji["F"], ji["r"]
+        js = dict(js=True, Delta_ne=Delta_ne, junk_ne=ji["r0"], n_junk=ji["n_junk"], junk_its=ji["its"])
+    ok = h_[2] < 1e-12 and h_[1] < STRONG_TOL and F < 1e-7
     lam = gamma_of(R, z, lam_guess) if ok else None
-    rec = dict(D=D, xK=XK, kc=KC, Ks=KS, smooth=SMOOTH, Delta=float(z[-1]), Delta_old=Delta_old, F=info["F"], strong=h_[1], weak=h_[2], junk=h_[3],
+    rec = dict(D=D, xK=XK, kc=KC, Ks=KS, smooth=SMOOTH, Delta=float(z[-1]), Delta_old=Delta_old, F=F, strong=h_[1], weak=h_[2], junk=junk,
                n_weak=info["n_weak"], weak_s=[float(f"{x:.2e}") for x in info["weak_s"]], n_outer=len(info["hist"]),
-               lam=lam, gamma=(1 / lam if lam else None), ok=bool(ok), source=src, seconds=round(time.time() - t0))
+               lam=lam, gamma=(1 / lam if lam else None), ok=bool(ok), source=src, **js, seconds=round(time.time() - t0))
     return z, rec
 
 
-hist = []
-seeds = sorted((float(f[len(p):-4]), f) for p in PREFIXES for f in glob.glob(p + "*.npy") if f[len(p):-4].replace(".", "").isdigit())
-SEED_MAX = float(os.environ.get("NE_SEED_MAX", "inf"))   # re-solve seeds only up to here, then continue
-seeds = [(D, f) for D, f in seeds if D_from - 1e-9 <= D <= SEED_MAX]
-lam_g = 2.0
-for D, f in seeds:
-    t0 = time.time()
-    z0 = np.load(f)
-    lam_g = extrap([r[0] for r in hist], [r[2] for r in hist], D) if len(hist) >= 4 and D > _gD[-1] else lam_table(D)
-    z, rec = solve(D, z0, lam_g, t0, f, Delta_old=float(z0[-1]))
-    print(json.dumps(rec), flush=True)
-    open(out, "a").write(json.dumps(rec) + "\n")
-    np.save(f"{OUTP}{D:.4f}.npy", z)
-    if rec["ok"] and rec["lam"]:
-        hist.append([D, z, rec["lam"]])
+if __name__ == "__main__":                     # junk_solve's process pool re-imports this module
+    hist = []
+    seeds = sorted((float(f[len(p):-4]), f) for p in PREFIXES for f in glob.glob(p + "*.npy") if f[len(p):-4].replace(".", "").isdigit())
+    SEED_MAX = float(os.environ.get("NE_SEED_MAX", "inf"))   # re-solve seeds only up to here, then continue
+    seeds = [(D, f) for D, f in seeds if D_from - 1e-9 <= D <= SEED_MAX]
+    lam_g = 2.0
+    for D, f in seeds:
+        t0 = time.time()
+        z0 = np.load(f)
+        lam_g = extrap([r[0] for r in hist], [r[2] for r in hist], D) if len(hist) >= 4 and D > _gD[-1] else lam_table(D)
+        z, rec = solve(D, z0, lam_g, t0, f, Delta_old=float(z0[-1]))
+        print(json.dumps(rec), flush=True)
+        open(out, "a").write(json.dumps(rec) + "\n")
+        np.save(f"{OUTP}{D:.4f}.npy", z)
+        if rec["ok"] and rec["lam"]:
+            hist.append([D, z, rec["lam"]])
 
-D = hist[-1][0] if hist else D_end
-while D < D_end - 1e-9:
-    Dt = min(D + h, D_end)
-    t0 = time.time()
-    Ds = [r[0] for r in hist]
-    z, rec = solve(Dt, extrap(Ds, [r[1] for r in hist], Dt), extrap(Ds, [r[2] for r in hist], Dt), t0, "continuation")
-    if not rec["ok"] or not rec["lam"]:
-        h /= 2
-        print(f"step to D={Dt:.4f} failed (|F| {rec['F']:.1e}, weak {rec['weak']:.1e}); h -> {h}", flush=True)
-        if h < 0.02:
-            print("giving up", flush=True)
-            break
-        continue
-    print(json.dumps(rec), flush=True)
-    open(out, "a").write(json.dumps(rec) + "\n")
-    np.save(f"{OUTP}{Dt:.4f}.npy", z)
-    hist.append([Dt, z, rec["lam"]])
-    D = Dt
-    h = min(h * 1.3, hmax)
+    D = hist[-1][0] if hist else D_end
+    while D < D_end - 1e-9:
+        Dt = min(D + h, D_end)
+        t0 = time.time()
+        Ds = [r[0] for r in hist]
+        z, rec = solve(Dt, extrap(Ds, [r[1] for r in hist], Dt), extrap(Ds, [r[2] for r in hist], Dt), t0, "continuation")
+        if not rec["ok"] or not rec["lam"]:
+            h /= 2
+            print(f"step to D={Dt:.4f} failed (|F| {rec['F']:.1e}, weak {rec['weak']:.1e}); h -> {h}", flush=True)
+            if h < 0.02:
+                print("giving up", flush=True)
+                break
+            continue
+        print(json.dumps(rec), flush=True)
+        open(out, "a").write(json.dumps(rec) + "\n")
+        np.save(f"{OUTP}{Dt:.4f}.npy", z)
+        hist.append([Dt, z, rec["lam"]])
+        D = Dt
+        h = min(h * 1.3, hmax)

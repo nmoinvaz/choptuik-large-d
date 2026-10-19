@@ -6,13 +6,14 @@ another setup is asked for). Duplicate D (re-solves of the same point) are avera
 
     rows = load()                      # {D: dict(D, Delta, gamma, src, spread)}
     rows = load(xK=0.7) / load(kc=31) / load(smooth=True)  # other setups, NE records only
+    rows = load(js=True)               # junk-solved scans (scan_ne with NE_JUNK)
 """
 import glob, json
 import numpy as np
 from data_best import load as _old
 
 
-def ne_records(xK=0.6, kc=23, smooth=False):
+def ne_records(xK=0.6, kc=23, smooth=False, js=False):
     recs = []
     for fn in sorted(glob.glob("scan_ne*.jsonl")):
         for l in open(fn):
@@ -22,18 +23,18 @@ def ne_records(xK=0.6, kc=23, smooth=False):
             if abs(r.get("xK", 0.6) - xK) > 1e-9:
                 continue
             rkc = r.get("kc", 31 if "kc31" in fn else 23)
-            if rkc != kc or bool(r.get("smooth", False)) != smooth:
+            if rkc != kc or bool(r.get("smooth", False)) != smooth or bool(r.get("js", False)) != js:
                 continue
             recs.append(r)
     return recs
 
 
-def load(xK=0.6, kc=23, dmin_ne=17.2, smooth=False):
+def load(xK=0.6, kc=23, dmin_ne=17.2, smooth=False, js=False):
     by = {}
-    for r in ne_records(xK, kc, smooth):
+    for r in ne_records(xK, kc, smooth, js):
         by.setdefault(round(r["D"], 4), []).append(r)
     rows = {}
-    if xK == 0.6 and kc == 23 and not smooth:
+    if xK == 0.6 and kc == 23 and not smooth and not js:
         for k, r in _old().items():
             if k < dmin_ne and r.get("Delta") is not None:
                 rows[k] = dict(D=r["D"], Delta=r["Delta"], gamma=r.get("gamma"), src="old", spread=0.0)

@@ -21,6 +21,8 @@ Install the kernel first (`pip install .` at the repo root), then run scripts fr
 | `rust_solver.py` | `make(D, Δ_ref)` → (S, RustResidual); `jacobian_rust`; `convert_06_to_07` (move the matching point) |
 | `ne_solver.py` | `ne_solve`: nonlinear elimination (strong equations by Newton for each value of the weak shape-mode coordinates, weak ones by the Schur complement, junk frozen). Removes the residual floor that stalled the LM solvers above D ≈ 18 |
 | `scan_ne.py` | D scan with `ne_solve`: re-solve stored seeds, then continue; Δ, residual split, γ per point |
+| `junk_solve.py` | Gauss–Newton on the junk directions (centre-p harmonics the f64 Jacobian cannot see), strong and weak re-solved by `ne_solve` per evaluation; `scan_ne` uses it with `NE_JUNK` |
+| `ne_disc.py` | One point re-solved with the discretisation changed or the start displaced (valley, junk); the pinning battery |
 | `run_local.py` | Runs two complementary `scan_ne.py` scans in parallel on a local machine (x_K = 0.7, and kc = 31) |
 | `dd_solver.py` | `dd_solve` (double-double residual and unknowns, f64 Jacobian); `profile` / `profile_minimum` (see below) |
 | `scan_long4.py`, `scan_long5.py` | D-continuation on the Rust kernel, matching at x_K = 0.6 / 0.7 |
