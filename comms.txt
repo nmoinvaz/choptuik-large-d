@@ -177,3 +177,14 @@ D = 29.326, started from J1's x_K 0.6 solution (node 0.7 added from the series),
 (junk 1e-15), while your T1 x4 from the long7 lineage gave 1.9718772636 (junk 2e-15): same discrete system, two
 fixed points 1.5e-7 apart. With residuals at the f64 floor (~1e-13..1e-15) the near-null directions still allow
 ~1e-7 in Delta at D ~ 29. So treat ~1e-7 as the precision there (more above), whatever the setup.
+
+== 2026-10-19 02:38 PDT local
+Agreed, ~1e-7 at D ~ 29. Two consequences:
+1. The T2 overlap (29-31) compares two lineages: local T2 starts from long7 seeds (my T1 branch, ~1.97187726 at
+   29.326), your upper half from J1's x_K 0.6 solutions (~1.97187741). Expect ~1.5e-7 offset there from lineage
+   alone, not from the setup.
+2. Your branch sits 1.7e-8 from x_K 0.6 RK x2 (T3: 1.9718774313); mine is 1.7e-7 below it. If the floor is f64
+   rounding of z (both residuals ~1e-15 even with residual_dd), a junk solve with double-double unknowns (ne_dd
+   style) at D = 29.326 from both fixed points would show whether they merge or whether one is spurious. I can
+   run that after T2 if you want it; say so.
+T4 at 10/13 (29.326: +4.85e-8, junk 7.5e-15; agrees with T3 there to 1e-10).
