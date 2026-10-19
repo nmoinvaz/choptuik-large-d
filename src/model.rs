@@ -3,8 +3,11 @@
 //! Everything is generic over the scalar type T (f64 or Complex64) and over a `Backend` that
 //! supplies the hot kernels (matrix-vector products, the ODE right-hand side, RK4 vector updates,
 //! Cauchy products, LU row updates). `Generic` is plain Rust loops (auto-vectorised or scalar,
-//! depending on compiler flags); `avx::Avx512` implements the same operations, in the same order,
-//! with explicit AVX-512 intrinsics.
+//! depending on the instruction set it is compiled for); `avx512::Avx512` implements the same
+//! operations, in the same order, with explicit AVX-512 intrinsics.
+//!
+//! Everything from `block_state` / `block_out` down is `#[inline(always)]`, so it is compiled into
+//! the `#[target_feature]` entry points of `dispatch` with the instruction set chosen at runtime.
 //!
 //! Fields are stored on N tau points (N = 72, or N = 40 for the parity-folded representation:
 //! 36 half-period samples padded to a multiple of 8). The parity-folded representation uses that p, m
@@ -12,6 +15,7 @@
 //! circulant D and trunc matrices then fold exactly into 36x36 matrices (and the periodic solve
 //! decouples into a 36x36 system).
 
+use crate::dispatch::Exec;
 use crate::scalar::{zero_state, Fld, Sc, State};
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
@@ -223,7 +227,7 @@ impl<T: Sc, const N: usize> Backend<T, N> for Generic {
         Fld(acc)
     }
 
-    #[inline(never)]
+    #[inline(always)]
     fn rhs(ctx: &Ctx<N>, x: f64, scale: f64, omega: T, s: &State<T, N>, out: &mut State<T, N>) {
         let nh = ctx.nh;
         let mut dp = Fld::<T, N>::zero();
@@ -367,6 +371,7 @@ fn eval_series<T: Sc, const N: usize>(s: &[Fld<T, N>], x: f64) -> Fld<T, N> {
 
 /// Solve (omega D + diag(kappa)) f = r for periodic f in the odd sector (DSS.solve_periodic).
 /// Column i of the system matrix is omega * d_odd[i] (+ kappa_i on the diagonal).
+#[inline(always)]
 pub fn solve_periodic<T: Sc, B: Backend<T, N>, const N: usize>(
     ctx: &Ctx<N>,
     kappa: &Fld<T, N>,
@@ -391,6 +396,7 @@ pub fn solve_periodic<T: Sc, B: Backend<T, N>, const N: usize>(
 // ---------------------------------------------------------------------------------------------
 // centre series (DSS.centre_series), evaluated at x0 and truncated
 // ---------------------------------------------------------------------------------------------
+#[inline(always)]
 fn centre_state<T: Sc, B: Backend<T, N>, const N: usize>(
     ctx: &Ctx<N>,
     p1: &Fld<T, N>,
@@ -468,6 +474,7 @@ fn centre_state<T: Sc, B: Backend<T, N>, const N: usize>(
 // ---------------------------------------------------------------------------------------------
 // horizon (SSH) series, O(K^2) form of fast.ssh_series_fast, evaluated at u0 and truncated
 // ---------------------------------------------------------------------------------------------
+#[inline(always)]
 fn ssh_state<T: Sc, B: Backend<T, N>, const N: usize>(
     ctx: &Ctx<N>,
     m0: &Fld<T, N>,
@@ -482,6 +489,7 @@ fn ssh_state<T: Sc, B: Backend<T, N>, const N: usize>(
 
 /// Horizon series coefficients P, M, A, C (orders 0..=Ks each).
 #[allow(clippy::type_complexity)]
+#[inline(always)]
 pub fn ssh_series<T: Sc, B: Backend<T, N>, const N: usize>(
     ctx: &Ctx<N>,
     m0: &Fld<T, N>,
@@ -570,6 +578,7 @@ pub fn ssh_series<T: Sc, B: Backend<T, N>, const N: usize>(
 }
 
 /// Debug helper: horizon series of batch row z (orders 0..=Ks), as (4, Ks+1, nh) row-major values.
+#[inline(always)]
 pub fn ssh_series_row<T: Sc, B: Backend<T, N>, const N: usize>(ctx: &Ctx<N>, z: &[T]) -> Vec<T> {
     let omega = T::re(2.0 * std::f64::consts::PI) / z[ctx.len - 1];
     let ns = ctx.offs.len() - 1;
@@ -610,6 +619,7 @@ fn xmap(v: Var, y: f64) -> (f64, f64) {
     }
 }
 
+#[inline(always)]
 fn rk4<T: Sc, B: Backend<T, N>, const N: usize>(
     ctx: &Ctx<N>,
     s: &mut State<T, N>,
@@ -646,6 +656,7 @@ fn rk4<T: Sc, B: Backend<T, N>, const N: usize>(
 // ---------------------------------------------------------------------------------------------
 // one residual block (one shooting segment) of one batch row
 // ---------------------------------------------------------------------------------------------
+#[inline(always)]
 fn part_phys<T: Sc, B: Backend<T, N>, const N: usize>(ctx: &Ctx<N>, z: &[T], idx: usize, odd: bool) -> Fld<T, N> {
     let c = &z[ctx.offs[idx]..ctx.offs[idx + 1]];
     if odd {
@@ -655,6 +666,7 @@ fn part_phys<T: Sc, B: Backend<T, N>, const N: usize>(ctx: &Ctx<N>, z: &[T], idx
     }
 }
 
+#[inline(always)]
 fn node_state<T: Sc, B: Backend<T, N>, const N: usize>(ctx: &Ctx<N>, z: &[T], i: usize) -> State<T, N> {
     let j = 2 + 4 * i;
     [
@@ -680,40 +692,44 @@ pub fn block_input_range<const N: usize>(ctx: &Ctx<N>, b: usize) -> (usize, usiz
 
 /// The expensive part of block b: centre series + log integration (b = 0), RK4 segment from node b-1
 /// (1 <= b < K), or horizon series at u0 (b = K). Depends only on block_input_range(b) and Delta.
+#[inline(always)]
 pub fn block_state<T: Sc, B: Backend<T, N>, const N: usize>(ctx: &Ctx<N>, z: &[T], b: usize) -> State<T, N> {
     let kn = ctx.nodes.len();
     let omega = T::re(2.0 * std::f64::consts::PI) / z[ctx.len - 1];
-    if b == 0 {
+    if b >= kn {
+        let ns = ctx.offs.len() - 1;
+        let ms = part_phys::<T, B, N>(ctx, z, ns - 2, true);
+        let a_s = part_phys::<T, B, N>(ctx, z, ns - 1, false);
+        return ssh_state::<T, B, N>(ctx, &ms, &a_s, omega);
+    }
+    // One rk4 call site, so the integrator (and the plain-loop rhs inside it) is inlined once.
+    let (mut s, var, y0, h, steps) = if b == 0 {
         let p1 = part_phys::<T, B, N>(ctx, z, 0, true);
         let mut c0 = part_phys::<T, B, N>(ctx, z, 1, false);
         for j in ctx.nh..N {
             c0.0[j] = T::re(1.0); // padding lanes: keep the centre-series determinant non-zero
         }
-        let mut s = centre_state::<T, B, N>(ctx, &p1, &c0, omega);
+        let s = centre_state::<T, B, N>(ctx, &p1, &c0, omega);
         let (xa, xb) = (ctx.x0, ctx.nodes[0]);
         let h = (xb.ln() - xa.ln()) / ctx.log_steps as f64;
-        rk4::<T, B, N>(ctx, &mut s, Var::Log, xa.ln(), h, ctx.log_steps, omega);
-        s
-    } else if b < kn {
-        let mut s = node_state::<T, B, N>(ctx, z, b - 1);
+        (s, Var::Log, xa.ln(), h, ctx.log_steps)
+    } else {
+        let s = node_state::<T, B, N>(ctx, z, b - 1);
         let (xa, xb) = (ctx.nodes[b - 1], ctx.nodes[b]);
         let steps = ctx.seg_steps[b - 1];
         if ctx.seg_u[b - 1] {
             let (ya, yb) = ((1.0 - xa).ln(), (1.0 - xb).ln());
-            rk4::<T, B, N>(ctx, &mut s, Var::U, ya, (yb - ya) / steps as f64, steps, omega);
+            (s, Var::U, ya, (yb - ya) / steps as f64, steps)
         } else {
-            rk4::<T, B, N>(ctx, &mut s, Var::X, xa, (xb - xa) / steps as f64, steps, omega);
+            (s, Var::X, xa, (xb - xa) / steps as f64, steps)
         }
-        s
-    } else {
-        let ns = ctx.offs.len() - 1;
-        let ms = part_phys::<T, B, N>(ctx, z, ns - 2, true);
-        let a_s = part_phys::<T, B, N>(ctx, z, ns - 1, false);
-        ssh_state::<T, B, N>(ctx, &ms, &a_s, omega)
-    }
+    };
+    rk4::<T, B, N>(ctx, &mut s, var, y0, h, steps, omega);
+    s
 }
 
 /// The cheap part: mismatch with the target node state, converted to spectral coefficients.
+#[inline(always)]
 pub fn block_out<T: Sc, B: Backend<T, N>, const N: usize>(ctx: &Ctx<N>, z: &[T], b: usize, s: &State<T, N>, out: &mut [T]) {
     let kn = ctx.nodes.len();
     let tgt = node_state::<T, B, N>(ctx, z, b.min(kn - 1));
@@ -726,6 +742,7 @@ pub fn block_out<T: Sc, B: Backend<T, N>, const N: usize>(ctx: &Ctx<N>, z: &[T],
 
 /// Residual block b (0: centre -> node 0, 1..K-1: node b-1 -> node b, K: horizon series - node K-1)
 /// of one batch row z; writes block_len() spectral values to out.
+#[inline(always)]
 pub fn block<T: Sc, B: Backend<T, N>, const N: usize>(ctx: &Ctx<N>, z: &[T], b: usize, out: &mut [T]) {
     let s = block_state::<T, B, N>(ctx, z, b);
     block_out::<T, B, N>(ctx, z, b, &s, out);
@@ -734,12 +751,14 @@ pub fn block<T: Sc, B: Backend<T, N>, const N: usize>(ctx: &Ctx<N>, z: &[T], b: 
 /// Full residual of a batch (rows of length ctx.len) using the given rayon pool (None: sequential).
 /// dedup: evaluate each block's expensive part once per distinct (block input, Delta) bit pattern
 /// (bitwise-identical results; large savings for finite-difference Jacobian batches).
-pub fn residual_batch<T: Sc, B: Backend<T, N>, const N: usize>(
+/// e: the backend and instruction set the blocks run with (see `dispatch`).
+pub fn residual_batch<T: Sc, E: Exec<T, N>, const N: usize>(
     ctx: &Ctx<N>,
     zb: &[T],
     out: &mut [T],
     pool: Option<&rayon::ThreadPool>,
     dedup: bool,
+    e: &E,
 ) {
     use rayon::prelude::*;
     let l = ctx.len;
@@ -767,14 +786,14 @@ pub fn residual_batch<T: Sc, B: Backend<T, N>, const N: usize>(
             }
         }
         if tasks.len() < nrows * nb {
-            let comp = |&(b, r): &(usize, usize)| block_state::<T, B, N>(ctx, &zb[r * l..(r + 1) * l], b);
+            let comp = |&(b, r): &(usize, usize)| e.block_state(ctx, &zb[r * l..(r + 1) * l], b);
             let states: Vec<State<T, N>> = match pool {
                 None => tasks.iter().map(comp).collect(),
                 Some(p) => p.install(|| tasks.par_iter().map(comp).collect()),
             };
             let fill = |(r, (z, o)): (usize, (&[T], &mut [T]))| {
                 for (b, ob) in o[..nb * bl].chunks_mut(bl).enumerate() {
-                    block_out::<T, B, N>(ctx, z, b, &states[assign[r * nb + b]], ob);
+                    e.block_out(ctx, z, b, &states[assign[r * nb + b]], ob);
                 }
                 o[l - 1] = z[ctx.phase_idx];
             };
@@ -787,10 +806,10 @@ pub fn residual_batch<T: Sc, B: Backend<T, N>, const N: usize>(
     }
     let row = |z: &[T], o: &mut [T], par: bool| {
         if par {
-            o[..nb * bl].par_chunks_mut(bl).enumerate().for_each(|(b, ob)| block::<T, B, N>(ctx, z, b, ob));
+            o[..nb * bl].par_chunks_mut(bl).enumerate().for_each(|(b, ob)| e.block(ctx, z, b, ob));
         } else {
             for (b, ob) in o[..nb * bl].chunks_mut(bl).enumerate() {
-                block::<T, B, N>(ctx, z, b, ob);
+                e.block(ctx, z, b, ob);
             }
         }
         o[l - 1] = z[ctx.phase_idx];

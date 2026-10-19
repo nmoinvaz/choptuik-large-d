@@ -7,15 +7,21 @@ spec_c.freeze_steps step counts).
     F = R(Zb, threads=1, backend="auto")
     Fc = R.residual_complex(Zb_complex) # complex-step capable (generic backend)
 
+backend="simd" (default) runs the best explicit SIMD kernels this CPU supports, picked at runtime
+(AVX-512 on x86_64); "auto" runs plain loops compiled for the best instruction set, "baseline" plain
+loops without extra features, and an instruction set name ("avx512") forces those kernels.
+available_backends() lists what this CPU can run, and RUSTKERNEL_ISA=avx2 (or baseline) caps the
+instruction set for the whole process.
+
 folded=True (default) uses the half-period parity of the fields (p, m odd; a, c even under
 tau -> tau + Delta/2) to work on 36 instead of 72 tau points; folded=False works on all 72 points
 like the Python code. Both agree with the Python reference to rounding level.
 """
 import numpy as np
 
-from ._rustkernel import Kernel, build_info, simd_available
+from ._rustkernel import Kernel, available_backends, build_info, simd_available
 
-__all__ = ["RustResidual", "Kernel", "kernel_args", "step_counts", "simd_available", "build_info"]
+__all__ = ["RustResidual", "Kernel", "kernel_args", "step_counts", "simd_available", "available_backends", "build_info"]
 
 
 def _closure_var(fn, name):

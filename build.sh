@@ -1,11 +1,11 @@
 #!/bin/bash
 # Build + install the main wheel, and build the two ablation variants into variants/ (same source):
-#   main     : RUSTFLAGS from .cargo/config.toml (-C target-cpu=native), opt-level 3, LTO, 1 CGU
-#   scalar   : + -C no-vectorize-loops -C no-vectorize-slp   (no auto-vectorisation)
-#   auto512  : + -C target-feature=-prefer-256-bit            (LLVM auto-vectorises with zmm)
+#   main     : portable (instruction set picked at runtime, src/dispatch.rs), opt-level 3, LTO, 1 CGU
+#   scalar   : -C target-cpu=native -C no-vectorize-loops -C no-vectorize-slp   (no auto-vectorisation)
+#   auto512  : -C target-cpu=native -C target-feature=-prefer-256-bit            (LLVM auto-vectorises with zmm)
 # All builds run at nice 2. Usage: ./build.sh [main|variants|all]
 set -euo pipefail
-ROOT=/home/claude/rustkernel
+ROOT=$(cd "$(dirname "$0")" && pwd)
 cd "$ROOT"
 what=${1:-all}
 

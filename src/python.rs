@@ -1,8 +1,7 @@
 //! Python bindings for the DSSSpec residual kernel.
 
-#[cfg(all(target_arch = "x86_64", target_feature = "avx512f"))]
-use crate::avx;
-use crate::model::{self, residual_batch, Backend, Ctx, Generic};
+use crate::dispatch::{self, with_exec, with_plain_exec, Exec, Isa, Target};
+use crate::model::{Backend, Ctx, Generic};
 use crate::scalar::{Fld, Sc};
 use num_complex::Complex64;
 use numpy::ndarray::Array2;
@@ -138,36 +137,14 @@ struct Kernel {
     len: usize,
 }
 
-#[derive(Clone, Copy, PartialEq)]
-enum Which {
-    Auto,
-    Simd,
+/// Backend name -> Target checked against this CPU (see dispatch::Target::parse).
+fn which(backend: &str) -> PyResult<Target> {
+    Target::parse(backend).map_err(PyValueError::new_err)
 }
 
-fn which(backend: &str) -> PyResult<Which> {
-    match backend {
-        "auto" | "generic" => Ok(Which::Auto),
-        "simd" | "avx512" => {
-            if simd_available() {
-                Ok(Which::Simd)
-            } else {
-                Err(PyValueError::new_err("this build has no AVX-512 backend"))
-            }
-        }
-        _ => Err(PyValueError::new_err("backend must be 'auto' or 'simd'")),
-    }
-}
-
-fn run_f64<const N: usize>(ctx: &Ctx<N>, zb: &[f64], out: &mut [f64], threads: usize, w: Which, dedup: bool) {
+fn run_f64<const N: usize>(ctx: &Ctx<N>, zb: &[f64], out: &mut [f64], threads: usize, w: Target, dedup: bool) {
     let p = if threads > 1 { Some(pool(threads)) } else { None };
-    let pr = p.as_deref();
-    match w {
-        Which::Auto => residual_batch::<f64, Generic, N>(ctx, zb, out, pr, dedup),
-        #[cfg(all(target_arch = "x86_64", target_feature = "avx512f"))]
-        Which::Simd => residual_batch::<f64, avx::Avx512, N>(ctx, zb, out, pr, dedup),
-        #[cfg(not(all(target_arch = "x86_64", target_feature = "avx512f")))]
-        Which::Simd => unreachable!(),
-    }
+    dispatch::residual(w, ctx, zb, out, p.as_deref(), dedup);
 }
 
 fn run_generic<T: Sc, const N: usize>(ctx: &Ctx<N>, zb: &[T], out: &mut [T], threads: usize, dedup: bool)
@@ -175,7 +152,7 @@ where
     Generic: Backend<T, N>,
 {
     let p = if threads > 1 { Some(pool(threads)) } else { None };
-    residual_batch::<T, Generic, N>(ctx, zb, out, p.as_deref(), dedup);
+    dispatch::residual_plain(Target::best_plain(), ctx, zb, out, p.as_deref(), dedup);
 }
 
 #[pymethods]
@@ -242,7 +219,8 @@ impl Kernel {
 
     /// Residual of a batch: zb (B, L) float64 -> (B, L) float64.
     /// threads: 1 = sequential, >1 = rayon pool over (batch row, shooting block).
-    /// backend: 'simd' (explicit AVX-512) or 'auto' (plain loops, compiler-vectorised).
+    /// backend: 'simd' (best explicit SIMD backend for this CPU), an instruction set ('avx512'),
+    /// 'auto' (plain loops, compiler-vectorised for the best instruction set) or 'baseline'.
     /// dedup: compute each block once per distinct block input (bitwise-identical output).
     #[pyo3(signature = (zb, threads=1, backend="simd", dedup=false))]
     fn residual<'py>(&self, py: Python<'py>, zb: PyReadonlyArray2<'py, f64>, threads: usize, backend: &str, dedup: bool) -> PyResult<Bound<'py, PyArray2<f64>>> {
@@ -262,7 +240,8 @@ impl Kernel {
         Ok(Array2::from_shape_vec((b, self.len), out).unwrap().into_pyarray(py))
     }
 
-    /// Complex residual (generic backend) for complex-step derivatives: zb (B, L) complex128.
+    /// Complex residual (plain loops for the best instruction set) for complex-step derivatives:
+    /// zb (B, L) complex128.
     #[pyo3(signature = (zb, threads=1, dedup=false))]
     fn residual_complex<'py>(&self, py: Python<'py>, zb: PyReadonlyArray2<'py, Complex64>, threads: usize, dedup: bool) -> PyResult<Bound<'py, PyArray2<Complex64>>> {
         let sh = zb.shape();
@@ -283,9 +262,10 @@ impl Kernel {
     /// Debug: horizon-series coefficients (P, M, A, C) of one row z, shape (4, Ks+1, n_tau).
     fn debug_ssh_series<'py>(&self, py: Python<'py>, z: PyReadonlyArray2<'py, f64>) -> PyResult<Bound<'py, PyArray2<f64>>> {
         let zz = z.as_slice().map_err(|_| PyValueError::new_err("z must be C-contiguous"))?;
+        let t = Target::best_plain();
         let (v, nh) = match &self.ctx {
-            AnyCtx::F40(c) => (model::ssh_series_row::<f64, Generic, 40>(c, &zz[..self.len]), c.nh),
-            AnyCtx::F72(c) => (model::ssh_series_row::<f64, Generic, 72>(c, &zz[..self.len]), c.nh),
+            AnyCtx::F40(c) => (with_plain_exec!(t, e => e.ssh_series_row(c, &zz[..self.len])), c.nh),
+            AnyCtx::F72(c) => (with_plain_exec!(t, e => e.ssh_series_row(c, &zz[..self.len])), c.nh),
         };
         let rows = v.len() / nh;
         Ok(Array2::from_shape_vec((rows, nh), v).unwrap().into_pyarray(py))
@@ -296,20 +276,14 @@ impl Kernel {
     fn debug_block_times(&self, zb: PyReadonlyArray2<f64>, backend: &str, reps: usize) -> PyResult<Vec<f64>> {
         let w = which(backend)?;
         let zz = zb.as_slice().map_err(|_| PyValueError::new_err("z must be C-contiguous"))?;
-        fn go<const N: usize>(c: &Ctx<N>, z: &[f64], w: Which, reps: usize) -> Vec<f64> {
+        fn go<const N: usize, E: Exec<f64, N>>(c: &Ctx<N>, z: &[f64], e: &E, reps: usize) -> Vec<f64> {
             let mut out = vec![0.0; c.block_len()];
             (0..c.nblocks())
                 .map(|b| {
                     let mut t: Vec<f64> = (0..reps)
                         .map(|_| {
                             let t0 = std::time::Instant::now();
-                            match w {
-                                Which::Auto => model::block::<f64, Generic, N>(c, z, b, &mut out),
-                                #[cfg(all(target_arch = "x86_64", target_feature = "avx512f"))]
-                                Which::Simd => model::block::<f64, avx::Avx512, N>(c, z, b, &mut out),
-                                #[cfg(not(all(target_arch = "x86_64", target_feature = "avx512f")))]
-                                Which::Simd => unreachable!(),
-                            }
+                            e.block(c, z, b, &mut out);
                             std::hint::black_box(&out);
                             t0.elapsed().as_secs_f64()
                         })
@@ -320,8 +294,8 @@ impl Kernel {
                 .collect()
         }
         Ok(match &self.ctx {
-            AnyCtx::F40(c) => go(c, &zz[..self.len], w, reps),
-            AnyCtx::F72(c) => go(c, &zz[..self.len], w, reps),
+            AnyCtx::F40(c) => with_exec!(w, e => go(c, &zz[..self.len], &e, reps)),
+            AnyCtx::F72(c) => with_exec!(w, e => go(c, &zz[..self.len], &e, reps)),
         })
     }
 
@@ -329,7 +303,7 @@ impl Kernel {
     #[pyo3(signature = (omega, kappa, backend="simd", reps=2000))]
     fn debug_solve_time(&self, omega: f64, kappa: f64, backend: &str, reps: usize) -> PyResult<f64> {
         let w = which(backend)?;
-        fn go<const N: usize>(c: &Ctx<N>, omega: f64, kappa: f64, w: Which, reps: usize) -> f64 {
+        fn go<const N: usize, E: Exec<f64, N>>(c: &Ctx<N>, omega: f64, kappa: f64, e: &E, reps: usize) -> f64 {
             let mut kap = Fld::<f64, N>([0.0; N]);
             let mut r = Fld::<f64, N>([0.0; N]);
             for j in 0..c.nh {
@@ -339,20 +313,14 @@ impl Kernel {
             let mut a = Vec::with_capacity(c.nh);
             let t0 = std::time::Instant::now();
             for _ in 0..reps {
-                let x = match w {
-                    Which::Auto => model::solve_periodic::<f64, Generic, N>(c, &kap, &r, omega, &mut a),
-                    #[cfg(all(target_arch = "x86_64", target_feature = "avx512f"))]
-                    Which::Simd => model::solve_periodic::<f64, avx::Avx512, N>(c, &kap, &r, omega, &mut a),
-                    #[cfg(not(all(target_arch = "x86_64", target_feature = "avx512f")))]
-                    Which::Simd => unreachable!(),
-                };
+                let x = e.solve_periodic(c, &kap, &r, omega, &mut a);
                 std::hint::black_box(&x);
             }
             t0.elapsed().as_secs_f64() / reps as f64
         }
         Ok(match &self.ctx {
-            AnyCtx::F40(c) => go(c, omega, kappa, w, reps),
-            AnyCtx::F72(c) => go(c, omega, kappa, w, reps),
+            AnyCtx::F40(c) => with_exec!(w, e => go(c, omega, kappa, &e, reps)),
+            AnyCtx::F72(c) => with_exec!(w, e => go(c, omega, kappa, &e, reps)),
         })
     }
 
@@ -365,9 +333,16 @@ impl Kernel {
     }
 }
 
+/// Whether this CPU can run an explicit SIMD backend ('simd').
 #[pyfunction]
 fn simd_available() -> bool {
-    cfg!(all(target_arch = "x86_64", target_feature = "avx512f"))
+    Target::best_simd().is_some()
+}
+
+/// Backend names this CPU can run, best first.
+#[pyfunction]
+fn available_backends() -> Vec<String> {
+    Target::all().into_iter().map(Target::name).collect()
 }
 
 #[pyfunction]
@@ -382,13 +357,21 @@ fn build_info() -> String {
     if cfg!(target_feature = "fma") {
         feats.push("fma");
     }
-    format!("target features: {}", feats.join(","))
+    let simd = Target::best_simd().map_or("none".to_string(), Target::name);
+    let avail: Vec<&str> = Isa::candidates().iter().filter(|i| i.available()).map(|i| i.name()).collect();
+    format!(
+        "isa: {} (cpu supports {}), simd backend: {simd}, compile-time target features: {}",
+        Isa::best().name(),
+        avail.join(","),
+        if feats.is_empty() { "baseline".to_string() } else { feats.join(",") }
+    )
 }
 
 #[pymodule]
 fn _rustkernel(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Kernel>()?;
     m.add_function(wrap_pyfunction!(simd_available, m)?)?;
+    m.add_function(wrap_pyfunction!(available_backends, m)?)?;
     m.add_function(wrap_pyfunction!(build_info, m)?)?;
     Ok(())
 }
