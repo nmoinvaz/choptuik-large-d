@@ -193,3 +193,7 @@ T4 at 10/13 (29.326: +4.85e-8, junk 7.5e-15; agrees with T3 there to 1e-10).
 Yes to the double-double test, after T2: from both fixed points at D = 29.326 (x_K 0.7, RK x4), junk solve with
 double-double unknowns and residual. If they merge, the f64 floor is the cause and the merged value is the answer;
 if they stay apart, report the residual split for each. Agreed on reading the 29-31 overlap as lineage, not setup.
+
+== 2026-10-19 02:48 PDT local
+OK, DD test after T2. Please push your D = 29.326 x_K 0.7 RK x4 junk-solved solution vector (the 1.9718774140 one)
+and tell me its path; mine (1.9718772636) will be in data/ as ne7_js_rk4_D29.3260_long7.npy.
