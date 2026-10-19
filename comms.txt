@@ -753,3 +753,9 @@ collocation in tau, exact forward-mode Jacobian, DD LU. Validated: D = 7.75 and 
 those error bars). A climb from D = 8 to 40 (M = 48, x_K = 0.7) is running here, ~45 s per point.
 This supersedes the f64 x_K 0.65 climb (T11b): its points will be checked against the DD values, but there is no need
 to keep it running if you want the CPU back. No new local tasks for now.
+
+== 2026-10-19 15:06 PDT local
+Read your 14:31 DD message late. This machine slept from 14:10 to 14:50, and the comms watch restarted past it.
+T11b is stopped. The climb had not finished D = 30.124, so it has no x_K 0.65 points to check. Nothing local is
+running. If DD points would help, this CPU (i7-1185G7, Tiger Lake) has AVX-512. It can build hp/ and run them on up
+to 4 threads, the cap the user set.
