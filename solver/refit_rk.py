@@ -4,13 +4,16 @@ import json, glob, sys, numpy as np
 from data_best import load as old_load
 Dmax = float(sys.argv[1]) if len(sys.argv) > 1 else 25.5
 o = old_load()
-rk1 = {k: r["Delta"] for k, r in o.items()}
-for f in glob.glob("scan_ne6*.jsonl"):
+rk1 = {k: r["Delta"] for k, r in o.items() if k < 17.2}          # old values are biased above 17.2
+for f in sorted(glob.glob("scan_ne6*.jsonl")):                    # NE RK x1, x_K 0.6, kc 23: junk-solved wins
     for l in open(f):
         r = json.loads(l)
         if r.get("ok") and r.get("rk", 1) == 1 and abs(r.get("xK", 0.6) - 0.6) < 1e-9 and r.get("kc", 23) == 23 and not r.get("smooth"):
-            if r.get("js") or r["D"] <= 23.4:
-                rk1.setdefault(round(r["D"], 4), r["Delta"])
+            k = round(r["D"], 4)
+            if r.get("js"):
+                rk1[k] = r["Delta"]
+            elif r["D"] <= 23.4 and k >= 17.2:
+                rk1.setdefault(k, r["Delta"])
 rk2 = {}
 for f in glob.glob("scan_ne6_rk2*.jsonl"):
     for l in open(f):
@@ -25,7 +28,7 @@ for name, y in (("RK x2", y2), ("Richardson", yR)):
     for xn, x in (("1/n", 1 / (D - 2)), ("1/(D-1)", 1 / (D - 1))):
         out = []
         for m in (7, 8, 9, 10):
-            A = np.vander(x, m + 1, increasing=True)
+            A = np.vander(x / x.max(), m + 1, increasing=True)      # scaled: an unscaled Vandermonde loses ~1e-9
             c, *_ = np.linalg.lstsq(A, y, rcond=None)
             out.append(f"m={m}: c0 {c[0]:.6f} rms {np.sqrt(np.mean((A @ c - y) ** 2)):.0e}")
         print(f"  {name:10s} {xn:8s} " + " | ".join(out))

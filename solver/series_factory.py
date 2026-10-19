@@ -29,11 +29,15 @@ def best(Dmin=8.0, Dmax=99.0, err_lo=1e-8):
 
 
 def polyfit_w(x, y, s, m):
-    A = np.vander(x, m + 1, increasing=True) / s[:, None]
+    """Weighted fit in the scaled variable x / max(x) (an unscaled Vandermonde of degree ~10 loses ~1e-9), returned
+    as coefficients of x itself."""
+    sc = x.max()
+    A = np.vander(x / sc, m + 1, increasing=True) / s[:, None]
     c, *_ = np.linalg.lstsq(A, y / s, rcond=None)
     cov = np.linalg.pinv(A.T @ A)
     chi2 = np.sum((A @ c - y / s) ** 2) / max(len(y) - m - 1, 1)
-    return c, np.sqrt(np.diag(cov) * max(chi2, 1.0)), chi2
+    k = np.arange(m + 1)
+    return c / sc ** k, np.sqrt(np.diag(cov) * max(chi2, 1.0)) / sc ** k, chi2
 
 
 if __name__ == "__main__":

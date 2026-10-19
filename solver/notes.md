@@ -309,3 +309,9 @@ light ray. Note the factor √(2π) between the simulation's field (G = 1) and t
 - Limit from the step-converged D <= 17.3 data alone, across variables 1/D, 1/(D-1), 1/(D-3/2), 1/n and cuts D >= 8-11:
   1.6441-1.6450 (1/D lowest, 1/n highest): Delta_inf = 1.6446 +- 0.0004; pi^2/6 inside again. The earlier 1.6441 used RK x1
   data to 25.5. Step-converged D = 17-30.5 data (cloud: 17-25.5 RK2 junk-solved; local T4: 25.5-30.5) will narrow it.
+- CORRECTION (02:20): the "1.6446 +- 0.0004 / pi^2/6 inside" numbers above came from unscaled Vandermonde fits of degree
+  7-10 (x ~ 0.05-0.17, so x^10 ~ 1e-13), which lose ~1e-9 and made the limit wander. refit_rk.py, series_factory.py and
+  constr_test.py now fit in x / max(x). On the step-converged set D = 8-22.4 (RK x2 + Richardson; RK x2 junk-solved above
+  17.2): fit rms 2e-11 (D >= 10), limit 1.64389-1.64407 for x = 1/D, 1/(D-1), 1/n. Forcing pi^2/6 raises the rms 3-13x
+  (6.9e-11 .. 2.6e-10); forcing 1.6440 does not (2.1-2.2e-11). D <= 17.3 alone does not constrain the limit at degree 10.
+  => Delta_inf = 1.6440 +- 0.0002; pi^2/6 disfavored. Step-converged D = 22.4-30.5 still to come.
