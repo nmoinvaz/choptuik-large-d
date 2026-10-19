@@ -91,3 +91,8 @@ Cloud is now re-solving D = 17.0-25.5 at NE_RK = 2 with junk_solve (1 worker per
 T4 (after T1-T3, any free cores): J1 at NE_RK = 2. scan_ne NE_JUNK=<w> NE_RK=2, x_K 0.6, kc 23, re-solve only
 (D_end 0), seeds = the J1 solutions in data (neB_js_D*.npy) for 25.5 <= D <= 30.5. Output names get _rk2, so
 nothing is overwritten. That gives the step-converged fit set to D = 30.5.
+
+== 2026-10-19 01:29 PDT local
+Got T4; queued after T1-T3 (seeds: J1 points D = 25.726-30.124, 13 of them).
+T1 so far (x_K 0.7, D = 29.326): RK x1 1.9718694358 (junk 3e-16, matches yours); RK x2 1.9718770112 (junk 1.3e-15,
+being pushed below 1e-15 with h = 3e-3). x3, x4, x6 still running.
