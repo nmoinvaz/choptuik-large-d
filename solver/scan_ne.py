@@ -10,8 +10,13 @@ env NE_SEED_MAX: re-solve only the seeds up to this D, then continue from those 
 env NE_JUNK_H: step of the junk solve's forward-difference Jacobian (default 1e-2; 1e-3 reaches the bottom of the flat
   valley at D ~ 29, where 1e-2 can stop 1e-7 short in Delta). A comma list (1e-2,3e-3,1e-3) is tried in turn.
 env NE_RK: multiply all RK4 step counts (x_K = 0.7 needs 4).
-env NE_NJUNK: the junk set is this many smallest singular directions, not s/s_max < 3e-14 (x_K 0.7 kc 23: 18). At a
-    continuation predictor the junk singular values smear above 3e-14 and the misfiled ones stall the junk solve.
+env NE_NJUNK: in the junk solve, the junk set is this many smallest singular directions, not s/s_max < 3e-14
+    (x_K 0.7 kc 23: 18). Off the valley bottom the junk singular values smear above 3e-14 and the misfiled ones stall
+    the junk solve (D = 30.98). The first NE solve keeps the cut.
+env NE_PRED_JUNK0=1: the continuation predictor extrapolates only the non-junk coordinates and keeps the junk
+    coordinates of the last solution (SVD there). The junk coordinates are not smooth in D (each point stops at a
+    different place in the flat valley: 0.1 apart between 30.32 and 30.58), so extrapolating them throws the
+    predictor 0.16 (linear) to 0.36 (quadratic) off in the junk directions.
 env NE_KS: horizon series terms (default 60; x_K = 0.5 needs ~120).
 env NE_SMOOTH=1: after each solve, fix the junk directions by smoothness (smooth_junk.py) and re-solve, until
   Delta changes by < 1e-10 (at most 8 rounds).
@@ -49,7 +54,8 @@ SMOOTH = os.environ.get("NE_SMOOTH", "0") == "1"
 if SMOOTH:
     OUTP = OUTP.replace("_D", "_sj_D")
 JUNK = int(os.environ.get("NE_JUNK", "0"))
-NJUNK = int(os.environ["NE_NJUNK"]) if os.environ.get("NE_NJUNK") else None   # fixed junk count (ne_solve n_junk)
+NJUNK = int(os.environ["NE_NJUNK"]) if os.environ.get("NE_NJUNK") else None   # fixed junk count in the junk solve
+PRED_JUNK0 = os.environ.get("NE_PRED_JUNK0", "0") == "1"
 if JUNK:
     OUTP = OUTP.replace("_D", "_js_D")
 RK = int(os.environ.get("NE_RK", "1"))
@@ -119,20 +125,36 @@ def extrap(Ds, vals, Dt):
     return o
 
 
+def predict(hist, Dt):
+    """Continuation predictor: polynomial extrapolation of the last solutions; with NE_PRED_JUNK0 the junk
+    coordinates (at the last solution) are kept instead of extrapolated."""
+    Ds = [r[0] for r in hist]
+    zp = extrap(Ds, [r[1] for r in hist], Dt)
+    if PRED_JUNK0:
+        Dl, zl = hist[-1][0], hist[-1][1]
+        _, Rl = make(Dl, zl[-1], nodes=NODES, threads=THREADS, kc=KC, Ks=KS)
+        _, J = Rl.jacobian(zl)
+        _, s, Vt = np.linalg.svd(J)
+        jm = np.arange(len(s)) >= len(s) - NJUNK if NJUNK else s / s[0] < 3e-14
+        dz = zp - zl
+        zp = zl + dz - Vt[jm].T @ (Vt[jm] @ dz)
+    return zp
+
+
 def solve(D, z0, lam_guess, t0, src, Delta_old=None):
     S, R = make(D, z0[-1], nodes=NODES, threads=THREADS, kc=KC, Ks=KS)
     if len(z0) != S.layout()[2]:            # a seed with other nodes (drop the outer node blocks) and/or kc = 23
         z0 = convert_seed(z0, D)
     if np.linalg.norm(R(z0)) > 1e-8:           # predictor or old seed far off: damped LM first, then NE polishes
         z0, _, _, _ = dd_solve(R, z0, maxjac=12, use_dd=False, stall=3)
-    z, info = ne_solve(R, z0, n_junk=NJUNK)
+    z, info = ne_solve(R, z0)
     if SMOOTH:                                   # alternate until Delta stops moving (3-5 rounds at D = 23)
         for _ in range(8):
             d_prev = z[-1]
             z, _, _ = smooth_junk(R, S, z)
             if np.linalg.norm(R(z)) > 1e-8:      # the junk move is only linearly null: its 2nd-order residual
                 z, _, _, _ = dd_solve(R, z, maxjac=20, use_dd=False, stall=4, cut=3e-14)   # LM that leaves junk alone
-            z, info = ne_solve(R, z, n_junk=NJUNK)
+            z, info = ne_solve(R, z)
             if abs(z[-1] - d_prev) < 1e-10:
                 break
     h_ = info["hist"][-1]
@@ -174,7 +196,7 @@ if __name__ == "__main__":                     # junk_solve's process pool re-im
         Dt = min(D + h, D_end)
         t0 = time.time()
         Ds = [r[0] for r in hist]
-        z, rec = solve(Dt, extrap(Ds, [r[1] for r in hist], Dt), extrap(Ds, [r[2] for r in hist], Dt), t0, "continuation")
+        z, rec = solve(Dt, predict(hist, Dt), extrap(Ds, [r[2] for r in hist], Dt), t0, "continuation")
         if not rec["ok"] or not rec["lam"]:
             h /= 2
             print(f"step to D={Dt:.4f} failed (|F| {rec['F']:.1e}, weak {rec['weak']:.1e}); h -> {h}", flush=True)
