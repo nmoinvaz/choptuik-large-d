@@ -6,6 +6,8 @@ spec_c.freeze_steps step counts).
     F = R(Zb)                           # Zb: (B, L) or (L,) float64 -> same shape as S.residual(Zb)
     F = R(Zb, threads=1, backend="auto")
     Fc = R.residual_complex(Zb_complex) # complex-step capable (generic backend)
+    F0, J = R.jacobian(z)               # exact Jacobian (forward-mode Dual arithmetic)
+    M = R.mode_matrix(z, lam)           # growth-mode matrix, as DSSSpec.mode_matrix(z, lam)
 
 backend="simd" (default) runs the best explicit SIMD kernels this CPU supports, picked at runtime
 (AVX-512, else AVX2 on x86_64, NEON on aarch64); "auto" runs plain loops compiled for the best
@@ -104,7 +106,7 @@ def kernel_args(S, folded=True):
 
 
 class RustResidual:
-    """Callable drop-in for S.residual (lam = 0)."""
+    """Callable drop-in for S.residual, plus the exact Jacobian and the growth-mode matrix."""
 
     def __init__(self, S, folded=True, threads=2, backend="simd", dedup=False, kernel_cls=None):
         self.folded = folded
@@ -121,6 +123,19 @@ class RustResidual:
         F = self.kernel.residual(Z2, self.threads if threads is None else threads, backend or self.backend,
                                  self.dedup if dedup is None else dedup)
         return F[0] if one else F
+
+    def jacobian(self, z, threads=None):
+        """Exact Jacobian dF/dz at z (forward-mode derivatives), (L, L), phase row and Delta column
+        included. Returns (F(z), J)."""
+        z = np.ascontiguousarray(z, dtype=np.float64)
+        J = self.kernel.jacobian(z, self.threads if threads is None else threads)
+        return self(z), J
+
+    def mode_matrix(self, z, lam, threads=None):
+        """Growth-mode matrix M(lam) at z, the drop-in for DSSSpec.mode_matrix(z, lam): (L-1, L-1)
+        for perturbations ~ exp(lam tau). det M(lam) = 0 at the unstable mode, gamma = 1 / lam."""
+        z = np.ascontiguousarray(z, dtype=np.float64)
+        return self.kernel.mode_matrix(z, float(lam), self.threads if threads is None else threads)
 
     def residual_complex(self, Zb, threads=None, dedup=None):
         Zb = np.asarray(Zb)

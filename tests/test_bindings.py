@@ -1,6 +1,6 @@
 """Bindings test: a synthetic production-sized configuration (36 folded tau points, 941 unknowns)
-must give bitwise the same residual on every backend this CPU runs. The matrices are random, so the
-values are only good for comparing backends.
+must give bitwise the same residual on every backend this CPU runs, and the exact Jacobian must match
+complex-step columns. The matrices are random, so the values are only good for these comparisons.
 
     pip install . && python tests/test_bindings.py [--time]
 """
@@ -61,6 +61,21 @@ def main():
     fc = k.residual_complex(zb.astype(complex) + 1e-20j)
     assert np.allclose(fc.real, want, rtol=1e-10, atol=0)
     print("ok: all backends bitwise equal")
+    # exact Jacobian (forward mode) against complex-step columns, and the growth-mode matrix
+    z = np.ascontiguousarray(zb[0])
+    J = k.jacobian(z, 2)
+    L = z.size
+    assert J.shape == (L, L)
+    cols = list(range(0, L, 37)) + [L - 1]
+    zc = np.repeat(z[None, :].astype(complex), len(cols), axis=0)
+    zc[np.arange(len(cols)), cols] += 1e-30j
+    cs = (k.residual_complex(zc).imag / 1e-30).T
+    assert np.allclose(J[:, cols], cs, rtol=0, atol=1e-9 * np.abs(J).max()), "jacobian vs complex step"
+    M0 = k.mode_matrix(z, 0.0, 2)
+    assert np.array_equal(M0, J[:-1, :-1]), "mode matrix at lam = 0 is the Jacobian block"
+    M1 = k.mode_matrix(z, 0.5, 2)
+    assert M1.shape == (L - 1, L - 1) and not np.array_equal(M1, M0)
+    print("ok: jacobian matches complex step; mode matrix consistent")
     if "--time" in sys.argv:
         for be in backends:
             t = []

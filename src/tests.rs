@@ -1,9 +1,11 @@
 //! Backend equivalence. Every backend performs the same operations in the same order, so each one
-//! this CPU can run must reproduce the baseline plain-loop residual bit for bit.
+//! this CPU can run must reproduce the baseline plain-loop residual bit for bit. Also the forward-mode
+//! (`Dual`) linearization: its values, its derivatives against the complex step, and the growth-mode
+//! shift.
 
-use crate::dispatch::{self, with_exec, Exec, Isa, Target};
+use crate::dispatch::{self, with_exec, with_plain_exec, Exec, Isa, Target};
 use crate::model::Ctx;
-use crate::scalar::Fld;
+use crate::scalar::{Dual, Fld};
 use num_complex::Complex64;
 
 /// Deterministic xorshift values in [-1, 1).
@@ -73,6 +75,7 @@ fn test_ctx<const N: usize>(nh: usize, rng: &mut Rng) -> Ctx<N> {
         offs,
         len,
         phase_idx: 3,
+        lam: 0.0,
     }
 }
 
@@ -188,5 +191,99 @@ fn backend_names() {
     assert!(Target::parse("bogus").is_err());
     for t in Target::all() {
         assert_eq!(Target::parse(&t.name()).unwrap(), t, "{}", t.name());
+    }
+}
+
+fn first_row<const N: usize>(ctx: &Ctx<N>, zb: &[f64]) -> Vec<f64> {
+    zb[..ctx.len].to_vec()
+}
+
+/// The value part of the Dual residual is the f64 residual, bit for bit, on every plain backend.
+#[test]
+fn dual_value_matches_f64() {
+    let mut rng = Rng(0x6a09_e667_f3bc_c908);
+    let ctx = test_ctx::<40>(36, &mut rng);
+    let zb = test_batch(&ctx, &mut rng);
+    let mut want = vec![0.0; zb.len()];
+    dispatch::residual(Target::plain(Isa::Baseline).unwrap(), &ctx, &zb, &mut want, None, false);
+    let zd: Vec<Dual> = zb.iter().map(|&v| Dual::new(v, 0.5 * rng.next())).collect();
+    for t in Target::all().into_iter().filter(|t| !t.is_simd()) {
+        let mut got = vec![Dual::new(0.0, 0.0); zd.len()];
+        dispatch::residual_plain(t, &ctx, &zd, &mut got, None, false);
+        let v: Vec<f64> = got.iter().map(|x| x.v).collect();
+        assert_bits_eq(&want, &v, &format!("dual value {}", t.name()));
+    }
+}
+
+/// The forward-mode Jacobian agrees with complex-step columns, and threads do not change it.
+#[test]
+fn jacobian_matches_complex_step() {
+    let mut rng = Rng(0xbb67_ae85_84ca_a73b);
+    let ctx = test_ctx::<40>(36, &mut rng);
+    let z = first_row(&ctx, &test_batch(&ctx, &mut rng));
+    let l = ctx.len;
+    let t = Target::best_plain();
+    let jac = dispatch::linearization(t, &ctx, &z, 0.0, true, None);
+    let pool = rayon::ThreadPoolBuilder::new().num_threads(2).build().unwrap();
+    assert_bits_eq(&jac, &dispatch::linearization(t, &ctx, &z, 0.0, true, Some(&pool)), "jacobian, 2 threads");
+    let scale = jac.iter().fold(0.0f64, |m, v| m.max(v.abs()));
+    let h = 1e-30;
+    let cols: Vec<usize> = (0..l).step_by(7).chain([l - 1]).collect();
+    let mut zc = Vec::with_capacity(cols.len() * l);
+    for &j in &cols {
+        zc.extend(z.iter().enumerate().map(|(i, &v)| Complex64::new(v, if i == j { h } else { 0.0 })));
+    }
+    let mut fc = vec![Complex64::new(0.0, 0.0); zc.len()];
+    dispatch::residual_plain(t, &ctx, &zc, &mut fc, None, false);
+    for (k, &j) in cols.iter().enumerate() {
+        for i in 0..l {
+            let cs = fc[k * l + i].im / h;
+            let fd = jac[i * l + j];
+            assert!((cs - fd).abs() <= 1e-9 * scale, "J[{i},{j}]: dual {fd:e} vs complex step {cs:e}");
+        }
+    }
+}
+
+/// The mode matrix at lam = 0 is the Jacobian without the phase row and the Delta column.
+#[test]
+fn mode_matrix_at_zero_is_jacobian() {
+    let mut rng = Rng(0x3c6e_f372_fe94_f82b);
+    let ctx = test_ctx::<40>(36, &mut rng);
+    let z = first_row(&ctx, &test_batch(&ctx, &mut rng));
+    let (l, m) = (ctx.len, ctx.len - 1);
+    let t = Target::best_plain();
+    let jac = dispatch::linearization(t, &ctx, &z, 0.0, true, None);
+    let mm = dispatch::linearization(t, &ctx, &z, 0.0, false, None);
+    let cut: Vec<f64> = (0..m).flat_map(|i| jac[i * l..i * l + m].to_vec()).collect();
+    assert_bits_eq(&cut, &mm, "mode matrix at lam = 0");
+    let shifted = dispatch::linearization(t, &ctx, &z, 0.7, false, None);
+    assert!(shifted.iter().zip(&mm).any(|(a, b)| a != b), "lam has no effect");
+}
+
+/// The growth-mode shift on its own: the tangent of d/dtau gains lam * tangent, and the tangent of
+/// the periodic solve satisfies (A0 + lam) f_d = r_d - (omega_d D + diag(kappa_d)) f_v.
+#[test]
+fn growth_mode_shift() {
+    let mut rng = Rng(0xa54f_f53a_5f1d_36f1);
+    let mut ctx = test_ctx::<40>(36, &mut rng);
+    ctx.lam = 0.37;
+    let nh = ctx.nh;
+    let mut kappa = Fld::<Dual, 40>([Dual::new(0.0, 0.0); 40]);
+    let mut r = Fld::<Dual, 40>([Dual::new(0.0, 0.0); 40]);
+    for j in 0..nh {
+        kappa.0[j] = Dual::new(1.0 + 0.3 * rng.next(), 0.2 * rng.next());
+        r.0[j] = Dual::new(rng.next(), rng.next());
+    }
+    let omega = Dual::new(2.0 * std::f64::consts::PI / 3.44, 0.1);
+    let x = with_plain_exec!(Target::best_plain(), e => e.solve_periodic(&ctx, &kappa, &r, omega, &mut Vec::new()));
+    // value: (omega_v D + diag kappa_v) x_v = r_v;  tangent: (omega_v D + diag kappa_v + lam) x_d
+    //        + (omega_d D + diag kappa_d) x_v = r_d, with (f D)[j] = sum_i f_i d_odd[i][j]
+    let dv = |f: &dyn Fn(usize) -> f64, j: usize| (0..nh).map(|i| f(i) * ctx.d_odd[i].0[j]).sum::<f64>();
+    for j in 0..nh {
+        let val = omega.v * dv(&|i| x.0[i].v, j) + kappa.0[j].v * x.0[j].v;
+        assert!((val - r.0[j].v).abs() < 1e-9, "value equation {j}: {}", val - r.0[j].v);
+        let tan = omega.v * dv(&|i| x.0[i].d, j) + (kappa.0[j].v + ctx.lam) * x.0[j].d
+            + omega.d * dv(&|i| x.0[i].v, j) + kappa.0[j].d * x.0[j].v;
+        assert!((tan - r.0[j].d).abs() < 1e-9, "tangent equation {j}: {}", tan - r.0[j].d);
     }
 }

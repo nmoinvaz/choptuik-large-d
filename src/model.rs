@@ -16,7 +16,7 @@
 //! decouples into a 36x36 system).
 
 use crate::dispatch::Exec;
-use crate::scalar::{zero_state, Fld, Sc, State};
+use crate::scalar::{zero_state, Dual, Fld, Sc, State};
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 // ---------------------------------------------------------------------------------------------
@@ -75,6 +75,7 @@ impl<T: Sc, const N: usize> Fld<T, N> {
 // ---------------------------------------------------------------------------------------------
 // context
 // ---------------------------------------------------------------------------------------------
+#[derive(Clone)]
 pub struct Ctx<const N: usize> {
     /// number of logical tau points stored (36 folded, 72 full)
     pub nh: usize,
@@ -103,6 +104,9 @@ pub struct Ctx<const N: usize> {
     pub offs: Vec<usize>,
     pub len: usize,
     pub phase_idx: usize,
+    /// Growth rate of the perturbation mode (perturbations ~ exp(lam tau)). Only tangent scalars
+    /// (`Dual`) see it: their tau-derivatives become D + lam on the tangent. 0 for the residual.
+    pub lam: f64,
 }
 
 impl<const N: usize> Ctx<N> {
@@ -246,8 +250,13 @@ impl<T: Sc, const N: usize> Backend<T, N> for Generic {
             let cx = ((c * n1) * (a2 - 1.0)) * ix;
             let ax = (a * ((p * p + m * m) + (one - a2) * n1)) * i2x;
             let pc = ((c * n) * (p + m)) * i2x;
-            let dpj = dp.0[j] * omega;
-            let dmj = dm.0[j] * omega;
+            let mut dpj = dp.0[j] * omega;
+            let mut dmj = dm.0[j] * omega;
+            if T::TANGENT && ctx.lam != 0.0 {
+                // perturbation mode: d/dtau -> d/dtau + lam on the tangent (DSS.D with lam)
+                dpj = dpj + p.tangent() * ctx.lam;
+                dmj = dmj + m.tangent() * ctx.lam;
+            }
             f[0].0[j] = (((-dpj + cx * p) - (c * p) * ix) + pc) / (xt - c);
             f[1].0[j] = (((-dmj - cx * m) + (c * m) * ix) - pc) / (xt + c);
             f[2].0[j] = ax;
@@ -326,7 +335,15 @@ impl<T: Sc, const N: usize> Backend<T, N> for Generic {
 fn dtau<T: Sc, B: Backend<T, N>, const N: usize>(ctx: &Ctx<N>, f: &Fld<T, N>, omega: T) -> Fld<T, N> {
     let mut o = Fld::zero();
     B::matvec(&ctx.d_odd, &f.0[..ctx.nh], &mut o);
-    o.scale_t(omega)
+    let o = o.scale_t(omega);
+    if T::TANGENT && ctx.lam != 0.0 {
+        let mut o = o;
+        for j in 0..N {
+            o.0[j] = o.0[j] + f.0[j].tangent() * ctx.lam;
+        }
+        return o;
+    }
+    o
 }
 
 #[inline(always)]
@@ -379,6 +396,9 @@ pub fn solve_periodic<T: Sc, B: Backend<T, N>, const N: usize>(
     omega: T,
     a: &mut Vec<Fld<T, N>>,
 ) -> Fld<T, N> {
+    if T::TANGENT {
+        return solve_periodic_tangent(ctx, kappa, r, omega);
+    }
     let nh = ctx.nh;
     a.clear();
     for i in 0..nh {
@@ -391,6 +411,60 @@ pub fn solve_periodic<T: Sc, B: Backend<T, N>, const N: usize>(
         a.push(col);
     }
     B::lu_solve(a, r, nh)
+}
+
+/// `solve_periodic` for tangent scalars. With A0 = omega_v D + diag(kappa_v):
+///   value:    A0 f_v = r_v                                     (bitwise the f64 plain-loop solve)
+///   tangent:  (A0 + lam) f_d = r_d - (omega_d D + diag(kappa_d)) f_v
+/// which is the first-order part of DSS.solve_periodic's perturbation rows (lam on the diagonal,
+/// lam * background added to the right-hand side).
+#[inline(always)]
+fn solve_periodic_tangent<T: Sc, const N: usize>(ctx: &Ctx<N>, kappa: &Fld<T, N>, r: &Fld<T, N>, omega: T) -> Fld<T, N> {
+    let nh = ctx.nh;
+    let (om_v, om_d) = omega.parts();
+    let split = |f: &Fld<T, N>| {
+        let (mut v, mut d) = (Fld::<f64, N>::zero(), Fld::<f64, N>::zero());
+        for j in 0..N {
+            let (a, b) = f.0[j].parts();
+            v.0[j] = a;
+            d.0[j] = b;
+        }
+        (v, d)
+    };
+    let (k_v, k_d) = split(kappa);
+    let (r_v, r_d) = split(r);
+    let mut cols = Vec::with_capacity(nh);
+    let build = |cols: &mut Vec<Fld<f64, N>>, shift: f64| {
+        cols.clear();
+        for i in 0..nh {
+            let mut col = Fld::<f64, N>::zero();
+            let dr = &ctx.d_odd[i];
+            for j in 0..N {
+                col.0[j] = om_v * dr.0[j];
+            }
+            col.0[i] = col.0[i] + k_v.0[i];
+            if shift != 0.0 {
+                col.0[i] = col.0[i] + shift;
+            }
+            cols.push(col);
+        }
+    };
+    build(&mut cols, 0.0);
+    let f_v = <Generic as Backend<f64, N>>::lu_solve(&mut cols, &r_v, nh);
+    // right-hand side of the tangent system
+    let mut df = Fld::<f64, N>::zero();
+    <Generic as Backend<f64, N>>::matvec(&ctx.d_odd, &f_v.0[..nh], &mut df);
+    let mut rhs = Fld::<f64, N>::zero();
+    for j in 0..nh {
+        rhs.0[j] = r_d.0[j] - om_d * df.0[j] - k_d.0[j] * f_v.0[j];
+    }
+    build(&mut cols, ctx.lam);
+    let f_d = <Generic as Backend<f64, N>>::lu_solve(&mut cols, &rhs, nh);
+    let mut out = Fld::<T, N>::zero();
+    for j in 0..N {
+        out.0[j] = T::from_parts(f_v.0[j], f_d.0[j]);
+    }
+    out
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -838,4 +912,82 @@ pub fn residual_batch<T: Sc, E: Exec<T, N>, const N: usize>(
             zb.par_chunks(l).zip(out.par_chunks_mut(l)).for_each(|(z, o)| row(z, o, true));
         }),
     }
+}
+
+/// Exact linearization at z by forward-mode differentiation: one `Dual` evaluation of block b for
+/// each unknown block b depends on (`block_input_range`), plus, for the Jacobian, one per block for
+/// Delta. Returns a row-major square matrix:
+///
+/// * `with_delta = true`: the L x L Jacobian dF/dz of `residual_batch`, phase row and Delta column
+///   included (`ctx.lam` should be 0).
+/// * `with_delta = false`: the (L-1) x (L-1) mode matrix M(lam) of DSSSpec.mode_matrix, the
+///   linearization for perturbations ~ exp(lam tau) with lam = `ctx.lam` (no phase row, no Delta
+///   column). Its determinant vanishes at the growth rate of the unstable mode, gamma = 1 / lam.
+///
+/// Each block's mismatch is spec(s_b(inputs) - phys(node_tgt)), so its derivative with respect to the
+/// target node is the constant -spec o phys of each field (the identity for the real, orthogonal
+/// Fourier matrices), added directly rather than differentiated.
+pub fn linearization<E: Exec<Dual, N>, const N: usize>(
+    ctx: &Ctx<N>,
+    z: &[f64],
+    with_delta: bool,
+    pool: Option<&rayon::ThreadPool>,
+    e: &E,
+) -> Vec<f64> {
+    use rayon::prelude::*;
+    let l = ctx.len;
+    let bl = ctx.block_len();
+    let nb = ctx.nblocks();
+    let kn = ctx.nodes.len();
+    let m = if with_delta { l } else { l - 1 };
+    let mut tasks: Vec<(usize, usize)> = Vec::new(); // (block, unknown)
+    for b in 0..nb {
+        let (lo, hi) = block_input_range(ctx, b);
+        tasks.extend((lo..hi).map(|j| (b, j)));
+        if with_delta {
+            tasks.push((b, l - 1));
+        }
+    }
+    let zd0: Vec<Dual> = z.iter().map(|&v| Dual::new(v, 0.0)).collect();
+    let column = |&(b, j): &(usize, usize)| {
+        let mut zd = zd0.clone();
+        zd[j].d = 1.0;
+        let mut ob = vec![Dual::new(0.0, 0.0); bl];
+        e.block(ctx, &zd, b, &mut ob);
+        ob.iter().map(|x| x.d).collect::<Vec<f64>>()
+    };
+    let cols: Vec<Vec<f64>> = match pool {
+        None => tasks.iter().map(column).collect(),
+        Some(p) => p.install(|| tasks.par_iter().map(column).collect()),
+    };
+    let mut a = vec![0.0f64; m * m];
+    for (&(b, j), col) in tasks.iter().zip(&cols) {
+        for (r, v) in col.iter().enumerate() {
+            a[(b * bl + r) * m + j] = *v;
+        }
+    }
+    // spec o phys for the odd and even fields: sp[k'][k] = sum_j phys[k][j] spec_t[k'][j]
+    let sp = |phys: &[Fld<f64, N>], spec_t: &[Fld<f64, N>]| -> Vec<Vec<f64>> {
+        spec_t
+            .iter()
+            .map(|st| phys.iter().map(|ph| (0..ctx.nh).map(|j| ph.0[j] * st.0[j]).sum::<f64>()).collect())
+            .collect()
+    };
+    let (sp_odd, sp_even) = (sp(&ctx.phys_odd, &ctx.spec_odd_t), sp(&ctx.phys_even, &ctx.spec_even_t));
+    let (no, ne) = (ctx.no, ctx.ne);
+    let fields = [(0, &sp_odd), (no, &sp_odd), (2 * no, &sp_even), (2 * no + ne, &sp_even)];
+    for b in 0..nb {
+        let tgt = ctx.offs[2 + 4 * b.min(kn - 1)];
+        for &(off, spq) in &fields {
+            for (r, row) in spq.iter().enumerate() {
+                for (k, v) in row.iter().enumerate() {
+                    a[(b * bl + off + r) * m + tgt + off + k] -= *v;
+                }
+            }
+        }
+    }
+    if with_delta {
+        a[(l - 1) * m + ctx.phase_idx] = 1.0;
+    }
+    a
 }

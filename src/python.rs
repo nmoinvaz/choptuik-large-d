@@ -5,7 +5,7 @@ use crate::model::{Backend, Ctx, Generic};
 use crate::scalar::{Fld, Sc};
 use num_complex::Complex64;
 use numpy::ndarray::Array2;
-use numpy::{IntoPyArray, PyArray2, PyReadonlyArray2, PyUntypedArrayMethods};
+use numpy::{IntoPyArray, PyArray2, PyReadonlyArray1, PyReadonlyArray2, PyUntypedArrayMethods};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use std::collections::HashMap;
@@ -122,6 +122,7 @@ fn build_ctx<const N: usize>(p: &Params) -> PyResult<Ctx<N>> {
         offs,
         len,
         phase_idx: p.phase_idx,
+        lam: 0.0,
     })
 }
 
@@ -260,6 +261,20 @@ impl Kernel {
         Ok(Array2::from_shape_vec((b, self.len), out).unwrap().into_pyarray(py))
     }
 
+    /// Exact Jacobian dF/dz at z (forward-mode `Dual` arithmetic, plain loops for the best
+    /// instruction set): z (L,) float64 -> (L, L), phase row and Delta column included.
+    #[pyo3(signature = (z, threads=1))]
+    fn jacobian<'py>(&self, py: Python<'py>, z: PyReadonlyArray1<'py, f64>, threads: usize) -> PyResult<Bound<'py, PyArray2<f64>>> {
+        self.linearize(py, z, 0.0, true, threads)
+    }
+
+    /// Growth-mode matrix M(lam) at z, as DSSSpec.mode_matrix(z, lam) (perturbations ~ exp(lam tau)):
+    /// z (L,) float64 -> (L-1, L-1). det M(lam) = 0 at the unstable mode's growth rate, gamma = 1/lam.
+    #[pyo3(signature = (z, lam, threads=1))]
+    fn mode_matrix<'py>(&self, py: Python<'py>, z: PyReadonlyArray1<'py, f64>, lam: f64, threads: usize) -> PyResult<Bound<'py, PyArray2<f64>>> {
+        self.linearize(py, z, lam, false, threads)
+    }
+
     /// Debug: horizon-series coefficients (P, M, A, C) of one row z, shape (4, Ks+1, n_tau).
     fn debug_ssh_series<'py>(&self, py: Python<'py>, z: PyReadonlyArray2<'py, f64>) -> PyResult<Bound<'py, PyArray2<f64>>> {
         let zz = z.as_slice().map_err(|_| PyValueError::new_err("z must be C-contiguous"))?;
@@ -331,6 +346,24 @@ impl Kernel {
             AnyCtx::F40(c) => c.nh,
             AnyCtx::F72(c) => c.nh,
         }
+    }
+}
+
+impl Kernel {
+    fn linearize<'py>(&self, py: Python<'py>, z: PyReadonlyArray1<'py, f64>, lam: f64, with_delta: bool, threads: usize) -> PyResult<Bound<'py, PyArray2<f64>>> {
+        let zz = z.as_slice().map_err(|_| PyValueError::new_err("z must be contiguous"))?;
+        if zz.len() != self.len {
+            return Err(PyValueError::new_err(format!("expected z of length {}, got {}", self.len, zz.len())));
+        }
+        let m = if with_delta { self.len } else { self.len - 1 };
+        let p = if threads > 1 { Some(pool(threads)) } else { None };
+        let t = Target::best_plain();
+        let ctx = &self.ctx;
+        let a = py.detach(|| match ctx {
+            AnyCtx::F40(c) => dispatch::linearization(t, c, zz, lam, with_delta, p.as_deref()),
+            AnyCtx::F72(c) => dispatch::linearization(t, c, zz, lam, with_delta, p.as_deref()),
+        });
+        Ok(Array2::from_shape_vec((m, m), a).unwrap().into_pyarray(py))
     }
 }
 

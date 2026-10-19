@@ -433,3 +433,19 @@ pub fn residual_plain<T: Sc, const N: usize>(
 ) {
     with_plain_exec!(t, e => model::residual_batch(ctx, zb, out, pool, dedup, &e))
 }
+
+/// Exact Jacobian (`with_delta = true`, lam = 0) or growth-mode matrix M(lam) (`with_delta = false`)
+/// at z, by forward-mode differentiation with plain loops for `t`'s instruction set
+/// (`model::linearization`). Row-major, L x L or (L-1) x (L-1).
+pub fn linearization<const N: usize>(
+    t: Target,
+    ctx: &Ctx<N>,
+    z: &[f64],
+    lam: f64,
+    with_delta: bool,
+    pool: Option<&rayon::ThreadPool>,
+) -> Vec<f64> {
+    let mut c = ctx.clone();
+    c.lam = lam;
+    with_plain_exec!(t, e => model::linearization::<_, N>(&c, z, with_delta, pool, &e))
+}

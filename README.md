@@ -40,7 +40,29 @@ F = R(Zb)                                     # (B, 941) -> (B, 941), same as S.
 F = R(Zb, backend="avx2")                     # force a backend for this call
 F = R(Zb, dedup=True)                         # block reuse for finite-difference batches
 Fc = R.residual_complex(Zb.astype(complex))   # complex-step derivatives
+F0, J = R.jacobian(z)                         # exact Jacobian, (941, 941)
+M = R.mode_matrix(z, lam)                     # growth-mode matrix, as DSSSpec.mode_matrix(z, lam)
 ```
+
+## Exact Jacobian and growth-mode matrix
+
+`jacobian` and `mode_matrix` differentiate the residual in forward mode with a dual-number scalar
+(`scalar::Dual`): one evaluation of block b per unknown that block depends on, run on rayon threads.
+The value part reproduces the f64 residual bit for bit; the tangent is the exact derivative, with no
+finite-difference step.
+
+`mode_matrix(z, lam)` is the linearisation for perturbations ~ exp(lam τ): every τ-derivative of the
+perturbation gains `+ lam`, as in `DSS.D` and `DSS.solve_periodic` with `lam` set. Its determinant
+changes sign at the growth rate of the unstable mode, and the critical exponent is γ = 1/λ.
+
+Checked against the Python reference (`spec_c.jacobian_cs`, `spec_c.mode_matrix_cs`) at D = 24.235:
+
+| | Python | Rust | Agreement |
+|---|---|---|---|
+| Jacobian | 3.5 s | 0.16 s | 1.7e-10 relative |
+| M(λ) | 3.0 s | 0.25 s | 1e-10 relative |
+| Growth rate λ (det root) | ~4 min per D | ~3.5 s per D | 5e-10 at D = 11.06, 13.98, 24.24 |
+
 
 ## Build and test
 
@@ -71,8 +93,9 @@ One residual of a synthetic production-sized configuration (`tests/test_bindings
 
 ```
 src/
-├── model.rs        residual blocks, centre and horizon series, RK4, LU, plain-loop backend
-├── scalar.rs       f64 / Complex64 scalar trait, 64-byte aligned field type
+├── model.rs        residual blocks, centre and horizon series, RK4, LU, plain-loop backend,
+│                   forward-mode linearization (Jacobian, growth-mode matrix)
+├── scalar.rs       f64 / Complex64 / Dual scalar trait, 64-byte aligned field type
 ├── dispatch.rs     runtime instruction-set detection and target_feature entry points
 ├── avx512.rs       hand-written AVX-512 backend
 ├── simd/
@@ -87,6 +110,7 @@ tests/              bindings test
 
 ## Limits
 
-- The γ perturbation mode (growth rate λ ≠ 0) is not ported yet, so the wrapper refuses it.
+- `jacobian` and `mode_matrix` use plain loops (no explicit SIMD) and the parity-folded layout's
+  generic path; the residual itself uses the SIMD backends.
 - Only the long-horizon-series variant with frozen RK4 step counts is ported.
 - Complex-step evaluation uses plain loops, without explicit SIMD.

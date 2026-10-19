@@ -1,11 +1,13 @@
-//! Scalar abstraction (f64 and Complex64) and the 64-byte aligned per-tau-point field type.
+//! Scalar abstraction (f64, Complex64 and the forward-mode `Dual`) and the 64-byte aligned
+//! per-tau-point field type.
 
 use num_complex::Complex64;
 use std::fmt::Debug;
 use std::ops::{Add, Div, Index, IndexMut, Mul, Neg, Sub};
 
 /// Scalar type the residual is generic over. All operations used by the residual are analytic
-/// (+, -, *, /), so instantiating with Complex64 gives a complex-step derivative.
+/// (+, -, *, /), so instantiating with Complex64 gives a complex-step derivative and with `Dual` an
+/// exact forward-mode derivative.
 pub trait Sc:
     Copy
     + Send
@@ -32,6 +34,24 @@ pub trait Sc:
     fn mag(self) -> f64;
     /// Exact bit pattern (for de-duplicating identical block inputs within a batch).
     fn push_bits(self, v: &mut Vec<u64>);
+
+    /// True for tangent scalars (`Dual`). Only those carry the growth-mode shift: with `Ctx::lam`
+    /// set, every tau-derivative of the tangent gains `lam * tangent` (perturbations ~ exp(lam tau)).
+    const TANGENT: bool = false;
+    /// The tangent part, with zero value ((0, d) for `Dual`; zero for the other scalars).
+    #[inline(always)]
+    fn tangent(self) -> Self {
+        Self::zero()
+    }
+    /// (value, tangent) of a tangent scalar.
+    #[inline(always)]
+    fn parts(self) -> (f64, f64) {
+        unreachable!("parts() is only called for tangent scalars")
+    }
+    #[inline(always)]
+    fn from_parts(_v: f64, _d: f64) -> Self {
+        unreachable!("from_parts() is only called for tangent scalars")
+    }
 }
 
 impl Sc for f64 {
@@ -87,6 +107,128 @@ impl Sc for Complex64 {
     fn push_bits(self, v: &mut Vec<u64>) {
         v.push(self.re.to_bits());
         v.push(self.im.to_bits());
+    }
+}
+
+/// Forward-mode dual number v + d ε (ε² = 0). The value part is computed with exactly the f64
+/// operations of the plain-loop path, so it reproduces the f64 residual bit for bit; the tangent part
+/// is the exact directional derivative.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Dual {
+    pub v: f64,
+    pub d: f64,
+}
+
+impl Dual {
+    #[inline(always)]
+    pub fn new(v: f64, d: f64) -> Self {
+        Dual { v, d }
+    }
+}
+
+impl Add for Dual {
+    type Output = Dual;
+    #[inline(always)]
+    fn add(self, o: Dual) -> Dual {
+        Dual::new(self.v + o.v, self.d + o.d)
+    }
+}
+impl Sub for Dual {
+    type Output = Dual;
+    #[inline(always)]
+    fn sub(self, o: Dual) -> Dual {
+        Dual::new(self.v - o.v, self.d - o.d)
+    }
+}
+impl Mul for Dual {
+    type Output = Dual;
+    #[inline(always)]
+    fn mul(self, o: Dual) -> Dual {
+        Dual::new(self.v * o.v, self.v.mul_add(o.d, self.d * o.v))
+    }
+}
+impl Div for Dual {
+    type Output = Dual;
+    #[inline(always)]
+    fn div(self, o: Dual) -> Dual {
+        let q = self.v / o.v;
+        Dual::new(q, (self.d - q * o.d) / o.v)
+    }
+}
+impl Neg for Dual {
+    type Output = Dual;
+    #[inline(always)]
+    fn neg(self) -> Dual {
+        Dual::new(-self.v, -self.d)
+    }
+}
+impl Mul<f64> for Dual {
+    type Output = Dual;
+    #[inline(always)]
+    fn mul(self, a: f64) -> Dual {
+        Dual::new(self.v * a, self.d * a)
+    }
+}
+impl Div<f64> for Dual {
+    type Output = Dual;
+    #[inline(always)]
+    fn div(self, a: f64) -> Dual {
+        Dual::new(self.v / a, self.d / a)
+    }
+}
+impl Add<f64> for Dual {
+    type Output = Dual;
+    #[inline(always)]
+    fn add(self, a: f64) -> Dual {
+        Dual::new(self.v + a, self.d)
+    }
+}
+impl Sub<f64> for Dual {
+    type Output = Dual;
+    #[inline(always)]
+    fn sub(self, a: f64) -> Dual {
+        Dual::new(self.v - a, self.d)
+    }
+}
+
+impl Sc for Dual {
+    const TANGENT: bool = true;
+    #[inline(always)]
+    fn zero() -> Self {
+        Dual::new(0.0, 0.0)
+    }
+    #[inline(always)]
+    fn re(x: f64) -> Self {
+        Dual::new(x, 0.0)
+    }
+    #[inline(always)]
+    fn fma_r(self, a: f64, acc: Self) -> Self {
+        Dual::new(self.v.mul_add(a, acc.v), self.d.mul_add(a, acc.d))
+    }
+    #[inline(always)]
+    fn fma(self, b: Self, acc: Self) -> Self {
+        Dual::new(self.v.mul_add(b.v, acc.v), self.v.mul_add(b.d, self.d.mul_add(b.v, acc.d)))
+    }
+    #[inline(always)]
+    fn mag(self) -> f64 {
+        self.v.abs()
+    }
+    #[inline(always)]
+    fn push_bits(self, v: &mut Vec<u64>) {
+        v.push(self.v.to_bits());
+        v.push(self.d.to_bits());
+    }
+    #[inline(always)]
+    fn tangent(self) -> Self {
+        Dual::new(0.0, self.d)
+    }
+    #[inline(always)]
+    fn parts(self) -> (f64, f64) {
+        (self.v, self.d)
+    }
+    #[inline(always)]
+    fn from_parts(v: f64, d: f64) -> Self {
+        Dual::new(v, d)
     }
 }
 
