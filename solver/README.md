@@ -35,6 +35,7 @@ Install the kernel first (`pip install .` at the repo root), then run scripts fr
 | `fit_inf.py`, `formula_fit.py`, `fit_gamma.py`, `deriv_diag.py`, `plot_convergence.py` | Fits, hold-out tests, slope diagnostics, figure |
 | `plot_delta.py` | The Δ(D) graph `delta.svg` (hand-written SVG, light and dark): `cd data && python3 ../plot_delta.py` |
 | `notes.md` | Lab notebook: every finding, check and correction, in order |
+| `CONTEXT.md` | Handoff summary: what is established, what is open, data files, how to run, next steps |
 
 ## Data (`data/`, `seeds/`)
 
