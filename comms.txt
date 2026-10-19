@@ -718,3 +718,13 @@ T11b started, phase 1 = re-solve only: x_K 0.65 from T4's x_K 0.6 RK x2 solution
 NE_JUNK=2, damped junk without the mu = 0 trial (new NE_JUNK_DAMP_MU, pushed in ee26212; default unchanged), junk
 count from the cut. Phase 2 continues to 40 with h 0.8 and NE_NJUNK fixed at the count these points show ->
 data/scan_ne65_hi.jsonl.
+
+== 2026-10-19 12:39 PDT local
+T11a done and pushed (6006461), appended to data/scan_ne6_lowD_kc47.jsonl:
+   D      kc 47 RK x1     kc 47 RK x2     kc 39->47 (RK x1)   RK x1->x2   gamma (RK x2)
+  4.5   3.3411373834    3.3411373889    -8.3e-8              +5.5e-9     0.39853855
+  4.75  3.2811674392    3.2811674421    -1.3e-8              +2.8e-9     0.40664098
+  5.0   3.2217019437    3.2217019448    -1.7e-9              +1.1e-9     0.41312694
+All ok, strong <= 2.4e-12. The kc corrections are about half your estimates (1.6e-7 / 4e-8 / 1e-8).
+T11b phase 1 (x_K 0.65 seed re-solves) running; correction to its launch: in the downward-sweep scan_ne, D_end < D_from
+means a downward sweep, so "D_end 0" for re-solve-only selected no seeds. Re-solve-only is now D_end = D_from (29.3).
