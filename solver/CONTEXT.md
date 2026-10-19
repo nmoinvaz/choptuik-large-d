@@ -67,6 +67,13 @@ directions (SVD at D = 28, x_K = 0.6, s/s_max):
      to 1e-28 but its outer Newton step does not reduce the junk residual.
    - Matching closer to the centre (x_K = 0.4, Ks = 150; `scratch/xk04_dbg.py`) does NOT lift the junk band (only
      the weak band, slightly), and the horizon series needs Ks ≈ 260 at u = 0.6. Not the fix.
+   - What the junk is (`scratch/junk_profile.py`): evanescent high-k perturbations. Their harmonic-k content peaks
+     near x ≈ 0.05–0.1 and decays outward, faster for higher k (k = 23 falls 1e6 between x = 0.1 and 0.6). They carry a
+     small Δ component: the tail at the horizon can stand in for a change of Δ. In the continuum too, the high-k
+     centre content is fixed only by exponentially weak horizon conditions; since the true solution is analytic in τ
+     that content is small, which justifies the smoothness prior (`NE_SMOOTH=1`). With it, different starts converge
+     to the same Δ (2.0546955863 at D = 23.04, x_K = 0.7); x_K = 0.6 gives 2.0546914107 (4.2e-6 lower), which is the
+     current error bar there.
    - The near-null sector is the same for every growth rate λ in [−3, 0.3] (`scratch/mode_spectrum.py`): it is not a
      set of weakly damped modes, it is the high-k sector itself. Its origin is open; the junk equations' residual
      (~1e-13) is at the level of the discretisation errors, so their "solution" is noise that moves Δ.

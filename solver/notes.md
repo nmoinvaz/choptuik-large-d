@@ -240,3 +240,12 @@ light ray. Note the factor √(2π) between the simulation's field (G = 1) and t
   junk, directions there). 4.2e-6 apart: the prior is not the same constraint in both setups. scan_ne NE_SMOOTH now
   iterates to |dDelta| < 1e-10.
 - x_K = 0.6 continuation stopped at D = 34.94 (steps shrinking, |F| 4.7e-8).
+- junk_profile.py (D = 23.04, x_K = 0.6): the junk directions are EVANESCENT high-k perturbations: their harmonic-k
+  content peaks at x ~ 0.05-0.1 and decays outward, faster for higher k (k = 23: 3e-2 at x = 0.1, 2e-5 at 0.3,
+  5e-8 at 0.6; k = 11: 1e-1 -> 2e-4). They carry a small Delta component (5.8e-5 aggregated) and horizon data (4e-4):
+  a 0.1 move along them changes Delta by ~6e-6 while F changes by ~1e-12, i.e. the evanescent tail at the horizon
+  can stand in for a Delta change. The weak (shape) directions are the same thing for k = 3-7, less evanescent.
+  So the high-k centre content is fixed only by exponentially weak horizon conditions, in the continuum too; with
+  a smooth (analytic in tau) solution its true size is small, so the smoothness prior should cost < ~1e-8 in Delta
+  from that source. The 4.2e-6 between x_K 0.6 / 0.7 (smoothed) is something else (discretisation of the weak part).
+- Running in the cloud: kc = 31 with smoothing, x_K 0.6 and 0.7 (scan_ne6_kc31_sj, scan_ne7_kc31_sj).
