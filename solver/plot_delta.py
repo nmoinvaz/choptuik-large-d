@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Graph the echo period Delta(D) and the critical exponent gamma(D) as an SVG.
 
-Three panels: Delta against D with the power series in 1/(D-2) and its limit, Delta against 1/(D-2) (D = infinity
+Three panels: Delta against D with the all-D rational formula (formula_all.py) and its limit, Delta against 1/(D-2) (D = infinity
 is the left edge, so the limit is the intercept), and gamma against 1/(D-2) with gamma_inf = 1/2. The series are
 fitted on D <= FIT_MAX, where the independent setups agree to ~1e-8; the points above are drawn hollow and are held
 out of every fit, so the graph shows how well the formula predicts them.
@@ -194,23 +194,27 @@ def main():
     # 17.2) from final_fit.step_converged; below D = 8 the older single-setup values. Points above FIT_MAX are held
     # out of every fit.
     from final_fit import step_converged, weighted_series
+    from data_all import low_d
+    import formula_all
     Dsc, ysc, ssc, gsc = step_converged(Dmin=8.0)
-    base = load()
-    low = np.array(sorted(d for d in base if 3.69 <= d < 8.0))
+    lowd = low_d()                                   # kc 39 + Richardson below D = 8 (data_all)
+    low = np.array(sorted(d for d in lowd if d >= 3.69))
     Dfit = np.r_[low, Dsc[Dsc <= FIT_MAX]]
-    yfit = np.r_[[base[d]["Delta"] for d in low], ysc[Dsc <= FIT_MAX]]
+    yfit = np.r_[[lowd[d][0] for d in low], ysc[Dsc <= FIT_MAX]]
     Dh, yh = Dsc[Dsc > FIT_MAX], ysc[Dsc > FIT_MAX]
+    fR, gR = formula_all.delta, formula_all.gamma   # one rational formula in 1/(D-2) for all D >= 4
 
     # Delta: weighted power series in 1/D, degree 10, fitted on 10 <= D <= FIT_MAX
     mfit = (Dsc >= 10) & (Dsc <= FIT_MAX)
     cD, _ = weighted_series(1 / Dsc[mfit], ysc[mfit], 1 / ssc[mfit], 10)
     fD = lambda d: np.polyval(cD[::-1], 1 / np.asarray(d, float))
-    hold_err = np.abs(fD(Dh) - yh).max() if len(Dh) else np.nan
+    hold_err = np.abs(fR(Dh) - yh).max() if len(Dh) else np.nan
+    dinf = formula_all.fit_delta()[0][0]
 
     # gamma: same points (gamma per point), older values below D = 8; series with gamma_inf = 1/2
     gm = np.isfinite(gsc)
-    Dg = np.r_[low[[base[d].get("gamma") is not None for d in low]], Dsc[gm & (Dsc <= FIT_MAX)]]
-    g = np.r_[[base[d]["gamma"] for d in low if base[d].get("gamma") is not None], gsc[gm & (Dsc <= FIT_MAX)]]
+    Dg = np.r_[low[[lowd[d][2] is not None for d in low]], Dsc[gm & (Dsc <= FIT_MAX)]]
+    g = np.r_[[lowd[d][2] for d in low if lowd[d][2] is not None], gsc[gm & (Dsc <= FIT_MAX)]]
     Dgh, ggh = Dsc[gm & (Dsc > FIT_MAX)], gsc[gm & (Dsc > FIT_MAX)]
     mg = (Dsc >= 10) & (Dsc <= FIT_MAX) & gm
     cG, _ = weighted_series(1 / Dsc[mg], gsc[mg], np.ones(mg.sum()), 10, c0=0.5)
@@ -223,60 +227,60 @@ def main():
     width = 1080
     svg = Svg(width)
     svg.text(16, 28, "Choptuik echo period Δ(D) and critical exponent γ(D) of massless scalar collapse", size=15, fill=INK, weight="bold")
-    svg.text(16, 48, f"Power series in 1/D fitted on the step-converged points 10 ≤ D ≤ {FIT_MAX:g}; "
-                     + (f"the {len(Dh)} hollow point{'s' if len(Dh) > 1 else ''} above {'are' if len(Dh) > 1 else 'is'} held out and match{'' if len(Dh) > 1 else 'es'} it to {hold_err:.0e}" if len(Dh) else "")
-                     + f";  Δ∞ ≈ {cD[0]:.5f}, γ∞ = 1/2", size=12)
+    svg.text(16, 48, f"One rational formula in 1/(D−2) for all D ≥ 4, fitted on the computed points 4 ≤ D ≤ {FIT_MAX:g}; "
+                     + (f"the {len(Dh)} hollow points above are held out and match it to {hold_err:.0e}" if len(Dh) else "")
+                     + f";  Δ∞ ≈ {dinf:.5f}, γ∞ = 1/2", size=12)
 
     # Panel A: Delta against D, full width
     A = Panel(svg, 78, 120, 984, 300, (3, 60), (1.4, 3.6),
-              f"Δ levels off at Δ∞ ≈ {cD[0]:.4f} instead of falling to zero",
+              f"Δ levels off at Δ∞ ≈ {dinf:.4f} instead of falling to zero",
               "spacetime dimension D", "echo period Δ")
     if len(Dh):
         A.band(FIT_MAX, Dh.max() + 0.3, "held out")
-    svg.line(A.sx(3), A.sy(cD[0]), A.sx(60), A.sy(cD[0]), SERIES[1], width=1, opacity=0.6)
+    svg.line(A.sx(3), A.sy(dinf), A.sx(60), A.sy(dinf), SERIES[1], width=1, opacity=0.6)
     svg.line(A.sx(3), A.sy(zeta2), A.sx(60), A.sy(zeta2), NEUTRAL, width=1, dash="2 3")
-    DD = np.linspace(8, 60, 400)
-    A.curve(DD, fD(DD), SERIES[1], dash="6 4", title=fitD)
+    DD = np.linspace(4, 60, 500)
+    A.curve(DD, fR(DD), SERIES[1], dash="6 4", title="rational formula in 1/(D-2), README")
     for d, v in zip(Dfit, yfit):
         marker(svg, A.sx(d), A.sy(v), SERIES[0], f"D = {d:.4f}, Δ = {v:.10f}")
     for d, v in zip(Dh, yh):
-        marker(svg, A.sx(d), A.sy(v), SERIES[0], f"D = {d:.4f}, Δ = {v:.10f} (held out; series {fD(d) - v:+.1e})", hollow=True)
-    svg.text(A.sx(44), A.sy(cD[0]) + 16, f"Δ∞ ≈ {cD[0]:.4f}  (series limit)", size=11, fill=INK)
+        marker(svg, A.sx(d), A.sy(v), SERIES[0], f"D = {d:.4f}, Δ = {v:.10f} (held out; formula {fR(d) - v:+.1e})", hollow=True)
+    svg.text(A.sx(44), A.sy(dinf) + 16, f"Δ∞ ≈ {dinf:.4f}  (formula limit)", size=11, fill=INK)
     svg.text(A.sx(44), A.sy(zeta2) - 8, f"π²/6 = {zeta2:.4f}", size=10)
     A.key("dot", SERIES[0], "computed, in the fit")
     A.key("hollow", SERIES[0], "computed, held out")
-    A.key("line", SERIES[1], "power series in 1/D, extended to D = 60", dash="6 4")
+    A.key("line", SERIES[1], "rational formula, D ≥ 4, extended to D = 60", dash="6 4")
     A.key("line", NEUTRAL, "π²/6 for reference", dash="2 3")
 
     # Panel B: Delta against 1/(D-2), D = infinity at the left edge
     B = Panel(svg, 78, 540, 452, 280, (0, 0.3), (1.4, 3.6),
               "Against 1/D, Δ runs into a finite intercept",
               "1/D   (D = ∞ at the left edge)", "echo period Δ", xfmt="{:.2f}")
-    X = np.linspace(0, 1 / 9, 300)
-    B.curve(X, np.polyval(cD[::-1], X), SERIES[1], dash="6 4", title=fitD)
+    X = np.linspace(1e-6, 1 / 4, 400)
+    B.curve(X, fR(1 / X), SERIES[1], dash="6 4", title="rational formula in 1/(D-2)")
     for d, v in zip(Dfit, yfit):
         marker(svg, B.sx(1 / d), B.sy(v), SERIES[0], f"D = {d:.4f}, Δ = {v:.10f}", r=3.8)
     for d, v in zip(Dh, yh):
         marker(svg, B.sx(1 / d), B.sy(v), SERIES[0], f"D = {d:.4f}, Δ = {v:.10f} (held out)", hollow=True, r=3.8)
-    marker(svg, B.sx(0), B.sy(cD[0]), SERIES[1], f"D = ∞: Δ∞ = {cD[0]:.5f} (series; 1.64394 ± 0.00005 over variables and degrees)", shape="diamond")
-    svg.text(B.sx(0) + 12, B.sy(cD[0]) + 18, f"D = ∞:  Δ∞ ≈ {cD[0]:.4f}", size=11, fill=INK)
+    marker(svg, B.sx(0), B.sy(dinf), SERIES[1], f"D = ∞: Δ∞ = {dinf:.5f} (formula; 1.64395 ± 0.00008 over all acceptable fits)", shape="diamond")
+    svg.text(B.sx(0) + 12, B.sy(dinf) + 18, f"D = ∞:  Δ∞ ≈ {dinf:.4f}", size=11, fill=INK)
     for d in (4, 6, 10, 20):
         svg.text(B.sx(1 / d) + 6, B.sy(np.interp(1 / d, (1 / Dfit)[::-1], yfit[::-1])) + 16, f"D={d}", size=10)
     B.key("dot", SERIES[0], "in the fit")
     B.key("hollow", SERIES[0], "held out")
-    B.key("line", SERIES[1], "series, D ≥ 10", dash="6 4")
+    B.key("line", SERIES[1], "formula, D ≥ 4", dash="6 4")
 
     # Panel C: gamma against 1/(D-2)
     C = Panel(svg, 610, 540, 452, 280, (0, 0.3), (0.36, 0.52),
               "γ runs into 1/2 as D → ∞",
               "1/D   (D = ∞ at the left edge)", "critical exponent γ", xfmt="{:.2f}", yfmt="{:.2f}")
     C.curve([0, 0.3], [0.5, 0.5], NEUTRAL, dash="2 3", width=1.5, title="1/2")
-    C.curve(X, np.polyval(cG[::-1], X), SERIES[1], dash="6 4", title=fitG)
+    C.curve(X, gR(1 / X), SERIES[1], dash="6 4", title="rational formula in 1/(D-2), gamma_inf = 1/2")
     for d, v in zip(Dg, g):
         if C.inside(1 / d, v):
             marker(svg, C.sx(1 / d), C.sy(v), SERIES[0], f"D = {d:.4f}, γ = {v:.10f}", r=3.8)
     for d, v in zip(Dgh, ggh):
-        marker(svg, C.sx(1 / d), C.sy(v), SERIES[0], f"D = {d:.4f}, γ = {v:.10f} (held out; series {fG(d) - v:+.1e})", hollow=True, r=3.8)
+        marker(svg, C.sx(1 / d), C.sy(v), SERIES[0], f"D = {d:.4f}, γ = {v:.10f} (held out; formula {gR(d) - v:+.1e})", hollow=True, r=3.8)
     marker(svg, C.sx(0), C.sy(0.5), SERIES[1], "D = ∞: γ = 1/2", shape="diamond")
     svg.text(C.sx(0) + 12, C.sy(0.5) + 18, "D = ∞:  γ = 1/2", size=11, fill=INK)
     for d in (4, 6, 10):
@@ -284,7 +288,7 @@ def main():
             svg.text(C.sx(1 / d) + 6, C.sy(np.interp(1 / d, (1 / Dg)[::-1], g[::-1])) + 16, f"D={d}", size=10)
     C.key("dot", SERIES[0], "in the fit")
     C.key("hollow", SERIES[0], "held out")
-    C.key("line", SERIES[1], "series with γ∞ = 1/2", dash="6 4")
+    C.key("line", SERIES[1], "formula with γ∞ = 1/2, D ≥ 4", dash="6 4")
 
     # Footnote and repository link
     height = 540 + 280 + 80
@@ -294,7 +298,7 @@ def main():
             f'text-anchor="end" text-decoration="underline">{esc(REPO_URL.removeprefix("https://"))}</text></a>')
     with open(args.output, "w") as f:
         f.write(svg.finish(height))
-    print(f"wrote {args.output}: {len(Dfit)} fitted + {len(Dh)} held-out points (max series error {hold_err:.1e})")
+    print(f"wrote {args.output}: {len(Dfit)} fitted + {len(Dh)} held-out points (max formula error {hold_err:.1e})")
     print(fitD)
     print(fitG)
 

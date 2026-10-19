@@ -2,12 +2,12 @@
 
 Rust port of the multiple-shooting residual `F(z)` used to compute Choptuik's discretely self-similar critical solution in D = n + 2 dimensions. It covers the centre series, the RK4 shooting segments and the horizon series on a 941-unknown spectral layout, and is called from Python through PyO3 as a drop-in for `S.residual`.
 
-![Echo period Δ(D) and critical exponent γ(D) with their power series in 1/(D−2)](solver/delta.svg)
+![Echo period Δ(D) and critical exponent γ(D) with one rational formula for all D ≥ 4](solver/delta.svg)
 
 The echo period Δ(D) and critical exponent γ(D), computed with this kernel and the solver in [`solver/`](solver/).
-The curves are power series in 1/D fitted on the step-converged points (2x RK steps, near-null directions solved,
-independent setups agreeing to ~1e-8); hollow points are held out of the fits. One rational formula covers every
-D ≥ 4 (below), with Δ → Δ∞ = 1.64395 ± 0.00008 and γ → 1/2 − 0.758/n as D → ∞ (details in
+The dashed curves are one rational formula in 1/(D−2) for every D ≥ 4 (below), fitted on the step-converged points
+4 ≤ D ≤ 30.2 (step error extrapolated out, near-null directions solved, enough Fourier modes in time at low D);
+hollow points are held out of the fit. Δ → Δ∞ = 1.64395 ± 0.00008 and γ → 1/2 − 0.758/n as D → ∞ (details in
 [`solver/CONTEXT.md`](solver/CONTEXT.md)). Regenerate with `cd solver/data && python3 ../plot_delta.py`.
 
 ## The formula
@@ -104,7 +104,7 @@ $$
 \Delta(D) \approx 1.64395 + \frac{10.4}{D} - \frac{28.4}{D^2} + \frac{239}{D^3} - \cdots
 $$
 
-Fitted on $10 \le D \le 30.2$ (`solver/formula.py`, the curve in the graph above); it reproduces the points there to
+Fitted on $10 \le D \le 30.2$ (`solver/formula.py`); it reproduces the points there to
 $1.6\times10^{-8}$ ($\Delta$) and $2.3\times10^{-9}$ ($\gamma$). The coefficients grow about ninefold per order with
 alternating signs: a pole near $D \approx -9$, the same one the rational form carries in its denominator. That pole
 limits the series to $D \gtrsim 10$ and forbids cutting it short (five terms are off by $4\times10^{-3}$ at $D \ge 20$).
