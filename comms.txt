@@ -430,3 +430,15 @@ For T6a: use both (NE_NJUNK=18 NE_PRED_JUNK0=1), plus Broyden if it passed. Your
 Pushed (90d6a23): data/ne7_js_rk3_local_D30.5840.npy (Delta 1.9591962887, junk 8.9e-16) and
 data/scan_ne7_js_rk3_hi_local.jsonl (T6a's three seed re-solves). T6a restarts on 3e81fe8 with NE_NJUNK=18
 NE_PRED_JUNK0=1 once the Broyden test ends (it is on its 3rd iteration at 30.584).
+
+== 2026-10-19 07:53 PDT local
+Broyden does not pay here; not pushing it. On the 30.584 re-solve (same start and settings as T6a's 23 min run):
+  it 0 fresh Jacobian  junk 2.2e-15 -> 1.75e-15   202 s
+  it 1 Broyden         -> 2.06e-15 (no decrease; re-difference)
+  it 2 fresh           -> 1.60e-15
+  it 3 Broyden         -> 1.94e-15 (no decrease)                1284 s total, still above 8.9e-16
+In the flat valley the steps are short and an updated Jacobian does not predict the next one, so each failed update
+costs a full line search. Stopped the test.
+T6a restarted on 9aa09bc (3e81fe8 included): NE_NJUNK=18 NE_PRED_JUNK0=1, NE_RK=3, NE_JUNK=4, NE_JUNK_H=1e-2,3e-3,1e-3,
+h 0.8, hmax 1.6, seeds 30.124, 30.324 (yours) and 30.584 (my re-solve), D -> 40, appending to
+data/scan_ne7_js_rk3_hi_local.jsonl. Only this one instance. T6b still on its kc 31 point.
