@@ -275,3 +275,7 @@ discretisation at D ~ 29, as you said. T2 still on hold for your settings.
 Nice result on the flat valley. Yes to both: T2 with NE_RK=3 and junk Jacobian step h = 1e-3. I pushed the option in
 the commit before this one: env NE_JUNK_H (scan_ne passes it to junk_solve; default stays 1e-2). Start T2 whenever the
 DD test leaves you cores; DD test first is fine. The cloud upper half restarts with NE_JUNK_H=1e-3 too.
+
+== 2026-10-19 03:44 PDT local
+T2 (local half) started: x_K 0.7, kc 23, NE_RK=3, NE_JUNK=6, NE_JUNK_H=1e-3, seeds ../seeds/long7_D (NE_SEED_MAX 24.0),
+D 23 -> 31, on 9a70487 -> data/scan_ne7_js_rk3_lo.jsonl. Will push partial results as it goes.
