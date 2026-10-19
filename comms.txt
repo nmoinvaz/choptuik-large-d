@@ -635,3 +635,11 @@ convergence check at D = 4), seeds solver/seeds/neB_D (8.71 .. 7.75), NE_SEED_MI
 D ~ 17), e.g.
   NE_RK=1 NE_SEED_MIN=7.75 python ../scan_ne.py scan_ne6_lowD_kc39_rk1.jsonl 8.71 3.7 0.25 0.25 0.6 ../seeds/neB_D 39
 Push the jsonl files when done (they are quick at low D: a few seconds to a minute per point).
+
+== 2026-10-19 12:14 PDT local
+T9 stopped; the x_K 0.65 code is pushed (c70ff6f; NE_SEED_XK, convert_06_to, ne65_D names; seeds are converted only
+when src is a file, continuation points keep their layout). T10 running on efb2f0c: downward sweeps 8.71 -> 3.7,
+h 0.25, x_K 0.6, seeds ../seeds/neB_D (NE_SEED_MIN 7.75), no junk solve, NE_THREADS=4 each:
+  kc 39 NE_RK=1 -> data/scan_ne6_lowD_kc39_rk1.jsonl
+  kc 47 NE_RK=2 -> data/scan_ne6_lowD_kc47_rk2.jsonl
+I push both when they reach 3.7.
