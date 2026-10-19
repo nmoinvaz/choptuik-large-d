@@ -37,16 +37,17 @@ D spacetime dimensions (n = D − 2), in particular the D → ∞ behaviour.
   beyond-all-orders selection problem, like Saffman–Taylor finger selection; an analytic Δ∞ would come from
   exponential asymptotics of the leading-order family, not from the 1/D series.
 
-## Current best formula (2026-10-19, 04:30)
+## Current best formula (2026-10-19, 13:00)
 
-Step-converged data D = 8–30.3 (x_K 0.6 RK x2 + Richardson, junk-solved above 17.2; x_K 0.7 RK x4 above 30.2),
-`final_fit.py`, weighted fits in x/max(x) over x = 1/D, 1/(D−1), 1/(D−2), degrees 8–11:
+One rational formula for all D >= 4 (README "The formula", `formula_all.py`), x = 1/(D - 2):
 
-  **Δ(D) = Δ∞ + c₁/D + c₂/D² + …, Δ∞ = 1.64394 ± 0.00005**, c₁ ≈ 10.3
-  **γ(D) = 1/2 − 0.7577/D + …** (free fit: γ∞ = 0.49995–0.50016)
+  **Delta(D) = P7(x) / Q2(x)** (10 numbers), **gamma(D) = P7(x) / Q2(x) with P(0) = 1/2** (9 numbers),
 
-π²/6 = 1.64493 is excluded (forcing it: χ²/dof 140–1300 against ~4); 2π/j₁,₁ and √e are far outside.
-ω∞ = 2π/Δ∞ = 3.82205.
+fitted on every computed point 4 <= D <= 30.2 (`data_all.load_all`: kc 39 + Richardson below D = 8, step-converged
+above), within the precision of the points everywhere (Delta <= 5e-8 on 5-30, gamma <= 4.5e-9) and predicting the
+held-out D = 34-40 points to 1.3e-6. **Delta_inf = 1.64395 +- 0.00008** (this formula: 1.643952), omega_inf = 3.8220,
+gamma = 1/2 - 0.758/n + ... The 1/D power series (degree 10, D >= 10, `formula.py`) is kept as the earlier form.
+pi^2/6, 2 pi/j11, sqrt(e), phi are excluded; five contrived forms fit inside the window (README table, candidates.svg).
 
 Hard-won lessons for these fits:
 - fit in x/max(x): an unscaled degree-10 Vandermonde loses ~1e-9 and made the limit wander (`series_factory.py`,

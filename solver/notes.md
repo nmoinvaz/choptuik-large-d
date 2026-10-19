@@ -372,3 +372,20 @@ light ray. Note the factor √(2π) between the simulation's field (G = 1) and t
 - So forcing a constant can exclude one (pi^2/6, sqrt e, 2 pi/j11, phi) but not select one: everything inside the window
   fits equally well, and the candidates differ at D <= 40 by less than the held-out points' own error (~2e-6). Telling
   them apart needs Delta_inf to ~1e-8, i.e. the D = infinity problem itself.
+
+## One formula for all D >= 4 (2026-10-19, ~12:00-13:00)
+- Old D < 8 values (data_best) were mixed: D = 4.1-4.75 at kc 31 (under-resolved by up to 8.4e-6 at 4.25), D = 6.75-7.5
+  off by up to 3.8e-6, D = 4.0 at kc 39. Re-solved 8.71 -> 3.7 downward (scan_ne D_end < D_from), x_K 0.6, at kc 23, 31,
+  39 (RK x1 and x2, Richardson). kc 23 -> 31 -> 39 at D = 4: -4.3e-4, -3.4e-5 (ratio ~13); above D = 5.5 the kc 31 -> 39
+  step is <= 1e-8, above 6.5 <= 1e-10. kc 39 + Richardson joins the D >= 8 data (kc 23 + Richardson) to <= 4e-10 at
+  D = 8-8.7. data_all.load_all: sigma at low D = the kc 31 -> 39 step / 13 (D = 4: 2.6e-6, 4.25: 6.5e-7, 5: 1e-8).
+  kc 47 at D = 8.71 did not converge (strong floor 6.2e-9, Delta +8.4e-7): not resolution. kc 47 re-solves at 3.7-4.25
+  (local T10) are pending.
+- Delta(D) has its maximum ~3.4661 near D = 3.8 (kc 39 RK x1: 3.4661347 at 3.7938).
+- rational_fit.compact on the clean data: Delta = P7(x)/Q2(x), x = 1/(D-2), 10 numbers, fitted on 4 <= D <= 30.2 with
+  sigma floored at 1e-7: within the point precision everywhere (D = 4: 1.6e-6 vs 2.6e-6; 4.3-5: 4e-8; 5-30: <= 5e-8;
+  held out 34-40: <= 1.3e-6), limit 1.643952, poles at D = -1.65, -9.37 (the 1/D series' pole near -9).
+  gamma = P7/Q2 with P(0) = 1/2, 9 numbers: D = 4: 3.9e-7 (sigma 5e-7), 4.3-5: 4e-8, 5-30: <= 4.5e-9, held out to 35.8:
+  <= 5e-7; above D ~ 36 the computed gamma scatter by up to 6e-5 around both this and the 1/D series (unreliable growth-
+  rate solves there). formula_all.py; README "The formula"; delta.svg draws it.
+- Covering D >= 3.7 (below the maximum) costs more (P3/Q6 at 1e-6, P8/Q2 at 1e-7 with 1.1e-6 at 3.7).
