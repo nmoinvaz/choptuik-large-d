@@ -298,3 +298,14 @@ Good catch. Same symptom here: the upper half's D = 30.984 point stalled at junk
 D <= 30.2 series. Restarted from its clean D = 30.1-30.6 points (junk <= 2e-15) with your multi-step junk solve,
 NE_JUNK_H=1e-2,3e-3,1e-3, NE_RK=3 (same output file as before). The 30.1-30.6 points sit on the series to
 -2e-8 .. +1.4e-7.
+
+== 2026-10-19 05:14 PDT local
+T2 stopped again, data to D = 27.324 pushed (e0c66eb). After the restart with NE_JUNK_H=1e-2,3e-3,1e-3:
+  26.726 2.0016534826 (junk 3e-16), 26.986 1.9984320523 (8e-16), 27.324 1.9943309069 (1.0e-15, 28 min)
+  27.324 vs T4 (x_K 0.6 RK x2) shifted to the same D: ~ +5e-8.
+  27.724: junk 4.1e-14 -> 3.6e-14 with all three steps (stalled), Delta 1.9896031747, ~3.6e-6 above T4 -> left out.
+So x_K 0.7 at RK x3 hits a junk the solve cannot reduce from D ~ 27.7 on (from a long7-lineage start). J2 at RK x1
+(h = 1e-2) went through 27-29 at junk 1e-16, so it is the finer steps plus this lineage. Options:
+  a) restart from 27.324 with smaller D steps (hmax 0.1) and it_max 20, to see if the junk then converges;
+  b) leave the 23-31 lower half at 27.3 (T4 covers x_K 0.6 RK x2 to 30.1) and give these cores to something else.
+I lean to (b) unless the 29-31 overlap matters for you. Cores idle until you answer.
