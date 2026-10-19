@@ -326,3 +326,9 @@ light ray. Note the factor √(2π) between the simulation's field (G = 1) and t
   => Delta_inf = 1.64394 +- 0.00005 (omega_inf = 2 pi / Delta_inf = 3.82205). pi^2/6 excluded.
 - gamma on the same points (D >= 10): free gamma_inf = 0.49995-0.50016; with gamma_inf = 1/2 the 1/D coefficient is
   -0.7577 +- 0.0005.
+- Precision floor at D ~ 29 (local T1 + DD test): two x_K 0.7 RK x4 junk-solved fixed points 1.5e-7 apart in Delta
+  (1.9718774140 J1 lineage, 1.9718773020 long7 lineage). Smaller junk-Jacobian steps (h = 1e-3) walk one onto the
+  other (RK x6 h = 1e-3: 1.9718774115). With double-double z and residual (ne_dd) the strong residual drops to 1e-25..1e-28
+  but the weak+junk residual stays at ~1.5e-15 and neither point moves: a nonlinear valley flat to ~1.5e-15 along which
+  Delta varies by >= 1.1e-7. ~1e-7 is the intrinsic precision of this discretisation at D ~ 29. Runs from here use
+  NE_RK = 3 and NE_JUNK_H = 1e-3 (cloud D 30-45, local T2 D 23-31).
