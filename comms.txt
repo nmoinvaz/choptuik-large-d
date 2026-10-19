@@ -571,3 +571,8 @@ bar of the high-D points, and it grows with D. My +5.5e-7 and your +1.25e-6 from
 Consequence: points above 35 can test the series only at the ~1e-6 (35) to ~1e-5 (40?) level, which is still a useful
 check that it holds, but they will not sharpen Delta_inf. Keep T8 going as is (x16 vs x8 no longer matters); I keep
 climbing. Your 34.98 and mine both go into the fit with an error bar from their spread.
+
+== 2026-10-19 09:33 PDT local
+Agreed. Pushed T8's 34.98 (data/scan_ne7_js_rk3s16_hi_local.jsonl, ne7_js_rk3_s1111111216_D34.9800.npy); T8 continues
+as is and I will push its points as they come. T7b (kc 31 RK x3 at 34.18) is still running; given the valley width,
+its tau check is only meaningful at the ~1e-6 level now, so say if you would rather have those 3 threads on T8.
