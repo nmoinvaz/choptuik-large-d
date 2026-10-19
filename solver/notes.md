@@ -425,3 +425,33 @@ light ray. Note the factor √(2π) between the simulation's field (G = 1) and t
   point is exponentially small in n; direct numerics need exponentially small discretization errors (high-precision
   series and high-order integration in arbitrary precision). An analytic D = infinity theory would go through the
   complex singularity of the horizon-regular solution (radius ~0.6 at n = 28) and the beyond-all-orders selection.
+
+## Double-double solver hp/ (2026-10-19, afternoon)
+- New crate hp/ (hpkernel): DD arithmetic on 8-lane AVX-512 vectors, Taylor stepping in x (order 36, adaptive frozen
+  steps, truncation 1e-32), centre / horizon series to 1e-33, pure collocation in tau on the half grid (no spectral
+  truncation), exact Jacobian by forward-mode duals, DD LU (+ transpose solve: y = J^-T e_Delta = dDelta/dF).
+- Checks: DD ops 1.3e-32; horizon series vs 40-digit mpmath 2e-32 (an apparent 1e-16 disagreement was mpmath's omega
+  computed at 15 digits); Jacobian vs DD differences; D = 8 quadratic to |F| 5e-31. Delta(7) +3.1e-12 and Delta(7.75)
+  -2.8e-12 vs the kc 39 references (+-3e-11). Delta(8) = 2.711790054444401: the kc 23 points from D = 8 up are
+  2-4e-10 high (their 3e-11 error bars counted RK steps only). The formula P8/Q2 agrees with the DD values to
+  <= 2.7e-9 on 8 <= D <= 21 (its stated tolerance 4e-9).
+- tau resolution: Delta(M = 32) = Delta(48) = Delta(64) to 1e-16 at D = 7-17, although at M = 32 the top harmonic is
+  still 1e-10 near the centre: errors there barely reach Delta (dDelta/dF ~ 1e-11 in the centre block, up to 6e4 at
+  the matching blocks for k <= 15, 280 for k >= 24). M = 80 does not converge even at D = 8.
+- The near-null ("junk") directions, now resolved: a ladder of p1 harmonics, one cos/sin pair per odd k, singular
+  values ~ e^(-0.8 k) (D = 21.35: 1.3e-10 at k = 7 ... 6.5e-18 at k = 31; sigma_max ~ 2e3), independent of where the
+  first node is (x0 = 0.1 or 0.3). The true p1 harmonics fall at a similar rate (2e-6 at k = 17, 7e-11 at k = 31), so
+  p1_k reaches the matching point as ~e^(-1.45 k). Their Delta components are <= 1.5e-12 for k >= 17 but up to 0.04-0.7
+  for k <= 9, where they mix with the physical selection direction. The centre-series map p1 -> state(x0) itself is
+  well conditioned (40-digit SVD: 0.14 .. 4e-3).
+- Why Newton's basin is tiny: second-order errors of the well-determined directions leak into the weak left singular
+  directions and are amplified by 1/sigma ~ 1e17. A J-based tangent dz/dD is O(1) wrong in the junk directions
+  (residual noise ~1e-28 x 1/sigma); differences of converged neighbours are smooth (dp1_31/dD ~ 3e-11).
+- Fixes: (1) first node at x = 0.3 (the centre series' radius is ~0.47 at D = 21, 0.31 at D = 12, the same for every
+  harmonic: a real singularity; ~200 terms); (2) kfreeze: p1 harmonics above 19 pinned to 0 and the horizon block's p
+  matching above 19 dropped (Delta changes by 7e-18; above 15: 4.5e-15; above 11: 8.6e-12); (3) Lagrange predictor from
+  converged neighbours; (4) deflated Newton: Newton steps with the 24 weakest right singular directions projected out
+  (inverse subspace iteration with the stored LU) until |F| stalls, then plain Newton. Steps of 0.1 / 0.2 / 0.4 in D
+  converge (6 / 8 / 18 iterations, 6-16 s at M = 32, L = 769) where plain Newton could not do 0.05.
+- Selection sensitivity max |dDelta/dF|: 1.2e2 (D = 8.25), 2.2e2 (10), 5.9e2 (12), 2.1e3 (14), 6.8e3 (16), 2e5 (21):
+  ~e^(0.57 D). With |F| ~ 1e-30 that leaves Delta at ~1e-6 at D = 100 if the rate holds.
