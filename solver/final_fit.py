@@ -13,8 +13,10 @@ import numpy as np
 from data_best import load as old_load
 
 
-def step_converged(Dmin=8.0, hi_from=30.2):
-    """(D, Delta, sigma, gamma) arrays: x_K 0.6 RK x2 (+ Richardson) up to hi_from, x_K 0.7 RK x3+ junk-solved above."""
+def step_converged(Dmin=8.0, hi_from=30.2, hi_junk=1.2e-15):
+    """(D, Delta, sigma, gamma) arrays: x_K 0.6 RK x2 (+ Richardson) up to hi_from, x_K 0.7 RK x3+ junk-solved above,
+    only points driven to junk <= hi_junk (one left at ~2e-15 can sit ~2e-7 up the flat valley), the lowest-junk run
+    per D."""
     o = old_load()
     rk1 = {k: r["Delta"] for k, r in o.items() if k < 17.2}
     rk2, hi, gam = {}, {}, {}
@@ -33,9 +35,10 @@ def step_converged(Dmin=8.0, hi_from=30.2):
                 elif rk == 1 and (r.get("js") or (17.2 <= k <= 23.4)):
                     if r.get("js") or k not in rk1:
                         rk1[k] = r["Delta"]
-            elif abs(xk - 0.7) < 1e-9 and rk >= 3 and r.get("js") and k > hi_from:
-                hi[k] = r["Delta"]
-                gam[k] = r.get("gamma")
+            elif abs(xk - 0.7) < 1e-9 and rk >= 3 and r.get("js") and k > hi_from and r.get("junk", 1) <= hi_junk:
+                if k not in hi or r["junk"] < hi[k][1]:      # several runs per D: the one deepest in the junk valley
+                    hi[k] = (r["Delta"], r["junk"])
+                    gam[k] = r.get("gamma")
     D, y, s, g = [], [], [], []
     for k in sorted(rk2):
         if k < Dmin or k > hi_from:
@@ -46,7 +49,7 @@ def step_converged(Dmin=8.0, hi_from=30.2):
         g.append(gam.get(k))
     for k in sorted(hi):
         D.append(k)
-        y.append(hi[k])
+        y.append(hi[k][0])
         s.append(1e-7)
         g.append(gam.get(k))
     return np.array(D), np.array(y), np.array(s), np.array([np.nan if v is None else v for v in g], float)
