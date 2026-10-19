@@ -284,3 +284,7 @@ light ray. Note the factor √(2π) between the simulation's field (G = 1) and t
   space, which would be the analytic route to the exact value.
 - The x_K = 0.6 kc 23 PLAIN continuation above D ~ 26 drifted into a distorted solution (h3/h1 0.29, h5/h3 0.64 at
   D = 29.3): its Delta values there are wrong (up to 3e-5). Use only the smoothed / x_K <= 0.5 scans above 25.5.
+- Smoothing blow-up at x_K = 0.5 (Ks 120): the junk move (|a| ~ 0.2) is only linearly null; its second-order residual is
+  ~0.12 and NE's undamped inner Newton cannot recover. Fix (scan_ne): after smooth_junk, if |F| > 1e-8 run LM with the
+  junk directions excluded (dd_solve cut = 3e-14), then NE. D = 24.596: 0.12 -> 4e-5 -> 4e-10, converged in 3 rounds,
+  Delta = 2.0304571464.

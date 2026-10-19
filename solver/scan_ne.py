@@ -110,6 +110,8 @@ def solve(D, z0, lam_guess, t0, src, Delta_old=None):
         for _ in range(8):
             d_prev = z[-1]
             z, _, _ = smooth_junk(R, S, z)
+            if np.linalg.norm(R(z)) > 1e-8:      # the junk move is only linearly null: its 2nd-order residual
+                z, _, _, _ = dd_solve(R, z, maxjac=20, use_dd=False, stall=4, cut=3e-14)   # LM that leaves junk alone
             z, info = ne_solve(R, z)
             if abs(z[-1] - d_prev) < 1e-10:
                 break
