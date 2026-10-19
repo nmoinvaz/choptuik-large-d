@@ -68,11 +68,17 @@ def jacobian_rust(S, R, z, eps=3e-7, h=1e-30):
 
 def convert_06_to_07(D, z6):
     """Solution vector matched at x_K=0.6 -> matched at x_K=0.7: insert the node-0.7 state from the horizon series at u=0.3."""
-    S6 = freeze_steps(make_long(23, D - 2, nodes=NODES_L, Ks=60), z6[-1])
+    return convert_06_to(D, z6, 0.7)
+
+
+def convert_06_to(D, z6, xk, Ks=60):
+    """kc 23 solution matched at x_K = 0.6 -> matched at xk > 0.6: append a node at xk whose state is the horizon
+    series (Ks terms) evaluated at u = 1 - xk."""
+    S6 = freeze_steps(make_long(23, D - 2, nodes=NODES_L, Ks=Ks), z6[-1])
     parts, _ = S6.split(z6[None, :]); parts = [p[0] for p in parts]
     mS = S6.phys(parts[-2][None, :], "odd"); aS = S6.phys(parts[-1][None, :], "even"); om = np.array([2 * np.pi / z6[-1]])
     P, M, A, C = S6.ssh_series(mS, aS, om)
-    st = S6.trunc(np.stack([S6.eval_series(Q, 0.3) for Q in (P, M, A, C)]))
+    st = S6.trunc(np.stack([S6.eval_series(Q, 1 - xk) for Q in (P, M, A, C)]))
     node7 = np.concatenate([S6.spec(st[0], "odd")[0], S6.spec(st[1], "odd")[0], S6.spec(st[2], "even")[0], S6.spec(st[3], "even")[0]])
     sizes6, K6, _ = S6.layout(); offs6 = np.concatenate([[0], np.cumsum(sizes6)])
     e = offs6[2 + 4 * K6]

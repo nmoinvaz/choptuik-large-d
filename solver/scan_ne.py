@@ -9,6 +9,9 @@ usage: python3 scan_ne.py out.jsonl D_from D_end h hmax [xK=0.6|0.7] [seed prefi
 down to D_end)
 Seeds are kc = 23 solutions; for another kc they are regridded. Threads per process: env NE_THREADS (2).
 env NE_SEED_MAX: re-solve only the seeds up to this D, then continue from those solutions.
+env NE_SEED_XK: the matching point of the seeds' layout, when it differs from x_K (e.g. x_K 0.7 seeds for an x_K 0.65
+    run: the two layouts have the same length). The seed is taken back to the x_K 0.6 layout and, for x_K > 0.6, gets
+    a node at x_K from the horizon series at u = 1 - x_K.
 env NE_JUNK_H: step of the junk solve's forward-difference Jacobian (default 1e-2; 1e-3 reaches the bottom of the flat
   valley at D ~ 29, where 1e-2 can stop 1e-7 short in Delta). A comma list (1e-2,3e-3,1e-3) is tried in turn.
 env NE_RK: multiply all RK4 step counts (x_K = 0.7 needs 4).
@@ -41,13 +44,15 @@ from smooth_junk import smooth_junk
 
 out, D_from, D_end, h, hmax = sys.argv[1], float(sys.argv[2]), float(sys.argv[3]), float(sys.argv[4]), float(sys.argv[5])
 XK = float(sys.argv[6]) if len(sys.argv) > 6 else 0.6
-NODES = [x for x in NODES_L + [0.7] if x <= XK + 1e-9]           # x_K = 0.5, 0.6 or 0.7
+NODES = [x for x in NODES_L if x <= XK + 1e-9] + ([XK] if XK > NODES_L[-1] + 1e-9 else [])   # x_K 0.4 .. 0.7
 KS = int(os.environ.get("NE_KS", "60"))                          # horizon series terms (x_K = 0.5: ~120)
 # a longer series has larger coefficients: f64 rounding of z leaves strong residuals ~1e-9 (harmless for Delta:
 # x_K = 0.4 with 3.6e-9 agrees with x_K = 0.5 to 4e-10 at D = 23)
 STRONG_TOL = float(os.environ.get("NE_STRONG_TOL", "1e-8" if KS > 60 else "1e-9"))
 SEED = "long7_D" if XK > 0.65 else "longB_D"
-OUTP = {6: "neB_D"}.get(int(round(XK * 10)), f"ne{int(round(XK * 10))}_D")   # ne4_D, ne5_D, neB_D, ne7_D
+_xt = int(round(XK * 100))
+OUTP = {60: "neB_D"}.get(_xt, f"ne{_xt // 10}_D" if _xt % 10 == 0 else f"ne{_xt}_D")   # ne4_D, ne5_D, neB_D, ne65_D, ne7_D
+SEED_XK = float(os.environ["NE_SEED_XK"]) if os.environ.get("NE_SEED_XK") else None
 PREFIXES = sys.argv[7].split(",") if len(sys.argv) > 7 else [SEED]
 KC = int(sys.argv[8]) if len(sys.argv) > 8 else 23
 THREADS = int(os.environ.get("NE_THREADS", "2"))
@@ -95,6 +100,24 @@ def gamma_of(R, z, g0):
             ref = 0.5 * (sd(grid[i])[1] + sd(grid[i + 1])[1])
             return brentq(lambda l: sd(l)[0] * np.exp(sd(l)[1] - ref), grid[i], grid[i + 1], xtol=1e-11, rtol=1e-14)
     return None
+
+
+def convert_xk(z0, D, sxk):
+    """kc 23 seed matched at x_K = sxk -> this setup: back to the x_K 0.6 layout (drop node blocks above 0.6), then a
+    node at x_K > 0.6 from the horizon series at u = 1 - x_K (rust_solver.convert_06_to), or convert_seed below 0.6."""
+    src = [x for x in NODES_L if x <= sxk + 1e-9] + ([sxk] if sxk > NODES_L[-1] + 1e-9 else [])
+    sizes, K, L = make_long(23, D - 2, nodes=src, Ks=60).layout()
+    if L != len(z0):
+        raise ValueError(f"seed of length {len(z0)} is not an x_K = {sxk} kc 23 layout ({L})")
+    offs = np.concatenate([[0], np.cumsum(sizes)])
+    z6 = np.r_[z0[:offs[2 + 4 * len(NODES_L)]], z0[offs[2 + 4 * K]:]]
+    if XK <= NODES_L[-1] + 1e-9:
+        return convert_seed(z6, D)
+    from rust_solver import convert_06_to
+    z1 = convert_06_to(D, z6, XK, Ks=KS)
+    if KC != 23:
+        z1 = make_long(KC, D - 2, nodes=NODES, Ks=60).regrid(z1, make_long(23, D - 2, nodes=NODES, Ks=60))
+    return z1
 
 
 def convert_seed(z0, D):
@@ -150,7 +173,9 @@ def predict(hist, Dt):
 
 def solve(D, z0, lam_guess, t0, src, Delta_old=None):
     S, R = make(D, z0[-1], nodes=NODES, threads=THREADS, kc=KC, Ks=KS)
-    if len(z0) != S.layout()[2]:            # a seed with other nodes (drop the outer node blocks) and/or kc = 23
+    if SEED_XK is not None and abs(SEED_XK - XK) > 1e-9 and src != "continuation":
+        z0 = convert_xk(z0, D, SEED_XK)        # a seed matched elsewhere (lengths can coincide: 0.65 vs 0.7)
+    elif len(z0) != S.layout()[2]:            # a seed with other nodes (drop the outer node blocks) and/or kc = 23
         z0 = convert_seed(z0, D)
     if np.linalg.norm(R(z0)) > 1e-8:           # predictor or old seed far off: damped LM first, then NE polishes
         z0, _, _, _ = dd_solve(R, z0, maxjac=12, use_dd=False, stall=3)
