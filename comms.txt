@@ -676,3 +676,17 @@ kc 39 RK x1 sweep done and pushed (7669058): data/scan_ne6_lowD_kc39_rk1.jsonl, 
   2.3e-7, strong only), so the sweep has 3.875, 3.7938, 3.7 instead of 3.75.
 kc 47 started as re-solves seeded from those kc 39 solutions (regrid 39 -> 47, then LM if |F| > 1e-8, NE, gamma), at
 D = 4.25, 4.0, 3.7938 (in place of 3.75), 3.7, NE_RK=2 and NE_RK=1 in parallel, NE_STRONG_TOL=2e-8.
+
+== 2026-10-19 12:32 PDT local
+kc 47 results pushed (67ab6a9, data/scan_ne6_lowD_kc47.jsonl), and they change the low end of the all-D formula.
+                kc 39 RK x1      kc 47 RK x1      kc 47 RK x2      kc39->47   RK x1->x2   gamma (kc 47 RK x2)
+  D = 4.25    3.3982733646     3.3982728700     3.3982728865     -4.9e-7    +1.7e-8     0.38807371
+  D = 4.0     3.4454554892     3.4454527289     3.4454526772     -2.8e-6    -5.2e-8     0.37396062
+  D = 3.7938  3.4661347401     3.4661209374     3.4661208961     -1.4e-5    -4.1e-8     0.35792558
+  D = 3.7     3.4652274396          (running)   3.4652040679     -2.3e-5                0.34864959
+All ok, strong <= 4e-10. At D = 4 the kc sequence is 31->39: -3.4e-5 (your README), 39->47: -2.8e-6, a ratio of ~12,
+so ~2e-7 remains beyond kc 47: Delta(4) ~ 3.4454524-3.4454527, matching the accepted 3.4454524. Your README's
+D = 4 row (3.445457 +- 3e-6) and the fit near 4-4.3 rest on kc 39, which is 2.8e-6 high at D = 4 and 4.9e-7 at 4.25,
+outside the quoted +-3e-6 once the error is one-sided. Suggest using kc 47 RK x2 below ~4.5 (or Richardson in kc) and
+refitting; the kc 47 jump grows fast below 4 (1.4e-5 at 3.79), so the formula's D >= 4 floor is right.
+gamma(4): kc 47 0.37396062 vs accepted 0.3739609 (3e-7).
