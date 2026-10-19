@@ -8,7 +8,7 @@ usage: python3 scan_ne.py out.jsonl D_from D_end h hmax [xK=0.6|0.7] [seed prefi
 Seeds are kc = 23 solutions; for another kc they are regridded. Threads per process: env NE_THREADS (2).
 env NE_SEED_MAX: re-solve only the seeds up to this D, then continue from those solutions.
 env NE_JUNK_H: step of the junk solve's forward-difference Jacobian (default 1e-2; 1e-3 reaches the bottom of the flat
-  valley at D ~ 29, where 1e-2 can stop 1e-7 short in Delta).
+  valley at D ~ 29, where 1e-2 can stop 1e-7 short in Delta). A comma list (1e-2,3e-3,1e-3) is tried in turn.
 env NE_RK: multiply all RK4 step counts (x_K = 0.7 needs 4).
 env NE_KS: horizon series terms (default 60; x_K = 0.5 needs ~120).
 env NE_SMOOTH=1: after each solve, fix the junk directions by smoothness (smooth_junk.py) and re-solve, until
@@ -137,7 +137,7 @@ def solve(D, z0, lam_guess, t0, src, Delta_old=None):
     if JUNK:
         from junk_solve import junk_solve
         Delta_ne = float(z[-1])
-        z, ji = junk_solve(D, z, NODES, KC, JUNK, Ks=KS, h=float(os.environ.get("NE_JUNK_H", "1e-2")))
+        z, ji = junk_solve(D, z, NODES, KC, JUNK, Ks=KS, h=[float(x) for x in os.environ.get("NE_JUNK_H", "1e-2").split(",")])
         F, junk = ji["F"], ji["r"]
         js = dict(js=True, Delta_ne=Delta_ne, junk_ne=ji["r0"], n_junk=ji["n_junk"], junk_its=ji["its"])
     ok = h_[2] < 1e-12 and h_[1] < STRONG_TOL and F < 1e-7
