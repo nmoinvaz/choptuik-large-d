@@ -29,12 +29,14 @@ def dd_norm(Fh, Fl):
     return float(np.linalg.norm(Fh + Fl, axis=-1)) if np.ndim(Fh) == 1 else np.linalg.norm(Fh + Fl, axis=-1)
 
 
-def dd_solve(R, zh, zl=None, maxjac=12, ncorr=4, mus=None, tol=1e-25, cut=0.0, verbose=False, stall=3, fix_delta=False):
+def dd_solve(R, zh, zl=None, maxjac=12, ncorr=4, mus=None, tol=1e-25, cut=0.0, verbose=False, stall=3, fix_delta=False, use_dd=True):
     """Levenberg-Marquardt with a damping grid and chord corrections, double-double residual.
     cut > 0 additionally drops singular directions with sigma/sigma_max < cut (junk directions the f64
     Jacobian cannot resolve). Returns zh, zl, |F|, history."""
     zh = np.array(zh, float)
     zl = np.zeros_like(zh) if zl is None else np.array(zl, float)
+    if not use_dd:                       # plain f64 residual (when rounding is far below the |F| floor)
+        R = _F64(R)
     mus = 10.0 ** np.arange(-4, -16.5, -0.5) if mus is None else np.asarray(mus)
     Fh, Fl = R.residual_dd(zh, zl)
     F = Fh + Fl
@@ -86,6 +88,19 @@ def dd_solve(R, zh, zl=None, maxjac=12, ncorr=4, mus=None, tol=1e-25, cut=0.0, v
         if bad >= stall:
             break
     return zh, zl, nF, hist
+
+
+class _F64:
+    """Wraps a RustResidual so dd_solve runs on the f64 residual (the low word is added, then ignored)."""
+    def __init__(self, R):
+        self.R = R
+
+    def residual_dd(self, H, L):
+        F = self.R(np.asarray(H) + np.asarray(L))
+        return F, np.zeros_like(F)
+
+    def jacobian(self, z):
+        return self.R.jacobian(z)
 
 
 def profile(R, zh, zl, deltas, **kw):

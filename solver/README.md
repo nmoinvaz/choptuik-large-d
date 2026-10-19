@@ -21,6 +21,7 @@ Install the kernel first (`pip install .` at the repo root), then run scripts fr
 | `rust_solver.py` | `make(D, Δ_ref)` → (S, RustResidual); `jacobian_rust`; `convert_06_to_07` (move the matching point) |
 | `dd_solver.py` | `dd_solve` (double-double residual and unknowns, f64 Jacobian); `profile` / `profile_minimum` (see below) |
 | `scan_long4.py`, `scan_long5.py` | D-continuation on the Rust kernel, matching at x_K = 0.6 / 0.7 |
+| `scan_profile.py` | D-continuation where each Δ is the profile minimum (the reliable method above D ≈ 26) |
 | `gamma_rust_sweep.py` | γ = 1/λ for every stored solution, λ = root of det M(λ) with the Rust mode matrix (~1.3 s per D) |
 | `gamma_root.py`, `gamma.py` | The same with the Python mode matrix (reference, ~4 min per D) |
 | `prof_test.py` | Profile minimum of Δ at one D: `python prof_test.py D seeds/longB_D30.0503.npy 0.6 3e-4 20` |
