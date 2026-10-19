@@ -2,6 +2,9 @@
 
 Rust port of the multiple-shooting residual `F(z)` used to compute Choptuik's discretely self-similar critical solution in D = n + 2 dimensions. It covers the centre series, the RK4 shooting segments and the horizon series on a 941-unknown spectral layout, and is called from Python through PyO3 as a drop-in for `S.residual`.
 
+[`hp/`](hp/) is a separate double-double (~32 digit) solver built to reach large D, where f64 can no longer pin the
+period ([below](#double-double-solver-hp-in-progress)).
+
 ![Echo period Δ(D) and critical exponent γ(D) with one rational formula for all D ≥ 4](solver/delta.svg)
 
 The echo period Δ(D) and critical exponent γ(D), computed with this kernel and the solver in [`solver/`](solver/).
@@ -46,6 +49,11 @@ ten times tighter), they reproduce each point within its own precision:
 | 4.3 – 20 | $\le 4\times10^{-9}$ | $3\times10^{-11}$ – $4\times10^{-9}$ | $\le 3.3\times10^{-8}$ | $\le 7\times10^{-8}$ |
 | 20 – 30 | $\le 1\times10^{-8}$ | $\le 3\times10^{-8}$ | $\le 2.3\times10^{-9}$ | $\sim 10^{-9}$ |
 | 34 – 40, never seen by the fit | $\le 2.1\times10^{-6}$ | $1$ – $3\times10^{-6}$ | $\le 5\times10^{-7}$ up to $D = 35.8$ | |
+
+An independent double-double computation ([below](#double-double-solver-hp-in-progress)) agrees with the formula to
+$2.7\times10^{-9}$ or better on $8 \le D \le 21$. It also shows that the f64 points from $D = 8$ upward (23 Fourier
+modes in time) sit $2$–$4\times10^{-10}$ above the true values, so their quoted $3\times10^{-11}$ was optimistic by about
+ten; that is below the formula's tolerance and does not change it.
 
 At $D = 4$ the formula gives $\Delta = 3.4454524$ and $\gamma = 0.3739610$, the accepted four-dimensional values.
 Near $D = 4$ the points themselves set the limit: the solution needs many Fourier modes in time there, and $\Delta(4)$
@@ -189,6 +197,62 @@ non-analytic or slow large-$D$ term allowed, $\pi^2/6$ and $\sqrt e$ fit as well
 $\Delta_\infty$ would take about eight digits and a settled large-$D$ form, from the $D \to \infty$ limit of the equations
 rather than from larger $D$.
 
+## Double-double solver (`hp/`, in progress)
+
+Above $D \approx 26$ the f64 points lose precision: the period is selected by an effect that weakens exponentially with
+$D$, so rounding at $10^{-16}$ moves $\Delta$ by $10^{-7}$–$10^{-6}$ at $D = 30$–$40$, and points far above $D = 40$ are out of
+reach. [`hp/`](hp/) (crate `hpkernel`) is a separate solver built for that regime, to settle the large-$D$ behaviour
+with computed points rather than an assumed form.
+
+- **Arithmetic:** double-double (hi + lo, about 32 digits) on 8-lane vectors: one AVX-512 register per lane group, two
+  AVX2 registers, or a portable array, chosen at compile time (`hp/build.sh` builds with `-C target-cpu=native`).
+  Error-free two-sum and FMA two-product; sums of products accumulated Sum2-style.
+- **No fixed-step error:** Taylor series in $x$ (order 36, step points planned once per $D$ so the truncation term is
+  $10^{-32}$), centre and horizon series run until their tails are below $10^{-33}$, and pure collocation in $\tau$ on the
+  half period ($p, m$ odd, $a, c$ even) with no spectral truncation.
+- **Exact Jacobian:** forward-mode duals over double-double, double-double LU for Newton, a transpose solve that gives
+  $\partial\Delta/\partial F$ at every point, and a Levenberg–Marquardt fallback.
+- **Continuation in $D$:** exact tangent $dz/dD = -J^{-1}\,\partial F/\partial D$ and cubic Hermite prediction.
+
+| Check | Result |
+|---|---|
+| double-double $+, \times, \div$ against mpmath | $1.3$–$1.6\times10^{-32}$ relative |
+| horizon series against 40-digit mpmath | $2\times10^{-32}$ |
+| Jacobian against double-double differences | agrees to the difference truncation |
+| Newton at $D = 8$ | quadratic, $\lvert F\rvert = 5\times10^{-31}$ in 4 steps |
+| $\Delta(7)$, $\Delta(7.75)$ against the 39-mode references ($\pm3\times10^{-11}$) | $+3.1\times10^{-12}$, $-2.8\times10^{-12}$ |
+| 32 / 48 / 64 collocation points in $\tau$, $D = 7$–$17$ | $\Delta$ agrees to $10^{-16}$ |
+| first node at $x = 0.02$ / $0.05$ / $0.1$, $D = 16.75$ | $\Delta$ identical to $10^{-16}$ |
+
+Values so far, each converged to $\lvert F\rvert \le 4\times10^{-29}$:
+
+| $D$ | $\Delta$ |
+|---|---|
+| 8 | 2.711790054444401 |
+| 9 | 2.606874063723623 |
+| 10 | 2.521078919561945 |
+| 12 | 2.389188553640616 |
+| 14 | 2.292445123615376 |
+| 16 | 2.218342998377886 |
+| 21.19141 | 2.087734162683868 |
+
+What the solver has shown so far:
+
+- **The weak directions are physical.** The near-null directions that stalled the f64 solver ("junk") are of two
+  kinds. Outgoing high-frequency waves launched near the centre thin out like $(x/x_K)^{n/2}$ on their way to the
+  matching point. The highest $\tau$-harmonics of the centre data are evanescent near the centre: at $D = 18$, harmonic
+  31 reaches $x = 0.1$ with a gain of $3\times10^{-16}$. Both leave those directions nearly invisible to the residual.
+  Their effect on $\Delta$ is negligible (components $\sim10^{-13}$ of the singular vectors), but they shrink Newton's
+  basin, and more $\tau$ resolution adds more of them: 80 points fail to converge even at $D = 8$, where 48 and 64
+  agree to $10^{-20}$. So the solver uses 32 points in $\tau$ and puts its first node at $x = 0.1$.
+- **How fast the selection weakens.** The largest entry of $\partial\Delta/\partial F$, the factor by which a residual
+  error moves $\Delta$, grows from $1.2\times10^{2}$ at $D = 8.25$ to $2\times10^{5}$ at $D = 21$, about $e^{0.57}$ per unit
+  of $D$. With residuals near $10^{-30}$, that rate would leave $\Delta$ good to about $10^{-6}$–$10^{-5}$ at $D = 100$, where
+  the candidate large-$D$ forms differ by $2\times10^{-4}$, if it holds.
+
+Status: the continuation is running upward from $D = 21$ at about 10 s per point, and a point-by-point comparison with
+the f64 data and the extrapolation graph above will follow.
+
 ## Backends
 
 The build targets the architecture's baseline, so one wheel runs on any CPU of that architecture. The instruction set is detected at runtime, and each residual block runs inside a `#[target_feature]` entry point for it.
@@ -274,6 +338,7 @@ pip install .                     # maturin build, enables the python feature
 cargo test --release              # backend equivalence tests, no Python needed
 python tests/test_bindings.py     # bindings test, after pip install .
 ./build.sh main                   # wheel into dist/, plus ablation variants with ./build.sh all
+hp/build.sh                       # double-double solver, built for this machine's instruction set
 ```
 
 ## Performance
@@ -309,6 +374,14 @@ src/
 └── tests.rs        bitwise backend equivalence
 python/rustkernel/  Python wrapper, RustResidual
 tests/              bindings test
+hp/                 double-double solver (crate hpkernel)
+├── src/v8.rs       8-lane f64 vector: AVX-512 / AVX2 / portable
+├── src/dv.rs       8-lane double-double, Sum2 dot accumulator
+├── src/lane.rs     value and forward-mode dual lanes
+├── src/model.rs    centre series, Taylor stepping, horizon series, residual, Jacobian
+├── src/linalg.rs   double-double LU, transpose solve, Gram matrix
+├── python/hpkernel/driver.py   grid, seeds, Newton, Levenberg-Marquardt, re-noding, tangent
+└── scan_hp.py      continuation in D
 ```
 
 ## Limits
