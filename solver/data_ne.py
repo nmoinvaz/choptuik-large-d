@@ -5,14 +5,14 @@ above comes from the NE scans (scan_ne*.jsonl, ok records only, matching at x_K 
 another setup is asked for). Duplicate D (re-solves of the same point) are averaged; their spread is kept.
 
     rows = load()                      # {D: dict(D, Delta, gamma, src, spread)}
-    rows = load(xK=0.7) / load(kc=31)  # another setup (local scans), NE records only
+    rows = load(xK=0.7) / load(kc=31) / load(smooth=True)  # other setups, NE records only
 """
 import glob, json
 import numpy as np
 from data_best import load as _old
 
 
-def ne_records(xK=0.6, kc=23):
+def ne_records(xK=0.6, kc=23, smooth=False):
     recs = []
     for fn in sorted(glob.glob("scan_ne*.jsonl")):
         for l in open(fn):
@@ -21,19 +21,19 @@ def ne_records(xK=0.6, kc=23):
                 continue
             if abs(r.get("xK", 0.6) - xK) > 1e-9:
                 continue
-            rkc = 31 if "kc31" in fn else 23
-            if rkc != kc:
+            rkc = r.get("kc", 31 if "kc31" in fn else 23)
+            if rkc != kc or bool(r.get("smooth", False)) != smooth:
                 continue
             recs.append(r)
     return recs
 
 
-def load(xK=0.6, kc=23, dmin_ne=17.2):
+def load(xK=0.6, kc=23, dmin_ne=17.2, smooth=False):
     by = {}
-    for r in ne_records(xK, kc):
+    for r in ne_records(xK, kc, smooth):
         by.setdefault(round(r["D"], 4), []).append(r)
     rows = {}
-    if xK == 0.6 and kc == 23:
+    if xK == 0.6 and kc == 23 and not smooth:
         for k, r in _old().items():
             if k < dmin_ne and r.get("Delta") is not None:
                 rows[k] = dict(D=r["D"], Delta=r["Delta"], gamma=r.get("gamma"), src="old", spread=0.0)

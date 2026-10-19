@@ -7,6 +7,7 @@ the weak singular values, and gamma = 1/lambda from the Rust growth-mode matrix.
 usage: python3 scan_ne.py out.jsonl D_from D_end h hmax [xK=0.6|0.7] [seed prefixes, comma separated] [kc=23]
 Seeds are kc = 23 solutions; for another kc they are regridded. Threads per process: env NE_THREADS (2).
 env NE_SEED_MAX: re-solve only the seeds up to this D, then continue from those solutions.
+env NE_SMOOTH=1: after each solve, fix the junk directions by smoothness (smooth_junk.py) and re-solve, twice.
 Run from the directory holding gamma_rust.jsonl; seed prefixes may include a directory (../seeds/long7_D).
 (D_end below the last seed: re-solve only, no continuation)
 """
@@ -19,6 +20,7 @@ from rust_solver import make, NODES_L
 from spec_long import make_long
 from ne_solver import ne_solve
 from dd_solver import dd_solve
+from smooth_junk import smooth_junk
 
 out, D_from, D_end, h, hmax = sys.argv[1], float(sys.argv[2]), float(sys.argv[3]), float(sys.argv[4]), float(sys.argv[5])
 XK = float(sys.argv[6]) if len(sys.argv) > 6 else 0.6
@@ -29,6 +31,9 @@ KC = int(sys.argv[8]) if len(sys.argv) > 8 else 23
 THREADS = int(os.environ.get("NE_THREADS", "2"))
 if KC != 23:
     OUTP = OUTP.replace("_D", f"_kc{KC}_D")
+SMOOTH = os.environ.get("NE_SMOOTH", "0") == "1"
+if SMOOTH:
+    OUTP = OUTP.replace("_D", "_sj_D")
 _g = [json.loads(l) for l in open("gamma_rust.jsonl")]
 _gD = np.array([r["D"] for r in _g if r.get("lam")]); _gl = np.array([r["lam"] for r in _g if r.get("lam")])
 
@@ -77,10 +82,14 @@ def solve(D, z0, lam_guess, t0, src, Delta_old=None):
     if np.linalg.norm(R(z0)) > 1e-8:           # predictor or old seed far off: damped LM first, then NE polishes
         z0, _, _, _ = dd_solve(R, z0, maxjac=12, use_dd=False, stall=3)
     z, info = ne_solve(R, z0)
+    if SMOOTH:
+        for _ in range(2):
+            z, _, _ = smooth_junk(R, S, z)
+            z, info = ne_solve(R, z)
     h_ = info["hist"][-1]
     ok = h_[2] < 1e-12 and h_[1] < 1e-9 and info["F"] < 1e-7
     lam = gamma_of(R, z, lam_guess) if ok else None
-    rec = dict(D=D, xK=XK, Delta=float(z[-1]), Delta_old=Delta_old, F=info["F"], strong=h_[1], weak=h_[2], junk=h_[3],
+    rec = dict(D=D, xK=XK, kc=KC, smooth=SMOOTH, Delta=float(z[-1]), Delta_old=Delta_old, F=info["F"], strong=h_[1], weak=h_[2], junk=h_[3],
                n_weak=info["n_weak"], weak_s=[float(f"{x:.2e}") for x in info["weak_s"]], n_outer=len(info["hist"]),
                lam=lam, gamma=(1 / lam if lam else None), ok=bool(ok), source=src, seconds=round(time.time() - t0))
     return z, rec

@@ -1,8 +1,11 @@
-"""Delta from two setups (x_K = 0.6 vs 0.7, or kc 23 vs 31) at the same D: interpolate the first (local cubic
+"""Delta from two setups at the same D (usage: cmp_setups.py [A] B, setups as xK,kc[,sj]; default 0.6,23 vs 0.7,23): interpolate the first (local cubic
 through its 4 nearest points) to the D values of the second. The difference is the discretisation error bar."""
 import numpy as np, sys
 from data_ne import load
-a = load(); b = load(xK=0.7) if len(sys.argv) < 2 else load(kc=int(sys.argv[1]))
+def setup(arg):   # "xK,kc[,sj]" e.g. 0.7,23 or 0.6,31,sj
+    p = arg.split(","); return load(xK=float(p[0]), kc=int(p[1]), smooth=len(p) > 2 and p[2] == "sj")
+a = setup(sys.argv[1]) if len(sys.argv) > 2 else load()
+b = setup(sys.argv[-1]) if len(sys.argv) > 1 else load(xK=0.7)
 Da = np.array(sorted(k for k in a if k >= 17)); ya = np.array([a[k]["Delta"] for k in Da])
 ga = np.array([a[k]["gamma"] or np.nan for k in Da])
 for k in sorted(b):
