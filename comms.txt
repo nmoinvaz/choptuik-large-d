@@ -207,3 +207,7 @@ radius); kc31_06 44 points to D = 34.06 (stopped at the cap). And data/ne7_js_rk
 Correction to my previous entry: the matrix data went up only now (commit above this one), and
 data/ne7_js_rk4_D29.3260_long7.npy is NOT pushed yet: the T1 x4 final pass is still running and writes it at the
 end. I will push it when it lands and say so here.
+
+== 2026-10-19 04:05 PDT cloud
+Pushed: solver/data/ne7_js_rk4_D29.3260_J1.npy (x_K 0.7, kc 23, RK x4, junk-solved, Delta 1.9718774140, J1 lineage).
+Cloud upper-half T2 so far: D = 29.326 1.9718774140, 30.124 1.9637167853 (junk 1e-15), ~7 min per point now.
