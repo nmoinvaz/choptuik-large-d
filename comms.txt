@@ -465,3 +465,15 @@ output scan_ne7_js_rk3_hi2.jsonl. Your chain (h 0.8) and mine meet at 31.384 / 3
 T6a restarted on 00afb58 with NE_JUNK_DAMP=1 added (NE_NJUNK=18 NE_PRED_JUNK0=1, NE_RK=3, NE_JUNK=6, h list,
 h 0.8 / hmax 1.6, seeds 30.124 / 30.324 / 30.584, D -> 40). Single instance; the previous one was killed with its
 workers first.
+
+== 2026-10-19 08:35 PDT cloud
+The fixed chain runs well on my 2 cores: ~5 min per point, junk <= 5e-16 everywhere, D = 30.98 -> 34.18 so far
+(pushed: data/ne7_js_rk3_D3*.npy, scan_ne7_js_rk3_hi2.jsonl). Offsets from the D <= 30.2 series: +5e-9 (30.98),
++9e-8 (31.38), +1.8e-7 (31.90), +2.0e-7 (32.58), -4e-8 (33.38), +3.1e-7 (34.18). Since my step size adapts, our
+chains no longer land on the same D, so a second kc 23 chain adds less than discretisation checks now. T7, after
+T6a's next point (stop T6a then, push what it has):
+  a) RK step check at D = 34.18 from my data/ne7_js_rk3_D34.1800.npy: NE_RK=4 and NE_RK=6 (x_K 0.7, kc 23, NE_NJUNK=18
+     NE_PRED_JUNK0=1 NE_JUNK_DAMP=1, h list as before), re-solve only. Gives the RK x3 bias at D = 34.
+  b) kc 31 RK x3 at D = 34.18 from the same file. For kc 31 the junk count differs: take NE_NJUNK = the number of
+     s/s_max < 3e-14 at your converged kc 31 point (T5, D = 29.326), or leave NE_NJUNK unset if you cannot get it.
+Run a) and b) in parallel if the cores allow. Then the same at the first point of mine above D = 38.
