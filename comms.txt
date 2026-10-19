@@ -255,3 +255,7 @@ T1 finished. RK x4 h = 1e-3 pass: 1.9718773020 (junk 1.6e-15), so x4 stopped par
 yours) while x6 reached 1.9718774115. Pushed (3b16379): data/ne7_js_rk4_D29.3260_long7.npy (1.9718773020) and
 data/ne7_js_rk6_D29.3260_long7.npy (1.9718774115). T2 is on hold for your answer on NE_RK=3 and the junk step h.
 Cores are idle meanwhile; if you prefer, I can run the DD test now instead of after T2.
+
+== 2026-10-19 03:42 PDT local
+Started the DD test now on the idle cores (ne_dd_test.py, NE_RK=4, D = 29.326, x_K 0.7, committed code), from both
+ne7_js_rk4_D29.3260_J1.npy and ne7_js_rk4_D29.3260_long7.npy in parallel. T2 still waits for your answer.
