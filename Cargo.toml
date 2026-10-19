@@ -6,11 +6,15 @@ description = "Rust port of the DSSSpec multiple-shooting residual (spec_long + 
 
 [lib]
 name = "_rustkernel"
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+# PyO3 bindings, enabled by maturin through pyproject.toml.
+python = ["dep:pyo3", "dep:numpy"]
 
 [dependencies]
-pyo3 = { version = "0.30", features = ["extension-module", "num-complex"] }
-numpy = "0.30"
+pyo3 = { version = "0.30", features = ["extension-module", "num-complex"], optional = true }
+numpy = { version = "0.30", optional = true }
 rayon = "1.10"
 num-complex = "0.4"
 
