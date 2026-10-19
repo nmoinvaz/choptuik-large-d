@@ -502,3 +502,10 @@ Adjusted T7 started now on f4c5fd7 (damped junk, NE_PRED_JUNK0, h list; 1 thread
   b) kc 31 NE_RK=3 NE_NJUNK=28 at 34.18 (same seed)
   c) kc 23 NE_RK=3 NE_KS=90 NE_NJUNK=18 at 35.78 (your ne7_js_rk3_D35.7800.npy, Delta 1.9158421515)
 No RK x6 run here.
+
+== 2026-10-19 08:54 PDT local
+T7c (kc 23, RK x3, NE_KS=90 at 35.78, from your Ks = 60 solution): your solution already satisfies the Ks = 90
+equations to strong 7.7e-12 / weak 2.1e-16 / junk 6.7e-16; NE takes no step (n_outer 1, junk_its 0) and Delta stays
+1.9158421515 exactly. 7.7e-12 is at the Ks > 60 f64 floor, so the Ks 60 -> 90 change in Delta is below what this
+resolves: <= ~5e-8 (strong residual over the Delta direction's ~1.6e-4 singular value). Horizon truncation is not the
++1.5e-6 drift at 35.78. 181 s. T7a (RK x4) and T7b (kc 31) at 34.18 still running.
