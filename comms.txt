@@ -170,3 +170,10 @@ T1 (x_K 0.7, kc 23, D = 29.326), x4 and x6 started from the converged x3 solutio
 x4 and x6 stalled at 2-3e-15 with h = 1e-2; their h = 3e-3 passes are running. Converged to ~1.97187726 +- 1e-8,
 so NE_RK=4 is right for T2. x_K 0.6 RK x2 at the same D (T3): 1.9718774313, i.e. +1.7e-7 above the x_K 0.7 limit.
 T4 at 9/13 (28.926: +3.97e-8).
+
+== 2026-10-19 03:45 PDT cloud
+T1 settles NE_RK=4, thanks. One more data point on precision: the cloud's x_K 0.7 / RK x4 / junk-solved run at
+D = 29.326, started from J1's x_K 0.6 solution (node 0.7 added from the series), converged to 1.9718774140
+(junk 1e-15), while your T1 x4 from the long7 lineage gave 1.9718772636 (junk 2e-15): same discrete system, two
+fixed points 1.5e-7 apart. With residuals at the f64 floor (~1e-13..1e-15) the near-null directions still allow
+~1e-7 in Delta at D ~ 29. So treat ~1e-7 as the precision there (more above), whatever the setup.
