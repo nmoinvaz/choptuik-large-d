@@ -15,7 +15,7 @@ import time
 
 import numpy as np
 
-from hpkernel.driver import load, make_solver, newton_solve, predict, renode, resample_z, save
+from hpkernel.driver import hermite, load, make_solver, newton_solve, predict, renode, resample_z, save, tangent
 
 
 def tails(s, zh, zl, nodes, M):
@@ -68,6 +68,8 @@ def main():
     ap.add_argument("--it_max", type=int, default=8)
     ap.add_argument("--threads", type=int, default=0)
     ap.add_argument("--verbose", action="store_true")
+    ap.add_argument("--Dlist", default="", help="explicit D values to visit in order (comma list or @file); "
+                    "D_end is then ignored")
     ap.add_argument("--schedule", default="", help="node changes during the scan: 'D1=x,x,...;D2=x,x,...' "
                     "(at the first converged point with D >= D_i the solution is re-noded and re-converged)")
     a = ap.parse_args()
@@ -80,24 +82,37 @@ def main():
     if nodes != nodes0:
         s0 = make_solver(D, M, nodes=nodes0, kt=a.kt, kc=a.kc, ks=a.ks, threads=a.threads)
         zh, zl = renode(s0, zh, zl, nodes0, nodes, M)
-    if M != M0 or nodes != nodes0:
-        s, zh, zl, hist, ok, dt = solve_at(D, zh, zl, a, nodes, M, a.it_max)
-        print(f"re-converged start D={D} M={M} nodes={nodes}: Delta {zh[-1]:.16f} ok {ok} ({dt:.0f}s)", flush=True)
-        if not ok:
-            raise SystemExit("start did not re-converge")
+    s, zh, zl, hist, ok, dt = solve_at(D, zh, zl, a, nodes, M, a.it_max)
+    print(f"(re-)converged start D={D} M={M} nodes={nodes}: Delta {zh[-1]:.16f} ok {ok} ({dt:.0f}s)", flush=True)
+    if not ok:
+        raise SystemExit("start did not converge")
     sched = []
     for item in filter(None, a.schedule.split(";")):
         d, xs = item.split("=")
         sched.append((float(d), [float(v) for v in xs.split(",")]))
     sched.sort()
     outdir = os.path.dirname(os.path.abspath(a.out))
-    hist_z = [(D, zh + zl)]
+    s_of = lambda Dx: make_solver(Dx, M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks, threads=a.threads)
+    hist_z = [(D, zh + zl, tangent(s_of, s, D, zh, zl))]
     dD = a.dD
+    targets = []
+    if a.Dlist:
+        txt = open(a.Dlist[1:]).read() if a.Dlist.startswith("@") else a.Dlist
+        targets = [float(v) for v in txt.replace("\n", ",").split(",") if v.strip()]
+        a.D_end = targets[-1]
     direction = 1.0 if a.D_end > D else -1.0
     while (a.D_end - D) * direction > 1e-12:
-        Dn = D + direction * min(dD, abs(a.D_end - D))
+        while targets and (targets[0] - D) * direction <= 1e-12:
+            targets.pop(0)
+        goal = targets[0] if targets else a.D_end
+        Dn = D + direction * min(dD, abs(goal - D))
         Dn = round(Dn, 6)
-        zp = predict(hist_z, Dn) if len(hist_z) > 1 else hist_z[-1][1]
+        if len(hist_z) > 1:
+            (D0, z0, t0), (D1, z1, t1) = hist_z[-2], hist_z[-1]
+            zp = hermite(D0, z0, t0, D1, z1, t1, Dn)
+        else:
+            D1, z1, t1 = hist_z[-1]
+            zp = z1 + (Dn - D1) * t1
         s, zh2, zl2, hist, ok, dt = solve_at(Dn, zp, np.zeros_like(zp), a, nodes, M, a.it_max)
         if not ok:
             print(f"D={Dn}: no convergence (|F| {hist[-1]['F'] if hist else float('nan'):.1e}); dD {dD} -> {dD / 2}", flush=True)
@@ -106,7 +121,7 @@ def main():
                 raise SystemExit("step too small")
             continue
         D, zh, zl = Dn, zh2, zl2
-        hist_z.append((D, zh + zl))
+        hist_z.append((D, zh + zl, tangent(s_of, s, D, zh, zl)))
         # the stored LU is from the last Newton call, made at the converged z
         sens = sensitivity(s, M)
         tc, th = tails(s, zh, zl, nodes, M)
@@ -141,7 +156,8 @@ def main():
                                         sens=sensitivity(s, M), tail_c=tails(s, zh, zl, new_nodes, M)[0],
                                         tail_h=tails(s, zh, zl, new_nodes, M)[1])) + "\n")
             nodes = new_nodes
-            hist_z = [(D, zh + zl)]
+            s_of = lambda Dx: make_solver(Dx, M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks, threads=a.threads)
+            hist_z = [(D, zh + zl, tangent(s_of, s, D, zh, zl))]
             dD = min(dD, 0.5)
 
 

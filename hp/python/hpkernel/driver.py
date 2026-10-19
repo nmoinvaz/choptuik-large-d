@@ -146,6 +146,7 @@ def newton_solve(s, zh, zl, tol=1e-28, it_max=12, chord=0, verbose=True, ls=True
                 print(f"  newton {it}: |F| {nF:.2e} converged (last |dz| {dd_norm(dh, dl):.1e}) Delta {zh[-1]:.15f}", flush=True)
             break
         lam = 1.0
+        accepted = not ls
         for h in range(max_halvings + 1):
             th, tl = dd_add(zh, zl, dh * lam, dl * lam)
             if not ls:
@@ -153,8 +154,14 @@ def newton_solve(s, zh, zl, tol=1e-28, it_max=12, chord=0, verbose=True, ls=True
             Th, Tl = s.residual(th, tl)
             n1 = rnorm(Th, Tl)
             if np.isfinite(n1) and n1 <= (1 - 1e-4 * lam) * n0:
+                accepted = True
                 break
             lam *= 0.5
+        if not accepted:
+            hist.append(dict(it=it, F=nF, failed="line search", Delta=float(zh[-1]), t=round(time.time() - t0, 1)))
+            if verbose:
+                print(f"  newton {it}: |F| {nF:.2e}: no decrease along the Newton step, giving up", flush=True)
+            break
         zh, zl = th, tl
         rec = dict(it=it, F=nF, dz=dd_norm(dh, dl), lam=lam, dDelta=float(dh[-1] + dl[-1]) * lam, Delta=float(zh[-1]),
                    piv=(pmin, pmax), t=round(time.time() - t0, 1))
@@ -247,3 +254,27 @@ def predict(hist, D):
                 w *= (D - Dj) / (Di - Dj)
         out = out + w * zi
     return out
+
+
+def tangent(s_of_D, s, D, zh, zl, h=1e-7):
+    """dz/dD at a converged point: -J^-1 dF/dD with the LU stored in s (from the last Newton call at z) and dF/dD by
+    central differences in D (the step points of s are reused)."""
+    segs = s.get_segs()
+    sp, sm = s_of_D(D + h), s_of_D(D - h)
+    sp.set_segs(segs)
+    sm.set_segs(segs)
+    Fp, Fm = sp.residual(zh, zl), sm.residual(zh, zl)
+    dF = ((Fp[0] - Fm[0]) + (Fp[1] - Fm[1])) / (2 * h)
+    th, tl = s.lu_solve(-dF, np.zeros_like(dF))
+    return th + tl
+
+
+def hermite(D0, z0, t0, D1, z1, t1, D):
+    """cubic Hermite through (D0, z0, z0') and (D1, z1, z1'), evaluated at D (extrapolation)"""
+    h = D1 - D0
+    u = (D - D0) / h
+    h00 = 2 * u ** 3 - 3 * u ** 2 + 1
+    h10 = u ** 3 - 2 * u ** 2 + u
+    h01 = -2 * u ** 3 + 3 * u ** 2
+    h11 = u ** 3 - u ** 2
+    return h00 * z0 + h10 * h * t0 + h01 * z1 + h11 * h * t1
