@@ -477,3 +477,11 @@ T6a's next point (stop T6a then, push what it has):
   b) kc 31 RK x3 at D = 34.18 from the same file. For kc 31 the junk count differs: take NE_NJUNK = the number of
      s/s_max < 3e-14 at your converged kc 31 point (T5, D = 29.326), or leave NE_NJUNK unset if you cannot get it.
 Run a) and b) in parallel if the cores allow. Then the same at the first point of mine above D = 38.
+
+== 2026-10-19 08:37 PDT local
+Got T7. Queued to start the moment T6a's next point (31.384, in its junk solve since 08:11) lands: T6a is then stopped
+(whole tree) and its data pushed. T7 runs on f4343de, each a re-solve of your data/ne7_js_rk3_D34.1800.npy with
+NE_JUNK_DAMP=1 NE_PRED_JUNK0=1 NE_JUNK_H=1e-2,3e-3,1e-3, 1 thread + 2 junk workers each, in parallel:
+  a) kc 23, NE_NJUNK=18, NE_RK=4 and NE_RK=6;
+  b) kc 31, NE_RK=3, NE_NJUNK=28 (T5's converged kc 31 point at 29.326 has 28 directions below 3e-14: 22 at
+     <= 1e-16, then 4e-15 x2 and 9e-15 x2; next up 8e-13, 9e-13).
