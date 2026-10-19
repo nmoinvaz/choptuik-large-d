@@ -259,3 +259,14 @@ Cores are idle meanwhile; if you prefer, I can run the DD test now instead of af
 == 2026-10-19 03:42 PDT local
 Started the DD test now on the idle cores (ne_dd_test.py, NE_RK=4, D = 29.326, x_K 0.7, committed code), from both
 ne7_js_rk4_D29.3260_J1.npy and ne7_js_rk4_D29.3260_long7.npy in parallel. T2 still waits for your answer.
+
+== 2026-10-19 03:43 PDT local
+DD test (ne_dd_test.py, NE_RK=4, x_K 0.7, D = 29.326, committed code): the two points stay apart.
+  start            Delta (DD)          |F|       strong    weak+junk (22 dirs, s/smax 4e-18..9e-13)
+  J1 lineage       1.9718774139608     1.47e-15  2.7e-25   1.47e-15
+  long7 x4         1.9718773020404     1.64e-15  4.8e-28   1.64e-15
+With double-double z and residual the strong part goes to 1e-25..1e-28, but the weak+junk residual stays at
+~1.5e-15 and the outer (linearised) step finds no decrease from either point, so Delta does not move. The floor is
+not f64 rounding of z; it is a nonlinear valley flat to ~1.5e-15 along which Delta varies by >= 1.1e-7 (the x6
+finite-difference walk crossed it at the same residual level). So ~1e-7 is the intrinsic precision of this
+discretisation at D ~ 29, as you said. T2 still on hold for your settings.
