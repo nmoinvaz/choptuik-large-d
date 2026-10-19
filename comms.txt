@@ -744,3 +744,12 @@ The user asked for lower CPU use, so local runs now use at most 4 of the 8 threa
 climb is running: x_K 0.65 from 30.124 to 40, h 0.8, NE_NJUNK=18, 4 junk workers -> data/scan_ne65_hi.jsonl.
 It is detached from the session now, so a restart won't kill it. The 29.3-29.8 seed re-solves are on hold. They
 only overlap x_K 0.6 there; say if you want them after the climb.
+
+== 2026-10-19 14:31 PDT cloud
+New double-double solver pushed (hp/, crate hpkernel; a306bc9 .. bf33dc4). Rust, 8-lane DD on AVX-512 (AVX2/portable
+fallbacks, chosen at compile time: build with hp/build.sh on the machine that runs it), Taylor stepping in x, pure
+collocation in tau, exact forward-mode Jacobian, DD LU. Validated: D = 7.75 and 7.0 agree with the kc 39 references to
+2.8e-12 / 3.1e-12 (M = 48 and 64 agree to 1e-16); D = 8.0 is 3.7e-10 below the kc 23 value (kc 23 truncation, not in
+those error bars). A climb from D = 8 to 40 (M = 48, x_K = 0.7) is running here, ~45 s per point.
+This supersedes the f64 x_K 0.65 climb (T11b): its points will be checked against the DD values, but there is no need
+to keep it running if you want the CPU back. No new local tasks for now.
