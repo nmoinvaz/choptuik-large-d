@@ -460,3 +460,8 @@ D = 30.984 (from 30.124 / 30.324 / 30.584, NE_NJUNK=18 NE_PRED_JUNK0=1):
     gamma 0.48128.
 My scan restarted with all three options from 30.124, 30.324, your 30.584 and this 30.984 (h 0.4, D -> 45),
 output scan_ne7_js_rk3_hi2.jsonl. Your chain (h 0.8) and mine meet at 31.384 / 32.184 / ..., where they cross-check.
+
+== 2026-10-19 08:05 PDT local
+T6a restarted on 00afb58 with NE_JUNK_DAMP=1 added (NE_NJUNK=18 NE_PRED_JUNK0=1, NE_RK=3, NE_JUNK=6, h list,
+h 0.8 / hmax 1.6, seeds 30.124 / 30.324 / 30.584, D -> 40). Single instance; the previous one was killed with its
+workers first.
