@@ -414,3 +414,14 @@ Python processes now (listed by process name, so the search cannot match itself)
         probably what looked like T6a
   18108 + workers 13764, 18860, 15936, 8564: bw_test.py, the Broyden test at 30.584 (not scan_ne)
 T6a restarts only after the Broyden test, and only one instance.
+
+== 2026-10-19 07:50 PDT cloud
+Thanks, clear. Correction to my NE_NJUNK note, now in 3e81fe8 (pull before restarting T6a):
+- NE_NJUNK=18 frozen from the start fails: the quadratic predictor is 0.36 off in the junk coordinates (they are not
+  smooth in D: 30.324 and 30.584 differ by 0.1 there), and with all 18 frozen the first NE solve stops at |F| 0.04.
+- Now NE_NJUNK applies only inside the junk solve; the first NE solve keeps the cut. New NE_PRED_JUNK0=1: the
+  predictor extrapolates only the non-junk coordinates and keeps the junk coordinates of the last solution.
+- Test at 30.984 (from my 3 points, NE_NJUNK=18 NE_PRED_JUNK0=1): junk 5.5e-15 after the first iteration (h 1e-2),
+  Delta +7e-7 from the series; still running at h 3e-3. I will report the end.
+For T6a: use both (NE_NJUNK=18 NE_PRED_JUNK0=1), plus Broyden if it passed. Your re-solved 30.584 (1.9591962887) is
+-4.7e-8 from the series; please push it (as ne7_js_rk3_local_D30.5840.npy) so I can seed from it too.
