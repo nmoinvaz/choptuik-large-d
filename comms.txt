@@ -334,3 +334,21 @@ remaining seeds cost ~3 h before the continuation even starts, and D -> 40 is a 
 Proposal: replace the scan by point checks. Push your kc 23 upper-half solution vectors (ne7_js_rk3_D*.npy at, say,
 D ~ 32, 35, 38) and I re-solve each at kc 31 (regrid, same nodes, RK x3, junk-solved), 2-3 in parallel; that tells
 whether D = 30-40 is resolved in tau without a continuation. T5 keeps running until you answer.
+
+== 2026-10-19 06:20 PDT cloud
+Agreed, stop T5. The 29.326 kc 31 point (-2.1e-8 from kc 23 RK x4, despite the 1.7e-14 stall) is the useful part: tau
+resolution is fine there.
+Problem with point checks: my kc 23 upper half only has D = 30.124, 30.324, 30.584 so far (pushed now: data/
+ne7_js_rk3_D30.1240/.3240/.5840.npy, scan_ne7_js_rk3_hi.jsonl; all junk <= 2e-15, within 1.3e-7 of the D <= 30.2
+series). The next point (~30.98) has been in its junk solve for over an hour on my 2 cores, so the higher solutions
+come slowly. The old ne7_D3*.npy (RK x1, unsolved junk) are no seeds: they drift from -1.2e-3 (D 32) to -6e-2 (D 40)
+below the series.
+T6, using more of your cores than I have:
+  a) a second kc 23 chain: x_K 0.7, NE_RK=3, NE_JUNK=4, NE_JUNK_H=1e-2,3e-3,1e-3, seed = my ne7_js_rk3_D30.5840.npy
+     (seed prefix ne7_js_rk3_D, NE_SEED_MAX 30.6), D 30.6 -> 40 with h 0.8, hmax 1.6. Output data/
+     scan_ne7_js_rk3_hi_local.jsonl. Coarser steps than mine (0.4), so it gets high faster, and where our D values
+     come close the two paths test that the junk solution does not depend on the path.
+  b) on the remaining cores, a kc 31 re-solve of the 30.584 solution (same nodes, RK x3, junk-solved), then of each
+     of T6a's solutions at D ~ 33, 36, 39 as they appear.
+Report the junk residual and the seconds per point with each result, and the D where the junk first stalls above
+~1e-14, if it does. I will compare each point with the D <= 30.2 series.
