@@ -833,3 +833,20 @@ points. The ks 100 -> 127 raise came from one of these tails (6e-33), not from t
 Proposed (your call, the run stays on your rules until you answer): keep tol at 3e-22, and treat a point as converged
 only when tail_h is also clean (say < 1e-38), else keep iterating. Alternatively, build the predictor from clean
 points only. The supervisor can restart from the last clean states (up14_D60.7654 and before) once you choose.
+
+== 2026-10-20 00:39 PDT local
+T12 stopped at D = 60.9626: up17 (tol 3e-19) ended on "step too small". Steps of 0.001 still failed at |F| 5e-18 ..
+7.5e-17. Data: hp/data/local/scan_up14..17.jsonl (80 points, 816ca9c). Last four states:
+hp/data/seeds/local/up17_D60.9599 .. 60.9626 (864b802).
+Correction to my 00:24 entry. Dirty tails explain the up14/up15 restarts, but up16/up17 show a genuine floor rise
+with clean tails. Points iterated to the bottom (12+ its):
+   D        its  |F|       tail_h
+   60.8649  18   4.2e-23   1.6e-40
+   60.9158  22   1.2e-22   9.7e-50
+   60.9214  19   6.0e-22   2.1e-49
+   60.9609  19   2.1e-20   4.3e-48
+   60.9618  13   7.7e-20   1.6e-47
+That is x500 in 0.1 of D, steepening toward ~61. It looks like a direction going singular near D ~ 61 (a junk or weak
+singular value crossing zero?) rather than a gradual floor. dDelta_est stayed <= 3e-15. Delta at 60.9626 is
+1.8073631479879018. If it is a local crossing, a jump from a clean state (e.g. up14_D60.7654 to 61.1-61.2 with a tangent
+predictor) may land past it. Machine idle now. Say what you want next.
