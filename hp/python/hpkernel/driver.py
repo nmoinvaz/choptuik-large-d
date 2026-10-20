@@ -6,6 +6,7 @@ Double-double vectors are (hi, lo) pairs of float64 arrays. Layout of z (M = hal
     from hpkernel.driver import make_solver, seed_from_f64, newton_solve
 """
 import json
+import os
 import sys
 import time
 
@@ -14,7 +15,11 @@ import numpy as np
 
 from ._hpkernel import Solver
 
-SOLVER_DIR = "/home/claude/dss-residual-kernel/solver"
+# The f64 solver's directory (for seed_from_f64): $DSS_SOLVER_DIR, else ../../../solver from this file when the package
+# runs from the source tree, else the cloud checkout.
+_TREE_SOLVER = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "solver"))
+SOLVER_DIR = os.environ.get("DSS_SOLVER_DIR") or (
+    _TREE_SOLVER if os.path.isdir(_TREE_SOLVER) else "/home/claude/dss-residual-kernel/solver")
 NODES_OLD = [0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6, 0.7]
 
 
