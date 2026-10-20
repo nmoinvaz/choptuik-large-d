@@ -16,6 +16,7 @@ import time
 import numpy as np
 
 from hpkernel.driver import deflated_newton, delta_correction, hermite, lm_solve, load, make_solver, newton_solve, plow_odd, predict, renode, resample_z, save, tangent
+from pinning import PinnedSolver, band_coeffs, band_field, predict_dd, dd_add
 
 
 def tails(s, zh, zl, nodes, M):
@@ -52,9 +53,15 @@ def freeze_p1(zh, zl, a, M):
     return zh, zl
 
 
-def solve_at(D, zh, zl, a, nodes, M, it_max):
-    s = make_solver(D, M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks, threads=a.threads, kfreeze=a.kfreeze)
+def solve_at(D, zh, zl, a, nodes, M, it_max, pin=None):
+    """pin: None, or (coeffs, ks) - p1's harmonics ks (all in (a.pin, a.kfreeze]) held at the given cos/sin
+    coefficients (PinnedSolver), the rest solved"""
+    s = make_solver(D, M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks, threads=a.threads,
+                    kfreeze=a.pin if pin is not None else a.kfreeze)
     s.set_segs(s.plan(zh, zl, a.tol_step, a.hmax))
+    if pin is not None:
+        hh, hl = band_field(pin[0], pin[1], M)
+        s = PinnedSolver(s, M, hh, hl)
     t0 = time.time()
     if a.corrector in ("dn", "dnp"):
         zh2, zl2, hist = deflated_newton(s, zh, zl, tol=a.tol, it_max=it_max, w=a.w, verbose=a.verbose,
@@ -69,7 +76,7 @@ def solve_at(D, zh, zl, a, nodes, M, it_max):
             zh2, zl2 = zh3, zl3
             hist = hist + [dict(r, polish=True) for r in h3]
     ok = bool(hist) and (hist[-1]["F"] < a.tol or bool(hist[-1].get("accepted")))
-    if not ok and a.lm:
+    if not ok and a.lm and pin is None:      # (lm_steps knows nothing of the pin offset)
         print(f"   D={D}: Newton stopped at |F| {hist[-1]['F']:.1e}; Levenberg-Marquardt from the predictor", flush=True)
         zh2, zl2, h2 = lm_solve(s, zh, zl, tol=a.tol, it_max=a.lm, verbose=a.verbose, newton_after=1e-22)
         hist = hist + h2
@@ -87,9 +94,11 @@ def main():
     ap.add_argument("--dD0", type=float, default=None, help="first step (default dD)")
     ap.add_argument("--history", default="", help="comma list of converged npz files at earlier D (same M), oldest first: "
                     "re-noded to the scan's layout and used for the predictor")
-    ap.add_argument("--predictor", default="lagrange", choices=["lagrange", "hermite"],
+    ap.add_argument("--predictor", default="lagrange", choices=["lagrange", "lagrange_dd", "hermite"],
                     help="lagrange: extrapolation through the last 4 converged points (default; the J-based tangent "
-                    "is unreliable along near-null directions at larger D); hermite: exact tangent + cubic Hermite")
+                    "is unreliable along near-null directions at larger D); lagrange_dd: the same in double-double "
+                    "(the f64 version rounds z at 1e-16, which the horizon block amplifies to |F| ~ 2e-7 at D ~ 61 "
+                    "even for dD = 0, and limits the step); hermite: exact tangent + cubic Hermite")
     ap.add_argument("--M", type=int, default=None)
     ap.add_argument("--kt", type=int, default=36)
     ap.add_argument("--kc", type=int, default=40)
@@ -117,6 +126,11 @@ def main():
                     "line through the last N points instead of the last value")
     ap.add_argument("--junk_only", action="store_true", help="freeze only weak directions without Delta content, and keep "
                     "them frozen (they stay on the predictor's smooth trend)")
+    ap.add_argument("--pin", type=int, default=None, help="with --kfreeze K: hold p1's harmonics in (pin, K] on a "
+                    "polynomial trend in D instead of solving them (they are the weakest directions); after each "
+                    "point one full-system Newton step measures their values for the trend and the pin's Delta error")
+    ap.add_argument("--pin_deg", type=int, default=1, help="--pin: degree of the trend")
+    ap.add_argument("--pin_n", type=int, default=6, help="--pin: number of measured points in the trend fit")
     ap.add_argument("--lm", type=int, default=15, help="Levenberg-Marquardt iterations after a failed Newton (0: off)")
     ap.add_argument("--Dlist", default="", help="explicit D values to visit in order (comma list or @file); "
                     "D_end is then ignored")
@@ -145,6 +159,8 @@ def main():
     outdir = os.path.dirname(os.path.abspath(a.out))
     s_of = lambda Dx: make_solver(Dx, M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks, threads=a.threads, kfreeze=a.kfreeze)
     hist_z = []
+    hist_dd = []        # (D, zh, zl) of the converged points, for --predictor lagrange_dd
+    pin_meas = []       # (D, cos/sin coefficients of p1's pinned band), measured by a full-system Newton step
     for f in filter(None, a.history.split(",")):
         hh, hl, hm = load(f)
         if hm["M"] != M:
@@ -157,8 +173,17 @@ def main():
         print(f"history point D={hm['D']}: ok {okh}, Delta {hh[-1]:.16f}", flush=True)
         if okh:
             hist_z.append((hm["D"], hh + hl, None))
+            hist_dd.append((hm["D"], hh, hl))
+            if a.pin is not None and a.kfreeze and a.pin < a.kfreeze:
+                pin_meas.append((hm["D"], np.ravel(band_coeffs(hh[:M], hl[:M], M, list(range(a.pin + 2, a.kfreeze + 1, 2))))))
     t0_ = tangent(s_of, s, D, zh, zl) if a.predictor == "hermite" or not hist_z else None
     hist_z.append((D, zh + zl, t0_))
+    hist_dd.append((D, zh, zl))
+    if a.pin is not None:
+        if not a.kfreeze or a.pin >= a.kfreeze:
+            raise SystemExit("--pin needs --kfreeze K with pin < K")
+        pin_ks = list(range(a.pin + 2, a.kfreeze + 1, 2))
+        pin_meas.append((D, np.ravel(band_coeffs(zh[:M], zl[:M], M, pin_ks))))
     dD = a.dD0 or a.dD
     targets = []
     if a.Dlist:
@@ -172,7 +197,10 @@ def main():
         goal = targets[0] if targets else a.D_end
         Dn = D + direction * min(dD, abs(goal - D))
         Dn = round(Dn, 6)
-        if a.predictor == "lagrange" and len(hist_z) > 1:
+        zpl = None
+        if a.predictor == "lagrange_dd" and len(hist_dd) > 1:
+            zp, zpl = predict_dd(hist_dd, Dn)
+        elif a.predictor in ("lagrange", "lagrange_dd") and len(hist_z) > 1:
             zp = predict([(h_[0], h_[1]) for h_ in hist_z], Dn)
             if a.junk_hold:
                 # p1 harmonics above junk_hold: carried over from the last point (they are frozen junk; extrapolating
@@ -198,7 +226,22 @@ def main():
         else:
             D1, z1, t1 = hist_z[-1]
             zp = z1 + (Dn - D1) * t1
-        s, zh2, zl2, hist, ok, dt = solve_at(Dn, zp, np.zeros_like(zp), a, nodes, M, a.it_max)
+        if zpl is None:
+            zpl = np.zeros_like(zp)
+        pin = None
+        if a.pin is not None:
+            # the pinned band on a polynomial trend through the last pin_n measured points (constant at first)
+            Dm = np.array([q[0] for q in pin_meas[-a.pin_n:]])
+            Cm = np.array([q[1] for q in pin_meas[-a.pin_n:]])
+            deg = min(a.pin_deg, len(Dm) - 1)
+            cn = np.polyval(np.polyfit(Dm - Dm[-1], Cm, deg), Dn - Dm[-1]) if deg > 0 else Cm[-1]
+            co = [(cn[2 * i], cn[2 * i + 1]) for i in range(len(pin_ks))]
+            cz = np.ravel(band_coeffs(zp[:M], zpl[:M], M, pin_ks))
+            bh, bl = band_field([(co[i][0] - cz[2 * i], co[i][1] - cz[2 * i + 1]) for i in range(len(pin_ks))], pin_ks, M)
+            zp = zp.copy(); zpl = zpl.copy()
+            zp[:M], zpl[:M] = dd_add(zp[:M], zpl[:M], bh, bl)
+            pin = (co, pin_ks)
+        s, zh2, zl2, hist, ok, dt = solve_at(Dn, zp, zpl, a, nodes, M, a.it_max, pin=pin)
         if not ok:
             print(f"D={Dn}: no convergence (|F| {hist[-1]['F'] if hist else float('nan'):.1e}); dD {dD} -> {dD / 2}", flush=True)
             dD /= 2
@@ -207,6 +250,18 @@ def main():
             continue
         D, zh, zl = Dn, zh2, zl2
         hist_z.append((D, zh + zl, tangent(s_of, s, D, zh, zl) if a.predictor == "hermite" else None))
+        hist_dd.append((D, zh, zl))
+        pin_rec = {}
+        if pin is not None:
+            # one full-system (kfreeze) Newton step from the pinned solution: its residual and linearised Delta
+            # correction measure what the pin costs; the stepped point's band is the measurement for the trend
+            sf = make_solver(D, M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks, threads=a.threads, kfreeze=a.kfreeze)
+            sf.set_segs(s.get_segs())
+            fdh, fdl, fFh, fFl, _, _ = sf.newton(zh, zl)
+            zmh, zml = dd_add(zh, zl, np.asarray(fdh), np.asarray(fdl))
+            pin_meas.append((D, np.ravel(band_coeffs(zmh[:M], zml[:M], M, pin_ks))))
+            pin_rec = dict(pin=a.pin, F_full=float(np.abs(np.asarray(fFh) + np.asarray(fFl)).max()),
+                           dDelta_pin=delta_correction(sf, fFh, fFl), Delta_full1=float(zmh[-1]), Delta_full1_lo=float(zml[-1]))
         # the stored LU is from the last Newton call, made at the converged z
         sens = sensitivity(s, M)
         tc, th = tails(s, zh, zl, nodes, M)
@@ -216,11 +271,13 @@ def main():
         if rec["dDelta_est"] is None:
             rec["dDelta_est"] = delta_correction(s, *s.residual(zh, zl))
         rec["polish"] = sum(1 for r in hist if r.get("polish"))
+        rec.update(pin_rec)
         with open(a.out, "a") as f:
             f.write(json.dumps(rec) + "\n")
         save(os.path.join(outdir, f"{a.tag}_D{D:.4f}.npz"), zh, zl, dict(D=D, M=M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks))
         print(f"D={D:.4f} Delta={zh[-1]:.16f}{zl[-1]:+.2e} its {len(hist)} |F| {hist[-1]['F']:.1e} {dt:.0f}s "
-              f"piv {rec['piv'][0]:.1e}..{rec['piv'][1]:.1e} dDelta/dF max {max(sens):.1e} tails {tc:.0e} {th:.0e}", flush=True)
+              f"piv {rec['piv'][0]:.1e}..{rec['piv'][1]:.1e} dDelta/dF max {max(sens):.1e} tails {tc:.0e} {th:.0e}"
+              + (f" pin: |F_full| {pin_rec['F_full']:.1e} dDelta_pin {pin_rec['dDelta_pin']:+.1e}" if pin_rec else ""), flush=True)
         if tc > 1e-33:
             a.kc = int(a.kc * 1.25) + 2
             print(f"   centre series tail {tc:.1e}: kc -> {a.kc}", flush=True)
@@ -249,6 +306,7 @@ def main():
             nodes = new_nodes
             s_of = lambda Dx: make_solver(Dx, M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks, threads=a.threads, kfreeze=a.kfreeze)
             hist_z = [(D, zh + zl, tangent(s_of, s, D, zh, zl))]   # one point: Euler with the tangent
+            hist_dd = [(D, zh, zl)]                                 # (the old layout's points cannot be mixed in)
             dD = min(dD, 0.5)
 
 

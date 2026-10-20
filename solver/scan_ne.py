@@ -25,6 +25,12 @@ env NE_PRED_JUNK0=1: the continuation predictor extrapolates only the non-junk c
     different place in the flat valley: 0.1 apart between 30.32 and 30.58), so extrapolating them throws the
     predictor 0.16 (linear) to 0.36 (quadratic) off in the junk directions.
 env NE_KS: horizon series terms (default 60; x_K = 0.5 needs ~120).
+env NE_LAM_EXTRA: comma list of jsonl files whose (D, lam) records join the gamma_rust.jsonl table of lambda guesses
+  (that table starts at D = 7.75, so a sweep that starts below it, e.g. from the D = 4 seeds, needs
+  scan_ne6_lowD_kc47.jsonl here: with the table's lambda(7.75) as the guess the growth-mode search misses, gamma is
+  None, the point does not enter the history and the continuation never starts).
+env NE_SEED_KC: the seeds are native solutions on this run's nodes at that kc (e.g. 47 for neB_kc47_rk2_D*), regridded
+  to KC instead of being treated as kc 23 seeds (a seed already at KC on these nodes is used as it is anyway).
 env NE_SMOOTH=1: after each solve, fix the junk directions by smoothness (smooth_junk.py) and re-solve, until
   Delta changes by < 1e-10 (at most 8 rounds).
 env NE_JUNK: solve the junk equations too (junk_solve.py) on a pool of this many processes. Without it the junk
@@ -54,6 +60,7 @@ SEED = "long7_D" if XK > 0.65 else "longB_D"
 _xt = int(round(XK * 100))
 OUTP = {60: "neB_D"}.get(_xt, f"ne{_xt // 10}_D" if _xt % 10 == 0 else f"ne{_xt}_D")   # ne4_D, ne5_D, neB_D, ne65_D, ne7_D
 SEED_XK = float(os.environ["NE_SEED_XK"]) if os.environ.get("NE_SEED_XK") else None
+SEED_KC = int(os.environ["NE_SEED_KC"]) if os.environ.get("NE_SEED_KC") else None
 PREFIXES = sys.argv[7].split(",") if len(sys.argv) > 7 else [SEED]
 KC = int(sys.argv[8]) if len(sys.argv) > 8 else 23
 THREADS = int(os.environ.get("NE_THREADS", "2"))
@@ -76,7 +83,10 @@ if RK != 1:
 if RK_SEG:
     OUTP = OUTP.replace("_D", "_s" + RK_SEG.replace(",", "") + "_D")
 _g = [json.loads(l) for l in open("gamma_rust.jsonl")]
-_gD = np.array([r["D"] for r in _g if r.get("lam")]); _gl = np.array([r["lam"] for r in _g if r.get("lam")])
+for _f in filter(None, os.environ.get("NE_LAM_EXTRA", "").split(",")):
+    _g += [json.loads(l) for l in open(_f)]
+_g = sorted((r for r in _g if r.get("lam")), key=lambda r: r["D"])
+_gD = np.array([r["D"] for r in _g]); _gl = np.array([r["lam"] for r in _g])
 
 
 def lam_table(D):
@@ -177,6 +187,8 @@ def solve(D, z0, lam_guess, t0, src, Delta_old=None):
     S, R = make(D, z0[-1], nodes=NODES, threads=THREADS, kc=KC, Ks=KS)
     if SEED_XK is not None and abs(SEED_XK - XK) > 1e-9 and src != "continuation":
         z0 = convert_xk(z0, D, SEED_XK)        # a seed matched elsewhere (lengths can coincide: 0.65 vs 0.7)
+    elif len(z0) != S.layout()[2] and SEED_KC is not None and src != "continuation":
+        z0 = make_long(KC, D - 2, nodes=NODES, Ks=60).regrid(z0, make_long(SEED_KC, D - 2, nodes=NODES, Ks=60))
     elif len(z0) != S.layout()[2]:            # a seed with other nodes (drop the outer node blocks) and/or kc = 23
         z0 = convert_seed(z0, D)
     if np.linalg.norm(R(z0)) > 1e-8:           # predictor or old seed far off: damped LM first, then NE polishes
