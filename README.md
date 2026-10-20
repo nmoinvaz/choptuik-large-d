@@ -11,7 +11,7 @@ solver in [`hp/`](hp/) for large D. The physics is in this file; the software is
   computed points up to D = 30, and Δ to 6×10⁻⁸ up to D = 61 ([The formula](#the-formula), [Values](#values)).
 - **The large-D limit.** Δ is computed at 857 points from D = 8.25 to 61.03; the points fit smooth curves to about 4×10⁻¹⁵
   (estimated error per point about 10⁻¹⁶ to D = 60.1, a few 10⁻¹⁵ above). The points support, but do not prove, that Δ is analytic in 1/D; then
-  Δ∞ = 1.64389375 ± 1.5×10⁻⁸ (ω∞ = 2π/Δ∞ = 3.82213589 ± 4×10⁻⁸), and γ∞ = 1/2 to about 4×10⁻⁴.
+  Δ∞ = 1.64389375 ± 1.5×10⁻⁸ (ω∞ = 2π/Δ∞ = 3.82213589 ± 4×10⁻⁸), and γ∞ = 1/2 to about 5×10⁻⁷ (γ computed in double-double at 28 points, D = 10–61).
   Nine candidate closed forms for Δ∞ are ruled out ([Evidence](#evidence)).
 - **Why the 1/D expansion cannot give it.** The 1/D expansion of the field equations can be carried to all orders for any
   period (Proposition 1), so Δ, and likewise γ, are selected by effects smaller than every power of 1/D. Without
@@ -59,7 +59,7 @@ The dashed curves are one rational formula in 1/(D−2) for every D ≥ 4 (below
 4 ≤ D ≤ 30.2 whose integration-step error has been extrapolated out ("step-converged"), with the solver's near-null
 directions resolved and enough Fourier modes in time at low D;
 hollow points are held out of the fit, and the green diamonds are double-double points up to D = 61, which it matches
-to 6×10⁻⁸. As D → ∞, γ → 1/2 − 0.758/n (the limit 1/2 is imposed in the γ fit; free fits give 0.4996–0.4998), and
+to 6×10⁻⁸. As D → ∞, γ → 1/2 − 0.758/n (the limit 1/2 is imposed in the γ fit; free fits of the double-double γ give 1/2 to about 5×10⁻⁷), and
 Δ → Δ∞ = 1.64389375 ± 0.000000015 if Δ is analytic in 1/D (from the double-double points; the f64 points gave
 1.64395 ± 0.00008). Details are in
 [`solver/CONTEXT.md`](solver/CONTEXT.md). Regenerate with `cd solver/data && python3 ../plot_delta.py`.
@@ -138,9 +138,14 @@ As D → ∞ (ε → 0):
 \gamma_\infty = \frac{1}{2} .
 ```
 
-γ∞ = 1/2 is imposed in both γ fits (their constant term is fixed), not derived. Unconstrained fits on
-D ≥ 8–12 give γ∞ = 0.4996–0.4998, so the data support 1/2 to about 4×10⁻⁴; the f64 γ values
-reach only D = 40 (γ(40) = 0.4848). 1/2 is also the value conjectured in the literature
+γ∞ = 1/2 is imposed in both γ fits (their constant term is fixed), not derived. Unconstrained fits of the f64 γ on
+D ≥ 8–12 give γ∞ = 0.4996–0.4998. The double-double γ (`hp/gamma_dd.py`: the exact growth-mode matrix M(λ) in
+double-double and the root of det M(λ); 28 points, D = 10–61, about 10⁻¹² for D = 16–58, matching the f64 values to
+10⁻⁸–10⁻¹²) pins it much more tightly. In free fits in powers of 1/n, λ∞ − 2 (λ = 1/γ) falls by a factor of about 3.7
+with each added power, to 1×10⁻⁶ at five powers on D ≥ 30, with no sign of levelling off; fixing λ∞ = 2 fits better
+with the same number of parameters. So γ∞ = 1/2 to about 5×10⁻⁷, and λ = 2 + 3.0324/n − 34.3/n² + …
+(γ = 1/2 − 0.7581/n + …). The rational γ formula is within 10⁻⁹ of these points for D ≤ 30 and off by 1.0×10⁻⁷ at
+D = 61, where it extrapolates. 1/2 is also the value conjectured in the literature
 ([below](#relation-to-published-work)), and like Δ∞ it is not fixed at any finite order of the 1/n expansion
 ([Large D](#what-is-known-about-the-selection-and-what-is-open)).
 
@@ -1264,7 +1269,7 @@ zero, so the D = 40 and 60 lines stop at ν = 13.)
   D = ∞ limit of the solver's gauge mode $`1 - \langle G(1)\rangle`$. No symmetry gives λ = 2. The fast exponents of a perturbation
   are g + λ. In the one-harmonic model at its zero the physical root is λ = 1.765 ± 0.005 (γ = 0.567;
   `pert_ratio.py`), as far from 2 as that model's ω is from ω∞. Free fits of the data give
-  γ∞ = 0.4996–0.4998 (`g_fits.py`): why λ∞ = 2 to 10⁻³ is open.
+  λ∞ = 2 to about 10⁻⁶ (the double-double γ, `hp/gamma_dd.py`; [The formula](#the-formula)); why it is exactly 2 is open.
 - **Open:** the D = ∞ selection rule itself. Proposition 2 gives the multiplier without gravity, C(n,s), and the inner
   problem shows it is asymptotically a $`{}_2F_0`$ Stokes constant; Proposition 3 shows that propagation inside the light cone
   cannot change whether it vanishes. The multipliers with gravity have been computed with up to three harmonics (above):
@@ -1393,6 +1398,14 @@ Checked against the Python reference (`spec_c.jacobian_cs`, `spec_c.mode_matrix_
 | M(λ) | 3.0 s | 0.25 s | 1e-10 relative |
 | Growth rate λ (det root) | ~4 min per D | ~3.5 s per D | 5e-10 at D = 11.06, 13.98, 24.24 |
 
+The double-double kernel (`hp/`) has the same construction: with the growth rate `Ctx::lam` set, `jacobian` returns
+the exact mode matrix M(λ) in double-double (Δ held fixed, phase row dropped), and `Solver.mode_matrix` and
+`Solver.mode_det` (sign and ln|det| from a double-double LU) expose it to Python; at λ = 0 the residual and Jacobian
+are bit-identical to before. `hp/gamma_dd.py` brackets the root of det M(λ) around the formula's value and refines it
+with brentq; above D = 35 it drops the weak directions with the kfreeze-13 cut, without which they bias λ by about
+10⁻⁹ at D = 60. `hp/gamma_batch.py` runs every saved state on N processes (resumable), and `hp/gamma_compare.py`
+compares with the f64 values and the formula.
+
 
 ### Build and test
 
@@ -1472,6 +1485,8 @@ reproduce.sh, reproduce.py    one-command check of the headline numbers (PASS/FA
 hp/states.py                  where saved solutions are read from (hp/data/states, else the runs' directory)
 hp/data/states/               53 double-double solutions, one per integer D = 8-60, for the profile scripts
 hp/dinf_budget.py             error budget for Delta_inf: model x degree x fit range x cleaning x snapshot
+hp/gamma_dd.py                gamma(D) in double-double: root of det M(lambda) (gamma_batch.py --procs N; gamma_compare.py;
+                              results in hp/data/gamma_dd.jsonl, 28 points D = 10-61)
 solver/plot_physics.py        physics.svg: e^Delta, fine-tuning digits per echo, field and gravity strength vs D
 solver/plot_echo.py           echo.svg: the echo at D = 4, 10, 20, 60 (data: solver/echo_data.py -> solver/data/echo_spectrum.npz)
 solver/plot_spectrum.py       spectrum.svg: the echo's harmonic spectrum and decay rates against the D = infinity prediction

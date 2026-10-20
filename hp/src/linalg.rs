@@ -185,6 +185,24 @@ impl DDLu {
         crate::field::Fl::<DV, B>::load(&h, &l)
     }
 
+    /// (sign, ln|det|) of the factored matrix: product of the pivots u_kk, sign flipped per row interchange.
+    pub fn logdet(&self) -> (f64, f64) {
+        let mut sign = 1.0f64;
+        let mut la = 0.0f64;
+        for k in 0..self.n {
+            let u = self.at(k, k);
+            let v = u.hi + u.lo;
+            if v < 0.0 {
+                sign = -sign;
+            }
+            la += v.abs().ln();
+            if self.perm[k] != k {
+                sign = -sign;
+            }
+        }
+        (sign, la)
+    }
+
     /// min and max |u_kk| (hi parts)
     pub fn pivot_range(&self) -> (f64, f64) {
         let mut lo = f64::INFINITY;

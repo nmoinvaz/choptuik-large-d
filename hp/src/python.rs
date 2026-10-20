@@ -25,6 +25,10 @@ trait Api: Send + Sync {
     fn segs(&self) -> Vec<Vec<f64>>;
     fn integrate(&self, zh: &[f64], zl: &[f64], sh: &[f64], sl: &[f64], xs: &[f64]) -> V;
     fn series(&self, zh: &[f64], zl: &[f64], which: u8) -> Result<V, String>;
+    /// Mode matrix M(lam): the Jacobian of the residual for perturbations ~ exp(lam tau) (every tau-derivative of a
+    /// perturbation gains + lam), Delta held fixed: the leading (L-1) x (L-1) block (no Delta column, no phase row).
+    /// Column-major with leading dimension ld_for(L-1): (hi, lo, ld).
+    fn mode_matrix(&mut self, zh: &[f64], zl: &[f64], lam: DD) -> Result<(Vec<f64>, Vec<f64>, usize), String>;
 }
 
 fn state_of<const B: usize>(sh: &[f64], sl: &[f64]) -> State<DV, B> {
@@ -100,8 +104,8 @@ impl<const B: usize> Api for Ctx<B> {
         let s = if which == 0 {
             model::centre_series(self, &self.fld(zh, zl, 0), &self.fld(zh, zl, 8 * B), omega)
         } else {
-            let lus = model::horizon_lus(self, &self.fld(zh, zl, self.off_ah()), delta, true)?;
-            model::horizon_series(self, &self.fld(zh, zl, self.off_mh()), &self.fld(zh, zl, self.off_ah()), omega, &lus)
+            let lus = model::horizon_lus(self, &self.fld(zh, zl, self.off_ah()), delta, true, DD::ZERO)?;
+            model::horizon_series(self, &self.fld(zh, zl, self.off_mh()), &self.fld(zh, zl, self.off_ah()), omega, &lus, &lus)
         };
         let m = 8 * B;
         let nk = s[0].len();
@@ -114,6 +118,21 @@ impl<const B: usize> Api for Ctx<B> {
             }
         }
         Ok((h, l))
+    }
+    fn mode_matrix(&mut self, zh: &[f64], zl: &[f64], lam: DD) -> Result<(Vec<f64>, Vec<f64>, usize), String> {
+        self.lam = lam;
+        let r = model::jacobian(self, zh, zl, true);
+        self.lam = DD::ZERO;
+        let (jh, jl, ld) = r?;
+        let n = Ctx::<B>::len(self) - 1;
+        let ld2 = crate::linalg::ld_for(n);
+        let mut h = vec![0.0; ld2 * n];
+        let mut l = vec![0.0; ld2 * n];
+        for c in 0..n {
+            h[c * ld2..c * ld2 + n].copy_from_slice(&jh[c * ld..c * ld + n]);
+            l[c * ld2..c * ld2 + n].copy_from_slice(&jl[c * ld..c * ld + n]);
+        }
+        Ok((h, l, ld2))
     }
 }
 
@@ -164,6 +183,7 @@ macro_rules! make_ctx {
                 ks: $ks,
                 freeze: freeze_pair::<$bb>(&$plow),
                 match_node: $mn,
+                lam: DD::ZERO,
             }) as Box<dyn Api>, )*
             _ => return Err(PyValueError::new_err("M must be one of 8, 16, 32, 48, 64, 80, 96, 128")),
         }
@@ -289,6 +309,53 @@ impl Solver {
             a
         };
         Ok((to2(jh).into_pyarray(py), to2(jl).into_pyarray(py)))
+    }
+
+    /// Mode matrix M(lam) (Delta fixed, no phase row) as two (L-1, L-1) arrays.
+    fn mode_matrix<'py>(
+        &mut self,
+        py: Python<'py>,
+        zh: PyReadonlyArray1<'py, f64>,
+        zl: PyReadonlyArray1<'py, f64>,
+        lam_hi: f64,
+        lam_lo: f64,
+    ) -> PyResult<(Bound<'py, PyArray2<f64>>, Bound<'py, PyArray2<f64>>)> {
+        let (h, l) = (slice(&zh, "zh")?, slice(&zl, "zl")?);
+        let (api, pool) = (&mut self.api, &self.pool);
+        let n = api.len() - 1;
+        let lam = DD::new(lam_hi, lam_lo);
+        let (mh, ml, ld) = py.detach(|| pool.install(|| api.mode_matrix(h, l, lam))).map_err(PyValueError::new_err)?;
+        let to2 = |v: Vec<f64>| {
+            let mut a = Array2::<f64>::zeros((n, n));
+            for c in 0..n {
+                for r in 0..n {
+                    a[[r, c]] = v[c * ld + r];
+                }
+            }
+            a
+        };
+        Ok((to2(mh).into_pyarray(py), to2(ml).into_pyarray(py)))
+    }
+
+    /// det M(lam) by double-double LU: (sign, ln|det|, min |u_kk|, max |u_kk|). Its sign changes at the growth rate of
+    /// an unstable mode; the critical exponent is gamma = 1/lam.
+    fn mode_det(&mut self, py: Python<'_>, zh: PyReadonlyArray1<'_, f64>, zl: PyReadonlyArray1<'_, f64>, lam_hi: f64, lam_lo: f64) -> PyResult<(f64, f64, f64, f64)> {
+        let (h, l) = (slice(&zh, "zh")?, slice(&zl, "zl")?);
+        let (api, pool) = (&mut self.api, &self.pool);
+        let n = api.len() - 1;
+        let lam = DD::new(lam_hi, lam_lo);
+        let r = py
+            .detach(|| {
+                pool.install(|| -> Result<_, String> {
+                    let (mh, ml, ld) = api.mode_matrix(h, l, lam)?;
+                    let lu = DDLu::factor(n, ld, mh, ml, true)?;
+                    let (s, la) = lu.logdet();
+                    let (pmin, pmax) = lu.pivot_range();
+                    Ok((s, la, pmin, pmax))
+                })
+            })
+            .map_err(PyValueError::new_err)?;
+        Ok(r)
     }
 
     /// Newton step: residual F, exact Jacobian J, its LU (kept for chord steps), dz = -J^-1 F.

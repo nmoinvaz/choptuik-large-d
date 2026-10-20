@@ -45,6 +45,9 @@ pub struct Ctx<const B: usize> {
     /// horizon side. Segments b <= match_node run outward (node b-1 -> node b); segments b > match_node run inward
     /// (node b -> node b-1). nodes.len() - 1 (the default) is the all-outward layout.
     pub match_node: usize,
+    /// Growth rate for the mode matrix: with lam != 0, every tau-derivative of a tangent (perturbation) gains + lam
+    /// (perturbations ~ exp(lam tau)); values are unaffected. Zero for the residual and the ordinary Jacobian.
+    pub lam: DD,
 }
 
 impl<const B: usize> Ctx<B> {
@@ -105,6 +108,17 @@ fn recip_int(k: usize) -> DD {
     DD::ONE / DD::from_f64(k as f64)
 }
 
+/// d/dtau = omega D, plus lam on the tangent part (perturbations ~ exp(lam tau); see Ctx::lam).
+#[inline(always)]
+fn dtau<T: Lane, const B: usize>(ctx: &Ctx<B>, x: &Fl<T, B>, omega: T) -> Fl<T, B> {
+    let r = ctx.d.apply(x).mul_t(omega);
+    if T::TANGENT && ctx.lam.hi != 0.0 {
+        r + Fl::from_vt(&Fl::zero(), &x.tan().muls(ctx.lam))
+    } else {
+        r
+    }
+}
+
 // ---------------------------------------------------------------------------------------------------------------
 // centre series (regular centre), evaluated at nodes[0]
 // ---------------------------------------------------------------------------------------------------------------
@@ -135,8 +149,8 @@ pub fn centre_series<T: Lane, const B: usize>(ctx: &Ctx<B>, p1: &Fl<T, B>, c0: &
         aa[k] = (s.mulf(0.5) - t3.muls(n1.mul_f(0.5))).muls(DD::ONE / (DD::from_f64(kf) + n1));
         a2[k] = cs(&aa, &aa, k);
         cc[k] = cs_range(&cc, &a2, k, 0, k - 1).muls(n1 * recip_int(k));
-        let dp = ctx.d.apply(&pp[k - 1]).mul_t(omega);
-        let dm = ctx.d.apply(&mm[k - 1]).mul_t(omega);
+        let dp = dtau(ctx, &pp[k - 1], omega);
+        let dm = dtau(ctx, &mm[k - 1], omega);
         let s1p = cs_w(&cc, &pp, k, 1, k - 1, |i| (k - i) as f64);
         let s1m = cs_w(&cc, &mm, k, 1, k - 1, |i| (k - i) as f64);
         let xpx = pp[k - 1].mulf(kf - 1.0) - s1p;
@@ -211,8 +225,8 @@ pub fn taylor_coeffs<T: Lane, const B: usize>(ctx: &Ctx<B>, s: &State<T, B>, x0:
         w.q2[k] = cs(&w.p, &w.p, k) + cs(&w.m, &w.m, k);
         w.g[k] = (cs(&w.c, &w.a2, k) - w.c[k]).muls(n1);
         w.h[k] = cs(&w.a, &w.q2, k) + (w.a[k] - cs(&w.a, &w.a2, k)).muls(n1);
-        w.pth[k] = ctx.d.apply(&w.p[k]).mul_t(omega);
-        w.mth[k] = ctx.d.apply(&w.m[k]).mul_t(omega);
+        w.pth[k] = dtau(ctx, &w.p[k], omega);
+        w.mth[k] = dtau(ctx, &w.m[k], omega);
         let mut xp = w.pth[k].muls(x0d);
         let mut xm = w.mth[k].muls(x0d);
         if k > 0 {
@@ -310,7 +324,7 @@ pub fn plan_path<const B: usize>(ctx: &Ctx<B>, s0: &State<DV, B>, xa: f64, xb: f
 
 /// LU factors of (omega D + diag kappa_kk), kk = 0..=ks, at the given (a_h, Delta) values:
 /// kappa_kk = (c1 + 1) kk + c1 + 1 - n/2, c1 = (n-1)(1 - a_h^2).
-pub fn horizon_lus<const B: usize>(ctx: &Ctx<B>, a0: &Fl<DV, B>, delta: DD, par: bool) -> Result<Vec<DDLu>, String> {
+pub fn horizon_lus<const B: usize>(ctx: &Ctx<B>, a0: &Fl<DV, B>, delta: DD, par: bool, shift: DD) -> Result<Vec<DDLu>, String> {
     let m = Ctx::<B>::M;
     let ld = ld_for(m);
     let omega = DD::TWO_PI / delta;
@@ -329,7 +343,7 @@ pub fn horizon_lus<const B: usize>(ctx: &Ctx<B>, a0: &Fl<DV, B>, delta: DD, par:
         let mut h = base_h.clone();
         let mut l = base_l.clone();
         for i in 0..m {
-            let kap = (c1s[i] + DD::ONE).mul_f(kk as f64) + c1s[i] + DD::ONE - nh;
+            let kap = (c1s[i] + DD::ONE).mul_f(kk as f64) + c1s[i] + DD::ONE - nh + shift;
             let v = DD { hi: h[i * ld + i], lo: l[i * ld + i] } + kap;
             h[i * ld + i] = v.hi;
             l[i * ld + i] = v.lo;
@@ -344,8 +358,8 @@ pub fn horizon_lus<const B: usize>(ctx: &Ctx<B>, a0: &Fl<DV, B>, delta: DD, par:
 }
 
 /// (omega D + diag kappa) f = r with the LU at the values; for tangents the derivative of the system:
-/// A f_d = r_d - omega_d D f_v - kappa_d f_v.
-fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, lu: &DDLu, kappa: &Fl<T, B>, rhs: &Fl<T, B>, omega: T) -> Fl<T, B> {
+/// A_t f_d = r_d - omega_d D f_v - kappa_d f_v, with A_t = A + lam (lu_t; the same LU when lam = 0).
+fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, lu: &DDLu, lu_t: &DDLu, kappa: &Fl<T, B>, rhs: &Fl<T, B>, omega: T) -> Fl<T, B> {
     let fv = lu.solve_lanes(&rhs.val());
     if !T::TANGENT {
         return Fl::from_vt(&fv, &Fl::zero());
@@ -353,7 +367,7 @@ fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, lu: &DDLu, kappa: &Fl<T, B>, rh
     let dfv = ctx.d.apply::<DV>(&fv);
     let od = Fl::<DV, B>([omega.tan(); B]);
     let r = (rhs.tan() - dfv * od) - kappa.tan() * fv;
-    let fd = lu.solve_lanes(&r);
+    let fd = lu_t.solve_lanes(&r);
     Fl::from_vt(&fv, &fd)
 }
 
@@ -363,6 +377,7 @@ pub fn horizon_series<T: Lane, const B: usize>(
     a0: &Fl<T, B>,
     omega: T,
     lus: &[DDLu],
+    lus_t: &[DDLu],
 ) -> [Vec<Fl<T, B>>; 4] {
     let n1 = ctx.n - DD::ONE;
     let nh = ctx.n.mul_f(0.5);
@@ -386,7 +401,7 @@ pub fn horizon_series<T: Lane, const B: usize>(
     cc[0] = one;
     mm[0] = *m0;
     a2[0] = aa[0] * aa[0];
-    dm[0] = ctx.d.apply(&mm[0]).mul_t(omega);
+    dm[0] = dtau(ctx, &mm[0], omega);
     let wfun = |c: &Vec<Fl<T, B>>, i: usize| -> Fl<T, B> {
         match i {
             0 => one - c[0],
@@ -417,8 +432,8 @@ pub fn horizon_series<T: Lane, const B: usize>(
         let tau = if kk >= 1 { -dp[kk - 1] } else { z };
         let r = (((tau - wpu) + cs(&vv, &pp, kk)) + cs(&cc, &pp, kk)) - cs(&cc, &pm, kk).muls(nh);
         let kappa = ((cc[1] + one).mulf(kf) + cc[1] + one).adds(-nh);
-        pp[kk] = psolve(ctx, &lus[kk], &kappa, &(-r), omega);
-        dp[kk] = ctx.d.apply(&pp[kk]).mul_t(omega);
+        pp[kk] = psolve(ctx, &lus[kk], &lus_t[kk], &kappa, &(-r), omega);
+        dp[kk] = dtau(ctx, &pp[kk], omega);
         q2[kk] = cs(&pp, &pp, kk) + cs(&mm, &mm, kk);
         if kk == ks {
             break;
@@ -432,7 +447,7 @@ pub fn horizon_series<T: Lane, const B: usize>(
         let zmu = cs_w(&mm, &zc, kk + 1, 0, kk, |i| i as f64);
         let rest = (((tau - zmu) - cs(&vv, &mm, kk)) - cs(&cc, &mm, kk)) + cs(&cc, &pm, kk).muls(nh);
         mm[kk + 1] = (rest * izc0).muls(ik1);
-        dm[kk + 1] = ctx.d.apply(&mm[kk + 1]).mul_t(omega);
+        dm[kk + 1] = dtau(ctx, &mm[kk + 1], omega);
     }
     pp.truncate(ks + 1);
     mm.truncate(ks + 1);
@@ -441,8 +456,8 @@ pub fn horizon_series<T: Lane, const B: usize>(
     [pp, mm, aa, cc]
 }
 
-pub fn horizon_state<T: Lane, const B: usize>(ctx: &Ctx<B>, m0: &Fl<T, B>, a0: &Fl<T, B>, omega: T, lus: &[DDLu]) -> State<T, B> {
-    let s = horizon_series(ctx, m0, a0, omega, lus);
+pub fn horizon_state<T: Lane, const B: usize>(ctx: &Ctx<B>, m0: &Fl<T, B>, a0: &Fl<T, B>, omega: T, lus: &[DDLu], lus_t: &[DDLu]) -> State<T, B> {
+    let s = horizon_series(ctx, m0, a0, omega, lus, lus_t);
     let u = ctx.u0();
     [horner(&s[0], u), horner(&s[1], u), horner(&s[2], u), horner(&s[3], u)]
 }
@@ -450,7 +465,7 @@ pub fn horizon_state<T: Lane, const B: usize>(ctx: &Ctx<B>, m0: &Fl<T, B>, a0: &
 // ---------------------------------------------------------------------------------------------------------------
 // blocks, residual, Jacobian
 // ---------------------------------------------------------------------------------------------------------------
-pub fn block_state<T: Lane, const B: usize>(ctx: &Ctx<B>, b: usize, inp: &[Fl<T, B>], delta: T, lus: &[DDLu]) -> State<T, B> {
+pub fn block_state<T: Lane, const B: usize>(ctx: &Ctx<B>, b: usize, inp: &[Fl<T, B>], delta: T, lus: &[DDLu], lus_t: &[DDLu]) -> State<T, B> {
     let omega = T::splat(DD::TWO_PI) / delta;
     let k = ctx.k();
     if b == 0 {
@@ -459,7 +474,7 @@ pub fn block_state<T: Lane, const B: usize>(ctx: &Ctx<B>, b: usize, inp: &[Fl<T,
         let mut w = TWork::<T, B>::new(ctx.kt);
         taylor_path(ctx, &[inp[0], inp[1], inp[2], inp[3]], &ctx.segs[b - 1], omega, &mut w)
     } else {
-        horizon_state(ctx, &inp[0], &inp[1], omega, lus)
+        horizon_state(ctx, &inp[0], &inp[1], omega, lus, lus_t)
     }
 }
 
@@ -482,10 +497,10 @@ pub fn residual<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool)
     let m = Ctx::<B>::M;
     assert_eq!(zh.len(), l);
     let delta = delta_of(zh, zl);
-    let lus = horizon_lus(ctx, &ctx.fld(zh, zl, ctx.off_ah()), delta, par)?;
+    let lus = horizon_lus(ctx, &ctx.fld(zh, zl, ctx.off_ah()), delta, par, DD::ZERO)?;
     let one_block = |b: usize| -> State<DV, B> {
         let inp: Vec<Fl<DV, B>> = ctx.block_inputs(b).iter().map(|&o| ctx.fld(zh, zl, o)).collect();
-        block_state::<DV, B>(ctx, b, &inp, DV::splat(delta), &lus)
+        block_state::<DV, B>(ctx, b, &inp, DV::splat(delta), &lus, &lus)
     };
     let nb = ctx.k() + 1;
     let states: Vec<State<DV, B>> = if par { (0..nb).into_par_iter().map(one_block).collect() } else { (0..nb).map(one_block).collect() };
@@ -515,7 +530,8 @@ pub fn jacobian<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool)
     let m = Ctx::<B>::M;
     let ld = ld_for(l);
     let delta = delta_of(zh, zl);
-    let lus = horizon_lus(ctx, &ctx.fld(zh, zl, ctx.off_ah()), delta, par)?;
+    let lus = horizon_lus(ctx, &ctx.fld(zh, zl, ctx.off_ah()), delta, par, DD::ZERO)?;
+    let lus_t = if ctx.lam.hi != 0.0 { horizon_lus(ctx, &ctx.fld(zh, zl, ctx.off_ah()), delta, par, ctx.lam)? } else { lus.clone() };
     let nb = ctx.k() + 1;
     // tasks: (block, input field index or usize::MAX for Delta, lane)
     let mut tasks: Vec<(usize, usize, usize)> = Vec::new();
@@ -547,7 +563,7 @@ pub fn jacobian<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool)
             .collect();
         let dt = if f == usize::MAX { DV::splat(DD::ONE) } else { DV::zero() };
         let d = Du { v: DV::splat(delta), d: dt };
-        let s = block_state::<Du, B>(ctx, b, &inp, d, &lus);
+        let s = block_state::<Du, B>(ctx, b, &inp, d, &lus, &lus_t);
         let mut out = Vec::with_capacity(4 * m);
         for q in 0..4 {
             let mut t = s[q].tan();
