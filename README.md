@@ -356,6 +356,22 @@ orders (Proposition 1). The leading-order problem is solved exactly by hypergeom
 analytic at the light cone (Proposition 2). So the period is selected by effects smaller than every power of $`1/D`$.
 Finding that selection rule is open; the last part of the section lists what is known about it.
 
+The results, in order:
+
+- [Proposition 1](#proposition-1-the-1n-expansion-never-fixes-the-period): the $`1/n`$ expansion can be carried to all
+  orders for any period and any time profile, so it never selects the period.
+- [Proposition 2](#proposition-2-the-leading-order-problem-solved-exactly): without gravity the problem is solved by
+  hypergeometric functions, and the solution is never analytic at the light cone; the obstruction is a coefficient
+  $`C(n,s)`$ in closed form.
+- [Proposition 3](#proposition-3-what-gravity-does-to-the-non-analytic-piece): gravity rescales the non-analytic piece by a
+  factor of order one that never vanishes, so it cannot cancel it on the way to the light cone.
+- [Proposition 4](#proposition-4-the-light-cone-coefficient-is-a-stokes-multiplier): the divergence of the $`1/n`$ series
+  without gravity is exactly that piece; its singulant, exponent and constant are derived and checked, and $`C(n,s)`$ is
+  the Stokes multiplier of a mode born at $`x = \infty`$.
+- [The inner problem at large x](#the-inner-problem-at-large-x): near $`x \sim \sqrt n`$ the equations lose $`n`$ altogether;
+  without gravity they reduce to Kummer's equation, whose Stokes constant is $`C(n,s)`$. With gravity, its multiplier
+  vanishing is the selection rule (being computed).
+
 Notation: $`n = D - 2`$, $`\varepsilon = 1/n`$, $`\omega = 2\pi/\Delta`$, and $`\theta`$ the phase of the echoing (period
 $`2\pi`$). The equations are the ones at the top of [`hp/src/model.rs`](hp/src/model.rs), with $`b = a^2`$ and
 $`G = (n-1)\,c\,(b-1)`$:
@@ -597,7 +613,7 @@ $`-2/(1+x)`$ times the transport equation.
    characteristic passes through that region, so the regular solution carries no fast mode on $`0 < x < 1`$ at any order
    of the WKB expansion. The non-analytic piece comes from a Stokes phenomenon, which the next subsection locates.
 
-### The light-cone coefficient is a Stokes multiplier
+### Proposition 4: the light-cone coefficient is a Stokes multiplier
 
 A divergent series records the exponentially small terms it switches on in its late orders (Dingle): if the switched-on
 term is $`n^{-g}e^{-n\chi(x)}`$, the coefficients behave like $`y_k \sim K\,Q(x)\,\Gamma(k-g)/\chi(x)^{k-g}`$. At leading order this can
@@ -677,9 +693,9 @@ What this says:
 
 With gravity, Proposition 3 holds on the continuation to $`x > 1`$ as well, so the light-cone coefficient is the
 multiplier times a factor that does not vanish. **The selection rule at $`D = \infty`$ is therefore that the Stokes
-multiplier of the mode born at $`x = \infty`$ vanishes.**
+multiplier of the mode born at $`x = \infty`$ vanishes.** Where that multiplier is set is the subject of the next subsection.
 
-### The inner problem at $`x \sim \sqrt n`$
+### The inner problem at large x
 
 Near $`x = \infty`$ the large-$`n`$ expansion is not uniform: at $`x \sim \sqrt n`$, $`\varepsilon x^2F^2 = O(1)`$, so $`c - 1 = O(1)`$
 (gravity is no longer weak); $`p \approx \varepsilon^{1/2}xF = O(1)`$; and $`e^{-n\Phi} \to e^{\mp in\pi/2}e^{-n/(2x^2)}`$, so fast and slow
