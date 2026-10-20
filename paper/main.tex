@@ -38,7 +38,8 @@ closed-form light-cone coefficient, which we identify as the Stokes multiplier o
 radius. We conjecture that the selection rule at $D = \infty$ is the vanishing of the Stokes multipliers of an
 $n$-free inner problem; its higher-harmonic conditions predict the shape of the echo, $|F_3/F_1| = 0.0551$, which the
 data reproduce. Truncated to three harmonics, the full set of conditions selects $\Delta = 1.619$, 1.5\% below
-$\Dinf$ (one harmonic: 29\% above); truncation is not a controlled approximation, so $\Dinf$ is not yet derived.
+$\Dinf$ (one harmonic: 29\% above), and without truncation five orders of an amplitude expansion point to $\omega$
+within about 0.5\% of $\omega_\infty$; neither is converged, so $\Dinf$ is not yet derived.
 The computations, derivations and text were produced by an AI model (Claude, Anthropic) under the author's
 direction and have not yet been reviewed by a human expert (Sec.~\ref{sec:how}).
 \end{abstract}
@@ -603,8 +604,15 @@ $\sigma_3 = -0.05397185 + 0.11658742i$, $\sigma_4 = -0.02886476 + 0.01077836i$, 
 ($0.878\pi$ to $0.978\pi$ for orders 2--5), the signature of a zero near the positive real axis; ratio and Pad\'e estimates put
 it at $A^2 \approx 8.7$--$9.1$ ($A \approx 2.95$--$3.01$) with a small imaginary part, about 10\% above the measured amplitude
 2.72, and not converged (at $A = 2.72$ the partial sums of $\mathrm{Re}\ln S_1$ are still falling). So at five orders the
-harmonic-1 condition at $\omega_\infty$ points to an amplitude near, but not at, the measured one; whether the zero converges
-to $(2.72, \omega_\infty)$ needs $\sigma_6$--$\sigma_8$ and a scan in $\omega$, which are running.
+harmonic-1 condition at $\omega_\infty$ points to an amplitude near, but not at, the measured one.
+
+A scan in $\omega$ ($0.70 \le \omega/\omega_\infty \le 1.30$) locates the \emph{direction} of that zero. A real zero
+$x_0$ of $S_1$ in $x = A^2$ makes the coefficients $\tau_k$ of $\ln S_1$ real and negative, $\arg\tau_k \to \pi$, while a complex
+$x_0$ turns them with $k$. Across $\omega$, $\arg\tau_k = \pi$ is crossed at $\omega/\omega_\infty = 1.2516$, $1.0554$, $1.0176$,
+$1.0084$ for $k = 2$--$5$, a sequence converging to about $1.005$. So at five orders the untruncated harmonic-1 condition
+points to $\omega$ within about 0.5\% of $\omega_\infty$, independently of the three-harmonic result; the amplitude is not
+converged (ratio estimates 2.6--2.9). Higher orders need better late-order fits: from order 13 on the fits used here
+do not converge in the number of terms ($\sigma_6$ is good to 1.5\%, $\sigma_7$ and $\sigma_8$ not at all).
 
 \begin{figure}[t]
 \centering

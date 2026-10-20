@@ -11,7 +11,7 @@ solver in [`hp/`](hp/) for large D. The physics is in this file; the software is
   computed points up to D = 30, and Δ to 6×10⁻⁸ up to D = 61 ([The formula](#the-formula), [Values](#values)).
 - **The large-D limit.** Δ is computed at 857 points from D = 8.25 to 61.03; the points fit smooth curves to about 4×10⁻¹⁵
   (estimated error per point about 10⁻¹⁶ to D = 60.1, a few 10⁻¹⁵ above). The points support, but do not prove, that Δ is analytic in 1/D; then
-  Δ∞ = 1.64389375 ± 1.5×10⁻⁸ (ω∞ = 2π/Δ∞ = 3.82213589 ± 4×10⁻⁸), and γ∞ = 1/2 to about 5×10⁻⁷ (γ computed in double-double at 28 points, D = 10–61).
+  Δ∞ = 1.64389375 ± 1.5×10⁻⁸ (ω∞ = 2π/Δ∞ = 3.82213589 ± 4×10⁻⁸), and γ∞ = 1/2 to about 5×10⁻⁷ (γ computed in double-double at 67 points, D = 8.25–61).
   Nine candidate closed forms for Δ∞ are ruled out ([Evidence](#evidence)).
 - **Why the 1/D expansion cannot give it.** The 1/D expansion of the field equations can be carried to all orders for any
   period (Proposition 1), so Δ, and likewise γ, are selected by effects smaller than every power of 1/D. Without
@@ -19,8 +19,9 @@ solver in [`hp/`](hp/) for large D. The physics is in this file; the software is
   multiplier of a mode born far outside the light cone (Propositions 3–4). The working hypothesis is that the selection
   rule is the vanishing of the Stokes multipliers of an n-free inner problem; its higher-harmonic conditions already
   predict the shape of the echo, F₃/F₁ = 0.055 against 0.055 extrapolated from the data, and with three harmonics
-  the full set of conditions gives Δ = 1.619, 1.5% below Δ∞ (one harmonic: 29% above). Truncation in harmonics is
-  not controlled, so this is not yet a derivation of Δ∞ ([Large D](#large-d-what-the-1d-expansion-can-and-cannot-see)).
+  the full set of conditions gives Δ = 1.619, 1.5% below Δ∞ (one harmonic: 29% above); without truncation, five orders
+  of the amplitude expansion point to ω within about 0.5% of ω∞. Neither is converged yet, so this is not yet a derivation
+  of Δ∞ ([Large D](#large-d-what-the-1d-expansion-can-and-cannot-see)).
 - **Relation to published work.** Agreement with the accepted values at D = 4 and at the maximum of Δ near D = 3.756;
   a 6×10⁻⁵ difference at D = 5 that the published higher-resolution data trace to resolution; and the published
   conjecture Δ → 0 as D → ∞ is not
@@ -153,10 +154,11 @@ As D → ∞ (ε → 0):
 
 γ∞ = 1/2 is imposed in both γ fits (their constant term is fixed), not derived. Unconstrained fits of the f64 γ on
 D ≥ 8–12 give γ∞ = 0.4996–0.4998. The double-double γ (`hp/gamma_dd.py`: the exact growth-mode matrix M(λ) in
-double-double and the root of det M(λ); 28 points, D = 10–61, about 10⁻¹² for D = 16–58, matching the f64 values to
-10⁻⁸–10⁻¹²) pins it much more tightly. In free fits in powers of 1/n, λ∞ − 2 (λ = 1/γ) falls by a factor of about 3.7
-with each added power, to 1×10⁻⁶ at five powers on D ≥ 30, with no sign of levelling off; fixing λ∞ = 2 fits better
-with the same number of parameters. So γ∞ = 1/2 to about 5×10⁻⁷, and λ = 2 + 3.0324/n − 34.3/n² + …
+double-double and the root of det M(λ); 67 points, D = 8.25–61, about 10⁻¹² for D = 16–58, matching the f64 values to
+10⁻⁸–10⁻¹²; `hp/data/gamma_dd.jsonl` and `hp/data/local/gamma_dd.jsonl`) pins it much more tightly. In free fits in
+powers of 1/n, λ∞ − 2 (λ = 1/γ) falls by a factor of about 3.5 with each added power: on D ≥ 30, 2.4×10⁻⁴, 6.7×10⁻⁵,
+1.9×10⁻⁵, 5.5×10⁻⁶ and (1.6 ± 2.2)×10⁻⁶ for four to eight powers (`hp/gamma_compare.py`), with no sign of levelling
+off; fixing λ∞ = 2 fits better with the same number of parameters. So γ∞ = 1/2 to about 5×10⁻⁷, and λ = 2 + 3.0324/n − 34.3/n² + …
 (γ = 1/2 − 0.7581/n + …). The rational γ formula is within 10⁻⁹ of these points for D ≤ 30 and off by 1.0×10⁻⁷ at
 D = 61, where it extrapolates. 1/2 is also the value conjectured in the literature
 ([below](#relation-to-published-work)), and like Δ∞ it is not fixed at any finite order of the 1/n expansion
@@ -1230,7 +1232,15 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   fit functional precomputed once per harmonic, `--procs N` worker processes; 26× faster on one process, same digits;
   [PARALLEL.md](PARALLEL.md) §4) showed that from order 13 on the late-order fits need J ≥ 1000 terms: at J = 500, σ₆
   is wrong (0.0138 − 0.0080i against −2.7×10⁻⁴ − 1.09×10⁻³i at J = 1000) and σ₇, σ₈ blow up. σ₅ is converged.
-  K = 17 at J = 1000 and 1500 and the ω scan are to run on the 8-thread machine (minutes each). The shape predictions at A = 2.72 sharpen to F₃/F₁ = 0.0551, F₅/F₁ = 0.00314
+  On the 8-thread machine (K = 17 at J = 1000 and 1500, 3 and 9 minutes; a K = 13, J = 1000 scan over
+  ω/ω∞ = 0.70–1.30, 25 minutes) σ₁–σ₄ agree to 10⁻¹¹ and σ₅ to 6×10⁻¹⁰ between the two J, but σ₆ only to 1.5% and
+  σ₇, σ₈ not at all: the late-order fits fail from order 13 on, and the fit residual grows with J (being diagnosed).
+  With the five reliable orders, the zero of S₁ in x = A² is not yet located by Padé approximants, but its *direction*
+  is (`arg_crossing.py scan13b`). A real zero x₀ makes the coefficients τ_k of ln S₁ real and negative,
+  arg τ_k → π, while a complex x₀ turns them with k. Across ω, arg τ_k = π is crossed at ω/ω∞ = 1.2516, 1.0554,
+  1.0176, 1.0084 for k = 2–5, a sequence converging to about 1.005 (Aitken). So at five orders the untruncated
+  harmonic-1 condition points to ω within about 0.5% of ω∞, independently of the three-harmonic result (1.0156);
+  the amplitude there is not converged (ratio estimates 2.6–2.9 against 2.72). Confirming it needs σ₆–σ₈. The shape predictions at A = 2.72 sharpen to F₃/F₁ = 0.0551, F₅/F₁ = 0.00314
   (data: 0.0552/0.0549, 0.0034/0.0032), and the D = ∞ relation evaluated at each D's own amplitude and ω tracks the
   measured F₃/F₁ at D = 20–60 to within 0.004–0.006 (0.126, 0.099, 0.087, 0.080, 0.075 against 0.130, 0.105, 0.093,
   0.085, 0.080; `harm_pred.py`, heuristic).
@@ -1529,7 +1539,8 @@ solver/inner_borel/           the same by Borel-Darboux in ball arithmetic (pyth
 solver/eeg20/                 the comparison with Ecker-Ecker-Grumiller's Eq. (20) (window identity, tilt, max c, Delta -> 0 fits)
 solver/inner_amp/             the inner multipliers by an amplitude expansion with every harmonic exact (amp_series.py check, stokes_amp2.py;
                               amp_flint.py wf K J in ball arithmetic; amp_flint_par.py, the same 26x faster with --procs N;
-                              scan_omega.py for an N-process scan in omega; zero_selection.py)
+                              scan_omega.py for an N-process scan in omega; zero_selection.py; arg_crossing.py, where
+                              across omega the zero becomes real, order by order)
 solver/inner_pert/            growing modes of the inner problem (exact lambda = 0, 1 modes; one-harmonic root) and free gamma fits
 hp/largeD_Fratios.py          harmonic ratios F_{nu+2}/F_nu of the double-double solutions, extrapolated to D = infinity
 hp/compare/                   D = 5 by double-double (dd_D5.py) and the comparison with Ecker et al.'s published data (cmp_ecker.py)
