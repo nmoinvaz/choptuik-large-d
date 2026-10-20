@@ -382,6 +382,9 @@ light ray. Note the factor √(2π) between the simulation's field (G = 1) and t
   kc 47 at D = 8.71 did not converge (strong floor 6.2e-9, Delta +8.4e-7): not resolution. kc 47 re-solves at 3.7-4.25
   (local T10) are pending.
 - Delta(D) has its maximum ~3.4661 near D = 3.8 (kc 39 RK x1: 3.4661347 at 3.7938).
+  [Correction 2026-10-20: 3.4661 is Delta at D = 3.7938, not the maximum. The kc 47 points (scan_down_kc47.jsonl)
+  put the maximum at D = 3.75570, Delta = 3.466774 (cubic through 3.70/3.75/3.76/3.80), in agreement with Ecker, Ecker,
+  Grumiller & Jechtl 2026, Eq. (70): D = 3.755726, Delta = 3.466772.]
 - rational_fit.compact on the clean data: Delta = P7(x)/Q2(x), x = 1/(D-2), 10 numbers, fitted on 4 <= D <= 30.2 with
   sigma floored at 1e-7: within the point precision everywhere (D = 4: 1.6e-6 vs 2.6e-6; 4.3-5: 4e-8; 5-30: <= 5e-8;
   held out 34-40: <= 1.3e-6), limit 1.643952, poles at D = -1.65, -9.37 (the 1/D series' pole near -9).
@@ -576,3 +579,15 @@ light ray. Note the factor √(2π) between the simulation's field (G = 1) and t
   1 : 1.6e-4 : 1e-14 at x = 0.5. Truncated series vs exact inside x < 1: no fast mode (4e-40 vs 7e-21 at x = 0.9, n = 60).
   Nonlinear late orders: rate x-independent (7-8.5 at x = 0.25..1), dominant harmonic ~0.55 k: free-data divergence, not
   a heat-type (x-dependent) singulant - that hypothesis refuted.
+
+## README lab-log paragraph moved here (2026-10-20, README referee pass)
+
+Status (as it stood in the README): the cloud climb stopped at D = 60.06 and the local machine carried it to D = 60.96
+(task T12 in comms.txt; its points are in hp/data/local/ and in the data file). There the climb stalls, and not because
+of anything in the problem: from a converged point Newton reaches the usual residual floor at the same D, and the
+Jacobian's weak spectrum changes smoothly. The two weakest directions, harmonics 11 and 13 of the centre data, are
+pinned only to about |F| / sigma, so their amplitudes jitter by about 5e-9 from point to point; the cubic predictor
+amplifies that 30-fold, past Newton's basin along exactly those directions. Carrying those harmonics on a straight-line
+trend instead (hp/scan_hp.py --junk_hold 9 --junk_trend N, with --corrector dnp to converge every point to the bottom)
+gets past D = 60.96, but only in steps of 0.002-0.003. Later (task T13) the second machine reached D = 61.026 with steps
+of 0.0014-0.0046 and was stopped there; the cloud added 7 points at 60.964-60.974 (up18, up20, up21).
