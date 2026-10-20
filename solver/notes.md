@@ -495,3 +495,24 @@ light ray. Note the factor √(2π) between the simulation's field (G = 1) and t
   8.4e-12; 5/7 sqrt(G) j01 1.8e-11; pi^2/6 1.5e-10. With all data, forced fits reach the residual floor only at degree
   22-24, so the exclusion rests on prediction, not on fit quality.
 - Formula P8/Q2 vs DD: 2.7e-9 (8-21), 8.1e-9 (21.5-30.2), 2.4e-8 (30.2-35), 4.2e-8 (35-40), 5.0e-8 (40-45).
+
+## Double-double climb to D = 60 (2026-10-19, ~18:45-23:05)
+
+- Runs up8-up13 (cloud): 45.33 -> 60.06, M = 32, kfreeze 13, tol 1e-24 -> 1e-23 (51.26) -> 1e-22 (55.66), raised each
+  time the |F| floor (x2 per unit D: 1e-25 at 45, 1e-24 at 51, 1e-23 at 57, 2e-23 at 60) reached the tolerance.
+  Steps 0.015-0.05, 30-50 s per point on two cores, 17 basin failures (step too long, |F| 1e-10..1e-16, halved) in
+  51-60. Two container restarts (53.74, 56.30) and the 3 h timeouts cost only the point in flight.
+- max dDelta/dF 1.5e12 (50), 1.2e13 (55), 8.9e13 (60); dDelta_est (-y.F) 1e-20 .. 2e-18. All 750 points in
+  hp/data/delta_dd.csv; fits stay at 4e-15 to D = 60.
+- Held-out (fit on cleaned 10-45, worst on 45-60.0): 1/D16 5.1e-13, 1/D18 1.8e-12, 1/n18 2.7e-12, n^-1/2 20 1.9e-11,
+  D^-1/2 20 1.5e-10. Fit 10-37.5, worst to 60: 4.1e-11, 1.5e-10, 7.8e-11, 3.9e-10, 6.1e-9. Mixed (1/D16 + one term,
+  fit 10-45): held-out 1.6-5e-13, limit 1.64389375 for every term, D^-1/2 coefficient 3e-5 (deg 14) / 1e-7 (deg 16).
+- All points 10-60: 1/D and 1/n degree 16-20 limits 1.643893744-1.643893752 -> Delta_inf = 1.64389375 +- 1e-8,
+  omega_inf = 3.82213589 +- 2e-8. Delta(60) = 1.809889459975, predicted from data <= 56.3 as 1.8098894599746.
+  Extrapolations: Delta(70) = 1.78693476494 (all models within 1e-11), Delta(100) = 1.7450264844 (2e-8 incl.
+  half-integer series), Delta(1000) = 1.65424086 (analytic; half-integer 1.6542 .. 1.671).
+- Candidates (hp/dd_candidates.py, forced 1/D series on 10-45, degree 14-26, held out to 59.8): best 5.4e-11
+  (10/9 sqrt(j01/ln3)) .. 4.4e-8 (golden ratio) vs free 4.7e-13: all ruled out, 110x-92000x. The closed-form search
+  (solver/candidates.py) finds nothing in 1.6438936-1.6438939 nor in 1.643890-1.643898.
+- Formula P8/Q2 vs DD: <= 5.8e-8 on 30.2-60 (never fitted there).
+- Handed the climb past 60 to the local machine (comms T12, seeds in hp/data/seeds/), cloud run stopped at 60.06.

@@ -3,15 +3,16 @@
 Rust port of the multiple-shooting residual `F(z)` used to compute Choptuik's discretely self-similar critical solution in D = n + 2 dimensions. It covers the centre series, the RK4 shooting segments and the horizon series on a 941-unknown spectral layout, and is called from Python through PyO3 as a drop-in for `S.residual`.
 
 [`hp/`](hp/) is a separate double-double (~32 digit) solver built to reach large D, where f64 can no longer pin the
-period ([below](#double-double-solver-hp-in-progress)). It has computed Δ from D = 8 to 45 to about $10^{-14}$, and it
-is climbing toward D = 60 to test whether Δ is analytic in 1/D.
+period ([below](#double-double-solver-hp-in-progress)). It has computed Δ from D = 8 to 60 to about $10^{-14}$, and the
+points beyond the fitted range show that Δ is analytic in 1/D at large D
+([below](#is-the-period-analytic-in-1d)).
 
 ![Echo period Δ(D) and critical exponent γ(D) with one rational formula for all D ≥ 4](solver/delta.svg)
 
 The echo period Δ(D) and critical exponent γ(D), computed with this kernel and the solver in [`solver/`](solver/).
 The dashed curves are one rational formula in 1/(D−2) for every D ≥ 4 (below), fitted on the step-converged points
 4 ≤ D ≤ 30.2 (step error extrapolated out, near-null directions solved, enough Fourier modes in time at low D);
-hollow points are held out of the fit. As D → ∞, γ → 1/2 − 0.758/n, and Δ → Δ∞ = 1.64389374 ± 0.00000002 if Δ is
+hollow points are held out of the fit. As D → ∞, γ → 1/2 − 0.758/n, and Δ → Δ∞ = 1.64389375 ± 0.00000001 if Δ is
 analytic in 1/D (from the double-double points; the f64 points gave 1.64395 ± 0.00008). Details are in
 [`solver/CONTEXT.md`](solver/CONTEXT.md). Regenerate with `cd solver/data && python3 ../plot_delta.py`.
 
@@ -50,11 +51,11 @@ ten times tighter), they reproduce each point within its own precision:
 | 4 – 4.3 | $5\times10^{-10}$ | $3\times10^{-7}$ | $3.4\times10^{-7}$ | $5\times10^{-7}$ |
 | 4.3 – 20 | $\le 4\times10^{-9}$ | $3\times10^{-11}$ – $4\times10^{-9}$ | $\le 3.3\times10^{-8}$ | $\le 7\times10^{-8}$ |
 | 20 – 30 | $\le 1\times10^{-8}$ | $\le 3\times10^{-8}$ | $\le 2.3\times10^{-9}$ | $\sim 10^{-9}$ |
-| 30.2 – 45, never seen by the fit | $\le 5\times10^{-8}$ | $\sim10^{-14}$ (double-double) | $\le 5\times10^{-7}$ up to $D = 35.8$ | |
+| 30.2 – 60, never seen by the fit | $\le 6\times10^{-8}$ | $\sim10^{-14}$ (double-double) | $\le 5\times10^{-7}$ up to $D = 35.8$ | |
 
 An independent double-double computation ([below](#double-double-solver-hp-in-progress)) agrees with the formula to
-$2.7\times10^{-9}$ or better on $8 \le D \le 21$, $8\times10^{-9}$ up to $D = 30$, and $5\times10^{-8}$ from there to
-$D = 45$, which the fit never saw. It also shows that the f64 points from $D = 8$ upward (23 Fourier modes in time)
+$2.7\times10^{-9}$ or better on $8 \le D \le 21$, $8\times10^{-9}$ up to $D = 30$, and $6\times10^{-8}$ from there to
+$D = 60$, which the fit never saw. It also shows that the f64 points from $D = 8$ upward (23 Fourier modes in time)
 sit $2$–$4\times10^{-10}$ above the true values, so their quoted $3\times10^{-11}$ was optimistic by about ten; that is
 below the formula's tolerance and does not change it.
 
@@ -75,37 +76,36 @@ $$
 $$
 
 $$
-\Delta_\infty = 1.64389374 \pm 0.00000002,
+\Delta_\infty = 1.64389375 \pm 0.00000001,
 \qquad
-\omega_\infty = \frac{2\pi}{\Delta_\infty} = 3.82213592 \pm 0.00000005,
+\omega_\infty = \frac{2\pi}{\Delta_\infty} = 3.82213589 \pm 0.00000002,
 \qquad
 \gamma_\infty = \frac{1}{2} .
 $$
 
 $\Delta_\infty$ comes from the double-double points ([below](#is-the-period-analytic-in-1d)): power series in $1/D$ and
-$1/(D-2)$ of degree 16–20 fit all of them from $D = 10$ to $45$ to $4\times10^{-15}$ and give limits from
-$1.64389375$ to $1.64389393$. The f64 points gave $1.64395 \pm 0.00008$, and this formula's own limit is
+$1/(D-2)$ of degree 16–20 fit all of them from $D = 10$ to $60$ to $4\times10^{-15}$ and give limits from
+$1.643893744$ to $1.643893752$. The f64 points gave $1.64395 \pm 0.00008$, and this formula's own limit is
 $a_0 = 1.643898$, $4\times10^{-6}$ high, which its fitting range could not see. The coefficients of one fit are not
 physical constants (they are correlated); only the function is.
 
-**The limit rests on an assumption.** $\Delta_\infty = 1.64389374$ holds if $\Delta(D)$ is analytic in $1/D$ at
+**The limit rests on an assumption, which the double-double points now support.** $\Delta_\infty = 1.64389375$ holds if $\Delta(D)$ is analytic in $1/D$ at
 $D = \infty$: no half-integer powers $n^{-1/2}$, no $\log n$, and no new scale far beyond the computed range. The f64
 data could not test that. Formulas with those features reproduce every f64 point from $D = 4$ to $40$ (fit and held
 out) just as well: a series in $n^{-1/2}$ gives limits from $1.607$ to $1.691$ depending on its degree; adding one
 $n^{-1/2}$ or $\log n / n$ term to the $1/D$ series moves the limit to $1.6437$–$1.6448$; and the rational form with
 its limit forced to $\pi^2/6$ or $\sqrt e$ fits too, by placing a pole at $D \approx -440$ or $-5900$, a slow bend
 that starts in the hundreds. All of these agree with the formula above to $10^{-5}$ up to $D \approx 60$ and fan out
-above $D \approx 100$. The double-double points begin to test it: fitted on $D \le 37.5$, the analytic form predicts
-the points up to $D = 45$ five times better than series in half-integer powers, and the forms split by
-$10^{-10}$–$5\times10^{-9}$ at $D = 50$–$60$, where the solver is heading
-([below](#is-the-period-analytic-in-1d)).
+above $D \approx 100$. The double-double points test it: fitted on $D \le 45$, the analytic form predicts the points
+up to $D = 60$ to $5\times10^{-13}$, 40 to 300 times better than series in half-integer powers, and no added
+non-analytic term improves it ([below](#is-the-period-analytic-in-1d)).
 
 ![Formulas that all fit the computed points, extended to D = 100000](solver/extrapolation.svg)
 
 The analytic form is the natural default (the large-$D$ expansion of the equations has no other scale, and the only
 structure the data show is the pole near $D \approx -9$), but it is not proven: the period is selected by an
 exponentially small effect that the $1/D$ expansion never sees, and Ecker, Ecker and Grumiller argue for $\Delta \to 0$.
-Settling it needs either points at $D$ in the hundreds or the $D \to \infty$ equations themselves.
+The double-double points up to $D = 60$ favour it strongly; a proof needs the $D \to \infty$ equations themselves.
 `solver/plot_extrapolation.py` draws the graph.
 
 **Values.**
@@ -123,17 +123,18 @@ Settling it needs either points at $D$ in the hundreds or the $D \to \infty$ equ
 | 20 | 2.112080154580 | 0.4737107 |
 | 30 | 1.964957899258 | 0.4807927 |
 | 40 | 1.888568197910 | 0.484776 |
-| 45 | 1.862614389097 | |
-| 50 | 1.8416595030 | 0.48736 |
-| 100 | 1.74502648 | 0.49313 |
-| 1000 | 1.6542409 | 0.4992 |
-| $\infty$ | $1.64389374 \pm 0.00000002$ | $1/2$ |
+| 50 | 1.841659503007 | 0.48736 |
+| 60 | 1.809889459975 | |
+| 70 | 1.78693476494 | |
+| 100 | 1.7450264844 | 0.49313 |
+| 1000 | 1.65424086 | 0.4992 |
+| $\infty$ | $1.64389375 \pm 0.00000001$ | $1/2$ |
 
-$\Delta$ for $D = 8$–$45$ is double-double (interpolated to $10^{-14}$ where $D$ is not itself a computed point); the
+$\Delta$ for $D = 8$–$60$ is double-double (interpolated to $10^{-14}$ where $D$ is not itself a computed point); the
 rest of the table, and every $\gamma$, is from the f64 solver and is within the precision of its points up to
-$D = 40$. $\Delta(50)$ is an extrapolation that every model fitting the double-double points agrees on to
-$1.3\times10^{-10}$. $D = 100$ and $1000$ assume analyticity in $1/D$; the half-integer series that also fit the
-double-double points differ by up to $2.4\times10^{-6}$ at $D = 100$.
+$D = 40$. $\Delta(70)$ and $\Delta(100)$ are extrapolations that every model fitting the double-double points agrees on,
+to $10^{-11}$ and $2\times10^{-8}$ (the half-integer series included). $D = 1000$ and $\infty$ assume analyticity in
+$1/D$; the half-integer series differ there by $3\times10^{-6}$ and more.
 
 <details>
 <summary>Power series in 1/D for D ≥ 10 (the earlier form)</summary>
@@ -183,7 +184,7 @@ $\Delta_\infty$, given that $\Delta$ is analytic in $1/D$ (which the double-doub
 
 | Candidate | Value | − double-double limit | f64 test: $\chi^2/\mathrm{dof}$; held-out rms | Double-double test: held-out error (× free) | Verdict |
 |---|---|---|---|---|---|
-| none (free fit) | $1.64389374 \pm 0.00000002$ | | 0.62 .. 3.4; $1.4\times10^{-6}$ | $4.7\times10^{-13}$ | |
+| none (free fit) | $1.64389375 \pm 0.00000001$ | | 0.62 .. 3.4; $1.4\times10^{-6}$ | $4.7\times10^{-13}$ | |
 | $\frac{5}{7}\sqrt{G}\, j_{0,1}$ | 1.6439747 | $+8.1\times10^{-5}$ | 0.62 .. 8.6; $1.3\times10^{-6}$ | $6.2\times10^{-11}$ (130×) | **ruled out** (passed the f64 test) |
 | $\frac{7}{5}\,(\ln 2)^{-2}\,\pi^{-1/2}$ | 1.6440014 | $+1.1\times10^{-4}$ | 0.62 .. 18; $1.2\times10^{-6}$ | $1.1\times10^{-10}$ (220×) | **ruled out** (passed the f64 test) |
 | $\frac{7}{2}\sqrt{\ln 2/\pi}$ | 1.6440152 | $+1.2\times10^{-4}$ | 0.62 .. 26; $1.2\times10^{-6}$ | $1.3\times10^{-10}$ (270×) | **ruled out** (passed the f64 test) |
@@ -196,7 +197,7 @@ $\Delta_\infty$, given that $\Delta$ is analytic in $1/D$ (which the double-doub
 
 The f64 test could not separate the first five: they move $\Delta(D)$ by less than $10^{-6}$ for $D \le 40$, below the
 precision of those points. The double-double points can. The closest candidate sits $1.3\times10^{-5}$ from the limit,
-600 times its uncertainty, and forcing any of them makes the fit predict the unseen points at least 100 times worse. A
+more than 1000 times its uncertainty, and forcing any of them makes the fit predict the unseen points at least 100 times worse. A
 forced fit can only bend toward its candidate by spending degrees, so it improves with degree (the table gives each
 one's best) until it reaches the level where the free fits overfit too (about $5\times10^{-11}$ at degree 24–26), which is
 still about 100 times the free fit's best.
@@ -238,7 +239,9 @@ with computed points rather than an assumed form.
 - **Continuation in $D$:** prediction by the cubic through the last four converged points (a tangent from the
   Jacobian is wrong in the weak directions, below), Newton with the weakest directions deflated, and from $D = 35$ on
   the centre data's $\tau$-harmonics above 13 frozen (below). 32 collocation points in $\tau$, nodes at
-  $x = 0.3, 0.4, \ldots, 0.7$; about 40 s per point at $D = 45$ on two cores.
+  $x = 0.3, 0.4, \ldots, 0.7$; 30–50 s per point on two cores up to $D = 60$. The tolerance on $\lvert F\rvert$ goes
+  from $10^{-25}$ at $D = 35$ to $10^{-22}$ at $D = 56$, following the residual floor, which rises about twofold per unit
+  of $D$.
 
 | Check | Result |
 |---|---|
@@ -252,7 +255,7 @@ with computed points rather than an assumed form.
 | 32 / 48 collocation points in $\tau$, $D = 40$ | $\Delta$ agrees to $9\times10^{-22}$ |
 | harmonics frozen above 13 / above 15, $D = 40$ | $\Delta$ agrees to $3\times10^{-17}$ |
 
-A sample of the computed points (all of them, about 400 from $D = 8.25$ to $45.3$, are in
+A sample of the computed points (all 750 of them, from $D = 8.25$ to $60.06$, are in
 [`hp/data/delta_dd.csv`](hp/data/delta_dd.csv)), with the residual and the largest entry of $\partial\Delta/\partial F$, the factor by which a residual error moves $\Delta$:
 
 | $D$ | $\Delta$ | $\lvert F\rvert$ | $\max\lvert\partial\Delta/\partial F\rvert$ |
@@ -266,6 +269,9 @@ A sample of the computed points (all of them, about 400 from $D = 8.25$ to $45.3
 | 35.35323 | 1.918943717094251 | $4\times10^{-27}$ | $7.0\times10^{8}$ |
 | 40.02007 | 1.888451664490614 | $2\times10^{-26}$ | $9.6\times10^{9}$ |
 | 44.96341 | 1.862784197662323 | $9\times10^{-26}$ | $1.3\times10^{11}$ |
+| 50.00749 | 1.841631133202264 | $1\times10^{-24}$ | $1.5\times10^{12}$ |
+| 54.99609 | 1.824394337272626 | $6\times10^{-24}$ | $1.2\times10^{13}$ |
+| 60.00195 | 1.809884258001715 | $2\times10^{-23}$ | $8.9\times10^{13}$ |
 
 \* From $D = 27$ to $35.2$, before the freezing, points were accepted once the linearised correction to $\Delta$,
 $-\partial\Delta/\partial F \cdot F$, was below $10^{-14}$ with the weak directions held on their trend; their residual
@@ -284,9 +290,10 @@ What the solver has shown:
   value rises from $10^{-24}$ to $10^{-17}$ and plain Newton converges again. The cut moves $\Delta$ by $5\times10^{-15}$ at
   $D = 35$ and $3\times10^{-17}$ at $D = 40$; a cut at 11 does not converge at $D = 40$.
 - **How fast the selection weakens.** $\max\lvert\partial\Delta/\partial F\rvert$ grows about $1.7$–$1.8$ times per unit
-  of $D$ (table). With residuals near $10^{-25}$ that bounds the error in $\Delta$ by about $10^{-14}$ at $D = 45$ and
-  $10^{-10}$ at $D = 60$ if the rate holds; the linearised estimate $-\partial\Delta/\partial F \cdot F$ is about
-  $10^{-20}$ at $D = 45$.
+  of $D$, to $9\times10^{13}$ at $D = 60$ (table), and the residual floor rises about twofold per unit. Their product, a
+  worst case that ignores the direction of $F$, bounds the error in $\Delta$ by $10^{-14}$ at $D = 45$ and $2\times10^{-9}$ at
+  $D = 60$. The linearised estimate $-\partial\Delta/\partial F \cdot F$, which accounts for it, stays between
+  $10^{-21}$ and $10^{-17}$, and the points themselves fit smooth curves to $4\times10^{-15}$ all the way to $D = 60$.
 - **How good the values are.** The points fit a smooth curve to $4\times10^{-15}$, not $10^{-20}$. Points between
   $D = 27$ and $35.2$, solved before the freezing, carry a few $10^{-15}$ from the weak directions; 25 of them sit
   visibly off their neighbours and `hp/dd_fits_mp.py --clean` drops them. The frozen points from $35.35$ to $37$ carry
@@ -294,28 +301,40 @@ What the solver has shown:
 - **The f64 points.** Against the double-double values they are within $5.5\times10^{-11}$ at $D = 15.6$–$21$ (quoted
   $3\times10^{-11}$), $3.6\times10^{-9}$ at $22$–$29.3$ (quoted $1.5$–$2\times10^{-9}$), $1.8\times10^{-8}$ at $30.1$ and
   $7\times10^{-8}$ at $34.2$, and $0.6$–$2.1\times10^{-6}$ high from $35$ to $40.3$ (quoted $1$–$3\times10^{-6}$). The rational
-  formula above holds to $2.7\times10^{-9}$ on $8$–$21$, $8\times10^{-9}$ on $21$–$30$ and $5\times10^{-8}$ on $30$–$45$.
+  formula above holds to $2.7\times10^{-9}$ on $8$–$21$, $8\times10^{-9}$ on $21$–$30$ and $6\times10^{-8}$ on $30$–$60$.
 
 ### Is the period analytic in 1/D?
 
-Each model below is a polynomial in one variable, fitted on the cleaned double-double points $10 \le D \le 37.5$ at 60
-digits (`hp/dd_fits_mp.py 10 37.5 --clean`) and compared with the points from $37.5$ to $45.1$, which it never saw:
+Yes, as far as the points up to $D = 60$ can tell. Each model below is a polynomial in one variable, fitted at 60 digits
+on the cleaned double-double points $10 \le D \le 45$ (or $\le 37.5$) and compared with every point above, up to
+$D = 60$, which it never saw (`hp/dd_fits_mp.py 10 45 --clean`):
 
-| Model | max residual | model − computed at $D = 45.1$ | $\Delta(50)$ | $\Delta(60)$ | limit |
-|---|---|---|---|---|---|
-| $1/D$, degree 16 | $3.6\times10^{-15}$ | $+1.0\times10^{-12}$ | 1.8416595030123 | 1.8098894600157 | 1.6438938 |
-| $1/D$, degree 18 | $3.5\times10^{-15}$ | $+2.5\times10^{-12}$ | 1.8416595030220 | 1.8098894601131 | 1.6438940 |
-| $1/(D-2)$, degree 18 | $3.6\times10^{-15}$ | $+1.6\times10^{-12}$ | 1.8416595030161 | 1.8098894600508 | 1.6438938 |
-| $(D-2)^{-1/2}$, degree 20 | $3.6\times10^{-15}$ | $+6.7\times10^{-12}$ | 1.8416595030574 | 1.8098894606192 | 1.636 |
-| $D^{-1/2}$, degree 20 | $3.5\times10^{-15}$ | $-4.9\times10^{-12}$ | 1.8416595028854 | 1.8098894548179 | 1.215 |
+![How well each model predicts double-double points it never saw](hp/heldout.svg)
 
-Every model fits to the level of the data, so the fit alone decides nothing. The half-integer series predict the new
-points five to seven times worse, and their limits jump with the degree (degree 24 and up gives limits of $-100$ and
-beyond), so they give no usable $\Delta_\infty$. That favours analyticity in $1/D$ without settling it. The models split
-by $10^{-10}$ to $5\times10^{-9}$ at $D = 50$–$60$, far above the solver's error there, so the next points decide it.
-Fitted on all the cleaned points ($10 \le D \le 45.3$), the analytic models give $\Delta_\infty = 1.6438938 \pm 0.0000002$.
+| Model | max residual on $10 \le D \le 45$ | worst error on $45 < D \le 60$ | fitted on $D \le 37.5$: worst error up to $60$ | limit |
+|---|---|---|---|---|
+| $1/D$, degree 16 | $4.1\times10^{-15}$ | $5.1\times10^{-13}$ | $4.1\times10^{-11}$ | 1.64389375 |
+| $1/D$, degree 18 | $4.0\times10^{-15}$ | $1.8\times10^{-12}$ | $1.5\times10^{-10}$ | 1.64389377 |
+| $1/(D-2)$, degree 18 | $4.0\times10^{-15}$ | $2.7\times10^{-12}$ | $7.8\times10^{-11}$ | 1.64389377 |
+| $(D-2)^{-1/2}$, degree 20 | $3.9\times10^{-15}$ | $1.9\times10^{-11}$ | $3.9\times10^{-10}$ | 1.636 |
+| $D^{-1/2}$, degree 20 | $3.8\times10^{-15}$ | $1.5\times10^{-10}$ | $6.1\times10^{-9}$ | 1.547 |
 
-Status: the continuation is at $D = 45.3$ and running toward $D = 60$.
+Every model fits its range to the level of the points, so the fit alone decides nothing; the unseen points do. Fitted
+on $D \le 45$, the $1/D$ series predicts $\Delta$ fifteen units of $D$ ahead to $5\times10^{-13}$, about 100 times the
+noise of the points, while the series in half-integer powers miss by 40 to 300 times more. Their limits also jump with
+the degree (1.636 to 1.694 for $(D-2)^{-1/2}$ and 1.54 to 2.75 for $D^{-1/2}$ at degree 20–24 on all the points), so they
+give no usable $\Delta_\infty$. Adding one non-analytic term ($D^{-1/2}$, $D^{-3/2}$, $\ln D / D$, $\ln D / D^2$ or
+$e^{-D/4}$) to the degree-16 series changes neither the prediction ($1.6$–$5\times10^{-13}$ at $D = 60$) nor the limit
+(1.64389375), and the term's coefficient is not determined: $D^{-1/2}$ gets $3\times10^{-5}$ at degree 14 and
+$1\times10^{-7}$ at degree 16 (`hp/dd_fits_mp.py 10 45 --clean --mixed`).
+
+Fitted on all the cleaned points ($10 \le D \le 60$), power series in $1/D$ and $1/(D-2)$ of degree 16–20 give limits
+from $1.643893744$ to $1.643893752$, so $\Delta_\infty = 1.64389375 \pm 0.00000001$. The analytic form is not proven (the
+period is selected by an effect the $1/D$ expansion does not see), but nothing in the points up to $D = 60$ asks for
+anything else.
+
+Status: the cloud climb stopped at $D = 60.06$. The local machine is continuing it toward $D = 75$ (task T12 in
+[`comms.txt`](comms.txt)).
 
 ## Backends
 
