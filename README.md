@@ -26,7 +26,7 @@ The dashed curves are one rational formula in 1/(D−2) for every D ≥ 4 (below
 4 ≤ D ≤ 30.2 whose integration-step error has been extrapolated out ("step-converged"), with the solver's near-null
 directions resolved and enough Fourier modes in time at low D;
 hollow points are held out of the fit, and the green diamonds are double-double points up to D = 61, which it matches
-to $`6\times10^{-8}`$. As D → ∞, γ → 1/2 − 0.758/n (the limit 1/2 is imposed in the γ fit, not measured), and
+to $`6\times10^{-8}`$. As D → ∞, γ → 1/2 − 0.758/n (the limit 1/2 is imposed in the γ fit; free fits give 0.4996–0.4998), and
 Δ → Δ∞ = 1.64389375 ± 0.00000001 if Δ is analytic in 1/D (from the double-double points; the f64 points gave
 1.64395 ± 0.00008). Details are in
 [`solver/CONTEXT.md`](solver/CONTEXT.md). Regenerate with `cd solver/data && python3 ../plot_delta.py`.
