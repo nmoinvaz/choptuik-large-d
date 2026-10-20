@@ -1,4 +1,7 @@
-"""Fast modes of the inner problem as formal series, and the Stokes constants they define (well-conditioned Darboux).
+"""WARNING: the correction terms m >= 3 are wrong for M > 1 (t5_check_fastmode.py: off by 3e-3 at m = 3, 1.6e-2 at m = 4,
+probably the dc-coupling terms); use only for M = 1, or for the leading terms m <= 2.
+
+Fast modes of the inner problem as formal series, and the Stokes constants they define (well-conditioned Darboux).
 
 Linearize the inner equations about the formal solution (inner_series.py; Dd = xi D(u), sigma = u S(u), c = C(u), u = xi^2)
 and put  dDd = E xi u^p a(u, th),  dsigma = E u^p b(u, th),  dc = E u^(p+2) g(u, th),  E = exp(-1/(2u)).

@@ -7,8 +7,8 @@ solver in [`hp/`](hp/) for large $`D`$. The physics is in this file; the softwar
 
 - **One formula for all $`D \ge 4`$.** A rational function of $`1/(D-2)`$ gives $`\Delta`$ and $`\gamma`$ within the precision of the
   computed points up to $`D = 30`$, and $`\Delta`$ to $`6\times10^{-8}`$ up to $`D = 61`$ ([The formula](#the-formula), [Values](#values)).
-- **The large-D limit.** $`\Delta`$ is computed at 857 points from $`D = 8.25`$ to $`61.03`$, to about $`10^{-16}`$ ($`10^{-15}`$ above
-  $`D = 60.1`$). The points support, but do not prove, that $`\Delta`$ is analytic in $`1/D`$; then
+- **The large-D limit.** $`\Delta`$ is computed at 857 points from $`D = 8.25`$ to $`61.03`$; the points fit smooth curves to about $`4\times10^{-15}`$
+  (estimated error per point about $`10^{-16}`$ to $`D = 60.1`$, a few $`10^{-15}`$ above). The points support, but do not prove, that $`\Delta`$ is analytic in $`1/D`$; then
   $`\Delta_\infty = 1.64389375 \pm 10^{-8}`$ ($`\omega_\infty = 2\pi/\Delta_\infty = 3.82213589`$), and $`\gamma_\infty = 1/2`$ to about $`4\times10^{-4}`$.
   Nine candidate closed forms for $`\Delta_\infty`$ are ruled out ([Evidence](#evidence)).
 - **Why the 1/D expansion cannot give it.** The $`1/D`$ expansion of the field equations can be carried to all orders for any
@@ -22,6 +22,9 @@ solver in [`hp/`](hp/) for large $`D`$. The physics is in this file; the softwar
   an unresolved $`6\times10^{-5}`$ discrepancy at $`D = 5`$; and the published conjecture $`\Delta \to 0`$ as $`D \to \infty`$ is not
   supported: a power-law approach to 0 is excluded, a logarithmic one disfavoured
   ([Relation to published work](#relation-to-published-work)).
+
+The work was directed by Nathan Moinvaziri and carried out by Claude, Anthropic's AI model; no human expert has
+reviewed it yet ([How this work was done](#how-this-work-was-done)).
 
 Contents
 
@@ -38,6 +41,7 @@ Contents
   [Proposition 4](#proposition-4-late-orders-of-the-leading-order-series) ·
   [The inner problem](#the-inner-problem-at-large-x) ·
   [What is known and what is open](#what-is-known-about-the-selection-and-what-is-open) · [References](#references)
+- [How this work was done](#how-this-work-was-done)
 - [Software: the Rust kernel](#software-the-rust-kernel): [Backends](#backends) · [Use](#use) ·
   [Double-double residual](#double-double-residual) ·
   [Exact Jacobian and growth-mode matrix](#exact-jacobian-and-growth-mode-matrix) · [Build and test](#build-and-test) ·
@@ -988,7 +992,14 @@ algebraic, $`\eta = p^2 + m^2`$.)
   ($`\lvert\mathrm{Im}\,g\rvert \approx 8.45`$ for the $`\nu = \pm3`$ modes of the $`M = 3`$ truncation; untruncated it would be
   $`3\omega_\infty = 11.47`$) and whose constants are $`10^4`$ times larger; at $`M = 3`$ the four modes at
   $`\zeta = \tfrac12`$ alone fit the series to $`2.5\times10^{-8}`$. Gravity couples the $`\pm\mu`$ fast modes, so the multiplier is
-  a matrix over harmonics.
+  a matrix over harmonics. *Caveat:* those $`M = 3`$ constants come from fits that pin each mode's corrections with
+  `solver/inner_borel/inner_fastmode.py`, whose correction terms were later found wrong from the third order on for $`M > 1`$
+  (off by $`3\times10^{-3}`$ at $`m = 3`$); the $`M = 1`$ values are unaffected (they agree with free fits to 8 digits). The exponents
+  are reliable: the truncated ones converge to the untruncated $`g_\nu`$ as $`M`$ grows (to $`10^{-7}`$ at $`M = 11`$,
+  `solver/inner_borel/inner_Mconv2.py`). Whether the constants converge in $`M`$ is undetermined: free fits stop pinning
+  them from $`M = 7`$ on (modes with $`(\nu\omega)^2 \gtrsim j`$ are not yet asymptotic, and their constants are $`e^{\pi\lvert\nu\rvert\omega/2}`$
+  larger), and a heuristic estimate of the gravity mixing at $`\mathrm{Im}\,\theta \approx \pi\omega/2`$ suggests that truncation would
+  need $`M`$ of order $`10^4`$, which favours the untruncated amplitude expansion below.
 
 The large-$`n`$ form of the light-cone coefficient, from the matching in the second bullet ($`\Lambda = n/2 - 1 - s`$ is the
 light-cone exponent of Proposition 2):
@@ -1028,8 +1039,8 @@ late orders of the inner series fitted with the predicted fast-mode exponents).
   Darboux (`solver/inner_borel/inner_zero.py`, Newton converging quadratically, $`\lvert S\rvert = 3\times10^{-14}`$ at 220 orders; it is the only
   clean zero for $`0.5 \le A \le 3`$, $`0.5 \le \omega/\omega_\infty \le 1.5`$). The amplitude is 6.5% below $`F_1 \approx 2.72`$; $`\omega`$ is 22% below
   $`\omega_\infty`$. Adding harmonic 3 (`solver/inner_stokes/zero_M3.py`) destroys that zero, and the zero found there is unphysical
-  ($`\omega = 0.198\,\omega_\infty`$, $`F_3/F_1 = 0.65`$); at the one-harmonic zero the $`M = 3`$ constant for $`\nu = \pm1`$ is
-  $`421 + 392i`$, nowhere near zero. ($`\Delta = 2.1157`$ is close to $`\Delta(20) = 2.1121`$, almost certainly a coincidence.) So no selection of $`\omega_\infty`$ follows yet; the next attempt needs rescaled
+  ($`\omega = 0.198\,\omega_\infty`$, $`F_3/F_1 = 0.65`$; lateral residual $`4.6\times10^6`$ at the one-harmonic zero with harmonic 3
+  added). ($`\Delta = 2.1157`$ is close to $`\Delta(20) = 2.1121`$, almost certainly a coincidence.) So no selection of $`\omega_\infty`$ follows yet; the next attempt needs rescaled
   unknowns $`F_\nu e^{\pi\lvert\nu\rvert\omega/2}`$, seven or more harmonics, and more precision along the integration arc.
 
 **Without truncation: the amplitude expansion** (`solver/inner_amp/`).
@@ -1139,6 +1150,25 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
 - C. Ecker, F. Ecker, D. Grumiller and T. Jechtl, SciPost Phys. 20, 176 (2026), [arXiv:2602.10185](https://arxiv.org/abs/2602.10185).
 - R. B. Dingle, *Asymptotic Expansions: Their Derivation and Interpretation*, Academic Press (1973).
 - NIST Digital Library of Mathematical Functions, §2.11 and §13.7 ([dlmf.nist.gov](https://dlmf.nist.gov)).
+
+## How this work was done
+
+Nathan Moinvaziri chose the problem, set the direction at each step and ran the long computations on his own machine.
+The code, the computations, the derivations, the proofs and the text in this repository were produced by Claude,
+Anthropic's AI model, working as a set of coordinated agents (cloud sessions and a session on that machine), with the
+commits marked as co-authored. He has not checked the mathematics himself.
+
+What has been checked, and how:
+
+- **Numerics:** two independent solvers (f64 and double-double) agree where they overlap; two machines with separate builds
+  agree to $`2`$–$`4\times10^{-16}`$; every fit table reproduces from the data with the command given next to it.
+- **Derivations:** Propositions 1–3 and the inner equations were re-derived by separate agents that had not written them
+  (sympy where possible); the inner Stokes multiplier was computed by two implementations that share no code.
+- **Against the literature:** agreement with the published values at $`D = 4`$ and at the maximum of $`\Delta`$
+  ([Relation to published work](#relation-to-published-work)).
+- **A referee pass** by an agent that had not seen the work, whose findings were applied.
+
+No human expert has reviewed it. The results should be read with that in mind, and corrections are welcome.
 
 ## Software: the Rust kernel
 
