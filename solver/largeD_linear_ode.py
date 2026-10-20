@@ -1,0 +1,20 @@
+import sympy as sp
+x, s, n = sp.symbols("x s n")
+Dfun = sp.Function("D")(x)
+Sexpr = (x * (1 - x**2) * Dfun.diff(x) - (1 + s * x**2) * Dfun) / (x * (s - n + 1))
+ode = sp.simplify(Sexpr.diff(x) - (x * Dfun.diff(x) + s * Dfun - (n - 1) * Sexpr / x))
+num = sp.factor(sp.together(ode).as_numer_denom()[0])
+print("ODE numerator:", num)
+# write as a2 D'' + a1 D' + a0 D
+expr = sp.expand(num)
+a2 = sp.factor(expr.coeff(Dfun.diff(x, 2)))
+a1 = sp.factor(expr.coeff(Dfun.diff(x)).subs(Dfun.diff(x, 2), 0))
+a0 = sp.factor(sp.expand(expr - a2 * Dfun.diff(x, 2) - a1 * Dfun.diff(x)).coeff(Dfun))
+print("a2 =", a2); print("a1 =", a1); print("a0 =", a0)
+# substitute D = x * y(z), z = x^2 and look for a hypergeometric form
+z = sp.symbols("z", positive=True)
+y = sp.Function("y")
+Dsub = x * y(x**2)
+e2 = sp.simplify((a2 * Dsub.diff(x, 2) + a1 * Dsub.diff(x) + a0 * Dsub))
+e2 = sp.simplify(e2.subs(x, sp.sqrt(z)))
+print("in z:", sp.factor(e2))

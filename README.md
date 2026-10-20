@@ -5,7 +5,8 @@ Rust port of the multiple-shooting residual `F(z)` used to compute Choptuik's di
 [`hp/`](hp/) is a separate double-double (~32 digit) solver built to reach large D, where f64 can no longer pin the
 period ([below](#double-double-solver-hp-in-progress)). It has computed Δ from D = 8 to 60 to about $10^{-14}$, and the
 points beyond the fitted range show that Δ is analytic in 1/D at large D
-([below](#is-the-period-analytic-in-1d)).
+([below](#is-the-period-analytic-in-1d)). Why the 1/D expansion of the equations cannot fix the period, with proofs,
+is in [Large D](#large-d-what-the-1d-expansion-can-and-cannot-see).
 
 ![Echo period Δ(D) and critical exponent γ(D) with one rational formula for all D ≥ 4, and the double-double points to D = 61](solver/delta.svg)
 
@@ -342,8 +343,184 @@ at the same $D$, and the Jacobian's weak spectrum changes smoothly. The two weak
 of the centre data, are pinned only to about $\lvert F\rvert / \sigma$, so their amplitudes jitter by about
 $5\times10^{-9}$ from point to point; the cubic predictor amplifies that 30-fold, past Newton's basin along exactly
 those directions. Carrying those harmonics on a straight-line trend instead (`scan_hp.py --junk_hold 9
---junk_trend N`, with `--corrector dnp` to converge every point to the bottom) gets past $D = 60.96$; making the steps
-long again is in progress.
+--junk_trend N`, with `--corrector dnp` to converge every point to the bottom) gets past $D = 60.96$, but only in
+steps of $0.002$–$0.003$. Points above $D = 61$ add little to $\Delta_\infty$ now, so the climb is paused there.
+
+## Large D: what the 1/D expansion can and cannot see
+
+The double-double points fix $\Delta_\infty = 1.64389375$ numerically. This section asks where the number comes from
+in the equations. The answer so far: **the period is not determined at any finite order of the $1/D$ expansion of
+the field equations.** For every choice of the period and of a free time profile, the expansion can be carried to all
+orders (Proposition 1). The leading-order problem is solved exactly by hypergeometric functions, and those are never
+analytic at the light cone (Proposition 2). So the period is selected by effects smaller than every power of $1/D$.
+Finding that selection rule is open; the last part of the section lists what is known about it.
+
+Notation: $n = D - 2$, $\varepsilon = 1/n$, $\omega = 2\pi/\Delta$, and $\theta$ the phase of the echoing (period
+$2\pi$). The equations are the ones at the top of [`hp/src/model.rs`](hp/src/model.rs), with $b = a^2$ and
+$G = (n-1)\,c\,(b-1)$:
+
+$$
+x c_x = (n-1)\,c\,(b-1), \qquad
+x b_x = b\,(p^2+m^2) - (n-1)\,b\,(b-1),
+$$
+$$
+x(x-c)\,p_x = -\omega x\,p_\theta + G p - c p + \tfrac{n}{2}\,c\,(p+m), \qquad
+x(x+c)\,m_x = -\omega x\,m_\theta - G m + c m - \tfrac{n}{2}\,c\,(p+m),
+$$
+
+on $0 \le x \le 1$, with $p, m$ odd and $b, c$ even in $\theta$, regular at the centre $x = 0$, analytic at the past
+light cone $x = 1$, and $c(1) = 1$ (the gauge that puts the light cone at $x = 1$).
+
+### How the solution scales with D
+
+Measured on the double-double solutions at $D = 12$–$60$ (`hp/largeD_scaling.py`, `hp/largeD_F.py`):
+
+- $p \approx x\,F(\theta)/\sqrt n$ near the centre, and $p + m$ is smaller than $p$ by another factor of order $1/n$;
+- $c = 1 - O(1/n)$, and $b - 1 = (p^2+m^2)/(n-1)$ to about 3%;
+- the light cone stays at $x - c = x - 1$ to $10^{-3}$;
+- the centre series has the exact symmetry $m(x) = p(-x)$.
+
+The profile $F = \sqrt n\, \partial_x p\,(x = 0)$ converges as $D$ grows:
+
+| $D$ | first harmonic of $F$ | third / first | fifth / first | $n\,(1 - \langle c(0)\rangle)$ | $\langle F^2\rangle$ |
+|---|---|---|---|---|---|
+| 20 | 3.480 | 0.130 | 0.024 | 3.021 | 6.162 |
+| 30 | 3.212 | 0.105 | 0.016 | 3.201 | 5.218 |
+| 40 | 3.086 | 0.093 | 0.012 | 3.304 | 4.804 |
+| 50 | 3.011 | 0.085 | 0.0097 | 3.372 | 4.568 |
+| 60 | 2.962 | 0.080 | 0.0085 | 3.421 | 4.416 |
+| $\infty$ (extrapolated) | $\approx 2.72$ | | | $\approx 3.65$ | $\approx 3.7$ |
+
+The last two columns approach the same limit, as Proposition 1 predicts ($c = 1 - \varepsilon F^2 (1-x^2) + \ldots$).
+
+### Proposition 1: the 1/n expansion never fixes the period
+
+Write $p = \varepsilon^{1/2} P$, $m = \varepsilon^{1/2} M$, $S = P + M$, $\Delta_P = P - M$, and expand
+$S = \sum_{k \ge 1} \varepsilon^k S_k$, $\Delta_P = \sum_{k \ge 0} \varepsilon^k D_k$,
+$c = 1 - \sum_{k\ge1} \varepsilon^k G_k$, $b = 1 + \sum_{k \ge 2} \varepsilon^k B_k$,
+$\omega = \sum_k \varepsilon^k \omega_k$. The sum and difference of the $p$ and $m$ equations become
+
+$$
+x\,c\,\partial_x \Delta_P - c\,\Delta_P = x^2 \partial_x S + \omega x\,\partial_\theta S - \tfrac{1-\varepsilon}{\varepsilon}\, c\,(b-1)\,\Delta_P ,
+\qquad
+S = \varepsilon\,\frac{x^2 \partial_x \Delta_P - x c\,\partial_x S + \omega x\,\partial_\theta \Delta_P}{c\,(1-\varepsilon)\,b} .
+$$
+
+**Proposition 1.** Let $F(\theta)$ be any smooth $2\pi$-periodic function with odd harmonics only, $\omega_0 \ne 0$,
+$\omega_1, \omega_2, \ldots$ any numbers and $K_1(\theta), K_2(\theta), \ldots$ any smooth odd-harmonic functions.
+Then there is exactly one formal solution with $D_0 = 2xF$ in which, at every order,
+$S_k$ is an even polynomial in $x$ starting at $x^2$, $D_k - xK_k$ is an odd polynomial starting at $x^3$, and $G_k$
+and $B_{k+1}$ are even polynomials ($B$ starting at $x^2$) with $G_k(1) = 0$. Every order is regular at the centre and
+analytic at the light cone, and $m(x) = p(-x)$ holds order by order.
+
+*Proof.* By induction on $k$, with the structure above as the hypothesis for all orders below $k$. Write $E$ for even
+polynomials in $x$ with smooth periodic coefficients.
+
+1. *$B_{k+1}$.* The $b$ equation at order $k+1$ gives $B_{k+1}$ algebraically (its coefficient is $(n-1)b \approx 1/\varepsilon$)
+   from $x\partial_x B_k$, $(1+B)\,(P^2+M^2)$ and $(1-\varepsilon)(1+B)B$ at lower orders. Since $P^2 + M^2 = (S^2 + \Delta_P^2)/2$
+   with $S \in x^2E$ and $\Delta_P \in xE$, every term is in $x^2E$.
+2. *$G_k$.* The $c$ equation at order $k+1$ reads $-x\,\partial_x G_k = [(1-\varepsilon)\,c\,(b-1)]_{k+1} \in x^2 E$.
+   Dividing by $x$ leaves only odd powers $x^{2j-1}$, $j \ge 1$, so $G_k = -\sum_j r_{2j} x^{2j}/(2j) + \text{const}$ is an even
+   polynomial with no $\log x$. The constant is fixed by $G_k(1) = 0$.
+3. *$S_k$.* The numerator $x^2\partial_x\Delta_P - xc\,\partial_x S + \omega x\,\partial_\theta\Delta_P$ maps
+   $\Delta_P \in xE$, $S \in x^2E$ into $x^2E$. The denominator is $1 + O(\varepsilon)$ with coefficients in $E$, so its inverse is
+   a power series in $\varepsilon$ with coefficients in $E$. Hence $S_k \in x^2 E$.
+4. *$D_k$.* The sum equation at order $k$ is $x\,\partial_x D_k - D_k = R_k$, where $R_k$ collects
+   $x^2\partial_x S_k + \omega x\,\partial_\theta S_k \in x^3E$, terms $c\,(b-1)\,\Delta_P \in x^3E$, and terms
+   $G_i\,(x\,\partial_x D_j - D_j)$. The last are in $x^3E$ because $x\partial_x - 1$ annihilates $xK_j$. So $R_k$ is odd and starts
+   at $x^3$, and $D_k = x\int R_k\,x^{-2}\,dx = \sum_{j \ge 1} R_{k,2j+1}\, x^{2j+1}/(2j) + xK_k$. The only obstruction,
+   a term $x^1$ in $R_k$ that would produce $x \log x$ (not allowed at the centre), never occurs.
+5. *Symmetry.* $S$ even and $\Delta_P$ odd in $x$ is the same as $p(-x) = m(x)$.
+
+Polynomials are analytic everywhere, so the light-cone condition is automatic, and $c(1) = 1$ holds by construction.
+Nothing in the construction constrains $F$, $\omega_0$ or the $\omega_k$. $\square$
+
+The first orders, from `solver/largeD_expand.py` (sympy, run to fourth order):
+
+$$
+P_0 = xF, \quad B_2 = 2x^2F^2, \quad G_1 = F^2\,(1-x^2), \quad S_1 = 2x^2\,(F + \omega_0 F'),
+\quad D_1 = x^3\,(\omega_0^2 F'' + 3\omega_0 F' + 2F - 2F^3) + xK_1 .
+$$
+
+*Check.* `solver/largeD_formal_check.py` substitutes the expansion (through $S_3$, $G_3$, $B_4$) into the exact equations,
+with $F$ taken from the $D = 60$ solution. The relative residual of every equation falls exactly like $n^{-3}$ for
+$n = 50, \ldots, 800$, both for $\omega_0 = 2\pi/1.64389$ and for a wrong $\omega_0 = 2\pi/1.4$. The expansion is right
+to that order, and it does not care what the period is.
+
+**Consequence.** $\Delta(D)$ itself does have a $1/D$ expansion: it is analytic in $1/D$, as the double-double points
+show. But its coefficients cannot be computed order by order from the field equations. The selection works through
+terms smaller than any power of $1/n$.
+
+### Proposition 2: the leading-order problem, solved exactly
+
+At leading order the equations are linear (the scalar wave equation on flat space in self-similar form, $c = b = 1$).
+For one harmonic $e^{i\mu\theta}$, put $s = i\mu\omega$.
+
+**Proposition 2.** The solution regular at the centre is, up to a constant,
+
+$$
+p - m = x\;{}_2F_1\!\left(\tfrac{1+s}{2},\,\tfrac{2+s}{2};\,\tfrac{n+1}{2};\,x^2\right),
+\qquad
+p + m = \frac{x(1-x^2)\,\partial_x(p-m) - (1+sx^2)\,(p-m)}{x\,(s-n+1)} .
+$$
+
+Near the light cone it contains the non-analytic branch $(1-x^2)^{\,n/2-1-s}$ with the coefficient
+
+$$
+C(n, s) = \frac{\Gamma\!\left(\frac{n+1}{2}\right)\,\Gamma\!\left(s + 1 - \frac n2\right)}{\Gamma\!\left(\frac{1+s}{2}\right)\Gamma\!\left(\frac{2+s}{2}\right)} ,
+$$
+
+which is finite and non-zero for every real $\omega \ne 0$, odd $\mu$ and $n > 2$. So no time-periodic self-similar
+solution of the linear problem is analytic at the light cone, in any dimension.
+
+*Proof.* With $c = b = 1$ the difference equation gives $(n - 1)\,(p+m) = x^2\,\partial_x(p-m) - x\,\partial_x(p+m) + s x\,(p-m)$,
+and the sum gives $x\,\partial_x(p-m) - (p-m) = x^2\,\partial_x(p+m) + sx\,(p+m)$. Eliminating $p+m$ gives
+
+$$
+x^2(1-x^2)\,y'' + x\,\big(n - 2 - 2(s+1)x^2\big)\,y' - \big(n - 2 + s(s+1)x^2\big)\,y = 0 , \qquad y = p - m ,
+$$
+
+and with $y = x\,w(z)$, $z = x^2$, this is Gauss's equation $z(1-z)w'' + [\kappa - (\alpha+\beta+1)z]\,w' - \alpha\beta\,w = 0$ with
+$\alpha = (1+s)/2$, $\beta = (2+s)/2$, $\kappa = (n+1)/2$. Its exponents are $0, 1-\kappa$ at $z = 0$ (so $y \sim x$ or $x^{2-n}$; regularity
+picks ${}_2F_1(\alpha,\beta;\kappa;z)$) and $0,\ \kappa-\alpha-\beta = n/2 - 1 - s$ at $z = 1$. The connection formula (Abramowitz & Stegun 15.3.6)
+
+$$
+{}_2F_1(\alpha,\beta;\kappa;z) = \frac{\Gamma(\kappa)\Gamma(\kappa-\alpha-\beta)}{\Gamma(\kappa-\alpha)\Gamma(\kappa-\beta)}\,{}_2F_1(\alpha,\beta;\alpha+\beta-\kappa+1;1-z)
++ (1-z)^{\kappa-\alpha-\beta}\,\frac{\Gamma(\kappa)\Gamma(\alpha+\beta-\kappa)}{\Gamma(\alpha)\Gamma(\beta)}\,{}_2F_1(\kappa-\alpha,\kappa-\beta;\kappa-\alpha-\beta+1;1-z)
+$$
+
+holds because $\kappa - \alpha - \beta$ is not an integer ($s$ is imaginary and non-zero). The second coefficient is $C(n,s)$. The
+Gamma function has no zeros, and its arguments $\alpha$, $\beta$, $\alpha+\beta-\kappa$ are not poles because their imaginary parts
+are $\mu\omega/2$, $\mu\omega/2$, $\mu\omega \ne 0$. $\square$
+
+*Check.* At 40 digits (mpmath), the formula satisfies the original first-order equations to $10^{-40}$ for $n = 18$–$1000$. For the
+fundamental at $\omega = \omega_\infty$, $\lvert C\rvert = 0.0121,\ 0.0114,\ 0.0124,\ 0.0192,\ 0.0405$ at $n = 18, 38, 58, 200, 1000$.
+It grows like $\sqrt n$ ($\lvert C\rvert/\sqrt n \to 0.00128$), small only through the factor of order $e^{-\pi\mu\omega/2}$.
+
+**What this means.** At leading order the self-similar oscillation is a free scalar wave, and a free wave cannot be
+both regular at the centre and analytic at the light cone. The non-analytic piece $(1-x^2)^{n/2-1-s}$ is smaller than any
+power of $1/n$ at every fixed $x < 1$, which is why Proposition 1 never sees it. Gravity, through the $O(1/n)$ couplings,
+has to cancel its coefficient harmonic by harmonic. That cancellation is the selection rule for $\Delta$ and for the
+profile $F$.
+
+### What is known about the selection, and what is open
+
+- **The expansion diverges.** `solver/largeD_late_orders.py` runs the recursion of Proposition 1 numerically to order 36,
+  as polynomials in $x$ with coefficients sampled in $\theta$. It reproduces sympy at orders 1–2 to $10^{-11}$, and roundoff
+  harmonics are projected out. For $F = 2.72\sin\theta$ and $\omega = \omega_\infty$, the terms grow factorially (ratio of
+  successive orders $\approx 7$–$8.6\,k$), dominated by ever-higher harmonics. The rate depends on the amplitude and on
+  $\omega$. This is the setting of exponential asymptotics: the series is divergent and its Borel-type remainders carry the
+  selection.
+- **The weak directions are the selection, measured.** The near-null directions of the Jacobian, the "junk" of the
+  solver sections, are exactly the variations of $F$'s harmonics that Proposition 1 leaves free. Their singular values measure
+  how strongly the hidden condition pins each harmonic. For harmonics $k = 7, 9, 11, 13$ they fall like
+  $n^{-10.5}, n^{-14}, n^{-17.5}, n^{-21}$ between $D = 20$ and $60$, roughly $n^{-1.6k}$.
+- **$F$'s singularities recede.** The decay rate of $F$'s harmonics grows roughly like $\tfrac14 \ln n$ (0.58 at
+  $D = 12$, 1.02 at $D = 60$), so $F_\infty$ looks entire, and its harmonics beyond the first shrink as $D$ grows.
+- **Open:** the cancellation condition at $D = \infty$. Proposition 2 gives the linear half exactly. The missing half is the
+  coefficient of $(1-x^2)^{n/2-1-s}$ produced by the gravitational couplings, to the order in $1/n$ at which it competes with
+  $C(n,s)$. With both halves, the selection would become an equation for $\omega_\infty$ and $F_\infty$ alone, and $\Delta_\infty$
+  would follow from it to any precision.
 
 ## Backends
 
@@ -477,6 +654,10 @@ hp/                 double-double solver (crate hpkernel)
 ├── export_dd.py    collects the runs' points into data/delta_dd.csv
 ├── dd_fits_mp.py   large-D model fits at 60 digits, held-out errors, predictions
 └── data/delta_dd.csv   every double-double point: D, Delta (hi + lo), |F|, max dDelta/dF
+hp/largeD_*.py      large-D scaling of the solutions (profiles, F(theta), harmonic content)
+solver/largeD_expand.py       the 1/n expansion symbolically (sympy, Proposition 1)
+solver/largeD_formal_check.py the expansion substituted into the exact equations (residual ~ n^-3 for any omega)
+solver/largeD_late_orders.py  the same recursion numerically to high order (divergence of the series)
 ```
 
 ## Limits
