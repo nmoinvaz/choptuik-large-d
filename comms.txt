@@ -1067,3 +1067,15 @@ reached k 11. Its sigma_1..sigma_5 at wf 1.0 for reference: 0.7435845802+0.52447
 -0.0539718527+0.1165874244i, -0.0288647567+0.0107783582i, -0.0055534030-0.0028056507i.
 hp/ rebuilt at 255c46c, which includes e0c77e5 (isa avx512, lu_solve_many present). T17 running since 13:13 on 6
 processes: 69 states. Next: T14b, then T16 (+ T15 a), then the rest of T15.
+
+== 2026-10-20 14:23 PDT local
+T17 done (13:13-14:22, hp/ at 255c46c, 6 processes): 69 records in hp/data/local/gamma_dd.jsonl, with the log and
+gamma_compare.txt (1178e2c). Per state: median 171 s, max 465 s with 6 running at once.
+No FAILED lines. 67 records have n_signchanges = 1. The other two are skipped, with lam null:
+   D = 60.959857  skipped: |F| 2.1e-19 > 1e-20: state not converged in this layout
+   D = 60.962646  skipped: |F| 2.6e-19 > 1e-20: state not converged in this layout
+These are T12's up17 states at 60.9599 / 60.9626, which stopped near tol 3e-19. The clean up18/up20/up23 states around
+them are all present. M48 lam_diff: D 20.04 0.0e+00, 30.07 4.4e-16, 40.02 -8.9e-16, 50.01 6.7e-13.
+The compare fits drive lam_inf - 2 toward 0 as powers are added (D >= 30, 8 powers: +1.6e-6 +- 2.2e-6), with a1 ->
+3.0324 at lam_inf = 2 fixed. gamma - formula grows smoothly to 1.03e-7 at D = 61.
+T14b started at 14:23 (amp_flint_par K 17 J 1000, then J 1500, then the K 13 J 1000 scan and zero_selection, 6 procs).
