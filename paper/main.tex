@@ -10,6 +10,7 @@
 \newcommand{\Dinf}{\Delta_\infty}
 \newcommand{\eps}{\varepsilon}
 \newtheorem{proposition}{Proposition}
+\newtheorem{conjecture}{Conjecture}
 
 \begin{document}
 
@@ -28,14 +29,15 @@ solver, consistent with smooth curves to $4\times10^{-15}$, and with an independ
 $4 \le D \le 40$. One rational function of $1/(D-2)$ reproduces $\Delta$ and the critical exponent $\gamma$ for all
 $D \ge 4$ within the precision of the points. Series in $1/D$ fitted on $D \le 45$ predict the points up to $D = 60.1$ to
 $5\times10^{-13}$ (to $D = 61$: $7\times10^{-13}$), 40 to 300 times better than series in half-integer powers; this supports, but does not prove,
-analyticity in $1/D$, which then gives $\Dinf = 1.64389375 \pm 10^{-8}$. A power-law approach to $\Delta = 0$, as
+analyticity in $1/D$, which then gives $\Dinf = 1.64389375 \pm 1.5\times10^{-8}$. A power-law approach to $\Delta = 0$, as
 conjectured in the literature, is excluded by the data; a logarithmic one is disfavoured. We show that the $1/D$
 expansion of the self-similar field equations can be carried to all orders for any period and any time profile, so
 the period (and likewise $\gamma$) is selected beyond all orders in $1/D$. Without gravity the obstruction is a
 closed-form light-cone coefficient, which we identify as the Stokes multiplier of a mode born at large self-similar
-radius. As a working hypothesis, the selection rule at $D = \infty$ is the vanishing of the Stokes multipliers of an
-$n$-free inner problem; its higher-harmonic conditions predict the shape of the echo, $|F_3/F_1| = 0.055$, which the
-data reproduce. The harmonic-1 condition, which would fix $\Dinf$, remains open.
+radius. We conjecture that the selection rule at $D = \infty$ is the vanishing of the Stokes multipliers of an
+$n$-free inner problem; its higher-harmonic conditions predict the shape of the echo, $|F_3/F_1| = 0.0551$, which the
+data reproduce. A first estimate of the harmonic-1 condition, which would fix $\Dinf$, puts its zero at
+$\omega_\infty$ about 10\% above the measured amplitude, not yet converged.
 The computations, derivations and text were produced by an AI model (Claude, Anthropic) under the author's
 direction and have not yet been reviewed by a human expert (Sec.~\ref{sec:how}).
 \end{abstract}
@@ -66,17 +68,19 @@ $4 \le D \le 40$ from a double-precision solver; one rational formula in $1/(D-2
 (Sec.~\ref{sec:results}). It reproduces the published values at $D = 4$ and the maximum of $\Delta$ below $D = 4$; at
 $D = 5$ it differs from~\cite{EckerEtAl2026} by $6\times10^{-5}$, a difference that the published higher-resolution
 data of~\cite{EckerEtAl2026} trace to resolution.
-\item Held-out tests that support analyticity of $\Delta$ in $1/D$, giving $\Dinf = 1.64389375 \pm 10^{-8}$; a
+\item Held-out tests that support analyticity of $\Delta$ in $1/D$, giving $\Dinf = 1.64389375 \pm 1.5\times10^{-8}$; a
 power-law approach to zero is excluded and a logarithmic one disfavoured; nine candidate closed forms for $\Dinf$
 are ruled out (Sec.~\ref{sec:limit}).
 \item The $1/D$ expansion never fixes the period (Proposition~\ref{prop:1}); the leading-order problem and its
 light-cone coefficient in closed form (Proposition~\ref{prop:2}); what gravity does to the non-analytic piece
-(Proposition~\ref{prop:3}); and a derivation identifying that coefficient as a Stokes multiplier
+(Proposition~\ref{prop:3}); and a proof that the late orders of the $1/D$ series encode that coefficient as a Stokes multiplier
 (Proposition~\ref{prop:4}) (Sec.~\ref{sec:theory}).
-\item An $n$-free inner problem whose Stokes multipliers, by a working hypothesis, select the period; its
-higher-harmonic conditions predict $|F_3/F_1| = 0.055$ and $|F_5/F_1| = 0.0030$ for the echo profile at
+\item An $n$-free inner problem whose Stokes multipliers, by a conjecture stated with its hypotheses and the points where
+a proof is missing (Conjecture~\ref{conj}), select the period; its
+higher-harmonic conditions predict $|F_3/F_1| = 0.0551$ and $|F_5/F_1| = 0.00314$ for the echo profile at
 $D = \infty$, against $0.0549$--$0.0552$ and $0.0032$--$0.0034$ extrapolated from the solutions
-(Sec.~\ref{sec:inner}). The harmonic-1 condition, which would give $\Dinf$, is open.
+(Sec.~\ref{sec:inner}). The harmonic-1 condition, which would give $\Dinf$, is not yet settled: a first estimate puts its
+zero about 10\% above the measured amplitude.
 \item An analysis of the next-to-leading-order condition of~\cite{EckerEckerGrumiller2026}, which within this framework
 does not select $\Delta$ (Sec.~\ref{sec:eeg}).
 \end{enumerate}
@@ -203,7 +207,7 @@ $D$ & $\Delta$ & $\gamma$ & $D$ & $\Delta$ & $\gamma$ \\ \hline
 10 & 2.521078919562 & 0.4555879 & 70 & 1.78693476494 & \\
 12 & 2.389188553641 & 0.4614056 & 100 & 1.7450264844 & 0.49313 \\
 15 & 2.253098407194 & 0.4673656 & 1000 & 1.65424086 & 0.4992 \\
- & & & $\infty$ & $1.64389375 \pm 10^{-8}$ & $1/2$ (assumed) \\
+ & & & $\infty$ & $1.64389375 \pm 1.5\times10^{-8}$ & $1/2$ (assumed) \\
 \end{tabular}
 \end{ruledtabular}
 \end{table}
@@ -288,9 +292,11 @@ $10 \le D \le 37.5$ (top) and $10 \le D \le 45$ (bottom); shaded: the level of t
 
 Fitted on all cleaned points, power series in $1/D$ of degree 16--20 and in $1/(D-2)$ of degree 18--20 fit to the
 noise and give limits from $1.643893744$ to $1.643893752$ (snapshot $D \le 60.1$) and from $1.643893745$ to
-$1.643893752$ (all 823 cleaned points to $D = 61.03$). Hence, if $\Delta$ is analytic in $1/D$,
+$1.643893752$ (all 823 cleaned points to $D = 61.03$). Over 48 choices of model ($1/D$, $1/(D-2)$), degree, fit range
+and cleaning, the limit ranges over $1.643893744$--$1.643893763$ (\texttt{hp/dinf\_budget.py}); fitting on $D \le 45$
+alone pins it only to $2.5\times10^{-7}$. Hence, if $\Delta$ is analytic in $1/D$,
 \begin{equation}
-\Dinf = 1.64389375 \pm 10^{-8}, \qquad \omega_\infty = 2\pi/\Dinf = 3.82213589 \pm 2\times10^{-8},
+\Dinf = 1.64389375 \pm 1.5\times10^{-8}, \qquad \omega_\infty = 2\pi/\Dinf = 3.82213589 \pm 4\times10^{-8},
 \end{equation}
 and $\Delta(D) \approx \Dinf + 10.37/n + \dots$. The analytic form is the natural default but not proven: as shown in
 Sec.~\ref{sec:theory}, the period is selected by an effect the $1/D$ expansion does not see.
@@ -321,7 +327,7 @@ $G$ is Catalan's constant, $j_{\nu,k}$ the $k$-th zero of $J_\nu$.}
 \begin{ruledtabular}
 \begin{tabular}{llll}
 Candidate & value & minus $\Dinf$ & held-out error (ratio) \\ \hline
-none (free fit) & $1.64389375 \pm 10^{-8}$ & & $4.7\times10^{-13}$ \\
+none (free fit) & $1.64389375 \pm 1.5\times10^{-8}$ & & $4.7\times10^{-13}$ \\
 $\tfrac57\sqrt{G}\,j_{0,1}$ & 1.6439747 & $+8.1\times10^{-5}$ & $6.2\times10^{-11}$ (130) \\
 $\tfrac75(\ln2)^{-2}\pi^{-1/2}$ & 1.6440014 & $+1.1\times10^{-4}$ & $1.1\times10^{-10}$ (220) \\
 $\tfrac72\sqrt{\ln2/\pi}$ & 1.6440152 & $+1.2\times10^{-4}$ & $1.3\times10^{-10}$ (270) \\
@@ -381,6 +387,12 @@ exponent: the expansion of growing perturbations $e^{\lambda\tau}$ goes through 
 with $\partial_\tau \to \lambda + \omega\partial_\theta$; checked with sympy through order 2), so $\gamma = 1/\lambda$ is also
 selected beyond all orders.
 
+\emph{Why the ansatz.} The scaling is forced by one measured fact, $c - 1 = O(1/n)$ (gravity weak;
+$n(1 - \langle c(0)\rangle) \to 3.65$): the $b$ equation gives $b - 1 \approx (p^2+m^2)/(n-1)$, the $c$ equation then gives
+$c - 1 = O(n(b-1)) = O(p^2)$, so $c - 1 = O(1/n)$ requires $p = O(n^{-1/2})$; and the $O(n)$ terms of the $p$, $m$ equations
+force $p + m = O(p/n)$, the measured $p + m = O(n^{-3/2})$. Integer powers of $\eps$ beyond the overall $\eps^{1/2}$ are an
+assumption (analyticity in $1/n$), consistent with the held-out tests on $\Delta(D)$ but not implied by them.
+
 \subsection{The leading-order problem}
 
 At leading order ($c = b = 1$) the equations describe a free wave in self-similar form. For one harmonic
@@ -439,28 +451,49 @@ phenomenon.
 
 \subsection{The light-cone coefficient as a Stokes multiplier}
 
-\begin{proposition}[derivation]\label{prop:4}
-Let $y(\eps) = x\,{}_2F_1(\alpha,\beta;\kappa;z)$ with $z = x^2$, $\kappa = (1 + 1/\eps)/2$, and $y \sim \sum_k y_k\eps^k$.
-Then
-\begin{gather}
-y_k = 2x(-1)^{k-1}\sum_{J\ge0}R_J(2J+1)^{k-1}, \\
-R_J = \frac{(-1)^J(\alpha)_{J+1}(\beta)_{J+1}}{J!\,(J+1)!}\,z^{J+1}\,{}_2F_1(\alpha+J+1,\beta+J+1;J+2;z),
-\end{gather}
-convergent for $x < 1/\sqrt2$ and continued above, and as $k \to \infty$
-$y_k \approx \sum_\ell K_\ell(x)\,\Gamma(k+s+\tfrac12)/\big(\Phi(x) + i\pi(\ell+\tfrac12)\big)^{k+s+1/2}$, dominated by
-$\ell = -1$, i.e.\ by the singulant $\chi = \Phi - i\pi/2$.
+A divergent series records the exponentially small terms it switches on in its late orders~\cite{Dingle1973}. At
+leading order this can be made exact, because the $1/n$ expansion of $x\,{}_2F_1$ from Proposition~\ref{prop:2} is
+explicit.
+
+\begin{proposition}\label{prop:4}
+Let $0 < x < 1$, $\Phi = \ln x - \tfrac12\ln(1-x^2)$, $\tau_\ell = \Phi - i\pi(\ell + \tfrac12)$, and let
+$y = x\,{}_2F_1(\alpha,\beta;\kappa;x^2)$ with $\kappa = (n+1)/2$, $y \sim \sum_k y_k\eps^k$, $\eps = 1/n$. If
+$|\Phi| < (\sqrt3/2)\pi$ (equivalently $0.066 < x < 0.998$), then
+\begin{equation}
+y_k = K\,x^2(1-x^2)^{-1-s}\,\frac{\Gamma(k+s+\frac12)}{\tau_0^{\,k+s+\frac12}}\,\big(1 + O(1/k)\big), \qquad
+K = e^{-i\pi(1+s)}\,\frac{2^{-s-1/2}}{\Gamma(\alpha)\Gamma(\beta)} .
+\label{eq:prop4}
+\end{equation}
+The $\ell = -1$ singularity contributes at the same rate but with a $k$-independent relative weight of $8\times10^{-5}$
+($x = 0.5$) to $5\times10^{-8}$ ($x = 0.95$). If $|\Phi| > (\sqrt3/2)\pi$ the late orders are governed instead by the
+$x$-independent singularities $\pm i\pi$.
 \end{proposition}
 
-The first formula is the pole expansion of ${}_2F_1$ in $\kappa$; the second follows from the large-$J$ form of $R_J$ and
-Poisson summation over $J$. This is a derivation, not a proof: a full proof needs a growth bound for the pole expansion,
-the exchange of the $J$-sum with the expansion of $1/(1+(2J+1)\eps)$, error bounds inside the Poisson sum, control of
-the continuation to $x > 1/\sqrt2$, and the branch of $\chi^{k+s+1/2}$. Numerically, the pole sum equals the direct series
-to $10^{-49}$--$10^{-91}$; the late orders computed to order 122 at 90 digits give $\chi = \Phi - i\pi/2$ to
-$3$--$7\times10^{-3}$ at $x = 0.7$--$0.9$; and the predicted Dingle constant
-$K = e^{-i\pi(1+s)}\,2^{-s-1/2}/(\Gamma(\alpha)\Gamma(\beta))$, with prefactor $x^2(1-x^2)^{-1-s}$ and exponent
-$g = -(s+\tfrac12)$~\cite{Dingle1973}, is matched to $6\times10^{-4}$ at $x = 0.9$.
+\emph{Proof (condensed).} (i) \emph{Euler integral.} For $n > 1$,
+${}_2F_1 = \frac{\Gamma(\kappa)}{\Gamma(\beta)\Gamma(\kappa-\beta)}\int_0^1 t^{\beta-1}(1-t)^{\kappa-\beta-1}(1-zt)^{-\alpha}dt$; with
+$1 - t = e^{-2\tau}$, $y = x\,P(\kappa)\cdot2\int_0^\infty e^{-\tau/\eps}G(\tau)\,d\tau$, where
+$G = e^{(2\beta-1)\tau}(1-e^{-2\tau})^{\beta-1}(1-z+ze^{-2\tau})^{-\alpha}$ and $P = \Gamma(\kappa)/(\Gamma(\beta)\Gamma(\kappa-\beta))$.
+(ii) \emph{Watson's lemma.} Write $G = \tau^{\beta-1}H$; $H$ is analytic except at the simple zeros $\tau = \tau_\ell$ of
+$1 - z + ze^{-2\tau}$, where $H \propto (1-\tau/\tau_\ell)^{-\alpha}$, and at the branch points $\tau = i\pi m$, $m \ne 0$. On
+$\tau > 0$, $|G| \le Ce^{\tau}$, so $2\int_0^\infty e^{-\tau/\eps}G \sim 2\sum_m H_m\Gamma(m+\beta)\eps^{m+\beta}$.
+(iii) \emph{Darboux.} The radius of convergence of $\sum H_m\tau^m$ is $\min(|\tau_0|, \pi)$; if $|\tau_0| < \pi$ the only singularities on
+that circle are $\tau_0$ and $\tau_{-1}$, giving $H_m = \sum_{\ell=0,-1}h_\ell\,\frac{\Gamma(m+\alpha)}{\Gamma(\alpha)\,m!}\,\tau_\ell^{-m}(1+O(1/m))$.
+(iv) \emph{Prefactor.} $P(\kappa)(2\eps)^\beta(1+\eps)^{-\beta}\Gamma(\beta) = 1 + \sum_j p_j\eps^j$, from Binet's expansion of
+$\ln\Gamma(\kappa) - \ln\Gamma(\kappa-\beta)$, whose Borel transform is singular only at $\tau = i\pi m$, a larger radius.
+(v) \emph{Product lemma.} If $A = \sum a_k\eps^k$ has Borel radius $\rho_A$ and $B = \sum b_j\eps^j$ has $\rho_B > \rho_A$, then
+$(AB)_k = b_0a_k(1+O(1/k))$; hence $y_k = \frac{x\,2^{1-\beta}}{\Gamma(\beta)}\Gamma(k+\beta)H_k(1+O(1/k))$.
+(vi) \emph{Constant.} $\Gamma(k+\alpha)\Gamma(k+\beta)/\Gamma(k+1) = \Gamma(k+s+\frac12)(1+O(1/k))$, and evaluating $h_0$ in closed
+form (with $e^{2\tau_0} = z/(z-1)$) gives the prefactor $x^2(1-x^2)^{-1-s}$ times $K$. If $|\tau_0| > \pi$ the radius is $\pi$
+and step (iii) applies to $\pm i\pi$ instead. $\square$
 
-Hence: $e^{-n\chi} = e^{in\pi/2}x^{-n}(1-x^2)^{n/2}$ is the fast mode of Proposition~\ref{prop:3}; $\chi$ vanishes only
+Numerically, the late orders computed to order 122 at 90 digits agree: at $x = 0.9$, $y_k$/prediction $- 1$ extrapolates to
+$(-0.9 - 2.3i)\times10^{-3}$ over $k = 100$--$122$; the derived constant equals $K$ to $1 + 3.65/k$ at $x = 0.5$, 0.8 and 0.9;
+and at $x = 0.999$ and $0.9999$ the measured singulant is $-3.135i \to -i\pi$, not $\Phi - i\pi/2$, as the statement predicts.
+The singularities $\pm i\pi$ come from the Gamma-function prefactor and the endpoint factor $(1-e^{-2\tau})^{\beta-1}$; their
+exponentials $e^{\mp i\pi n}$ are pure phases, not exponentially small terms, so they do not affect the Stokes-line
+argument, which concerns the $\tau_\ell$.
+
+Hence, with $\chi = \tau_0 = \Phi - i\pi/2$: $e^{-n\chi} = e^{in\pi/2}x^{-n}(1-x^2)^{n/2}$ is the fast mode of Proposition~\ref{prop:3}; $\chi$ vanishes only
 at $x = \infty$, so the mode is born at the outer singular point; its Stokes line is the real axis $x > 1$ approached
 from above, where $\chi = \ln(x/\sqrt{x^2-1})$; on $0 < x < 1$ nothing is switched on (the optimally truncated series
 matches the exact solution to $4\times10^{-40}$ at $x = 0.9$, $n = 60$, against a singular-branch size of
@@ -485,11 +518,44 @@ C(n,s) \approx -\,i\,\frac{\sqrt{2\pi}}{\Gamma(1+s)}\,(n+1)^{s+1/2}\,e^{-i\pi\La
 \end{equation}
 Weber's classical Stokes constant~\cite{DLMF}; the ratio to the exact~\eqref{eq:C} is $1.00014$ at $n = 10^5$ ($\mu = 1$).
 
-\emph{Working hypothesis.} With gravity, the selection rule at $D = \infty$ is that the fast-type Stokes multipliers of the
-formal inner solution vanish, one complex condition per odd harmonic; the unknowns are $F$'s harmonics and $\omega$, so
-the count balances. This is derived from the matching but not proved. In the inner region the fast mode obeys
-$\xi\partial_\xi a + 2\omega\partial_\theta a = 2F^2a$ (the large-$x$ limit of Proposition~\ref{prop:3}); the Borel
-singularity stays at $\zeta = \tfrac12$ and the exponents shift by $\langle F^2\rangle$.
+In the inner region the fast mode obeys $\xi\partial_\xi a + 2\omega\partial_\theta a = 2F^2a$ (the large-$x$ limit of
+Proposition~\ref{prop:3}), so the fast-type Stokes multiplier is a function of the characteristic label,
+$S(\theta_0) = \sum_\nu S_\nu e^{i\nu\theta_0}$ with $\theta_0 = \theta - 2\omega\ln\xi$; the Borel singularity stays at
+$\zeta = \tfrac12$ and the exponents shift by $\langle F^2\rangle$. The selection rule is stated as a conjecture.
+
+\begin{conjecture}[selection at $D = \infty$]\label{conj}
+For $n = D - 2$ let $F_n(\theta) = \sqrt n\,\partial_xp(0,\theta)$ and $\omega_n = 2\pi/\Delta(D)$ be the profile and frequency
+of the critical solution. Assume (H1) $F_n \to F_\infty$ uniformly on a strip $|\mathrm{Im}\,\theta| < \sigma$ for some
+$\sigma > 0$, and $\omega_n \to \omega_\infty > 0$ (the data give $\sigma \approx 1.4$, the harmonic decay rate); and (H2) the
+formal family of Proposition~\ref{prop:1} with data $(F_n, \omega_n, K_k)$ is the asymptotic expansion of the solution
+uniformly on $\delta \le x \le 1 - \delta$ (checked: residuals $\propto n^{-3}$ through third order). Then
+$S_\nu(F_\infty, \omega_\infty) = 0$ for every odd $\nu$. Conversely, a zero of $S$ at which the Jacobian with respect to
+$(F, \omega)$, modulo the phase, is invertible should continue to critical solutions for all large $n$.
+\end{conjecture}
+
+\emph{Argument.} The inner problem resums the outer series' top-degree terms; the outer series' light-cone exponential is
+fixed by the inner singularity at $x = \infty$ (exact in the linear case, where the outer late-order constant of
+Proposition~\ref{prop:4} is the inner Weber Stokes constant); and analyticity at the light cone forces $C = 0$. The map
+$S \mapsto C$ is, at leading order in $1/n$, a composition of three invertible maps: (1) inner--outer matching on
+$1 \ll x \ll \sqrt n$, where the inner fast mode $e^{-1/(2\xi^2)}\xi^{2\langle F^2\rangle}e^{\Pi(\theta)}S(\theta_0)$, with
+$\Pi = \omega^{-1}\!\int(F^2 - \langle F^2\rangle)$, matches the outer WKB mode $e^{-n\Phi}A$ on the branch above the real axis
+$x > 1$; (2) the outer transport of Proposition~\ref{prop:3} along $x > 1$ with real $\theta$, which has real coefficients
+while $\eps x^2F^2 \ll 1$ and acts along real characteristics as multiplication by a non-vanishing function composed with
+a shift; and (3) the half-monodromy at the regular singular point $x = 1$, which continues the singular Floquet branch
+$(1-x)^\Lambda\varphi(\theta - \omega'\ln(1-x))$, $\omega' = \omega/(1 - \langle G(1)\rangle)$, from $x > 1$ to $x < 1$ and multiplies
+harmonic $\mu$ by $e^{-i\pi\Lambda}e^{\pm\pi\mu\omega'}$. Hence $C \equiv 0 \Leftrightarrow S \equiv 0$ at leading order; in the
+linear case this is exact.
+
+Rigour fails at three points. (a) Borel summability of the nonlinear series is not proved; the outer nonlinear late
+orders also carry $x$-independent singularities of modulus about 0.13, driven by high harmonics, and one must show that
+these give only ambiguities in the free data, not light-cone branches (in the linear case the analogous $\pm i\pi$ are
+harmless pure phases, which is suggestive but not a proof). (b) Uniformity in the harmonic index: the weights
+$e^{\pi|\mu|\omega/2}$ grow like $e^{6.0|\mu|}$ while $F$'s harmonics decay only like $e^{-1.4|\mu|}$, so an $O(1/n)$ error in a
+high harmonic is amplified when it mixes into low harmonics through $e^{\Pi}$; a proof needs a function-space formulation,
+e.g.\ on the strip $|\mathrm{Im}\,\theta| < \sigma$ with weights in a dual norm. (c) Uniformity at $x = 1$: the outer WKB
+amplitude is singular there ($A \propto (1-x)^{-1}$) and must be matched to the Frobenius solution on
+$1/n \ll |1-x| \ll 1$; the exponents agree ($\Lambda = n/2 - 1 - s + \langle F^2\rangle + O(1/n)$ on both sides), but the matching
+has not been written out.
 
 \emph{Computations with gravity.} Two independent implementations (lateral solutions on either side of the Stokes
 line, and Borel--Darboux fits in ball arithmetic) reproduce the linear constant to $10^{-11}$ and $6\times10^{-27}$. With
@@ -500,15 +566,25 @@ approximation here: the linear multipliers grow like $F_\nu e^{\pi|\nu|\omega/2}
 \emph{Amplitude expansion.} Writing $F = A\sin\theta + \sum_{\nu\ge3} f_\nu(A)e^{i\nu\theta}$ (plus c.c.), harmonic $\mu$
 first appears at order $A^{|\mu|}$, so every harmonic is kept exactly. Tuning $f_\nu$ order by order so that the
 multipliers of all harmonics $|\nu| \ge 3$ vanish, at $A = 2.72$ and $\omega = \omega_\infty$, gives
-$|F_3/F_1| = 0.055$ and $|F_5/F_1| = 0.0030$, with ratios $f_{\nu+2}/f_\nu \approx qA^2$, $|q|A^2 \approx 0.063$, nearly
+$|F_3/F_1| = 0.0551$ and $|F_5/F_1| = 0.00314$, with ratios $f_{\nu+2}/f_\nu \approx qA^2$, $|q|A^2 \approx 0.063$, nearly
 independent of $\nu$. The double-double solutions at $D = 20$--$60$, extrapolated in $1/n$ (degree 2--3), give
 $|F_3/F_1| \to 0.0552$--$0.0549$ and $|F_5/F_1| \to 0.0034$--$0.0032$, and the ratios $|F_{\nu+2}/F_\nu|$
 ($\nu = 1,\dots,9$) extrapolate to $0.055$--$0.072$, a finite decay rate of 1.3--1.45 per harmonic, as predicted
 (Fig.~\ref{fig:spectrum}; the extrapolations are not fully converged). This is the first number the inner problem has
-produced that can be checked against the solutions, and it agrees. The harmonic-1 condition, which would fix $\omega$ and
-hence $\Dinf$, is still open: its series $S_1/S_1^{(1)} = 1 + \sigma_1A^2 + \sigma_2A^4 + \dots$ is known to four terms
-($\sigma_1 = 0.7436 + 0.5245i$, $\sigma_2 = 0.1188 + 0.3981i$, $\sigma_3 = -0.0540 + 0.1166i$, $\sigma_4 \approx -0.029 + 0.011i$),
-which do not locate its zero; an extended-precision computation is in progress.
+produced that can be checked against the solutions, and it agrees. The same relation evaluated at each $D$'s own
+amplitude and $\omega$ (a heuristic) tracks the measured $F_3/F_1$ at $D = 20$--$60$ to within $0.004$--$0.006$ (0.126, 0.099,
+0.087, 0.080, 0.075 against 0.130, 0.105, 0.093, 0.085, 0.080).
+
+\emph{The harmonic-1 condition: a first estimate.} With the higher harmonics tuned,
+$S_1/S_1^{(1)} = 1 + \sigma_1A^2 + \sigma_2A^4 + \dots$; at $\omega_\infty$, computed in ball arithmetic (320 bits) with late orders
+fitted on $j \le 500$--$750$, $\sigma_1 = 0.74358458 + 0.52447485i$, $\sigma_2 = 0.11879384 + 0.39807457i$,
+$\sigma_3 = -0.05397185 + 0.11658742i$, $\sigma_4 = -0.02886476 + 0.01077836i$, $\sigma_5 = -0.00555340 - 0.00280565i$
+($\sigma_1$--$\sigma_4$ stable to $10^{-9}$). The coefficients of $\ln S_1$ in $A^2$ have arguments close to $\pi$
+($0.878\pi$ to $0.978\pi$ for orders 2--5), the signature of a zero near the positive real axis; ratio and Pad\'e estimates put
+it at $A^2 \approx 8.7$--$9.1$ ($A \approx 2.95$--$3.01$) with a small imaginary part, about 10\% above the measured amplitude
+2.72, and not converged (at $A = 2.72$ the partial sums of $\mathrm{Re}\ln S_1$ are still falling). So at five orders the
+harmonic-1 condition at $\omega_\infty$ points to an amplitude near, but not at, the measured one; whether the zero converges
+to $(2.72, \omega_\infty)$ needs $\sigma_6$--$\sigma_8$ and a scan in $\omega$, which are running.
 
 \begin{figure}[t]
 \centering
@@ -555,7 +631,7 @@ theory explains why that number cannot come from the $1/D$ expansion: the expans
 and the selection acts through an exponentially small, Stokes-type effect whose linear version is solved exactly. The
 inner problem at $x \sim \sqrt n$ is $n$-free; its higher-harmonic conditions already reproduce the shape of the echo
 at $D = \infty$. Open are: the harmonic-1 condition of the inner problem, which would give $\Dinf$ (and possibly a closed
-form) from first principles; a proof of the working hypothesis; the value $\lambda_\infty = 2$;
+form) from first principles; a proof of Conjecture~\ref{conj}; the value $\lambda_\infty = 2$;
 and the behaviour just below $D = 4$.
 
 \section{How this work was done}
@@ -571,7 +647,7 @@ computed by two implementations that share no code; values at $D = 4$ and the ma
 literature; and an independent agent refereed the write-up. Corrections are welcome.
 
 \emph{Data and code.} All data, code and derivation scripts are at
-\url{https://github.com/nmoinvaz/dss-residual-kernel}, with a reproduction script (\texttt{reproduce.sh}) and the
+\url{https://github.com/nmoinvaz/dss-residual-kernel}, with a reproduction script (\texttt{./reproduce.sh}, which regenerates the fit tables and checks) and the
 double-double points in \texttt{hp/data/delta\_dd.csv}.
 
 \begin{thebibliography}{99}
