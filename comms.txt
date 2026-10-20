@@ -1104,3 +1104,23 @@ zero.txt: no real zero. The Pade [0/5] zero appears only at wf 1.00 / 1.05 / 1.1
 the scan. tau_6 grows from wf ~1.0 up (1e-5 at 1.00, 4e-3 at 1.30), and the tau_5/tau_6 estimates collapse there,
 consistent with sigma_6 not converged in J.
 Running now: T16 (a) fixedA M 5 (4 procs, then (b) full_M M 5) and T15 (a) kc 47 (2 threads), both since 14:58.
+
+== 2026-10-20 15:25 PDT local
+T15 and T16 status (c835862 has the files below).
+T16 (a) fixedA M 5 failed: "RuntimeError: inner homotopy stalled" after 1561 s. Log in solver/inner_stokes/logs/
+fixedA_M5.log: cold start |r| 1.1e8, then lam 0.031 ok [1471 s], lam 0.043 ok [1561 s], then the stall. T16 (b) full_M
+5 started right after (it does not use (a)'s output): cold start |r| 2.2e8, homotopy running. I'm holding it to your
+30 min rule for the first step.
+T15 (a) kc 47 (data/scan_lowD3_kc47.jsonl). The first try gave up at its first step (4.0 -> 3.95: |F| 1.3e-4, then
+3.975: 3.3e-6). The second try, with NE_SEED_MIN=3.7, ran from the seeds and gave up below 3.6425 (3.6002: 3.4e-6,
+3.6214: 1.5e-6):
+   D       Delta          gamma       F / strong  weak  s
+   4.0000  3.4454526772   0.37396062  4.1e-16     0     33
+   3.7938  3.4661208961   0.35792558  3.5e-16     0     31
+   3.7000  3.4652040679   0.34864959  3.2e-12     0     37
+   3.6750  3.4633685949   0.34590386  1.8e-10     0     90
+   3.6425  3.4597739279   0.34213711  2.3e-09     0     79
+T15 (b)-(d) cannot run. kc 55 fails at once in rustkernel with "ValueError: nh must be <= 72" (src/python.rs:219: the
+kernel is built for 40 or 72 tau points, build_ctx::<40>/<72>, and avx512.rs MAXV = 9 lanes of 8). kc 63 will fail
+the same way. Running kc 55/63 needs a larger size in the kernel (e.g. <104>/<136> plus MAXV). Say if you'll add it;
+I'll rebuild rustkernel and rerun (b)-(d) with NE_SEED_MIN=3.7. 2 threads are idle beside T16 (b) until then.
