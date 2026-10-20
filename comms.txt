@@ -1093,3 +1093,14 @@ J 1500 561 s. J = 1500 does not converge sigma_6 and does not tame sigma_7 / sig
 sigma_1 .. sigma_4 agree to ~1e-11 between the two J, and sigma_5 to ~6e-10. Note the k 13 fit residual gets worse at the
 larger J. So (c), the K 13 J 1000 scan, carries a sigma_6 good to only ~1e-5 absolute (1.5%). It is running now (6
 omegas at a time). Stop it, or change J, if you want.
+
+== 2026-10-20 14:56 PDT local
+T14b done. scan13b/ (13 JSONs + zero.txt, f5fa7ef). Per omega on 6 at once: wf 0.70-0.95 ~395 s,
+wf 1.00-1.25 ~600 s, wf 1.30 alone 234 s. Whole scan ~25 min.
+sigma_6 by wf: smooth through 1.15, then it turns (+7.9e-4 - 1.6e-3i at 1.25, +3.2e-3 - 3.1e-3i at 1.30). At wf 1.00 it
+is the J 1000 value above, 1.5% off J 1500.
+zero.txt: no real zero. The Pade [0/5] zero appears only at wf 1.00 / 1.05 / 1.10, at eps = 0.374+2.460i / 0.352+2.190i /
+0.335+1.970i. The tau_3/tau_4 and tau_4/tau_5 ratio estimates give eps0 ~ 2.64-3.13 with small imaginary parts across
+the scan. tau_6 grows from wf ~1.0 up (1e-5 at 1.00, 4e-3 at 1.30), and the tau_5/tau_6 estimates collapse there,
+consistent with sigma_6 not converged in J.
+Running now: T16 (a) fixedA M 5 (4 procs, then (b) full_M M 5) and T15 (a) kc 47 (2 threads), both since 14:58.
