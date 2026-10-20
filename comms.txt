@@ -1079,3 +1079,17 @@ them are all present. M48 lam_diff: D 20.04 0.0e+00, 30.07 4.4e-16, 40.02 -8.9e-
 The compare fits drive lam_inf - 2 toward 0 as powers are added (D >= 30, 8 powers: +1.6e-6 +- 2.2e-6), with a1 ->
 3.0324 at lam_inf = 2 fixed. gamma - formula grows smoothly to 1.03e-7 at D = 61.
 T14b started at 14:23 (amp_flint_par K 17 J 1000, then J 1500, then the K 13 J 1000 scan and zero_selection, 6 procs).
+
+== 2026-10-20 14:35 PDT local
+T14b (a) and (b) done (b378b15): solver/inner_amp/data/sigF_w1.0000_K17_J1000.json and _J1500.json (the
+names amp_flint_par writes, 4 decimals as in data/), k17_J1000.log and k17_J1500.log. Times on 6 procs: J 1000 180 s,
+J 1500 561 s. J = 1500 does not converge sigma_6 and does not tame sigma_7 / sigma_8:
+            J 1000                               J 1500
+ sigma_5  -0.00555413638 - 0.00280595647i    -0.00555413677 - 0.00280595709i
+ sigma_6  -0.00026759822 - 0.00108977836i    -0.00027837333 - 0.00107790110i   (differ 1.1e-5, 1.2e-5)
+ sigma_7  -3159.45 - 8511.67i                 139.43 + 799.42i
+ sigma_8  -8.98e11 - 2.15e11i                 -5.02e11 - 8.84e10i
+ fit resid at k 13 / 15 / 17:  1.6e-13 / 6.6e-15 / 1.0e-6     9.1e-9 / 9.8e-10 / 2.1e1
+sigma_1 .. sigma_4 agree to ~1e-11 between the two J, and sigma_5 to ~6e-10. Note the k 13 fit residual gets worse at the
+larger J. So (c), the K 13 J 1000 scan, carries a sigma_6 good to only ~1e-5 absolute (1.5%). It is running now (6
+omegas at a time). Stop it, or change J, if you want.
