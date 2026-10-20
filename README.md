@@ -257,6 +257,7 @@ with computed points rather than an assumed form.
 | 32 / 48 collocation points in $`\tau`$, $`D = 40`$ | $`\Delta`$ agrees to $`9\times10^{-22}`$ |
 | harmonics frozen above 13 / above 15, $`D = 40`$ | $`\Delta`$ agrees to $`3\times10^{-17}`$ |
 | second machine (Windows, i7-1185G7, own build), $`D = 59.84`$–$`60.05`$ | agrees with the cloud points to $`2`$–$`4\times10^{-16}`$ |
+| second machine's 23 points $`D = 60.96`$–$`61.006`$ against the $`1/D`$ fit on $`D \le 60.1`$ (degree 18) | agree to $`2.6\times10^{-15}`$ |
 
 A sample of the computed points (all of them, from $`D = 8.25`$ up, are in
 [`hp/data/delta_dd.csv`](hp/data/delta_dd.csv)), with the residual and the largest entry of $`\partial\Delta/\partial F`$, the factor by which a residual error moves $`\Delta`$:
@@ -501,7 +502,126 @@ It grows like $`\sqrt n`$ ($`\lvert C\rvert/\sqrt n \to 0.00128`$), small only t
 both regular at the centre and analytic at the light cone. The non-analytic piece $`(1-x^2)^{n/2-1-s}`$ is smaller than any
 power of $`1/n`$ at every fixed $`x < 1`$, which is why Proposition 1 never sees it. Gravity, through the $`O(1/n)`$ couplings,
 has to cancel its coefficient harmonic by harmonic. That cancellation is the selection rule for $`\Delta`$ and for the
-profile $`F`$.
+profile $`F`$. The next two subsections show that gravity cannot do it while the wave travels to the light cone, and
+locate where it has to happen instead.
+
+### Proposition 3: what gravity does to the non-analytic piece
+
+The non-analytic piece is a fast WKB mode: in the exact solution of Proposition 2 it is
+$`x^{2-n}(1-x^2)^{n/2-1-s}`$, which varies on the scale $`1/n`$. Linearize the field equations around the formal solution
+of Proposition 1 and look for perturbations of that kind.
+
+**Proposition 3.** Let $`F(\theta)`$ and $`\omega`$ be given and $`c = 1 - \varepsilon F^2(1-x^2) + O(\varepsilon^2)`$, as in
+Proposition 1. Put
+
+```math
+\delta p = e^{-n\Phi(x)}\,\big(A(x,\theta) + O(1/n)\big), \qquad
+\delta m = e^{-n\Phi(x)}\,\Big(\frac{1-x}{1+x}\,A(x,\theta) + O(1/n)\Big), \qquad
+\Phi(x) = \ln x - \tfrac12 \ln(1-x^2) .
+```
+
+This solves the linearized equations on $`0 < x < 1`$ to the order shown if and only if
+
+```math
+x(1-x^2)\,\partial_x A - 2\omega x^2\,\partial_\theta A = \big(1 + x - 2x^2F(\theta)^2\big)\,A ,
+```
+
+that is, along the characteristics $`\theta = \theta_0 + \omega\ln(1-x^2)`$,
+
+```math
+A = A_0(\theta_0)\,\frac{x}{1-x}\,\exp\!\Big(-\int_0^x \frac{2t\,F\big(\theta_0 + \omega\ln(1-t^2)\big)^2}{1-t^2}\,dt\Big) .
+```
+
+*Proof.* Substitute into the linearized equations. The terms of order $`n`$ come from $`x(x\mp c)\,\partial_x`$ acting on
+$`e^{-n\Phi}`$ and from $`\tfrac n2 c\,(\delta p+\delta m)`$. With $`B`$ the amplitude of $`\delta m`$ they read
+
+```math
+-x(x-1)\,\Phi'\,A = \tfrac12 (A+B), \qquad -x(x+1)\,\Phi'\,B = -\tfrac12 (A+B) .
+```
+
+A non-zero solution needs $`x(1-x^2)\,\Phi' = 1`$, which gives $`\Phi`$, and then $`B = A(1-x)/(1+x)`$. At order 1 the
+corrections $`(a_1, b_1)`$ satisfy a linear system with the same singular matrix,
+
+```math
+\frac12\begin{pmatrix} \dfrac{1-x}{1+x} & -1 \\[4pt] 1 & -\dfrac{1+x}{1-x} \end{pmatrix}
+\begin{pmatrix} a_1 \\ b_1 \end{pmatrix} = \begin{pmatrix} R_p \\ R_m \end{pmatrix},
+```
+
+whose left null vector is $`(1+x,\ -(1-x))`$. The right-hand sides collect $`x(x\mp1)\,\partial_x`$ of $`A`$ and $`B`$, the
+$`\omega x\,\partial_\theta`$ terms, the $`\mp c`$ terms, and the gravity terms from $`c = 1 - \varepsilon G_1`$ inside
+$`x(x\mp c)\,n\Phi'`$ and $`\tfrac n2 c`$. The perturbations of $`b`$ and $`c`$, and $`G\,\delta p`$, are smaller by $`1/n`$ and drop
+out. Solvability, $`(1+x)R_p - (1-x)R_m = 0`$, multiplied by $`(1+x)/2`$, is the transport equation; with
+$`G_1 = F^2(1-x^2)`$ the gravity terms add up to $`-2x^2F^2A`$. A first-order equation integrates along its characteristics,
+and $`\int (1+x)/(x(1-x^2))\,dx = \ln\big(x/(1-x)\big)`$ gives the prefactor. $`\square`$
+
+Without gravity, a harmonic $`A = \alpha(x)e^{i\mu\theta}`$ gives $`\alpha = x(1-x)^{-1}(1-x^2)^{-s}`$ and
+$`\delta p - \delta m = 2x^{2-n}(1-x^2)^{n/2-1-s}`$: exactly the second solution of Proposition 2, with its exponents at the
+centre and at the light cone.
+
+*Check.* `solver/largeD_fast_transport.py` integrates the linearized equations ($`b = 1`$, $`c = 1 - F^2(1-x^2)/n`$,
+$`F = 2.72\sin\theta + 0.22\sin3\theta`$, $`\omega = \omega_\infty`$, 64 points in $`\theta`$) from $`x = 0.9`$ to $`0.72`$, starting
+from the WKB data, and compares the result with the transported $`A`$:
+
+| $`n`$ | 100 | 200 | 400 | 800 | 1600 |
+|---|---|---|---|---|---|
+| relative error, no gravity ($`F = 0`$ in $`c`$) | $`5.6\times10^{-2}`$ | $`2.9\times10^{-2}`$ | $`1.5\times10^{-2}`$ | $`7.5\times10^{-3}`$ | $`3.8\times10^{-3}`$ |
+| relative error, with gravity | $`0.57`$ | $`0.26`$ | $`0.13`$ | $`0.062`$ | $`0.031`$ |
+
+Both fall like $`1/n`$. Over this interval gravity multiplies the fast mode by about 40.
+
+**Consequences.**
+
+1. Gravity acts on the non-analytic piece at order 1, not at order $`1/n`$, through a factor that contains every power of
+   $`F^2`$. Near the light cone the characteristic winds through all phases, $`F^2`$ averages, and the factor behaves like
+   $`(1-x^2)^{\langle F^2\rangle}`$: the light-cone exponent becomes $`n/2 - 1 - s + \langle F^2\rangle`$. The exact local analysis at
+   $`x = 1`$ agrees: there the exponent is $`(n/2 - 1 - s + \langle G(1)\rangle)/(1 - \langle G(1)\rangle)`$, and $`G(1) \approx 2F^2/n`$. With
+   $`\langle F^2\rangle \approx 3.7`$ at $`D = \infty`$, an expansion in the amplitude of the wave is not a route to the selection.
+2. The factor never vanishes. Gravity rescales the fast mode along each characteristic, but it cannot cancel it on the
+   way to the light cone; the light-cone coefficient is zero only where the mode is never created.
+3. For $`x < 1/\sqrt2`$, $`\Phi < 0`$ and $`e^{-n\Phi}`$ is exponentially large, while the solution is of size $`n^{-1/2}`$. Every
+   characteristic passes through that region, so the regular solution carries no fast mode on $`0 < x < 1`$ at any order
+   of the WKB expansion. The non-analytic piece comes from a Stokes phenomenon, which the next subsection locates.
+
+### The light-cone coefficient is a Stokes multiplier
+
+A divergent series records the exponentially small terms it switches on in its late orders (Dingle): if the switched-on
+term is $`n^{-g}e^{-n\chi(x)}`$, the coefficients behave like $`y_k \sim K\,Q(x)\,\Gamma(k-g)/\chi(x)^{k-g}`$. At leading order this can
+be checked exactly, because the $`1/n`$ expansion of $`x\,{}_2F_1`$ from Proposition 2 is explicit. `solver/largeD_linear_late.py`
+computes it to order 122 at 90 digits and reads $`\chi`$ and $`g`$ off consecutive ratios of $`y_k`$:
+
+| $`x`$ | $`\chi`$ measured (orders 100–120) | $`\Phi(x) - i\pi/2`$ | $`g`$ measured |
+|---|---|---|---|
+| 0.6 | $`-0.27 - 1.57i`$ to $`-0.30 - 1.58i`$ | $`-0.288 - 1.571i`$ | scattered |
+| $`1/\sqrt2`$ | $`0.0069 - 1.5703i`$ | $`-1.571i`$ | $`-0.52 - 4.50i`$ |
+| 0.8 | $`0.291 - 1.5704i`$ | $`0.288 - 1.571i`$ | $`-0.55 - 4.27i`$ |
+| 0.9 | $`0.728 - 1.5694i`$ | $`0.725 - 1.571i`$ | $`-0.47 - 4.26i`$ |
+
+So the singulant is $`\chi(x) = \Phi(x) - i\pi/2`$ to the accuracy of 120 orders, and $`g`$ is close to $`-(s + \tfrac12) = -0.5 - 3.82i`$, the
+power $`n^{s+1/2}`$ that $`C(n,s)`$ carries for large $`n`$ ($`C \approx \pi\kappa^{s+1/2}/\big(\sin(\pi(\kappa-\alpha-\beta))\,\Gamma(\alpha)\Gamma(\beta)\big)`$).
+Below $`x = 1/\sqrt2`$ a second singulant of equal modulus, $`\Phi + i\pi/2`$, interferes and the readings scatter. What this says:
+
+- $`e^{-n\chi} = e^{in\pi/2}\,x^{-n}(1-x^2)^{n/2}`$ is the fast mode of Proposition 3, so the divergence of the $`1/n`$ series and
+  the non-analytic piece are the same object.
+- $`\chi`$ vanishes only at $`x = \infty`$ ($`\Phi(\infty) = i\pi/2`$ on this branch): the fast mode is born at the outer singular point
+  of the equations, not in $`0 \le x \le 1`$.
+- Its Stokes line ($`\operatorname{Im}\chi = 0`$, $`\operatorname{Re}\chi > 0`$) is the real axis $`x > 1`$ approached from above, where
+  $`\chi = \ln\big(x/\sqrt{x^2-1}\big)`$. On $`0 < x < 1`$, $`\operatorname{Im}\chi = -\pi/2`$, so nothing is switched on there (as
+  Consequence 3 requires). The Stokes line ends at the light cone, so a loop around $`x = 1`$ crosses it, and that is where
+  the branch $`(1-x^2)^{n/2-1-s}`$ and its coefficient $`C(n,s)`$, the Stokes multiplier, come from.
+
+With gravity, Proposition 3 holds on the continuation to $`x > 1`$ as well, so the light-cone coefficient is the
+multiplier times a factor that does not vanish. **The selection rule at $`D = \infty`$ is therefore that the Stokes
+multiplier of the mode born at $`x = \infty`$ vanishes on every characteristic.** Two features of that problem are already
+visible:
+
+- Near $`x = \infty`$ the large-$`n`$ expansion is not uniform. At $`x \sim \sqrt n`$, $`\varepsilon x^2F^2 = O(1)`$, so $`c - 1 = O(1)`$
+  (gravity is no longer weak); $`p \approx \varepsilon^{1/2}xF = O(1)`$; and $`e^{-n\Phi} \to e^{\mp in\pi/2}e^{-n/(2x^2)}`$, so fast and
+  slow modes are no longer separated. The multiplier is set in this inner region, where the equations stay fully
+  nonlinear at leading order.
+- On the Stokes line, $`\ln(1-x^2) = \ln(x^2-1) - i\pi`$, so the characteristics run at $`\operatorname{Im}\theta = -\pi\omega \approx -12`$:
+  the multiplier involves $`F`$ continued far into the complex $`\theta`$-plane, where each harmonic $`\mu`$ is weighted by
+  $`e^{\pi\mu\omega}`$. That ties the selection to the analytic structure of $`F`$, whose harmonics decay at a rate that grows
+  with $`n`$ (below).
 
 ### What is known about the selection, and what is open
 
@@ -517,10 +637,15 @@ profile $`F`$.
   $`n^{-10.5}, n^{-14}, n^{-17.5}, n^{-21}`$ between $`D = 20`$ and $`60`$, roughly $`n^{-1.6k}`$.
 - **$`F`$'s singularities recede.** The decay rate of $`F`$'s harmonics grows roughly like $`\tfrac14 \ln n`$ (0.58 at
   $`D = 12`$, 1.02 at $`D = 60`$), so $`F_\infty`$ looks entire, and its harmonics beyond the first shrink as $`D`$ grows.
-- **Open:** the cancellation condition at $`D = \infty`$. Proposition 2 gives the linear half exactly. The missing half is the
-  coefficient of $`(1-x^2)^{n/2-1-s}`$ produced by the gravitational couplings, to the order in $`1/n`$ at which it competes with
-  $`C(n,s)`$. With both halves, the selection would become an equation for $`\omega_\infty`$ and $`F_\infty`$ alone, and $`\Delta_\infty`$
-  would follow from it to any precision.
+- **The nonlinear late orders are dominated by something else.** In the nonlinear recursion the ratio of successive
+  orders grows like $`7k`$–$`8.6k`$ (a singulant of modulus about $`0.13`$), driven by high harmonics, against $`\lvert\chi\rvert \ge \pi/2`$
+  for the fast mode. So the fast singulant is not directly visible in the nonlinear late orders; it sits under a
+  closer one of a different (heat-like, $`\theta`$-dependent) kind.
+- **Open:** the D = ∞ selection rule itself. Proposition 2 gives the multiplier without gravity, $`C(n,s)`$; Proposition 3 shows
+  that propagation to the light cone cannot change whether it vanishes; the Stokes analysis puts its origin at $`x = \infty`$,
+  in a region $`x \sim \sqrt n`$ where gravity is of order one. What remains is to solve that inner problem for its Stokes
+  multiplier as a functional of $`F`$ and $`\omega`$ and to require it to vanish. That would be an equation for
+  $`\omega_\infty`$ and $`F_\infty`$ alone, from which $`\Delta_\infty`$ would follow to any precision.
 
 ## Backends
 
@@ -658,6 +783,8 @@ hp/largeD_*.py      large-D scaling of the solutions (profiles, F(theta), harmon
 solver/largeD_expand.py       the 1/n expansion symbolically (sympy, Proposition 1)
 solver/largeD_formal_check.py the expansion substituted into the exact equations (residual ~ n^-3 for any omega)
 solver/largeD_late_orders.py  the same recursion numerically to high order (divergence of the series)
+solver/largeD_fast_transport.py  the fast WKB mode with gravity against direct integration (Proposition 3)
+solver/largeD_linear_late.py  late orders of the exact leading-order 1/n series (singulant Phi - i pi/2)
 ```
 
 ## Limits

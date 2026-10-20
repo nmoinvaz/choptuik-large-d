@@ -542,3 +542,23 @@ light ray. Note the factor √(2π) between the simulation's field (G = 1) and t
 - Weak singular values of the DD Jacobian by p1 harmonic (D = 20..60): k = 7, 9, 11, 13 fall like n^-10.5, n^-14,
   n^-17.5, n^-21 (~ n^-1.6k); k = 1, 3 mix with other directions. The decay rate of F's harmonics grows like ~0.25 ln n
   (0.58 at D = 12 .. 1.02 at D = 60, local rate at k ~ 9-11), with no collapse in k/n.
+
+## The fast mode with gravity and the Stokes picture (2026-10-20, 08:10-09:30)
+
+- Weakly nonlinear test (scratch cubic.py: C_lin + |A|^2 K = 0 by monodromy) abandoned: mpmath odefun far too slow,
+  the monodromy basis needs six branch factors plus a log at lambda+ (non-integer n), and the amplitude is not small
+  (centre slope ~0.64 at D = 20, <F^2> ~ 3.7 at D = infinity). Proposition 3 explains why it cannot work.
+- Proposition 3 (README): fast perturbations e^{-n Phi} A, Phi = ln x - ln(1-x^2)/2, delta m/delta p = (1-x)/(1+x);
+  transport x(1-x^2) A_x - 2 w x^2 A_th = (1 + x - 2 x^2 F^2) A from the order-1 solvability (left null vector
+  (1+x, -(1-x))). b, c perturbations and G dp are O(1/n). largeD_fast_transport.py (x 0.9 -> 0.72, 64 theta points):
+  error n x 6.0 (no gravity), n x 49-57 (with gravity), i.e. 1/n; gravity factor ~40 over the interval. Light-cone
+  exponent shifts by <F^2>, consistent with the exact local exponent (n/2 - 1 - s + <G(1)>)/(1 - <G(1)>).
+- Linear late orders (largeD_linear_late.py, 90 digits, order 122): consecutive ratios give chi = Phi(x) - i pi/2 to
+  3e-3..7e-3 at x = 0.71-0.9 (orders 100-120), g ~ -0.5 - 4.3i (predicted -(s + 1/2) = -0.5 - 3.82i, Im drifting);
+  x < 0.7: interference with Phi + i pi/2. Singulant born at x = infinity; Stokes line = real axis x > 1 from above
+  (chi = ln(x/sqrt(x^2-1)) real), ends at the light cone: C(n, s) is the Stokes multiplier. On the Stokes line the
+  characteristics sit at Im theta = -pi w ~ -12. Inner region x ~ sqrt(n): gravity O(1), fast/slow not separated.
+- New local points (T13, up22-23) to D = 61.006: 23 points > 60.95 agree with the 1/D deg-18 fit on <= 60.1 to
+  2.6e-15 (deg 16: 7e-15, 1/n 18: 1e-14).
+- Two forks launched on (A) the inner problem at x ~ sqrt(n) and (B) independent checks of Proposition 3 / the Stokes
+  claims and the nonlinear late-order singulant.
