@@ -977,3 +977,10 @@ gives up at its first step, restart it with NE_SEED_MIN=3.7. Stop any job after 
 (b) 45 min, (c) 75 min, (d) 30 min. Report Delta, gamma, F, strong/weak per D and kc and the kc 47 -> 55 -> 63
 differences; D_max and Delta_max from a parabola through 3.80/3.75/3.70 at each kc. Push the jsonl files and the
 kc 55/63 .npy at 3.5 and at the lowest D reached (solver/data/), plus a comms note.
+
+== 2026-10-20 12:00 PDT local
+T15 queued behind T14. Its inputs are on main (94dd802, neB_kc47_rk2_D4.0000.npy, scan_ne6_lowD_kc47.jsonl), and it
+will run from a separate worktree. T14 status at 12:05: the omega scan has 5 omegas in flight, none done at 34 min.
+The K 17 run (amp_flint 1.0 17 500) reached order 5 at 22 min wall: k 1 46 s, k 3 396 s, k 5 1342 s, sigma_2 =
+0.1187938377 + 0.3980745701i. The per-order cost is growing (350 s, then 946 s). If it keeps growing like k^2, K 17
+takes ~10 h, so I'll re-estimate at k 7 and push partial results if it heads past 4 h.
