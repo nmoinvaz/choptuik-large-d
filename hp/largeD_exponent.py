@@ -1,5 +1,5 @@
-"""light-cone exponent shift on the DD solutions: n <G(1)>/2 (and the exact local-exponent shift) vs <F^2>."""
-(Reads the runs' saved states from /home/claude/dss/hp_scan, which are not in the repo; hp/data/seeds holds a few.)
+"""light-cone exponent shift on the DD solutions: n <G(1)>/2 (and the exact local-exponent shift) vs <F^2>.
+(Reads the runs' saved states from /home/claude/dss/hp_scan, which are not in the repo; hp/data/seeds holds a few.)"""
 import os
 import glob, sys
 import numpy as np
