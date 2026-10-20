@@ -17,8 +17,8 @@ The short version:
 - It does not hold for the nonlinear parts: the primal Taylor steps, the order-by-order series recursions, the Newton
   iteration and continuation in D. These stay sequential.
 
-Measurements from the two implementations in progress (agent S: the amplitude series; agent N: the Newton Jacobian)
-will be filled in where marked *(pending)*.
+Agent S's measurements for the amplitude series are in §4; agent N's for the Newton Jacobian will be filled in where
+marked *(pending)*.
 
 Contents: [1. The principle](#1-the-principle-crc-32-as-the-model) ·
 [2. Multiple shooting is chunking](#2-multiple-shooting-is-chunking) ·
@@ -406,8 +406,37 @@ For an ω scan, items 1–2 are not needed: running different ω in different pr
 with no communication. Order-level parallelism and the fit precomputation matter for the **latency of one deep run**,
 for example one ω at K = 21.
 
-**Measured results** *(pending: agent S measurements)*: the speedup at 2, 4 and 8 processes, the effect of the
-precomputed fit functional, and agreement with the serial code (σ_k within ball radii).
+**Measured results** (agent S, `solver/inner_amp/amp_flint_par.py`, on the cloud container's 2 shared cores). Most of
+the gain is algorithmic, not parallel:
+
+- *Products packed by order.* Order k carries only the harmonics −k, −k+2, …, k, so a product of orders k₁ + k₂ = k is
+  packed with stride k + 1 instead of 4K + 1, and only the first (J + 1)(k + 1) coefficients are formed (a truncated
+  product). The two mirror-image d·d products of the even pass are formed once.
+- *The fit functional precomputed* (item 2): G = (AᴴA)⁻¹Aᴴ once per ν in ball arithmetic, so each fit is c = G y; the
+  ψ tables by recurrence, and the normalisation exponential through N′ = L′N.
+- *Processes, not threads.* python-flint holds the GIL during a product (two threads take 2.3× the time of one
+  product), so `--procs N` spawns N worker processes (Windows-safe). Each keeps its own copy of the finished tables, which
+  are sent to it once, when an order is done.
+
+| Run | serial `amp_flint.py` | 1 process | 2 processes |
+|---|---|---|---|
+| K = 7, J = 300 | 90 s | 3.4 s | 2.7 s |
+| K = 9, J = 500 | — | 17 s | — |
+| K = 11, J = 500 | — | 38 s | 23 s (products 2.06×) |
+| K = 17, J = 500 | — | 147 s | 132 s (one core shared with a build) |
+
+So one process is 26× faster than the serial code at K = 7, and products are now about 95% of the run. The cost grows
+like about K³·⁵ J²·⁵. On 8 processes the model from the measured per-order times (round-robin, about 80% efficiency,
+5 s overhead) gives about 30 s for K = 17, J = 500. Agreement: K = 7, J = 300 matches the serial code's tuned f_ν
+to every printed digit and σ₁–σ₃ to 8×10⁻³⁵ (the serial code's 60-digit QR; ball radii ≤ 7×10⁻⁵⁰); 1 and 2 processes
+are bit-identical; the stored `data/sigF_*` files (K = 9 and 11 at J = 500, K = 9 at J = 750) are reproduced to all
+20 stored digits.
+
+One finding from the faster code: **J = 500 is not enough from order 13 on.** The ν = 3 tuning at order 13 leaves
+|f₃| = 1.1×10⁻³ at J = 500, 7.7×10⁻⁵ at J = 750 and 1.3×10⁻⁵ at J = 1000, and σ₆ moves from 0.0138 − 0.0080i
+(J = 500) to −2.7×10⁻⁴ − 1.09×10⁻³i (J = 1000); at J = 500, σ₇ and σ₈ blow up to about 10⁶ and 10¹¹. The ball
+radii stay small, so this is the fit's truncation, not rounding. σ₅ is converged (J = 750 and 1000 agree to 10⁻⁸). Runs
+with K ≥ 13 need J ≥ 1000 and a second J to compare.
 
 ## 5. Embarrassingly parallel scans
 
@@ -474,8 +503,8 @@ The criterion from §1: the chunk maps must form a monoid with a compact represe
 | Condensation (shooting combine) | affine over segments | tree of (G_b, g_b, F_b) or structured QR/LU | not implemented | depth log₂ K; stability needs the structured form |
 | Taylor tangent per step | linear along a fixed primal path | per-step transfer matrices, tree product | not implemented | only with ≫ 1931 cores |
 | Horizon series LUs | independent per order | `into_par_iter` over ks + 1 orders | done | ~8× on that stage |
-| amp_flint convolutions at order k | independent products, linear sum | process pool over products | in progress (agent S) | 4.5–5.8× bound for K = 9–21 *(pending)* |
-| amp_flint late-order fits at order k | fixed linear functional per ν; independent over ν | precompute e₀ᵀA⁺ once per ν; pool over ν | proposed / in progress (agent S) | removes most of the 48% QR share; then up to (k+1)/2 at order k *(pending)* |
+| amp_flint convolutions at order k | independent products, linear sum | packed by order (stride k + 1, truncated); process pool over products | done (`amp_flint_par.py`) | 26× on one process (algorithmic); products 2.06× on 2 processes; bound 4.5–5.8× on 8 |
+| amp_flint late-order fits at order k | fixed linear functional per ν; independent over ν | precompute G = (AᴴA)⁻¹Aᴴ once per ν; setups on the pool | done (`amp_flint_par.py`) | the 48% QR share removed; at K = 17 products are about 95% of a run |
 | amp_flint j-recursion | scalar affine per μ, closed form prefix sum | prefix scan or closed form | possible, not needed | negligible share of the time |
 | ω scan of the inner series | independent | `scan_omega.py`, one process per ω | done | 8× |
 | Finite-difference Jacobian (lateral solves) | independent columns | `--procs N` (continue_M.py, full_M.py, fixedA.py) | done | (n+1)/(1+⌈n/8⌉): 3.5× at n = 6 |

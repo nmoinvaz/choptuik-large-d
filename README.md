@@ -1213,8 +1213,11 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   imaginary part, about 10% above the measured amplitude 2.72, and not converged (the Padé residues are 2–2.7, not 1; at
   A = 2.72 the partial sums of Re ln S₁ are still falling, 5.50, 4.40, 3.99, 3.69, 3.49). So at five orders the
   harmonic-1 condition at ω∞ points to an amplitude near, but not at, the measured one; whether the zero converges to
-  (2.72, ω∞) needs σ₆–σ₈ and a scan in ω, which are running on a separate 8-thread machine
-  (`scan_omega.py`, about 2–3 hours). The shape predictions at A = 2.72 sharpen to F₃/F₁ = 0.0551, F₅/F₁ = 0.00314
+  (2.72, ω∞) needs σ₆–σ₈ and a scan in ω. A faster implementation (`amp_flint_par.py`: products packed by order, the
+  fit functional precomputed once per harmonic, `--procs N` worker processes; 26× faster on one process, same digits;
+  [PARALLEL.md](PARALLEL.md) §4) showed that from order 13 on the late-order fits need J ≥ 1000 terms: at J = 500, σ₆
+  is wrong (0.0138 − 0.0080i against −2.7×10⁻⁴ − 1.09×10⁻³i at J = 1000) and σ₇, σ₈ blow up. σ₅ is converged.
+  K = 17 at J = 1000 and 1500 and the ω scan are to run on the 8-thread machine (minutes each). The shape predictions at A = 2.72 sharpen to F₃/F₁ = 0.0551, F₅/F₁ = 0.00314
   (data: 0.0552/0.0549, 0.0034/0.0032), and the D = ∞ relation evaluated at each D's own amplitude and ω tracks the
   measured F₃/F₁ at D = 20–60 to within 0.004–0.006 (0.126, 0.099, 0.087, 0.080, 0.075 against 0.130, 0.105, 0.093,
   0.085, 0.080; `harm_pred.py`, heuristic).
@@ -1505,7 +1508,8 @@ solver/inner_stokes/          the inner Stokes multiplier by lateral solutions (
 solver/inner_borel/           the same by Borel-Darboux in ball arithmetic (python-flint): inner_stokes.py linear|grav, inner_zero.py
 solver/eeg20/                 the comparison with Ecker-Ecker-Grumiller's Eq. (20) (window identity, tilt, max c, Delta -> 0 fits)
 solver/inner_amp/             the inner multipliers by an amplitude expansion with every harmonic exact (amp_series.py check, stokes_amp2.py;
-                              amp_flint.py wf K J in ball arithmetic; scan_omega.py for an N-process scan in omega; zero_selection.py)
+                              amp_flint.py wf K J in ball arithmetic; amp_flint_par.py, the same 26x faster with --procs N;
+                              scan_omega.py for an N-process scan in omega; zero_selection.py)
 solver/inner_pert/            growing modes of the inner problem (exact lambda = 0, 1 modes; one-harmonic root) and free gamma fits
 hp/largeD_Fratios.py          harmonic ratios F_{nu+2}/F_nu of the double-double solutions, extrapolated to D = infinity
 hp/compare/                   D = 5 by double-double (dd_D5.py) and the comparison with Ecker et al.'s published data (cmp_ecker.py)
