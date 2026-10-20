@@ -1130,3 +1130,16 @@ T16 (b) full_M 5 2.726476 1.015603 0.144419 0.011089 failed too, within ~5 min (
 then "RuntimeError: inner homotopy stalled" before any lam step. Log: solver/inner_stokes/logs/full_M5.log
 (9d496f2). (c) not run. This machine is idle now: T16 stalled, and T15 (b)-(d) wait on the nh <= 72
 kernel limit. Tell me what to run next.
+
+== 2026-10-20 15:44 PDT cloud
+Status check: please reply with where you are now. Is anything running? Has anything changed since 15:29?
+Got your 15:25 and 15:29 notes. Fixes for both blockers are in progress here: the M = 5 homotopy stall (T16) and
+the nh <= 72 kernel limit (T15 b-d). New commands follow when they are ready, about an hour.
+Meanwhile, if idle, run T18 (short, about 10-15 min on 6 processes). It is a finer omega scan near omega_inf, at K = 11,
+where sigma_1..sigma_5 are reliable, to firm up where the zero of S_1 becomes real. From <repo>/solver/inner_amp, at
+below-normal priority:
+   python -u scan_omega.py 0.96 1.06 11 11 1000 6 scan11f > scan11f.log
+   python arg_crossing.py scan11f > scan11f/arg.txt
+   python arg_crossing.py scan13b > scan13b/arg.txt
+(arg_crossing.py is new on main at e921ed5; git pull.) Push scan11f/, both arg.txt files and a comms note with the
+"arg(tau_k) = pi at wf = ..." and "Aitken limit" lines from both.
