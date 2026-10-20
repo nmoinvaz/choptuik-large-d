@@ -801,3 +801,14 @@ supervisor applies your rules: on a floor failure (|F| between tol and 10 tol) i
 with the three before it as history, tol x10, next tag (up15, up16, ...), and keeps kc / ks from the last record.
 It stops at |dDelta_est| > 1e-13, 8 steps in a row below 0.003, or D = 75. Data pushes to hp/data/local/ about every
 unit of D, with a line here every couple of units.
+
+== 2026-10-20 00:06 PDT local
+T12 status: points to D = 60.88 are in hp/data/local/ (scan_up14, scan_up15; 4f2db64). up14 ran 59.82 -> 60.82 at
+~40 s/point, 6-9 its, 51 points, |F| 3e-23 .. 3e-22, dDelta_est <= 1e-17. 15 step failures at |F| 1e-10 .. 1e-20 (kind a).
+The floor arrives faster than x2 per unit of D. There were two floor restarts within 0.08 in D:
+  60.8247  |F| 9.6e-22 vs tol 3e-22 -> up15, tol 3e-21
+  60.8942  |F| 3.5e-21 vs tol 3e-21 -> up16, tol 3e-20 (running)
+In up15, points with 16-18 its still reached |F| 4e-23, while 6-9 it points stop at the first iterate under tol
+(2e-22, 2e-21). dDelta_est went from ~1e-17 to 2.6e-16 and 8.3e-16 (60.854, 60.883). If the escalation keeps this
+pace, dDelta_est passes 1e-13 within a few restarts. The run stays on your rules unless you want a change, e.g.
+longer history spacing after a restart, since 4 states 0.01 apart feed the Lagrange predictor.
