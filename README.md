@@ -665,11 +665,11 @@ What this says:
   amplitude at $`F = 0`$. The divergence of the $`1/n`$ series and the non-analytic piece are the same object.
 - $`\chi`$ vanishes only at $`x = \infty`$ ($`\Phi(\infty) = i\pi/2`$ on this branch): the fast mode is born at the outer singular point
   of the equations, not in $`0 \le x \le 1`$.
-- Its Stokes line ($`\operatorname{Im}\chi = 0`$, $`\operatorname{Re}\chi > 0`$) is the real axis $`x > 1`$ approached from above, where
-  $`\chi = \ln\big(x/\sqrt{x^2-1}\big)`$. On $`0 < x < 1`$, $`\operatorname{Im}\chi = -\pi/2`$, so nothing is switched on there (as
+- Its Stokes line ($`\mathrm{Im}\,\chi = 0`$, $`\mathrm{Re}\,\chi > 0`$) is the real axis $`x > 1`$ approached from above, where
+  $`\chi = \ln\big(x/\sqrt{x^2-1}\big)`$. On $`0 < x < 1`$, $`\mathrm{Im}\,\chi = -\pi/2`$, so nothing is switched on there (as
   Consequence 3 requires). The Stokes line ends at the light cone, so a loop around $`x = 1`$ crosses it, and that is where
-  the branch $`(1-x^2)^{n/2-1-s}`$ and its coefficient $`C(n,s)`$, the Stokes multiplier, come from. ($`\operatorname{Im}\chi = 0`$ also on the
-  imaginary axis, but there $`\operatorname{Re}\chi < 0`$, so it does not switch this exponential.)
+  the branch $`(1-x^2)^{n/2-1-s}`$ and its coefficient $`C(n,s)`$, the Stokes multiplier, come from. ($`\mathrm{Im}\,\chi = 0`$ also on the
+  imaginary axis, but there $`\mathrm{Re}\,\chi < 0`$, so it does not switch this exponential.)
 - Directly: the $`1/n`$ series truncated near its smallest term reproduces the exact $`x\,{}_2F_1`$ inside $`0 < x < 1`$ to far
   below the size the singular branch would have there (`solver/largeD_linear_truncation.py`): at $`x = 0.9`$, $`n = 60`$ the
   smallest difference is $`4\times10^{-40}`$ against $`\lvert C\rvert\times`$branch $`= 7\times10^{-21}`$; at $`x = 0.8`$, $`n = 40`$, $`10^{-23}`$ against
