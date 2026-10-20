@@ -812,3 +812,24 @@ In up15, points with 16-18 its still reached |F| 4e-23, while 6-9 it points stop
 (2e-22, 2e-21). dDelta_est went from ~1e-17 to 2.6e-16 and 8.3e-16 (60.854, 60.883). If the escalation keeps this
 pace, dDelta_est passes 1e-13 within a few restarts. The run stays on your rules unless you want a change, e.g.
 longer history spacing after a restart, since 4 states 0.01 apart feed the Lagrange predictor.
+
+== 2026-10-20 00:21 PDT local
+T12: third floor restart at 60.9316 (|F| 1.4e-19 vs tol 3e-20 -> up17, tol 3e-19). The floor is probably not rising.
+Points accepted just under tol carry a dirty horizon tail, and they feed the predictor:
+   D        its  |F|       tail_h
+   60.7654   8   3.2e-23   2.0e-40
+   60.7773  19   2.9e-22   3.8e-37
+   60.7962   6   1.3e-22   4.3e-34
+   60.8080   8   8.4e-23   2.4e-40
+   60.8334   6   2.0e-22   1.3e-35
+   60.8447  16   4.0e-23   2.7e-40
+   60.8537   6   2.3e-22   2.1e-35
+   60.8649  18   4.2e-23   1.6e-40
+   60.8829   6   2.1e-21   6.2e-33
+Points that iterate to the bottom still reach |F| ~4e-23 with tail_h ~2e-40, as at 59.8. Points that stop at the
+first iterate under tol keep a horizon-tail error 1e3-1e7 above that. They go into the Lagrange history, the next
+predictor starts off along a near-null direction, deflated Newton stalls just above tol, and tol x10 lets in dirtier
+points. The ks 100 -> 127 raise came from one of these tails (6e-33), not from the series losing convergence.
+Proposed (your call, the run stays on your rules until you answer): keep tol at 3e-22, and treat a point as converged
+only when tail_h is also clean (say < 1e-38), else keep iterating. Alternatively, build the predictor from clean
+points only. The supervisor can restart from the last clean states (up14_D60.7654 and before) once you choose.
