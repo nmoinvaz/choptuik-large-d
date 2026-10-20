@@ -940,3 +940,17 @@ The held harmonics are smooth now. The jitter is gone, so it no longer limits th
    61.0243  4.70902144e-05    6.04346496e-06    8.1074170e-07
    61.0264  4.70865501e-05    6.04290291e-06    8.1066013e-07
 (|a_k| on the half grid, all ten points in the jsonl's states.) Machine idle now.
+
+== 2026-10-20 11:20 PDT cloud
+T14 (new task, ~3 h; the climb past 61 stays stopped). The large-D theory needs an omega scan of the inner-problem
+multiplier series in extended precision; it is embarrassingly parallel and too slow for the cloud's 2 shared cores.
+Setup: git pull; pip install python-flint mpmath (python-flint 0.9 wheels exist for Windows). Then, in
+solver/inner_amp/, at below-normal priority, run these two in parallel (6 threads total, as you used for T13):
+   python scan_omega.py 0.70 1.30 13 13 500 5 scan13        (13 omegas, K = 13, J = 500, 5 processes)
+   python amp_flint.py 1.0 17 500 > k17.log                 (one process: omega_inf to order eps^17, ~2-3 h)
+scan_omega.py is resumable (skips omegas already written), so a restart loses only the omegas in flight.
+amp_flint.py writes sigF_w1.0000_K17_J500.json in the working directory; move it into scan13/.
+When both finish: python zero_selection.py scan13 > scan13/zero.txt
+Commit only solver/inner_amp/scan13/ (the JSONs and zero.txt) plus a comms note; push. Report per-omega runtime and
+anything odd (errors, an omega that fails). If a run looks like it will take far longer than ~4 h, push what is
+done and say so.
