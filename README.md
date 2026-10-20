@@ -29,25 +29,38 @@ solver in [`hp/`](hp/) for large D. The physics is in this file; the software is
 
 Contents
 
-- [Results](#results): [The formula](#the-formula) · [Values](#values) ·
-  [What the numbers mean physically](#what-the-numbers-mean-physically) ·
-  [Candidate closed forms, all ruled out](#candidate-closed-forms-all-ruled-out) ·
-  [Relation to published work](#relation-to-published-work)
-- [Evidence](#evidence): [The double-double solver](#the-double-double-solver-hp) ·
-  [Is the period analytic in 1/D?](#is-the-period-analytic-in-1d) · [Reproduce](#reproduce)
-- [Large D](#large-d-what-the-1d-expansion-can-and-cannot-see): [How the solution scales](#how-the-solution-scales-with-d) ·
-  [Proposition 1](#proposition-1-the-1n-expansion-never-fixes-the-period) ·
-  [Proposition 2](#proposition-2-the-leading-order-problem-solved-exactly) ·
-  [Proposition 3](#proposition-3-what-gravity-does-to-the-non-analytic-piece) ·
-  [Proposition 4](#proposition-4-late-orders-of-the-leading-order-series) ·
-  [The inner problem](#the-inner-problem-at-large-x) ·
-  [What is known and what is open](#what-is-known-about-the-selection-and-what-is-open) · [References](#references)
+- [Results](#results)
+  - [The formula](#the-formula)
+  - [Values](#values)
+  - [What the numbers mean physically](#what-the-numbers-mean-physically)
+  - [Candidate closed forms, all ruled out](#candidate-closed-forms-all-ruled-out)
+  - [Relation to published work](#relation-to-published-work)
+- [Evidence](#evidence)
+  - [The double-double solver](#the-double-double-solver-hp)
+  - [Is the period analytic in 1/D?](#is-the-period-analytic-in-1d)
+  - [Reproduce](#reproduce)
+- [Large D: what the 1/D expansion can and cannot see](#large-d-what-the-1d-expansion-can-and-cannot-see)
+  - [How the solution scales with D](#how-the-solution-scales-with-d)
+  - [Proposition 1: the 1/n expansion never fixes the period](#proposition-1-the-1n-expansion-never-fixes-the-period)
+  - [Proposition 2: the leading-order problem, solved exactly](#proposition-2-the-leading-order-problem-solved-exactly)
+  - [Proposition 3: what gravity does to the non-analytic piece](#proposition-3-what-gravity-does-to-the-non-analytic-piece)
+  - [Proposition 4: late orders of the leading-order series](#proposition-4-late-orders-of-the-leading-order-series)
+  - [The inner problem at large x](#the-inner-problem-at-large-x)
+  - [What is known about the selection, and what is open](#what-is-known-about-the-selection-and-what-is-open)
+  - [References](#references)
 - [How this work was done](#how-this-work-was-done)
-- [Software: the Rust kernel](#software-the-rust-kernel): [Backends](#backends) · [Use](#use) ·
-  [Double-double residual](#double-double-residual) ·
-  [Exact Jacobian and growth-mode matrix](#exact-jacobian-and-growth-mode-matrix) · [Build and test](#build-and-test) ·
-  [Performance](#performance) · [Layout](#layout) · [Limits](#limits)
-- How the computations parallelize (CRC-style split and combine): [PARALLEL.md](PARALLEL.md)
+- [Software: the Rust kernel](#software-the-rust-kernel)
+  - [Backends](#backends)
+  - [Use](#use)
+  - [Double-double residual](#double-double-residual)
+  - [Exact Jacobian and growth-mode matrix](#exact-jacobian-and-growth-mode-matrix)
+  - [Build and test](#build-and-test)
+  - [Performance](#performance)
+  - [Layout](#layout)
+  - [Limits](#limits)
+- Companion files
+  - [PARALLEL.md](PARALLEL.md): how the computations parallelize (CRC-style split and combine)
+  - [AGENTS.md](AGENTS.md): conventions for the AI sessions that run computations here
 
 ## Results
 

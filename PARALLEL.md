@@ -19,12 +19,15 @@ The short version:
 
 Measured results: agent N's for the Newton step in §3, agent S's for the amplitude series in §4.
 
-Contents: [1. The principle](#1-the-principle-crc-32-as-the-model) ·
-[2. Multiple shooting is chunking](#2-multiple-shooting-is-chunking) ·
-[3. The Newton Jacobian and LU](#3-the-newton-jacobian-and-its-lu) ·
-[4. The inner amplitude series](#4-the-inner-amplitude-series-solverinner_ampamp_flintpy) ·
-[5. Embarrassingly parallel scans](#5-embarrassingly-parallel-scans) ·
-[6. What cannot be split](#6-what-cannot-be-split-and-why) · [7. Summary](#7-summary)
+Contents
+
+- [1. The principle: CRC-32 as the model](#1-the-principle-crc-32-as-the-model)
+- [2. Multiple shooting is chunking](#2-multiple-shooting-is-chunking)
+- [3. The Newton Jacobian and its LU](#3-the-newton-jacobian-and-its-lu)
+- [4. The inner amplitude series](#4-the-inner-amplitude-series-solverinner_ampamp_flintpy)
+- [5. Embarrassingly parallel scans](#5-embarrassingly-parallel-scans)
+- [6. What cannot be split, and why](#6-what-cannot-be-split-and-why)
+- [7. Summary](#7-summary)
 
 ## 1. The principle: CRC-32 as the model
 
