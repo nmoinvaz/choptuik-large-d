@@ -23,9 +23,6 @@ solver in [`hp/`](hp/) for large D. The physics is in this file; the software is
   supported: a power-law approach to 0 is excluded, a logarithmic one disfavoured
   ([Relation to published work](#relation-to-published-work)).
 
-The work was directed by Nathan Moinvaziri and carried out by Claude, Anthropic's AI model; no human expert has
-reviewed it yet ([How this work was done](#how-this-work-was-done)).
-
 Contents
 
 - [Results](#results): [The formula](#the-formula) · [Values](#values) ·
