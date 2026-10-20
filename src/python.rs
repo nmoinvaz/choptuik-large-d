@@ -134,6 +134,7 @@ fn build_ctx<const N: usize>(p: &Params) -> PyResult<Ctx<N>> {
 enum AnyCtx {
     F40(Ctx<40>),
     F72(Ctx<72>),
+    F96(Ctx<96>),
 }
 
 /// Residual kernel for one DSSSpec configuration (built by rustkernel.RustResidual from a Python S).
@@ -215,12 +216,15 @@ impl Kernel {
             AnyCtx::F40(build_ctx::<40>(&p)?)
         } else if nh <= 72 {
             AnyCtx::F72(build_ctx::<72>(&p)?)
+        } else if nh <= 96 {
+            AnyCtx::F96(build_ctx::<96>(&p)?)
         } else {
-            return Err(PyValueError::new_err("nh must be <= 72"));
+            return Err(PyValueError::new_err("nh must be <= 96 (kc <= 63)"));
         };
         let len = match &ctx {
             AnyCtx::F40(c) => c.len,
             AnyCtx::F72(c) => c.len,
+            AnyCtx::F96(c) => c.len,
         };
         Ok(Kernel { ctx, len })
     }
@@ -245,6 +249,7 @@ impl Kernel {
         py.detach(|| match ctx {
             AnyCtx::F40(c) => run_f64(c, z, &mut out, threads, w, dedup),
             AnyCtx::F72(c) => run_f64(c, z, &mut out, threads, w, dedup),
+            AnyCtx::F96(c) => run_f64(c, z, &mut out, threads, w, dedup),
         });
         Ok(Array2::from_shape_vec((b, self.len), out).unwrap().into_pyarray(py))
     }
@@ -264,6 +269,7 @@ impl Kernel {
         py.detach(|| match ctx {
             AnyCtx::F40(c) => run_generic(c, z, &mut out, threads, dedup),
             AnyCtx::F72(c) => run_generic(c, z, &mut out, threads, dedup),
+            AnyCtx::F96(c) => run_generic(c, z, &mut out, threads, dedup),
         });
         Ok(Array2::from_shape_vec((b, self.len), out).unwrap().into_pyarray(py))
     }
@@ -292,6 +298,7 @@ impl Kernel {
         py.detach(|| match ctx {
             AnyCtx::F40(c) => run_generic(c, &z, &mut out, threads, dedup),
             AnyCtx::F72(c) => run_generic(c, &z, &mut out, threads, dedup),
+            AnyCtx::F96(c) => run_generic(c, &z, &mut out, threads, dedup),
         });
         let fh: Vec<f64> = out.iter().map(|x| x.hi).collect();
         let fl: Vec<f64> = out.iter().map(|x| x.lo).collect();
@@ -322,6 +329,7 @@ impl Kernel {
         let (v, nh) = match &self.ctx {
             AnyCtx::F40(c) => (with_plain_exec!(t, e => e.ssh_series_row(c, &zz[..self.len])), c.nh),
             AnyCtx::F72(c) => (with_plain_exec!(t, e => e.ssh_series_row(c, &zz[..self.len])), c.nh),
+            AnyCtx::F96(c) => (with_plain_exec!(t, e => e.ssh_series_row(c, &zz[..self.len])), c.nh),
         };
         let rows = v.len() / nh;
         Ok(Array2::from_shape_vec((rows, nh), v).unwrap().into_pyarray(py))
@@ -352,6 +360,7 @@ impl Kernel {
         Ok(match &self.ctx {
             AnyCtx::F40(c) => with_exec!(w, e => go(c, &zz[..self.len], &e, reps)),
             AnyCtx::F72(c) => with_exec!(w, e => go(c, &zz[..self.len], &e, reps)),
+            AnyCtx::F96(c) => with_exec!(w, e => go(c, &zz[..self.len], &e, reps)),
         })
     }
 
@@ -377,6 +386,7 @@ impl Kernel {
         Ok(match &self.ctx {
             AnyCtx::F40(c) => with_exec!(w, e => go(c, omega, kappa, &e, reps)),
             AnyCtx::F72(c) => with_exec!(w, e => go(c, omega, kappa, &e, reps)),
+            AnyCtx::F96(c) => with_exec!(w, e => go(c, omega, kappa, &e, reps)),
         })
     }
 
@@ -385,6 +395,7 @@ impl Kernel {
         match &self.ctx {
             AnyCtx::F40(c) => c.nh,
             AnyCtx::F72(c) => c.nh,
+            AnyCtx::F96(c) => c.nh,
         }
     }
 }
@@ -402,6 +413,7 @@ impl Kernel {
         let a = py.detach(|| match ctx {
             AnyCtx::F40(c) => dispatch::linearization(t, c, zz, lam, with_delta, p.as_deref()),
             AnyCtx::F72(c) => dispatch::linearization(t, c, zz, lam, with_delta, p.as_deref()),
+            AnyCtx::F96(c) => dispatch::linearization(t, c, zz, lam, with_delta, p.as_deref()),
         });
         Ok(Array2::from_shape_vec((m, m), a).unwrap().into_pyarray(py))
     }

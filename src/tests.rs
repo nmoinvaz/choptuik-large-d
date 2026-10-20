@@ -136,6 +136,13 @@ fn residual_full_matches_baseline() {
     check_residual::<72>(72, 0xd1b5_4a32_d192_ed03);
 }
 
+/// The 96-lane context (kc 49-63, folded nh 76-96), padded (84 of 96, kc 55) and full (96, kc 63).
+#[test]
+fn residual_96_matches_baseline() {
+    check_residual::<96>(84, 0x3c6e_f372_fe94_f82b);
+    check_residual::<96>(96, 0xa54f_f53a_5f1d_36f1);
+}
+
 #[test]
 fn complex_residual_matches_baseline() {
     let mut rng = Rng(0x2545_f491_4f6c_dd1d);
@@ -219,8 +226,17 @@ fn dual_value_matches_f64() {
 /// The forward-mode Jacobian agrees with complex-step columns, and threads do not change it.
 #[test]
 fn jacobian_matches_complex_step() {
-    let mut rng = Rng(0xbb67_ae85_84ca_a73b);
-    let ctx = test_ctx::<40>(36, &mut rng);
+    check_jacobian::<40>(36, 0xbb67_ae85_84ca_a73b);
+}
+
+#[test]
+fn jacobian_matches_complex_step_96() {
+    check_jacobian::<96>(84, 0x510e_527f_ade6_82d1);
+}
+
+fn check_jacobian<const N: usize>(nh: usize, seed: u64) {
+    let mut rng = Rng(seed);
+    let ctx = test_ctx::<N>(nh, &mut rng);
     let z = first_row(&ctx, &test_batch(&ctx, &mut rng));
     let l = ctx.len;
     let t = Target::best_plain();

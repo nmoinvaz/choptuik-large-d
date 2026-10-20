@@ -12,7 +12,7 @@ use core::arch::x86_64::*;
 
 pub struct Avx512;
 
-const MAXV: usize = 9; // up to 72 lanes
+const MAXV: usize = 12; // up to 96 lanes
 
 #[target_feature(enable = "avx512f")]
 #[inline]

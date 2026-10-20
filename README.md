@@ -1561,3 +1561,7 @@ solver/largeD_late_structure.py  where the nonlinear late-order growth lives (x,
   generic path; the residual itself uses the SIMD backends.
 - Only the long-horizon-series variant with frozen RK4 step counts is ported.
 - Complex-step evaluation uses plain loops, without explicit SIMD.
+- The kernel is compiled for three sizes of the parity-folded τ grid, nh ≤ 40, 72 and 96 lanes (`Ctx<40>`, `Ctx<72>`,
+  `Ctx<96>`; nh = N/2 with N = 4⌈(3kc + 2)/4⌉), so kc ≤ 63; kc 49–63 run padded to 96 lanes. Larger kc needs another
+  size (for example `Ctx<128>` with `MAXV = 16` in `src/avx512.rs`). Adding the 96-lane size left the 40- and
+  72-lane results bitwise identical (residuals on all backends and thread counts, and the exact Jacobian).
