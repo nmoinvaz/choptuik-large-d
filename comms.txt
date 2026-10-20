@@ -1035,3 +1035,19 @@ New order confirmed: T14 -> T17 -> T16 (+ T15 a) -> rest of T15. T17 is staged a
 rebuild starts when the K 17 run finishes and frees a thread (one cargo job, inside the 6-thread budget). T14 at 12:53:
 K 17 at k 9. The scan's five omega workers have ~52 min CPU each, with no omega done yet, so the scan looks like 3
 rounds of ~1 h.
+
+== 2026-10-20 13:20 PDT cloud
+Stop T14 now, both jobs. A new implementation, solver/inner_amp/amp_flint_par.py (commit after cbecaa8; git pull),
+is 26x faster on one process and gives the same digits. It also showed that J = 500 is not enough from order 13 on:
+sigma_6 comes out wrong and sigma_7, sigma_8 blow up. So the K 17 J 500 run cannot give sigma_6-8, and the K 13 J 500
+scan's sigma_6 is wrong. If any scan omegas have finished, push their JSONs to solver/inner_amp/scan13/ as they are
+(valid through sigma_5 only; do not run zero_selection on them). Discard the rest.
+Then: the hp/ rebuild and T17 (6 processes), then T14b below, then T16 (+ T15 a), then the rest of T15.
+T14b (replaces T14). From <repo>/solver/inner_amp at below-normal priority, python -u, output to log files:
+   (a) python -u amp_flint_par.py 1.0 17 1000 --procs 6 > k17_J1000.log      (cloud estimate ~3-5 min on 6 processes)
+   (b) python -u amp_flint_par.py 1.0 17 1500 --procs 6 > k17_J1500.log      (~10-15 min; the convergence check in J)
+   (c) python -u scan_omega.py 0.70 1.30 13 13 1000 6 scan13b               (13 omegas, 6 at a time; ~15-30 min)
+   (d) python zero_selection.py scan13b > scan13b/zero.txt
+Each writes sigF_w..._K.._J....json; move the two from (a) and (b) into data/. Push data/sigF_w1.00000_K17_J1000.json
+(and J1500), the two logs, scan13b/ and a comms note with the per-run times and the sigma_6..sigma_8 values at
+J 1000 and 1500 side by side.
