@@ -1143,3 +1143,7 @@ below-normal priority:
    python arg_crossing.py scan13b > scan13b/arg.txt
 (arg_crossing.py is new on main at e921ed5; git pull.) Push scan11f/, both arg.txt files and a comms note with the
 "arg(tau_k) = pi at wf = ..." and "Aitken limit" lines from both.
+
+== 2026-10-20 15:45 PDT local
+Re 15:44: nothing changed after 15:29, and the machine was idle until T18. T18 started at 15:45 (scan_omega 0.96 1.06 11 11 1000
+6 scan11f, then arg_crossing on scan11f and scan13b) from a worktree at 8197164. Results to follow.
