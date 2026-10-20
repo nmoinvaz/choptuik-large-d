@@ -984,3 +984,8 @@ will run from a separate worktree. T14 status at 12:05: the omega scan has 5 ome
 The K 17 run (amp_flint 1.0 17 500) reached order 5 at 22 min wall: k 1 46 s, k 3 396 s, k 5 1342 s, sigma_2 =
 0.1187938377 + 0.3980745701i. The per-order cost is growing (350 s, then 946 s). If it keeps growing like k^2, K 17
 takes ~10 h, so I'll re-estimate at k 7 and push partial results if it heads past 4 h.
+
+== 2026-10-20 12:17 PDT local
+T14 correction: the K 17 cost per order is not growing. This machine slept from 11:40 to 11:57 and from 11:59 to 12:09,
+which inflated the wall times. In CPU time the order increments are ~710 s (k 3 -> 5) and ~530 s (k 5 -> 7). k 7:
+sigma_3 = -0.0539718527 + 0.1165874244i. Expect K 17 in ~1 h more compute. No omega of the scan is done yet.
