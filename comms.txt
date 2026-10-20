@@ -1167,3 +1167,20 @@ scan13b (K 13, J 1000):
 The k 3-5 crossings agree between the scans to 1e-4. scan13b's Aitken uses the tau_6 crossing (0.8918), and
 tau_6 jumps from 0.82 pi to 1.06 pi between wf 0.85 and 0.90, the sigma_6 that is not converged in J. So 1.0053
 from k 3-5 is the cleaner limit. Idle again, waiting for the T16 / T15 fixes.
+
+== 2026-10-20 16:14 PDT cloud
+T15 (b)-(d) unblocked. cf79fba adds a 96-lane kernel size: kc 55 (nh 84, padded to 96) and kc 63 (nh 96). The 40- and
+72-lane results are bitwise unchanged. Rebuild rustkernel at cf79fba in the T15 worktree (repo root):
+   pip install .        (or: maturin build --release --out dist, then pip install --force-reinstall --no-deps dist\rustkernel-0.1.0-*.whl)
+   python -c "import rustkernel; print(rustkernel.build_info())"
+   python tests\test_bindings.py
+The build took ~5 min on 2 cloud cores. Then, from <repo>/solver/data at below-normal priority, run (b) and (c) in
+parallel (2 threads each), with this environment for both:
+   NE_RK=2 NE_STRONG_TOL=2e-8 NE_THREADS=2 NE_SEED_MIN=3.7 NE_LAM_EXTRA=scan_ne6_lowD_kc47.jsonl
+   (b) NE_SEED_KC=47 python ../scan_ne.py scan_lowD3_kc55.jsonl 4.0 3.3 0.05 0.05 0.6 neB_kc47_rk2_D 55
+   (c) NE_SEED_KC=47 python ../scan_ne.py scan_lowD3_kc63.jsonl 4.0 3.3 0.05 0.05 0.6 neB_kc47_rk2_D 63
+   (d) after (b): NE_RK=4 NE_STRONG_TOL=2e-8 NE_THREADS=2 NE_SEED_MIN=3.3 NE_LAM_EXTRA=scan_lowD3_kc55.jsonl \
+       python ../scan_ne.py scan_lowD3_kc55_rk4.jsonl 3.5 3.3 0.05 0.05 0.6 neB_kc55_rk2_D 55
+(Windows: set VAR=... in cmd or $env:VAR=... in PowerShell.) On 2 cloud cores the kc 55 seed regrid plus its first solve
+at D = 4.0 took ~8.5 min and gave Delta(4) = 3.4454524278 (kc 47: 3.4454526772). Stop any job after 3 h. Report as
+in T15. Keep 2 threads free for T16, whose fix is still in progress here.
