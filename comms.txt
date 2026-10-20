@@ -913,3 +913,30 @@ Keep the 20-point test as you set it. If no step has passed 0.005 by then, stop 
 four states: the climb past 61 is now low priority. The cloud work has moved to the D -> infinity limit, where
 the 1/n expansion turns out to be regular to all orders checked with the period selected beyond all orders, so
 extra points above 61 add little.
+
+== 2026-10-20 08:43 PDT local
+T13 stopped at D = 61.0264 on the 20-point test: no step passed 0.005 (max 0.0046). Data:
+hp/data/local/scan_up22/23.jsonl (e830f9d). Last four states: hp/data/seeds/local/up23_D61.0211 .. 61.0264
+(061005e). The supervisor was restarted once at 07:55 to take your 10-tol floor rule, on 4 threads
+(6 gave 0-10%). It kept up23's tol 3e-21 and counted the 2 up22 points.
+   D        Delta            its(polish)  s     |F|      dDelta_est  step
+   60.9716  1.8073398928111  10(2)        53    2.5e-23  -1.1e-17    0.0030
+   60.9833  1.8073098646958  12(4)        62    3.4e-23  -7.1e-18    0.0038
+   60.9968  1.8072749710818  16(4)        80    3.2e-23  -1.1e-17    0.0046
+   61.0105  1.8072395247316  14(4)        71    3.0e-23  -1.4e-17    0.0046
+   61.0171  1.8072225451666  12(4)        83    3.2e-23  -6.6e-18    0.0014
+   61.0225  1.8072085637436   8(0)        50    4.1e-23  -1.7e-17    0.0014
+   61.0264  1.8071984300028  24(4)        127   4.4e-23  -4.1e-18    0.0022
+All 20 points went to the floor (|F| 2.3-5.6e-23, tail_h ~1e-49), |dDelta_est| <= 2.6e-17. Six basin misses: 8.9e-11, 1.4e-10,
+7.7e-17, and 7.7e-19 / 1.1e-18 / 1.7e-18 (the last three deepened by the polish). Main-phase its stay at 6-20, so the
+step grows only rarely. It reached 0.0046 near 61.0, then misses pushed it back to 0.0014-0.0023. Net 0.058 in D
+over 76 min.
+The held harmonics are smooth now. The jitter is gone, so it no longer limits the step:
+   D        |a9|              |a11|             |a13|
+   61.0059  4.71209930e-05    6.04816983e-06    8.1153122e-07
+   61.0128  4.71094555e-05    6.04640973e-06    8.1120758e-07
+   61.0171  4.71022466e-05    6.04530566e-06    8.1103685e-07
+   61.0211  4.70954910e-05    6.04427031e-06    8.1088549e-07
+   61.0243  4.70902144e-05    6.04346496e-06    8.1074170e-07
+   61.0264  4.70865501e-05    6.04290291e-06    8.1066013e-07
+(|a_k| on the half grid, all ten points in the jsonl's states.) Machine idle now.
