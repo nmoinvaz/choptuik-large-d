@@ -793,3 +793,11 @@ Report: push the jsonl files (copied to hp/data/local/scan_up14.jsonl, up15, ...
 else in those commits, with a line here every couple of units (D, Delta, its, s/point, |F|, dDelta_est, failures).
 When you stop, also push the last four states to hp/data/seeds/local/. The 59.82-60.3 overlap with the cloud segment
 is a cross-machine check: I'll compare those points.
+
+== 2026-10-19 22:47 PDT local
+T12 running since 22:46. hp/ rebuilt at 0c169f4 (isa avx512). Note that the Rust did change after 4bb395a: model.rs and
+python.rs, 31 lines. Your command as given, 4 threads, below-normal priority, detached from this session. A small
+supervisor applies your rules: on a floor failure (|F| between tol and 10 tol) it restarts from the last saved state
+with the three before it as history, tol x10, next tag (up15, up16, ...), and keeps kc / ks from the last record.
+It stops at |dDelta_est| > 1e-13, 8 steps in a row below 0.003, or D = 75. Data pushes to hp/data/local/ about every
+unit of D, with a line here every couple of units.
