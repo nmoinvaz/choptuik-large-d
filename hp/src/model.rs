@@ -41,6 +41,10 @@ pub struct Ctx<const B: usize> {
     /// point only through exponentially small couplings (the near-null directions), and their effect on Delta is
     /// below 1e-12 per unit change.
     pub freeze: Option<(DMat<B>, DMat<B>)>,
+    /// Index of the node where the outward integration from the centre meets the inward integration from the
+    /// horizon side. Segments b <= match_node run outward (node b-1 -> node b); segments b > match_node run inward
+    /// (node b -> node b-1). nodes.len() - 1 (the default) is the all-outward layout.
+    pub match_node: usize,
 }
 
 impl<const B: usize> Ctx<B> {
@@ -67,15 +71,23 @@ impl<const B: usize> Ctx<B> {
         if b == 0 {
             vec![0, m]
         } else if b < k {
-            let o = self.off_node(b - 1);
+            let o = if self.seg_inward(b) { self.off_node(b) } else { self.off_node(b - 1) };
             vec![o, o + m, o + 2 * m, o + 3 * m]
         } else {
             vec![self.off_mh(), self.off_ah()]
         }
     }
+    /// segment b (1 <= b < K) runs inward, from node b to node b-1
+    pub fn seg_inward(&self, b: usize) -> bool {
+        b > self.match_node && b < self.k()
+    }
     pub fn block_target(&self, b: usize) -> usize {
         if b < self.k() {
-            self.off_node(b)
+            if self.seg_inward(b) {
+                self.off_node(b - 1)
+            } else {
+                self.off_node(b)
+            }
         } else {
             self.off_node(self.k() - 1)
         }

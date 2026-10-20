@@ -92,7 +92,7 @@ def plow_odd(M, kf, dps=40):
     return _PLOW[key]
 
 
-def make_solver(D, M, nodes=None, kt=36, kc=40, ks=120, segs=None, threads=0, kfreeze=None):
+def make_solver(D, M, nodes=None, kt=36, kc=40, ks=120, segs=None, threads=0, kfreeze=None, match_node=None):
     """kfreeze: pin the p1 harmonics k > kfreeze to zero and drop the matching of p's harmonics k > kfreeze at the
     horizon block (see model.rs Ctx::freeze)."""
     nodes = list(NODES_OLD if nodes is None else nodes)
@@ -100,10 +100,10 @@ def make_solver(D, M, nodes=None, kt=36, kc=40, ks=120, segs=None, threads=0, kf
         nh, nl = dd_from_mp([mp.mpf(D) - 2])
     dh, dl = dmat_odd(M)
     ph, pl = phase_weights(M)
+    a = b = None
     if kfreeze:
         a, b = plow_odd(M, kfreeze)
-        return Solver(M, float(nh[0]), float(nl[0]), dh, dl, ph, pl, nodes, segs or [], kt, kc, ks, threads, a, b)
-    return Solver(M, float(nh[0]), float(nl[0]), dh, dl, ph, pl, nodes, segs or [], kt, kc, ks, threads)
+    return Solver(M, float(nh[0]), float(nl[0]), dh, dl, ph, pl, nodes, segs or [], kt, kc, ks, threads, a, b, match_node)
 
 
 # ------------------------------------------------------------------ seeds

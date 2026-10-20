@@ -455,3 +455,18 @@ light ray. Note the factor √(2π) between the simulation's field (G = 1) and t
   converge (6 / 8 / 18 iterations, 6-16 s at M = 32, L = 769) where plain Newton could not do 0.05.
 - Selection sensitivity max |dDelta/dF|: 1.2e2 (D = 8.25), 2.2e2 (10), 5.9e2 (12), 2.1e3 (14), 6.8e3 (16), 2e5 (21):
   ~e^(0.57 D). With |F| ~ 1e-30 that leaves Delta at ~1e-6 at D = 100 if the rate holds.
+- (evening) Freezing p1 above k = 19 (kfreeze 19) contaminated k = 15-19: pinning ~1e-7 harmonics at zero is a
+  forcing that the next weak directions absorb with 1/sigma. Deflated Newton with the junk left free also drifts
+  (junk fixed only to tol / sigma: sigma ~1e-20 at D = 24, 1e-24 at D = 35); junk held on the predictor's trend
+  (junk_only + junk_hold, acceptance by the linearised Delta correction -y.F < 1e-14) reached D = 35.2, then the
+  frozen-junk floor reached Delta. Moving the matching node inward (x = 0.5, 0.4, with inward segments from the
+  horizon side) changes neither the weak spectrum nor dDelta/dF (both belong to the boundary-value problem, not to
+  the shooting layout); Delta agrees to 1e-15.
+- What works: kfreeze 13 at D = 35.2: Delta - unfrozen = -5.5e-15 (kfreeze 15: +1.1e-15, 11: +6.3e-13, 9: -1.2e-11),
+  weakest sigma 1e-17 instead of 1e-24, every remaining weak direction has Delta content (>= 1e-8), plain Newton
+  converges in 7 iterations to |F| 3e-27. Lower kfreeze as D grows to keep the weakest sigma >= ~1e-18.
+- DD vs f64 data: D = 15.6-21: within 5.5e-11 (f64 sigma 3e-11); 22-29.3: <= 3.6e-9 (sigma 1.5-2e-9); 29.8: -1.1e-8,
+  30.124: -1.8e-8 (sigma 3e-8); 34.18: -7.1e-8 (sigma 5.6e-7). All models fitted to the f64 data agree with the DD
+  values to <= 9e-8 up to D = 36; they separate at the 1e-8 level (1/D deg 11 and n^-1/2 deg 18: 3-4e-9; n^-1/2 deg
+  14/16: 8e-8; rational P8/Q2: 2.5e-8).
+- dDelta/dF: 2e5 (D = 21), 6.2e8 (31.6), 2e10 (34.7), 3e10 (35.2): ~x3.5 per unit D above 30.

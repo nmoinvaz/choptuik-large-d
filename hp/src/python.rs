@@ -63,9 +63,10 @@ impl<const B: usize> Api for Ctx<B> {
         (1..self.k())
             .into_par_iter()
             .map(|b| {
-                let o = self.off_node(b - 1);
+                let (from, to) = if self.seg_inward(b) { (b, b - 1) } else { (b - 1, b) };
+                let o = self.off_node(from);
                 let s = state_of::<B>(&zh[o..o + 4 * m], &zl[o..o + 4 * m]);
-                model::plan_path(self, &s, self.nodes[b - 1], self.nodes[b], omega, tol, hmax)
+                model::plan_path(self, &s, self.nodes[from], self.nodes[to], omega, tol, hmax)
             })
             .collect()
     }
@@ -74,8 +75,9 @@ impl<const B: usize> Api for Ctx<B> {
             return Err(format!("need {} segments, got {}", self.k() - 1, segs.len()));
         }
         for (b, s) in segs.iter().enumerate() {
-            if s.len() < 2 || s[0] != self.nodes[b] || *s.last().unwrap() != self.nodes[b + 1] {
-                return Err(format!("segment {} must run from node {} to node {}", b + 1, self.nodes[b], self.nodes[b + 1]));
+            let (from, to) = if self.seg_inward(b + 1) { (b + 1, b) } else { (b, b + 1) };
+            if s.len() < 2 || s[0] != self.nodes[from] || *s.last().unwrap() != self.nodes[to] {
+                return Err(format!("segment {} must run from node {} to node {}", b + 1, self.nodes[from], self.nodes[to]));
             }
         }
         self.segs = segs;
@@ -149,7 +151,7 @@ fn freeze_pair<const B: usize>(p: &Option<(Vec<f64>, Vec<f64>)>) -> Option<(DMat
 }
 
 macro_rules! make_ctx {
-    ($b:expr, $n:expr, $dh:expr, $dl:expr, $ph:expr, $pl:expr, $nodes:expr, $segs:expr, $kt:expr, $kc:expr, $ks:expr, $plow:expr, [$($bb:literal),*]) => {
+    ($b:expr, $n:expr, $dh:expr, $dl:expr, $ph:expr, $pl:expr, $nodes:expr, $segs:expr, $kt:expr, $kc:expr, $ks:expr, $plow:expr, $mn:expr, [$($bb:literal),*]) => {
         match $b {
             $( $bb => Box::new(Ctx::<$bb> {
                 n: $n,
@@ -161,6 +163,7 @@ macro_rules! make_ctx {
                 kc: $kc,
                 ks: $ks,
                 freeze: freeze_pair::<$bb>(&$plow),
+                match_node: $mn,
             }) as Box<dyn Api>, )*
             _ => return Err(PyValueError::new_err("M must be one of 8, 16, 32, 48, 64, 80, 96, 128")),
         }
@@ -170,7 +173,7 @@ macro_rules! make_ctx {
 #[pymethods]
 impl Solver {
     #[new]
-    #[pyo3(signature = (m, n_hi, n_lo, dmat_hi, dmat_lo, phase_hi, phase_lo, nodes, segs, kt, kc, ks, threads=0, plow_hi=None, plow_lo=None))]
+    #[pyo3(signature = (m, n_hi, n_lo, dmat_hi, dmat_lo, phase_hi, phase_lo, nodes, segs, kt, kc, ks, threads=0, plow_hi=None, plow_lo=None, match_node=None))]
     #[allow(clippy::too_many_arguments)]
     fn new(
         m: usize,
@@ -188,6 +191,7 @@ impl Solver {
         threads: usize,
         plow_hi: Option<PyReadonlyArray2<f64>>,
         plow_lo: Option<PyReadonlyArray2<f64>>,
+        match_node: Option<usize>,
     ) -> PyResult<Self> {
         if m % 8 != 0 {
             return Err(PyValueError::new_err("M must be a multiple of 8"));
@@ -217,8 +221,13 @@ impl Solver {
             _ => None,
         };
         let mut api: Box<dyn Api> =
-            make_ctx!(m / 8, n, dh, dl, ph, pl, nodes.clone(), vec![], kt, kc, ks, plow, [1, 2, 4, 6, 8, 10, 12, 16]);
-        let segs = if segs.is_empty() { (1..nodes.len()).map(|b| vec![nodes[b - 1], nodes[b]]).collect() } else { segs };
+            make_ctx!(m / 8, n, dh, dl, ph, pl, nodes.clone(), vec![], kt, kc, ks, plow, match_node.unwrap_or(nodes.len() - 1).min(nodes.len() - 1), [1, 2, 4, 6, 8, 10, 12, 16]);
+        let mn = match_node.unwrap_or(nodes.len() - 1).min(nodes.len() - 1);
+        let segs = if segs.is_empty() {
+            (1..nodes.len()).map(|b| if b > mn { vec![nodes[b], nodes[b - 1]] } else { vec![nodes[b - 1], nodes[b]] }).collect()
+        } else {
+            segs
+        };
         api.set_segs(segs).map_err(PyValueError::new_err)?;
         let t = if threads == 0 { std::thread::available_parallelism().map(|v| v.get()).unwrap_or(1) } else { threads };
         let pool = Arc::new(rayon::ThreadPoolBuilder::new().num_threads(t).build().unwrap());
