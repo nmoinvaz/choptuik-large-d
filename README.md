@@ -1040,8 +1040,15 @@ late orders of the inner series fitted with the predicted fast-mode exponents).
   clean zero for $`0.5 \le A \le 3`$, $`0.5 \le \omega/\omega_\infty \le 1.5`$). The amplitude is 6.5% below $`F_1 \approx 2.72`$; $`\omega`$ is 22% below
   $`\omega_\infty`$. Adding harmonic 3 (`solver/inner_stokes/zero_M3.py`) destroys that zero, and the zero found there is unphysical
   ($`\omega = 0.198\,\omega_\infty`$, $`F_3/F_1 = 0.65`$; lateral residual $`4.6\times10^6`$ at the one-harmonic zero with harmonic 3
-  added). ($`\Delta = 2.1157`$ is close to $`\Delta(20) = 2.1121`$, almost certainly a coincidence.) So no selection of $`\omega_\infty`$ follows yet; the next attempt needs rescaled
-  unknowns $`F_\nu e^{\pi\lvert\nu\rvert\omega/2}`$, seven or more harmonics, and more precision along the integration arc.
+  added). ($`\Delta = 2.1157`$ is close to $`\Delta(20) = 2.1121`$, almost certainly a coincidence.) So no selection of $`\omega_\infty`$ follows yet.
+- *More harmonics* (`solver/inner_stokes/inner_np.py`, `staged.py`, `continue_M.py`). Starting the lateral sum on the ray
+  $`\arg\xi^2 = \pi/2 + \pi/8`$ from the series computed in scaled form removes the amplification along the arc: without gravity
+  the jumps of harmonics 1–9 come out as $`1.00000000`$ times their exact values, in double precision, about 1 s per
+  evaluation (`inner_np.py checklin 9`). With gravity the residuals are de-mixed (multiplied by $`e^{-\Pi}`$ and taken on the
+  label $`\theta_0`$), which leaves the zeros unchanged but gives each condition its own weight. At the one-harmonic zero, solving
+  only the harmonic-3 condition gives $`F_3/F_1 = 0.074`$; the harmonic-1 condition is then violated, so that zero does not
+  survive harmonic 3. The full solve for $`(A, F_3, \omega)`$ has not converged yet, so the truncated route still gives no $`\omega`$;
+  the amplitude expansion below avoids truncation altogether.
 
 **Without truncation: the amplitude expansion** (`solver/inner_amp/`).
 
