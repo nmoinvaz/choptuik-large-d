@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Large-D model fits on the double-double values, done in mpmath so the fit itself adds no f64 rounding.
 
-    python3 dd_fits_mp.py [Dmin] [Dmax_fit] [--clean] [--pred=D1,D2,...] [--mixed] [--scan=DIR]
+    python3 dd_fits_mp.py [Dmin] [Dmax_fit] [--clean] [--pred=D1,D2,...] [--mixed] [--scan=DIR] [--dmax=D]
 
 Each model is a polynomial in a variable t(D); it is fitted by least squares in a Chebyshev basis on the fitted
 t-range (well conditioned) at 60 digits. Reports the fit residual, the held-out error on D > Dmax_fit, the limit
@@ -10,7 +10,9 @@ ln D / D, ln D / D^2, e^(-D/4)) and reports that term's coefficient, the held-ou
 
 The points come from hp/data/delta_dd.csv (export_dd.py), or with --scan=DIR from the runs' DIR/scan_up*.jsonl
 directly (a D that appears in several runs keeps the last value read). --clean drops isolated points that sit off
-their neighbours (see clean()).
+their neighbours (see clean()). --dmax=D ignores every point above D (before cleaning), so a table quoted for an
+earlier snapshot of the data (e.g. --dmax=60.1, the points before the climb past 60.9) reproduces after new points
+are added.
 """
 import glob
 import json
@@ -123,8 +125,9 @@ def main():
         if a.startswith("--pred="):
             pred = [float(v) for v in a[7:].split(",")]
     scan = next((a[7:] for a in sys.argv[1:] if a.startswith("--scan=")), None)
+    dmax = next((float(a[7:]) for a in sys.argv[1:] if a.startswith("--dmax=")), float("inf"))
     pts, _ = load_points(scan)
-    Ds = sorted(d for d in pts if d >= Dmin)
+    Ds = sorted(d for d in pts if Dmin <= d <= dmax)
     if "--clean" in sys.argv:
         Ds = clean(pts, Ds)
     fitD = [d for d in Ds if d <= Dfit]

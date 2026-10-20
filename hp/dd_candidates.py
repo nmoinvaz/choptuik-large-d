@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Test candidate constants for Delta_inf on the double-double points (assumes Delta is analytic in 1/D).
 
-    python3 dd_candidates.py [Dmax_fit]        (default 45)
+    python3 dd_candidates.py [Dmax_fit] [--dmax=D]        (default 45; --dmax ignores the points above D)
 
 For each candidate c0, Delta(D) = c0 + x * p(x), x = 1/D, p a polynomial of degree deg - 1 in a Chebyshev basis on the
 fitted x-range, is fitted at 60 digits on the cleaned points 10 <= D <= Dmax_fit and compared with every point above
@@ -53,9 +53,11 @@ def fit_forced(pts, fitD, deg, c0=None):
 
 
 def main():
-    Dfit = float(sys.argv[1]) if len(sys.argv) > 1 else 45.0
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    Dfit = float(args[0]) if args else 45.0
+    dmax = next((float(a[7:]) for a in sys.argv[1:] if a.startswith("--dmax=")), float("inf"))
     pts, _ = load_points()
-    Ds = clean(pts, sorted(d for d in pts if d >= 10), verbose=False)
+    Ds = clean(pts, sorted(d for d in pts if 10 <= d <= dmax), verbose=False)
     fitD = [d for d in Ds if d <= Dfit]
     hold = [d for d in Ds if d > Dfit]
     print(f"fit on {len(fitD)} cleaned points 10 <= D <= {Dfit:g}, {len(hold)} held out up to D = {hold[-1]:.2f}")
