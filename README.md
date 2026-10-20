@@ -11,7 +11,7 @@ solver in [`hp/`](hp/) for large D. The physics is in this file; the software is
   computed points up to D = 30, and Δ to 6×10⁻⁸ up to D = 61 ([The formula](#the-formula), [Values](#values)).
 - **The large-D limit.** Δ is computed at 857 points from D = 8.25 to 61.03; the points fit smooth curves to about 4×10⁻¹⁵
   (estimated error per point about 10⁻¹⁶ to D = 60.1, a few 10⁻¹⁵ above). The points support, but do not prove, that Δ is analytic in 1/D; then
-  Δ∞ = 1.64389375 ± 10⁻⁸ (ω∞ = 2π/Δ∞ = 3.82213589), and γ∞ = 1/2 to about 4×10⁻⁴.
+  Δ∞ = 1.64389375 ± 1.5×10⁻⁸ (ω∞ = 2π/Δ∞ = 3.82213589 ± 4×10⁻⁸), and γ∞ = 1/2 to about 4×10⁻⁴.
   Nine candidate closed forms for Δ∞ are ruled out ([Evidence](#evidence)).
 - **Why the 1/D expansion cannot give it.** The 1/D expansion of the field equations can be carried to all orders for any
   period (Proposition 1), so Δ, and likewise γ, are selected by effects smaller than every power of 1/D. Without
@@ -33,7 +33,7 @@ Contents
   [Candidate closed forms, all ruled out](#candidate-closed-forms-all-ruled-out) ·
   [Relation to published work](#relation-to-published-work)
 - [Evidence](#evidence): [The double-double solver](#the-double-double-solver-hp) ·
-  [Is the period analytic in 1/D?](#is-the-period-analytic-in-1d)
+  [Is the period analytic in 1/D?](#is-the-period-analytic-in-1d) · [Reproduce](#reproduce)
 - [Large D](#large-d-what-the-1d-expansion-can-and-cannot-see): [How the solution scales](#how-the-solution-scales-with-d) ·
   [Proposition 1](#proposition-1-the-1n-expansion-never-fixes-the-period) ·
   [Proposition 2](#proposition-2-the-leading-order-problem-solved-exactly) ·
@@ -58,7 +58,7 @@ The dashed curves are one rational formula in 1/(D−2) for every D ≥ 4 (below
 directions resolved and enough Fourier modes in time at low D;
 hollow points are held out of the fit, and the green diamonds are double-double points up to D = 61, which it matches
 to 6×10⁻⁸. As D → ∞, γ → 1/2 − 0.758/n (the limit 1/2 is imposed in the γ fit; free fits give 0.4996–0.4998), and
-Δ → Δ∞ = 1.64389375 ± 0.00000001 if Δ is analytic in 1/D (from the double-double points; the f64 points gave
+Δ → Δ∞ = 1.64389375 ± 0.000000015 if Δ is analytic in 1/D (from the double-double points; the f64 points gave
 1.64395 ± 0.00008). Details are in
 [`solver/CONTEXT.md`](solver/CONTEXT.md). Regenerate with `cd solver/data && python3 ../plot_delta.py`.
 
@@ -221,7 +221,7 @@ limits the series to $`D \gtrsim 10`$ and forbids cutting it short (five terms a
 | 70 | 1.78693476494 | |
 | 100 | 1.7450264844 | 0.49313 |
 | 1000 | 1.65424086 | 0.4992 |
-| ∞ | 1.64389375 ± 0.00000001 | 1/2 (assumed) |
+| ∞ | 1.64389375 ± 0.000000015 | 1/2 (assumed) |
 
 Δ for D = 10–60 is double-double, interpolated to 10⁻¹⁴ from [`hp/data/delta_dd.csv`](hp/data/delta_dd.csv)
 where D is not itself a computed point; Δ(8) is the solver's separate check run at D = 8 (Newton to
@@ -542,7 +542,10 @@ Fitted on all the cleaned points, power series in 1/D of degree 16–20 and in 1
 to the noise; 1/(D-2) at degree 16 leaves 3×10⁻¹³) fit the points from D = 10 to 61.03 to 4.2×10⁻¹⁵
 (8.6×10⁻¹⁵ for 1/D at degree 16, 1.5×10⁻¹⁴ for 1/(D-2) at degree 18) and give limits from 1.643893744 to 1.643893752 on
 10 ≤ D ≤ 60.1 (`hp/dd_fits_mp.py 10 1e9 --clean --dmax=60.1`) and from 1.643893745 to 1.643893752 on all 823
-cleaned points to D = 61.03, so Δ∞ = 1.64389375 ± 0.00000001. The analytic form is not proven (the period is
+cleaned points to D = 61.03. Over 48 choices of model (1/D, 1/(D-2)), degree (the two lowest that reach the noise),
+lower and upper fit ends (D ≥ 10, 12, 15; D ≤ 60.1, 61.03) and cleaning on or off, the limit ranges over
+1.643893744–1.643893763 (`hp/dinf_budget.py`), so Δ∞ = 1.64389375 ± 0.000000015; fitting on D ≤ 45 alone pins it only to
+2.5×10⁻⁷. The analytic form is not proven (the period is
 selected by an effect the 1/D expansion does not see), but nothing in the points up to D = 61 asks for anything else.
 
 Data range: the cloud runs reach D = 60.06 (and a few points at 60.96–60.97); the climb above that was done
@@ -552,6 +555,18 @@ little to Δ∞; why the steps shrink, and the solver options used (`hp/scan_hp.
 `--junk_trend`, `--corrector dnp`), are in [`solver/notes.md`](solver/notes.md).
 
 These limits are the Δ∞ quoted in [The formula](#the-formula) and [Values](#values).
+
+### Reproduce
+
+`./reproduce.sh` reruns the headline numbers and prints PASS / FAIL / SKIP for each check, with the expected value
+next to the computed one: the data and the Values table, the rational formula, Δ∞ from five analytic fits on all
+cleaned points, the held-out test (fit on D ≤ 45, predict 45–61), and the theory checks of Propositions 1–3, the
+Stokes constant C(n,s) and both inner-multiplier methods (14 checks; about 4–6 minutes on a busy 2-core machine;
+`--full` adds the Proposition 4 check). It needs numpy, scipy, mpmath and sympy. python-flint (the Borel–Darboux check)
+and the compiled double-double kernel (the checks on saved solutions; build it with `hp/build.sh`, which needs Rust and
+maturin) are optional and skipped if missing. The saved solutions in `hp/data/states/` (53 states, one per integer D
+from 8 to 60, about 1 MB) are what the profile scripts read (`hp/states.py`). `hp/dinf_budget.py` tabulates how Δ∞
+moves with model, degree, fit range, cleaning and data snapshot.
 
 ## Large D: what the 1/D expansion can and cannot see
 
@@ -1438,6 +1453,10 @@ solver/rational_fit.py the search over rational forms; solver/formula.py the 1/D
 solver/candidates.py   the f64 candidate-constant test: cd solver/data && python3 ../candidates.py
 solver/plot_delta.py, plot_extrapolation.py, plot_candidates.py  delta.svg, extrapolation.svg, candidates.svg
                        (cd solver/data && python3 ../plot_delta.py, and likewise)
+reproduce.sh, reproduce.py    one-command check of the headline numbers (PASS/FAIL/SKIP; --full adds Proposition 4)
+hp/states.py                  where saved solutions are read from (hp/data/states, else the runs' directory)
+hp/data/states/               53 double-double solutions, one per integer D = 8-60, for the profile scripts
+hp/dinf_budget.py             error budget for Delta_inf: model x degree x fit range x cleaning x snapshot
 solver/plot_physics.py        physics.svg: e^Delta, fine-tuning digits per echo, field and gravity strength vs D
 solver/plot_echo.py           echo.svg: the echo at D = 4, 10, 20, 60 (data: solver/echo_data.py -> solver/data/echo_spectrum.npz)
 solver/plot_spectrum.py       spectrum.svg: the echo's harmonic spectrum and decay rates against the D = infinity prediction
