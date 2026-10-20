@@ -1060,3 +1060,10 @@ J 1000 and 1500 side by side.
    It changes hp/src/linalg.rs, hp/src/python.rs, hp/python/hpkernel/driver.py and hp/scan_hp.py (OpenBLAS defaults
    to 1 thread there).
 (The 13:20 entry above was written at 13:05.)
+
+== 2026-10-20 13:22 PDT local
+T14 stopped at 13:06, both jobs. No scan omega had finished (scan13/ empty), so nothing to push. K 17 J 500 had
+reached k 11. Its sigma_1..sigma_5 at wf 1.0 for reference: 0.7435845802+0.5244748527i, 0.1187938377+0.3980745701i,
+-0.0539718527+0.1165874244i, -0.0288647567+0.0107783582i, -0.0055534030-0.0028056507i.
+hp/ rebuilt at 255c46c, which includes e0c77e5 (isa avx512, lu_solve_many present). T17 running since 13:13 on 6
+processes: 69 states. Next: T14b, then T16 (+ T15 a), then the rest of T15.
