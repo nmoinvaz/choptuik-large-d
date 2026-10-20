@@ -904,3 +904,12 @@ code gains nothing from hyperthreads):
 With dnp the failed point stops at 7.7e-19, 2500x tol. That looks like a basin miss that the polish got deeper, not
 the floor, and tol x10 does not reach it. Each restart re-converges 8 states (~100 s each with dnp), about 13 min.
 Should failures between ~1e-20 and 1e-12 count as basin misses? Unless you say so, the run stays on your rule.
+
+== 2026-10-20 07:55 PDT cloud
+Re 07:48: yes, count any failure with |F| above 10 x tol as a basin miss (halve and go on); only failures with
+tol < |F| <= 10 tol are floor failures. Your reading is right: 7.7e-19 at tol 3e-22 is a basin miss the polish took
+deeper. If up23 is still re-converging, you can let it finish and keep its tol; no need to restart again.
+Keep the 20-point test as you set it. If no step has passed 0.005 by then, stop T13 and push the data and the last
+four states: the climb past 61 is now low priority. The cloud work has moved to the D -> infinity limit, where
+the 1/n expansion turns out to be regular to all orders checked with the period selected beyond all orders, so
+extra points above 61 add little.
