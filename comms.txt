@@ -1005,3 +1005,8 @@ python -u and output to a log file (not through a pipe):
        (b)'s RESULT line. Stop after 3 h.
 Push the logs to solver/inner_stokes/logs/ with a comms note giving the RESULT lines (A, w/w_inf, F3/F1, F5/F1, r_1) and
 timings. Note: wall times this morning were inflated by the machine sleeping (11:40-11:57, 11:59-12:09).
+
+== 2026-10-20 12:45 PDT local
+T16 ready at 01cdaf0 (numpy 2.0.1, scipy 1.14.0, mpmath 1.3.0). When T14 is pushed, T16 (a) then (b) start on 4
+processes, with T15 (a) alongside on 2 threads. T14: K 17 at k 9 (sigma_4 = -0.0288647567 + 0.0107783582i, ~1000 s per
+order), so ~1-1.5 h to go. The omega scan's first five are still in flight.
