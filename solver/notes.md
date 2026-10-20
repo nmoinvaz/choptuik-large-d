@@ -516,3 +516,17 @@ light ray. Note the factor √(2π) between the simulation's field (G = 1) and t
   (solver/candidates.py) finds nothing in 1.6438936-1.6438939 nor in 1.643890-1.643898.
 - Formula P8/Q2 vs DD: <= 5.8e-8 on 30.2-60 (never fitted there).
 - Handed the climb past 60 to the local machine (comms T12, seeds in hp/data/seeds/), cloud run stopped at 60.06.
+
+## Towards D = infinity: the 1/n expansion is regular, the period is selected beyond all orders (2026-10-20 morning)
+
+- Scaling from the DD solutions D = 12-60 (hp/largeD_scaling.py, hp/largeD_F.py), n = D - 2: p ~ x F(theta)/sqrt(n)
+  (sqrt(n) dp/dx at x = 0: |F_1| 3.48 (D=20) .. 2.96 (D=60), ~2.73 extrapolated; F3/F1 0.130 .. 0.080, F5/F1 0.024 ..
+  0.0085), p + m = O(n^-3/2) (n(p+m) slowly falling), c = 1 - O(1/n) with n(1 - <c(0)>) -> <F^2> (3.42 vs 4.42 at
+  D = 60, both extrapolating to ~3.65), a^2 - 1 = (p^2 + m^2)/(n-1) to 3%, x - c stays at x - 1 to 1e-3. Exact
+  symmetry of the centre series: m(x) = p(-x).
+- Formal expansion (solver/largeD_expand.py, sympy, eps = 1/n, p = eps^1/2 P, m = eps^1/2 M, c = 1 - sum eps^k G_k,
+  a^2 = 1 + sum eps^k B_k): P0 = x F(theta), M0 = -P0; B2 = 2 x^2 F^2; G1 = F^2 (1 - x^2); S1 = P1 + M1 =
+  2 x^2 (F + w0 F'); D1 = P1 - M1 = x^3 (w0^2 F'' + 3 w0 F' + 2F - 2F^3) + x K1(theta); and so on. Through order 4
+  every field is a polynomial in x, regular at the centre (no x log x) and at the light cone, for ANY periodic F
+  and any w: no solvability condition appears. The period (and F) are selected by terms exponentially small in n,
+  e.g. the WKB modes ((1-x)/x)^(n/2) of the p equation (the same thinning seen in the weak directions).
