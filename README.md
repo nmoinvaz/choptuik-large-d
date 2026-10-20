@@ -596,12 +596,26 @@ computes it to order 122 at 90 digits and reads $`\chi`$ and $`g`$ off consecuti
 | 0.8 | $`0.291 - 1.5704i`$ | $`0.288 - 1.571i`$ | $`-0.55 - 4.27i`$ |
 | 0.9 | $`0.728 - 1.5694i`$ | $`0.725 - 1.571i`$ | $`-0.47 - 4.26i`$ |
 
-So the singulant is $`\chi(x) = \Phi(x) - i\pi/2`$ to the accuracy of 120 orders, and $`g`$ is close to $`-(s + \tfrac12) = -0.5 - 3.82i`$, the
-power $`n^{s+1/2}`$ that $`C(n,s)`$ carries for large $`n`$ ($`C \approx \pi\kappa^{s+1/2}/\big(\sin(\pi(\kappa-\alpha-\beta))\,\Gamma(\alpha)\Gamma(\beta)\big)`$).
-Below $`x = 1/\sqrt2`$ a second singulant of equal modulus, $`\Phi + i\pi/2`$, interferes and the readings scatter. What this says:
+So the singulant is $`\chi(x) = \Phi(x) - i\pi/2`$ to the accuracy of 120 orders. The exponent read off two ratios carries
+a $`1/k`$ error; with the constant below fixed, the data are consistent with $`g = -(s + \tfrac12) = -0.5 - 3.82i`$ exactly, the
+power $`n^{s+1/2}`$ that $`C(n,s)`$ carries for large $`n`$. Below $`x = 1/\sqrt2`$ a second singulant of equal modulus,
+$`\Phi + i\pi/2`$, interferes and the readings scatter. The prefactor and the constant are predicted too (next subsection):
 
-- $`e^{-n\chi} = e^{in\pi/2}\,x^{-n}(1-x^2)^{n/2}`$ is the fast mode of Proposition 3, so the divergence of the $`1/n`$ series and
-  the non-analytic piece are the same object.
+```math
+y_k(x) \sim K\,x^2(1-x^2)^{-1-s}\,\frac{\Gamma(k+s+\frac12)}{\chi(x)^{\,k+s+\frac12}}, \qquad
+K = e^{-i\pi(1+s)}\,\frac{2^{-s-1/2}}{\Gamma(\alpha)\Gamma(\beta)} .
+```
+
+`solver/largeD_dingle_K.py` divides the measured $`y_k`$ (orders 92–122) by this form and extrapolates in $`1/k`$:
+
+| $`x`$ | 0.6 | $`1/\sqrt2`$ | 0.8 | 0.9 | 0.95 |
+|---|---|---|---|---|---|
+| $`K_{\text{measured}}/K`$ | $`1.08 + 0.06i`$ | $`1.01 - 0.10i`$ | $`0.9936 + 0.0022i`$ | $`1.0006 - 0.0002i`$ | $`1.0010 - 0.0015i`$ |
+
+(the first two columns are the ones the second singulant spoils). What this says:
+
+- $`e^{-n\chi} = e^{in\pi/2}\,x^{-n}(1-x^2)^{n/2}`$ is the fast mode of Proposition 3, and $`x^2(1-x^2)^{-1-s}`$ is its transported
+  amplitude at $`F = 0`$. The divergence of the $`1/n`$ series and the non-analytic piece are the same object.
 - $`\chi`$ vanishes only at $`x = \infty`$ ($`\Phi(\infty) = i\pi/2`$ on this branch): the fast mode is born at the outer singular point
   of the equations, not in $`0 \le x \le 1`$.
 - Its Stokes line ($`\operatorname{Im}\chi = 0`$, $`\operatorname{Re}\chi > 0`$) is the real axis $`x > 1`$ approached from above, where
@@ -611,17 +625,58 @@ Below $`x = 1/\sqrt2`$ a second singulant of equal modulus, $`\Phi + i\pi/2`$, i
 
 With gravity, Proposition 3 holds on the continuation to $`x > 1`$ as well, so the light-cone coefficient is the
 multiplier times a factor that does not vanish. **The selection rule at $`D = \infty`$ is therefore that the Stokes
-multiplier of the mode born at $`x = \infty`$ vanishes on every characteristic.** Two features of that problem are already
-visible:
+multiplier of the mode born at $`x = \infty`$ vanishes.**
 
-- Near $`x = \infty`$ the large-$`n`$ expansion is not uniform. At $`x \sim \sqrt n`$, $`\varepsilon x^2F^2 = O(1)`$, so $`c - 1 = O(1)`$
-  (gravity is no longer weak); $`p \approx \varepsilon^{1/2}xF = O(1)`$; and $`e^{-n\Phi} \to e^{\mp in\pi/2}e^{-n/(2x^2)}`$, so fast and
-  slow modes are no longer separated. The multiplier is set in this inner region, where the equations stay fully
-  nonlinear at leading order.
-- On the Stokes line, $`\ln(1-x^2) = \ln(x^2-1) - i\pi`$, so the characteristics run at $`\operatorname{Im}\theta = -\pi\omega \approx -12`$:
-  the multiplier involves $`F`$ continued far into the complex $`\theta`$-plane, where each harmonic $`\mu`$ is weighted by
-  $`e^{\pi\mu\omega}`$. That ties the selection to the analytic structure of $`F`$, whose harmonics decay at a rate that grows
-  with $`n`$ (below).
+### The inner problem at $`x \sim \sqrt n`$
+
+Near $`x = \infty`$ the large-$`n`$ expansion is not uniform: at $`x \sim \sqrt n`$, $`\varepsilon x^2F^2 = O(1)`$, so $`c - 1 = O(1)`$
+(gravity is no longer weak); $`p \approx \varepsilon^{1/2}xF = O(1)`$; and $`e^{-n\Phi} \to e^{\mp in\pi/2}e^{-n/(2x^2)}`$, so fast and slow
+modes are no longer separated. Put $`\xi = x/\sqrt n`$, $`\Delta_P = p - m`$ (unscaled here), $`\sigma = \sqrt n\,(p+m)`$, $`b - 1 = \eta/n`$, and
+$`L = \xi^2\partial_\xi + \omega\xi\,\partial_\theta`$. The difference and sum of the $`p, m`$ equations and the $`b, c`$ equations give, at
+leading order,
+
+```math
+L\,\Delta_P = c\,\sigma, \qquad
+L\,\sigma = c\,\xi\,\partial_\xi\Delta_P + c\,\big(\tfrac12\Delta_P^2 - 1\big)\,\Delta_P, \qquad
+\xi\,\partial_\xi c = \tfrac12\,c\,\Delta_P^2 , \qquad \eta = \tfrac12\Delta_P^2 .
+```
+
+No large parameter is left: this problem is the same for every $`n`$. (Derivation: in the difference equation the terms
+of order $`\sqrt n`$ are $`x^2\partial_x\Delta_P`$, $`\omega x\,\partial_\theta\Delta_P`$ and $`n c\,(p+m)`$; in the sum, the order-1 terms are
+$`x^2\partial_x(p+m)`$, $`x c\,\partial_x\Delta_P`$, $`\omega x\,\partial_\theta(p+m)`$ and $`(G - c)\,\Delta_P`$ with $`G = c\eta`$; the $`b`$ equation becomes
+algebraic, $`\eta = p^2 + m^2`$.)
+
+- **It resums the outer expansion.** Its formal solution regular at $`\xi = 0`$, $`\Delta_P = \sum_j d_j\xi^{2j+1}`$,
+  $`\sigma = \sum_j s_j\xi^{2j+2}`$, $`c = \sum_j g_j\xi^{2j}`$ with $`d_0 = 2F`$, $`g_0 = 1`$, has $`g_1 = F^2`$, $`s_0 = 2(F + \omega F')`$,
+  $`d_1 = \omega^2F'' + 3\omega F' + 2F - 2F^3`$: the top-degree coefficients of $`G_1`$, $`S_1`$, $`D_1`$ of Proposition 1. `solver/largeD_inner.py`
+  runs the recursion and finds $`d_k`$, $`-g_k`$, $`s_{k-1}`$ equal to the top-degree coefficients of the outer $`D_k`$, $`G_k`$, $`S_k`$
+  to $`2\times10^{-13}`$ at orders 1–10 ($`F = 2.72\sin\theta`$, $`\omega = \omega_\infty`$).
+- **Without gravity it is Kummer's equation, and $`C(n,s)`$ is its Stokes constant.** With $`c = 1`$ and one harmonic, the regular
+  solution is $`\Delta_P = 2\xi\,{}_2F_0\big(\alpha, \beta; ; 2\xi^2\big)`$, i.e. $`d_j = 2^j(\alpha)_j(\beta)_j/j!\;d_0`$, and the second solution
+  carries $`e^{-1/(2\xi^2)}`$, the outer fast mode $`e^{-n/(2x^2)}`$. The Stokes line of $`{}_2F_0(\cdot;2\xi^2)`$ is real $`\xi`$, i.e. real
+  $`x > 1`$, and its Stokes constant is proportional to $`1/(\Gamma(\alpha)\Gamma(\beta))`$. Matching gives the constant $`K`$ above, and
+
+  ```math
+  C(n,s) = -2\pi i\,\frac{2^{-s-1/2}}{\Gamma(\alpha)\Gamma(\beta)}\,(n+1)^{s+1/2}\,e^{-i\pi\lambda}\,\big(1 + O(s^2/n)\big), \qquad \lambda = \tfrac n2 - 1 - s .
+  ```
+
+  `solver/largeD_stokes_C.py`: the ratio of the two sides is $`1.00014`$ at $`n = 10^5`$ for $`\mu = 1`$ ($`1.0013`$ for $`\mu = 3`$), with
+  $`n\,(\text{ratio} - 1) \to 13.9 - 7.6i`$, of the size of $`\lvert s^2\rvert = 14.6`$. At $`D = 20`$–$`60`$ the ratio is still about $`2.1`$–$`1.27`$ for
+  $`\mu = 1`$: the asymptotics need $`\mu^2\omega^2 \ll n`$. So the light-cone coefficient of Proposition 2 is, exactly, the Stokes
+  constant of a $`{}_2F_0`$ times a power of $`n`$ and a phase, and its factor $`1/(\Gamma(\alpha)\Gamma(\beta))`$ is that Stokes constant.
+- **The selection rule as an inner problem.** With gravity the rule becomes: the fast-type Stokes multipliers of the formal
+  inner solution vanish, one complex condition per odd harmonic $`\mu`$. The unknowns are $`F`$'s odd harmonics (less one phase)
+  and $`\omega`$, so the count balances, and the problem contains $`F`$ and $`\omega`$ only. This formulation is derived from the
+  matching above but not yet proved.
+- **What the inner series shows with gravity.** On the Stokes line the inner variable is real and the fast characteristic
+  is $`\theta_0 + 2\omega\ln\xi`$, also real, so the multiplier needs $`F`$ on the real $`\theta`$ axis only. (In the outer labels the same
+  characteristic carries a shift $`-i\pi\omega`$; that is branch bookkeeping between $`0 < x < 1`$ and $`x > 1`$, and it is the phase
+  $`e^{-i\pi\lambda}`$ in $`C`$.) Without gravity, harmonic 1 of the inner series grows at ratio/$`j \to 2`$ (the Borel singularity at
+  $`\zeta = \tfrac12`$, dual to $`1/\xi^2`$). With gravity ($`F = 2.72\sin\theta`$, 60 orders) the growth is dominated by high harmonics,
+  ratio/$`j`$ 6.8, 4.9, 4.2 at $`j`$ = 10, 30, 50: the heat-like growth of the outer late orders lives in the top-degree terms. The
+  fast-type constant sits under it and cannot be read off ratios in double precision; a one-harmonic truncation suggests
+  that gravity also couples the $`s = \pm i\mu\omega`$ fast modes (same singulant, exponents $`2i\mu\omega`$ apart), so the
+  multiplier is a matrix over $`\pm\mu`$.
 
 ### What is known about the selection, and what is open
 
@@ -641,11 +696,11 @@ visible:
   orders grows like $`7k`$–$`8.6k`$ (a singulant of modulus about $`0.13`$), driven by high harmonics, against $`\lvert\chi\rvert \ge \pi/2`$
   for the fast mode. So the fast singulant is not directly visible in the nonlinear late orders; it sits under a
   closer one of a different (heat-like, $`\theta`$-dependent) kind.
-- **Open:** the D = ∞ selection rule itself. Proposition 2 gives the multiplier without gravity, $`C(n,s)`$; Proposition 3 shows
-  that propagation to the light cone cannot change whether it vanishes; the Stokes analysis puts its origin at $`x = \infty`$,
-  in a region $`x \sim \sqrt n`$ where gravity is of order one. What remains is to solve that inner problem for its Stokes
-  multiplier as a functional of $`F`$ and $`\omega`$ and to require it to vanish. That would be an equation for
-  $`\omega_\infty`$ and $`F_\infty`$ alone, from which $`\Delta_\infty`$ would follow to any precision.
+- **Open:** the D = ∞ selection rule itself. Proposition 2 gives the multiplier without gravity, $`C(n,s)`$, and the inner
+  problem shows it is a $`{}_2F_0`$ Stokes constant; Proposition 3 shows that propagation to the light cone cannot change whether
+  it vanishes. What remains is to compute the Stokes multipliers of the inner problem with gravity as functions of $`F`$ and
+  $`\omega`$ (directly, by lateral solutions or Borel–Padé, since late-order ratios are swamped) and to require them to vanish.
+  That would be an equation for $`\omega_\infty`$ and $`F_\infty`$ alone, from which $`\Delta_\infty`$ would follow to any precision.
 
 ## Backends
 
@@ -785,6 +840,9 @@ solver/largeD_formal_check.py the expansion substituted into the exact equations
 solver/largeD_late_orders.py  the same recursion numerically to high order (divergence of the series)
 solver/largeD_fast_transport.py  the fast WKB mode with gravity against direct integration (Proposition 3)
 solver/largeD_linear_late.py  late orders of the exact leading-order 1/n series (singulant Phi - i pi/2)
+solver/largeD_dingle_K.py     their Dingle constant against the inner 2F0 prediction
+solver/largeD_stokes_C.py     C(n,s) as the 2F0 Stokes constant times n^(s+1/2) and a phase
+solver/largeD_inner.py        the inner problem at x ~ sqrt(n): formal series, check against the outer top degrees
 ```
 
 ## Limits
