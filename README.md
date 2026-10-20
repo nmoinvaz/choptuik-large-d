@@ -111,9 +111,10 @@ reach only $`D = 40`$ ($`\gamma(40) = 0.4848`$). $`1/2`$ is also the value conje
 ([below](#relation-to-published-work)), and like $`\Delta_\infty`$ it is not fixed at any finite order of the $`1/n`$ expansion
 ([Large D](#what-is-known-about-the-selection-and-what-is-open)).
 
-$`\Delta_\infty`$ comes from the double-double points ([below](#is-the-period-analytic-in-1d)): power series in $`1/D`$ and
-$`1/(D-2)`$ of degree 16–20 fit all of them from $`D = 10`$ to $`60`$ to $`4\times10^{-15}`$ and give limits from
-$`1.643893744`$ to $`1.643893752`$. The f64 points gave $`1.64395 \pm 0.00008`$, and this formula's own limit is
+$`\Delta_\infty`$ comes from the double-double points ([below](#is-the-period-analytic-in-1d)): power series in $`1/D`$ of degree
+16–20 and in $`1/(D-2)`$ of degree 18–20 fit all the cleaned points from $`D = 10`$ to $`61.03`$ to $`4.2\times10^{-15}`$
+($`8.6\times10^{-15}`$ for $`1/D`$ at degree 16, $`1.5\times10^{-14}`$ for $`1/(D-2)`$ at degree 18) and give limits from $`1.643893745`$ to
+$`1.643893752`$ (on the points to $`D = 60.1`$ only: $`1.643893744`$ to $`1.643893752`$). The f64 points gave $`1.64395 \pm 0.00008`$, and this formula's own limit is
 $`a_0 = 1.643898`$, $`4\times10^{-6}`$ high, which its fitting range could not see. The coefficients of one fit are not
 physical constants (they are correlated); only the function is.
 
@@ -307,8 +308,8 @@ From a literature search (October 2026); the references are listed at the end of
 
 Ecker, Ecker & Grumiller (PRL 136, 191401 (2026), [arXiv:2601.14358](https://arxiv.org/abs/2601.14358)) use the same gauge in
 their large-$`D`$ expansion: their $`f = \alpha/a`$ is our $`c`$, with $`f = 1`$ at the self-similarity horizon $`x = 1`$ for all $`\tau`$.
-At leading order they find the same freedom as Proposition 1: any periodic profile $`\beta(\tau) = \Pi(0,\tau) \approx
-\sqrt{2/n}\,F(\omega\tau)`$, with any period. At next order they require $`f \le 1`$ near the horizon at the zeros of $`\beta`$, which
+At leading order they find the same freedom as Proposition 1: any periodic profile
+$`\beta(\tau) = \Pi(0,\tau) \approx \sqrt{2/n}\,F(\omega\tau)`$, with any period. At next order they require $`f \le 1`$ near the horizon at the zeros of $`\beta`$, which
 gives $`\beta'' + 3\beta' = 0`$ there (their Eq. (20)); in our variables, $`\omega^2F'' + 3\omega F' = 0`$ at the zeros of $`F`$.
 
 The inequality $`f \le 1`$ holds for every regular solution, whatever the period. From $`x b_x = b(p^2+m^2) - (n-1)b(b-1)`$ with
@@ -462,10 +463,11 @@ $`e^{-D/4}`$) to the degree-16 series changes neither the prediction ($`1.6`$–
 (1.64389375), and the term's coefficient is not determined: $`D^{-1/2}`$ gets $`3\times10^{-5}`$ at degree 14 and
 $`1\times10^{-7}`$ at degree 16 (`hp/dd_fits_mp.py 10 45 --clean --mixed --dmax=60.1`).
 
-Fitted on all the cleaned points ($`10 \le D \le 60`$), power series in $`1/D`$ and $`1/(D-2)`$ of degree 16–20 give limits
-from $`1.643893744`$ to $`1.643893752`$, so $`\Delta_\infty = 1.64389375 \pm 0.00000001`$. The analytic form is not proven (the
-period is selected by an effect the $`1/D`$ expansion does not see), but nothing in the points up to $`D = 60`$ asks for
-anything else.
+Fitted on all the cleaned points, power series in $`1/D`$ of degree 16–20 and in $`1/(D-2)`$ of degree 18–20 (the ones that fit
+to the noise; $`1/(D-2)`$ at degree 16 leaves $`3\times10^{-13}`$) give limits from $`1.643893744`$ to $`1.643893752`$ on
+$`10 \le D \le 60.1`$ (`hp/dd_fits_mp.py 10 1e9 --clean --dmax=60.1`) and from $`1.643893745`$ to $`1.643893752`$ on all 823
+cleaned points to $`D = 61.03`$, so $`\Delta_\infty = 1.64389375 \pm 0.00000001`$. The analytic form is not proven (the period is
+selected by an effect the $`1/D`$ expansion does not see), but nothing in the points up to $`D = 61`$ asks for anything else.
 
 Data range: the cloud runs reach $`D = 60.06`$ (and a few points at $`60.96`$–$`60.97`$); the climb above that was done
 mostly on a second machine (runs in [`hp/data/local/`](hp/data/local/), coordinated through [`comms.txt`](comms.txt)),
@@ -1171,6 +1173,7 @@ solver/largeD_stokes_C.py     C(n,s) as the 2F0 Stokes constant times n^(s+1/2) 
 solver/largeD_inner.py        the inner problem at x ~ sqrt(n): formal series, check against the outer top degrees
 solver/inner_stokes/          the inner Stokes multiplier by lateral solutions (lateral_np.py check|scan, zero_M1.py, zero_M3.py)
 solver/inner_borel/           the same by Borel-Darboux in ball arithmetic (python-flint): inner_stokes.py linear|grav, inner_zero.py
+solver/eeg20/                 the comparison with Ecker-Ecker-Grumiller's Eq. (20) (window identity, tilt, max c, Delta -> 0 fits)
 solver/largeD_transport_sympy.py  Proposition 3 derived symbolically from the exact equations (b, c perturbed too)
 solver/largeD_fast_transport_full.py  the transport check with the full O(1/n) background
 solver/largeD_linear_poles.py  Proposition 4: the late orders as an exact sum over the poles in kappa
