@@ -818,7 +818,9 @@ late orders of the inner series fitted with the predicted fast-mode exponents).
   slow-branch singulant would give a rate that depends on $`x`$, a fast one $`\lvert\chi\rvert \ge \pi/2`$. The divergence lives in the free data
   ($`\theta`$-harmonics of $`F`$ and the $`K_k`$), consistent with an $`x`$-independent Borel singularity per harmonic that moves
   towards 0 as the harmonic grows. Its ambiguities are exponentially small changes of $`F`$'s high harmonics, like the
-  solver's weak directions, not light-cone terms.
+  solver's weak directions, not light-cone terms. (In the inner series the analogous fast high-harmonic growth turned out
+  to be the fast singularity itself, carried by harmonics with large exponents; whether the same holds for this outer
+  growth is not settled.)
 - **Open:** the D = ∞ selection rule itself. Proposition 2 gives the multiplier without gravity, $`C(n,s)`$, and the inner
   problem shows it is a $`{}_2F_0`$ Stokes constant; Proposition 3 shows that propagation to the light cone cannot change whether
   it vanishes. What remains is to compute the Stokes multipliers of the inner problem with gravity as functions of $`F`$ and
