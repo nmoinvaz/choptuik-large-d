@@ -470,3 +470,28 @@ light ray. Note the factor √(2π) between the simulation's field (G = 1) and t
   values to <= 9e-8 up to D = 36; they separate at the 1e-8 level (1/D deg 11 and n^-1/2 deg 18: 3-4e-9; n^-1/2 deg
   14/16: 8e-8; rational P8/Q2: 2.5e-8).
 - dDelta/dF: 2e5 (D = 21), 6.2e8 (31.6), 2e10 (34.7), 3e10 (35.2): ~x3.5 per unit D above 30.
+
+## Double-double climb to D = 45 and the large-D test (2026-10-19, ~16:00-18:45)
+
+- Resolution at D = 40.02 (kfreeze 13, M = 32): M = 48 moves Delta by 9e-22; kfreeze 15 by 3e-17; kfreeze 11 does not
+  converge (|F| 2e-9 after 20 iterations). At D = 45.33 the p1 harmonics are 9: 9e-5, 11: 1.4e-5, 13: 2.1e-6, so 13 is
+  physical: kfreeze 11 stalls at |F| 2e-14. kfreeze 13 stays.
+- Climb (up7, tol 1e-25): D = 35.35 -> 45.33, 30-60 s per point on two cores, |F| 2e-26 -> 1e-25, max dDelta/dF
+  7e8 -> 1.5e11 (x1.7-1.8 per unit D), linearised Delta correction -y.F ~ 1e-21 .. 1e-20. At 45.3 |F| floored at
+  1.2e-25 and the step halved; weakest sigma there is the harmonic-13 pair at 4.4e-20 (44.96: 5.2e-20), then 11:
+  1.7e-18, 9: 1.1e-16, 7: 1.5e-14, with Delta components 3e-8, 5e-7, 9e-6, 1e-4. The LU's smallest pivot dropped from
+  7e-5 to 1e-7 there without any change in the spectrum (pivoting artefact). Continued as up8 with tol 1e-24.
+- Data quality: the DD set fits smooth curves to 9e-15, not 1e-20. 25 points between 27 and 35.4 (the unfrozen up6 run,
+  accepted by the Delta-correction rule) sit 1-9e-15 off their neighbours (dd_fits_mp.py --clean drops them); the
+  kfreeze-13 points 35.35-37 carry the cut's truncation, 4.6e-15 at 35.35 decaying to ~0 by 37. After cleaning, fits
+  reach 3.5-4e-15.
+- Fits (dd_fits_mp.py, Chebyshev basis at 60 digits), fitted on 10-37.5 (cleaned), error at the held-out D = 45.1:
+  1/D deg 16 +1.0e-12, deg 18 +2.5e-12, 1/n deg 18 +1.6e-12, n^-1/2 deg 20 +6.7e-12, D^-1/2 deg 20 -4.9e-12. Half-integer
+  series limits are unstable (deg 20: 1.636 / 1.215; deg 24+: -100 and worse). Predictions D = 50: all within 1.3e-10
+  (1.84165950301); D = 60: 1/D 1.80988946002-1.80988946011, n^-1/2 +5e-10, D^-1/2 -5e-9.
+- All cleaned points 10-45.3: 1/D and 1/n deg 16-20 limits 1.64389375-1.64389393 -> Delta_inf = 1.6438938 +- 2e-7
+  (omega_inf 3.8221358 +- 5e-7) if analytic. The f64 estimate was 1.64395 +- 8e-5; the rational formula's a0 = 1.643898.
+  Forced limits (1/D series fitted on 10-37.5, degree up to 24), held-out max to 45.3: free 1.0e-12; 10/9 sqrt(j01/ln3)
+  8.4e-12; 5/7 sqrt(G) j01 1.8e-11; pi^2/6 1.5e-10. With all data, forced fits reach the residual floor only at degree
+  22-24, so the exclusion rests on prediction, not on fit quality.
+- Formula P8/Q2 vs DD: 2.7e-9 (8-21), 8.1e-9 (21.5-30.2), 2.4e-8 (30.2-35), 4.2e-8 (35-40), 5.0e-8 (40-45).

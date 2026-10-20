@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 """Large-D model fits on the double-double values, done in mpmath so the fit itself adds no f64 rounding.
 
-    python3 dd_fits_mp.py [Dmin] [Dmax_fit] [--pred D1,D2,...]
+    python3 dd_fits_mp.py [Dmin] [Dmax_fit] [--clean] [--pred=D1,D2,...] [--scan=DIR]
 
 Each model is a polynomial in a variable t(D); it is fitted by least squares in a Chebyshev basis on the fitted
 t-range (well conditioned) at 60 digits. Reports the fit residual, the held-out error on D > Dmax_fit, the limit
-(value at t = 0) and predictions. The scan files are read from /home/claude/dss/hp_scan/scan_up*.jsonl; a point
-that appears in several files (same D to 1e-6) keeps the last value read.
+(value at t = 0) and predictions. The points come from hp/data/delta_dd.csv (export_dd.py), or with --scan=DIR from
+the runs' DIR/scan_up*.jsonl directly (a D that appears in several runs keeps the last value read).
 """
 import glob
 import json
+import os
 import sys
 
 import mpmath as mp
@@ -25,12 +26,20 @@ for a in sys.argv[1:]:
 
 pts = {}
 src = {}
-for f in sorted(glob.glob("/home/claude/dss/hp_scan/scan_up*.jsonl")):
-    for l in open(f):
-        r = json.loads(l)
-        k = round(r["D"], 6)
-        pts[k] = mp.mpf(r["Delta"]) + mp.mpf(r["Delta_lo"])
-        src[k] = f.split("/")[-1]
+scan = next((a[7:] for a in sys.argv[1:] if a.startswith("--scan=")), None)
+if scan:
+    for f in sorted(glob.glob(os.path.join(scan, "scan_up*.jsonl"))):
+        for l in open(f):
+            r = json.loads(l)
+            k = round(r["D"], 6)
+            pts[k] = mp.mpf(r["Delta"]) + mp.mpf(r["Delta_lo"])
+            src[k] = os.path.basename(f)[5:-6]
+else:
+    for l in list(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "delta_dd.csv")))[1:]:
+        c = l.strip().split(",")
+        k = round(float(c[0]), 6)
+        pts[k] = mp.mpf(c[1]) + mp.mpf(c[2])
+        src[k] = c[6]
 Ds = sorted(d for d in pts if d >= Dmin)
 fitD = [d for d in Ds if d <= Dfit]
 holdD = [d for d in Ds if d > Dfit]

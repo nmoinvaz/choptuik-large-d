@@ -3,15 +3,17 @@
 Rust port of the multiple-shooting residual `F(z)` used to compute Choptuik's discretely self-similar critical solution in D = n + 2 dimensions. It covers the centre series, the RK4 shooting segments and the horizon series on a 941-unknown spectral layout, and is called from Python through PyO3 as a drop-in for `S.residual`.
 
 [`hp/`](hp/) is a separate double-double (~32 digit) solver built to reach large D, where f64 can no longer pin the
-period ([below](#double-double-solver-hp-in-progress)).
+period ([below](#double-double-solver-hp-in-progress)). It has computed Δ from D = 8 to 45 to about $10^{-14}$, and it
+is climbing toward D = 60 to test whether Δ is analytic in 1/D.
 
 ![Echo period Δ(D) and critical exponent γ(D) with one rational formula for all D ≥ 4](solver/delta.svg)
 
 The echo period Δ(D) and critical exponent γ(D), computed with this kernel and the solver in [`solver/`](solver/).
 The dashed curves are one rational formula in 1/(D−2) for every D ≥ 4 (below), fitted on the step-converged points
 4 ≤ D ≤ 30.2 (step error extrapolated out, near-null directions solved, enough Fourier modes in time at low D);
-hollow points are held out of the fit. Δ → Δ∞ = 1.64395 ± 0.00008 and γ → 1/2 − 0.758/n as D → ∞ (details in
-[`solver/CONTEXT.md`](solver/CONTEXT.md)). Regenerate with `cd solver/data && python3 ../plot_delta.py`.
+hollow points are held out of the fit. As D → ∞, γ → 1/2 − 0.758/n, and Δ → Δ∞ = 1.6438938 ± 0.0000002 if Δ is
+analytic in 1/D (from the double-double points; the f64 points gave 1.64395 ± 0.00008). Details are in
+[`solver/CONTEXT.md`](solver/CONTEXT.md). Regenerate with `cd solver/data && python3 ../plot_delta.py`.
 
 ## The formula
 
@@ -48,12 +50,13 @@ ten times tighter), they reproduce each point within its own precision:
 | 4 – 4.3 | $5\times10^{-10}$ | $3\times10^{-7}$ | $3.4\times10^{-7}$ | $5\times10^{-7}$ |
 | 4.3 – 20 | $\le 4\times10^{-9}$ | $3\times10^{-11}$ – $4\times10^{-9}$ | $\le 3.3\times10^{-8}$ | $\le 7\times10^{-8}$ |
 | 20 – 30 | $\le 1\times10^{-8}$ | $\le 3\times10^{-8}$ | $\le 2.3\times10^{-9}$ | $\sim 10^{-9}$ |
-| 34 – 40, never seen by the fit | $\le 2.1\times10^{-6}$ | $1$ – $3\times10^{-6}$ | $\le 5\times10^{-7}$ up to $D = 35.8$ | |
+| 30.2 – 45, never seen by the fit | $\le 5\times10^{-8}$ | $\sim10^{-14}$ (double-double) | $\le 5\times10^{-7}$ up to $D = 35.8$ | |
 
 An independent double-double computation ([below](#double-double-solver-hp-in-progress)) agrees with the formula to
-$2.7\times10^{-9}$ or better on $8 \le D \le 21$. It also shows that the f64 points from $D = 8$ upward (23 Fourier
-modes in time) sit $2$–$4\times10^{-10}$ above the true values, so their quoted $3\times10^{-11}$ was optimistic by about
-ten; that is below the formula's tolerance and does not change it.
+$2.7\times10^{-9}$ or better on $8 \le D \le 21$, $8\times10^{-9}$ up to $D = 30$, and $5\times10^{-8}$ from there to
+$D = 45$, which the fit never saw. It also shows that the f64 points from $D = 8$ upward (23 Fourier modes in time)
+sit $2$–$4\times10^{-10}$ above the true values, so their quoted $3\times10^{-11}$ was optimistic by about ten; that is
+below the formula's tolerance and does not change it.
 
 At $D = 4$ the formula gives $\Delta = 3.4454524$ and $\gamma = 0.3739610$, the accepted four-dimensional values.
 Near $D = 4$ the points themselves set the limit: the solution needs many Fourier modes in time there, and $\Delta(4)$
@@ -72,25 +75,30 @@ $$
 $$
 
 $$
-\Delta_\infty = 1.64395 \pm 0.00008,
+\Delta_\infty = 1.6438938 \pm 0.0000002,
 \qquad
-\omega_\infty = \frac{2\pi}{\Delta_\infty} = 3.8220 \pm 0.0002,
+\omega_\infty = \frac{2\pi}{\Delta_\infty} = 3.8221358 \pm 0.0000005,
 \qquad
 \gamma_\infty = \frac{1}{2} .
 $$
 
-This formula's own limit is $a_0 = 1.643898$; the quoted range $1.64388$–$1.64403$ covers all acceptable fits (power
-series and rational forms in $1/D$, $1/(D-1)$, $1/(D-2)$ over several degrees and ranges, $\chi^2/\mathrm{dof} \le 1$).
-The coefficients of one fit are not physical constants (they are correlated); only the function is.
+$\Delta_\infty$ comes from the double-double points ([below](#is-the-period-analytic-in-1d)): power series in $1/D$ and
+$1/(D-2)$ of degree 16–20 fit all of them from $D = 10$ to $45$ to $4\times10^{-15}$ and give limits from
+$1.64389375$ to $1.64389393$. The f64 points gave $1.64395 \pm 0.00008$, and this formula's own limit is
+$a_0 = 1.643898$, $4\times10^{-6}$ high, which its fitting range could not see. The coefficients of one fit are not
+physical constants (they are correlated); only the function is.
 
-**The limit rests on an assumption.** $\Delta_\infty = 1.64395 \pm 0.00008$ holds if $\Delta(D)$ is analytic in $1/D$
-at $D = \infty$: no half-integer powers $n^{-1/2}$, no $\log n$, and no new scale far beyond the computed range. The
-data do not test that. Formulas with those features reproduce every computed point from $D = 4$ to $40$ (fit and held
+**The limit rests on an assumption.** $\Delta_\infty = 1.6438938$ holds if $\Delta(D)$ is analytic in $1/D$ at
+$D = \infty$: no half-integer powers $n^{-1/2}$, no $\log n$, and no new scale far beyond the computed range. The f64
+data could not test that. Formulas with those features reproduce every f64 point from $D = 4$ to $40$ (fit and held
 out) just as well: a series in $n^{-1/2}$ gives limits from $1.607$ to $1.691$ depending on its degree; adding one
 $n^{-1/2}$ or $\log n / n$ term to the $1/D$ series moves the limit to $1.6437$–$1.6448$; and the rational form with
 its limit forced to $\pi^2/6$ or $\sqrt e$ fits too, by placing a pole at $D \approx -440$ or $-5900$, a slow bend
 that starts in the hundreds. All of these agree with the formula above to $10^{-5}$ up to $D \approx 60$ and fan out
-above $D \approx 100$:
+above $D \approx 100$. The double-double points begin to test it: fitted on $D \le 37.5$, the analytic form predicts
+the points up to $D = 45$ five times better than series in half-integer powers, and the forms split by
+$10^{-10}$–$5\times10^{-9}$ at $D = 50$–$60$, where the solver is heading
+([below](#is-the-period-analytic-in-1d)).
 
 ![Formulas that all fit the computed points, extended to D = 100000](solver/extrapolation.svg)
 
@@ -108,21 +116,24 @@ Settling it needs either points at $D$ in the hundreds or the $D \to \infty$ equ
 | 5 | 3.2217019 | 0.4131269 |
 | 6 | 3.0094832 | 0.4300795 |
 | 7 | 2.8427532 | 0.4399912 |
-| 8 | 2.7117901 | 0.4467164 |
-| 10 | 2.5210789 | 0.4555879 |
-| 12 | 2.3891886 | 0.4614056 |
-| 15 | 2.2530984 | 0.4673656 |
-| 20 | 2.1120802 | 0.4737107 |
-| 30 | 1.9649579 | 0.4807927 |
-| 40 | 1.888568 | 0.484776 |
-| 50 | 1.84166 | 0.48736 |
-| 100 | 1.74503 | 0.49313 |
-| 1000 | 1.6542 | 0.4992 |
-| $\infty$ | $1.64395 \pm 0.00008$ | $1/2$ |
+| 8 | 2.711790054444 | 0.4467164 |
+| 10 | 2.521078919562 | 0.4555879 |
+| 12 | 2.389188553641 | 0.4614056 |
+| 15 | 2.253098407194 | 0.4673656 |
+| 20 | 2.112080154580 | 0.4737107 |
+| 30 | 1.964957899258 | 0.4807927 |
+| 40 | 1.888568197910 | 0.484776 |
+| 45 | 1.862614389097 | |
+| 50 | 1.8416595030 | 0.48736 |
+| 100 | 1.74502648 | 0.49313 |
+| 1000 | 1.6542409 | 0.4992 |
+| $\infty$ | $1.6438938 \pm 0.0000002$ | $1/2$ |
 
-Up to $D = 40$ these are within the precision of the computed points. $D = 50$ is an extrapolation that every form
-above agrees on to $10^{-5}$; $D = 100$ and $1000$ assume analyticity in $1/D$ (the other forms differ by up to
-$2\times10^{-4}$ at $D = 100$ and $0.02$ at $D = 1000$).
+$\Delta$ for $D = 8$–$45$ is double-double (interpolated to $10^{-14}$ where $D$ is not itself a computed point); the
+rest of the table, and every $\gamma$, is from the f64 solver and is within the precision of its points up to
+$D = 40$. $\Delta(50)$ is an extrapolation that every model fitting the double-double points agrees on to
+$1.3\times10^{-10}$. $D = 100$ and $1000$ assume analyticity in $1/D$; the half-integer series that also fit the
+double-double points differ by up to $2.4\times10^{-6}$ at $D = 100$.
 
 <details>
 <summary>Power series in 1/D for D ≥ 10 (the earlier form)</summary>
@@ -156,7 +167,14 @@ limits the series to $D \gtrsim 10$ and forbids cutting it short (five terms are
 
 </details>
 
-**Candidate constants for $\Delta_\infty$.** Each candidate is forced as $c_0$ in 12 fits (variable $1/D$, $1/(D-1)$,
+**Candidate constants for $\Delta_\infty$.** The double-double points now put every constant below outside the
+analytic limit $1.6438938 \pm 0.0000002$. Forcing each one as the limit of a $1/D$ series fitted on
+$10 \le D \le 37.5$ (best degree up to 24) misses the double-double points from $37.5$ to $45$ by
+$8\times10^{-12}$ ($\frac{10}{9}\sqrt{j_{0,1}/\ln 3}$, the closest) to $1.5\times10^{-10}$ ($\pi^2/6$), against
+$1\times10^{-12}$ for the free limit. So, if $\Delta$ is analytic in $1/D$, none of them is $\Delta_\infty$. The
+table and graph below are the earlier test on the f64 points.
+
+Each candidate is forced as $c_0$ in 12 fits (variable $1/D$, $1/(D-1)$,
 $1/(D-2)$; degree 9 and 10; lower cut $D \ge 10$ or $12$), so the test assumes analyticity in $1/D$ (above). The
 table gives the fit quality, as $\chi^2/\mathrm{dof}$ of the
 best and the worst of the 12 (0.62 is the unconstrained fit), and the rms error on the held-out points at
@@ -212,7 +230,10 @@ with computed points rather than an assumed form.
   half period ($p, m$ odd, $a, c$ even) with no spectral truncation.
 - **Exact Jacobian:** forward-mode duals over double-double, double-double LU for Newton, a transpose solve that gives
   $\partial\Delta/\partial F$ at every point, and a Levenberg–Marquardt fallback.
-- **Continuation in $D$:** exact tangent $dz/dD = -J^{-1}\,\partial F/\partial D$ and cubic Hermite prediction.
+- **Continuation in $D$:** prediction by the cubic through the last four converged points (a tangent from the
+  Jacobian is wrong in the weak directions, below), Newton with the weakest directions deflated, and from $D = 35$ on
+  the centre data's $\tau$-harmonics above 13 frozen (below). 32 collocation points in $\tau$, nodes at
+  $x = 0.3, 0.4, \ldots, 0.7$; about 40 s per point at $D = 45$ on two cores.
 
 | Check | Result |
 |---|---|
@@ -223,35 +244,73 @@ with computed points rather than an assumed form.
 | $\Delta(7)$, $\Delta(7.75)$ against the 39-mode references ($\pm3\times10^{-11}$) | $+3.1\times10^{-12}$, $-2.8\times10^{-12}$ |
 | 32 / 48 / 64 collocation points in $\tau$, $D = 7$–$17$ | $\Delta$ agrees to $10^{-16}$ |
 | first node at $x = 0.02$ / $0.05$ / $0.1$, $D = 16.75$ | $\Delta$ identical to $10^{-16}$ |
+| 32 / 48 collocation points in $\tau$, $D = 40$ | $\Delta$ agrees to $9\times10^{-22}$ |
+| harmonics frozen above 13 / above 15, $D = 40$ | $\Delta$ agrees to $3\times10^{-17}$ |
 
-Values so far, each converged to $\lvert F\rvert \le 4\times10^{-29}$:
+A sample of the computed points (all of them, about 400 from $D = 8.25$ to $45.3$, are in
+[`hp/data/delta_dd.csv`](hp/data/delta_dd.csv)), with the residual and the largest entry of $\partial\Delta/\partial F$, the factor by which a residual error moves $\Delta$:
 
-| $D$ | $\Delta$ |
-|---|---|
-| 8 | 2.711790054444401 |
-| 9 | 2.606874063723623 |
-| 10 | 2.521078919561945 |
-| 12 | 2.389188553640616 |
-| 14 | 2.292445123615376 |
-| 16 | 2.218342998377886 |
-| 21.19141 | 2.087734162683868 |
+| $D$ | $\Delta$ | $\lvert F\rvert$ | $\max\lvert\partial\Delta/\partial F\rvert$ |
+|---|---|---|---|
+| 8.25 | 2.683434296073425 | $5\times10^{-31}$ | $1.2\times10^{2}$ |
+| 12 | 2.389188553640616 | $8\times10^{-31}$ | $5.9\times10^{2}$ |
+| 16 | 2.218342998377886 | $4\times10^{-30}$ | $6.8\times10^{3}$ |
+| 21.19141 | 2.087734162683867 | $4\times10^{-29}$ | $2.0\times10^{5}$ |
+| 25.07972 | 2.023511166632090 | $1\times10^{-28}$ | $2.1\times10^{6}$ |
+| 29.98475 | 1.965111240898741 | $1\times10^{-15}$ \* | $8.0\times10^{7}$ |
+| 35.35323 | 1.918943717094251 | $4\times10^{-27}$ | $7.0\times10^{8}$ |
+| 40.02007 | 1.888451664490614 | $2\times10^{-26}$ | $9.6\times10^{9}$ |
+| 44.96341 | 1.862784197662323 | $9\times10^{-26}$ | $1.3\times10^{11}$ |
 
-What the solver has shown so far:
+\* From $D = 27$ to $35.2$, before the freezing, points were accepted once the linearised correction to $\Delta$,
+$-\partial\Delta/\partial F \cdot F$, was below $10^{-14}$ with the weak directions held on their trend; their residual
+sits in those directions.
 
-- **The weak directions are physical.** The near-null directions that stalled the f64 solver ("junk") are of two
-  kinds. Outgoing high-frequency waves launched near the centre thin out like $(x/x_K)^{n/2}$ on their way to the
-  matching point. The highest $\tau$-harmonics of the centre data are evanescent near the centre: at $D = 18$, harmonic
-  31 reaches $x = 0.1$ with a gain of $3\times10^{-16}$. Both leave those directions nearly invisible to the residual.
-  Their effect on $\Delta$ is negligible (components $\sim10^{-13}$ of the singular vectors), but they shrink Newton's
-  basin, and more $\tau$ resolution adds more of them: 80 points fail to converge even at $D = 8$, where 48 and 64
-  agree to $10^{-20}$. So the solver uses 32 points in $\tau$ and puts its first node at $x = 0.1$.
-- **How fast the selection weakens.** The largest entry of $\partial\Delta/\partial F$, the factor by which a residual
-  error moves $\Delta$, grows from $1.2\times10^{2}$ at $D = 8.25$ to $2\times10^{5}$ at $D = 21$, about $e^{0.57}$ per unit
-  of $D$. With residuals near $10^{-30}$, that rate would leave $\Delta$ good to about $10^{-6}$–$10^{-5}$ at $D = 100$, where
-  the candidate large-$D$ forms differ by $2\times10^{-4}$, if it holds.
+What the solver has shown:
 
-Status: the continuation is running upward from $D = 21$ at about 10 s per point, and a point-by-point comparison with
-the f64 data and the extrapolation graph above will follow.
+- **The weak directions.** The near-null directions that stalled the f64 solver ("junk") are a ladder of high
+  $\tau$-harmonics of the centre data, one pair per odd harmonic $k$ with singular values about $e^{-0.8k}$
+  ($10^{-10}$ at $k = 7$ down to $7\times10^{-18}$ at $k = 31$ at $D = 21$; the weakest is $10^{-24}$ at $D = 35$). They
+  are outgoing waves near the centre that barely reach the matching point, and they belong to the boundary-value problem
+  itself: moving the first node or the matching point leaves them unchanged. Their own effect on $\Delta$ is tiny
+  ($\le 10^{-12}$ per unit amplitude for $k \ge 17$), but second-order errors leak into them amplified by $1/\sigma$,
+  so Newton's basin shrinks with $D$; at $D = 8$, 80 points in $\tau$ already fail to converge. From $D = 35$ the solver
+  pins the centre data's harmonics above 13 at zero and drops their matching on the horizon side: the weakest singular
+  value rises from $10^{-24}$ to $10^{-17}$ and plain Newton converges again. The cut moves $\Delta$ by $5\times10^{-15}$ at
+  $D = 35$ and $3\times10^{-17}$ at $D = 40$; a cut at 11 does not converge at $D = 40$.
+- **How fast the selection weakens.** $\max\lvert\partial\Delta/\partial F\rvert$ grows about $1.7$–$1.8$ times per unit
+  of $D$ (table). With residuals near $10^{-25}$ that bounds the error in $\Delta$ by about $10^{-14}$ at $D = 45$ and
+  $10^{-10}$ at $D = 60$ if the rate holds; the linearised estimate $-\partial\Delta/\partial F \cdot F$ is about
+  $10^{-20}$ at $D = 45$.
+- **How good the values are.** The points fit a smooth curve to $4\times10^{-15}$, not $10^{-20}$. Points between
+  $D = 27$ and $35.2$, solved before the freezing, carry a few $10^{-15}$ from the weak directions; 25 of them sit
+  visibly off their neighbours and `hp/dd_fits_mp.py --clean` drops them. The frozen points from $35.35$ to $37$ carry
+  the cut's $\le 5\times10^{-15}$, which falls off with $D$. Elsewhere the error is about $10^{-16}$.
+- **The f64 points.** Against the double-double values they are within $5.5\times10^{-11}$ at $D = 15.6$–$21$ (quoted
+  $3\times10^{-11}$), $3.6\times10^{-9}$ at $22$–$29.3$ (quoted $1.5$–$2\times10^{-9}$), $1.8\times10^{-8}$ at $30.1$ and
+  $7\times10^{-8}$ at $34.2$, and $0.6$–$2.1\times10^{-6}$ high from $35$ to $40.3$ (quoted $1$–$3\times10^{-6}$). The rational
+  formula above holds to $2.7\times10^{-9}$ on $8$–$21$, $8\times10^{-9}$ on $21$–$30$ and $5\times10^{-8}$ on $30$–$45$.
+
+### Is the period analytic in 1/D?
+
+Each model below is a polynomial in one variable, fitted on the cleaned double-double points $10 \le D \le 37.5$ at 60
+digits (`hp/dd_fits_mp.py 10 37.5 --clean`) and compared with the points from $37.5$ to $45.1$, which it never saw:
+
+| Model | max residual | model − computed at $D = 45.1$ | $\Delta(50)$ | $\Delta(60)$ | limit |
+|---|---|---|---|---|---|
+| $1/D$, degree 16 | $3.6\times10^{-15}$ | $+1.0\times10^{-12}$ | 1.8416595030123 | 1.8098894600157 | 1.6438938 |
+| $1/D$, degree 18 | $3.5\times10^{-15}$ | $+2.5\times10^{-12}$ | 1.8416595030220 | 1.8098894601131 | 1.6438940 |
+| $1/(D-2)$, degree 18 | $3.6\times10^{-15}$ | $+1.6\times10^{-12}$ | 1.8416595030161 | 1.8098894600508 | 1.6438938 |
+| $(D-2)^{-1/2}$, degree 20 | $3.6\times10^{-15}$ | $+6.7\times10^{-12}$ | 1.8416595030574 | 1.8098894606192 | 1.636 |
+| $D^{-1/2}$, degree 20 | $3.5\times10^{-15}$ | $-4.9\times10^{-12}$ | 1.8416595028854 | 1.8098894548179 | 1.215 |
+
+Every model fits to the level of the data, so the fit alone decides nothing. The half-integer series predict the new
+points five to seven times worse, and their limits jump with the degree (degree 24 and up gives limits of $-100$ and
+beyond), so they give no usable $\Delta_\infty$. That favours analyticity in $1/D$ without settling it. The models split
+by $10^{-10}$ to $5\times10^{-9}$ at $D = 50$–$60$, far above the solver's error there, so the next points decide it.
+Fitted on all the cleaned points ($10 \le D \le 45.3$), the analytic models give $\Delta_\infty = 1.6438938 \pm 0.0000002$.
+
+Status: the continuation is at $D = 45.3$ and running toward $D = 60$.
 
 ## Backends
 
@@ -380,8 +439,11 @@ hp/                 double-double solver (crate hpkernel)
 ├── src/lane.rs     value and forward-mode dual lanes
 ├── src/model.rs    centre series, Taylor stepping, horizon series, residual, Jacobian
 ├── src/linalg.rs   double-double LU, transpose solve, Gram matrix
-├── python/hpkernel/driver.py   grid, seeds, Newton, Levenberg-Marquardt, re-noding, tangent
-└── scan_hp.py      continuation in D
+├── python/hpkernel/driver.py   grid, seeds, Newton, deflated Newton, Levenberg-Marquardt, re-noding
+├── scan_hp.py      continuation in D
+├── export_dd.py    collects the runs' points into data/delta_dd.csv
+├── dd_fits_mp.py   large-D model fits at 60 digits, held-out errors, predictions
+└── data/delta_dd.csv   every double-double point: D, Delta (hi + lo), |F|, max dDelta/dF
 ```
 
 ## Limits
