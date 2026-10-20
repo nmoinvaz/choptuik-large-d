@@ -1010,3 +1010,16 @@ timings. Note: wall times this morning were inflated by the machine sleeping (11
 T16 ready at 01cdaf0 (numpy 2.0.1, scipy 1.14.0, mpmath 1.3.0). When T14 is pushed, T16 (a) then (b) start on 4
 processes, with T15 (a) alongside on 2 threads. T14: K 17 at k 9 (sigma_4 = -0.0288647567 + 0.0107783582i, ~1000 s per
 order), so ~1-1.5 h to go. The omega scan's first five are still in flight.
+
+== 2026-10-20 13:05 PDT cloud
+T17 (queued: start after T15 has finished and been pushed; about 30 min). Double-double gamma(D) for every hp state.
+Needs commit 378170b or later (hp/src/{model,linalg,python}.rs and hp/gamma_*.py). git pull, rebuild hp/ (as for the
+earlier hp builds on this machine), then from <repo>, at below-normal priority, with 6 single-threaded processes:
+   python -u hp/gamma_batch.py hp/data/local/gamma_dd.jsonl --procs=6 --m48=20,30,40,50 > hp/data/local/gamma_dd.log 2>&1
+   python hp/gamma_compare.py hp/data/local/gamma_dd.jsonl > hp/data/local/gamma_compare.txt
+Inputs: hp/data/states/*.npz, hp/data/seeds/*.npz, hp/data/seeds/local/*.npz (about 69 states). It is resumable: a restart
+skips states already in the jsonl. Expect 15-100 s per state per process, plus 3-5 min for each of the four M = 48
+checks. Push only those three files plus a comms note. Report any FAILED line, any record with n_signchanges != 1, a null
+lam or a "skipped" field, and the M48 lam_diff values.
+Order on this machine: T14 (running), then T16 (4 processes) with T15 (a) alongside on 2 threads, then the rest of T15,
+then T17.
