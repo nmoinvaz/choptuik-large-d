@@ -530,3 +530,15 @@ light ray. Note the factor √(2π) between the simulation's field (G = 1) and t
   every field is a polynomial in x, regular at the centre (no x log x) and at the light cone, for ANY periodic F
   and any w: no solvability condition appears. The period (and F) are selected by terms exponentially small in n,
   e.g. the WKB modes ((1-x)/x)^(n/2) of the p equation (the same thinning seen in the weak directions).
+- Numerical check (solver/largeD_formal_check.py): the order-2 formal solution (plus S_3, G_3, B_4) for the D = 60
+  F(theta), K_k = 0, plugged into the exact equations, leaves relative residuals falling exactly as n^-3 in all four
+  equations, for omega = omega_inf and for a wrong omega (Delta = 1.4) alike: the family is free in (F, omega).
+- Late orders (solver/largeD_late_orders.py: the same recursion numerically, x-polynomials with theta-grid
+  coefficients, roundoff harmonics projected out; matches sympy at orders 1-2 to 1e-11): the series diverges
+  factorially, |D_k| ratio / k ~ 7-8.6 at orders 10-30 for F = 2.72 sin(theta), omega = omega_inf; the rate depends on
+  the amplitude A and omega (A = 1.36: 5.3; A = 5.44: 10.6; omega/2: 2.7; 2 omega: 20.8; omega = 0: 0.94; A^2/(rate)
+  = 1.005 at the physical point, possibly a coincidence). The late terms are dominated by ever-higher harmonics
+  (h3/h1 ~ 20-70); the harmonic-1 ratio/k ~ -3 + 1.5i (a complex pair of singulants with Re chi < 0).
+- Weak singular values of the DD Jacobian by p1 harmonic (D = 20..60): k = 7, 9, 11, 13 fall like n^-10.5, n^-14,
+  n^-17.5, n^-21 (~ n^-1.6k); k = 1, 3 mix with other directions. The decay rate of F's harmonics grows like ~0.25 ln n
+  (0.58 at D = 12 .. 1.02 at D = 60, local rate at k ~ 9-11), with no collapse in k/n.
