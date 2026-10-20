@@ -5,7 +5,7 @@ import numpy as np
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from largeD_profiles import solver_for, harmonics
-H = "/home/claude/dss/hp_scan/"   # the runs' saved states (not in the repo; hp/data/seeds holds a few)
+from states import H   # hp/data/states (in the repo), else the runs' directory; see hp/states.py
 rows = []
 for t in (12, 14, 16, 18, 20, 23, 26, 30, 34, 38, 42, 46, 50, 54, 58, 60):
     fs = sorted(glob.glob(H + f"up*_D{t}.*.npz")) or sorted(glob.glob(H + f"up*_D{t-1}.*.npz"))

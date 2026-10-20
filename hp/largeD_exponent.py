@@ -1,11 +1,11 @@
 """light-cone exponent shift on the DD solutions: n <G(1)>/2 (and the exact local-exponent shift) vs <F^2>.
-(Reads the runs' saved states from /home/claude/dss/hp_scan, which are not in the repo; hp/data/seeds holds a few.)"""
+(Reads the saved states from hp/data/states, see hp/states.py.)"""
 import os
 import glob, sys
 import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from largeD_profiles import solver_for
-H = "/home/claude/dss/hp_scan/"
+from states import H   # hp/data/states (in the repo), else the runs' directory; see hp/states.py
 for t in (20, 25, 30, 35, 40, 45, 50, 55, 60):
     fs = sorted(glob.glob(H + f"up*_D{t}.*.npz")) or sorted(glob.glob(H + f"up*_D{t-1}.*.npz"))
     if not fs:

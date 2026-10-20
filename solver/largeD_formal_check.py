@@ -1,7 +1,7 @@
 """Plug the formal solution (P, M to order 2 plus S_3; c to G_3; B to B_4) into the exact equations for a fixed
 F(theta), K_k = 0 and any omega0 (higher w_k = 0). The scaled residual should fall like eps^3 if the expansion is
 right and the family is free in (F, omega)."""
-import json, sys
+import json, os, sys
 import numpy as np
 import sympy as sp
 sys.argv = ["x", "3"]
@@ -19,7 +19,9 @@ fields = {f"S{k}": lam(S[k]) for k in range(1, 4)}
 fields.update({f"D{k}": lam(D[k]) for k in range(0, 3)})
 fields.update({f"G{k}": lam(G[k]) for k in range(1, 4)})
 fields.update({f"B{k}": lam(Bs[k]) for k in range(2, 5)})
-d = np.load("/home/claude/dss/hp_scan/up13_D60.0020.npz", allow_pickle=True)
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "hp"))
+from states import path as state_path   # hp/data/states, see hp/states.py
+d = np.load(state_path("up13_D60.0020"), allow_pickle=True)
 meta = json.loads(str(d["meta"])); M = meta["M"]; n0 = meta["D"] - 2
 p1 = d["zh"][:M] + d["zl"][:M]
 full = np.r_[p1, -p1] * np.sqrt(n0)
