@@ -257,7 +257,7 @@ with computed points rather than an assumed form.
 | 32 / 48 collocation points in $`\tau`$, $`D = 40`$ | $`\Delta`$ agrees to $`9\times10^{-22}`$ |
 | harmonics frozen above 13 / above 15, $`D = 40`$ | $`\Delta`$ agrees to $`3\times10^{-17}`$ |
 | second machine (Windows, i7-1185G7, own build), $`D = 59.84`$–$`60.05`$ | agrees with the cloud points to $`2`$–$`4\times10^{-16}`$ |
-| second machine's 23 points $`D = 60.96`$–$`61.006`$ against the $`1/D`$ fit on $`D \le 60.1`$ (degree 18) | agree to $`2.6\times10^{-15}`$ |
+| second machine's 32 points $`D = 60.95`$–$`61.026`$ against the $`1/D`$ fit on $`D \le 60.1`$ (degree 18) | agree to $`2.6\times10^{-15}`$ |
 
 A sample of the computed points (all of them, from $`D = 8.25`$ up, are in
 [`hp/data/delta_dd.csv`](hp/data/delta_dd.csv)), with the residual and the largest entry of $`\partial\Delta/\partial F`$, the factor by which a residual error moves $`\Delta`$:
