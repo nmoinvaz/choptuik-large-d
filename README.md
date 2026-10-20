@@ -953,6 +953,48 @@ late orders of the inner series fitted with the predicted fast-mode exponents).
   $`421 + 392i`$, nowhere near zero. ($`\Delta = 2.1157`$ is close to $`\Delta(20) = 2.1121`$, almost certainly a coincidence.) So no selection of $`\omega_\infty`$ follows yet; the next attempt needs rescaled
   unknowns $`F_\nu e^{\pi\lvert\nu\rvert\omega/2}`$, seven or more harmonics, and more precision along the integration arc.
 
+**Without truncation: the amplitude expansion** (`solver/inner_amp/`).
+
+*The inner problem is a Weber (parabolic-cylinder) problem* (derived). With $`t = 1/\xi`$ and the characteristic coordinate
+$`\phi = \theta + \omega\ln t`$, $`L = -\partial_t`$ at fixed $`\phi`$, and eliminating $`\sigma`$ gives
+
+```math
+y'' + \Big(c^2t - \frac{c'}{c}\Big)\,y' + c^2\Big[\omega\,\partial_\phi y + \big(1 - \tfrac12 y^2\big)\,y\Big] = 0, \qquad t\,c' + \omega\,\partial_\phi c = -\tfrac12\,c\,y^2
+```
+
+($`' = \partial_t`$ at fixed $`\phi`$): along each characteristic, a softening anharmonic oscillator with friction $`c^2t`$. Without
+gravity, $`w = t^{-s}y`$ obeys Hermite's equation $`w'' + tw' + (1+s)\,w = 0`$, and $`w = e^{-t^2/4}v`$ gives Weber's
+$`v'' + (\tfrac12 + s - \tfrac14t^2)\,v = 0`$. By the duplication formula $`2^{-s-1/2}/(\Gamma(\alpha)\Gamma(\beta)) = 1/(\sqrt{2\pi}\,\Gamma(1+s))`$
+(checked numerically for $`\nu = 1, 3`$), so the large-$`n`$ coefficient is
+
+```math
+C(n,s) \approx -\,i\,\frac{\sqrt{2\pi}}{\Gamma(1+s)}\,(n+1)^{s+1/2}\,e^{-i\pi\Lambda},
+```
+
+Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = -1-s`$.
+
+- *Every harmonic exact.* Put $`F = A\sin\theta + \sum_{\nu\ge3} f_\nu(A)\,e^{i\nu\theta}`$ (+ c.c.). Harmonic $`\mu`$ first appears at
+  order $`A^{\lvert\mu\rvert}`$, so keeping $`\lvert\mu\rvert \le K`$ at each order in $`A`$ is exact: no truncation error, unlike fixed $`M`$
+  (`amp_series.py` matches `solver/largeD_inner.py` to $`2`$–$`4\times10^{-16}`$ at orders 0–3). The late orders of each harmonic are
+  normalized by its exact linear form $`\Gamma(\alpha + j - \delta/2)\,\Gamma(\beta + j - \delta/2)`$, $`\delta = \langle F^2\rangle`$, and de-mixed by
+  $`e^{-\Pi}`$; without that, harmonics $`\ge 5`$ never reach their asymptotic regime (corrections $`\sim(\nu\omega)^2/j`$), which is
+  probably part of why fixed-$`M`$ truncation misbehaves.
+- *The higher-harmonic conditions predict $`F_\infty`$'s shape* (computed; compared with data). Tuning $`f_\nu`$ order by order
+  so that $`S_\nu = 0`$ for $`\lvert\nu\rvert \ge 3`$ (residuals $`\le 10^{-9}`$ of the linear sizes), at $`A = 2.72`$ and $`\omega = \omega_\infty`$,
+  gives $`\lvert F_3/F_1\rvert = 0.055`$ and $`\lvert F_5/F_1\rvert = 0.0030`$ (the $`f_3`$ series converges: 0.0855, 0.0131, 0.0016). The double-double
+  solutions at $`D = 20`$–$`60`$, extrapolated in $`1/n`$ (degree 1–3), give 0.050–0.058 and 0.0013–0.0046. This is the first number
+  the D = ∞ selection rule has produced that can be checked against the solutions, and it agrees.
+- *Leading structure and a prediction* (conjectured). The tuned ratios are $`f_{\nu+2}/f_\nu \approx q(\omega)\,A^2`$ with $`q`$ nearly the same
+  for every $`\nu`$ (at $`\omega_\infty`$: $`q = 0.00850 + 0.00114i`$, $`0.00851 + 0.00085i`$, $`0.00852 + 0.00082i`$ for $`\nu = 1, 3, 5`$;
+  roughly $`1/q \approx 8\omega^2 - 4i\omega - 1.3`$), so $`F \approx 2\,\mathrm{Re}\big[F_1e^{i\theta}/(1 - qA^2e^{2i\theta})\big]`$ with singularities at
+  $`\lvert\mathrm{Im}\,\theta\rvert \approx \tfrac12\ln\big(1/\lvert q\rvertA^2\big) \approx 1.4`$, well inside $`\pi\omega/2 \approx 6`$. If so, $`F_\infty`$ is not entire, and
+  the harmonic decay rate (1.02 at $`D = 60`$, growing) levels off near 1.4 instead of growing like $`\tfrac14\ln n`$.
+- *The harmonic-1 condition is still open.* With the higher harmonics tuned, $`S_1/S_1^{(1)} = 1 + \sigma_1A^2 + \sigma_2A^4 + \ldots`$ with
+  $`\sigma_1 = 0.743587 + 0.524476i`$, $`\sigma_2 = 0.118797 + 0.398074i`$, $`\sigma_3 = -0.053969 + 0.116587i`$, $`\sigma_4 \approx -0.0290 + 0.0109i`$
+  (stable to $`10^{-5}`$–$`4\times10^{-4}`$ across fit windows). $`\ln S_1`$ is nearly linear in $`A^2`$, and four terms do not locate its
+  zero; whether $`S_1 = 0`$ at $`A \approx 2.72`$, $`\omega = \omega_\infty`$ needs the series to about $`A^{25}`$ in extended precision
+  (in progress). $`\sigma_1(\omega)`$ alone never vanishes.
+
 ### What is known about the selection, and what is open
 
 - **The expansion diverges.** `solver/largeD_late_orders.py` runs the recursion of Proposition 1 numerically to order 36,
@@ -982,14 +1024,22 @@ late orders of the inner series fitted with the predicted fast-mode exponents).
   solver's weak directions, not light-cone terms. (In the inner series the analogous fast high-harmonic growth turned out
   to be the fast singularity itself, carried by harmonics with large exponents; whether the same holds for this outer
   growth is not settled.)
-- **The critical exponent too.** The $`1/n`$ expansion of growing perturbations $`e^{\lambda\tau}`$ of the formal solution gives no
-  condition on $`\lambda`$ either (parity induction, checked with sympy through order 2): the unstable mode, and hence
-  $`\gamma_\infty`$, is also selected beyond all orders. Why $`\lambda_\infty = 2`$ ($`\gamma_\infty = 1/2`$) to $`10^{-3}`$ is open.
+- **The critical exponent too** (`solver/inner_pert/`). The $`1/n`$ expansion of growing perturbations $`e^{\lambda\tau}`$ of the formal
+  solution gives no condition on $`\lambda`$ either: Proposition 1's parity induction goes through with every $`\tau`$-derivative of a
+  perturbation replaced by $`\lambda + \omega\partial_\theta`$ (`expand_pert.py`, sympy, through order 2). So the unstable mode, and hence
+  $`\gamma_\infty = 1/\lambda_\infty`$, is also selected beyond all orders, by the same kind of fast-mode multiplier. In the inner problem two
+  eigenvalues are exact, from symmetries: $`\lambda = 0`$ (a shift of $`\theta`$; `pert_check.py`, to $`6\times10^{-30}`$) and $`\lambda = 1`$ (a shift
+  of the time of the singularity, $`\delta Z = (\xi\partial_\xi + \omega\partial_\theta)Z`$; `pert_check2.py`, with gravity, to $`10^{-177}`$), the
+  D = ∞ limit of the solver's gauge mode $`1 - \langle G(1)\rangle`$. No symmetry gives $`\lambda = 2`$. The fast exponents of a perturbation
+  are $`g + \lambda`$. In the one-harmonic model at its zero the physical root is $`\lambda = 1.765 \pm 0.005`$ ($`\gamma = 0.567`$;
+  `pert_ratio.py`), as far from 2 as that model's $`\omega`$ is from $`\omega_\infty`$. Free fits of the data give
+  $`\gamma_\infty = 0.4996`$–$`0.4998`$ (`g_fits.py`): why $`\lambda_\infty = 2`$ to $`10^{-3}`$ is open.
 - **Open:** the D = ∞ selection rule itself. Proposition 2 gives the multiplier without gravity, $`C(n,s)`$, and the inner
   problem shows it is asymptotically a $`{}_2F_0`$ Stokes constant; Proposition 3 shows that propagation inside the light cone
   cannot change whether it vanishes. The multipliers with gravity have been computed for one and two harmonics (above),
   with no selection of $`\omega_\infty`$ yet. What remains is to go past $`M = 3`$ with rescaled unknowns
-  $`F_\nu e^{\pi\lvert\nu\rvert\omega/2}`$ (or without truncation, on the characteristic label), to require the multipliers to vanish,
+  $`F_\nu e^{\pi\lvert\nu\rvert\omega/2}`$, or without truncation by the amplitude expansion above (whose higher-harmonic conditions
+  already reproduce $`F_3/F_1`$), to require the harmonic-1 multiplier to vanish as well,
   and to prove the working hypothesis that this is the selection rule. That would be an equation for $`\omega_\infty`$ and
   $`F_\infty`$ alone, from which $`\Delta_\infty`$ would follow to any precision.
 
@@ -1174,6 +1224,8 @@ solver/largeD_inner.py        the inner problem at x ~ sqrt(n): formal series, c
 solver/inner_stokes/          the inner Stokes multiplier by lateral solutions (lateral_np.py check|scan, zero_M1.py, zero_M3.py)
 solver/inner_borel/           the same by Borel-Darboux in ball arithmetic (python-flint): inner_stokes.py linear|grav, inner_zero.py
 solver/eeg20/                 the comparison with Ecker-Ecker-Grumiller's Eq. (20) (window identity, tilt, max c, Delta -> 0 fits)
+solver/inner_amp/             the inner multipliers by an amplitude expansion with every harmonic exact (amp_series.py check, stokes_amp2.py wf K J)
+solver/inner_pert/            growing modes of the inner problem (exact lambda = 0, 1 modes; one-harmonic root) and free gamma fits
 solver/largeD_transport_sympy.py  Proposition 3 derived symbolically from the exact equations (b, c perturbed too)
 solver/largeD_fast_transport_full.py  the transport check with the full O(1/n) background
 solver/largeD_linear_poles.py  Proposition 4: the late orders as an exact sum over the poles in kappa
