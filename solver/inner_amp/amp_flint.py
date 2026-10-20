@@ -1,5 +1,9 @@
 """Inner Stokes multipliers to high order in the amplitude, in ball arithmetic (python-flint), all harmonics exact.
 
+For runs, use amp_flint_par.py: the same problem and the same JSON output, 26x faster on one process and with
+--procs N worker processes. This file is the serial reference implementation (amp_flint_par imports its Amp class);
+keep it for checks. For K >= 13 use J >= 1000 in either code (see amp_flint_par.py).
+
 Same problem as amp_series.py / stokes_amp2.py (README, "The inner problem at large x"):
     L y = c sigma,  L sigma = c xi y_xi + c (y^2/2 - 1) y,  xi c_xi = c y^2/2,   L = xi^2 d_xi + w xi d_theta,
 y = sum_j d_j xi^(2j+1), sigma = sum_j s_j xi^(2j+2), c = sum_j g_j xi^(2j); stored as X~_j = X_j / 2^j so that every

@@ -13,7 +13,9 @@ import json
 import os
 import time
 
-import numpy as np
+# the f64 linear algebra here is small (QR of L x w); BLAS threads would only compete with the kernel's thread pool
+os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
+import numpy as np  # noqa: E402
 
 from hpkernel.driver import deflated_newton, delta_correction, hermite, lm_solve, load, make_solver, newton_solve, plow_odd, predict, renode, resample_z, save, tangent
 from pinning import PinnedSolver, band_coeffs, band_field, predict_dd, dd_add

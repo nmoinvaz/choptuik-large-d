@@ -17,8 +17,7 @@ The short version:
 - It does not hold for the nonlinear parts: the primal Taylor steps, the order-by-order series recursions, the Newton
   iteration and continuation in D. These stay sequential.
 
-Agent S's measurements for the amplitude series are in §4; agent N's for the Newton Jacobian will be filled in where
-marked *(pending)*.
+Measured results: agent N's for the Newton step in §3, agent S's for the amplitude series in §4.
 
 Contents: [1. The principle](#1-the-principle-crc-32-as-the-model) ·
 [2. Multiple shooting is chunking](#2-multiple-shooting-is-chunking) ·
@@ -266,14 +265,39 @@ factor block by block). A blocked right-looking LU, panel then GEMM-like update,
 f64 kernel (`src/model.rs`, `linearization`) has the same structure: tasks (block, unknown) with a scalar `Dual`,
 run with `par_iter`, and the −spec∘phys target blocks added directly.
 
-**Measured time breakdown and speedups** *(pending: agent N measurements)*:
+**Measured (agent N).** Before the change, one double-double D-step (D = 20.1, L = 1153, three Newton iterations, one
+thread) spent about 3.0 s per iteration in the Jacobian (already parallel over its columns), 0.56 s per iteration in
+the LU (a rank-one trailing update per column: memory-bound, 0.60 → 0.46 s on two threads), and 3.6 s per D-step in
+the deflation subspace: 192 one-at-a-time solve pairs, the transposed ones dominating, none on the thread pool.
+Three changes, all bit-for-bit identical in every output (residual, Jacobian, Newton step, pivots, both solves with
+e_Δ, the 24-direction subspace and the Δ correction, at D = 10, 20, 40 and 60, on one and two threads; the γ of
+`hp/gamma_dd.py` at D = 20.04 is unchanged to the last bit):
 
-| Stage (M = 48, K = 10, one Newton step) | 1 thread | 8 threads | speedup | notes |
-|---|---|---|---|---|
-| residual (K + 1 blocks) | (pending) | (pending) | (pending) | span = slowest block |
-| Jacobian (1931 column tasks) | (pending) | (pending) | (pending) | |
-| LU factor (L = 2113) | (pending) | (pending) | (pending) | |
-| solve | (pending) | (pending) | (pending) | serial |
+- *Blocked LU that skips zeros.* Panels of 32 columns, the trailing update in parallel on register tiles, and an
+  update skipped whenever its multiplier block or pivot-row entry is exactly zero, which are the two cheap changes of §2.
+  After pivoting only 1.9% of the dense work touches nonzero entries. One thread: 0.565 → 0.031 s at L = 1153 (18×),
+  5.59 → 0.164 s at L = 2113 (34×). `mode_det` and `logdet` use the same factorization.
+- *Many right-hand sides at once.* `Solver.lu_solve_many` solves a batch, 8 per lane vector, with groups in parallel and
+  zero ranges skipped; `weak_subspace` and `junk_subspace` use it. 24 solve pairs: 0.44 → 0.027 s (L = 1153),
+  1.41 → 0.072 s (L = 2113); the whole subspace 3.6 → 0.21 s at D = 20, 11.9 → 0.60 s at D = 10.
+- *One BLAS thread for numpy.* `scan_hp.py` defaults OpenBLAS to one thread (an exported value still wins): on a shared
+  machine nine small QRs took 2.3 s instead of 10 ms.
+
+| Stage (M = 48, K = 10, L = 2113, D = 10) | 1 thread | 2 threads | 8 threads (est.) |
+|---|---|---|---|
+| residual (K + 1 blocks) | 0.022–0.033 s | 0.021 s | — |
+| Jacobian (column tasks) | 6.2–7.2 s | 3.63 s | about 1.5 s |
+| LU, old dense | 5.6 s | — | — |
+| LU, blocked, zeros skipped | 0.164 s | — | — |
+| single solve | 10–60 ms | — | — |
+| 24 solve pairs, batched | 0.072 s | — | — |
+
+A full D-step: 15.4 → 9.5 s on one thread (1.6×) and 10.1 → 5.5 s on two (1.84×; other jobs shared the CPU). On an
+8-thread laptop (i7-1185G7) the estimate is about 2.2–2.4 s against about 6.5 s, roughly 2.8×, assuming the Jacobian
+scales 4–4.5× on 4 cores. The step is now almost all Jacobian; the next lever is a shared primal for several tangents
+(the vector-mode tangents above, about 1.7×, needs a multi-tangent dual type), and the fallback step's dense JᵀJ (`gram()`) could skip
+zero blocks the same way. The f64 kernel was already parallel everywhere (Jacobian 184 → 133 ms and residual
+24 → 18 ms on the thread pool, SVD and LU in multithreaded OpenBLAS) and is unchanged.
 
 ## 4. The inner amplitude series (`solver/inner_amp/amp_flint.py`)
 
@@ -497,9 +521,9 @@ The criterion from §1: the chunk maps must form a monoid with a compact represe
 | Computation | Structure | Parallel scheme | Status | Expected on 8 threads |
 |---|---|---|---|---|
 | Residual blocks (hp, f64 kernel) | independent given start states | blocks with `par_iter` | done | ≤ (K+1)/⌈(K+1)/8⌉ ≈ 5.5× for K = 10, span = slowest block |
-| Newton Jacobian columns | linear in the seed (forward-mode duals) | column tasks with `par_iter`, 8 τ lanes per SIMD register | done | near 8× (1931 tasks) *(pending: agent N measurements)* |
-| Vector-mode tangents | linear, shared primal | r tangents per dual pass | proposed (agent N auditing) | 1.5–2× less work *(pending)* |
-| Newton LU | dense, block-bidiagonal + border | parallel trailing update (done); structure-aware or block LU | partly done, in progress (agent N) | dense: memory-bound; structured: ~20× fewer operations (estimate) *(pending)* |
+| Newton Jacobian columns | linear in the seed (forward-mode duals) | column tasks with `par_iter`, 8 τ lanes per SIMD register | done | 6.7 → 3.6 s on 2 threads (L = 2113); about 4–4.5× on 4 cores (est.) |
+| Vector-mode tangents | linear, shared primal | r tangents per dual pass | proposed (needs a multi-tangent dual type) | about 1.7× (est.) |
+| Newton LU | dense, block-bidiagonal + border | blocked LU, panels of 32, zero updates skipped; batched solves `lu_solve_many` | done | LU 18–34× on one thread; 24 solve pairs 16–20×; D-step 1.6× (1 thread), 1.84× (2 threads), about 2.8× est. on 8 |
 | Condensation (shooting combine) | affine over segments | tree of (G_b, g_b, F_b) or structured QR/LU | not implemented | depth log₂ K; stability needs the structured form |
 | Taylor tangent per step | linear along a fixed primal path | per-step transfer matrices, tree product | not implemented | only with ≫ 1931 cores |
 | Horizon series LUs | independent per order | `into_par_iter` over ks + 1 orders | done | ~8× on that stage |

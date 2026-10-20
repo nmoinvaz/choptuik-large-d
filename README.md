@@ -1438,6 +1438,12 @@ One residual of a synthetic production-sized configuration (`tests/test_bindings
 
 `baseline` is slow because x86_64 without FMA turns every fused multiply-add into a libm call, which keeps it bitwise identical to the other backends. Only pre-2013 x86 CPUs land there.
 
+The double-double solver's Newton step (`hp/`): a blocked LU that skips exact zeros (panels of 32 columns, parallel
+trailing update; 18–34× faster than the dense LU on one thread) and batched solves (`Solver.lu_solve_many`) for the
+deflation subspace bring one D-step from 15.4 to 9.5 s on one thread and from 10.1 to 5.5 s on two (D = 20, L = 1153),
+with every output bitwise identical; on 8 threads the estimate is about 2.3 s against 6.5 s. Details and the other
+parallel parts in [PARALLEL.md](PARALLEL.md) §3.
+
 ### Layout
 
 ```

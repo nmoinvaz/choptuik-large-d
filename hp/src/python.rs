@@ -491,6 +491,33 @@ impl Solver {
         Ok((arr(py, b.iter().map(|v| v.hi).collect()), arr(py, b.iter().map(|v| v.lo).collect())))
     }
 
+    /// Solve with the stored LU for several right-hand sides at once: the rows of R (k, L) as (hi, lo) -> the rows of
+    /// X with J0 X^T = R^T (transpose: J0^T X^T = R^T). Eight right-hand sides per lane vector, groups of eight in
+    /// parallel; every row is bitwise what lu_solve / lu_solve_t gives for it.
+    #[pyo3(signature = (rh, rl, transpose=false))]
+    #[allow(clippy::type_complexity)]
+    fn lu_solve_many<'py>(
+        &self,
+        py: Python<'py>,
+        rh: PyReadonlyArray2<'py, f64>,
+        rl: PyReadonlyArray2<'py, f64>,
+        transpose: bool,
+    ) -> PyResult<(Bound<'py, PyArray2<f64>>, Bound<'py, PyArray2<f64>>)> {
+        let lu = self.lu.as_ref().ok_or_else(|| PyValueError::new_err("no stored LU: call newton first"))?;
+        let n = lu.n;
+        let sh = rh.as_array().shape().to_vec();
+        if sh[1] != n || rl.as_array().shape() != sh.as_slice() {
+            return Err(PyValueError::new_err(format!("R must be (k, {n}) for hi and lo")));
+        }
+        let k = sh[0];
+        let mut h = rh.as_slice().map_err(|_| PyValueError::new_err("rh must be C-contiguous"))?.to_vec();
+        let mut l = rl.as_slice().map_err(|_| PyValueError::new_err("rl must be C-contiguous"))?.to_vec();
+        let pool = &self.pool;
+        py.detach(|| pool.install(|| lu.solve_many(&mut h, &mut l, k, transpose, true)));
+        let to2 = |v: Vec<f64>| Array2::from_shape_vec((k, n), v).unwrap().into_pyarray(py);
+        Ok((to2(h), to2(l)))
+    }
+
     /// Adaptive Taylor step points for every segment (from the node states in z); does not change the solver.
     fn plan(&self, py: Python<'_>, zh: PyReadonlyArray1<'_, f64>, zl: PyReadonlyArray1<'_, f64>, tol: f64, hmax: f64) -> PyResult<Vec<Vec<f64>>> {
         let (h, l) = (slice(&zh, "zh")?, slice(&zl, "zl")?);

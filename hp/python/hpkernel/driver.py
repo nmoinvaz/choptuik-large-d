@@ -348,15 +348,26 @@ def weak_subspace(s, w, iters=8, seed=0):
     """Orthonormal basis (L, w) of the w weakest right singular directions of the Jacobian whose LU is stored in s
     (inverse subspace iteration on (J^T J)^-1, f64 directions)."""
     L = s.size
-    zl = np.zeros(L)
     V = np.linalg.qr(np.random.default_rng(seed).standard_normal((L, w)))[0]
     for _ in range(iters):
-        W = np.empty_like(V)
-        for j in range(w):
-            y = np.asarray(s.lu_solve_t(np.ascontiguousarray(V[:, j]), zl)[0])
-            W[:, j] = np.asarray(s.lu_solve(np.ascontiguousarray(y), zl)[0])
-        V = np.linalg.qr(W)[0]
+        V = np.linalg.qr(_normal_solve(s, V))[0]
     return V
+
+
+def _normal_solve(s, V):
+    """(J^T J)^-1 V column by column with the stored LU, hi parts only: y = J^-T v, then J^-1 y. All columns at once
+    (Solver.lu_solve_many: 8 per lane vector, in parallel; bitwise the per-column solves) when the kernel has it."""
+    L, w = V.shape
+    if hasattr(s, "lu_solve_many"):
+        Z = np.zeros((w, L))
+        Y = np.asarray(s.lu_solve_many(np.ascontiguousarray(V.T), Z, transpose=True)[0])
+        return np.asarray(s.lu_solve_many(np.ascontiguousarray(Y), Z)[0]).T.copy()
+    zl = np.zeros(L)
+    W = np.empty_like(V)
+    for j in range(w):
+        y = np.asarray(s.lu_solve_t(np.ascontiguousarray(V[:, j]), zl)[0])
+        W[:, j] = np.asarray(s.lu_solve(np.ascontiguousarray(y), zl)[0])
+    return W
 
 
 def junk_subspace(s, w, delta_max=1e-9, iters=8):
@@ -364,12 +375,8 @@ def junk_subspace(s, w, delta_max=1e-9, iters=8):
     (the near-null centre directions, which the equations fix only to tol / sigma and Delta does not feel).
     Returns (orthonormal basis, sigmas kept, sigmas dropped)."""
     L = s.size
-    zl = np.zeros(L)
     V = weak_subspace(s, w, iters=iters)
-    W = np.empty_like(V)
-    for j in range(w):
-        y = np.asarray(s.lu_solve_t(np.ascontiguousarray(V[:, j]), zl)[0])
-        W[:, j] = np.asarray(s.lu_solve(np.ascontiguousarray(y), zl)[0])
+    W = _normal_solve(s, V)
     H = V.T @ W
     ev, U = np.linalg.eigh((H + H.T) / 2)
     X = V @ U
