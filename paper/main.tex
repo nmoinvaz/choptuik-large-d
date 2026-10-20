@@ -1,9 +1,10 @@
 % Choptuik's echo period at large dimension.  Build: see paper/Makefile (pdflatex twice).
-\documentclass[aps,prd,onecolumn,superscriptaddress,nofootinbib,11pt]{revtex4-2}
+\documentclass[aps,prd,onecolumn,superscriptaddress,nofootinbib,10pt]{revtex4-2}
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{dcolumn}
+\usepackage{xurl}
 \usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
 
 \newcommand{\Dinf}{\Delta_\infty}
@@ -17,11 +18,7 @@ $\Delta_\infty = 1.64389375$, and selection beyond all orders in $1/D$}
 
 \author{Nathan Moinvaziri}
 \email{nathan@nathanm.com}
-\noaffiliation
-\thanks{Independent. How this work was done is described in Sec.~\ref{sec:how}: the
-computations, derivations and text were produced by an AI model (Claude, Anthropic) working under the author's
-direction; the author has not checked the mathematics himself, and no human expert has reviewed it.}
-
+\affiliation{Independent researcher}
 \date{October 2026; unreviewed draft}
 
 \begin{abstract}
@@ -29,8 +26,8 @@ We compute the echo period $\Delta(D)$ of Choptuik's discretely self-similar cri
 collapse in $D$ spacetime dimensions at 857 points $8.25 \le D \le 61.03$ with a double-double (about 32-digit)
 solver, consistent with smooth curves to $4\times10^{-15}$, and with an independent double-precision solver for
 $4 \le D \le 40$. One rational function of $1/(D-2)$ reproduces $\Delta$ and the critical exponent $\gamma$ for all
-$D \ge 4$ within the precision of the points. Series in $1/D$ fitted on $D \le 45$ predict the points up to $D = 61$ to
-$5\times10^{-13}$, 40 to 300 times better than series in half-integer powers; this supports, but does not prove,
+$D \ge 4$ within the precision of the points. Series in $1/D$ fitted on $D \le 45$ predict the points up to $D = 60.1$ to
+$5\times10^{-13}$ (to $D = 61$: $7\times10^{-13}$), 40 to 300 times better than series in half-integer powers; this supports, but does not prove,
 analyticity in $1/D$, which then gives $\Dinf = 1.64389375 \pm 10^{-8}$. A power-law approach to $\Delta = 0$, as
 conjectured in the literature, is excluded by the data; a logarithmic one is disfavoured. We show that the $1/D$
 expansion of the self-similar field equations can be carried to all orders for any period and any time profile, so
@@ -39,6 +36,8 @@ closed-form light-cone coefficient, which we identify as the Stokes multiplier o
 radius. As a working hypothesis, the selection rule at $D = \infty$ is the vanishing of the Stokes multipliers of an
 $n$-free inner problem; its higher-harmonic conditions predict the shape of the echo, $|F_3/F_1| = 0.055$, which the
 data reproduce. The harmonic-1 condition, which would fix $\Dinf$, remains open.
+The computations, derivations and text were produced by an AI model (Claude, Anthropic) under the author's
+direction and have not yet been reviewed by a human expert (Sec.~\ref{sec:how}).
 \end{abstract}
 
 \maketitle
@@ -53,8 +52,8 @@ just above threshold scale as $M \propto (p - p^*)^\gamma$~\cite{Choptuik1993}. 
 $\Delta = 3.445452402(3)$~\cite{MartinGarciaGundlach2003} and $\gamma \simeq 0.374$~\cite{Gundlach1997}; see the
 review~\cite{GundlachReview2025}.
 
-The dependence on the spacetime dimension $D$ has been studied numerically at percent-level precision for integer
-$D = 4$--$11$~\cite{GarfinkleCutlerDuncan1999,SorkinOren2005,BlandEtAl2005,BlandKunstatter2007,Bland2007}, and to about
+The dependence on the spacetime dimension $D$ has been studied numerically, mostly at percent-level precision, for integer
+$D = 4$--$14$~\cite{GarfinkleCutlerDuncan1999,SorkinOren2005,BlandEtAl2005,BlandKunstatter2007,Bland2007}, and to about
 $10^{-6}$ for continuous $3.05 < D < 5.5$ by Ecker, Ecker, Grumiller and Jechtl~\cite{EckerEtAl2026}, who find a
 maximum of $\Delta$ near $D = 3.756$. Ecker, Ecker and Grumiller~\cite{EckerEckerGrumiller2026} constructed analytic
 DSS solutions at large $D$ and, with~\cite{EckerEtAl2026}, conjectured $\Delta \to 0$ and $\gamma \to 1/2$ as
@@ -77,8 +76,8 @@ light-cone coefficient in closed form (Proposition~\ref{prop:2}); what gravity d
 higher-harmonic conditions predict $|F_3/F_1| = 0.055$ and $|F_5/F_1| = 0.0030$ for the echo profile at
 $D = \infty$, against $0.0549$--$0.0552$ and $0.0032$--$0.0034$ extrapolated from the solutions
 (Sec.~\ref{sec:inner}). The harmonic-1 condition, which would give $\Dinf$, is open.
-\item A resolution of the next-to-leading-order condition of~\cite{EckerEckerGrumiller2026} within this framework
-(Sec.~\ref{sec:eeg}).
+\item An analysis of the next-to-leading-order condition of~\cite{EckerEckerGrumiller2026}, which within this framework
+does not select $\Delta$ (Sec.~\ref{sec:eeg}).
 \end{enumerate}
 
 \begin{figure}[t]
@@ -127,13 +126,14 @@ about $10^{-16}$ to $D = 60.1$ and a few $10^{-15}$ above, where the tolerance w
 \begin{table}[t]
 \caption{Checks of the double-double solver.}
 \label{tab:checks}
+\footnotesize
 \begin{ruledtabular}
 \begin{tabular}{ll}
 Check & Result \\ \hline
-double-double arithmetic against 40-digit mpmath & $1.3$--$1.6\times10^{-32}$ relative \\
+double-double arithmetic against mpmath & $1.3$--$1.6\times10^{-32}$ relative \\
 horizon series against 40-digit mpmath & $2\times10^{-32}$ \\
 Newton at $D = 8$ & quadratic, $|F| = 5\times10^{-31}$ in 4 steps \\
-$\Delta(7)$, $\Delta(7.75)$ against 39-mode double-precision references ($\pm3\times10^{-11}$) & $+3.1\times10^{-12}$, $-2.8\times10^{-12}$ \\
+$\Delta(7)$, $\Delta(7.75)$ against 39-mode references ($\pm3\times10^{-11}$) & $+3.1\times10^{-12}$, $-2.8\times10^{-12}$ \\
 32 / 48 / 64 collocation points in $\tau$, $D = 7$--$17$ & $\Delta$ agrees to $10^{-16}$ \\
 32 / 48 collocation points, $D = 40$ & $9\times10^{-22}$ \\
 harmonics pinned above 13 / above 15, $D = 40$ & $3\times10^{-17}$ \\
@@ -166,6 +166,7 @@ vanish only at $D = -3.2, -11.0$ ($\Delta$) and $D = -13.3, -20.4$ ($\gamma$). V
 \begin{table}[t]
 \caption{Coefficients of Eq.~\eqref{eq:formula}.}
 \label{tab:coef}
+\footnotesize
 \begin{ruledtabular}
 \begin{tabular}{rllll}
 $k$ & $a_k$ & $b_k$ & $e_k$ & $f_k$ \\ \hline
@@ -189,6 +190,7 @@ double-precision; $\gamma(50)$, $\gamma(100)$, $\gamma(1000)$ are formula values
 extrapolations on which all models fitting the double-double points agree (to $10^{-11}$, $2\times10^{-8}$);
 $D = 1000$ and $\infty$ assume analyticity in $1/D$.}
 \label{tab:values}
+\small
 \begin{ruledtabular}
 \begin{tabular}{rll|rll}
 $D$ & $\Delta$ & $\gamma$ & $D$ & $\Delta$ & $\gamma$ \\ \hline
@@ -254,6 +256,7 @@ term's coefficient is not determined.
 \begin{table}[t]
 \caption{Held-out test of large-$D$ models (cleaned double-double points; snapshot $D \le 60.1$).}
 \label{tab:analytic}
+\footnotesize
 \begin{ruledtabular}
 \begin{tabular}{lllll}
 Model & max residual, $10 \le D \le 45$ & worst error, $45 < D \le 60.1$ & fitted on $D \le 37.5$: worst error & limit \\ \hline
@@ -305,6 +308,7 @@ $1.6438936$--$1.6438939$, nor in a window about 27 times wider. Whether $\Dinf$ 
 \caption{Candidate closed forms for $\Dinf$, forced as the limit: best held-out error and its ratio to the free fit.
 $G$ is Catalan's constant, $j_{\nu,k}$ the $k$-th zero of $J_\nu$.}
 \label{tab:cand}
+\small
 \begin{ruledtabular}
 \begin{tabular}{llll}
 Candidate & value & minus $\Dinf$ & held-out error (ratio) \\ \hline
@@ -429,10 +433,10 @@ phenomenon.
 \begin{proposition}[derivation]\label{prop:4}
 Let $y(\eps) = x\,{}_2F_1(\alpha,\beta;\kappa;z)$ with $z = x^2$, $\kappa = (1 + 1/\eps)/2$, and $y \sim \sum_k y_k\eps^k$.
 Then
-\begin{equation}
-y_k = 2x(-1)^{k-1}\sum_{J\ge0}R_J(2J+1)^{k-1}, \qquad
-R_J = \frac{(-1)^J(\alpha)_{J+1}(\beta)_{J+1}}{J!\,(J+1)!}\,z^{J+1}{}_2F_1(\alpha+J+1,\beta+J+1;J+2;z),
-\end{equation}
+\begin{gather}
+y_k = 2x(-1)^{k-1}\sum_{J\ge0}R_J(2J+1)^{k-1}, \\
+R_J = \frac{(-1)^J(\alpha)_{J+1}(\beta)_{J+1}}{J!\,(J+1)!}\,z^{J+1}\,{}_2F_1(\alpha+J+1,\beta+J+1;J+2;z),
+\end{gather}
 convergent for $x < 1/\sqrt2$ and continued above, and as $k \to \infty$
 $y_k \approx \sum_\ell K_\ell(x)\,\Gamma(k+s+\tfrac12)/\big(\Phi(x) + i\pi(\ell+\tfrac12)\big)^{k+s+1/2}$, dominated by
 $\ell = -1$, i.e.\ by the singulant $\chi = \Phi - i\pi/2$.
