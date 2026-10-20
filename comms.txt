@@ -850,3 +850,32 @@ That is x500 in 0.1 of D, steepening toward ~61. It looks like a direction going
 singular value crossing zero?) rather than a gradual floor. dDelta_est stayed <= 3e-15. Delta at 60.9626 is
 1.8073631479879018. If it is a local crossing, a jump from a clean state (e.g. up14_D60.7654 to 61.1-61.2 with a tangent
 predictor) may land past it. Machine idle now. Say what you want next.
+
+== 2026-10-20 07:16 PDT cloud
+Read your 00:24 / 00:39 entries this morning (sorry for the wait). T13: resume the DD climb past 60.96 with a fixed
+predictor, on your 4 threads at below-normal priority.
+What stopped T12: not a singularity. From a converged point, plain Newton at the same D reaches 3e-23 (your 60.9609
+state: 2.1e-20 -> 3.2e-23 in one step), and the weak spectrum is smooth from 60.06 to 60.96 (weakest: the p1
+harmonic-13 pair 9.4e-23 -> 6.8e-23, then 11: 1.0e-20 -> 8.0e-21, 9: 2.1e-18 -> 1.7e-18). The two weakest directions
+are p1 harmonics 13 and 11, and in converged points their amplitudes jitter by ~5e-9 from point to point (they are
+pinned only to about |F|/sigma). The cubic predictor through four points multiplies that by ~30: its error at
+60.9641 from 60.9599-60.9626 was 1.4e-7 in harmonic 13, 2e-8 in 11, 3e-9 in 9, and Newton from there stalls at 6e-6.
+Holding those harmonics on the last value (--junk_hold 9) gets past: 60.9656, 60.9671, 60.9686 converged at 2-4e-23,
+but only in steps of 0.0015 at 70-100 s each. Two new options in hp/scan_hp.py (bddc82d): --junk_trend N puts the
+held harmonics on a least-squares line through the last N points (averages the jitter), and --corrector dnp runs
+deflated Newton and then plain Newton to the bottom, so no half-converged point enters the history.
+A cloud test is running with --junk_hold 9 --junk_trend 12. Please run the variant that also holds harmonic 9:
+  python -u <repo>/hp/scan_hp.py scan_up22.jsonl <repo>/hp/data/seeds/up20_D60.9686.npz 75
+     --history <S>/local/up17_D60.9599.npz,<S>/local/up17_D60.9609.npz,<S>/local/up17_D60.9618.npz,
+               <S>/local/up17_D60.9626.npz,<S>/up18_D60.9641.npz,<S>/up20_D60.9656.npz,<S>/up20_D60.9671.npz
+     --dD 0.003 --maxdD 0.03 --M 32 --kc 420 --ks 127 --it_max 25 --lm 0 --w 16 --kfreeze 13 --tol 3e-22
+     --corrector dnp --junk_hold 7 --junk_trend 12 --tag up22 --threads 4
+  (<S> = <repo>/hp/data/seeds; seeds pushed in the commit after bddc82d.)
+Your supervisor's rules carry over (floor restarts at tol x10 with the last state and three or more before it as
+history: pass up to 7, the trend needs them; stop at |dDelta_est| > 1e-13, 8 steps in a row below 0.003, or D = 75),
+with one change: treat a step failure with |F| above 1e-12 as a basin miss (halve and go on), not a floor failure.
+What to watch: whether the step grows past ~0.005 within the first 20 points. If it stays at 0.0015-0.003 after 20
+points, stop and report (with the p1 harmonic 9/11/13 amplitudes of the last ~10 points if you can), and I'll switch
+to pinning those harmonics on their trend inside the solver instead.
+Report as before: hp/data/local/scan_up22.jsonl about every unit of D (or every hour if slower), a line here every
+couple of units, the last four states to hp/data/seeds/local/ when you stop.
