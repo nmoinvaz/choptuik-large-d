@@ -21,7 +21,8 @@ solver in [`hp/`](hp/) for large D. The physics is in this file; the software is
   predict the shape of the echo, F₃/F₁ = 0.055 against 0.055 extrapolated from the data
   ([Large D](#large-d-what-the-1d-expansion-can-and-cannot-see)).
 - **Relation to published work.** Agreement with the accepted values at D = 4 and at the maximum of Δ near D = 3.756;
-  an unresolved 6×10⁻⁵ discrepancy at D = 5; and the published conjecture Δ → 0 as D → ∞ is not
+  a 6×10⁻⁵ difference at D = 5 that the published higher-resolution data trace to resolution; and the published
+  conjecture Δ → 0 as D → ∞ is not
   supported: a power-law approach to 0 is excluded, a logarithmic one disfavoured
   ([Relation to published work](#relation-to-published-work)).
 
@@ -339,10 +340,19 @@ From a literature search (October 2026); the references are listed at the end of
   10⁻⁸ and 10⁻⁷.
 - **The maximum below D = 4.** Ecker et al. 2026, Eq. (70): D = 3.755726 ± 10⁻⁶, Δ = 3.466772 ± 10⁻⁶. The 47-mode
   points here give D = 3.75570, Δ = 3.466774 (agreement to about 2×10⁻⁶).
-- **D = 5: an unresolved discrepancy.** Ecker et al. 2026 give Δ = 3.22176, γ = 0.41322, which are
-  5.8×10⁻⁵ and 9.3×10⁻⁵ above the values here (3.2217019, 0.4131269). Ours are stable across 31, 39 and 47
-  Fourier modes to about 10⁻⁷, and Bland & Kunstatter (2007) give γ(5) = 0.4131 ± 0.0001, matching ours. The cause
-  is not known.
+- **D = 5: a resolution effect in the published value.** Ecker et al. 2026 give Δ = 3.22176, γ = 0.41322, which are
+  5.8×10⁻⁵ and 9.3×10⁻⁵ above the values here. Our Δ(5) = 3.2217019446 comes from two independent codes: the f64
+  solver at 31, 39 and 47 Fourier modes (3.221701945 ± 7×10⁻¹¹ extrapolated) and the double-double solver at
+  M = 48 and 64 collocation points (3.22170194461806, 3.22170194462672), which agree to 10⁻¹¹
+  (`hp/compare/dd_D5.py`, log in `hp/compare/dd_D5.log`). Their published data
+  ([github.com/EckerChristian/CriticalSpacetimeCrystal](https://github.com/EckerChristian/CriticalSpacetimeCrystal),
+  compared by `hp/compare/cmp_ecker.py`) show their D = 5 value still moving by −1.66×10⁻⁴ between 256 and 512 modes,
+  toward ours, in the range above D ≈ 4.8 where their paper notes that the light-cone expansion order has to be
+  increased. Their offset from our values grows smoothly with D, from 2.7×10⁻⁷ at D = 4 (within their stated ±10⁻⁶;
+  ours matches Martín-García & Gundlach to 7×10⁻⁹) to 5×10⁻⁴ at D = 5.5. Their γ list has no points for
+  4.79 < D < 5.49, the range where they report that their perturbation method fails, so their γ(5) is not a direct
+  computation in the published data; ours, 0.41312694 (stable to 10⁻⁷ across resolutions), agrees with Bland &
+  Kunstatter's 0.4131 ± 0.0001. No difference of convention: at D = 3.7 the two agree to 8×10⁻⁸.
 - **Below D = 4.** γ extrapolated from the 47-mode points (γ(3.7) = 0.34865) suggests $`\gamma(3.5) \lesssim 0.33`$, against
   0.349 ± 0.003 from Bland et al. (2005). The points here below D = 4 are under-resolved in the Fourier modes; this is
   an open check.
@@ -1378,6 +1388,7 @@ solver/eeg20/                 the comparison with Ecker-Ecker-Grumiller's Eq. (2
 solver/inner_amp/             the inner multipliers by an amplitude expansion with every harmonic exact (amp_series.py check, stokes_amp2.py wf K J)
 solver/inner_pert/            growing modes of the inner problem (exact lambda = 0, 1 modes; one-harmonic root) and free gamma fits
 hp/largeD_Fratios.py          harmonic ratios F_{nu+2}/F_nu of the double-double solutions, extrapolated to D = infinity
+hp/compare/                   D = 5 by double-double (dd_D5.py) and the comparison with Ecker et al.'s published data (cmp_ecker.py)
 solver/largeD_transport_sympy.py  Proposition 3 derived symbolically from the exact equations (b, c perturbed too)
 solver/largeD_fast_transport_full.py  the transport check with the full O(1/n) background
 solver/largeD_linear_poles.py  Proposition 4: the late orders as an exact sum over the poles in kappa

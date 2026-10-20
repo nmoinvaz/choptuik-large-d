@@ -1,0 +1,4 @@
+seed /home/claude/dss-residual-kernel/solver/data/neB_kc47_rk2_D5.0000.npy: D 5.0, f64 Delta 3.221701944776
+D 5.0 M 32: Delta 3.2217021115118452 (+-1.22e-16)  |F| 1.9e-31  its 4  62s
+D 5.0 M 48: Delta 3.2217019446180597 (+5.85e-17)  |F| 4.6e-31  its 4  229s
+D 5.0 M 64: Delta 3.2217019446267159 (+-2.11e-17)  |F| 4.1e-31  its 5  675s
