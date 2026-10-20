@@ -1238,7 +1238,8 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   With the five reliable orders, the zero of S₁ in x = A² is not yet located by Padé approximants, but its *direction*
   is (`arg_crossing.py scan13b`). A real zero x₀ makes the coefficients τ_k of ln S₁ real and negative,
   arg τ_k → π, while a complex x₀ turns them with k. Across ω, arg τ_k = π is crossed at ω/ω∞ = 1.2516, 1.0554,
-  1.0176, 1.0084 for k = 2–5, a sequence converging to about 1.005 (Aitken). So at five orders the untruncated
+  1.0176, 1.0084 for k = 2–5, a sequence converging to about 1.005 (Aitken: 1.0053; a finer K = 11 scan in steps of
+  0.01, `scan11f/`, gives the same crossings to 10⁻⁴). So at five orders the untruncated
   harmonic-1 condition points to ω within about 0.5% of ω∞, independently of the three-harmonic result (1.0156);
   the amplitude there is not converged (ratio estimates 2.6–2.9 against 2.72). Confirming it needs σ₆–σ₈. The shape predictions at A = 2.72 sharpen to F₃/F₁ = 0.0551, F₅/F₁ = 0.00314
   (data: 0.0552/0.0549, 0.0034/0.0032), and the D = ∞ relation evaluated at each D's own amplitude and ω tracks the
