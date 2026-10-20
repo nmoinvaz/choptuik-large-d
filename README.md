@@ -254,8 +254,9 @@ with computed points rather than an assumed form.
 | first node at $x = 0.02$ / $0.05$ / $0.1$, $D = 16.75$ | $\Delta$ identical to $10^{-16}$ |
 | 32 / 48 collocation points in $\tau$, $D = 40$ | $\Delta$ agrees to $9\times10^{-22}$ |
 | harmonics frozen above 13 / above 15, $D = 40$ | $\Delta$ agrees to $3\times10^{-17}$ |
+| second machine (Windows, i7-1185G7, own build), $D = 59.84$–$60.05$ | agrees with the cloud points to $2$–$4\times10^{-16}$ |
 
-A sample of the computed points (all 750 of them, from $D = 8.25$ to $60.06$, are in
+A sample of the computed points (all of them, from $D = 8.25$ up, are in
 [`hp/data/delta_dd.csv`](hp/data/delta_dd.csv)), with the residual and the largest entry of $\partial\Delta/\partial F$, the factor by which a residual error moves $\Delta$:
 
 | $D$ | $\Delta$ | $\lvert F\rvert$ | $\max\lvert\partial\Delta/\partial F\rvert$ |
@@ -334,7 +335,7 @@ period is selected by an effect the $1/D$ expansion does not see), but nothing i
 anything else.
 
 Status: the cloud climb stopped at $D = 60.06$. The local machine is continuing it toward $D = 75$ (task T12 in
-[`comms.txt`](comms.txt)).
+[`comms.txt`](comms.txt)); its points go to [`hp/data/local/`](hp/data/local/) and into the data file.
 
 ## Backends
 
