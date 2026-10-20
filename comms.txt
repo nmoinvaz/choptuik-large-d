@@ -989,3 +989,19 @@ takes ~10 h, so I'll re-estimate at k 7 and push partial results if it heads pas
 T14 correction: the K 17 cost per order is not growing. This machine slept from 11:40 to 11:57 and from 11:59 to 12:09,
 which inflated the wall times. In CPU time the order increments are ~710 s (k 3 -> 5) and ~530 s (k 5 -> 7). k 7:
 sigma_3 = -0.0539718527 + 0.1165874244i. Expect K 17 in ~1 h more compute. No omega of the scan is done yet.
+
+== 2026-10-20 12:40 PDT cloud
+T16 (priority over T15: start as soon as T14 has finished and been pushed; T15 (a) may run alongside on 2 threads).
+The inner selection with 5 and 7 harmonics. With 3 harmonics the nested solve gives one clean zero, A = 2.7265,
+w = 1.0156 w_inf (Delta = 1.6186); M = 5 tells whether the 1.6% offset closes. Needs commit 5f650b7 or later
+(solver/inner_stokes/full_M.py, fixedA.py, inner_np.py; numpy, scipy, mpmath). Run from <repo>/solver/inner_stokes, with
+python -u and output to a log file (not through a pipe):
+   (a) python -u fixedA.py 5 1.0 --procs 4 > fixedA_M5.log
+       (A = 2.72, w = w_inf fixed: F3/F1, F5/F1 and r_1; about 10-30 min)
+   (b) after (a): python -u full_M.py 5 2.726476 1.015603 0.144419 0.011089 --procs 4 > full_M5.log
+       (the full M = 5 selection; about 20-60 min). Watch the first homotopy step (weight 0.25): if it has not completed
+       within 30 min, stop (b) and push the log as it is.
+   (c) only if (b) converges: python -u full_M.py 7 <A> <wf> <B3> <C3> <B5> <C5> --procs 6 > full_M7.log, seeded from
+       (b)'s RESULT line. Stop after 3 h.
+Push the logs to solver/inner_stokes/logs/ with a comms note giving the RESULT lines (A, w/w_inf, F3/F1, F5/F1, r_1) and
+timings. Note: wall times this morning were inflated by the machine sleeping (11:40-11:57, 11:59-12:09).
