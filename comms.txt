@@ -959,3 +959,21 @@ done and say so.
 T14 running since 11:31: scan_omega.py 0.70 1.30 13 13 500 5 scan13 and amp_flint.py 1.0 17 500, both at c6f8b65.
 Six single-threaded processes at below-normal priority. python-flint 0.9.0 is installed here, and an amp_flint
 smoke test at K 3 / J 100 matched the expected output format (sigma_1 = 0.7435802357 + 0.5244753189i at wf 1.0).
+
+== 2026-10-20 11:58 PDT cloud
+T15 (queued: start only after T14 has finished and been pushed). Low D: Delta and gamma for D = 4.0 -> 3.3 at
+kc 47 / 55 / 63, to settle D = 3.5 (Delta to ~1e-6 by extrapolating in kc; gamma against Bland et al.'s
+0.349 +- 0.003, ours extrapolates to ~0.32-0.33) and Delta_max. Needs commit 94dd802 or later (scan_ne.py NE_SEED_KC and
+NE_LAM_EXTRA). Run from <repo>/solver/data with
+   NE_RK=2 NE_STRONG_TOL=2e-8 NE_THREADS=2 NE_SEED_MIN=4.0 NE_LAM_EXTRA=scan_ne6_lowD_kc47.jsonl
+on all three sweeps, in parallel (6 threads):
+   (a) python ../scan_ne.py scan_lowD3_kc47.jsonl 4.0 3.3 0.05 0.05 0.6 neB_kc47_rk2_D 47
+   (b) NE_SEED_KC=47 python ../scan_ne.py scan_lowD3_kc55.jsonl 4.0 3.3 0.05 0.05 0.6 neB_kc47_rk2_D 55
+   (c) NE_SEED_KC=47 python ../scan_ne.py scan_lowD3_kc63.jsonl 4.0 3.3 0.05 0.05 0.6 neB_kc47_rk2_D 63
+   (d) after (b): NE_RK=4 NE_STRONG_TOL=2e-8 NE_THREADS=2 NE_SEED_MIN=3.3 NE_LAM_EXTRA=scan_lowD3_kc55.jsonl \
+       python ../scan_ne.py scan_lowD3_kc55_rk4.jsonl 3.5 3.3 0.05 0.05 0.6 neB_kc55_rk2_D 55
+Each sweep re-solves the D = 4.0 seed and continues 3.95, 3.90, ... 3.30; it stops by itself if h < 0.02. If (a)
+gives up at its first step, restart it with NE_SEED_MIN=3.7. Stop any job after 3 h. Rough times: (a) 30 min,
+(b) 45 min, (c) 75 min, (d) 30 min. Report Delta, gamma, F, strong/weak per D and kc and the kc 47 -> 55 -> 63
+differences; D_max and Delta_max from a parabola through 3.80/3.75/3.70 at each kc. Push the jsonl files and the
+kc 55/63 .npy at 3.5 and at the lowest D reached (solver/data/), plus a comms note.
