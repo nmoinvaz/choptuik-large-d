@@ -8,13 +8,15 @@ Needs numpy, scipy, mpmath, sympy. Optional: python-flint (the Borel-Darboux che
 kernel hpkernel (the checks on saved solutions; build it with hp/build.sh, which needs Rust and maturin). Missing
 optional parts are reported as SKIP. --full adds the late-order (Proposition 4) check, about two more minutes.
 
-Measured on the (busy, 2-core) development machine at nice -n 15; a laptop should be faster:
-  data, interpolation, formula     ~2 s
-  Delta_inf (cleaning + 5 fits)    ~80 s   mpmath, 60 digits, every cleaned point 10 <= D <= 61.03 (not reduced)
+Measured on the development machine (2 cores, both busy with other jobs, run at nice -n 15); an idle laptop
+should be two to four times faster:
+  data, interpolation, formula     ~1 s
+  Delta_inf (cleaning + 5 fits)    ~280 s  mpmath, 60 digits, every cleaned point 10 <= D <= 61.03 (not reduced;
+                                           about 9 s per fit when the machine was idle)
   held-out test (3 fits)           ~25 s
-  theory checks                    ~45 s   (Proposition 1 formal check ~30 s of it)
-  saved solutions (hpkernel)       ~5 s
-  total                            ~3 min  (--full: +2 min)
+  theory checks                    ~40 s   (the Proposition 1 formal check is ~30 s of it)
+  saved solutions (hpkernel)       ~2 s
+  total                            ~6 min  (--full: +2 min)
 Nothing in the repository is written.
 """
 import os
@@ -34,7 +36,7 @@ T0 = time.time()
 
 
 def record(name, expected, got, ok):
-    status = "PASS" if ok is True else ("SKIP" if ok is None else "FAIL")
+    status = "SKIP" if ok is None else ("PASS" if bool(ok) else "FAIL")
     results.append((name, expected, got, status))
     print(f"  [{status}] {name}: got {got} (expected {expected})", flush=True)
 
@@ -148,9 +150,9 @@ record("lateral solutions without gravity, harmonics 1 and 3 (inner_stokes/inner
 try:
     import flint  # noqa: F401
     out = run(["inner_stokes.py", "linear"], os.path.join(SOLVER, "inner_borel"))
-    m = re.search(r"rel err ([\d.e+-]+)", out)
-    record("Borel-Darboux linear Stokes constant (inner_borel/inner_stokes.py linear)", "rel err <= 1e-20",
-           m.group(1) if m else "no output", bool(m) and float(m.group(1)) <= 1e-20)
+    m = re.findall(r"with (\d+) corrections: .*rel err ([\d.e+-]+)", out)      # 6, 12, 20 correction terms
+    record("Borel-Darboux linear Stokes constant, 20 correction terms (inner_borel/inner_stokes.py linear)",
+           "rel err <= 1e-20 (README: 6e-27)", m[-1][1] if m else "no output", bool(m) and float(m[-1][1]) <= 1e-20)
 except ImportError:
     record("Borel-Darboux linear Stokes constant", "rel err <= 1e-20", "python-flint not installed", None)
 

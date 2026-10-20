@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Reproduce the headline numbers of this repository and report PASS / FAIL / SKIP for each check.
 #
-#   ./reproduce.sh          about 3 minutes (measured on a busy 2-core machine; a laptop should be faster)
+#   ./reproduce.sh          about 6 minutes on a busy 2-core machine (an idle laptop: about 2-3 minutes)
 #   ./reproduce.sh --full   adds the Proposition 4 late-order check (about 2 minutes more)
 #
 # What it checks (details and expected values in reproduce.py):
