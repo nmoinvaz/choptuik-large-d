@@ -18,8 +18,9 @@ solver in [`hp/`](hp/) for large D. The physics is in this file; the software is
   gravity the obstruction at the light cone is a closed-form coefficient C(n,s) (Proposition 2), which is the Stokes
   multiplier of a mode born far outside the light cone (Propositions 3–4). The working hypothesis is that the selection
   rule is the vanishing of the Stokes multipliers of an n-free inner problem; its higher-harmonic conditions already
-  predict the shape of the echo, F₃/F₁ = 0.055 against 0.055 extrapolated from the data
-  ([Large D](#large-d-what-the-1d-expansion-can-and-cannot-see)).
+  predict the shape of the echo, F₃/F₁ = 0.055 against 0.055 extrapolated from the data, and with three harmonics
+  the full set of conditions gives Δ = 1.619, 1.5% below Δ∞ (one harmonic: 29% above). Truncation in harmonics is
+  not controlled, so this is not yet a derivation of Δ∞ ([Large D](#large-d-what-the-1d-expansion-can-and-cannot-see)).
 - **Relation to published work.** Agreement with the accepted values at D = 4 and at the maximum of Δ near D = 3.756;
   a 6×10⁻⁵ difference at D = 5 that the published higher-resolution data trace to resolution; and the published
   conjecture Δ → 0 as D → ∞ is not
@@ -1131,17 +1132,29 @@ late orders of the inner series fitted with the predicted fast-mode exponents).
   (Δ = 2.11571). Both methods find it: lateral (`solver/inner_stokes/zero_M1.py`, the same at four matching radii) and
   Darboux (`solver/inner_borel/inner_zero.py`, Newton converging quadratically, $`\lvert S\rvert = 3\times10^{-14}`$ at 220 orders; it is the only
   clean zero for 0.5 ≤ A ≤ 3, 0.5 ≤ ω/ω∞ ≤ 1.5). The amplitude is 6.5% below F₁ ≈ 2.72; ω is 22% below
-  ω∞. Adding harmonic 3 (`solver/inner_stokes/zero_M3.py`) destroys that zero, and the zero found there is unphysical
-  (ω = 0.198 ω∞, F₃/F₁ = 0.65; lateral residual 4.6×10⁶ at the one-harmonic zero with harmonic 3
-  added). (Δ = 2.1157 is close to Δ(20) = 2.1121, almost certainly a coincidence.) So no selection of ω∞ follows yet.
+  ω∞. Adding harmonic 3 destroys that zero (lateral residual 4.6×10⁶ at the one-harmonic zero with harmonic 3
+  added); a first search without de-mixing (`solver/inner_stokes/zero_M3.py`) found only an unphysical zero
+  (ω = 0.198 ω∞, F₃/F₁ = 0.65). (Δ = 2.1157 is close to Δ(20) = 2.1121, almost certainly a coincidence.) So one
+  harmonic does not select ω∞.
 - *More harmonics* (`solver/inner_stokes/inner_np.py`, `staged.py`, `continue_M.py`). Starting the lateral sum on the ray
   $`\arg\xi^2 = \pi/2 + \pi/8`$ from the series computed in scaled form removes the amplification along the arc: without gravity
   the jumps of harmonics 1–9 come out as 1.00000000 times their exact values, in double precision, about 1 s per
   evaluation (`inner_np.py checklin 9`). With gravity the residuals are de-mixed (multiplied by $`e^{-\Pi}`$ and taken on the
   label θ₀), which leaves the zeros unchanged but gives each condition its own weight. At the one-harmonic zero, solving
   only the harmonic-3 condition gives F₃/F₁ = 0.074; the harmonic-1 condition is then violated, so that zero does not
-  survive harmonic 3. The full solve for (A, F₃, ω) has not converged yet, so the truncated route still gives no ω;
-  the amplitude expansion below avoids truncation altogether.
+  survive harmonic 3.
+- *Three harmonics: the full selection* (`solver/inner_stokes/nested.py`, `full_M.py`, `m3_diag.py`). Solving
+  S₁ = S₃ = 0 jointly for (A, ω, F₃) is badly conditioned (Jacobian singular values 6×10⁹, 5×10⁹, 23, 0.4): the
+  de-mixing leaves a leakage of the harmonic-3 condition into the harmonic-1 one about 10⁴ times r₃ itself (about
+  $`e^{\pi\omega}`$ times the finite-ξ de-mixing error), so the joint solve stops on false near-zeros where a small S₃
+  cancels S₁. Solved nested instead (S₃ = 0 for F₃ to 10⁻¹¹ at fixed A and ω, then Newton on (A, ω) for S₁ = 0,
+  a 2×2 problem of condition about 2, converging quadratically), there is one zero. It is the same from two
+  different starts and at three matching radii (ξ₁ = 0.175, 0.2, 0.225; it moves by less than 10⁻⁷):
+  A = 2.7265, ω = 1.0156 ω∞ (Δ = 1.6186), F₃/F₁ = 0.0530 + 0.0041i, ⟨F²⟩ = 3.727. The shape is that of the
+  D = ∞ solution (extrapolated from the data: A ≈ 2.70–2.72, |F₃/F₁| ≈ 0.050–0.058, ⟨F²⟩ ≈ 3.65–3.7), and ω is
+  1.56% above ω∞, against 22% below with one harmonic. Truncation is not controlled (previous item), so whether the
+  offset closes needs M ≥ 5. There the leakage of S₅ into r₁ is about $`e^{2\pi\omega}`$ ≈ 3×10¹⁰, so only the nested form is
+  usable (`full_M.py 5 …`, with `--procs N` for the Jacobian columns; to run on the 8-thread machine).
 
 **Without truncation: the amplitude expansion** (`solver/inner_amp/`).
 
@@ -1253,10 +1266,10 @@ zero, so the D = 40 and 60 lines stop at ν = 13.)
   γ∞ = 0.4996–0.4998 (`g_fits.py`): why λ∞ = 2 to 10⁻³ is open.
 - **Open:** the D = ∞ selection rule itself. Proposition 2 gives the multiplier without gravity, C(n,s), and the inner
   problem shows it is asymptotically a $`{}_2F_0`$ Stokes constant; Proposition 3 shows that propagation inside the light cone
-  cannot change whether it vanishes. The multipliers with gravity have been computed for one and two harmonics (above),
-  with no selection of ω∞ yet. What remains is to go past M = 3 with rescaled unknowns
-  $`F_\nu e^{\pi\lvert\nu\rvert\omega/2}`$, or without truncation by the amplitude expansion above (whose higher-harmonic conditions
-  already reproduce F₃/F₁), to require the harmonic-1 multiplier to vanish as well,
+  cannot change whether it vanishes. The multipliers with gravity have been computed with up to three harmonics (above):
+  with three, their vanishing selects ω = 1.0156 ω∞ and the measured shape (A = 2.73, F₃/F₁ = 0.053). What remains is to go
+  past M = 3 by the nested solve, or without truncation by the amplitude expansion above (whose higher-harmonic conditions
+  already reproduce F₃/F₁), to see whether the harmonic-1 condition then lands on ω∞,
   and to prove the working hypothesis that this is the selection rule. That would be an equation for ω∞ and
   F∞ alone, from which Δ∞ would follow to any precision.
 
@@ -1469,7 +1482,9 @@ solver/largeD_linear_late.py  late orders of the exact leading-order 1/n series 
 solver/largeD_dingle_K.py     their Dingle constant against the inner 2F0 prediction
 solver/largeD_stokes_C.py     C(n,s) as the 2F0 Stokes constant times n^(s+1/2) and a phase
 solver/largeD_inner.py        the inner problem at x ~ sqrt(n): formal series, check against the outer top degrees
-solver/inner_stokes/          the inner Stokes multiplier by lateral solutions (lateral_np.py check|scan, zero_M1.py, zero_M3.py)
+solver/inner_stokes/          the inner Stokes multiplier by lateral solutions (lateral_np.py check|scan, zero_M1.py, zero_M3.py);
+                              the M-harmonic selection by nested solve (nested.py M = 3, full_M.py any M with --procs N,
+                              fixedA.py), conditioning of the joint solve (m3_diag.py)
 solver/inner_borel/           the same by Borel-Darboux in ball arithmetic (python-flint): inner_stokes.py linear|grav, inner_zero.py
 solver/eeg20/                 the comparison with Ecker-Ecker-Grumiller's Eq. (20) (window identity, tilt, max c, Delta -> 0 fits)
 solver/inner_amp/             the inner multipliers by an amplitude expansion with every harmonic exact (amp_series.py check, stokes_amp2.py;

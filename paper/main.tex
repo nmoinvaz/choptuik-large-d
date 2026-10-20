@@ -36,8 +36,8 @@ the period (and likewise $\gamma$) is selected beyond all orders in $1/D$. Witho
 closed-form light-cone coefficient, which we identify as the Stokes multiplier of a mode born at large self-similar
 radius. We conjecture that the selection rule at $D = \infty$ is the vanishing of the Stokes multipliers of an
 $n$-free inner problem; its higher-harmonic conditions predict the shape of the echo, $|F_3/F_1| = 0.0551$, which the
-data reproduce. A first estimate of the harmonic-1 condition, which would fix $\Dinf$, puts its zero at
-$\omega_\infty$ about 10\% above the measured amplitude, not yet converged.
+data reproduce. Truncated to three harmonics, the full set of conditions selects $\Delta = 1.619$, 1.5\% below
+$\Dinf$ (one harmonic: 29\% above); truncation is not a controlled approximation, so $\Dinf$ is not yet derived.
 The computations, derivations and text were produced by an AI model (Claude, Anthropic) under the author's
 direction and have not yet been reviewed by a human expert (Sec.~\ref{sec:how}).
 \end{abstract}
@@ -79,8 +79,9 @@ light-cone coefficient in closed form (Proposition~\ref{prop:2}); what gravity d
 a proof is missing (Conjecture~\ref{conj}), select the period; its
 higher-harmonic conditions predict $|F_3/F_1| = 0.0551$ and $|F_5/F_1| = 0.00314$ for the echo profile at
 $D = \infty$, against $0.0549$--$0.0552$ and $0.0032$--$0.0034$ extrapolated from the solutions
-(Sec.~\ref{sec:inner}). The harmonic-1 condition, which would give $\Dinf$, is not yet settled: a first estimate puts its
-zero about 10\% above the measured amplitude.
+(Sec.~\ref{sec:inner}). The harmonic-1 condition, which would give $\Dinf$, is not yet settled: truncated to three
+harmonics, the conditions select $\omega = 1.0156\,\omega_\infty$ with the measured shape, and a first estimate without
+truncation puts the zero at $\omega_\infty$ about 10\% above the measured amplitude.
 \item An analysis of the next-to-leading-order condition of~\cite{EckerEckerGrumiller2026}, which within this framework
 does not select $\Delta$ (Sec.~\ref{sec:eeg}).
 \end{enumerate}
@@ -563,6 +564,19 @@ $F = A\sin\theta$ alone, both find an isolated zero of the multiplier at $A = 2.
 physical solution ($\omega$ 22\% low) and does not survive adding harmonic 3. Truncating harmonics is not a controlled
 approximation here: the linear multipliers grow like $F_\nu e^{\pi|\nu|\omega/2}$.
 
+\emph{Three harmonics.} With $F = A\sin\theta + (F_3e^{3i\theta} + \mathrm{c.c.})$ the joint solve of $S_1 = S_3 = 0$ for
+$(A, \omega, F_3)$ is badly conditioned (Jacobian singular values $6\times10^9$, $5\times10^9$, $23$, $0.4$): the de-mixed
+harmonic-1 residual picks up about $10^4$ times the harmonic-3 one ($\sim e^{\pi\omega}$ times the finite-$\xi$ de-mixing
+error), and the joint solve stops on false near-zeros where a small $S_3$ cancels $S_1$. A nested solve removes this:
+at fixed $(A, \omega)$ solve $S_3 = 0$ for $F_3$ to $10^{-11}$, then apply Newton's method to $(A, \omega)$ for $S_1 = 0$ (a $2\times2$ problem of
+condition about 2). It has one zero, the same from two starts and at three matching radii (moving by less than
+$10^{-7}$): $A = 2.7265$, $\omega = 1.0156\,\omega_\infty$ ($\Delta = 1.6186$), $F_3/F_1 = 0.0530 + 0.0041i$,
+$\langle F^2\rangle = 3.727$. The shape is that of the $D = \infty$ solution extrapolated from the data
+($A \approx 2.70$--$2.72$, $|F_3/F_1| \approx 0.050$--$0.058$, $\langle F^2\rangle \approx 3.65$--$3.7$), and $\omega$ is 1.56\%
+above $\omega_\infty$, against 22\% below with one harmonic. Since truncation is not controlled, whether the offset closes
+needs $M \ge 5$; there the leakage of $S_5$ into the harmonic-1 residual is about $e^{2\pi\omega} \approx 3\times10^{10}$, so
+only the nested form is usable.
+
 \emph{Amplitude expansion.} Writing $F = A\sin\theta + \sum_{\nu\ge3} f_\nu(A)e^{i\nu\theta}$ (plus c.c.), harmonic $\mu$
 first appears at order $A^{|\mu|}$, so every harmonic is kept exactly. Tuning $f_\nu$ order by order so that the
 multipliers of all harmonics $|\nu| \ge 3$ vanish, at $A = 2.72$ and $\omega = \omega_\infty$, gives
@@ -630,7 +644,8 @@ $\Dinf = 1.64389375$ strongly, under the assumption of analyticity in $1/D$ that
 theory explains why that number cannot come from the $1/D$ expansion: the expansion is unobstructed for every period,
 and the selection acts through an exponentially small, Stokes-type effect whose linear version is solved exactly. The
 inner problem at $x \sim \sqrt n$ is $n$-free; its higher-harmonic conditions already reproduce the shape of the echo
-at $D = \infty$. Open are: the harmonic-1 condition of the inner problem, which would give $\Dinf$ (and possibly a closed
+at $D = \infty$, and truncated to three harmonics its conditions select $\omega$ within 1.6\% of $\omega_\infty$.
+Open are: the harmonic-1 condition of the inner problem, which would give $\Dinf$ (and possibly a closed
 form) from first principles; a proof of Conjecture~\ref{conj}; the value $\lambda_\infty = 2$;
 and the behaviour just below $D = 4$.
 
