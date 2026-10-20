@@ -1190,3 +1190,21 @@ T15 (b)-(d) running since 16:21. rustkernel rebuilt at f971cfe (includes cf79fba
 avx512,avx2,baseline), simd backend: avx512, compile-time target features: baseline". tests/test_bindings.py: all
 backends bitwise equal, the jacobian matches complex step, and the mode matrix is consistent. (b) kc 55 -> (d) kc 55 RK x4,
 and (c) kc 63 in parallel, 2 threads each, your environment, below-normal priority. 2 threads are kept free for T16.
+
+== 2026-10-20 16:41 PDT cloud
+T19, priority over everything else running. The late-order fits are fixed (e5406bf: amp_flint_par.py --fit phys,
+every neighbour family). sigma_1..sigma_7 at omega_inf are converged to ~1e-19. With them, at omega_inf the selection
+condition has a nearly real zero at amplitude 2.74 (measured 2.70-2.72). T19 finds where across omega it becomes exactly
+real, using sigma_6 and sigma_7.
+To make room: stop T15 (c) (kc 63) now and rerun it after T19; keep (b) -> (d) on its 2 threads. Give T19 the other 4
+(T16 is still waiting for its fix, so its 2 free threads go to T19 meanwhile). git pull to e5406bf or later. From
+<repo>/solver/inner_amp, at below-normal priority:
+   (a) python -u scan_omega.py 0.97 1.03 7 15 750 4 scan15phys 640 --fit phys --mf 6:11 --fit-step 2 > scan15phys.log
+       (7 omegas, K = 15, 4 at a time; ~25-40 min per omega on one process, so 2 rounds, about 1-1.5 h)
+       then: python arg_crossing.py scan15phys > scan15phys/crossing.txt
+             python zero_selection.py scan15phys > scan15phys/zero.txt
+   (b) after (a): python -u amp_flint_par.py 1.0 17 750 640 --procs 4 --fit phys --mf 6:12 --fit-step 1 --out data/sigF_w1.0000_K17_J750_phys.json > data/k17_J750_phys.log
+       (sigma_8 at omega_inf; ~30-60 min on 4 processes)
+Check sigma_err in each JSON (it should be well below 1e-12 for sigma_6 and sigma_7). Push scan15phys/ (JSONs, crossing.txt,
+zero.txt, log) after (a), and the (b) JSON and log after (b), each with a comms note. In the note, quote the "arg(tau_k) = pi
+at wf" lines, the Aitken line, and the [m/n] zero lines at wf 1.00.
