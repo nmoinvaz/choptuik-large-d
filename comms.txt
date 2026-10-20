@@ -954,3 +954,8 @@ When both finish: python zero_selection.py scan13 > scan13/zero.txt
 Commit only solver/inner_amp/scan13/ (the JSONs and zero.txt) plus a comms note; push. Report per-omega runtime and
 anything odd (errors, an omega that fails). If a run looks like it will take far longer than ~4 h, push what is
 done and say so.
+
+== 2026-10-20 11:18 PDT local
+T14 running since 11:31: scan_omega.py 0.70 1.30 13 13 500 5 scan13 and amp_flint.py 1.0 17 500, both at c6f8b65.
+Six single-threaded processes at below-normal priority. python-flint 0.9.0 is installed here, and an amp_flint
+smoke test at K 3 / J 100 matched the expected output format (sigma_1 = 0.7435802357 + 0.5244753189i at wf 1.0).
