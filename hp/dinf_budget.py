@@ -7,9 +7,13 @@ Grid: model (series in 1/D, in 1/(D-2)) x degree (14, 16, 18, 20, 22) x lower en
 upper end / data snapshot (D <= 45, 60.1, 61.03) x cleaning (dd_fits_mp.clean on / off). Each fit is the same
 least-squares Chebyshev fit as hp/dd_fits_mp.py (60 digits), solved through the normal equations of the degree-22
 basis so one Gram matrix serves every degree of a group (the Chebyshev basis on the fitted range is well conditioned,
-and at 60 digits the squared condition number costs nothing; checked against dd_fits_mp.fit below). A fit "reaches
-the noise floor" when its largest residual is within 2.5x of the smallest one among the degrees of its group; only
-those enter the spread. The limit is the value at 1/D = 0.
+and at 60 digits the squared condition number costs nothing; checked against dd_fits_mp.fit below). The limit is
+the value at 1/D = 0.
+
+Which fits count: reaching the noise floor (largest residual within 2.5x of the group's best, marked *) is
+necessary but not enough, because once the data are resolved every further degree only adds freedom at the
+unconstrained end 1/D -> 0 (the limits of degrees 20-22 on narrow ranges wander by 1e-7 to 1e-6 at the same
+residual). The budget therefore uses, in each group, the two lowest degrees that reach the floor (marked +).
 """
 import os
 import sys
@@ -68,19 +72,28 @@ def main():
                 for model in ("1/D", "1/n"):
                     r = fits_all_degrees(pts, Ds, model)
                     floor = min(v[1] for v in r.values())
+                    at = [deg for deg in DEGS if r[deg][1] <= 2.5 * floor]
+                    use = set(at[:2])
                     for deg, (lim, res) in r.items():
-                        rows.append((dmax, dmin, clean, model, deg, lim, res, res <= 2.5 * floor))
+                        rows.append((dmax, dmin, clean, model, deg, lim, res, deg in use))
                     print(f"D {dmin:>2}..{dmax:<5}  {'clean' if clean else 'all  '}  {model:3s}  N {len(Ds):3d}  "
-                          + "  ".join(f"{deg}:{mp.nstr(lim, 10)}{'*' if res <= 2.5 * floor else ' '}" for deg, (lim, res) in r.items())
+                          + "  ".join(f"{deg}:{mp.nstr(lim, 10)}{'+' if deg in use else ('*' if deg in at else ' ')}"
+                                      for deg, (lim, res) in r.items())
                           + f"   floor {mp.nstr(floor, 2)}   ({time.time() - T0:.0f} s)", flush=True)
-    print("\n* = reaches the noise floor (max residual within 2.5x of the group's best)")
-    print("\nSpread of the limits that reach the noise floor:")
+    print("\n* = reaches the noise floor (max residual within 2.5x of the group's best); "
+          "+ = one of the two lowest such degrees, used below")
+    print("\nSpread of the limits used (+):")
     for label, sel in (("all fits", lambda r: True),
                        ("D <= 45 (fit range of the held-out test)", lambda r: r[0] == 45),
                        ("D <= 60.1 snapshot", lambda r: r[0] == 60.1),
                        ("D <= 61.03 (all data)", lambda r: r[0] == 61.03),
                        ("D <= 61.03, cleaned", lambda r: r[0] == 61.03 and r[2]),
-                       ("D <= 61.03, cleaned, D >= 10", lambda r: r[0] == 61.03 and r[2] and r[1] == 10)):
+                       ("D <= 61.03, cleaned, D >= 10", lambda r: r[0] == 61.03 and r[2] and r[1] == 10),
+                       ("D <= 60.1 and 61.03, any cleaning, any Dmin", lambda r: r[0] > 50),
+                       ("  model 1/D only", lambda r: r[0] > 50 and r[3] == "1/D"),
+                       ("  model 1/(D-2) only", lambda r: r[0] > 50 and r[3] == "1/n"),
+                       ("  cleaning off only", lambda r: r[0] > 50 and not r[2]),
+                       ("  D >= 15 only", lambda r: r[0] > 50 and r[1] == 15)):
         L = [r[5] for r in rows if r[7] and sel(r)]
         if L:
             print(f"  {label:42s} {len(L):3d} fits: {mp.nstr(min(L), 10)} .. {mp.nstr(max(L), 10)}   "
