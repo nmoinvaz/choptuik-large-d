@@ -138,6 +138,25 @@ $`D = 40`$. $`\Delta(70)`$ and $`\Delta(100)`$ are extrapolations that every mod
 to $`10^{-11}`$ and $`2\times10^{-8}`$ (the half-integer series included). $`D = 1000`$ and $`\infty`$ assume analyticity in
 $`1/D`$; the half-integer series differ there by $`3\times10^{-6}`$ and more.
 
+### What the numbers mean physically
+
+![e^Δ, the fine-tuning per echo and the strength of the field and its gravity, from D = 4 to D = infinity](solver/physics.svg)
+
+The same two numbers, read as physics (`solver/plot_physics.py`):
+
+- **Each echo is a factor $`e^{\Delta}`$ smaller than the last:** 31 at $`D = 4`$, 12 at $`D = 10`$, 5.2 at $`D = \infty`$. In higher
+  dimensions the echoes come closer together in scale.
+- **One more echo costs $`\Delta/(\gamma\ln 10)`$ digits of fine-tuning.** A collapse whose initial strength $`p`$ is tuned to
+  $`\lvert p - p^*\rvert`$ makes about $`\gamma\ln(1/\lvert p - p^*\rvert)/\Delta`$ echoes before it either forms a black hole or disperses,
+  so each extra echo needs $`\lvert p - p^*\rvert`$ smaller by $`e^{\Delta/\gamma}`$: 4.0 digits at $`D = 4`$, 2.4 at $`D = 10`$, 1.43 at $`D = \infty`$.
+- **The field and its gravity weaken as $`D`$ grows:** the centre slope of the field falls like $`2.72/\sqrt n`$ and the
+  departure of spacetime from flat at the centre like $`3.65/n`$ (double-double solutions, $`D = 20`$–$`60`$). At $`D = \infty`$ the
+  echo is a free wave on flat space, which on its own cannot echo (Proposition 2); the selection of $`\Delta`$ is gravity's
+  doing even there ([Large D](#large-d-what-the-1d-expansion-can-and-cannot-see)).
+
+The phenomenon is the same at every $`D \ge 4`$: one unstable mode, the same echoing structure, a smooth $`\Delta(D)`$. Only the
+numbers change.
+
 <details>
 <summary>Power series in 1/D for D ≥ 10 (the earlier form)</summary>
 
@@ -911,6 +930,7 @@ hp/                 double-double solver (crate hpkernel)
 ├── dd_fits_mp.py   large-D model fits at 60 digits, held-out errors, predictions
 └── data/delta_dd.csv   every double-double point: D, Delta (hi + lo), |F|, max dDelta/dF
 hp/largeD_*.py      large-D scaling of the solutions (profiles, F(theta), harmonic content)
+solver/plot_physics.py        physics.svg: e^Delta, fine-tuning digits per echo, field and gravity strength vs D
 solver/largeD_expand.py       the 1/n expansion symbolically (sympy, Proposition 1)
 solver/largeD_formal_check.py the expansion substituted into the exact equations (residual ~ n^-3 for any omega)
 solver/largeD_late_orders.py  the same recursion numerically to high order (divergence of the series)
