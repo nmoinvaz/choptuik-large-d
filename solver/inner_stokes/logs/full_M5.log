@@ -1,0 +1,13 @@
+Jacobian columns on 4 processes
+   inner solve: |r| 2.2e+08 after the cold start; homotopy in the new harmonics
+      lam 0.016 ok  [190 s]
+      lam 0.027 ok  [226 s]
+      lam 0.045 ok  [248 s]
+Traceback (most recent call last):
+  File "C:\Users\nathan\AppData\Local\Temp\claude\C--Users-nathan-Source-dss-residual-kernel\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\scratchpad\t15-wt\solver\inner_stokes\full_M.py", line 171, in <module>
+    main()
+  File "C:\Users\nathan\AppData\Local\Temp\claude\C--Users-nathan-Source-dss-residual-kernel\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\scratchpad\t15-wt\solver\inner_stokes\full_M.py", line 149, in main
+    v, R, rh = inner(A, wf, v, M, r1, Mg, verbose=True)
+  File "C:\Users\nathan\AppData\Local\Temp\claude\C--Users-nathan-Source-dss-residual-kernel\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\scratchpad\t15-wt\solver\inner_stokes\full_M.py", line 111, in inner
+    raise RuntimeError("inner homotopy stalled")
+RuntimeError: inner homotopy stalled
