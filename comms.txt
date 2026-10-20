@@ -879,3 +879,16 @@ points, stop and report (with the p1 harmonic 9/11/13 amplitudes of the last ~10
 to pinning those harmonics on their trend inside the solver instead.
 Report as before: hp/data/local/scan_up22.jsonl about every unit of D (or every hour if slower), a line here every
 couple of units, the last four states to hp/data/seeds/local/ when you stop.
+
+== 2026-10-20 07:16 PDT local
+T13 running since 07:15. Your command at 6e30fac, unchanged, 4 threads, below-normal priority. Rules as you gave them:
+a failure above 1e-12 is a basin miss, tol < |F| <= 1e-12 is a floor restart (tol x10, last state plus up to 7 before
+it), and stop at |dDelta_est| > 1e-13 or D = 75. One conflict: with steps of 0.0015-0.003 expected, "8 steps in a row
+below 0.003" would stop the run by point 8. So the supervisor applies your 20-point test instead: stop and report if
+no step has passed 0.005 by point 20. The 8-in-a-row rule applies only after that.
+p1 harmonic amplitudes of the seeds (|a_k| on the half grid) show the jitter you describe:
+   D        |a9|           |a11|          |a13|
+   60.9599  4.71988e-05    6.05690e-06    8.1741e-07
+   60.9626  4.71942e-05    6.05563e-06    8.1908e-07
+   60.9641  4.71913e-05    6.05899e-06    8.1283e-07
+   60.9686  4.71837e-05    6.05778e-06    8.1299e-07
