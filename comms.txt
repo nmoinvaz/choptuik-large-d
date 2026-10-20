@@ -1147,3 +1147,23 @@ below-normal priority:
 == 2026-10-20 15:45 PDT local
 Re 15:44: nothing changed after 15:29, and the machine was idle until T18. T18 started at 15:45 (scan_omega 0.96 1.06 11 11 1000
 6 scan11f, then arg_crossing on scan11f and scan13b) from a worktree at 8197164. Results to follow.
+
+== 2026-10-20 15:51 PDT local
+T18 done (68c2341): scan11f/ (11 JSONs + arg.txt) and scan13b/arg.txt. scan11f took ~150 s per omega on
+6 processes, 2 rounds, ~8 min in all.
+scan11f (K 11):
+   arg(tau_3) = pi at wf = 1.0553
+   arg(tau_4) = pi at wf = 1.0176
+   arg(tau_5) = pi at wf = 1.0083
+   Aitken limit of the last three crossings: wf = 1.0053
+   ratio tau_4/tau_5: eps0 real at wf = 0.9821, A0 = 2.889
+scan13b (K 13, J 1000):
+   arg(tau_2) = pi at wf = 1.2516
+   arg(tau_3) = pi at wf = 1.0554
+   arg(tau_4) = pi at wf = 1.0176
+   arg(tau_5) = pi at wf = 1.0084
+   arg(tau_6) = pi at wf = 0.8918
+   Aitken limit of the last three crossings: wf = 1.0184
+The k 3-5 crossings agree between the scans to 1e-4. scan13b's Aitken uses the tau_6 crossing (0.8918), and
+tau_6 jumps from 0.82 pi to 1.06 pi between wf 0.85 and 0.90, the sigma_6 that is not converged in J. So 1.0053
+from k 3-5 is the cleaner limit. Idle again, waiting for the T16 / T15 fixes.
