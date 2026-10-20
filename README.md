@@ -16,7 +16,7 @@ solver in [`hp/`](hp/) for large $`D`$. The physics is in this file; the softwar
   gravity the obstruction at the light cone is a closed-form coefficient $`C(n,s)`$ (Proposition 2), which is the Stokes
   multiplier of a mode born far outside the light cone (Propositions 3–4). The working hypothesis is that the selection
   rule is the vanishing of the Stokes multipliers of an $`n`$-free inner problem; its higher-harmonic conditions already
-  predict the shape of the echo, $`F_3/F_1 = 0.055`$ against $`0.050`$–$`0.058`$ from the data
+  predict the shape of the echo, $`F_3/F_1 = 0.055`$ against $`0.055`$ extrapolated from the data
   ([Large D](#large-d-what-the-1d-expansion-can-and-cannot-see)).
 - **Relation to published work.** Agreement with the accepted values at $`D = 4`$ and at the maximum of $`\Delta`$ near $`D = 3.756`$;
   an unresolved $`6\times10^{-5}`$ discrepancy at $`D = 5`$; and the published conjecture $`\Delta \to 0`$ as $`D \to \infty`$ is not
@@ -1079,13 +1079,19 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
 - *The higher-harmonic conditions predict $`F_\infty`$'s shape* (computed; compared with data). Tuning $`f_\nu`$ order by order
   so that $`S_\nu = 0`$ for $`\lvert\nu\rvert \ge 3`$ (residuals $`\le 10^{-9}`$ of the linear sizes), at $`A = 2.72`$ and $`\omega = \omega_\infty`$,
   gives $`\lvert F_3/F_1\rvert = 0.055`$ and $`\lvert F_5/F_1\rvert = 0.0030`$ (the $`f_3`$ series converges: 0.0855, 0.0131, 0.0016). The double-double
-  solutions at $`D = 20`$–$`60`$, extrapolated in $`1/n`$ (degree 1–3), give 0.050–0.058 and 0.0013–0.0046. This is the first number
-  the D = ∞ selection rule has produced that can be checked against the solutions, and it agrees.
+  solutions at $`D = 20`$–$`60`$, extrapolated in $`1/n`$ (`hp/largeD_Fratios.py`, polynomials of degree 2–3), give
+  $`\lvert F_3/F_1\rvert \to 0.0552`$–$`0.0549`$ and $`\lvert F_5/F_1\rvert \to 0.0034`$–$`0.0032`$ (degree 1: 0.058, 0.0041). This is the first number the
+  D = ∞ selection rule has produced that can be checked against the solutions, and it agrees to the precision of the
+  extrapolation.
 - *Leading structure and a prediction* (conjectured). The tuned ratios are $`f_{\nu+2}/f_\nu \approx q(\omega)\,A^2`$ with $`q`$ nearly the same
   for every $`\nu`$ (at $`\omega_\infty`$: $`q = 0.00850 + 0.00114i`$, $`0.00851 + 0.00085i`$, $`0.00852 + 0.00082i`$ for $`\nu = 1, 3, 5`$;
   roughly $`1/q \approx 8\omega^2 - 4i\omega - 1.3`$), so $`F \approx 2\,\mathrm{Re}\big[F_1e^{i\theta}/(1 - qA^2e^{2i\theta})\big]`$ with singularities at
-  $`\lvert\mathrm{Im}\,\theta\rvert \approx \tfrac12\ln\big(1/\lvert q\rvertA^2\big) \approx 1.4`$, well inside $`\pi\omega/2 \approx 6`$. If so, $`F_\infty`$ is not entire, and
-  the harmonic decay rate (1.02 at $`D = 60`$, growing) levels off near 1.4 instead of growing like $`\tfrac14\ln n`$.
+  $`\lvert\mathrm{Im}\,\theta\rvert \approx \tfrac12\ln\big(1/\lvert q\rvert A^2\big) \approx 1.4`$, well inside $`\pi\omega/2 \approx 6`$. If so, $`F_\infty`$ is not entire, and
+  the harmonic decay rate (1.02 at $`D = 60`$, growing) levels off near 1.4 instead of growing like $`\tfrac14\ln n`$. The data
+  support this: the measured ratios $`\lvert F_{\nu+2}/F_\nu\rvert`$, $`\nu = 1, \ldots, 9`$, are 0.080, 0.106, 0.118, 0.125, 0.129 at $`D = 60`$ and
+  extrapolate (degree 3 in $`1/n`$) to 0.055, 0.059, 0.065, 0.069, 0.072: finite, close to each other and to $`\lvert q\rvert A^2 \approx 0.063`$,
+  i.e. a decay rate of 1.3–1.45 per harmonic. The extrapolations are not fully converged (they still fall by 0.003–0.004
+  from degree 2 to 3).
 - *The harmonic-1 condition is still open.* With the higher harmonics tuned, $`S_1/S_1^{(1)} = 1 + \sigma_1A^2 + \sigma_2A^4 + \ldots`$ with
   $`\sigma_1 = 0.743587 + 0.524476i`$, $`\sigma_2 = 0.118797 + 0.398074i`$, $`\sigma_3 = -0.053969 + 0.116587i`$, $`\sigma_4 \approx -0.0290 + 0.0109i`$
   (stable to $`10^{-5}`$–$`4\times10^{-4}`$ across fit windows). $`\ln S_1`$ is nearly linear in $`A^2`$, and four terms do not locate its
@@ -1106,9 +1112,10 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   been checked directly. For harmonics $`k = 7, 9, 11, 13`$ they fall between $`D = 20`$ and $`60`$ about like
   $`n^{-10.5}, n^{-14}, n^{-17.5}, n^{-21}`$, roughly $`n^{-1.6k}`$; data at $`n = 18`$–$`58`$ cannot tell such power laws from the
   exponential weakening seen in $`\max\lvert\partial\Delta/\partial F\rvert`$.
-- **$`F`$'s singularities recede.** The decay rate of $`F`$'s harmonics grows roughly like $`\tfrac14 \ln n`$ (0.58 at
-  $`D = 12`$, 1.02 at $`D = 60`$), so $`F_\infty`$ looks entire, and its harmonics beyond the first shrink as $`D`$ grows. (The amplitude
-  expansion of the inner problem, above, predicts instead that the rate levels off near 1.4; the data cannot yet tell.)
+- **$`F`$'s singularities recede, to a finite distance.** The decay rate of $`F`$'s harmonics grows from 0.58 at $`D = 12`$ to
+  1.02 at $`D = 60`$, which first suggested $`\tfrac14\ln n`$ growth and an entire $`F_\infty`$. The harmonic ratios extrapolate instead to
+  a finite rate of 1.3–1.45 per harmonic, as the amplitude expansion of the inner problem predicts (above), so $`F_\infty`$
+  likely has complex singularities near $`\lvert\mathrm{Im}\,\theta\rvert \approx 1.4`$.
 - **The nonlinear late orders are dominated by something else.** In the nonlinear recursion the ratio of successive
   orders grows like $`7k`$–$`8.6k`$ (a singulant of modulus about $`0.13`$), against $`\lvert\chi\rvert \ge \pi/2`$ for the fast mode, so the fast
   singulant is not directly visible. `solver/largeD_late_structure.py` characterizes the dominant growth: the rate is the
@@ -1348,6 +1355,7 @@ solver/inner_borel/           the same by Borel-Darboux in ball arithmetic (pyth
 solver/eeg20/                 the comparison with Ecker-Ecker-Grumiller's Eq. (20) (window identity, tilt, max c, Delta -> 0 fits)
 solver/inner_amp/             the inner multipliers by an amplitude expansion with every harmonic exact (amp_series.py check, stokes_amp2.py wf K J)
 solver/inner_pert/            growing modes of the inner problem (exact lambda = 0, 1 modes; one-harmonic root) and free gamma fits
+hp/largeD_Fratios.py          harmonic ratios F_{nu+2}/F_nu of the double-double solutions, extrapolated to D = infinity
 solver/largeD_transport_sympy.py  Proposition 3 derived symbolically from the exact equations (b, c perturbed too)
 solver/largeD_fast_transport_full.py  the transport check with the full O(1/n) background
 solver/largeD_linear_poles.py  Proposition 4: the late orders as an exact sum over the poles in kappa
