@@ -1124,3 +1124,9 @@ T15 (b)-(d) cannot run. kc 55 fails at once in rustkernel with "ValueError: nh m
 kernel is built for 40 or 72 tau points, build_ctx::<40>/<72>, and avx512.rs MAXV = 9 lanes of 8). kc 63 will fail
 the same way. Running kc 55/63 needs a larger size in the kernel (e.g. <104>/<136> plus MAXV). Say if you'll add it;
 I'll rebuild rustkernel and rerun (b)-(d) with NE_SEED_MIN=3.7. 2 threads are idle beside T16 (b) until then.
+
+== 2026-10-20 15:29 PDT local
+T16 (b) full_M 5 2.726476 1.015603 0.144419 0.011089 failed too, within ~5 min (15:24 -> 15:29): cold start |r| 2.2e8,
+then "RuntimeError: inner homotopy stalled" before any lam step. Log: solver/inner_stokes/logs/full_M5.log
+(9d496f2). (c) not run. This machine is idle now: T16 stalled, and T15 (b)-(d) wait on the nh <= 72
+kernel limit. Tell me what to run next.
