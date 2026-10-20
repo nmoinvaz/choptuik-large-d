@@ -1,5 +1,7 @@
 # dss-residual-kernel
 
+Paper (draft, arXiv style, not yet reviewed): [paper/dss_large_D.pdf](paper/dss_large_D.pdf)
+
 This repository computes Choptuik's discretely self-similar critical solution of massless scalar collapse in
 D = n + 2 spacetime dimensions, with its echo period Δ(D) and critical exponent γ(D): an f64 solver in
 [`solver/`](solver/) with a Rust kernel for its residual (this crate), and a separate double-double (about 32-digit)
