@@ -566,16 +566,31 @@ from the WKB data, and compares the result with the transported $`A`$:
 |---|---|---|---|---|---|
 | relative error, no gravity ($`F = 0`$ in $`c`$) | $`5.6\times10^{-2}`$ | $`2.9\times10^{-2}`$ | $`1.5\times10^{-2}`$ | $`7.5\times10^{-3}`$ | $`3.8\times10^{-3}`$ |
 | relative error, with gravity | $`0.57`$ | $`0.26`$ | $`0.13`$ | $`0.062`$ | $`0.031`$ |
+| relative error, full background ($`b`$, $`G`$, $`p`$ of Proposition 1, with $`\delta b`$, $`\delta c`$) | $`0.62`$ | $`0.28`$ | $`0.135`$ | $`0.066`$ | $`0.032`$ |
 
-Both fall like $`1/n`$. Over this interval gravity multiplies the fast mode by about 40.
+All fall like $`1/n`$. Over this interval gravity multiplies the fast mode by about 40. The last row is
+`solver/largeD_fast_transport_full.py`. `solver/largeD_transport_sympy.py` repeats the derivation symbolically from the
+exact equations with $`\delta b`$ and $`\delta c`$ kept: they come out at order $`\varepsilon^{3/2}e^{-n\Phi}`$, the half-integer orders vanish,
+the leading order gives $`B = A(1-x)/(1+x)`$, $`a_1, b_1`$ drop out of the projection, and the projected order-1 equation is
+$`-2/(1+x)`$ times the transport equation.
 
 **Consequences.**
 
 1. Gravity acts on the non-analytic piece at order 1, not at order $`1/n`$, through a factor that contains every power of
    $`F^2`$. Near the light cone the characteristic winds through all phases, $`F^2`$ averages, and the factor behaves like
    $`(1-x^2)^{\langle F^2\rangle}`$: the light-cone exponent becomes $`n/2 - 1 - s + \langle F^2\rangle`$. The exact local analysis at
-   $`x = 1`$ agrees: there the exponent is $`(n/2 - 1 - s + \langle G(1)\rangle)/(1 - \langle G(1)\rangle)`$, and $`G(1) \approx 2F^2/n`$. With
-   $`\langle F^2\rangle \approx 3.7`$ at $`D = \infty`$, an expansion in the amplitude of the wave is not a route to the selection.
+   $`x = 1`$ agrees: there $`x - c = -(1-x)\,(1 - c_x(1))`$ with $`c_x(1) = G(1)`$ (because $`c(1) = 1`$), $`m`$ enters only one power
+   later, and periodicity in $`\theta`$ gives the exponent $`(n/2 - 1 - s + \langle G(1)\rangle)/(1 - \langle G(1)\rangle)`$. On the double-double
+   solutions (`hp/largeD_exponent.py`; $`\lvert c_x(1) - G(1)\rvert \le 1.7\times10^{-14}`$):
+
+   | $`D`$ | 20 | 30 | 40 | 50 | 60 | $`\infty`$ (fit in $`1/n`$) |
+   |---|---|---|---|---|---|---|
+   | $`n\langle G(1)\rangle/2`$ | 2.038 | 2.435 | 2.678 | 2.844 | 2.964 | 3.59–3.70 |
+   | $`\langle F^2\rangle`$ | 6.162 | 5.218 | 4.804 | 4.568 | 4.416 | 3.70–3.73 |
+   | exponent shift, real part | 2.63 | 2.95 | 3.12 | 3.23 | 3.30 | |
+
+   The two agree only in the limit (both extrapolate to about 3.70); at finite $`D`$ the $`1/n`$ corrections are large. With
+   a shift of about 3.7 at $`D = \infty`$, an expansion in the amplitude of the wave is not a route to the selection.
 2. The factor never vanishes. Gravity rescales the fast mode along each characteristic, but it cannot cancel it on the
    way to the light cone; the light-cone coefficient is zero only where the mode is never created.
 3. For $`x < 1/\sqrt2`$, $`\Phi < 0`$ and $`e^{-n\Phi}`$ is exponentially large, while the solution is of size $`n^{-1/2}`$. Every
@@ -598,8 +613,11 @@ computes it to order 122 at 90 digits and reads $`\chi`$ and $`g`$ off consecuti
 
 So the singulant is $`\chi(x) = \Phi(x) - i\pi/2`$ to the accuracy of 120 orders. The exponent read off two ratios carries
 a $`1/k`$ error; with the constant below fixed, the data are consistent with $`g = -(s + \tfrac12) = -0.5 - 3.82i`$ exactly, the
-power $`n^{s+1/2}`$ that $`C(n,s)`$ carries for large $`n`$. Below $`x = 1/\sqrt2`$ a second singulant of equal modulus,
-$`\Phi + i\pi/2`$, interferes and the readings scatter. The prefactor and the constant are predicted too (next subsection):
+power $`n^{s+1/2}`$ that $`C(n,s)`$ carries for large $`n`$. Below $`x = 1/\sqrt2`$ the readings scatter. The next singulant,
+$`\Phi + i\pi/2`$, has the same modulus but a small weight ($`8\times10^{-5}`$ at $`x = 0.5`$, $`e^{-\pi\omega} \approx 6\times10^{-6}`$ at $`1/\sqrt2`$,
+$`e^{-2\pi\omega}`$ as $`x \to 1`$); the two-ratio estimator amplifies it by about $`k\,\lvert e^{i\varphi}-1\rvert^2`$, and at $`x = 0.6`$, $`k \ge 110`$ the
+direct series also loses 70–84 of its 90 digits to cancellation. The prefactor and the constant are predicted too (next
+subsection):
 
 ```math
 y_k(x) \sim K\,x^2(1-x^2)^{-1-s}\,\frac{\Gamma(k+s+\frac12)}{\chi(x)^{\,k+s+\frac12}}, \qquad
@@ -612,7 +630,36 @@ K = e^{-i\pi(1+s)}\,\frac{2^{-s-1/2}}{\Gamma(\alpha)\Gamma(\beta)} .
 |---|---|---|---|---|---|
 | $`K_{\text{measured}}/K`$ | $`1.08 + 0.06i`$ | $`1.01 - 0.10i`$ | $`0.9936 + 0.0022i`$ | $`1.0006 - 0.0002i`$ | $`1.0010 - 0.0015i`$ |
 
-(the first two columns are the ones the second singulant spoils). What this says:
+(the first two columns carry the estimator's interference). Both the singulant and the exponent can be proved:
+
+**Proposition 4 (late orders of the leading-order series).** Let $`y(\varepsilon) = x\,{}_2F_1(\alpha, \beta; \kappa; z)`$, $`z = x^2`$,
+$`\kappa = (1 + 1/\varepsilon)/2`$, with $`y \sim \sum_k y_k\varepsilon^k`$. Then, exactly,
+
+```math
+y_k = 2x\,(-1)^{k-1}\sum_{J \ge 0} R_J\,(2J+1)^{k-1}, \qquad
+R_J = \frac{(-1)^J(\alpha)_{J+1}(\beta)_{J+1}}{J!\,(J+1)!}\,z^{J+1}\,{}_2F_1(\alpha+J+1, \beta+J+1; J+2; z),
+```
+
+the sum converging for $`x < 1/\sqrt2`$ and continued analytically above, and as $`k \to \infty`$
+
+```math
+y_k \approx \sum_{\ell} K_\ell(x)\,\frac{\Gamma\big(k + s + \frac12\big)}{\big(\Phi(x) + i\pi(\ell + \frac12)\big)^{k+s+\frac12}} ,
+```
+
+with the $`\ell = -1`$ term, $`\chi = \Phi - i\pi/2`$, dominant for an echo with $`\omega > 0`$.
+
+*Proof sketch.* As a function of $`\kappa`$, $`{}_2F_1`$ is meromorphic with simple poles at $`\kappa = -J`$ and residues $`R_J`$; with
+$`1/(\kappa + J) = 2\varepsilon/\big(1 + (2J+1)\varepsilon\big)`$ the pole expansion gives the first formula term by term. For large $`J`$,
+$`R_J \approx (-1)^J x^2(1-x^2)^{-\alpha-\beta}\,e^{2\Phi J}J^{s+1/2}/\big(\Gamma(\alpha)\Gamma(\beta)\big)`$. Poisson summation over $`J`$ turns
+$`\sum_J (-1)^J e^{2\Phi J}J^{s+1/2}(2J+1)^{k-1}`$ into $`\sum_\ell \int_0^\infty e^{(2\Phi + i\pi(2\ell+1))J}J^{k+s-1/2}\,dJ`$ (to leading order), and each
+integral is a Gamma function: singulants $`\Phi + i\pi(\ell+\tfrac12)`$ and exponent $`g = -(s+\tfrac12)`$. The tower of $`\ell`$ is the tower
+in $`1/\sin(\pi(\kappa-\alpha-\beta))`$ of $`C(n,s)`$, and the prefactor carries the same $`1/(\Gamma(\alpha)\Gamma(\beta))`$. $`\square`$
+
+*Check.* `solver/largeD_linear_poles.py`: the pole sum equals the direct series to $`10^{-49}`$–$`10^{-91}`$ at $`x = 0.3, 0.5, 0.6`$,
+$`k \le 60`$. `solver/largeD_linear_poisson.py`: at $`x = 0.5`$, $`k = 30`$ the Poisson pieces add up to the exact $`y_k`$ within
+$`10^{-19}`$, with relative sizes $`1`$ ($`\ell = -1`$), $`1.6\times10^{-4}`$ ($`\ell = 0`$), $`10^{-14}`$ ($`\ell = -2`$).
+
+What this says:
 
 - $`e^{-n\chi} = e^{in\pi/2}\,x^{-n}(1-x^2)^{n/2}`$ is the fast mode of Proposition 3, and $`x^2(1-x^2)^{-1-s}`$ is its transported
   amplitude at $`F = 0`$. The divergence of the $`1/n`$ series and the non-analytic piece are the same object.
@@ -621,7 +668,12 @@ K = e^{-i\pi(1+s)}\,\frac{2^{-s-1/2}}{\Gamma(\alpha)\Gamma(\beta)} .
 - Its Stokes line ($`\operatorname{Im}\chi = 0`$, $`\operatorname{Re}\chi > 0`$) is the real axis $`x > 1`$ approached from above, where
   $`\chi = \ln\big(x/\sqrt{x^2-1}\big)`$. On $`0 < x < 1`$, $`\operatorname{Im}\chi = -\pi/2`$, so nothing is switched on there (as
   Consequence 3 requires). The Stokes line ends at the light cone, so a loop around $`x = 1`$ crosses it, and that is where
-  the branch $`(1-x^2)^{n/2-1-s}`$ and its coefficient $`C(n,s)`$, the Stokes multiplier, come from.
+  the branch $`(1-x^2)^{n/2-1-s}`$ and its coefficient $`C(n,s)`$, the Stokes multiplier, come from. ($`\operatorname{Im}\chi = 0`$ also on the
+  imaginary axis, but there $`\operatorname{Re}\chi < 0`$, so it does not switch this exponential.)
+- Directly: the $`1/n`$ series truncated near its smallest term reproduces the exact $`x\,{}_2F_1`$ inside $`0 < x < 1`$ to far
+  below the size the singular branch would have there (`solver/largeD_linear_truncation.py`): at $`x = 0.9`$, $`n = 60`$ the
+  smallest difference is $`4\times10^{-40}`$ against $`\lvert C\rvert\times`$branch $`= 7\times10^{-21}`$; at $`x = 0.8`$, $`n = 40`$, $`10^{-23}`$ against
+  $`2\times10^{-7}`$. So the regular solution carries no fast mode inside the light cone.
 
 With gravity, Proposition 3 holds on the continuation to $`x > 1`$ as well, so the light-cone coefficient is the
 multiplier times a factor that does not vanish. **The selection rule at $`D = \infty`$ is therefore that the Stokes
@@ -673,7 +725,7 @@ algebraic, $`\eta = p^2 + m^2`$.)
   characteristic carries a shift $`-i\pi\omega`$; that is branch bookkeeping between $`0 < x < 1`$ and $`x > 1`$, and it is the phase
   $`e^{-i\pi\lambda}`$ in $`C`$.) Without gravity, harmonic 1 of the inner series grows at ratio/$`j \to 2`$ (the Borel singularity at
   $`\zeta = \tfrac12`$, dual to $`1/\xi^2`$). With gravity ($`F = 2.72\sin\theta`$, 60 orders) the growth is dominated by high harmonics,
-  ratio/$`j`$ 6.8, 4.9, 4.2 at $`j`$ = 10, 30, 50: the heat-like growth of the outer late orders lives in the top-degree terms. The
+  ratio/$`j`$ 6.8, 4.9, 4.2 at $`j`$ = 10, 30, 50, like the outer late orders (next subsection). The
   fast-type constant sits under it and cannot be read off ratios in double precision; a one-harmonic truncation suggests
   that gravity also couples the $`s = \pm i\mu\omega`$ fast modes (same singulant, exponents $`2i\mu\omega`$ apart), so the
   multiplier is a matrix over $`\pm\mu`$.
@@ -693,9 +745,16 @@ algebraic, $`\eta = p^2 + m^2`$.)
 - **$`F`$'s singularities recede.** The decay rate of $`F`$'s harmonics grows roughly like $`\tfrac14 \ln n`$ (0.58 at
   $`D = 12`$, 1.02 at $`D = 60`$), so $`F_\infty`$ looks entire, and its harmonics beyond the first shrink as $`D`$ grows.
 - **The nonlinear late orders are dominated by something else.** In the nonlinear recursion the ratio of successive
-  orders grows like $`7k`$–$`8.6k`$ (a singulant of modulus about $`0.13`$), driven by high harmonics, against $`\lvert\chi\rvert \ge \pi/2`$
-  for the fast mode. So the fast singulant is not directly visible in the nonlinear late orders; it sits under a
-  closer one of a different (heat-like, $`\theta`$-dependent) kind.
+  orders grows like $`7k`$–$`8.6k`$ (a singulant of modulus about $`0.13`$), against $`\lvert\chi\rvert \ge \pi/2`$ for the fast mode, so the fast
+  singulant is not directly visible. `solver/largeD_late_structure.py` characterizes the dominant growth: the rate is the
+  same at $`x = 0.25, 0.5, 0.75, 1`$ (at $`x = 0.25`$ it is carried by the $`x^3`$ coefficient; the top-degree share at $`x = 1`$
+  falls to 0.008 by order 27), and the dominant harmonic grows like $`0.55k`$, almost independently of the amplitude
+  (13, 15, 17 at order 25 for $`A = 1.36, 2.72, 5.44`$) and of $`\omega`$, while the rate does depend on them (about 6, 8.5,
+  12 for those amplitudes, 25 at $`2\omega`$). An $`x`$-dependent singulant of either eikonal branch is ruled out: a heat-like
+  slow-branch singulant would give a rate that depends on $`x`$, a fast one $`\lvert\chi\rvert \ge \pi/2`$. The divergence lives in the free data
+  ($`\theta`$-harmonics of $`F`$ and the $`K_k`$), consistent with an $`x`$-independent Borel singularity per harmonic that moves
+  towards 0 as the harmonic grows. Its ambiguities are exponentially small changes of $`F`$'s high harmonics, like the
+  solver's weak directions, not light-cone terms.
 - **Open:** the D = ∞ selection rule itself. Proposition 2 gives the multiplier without gravity, $`C(n,s)`$, and the inner
   problem shows it is a $`{}_2F_0`$ Stokes constant; Proposition 3 shows that propagation to the light cone cannot change whether
   it vanishes. What remains is to compute the Stokes multipliers of the inner problem with gravity as functions of $`F`$ and
@@ -843,6 +902,13 @@ solver/largeD_linear_late.py  late orders of the exact leading-order 1/n series 
 solver/largeD_dingle_K.py     their Dingle constant against the inner 2F0 prediction
 solver/largeD_stokes_C.py     C(n,s) as the 2F0 Stokes constant times n^(s+1/2) and a phase
 solver/largeD_inner.py        the inner problem at x ~ sqrt(n): formal series, check against the outer top degrees
+solver/largeD_transport_sympy.py  Proposition 3 derived symbolically from the exact equations (b, c perturbed too)
+solver/largeD_fast_transport_full.py  the transport check with the full O(1/n) background
+solver/largeD_linear_poles.py  Proposition 4: the late orders as an exact sum over the poles in kappa
+solver/largeD_linear_poisson.py  Proposition 4: Poisson summation of the pole sum (the singulant tower)
+solver/largeD_linear_truncation.py  optimally truncated series against the exact solution (no fast mode inside x < 1)
+solver/largeD_late_structure.py  where the nonlinear late-order growth lives (x, harmonic, amplitude)
+hp/largeD_exponent.py         light-cone exponent and n<G(1)>/2 vs <F^2> on the double-double solutions
 ```
 
 ## Limits

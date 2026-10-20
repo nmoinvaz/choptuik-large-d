@@ -562,3 +562,17 @@ light ray. Note the factor √(2π) between the simulation's field (G = 1) and t
   2.6e-15 (deg 16: 7e-15, 1/n 18: 1e-14).
 - Two forks launched on (A) the inner problem at x ~ sqrt(n) and (B) independent checks of Proposition 3 / the Stokes
   claims and the nonlinear late-order singulant.
+- Fork A (inner problem): xi = x/sqrt(n) gives I1-I3 (README), n-free; the inner series reproduces the outer top-degree
+  coefficients to 2e-13 (orders 1-10). Linear: 2F0(a, b; ; 2 xi^2); C(n,s) = -2 pi i 2^(-s-1/2)/(Gamma(a)Gamma(b))
+  (n+1)^(s+1/2) e^(-i pi lambda)(1 + O(s^2/n)) (ratio 1.00014 at n = 1e5); Dingle constant of the linear late orders
+  K = e^(-i pi(1+s)) 2^(-s-1/2)/(Gamma(a)Gamma(b)) verified to 6e-4 (x = 0.9), 1e-3 (0.95) after Richardson; g = -(s+1/2)
+  exact. Im theta = -pi omega remark withdrawn (branch bookkeeping). With gravity: inner series growth dominated by high
+  harmonics (ratio/j 6.8 -> 4.2), harmonic-1 fast constant below double-precision floor; one-harmonic Galerkin hints at
+  +-omega mixing. Fork A continues: direct multiplier with gravity (lateral solutions / Borel-Pade).
+- Fork B (checks): Prop 3 transport re-derived in sympy with db, dc (enter at eps^3/2) - exact; full-background check
+  n*err 62 -> 51.7. Local exponent formula verified (c_x(1) = G(1) to 1.7e-14 on DD states); n<G(1)>/2 = 2.04..2.96 vs
+  <F^2> 6.16..4.42 at D = 20..60, both extrapolate to ~3.70. Proposition 4 (README): exact pole sum of the linear late
+  orders (1e-49..1e-91), Poisson summation gives the singulant tower Phi + i pi (l + 1/2) and g = -(s+1/2); weights
+  1 : 1.6e-4 : 1e-14 at x = 0.5. Truncated series vs exact inside x < 1: no fast mode (4e-40 vs 7e-21 at x = 0.9, n = 60).
+  Nonlinear late orders: rate x-independent (7-8.5 at x = 0.25..1), dominant harmonic ~0.55 k: free-data divergence, not
+  a heat-type (x-dependent) singulant - that hypothesis refuted.
