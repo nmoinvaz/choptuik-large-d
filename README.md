@@ -1,27 +1,54 @@
 # dss-residual-kernel
 
-Rust port of the multiple-shooting residual `F(z)` used to compute Choptuik's discretely self-similar critical solution in D = n + 2 dimensions. It covers the centre series, the RK4 shooting segments and the horizon series on the Python solver's spectral layout (941 unknowns in the production configuration; [`solver/`](solver/)), and is
-called from Python through PyO3 as a drop-in for `S.residual`, the Python reference residual.
+This repository computes Choptuik's discretely self-similar critical solution of massless scalar collapse in
+$`D = n + 2`$ spacetime dimensions, with its echo period $`\Delta(D)`$ and critical exponent $`\gamma(D)`$: an f64 solver in
+[`solver/`](solver/) with a Rust kernel for its residual (this crate), and a separate double-double (about 32-digit)
+solver in [`hp/`](hp/) for large $`D`$. The physics is in this file; the software is described at the end. Headline results:
 
-[`hp/`](hp/) is a separate double-double (~32 digit) solver built to reach large D, where f64 can no longer pin the
-period ([below](#double-double-solver-hp-in-progress)). It has computed Δ at 857 points from D = 8.25 to 61.03
-([`hp/data/delta_dd.csv`](hp/data/delta_dd.csv)), to about $`10^{-16}`$ up to D = 60.1 and a few $`10^{-15}`$ above, and
-the points beyond each fitted range support (they do not prove) that Δ is analytic in 1/D at large D
-([below](#is-the-period-analytic-in-1d)). Why the 1/D expansion of the equations cannot fix the period, with proofs,
-is in [Large D](#large-d-what-the-1d-expansion-can-and-cannot-see).
+- **One formula for all $`D \ge 4`$.** A rational function of $`1/(D-2)`$ gives $`\Delta`$ and $`\gamma`$ within the precision of the
+  computed points up to $`D = 30`$, and $`\Delta`$ to $`6\times10^{-8}`$ up to $`D = 61`$ ([The formula](#the-formula), [Values](#values)).
+- **The large-D limit.** $`\Delta`$ is computed at 857 points from $`D = 8.25`$ to $`61.03`$, to about $`10^{-16}`$ ($`10^{-15}`$ above
+  $`D = 60.1`$). The points support, but do not prove, that $`\Delta`$ is analytic in $`1/D`$; then
+  $`\Delta_\infty = 1.64389375 \pm 10^{-8}`$ ($`\omega_\infty = 2\pi/\Delta_\infty = 3.82213589`$), and $`\gamma_\infty = 1/2`$ to about $`4\times10^{-4}`$.
+  Nine candidate closed forms for $`\Delta_\infty`$ are ruled out ([Evidence](#evidence)).
+- **Why the 1/D expansion cannot give it.** The $`1/D`$ expansion of the field equations can be carried to all orders for any
+  period (Proposition 1), so $`\Delta`$, and likewise $`\gamma`$, are selected by effects smaller than every power of $`1/D`$. Without
+  gravity the obstruction at the light cone is a closed-form coefficient $`C(n,s)`$ (Proposition 2), which is the Stokes
+  multiplier of a mode born far outside the light cone (Propositions 3–4). The working hypothesis is that the selection
+  rule is the vanishing of the Stokes multipliers of an $`n`$-free inner problem; its higher-harmonic conditions already
+  predict the shape of the echo, $`F_3/F_1 = 0.055`$ against $`0.050`$–$`0.058`$ from the data
+  ([Large D](#large-d-what-the-1d-expansion-can-and-cannot-see)).
+- **Relation to published work.** Agreement with the accepted values at $`D = 4`$ and at the maximum of $`\Delta`$ near $`D = 3.756`$;
+  an unresolved $`6\times10^{-5}`$ discrepancy at $`D = 5`$; and the published conjecture $`\Delta \to 0`$ as $`D \to \infty`$ is not
+  supported: a power-law approach to 0 is excluded, a logarithmic one disfavoured
+  ([Relation to published work](#relation-to-published-work)).
 
-Contents: [The formula](#the-formula) ·
-[What the numbers mean physically](#what-the-numbers-mean-physically) ·
-[Relation to published work](#relation-to-published-work) ·
-[Double-double solver](#double-double-solver-hp-in-progress) ·
-[Is the period analytic in 1/D?](#is-the-period-analytic-in-1d) ·
-[Large D](#large-d-what-the-1d-expansion-can-and-cannot-see) ·
-[Backends](#backends) · [Use](#use) · [Build and test](#build-and-test) · [Performance](#performance) ·
-[Layout](#layout) · [Limits](#limits)
+Contents
+
+- [Results](#results): [The formula](#the-formula) · [Values](#values) ·
+  [What the numbers mean physically](#what-the-numbers-mean-physically) ·
+  [Candidate closed forms, all ruled out](#candidate-closed-forms-all-ruled-out) ·
+  [Relation to published work](#relation-to-published-work)
+- [Evidence](#evidence): [The double-double solver](#the-double-double-solver-hp) ·
+  [Is the period analytic in 1/D?](#is-the-period-analytic-in-1d)
+- [Large D](#large-d-what-the-1d-expansion-can-and-cannot-see): [How the solution scales](#how-the-solution-scales-with-d) ·
+  [Proposition 1](#proposition-1-the-1n-expansion-never-fixes-the-period) ·
+  [Proposition 2](#proposition-2-the-leading-order-problem-solved-exactly) ·
+  [Proposition 3](#proposition-3-what-gravity-does-to-the-non-analytic-piece) ·
+  [Proposition 4](#proposition-4-late-orders-of-the-leading-order-series) ·
+  [The inner problem](#the-inner-problem-at-large-x) ·
+  [What is known and what is open](#what-is-known-about-the-selection-and-what-is-open) · [References](#references)
+- [Software: the Rust kernel](#software-the-rust-kernel): [Backends](#backends) · [Use](#use) ·
+  [Double-double residual](#double-double-residual) ·
+  [Exact Jacobian and growth-mode matrix](#exact-jacobian-and-growth-mode-matrix) · [Build and test](#build-and-test) ·
+  [Performance](#performance) · [Layout](#layout) · [Limits](#limits)
+
+## Results
 
 ![Echo period Δ(D) and critical exponent γ(D) with one rational formula for all D ≥ 4, and the double-double points to D = 61](solver/delta.svg)
 
-The echo period Δ(D) and critical exponent γ(D), computed with this kernel and the solver in [`solver/`](solver/).
+The echo period Δ(D) and critical exponent γ(D), computed with the f64 solver in [`solver/`](solver/) (its residual is the
+Rust kernel of [Software](#software-the-rust-kernel)) and the double-double solver in [`hp/`](hp/).
 The dashed curves are one rational formula in 1/(D−2) for every D ≥ 4 (below), fitted on the f64 points
 4 ≤ D ≤ 30.2 whose integration-step error has been extrapolated out ("step-converged"), with the solver's near-null
 directions resolved and enough Fourier modes in time at low D;
@@ -31,7 +58,7 @@ to $`6\times10^{-8}`$. As D → ∞, γ → 1/2 − 0.758/n (the limit 1/2 is im
 1.64395 ± 0.00008). Details are in
 [`solver/CONTEXT.md`](solver/CONTEXT.md). Regenerate with `cd solver/data && python3 ../plot_delta.py`.
 
-## The formula
+### The formula
 
 For massless scalar critical collapse in $`D = n + 2`$ spacetime dimensions, the echo period $`\Delta`$ and the critical
 exponent $`\gamma`$ of Choptuik's discretely self-similar solution (Choptuik, PRL 70, 9 (1993)) are fitted, for every
@@ -69,8 +96,8 @@ ten times tighter), they reproduce each point within its own precision:
 | 20 – 30 | $`\le 1\times10^{-8}`$ | $`\le 3\times10^{-8}`$ | $`\le 2.3\times10^{-9}`$ | $`\sim 10^{-7}`$ (assigned $`10^{-9}`$, but the fits' $`\chi^2/\mathrm{dof}`$ is about 7000 against it) |
 | 30.2 – 61, never seen by the fit | $`\le 6\times10^{-8}`$ | $`\le 10^{-14}`$ (double-double) | $`\le 5\times10^{-7}`$ up to $`D = 35.8`$ | |
 
-An independent double-double computation ([below](#double-double-solver-hp-in-progress)) agrees with the formula to
-$`2.7\times10^{-9}`$ or better on $`8.25 \le D \le 21`$, $`7.5\times10^{-9}`$ up to $`D = 30`$, and $`6\times10^{-8}`$ from there to
+An independent double-double computation ([below](#the-double-double-solver-hp)) agrees with the formula to
+$`2.7\times10^{-9}`$ or better on $`8.25 \le D \le 21`$, $`7.5\times10^{-9}`$ up to $`D = 30`$, and $`5.8\times10^{-8}`$ from there to
 $`D = 61`$, which the fit never saw. It also shows that the f64 points at $`D \approx 8`$–$`10`$ (23 Fourier modes in time)
 sit up to $`4\times10^{-10}`$ above the true values (from $`1.3\times10^{-11}`$ to $`3.7\times10^{-10}`$ on $`8.25`$–$`9.9`$; within
 $`3\times10^{-11}`$ on $`10`$–$`15.2`$ and $`5.6\times10^{-11}`$ on $`15.6`$–$`21`$), so their quoted $`3\times10^{-11}`$ was optimistic
@@ -111,11 +138,10 @@ reach only $`D = 40`$ ($`\gamma(40) = 0.4848`$). $`1/2`$ is also the value conje
 ([below](#relation-to-published-work)), and like $`\Delta_\infty`$ it is not fixed at any finite order of the $`1/n`$ expansion
 ([Large D](#what-is-known-about-the-selection-and-what-is-open)).
 
-$`\Delta_\infty`$ comes from the double-double points ([below](#is-the-period-analytic-in-1d)): power series in $`1/D`$ of degree
-16–20 and in $`1/(D-2)`$ of degree 18–20 fit all the cleaned points from $`D = 10`$ to $`61.03`$ to $`4.2\times10^{-15}`$
-($`8.6\times10^{-15}`$ for $`1/D`$ at degree 16, $`1.5\times10^{-14}`$ for $`1/(D-2)`$ at degree 18) and give limits from $`1.643893745`$ to
-$`1.643893752`$ (on the points to $`D = 60.1`$ only: $`1.643893744`$ to $`1.643893752`$). The f64 points gave $`1.64395 \pm 0.00008`$, and this formula's own limit is
-$`a_0 = 1.643898`$, $`4\times10^{-6}`$ high, which its fitting range could not see. The coefficients of one fit are not
+$`\Delta_\infty`$ comes from fits of all the double-double points, which give limits from $`1.643893744`$ to $`1.643893752`$
+([Is the period analytic in 1/D?](#is-the-period-analytic-in-1d), where the fits and their residuals are listed). The f64
+points gave $`1.64395 \pm 0.00008`$, and this formula's own limit is $`a_0 = 1.643898`$, $`4\times10^{-6}`$ high, which its fitting
+range could not see. The coefficients of one fit are not
 physical constants (they are correlated); only the function is.
 
 **The limit rests on an assumption, which the double-double points now support.** $`\Delta_\infty = 1.64389375`$ holds if $`\Delta(D)`$ is analytic in $`1/D`$ at
@@ -137,57 +163,6 @@ the period is selected by an exponentially small effect that the $`1/D`$ expansi
 Grumiller conjecture $`\Delta \to 0`$ ([below](#relation-to-published-work)). The double-double points up to $`D = 61`$
 favour the analytic form strongly; a proof needs the $`D \to \infty`$ equations themselves.
 `solver/plot_extrapolation.py` draws the graph; the faded curves are the ones the double-double points rule out.
-
-**Values.**
-
-| $`D`$ | $`\Delta`$ | $`\gamma`$ |
-|---|---|---|
-| 4 | 3.4454524 | 0.3739610 |
-| 5 | 3.2217019 | 0.4131269 |
-| 6 | 3.0094832 | 0.4300795 |
-| 7 | 2.8427532 | 0.4399912 |
-| 8 | 2.711790054444 | 0.4467164 |
-| 10 | 2.521078919562 | 0.4555879 |
-| 12 | 2.389188553641 | 0.4614056 |
-| 15 | 2.253098407194 | 0.4673656 |
-| 20 | 2.112080154580 | 0.4737107 |
-| 30 | 1.964957899258 | 0.4807927 |
-| 40 | 1.888568197910 | 0.484776 |
-| 50 | 1.841659503007 | 0.48736 |
-| 60 | 1.809889459975 | |
-| 70 | 1.78693476494 | |
-| 100 | 1.7450264844 | 0.49313 |
-| 1000 | 1.65424086 | 0.4992 |
-| $`\infty`$ | $`1.64389375 \pm 0.00000001`$ | $`1/2`$ (assumed) |
-
-$`\Delta`$ for $`D = 10`$–$`60`$ is double-double, interpolated to $`10^{-14}`$ from [`hp/data/delta_dd.csv`](hp/data/delta_dd.csv)
-where $`D`$ is not itself a computed point; $`\Delta(8)`$ is the solver's separate check run at $`D = 8`$ (Newton to
-$`\lvert F\rvert = 5\times10^{-31}`$, checks table below), which is not in the data file. $`\Delta`$ for $`D = 4`$–$`7`$ and $`\gamma`$ up to
-$`D = 40`$ are from the f64 solver, within the precision of its points; $`\gamma(50)`$, $`\gamma(100)`$ and $`\gamma(1000)`$ are the
-rational formula's values (the solver was not run there, and its $`\gamma`$ is unreliable above $`D \approx 36`$).
-$`\Delta(70)`$ and $`\Delta(100)`$ are extrapolations that every model fitting the double-double points agrees on,
-to $`10^{-11}`$ and $`2\times10^{-8}`$ (the half-integer series included). $`D = 1000`$ and $`\infty`$ assume analyticity in
-$`1/D`$; the half-integer series differ there by $`3\times10^{-6}`$ and more.
-
-### What the numbers mean physically
-
-![e^Δ, the fine-tuning per echo and the strength of the field and its gravity, from D = 4 to D = infinity](solver/physics.svg)
-
-The same two numbers, read as physics (`solver/plot_physics.py`):
-
-- **Each echo is a factor $`e^{\Delta}`$ smaller than the last:** 31 at $`D = 4`$, 12 at $`D = 10`$, 5.2 at $`D = \infty`$. In higher
-  dimensions the echoes come closer together in scale.
-- **One more echo costs $`\Delta/(\gamma\ln 10)`$ digits of fine-tuning.** A collapse whose initial strength $`p`$ is tuned to
-  $`\lvert p - p^*\rvert`$ makes about $`\gamma\ln(1/\lvert p - p^*\rvert)/\Delta`$ echoes before it either forms a black hole or disperses,
-  so each extra echo needs $`\lvert p - p^*\rvert`$ smaller by $`e^{\Delta/\gamma}`$: 4.0 digits at $`D = 4`$, 2.4 at $`D = 10`$, 1.43 at $`D = \infty`$.
-- **The field and its gravity weaken as $`D`$ grows:** the centre slope of the field falls like $`2.72/\sqrt n`$ and the
-  departure of spacetime from flat at the centre like $`3.65/n`$ (double-double solutions, $`D = 20`$–$`60`$). At $`D = \infty`$ the
-  echo is a free wave on flat space, which on its own cannot echo (Proposition 2); the selection of $`\Delta`$ is gravity's
-  doing even there ([Large D](#large-d-what-the-1d-expansion-can-and-cannot-see)).
-
-The phenomenon is the same at every $`D \ge 4`$: the same echoing structure and a smooth $`\Delta(D)`$, with one unstable mode
-as in four dimensions (assumed here: only that mode's growth rate is computed, not the full spectrum). Only the numbers
-change.
 
 <details>
 <summary>Power series in 1/D for D ≥ 10 (the earlier form)</summary>
@@ -222,10 +197,72 @@ limits the series to $`D \gtrsim 10`$ and forbids cutting it short (five terms a
 
 </details>
 
-**Candidate constants for $`\Delta_\infty`$: tried, all ruled out.** Nine closed forms were tried as the limit, first on
+### Values
+
+| $`D`$ | $`\Delta`$ | $`\gamma`$ |
+|---|---|---|
+| 4 | 3.4454524 | 0.3739610 |
+| 5 | 3.2217019 | 0.4131269 |
+| 6 | 3.0094832 | 0.4300795 |
+| 7 | 2.8427532 | 0.4399912 |
+| 8 | 2.711790054444 | 0.4467164 |
+| 10 | 2.521078919562 | 0.4555879 |
+| 12 | 2.389188553641 | 0.4614056 |
+| 15 | 2.253098407194 | 0.4673656 |
+| 20 | 2.112080154580 | 0.4737107 |
+| 30 | 1.964957899258 | 0.4807927 |
+| 40 | 1.888568197910 | 0.484776 |
+| 50 | 1.841659503007 | 0.48736 |
+| 60 | 1.809889459975 | |
+| 70 | 1.78693476494 | |
+| 100 | 1.7450264844 | 0.49313 |
+| 1000 | 1.65424086 | 0.4992 |
+| $`\infty`$ | $`1.64389375 \pm 0.00000001`$ | $`1/2`$ (assumed) |
+
+$`\Delta`$ for $`D = 10`$–$`60`$ is double-double, interpolated to $`10^{-14}`$ from [`hp/data/delta_dd.csv`](hp/data/delta_dd.csv)
+where $`D`$ is not itself a computed point; $`\Delta(8)`$ is the solver's separate check run at $`D = 8`$ (Newton to
+$`\lvert F\rvert = 5\times10^{-31}`$, checks table below), which is not in the data file. $`\Delta`$ for $`D = 4`$–$`7`$ and $`\gamma`$ up to
+$`D = 40`$ are from the f64 solver, within the precision of its points; $`\gamma(50)`$, $`\gamma(100)`$ and $`\gamma(1000)`$ are the
+rational formula's values (the solver was not run there, and its $`\gamma`$ is unreliable above $`D \approx 36`$).
+$`\Delta(70)`$ and $`\Delta(100)`$ are extrapolations that every model fitting the double-double points agrees on,
+to $`10^{-11}`$ and $`2\times10^{-8}`$ (the half-integer series included). $`D = 1000`$ and $`\infty`$ assume analyticity in
+$`1/D`$; the half-integer series differ there by $`3\times10^{-6}`$ and more.
+
+The physics figure below and the candidate test use these values; the double-double points behind them are described in
+[The double-double solver](#the-double-double-solver-hp).
+
+### What the numbers mean physically
+
+![e^Δ, the fine-tuning per echo and the strength of the field and its gravity, from D = 4 to D = infinity](solver/physics.svg)
+
+The same two numbers, read as physics (`solver/plot_physics.py`):
+
+- **Each echo is a factor $`e^{\Delta}`$ smaller than the last:** 31 at $`D = 4`$, 12 at $`D = 10`$, 5.2 at $`D = \infty`$. In higher
+  dimensions the echoes come closer together in scale.
+- **One more echo costs $`\Delta/(\gamma\ln 10)`$ digits of fine-tuning.** A collapse whose initial strength $`p`$ is tuned to
+  $`\lvert p - p^*\rvert`$ makes about $`\gamma\ln(1/\lvert p - p^*\rvert)/\Delta`$ echoes before it either forms a black hole or disperses,
+  so each extra echo needs $`\lvert p - p^*\rvert`$ smaller by $`e^{\Delta/\gamma}`$: 4.0 digits at $`D = 4`$, 2.4 at $`D = 10`$, 1.43 at $`D = \infty`$.
+- **The field and its gravity weaken as $`D`$ grows:** the centre slope of the field falls like $`2.72/\sqrt n`$ and the
+  departure of spacetime from flat at the centre like $`3.65/n`$ (double-double solutions, $`D = 20`$–$`60`$). At $`D = \infty`$ the
+  echo is a free wave on flat space, which on its own cannot echo (Proposition 2); the selection of $`\Delta`$ is gravity's
+  doing even there ([Large D](#large-d-what-the-1d-expansion-can-and-cannot-see)).
+
+The phenomenon is the same at every $`D \ge 4`$: the same echoing structure and a smooth $`\Delta(D)`$, with one unstable mode
+as in four dimensions (assumed here: only that mode's growth rate is computed, not the full spectrum). Only the numbers
+change.
+
+### Candidate closed forms, all ruled out
+
+Nine closed forms were tried as the limit, first on
 the f64 points and then on the double-double points. None of them passes the second test, so none of them is
 $`\Delta_\infty`$, given that $`\Delta`$ is analytic in $`1/D`$ (which the double-double points support,
 [below](#is-the-period-analytic-in-1d)).
+
+The closest candidate sits $`1.3\times10^{-5}`$ from the limit, more than 1000 times its uncertainty, and forcing any of them makes the fit predict the unseen points at least 100 times worse. A search over products of standard constants finds nothing inside the double-double
+window either.
+
+<details>
+<summary>The two tests, the table, the influence function and the search</summary>
 
 - **f64 test** ($`D \le 39.5`$, `solver/candidates.py`): each candidate forced as $`c_0`$ in 12 fits (variable $`1/D`$,
   $`1/(D-1)`$, $`1/(D-2)`$; degree 9 and 10; lower cut $`D \ge 10`$ or $`12`$). The table gives $`\chi^2/\mathrm{dof}`$ of the best
@@ -252,8 +289,7 @@ $`\Delta_\infty`$, given that $`\Delta`$ is analytic in $`1/D`$ (which the doubl
 | $`\varphi = (1+\sqrt5)/2`$ | 1.6180340 | $`-2.6\times10^{-2}`$ | 2500 .. $`10^{7}`$; $`7.7\times10^{-5}`$ | $`4.4\times10^{-8}`$ (92000×) | **ruled out** by both |
 
 The f64 test could not separate the first five: they move $`\Delta(D)`$ by less than $`10^{-6}`$ for $`D \le 40`$, below the
-precision of those points. The double-double points can. The closest candidate sits $`1.3\times10^{-5}`$ from the limit,
-more than 1000 times its uncertainty, and forcing any of them makes the fit predict the unseen points at least 100 times worse. A
+precision of those points. The double-double points can. A
 forced fit can only bend toward its candidate by spending degrees, so it improves with degree (the table gives each
 one's best) until it reaches the level where the free fits overfit too (about $`5\times10^{-11}`$ at degree 24–26), which is
 still about 100 times the free fit's best.
@@ -278,6 +314,8 @@ $`\gamma`$, $`\zeta(3)`$, $`\varphi`$, $`G`$ and Bessel zeros: $`j_{0,1}, j_{0,2
 $`1.6438936`$–$`1.6438939`$ (deliberately $`\pm1.5\times10^{-7}`$, 15 times the stated error, so that a constant just outside
 the error bar would still show), nor in one about 27 times wider ($`1.643890`$–$`1.643898`$). Whether
 $`\Delta_\infty`$ has a closed form at all is open; the $`D \to \infty`$ limit of the equations is the way to find out.
+
+</details>
 
 ### Relation to published work
 
@@ -343,13 +381,17 @@ Their conjecture $`\Delta \to 0`$ comes with no rate. Fitted on $`10 \le D \le 4
 A power-law approach to 0 is excluded; a logarithmic one is disfavoured but cannot be excluded from $`D \le 61`$ alone.
 Scripts: [`solver/eeg20/`](solver/eeg20/).
 
-## Double-double solver (`hp/`, in progress)
+## Evidence
+
+### The double-double solver (`hp/`)
 
 Above $`D \approx 26`$ the f64 points lose precision: the period is selected by an effect that weakens exponentially with
 $`D`$, so rounding at $`10^{-16}`$ in the residual moves $`\Delta`$ by $`10^{-7}`$–$`10^{-6}`$ at $`D = 30`$–$`40`$ (through the sensitivity
 $`\max\lvert\partial\Delta/\partial F\rvert`$ of the table below), and points far above $`D = 40`$ are out of
 reach. [`hp/`](hp/) (crate `hpkernel`) is a separate solver built for that regime, to settle the large-$`D`$ behaviour
-with computed points rather than an assumed form.
+with computed points rather than an assumed form. Its points are used in [The formula](#the-formula) (agreement and
+$`\Delta_\infty`$), [Values](#values), the [candidate test](#candidate-closed-forms-all-ruled-out), the
+[analyticity tests](#is-the-period-analytic-in-1d) and the large-$`D`$ scaling ([How the solution scales with D](#how-the-solution-scales-with-d)).
 
 - **Arithmetic:** double-double (hi + lo, about 32 digits) on 8-lane vectors: one AVX-512 register per lane group, two
   AVX2 registers, or a portable array, chosen at compile time (`hp/build.sh` builds with `-C target-cpu=native`).
@@ -368,6 +410,9 @@ with computed points rather than an assumed form.
   following the residual floor, which rises about 1.4-fold per unit of $`D`$. Above $`D = 60.1`$, on the second machine, it
   was relaxed to $`3\times10^{-19}`$ for part of the climb ($`\lvert F\rvert`$ up to $`2.9\times10^{-19}`$ there).
 
+<details>
+<summary>Checks of the solver</summary>
+
 | Check | Result |
 |---|---|
 | double-double $`+, \times, \div`$ against mpmath | $`1.3`$–$`1.6\times10^{-32}`$ relative |
@@ -381,6 +426,11 @@ with computed points rather than an assumed form.
 | harmonics frozen above 13 / above 15, $`D = 40`$ | $`\Delta`$ agrees to $`3\times10^{-17}`$ |
 | second machine (Windows, i7-1185G7, own build), $`D = 59.84`$–$`60.05`$ | agrees with the cloud points to $`2`$–$`4\times10^{-16}`$ |
 | the 32 points at $`D = 60.95`$–$`61.026`$ (25 from the second machine, 7 from the cloud) against the $`1/D`$ fit on $`D \le 60.1`$ (degree 18) | agree to $`2.6\times10^{-15}`$ |
+
+</details>
+
+<details>
+<summary>A sample of the computed points</summary>
 
 A sample of the computed points (all of them, from $`D = 8.25`$ up, are in
 [`hp/data/delta_dd.csv`](hp/data/delta_dd.csv)), with the residual and the largest entry of $`\partial\Delta/\partial F`$, the factor by which a residual error moves $`\Delta`$:
@@ -403,6 +453,8 @@ A sample of the computed points (all of them, from $`D = 8.25`$ up, are in
 \* From $`D = 27`$ to $`35.2`$, before the freezing, points were accepted once the linearised correction to $`\Delta`$,
 $`-\partial\Delta/\partial F \cdot F`$, was below $`10^{-14}`$ with the weak directions held on their trend; their residual
 sits in those directions.
+
+</details>
 
 What the solver has shown:
 
@@ -432,8 +484,8 @@ What the solver has shown:
 - **The f64 points.** Against the double-double values they are within $`5.5\times10^{-11}`$ at $`D = 15.6`$–$`21`$ (quoted
   $`3\times10^{-11}`$), typically $`3.6\times10^{-9}`$ and at most $`6.4\times10^{-9}`$ ($`D = 24.5`$) at $`22`$–$`29.3`$ (quoted
   $`1.5`$–$`2\times10^{-9}`$), $`1.8\times10^{-8}`$ at $`30.1`$ and
-  $`7\times10^{-8}`$ at $`34.2`$, and $`0.6`$–$`2.1\times10^{-6}`$ high from $`35`$ to $`40.3`$ (quoted $`1`$–$`3\times10^{-6}`$). The rational
-  formula above holds to $`2.7\times10^{-9}`$ on $`8.25`$–$`21`$, $`7.5\times10^{-9}`$ on $`21`$–$`30`$ and $`5.8\times10^{-8}`$ on $`30`$–$`61`$.
+  $`7\times10^{-8}`$ at $`34.2`$, and $`0.6`$–$`2.1\times10^{-6}`$ high from $`35`$ to $`40.3`$ (quoted $`1`$–$`3\times10^{-6}`$). How well the
+  rational formula holds against these points is in [The formula](#the-formula).
 
 ### Is the period analytic in 1/D?
 
@@ -464,7 +516,8 @@ $`e^{-D/4}`$) to the degree-16 series changes neither the prediction ($`1.6`$–
 $`1\times10^{-7}`$ at degree 16 (`hp/dd_fits_mp.py 10 45 --clean --mixed --dmax=60.1`).
 
 Fitted on all the cleaned points, power series in $`1/D`$ of degree 16–20 and in $`1/(D-2)`$ of degree 18–20 (the ones that fit
-to the noise; $`1/(D-2)`$ at degree 16 leaves $`3\times10^{-13}`$) give limits from $`1.643893744`$ to $`1.643893752`$ on
+to the noise; $`1/(D-2)`$ at degree 16 leaves $`3\times10^{-13}`$) fit the points from $`D = 10`$ to $`61.03`$ to $`4.2\times10^{-15}`$
+($`8.6\times10^{-15}`$ for $`1/D`$ at degree 16, $`1.5\times10^{-14}`$ for $`1/(D-2)`$ at degree 18) and give limits from $`1.643893744`$ to $`1.643893752`$ on
 $`10 \le D \le 60.1`$ (`hp/dd_fits_mp.py 10 1e9 --clean --dmax=60.1`) and from $`1.643893745`$ to $`1.643893752`$ on all 823
 cleaned points to $`D = 61.03`$, so $`\Delta_\infty = 1.64389375 \pm 0.00000001`$. The analytic form is not proven (the period is
 selected by an effect the $`1/D`$ expansion does not see), but nothing in the points up to $`D = 61`$ asks for anything else.
@@ -474,6 +527,8 @@ mostly on a second machine (runs in [`hp/data/local/`](hp/data/local/), coordina
 to $`D = 61.03`$. It was stopped there because the steps in $`D`$ had shrunk to $`0.0015`$–$`0.005`$ and further points add
 little to $`\Delta_\infty`$; why the steps shrink, and the solver options used (`hp/scan_hp.py --junk_hold`,
 `--junk_trend`, `--corrector dnp`), are in [`solver/notes.md`](solver/notes.md).
+
+These limits are the $`\Delta_\infty`$ quoted in [The formula](#the-formula) and [Values](#values).
 
 ## Large D: what the 1/D expansion can and cannot see
 
@@ -508,6 +563,10 @@ the leading-order freedom (any periodic profile and any period solve the equatio
 substance (Ecker, Ecker & Grumiller 2026), and the free wave equation in similarity coordinates has been studied
 in 3+1 (Donninger 2008). The all-orders statement (Proposition 1), the exact light-cone coefficient in every dimension
 (Proposition 2) and the Stokes reading (Propositions 3–4 and the inner problem) were not found in print.
+
+Everything below uses the scaling measured on the double-double solutions in
+[How the solution scales with D](#how-the-solution-scales-with-d), and the results are checked against those solutions
+where possible.
 
 Notation: $`n = D - 2`$, $`\varepsilon = 1/n`$, $`\omega = 2\pi/\Delta`$. The solution depends on two variables: $`x`$, the
 self-similar radius (radius over time to the singularity, normalized so that the past light cone of the singularity is at
@@ -576,6 +635,9 @@ $`S_k`$ is an even polynomial in $`x`$ starting at $`x^2`$, $`D_k - xK_k`$ is an
 and $`B_{k+1}`$ are even polynomials ($`B`$ starting at $`x^2`$) with $`G_k(1) = 0`$. Every order is regular at the centre and
 analytic at the light cone, and $`m(x) = p(-x)`$ holds order by order.
 
+<details>
+<summary>Proof of Proposition 1</summary>
+
 *Proof.* By induction on $`k`$, with the structure above as the hypothesis for all orders below $`k`$. Write $`E`$ for even
 polynomials in $`x`$ with smooth periodic coefficients.
 
@@ -600,6 +662,8 @@ polynomials in $`x`$ with smooth periodic coefficients.
 
 Polynomials are analytic everywhere, so the light-cone condition is automatic, and $`c(1) = 1`$ holds by construction.
 Nothing in the construction constrains $`F`$, $`\omega_0`$ or the $`\omega_k`$. $`\square`$
+
+</details>
 
 The first orders, from `solver/largeD_expand.py` (sympy, run to fourth order):
 
@@ -643,6 +707,9 @@ C(n, s) = \frac{\Gamma\!\left(\frac{n+1}{2}\right)\,\Gamma\!\left(s + 1 - \frac 
 which is finite and non-zero for every real $`\omega \ne 0`$, odd $`\mu`$ and $`n \ge 2`$. So no time-periodic self-similar
 solution of the linear problem is analytic at the light cone, in any dimension $`D \ge 4`$.
 
+<details>
+<summary>Proof of Proposition 2</summary>
+
 *Proof.* With $`c = b = 1`$ the difference equation gives $`(n - 1)\,(p+m) = x^2\,\partial_x(p-m) - x\,\partial_x(p+m) + s x\,(p-m)`$,
 and the sum gives $`x\,\partial_x(p-m) - (p-m) = x^2\,\partial_x(p+m) + sx\,(p+m)`$. Eliminating $`p+m`$ gives
 
@@ -663,6 +730,8 @@ $`{}_2F_1(\alpha,\beta;\kappa;z)`$) and $`0,\ \kappa-\alpha-\beta = n/2 - 1 - s`
 holds because $`\kappa - \alpha - \beta`$ is not an integer ($`s`$ is imaginary and non-zero). The second coefficient is $`C(n,s)`$. The
 Gamma function has no zeros, and its arguments $`\alpha`$, $`\beta`$, $`\alpha+\beta-\kappa`$ are not poles because their imaginary parts
 are $`\mu\omega/2`$, $`\mu\omega/2`$, $`\mu\omega \ne 0`$. $`\square`$
+
+</details>
 
 *Check.* At 40 digits (mpmath), the formula satisfies the original first-order equations to $`10^{-40}`$ for $`n = 18`$–$`1000`$. For the
 fundamental at $`\omega = \omega_\infty`$, $`\lvert C\rvert = 0.0121,\ 0.0114,\ 0.0124,\ 0.0192,\ 0.0405`$ at $`n = 18, 38, 58, 200, 1000`$.
@@ -706,6 +775,9 @@ that is, along the characteristics $`\theta = \theta_0 + \omega\ln(1-x^2)`$,
 A = A_0(\theta_0)\,\frac{x}{1-x}\,\exp\!\Big(-\int_0^x \frac{2t\,F\big(\theta_0 + \omega\ln(1-t^2)\big)^2}{1-t^2}\,dt\Big) .
 ```
 
+<details>
+<summary>Proof of Proposition 3</summary>
+
 *Proof.* Substitute into the linearized equations. The terms of order $`n`$ come from $`x(x\mp c)\,\partial_x`$ acting on
 $`e^{-n\Phi}`$ and from $`\tfrac n2 c\,(\delta p+\delta m)`$. With $`B`$ the amplitude of $`\delta m`$ they read
 
@@ -727,6 +799,8 @@ $`x(x\mp c)\,n\Phi'`$ and $`\tfrac n2 c`$. The perturbations of $`b`$ and $`c`$,
 out. Solvability, $`(1+x)R_p - (1-x)R_m = 0`$, multiplied by $`(1+x)/2`$, is the transport equation; with
 $`G_1 = F^2(1-x^2)`$ the gravity terms add up to $`-2x^2F^2A`$. A first-order equation integrates along its characteristics,
 and $`\int (1+x)/(x(1-x^2))\,dx = \ln\big(x/(1-x)\big)`$ gives the prefactor. $`\square`$
+
+</details>
 
 Without gravity, a harmonic $`A = \alpha(x)e^{i\mu\theta}`$ gives $`\alpha = x(1-x)^{-1}(1-x^2)^{-s}`$ and
 $`\delta p - \delta m = 2x^{2-n}(1-x^2)^{n/2-1-s}`$: exactly the second solution of Proposition 2, with its exponents at the
@@ -826,6 +900,9 @@ y_k \approx \sum_{\ell} K_\ell(x)\,\frac{\Gamma\big(k + s + \frac12\big)}{\big(\
 
 with the $`\ell = -1`$ term, $`\chi = \Phi - i\pi/2`$, dominant for an echo with $`\omega > 0`$.
 
+<details>
+<summary>Derivation of Proposition 4, and the gaps a full proof must close</summary>
+
 *Proof sketch.* As a function of $`\kappa`$, $`{}_2F_1`$ is meromorphic with simple poles at $`\kappa = -J`$ and residues $`R_J`$; with
 $`1/(\kappa + J) = 2\varepsilon/\big(1 + (2J+1)\varepsilon\big)`$ the pole expansion gives the first formula term by term. For large $`J`$,
 $`R_J \approx (-1)^J x^2(1-x^2)^{-\alpha-\beta}\,e^{2\Phi J}J^{s+1/2}/\big(\Gamma(\alpha)\Gamma(\beta)\big)`$. Poisson summation over $`J`$ turns
@@ -837,6 +914,8 @@ Gaps a full proof must close: the pole expansion in $`\kappa`$ needs a growth bo
 $`J`$-sum with the expansion of $`1/(1 + (2J+1)\varepsilon)`$, which is not uniform in $`J`$; error bounds for the large-$`J`$ form
 of $`R_J`$ inside the Poisson sum; the continuation to $`x > 1/\sqrt2`$, where the $`J`$-sum diverges (and where the $`K`$ checks
 above are made); and fixing the branch of $`\chi^{k+s+1/2}`$ that makes $`\ell = -1`$ dominant.
+
+</details>
 
 *Check.* `solver/largeD_linear_poles.py`: the pole sum equals the direct series to $`10^{-49}`$–$`10^{-91}`$ at $`x = 0.3, 0.5, 0.6`$,
 $`k \le 60`$. `solver/largeD_linear_poisson.py`: at $`x = 0.5`$, $`k = 30`$ the Poisson pieces add up to the exact $`y_k`$ within
@@ -1010,7 +1089,8 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   $`n^{-10.5}, n^{-14}, n^{-17.5}, n^{-21}`$, roughly $`n^{-1.6k}`$; data at $`n = 18`$–$`58`$ cannot tell such power laws from the
   exponential weakening seen in $`\max\lvert\partial\Delta/\partial F\rvert`$.
 - **$`F`$'s singularities recede.** The decay rate of $`F`$'s harmonics grows roughly like $`\tfrac14 \ln n`$ (0.58 at
-  $`D = 12`$, 1.02 at $`D = 60`$), so $`F_\infty`$ looks entire, and its harmonics beyond the first shrink as $`D`$ grows.
+  $`D = 12`$, 1.02 at $`D = 60`$), so $`F_\infty`$ looks entire, and its harmonics beyond the first shrink as $`D`$ grows. (The amplitude
+  expansion of the inner problem, above, predicts instead that the rate levels off near 1.4; the data cannot yet tell.)
 - **The nonlinear late orders are dominated by something else.** In the nonlinear recursion the ratio of successive
   orders grows like $`7k`$–$`8.6k`$ (a singulant of modulus about $`0.13`$), against $`\lvert\chi\rvert \ge \pi/2`$ for the fast mode, so the fast
   singulant is not directly visible. `solver/largeD_late_structure.py` characterizes the dominant growth: the rate is the
@@ -1060,7 +1140,12 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
 - R. B. Dingle, *Asymptotic Expansions: Their Derivation and Interpretation*, Academic Press (1973).
 - NIST Digital Library of Mathematical Functions, §2.11 and §13.7 ([dlmf.nist.gov](https://dlmf.nist.gov)).
 
-## Backends
+## Software: the Rust kernel
+
+Rust port of the multiple-shooting residual `F(z)` used to compute Choptuik's discretely self-similar critical solution in D = n + 2 dimensions. It covers the centre series, the RK4 shooting segments and the horizon series on the Python solver's spectral layout (941 unknowns in the production configuration; [`solver/`](solver/)), and is
+called from Python through PyO3 as a drop-in for `S.residual`, the Python reference residual.
+
+### Backends
 
 The build targets the architecture's baseline, so one wheel runs on any CPU of that architecture. The instruction set is detected at runtime, and each residual block runs inside a `#[target_feature]` entry point for it.
 
@@ -1085,7 +1170,7 @@ backend="simd" (default)
 
 `available_backends()` lists what this CPU can run, and `auto:avx2` style names pick plain loops for a given instruction set. Setting `RUSTKERNEL_ISA=avx2` (or `baseline`) caps the instruction set for the whole process, which turns AVX-512 off without a rebuild.
 
-## Use
+### Use
 
 ```python
 from spec_long import make_long
@@ -1110,7 +1195,7 @@ carried towards the centre instead of the centre data towards the horizon. The u
 are the same; only the conditioning of the matching rows changes. The default (`None`) is the last node,
 identical to the Python reference.
 
-## Double-double residual
+### Double-double residual
 
 Above D ≈ 26 the period Δ is selected by an effect that falls below f64 rounding noise, so the f64
 residual can no longer pin it. `residual_dd` evaluates the same residual in double-double arithmetic
@@ -1119,7 +1204,7 @@ residual's rounding noise (the maximum over the residual's entries) drops from 1
 the cost of the SIMD f64 residual in that measurement (15 ms per double-double evaluation; a different configuration
 from the Performance table's synthetic one).
 
-## Exact Jacobian and growth-mode matrix
+### Exact Jacobian and growth-mode matrix
 
 `jacobian` and `mode_matrix` differentiate the residual in forward mode with a dual-number scalar
 (`scalar::Dual`): one evaluation of block b per unknown that block depends on, run on rayon threads.
@@ -1139,7 +1224,7 @@ Checked against the Python reference (`spec_c.jacobian_cs`, `spec_c.mode_matrix_
 | Growth rate λ (det root) | ~4 min per D | ~3.5 s per D | 5e-10 at D = 11.06, 13.98, 24.24 |
 
 
-## Build and test
+### Build and test
 
 Python side: numpy, scipy, mpmath and sympy; python-flint for `solver/inner_borel/` (`pip install python-flint`).
 
@@ -1151,7 +1236,7 @@ python tests/test_bindings.py     # bindings test, after pip install .
 hp/build.sh                       # double-double solver, built for this machine's instruction set
 ```
 
-## Performance
+### Performance
 
 One residual of a synthetic production-sized configuration (`tests/test_bindings.py --time`), single thread, on an i7-1185G7.
 
@@ -1167,7 +1252,7 @@ One residual of a synthetic production-sized configuration (`tests/test_bindings
 
 `baseline` is slow because x86_64 without FMA turns every fused multiply-add into a libm call, which keeps it bitwise identical to the other backends. Only pre-2013 x86 CPUs land there.
 
-## Layout
+### Layout
 
 ```
 src/
@@ -1234,7 +1319,7 @@ solver/largeD_linear_truncation.py  optimally truncated series against the exact
 solver/largeD_late_structure.py  where the nonlinear late-order growth lives (x, harmonic, amplitude)
 ```
 
-## Limits
+### Limits
 
 - The Python solver, scans and fits live in `solver/` (see `solver/README.md`).
 - `jacobian` and `mode_matrix` use plain loops (no explicit SIMD) and the parity-folded layout's
