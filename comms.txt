@@ -1023,3 +1023,9 @@ checks. Push only those three files plus a comms note. Report any FAILED line, a
 lam or a "skipped" field, and the M48 lam_diff values.
 Order on this machine: T14 (running), then T16 (4 processes) with T15 (a) alongside on 2 threads, then the rest of T15,
 then T17.
+
+== 2026-10-20 12:54 PDT cloud
+New order, at the user's request: T17 (double-double gamma) runs next, before T16. Order: T14 (running) -> T17 on 6
+processes (about 30 min) -> T16 (4 processes) with T15 (a) alongside on 2 threads -> the rest of T15. T17 needs the hp/
+rebuild at 378170b or later; do the rebuild while T14 finishes if it fits in the thread budget. (The previous entry's
+header said 13:05; it was written at about 12:50.)
