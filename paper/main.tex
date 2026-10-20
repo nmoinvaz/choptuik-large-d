@@ -64,7 +64,8 @@ This paper reports the following.
 \item $\Delta(D)$ at 857 points $8.25 \le D \le 61.03$ from a double-double solver, and $\Delta$, $\gamma$ for
 $4 \le D \le 40$ from a double-precision solver; one rational formula in $1/(D-2)$ for all $D \ge 4$
 (Sec.~\ref{sec:results}). It reproduces the published values at $D = 4$ and the maximum of $\Delta$ below $D = 4$; at
-$D = 5$ there is an unresolved $6\times10^{-5}$ discrepancy with~\cite{EckerEtAl2026}.
+$D = 5$ it differs from~\cite{EckerEtAl2026} by $6\times10^{-5}$, a difference that the published higher-resolution
+data of~\cite{EckerEtAl2026} trace to resolution.
 \item Held-out tests that support analyticity of $\Delta$ in $1/D$, giving $\Dinf = 1.64389375 \pm 10^{-8}$; a
 power-law approach to zero is excluded and a logarithmic one disfavoured; nine candidate closed forms for $\Dinf$
 are ruled out (Sec.~\ref{sec:limit}).
@@ -224,9 +225,17 @@ double-precision points at $D = 3.70$--$3.80$ puts the maximum of $\Delta$ at $D
 agreement to $2\times10^{-6}$ with $D = 3.755726$, $\Delta = 3.466772$ of~\cite{EckerEtAl2026}.
 
 At $D = 5$, Ref.~\cite{EckerEtAl2026} gives $\Delta = 3.22176$ and $\gamma = 0.41322$, which are $5.8\times10^{-5}$ and
-$9.3\times10^{-5}$ above our $3.2217019$ and $0.4131269$. Ours are stable across 31, 39 and 47 Fourier modes to about
-$10^{-7}$, and Bland and Kunstatter give $\gamma(5) = 0.4131 \pm 0.0001$~\cite{BlandKunstatter2007}, matching ours.
-The cause of the discrepancy is not known; an independent recomputation is in progress. Below $D = 4$, $\gamma$
+$9.3\times10^{-5}$ above our values. Our $\Delta(5) = 3.2217019446$ comes from two independent codes: the
+double-precision solver at 31, 39 and 47 Fourier modes ($3.221701945 \pm 7\times10^{-11}$ extrapolated) and the
+double-double solver at $M = 48$ and $64$ collocation points ($3.22170194461806$, $3.22170194462672$), which agree to
+$10^{-11}$. The published data of~\cite{EckerEtAl2026} (repository CriticalSpacetimeCrystal) show their $D = 5$ value
+still moving by $-1.66\times10^{-4}$ between 256 and 512 modes, toward ours, in the range $D \gtrsim 4.8$ where they
+note that their light-cone expansion order must be increased; their offset from our values grows smoothly from
+$2.7\times10^{-7}$ at $D = 4$ (within their stated $\pm10^{-6}$) to $5\times10^{-4}$ at $D = 5.5$, and at $D = 3.7$ the two
+agree to $8\times10^{-8}$, so there is no difference of convention. Their $\gamma$ list has no points for
+$4.79 < D < 5.49$, where they report that their perturbation method fails, so their $\gamma(5)$ is not a direct
+computation in the published data; ours, $0.41312694$ (stable to $10^{-7}$ across resolutions), agrees with Bland and
+Kunstatter's $0.4131 \pm 0.0001$~\cite{BlandKunstatter2007}. Below $D = 4$, $\gamma$
 extrapolated from our 47-mode points suggests $\gamma(3.5) \lesssim 0.33$, against $0.349 \pm 0.003$
 in~\cite{BlandEtAl2005}; our points there are under-resolved, and this is an open check.
 
@@ -546,7 +555,7 @@ theory explains why that number cannot come from the $1/D$ expansion: the expans
 and the selection acts through an exponentially small, Stokes-type effect whose linear version is solved exactly. The
 inner problem at $x \sim \sqrt n$ is $n$-free; its higher-harmonic conditions already reproduce the shape of the echo
 at $D = \infty$. Open are: the harmonic-1 condition of the inner problem, which would give $\Dinf$ (and possibly a closed
-form) from first principles; a proof of the working hypothesis; the value $\lambda_\infty = 2$; the $D = 5$ discrepancy;
+form) from first principles; a proof of the working hypothesis; the value $\lambda_\infty = 2$;
 and the behaviour just below $D = 4$.
 
 \section{How this work was done}
