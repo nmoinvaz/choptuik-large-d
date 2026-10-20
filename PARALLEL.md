@@ -459,11 +459,12 @@ to every printed digit and σ₁–σ₃ to 8×10⁻³⁵ (the serial code's 60-
 are bit-identical; the stored `data/sigF_*` files (K = 9 and 11 at J = 500, K = 9 at J = 750) are reproduced to all
 20 stored digits.
 
-One finding from the faster code: **J = 500 is not enough from order 13 on.** The ν = 3 tuning at order 13 leaves
-|f₃| = 1.1×10⁻³ at J = 500, 7.7×10⁻⁵ at J = 750 and 1.3×10⁻⁵ at J = 1000, and σ₆ moves from 0.0138 − 0.0080i
-(J = 500) to −2.7×10⁻⁴ − 1.09×10⁻³i (J = 1000); at J = 500, σ₇ and σ₈ blow up to about 10⁶ and 10¹¹. The ball
-radii stay small, so this is the fit's truncation, not rounding. σ₅ is converged (J = 750 and 1000 agree to 10⁻⁸). Runs
-with K ≥ 13 need J ≥ 1000 and a second J to compare.
+One finding from the faster code: from order 13 on, σ₆–σ₈ did not converge in J (σ₆ moved by 1.5% from J = 1000
+to 1500; σ₇, σ₈ blew up). The cause was the fit basis, not J: the late orders of harmonic ν at order k contain every
+neighbour family |ν′| ≤ k, and a basis with only ν′ − ν = ±2, ±4, ±6 mis-tuned the higher harmonics. With all families
+(`--fit phys`, 640 bits, one normal matrix at about 1600 bits serving every number of terms per family), σ₁–σ₇ at ω∞
+agree to about 10⁻¹⁹ between J = 750 and 1000. The fits then cost more than the products: K = 15 takes about 2200 s on
+one cloud process (fits 1400–1700 s, products 460–790 s); the tuning fits of one order run in parallel on the workers.
 
 ## 5. Embarrassingly parallel scans
 

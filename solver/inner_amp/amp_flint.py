@@ -2,7 +2,8 @@
 
 For runs, use amp_flint_par.py: the same problem and the same JSON output, 26x faster on one process and with
 --procs N worker processes. This file is the serial reference implementation (amp_flint_par imports its Amp class);
-keep it for checks. For K >= 13 use J >= 1000 in either code (see amp_flint_par.py).
+keep it for checks. Its late-order fit basis (neighbour families +-2, +-4, +-6) is good through sigma_4 only; for
+higher orders use amp_flint_par.py --fit phys (every family |nu'| <= k).
 
 Same problem as amp_series.py / stokes_amp2.py (README, "The inner problem at large x"):
     L y = c sigma,  L sigma = c xi y_xi + c (y^2/2 - 1) y,  xi c_xi = c y^2/2,   L = xi^2 d_xi + w xi d_theta,

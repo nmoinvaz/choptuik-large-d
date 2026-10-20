@@ -5,8 +5,10 @@ Conventions for the Claude sessions (cloud and local) that run computations here
 
 - **Inner amplitude series:** use `solver/inner_amp/amp_flint_par.py` (and `scan_omega.py`, which calls it), not
   `amp_flint.py`. It gives the same digits, 26× faster on one process, and `--procs N` adds worker processes (spawn,
-  Windows-safe; threads do not help because python-flint holds the GIL). For K ≥ 13 use J ≥ 1000 and compare two J:
-  at J = 500, σ₆ is wrong and σ₇, σ₈ blow up. `amp_flint.py` stays as the serial reference for checks.
+  Windows-safe; threads do not help because python-flint holds the GIL). For anything past σ₄ use `--fit phys` at
+  640 bits (late-order fits with every neighbour family |ν′| ≤ k; the default `legacy` basis, ±2, ±4, ±6 only, biases σ₅
+  and wrecks σ₆–σ₈), e.g. `amp_flint_par.py 1.0 15 750 640 --procs 6 --fit phys --mf 6:12`, and compare two J.
+  Check `sigma_err` in the JSON. `amp_flint.py` stays as the serial reference for checks.
 - **Inner selection with M harmonics:** use the nested solve, `solver/inner_stokes/full_M.py` (or `nested.py` for
   M = 3), not a joint solve of all conditions: the joint solve is ill-conditioned (about 10¹⁰) and stops on false
   near-zeros.

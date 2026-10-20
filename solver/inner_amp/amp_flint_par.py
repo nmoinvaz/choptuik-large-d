@@ -18,11 +18,27 @@ What changed against amp_flint.py (see PARALLEL notes in the docstrings below):
 Threads do not help: python-flint keeps the GIL during a product (two threads take 2.3x one product).  Processes are
 started with 'spawn', so this runs the same way on Windows; keep calls under an  if __name__ == "__main__":  guard.
 
-    python3 amp_flint_par.py wf K J [prec_bits] [--procs N]
-        writes sigF_w<wf>_K<K>_J<J>.json, same keys as amp_flint.py (plus 'procs', 'seconds', 'timing', 'order_times',
-        'sigma_rad')
-For K >= 13 use J >= 1000 (and compare two J): at J = 500 the nu = 3 fit at order 13 is not converged and sigma_7, sigma_8
-blow up (see scan_omega.py).
+    python3 amp_flint_par.py wf K J [prec_bits] [--procs N] [--fit phys [--mf LO:HI] [--fit-step S] [--phys-prec B]]
+                             [--out FILE]
+        writes sigF_w<wf>_K<K>_J<J>.json (or FILE), same keys as amp_flint.py (plus 'procs', 'seconds', 'timing',
+        'order_times', 'sigma_rad'; with --fit phys also 'sigma_err', 'fit_info', 'mf', 'fit_step', 'phys_prec')
+
+4. The fit basis (--fit phys; the default 'legacy' keeps amp_flint.py's basis and its results).  At order k harmonic nu
+   contains, besides its own family (exponent g_nu), every family nu' with |nu'| <= k: products of the fast mode with
+   functions of the characteristic label theta_0 = theta - 2 w ln xi (from integrating the transport equation) carry
+   e^{i nu' theta_0} whatever S_nu' is, so they appear at relative order 1/j with amplitude ~ eps^{|nu' - nu|}.  The
+   legacy basis has only nu' - nu = +-2, +-4, +-6 with 4 terms each.  From k = 11 (nu >= 7) and k = 13 (nu = 1, 3) the
+   missing families (and too few terms) bias the fits: S_3^(13) came out as 1e2 instead of ~1e-4, the tuned f_3^(13)
+   was wrong by 1e-5, and from there sigma_7, sigma_8 blew up.  'phys' fits the main family (M terms) and every family
+   nu' (odd, |nu'| <= k, nu' != nu) with Mf terms 1/j^1..1/j^Mf each, for Mf = LO..HI (one normal matrix at
+   --phys-prec bits serves all Mf as prefixes), and takes S at the Mf where it changes least from Mf - 1; that change is
+   the error estimate ('fit_info', 'sigma_err').  Use prec 640: the data's noise floor is then ~1e-187 relative
+   (~1e-90 at prec 320), which the high-Mf fits need.  The fits for nu = 3..k at one order run in parallel on the
+   workers.  --fit-step S uses every S-th j (the basis has 13 + k*HI columns; keep the rows (J - 2J/5)/S above that).
+   The 'fit resid' printed in legacy mode is now computed on midpoints; before, it was dominated by the radii of y,
+   which |G| ~ 1e29 amplifies, and printed values > 1 that did not mean the fit had failed.
+For K >= 13 use --fit phys with prec 640 (see the docstring of fit_phys); the legacy basis is reliable only to k = 11
+(sigma_5, to ~1e-9 at J = 1000; sigma_1..4 are biased by ~3e-10 at J = 500).
 """
 import sys
 import json
@@ -94,13 +110,102 @@ def _products(tabs, k, J, tasks):
     return out
 
 
+def phys_families(nu, kmax):
+    """signed shifts t = nu' - nu of the families present in harmonic nu at order kmax: every odd nu' != nu, |nu'| <= kmax"""
+    return [nup - nu for nup in range(-kmax, kmax + 1, 2) if nup != nu]
+
+
+def fit_phys(wmid, nu, k, jlo, J, M, mf_lo, mf_hi, step, fit_prec, ys):
+    """Late-order fit of y_j (j = jlo, jlo + step, ..., <= J) with the 'physical' basis: the main family (1 and M terms
+    1/(j+g0-1)...(j+g0-m)) plus every family nu' (odd, |nu'| <= k, nu' != nu), each with Mf terms
+    Gamma(j+g')/Gamma(j+g0) / ((j+g'-1)...(j+g'-m)), m = 1..Mf. Columns are ordered by level m, so the bases for
+    Mf = mf_lo..mf_hi are prefixes of one matrix: one normal matrix N = A^H A (at fit_prec, on midpoints) serves them all.
+    Returns [(Mf, S, relative residual)] with S = the coefficient of the constant column (the multiplier)."""
+    p0 = ctx.prec
+    ctx.prec = fit_prec
+    try:
+        w = _de_rows(wmid)[0][0] if isinstance(wmid, tuple) else acb(wmid)
+        g0 = acb(0, nu) * w + acb(1) / 2
+        fams = phys_families(nu, k)
+        js = list(range(jlo, J + 1, step))
+        rows = []
+        for j in js:
+            main = [acb(1)]
+            t = acb(1)
+            for m in range(1, M + 1):
+                t = t / (j + g0 - m)
+                main.append(t)
+            lg0 = (j + g0).lgamma()
+            levels = []
+            ts = []
+            for tsh in fams:
+                gs = g0 + acb(0, tsh) * w
+                ts.append((gs, ((j + gs).lgamma() - lg0).exp()))
+            for m in range(1, mf_hi + 1):
+                lev = []
+                for i, (gs, t) in enumerate(ts):
+                    t = t / (j + gs - m)
+                    ts[i] = (gs, t)
+                    lev.append(t)
+                levels.extend(lev)
+            rows.append(main + levels)
+        n = len(rows[0])
+        sc = [max(abs(r[c]).mid() for r in rows) for c in range(n)]
+        A = acb_mat([[r[c].mid() / sc[c] for c in range(n)] for r in rows])
+        yv = [acb(v.mid()) for v in ys]
+        y = acb_mat([[v] for v in yv])
+        AH = A.transpose().conjugate()
+        N = AH * A
+        b = AH * y
+        ny2 = sum((abs(v) ** 2 for v in yv), arb(0))
+        out = []
+        nf = len(fams)
+        for Mf in range(mf_lo, mf_hi + 1):
+            p = M + 1 + nf * Mf
+            Np = acb_mat([[N[i, l] for l in range(p)] for i in range(p)])
+            bp = acb_mat([[b[i, 0]] for i in range(p)])
+            c = Np.solve(bp, algorithm="approx")
+            # |A c - y|^2 = |y|^2 - Re(c^H b) at the least-squares solution (fit_prec carries the cancellation)
+            cb = sum((c[l, 0].conjugate() * b[l, 0] for l in range(p)), acb(0))
+            r2 = (ny2 - cb.real).mid()
+            rel = float((abs(r2) / ny2).sqrt().mid()) if ny2 != 0 else float("nan")
+            S = (c[0, 0] / sc[0]).mid()
+            out.append((Mf, S, rel))
+        return out
+    finally:
+        ctx.prec = p0
+
+
+def pick_plateau(res):
+    """choose among [(Mf, S, resid)] the Mf where S changes least from Mf - 1 (and the residual still falls);
+    returns (Mf, S, err = |S(Mf) - S(Mf-1)|, resid)"""
+    best = None
+    for (m0, S0, r0), (m1, S1, r1) in zip(res, res[1:]):
+        if not (r1 < r0):
+            continue
+        d = float(abs(S1 - S0).mid())
+        if best is None or d < best[2]:
+            best = (m1, S1, d, r1)
+    if best is None:
+        m, S, r = res[-1]
+        best = (m, S, float("inf"), r)
+    return best
+
+
 def _worker(conn, prec):
     ctx.prec = prec
     tabs = {}
     while True:
         msg = pickle.loads(conn.recv_bytes())
         op = msg[0]
-        if op == "put":
+        if op == "fitphys":
+            _, args, yblob = msg
+            ys = _de_rows(yblob)[0]
+            res = fit_phys(*args, ys)
+            conn.send_bytes(pickle.dumps([(m, _ser_rows([[S]]), r) for m, S, r in res],
+                                         protocol=pickle.HIGHEST_PROTOCOL))
+            ctx.prec = prec
+        elif op == "put":
             for key, blob in msg[1]:
                 tabs[key] = _de_rows(blob)
         elif op == "prod":
@@ -129,10 +234,18 @@ def _add_rows(A, B):
 class AmpPar(Amp):
     def __init__(self, wf, K, J, prec=320, procs=1, **kw):
         fit_prec = kw.pop("fit_prec", None)
+        # late-order fit: "legacy" (default; the fixed basis of amp_flint.py) or "phys" (every family nu' present at the
+        # order, Mf = mf[0]..mf[1] terms each, Mf chosen at the plateau of S; see fit_phys)
+        self.fit_mode = kw.pop("fit", "legacy")
+        self.mf = tuple(kw.pop("mf", (4, 12)))
+        self.fit_step = int(kw.pop("fit_step", 1))
+        self.phys_prec = kw.pop("phys_prec", None)
         super().__init__(wf, K, J, prec=prec, **kw)
         self.params = dict(wf=wf, K=K, J=J, prec=prec, fit_prec=fit_prec, **kw)
         self.prec, self.procs = prec, max(1, int(procs))
         self.fit_prec = fit_prec or max(1024, 3 * prec)
+        self.phys_prec = self.phys_prec or max(1600, 3 * prec)
+        self.fit_info = {}                    # "k_nu" -> (Mf chosen, err estimate of S, relative residual)
         self.workers = []
         self.ctab = {}                      # compressed finished tables, keyed (name, order)
         self.fit_cache = {}
@@ -345,11 +458,57 @@ class AmpPar(Amp):
         A, G, sca, tab = self.fit_data(nu)
         t0 = time.time()
         try:
+            if self.fit_mode == "phys":
+                return self.S_many([nu], k)[nu]
             return self._S_at(nu, k, A, G, sca, tab)
         finally:
             self.timing["fits"] += time.time() - t0
 
     def _S_at(self, nu, k, A, G, sca, tab):
+        ys = self._ys(nu, k, tab)
+        y = acb_mat([[v] for v in ys])
+        c = G * y
+        # residual on midpoints: the ball residual is dominated by the radii of y, which |G| ~ 1e29 amplifies
+        r = A.mid() * c.mid() - y.mid()
+        nr = sum(float(abs(r[i, 0].mid())) ** 2 for i in range(r.nrows())) ** 0.5
+        ny = sum(float(abs(v.mid())) ** 2 for v in ys) ** 0.5
+        return c[0, 0] / sca[0], (nr / ny if ny else float("nan"))
+
+    def S_many(self, nus, k):
+        """phys fits of S_nu^(k) for several nu (independent at one order), on the worker pool when there is one.
+        Returns {nu: (S, err)}; err = |S(Mf) - S(Mf - 1)| at the chosen Mf. Details go to self.fit_info."""
+        args, yb = {}, {}
+        for nu in nus:
+            tab = self.fit_data(nu)[3]
+            ys = self._ys(nu, k, tab, self.fit_step)
+            args[nu] = (_ser_rows([[self.w.mid()]]), nu, k, self.jlo, self.J, self.M, self.mf[0], self.mf[1], self.fit_step,
+                        self.phys_prec)
+            yb[nu] = ys
+        res = {}
+        if self.workers:
+            nw = len(self.workers)
+            pending = list(nus)
+            while pending:
+                batch, pending = pending[:nw], pending[nw:]
+                for (p, conn), nu in zip(self.workers, batch):
+                    conn.send_bytes(pickle.dumps(("fitphys", args[nu], _ser_rows([yb[nu]])),
+                                                 protocol=pickle.HIGHEST_PROTOCOL))
+                for (p, conn), nu in zip(self.workers, batch):
+                    out = pickle.loads(conn.recv_bytes())
+                    res[nu] = [(m, _de_rows(Sb)[0][0], r) for m, Sb, r in out]
+        else:
+            for nu in nus:
+                res[nu] = fit_phys(*args[nu], yb[nu])
+                ctx.prec = self.prec
+        out = {}
+        for nu in nus:
+            Mf, S, err, rel = pick_plateau(res[nu])
+            self.fit_info[f"{k}_{nu}"] = (Mf, err, rel)
+            out[nu] = (S, err)
+        return out
+
+    def _ys(self, nu, k, tab, step=1):
+        """the normalized late-order sequence y_j, j = jlo, jlo + step, ..., the fit for S_nu^(k) uses"""
         E, delta = self.theta(k)
         H = self.H
         nmax = k // 2 + 1
@@ -387,6 +546,8 @@ class AmpPar(Amp):
                     pat.append((kp, kp + kpp, terms))
         ys = []
         for idx, j in enumerate(range(self.jlo, self.J + 1)):
+            if idx % step:
+                continue
             base, ps = tab[idx]
             L = [ZERO] * (k + 1)
             for q in qs:
@@ -413,12 +574,7 @@ class AmpPar(Amp):
                     acc += e_ * dj[i]
                 z[q] += acc
             ys.append(base * sum((z[q] * N[k - q] for q in range(k + 1)), ZERO))
-        y = acb_mat([[v] for v in ys])
-        c = G * y
-        r = A * c - y
-        nr = sum(float(abs(r[i, 0]).mid()) ** 2 for i in range(r.nrows())) ** 0.5
-        ny = sum(float(abs(v).mid()) ** 2 for v in ys) ** 0.5
-        return c[0, 0] / sca[0], (nr / ny if ny else float("nan"))
+        return ys
 
     def run(self, verbose=True, tune=True):
         self.start()
@@ -431,14 +587,20 @@ class AmpPar(Amp):
         t0 = time.time()
         sig, f_out, S1 = [], {}, {}
         self.f_acb = {}
+        self.S1_err = {}
         for k in range(1, self.K + 1):
             if k % 2 == 0:
                 self.pass_even(k)
             else:
                 self.pass_odd(k)
                 if tune and k >= 3:
-                    for nu in range(3, k + 1, 2):
-                        S, rs = self.S_at(nu, k)
+                    nus = list(range(3, k + 1, 2))
+                    if self.fit_mode == "phys":
+                        t1 = time.time()
+                        pre = self.S_many(nus, k)
+                        self.timing["fits"] += time.time() - t1
+                    for nu in nus:
+                        S, rs = pre[nu] if self.fit_mode == "phys" else self.S_at(nu, k)
                         s_ = acb(0, nu) * self.w
                         linS = ((1 + s_) / 2).rgamma() * ((2 + s_) / 2).rgamma()
                         f = -S / (2 * linS)
@@ -451,40 +613,70 @@ class AmpPar(Amp):
                         self.f_acb[f"{k}_{nu}"] = f
                         f_out[f"{k}_{nu}"] = [float(fm.real), float(fm.imag)]
                         if verbose:
-                            print(f"   k {k} nu {nu}: |S_gen/linS| {float(abs(S / linS).mid()):.3e} fit resid {rs:.1e} "
+                            print(f"   k {k} nu {nu}: |S_gen/linS| {float(abs(S / linS).mid()):.3e} {self._fitlabel(k, nu, rs)} "
                                   f"f {mp.nstr(fm, 10)}", flush=True)
                 self.publish("d", k, self.d[k])
                 self.publish("s", k, self.s[k])
                 S, rs = self.S_at(1, k)
                 S1[k] = S
+                if self.fit_mode == "phys":
+                    self.S1_err[k] = rs
                 if verbose:
-                    print(f"k {k}: S_1^({k}) = {mp.nstr(to_mp(S), 15)}  fit resid {rs:.1e}  sigma = "
+                    print(f"k {k}: S_1^({k}) = {mp.nstr(to_mp(S), 15)}  {self._fitlabel(k, 1, rs)}  sigma = "
                           f"{mp.nstr(to_mp(S / S1[1]), 15)}  [{time.time() - t0:.0f}s]", flush=True)
                 sig.append(S / S1[1])
         self.sig_acb = sig
+        if self.fit_mode == "phys":
+            # error of sigma_n = S^(2n+1)/S^(1) from the fit plateaus of the two multipliers
+            e1, a1 = self.S1_err.get(1, 0.0), float(abs(S1[1]).mid())
+            self.sigma_err = [self.S1_err.get(2 * n + 1, 0.0) / a1 + float(abs(z).mid()) * e1 / a1
+                              for n, z in enumerate(sig)]
         return [to_mp(z) for z in sig], f_out
+
+    def _fitlabel(self, k, nu, rs):
+        if self.fit_mode == "phys":
+            Mf, err, rel = self.fit_info[f"{k}_{nu}"]
+            return f"fit Mf {Mf} err {err:.1e} resid {rel:.1e}"
+        return f"fit resid {rs:.1e}"
+
+
+def _opt(argv, name, default=None, conv=str):
+    if name in argv:
+        i = argv.index(name)
+        v = conv(argv[i + 1])
+        del argv[i:i + 2]
+        return v
+    return default
 
 
 def main(argv):
-    procs = 1
-    if "--procs" in argv:
-        i = argv.index("--procs")
-        procs = int(argv[i + 1])
-        argv = argv[:i] + argv[i + 2:]
+    argv = list(argv)
+    procs = _opt(argv, "--procs", 1, int)
+    fit = _opt(argv, "--fit", "legacy")
+    mf = _opt(argv, "--mf", "4:12")
+    fit_step = _opt(argv, "--fit-step", 1, int)
+    phys_prec = _opt(argv, "--phys-prec", None, int)
+    out = _opt(argv, "--out", None)
     wf, K, J = float(argv[1]), int(argv[2]), int(argv[3])
     prec = int(argv[4]) if len(argv) > 4 else 320
     t0 = time.time()
-    A = AmpPar(wf, K, J, prec=prec, procs=procs)
+    kw = {}
+    if fit != "legacy":
+        kw = dict(fit=fit, mf=tuple(int(x) for x in mf.split(":")), fit_step=fit_step, phys_prec=phys_prec)
+    A = AmpPar(wf, K, J, prec=prec, procs=procs, **kw)
     sig, f = A.run()
     secs = time.time() - t0
     tm = {k: round(v, 1) for k, v in A.timing.items()}
     print(f"total {secs:.0f}s with {procs} process(es); products {tm['products']}s, fit setup {tm['fit_setup']}s, "
           f"fits {tm['fits']}s", flush=True)
-    json.dump({"wf": wf, "K": K, "J": J, "prec": prec, "sigma": [[float(z.real), float(z.imag)] for z in sig],
-               "sigma_str": [[mp.nstr(z.real, 20), mp.nstr(z.imag, 20)] for z in sig], "f": f,
-               "sigma_rad": [max(float(z.real.rad()), float(z.imag.rad())) for z in A.sig_acb],
-               "procs": procs, "seconds": round(secs, 1), "timing": tm, "order_times": A.order_times},
-              open(f"sigF_w{wf:.4f}_K{K}_J{J}.json", "w"))
+    rec = {"wf": wf, "K": K, "J": J, "prec": prec, "sigma": [[float(z.real), float(z.imag)] for z in sig],
+           "sigma_str": [[mp.nstr(z.real, 20), mp.nstr(z.imag, 20)] for z in sig], "f": f,
+           "sigma_rad": [max(float(z.real.rad()), float(z.imag.rad())) for z in A.sig_acb],
+           "procs": procs, "seconds": round(secs, 1), "timing": tm, "order_times": A.order_times}
+    if fit != "legacy":
+        rec.update({"fit": fit, "mf": list(A.mf), "fit_step": A.fit_step, "phys_prec": A.phys_prec,
+                    "sigma_err": A.sigma_err, "fit_info": A.fit_info})
+    json.dump(rec, open(out or f"sigF_w{wf:.4f}_K{K}_J{J}.json", "w"))
 
 
 if __name__ == "__main__":

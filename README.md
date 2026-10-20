@@ -19,9 +19,10 @@ solver in [`hp/`](hp/) for large D. The physics is in this file; the software is
   multiplier of a mode born far outside the light cone (Propositions 3–4). The working hypothesis is that the selection
   rule is the vanishing of the Stokes multipliers of an n-free inner problem; its higher-harmonic conditions already
   predict the shape of the echo, F₃/F₁ = 0.055 against 0.055 extrapolated from the data, and with three harmonics
-  the full set of conditions gives Δ = 1.619, 1.5% below Δ∞ (one harmonic: 29% above); without truncation, five orders
-  of the amplitude expansion point to ω within about 0.5% of ω∞. Neither is converged yet, so this is not yet a derivation
-  of Δ∞ ([Large D](#large-d-what-the-1d-expansion-can-and-cannot-see)).
+  the full set of conditions gives Δ = 1.619, 1.5% below Δ∞ (one harmonic: 29% above). Without truncation, seven orders
+  of an amplitude expansion give, at ω∞, a nearly real zero at amplitude 2.74 (measured: 2.70–2.72), and five orders put
+  the ω where it is exactly real within about 0.5% of ω∞. None of this is converged yet, so it is not yet a derivation of
+  Δ∞ ([Large D](#large-d-what-the-1d-expansion-can-and-cannot-see)).
 - **Relation to published work.** Agreement with the accepted values at D = 4 and at the maximum of Δ near D = 3.756;
   a 6×10⁻⁵ difference at D = 5 that the published higher-resolution data trace to resolution; and the published
   conjecture Δ → 0 as D → ∞ is not
@@ -1219,29 +1220,28 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   extrapolate (degree 3 in 1/n) to 0.055, 0.059, 0.065, 0.069, 0.072: finite, close to each other and to $`\lvert q\rvert A^2 \approx 0.063`$,
   i.e. a decay rate of 1.3–1.45 per harmonic. The extrapolations are not fully converged (they still fall by 0.003–0.004
   from degree 2 to 3).
-- *The harmonic-1 condition: first estimate* (`solver/inner_amp/amp_flint.py`, python-flint at 320 bits; `zero_selection.py`).
-  With the higher harmonics tuned, $`S_1/S_1^{(1)} = 1 + \sigma_1A^2 + \sigma_2A^4 + \ldots`$; at ω∞, with late orders fitted on
-  j ≤ 500–750 (fewer orders bias σ₄ by 1.5×10⁻⁴), σ₁ = 0.74358458 + 0.52447485i, σ₂ = 0.11879384 + 0.39807457i,
-  σ₃ = −0.05397185 + 0.11658742i, σ₄ = −0.02886476 + 0.01077836i, σ₅ = −0.00555340 − 0.00280565i (σ₁–σ₄ stable to 10⁻⁹).
-  The coefficients τ_k of $`\ln S_1`$ in x = A² have arguments 0.878π, 0.943π, 0.978π, 0.974π for k = 2–5, the signature of a
-  zero near the positive real x-axis; ratio and Padé estimates put it at x₀ ≈ 8.7–9.1 (A ≈ 2.95–3.01) with a small
-  imaginary part, about 10% above the measured amplitude 2.72, and not converged (the Padé residues are 2–2.7, not 1; at
-  A = 2.72 the partial sums of Re ln S₁ are still falling, 5.50, 4.40, 3.99, 3.69, 3.49). So at five orders the
-  harmonic-1 condition at ω∞ points to an amplitude near, but not at, the measured one; whether the zero converges to
-  (2.72, ω∞) needs σ₆–σ₈ and a scan in ω. A faster implementation (`amp_flint_par.py`: products packed by order, the
-  fit functional precomputed once per harmonic, `--procs N` worker processes; 26× faster on one process, same digits;
-  [PARALLEL.md](PARALLEL.md) §4) showed that from order 13 on the late-order fits need J ≥ 1000 terms: at J = 500, σ₆
-  is wrong (0.0138 − 0.0080i against −2.7×10⁻⁴ − 1.09×10⁻³i at J = 1000) and σ₇, σ₈ blow up. σ₅ is converged.
-  On the 8-thread machine (K = 17 at J = 1000 and 1500, 3 and 9 minutes; a K = 13, J = 1000 scan over
-  ω/ω∞ = 0.70–1.30, 25 minutes) σ₁–σ₄ agree to 10⁻¹¹ and σ₅ to 6×10⁻¹⁰ between the two J, but σ₆ only to 1.5% and
-  σ₇, σ₈ not at all: the late-order fits fail from order 13 on, and the fit residual grows with J (being diagnosed).
-  With the five reliable orders, the zero of S₁ in x = A² is not yet located by Padé approximants, but its *direction*
-  is (`arg_crossing.py scan13b`). A real zero x₀ makes the coefficients τ_k of ln S₁ real and negative,
-  arg τ_k → π, while a complex x₀ turns them with k. Across ω, arg τ_k = π is crossed at ω/ω∞ = 1.2516, 1.0554,
-  1.0176, 1.0084 for k = 2–5, a sequence converging to about 1.005 (Aitken: 1.0053; a finer K = 11 scan in steps of
-  0.01, `scan11f/`, gives the same crossings to 10⁻⁴). So at five orders the untruncated
-  harmonic-1 condition points to ω within about 0.5% of ω∞, independently of the three-harmonic result (1.0156);
-  the amplitude there is not converged (ratio estimates 2.6–2.9 against 2.72). Confirming it needs σ₆–σ₈. The shape predictions at A = 2.72 sharpen to F₃/F₁ = 0.0551, F₅/F₁ = 0.00314
+- *The harmonic-1 condition* (`solver/inner_amp/amp_flint_par.py --fit phys`, python-flint at 640 bits;
+  `zero_selection.py`, `arg_crossing.py`). With the higher harmonics tuned, $`S_1/S_1^{(1)} = 1 + \sigma_1A^2 + \sigma_2A^4 + \ldots`$. The
+  late orders of harmonic ν at order k contain every neighbour family ν′ with |ν′| ≤ k (they enter through the label
+  θ₀ at relative order 1/j), and the fits must include them all. A first basis with only ν′ − ν = ±2, ±4, ±6
+  (`amp_flint.py`) is good through σ₄, biases σ₅ by 7×10⁻⁷, and from order 13 on mis-tunes the higher harmonics, which
+  wrecked σ₆–σ₈. With all families, at ω∞, J = 750 and 1000 agree to about 10⁻¹⁹:
+  σ₁ = 0.74358457992 + 0.52447485276i, σ₂ = 0.11879383784 + 0.39807457035i, σ₃ = −0.05397185243 + 0.11658742432i,
+  σ₄ = −0.02886475753 + 0.01077835879i, σ₅ = −0.00555413676 − 0.00280595708i,
+  σ₆ = −2.7853745790×10⁻⁴ − 1.0776628405×10⁻³i, σ₇ = 1.0223846436×10⁻⁴ − 1.4905053530×10⁻⁴i
+  (`data/sigF_w1.0000_K15_J750_phys.json`, `_J1000_phys.json`).
+- *At ω∞ the harmonic-1 condition has a nearly real zero at the measured amplitude.* The coefficients τ_k of $`\ln S_1`$
+  in x = A² have arg τ_k/π = 0.878, 0.944, 0.978, 0.986, 0.992, 0.995 for k = 2–7, approaching π, as a real zero x₀
+  requires (then $`\tau_k \to -1/(k\,x_0^k)`$; a complex x₀ would turn them with k). Padé approximants [1/5] to [5/1] of
+  $`(\ln S_1)'`$ put the zero at A₀ = 2.728–2.756 with Im A₀ = −0.013 to −0.027 (residues 1.05–1.22, ideally 1), and the
+  ratio estimates from τ₅/τ₆ and τ₆/τ₇ give 2.744 − 0.026i and 2.748 − 0.013i. The D = ∞ amplitude measured from the
+  solutions is 2.70–2.72, so the zero lies within about 1% of it.
+- *Across ω* (σ₁–σ₅ from the first basis, K = 13 and K = 11 scans, `scan13b/`, `scan11f/`): arg τ_k = π is crossed at
+  ω/ω∞ = 1.2516, 1.0554, 1.0176, 1.0084 for k = 2–5, converging to about 1.005 (Aitken 1.0053; the two scans agree to
+  10⁻⁴). So the ω where the zero becomes exactly real is within about 0.5% of ω∞ at five orders, independently of the
+  three-harmonic result (1.0156). A scan with σ₆ and σ₇ across ω, which decides where the zero is real at seven
+  orders, is to run on the 8-thread machine.
+- *Shape.* The shape predictions at A = 2.72 are F₃/F₁ = 0.0551, F₅/F₁ = 0.00314
   (data: 0.0552/0.0549, 0.0034/0.0032), and the D = ∞ relation evaluated at each D's own amplitude and ω tracks the
   measured F₃/F₁ at D = 20–60 to within 0.004–0.006 (0.126, 0.099, 0.087, 0.080, 0.075 against 0.130, 0.105, 0.093,
   0.085, 0.080; `harm_pred.py`, heuristic).

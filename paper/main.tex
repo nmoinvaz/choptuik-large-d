@@ -38,8 +38,9 @@ closed-form light-cone coefficient, which we identify as the Stokes multiplier o
 radius. We conjecture that the selection rule at $D = \infty$ is the vanishing of the Stokes multipliers of an
 $n$-free inner problem; its higher-harmonic conditions predict the shape of the echo, $|F_3/F_1| = 0.0551$, which the
 data reproduce. Truncated to three harmonics, the full set of conditions selects $\Delta = 1.619$, 1.5\% below
-$\Dinf$ (one harmonic: 29\% above), and without truncation five orders of an amplitude expansion point to $\omega$
-within about 0.5\% of $\omega_\infty$; neither is converged, so $\Dinf$ is not yet derived.
+$\Dinf$ (one harmonic: 29\% above). Without truncation, seven orders of an amplitude expansion give at $\omega_\infty$ a
+nearly real zero at amplitude 2.74 (measured: 2.70--2.72), and five orders put the $\omega$ where it is exactly real within
+about 0.5\% of $\omega_\infty$; none of this is converged, so $\Dinf$ is not yet derived.
 The computations, derivations and text were produced by an AI model (Claude, Anthropic) under the author's
 direction and have not yet been reviewed by a human expert (Sec.~\ref{sec:how}).
 \end{abstract}
@@ -82,8 +83,9 @@ a proof is missing (Conjecture~\ref{conj}), select the period; its
 higher-harmonic conditions predict $|F_3/F_1| = 0.0551$ and $|F_5/F_1| = 0.00314$ for the echo profile at
 $D = \infty$, against $0.0549$--$0.0552$ and $0.0032$--$0.0034$ extrapolated from the solutions
 (Sec.~\ref{sec:inner}). The harmonic-1 condition, which would give $\Dinf$, is not yet settled: truncated to three
-harmonics, the conditions select $\omega = 1.0156\,\omega_\infty$ with the measured shape, and a first estimate without
-truncation puts the zero at $\omega_\infty$ about 10\% above the measured amplitude.
+harmonics, the conditions select $\omega = 1.0156\,\omega_\infty$ with the measured shape, and without
+truncation, at seven orders, the zero at $\omega_\infty$ is nearly real and lies at amplitude 2.74, within about 1\% of the
+measured one.
 \item An analysis of the next-to-leading-order condition of~\cite{EckerEckerGrumiller2026}, which within this framework
 does not select $\Delta$ (Sec.~\ref{sec:eeg}).
 \end{enumerate}
@@ -596,23 +598,27 @@ produced that can be checked against the solutions, and it agrees. The same rela
 amplitude and $\omega$ (a heuristic) tracks the measured $F_3/F_1$ at $D = 20$--$60$ to within $0.004$--$0.006$ (0.126, 0.099,
 0.087, 0.080, 0.075 against 0.130, 0.105, 0.093, 0.085, 0.080).
 
-\emph{The harmonic-1 condition: a first estimate.} With the higher harmonics tuned,
-$S_1/S_1^{(1)} = 1 + \sigma_1A^2 + \sigma_2A^4 + \dots$; at $\omega_\infty$, computed in ball arithmetic (320 bits) with late orders
-fitted on $j \le 500$--$750$, $\sigma_1 = 0.74358458 + 0.52447485i$, $\sigma_2 = 0.11879384 + 0.39807457i$,
-$\sigma_3 = -0.05397185 + 0.11658742i$, $\sigma_4 = -0.02886476 + 0.01077836i$, $\sigma_5 = -0.00555340 - 0.00280565i$
-($\sigma_1$--$\sigma_4$ stable to $10^{-9}$). The coefficients of $\ln S_1$ in $A^2$ have arguments close to $\pi$
-($0.878\pi$ to $0.978\pi$ for orders 2--5), the signature of a zero near the positive real axis; ratio and Pad\'e estimates put
-it at $A^2 \approx 8.7$--$9.1$ ($A \approx 2.95$--$3.01$) with a small imaginary part, about 10\% above the measured amplitude
-2.72, and not converged (at $A = 2.72$ the partial sums of $\mathrm{Re}\ln S_1$ are still falling). So at five orders the
-harmonic-1 condition at $\omega_\infty$ points to an amplitude near, but not at, the measured one.
+\emph{The harmonic-1 condition.} With the higher harmonics tuned,
+$S_1/S_1^{(1)} = 1 + \sigma_1A^2 + \sigma_2A^4 + \dots$. The late orders of harmonic $\nu$ at order $k$ contain every neighbour
+family $\nu'$ with $|\nu'| \le k$ (they enter through the label $\theta_0$ at relative order $1/j$), and the fits must include
+them all; a basis with only $\nu' - \nu = \pm2, \pm4, \pm6$ is good through $\sigma_4$ but fails from $\sigma_6$ on. With all
+families, in ball arithmetic at 640 bits, the values at $\omega_\infty$ agree between $J = 750$ and $1000$ terms to about
+$10^{-19}$: $\sigma_1 = 0.74358457992 + 0.52447485276i$, $\sigma_2 = 0.11879383784 + 0.39807457035i$,
+$\sigma_3 = -0.05397185243 + 0.11658742432i$, $\sigma_4 = -0.02886475753 + 0.01077835879i$,
+$\sigma_5 = -0.00555413676 - 0.00280595708i$, $\sigma_6 = (-2.7853745790 - 10.776628405i)\times10^{-4}$,
+$\sigma_7 = (1.0223846436 - 1.4905053530i)\times10^{-4}$.
 
-A scan in $\omega$ ($0.70 \le \omega/\omega_\infty \le 1.30$) locates the \emph{direction} of that zero. A real zero
-$x_0$ of $S_1$ in $x = A^2$ makes the coefficients $\tau_k$ of $\ln S_1$ real and negative, $\arg\tau_k \to \pi$, while a complex
-$x_0$ turns them with $k$. Across $\omega$, $\arg\tau_k = \pi$ is crossed at $\omega/\omega_\infty = 1.2516$, $1.0554$, $1.0176$,
-$1.0084$ for $k = 2$--$5$, a sequence converging to about $1.005$. So at five orders the untruncated harmonic-1 condition
-points to $\omega$ within about 0.5\% of $\omega_\infty$, independently of the three-harmonic result; the amplitude is not
-converged (ratio estimates 2.6--2.9). Higher orders need better late-order fits: from order 13 on the fits used here
-do not converge in the number of terms ($\sigma_6$ is good to 1.5\%, $\sigma_7$ and $\sigma_8$ not at all).
+At $\omega_\infty$ the coefficients $\tau_k$ of $\ln S_1$ in $x = A^2$ have $\arg\tau_k/\pi = 0.878$, $0.944$, $0.978$, $0.986$,
+$0.992$, $0.995$ for $k = 2$--$7$, approaching $\pi$, as a real zero $x_0$ requires ($\tau_k \to -1/(k x_0^k)$; a complex $x_0$
+would turn them with $k$). Pad\'e approximants $[1/5]$ to $[5/1]$ of $(\ln S_1)'$ put the zero at $A_0 = 2.728$--$2.756$ with
+$\mathrm{Im}\,A_0 = -0.013$ to $-0.027$ (residues 1.05--1.22), and ratio estimates from the last coefficients give
+$2.744 - 0.026i$ and $2.748 - 0.013i$. The amplitude extrapolated from the solutions is 2.70--2.72, so at $\omega_\infty$ the
+harmonic-1 condition has a nearly real zero within about 1\% of it.
+
+Across $\omega$ (scans with $\sigma_1$--$\sigma_5$, $0.70 \le \omega/\omega_\infty \le 1.30$ and, more finely, $0.96$--$1.06$),
+$\arg\tau_k = \pi$ is crossed at $\omega/\omega_\infty = 1.2516$, $1.0554$, $1.0176$, $1.0084$ for $k = 2$--$5$, a sequence
+converging to about $1.005$. So at five orders the $\omega$ where the zero is exactly real lies within about 0.5\% of
+$\omega_\infty$, independently of the three-harmonic result; a scan with $\sigma_6$ and $\sigma_7$ is the next step.
 
 \begin{figure}[t]
 \centering

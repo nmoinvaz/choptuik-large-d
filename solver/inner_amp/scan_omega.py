@@ -4,6 +4,7 @@ For each omega = wf * omega_inf it computes sigma_0..sigma_{(K-1)/2} (S_1/S_1^(1
 harmonics f_nu^(k), and writes one JSON per omega into OUTDIR (skipping omegas already done, so it can be resumed).
 
     python3 scan_omega.py WF_LO WF_HI N_OMEGA K J PROCS [OUTDIR] [PREC] [--inner M] [--serial]
+                          [--fit phys [--mf LO:HI] [--fit-step S] [--phys-prec BITS]]
     e.g. python3 scan_omega.py 0.70 1.30 13 13 500 8 scan13             8 omegas at a time, 1 process each
          python3 scan_omega.py 0.70 1.30 13 17 500 2 scan17 --inner 4  2 omegas at a time, 4 processes each
 
@@ -28,7 +29,7 @@ import multiprocessing as mpr
 
 
 def one(args):
-    wf, K, J, outdir, prec, inner, serial = args
+    wf, K, J, outdir, prec, inner, serial, fitkw = args
     fn = os.path.join(outdir, f"sigF_w{wf:.5f}_K{K}_J{J}.json")
     if os.path.exists(fn):
         return fn
@@ -42,13 +43,17 @@ def one(args):
         A = Amp(wf, K, J, prec=prec)
     else:
         from amp_flint_par import AmpPar
-        A = AmpPar(wf, K, J, prec=prec, procs=inner)
+        A = AmpPar(wf, K, J, prec=prec, procs=inner, **fitkw)
     sig, f = A.run(verbose=False)
     tmp = fn + ".tmp"
-    json.dump({"wf": wf, "K": K, "J": J, "prec": prec,
-               "sigma_str": [[mp.nstr(z.real, 25), mp.nstr(z.imag, 25)] for z in sig],
-               "sigma": [[float(z.real), float(z.imag)] for z in sig], "f": f,
-               "procs": 1 if serial else inner, "seconds": round(time.time() - t0, 1)}, open(tmp, "w"))
+    rec = {"wf": wf, "K": K, "J": J, "prec": prec,
+           "sigma_str": [[mp.nstr(z.real, 25), mp.nstr(z.imag, 25)] for z in sig],
+           "sigma": [[float(z.real), float(z.imag)] for z in sig], "f": f,
+           "procs": 1 if serial else inner, "seconds": round(time.time() - t0, 1)}
+    if fitkw:
+        rec.update({"fit": A.fit_mode, "mf": list(A.mf), "fit_step": A.fit_step, "phys_prec": A.phys_prec,
+                    "sigma_err": A.sigma_err, "fit_info": A.fit_info})
+    json.dump(rec, open(tmp, "w"))
     os.replace(tmp, fn)
     return fn
 
@@ -66,12 +71,21 @@ def main(argv):
     if "--serial" in argv:
         serial = True
         argv = [a for a in argv if a != "--serial"]
+    fitkw = {}
+    for flag, key, conv in (("--fit", "fit", str), ("--mf", "mf", lambda v: tuple(int(x) for x in v.split(":"))),
+                            ("--fit-step", "fit_step", int), ("--phys-prec", "phys_prec", int)):
+        if flag in argv:
+            i = argv.index(flag)
+            fitkw[key] = conv(argv[i + 1])
+            argv = argv[:i] + argv[i + 2:]
+    if fitkw.get("fit", "legacy") == "legacy":
+        fitkw = {}
     lo, hi, n, K, J, procs = float(argv[1]), float(argv[2]), int(argv[3]), int(argv[4]), int(argv[5]), int(argv[6])
     outdir = argv[7] if len(argv) > 7 else f"scan_K{K}_J{J}"
     prec = int(argv[8]) if len(argv) > 8 else 320
     os.makedirs(outdir, exist_ok=True)
     wfs = [lo + (hi - lo) * i / max(1, n - 1) for i in range(n)]
-    jobs = [(wf, K, J, outdir, prec, inner, serial) for wf in wfs]
+    jobs = [(wf, K, J, outdir, prec, inner, serial, fitkw) for wf in wfs]
     cx = mpr.get_context("spawn")
     if inner <= 1:
         with cx.Pool(procs) as p:
