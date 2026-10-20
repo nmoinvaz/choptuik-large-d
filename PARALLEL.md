@@ -62,7 +62,7 @@ $`x_{j+1} = A_j x_j + b_j`$ of length J therefore splits into P chunks:
 3. Optionally, recompute the interior values of each chunk from its now-known start value, in parallel.
 
 A chunk's b is the ordinary recurrence run from the zero state, at the serial cost c_v (one matrix–vector product)
-per step. Its A = A_{j₁−1}⋯A_{j₀} either has a closed form or has to be multiplied out:
+per step. Its $`A = A_{j_1-1}\cdots A_{j_0}`$ either has a closed form or has to be multiplied out:
 
 - CRC: x^{8n} mod P by square-and-multiply in O(log n).
 - §4: a ratio of hypergeometric products.
@@ -420,7 +420,7 @@ These need no combine at all: independent runs with no shared state. They corres
 - **Seeds in D**, each solved independently from its own seed: low-D sweeps at several kc (`solver/scan_ne.py` with
   NE_SEED_KC), D = 5 checks, the per-integer-D states in `hp/data/states/`.
 - **Finite-difference Jacobian columns** for the lateral-solution solves (`solver/inner_stokes/continue_M.py procs`,
-  and agent A's `full_M.py` / `fixedA.py --procs N`); the formula follows the list.
+  and `solver/inner_stokes/full_M.py` / `fixedA.py --procs N`); the formula follows the list.
 
 The unknowns are u = (A, ω, B₃, C₃, …, B_M, C_M) ∈ ℝⁿ, with n = M + 1. Column i of the Jacobian is
 

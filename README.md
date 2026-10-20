@@ -47,6 +47,7 @@ Contents
   [Double-double residual](#double-double-residual) ·
   [Exact Jacobian and growth-mode matrix](#exact-jacobian-and-growth-mode-matrix) · [Build and test](#build-and-test) ·
   [Performance](#performance) · [Layout](#layout) · [Limits](#limits)
+- How the computations parallelize (CRC-style split and combine): [PARALLEL.md](PARALLEL.md)
 
 ## Results
 
@@ -1460,6 +1461,7 @@ hp/                 double-double solver (crate hpkernel)
 └── data/seeds/     saved solver states to restart continuation from
 hp/largeD_*.py      large-D scaling of the solutions (profiles, F(theta), harmonic content, light-cone exponent)
 comms.txt           task log between the cloud and the second machine
+PARALLEL.md         how the computations parallelize: shooting as CRC-style chunking, Jacobian columns, amp_flint, scans
 solver/README.md    the Python solver, scans and fits; solver/CONTEXT.md (summary), solver/notes.md (lab notebook)
 solver/formula_all.py  the rational formulas (README coefficient table): cd solver/data && python3 ../formula_all.py
 solver/rational_fit.py the search over rational forms; solver/formula.py the 1/D power series
