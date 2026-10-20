@@ -334,7 +334,7 @@ The recurrence even has a closed form. The homogeneous solution is the hypergeom
 already uses:
 
 ```math
-T_j = \prod_{i<j} a_i = \frac{(\alpha)_j(\beta)_j}{j!},\qquad
+T_j = \prod_{i \lt j} a_i = \frac{(\alpha)_j(\beta)_j}{j!},\qquad
 d_j = T_j\Bigl(d_0 + \sum_{i=0}^{j-1}\frac{b_i}{T_{i+1}}\Bigr).
 ```
 
