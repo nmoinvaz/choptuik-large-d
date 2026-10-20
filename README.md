@@ -1484,6 +1484,7 @@ hp/                 double-double solver (crate hpkernel)
 hp/largeD_*.py      large-D scaling of the solutions (profiles, F(theta), harmonic content, light-cone exponent)
 comms.txt           task log between the cloud and the second machine
 PARALLEL.md         how the computations parallelize: shooting as CRC-style chunking, Jacobian columns, amp_flint, scans
+AGENTS.md           conventions for the AI sessions that run computations here (which scripts to use, thread budget, comms)
 solver/README.md    the Python solver, scans and fits; solver/CONTEXT.md (summary), solver/notes.md (lab notebook)
 solver/formula_all.py  the rational formulas (README coefficient table): cd solver/data && python3 ../formula_all.py
 solver/rational_fit.py the search over rational forms; solver/formula.py the 1/D power series
