@@ -1,0 +1,6 @@
+D     20: omega 2.9749 A 3.48: predicted |F3/F1| 0.1263 |F5/F1| 0.01310  (f3 terms 2.98e-01, 1.19e-01, 3.97e-02)   measured 0.13 0.024
+D     30: omega 3.1976 A 3.212: predicted |F3/F1| 0.0987 |F5/F1| 0.00807  (f3 terms 2.03e-01, 6.02e-02, 1.44e-02)   measured 0.105 0.016
+D     40: omega 3.3270 A 3.086: predicted |F3/F1| 0.0865 |F5/F1| 0.00693  (f3 terms 1.66e-01, 4.23e-02, 8.47e-03)   measured 0.093 0.012
+D     50: omega 3.4117 A 3.011: predicted |F3/F1| 0.0797 |F5/F1| 0.00597  (f3 terms 1.47e-01, 3.39e-02, 6.24e-03)   measured 0.085 0.0097
+D     60: omega 3.4716 A 2.962: predicted |F3/F1| 0.0753 |F5/F1| 0.00535  (f3 terms 1.35e-01, 2.92e-02, 5.10e-03)   measured 0.08 0.0085
+D  1e+09: omega 3.8221 A 2.72: predicted |F3/F1| 0.0552 |F5/F1| 0.00301  (f3 terms 8.63e-02, 1.31e-02, 1.56e-03)   measured None None

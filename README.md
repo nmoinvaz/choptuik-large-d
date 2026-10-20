@@ -1111,11 +1111,20 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   extrapolate (degree 3 in 1/n) to 0.055, 0.059, 0.065, 0.069, 0.072: finite, close to each other and to $`\lvert q\rvert A^2 \approx 0.063`$,
   i.e. a decay rate of 1.3–1.45 per harmonic. The extrapolations are not fully converged (they still fall by 0.003–0.004
   from degree 2 to 3).
-- *The harmonic-1 condition is still open.* With the higher harmonics tuned, $`S_1/S_1^{(1)} = 1 + \sigma_1A^2 + \sigma_2A^4 + \ldots`$ with
-  σ₁ = 0.743587 + 0.524476i, σ₂ = 0.118797 + 0.398074i, σ₃ = −0.053969 + 0.116587i, σ₄ ≈ −0.0290 + 0.0109i
-  (stable to 10⁻⁵–4×10⁻⁴ across fit windows). $`\ln S_1`$ is nearly linear in A², and four terms do not locate its
-  zero; whether S₁ = 0 at A ≈ 2.72, ω = ω∞ needs the series to about A²⁵ in extended precision
-  (in progress). σ₁(ω) alone never vanishes.
+- *The harmonic-1 condition: first estimate* (`solver/inner_amp/amp_flint.py`, python-flint at 320 bits; `zero_selection.py`).
+  With the higher harmonics tuned, $`S_1/S_1^{(1)} = 1 + \sigma_1A^2 + \sigma_2A^4 + \ldots`$; at ω∞, with late orders fitted on
+  j ≤ 500–750 (fewer orders bias σ₄ by 1.5×10⁻⁴), σ₁ = 0.74358458 + 0.52447485i, σ₂ = 0.11879384 + 0.39807457i,
+  σ₃ = −0.05397185 + 0.11658742i, σ₄ = −0.02886476 + 0.01077836i, σ₅ = −0.00555340 − 0.00280565i (σ₁–σ₄ stable to 10⁻⁹).
+  The coefficients τ_k of $`\ln S_1`$ in x = A² have arguments 0.878π, 0.943π, 0.978π, 0.974π for k = 2–5, the signature of a
+  zero near the positive real x-axis; ratio and Padé estimates put it at x₀ ≈ 8.7–9.1 (A ≈ 2.95–3.01) with a small
+  imaginary part, about 10% above the measured amplitude 2.72, and not converged (the Padé residues are 2–2.7, not 1; at
+  A = 2.72 the partial sums of Re ln S₁ are still falling, 5.50, 4.40, 3.99, 3.69, 3.49). So at five orders the
+  harmonic-1 condition at ω∞ points to an amplitude near, but not at, the measured one; whether the zero converges to
+  (2.72, ω∞) needs σ₆–σ₈ and a scan in ω, which are running on a separate 8-thread machine
+  (`scan_omega.py`, about 2–3 hours). The shape predictions at A = 2.72 sharpen to F₃/F₁ = 0.0551, F₅/F₁ = 0.00314
+  (data: 0.0552/0.0549, 0.0034/0.0032), and the D = ∞ relation evaluated at each D's own amplitude and ω tracks the
+  measured F₃/F₁ at D = 20–60 to within 0.004–0.006 (0.126, 0.099, 0.087, 0.080, 0.075 against 0.130, 0.105, 0.093,
+  0.085, 0.080; `harm_pred.py`, heuristic).
 
 ![The echo's harmonic spectrum: amplitude of each odd harmonic for D = 4 to 60 with the D = infinity prediction, and the decay rate per harmonic against 1/(D-2)](solver/spectrum.svg)
 
@@ -1385,7 +1394,8 @@ solver/largeD_inner.py        the inner problem at x ~ sqrt(n): formal series, c
 solver/inner_stokes/          the inner Stokes multiplier by lateral solutions (lateral_np.py check|scan, zero_M1.py, zero_M3.py)
 solver/inner_borel/           the same by Borel-Darboux in ball arithmetic (python-flint): inner_stokes.py linear|grav, inner_zero.py
 solver/eeg20/                 the comparison with Ecker-Ecker-Grumiller's Eq. (20) (window identity, tilt, max c, Delta -> 0 fits)
-solver/inner_amp/             the inner multipliers by an amplitude expansion with every harmonic exact (amp_series.py check, stokes_amp2.py wf K J)
+solver/inner_amp/             the inner multipliers by an amplitude expansion with every harmonic exact (amp_series.py check, stokes_amp2.py;
+                              amp_flint.py wf K J in ball arithmetic; scan_omega.py for an N-process scan in omega; zero_selection.py)
 solver/inner_pert/            growing modes of the inner problem (exact lambda = 0, 1 modes; one-harmonic root) and free gamma fits
 hp/largeD_Fratios.py          harmonic ratios F_{nu+2}/F_nu of the double-double solutions, extrapolated to D = infinity
 hp/compare/                   D = 5 by double-double (dd_D5.py) and the comparison with Ecker et al.'s published data (cmp_ecker.py)
