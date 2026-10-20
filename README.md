@@ -11,7 +11,7 @@ is climbing toward D = 60 to test whether Δ is analytic in 1/D.
 The echo period Δ(D) and critical exponent γ(D), computed with this kernel and the solver in [`solver/`](solver/).
 The dashed curves are one rational formula in 1/(D−2) for every D ≥ 4 (below), fitted on the step-converged points
 4 ≤ D ≤ 30.2 (step error extrapolated out, near-null directions solved, enough Fourier modes in time at low D);
-hollow points are held out of the fit. As D → ∞, γ → 1/2 − 0.758/n, and Δ → Δ∞ = 1.6438938 ± 0.0000002 if Δ is
+hollow points are held out of the fit. As D → ∞, γ → 1/2 − 0.758/n, and Δ → Δ∞ = 1.64389374 ± 0.00000002 if Δ is
 analytic in 1/D (from the double-double points; the f64 points gave 1.64395 ± 0.00008). Details are in
 [`solver/CONTEXT.md`](solver/CONTEXT.md). Regenerate with `cd solver/data && python3 ../plot_delta.py`.
 
@@ -75,9 +75,9 @@ $$
 $$
 
 $$
-\Delta_\infty = 1.6438938 \pm 0.0000002,
+\Delta_\infty = 1.64389374 \pm 0.00000002,
 \qquad
-\omega_\infty = \frac{2\pi}{\Delta_\infty} = 3.8221358 \pm 0.0000005,
+\omega_\infty = \frac{2\pi}{\Delta_\infty} = 3.82213592 \pm 0.00000005,
 \qquad
 \gamma_\infty = \frac{1}{2} .
 $$
@@ -88,7 +88,7 @@ $1.64389375$ to $1.64389393$. The f64 points gave $1.64395 \pm 0.00008$, and thi
 $a_0 = 1.643898$, $4\times10^{-6}$ high, which its fitting range could not see. The coefficients of one fit are not
 physical constants (they are correlated); only the function is.
 
-**The limit rests on an assumption.** $\Delta_\infty = 1.6438938$ holds if $\Delta(D)$ is analytic in $1/D$ at
+**The limit rests on an assumption.** $\Delta_\infty = 1.64389374$ holds if $\Delta(D)$ is analytic in $1/D$ at
 $D = \infty$: no half-integer powers $n^{-1/2}$, no $\log n$, and no new scale far beyond the computed range. The f64
 data could not test that. Formulas with those features reproduce every f64 point from $D = 4$ to $40$ (fit and held
 out) just as well: a series in $n^{-1/2}$ gives limits from $1.607$ to $1.691$ depending on its degree; adding one
@@ -127,7 +127,7 @@ Settling it needs either points at $D$ in the hundreds or the $D \to \infty$ equ
 | 50 | 1.8416595030 | 0.48736 |
 | 100 | 1.74502648 | 0.49313 |
 | 1000 | 1.6542409 | 0.4992 |
-| $\infty$ | $1.6438938 \pm 0.0000002$ | $1/2$ |
+| $\infty$ | $1.64389374 \pm 0.00000002$ | $1/2$ |
 
 $\Delta$ for $D = 8$–$45$ is double-double (interpolated to $10^{-14}$ where $D$ is not itself a computed point); the
 rest of the table, and every $\gamma$, is from the f64 solver and is within the precision of its points up to
@@ -167,35 +167,43 @@ limits the series to $D \gtrsim 10$ and forbids cutting it short (five terms are
 
 </details>
 
-**Candidate constants for $\Delta_\infty$.** The double-double points now put every constant below outside the
-analytic limit $1.6438938 \pm 0.0000002$. Forcing each one as the limit of a $1/D$ series fitted on
-$10 \le D \le 37.5$ (best degree up to 24) misses the double-double points from $37.5$ to $45$ by
-$8\times10^{-12}$ ($\frac{10}{9}\sqrt{j_{0,1}/\ln 3}$, the closest) to $1.5\times10^{-10}$ ($\pi^2/6$), against
-$1\times10^{-12}$ for the free limit. So, if $\Delta$ is analytic in $1/D$, none of them is $\Delta_\infty$. The
-table and graph below are the earlier test on the f64 points.
+**Candidate constants for $\Delta_\infty$: tried, all ruled out.** Nine closed forms were tried as the limit, first on
+the f64 points and then on the double-double points. None of them passes the second test, so none of them is
+$\Delta_\infty$, given that $\Delta$ is analytic in $1/D$ (which the double-double points support,
+[below](#is-the-period-analytic-in-1d)).
 
-Each candidate is forced as $c_0$ in 12 fits (variable $1/D$, $1/(D-1)$,
-$1/(D-2)$; degree 9 and 10; lower cut $D \ge 10$ or $12$), so the test assumes analyticity in $1/D$ (above). The
-table gives the fit quality, as $\chi^2/\mathrm{dof}$ of the
-best and the worst of the 12 (0.62 is the unconstrained fit), and the rms error on the held-out points at
-$D = 34$–$39.5$, which the fits never saw.
+- **f64 test** ($D \le 39.5$, `solver/candidates.py`): each candidate forced as $c_0$ in 12 fits (variable $1/D$,
+  $1/(D-1)$, $1/(D-2)$; degree 9 and 10; lower cut $D \ge 10$ or $12$). The table gives $\chi^2/\mathrm{dof}$ of the best
+  and the worst of the 12 (0.62 is the unconstrained fit) and the rms error on the held-out points at $D = 34$–$39.5$.
+  Five candidates passed it; four were already excluded.
+- **Double-double test** ($D \le 59.8$, `hp/dd_candidates.py`): each candidate forced as the limit of a power series in
+  $1/D$ fitted on $10 \le D \le 45$ at degree 14 to 26, and compared with the 351 points from $45$ to $59.8$ that the fit
+  never saw. The table gives the best of those degrees and how many times worse it is than the free fit ($4.7\times10^{-13}$
+  at degree 16).
 
-| Candidate | Value | $\chi^2/\mathrm{dof}$ (best .. worst) | Held-out rms | Verdict |
-|---|---|---|---|---|
-| none (free fit) | $1.64395 \pm 0.00008$ | 0.62 .. 3.4 | $1.4\times10^{-6}$ | |
-| $\frac{5}{7}\sqrt{G}\, j_{0,1}$ | 1.6439747 | 0.62 .. 8.6 | $1.3\times10^{-6}$ | fits, contrived |
-| $\frac{7}{5}\,(\ln 2)^{-2}\,\pi^{-1/2}$ | 1.6440014 | 0.62 .. 18 | $1.2\times10^{-6}$ | fits, contrived |
-| $\frac{7}{2}\sqrt{\ln 2/\pi}$ | 1.6440152 | 0.62 .. 26 | $1.2\times10^{-6}$ | fits, contrived |
-| $\frac{9}{8}\sqrt{j_{2,1}/j_{0,1}}$ | 1.6440207 | 0.62 .. 30 | $1.2\times10^{-6}$ | fits, contrived |
-| $\frac{10}{9}\sqrt{j_{0,1}/\ln 3}$ | 1.6439063 | 0.62 .. 118 | $1.5\times10^{-6}$ | fits, contrived |
-| $\pi^2/6 = \zeta(2)$ | 1.6449341 | 3.6 .. 13000 | $1.9\times10^{-6}$ | excluded if analytic in $1/D$ |
-| $2\pi/j_{1,1}$ | 1.6397878 | 67 .. $3\times10^{5}$ | $1.3\times10^{-5}$ | excluded if analytic in $1/D$ |
-| $\sqrt{e}$ | 1.6487213 | 82 .. $3\times10^{5}$ | $1.3\times10^{-5}$ | excluded if analytic in $1/D$ |
-| $\varphi = (1+\sqrt5)/2$ | 1.6180340 | 2500 .. $10^{7}$ | $7.7\times10^{-5}$ | excluded if analytic in $1/D$ |
+| Candidate | Value | − double-double limit | f64 test: $\chi^2/\mathrm{dof}$; held-out rms | Double-double test: held-out error (× free) | Verdict |
+|---|---|---|---|---|---|
+| none (free fit) | $1.64389374 \pm 0.00000002$ | | 0.62 .. 3.4; $1.4\times10^{-6}$ | $4.7\times10^{-13}$ | |
+| $\frac{5}{7}\sqrt{G}\, j_{0,1}$ | 1.6439747 | $+8.1\times10^{-5}$ | 0.62 .. 8.6; $1.3\times10^{-6}$ | $6.2\times10^{-11}$ (130×) | **ruled out** (passed the f64 test) |
+| $\frac{7}{5}\,(\ln 2)^{-2}\,\pi^{-1/2}$ | 1.6440014 | $+1.1\times10^{-4}$ | 0.62 .. 18; $1.2\times10^{-6}$ | $1.1\times10^{-10}$ (220×) | **ruled out** (passed the f64 test) |
+| $\frac{7}{2}\sqrt{\ln 2/\pi}$ | 1.6440152 | $+1.2\times10^{-4}$ | 0.62 .. 26; $1.2\times10^{-6}$ | $1.3\times10^{-10}$ (270×) | **ruled out** (passed the f64 test) |
+| $\frac{9}{8}\sqrt{j_{2,1}/j_{0,1}}$ | 1.6440207 | $+1.3\times10^{-4}$ | 0.62 .. 30; $1.2\times10^{-6}$ | $1.4\times10^{-10}$ (290×) | **ruled out** (passed the f64 test) |
+| $\frac{10}{9}\sqrt{j_{0,1}/\ln 3}$ | 1.6439063 | $+1.3\times10^{-5}$ | 0.62 .. 118; $1.5\times10^{-6}$ | $5.4\times10^{-11}$ (110×) | **ruled out** (passed the f64 test) |
+| $\pi^2/6 = \zeta(2)$ | 1.6449341 | $+1.0\times10^{-3}$ | 3.6 .. 13000; $1.9\times10^{-6}$ | $1.7\times10^{-9}$ (3500×) | **ruled out** by both |
+| $2\pi/j_{1,1}$ | 1.6397878 | $-4.1\times10^{-3}$ | 67 .. $3\times10^{5}$; $1.3\times10^{-5}$ | $7.0\times10^{-9}$ (15000×) | **ruled out** by both |
+| $\sqrt{e}$ | 1.6487213 | $+4.8\times10^{-3}$ | 82 .. $3\times10^{5}$; $1.3\times10^{-5}$ | $8.1\times10^{-9}$ (17000×) | **ruled out** by both |
+| $\varphi = (1+\sqrt5)/2$ | 1.6180340 | $-2.6\times10^{-2}$ | 2500 .. $10^{7}$; $7.7\times10^{-5}$ | $4.4\times10^{-8}$ (92000×) | **ruled out** by both |
+
+The f64 test could not separate the first five: they move $\Delta(D)$ by less than $10^{-6}$ for $D \le 40$, below the
+precision of those points. The double-double points can. The closest candidate sits $1.3\times10^{-5}$ from the limit,
+600 times its uncertainty, and forcing any of them makes the fit predict the unseen points at least 100 times worse. A
+forced fit can only bend toward its candidate by spending degrees, so it improves with degree (the table gives each
+one's best) until it reaches the level where the free fits overfit too (about $5\times10^{-11}$ at degree 24–26), which is
+still about 100 times the free fit's best.
 
 ![How far each candidate constant moves Δ(D) over the computed range](solver/candidates.svg)
 
-The graph shows, for every candidate, how much fixing $\Delta_\infty$ to it changes the fitted $\Delta(D)$ over the computed
+The graph is from the f64 test. It shows, for every candidate, how much fixing $\Delta_\infty$ to it changes the fitted $\Delta(D)$ over the computed
 range ($|\text{forced fit} - \text{free fit}|$, log scale), against the precision of the computed points (shaded).
 The five forms inside the window stay at the level of the data; $\pi^2/6$ sits 10–100 times above it at
 $D = 10$–$30$, and $2\pi/j_{1,1}$, $\sqrt e$ and $\varphi$ climb further out. Every curve has the same shape: forcing the
@@ -205,15 +213,12 @@ influence function $h(D)$ with $h(\infty) = 1$. It is $\sim 10^{-7}$ where the p
 $h(40) = 3.8\times10^{-3}$, $h(100) = 0.17$, $h(1000) = 0.85$. Regenerate with
 `cd solver/data && python3 ../plot_candidates.py`.
 
-$G$ is Catalan's constant and $j_{\nu,k}$ the $k$-th zero of the Bessel function $J_\nu$. The five that fit are all that a
-search finds in the window $1.64388$–$1.64403$ among products $r\, b_1^{p_1} b_2^{p_2}$ ($r = i/j$ with $i, j \le 12$;
-$p = \pm\tfrac12, \pm1, \pm2$; $b$ from $\pi$, $e$, $\sqrt2$, $\sqrt3$, $\ln 2$, $\ln 3$, Euler's $\gamma$, $\zeta(3)$, $\varphi$, $G$
-and the first Bessel zeros), $2\pi/(r b)$ and $r \ln b$. None has a reason to appear here, and inside the window the data
-cannot tell them apart: they move $\Delta(D)$ by less than $10^{-6}$ for $D \le 40$, below the precision of the held-out
-points. Forcing a constant can exclude it but not select it, and only under the analytic assumption: with a
-non-analytic or slow large-$D$ term allowed, $\pi^2/6$ and $\sqrt e$ fit as well (graph above). Identifying
-$\Delta_\infty$ would take about eight digits and a settled large-$D$ form, from the $D \to \infty$ limit of the equations
-rather than from larger $D$.
+$G$ is Catalan's constant and $j_{\nu,k}$ the $k$-th zero of the Bessel function $J_\nu$. The five that passed the f64
+test are all that a search finds in the old window $1.64388$–$1.64403$ among products $r\, b_1^{p_1} b_2^{p_2}$
+($r = i/j$ with $i, j \le 12$; $p = \pm\tfrac12, \pm1, \pm2$; $b$ from $\pi$, $e$, $\sqrt2$, $\sqrt3$, $\ln 2$, $\ln 3$, Euler's
+$\gamma$, $\zeta(3)$, $\varphi$, $G$ and the first Bessel zeros), $2\pi/(r b)$ and $r \ln b$. The same search finds nothing in
+the double-double window $1.6438936$–$1.6438939$, nor in one 20 times wider ($1.643890$–$1.643898$). Whether
+$\Delta_\infty$ has a closed form at all is open; the $D \to \infty$ limit of the equations is the way to find out.
 
 ## Double-double solver (`hp/`, in progress)
 
