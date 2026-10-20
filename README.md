@@ -766,6 +766,25 @@ constant of a $`{}_2F_0`$ times a power of $`n`$ and a phase, and its factor $`1
   that gravity also couples the $`s = \pm i\mu\omega`$ fast modes (same singulant, exponents $`2i\mu\omega`$ apart), so the
   multiplier is a matrix over $`\pm\mu`$.
 
+**First computation with gravity** (`solver/inner_stokes/`, lateral solutions: the inner equations integrated from
+just above and just below the Stokes line and differenced, harmonics $`\lvert\mu\rvert \le M`$):
+
+- *Method checked without gravity.* The jump divided by $`2\pi i\,2^{-s-1/2}/(\Gamma(\alpha)\Gamma(\beta))`$ times the linear fast solution is
+  $`1.000000000002 - 7\times10^{-12}i`$, the same at two matching radii (`lateral_np.py check`).
+- *The fast mode with gravity, in the inner region* (derived): with $`\delta\Delta_P = e^{-1/(2\xi^2)}a`$, the order-$`\xi^{-2}`$ terms cancel and
+  $`\xi\,\partial_\xi a + 2\omega\,\partial_\theta a = 2F^2a`$, the large-$`x`$ limit of Proposition 3. So the multiplier is a function of the
+  characteristic label, $`S(\theta_0) = \sum_\nu S_\nu e^{i\nu\theta_0}`$, multiplying $`e^{-1/(2\xi^2)}\xi^{2\langle F^2\rangle}e^{\Pi(\theta)}`$ with
+  $`\Pi = \omega^{-1}\!\int(F^2 - \langle F^2\rangle)`$. The extra power $`\xi^{2\langle F^2\rangle}`$ is seen in the computed jumps.
+- *Harmonic truncation is not a controlled approximation* (derived and seen). The linear multipliers grow like
+  $`S_\nu \propto F_\nu\,e^{\pi\lvert\nu\rvert\omega/2}`$ ($`1/\lvert\Gamma(\alpha)\Gamma(\beta)\rvert \approx 47`$ for $`\nu = 1`$, $`2\times10^6`$ for $`\nu = 3`$), so
+  $`S(\theta_0)`$ involves $`F`$ continued to $`\mathrm{Im}\,\theta = \mp\pi\omega/2 \approx \mp6`$, and a harmonic generated only by the
+  nonlinearity already carries a jump $`10^2`$–$`10^4`$ times that of harmonic 1.
+- *One harmonic* ($`F = A\sin\theta`$, `zero_M1.py`): the multiplier has a genuine zero, independent of the matching radius,
+  at $`A = 2.542`$, $`\omega = 2.970`$ ($`\Delta = 2.116`$). The amplitude is 6.5% below $`F_1 \approx 2.72`$; $`\omega`$ is 22% below
+  $`\omega_\infty`$. Adding harmonic 3 (`zero_M3.py`) destroys that zero, and the zero found there is unphysical
+  ($`\omega = 0.198\,\omega_\infty`$, $`F_3/F_1 = 0.65`$). So no selection of $`\omega_\infty`$ follows yet; the next attempt needs rescaled
+  unknowns $`F_\nu e^{\pi\lvert\nu\rvert\omega/2}`$, seven or more harmonics, and more precision along the integration arc.
+
 ### What is known about the selection, and what is open
 
 - **The expansion diverges.** `solver/largeD_late_orders.py` runs the recursion of Proposition 1 numerically to order 36,
@@ -939,6 +958,7 @@ solver/largeD_linear_late.py  late orders of the exact leading-order 1/n series 
 solver/largeD_dingle_K.py     their Dingle constant against the inner 2F0 prediction
 solver/largeD_stokes_C.py     C(n,s) as the 2F0 Stokes constant times n^(s+1/2) and a phase
 solver/largeD_inner.py        the inner problem at x ~ sqrt(n): formal series, check against the outer top degrees
+solver/inner_stokes/          the inner Stokes multiplier by lateral solutions (lateral_np.py check|scan, zero_M1.py, zero_M3.py)
 solver/largeD_transport_sympy.py  Proposition 3 derived symbolically from the exact equations (b, c perturbed too)
 solver/largeD_fast_transport_full.py  the transport check with the full O(1/n) background
 solver/largeD_linear_poles.py  Proposition 4: the late orders as an exact sum over the poles in kappa
