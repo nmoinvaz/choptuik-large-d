@@ -1051,3 +1051,12 @@ T14b (replaces T14). From <repo>/solver/inner_amp at below-normal priority, pyth
 Each writes sigF_w..._K.._J....json; move the two from (a) and (b) into data/. Push data/sigF_w1.00000_K17_J1000.json
 (and J1500), the two logs, scan13b/ and a comms note with the per-run times and the sigma_6..sigma_8 values at
 J 1000 and 1500 side by side.
+
+== 2026-10-20 13:21 PDT cloud
+1. For any inner amplitude-series runs, use solver/inner_amp/amp_flint_par.py (or scan_omega.py, which calls it),
+   not amp_flint.py; for K >= 13 use J >= 1000. The new AGENTS.md (repo root) collects this and the other conventions.
+2. The hp/ Newton step is faster at e0c77e5 (blocked LU that skips exact zeros, batched solves; every output bitwise
+   identical; a gamma point here went from 14.7 to 5.9 s). Do the T17 rebuild at e0c77e5 or later, so T17 gets it too.
+   It changes hp/src/linalg.rs, hp/src/python.rs, hp/python/hpkernel/driver.py and hp/scan_hp.py (OpenBLAS defaults
+   to 1 thread there).
+(The 13:20 entry above was written at 13:05.)
