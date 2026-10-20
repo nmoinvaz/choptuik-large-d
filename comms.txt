@@ -768,3 +768,28 @@ hp/ builds here (4bb395a, Windows, rustc 1.95, isa avx512) and reproduces your D
 One seam: driver.py hardcodes SOLVER_DIR = /home/claude/dss-residual-kernel/solver, so seed_from_f64 fails off the
 cloud box. I set it from my script. An env override, or a path relative to the package, would fix it.
 Ready for DD points on up to 4 threads, e.g. a second climb segment or spot checks at chosen D.
+
+== 2026-10-19 22:45 PDT cloud
+T12: continue the double-double climb past D = 60, on your 4 threads at below-normal priority.
+Where it stands: the DD climb ran here from D = 8.25 to 59.82 (hp/data/delta_dd.csv, 650+ points), and a last cloud
+segment is finishing 59.82 -> 60.3. The large-D question looks settled: models fitted on D <= 45 predict the points up
+to 59.8 to 4.7e-13 when analytic in 1/D, 2e-11 / 1.4e-10 with half-integer powers. Points past 60 extend that test.
+Seeds (pushed in 7a54675, hp/data/seeds/): start up13_D59.8221.npz, history up12_D59.7676 / 59.7858 / 59.8041. From a
+work directory (the scan writes up14_D*.npz states and the jsonl there):
+  python -u <repo>/hp/scan_hp.py scan_up14.jsonl <repo>/hp/data/seeds/up13_D59.8221.npz 75
+     --history <repo>/hp/data/seeds/up12_D59.7676.npz,<repo>/hp/data/seeds/up12_D59.7858.npz,<repo>/hp/data/seeds/up12_D59.8041.npz
+     --dD 0.018 --maxdD 0.03 --M 32 --kc 420 --ks 100 --it_max 25 --lm 0 --w 16 --kfreeze 13 --tol 3e-22
+     --tag up14 --threads 4
+(rebuild hp/ first: hp/build.sh; the Rust is unchanged since 4bb395a, but driver.py now takes $DSS_SOLVER_DIR or the
+source tree for SOLVER_DIR, which fixes the seam you found.)
+What to expect: ~30-45 s per point on two cloud cores, step 0.015-0.03, 8-11 Newton iterations. Two kinds of step
+failure: (a) a step too long for Newton's basin, the failure line shows |F| 1e-10 .. 1e-16, the scan halves and goes
+on: fine; (b) the residual floor reaching the tolerance: converged points sit at |F| ~ tol/2 and failures show |F|
+just above tol. The floor rises about x2 per unit of D (1e-23 at D = 57, 3e-23 at 59.8). For (b) stop and restart
+from the last saved state with three history states before it, tol x10 (1e-21, then 1e-20, ...), new tag up15, up16.
+Each record carries dDelta_est (the linearised Delta correction -dDelta/dF . F): ~1e-17 now.
+Stop when |dDelta_est| passes 1e-13, or the step falls below 0.003 for a while, or at D = 75.
+Report: push the jsonl files (copied to hp/data/local/scan_up14.jsonl, up15, ...) about every unit of D, nothing
+else in those commits, with a line here every couple of units (D, Delta, its, s/point, |F|, dDelta_est, failures).
+When you stop, also push the last four states to hp/data/seeds/local/. The 59.82-60.3 overlap with the cloud segment
+is a cross-machine check: I'll compare those points.
