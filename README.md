@@ -7,12 +7,13 @@ period ([below](#double-double-solver-hp-in-progress)). It has computed Δ from 
 points beyond the fitted range show that Δ is analytic in 1/D at large D
 ([below](#is-the-period-analytic-in-1d)).
 
-![Echo period Δ(D) and critical exponent γ(D) with one rational formula for all D ≥ 4](solver/delta.svg)
+![Echo period Δ(D) and critical exponent γ(D) with one rational formula for all D ≥ 4, and the double-double points to D = 61](solver/delta.svg)
 
 The echo period Δ(D) and critical exponent γ(D), computed with this kernel and the solver in [`solver/`](solver/).
 The dashed curves are one rational formula in 1/(D−2) for every D ≥ 4 (below), fitted on the step-converged points
 4 ≤ D ≤ 30.2 (step error extrapolated out, near-null directions solved, enough Fourier modes in time at low D);
-hollow points are held out of the fit. As D → ∞, γ → 1/2 − 0.758/n, and Δ → Δ∞ = 1.64389375 ± 0.00000001 if Δ is
+hollow points are held out of the fit, and the green diamonds are double-double points up to D = 61, which it matches
+to 6e-8. As D → ∞, γ → 1/2 − 0.758/n, and Δ → Δ∞ = 1.64389375 ± 0.00000001 if Δ is
 analytic in 1/D (from the double-double points; the f64 points gave 1.64395 ± 0.00008). Details are in
 [`solver/CONTEXT.md`](solver/CONTEXT.md). Regenerate with `cd solver/data && python3 ../plot_delta.py`.
 
@@ -100,13 +101,13 @@ above $D \approx 100$. The double-double points test it: fitted on $D \le 45$, t
 up to $D = 60$ to $5\times10^{-13}$, 40 to 300 times better than series in half-integer powers, and no added
 non-analytic term improves it ([below](#is-the-period-analytic-in-1d)).
 
-![Formulas that all fit the computed points, extended to D = 100000](solver/extrapolation.svg)
+![Formulas that fit the f64 points, extended to D = 100000; the double-double points rule out all but the analytic ones](solver/extrapolation.svg)
 
 The analytic form is the natural default (the large-$D$ expansion of the equations has no other scale, and the only
 structure the data show is the pole near $D \approx -9$), but it is not proven: the period is selected by an
 exponentially small effect that the $1/D$ expansion never sees, and Ecker, Ecker and Grumiller argue for $\Delta \to 0$.
 The double-double points up to $D = 60$ favour it strongly; a proof needs the $D \to \infty$ equations themselves.
-`solver/plot_extrapolation.py` draws the graph.
+`solver/plot_extrapolation.py` draws the graph; the faded curves are the ones the double-double points rule out.
 
 **Values.**
 
@@ -334,8 +335,15 @@ from $1.643893744$ to $1.643893752$, so $\Delta_\infty = 1.64389375 \pm 0.000000
 period is selected by an effect the $1/D$ expansion does not see), but nothing in the points up to $D = 60$ asks for
 anything else.
 
-Status: the cloud climb stopped at $D = 60.06$. The local machine is continuing it toward $D = 75$ (task T12 in
-[`comms.txt`](comms.txt)); its points go to [`hp/data/local/`](hp/data/local/) and into the data file.
+Status: the cloud climb stopped at $D = 60.06$ and the local machine carried it to $D = 60.96$ (task T12 in
+[`comms.txt`](comms.txt); its points are in [`hp/data/local/`](hp/data/local/) and in the data file). There the climb
+stalls, and not because of anything in the problem: from a converged point Newton reaches the usual residual floor
+at the same $D$, and the Jacobian's weak spectrum changes smoothly. The two weakest directions, harmonics 11 and 13
+of the centre data, are pinned only to about $\lvert F\rvert / \sigma$, so their amplitudes jitter by about
+$5\times10^{-9}$ from point to point; the cubic predictor amplifies that 30-fold, past Newton's basin along exactly
+those directions. Carrying those harmonics on a straight-line trend instead (`scan_hp.py --junk_hold 9
+--junk_trend N`, with `--corrector dnp` to converge every point to the bottom) gets past $D = 60.96$; making the steps
+long again is in progress.
 
 ## Backends
 

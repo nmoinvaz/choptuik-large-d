@@ -47,6 +47,22 @@ DARK = {
 }
 
 REPO_URL = "https://github.com/nmoinvaz/dss-residual-kernel"
+# Delta_inf from the double-double points (hp/dd_fits_mp.py: power series in 1/D and 1/(D-2), degree 16-20, on
+# 10 <= D <= 60), if Delta is analytic in 1/D; README.
+DINF_DD = 1.64389375
+DD_CSV = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "hp", "data", "delta_dd.csv")
+
+
+def dd_points(Dmin, every=0.5):
+    """Double-double points above Dmin from hp/data/delta_dd.csv, thinned to about one per `every` in D."""
+    out, last = [], -1e9
+    for line in list(open(DD_CSV))[1:]:
+        c = line.split(",")
+        d = float(c[0])
+        if d > Dmin and d - last >= every:
+            out.append((d, float(c[1]) + float(c[2])))
+            last = d
+    return np.array(out)
 
 
 def esc(s):
@@ -169,7 +185,8 @@ class Panel:
             self.svg.line(self.kx, y - 4, self.kx + 22, y - 4, color, width=2, dash=dash)
             x = self.kx + 28
         else:
-            marker(self.svg, self.kx + 5, y - 4, color, label, hollow=(kind == "hollow"))
+            marker(self.svg, self.kx + 5, y - 4, color, label, hollow=(kind == "hollow"),
+                   shape="diamond" if kind == "diamond" else "circle", r=3.5 if kind == "diamond" else 4.5)
             x = self.kx + 14
         self.svg.text(x, y, label, size=10)
         self.kx = x + 6.0 * len(label) + 18
@@ -210,6 +227,12 @@ def main():
     fD = lambda d: np.polyval(cD[::-1], 1 / np.asarray(d, float))
     hold_err = np.abs(fR(Dh) - yh).max() if len(Dh) else np.nan
     dinf = formula_all.fit_delta()[0][0]
+    ddp = dd_points(Dh.max() if len(Dh) else FIT_MAX)          # double-double points beyond the f64 ones
+    dd_err = np.abs(fR(ddp[:, 0]) - ddp[:, 1]).max()
+    dd_all = dd_points(FIT_MAX, every=0.0)
+    dd_err = max(dd_err, np.abs(fR(dd_all[:, 0]) - dd_all[:, 1]).max())
+    dd_max = dd_all[:, 0].max()
+    Dtop = math.ceil(dd_all[:, 0].max() + 0.5) if len(ddp) else 60
 
     # gamma: same points (gamma per point), older values below D = 8; series with gamma_inf = 1/2
     gm = np.isfinite(gsc)
@@ -228,32 +251,39 @@ def main():
     svg = Svg(width)
     svg.text(16, 28, "Choptuik echo period Δ(D) and critical exponent γ(D) of massless scalar collapse", size=15, fill=INK, weight="bold")
     svg.text(16, 48, f"One rational formula in 1/(D−2) for all D ≥ 4, fitted on the computed points 4 ≤ D ≤ {FIT_MAX:g}; "
-                     + (f"the {len(Dh)} hollow points above are held out and match it to {hold_err:.0e}" if len(Dh) else "")
-                     + f";  Δ∞ ≈ {dinf:.5f}, γ∞ = 1/2", size=12)
+                     + (f"the {len(Dh)} hollow points above are held out and match it to {hold_err:.0e}," if len(Dh) else ""),
+             size=12)
+    svg.text(16, 66, f"and the double-double points (green) up to D = {dd_max:.0f} to {dd_err:.0e}.  "
+                     f"Δ∞ = {DINF_DD:.8f} from the double-double points, γ∞ = 1/2", size=12)
 
     # Panel A: Delta against D, full width
-    A = Panel(svg, 78, 120, 984, 300, (3, 60), (1.4, 3.6),
-              f"Δ levels off at Δ∞ ≈ {dinf:.4f} instead of falling to zero",
+    A = Panel(svg, 78, 140, 984, 300, (3, Dtop), (1.4, 3.6),
+              f"Δ levels off at Δ∞ ≈ {DINF_DD:.4f} instead of falling to zero",
               "spacetime dimension D", "echo period Δ")
     if len(Dh):
         A.band(FIT_MAX, Dh.max() + 0.3, "held out")
-    svg.line(A.sx(3), A.sy(dinf), A.sx(60), A.sy(dinf), SERIES[1], width=1, opacity=0.6)
-    svg.line(A.sx(3), A.sy(zeta2), A.sx(60), A.sy(zeta2), NEUTRAL, width=1, dash="2 3")
-    DD = np.linspace(4, 60, 500)
+    svg.line(A.sx(3), A.sy(DINF_DD), A.sx(Dtop), A.sy(DINF_DD), SERIES[1], width=1, opacity=0.6)
+    svg.line(A.sx(3), A.sy(zeta2), A.sx(Dtop), A.sy(zeta2), NEUTRAL, width=1, dash="2 3")
+    DD = np.linspace(4, Dtop, 500)
     A.curve(DD, fR(DD), SERIES[1], dash="6 4", title="rational formula in 1/(D-2), README")
     for d, v in zip(Dfit, yfit):
         marker(svg, A.sx(d), A.sy(v), SERIES[0], f"D = {d:.4f}, Δ = {v:.10f}")
     for d, v in zip(Dh, yh):
         marker(svg, A.sx(d), A.sy(v), SERIES[0], f"D = {d:.4f}, Δ = {v:.10f} (held out; formula {fR(d) - v:+.1e})", hollow=True)
-    svg.text(A.sx(44), A.sy(dinf) + 16, f"Δ∞ ≈ {dinf:.4f}  (formula limit)", size=11, fill=INK)
+    for d, v in ddp:
+        marker(svg, A.sx(d), A.sy(v), SERIES[2], f"D = {d:.4f}, Δ = {v:.13f} (double-double, never in the fit; "
+                                                  f"formula {fR(d) - v:+.1e})", shape="diamond", r=3.2)
+    svg.text(A.sx(44), A.sy(DINF_DD) + 16, f"Δ∞ = {DINF_DD:.8f}  (double-double; formula limit {dinf:.6f})",
+             size=11, fill=INK)
     svg.text(A.sx(44), A.sy(zeta2) - 8, f"π²/6 = {zeta2:.4f}", size=10)
     A.key("dot", SERIES[0], "computed, in the fit")
     A.key("hollow", SERIES[0], "computed, held out")
-    A.key("line", SERIES[1], "rational formula, D ≥ 4, extended to D = 60", dash="6 4")
+    A.key("diamond", SERIES[2], "double-double, held out")
+    A.key("line", SERIES[1], f"rational formula, D ≥ 4, extended to D = {Dtop}", dash="6 4")
     A.key("line", NEUTRAL, "π²/6 for reference", dash="2 3")
 
     # Panel B: Delta against 1/(D-2), D = infinity at the left edge
-    B = Panel(svg, 78, 540, 452, 280, (0, 0.3), (1.4, 3.6),
+    B = Panel(svg, 78, 560, 452, 280, (0, 0.3), (1.4, 3.6),
               "Against 1/D, Δ runs into a finite intercept",
               "1/D   (D = ∞ at the left edge)", "echo period Δ", xfmt="{:.2f}")
     X = np.linspace(1e-6, 1 / 4, 400)
@@ -262,16 +292,20 @@ def main():
         marker(svg, B.sx(1 / d), B.sy(v), SERIES[0], f"D = {d:.4f}, Δ = {v:.10f}", r=3.8)
     for d, v in zip(Dh, yh):
         marker(svg, B.sx(1 / d), B.sy(v), SERIES[0], f"D = {d:.4f}, Δ = {v:.10f} (held out)", hollow=True, r=3.8)
-    marker(svg, B.sx(0), B.sy(dinf), SERIES[1], f"D = ∞: Δ∞ = {dinf:.5f} (formula; 1.64395 ± 0.00008 over all acceptable fits)", shape="diamond")
-    svg.text(B.sx(0) + 12, B.sy(dinf) + 18, f"D = ∞:  Δ∞ ≈ {dinf:.4f}", size=11, fill=INK)
+    for d, v in dd_points(Dh.max() if len(Dh) else FIT_MAX, every=5.0):     # packed below a pixel apart otherwise
+        marker(svg, B.sx(1 / d), B.sy(v), SERIES[2], f"D = {d:.4f}, Δ = {v:.13f} (double-double)", shape="diamond", r=3.0)
+    marker(svg, B.sx(0), B.sy(DINF_DD), SERIES[1], f"D = ∞: Δ∞ = {DINF_DD:.8f} ± 1e-8 (double-double points, analytic "
+                                                   f"in 1/D; the formula's own limit is {dinf:.6f})", shape="diamond")
+    svg.text(B.sx(0) + 12, B.sy(DINF_DD) + 18, f"D = ∞:  Δ∞ = {DINF_DD:.6f}", size=11, fill=INK)
     for d in (4, 6, 10, 20):
         svg.text(B.sx(1 / d) + 6, B.sy(np.interp(1 / d, (1 / Dfit)[::-1], yfit[::-1])) + 16, f"D={d}", size=10)
     B.key("dot", SERIES[0], "in the fit")
     B.key("hollow", SERIES[0], "held out")
+    B.key("diamond", SERIES[2], "double-double")
     B.key("line", SERIES[1], "formula, D ≥ 4", dash="6 4")
 
     # Panel C: gamma against 1/(D-2)
-    C = Panel(svg, 610, 540, 452, 280, (0, 0.3), (0.36, 0.52),
+    C = Panel(svg, 610, 560, 452, 280, (0, 0.3), (0.36, 0.52),
               "γ runs into 1/2 as D → ∞",
               "1/D   (D = ∞ at the left edge)", "critical exponent γ", xfmt="{:.2f}", yfmt="{:.2f}")
     C.curve([0, 0.3], [0.5, 0.5], NEUTRAL, dash="2 3", width=1.5, title="1/2")
@@ -291,7 +325,7 @@ def main():
     C.key("line", SERIES[1], "formula with γ∞ = 1/2, D ≥ 4", dash="6 4")
 
     # Footnote and repository link
-    height = 540 + 280 + 80
+    height = 560 + 280 + 80
     svg.text(16, height - 12, "Spectral multiple shooting with nonlinear elimination (solver/CONTEXT.md); "
                               "hover a point for its value, a curve for its coefficients", size=10)
     svg.add(f'<a href="{REPO_URL}"><text x="{width - 16}" y="{height - 12}" font-size="10" fill="{INK_SOFT}" '

@@ -15,7 +15,7 @@ import time
 
 import numpy as np
 
-from hpkernel.driver import deflated_newton, hermite, lm_solve, load, make_solver, newton_solve, plow_odd, predict, renode, resample_z, save, tangent
+from hpkernel.driver import deflated_newton, delta_correction, hermite, lm_solve, load, make_solver, newton_solve, plow_odd, predict, renode, resample_z, save, tangent
 
 
 def tails(s, zh, zl, nodes, M):
@@ -56,11 +56,18 @@ def solve_at(D, zh, zl, a, nodes, M, it_max):
     s = make_solver(D, M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks, threads=a.threads, kfreeze=a.kfreeze)
     s.set_segs(s.plan(zh, zl, a.tol_step, a.hmax))
     t0 = time.time()
-    if a.corrector == "dn":
+    if a.corrector in ("dn", "dnp"):
         zh2, zl2, hist = deflated_newton(s, zh, zl, tol=a.tol, it_max=it_max, w=a.w, verbose=a.verbose,
                                          junk_only=a.junk_only, delta_tol=a.delta_tol)
     else:
         zh2, zl2, hist = newton_solve(s, zh, zl, tol=a.tol, it_max=it_max, verbose=a.verbose)
+    if a.corrector == "dnp" and hist and hist[-1]["F"] < a.polish_from:
+        # polish: plain Newton to the bottom (deflated Newton stops at the first iterate under tol, or stalls just
+        # above it, and leaves that point's error in the predictor's history)
+        zh3, zl3, h3 = newton_solve(s, zh2, zl2, tol=1e-40, it_max=a.polish_its, verbose=a.verbose)
+        if h3 and h3[-1]["F"] < hist[-1]["F"]:
+            zh2, zl2 = zh3, zl3
+            hist = hist + [dict(r, polish=True) for r in h3]
     ok = bool(hist) and (hist[-1]["F"] < a.tol or bool(hist[-1].get("accepted")))
     if not ok and a.lm:
         print(f"   D={D}: Newton stopped at |F| {hist[-1]['F']:.1e}; Levenberg-Marquardt from the predictor", flush=True)
@@ -97,12 +104,17 @@ def main():
     ap.add_argument("--verbose", action="store_true")
     ap.add_argument("--kfreeze", type=int, default=None, help="pin p1 harmonics above this to zero and drop the matching of "
                     "p's harmonics above it at the horizon block (removes the near-null centre directions)")
-    ap.add_argument("--corrector", default="dn", choices=["dn", "newton"], help="dn: deflated Newton (default)")
+    ap.add_argument("--corrector", default="dn", choices=["dn", "dnp", "newton"],
+                    help="dn: deflated Newton (default); dnp: deflated Newton, then plain Newton to the bottom")
+    ap.add_argument("--polish_its", type=int, default=4, help="dnp: plain Newton steps after the deflated phase")
+    ap.add_argument("--polish_from", type=float, default=1e-12, help="dnp: polish only from |F| below this")
     ap.add_argument("--w", type=int, default=24, help="weak directions frozen in the deflated phase")
     ap.add_argument("--delta_tol", type=float, default=1e-14, help="junk_only: accept a stalled step if the linearised "
                     "Delta correction is below this")
     ap.add_argument("--junk_hold", type=int, default=None, help="predictor: carry p1 harmonics above this over from the "
                     "last point instead of extrapolating them")
+    ap.add_argument("--junk_trend", type=int, default=0, help="with junk_hold: put the held harmonics on a least-squares "
+                    "line through the last N points instead of the last value")
     ap.add_argument("--junk_only", action="store_true", help="freeze only weak directions without Delta content, and keep "
                     "them frozen (they stay on the predictor's smooth trend)")
     ap.add_argument("--lm", type=int, default=15, help="Levenberg-Marquardt iterations after a failed Newton (0: off)")
@@ -169,7 +181,17 @@ def main():
                 P = lo + lo2
                 zlast = hist_z[-1][1]
                 zp = zp.copy()
-                zp[:M] = P @ zp[:M] + (zlast[:M] - P @ zlast[:M])
+                held = zlast[:M] - P @ zlast[:M]
+                if a.junk_trend and len(hist_z) >= 3:
+                    # least-squares line through the held harmonics of the last junk_trend points: their values
+                    # jitter from point to point at |F| / sigma, and a straight fit averages that out
+                    pts_ = hist_z[-a.junk_trend:]
+                    Dh_ = np.array([h_[0] for h_ in pts_])
+                    Y = np.array([h_[1][:M] - P @ h_[1][:M] for h_ in pts_])
+                    A_ = np.vander(Dh_ - Dh_[-1], 2)
+                    coef, *_ = np.linalg.lstsq(A_, Y, rcond=None)
+                    held = coef[0] * (Dn - Dh_[-1]) + coef[1]
+                zp[:M] = P @ zp[:M] + held
         elif len(hist_z) > 1 and hist_z[-2][2] is not None:
             (D0, z0, t0), (D1, z1, t1) = hist_z[-2], hist_z[-1]
             zp = hermite(D0, z0, t0, D1, z1, t1, Dn)
@@ -191,6 +213,9 @@ def main():
         rec = dict(D=D, Delta=float(zh[-1]), Delta_lo=float(zl[-1]), F=hist[-1]["F"], its=len(hist), seconds=round(dt, 1),
                    M=M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks, tol_step=a.tol_step, steps=sum(len(g) - 1 for g in s.get_segs()),
                    piv=hist[0].get("piv"), sens=sens, tail_c=tc, tail_h=th, dDelta_est=hist[-1].get("dDelta_est"))
+        if rec["dDelta_est"] is None:
+            rec["dDelta_est"] = delta_correction(s, *s.residual(zh, zl))
+        rec["polish"] = sum(1 for r in hist if r.get("polish"))
         with open(a.out, "a") as f:
             f.write(json.dumps(rec) + "\n")
         save(os.path.join(outdir, f"{a.tag}_D{D:.4f}.npz"), zh, zl, dict(D=D, M=M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks))
@@ -202,9 +227,10 @@ def main():
         if th > 1e-33:
             a.ks = int(a.ks * 1.25) + 2
             print(f"   horizon series tail {th:.1e}: ks -> {a.ks}", flush=True)
-        if len(hist) <= 8:
+        its_main = len(hist) - rec["polish"]
+        if its_main <= 8:
             dD = min(a.maxdD, dD * 1.25)
-        elif len(hist) >= 14:
+        elif its_main >= 14:
             dD *= 0.8
         while sched and (D - sched[0][0]) * direction >= -1e-9:
             new_nodes = sched.pop(0)[1]
