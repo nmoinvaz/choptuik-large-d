@@ -1,0 +1,214 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="502" viewBox="0 0 900 502" font-family="system-ui, sans-serif">
+<style>@media (prefers-color-scheme: dark){[fill="#fcfcfb"]{fill:#201f1d}[stroke="#fcfcfb"]{stroke:#201f1d}[fill="#0b0b0b"]{fill:#e8e6e3}[stroke="#0b0b0b"]{stroke:#e8e6e3}[fill="#52514e"]{fill:#a8a49d}[stroke="#52514e"]{stroke:#a8a49d}[fill="#e7e6e2"]{fill:#343230}[stroke="#e7e6e2"]{stroke:#343230}[fill="#efeeea"]{fill:#2a2927}[stroke="#efeeea"]{stroke:#2a2927}[fill="#eb6834"]{fill:#dd5c26}[stroke="#eb6834"]{stroke:#dd5c26}[fill="#7a7668"]{fill:#948e82}[stroke="#7a7668"]{stroke:#948e82}[fill="#86b6ef"]{fill:#184f95}[stroke="#86b6ef"]{stroke:#184f95}[fill="#5598e7"]{fill:#256abf}[stroke="#5598e7"]{stroke:#256abf}[fill="#2a78d6"]{fill:#3987e5}[stroke="#2a78d6"]{stroke:#3987e5}[fill="#1c5cab"]{fill:#6da7ec}[stroke="#1c5cab"]{stroke:#6da7ec}[fill="#104281"]{fill:#9ec5f4}[stroke="#104281"]{stroke:#9ec5f4}}</style>
+<rect width="900" height="502" fill="#fcfcfb"/>
+<text x="40.0" y="26.0" font-size="15" fill="#0b0b0b" text-anchor="start" font-weight="bold">The echo's harmonic spectrum</text>
+<text x="40.0" y="46.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">Each odd harmonic of the centre profile is smaller than the last by a factor that grows with D and levels off: at D = ∞ the</text>
+<text x="40.0" y="62.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">inner problem predicts a factor of about 1/16 per two harmonics, a finite decay rate of 1.38–1.45 per harmonic.</text>
+<text x="80.0" y="90.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">|F_ν|, amplitude of harmonic ν (log scale)</text>
+<line x1="80.0" y1="104.0" x2="96.0" y2="104.0" stroke="#86b6ef" stroke-width="2"/>
+<text x="100.0" y="108.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">D = 4</text>
+<line x1="140.0" y1="104.0" x2="156.0" y2="104.0" stroke="#5598e7" stroke-width="2"/>
+<text x="160.0" y="108.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">D = 10</text>
+<line x1="205.6" y1="104.0" x2="221.6" y2="104.0" stroke="#2a78d6" stroke-width="2"/>
+<text x="225.6" y="108.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">D = 20</text>
+<line x1="271.2" y1="104.0" x2="287.2" y2="104.0" stroke="#1c5cab" stroke-width="2"/>
+<text x="291.2" y="108.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">D = 40</text>
+<line x1="336.8" y1="104.0" x2="352.8" y2="104.0" stroke="#104281" stroke-width="2"/>
+<text x="356.8" y="108.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">D = 60</text>
+<line x1="402.4" y1="104.0" x2="418.4" y2="104.0" stroke="#0b0b0b" stroke-width="1.5" stroke-dasharray="5 4"/>
+<text x="422.4" y="108.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">D = ∞, predicted</text>
+<line x1="80.0" y1="450.0" x2="520.0" y2="450.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="72.0" y="454.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">10⁻⁸</text>
+<line x1="80.0" y1="417.0" x2="520.0" y2="417.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="72.0" y="421.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">10⁻⁷</text>
+<line x1="80.0" y1="384.0" x2="520.0" y2="384.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="72.0" y="388.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">10⁻⁶</text>
+<line x1="80.0" y1="351.0" x2="520.0" y2="351.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="72.0" y="355.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">10⁻⁵</text>
+<line x1="80.0" y1="318.0" x2="520.0" y2="318.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="72.0" y="322.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">10⁻⁴</text>
+<line x1="80.0" y1="285.0" x2="520.0" y2="285.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="72.0" y="289.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">10⁻³</text>
+<line x1="80.0" y1="252.0" x2="520.0" y2="252.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="72.0" y="256.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">10⁻²</text>
+<line x1="80.0" y1="219.0" x2="520.0" y2="219.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="72.0" y="223.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">10⁻¹</text>
+<line x1="80.0" y1="186.0" x2="520.0" y2="186.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="72.0" y="190.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">1</text>
+<line x1="80.0" y1="153.0" x2="520.0" y2="153.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="72.0" y="157.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">10</text>
+<line x1="80.0" y1="120.0" x2="520.0" y2="120.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="72.0" y="124.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">10²</text>
+<line x1="80.0" y1="120.0" x2="80.0" y2="450.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="80.0" y="466.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">1</text>
+<line x1="124.0" y1="120.0" x2="124.0" y2="450.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="124.0" y="466.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">3</text>
+<line x1="168.0" y1="120.0" x2="168.0" y2="450.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="168.0" y="466.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">5</text>
+<line x1="212.0" y1="120.0" x2="212.0" y2="450.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="212.0" y="466.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">7</text>
+<line x1="256.0" y1="120.0" x2="256.0" y2="450.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="256.0" y="466.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">9</text>
+<line x1="300.0" y1="120.0" x2="300.0" y2="450.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="300.0" y="466.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">11</text>
+<line x1="344.0" y1="120.0" x2="344.0" y2="450.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="344.0" y="466.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">13</text>
+<line x1="388.0" y1="120.0" x2="388.0" y2="450.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="388.0" y="466.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">15</text>
+<line x1="432.0" y1="120.0" x2="432.0" y2="450.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="432.0" y="466.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">17</text>
+<line x1="476.0" y1="120.0" x2="476.0" y2="450.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="476.0" y="466.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">19</text>
+<line x1="520.0" y1="120.0" x2="520.0" y2="450.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="520.0" y="466.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">21</text>
+<line x1="80.0" y1="450.0" x2="520.0" y2="450.0" stroke="#52514e" stroke-width="1"/>
+<text x="300.0" y="486.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal">harmonic ν</text>
+<g><path d="M80.0,171.7 L124.0,213.2 L168.0,254.9 L212.0,294.4 L256.0,334.0 L300.0,373.5 L344.0,413.0" fill="none" stroke="#0b0b0b" stroke-width="1.5" stroke-opacity="0.9" stroke-linejoin="round" stroke-dasharray="5 4"/><title>D = infinity prediction of the amplitude expansion</title></g>
+<g><circle cx="124.0" cy="213.2" r="3.5" fill="#fcfcfb" stroke="#52514e" stroke-width="1.6"/><title>D = infinity prediction: |F3/F1| = 0.0550</title></g>
+<g><circle cx="168.0" cy="254.9" r="3.5" fill="#fcfcfb" stroke="#52514e" stroke-width="1.6"/><title>D = infinity prediction: |F5/F1| = 0.0030</title></g>
+<text x="340.0" y="429.0" font-size="10" fill="#0b0b0b" text-anchor="end" font-weight="normal">D = ∞ (predicted)</text>
+<g><path d="M80.0,146.1 L124.0,157.9 L168.0,165.2 L212.0,171.2 L256.0,176.6 L300.0,181.6 L344.0,186.5 L388.0,191.2 L432.0,195.9 L476.0,200.6 L520.0,205.2" fill="none" stroke="#86b6ef" stroke-width="2" stroke-opacity="0.85" stroke-linejoin="round"/><title>D = 4</title></g>
+<g><circle cx="80.0" cy="146.1" r="3.2" fill="#86b6ef" stroke="#fcfcfb" stroke-width="2"/><title>D = 4: |F1| = 1.623e+01</title></g>
+<g><circle cx="124.0" cy="157.9" r="3.2" fill="#86b6ef" stroke="#fcfcfb" stroke-width="2"/><title>D = 4: |F3| = 7.115e+00</title></g>
+<g><circle cx="168.0" cy="165.2" r="3.2" fill="#86b6ef" stroke="#fcfcfb" stroke-width="2"/><title>D = 4: |F5| = 4.269e+00</title></g>
+<g><circle cx="212.0" cy="171.2" r="3.2" fill="#86b6ef" stroke="#fcfcfb" stroke-width="2"/><title>D = 4: |F7| = 2.812e+00</title></g>
+<g><circle cx="256.0" cy="176.6" r="3.2" fill="#86b6ef" stroke="#fcfcfb" stroke-width="2"/><title>D = 4: |F9| = 1.927e+00</title></g>
+<g><circle cx="300.0" cy="181.6" r="3.2" fill="#86b6ef" stroke="#fcfcfb" stroke-width="2"/><title>D = 4: |F11| = 1.357e+00</title></g>
+<g><circle cx="344.0" cy="186.5" r="3.2" fill="#86b6ef" stroke="#fcfcfb" stroke-width="2"/><title>D = 4: |F13| = 9.688e-01</title></g>
+<g><circle cx="388.0" cy="191.2" r="3.2" fill="#86b6ef" stroke="#fcfcfb" stroke-width="2"/><title>D = 4: |F15| = 6.963e-01</title></g>
+<g><circle cx="432.0" cy="195.9" r="3.2" fill="#86b6ef" stroke="#fcfcfb" stroke-width="2"/><title>D = 4: |F17| = 5.018e-01</title></g>
+<g><circle cx="476.0" cy="200.6" r="3.2" fill="#86b6ef" stroke="#fcfcfb" stroke-width="2"/><title>D = 4: |F19| = 3.620e-01</title></g>
+<g><circle cx="520.0" cy="205.2" r="3.2" fill="#86b6ef" stroke="#fcfcfb" stroke-width="2"/><title>D = 4: |F21| = 2.613e-01</title></g>
+<text x="528.0" y="209.2" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">D = 4</text>
+<g><path d="M80.0,164.5 L124.0,187.1 L168.0,204.6 L212.0,220.5 L256.0,235.7 L300.0,250.5 L344.0,265.1 L388.0,279.4 L432.0,293.6 L476.0,307.8 L520.0,321.8" fill="none" stroke="#5598e7" stroke-width="2" stroke-opacity="0.85" stroke-linejoin="round"/><title>D = 10</title></g>
+<g><circle cx="80.0" cy="164.5" r="3.2" fill="#5598e7" stroke="#fcfcfb" stroke-width="2"/><title>D = 10: |F1| = 4.479e+00</title></g>
+<g><circle cx="124.0" cy="187.1" r="3.2" fill="#5598e7" stroke="#fcfcfb" stroke-width="2"/><title>D = 10: |F3| = 9.240e-01</title></g>
+<g><circle cx="168.0" cy="204.6" r="3.2" fill="#5598e7" stroke="#fcfcfb" stroke-width="2"/><title>D = 10: |F5| = 2.729e-01</title></g>
+<g><circle cx="212.0" cy="220.5" r="3.2" fill="#5598e7" stroke="#fcfcfb" stroke-width="2"/><title>D = 10: |F7| = 8.990e-02</title></g>
+<g><circle cx="256.0" cy="235.7" r="3.2" fill="#5598e7" stroke="#fcfcfb" stroke-width="2"/><title>D = 10: |F9| = 3.112e-02</title></g>
+<g><circle cx="300.0" cy="250.5" r="3.2" fill="#5598e7" stroke="#fcfcfb" stroke-width="2"/><title>D = 10: |F11| = 1.108e-02</title></g>
+<g><circle cx="344.0" cy="265.1" r="3.2" fill="#5598e7" stroke="#fcfcfb" stroke-width="2"/><title>D = 10: |F13| = 4.020e-03</title></g>
+<g><circle cx="388.0" cy="279.4" r="3.2" fill="#5598e7" stroke="#fcfcfb" stroke-width="2"/><title>D = 10: |F15| = 1.476e-03</title></g>
+<g><circle cx="432.0" cy="293.6" r="3.2" fill="#5598e7" stroke="#fcfcfb" stroke-width="2"/><title>D = 10: |F17| = 5.472e-04</title></g>
+<g><circle cx="476.0" cy="307.8" r="3.2" fill="#5598e7" stroke="#fcfcfb" stroke-width="2"/><title>D = 10: |F19| = 2.042e-04</title></g>
+<g><circle cx="520.0" cy="321.8" r="3.2" fill="#5598e7" stroke="#fcfcfb" stroke-width="2"/><title>D = 10: |F21| = 7.667e-05</title></g>
+<text x="528.0" y="325.8" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">D = 10</text>
+<g><path d="M80.0,168.1 L124.0,197.3 L168.0,221.4 L212.0,243.9 L256.0,265.6 L300.0,286.9 L344.0,307.9 L388.0,328.8 L432.0,349.5 L476.0,370.1 L520.0,390.6" fill="none" stroke="#2a78d6" stroke-width="2" stroke-opacity="0.85" stroke-linejoin="round"/><title>D = 20.04</title></g>
+<g><circle cx="80.0" cy="168.1" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.04: |F1| = 3.480e+00</title></g>
+<g><circle cx="124.0" cy="197.3" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.04: |F3| = 4.539e-01</title></g>
+<g><circle cx="168.0" cy="221.4" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.04: |F5| = 8.454e-02</title></g>
+<g><circle cx="212.0" cy="243.9" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.04: |F7| = 1.764e-02</title></g>
+<g><circle cx="256.0" cy="265.6" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.04: |F9| = 3.875e-03</title></g>
+<g><circle cx="300.0" cy="286.9" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.04: |F11| = 8.768e-04</title></g>
+<g><circle cx="344.0" cy="307.9" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.04: |F13| = 2.021e-04</title></g>
+<g><circle cx="388.0" cy="328.8" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.04: |F15| = 4.721e-05</title></g>
+<g><circle cx="432.0" cy="349.5" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.04: |F17| = 1.113e-05</title></g>
+<g><circle cx="476.0" cy="370.1" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.04: |F19| = 2.645e-06</title></g>
+<g><circle cx="520.0" cy="390.6" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.04: |F21| = 6.321e-07</title></g>
+<text x="528.0" y="394.6" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">D = 20</text>
+<g><path d="M80.0,169.8 L124.0,203.9 L168.0,233.5 L212.0,261.4 L256.0,288.5 L300.0,315.2 L344.0,340.9" fill="none" stroke="#1c5cab" stroke-width="2" stroke-opacity="0.85" stroke-linejoin="round"/><title>D = 40.02</title></g>
+<g><circle cx="80.0" cy="169.8" r="3.2" fill="#1c5cab" stroke="#fcfcfb" stroke-width="2"/><title>D = 40.02: |F1| = 3.086e+00</title></g>
+<g><circle cx="124.0" cy="203.9" r="3.2" fill="#1c5cab" stroke="#fcfcfb" stroke-width="2"/><title>D = 40.02: |F3| = 2.866e-01</title></g>
+<g><circle cx="168.0" cy="233.5" r="3.2" fill="#1c5cab" stroke="#fcfcfb" stroke-width="2"/><title>D = 40.02: |F5| = 3.640e-02</title></g>
+<g><circle cx="212.0" cy="261.4" r="3.2" fill="#1c5cab" stroke="#fcfcfb" stroke-width="2"/><title>D = 40.02: |F7| = 5.195e-03</title></g>
+<g><circle cx="256.0" cy="288.5" r="3.2" fill="#1c5cab" stroke="#fcfcfb" stroke-width="2"/><title>D = 40.02: |F9| = 7.829e-04</title></g>
+<g><circle cx="300.0" cy="315.2" r="3.2" fill="#1c5cab" stroke="#fcfcfb" stroke-width="2"/><title>D = 40.02: |F11| = 1.216e-04</title></g>
+<g><circle cx="344.0" cy="340.9" r="3.2" fill="#1c5cab" stroke="#fcfcfb" stroke-width="2"/><title>D = 40.02: |F13| = 2.027e-05</title></g>
+<text x="352.0" y="344.9" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">D = 40</text>
+<g><path d="M80.0,170.4 L124.0,206.6 L168.0,238.8 L212.0,269.4 L256.0,299.2 L300.0,328.5 L344.0,357.2" fill="none" stroke="#104281" stroke-width="2" stroke-opacity="0.85" stroke-linejoin="round"/><title>D = 60.00</title></g>
+<g><circle cx="80.0" cy="170.4" r="3.2" fill="#104281" stroke="#fcfcfb" stroke-width="2"/><title>D = 60.00: |F1| = 2.962e+00</title></g>
+<g><circle cx="124.0" cy="206.6" r="3.2" fill="#104281" stroke="#fcfcfb" stroke-width="2"/><title>D = 60.00: |F3| = 2.378e-01</title></g>
+<g><circle cx="168.0" cy="238.8" r="3.2" fill="#104281" stroke="#fcfcfb" stroke-width="2"/><title>D = 60.00: |F5| = 2.509e-02</title></g>
+<g><circle cx="212.0" cy="269.4" r="3.2" fill="#104281" stroke="#fcfcfb" stroke-width="2"/><title>D = 60.00: |F7| = 2.971e-03</title></g>
+<g><circle cx="256.0" cy="299.2" r="3.2" fill="#104281" stroke="#fcfcfb" stroke-width="2"/><title>D = 60.00: |F9| = 3.721e-04</title></g>
+<g><circle cx="300.0" cy="328.5" r="3.2" fill="#104281" stroke="#fcfcfb" stroke-width="2"/><title>D = 60.00: |F11| = 4.810e-05</title></g>
+<g><circle cx="344.0" cy="357.2" r="3.2" fill="#104281" stroke="#fcfcfb" stroke-width="2"/><title>D = 60.00: |F13| = 6.502e-06</title></g>
+<text x="352.0" y="361.2" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">D = 60</text>
+<text x="590.0" y="90.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">Decay rate per harmonic, ½ ln |F_ν / F_(ν+2)|</text>
+<line x1="630.0" y1="420.0" x2="845.0" y2="420.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="622.0" y="424.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">0.6</text>
+<line x1="630.0" y1="360.0" x2="845.0" y2="360.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="622.0" y="364.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">0.8</text>
+<line x1="630.0" y1="300.0" x2="845.0" y2="300.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="622.0" y="304.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">1.0</text>
+<line x1="630.0" y1="240.0" x2="845.0" y2="240.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="622.0" y="244.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">1.2</text>
+<line x1="630.0" y1="180.0" x2="845.0" y2="180.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="622.0" y="184.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">1.4</text>
+<line x1="630.0" y1="120.0" x2="845.0" y2="120.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="622.0" y="124.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">1.6</text>
+<line x1="630.0" y1="120.0" x2="630.0" y2="450.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="630.0" y="466.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">∞</text>
+<line x1="667.1" y1="120.0" x2="667.1" y2="450.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="667.1" y="466.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">60</text>
+<line x1="706.8" y1="120.0" x2="706.8" y2="450.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="706.8" y="466.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">30</text>
+<line x1="749.4" y1="120.0" x2="749.4" y2="450.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="749.4" y="466.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">20</text>
+<line x1="795.4" y1="120.0" x2="795.4" y2="450.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="795.4" y="466.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">15</text>
+<line x1="845.0" y1="120.0" x2="845.0" y2="450.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="845.0" y="466.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">12</text>
+<line x1="630.0" y1="450.0" x2="845.0" y2="450.0" stroke="#52514e" stroke-width="1"/>
+<text x="737.5" y="486.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal">D (axis linear in 1/(D − 2))</text>
+<rect x="629.0" y="164.9" width="10" height="21.3" fill="#0b0b0b" fill-opacity="0.25"><title>D = infinity prediction: 1.38-1.45</title></rect>
+<text x="644.0" y="158.9" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">predicted 1.38–1.45</text>
+<g><path d="M630.0,164.8 L632.0,168.6 L634.0,172.4 L636.1,176.0 L638.1,179.5 L640.1,183.0 L642.1,186.3 L644.1,189.6 L646.2,192.8 L648.2,195.9 L650.2,198.9 L652.2,201.8 L654.2,204.7 L656.3,207.6 L658.3,210.3 L660.3,213.0 L662.3,215.7 L664.3,218.2 L666.4,220.8 L668.4,223.2 L670.4,225.7 L672.4,228.1 L674.4,230.4 L676.5,232.7 L678.5,234.9 L680.5,237.1 L682.5,239.3 L684.5,241.4 L686.5,243.5 L688.6,245.6 L690.6,247.6 L692.6,249.6 L694.6,251.5 L696.6,253.4 L698.7,255.3 L700.7,257.2 L702.7,259.0 L704.7,260.8 L706.7,262.6 L708.8,264.3 L710.8,266.0 L712.8,267.7 L714.8,269.4 L716.8,271.0 L718.9,272.7 L720.9,274.3 L722.9,275.8 L724.9,277.4 L726.9,278.9 L729.0,280.4 L731.0,281.9 L733.0,283.4 L735.0,284.8 L737.0,286.3 L739.1,287.7 L741.1,289.1 L743.1,290.4 L745.1,291.8 L747.1,293.1 L749.2,294.5" fill="none" stroke="#2a78d6" stroke-width="1.5" stroke-opacity="0.8" stroke-linejoin="round" stroke-dasharray="4 3"/><title>nu = 1: ratio cubic in 1/n through D &gt;= 20, limit rate 1.451</title></g>
+<g><path d="M845.0,343.5 L809.2,327.8 L775.7,310.5 L762.9,303.1 L749.2,294.5 L732.2,282.8 L719.3,273.0 L706.6,262.5 L697.1,253.8 L689.7,246.7 L683.7,240.6 L678.9,235.4 L674.8,230.8 L671.3,226.8 L668.4,223.3 L667.1,221.7" fill="none" stroke="#2a78d6" stroke-width="2" stroke-opacity="0.85" stroke-linejoin="round"/><title>nu = 1</title></g>
+<g><circle cx="845.0" cy="343.5" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 12.00, nu = 1: rate 0.8548</title></g>
+<g><circle cx="809.2" cy="327.8" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 14.00, nu = 1: rate 0.9073</title></g>
+<g><circle cx="775.7" cy="310.5" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 16.76, nu = 1: rate 0.9650</title></g>
+<g><circle cx="762.9" cy="303.1" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 18.18, nu = 1: rate 0.9897</title></g>
+<g><circle cx="749.2" cy="294.5" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.04, nu = 1: rate 1.0185</title></g>
+<g><circle cx="732.2" cy="282.8" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 23.04, nu = 1: rate 1.0574</title></g>
+<g><circle cx="719.3" cy="273.0" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 26.08, nu = 1: rate 1.0900</title></g>
+<g><circle cx="706.6" cy="262.5" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 30.07, nu = 1: rate 1.1252</title></g>
+<g><circle cx="697.1" cy="253.8" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 34.05, nu = 1: rate 1.1538</title></g>
+<g><circle cx="689.7" cy="246.7" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 38.02, nu = 1: rate 1.1777</title></g>
+<g><circle cx="683.7" cy="240.6" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 42.04, nu = 1: rate 1.1982</title></g>
+<g><circle cx="678.9" cy="235.4" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 46.00, nu = 1: rate 1.2155</title></g>
+<g><circle cx="674.8" cy="230.8" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 50.01, nu = 1: rate 1.2307</title></g>
+<g><circle cx="671.3" cy="226.8" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 54.04, nu = 1: rate 1.2441</title></g>
+<g><circle cx="668.4" cy="223.3" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 58.01, nu = 1: rate 1.2558</title></g>
+<g><circle cx="667.1" cy="221.7" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 60.00, nu = 1: rate 1.2612</title></g>
+<text x="851.0" y="347.5" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">ν = 1</text>
+<g><path d="M630.0,189.0 L632.0,196.3 L634.0,203.2 L636.1,209.8 L638.1,216.0 L640.1,221.8 L642.1,227.4 L644.1,232.8 L646.2,237.9 L648.2,242.7 L650.2,247.4 L652.2,251.9 L654.2,256.2 L656.3,260.3 L658.3,264.3 L660.3,268.1 L662.3,271.8 L664.3,275.4 L666.4,278.8 L668.4,282.1 L670.4,285.4 L672.4,288.5 L674.4,291.5 L676.5,294.5 L678.5,297.3 L680.5,300.1 L682.5,302.8 L684.5,305.4 L686.5,308.0 L688.6,310.5 L690.6,312.9 L692.6,315.2 L694.6,317.5 L696.6,319.8 L698.7,322.0 L700.7,324.1 L702.7,326.2 L704.7,328.3 L706.7,330.3 L708.8,332.3 L710.8,334.2 L712.8,336.1 L714.8,337.9 L716.8,339.7 L718.9,341.5 L720.9,343.3 L722.9,345.0 L724.9,346.7 L726.9,348.3 L729.0,349.9 L731.0,351.5 L733.0,353.1 L735.0,354.7 L737.0,356.2 L739.1,357.7 L741.1,359.2 L743.1,360.7 L745.1,362.1 L747.1,363.5 L749.2,364.9" fill="none" stroke="#eb6834" stroke-width="1.5" stroke-opacity="0.8" stroke-linejoin="round" stroke-dasharray="4 3"/><title>nu = 5: ratio cubic in 1/n through D &gt;= 20, limit rate 1.370</title></g>
+<g><path d="M845.0,414.4 L809.2,398.9 L775.7,381.5 L762.9,373.9 L749.2,364.9 L732.2,352.5 L719.3,341.9 L706.6,330.1 L697.1,320.2 L689.7,311.8 L683.7,304.4 L678.9,297.9 L674.8,292.1 L671.3,286.8 L668.4,282.1 L667.1,280.0" fill="none" stroke="#eb6834" stroke-width="2" stroke-opacity="0.85" stroke-linejoin="round"/><title>nu = 5</title></g>
+<g><circle cx="845.0" cy="414.4" r="3.2" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 12.00, nu = 5: rate 0.6185</title></g>
+<g><circle cx="809.2" cy="398.9" r="3.2" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 14.00, nu = 5: rate 0.6702</title></g>
+<g><circle cx="775.7" cy="381.5" r="3.2" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 16.76, nu = 5: rate 0.7283</title></g>
+<g><circle cx="762.9" cy="373.9" r="3.2" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 18.18, nu = 5: rate 0.7537</title></g>
+<g><circle cx="749.2" cy="364.9" r="3.2" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.04, nu = 5: rate 0.7836</title></g>
+<g><circle cx="732.2" cy="352.5" r="3.2" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 23.04, nu = 5: rate 0.8250</title></g>
+<g><circle cx="719.3" cy="341.9" r="3.2" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 26.08, nu = 5: rate 0.8604</title></g>
+<g><circle cx="706.6" cy="330.1" r="3.2" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 30.07, nu = 5: rate 0.8996</title></g>
+<g><circle cx="697.1" cy="320.2" r="3.2" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 34.05, nu = 5: rate 0.9325</title></g>
+<g><circle cx="689.7" cy="311.8" r="3.2" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 38.02, nu = 5: rate 0.9607</title></g>
+<g><circle cx="683.7" cy="304.4" r="3.2" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 42.04, nu = 5: rate 0.9855</title></g>
+<g><circle cx="678.9" cy="297.9" r="3.2" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 46.00, nu = 5: rate 1.0070</title></g>
+<g><circle cx="674.8" cy="292.1" r="3.2" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 50.01, nu = 5: rate 1.0264</title></g>
+<g><circle cx="671.3" cy="286.8" r="3.2" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 54.04, nu = 5: rate 1.0439</title></g>
+<g><circle cx="668.4" cy="282.1" r="3.2" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 58.01, nu = 5: rate 1.0595</title></g>
+<g><circle cx="667.1" cy="280.0" r="3.2" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 60.00, nu = 5: rate 1.0668</title></g>
+<text x="851.0" y="412.4" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">ν = 5</text>
+<g><path d="M630.0,205.7 L632.0,212.6 L634.0,219.2 L636.1,225.4 L638.1,231.3 L640.1,236.9 L642.1,242.3 L644.1,247.4 L646.2,252.3 L648.2,257.0 L650.2,261.5 L652.2,265.8 L654.2,269.9 L656.3,273.9 L658.3,277.8 L660.3,281.5 L662.3,285.1 L664.3,288.6 L666.4,292.0 L668.4,295.2 L670.4,298.4 L672.4,301.5 L674.4,304.4 L676.5,307.3 L678.5,310.1 L680.5,312.9 L682.5,315.5 L684.5,318.1 L686.5,320.6 L688.6,323.1 L690.6,325.5 L692.6,327.8 L694.6,330.1 L696.6,332.3 L698.7,334.5 L700.7,336.6 L702.7,338.7 L704.7,340.7 L706.7,342.7 L708.8,344.7 L710.8,346.6 L712.8,348.5 L714.8,350.3 L716.8,352.1 L718.9,353.9 L720.9,355.6 L722.9,357.3 L724.9,359.0 L726.9,360.6 L729.0,362.2 L731.0,363.8 L733.0,365.4 L735.0,366.9 L737.0,368.4 L739.1,369.9 L741.1,371.4 L743.1,372.9 L745.1,374.3 L747.1,375.7 L749.2,377.1" fill="none" stroke="#1baf7a" stroke-width="1.5" stroke-opacity="0.8" stroke-linejoin="round" stroke-dasharray="4 3"/><title>nu = 9: ratio cubic in 1/n through D &gt;= 20, limit rate 1.314</title></g>
+<g><path d="M845.0,426.3 L809.2,410.9 L775.7,393.6 L762.9,386.0 L749.2,377.1 L732.2,364.8 L719.3,354.2 L706.6,342.6 L697.1,332.8 L689.7,324.3 L683.7,317.0 L678.9,310.7 L674.8,305.0 L671.3,299.8 L668.4,295.3 L667.1,293.1" fill="none" stroke="#1baf7a" stroke-width="2" stroke-opacity="0.85" stroke-linejoin="round"/><title>nu = 9</title></g>
+<g><circle cx="845.0" cy="426.3" r="3.2" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>D = 12.00, nu = 9: rate 0.5791</title></g>
+<g><circle cx="809.2" cy="410.9" r="3.2" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>D = 14.00, nu = 9: rate 0.6304</title></g>
+<g><circle cx="775.7" cy="393.6" r="3.2" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>D = 16.76, nu = 9: rate 0.6881</title></g>
+<g><circle cx="762.9" cy="386.0" r="3.2" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>D = 18.18, nu = 9: rate 0.7133</title></g>
+<g><circle cx="749.2" cy="377.1" r="3.2" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.04, nu = 9: rate 0.7431</title></g>
+<g><circle cx="732.2" cy="364.8" r="3.2" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>D = 23.04, nu = 9: rate 0.7841</title></g>
+<g><circle cx="719.3" cy="354.2" r="3.2" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>D = 26.08, nu = 9: rate 0.8193</title></g>
+<g><circle cx="706.6" cy="342.6" r="3.2" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>D = 30.07, nu = 9: rate 0.8581</title></g>
+<g><circle cx="697.1" cy="332.8" r="3.2" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>D = 34.05, nu = 9: rate 0.8907</title></g>
+<g><circle cx="689.7" cy="324.3" r="3.2" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>D = 38.02, nu = 9: rate 0.9188</title></g>
+<g><circle cx="683.7" cy="317.0" r="3.2" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>D = 42.04, nu = 9: rate 0.9432</title></g>
+<g><circle cx="678.9" cy="310.7" r="3.2" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>D = 46.00, nu = 9: rate 0.9643</title></g>
+<g><circle cx="674.8" cy="305.0" r="3.2" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>D = 50.01, nu = 9: rate 0.9833</title></g>
+<g><circle cx="671.3" cy="299.8" r="3.2" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>D = 54.04, nu = 9: rate 1.0005</title></g>
+<g><circle cx="668.4" cy="295.3" r="3.2" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>D = 58.01, nu = 9: rate 1.0158</title></g>
+<g><circle cx="667.1" cy="293.1" r="3.2" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>D = 60.00, nu = 9: rate 1.0230</title></g>
+<text x="851.0" y="436.3" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">ν = 9</text>
+<text x="590.0" y="108.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">dashed: extrapolation in 1/n from D ≥ 20</text>
+</svg>

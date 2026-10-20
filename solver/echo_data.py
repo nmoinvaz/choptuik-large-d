@@ -19,7 +19,7 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "hp"))
-H = "/home/claude/dss/hp_scan/"
+from states import H   # hp/data/states (in the repo), else the runs' directory; see hp/states.py
 OUT = os.path.join(HERE, "data", "echo_spectrum.npz")
 KMAX = 39
 

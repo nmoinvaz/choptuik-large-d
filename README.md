@@ -255,6 +255,16 @@ The phenomenon is the same at every D ≥ 4: the same echoing structure and a sm
 as in four dimensions (assumed here: only that mode's growth rate is computed, not the full spectrum). Only the numbers
 change.
 
+![The echo across dimensions: the field's slope at the centre over the same stretch of logarithmic time for D = 4, 10, 20 and 60](solver/echo.svg)
+
+**The echo itself.** The figure shows the field's slope at the centre, F(τ) = √(D−2)·∂p/∂x at r = 0, over the same stretch of
+logarithmic time τ for D = 4, 10, 20 and 60, each scaled to its peak (dashed: its first harmonic alone; dotted lines: the
+start of each echo). At D = 4 the echo is far from a sine: almost a square wave, with a third harmonic 44% of the first,
+and each echo 31× smaller than the one before. As D grows the echoes come faster (Δ = 2.52, 2.11, 1.81 at D = 10, 20, 60:
+12×, 8.3×, 6.1× per echo) and the profile turns into a pure sine: the third harmonic falls to 8% of the first at D = 60,
+and the D = ∞ theory predicts 5.5%. The D = 4 profile is from the f64 solver (39 harmonics, Δ within 3×10⁻⁶ of the best
+value); the others are double-double solutions (`solver/plot_echo.py`, data from `solver/echo_data.py`).
+
 ### Candidate closed forms, all ruled out
 
 Nine closed forms were tried as the limit, first on
@@ -1098,6 +1108,16 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   zero; whether S₁ = 0 at A ≈ 2.72, ω = ω∞ needs the series to about A²⁵ in extended precision
   (in progress). σ₁(ω) alone never vanishes.
 
+![The echo's harmonic spectrum: amplitude of each odd harmonic for D = 4 to 60 with the D = infinity prediction, and the decay rate per harmonic against 1/(D-2)](solver/spectrum.svg)
+
+**The prediction against the spectrum** (`solver/plot_spectrum.py`). Left: the amplitude |F_ν| of each odd harmonic (log
+scale) for D = 4 to 60, darker for larger D, with the D = ∞ prediction dashed (F₃ and F₅ computed; beyond that the
+leading-order ratio |q|A² ≈ 0.063, conjectured). Right: the decay rate per harmonic, ½ ln|F_ν/F_ν₊₂|, against 1/(D−2), with
+extrapolations from D ≥ 20. The rate grows from about 0.4 at D = 4 to about 1.0 at D = 60 and levels off: for ν = 1 it
+extrapolates to 1.45, on the predicted 1.38–1.45; for ν = 5 and 9 to 1.34–1.37 and 1.29–1.31, still rising with the fit
+degree, so approaching the predicted band but not converged. (From D = 35 the double-double runs pin harmonics above 13 to
+zero, so the D = 40 and 60 lines stop at ν = 13.)
+
 ### What is known about the selection, and what is open
 
 - **The expansion diverges.** `solver/largeD_late_orders.py` runs the recursion of Proposition 1 numerically to order 36,
@@ -1342,6 +1362,9 @@ solver/candidates.py   the f64 candidate-constant test: cd solver/data && python
 solver/plot_delta.py, plot_extrapolation.py, plot_candidates.py  delta.svg, extrapolation.svg, candidates.svg
                        (cd solver/data && python3 ../plot_delta.py, and likewise)
 solver/plot_physics.py        physics.svg: e^Delta, fine-tuning digits per echo, field and gravity strength vs D
+solver/plot_echo.py           echo.svg: the echo at D = 4, 10, 20, 60 (data: solver/echo_data.py -> solver/data/echo_spectrum.npz)
+solver/plot_spectrum.py       spectrum.svg: the echo's harmonic spectrum and decay rates against the D = infinity prediction
+solver/simplify_math.py       converts trivial inline math in README.md to Unicode (GitHub renders at most ~1400 expressions)
 solver/largeD_expand.py       the 1/n expansion symbolically (sympy, Proposition 1)
 solver/largeD_formal_check.py the expansion substituted into the exact equations (residual ~ n^-3 for any omega)
 solver/largeD_late_orders.py  the same recursion numerically to high order (divergence of the series)
