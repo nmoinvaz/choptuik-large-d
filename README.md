@@ -708,14 +708,15 @@ algebraic, $`\eta = p^2 + m^2`$.)
   carries $`e^{-1/(2\xi^2)}`$, the outer fast mode $`e^{-n/(2x^2)}`$. The Stokes line of $`{}_2F_0(\cdot;2\xi^2)`$ is real $`\xi`$, i.e. real
   $`x > 1`$, and its Stokes constant is proportional to $`1/(\Gamma(\alpha)\Gamma(\beta))`$. Matching gives the constant $`K`$ above, and
 
-  ```math
-  C(n,s) = -2\pi i\,\frac{2^{-s-1/2}}{\Gamma(\alpha)\Gamma(\beta)}\,(n+1)^{s+1/2}\,e^{-i\pi\lambda}\,\big(1 + O(s^2/n)\big), \qquad \lambda = \tfrac n2 - 1 - s .
-  ```
+```math
+C(n,s) = -2\pi i\,\frac{2^{-s-1/2}}{\Gamma(\alpha)\Gamma(\beta)}\,(n+1)^{s+1/2}\,e^{-i\pi\lambda}\,\big(1 + O(s^2/n)\big), \qquad \lambda = \tfrac n2 - 1 - s .
+```
 
-  `solver/largeD_stokes_C.py`: the ratio of the two sides is $`1.00014`$ at $`n = 10^5`$ for $`\mu = 1`$ ($`1.0013`$ for $`\mu = 3`$), with
-  $`n\,(\text{ratio} - 1) \to 13.9 - 7.6i`$, of the size of $`\lvert s^2\rvert = 14.6`$. At $`D = 20`$–$`60`$ the ratio is still about $`2.1`$–$`1.27`$ for
-  $`\mu = 1`$: the asymptotics need $`\mu^2\omega^2 \ll n`$. So the light-cone coefficient of Proposition 2 is, exactly, the Stokes
-  constant of a $`{}_2F_0`$ times a power of $`n`$ and a phase, and its factor $`1/(\Gamma(\alpha)\Gamma(\beta))`$ is that Stokes constant.
+`solver/largeD_stokes_C.py`: the ratio of the two sides is $`1.00014`$ at $`n = 10^5`$ for $`\mu = 1`$ ($`1.0013`$ for $`\mu = 3`$), with
+$`n\,(\text{ratio} - 1) \to 13.9 - 7.6i`$, of the size of $`\lvert s^2\rvert = 14.6`$. At $`D = 20`$–$`60`$ the ratio is still about $`2.1`$–$`1.27`$ for
+$`\mu = 1`$: the asymptotics need $`\mu^2\omega^2 \ll n`$. So the light-cone coefficient of Proposition 2 is, exactly, the Stokes
+constant of a $`{}_2F_0`$ times a power of $`n`$ and a phase, and its factor $`1/(\Gamma(\alpha)\Gamma(\beta))`$ is that Stokes constant.
+
 - **The selection rule as an inner problem.** With gravity the rule becomes: the fast-type Stokes multipliers of the formal
   inner solution vanish, one complex condition per odd harmonic $`\mu`$. The unknowns are $`F`$'s odd harmonics (less one phase)
   and $`\omega`$, so the count balances, and the problem contains $`F`$ and $`\omega`$ only. This formulation is derived from the
