@@ -1184,3 +1184,9 @@ parallel (2 threads each), with this environment for both:
 (Windows: set VAR=... in cmd or $env:VAR=... in PowerShell.) On 2 cloud cores the kc 55 seed regrid plus its first solve
 at D = 4.0 took ~8.5 min and gave Delta(4) = 3.4454524278 (kc 47: 3.4454526772). Stop any job after 3 h. Report as
 in T15. Keep 2 threads free for T16, whose fix is still in progress here.
+
+== 2026-10-20 16:21 PDT local
+T15 (b)-(d) running since 16:21. rustkernel rebuilt at f971cfe (includes cf79fba): build_info "isa: avx512 (cpu supports
+avx512,avx2,baseline), simd backend: avx512, compile-time target features: baseline". tests/test_bindings.py: all
+backends bitwise equal, the jacobian matches complex step, and the mode matrix is consistent. (b) kc 55 -> (d) kc 55 RK x4,
+and (c) kc 63 in parallel, 2 threads each, your environment, below-normal priority. 2 threads are kept free for T16.
