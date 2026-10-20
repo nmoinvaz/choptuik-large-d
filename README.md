@@ -708,6 +708,11 @@ through terms smaller than any power of 1/n.
 (their Eq. (20)). It turns out not to select Δ, and Proposition 1 stands; see
 [Relation to published work](#relation-to-ecker-ecker--grumiller).
 
+*Why the ansatz.* The scaling is forced by one measured fact, c − 1 = O(1/n) (gravity weak; n(1 − ⟨c(0)⟩) → 3.65): E2
+gives b − 1 ≈ (p² + m²)/(n − 1); E1 then gives c − 1 = O(n(b − 1)) = O(p²), so c − 1 = O(1/n) requires p = O(n^{−1/2}); and
+the O(n) terms of E3–E4 force p + m = O(p/n), the measured p + m = O(n^{−3/2}). Integer powers of ε beyond the overall
+ε^{1/2} are an assumption (analyticity in 1/n), consistent with the held-out tests on Δ(D) but not implied by them.
+
 ### Proposition 2: the leading-order problem, solved exactly
 
 At leading order the equations are linear (the scalar wave equation on flat space in self-similar form, c = b = 1).
@@ -885,7 +890,7 @@ computes it to order 122 at 90 digits and reads χ and g off consecutive ratios 
 | 0.8 | 0.291 - 1.5704i | 0.288 - 1.571i | −0.55 − 4.27i |
 | 0.9 | 0.728 - 1.5694i | 0.725 - 1.571i | −0.47 − 4.26i |
 
-So the singulant is χ(x) = Φ(x) - iπ/2 to the accuracy of 120 orders. The exponent read off two ratios carries
+So the singulant is χ(x) = Φ(x) - iπ/2 to the accuracy of 120 orders (for 0.066 < x < 0.998; see Proposition 4). The exponent read off two ratios carries
 a 1/k error; with the constant below fixed, the data are consistent with $`g = -(s + \tfrac12) = -0.5 - 3.82i`$ exactly, the
 power $`n^{s+1/2}`$ that C(n,s) carries for large n. Below $`x = 1/\sqrt2`$ the readings scatter. The next singulant,
 Φ + iπ/2, has the same modulus but a small weight (8×10⁻⁵ at x = 0.5, $`e^{-\pi\omega} \approx 6\times10^{-6}`$ at $`1/\sqrt2`$,
@@ -904,45 +909,59 @@ K = e^{-i\pi(1+s)}\,\frac{2^{-s-1/2}}{\Gamma(\alpha)\Gamma(\beta)} .
 |---|---|---|---|---|---|
 | $`K_{\text{measured}}/K`$ | 1.08 + 0.06i | 1.01 - 0.10i | 0.9936 + 0.0022i | 1.0006 - 0.0002i | 1.0010 - 0.0015i |
 
-(the first two columns carry the estimator's interference). The singulant and the exponent also follow from a
-derivation, not yet a full proof:
+(the first two columns carry the estimator's interference). The singulant, the exponent and the constant are proved:
 
-**Proposition 4 (derivation; late orders of the leading-order series).** Let $`y(\varepsilon) = x\,{}_2F_1(\alpha, \beta; \kappa; z)`$, z = x²,
-κ = (1 + 1/ε)/2, with $`y \sim \sum_k y_k\varepsilon^k`$. Then, exactly,
-
-```math
-y_k = 2x\,(-1)^{k-1}\sum_{J \ge 0} R_J\,(2J+1)^{k-1}, \qquad
-R_J = \frac{(-1)^J(\alpha)_{J+1}(\beta)_{J+1}}{J!\,(J+1)!}\,z^{J+1}\,{}_2F_1(\alpha+J+1, \beta+J+1; J+2; z),
-```
-
-the sum converging for $`x < 1/\sqrt2`$ and continued analytically above, and as k → ∞
+**Proposition 4 (late orders of the leading-order series).** Let 0 < x < 1, Φ = ln x − ½ ln(1 − x²),
+$`\tau_\ell = \Phi - i\pi(\ell+\tfrac12)`$, and let $`y = x\,{}_2F_1(\alpha,\beta;\kappa;x^2)`$ with κ = (n+1)/2, α = (1+s)/2, β = (2+s)/2,
+$`y \sim \sum_k y_k\varepsilon^k`$, ε = 1/n. If $`\lvert\Phi\rvert < (\sqrt3/2)\pi`$ (equivalently 0.066 < x < 0.998), then
 
 ```math
-y_k \approx \sum_{\ell} K_\ell(x)\,\frac{\Gamma\big(k + s + \frac12\big)}{\big(\Phi(x) + i\pi(\ell + \frac12)\big)^{k+s+\frac12}} ,
+y_k = K\,x^2(1-x^2)^{-1-s}\,\frac{\Gamma(k+s+\frac12)}{\tau_0^{\,k+s+\frac12}}\,\big(1 + O(1/k)\big), \qquad K = e^{-i\pi(1+s)}\,\frac{2^{-s-1/2}}{\Gamma(\alpha)\Gamma(\beta)} .
 ```
 
-with the $`\ell = -1`$ term, χ = Φ - iπ/2, dominant for an echo with ω > 0.
+The $`\ell = -1`$ singularity contributes at the same rate but with a k-independent relative weight of 8×10⁻⁵ (x = 0.5) to
+5×10⁻⁸ (x = 0.95). If $`\lvert\Phi\rvert > (\sqrt3/2)\pi`$ the late orders are governed instead by the x-independent singularities ±iπ.
 
 <details>
-<summary>Derivation of Proposition 4, and the gaps a full proof must close</summary>
+<summary>Proof of Proposition 4 (Euler integral, Watson's lemma, Darboux's method)</summary>
 
-*Proof sketch.* As a function of κ, $`{}_2F_1`$ is meromorphic with simple poles at κ = -J and residues $`R_J`$; with
-$`1/(\kappa + J) = 2\varepsilon/\big(1 + (2J+1)\varepsilon\big)`$ the pole expansion gives the first formula term by term. For large J,
-$`R_J \approx (-1)^J x^2(1-x^2)^{-\alpha-\beta}\,e^{2\Phi J}J^{s+1/2}/\big(\Gamma(\alpha)\Gamma(\beta)\big)`$. Poisson summation over J turns
-$`\sum_J (-1)^J e^{2\Phi J}J^{s+1/2}(2J+1)^{k-1}`$ into $`\sum_\ell \int_0^\infty e^{(2\Phi + i\pi(2\ell+1))J}J^{k+s-1/2}\,dJ`$ (to leading order), and each
-integral is a Gamma function: singulants $`\Phi + i\pi(\ell+\tfrac12)`$ and exponent $`g = -(s+\tfrac12)`$. The tower of $`\ell`$ is the tower
-in $`1/\sin(\pi(\kappa-\alpha-\beta))`$ of C(n,s), and the prefactor carries the same 1/(Γ(α)Γ(β)). (End of sketch.)
+1. *Euler integral.* For Re κ > Re β (n > 1),
+   $`{}_2F_1 = \frac{\Gamma(\kappa)}{\Gamma(\beta)\Gamma(\kappa-\beta)}\int_0^1 t^{\beta-1}(1-t)^{\kappa-\beta-1}(1-zt)^{-\alpha}\,dt`$. With $`1 - t = e^{-2\tau}`$ and κ = (1 + 1/ε)/2,
+   $`y = x\,P(\kappa)\cdot 2\int_0^\infty e^{-\tau/\varepsilon}G(\tau)\,d\tau`$, where $`G = e^{(2\beta-1)\tau}(1-e^{-2\tau})^{\beta-1}(1-z+ze^{-2\tau})^{-\alpha}`$,
+   P = Γ(κ)/(Γ(β)Γ(κ−β)) and z = x².
+2. *Singularities of G.* Write $`G = \tau^{\beta-1}H`$. H is analytic except where $`1 - z + ze^{-2\tau} = 0`$, i.e. $`\tau = \tau_\ell`$ (each a
+   simple zero, so $`H \propto (1-\tau/\tau_\ell)^{-\alpha}`$ there), and at the branch points τ = iπm, m ≠ 0, of $`(1-e^{-2\tau})^{\beta-1}`$. On τ > 0,
+   $`1 - z + ze^{-2\tau} > 1 - z > 0`$ and $`\lvert G\rvert \le Ce^{\tau}`$, so Watson's lemma gives
+   $`2\int_0^\infty e^{-\tau/\varepsilon}G \sim 2\sum_m H_m\Gamma(m+\beta)\varepsilon^{m+\beta}`$, with $`H = \sum_m H_m\tau^m`$.
+3. *Darboux.* The radius of convergence of $`\sum H_m\tau^m`$ is $`R = \min(\lvert\tau_0\rvert, \pi)`$. If $`\lvert\tau_0\rvert < \pi`$, the only singularities on
+   $`\lvert\tau\rvert = R`$ are τ₀ and $`\tau_{-1}`$, both of type $`(1-\tau/\tau_\ell)^{-\alpha}`$, so
+   $`H_m = \sum_{\ell=0,-1} h_\ell\,\frac{\Gamma(m+\alpha)}{\Gamma(\alpha)\,m!}\,\tau_\ell^{-m}\,(1+O(1/m))`$ with $`h_\ell = \lim_{\tau\to\tau_\ell}H(\tau)(1-\tau/\tau_\ell)^{\alpha}`$
+   (continued along the ray from 0).
+4. *Prefactor.* $`P(\kappa)(2\varepsilon)^{\beta}(1+\varepsilon)^{-\beta}\Gamma(\beta) = 1 + \sum_j p_j\varepsilon^j`$, from Binet's expansion of
+   ln Γ(κ) − ln Γ(κ−β), whose Borel transform is singular only at τ = iπm; $`(1+\varepsilon)^{\beta}`$ converges.
+5. *Product.* If $`A = \sum a_k\varepsilon^k`$ has Borel radius $`\rho_A`$ and $`B = \sum b_j\varepsilon^j`$ has $`\rho_B > \rho_A`$, then
+   $`(AB)_k = b_0a_k(1+O(1/k))`$, since $`\lvert b_ja_{k-j}/a_k\rvert \lesssim (\rho_A/\rho_B)^j\,j!(k-j)!/k!`$. Here b₀ = 1 and the powers
+   $`\varepsilon^{\pm\beta}`$ cancel: $`y_k = \frac{x\,2^{1-\beta}}{\Gamma(\beta)}\,\Gamma(k+\beta)H_k\,(1+O(1/k))`$.
+6. *Combining.* $`\Gamma(k+\alpha)\Gamma(k+\beta)/\Gamma(k+1) = \Gamma(k+s+\tfrac12)(1+O(1/k))`$. Evaluating h₀ in closed form (with
+   $`e^{2\tau_0} = z/(z-1)`$ the factors reduce to $`x^2(1-x^2)^{-1-s}`$ times K) gives the statement. If $`\lvert\tau_0\rvert > \pi`$, then R = π
+   and step 3 applies to ±iπ instead. ∎
 
-Gaps a full proof must close: the pole expansion in κ needs a growth bound (and its constant term); exchanging the
-J-sum with the expansion of 1/(1 + (2J+1)ε), which is not uniform in J; error bounds for the large-J form
-of $`R_J`$ inside the Poisson sum; the continuation to $`x > 1/\sqrt2`$, where the J-sum diverges (and where the K checks
-above are made); and fixing the branch of $`\chi^{k+s+1/2}`$ that makes $`\ell = -1`$ dominant.
+This proof replaces an earlier derivation by a pole sum in κ and Poisson summation (whose exactness was checked
+numerically, `solver/largeD_linear_poles.py`, `solver/largeD_linear_poisson.py`, but which left five gaps); the integral
+representation holds for every 0 < x < 1, and the explicit constants settle which singularity dominates.
 
 </details>
 
-*Check.* `solver/largeD_linear_poles.py`: the pole sum equals the direct series to 10⁻⁴⁹–10⁻⁹¹ at x = 0.3, 0.5, 0.6,
-k ≤ 60. `solver/largeD_linear_poisson.py`: at x = 0.5, k = 30 the Poisson pieces add up to the exact $`y_k`$ within
-10⁻¹⁹, with relative sizes 1 ($`\ell = -1`$), 1.6×10⁻⁴ ($`\ell = 0`$), 10⁻¹⁴ ($`\ell = -2`$).
+*Check* (`solver/largeD_prop4/`: `euler_late.py`, `kcheck.py`, `switch2.py`). At x = 0.9, $`y_k`$/prediction − 1 extrapolates to
+(−0.9 − 2.3i)×10⁻³ over k = 100–122; the derived constant equals K to 1 + 3.65/k at x = 0.5, 0.8, 0.9; and at x = 0.999 and
+0.9999 the measured singulant is −3.135i → −iπ, not Φ − iπ/2, as the statement predicts. Closer to the light cone than
+x = 0.998 the late orders are dominated by the x-independent singularities ±iπ, which come from the Γ-function
+prefactor and the endpoint factor $`(1-e^{-2\tau})^{\beta-1}`$; their exponentials $`e^{\mp i\pi n}`$ are pure phases, not exponentially
+small terms, so they do not affect the Stokes-line argument below, which concerns the $`\tau_\ell`$.
+
+The earlier pole-sum route also checks out numerically: `solver/largeD_linear_poles.py` gives the pole sum equal to the
+direct series to 10⁻⁴⁹–10⁻⁹¹ at x = 0.3, 0.5, 0.6, k ≤ 60, and `solver/largeD_linear_poisson.py` splits it into the
+singulant tower at x = 0.5, k = 30 within 10⁻¹⁹.
 
 What this says:
 
@@ -960,11 +979,51 @@ What this says:
   smallest difference is 4×10⁻⁴⁰ against $`\lvert C\rvert\times\text{branch} = 7\times10^{-21}`$; at x = 0.8, n = 40, 10⁻²³ against
   2×10⁻⁷. So the regular solution carries no fast mode inside the light cone.
 
-With gravity this suggests a **working hypothesis** (not proved): if the transport of Proposition 3 continues to x > 1,
-the light-cone coefficient is the multiplier times a factor that does not vanish, and **the selection rule at
-D = ∞ is that the Stokes multiplier of the mode born at x = ∞ vanishes.** Proposition 3 is proved only on
-0 < x < 1, and its background (the polynomials of Proposition 1) is not uniform at $`x \sim \sqrt n`$; the inner problem
-of the next subsection is where the hypothesis has to be made precise.
+With gravity this suggests a **working hypothesis**, stated precisely:
+
+**Conjecture (selection at D = ∞).** For n = D − 2 let $`F_n(\theta) = \sqrt n\,\partial_xp(0,\theta)`$ and $`\omega_n = 2\pi/\Delta(D)`$ be the profile and
+frequency of the critical solution. Assume (H1) $`F_n \to F_\infty`$ uniformly on a strip $`\lvert\mathrm{Im}\,\theta\rvert < \sigma`$ for some σ > 0 and
+ω_n → ω∞ > 0 (the data give σ ≈ 1.4, the harmonic decay rate), and (H2) the formal family of Proposition 1 with data
+(F_n, ω_n, K_k) is the asymptotic expansion of the solution uniformly on δ ≤ x ≤ 1 − δ (checked: residuals ∝ n⁻³ through
+third order). Then $`S_\nu(F_\infty, \omega_\infty) = 0`$ for every odd ν, where $`S_\nu`$ are the fast-type Stokes multipliers of the inner
+problem of the next subsection. Conversely, a zero of S at which the Jacobian with respect to (F, ω), modulo the phase, is
+invertible should continue to critical solutions for all large n.
+
+<details>
+<summary>The argument for the conjecture, and where rigour fails</summary>
+
+The inner problem resums the outer series' top-degree terms (checked to 2×10⁻¹³ through order 10); the outer series'
+light-cone exponential is fixed by the inner singularity at x = ∞ (exact in the linear case: the outer late-order
+constant of Proposition 4 is the inner Weber Stokes constant); the switched exponential reaches the light cone through
+an invertible map; and analyticity at the light cone forces C = 0, hence S = 0.
+
+The invertible map S ↦ C is, at leading order in 1/n, a composition of three maps: (1) inner–outer matching on
+1 ≪ x ≪ √n, where the inner fast mode $`e^{-1/(2\xi^2)}\xi^{2\langle F^2\rangle}e^{\Pi(\theta)}S(\theta_0)`$, θ₀ = θ − 2ω ln ξ, matches the outer WKB mode
+$`e^{-n\Phi}A`$ on the branch above the real axis x > 1 (there Φ = ln(x/√(x² − 1)) + iπ/2); (2) the outer transport of
+Proposition 3 along x > 1 with real θ, which has real coefficients while εx²F² ≪ 1 and acts along real characteristics as
+multiplication by a non-vanishing function composed with a shift, so it is invertible on Fourier sequences of at most
+exponential growth; (3) the half-monodromy at the regular singular point x = 1, continuing the singular Floquet branch
+$`(1-x)^{\Lambda}\varphi(\theta - \omega'\ln(1-x))`$ (ω' = ω/(1 − ⟨G(1)⟩)) from x > 1 to x < 1, which multiplies harmonic μ by
+$`e^{-i\pi\Lambda}e^{\pm\pi\mu\omega'}`$, a diagonal map with non-zero entries. So C ≡ 0 ⇔ S ≡ 0 at leading order. In the linear case this is
+exact (Proposition 2 and the large-n form of C(n,s), with the constant proved in Proposition 4).
+
+Where rigour fails: (a) Borel summability of the nonlinear series is not proved; the outer nonlinear late orders also
+carry x-independent singularities of modulus about 0.13, driven by high harmonics, and one must show that these give
+only ambiguities in the free data (F's harmonics, $`K_k`$), not light-cone branches (in the linear case the analogous
+x-independent singularities ±iπ are harmless pure phases, which is suggestive but not a proof). (b) Uniformity in the
+harmonic index: the weights $`e^{\pi\lvert\mu\rvert\omega/2}`$ grow like e^{6.0|μ|} while F's harmonics decay only like e^{−1.4|μ|}, so an O(1/n)
+relative error in a high harmonic is amplified when it mixes into low harmonics through $`e^{\Pi}`$; the leading-order
+equivalence holds harmonic by harmonic, but the n at which it becomes accurate may grow with the number of harmonics
+(the same mechanism that defeated fixed-M truncation); a proof needs a function-space formulation, e.g. on the strip
+$`\lvert\mathrm{Im}\,\theta\rvert < \sigma`$ with σ < 1.4 and the weights in a dual norm. (c) Uniformity at x = 1: the outer WKB amplitude is
+singular there (A ∝ (1 − x)⁻¹) and must be matched to the Frobenius solution on 1/n ≪ |1 − x| ≪ 1; the exponents agree
+(Λ = n/2 − 1 − s + ⟨F²⟩ + O(1/n) on both sides), but the matching has not been written out.
+
+Evidence beyond the linear case: the conditions $`S_\nu = 0`$ for |ν| ≥ 3 alone predict the echo's shape, F₃/F₁ = 0.055
+and F₅/F₁ = 0.0031, against 0.0549–0.0552 and 0.0032–0.0034 extrapolated from the solutions, and the predicted finite
+harmonic decay rate of about 1.4 agrees with the data (1.3–1.45), consistent with (H1).
+
+</details>
 
 ### The inner problem at large x
 
@@ -1403,6 +1462,7 @@ solver/largeD_transport_sympy.py  Proposition 3 derived symbolically from the ex
 solver/largeD_fast_transport_full.py  the transport check with the full O(1/n) background
 solver/largeD_linear_poles.py  Proposition 4: the late orders as an exact sum over the poles in kappa
 solver/largeD_linear_poisson.py  Proposition 4: Poisson summation of the pole sum (the singulant tower)
+solver/largeD_prop4/          Proposition 4's proof checked: late-order prediction (euler_late.py), constant K (kcheck.py), switch near x = 1 (switch2.py)
 solver/largeD_linear_truncation.py  optimally truncated series against the exact solution (no fast mode inside x < 1)
 solver/largeD_late_structure.py  where the nonlinear late-order growth lives (x, harmonic, amplitude)
 ```
