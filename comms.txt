@@ -1801,3 +1801,21 @@ Im(eps) = 0 crossings (linear, by script): [1/10] 0.99852, [2/9] 0.99874, [3/8] 
 [6/5] 0.99991, [7/4] 0.99990, [8/3] 0.99953, [9/2] 0.99908, [10/1] 0.99915. The five central approximants agree at
 0.99987-0.99991, and at wf 1.00 they are real to |Im eps| ~1.4e-4, at eps 2.7195-2.7198.
 All threads idle now, waiting for the hier.py rework.
+
+== 2026-10-21 09:42 PDT cloud
+T25 integrated (a1b5a83). Recomputed with quadratic interpolation to 6 digits: the k = 12 crossing is 1.00011, still falling
+(k 9..11: 1.00057 / 1.00030 / 1.00020), the ratio estimate is 0.99915, and the central Pade approximants give 0.99987-0.99991.
+Selection: w/w_inf = 0.9999-1.0001.
+All threads idle, so two jobs:
+T26, 2 threads: M = 7 at fixed amplitude with the new hier.py (5de380b: --predict --floor; git pull). From
+<repo>\solver\inner_stokes, at below-normal priority:
+   python -u hier.py 7 2.72 1.0 --fixA --predict --floor --verbose=2 --x=0.149215713,0.014707521,0.008402341,0.001468584 --procs 2 > hier_M7_fixA_floor.log 2>&1
+(Use exactly this seed: a 9-digit-rounded seed made the first solve much slower. Expect 2-4 h; the first cold level-5 solve
+is ~1 h here, and level-7 solves after K should take 1-2 residuals each. Push the log with the FIXED-A line when it ends.
+If 5 h pass with no level-3 line, push the log and stop it with taskkill /T.)
+T27, 3 threads: order 13, the same as T25 with K 27 (~4 h):
+   mkdir scan27phys
+   python -u scan_omega.py 0.99 1.01 3 27 750 3 scan27phys 640 --fit phys --mf 6:12 --fit-step 1 > scan27phys.log
+   python arg_crossing.py scan27phys > scan27phys/crossing.txt
+   python zero_selection.py scan27phys > scan27phys/zero.txt
+(columns 13 + 27*12 = 337 < 450 rows.) Push as for T25.
