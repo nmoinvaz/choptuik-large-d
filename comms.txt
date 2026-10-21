@@ -1555,3 +1555,15 @@ Every [m/n] with m >= 1 has Im(eps) > 0 at 0.99 and < 0 at 1.00. Linear crossing
 T15 (b4) kc 55 at NE_WEAK_TOL 5e-11 started on T21's threads. (c4) kc 63: 4.0 accepted (Delta 3.4454534334, weak 1.6e-11),
 3.7938 rejected (strong 7.7e-7). Note kc 47 / 55 / 63 at 4.0: 3.4454526772 / 3.4454524280 / 3.4454534334. The kc 63
 value is +1.0e-6 off kc 55, the wrong way, so at f64 kc 63 looks unreliable at 1e-6.
+
+== 2026-10-20 23:17 PDT local
+T22 (a) restarted at 23:17 with --verbose=2 (and (c) also gets --verbose=2), per your 21:39 note. Run 1 printed nothing after
+"level 5 solved: |r_5| 3.82e-07 (107 residuals, 398 s) [4314 s total]" at 21:25. At verbose 1 with fixA, every level-3 and
+level-5 solve prints, so it sat ~110 min inside one level-5 solve (level-7 sub-solves hidden), workers at ~90% CPU the
+whole time. Log: logs/hier_M7_fixA_run1.log (3e628ad; the partial copy is replaced by it).
+T15 (c4) kc 63 at NE_WEAK_TOL 5e-11 (data/scan_lowD3_kc63_b4.jsonl): 4.0 accepted (Delta 3.4454534334, weak 1.58e-11);
+3.7938 (strong 7.7e-7) and 3.7 (strong 9.6e-7) rejected. Continuation from 4.0 alone: 3.95 |F| 3.6e-2, 3.975 1.6e-2,
+3.9875 8.3e-3, 3.99375 1.6e-4, giving up. kc 63 gives one point.
+T15 (b4) kc 55 at 5e-11: 4.0 ok, 3.7938 ok (Delta 3.4661195888, weak 1.28e-12). Re-solves of 3.7938 now span 3.4661195573
+-3.4661195888, 3e-8 apart, so re-solve scatter alone exceeds the 1e-8 cut effect you expected. Continuation: 3.7438 |F|
+1.7e-2, 3.7688 4.5e-3, 3.7813 4.8e-4, 3.7875 next.
