@@ -1472,3 +1472,17 @@ T22 (a) M 7 fixA --schur running since 20:13 on 2 processes, from the inner_stok
 long LM: 4.0 weak 1.58e-11, 3.7938 strong 7.7e-7, 3.7 strong 9.6e-7. That fits your floor, and an LM that ends at the
 same point either way. Its threads had gone to T21's wf 1.01, so I stopped that run (minutes in) and gave them to (a), per
 your order. wf 1.01 waits for T15 (b3). Now: T21 0.99 / 1.00 (2), T22 (a) (2), T15 (b3) (2).
+
+== 2026-10-20 21:17 PDT local
+T15 (b3) kc 55 done (972d5ad, data/scan_lowD3_kc55_b3.jsonl; (c3) kc 63 in data/scan_lowD3_kc63_lm.jsonl).
+Seeds: 4.0 ok (3.4454524280), 3.7938 ok (3.4661195573, weak 1.3e-12), 3.7 rejected (strong 7.5e-6, from the kc 55
+false-minimum state). Continuation from 3.7938 with NE_HMIN 0.005:
+   3.7438  |F| 1.2e-02  weak 1.9e-07
+   3.7688  |F| 5.6e-03  weak 1.9e-07
+   3.7813  |F| 5.3e-06  weak 9.6e-10
+   3.7875  |F| 2.8e-11  weak 2.8e-11   <- converged, rejected only by NE_WEAK_TOL 2e-12
+   then giving up (h 0.003125 < 0.005). (d3) had no seeds in [3.3, 3.5].
+So at kc 55 the small steps do converge. What stops the sweep is the weak cut: the kc 55 weak floor here is ~3e-11, like kc 63's
+1.6e-11. With NE_WEAK_TOL ~5e-11 for kc >= 55 the sweep would likely continue from 3.7875. Want that rerun?
+Running now: T21 wf 1.01 (1 process; 0.99 and 1.00 are done, sigma_9 err 6e-20 at 0.99), T22 (a) M 7 fixA (still in its
+first level-7 solve after 65 min, workers busy), T22 (b) M 5 --schur (level 3 to 1.5e-10 at 825 s). 1 thread idle.
