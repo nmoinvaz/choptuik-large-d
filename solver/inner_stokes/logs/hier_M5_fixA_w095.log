@@ -1,0 +1,26 @@
+M 5, xi1 0.2, fixed (A, w), procs 2; start x [2.72, 0.95, 0.149215713, 0.014707521, 0.008402341, 0.001468584]
+level radii: r_1 at xi 0.2000, r_3 at xi 0.2000, r_5 at xi 0.1213
+start residuals: |r_1| 5.80e+10  |r_3| 1.05e+07  |r_5| 3.12e+03
+   level 5 (low): stop at |g| 2.95e-07 (noise floor)
+   level 5 (top): stop at |g| 2.70e-10 (noise floor)
+   level 5 (low): stop at |g| 1.70e-07 (noise floor)
+   level 5 (top): stop at |g| 1.45e-10 (noise floor)
+level 3 it 0: |r_3| 5.742e+01  lam 1  x [2.72, 0.95, 0.163186106, 0.016549345, 0.01006905, 0.001809201]  [198 s, 131 residuals]
+   level 5 (low): stop at |g| 3.66e-07 (noise floor)
+   level 5 (top): stop at |g| 3.65e-10 (noise floor)
+level 3 it 1: |r_3| 5.431e-01  lam 1  x [2.72, 0.95, 0.163130074, 0.016612688, 0.010063811, 0.00181421]  [249 s, 158 residuals]
+   level 5 (low): stop at |g| 2.43e-07 (noise floor)
+   level 5 (top): stop at |g| 2.58e-10 (noise floor)
+level 3 it 2: |r_3| 7.259e-03  lam 1  x [2.72, 0.95, 0.163129735, 0.016611965, 0.010063787, 0.001814146]  [291 s, 180 residuals]
+   level 5 (low): stop at |g| 1.18e-07 (noise floor)
+level 3 it 3: |r_3| 8.191e-05  lam 1  x [2.72, 0.95, 0.163129745, 0.016611964, 0.010063788, 0.001814146]  [342 s, 209 residuals]
+   level 5 (low): stop at |g| 1.98e-07 (noise floor)
+level 3 it 4: |r_3| 1.480e-06  lam 1  x [2.72, 0.95, 0.163129745, 0.016611964, 0.010063788, 0.001814146]  [391 s, 237 residuals]
+   level 5 (top): stop at |g| 6.36e-10 (noise floor)
+level 3 it 5: |r_3| 8.565e-07  lam 0.5  x [2.72, 0.95, 0.163129745, 0.016611964, 0.010063788, 0.001814146]  [482 s, 304 residuals]
+   level 5 (top): stop at |g| 1.54e-10 (noise floor)
+   level 5 (top): stop at |g| 3.63e-10 (noise floor)
+   level 3 (top): stop at |g| 8.56e-07 (noise floor)
+FIXED-A M 5: A 2.720000  w/w_inf 0.950000  (w 3.63103, Delta 1.73041)  <F^2> 3.7127  r_1 +7.4436e+01-3.1078e+02i  [535 s, 331 residuals]
+      F_3/F_1 = +0.059974+0.006107i   |.| 0.060284  arg +0.1015   r_3 8.6e-07
+      F_5/F_1 = +0.003700+0.000667i   |.| 0.003760  arg +0.1783   r_5 9.1e-11

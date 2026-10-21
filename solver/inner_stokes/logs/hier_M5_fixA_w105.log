@@ -1,0 +1,38 @@
+M 5, xi1 0.2, fixed (A, w), procs 2; start x [2.72, 1.05, 0.149215713, 0.014707521, 0.008402341, 0.001468584]
+level radii: r_1 at xi 0.2000, r_3 at xi 0.2000, r_5 at xi 0.1164
+start residuals: |r_1| 2.28e+13  |r_3| 1.31e+09  |r_5| 5.93e+03
+   level 5 (low): stop at |g| 9.21e-07 (noise floor)
+   level 5 (top): stop at |g| 1.79e-09 (noise floor)
+   level 5 (low): stop at |g| 1.79e-06 (noise floor)
+   level 5 (top): stop at |g| 2.54e-10 (noise floor)
+level 3 it 0: |r_3| 7.110e+02  lam 1  x [2.72, 1.05, 0.13747385, 0.012727021, 0.007103983, 0.001175573]  [485 s, 282 residuals]
+   level 5 (low): stop at |g| 1.08e-06 (noise floor)
+   level 5 (top): stop at |g| 5.69e-10 (noise floor)
+level 3 it 1: |r_3| 6.546e+01  lam 1  x [2.72, 1.05, 0.13696003, 0.013013124, 0.007065385, 0.001193103]  [543 s, 306 residuals]
+   level 5 (low): stop at |g| 2.62e-07 (noise floor)
+   level 5 (top): stop at |g| 9.11e-10 (noise floor)
+level 3 it 2: |r_3| 6.222e+00  lam 1  x [2.72, 1.05, 0.136941311, 0.013064018, 0.007063744, 0.001196652]  [614 s, 336 residuals]
+   level 5 (low): stop at |g| 4.54e-07 (noise floor)
+   level 5 (top): stop at |g| 9.59e-10 (noise floor)
+level 3 it 3: |r_3| 6.175e-01  lam 1  x [2.72, 1.05, 0.136943387, 0.013068708, 0.007063866, 0.001197001]  [682 s, 367 residuals]
+   level 5 (low): stop at |g| 1.95e-07 (noise floor)
+level 3 it 4: |r_3| 6.069e-02  lam 1  x [2.72, 1.05, 0.136943857, 0.013068901, 0.007063898, 0.001197018]  [751 s, 401 residuals]
+   level 5 (low): stop at |g| 6.41e-08 (noise floor)
+   level 5 (top): stop at |g| 3.59e-10 (noise floor)
+level 3 it 5: |r_3| 5.726e-03  lam 1  x [2.72, 1.05, 0.136943905, 0.013068884, 0.007063902, 0.001197017]  [831 s, 431 residuals]
+   level 5 (low): stop at |g| 5.64e-07 (noise floor)
+   level 5 (top): stop at |g| 6.64e-10 (noise floor)
+level 3 it 6: |r_3| 5.255e-04  lam 1  x [2.72, 1.05, 0.136943907, 0.01306888, 0.007063902, 0.001197016]  [904 s, 458 residuals]
+   level 5 (low): stop at |g| 2.59e-07 (noise floor)
+   level 5 (top): stop at |g| 7.55e-10 (noise floor)
+level 3 it 7: |r_3| 5.397e-05  lam 1  x [2.72, 1.05, 0.136943907, 0.01306888, 0.007063902, 0.001197016]  [965 s, 480 residuals]
+   level 5 (low): stop at |g| 1.01e-06 (noise floor)
+   level 5 (top): stop at |g| 2.94e-10 (noise floor)
+level 3 it 8: |r_3| 7.229e-06  lam 1  x [2.72, 1.05, 0.136943907, 0.01306888, 0.007063902, 0.001197016]  [1025 s, 509 residuals]
+level 3 it 9: |r_3| 5.101e-06  lam 1  x [2.72, 1.05, 0.136943907, 0.01306888, 0.007063902, 0.001197016]  [1143 s, 572 residuals]
+   level 5 (top): stop at |g| 5.43e-10 (noise floor)
+   level 5 (top): stop at |g| 5.64e-10 (noise floor)
+   level 3 (top): stop at |g| 5.10e-06 (noise floor)
+FIXED-A M 5: A 2.720000  w/w_inf 1.050000  (w 4.01324, Delta 1.56561)  <F^2> 3.7087  r_1 +2.7131e+02+3.2869e+02i  [1229 s, 606 residuals]
+      F_3/F_1 = +0.050347+0.004805i   |.| 0.050576  arg +0.0951   r_3 5.1e-06
+      F_5/F_1 = +0.002597+0.000440i   |.| 0.002634  arg +0.1679   r_5 1.2e-10
