@@ -39,8 +39,8 @@ radius. We conjecture that the selection rule at $D = \infty$ is the vanishing o
 $n$-free inner problem; its higher-harmonic conditions predict the shape of the echo, $|F_3/F_1| = 0.0551$, which the
 data reproduce. Truncated to three harmonics, the full set of conditions selects $\Delta = 1.619$, 1.5\% below
 $\Dinf$, and with five harmonics $\Delta = 1.64516$, 0.077\% above (one harmonic: 29\% above).
-Without truncation, an amplitude expansion to nine orders selects $\omega = (1.0000 \pm 0.0003)\,\omega_\infty$ at
-amplitude 2.72--2.73 (measured: 2.70--2.72). The conjectured rule thus gives $\Dinf = 1.6439 \pm 0.0005$ from the
+Without truncation, an amplitude expansion to ten orders selects $\omega = (1.0000 \pm 0.0002)\,\omega_\infty$ at
+amplitude 2.72 (measured: 2.70--2.72). The conjectured rule thus gives $\Dinf = 1.6439 \pm 0.0003$ from the
 $D = \infty$ equations alone, against $1.64389375$ from the solutions; the rule itself is not yet proved.
 The computations, derivations and text were produced by an AI model (Claude, Anthropic) under the author's
 direction and have not yet been reviewed by a human expert (Sec.~\ref{sec:how}).
@@ -86,7 +86,7 @@ $D = \infty$, against $0.0549$--$0.0552$ and $0.0032$--$0.0034$ extrapolated fro
 (Sec.~\ref{sec:inner}). The harmonic-1 condition, which would give $\Dinf$, is not yet settled: truncated to three
 harmonics, the conditions select $\omega = 1.0156\,\omega_\infty$ with the measured shape, with five about
 $0.99923\,\omega_\infty$, and without
-truncation, at nine orders, $(1.0000 \pm 0.0003)\,\omega_\infty$ at amplitude 2.72--2.73 (measured: 2.70--2.72).
+truncation, at ten orders, $(1.0000 \pm 0.0002)\,\omega_\infty$ at amplitude 2.72 (measured: 2.70--2.72).
 \item An analysis of the next-to-leading-order condition of~\cite{EckerEckerGrumiller2026}, which within this framework
 does not select $\Delta$ (Sec.~\ref{sec:eeg}).
 \end{enumerate}
@@ -626,18 +626,19 @@ $2.744 - 0.026i$ and $2.748 - 0.013i$. The amplitude extrapolated from the solut
 harmonic-1 condition has a nearly real zero within about 1\% of it.
 
 Across $\omega$ two families of estimates of where the zero is exactly real approach $\omega_\infty$ from opposite sides
-(Table~\ref{tab:bracket}; $\sigma_1$--$\sigma_9$ at $\omega/\omega_\infty = 0.99$, $1.00$, $1.01$, $\sigma_1$--$\sigma_8$ at five values
+(Table~\ref{tab:bracket}; $\sigma_1$--$\sigma_{10}$ at $\omega/\omega_\infty = 0.99$, $1.00$, $1.01$, $\sigma_1$--$\sigma_8$ at five values
 $0.98$--$1.02$, $\sigma_1$--$\sigma_7$ at seven values $0.97$--$1.03$). The crossings $\arg\tau_k = \pi$ assume a simple zero,
 $\tau_k \to -1/(k x_0^k)$. The coefficients behave as $-c/(k x_0^k)$ with an effective exponent $c$ that falls toward 1 as
 orders are added (last column), so $x_0$ is a simple zero, the departure of $c$ from 1 is contamination by singularities
 beyond it, and the crossings from above are the asymptotically correct estimator. Their distance from the limit shrinks by a
-factor of about 0.45--0.53 per order, and Aitken's extrapolation of consecutive triples is stable: $1.0003$, $1.0006$,
-$0.99999$, $1.0001$. The ratio estimates, which let $c$ float, come up from below and extrapolate to about $0.9974$; Pad\'e
-approximants of $(\ln S_1)'$ put $\mathrm{Im}\,A_0 = 0$ at $0.981$--$0.991$ with seven coefficients, $0.987$--$0.998$ with eight and
-$0.992$--$0.998$ with nine. At nine orders the bracket is $0.9961$--$1.0006$, and the five-harmonic truncation ($0.999228$) lies
-inside it. The selection rule thus picks $\omega/\omega_\infty$ between $0.997$ and $1.0003$, best estimate $1.0000 \pm 0.0003$,
-at amplitude $A_0 = 2.72$--$2.73$ (the solutions: 2.70--2.72): $\Dinf = 1.6439 \pm 0.0005$ from the $D = \infty$ inner equations
-alone, with no input from the finite-$D$ solutions, against $1.64389375$ from them.
+factor of about 0.45--0.55 per order, and Aitken's extrapolation of consecutive triples is stable: $1.0003$, $1.0006$,
+$0.99999$, $1.0001$, $0.99985$. The ratio estimates, which let $c$ float, come up from below more slowly; Pad\'e approximants
+of $(\ln S_1)'$ put $\mathrm{Im}\,A_0 = 0$ at $0.981$--$0.991$ with seven coefficients, $0.987$--$0.998$ with eight, $0.992$--$0.998$ with
+nine, and with ten they straddle $\omega_\infty$ ($0.9949$--$1.0034$; the mutually consistent ones at $0.9995$, $1.0000$, $1.0007$, with
+zeros at $\omega_\infty$ real to $10^{-3}$). At ten orders the bracket is $0.9978$--$1.0003$, and the five-harmonic truncation
+($0.999228$) lies inside it. The selection rule thus picks $\omega/\omega_\infty = 1.0000 \pm 0.0002$ at amplitude $A_0 \approx 2.72$
+(the solutions: 2.70--2.72): $\Dinf = 1.6439 \pm 0.0003$ from the $D = \infty$ inner equations alone, with no input from the
+finite-$D$ solutions, against $1.64389375$ from them.
 
 \begin{table}[h]
 \caption{Where the zero of $S_1$ becomes real, in $\omega/\omega_\infty$, order by order.}
@@ -651,6 +652,7 @@ order $k$ & $\arg\tau_k = \pi$ (from above) & ratio $\tau_{k-1}/\tau_k$ real (fr
 7 & 1.0021 & 0.9913 & $1.177 - 0.095i$ \\
 8 & 1.0011 & 0.9946 & $1.077 - 0.059i$ \\
 9 & 1.0006 & 0.9961 & $1.052 - 0.044i$ \\
+10 & 1.0003 & 0.9978 & $1.021 - 0.026i$ \\
 \end{tabular}
 \end{ruledtabular}
 \end{table}
@@ -699,7 +701,7 @@ $\Dinf = 1.64389375$ strongly, under the assumption of analyticity in $1/D$ that
 theory explains why that number cannot come from the $1/D$ expansion: the expansion is unobstructed for every period,
 and the selection acts through an exponentially small, Stokes-type effect whose linear version is solved exactly. The
 inner problem at $x \sim \sqrt n$ is $n$-free; its higher-harmonic conditions already reproduce the shape of the echo
-at $D = \infty$, and its harmonic-1 condition selects $\omega = (1.0000 \pm 0.0003)\,\omega_\infty$ untruncated and
+at $D = \infty$, and its harmonic-1 condition selects $\omega = (1.0000 \pm 0.0002)\,\omega_\infty$ untruncated and
 $0.99923\,\omega_\infty$ truncated to five harmonics. Open are: higher orders of that condition, which would give $\Dinf$ (and possibly a closed
 form) from first principles to more digits; a proof of Conjecture~\ref{conj}; the value $\lambda_\infty = 2$;
 and the behaviour just below $D = 4$.
