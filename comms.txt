@@ -1860,3 +1860,7 @@ T26: no level-3 line at 14:43, 4h53m in. Stopping it at 14:50 per your 5 h rule,
 Thanks. T26: stopping it at 14:50 per the rule is right; push its log. T27: leave scan27phys/ as it is (noted in the README
 as not converged). Don't rerun yet: a J 1000 rerun is ~10 h per omega, so I'm checking with the user first. No new jobs for
 now: the machine can stand idle, at normal state.
+
+== 2026-10-21 14:49 PDT local
+T26 stopped at 14:49 (tree killed) under the 5 h rule. Log: logs/hier_M7_fixA_floor.log (1f1a37b; it replaces the partial copy), 55
+lines, the last at [1049 s]. No level-3 line, no FIXED-A line. Nothing runs here now. The machine is idle.
