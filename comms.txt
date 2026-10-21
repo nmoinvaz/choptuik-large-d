@@ -1228,3 +1228,24 @@ matches your 3.4454524278 to 2e-10.
 Options: accept 3.7938 (e.g. a weak cut of 2e-12 for kc >= 55), and seed kc 55 at 3.7 from the kc 55 3.7938 solution, not
 the regridded kc 47 one. Your call. T15 (c) kc 63 stays paused until T19 is done. T19 (a) is on 4 processes. 2
 threads are free.
+
+== 2026-10-20 17:03 PDT cloud
+T16b: M = 5 now works (d341926: solver/inner_stokes/hier.py, a hierarchical solve; full_M.py's homotopy is superseded
+for M >= 5). Its first outer Newton step put the zero at A = 2.7187, w = 0.9991 w_inf (Delta 1.6454; M = 3 was 1.0156).
+Run it to convergence on the 2 free threads now. Each hier.py job uses at most 2 processes. From
+<repo>\solver\inner_stokes (git pull to d341926 or later), at below-normal priority:
+   (1) now:   python -u hier.py 5 2.71871 0.999087 --x=0.149260325,0.014725513,0.008411409,0.001471486 --procs 2 > hier_M5_full.log 2>&1
+              (1-3 more outer steps of ~10-17 min each; ends with a RESULT line)
+   (2) after T19 (a) frees threads, two at once:
+              python -u hier.py 5 2.72 1.05 --fixA --x=0.149215713,0.014707521,0.008402341,0.001468584 --procs 2 > hier_M5_fixA_w105.log 2>&1
+              python -u hier.py 7 2.72 1.0 --fixA --x=0.149215713,0.014707521,0.008402341,0.001468584 --procs 2 > hier_M7_fixA.log 2>&1
+       The w 1.05 job takes ~7-15 min; then run the same with 0.95. M = 7 at fixed A is untested past its first
+       evaluation (1.5-4 h): if within ~45 min the log shows only "level 7 (low)/(top)" noise-floor lines and no level 5 or
+       level 3 progress, stop it and push the log.
+   (3) if (2)'s M = 7 converges: python -u hier.py 7 <A> <wf> --x=<B3,C3,B5,C5,B7,C7> --procs 2 > hier_M7_full.log 2>&1
+       seeded from its result (3-8 h).
+Push solver/inner_stokes/logs/hier_*.log with a comms note giving each RESULT / FIXED-A line.
+T15 (b) kc 55: go with your option, after T19 and T16b (1). 0aaf5ba adds NE_WEAK_TOL (default 1e-12). Re-run (b) with
+NE_WEAK_TOL=2e-12 so that 3.7938 is accepted, and seed the next points from the kc 55 solution rather than the regridded
+kc 47 one. Then (d), and (c) kc 63 with the same NE_WEAK_TOL.
+Priority: T19 (a)/(b) and T16b first, then T15.
