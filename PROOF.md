@@ -170,8 +170,12 @@ and two ω, from arb's Kummer U on either side of its cut; `lin_check.py`), the 
 (A, ω) boxes (`series_arb.py`), and the forcing bound of the start-value fixed point (the optimally truncated series has
 residual 1.0×10⁻³³ on |ξ| ≤ 0.1; `residual_poly.py`). In double precision, Poincaré–Miranda holds on all four faces of the
 box (`pm_dryrun.py`): half-width 10⁻³ needs the multiplier enclosed to 0.076, 10⁻⁵ to 7.8×10⁻⁴, i.e. 10⁻² to 10⁻³
-relative, the accuracy the Baldomá et al. template achieved. Missing: the contraction constant (explicit bounds on the
-inverse of the linear operator built from the Kummer solutions), validated integration along the ray, which is stiff
+relative, the accuracy the Baldomá et al. template achieved. Since proved: the start-value fixed point (`fixed_point.py`: on the rays arg ξ = ±3π/8,
+|ξ| ≤ 0.1, exactly one solution in an explicit weighted ball around the N = 53 series, contraction constant ≤ 0.2918, start
+values enclosed to 6×10⁻³⁴, with ∂/∂(A, ω) over a parameter box), and the Krawczyk test is built and validated on mock
+enclosures (`krawczyk.py`; matching at ξ₁ = 0.3 rather than 0.2 makes the absolute targets about 15,000× easier: the
+state at the centre to about 2×10⁻⁵ for a 10⁻³ box, the derivatives over the box to 10⁻²). Missing: validated integration
+along the ray and arc, which is stiff
 (fast modes shrink by e⁻³¹, so naive interval Taylor overestimates by about e⁵⁰; it needs a Lohner/QR integrator, e.g.
 CAPD, an estimated 1–3 weeks), and Krawczyk with (A, ω) as state variables for uniqueness. At M = 5 the system is
 38-dimensional, and the certificate must use the Schur-corrected conditions (leakage up to 10¹⁷), i.e. multiprecision

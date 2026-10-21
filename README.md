@@ -1622,7 +1622,8 @@ GAMMA.md            why gamma_inf = 1/2 (solver/inner_pert/heat_form.py: the hea
 solver/proof/       feasibility numbers for the proof roadmap (feasibility.py: sigma ratios, conditioning, tail size;
                     entire_cert.py: S_1 as an entire function of A^2, the factored series and certificate margins;
                     fast_eigenvalues.py: the outer system's fast eigenvalues, Lemma B2; certify_M1.py, lin_check.py,
-                    series_arb.py, residual_poly.py, pm_dryrun.py: the M = 1 certificate prototype in ball arithmetic;
+                    series_arb.py, residual_poly.py, pm_dryrun.py, fixed_point.py, krawczyk.py: the M = 1 certificate
+                    in ball arithmetic (start-value fixed point proved; Krawczyk test built);
                     tail_harmonics.py, reconcile.py, amp_trunc.py, family_amps.py: the harmonic-tail analysis)
 proof/              the proof roadmap's parts (A_certify.md: the computer-assisted certificate, prototyped at M = 1;
                     B_tail.md: gap (b), the harmonic tail;

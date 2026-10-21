@@ -7,10 +7,14 @@
   2. RIGOROUS  formal series of the truncated M = 1 system in ball arithmetic (series_arb.py; A, omega may be boxes) and
      the residual polynomial of its optimal truncation, with a rigorous bound on |xi| <= r0 (residual_poly.py): this is
      the forcing M_0 of the fixed-point lemma that will enclose the lateral solution at the start point.
-  3. NOT RIGOROUS (dry run)  Poincare-Miranda test on a preconditioned box around the zero with the double-precision
-     lateral solver (pm_dryrun.py): the enclosure accuracy the certified jump must reach.
-Missing for a certificate: the contraction constant of the fixed-point lemma (step i) and validated integration of the
-lateral solution from the start point to the real axis (step ii). See proof/A_certify.md.
+  3. RIGOROUS  the start-value lemma (step i): a contraction in a weighted space proves that the truncated system has a
+     unique solution within an explicit ball of the truncated series on the rays arg xi = +-3pi/8, |xi| <= r0, and
+     encloses y+(xi0) (fixed_point.py).
+  4. NOT RIGOROUS (dry run)  Poincare-Miranda test on a preconditioned box around the zero with the double-precision
+     lateral solver (pm_dryrun.py): the enclosure accuracy the certified jump must reach. The Krawczyk test and its
+     budget are in krawczyk.py.
+Missing for a certificate: validated integration of the lateral solution (with its variational equations) from the
+start point to the real axis (step ii). See proof/A_certify.md.
 
     python3 certify_M1.py [--pm]
 """
@@ -44,8 +48,15 @@ def main():
     kmin = min(RP.weighted_bound(p, r0)[0] for dct in (r1, r2, r3) for p in dct.values())
     print(f"   N = {n} terms; |R(xi)| <= sum_k |rho_k| |xi|^k <= {float(worst.upper()):.2e} on |xi| <= {r0}; "
           f"nonzero coefficients from xi^{kmin}")
+    print("3. start-value fixed point (rigorous), M = 1 at the zero, rays arg xi = +-3pi/8:")
+    import fixed_point as FP
+    out = FP.run(FP.acb(FP.A_STAR), FP.acb(FP.WF_STAR), r0, verbose=False)
+    xi0, Dv, Sv, Cv = FP.start_values(out, +1)
+    rad = max(float(max(v.real.rad(), v.imag.rad())) for dct in (Dv, Sv, Cv) for v in dct.values())
+    print(f"   contraction constant <= {float(out['lip'].upper()):.4f}, self-map verified: {out['ok']}; "
+          f"y+(xi0) enclosed to radius {rad:.1e} (D, S, C at xi0 = {r0} e^(3 i pi/8))")
     if "--pm" in sys.argv:
-        print("3. Poincare-Miranda dry run (double precision, not rigorous):")
+        print("4. Poincare-Miranda dry run (double precision, not rigorous):")
         import pm_dryrun
         pm_dryrun.main()
 
