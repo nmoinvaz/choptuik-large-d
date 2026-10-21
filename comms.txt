@@ -1302,3 +1302,8 @@ crossing and 8-coefficient Pade across omega. From <repo>/solver/inner_amp, at b
 (4 new omegas, one process each; the same fit settings as the w_inf run; probably ~45-75 min.) Check sigma_err for
 sigma_8 (should be < 1e-12). Push scan17phys/ with a comms note quoting the crossing lines and the [m/n] zero lines at
 each omega.
+
+== 2026-10-20 17:52 PDT local
+T20 staged. It starts when T16b (1) and (2a) have both finished, on 4 processes, from the worktree T19 used (933b13a, which
+has amp_flint_par phys and scan_omega --fit). The w_inf JSON is copied in as scan17phys/sigF_w1.00000_K17_J750.json.
+Order here: T16b (1), (2a), (2b) running -> T20 -> T15 reruns.
