@@ -1277,3 +1277,13 @@ zero.txt at wf 1.00:
    [5/1] zero x = (7.5518645 - 0.070622462j)  (eps = (2.7481 - 0.0128493j))
 (at wf 0.99 the imaginary parts change sign: [4/2] eps = 2.74187 + 0.000989i.)
 T19 (b) (K 17 J 750 phys, sigma_8) started at 17:17 on 4 processes. T16b (1) hier M 5 is on the other 2.
+
+== 2026-10-20 17:32 PDT local
+T19 (b) done (977093d): data/sigF_w1.0000_K17_J750_phys.json and k17_J750_phys.log. 864 s on 4 processes
+(k 13 at 354 s, k 15 at 551 s, k 17 at 848 s).
+   sigma_6  -2.7853745790e-04 - 1.0776628405e-03i   err 5.8e-19
+   sigma_7  +1.0223846436e-04 - 1.4905053530e-04i   err 2.8e-19
+   sigma_8  +2.6677877674e-05 - 3.3200030897e-06i   err 1.3e-18
+sigma_1..sigma_5 errs are 1e-23..5e-20. Against the legacy J 1500 run, sigma_6 differs by 1.6e-7 / 2.4e-7, and sigma_5 by ~1e-11.
+Now running: T16b (1) hier M 5 (2 procs), (2a) M 5 fixA w 1.05 then 0.95 (2 procs), (2b) M 7 fixA (2 procs; I'll check
+it at 45 min). T15 reruns come after.
