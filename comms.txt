@@ -1612,3 +1612,40 @@ Only 3.78755 needed the 5e-11 cut (weak 5.1e-12). The points after it have weak 
 The steps were growing (0.00625 -> 0.008 -> 0.011) and each took less time (4771 -> 1923 -> 994 s) when the limit hit, and Delta
 was still rising. (d4) had no seeds in [3.3, 3.5].
 Restarting from 3.7794 / 3.7689 (NE_SEED_MIN=3.76) would continue toward 3.5 and Delta_max. Say if you want that on the 2 free threads.
+
+== 2026-10-21 02:32 PDT local
+T23 done (dc2cefe): scan21phys/ (3 JSONs, crossing.txt, zero.txt, log). Per omega: 0.99 5598 s, 1.00 5597 s (2 at a time),
+1.01 4248 s (alone). sigma_10 err 5.0e-20 / 5.8e-20 / 6.5e-20.
+crossing.txt:
+   arg(tau_9) = pi at wf = 1.0006
+   arg(tau_10) = pi at wf = 1.0003
+   Aitken limit of the last three crossings: wf = 1.0000
+   ratio tau_9/tau_10: eps0 real at wf = 0.9978, A0 = 2.720
+zero.txt, [m/n] zeros (eps) at each omega ([0/9] is off at eps ~0.6+2.86i, omitted):
+   wf 0.99  [1/8]  eps 2.71321 + 0.00674457j
+   wf 0.99  [2/7]  eps 2.70407 + 0.00882532j
+   wf 0.99  [3/6]  eps 2.70824 + 0.00732922j
+   wf 0.99  [4/5]  eps 2.71322 + 0.0156106j
+   wf 0.99  [5/4]  eps 2.7154 + 0.0245941j
+   wf 0.99  [6/3]  eps 2.70775 + 0.012285j
+   wf 0.99  [7/2]  eps 2.72849 - 0.0040036j
+   wf 0.99  [8/1]  eps 2.71413 + 0.010834j
+   wf 1.00  [1/8]  eps 2.72058 - 0.00714976j
+   wf 1.00  [2/7]  eps 2.71066 - 0.000466338j
+   wf 1.00  [3/6]  eps 2.71186 - 0.00504319j
+   wf 1.00  [4/5]  eps 2.72064 + 0.000970101j
+   wf 1.00  [5/4]  eps 2.72087 + 0.00550427j
+   wf 1.00  [6/3]  eps 2.71572 + 5.73628e-5j
+   wf 1.00  [7/2]  eps 2.75827 - 0.0201279j
+   wf 1.00  [8/1]  eps 2.72172 - 0.0030353j
+   wf 1.01  [1/8]  eps 2.72793 - 0.0210902j
+   wf 1.01  [2/7]  eps 2.72071 - 0.0107692j
+   wf 1.01  [3/6]  eps 2.7176 - 0.0129199j
+   wf 1.01  [4/5]  eps 2.72802 - 0.0135963j
+   wf 1.01  [5/4]  eps 2.72814 - 0.0108497j
+   wf 1.01  [6/3]  eps 2.72428 - 0.012923j
+   wf 1.01  [8/1]  eps 2.72925 - 0.017025j
+Linear Im(eps) = 0 crossings: [1/8] 0.9949, [2/7] 0.9995, [3/6] 0.9959, [8/1] 0.9978 (between 0.99 and 1.00); [4/5] 1.0007,
+[5/4] 1.0034, [6/3] 1.00004 (between 1.00 and 1.01). [7/2] has no sign change on 0.99-1.01 (-0.0040i at 0.99, -0.0201i at
+1.00, no zero at 1.01), so it looks spurious. At wf 1.00 the zeros of [2/7], [4/5], [6/3] are real to ~1e-3 in eps.
+Running: T22 (a) M 7 fixA (verbose 2), in the worker-only level-3 phase since 00:19, both workers busy. 4 threads idle.
