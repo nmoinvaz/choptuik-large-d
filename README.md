@@ -65,6 +65,7 @@ Contents
 - Companion files
   - [PARALLEL.md](PARALLEL.md): how the computations parallelize (CRC-style split and combine)
   - [AGENTS.md](AGENTS.md): conventions for the AI sessions that run computations here
+  - [PROOF.md](PROOF.md): a roadmap for proving the selection rule (Conjecture 1): layers, precedents, staged plan
 
 ## Results
 
@@ -1569,6 +1570,8 @@ hp/largeD_*.py      large-D scaling of the solutions (profiles, F(theta), harmon
 comms.txt           task log between the cloud and the second machine
 PARALLEL.md         how the computations parallelize: shooting as CRC-style chunking, Jacobian columns, amp_flint, scans
 AGENTS.md           conventions for the AI sessions that run computations here (which scripts to use, thread budget, comms)
+PROOF.md            roadmap for a proof of the selection rule (computer-assisted inner zero; analytic selection theorem)
+solver/proof/       feasibility numbers for the proof roadmap (feasibility.py: sigma ratios, conditioning, tail size)
 solver/README.md    the Python solver, scans and fits; solver/CONTEXT.md (summary), solver/notes.md (lab notebook)
 solver/formula_all.py  the rational formulas (README coefficient table): cd solver/data && python3 ../formula_all.py
 solver/rational_fit.py the search over rational forms; solver/formula.py the 1/D power series
