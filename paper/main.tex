@@ -39,7 +39,7 @@ radius. We conjecture that the selection rule at $D = \infty$ is the vanishing o
 $n$-free inner problem; its higher-harmonic conditions predict the shape of the echo, $|F_3/F_1| = 0.0551$, which the
 data reproduce. Truncated to three harmonics, the full set of conditions selects $\Delta = 1.619$, 1.5\% below
 $\Dinf$, and with five harmonics $\Delta = 1.64516$, 0.077\% above (one harmonic: 29\% above).
-Without truncation, an amplitude expansion to ten orders selects $\omega = (1.0000 \pm 0.0002)\,\omega_\infty$ at
+Without truncation, an amplitude expansion to eleven orders selects $\omega = (1.0000 \pm 0.0002)\,\omega_\infty$ at
 amplitude 2.72 (measured: 2.70--2.72). The conjectured rule thus gives $\Dinf = 1.6439 \pm 0.0003$ from the
 $D = \infty$ equations alone, against $1.64389375$ from the solutions; the rule itself is not yet proved.
 The computations, derivations and text were produced by an AI model (Claude, Anthropic) under the author's
@@ -86,7 +86,7 @@ $D = \infty$, against $0.0549$--$0.0552$ and $0.0032$--$0.0034$ extrapolated fro
 (Sec.~\ref{sec:inner}). The harmonic-1 condition, which would give $\Dinf$, is not yet settled: truncated to three
 harmonics, the conditions select $\omega = 1.0156\,\omega_\infty$ with the measured shape, with five about
 $0.99923\,\omega_\infty$, and without
-truncation, at ten orders, $(1.0000 \pm 0.0002)\,\omega_\infty$ at amplitude 2.72 (measured: 2.70--2.72).
+truncation, at eleven orders, $(1.0000 \pm 0.0002)\,\omega_\infty$ at amplitude 2.72 (measured: 2.70--2.72).
 \item An analysis of the next-to-leading-order condition of~\cite{EckerEckerGrumiller2026}, which within this framework
 does not select $\Delta$ (Sec.~\ref{sec:eeg}).
 \end{enumerate}
@@ -626,16 +626,17 @@ $2.744 - 0.026i$ and $2.748 - 0.013i$. The amplitude extrapolated from the solut
 harmonic-1 condition has a nearly real zero within about 1\% of it.
 
 Across $\omega$ two families of estimates of where the zero is exactly real approach $\omega_\infty$ from opposite sides
-(Table~\ref{tab:bracket}; $\sigma_1$--$\sigma_{10}$ at $\omega/\omega_\infty = 0.99$, $1.00$, $1.01$, $\sigma_1$--$\sigma_8$ at five values
+(Table~\ref{tab:bracket}; $\sigma_1$--$\sigma_{11}$ at $\omega/\omega_\infty = 0.99$, $1.00$, $1.01$, $\sigma_1$--$\sigma_8$ at five values
 $0.98$--$1.02$, $\sigma_1$--$\sigma_7$ at seven values $0.97$--$1.03$). The crossings $\arg\tau_k = \pi$ assume a simple zero,
 $\tau_k \to -1/(k x_0^k)$. The coefficients behave as $-c/(k x_0^k)$ with an effective exponent $c$ that falls toward 1 as
 orders are added (last column), so $x_0$ is a simple zero, the departure of $c$ from 1 is contamination by singularities
 beyond it, and the crossings from above are the asymptotically correct estimator. Their distance from the limit shrinks by a
 factor of about 0.45--0.55 per order, and Aitken's extrapolation of consecutive triples is stable: $1.0003$, $1.0006$,
-$0.99999$, $1.0001$, $0.99985$. The ratio estimates, which let $c$ float, come up from below more slowly; Pad\'e approximants
+$0.99999$, $1.0001$, $0.99985$, $1.00015$. The ratio estimates, which let $c$ float, come up from below more slowly; Pad\'e approximants
 of $(\ln S_1)'$ put $\mathrm{Im}\,A_0 = 0$ at $0.981$--$0.991$ with seven coefficients, $0.987$--$0.998$ with eight, $0.992$--$0.998$ with
-nine, and with ten they straddle $\omega_\infty$ ($0.9949$--$1.0034$; the mutually consistent ones at $0.9995$, $1.0000$, $1.0007$, with
-zeros at $\omega_\infty$ real to $10^{-3}$). At ten orders the bracket is $0.9978$--$1.0003$, and the five-harmonic truncation
+nine, and with ten and eleven they straddle $\omega_\infty$ (with eleven, all nine approximants cross between $0.9975$ and $1.0008$,
+mean $0.9999$, and at $\omega_\infty$ every zero is real to $|\mathrm{Im}\,A_0| \le 0.0035$). At eleven orders the bracket is
+$0.9992$--$1.0002$, and the five-harmonic truncation
 ($0.999228$) lies inside it. The selection rule thus picks $\omega/\omega_\infty = 1.0000 \pm 0.0002$ at amplitude $A_0 \approx 2.72$
 (the solutions: 2.70--2.72): $\Dinf = 1.6439 \pm 0.0003$ from the $D = \infty$ inner equations alone, with no input from the
 finite-$D$ solutions, against $1.64389375$ from them.
@@ -653,6 +654,7 @@ order $k$ & $\arg\tau_k = \pi$ (from above) & ratio $\tau_{k-1}/\tau_k$ real (fr
 8 & 1.0011 & 0.9946 & $1.077 - 0.059i$ \\
 9 & 1.0006 & 0.9961 & $1.052 - 0.044i$ \\
 10 & 1.0003 & 0.9978 & $1.021 - 0.026i$ \\
+11 & 1.0002 & 0.9992 & $1.017 - 0.012i$ \\
 \end{tabular}
 \end{ruledtabular}
 \end{table}
