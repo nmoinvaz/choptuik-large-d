@@ -1067,8 +1067,15 @@ Status of these gaps ([PROOF.md](PROOF.md)): for a model truncated to M harmonic
 lemma by lemma ([proof/C_selection.md](proof/C_selection.md)). Gap (c) reduces to Olver's error control, and the inner
 half of gap (a) to Braaksma's summability theorem. What remains there is the continuation of the solution through the
 complex x-plane with uniform bounds and the nonlinear inner–outer matching, both on published templates (Xie–Tanveer;
-Baldomá–Fontich–Guardia–Seara). Gap (b) is being analysed separately, and a computer-assisted certificate of the inner
-zero has a concrete route ([proof/D_entire.md](proof/D_entire.md)).
+Baldomá–Fontich–Guardia–Seara). Gap (b) is narrower than stated above ([proof/B_tail.md](proof/B_tail.md)). Stated
+without harmonics, the condition is S(θ₀) ≡ 0 on the real label circle and uses F only on the real line; the weights
+$`e^{\pi\lvert\nu\rvert\omega/2}`$ are the linear connection coefficients of each label harmonic and cancel in every tuning
+equation. The data agree: the tuning ratio is the same for every ν to six digits (|q|A² = 0.0633), and the
+neighbour-family amplitudes fall by 10⁴–10⁸ per harmonic pair instead of growing. The weights do come back under naive
+Galerkin truncation (σ₆ from a five-harmonic projection is −1371 against −0.0003 − 0.0011i), so a tail lemma must be
+stated for the jump-conditioned truncation (`hier.py --schur`). The tail it must bound looks provable: about 4–6 in r₁
+above M = 5 and 0.2–0.35 above M = 7, against about 4 needed for a 10⁻³ box. A computer-assisted certificate of the inner
+zero has a concrete route ([proof/A_certify.md](proof/A_certify.md), [proof/D_entire.md](proof/D_entire.md)).
 
 Evidence beyond the linear case: the conditions $`S_\nu = 0`$ for |ν| ≥ 3 alone predict the echo's shape, F₃/F₁ = 0.055
 and F₅/F₁ = 0.0031, against 0.0549–0.0552 and 0.0032–0.0034 extrapolated from the solutions, and the predicted finite
@@ -1598,8 +1605,10 @@ GAMMA.md            why gamma_inf = 1/2 (solver/inner_pert/heat_form.py: the hea
 solver/proof/       feasibility numbers for the proof roadmap (feasibility.py: sigma ratios, conditioning, tail size;
                     entire_cert.py: S_1 as an entire function of A^2, the factored series and certificate margins;
                     fast_eigenvalues.py: the outer system's fast eigenvalues, Lemma B2; certify_M1.py, lin_check.py,
-                    series_arb.py, residual_poly.py, pm_dryrun.py: the M = 1 certificate prototype in ball arithmetic)
+                    series_arb.py, residual_poly.py, pm_dryrun.py: the M = 1 certificate prototype in ball arithmetic;
+                    tail_harmonics.py, reconcile.py, amp_trunc.py, family_amps.py: the harmonic-tail analysis)
 proof/              the proof roadmap's parts (A_certify.md: the computer-assisted certificate, prototyped at M = 1;
+                    B_tail.md: gap (b), the harmonic tail;
                     C_selection.md: the selection theorem for M harmonics, lemma by lemma;
                     D_entire.md: the entire-function route to a certified inner zero)
 solver/README.md    the Python solver, scans and fits; solver/CONTEXT.md (summary), solver/notes.md (lab notebook)

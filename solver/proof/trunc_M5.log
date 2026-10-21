@@ -1,0 +1,8 @@
+k 1: sigma_0 = (1.0 + 0.0j)  fit resid 8.2e-62  [8s]
+k 3: sigma_1 = (0.743584580148924 + 0.524474852773702j)  fit resid 1.1e-50  [32s]
+k 5: sigma_2 = (0.118793837814902 + 0.398074570101703j)  fit resid 2.6e-50  [94s]
+k 7: sigma_3 = (-0.0539718526109283 + 0.116587424290372j)  fit resid 6.2e-50  [184s]
+k 9: sigma_4 = (-0.028864757548311 + 0.0107783588120543j)  fit resid 1.9e-49  [264s]
+k 11: sigma_5 = (-0.00598240650056941 - 0.00288205607998415j)  fit resid 1.0e-41  [358s]
+k 13: sigma_6 = (-1371.13783587056 + 69.2255173567666j)  fit resid 1.1e-34  [467s]
+wrote /home/claude/dss/agentPA2/wt/solver/proof/trunc_M5_K13_J500_w1.0000.json

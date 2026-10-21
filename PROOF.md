@@ -147,6 +147,14 @@ harmonics, the multiplier is the jump across the Stokes line of solutions starte
   coefficients measured in `hier.py` (∂r₃/∂B₅ ~ 10¹³ and ∂r₁/∂B₅ ~ 10¹⁷ at M = 5; at M = 7 one ulp of B₇ moves r₁ by
   about 200) show that this must be done for the *tuned* family (the Schur complement, in which the higher harmonics sit
   on their own zeros), not harmonic by harmonic.
+  *Status* ([proof/B_tail.md](proof/B_tail.md)): the weights cancel in the tuned problem (they are the connection
+  coefficients of label harmonics tuned to zero; the tuning ratio is ν-independent to six digits, and neighbour-family
+  amplitudes fall by 10⁴–10⁸ per pair), so the condition needs F only on the real line. Naive Galerkin truncation brings
+  the weights back (σ_{M+1} wrong by 10⁴–10⁶), so the lemma must be stated for the jump-conditioned truncation. Proposed
+  framework: a strip-analytic weighted ℓ¹ space X_σ (σ ≈ 1), in which the leading tuning map has norm 0.0633·e^{2σ};
+  the target is a Lipschitz bound with per-pair constant about 0.05 (0.25 would suffice). Estimated tail in r₁: 4–6 above
+  M = 5, 0.2–0.35 above M = 7, so certifying a 10⁻³ box needs M = 7 explicit with a margin of about 13. Prediction for
+  M = 7: ω/ω∞ = 0.99997–1.00017. No evidence of secondary Stokes lines from F's complex singularities.
 - **A.4 Krawczyk / interval Newton** on the 2×2 real system r₁(A, ω) = 0 (real and imaginary parts), with the tuned
   higher harmonics eliminated. The outer Jacobian at M = 5 is well conditioned: singular values about 6.8×10³ and
   3.9×10³ (condition 1.7), with second derivatives about 1.3×10⁵. A box of radius ρ in (A, ω/ω∞) is certified if the
