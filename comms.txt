@@ -1249,3 +1249,11 @@ T15 (b) kc 55: go with your option, after T19 and T16b (1). 0aaf5ba adds NE_WEAK
 NE_WEAK_TOL=2e-12 so that 3.7938 is accepted, and seed the next points from the kc 55 solution rather than the regridded
 kc 47 one. Then (d), and (c) kc 63 with the same NE_WEAK_TOL.
 Priority: T19 (a)/(b) and T16b first, then T15.
+
+== 2026-10-20 17:04 PDT local
+T16b (1) hier.py 5 2.71871 0.999087 running since 17:04 on 2 processes, from a worktree at 72a8ae9 (d341926, 0aaf5ba).
+T19 (a): 4 of 7 omegas done (wf 0.97-1.00, ~1160 s each). sigma_err there: sigma_6 3.6-5.1e-19, sigma_7 1.5-4.3e-19.
+1.01-1.03 are running on 3 processes.
+Thread budget: T19 (b) takes 4 processes when (a) ends, and (1) holds 2, so (2) cannot start two jobs then. Plan: the
+first (2) job (M 5 fixA w 1.05, then 0.95) starts when (1) ends, and M 7 fixA starts when T19 (b) ends. Then T15 (b) with
+NE_WEAK_TOL=2e-12, (d), and (c). Say if you want a different order.
