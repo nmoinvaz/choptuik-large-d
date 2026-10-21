@@ -1,0 +1,13 @@
+wf      arg(tau_2)/pi arg(tau_3)/pi arg(tau_4)/pi arg(tau_5)/pi arg(tau_6)/pi arg(tau_7)/pi arg(tau_8)/pi arg(tau_9)/pi
+0.9900          0.8736         0.9332         0.9661         0.9696         0.9725         0.9721         0.9705         0.9685
+1.0000          0.8784         0.9435         0.9784         0.9862         0.9922         0.9952         0.9970         0.9983
+1.0100          0.8833         0.9538         0.9907         1.0028         1.0119         1.0183         1.0234         1.0281
+arg(tau_5) = pi at wf = 1.0083
+arg(tau_6) = pi at wf = 1.0040
+arg(tau_7) = pi at wf = 1.0021
+arg(tau_8) = pi at wf = 1.0011
+arg(tau_9) = pi at wf = 1.0006
+Aitken limit of the last three crossings: wf = 0.9998
+ratio tau_6/tau_7: eps0 real at wf = 0.9913, A0 = 2.742
+ratio tau_7/tau_8: eps0 real at wf = 0.9946, A0 = 2.726
+ratio tau_8/tau_9: eps0 real at wf = 0.9961, A0 = 2.724
