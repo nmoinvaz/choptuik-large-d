@@ -56,6 +56,7 @@ KS = int(os.environ.get("NE_KS", "60"))                          # horizon serie
 # a longer series has larger coefficients: f64 rounding of z leaves strong residuals ~1e-9 (harmless for Delta:
 # x_K = 0.4 with 3.6e-9 agrees with x_K = 0.5 to 4e-10 at D = 23)
 STRONG_TOL = float(os.environ.get("NE_STRONG_TOL", "1e-8" if KS > 60 else "1e-9"))
+WEAK_TOL = float(os.environ.get("NE_WEAK_TOL", "1e-12"))       # acceptance cut on the weak residual (default as before)
 SEED = "long7_D" if XK > 0.65 else "longB_D"
 _xt = int(round(XK * 100))
 OUTP = {60: "neB_D"}.get(_xt, f"ne{_xt // 10}_D" if _xt % 10 == 0 else f"ne{_xt}_D")   # ne4_D, ne5_D, neB_D, ne65_D, ne7_D
@@ -212,7 +213,7 @@ def solve(D, z0, lam_guess, t0, src, Delta_old=None):
                            n_junk=NJUNK, damp=JUNK_DAMP, damp_mu=JUNK_DAMP_MU)
         F, junk = ji["F"], ji["r"]
         js = dict(js=True, Delta_ne=Delta_ne, junk_ne=ji["r0"], n_junk=ji["n_junk"], junk_its=ji["its"])
-    ok = h_[2] < 1e-12 and h_[1] < STRONG_TOL and F < 1e-7
+    ok = h_[2] < WEAK_TOL and h_[1] < STRONG_TOL and F < 1e-7
     lam = gamma_of(R, z, lam_guess) if ok else None
     rec = dict(D=D, xK=XK, kc=KC, Ks=KS, rk=RK, rk_seg=RK_SEG or None, smooth=SMOOTH, Delta=float(z[-1]), Delta_old=Delta_old, F=F, strong=h_[1], weak=h_[2], junk=junk,
                n_weak=info["n_weak"], weak_s=[float(f"{x:.2e}") for x in info["weak_s"]], n_outer=len(info["hist"]),
