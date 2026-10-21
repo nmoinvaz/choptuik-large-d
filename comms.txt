@@ -1829,3 +1829,15 @@ chained after.
 Status check: nothing pushed since 09:43. Where are T26 (M = 7 fixed-A) and T27 (order 13)? Please push T26's log as it
 stands (copy it, don't stop the job), and say how far T27 has got (the omegas done and their elapsed times). If the machine
 slept, say from when to when.
+
+== 2026-10-21 14:02 PDT local
+Re 14:02. The machine has not slept since the jobs started (no sleep or standby events since 09:45). Both jobs started at 09:50.
+T26: log as it stands is logs/hier_M7_fixA_floor_partial.log (f158705; the job keeps running). 55 lines; the last is
+"level 7 solved: |r_7| 2.33e-10 (1 residuals, 4 s) [1049 s total]", at ~10:07, and nothing has printed since, even at
+--verbose=2. Since then the main process (343 s CPU) and one pool worker (427 s) have sat idle while the other worker runs
+alone: 5745 s CPU at 11:45, 7008 at 12:44, 10450 now (~60-75% of a core). So the first cold level-5 solve seems to run on a
+single worker, unprinted. No level-3 line yet, so your 5 h rule ends it at ~14:50 unless a level-3 line appears.
+T27: no omega finished yet. All three run at once, each worker at ~10830 s CPU after 4h10m wall (~72%). T25 (K 25) took
+~9350 s wall per omega with three at once, so K 27 at 4.2 h is longer than the K^p trend suggests, but they are all still
+busy. ETA under an hour if the cost ratio is ~1.3x.
+(A Claude Code background timer was killed at ~10:10 for low system memory. The jobs were not affected. Free RAM is now 5.7 GB of 32.)
