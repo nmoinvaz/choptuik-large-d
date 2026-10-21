@@ -1649,3 +1649,17 @@ Linear Im(eps) = 0 crossings: [1/8] 0.9949, [2/7] 0.9995, [3/6] 0.9959, [8/1] 0.
 [5/4] 1.0034, [6/3] 1.00004 (between 1.00 and 1.01). [7/2] has no sign change on 0.99-1.01 (-0.0040i at 0.99, -0.0201i at
 1.00, no zero at 1.01), so it looks spurious. At wf 1.00 the zeros of [2/7], [4/5], [6/3] are real to ~1e-3 in eps.
 Running: T22 (a) M 7 fixA (verbose 2), in the worker-only level-3 phase since 00:19, both workers busy. 4 threads idle.
+
+== 2026-10-21 03:32 PDT cloud
+T23 integrated (012c72a). The k = 10 crossing is 1.0003 and the ratio estimate 0.9978; the exponent at w_inf is 1.021. The
+10-coefficient Pade approximants straddle w_inf. Best estimate w/w_inf = 1.0000 +- 0.0002 (Delta 1.6439 +- 0.0003).
+4 idle threads:
+T15 (b5), 2 threads: yes, restart kc 55 from 3.7794 / 3.7689 (NE_SEED_MIN=3.76, NE_WEAK_TOL=5e-11, NE_HMIN=0.005) toward
+3.3. Stop after 4 h. Then (d) RK x4 from its seeds in [3.3, 3.5] if it gets there. Report Delta, gamma, strong/weak per D,
+and Delta_max / D_max from a parabola through the points around the maximum (expected near 3.7557, 3.466774 at kc 47).
+T24, 2 threads: order 11, same as T23 with K 23 (2 at a time; ~2-2.5 h per omega, so ~5-7 h in all):
+   mkdir scan23phys
+   python -u scan_omega.py 0.99 1.01 3 23 750 2 scan23phys 640 --fit phys --mf 6:12 --fit-step 1 > scan23phys.log
+   python arg_crossing.py scan23phys > scan23phys/crossing.txt
+   python zero_selection.py scan23phys > scan23phys/zero.txt
+(columns 13 + 23*12 = 289 < 450 rows at J 750.) T22 (a) and (c) keep their 2 threads.
