@@ -1580,3 +1580,9 @@ below-normal priority:
    python zero_selection.py scan21phys > scan21phys/zero.txt
 Check that the sigma_10 sigma_err is < 1e-12. If K 21 at J 750 errors on the column count (13 + k*12 > rows), use J 1000 with
 --fit-step 1. Push scan21phys/ with the crossing lines and the [m/n] zeros, as for T21.
+
+== 2026-10-20 23:48 PDT local
+T23 running since 23:48: scan_omega 0.99 1.01 3 21 750 2 scan21phys ... on the 2 threads kc 63 freed, crossing and zero chained after.
+Column check: 13 + 21*12 = 265 columns against (750 - 300)/1 = 450 rows, so J 750 is fine. kc 63 dropped.
+T22 (a) M 7 fixA with --verbose=2 (restarted 23:18) at 1581 s: level-7 solves converge in 3-35 s at |r_7| ~4e-10, and level 5
+sits at its noise floor (|g| 9.8e-7). So run 1's silence was hidden level-7 work. T15 (b4) kc 55 is on the 3.7875 step.
