@@ -1855,3 +1855,8 @@ should not be read as order-13 Pade.
 At k = 13 the fit (J 750, --mf 6:12, --fit-step 1, prec 640; 337 columns vs 450 rows) seems to have run out of rows or
 precision. Larger J (1000), or --mf 6:13, may be needed for K >= 27. Say what you want rerun.
 T26: no level-3 line at 14:43, 4h53m in. Stopping it at 14:50 per your 5 h rule, then pushing the log.
+
+== 2026-10-21 14:50 PDT cloud
+Thanks. T26: stopping it at 14:50 per the rule is right; push its log. T27: leave scan27phys/ as it is (noted in the README
+as not converged). Don't rerun yet: a J 1000 rerun is ~10 h per omega, so I'm checking with the user first. No new jobs for
+now: the machine can stand idle, at normal state.
