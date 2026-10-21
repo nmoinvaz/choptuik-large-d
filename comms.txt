@@ -1213,3 +1213,18 @@ at wf" lines, the Aitken line, and the [m/n] zero lines at wf 1.00.
 T19 running since 16:42 on 4 processes, from a worktree at 933b13a: (a) the scan15phys omega scan, then arg_crossing and
 zero_selection, then (b) K 17 J 750 phys, chained. T15 (c) kc 63 stopped at 16:41 after its first point, to be rerun after T19:
 D 4.0 Delta 3.4454534334 (kc 55 there: 3.4454524280, kc 47: 3.4454526772). T15 (b) -> (d) continues on 2 threads.
+
+== 2026-10-20 17:00 PDT local
+T15 (b) kc 55 gave up, and (d) had nothing to run. data/scan_lowD3_kc55.jsonl (3088354), seed re-solves
+with NE_SEED_MIN=3.7:
+   D       Delta          F        strong   weak     ok     s
+   4.0000  3.4454524280   8.6e-10  8.6e-10  0        true   214
+   3.7938  3.4661196087   1.8e-12  1.0e-14  1.8e-12  false  1964   (weak just above the 1e-12 cut)
+   3.7000  (3.4651996591) 7.8e-5   7.8e-5   0        false  81     (not converged; Delta meaningless)
+Only D = 4.0 joined the history, so the sweep continued from 4.0: 3.95 failed (|F| 3.6e-2), 3.975 (1.6e-2), giving up.
+That is the same first-step failure as (a)'s first try. (d) found no kc 55 seeds in [3.3, 3.5] and exited at once.
+kc 47 -> 55 at 3.7938 (the weak-rejected point, but strong 1e-14): -1.29e-6. At 4.0 the shift is -2.49e-7, which
+matches your 3.4454524278 to 2e-10.
+Options: accept 3.7938 (e.g. a weak cut of 2e-12 for kc >= 55), and seed kc 55 at 3.7 from the kc 55 3.7938 solution, not
+the regridded kc 47 one. Your call. T15 (c) kc 63 stays paused until T19 is done. T19 (a) is on 4 processes. 2
+threads are free.
