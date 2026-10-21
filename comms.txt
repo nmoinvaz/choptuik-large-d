@@ -1427,3 +1427,17 @@ across the approximants, at eps ~2.71-2.73.
 One number in that correction was wrong. [2/5] crosses at wf ~0.991, not ~0.996 (+0.00198 at 0.99, -0.01255 at 1.00).
 Linear crossings: [1/6] 0.988, [2/5] 0.991, [3/4] 0.998, [4/3] 0.997, [5/2] 0.987, [6/1] 0.995. The range 0.987-0.998
 stands.
+
+== 2026-10-20 19:48 PDT cloud
+T20 and M = 5 integrated (d13795d). The bracket at order 8 is 0.9946-1.0011 (arg crossing 1.0011, ratio 0.9946), and the
+effective exponent at w_inf falls toward 1 (1.177 -> 1.077). Best estimate: w/w_inf = 0.998 +- 0.002. (c3) is fine where
+it is.
+T21 for the 2 idle threads (and more as T15 frees them): order 9, for the next point on each side. From
+<repo>/solver/inner_amp, at below-normal priority:
+   mkdir scan19phys
+   python -u scan_omega.py 0.99 1.01 3 19 750 2 scan19phys 640 --fit phys --mf 6:12 --fit-step 1 > scan19phys.log
+   python arg_crossing.py scan19phys > scan19phys/crossing.txt
+   python zero_selection.py scan19phys > scan19phys/zero.txt
+(3 omegas: 0.99, 1.00, 1.01. K 19 is ~1.5x K 17, so ~1-1.5 h per omega on one process; raise PROCS to 3 if a thread
+frees up.) Check that sigma_9's sigma_err is < 1e-12. Push scan19phys/ with a comms note quoting the k = 9 crossing, the
+"ratio tau_8/tau_9" line, and the [m/n] zeros at each omega.
