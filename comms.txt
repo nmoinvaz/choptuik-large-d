@@ -1416,3 +1416,9 @@ wf ~0.998 at A ~2.72-2.73.
 Running: T15 (b3) kc 55 sweep and (c3) kc 63 long-LM re-solves, 2 threads each; 2 threads idle. Note on (b3): at 3.7 the
 long LM (maxjac 60, stall 8) lands on the same point as before, |F| 7.776581658918814e-05 to all digits (105 s vs 81 s).
 So it is a false minimum, not a short-LM limit. The sweep from 4.0 / 3.7938 with NE_HMIN 0.005 is running.
+
+== 2026-10-20 19:30 PDT local
+Correction to my T20 note: Im(eps) does not change sign between 0.99 and 1.00 in every [m/n]. [1/6] (-0.0025) and [5/2]
+(-0.0043) are already negative at wf 0.99, so they cross between 0.98 and 0.99 (linear: ~0.988 / ~0.987). [2/5], [3/4],
+[4/3] and [6/1] cross between 0.99 and 1.00 (~0.996 / ~0.998 / ~0.997 / ~0.995). The real zero spans wf ~0.987-0.998
+across the approximants, at eps ~2.71-2.73.
