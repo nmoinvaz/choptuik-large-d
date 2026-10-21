@@ -1078,7 +1078,10 @@ neighbour-family amplitudes fall by 10⁴–10⁸ per harmonic pair instead of g
 Galerkin truncation (σ₆ from a five-harmonic projection is −1371 against −0.0003 − 0.0011i), so a tail lemma must be
 stated for the jump-conditioned truncation (`hier.py --schur`). The tail it must bound looks provable: about 4–6 in r₁
 above M = 5 and 0.2–0.35 above M = 7, against about 4 needed for a 10⁻³ box. A computer-assisted certificate of the inner
-zero has a concrete route ([proof/A_certify.md](proof/A_certify.md), [proof/D_entire.md](proof/D_entire.md)).
+zero has a concrete route ([proof/A_certify.md](proof/A_certify.md), [proof/D_entire.md](proof/D_entire.md)), and for the
+one-harmonic model it is done: a computer-assisted proof (ball arithmetic, a validated Lohner integrator, Krawczyk's test)
+shows the one-harmonic selection condition has exactly one zero, a simple one, in the box (2.5421480475, 0.7769940136) ±
+10⁻⁹ in (A, ω/ω∞). The first coefficient σ₁ of the untruncated condition is also enclosed rigorously (±3.5×10⁻⁵).
 
 Evidence beyond the linear case: the conditions $`S_\nu = 0`$ for |ν| ≥ 3 alone predict the echo's shape, F₃/F₁ = 0.055
 and F₅/F₁ = 0.0031, against 0.0549–0.0552 and 0.0032–0.0034 extrapolated from the solutions, and the predicted finite
@@ -1626,8 +1629,8 @@ solver/proof/       feasibility numbers for the proof roadmap (feasibility.py: s
                     entire_cert.py: S_1 as an entire function of A^2, the factored series and certificate margins;
                     exact_sigma.py: sigma_1 rigorously enclosed by an exact telescoped formula (no fit);
                     fast_eigenvalues.py: the outer system's fast eigenvalues, Lemma B2; certify_M1.py, lin_check.py,
-                    series_arb.py, residual_poly.py, pm_dryrun.py, fixed_point.py, krawczyk.py: the M = 1 certificate
-                    in ball arithmetic (start-value fixed point proved; Krawczyk test built);
+                    series_arb.py, residual_poly.py, pm_dryrun.py, fixed_point.py, krawczyk.py, validated_int.py: the
+                    M = 1 certificate in ball arithmetic (the one-harmonic zero certified in a 1e-9 box);
                     tail_harmonics.py, reconcile.py, amp_trunc.py, family_amps.py: the harmonic-tail analysis;
                     outer_borel.py, inner_corrections.py, lightcone_exponents.py: checks for the selection theorem)
 proof/              the proof roadmap's parts (A_certify.md: the computer-assisted certificate, prototyped at M = 1;

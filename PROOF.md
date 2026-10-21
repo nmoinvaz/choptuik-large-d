@@ -174,10 +174,17 @@ relative, the accuracy the Baldomá et al. template achieved. Since proved: the 
 |ξ| ≤ 0.1, exactly one solution in an explicit weighted ball around the N = 53 series, contraction constant ≤ 0.2918, start
 values enclosed to 6×10⁻³⁴, with ∂/∂(A, ω) over a parameter box), and the Krawczyk test is built and validated on mock
 enclosures (`krawczyk.py`; matching at ξ₁ = 0.3 rather than 0.2 makes the absolute targets about 15,000× easier: the
-state at the centre to about 2×10⁻⁵ for a 10⁻³ box, the derivatives over the box to 10⁻²). Missing: validated integration
-along the ray and arc, which is stiff
-(fast modes shrink by e⁻³¹, so naive interval Taylor overestimates by about e⁵⁰; it needs a Lohner/QR integrator, e.g.
-CAPD, an estimated 1–3 weeks), and Krawczyk with (A, ω) as state variables for uniqueness. At M = 5 the system is
+state at the centre to about 2×10⁻⁵ for a 10⁻³ box, the derivatives over the box to 10⁻²). **Certified** since (`validated_int.py`, §9 of
+[proof/A_certify.md](proof/A_certify.md)): a Lohner-type validated integrator in ball arithmetic (QR wrapping with
+Lohner's pivoting, the variational columns as their own Lohner sets) carries the start data along the ray to ξ₁ = 0.3 and
+the arc to the real axis (743 steps, state enclosed to 3×10⁻¹⁹, matching double precision to 9×10⁻¹⁶). With it the
+Krawczyk test passes on the box (A, ω/ω∞) = (2.5421480475, 0.7769940136) ± 10⁻⁹: **the truncated one-harmonic selection
+condition has exactly one zero there, and it is simple**, at A = 2.542148047617 ± 9×10⁻¹¹, ω/ω∞ = 0.7769940136097 ± 7×10⁻¹¹.
+This is a computer-assisted proof of the truncated selection zero (not yet independently reviewed; CAPD is the natural
+cross-check). Larger boxes fail because the interval Jacobian's excess grows like 7×10⁵·h (the solution is
+large where the ray meets the arc), so 10⁻³ boxes need a C² Lohner step; a lower path (ray to 0.2, then the real axis)
+should allow 10⁻⁸. The integration is stiff (fast modes shrink by e⁻³¹, so naive interval Taylor would overestimate by
+about e⁵⁰), which is why the Lohner wrapping is essential. At M = 5 the system is
 38-dimensional, and the certificate must use the Schur-corrected conditions (leakage up to 10¹⁷), i.e. multiprecision
 Lohner.
 

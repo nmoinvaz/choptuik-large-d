@@ -494,3 +494,193 @@ python3 fixed_point.py --sector=0.2     # the same on every ray |arg xi -+ 3pi/8
 python3 fixed_point.py 0.08             # at start radius 0.08 (N = 80)
 python3 krawczyk.py --xi1=0.3           # Krawczyk budget (dry run) and the mock validation of the test, about 15 s
 ```
+
+## 9. Step (ii): the validated integration (agent VI)
+
+`validated_int.py` integrates the truncated M = 1 system of §2 in ball arithmetic (python-flint arb at 256 bits). It
+starts from the step-(i) data of §4.5 and produces the two runs §5.2 asks for. Its `krawczyk` mode then calls the
+assembly of §5.2 unchanged: `krawczyk.normalization` → `g_from_states` → `krawczyk`.
+
+**Result.** At ξ₁ = 0.3 the Krawczyk test of §5.1 passes on
+
+```math
+X = \hat x + [-10^{-9}, 10^{-9}]^2, \qquad \hat x = (2.5421480475,\ 0.7769940136) .
+```
+
+K(X) lies in the interior of X, with margins 7.9×10⁻¹⁰ and 9.2×10⁻¹⁰ (out of 10⁻⁹). So the truncated M = 1 selection condition
+J₁ = 0 has exactly one zero in X, and it is simple. The zero lies in K(X):
+
+```math
+A = 2.542148047617 \pm 9.1\times10^{-11}, \qquad \omega/\omega_\infty = 0.7769940136097 \pm 6.6\times10^{-11} .
+```
+
+Every input is rigorous:
+
+- step (i), the start data of §4.4–4.5;
+- this integration;
+- κ, from `krawczyk.normalization`.
+
+The certificate rests on the correctness of the code, which no second implementation has checked yet (§9.4).
+
+The box is much smaller than the 10⁻³ and 10⁻⁵ boxes §5.1 budgets for. The point values are far inside every budget.
+The obstacle is the derivative enclosures over a box: their excess grows like 10⁶ h (§9.3–9.4).
+
+### 9.1 Method
+
+**Path and state.** The path is the one of §5.2, parametrized by t ∈ [0, 1] on each leg:
+
+```math
+\xi(t) = \big(r_0 + (\xi_1 - r_0)\,t\big)\,e^{3i\pi/8} \ \text{(ray)}, \qquad
+\xi(t) = \xi_1\,e^{3i\pi(1-t)/8} \ \text{(arc)}, \qquad r_0 = 0.1,\ \xi_1 = 0.3 .
+```
+
+Every step is a multiple of 2⁻³⁰, so every node t is exact in binary; r₀, ξ₁ and π are arb balls. The state is the 7
+complex unknowns in `lateral_np.py`'s order [D₋₁, D₊₁, S₋₁, S₊₁, C₋₂, C₀, C₊₂], plus ω and A as constant states. ω enters
+the right-hand side; A enters only through the start data. So the step Jacobian contains the ω-derivatives.
+
+**The set.** A QR-Lohner set (Lohner 1987; Nedialkov and Jackson) in real coordinates: the state is
+c + (Qq)₁…ₙ + i(Qq)ₙ₊₁…₂ₙ, with c a complex point, Q a real 18 × 18 matrix and q a real box. One step of size h:
+
+1. **A-priori enclosure.** An enclosure Ỹ of every trajectory from the set over [t, t + h], by interval Picard
+   iteration with t as a ball. The step is halved when it fails, and grows by 5/4 after each success.
+2. **Taylor parts, order 24.** The Taylor polynomial of the trajectory from c, and that of the variational matrix along
+   the trajectories from the whole set. Both come from Picard iteration on power series (acb_series); the variational
+   coefficients use the exact recursion $`V_{k+1} = \frac{1}{k+1}\sum_{j \le k} A_{k-j} V_j`$.
+3. **Remainders.** The order-25 coefficient of the trajectory, evaluated on Ỹ. For the Jacobian, the order-25
+   coefficient of the fundamental matrix along Ỹ, times an a-priori enclosure of the variational matrix.
+4. **Update (mean value form).** Let φ be the step map and J the enclosure of its Jacobian over the whole set. Then
+   φ(c + Qq) ⊂ φ(c) + JQq. Set c′ = mid φ(c). Q′ is the Q factor of a QR factorization of mid(JQ), computed in floating
+   point and then used as an exact matrix. Its inverse is enclosed rigorously. Then q′ = (Q′⁻¹JQ)q + Q′⁻¹(φ(c) − c′).
+
+The interval Taylor arithmetic only ever acts on the centre trajectory and on J. The set itself moves linearly. So the
+stiff fast modes, which decay along both legs, only shrink q, and nothing wraps by $`\exp\int\lvert\lambda\rvert`$.
+
+Two details decide whether the method works on this problem:
+
+- **Real coordinates.** A complex ball is a rectangle, so a complex Q and q inflate under every phase rotation. Real
+  coordinates remove that source of wrapping. Here it made no measurable difference.
+- **Pivoting.** The columns of mid(JQ) are pivoted by their norm times the size of the matching q component (Lohner's
+  rule), not by norm alone. With norms alone, the start of the arc at ξ₁ = 0.3 grew the enclosures by about 15% per
+  step, and by e¹⁸ over the arc. The flow there is strongly non-normal: the real parts of the eigenvalues move from
+  +10 to −14 per unit t within Δθ = 0.1. With Lohner's rule the growth is about 2–3% per step, close to the true
+  expansion rate.
+
+**Point run.** The set starts as the step-(i) enclosure of y⁺(ξ₀; x̂), radius about 5×10⁻³², from
+`fixed_point.start_data` (§4.5).
+
+**Box run (C¹).** Each parameter derivative v = ∂(state)/∂x_k, with x = (A, ω/ω∞), is carried as a Lohner set of its
+own. Every trajectory from the box has its step Jacobian inside J, so v′ ∈ J c_V + (JQ_V)q_V, with the same QR update
+and no remainder. The two columns start from `start_data` over X, as (∂y/∂A, 0, 1) and (∂y/∂(ω/ω∞), ω∞, 0) in the rows
+(y, ω, A).
+
+The state set over the box is never propagated by itself. At every step it is rebuilt from the mean value theorem as
+
+```math
+y(t; x) \in y(t; \hat x) + V(t; X)\,(x - \hat x), \qquad x \in X ,
+```
+
+with y(t; x̂) from the centre trajectory's Lohner set and V(t; X) the current derivative enclosure. J is then computed
+over that set. Propagating a C⁰ Lohner set over the box instead gave almost the same widths here. Both diverge for
+boxes of 10⁻⁴ and wider (§9.3).
+
+### 9.2 Checks
+
+- **Linear problem.** Without gravity the jump is known in closed form (Kummer U, `lin_check.py`). The integrator gives
+  R₁ = 1 ± 5×10⁻¹⁷ at ξ₁ = 0.2, from a start ball of 10⁻³⁰ (377 steps, 24 s). Its D₁(ξ₁) overlaps the exact value.
+- **Double precision.** The validated D⁺ agree with `lateral_np.py` to its accuracy (§9.3).
+- **Gravity point at ξ₁ = 0.2.** An earlier run started from the truncated series plus an assumed ball of 10⁻³⁰. It
+  enclosed J_D to 3×10⁻¹⁹ and G to 1.2×10⁻¹¹. The double-precision G there, about 4×10⁻⁸, is only that solver's noise
+  floor.
+
+### 9.3 Results at ξ₁ = 0.3
+
+All runs use the path of §5.2 (ray to 0.3, then the arc). Each run takes 743 steps and about 4 minutes on one core.
+Radii are the larger of the real and the imaginary radius.
+
+**Point run at x̂** (`kpoint_job`):
+
+| quantity | enclosure | radius | budget (§5.1, h = 10⁻⁵) |
+|---|---|---|---|
+| D⁺₋₁(ξ₁) | 0.094871263087140 + 0.403634942280012i | 3×10⁻¹⁹ | 1.2×10⁻⁷ |
+| D⁺₊₁(ξ₁) | 0.094871263088194 − 0.403634942283502i | 3×10⁻¹⁹ | 1.2×10⁻⁷ |
+| J_D(x̂) | 1.054740×10⁻¹² − 3.490429×10⁻¹²i | 4.1×10⁻¹⁹ | 2.4×10⁻⁷ |
+| g(x̂) = κ J_D, \|κ\| = 2889.9 | 2.78871×10⁻⁹ − 1.01616×10⁻⁸i | 1.2×10⁻¹⁵ | 6.8×10⁻⁴ |
+
+- **Double precision.** `lateral_np.py` at rtol 10⁻¹³ agrees to 9×10⁻¹⁶, and its J_D = 1.0535×10⁻¹² − 3.4908×10⁻¹²i.
+- **The dry-run centre.** g(x̂) ≠ 0 is now proved. The dry-run zero is accurate to about 10⁻¹⁰, which matches
+  |J₀⁻¹ g(x̂)|.
+- **Growth along the path.** The state radius grows from 5×10⁻³² at ξ₀ to 1×10⁻¹⁹ at the end of the ray, and ends at
+  3×10⁻¹⁹.
+
+**Box runs** (`kbox_job`): the derivative enclosures over X = x̂ + [−h, h]², and the Krawczyk test.
+
+| h | radius of ∂D⁺₋₁/∂(A, ω/ω∞) | radius of ∂D⁺₊₁/∂(A, ω/ω∞) | radius of ∂J_D (budget 1.2×10⁻²) | K(X) ⊂ int X |
+|---|---|---|---|---|
+| 10⁻³ | diverges on the ray (t ≈ 0.35) | | | — |
+| 10⁻⁴ | diverges at the start of the arc | | | — |
+| 10⁻⁵ | 60, 79 | 38, 49 | ≈ 100 | no |
+| 10⁻⁶ | 0.67, 0.86 | 0.31, 0.39 | ≈ 1 | no |
+| 10⁻⁷ | 0.064, 0.081 | 0.029, 0.037 | ≈ 0.1 | no |
+| 10⁻⁸ | 6.4×10⁻³, 8.1×10⁻³ | 2.9×10⁻³, 3.7×10⁻³ | ≈ 10⁻² | no, narrowly (see below) |
+| 10⁻⁹ | 6.4×10⁻⁴, 8.1×10⁻⁴ | 2.9×10⁻⁴, 3.7×10⁻⁴ | 0.9×10⁻³, 1.2×10⁻³ | **yes**: margins 7.9×10⁻¹⁰, 9.2×10⁻¹⁰ |
+
+From 10⁻⁶ down the excess is linear, about 7×10⁵ h in ∂D⁺₋₁ and 3.5×10⁵ h in ∂D⁺₊₁. At 10⁻⁵ it is already
+superlinear, because the wide derivative enclosures widen the state set and so J.
+
+The 10⁻⁸ test failed with margins −7×10⁻⁹ and −5×10⁻¹⁰. It read its enclosures back from a lossy printout, which
+tripled the ∂J_D radii; that is now fixed. Without the loss the ∂J_D radius is about 10⁻², right at the budget. It was
+not rerun.
+
+At h = 10⁻⁹:
+
+```math
+J(X) = \begin{pmatrix} -15.32 \pm 2.74 & -103.12 \pm 3.47 \\ 90.86 \pm 2.74 & -44.09 \pm 3.47 \end{pmatrix} .
+```
+
+The midpoints match the dry-run J₀ (singular values 117 and 86). The radii are about a tenth of the tolerated 33.
+
+**A lower path.** Take the ray to 0.2, the arc at 0.2, then the real axis from 0.2 to 0.3 (`--rho=0.2`). It cuts the
+excess 3–4 times: at h = 10⁻⁷ the radii are 0.015 and 0.030 for ∂D⁺₋₁, and 0.005 and 0.010 for ∂D⁺₊₁. So h = 10⁻⁸
+should pass on that path. It has not been run.
+
+### 9.4 What remains
+
+1. **Larger boxes.** The obstacle is the excess of the derivative enclosures, not the point values.
+   - **Where it comes from.** At every step the derivative columns are multiplied by J, which is enclosed over the
+     whole state set. Its width is the genuine variation of the Jacobian across the box. That variation is large
+     because the solution itself is large near ξ = 0.3e^{3iπ/8}: in double precision |S₋₁| ≈ 6.8 and
+     |∂S₋₁/∂(ω/ω∞)| ≈ 35 there, against about 0.4 on the real axis.
+   - **Why it does not cancel.** The per-step widths add in absolute value. The true ∂J_D, a difference of conjugate
+     partners, varies little: V_h ≈ 5×10⁻⁴ for h = 10⁻³ (§5.1).
+   - **Remedies**, in order of promise:
+     - **A C² Lohner step.** Enclose the second variational equations, so J over the set comes in mean value form
+       around the centre trajectory. The excess then becomes second order in h, and the midpoints keep the
+       conjugate-pair cancellation.
+     - **A path through smaller |y|.** The lower path gains 3–4 times; an arc nearer 0.15 should gain more.
+     - **Sub-box covering.** `--sub=k` runs k² boxes of half-width h/k and takes the union. That suits factors of a
+       few, not 10⁶.
+2. **An independent check of the code.** The certificate now depends on `validated_int.py` together with
+   `fixed_point.py` and `krawczyk.py`. A second implementation or a careful review should come next. CAPD's C¹ Lohner
+   on the 18-dimensional real system is the natural one. Points to audit:
+   - the remainder terms of steps 3–4 of §9.1;
+   - the exact dyadic time grid;
+   - the mean value start set.
+3. **The C⁰ route.** Poincaré–Miranda with a C⁰ mean value enclosure of G over the faces, as in §5, is not workable.
+   At ξ₁ = 0.2 a face of half-width 3×10⁻⁶ in A gave H radii of 2.9 against the required 1 (`boxtest`): a C⁰ set over
+   the box loses the cancellation in the jump. The C¹ Krawczyk route replaces it.
+4. **Matching at 0.2.** Not needed. For reference, the point run there encloses J_D to 3×10⁻¹⁹ (§9.2), but the
+   derivative budget at 0.2 is 8×10⁻⁷, 15 000 times tighter.
+
+**Reproduce.**
+
+```
+cd solver/proof
+python3 validated_int.py krawczyk 1e-9                 # the certificate: point run + box run (2 processes) + Krawczyk, ~5 min
+python3 validated_int.py krawczyk 1e-9 --only=point --out=p.json      # the runs separately, saved as JSON
+python3 validated_int.py krawczyk 1e-9 --only=box --out=b.json
+python3 validated_int.py krawczyk 1e-9 --point=p.json --box=b.json    # the test from saved runs, seconds
+python3 validated_int.py krawczyk 1e-9 --point=validated_int_krawczyk_1e-9.json --box=validated_int_krawczyk_1e-9.json
+                                                       # re-check the saved certificate runs (JSON next to the script), seconds
+python3 validated_int.py krawczyk 1e-8 --rho=0.2       # next: the lower path, expected to pass at 1e-8
+python3 validated_int.py linear                        # the linear check of 9.2 (xi1 = 0.2)
+```
