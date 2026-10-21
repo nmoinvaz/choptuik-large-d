@@ -202,6 +202,18 @@ Laplace/Paley–Wiener representation proving the exponential type. This replace
 amplitude tail that is much better behaved; a conditional theorem (zero certified assuming an explicit type bound) is
 within reach now.
 
+*Progress on route A3* ([proof/D_entire.md](proof/D_entire.md) §6–7, `exact_sigma.py`). The late-order fit is replaced by
+an exact formula for σ₁: the order-3 recursion telescopes (base_j·T_j = 1/(Γ(a)Γ(b)) exactly), the increment is O(j⁻²)
+after two exact cancellations of its O(1/j) parts, its leading part is summed in closed form (digamma / Hurwitz ζ, and two
+summations by parts), and an explicit O(j⁻³) remainder bound closes it. In ball arithmetic σ₁ is now **rigorously
+enclosed** to ±3.5×10⁻⁵ at ω/ω∞ = 0.99, 1.00, 1.01 (it contains the fitted values; a 10⁻³ box needs about 2×10⁻³). σ₂ to σ₆
+telescope the same way (increments O(logᵏ j/j²)); they need the lower orders' large-j forms by induction, which is
+mechanical but long. Enclosures uniform over an ω box need log T_j carried through lgamma. The exponential type is
+characterised but not derived: |σ_k| Γ(k + 4.16)/1.675ᵏ stays within 24.9–27.3 for k = 4–12, the Borel transform has a cut
+from about 0.75 + 0.16i to κ⋆ ≈ 1.28 + 1.08i with density vanishing at κ⋆, and the mechanism is not a single exponential
+factor. A proof of the type, and so of the tail bound, still needs one a-priori bound at complex amplitude; writing order
+2k + 1 as k-fold Borel convolutions over a simplex is the proposed route.
+
 A cheaper intermediate certificate uses the entire-function structure: if S₁(·, ω) is entire of order 1 in x (lemma to
 prove: a bound $`\lvert\sigma_k\rvert \le C\,a^k/\Gamma(k+b)`$ with explicit C, a, b), then rigorous enclosures of σ₁…σ_K
 plus that tail bound give S₁ on a contour, and the argument principle counts its zeros near x₀ for each ω; Miranda's

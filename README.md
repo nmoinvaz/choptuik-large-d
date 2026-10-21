@@ -1624,6 +1624,7 @@ PROOF.md            roadmap for a proof of the selection rule (computer-assisted
 GAMMA.md            why gamma_inf = 1/2 (solver/inner_pert/heat_form.py: the heat-equation form; pert_check3.py: the exact lambda = 2 mode)
 solver/proof/       feasibility numbers for the proof roadmap (feasibility.py: sigma ratios, conditioning, tail size;
                     entire_cert.py: S_1 as an entire function of A^2, the factored series and certificate margins;
+                    exact_sigma.py: sigma_1 rigorously enclosed by an exact telescoped formula (no fit);
                     fast_eigenvalues.py: the outer system's fast eigenvalues, Lemma B2; certify_M1.py, lin_check.py,
                     series_arb.py, residual_poly.py, pm_dryrun.py, fixed_point.py, krawczyk.py: the M = 1 certificate
                     in ball arithmetic (start-value fixed point proved; Krawczyk test built);
