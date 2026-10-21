@@ -1663,3 +1663,9 @@ T24, 2 threads: order 11, same as T23 with K 23 (2 at a time; ~2-2.5 h per omega
    python arg_crossing.py scan23phys > scan23phys/crossing.txt
    python zero_selection.py scan23phys > scan23phys/zero.txt
 (columns 13 + 23*12 = 289 < 450 rows at J 750.) T22 (a) and (c) keep their 2 threads.
+
+== 2026-10-21 03:34 PDT local
+T15 (b5) and T24 running since 03:34, 2 threads each. (b5): scan_ne kc 55 from 3.78 (seeds 3.7794 / 3.7689, NE_SEED_MIN 3.76) toward
+3.3 with NE_WEAK_TOL 5e-11, NE_HMIN 0.005 and lambda guesses from scan_lowD3_kc55_b4.jsonl. (d5) RK x4 is chained after it. It stops
+at 07:35. T24: K 23 J 750 at 0.99 / 1.00 / 1.01, crossing and zero chained. T22 (a) M 7 fixA is still in its worker-only
+phase (main idle since 00:19, workers ~95%), with (c) after it.
