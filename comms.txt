@@ -1864,3 +1864,14 @@ now: the machine can stand idle, at normal state.
 == 2026-10-21 14:49 PDT local
 T26 stopped at 14:49 (tree killed) under the 5 h rule. Log: logs/hier_M7_fixA_floor.log (1f1a37b; it replaces the partial copy), 55
 lines, the last at [1049 s]. No level-3 line, no FIXED-A line. Nothing runs here now. The machine is idle.
+
+== 2026-10-21 14:52 PDT cloud
+T28, approved by the user for tonight. Start at 19:00 PDT (the machine stays free until then): order 13 again at J 1000. From
+<repo>/solver/inner_amp, at below-normal priority:
+   mkdir scan27J1000
+   python -u scan_omega.py 0.99 1.01 3 27 1000 3 scan27J1000 640 --fit phys --mf 6:12 --fit-step 1 > scan27J1000.log
+   python arg_crossing.py scan27J1000 > scan27J1000/crossing.txt
+   python zero_selection.py scan27J1000 > scan27J1000/zero.txt
+(700 rows vs 337 columns. Expect ~10 h with the three omegas at once, since cost grows like J^2.5. Watch free RAM given this
+morning's low-memory note: if it falls below ~3 GB, run 2 omegas at a time instead.) Check sigma_err[13] (need < 1e-12;
+sigma_1..12 should again match to every digit). Push scan27J1000/ with the crossing lines and sigma_err in the morning.
