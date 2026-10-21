@@ -66,7 +66,8 @@ Contents
 - Companion files
   - [PARALLEL.md](PARALLEL.md): how the computations parallelize (CRC-style split and combine)
   - [AGENTS.md](AGENTS.md): conventions for the AI sessions that run computations here
-  - [PROOF.md](PROOF.md): a roadmap for proving the selection rule (Conjecture 1): layers, precedents, staged plan
+  - [PROOF.md](PROOF.md): a roadmap for proving the selection rule (Conjecture 1): layers, precedents, staged plan, with
+    parts in [proof/](proof/) (the M-harmonic selection theorem; the entire-function certificate)
   - [GAMMA.md](GAMMA.md): why γ∞ = 1/2: the inner problem as a nonlinear heat equation, whose r²-shift symmetry gives λ = 2
 
 ## Results
@@ -1062,6 +1063,13 @@ $`\lvert\mathrm{Im}\,\theta\rvert < \sigma`$ with σ < 1.4 and the weights in a 
 singular there (A ∝ (1 − x)⁻¹) and must be matched to the Frobenius solution on 1/n ≪ |1 − x| ≪ 1; the exponents agree
 (Λ = n/2 − 1 − s + ⟨F²⟩ + O(1/n) on both sides), but the matching has not been written out.
 
+Status of these gaps ([PROOF.md](PROOF.md)): for a model truncated to M harmonics the selection theorem is written out
+lemma by lemma ([proof/C_selection.md](proof/C_selection.md)). Gap (c) reduces to Olver's error control, and the inner
+half of gap (a) to Braaksma's summability theorem. What remains there is the continuation of the solution through the
+complex x-plane with uniform bounds and the nonlinear inner–outer matching, both on published templates (Xie–Tanveer;
+Baldomá–Fontich–Guardia–Seara). Gap (b) is being analysed separately, and a computer-assisted certificate of the inner
+zero has a concrete route ([proof/D_entire.md](proof/D_entire.md)).
+
 Evidence beyond the linear case: the conditions $`S_\nu = 0`$ for |ν| ≥ 3 alone predict the echo's shape, F₃/F₁ = 0.055
 and F₅/F₁ = 0.0031, against 0.0549–0.0552 and 0.0032–0.0034 extrapolated from the solutions, and the predicted finite
 harmonic decay rate of about 1.4 agrees with the data (1.3–1.45), consistent with (H1).
@@ -1588,8 +1596,10 @@ AGENTS.md           conventions for the AI sessions that run computations here (
 PROOF.md            roadmap for a proof of the selection rule (computer-assisted inner zero; analytic selection theorem)
 GAMMA.md            why gamma_inf = 1/2 (solver/inner_pert/heat_form.py: the heat-equation form; pert_check3.py: the exact lambda = 2 mode)
 solver/proof/       feasibility numbers for the proof roadmap (feasibility.py: sigma ratios, conditioning, tail size;
-                    entire_cert.py: S_1 as an entire function of A^2, the factored series and certificate margins)
-proof/              the proof roadmap's parts (D_entire.md: the entire-function route to a certified inner zero)
+                    entire_cert.py: S_1 as an entire function of A^2, the factored series and certificate margins;
+                    fast_eigenvalues.py: the outer system's fast eigenvalues, Lemma B2)
+proof/              the proof roadmap's parts (C_selection.md: the selection theorem for M harmonics, lemma by lemma;
+                    D_entire.md: the entire-function route to a certified inner zero)
 solver/README.md    the Python solver, scans and fits; solver/CONTEXT.md (summary), solver/notes.md (lab notebook)
 solver/formula_all.py  the rational formulas (README coefficient table): cd solver/data && python3 ../formula_all.py
 solver/rational_fit.py the search over rational forms; solver/formula.py the 1/D power series

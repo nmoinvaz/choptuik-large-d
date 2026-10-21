@@ -190,6 +190,24 @@ a finite radius of convergence and faster, cleaner convergence of all the estima
 
 ## 5. Layer B: the analytic selection theorem
 
+**Status for the M-harmonic model** ([proof/C_selection.md](proof/C_selection.md)). Theorem B(M): for n ≥ n₀(M), the
+centre-regular solution with profile F_n and frequency ω is analytic at the light cone exactly when
+C_{n,μ} = κ_{n,μ}[S_μ + O(1/n)] = 0 for every odd μ ≤ M, with κ explicit and non-zero; a zero of S that is simple once
+the phase is fixed gives a unique branch with ω_n − ω* = O(1/n), and any convergent sequence of solutions converges to a
+zero of S. Given the lemmas it is the finite-dimensional implicit function theorem, as in Xie–Tanveer. Lemma B2 is proved
+(`solver/proof/fast_eigenvalues.py`, sympy): the outer system's fast eigenvalues are n·c²/(x(x² − c²)) for p + m (equal to
+−nΦ′ at c = 1) and −n/x for b − 1, with no turning points on the real axis, regular-singular points at the centre and
+the light cone, and the turning point at infinity (x ~ √n) being exactly the inner problem. Gap (c) reduces to Olver's
+error control (the WKB phase and the Frobenius exponent are the same object, since x − c has a simple zero at the light
+cone; the exponents of different harmonics differ by at least 2ω in imaginary part, so no resonance), with only a
+routine Volterra bound left to write. The inner half of gap (a) reduces to a citation: at fixed M the inner problem is a
+finite system with a rank-1 irregular point and is 1-summable by Braaksma's theorem (1992), so the multipliers are
+rigorously defined. Costin's rank-one theorems do not apply as stated: the fast eigenvalue repeats across harmonics, and
+the slow directions have eigenvalue 0. The outer half rests on Gevrey-1 theory without turning points plus two cheap
+numerical hypotheses about where Borel singularities lie. Open, at research level but on published templates: carrying
+the centre-regular solution through an n-dependent complex domain to the Stokes line and out to |x| ~ √n with uniform
+bounds, and the nonlinear inner–outer matching (lemma B5). Uniformity in M (gap (b)) is a separate question.
+
 **Architecture (after Xie–Tanveer).** Work with the self-similar unknowns (p, m, b, c) as functions of (x, θ) analytic
 in θ on a strip and in x on a complex domain that reaches the inner region x ~ √n and the light cone x = 1.
 
