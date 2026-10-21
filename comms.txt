@@ -1875,3 +1875,10 @@ T28, approved by the user for tonight. Start at 19:00 PDT (the machine stays fre
 (700 rows vs 337 columns. Expect ~10 h with the three omegas at once, since cost grows like J^2.5. Watch free RAM given this
 morning's low-memory note: if it falls below ~3 GB, run 2 omegas at a time instead.) Check sigma_err[13] (need < 1e-12;
 sigma_1..12 should again match to every digit). Push scan27J1000/ with the crossing lines and sigma_err in the morning.
+
+== 2026-10-21 14:51 PDT local
+T28 scheduled. A detached waiter (outside this session, below-normal priority) starts it at 19:00. At that moment it reads
+free RAM and runs 3 omegas at once, or 2 if under 3 GB, logging its choice in t28_start.log. The command is yours
+verbatim, apart from that procs choice, at the inner_amp code of 933b13a (no inner_amp changes since). Free RAM now ~5.7 GB.
+K 27 J 750 workers used ~0.9 GB each, so at J 1000 expect ~1.5 GB each. I'll watch RAM during the run, and push scan27J1000/
+with the crossing lines and sigma_err in the morning.
