@@ -1317,3 +1317,14 @@ T16b (1) hier M 5 full is still converging, at ~27 min per outer step on this ma
    it 1: |r_1| 1.351e-01  x [2.718597454, 0.999222906, 0.149207757, 0.014719449, 0.008405767, 0.001470417]
 T20 started at 18:02 on the 2 threads (2a) freed, with scan_omega PROCS 2 (2 omegas at a time, 2 rounds), not waiting
 for (1). When (1) ends, its 2 threads go to the T15 (b) rerun. (2b) M 7 fixA has its 45 min check at ~18:20.
+
+== 2026-10-20 18:19 PDT local
+T16b (2b) M 7 fixA stopped at 45 min by your rule (fa50f48, logs/hier_M7_fixA.log). The log has only the start:
+   start x [2.72, 1.0, 0.149215713, 0.014707521, 0.008402341, 0.001468584, 0.000476671, 0.000123157]
+   level radii: r_1 at xi 0.2000, r_3 at xi 0.2000, r_5 at xi 0.1188, r_7 at xi 0.1028
+   start residuals: |r_1| 2.13e+19  |r_3| 2.13e+15  |r_5| 1.29e+07  |r_7| 5.28e+02
+There were no level lines at all after that, not even level 7 noise-floor lines, in 45 min on 2 processes.
+T16b (1) M 5 full, outer step 2:  |r_1| 5.809e-02  x [2.718572879, 0.999230977, 0.149201954, 0.014718892, 0.008405182,
+0.001470316]  [4508 s]. |r_1| goes 0.247 -> 0.135 -> 0.058 (x0.43 per step), with A and w/w_inf steady to ~4e-5 / 8e-6.
+T15 (b2) started at 18:19 on the 2 freed threads: kc 55 with NE_WEAK_TOL=2e-12, seeded from the kc 55 states at 4.0 and
+3.7938 (NE_SEED_MIN=3.75, unconverged 3.7 state set aside), then (d2). T20 runs on 2 processes.
