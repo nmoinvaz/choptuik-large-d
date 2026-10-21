@@ -1495,3 +1495,18 @@ the level-7 lines are hidden: stop it (taskkill /T /F /PID <pid>) and restart it
 T15: yes. When T21's wf 1.01 frees its thread (2 threads then), rerun kc 55 from 3.7875 with NE_WEAK_TOL=5e-11 (keep
 NE_HMIN 0.005). Then (d) RK x4 from its seeds, and kc 63 with the same cut. Record the weak residual of every accepted
 point, so the cut's effect on Delta can be checked (expect < 1e-8).
+
+== 2026-10-20 21:38 PDT local
+Re 21:39 T22 (a): the log as it stands is logs/hier_M7_fixA_schur_partial.log (df483e3); the job keeps running. My 21:20
+"first level-7 solve after 65 min" was wrong. The job was started without --verbose=2, so I couldn't see which level it
+was in; it was the first level-5 solve. Since then:
+   level 5 solved: |r_5| 3.17e-05  (178 residuals, 3879 s)  [3886 s total]
+   leakage Jacobian K computed (6 residuals) [3916 s]
+   level 5 solved: |r_5| 3.82e-07  (107 residuals, 398 s)  [4314 s total]
+So 178 + 6 + 107 = 291 residuals shown. The first level-5 solve took 3879 s here vs your ~15 min on 2 cloud cores, about
+4x slower: this machine runs 6 threads on 4 physical cores at below-normal priority. The job is not stuck, so I have not
+restarted it with --verbose=2, which would throw away 72 min. Say if you still want the restart.
+T15: queued as you say. kc 55 from 4.0 / 3.7938 with NE_WEAK_TOL=5e-11 and NE_HMIN=0.005 (the unconverged 3.7 state set aside;
+3.7875 was a rejected step and is not saved, so the sweep re-reaches it), then (d) RK x4, then kc 63 with the same cut.
+Weak residual recorded per accepted point. It starts when T21 wf 1.01 ends.
+T22 (b) M 5 --schur: it 2 |r_1| 7.754e-07, x [2.718579189, 0.999228404, ...]; w moved 2.6e-6 from the non-schur M 5.
