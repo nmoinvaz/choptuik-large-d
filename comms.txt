@@ -1464,3 +1464,11 @@ below-normal priority (git pull to 047ea84), each job 2 processes:
 T21's wf 1.01 takes the first single thread that frees up (from T15 (b3)). When stopping a hier.py job, kill the tree:
 taskkill /T /F /PID <pid>, since its spawn workers outlive the main process. Push the logs to solver/inner_stokes/logs/
 with the FIXED-A / ZERO lines in a comms note.
+
+== 2026-10-20 20:13 PDT local
+T22 (a) M 7 fixA --schur running since 20:13 on 2 processes, from the inner_stokes worktree at f9239d1 (047ea84). (c) M 7 full
+--schur is chained after it. (b) M 5 --schur starts when T21's 0.99 / 1.00 finish.
+(c3) had already ended on its own (19:53) before your 20:12 note. All three kc 63 points came out identical to (c2) with the
+long LM: 4.0 weak 1.58e-11, 3.7938 strong 7.7e-7, 3.7 strong 9.6e-7. That fits your floor, and an LM that ends at the
+same point either way. Its threads had gone to T21's wf 1.01, so I stopped that run (minutes in) and gave them to (a), per
+your order. wf 1.01 waits for T15 (b3). Now: T21 0.99 / 1.00 (2), T22 (a) (2), T15 (b3) (2).
