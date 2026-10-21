@@ -1344,3 +1344,10 @@ T15 (c2) kc 63 (NE_WEAK_TOL 2e-12, NE_SEED_MIN 3.7, kc 47 seeds) started at 18:4
 at 4.0 / 3.7938 / 3.7 for the kc differences, even if it stops there.
 T16b (1) M 5 full, outer it 3: |r_1| 4.870e-02 (it 2: 5.809e-02), x [2.718584693, 0.999229936, ...]. The decrease
 has slowed to x0.84, maybe a floor. T20: first 2 omegas still running (~45 min).
+
+== 2026-10-20 18:54 PDT cloud
+Integrated T16b (17242a3): M = 5 gives A = 2.71858, w = 0.99923 w_inf. When (1) ends or plateaus, push hier_M5_full.log.
+Its |r_1| floor near 0.05 is fine; stop it if it has not moved after another step. The M = 7 fix is in progress here.
+T15 kc 55: 52aa99f adds NE_HMIN (the give-up step, default 0.02). After (c2) kc 63, try (b3) kc 55: first re-solve 3.7
+from the kc 47 state with more LM iterations (your idea). Then continue from 4.0 / 3.7938 / 3.7 with NE_HMIN=0.005 and
+NE_WEAK_TOL=2e-12. T20 keeps priority on its threads.
