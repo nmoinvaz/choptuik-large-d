@@ -1195,7 +1195,11 @@ late orders of the inner series fitted with the predicted fast-mode exponents).
   (finite steps of thousands of ulps, still linear) and uses $`r_l - K_{lH}K_{HH}^{-1}r_H`$, i.e. r_l as if the higher
   harmonics sat exactly on their zeros. At M = 5 it changes r₁ by 0.02 (the old floor) and leaves F₃/F₁, F₅/F₁ unchanged
   to six digits. Re-running the full M = 5 selection with it takes |r₁| from the old floor 0.05 to 8×10⁻⁷ and moves ω/ω∞ by
-  only 2.6×10⁻⁶, to 0.999228 (A = 2.718579). M = 7 with the correction is running on the 8-thread machine.
+  only 2.6×10⁻⁶, to 0.999228 (A = 2.718579). At M = 7 each nested solve costs as much as a whole M = 5 level, so the
+  full selection is slow; `--predict` (linear prediction of the higher levels' zeros from K) and `--floor` (stop each nested
+  solve at 3× that level's measured noise floor) cut the nested solves after the first to a median of 1–3 residuals at
+  levels 5 and 7 and 27 at level 3, and reproduce the M = 5 zero to 2×10⁻⁷ in about a third of the evaluations. M = 7 at
+  fixed amplitude is running on the 8-thread machine.
 
 **Without truncation: the amplitude expansion** (`solver/inner_amp/`).
 

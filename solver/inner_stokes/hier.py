@@ -29,6 +29,19 @@ near the zeros one ulp of B7 (5.4e-20) moves r_1 by ~200 at xi 0.2 (~15-20 at 0.
 i.e. a 0.3-3% floor on w, while r_7 at the same radius resolves sub-ulp offsets of B7 to ~1e-11 ulp. The correction
 r_l - K_lH K_HH^-1 r_H (K by finite differences, M - 1 residuals) is r_l at the exact higher-level zeros.
 Use --schur for M >= 7 (it also helps at M = 5).
+
+    python -u hier.py M A wf [--fixA] [--x=B3,C3,...] [--seed=FILE] [--xi1=0.2] [--procs N] [--verbose=2]
+                             [--schur] [--predict] [--floor] [--tol=T] [--fasttrial]
+  --fixA       (A, w) fixed: solve S_3..S_M = 0, report F_nu/F_1 and r_1
+  --schur      leakage Jacobian K after the first inner solve; Schur-corrected residuals from then on
+  --predict    (implies --schur) K also over (A, w); every nested re-solve starts from the linear prediction of the
+               higher-level zeros; outer FD step 1e-6
+  --floor      (with K) stop every nested solve (levels below the top) at 3x its level's noise floor, measured once by
+               the first solves after K that end by failed trials (instead of rediscovering it in every solve)
+  --tol=T      inner levels stop at |r_l| < T once K exists (default 0). T = 1e-7 tested at M = 5: worse (r_5 leaks
+               into r_3 with weight ~6e4 and K is only ~1e-4 accurate)
+  --fasttrial  near the floor try lam = 1, 0.25 then refresh J (default: halvings down to 1/32); not validated
+Without --predict/--floor/--tol/--fasttrial the solver is the one on main (047ea84).
 """
 import os
 import sys
@@ -121,6 +134,14 @@ class Hier:
         self.mode = {}         # level >= 5: 'low' (small radius, approach) or 'top' (xi_top, polish)
         self.K = None          # leakage Jacobian for the Schur correction (--schur)
         self.schur = False
+        self.predict = False   # --predict: linear predictor for the higher levels (needs K, implies --schur)
+        self.tol = 0.0         # --tol: inner levels stop at |r_l| < tol once K exists (default 1e-7 with --predict)
+        self.xref, self.xorder, self.count = {}, {}, 0
+        self.fasttrial = False # --fasttrial: near the floor try lam = 1, 0.25 only, then refresh J (default: 6 halvings)
+        self.floorstop = False # --floor: stop nested solves at 3x the measured noise floor of their level
+        self.floor = {}        # (level, mode) -> measured floor of |r_l| (median end value of floor-discovery solves)
+        self.floorhist = {}
+        self.ltop = top        # the run's top level (workers: the main process's), for --tol / --floor
 
     def radii(self, x):
         """(low, polish) radius per level"""
@@ -157,15 +178,16 @@ class Hier:
             self.mode[nu] = "top"
         K = np.zeros((self.M + 1, self.M + 1))
         r0 = self.res_raw(x)
-        for k in range(2, self.M + 1):
-            hk = 1e-12 * max(abs(x[k]), 1e-3 * abs(x[0]))
+        for k in range(0 if self.predict else 2, self.M + 1):
+            rel = 1e-10 if (self.predict and k < 4) else 1e-12   # --predict: B3, C3, A, w at 1e-10 (accuracy)
+            hk = rel * max(abs(x[k]), 1e-3 * abs(x[0])) if k >= 2 else rel * abs(x[k])
             xp = x.copy()
             xp[k] += hk
             K[:, k] = (self.res_raw(xp) - r0) / hk
         self.mode = saved
         self.K = K
         if self.verbose:
-            print(f"   leakage Jacobian K computed ({self.M - 1} residuals) [{time.time() - T0:.0f} s]", flush=True)
+            print(f"   Jacobian K computed ({self.M + 1 if self.predict else self.M - 1} residuals) [{time.time() - T0:.0f} s]", flush=True)
 
     def res_raw(self, x):
         """packed residual: r_nu for nu <= 3 at xi_top; for nu >= 5 at the level's current mode radius ('low' while
@@ -183,11 +205,30 @@ class Hier:
         """solve levels l..M (l > M: just evaluate). Returns x, full residual vector."""
         if l > self.M:
             return x, self.res(x)
-        return self.level(l, x)
+        return self.level(self.predicted(l, x), l)
+
+    def predicted(self, l, x):
+        """--predict: move the unknowns of levels >= l onto the linearized zeros of r_l..r_M, given the change of the
+        lower unknowns since the last state at which levels >= l were solved (K = full raw Jacobian). The nested
+        re-solve then starts in the linear (polish) regime and needs a few residuals instead of a fresh approach."""
+        if not self.predict or self.K is None or l < 3:
+            return x
+        cands = [(self.xorder[k], self.xref[k]) for k in self.xref if k <= l]
+        if not cands:
+            return x
+        xr = max(cands, key=lambda t: t[0])[1]
+        lo = list(range(0, l - 1))
+        H = list(range(l - 1, self.M + 1))
+        d = x[lo] - xr[lo]
+        if not np.any(d):
+            return x
+        x = x.copy()
+        x[H] = xr[H] - np.linalg.solve(self.K[np.ix_(H, H)], self.K[np.ix_(H, lo)] @ d)
+        return x
 
     def h(self, l, x):
         if l == 1:
-            return np.array([1e-4, 1e-4])
+            return np.array([1e-6, 1e-6]) if self.predict else np.array([1e-4, 1e-4])
         b = x[idx(l)]
         return 1e-6 * np.maximum(np.abs(b), 1e-3 * np.abs(x[0]))
 
@@ -199,16 +240,20 @@ class Hier:
             xt[k] += hs[i]
             xs.append(xt)
         if POOL is not None and l >= self.top:
-            outs = POOL.map(_worker, [(self.M, self.r1, l + 2, xt, dict(self.mode), dict(self.J), self.K) for xt in xs])
+            st = (self.predict, dict(self.xref), dict(self.xorder), self.count, self.tol, self.ltop, self.fasttrial,
+                  self.floorstop, dict(self.floor))
+            outs = POOL.map(_worker, [(self.M, self.r1, l + 2, xt, dict(self.mode), dict(self.J), self.K, st) for xt in xs])
             NEV[0] += sum(o[2] for o in outs)
         else:
             outs = [self.solve_from(l + 2, xt) + (0,) for xt in xs]
         cols = [(o[1][idx(l)] - g0) / hs[i] for i, o in enumerate(outs)]
         return np.array(cols).T
 
-    def level(self, l, x, maxit=15):
+    def level(self, x, l, maxit=15):
         t0, n0 = time.time(), NEV[0]
         x, r = self._level(l, x)
+        self.count += 1
+        self.xref[l], self.xorder[l] = x.copy(), self.count
         if self.verbose >= 2 or (self.verbose and l <= self.top + 2):
             print(f"   level {l} solved: |r_{l}| {np.linalg.norm(r[idx(l)]):.2e}  ({NEV[0] - n0} residuals, {time.time() - t0:.0f} s)  "
                   f"[{time.time() - T0:.0f} s total]", flush=True)
@@ -231,6 +276,21 @@ class Hier:
             return self._newton(l, x, r)
         return self._newton(l, x)
 
+    def at_floor(self, key, l, g):
+        """--floor: a nested level (l > top, polish mode) whose |r_l| is within 3x its measured floor is done"""
+        return (self.floorstop and self.K is not None and l > self.ltop and key in self.floor and key[1] == "top"
+                and np.linalg.norm(g) < 3 * self.floor[key])
+
+    def record_floor(self, key, l, g):
+        """--floor: the end value of a solve that discovered its noise floor (failed trials with a fresh Jacobian)"""
+        if self.floorstop and self.K is not None and l > self.ltop and key[1] == "top":
+            new = key not in self.floor
+            hist = self.floorhist.setdefault(key, [])
+            hist.append(float(np.linalg.norm(g)))
+            self.floor[key] = float(np.median(hist))     # median: one early stop must not inflate the floor
+            if new and self.verbose:
+                print(f"   floor of level {l}: |r_{l}| ~ {self.floor[key]:.2e} (stop at 3x from now on)", flush=True)
+
     def _newton(self, l, x, r=None, maxit=15):
         key = (l, self.mode.get(l, "top"))
         if r is None:
@@ -240,15 +300,26 @@ class Hier:
             self.J[key] = self.fdjac(l, x, g)
             self.fresh[key] = True
         for it in range(maxit):
+            if self.at_floor(key, l, g):
+                break
+            if self.tol and self.K is not None and l > self.ltop and np.linalg.norm(g) < self.tol:
+                break                          # inner level in the linear regime: the Schur correction does the rest
             try:
                 step = -np.linalg.solve(self.J[key], g)
             except np.linalg.LinAlgError:
                 step = -np.linalg.lstsq(self.J[key], g, rcond=None)[0]
             scale = np.abs(x[idx(l)]).max() + 1e-3 * abs(x[0])
             if np.abs(step).max() < 2e-16 * scale:
+                self.record_floor(key, l, g)
                 break
             accepted = False
-            for lam in ((1.0, 0.5, 0.25, 0.125, 1 / 16, 1 / 32) if not self.fresh[key] or it == 0 else (1.0, 0.5)):
+            if not self.fasttrial:
+                lams = (1.0, 0.5, 0.25, 0.125, 1 / 16, 1 / 32) if not self.fresh[key] or it == 0 else (1.0, 0.5)
+            elif it == 0 or key[1] == "low":
+                lams = (1.0, 0.5, 0.25, 0.125, 1 / 16, 1 / 32)     # approach: damping may be needed
+            else:
+                lams = (1.0, 0.25)                                 # near the floor: refresh J instead of halving
+            for lam in lams:
                 xt = x.copy()
                 xt[idx(l)] += lam * step
                 try:
@@ -264,6 +335,7 @@ class Hier:
                 if self.fresh[key]:
                     if self.verbose >= 2:
                         print(f"   level {l} ({key[1]}): stop at |g| {np.linalg.norm(g):.2e} (noise floor)", flush=True)
+                    self.record_floor(key, l, g)
                     break
                 self.J[key] = self.fdjac(l, x, g)
                 self.fresh[key] = True
@@ -271,7 +343,10 @@ class Hier:
             slow = np.linalg.norm(gt) > 0.3 * np.linalg.norm(g)
             floor = self.fresh[key] and np.linalg.norm(gt) > 0.5 * np.linalg.norm(g)
             x, r, g = xt, rt, gt
+            if self.at_floor(key, l, g):
+                break
             if floor:                          # a fresh Jacobian no longer halves |g|: noise floor
+                self.record_floor(key, l, g)
                 break
             self.fresh[key] = False
             if slow:
@@ -284,13 +359,14 @@ class Hier:
 
 
 def _worker(args):
-    M, r1, l, x, mode, Jc, K = args
+    M, r1, l, x, mode, Jc, K, st = args
     n0 = NEV[0]
     h = Hier(M, r1, top=99, verbose=0)
     h.mode = mode
     h.J = Jc                                   # warm chord Jacobians from the main process
     h.fresh = {k: False for k in Jc}
     h.K = K
+    (h.predict, h.xref, h.xorder, h.count, h.tol, h.ltop, h.fasttrial, h.floorstop, h.floor) = st
     x, r = h.solve_from(l, x)
     return x, r, NEV[0] - n0
 
@@ -298,7 +374,7 @@ def _worker(args):
 def report(x, r, M, tag):
     Fh = I.Fh_from(x, M)
     w = x[1] * I.W0
-    print(f"{tag} M {M}: A {x[0]:.6f}  w/w_inf {x[1]:.6f}  (w {w:.5f}, Delta {2 * np.pi / w:.5f})  <F^2> {I.F2mean(Fh):.4f}  "
+    print(f"{tag} M {M}: A {x[0]:.9f}  w/w_inf {x[1]:.9f}  (w {w:.5f}, Delta {2 * np.pi / w:.5f})  <F^2> {I.F2mean(Fh):.4f}  "
           f"r_1 {r[0]:+.4e}{r[1]:+.4e}i  [{time.time() - T0:.0f} s, {NEV[0]} residuals]", flush=True)
     for nu in range(3, M + 1, 2):
         rr = Fh[nu] / Fh[1]
@@ -333,7 +409,11 @@ def main():
     print(f"M {M}, xi1 {r1}, {'fixed (A, w)' if top == 3 else 'full selection'}, procs {procs}; start x {np.round(x, 9).tolist()}",
           flush=True)
     h = Hier(M, r1, top=top, verbose=int(opts.get("--verbose", 1)))
-    h.schur = "--schur" in opts
+    h.predict = "--predict" in opts
+    h.tol = float(opts.get("--tol", 0.0))
+    h.fasttrial = "--fasttrial" in opts
+    h.floorstop = "--floor" in opts
+    h.schur = "--schur" in opts or h.predict
     low, pol = h.radii(x)
     print("level radii (approach -> polish): " + ", ".join(f"r_{nu} {low[nu]:.4f} -> {pol[nu]:.4f}" for nu in low), flush=True)
     r0 = h.res(x)
