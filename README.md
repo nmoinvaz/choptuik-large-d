@@ -1198,8 +1198,9 @@ late orders of the inner series fitted with the predicted fast-mode exponents).
   only 2.6×10⁻⁶, to 0.999228 (A = 2.718579). At M = 7 each nested solve costs as much as a whole M = 5 level, so the
   full selection is slow; `--predict` (linear prediction of the higher levels' zeros from K) and `--floor` (stop each nested
   solve at 3× that level's measured noise floor) cut the nested solves after the first to a median of 1–3 residuals at
-  levels 5 and 7 and 27 at level 3, and reproduce the M = 5 zero to 2×10⁻⁷ in about a third of the evaluations. M = 7 at
-  fixed amplitude is running on the 8-thread machine.
+  levels 5 and 7 and 27 at level 3, and reproduce the M = 5 zero to 2×10⁻⁷ in about a third of the evaluations. M = 7 is
+  still out of reach: on the 8-thread machine its first cold level-5 solve, which runs on a single worker, had not finished
+  after 5 hours (`logs/hier_M7_fixA_floor*.log`), so the truncation sequence stops at M = 5.
 
 **Without truncation: the amplitude expansion** (`solver/inner_amp/`).
 
@@ -1292,7 +1293,10 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   sequence alternates (0.777, 1.0156, 0.999228; Aitken 1.0003). So the selection rule of Conjecture 1 picks
   ω/ω∞ = 0.9999–1.0001 (the bracket is the cautious range), at amplitude A₀ = 2.720 (the solutions: 2.70–2.72):
   **Δ∞ = 1.6439 ± 0.0002 from the D = ∞ inner equations alone**, with no input from the finite-D solutions, against
-  1.64389375 from them. Whether the remaining 10⁻⁴ (the Padé value sits 1.1×10⁻⁴ below 1) closes needs more orders. The rule itself is still a conjecture (hypotheses H1–H2,
+  1.64389375 from them. Whether the remaining 10⁻⁴ (the Padé value sits 1.1×10⁻⁴ below 1) closes needs more orders.
+  Order 13 at J = 750 does not converge (its error estimate, 10⁻⁹–2.5×10⁻⁸, is the size of σ₁₃ itself, while σ₁–σ₁₂ stay
+  at 10⁻²⁰; `scan27phys/`, kept for reference): it needs a longer late-order window (J ≥ 1000, about 10 hours per ω on the
+  8-thread machine). The rule itself is still a conjecture (hypotheses H1–H2,
   gaps (a)–(c)). Tightening the number needs more orders, approximants that model the competing singularity
   explicitly (differential or algebraic approximants), or M = 7, which evaluates the multiplier at real amplitude with
   no series to resum (being fixed).
