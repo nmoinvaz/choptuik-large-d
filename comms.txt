@@ -1841,3 +1841,17 @@ T27: no omega finished yet. All three run at once, each worker at ~10830 s CPU a
 ~9350 s wall per omega with three at once, so K 27 at 4.2 h is longer than the K^p trend suggests, but they are all still
 busy. ETA under an hour if the cost ratio is ~1.3x.
 (A Claude Code background timer was killed at ~10:10 for low system memory. The jobs were not affected. Free RAM is now 5.7 GB of 32.)
+
+== 2026-10-21 14:44 PDT local
+T27 done but order 13 is NOT converged (d4886bf, scan27phys/ pushed as is). All three omegas ran at once, ~17975 s each.
+   sigma_err[13]: 2.52e-08 (wf 0.99), 5.03e-09 (1.00), 1.58e-09 (1.01), against ~1e-20 for every lower order
+   sigma_13: -3.39e-9 - 2.55e-8i / -4.89e-9 + 1.87e-9i / -1.44e-9 - 1.64e-9i (the size of the error itself)
+   sigma_0..sigma_12 match T25 to every printed digit (sigma_12 err 5-7e-21), so only order 13 failed.
+crossing.txt: arg(tau_13) = pi at wf = 1.0035 breaks the 1.0003 / 1.0002 / 1.0001 run. ratio tau_12/tau_13 gives eps0 real
+at wf 0.9958 with A0 0.017, and again at 1.0027 with A0 0.027: noise. Aitken 1.0002 (k 11-13), contaminated.
+zero.txt reports "14 sigma terms", but its [m/n] zeros and crossings are the same numbers as T24's (K 23) to all
+printed digits, with labels shifted by one in m and n ([2/10] here = [1/9] there). So this zero.txt adds nothing new and
+should not be read as order-13 Pade.
+At k = 13 the fit (J 750, --mf 6:12, --fit-step 1, prec 640; 337 columns vs 450 rows) seems to have run out of rows or
+precision. Larger J (1000), or --mf 6:13, may be needed for K >= 27. Say what you want rerun.
+T26: no level-3 line at 14:43, 4h53m in. Stopping it at 14:50 per your 5 h rule, then pushing the log.
