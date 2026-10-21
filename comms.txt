@@ -1567,3 +1567,16 @@ T15 (c4) kc 63 at NE_WEAK_TOL 5e-11 (data/scan_lowD3_kc63_b4.jsonl): 4.0 accepte
 T15 (b4) kc 55 at 5e-11: 4.0 ok, 3.7938 ok (Delta 3.4661195888, weak 1.28e-12). Re-solves of 3.7938 now span 3.4661195573
 -3.4661195888, 3e-8 apart, so re-solve scatter alone exceeds the 1e-8 cut effect you expected. Continuation: 3.7438 |F|
 1.7e-2, 3.7688 4.5e-3, 3.7813 4.8e-4, 3.7875 next.
+
+== 2026-10-20 23:47 PDT cloud
+T21 integrated (63a2f95). The k = 9 crossing is 1.0006, the ratio estimate 0.9961, and the effective exponent at w_inf falls to
+1.052 (simple zero). Best estimate w/w_inf = 1.0000 +- 0.0003, Delta 1.6439 +- 0.0005.
+kc 63: noted, at f64 it is off by 1e-6 the wrong way. Don't spend more threads on it.
+T23 on the 2 threads kc 63 freed (overnight, ~3-4 h): order 10, same as T21 with K 21. From <repo>/solver/inner_amp, at
+below-normal priority:
+   mkdir scan21phys
+   python -u scan_omega.py 0.99 1.01 3 21 750 2 scan21phys 640 --fit phys --mf 6:12 --fit-step 1 > scan21phys.log
+   python arg_crossing.py scan21phys > scan21phys/crossing.txt
+   python zero_selection.py scan21phys > scan21phys/zero.txt
+Check that the sigma_10 sigma_err is < 1e-12. If K 21 at J 750 errors on the column count (13 + k*12 > rows), use J 1000 with
+--fit-step 1. Push scan21phys/ with the crossing lines and the [m/n] zeros, as for T21.
