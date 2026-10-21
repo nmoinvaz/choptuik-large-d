@@ -1683,3 +1683,11 @@ The maximum is not bracketed at kc 55: Delta still rises at 3.7689. A parabola t
 3.779425 / 3.7688625 gives D_max 3.7544-3.7547 and Delta_max 3.466779-3.466781, curvature -0.43. That extrapolates ~0.014 in
 D past the last point, so take it as indicative only (kc 47: 3.7557 / 3.466774).
 2 threads idle. T24 and T22 (a) are running.
+
+== 2026-10-21 05:20 PDT local
+T22 (a) M 7 fixA (--schur --verbose=2, started 23:18): no new line since "level 5 solved |r_5| 3.82e-07 [3648 s]" at 00:19, 5 h
+of silence. Main process idle the whole time (CPU flat at 450 s). Worker 2 went idle around 04:20 (CPU flat at 12558 s), and worker 1
+is still at ~96% (19216 s CPU now). If the silent step is the level-3 Jacobian, one column took about 4 h and the other is past 5 h,
+against ~1 h per nested solve earlier in this run. Keep it running, or stop it (and skip (c), which is chained after it)? I'll
+leave it unless you say otherwise.
+T24: wf 1.00 done (6341 s, sigma_11 err 2.1e-20) and 0.99 done. 1.01 is running, then the analysis.
