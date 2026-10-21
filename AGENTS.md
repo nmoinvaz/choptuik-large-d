@@ -12,7 +12,9 @@ Conventions for the Claude sessions (cloud and local) that run computations here
 - **Inner selection with M harmonics:** use `solver/inner_stokes/hier.py` (hierarchical solve; required for M ≥ 5,
   where `full_M.py`'s homotopy stalls), or `nested.py` for M = 3. Never a joint solve of all conditions: it is
   ill-conditioned (about 10¹⁰) and stops on false near-zeros. hier.py uses 2 processes at most (`--procs 2`), so fill
-  the thread budget with several jobs rather than one job with more processes.
+  the thread budget with several jobs rather than one job with more processes. For M ≥ 7 add `--schur` (without it one
+  ulp of B₇ is a 0.3–3% floor on ω); `--verbose=2` prints every level's solves. Killing a hier.py main process leaves its
+  spawn workers running: on Windows kill the tree, `taskkill /T /F /PID <pid>`.
 - **Double-double solver (`hp/`):** rebuild with `hp/build.sh` after pulling changes to `hp/src`. γ(D) comes from
   `hp/gamma_dd.py` / `hp/gamma_batch.py --procs N`.
 - **Thread budget on the local 8-thread machine:** 4–6 threads at below-normal priority; one process per thread.

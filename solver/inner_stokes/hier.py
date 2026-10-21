@@ -19,13 +19,16 @@ tuned f_nu summed to eps^15 at the given A; computed at w = w_inf; falls back to
 eps^11), or given explicitly with --x (missing higher harmonics are filled from the seed file).
 
 Result (2026-10-20, M = 5, A = 2.72, w_inf, --fixA, 403 s on one core): F3/F1 = 0.054859 + 0.005407i,
-F5/F1 = 0.003089 + 0.000540i, r_1 = 6.50 + 1.81i (M = 3: -58.8 - 99.1i).
+F5/F1 = 0.003089 + 0.000540i, r_1 = 6.50 + 1.81i (M = 3: -58.8 - 99.1i); with --schur 218 s, r_1 = 6.484 + 1.854i.
 
-    python -u hier.py M A wf [--fixA] [--seed=FILE] [--x=B3,C3,B5,C5,...] [--xi1=0.2] [--procs N]
-      --fixA     keep (A, w) fixed: solve S_3..S_M = 0, print F_nu/F_1 and the harmonic-1 residual r_1
-      --procs N  finite-difference columns of the levels run in the main process go to N worker processes
-                 (spawn start method; Windows-safe). Only 2 columns per level, so N = 2..3 is all it can use.
-F_nu = B_nu/(2i) + C_nu/2 is the e^{i nu theta} coefficient of F = A sin(theta) + ... (F_1 = A/(2i)).
+M = 7 (2026-10-20): the polish radius is per level (polish_radius: nu = 5 at 0.2 as before, nu = 7 at ~0.15; at 0.2
+the harmonic-7 jump left over by the approach is ~1e3, far outside the linear regime), the Newton stops as soon as a
+fresh Jacobian no longer halves |g| (before: up to 25 noise-floor iterations with Jacobian refreshes, ~75 residuals
+per level-7 solve, which is why the first M = 7 run printed nothing for 45 min), and --schur removes the ulp leakage:
+near the zeros one ulp of B7 (5.4e-20) moves r_1 by ~200 at xi 0.2 (~15-20 at 0.15), r_3 by ~0.05, r_5 by ~5e-6,
+i.e. a 0.3-3% floor on w, while r_7 at the same radius resolves sub-ulp offsets of B7 to ~1e-11 ulp. The correction
+r_l - K_lH K_HH^-1 r_H (K by finite differences, M - 1 residuals) is r_l at the exact higher-level zeros.
+Use --schur for M >= 7 (it also helps at M = 5).
 """
 import os
 import sys
@@ -38,7 +41,7 @@ T0 = time.time()
 HERE = os.path.dirname(os.path.abspath(__file__))
 _DATA = os.path.join(HERE, "..", "inner_amp", "data")
 # converged physical-basis fit first (main e5406bf); the legacy files are mis-tuned from order 11 (nu = 7) / 13 (nu = 3)
-DEFAULT_SEED = next((os.path.join(_DATA, f) for f in ("sigF_w1.0000_K15_J1000_phys.json", "sigF_w1.0000_K17_J1500.json")
+DEFAULT_SEED = next((os.path.join(_DATA, f) for f in ("sigF_w1.0000_K17_J750_phys.json", "sigF_w1.0000_K15_J1000_phys.json", "sigF_w1.0000_K17_J1500.json")
                      if os.path.exists(os.path.join(_DATA, f))), os.path.join(_DATA, "sigF_w1.0000_K15_J1000_phys.json"))
 POOL = None
 NEV = [0]
@@ -88,6 +91,24 @@ def level_radius(nu, w, xi_top=0.2, margin=1e3):
     return min(xi_top, 1 / np.sqrt(2 * L))
 
 
+def polish_radius(nu, w, F2, xi_top=0.2, sc_min=1e-2):
+    """radius at which a level nu >= 5 is polished after the small-radius approach: the largest xi <= xi_top at which
+    the normalization e^{1/(2xi^2)} xi^{-2<F^2>} / (2 pi |K'_nu|) is still >= sc_min, i.e. where the harmonic-nu jump
+    left over by the approach (r_nu ~ 1e-6) is still linear (J ~ 1e-4). nu = 5: xi_top (0.2), as in the converged M = 5
+    run; nu = 7: about 0.15 (at 0.2 the leftover jump would be ~1e3, far from linear)."""
+    if nu <= 3:
+        return xi_top
+    L = np.log(2 * np.pi * abs(I.Kp(1j * nu * w))) + np.log(sc_min)
+    f = lambda xi: 1 / (2 * xi * xi) - 2 * F2 * np.log(xi) - L
+    if f(xi_top) >= 0:
+        return xi_top
+    lo, hi = 0.05, xi_top
+    for _ in range(60):
+        mid = (lo + hi) / 2
+        lo, hi = (mid, hi) if f(mid) >= 0 else (lo, mid)
+    return lo
+
+
 def idx(l):
     return [0, 1] if l == 1 else [l - 1, l]
 
@@ -98,22 +119,64 @@ class Hier:
         self.J = {}            # chord Jacobian per (level, mode)
         self.fresh = {}
         self.mode = {}         # level >= 5: 'low' (small radius, approach) or 'top' (xi_top, polish)
+        self.K = None          # leakage Jacobian for the Schur correction (--schur)
+        self.schur = False
 
     def radii(self, x):
+        """(low, polish) radius per level"""
         w = I.W0 * x[1]
-        return {nu: level_radius(nu, w, self.r1) for nu in range(1, self.M + 1, 2)}
+        F2 = I.F2mean(I.Fh_from(x, self.M))
+        low = {nu: level_radius(nu, w, self.r1) for nu in range(1, self.M + 1, 2)}
+        pol = {nu: polish_radius(nu, w, F2, self.r1) for nu in range(1, self.M + 1, 2)}
+        return low, pol
 
     def res(self, x):
-        """packed residual: r_nu for nu <= 3 at xi_top; for nu >= 5 the level's current mode ('low' radius while
-        approaching, 'top' once near the zero). Also keeps both sets in self.last."""
+        """residual used by the solver: the raw residual with the sub-ulp (Schur) leakage correction when available"""
+        r = self.res_raw(x)
+        return self.correct(r) if self.K is not None else r
+
+    def correct(self, r):
+        """r_l -> r_l - K_lH K_HH^-1 r_H for every level l, H = the levels above l (all in polish mode): the value r_l
+        would have if the higher-harmonic unknowns were moved (by far less than one ulp) onto their exact zeros.
+        Removes the leakage of the ulp-limited S_mu (mu > l) into r_l (M = 7: one ulp of B7 moves r_1 by ~200)."""
+        out = r.copy()
+        for l in range(1, self.M - 1, 2):
+            H = list(range(l + 2, self.M + 1, 2))
+            if any(self.mode.get(nu, "low") != "top" for nu in H if nu >= 5):
+                continue
+            rows = sum((idx(nu) for nu in H), [])
+            dv = np.linalg.solve(self.K[np.ix_(rows, rows)], r[rows])
+            out[idx(l)] = r[idx(l)] - self.K[np.ix_(idx(l), rows)] @ dv
+        return out
+
+    def leak_jac(self, x):
+        """K = d r_raw / d (B3, C3, ..., B_M, C_M) at x, with every level >= 5 in polish mode (linear regime near the
+        zeros); steps 1e-12 relative (thousands of ulps, still linear)"""
+        saved = dict(self.mode)
+        for nu in range(5, self.M + 1, 2):
+            self.mode[nu] = "top"
+        K = np.zeros((self.M + 1, self.M + 1))
+        r0 = self.res_raw(x)
+        for k in range(2, self.M + 1):
+            hk = 1e-12 * max(abs(x[k]), 1e-3 * abs(x[0]))
+            xp = x.copy()
+            xp[k] += hk
+            K[:, k] = (self.res_raw(xp) - r0) / hk
+        self.mode = saved
+        self.K = K
+        if self.verbose:
+            print(f"   leakage Jacobian K computed ({self.M - 1} residuals) [{time.time() - T0:.0f} s]", flush=True)
+
+    def res_raw(self, x):
+        """packed residual: r_nu for nu <= 3 at xi_top; for nu >= 5 at the level's current mode radius ('low' while
+        approaching, 'top' = polish radius once near the zero); all radii from one integration."""
         NEV[0] += 1
-        rad = self.radii(x)
-        R = demixed_multi(x, self.M, [self.r1] + list(rad.values()))
+        low, pol = self.radii(x)
+        R = demixed_multi(x, self.M, [self.r1] + list(low.values()) + list(pol.values()))
         out = R[self.r1].copy()
         for nu in range(5, self.M + 1, 2):
-            if self.mode.get(nu, "low") == "low":
-                out[idx(nu)] = R[rad[nu]][idx(nu)]
-        self.last = (R, rad)
+            rr = low[nu] if self.mode.get(nu, "low") == "low" else pol[nu]
+            out[idx(nu)] = R[rr][idx(nu)]
         return out
 
     def solve_from(self, l, x):
@@ -136,14 +199,25 @@ class Hier:
             xt[k] += hs[i]
             xs.append(xt)
         if POOL is not None and l >= self.top:
-            outs = POOL.map(_worker, [(self.M, self.r1, l + 2, xt, dict(self.mode), dict(self.J)) for xt in xs])
+            outs = POOL.map(_worker, [(self.M, self.r1, l + 2, xt, dict(self.mode), dict(self.J), self.K) for xt in xs])
             NEV[0] += sum(o[2] for o in outs)
         else:
             outs = [self.solve_from(l + 2, xt) + (0,) for xt in xs]
         cols = [(o[1][idx(l)] - g0) / hs[i] for i, o in enumerate(outs)]
         return np.array(cols).T
 
-    def level(self, l, x, maxit=25):
+    def level(self, l, x, maxit=15):
+        t0, n0 = time.time(), NEV[0]
+        x, r = self._level(l, x)
+        if self.verbose >= 2 or (self.verbose and l <= self.top + 2):
+            print(f"   level {l} solved: |r_{l}| {np.linalg.norm(r[idx(l)]):.2e}  ({NEV[0] - n0} residuals, {time.time() - t0:.0f} s)  "
+                  f"[{time.time() - T0:.0f} s total]", flush=True)
+        return x, r
+
+    def _level(self, l, x):
+        if l == self.top and self.schur and self.K is None and l < self.M:
+            x, _ = self.solve_from(l + 2, x.copy())
+            self.leak_jac(x)
         if l >= 5:
             self.mode[l] = "top"
             x1, r = self.solve_from(l + 2, x.copy())
@@ -157,7 +231,7 @@ class Hier:
             return self._newton(l, x, r)
         return self._newton(l, x)
 
-    def _newton(self, l, x, r=None, maxit=25):
+    def _newton(self, l, x, r=None, maxit=15):
         key = (l, self.mode.get(l, "top"))
         if r is None:
             x, r = self.solve_from(l + 2, x.copy())
@@ -188,14 +262,17 @@ class Hier:
                     break
             if not accepted:
                 if self.fresh[key]:
-                    if self.verbose and l <= self.top + 2:
+                    if self.verbose >= 2:
                         print(f"   level {l} ({key[1]}): stop at |g| {np.linalg.norm(g):.2e} (noise floor)", flush=True)
                     break
                 self.J[key] = self.fdjac(l, x, g)
                 self.fresh[key] = True
                 continue
             slow = np.linalg.norm(gt) > 0.3 * np.linalg.norm(g)
+            floor = self.fresh[key] and np.linalg.norm(gt) > 0.5 * np.linalg.norm(g)
             x, r, g = xt, rt, gt
+            if floor:                          # a fresh Jacobian no longer halves |g|: noise floor
+                break
             self.fresh[key] = False
             if slow:
                 self.J[key] = self.fdjac(l, x, g)
@@ -207,12 +284,13 @@ class Hier:
 
 
 def _worker(args):
-    M, r1, l, x, mode, Jc = args
+    M, r1, l, x, mode, Jc, K = args
     n0 = NEV[0]
     h = Hier(M, r1, top=99, verbose=0)
     h.mode = mode
     h.J = Jc                                   # warm chord Jacobians from the main process
     h.fresh = {k: False for k in Jc}
+    h.K = K
     x, r = h.solve_from(l, x)
     return x, r, NEV[0] - n0
 
@@ -254,13 +332,18 @@ def main():
     top = 3 if "--fixA" in opts else 1
     print(f"M {M}, xi1 {r1}, {'fixed (A, w)' if top == 3 else 'full selection'}, procs {procs}; start x {np.round(x, 9).tolist()}",
           flush=True)
-    h = Hier(M, r1, top=top)
-    print("level radii: " + ", ".join(f"r_{nu} at xi {v:.4f}" for nu, v in h.radii(x).items()), flush=True)
+    h = Hier(M, r1, top=top, verbose=int(opts.get("--verbose", 1)))
+    h.schur = "--schur" in opts
+    low, pol = h.radii(x)
+    print("level radii (approach -> polish): " + ", ".join(f"r_{nu} {low[nu]:.4f} -> {pol[nu]:.4f}" for nu in low), flush=True)
     r0 = h.res(x)
     print("start residuals: " + "  ".join(f"|r_{nu}| {np.hypot(r0[nu - 1 if nu > 1 else 0], r0[nu if nu > 1 else 1]):.2e}"
                                          for nu in range(1, M + 1, 2)), flush=True)
     x, r = h.solve_from(top, x)
     report(x, r, M, "FIXED-A" if top == 3 else "ZERO")
+    if h.K is not None:
+        rr = h.res_raw(x)
+        print(f"      (uncorrected r_1 {rr[0]:+.4e}{rr[1]:+.4e}i)", flush=True)
 
 
 if __name__ == "__main__":

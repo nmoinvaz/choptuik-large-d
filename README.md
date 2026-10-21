@@ -1189,7 +1189,12 @@ late orders of the inner series fitted with the predicted fast-mode exponents).
   4×10⁻⁵ and 8×10⁻⁶ over the last steps), gives **A = 2.71858, ω = 0.99923 ω∞ (Δ = 1.64516, 0.077% above Δ∞)**. So the
   offset in ω goes −22%, +1.56%, −0.077% for M = 1, 3, 5: it alternates in sign and shrinks fifteen- to twentyfold per
   added pair of harmonics. Aitken's extrapolation of the three gives ω/ω∞ = 1.0003, though three terms are a thin basis.
-  M = 7 does not yet run (`hier.py` makes no progress from its start; being fixed).
+  At M = 7 double precision itself becomes the limit: near the zeros, one ulp of B₇ moves r₁ at ξ₁ = 0.2 by 200–250,
+  which at ∂r₁/∂(ω/ω∞) ≈ 7×10³ is a floor of 0.3–3% on ω, far above the expected M = 7 correction. `hier.py --schur`
+  removes it: after the first inner solve it takes the Jacobian K of all residuals with respect to the higher harmonics
+  (finite steps of thousands of ulps, still linear) and uses $`r_l - K_{lH}K_{HH}^{-1}r_H`$, i.e. r_l as if the higher
+  harmonics sat exactly on their zeros. At M = 5 it changes r₁ by 0.02 (the old floor) and leaves F₃/F₁, F₅/F₁ unchanged
+  to six digits. M = 7 with the correction is to run on the 8-thread machine.
 
 **Without truncation: the amplitude expansion** (`solver/inner_amp/`).
 
