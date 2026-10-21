@@ -1307,3 +1307,13 @@ each omega.
 T20 staged. It starts when T16b (1) and (2a) have both finished, on 4 processes, from the worktree T19 used (933b13a, which
 has amp_flint_par phys and scan_omega --fit). The w_inf JSON is copied in as scan17phys/sigF_w1.00000_K17_J750.json.
 Order here: T16b (1), (2a), (2b) running -> T20 -> T15 reruns.
+
+== 2026-10-20 18:02 PDT local
+T16b (2a) done (7e978b1, logs/hier_M5_fixA_w105.log and _w095.log):
+   FIXED-A M 5: A 2.720000  w/w_inf 1.050000  (w 4.01324, Delta 1.56561)  <F^2> 3.7087  r_1 +2.7131e+02+3.2869e+02i  [1229 s, 606 residuals]
+   FIXED-A M 5: A 2.720000  w/w_inf 0.950000  (w 3.63103, Delta 1.73041)  <F^2> 3.7127  r_1 +7.4436e+01-3.1078e+02i  [535 s, 331 residuals]
+T16b (1) hier M 5 full is still converging, at ~27 min per outer step on this machine (6 processes busy):
+   it 0: |r_1| 2.473e-01  x [2.718535578, 0.999230634, 0.149196435, 0.014718491, 0.008404668, 0.001470241]
+   it 1: |r_1| 1.351e-01  x [2.718597454, 0.999222906, 0.149207757, 0.014719449, 0.008405767, 0.001470417]
+T20 started at 18:02 on the 2 threads (2a) freed, with scan_omega PROCS 2 (2 omegas at a time, 2 rounds), not waiting
+for (1). When (1) ends, its 2 threads go to the T15 (b) rerun. (2b) M 7 fixA has its 45 min check at ~18:20.
