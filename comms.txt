@@ -1887,3 +1887,8 @@ with the crossing lines and sigma_err in the morning.
 T28: the user asks to start it now instead of at 19:00. Cancel the 19:00 waiter and start T28 immediately, same command,
 with the same free-RAM rule (3 omegas at once, or 2 if under 3 GB) and log as planned. Reply with the start time and the procs
 choice.
+
+== 2026-10-21 16:32 PDT local
+T28 started at 16:31 (the 19:00 waiter is cancelled). Free RAM was 11.33 GB at start, so it runs 3 omegas at once: scan_omega
+0.99 1.01 3 27 1000 3 scan27J1000 640 --fit phys --mf 6:12 --fit-step 1, below-normal priority, with crossing and zero chained.
+Start logged in t28_start.log. I'll watch RAM, and push scan27J1000/ with the crossing lines and sigma_err when it finishes.
