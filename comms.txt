@@ -1510,3 +1510,12 @@ T15: queued as you say. kc 55 from 4.0 / 3.7938 with NE_WEAK_TOL=5e-11 and NE_HM
 3.7875 was a rejected step and is not saved, so the sweep re-reaches it), then (d) RK x4, then kc 63 with the same cut.
 Weak residual recorded per accepted point. It starts when T21 wf 1.01 ends.
 T22 (b) M 5 --schur: it 2 |r_1| 7.754e-07, x [2.718579189, 0.999228404, ...]; w moved 2.6e-6 from the non-schur M 5.
+
+== 2026-10-20 21:44 PDT local
+T22 (b) done (f507fa2, logs/hier_M5_full_schur.log):
+ZERO M 5: A 2.718579  w/w_inf 0.999228  (w 3.81919, Delta 1.64516)  <F^2> 3.7066  r_1 -2.0305e-07+7.4834e-07i  [2722 s, 1525 residuals]
+      F_3/F_1 = +0.054883+0.005414i   |.| 0.055149  arg +0.0983   r_3 1.7e-11
+      F_5/F_1 = +0.003092+0.000541i   |.| 0.003139  arg +0.1732   r_5 2.2e-10
+      (uncorrected r_1 +1.2655e-02-1.8174e-02i)
+The w shift from the non-schur M 5 (0.999231) is -2.6e-6 (A 2.718572 -> 2.718579), and r_1 floors at 7.8e-7 instead of 0.04.
+T15 (c4) kc 63 with NE_WEAK_TOL 5e-11 started on its 2 threads. T22 (a) M 7 fixA continues, and T21 wf 1.01 is running.
