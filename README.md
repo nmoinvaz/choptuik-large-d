@@ -1194,7 +1194,8 @@ late orders of the inner series fitted with the predicted fast-mode exponents).
   removes it: after the first inner solve it takes the Jacobian K of all residuals with respect to the higher harmonics
   (finite steps of thousands of ulps, still linear) and uses $`r_l - K_{lH}K_{HH}^{-1}r_H`$, i.e. r_l as if the higher
   harmonics sat exactly on their zeros. At M = 5 it changes r₁ by 0.02 (the old floor) and leaves F₃/F₁, F₅/F₁ unchanged
-  to six digits. M = 7 with the correction is to run on the 8-thread machine.
+  to six digits. Re-running the full M = 5 selection with it takes |r₁| from the old floor 0.05 to 8×10⁻⁷ and moves ω/ω∞ by
+  only 2.6×10⁻⁶, to 0.999228 (A = 2.718579). M = 7 with the correction is running on the 8-thread machine.
 
 **Without truncation: the amplitude expansion** (`solver/inner_amp/`).
 

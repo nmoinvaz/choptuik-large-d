@@ -17,7 +17,8 @@ Conventions for the Claude sessions (cloud and local) that run computations here
   spawn workers running: on Windows kill the tree, `taskkill /T /F /PID <pid>`.
 - **Double-double solver (`hp/`):** rebuild with `hp/build.sh` after pulling changes to `hp/src`. γ(D) comes from
   `hp/gamma_dd.py` / `hp/gamma_batch.py --procs N`.
-- **Thread budget on the local 8-thread machine:** 4–6 threads at below-normal priority; one process per thread.
+- **Thread budget on the local 8-thread machine:** 4–6 threads at below-normal priority; one process per thread. It has 4
+  physical cores, so with 6 busy threads a job runs about 4× slower than on 2 cloud cores; scale cloud estimates.
 - **Coordination:** the cloud and local sessions talk through `comms.txt` (append only; pull before writing; commit only
   `comms.txt` in comms commits; header `== <date time PDT> cloud|local`). Agents making code changes work in a git
   worktree, not the main checkout.
