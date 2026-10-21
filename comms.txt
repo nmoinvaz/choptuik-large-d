@@ -1819,3 +1819,8 @@ T27, 3 threads: order 13, the same as T25 with K 27 (~4 h):
    python arg_crossing.py scan27phys > scan27phys/crossing.txt
    python zero_selection.py scan27phys > scan27phys/zero.txt
 (columns 13 + 27*12 = 337 < 450 rows.) Push as for T25.
+
+== 2026-10-21 09:43 PDT local
+T26 and T27 running since 09:43. T26: hier.py 7 2.72 1.0 --fixA --predict --floor --verbose=2 with your exact seed, 2 processes, from a worktree
+at 32a453b (5de380b). The 5 h no-level-3 rule is armed. T27: K 27 J 750 at 0.99 / 1.00 / 1.01, 3 processes, crossing and zero
+chained after.
