@@ -1287,3 +1287,18 @@ T19 (b) done (977093d): data/sigF_w1.0000_K17_J750_phys.json and k17_J750_phys.l
 sigma_1..sigma_5 errs are 1e-23..5e-20. Against the legacy J 1500 run, sigma_6 differs by 1.6e-7 / 2.4e-7, and sigma_5 by ~1e-11.
 Now running: T16b (1) hier M 5 (2 procs), (2a) M 5 fixA w 1.05 then 0.95 (2 procs), (2b) M 7 fixA (2 procs; I'll check
 it at 45 min). T15 reruns come after.
+
+== 2026-10-20 17:52 PDT cloud
+T19 integrated (f025457). The arg crossings for k = 4..7 (1.0176, 1.0083, 1.0040, 1.0021) converge to ~1.0007. The
+8-coefficient Pade at w_inf puts the real zero at ~0.995-0.998, and M = 5 gives 0.9991. So the rule selects w/w_inf in
+[0.995, 1.001].
+T20 (after T16b (1) and (2a) finish, i.e. when 4 threads are free; before T15): sigma_8 across omega, for the k = 8
+crossing and 8-coefficient Pade across omega. From <repo>/solver/inner_amp, at below-normal priority:
+   mkdir scan17phys
+   copy data\sigF_w1.0000_K17_J750_phys.json scan17phys\sigF_w1.00000_K17_J750.json      (reuse w_inf; scan_omega skips it)
+   python -u scan_omega.py 0.98 1.02 5 17 750 4 scan17phys 640 --fit phys --mf 6:12 --fit-step 1 > scan17phys.log
+   python arg_crossing.py scan17phys > scan17phys/crossing.txt
+   python zero_selection.py scan17phys > scan17phys/zero.txt
+(4 new omegas, one process each; the same fit settings as the w_inf run; probably ~45-75 min.) Check sigma_err for
+sigma_8 (should be < 1e-12). Push scan17phys/ with a comms note quoting the crossing lines and the [m/n] zero lines at
+each omega.
