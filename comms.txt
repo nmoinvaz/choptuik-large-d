@@ -1367,3 +1367,52 @@ with LM maxjac 60 / stall 8 (a wrapper script, not a code change), then the swee
 NE_HMIN 0.005, NE_WEAK_TOL 2e-12 -> scan_lowD3_kc55_b3.jsonl, then (d3) RK x4.
 Unasked, on the 2 threads (1) freed: (c3), the same long-LM re-solve for kc 63 at 4.0 / 3.7938 / 3.7, for the kc 47 ->
 55 -> 63 differences. Stop me if you'd rather have those threads elsewhere. T20 has 1.01 and 1.02 still running.
+
+== 2026-10-20 19:29 PDT local
+T20 done (69c661d): scan17phys/ (4 new JSONs + the reused w_inf one, crossing.txt, zero.txt, scan17phys.log). Per omega,
+one process each with 2 at a time (6 threads shared): 0.98 2439 s, 0.99 2435 s, 1.01 2765 s, 1.02 2763 s. sigma_8 err 1.1-1.6e-18
+at every omega.
+crossing.txt:
+   arg(tau_4) = pi at wf = 1.0176
+   arg(tau_5) = pi at wf = 1.0083
+   arg(tau_6) = pi at wf = 1.0040
+   arg(tau_7) = pi at wf = 1.0021
+   arg(tau_8) = pi at wf = 1.0011
+   Aitken limit of the last three crossings: wf = 1.0002
+   ratio tau_7/tau_8: eps0 real at wf = 0.9946, A0 = 2.726
+zero.txt, [m/n] zeros (eps) at each omega ([0/7] is off at eps ~0.8+2.9i, omitted):
+   wf 0.98  [1/6]  eps 2.71377 + 0.0117058j
+   wf 0.98  [2/5]  eps 2.70649 + 0.016336j
+   wf 0.98  [3/4]  eps 2.71112 + 0.0269949j
+   wf 0.98  [4/3]  eps 2.71175 + 0.0248053j
+   wf 0.98  [5/2]  eps 2.72289 + 0.0105503j
+   wf 0.98  [6/1]  eps 2.71474 + 0.0209854j
+   wf 0.99  [1/6]  eps 2.72169 - 0.00252107j
+   wf 0.99  [2/5]  eps 2.71425 + 0.00197826j
+   wf 0.99  [3/4]  eps 2.71903 + 0.0120567j
+   wf 0.99  [4/3]  eps 2.71956 + 0.0101638j
+   wf 0.99  [5/2]  eps 2.73109 - 0.00425009j
+   wf 0.99  [6/1]  eps 2.72267 + 0.00666029j
+   wf 1.00  [1/6]  eps 2.72939 - 0.0168595j
+   wf 1.00  [2/5]  eps 2.72167 - 0.0125504j
+   wf 1.00  [3/4]  eps 2.72661 - 0.00289114j
+   wf 1.00  [4/3]  eps 2.72707 - 0.00452596j
+   wf 1.00  [5/2]  eps 2.73925 - 0.019199j
+   wf 1.00  [6/1]  eps 2.73037 - 0.00774317j
+   wf 1.01  [1/6]  eps 2.73688 - 0.0312775j
+   wf 1.01  [2/5]  eps 2.72874 - 0.0271744j
+   wf 1.01  [3/4]  eps 2.73388 - 0.0178094j
+   wf 1.01  [4/3]  eps 2.73433 - 0.0192267j
+   wf 1.01  [5/2]  eps 2.74737 - 0.0342838j
+   wf 1.01  [6/1]  eps 2.73785 - 0.0221959j
+   wf 1.02  [1/6]  eps 2.74416 - 0.0457481j
+   wf 1.02  [2/5]  eps 2.73548 - 0.0418309j
+   wf 1.02  [3/4]  eps 2.7409 - 0.0326752j
+   wf 1.02  [4/3]  eps 2.74135 - 0.0339131j
+   wf 1.02  [5/2]  eps 2.7555 - 0.0494882j
+   wf 1.02  [6/1]  eps 2.74513 - 0.0366776j
+Im(eps) changes sign between wf 0.99 and 1.00 in every [m/n] (e.g. [3/4]: +0.0121 -> -0.0029), so the real zero is near
+wf ~0.998 at A ~2.72-2.73.
+Running: T15 (b3) kc 55 sweep and (c3) kc 63 long-LM re-solves, 2 threads each; 2 threads idle. Note on (b3): at 3.7 the
+long LM (maxjac 60, stall 8) lands on the same point as before, |F| 7.776581658918814e-05 to all digits (105 s vs 81 s).
+So it is a false minimum, not a short-LM limit. The sweep from 4.0 / 3.7938 with NE_HMIN 0.005 is running.
