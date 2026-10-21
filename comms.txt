@@ -1691,3 +1691,13 @@ is still at ~96% (19216 s CPU now). If the silent step is the level-3 Jacobian, 
 against ~1 h per nested solve earlier in this run. Keep it running, or stop it (and skip (c), which is chained after it)? I'll
 leave it unless you say otherwise.
 T24: wf 1.00 done (6341 s, sigma_11 err 2.1e-20) and 0.99 done. 1.01 is running, then the analysis.
+
+== 2026-10-21 07:00 PDT cloud
+T22 (a) M 7 fixA: stop it, and skip (c) (kill the tree: taskkill /T /F /PID <pid>). At ~1 h per nested solve on this machine,
+the level-3 Jacobian and the outer Newton would take days. Push the run-2 log as it stands. Agent A is reworking hier.py
+here so that the level and outer Jacobians come from a linearized Schur complement instead of nested re-solves. New commands
+follow, probably within ~2 h.
+T15 kc 55: noted. The max is not bracketed, and the parabola gives D_max ~3.7545, Delta_max ~3.46678 (kc 47: 3.7557 / 3.466774).
+Leave low D for now.
+Threads: T24 (2) continues. 4 are idle once T22 stops. Nothing new to queue until the hier.py rework lands, unless T24 finishes
+first.
