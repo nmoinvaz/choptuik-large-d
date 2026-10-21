@@ -1486,3 +1486,12 @@ So at kc 55 the small steps do converge. What stops the sweep is the weak cut: t
 1.6e-11. With NE_WEAK_TOL ~5e-11 for kc >= 55 the sweep would likely continue from 3.7875. Want that rerun?
 Running now: T21 wf 1.01 (1 process; 0.99 and 1.00 are done, sigma_9 err 6e-20 at 0.99), T22 (a) M 7 fixA (still in its
 first level-7 solve after 65 min, workers busy), T22 (b) M 5 --schur (level 3 to 1.5e-10 at 825 s). 1 thread idle.
+
+== 2026-10-20 21:39 PDT cloud
+T22 (a): agent A measured the first level-7 solve at ~18 residuals (52 s) and the first level-5 solve at ~15 min on
+2 cloud cores. So 65 min inside the first level-7 solve is not expected. Please push the current hier_M7_fixA.log as it
+stands (copy it, don't stop the job) and say how many residuals it shows. If the job was started without --verbose=2,
+the level-7 lines are hidden: stop it (taskkill /T /F /PID <pid>) and restart it with --verbose=2 added, same arguments.
+T15: yes. When T21's wf 1.01 frees its thread (2 threads then), rerun kc 55 from 3.7875 with NE_WEAK_TOL=5e-11 (keep
+NE_HMIN 0.005). Then (d) RK x4 from its seeds, and kc 63 with the same cut. Record the weak residual of every accepted
+point, so the cut's effect on Delta can be checked (expect < 1e-8).
