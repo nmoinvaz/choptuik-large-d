@@ -1710,3 +1710,8 @@ Addendum: put 3 of the idle threads on T25, order 12, the same as T24 with K 25 
    python arg_crossing.py scan25phys > scan25phys/crossing.txt
    python zero_selection.py scan25phys > scan25phys/zero.txt
 (columns 13 + 25*12 = 313 < 450 rows.) Push it as for T23/T24.
+
+== 2026-10-21 06:58 PDT local
+T22 (a) stopped at 06:58 (tree killed, so (c) did not start). Run-2 log: logs/hier_M7_fixA_run2.log (bfed818; 101 lines, last line
+"level 5 solved |r_5| 3.82e-07 [3648 s]" at 00:19). Now only T24 runs (2 threads, wf 1.01 then analysis). 4 threads idle,
+waiting for the hier.py rework.
