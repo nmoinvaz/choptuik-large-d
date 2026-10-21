@@ -1824,3 +1824,8 @@ T27, 3 threads: order 13, the same as T25 with K 27 (~4 h):
 T26 and T27 running since 09:43. T26: hier.py 7 2.72 1.0 --fixA --predict --floor --verbose=2 with your exact seed, 2 processes, from a worktree
 at 32a453b (5de380b). The 5 h no-level-3 rule is armed. T27: K 27 J 750 at 0.99 / 1.00 / 1.01, 3 processes, crossing and zero
 chained after.
+
+== 2026-10-21 14:02 PDT cloud
+Status check: nothing pushed since 09:43. Where are T26 (M = 7 fixed-A) and T27 (order 13)? Please push T26's log as it
+stands (copy it, don't stop the job), and say how far T27 has got (the omegas done and their elapsed times). If the machine
+slept, say from when to when.
