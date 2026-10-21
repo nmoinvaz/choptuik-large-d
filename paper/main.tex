@@ -630,7 +630,7 @@ $2.744 - 0.026i$ and $2.748 - 0.013i$. The amplitude extrapolated from the solut
 harmonic-1 condition has a nearly real zero within about 1\% of it.
 
 Across $\omega$ two families of estimates of where the zero is exactly real approach $\omega_\infty$ from opposite sides
-(Table~\ref{tab:bracket}; $\sigma_1$--$\sigma_{12}$ at $\omega/\omega_\infty = 0.99$, $1.00$, $1.01$, $\sigma_1$--$\sigma_8$ at five values
+(Table~\ref{tab:bracket}, Fig.~\ref{fig:selection}; $\sigma_1$--$\sigma_{12}$ at $\omega/\omega_\infty = 0.99$, $1.00$, $1.01$, $\sigma_1$--$\sigma_8$ at five values
 $0.98$--$1.02$, $\sigma_1$--$\sigma_7$ at seven values $0.97$--$1.03$). The crossings $\arg\tau_k = \pi$ assume a simple zero,
 $\tau_k \to -1/(k x_0^k)$. The coefficients behave as $-c/(k x_0^k)$ with an effective exponent $c$ that falls toward 1 as
 orders are added (last column), so $x_0$ is a simple zero, the departure of $c$ from 1 is contamination by singularities
@@ -669,6 +669,17 @@ order $k$ & $\arg\tau_k = \pi$ (from above) & ratio $\tau_{k-1}/\tau_k$ real (fr
 
 \begin{figure}[t]
 \centering
+\includegraphics[width=\linewidth]{figures/selection.pdf}
+\caption{The selection rule evaluated from the $D = \infty$ inner problem alone. Top: where the harmonic-1 multiplier has
+a real zero, order by order in the amplitude expansion; simple-zero estimates ($\arg\tau_k = \pi$) from above,
+floating-exponent estimates from below, Pad\'e ranges and the factored series inside the shaded bracket, which narrows onto
+$\omega_\infty$ from the finite-$D$ solutions (dashed). Bottom left: the truncated route, $|\omega^*/\omega_\infty - 1|$ for $M = 1$, 3,
+5 harmonics (alternating in sign) and the $M = 7$ prediction. Bottom right: the effective exponent of the zero tends to 1.}
+\label{fig:selection}
+\end{figure}
+
+\begin{figure}[t]
+\centering
 \includegraphics[width=\linewidth]{figures/spectrum.pdf}
 \caption{Left: amplitude $|F_\nu|$ of each odd harmonic of the echo profile for $D = 4$--$60$ and the $D = \infty$
 prediction of the inner problem (dashed; beyond $\nu = 5$ the leading-order ratio, conjectured). Right: the decay rate
@@ -692,6 +703,16 @@ a family of exact solutions, the mode's Stokes multiplier vanishes whenever the 
 needs no transcendental condition, unlike $\omega_\infty$. Physically the unstable mode shifts $r^2$, so
 $r_{\rm BH}^2 \propto p - p^*$ and $\gamma_\infty = 1/2$, the exact DSS form of the heuristic of Rozali and Way~\cite{RozaliWay2018}. Open are the
 uniqueness of this unstable mode at $D = \infty$ and the coefficient $3.0324/n$, which needs the $O(1/n)$ inner equations.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/gamma.pdf}
+\caption{Left: $\lambda = 1/\gamma$ against $1/(D-2)$ for 67 double-double points, with a fit fixing $\lambda_\infty = 2$ (solid,
+over its range $D \ge 16$) and its leading term $2 + 3.03/n$ (dashed); at $D = \infty$, $\lambda = 2$ is exact, from the
+$r^2$-shift symmetry of the inner heat equation. Right: with $\lambda_\infty$ left free, the fitted $\lambda_\infty - 2$ falls about
+3.5-fold per added power of $1/n$, for three fit ranges.}
+\label{fig:gamma}
+\end{figure}
 
 \subsection{Relation to the next-to-leading-order condition of Ref.~\cite{EckerEckerGrumiller2026}}
 \label{sec:eeg}

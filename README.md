@@ -1325,6 +1325,16 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   measured F₃/F₁ at D = 20–60 to within 0.004–0.006 (0.126, 0.099, 0.087, 0.080, 0.075 against 0.130, 0.105, 0.093,
   0.085, 0.080; `harm_pred.py`, heuristic).
 
+![The selection rule evaluated from the D = infinity inner problem alone: the order-by-order bracket on omega, the truncation sequence and the effective exponent](solver/selection.svg)
+
+**The selection rule from the inner problem alone** (`solver/plot_selection.py`). Top: where the harmonic-1 multiplier
+has a real zero, order by order in the amplitude expansion. The simple-zero estimates (arg τ_k = π) come down from above,
+the floating-exponent estimates come up from below, and the shaded bracket between them narrows onto the line at 1, which
+is ω∞ from the finite-D solutions; the Padé approximants (ranges) and the factored series land inside it. Bottom left:
+keeping M harmonics, the error alternates in sign and shrinks fifteen- to twentyfold per pair, with the M = 7 prediction.
+Bottom right: the effective exponent of the zero tends to 1, a simple zero, which is why the estimates from above are the
+asymptotically correct ones.
+
 ![The echo's harmonic spectrum: amplitude of each odd harmonic for D = 4 to 60 with the D = infinity prediction, and the decay rate per harmonic against 1/(D-2)](solver/spectrum.svg)
 
 **The prediction against the spectrum** (`solver/plot_spectrum.py`). Left: the amplitude |F_ν| of each odd harmonic (log
@@ -1396,6 +1406,13 @@ zero, so the D = 40 and 60 lines stop at ν = 13.)
   exactly on ω∞,
   and to prove the working hypothesis that this is the selection rule. That would be an equation for ω∞ and
   F∞ alone, from which Δ∞ would follow to any precision.
+
+![Why the critical exponent tends to 1/2: lambda = 1/gamma against 1/(D-2) for 67 double-double points with the fit carried to lambda = 2 at D = infinity, and free fits of lambda_inf - 2 falling with the number of powers](solver/gamma.svg)
+
+**Why γ∞ = 1/2** (`solver/plot_gamma.py`). Left: λ = 1/γ against 1/n for the 67 double-double points, with a fit that
+fixes λ∞ = 2, carried to D = ∞, where λ = 2 is exact (the r²-shift symmetry of the inner heat equation,
+[GAMMA.md](GAMMA.md)); dashed, the leading term 2 + 3.03/n. Right: with λ∞ left free, the fitted λ∞ − 2 falls about
+3.5-fold with each added power of 1/n, toward 0, for three fit ranges.
 
 ### References
 
@@ -1626,6 +1643,8 @@ hp/gamma_dd.py                gamma(D) in double-double: root of det M(lambda) (
 solver/plot_physics.py        physics.svg: e^Delta, fine-tuning digits per echo, field and gravity strength vs D
 solver/plot_echo.py           echo.svg: the echo at D = 4, 10, 20, 60 (data: solver/echo_data.py -> solver/data/echo_spectrum.npz)
 solver/plot_spectrum.py       spectrum.svg: the echo's harmonic spectrum and decay rates against the D = infinity prediction
+solver/plot_selection.py      selection.svg: the selection rule order by order (bracket, truncation sequence, exponent)
+solver/plot_gamma.py          gamma.svg: lambda = 1/gamma against 1/n with the lambda = 2 limit, and the free fits
 solver/simplify_math.py       converts trivial inline math in README.md to Unicode (GitHub renders at most ~1400 expressions)
 solver/largeD_expand.py       the 1/n expansion symbolically (sympy, Proposition 1)
 solver/largeD_formal_check.py the expansion substituted into the exact equations (residual ~ n^-3 for any omega)
