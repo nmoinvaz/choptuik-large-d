@@ -19,8 +19,8 @@ solver in [`hp/`](hp/) for large D. The physics is in this file; the software is
   multiplier of a mode born far outside the light cone (Propositions 3–4). The working hypothesis is that the selection
   rule is the vanishing of the Stokes multipliers of an n-free inner problem; its higher-harmonic conditions already
   predict the shape of the echo, F₃/F₁ = 0.055 against 0.055 extrapolated from the data, and with three harmonics
-  the full set of conditions gives Δ = 1.619, 1.5% below Δ∞, and with five harmonics (first Newton step) Δ = 1.6454,
-  0.09% above (one harmonic: 29% above): the offset shrinks about fifteenfold per harmonic pair. Without truncation, an
+  the full set of conditions gives Δ = 1.619, 1.5% below Δ∞, and with five harmonics Δ = 1.64516, 0.077% above (one
+  harmonic: 29% above): the offset alternates in sign and shrinks fifteen- to twentyfold per harmonic pair. Without truncation, an
   amplitude expansion to eight orders selects ω between about 0.99 and 1.001 ω∞ at amplitude 2.72–2.73 (measured:
   2.70–2.72). So the conjectured rule reproduces Δ∞ to within about 1% from the D = ∞ equations alone; the rule itself is not yet
   proved ([Large D](#large-d-what-the-1d-expansion-can-and-cannot-see)).
@@ -1183,10 +1183,12 @@ late orders of the inner series fitted with the predicted fast-mode exponents).
   ξ₁ = 0.2, where it is resolved about 10⁸ times better. At fixed (2.72, ω∞) it reproduces the amplitude expansion's
   harmonics, which share no code with it: F₃/F₁ = 0.05486 + 0.00541i and F₅/F₁ = 0.00309 + 0.00054i against
   0.05482 + 0.00543i and 0.00310 + 0.00056i (the differences are of the size of the omitted F₇). The harmonic-1
-  residual there is 6.5 + 1.8i, against −59 − 99i at M = 3. The first outer Newton step of the full selection lands at
-  **A = 2.7187, ω = 0.9991 ω∞ (Δ = 1.6454, 0.09% above Δ∞)**, with an uncertainty of about 3×10⁻⁴ in A and ω/ω∞
-  (one step, not converged). So the offset in ω goes 22% (M = 1), 1.56% (M = 3), about 0.1% (M = 5), shrinking about
-  fifteenfold per added harmonic pair. Convergence of the M = 5 solve and M = 7 are to run on the 8-thread machine.
+  residual there is 6.5 + 1.8i, against −59 − 99i at M = 3 (and 271 + 329i, 74 − 311i at ω = 1.05, 0.95 ω∞). The full
+  selection, run to its noise floor on the 8-thread machine (four outer Newton steps, |r₁| 0.25 → 0.05; A and ω steady to
+  4×10⁻⁵ and 8×10⁻⁶ over the last steps), gives **A = 2.71858, ω = 0.99923 ω∞ (Δ = 1.64516, 0.077% above Δ∞)**. So the
+  offset in ω goes −22%, +1.56%, −0.077% for M = 1, 3, 5: it alternates in sign and shrinks fifteen- to twentyfold per
+  added pair of harmonics. Aitken's extrapolation of the three gives ω/ω∞ = 1.0003, though three terms are a thin basis.
+  M = 7 does not yet run (`hier.py` makes no progress from its start; being fixed).
 
 **Without truncation: the amplitude expansion** (`solver/inner_amp/`).
 
@@ -1268,8 +1270,8 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   sequence is not yet in its asymptotic form.
 - *Where that leaves it.* Estimates that assume a simple zero approach from above (1.0040, 1.0021, extrapolating to about
   1.0006); estimates that let the exponent float, and the Padé approximants, approach from below (0.980–0.991 at seven
-  coefficients, 0.995–0.998 at eight); the five-harmonic truncation gives 0.9991, and the truncation sequence alternates
-  (0.777, 1.0156, 0.9991) with shrinking steps. So the selection rule of Conjecture 1 picks ω/ω∞ between about 0.99 and
+  coefficients, 0.995–0.998 at eight); the five-harmonic truncation gives 0.99923, and the truncation sequence alternates
+  (0.777, 1.0156, 0.99923; Aitken 1.0003). So the selection rule of Conjecture 1 picks ω/ω∞ between about 0.99 and
   1.001, at amplitude A₀ = 2.72–2.73 (the solutions: 2.70–2.72): Δ∞ to within about 1%, plausibly 0.1%, from the D = ∞
   inner equations alone, with no input from the finite-D solutions. The rule itself is still a conjecture (hypotheses
   H1–H2, gaps (a)–(c)). Tightening the number needs more orders (σ₈ across ω is running), approximants that model the
@@ -1334,7 +1336,7 @@ zero, so the D = 40 and 60 lines stop at ν = 13.)
 - **Open:** the D = ∞ selection rule itself. Proposition 2 gives the multiplier without gravity, C(n,s), and the inner
   problem shows it is asymptotically a $`{}_2F_0`$ Stokes constant; Proposition 3 shows that propagation inside the light cone
   cannot change whether it vanishes. The multipliers with gravity have been computed with up to five harmonics (above):
-  their vanishing selects ω = 1.0156 ω∞ with three and about 0.9991 ω∞ with five (first estimate), with the measured
+  their vanishing selects ω = 1.0156 ω∞ with three and 0.99923 ω∞ with five, with the measured
   shape; without truncation the harmonic-1 condition selects ω between about 0.99 and 1.001 ω∞ at eight orders. What remains
   is to converge these further (M = 5 and 7; σ₈ and beyond across ω), to see whether the harmonic-1 condition lands
   exactly on ω∞,
