@@ -1715,3 +1715,44 @@ Addendum: put 3 of the idle threads on T25, order 12, the same as T24 with K 25 
 T22 (a) stopped at 06:58 (tree killed, so (c) did not start). Run-2 log: logs/hier_M7_fixA_run2.log (bfed818; 101 lines, last line
 "level 5 solved |r_5| 3.82e-07 [3648 s]" at 00:19). Now only T24 runs (2 threads, wf 1.01 then analysis). 4 threads idle,
 waiting for the hier.py rework.
+
+== 2026-10-21 07:00 PDT local
+T24 done (e43ab5c): scan23phys/ (3 JSONs, crossing.txt, zero.txt, log). Per omega: 6354 / 6341 / 6013 s. sigma_11 err
+1.8e-20 / 2.1e-20 / 2.3e-20.
+crossing.txt:
+   arg(tau_11) = pi at wf = 1.0002
+   Aitken limit of the last three crossings: wf = 1.0001
+   ratio tau_10/tau_11: eps0 real at wf = 0.9992, A0 = 2.720
+   (k 5..10 crossings: 1.0083 / 1.0040 / 1.0021 / 1.0011 / 1.0006 / 1.0003)
+zero.txt, [m/n] zeros (eps) at each omega (no [0/10] zero listed):
+   wf 0.99  [1/9]  eps 2.71152 + 0.0104735j
+   wf 0.99  [2/8]  eps 2.71771 + 0.015152j
+   wf 0.99  [3/7]  eps 2.71053 + 0.0142539j
+   wf 0.99  [4/6]  eps 2.71248 + 0.013412j
+   wf 0.99  [5/5]  eps 2.71258 + 0.0132684j
+   wf 0.99  [6/4]  eps 2.71226 + 0.0140071j
+   wf 0.99  [7/3]  eps 2.71257 + 0.0156911j
+   wf 0.99  [8/2]  eps 2.71433 + 0.0139809j
+   wf 0.99  [9/1]  eps 2.71325 + 0.0130724j
+   wf 1.00  [1/9]  eps 2.71934 - 0.00351715j
+   wf 1.00  [2/8]  eps 2.72369 + 0.000254064j
+   wf 1.00  [3/7]  eps 2.71838 + 0.000319029j
+   wf 1.00  [4/6]  eps 2.72001 - 0.000655819j
+   wf 1.00  [5/5]  eps 2.72007 - 0.000786101j
+   wf 1.00  [6/4]  eps 2.71986 - 0.000131514j
+   wf 1.00  [7/3]  eps 2.72041 + 0.00110095j
+   wf 1.00  [8/2]  eps 2.72173 - 0.000431093j
+   wf 1.00  [9/1]  eps 2.72106 - 0.00116274j
+   wf 1.01  [1/9]  eps 2.72702 - 0.0176693j
+   wf 1.01  [2/8]  eps 2.73013 - 0.0145461j
+   wf 1.01  [3/7]  eps 2.72607 - 0.0137549j
+   wf 1.01  [4/6]  eps 2.7274 - 0.0148015j
+   wf 1.01  [5/5]  eps 2.72743 - 0.0149207j
+   wf 1.01  [6/4]  eps 2.72731 - 0.0143405j
+   wf 1.01  [7/3]  eps 2.728 - 0.0135043j
+   wf 1.01  [8/2]  eps 2.72899 - 0.0148935j
+   wf 1.01  [9/1]  eps 2.72866 - 0.0155122j
+Im(eps) = 0 crossings (linear between the bracketing omegas, computed by script): [1/9] 0.99749, [2/8] 1.00017,
+[3/7] 1.00023, [4/6] 0.99953, [5/5] 0.99944, [6/4] 0.99991, [7/3] 1.00075, [8/2] 0.99970, [9/1] 0.99918. All nine
+change sign on 0.99-1.01, and at wf 1.00 every |Im eps| <= 0.0035, with eps 2.718-2.724.
+T25 (K 25, 3 omegas at once) running since 07:00 on 3 processes. 3 threads idle.
