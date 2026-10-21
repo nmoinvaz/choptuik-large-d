@@ -1292,7 +1292,9 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   A₀ = 2.7195–2.7198.
 - *Where that leaves it.* At twelve orders the bracket is 0.99915–1.00011 (eleven: 0.9992–1.0002, ten: 0.9978–1.0003,
   nine: 0.9961–1.0006, eight: 0.9946–1.0011). Inside it the simple-zero crossings are still falling through 1.00011,
-  and the twelve-coefficient Padé approximants agree at 0.9999. The five-harmonic truncation gives 0.999228 and its
+  and the twelve-coefficient Padé approximants agree at 0.9999. A third estimator agrees: S₁ is numerically an entire
+  function of A² of exponential type, and the series of G = e^{−κ̄A²}S₁ (same zeros, no cancellation) puts the real zero
+  at 0.99988 at twelve orders, A₀ = 2.7194, isolated from the other zeros ([proof/D_entire.md](proof/D_entire.md)). The five-harmonic truncation gives 0.999228 and its
   sequence alternates (0.777, 1.0156, 0.999228; Aitken 1.0003). So the selection rule of Conjecture 1 picks
   ω/ω∞ = 0.9999–1.0001 (the bracket is the cautious range), at amplitude A₀ = 2.720 (the solutions: 2.70–2.72):
   **Δ∞ = 1.6439 ± 0.0002 from the D = ∞ inner equations alone**, with no input from the finite-D solutions, against
@@ -1585,7 +1587,9 @@ PARALLEL.md         how the computations parallelize: shooting as CRC-style chun
 AGENTS.md           conventions for the AI sessions that run computations here (which scripts to use, thread budget, comms)
 PROOF.md            roadmap for a proof of the selection rule (computer-assisted inner zero; analytic selection theorem)
 GAMMA.md            why gamma_inf = 1/2 (solver/inner_pert/heat_form.py: the heat-equation form; pert_check3.py: the exact lambda = 2 mode)
-solver/proof/       feasibility numbers for the proof roadmap (feasibility.py: sigma ratios, conditioning, tail size)
+solver/proof/       feasibility numbers for the proof roadmap (feasibility.py: sigma ratios, conditioning, tail size;
+                    entire_cert.py: S_1 as an entire function of A^2, the factored series and certificate margins)
+proof/              the proof roadmap's parts (D_entire.md: the entire-function route to a certified inner zero)
 solver/README.md    the Python solver, scans and fits; solver/CONTEXT.md (summary), solver/notes.md (lab notebook)
 solver/formula_all.py  the rational formulas (README coefficient table): cd solver/data && python3 ../formula_all.py
 solver/rational_fit.py the search over rational forms; solver/formula.py the 1/D power series

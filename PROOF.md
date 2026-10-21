@@ -46,9 +46,12 @@ Contents
   asymptotics; together they would be the first rigorous derivation of a critical-collapse echo period.
 - **A new structural fact that helps both:** the amplitude-series coefficients satisfy
   |σ_k/σ_{k+1}| ≈ 0.60 k + 2.5 with remarkable regularity (k = 3–11, `solver/proof/feasibility.py`), so S₁(·, ω) is,
-  numerically, an *entire* function of x = A² of order 1. Its logarithm's singularities are then exactly its zeros, which
-  explains the slow, monotone convergence of the order-by-order estimates (the next zero lies at |x| ≈ 8–9, close to
-  the physical one at x₀ = 7.40) and makes argument-principle and Miranda-type root certificates natural.
+  numerically, an *entire* function of x = A² of order 1 and exponential type (about 1.67 in x;
+  [proof/D_entire.md](proof/D_entire.md)). Its logarithm's singularities are then exactly its zeros, which makes
+  argument-principle and Miranda-type root certificates natural. Factoring out the exponential,
+  G = e^{−κ̄x}S₁, removes the cancellation (the terms at x₀ are O(1) and fall to 4×10⁻⁴ by k = 12 instead of peaking near
+  240), puts the real zero at ω/ω∞ = 0.99988 at twelve orders (A₀ = 2.7194), and shows the zero x₀ ≈ 7.40 is isolated
+  (the next zeros lie at |x| > 10).
 
 ## 1. The statement, in three layers
 
@@ -153,7 +156,25 @@ harmonics, the multiplier is the jump across the Stokes line of solutions starte
   M > 5 tail must be bounded below about 4 to certify a 10⁻³ box).
 
 Staged targets: **A(M=5)**, a certified simple zero of the five-harmonic multiplier (lemmas A.1, A.2, A.4 only; a
-standard computer-assisted proof); then **A(∞)**, the untruncated zero, adding A.3.
+standard computer-assisted proof); then **A(∞)**, the untruncated zero, adding A.3, or by the entire-function route below.
+
+**Route A3: the entire-function certificate** ([proof/D_entire.md](proof/D_entire.md), `solver/proof/entire_cert.py`).
+The coefficients follow σ_k/σ_{k+1} ≈ (k + β)/κ⋆ with κ⋆ ≈ 1.28 + 1.08i and β ≈ 4.2 − 1.6i, the same at ω/ω∞ = 0.99,
+1.00, 1.01 to about 1%: S₁ is entire of order 1 and exponential type, a Laplace integral over an arc of Borel
+singularities (from about 0.75 + 0.16i to κ⋆) rather than a sum of isolated exponents. With G = e^{−κ̄x}S₁ (κ̄ ≈ 0.89 + 0.55i,
+the arc's centre; same zeros) the truncated series at K = 9–12 puts the real zero at ω/ω∞ = 0.99767, 1.00035, 0.99987,
+0.99988, with A₀(ω∞) = 2.7194 − 0.0002i, matching the central Padé approximants (0.99987–0.99991); the plain Taylor
+truncation is useless at these orders. Certificate margins at ω∞: Rouché on |x − x₀| = 0.01 needs total error below
+5.7×10⁻⁴; Krawczyk/Miranda in (A, ω/ω∞) (Jacobian singular values 0.53, 0.26) needs below about 2.6×10⁻³ for a box of
+radius 0.01 and 2.6×10⁻⁴ for 10⁻³. A type bound calibrated at k = 12 gives a tail of about 2×10⁻⁴, so K = 12 would certify
+a 0.01 box and K ≈ 14–15 a 10⁻³ box, if the coefficients and the tail were rigorous. What that needs: rigorous σ_k for
+k ≤ 14 (standard but laborious: each order is a linear inhomogeneous Stokes problem, enclosed by validated lateral
+integration or an exact adjoint pairing instead of the late-order fit), and the tail bound, which is the new, hard part.
+A majorant on the recursion can only give geometric bounds, so it needs either a bound on G at complex amplitude on one
+circle |x| ≈ 15–20 (|A| ≈ 4–4.5) via Cauchy estimates, i.e. control of the tuned inner solution at complex amplitude, or a
+Laplace/Paley–Wiener representation proving the exponential type. This replaces the harmonic tail (gap (b)) by an
+amplitude tail that is much better behaved; a conditional theorem (zero certified assuming an explicit type bound) is
+within reach now.
 
 A cheaper intermediate certificate uses the entire-function structure: if S₁(·, ω) is entire of order 1 in x (lemma to
 prove: a bound $`\lvert\sigma_k\rvert \le C\,a^k/\Gamma(k+b)`$ with explicit C, a, b), then rigorous enclosures of σ₁…σ_K
