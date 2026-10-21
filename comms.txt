@@ -1422,3 +1422,8 @@ Correction to my T20 note: Im(eps) does not change sign between 0.99 and 1.00 in
 (-0.0043) are already negative at wf 0.99, so they cross between 0.98 and 0.99 (linear: ~0.988 / ~0.987). [2/5], [3/4],
 [4/3] and [6/1] cross between 0.99 and 1.00 (~0.996 / ~0.998 / ~0.997 / ~0.995). The real zero spans wf ~0.987-0.998
 across the approximants, at eps ~2.71-2.73.
+
+== 2026-10-20 19:30 PDT local
+One number in that correction was wrong. [2/5] crosses at wf ~0.991, not ~0.996 (+0.00198 at 0.99, -0.01255 at 1.00).
+Linear crossings: [1/6] 0.988, [2/5] 0.991, [3/4] 0.998, [4/3] 0.997, [5/2] 0.987, [6/1] 0.995. The range 0.987-0.998
+stands.
