@@ -21,9 +21,9 @@ solver in [`hp/`](hp/) for large D. The physics is in this file; the software is
   predict the shape of the echo, F₃/F₁ = 0.055 against 0.055 extrapolated from the data, and with three harmonics
   the full set of conditions gives Δ = 1.619, 1.5% below Δ∞, and with five harmonics Δ = 1.64516, 0.077% above (one
   harmonic: 29% above): the offset alternates in sign and shrinks fifteen- to twentyfold per harmonic pair. Without truncation, an
-  amplitude expansion to eight orders brackets the selected ω between 0.9946 and 1.0011 ω∞, best estimate
-  0.998 ± 0.002, at amplitude 2.72–2.73 (measured: 2.70–2.72). So the conjectured rule reproduces Δ∞ to about 0.2% from
-  the D = ∞ equations alone, consistent with exact agreement; the rule itself is not yet
+  amplitude expansion to nine orders brackets the selected ω between 0.9961 and 1.0006 ω∞, best estimate
+  1.0000 ± 0.0003, at amplitude 2.72–2.73 (measured: 2.70–2.72). So the conjectured rule gives Δ∞ = 1.6439 ± 0.0005
+  from the D = ∞ equations alone, against 1.64389375 from the solutions; the rule itself is not yet
   proved ([Large D](#large-d-what-the-1d-expansion-can-and-cannot-see)).
 - **Relation to published work.** Agreement with the accepted values at D = 4 and at the maximum of Δ near D = 3.756;
   a 6×10⁻⁵ difference at D = 5 that the published higher-resolution data trace to resolution; and the published
@@ -1255,8 +1255,9 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   $`(\ln S_1)'`$ put the zero at A₀ = 2.728–2.756 with Im A₀ = −0.013 to −0.027 (residues 1.05–1.22, ideally 1), and the
   ratio estimates from τ₅/τ₆ and τ₆/τ₇ give 2.744 − 0.026i and 2.748 − 0.013i. The D = ∞ amplitude measured from the
   solutions is 2.70–2.72, so the zero lies within about 1% of it.
-- *Across ω: where the zero is exactly real.* Two families of estimates approach from opposite sides (σ₁–σ₈ at five
-  ω, 0.98–1.02 ω∞, K = 17, `scan17phys/`; σ₁–σ₇ at seven ω, 0.97–1.03, `scan15phys/`; earlier coarser scans agree to 10⁻⁴):
+- *Across ω: where the zero is exactly real.* Two families of estimates approach from opposite sides (σ₁–σ₉ at ω/ω∞ =
+  0.99, 1.00, 1.01, K = 19, `scan19phys/`; σ₁–σ₈ at five ω, 0.98–1.02, `scan17phys/`; σ₁–σ₇ at seven ω, 0.97–1.03,
+  `scan15phys/`; earlier coarser scans agree to 10⁻⁴):
 
 | Order k | arg τₖ = π crossing (from above) | ratio τₖ₋₁/τₖ real (from below) | effective exponent c at ω∞ |
 |---|---|---|---|
@@ -1264,21 +1265,23 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
 | 6 | 1.0040 | 0.9803 | 1.148 − 0.159i |
 | 7 | 1.0021 | 0.9913 | 1.177 − 0.095i |
 | 8 | 1.0011 | 0.9946 | 1.077 − 0.059i |
+| 9 | 1.0006 | 0.9961 | 1.052 − 0.044i |
 
-  The crossings from above shrink their distance by a factor of about 0.45–0.53 per order and extrapolate to 1.0002
-  (Aitken, k = 6–8; the geometric model had predicted the k = 8 crossing at 1.0013, a 1/k model at 1.0007). The
-  arg = π criterion assumes x₀ is a simple zero, $`\tau_k \to -1/(k\,x_0^k)`$; the coefficients behave as
-  $`-c/(k\,x_0^k)`$ with an effective exponent c (last column, from three consecutive orders) that is falling toward 1 as
-  orders are added, so its departure from 1 is contamination by singularities beyond x₀, not a non-simple zero. The
-  ratio estimates, which let c float, come up from below. Padé approximants of $`(\ln S_1)'`$ with eight coefficients
-  put Im A₀ = 0 at ω/ω∞ = 0.987–0.998 (with seven: 0.981–0.991); the best-conditioned, [3/4] and [4/3], at 0.997–0.998,
-  with A₀ = 2.72–2.73.
-- *Where that leaves it.* At eight orders the bracket is 0.9946–1.0011 (at seven 0.9913–1.0021, at six 0.9803–1.0040),
-  narrowing by about half per order; the extrapolations from the two sides give 0.996 and 1.0002, and the best Padé
-  approximants 0.997–0.998. The five-harmonic truncation gives 0.99923, and the truncation sequence alternates (0.777,
-  1.0156, 0.99923; Aitken 1.0003). So the selection rule of Conjecture 1 picks ω/ω∞ = 0.998 ± 0.002, at amplitude
-  A₀ = 2.72–2.73 (the solutions: 2.70–2.72): Δ∞ to about 0.2% from the D = ∞ inner equations alone, with no input from
-  the finite-D solutions, and consistent with exactly ω∞. The rule itself is still a conjecture (hypotheses H1–H2,
+  The arg = π criterion assumes x₀ is a simple zero, $`\tau_k \to -1/(k\,x_0^k)`$; the coefficients behave as
+  $`-c/(k\,x_0^k)`$ with an effective exponent c (last column, from three consecutive orders) that falls toward 1 as
+  orders are added (1.177, 1.077, 1.052), so x₀ is a simple zero and the departure of c from 1 is contamination by
+  singularities beyond it. That makes the crossings from above the asymptotically correct estimator. Their distance
+  shrinks by a factor of about 0.45–0.53 per order, and Aitken's extrapolation of consecutive triples is stable:
+  1.0003, 1.0006, 0.99999, 1.0001 (k = 4–6 to 7–9). The ratio estimates, which let c float, come up from below and
+  extrapolate to about 0.9974. Padé approximants of $`(\ln S_1)'`$ put Im A₀ = 0 at ω/ω∞ = 0.981–0.991 with seven
+  coefficients, 0.987–0.998 with eight and 0.992–0.998 with nine (all but one at 0.996–0.998), with A₀ = 2.715–2.72.
+- *Where that leaves it.* At nine orders the bracket is 0.9961–1.0006 (eight: 0.9946–1.0011, seven: 0.9913–1.0021),
+  narrowing by about a third per order. The simple-zero crossings extrapolate to 1.0000 ± 0.0003; the floating-exponent
+  estimates and the Padé approximants, which converge more slowly, to about 0.997–0.998 and still rising. The
+  five-harmonic truncation gives 0.999228 and its sequence alternates (0.777, 1.0156, 0.999228; Aitken 1.0003). So the
+  selection rule of Conjecture 1 picks ω/ω∞ between 0.997 and 1.0003, best estimate 1.0000 ± 0.0003, at amplitude
+  A₀ = 2.72–2.73 (the solutions: 2.70–2.72): Δ∞ = 1.6439 ± 0.0005 from the D = ∞ inner equations alone, with no input
+  from the finite-D solutions, against 1.64389375 from them. The rule itself is still a conjecture (hypotheses H1–H2,
   gaps (a)–(c)). Tightening the number needs more orders, approximants that model the competing singularity
   explicitly (differential or algebraic approximants), or M = 7, which evaluates the multiplier at real amplitude with
   no series to resum (being fixed).
@@ -1342,7 +1345,7 @@ zero, so the D = 40 and 60 lines stop at ν = 13.)
   problem shows it is asymptotically a $`{}_2F_0`$ Stokes constant; Proposition 3 shows that propagation inside the light cone
   cannot change whether it vanishes. The multipliers with gravity have been computed with up to five harmonics (above):
   their vanishing selects ω = 1.0156 ω∞ with three and 0.99923 ω∞ with five, with the measured
-  shape; without truncation the harmonic-1 condition selects ω = (0.998 ± 0.002) ω∞ at eight orders. What remains
+  shape; without truncation the harmonic-1 condition selects ω = (1.0000 ± 0.0003) ω∞ at nine orders. What remains
   is to converge these further (M = 5 and 7; σ₈ and beyond across ω), to see whether the harmonic-1 condition lands
   exactly on ω∞,
   and to prove the working hypothesis that this is the selection rule. That would be an equation for ω∞ and
