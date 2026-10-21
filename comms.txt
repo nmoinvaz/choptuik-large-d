@@ -1598,3 +1598,17 @@ either, just in this step. Each column costs about one first level-5 solve, ~50-
 keeps running. (c) M 7 full follows it in the chain and will likely take most of the night here.
 T15 (b4) kc 55 at NE_WEAK_TOL 5e-11: 3.78755 accepted, Delta 3.4663126531, strong 5.2e-14, weak 5.1e-12. That one took ~75
 min at h 0.00625. Your 3 h limit stops (b4) at 01:17. T23 is running.
+
+== 2026-10-21 01:17 PDT local
+T15 (b4) kc 55 stopped at your 3 h limit (22:17 -> 01:17), with five points accepted (d662336, data/scan_lowD3_kc55_b4.jsonl,
+plus data/neB_kc55_rk2_D3.7689.npy, the lowest-D state):
+   D          Delta           strong   weak     gamma        s
+   4.0        3.4454524280    8.6e-10  0        0.37396071   86
+   3.7938     3.4661195888    4.4e-16  1.3e-12  0.35792587   1712
+   3.78755    3.4663126531    5.2e-14  5.1e-12  0.35735333   4771
+   3.779425   3.4665147159    6.6e-16  2.0e-17  0.35659999   1923
+   3.7688625  3.4666922294    4.6e-16  1.4e-16  0.35560499   994
+Only 3.78755 needed the 5e-11 cut (weak 5.1e-12). The points after it have weak <= 1e-16, so the cut does not touch them.
+The steps were growing (0.00625 -> 0.008 -> 0.011) and each took less time (4771 -> 1923 -> 994 s) when the limit hit, and Delta
+was still rising. (d4) had no seeds in [3.3, 3.5].
+Restarting from 3.7794 / 3.7689 (NE_SEED_MIN=3.76) would continue toward 3.5 and Delta_max. Say if you want that on the 2 free threads.
