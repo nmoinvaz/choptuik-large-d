@@ -39,8 +39,8 @@ radius. We conjecture that the selection rule at $D = \infty$ is the vanishing o
 $n$-free inner problem; its higher-harmonic conditions predict the shape of the echo, $|F_3/F_1| = 0.0551$, which the
 data reproduce. Truncated to three harmonics, the full set of conditions selects $\Delta = 1.619$, 1.5\% below
 $\Dinf$, and with five harmonics (a first estimate) $\Delta = 1.6454$, 0.09\% above (one harmonic: 29\% above).
-Without truncation, an amplitude expansion to eight orders selects $\omega$ between $0.995$ and $1.001\,\omega_\infty$ at
-amplitude 2.72--2.73 (measured: 2.70--2.72). The conjectured rule thus reproduces $\Dinf$ to about 0.1--0.5\% from the
+Without truncation, an amplitude expansion to eight orders selects $\omega$ between about $0.99$ and $1.001\,\omega_\infty$
+at amplitude 2.72--2.73 (measured: 2.70--2.72). The conjectured rule thus reproduces $\Dinf$ to within about 1\% from the
 $D = \infty$ equations alone; the rule itself is not yet proved.
 The computations, derivations and text were produced by an AI model (Claude, Anthropic) under the author's
 direction and have not yet been reviewed by a human expert (Sec.~\ref{sec:how}).
@@ -631,10 +631,16 @@ of about 0.45, and the sequence converges to about $1.0007$. Pad\'e approximants
 $\mathrm{Im}\,A_0 = 0$ at $\omega/\omega_\infty = 0.981$--$0.991$; with the eighth coefficient at $\omega_\infty$
 ($\sigma_8 = (2.6677877674 - 0.33200030897i)\times10^{-5}$), the best-conditioned approximants give
 $A_0 = 2.7266 - 0.0029i$ and $2.7271 - 0.0045i$, which with the measured slope of $\mathrm{Im}\,A_0$ in $\omega$ puts the
-real zero at $\omega/\omega_\infty \approx 0.995$--$0.998$. Together with the five-harmonic truncation ($0.9991$), the
-selection rule thus picks $\omega/\omega_\infty$ between about $0.995$ and $1.001$ at amplitude $A_0 = 2.72$--$2.73$ (the
-solutions: 2.70--2.72): $\Dinf$ to about 0.1--0.5\% from the $D = \infty$ inner equations alone, with no input from the
-finite-$D$ solutions.
+real zero at $\omega/\omega_\infty \approx 0.995$--$0.998$. These estimates are not yet asymptotic. The arg-crossing
+criterion assumes a simple zero, $\tau_k \to -1/(k x_0^k)$, but the coefficients behave as $-c/(k x_0^k)$ with an effective
+exponent $c \approx 1.18 - 0.10i$, stable over orders and $\omega$ (the Pad\'e residues, 1.05--1.13, agree). A zero is
+generically simple, so this most likely measures contamination by other singularities not far beyond $x_0$; letting $c$
+float moves the crossings to $0.980$--$0.993$, rising with order, and rational extrapolations of the crossing sequence
+range from $0.991$ to $1.019$. Estimates assuming a simple zero thus approach from above, those letting the exponent
+float (and the Pad\'e approximants) from below, and the five-harmonic truncation gives $0.9991$: the selection rule picks
+$\omega/\omega_\infty$ between about $0.99$ and $1.001$ at amplitude $A_0 = 2.72$--$2.73$ (the solutions: 2.70--2.72), i.e.\
+$\Dinf$ to within about 1\%, plausibly 0.1\%, from the $D = \infty$ inner equations alone, with no input from the finite-$D$
+solutions.
 
 \begin{figure}[t]
 \centering
@@ -680,8 +686,8 @@ $\Dinf = 1.64389375$ strongly, under the assumption of analyticity in $1/D$ that
 theory explains why that number cannot come from the $1/D$ expansion: the expansion is unobstructed for every period,
 and the selection acts through an exponentially small, Stokes-type effect whose linear version is solved exactly. The
 inner problem at $x \sim \sqrt n$ is $n$-free; its higher-harmonic conditions already reproduce the shape of the echo
-at $D = \infty$, and its harmonic-1 condition selects $\omega$ within 0.1--0.5\% of $\omega_\infty$, both untruncated and
-truncated to five harmonics. Open are: higher orders of that condition, which would give $\Dinf$ (and possibly a closed
+at $D = \infty$, and its harmonic-1 condition selects $\omega$ within about 1\% of $\omega_\infty$ untruncated and within
+0.1\% truncated to five harmonics. Open are: higher orders of that condition, which would give $\Dinf$ (and possibly a closed
 form) from first principles to more digits; a proof of Conjecture~\ref{conj}; the value $\lambda_\infty = 2$;
 and the behaviour just below $D = 4$.
 
