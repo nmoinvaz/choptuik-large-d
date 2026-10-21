@@ -9,9 +9,10 @@ Conventions for the Claude sessions (cloud and local) that run computations here
   640 bits (late-order fits with every neighbour family |ν′| ≤ k; the default `legacy` basis, ±2, ±4, ±6 only, biases σ₅
   and wrecks σ₆–σ₈), e.g. `amp_flint_par.py 1.0 15 750 640 --procs 6 --fit phys --mf 6:12`, and compare two J.
   Check `sigma_err` in the JSON. `amp_flint.py` stays as the serial reference for checks.
-- **Inner selection with M harmonics:** use the nested solve, `solver/inner_stokes/full_M.py` (or `nested.py` for
-  M = 3), not a joint solve of all conditions: the joint solve is ill-conditioned (about 10¹⁰) and stops on false
-  near-zeros.
+- **Inner selection with M harmonics:** use `solver/inner_stokes/hier.py` (hierarchical solve; required for M ≥ 5,
+  where `full_M.py`'s homotopy stalls), or `nested.py` for M = 3. Never a joint solve of all conditions: it is
+  ill-conditioned (about 10¹⁰) and stops on false near-zeros. hier.py uses 2 processes at most (`--procs 2`), so fill
+  the thread budget with several jobs rather than one job with more processes.
 - **Double-double solver (`hp/`):** rebuild with `hp/build.sh` after pulling changes to `hp/src`. γ(D) comes from
   `hp/gamma_dd.py` / `hp/gamma_batch.py --procs N`.
 - **Thread budget on the local 8-thread machine:** 4–6 threads at below-normal priority; one process per thread.

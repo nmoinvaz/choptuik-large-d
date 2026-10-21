@@ -19,10 +19,11 @@ solver in [`hp/`](hp/) for large D. The physics is in this file; the software is
   multiplier of a mode born far outside the light cone (Propositions 3–4). The working hypothesis is that the selection
   rule is the vanishing of the Stokes multipliers of an n-free inner problem; its higher-harmonic conditions already
   predict the shape of the echo, F₃/F₁ = 0.055 against 0.055 extrapolated from the data, and with three harmonics
-  the full set of conditions gives Δ = 1.619, 1.5% below Δ∞ (one harmonic: 29% above). Without truncation, seven orders
-  of an amplitude expansion give, at ω∞, a nearly real zero at amplitude 2.74 (measured: 2.70–2.72), and five orders put
-  the ω where it is exactly real within about 0.5% of ω∞. None of this is converged yet, so it is not yet a derivation of
-  Δ∞ ([Large D](#large-d-what-the-1d-expansion-can-and-cannot-see)).
+  the full set of conditions gives Δ = 1.619, 1.5% below Δ∞, and with five harmonics (first Newton step) Δ = 1.6454,
+  0.09% above (one harmonic: 29% above): the offset shrinks about fifteenfold per harmonic pair. Without truncation,
+  seven orders of an amplitude expansion give, at ω∞, a nearly real zero at amplitude 2.74 (measured: 2.70–2.72). None
+  of this is converged yet, so it is not yet a derivation of Δ∞
+  ([Large D](#large-d-what-the-1d-expansion-can-and-cannot-see)).
 - **Relation to published work.** Agreement with the accepted values at D = 4 and at the maximum of Δ near D = 3.756;
   a 6×10⁻⁵ difference at D = 5 that the published higher-resolution data trace to resolution; and the published
   conjecture Δ → 0 as D → ∞ is not
@@ -1174,9 +1175,18 @@ late orders of the inner series fitted with the predicted fast-mode exponents).
   different starts and at three matching radii (ξ₁ = 0.175, 0.2, 0.225; it moves by less than 10⁻⁷):
   A = 2.7265, ω = 1.0156 ω∞ (Δ = 1.6186), F₃/F₁ = 0.0530 + 0.0041i, ⟨F²⟩ = 3.727. The shape is that of the
   D = ∞ solution (extrapolated from the data: A ≈ 2.70–2.72, |F₃/F₁| ≈ 0.050–0.058, ⟨F²⟩ ≈ 3.65–3.7), and ω is
-  1.56% above ω∞, against 22% below with one harmonic. Truncation is not controlled (previous item), so whether the
-  offset closes needs M ≥ 5. There the leakage of S₅ into r₁ is about $`e^{2\pi\omega}`$ ≈ 3×10¹⁰, so only the nested form is
-  usable (`full_M.py 5 …`, with `--procs N` for the Jacobian columns; to run on the 8-thread machine).
+  1.56% above ω∞, against 22% below with one harmonic.
+- *Five harmonics* (`solver/inner_stokes/hier.py`). At M = 5 the couplings are larger still (∂r₅/∂B₅ ≈ 2×10⁸,
+  ∂r₃/∂B₅ ≈ 10¹³, ∂r₁/∂B₅ ≈ 10¹⁷), and the nested solve's homotopy stalled. A hierarchical solve works: S_M = 0
+  innermost, then S_{M−2}, …, S₃, and S₁ = 0 for (A, ω) outermost, each level a damped 2×2 Newton step judged by step
+  size; each condition with ν ≥ 5 is first solved at a small radius where its jump is linear and then polished at
+  ξ₁ = 0.2, where it is resolved about 10⁸ times better. At fixed (2.72, ω∞) it reproduces the amplitude expansion's
+  harmonics, which share no code with it: F₃/F₁ = 0.05486 + 0.00541i and F₅/F₁ = 0.00309 + 0.00054i against
+  0.05482 + 0.00543i and 0.00310 + 0.00056i (the differences are of the size of the omitted F₇). The harmonic-1
+  residual there is 6.5 + 1.8i, against −59 − 99i at M = 3. The first outer Newton step of the full selection lands at
+  **A = 2.7187, ω = 0.9991 ω∞ (Δ = 1.6454, 0.09% above Δ∞)**, with an uncertainty of about 3×10⁻⁴ in A and ω/ω∞
+  (one step, not converged). So the offset in ω goes 22% (M = 1), 1.56% (M = 3), about 0.1% (M = 5), shrinking about
+  fifteenfold per added harmonic pair. Convergence of the M = 5 solve and M = 7 are to run on the 8-thread machine.
 
 **Without truncation: the amplitude expansion** (`solver/inner_amp/`).
 
@@ -1299,10 +1309,10 @@ zero, so the D = 40 and 60 lines stop at ν = 13.)
   λ∞ = 2 to about 10⁻⁶ (the double-double γ, `hp/gamma_dd.py`; [The formula](#the-formula)); why it is exactly 2 is open.
 - **Open:** the D = ∞ selection rule itself. Proposition 2 gives the multiplier without gravity, C(n,s), and the inner
   problem shows it is asymptotically a $`{}_2F_0`$ Stokes constant; Proposition 3 shows that propagation inside the light cone
-  cannot change whether it vanishes. The multipliers with gravity have been computed with up to three harmonics (above):
-  with three, their vanishing selects ω = 1.0156 ω∞ and the measured shape (A = 2.73, F₃/F₁ = 0.053). What remains is to go
-  past M = 3 by the nested solve, or without truncation by the amplitude expansion above (whose higher-harmonic conditions
-  already reproduce F₃/F₁), to see whether the harmonic-1 condition then lands on ω∞,
+  cannot change whether it vanishes. The multipliers with gravity have been computed with up to five harmonics (above):
+  their vanishing selects ω = 1.0156 ω∞ with three and about 0.9991 ω∞ with five (first estimate), with the measured
+  shape; without truncation the harmonic-1 condition has a nearly real zero at ω∞ and amplitude 2.74. What remains is to
+  converge both (M = 5 and 7; σ₆–σ₈ across ω), to see whether the harmonic-1 condition lands exactly on ω∞,
   and to prove the working hypothesis that this is the selection rule. That would be an equation for ω∞ and
   F∞ alone, from which Δ∞ would follow to any precision.
 
@@ -1534,8 +1544,8 @@ solver/largeD_dingle_K.py     their Dingle constant against the inner 2F0 predic
 solver/largeD_stokes_C.py     C(n,s) as the 2F0 Stokes constant times n^(s+1/2) and a phase
 solver/largeD_inner.py        the inner problem at x ~ sqrt(n): formal series, check against the outer top degrees
 solver/inner_stokes/          the inner Stokes multiplier by lateral solutions (lateral_np.py check|scan, zero_M1.py, zero_M3.py);
-                              the M-harmonic selection by nested solve (nested.py M = 3, full_M.py any M with --procs N,
-                              fixedA.py), conditioning of the joint solve (m3_diag.py)
+                              the M-harmonic selection by nested solve (nested.py M = 3, full_M.py, fixedA.py) and, for
+                              M >= 5, by hierarchical solve (hier.py M A wf [--fixA] [--procs 2]); conditioning (m3_diag.py)
 solver/inner_borel/           the same by Borel-Darboux in ball arithmetic (python-flint): inner_stokes.py linear|grav, inner_zero.py
 solver/eeg20/                 the comparison with Ecker-Ecker-Grumiller's Eq. (20) (window identity, tilt, max c, Delta -> 0 fits)
 solver/inner_amp/             the inner multipliers by an amplitude expansion with every harmonic exact (amp_series.py check, stokes_amp2.py;
