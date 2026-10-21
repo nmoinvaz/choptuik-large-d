@@ -20,10 +20,10 @@ solver in [`hp/`](hp/) for large D. The physics is in this file; the software is
   rule is the vanishing of the Stokes multipliers of an n-free inner problem; its higher-harmonic conditions already
   predict the shape of the echo, F₃/F₁ = 0.055 against 0.055 extrapolated from the data, and with three harmonics
   the full set of conditions gives Δ = 1.619, 1.5% below Δ∞, and with five harmonics (first Newton step) Δ = 1.6454,
-  0.09% above (one harmonic: 29% above): the offset shrinks about fifteenfold per harmonic pair. Without truncation,
-  seven orders of an amplitude expansion give, at ω∞, a nearly real zero at amplitude 2.74 (measured: 2.70–2.72). None
-  of this is converged yet, so it is not yet a derivation of Δ∞
-  ([Large D](#large-d-what-the-1d-expansion-can-and-cannot-see)).
+  0.09% above (one harmonic: 29% above): the offset shrinks about fifteenfold per harmonic pair. Without truncation, an
+  amplitude expansion to eight orders selects ω between 0.995 and 1.001 ω∞ at amplitude 2.72–2.73 (measured: 2.70–2.72).
+  So the conjectured rule reproduces Δ∞ to about 0.1–0.5% from the D = ∞ equations alone; the rule itself is not yet
+  proved ([Large D](#large-d-what-the-1d-expansion-can-and-cannot-see)).
 - **Relation to published work.** Agreement with the accepted values at D = 4 and at the maximum of Δ near D = 3.756;
   a 6×10⁻⁵ difference at D = 5 that the published higher-resolution data trace to resolution; and the published
   conjecture Δ → 0 as D → ∞ is not
@@ -1246,11 +1246,22 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   $`(\ln S_1)'`$ put the zero at A₀ = 2.728–2.756 with Im A₀ = −0.013 to −0.027 (residues 1.05–1.22, ideally 1), and the
   ratio estimates from τ₅/τ₆ and τ₆/τ₇ give 2.744 − 0.026i and 2.748 − 0.013i. The D = ∞ amplitude measured from the
   solutions is 2.70–2.72, so the zero lies within about 1% of it.
-- *Across ω* (σ₁–σ₅ from the first basis, K = 13 and K = 11 scans, `scan13b/`, `scan11f/`): arg τ_k = π is crossed at
-  ω/ω∞ = 1.2516, 1.0554, 1.0176, 1.0084 for k = 2–5, converging to about 1.005 (Aitken 1.0053; the two scans agree to
-  10⁻⁴). So the ω where the zero becomes exactly real is within about 0.5% of ω∞ at five orders, independently of the
-  three-harmonic result (1.0156). A scan with σ₆ and σ₇ across ω, which decides where the zero is real at seven
-  orders, is to run on the 8-thread machine.
+- *Across ω: where the zero is exactly real.* Two estimates, approaching from opposite sides:
+  - *The arg τ_k = π crossings* (`arg_crossing.py`; σ₁–σ₇ at seven ω, 0.97–1.03 ω∞, K = 15, `scan15phys/`; earlier
+    coarser scans `scan13b/`, `scan11f/` agree to 10⁻⁴) fall at ω/ω∞ = 1.2516, 1.0554, 1.0176, 1.0083, 1.0040, 1.0021 for
+    k = 2–7. The steps shrink by a factor of about 0.45 each, so the sequence converges geometrically, to about 1.0007
+    (Aitken, k = 5–7). These approach from above.
+  - *Padé approximants* of $`(\ln S_1)'`$ with seven coefficients put the zero's imaginary part through 0 at ω/ω∞ = 0.981–0.991
+    (A₀ = 2.717–2.748) across the scan. With the eighth coefficient at ω∞ (K = 17, σ₈ = 2.6677877674×10⁻⁵ − 3.3200030897×10⁻⁶i,
+    `data/sigF_w1.0000_K17_J750_phys.json`), Im A₀ at ω∞ shrinks from −0.013…−0.027 to −0.003…−0.019, and the
+    best-conditioned approximants, [3/4] and [4/3] (residues 1.05), give A₀ = 2.7266 − 0.0029i and 2.7271 − 0.0045i. With
+    the measured slope of Im A₀ in ω (about −1.4 per unit ω/ω∞), that puts the real zero at ω/ω∞ ≈ 0.995–0.998. These approach
+    from below.
+- *Three routes, one answer.* The selection rule of Conjecture 1, evaluated without truncation (arg crossings → 1.0007,
+  Padé → 0.995–0.998) and truncated to five harmonics (0.9991, first Newton step), selects ω/ω∞ between about 0.995 and
+  1.001, at amplitude A₀ = 2.72–2.73 (the solutions: 2.70–2.72). That is Δ∞ to about 0.1–0.5% from the D = ∞ inner equations
+  alone, with no input from the finite-D solutions. The rule itself is still a conjecture (hypotheses H1–H2, gaps (a)–(c)), and
+  more orders would tighten the number: a scan with σ₈ across ω gives the next arg crossing.
 - *Shape.* The shape predictions at A = 2.72 are F₃/F₁ = 0.0551, F₅/F₁ = 0.00314
   (data: 0.0552/0.0549, 0.0034/0.0032), and the D = ∞ relation evaluated at each D's own amplitude and ω tracks the
   measured F₃/F₁ at D = 20–60 to within 0.004–0.006 (0.126, 0.099, 0.087, 0.080, 0.075 against 0.130, 0.105, 0.093,
@@ -1311,8 +1322,9 @@ zero, so the D = 40 and 60 lines stop at ν = 13.)
   problem shows it is asymptotically a $`{}_2F_0`$ Stokes constant; Proposition 3 shows that propagation inside the light cone
   cannot change whether it vanishes. The multipliers with gravity have been computed with up to five harmonics (above):
   their vanishing selects ω = 1.0156 ω∞ with three and about 0.9991 ω∞ with five (first estimate), with the measured
-  shape; without truncation the harmonic-1 condition has a nearly real zero at ω∞ and amplitude 2.74. What remains is to
-  converge both (M = 5 and 7; σ₆–σ₈ across ω), to see whether the harmonic-1 condition lands exactly on ω∞,
+  shape; without truncation the harmonic-1 condition selects ω between 0.995 and 1.001 ω∞ at eight orders. What remains
+  is to converge these further (M = 5 and 7; σ₈ and beyond across ω), to see whether the harmonic-1 condition lands
+  exactly on ω∞,
   and to prove the working hypothesis that this is the selection rule. That would be an equation for ω∞ and
   F∞ alone, from which Δ∞ would follow to any precision.
 

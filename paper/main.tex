@@ -39,8 +39,9 @@ radius. We conjecture that the selection rule at $D = \infty$ is the vanishing o
 $n$-free inner problem; its higher-harmonic conditions predict the shape of the echo, $|F_3/F_1| = 0.0551$, which the
 data reproduce. Truncated to three harmonics, the full set of conditions selects $\Delta = 1.619$, 1.5\% below
 $\Dinf$, and with five harmonics (a first estimate) $\Delta = 1.6454$, 0.09\% above (one harmonic: 29\% above).
-Without truncation, seven orders of an amplitude expansion give at $\omega_\infty$ a nearly real zero at amplitude 2.74
-(measured: 2.70--2.72); none of this is converged, so $\Dinf$ is not yet derived.
+Without truncation, an amplitude expansion to eight orders selects $\omega$ between $0.995$ and $1.001\,\omega_\infty$ at
+amplitude 2.72--2.73 (measured: 2.70--2.72). The conjectured rule thus reproduces $\Dinf$ to about 0.1--0.5\% from the
+$D = \infty$ equations alone; the rule itself is not yet proved.
 The computations, derivations and text were produced by an AI model (Claude, Anthropic) under the author's
 direction and have not yet been reviewed by a human expert (Sec.~\ref{sec:how}).
 \end{abstract}
@@ -85,8 +86,7 @@ $D = \infty$, against $0.0549$--$0.0552$ and $0.0032$--$0.0034$ extrapolated fro
 (Sec.~\ref{sec:inner}). The harmonic-1 condition, which would give $\Dinf$, is not yet settled: truncated to three
 harmonics, the conditions select $\omega = 1.0156\,\omega_\infty$ with the measured shape, with five about
 $0.9991\,\omega_\infty$ (first estimate), and without
-truncation, at seven orders, the zero at $\omega_\infty$ is nearly real and lies at amplitude 2.74, within about 1\% of the
-measured one.
+truncation, at eight orders, between $0.995$ and $1.001\,\omega_\infty$ at amplitude 2.72--2.73 (measured: 2.70--2.72).
 \item An analysis of the next-to-leading-order condition of~\cite{EckerEckerGrumiller2026}, which within this framework
 does not select $\Delta$ (Sec.~\ref{sec:eeg}).
 \end{enumerate}
@@ -624,10 +624,17 @@ $\mathrm{Im}\,A_0 = -0.013$ to $-0.027$ (residues 1.05--1.22), and ratio estimat
 $2.744 - 0.026i$ and $2.748 - 0.013i$. The amplitude extrapolated from the solutions is 2.70--2.72, so at $\omega_\infty$ the
 harmonic-1 condition has a nearly real zero within about 1\% of it.
 
-Across $\omega$ (scans with $\sigma_1$--$\sigma_5$, $0.70 \le \omega/\omega_\infty \le 1.30$ and, more finely, $0.96$--$1.06$),
-$\arg\tau_k = \pi$ is crossed at $\omega/\omega_\infty = 1.2516$, $1.0554$, $1.0176$, $1.0084$ for $k = 2$--$5$, a sequence
-converging to about $1.005$. So at five orders the $\omega$ where the zero is exactly real lies within about 0.5\% of
-$\omega_\infty$, independently of the three-harmonic result; a scan with $\sigma_6$ and $\sigma_7$ is the next step.
+Across $\omega$ two estimates of where the zero is exactly real approach $\omega_\infty$ from opposite sides. With
+$\sigma_1$--$\sigma_7$ at seven values $0.97 \le \omega/\omega_\infty \le 1.03$, $\arg\tau_k = \pi$ is crossed at
+$\omega/\omega_\infty = 1.2516$, $1.0554$, $1.0176$, $1.0083$, $1.0040$, $1.0021$ for $k = 2$--$7$; the steps shrink by a factor
+of about 0.45, and the sequence converges to about $1.0007$. Pad\'e approximants with seven coefficients put
+$\mathrm{Im}\,A_0 = 0$ at $\omega/\omega_\infty = 0.981$--$0.991$; with the eighth coefficient at $\omega_\infty$
+($\sigma_8 = (2.6677877674 - 0.33200030897i)\times10^{-5}$), the best-conditioned approximants give
+$A_0 = 2.7266 - 0.0029i$ and $2.7271 - 0.0045i$, which with the measured slope of $\mathrm{Im}\,A_0$ in $\omega$ puts the
+real zero at $\omega/\omega_\infty \approx 0.995$--$0.998$. Together with the five-harmonic truncation ($0.9991$), the
+selection rule thus picks $\omega/\omega_\infty$ between about $0.995$ and $1.001$ at amplitude $A_0 = 2.72$--$2.73$ (the
+solutions: 2.70--2.72): $\Dinf$ to about 0.1--0.5\% from the $D = \infty$ inner equations alone, with no input from the
+finite-$D$ solutions.
 
 \begin{figure}[t]
 \centering
@@ -673,9 +680,9 @@ $\Dinf = 1.64389375$ strongly, under the assumption of analyticity in $1/D$ that
 theory explains why that number cannot come from the $1/D$ expansion: the expansion is unobstructed for every period,
 and the selection acts through an exponentially small, Stokes-type effect whose linear version is solved exactly. The
 inner problem at $x \sim \sqrt n$ is $n$-free; its higher-harmonic conditions already reproduce the shape of the echo
-at $D = \infty$, and truncated to three harmonics its conditions select $\omega$ within 1.6\% of $\omega_\infty$.
-Open are: the harmonic-1 condition of the inner problem, which would give $\Dinf$ (and possibly a closed
-form) from first principles; a proof of Conjecture~\ref{conj}; the value $\lambda_\infty = 2$;
+at $D = \infty$, and its harmonic-1 condition selects $\omega$ within 0.1--0.5\% of $\omega_\infty$, both untruncated and
+truncated to five harmonics. Open are: higher orders of that condition, which would give $\Dinf$ (and possibly a closed
+form) from first principles to more digits; a proof of Conjecture~\ref{conj}; the value $\lambda_\infty = 2$;
 and the behaviour just below $D = 4$.
 
 \section{How this work was done}
