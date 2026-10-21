@@ -1065,8 +1065,11 @@ singular there (A ∝ (1 − x)⁻¹) and must be matched to the Frobenius solut
 
 Status of these gaps ([PROOF.md](PROOF.md)): for a model truncated to M harmonics the selection theorem is written out
 lemma by lemma ([proof/C_selection.md](proof/C_selection.md)). Gap (c) reduces to Olver's error control, and the inner
-half of gap (a) to Braaksma's summability theorem. What remains there is the continuation of the solution through the
-complex x-plane with uniform bounds and the nonlinear inner–outer matching, both on published templates (Xie–Tanveer;
+half of gap (a) to Braaksma's summability theorem; the outer half's two hypotheses on where Borel singularities lie are
+checked numerically (none within 0.48π of the positive real axis). The matching error is O(1/n) (the inner equations'
+corrections come in integer powers of 1/n), the matching factor is explicit, and the outer jump equals that factor times
+[S + O(1/n)] given an inner fixed point. What remains is two contraction arguments with explicit constants: the inner fixed
+point on the matching domain and the global continuation, both on published templates (Xie–Tanveer;
 Baldomá–Fontich–Guardia–Seara). Gap (b) is narrower than stated above ([proof/B_tail.md](proof/B_tail.md)). Stated
 without harmonics, the condition is S(θ₀) ≡ 0 on the real label circle and uses F only on the real line; the weights
 $`e^{\pi\lvert\nu\rvert\omega/2}`$ are the linear connection coefficients of each label harmonic and cancel in every tuning
@@ -1624,7 +1627,8 @@ solver/proof/       feasibility numbers for the proof roadmap (feasibility.py: s
                     fast_eigenvalues.py: the outer system's fast eigenvalues, Lemma B2; certify_M1.py, lin_check.py,
                     series_arb.py, residual_poly.py, pm_dryrun.py, fixed_point.py, krawczyk.py: the M = 1 certificate
                     in ball arithmetic (start-value fixed point proved; Krawczyk test built);
-                    tail_harmonics.py, reconcile.py, amp_trunc.py, family_amps.py: the harmonic-tail analysis)
+                    tail_harmonics.py, reconcile.py, amp_trunc.py, family_amps.py: the harmonic-tail analysis;
+                    outer_borel.py, inner_corrections.py, lightcone_exponents.py: checks for the selection theorem)
 proof/              the proof roadmap's parts (A_certify.md: the computer-assisted certificate, prototyped at M = 1;
                     B_tail.md: gap (b), the harmonic tail;
                     C_selection.md: the selection theorem for M harmonics, lemma by lemma;

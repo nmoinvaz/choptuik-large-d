@@ -230,9 +230,18 @@ routine Volterra bound left to write. The inner half of gap (a) reduces to a cit
 finite system with a rank-1 irregular point and is 1-summable by Braaksma's theorem (1992), so the multipliers are
 rigorously defined. Costin's rank-one theorems do not apply as stated: the fast eigenvalue repeats across harmonics, and
 the slow directions have eigenvalue 0. The outer half rests on Gevrey-1 theory without turning points plus two cheap
-numerical hypotheses about where Borel singularities lie. Open, at research level but on published templates: carrying
-the centre-regular solution through an n-dependent complex domain to the Stokes line and out to |x| ~ √n with uniform
-bounds, and the nonlinear inner–outer matching (lemma B5). Uniformity in M (gap (b)) is a separate question.
+numerical hypotheses about where Borel singularities lie, now checked numerically for M = 1, 3, 5, 7 and untruncated
+(every genuine Borel singularity at |arg| ≥ 0.48π; `outer_borel.py`). Further progress
+([proof/C_selection.md](proof/C_selection.md) §8–13): in inner variables the exact equations are the inner problem plus
+corrections in integer powers of 1/n only (B5.0, `inner_corrections.py`), so the matching error is O(1/n), not
+O(n^{−1/2}); the change to the fast-mode variable and the non-zero matching factor κ are explicit (B5.1, reducing to the
+linear C(n, s) at F = 0); the outer jump equals κ[S + O(1/n)] given the inner fixed point (B5 part 2); the continuation
+domain is explicit, with progressive paths along which Re Φ never decreases; and the Volterra bound of the light-cone
+lemma is written out (B6′). A correction: the inter-harmonic coupling in the light-cone exponents is O(1), not O(1/n), but
+the gauge e^{Π} removes it exactly, and the exponent differences stay at least 7.27 apart in imaginary part
+(`lightcone_exponents.py`), so non-resonance holds. Still to write with explicit constants: the inner fixed point on the
+matching domain (B5 part 1) and the global continuation contraction (B8), both needing only fixed-order truncations.
+Uniformity in M (gap (b)) is a separate question.
 
 **Architecture (after Xie–Tanveer).** Work with the self-similar unknowns (p, m, b, c) as functions of (x, θ) analytic
 in θ on a strip and in x on a complex domain that reaches the inner region x ~ √n and the light cone x = 1.
