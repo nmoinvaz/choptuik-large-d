@@ -1669,3 +1669,17 @@ T15 (b5) and T24 running since 03:34, 2 threads each. (b5): scan_ne kc 55 from 3
 3.3 with NE_WEAK_TOL 5e-11, NE_HMIN 0.005 and lambda guesses from scan_lowD3_kc55_b4.jsonl. (d5) RK x4 is chained after it. It stops
 at 07:35. T24: K 23 J 750 at 0.99 / 1.00 / 1.01, crossing and zero chained. T22 (a) M 7 fixA is still in its worker-only
 phase (main idle since 00:19, workers ~95%), with (c) after it.
+
+== 2026-10-21 04:11 PDT local
+T15 (b5) kc 55 done, well inside 4 h (43eb117, data/scan_lowD3_kc55_b5.jsonl). Seeds re-solved: 3.7794 Delta 3.4665152505 (weak
+9.8e-16, gamma 0.35659766), 3.7689 Delta 3.4666917780 (weak 5.5e-16, gamma 0.35560855). The continuation got no further:
+   3.7189  |F| 5.8e-03  weak 4.3e-07
+   3.7439  |F| 4.0e-04  weak 1.9e-08
+   3.7564  |F| 5.7e-07  weak 8.2e-11
+   3.7626  |F| 1.1e-08  weak 1.5e-10   (strong passes; weak over the 5e-11 cut)
+   giving up at h 0.003125. (d5) had no seeds in [3.3, 3.5].
+The good kc 55 points sit at weak <= 1e-15, so 3.7626's 1.5e-10 looks like an unfinished NE solve, not the floor.
+The maximum is not bracketed at kc 55: Delta still rises at 3.7689. A parabola through the (b4) points 3.7938 / 3.78755 /
+3.779425 / 3.7688625 gives D_max 3.7544-3.7547 and Delta_max 3.466779-3.466781, curvature -0.43. That extrapolates ~0.014 in
+D past the last point, so take it as indicative only (kc 47: 3.7557 / 3.466774).
+2 threads idle. T24 and T22 (a) are running.
