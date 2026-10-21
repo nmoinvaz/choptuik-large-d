@@ -1257,3 +1257,23 @@ T19 (a): 4 of 7 omegas done (wf 0.97-1.00, ~1160 s each). sigma_err there: sigma
 Thread budget: T19 (b) takes 4 processes when (a) ends, and (1) holds 2, so (2) cannot start two jobs then. Plan: the
 first (2) job (M 5 fixA w 1.05, then 0.95) starts when (1) ends, and M 7 fixA starts when T19 (b) ends. Then T15 (b) with
 NE_WEAK_TOL=2e-12, (d), and (c). Say if you want a different order.
+
+== 2026-10-20 17:17 PDT local
+T19 (a) done (fd7b9e8): scan15phys/ (7 JSONs, crossing.txt, zero.txt, scan15phys.log). Per omega: ~1160 s
+(wf 0.97-1.00, 4 at a time), ~930 s (1.01-1.03, 3 at a time). sigma_err: sigma_6 3.6-7.2e-19, sigma_7 1.5-4.3e-19 over
+the scan, all far below 1e-12.
+crossing.txt:
+   arg(tau_4) = pi at wf = 1.0176
+   arg(tau_5) = pi at wf = 1.0083
+   arg(tau_6) = pi at wf = 1.0040
+   arg(tau_7) = pi at wf = 1.0021
+   Aitken limit of the last three crossings: wf = 1.0007
+   ratio tau_5/tau_6: eps0 real at wf = 0.9803, A0 = 2.728;  tau_6/tau_7: wf = 0.9913, A0 = 2.742
+zero.txt at wf 1.00:
+   [1/5] zero x = (7.5047953 - 0.14741642j)  (eps = (2.73962 - 0.0269045j))
+   [2/4] zero x = (7.595541 - 0.098457712j)  (eps = (2.75606 - 0.017862j))
+   [3/3] zero x = (7.4394485 - 0.11015252j)  (eps = (2.72761 - 0.0201921j))
+   [4/2] zero x = (7.5569528 - 0.074512312j)  (eps = (2.74902 - 0.0135525j))
+   [5/1] zero x = (7.5518645 - 0.070622462j)  (eps = (2.7481 - 0.0128493j))
+(at wf 0.99 the imaginary parts change sign: [4/2] eps = 2.74187 + 0.000989i.)
+T19 (b) (K 17 J 750 phys, sigma_8) started at 17:17 on 4 processes. T16b (1) hier M 5 is on the other 2.
