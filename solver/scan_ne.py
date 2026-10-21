@@ -57,6 +57,7 @@ KS = int(os.environ.get("NE_KS", "60"))                          # horizon serie
 # x_K = 0.4 with 3.6e-9 agrees with x_K = 0.5 to 4e-10 at D = 23)
 STRONG_TOL = float(os.environ.get("NE_STRONG_TOL", "1e-8" if KS > 60 else "1e-9"))
 WEAK_TOL = float(os.environ.get("NE_WEAK_TOL", "1e-12"))       # acceptance cut on the weak residual (default as before)
+HMIN = float(os.environ.get("NE_HMIN", "0.02"))                 # continuation gives up when the step falls below this
 SEED = "long7_D" if XK > 0.65 else "longB_D"
 _xt = int(round(XK * 100))
 OUTP = {60: "neB_D"}.get(_xt, f"ne{_xt // 10}_D" if _xt % 10 == 0 else f"ne{_xt}_D")   # ne4_D, ne5_D, neB_D, ne65_D, ne7_D
@@ -252,7 +253,7 @@ if __name__ == "__main__":                     # junk_solve's process pool re-im
         if not rec["ok"] or not rec["lam"]:
             h /= 2
             print(f"step to D={Dt:.4f} failed (|F| {rec['F']:.1e}, weak {rec['weak']:.1e}); h -> {h}", flush=True)
-            if h < 0.02:
+            if h < HMIN:
                 print("giving up", flush=True)
                 break
             continue
