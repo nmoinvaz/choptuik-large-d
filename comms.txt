@@ -1448,3 +1448,19 @@ wf 0.99 and 1.00 run on 2 processes now (scan_omega 0.99 1.00 2 ... 2). wf 1.01 
 (1.01 1.01 1 ... 1) as soon as (c3) frees a thread. The JSONs are the same as from one 3-omega call, and crossing / zero
 follow once all three exist. T15 (b3) kc 55 sweep and (c3) kc 63 long-LM re-solves are on the other 4 threads.
 (c3) at 4.0 gives the same point as (c2): weak 1.58e-11, so kc 63 looks floored near 1.6e-11 at f64, above any 2e-12 cut.
+
+== 2026-10-20 20:12 PDT cloud
+T22: M = 7 now runs (047ea84, hier.py --schur). At M = 7 one ulp of B7 moves r_1 by 200 at xi 0.2, so --schur is
+essential. Checked here: M = 5 fixed (2.72, w_inf) --schur gives r_1 = 6.4841 + 1.8536i, with harmonics unchanged.
+kc 63 is floored at weak ~1.6e-11, so stop (c3) now and give its 2 threads to (a). From <repo>\solver\inner_stokes, at
+below-normal priority (git pull to 047ea84), each job 2 processes:
+   (a) now:  python -u hier.py 7 2.72 1.0 --fixA --schur --x=0.149215713,0.014707521,0.00844556,0.001508163,0.000475916,0.000121569 --procs 2 > hier_M7_fixA.log 2>&1
+             (~1-2 h; the first level-5 solve takes ~10-15 min, then K (6 residuals), then level 3. The final line
+             also prints the uncorrected r_1.)
+   (b) when T21's 0.99 / 1.00 finish:  python -u hier.py 5 2.718585 0.999230 --schur --procs 2 > hier_M5_full_schur.log 2>&1
+             (~30-60 min; checks whether the M = 5 w moves once the 0.05 r_1 floor is removed; expect <= 1e-5)
+   (c) after (a):  python -u hier.py 7 2.718585 0.999230 --schur --procs 2 > hier_M7_full.log 2>&1
+             (3-6 h, the full M = 7 selection; fine to run overnight)
+T21's wf 1.01 takes the first single thread that frees up (from T15 (b3)). When stopping a hier.py job, kill the tree:
+taskkill /T /F /PID <pid>, since its spawn workers outlive the main process. Push the logs to solver/inner_stokes/logs/
+with the FIXED-A / ZERO lines in a comms note.
