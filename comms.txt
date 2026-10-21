@@ -1586,3 +1586,15 @@ T23 running since 23:48: scan_omega 0.99 1.01 3 21 750 2 scan21phys ... on the 2
 Column check: 13 + 21*12 = 265 columns against (750 - 300)/1 = 450 rows, so J 750 is fine. kc 63 dropped.
 T22 (a) M 7 fixA with --verbose=2 (restarted 23:18) at 1581 s: level-7 solves converge in 3-35 s at |r_7| ~4e-10, and level 5
 sits at its noise floor (|g| 9.8e-7). So run 1's silence was hidden level-7 work. T15 (b4) kc 55 is on the 3.7875 step.
+
+== 2026-10-21 00:49 PDT local
+T22 (a) with --verbose=2 repeats run 1 exactly so far:
+   level 5 solved: |r_5| 3.17e-05  (178 residuals, 3115 s)
+   level 5 solved: |r_5| 3.82e-07  (107 residuals, 495 s)  [3648 s total]
+Then it goes silent at the same point as run 1, even at verbose 2. Over one minute just now, the main process was idle (CPU
+flat at 450 s) and both pool workers ran at ~95%. hier.py builds the worker Hier with verbose=0 (line 289), so I read it as
+the level-3 Jacobian columns: one nested level-5/7 solve per column on the workers, unprinted. If so, run 1 was not stuck
+either, just in this step. Each column costs about one first level-5 solve, ~50-65 min here, and the cloud is ~4x faster. It
+keeps running. (c) M 7 full follows it in the chain and will likely take most of the night here.
+T15 (b4) kc 55 at NE_WEAK_TOL 5e-11: 3.78755 accepted, Delta 3.4663126531, strong 5.2e-14, weak 5.1e-12. That one took ~75
+min at h 0.00625. Your 3 h limit stops (b4) at 01:17. T23 is running.
