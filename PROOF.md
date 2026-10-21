@@ -155,6 +155,20 @@ harmonics, the multiplier is the jump across the Stokes line of solutions starte
   not the obstacle; the obstacle is A.3 (the M = 3 → 5 change of the zero corresponds to about 60–110 in r₁, so the
   M > 5 tail must be bounded below about 4 to certify a 10⁻³ box).
 
+**Prototype status at M = 1** ([proof/A_certify.md](proof/A_certify.md)). The one-harmonic model's zero
+(A = 2.5421480475, ω/ω∞ = 0.7769940136; Jacobian singular values 303 and 87) is the test case. Rigorous already, in ball
+arithmetic: the linear normalization (the lateral jump over the closed-form Stokes constant is 1 ± 3×10⁻³⁰ at two radii
+and two ω, from arb's Kummer U on either side of its cut; `lin_check.py`), the formal series of the truncated system with
+(A, ω) boxes (`series_arb.py`), and the forcing bound of the start-value fixed point (the optimally truncated series has
+residual 1.0×10⁻³³ on |ξ| ≤ 0.1; `residual_poly.py`). In double precision, Poincaré–Miranda holds on all four faces of the
+box (`pm_dryrun.py`): half-width 10⁻³ needs the multiplier enclosed to 0.076, 10⁻⁵ to 7.8×10⁻⁴, i.e. 10⁻² to 10⁻³
+relative, the accuracy the Baldomá et al. template achieved. Missing: the contraction constant (explicit bounds on the
+inverse of the linear operator built from the Kummer solutions), validated integration along the ray, which is stiff
+(fast modes shrink by e⁻³¹, so naive interval Taylor overestimates by about e⁵⁰; it needs a Lohner/QR integrator, e.g.
+CAPD, an estimated 1–3 weeks), and Krawczyk with (A, ω) as state variables for uniqueness. At M = 5 the system is
+38-dimensional, and the certificate must use the Schur-corrected conditions (leakage up to 10¹⁷), i.e. multiprecision
+Lohner.
+
 Staged targets: **A(M=5)**, a certified simple zero of the five-harmonic multiplier (lemmas A.1, A.2, A.4 only; a
 standard computer-assisted proof); then **A(∞)**, the untruncated zero, adding A.3, or by the entire-function route below.
 
@@ -347,7 +361,8 @@ should be checked.
 - I. Baldomá, E. Fontich, M. Guardia, T. M. Seara, *Exponentially small splitting of separatrices beyond Melnikov
   analysis: rigorous results*, [arXiv:1201.5152](https://arxiv.org/abs/1201.5152).
 - I. Baldomá, M. J. Capiński, M. Guardia, T. M. Seara, *Breakdown of heteroclinic connections in the analytic Hopf-zero
-  singularity: rigorous computation of the Stokes constant*, [arXiv:2206.13840](https://arxiv.org/abs/2206.13840).
+  singularity: rigorous computation of the Stokes constant*, [arXiv:2206.13840](https://arxiv.org/abs/2206.13840);
+  J. Nonlinear Sci. (2023), doi:10.1007/s00332-022-09882-x.
 - E. Lombardi, *Oscillatory Integrals and Phenomena Beyond all Algebraic Orders*, Lecture Notes in Math. 1741, Springer
   (2000) *(from memory)*.
 - M. Reiterer, E. Trubowitz, *Choptuik's critical spacetime exists*, [arXiv:1203.3766](https://arxiv.org/abs/1203.3766).

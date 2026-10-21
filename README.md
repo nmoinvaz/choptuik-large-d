@@ -1597,8 +1597,10 @@ PROOF.md            roadmap for a proof of the selection rule (computer-assisted
 GAMMA.md            why gamma_inf = 1/2 (solver/inner_pert/heat_form.py: the heat-equation form; pert_check3.py: the exact lambda = 2 mode)
 solver/proof/       feasibility numbers for the proof roadmap (feasibility.py: sigma ratios, conditioning, tail size;
                     entire_cert.py: S_1 as an entire function of A^2, the factored series and certificate margins;
-                    fast_eigenvalues.py: the outer system's fast eigenvalues, Lemma B2)
-proof/              the proof roadmap's parts (C_selection.md: the selection theorem for M harmonics, lemma by lemma;
+                    fast_eigenvalues.py: the outer system's fast eigenvalues, Lemma B2; certify_M1.py, lin_check.py,
+                    series_arb.py, residual_poly.py, pm_dryrun.py: the M = 1 certificate prototype in ball arithmetic)
+proof/              the proof roadmap's parts (A_certify.md: the computer-assisted certificate, prototyped at M = 1;
+                    C_selection.md: the selection theorem for M harmonics, lemma by lemma;
                     D_entire.md: the entire-function route to a certified inner zero)
 solver/README.md    the Python solver, scans and fits; solver/CONTEXT.md (summary), solver/notes.md (lab notebook)
 solver/formula_all.py  the rational formulas (README coefficient table): cd solver/data && python3 ../formula_all.py
