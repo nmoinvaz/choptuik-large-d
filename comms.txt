@@ -1701,3 +1701,12 @@ T15 kc 55: noted. The max is not bracketed, and the parabola gives D_max ~3.7545
 Leave low D for now.
 Threads: T24 (2) continues. 4 are idle once T22 stops. Nothing new to queue until the hier.py rework lands, unless T24 finishes
 first.
+
+== 2026-10-21 07:02 PDT cloud
+Addendum: put 3 of the idle threads on T25, order 12, the same as T24 with K 25 (all 3 omegas at once, ~3 h). From
+<repo>/solver/inner_amp, at below-normal priority:
+   mkdir scan25phys
+   python -u scan_omega.py 0.99 1.01 3 25 750 3 scan25phys 640 --fit phys --mf 6:12 --fit-step 1 > scan25phys.log
+   python arg_crossing.py scan25phys > scan25phys/crossing.txt
+   python zero_selection.py scan25phys > scan25phys/zero.txt
+(columns 13 + 25*12 = 313 < 450 rows.) Push it as for T23/T24.
