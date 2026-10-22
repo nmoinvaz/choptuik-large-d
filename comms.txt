@@ -2343,3 +2343,26 @@ unstable-mode count's local jobs, notes/MODE_COUNT.md section 7 (hp/modecount_lo
 order: job 4 first (the D = 30 pair at M = 64: it decides the open item), then 1, 2 and 5; job 3 (D = 4) only after its
 seeding pilot passes; 6-9 last, only if threads are idle. Stop conditions and push lists as in that table; push to
 wip/modecount-local. Any wind(g) not 0 in a box is a finding: stop that job and report it.
+
+== 2026-10-22 10:57 PDT local
+T35 D done: the maximum of Delta in double-double at M 80 (A's nodes 0.005..0.8, kcs 100, ks 250, tol_step 1e-30).
+   D     3.70 (M 80 ref)   3.72              3.74              3.75              3.76              3.78              3.80
+   Delta 3.4652004835440   3.4661423099798   3.4666527873640   3.4667561198814   3.4667631178829   3.4665020406849   3.4658960615678
+   (4-6 Newton its each, |F| <= 8e-30, about 18-30 min per point)
+   quartic, the six points 3.72-3.80 (least squares, max resid 1.5e-9):  D_max 3.755725, Delta_max 3.4667716863
+   quartic with 3.70 (7 points, resid 9.2e-9): 3.755725, 3.4667716800; quintic (7 points, resid 7.8e-11): 3.755726, 3.4667716860
+   So D_max = 3.75573 and Delta_max = 3.46677169 +- 5e-9 (fits), with an M 80 truncation error near 1e-9 at 3.7 (M 80 -> 96 is
+   -1.24e-9). Against the README (3.75570, 3.466774): Delta 2.3e-6 lower, D 2.5e-5 higher.
+Pushed to wip/lowd-local (ee53f91): lowD_dd_local.jsonl (A so far), lowD_dd_local_max.jsonl (D), local_A.log,
+local_D.log, lowDv_D3.7000_M96.npz. D's M 80 states (87 KB each) are kept locally; say if you want them.
+lowD_conv.py table:
+   D 3.7: M 48 3.465201447069621, M 64 3.465200511802858, M 80 3.465200483544031, M 96 3.465200482305273
+          steps -9.35e-07, -2.83e-08, -1.24e-09; best 3.465200482305273, error 1.2e-09 (ratio 0.044, tail 5.7e-11)
+   D 4.0: M 80 3.445452402240971, error 1.8e-09 (unchanged)
+T37: the first lane failed every job in 3 s and I stopped it at once. hp/modecount_cx had never been built here, so
+Python imported the bare directory as an empty namespace package ("no attribute CSolver"). Job 3 also needed
+DSS_SOLVER_DIR for spec_long. No count ran, and the queue is reset. I built modecount_cx the way modecount_build.sh does
+(cargo build --release --offline, target-cpu=native, -j 1; 3 min) and installed target/release/modecount_cx.dll as
+hp/modecount_cx/build/modecount_cx.pyd, the Windows name for the .so the script copies. It exports CSolver and cdet.
+modecount_check.py --quick on D 30 at M 32 is running against the reference log; T37 starts with job 4 once it agrees.
+T36 C: level 5 of the M 9 pilot hit a floor at |r_5| 9.76 after 22 min, so it continues with the floor rule.
