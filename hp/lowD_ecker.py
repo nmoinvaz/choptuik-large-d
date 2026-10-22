@@ -5,6 +5,7 @@ between resolutions (their self-convergence), next to our values in hp/data/lowD
 
     git clone --depth 1 https://github.com/EckerChristian/CriticalSpacetimeCrystal ecc
     python3 lowD_ecker.py ecc [--dmax=4.0]
+    python3 lowD_ecker.py ecc --fields     (their exported fields: amplitude and harmonic decay at the centre)
 
 Reads only their data files (FortranData/dim*/<N>/Delta.out, gam.out; DeltaList.dat, GammaList.dat).
 """
@@ -12,6 +13,8 @@ import glob
 import json
 import os
 import sys
+
+import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -23,10 +26,44 @@ def first_float(path):
         return None
 
 
+def fields(ecc):
+    """their exported fields (plots/fields_<D>_0.json): U(tau) at the smallest x, the period located by the best
+    antiperiodicity of a spline through the samples, then |F_1| = sqrt(D - 2) c_1 / x (our F = sqrt(n) dp/dx at x = 0;
+    U/x -> p1 in our normalisation: their D = 4 gives our |F_1| = 16.23), F_3/F_1 and the decay rate beta of the odd
+    harmonics over k = 9..31; with the antiperiodicity error of the located period (0 for an exact period)."""
+    from scipy.interpolate import CubicSpline
+    for fn in sorted(glob.glob(os.path.join(ecc, "plots", "fields_*_0.json"))):
+        D = float(os.path.basename(fn).split("_")[1])
+        d = json.load(open(fn))
+        xs = sorted([k for k in d if k.replace(".", "").isdigit()], key=float)
+        x0 = xs[0]
+        v = np.array(d[x0]["U"], float)
+        cs = CubicSpline(np.arange(len(v)), v)
+        best = None
+        for P in np.linspace(len(v) - 8, len(v), 801):
+            w = cs(np.arange(256) * P / 256)
+            e = float(np.abs(w[:128] + w[128:]).max() / np.abs(w).max())
+            if best is None or e < best[0]:
+                best = (e, P)
+        e, P = best
+        w = cs(np.arange(256) * P / 256)
+        c = np.abs(np.fft.rfft(w)) / 256 * 2
+        k = np.arange(len(c))
+        sel = (k % 2 == 1) & (k >= 9) & (k <= 31)
+        beta = -np.polyfit(k[sel], np.log(c[sel]), 1)[0]
+        F1 = np.sqrt(D - 2) * c[1] / float(x0)
+        print(f"  D {D}: x {x0}, {len(v)} samples, period {P:.3f} samples (antiperiodicity error {e:.1e}): |F_1| {F1:.2f}, "
+              f"F_3/F_1 {c[3] / c[1]:.3f}, beta(9..31) {beta:.3f}")
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     opts = dict(a[2:].split("=", 1) for a in sys.argv[1:] if a.startswith("--") and "=" in a)
     ecc = args[0] if args else "ecc"
+    if "--fields" in sys.argv:
+        print("Ecker et al.'s exported fields at the smallest x:")
+        fields(ecc)
+        return
     dmax = float(opts.get("dmax", 4.0))
     root = os.path.join(ecc, "complete_data", "FortranData")
     DL = {round(float(a), 6): float(b) for a, b in (l.split() for l in open(os.path.join(ecc, "complete_data", "DeltaList.dat")) if l.strip())}

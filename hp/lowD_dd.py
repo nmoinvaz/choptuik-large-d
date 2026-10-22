@@ -289,6 +289,30 @@ def main():
         D, zh, zl = seed_from_f64(a.seed, Ms[0], kc=a.kc_seed, nodes=seed_nodes)
         Mo, src = Ms[0], os.path.basename(a.seed)
         log(f"seed {a.seed}: D {D}, f64 Delta {zh[-1]:.12f}")
+    else:
+        zh, zl, meta = load(a.start)
+        D, Mo, src = meta["D"], meta["M"], os.path.basename(a.start)
+        if list(meta["nodes"]) != nodes:
+            # re-node: every new node's state from the old solution (driver.renode: Taylor integration from the
+            # nearest old node below, or the centre series)
+            s0 = make_solver(D, Mo, nodes=list(meta["nodes"]), kt=a.kt, kc=a.kcs, ks=a.ks, threads=a.threads)
+            s0.set_segs(s0.plan(zh, zl, a.tol_step, a.hmax))
+            zh, zl = renode(s0, zh, zl, list(meta["nodes"]), nodes, Mo)
+            log(f"re-noded {meta['nodes']} -> {nodes}")
+            src += " (re-noded)"
+        if a.D is not None and abs(a.D - D) > 1e-12:
+            hist = []
+            for f in filter(None, a.history.split(",")):
+                hh, hl, hm = load(f)
+                if hm["M"] != Mo or list(hm["nodes"]) != nodes:
+                    raise SystemExit(f"{f}: M/nodes differ from the start")
+                hist.append((hm["D"], hh + hl))
+            hist.append((D, zh + zl))
+            if len(hist) > 1:
+                zh = predict(hist, a.D)
+                zl = np.zeros_like(zh)
+            log(f"start {a.start} (D {D}, M {Mo}); predictor through {len(hist)} point(s) to D {a.D}: Delta {zh[-1]:.12f}")
+            D = a.D
     if a.seed and a.fill_tail and Ms[0] > a.kc_seed + 1:
         zh = fill_tail(zh, Ms[0], len(seed_nodes), a.kc_seed)
         src += " (tail filled)"
@@ -314,30 +338,6 @@ def main():
             nb = (len(F) - 1) // (4 * M)
             log(f"D {D} M {M}: start |F| {F.max():.2e}; per block " + " ".join(f"{F[b * 4 * M:(b + 1) * 4 * M].max():.1e}" for b in range(nb)))
         return
-    else:
-        zh, zl, meta = load(a.start)
-        D, Mo, src = meta["D"], meta["M"], os.path.basename(a.start)
-        if list(meta["nodes"]) != nodes:
-            # re-node: every new node's state from the old solution (driver.renode: Taylor integration from the
-            # nearest old node below, or the centre series)
-            s0 = make_solver(D, Mo, nodes=list(meta["nodes"]), kt=a.kt, kc=a.kcs, ks=a.ks, threads=a.threads)
-            s0.set_segs(s0.plan(zh, zl, a.tol_step, a.hmax))
-            zh, zl = renode(s0, zh, zl, list(meta["nodes"]), nodes, Mo)
-            log(f"re-noded {meta['nodes']} -> {nodes}")
-            src += " (re-noded)"
-        if a.D is not None and abs(a.D - D) > 1e-12:
-            hist = []
-            for f in filter(None, a.history.split(",")):
-                hh, hl, hm = load(f)
-                if hm["M"] != Mo or list(hm["nodes"]) != nodes:
-                    raise SystemExit(f"{f}: M/nodes differ from the start")
-                hist.append((hm["D"], hh + hl))
-            hist.append((D, zh + zl))
-            if len(hist) > 1:
-                zh = predict(hist, a.D)
-                zl = np.zeros_like(zh)
-            log(f"start {a.start} (D {D}, M {Mo}); predictor through {len(hist)} point(s) to D {a.D}: Delta {zh[-1]:.12f}")
-            D = a.D
     for M in Ms:
         if M != Mo:
             zh, zl = resample_z(np.asarray(zh) + np.asarray(zl), Mo, M, len(nodes))

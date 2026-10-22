@@ -12,3 +12,5 @@ re-noded [0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6] -> [0.01, 0.02, 0.05,
 D 4.0 M 48: already converged (/home/claude/dss-residual-kernel/.claude/worktrees/agent-a52a49ad4e6f05e6e/hp/data/lowD_states/lowDn_D4.0000_M48.npz); skipped
 D 4.0 M 64: L 3073, steps 251, start |F| 2.2e-04
   newton 0: |F| 2.16e-04 |dz| 1.22e-02 lam 1 dDelta -2.66e-07 Delta 3.445452395704304 piv 1.9e-03..5.8e+00  t 698.9s
+  newton 0: |F| 2.29e-08 |dz| 1.25e-06 lam 1 dDelta +8.37e-09 Delta 3.445452404078125 piv 1.9e-03..5.8e+00  t 634.6s
+  newton 0: |F| 1.26e-15 |dz| 1.52e-13 lam 1 dDelta +4.84e-17 Delta 3.445452404078125 piv 1.9e-03..5.8e+00  t 601.3s
