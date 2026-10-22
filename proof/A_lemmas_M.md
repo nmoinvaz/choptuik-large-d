@@ -28,7 +28,31 @@ Contents
 
 ## Summary
 
-RESULTS_SUMMARY
+| item | M = 3 | M = 5 | where |
+|---|---|---|---|
+| step (i): the start-value fixed point with derivatives in all M + 1 parameters | **certified** at the `hier.py` zero, at points and over real (±10⁻⁶) and complex (±10⁻³(1 + i)) boxes, on the rays 3π/8 and 5π/16 | **certified**, the same | §2 |
+| M = 1 reproduces `fixed_point.py` | start values and start data bit for bit; constants to 10⁻¹⁶ | | §2.4 |
+| lemma S, lemma 6b₀ | **certified** over x̂ ± 10⁻⁶, R₊ = 0.01 (the M = 1 domain) | **certified** over x̂ ± 10⁻⁶, R₊ = 0.0064 | §3 |
+| lemma 6a | the flat estimate **certified** (Λ ≤ 0.29); the backward flow and ρ₆ₐ wait for the certificate's B₁; a pilot on a non-rigorous B₁ gives ρ₆ₐ = 0.030 (**numerical evidence**) | the flat estimate **certified** (Λ ≤ 0.42) | §4 |
+| lemma 6b₁ | proof carried over; ray run certified; row 11 COVER_STATUS | design only (366 discs): a local-machine task | §5 |
+| Theorem A(M) | **conditional** on the point certificate (H1–H3 of §6) | the same | §6–7 |
+
+- **What carries over verbatim:** the inverse operators, domains and kernel bounds (the fast eigenvalue repeats across
+  harmonics), the identification with y± (the same Stokes directions), lemma D, lemma G, the geometric gluing check (its
+  code is reused unchanged) and the 6a argument.
+- **What changes:** the labels s_μ = iμω.
+  - On rays their weight cancels exactly, |(t/z)^{s_μ}| = 1, and the new "diag" splitting removes them from the
+    contraction.
+  - Elsewhere they are perturbations of size |s_μ|R₊. That forces R₊ ∝ 1/(Mω) in lemma S at M = 5, smaller start radii
+    at M = 5, and more D-conditions in 6a: all (M + 1)/2 complex J_{D,μ}.
+  - They make y⁺ about 30 times more sensitive to the parameters near |ξ| = 0.19. Together with the restart of each arc
+    from a full box, that is why the M = 1 covering method fails on the innermost row at M = 3. The C¹ mean-value
+    mode (§5.3) replaces it.
+- **Found along the way:**
+  - `fixed_point.py`'s weight exponent adapts to a wrong series, so a mutated coefficient yields a weaker but true
+    lemma; `fixed_point_M.py` now checks the structural vanishing orders.
+  - `hier.py` prints (B_ν, C_ν) only at intermediate iterates; `refine_zero_M.py` gives them at the final (A, ω).
+  - The coords mutation of 6a, not caught at M = 1 (ρ₆ₐ = 0.12), is still not caught at M = 3, but ρ₆ₐ = 0.89 there.
 
 ## 1. The M-harmonic setting
 
@@ -564,11 +588,35 @@ The cause, from `lemma6b1_estimate_M.py --arc=26.98` (double precision; `arc_dia
   widens every step's Jacobian, which widens the set. At M = 1 the same excess was about 13×: row 11's boxes reached
   1.8×10⁻⁵ against a hull of 1.4×10⁻⁶.
 
-The remedy is a smaller parameter box, since the spread and the feedback scale like h and h². Reformulating would also
-work: carrying the parameter derivatives as Lohner columns in mean-value form, as the box runs of §9 do, so that the
-set's width is the true spread.
+**A smaller box does not cure it** (h = 10⁻⁹; `cover_M3_ray.log`, `cover_M3_row11_h1e-9_hullrestart.log`). The ray
+run scales exactly: 5.8×10⁻⁸ at the start, 2.5×10⁻⁶ at |u| = 27. On the arc the boxes are 10× smaller than at 10⁻⁸ up
+to disc 4 (3.8×10⁻³). They still jump by 10–15× at the same discs as at h = 10⁻⁸, about 10⁴ times the true spread, and
+disc 6 fails (box 1.4×10⁻², Λ = 2.5). So the excess is mostly the Lohner set's own growth on this arc after a restart
+from a full box; it is not quadratic feedback alone.
 
-ROW11_H1E9
+**The C¹ (mean-value) mode** (`--c1`). The set over X is y(t; x̂) + V(t; X)(x − x̂):
+
+- the single trajectory from the box centre is a Lohner set;
+- the M + 1 parameter-derivative columns are Lohner sets of their own (`validated_int.Lohner`'s `var` and `dx`, the
+  machinery of the box runs of §9);
+- the step Jacobian is enclosed over that set, which by the mean value theorem contains every trajectory from X;
+- each arc continues from the ray's exact Lohner state (c, Q, q and the columns, saved at every row radius in
+  `ray.json`), not from its hull.
+
+The start data at s₀ = 262e^{−3iπ/4} come from the old sector lemma evaluated at z₀ = 1/s₀:
+
+- the value at x̂, with |η_j(z₀)| ≤ (ρ/w_j)|z₀|^{k_j};
+- the derivatives in all M + 1 parameters over X, by jets plus Cauchy's estimate over X + 10⁻³(1 + i).
+
+At M = 3, with h = 10⁻⁹:
+
+- the centre is enclosed to 4×10⁻⁴⁴;
+- the derivative columns are enclosed to 8×10⁻⁸ (|∂y/∂x| ≤ 1.3);
+- the set over X has radius 1.6×10⁻⁹, against 5.8×10⁻⁸ for the box start.
+
+A save and restore of the Lohner state contains the original set.
+
+ROW11_C1
 
 ## 6. Theorem A(M), conditional on the point certificate
 

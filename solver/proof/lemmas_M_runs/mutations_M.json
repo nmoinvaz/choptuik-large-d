@@ -86,13 +86,13 @@
   "expected": "caught",
   "exit": 0,
   "matches": true,
-  "what": "system: s_mu = i |mu| w in the u-form (the label sign lost); the comparisons with the xi-form and with fixed_point's encoding must fire",
+  "what": "system: s_mu = i abs(mu) w in the u-form (the label sign lost); the comparisons with the xi-form and with fixed_point's encoding must fire",
   "tail": [
    "M = 3 [MUTATION label]: (a) 1.4e-55 ok; (b) 3.5e-16 ok; (c) 2.6e+00 FAIL; (d) 3.5e-01 FAIL; (e) 5.3e-56 ok; (f) 3.7e+00 FAIL",
    "M = 5 [MUTATION label]: (a) 1.4e-55 ok; (b) 1.4e-15 ok; (c) 1.8e+00 FAIL; (d) 3.3e-01 FAIL; (e) 5.7e-55 ok; (f) 3.7e+01 FAIL",
    "MUTATION label: caught: True"
   ],
-  "sec": 7.0
+  "sec": 6.6
  },
  {
   "name": "usys_clean",

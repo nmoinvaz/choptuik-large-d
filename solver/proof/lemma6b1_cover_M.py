@@ -21,6 +21,12 @@ the disc radii and orders, set by the distance to the singularities of y+ (lemma
     python3 lemma6b1_cover_M.py check --M=3 [--h=1e-6] [--json=f.json] [--drop=j,k]
     python3 lemma6b1_cover_M.py mutate --M=3 [--j=J]          the fast term with the wrong sign in every disc of row j:
                                                               no disc may be certified
+    python3 lemma6b1_cover_M.py ray --c1 ...                 the C^1 (mean-value) ray run: centre trajectory plus the
+                                                              parameter-derivative columns; the rows continue from its
+                                                              saved Lohner states (use this mode at M >= 3)
+    python3 lemma6b1_cover_M.py c1check --M=3 [--mutate=nov]   planted truth for the C^1 sets (double precision): y+ at
+                                                              x^ and x^ +- h e_i must lie in the saved sets; with nov
+                                                              (derivative columns dropped) the off-centre points must not
 Runs are saved in lemma6b1_runs_M<M><tag>/ (ray.json, row_JJ.json).
 Every command takes --x=A,wf,B3,C3,.. (the box centre, decimal strings; default the stored hier.py zero, recorded in
 ray.json and checked by the rows) and --tag=_name (a separate run directory), for running on the point certificate's
@@ -375,6 +381,66 @@ def ray_run_c1(M, h):
     return out
 
 
+def c1check(M, h, rows_to=(1, 6, 9, 11), mutate=None, tol=1e-11):
+    """planted truth for the C^1 sets (double precision, NOT rigorous, a control): y+(s_j; x) for x = x^ and
+    x = x^ +- h e_i (each parameter), computed by the double-precision path of lemma6b1_estimate_M (series at rho0, the
+    ray), must lie in the saved set over X at s_j, inflated by tol for the double-precision error.
+    mutate='nov': the derivative columns dropped (the centre set only, inflated by tol): the off-centre points must
+    fall outside."""
+    import lemma6b1_estimate_M as EST
+    from flint import arb_mat
+    with open(os.path.join(runs_dir(M), "ray.json")) as fh:
+        ray = json.load(fh)
+    assert ray.get("c1"), "c1check needs a --c1 ray run"
+    design_rows = design(M)
+    xs0 = list(FPM.ZEROS[M])
+    hh = float(h)
+    pts = [("centre", [float(v) for v in xs0])]
+    for i in range(M + 1):
+        for sg in (+1, -1):
+            x = [float(v) for v in xs0]
+            x[i] += sg * hh * (1 - 1e-6)
+            pts.append((f"x{i}{'+' if sg > 0 else '-'}h", x))
+    E3 = np.exp(-3j * np.pi / 4)
+    rho0 = float(design_rows[0]["rho"])
+    vals = {}
+    for name, x in pts:
+        FPM.ZEROS[M] = [repr(v) for v in x]
+        try:
+            y0, w, N = EST.start(M, rho0)
+        finally:
+            FPM.ZEROS[M] = xs0
+        sr = EST.integrate(lambda t: (t * E3, E3), y0, rho0, float(design_rows[max(rows_to)]["rho"]) - 1, M, w)
+        vals[name] = {j: EST.val(sr, float(design_rows[j]["rho"])) for j in rows_to}
+    nd = UM.SysUM(M).nd
+    allin, offout = True, True
+    for j in rows_to:
+        lo = lohner_restore(M, ray["sets"][str(j)])
+        if mutate == "nov":
+            n = lo.s.n
+            Qq = lo.Q * arb_mat([[x] for x in lo.q])
+            Xb = [lo.c[i] + acb(Qq[i, 0], Qq[n + i, 0]) for i in range(nd)]
+        else:
+            Xb = lo.box()[:nd]
+        Xb = [acb(arb(z.real.mid(), z.real.rad() + tol), arb(z.imag.mid(), z.imag.rad() + tol)) for z in Xb]
+        for name, _ in pts:
+            y = vals[name][j]
+            inside = all(Xb[i].contains(acb(y[i].real, y[i].imag)) for i in range(nd))
+            if name == "centre":
+                allin = allin and inside
+            else:
+                allin = allin and (inside or mutate == "nov")
+                offout = offout and not inside
+        print(f"row {j} (|u| = {design_rows[j]['rho']}): set radius {maxrad(Xb, nd):.2e}; "
+              + ", ".join(f"{name} {'in' if all(Xb[i].contains(acb(vals[name][j][i].real, vals[name][j][i].imag)) for i in range(nd)) else 'OUT'}"
+                          for name, _ in pts), flush=True)
+    if mutate == "nov":
+        print(f"MUTATION nov (derivative columns dropped): every off-centre point outside: {offout} (must be True)")
+        return offout
+    print(f"C1 PLANTED TRUTH: every point inside its set: {allin}")
+    return allin
+
+
 def row_run(M, j, h, mutate=None):
     t00 = time.time()
     rows = design(M)
@@ -499,6 +565,9 @@ def main():
             with open(opts["json"], "w") as fh:
                 json.dump(res, fh, indent=1)
         sys.exit(0 if res["ok"] else 3)
+    elif cmd == "c1check":
+        ok = c1check(M, h, mutate=opts.get("mutate"))
+        sys.exit(0 if ok else 3)
     elif cmd == "mutate":
         j = int(opts.get("j", str(len(design(M)) - 1)))
         res = row_run(M, j, h, mutate="sign")
