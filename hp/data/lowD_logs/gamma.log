@@ -8,3 +8,19 @@ lowDn_D4.0000_M64.npz: D 4.0 M 64 |F| 9.1e-30, guess lam 2.674074
     lam 2.674077698219: sign -1 ln|det| 267.720351 pivots 2.06e-07..1.47e+01 (76.0 s)
 {"D": 4.0, "M": 64, "F": 9.096552313329792e-30, "lam": 2.6740776982193952, "gamma": 0.37396071201142594, "lam_guess": 2.674074, "n_signchanges": 1, "n_det": 6, "state": "lowDn_D4.0000_M64.npz", "seconds": 508.6}
 == exit 0 Thu Oct 22 07:29:18 MST 2026
+== Thu Oct 22 07:29:42 MST 2026 hp/lowD_gamma.py hp/data/lowD_gamma.jsonl hp/data/lowD_states/lowDn_D4.0000_M80.npz hp/data/lowD_states/lowDn_D3.7000_M48.npz --threads=2 --lam0=2.674078
+lowDn_D4.0000_M80.npz: D 4.0 M 80 |F| 3.7e-30, guess lam 2.674078
+== Thu Oct 22 07:29:56 MST 2026 hp/lowD_gamma.py hp/data/lowD_gamma.jsonl hp/data/lowD_states/lowDn_D4.0000_M80.npz --threads=2 --lam0=2.674078
+lowDn_D4.0000_M80.npz: D 4.0 M 80 |F| 3.7e-30, guess lam 2.674078
+    lam 2.673978000000: sign -1 ln|det| 344.798506 pivots 1.38e-03..2.47e+01 (101.3 s)
+    lam 2.674078000000: sign +1 ln|det| 339.125104 pivots 1.38e-03..2.47e+01 (86.9 s)
+    lam 2.674178000000: sign +1 ln|det| 344.878370 pivots 1.38e-03..2.47e+01 (110.7 s)
+    lam 2.674077657561: sign -1 ln|det| 335.833040 pivots 1.38e-03..2.47e+01 (116.0 s)
+    lam 2.674077669836: sign -1 ln|det| 326.812681 pivots 9.76e-07..2.47e+01 (122.7 s)
+    lam 2.674077669841: sign +1 ln|det| 327.675220 pivots 2.31e-06..2.47e+01 (161.1 s)
+{"D": 4.0, "M": 80, "F": 3.676985449824111e-30, "lam": 2.674077669835866, "gamma": 0.37396071598076647, "lam_guess": 2.674078, "n_signchanges": 1, "n_det": 6, "state": "lowDn_D4.0000_M80.npz", "seconds": 700.6}
+== exit 0 Thu Oct 22 07:41:38 MST 2026
+== Thu Oct 22 07:41:38 MST 2026 hp/lowD_gamma.py hp/data/lowD_gamma.jsonl hp/data/lowD_states/lowDn_D3.7000_M48.npz --threads=2 --lam0=2.868209
+lowDn_D3.7000_M48.npz: D 3.7 M 48 |F| 4.1e-30, guess lam 2.868209
+    lam 2.868109000000: sign -1 ln|det| 324.467551 pivots 3.46e-03..1.97e+01 (37.5 s)
+    lam 2.868209000000: sign +1 ln|det| 324.514217 pivots 3.46e-03..1.97e+01 (30.2 s)

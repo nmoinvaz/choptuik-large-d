@@ -92,7 +92,8 @@ def main():
         print(f"{D:8.5f}  {f(g['128'])}  {f(g['256'])}  {f(g['512'])}  {f(g['1024'])}   {GL.get(round(D, 6), float('nan')):.9f}")
     # ours
     ours = []
-    for fn in [os.path.join(HERE, "data", "lowD_dd.jsonl")] + sorted(glob.glob(os.path.join(HERE, "..", "solver", "data", "lowD_f64*.jsonl"))):
+    extra = [os.path.join(HERE, "..", "solver", "data", "scan_lowD3_kc47.jsonl")]
+    for fn in [os.path.join(HERE, "data", "lowD_dd.jsonl"), os.path.join(HERE, "data", "lowD_gamma.jsonl")] + sorted(glob.glob(os.path.join(HERE, "..", "solver", "data", "lowD_f64*.jsonl"))) + extra:
         if os.path.exists(fn):
             for l in open(fn):
                 if l.strip():
@@ -100,17 +101,28 @@ def main():
                     if r.get("converged", True):
                         ours.append((os.path.basename(fn), r))
     if ours:
-        print("\nours against their lists (DeltaList / GammaList at the same D, where they have it)")
+        print("\nours against their lists (DeltaList / GammaList at the same D; off their grid, cubic through their 4 "
+              "nearest points, marked ~)")
+        dk, gk = np.array(sorted(DL)), np.array(sorted(GL))
+
+        def interp(tab, keys, D):
+            if round(D, 6) in tab:
+                return tab[round(D, 6)], ""
+            j = np.argsort(np.abs(keys - D))[:4]
+            if np.abs(keys[j] - D).max() > 0.1:
+                return None, ""
+            return float(np.polyval(np.polyfit(keys[j] - D, [tab[k] for k in keys[j]], 3), 0.0)), "~"
+
         for fn, r in ours:
             D = r["D"]
-            e = DL.get(round(D, 6))
-            eg = GL.get(round(D, 6))
+            e, m1 = interp(DL, dk, D)
+            eg, m2 = interp(GL, gk, D)
             Dl = r.get("Delta", 0) + r.get("Delta_lo", 0)
-            s = f"  {fn:28s} D {D:.6f} M/kc {r.get('M', r.get('kc'))}: Delta {Dl:.12f}"
-            if e is not None:
-                s += f"  Ecker {e:.12f}  Ecker-ours {e - Dl:+.2e}"
+            s = f"  {fn:28s} D {D:.6f} M/kc {r.get('M', r.get('kc'))}:" + (f" Delta {Dl:.12f}" if "Delta" in r else "")
+            if e is not None and "Delta" in r:
+                s += f"  Ecker{m1} {e:.12f}  Ecker-ours {e - Dl:+.2e}"
             if r.get("gamma") and eg is not None:
-                s += f"  gamma ours {r['gamma']:.9f} Ecker {eg:.9f} diff {eg - r['gamma']:+.1e}"
+                s += f"  gamma ours {r['gamma']:.9f} Ecker{m2} {eg:.9f} diff {eg - r['gamma']:+.1e}"
             print(s)
 
 
