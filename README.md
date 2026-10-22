@@ -1617,9 +1617,9 @@ state extrapolated to D = ∞, 1.9226 ± 0.0003.
   at D = ∞, and the 1/n coefficient 3.0324.
 - **Open:** the D = ∞ selection rule itself. Without gravity the multiplier is C(n,s) (Proposition 2), asymptotically a
   $`{}_2F_0`$ Stokes constant (the inner problem), and propagation inside the light cone cannot change whether it
-  vanishes (Proposition 3). With gravity, the vanishing of the multipliers selects ω ever closer to ω∞, with the
-  measured shape, as harmonics are added and without truncation (to about 10⁻⁴ at twelve orders;
-  [above](#the-inner-problem-at-large-x)). What remains is to converge these further (M = 5 and 7; σ₈ and beyond across
+  vanishes (Proposition 3). With gravity, their vanishing with three and five harmonics, and without truncation,
+  selects ω ever closer to ω∞ (to about 10⁻⁴ without truncation, at twelve orders), with the measured shape
+  ([above](#the-inner-problem-at-large-x)). What remains is to converge these further (M = 5 and 7; σ₈ and beyond across
   ω), to see whether the harmonic-1 condition lands exactly on ω∞, and to prove the working hypothesis that this is the
   selection rule. That would be an equation for ω∞ and F∞ alone, from which Δ∞ would follow to any precision.
 - **Assumed, not checked: the branch stays critical.** The growth rate is a local root of the growth-mode determinant near
