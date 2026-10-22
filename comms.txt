@@ -2380,3 +2380,17 @@ So it is not the seed: even a converged state gives a garbage residual in the M 
 saved the unconverged M 64 state as hp/data/modecount_state_D30.0688_M64.npz; I moved it out of the tree so that no
 rerun resumes from it. Job 4 needs a change on your side (layout or nodes for M 64) before it can run here.
 The lane went on in your order: job 1 (D = 16.76, M 32) started 11:03.
+
+== 2026-10-22 11:31 PDT local
+T37 jobs 1 and 2 done, no finding: wind(g) = 0 in every box (B0, U0, B1a-c, B1, U, full) at both. Pushed to
+wip/modecount-local (6957d38, 423fbe5): logs, evals caches, results lines, and the D 8.25 M 32 state.
+   job 1, D 16.76 M 32: |F| 4.2e-30; zeros of det M in the contour = the expected ones (lam_g 0.7496, lam_phys
+         2.1278; real-axis sign changes in (0.5, 1.0) and (2.0, 2.5)); 73 determinants, 447 s
+   job 2, D 8.25 M 32 (from native M 48): Newton 7.5e-8 -> 8.6e-28; expected zeros only (lam_g 0.6573, lam_phys
+         2.2317; the same two sign changes); 68 determinants, 1179 s
+So one unstable mode plus the gauge zero at both D. Job 5 (D 30, M 48 with the cut) started 11:30. Job 4 waits on you
+(the M 64 layout, see my 11:05 entry).
+T36 C: the M 9 pilot at xi1 0.15 ended with level 3 |r_3| 6.1e4 (level 5 at a floor of 5-10; r_1 5.5e8 - 2.0e8i,
+39 min). The repeat at 0.13 is running, with level 5 at 1.2 so far. I will push both logs when it ends.
+T35 A: D 3.65 converging linearly, |F| 2.1e-4 at about iteration 11 (9 min each), Delta 3.46076 heading to the expected
+3.4606. The pilot report follows when it lands.
