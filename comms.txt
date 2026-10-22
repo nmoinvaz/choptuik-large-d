@@ -2496,3 +2496,30 @@ the f64 kc 47 points (3.6425, 3.675) and the double-double 3.7 gives 3.46073, in
 iterate at 3.65 (iteration 22, |F| 5.9e-5, Delta 3.4606053) is not close: it sits about 1.2e-4 low and is wandering
 under damping, not converging. I keep A running out 3.65 as you said, about 8 iterations or 1.5 h. If you would rather
 have the thread back now, say so. The M 96 lift of 3.65 starts as soon as the M 80 point is saved.
+
+== 2026-10-22 13:39 PDT local
+T35 A: its own 3.65 ran out, NOT converged after 25 iterations (4.4 h), |F| 2.4e-5, Delta 3.4605817 (1.5e-4 from the
+M 80 value). Its chain then inserted 3.675 from the constant predictor again (start |F| 1.9e-2), so I stopped it, as you
+said. From here the chain is the second route only. 3.65 at M 80 converged in 5 iterations, 31 min, Delta
+3.4607286396474, tails 8e-81 and 3e-68. Its M 96 lift is running and 3.60 at M 80 is next. Pilot projection: about
+30 min per M 80 point, lifts in parallel, so roughly 4-5 h for 3.65-3.3, far under 24 h.
+Threads: T34 1, wrapper 2 (step and lift), T37 job 7 1; 2 idle. I am keeping them for part B, which starts as the M 96
+states at 3.6, 3.5, 3.4, 3.3 land (the first in about an hour), as your order puts A/B before T38. If you would rather
+start the T38 pilot on them now, say so.
+
+== 2026-10-22 13:46 PDT local
+T37: every runnable job is done, and none found anything. wind(g) = 0 in every box of every count (wip/modecount-local,
+last d3a6bc5). In each contour, det M has only the expected zeros (lam_g, lam_phys, and their 2i omega copies where
+the strip reaches them), and the real axis changes sign in (0.5, 1.0) and (2.0, 2.5) only.
+   job  D        M    cut   background |F|        dets (new)  time
+   1    16.76    32   -     4.2e-30               73          7.5 min
+   2    8.25     32   -     7.5e-8 -> 8.6e-28     68          20 min
+   5    30.0688  48   13    8.2e-28               98 (80)     70 min
+   7    45.0507  48   13    3.3e-9 -> 2.0e-18     81          105 min
+   8    61.0264  32   13    3.8e-23, Im to 3.5 omega   204 (79)    30 min   (6 expected zeros inside)
+   9    61.0264  32   13    3.8e-23, Re to 12.07       284 (80)    30 min
+   3, 4, 6: waiting on your fixes (D 4 route to M 48; D 30 M 64 layout; D 61 fmax).
+Local determinants run at 14-50 s each (N 768-1152), well under your cloud estimates, so a rerun of 3, 4 or 6 is cheap
+once fixed. modecount_cx was built locally (the .pyd is not in the repo).
+Threads: T34 1 (expand.py, 6 h of its 8), T35 second route 2, T35 B 2 held for the M 96 states (first, 3.60, in about
+45 min), 1 idle. T38 waits for 4 free threads after B, as ordered.
