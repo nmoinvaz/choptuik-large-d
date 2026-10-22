@@ -88,7 +88,11 @@ def main():
     for D in sorted(byD):
         rs = byD[D]
         key = lambda r: (tuple(r["nodes"]), r.get("tol_step"), r.get("kt"), r.get("kcs"), r.get("ks"))
-        ref_key = key(min(rs, key=lambda r: (r["nodes"] != [0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6], r.get("tol_step") != 1e-32)))
+        # reference discretisation: the one with the most resolutions M at this D (ties: the latest record's)
+        counts = defaultdict(set)
+        for r in rs:
+            counts[key(r)].add(r["M"])
+        ref_key = max(counts, key=lambda k: (len(counts[k]), max(i for i, r in enumerate(rs) if key(r) == k)))
         main_ = sorted({r["M"]: r for r in rs if key(r) == ref_key}.values(), key=lambda r: r["M"])
         pts = [(r["M"], r["Delta"] + r["Delta_lo"]) for r in main_]
         best, err, ratio, note = estimate(pts)

@@ -14,3 +14,8 @@ D 4.0 M 64: L 3073, steps 251, start |F| 2.2e-04
   newton 0: |F| 2.16e-04 |dz| 1.22e-02 lam 1 dDelta -2.66e-07 Delta 3.445452395704304 piv 1.9e-03..5.8e+00  t 698.9s
   newton 0: |F| 2.29e-08 |dz| 1.25e-06 lam 1 dDelta +8.37e-09 Delta 3.445452404078125 piv 1.9e-03..5.8e+00  t 634.6s
   newton 0: |F| 1.26e-15 |dz| 1.52e-13 lam 1 dDelta +4.84e-17 Delta 3.445452404078125 piv 1.9e-03..5.8e+00  t 601.3s
+  newton 0: |F| 9.10e-30 converged (last |dz| 8.0e-26) Delta 3.445452404078125
+D 4.0 M 64: Delta 3.4454524040781247 (-9.67e-17) |F| 9.1e-30 its 4 2503s dDelta/dF max 1.9e+00 tails 5e-63 3e-38 dDelta_est -2.7e-30
+== exit 0 Thu Oct 22 03:37:07 MST 2026
+== Thu Oct 22 03:37:24 MST 2026 hp/lowD_dd.py hp/data/lowD_dd.jsonl --start hp/data/lowD_states/lowDn_D4.0000_M64.npz --nodes 0.01,0.02,0.05,0.1,0.16,0.23,0.3,0.4,0.5,0.6,0.7 --Ms 80 --kcs 80 --ks 200 --solver newton --it_max 24 --threads 2 --tag lowDn --resume
+D 4.0 M 80: L 3841, steps 286, start |F| 1.6e-05
