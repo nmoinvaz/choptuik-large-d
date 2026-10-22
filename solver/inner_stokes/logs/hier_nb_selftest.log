@@ -1,0 +1,6 @@
+modes 5:low 7:low: used entries [6, 7], max |lazy - full| 0.0e+00
+modes 5:low 7:top: used entries [4, 5, 6, 7], max |lazy - full| 0.0e+00
+modes 5:top 7:low: used entries [6, 7], max |lazy - full| 0.0e+00
+modes 5:top 7:top: used entries [0, 1, 2, 3, 4, 5, 6, 7], max |lazy - full| 0.0e+00
+PASS
+exit 0

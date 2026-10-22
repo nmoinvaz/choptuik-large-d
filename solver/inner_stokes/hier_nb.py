@@ -10,7 +10,11 @@ evaluates every residual at all radii from one integration, and while the top ha
 (minutes) instead of ~10^4. The pretuned x is only a better starting point; hier's own level-M solve then starts in
 its polish regime, and the zero it converges to does not depend on it.
 
+A second optimisation, LazyHier (below): while a level is in its approach mode only the radii whose entries hier can
+read are integrated; the used entries are bit-identical to hier's (`hier_nb.py selftest`).
+
     python -u hier_nb.py M A wf [hier.py options] [--pretune]
+    python3 hier_nb.py selftest [--mutate=radius]       lazy against full residual (the mutation must fail)
 e.g. the M = 7 selection from the M = 5 zero:
     python -u hier_nb.py 7 2.718579189229888 0.9992284031945021 --x=0.1492035749173264,0.01471905249087869,\
 0.008405346906375517,0.0014703451817031647 --pretune --schur --predict --floor --procs 2 --verbose=2
@@ -27,6 +31,40 @@ import inner_nb                                         # noqa: E402
 inner_nb.install()
 import hier as H                                        # noqa: E402
 import inner_np as I                                    # noqa: E402
+
+LAZY = [os.environ.get("HIER_NB_LAZY", "1") == "1"]
+MUT_RADIUS = [False]                                    # selftest --mutate=radius: read the approach level at the smallest radius
+
+
+class LazyHier(H.Hier):
+    """hier.Hier whose residual integrates only up to the largest radius whose entries can be used.
+
+    While some level l >= 5 is in its approach ('low') mode, hier uses only r_l at its approach radius and r_m (m > l)
+    at their polish radii: the entries of the levels below the highest 'low' level are never read (the level-l Newton
+    reads r[idx(l)]; a level returns to the caller only after a fresh evaluation in polish mode; correct() skips rows
+    below a 'low' level). So the integration stops at R = max(approach radius of that level, polish radii above it), and
+    the unused entries are set to 0. The radii below R are hier's own list (same staged ray segments), so every used
+    entry is bit-identical to hier's. Why: with the top harmonic far from tuned, the arc at xi = 0.2 costs ~10^6
+    right-hand sides. When no level is in approach mode the evaluation is hier's, unchanged. HIER_NB_LAZY=0 disables."""
+
+    def res_raw(self, x):
+        lows = [nu for nu in range(5, self.M + 1, 2) if self.mode.get(nu, "low") == "low"]
+        if not LAZY[0] or not lows:
+            return super().res_raw(x)
+        H.NEV[0] += 1
+        Ls = max(lows)
+        low, pol = self.radii(x)
+        allr = [self.r1] + list(low.values()) + list(pol.values())
+        need = max([low[Ls]] + [pol[nu] for nu in range(Ls + 2, self.M + 1, 2)])
+        R = H.demixed_multi(x, self.M, [r for r in allr if r <= need])
+        out = np.zeros(self.M + 1)
+        out[H.idx(Ls)] = R[min(R) if MUT_RADIUS[0] else low[Ls]][H.idx(Ls)]
+        for nu in range(Ls + 2, self.M + 1, 2):
+            out[H.idx(nu)] = R[pol[nu]][H.idx(nu)]
+        return out
+
+
+H.Hier = LazyHier
 
 
 def pretune(x, M, xi_top=0.2, maxit=12):
@@ -76,8 +114,33 @@ def pretune(x, M, xi_top=0.2, maxit=12):
     return x
 
 
+def selftest(mutate=False):
+    """LazyHier.res_raw against hier.Hier.res_raw at the pretuned M = 7 start (M = 5 zero + tuned F_7), for every
+    combination of approach/polish modes of levels 5 and 7: the used entries must be bit-identical. Exit 1 otherwise.
+    --mutate=radius reads the approach level at the smallest integrated radius instead and must fail."""
+    MUT_RADIUS[0] = mutate
+    x = np.array([2.718579189229888, 0.9992284031945021, 0.1492035749173264, 0.01471905249087869,
+                  0.008405346906375517, 0.0014703451817031647, 0.0004739782315836618, 0.00011921162548210427])
+    ok = True
+    for m5 in ("low", "top"):
+        for m7 in ("low", "top"):
+            h = LazyHier(7, verbose=0)
+            h.mode = {5: m5, 7: m7}
+            a = h.res_raw(x)
+            b = H.Hier.__mro__[1].res_raw(h, x)
+            lows = [nu for nu in (5, 7) if h.mode[nu] == "low"]
+            used = list(range(len(a))) if not lows else sum((H.idx(nu) for nu in range(max(lows), 8, 2)), [])
+            d = float(np.abs(a[used] - b[used]).max())
+            print(f"modes 5:{m5} 7:{m7}: used entries {used}, max |lazy - full| {d:.1e}", flush=True)
+            ok = ok and d == 0.0
+    print("PASS" if ok else "FAIL")
+    return ok
+
+
 def main():
     argv = sys.argv[1:]
+    if argv and argv[0] == "selftest":
+        sys.exit(0 if selftest("--mutate=radius" in argv) else 1)
     if "--pretune" in argv:
         argv = [a for a in argv if a != "--pretune"]
         args = [a for a in argv if not a.startswith("--")]
