@@ -527,7 +527,17 @@ def step_check():
     good = oka and okb and ov and dm < 1e-40
     print(f"M = 1: one step of LohnerM vs validated_int.Lohner: both ok {oka and okb}, overlap {ov}, midpoints differ "
           f"{dm:.1e}, radii {ra:.1e} vs {rb:.1e}  {'ok' if good else 'MISMATCH'}")
-    return good
+    # the same step with the Jacobian at order 12 (N = 24): a different but valid enclosure, overlapping
+    c2 = CL.LohnerM(s1, c, Q1, q, 24)
+    c2.NJ = 12
+    okc = c2.step(lega, 0.0, 2.0 ** -12)
+    Xc = c2.box()
+    ov2 = all(Xc[i].overlaps(Xb[i]) for i in range(s1.nd))
+    rc = max(max(float(x.real.rad()), float(x.imag.rad())) for x in Xc[:s1.nd])
+    good2 = okc and ov2 and rc < 10 * rb + 1e-30
+    print(f"M = 1: the same step with NJ = 12: ok {okc}, overlaps validated_int's {ov2}, radius {rc:.1e}  "
+          f"{'ok' if good2 else 'MISMATCH'}")
+    return good and good2
 
 
 def timing(M, N=24, prec=256, NJ=None):

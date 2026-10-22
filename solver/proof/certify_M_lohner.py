@@ -64,6 +64,20 @@ def taylor_Y(sys_, leg, t0, Y0, N):
     return Ys, (cache, xs, ixs, dxs, zero)
 
 
+def _trunc(x, L):
+    if isinstance(x, acb_series):
+        return acb_series(x.coeffs()[:L], prec=L)
+    return x
+
+
+def truncate_ctx(ctxv, L):
+    """the context of taylor_Y (the value-level cache and the path series) truncated to length L: the same
+    coefficients 0..L-1 that taylor_Y(..., L - 1) would give (they do not depend on the higher ones)"""
+    cache, xs, ixs, dxs, zero = ctxv
+    cache = tuple({k: _trunc(v, L) for k, v in c.items()} if isinstance(c, dict) else _trunc(c, L) for c in cache)
+    return cache, _trunc(xs, L), _trunc(ixs, L), _trunc(dxs, L), _trunc(zero, L)
+
+
 def taylor_V(sys_, ctxv, N):
     """validated_int.taylor_V with the columns of A(tau) = F_Y(Y(tau)) xi'(tau) from SysM.lin_unit (the same
     linearization, products with zero series skipped); the coefficient recursion is the same:
@@ -129,10 +143,7 @@ class LohnerM(VI.Lohner):
         NJ = self.NJ or N
         _, ctxX = taylor_Y(s, leg, acb(t0), X, NJ)
         Vk = taylor_V(s, ctxX, NJ)
-        if NJ < N:
-            _, ctrJ = taylor_Y(s, leg, T, Yt, NJ + 1)
-        else:
-            ctrJ = ctr
+        ctrJ = truncate_ctx(ctr, NJ + 2) if NJ < N else ctr
         VR = taylor_V(s, ctrJ, NJ + 1)
         J = Vk[NJ]
         for k in range(NJ - 1, -1, -1):

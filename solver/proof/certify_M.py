@@ -416,6 +416,26 @@ def hull_contains(res, pvals):
     return all(res["pstar"][i].contains(arb(v)) for i, v in enumerate(pvals))
 
 
+def export_6a(bx, out):
+    """the state box B1 at xi1 over the certified parallelepiped (every state component), in the format lemma 6a(M)
+    reads (lemma6_jump_M.py --box=..., keys M, h, xi1, yX_xi1, as lemma6_path_box_1e-9.json): the box of the final
+    Lohner set c + Q q + V dx, V = cV + QV qV, which contains y+(xi1; p) for every p in P"""
+    ctx.prec = PREC
+    s = CS.SysM(bx["M"])
+    c, Q, q, var = CL.load_lohner(bx["sets"])
+    lo = CL.LohnerM(s, c, Q, q, 1, var)
+    lo.dx = [CL.p_acb(z) for z in bx["sets"]["dx"]]
+    X = lo.box()
+    V = lo.var_box()
+    d = {"M": bx["M"], "h": bx["h"], "w": bx["w"], "xi1": bx["path"][3], "path": bx["path"], "p": bx["p"],
+         "C": bx["C"], "start": bx["start"], "yX_xi1": [CL.s_acb(x) for x in X[:s.nd]],
+         "V": [[CL.s_acb(V[i, j]) for j in range(V.ncols())] for i in range(s.nd)],
+         "note": "V = d(state)/d(x) over P in the tilted coordinates x (p = p^ + T x, T = [[I, 0], [C, I]])"}
+    with open(out, "w") as fh:
+        json.dump(d, fh)
+    print(f"exported the state box at xi1 = {d['xi1']} (max radius {max(CL.VI.rad_of(x) for x in X[:s.nd]):.2e}) to {out}")
+
+
 def hier_check(res, M, mutate=False, verbose=True):
     """the certified zero against hier.py's double-precision zeros (HIER[M], two solves each, their spread = hier's
     accuracy). Two statements, both must hold:
@@ -557,7 +577,8 @@ def refine(M, pstr, iters, tag, modes=None):
         newstr = [x.mid().str(50, radius=False) for x in newp]
         Cm = tilt_from(Dg, M)
         rec = {"it": it, "p_in": list(pstr), "mode": mode, "p_out": newstr,
-               "g": [x.str(20) for x in g], "full_step": [x.str(10) for x in sF], "H_step": [x.str(10) for x in sH],
+               "g": [x.str(20) for x in g], "Dg": [[x.str(20) for x in r] for r in Dg],
+               "full_step": [x.str(10) for x in sF], "H_step": [x.str(10) for x in sH],
                "steps": steps, "sec": time.time() - t0}
         hist.append(rec)
         msg = (f"refine M = {M} it {it}: |g| = {max(abs(float(x)) for x in g):.3e}; H step "
@@ -681,6 +702,11 @@ def main():
             hok = hier_check(r, M, mutate=(o.get("mutate") == "hier"))
             return 0 if hok else 1
         return 0 if r["ok"] else 1
+    if mode == "export6a":
+        with open(o["box"]) as fh:
+            bx = json.load(fh)
+        export_6a(bx, o["out"])
+        return 0
     if mode == "startcheck":
         ok = start_check(int(pos[0]), mutate="mutate" in o)
         return 0 if ok else 1

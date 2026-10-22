@@ -217,3 +217,32 @@ J_D without the constant factor κ, to which the test is invariant (A_certify.md
 the same margins to three digits). The start data are fixed_point.start_data's, the path is the lower path of §11.2,
 and the step is validated_int's. `python3 certify_M.py m1` runs it and checks that the zero enclosure overlaps the one
 of Theorem A(M = 1) (A_certify.md §12.6); `--mutate=m1ref` shifts the reference by 10⁻¹¹ and must fail.
+
+## 5. Controls, written down before the runs
+
+Every check below has a runnable mutation, with the verdict it must give. The Krawczyk controls follow A_certify.md §9.5:
+they mutate the function or plant a zero, never an enclosure alone (a wrong J(X) can make the test pass or fail either
+way), except C7, which widens g(p̂) and must make it fail.
+
+| check | control | how to run | expected |
+|---|---|---|---|
+| system self-test | none | `python3 certify_M_sys.py selftest` | PASS |
+| system self-test | one coupling sign flipped (`[(C E) D]` with the wrong sign) | `--mutate=coupling` | FAIL |
+| Krawczyk test | C0 clean | `python3 certify_M.py controls --box=...` | pass |
+| | C1 jump sign flipped, D_ν + conj D₋ν | (same command, all rows) | fail |
+| | C2 conjugation dropped, D_ν − D₋ν | | fail |
+| | C3 −conj J (null: same zeros) | | pass, enclosure overlapping C0's |
+| | C4 J_ν → (ν + 1)J_ν (null: same zeros) | | pass, enclosure overlapping C0's |
+| | C5 zero planted outside, moved by 2h in A | | fail |
+| | C6 zero planted inside, moved by (h/2, −3h/10, w/4, …) | | pass |
+| | C7 g(p̂) widened by 10³ h·σ_min(S) in the outer components | | fail |
+| | C8 zero planted outside in B₃ (moved by 2w) — the inner interval Newton must reject it | (M ≥ 3) | fail |
+| M = 1 reproduction | none | `python3 certify_M.py m1` | REPRODUCED |
+| M = 1 reproduction | Theorem A(M = 1)'s A-interval shifted by 10⁻¹¹ | `--mutate=m1ref` | NOT REPRODUCED |
+| hier.py agreement | none | `krawczyk ... --hier` | both statements hold |
+| hier.py agreement | hier's zeros moved by 100× their spread (≥ 10⁻⁹) in A | `--hier --mutate=hier` | fails |
+| start data | none | `python3 certify_M.py startcheck M` | contains |
+| start data | this file's series shifted by 10⁻⁴⁰ | `--mutate` | does not contain |
+
+A planted zero is g − L d with L the exact midpoint of Dg̃(X): it moves the zero by d up to second order and leaves
+Dg̃(X) unchanged.
