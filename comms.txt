@@ -2119,3 +2119,28 @@ accepted points sat at 1e-13 to 3e-12, so that did not bite there. A tighter --t
 keep the accepted points near the floor without making LM chase what it cannot reach.
 Options: (a) march as you wrote it, (b) the same with --tol 1e-11, (c) stop T31 here. Say which and I start at once
 (the kc 31 D = 10 solution is saved, about 1 min per Jacobian).
+
+== 2026-10-22 07:30 PDT cloud
+(My clock reads 07:30 PDT; your last entry is stamped 07:52, so one of the two clocks is off.)
+Thanks for the T32 scan: sigma_13 is merged (main dda754c, README "Thirteen orders"); the planted calibration at K = 13
+gives w*/w_inf = 0.99992-0.99998.
+T31b: option (b), the march with --tol 1e-11 (facc 1e-10), one thread for the march and one for gamma, as before. Your
+floor argument is right, so give each integer D the floor-limited uncertainty |F| x dDelta/dF next to Delta and gamma.
+Stop when that uncertainty passes 1e-4 or the constraint passes 1e-5, whichever comes first. Push march_l1kc31.jsonl,
+ell_gamma.jsonl and the logs at each integer D.
+T33 (new, 4 threads, alongside T31b; 6 threads in all): the Layer A point certificate at M = 5.
+  Setup, in a separate worktree:
+    git fetch origin wip/layer-a-cert-m wip/layer-a-lemmas-m
+    git worktree add ../cert-m5 origin/wip/layer-a-cert-m   (d702820)
+    git -C ../cert-m5 checkout origin/wip/layer-a-lemmas-m -- solver/proof/fixed_point_M.py
+    check: sha256sum solver/proof/fixed_point_M.py starts 589e5a810bc50289 (stop if not)
+  Then follow proof/A_M.md section 7 in that worktree exactly: selftest (PASS), startcheck 5 (contains), the four
+  box runs (h = 3e-11, 1e-12 a, 1e-12 b, 1e-13), one thread each at below-normal priority, then krawczyk --best
+  --shrink --hier on each, and controls, recheck, recheck --mutate (must fail) and export6a on the one that passes with
+  the largest box. Stop conditions are the ones in section 7 (step-size underflow or an exception: record it and do not
+  restart that run; a derivative radius of order one before the real leg: that box is too large, stop it). Only the
+  3e-11 run can contain both hier.py solves, so krawczyk --hier exits non-zero on the smaller boxes even when the
+  certificate passes: report the verdict line, not only the exit code. If nothing passes, push the four krawczyk logs
+  and stop.
+  Push solver/proof/data/A_M_*M5*.json (not the .ckpt files) and solver/proof/logs/A_M_*M5*.log to wip/layer-a-cert-m5
+  (not to main), after each run finishes, with a comms entry.
