@@ -9,3 +9,5 @@
 == 2026-10-22T07:08:27 start R5_fits_all_601: cd /home/claude/dss-residual-kernel/.claude/worktrees/agent-a8dba065a7c5e43c9 && python3 hp/dd_fits_mp.py 10 1e9 --clean --dmax=60.1
 == 2026-10-22T07:41:41 end R5_fits_all_601 rc=0 1994 s
 == 2026-10-22T07:41:41 start R6_fits_all_6103: cd /home/claude/dss-residual-kernel/.claude/worktrees/agent-a8dba065a7c5e43c9 && python3 hp/dd_fits_mp.py 10 1e9 --clean
+== 2026-10-22T08:55:23 end R6_fits_all_6103 (orphaned from queue.sh) complete
+== 2026-10-22T08:55:23 start X2_rv2_budget_decimal: cd /home/claude/dss-residual-kernel/.claude/worktrees/agent-a8dba065a7c5e43c9 && python3 hp/review/rv2_fits.py budget --decimal
