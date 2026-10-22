@@ -444,7 +444,35 @@ equation along y⁺ = y⁻ and obeys the same flat estimate and backward inclusi
 hulls. So the real-linear map 𝓛 : ∂Σ ↦ ∂J_D(ξ₁), now from ℝ^{M+1} to ℝ^{M+1}, is injective. Since
 DJ_D(x*) = 𝓛 ∘ DΣ(x*), the Jacobian DΣ(x*) is non-singular whenever DJ_D(x*) is.
 
-SECTION_4_RESULTS
+### 4.3 Results
+
+**Flat estimate: certified** at M = 3 and 5 over X₆ = x̂ ± 10⁻⁶, at Z = 0.004489 (ξ_a = 0.067, the M = 1 value), §3.3:
+
+| M | Λ plain | Λ diag | largest entries |
+|---|---|---|---|
+| 1 (§11.5) | 0.1513 | | |
+| 3 | 0.2923 | 0.2199 | v±3 ← p±3: 1.16 |
+| 5 | 0.4233 | 0.2979 | v±5 ← p±5: 2.6 |
+
+The largest entries come from the (1 + s)(2 + s)P/(2z) coupling, which grows like (μω)².
+
+**Backward flow and ρ₆ₐ: a pilot, not a proof** (`lemma6_jump_M.py --pilot`, `lemmas_M_runs/lemma6a_pilot_M3_xi0.2.*`).
+B₁ is the double-precision y⁺(0.2) at x̂ (from `lateral_np.py`'s path, the ray 3π/8 from 0.085 to 0.2 and the arc at
+0.2), inflated by 10⁻¹⁰. That is the role the point certificate's box plays; here it is not rigorous. Lemma S and the
+flat estimate are over X₆, and ω is a ball over X₆.
+
+| | M = 1 (§11.5, rigorous) | M = 3 (pilot) |
+|---|---|---|
+| ξ₁ → ξ_a | 0.3 → 0.067 | 0.2 → 0.067 |
+| start hull radius | (box run, h = 10⁻⁹) | 3.9×10⁻¹⁰ |
+| Lohner steps, time | 291, 130 s | 389, 3014 s |
+| max radius of B | 1.8×10⁻⁶ | 1.1×10⁻³ |
+| entries of G_slow⁻¹, of H = G_fast G_slow⁻¹ | ≤ 1.26, ≤ 7.7 | ≤ 1.13, ≤ 10.7 |
+| ρ₆ₐ | 4.22×10⁻³ | **3.04×10⁻²** |
+
+So the 6a computation works at M = 3 with a margin of about 30, as numerical evidence. B is wider than at M = 1. One
+plausible contributor, not separated out here: ω ranges over X₆ (10⁻⁶) in this pilot, against a 10⁻⁹ box at M = 1.
+The run itself is the cost to plan for: about 50 minutes at load 15–19.
 
 ## 5. Lemma 6b₁
 
@@ -599,7 +627,29 @@ MUTATION_TABLE
 
 ## 9. Cost, and a proposed task for the local machine
 
-COST_SECTION
+**Measured on the cloud machine** (2 cores at load 15–19; each process got about a fifth of a core; wall-clock):
+
+| piece | M = 3 | M = 5 |
+|---|---|---|
+| step (i), one run at a point / over a box (table rows) | 4–8 s / 6–17 s | 7–32 s / 15–56 s |
+| start data with derivatives over a box | 32–59 s | 188–285 s |
+| lemma S + old sector lemma + flat estimate over a box | minutes (not timed separately) | minutes |
+| `hier.py` zero, then `refine_zero_M.py` | 9 min, then 76 s | (8-thread run, README), then 35 min |
+| 6a backward flow (pilot), ξ₁ = 0.2 → 0.067 | 389 steps, 50 min | not run |
+| 6b₁ ray run (11 legs) | 903 steps, about 35 min | not run |
+| 6b₁ arc + discs, row 11 (pilot) | about 2 s per Lohner step, 5–15 s per disc | not run |
+
+Per Lohner step, M = 3 costs about 6 times M = 1 (2 s against 0.3 s at comparable load). That is consistent with the
+dimension (15 against 9 states, cubic in the matrix work) and the number of harmonic products.
+
+**Estimates (not measured):**
+
+- The full M = 3 covering is 12 rows and 183 discs, about 6000 arc steps. That is about 4 hours on this machine at
+  this load, or 1.5–2 hours on 5 local threads with the rows in parallel.
+- M = 5 has 18 rows and 366 discs, 2.2 times the arc length, at about 3 times the cost per step: roughly 6 times M = 3.
+  That means 8–12 hours on 5 local threads, after a pilot of its innermost row and its disc radii.
+
+LOCAL_TASK
 
 ## 10. Reproduce
 

@@ -21,7 +21,9 @@ M + 1 complex D-components (the J_{D,mu}, mu > 0) are needed, because u must hav
 
 Input (from the point certificate's box run, the analogue of lemma6_path_box_1e-9.json):
     --box=f.json with keys "M", "h", "xi1", "yX_xi1" (the nd = 2(M+1) + (M+2) state components at xi1 as [re, im]
-    arb strings, in lateral_np's order [D_mu ascending, S_mu, C_nu]) and optionally "x" (the box centre)
+    arb strings, in lateral_np's order [D_mu ascending, S_mu, C_nu]) and optionally "x" (the box centre, decimal
+    strings; default the stored hier.py zero). The parameter box is x +- h (the axis-aligned hull of a tilted box is
+    fine); lemma S and the flat estimate are proved over x^ +- hbox (--hbox, default 1e-6), which must contain it.
 PILOT (NOT rigorous): --pilot=1e-10 builds B1 from a double-precision y+(xi1) at the hier.py zero (lateral_np's path:
     the ray arg xi = 3pi/8 from 0.085 to rho, the arc |xi| = rho to the real axis, then the real axis to xi1),
     inflated by the given radius. It measures the cost and rho_6a; it proves nothing.
@@ -130,12 +132,24 @@ def main():
         box = opts.get("hbox", "1e-6")
         print(f"PILOT (not rigorous): B1 = double-precision y+({xi1}) at the hier.py zero (path: ray 3pi/8 to {rho}, "
               f"arc, real axis to {xi1}) inflated by {opts['pilot']}; lemma S and the flat estimate over x^ +- {box}")
+        xs = FPM.ZEROS[M]
+        hpar = box
     else:
         with open(opts["box"]) as fh:
             d = json.load(fh)
         assert int(d.get("M", M)) == M, "box file is for another M"
         y = [parse(p) for p in d["yX_xi1"]]
-        box, xi1 = d["h"], str(d.get("xi1", "0.3"))
+        xi1 = str(d.get("xi1", "0.3"))
+        # the certificate's box: centre d["x"] (default: the stored zero) +- d["h"] in every parameter (the axis-aligned
+        # hull of a tilted box is fine). Lemma S and the flat estimate are over x^ +- hbox (default 1e-6), which must
+        # contain it.
+        xs, hpar = d.get("x", FPM.ZEROS[M]), d["h"]
+        box = opts.get("hbox", "1e-6")
+        ctx.prec = 320
+        inside = all(bool(abs(arb(a) - arb(b)) + arb(hpar) <= arb(box)) for a, b in zip(xs, FPM.ZEROS[M]))
+        if not inside:
+            print(f"the certificate's box is not inside x^ +- {box}: rerun with a larger --hbox")
+            return 1
     S = L6SM.lemma_S_M(M, rp, k, box, verbose=False)
     R = L6SM.flat_estimate_M(S, Z, diag=False, verbose=False)
     if not (S["ok"] and R["ok"]):
@@ -145,10 +159,9 @@ def main():
     print(f"lemma S (M = {M}, rp = {rp}, k = {k}): contraction {float(S['lip'].upper()):.4f}; flat estimate on "
           f"0 < z <= Z = {Z}: Lambda = {float(lam.upper()):.4f}")
     ctx.prec = 320
-    xs = FPM.ZEROS[M]
-    wf = arb(xs[1], arb(box)) if float(box) > 0 else arb(xs[1])
+    wf = arb(xs[1], arb(hpar)) if float(hpar) > 0 else arb(xs[1])
     w = FPM.W0() * wf
-    A_box = arb(xs[0], arb(box)) if float(box) > 0 else arb(xs[0])
+    A_box = arb(xs[0], arb(hpar)) if float(hpar) > 0 else arb(xs[0])
     ctx.prec = VI.PREC
     H = start_box(M, y, w, A_box, mutate)
     nd = len(y)

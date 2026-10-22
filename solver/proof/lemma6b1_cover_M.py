@@ -21,7 +21,10 @@ the disc radii and orders, set by the distance to the singularities of y+ (lemma
     python3 lemma6b1_cover_M.py check --M=3 [--h=1e-6] [--json=f.json] [--drop=j,k]
     python3 lemma6b1_cover_M.py mutate --M=3 [--j=J]          the fast term with the wrong sign in every disc of row j:
                                                               no disc may be certified
-Runs are saved in lemma6b1_runs_M<M>/ (ray.json, row_JJ.json).
+Runs are saved in lemma6b1_runs_M<M><tag>/ (ray.json, row_JJ.json).
+Every command takes --x=A,wf,B3,C3,.. (the box centre, decimal strings; default the stored hier.py zero, recorded in
+ray.json and checked by the rows) and --tag=_name (a separate run directory), for running on the point certificate's
+own box: e.g. --x=<its p^> --h=1e-9 --tag=_cert (an axis-aligned box containing its tilted box).
 """
 import json
 import math
@@ -54,8 +57,11 @@ CONF = {
 }
 
 
+TAG = ""                            # --tag: a separate run directory (e.g. for the point certificate's own box)
+
+
 def runs_dir(M):
-    return os.path.join(HERE, f"lemma6b1_runs_M{M}")
+    return os.path.join(HERE, f"lemma6b1_runs_M{M}{TAG}")
 
 
 def disc_params(M, rho):
@@ -174,8 +180,9 @@ def ray_run(M, h):
     E3 = (acb(0, -1) * UM.PHI_U).exp()
     ctx.prec = 320
     H = start_box(M, old, w, xb[0], acb(arb(rows[0]["rho"])) * E3)
-    out = {"M": M, "h": h, "rho": [rw["rho"] for rw in rows], "starts": {"0": [LC.s_acb(z) for z in H]},
-           "start_rad": maxrad(H, nd), "legs": [], "lip_old": float(old["lip"].upper())}
+    out = {"M": M, "h": h, "x": list(FPM.ZEROS[M]), "rho": [rw["rho"] for rw in rows],
+           "starts": {"0": [LC.s_acb(z) for z in H]}, "start_rad": maxrad(H, nd), "legs": [],
+           "lip_old": float(old["lip"].upper())}
     print(f"M = {M}: start box at |u| = {rows[0]['rho']} on the start ray (old sector lemma over X = x^ +- {h}, "
           f"contraction {float(old['lip'].upper()):.4f}): radius {maxrad(H, nd):.2e}", flush=True)
     ctx.prec = VI.PREC
@@ -206,6 +213,7 @@ def row_run(M, j, h, mutate=None):
     with open(os.path.join(runs_dir(M), "ray.json")) as fh:
         ray = json.load(fh)
     assert ray["h"] == h and ray["rho"] == [x["rho"] for x in rows], "ray.json made with another design or box"
+    assert ray.get("x", list(FPM.ZEROS[M])) == list(FPM.ZEROS[M]), "ray.json made with another centre (--x)"
     nd = UM.SysUM(M).nd
     ctx.prec = VI.PREC
     H = [LC.p_acb(p) for p in ray["starts"][str(j)]]
@@ -277,6 +285,14 @@ def main():
     cmd = args[0] if args else "design"
     M = int(opts.get("M", "3"))
     h = opts.get("h", "1e-6")
+    global TAG
+    TAG = opts.get("tag", "")
+    if "x" in opts:
+        # the box centre (decimal strings, M + 1 of them), e.g. the point certificate's p^; it replaces the stored
+        # hier.py zero everywhere downstream (start box, w and A balls) and is recorded in ray.json
+        xs = opts["x"].split(",")
+        assert len(xs) == M + 1
+        FPM.ZEROS[M] = xs
     if cmd == "design":
         tot = 0.0
         for rw in design(M):

@@ -20,3 +20,6 @@ start box at xi1 = 0.2 (y+ and sigma(y+)): radius 3.92e-10
    real t 0.958250 h 1.10e-03  max state radius 9.43e-08  [2735 s]
    real t 0.975585 h 7.43e-04  max state radius 9.29e-08  [2863 s]
    real t 0.993339 h 1.01e-03  max state radius 9.13e-08  [2994 s]
+backward along the real axis 0.2 -> 0.067: 389 steps, 3014 s; final state radius 9.07e-08; max radius of B 1.09e-03
+|H| = |G_fast G_slow^-1| entries <= 1.07e+01; G_slow^-1 entries <= 1.13e+00
+rho_6a = 3.044e-02 < 1: True  => all J_D,mu(0.2) = 0 implies psi = 0 (whole jump): True   [PILOT: not rigorous]
