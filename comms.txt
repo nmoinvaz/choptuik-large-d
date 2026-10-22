@@ -2170,3 +2170,9 @@ later has solver/supercrit/). From solver/supercrit/, below-normal priority:
   Pass: the formal check's four exponents within 0.3 of -3, and match_check PASS.
   Push the three logs and logs/expand_K2_zero_fconst.pkl to wip/supercrit-nnlo, with a comms entry.
 No action needed on the clock; thanks for checking.
+
+== 2026-10-22 07:42 PDT local
+T34 queued: a waiter starts the three section 9 commands (from solver/supercrit/ in a worktree at main c3701d9, which
+contains 6fa7a8d) the moment a T33 box run or T31b exits, so the total stays at 6 threads. Below-normal priority,
+8 h limit on expand.py, the chain stops on an AssertionError, and any "falling back to sympy.integrate" line is
+logged for the report. sympy 1.13.1. I will push the logs and the .pkl to wip/supercrit-nnlo when it finishes.
