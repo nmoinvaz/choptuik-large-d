@@ -18,6 +18,11 @@ Contents
 - [2. Design: the Schur-corrected Krawczyk test in a tilted box](#2-design-the-schur-corrected-krawczyk-test-in-a-tilted-box)
 - [3. The runs](#3-the-runs)
 - [4. The M = 1 case as a special case](#4-the-m--1-case-as-a-special-case)
+- [5. Controls, written down before the runs](#5-controls-written-down-before-the-runs)
+- [6. Results](#6-results)
+- [7. Cost, and a proposed task for the local machine](#7-cost-and-a-proposed-task-for-the-local-machine)
+- [8. Reproduce](#8-reproduce)
+- [9. Proposed text for README.md, PROOF.md and A_certify.md](#9-proposed-text-for-readmemd-proofmd-and-a_certifymd)
 
 ## 1. The function and what is certified
 
@@ -294,55 +299,73 @@ with an empty inner block, and LohnerM against validated_int. The independent as
 
 ### 6.2 M = 3: certified (given the M-harmonic start-value lemma)
 
-**The centre** (`data/A_M_refine_M3_c.json`, numerics): p̂ = (A, wf, B₃, C₃) =
+**The centre** (`data/A_M_refine_M3_c.json`, `p_out`; numerics): p̂ = (A, wf, B₃, C₃) =
 (2.72647588563088004, 1.01560309485773330, 0.144419478470076894, 0.0110874258881167086) (the last Newton steps are
-1.5×10⁻²⁵ outer and 4×10⁻²⁸ inner). The box run below was centred at the previous refinement's centre
-(`data/A_M_refine_M3_a.json`, `p_out`), which is 2.7×10⁻¹³ (outer) and 8×10⁻¹⁸ (inner, B₃) from it.
+1.5×10⁻²⁵ outer and 4×10⁻²⁸ inner).
 
 **Structure in raw jump units at ξ₁ = 0.3** (`logs/A_M_plan_M3.log`): outer Schur complement S with singular values
 0.443 and 0.238; inner block Dg_HH with singular values 1.05×10⁷ (twice); raw outer block up to 3.7×10⁵ and Dg_oH up to
 1.8×10⁶ (the leakage L = Dg_oH Dg_HH⁻¹ is at most 0.17); tilt C = [[0.142, −0.245], [0.004, −0.021]]; condition of Dg
 4.7×10⁷.
 
-**The run** (`data/A_M_box_M3_1e-9.json`, log `logs/A_M_box_M3_1e-9.log`): h = 10⁻⁹, w = 10⁻¹⁶, start data from
-`fixed_point_M.start_data_M` (SHA-256 prefix 589e5a810bc50289, the lemma agent's working copy at the time), 955 + 552 +
-72 steps, 72 minutes at load 17–22.
+**The run** (`data/A_M_box_M3_1e-10.json`, log `logs/A_M_box_M3_1e-10.log`): h = 10⁻¹⁰, w = 4×10⁻¹⁶, start data from
+`fixed_point_M.start_data_M` (SHA-256 prefix 589e5a810bc50289, the same file as on the lemma agent's branch
+`wip/layer-a-lemmas-m` when this was written), 955 + 552 + 72 steps, 55 minutes of run time at load about 20 (it was
+interrupted once by a restart and resumed from its checkpoint).
 
-**The test** (`logs/A_M_krawczyk_M3_1e-9.log`). On the run's own box the outer rows pass (relative margins 0.944,
-0.970) but the inner rows fail: |K_z| ≈ 89 w. The inner rows of Y Dg̃(X) have radii 3–6×10⁻⁶ in the outer columns,
-because the enclosure excess of the outer columns in the J₃ components reaches 30–60 (absolute) at ξ₁: interval excess
-in slow harmonic-3 directions is amplified by the Stokes switching, and the largest derivative radius grows from
-2×10⁻² at the end of the arc to 2–7×10² (per column) at ξ₁, on the real leg where the fast modes grow. Dg̃(X) encloses the Jacobian on every sub-box of X, so the
-test was repeated on sub-boxes with the inner widths kept: it passes for outer half-widths up to 9.7×10⁻¹².
+**The test** (`python3 certify_M.py krawczyk --box=data/A_M_box_M3_1e-10.json --hier`, `logs/A_M_krawczyk_M3_1e-10.log`):
+K(X) ⊂ int X on the run's whole box, relative margins 0.994, 0.997, 0.778, 0.778; radius of g(p̂) 1.7×10⁻¹⁶, largest
+radius in Y Dg̃(X) 0.23.
 
-> **Certified** (given the start-value lemma `fixed_point_M.start_data_M` and Braaksma's theorem; code certify_M*.py on
-> python-flint 0.9, not reviewed): the D-jump function g of §1 at M = 3 has exactly one zero in the parallelepiped
-> P = p̂ + T·([−9.70×10⁻¹², 9.70×10⁻¹²]² × [−10⁻¹⁶, 10⁻¹⁶]²), and its Jacobian is non-singular there. Relative margins
-> 0.916, 0.964, 0.100, 0.057. The zero lies in (endpoints rounded outward; the smallest passing sub-box, θ = 0.656):
+> **Certified** (given the start-value lemma `fixed_point_M.start_data_M` and Braaksma's theorem; trusted code
+> certify_M*.py, validated_int.py and python-flint 0.9; the new files are not reviewed): the D-jump function g of §1 at
+> M = 3 has exactly one zero in the parallelepiped
+> P = p̂ + T·([−10⁻¹⁰, 10⁻¹⁰]² × [−4×10⁻¹⁶, 4×10⁻¹⁶]²), and its Jacobian is non-singular there. The zero lies in
+> (endpoints rounded outward):
 >
-> A ∈ [2.72647588563052, 2.72647588563124], ω/ω∞ ∈ [1.01560309485754, 1.01560309485793],
-> B₃ ∈ [0.144419478469979, 0.144419478470175], C₃ ∈ [0.0110874258881111, 0.0110874258881224].
+> A ∈ [2.72647588563032, 2.72647588563144], ω/ω∞ ∈ [1.01560309485743, 1.01560309485804],
+> B₃ ∈ [0.144419478469924, 0.144419478470230], C₃ ∈ [0.0110874258881079, 0.0110874258881255].
 
-The refined numerical zero lies inside this enclosure in every coordinate. The independent assembly
-(`certify_M_recheck.py --sub=...`, `logs/A_M_recheck_M3_1e-9.log`) gives the same verdict and margins.
+The axis-aligned hull of P has half-widths 1.0×10⁻¹⁰, 1.0×10⁻¹⁰, 3.9×10⁻¹¹, 2.5×10⁻¹² (the krawczyk log). The refined
+numerical zero lies inside the enclosure in every coordinate.
 
-**Controls** (`logs/A_M_controls_M3_1e-9.log`, on the certified sub-box): C0–C5, C7, C8 as expected. **C6 does not
-give its expected verdict**: the zero planted inside at (h/2, −3h/10, w/4, w/4) is not certified (inner margins −0.15,
-−0.19). Its planted inner shift, a quarter of w, is larger than the clean inner margins (0.100, 0.057), so the test
-cannot certify it; the control's expected verdict assumed margins of order one, as at M = 1. It is reported, not
-changed. C6b, added afterwards with CAPD's rule (A_certify.md §10.3: shift by half the clean margins), passes. At
-M = 1 every control, C6 and C6b included, gives its expected verdict.
+**Independent assembly** (`python3 certify_M_recheck.py data/A_M_box_M3_1e-10.json`, `logs/A_M_recheck_M3_1e-10.log`;
+mpmath intervals, its own jump functionals and preconditioner, sharing only the saved Lohner sets): the same verdict and
+margins, and the zero in A ∈ [2.7264758856303206, 2.7264758856314395]. With the jump sign flipped (`--mutate`,
+`logs/A_M_recheck_M3_1e-10_mutate.log`) it fails (exit status 1), as it must.
 
-**hier.py's zeros** (`logs/A_M_hier_M3_1e-9.log`): hier.py's zero lies inside the axis-aligned hull of P; nested.py's
-lies 1.7×10⁻¹² outside it in A (the two solvers differ by 1.7×10⁻¹¹ in A and ω/ω∞, more than the certified outer
-half-width). Both agree with the certified zero to within their own spread in every coordinate (|difference| ≤ 1.14×10⁻¹¹
-in A, 1.09×10⁻¹¹ in ω/ω∞, 1.2×10⁻¹² in B₃, 1.8×10⁻¹³ in C₃). With hier's zeros moved by 100 times their spread the check
-fails, as it must.
+**Controls** (`python3 certify_M.py controls --box=data/A_M_box_M3_1e-10.json`, `logs/A_M_controls_M3_1e-10.log`,
+exit status 0): all of C0–C8 and C6b give their expected verdicts. C1, C2 fail by relative margins of order −10⁹ (outer)
+and −10⁵ to −10⁶ (inner); C5 by −1.01 in A; C7 by −10³; C8 by −1.22 in B₃; the null mutations C3, C4 pass with the clean
+margins and overlapping enclosures; the planted interior zeros C6 and C6b pass with margins 0.49–0.70 and 0.39–0.50.
 
-**For lemma 6a(M)**: the state box at ξ₁ over the run's whole parallelepiped (which contains P) is in
-`data/A_M_6a_M3_1e-9.json` (keys M, h, xi1, yX_xi1, and V), max radius 5.2×10⁻⁷. The certified box lies within
-x̂ ± 10⁻⁸ of `fixed_point_M.py`'s x̂ for M = 3 (hypotheses H1, H2 of A_lemmas_M.md §6), and the path (ray 5π/16 from
-0.0741, arc at 0.2, real axis to 0.3) is of the kind its §6 assumes.
+**hier.py's zeros** (same log as the test): both solves stored in certify_M.py (`HIER[3]`, hier.py's and nested.py's)
+lie inside the axis-aligned hull of P, and agree with the certified zero to within their own spread in every
+coordinate (|difference| ≤ 1.14×10⁻¹¹ in A, 1.09×10⁻¹¹ in ω/ω∞, 1.2×10⁻¹² in B₃, 1.8×10⁻¹³ in C₃; spread 1.7×10⁻¹¹,
+1.7×10⁻¹¹, 1.8×10⁻¹², 2.8×10⁻¹³). Literal containment in P itself is not expected: P is 4×10⁻¹⁶ wide in the tilted
+inner coordinates, far below hier.py's own accuracy there. With hier's zeros moved by 100 times their spread
+(`--mutate=hier`, `logs/A_M_hier_M3_1e-10_mutate.log`) both statements fail, as they must.
+
+**For lemma 6a(M) and the covering** (A_lemmas_M.md §6–7, hypotheses H1–H3): the state box at ξ₁ over the run's
+whole parallelepiped is in `data/A_M_6a_M3_1e-10.json` (`python3 certify_M.py export6a --box=data/A_M_box_M3_1e-10.json
+--out=data/A_M_6a_M3_1e-10.json`; keys M, h, xi1, yX_xi1, V, the format of `lemma6_path_box_1e-9.json` plus extras), max
+radius 3.4×10⁻⁸. The hull of P lies within about 1.0×10⁻¹⁰ of the centre that the lemma agent's 6b₁ covering uses
+(`data/A_M_refine_M3_a.json`, `p_out`, which differs from p̂ by less than 3×10⁻¹³), so inside its x̂ ± 10⁻⁹ box (H2,
+if that covering completes) and inside x̂ ± 10⁻⁶ (H1). The path (ray 5π/16 from 0.0741, arc at 0.2, real axis to 0.3)
+is of the kind A_lemmas_M.md §6 assumes, and all (M + 1)/2 complex D-jumps are taken at one radius.
+
+**The first run** (h = 10⁻⁹, w = 10⁻¹⁶; `data/A_M_box_M3_1e-9.json`, `logs/A_M_krawczyk_M3_1e-9.log`,
+`logs/A_M_controls_M3_1e-9.log`, `logs/A_M_hier_M3_1e-9.log`, `logs/A_M_recheck_M3_1e-9.log`). It was centred at
+`data/A_M_refine_M3_a.json`'s `p_out`. On its own box the outer rows pass (0.944, 0.970) but the inner rows fail
+(|K_z| ≈ 89 w): the outer columns' enclosure excess in the J₃ components reaches 30–60 at ξ₁ (interval excess in slow
+harmonic-3 directions is amplified by the Stokes switching on the real leg), so the inner rows of Y Dg̃(X) have radii
+3–6×10⁻⁶ in the outer columns. Since Dg̃(X) encloses the Jacobian on every sub-box, the test passes on outer half-widths
+up to 9.7×10⁻¹² (inner widths kept; margins 0.916, 0.964, 0.100, 0.057), a box contained in the one above. On that
+sub-box C6 did not give its expected verdict (its planted inner shift w/4 exceeded the clean inner margins); this is
+recorded, not changed, and is why C6b (CAPD's rule, half the clean margins) was added. The run at h = 10⁻¹⁰ removes
+the problem the way the scale estimate of §2 says it should: the excess scales with the run's box (the derivative
+radius in the progress lines at step 50 of the real leg is 2.78×10¹ in the first run's log and 2.78 in this one's), while
+w is four times larger.
 
 ## 7. Cost, and a proposed task for the local machine
 
@@ -353,7 +376,8 @@ one process each, under `nice -n 10`:
 |---|---|---|---|---|
 | M = 1 point run (C¹, 2 columns), N = NJ = 24 | 7 + ω | 303, 320, 46 | 18 min | 1.6 s |
 | M = 1 box run | 7 + ω | 303, 320, 46 | 21 min | 1.8 s |
-| M = 3 box run, N = 20, NJ = 12 | 13 + ω | 955, 552, 72 | 72 min | 2.7 s |
+| M = 3 box run, N = 20, NJ = 12 (h = 10⁻⁹) | 13 + ω | 955, 552, 72 | 72 min | 2.7 s |
+| M = 3 box run (h = 10⁻¹⁰) | 13 + ω | 955, 552, 72 | 55 min | 2.1 s |
 | M = 3 refinement, one Newton iteration (numerics, order 30) | 13 + ω | 193 in all | 11–13 min | 3.6 s |
 | M = 5 refinement, one Newton iteration | 19 + ω | 307 in all | 41 min | 8 s |
 | M = 5 box run | 19 + ω | M5_STEPS | M5_TIME | M5_PER |
