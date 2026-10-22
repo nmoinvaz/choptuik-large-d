@@ -65,6 +65,10 @@ def converge(D, eps, zg):
     facc = a.facc if a.facc else 10 * a.tol
     S._lastJ = None
     zs, nF, _ = lm(S, zg, tol=a.tol, maxjac=a.maxjac, verbose=False, prep=lambda zz: S.refreeze(zz, a.kappa), reg=a.reg)
+    if facc <= nF < 1e-5:
+        # polish with the RK step counts frozen (re-freezing inside the Newton loop can toggle the counts, which moves
+        # the discrete residual by ~1e-8 and stalls it)
+        zs, nF, _ = lm(S, zs, tol=a.tol, maxjac=4, verbose=False, reg=a.reg)
     if not nF < facc:
         return None, F0, nF
     return (S, zs), F0, nF

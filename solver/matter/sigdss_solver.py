@@ -794,7 +794,7 @@ def _model_root(P):
     return min(roots, key=lambda r: abs(r - mid))
 
 
-def lam_model(S, z, guess, h=0.01, rtol=1e-9, maxit=12):
+def lam_model(S, z, guess, h=0.01, rtol=1e-9, maxit=12, accept=1e-7):
     """Real root of det M(lam) near guess, fitting log|det| = log|lam - lam0| + a + b lam through the last three
     evaluations (exact for a simple root times an exponential, which is how |det M| behaves; the plain secant on det
     crawls when the exponential dominates). Returns lam, number of evaluations, last step."""
@@ -807,8 +807,21 @@ def lam_model(S, z, guess, h=0.01, rtol=1e-9, maxit=12):
     step = np.inf
     x = guess
     for _ in range(maxit):
-        r = _model_root(pts[-3:])
+        try:
+            r = _model_root(pts[-3:])
+        except Exception:
+            r = None
         if r is None or not (0.5 * guess < r < 2 * guess):
+            # points too close for the 3-point model: if two of the last ones bracket the root closely, take the
+            # 2-point root |l1 - l0|/|l2 - l0| = exp(L1 - L2) inside the bracket
+            P = sorted(pts[-4:])
+            for (l1, s1, L1), (l2, s2, L2) in zip(P[:-1], P[1:]):
+                if s1 != s2 and (l2 - l1) < 1e-4 * abs(l1):
+                    q = np.exp(L1 - L2)
+                    x = (l1 + q * l2) / (1 + q)
+                    return x, len(pts), l2 - l1
+            if step < accept * abs(x):            # the last estimate has converged
+                return x, len(pts), step
             r0, ne, _ = lam_root(S, z, guess)
             return r0, ne + len(pts), None
         step = abs(r - x)
