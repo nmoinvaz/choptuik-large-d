@@ -10,21 +10,12 @@ it approaches a universal solution, Choptuik's critical solution, which repeats 
 echo period Δ and the critical exponent γ are universal numbers, the same for any initial data, but they depend on the
 number of spacetime dimensions D, and no formula for them is known. In D = 4, Δ ≈ 3.445 and γ ≈ 0.374.
 
-Some history. Choptuik discovered these critical phenomena in 1993 in numerical simulations of a collapsing massless
-scalar field in four dimensions: universality, the echoing with Δ ≈ 3.44, and the mass scaling with γ ≈ 0.37. Within a
-few years the scaling was explained (Koike, Hara and Adachi, 1995): the critical solution has a single unstable mode,
-and γ = 1/λ with λ its growth rate. Gundlach then constructed the critical solution directly, as a periodic
-boundary-value problem in self-similar variables, and with Martín-García pushed Δ in four dimensions to ten digits
-(2003). In other dimensions the picture is patchier: Garfinkle, Cutler and Duncan computed D = 6 (1999), Sorkin and Oren
-(2005), Bland and collaborators (2005–2007) and Taves and Kunstatter (2011) followed Δ and γ over 3.5 ≤ D ≤ 14
-(Bland conjectured Δ → 5/2 as D → ∞), and
-Ecker, Ecker, Grumiller and Jechtl (2026) mapped continuous D near 4 to about six digits, finding a maximum of Δ near
-D = 3.756. Large D has been a fruitful limit in gravity generally. For critical collapse, Rozali and Way (2018) derived
-the leading-order large-D equations of a self-gravitating scalar field, noted that they are parabolic with space and
-time swapped, and estimated γ = 1/2; Clark and Pimentel (2025) constructed continuously self-similar critical solutions
-at large D; and Ecker, Ecker and Grumiller (2026) found analytic discretely self-similar solutions at large D and
-conjectured that the echo period shrinks to zero there. A review of the field is Gundlach, Hilditch and
-Martín-García (2025).
+Some history. Choptuik discovered critical collapse in four dimensions in 1993[^1]. The scaling was soon explained by
+the critical solution's single unstable mode, γ = 1/λ[^2], and the solution was computed directly as a periodic
+eigenvalue problem, with Δ now known to ten digits in four dimensions[^3]. Other dimensions were studied numerically for
+3.5 ≤ D ≤ 14[^4], and near D = 4 to about six digits[^5]. At large D, the leading-order equations and an estimate
+γ = 1/2 came first[^6], followed by continuously self-similar solutions[^7] and analytic echoing solutions with the
+conjecture Δ → 0[^8]. A recent review is Gundlach, Hilditch and Martín-García[^9].
 
 This project asks three questions:
 
@@ -40,16 +31,13 @@ explains γ∞ = 1/2. A proof of the selection rule is in progress ([PROOF.md](P
 computer-assisted computation certifies the selected zero up to one remaining lemma.
 
 What this builds on, and what is new. From earlier work:
-- the critical phenomena themselves (Choptuik), γ = 1/λ (Koike, Hara and Adachi), and the critical solution as a
-  periodic eigenvalue problem (Gundlach);
-- the numerics up to D = 14 and near D = 4 (Garfinkle, Cutler and Duncan; Sorkin and Oren; Bland and collaborators;
-  Taves and Kunstatter; Ecker, Ecker, Grumiller and Jechtl);
-- the leading-order large-D equations of a self-gravitating scalar field, which are the D = ∞ inner problem used here,
-  their heat-equation character, and the estimate γ = 1/2 (Rozali and Way 2018);
-- the leading-order freedom of the period at large D and the conjecture Δ → 0 (Ecker, Ecker and Grumiller 2026);
-- continuously self-similar critical solutions at large D (Clark and Pimentel 2025);
-- a computer-assisted existence proof of the D = 4 solution (Reiterer and Trubowitz 2019);
-- the proof templates (Baldomá, Capiński, Guardia and Seara; Xie and Tanveer).
+- the critical phenomena, γ = 1/λ, and the critical solution as a periodic eigenvalue problem[^1][^2][^3];
+- the numerics up to D = 14 and near D = 4[^4][^5];
+- the leading-order large-D equations, which are the D = ∞ inner problem used here, their heat-equation character, and
+  the estimate γ = 1/2[^6];
+- the leading-order freedom of the period at large D and the conjecture Δ → 0[^8];
+- continuously self-similar critical solutions at large D[^7];
+- a computer-assisted existence proof of the D = 4 solution[^10], and the proof templates[^11].
 
 Not found in the literature searched ([notes/LIT_REVIEW.md](notes/LIT_REVIEW.md)):
 - Δ(D) to D = 61 at about 15 digits, and the finite limit Δ∞ = 1.64389375 against the Δ → 0 conjecture;
@@ -1981,3 +1969,21 @@ solver/largeD_late_structure.py  where the nonlinear late-order growth lives (x,
   `Ctx<96>`; nh = N/2 with N = 4⌈(3kc + 2)/4⌉), so kc ≤ 63; kc 49–63 run padded to 96 lanes. Larger kc needs another
   size (for example `Ctx<128>` with `MAXV = 16` in `src/avx512.rs`). Adding the 96-lane size left the 40- and
   72-lane results bitwise identical (residuals on all backends and thread counts, and the exact Jacobian).
+
+[^1]: M. W. Choptuik, PRL 70, 9 (1993).
+[^2]: T. Koike, T. Hara and S. Adachi, PRL 74, 5170 (1995), [gr-qc/9503007](https://arxiv.org/abs/gr-qc/9503007).
+[^3]: C. Gundlach, PRD 55, 695 (1997), [gr-qc/9604019](https://arxiv.org/abs/gr-qc/9604019); J. M. Martín-García and
+    C. Gundlach, PRD 68, 024011 (2003), [gr-qc/0304070](https://arxiv.org/abs/gr-qc/0304070).
+[^4]: D. Garfinkle, C. Cutler and G. C. Duncan, PRD 60, 104007 (1999); E. Sorkin and Y. Oren, PRD 71, 124005 (2005);
+    J. Bland et al., CQG 22, 5355 (2005); J. Bland and G. Kunstatter, PRD 75, 101501 (2007); J. Bland, PhD thesis,
+    University of Manitoba (2007); T. Taves and G. Kunstatter, [arXiv:1105.0878](https://arxiv.org/abs/1105.0878).
+[^5]: C. Ecker, F. Ecker, D. Grumiller and T. Jechtl, SciPost Phys. 20, 176 (2026),
+    [arXiv:2602.10185](https://arxiv.org/abs/2602.10185).
+[^6]: M. Rozali and B. Way, JHEP 11 (2018) 106, [arXiv:1807.10283](https://arxiv.org/abs/1807.10283).
+[^7]: C. R. Clark and G. L. Pimentel, JHEP 11 (2025) 017, [arXiv:2504.10590](https://arxiv.org/abs/2504.10590).
+[^8]: C. Ecker, F. Ecker and D. Grumiller, PRL 136, 191401 (2026), [arXiv:2601.14358](https://arxiv.org/abs/2601.14358).
+[^9]: C. Gundlach, D. Hilditch and J. M. Martín-García, *Critical Phenomena in Gravitational Collapse* (2025),
+    [arXiv:2507.07636](https://arxiv.org/abs/2507.07636).
+[^10]: M. Reiterer and E. Trubowitz, Commun. Math. Phys. 368, 143 (2019), [arXiv:1203.3766](https://arxiv.org/abs/1203.3766).
+[^11]: I. Baldomá, M. J. Capiński, M. Guardia and T. M. Seara, J. Nonlinear Sci. 33 (2023),
+    [arXiv:2206.13840](https://arxiv.org/abs/2206.13840); X. Xie and S. Tanveer, Arch. Ration. Mech. Anal. 166, 219 (2003).
