@@ -237,7 +237,8 @@ needs one correction, reported here and not fixed in B_tail.md:
 
 (`python3 trunc_seq_M7.py --amp`.) Lemma O's prediction holds exactly in both truncations: hier's model first changes at
 σ_{M+1}, `amp_trunc.py`'s at σ_M. And the explosion is a property of dropping the even harmonic M + 1, not of Galerkin
-truncation: with it kept, σ₄ changes by 0.12% (M = 3) and σ₆ by 7×10⁻⁶ (M = 5), not by factors of 10⁴–10⁶.
+truncation (the two runs also differ slightly in the late-order fit basis, neighbour shifts up to 2M + 2 here against
+2M there, which cannot remove a factor 10⁴): with it kept, σ₄ changes by 0.12% (M = 3) and σ₆ by 7×10⁻⁶ (M = 5), not by factors of 10⁴–10⁶.
 ([C_selection.md](C_selection.md) §1, on main since this work began, now defines the M-model this way and notes that with
 the even harmonics stopped at M − 1 the inner limit would be a different problem.) The lowest-order increments themselves
 decrease fast: at A = 2.7196, x² Δσ₄/Δσ₂ = −0.025 + 0.024i (modulus 0.035) and x² Δσ₆/Δσ₄ = −0.010 + 0.005i (modulus
@@ -518,12 +519,13 @@ individual labels, and so meets e^{πνω/2} before the cancellation. Two candid
 |---|---|
 | Compiled backend = scipy backend to scipy's own rtol noise, M = 1–7 (`inner_nb.py check`) | numerical check, with a mutation control |
 | Lazy residual: every entry hier reads bit-identical (`hier_nb.py selftest`) | numerical check, with a mutation control |
+| Right-hand-side cap: a capped segment is NaN, the other radii bit-identical (`inner_nb.py capcheck`) | numerical check, with a mutation control |
 | M = 7 at p₅: F₅/F₁ = 0.003104 + 0.000557i, \|F₇/F₅\| = 0.0573 | numerical evidence (levels 5, 7 at their floors) |
 | M = 7 zero c₇ | not obtained (level-3 Newton stalls at \|r₃\| ≈ 9; local task §3.1) |
 | B_tail.md's prediction c₇ ∈ [0.99997, 1.00017] | untested |
-| hier's M-model expanded in A is exact through σ_M (M = 1, 3) and changes σ_{M+1} by 14% (M = 1), 0.12% (M = 3) | numerical evidence (fits); the exactness through σ_M is Lemma O, *proved* |
-| B_tail.md §4's Galerkin explosion comes from dropping the even harmonic M + 1 | numerical evidence (M = 3) plus Lemma O; M = 5 running |
-| Lemma T, ratio form (R) with κ ≤ ¼ | *conjecture*; numerical evidence κ₅ = −0.069, lowest-order 0.035 |
+| hier's M-model expanded in A is exact through σ_M (M = 1, 3, 5) and changes σ_{M+1} by 14% (M = 1), 0.12% (M = 3), 7×10⁻⁶ (M = 5) | numerical evidence (fits); the exactness through σ_M is Lemma O, *proved* |
+| B_tail.md §4's Galerkin explosion comes from dropping the even harmonic M + 1 | numerical evidence (M = 3, 5) plus Lemma O (the fit bases also differ slightly: shifts up to 2M + 2 here, 2M there) |
+| Lemma T, ratio form (R) with κ ≤ ¼ | *conjecture*; numerical evidence κ₅ = −0.069, lowest-order 0.035 and 0.012 |
 | Lemma R (Schur-corrected residual ⇔ jump-conditioned multiplier; weights cancel in the Schur complement) | *conditional* on (H_6a^M) and T_HH invertible; proved by hand |
 | Lemma O (order counting), Lemma L (linearity at threshold), Lemma C (telescoping), identity H | *proved* (by hand) |
 | Lemma W (the weight cancels exactly in every tuning step, Darboux form) | *proved* as algebra, given the late-order normalisation of D_entire.md §6.1 |
@@ -536,7 +538,10 @@ From the repository root unless stated; times are for this session's loaded clou
 
 ```
 cd solver/inner_stokes
+sh inner_nb_checks.sh                             # all of the checks below, logs in logs/ (~15 min here)
 python3 inner_nb.py check 1 3 5 7                 # PASS; worst |numba - scipy| / scipy rtol noise 3.6 (~3 min)
+python3 inner_nb.py capcheck                      # PASS: the xi = 0.2 arc capped (NaN), other radii bit-identical
+INNER_NB_MAXFEV=0 python3 inner_nb.py capcheck    # FAIL (exit 1): no cap
 python3 inner_nb.py check 3 5 --mutate=sign       # FAIL (exit 1), ratio ~1e14-1e15
 python3 hier_nb.py selftest                       # PASS (~1 min)
 python3 hier_nb.py selftest --mutate=radius       # FAIL (exit 1), 2.9e+02
@@ -546,8 +551,9 @@ cd ../proof
 python3 trunc_seq_M7.py                           # the sequence table of §3
 python3 trunc_seq_M7.py --planted                 # PASS (estimator on planted sequences)
 python3 trunc_seq_M7.py --planted --mutate=nocorr # FAIL (exit 1)
-python3 trunc_seq_M7.py --amp                     # Delta sigma_2, Delta sigma_4 and their ratio 0.0347 (§4)
+python3 trunc_seq_M7.py --amp                     # Delta sigma_2, 4, 6 and the ratios 0.0347, 0.0116 (§4)
 python3 amp_trunc_hiermodel.py 3 9 500            # sigma_4^[3] = -0.0288364238 + 0.0108028097i (~35 min here)
+python3 amp_trunc_hiermodel.py 5 13 500           # sigma_6^[5] = -2.785451e-4 - 1.0776647e-3i (~85 min here)
 ```
 
 ## 11. Proposed text (for the coordinator; README.md, PROOF.md and B_tail.md were not edited)
