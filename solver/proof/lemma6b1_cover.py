@@ -26,9 +26,11 @@ The method (section 12.2). Rows j = 0, 1, ... of polar tiles T_jk = { a_j < |u| 
     python3 lemma6b1_cover.py check [--json=out.json]     the gluing and covering checks over the saved runs
     python3 lemma6b1_cover.py mutate=sign                 mutation test: every disc of row 0 with the wrong sign of
                                                           the fast term in the defect; the certificates must fail
-    python3 lemma6b1_cover.py control                     negative control: discs on the start ray at |u| = 13 and 17
-                                                          with radius 6, reaching the singularity of y+ (review R6);
-                                                          must fail
+    python3 lemma6b1_cover.py control                     negative control: discs at 14 e^{-3 i pi/4} of radius 2 ... 8;
+                                                          y+ has a branch point at distance 5.12 (review R6), so the
+                                                          radii above 5.12 must fail
+    python3 lemma6b1_cover.py check --drop=j,k            mutation test of the gluing check: tile (j, k) left out;
+                                                          the check must fail
 """
 import json
 import math
@@ -223,6 +225,204 @@ def row_run(j, h="1e-9", mutate=None):
     return out
 
 
+def _bmax(x, y):
+    """a ball containing max(x*, y*) for the exact reals x* in x, y* in y"""
+    return x if x > y else (y if y > x else x.union(y))
+
+
+def _bmin(x, y):
+    return x if x < y else (y if y < x else x.union(y))
+
+
+class PRect:
+    """open polar rectangle { a < |u| < b, t1 < arg u < t2 }: each bound is a ball containing the exact bound (b = None
+    for infinity); angles in (-pi, pi), so no wrap-around"""
+
+    def __init__(self, a, b, t1, t2, name=""):
+        self.a, self.b, self.t1, self.t2, self.name = a, b, t1, t2, name
+
+    def meet(self, o):
+        """the intersection, with bounds that are again balls containing the exact bounds"""
+        b = self.b if o.b is None else (o.b if self.b is None else _bmin(self.b, o.b))
+        return PRect(_bmax(self.a, o.a), b, _bmax(self.t1, o.t1), _bmin(self.t2, o.t2))
+
+    def nonempty(self):
+        """proven nonempty (True), proven empty (False) or undecided (None)"""
+        rb = True if self.b is None else (self.b - self.a)
+        dt = self.t2 - self.t1
+        if (rb is not True and rb <= 0) or dt <= 0:
+            return False
+        if (rb is True or rb > 0) and dt > 0:
+            return True
+        return None
+
+    def contains(self, rho, th):
+        return bool(rho > self.a) and (self.b is None or bool(rho < self.b)) and bool(th > self.t1) and bool(th < self.t2)
+
+
+def load_runs(h):
+    rows = design()
+    with open(os.path.join(RUNS, "ray.json")) as fh:
+        ray = json.load(fh)
+    runs = []
+    for rw in rows:
+        f = os.path.join(RUNS, f"row_{rw['j']:02d}.json")
+        runs.append(json.load(open(f)) if os.path.exists(f) else None)
+    return rows, ray, runs
+
+
+def check(h="1e-9", drop=None, verbose=True):
+    """the gluing and covering conditions of section 12.2, rigorous in arb, over the saved runs.
+    drop=(j, k): mutation test, the disc (j, k) is treated as missing (its tile is not added); the check must fail."""
+    ctx.prec = 256
+    rows, ray, runs = load_runs(h)
+    fails = []
+
+    def need(cond, msg):
+        if not cond:
+            fails.append(msg)
+        return cond
+    pi = arb.pi()
+    P34 = 3 * pi / 4
+    need(ray["h"] == h and ray["rho"] == [rw["rho"] for rw in rows], "ray.json: other design or box")
+    need(len(ray["legs"]) == len(rows) - 1 and all(str(j) in ray["starts"] for j in range(len(rows))),
+         "ray run incomplete")
+    stats = []
+    for rw, run in zip(rows, runs):
+        j = rw["j"]
+        if not need(run is not None, f"row {j}: no run"):
+            continue
+        need(run["h"] == h and run["rho"] == rw["rho"] and run["r"] == rw["r"] and run["n"] == rw["n"],
+             f"row {j}: other design")
+        need([d["t"] for d in run["discs"]] == rw["t"], f"row {j}: disc centres differ from the design")
+        for d in run["discs"]:
+            need(d["ok"], f"disc ({j}, {d['k']}) not certified")
+        stats.append(dict(j=j, rho=rw["rho"], r=rw["r"], n=rw["n"], discs=len(run["discs"]), steps=run["steps"],
+                          sec=run["sec"], Lam=max(d["Lam"] for d in run["discs"]),
+                          box=max(d["box_rad"] for d in run["discs"]), sup=max(d["sup"] for d in run["discs"])))
+    # exact numbers of the construction
+    R = [arb(str(rw["rho"])) for rw in rows]                   # row radii (the decimals the runs used)
+    Ar = [arb(rw["a"]) for rw in rows]                          # tile radial bounds (binary floats, exact)
+    Br = [arb(rw["b"]) for rw in rows]
+    Al = [arb(rw["alpha"]) for rw in rows]
+    Rd = [arb(rw["r"]) for rw in rows]
+    Phi = [[phi_of(t) for t in rw["t"]] for rw in rows]
+    for j, rw in enumerate(rows):
+        need(rw["t"][0] == 0.0 and rw["t"][-1] == 1.0, f"row {j}: first centre not on the ray or last not on the axis")
+        need(bool(Ar[j] < R[j]) and bool(R[j] < Br[j]), f"row {j}: centre radius outside the tile band")
+        for k, ph in enumerate(Phi[j]):
+            # closed tile inside the open disc: corners at the radial ends, |arg u - phi| <= alpha (C2)
+            for rr in (Ar[j], Br[j]):
+                need(bool(rr * rr + R[j] * R[j] - 2 * rr * R[j] * Al[j].cos() < Rd[j] * Rd[j]),
+                     f"tile ({j}, {k}) not inside its disc")
+            if k:
+                # the two halves of the arc between consecutive centres, each in its own disc: every point of the arc
+                # from a centre to the midpoint q is within the chord 2 rho sin(dphi/4) of that centre (C3)
+                dph = ph - Phi[j][k - 1]
+                need(bool(dph > 0) and bool(2 * R[j] * (dph / 4).sin() < Rd[j]), f"arc halves ({j}, {k}) not in the discs")
+                need(bool(dph / 2 < Al[j]) and bool(Al[j] < dph), f"tiles ({j}, {k - 1}), ({j}, {k}): overlap rule")
+        need(bool(Al[j] > 0) and bool(Al[j] < 1), f"row {j}: tile angle")
+        if j:
+            rq = (Ar[j - 1] + Br[j]) / 2
+            need(bool(Ar[j - 1] < Br[j]), f"rows {j - 1}, {j} do not overlap")
+            need(bool(R[j] < rq) and bool(rq < R[j - 1]), f"ray point q between rows {j - 1}, {j}: not between the centres")
+            need(bool(R[j - 1] - rq < Rd[j - 1]) and bool(rq - R[j] < Rd[j]), f"ray segment between rows {j - 1}, {j}")
+            need(bool(Ar[j] < rq) and bool(rq < Br[j]) and bool(Ar[j - 1] < rq) and bool(rq < Br[j - 1]),
+                 f"ray point q between rows {j - 1}, {j}: not in both tile bands")
+    # covering of A1 (C8)
+    need(bool(Br[0] > U_OUT) and bool(Ar[-1] < U_IN), "rows do not cover 25 <= |u| <= 260")
+    need(bool(R[0] > arb(G0_RAD)), "s_0 not in G0")
+    # connectivity of each new tile's meeting set with the earlier union, and the agreement point in it (C7)
+    G0 = PRect(arb(G0_RAD), None, -P34 - arb(G0_ANG), arb(0), "G0")
+    done = [G0]
+    nedges = 0
+    for j, rw in enumerate(rows):
+        for k, ph in enumerate(Phi[j]):
+            if drop is not None and (j, k) == tuple(drop):
+                continue
+            T = PRect(Ar[j], Br[j], ph - Al[j], ph + Al[j], f"T{j},{k}")
+            pieces = []
+            for X in done:
+                Pm = T.meet(X)
+                ne = Pm.nonempty()
+                if ne is False:
+                    continue
+                pieces.append((X.name, Pm, ne))
+            # agreement point: on the arc between the centres (k > 0), on the ray between the rows (k = 0, j > 0),
+            # s_0 itself (tile (0, 0), against G0)
+            if k:
+                qname, qr, qt = f"T{j},{k - 1}", R[j], (Phi[j][k - 1] + ph) / 2
+            elif j:
+                qname, qr, qt = f"T{j - 1},0", (Ar[j - 1] + Br[j]) / 2, -P34
+            else:
+                qname, qr, qt = "G0", R[0], -P34
+            qp = [Pm for (nm, Pm, ne) in pieces if nm == qname]
+            need(len(qp) == 1 and qp[0].contains(qr, qt), f"tile ({j}, {k}): agreement point not in the meeting set")
+            # connected: every piece linked to the agreement piece by proven-nonempty overlaps
+            if not need(all(ne is True for (_, _, ne) in pieces), f"tile ({j}, {k}): undecided piece"):
+                continue
+            idx = {nm: i for i, (nm, _, _) in enumerate(pieces)}
+            seen, stack = set(), [idx.get(qname, 0)]
+            while stack:
+                i = stack.pop()
+                if i in seen:
+                    continue
+                seen.add(i)
+                for l in range(len(pieces)):
+                    if l not in seen and pieces[i][1].meet(pieces[l][1]).nonempty() is True:
+                        stack.append(l)
+                        nedges += 1
+            need(len(seen) == len(pieces), f"tile ({j}, {k}): meeting set not connected")
+            done.append(T)
+    # with a dropped tile, also check that A1 is still covered (it is not: the covering argument needs every tile)
+    if drop is not None:
+        jj, kk = drop
+        ph = Phi[jj][kk]
+        # a point of A1 in tile (jj, kk) only: its centre direction at the middle of its band
+        pt_r, pt_t = R[jj], ph
+        cov = any(X.contains(pt_r, pt_t) for X in done)
+        need(cov, f"point (|u| = {rows[jj]['rho']}, arg = phi_{jj},{kk}) not covered without tile ({jj}, {kk})")
+    ok = not fails
+    out = dict(ok=ok, fails=fails[:200], nfails=len(fails), rows=stats, tiles=len(done) - 1, ray=ray["legs"],
+               ray_sec=ray["sec"], start_rad=ray["start_rad"], drop=drop)
+    if verbose:
+        for s in stats:
+            print(f"row {s['j']:2d} |u| = {s['rho']:7.2f}: {s['discs']:2d} discs (r = {s['r']}, n = {s['n']}), "
+                  f"{s['steps']:4d} Lohner steps, max Lam {s['Lam']:.3f}, max box radius {s['box']:.1e}, "
+                  f"max sup|y - y(c)| {s['sup']:.3g}, {s['sec']:.0f} s")
+        print(f"ray: {sum(l['steps'] for l in ray['legs'])} steps, {ray['sec']:.0f} s; tiles glued: {len(done) - 1}")
+        print(f"LEMMA 6b_1 CHECK: {'PASS' if ok else 'FAIL'}" + ("" if ok else f" ({len(fails)} failures: {fails[:5]})"))
+    return out
+
+
+def control(h="1e-9"):
+    """negative control: the Lohner run continued along the start ray from the last row to |u| = 14, and discs at
+    14 e^{-3 i pi/4} of growing radius. y+ has a branch point near u* = 9.675 e^{-2.120 i} (xi* = 0.3215 e^{1.060 i};
+    review R6; located in double precision, so not rigorous), at distance 5.12 from that centre, so no certificate may
+    pass once the radius exceeds 5.12."""
+    rows = design()
+    with open(os.path.join(RUNS, "ray.json")) as fh:
+        ray = json.load(fh)
+    ctx.prec = VI.PREC
+    H = [p_acb(p) for p in ray["starts"][str(len(rows) - 1)]]
+    lo = lohner_from_box(H)
+    n = lo.run(U.URay(str(rows[-1]["rho"]), "14"), 1e-2)
+    X = lo.box()
+    print(f"ray continued to |u| = 14: {n} steps, state radius {maxrad(X):.1e}")
+    leg = U.URay("14", "13")
+    out = []
+    for r, nn in (("2", 40), ("3", 40), ("4", 50), ("4.5", 60), ("5.5", 60), ("6", 60), ("8", 60)):
+        ctx.prec = DISC_PREC
+        res = LD.certify(leg.xi(acb(0)), X[:7], X[7], str(r), nn)
+        ctx.prec = VI.PREC
+        out.append(dict(r=r, n=nn, ok=res["ok"], Lam=float(res["Lam"].upper()), why=res.get("why"),
+                        sup=max(float(m.upper()) for m in res["Msup"]) if "Msup" in res else None))
+        print(f"control disc at 14 e^(-3 i pi/4), radius {r}, n = {nn}: certified {res['ok']}, Lam "
+              f"{float(res['Lam'].upper()):.3f}" + (f", sup|y - y(c)| {out[-1]['sup']:.3g}" if out[-1]["sup"] else
+                                                    f" ({res.get('why')})"), flush=True)
+    return out
+
+
 if __name__ == "__main__":
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     opts = {a.split("=", 1)[0][2:]: (a.split("=", 1)[1] if "=" in a else "1") for a in sys.argv[1:] if a.startswith("--")}
@@ -248,3 +448,22 @@ if __name__ == "__main__":
             if os.path.exists(os.path.join(RUNS, f"row_{rw['j']:02d}.json")):
                 continue
             row_run(rw["j"], h)
+    elif cmd == "check":
+        drop = tuple(int(x) for x in opts["drop"].split(",")) if "drop" in opts else None
+        res = check(h, drop)
+        if "json" in opts:
+            with open(opts["json"], "w") as fh:
+                json.dump(res, fh, indent=1)
+        sys.exit(0 if res["ok"] else 3)
+    elif cmd == "mutate=sign" or opts.get("mutate") == "sign":
+        j = int(opts.get("j", str(len(design()) - 1)))
+        res = row_run(j, h, mutate="sign")
+        nok = sum(d["ok"] for d in res["discs"])
+        print(f"MUTATION sign (the fast term V_u = +V/2 in the defect): {nok} of {len(res['discs'])} discs of row {j} "
+              f"certified (must be 0)")
+        sys.exit(0 if nok == 0 else 3)
+    elif cmd == "control":
+        res = control(h)
+        if "json" in opts:
+            with open(opts["json"], "w") as fh:
+                json.dump(res, fh, indent=1)
