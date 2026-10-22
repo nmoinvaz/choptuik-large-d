@@ -1301,7 +1301,7 @@ late orders of the inner series fitted with the predicted fast-mode exponents).
   a 2×2 problem of condition about 2, converging quadratically), there is one zero. It is the same from two
   different starts and at three matching radii (ξ₁ = 0.175, 0.2, 0.225; it moves by less than 10⁻⁷):
   A = 2.7265, ω = 1.0156 ω∞ (Δ = 1.6186), F₃/F₁ = 0.0530 + 0.0041i, ⟨F²⟩ = 3.727. The shape is that of the
-  D = ∞ solution (extrapolated from the data: A ≈ 2.70–2.72, |F₃/F₁| ≈ 0.050–0.058, ⟨F²⟩ ≈ 3.65–3.7), and ω is
+  D = ∞ solution (extrapolated from the data: A ≈ 2.70–2.72, |F₃/F₁| ≈ 0.055–0.058, ⟨F²⟩ ≈ 3.65–3.7), and ω is
   1.56% above ω∞, against 22% below with one harmonic.
 - *Five harmonics* (`solver/inner_stokes/hier.py`). At M = 5 the couplings are larger still (∂r₅/∂B₅ ≈ 2×10⁸,
   ∂r₃/∂B₅ ≈ 10¹³, ∂r₁/∂B₅ ≈ 10¹⁷), and the nested solve's homotopy stalled. A hierarchical solve works: S_M = 0
@@ -1616,7 +1616,7 @@ scalar's large-D structure: weak gravity inside the light cone and an n-free inn
 with the target curvature included, have no explicit s, so the r²-shift gives λ = 2. A winding-number count finds a single
 unstable mode besides the gauge mode at D = 4, 10, 20 and 40. The selection rule passes a second, truncation-free test:
 the D = ∞ Stokes zero gives ω∞ = 3.1998939 for the axion–dilaton and 3.9789695 for the free complex scalar, and the
-finite-D frequencies extrapolate to 3.1994 and 3.9784 (agreement about 1.5×10⁻⁴). Clark and Pimentel's large-D CSS
+finite-D frequencies extrapolate to 3.1994 and 3.9784 (agreement 1.6×10⁻⁴ and 1.3×10⁻⁴, relative). Clark and Pimentel's large-D CSS
 solution, whose radius exponents go to 0, is a different solution: a real scalar with no regular centre and no analytic
 light cone. So the γ∞ = 1/2 mechanism needs a regular centre, an analytic light cone and the inner scaling, as well as no
 1/r² term.

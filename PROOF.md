@@ -272,7 +272,7 @@ O(n^{−1/2}); the change to the fast-mode variable and the non-zero matching fa
 linear C(n, s) at F = 0); the outer jump equals κ[S + O(1/n)] given the inner fixed point (B5 part 2); the continuation
 domain is explicit, with progressive paths along which Re Φ never decreases; and the Volterra bound of the light-cone
 lemma is written out (B6′). A correction: the inter-harmonic coupling in the light-cone exponents is O(1), not O(1/n), but
-the gauge e^{Π} removes it exactly, and the exponent differences stay at least 7.27 apart in imaginary part
+the gauge e^{Π} removes it exactly, and the exponent differences stay at least 6.89 apart in imaginary part (7.26 for M ≥ 3)
 (`lightcone_exponents.py`), so non-resonance holds. Still to write with explicit constants: the inner fixed point on the
 matching domain (B5 part 1) and the global continuation contraction (B8), both needing only fixed-order truncations.
 Uniformity in M (gap (b)) is a separate question.

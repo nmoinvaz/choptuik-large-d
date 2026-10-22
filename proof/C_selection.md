@@ -396,7 +396,7 @@ eigenvalue $`-c^2/(x(x^2-c^2))`$ of the actual background, and with the order-1 
   (including ν = −μ), since their imaginary parts differ by about (μ − ν)ω, at least 2ω in modulus. The O(1/n) coupling
   through the harmonics of G(1) moves the exponents (eigenvalues of the indicial matrix) by O(1/n), which cannot close
   a gap of 2ω. *(Second pass: the coupling is O(1) but gauged away exactly; in the truncations the differences have
-  |Im| ≥ 6.9 and |Re| ≤ 0.019. See Section 12.)* So the solutions of the linearized system behaving like $`(1-x)^{\Lambda_\mu}`$ at x = 1 form a
+  |Im| ≥ 6.89 and |Re| < 0.02 (from `lightcone_exponents.py`: 6.894 and 0.0194). See Section 12.)* So the solutions of the linearized system behaving like $`(1-x)^{\Lambda_\mu}`$ at x = 1 form a
   one-dimensional space modulo solutions analytic at x = 1. The exact solution of step 2 has exactly this behaviour,
   which gives 2.
 - **Step 4: the constant.** $`k_{n,\mu}`$ is read off by comparing the leading terms at x → 1. Its non-vanishing follows
@@ -881,7 +881,7 @@ uses the M = 5 zero (A = 2.7186, F₃/F₁ = 0.0549 + 0.0054i, F₅/F₁ = 0.003
   4×10⁻⁸ at M = 3, 5, 7, 9.
 - **Outermost harmonics.** The two eigenvalues for |μ| = M are shifted by about 0.37, almost entirely in the imaginary
   part.
-- **Non-resonance.** For every M tested, all pairwise differences have |Im| ≥ 6.9 and |Re| ≤ 0.019. So the truncated
+- **Non-resonance.** For every M tested, all pairwise differences have |Im| ≥ 6.89 and |Re| < 0.02. So the truncated
   models are non-resonant with a wide margin too.
 
 **Lemma B6′ (the Volterra bound).** Work on t ∈ (0, t₀], t₀ = ½. Split the linearized M-harmonic system into fast
@@ -915,7 +915,7 @@ with C depending only on M, F, ω and t₀.
    - Write U(t) = t^{𝓣₀}(I + O(t)).
    - The entries of $`U(t)^{-1}(QR)\,U(t)`$ are $`O(t^{-\rho})`$, with ρ the largest difference of the real parts of the eigenvalues of
      𝓣₀.
-   - ρ = 0 untruncated and ρ ≤ 0.019 in the truncations.
+   - ρ = 0 untruncated and ρ < 0.02 in the truncations.
    - So $`\lvert r'\rvert \le C_2\,t^{1-\rho}(\lvert c\rvert + \lvert r\rvert)/n`$, which is integrable at 0.
 4. **Gronwall.** With r(t₀) = 0, $`\lvert r(t)\rvert \le \lvert c\rvert\,\big(e^{C_2 t_0^{2-\rho}/n} - 1\big) \le C\lvert c\rvert/n`$, uniformly up to t = 0. $`\square`$
 

@@ -623,7 +623,7 @@ Journal reference and arXiv number checked unless noted.
 - [Bi00] P. Bizoń, Comm. Math. Phys. 215, 45 (2000), [math-ph/9910026](https://arxiv.org/abs/math-ph/9910026).
 - [BCT00] P. Bizoń, T. Chmaj, Z. Tabor, Nonlinearity 13, 1411 (2000), [math-ph/9912009](https://arxiv.org/abs/math-ph/9912009).
 - [LHI00] S. L. Liebling, E. W. Hirschmann, J. Isenberg, J. Math. Phys. 41, 5691 (2000), [math-ph/9911020](https://arxiv.org/abs/math-ph/9911020).
-- [BBM17] P. Biernat, P. Bizoń, M. Maliborski, Nonlinearity 30, no. 4 (2017) (page number not checked), [arXiv:1608.07707](https://arxiv.org/abs/1608.07707).
+- [BBM17] P. Biernat, P. Bizoń, M. Maliborski, Nonlinearity 30, no. 4 (2017) (page number not checked), doi:10.1088/1361-6544/aa61ab, [arXiv:1608.07707](https://arxiv.org/abs/1608.07707).
 - [CDG17] O. Costin, R. Donninger, I. Glogić, Comm. Math. Phys. 351, 959 (2017) (arXiv number not looked up).
 - [DG19] R. Donninger, I. Glogić, Anal. PDE 12, 389 (2019), [arXiv:1705.06352](https://arxiv.org/abs/1705.06352).
 - [GHW25] I. Glogić, D. Hilditch, D. Wallauch, [arXiv:2512.16623](https://arxiv.org/abs/2512.16623) (2025).
