@@ -148,9 +148,11 @@ class JetModel:
         return x
 
     # ---- formal series at xi0 (scaled: D_j = d_j xi0^(2j), ...), optimally truncated on the value component
-    def series_at(self, xi0, J):
+    def series_at(self, xi0, J, stop=True):
         q = xi0 * xi0
         o, e = self.odd, self.even
+        for b, fn in self.fdirs:
+            fn.prepare(self, xi0, J + 3)
         D, S, G, E, CE, PS, CP, OM = [self.d0.copy()], [], [self.g0.copy()], [None], [None], [None], [None], []
         Z = np.zeros_like(self.d0)
         mags = [np.abs(D[0][0]).max()]
@@ -160,7 +162,7 @@ class JetModel:
             for i in range(1, j + 1):
                 R = R - self.mul(G[i], S[j - i], o)
             for b, fn in self.fdirs:
-                R = R + fn("y", j, self, q, D, S, G, E)
+                R = R + fn.series_y(j, self)
             sj = self.ginv_solve(G[0], R * o, o)
             if self.qbit:
                 Om_j = (2 * j + 1) * sj
@@ -201,7 +203,7 @@ class JetModel:
                 CP.append(cp)
                 gm = gm + self.shift(cp, self.qmap)
             for b, fn in self.fdirs:
-                gm = gm + fn("c", m, self, q, D, S, G, E)
+                gm = gm + fn.series_c(m, self)
             G.append(gm / (2 * m))
             # (c) d_{j+1}
             num = q * ((2 * j + 2) * S[j] + self.lmul(S[j]) + self.wmul(S[j]))
@@ -210,7 +212,7 @@ class JetModel:
             dn = self.ginv_solve(G[0], num * o / (2 * j + 2), o)
             D.append(dn * o)
             mags.append(np.abs(D[-1][0]).max())
-            if j > 10 and mags[-1] > 10 * min(mags):
+            if stop and j > 10 and mags[-1] > 10 * min(mags):
                 break
         jt = int(np.argmin(mags[1:])) + 1
         Dd = xi0 * sum(D[:jt]); Sg = q * sum(S[:jt]); Cc = sum(G[:jt])
@@ -237,12 +239,13 @@ class JetModel:
         E = self.mul(D, D, e) / 2
         cE = self.mul(C, E, e)
         ext_y, ext_c = 0, 0
-        for b, fn in self.fdirs:
-            fy, fc = fn("rhs", xi, self, D, S, C, E)
-            ext_y, ext_c = ext_y + fy, ext_c + fc
-        if self.qbit:
+        if self.qbit or self.fdirs:
             r2 = self.mul(C, xi * dD, o) + self.mul(cE, D, o) - self.mul(C, D, o)
             dS0 = (r2 - trans(S)) / (xi * xi)
+        for b, fn in self.fdirs:
+            fy, fc = fn.rhs(xi, self, D, S, C, E, dD, dS0)
+            ext_y, ext_c = ext_y + fy, ext_c + fc
+        if self.qbit:
             Om = S - xi * dS0 - self.mul(E, S, o)
             dD = dD - self.shift(self.mul(C, Om, o), self.qmap) / (xi * xi)
             Psi = self.mul(S, S, e) / 2 - self.mul(D, xi * dD, e)
@@ -287,6 +290,77 @@ class JetModel:
             ends[r1] = (D, S, C)
         self.ends = ends
         return out, (r0, jt, terr)
+
+
+class SymForce:
+    """Forcing of the O(1/n) part W of the lambda = 2 mode (the s-translation symmetry broken by the O(1/n) terms;
+    first_order_equations.py, section 3). With the mode written dZ = D Z_n + W/n, W solves the perturbation equations
+    at lambda = 2 with
+        L_2 W_y   = ... - (2/xi^2) c (xi sigma_xi - 2 sigma + E sigma)            (= F_y)
+        xi W_c,xi = ... - (2/xi^2) c (Psi + 2 E),  Psi = sigma^2/2 - xi y y_xi     (= F_c)
+    and the sigma equation forced by y F_c (included through cE), all from the background (value component).
+    The series needs the background one order ahead, so the background series is computed first."""
+
+    def __init__(self, bit):
+        self.bit = bit
+
+    def prepare(self, model, xi0, J):
+        bg = JetModel(model.M, model.w, None, [], [0], {})
+        bg.d0[0] = model.d0[0]
+        bg.series_at(xi0, J, stop=False)
+        self.q = xi0 * xi0
+        self.bg = {k: [v[0] if v is not None else None for v in bg.ser[k]] for k in ("D", "S", "G", "E")}
+        self.slot = model.idx[self.bit]
+        self.L = model.L
+        o, e = model.odd, model.even
+        S, E, G = self.bg["S"], self.bg["E"], self.bg["G"]
+        q = self.q
+        cv = lambda a, b, sp: np.convolve(a, b)[self.L:3 * self.L + 1] * sp
+        nS = len(S)
+        self.Th = [np.zeros_like(S[0])]
+        for k in range(1, nS):
+            t = 2 * k * S[k]
+            for m in range(1, k + 1):
+                t = t + cv(E[m], S[k - m], o)
+            self.Th.append(t)
+        self.PE = [np.zeros_like(S[0]), np.zeros_like(S[0])]
+        for k in range(2, min(len(E), nS + 2)):
+            t = -(2 * k - 2) * E[k]
+            for i in range(0, k - 1):
+                t = t + q * q * cv(S[i], S[k - 2 - i], e) / 2
+            self.PE.append(t)
+        self.cv, self.o, self.e = cv, o, e
+
+    def _put(self, model, arr):
+        out = np.zeros((model.nc, 2 * model.L + 1), complex)
+        out[self.slot] = arr
+        return out
+
+    def series_y(self, j, model):
+        """+(2/q) sum_i G_i Theta_{j+1-i}  (the contribution -F_y to [g0 s_j])"""
+        G = self.bg["G"]
+        t = np.zeros(2 * self.L + 1, complex)
+        for i in range(0, j + 1):
+            t = t + self.cv(G[i], self.Th[j + 1 - i], self.o)
+        return self._put(model, 2 * t / self.q)
+
+    def series_c(self, m, model):
+        """F_c at order m: -(2/q) sum_i G_i (Psi + 2E)_{m+1-i}"""
+        G = self.bg["G"]
+        t = np.zeros(2 * self.L + 1, complex)
+        for i in range(0, m + 1):
+            t = t + self.cv(G[i], self.PE[m + 1 - i], self.e)
+        return self._put(model, -2 * t / self.q)
+
+    def rhs(self, xi, model, D, S, C, E, dD, dS):
+        o, e = self.o, self.e
+        cv = self.cv
+        D0, S0, C0, E0 = D[0], S[0], C[0], E[0]
+        Th = xi * dS[0] - 2 * S0 + cv(E0, S0, o)
+        Fy = -2 * cv(C0, Th, o) / (xi * xi)
+        Psi = cv(S0, S0, e) / 2 - cv(D0, xi * dD[0], e)
+        Fc = -2 * cv(C0, Psi + 2 * E0, e) / (xi * xi)
+        return self._put(model, Fy), self._put(model, Fc)
 
 
 # ---------------- background parametrization (as inner_np: F = A sin t + sum_nu (B_nu sin nu t + C_nu cos nu t))

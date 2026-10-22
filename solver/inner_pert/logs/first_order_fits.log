@@ -1,0 +1,53 @@
+Delta: 819 cleaned double-double points, D = 8.25 .. 61.03
+  1/n D >= 10 deg 12: Delta_inf 1.64389428435  Delta_1 10.37510575  omega_1 -24.12262855  omega_1/omega_inf -6.311297416  max|res| 6.3e-11
+  1/n D >= 10 deg 14: Delta_inf 1.64389383667  Delta_1 10.37525062  omega_1 -24.12297852  omega_1/omega_inf -6.311387263  max|res| 1.6e-12
+  1/n D >= 10 deg 16: Delta_inf 1.64389376078  Delta_1 10.37527887  omega_1 -24.12304643  omega_1/omega_inf -6.311404739  max|res| 5.3e-14
+  1/n D >= 10 deg 18: Delta_inf 1.64389374732  Delta_1 10.37528454  omega_1 -24.12306001  omega_1/omega_inf -6.31140824  max|res| 4.1e-15
+  1/n D >= 10 deg 20: Delta_inf 1.64389374774  Delta_1 10.3752843  omega_1 -24.12305945  omega_1/omega_inf -6.311408093  max|res| 4.2e-15
+  1/n D >= 12 deg 12: Delta_inf 1.64389413153  Delta_1 10.37515237  omega_1 -24.12274143  omega_1/omega_inf -6.311326364  max|res| 2.7e-11
+  1/n D >= 12 deg 14: Delta_inf 1.64389380997  Delta_1 10.37526008  omega_1 -24.1230013  omega_1/omega_inf -6.311393118  max|res| 7.7e-13
+  1/n D >= 12 deg 16: Delta_inf 1.64389375578  Delta_1 10.37528089  omega_1 -24.12305127  omega_1/omega_inf -6.311405985  max|res| 2.2e-14
+  1/n D >= 12 deg 18: Delta_inf 1.64389374651  Delta_1 10.37528491  omega_1 -24.12306089  omega_1/omega_inf -6.311408466  max|res| 4.2e-15
+  1/n D >= 12 deg 20: Delta_inf 1.64389375183  Delta_1 10.37528225  omega_1 -24.12305455  omega_1/omega_inf -6.311406828  max|res| 4.2e-15
+  1/n D >= 16 deg 12: Delta_inf 1.64389383163  Delta_1 10.37525111  omega_1 -24.12297981  omega_1/omega_inf -6.311387579  max|res| 4.0e-13
+  1/n D >= 16 deg 14: Delta_inf 1.64389375626  Delta_1 10.37528052  omega_1 -24.12305039  omega_1/omega_inf -6.311405756  max|res| 7.4e-15
+  1/n D >= 16 deg 16: Delta_inf 1.64389375006  Delta_1 10.37528323  omega_1 -24.12305688  omega_1/omega_inf -6.311407431  max|res| 4.1e-15
+  1/n D >= 16 deg 18: Delta_inf 1.64389374644  Delta_1 10.37528526  omega_1 -24.12306171  omega_1/omega_inf -6.311408682  max|res| 4.1e-15
+  1/n D >= 16 deg 20: Delta_inf 1.64389353554  Delta_1 10.37540652  omega_1 -24.12334983  omega_1/omega_inf -6.311483254  max|res| 4.1e-15
+  1/D D >= 10 deg 12: Delta_inf 1.6438938215  Delta_1 10.37525751  omega_1 -24.12299497  omega_1/omega_inf -6.311391508  max|res| 3.2e-12
+  1/D D >= 10 deg 14: Delta_inf 1.64389375527  Delta_1 10.37528135  omega_1 -24.12305236  omega_1/omega_inf -6.311406268  max|res| 6.7e-14
+  1/D D >= 10 deg 16: Delta_inf 1.643893746  Delta_1 10.37528519  omega_1 -24.12306156  omega_1/omega_inf -6.311408639  max|res| 4.1e-15
+  1/D D >= 10 deg 18: Delta_inf 1.64389374539  Delta_1 10.37528546  omega_1 -24.12306219  omega_1/omega_inf -6.311408803  max|res| 4.3e-15
+  1/D D >= 10 deg 20: Delta_inf 1.64389376272  Delta_1 10.3752762  omega_1 -24.12304017  omega_1/omega_inf -6.311403107  max|res| 4.2e-15
+  1/D D >= 12 deg 12: Delta_inf 1.64389380123  Delta_1 10.37526437  omega_1 -24.12301152  omega_1/omega_inf -6.31139576  max|res| 1.6e-12
+  1/D D >= 12 deg 14: Delta_inf 1.64389375226  Delta_1 10.37528253  omega_1 -24.1230552  omega_1/omega_inf -6.311406999  max|res| 2.6e-14
+  1/D D >= 12 deg 16: Delta_inf 1.64389374537  Delta_1 10.37528547  omega_1 -24.12306223  omega_1/omega_inf -6.311408812  max|res| 4.2e-15
+  1/D D >= 12 deg 18: Delta_inf 1.64389374744  Delta_1 10.37528442  omega_1 -24.12305973  omega_1/omega_inf -6.311408167  max|res| 4.2e-15
+  1/D D >= 12 deg 20: Delta_inf 1.6438937683  Delta_1 10.3752731  omega_1 -24.12303279  omega_1/omega_inf -6.311401198  max|res| 4.2e-15
+  1/D D >= 16 deg 12: Delta_inf 1.64389375904  Delta_1 10.37527964  omega_1 -24.12304828  omega_1/omega_inf -6.311405215  max|res| 3.2e-14
+  1/D D >= 16 deg 14: Delta_inf 1.64389374618  Delta_1 10.37528507  omega_1 -24.12306128  omega_1/omega_inf -6.311408568  max|res| 4.2e-15
+  1/D D >= 16 deg 16: Delta_inf 1.64389375564  Delta_1 10.37528032  omega_1 -24.12304995  omega_1/omega_inf -6.31140564  max|res| 4.2e-15
+  1/D D >= 16 deg 18: Delta_inf 1.64389368488  Delta_1 10.37532072  omega_1 -24.12314597  omega_1/omega_inf -6.311430489  max|res| 4.0e-15
+  1/D D >= 16 deg 20: Delta_inf 1.64389347515  Delta_1 10.37544699  omega_1 -24.12344569  omega_1/omega_inf -6.311508102  max|res| 4.1e-15
+  fits with max|res| < 1e-12: Delta_1 in [10.375251, 10.375447], omega_1 in [-24.123446, -24.12298]
+lambda: 52 double-double points, D = 8.25 .. 60.96
+  D >= 16, degree 4: lam_inf = 2 fixed: lam_1 2.9926351 (max|res| 2.7e-5);  free: lam_inf - 2 0.000788, lam_1 2.9010382 (max|res| 7.1e-6)
+  D >= 16, degree 5: lam_inf = 2 fixed: lam_1 3.0181463 (max|res| 4.1e-6);  free: lam_inf - 2 0.000281, lam_1 2.9770286 (max|res| 8.8e-7)
+  D >= 16, degree 6: lam_inf = 2 fixed: lam_1 3.0273435 (max|res| 4.6e-7);  free: lam_inf - 2 0.0001, lam_1 3.0096123 (max|res| 9.2e-8)
+  D >= 16, degree 7: lam_inf = 2 fixed: lam_1 3.0306142 (max|res| 4.5e-8);  free: lam_inf - 2 3.58e-5, lam_1 3.0231923 (max|res| 8.8e-9)
+  D >= 16, degree 8: lam_inf = 2 fixed: lam_1 3.0317922 (max|res| 5.4e-9);  free: lam_inf - 2 1.27e-5, lam_1 3.0287728 (max|res| 1.2e-9)
+  D >= 20, degree 4: lam_inf = 2 fixed: lam_1 3.0037017 (max|res| 1.1e-5);  free: lam_inf - 2 0.000548, lam_1 2.9329207 (max|res| 1.9e-6)
+  D >= 20, degree 5: lam_inf = 2 fixed: lam_1 3.022819 (max|res| 1.1e-6);  free: lam_inf - 2 0.000184, lam_1 2.993013 (max|res| 2.6e-7)
+  D >= 20, degree 6: lam_inf = 2 fixed: lam_1 3.0291858 (max|res| 1.3e-7);  free: lam_inf - 2 6.23e-5, lam_1 3.01706 (max|res| 2.6e-8)
+  D >= 20, degree 7: lam_inf = 2 fixed: lam_1 3.0313339 (max|res| 1.2e-8);  free: lam_inf - 2 2.1e-5, lam_1 3.0265513 (max|res| 1.9e-9)
+  D >= 20, degree 8: lam_inf = 2 fixed: lam_1 3.0320725 (max|res| 9.4e-10);  free: lam_inf - 2 7.02e-6, lam_1 3.030243 (max|res| 1.9e-10)
+  D >= 24, degree 4: lam_inf = 2 fixed: lam_1 3.011816 (max|res| 3.9e-6);  free: lam_inf - 2 0.000378, lam_1 2.9575917 (max|res| 5.7e-7)
+  D >= 24, degree 5: lam_inf = 2 fixed: lam_1 3.0259983 (max|res| 2.5e-7);  free: lam_inf - 2 0.000118, lam_1 3.0048912 (max|res| 5.0e-8)
+  D >= 24, degree 6: lam_inf = 2 fixed: lam_1 3.0304217 (max|res| 2.3e-8);  free: lam_inf - 2 3.66e-5, lam_1 3.022545 (max|res| 4.1e-9)
+  D >= 24, degree 7: lam_inf = 2 fixed: lam_1 3.0318141 (max|res| 1.8e-9);  free: lam_inf - 2 1.14e-5, lam_1 3.0289389 (max|res| 2.7e-10)
+  D >= 24, degree 8: lam_inf = 2 fixed: lam_1 3.0322519 (max|res| 1.1e-10);  free: lam_inf - 2 3.58e-6, lam_1 3.0312199 (max|res| 1.9e-11)
+  D >= 30, degree 4: lam_inf = 2 fixed: lam_1 3.0185642 (max|res| 7.7e-7);  free: lam_inf - 2 0.000239, lam_1 2.9798526 (max|res| 1.0e-7)
+  D >= 30, degree 5: lam_inf = 2 fixed: lam_1 3.0284898 (max|res| 3.9e-8);  free: lam_inf - 2 6.73e-5, lam_1 3.0148662 (max|res| 5.3e-9)
+  D >= 30, degree 6: lam_inf = 2 fixed: lam_1 3.0313231 (max|res| 2.2e-9);  free: lam_inf - 2 1.91e-5, lam_1 3.0266707 (max|res| 3.1e-10)
+  D >= 30, degree 7: lam_inf = 2 fixed: lam_1 3.0321291 (max|res| 1.2e-10);  free: lam_inf - 2 5.47e-6, lam_1 3.0305728 (max|res| 1.5e-11)
+  D >= 30, degree 8: lam_inf = 2 fixed: lam_1 3.0323592 (max|res| 5.6e-12);  free: lam_inf - 2 1.57e-6, lam_1 3.0318489 (max|res| 6.8e-13)

@@ -57,28 +57,38 @@ def model_params(x, M, extra_dirs=(), extra_data=None, with_params=True):
 
 
 def residuals(jm, x, M, xi1):
-    J, info = jm.jumps((xi1,))
+    J, info = jm.jumps((xi1,), rtol=RTOL)
     dm = demix_matrix(x, M, xi1)
     return np.array([ri(dm(J[xi1][c])) for c in range(jm.nc)]), info
 
 
-def find_zero(x, M, xi1, maxit=12, tol=1e-13):
+RTOL = 1e-12
+
+
+def find_zero(x, M, xi1, maxit=14, tol=1e-13):
+    """Newton with the exact Jacobian (jet directions), Schur solve; stops at the noise floor (|r| not decreasing
+    twice) and returns the best point"""
+    best, worse = None, 0
     for it in range(maxit):
         dirs, masks, data, _ = model_params(x, M)
         jm = JetModel(M, W0 * x[1], Fh_from(x, M), dirs, masks, data)
         R, info = residuals(jm, x, M, xi1)
         r, K = R[0], R[1:].T
-        # equilibrate: rows by their norm, columns by their norm
-        rs = 1 / np.linalg.norm(K, axis=1)
-        Ks = K * rs[:, None]
-        cs = 1 / np.linalg.norm(Ks, axis=0)
-        dx = -np.linalg.solve(Ks * cs[None, :], r * rs) * cs
-        log(f"zero it {it}: |r| {np.linalg.norm(r):.3e}  r_1 {r[0]:+.3e}{r[1]:+.3e}i  step {np.abs(dx).max():.2e}  "
+        nr = np.linalg.norm(r)
+        dx = -schur_solve(K, r)
+        log(f"zero it {it}: |r| {nr:.3e}  r_1 {r[0]:+.3e}{r[1]:+.3e}i  step {np.abs(dx).max():.2e}  "
             f"x {np.array2string(x, precision=12, max_line_width=300)}")
+        if best is None or nr < best[0]:
+            best, worse = (nr, x.copy(), r, K), 0
+        else:
+            worse += 1
+            if worse >= 2:
+                break
         x = x + dx
         if np.abs(dx).max() < tol * max(1, np.abs(x).max()):
             break
-    return x, r, K, jm
+    nr, x, r, K = best
+    return x, r, K, None
 
 
 def omega1_step(x, M, xi1, K):
@@ -95,7 +105,10 @@ def omega1_step(x, M, xi1, K):
     rs = 1 / np.linalg.norm(Kp, axis=1)
     Ks = Kp * rs[:, None]
     cs = 1 / np.linalg.norm(Ks, axis=0)
-    dx = -np.linalg.solve(Ks * cs[None, :], Jn * rs) * cs
+    dx_lu = -np.linalg.solve(Ks * cs[None, :], Jn * rs) * cs
+    dx = -schur_solve(Kp, Jn)
+    log(f"   omega1 step: Schur solve vs equilibrated LU, max difference {np.abs(dx - dx_lu).max():.2e} "
+        f"(omega part {dx[1] - dx_lu[1]:+.2e})")
     return dx, Jn, r, Kp, info
 
 
@@ -129,22 +142,51 @@ def scaled(S):
 
 
 def null_vectors(S):
-    """right and left null vectors of S via the row-scaled matrix's SVD"""
-    Ss, rs = scaled(S)
-    U, sv, Vt = np.linalg.svd(Ss)
-    f = Vt[-1]
-    ell = U[:, -1] * rs
-    return f, ell, sv
+    """right and left (near-)null vectors of S by block elimination of the harmonics >= 3 (rows and columns 2..):
+    the jumps of the higher harmonics leak into the harmonic-1 rows with weights ~1e4 (M = 3), so a plain SVD, even
+    row-scaled, does not resolve the harmonic-1 block. Schur complement Sch = S_ll - S_lh S_hh^-1 S_hl (2 x 2);
+    returns f, ell (ell S ~ 0, S f ~ 0) and the singular values of Sch."""
+    if S.shape[0] == 2:
+        U, sv, Vt = np.linalg.svd(S)
+        return Vt[-1], U[:, -1], sv
+    Sll, Slh, Shl, Shh = S[:2, :2], S[:2, 2:], S[2:, :2], S[2:, 2:]
+    X = np.linalg.solve(Shh, Shl)
+    Sch = Sll - Slh @ X
+    U, sv, Vt = np.linalg.svd(Sch)
+    e = Vt[-1]
+    ll = U[:, -1]
+    f = np.concatenate([e, -X @ e])
+    lh = -np.linalg.solve(Shh.T, Slh.T @ ll)
+    return f, np.concatenate([ll, lh]), sv
 
 
-def find_lam(x, M, xi1, lam, maxit=10):
+def schur_solve(K, b):
+    """solve K x = b by eliminating the harmonic >= 3 rows/columns first (as null_vectors)"""
+    if K.shape[0] == 2:
+        return np.linalg.solve(K, b)
+    Kll, Klh, Khl, Khh = K[:2, :2], K[:2, 2:], K[2:, :2], K[2:, 2:]
+    X = np.linalg.solve(Khh, Khl)
+    y = np.linalg.solve(Khh, b[2:])
+    xl = np.linalg.solve(Kll - Klh @ X, b[:2] - Klh @ y)
+    return np.concatenate([xl, y - X @ xl])
+
+
+def find_lam(x, M, xi1, lam, maxit=12):
+    """Newton on g(lam) = det S(lam) / (lam (lam - 1)) (the exact roots 0 and 1 deflated):
+    d ln g / d lam = tr(S^-1 dS) - 1/lam - 1/(lam - 1)"""
+    prev = None
     for it in range(maxit):
         S, dS, r0 = pert_matrix(x, M, xi1, lam)
-        Ss, rs = scaled(S)
-        step = -1 / np.trace(np.linalg.solve(S, dS))
-        sv = np.linalg.svd(Ss, compute_uv=False)
-        log(f"lam it {it}: lam {lam:.12f}  smallest/largest singular value (row-scaled) {sv[-1] / sv[0]:.2e}  step {step:+.2e}")
+        dl = np.trace(np.linalg.solve(S, dS)) - 1 / lam - 1 / (lam - 1)
+        step = -1 / dl
+        if abs(step) > 0.15:
+            step = 0.15 * np.sign(step)
+        g = np.linalg.det(S) / (lam * (lam - 1))
+        log(f"lam it {it}: lam {lam:.12f}  deflated det {g:+.6e}  step {step:+.2e}")
+        if prev is not None and abs(step) >= abs(prev) and abs(step) < 1e-9:
+            break                                  # noise floor
         lam = lam + step
+        prev = step
         if abs(step) < 1e-13:
             break
     S, dS, r0 = pert_matrix(x, M, xi1, lam)
@@ -186,56 +228,136 @@ def lam1_step(x, M, xi1, lam, f, dx):
     return R[idx[e | n]], R[idx[e | l]], R[idx[e]], R[idx[n]], R[0]
 
 
+def sym_step(x, M, xi1):
+    """step 5 (symmetry route): the lambda = 2 mode e = D_P Z_0 (Proposition 5's profile f2, truncated as the model)
+    and its O(1/n) part W forced by the s-translation breaking (SymForce); lam1 = -(ell2 . J_W)/(ell2 . J_el) with
+    ell2 the left singular vector of S(2) of smallest singular value. In the full problem S(2) f2 = 0 exactly; in the
+    model the mismatch -(ell2 . J_e)/(ell2 . J_el) estimates lam* - 2."""
+    from first_order_jet import SymForce
+    w = W0 * x[1]
+    Fh = Fh_from(x, M)
+    bg = JetModel(M, w, Fh, [], [0], {})
+    bg.series_at(1.0, 3, stop=False)
+    L = bg.L
+    k = bg.k
+    d1 = bg.ser["D"][1][0]
+    g1 = bg.ser["G"][1][0]
+    P = -2 * g1 / (1 + 1j * w * k)
+    Xd0 = (1 + 1j * k * w) * bg.ser["D"][0][0]
+    a0 = 2 * d1 + np.convolve(P, Xd0)[L:3 * L + 1] * bg.odd
+    f2 = {int(kk): a0[kk + L] / 2 for kk in range(-M, M + 1) if kk % 2}
+    S2, dS2, _ = pert_matrix(x, M, xi1, 2.0)
+    fv, ell2, sv = null_vectors(S2)
+    e, l, Wb = 1, 2, 4
+    dirs = [Dir("pert", lam=2.0), Dir("l", dlam=True), Dir("W", lam=2.0, force=SymForce(Wb))]
+    jm = JetModel(M, w, Fh, dirs, [0, e, e | l, Wb], {e: (f2, {})})
+    R, info = residuals(jm, x, M, xi1)
+    Je, Jel, JW = R[jm.idx[e]], R[jm.idx[e | l]], R[jm.idx[Wb]]
+    lam1 = -ell2 @ JW / (ell2 @ Jel)
+    mism = -ell2 @ Je / (ell2 @ Jel)
+    # the profile f2 in the (sin, cos) basis, against the model's own null vector of S(2)
+    f2v = []
+    for nu in range(1, M + 1, 2):
+        c = f2.get(nu, 0)
+        f2v += [-2 * c.imag, 2 * c.real]
+    f2v = np.array(f2v) / (-2 * f2[1].imag)
+    return dict(lam1_sym=lam1, lam_mismatch=mism, sv_S2=sv.tolist(), f2=f2v.tolist(), Je=Je.tolist(), Jel=Jel.tolist(),
+                JW=JW.tolist(), ell2=ell2.tolist(), nullvec_S2=(fv / fv[0]).tolist())
+
+
 def main():
+    global RTOL
     argv = sys.argv[1:]
     opts = {a.split("=")[0]: (a.split("=", 1)[1] if "=" in a else True) for a in argv if a.startswith("--")}
     args = [a for a in argv if not a.startswith("--")]
     M = int(args[0])
     xi1 = float(opts.get("--xi1", 0.2))
-    x0 = {1: [2.54214805, 0.77699401], 3: [2.7265, 1.0156, 0, 0], 5: [2.718579, 0.999228, 0, 0, 0, 0]}[M] \
+    RTOL = float(opts.get("--rtol", 1e-12))
+    x0 = {1: [2.54214805, 0.77699401], 3: [2.7265, 1.0156, 0, 0],
+          5: [2.718579189, 0.999228404, 0.149203575, 0.014719052, 0.008405347, 0.001470345]}[M] \
         if "--x" not in opts else [float(t) for t in opts["--x"].split(",")]
     x = np.array(x0, float)
-    if "--x" not in opts and M >= 3:
-        F1 = x[0] / 2j
-        rat = {3: 0.054883 + 0.005414j, 5: 0.003092 + 0.000541j} if M == 5 else {3: 0.0530 + 0.0041j}
-        for i, nu in enumerate(range(3, M + 1, 2)):
-            Fn = F1 * rat[nu]
-            x[2 + 2 * i], x[3 + 2 * i] = -2 * Fn.imag, 2 * Fn.real
-    out = dict(M=M, xi1=xi1)
-    log(f"M {M} xi1 {xi1} start x {x.tolist()}")
-    x, r, K, jm = find_zero(x, M, xi1)
-    out.update(x=x.tolist(), r=r.tolist(), wf=x[1], omega=W0 * x[1])
-    log(f"ZERO: x {x.tolist()}  |r| {np.linalg.norm(r):.2e}  Jacobian singular values "
-        f"{np.linalg.svd(K, compute_uv=False)}")
-    dx, Jn, r, Kp, info = omega1_step(x, M, xi1, K)
+    if "--x" not in opts and M == 3:
+        Fn = (x[0] / 2j) * (0.0530 + 0.0041j)
+        x[2], x[3] = -2 * Fn.imag, 2 * Fn.real
+    tag = f"M{M}_xi{xi1:g}" + (f"_rtol{RTOL:g}" if RTOL != 1e-12 else "")
+    fn = opts.get("--out", os.path.join(HERE, "data", f"first_order_{tag}.json"))
+    os.makedirs(os.path.dirname(fn), exist_ok=True)
+    out = json.load(open(fn)) if os.path.exists(fn) and "--fresh" not in opts else dict(M=M, xi1=xi1, rtol=RTOL)
+
+    def save():
+        json.dump(out, open(fn, "w"), indent=1)
+    if "--redo" in opts:
+        keys = {"zero": ["x"], "omega1": ["dx"], "lam": ["lam", "lam1"], "lam1": ["lam1"], "sym": ["lam1_sym"],
+                "checks": ["sch_sv_lam0", "sch_sv_lam1"]}
+        for key in opts["--redo"].split(","):
+            for k2 in keys[key]:
+                out.pop(k2, None)
+    if "x" in out:
+        log(f"M {M} xi1 {xi1} rtol {RTOL}: resuming from {fn}")
+    else:
+        log(f"M {M} xi1 {xi1} rtol {RTOL}: start x {x.tolist()}")
+    # 1. zero
+    if "x" not in out:
+        x, r, K, _ = find_zero(x, M, xi1)
+        out.update(x=x.tolist(), r=r.tolist(), wf=x[1], omega=W0 * x[1],
+                   jac_sv=np.linalg.svd(K, compute_uv=False).tolist())
+        save()
+    x = np.array(out["x"])
+    log(f"ZERO: x {x.tolist()}  |r| {np.linalg.norm(out['r']):.2e}  Jacobian singular values {out['jac_sv']}")
+    # 2. omega1
+    if "dx" not in out:
+        dx, Jn, r, Kp, info = omega1_step(x, M, xi1, None)
+        w1 = W0 * dx[1]
+        out.update(dx=dx.tolist(), Jn=Jn.tolist(), omega1=w1, A1=dx[0], omega1_rel=w1 / (W0 * x[1]))
+        save()
+    dx = np.array(out["dx"])
     w1 = W0 * dx[1]
-    out.update(dx=dx.tolist(), Jn=Jn.tolist(), omega1=w1, A1=dx[0])
     log(f"OMEGA1: dx {dx.tolist()}")
     log(f"   omega = {W0 * x[1]:.9f} + ({w1:.6f})/n,  omega1/omega* = {w1 / (W0 * x[1]):.6f};  "
         f"Delta1 = -2 pi omega1/omega*^2 = {-2 * np.pi * w1 / (W0 * x[1]) ** 2:.6f}")
-    # growth-rate checks at lam = 0 and 1
+    if "--omega-only" in opts:
+        return
+    # growth-rate checks at lam = 0 and 1 (singular values of the harmonic-1 Schur complement; the null vector
+    # should be F' and F + w F')
     for lam_c, fc in ((0.0, "F'"), (1.0, "F + w F'")):
-        S, dS, _ = pert_matrix(x, M, xi1, lam_c)
-        Ss, _ = scaled(S)
-        sv = np.linalg.svd(Ss, compute_uv=False)
-        fv, ell, _ = null_vectors(S)
-        log(f"check lam = {lam_c}: row-scaled singular values {sv}  (exact mode f = {fc})")
-        out[f"sv_lam{lam_c:g}"] = sv.tolist()
-    lam = float(opts.get("--lam", 1.8))
-    lam, S, dS = find_lam(x, M, xi1, lam)
-    fvec, ell, sv = null_vectors(S)
-    fvec = fvec / fvec[0]
-    f = profile_of(fvec, M)
-    out.update(lam=lam, fvec=fvec.tolist(), ell=ell.tolist(), sv_lam=sv.tolist())
-    log(f"LAMBDA*: {lam:.12f}  profile (sin t, cos t, sin 3t, ...) {fvec.tolist()}")
-    Jen, Jel, Je, Jn2, r0 = lam1_step(x, M, xi1, lam, f, dx)
-    lam1 = -ell @ Jen / (ell @ Jel)
-    out.update(lam1=lam1, Jen=Jen.tolist(), Jel=Jel.tolist(), Je=Je.tolist(), Jn_sel=Jn2.tolist())
-    log(f"   check: |J_e| {np.linalg.norm(Je):.2e} (eigenmode), |J_n| after selection {np.linalg.norm(Jn2):.2e}, |r| {np.linalg.norm(r0):.2e}")
-    log(f"LAMBDA1: lam = {lam:.9f} + ({lam1:.6f})/n   (ell.J_el {ell @ Jel:.4e})")
-    fn = opts.get("--out", os.path.join(HERE, "data", f"first_order_M{M}_xi{xi1:g}.json"))
-    os.makedirs(os.path.dirname(fn), exist_ok=True)
-    json.dump(out, open(fn, "w"), indent=1)
+        key = f"sch_sv_lam{lam_c:g}"
+        if key not in out:
+            S, dS, _ = pert_matrix(x, M, xi1, lam_c)
+            fv, ell, sv = null_vectors(S)
+            out[key] = sv.tolist()
+            out[f"nullvec_lam{lam_c:g}"] = (fv / fv[0]).tolist()
+            save()
+        log(f"check lam = {lam_c:g}: Schur-complement singular values {out[key]}; null vector {out[f'nullvec_lam{lam_c:g}']} "
+            f"(exact mode f = {fc})")
+    # 3. lam*
+    if "lam" not in out:
+        lam = float(opts.get("--lam", 2.0))
+        lam, S, dS = find_lam(x, M, xi1, lam)
+        fvec, ell, sv = null_vectors(S)
+        fvec = fvec / fvec[0]
+        out.update(lam=lam, fvec=fvec.tolist(), ell=ell.tolist(), sch_sv_lam=sv.tolist())
+        save()
+    lam = out["lam"]
+    fvec, ell = np.array(out["fvec"]), np.array(out["ell"])
+    log(f"LAMBDA*: {lam:.12f}  profile (sin t, cos t, sin 3t, ...) {fvec.tolist()}  Schur sv {out['sch_sv_lam']}")
+    # 4. lam1, direct route
+    if "lam1" not in out:
+        Jen, Jel, Je, Jn2, r0 = lam1_step(x, M, xi1, lam, profile_of(fvec, M), dx)
+        lam1 = -ell @ Jen / (ell @ Jel)
+        out.update(lam1=lam1, Jen=Jen.tolist(), Jel=Jel.tolist(), Je=Je.tolist(), Jn_sel=Jn2.tolist(),
+                   ellJe=ell @ Je, ellJel=ell @ Jel, r_hyper=r0.tolist())
+        save()
+    log(f"   check: ell.J_e {out['ellJe']:.2e} against ell.J_el {out['ellJel']:.3e} (eigenmode); |J_n| after the "
+        f"selection {np.linalg.norm(out['Jn_sel']):.2e} (before: {np.linalg.norm(out['Jn']):.2e})")
+    log(f"LAMBDA1 (direct): lam = {lam:.9f} + ({out['lam1']:.6f})/n")
+    # 5. lam1, symmetry route
+    if "lam1_sym" not in out:
+        out.update(sym_step(x, M, xi1))
+        save()
+    log(f"SYMMETRY ROUTE: lam1 = {out['lam1_sym']:.6f}  (model's lam* - 2 estimated by the mismatch: "
+        f"{out['lam_mismatch']:+.4e}; Schur singular values of S(2) {out['sv_S2']})")
+    log(f"   f2 (sin t, cos t, ...) {out['f2']}  null vector of S(2) {out['nullvec_S2']}")
     log(f"wrote {fn}")
 
 
