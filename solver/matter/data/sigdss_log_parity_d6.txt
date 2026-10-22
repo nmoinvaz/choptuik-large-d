@@ -1,0 +1,2 @@
+symmetric |F| 1.710e-10; full layout |F| 1.710e-10; forbidden harmonics 3.27e-16 (allowed 4.990e+00); unknowns 1015 -> 2016
+perturbed: forbidden harmonics 1.96e-02, |F| 2.730e-02
