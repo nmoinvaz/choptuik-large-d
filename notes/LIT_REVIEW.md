@@ -350,3 +350,29 @@ different form and limit. The rational formula is an empirical fit, a ratio of p
 Rational (Padé-type) fitting is a standard method, so what is new is the fitted function and its validation (precision
 across D ≥ 4, held-out agreement with the double-double points to D = 61, and the correct limits), not a law derived from
 the equations.
+
+## Addendum (2026-10-21): prior art for the techniques in PARALLEL.md
+
+Question: is any technique in PARALLEL.md new? PARALLEL.md itself claims no novelty. Sources read (abstracts or the
+relevant section), not recalled:
+
+| PARALLEL.md item | Closest prior work read | What it contains |
+|---|---|---|
+| §1 affine maps (A, b) compose associatively, so a recurrence is a prefix scan | Blelloch, *Prefix sums and their applications* (1990), via Heinsen, arXiv:2311.06281, §2–3; ScanWeaver, arXiv:2606.00601, eq. 7 | first-order linear recurrences as scans; the operator (A₂A₁, A₂b₁ + b₂); the closed form x_t = (Πa)(x₀ + Σ b_i/Πa) |
+| §1 `crc32_combine` | zlib man page crc32_combine(3) | the CRC of a concatenation from crc1, crc2 and len2 only |
+| §2 Newton step on a block-bidiagonal system is an affine recurrence over segments, solved by a scan; long Jacobian products unstable | Lim et al., DEER, ICLR 2024 (arXiv:2309.12252), as described in Gonzalez et al., arXiv:2407.19115, §3.1, §3.3 | the same structure for nonlinear RNNs: Newton, block-bidiagonal Jacobian, parallel associative scan, instability when the per-step Jacobians have eigenvalues above 1 |
+| §2 condensing the multiple-shooting system | Kirches et al., optimization-online 2009/09/2395 (Bock–Plitt condensing) | the classical condensing of block-sparse multiple-shooting systems to small dense ones |
+| §2 stable structured alternatives | Varah, *Alternate row and column elimination* (UBC TR 74-03; SIAM J. Numer. Anal. 13, 1976); Wright, SIAM J. Sci. Stat. Comput. 13 (1992), already cited | pivoted elimination for bordered block systems of BVPs with no fill-in, as stable as Gaussian elimination; stable parallel BVP elimination |
+| §3 Jacobian columns by forward-mode tangents; vector mode sharing the primal | standard AD (Griewank–Walther; survey arXiv:1502.05767) | forward and vector forward mode |
+| §4 fit c₀ as the first row of a precomputed pseudo-inverse | Savitzky–Golay filter (1964), Wikipedia summary | least-squares coefficients from a fixed design matrix, computed once and applied as a dot product |
+| §4 Kronecker substitution | Harvey, arXiv:0712.4046 | credits Kronecker (1882) and Schönhage |
+| §4 truncated products | Giorgi–Grenet–Roche, arXiv:1902.02967, Def. 3.1 | short product; cites Mulders (2000) and Hanrot–Zimmermann (2004) |
+| §4 relaxed multiplication | van der Hoeven (texmacs.org/joris/relax), already cited | online power-series products |
+| §6 parallel continuation | arXiv:1312.3491 | parallel step-length adaptation in pseudo-arclength continuation (several predictor–corrector chains at once); not Parareal in the parameter |
+
+Verdict: every technique in PARALLEL.md has a named precedent. Not found in this search, and not a technique in any case:
+the CRC-32 framing of multiple shooting and of the series (an exposition), the instances specific to this code (the
+summation-factor closed form with T_j = (α)_j(β)_j/j!, the 193-unknown condensed system, the 1.9% nonzero LU work after
+pivoting), the measured speedups, and the late-order fit-basis finding of §4 (every neighbour family |ν′| ≤ k is needed).
+That last one is a numerics result about this computation; the general principle, that late orders carry every
+singularity's contribution, is standard in resurgence (Dingle; Berry–Howls).
