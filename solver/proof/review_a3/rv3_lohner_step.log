@@ -1,0 +1,14 @@
+K2: one LohnerM step at M = 3 against an independent 60-digit reference
+   ray  t0 = 0.0, h = 4.883e-04, N = 20, NJ = 12 : state contains reference True (|mid - ref| 2.8e-50, radius 3.7e-28); columns contain FD reference True (|mid - ref| 1.1e-22, radius 3.8e-18)
+   ray  t0 = 0.0, h = 4.883e-04, N = 6, NJ = 4 : state contains reference True (|mid - ref| 1.4e-18, radius 2.8e-09); columns contain FD reference True (|mid - ref| 1.6e-08, radius 1.3e-07)
+   arc  t0 = 0.5, h = 4.883e-04, N = 20, NJ = 12 : state contains reference True (|mid - ref| 4.1e-41, radius 1.2e-25); columns contain FD reference True (|mid - ref| 2.8e-25, radius 1.7e-16)
+   arc  t0 = 0.5, h = 4.883e-04, N = 6, NJ = 4 : state contains reference True (|mid - ref| 4.9e-15, radius 6.0e-08); columns contain FD reference True (|mid - ref| 2.3e-11, radius 3.7e-07)
+   real t0 = 0.25, h = 3.906e-03, N = 20, NJ = 12 : state contains reference True (|mid - ref| 2.3e-33, radius 1.2e-27); columns contain FD reference True (|mid - ref| 1.0e-20, radius 2.7e-17)
+   real t0 = 0.25, h = 3.906e-03, N = 6, NJ = 4 : state contains reference True (|mid - ref| 1.8e-12, radius 3.1e-09); columns contain FD reference True (|mid - ref| 2.7e-09, radius 2.9e-07)
+negative controls (must fire):
+   ray  t0 = 0.0, h = 4.883e-04, N = 6, NJ = 4 [noremainder]: state contains reference False (|mid - ref| 1.8e-25, radius 8.9e-78); columns contain FD reference True (|mid - ref| 1.6e-08, radius 1.3e-07)
+   ray  t0 = 0.0, h = 4.883e-04, N = 6, NJ = 4 [noJremainder]: state contains reference True (|mid - ref| 1.4e-18, radius 2.8e-09); columns contain FD reference False (|mid - ref| 2.9e-07, radius 2.2e-76)
+   real t0 = 0.25, h = 3.906e-03, N = 6, NJ = 4 [noremainder]: state contains reference False (|mid - ref| 3.4e-11, radius 4.5e-77); columns contain FD reference True (|mid - ref| 2.7e-09, radius 2.9e-07)
+   real t0 = 0.25, h = 3.906e-03, N = 6, NJ = 4 [noJremainder]: state contains reference True (|mid - ref| 1.8e-12, radius 3.1e-09); columns contain FD reference False (|mid - ref| 7.2e-08, radius 3.3e-77)
+K2: containments all hold; controls fire
+exit 0

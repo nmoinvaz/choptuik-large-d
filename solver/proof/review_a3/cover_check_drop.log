@@ -1,0 +1,14 @@
+row  0 |u| =  262.00: 25 discs (r = 24, n = 70), 1299 Lohner steps, max Lam 0.185, max box radius 1.8e-09, max sup|y - y(c)| 0.151, 2144 s
+row  1 |u| =  235.36: 23 discs (r = 24, n = 70), 1198 Lohner steps, max Lam 0.188, max box radius 1.9e-09, max sup|y - y(c)| 0.191, 1919 s
+row  2 |u| =  208.72: 20 discs (r = 24, n = 70), 1138 Lohner steps, max Lam 0.191, max box radius 2.3e-09, max sup|y - y(c)| 0.248, 1486 s
+row  3 |u| =  182.08: 18 discs (r = 24, n = 70), 1088 Lohner steps, max Lam 0.196, max box radius 2.8e-09, max sup|y - y(c)| 0.336, 1422 s
+row  4 |u| =  155.44: 16 discs (r = 24, n = 70), 1034 Lohner steps, max Lam 0.202, max box radius 3.6e-09, max sup|y - y(c)| 0.48, 1055 s
+row  5 |u| =  128.80: 13 discs (r = 24, n = 70),  946 Lohner steps, max Lam 0.212, max box radius 4.9e-09, max sup|y - y(c)| 0.743, 975 s
+row  6 |u| =  102.16: 11 discs (r = 24, n = 70),  891 Lohner steps, max Lam 0.231, max box radius 7.5e-09, max sup|y - y(c)| 6.16, 491 s
+row  7 |u| =   79.60: 13 discs (r = 16, n = 60),  835 Lohner steps, max Lam 0.191, max box radius 1.3e-08, max sup|y - y(c)| 1.42, 495 s
+row  8 |u| =   61.84: 10 discs (r = 16, n = 60),  803 Lohner steps, max Lam 0.221, max box radius 2.4e-08, max sup|y - y(c)| 2.72, 380 s
+row  9 |u| =   47.14: 12 discs (r = 10, n = 50),  811 Lohner steps, max Lam 0.182, max box radius 5.5e-08, max sup|y - y(c)| 2.97, 424 s
+row 10 |u| =   36.04: 10 discs (r = 10, n = 50),  799 Lohner steps, max Lam 0.245, max box radius 1.5e-07, max sup|y - y(c)| 6.41, 208 s
+row 11 |u| =   26.98: 12 discs (r = 6, n = 50),  834 Lohner steps, max Lam 0.179, max box radius 3.4e-05, max sup|y - y(c)| 7.54, 1566 s
+ray: 903 steps, 938 s; tiles glued: 182 (meeting sets: 572 polar rectangles, 452 links)
+LEMMA 6b_1 CHECK: FAIL (3 failures: ['tile (5, 7): agreement point not in the meeting set', 'tile (6, 5): meeting set not connected', 'point (|u| = 128.8, arg = phi_5,6) not covered without tile (5, 6)'])
