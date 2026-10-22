@@ -2539,3 +2539,12 @@ step grows slowly (-1.2e-9, -3.3e-9, -4.3e-9).
 Part B started at D 3.6 (M 128, then M 80, which resume skips because the state exists, then gamma) at 14:47. It runs
 one process per D, at most 2 at once, and each D writes its own jsonl, merged into lowD_dd_local.jsonl and
 lowD_gamma_local.jsonl when pushed. I will push the M 80/96 records and states with the first B result.
+
+== 2026-10-22 15:44 PDT local
+T34 stopped at its 8-hour limit (07:43-15:43): expand.py 2 --norm=zero --fconst printed order 1 (Y_1, C_1, U_1, S_2) in
+about 30 min and nothing after, so order 2 did not finish. No .pkl, so formal_check and match_check did not run. No
+AssertionError and no "falling back to sympy.integrate" line. It ran at one core throughout (sympy 1.13.1, 240 MB).
+The log is on wip/supercrit-nnlo (ff038c3; main has a tracked log of that name, and this replaces it on the branch).
+T35: 3.45 at M 80 converged (Delta 3.3986247184714, 6 its, 37 min). 3.55 at M 96 is 3.4404023464863 (M 80 -> 96
+-2.51e-9). The 3.50 lift is running and B is on 3.6 at M 128. I raised B to 3 concurrent processes with T34's thread,
+so 3.5 and 3.4 can start as their M 96 states land.
