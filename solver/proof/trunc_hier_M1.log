@@ -1,0 +1,4 @@
+k 1: sigma_0 = (1.0 + 0.0j)  fit resid 8.5e-62  [35s]
+k 3: sigma_1 = (0.743584580246135 + 0.524474852453718j)  fit resid 1.4e-32  [79s]
+k 5: sigma_2 = (0.113514533082574 + 0.339342962129681j)  fit resid 6.7e-26  [154s]
+wrote /home/claude/dss-residual-kernel/.claude/worktrees/agent-a5113829544a08664/solver/proof/trunc_hier_M1_K5_J500_w1.0000.json
