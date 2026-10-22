@@ -49,6 +49,58 @@ def harmonics(f):
     return np.abs(c[1::2])
 
 
+def fill_tail(z, M, K, kc, klo=None):
+    """Seed improvement: the f64 seed has no harmonics above kc; extend every field's harmonics k = kc+2, ..., < M by
+    the geometric trend (modulus and phase linear in k) fitted on its harmonics klo..kc-2 of the same parity (the top
+    one, kc, is depressed by the truncation). A field whose fitted modulus grows is left alone."""
+    klo = klo if klo is not None else kc - 16
+    pars = ["odd", "even"] + ["odd", "odd", "even", "even"] * K + ["odd", "even"]
+    z = np.array(z, float)
+    for j, p in enumerate(pars):
+        f = z[j * M:(j + 1) * M]
+        full = np.r_[f, -f] if p == "odd" else np.r_[f, f]
+        c = np.fft.rfft(full)
+        par = 1 if p == "odd" else 0
+        kf = np.array([k for k in range(klo, kc - 1) if k % 2 == par])
+        if len(kf) < 4 or np.any(np.abs(c[kf]) == 0):
+            continue
+        sl, ic = np.polyfit(kf, np.log(np.abs(c[kf])), 1)
+        ph = np.unwrap(np.angle(c[kf]))
+        ps, pc = np.polyfit(kf, ph, 1)
+        if sl >= 0:
+            continue
+        kn = np.array([k for k in range(kc + 1, M) if k % 2 == par])
+        c[kn] = np.exp(ic + sl * kn) * np.exp(1j * (pc + ps * kn))
+        full2 = np.fft.irfft(c, n=2 * M)
+        z[j * M:(j + 1) * M] = full2[:M]
+    return z
+
+
+def reintegrate(s, zh, zl, nodes, M, h=0.002):
+    """Seed improvement: every node state recomputed from the seed's centre data, by the centre series at nodes[0]
+    and the double-double Taylor integrator outward from node to node (as driver.renode), so that all centre-side
+    blocks are consistent at this M and the mismatch sits in the horizon block."""
+    zh = np.array(zh, float)
+    zl = np.array(zl, float)
+    ch, cl = s.series(zh, zl, 0)
+    ch = (np.asarray(ch) + np.asarray(cl)).reshape(-1, 4, M)
+    v = np.zeros((4, M))
+    for k in range(ch.shape[0] - 1, -1, -1):
+        v = v * nodes[0] + ch[k]
+    sh, sl = v.ravel(), np.zeros(4 * M)
+    zh[2 * M:2 * M + 4 * M] = sh
+    zl[2 * M:2 * M + 4 * M] = 0.0
+    for i in range(1, len(nodes)):
+        nst = max(2, int(np.ceil((nodes[i] - nodes[i - 1]) / h)))
+        xs = list(np.linspace(nodes[i - 1], nodes[i], nst + 1))
+        xs[-1] = nodes[i]
+        sh, sl = s.integrate(zh, zl, sh, sl, xs)
+        sh, sl = np.asarray(sh), np.asarray(sl)
+        zh[2 * M + 4 * M * i:2 * M + 4 * M * (i + 1)] = sh
+        zl[2 * M + 4 * M * i:2 * M + 4 * M * (i + 1)] = sl
+    return zh, zl
+
+
 def tails(s, zh, zl, nodes, M):
     out = []
     for which, x in ((0, nodes[0]), (1, 1 - nodes[-1])):
@@ -92,6 +144,8 @@ def main():
     ap.add_argument("--history", default="")
     ap.add_argument("--Ms", default="64")
     ap.add_argument("--nodes", default=None)
+    ap.add_argument("--seed_nodes", default=None, help="nodes of the f64 seed's layout (default the x_K = 0.6 set); the "
+                    "seed is re-noded to --nodes when they differ")
     ap.add_argument("--kt", type=int, default=36)
     ap.add_argument("--kcs", type=int, default=60)
     ap.add_argument("--ks", type=int, default=100)
@@ -106,6 +160,11 @@ def main():
     ap.add_argument("--w", type=int, default=24)
     ap.add_argument("--dn_its", type=int, default=2, help="dn: iterations of the deflated phase before plain Newton")
     ap.add_argument("--resume", action="store_true", help="start each (D, M) from its checkpoint if there is one")
+    ap.add_argument("--fill_tail", action="store_true", help="--seed: extend the seed's harmonics above kc_seed by "
+                    "each field's geometric trend (fill_tail)")
+    ap.add_argument("--start_residual_only", action="store_true", help="print the start residual per block and exit")
+    ap.add_argument("--reintegrate", action="store_true", help="recompute every node state of the start from its centre "
+                    "data (reintegrate)")
     ap.add_argument("--svd", type=int, default=0)
     ap.add_argument("--lm", type=int, default=0)
     a = ap.parse_args()
@@ -115,9 +174,10 @@ def main():
     os.makedirs(outdir, exist_ok=True)
     log = lambda m: print(m, flush=True)
 
+    seed_nodes = [float(v) for v in a.seed_nodes.split(",")] if a.seed_nodes else NL
     if a.seed and "," in a.seed:
         # several f64 solutions at one kc: Lagrange interpolation in D to --D (a seed between computed points)
-        pts = [seed_from_f64(f, Ms[0], kc=a.kc_seed, nodes=nodes) for f in a.seed.split(",")]
+        pts = [seed_from_f64(f, Ms[0], kc=a.kc_seed, nodes=seed_nodes) for f in a.seed.split(",")]
         if a.D is None:
             raise SystemExit("--seed with several files needs --D")
         D = a.D
@@ -126,9 +186,34 @@ def main():
         Mo, src = Ms[0], "interp:" + ",".join(os.path.basename(f) for f in a.seed.split(","))
         log(f"seed interpolated from D {[p[0] for p in pts]} to D {D}: Delta {zh[-1]:.12f}")
     elif a.seed:
-        D, zh, zl = seed_from_f64(a.seed, Ms[0], kc=a.kc_seed, nodes=nodes)
+        D, zh, zl = seed_from_f64(a.seed, Ms[0], kc=a.kc_seed, nodes=seed_nodes)
         Mo, src = Ms[0], os.path.basename(a.seed)
         log(f"seed {a.seed}: D {D}, f64 Delta {zh[-1]:.12f}")
+    if a.seed and a.fill_tail and Ms[0] > a.kc_seed + 1:
+        zh = fill_tail(zh, Ms[0], len(seed_nodes), a.kc_seed)
+        src += " (tail filled)"
+        log(f"harmonics above {a.kc_seed} filled by the geometric trend of each field")
+    if a.seed and seed_nodes != nodes:
+        s0 = make_solver(D, Mo, nodes=seed_nodes, kt=a.kt, kc=a.kcs, ks=a.ks, threads=a.threads)
+        s0.set_segs(s0.plan(zh, zl, a.tol_step, a.hmax))
+        zh, zl = renode(s0, zh, zl, seed_nodes, nodes, Mo)
+        log(f"seed re-noded {seed_nodes} -> {nodes}")
+        src += " (re-noded)"
+    if a.reintegrate:
+        s0 = make_solver(D, Mo, nodes=nodes, kt=a.kt, kc=a.kcs, ks=a.ks, threads=a.threads)
+        zh, zl = reintegrate(s0, zh, zl, nodes, Mo)
+        src += " (node states re-integrated from the centre)"
+        log("node states re-integrated from the centre data")
+    if a.start_residual_only:
+        for M in Ms:
+            zz = resample_z(np.asarray(zh) + np.asarray(zl), Mo, M, len(nodes))[0] if M != Mo else np.asarray(zh) + np.asarray(zl)
+            s = make_solver(D, M, nodes=nodes, kt=a.kt, kc=a.kcs, ks=a.ks, threads=a.threads)
+            s.set_segs(s.plan(zz, np.zeros_like(zz), a.tol_step, a.hmax))
+            fh, fl = s.residual(zz, np.zeros_like(zz))
+            F = np.abs(np.asarray(fh) + np.asarray(fl))
+            nb = (len(F) - 1) // (4 * M)
+            log(f"D {D} M {M}: start |F| {F.max():.2e}; per block " + " ".join(f"{F[b * 4 * M:(b + 1) * 4 * M].max():.1e}" for b in range(nb)))
+        return
     else:
         zh, zl, meta = load(a.start)
         D, Mo, src = meta["D"], meta["M"], os.path.basename(a.start)

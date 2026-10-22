@@ -1,0 +1,20 @@
+== Thu Oct 22 00:55:23 MST 2026 hp/lowD_dd.py hp/data/lowD_dd.jsonl --seed solver/data/neB_kc47_rk2_D4.0000.npy --Ms 48,64 --solver dn --it_max 16 --threads 2 --tag lowD
+seed solver/data/neB_kc47_rk2_D4.0000.npy: D 4.0, f64 Delta 3.445452677190
+D 4.0 M 48: L 1921, steps 175, start |F| 3.4e-05
+  dn 0 [all]: |F| 3.45e-05 -> 3.13e-06 lam 1 Delta 3.445452739050431 t 249s
+  dn 1 [all]: |F| 3.13e-06 -> nan lam 0.000122 Delta 3.445452739022331 t 518s
+  dn 2 [full]: |F| 3.13e-06 -> 2.53e-06 lam 1 Delta 3.445452622938568 t 773s
+  dn 3 [full]: |F| 2.53e-06 -> 6.07e-07 lam 1 Delta 3.445452809024098 t 1026s
+  dn 4 [full]: |F| 6.07e-07 -> 3.37e-07 lam 0.5 Delta 3.445452804324050 t 1313s
+  dn 5 [full]: |F| 3.37e-07 -> 2.39e-07 lam 1 Delta 3.445452798312163 t 1607s
+== Thu Oct 22 01:31:56 MST 2026 hp/lowD_dd.py hp/data/lowD_dd.jsonl --seed solver/data/neB_kc47_rk2_D4.0000.npy --Ms 48,64 --solver dn --dn_its 1 --it_max 24 --threads 2 --tag lowD --resume
+seed solver/data/neB_kc47_rk2_D4.0000.npy: D 4.0, f64 Delta 3.445452677190
+D 4.0 M 48: L 1921, steps 175, start |F| 3.4e-05
+  dn 0 [all]: |F| 3.45e-05 -> 3.13e-06 lam 1 Delta 3.445452739050431 t 300s
+  newton 0: |F| 3.13e-06 |dz| 3.08e-03 lam 1 dDelta -1.16e-07 Delta 3.445452622938568 piv 2.0e-03..6.5e+00  t 262.5s
+  newton 0: |F| 2.53e-06 |dz| 8.27e-04 lam 1 dDelta +1.86e-07 Delta 3.445452809024098 piv 2.7e-03..4.0e+00  t 219.8s
+  newton 0: |F| 6.07e-07 |dz| 3.06e-04 lam 0.5 dDelta -4.70e-09 Delta 3.445452804324050 piv 2.5e-03..2.8e+00  t 237.0s
+  newton 0: |F| 3.37e-07 |dz| 1.89e-04 lam 1 dDelta -6.01e-09 Delta 3.445452798312163 piv 2.5e-03..3.3e+00  t 273.2s
+  newton 0: |F| 2.39e-07 |dz| 9.52e-05 lam 1 dDelta -2.12e-09 Delta 3.445452796188229 piv 2.4e-03..2.6e+00  t 299.9s
+  newton 0: |F| 1.63e-08 |dz| 5.71e-06 lam 1 dDelta -2.27e-11 Delta 3.445452796165538 piv 2.4e-03..4.0e+00  t 304.7s
+  newton 0: |F| 9.00e-11 |dz| 2.85e-08 lam 1 dDelta -2.27e-13 Delta 3.445452796165311 piv 2.4e-03..4.0e+00  t 284.4s

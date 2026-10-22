@@ -1,0 +1,30 @@
+== Thu Oct 22 02:00:16 MST 2026 python3 ../lowD_horizon.py <state> --Ks=60,90,120 (rustkernel built from this tree, cf79fba+)
+-- neB_kc47_rk2_D4.0000.npy
+D 4.0 kc 47 Ks 60 u0 0.40: largest term / |sum| per field (p, m, a, c): 3.3e-01/4.2e-01 5.8e-01/6.3e-01 1.2e+00/1.3e+00 1.0e+00/8.6e-01   last 3 terms 1.2e-11 1.9e-10 2.8e-10 8.3e-12   j of largest term 0 0 0 0
+D 4.0 kc 47 Ks 90 u0 0.40: largest term / |sum| per field (p, m, a, c): 3.3e-01/4.2e-01 5.8e-01/6.3e-01 1.2e+00/1.3e+00 1.0e+00/8.6e-01   last 3 terms 9.7e-16 4.4e-15 4.1e-14 1.3e-15   j of largest term 0 0 0 0
+D 4.0 kc 47 Ks 120 u0 0.40: largest term / |sum| per field (p, m, a, c): 3.3e-01/4.2e-01 5.8e-01/6.3e-01 1.2e+00/1.3e+00 1.0e+00/8.6e-01   last 3 terms 3.1e-20 4.0e-19 6.7e-19 3.4e-20   j of largest term 0 0 0 0
+   radius of convergence in u (root test, coefficients j >= 2Ks/3): k 0-15: R 0.622, k 17-31: R 0.594, k 33-47: R 0.571
+   sum(Ks 90) - sum(Ks 60): max 8.6e-11
+   sum(Ks 120) - sum(Ks 90): max 1.5e-14
+-- neB_kc47_rk2_D3.7938.npy
+D 3.7938 kc 47 Ks 60 u0 0.40: largest term / |sum| per field (p, m, a, c): 3.0e-01/3.8e-01 5.7e-01/6.1e-01 1.3e+00/1.3e+00 1.0e+00/8.5e-01   last 3 terms 9.5e-10 1.5e-08 1.7e-08 4.5e-10   j of largest term 0 0 0 0
+D 3.7938 kc 47 Ks 90 u0 0.40: largest term / |sum| per field (p, m, a, c): 3.0e-01/3.8e-01 5.7e-01/6.1e-01 1.3e+00/1.3e+00 1.0e+00/8.5e-01   last 3 terms 5.7e-13 5.0e-12 1.8e-11 5.8e-13   j of largest term 0 0 0 0
+D 3.7938 kc 47 Ks 120 u0 0.40: largest term / |sum| per field (p, m, a, c): 3.0e-01/3.8e-01 5.7e-01/6.1e-01 1.3e+00/1.3e+00 1.0e+00/8.5e-01   last 3 terms 2.5e-16 1.6e-15 5.5e-15 2.5e-16   j of largest term 0 0 0 0
+   radius of convergence in u (root test, coefficients j >= 2Ks/3): k 0-15: R 0.563, k 17-31: R 0.542, k 33-47: R 0.524
+   sum(Ks 90) - sum(Ks 60): max 7.8e-09
+   sum(Ks 120) - sum(Ks 90): max 6.3e-12
+-- neB_kc47_rk2_D3.7000.npy
+D 3.7 kc 47 Ks 60 u0 0.40: largest term / |sum| per field (p, m, a, c): 2.9e-01/3.6e-01 5.6e-01/6.0e-01 1.3e+00/1.4e+00 1.0e+00/8.5e-01   last 3 terms 8.6e-09 1.2e-07 1.8e-07 4.1e-09   j of largest term 0 0 0 0
+D 3.7 kc 47 Ks 90 u0 0.40: largest term / |sum| per field (p, m, a, c): 2.9e-01/3.6e-01 5.6e-01/6.0e-01 1.3e+00/1.4e+00 1.0e+00/8.5e-01   last 3 terms 1.1e-11 1.6e-10 3.0e-10 1.0e-11   j of largest term 0 0 0 0
+D 3.7 kc 47 Ks 120 u0 0.40: largest term / |sum| per field (p, m, a, c): 2.9e-01/3.6e-01 5.6e-01/6.0e-01 1.3e+00/1.4e+00 1.0e+00/8.5e-01   last 3 terms 1.9e-14 1.2e-13 4.4e-13 1.6e-14   j of largest term 0 0 0 0
+   radius of convergence in u (root test, coefficients j >= 2Ks/3): k 0-15: R 0.533, k 17-31: R 0.521, k 33-47: R 0.481
+   sum(Ks 90) - sum(Ks 60): max 7.6e-08
+   sum(Ks 120) - sum(Ks 90): max 1.4e-10
+-- neB_kc55_rk2_D3.7689.npy at D = 3.7688625 (the b4 point; the file name rounds D)
+D 3.7688625 kc 55 Ks 60 u0 0.40: largest term / |sum| per field (p, m, a, c): 3.0e-01/3.8e-01 5.7e-01/6.1e-01 1.3e+00/1.3e+00 1.0e+00/8.5e-01   last 3 terms 1.1e-06 3.7e-05 6.5e-05 1.6e-06   j of largest term 0 0 0 0
+D 3.7688625 kc 55 Ks 90 u0 0.40: largest term / |sum| per field (p, m, a, c): 3.0e-01/3.8e-01 5.7e-01/6.1e-01 1.3e+00/1.3e+00 1.0e+00/8.5e-01   last 3 terms 5.2e-08 6.9e-07 6.9e-06 1.4e-07   j of largest term 0 0 0 0
+D 3.7688625 kc 55 Ks 120 u0 0.40: largest term / |sum| per field (p, m, a, c): 3.0e-01/3.8e-01 5.7e-01/6.1e-01 1.3e+00/1.3e+00 1.0e+00/8.5e-01   last 3 terms 1.5e-09 2.4e-08 9.9e-08 2.7e-09   j of largest term 0 0 0 0
+   radius of convergence in u (root test, coefficients j >= 2Ks/3): k 0-15: R 0.467, k 17-31: R 0.463, k 33-47: R 0.474, k 49-63: R 0.447
+   sum(Ks 90) - sum(Ks 60): max 3.7e-05
+   sum(Ks 120) - sum(Ks 90): max 4.1e-06
+== done Thu Oct 22 02:03:16 MST 2026
