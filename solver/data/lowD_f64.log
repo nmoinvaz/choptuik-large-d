@@ -1,0 +1,6 @@
+== Thu Oct 22 02:12:13 MST 2026 solver/lowD_f64.py solver/data/lowD_f64.jsonl --seed solver/data/neB_kc47_rk2_D3.7000.npy --kcs 47 --rks 2 --Ks 90 --tag Ks90
+D 3.7 kc 47 rk 2 nodes [0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6]: start |F| 3.0e-09 (seed Delta 3.465204067887)
+{"D": 3.7, "kc": 47, "rk": 2, "nodes": [0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6], "Ks": 90, "Delta": 3.465204104945248, "F": 2.180219592267718e-16, "strong": 2.1802195922677179e-16, "weak": 0.0, "junk": 4.0523408517554946e-24, "n_weak": 0, "weak_s": [], "n_outer": 1, "lam": null, "gamma": null, "F_start": 2.983596569691009e-09, "source": "neB_kc47_rk2_D3.7000.npy", "seconds": 563}
+== exit 0 Thu Oct 22 02:21:42 MST 2026
+== Thu Oct 22 02:25:53 MST 2026 solver/lowD_f64.py solver/data/lowD_f64.jsonl --seed solver/data/neB_kc47_rk2_D3.7000.npy --kcs 47 --rks 4 --Ks 60 --tag rk4
+D 3.7 kc 47 rk 4 nodes [0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6]: start |F| 1.8e-09 (seed Delta 3.465204067887)
