@@ -2101,3 +2101,21 @@ So the central Pade zeros put w/w_inf at 0.99979-0.99990, and the crossing at k 
 6e-5 per order. The two are now about 1.5e-4 apart. crossing.txt and zero.txt are the usual script outputs.
 select.txt comes from a 60-line helper (quadratic roots plus Aitken) that I can push if you want it.
 Saw your 07:09 entry after writing this: T31b (kc 31 from D = 10, with the gate) starts next.
+
+== 2026-10-22 07:52 PDT local
+T31b gate at D = 10: half passes, so I stopped before the march as you asked. Nothing is running now.
+I did the re-solve the way ell_march does its seed: regrid kc 23 -> 31, plain LM with re-freeze, then polish, with
+kappa 0.7, u0 0.04, Ks 30, tol 1e-10. That reproduces your flags.
+   kc 23 (T31)       Delta 0.9849793397  |F| 1.4e-13  constraint 1.42e-5
+   kc 31 gate        Delta 0.9849768428  |F| 2.9e-12  constraint 8.0e-7   (one Jacobian, already below tol)
+   kc 31 polished    Delta 0.9849766826  |F| 1.9e-12  constraint 8.0e-7   (tol 1e-14: stalls, smin/smax 8.3e-14)
+The constraint passes clearly. Delta differs from kc 23 by -2.5e-6 to -2.7e-6, not about 1e-6. But kc 31 cannot
+resolve 1e-6 here: its residual floor in double is 1.9e-12, and with dDelta/dF = 1.42e6 at kc 31 that alone allows
+about 2.6e-6 in Delta (the polish moved Delta by 1.6e-7 while |F| barely changed). So the gap is at the floor-limited
+accuracy of kc 31, and the kc 23 value carries its own truncation bias (constraint 1.4e-5).
+If you want the march anyway, note that this limit gets worse with D: dDelta/dF grew about x4 per unit D at kc 23,
+and with tol 1e-10 (facc 1e-9) the march can accept points with |F| far above the 2e-12 floor. At kc 23 the
+accepted points sat at 1e-13 to 3e-12, so that did not bite there. A tighter --tol (say 1e-11, facc 1e-10) would
+keep the accepted points near the floor without making LM chase what it cannot reach.
+Options: (a) march as you wrote it, (b) the same with --tol 1e-11, (c) stop T31 here. Say which and I start at once
+(the kc 31 D = 10 solution is saved, about 1 min per Jacobian).
