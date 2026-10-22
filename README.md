@@ -10,7 +10,7 @@ it approaches a universal solution, Choptuik's critical solution, which repeats 
 echo period Δ and the critical exponent γ are universal numbers, the same for any initial data, but they depend on the
 number of spacetime dimensions D, and no formula for them is known. In D = 4, Δ ≈ 3.445 and γ ≈ 0.374.
 
-Some history. Choptuik discovered critical collapse in four dimensions in 1993[^1]. The scaling was soon explained by
+Choptuik discovered critical collapse in four dimensions in 1993[^1]. The scaling was soon explained by
 the critical solution's single unstable mode, γ = 1/λ[^2], and the solution was computed directly as a periodic
 eigenvalue problem, with Δ now known to ten digits in four dimensions[^3]. Other dimensions were studied numerically for
 3.5 ≤ D ≤ 14[^4], and near D = 4 to about six digits[^5]. At large D, the leading-order equations and an estimate
