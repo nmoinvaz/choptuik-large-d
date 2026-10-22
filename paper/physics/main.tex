@@ -10,6 +10,10 @@
 
 \newcommand{\Dinf}{\Delta_\infty}
 \newcommand{\eps}{\varepsilon}
+\renewcommand{\topfraction}{0.85}
+\renewcommand{\bottomfraction}{0.6}
+\renewcommand{\textfraction}{0.1}
+\renewcommand{\floatpagefraction}{0.75}
 
 \begin{document}
 
@@ -22,7 +26,23 @@ evidence for $\Delta_\infty = 1.64389375$ and an $r^2$-shift symmetry behind $\g
 \date{October 2026; unreviewed draft}
 
 \begin{abstract}
-% TODO: abstract (written last).
+We compute the echo period $\Delta(D)$ of Choptuik's critical solution of massless scalar collapse in $D$ dimensions at
+857 points $8.25 \le D \le 61.03$ with a double-double (about 32-digit) solver, and the critical exponent $\gamma$ of the
+black-hole radius at 67 points up to $D = 61$; an independent double-precision solver covers $4 \le D \le 40$. One
+rational function of $1/(D-2)$ reproduces both for all $D \ge 4$ and agrees with the published values; a
+$6\times10^{-5}$ difference at $D = 5$ is traced to resolution in the published data. Held-out tests support, but do not
+prove, analyticity in $1/D$, which gives $\Dinf = 1.64389375 \pm 1.5\times10^{-8}$; a power-law approach to $\Delta = 0$
+(exponent at least $0.01$), as conjectured in the literature, is excluded by the data, and a logarithmic one disfavoured.
+The exponent tends to $\gamma_\infty = 1/2$ to about $5\times10^{-7}$. Within the measured large-$D$ scaling the $1/D$
+expansion is unobstructed for every period, so $\Delta$ and $\gamma$ are selected beyond all orders in $1/D$, at radii of
+order $\sqrt D$ times the time to the singularity, where the field equations are Rozali and Way's nonlinear heat equation.
+Its shift symmetry in $r^2$ gives an exact unstable mode with $1/\gamma = 2$ at $D = \infty$, which explains
+$\gamma_\infty = 1/2$ given a conjectured selection rule and the uniqueness of the unstable mode; that rule, evaluated on
+the $D = \infty$ equations alone, gives $\Dinf = 1.6439 \pm 0.0002$ (a range of estimators) and the shape of the echo. For
+the axion--dilaton and the complex scalar, whose large-$D$ equations keep the symmetry, $\gamma \to 1/2$ to $D = 80$; for
+matter with a centrifugal term, which breaks it, the computations so far do not decide $\gamma_\infty$. The work was done
+by an AI model (Claude, Anthropic) under the author's direction and has not been reviewed by a human expert
+(Sec.~\ref{sec:how}).
 \end{abstract}
 
 \maketitle
@@ -99,9 +119,9 @@ computer-assisted proof in a model case) is developed in a companion paper~\cite
 physical terms, with the numerical evidence, and refer there for proofs. We assume, without checking it at large $D$,
 that the branch we follow remains the critical solution, with a single unstable mode (Sec.~\ref{sec:discussion}).
 
-\begin{figure}[t]
+\begin{figure}[htbp]
 \centering
-\includegraphics[width=0.92\linewidth]{../figures/echo.pdf}
+\includegraphics[width=0.66\linewidth]{../figures/echo.pdf}
 \caption{The echo across dimensions: the centre slope of the field,
 $F(\tau) = \sqrt{D-2}\,\partial_x p$ at $r = 0$, over the same stretch of logarithmic time $\tau$ for $D = 4$, 10, 20
 and 60, each scaled to its peak (dashed: its first harmonic). At $D = 4$ the profile is close to a square wave and
@@ -126,8 +146,8 @@ x(x-c)\,p_x &= -\omega x\,p_\theta + G p - c p + \tfrac{n}{2}\,c\,(p+m), &
 x(x+c)\,m_x &= -\omega x\,m_\theta - G m + c m - \tfrac{n}{2}\,c\,(p+m), \label{eq:E34}
 \end{align}
 with $G = (n-1)\,c\,(b-1)$, on $0 \le x \le 1$; $p$, $m$ contain only odd harmonics of $\theta$ and $b$, $c$ only even
-ones; the solution is regular at $x = 0$, analytic at the past light cone $x = 1$, and $c(1) = 1$ fixes the gauge. The
-critical solution is thus computed directly as a periodic boundary-value problem, with $\Delta$ an eigenvalue.
+ones; the solution is regular at $x = 0$, analytic at the past light cone $x = 1$, and $c(1) = 1$ fixes the gauge: a
+periodic boundary-value problem with $\Delta$ as an eigenvalue.
 
 \emph{Double-precision solver} ($4 \le D \le 40$, with points down to $D = 3.7$): spectral multiple shooting in $x$ with
 Fourier modes in $\tau$ (23--47 modes), with the integration-step error extrapolated out; near $D = 4$ the points are
@@ -146,9 +166,9 @@ checks are internal to the double-double solver (resolution, pinning, a second b
 independent double-precision solver stops at $D = 40$.
 
 Why the extra precision is needed is itself a physical result. The sensitivity of $\Delta$ to the residual,
-$\max|\partial\Delta/\partial F|$ from the transposed Jacobian, grows about 1.8-fold per unit of $D$ below $D = 27$ and
-1.5-fold at $D = 56$--$61$, to $9\times10^{13}$ at $D = 60$: the condition that selects the period weakens
-exponentially with $D$. Section~\ref{sec:picture} explains why.
+$\max|\partial\Delta/\partial F|$, grows about 1.8-fold per unit of $D$ below $D = 27$ and 1.5-fold at $D = 56$--$61$, to
+$9\times10^{13}$ at $D = 60$: the condition that selects the period weakens exponentially with $D$
+(Sec.~\ref{sec:picture} explains why).
 
 \emph{Critical exponent.} For perturbations $\propto e^{\lambda\tau}$ every $\tau$-derivative in the linearized equations
 gains $+\lambda$; the growth-mode matrix $M(\lambda)$ of the discretized problem is singular at a growth rate, and
@@ -157,7 +177,7 @@ of $\det M(\lambda)$ near its predicted value: 67 points for $8.25 \le D \le 61$
 $D = 16$--$58$ and agreeing with the double-precision values to $10^{-8}$--$10^{-12}$. The double-precision $\gamma$
 scatters by up to $6\times10^{-5}$ above $D \approx 36$.
 
-\begin{table}[t]
+\begin{table}[htbp]
 \caption{Checks of the double-double solver.}
 \label{tab:checks}
 \footnotesize
@@ -204,7 +224,7 @@ listed in Table~\ref{tab:values}. Both $\Delta$ and $\gamma$ are monotonic up to
 their $D \le 11$ values as a minimum of $\Delta$ and a maximum of $\gamma$ near $D = 11$--$13$~\cite{SorkinOren2005} is
 not borne out.
 
-\begin{table}[t]
+\begin{table}[htbp]
 \caption{Coefficients of Eq.~\eqref{eq:formula}.}
 \label{tab:coef}
 \footnotesize
@@ -224,7 +244,7 @@ $k$ & $a_k$ & $b_k$ & $e_k$ & $f_k$ \\ \hline
 \end{ruledtabular}
 \end{table}
 
-\begin{table}[t]
+\begin{table}[htbp]
 \caption{Values. $\Delta$ for $D = 10$--$60$ is double-double (interpolated to $10^{-14}$ where $D$ is not a computed
 point); $\Delta(8)$ is a separate double-double run; $\Delta$ for $D = 4$--$7$ and $\gamma$ to $D = 40$ are
 double-precision; $\gamma(50)$, $\gamma(100)$, $\gamma(1000)$ are formula values. $\Delta(70)$ and $\Delta(100)$ are
@@ -248,9 +268,9 @@ $D$ & $\Delta$ & $\gamma$ & $D$ & $\Delta$ & $\gamma$ \\ \hline
 \end{ruledtabular}
 \end{table}
 
-\begin{figure}[t]
+\begin{figure}[htbp]
 \centering
-\includegraphics[width=\linewidth]{../figures/delta.pdf}
+\includegraphics[width=0.66\linewidth]{../figures/delta.pdf}
 \caption{$\Delta(D)$ and $\gamma(D)$ with the rational formula~\eqref{eq:formula} (dashed), fitted on
 $4 \le D \le 30.2$; hollow points are held out, and green diamonds are double-double points up to $D = 61$.}
 \label{fig:delta}
@@ -266,10 +286,9 @@ double-precision points at $D = 3.70$--$3.80$ puts the maximum of $\Delta$ at $D
 agreement to $2\times10^{-6}$ with $D = 3.755726$, $\Delta = 3.466772$ of~\cite{EckerEtAl2026}.
 
 At $D = 5$, Ref.~\cite{EckerEtAl2026} gives $\Delta = 3.22176$ and $\gamma = 0.41322$, which are $5.8\times10^{-5}$ and
-$9.3\times10^{-5}$ above our values. Our $\Delta(5) = 3.2217019446$ comes from two independent codes: the
-double-precision solver at 31, 39 and 47 Fourier modes ($3.221701945 \pm 7\times10^{-11}$ extrapolated) and the
-double-double solver at $M = 48$ and $64$ collocation points ($3.22170194461806$, $3.22170194462672$), which agree to
-$10^{-11}$. The published data of~\cite{EckerEtAl2026} (repository CriticalSpacetimeCrystal) show their $D = 5$ value
+$9.3\times10^{-5}$ above our values. Our $\Delta(5) = 3.2217019446$ comes from two independent codes that agree to
+$10^{-11}$: the double-precision solver at 31, 39 and 47 Fourier modes, extrapolated, and the double-double solver at 48
+and 64 collocation points. The published data of~\cite{EckerEtAl2026} (repository CriticalSpacetimeCrystal) show their $D = 5$ value
 still moving by $-1.66\times10^{-4}$ between 256 and 512 modes, toward ours, in the range $D \gtrsim 4.8$ where they
 note that their light-cone expansion order must be increased; their offset from our values grows smoothly from
 $2.7\times10^{-7}$ at $D = 4$ (within their stated $\pm10^{-6}$) to $5\times10^{-4}$ at $D = 5.5$, and at $D = 3.7$ the two
@@ -303,11 +322,10 @@ model fits its range to the level of the points, so the fit alone decides nothin
 $D \le 45$, the $1/D$ series predicts $\Delta$ fifteen units of $D$ ahead to $5\times10^{-13}$, while the series in
 half-integer powers miss by 40 to 300 times more, and their limits jump with the degree. Adding one non-analytic term
 ($D^{-1/2}$, $D^{-3/2}$, $\ln D/D$, $\ln D/D^2$ or $e^{-D/4}$) to the degree-16 series changes neither the prediction nor
-the limit, and the term's coefficient is not determined. The only structure the points show is a singularity on the
-negative $D$ axis, near $D \approx -9$ to $-11$, which the rational formula represents by the zero of its denominator at
-$D = -11.0$.
+the limit, and the term's coefficient is not determined. The only structure the points show is a singularity near
+$D \approx -9$ to $-11$.
 
-\begin{table}[t]
+\begin{table}[htbp]
 \caption{Held-out test of large-$D$ models (cleaned double-double points; snapshot $D \le 60.1$).}
 \label{tab:analytic}
 \footnotesize
@@ -323,9 +341,9 @@ $D^{-1/2}$, degree 20 & $3.8\times10^{-15}$ & $1.6\times10^{-10}$ & $6.2\times10
 \end{ruledtabular}
 \end{table}
 
-\begin{figure}[t]
+\begin{figure}[htbp]
 \centering
-\includegraphics[width=0.8\linewidth]{../figures/heldout.pdf}
+\includegraphics[width=0.56\linewidth]{../figures/heldout.pdf}
 \caption{$|\text{model} - \text{computed}\ \Delta|$ on every double-double point above the fitted range, for fits on
 $10 \le D \le 37.5$ (top) and $10 \le D \le 45$ (bottom); shaded: the level of the points.}
 \label{fig:heldout}
@@ -374,7 +392,7 @@ $i/j$ ($i, j \le 12$) and exponents $\pm\tfrac12, \pm1, \pm2$ (514\,332 expressi
 expected in the window, so this null has little power). At eight known digits no integer-relation search could support
 a closed form, so whether $\Dinf$ has one is open.
 
-\begin{table}[t]
+\begin{table}[htbp]
 \caption{Candidate closed forms for $\Dinf$, forced as the limit: best held-out error and its ratio to the free fit.
 $G$ is Catalan's constant, $j_{\nu,k}$ the $k$-th zero of $J_\nu$.}
 \label{tab:cand}
@@ -416,9 +434,9 @@ is Rozali and Way's estimate~\cite{RozaliWay2018}, reported in~\cite{EckerEckerG
 $\Dinf$, it is not fixed at any finite order of the $1/n$ expansion (Sec.~\ref{sec:allorders}); its explanation is in
 Sec.~\ref{sec:r2shift}.
 
-\begin{figure}[t]
+\begin{figure}[htbp]
 \centering
-\includegraphics[width=\linewidth]{../figures/gamma.pdf}
+\includegraphics[width=0.78\linewidth]{../figures/gamma.pdf}
 \caption{Left: $\lambda = 1/\gamma$ against $1/(D-2)$ for 67 double-double points, with a fit fixing $\lambda_\infty = 2$ (solid,
 over its range $D \ge 16$) and its leading term $2 + 3.03/n$ (dashed); at $D = \infty$, $\lambda = 2$ is exact, from the
 $r^2$-shift symmetry of the inner heat equation (Sec.~\ref{sec:r2shift}). Right: with $\lambda_\infty$ left free, the
@@ -441,12 +459,10 @@ smaller by a further factor of order $1/n$; $c = 1 - O(1/n)$ and $b - 1 = (p^2+m
 cone $c$ stays within $10^{-3}$ of 1. The profile $F = \sqrt n\,\partial_x p(x = 0)$ converges as $D$ grows
 (Table~\ref{tab:scaling}). So the field and its gravity weaken inside the light cone: the centre slope falls like
 $2.72/\sqrt n$ and the departure of $c$ from 1 at the centre like $3.65/n$, and the last two columns of the table
-approach the same limit, as the large-$D$ expansion requires ($c = 1 - \eps F^2(1-x^2) + \dots$). This scaling is forced
-by one measured fact, $c - 1 = O(1/n)$: the $b$ equation then gives $b - 1 \approx (p^2+m^2)/(n-1)$, the $c$ equation
-$c - 1 = O(p^2)$, so $p = O(n^{-1/2})$, and the $O(n)$ terms of the $p$, $m$ equations force $p + m = O(p/n)$. At
-$D = \infty$ the echo inside the light cone is therefore a free scalar wave on flat space.
+approach the same limit, as the large-$D$ expansion requires ($c = 1 - \eps F^2(1-x^2) + \dots$). At $D = \infty$ the
+echo inside the light cone is therefore a free scalar wave on flat space.
 
-\begin{table}[t]
+\begin{table}[htbp]
 \caption{The echo profile $F = \sqrt n\,\partial_x p(0)$ and the strength of gravity at the centre on the double-double
 solutions, and their $D = \infty$ extrapolations.}
 \label{tab:scaling}
@@ -479,8 +495,7 @@ which is finite and non-zero for every real $\omega \ne 0$, odd $\mu$ and $n \ge
 periodic in $\tau$ and regular at the centre is never analytic at the light cone: on its own it cannot echo, in any
 $D \ge 4$. (The free wave equation in similarity coordinates was analysed in 3+1 dimensions by
 Donninger~\cite{Donninger2008}, which contains the $D = 4$ case.) For the fundamental at $\omega_\infty$,
-$|C| = 0.0121$, 0.0114, 0.0124, 0.0192, 0.0405 at $n = 18$, 38, 58, 200, 1000: small, through a factor of order
-$e^{-\pi\omega/2}$, but never zero. Gravity has to cancel this coefficient harmonic by harmonic, and that cancellation
+$|C| = 0.0121$--$0.0405$ for $n = 18$--$1000$: small, through a factor of order $e^{-\pi\omega/2}$, but never zero. Gravity has to cancel this coefficient harmonic by harmonic, and that cancellation
 is what selects $\Delta$ and the profile $F$.
 
 The $1/n$ expansion of the field equations never sees it. Within the scaling measured above (integer powers of $1/n$
@@ -524,18 +539,16 @@ Y_t = c\,S, \qquad S_t = c\,\Big(Y_s + \frac{Y^3}{4}\Big), \qquad c_s = \frac{c\
 \label{eq:heat}
 \end{equation}
 with $b - 1 = (p - m)^2/(2n)$: a nonlinear heat equation in which $s = r^2/(2n)$ plays the role of time and $t$ that of
-space, with no large parameter left. These are Rozali and Way's leading-order large-$D$ equations: with their $r$,
-$\tau = \sqrt D\,t$ and lapse factor $1 - \delta_0$ identified with our $\rho$, $t$ and $c^2$, their equations read
-$\phi_s = c^{-1}\partial_t(c^{-1}\phi_t)$ and $c_s = \phi_t^2/c$, and $Y = 2\phi_t/c$, $S = Y_t/c$ satisfy
-Eqs.~\eqref{eq:heat} identically (checked symbolically). Rozali and Way noted this parabolic character, with space and
-time swapped. A discretely self-similar solution of Eqs.~\eqref{eq:heat} depends on $\xi = \rho/(-t) = x/\sqrt n$ and
-$\theta$; its formal series at $\xi = 0$ reproduces the top-degree terms of the outer $1/n$ expansion (to
-$2\times10^{-13}$ at orders 1--10). Two familiar objects appear. The fast mode of the outer region,
-$e^{-n/(2x^2)} = e^{-t^2/(4s)}$, is the heat kernel. And without gravity the inner problem is Weber's (Hermite's)
-equation, whose classical Stokes constant~\cite{DLMF} reproduces $C(n,s)$ at large $n$ (the ratio to Eq.~\eqref{eq:C} is
-$1.00014$ at $n = 10^5$), so the light-cone obstruction of Sec.~\ref{sec:allorders} is a property of this $n$-free
-problem. What this work adds to Rozali and Way's equations is the discretely self-similar problem posed on them: the
-selection rule (Sec.~\ref{sec:selection}) and the $r^2$-shift argument for $\gamma_\infty$, which we turn to now.
+space, with no large parameter left. These are the leading-order large-$D$ equations of Rozali and Way, who noted this
+parabolic character: with their $r$, $\tau = \sqrt D\,t$ and lapse factor $1 - \delta_0$ identified with our $\rho$, $t$
+and $c^2$, $Y = 2\phi_t/c$ and $S = Y_t/c$ turn their equations into Eqs.~\eqref{eq:heat} (checked symbolically). A
+discretely self-similar solution depends on $\xi = \rho/(-t) = x/\sqrt n$ and $\theta$; its series at $\xi = 0$
+reproduces the top-degree terms of the outer $1/n$ expansion (to $2\times10^{-13}$ at orders 1--10). The outer fast mode
+$e^{-n/(2x^2)} = e^{-t^2/(4s)}$ is the heat kernel, and without gravity the inner problem is Weber's equation, whose
+classical Stokes constant~\cite{DLMF} reproduces $C(n,s)$ at large $n$ (ratio $1.00014$ at $n = 10^5$): the light-cone
+obstruction is a property of this $n$-free problem. What this work adds to Rozali and Way's equations is the discretely
+self-similar problem posed on them: the selection rule (Sec.~\ref{sec:selection}) and the $r^2$-shift argument for
+$\gamma_\infty$.
 
 \subsection{The $r^2$-shift and $\gamma_\infty = 1/2$}
 \label{sec:r2shift}
@@ -589,8 +602,7 @@ ratios of successive harmonics are nearly the same for every harmonic, $|F_{\nu+
 rate per harmonic of the profile should level off near 1.4 as $D \to \infty$ rather than keep growing; the measured
 ratios ($\nu = 1, \dots, 9$) extrapolate to a rate of 1.3--1.45 (not fully converged). The $D = \infty$ echo profile is
 then not an entire function of $\theta$: it has singularities at a finite distance, $|\mathrm{Im}\,\theta| \approx 1.4$,
-from the real axis. The same relation evaluated at each $D$'s own amplitude and $\omega$ (a heuristic) tracks the measured
-$|F_3/F_1|$ at $D = 20$--$60$ to within $0.004$--$0.006$.
+from the real axis.
 
 \emph{The period, without truncation.} Expanding the harmonic-1 multiplier in powers of $A^2$, with every harmonic kept
 exactly at each order, to twelve orders, its zero becomes real at $\omega/\omega_\infty = 0.9999$--$1.0001$ (best
@@ -606,10 +618,8 @@ range of the estimators, not an error bound; whether the remaining $10^{-4}$ clo
 $\omega/\omega_\infty - 1 = -22\%$, $+1.56\%$ and $-0.077\%$ for $M = 1$, 3 and 5 ($\Delta$ 29\% above, 1.5\% below and
 $0.077\%$ above $\Dinf$), alternating in sign and shrinking fifteen- to twentyfold per added pair of harmonics. Harmonic
 truncation is not a controlled approximation here (the linear multipliers grow like $e^{\pi|\nu|\omega/2}$ with the
-harmonic $\nu$), which is why the untruncated expansion above is the primary estimate. The multipliers were computed by
-two implementations that share no code (lateral solutions on either side of the Stokes line, and Borel--Darboux fits in
-ball arithmetic); at $M = 5$ and $(A, \omega) = (2.72, \omega_\infty)$ the first gives $F_3/F_1 = 0.05486 + 0.00541i$ and
-$F_5/F_1 = 0.00309 + 0.00054i$, against the amplitude expansion's $0.05482 + 0.00543i$ and $0.00310 + 0.00056i$. For the
+harmonic $\nu$), which is why the untruncated expansion above is the primary estimate; at $M = 5$ the two give the same
+$F_3/F_1$ and $F_5/F_1$ to the size of the omitted $F_7$, from codes that share nothing. For the
 one-harmonic truncation, whose zero is not the physical one, the companion paper gives a computer-assisted proof,
 assuming Braaksma's summability theorem and following the template of Baldom\'a et al.~\cite{BaldomaEtAl2023}, that the
 selection condition has exactly one zero in a small box around it, and that it is simple~\cite{math} (Reiterer and
@@ -618,9 +628,9 @@ itself~\cite{ReitererTrubowitz2019}).
 
 The matter models of Sec.~\ref{sec:matter} give two further, truncation-free tests of the rule.
 
-\begin{figure}[t]
+\begin{figure}[htbp]
 \centering
-\includegraphics[width=\linewidth]{../figures/selection.pdf}
+\includegraphics[width=0.66\linewidth]{../figures/selection.pdf}
 \caption{The selection rule evaluated from the $D = \infty$ inner problem alone. Top: where the harmonic-1 multiplier has
 a real zero, order by order in the amplitude expansion; simple-zero estimates from above, floating-exponent estimates from
 below, Pad\'e ranges and a factored series inside the shaded bracket, which narrows onto $\omega_\infty$ from the
@@ -630,9 +640,9 @@ a simple zero.}
 \label{fig:selection}
 \end{figure}
 
-\begin{figure}[t]
+\begin{figure}[htbp]
 \centering
-\includegraphics[width=\linewidth]{../figures/spectrum.pdf}
+\includegraphics[width=0.72\linewidth]{../figures/spectrum.pdf}
 \caption{Left: amplitude $|F_\nu|$ of each odd harmonic of the echo profile for $D = 4$--$60$ and the $D = \infty$
 prediction of the inner problem (dashed; beyond $\nu = 5$ the leading-order ratio, conjectured). Right: the decay rate
 per harmonic, $\frac12\ln|F_\nu/F_{\nu+2}|$, against $1/(D-2)$, with extrapolations from $D \ge 20$ and the predicted
@@ -673,13 +683,13 @@ translation, $\lambda = 1$. For these models $\gamma_\infty$ is not fixed by a s
 generic expectation (a conjecture). The predictions were tested numerically as follows; each solver reproduces the
 published four-dimensional values first.
 
-\begin{table}[t]
+\begin{table}[htbp]
 \caption{The $D = \infty$ inner problem of several matter models and what it implies for $\gamma_\infty$.}
 \label{tab:matter}
-\small
+\footnotesize
 \begin{ruledtabular}
-\begin{tabular}{llll}
-Model & $D = \infty$ inner problem & $s$-translation & expectation for $\gamma_\infty$ \\ \hline
+\begin{tabular}{p{0.22\linewidth}p{0.25\linewidth}p{0.1\linewidth}p{0.33\linewidth}}
+Model & $D = \infty$ inner problem & $s$-shift & expectation for $\gamma_\infty$ \\ \hline
 real scalar & autonomous heat system~\eqref{eq:heat} & yes & 1/2 (data: $1/2$ to $5\times10^{-7}$) \\
 complex scalar, axion--dilaton & the same, plus a target-curvature term & yes & 1/2 (axion--dilaton to $D = 80$: $1/2$ to
 about $3\times10^{-6}$) \\
@@ -701,26 +711,23 @@ self-similar, $F = (-t)^{i\omega}f(x)$, so they solve ordinary differential equa
 analyticity at the past light cone. At $D = 4$ our codes reproduce $\omega = 1.176952724$ and $\gamma = 0.2641066$ for the
 axion--dilaton~\cite{HamadeHorneStewart1996}, and $\omega = 1.9154447$ and $\gamma = 0.3871055$ for the free complex
 scalar~\cite{HirschmannEardley1995a,HirschmannEardley1995b}. The axion--dilaton solution was followed to $D = 80$ by
-complex-path shooting (with collocation as an independent check to $D \approx 8$), and its growth rate computed at each
-$D$:
-\begin{itemize}
-\item $\gamma$ rises monotonically from $0.2641$ at $D = 4$ to $0.4896$ at $D = 80$. In free fits of $\lambda$ in powers of
+complex-path shooting (with collocation as an independent check to $D \approx 8$), with its growth rate at each $D$.
+Its $\gamma$ rises monotonically from $0.2641$ at $D = 4$ to $0.4896$ at $D = 80$. In free fits of $\lambda$ in powers of
 $1/n$, $\lambda_\infty - 2$ falls about threefold per added power, to $8.6\times10^{-6}$, and at every order fixing
-$\lambda_\infty = 2$ fits better; $\lambda = 2 + 3.60/n - 27/n^2 + \dots$, i.e.\ $\gamma = 1/2 - 0.900/n + \dots$ (against
-$1/2 - 0.758/n$ for the real scalar). So $\gamma_\infty = 1/2$ to about $3\times10^{-6}$, an extrapolation from $D \le 80$.
-\item The solution has the real scalar's large-$D$ structure: gravity is weak inside the light cone, the field is of
-order one and varies on $x \sim \sqrt n$, and there the equations become the heat system~\eqref{eq:heat} for a complex
-field, with the target curvature as one extra term and no explicit $s$, so the $r^2$-shift gives $\lambda = 2$. The
-finite-$D$ solutions continued past the light cone converge to the $D = \infty$ inner solution with $O(1/n)$ corrections.
-\item Unlike for the real scalar, the uniqueness of the unstable mode was checked at finite $D$: besides the exact
-symmetry modes there is a single growing mode, from the full collocation spectra at $D = 4$--$8$ and from winding numbers
-of the growth-rate determinant at $D = 4$, 10, 20 and 40, in boxes up to $\mathrm{Re}\,\lambda = 4.5$--$6$ and
-$|\mathrm{Im}\,\lambda| = 1.2$--$2.9$.
-\item The selection rule passes a test without harmonic truncation, because the phase-rotating solution closes on one
-harmonic. The zero of the $D = \infty$ Stokes jump gives $\omega_\infty = 3.1998939$ for the axion--dilaton and
-$3.9789695$ for the free complex scalar; the finite-$D$ frequencies extrapolate to $3.1994$ and $3.9784$, an agreement to
-$1.6\times10^{-4}$ and $1.3\times10^{-4}$, and the central amplitudes agree to $2$--$5\times10^{-5}$.
-\end{itemize}
+$\lambda_\infty = 2$ fits better: $\lambda = 2 + 3.60/n - 27/n^2 + \dots$, i.e.\ $\gamma = 1/2 - 0.900/n + \dots$ (against
+$1/2 - 0.758/n$ for the real scalar), so $\gamma_\infty = 1/2$ to about $3\times10^{-6}$, an extrapolation from $D \le 80$.
+The solution has the real scalar's large-$D$ structure: gravity is weak inside the light cone, the field is of order one
+and varies on $x \sim \sqrt n$, and there the equations become the heat system~\eqref{eq:heat} for a complex field, with
+the target curvature as one extra term and no explicit $s$, so the $r^2$-shift gives $\lambda = 2$; the finite-$D$
+solutions continued past the light cone converge to the $D = \infty$ inner solution with $O(1/n)$ corrections. Unlike
+for the real scalar, the uniqueness of the unstable mode was checked at finite $D$: besides the exact symmetry modes
+there is a single growing mode, from the full collocation spectra at $D = 4$--$8$ and from winding numbers of the
+growth-rate determinant at $D = 4$, 10, 20 and 40 (in boxes up to $\mathrm{Re}\,\lambda = 4.5$--$6$,
+$|\mathrm{Im}\,\lambda| = 1.2$--$2.9$). Finally, the selection rule passes a test without harmonic truncation, because the
+phase-rotating solution closes on one harmonic: the zero of the $D = \infty$ Stokes jump gives
+$\omega_\infty = 3.1998939$ for the axion--dilaton and $3.9789695$ for the free complex scalar, and the finite-$D$
+frequencies extrapolate to $3.1994$ and $3.9784$, an agreement to $1.6\times10^{-4}$ and $1.3\times10^{-4}$.
+
 Two caveats. The published axion--dilaton values for $5 \le D \le 10$~\cite{AlvarezGaumeHatefi2012} are not reproduced:
 shooting with those parameters reaches the light cone, but not analytically, so they appear to satisfy a weaker horizon
 condition; we have not checked this against the authors' code. And at $D = 4$ the free complex scalar has a second,
@@ -732,11 +739,10 @@ analytic light cone and the inner scaling, as well as the absence of a $1/r^2$ t
 
 \subsection{The $\sigma$-model: the CSS branch ends near $D = 8.5$}
 
-For the self-gravitating hedgehog wave map into $S^{D-1}$, with the dimensionless coupling $\eta = 4\pi Gf^2$, the solver
-reproduces the published four-dimensional values: $\lambda = 5.1428$ at $\eta = 0.17$ against ``$\lambda \approx 5.14$''
-and $\gamma = 0.179$--$0.188$ for $\eta = 0.10$--$0.14$ against $\approx 0.18$~\cite{LechnerEtAl2002}, the critical couplings
-for apparent horizons of Bizo\'n and Wasserman~\cite{BizonWasserman2000}, and the flat-space self-similar solutions and
-growth rates of~\cite{BizonChmajTabor2000,BiernatBizonMaliborski2017}. At fixed $\eta = 0.14$ the CSS critical solution has
+For the self-gravitating hedgehog wave map into $S^{D-1}$, with the dimensionless coupling $\eta = 4\pi Gf^2$, the CSS
+solver reproduces the published four-dimensional values (e.g.\ $\gamma = 0.179$--$0.188$ for $\eta = 0.10$--$0.14$ against
+$\approx 0.18$~\cite{LechnerEtAl2002}; also~\cite{BizonWasserman2000,BizonChmajTabor2000,BiernatBizonMaliborski2017}).
+At fixed $\eta = 0.14$ the CSS critical solution has
 one growing mode all along its branch, and $\gamma$ rises monotonically from 0.188 at $D = 4$ to $0.5135$ at a fold at
 $D = 8.5444$, where the branch ends. In flat space the branch instead collapses onto the singular equator cone as
 $D \to 8$, with $\gamma \to 1/2$; that value is inherited from the cone, not from an $r^2$-shift. So this branch never
@@ -763,8 +769,7 @@ $\gamma$ & 0.118900 & 0.215509 & 0.265565 & 0.295733 & 0.316203 & 0.331286 \\
 \end{tabular}
 \end{center}
 Beyond $D = 9$ the period is selected ever more weakly ($|\partial\Delta/\partial F| \approx 4\times10^5$, a level the
-$\ell = 0$ solution reaches only near $D = 21$), as expected from gravity at $x = O(1)$ being weaker by a factor $1/n$ for
-$\ell = 1$, and the continuation in double precision stops there. Six points do not decide $\gamma_\infty$: free fits put
+$\ell = 0$ solution reaches only near $D = 21$), and the continuation in double precision stops there. Six points do not decide $\gamma_\infty$: free fits put
 $\lambda_\infty$ anywhere from 0.55 to 3.95, and fixing $\lambda_\infty = 2$ fits as well. Compared with $\ell = 0$ at the
 same $D$, $\lambda_1 - \lambda_0$ falls roughly like $5.6/n$, and windowed fits of its limit bracket $\lambda_{1,\infty} - 2$
 heuristically in 0.09--0.31 ($\gamma_\infty \approx 0.43$--$0.48$). That leans toward the predicted
@@ -775,16 +780,9 @@ near $0.988$ at $D \approx 9$ and then falls, so on present evidence its limit i
 \section{Discussion}
 \label{sec:discussion}
 
-The numerics give $\Delta(D)$ to about fifteen digits up to $D = 61$ and $\gamma(D)$ to about twelve, and they favour a
-finite limit $\Dinf = 1.64389375 \pm 1.5\times10^{-8}$ strongly, under the assumption of analyticity in $1/D$ that they
-support but cannot prove; a power-law approach to zero is excluded. The critical exponent tends to $1/2$ to about
-$5\times10^{-7}$. The large-$D$ picture explains why neither number can come from the $1/D$ expansion: inside the light
-cone the echo is a weak free wave, which cannot echo by itself, and the expansion is unobstructed for every period and
-every growth rate, so both are fixed by a Stokes-type effect at $r \sim \sqrt n\,(-t)$, where the equations are Rozali
-and Way's nonlinear heat equation. Its $r^2$-shift gives the unstable mode with $\lambda = 2$ exactly at $D = \infty$,
-and the conjectured selection rule posed on it reproduces $\Dinf$ to $10^{-4}$ and the shape of the echo, with no input
-from finite $D$. The axion--dilaton and the complex scalar, whose inner equations keep the shift, show the same
-$\gamma \to 1/2$ and pass a truncation-free test of the rule.
+The numerics favour a finite $\Dinf = 1.64389375 \pm 1.5\times10^{-8}$ strongly, under the assumption of analyticity in
+$1/D$ that they support but cannot prove, and give $\gamma_\infty = 1/2$; both are fixed beyond all orders in $1/D$, in
+Rozali and Way's inner region, whose $r^2$-shift explains $\gamma_\infty = 1/2$.
 
 \emph{An assumption.} We assume, without checking it, that the DSS branch we follow remains the critical solution at
 large $D$, with a single unstable mode: our growth rate is a local root of the growth-mode determinant near its predicted
@@ -816,9 +814,8 @@ refereed the write-up; synthetic data with known limits test the error bar on $\
 was checked against the published record. Corrections are welcome.
 
 \emph{Data and code.} All data, code and derivation scripts are at
-\url{https://github.com/nmoinvaz/dss-residual-kernel}, with a reproduction script (\texttt{./reproduce.sh}, which
-regenerates the fit tables and checks), the double-double points in \texttt{hp/data/delta\_dd.csv}, the double-double
-critical exponents in \texttt{hp/data/gamma\_dd.jsonl}, and the matter computations in \texttt{solver/matter/}.
+\url{https://github.com/nmoinvaz/dss-residual-kernel}, with a reproduction script (\texttt{./reproduce.sh}); the
+double-double points are in \texttt{hp/data/}, the matter computations in \texttt{solver/matter/}.
 
 \begin{thebibliography}{99}
 \bibitem{Choptuik1993} M. W. Choptuik, Phys.\ Rev.\ Lett.\ \textbf{70}, 9 (1993).
