@@ -2,6 +2,9 @@
 """Summarise hp/data/modecount_results.jsonl (the mode counts) as Markdown tables for notes/MODE_COUNT.md.
 
     python3 modecount_table.py [results.jsonl]
+
+Table 1: per run, winding of g and of det M for every box, the expected zeros and candidate poles inside, and the
+bound on the number of zeros. Table 2: sampling diagnostics per run.
 """
 import json
 import os
@@ -13,23 +16,48 @@ recs = [json.loads(l) for l in open(path)]
 last = {}
 for r in recs:
     last[r["tag"]] = r          # the latest run per tag
-recs = sorted(last.values(), key=lambda r: (r["D"], -(r.get("M") or 0)))
+recs = sorted(last.values(), key=lambda r: (r["D"], -(r.get("M") or 0), r["tag"]))
+BOXES = ["B0", "U0", "B1a", "B1b", "B1c", "B1", "U", "full"]
 
-print("| D | solver, M | omega | lam_g | B1a | B1b | B1c | B1 | U (poles) | full (poles) | zeros in full box (upper bound) | evaluations | max step (rad) | min ln|g| |")
-print("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+
+def sol(r):
+    if r.get("kc"):
+        return f"f64, kc {r['kc']}"
+    return f"dd, M {r['M']}" + (", kf 13" if r.get("kfreeze") else "")
+
+
+print("Windings: wind(g) [wind(det M) = wind(g) + expected - candidate poles]; zeros of det M <= wind(g) + expected.")
+print()
+print("| D | solver | λ_g | λ_phys | " + " | ".join(BOXES) + " |")
+print("|---|---|---|---|" + "---|" * len(BOXES))
 for r in recs:
     b = r["boxes"]
-    sol = "f64 kc %d" % r["kc"] if r.get("kc") else "dd M %d%s" % (r["M"], ", kf 13" if r.get("kfreeze") else "")
-    mx = max(v["max_step"] for v in b.values())
-    mn = min(v["min_lng"] for v in b.values())
-    print(f"| {r['D']:.4f} | {sol} | {r['omega']:.4f} | {r['lam_g']:.6f} | {b['B1a']['winding']:+.4f} | {b['B1b']['winding']:+.4f} | "
-          f"{b['B1c']['winding']:+.4f} | {b['B1']['winding']:+.4f} | {b['U']['winding']:+.4f} ({b['U']['poles_inside']}) | "
-          f"{b['full']['winding']:+.4f} ({b['full']['poles_inside']}) | {b['full']['zeros_upper_bound']} | {r['evaluations']} | {mx:.3f} | {mn:.2f} |")
+    cells = []
+    for k in BOXES:
+        x = b[k]
+        cells.append(f"{x['winding_g']:+.3f} [{x['winding_det']:+d}]")
+    print(f"| {r['D']:.4f} | {sol(r)} | {r['lam_g']:.6f} | {r['lam_f']:.6f} | " + " | ".join(cells) + " |")
 print()
-print("| D | solver, M | aL | a1 | a2 | aR | y1 | y2 | real-axis sign changes | edges: points / max raw phase step of det M (rad) |")
-print("|---|---|---|---|---|---|---|---|---|---|")
+print("| D | solver | expected zeros / candidate poles inside, per box | zeros of det M in the full box (bound) |")
+print("|---|---|---|---|")
 for r in recs:
-    sol = "f64 kc %d" % r["kc"] if r.get("kc") else "dd M %d" % r["M"]
-    sc = ", ".join(f"({a:.2f}, {b:.2f})" for a, b in r["real_sign_changes"])
-    ed = "; ".join(f"{k} {e['points']}/{e['max_raw_step']:.2f}" for k, e in r["edges"].items())
-    print(f"| {r['D']:.4f} | {sol} | {r['aL']:.3f} | {r['a1']:.3f} | {r['a2']:.3f} | {r['aR']:.3f} | {r['y1']:.3f} | {r['y2']:.3f} | {sc} | {ed} |")
+    b = r["boxes"]
+    s = ", ".join(f"{k} {b[k]['expected_zeros_inside']}/{b[k]['candidate_poles_inside']}" for k in BOXES)
+    print(f"| {r['D']:.4f} | {sol(r)} | {s} | ≤ {b['full']['zeros_upper_bound']} (+ B0: ≤ {b['B0']['zeros_upper_bound']}, U0: ≤ {b['U0']['zeros_upper_bound']}) |")
+print()
+print("| D | solver | aLL, aL, a1, a2, aR | y1, y2 | evaluations | s / eval | max phase step of g (rad) | max step of det M (rad) | ln\\|g\\| on the boundary | nearest candidate pole / expected zero to an edge | real-axis sign changes |")
+print("|---|---|---|---|---|---|---|---|---|---|---|")
+for r in recs:
+    b = r["boxes"]
+    E = r["edges"].values()
+    mx = max(e["max_step"] for e in E)
+    mr = max(e["max_raw_step"] for e in E)
+    lo = min(e["min_lng"] for e in E)
+    hi = max(e["max_lng"] for e in E)
+    dp = min(x["pole_min_dist_to_edge"] for x in b.values())
+    dz = min(x["expected_zero_min_dist_to_edge"] for x in b.values())
+    sc = ", ".join(f"({a:.2f}, {c:.2f})" for a, c in r["real_sign_changes"])
+    spe = f"{r['sec_per_eval']:.0f}" if r.get("sec_per_eval") else "–"
+    print(f"| {r['D']:.4f} | {sol(r)} | {r['aLL']:.3f}, {r['aL']:.3f}, {r['a1']:.3f}, {r['a2']:.3f}, {r['aR']:.3f} | "
+          f"{r['y1']:.3f}, {r['y2']:.3f} | {r['evaluations']} | {spe} | {mx:.3f} | {mr:.2f} | {lo:.3f} … {hi:.3f} | "
+          f"{dp:.3f} / {dz:.3f} | {sc} |")

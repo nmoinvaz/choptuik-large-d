@@ -7,7 +7,7 @@ complex-lambda determinant of hp/modecount_cx (built by hp/modecount_build.sh) o
 
 Also: the exactly known structure of det M(lambda) in this formulation (see MODE_COUNT.md):
   * lam_g = 1 + <c1>, c1 = (n-1)(1 - a_h^2): a residual gauge mode (time reparametrisation that keeps c(tau, 1) = 1),
-    a zero of det M at lam_g + i k omega for every integer k;
+    a zero of det M at lam_g + 2 i k omega for every integer k (the folded layout's period);
   * poles at the eigenvalues of -(omega D + diag kappa_kk), kappa_kk = (c1 + 1)(kk + 1) - n/2, kk = 0..ks (the horizon
     series' periodic solves): Re = n/2 - lam_g (kk + 1) to collocation accuracy, Im = odd multiples of omega.
 """

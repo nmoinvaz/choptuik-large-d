@@ -3,7 +3,10 @@
 principle (notes/MODE_COUNT.md), for one saved double-double state.
 
     python3 modecount_wind.py STATE.npz [--M=N] [--kf=none|13] [--threads=N] [--tag=NAME] [--h0=0.4] [--tol=0.785]
-                              [--Im2=1.5] [--aR=..] [--aL=..] [--aLL=..] [--res=hp/data/modecount_results.jsonl]
+                              [--Im2=1.5] [--aR=..] [--aL=..] [--aLL=..] [--cache=TAG] [--res=hp/data/modecount_results.jsonl]
+
+--tag names the run (log, record); --cache names the evaluation cache (default: the tag), so that runs on the same
+state and layout with other boxes can share evaluations.
 
 det M(lambda) is evaluated at complex lambda with hp/modecount_cx (the hp kernel's mode matrix with a complex tangent,
 double-double, complex double-double LU). With omega = 2 pi / Delta, y1 = omega / 2 and y2 = Im2 * omega (default
@@ -22,8 +25,8 @@ The function whose phase is followed is
 
     g(lam) = det M(lam) * q(lam) / k(lam) * exp(-p(lam)),
     q = prod (lam - p_j)   over the candidate poles p_j near the network (det M's only possible poles, all simple),
-    k = prod (lam - z_j)   over the zeros expected in the network: 0 (tau translation), lam_g and lam_g +- i omega
-                           (the residual gauge mode), lam_phys,
+    k = prod (lam - z_j)   over the zeros expected: 0 (tau translation), lam_g (the residual gauge mode), lam_phys,
+                           and their copies + 2 i k omega (the folded layout's period),
     p = a real quadratic fitted to ln|det M q / k| on the real axis.
 
 q, k and exp(-p) are known exactly, so on every closed contour
@@ -37,8 +40,8 @@ Boxes:  B0 (aLL, aL) x (-y1, y1)   expected zeros: lam = 0
         U0 (aLL, aL) x (y1, y2)     none
         B1a (aL, a1) x (-y1, y1)   lam_g          B1b (a1, a2) x (-y1, y1)  lam_phys       B1c (a2, aR) x (-y1, y1)  none
         B1 (aL, aR) x (-y1, y1)    lam_g, lam_phys
-        U (aL, aR) x (y1, y2)      lam_g + i omega
-        full (aL, aR) x (-y2, y2)  lam_g, lam_phys, lam_g +- i omega
+        U (aL, aR) x (y1, y2)      none
+        full (aL, aR) x (-y2, y2)  lam_g, lam_phys
 
 Sampling: each edge starts on a grid of spacing h0 and every interval is bisected until the phase change of g across it
 is at most tol (default pi/4); then every interval whose phase change exceeds tol/2 is bisected once more and the two
@@ -77,7 +80,7 @@ def count(det_fn, info, poles, opts, log, tag, res_file):
     hmin = float(opts.get("hmin", 1e-4))
     im2 = float(opts.get("Im2", 1.5))
     omega, lam_g, lam_f = info["omega"], info["lam_g"], info["lam_f"]
-    cache_path = os.path.join(DATA, f"modecount_{tag}_evals.jsonl")
+    cache_path = os.path.join(DATA, f"modecount_{opts.get('cache', tag)}_evals.jsonl")
     cache = {}
     if os.path.exists(cache_path):
         for line in open(cache_path):
@@ -106,10 +109,10 @@ def count(det_fn, info, poles, opts, log, tag, res_file):
 
     # ---- geometry: vertical edges away from the candidate poles and the expected zeros
     y1, y2 = 0.5 * omega, im2 * omega
-    # expected zeros: lam = 0 and lam_phys (and their copies 2 i k omega of the folded layout), lam_g + i k omega
+    # expected zeros: lam = 0, lam_g and lam_phys, and their copies 2 i k omega of the folded layout
     kmax = int((y2 + 2 * omega) / omega) + 1
-    known = [complex(z, 2 * k * omega) for z in (0.0, lam_f) for k in range(-kmax, kmax + 1) if abs(2 * k * omega) < y2 + 2 * omega]
-    known += [complex(lam_g, k * omega) for k in range(-2 * kmax, 2 * kmax + 1) if abs(k * omega) < y2 + 2 * omega]
+    known = [complex(z, 2 * k * omega) for z in (0.0, lam_g, lam_f) for k in range(-kmax, kmax + 1)
+             if abs(2 * k * omega) < y2 + 2 * omega]
     pre = sorted(set(p.real for p in poles if abs(p.imag) < y2 + 0.5 * omega))
 
     def far(lo, hi, avoid):
@@ -118,7 +121,7 @@ def count(det_fn, info, poles, opts, log, tag, res_file):
         return float(cands[int(np.argmax(d))])
 
     zre = [z.real for z in known]
-    aR = float(opts["aR"]) if "aR" in opts else far(5.6, 6.4, pre)
+    aR = float(opts["aR"]) if "aR" in opts else far(6.0, 6.7, pre)
     aL = float(opts["aL"]) if "aL" in opts else far(0.08, 0.3, pre + zre)
     aLL = float(opts["aLL"]) if "aLL" in opts else far(-0.15, -0.05, pre + zre)
     a1 = float(opts["a1"]) if "a1" in opts else far(lam_g + 0.35, lam_f - 0.35, pre + zre)
@@ -129,7 +132,9 @@ def count(det_fn, info, poles, opts, log, tag, res_file):
         f"{[(round(p.real, 4), round(p.imag, 4)) for p in sorted(poles, key=lambda p: (p.imag, p.real)) if -1 < p.real < 9 and abs(p.imag) < y2]}")
     log(f"  expected zeros: {[(round(z.real, 6), round(z.imag, 6)) for z in known]}")
 
-    Q = np.array([p for p in poles if aLL - 3 < p.real < aR + 3 and abs(p.imag) < y2 + 2 * omega], complex)
+    # all candidates (every horizon order kk = 0..ks) in a band around the network: the rows of poles at Im = +-omega
+    # reach Re = n/2 - lam_g (ks + 1), far to the left, and leaving their tails out makes g drift along vertical edges
+    Q = np.array([p for p in poles if abs(p.imag) < y2 + 3 * omega], complex)
     K = np.array(known, complex)
 
     def lnqk(lam):
@@ -298,7 +303,7 @@ def main():
     log2(f"=== {time.strftime('%Y-%m-%d %H:%M:%S')}  {os.path.basename(path)}: D {D}, M {M}, kfreeze {st.kf}, "
          f"|F| {st.F:.1e} (in {st.F_in:.1e}); Delta {st.Delta:.12f}, omega {st.omega:.6f}; "
          f"lam_g = 1 + <c1> = {st.lam_g:.10f}; lam_phys (expected) {lam_f:.10f}")
-    poles = [p for _, p in horizon_poles(st, kk_max=int(st.n / (2 * st.lam_g)) + 8)]
+    poles = [p for _, p in horizon_poles(st)]
     info = dict(D=D, M=M, kfreeze=st.kf, F=st.F, state=os.path.basename(path), solver="dd (hp + modecount_cx)",
                 Delta=st.Delta, omega=st.omega, lam_g=st.lam_g, lam_f=lam_f)
     count(lambda re, im: st.det(re, im), info, poles, opts, log2, tag, res_file)

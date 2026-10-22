@@ -1,1 +1,2 @@
 check hp/data/seeds/local/up23_D61.0264.npz --quick
+hp/data/seeds/local/up23_D61.0264.npz --lam=2.043532530673195

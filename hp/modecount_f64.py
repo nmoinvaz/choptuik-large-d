@@ -16,7 +16,9 @@ Cauchy-Riemann test, and the real zeros near lam_g and lam_phys; no count.
 The periodic solves of the Python reference work on the full tau grid (both parities), so besides the folded
 layout's resonances (Im = odd multiples of omega) the matrices omega D + diag kappa_kk + lambda are also singular at
 Im = even multiples of omega; there the odd right-hand side has no component (in exact arithmetic) and det M has no
-pole. Both families are listed as possible poles (an upper bound on the zero count only gets looser).
+pole. Both families are passed to the count as candidate poles, so the bound zeros <= winding(g) + expected zeros
+stays valid; if the second family are not poles, winding(g) of a box equals the number of them inside it (record field
+even_resonances) instead of 0.
 """
 import json
 import math
@@ -139,22 +141,27 @@ def main():
 
     log(f"=== {time.strftime('%Y-%m-%d %H:%M:%S')}  {os.path.basename(path)}: D {D}, kc {kc}, Ks {Ks}, N {S.N}, "
         f"unknowns {S.layout()[2]}; |F| {F:.1e}; Delta {Delta:.10f}, omega {omega:.6f}; lam_g = 1 + <c1> = {lam_g:.10f}")
-    # possible poles: eigenvalues of -(omega D + diag kappa_kk) on the full grid (both parities)
-    Dm = fast._orig["_D_unit"](S, np.eye(S.N)).T if fast._orig else S.Dmat1.T
+    # possible poles: eigenvalues of -(omega D + diag kappa_kk) on the full grid; those with Im an odd multiple of omega
+    # belong to the odd fields (as in the folded double-double layout), the others only to the full grid's even
+    # harmonics, which the odd right-hand sides do not excite
     Dm = S.Dmat1.T
-    poles = []
+    poles, even_res = [], []
     for kk in range(Ks + 1):
         kap = (c1 + 1) * (kk + 1) - n / 2
-        ev = np.linalg.eigvals(omega * Dm + np.diag(kap))
-        poles += [-complex(e) for e in ev]
+        for e in np.linalg.eigvals(omega * Dm + np.diag(kap)):
+            p = -complex(e)
+            (poles if round(p.imag / omega) % 2 else even_res).append(p)
+    log(f"  full-grid resonances with Im an even multiple of omega (not poles in exact arithmetic), Re in (-1, 7), "
+        f"|Im| < 2.5 omega: {sorted((round(p.real, 4), round(p.imag, 4)) for p in even_res if -1 < p.real < 7 and abs(p.imag) < 2.5 * omega)}")
     if "check" in opts:
         check(S, z, D, lam_g, det_fn, log, tag)
         return
     from gamma_dd import gamma_formula
     lam_f = 1.0 / gamma_formula(D)
     info = dict(D=D, M=None, kc=kc, Ks=Ks, F=float(F), state=os.path.basename(path), solver="f64 (solver/ DSSSpec, complex lambda)",
-                Delta=Delta, omega=omega, lam_g=lam_g, lam_f=lam_f)
-    count(det_fn, info, poles, opts, log, tag, opts.get("res", os.path.join(DATA, "modecount_results.jsonl")))
+                Delta=Delta, omega=omega, lam_g=lam_g, lam_f=lam_f,
+                even_resonances=[[p.real, p.imag] for p in even_res if -1 < p.real < 9 and abs(p.imag) < 4 * omega])
+    count(det_fn, info, poles + even_res, opts, log, tag, opts.get("res", os.path.join(DATA, "modecount_results.jsonl")))
 
 
 def check(S, z, D, lam_g, det_fn, log, tag):
