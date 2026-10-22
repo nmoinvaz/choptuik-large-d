@@ -245,6 +245,8 @@ way), except C7, which widens g(p̂) and must make it fail.
 | M = 1 reproduction | Theorem A(M = 1)'s A-interval shifted by 10⁻¹¹ | `--mutate=m1ref` | NOT REPRODUCED |
 | hier.py agreement | none | `krawczyk ... --hier` | both statements hold |
 | hier.py agreement | hier's zeros moved by 100× their spread (≥ 10⁻⁹) in A | `--hier --mutate=hier` | fails |
+| independent assembly (mpmath intervals) | none | `python3 certify_M_recheck.py data/A_M_box_....json` | the same verdict, enclosure overlapping |
+| independent assembly | jump sign flipped | `--mutate` | fail |
 | start data | none | `python3 certify_M.py startcheck M` | contains |
 | start data | this file's series shifted by 10⁻⁴⁰ | `--mutate` | does not contain |
 
@@ -269,7 +271,7 @@ Dg̃(X) unchanged.
 
 The enclosure lies inside Theorem A(M = 1)'s (endpoints rounded outward). The test here is posed on g = J_D without κ
 and with Y from the box run's own column midpoints, so the agreement checks the generic assembly, the tilted-box code
-with an empty inner block, and LohnerM against validated_int. With Theorem A's A-interval shifted by 10⁻¹¹
+with an empty inner block, and LohnerM against validated_int. The independent assembly `certify_M_recheck.py` (mpmath interval arithmetic, its own jump functionals and its own preconditioner, sharing only the saved Lohner sets) gives the same verdict and margins (0.863, 0.976) and the enclosure A ∈ [2.5421480475960, 2.5421480476371]. With Theorem A's A-interval shifted by 10⁻¹¹
 (`--mutate=m1ref`) the check reports NOT REPRODUCED. All M = 1 controls give their expected verdict
 (`logs/A_M_controls_M1.log`); C1 and C2 have absolute margins −59, −22 and −2.0, −0.35, the same as A_certify.md §9.5.
 
@@ -296,6 +298,7 @@ python3 certify_M.py krawczyk --box=data/A_M_box_M3_H.json --hier       # the te
 python3 certify_M.py controls --box=data/A_M_box_M3_H.json              # C0-C8, exit 0 iff all as expected
 python3 certify_M.py krawczyk --box=data/A_M_box_M3_H.json --hier --mutate=hier   # must fail
 python3 certify_M.py export6a --box=data/A_M_box_M3_H.json --out=data/A_M_6a_M3_H.json   # state box for lemma 6a(M)
+python3 certify_M_recheck.py data/A_M_box_M3_H.json [--mutate]          # independent assembly (mpmath)
 ```
 
 ## 9. Proposed text for README.md, PROOF.md and A_certify.md
