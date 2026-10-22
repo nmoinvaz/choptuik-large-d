@@ -103,6 +103,10 @@ truncation, at twelve orders, $(1.0000 \pm 0.0001)\,\omega_\infty$ at amplitude 
 \item An analysis of the next-to-leading-order condition of~\cite{EckerEckerGrumiller2026}, which within this framework
 does not select $\Delta$ (Sec.~\ref{sec:eeg}).
 \end{enumerate}
+The inner equations of Sec.~\ref{sec:inner} are, in other variables, the leading-order large-$D$ system of Rozali and
+Way~\cite{RozaliWay2018}, who also noted its heat-equation character and estimated $\gamma = 1/2$; what is new here is
+their use for the discretely self-similar solution: the selection rule and the symmetry argument of
+Proposition~\ref{prop:5}.
 
 \begin{figure}[t]
 \centering
@@ -323,7 +327,11 @@ alone pins it only to $2.5\times10^{-7}$. Hence, if $\Delta$ is analytic in $1/D
 \begin{equation}
 \Dinf = 1.64389375 \pm 1.5\times10^{-8}, \qquad \omega_\infty = 2\pi/\Dinf = 3.82213589 \pm 4\times10^{-8},
 \end{equation}
-and $\Delta(D) \approx \Dinf + 10.37/n + \dots$. The analytic form is the natural default but not proven: as shown in
+and $\Delta(D) \approx \Dinf + 10.37/n + \dots$. The $\pm1.5\times10^{-8}$ is a spread over fit choices, so we tested it on
+synthetic data with a known limit: the real $D$ grid, noise and junk points like the real ones, and added structures
+from a distant pole to a complex pole pair and a logarithmic branch point near the data. In all six cases the 48 fits
+put the known limit inside their range, with the centre $0.8$--$0.9\times10^{-8}$ above it, so the bar holds and the
+quoted centre is probably high by about $10^{-8}$. The analytic form is the natural default but not proven: as shown in
 Sec.~\ref{sec:theory}, the period is selected by an effect the $1/D$ expansion does not see.
 
 \subsection{The conjecture $\Delta \to 0$}
@@ -826,7 +834,11 @@ reviewed the work. Checks made: two independent solvers agree where they overlap
 agree to $2$--$4\times10^{-16}$; every fit table reproduces from the data with the stated command; Propositions 1--3
 and the inner equations were re-derived by separate agents (with sympy where possible); the inner Stokes multiplier was
 computed by two implementations that share no code; values at $D = 4$ and the maximum of $\Delta$ agree with the
-literature; and an independent agent refereed the write-up. Corrections are welcome.
+literature; an independent agent refereed the write-up; an independent review re-derived every input of the
+computer-assisted certificate, and deliberately broken versions of its final test fail as predicted; synthetic data
+with known limits test the error bar on $\Dinf$; and every citation and novelty claim was checked against the published
+record. That audit found that the inner equations had been derived by Rozali and Way~\cite{RozaliWay2018}, which earlier
+drafts did not credit; this version does. Corrections are welcome.
 
 \emph{Data and code.} All data, code and derivation scripts are at
 \url{https://github.com/nmoinvaz/dss-residual-kernel}, with a reproduction script (\texttt{./reproduce.sh}, which regenerates the fit tables and checks) and the

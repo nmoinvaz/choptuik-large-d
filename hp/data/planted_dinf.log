@@ -4,3 +4,5 @@ T2: 48 fits, range -2.97e-9 .. 1.87e-8 about the planted limit; centre off by 7.
 T3: 48 fits, range -2.98e-9 .. 2.05e-8 about the planted limit; centre off by 8.77e-9 (bar 1.5e-8); inside range True; within bar True; junk caught False (20); worst used residual 2.2e-14 -> FAIL  (1221 s)
 T4: 48 fits, range -2.97e-9 .. 1.87e-8 about the planted limit; centre off by 7.85e-9 (bar 1.5e-8); inside range True; within bar True; junk caught False (20); worst used residual 2.1e-14 -> FAIL  (1709 s)
 T5: 48 fits, range -2.96e-9 .. 1.9e-8 about the planted limit; centre off by 8.0e-9 (bar 1.5e-8); inside range True; within bar True; junk caught False (20); worst used residual 2.1e-14 -> FAIL  (2327 s)
+T6: 48 fits, range -2.94e-9 .. 1.87e-8 about the planted limit; centre off by 7.89e-9 (bar 1.5e-8); inside range True; within bar True; junk caught False (20); worst used residual 2.1e-14 -> info  (2934 s)
+0 of 5 graded plants passed

@@ -53,5 +53,16 @@
   "junk_caught": false,
   "worst_used_residual": 2.111162629654033e-14,
   "verdict": "FAIL"
+ },
+ "T6": {
+  "lo_minus_L": -2.9375822112842627e-09,
+  "hi_minus_L": 1.8720849384044468e-08,
+  "centre_minus_L": 7.891633586380102e-09,
+  "nfit": 48,
+  "inside": true,
+  "within_bar": true,
+  "junk_caught": false,
+  "worst_used_residual": 2.0826092248934463e-14,
+  "verdict": "info"
  }
 }
