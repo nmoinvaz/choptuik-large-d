@@ -267,3 +267,6 @@ committed 4444cd6
     200 evaluations, 8.0 s each
     210 evaluations, 7.9 s each
     220 evaluations, 7.8 s each
+=== 2026-10-22 07:33:26  neB_kc39_D4.0000.npy: D 4.0, kc 39, Ks 60, N 120, unknowns 1581; |F| 9.2e-16; Delta 3.4454554892, omega 1.823615; lam_g = 1 + <c1> = 0.6138550105
+  full-grid resonances with Im an even multiple of omega (not poles in exact arithmetic), Re in (-1, 7), |Im| < 2.5 omega: [(-0.8416, -3.6472), (-0.8416, -0.0), (-0.8416, -0.0), (-0.8416, 3.6472), (-0.2277, -3.6472), (-0.2277, -0.0), (-0.2277, -0.0), (-0.2277, 3.6472), (0.3861, -3.6472), (0.3861, -0.0), (0.3861, -0.0), (0.3861, 3.6472)]
+  lam 0.3: Rust (exact duals) sign +1 ln|det| -237.5803013083 (3.1 s) | Python complex FD ln|det| -229.4202306037 arg +3.14e+00 (429.6 s); max |dM| / max |M| = 8.9e-01

@@ -32,6 +32,6 @@ for job in "$@"; do
       hp/modecount_cx/.gitignore hp/modecount_cx/src hp/data/modecount_* 2>/dev/null
   git commit -q -m "mode count: $job (exit $rc)
 
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
-Claude-Session: https://claude.ai/code/session_0153nshFY7Jok53P4PMRbvz1" && echo "committed $(git rev-parse --short HEAD)"
+Co-Authored-By: Nathan Moinvaziri <nathan@nathanm.com>" && echo "committed $(git rev-parse --short HEAD)" \
+    && git push -q -f origin HEAD:refs/heads/wip/mode-count && echo "pushed to wip/mode-count"
 done

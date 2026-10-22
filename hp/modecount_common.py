@@ -79,6 +79,10 @@ def setup(path, M=None, threads=1, kf="default", fmax=1e-20, log=print):
             log(f"  |F| {F:.1e} after Newton: Levenberg-Marquardt")
             zh, zl, hist = lm_solve(s, zh, zl, tol=1e-27, it_max=20, verbose=False, newton_after=1e-22)
             F = resid(s, zh, zl)
+    if F > fmax:
+        # a count on a background that does not solve the equations of this layout means nothing (the M = 16
+        # resampling at D = 61 stalled at |F| = 1.3e-9 and gave a spurious real sign change)
+        raise RuntimeError(f"background not converged in this layout: |F| = {F:.1e} > {fmax:.0e} (M = {M})")
     st = Setup()
     st.path, st.meta, st.D, st.M, st.kf = path, meta, D, M, kf
     st.zh, st.zl, st.s, st.c, st.F, st.F_in = np.ascontiguousarray(zh), np.ascontiguousarray(zl), s, c, F, F_in

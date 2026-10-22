@@ -156,12 +156,51 @@ def main():
     if "check" in opts:
         check(S, z, D, lam_g, det_fn, log, tag)
         return
+    if "realscan" in opts:
+        realscan(S, z, D, lam_g, omega, even_res, poles, float(opts["realscan"]) if opts["realscan"] != "1" else 0.05, log, tag)
+        return
     from gamma_dd import gamma_formula
     lam_f = 1.0 / gamma_formula(D)
     info = dict(D=D, M=None, kc=kc, Ks=Ks, F=float(F), state=os.path.basename(path), solver="f64 (solver/ DSSSpec, complex lambda)",
                 Delta=Delta, omega=omega, lam_g=lam_g, lam_f=lam_f,
                 even_resonances=[[p.real, p.imag] for p in even_res if -1 < p.real < 9 and abs(p.imag) < 4 * omega])
     count(det_fn, info, poles + even_res, opts, log, tag, opts.get("res", os.path.join(DATA, "modecount_results.jsonl")))
+
+
+def realscan(S, z, D, lam_g, omega, even_res, poles, step, log, tag):
+    """Real-axis count with the Rust f64 kernel's exact mode matrix (real lambda only): the sign of det M on a grid
+    from 0.02 to 6.5, every sign change refined by brentq. Covers the symmetric sector's real growth rates only."""
+    from rustkernel import RustResidual
+    from scipy.optimize import brentq
+    from gamma_dd import gamma_formula
+    R = RustResidual(S, threads=1)
+    t0 = time.time()
+    xs = np.arange(0.02, 6.5 + 1e-9, step)
+    vals = []
+    for x in xs:
+        s, la = np.linalg.slogdet(R.mode_matrix(z, float(x)))
+        vals.append((float(x), float(s), float(la)))
+    log(f"  real axis {xs[0]:.2f} .. {xs[-1]:.2f} step {step}: {len(xs)} determinants, {(time.time() - t0) / len(xs):.1f} s each")
+    roots = []
+    for (a, sa, la), (b, sb, lb) in zip(vals[:-1], vals[1:]):
+        if sa != sb:
+            ref = 0.5 * (la + lb)
+
+            def f(l):
+                s, ll = np.linalg.slogdet(R.mode_matrix(z, l))
+                return s * math.exp(ll - ref)
+            r = brentq(f, a, b, xtol=1e-12, rtol=1e-14)
+            near_res = min([abs(r - p.real) for p in even_res + poles if abs(p.imag) < 1e-6] + [9.0])
+            roots.append(dict(lam=r, bracket=[a, b], dist_to_full_grid_resonance=near_res))
+            log(f"  sign change in ({a:.2f}, {b:.2f}): det M = 0 at {r:.10f}; nearest real full-grid resonance {near_res:.3f} away")
+    lam_f = 1 / gamma_formula(D)
+    log(f"  expected: lam_g = 1 + <c1> = {lam_g:.10f}, lam_phys (formula) = {lam_f:.10f}")
+    rec = dict(D=D, tag=tag, kind="realscan (Rust f64, exact duals)", step=step, grid=[float(xs[0]), float(xs[-1])],
+               n_det=len(xs), roots=roots, lam_g=lam_g, lam_phys_formula=lam_f,
+               real_full_grid_resonances=sorted(p.real for p in even_res if abs(p.imag) < 1e-6 and -1 < p.real < 7),
+               signs=[[x, s] for x, s, _ in vals], time=time.strftime("%Y-%m-%d %H:%M:%S"))
+    with open(os.path.join(DATA, "modecount_check.jsonl"), "a") as fo:
+        fo.write(json.dumps(rec) + "\n")
 
 
 def check(S, z, D, lam_g, det_fn, log, tag):
