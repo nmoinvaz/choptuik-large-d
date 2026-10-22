@@ -123,9 +123,11 @@ is f → f + ε^k B_k (`expand.py 1`, the free run, checks this at k = 1 symboli
 "zero" normalization A_k = B_k = 0 (zY_k and C_k have no z⁰ term in their expansion at z = 0 apart from logarithms)
 defines β and f beyond leading order.
 
-The integrals are elementary: every order is a polynomial in ln z with coefficients rational in z (no ln(1+z) and no
-dilogarithm occurred through NNLO; `expand.py` integrates these forms exactly and falls back to sympy otherwise, and
-checks every antiderivative by differentiation).
+The integrals are elementary: every order is a polynomial in ln z with coefficients that are Laurent polynomials in z
+(no ln(1+z) and no dilogarithm occurred through NNLO; a dilogarithm would need a nonzero coefficient of ln^a z/(z+1),
+a ≥ 1, which `expand.py` would report). `expand.py` integrates these forms term by term in closed form, falls back to
+sympy otherwise, and checks every antiderivative by differentiation. The term-by-term integrator and sympy's
+`integrate` give identical series for the general-τ NLO and the CSS NNLO (`cmp_series.py`).
 
 ### 2.2 Next-to-leading order
 
@@ -285,7 +287,12 @@ inner end; no large-n approximation. Against the layer (β = 1, f = 0.8, κ_f = 
 | 6400 | 0.040 | 1.0036 | 1.6481 | 0.0162 | 0.9838 | 2.3×10⁻⁵ |
 
 The deviation from the layer falls (fitted n^{−0.27}; the last step halves it), (n−1)(b−1)/(κ√n) approaches the
-layer's 1.627, and 1 − 1/b falls like n^{−1/2}. `--mutate=cubic` (a wrong layer) FAILS. This is *numerical evidence*
+layer's 1.627, and 1 − 1/b falls like n^{−1/2}. With κ_f = 1.5 (β = 1.5, f = 1; the self-similarity horizon
+x_lc = 0.894 lies outside the interval; `logs/css_bvp_b1.5_f1.0.log`) the deviation is 0.135, 0.092, 0.047, 0.024
+(fitted n^{−0.42}), (n−1)(b−1)/(κ√n) = 1.819, 1.723, 1.675, 1.651 and 1 − 1/b = 0.216, 0.115, 0.059, 0.030 at
+n = 100–6400; min 1/b ≥ 0.78. The lapse ratio c/c_layer agrees less well (16% at n = 6400, in the tail where c is
+already 10⁻⁵ of its outer value). `--mutate=cubic` (a wrong layer) FAILS: at n = 6400 the solve converges to the same
+solution and misses the wrong layer by a factor 8.6. This is *numerical evidence*
 for the CSS case; the general-τ statements rest on the quasi-static layer reduction and are not checked numerically.
 
 ### 3.5 Verdict
@@ -450,6 +457,8 @@ python3 expand.py 2 --norm=zero --css              # NNLO, CSS; writes logs/expa
 python3 expand.py 2 --norm=zero                    # NNLO, general beta, f (see section 9)
 python3 nlo_factor.py                              # the NLO coefficients of section 2.2, factored          ~1 min
 python3 cmp_series.py logs/expand_K2_zero_css_sympyint.pkl logs/expand_K2_zero_css.pkl   # identical series
+python3 cmp_series.py logs/expand_K1_free_sympyint.pkl logs/expand_K1_free.pkl           # identical series
+python3 css_bvp.py 1.5 1.0                         # kappa_f = 1.5, section 3.4              ~10 min
 python3 formal_check.py logs/expand_K1_free.pkl tau        # exponents about -2                 ~10 min
 python3 formal_check.py logs/expand_K2_zero_css.pkl css    # exponents about -3                 ~5 min
 python3 y1_modes.py                                # lambda_1 = -1.0779457959, lambda_2 = -1.1619671389   ~2 min
@@ -509,8 +518,9 @@ For the end of "Relation to Ecker, Ecker & Grumiller" (after the paragraph on th
 > the r²-shift of Proposition 5 moves C by 2nσ₀e^{2τ}: the supercritical branch is the regular one pushed along the
 > λ = 2 mode. Its 1/n expansion exists to all orders with nothing forced (as in Proposition 1). Near β²x² = 1 it is a
 > series in 1/(n(β²x²−1)²) and breaks down at β²x² − 1 ~ n^{−1/2}, where 2m/r^{n−1} is only of order n^{−1/2}. There
-> the solution crosses β²x² = 1 smoothly into a region where the polar lapse collapses exponentially, with
-> 1 − 2m/r^{n−1} → 1 − 1.63 κ̃/√n behind a spacelike front. So, for a moving front, β²x² = 1 is not an apparent
-> horizon; trapping needs the front to come to rest, as it does when the shifted solution's front stops at
-> r² = 2n|σ₀|. Details, checks and the comparison with the Roberts and Brady self-similar families:
+> the solution crosses β²x² = 1 smoothly into a region where the polar lapse collapses exponentially. Behind this
+> spacelike front, 2m/r^{n−1} stays near 1.63 κ̃ n^{−1/2}, with κ̃ = fβ²/|β + β′| the inverse speed of the front.
+> So, for a moving front, β²x² = 1 is not an apparent horizon. Trapping needs the front to come to rest, as it does
+> when the shifted solution's front stops at r² = 2n|σ₀|. The exact CSS equations at n = 100–6400 bear this out.
+> Details, checks and the comparison with the Roberts and Brady self-similar families:
 > [notes/SUPERCRITICAL.md](notes/SUPERCRITICAL.md).

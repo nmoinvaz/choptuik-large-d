@@ -31,6 +31,7 @@ for formal_check.py.
 
     python3 expand.py 2 --norm=zero         # NLO and NNLO (K = 2), general beta(tau), f(tau)
     python3 expand.py 2 --norm=zero --css   # the same for CSS (beta, f constant): much faster
+    --slow  partial fractions by sympy.apart instead of the term-by-term split (identical series; cmp_series.py)
 """
 import pickle
 import sys
@@ -40,6 +41,7 @@ args = [a for a in sys.argv[1:] if not a.startswith("--")]
 K = int(args[0]) if args else 2
 norm = next((a.split("=", 1)[1] for a in sys.argv[1:] if a.startswith("--norm=")), "free")
 css = "--css" in sys.argv
+FAST = "--slow" not in sys.argv     # --slow: partial fractions by sympy.apart (the cross-check of the fast path)
 NDER = 2 * K + 4
 z, eps = sp.symbols("z epsilon", positive=True)
 Bd = sp.symbols(f"b0:{NDER + 1}")            # beta, beta', beta'', ...
@@ -94,10 +96,69 @@ def _Iw(m, a):
     return -Lz ** a * (z + 1) ** (1 - m) / (m - 1) + sp.Rational(a, m - 1) * rest
 
 
+def _split(t):
+    """t = c z^p (z+1)^-q Lz^a with c free of z, Lz, L1 -> (c, p, q, a), or None"""
+    p = q = a = 0
+    c = sp.Integer(1)
+    for base, ex in t.as_powers_dict().items():
+        if base == z:
+            p += ex
+        elif base == Lz:
+            a += ex
+        elif base.has(z) and sp.expand(base - z - 1) == 0:
+            q -= ex
+        elif base.has(z) or base.has(Lz) or base.has(L1):
+            return None
+        else:
+            c *= base ** ex
+    if not all(sp.Integer(v) == v for v in (p, q, a)):
+        return None
+    return c, int(p), int(q), int(a)
+
+
+def _fast_integrate(e):
+    """term-by-term antiderivative when every term is c z^p Lz^a or c z^p Lz^a/(z+1) (the forms the scheme produces);
+    z^p/(z+1) is split by hand: p >= 0: sum_{j<p} (-1)^{p-1-j} z^j + (-1)^p/(z+1);
+    p = -k < 0: sum_{j=1}^{k} (-1)^{k-j} z^-j + (-1)^k/(z+1). Returns None if another form occurs."""
+    out = 0
+    w1 = {}
+    for t in sp.Add.make_args(e):
+        sp_ = _split(t)
+        if sp_ is None:
+            return None
+        c, p, q, a = sp_
+        if q == 0:
+            out += c * _Iz(p, a)
+        elif q == 1:
+            if p >= 0:
+                for j in range(p):
+                    out += c * (-1) ** (p - 1 - j) * _Iz(j, a)
+            else:
+                k_ = -p
+                for j in range(1, k_ + 1):
+                    out += c * (-1) ** (k_ - j) * _Iz(-j, a)
+            w1[a] = w1.get(a, 0) + c * (-1) ** abs(p)
+        else:
+            return None
+    for a, cf in w1.items():
+        cf = sp.expand(cf)
+        if cf == 0:
+            continue
+        if a == 0:
+            out += cf * L1
+        else:
+            raise NotImplementedError("dilogarithm (Lz^a/(z+1) with nonzero coefficient)")
+    return sp.expand(out)
+
+
 def integrate_z(e):
     """antiderivative in z of an expression polynomial in Lz (and free of L1) with rational coefficients;
     terms z^k Lz^a and (z+1)^-m Lz^a are integrated exactly (no additive constants); anything else falls back to sympy"""
     e = sp.expand(e)
+    r = _fast_integrate(e) if FAST else None
+    if r is not None:
+        assert sp.expand((z + 1) * (dz(r) - e)) == 0 or is_zero(dz(r) - e), "antiderivative check"
+        return r
     out = 0
     try:
         P = sp.Poly(e, Lz, L1)
@@ -232,7 +293,7 @@ for name, ser in (("Y", Y), ("C", C), ("U", U), ("S", S)):
         pw = sp.Poly(den, z).monoms()[-1][0] if den.has(z) else 0
         lowest = sp.Poly(num, z).monoms()[-1][0] if num.has(z) else 0
         print(f"   {name}_{k} ~ z^{lowest - pw}  (+ log z terms: {ee.has(sp.log(z))})")
-tag = f"K{K}_{norm}" + ("_css" if css else "")
+tag = f"K{K}_{norm}" + ("_css" if css else "") + ("_slow" if not FAST else "")
 with open(f"logs/expand_{tag}.pkl", "wb") as fh:
     pickle.dump({"K": K, "Y": Y, "C": C, "U": U, "S": S, "syms": (z, eps, Bd, Fd, Ad, Cd, Lz, L1)}, fh)
 print("saved", f"logs/expand_{tag}.pkl")
