@@ -1,4 +1,4 @@
-# dss-residual-kernel
+# choptuik-large-d
 
 **Critical collapse in D dimensions: the echo period and critical exponent, from numerics to first principles.**
 

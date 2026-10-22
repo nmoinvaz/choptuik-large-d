@@ -454,5 +454,5 @@
 <line x1="782.0" y1="536.0" x2="804.0" y2="536.0" stroke="#eb6834" stroke-width="2" stroke-dasharray="6 4"/>
 <text x="810.0" y="540.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">formula with γ∞ = 1/2, D ≥ 4</text>
 <text x="16.0" y="908.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">Spectral multiple shooting with nonlinear elimination (solver/CONTEXT.md); hover a point for its value, a curve for its coefficients</text>
-<a href="https://github.com/nmoinvaz/dss-residual-kernel"><text x="1064" y="908" font-size="10" fill="#52514e" text-anchor="end" text-decoration="underline">github.com/nmoinvaz/dss-residual-kernel</text></a>
+<a href="https://github.com/nmoinvaz/choptuik-large-d"><text x="1064" y="908" font-size="10" fill="#52514e" text-anchor="end" text-decoration="underline">github.com/nmoinvaz/choptuik-large-d</text></a>
 </svg>

@@ -46,7 +46,7 @@ DARK = {
     "#7a7668": "#948e82",
 }
 
-REPO_URL = "https://github.com/nmoinvaz/dss-residual-kernel"
+REPO_URL = "https://github.com/nmoinvaz/choptuik-large-d"
 # Delta_inf from the double-double points (hp/dd_fits_mp.py: power series in 1/D and 1/(D-2), degree 16-20, on
 # 10 <= D <= 60), if Delta is analytic in 1/D; README.
 DINF_DD = 1.643893746  # the quoted value: centre of the 48-fit range less the planted-truth bias (README)
