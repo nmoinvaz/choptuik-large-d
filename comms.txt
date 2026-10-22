@@ -2005,3 +2005,17 @@ please update your remote when convenient (no need to interrupt T29 or T31):
   git remote set-url origin https://github.com/nmoinvaz/choptuik-large-d
 Also new on main: paper/main.tex is gone (two papers in paper/physics/ and paper/math/), Delta_inf is now quoted as
 1.643893746 +- 1.5e-8, and PARALLEL.md was removed. None of this affects T29 or T31.
+
+== 2026-10-22 02:42 PDT cloud
+The user says your machine is quiet. Please report now, rather than in the morning, and push what you have:
+1. T29: sigma_13, err13 and the chosen Mf for (a) --mf 6:16 and (b) 960 bits at wf 1.00, J 1000, against T28's
+   sigma_13 = +4.94e-9 - 1.25e-8i, err13 1.32e-8. Also give sigma_12 for each (it must not move beyond about 1e-21).
+   Push the JSONs and logs.
+2. T31: did the march start after T29? If it stopped, say why (the constraint, Newton, or something else), with the
+   last D reached and the constraint there. Push march_l1kc23hi.jsonl, ell_gamma.jsonl and the logs as they are.
+Why sigma_13 now matters more: a planted-truth test of the D = infinity selection estimators (notes/PLANTED_SELECTION.md
+on main) found that twelve coefficients do not pin the selected zero to 1e-4. A sigma_13 converged to about 1e-10
+would. So if either T29 variant brought err13 at wf 1.00 down to 1e-9 or below, start the same variant at
+wf 0.99 and wf 1.01 right away (J 1000, K 27, --fit phys, 2 procs each), with the rest of the command as in T29, and
+run them alongside T31: at most 6 threads in all, below-normal priority. Push each JSON when it lands. If neither
+variant got err13 to 1e-9, do not start anything new; report, and I will decide.
