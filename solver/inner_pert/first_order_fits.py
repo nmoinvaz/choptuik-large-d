@@ -91,7 +91,68 @@ def lam_fits():
     return out
 
 
+def planted():
+    """Planted truth: the same fits on synthetic data with a known first coefficient, at the same D points.
+    Delta: the README's rational formula for Delta(D) (denominator zeros at D = -3.2 and -11.0, like the data's
+    singularity near D = -9 to -11), plus Gaussian noise 1e-14; its 1/n coefficient is a1 - a0 b1.
+    lam: 1/gamma with the README's rational gamma(D), noise 1e-12 on lam; its 1/n coefficient is -4 (e1 - f1/2).
+    Pass criteria, fixed before running: Delta_1 recovered within 2e-5 by every fit with max|res| <= 1e-13 (the spread
+    quoted for the real data is 1e-5); lam_1 recovered within 2e-4 by the degree 9-10 fits on D >= 24, 30."""
+    import random
+    random.seed(1)
+    a = [mp.mpf(v) for v in ("1.6438975180", "40.378045077", "252.33285989", "206.73502321", "-357.09850575",
+                             "313.47320996", "-418.91374574", "326.95252782", "-160.50467699")]
+    b = [mp.mpf(1), mp.mpf("18.251453626"), mp.mpf("68.182050167")]
+    e = [mp.mpf(v) for v in ("0.5", "18.083629635", "152.41588758", "-52.341588541", "9.9259594505", "-98.386450353",
+                             "74.529506074", "-48.272358903")]
+    f = [mp.mpf(1), mp.mpf("37.683686025"), mp.mpf("342.45505235")]
+    rat = lambda num, den, eps: sum(c * eps ** k for k, c in enumerate(num)) / sum(c * eps ** k for k, c in enumerate(den))
+    D1_true = a[1] - a[0] * b[1]
+    L1_true = -4 * (e[1] - f[1] / 2)
+    pts, _ = load_points()
+    Ds = clean(pts, sorted(pts), verbose=False)
+    syn = {d: rat(a, b, 1 / (mp.mpf(d) - 2)) + mp.mpf(random.gauss(0, 1e-14)) for d in Ds}
+    ok = True
+    print(f"planted Delta: Delta_1 = {mp.nstr(D1_true, 12)}")
+    for var, tf in (("1/n", lambda D: 1 / (mp.mpf(D) - 2)), ("1/D", lambda D: 1 / mp.mpf(D))):
+        for Dmin in (10, 12, 16):
+            for deg in (14, 16, 18, 20):
+                sel = [d for d in Ds if d >= Dmin]
+                coef, res = polyfit([tf(d) for d in sel], [syn[d] for d in sel], deg)
+                err = coef[1] - D1_true
+                flag = ""
+                if res <= 1e-13:
+                    flag = "ok" if abs(err) <= 2e-5 else "MISS"
+                    ok &= abs(err) <= 2e-5
+                print(f"  {var} D >= {Dmin:2d} deg {deg:2d}: Delta_1 - planted {mp.nstr(err, 3):>10s}  max|res| {mp.nstr(res, 2)}  {flag}")
+    rows = {}
+    for fn in (os.path.join(HP, "data", "gamma_dd.jsonl"), os.path.join(HP, "data", "local", "gamma_dd.jsonl")):
+        for l in open(fn):
+            r = json.loads(l)
+            if r.get("lam"):
+                rows[round(r["D"], 6)] = r
+    good = []
+    for d in sorted(rows):
+        if rows[d]["F"] <= 1e-20 and all(abs(d - x) >= 0.5 for x in good):
+            good.append(d)
+    print(f"planted lam: lam_1 = {mp.nstr(L1_true, 12)}")
+    for Dmin in (24, 30):
+        sel = [d for d in good if d >= Dmin]
+        ts = [1 / (mp.mpf(d) - 2) for d in sel]
+        ys = [1 / rat(e, f, t) + mp.mpf(random.gauss(0, 1e-12)) for t in ts]
+        for deg in (8, 9, 10):
+            c, res = polyfit(ts, ys, deg, fix0=mp.mpf(2))
+            err = c[1] - L1_true
+            flag = ("ok" if abs(err) <= 2e-4 else "MISS") if deg >= 9 else ""
+            ok &= abs(err) <= 2e-4 or deg < 9
+            print(f"  D >= {Dmin}, degree {deg}: lam_1 - planted {mp.nstr(err, 3):>10s}  max|res| {mp.nstr(res, 2)}  {flag}")
+    print("PLANTED: PASS" if ok else "PLANTED: FAIL")
+    return ok
+
+
 if __name__ == "__main__":
+    if "--planted" in sys.argv[1:]:
+        sys.exit(0 if planted() else 1)
     if "lam" not in sys.argv[1:]:
         delta_fits()
     lam_fits()

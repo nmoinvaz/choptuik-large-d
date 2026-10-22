@@ -57,12 +57,23 @@ def model_params(x, M, extra_dirs=(), extra_data=None, with_params=True):
 
 
 def residuals(jm, x, M, xi1):
-    J, info = jm.jumps((xi1,), rtol=RTOL)
-    dm = demix_matrix(x, M, xi1)
-    return np.array([ri(dm(J[xi1][c])) for c in range(jm.nc)]), info
+    """de-mixed residual of every jet component. Harmonic nu's rows are taken at ROW_RADII[nu] if set (hier.py's
+    per-level radii: the jump of a high harmonic is linear only at smaller xi), otherwise at xi1; all radii come
+    from one integration, and every component uses the same rows, so the linear algebra is consistent."""
+    radii = {nu: ROW_RADII.get(nu, xi1) for nu in range(1, M + 1, 2)}
+    rs = sorted(set(radii.values()))
+    J, info = jm.jumps(tuple(rs), rtol=RTOL)
+    dms = {r: demix_matrix(x, M, r) for r in rs}
+    out = []
+    for c in range(jm.nc):
+        v = {r: dms[r](J[r][c]) for r in rs}
+        z = np.array([v[radii[nu]][i] for i, nu in enumerate(range(1, M + 1, 2))])
+        out.append(ri(z))
+    return np.array(out), info
 
 
 RTOL = 1e-12
+ROW_RADII = {}
 
 
 def find_zero(x, M, xi1, maxit=14, tol=1e-13):

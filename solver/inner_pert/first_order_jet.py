@@ -30,6 +30,17 @@ from scipy.integrate import solve_ivp
 W0 = float(2 * mp.pi / mp.mpf("1.64389375"))
 DELTA = np.pi / 8
 
+# Mutations for the checks (first_order_checks.py --mutate=...): each must make some check fail.
+#   q1y   flips the sign of the O(1/n) term of the y equation
+#   q1c   drops the O(1/n) term (c Psi) of the c equation (and so of the sigma equation)
+#   force flips the sign of the s-translation breaking forcing (SymForce)
+#   rhs   flips the O(1/n) term of the y equation in the right-hand side only (not in the series)
+MUTATE = set()
+SGN_Y = lambda: -1.0 if "q1y" in MUTATE else 1.0
+SGN_YR = lambda: -1.0 if ("q1y" in MUTATE or "rhs" in MUTATE) else 1.0
+SGN_C = lambda: 0.0 if "q1c" in MUTATE else 1.0
+SGN_F = lambda: -1.0 if "force" in MUTATE else 1.0
+
 
 def Kp(s):
     a, b = (1 + s) / 2, (2 + s) / 2
@@ -172,7 +183,7 @@ class JetModel:
                 Qy = Z.copy()
                 for i in range(0, j + 1):
                     Qy = Qy + self.mul(G[i], OMj[j - i], o)
-                sj = self.ginv_solve(G[0], (R - self.shift(Qy, self.qmap)) * o, o)
+                sj = self.ginv_solve(G[0], (R - SGN_Y() * self.shift(Qy, self.qmap)) * o, o)
                 Om_j = (2 * j + 1) * sj
                 for m in range(1, j + 1):
                     Om_j = Om_j + self.mul(E[m], S[j - m], o)
@@ -201,7 +212,7 @@ class JetModel:
                 for i in range(m):
                     cp = cp + self.mul(G[i], PS[m - i], e)
                 CP.append(cp)
-                gm = gm + self.shift(cp, self.qmap)
+                gm = gm + SGN_C() * self.shift(cp, self.qmap)
             for b, fn in self.fdirs:
                 gm = gm + fn.series_c(m, self)
             G.append(gm / (2 * m))
@@ -247,9 +258,9 @@ class JetModel:
             ext_y, ext_c = ext_y + fy, ext_c + fc
         if self.qbit:
             Om = S - xi * dS0 - self.mul(E, S, o)
-            dD = dD - self.shift(self.mul(C, Om, o), self.qmap) / (xi * xi)
+            dD = dD - SGN_YR() * self.shift(self.mul(C, Om, o), self.qmap) / (xi * xi)
             Psi = self.mul(S, S, e) / 2 - self.mul(D, xi * dD, e)
-            cE = cE + self.shift(self.mul(C, Psi, e), self.qmap)
+            cE = cE + SGN_C() * self.shift(self.mul(C, Psi, e), self.qmap)
         dD = dD + ext_y / (xi * xi)
         cE = cE + ext_c
         r2 = self.mul(C, xi * dD, o) + self.mul(cE, D, o) - self.mul(C, D, o)
@@ -342,7 +353,7 @@ class SymForce:
         t = np.zeros(2 * self.L + 1, complex)
         for i in range(0, j + 1):
             t = t + self.cv(G[i], self.Th[j + 1 - i], self.o)
-        return self._put(model, 2 * t / self.q)
+        return self._put(model, SGN_F() * 2 * t / self.q)
 
     def series_c(self, m, model):
         """F_c at order m: -(2/q) sum_i G_i (Psi + 2E)_{m+1-i}"""
@@ -350,16 +361,16 @@ class SymForce:
         t = np.zeros(2 * self.L + 1, complex)
         for i in range(0, m + 1):
             t = t + self.cv(G[i], self.PE[m + 1 - i], self.e)
-        return self._put(model, -2 * t / self.q)
+        return self._put(model, -SGN_F() * 2 * t / self.q)
 
     def rhs(self, xi, model, D, S, C, E, dD, dS):
         o, e = self.o, self.e
         cv = self.cv
         D0, S0, C0, E0 = D[0], S[0], C[0], E[0]
         Th = xi * dS[0] - 2 * S0 + cv(E0, S0, o)
-        Fy = -2 * cv(C0, Th, o) / (xi * xi)
+        Fy = -SGN_F() * 2 * cv(C0, Th, o) / (xi * xi)
         Psi = cv(S0, S0, e) / 2 - cv(D0, xi * dD[0], e)
-        Fc = -2 * cv(C0, Psi + 2 * E0, e) / (xi * xi)
+        Fc = -SGN_F() * 2 * cv(C0, Psi + 2 * E0, e) / (xi * xi)
         return self._put(model, Fy), self._put(model, Fc)
 
 

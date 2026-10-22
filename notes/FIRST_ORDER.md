@@ -21,7 +21,37 @@ Contents
 
 ## Summary
 
-RESULTS_TABLE_PLACEHOLDER
+The O(1/n) inner problem gives both coefficients, in the M-harmonic truncation of the selection used in the README
+(M = 1, 3, 5), against the double-double fits:
+
+| | M = 1 | M = 3 | M = 5 | fit (double-double) |
+|---|---|---|---|---|
+| ω*/ω∞ (n = ∞, for reference) | 0.776994 | 1.015603 | 0.999228 | 1 |
+| ω₁ | −21.052 | −23.709 | −24.149 | −24.1231 |
+| ω₁/ω* | −7.0887 | −6.1078 | −6.3230 | −6.3114 |
+| Δ₁ = −2π ω₁/ω*² | 15.00 | 9.886 | 10.402 | 10.3753 |
+| λ* (n = ∞) | 1.76912 | 2.00680 | 1.99967 | 2 |
+| λ₁ | 7.757 | 3.0797 | 3.0223 | 3.0324 |
+
+with ω = ω* + ω₁/n + …, Δ = Δ* + Δ₁/n + …, λ = 1/γ = λ* + λ₁/n + …. At five harmonics the derived values are within
+0.1% (ω₁), 0.2% (ω₁/ω*), 0.3% (Δ₁) and 0.3% (λ₁) of the fitted ones. Every sequence approaches the fit as harmonics are
+added, the relative ones alternating like the truncation sequence of ω* itself, and for every quantity the fitted
+value lies between the M = 3 and M = 5 values, at 5% (ω), 6% (ω₁) and 18% (λ₁) of the way from M = 5 to M = 3. The
+truncated model's own growth rate tends to the exact 2 of Proposition 5 (−0.23, +0.0068, −0.00033).
+
+**Method.** The inner equations are expanded to O(1/n) from the exact equations (§1); the O(1/n) inner solution is
+fixed by the profile correction $`K_1`$, by $`\omega_1`$ and by the light-cone gauge (§2); the multiplier of the corrected
+inner solution must vanish at O(1/n), which is a linear system for $`(K_1, \omega_1)`$ whose ω component is
+ω₁ = −S₁/ₙ/∂_ωS with the profile correction eliminated (§3). The outer region adds nothing at this order: the
+light-cone exponent's gravitational shift and every matching factor multiply a multiplier that already vanishes (§3).
+λ₁ is first-order perturbation theory of the growth-rate condition, −ℓ·S₁/ₙ / ℓ·∂_λS (§4). All derivatives are exact
+jets of the lateral Stokes-jump integration (§5).
+
+**Status.** The O(1/n) inner equations, the matching data and the symmetry-breaking term are derived and checked
+symbolically and against the outer 1/n expansion. The selection at O(1/n) is as rigorous as the selection itself
+(Conjecture 1 and the lemma chain of C_selection.md, applied one order further). The numbers are those of truncated
+models; the truncation error at M = 5 is estimated from the sequences at ~0.05–0.3% and is the dominant
+uncertainty (the numerical error of each M = 5 value is far smaller, §6). An untruncated computation was not done.
 
 ## 1. The inner equations to O(1/n)
 
@@ -220,11 +250,111 @@ done with exact derivatives.
 
 ## 6. Results against the fits
 
-FITS_AND_RESULTS_PLACEHOLDER
+**The fitted coefficients** (`first_order_fits.py`). Δ: the 819 cleaned double-double points (as `hp/dd_fits_mp.py
+--clean`), least squares at 60 digits with polynomials of degree 12–20 in 1/n or 1/D on D ≥ 10, 12 or 16. The first
+coefficient is the same in both variables (1/D = 1/n − 2/n² + …), and the fits that reach the points' precision
+(max |residual| ≤ 10⁻¹⁴) give
+
+```math
+\Delta_1 = 10.37528 \pm 0.00001, \qquad \omega_1 = -\frac{\omega_\infty\Delta_1}{\Delta_\infty} = -24.12306 \pm 0.00003, \qquad \frac{\omega_1}{\omega_\infty} = -6.311408 \pm 0.000005
+```
+
+(one under-constrained fit, D ≥ 16 at degree 20, gives −24.1233). λ: the 52 double-double growth rates (one per 0.5 in
+D, as `hp/gamma_compare.py`), polynomials in 1/n with λ∞ = 2 fixed. The 1/n coefficient rises with the degree and
+settles: on D ≥ 30, 3.03236, 3.03243, 3.03244 at degrees 8, 9, 10 (D ≥ 24: 3.03225, 3.03239, 3.03243); free fits
+put λ∞ − 2 at 5×10⁻⁸ and λ₁ = 3.03242. So
+
+```math
+\lambda_1 = 3.0324 \pm 0.0001 .
+```
+
+**The derived coefficients.** For each M: the model's zero (n = ∞), then the O(1/n) selection (§3), the model's growth
+rate near 2 and its first-order shift (§4, direct route). Full output in `data/first_order_M{1,3}_xi0.2.json` (one-shot
+jets) and `data/first_order_hier_M{1,3,5}_xi0.2.json` (deflated; the same numbers for M = 1, 3).
+
+| M | A | ω*/ω∞ | ω₁ | ω₁/ω* | Δ₁ | λ* | λ₁ |
+|---|---|---|---|---|---|---|---|
+| 1 | 2.5421480 | 0.776994014 | −21.0519 | −7.08873 | 14.9977 | 1.769122008 | 7.7565 |
+| 3 | 2.7264759 | 1.015603095 | −23.7089 | −6.10776 | 9.88625 | 2.006804459 | 3.07967 |
+| 5 | 2.7185792 | 0.999228403 | −24.1488 | −6.32302 | 10.4024 | 1.99966851 | 3.0223 |
+| fit | | 1 | −24.1231 | −6.31141 | 10.3753 | 2 | 3.0324 |
+
+The 1/n corrections of the profile come out large (for M = 5, $`A_1 = 14.45`$ against A = 2.72, and $`K_1`$'s harmonic 3
+relatively six times larger than F's), as the O(1/n) corrections of the solution are at finite D (README, "How the
+solution scales with D").
+
+**Convergence in M.** Differences from the fits:
+
+| | M = 1 | M = 3 | M = 5 | ratio of successive errors |
+|---|---|---|---|---|
+| ω*/ω∞ − 1 (README's sequence) | −0.223 | +0.0156 | −0.00077 | −0.07, −0.05 |
+| ω₁/ω* | +12.3% | −3.2% | +0.18% | −0.26, −0.06 |
+| Δ₁ | +44.6% | −4.7% | +0.26% | −0.11, −0.06 |
+| ω₁ | −12.7% | −1.7% | +0.11% | 0.13, −0.06 |
+| λ* − 2 | −0.231 | +0.0068 | −0.00033 | −0.03, −0.05 |
+| λ₁ | +156% | +1.56% | −0.33% | 0.01, −0.21 |
+
+From M = 3 to M = 5 every error changes sign and shrinks, by a factor of about 5 (λ₁) to 20 (the ω quantities), as
+the error of ω* does (20). With alternating signs the M → ∞ limit lies between the M = 3 and M = 5 values, and the
+fitted value does, for every quantity. If the next error ratio r is like ω*'s (r ≈ −0.05), the limit is
+$`x_5 + \tfrac{-r}{1-r}(x_3 - x_5) \approx x_5 + 0.048\,(x_3 - x_5)`$:
+
+| | M = 5 | limit with r = −0.05 | limit with r = −0.2 | fit |
+|---|---|---|---|---|
+| ω₁ | −24.1488 | −24.128 | −24.075 | −24.1231 |
+| ω₁/ω* | −6.3230 | −6.3128 | −6.287 | −6.3114 |
+| Δ₁ | 10.4024 | 10.378 | 10.316 | 10.3753 |
+| λ₁ | 3.0223 | 3.0250 | 3.0319 | 3.0324 |
+
+The ω coefficients match the r = −0.05 reading (to 0.02–0.03%), λ₁ the r = −0.2 one, which is also the ratio its own
+last step showed. This is a reading of three-term sequences, not an error bound: the truncation error of the M = 5
+values is ~0.1–0.3%, and a sharper statement needs M = 7.
+
+**A second measure of the truncation error: the gauge datum.** In the full problem ω₁ does not depend on the gauge datum
+$`c_1(0)`$ (§3). In the models it does: with $`c_1(0) = 0`$ instead of $`-g_1`$, ω₁ is −28.61, −23.81, −24.20 for M = 1, 3, 5,
+i.e. it moves by 7.6, 0.10 and 0.052. At M = 5 that is twice the remaining difference from the fit (0.026), consistent
+with the estimate above.
+
+ROBUSTNESS_PLACEHOLDER
 
 ## 7. What is rigorous, what is numerical, what is truncated
 
-STATUS_PLACEHOLDER
+**Derived and checked (exact, symbolic or to roundoff):**
+
+- the O(1/n) inner equations, from the exact equations, with η slaved and no half-integer powers (§1; sympy);
+- the matching data of the O(1/n) inner solution: $`K_1`$, $`\omega_1`$ and the gauge datum $`c_1(0) = -F^2`$ (§2; the O(1/n) inner
+  series equals the outer expansion's next-to-top coefficients to 10⁻¹³);
+- the symmetry-breaking term of the λ = 2 mode (§4; sympy for arbitrary fields, and the series identity
+  $`\mathcal D Z_1 + W`$ = direct route to 3×10⁻¹⁵);
+- the exactness of the time reparametrization at O(1/n), hence the gauge independence of ω₁ and λ₁ in the full problem.
+
+**Argued, at the level of rigor of the selection rule itself:**
+
+- that the selection at O(1/n) is the vanishing of the multiplier of $`Z_0 + Z_1/n`$, and that the outer region (matching
+  factors, transport, the light-cone exponent and its gravitational shift, the half-monodromy) contributes only
+  invertible factors at this order (§3). This is Conjecture 1 plus the lemma chain of C_selection.md carried one order
+  further (its "1/n refinement" of Lemma B5(2), written at appendix level there);
+- first-order perturbation theory for λ: λ* is a simple root and ℓ·∂_λS·f* ≠ 0 (seen numerically in every model:
+  ℓ·∂_λS·f* = −4.4×10³, −6.5×10⁴, −5.9×10⁴ for M = 1, 3, 5).
+
+**Numerical, for each truncated model:** the zeros, ω₁, λ* and λ₁ of the M-harmonic models, with exact jets and the
+numerical error of §6 (far below the truncation error).
+
+**Truncated:** the numbers are those of the M = 1, 3, 5 models. Their sequences converge toward the fits and bracket
+them, but the M → ∞ limit is not computed. In particular:
+
+- harmonic truncation is not a controlled approximation in general (README: the multipliers involve F continued to
+  Im θ ≈ πω/2). Here the sequences behave regularly from M = 3 on, as ω*'s does, but three terms are a thin basis;
+- in a truncated model λ = 2 is not exact and the symmetry route does not apply (§4), so λ₁ is the model's own
+  first-order coefficient about its own λ*.
+
+**Open:**
+
+- M = 7, or an untruncated computation. The amplitude expansion of `solver/inner_amp/` (which gave ω∞ to 10⁻⁴ without
+  truncation) would need its linear-response version: the O(1/n) forcing and the perturbation at λ = 2 expanded in the
+  amplitude, with their late-order fits. With the symmetry route (§4) the λ₁ computation then needs only n = ∞
+  objects: the λ = 2 mode of Proposition 5, the forced response W, and ∂_λS at λ = 2;
+- a proof of the O(1/n) step of the matching lemmas.
 
 ## 8. Scripts
 

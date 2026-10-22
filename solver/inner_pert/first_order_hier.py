@@ -314,11 +314,18 @@ def main():
     M = int(args[0])
     xi1 = float(opts.get("--xi1", 0.2))
     R.RTOL = float(opts.get("--rtol", 1e-12))
+    if "--rows" in opts:              # per-harmonic radii, e.g. --rows=5:0.2,7:0.15
+        R.ROW_RADII.update({int(a.split(":")[0]): float(a.split(":")[1]) for a in opts["--rows"].split(",")})
+    # M = 7 start: the M = 5 zero, with B5, C5, B7, C7 from hier.py's M = 7 inner solve at (2.72, w_inf)
+    # (solver/inner_stokes/logs/hier_M7_fixA_run2.log)
     x0 = {1: [2.5421480476347464, 0.7769940135984376],
           3: [2.7264758856227167, 1.015603094848114, 0.14441947847126993, 0.011087425888277868],
-          5: [2.718579189, 0.999228404, 0.149203575, 0.014719052, 0.008405347, 0.001470345]}[M] \
+          5: [2.718579189, 0.999228404, 0.149203575, 0.014719052, 0.008405347, 0.001470345],
+          7: [2.718579189229888, 0.9992284031945021, 0.1492035749173264, 0.01471905249087869, 0.00844556, 0.001508163,
+              0.000475916, 0.000121569]}[M] \
         if "--x" not in opts else [float(t) for t in opts["--x"].split(",")]
-    tag = f"M{M}_xi{xi1:g}" + (f"_rtol{R.RTOL:g}" if R.RTOL != 1e-12 else "")
+    tag = f"M{M}_xi{xi1:g}" + (f"_rtol{R.RTOL:g}" if R.RTOL != 1e-12 else "") \
+        + ("_rows" + "_".join(f"{k}-{v:g}" for k, v in sorted(R.ROW_RADII.items())) if R.ROW_RADII else "")
     fn = opts.get("--out", os.path.join(HERE, "data", f"first_order_hier_{tag}.json"))
     out = json.load(open(fn)) if os.path.exists(fn) else dict(M=M, xi1=xi1, rtol=R.RTOL)
 
@@ -336,6 +343,8 @@ def main():
         save()
     x = np.array(out["x"]); K = np.array(out["K"]); L = Lin(K)
     log(f"ZERO: x {x.tolist()}  r_1 {out['r'][:2]} (Schur-corrected {out['r1_corr']})  |r_H| {np.linalg.norm(out['r'][2:]):.1e}")
+    if "--zero-only" in opts:
+        return
     if "dx" not in out:
         dx, info = omega1(x, M, xi1, K, L)
         out.update(dx=dx.tolist(), omega1=W0 * dx[1], omega1_rel=dx[1] / x[1], **info)
@@ -354,6 +363,26 @@ def main():
             f"(difference {out['omega1'] - out['omega1_gauge0']:+.2e}; zero in the full problem)")
     if "--omega-only" in opts:
         return
+    if "--checks" in opts and "checks" not in out:
+        # the exact modes: lam = 0 (theta shift, f = F') and lam = 1 (time translation, f = F + w F'): Sch(lam) is
+        # singular there, with null vector the harmonic-1 part of f; lam = 0.5 for comparison
+        Fh = Fh_from(x, M)
+        w = W0 * x[1]
+        F1 = Fh[1]
+        chk = {}
+        for lam_c, f1 in ((0.0, 1j * F1), (1.0, (1 + 1j * w) * F1), (0.5, None)):
+            Sch, C, _, resH = sch_lam(x, M, xi1, lam_c)
+            sv = np.linalg.svd(Sch, compute_uv=False)
+            e = np.linalg.svd(Sch)[2][-1]
+            ent = dict(sv=sv.tolist(), null=(e / e[0]).tolist())
+            if f1 is not None:
+                ex = np.array([-2 * f1.imag, 2 * f1.real])      # (sin, cos) coefficients of the harmonic-1 part
+                ent["exact"] = (ex / ex[0]).tolist()
+            chk[f"{lam_c:g}"] = ent
+            log(f"CHECK lam = {lam_c:g}: Sch singular values {sv}; null vector {ent['null']}"
+                + (f"; exact {ent['exact']}" if f1 is not None else ""))
+        out.update(checks=chk)
+        save()
     if "lam" not in out:
         lam = find_lam(x, M, xi1, float(opts.get("--lam", 2.0)))
         out.update(lam=lam)
