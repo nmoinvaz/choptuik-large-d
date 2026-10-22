@@ -713,11 +713,12 @@ The results, in order:
 What is new here, as far as a literature search shows ([Relation to published work](#relation-to-published-work)):
 the leading-order freedom (any periodic profile and any period solve the equations at leading order) is known in
 substance (Ecker, Ecker & Grumiller 2026), and the free wave equation in similarity coordinates has been studied
-in 3+1 (Donninger 2008). Not found in the critical-collapse or large-D literature searched
-([notes/LIT_REVIEW.md](notes/LIT_REVIEW.md)): the all-orders statement (Proposition 1, within its ansatz), the
-closed-form light-cone coefficient in every dimension (Proposition 2, which follows from Gauss's connection formula;
-Donninger's 3+1 analysis contains the D = 4 case), and the Stokes reading (Propositions 3–4, an instance of standard
-late-order analysis, and the inner problem). The inner equations themselves are, up to a change of variables, Rozali
+in 3+1 (Donninger 2008).
+
+Not found in the critical-collapse or large-D literature searched ([notes/LIT_REVIEW.md](notes/LIT_REVIEW.md)): the
+all-orders statement (Proposition 1, within its ansatz), the closed-form light-cone coefficient in every dimension
+(Proposition 2, which follows from Gauss's connection formula; Donninger's 3+1 analysis contains the D = 4 case), and
+the Stokes reading (Propositions 3–4, an instance of standard late-order analysis, and the inner problem). The inner equations themselves are, up to a change of variables, Rozali
 and Way's leading-order large-D system (2018), and their heat-equation character was noted there. Proposition 5 is the
 discretely self-similar counterpart of Rozali and Way's estimate γ = 1/2, exact at D = ∞ given Conjecture 1.
 
