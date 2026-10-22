@@ -216,9 +216,10 @@ come only from the summation over the Taylor index.
 - In the linear case the Taylor coefficients (α)_j(β)_j/((κ)_j j!) have poles at n = −1, −3, −5, … (spacing 2). These
   produce the Γ-function factors and the singularities at iπm (Lemma B3.4).
 - The determinant factors j − 1 + n for odd j are not poles of the solution: they cancel against the numerators.
-- For M = 1, `b3_taylor_rational.py` (sympy) solves the Taylor recursion symbolically through x⁷ and checks the residual.
-  Besides the n = 0 of the scaling, it finds only the poles n = −1, −3, −5, again spacing 2
-  (`b3_taylor_rational.log`).
+- For M = 1, `b3_taylor_rational.py` (sympy) solves the Taylor recursion symbolically through x⁵ and checks that the
+  residual vanishes. Besides the n = 0 of the scaling, it finds only the poles n = −1 and −3, again spacing 2
+  (`b3_taylor_rational.log`; a run through x⁷ did not finish in 25 minutes). Its mutation `--mutate=eq` (n/3 for n/2 in
+  the m equation of the solved system) makes the residual test fail (`b3_taylor_rational_mut_eq.log`).
 - (P and M carry every power of x; only P − M is odd and P + M even.)
 
 ### 2.4 Lemma B3.4 (the linear case; proved)
@@ -446,7 +447,8 @@ References). For a function P of the large variable, these are equivalent:
 - **Proved** near ζ = 0 for every M: analyticity on |ζ| < t₁ (Lemma B3.7).
 - **Conjecture** in general, supported by numerical evidence (§5):
   - M = 1: σ ≈ π/2 at x = 0.5, 0.8, 0.95, set by the u-mode on Im ζ = ∓π/2. At x = 1 it is about 3.09.
-  - M = 3: σ is smaller (see §5.2 for the number), set by an x-independent singularity near ζ ≈ −1.2.
+  - M = 3: σ ≈ 1.0–1.27, set by an x-independent singularity at ζ ≈ −1.22 ± 0.15i; nothing stable near ℝ⁺ (§5.2).
+  - M = 5: not resolved by 70 orders; isolated poles near −0.8 (§5.2).
 - The structural reason it should hold is Lemmas B3.1, B3.5 and B3.6. The characteristic singularities lie on
   Im ζ ∈ π(ℤ + ½). Sums of singularities from opposite sides of ℝ⁺ do not reach the principal sheet. The x-independent
   singularities come from global data: Γ-type at iπm in the linear case, and the even harmonics of c(0, θ) for M ≥ 3.
@@ -572,9 +574,13 @@ planted u-mode pair at 0.30π. But it does not see a weight-0.05 ℝ⁺ singular
 
 ### 5.2 M = 3 (and M = 5)
 
-*The x-independent singularity.* The two series of c(0, θ) (harmonics 0 and 2, light-cone gauge) have their nearest Padé
-poles near ζ ≈ −1.22 ± 0.15i, with a cut through the region Re ζ ≈ −1.2. Their root-test radius is 0.95 at k = 100 and
-still rising (`b3_scan_all.log`). The same singularity appears in D1, D3, B0, B2 at x = 0.5 (nearest poles −1.03 to −1.26)
+*The x-independent singularity.* The two series of c(0, θ) (harmonics 0 and 2, light-cone gauge) have their nearest
+stable Padé poles at ζ = −1.2248 ± 0.1502i (harmonic 0; |a| = 1.234, arg ±0.961π; the pole moves by 3 × 10⁻⁴ between the
+[49/49] and [47/47] approximants) and near −1.22 ± 0.19i (harmonic 2), followed by a line of poles through Re ζ ≈ −1.2.
+The root-test radius is 0.95 at k = 100 and still rising (`b3_scan_all.log`). The harmonic-0 approximant also has two
+real poles, at −0.689 and at +1.768 (on ℝ⁺). They move by 0.58 and 0.81 between the two approximants and the first is a
+numerically exact doublet (zero distance 3 × 10⁻²⁶), so both are artifacts. The stability rule exists to drop poles
+like these. The same singularity appears in D1, D3, B0, B2 at x = 0.5 (nearest poles −1.03 to −1.26)
 and at x = 0.8 (−1.15 to −1.23). It is x-independent and sits near the negative real axis, |arg| ≈ 0.9–1.0π.
 
 So the "x-independent cluster" of C_selection.md §8 is real for M ≥ 3. It is not at 0.66–0.88 and 0.60π as tabulated
@@ -586,8 +592,27 @@ closed form.)
 
 *Near ℝ⁺.* In the first run of the strip check, B0 at x = 0.8 had one pole at 1.653 − 0.696i. It appears only with
 K = 100 terms and is absent with K = 94, 88, 80 (`b3_pole_stability_M3_B0.log`), so it is drawn by the approximant
-outside the disc of convergence. This is what prompted the stability rule above. The full M = 3 result under that rule
-is in `b3_strip_check_M3.log`: [M3_RESULT]
+outside the disc of convergence. This is what prompted the stability rule above. Under that rule the M = 3 strip check **passes**
+(`b3_strip_check_M3.log`; D1, D3, B0, B2, G0 at x = 0.5, 0.8, 0.95, 1). No stable Padé pole lies within |Im ζ| < 1 of
+ℝ⁺ or near the origin.
+
+Four unstable poles near ℝ⁺ were dropped, each absent from the K − 6 approximant:
+- B0, x = 0.8: 1.653 ± 0.696i;
+- B2, x = 0.95: 1.792;
+- B0, x = 1: 0.711;
+- D3, x = 1: −0.389 + 0.878i.
+
+The one on ℝ⁺ at 0.711 was examined further (`b3_pole_stability_M3_B0_x1.log`, `b3_roottest_M3_x1.log`).
+- It appears with K = 100 only. With K = 86 there is a pole at 0.843 instead, and with K = 97, 94, 90, 80 there is
+  none within 0.3.
+- The root-test radius of the same series rises through 0.845, 0.894, 0.922 at k = 80, 90, 100. A genuine singularity
+  at 0.711 would therefore need a relative weight below about (0.711/0.922)¹⁰⁰ ≈ 5 × 10⁻¹² to stay hidden.
+- One weakness of the check shows here: the disc it reads is 1.6 × the modulus of the nearest pole, stable or not. For
+  B0 at x = 1 it covered only |ζ| ≤ 1.14.
+
+The σ estimates (the smallest distance from a stable pole in the disc to [0, ∞)) are 1.0–1.27, set by the
+x-independent singularity near −1.2. The exception is G0 at x = 0.5, whose approximant has a real pole at −0.756 (σ
+estimate 0.76); its stability was not tested, since it is far from ℝ⁺.
 
 *M = 5* (`b3_outer_M.py 5 70`, `b3_scan_M5.log`). K = 70 orders do not resolve the Borel plane at M = 5. For the three
 harmonics of c(0) and for D1 at x = 0.5 and 0.8, the Padé poles form a ring at |a| ≈ 0.91–1.05 around all directions,
@@ -603,7 +628,7 @@ M = 5 from these data; Lemma B3.7 covers the disc.
 |---|---|---|---|
 | linear (proved) | Φ ∓ iπ/2; iπm | π/2 | no |
 | M = 1 | Φ ∓ iπ/2 (x-dependent); near ±3.1i (x-independent) | ≈ 1.6 (x < 1), ≈ 3.1 (x = 1) | no |
-| M = 3 | Φ ∓ iπ/2; near −1.2 (x-independent) | [M3_SIGMA] | [M3_NEAR] |
+| M = 3 | Φ ∓ iπ/2; −1.2248 ± 0.1502i (x-independent) | 1.0–1.27 (one probe 0.76) | no stable pole; four unstable ones dropped |
 | M = 5 (K = 70) | not resolved (Padé ring at the circle of convergence, \|a\| ≈ 0.91–1.05); isolated poles near −0.8 | ≲ 0.8 | not resolvable from 70 orders |
 
 ## 6. The computer-assisted step: design and pilot

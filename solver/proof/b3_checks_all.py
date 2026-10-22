@@ -1,6 +1,8 @@
 """Runs every check of proof/B3_borel.md with its mutation controls and writes one log per run, then a summary.
 
-    python3 b3_checks_all.py [--quick]        (from solver/proof; --quick skips the slow strip checks)
+    python3 b3_checks_all.py [--quick] [--only=name1,name2]
+(from solver/proof; --quick skips the slow strip checks; --only reruns the named runs, e.g. after a restart, and the
+summary covers those runs only)
 
 Expected exit codes are stated per run: a check exits 0 on the real data and non-zero under its mutation. The summary
 line says whether every run behaved as expected; the script exits non-zero otherwise.
@@ -31,7 +33,12 @@ if not QUICK:
         ("b3_strip_check_planted_2.2", ["b3_strip_check.py", "b3_outer_m1_lc_K120.json", "--xs=0.5,0.95", "--names=D",
                                         "--plant=2.2,1e-3"], 1),
         ("b3_strip_check_M3", ["b3_strip_check.py", "b3_outer_M3_K100.json", "--names=D1,D3,B0,B2,G0"], None),
+        ("b3_taylor_rational", ["b3_taylor_rational.py", "5"], 0),
+        ("b3_taylor_rational_mut_eq", ["b3_taylor_rational.py", "5", "--mutate=eq"], 1),
     ]
+ONLY = [a.split("=", 1)[1].split(",") for a in sys.argv[1:] if a.startswith("--only=")]
+if ONLY:
+    RUNS = [r for r in RUNS if r[0] in ONLY[0]]
 env = dict(os.environ, TMPDIR=os.environ.get("TMPDIR", "/tmp"))
 allok = True
 for name, cmd, expect in RUNS:
