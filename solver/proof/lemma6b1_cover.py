@@ -24,8 +24,9 @@ The method (section 12.2). Rows j = 0, 1, ... of polar tiles T_jk = { a_j < |u| 
                                                           -> lemma6b1_runs/row_JJ.json
     python3 lemma6b1_cover.py rows [--from=J]             every row not yet saved, one after the other
     python3 lemma6b1_cover.py check [--json=out.json]     the gluing and covering checks over the saved runs
-    python3 lemma6b1_cover.py mutate=sign                 mutation test: every disc of row 0 with the wrong sign of
-                                                          the fast term in the defect; the certificates must fail
+    python3 lemma6b1_cover.py --mutate=sign [--j=11]      mutation test: every disc of row j (default the last) with
+                                                          the wrong sign of the fast term in the defect; no
+                                                          certificate may pass
     python3 lemma6b1_cover.py control                     negative control: discs at 14 e^{-3 i pi/4} of radius 2 ... 8;
                                                           y+ has a branch point at distance 5.12 (review R6), so the
                                                           radii above 5.12 must fail
@@ -427,6 +428,8 @@ if __name__ == "__main__":
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     opts = {a.split("=", 1)[0][2:]: (a.split("=", 1)[1] if "=" in a else "1") for a in sys.argv[1:] if a.startswith("--")}
     cmd = args[0] if args else "design"
+    if opts.get("mutate") == "sign" or cmd == "mutate=sign":
+        cmd = "mutate"
     h = opts.get("h", "1e-9")
     if cmd == "design":
         tot_len = 0.0
@@ -455,7 +458,7 @@ if __name__ == "__main__":
             with open(opts["json"], "w") as fh:
                 json.dump(res, fh, indent=1)
         sys.exit(0 if res["ok"] else 3)
-    elif cmd == "mutate=sign" or opts.get("mutate") == "sign":
+    elif cmd == "mutate":
         j = int(opts.get("j", str(len(design()) - 1)))
         res = row_run(j, h, mutate="sign")
         nok = sum(d["ok"] for d in res["discs"])

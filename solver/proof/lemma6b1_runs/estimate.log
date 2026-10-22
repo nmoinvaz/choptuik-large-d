@@ -1,0 +1,8 @@
+1-2. y+ on arcs |u| = rho (max over the arc), and the route-1 loop gain g (natural norms):
+  |u| = 260 (|xi| = 0.0620): max|P| 2.63, max|V| 0.23, max|Q| 8.44, max|C_0 - 1| 0.013;  g = 0.09
+  |u| = 150 (|xi| = 0.0816): max|P| 2.70, max|V| 0.41, max|Q| 8.81, max|C_0 - 1| 0.022;  g = 0.17
+  |u| = 100 (|xi| = 0.1000): max|P| 2.79, max|V| 0.65, max|Q| 9.29, max|C_0 - 1| 0.034;  g = 0.27
+  |u| =  60 (|xi| = 0.1291): max|P| 2.98, max|V| 1.22, max|Q| 10.38, max|C_0 - 1| 0.058;  g = 0.57
+  |u| =  40 (|xi| = 0.1581): max|P| 3.24, max|V| 2.12, max|Q| 12.05, max|C_0 - 1| 0.090;  g = 1.12
+  |u| =  25 (|xi| = 0.2000): max|P| 3.85, max|V| 4.53, max|Q| 16.25, max|C_0 - 1| 0.154;  g = 3.11
+3. branch point of y+: u* = 9.6746 e^(-2.1198 i), xi* = 0.3215 e^(1.0599 i); distance from 14 e^(-3 i pi/4): 5.123
