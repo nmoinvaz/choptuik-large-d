@@ -37,6 +37,9 @@ C_ = np.ascontiguousarray(dc.C[:NS], dtype=np.float64)
 E3_ = np.ascontiguousarray(dc.E3, dtype=np.float64)
 E5_ = np.ascontiguousarray(dc.E5, dtype=np.float64)
 MUTATE = [0.0]
+# INNER_NB_RTOL=1e-13 (say) overrides the integrator tolerance hier.py passes (1e-12): a finer floor for M = 7, where the
+# Schur-corrected r_3 at xi = 0.2 inherits the integration noise of the large leaked harmonic-5 and -7 jumps.
+RTOL_OVERRIDE = float(os.environ["INNER_NB_RTOL"]) if os.environ.get("INNER_NB_RTOL") else None
 
 
 @nb.njit(cache=True)
@@ -279,6 +282,8 @@ class InnerNB(I.Inner):
         return self.pack(Dd, Sg, Cc), jt, ratio
 
     def integrate(self, Y, kind, a, b, par, rtol=1e-12, atol=1e-16):
+        if RTOL_OVERRIDE is not None:
+            rtol = RTOL_OVERRIDE
         y, nfev, st = dop853(0 if kind == "ray" else 1, float(par), float(a), float(b),
                              np.ascontiguousarray(Y, np.complex128), rtol, atol, self._oi, self._ei, self._odd,
                              self._even, self._imw, self.L, MUTATE[0], A_, B_, C_, E3_, E5_)
