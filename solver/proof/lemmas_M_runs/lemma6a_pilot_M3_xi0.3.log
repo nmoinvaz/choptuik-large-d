@@ -1,0 +1,8 @@
+PILOT (not rigorous): B1 = double-precision y+(0.3) at the hier.py zero (path: ray 3pi/8 to 0.2, arc, real axis to 0.3) inflated by 1e-10; lemma S and the flat estimate over x^ +- 1e-6
+lemma S (M = 3, rp = 0.1, k = 20): contraction 0.8252; flat estimate on 0 < z <= Z = 0.004489: Lambda = 0.2923
+start box at xi1 = 0.3 (y+ and sigma(y+)): radius 7.98e-06
+   real t 0.124649 h 8.67e-03  max state radius 1.09e-05  [203 s]
+   real t 0.257612 h 5.88e-03  max state radius 2.41e-05  [354 s]
+   real t 0.368013 h 3.98e-03  max state radius 3.45e-05  [503 s]
+   real t 0.463131 h 5.40e-03  max state radius 4.43e-05  [646 s]
+   real t 0.542501 h 3.66e-03  max state radius 5.32e-05  [789 s]
