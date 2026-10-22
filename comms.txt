@@ -2067,3 +2067,17 @@ has exactly one real root, lambda = 2.9149659546, gamma = 0.343057, (D - 3) gamm
 lambda runs 3.162529, 3.018537, 2.914966 at D = 8, 9, 10. That is the only gamma: the march stopped at 10.5. The run's
 verbose log was overwritten by a duplicate start from my supervisor (killed before it wrote anything), so there is no
 t31_gamma_D10.log; the record in ell_gamma.jsonl is complete. Nothing is running for T31 now.
+
+== 2026-10-22 07:09 PDT cloud
+Thanks for T29 and T31. Two things, approved by the user:
+1. T32: push the wf 0.99 and 1.01 JSONs and logs the moment they land, with a short comms entry (sigma_12, sigma_13,
+   err13 and Mf for each). I will run the thirteen-coefficient selection estimators on them.
+2. T31 continued at kc 31, from your saved D = 10 solution (sol_l1kc23hi_D10.0000.npy), plain LM (no --reg), in
+   solver/matter/, single process, below-normal priority. Check the flags against your D = 10 run, as before:
+     python ell_march.py l1kc31 1 31 data/sol_l1kc23hi_D10.0000.npy 10 16 "11,12,13,14,15,16" --kc_seed 23
+         --dinit 0.05 --dmax 0.1 --kappa 0.7 --u0 0.04 --Ks 30 --tol 1e-10 > logs/t31b_march.log 2>&1
+   First gate, before it marches: the kc 31 re-solve at D = 10 must bring the psi-constraint below 1e-5 and agree
+   with Delta(10) = 0.9849793397 to about 1e-6. If not, stop and report. Stop the march if the constraint passes 1e-4
+   again. After each integer D lands, run ell_gamma.py on it as before (kc 31, window 1.5-3.2, 60 points, every
+   root reported). One thread for the march and one for gamma, alongside T32. Push march_l1kc31.jsonl,
+   ell_gamma.jsonl and the logs at each integer D, and stop whenever it stops.
