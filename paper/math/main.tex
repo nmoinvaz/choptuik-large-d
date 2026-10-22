@@ -158,6 +158,7 @@ Corollary~\ref{cor:gamma} & $\gamma_\infty = 1/2$ & conditional on Conjecture~\r
 Theorem~\ref{thm:B} & selection for the $M$-harmonic model & conditional on the lemmas of Table~\ref{tab:Bstatus}; for $M = 1$ not yet proved (Section~\ref{sec:B1status}) \\
 Lemmas B1, B5.1, B6$'$, B8.1, B8.2; B2, B5.0 & ingredients of Theorem~\ref{thm:B} & proved; B2 and B5.0 checked symbolically \\
 Theorem~\ref{thm:A} & one simple zero of the $M = 1$ selection condition & certified (computer-assisted), assuming Braaksma's theorem \\
+Section~\ref{sec:A3} & one simple zero of the $M = 3$ selection condition & certified (computer-assisted), assuming Braaksma's theorem; not independently reviewed \\
 Lemma~\ref{lem:sigma1} & enclosure of the first amplitude coefficient $\sigma_1$ & certified (computer-assisted,\newline
 \repo{exact\_sigma.py}); not independently reviewed \\
 Section~\ref{sec:evidence} & $\omega^*/\winf = 0.99992$--$1.00019$ (no other zeros of $S_1$ near $x_0$ assumed) & numerical evidence \\
@@ -1839,6 +1840,19 @@ the constant $\kappa_0$, which only the $\kappa_0$-scaled CAPD test uses. Lemmas
 majorant code only, and the disc covering of Lemma~6b$_1$ (Lemmas~D and G and the checks C1--C8) has no second implementation
 yet; re-running the discs in CAPD would be the natural check.
 
+\subsection{Three harmonics}\label{sec:A3}
+The same method certifies the three-harmonic truncation of Section~\ref{sec:trunc} (\repo{proof/A\_M.md},
+\repo{proof/A\_lemmas\_M.md}). A point certificate (validated integration along the ray $\arg\xi = 5\pi/16$ from $0.0741$,
+the arc $|\xi| = 0.2$ and the real axis to $\xi_1 = 0.3$, then a Krawczyk test on the four real $D$-jump conditions) shows
+that they have exactly one zero, with a non-singular Jacobian, in a parallelepiped of outer half-width $10^{-10}$, at
+$A \in [2.72647588563032, 2.72647588563144]$, $\omega/\winf \in [1.01560309485743, 1.01560309485804]$,
+$B_3 \in [0.144419478469924, 0.144419478470230]$ and $C_3 \in [0.0110874258881079, 0.0110874258881255]$. Lemmas S,
+6b$_0$, 6a and 6b$_1$ carry over to $M$ harmonics with the same proofs, and at $M = 3$ they are certified on boxes that
+contain the certificate's (6a with $\rho_{6a} = 0.041$, 6b$_1$ by $183$ discs in a $C^1$ mean-value form). So, assuming
+Braaksma's theorem, the three-harmonic selection condition $S_1 = S_3 = 0$ has exactly one zero in that box, and it is
+simple. The zero is $1.6\%$ above $\winf$ in frequency, at the measured amplitude. Unlike the case $M = 1$, this code has
+not been reviewed independently or re-implemented.
+
 \subsection{What is not claimed}
 Theorem~\ref{thm:A} is a statement about the one-harmonic truncation ($M = 1$), not about the physical problem: its zero is
 $22\%$ below $\winf$ in frequency, and it does not survive the addition of harmonic $3$. Nothing is said about parameters outside
@@ -2121,7 +2135,8 @@ light-cone coefficient) is proved. What would turn the selection rule into a the
 in Lemma~B5(2) (or a matching domain of $n$-independent size, \repo{proof/B5\_inner.md}, \S5.4) and independent reviews of
 the certificate code; then the same for each fixed $M$. A proof of (H-$\sigma$) would identify the centre-regular solution
 with the Borel sum of the outer series, but the theorem does not need it.
-\item \emph{Theorem A($M = 5$)}, on the Schur-corrected conditions; and a second implementation of the disc covering.
+\item \emph{Theorem A($M = 5$)}, on the Schur-corrected conditions; an independent review of the $M = 3$ certificate
+(Section~\ref{sec:A3}); and a second implementation of the disc covering.
 \item \emph{The untruncated zero}: the harmonic-tail lemma of Section~\ref{sec:tail} with $M = 7$ explicit, or rigorous
 $\sigma_k$, $k \le 14$, with a proof of the exponential type of $S_1$ (Section~\ref{sec:entire}).
 \item \emph{Uniformity in the harmonic index} (gap (b)) for the selection theorem itself, in a space of functions analytic in

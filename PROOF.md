@@ -210,8 +210,10 @@ is **certified** at M = 3: the four real D-jump conditions at ξ₁ = 0.3 have e
 Jacobian, in a box of outer half-width 10⁻¹⁰ about A = 2.7264758856, ω/ω∞ = 1.0156030949. The parts of Theorem A that
 turn a point certificate into the theorem have been generalized to M harmonics: the start-value fixed point with
 parameter derivatives, lemma S, and lemmas 6a, 6b₀ and 6b₁. At M = 3 all of them are certified on boxes that contain the
-point certificate's box, except the backward step of 6a, which needs that certificate's state box at ξ₁ = 0.3 (running).
-At M = 5 the point certificate and 6b₁ remain to be run. None of this code has had an independent review.
+point certificate's box, lemma 6a with that certificate's state box at ξ₁ = 0.3 (ρ₆ₐ = 0.041). So **Theorem A(M = 3) is
+certified**, assuming Braaksma's theorem: the three-harmonic selection condition has exactly one zero in the
+certificate's box, and it is simple. At M = 5 the point certificate and 6b₁ remain to be run. None of the M-harmonic code
+has had an independent review.
 
 Staged targets: **A(M=5)**, a certified simple zero of the five-harmonic multiplier (lemmas A.1, A.2, A.4 only; a
 standard computer-assisted proof); then **A(∞)**, the untruncated zero, adding A.3, or by the entire-function route below.

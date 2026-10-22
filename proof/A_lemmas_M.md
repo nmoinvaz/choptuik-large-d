@@ -33,9 +33,9 @@ Contents
 | step (i): the start-value fixed point with derivatives in all M + 1 parameters | **certified** at the `hier.py` zero, at points and over real (±10⁻⁶) and complex (±10⁻³(1 + i)) boxes, on the rays 3π/8 and 5π/16 | **certified**, the same | §2 |
 | M = 1 reproduces `fixed_point.py` | start values and start data bit for bit; constants to 10⁻¹⁶ | | §2.4 |
 | lemma S, lemma 6b₀ | **certified** over x̂ ± 10⁻⁶, R₊ = 0.01 (the M = 1 domain) | **certified** over x̂ ± 10⁻⁶, R₊ = 0.0064 | §3 |
-| lemma 6a | the flat estimate **certified** (Λ ≤ 0.29); the backward flow and ρ₆ₐ wait for the certificate's B₁; pilots on non-rigorous B₁ give ρ₆ₐ = 0.030 from ξ₁ = 0.2 and 0.052 from 0.3, the certificate's radius (**numerical evidence**) | the flat estimate **certified** (Λ ≤ 0.42) | §4 |
+| lemma 6a | **certified** with the certificate's state box at ξ₁ = 0.3: ρ₆ₐ = 0.041 (`lemmas_M_runs/lemma6a_M3_cert.*`); the flat estimate Λ ≤ 0.29 | the flat estimate **certified** (Λ ≤ 0.42) | §4 |
 | lemma 6b₁ | **certified** on the point certificate's box p̂ ± 1.1×10⁻⁹ (C¹ mode, 183 discs, check C1–C8 passes) | design only (366 discs): a local-machine task | §5 |
-| Theorem A(M) | **conditional** on the point certificate (H1–H3 of §6) | the same | §6–7 |
+| Theorem A(M) | **certified** (H1–H3 of §6 hold, §7) | **conditional** on the point certificate (H1–H3 of §6) | §6–7 |
 
 - **What carries over verbatim:** the inverse operators, domains and kernel bounds (the fast eigenvalue repeats across
   harmonics), the identification with y± (the same Stokes directions), lemma D, lemma G, the geometric gluing check (its
@@ -708,6 +708,19 @@ At M = 1 the same assembly is Theorem A(M = 1) of §12.6.
 
 ## 7. What waits for the point certificate
 
+**Result at M = 3 (added after the certificate).** The certificate's M = 3 run at h = 10⁻¹⁰ ([A_M.md](A_M.md) §6.2)
+passes its Krawczyk test. Its state box at ξ₁ = 0.3 (`solver/proof/data/A_M_6a_M3_1e-10.json`, with x set to its centre
+p in `A_M_6a_M3_1e-10_in.json`) gives lemma 6a: `lemma6_jump_M.py --M=3 --box=data/A_M_6a_M3_1e-10_in.json` runs the
+backward flow 0.3 → 0.067 in 449 steps (B's largest radius 2.0×10⁻³, |G_slow⁻¹| ≤ 1.62, |H| ≤ 11.6) and proves
+**ρ₆ₐ = 0.041 < 1** (`lemmas_M_runs/lemma6a_M3_cert.log`, `.json`). Its parallelepiped lies in p̂ ± 1.1×10⁻⁹: the
+centre is within 2.7×10⁻¹³ of p̂ and the hull's half-widths are 10⁻¹⁰, 10⁻¹⁰, 3.9×10⁻¹¹ and 2.5×10⁻¹² in
+(A, ω/ω∞, B₃, C₃). So (H1)–(H3) hold, and **Theorem A(3) is certified**, assuming Braaksma's theorem: the three-harmonic
+selection condition (S₁ = S₃ = 0, for the truncation of `inner_np.py`: b, c on |ν| ≤ 4, each binary product projected)
+has exactly one zero in the certificate's box, and it is simple. The code (this note's and A_M.md's) has not been
+reviewed independently.
+
+The rest of this section was written before the certificate finished.
+
 The point certificate is built on the branch `wip/layer-a-cert-m` (`solver/proof/certify_M.py`, notes
 `proof/A_M.md`). At the time of writing, its notes and data, read only, fix the following.
 
@@ -725,7 +738,7 @@ Against that, this note's status for M = 3:
 | (H1) X_c ⊂ x̂ ± 10⁻⁶ (lemma S, 6b₀, flat estimate) | **certified** over x̂ ± 10⁻⁶; p̂ is within 4×10⁻¹⁰ of x̂ | only the inclusion, which holds for any h ≤ 10⁻⁷ around p̂ |
 | (H2) X_c ⊂ p̂ ± 1.1×10⁻⁹ (lemma 6b₁) | **certified** on that box (§5.3) | the inclusion: its final centre within about 10⁻¹⁰ of p̂ and h ≤ 10⁻⁹ (true of both of its runs) |
 | the path lies in Ω | yes: arc 0.2, start ray 5π/16 within 0.2 of 3π/8, start point at 0.0741 < 0.1 | none |
-| (H3) lemma 6a from its B₁ at ξ₁ = 0.3 | the flat estimate **certified**; the backward flow **waits** | its hull of y⁺(0.3; X_c), as JSON (keys M, h, x, xi1, yX_xi1); then `lemma6_jump_M.py --box=` (about 1 h) |
+| (H3) lemma 6a from its B₁ at ξ₁ = 0.3 | **certified**: ρ₆ₐ = 0.041 (below) | its hull of y⁺(0.3; X_c), as JSON (keys M, h, x, xi1, yX_xi1); then `lemma6_jump_M.py --box=` (about 1 h) |
 | the zero and its simplicity | — | its Krawczyk test on the (M + 1) real D-jump conditions at ξ₁ |
 
 **The 6a pilots from ξ₁ = 0.3** (not rigorous). From x̂, the backward flow ran (450 steps), but G_slow was not

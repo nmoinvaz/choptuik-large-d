@@ -10,7 +10,8 @@ point is being written separately (`solver/proof/fixed_point_M.py`, notes in `pr
 **Status.** M = 1: this code path reproduces Theorem A(M = 1)'s box (§6.1). M = 3: **certified**, given the M-harmonic
 start-value lemma `fixed_point_M.start_data_M` and Braaksma's theorem, on a parallelepiped of outer half-width 10⁻¹⁰
 (§6.2). M = 5: **not certified**; the centre is refined (numerical evidence) and the box runs are a proposed task for
-the local machine (§6.3, §7). The new code has not been reviewed.
+the local machine (§6.3, §7). The new code has not been reviewed. With lemma 6a run on this certificate's state box
+(ρ₆ₐ = 0.041) and the other lemmas of [A_lemmas_M.md](A_lemmas_M.md), **Theorem A(3) is certified** (A_lemmas_M.md §7).
 
 Code: [`solver/proof/certify_M.py`](../solver/proof/certify_M.py) (driver, the Krawczyk test, refinement, controls),
 [`certify_M_lohner.py`](../solver/proof/certify_M_lohner.py) (the runs), [`certify_M_sys.py`](../solver/proof/certify_M_sys.py)

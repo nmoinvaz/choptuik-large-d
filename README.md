@@ -9,7 +9,7 @@ Papers (drafts, not yet reviewed):
   limit D → ∞, the large-D picture and other matter.
 - **Mathematics:** [*The echo period of Choptuik's critical solution at large dimension: a selection rule and a
   computer-assisted proof*](paper/math/dss_math.pdf). Propositions 1–5 with proofs, the selection rule (Conjecture 1)
-  and Theorem A(M = 1).
+  and Theorems A(M = 1) and A(M = 3).
 
 When a collapsing shell of scalar field is tuned exactly to the threshold between dispersing and forming a black hole,
 it approaches a universal solution, Choptuik's critical solution, which repeats itself on ever smaller scales: each
@@ -39,7 +39,8 @@ In brief: one rational formula in 1/(D − 2) fits all D ≥ 4; Δ tends to a fi
 a selection rule derived at D = ∞ reproduces Δ∞ to about 10⁻⁴ without using the finite-D solutions, and an exact symmetry
 explains γ∞ = 1/2. A proof of the selection rule is in progress ([PROOF.md](PROOF.md)); in a one-harmonic model case, a
 computer-assisted proof shows that the selection condition has exactly one simple zero (Theorem A(M = 1), assuming
-Braaksma's summability theorem).
+Braaksma's summability theorem), and the same holds with three harmonics (Theorem A(M = 3), whose code is not yet
+independently reviewed).
 
 What is new: not found in the literature searched ([notes/LIT_REVIEW.md](notes/LIT_REVIEW.md)):
 - Δ(D) to D = 61 at about 15 digits, and the finite limit Δ∞ = 1.643893746 against the Δ → 0 conjecture;
@@ -1195,7 +1196,16 @@ computer-assisted in ball arithmetic:
   annulus 0.0624 ≤ |ξ| ≤ 0.2 by a covering with 178 validated Taylor discs (§12).
 
 The disc covering has not yet been independently re-implemented. The model is the one-harmonic truncation, not the full
-selection condition. The
+selection condition.
+
+**Theorem A(M = 3)** ([proof/A_M.md](proof/A_M.md), [proof/A_lemmas_M.md](proof/A_lemmas_M.md) §7): assuming
+Braaksma's theorem, the three-harmonic selection condition (S₁ = S₃ = 0) has exactly one zero in a box of half-width
+10⁻¹⁰ about A = 2.7264758856, ω/ω∞ = 1.0156030949 (with B₃, C₃ about 0.1444194785, 0.0110874259), and it is simple:
+A ∈ [2.72647588563032, 2.72647588563144], ω/ω∞ ∈ [1.01560309485743, 1.01560309485804]. Unlike the one-harmonic zero
+(29% from the selected period), this one is 1.6% above ω∞, with the measured amplitude (2.70–2.72). The same steps carry
+over: a point certificate with four real jump conditions, and lemmas S, 6a, 6b₀ and 6b₁ for M harmonics, certified on
+boxes containing it (6a with ρ₆ₐ = 0.041, 6b₁ by 183 discs). This code has not been reviewed independently or
+re-implemented. M = 5 is running. The
 first coefficient σ₁ of the untruncated condition is also enclosed rigorously (±3.5×10⁻⁵).
 
 Evidence beyond the linear case: the conditions $`S_\nu = 0`$ for |ν| ≥ 3 alone predict the echo's shape as

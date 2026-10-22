@@ -537,7 +537,7 @@ Rough effort: (1) is done; (2) is the main work, about 1–2 weeks with CAPD or 
   At M = 3, lemma S, lemma 6b₀ and the flat estimate of 6a are certified over x̂ ± 10⁻⁶, and lemma 6b₁ is certified
   on the point certificate's box p̂ ± 1.1×10⁻⁹ by a covering with 183 discs in a C¹ mean-value form. The M = 1
   covering method fails on the innermost row at M = 3. The backward step of 6a with the certificate's state box at
-  ξ₁ = 0.3 is the one remaining run for Theorem A(3). At M = 5, lemma S, 6b₀ and the flat estimate are certified, and
+  ξ₁ = 0.3 passes (ρ₆ₐ = 0.041), so **Theorem A(3) is certified**, assuming Braaksma's theorem (A_lemmas_M.md §7). At M = 5, lemma S, 6b₀ and the flat estimate are certified, and
   6b₁ is a local-machine task.
 
 ## 8. Reproduce
