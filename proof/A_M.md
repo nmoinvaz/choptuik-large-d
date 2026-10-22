@@ -7,6 +7,11 @@ analogues of lemmas S, 6a and 6b of A_certify.md §11–12) are not part of this
 point is being written separately (`solver/proof/fixed_point_M.py`, notes in `proof/A_lemmas_M.md`). Written by Claude
 (Anthropic) under Nathan Moinvaziri's direction; not reviewed.
 
+**Status.** M = 1: this code path reproduces Theorem A(M = 1)'s box (§6.1). M = 3: **certified**, given the M-harmonic
+start-value lemma `fixed_point_M.start_data_M` and Braaksma's theorem, on a parallelepiped of outer half-width 10⁻¹⁰
+(§6.2). M = 5: **not certified**; the centre is refined (numerical evidence) and the box runs are a proposed task for
+the local machine (§6.3, §7). The new code has not been reviewed.
+
 Code: [`solver/proof/certify_M.py`](../solver/proof/certify_M.py) (driver, the Krawczyk test, refinement, controls),
 [`certify_M_lohner.py`](../solver/proof/certify_M_lohner.py) (the runs), [`certify_M_sys.py`](../solver/proof/certify_M_sys.py)
 (the M-harmonic system, path legs, formal series with parameter jets, placeholder start values, self-test). Data and
@@ -367,6 +372,37 @@ the problem the way the scale estimate of §2 says it should: the excess scales 
 radius in the progress lines at step 50 of the real leg is 2.78×10¹ in the first run's log and 2.78 in this one's), while
 w is four times larger.
 
+### 6.3 M = 5: not certified here; the centre is ready and the runs are a local-machine task
+
+**The centre** (numerics). Two Newton iterations at ξ₁ (`data/A_M_refine_M5_a.json`, `_b.json`; logs of the same names)
+took |g| from 3.9×10⁻³ to 2.7×10⁻⁸ but the higher-harmonic steps only from 4.6×10⁻¹⁶ to 1.1×10⁻¹⁶ (§2, "The centre").
+The mixed system (`--mixed`; `data/A_M_refine_M5_c.json`, `logs/A_M_refine_M5_c.log`) then converged: full Newton steps
+of 3.5×10⁻²⁰ (outer) and 1.5×10⁻²¹ (inner), then 1.3×10⁻²¹ and 4.4×10⁻²², with the inner residuals at ρ = 0.2 down to
+3×10⁻³⁰ and |g| at ξ₁ = 5.2×10⁻²² in every component. At the second iterate the full Newton step of the ξ₁ system and
+that of the mixed system agree to all ten printed digits, so the two systems have the same zero to this accuracy.
+REFINE_D
+
+**Structure** (`logs/A_M_plan_M5_it0.log`): outer Schur complement S with singular values 5.45 and 0.248; Dg_HH with
+singular values 3.2×10¹⁴ (twice, harmonic 5) and 1.07×10⁷ (twice, harmonic 3); raw outer block up to 6.9×10¹⁰; leakage
+at most 0.18; condition of Dg 1.6×10¹⁵.
+
+**The pilot** (`logs/A_M_pilot_M5.log`, `data/A_M_pilot_M5.json`): the box run at h = 10⁻¹², w = (10⁻¹⁸, 10⁻²²),
+stopped after 40 steps (ray t = 0.0059): 147 s including the start data at load about 4, state radius 5.9×10⁻¹⁴,
+derivative radii per column 3×10⁻¹³ to 4×10⁻¹². A full run is about 2000 steps (M = 3 needed 955 + 552 + 72 from
+r₀ = 0.0741; the ray from r₀ = 0.0622 is longer in step count by about (0.0741/0.0622)² ≈ 1.4), so 1.5–2 hours here at
+low load and more at the usual load of 15–25. Following the coordinator's rule for runs of hours, the M = 5 box runs are
+the local-machine task of §7; none was run here.
+
+**What decides the box at M = 5** (scale estimates, not measured). The inner rows for (B₅, C₅) need
+w₅ > |(Y Dg̃(X))_{z₅,o}|·h; that entry is the enclosure excess of the outer columns in the J₅ components divided by
+about 3×10¹⁴, and at M = 3 the corresponding excess grew in proportion to the run's outer width (§6.2). Against that, the
+state's width over the box is about 3×10¹⁴·w₅ from the harmonic-5 coordinates alone, which must stay well below the
+0.1% a C¹ family integration tolerates (AGENTS.md). Since the M = 5 growth factors are unknown, §7 runs four (h, w)
+pairs in parallel. hier.py's two M = 5 solves (`HIER[5]` in certify_M.py) lie 1.8×10⁻¹¹ and 9×10⁻¹³ from the refined
+centre in A, so statement (a) of the hier.py check (inside the hull of P) can hold for both only on a box with
+h ≥ 2×10⁻¹¹; on the smaller boxes only statement (b) (agreement within 3× hier's spread) is meaningful, and
+`krawczyk --hier` exits non-zero there because of (a).
+
 ## 7. Cost, and a proposed task for the local machine
 
 Wall-clock times on the shared 2-core cloud machine at load 17–25 (each process got a fifth to an eighth of a core),
@@ -380,28 +416,48 @@ one process each, under `nice -n 10`:
 | M = 3 box run (h = 10⁻¹⁰) | 13 + ω | 955, 552, 72 | 55 min | 2.1 s |
 | M = 3 refinement, one Newton iteration (numerics, order 30) | 13 + ω | 193 in all | 11–13 min | 3.6 s |
 | M = 5 refinement, one Newton iteration | 19 + ω | 307 in all | 41 min | 8 s |
-| M = 5 box run | 19 + ω | M5_STEPS | M5_TIME | M5_PER |
+| M = 5 box run, pilot (40 steps, start data included) | 19 + ω | 40 of about 2000 | 147 s at load 4 | 3.7 s |
 
 The step counts are set by the first-order a-priori enclosure (§3), not by the accuracy needed.
 
-**Proposed task for the local 8-thread machine** (for the coordinator to queue; COST_LOCAL).
+**Proposed task for the local 8-thread machine** (for the coordinator to queue; about 3–4 hours on 4 threads).
 
-- *What:* LOCAL_WHAT
+- *What:* the M = 5 point certificate: four box runs at different (h, w) in parallel, then the Krawczyk test,
+  the controls, the independent re-check and the 6a export on the one that passes with the largest box.
 - *Prerequisites:* python-flint 0.9.0 and numpy; this branch merged with the lemma agent's (so that
   `solver/proof/fixed_point_M.py` sits next to `certify_M.py`), or `CERTIFY_M_FPM_DIR` pointing at it. Check first:
   `python3 certify_M_sys.py selftest` (PASS) and `python3 certify_M.py startcheck 5` (contains).
-- *Threads:* LOCAL_THREADS, one process each, at below-normal priority.
+- *Threads:* 4, one process each, at below-normal priority. One M = 5 Lohner step costs about 1.5 s on an idle core,
+  so a run of about 2000 steps takes about 1 hour alone and 3–4 hours with 4 busy threads (AGENTS.md: about 4× slower).
 - *Commands* (from `solver/proof/`):
 
 ```
-LOCAL_COMMANDS
+python3 certify_M_sys.py selftest                 # PASS
+python3 certify_M.py startcheck 5                  # contains
+# the four runs, one thread each (each resumes from its .ckpt if interrupted):
+python3 certify_M.py box 5 --centre=data/A_M_refine_M5_CTAG.json --use_out --h=3e-11 --w=3e-17,3e-21 --out=data/A_M_box_M5_3e-11.json --log=logs/A_M_box_M5_3e-11.log
+python3 certify_M.py box 5 --centre=data/A_M_refine_M5_CTAG.json --use_out --h=1e-12 --w=1e-18,1e-21 --out=data/A_M_box_M5_1e-12a.json --log=logs/A_M_box_M5_1e-12a.log
+python3 certify_M.py box 5 --centre=data/A_M_refine_M5_CTAG.json --use_out --h=1e-12 --w=1e-18,1e-22 --out=data/A_M_box_M5_1e-12b.json --log=logs/A_M_box_M5_1e-12b.log
+python3 certify_M.py box 5 --centre=data/A_M_refine_M5_CTAG.json --use_out --h=1e-13 --w=1e-19,1e-23 --out=data/A_M_box_M5_1e-13.json --log=logs/A_M_box_M5_1e-13.log
+# then, for each finished run (seconds each); --best tries outer sub-boxes h' = h 0.9^k with the inner widths kept:
+python3 certify_M.py krawczyk --box=data/A_M_box_M5_TAG.json --best --shrink --hier > logs/A_M_krawczyk_M5_TAG.log
+# for the run that passes with the largest box (SUB = the printed outer half-width and the run's two inner widths,
+# e.g. --sub=1e-12,1e-18,1e-22; leave --sub out if the whole box passes):
+python3 certify_M.py controls --box=data/A_M_box_M5_TAG.json --sub=SUB > logs/A_M_controls_M5_TAG.log   # exit 0
+python3 certify_M_recheck.py data/A_M_box_M5_TAG.json --sub=SUB > logs/A_M_recheck_M5_TAG.log           # same verdict
+python3 certify_M_recheck.py data/A_M_box_M5_TAG.json --sub=SUB --mutate > logs/A_M_recheck_M5_TAG_mutate.log   # must fail
+python3 certify_M.py export6a --box=data/A_M_box_M5_TAG.json --out=data/A_M_6a_M5_TAG.json
 ```
 
-- *Stop conditions:* a box run whose log shows `step size underflow`, or a derivative radius above 10³ in its progress
-  lines, is stopped (it will not pass); the refinement is stopped if its full Newton step does not shrink by at least
-  10³ per full iteration (the numerics are then not resolving Dg). A run interrupted by a restart is simply relaunched
-  with the same command: it resumes from its `.ckpt` file.
-- *Push:* `solver/proof/data/A_M_*M5*.json` (not the `.ckpt` files) and `solver/proof/logs/A_M_*M5*.log`.
+- *Stop conditions:* a run stops by itself with `step size underflow` or another exception (record it and do not
+  restart that pair). A derivative radius of order one or more in the progress lines before the real leg means that
+  run's box is too large (at M = 3, h = 10⁻¹⁰, it was 2×10⁻³ at the end of the arc); it may be stopped to free the
+  thread. A run interrupted by a restart is relaunched with the same command and resumes from its `.ckpt` file. Each
+  run is a few hours at most, so no other stop is needed. If no run passes even with `--best`, report the four
+  krawczyk logs (their margins say which rows fail) and stop: the next step is a design change (second-order chart or
+  C² enclosures, §2), not more runs.
+- *Push:* `solver/proof/data/A_M_*M5*.json` (not the `.ckpt` or `.ckpt.done` files) and
+  `solver/proof/logs/A_M_*M5*.log`, to a `wip/` branch the coordinator names.
 
 ## 8. Reproduce
 
@@ -420,13 +476,17 @@ python3 certify_M.py crosscheck 3                       # J_nu(0.2) vs inner_np.
 python3 certify_M.py crosscheck 3 --mutate              # must DISAGREE
 python3 certify_M.py refine 3 --iters=3 --tag=a         # centre (numerics) -> data/A_M_refine_M3_a.json
 python3 certify_M.py plan --centre=data/A_M_refine_M3_a.json
-python3 certify_M.py box 3 --centre=data/A_M_refine_M3_a.json --use_out --h=H --w=W \
-    --out=data/A_M_box_M3_H.json --log=logs/A_M_box_M3_H.log          # the rigorous run
-python3 certify_M.py krawczyk --box=data/A_M_box_M3_H.json --hier       # the test (seconds), then hier.py's zeros
-python3 certify_M.py controls --box=data/A_M_box_M3_H.json              # C0-C8, exit 0 iff all as expected
-python3 certify_M.py krawczyk --box=data/A_M_box_M3_H.json --hier --mutate=hier   # must fail
-python3 certify_M.py export6a --box=data/A_M_box_M3_H.json --out=data/A_M_6a_M3_H.json   # state box for lemma 6a(M)
-python3 certify_M_recheck.py data/A_M_box_M3_H.json [--mutate]          # independent assembly (mpmath)
+# the M = 3 certificate of section 6.2 (the centre is data/A_M_refine_M3_c.json's p_out; ~1 hour at load 20):
+python3 certify_M.py box 3 --centre=data/A_M_refine_M3_c.json --use_out --h=1e-10 --w=4e-16 \
+    --out=data/A_M_box_M3_1e-10.json --log=logs/A_M_box_M3_1e-10.log          # the rigorous run
+python3 certify_M.py krawczyk --box=data/A_M_box_M3_1e-10.json --hier       # the test (seconds), then hier.py's zeros
+python3 certify_M.py controls --box=data/A_M_box_M3_1e-10.json              # C0-C8, exit 0 iff all as expected
+python3 certify_M.py krawczyk --box=data/A_M_box_M3_1e-10.json --hier --mutate=hier   # must fail
+python3 certify_M_recheck.py data/A_M_box_M3_1e-10.json                     # independent assembly (mpmath)
+python3 certify_M_recheck.py data/A_M_box_M3_1e-10.json --mutate            # must fail
+python3 certify_M.py export6a --box=data/A_M_box_M3_1e-10.json --out=data/A_M_6a_M3_1e-10.json   # for lemma 6a(M)
+# M = 5 centre (numerics; 25-40 min per iteration): the mixed system, from refine b's p_out
+python3 certify_M.py refine 5 --p=P --iters=2 --modes=full,full --mixed --tag=c
 ```
 
 ## 9. Proposed text for README.md, PROOF.md and A_certify.md
@@ -437,12 +497,20 @@ python3 certify_M_recheck.py data/A_M_box_M3_H.json [--mutate]          # indepe
 certificate is posed on the full (M + 1)-dimensional system of D-jumps at ξ₁ = 0.3, in coordinates that follow the
 higher harmonics' zero manifold to first order (hier.py's linear predictor), with a preconditioner whose outer rows are
 the Schur-corrected outer condition and whose inner rows are the interval Newton step for the higher-harmonic
-unknowns; the preconditioner is applied to the Lohner sets before any interval hull, so the 10¹⁷-sized leakage cancels
-exactly. RESULT_SENTENCE"
+unknowns; the preconditioner is applied to the Lohner sets before any interval hull, so the leakage cancels in a point
+matrix before any interval product. At M = 3 this certifies, given the M-harmonic start-value lemma
+(`fixed_point_M.start_data_M`) and Braaksma's theorem, exactly one simple zero of the D-jump function in an explicit
+parallelepiped of outer half-width 10⁻¹⁰, with A ∈ [2.72647588563032, 2.72647588563144] and
+ω/ω∞ ∈ [1.01560309485743, 1.01560309485804]. Theorem A(3) follows as in [A_lemmas_M.md](proof/A_lemmas_M.md) §6 once
+its hypotheses H2 (the 6b₁ covering) and H3 (lemma 6a(3) on this run's state box) are discharged. M = 5 is not
+certified yet: its box runs are a queued local-machine task (A_M.md §7)."
 
-**A_certify.md §7 ("From M = 1 to M = 5"), a closing line:** "Done in [A_M.md](A_M.md): the de-mixing and the Schur
+**A_certify.md §7 ("From M = 1 to M = 5"), a closing line:** "Done at M = 3 in [A_M.md](A_M.md): the de-mixing and the Schur
 correction are a choice of preconditioner, the inner unknowns are measured from the linearized zero manifold, and one
 Krawczyk test on the whole system does what the nested test would. Multiprecision is needed for the preconditioner
 (condition about 10⁷ at M = 3 in raw jump units) but not for the integration, which runs at 256 bits as at M = 1."
 
-**README, where the M = 3 and M = 5 zeros are quoted (the selection-rule section):** "RESULT_README"
+**README, where the M = 3 and M = 5 zeros are quoted (the selection-rule section):** "At M = 3 the zero is certified (computer-assisted, given the M-harmonic start-value lemma; proof/A_M.md §6.2):
+A ∈ [2.72647588563032, 2.72647588563144], ω/ω∞ ∈ [1.01560309485743, 1.01560309485804]. hier.py's and nested.py's
+zeros agree with it to within their own spread (at most 1.2×10⁻¹¹). At M = 5 the zero is numerical evidence (hier.py,
+refined by Newton steps in proof/A_M.md §6.3); its certificate runs are queued."
