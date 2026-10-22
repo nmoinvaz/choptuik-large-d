@@ -1,0 +1,92 @@
+=== python3 certify_M_sys.py selftest --mutate=coupling
+M = 1: SysM vs validated_int.Sys: rhs 3.8e+01, lin 2.0e+02  MISMATCH
+M = 3: SysM vs inner_np.Inner.rhs (double): 8.2e-01; lin vs central difference: 1.8e-45  MISMATCH
+M = 5: SysM vs inner_np.Inner.rhs (double): 9.9e-01; lin vs central difference: 2.3e-45  MISMATCH
+M = 3: series_generic_M vs series_arb.SeriesArb: 2.5e-56; parameter jets vs central differences: 3.7e-51  ok
+M = 3: lin_unit vs lin on all unit vectors (series): 7.2e-72  ok
+M = 5: lin_unit vs lin on all unit vectors (series): 1.3e-71  ok
+M = 1: one step of LohnerM vs validated_int.Lohner: both ok True, overlap False, midpoints differ 1.4e-04, radii 9.6e-34 vs 9.7e-34  MISMATCH
+M = 1: the same step with NJ = 12: ok True, overlaps validated_int's False, radius 9.6e-34  MISMATCH
+SELFTEST FAIL
+=== exit 1
+=== python3 certify_M.py krawczyk --box=data/A_M_box_M3_1e-10.json --hier
+Krawczyk M = 3: K(X) in int X: True; relative margins +0.994, +0.997, +0.778, +0.778
+   start values: fixed_point_M.start_data_M (rigorous given that lemma; /home/claude/dss-residual-kernel/.claude/worktrees/agent-a2fc719f20ab19cbf/solver/proof/fixed_point_M.py, sha256 589e5a810bc50289), arg 5pi/16, diag splitting
+   g(p^) radius 1.7e-16; max radius of Y Dgt(X) 2.3e-01
+   box of the run: h = 1e-10, w = ['4e-16']; tested on: half-widths 1e-10, 1e-10, 4e-16, 4e-16
+   A        in [2.72647588563032, 2.72647588563144]  (radius 5.59e-13)
+   w/w_inf  in [1.01560309485743, 1.01560309485804]  (radius 2.98e-13)
+   B3       in [0.144419478469924, 0.144419478470230]  (radius 1.53e-13)
+   C3       in [0.0110874258881079, 0.0110874258881255]  (radius 8.75e-15)
+hier.py check M = 3: (a) inside the hull of P: True (per solve: [True, True]); (b) agreement within 3x hier's spread: True
+   A        |hier - certified| <= 1.14e-11   hier spread 1.7e-11   hull half-width 1.0e-10
+   w/w_inf  |hier - certified| <= 1.09e-11   hier spread 1.7e-11   hull half-width 1.0e-10
+   B3       |hier - certified| <= 1.21e-12   hier spread 1.8e-12   hull half-width 3.9e-11
+   C3       |hier - certified| <= 1.79e-13   hier spread 2.8e-13   hull half-width 2.5e-12
+=== exit 0
+=== python3 certify_M.py krawczyk --box=data/A_M_box_M3_1e-10.json --hier --mutate=hier
+Krawczyk M = 3 [mutation hier]: K(X) in int X: True; relative margins +0.994, +0.997, +0.778, +0.778
+   start values: fixed_point_M.start_data_M (rigorous given that lemma; /home/claude/dss-residual-kernel/.claude/worktrees/agent-a2fc719f20ab19cbf/solver/proof/fixed_point_M.py, sha256 589e5a810bc50289), arg 5pi/16, diag splitting
+   g(p^) radius 1.7e-16; max radius of Y Dgt(X) 2.3e-01
+   box of the run: h = 1e-10, w = ['4e-16']; tested on: half-widths 1e-10, 1e-10, 4e-16, 4e-16
+   A        in [2.72647588563032, 2.72647588563144]  (radius 5.59e-13)
+   w/w_inf  in [1.01560309485743, 1.01560309485804]  (radius 2.98e-13)
+   B3       in [0.144419478469924, 0.144419478470230]  (radius 1.53e-13)
+   C3       in [0.0110874258881079, 0.0110874258881255]  (radius 8.75e-15)
+hier.py check M = 3 [mutated: hier zeros shifted]: (a) inside the hull of P: False (per solve: [False, False]); (b) agreement within 3x hier's spread: False
+   A        |hier - certified| <= 1.66e-09   hier spread 1.7e-11   hull half-width 1.0e-10
+   w/w_inf  |hier - certified| <= 1.09e-11   hier spread 1.7e-11   hull half-width 1.0e-10
+   B3       |hier - certified| <= 1.21e-12   hier spread 1.8e-12   hull half-width 3.9e-11
+   C3       |hier - certified| <= 1.79e-13   hier spread 2.8e-13   hull half-width 2.5e-12
+=== exit 1
+=== python3 certify_M.py controls --box=data/A_M_box_M3_1e-10.json
+C0 clean: expected pass, got pass (relative margins +9.94e-01, +9.97e-01, +7.78e-01, +7.78e-01)  OK
+C1 jump sign flipped, D_nu + conj D_-nu: expected fail, got fail (relative margins -6.97e+09, -3.58e+09, -2.30e+06, -2.96e+06)  OK
+C2 conjugation dropped, D_nu - D_-nu: expected fail, got fail (relative margins -1.41e+09, -5.39e+09, -1.92e+05, -4.12e+06)  OK
+C3 -conj J (null: same zeros): expected pass, got pass (relative margins +9.94e-01, +9.97e-01, +7.78e-01, +7.78e-01); zero enclosure overlaps C0's: True  OK
+C4 J_nu -> (nu + 1) J_nu (null: same zeros): expected pass, got pass (relative margins +9.94e-01, +9.97e-01, +7.78e-01, +7.78e-01); zero enclosure overlaps C0's: True  OK
+C5 zero planted outside, moved by 2h in A: expected fail, got fail (relative margins -1.01e+00, +9.97e-01, +7.78e-01, +7.78e-01)  OK
+C6 zero planted inside, moved by (h/2, -3h/10, w/4, ...): expected pass, got pass (relative margins +4.94e-01, +6.97e-01, +5.28e-01, +5.28e-01)  OK
+C6b zero planted inside, moved by half the clean margins (alternating signs): expected pass, got pass (relative margins +4.97e-01, +4.99e-01, +3.89e-01, +3.89e-01)  OK
+C7 g(p^) widened by 1e3 h |S| in the outer components: expected fail, got fail (relative margins -1.03e+03, -9.94e+02, +7.78e-01, +7.78e-01)  OK
+C8 zero planted outside in the first higher-harmonic coordinate, moved by 2w: expected fail, got fail (relative margins +9.94e-01, +9.97e-01, -1.22e+00, +7.78e-01)  OK
+CONTROLS ALL AS EXPECTED
+=== exit 0
+=== python3 certify_M_recheck.py data/A_M_box_M3_1e-10.json
+recheck (mpmath intervals) data/A_M_box_M3_1e-10.json: K(X) in int X: True; relative margins +0.994, +0.997, +0.778, +0.778
+   A        in [2.7264758856303206, 2.7264758856314395]
+   w/w_inf  in [1.0156030948574348, 1.0156030948580318]
+   B3       in [0.14441947846992423, 0.14441947847022956]
+   C3       in [0.011087425888107957, 0.01108742588812546]
+=== exit 0
+=== python3 certify_M_recheck.py data/A_M_box_M3_1e-10.json --mutate
+recheck (mpmath intervals) [mutated: jump sign] data/A_M_box_M3_1e-10.json: K(X) in int X: False; relative margins -6970584715.795, -3581188767.700, -2300395.264, -2962748.376
+   A        in [2.0294174139513798, 2.029417413953009]
+   w/w_inf  in [1.3737219717271945, 1.3737219717277633]
+   B3       in [-0.042305578150909208, -0.042305578150538245]
+   C3       in [0.00057895463105998471, 0.00057895463107919364]
+=== exit 1
+=== python3 certify_M.py startcheck 3
+start check M = 3: fixed_point_M.start_data_M (rigorous given that lemma; /home/claude/dss-residual-kernel/.claude/worktrees/agent-ad660282861a34362/solver/proof/fixed_point_M.py, sha256 589e5a810bc50289), arg 5pi/16, diag splitting
+   contains this file's series values: True (max difference 4.4e-76, radius 6.0e-51); derivatives: True
+=== exit 0
+=== python3 certify_M.py startcheck 3 --mutate
+start check M = 3 [mutated]: fixed_point_M.start_data_M (rigorous given that lemma; /home/claude/dss-residual-kernel/.claude/worktrees/agent-ad660282861a34362/solver/proof/fixed_point_M.py, sha256 589e5a810bc50289), arg 5pi/16, diag splitting
+   contains this file's series values: False (max difference 4.4e-76, radius 6.0e-51); derivatives: True
+=== exit 1
+=== python3 certify_M.py crosscheck 3
+   J_1(0.2): this code -2.522593984520e-01+6.937703960807e-02j, inner_np -2.522593984519e-01+6.937703960810e-02j, |difference| / max|y| = 1.7e-14
+   J_3(0.2): this code 2.599286239174e-01-1.143350993554e+00j, inner_np 2.599286239169e-01-1.143350993553e+00j, |difference| / max|y| = 8.6e-14
+crosscheck M = 3: worst |difference| / max|y| 8.6e-14 -> AGREE (inner_np r0 0.0741, its series to 94 terms)
+=== exit 0
+=== python3 certify_M.py crosscheck 3 --mutate
+   J_1(0.2): this code -2.522593984520e-01+6.937703960807e-02j, inner_np -2.522521819762e-01+6.937063075437e-02j, |difference| / max|y| = 1.3e-06
+   J_3(0.2): this code 2.599286239174e-01-1.143350993554e+00j, inner_np 2.599423267260e-01-1.143312903699e+00j, |difference| / max|y| = 5.5e-06
+crosscheck M = 3 [mutated: inner_np at wf + 1e-6]: worst |difference| / max|y| 5.5e-06 -> DISAGREE (inner_np r0 0.0741, its series to 94 terms)
+=== exit 1
+=== python3 lemma6_usys_M.py
+M = 3: (a) 1.4e-55 ok; (b) 3.5e-16 ok; (c) 4.0e-58 ok; (d) 9.2e-59 ok; (e) 5.3e-56 ok; (f) 1.6e-58 ok
+M = 5: (a) 1.4e-55 ok; (b) 1.4e-15 ok; (c) 6.4e-58 ok; (d) 8.0e-59 ok; (e) 5.7e-55 ok; (f) 2.5e-57 ok
+ALL SELF-TESTS PASS: True
+=== exit 0
+=== done

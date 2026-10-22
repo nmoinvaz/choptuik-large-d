@@ -52,7 +52,9 @@ Contents
   - `fixed_point.py`'s weight exponent adapts to a wrong series, so a mutated coefficient yields a weaker but true
     lemma; `fixed_point_M.py` now checks the structural vanishing orders.
   - `hier.py` prints (B_ν, C_ν) only at intermediate iterates; `refine_zero_M.py` gives them at the final (A, ω).
-  - The coords mutation of 6a, not caught at M = 1 (ρ₆ₐ = 0.12), is still not caught at M = 3, but ρ₆ₐ = 0.89 there.
+  - The coords mutation of 6a, not caught at M = 1 (ρ₆ₐ = 0.12), is not caught on the pilot's state box at M = 3
+    (ρ₆ₐ = 0.89), but on the certificate's own state box it is: ρ₆ₐ = 1.45 against 0.0785 for the clean run on that box
+    (A_M_review.md F8).
 
 ## 1. The M-harmonic setting
 
@@ -164,7 +166,9 @@ The homogeneous solution is $`\varphi_\mu(z) = e^{-1/(2z)}z^{-(3+2s_\mu)/2}`$ (p
 v(z) = \int_0^z K_\mu(t, z)\,\Phi_v(t)\,dt, \qquad K_\mu(t, z) = e^{\frac{1}{2t}-\frac{1}{2z}}\Big(\frac tz\Big)^{(3+2s_\mu)/2} .
 ```
 
-On a ray t/z = ϱ/r ∈ (0, 1] is real and positive, so $`\lvert(t/z)^{s_\mu}\rvert = 1`$ for every label and
+On a ray t/z = ϱ/r ∈ (0, 1] is real and positive, so $`\lvert(t/z)^{s_\mu}\rvert = 1`$ for every label when ω is real.
+(Over the complex Cauchy box that supplies the derivative columns, $`\lvert(t/z)^{(3+2s_\mu)/2}\rvert = (t/z)^{3/2 - \mu\,\mathrm{Im}\,\omega} \le 1`$
+needs $`\lvert\mu\,\mathrm{Im}\,\omega\rvert \le 3/2`$; at M = 3 it is at most 0.0115, A_M_review.md F3.) Then
 
 ```math
 \lvert K_\mu(t, z)\rvert = e^{-a\left(\frac1\varrho - \frac1r\right)}\Big(\frac\varrho r\Big)^{3/2} \le e^{-a\left(\frac1\varrho - \frac1r\right)} .
@@ -698,8 +702,8 @@ the real (M + 1) × (M + 1) Jacobian of (Re S_μ, Im S_μ)_μ is non-singular at
 *Proof.* The steps are those of §12.6 in order.
 
 1. Lemma 6b₀(M) (from H1) and lemma 6b₁(M) (from H2) make y⁺ analytic on Ω = {0 < |ξ| ≤ 0.2, 0 ≤ arg ξ ≤ 3π/8}. The
-   certificate's path lies in Ω up to the real leg, and its start point lies in the domain of the old sector lemma, where
-   the start value is y⁺. So the path continuation is the continuation along the real axis, and J^path = J.
+   certificate's path lies in Ω up to the real leg, and its start value on the 5π/16 ray is y⁺ by the start-value fixed
+   point (step (i), §2). So the path continuation is the continuation along the real axis, and J^path = J.
 2. The certificate gives one simple zero of J in X_c.
 3. Lemma 6a(M) (H3, with lemma S and the flat estimate from H1) gives J(ξ₁; x) = 0 ⇔ y⁺ ≡ y⁻.
 4. Simplicity transfers to S by §4.2. ∎
@@ -716,8 +720,9 @@ backward flow 0.3 → 0.067 in 449 steps (B's largest radius 2.0×10⁻³, |G_sl
 centre is within 2.7×10⁻¹³ of p̂ and the hull's half-widths are 10⁻¹⁰, 10⁻¹⁰, 3.9×10⁻¹¹ and 2.5×10⁻¹² in
 (A, ω/ω∞, B₃, C₃). So (H1)–(H3) hold, and **Theorem A(3) is certified**, assuming Braaksma's theorem: the three-harmonic
 selection condition (S₁ = S₃ = 0, for the truncation of `inner_np.py`: b, c on |ν| ≤ 4, each binary product projected)
-has exactly one zero in the certificate's box, and it is simple. The code (this note's and A_M.md's) has not been
-reviewed independently.
+has exactly one zero in the certificate's box, and it is simple. An independent review ([A_M_review.md](A_M_review.md))
+confirms the point certificate, H1–H3 and lemma 6a; the majorant code of lemma S, 6b₀ and the flat estimate, and the 6b₁
+disc certificates, are not yet reviewed.
 
 The rest of this section was written before the certificate finished.
 
@@ -795,7 +800,8 @@ Every verdict matches (`python3 mutations_M.py --all`; the entries ran in four b
 - `fp_series_M3` was first seen *not* to fire. Without the structural vanishing check, the harness lowered the weight
   exponent to fit the mutated polynomial and proved a weaker, true lemma about it. The check was added and the entry
   rerun (§2.2).
-- `jump_coords_M3` is reported, not caught: ρ₆ₐ = 0.89 < 1 with the wrong mode normalization (0.12 at M = 1). As at
+- `jump_coords_M3` is reported, not caught on the pilot's box: ρ₆ₐ = 0.89 < 1 with the wrong mode normalization (0.12
+  at M = 1). On the certificate's state box it is caught (ρ₆ₐ = 1.45; A_M_review.md F8). As at
   M = 1 (§11.6), the error enters at second order through the flat estimate. What guards the normalization is
   `lemma6_usys_M.py`'s test (c).
 - The 6a mutations ran on the pilot's B₁, so they test the harness, not a proof.

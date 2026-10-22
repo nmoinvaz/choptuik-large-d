@@ -1850,8 +1850,10 @@ $B_3 \in [0.144419478469924, 0.144419478470230]$ and $C_3 \in [0.011087425888107
 6b$_0$, 6a and 6b$_1$ carry over to $M$ harmonics with the same proofs, and at $M = 3$ they are certified on boxes that
 contain the certificate's (6a with $\rho_{6a} = 0.041$, 6b$_1$ by $183$ discs in a $C^1$ mean-value form). So, assuming
 Braaksma's theorem, the three-harmonic selection condition $S_1 = S_3 = 0$ has exactly one zero in that box, and it is
-simple. The zero is $1.6\%$ above $\winf$ in frequency, at the measured amplitude. Unlike the case $M = 1$, this code has
-not been reviewed independently or re-implemented.
+simple. The zero is $1.6\%$ above $\winf$ in frequency, at the measured amplitude. An independent review (\repo{proof/A\_M\_review.md}) re-derived the
+Krawczyk inclusion in exact rational intervals, checked single integration steps and the start values against
+high-precision references, and confirmed the hypotheses of the assembly; the majorant code of lemmas S and 6b$_0$ and the
+disc certificates of 6b$_1$ are not yet reviewed.
 
 \subsection{What is not claimed}
 Theorem~\ref{thm:A} is a statement about the one-harmonic truncation ($M = 1$), not about the physical problem: its zero is

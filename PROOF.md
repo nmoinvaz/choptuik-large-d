@@ -221,8 +221,9 @@ point certificate's box, lemma 6a with that certificate's state box at ξ₁ = 0
 certified**, assuming Braaksma's theorem: the three-harmonic selection condition has exactly one zero in the
 certificate's box, and it is simple. At M = 5 the point certificate fails with the present
 first-order enclosures (A_M.md: the derivative radius grows past order one on the arc) and needs a second-order design;
-6b₁ also remains. None of the M-harmonic code
-has had an independent review.
+6b₁ also remains. An independent review (proof/A_M_review.md) confirms the
+M = 3 point certificate, H1–H3 and lemma 6a; the majorant code of lemmas S and 6b₀ and the 6b₁ disc certificates are
+not yet reviewed.
 
 Staged targets: **A(M=5)**, a certified simple zero of the five-harmonic multiplier (lemmas A.1, A.2, A.4 only; a
 standard computer-assisted proof); then **A(∞)**, the untruncated zero, adding A.3, or by the entire-function route below.

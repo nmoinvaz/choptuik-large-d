@@ -13,7 +13,7 @@ start-value lemma `fixed_point_M.start_data_M` and Braaksma's theorem, on a para
 machine all failed: at h = 3×10⁻¹¹ and 10⁻¹² (twice) the derivative radius grew past order one on the arc, and the one
 run that finished (h = 10⁻¹³) fails the Krawczyk test (margins −13.7, −11.8, +0.29, +0.33, −542, −511;
 `logs/A_M_krawczyk_M5_1e-13.log`). By §7 the next step is a design change (a second-order chart or C² enclosures), not
-more runs. The new code has not been reviewed. With lemma 6a run on this certificate's state box
+more runs. An independent review ([A_M_review.md](A_M_review.md)) confirms the M = 3 certificate. With lemma 6a run on this certificate's state box
 (ρ₆ₐ = 0.041) and the other lemmas of [A_lemmas_M.md](A_lemmas_M.md), **Theorem A(3) is certified** (A_lemmas_M.md §7).
 
 Code: [`solver/proof/certify_M.py`](../solver/proof/certify_M.py) (driver, the Krawczyk test, refinement, controls),
@@ -319,8 +319,8 @@ with an empty inner block, and LohnerM against validated_int. The independent as
 
 **The run** (`data/A_M_box_M3_1e-10.json`, log `logs/A_M_box_M3_1e-10.log`): h = 10⁻¹⁰, w = 4×10⁻¹⁶, start data from
 `fixed_point_M.start_data_M` (SHA-256 prefix 589e5a810bc50289, the same file as on the lemma agent's branch
-`wip/layer-a-lemmas-m` when this was written), 955 + 552 + 72 steps, 55 minutes of run time at load about 20 (it was
-interrupted once by a restart and resumed from its checkpoint).
+`wip/layer-a-lemmas-m` when this was written), 955 + 552 + 72 steps, 55 minutes of run time at load about 20, in one
+uninterrupted run (its log).
 
 **The test** (`python3 certify_M.py krawczyk --box=data/A_M_box_M3_1e-10.json --hier`, `logs/A_M_krawczyk_M3_1e-10.log`):
 K(X) ⊂ int X on the run's whole box, relative margins 0.994, 0.997, 0.778, 0.778; radius of g(p̂) 1.7×10⁻¹⁶, largest

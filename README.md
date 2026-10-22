@@ -39,8 +39,8 @@ In brief: one rational formula in 1/(D − 2) fits all D ≥ 4; Δ tends to a fi
 a selection rule derived at D = ∞ reproduces Δ∞ to about 10⁻⁴ without using the finite-D solutions, and an exact symmetry
 explains γ∞ = 1/2. A proof of the selection rule is in progress ([PROOF.md](PROOF.md)); in a one-harmonic model case, a
 computer-assisted proof shows that the selection condition has exactly one simple zero (Theorem A(M = 1), assuming
-Braaksma's summability theorem), and the same holds with three harmonics (Theorem A(M = 3), whose code is not yet
-independently reviewed).
+Braaksma's summability theorem), and the same holds with three harmonics (Theorem A(M = 3), independently reviewed in
+part).
 
 What is new: not found in the literature searched ([notes/LIT_REVIEW.md](notes/LIT_REVIEW.md)):
 - Δ(D) to D = 61 at about 15 digits, and the finite limit Δ∞ = 1.643893746 against the Δ → 0 conjecture;
@@ -1210,8 +1210,10 @@ Braaksma's theorem, the three-harmonic selection condition (S₁ = S₃ = 0) has
 A ∈ [2.72647588563032, 2.72647588563144], ω/ω∞ ∈ [1.01560309485743, 1.01560309485804]. Unlike the one-harmonic zero
 (29% from the selected period), this one is 1.6% above ω∞, with the measured amplitude (2.70–2.72). The same steps carry
 over: a point certificate with four real jump conditions, and lemmas S, 6a, 6b₀ and 6b₁ for M harmonics, certified on
-boxes containing it (6a with ρ₆ₐ = 0.041, 6b₁ by 183 discs). This code has not been reviewed independently or
-re-implemented. At M = 5 the same certificate fails (the interval enclosures grow too fast along the arc); it needs a
+boxes containing it (6a with ρ₆ₐ = 0.041, 6b₁ by 183 discs). An independent review ([proof/A_M_review.md](proof/A_M_review.md)) re-derived the Krawczyk
+inclusion in exact rational intervals from the saved box, checked single Lohner steps and the start values against
+60–75-digit references, confirmed hypotheses H1–H3 and reran lemma 6a, and found no error that changes a number or a
+verdict. Not yet reviewed, here or at M = 1: the majorant code of lemmas S and 6b₀ and the 6b₁ disc certificates. At M = 5 the same certificate fails (the interval enclosures grow too fast along the arc); it needs a
 second-order design ([proof/A_M.md](proof/A_M.md)). The
 first coefficient σ₁ of the untruncated condition is also enclosed rigorously (±3.5×10⁻⁵).
 

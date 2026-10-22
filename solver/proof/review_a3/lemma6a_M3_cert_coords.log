@@ -1,0 +1,6 @@
+lemma S (M = 3, rp = 0.1, k = 20): contraction 0.8252; flat estimate on 0 < z <= Z = 0.004489: Lambda = 0.2923
+start box at xi1 = 0.3 (y+ and sigma(y+)): radius 3.42e-08
+backward along the real axis 0.3 -> 0.067: 449 steps, 0 s; final state radius 5.42e-07; max radius of B 9.05e-03
+|H| = |G_fast G_slow^-1| entries <= 1.01e+02; G_slow^-1 entries <= 1.70e+00
+rho_6a = 1.453e+00 < 1: False  => all J_D,mu(0.3) = 0 implies psi = 0 (whole jump): False   [MUTATION coords]
+exit 2
