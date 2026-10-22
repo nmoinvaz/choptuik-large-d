@@ -1572,13 +1572,22 @@ Proposition 5.
 | complex scalar, axion–dilaton | the same heat system | yes | 1/2 where the λ = 2 mode is the relevant one |
 | scalar multiplet with angular momentum ℓ ≥ 1 | heat equation plus ℓφ/(2s) | broken | not fixed by any symmetry; generically ≠ 1/2 |
 | Yang–Mills (type II) | the ℓ = 1 multiplet's | broken | the ℓ = 1 value |
-| wave maps (σ-model), coupling η | a sin 2u/(4s) term, η-dependent | broken | η-dependent; the ℓ = 1 value as η → ∞ |
+| wave maps (σ-model), coupling η | a sin 2u/(4s) term, η-dependent | broken | η-dependent; the ℓ = 1 value as η → ∞ (its CSS branch ends at D ≈ 8.5, so only the DSS branch can test this) |
 
 The model equations, the D = ∞ inner problems and the symmetry search are derived and checked symbolically. The
 predictions for γ∞ are conjectures. They are being tested numerically: the ℓ = 1 multiplet across D, the σ-model's
 self-similar branch, and the complex-scalar control. For the phase-rotating complex scalar, the D = ∞ inner problem
 closes exactly on one harmonic with no truncation, and its selection condition gives ω∞ = 3.9789695074 (against 3.8221
 for the real scalar).
+
+**σ-model, self-similar (CSS) branch** ([matter/SIGMA.md](matter/SIGMA.md)). The D-dimensional equations are checked
+against Bizoń and Wasserman's at D = 4, and the D = 4 values are reproduced: λ ≈ 5.14, γ ≈ 0.18, and the horizon
+thresholds. Continued in D at fixed coupling η = 0.14, γ rises from 0.188 at D = 4 to 0.513 at a fold at D = 8.544,
+where the branch ends. In flat space it collapses onto a singular cone (u ≡ π/2) as D → 8, with λ → 2. So this branch
+never reaches large D and cannot test γ∞: its γ ends near 1/2 for a different reason. The test of the prediction needs
+the σ-model's DSS branch, which has not been computed. A by-product supports the selection rule in a second model: at
+η = 0.14 the zero of the D = ∞ Stokes multiplier for the CSS ground state, A₀ = 1.9225686, matches the finite-D ground
+state extrapolated to D = ∞, 1.9226 ± 0.0003.
 
 ### What is known about the selection, and what is open
 
