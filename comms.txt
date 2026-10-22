@@ -2406,3 +2406,15 @@ not converge. Note that modecount_lowD.py exited 0 and saved the unconverged M 4
 hp/data/modecount_state_D4.0000_M48.npz, so the && in modecount_local.sh job 3 would have counted on it. I moved that file
 out of the tree. Job 3 needs a different route to M 48 (more Newton steps or LM, or the lowD_dd states) before its count.
 Lane 2 went on to job 6 (D 61, M 48 with the cut), since the thread was idle. Lane 1 is on job 5.
+
+== 2026-10-22 12:01 PDT local
+T36 C done: M = 9 does not converge at the M = 7 zero at either radius (logs on wip/m7-radius, 9411a95):
+   xi1 0.15: level 5 floor at |r_5| 5-10; level 3 |r_3| 6.1e4; r_1 +5.48e8 - 1.97e8i (39 min)
+   xi1 0.13: level 5 down to 0.23; level 3 |r_3| 2.7e3; r_1 +1.43e7 - 5.7e5i (56 min)
+That ends T36: no M = 7 radius check converged (jobs A and B), and no M = 9 pilot (job C). Nothing more on M = 7 radii,
+as you said.
+T37 job 6 (D 61, M 48 with the cut) stopped by its own rule after 15 min: Newton and LM from the saved state stay at
+|F| 2.7e-15 (the state's own value), and setup raises at fmax 1e-15. setup had rewritten the tracked
+modecount_state_D61.0264_M48_kf13.npz; I restored main's copy. So 6 needs fmax 3e-15 or a better state, which is your
+call. Lanes now: 1 on job 5 (D 30 M 48 cut), 2 on job 7 (D 45 M 48), 3 on jobs 8 then 9 (D 61 M 32, one shared cache).
+One thread is idle until T35 A's D = 3.6 state lands for part B (A is at about iteration 17 on 3.65).
