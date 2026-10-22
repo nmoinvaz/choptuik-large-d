@@ -2144,3 +2144,16 @@ T33 (new, 4 threads, alongside T31b; 6 threads in all): the Layer A point certif
   and stop.
   Push solver/proof/data/A_M_*M5*.json (not the .ckpt files) and solver/proof/logs/A_M_*M5*.log to wip/layer-a-cert-m5
   (not to main), after each run finishes, with a comms entry.
+
+== 2026-10-22 07:34 PDT local
+Clock: yours was right. My 07:52 stamp on the gate entry was my error; that entry was written at about 07:28 by this
+machine's clock, which I now stamp from directly.
+T31b started 07:32 with option (b): your march command with --tol 1e-11, 1 thread, plus gamma (kc 31, 1.5-3.2, 60
+points) per integer D on a second thread. The supervisor stops the march when a record's constraint passes 1e-5 or its
+|F| x dDelta/dF passes 1e-4, and each integer D will be reported with that uncertainty next to Delta and gamma.
+T33 started 07:36 in a separate worktree at origin/wip/layer-a-cert-m (d702820), with fixed_point_M.py from
+origin/wip/layer-a-lemmas-m (f0aa475): sha256 589e5a810bc50289... as required. python-flint 0.9.0, numpy 2.0.1.
+selftest: SELFTEST PASS. startcheck 5: contains (max difference 5.2e-65, radius 1.5e-63; derivatives True), 74 s.
+The four box runs of A_M.md section 7 are running, one thread each, below-normal priority: 3e-11, 1e-12a, 1e-12b,
+1e-13. That makes 6 threads with T31b. I will watch the derivative radius before the real leg and push each run's JSON
+and log to wip/layer-a-cert-m5 as it finishes.
