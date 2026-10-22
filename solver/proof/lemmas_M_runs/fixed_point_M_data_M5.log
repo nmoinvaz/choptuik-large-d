@@ -1,0 +1,4 @@
+start data M 5, ray 3pi/8 r0 0.07, box +- 1e-9: value radius 7.4e-10 (|eta| <= 5.1e-20), derivative radius 2.7e-09 (Cauchy part 1.2e-10)  [187.6 s]
+start data M 5, ray 3pi/8 r0 0.07, box +- 1e-6: value radius 7.4e-07 (|eta| <= 5.1e-17), derivative radius 2.7e-06 (Cauchy part 1.2e-10)  [209.4 s]
+start data M 5, ray 5pi/16 r0 0.0622, box +- 1e-9: value radius 3.9e-10 (|eta| <= 1.6e-29), derivative radius 1.2e-09 (Cauchy part 3.6e-20)  [284.6 s]
+start data M 5, ray 5pi/16 r0 0.0622, box +- 1e-6: value radius 3.9e-07 (|eta| <= 1.6e-26), derivative radius 1.2e-06 (Cauchy part 3.6e-20)  [233.2 s]

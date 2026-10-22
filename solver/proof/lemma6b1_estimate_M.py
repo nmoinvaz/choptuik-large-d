@@ -106,9 +106,65 @@ def root_test(M, c, y, w, n=60):
     return est
 
 
+def arc_diagnostic(M, rho, h=1e-8, rho0=262.0, K=11, box0=None):
+    """why a box started at the arc's ray end grows: along the arc |u| = rho (from the start ray, t: 0 -> 1 in K steps)
+    (a) the true spread of y+ over the parameter box x^ +- h: sum_i |dy/dx_i| h, by central differences in each
+        parameter (series at rho0, ray, arc);
+    (b) the growth of a box restarted at the arc's start: the largest absolute row sum of the arc's flow map (real
+        coordinates, by finite differences of the flow), times the start box radius box0 (the hull of a full box)."""
+    import fixed_point_M as F
+    xs0 = [float(v) for v in F.ZEROS[M]]
+    ts = np.linspace(0, 1, K + 1)
+    phis = -3 * np.pi / 4 * (1 - ts)
+
+    def traj(xs):
+        saved = F.ZEROS[M]
+        F.ZEROS[M] = [repr(v) for v in xs]
+        try:
+            y0, w, N = start(M, rho0)
+        finally:
+            F.ZEROS[M] = saved
+        sr = integrate(lambda t: (t * E3, E3), y0, rho0, rho, M, w)
+        ya = val(sr, rho)
+        sa = integrate(lambda t: (rho * np.exp(1j * t), 1j * rho * np.exp(1j * t)), ya, -3 * np.pi / 4, 0.0, M, w)
+        return np.array([val(sa, p) for p in phis]), ya, w
+    base, ya, w = traj(xs0)
+    spread = np.zeros(len(ts))
+    for i in range(len(xs0)):
+        d = 1e-6 * max(abs(xs0[i]), 1e-2)
+        xp, xm = list(xs0), list(xs0)
+        xp[i] += d
+        xm[i] -= d
+        der = (traj(xp)[0] - traj(xm)[0]) / (2 * d)
+        spread += np.abs(der).max(axis=1) * h
+    # flow map of the arc from its start, in real coordinates
+    nd = len(ya)
+    eps = 1e-7
+    cols = []
+    for j in range(2 * nd):
+        dy = np.zeros(nd, complex)
+        dy[j % nd] = eps if j < nd else 1j * eps
+        sa = integrate(lambda t: (rho * np.exp(1j * t), 1j * rho * np.exp(1j * t)), ya + dy, -3 * np.pi / 4, 0.0, M, w)
+        cols.append(np.array([val(sa, p) for p in phis]) - base)
+    rows = []
+    for k in range(len(ts)):
+        Phi = np.array([np.concatenate([c[k].real, c[k].imag]) / eps for c in cols]).T
+        rows.append((np.abs(Phi).sum(axis=1).max(), np.linalg.svd(Phi, compute_uv=False)[0]))
+    print(f"M = {M}, arc |u| = {rho}: true spread over x^ +- {h:g} vs the hull growth of a box restarted at the arc start"
+          + (f" (radius {box0:g})" if box0 else ""))
+    for k in range(len(ts)):
+        rs, sv = rows[k]
+        print(f"   t = {ts[k]:.3f}: true spread {spread[k]:.2e};  max abs row sum of the flow {rs:.2e}, largest singular "
+              f"value {sv:.2e}" + (f";  restarted box -> {rs * box0:.2e}" if box0 else ""), flush=True)
+    return spread, rows
+
+
 def main():
     opts = {a.split("=", 1)[0][2:]: (a.split("=", 1)[1] if "=" in a else "1") for a in sys.argv[1:] if a.startswith("--")}
     M = int(opts.get("M", "3"))
+    if "arc" in opts:
+        arc_diagnostic(M, float(opts["arc"]), float(opts.get("h", "1e-8")), box0=float(opts.get("box0", "0")) or None)
+        return
     rho0 = float(opts.get("rho0", "262"))
     t00 = time.time()
     y0, w, N = start(M, rho0)

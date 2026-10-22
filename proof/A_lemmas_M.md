@@ -204,17 +204,60 @@ about 5×10⁻¹⁰ of the zero in (A, ω/ω∞). Rows of kind "lemma" are the r
 "limit" rows are measured and reported; "control" must fail. `python3 fixed_point_M.py --table --Ms=3`, exit status 0
 (`lemmas_M_runs/fixed_point_M_table_M3.json`):
 
-FP_TABLE_M3
+| M | kind | configuration | start ray, r₀ | splitting | parameters | N | contraction | sup\|η\| at \|z\| = R | holds |
+|---|---|---|---|---|---|---|---|---|---|
+| 3 | lemma | point | 3pi/8, 0.085 | diag | point | 72 | 0.2564 | 2.9×10⁻³⁶ | yes |
+| 3 | lemma | point | 3pi/8, 0.085 | plain | point | 72 | 0.4160 | 3.7×10⁻³⁶ | yes |
+| 3 | lemma | real box | 3pi/8, 0.085 | diag | real ±1e-6 | 72 | 0.2564 | 1.1×10⁻¹² | yes |
+| 3 | lemma | complex (Cauchy) box | 3pi/8, 0.085 | diag | complex ±1e-3(1+i) | 72 | 0.2571 | 2.4×10⁻⁹ | yes |
+| 3 | lemma | point | 5pi/16, 0.0741 | diag | point | 94 | 0.3159 | 5.5×10⁻⁴⁶ | yes |
+| 3 | lemma | point | 5pi/16, 0.0741 | plain | point | 94 | 0.5501 | 8.4×10⁻⁴⁶ | yes |
+| 3 | lemma | real box | 5pi/16, 0.0741 | diag | real ±1e-6 | 94 | 0.3159 | 2.6×10⁻²⁰ | yes |
+| 3 | lemma | complex (Cauchy) box | 5pi/16, 0.0741 | diag | complex ±1e-3(1+i) | 94 | 0.3168 | 5.9×10⁻¹⁷ | yes |
+| 3 | lemma | sector (old lemma) | 3pi/8 ± 0.2, 0.1 | diag | point | 53 | 0.5408 | 2.1×10⁻²⁷ | yes |
+| 3 | limit | point | 3pi/8, 0.1 | diag | point | 53 | 0.3359 | 1.4×10⁻²⁷ | yes |
+| 3 | limit | point | 3pi/8, 0.1 | plain | point | 53 | 0.5613 | 2.1×10⁻²⁷ | yes |
+| 3 | limit | real box | 3pi/8, 0.1 | diag | real ±1e-6 | 53 | 0.3359 | 2.2×10⁻⁶ | yes |
+| 3 | limit | complex (Cauchy) box | 3pi/8, 0.1 | diag | complex ±1e-3(1+i) | 53 | 0.3374 | 5.0×10⁻³ | yes |
+| 3 | limit | sector (old lemma) | 3pi/8 ± 0.2, 0.1 | plain | point | 53 | 0.9888 | 8.2×10⁻²⁶ | yes |
+| 3 | control | r0 too large | 3pi/8, 0.3 | diag | point | 3 | 16.3920 | — | **no** |
 
 **M = 5 at the hier.py zero** (`--table --Ms=5`, `lemmas_M_runs/fixed_point_M_table_M5.json`):
 
-FP_TABLE_M5
+| M | kind | configuration | start ray, r₀ | splitting | parameters | N | contraction | sup\|η\| at \|z\| = R | holds |
+|---|---|---|---|---|---|---|---|---|---|
+| 5 | lemma | point | 3pi/8, 0.07 | diag | point | 105 | 0.2500 | 3.2×10⁻⁴⁵ | yes |
+| 5 | lemma | point | 3pi/8, 0.07 | plain | point | 105 | 0.4299 | 4.2×10⁻⁴⁵ | yes |
+| 5 | lemma | real box | 3pi/8, 0.07 | diag | real ±1e-6 | 105 | 0.2500 | 5.1×10⁻¹⁷ | yes |
+| 5 | lemma | complex (Cauchy) box | 3pi/8, 0.07 | diag | complex ±1e-3(1+i) | 105 | 0.2506 | 1.2×10⁻¹³ | yes |
+| 5 | lemma | point | 5pi/16, 0.0622 | diag | point | 132 | 0.3095 | 3.4×10⁻⁵⁷ | yes |
+| 5 | lemma | point | 5pi/16, 0.0622 | plain | point | 132 | 0.5838 | 5.6×10⁻⁵⁷ | yes |
+| 5 | lemma | real box | 5pi/16, 0.0622 | diag | real ±1e-6 | 132 | 0.3095 | 1.6×10⁻²⁶ | yes |
+| 5 | lemma | complex (Cauchy) box | 5pi/16, 0.0622 | diag | complex ±1e-3(1+i) | 132 | 0.3102 | 3.6×10⁻²³ | yes |
+| 5 | lemma | sector (old lemma) | 3pi/8 ± 0.2, 0.1 | diag | point | 52 | 0.6384 | 6.8×10⁻²² | yes |
+| 5 | limit | real box | 3pi/8, 0.085 | diag | real ±1e-6 | 72 | 0.3250 | 2.3×10⁻⁶ | yes |
+| 5 | limit | complex (Cauchy) box | 3pi/8, 0.085 | diag | complex ±1e-3(1+i) | 72 | 0.3263 | 5.3×10⁻³ | yes |
+| 5 | limit | point | 3pi/8, 0.1 | diag | point | 52 | 0.4142 | 4.2×10⁻²² | yes |
+| 5 | limit | point | 3pi/8, 0.1 | plain | point | 52 | 0.8046 | 1.3×10⁻²¹ | yes |
+| 5 | limit | real box | 3pi/8, 0.1 | diag | real ±1e-6 | 52 | 0.4222 | 5.2×10⁻¹ | yes |
+| 5 | limit | complex (Cauchy) box | 3pi/8, 0.1 | diag | complex ±1e-3(1+i) | 52 | 44.8089 | — | **no** |
+| 5 | limit | sector (old lemma) | 3pi/8 ± 0.2, 0.1 | plain | point | 52 | 1.4162 | — | **no** |
+| 5 | control | r0 too large | 3pi/8, 0.3 | diag | point | 3 | 18.6888 | — | **no** |
 
 **Start data with derivatives** (`--data-table`), real boxes around x̂, Cauchy radius 10⁻³, diag splitting. The value
 and derivative radii are those of the balls handed to the integrator: the true variation over the box plus the
 enclosure. The Cauchy part is the bound on |∂η/∂x| in the (p, v, c) variables:
 
-DATA_TABLE
+| M | start ray, r₀ | real box | value radius | derivative radius | Cauchy part (p, v, c) | sup\|η\| over X |
+|---|---|---|---|---|---|---|
+| 3 | 3pi/8, 0.085 | ±1e-9 | 5.2×10⁻¹⁰ | 2.9×10⁻⁸ | 2.4×10⁻⁶ | 1.1×10⁻¹⁵ |
+| 3 | 3pi/8, 0.085 | ±1e-6 | 5.2×10⁻⁷ | 1.3×10⁻⁶ | 2.4×10⁻⁶ | 1.1×10⁻¹² |
+| 3 | 5pi/16, 0.0741 | ±1e-9 | 2.6×10⁻¹⁰ | 5.6×10⁻¹⁰ | 5.9×10⁻¹⁴ | 2.6×10⁻²³ |
+| 3 | 5pi/16, 0.0741 | ±1e-6 | 2.6×10⁻⁷ | 5.6×10⁻⁷ | 5.9×10⁻¹⁴ | 2.6×10⁻²⁰ |
+| 5 | 3pi/8, 0.07 | ±1e-9 | 7.4×10⁻¹⁰ | 2.7×10⁻⁹ | 1.2×10⁻¹⁰ | 5.1×10⁻²⁰ |
+| 5 | 3pi/8, 0.07 | ±1e-6 | 7.4×10⁻⁷ | 2.7×10⁻⁶ | 1.2×10⁻¹⁰ | 5.1×10⁻¹⁷ |
+| 5 | 5pi/16, 0.0622 | ±1e-9 | 3.9×10⁻¹⁰ | 1.2×10⁻⁹ | 3.6×10⁻²⁰ | 1.6×10⁻²⁹ |
+| 5 | 5pi/16, 0.0622 | ±1e-6 | 3.9×10⁻⁷ | 1.2×10⁻⁶ | 3.6×10⁻²⁰ | 1.6×10⁻²⁶ |
 
 **Where the label weights show: the forcing over parameter boxes.** At a point, the forcing is the optimal truncation
 error of the series, and it is far smaller near the zero than away from it. At the M = 3 zero, sup|η| at r₀ = 0.1 is
@@ -299,7 +342,10 @@ The contraction at fixed R₊ grows with M through the label terms, as §3.2 pre
 
 **Over the box X₆ = x̂ ± 10⁻⁶** (`lemma6_sector_M.py --box=1e-6`, exit status 0):
 
-SECTOR_TABLE
+| M | R₊ (r₊²) | k | parameters | lemma S contraction | old sector lemma (diag) | Z | flat estimate Λ plain / diag | all |
+|---|---|---|---|---|---|---|---|---|
+| 3 | 0.1² | 20 | x̂ ± 1e-6 | 0.8252 | 0.5408 | 0.004489 | 0.2923 / 0.2199 | yes |
+| 5 | 0.08² | 20 | x̂ ± 1e-6 | 0.7247 | 0.6493 | 0.004489 | 0.4233 / 0.2979 | yes |
 
 **Lemma S(3), lemma 6b₀(3) and the flat estimate at M = 3: certified** over X₆ = x̂ ± 10⁻⁶ (trusted code:
 `lemma6_sector_M.py`, `fixed_point_M.py` and `fixed_point.py`'s majorant helpers, python-flint).
@@ -310,7 +356,19 @@ SECTOR_TABLE
   x ∈ X₆. These radii are exactly those of M = 1.
 - Flat estimate at Z = 0.004489 (ξ_a = 0.067): Λ ≤ 0.2923 (plain) or 0.2199 (diag).
 
-M5_SECTOR
+**Lemma S(5), lemma 6b₀(5) and the flat estimate at M = 5: certified** over X₆ = x̂ ± 10⁻⁶ at the M = 5 zero
+x̂ = (2.718579189, 0.999228404, 0.149203574672, 0.014719052460, 0.008405346879, 0.001470345176). (A, ω/ω∞) are from
+`hier.py --schur`; the B, C are re-solved at that (A, ω), with Schur-corrected |r₁| = 6.3×10⁻⁶ and r₃, r₅ at about
+3×10⁻¹⁰ (`lemmas_M_runs/zero_M5.json`).
+
+- Lemma S: R₊ = 0.0064 (r₊ = 0.08), k = 20, a_eff = 0.2896, contraction ≤ 0.7247.
+- Old sector lemma: diag splitting, contraction ≤ 0.6493.
+- Lemma 6b₀(5): y⁺ is analytic for 0 < |ξ| ≤ 0.0499 (|u| ≥ 401.2), 0 ≤ arg ξ ≤ 3π/8, and on the real segment up to
+  0.0673, for every x ∈ X₆.
+- Flat estimate at the same Z = 0.004489, which still lies in D's real reach R₊/√2 = 0.004525: Λ ≤ 0.4233 (plain) or
+  0.2979 (diag).
+
+So at M = 5, G₀ shrinks to |u| > 402, and the 6b₁ annulus grows to 25 ≤ |u| ≤ 402 (§9).
 
 ## 4. Lemma 6a
 
@@ -424,7 +482,65 @@ G = G₀ ∪ ⋃ T_jk that contains the annular sector A₁ = {25 ≤ |u| ≤ 26
 
 With these, the proof is that of §12.4: lemma D for each disc (C1), then lemma G with C2–C7, then C8. ∎
 
-SECTION_5_RESULTS
+### 5.3 Results
+
+**Planning (double precision, not rigorous; `lemma6b1_estimate_M.py`).** On the arcs |u| = ρ, from the start ray to
+the real axis:
+
+| \|u\| | \|ξ\| | M = 1: max \|P\|, \|V\|, \|C₀ − 1\| | M = 3: max \|P\|, \|V\|, \|C₀ − 1\| | root-test singularity distance at ρe^{−3iπ/4}, M = 1 / M = 3 |
+|---|---|---|---|---|
+| 262 | 0.0618 | 2.63, 0.23, 0.013 | 2.86, 0.33, 0.015 | |
+| 100 | 0.1000 | 2.79, 0.65, 0.034 | 3.11, 1.01, 0.040 | 63 / 52 |
+| 60 | 0.1291 | 2.98, 1.22, 0.058 | 3.41, 1.97, 0.069 | 45 / 36 |
+| 40 | 0.1581 | 3.24, 2.12, 0.090 | 3.87, 3.61, 0.110 | 30 / 24 |
+| 25 | 0.2000 | 3.85, 4.53, 0.154 | 5.01, 8.62, 0.198 | 15.0 / 12.7 |
+
+The M = 1 column reproduces §12.1's table. At M = 1 the root test at 25e^{−3iπ/4} (15.0) is close to the distance to
+the branch point located there (15.8).
+
+**Lemma D at M = 1 reproduces lemma6b1_disc** (`python3 lemma6b1_disc_M.py`, exit status 0). On the M = 1 data, at
+|u| = 102.16 (r = 24, n = 70) and 24.94 (r = 10, n = 40), Λ is 0.184226 and 0.438972 in both codes, and Λ and F₀
+agree exactly.
+
+**Disc radii (probe, not rigorous).** Discs certified around double-precision values of y⁺ with inflated boxes
+(`probe_M3*.log`):
+
+- The M = 1 radii work at M = 3 down to row 10.
+- The innermost row's start-ray disc needs r = 6 (r = 8 gives Λ = 1.34 with 10⁻⁷ boxes).
+- How much box radius a disc tolerates depends on where it sits. With r = 6, the start-ray disc of row 11 passes with
+  2×10⁻⁵ boxes (Λ = 0.28) and fails with 10⁻⁴; the real-axis disc passes with 10⁻³.
+
+The M = 3 design (`design --M=3`) therefore has the 12 rows of M = 1, with r = 6 below |u| = 32: 183 discs.
+
+**The ray run over x̂ ± 10⁻⁸** (rigorous; `lemma6b1_runs_M3/ray_h1e-8.json`). The start box from the old sector lemma
+has radius 5.8×10⁻⁷. Across the 11 legs, 903 steps:
+
+| \|u\| | 235 | 209 | 182 | 155 | 129 | 102 | 80 | 62 | 47 | 36 | 27 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| radius (×10⁻⁷) | 1.06 | 1.16 | 1.27 | 1.40 | 1.93 | 3.09 | 5.51 | 10.7 | 25.2 | 69.8 | 254 |
+
+At M = 1 the same run grew from 2.9×10⁻⁸ to 7.9×10⁻⁸.
+
+**Row 11 over x̂ ± 10⁻⁸ fails** (`cover_M3_row11_h1e-8_hullrestart.log`). Discs 0–3 are certified (Λ ≤ 0.34). Then
+the Lohner box grows from 2.5×10⁻⁵ at the arc's start to 2.7×10⁻³ (t = 0.18) and 5.6×10⁻² (t = 0.36), and disc 4 fails
+(Λ = 2.2).
+
+The cause, from `lemma6b1_estimate_M.py --arc=26.98` (double precision; `arc_diagnostic_M3_row11.log`):
+
+- **The box at the arc start is real parameter spread.** y⁺ near 27e^{−3iπ/4} moves by about 630·h over the box
+  (6.3×10⁻⁶ at h = 10⁻⁸). The same diagnostic at M = 1, on row 11 at 24.94 (`arc_diagnostic_M1_row11.log`), gives
+  22h. The higher harmonics make y⁺ about 30 times more sensitive to the parameters near |ξ| = 0.19.
+- **The linear flow would grow a restarted box only moderately.** Its largest absolute row sum stays at or below 18
+  up to t = 0.73 and reaches 691 only at the real axis (at M = 1 it stays at or below 18 to the axis). The Lohner run
+  exceeds that hull by 10–170× from t = 0.18 on. That excess is the quadratic feedback diagnosed in §11.4: a wide set
+  widens every step's Jacobian, which widens the set. At M = 1 the same excess was about 13×: row 11's boxes reached
+  1.8×10⁻⁵ against a hull of 1.4×10⁻⁶.
+
+The remedy is a smaller parameter box, since the spread and the feedback scale like h and h². Reformulating would also
+work: carrying the parameter derivatives as Lohner columns in mean-value form, as the box runs of §9 do, so that the
+set's width is the true spread.
+
+ROW11_H1E9
 
 ## 6. Theorem A(M), conditional on the point certificate
 
