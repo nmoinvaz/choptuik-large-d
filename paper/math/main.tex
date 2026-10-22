@@ -58,7 +58,7 @@ a selection rule and a computer-assisted proof}
 
 \begin{abstract}
 Choptuik's critical solution of spherical scalar-field collapse is discretely self-similar, with an echo period $\Delta$
-that depends on the spacetime dimension $D = n + 2$; computed to $D = 61$, it approaches $1.64389375$ as $D \to \infty$, if it is
+that depends on the spacetime dimension $D = n + 2$; computed to $D = 61$, it approaches $1.643893746$ as $D \to \infty$, if it is
 analytic in $1/D$. We study the
 limit as a selection problem of exponential asymptotics. Within a scaling ansatz measured on the solutions, the $1/n$
 expansion of the self-similar field equations is unobstructed to all orders for any period and any time profile, so the
@@ -93,7 +93,7 @@ can be posed in any number $D = n + 2$ of spacetime dimensions, with $n$ enterin
 review~\cite{GundlachReview2025} for the physics.
 
 This paper is about the limit $n \to \infty$. In the companion paper~\cite{companion} the critical solution is
-computed up to $D = 61$, and the echo period approaches a finite limit, $\Dinf = 1.64389375$ if $\Delta$ is analytic in $1/D$
+computed up to $D = 61$, and the echo period approaches a finite limit, $\Dinf = 1.643893746$ if $\Delta$ is analytic in $1/D$
 (Section~\ref{sec:numbers}).
 The questions here are mathematical. Why does the expansion of the equations in powers of $1/n$ not determine $\Dinf$?
 What does? And what can be proved about it?
@@ -228,10 +228,10 @@ exact symmetry $m(x) = p(-x)$.
 The companion paper~\cite{companion} computes the critical solution at 857 values $8.25 \le D \le 61.03$ in
 double-double arithmetic~\cite{Dekker1971}. If $\Delta$ is analytic in $1/D$, which held-out tests there support but do not prove,
 \begin{equation}\label{eq:Dinf}
-\Dinf = 1.64389375 \pm 1.5\times10^{-8}, \qquad \winf = 2\pi/\Dinf = 3.82213589 \pm 4\times10^{-8},
+\Dinf = 1.643893746 \pm 1.5\times10^{-8}, \qquad 2\pi/\Dinf = 3.82213590 \pm 4\times10^{-8},
 \end{equation}
-where the $\pm$ is the spread over 48 fit choices (it covers the known limits of synthetic data, and its centre is probably
-high by about $10^{-8}$). The growth rate $\lambda$ of the unstable mode, $\lambda = 1/\gamma$
+where the value is the centre of 48 fit choices lowered by the $0.8\times10^{-8}$ by which that centre overshoots the known
+limits of synthetic data, and the $\pm$ is the spread of the fits, an estimator range rather than a calibrated error. The growth rate $\lambda$ of the unstable mode, $\lambda = 1/\gamma$
 with $\gamma$ the critical exponent of the black-hole radius, $r_{\rm BH} \propto (p - p^*)^{\gamma}$~\cite{KoikeHaraAdachi1995},
 tends to $2$: free fits in $1/n$ put $\lambda_\infty = 2$ to about $10^{-6}$, so $\gamma \to 1/2$ to about $5\times10^{-7}$,
 and with $\lambda_\infty = 2$ imposed $\lambda = 2 + 3.0324/n + \dots$. The time profile at the centre,
@@ -239,7 +239,8 @@ $F_n(\theta) = \sqrt n\,\partial_x p(0, \theta)$, converges as $D$ grows: its fi
 to $2.962$ at $D = 60$ and extrapolates to about $2.72$, and $n\,(1 - \langle c(0)\rangle)$ and $\langle F^2\rangle$
 approach a common limit near $3.7$ (angle brackets denote the mean over $\theta$). None of these numbers is used in a
 proof below. Where an exact value of $\winf$ is needed, as in Theorem~\ref{thm:A}, we \emph{define}
-$\winf := 2\pi/1.64389375$; this is a convention, and the theorem is equally a statement about $\omega$ itself.
+$\winf := 2\pi/1.64389375$, the reference value used in all the codes; this is a convention (it differs from
+$2\pi/\Dinf$ by $2.4\times10^{-9}$ relative), and the theorem is equally a statement about $\omega$ itself.
 
 \subsection{The scaling at large \texorpdfstring{$n$}{n}}
 \label{sec:ansatz}
@@ -2021,7 +2022,7 @@ $0.9999$--$1.0001$, at amplitude $A_0 = 2.720$ (measured on the solutions: $2.70
 \[
 \Dinf = 1.6439 \pm 0.0002
 \]
-from the $D = \infty$ inner equations alone, with no input from the finite-$D$ solutions, against $1.64389375$ from
+from the $D = \infty$ inner equations alone, with no input from the finite-$D$ solutions, against $1.643893746$ from
 them~\cite{companion}.
 
 \subsection{What the evidence does not show}

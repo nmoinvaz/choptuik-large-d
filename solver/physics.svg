@@ -38,7 +38,7 @@
 <g><circle cx="473.0" cy="183.5" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 6: Delta = 3.0095, e^Delta = 20.28</title></g>
 <g><circle cx="275.5" cy="225.2" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 10: Delta = 2.5211, e^Delta = 12.44</title></g>
 <g><circle cx="165.8" cy="247.3" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20: Delta = 2.1121, e^Delta = 8.27</title></g>
-<g><circle cx="78.0" cy="263.8" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = infinity: Delta = 1.64389375, e^Delta = 5.175</title></g>
+<g><circle cx="78.0" cy="263.8" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = infinity: Delta = 1.643893746, e^Delta = 5.175</title></g>
 <text x="858.0" y="142.7" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="normal">31× at D = 4</text>
 <text x="86.0" y="241.8" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">5.2× at D = ∞</text>
 <text x="78.0" y="310.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">Digits of fine-tuning that one more echo costs, Δ / (γ ln 10)</text>

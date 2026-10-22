@@ -65,23 +65,51 @@ def gamma_points():
             ("gamma highest D", max(pts), 61, 1, txt)]
 
 
-DINF, BAR = 1.64389375, 1.5e-8
+DINF, BAR = 1.643893746, 1.5e-8
 RANGE = (1.643893744, 1.643893763)
+BIAS = 0.8e-8   # the correction applied to the centre of the 48-fit range (README, "Is the period analytic in 1/D?")
+
+
+def planted_offsets():
+    """Centre minus planted limit, from the repository's planted test (T1-T6) and the review's independent one (N1-N3)."""
+    rep = [float(m.group(1)) for m in re.finditer(r"centre off by ([0-9.e+-]+)",
+                                                   open(os.path.join(ROOT, "hp/data/planted_dinf.log")).read())]
+    rev = {m.group(1): float(m.group(2)) for m in re.finditer(r"^(N[0-9]) .*?centre off by ([0-9.e+-]+)",
+                                                             open(os.path.join(ROOT, "hp/review/rv2_planted.log")).read(), re.M)}
+    return rep, rev
 
 
 @check
 def dinf_quotes():
-    """The bar is the half-range of the 48 fits (README); the centre of that range rounds to the quoted value; every
-    quote of Delta_inf in the README and the paper carries the same bar."""
-    items = [("Delta_inf = centre of the fit range", (RANGE[0] + RANGE[1]) / 2, DINF, 1e-8,
-              [("README.md", "1.643893744–1.643893763")]),
-             ("bar covers the half-range", max(BAR, (RANGE[1] - RANGE[0]) / 2), BAR, 1e-9, [])]
-    pat = re.compile(r"1\.64389375\s*(?:±|\\pm)\s*([0-9.]+)(?:\s*(?:×|\\times)\s*10\^?\{?([⁻\-−]?[0-9⁰¹²³⁴⁵⁶⁷⁸⁹]+)\}?)?")
+    """Delta_inf is the centre of the 48-fit range less the planted-truth offset; the bar contains the fit range but its
+    top 2e-9 and every graded plant; every quote of Delta_inf in the README and the papers carries the same value and bar."""
+    rep, rev = planted_offsets()
+    # the 48-fit range to 11 digits, as the review's independent refit prints it (the quoted selection: factor 2.5, two
+    # lowest degrees); the full mode below recomputes the 9-digit RANGE with the repository's own code
+    m = re.search(r"factor\s+2\.5\s+lowest 2\s+48 fits\s+([0-9.]+) \.\. ([0-9.]+)",
+                  open(os.path.join(ROOT, "hp/review/rv2_fits_rules.log")).read())
+    lo, hi = float(m.group(1)), float(m.group(2))
+    centre = (lo + hi) / 2
+    readme = [("README.md", "1.643893744–1.643893763")]
+    items = [("fit range, low end", lo, RANGE[0], 1e-9, readme), ("fit range, high end", hi, RANGE[1], 1e-9, readme),
+             ("centre of the fit range", centre, 1.643893754, 1e-9, [("README.md", "centred on 1.643893754")]),
+             ("planted offset, repository test, lowest (7.85e-9: half-way, so a 2e-10 unit)", min(rep), 0.79e-8, 0.02e-8, [("README.md", "0.79–0.88×10⁻⁸")]),
+             ("planted offset, repository test, highest", max(rep), 0.88e-8, 0.01e-8, [("README.md", "0.79–0.88×10⁻⁸")]),
+             ("planted offset, independent test (N1)", rev["N1"], 0.78e-8, 0.01e-8, [("README.md", "0.78×10⁻⁸")]),
+             ("correction within the measured offsets", min(max(BIAS, min(rep + [rev["N1"]])), max(rep)), BIAS, 1e-12, []),
+             ("Delta_inf = centre less the correction", centre - BIAS, DINF, 1e-9, readme),
+             ("bar reaches the bottom of the fit range", max(DINF - BAR, RANGE[0]), RANGE[0], 1e-12, []),
+             ("fit range above the bar (quoted 2e-9)", RANGE[1] - (DINF + BAR), 2e-9, 1e-9, []),
+             ("bar contains every graded plant", max(BAR, max(abs(o - BIAS) for o in rep + [rev[k] for k in ("N1", "N2", "N3")])),
+              BAR, 1e-12, [])]
+    pat = re.compile(r"1\.643893746\s*(?:±|\\pm)\s*([0-9.]+)(?:\s*(?:×|\\times)\s*10\^?\{?([⁻\-−]?[0-9⁰¹²³⁴⁵⁶⁷⁸⁹]+)\}?)?")
+    old = re.compile(r"1\.64389375\s*(?:±|\\pm)")
     sup = str.maketrans("⁻⁰¹²³⁴⁵⁶⁷⁸⁹−", "-0123456789-")
     for doc in ("README.md", "paper/physics/main.tex", "paper/math/main.tex"):
         for m in pat.finditer(DOCS[doc]):
             v = float(m.group(1)) * (10 ** int(m.group(2).translate(sup)) if m.group(2) else 1)
             items.append((f"bar quoted in {doc}: '{m.group(0)}'", BAR, v, 1e-10, []))
+        items.append((f"old quote 1.64389375 ± left in {doc}", len(old.findall(DOCS[doc])), 0, 1, []))
     return items
 
 
@@ -89,8 +117,8 @@ def dinf_quotes():
 def omega_quotes():
     w = 2 * math.pi / DINF
     dw = 2 * math.pi * BAR / DINF ** 2
-    items = [("omega_inf = 2 pi / Delta_inf", w, 3.82213589, 1e-8, [("README.md", "3.82213589")])]
-    pat = re.compile(r"3\.82213589\s*(?:±|\\pm)\s*([0-9.]+)(?:\s*(?:×|\\times)\s*10\^?\{?([⁻\-−]?[0-9⁰¹²³⁴⁵⁶⁷⁸⁹]+)\}?)?")
+    items = [("omega_inf = 2 pi / Delta_inf", w, 3.82213590, 1e-8, [("README.md", "3.82213590")])]
+    pat = re.compile(r"3\.82213590\s*(?:±|\\pm)\s*([0-9.]+)(?:\s*(?:×|\\times)\s*10\^?\{?([⁻\-−]?[0-9⁰¹²³⁴⁵⁶⁷⁸⁹]+)\}?)?")
     sup = str.maketrans("⁻⁰¹²³⁴⁵⁶⁷⁸⁹−", "-0123456789-")
     for doc in ("README.md", "paper/physics/main.tex", "paper/math/main.tex"):
         for m in pat.finditer(DOCS[doc]):

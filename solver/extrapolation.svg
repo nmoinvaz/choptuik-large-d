@@ -4,8 +4,8 @@
 <text x="16.0" y="28.0" font-size="15" fill="#0b0b0b" text-anchor="start" font-weight="bold">The large-D forms the f64 points allowed, and the one the double-double points leave</text>
 <text x="16.0" y="48.0" font-size="12" fill="#52514e" text-anchor="start" font-weight="normal">Every curve reproduces the f64 Δ for D = 4–40 to its precision; they agree to 1e-5 up to D ≈ 60 and fan out above D ≈ 100 toward different limits.</text>
 <text x="16.0" y="66.0" font-size="12" fill="#52514e" text-anchor="start" font-weight="normal">The double-double points up to D = 61 decide it: fitted to them, half-integer series predict unseen points 40–300× worse than the 1/D series and forced limits 100–3500× worse (README).</text>
-<text x="16.0" y="84.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">The analytic family (blue) is the one left, with Δ∞ = 1.64389375; the faded curves are ruled out.</text>
-<rect x="84.0" y="186" width="107.3" height="480" fill="#efeeea"/>
+<text x="16.0" y="84.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">The analytic family (blue) is the one left, with Δ∞ = 1.643893746; the faded curves are ruled out.</text>
+<rect x="84.0" y="186" width="107.4" height="480" fill="#efeeea"/>
 <text x="137.7" y="200.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">computed</text>
 <text x="137.7" y="214.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">(D = 4–61)</text>
 <line x1="84.0" y1="649.2" x2="904.0" y2="649.2" stroke="#e7e6e2" stroke-width="1"/>
@@ -64,7 +64,7 @@
 <line x1="84.0" y1="611.3" x2="904.0" y2="611.3" stroke="#7a7668" stroke-width="1" stroke-dasharray="2 3" stroke-opacity="0.7"/>
 <text x="910.0" y="625.1" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">π²/6 = 1.6449</text>
 <line x1="84.0" y1="612.2" x2="904.0" y2="612.2" stroke="#2a78d6" stroke-width="1" stroke-opacity="0.9"/>
-<text x="910.0" y="638.1" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">Δ∞ (double-double) = 1.64389375</text>
+<text x="910.0" y="638.1" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">Δ∞ (double-double) = 1.643893746</text>
 <line x1="84.0" y1="615.7" x2="904.0" y2="615.7" stroke="#7a7668" stroke-width="1" stroke-dasharray="2 3" stroke-opacity="0.7"/>
 <text x="910.0" y="651.1" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">2π/j₁,₁ = 1.6398</text>
 <line x1="84.0" y1="634.0" x2="904.0" y2="634.0" stroke="#7a7668" stroke-width="1" stroke-dasharray="2 3" stroke-opacity="0.7"/>

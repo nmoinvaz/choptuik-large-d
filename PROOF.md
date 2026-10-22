@@ -344,7 +344,7 @@ Given Theorem B, C is a corollary: the branch of critical solutions continued fr
 and if that zero is the unique simple zero in a box containing the numerical limit, ω∞ = ω*. Two points need care:
 
 - **Uniqueness in the box.** Theorem A must certify that there is exactly one zero of S₁ in a box that also contains
-  the numerically extrapolated ω∞ = 3.82213589 (±4×10⁻⁸) and A∞ ≈ 2.70–2.72. A box of radius 10⁻³ suffices for the
+  the numerically extrapolated ω∞ = 3.82213590 (±4×10⁻⁸) and A∞ ≈ 2.70–2.72. A box of radius 10⁻³ suffices for the
   identification; it does not need the numerics' digits.
 - **That the computed branch is the branch of Theorem B.** The double-double solutions at D = 8–61 are numerical. A
   Reiterer–Trubowitz-style computer-assisted existence proof at one large D (say D = 40–60), with the certified solution

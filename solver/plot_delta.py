@@ -49,7 +49,7 @@ DARK = {
 REPO_URL = "https://github.com/nmoinvaz/dss-residual-kernel"
 # Delta_inf from the double-double points (hp/dd_fits_mp.py: power series in 1/D and 1/(D-2), degree 16-20, on
 # 10 <= D <= 60), if Delta is analytic in 1/D; README.
-DINF_DD = 1.64389375
+DINF_DD = 1.643893746  # the quoted value: centre of the 48-fit range less the planted-truth bias (README)
 DD_CSV = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "hp", "data", "delta_dd.csv")
 
 
@@ -254,7 +254,7 @@ def main():
                      + (f"the {len(Dh)} hollow points above are held out and match it to {hold_err:.0e}," if len(Dh) else ""),
              size=12)
     svg.text(16, 66, f"and the double-double points (green) up to D = {dd_max:.0f} to {dd_err:.0e}.  "
-                     f"Δ∞ = {DINF_DD:.8f} from the double-double points, γ∞ = 1/2", size=12)
+                     f"Δ∞ = {DINF_DD:.9f} from the double-double points, γ∞ = 1/2", size=12)
 
     # Panel A: Delta against D, full width
     A = Panel(svg, 78, 140, 984, 300, (3, Dtop), (1.4, 3.6),
@@ -273,7 +273,7 @@ def main():
     for d, v in ddp:
         marker(svg, A.sx(d), A.sy(v), SERIES[2], f"D = {d:.4f}, Δ = {v:.13f} (double-double, never in the fit; "
                                                   f"formula {fR(d) - v:+.1e})", shape="diamond", r=3.2)
-    svg.text(A.sx(44), A.sy(DINF_DD) + 16, f"Δ∞ = {DINF_DD:.8f}  (double-double; formula limit {dinf:.6f})",
+    svg.text(A.sx(44), A.sy(DINF_DD) + 16, f"Δ∞ = {DINF_DD:.9f}  (double-double; formula limit {dinf:.6f})",
              size=11, fill=INK)
     svg.text(A.sx(44), A.sy(zeta2) - 8, f"π²/6 = {zeta2:.4f}", size=10)
     A.key("dot", SERIES[0], "computed, in the fit")
@@ -294,7 +294,7 @@ def main():
         marker(svg, B.sx(1 / d), B.sy(v), SERIES[0], f"D = {d:.4f}, Δ = {v:.10f} (held out)", hollow=True, r=3.8)
     for d, v in dd_points(Dh.max() if len(Dh) else FIT_MAX, every=5.0):     # packed below a pixel apart otherwise
         marker(svg, B.sx(1 / d), B.sy(v), SERIES[2], f"D = {d:.4f}, Δ = {v:.13f} (double-double)", shape="diamond", r=3.0)
-    marker(svg, B.sx(0), B.sy(DINF_DD), SERIES[1], f"D = ∞: Δ∞ = {DINF_DD:.8f} ± 1e-8 (double-double points, analytic "
+    marker(svg, B.sx(0), B.sy(DINF_DD), SERIES[1], f"D = ∞: Δ∞ = {DINF_DD:.9f} ± 1.5e-8 (double-double points, analytic "
                                                    f"in 1/D; the formula's own limit is {dinf:.6f})", shape="diamond")
     svg.text(B.sx(0) + 12, B.sy(DINF_DD) + 18, f"D = ∞:  Δ∞ = {DINF_DD:.6f}", size=11, fill=INK)
     for d in (4, 6, 10, 20):

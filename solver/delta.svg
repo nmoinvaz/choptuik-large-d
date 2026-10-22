@@ -3,7 +3,7 @@
 <rect width="1080" height="920" fill="#fcfcfb"/>
 <text x="16.0" y="28.0" font-size="15" fill="#0b0b0b" text-anchor="start" font-weight="bold">Choptuik echo period Δ(D) and critical exponent γ(D) of massless scalar collapse</text>
 <text x="16.0" y="48.0" font-size="12" fill="#52514e" text-anchor="start" font-weight="normal">One rational formula in 1/(D−2) for all D ≥ 4, fitted on the computed points 4 ≤ D ≤ 30.2; the 8 hollow points above are held out and match it to 2e-06,</text>
-<text x="16.0" y="66.0" font-size="12" fill="#52514e" text-anchor="start" font-weight="normal">and the double-double points (green) up to D = 61 to 6e-08.  Δ∞ = 1.64389375 from the double-double points, γ∞ = 1/2</text>
+<text x="16.0" y="66.0" font-size="12" fill="#52514e" text-anchor="start" font-weight="normal">and the double-double points (green) up to D = 61 to 6e-08.  Δ∞ = 1.643893746 from the double-double points, γ∞ = 1/2</text>
 <text x="78.0" y="100.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">Δ levels off at Δ∞ ≈ 1.6439 instead of falling to zero</text>
 <line x1="78.0" y1="426.4" x2="1062.0" y2="426.4" stroke="#e7e6e2" stroke-width="1"/>
 <text x="70.0" y="430.4" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">1.5</text>
@@ -169,7 +169,7 @@
 <g><polygon points="1026.4,379.4 1031.1,384.1 1026.4,388.8 1021.7,384.1" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>D = 59.8626, Δ = 1.8102564229971 (double-double, never in the fit; formula -3.7e-08)</title></g>
 <g><polygon points="1034.8,379.5 1039.5,384.2 1034.8,388.9 1030.1,384.2" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>D = 60.3682, Δ = 1.8089138968067 (double-double, never in the fit; formula -3.5e-08)</title></g>
 <g><polygon points="1043.2,379.7 1047.9,384.4 1043.2,389.1 1038.5,384.4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>D = 60.8739, Δ = 1.8075927740201 (double-double, never in the fit; formula -3.3e-08)</title></g>
-<text x="761.8" y="422.7" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Δ∞ = 1.64389375  (double-double; formula limit 1.643898)</text>
+<text x="761.8" y="422.7" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Δ∞ = 1.643893746  (double-double; formula limit 1.643898)</text>
 <text x="761.8" y="398.6" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">π²/6 = 1.6449</text>
 <g><circle cx="83.0" cy="116.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>computed, in the fit</title></g>
 <text x="92.0" y="120.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">computed, in the fit</text>
@@ -309,7 +309,7 @@
 <g><polygon points="107.9,779.5 112.4,784.0 107.9,788.5 103.4,784.0" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>D = 50.4645, Δ = 1.8399155968004 (double-double)</title></g>
 <g><polygon points="105.2,781.7 109.7,786.2 105.2,790.7 100.7,786.2" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>D = 55.4726, Δ = 1.8229042118984 (double-double)</title></g>
 <g><polygon points="102.9,783.5 107.4,788.0 102.9,792.5 98.4,788.0" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>D = 60.4745, Δ = 1.8086343920677 (double-double)</title></g>
-<g><polygon points="78.0,803.0 84.0,809.0 78.0,815.0 72.0,809.0" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = ∞: Δ∞ = 1.64389375 ± 1e-8 (double-double points, analytic in 1/D; the formula's own limit is 1.643898)</title></g>
+<g><polygon points="78.0,803.0 84.0,809.0 78.0,815.0 72.0,809.0" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = ∞: Δ∞ = 1.643893746 ± 1.5e-8 (double-double points, analytic in 1/D; the formula's own limit is 1.643898)</title></g>
 <text x="90.0" y="827.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">D = ∞:  Δ∞ = 1.643894</text>
 <text x="460.7" y="595.7" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">D=4</text>
 <text x="335.1" y="651.2" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">D=6</text>

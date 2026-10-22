@@ -92,7 +92,7 @@ def main():
     svg.text(16, 66, f"The double-double points up to D = {Dtop:.0f} decide it: fitted to them, half-integer series predict "
                      "unseen points 40–300× worse than the 1/D series and forced limits 100–3500× worse (README).",
              size=12)
-    svg.text(16, 84, f"The analytic family (blue) is the one left, with Δ∞ = {DINF_DD:.8f}; the faded curves are ruled out.",
+    svg.text(16, 84, f"The analytic family (blue) is the one left, with Δ∞ = {DINF_DD:.9f}; the faded curves are ruled out.",
              size=12, fill=INK)
     sx = lambda d: px + (math.log10(d) - LX0) / (LX1 - LX0) * pw
     sy = lambda v: py + ph - (v - Y0) / (Y1 - Y0) * ph
@@ -125,7 +125,7 @@ def main():
                  opacity=0.9 if dd_ref else 0.7)
         yl = max(sy(v) + 4, ys_lab[-1] + 13) if ys_lab else sy(v) + 4
         ys_lab.append(yl)
-        svg.text(px + pw + 6, yl, f"{name} = {v:.8f}" if name.startswith("Δ∞") else f"{name} = {v:.4f}", size=10,
+        svg.text(px + pw + 6, yl, f"{name} = {v:.9f}" if name.startswith("Δ∞") else f"{name} = {v:.4f}", size=10,
                  fill=INK if name.startswith("Δ∞") else INK_SOFT)
     # models
     dd = np.logspace(LX0, LX1, 700)

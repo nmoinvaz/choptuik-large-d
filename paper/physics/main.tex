@@ -18,7 +18,7 @@
 \begin{document}
 
 \title{Choptuik's echo period and critical exponent at large dimension:\\
-evidence for $\Delta_\infty = 1.64389375$ and an $r^2$-shift symmetry behind $\gamma_\infty = 1/2$}
+evidence for $\Delta_\infty = 1.643893746$ and an $r^2$-shift symmetry behind $\gamma_\infty = 1/2$}
 
 \author{Nathan Moinvaziri}
 \email{nathan@nathanm.com}
@@ -31,7 +31,7 @@ We compute the echo period $\Delta(D)$ of Choptuik's critical solution of massle
 black-hole radius at 67 points up to $D = 61$; an independent double-precision solver covers $4 \le D \le 40$. One
 rational function of $1/(D-2)$ reproduces both for all $D \ge 4$ and agrees with the published values; a
 $6\times10^{-5}$ difference at $D = 5$ is traced to resolution in the published data. Held-out tests support, but do not
-prove, analyticity in $1/D$, which gives $\Dinf = 1.64389375 \pm 1.5\times10^{-8}$; a power-law approach to $\Delta = 0$
+prove, analyticity in $1/D$, which gives $\Dinf = 1.643893746 \pm 1.5\times10^{-8}$; a power-law approach to $\Delta = 0$
 (exponent at least $0.01$), as conjectured in the literature, is excluded by the data, and a logarithmic one disfavoured.
 The exponent tends to $\gamma_\infty = 1/2$ to about $5\times10^{-7}$. Within the measured large-$D$ scaling the $1/D$
 expansion is unobstructed for every period, so $\Delta$ and $\gamma$ are selected beyond all orders in $1/D$, at radii of
@@ -81,7 +81,7 @@ points up to $D = 61$, and both for $4 \le D \le 40$ from an independent double-
 function of $1/(D-2)$ that reproduces them for all $D \ge 4$; and the comparison with published values, including a
 $6\times10^{-5}$ difference at $D = 5$ that the published higher-resolution data trace to resolution
 (Sec.~\ref{sec:results}).
-\item Held-out tests that support analyticity of $\Delta$ in $1/D$, giving $\Dinf = 1.64389375 \pm 1.5\times10^{-8}$; a
+\item Held-out tests that support analyticity of $\Delta$ in $1/D$, giving $\Dinf = 1.643893746 \pm 1.5\times10^{-8}$; a
 power-law approach to $\Delta = 0$ (exponent at least $0.01$) is excluded and a logarithmic one disfavoured by the data
 to $D = 61$; given analyticity, nine constants tested as closed forms for $\Dinf$ are excluded; and $\gamma_\infty = 1/2$
 to about $5\times10^{-7}$ (Sec.~\ref{sec:limit}).
@@ -245,7 +245,7 @@ $D$ & $\Delta$ & $\gamma$ & $D$ & $\Delta$ & $\gamma$ \\ \hline
 10 & 2.521078919562 & 0.4555879 & 70 & 1.78693476494 & \\
 12 & 2.389188553641 & 0.4614056 & 100 & 1.7450264844 & 0.49313 \\
 15 & 2.253098407194 & 0.4673656 & 1000 & 1.65424086 & 0.4992 \\
- & & & $\infty$ & $1.64389375 \pm 1.5\times10^{-8}$ & $1/2$ (assumed) \\
+ & & & $\infty$ & $1.643893746 \pm 1.5\times10^{-8}$ & $1/2$ (assumed) \\
 \end{tabular}
 \end{ruledtabular}
 \end{table}
@@ -336,18 +336,22 @@ $10 \le D \le 37.5$ (top) and $10 \le D \le 45$ (bottom); shaded: the level of t
 Fitted on all cleaned points, power series in $1/D$ of degree 16--20 and in $1/(D-2)$ of degree 18--20 fit to the
 noise and give limits from $1.643893744$ to $1.643893752$ (snapshot $D \le 60.1$) and from $1.643893745$ to
 $1.643893752$ (all 823 cleaned points to $D = 61.03$). Over 48 choices of model ($1/D$, $1/(D-2)$), degree, fit range
-and cleaning, the limit ranges over $1.643893744$--$1.643893763$; fitting on $D \le 45$ alone pins it only to
-$2.5\times10^{-7}$. Hence, if $\Delta$ is analytic in $1/D$,
+and cleaning, the limit ranges over $1.643893744$--$1.643893763$, centred on $1.643893754$; fitting on $D \le 45$ alone
+pins it only to $2.5\times10^{-7}$. A spread over fit choices is not an error with a stated coverage, so we tested the
+procedure on synthetic data with a known limit: the real $D$ grid, noise and junk points like the real ones, and added
+structures ranging from a distant pole to a complex pole pair and a logarithmic branch point near the data, plus one
+term outside the fitted model class. In all six cases the 48 fits put the known limit inside their range, with the
+centre $0.79$--$0.88\times10^{-8}$ above it. A second test, whose planted truth is not made by the fitting code (the
+rational formula of Sec.~\ref{sec:results} carrying the real data's residual pattern), finds $0.78\times10^{-8}$. We
+therefore lower the centre by $0.8\times10^{-8}$ and quote, if $\Delta$ is analytic in $1/D$,
 \begin{equation}
-\Dinf = 1.64389375 \pm 1.5\times10^{-8}, \qquad \omega_\infty = 2\pi/\Dinf = 3.82213589 \pm 4\times10^{-8},
+\Dinf = 1.643893746 \pm 1.5\times10^{-8}, \qquad \omega_\infty = 2\pi/\Dinf = 3.82213590 \pm 4\times10^{-8},
 \label{eq:dinf}
 \end{equation}
-and $\Delta(D) \approx \Dinf + 10.37/n + \dots$. The $\pm1.5\times10^{-8}$ is a spread over fit choices, not an error
-with a stated coverage, so we tested it on synthetic data with a known limit: the real $D$ grid, noise and junk points
-like the real ones, and added structures ranging from a distant pole to a complex pole pair and a logarithmic branch
-point near the data, plus one term outside the fitted model class. In all six cases the 48 fits put the known limit
-inside their range, with the centre $0.8$--$0.9\times10^{-8}$ above it, so the bar holds and the quoted centre is
-probably high by about $10^{-8}$. Analyticity is the natural default, since the large-$D$ expansion of the equations has
+and $\Delta(D) \approx \Dinf + 10.37/n + \dots$. The bar is an estimator range, not a calibrated error: it contains
+the planted limit in every graded case of both tests and the 48-fit range except its top $2\times10^{-9}$, which comes from an under-resolved fit. Other
+reasonable rules for choosing the fits, or removing the points the runs themselves flag, widen it to
+$0.7$--$1\times10^{-7}$ (an independent review of the numerics, in the repository). Analyticity is the natural default, since the large-$D$ expansion of the equations has
 no other scale, but it is not proven: as Sec.~\ref{sec:picture} explains, the period is selected by an effect that the
 $1/D$ expansion does not see.
 
@@ -382,7 +386,7 @@ $G$ is Catalan's constant, $j_{\nu,k}$ the $k$-th zero of $J_\nu$.}
 \begin{ruledtabular}
 \begin{tabular}{llll}
 Candidate & value & minus $\Dinf$ & held-out error (ratio) \\ \hline
-none (free fit) & $1.64389375 \pm 1.5\times10^{-8}$ & & $4.7\times10^{-13}$ \\
+none (free fit) & $1.643893746 \pm 1.5\times10^{-8}$ & & $4.7\times10^{-13}$ \\
 $\tfrac57\sqrt{G}\,j_{0,1}$ & 1.6439747 & $+8.1\times10^{-5}$ & $6.2\times10^{-11}$ (130) \\
 $\tfrac75(\ln2)^{-2}\pi^{-1/2}$ & 1.6440014 & $+1.1\times10^{-4}$ & $1.1\times10^{-10}$ (220) \\
 $\tfrac72\sqrt{\ln2/\pi}$ & 1.6440152 & $+1.2\times10^{-4}$ & $1.3\times10^{-10}$ (270) \\
@@ -595,7 +599,7 @@ $A_0 = 2.720$, where the solutions extrapolate to 2.70--2.72. So the rule gives
 \begin{equation}
 \Dinf = 1.6439 \pm 0.0002
 \end{equation}
-from the $D = \infty$ inner equations alone, against $1.64389375$ from the finite-$D$ solutions. The $\pm0.0002$ is the
+from the $D = \infty$ inner equations alone, against $1.643893746$ from the finite-$D$ solutions. The $\pm0.0002$ is the
 range of the estimators, not an error bound; whether the remaining $10^{-4}$ closes needs more orders.
 
 \emph{The truncation sequence.} Keeping only $M$ harmonics in the profile, the full set of conditions selects
