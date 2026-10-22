@@ -1,11 +1,50 @@
 # dss-residual-kernel
 
+**Critical collapse in D dimensions: the echo period and critical exponent, from numerics to first principles.**
 Paper (draft, arXiv style, not yet reviewed): [paper/dss_large_D.pdf](paper/dss_large_D.pdf)
 
-This repository computes Choptuik's discretely self-similar critical solution of massless scalar collapse in
-D = n + 2 spacetime dimensions, with its echo period Δ(D) and critical exponent γ(D): an f64 solver in
-[`solver/`](solver/) with a Rust kernel for its residual (this crate), and a separate double-double (about 32-digit)
-solver in [`hp/`](hp/) for large D. The physics is in this file; the software is described at the end. Headline results:
+When a collapsing shell of scalar field is tuned exactly to the threshold between dispersing and forming a black hole,
+it approaches a universal solution, Choptuik's critical solution, which repeats itself on ever smaller scales: each
+"echo" is a copy of the last, shrunk by a factor e^Δ. Just above the threshold, the black hole's size scales like
+(p − p*)^γ in the tuning parameter p. The echo period Δ and the critical exponent γ are universal numbers, the same for
+any initial data, but they depend on the number of spacetime dimensions D, and no formula for them is known. In D = 4,
+Δ ≈ 3.445 and γ ≈ 0.374.
+
+Some history. Choptuik discovered these critical phenomena in 1993 in numerical simulations of a collapsing massless
+scalar field in four dimensions: universality, the echoing with Δ ≈ 3.44, and the mass scaling with γ ≈ 0.37. Within a
+few years the scaling was explained (Koike, Hara and Adachi, 1995): the critical solution has a single unstable mode,
+and γ = 1/λ with λ its growth rate. Gundlach then constructed the critical solution directly, as a periodic
+boundary-value problem in self-similar variables, and with Martín-García pushed Δ in four dimensions to ten digits
+(2003). In other dimensions the picture is patchier: Garfinkle, Cutler and Duncan computed D = 6 (1999), Sorkin and Oren
+(2005) and Bland and collaborators (2005–2007) followed Δ and γ up to D = 14 (Bland conjectured Δ → 5/2 as D → ∞), and
+Ecker, Ecker, Grumiller and Jechtl (2026) mapped continuous D near 4 to about six digits, finding a maximum of Δ near
+D = 3.756. Large D has been a fruitful limit in gravity generally; for critical collapse, Rozali and Way (2018) gave a
+heuristic argument for γ → 1/2, and Ecker, Ecker and Grumiller (2026) found analytic discretely self-similar solutions
+at large D and conjectured that the echo period shrinks to zero there. A review of the field is Gundlach, Hilditch and
+Martín-García (2025).
+
+This project asks three questions:
+
+1. **What are Δ(D) and γ(D),** to high precision across dimensions, and is there a formula for them?
+2. **What happens as D → ∞?** It has been conjectured that the echo period shrinks to zero; does it, or does it tend
+   to a finite limit?
+3. **Can that limit be derived from first principles,** from the equations at D = ∞ alone rather than by extrapolating
+   computed values, and eventually proved?
+
+In brief: one rational formula in 1/(D − 2) fits all D ≥ 4; Δ tends to a finite limit, Δ∞ = 1.64389375, and γ to 1/2;
+a selection rule derived at D = ∞ reproduces Δ∞ to about 10⁻⁴ without using the finite-D solutions, and an exact symmetry
+explains γ∞ = 1/2. A proof of the selection rule is in progress ([PROOF.md](PROOF.md)), and a computer-assisted
+certificate already covers a model case.
+
+How: Choptuik's solution is computed as a periodic boundary-value problem in self-similar variables. An f64 solver in
+[`solver/`](solver/), with a Rust kernel for its residual (this crate), covers D = 3.6–40, and a separate double-double
+(about 32-digit) solver in [`hp/`](hp/) reaches D = 61. The theory (the large-D expansion, its Stokes multipliers and
+the inner problem at D = ∞) is in the Large-D section, with the scripts that check each step. The physics is in this
+file; the software is described at the end. The computations, derivations and text were produced by Claude (Anthropic)
+under Nathan Moinvaziri's direction and have not yet been reviewed by an expert
+([How this work was done](#how-this-work-was-done)).
+
+Headline results:
 
 - **One formula for all D ≥ 4.** A rational function of 1/(D-2) gives Δ and γ within the precision of the
   computed points up to D = 30, and Δ to 6×10⁻⁸ up to D = 61 ([The formula](#the-formula), [Values](#values)).
@@ -1423,15 +1462,19 @@ fixes λ∞ = 2, carried to D = ∞, where λ = 2 is exact (the r²-shift symmet
 ### References
 
 - M. W. Choptuik, PRL 70, 9 (1993).
+- T. Koike, T. Hara and S. Adachi, PRL 74, 5170 (1995), [gr-qc/9503007](https://arxiv.org/abs/gr-qc/9503007).
 - C. Gundlach, PRD 55, 695 (1997), [gr-qc/9604019](https://arxiv.org/abs/gr-qc/9604019).
 - J. M. Martín-García and C. Gundlach, PRD 68, 024011 (2003), [gr-qc/0304070](https://arxiv.org/abs/gr-qc/0304070).
 - J. Bland et al., CQG 22, 5355 (2005), [gr-qc/0507088](https://arxiv.org/abs/gr-qc/0507088).
-- E. Sorkin and Y. Oren, [hep-th/0502034](https://arxiv.org/abs/hep-th/0502034).
+- D. Garfinkle, C. Cutler and G. C. Duncan, PRD 60, 104007 (1999), [gr-qc/9908044](https://arxiv.org/abs/gr-qc/9908044).
+- E. Sorkin and Y. Oren, PRD 71, 124005 (2005), [hep-th/0502034](https://arxiv.org/abs/hep-th/0502034).
+- M. Rozali and B. Way, [arXiv:1807.10283](https://arxiv.org/abs/1807.10283).
 - J. Bland and G. Kunstatter, PRD 75, 101501 (2007), [hep-th/0702226](https://arxiv.org/abs/hep-th/0702226); J. Bland, PhD thesis,
   University of Manitoba (2007).
 - R. Donninger, [arXiv:0809.5177](https://arxiv.org/abs/0809.5177).
 - R. Emparan and C. P. Herzog, large-D review, [arXiv:2003.11394](https://arxiv.org/abs/2003.11394).
-- Review of critical collapse (2025), [arXiv:2507.07636](https://arxiv.org/abs/2507.07636).
+- C. Gundlach, D. Hilditch and J. M. Martín-García, review of critical phenomena in gravitational collapse (2025),
+  [arXiv:2507.07636](https://arxiv.org/abs/2507.07636).
 - C. Ecker, F. Ecker and D. Grumiller, PRL 136, 191401 (2026), [arXiv:2601.14358](https://arxiv.org/abs/2601.14358).
 - C. Ecker, F. Ecker, D. Grumiller and T. Jechtl, SciPost Phys. 20, 176 (2026), [arXiv:2602.10185](https://arxiv.org/abs/2602.10185).
 - R. B. Dingle, *Asymptotic Expansions: Their Derivation and Interpretation*, Academic Press (1973).
