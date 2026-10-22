@@ -99,7 +99,7 @@ Proved in the README and the paper, by the methods named; not yet refereed.
 | Proposition 5 | in s = r²/(2n) the inner problem is an autonomous nonlinear heat equation; its r²-shift, gauge-fixed, is an exact λ = 2 mode whose multipliers vanish with the background's | symmetry, explicit series, Borel sums commute with the generator | γ∞ = 1/2 given Conjecture 1 and uniqueness of the unstable mode |
 
 So the linear (no-gravity) version of the whole chain, outer late orders → inner Stokes constant → light-cone
-coefficient, is proved. Everything nonlinear is open.
+coefficient, is proved. The nonlinear steps are in §4 (layer A) and §5 (layer B).
 
 ## 3. Precedents
 
@@ -261,23 +261,36 @@ zero of S. Given the lemmas it is the finite-dimensional implicit function theor
 −nΦ′ at c = 1) and −n/x for b − 1, with no turning points on the real axis, regular-singular points at the centre and
 the light cone, and the turning point at infinity (x ~ √n) being exactly the inner problem. Gap (c) reduces to Olver's
 error control (the WKB phase and the Frobenius exponent are the same object, since x − c has a simple zero at the light
-cone; the exponents of different harmonics differ by at least 2ω in imaginary part, so no resonance), with only a
-routine Volterra bound left to write. The inner half of gap (a) reduces to a citation: at fixed M the inner problem is a
+cone; the exponents of different harmonics differ by at least 2ω in imaginary part, so no resonance), up to a routine
+block-diagonalization (the Volterra bound B6′ is written). The inner half of gap (a) reduces to a citation: at fixed M the inner problem is a
 finite system with a rank-1 irregular point and is 1-summable by Braaksma's theorem (1992), so the multipliers are
 rigorously defined. Costin's rank-one theorems do not apply as stated: the fast eigenvalue repeats across harmonics, and
-the slow directions have eigenvalue 0. The outer half rests on Gevrey-1 theory without turning points plus two cheap
-numerical hypotheses about where Borel singularities lie, now checked numerically for M = 1, 3, 5, 7 and untruncated
-(every genuine Borel singularity at |arg| ≥ 0.48π; `outer_borel.py`). Further progress
-([proof/C_selection.md](proof/C_selection.md) §8–13): in inner variables the exact equations are the inner problem plus
-corrections in integer powers of 1/n only (B5.0, `inner_corrections.py`), so the matching error is O(1/n), not
-O(n^{−1/2}); the change to the fast-mode variable and the non-zero matching factor κ are explicit (B5.1, reducing to the
-linear C(n, s) at F = 0); the outer jump equals κ[S + O(1/n)] given the inner fixed point (B5 part 2); the continuation
-domain is explicit, with progressive paths along which Re Φ never decreases; and the Volterra bound of the light-cone
-lemma is written out (B6′). A correction: the inter-harmonic coupling in the light-cone exponents is O(1), not O(1/n), but
-the gauge e^{Π} removes it exactly, and the exponent differences stay at least 6.89 apart in imaginary part (7.26 for M ≥ 3)
-(`lightcone_exponents.py`), so non-resonance holds. Still to write with explicit constants: the inner fixed point on the
-matching domain (B5 part 1) and the global continuation contraction (B8), both needing only fixed-order truncations.
-Uniformity in M (gap (b)) is a separate question.
+the slow directions have eigenvalue 0. The outer formal series is Gevrey-1 on every disc in x, for every M (proved by
+majorants, constants certified for M = 1; [proof/B3_borel.md](proof/B3_borel.md)). Whether it is Borel summable along ℝ⁺
+(hypothesis (H-σ), proved in the linear case) is not needed for Theorem B(M),
+whose outer steps use fixed-order truncations only. Further progress ([proof/C_selection.md](proof/C_selection.md)
+§9–12): in inner variables the exact equations are the inner problem plus corrections in integer powers of 1/n only
+(B5.0, `inner_corrections.py`), so the matching error is O(1/n), not O(n^{−1/2}); the change to the fast-mode variable
+and the non-zero matching factor κ are explicit (B5.1, reducing to the linear C(n, s) at F = 0); the outer jump equals
+κ[S + small] given the inner fixed point (B5 part 2); and the Volterra bound of the light-cone lemma is written out (B6′).
+A correction: the inter-harmonic coupling in the light-cone exponents is O(1), not O(1/n), but the gauge e^{Π} removes it
+exactly, and the exponent differences stay at least 6.89 apart in imaginary part (7.26 for M ≥ 3)
+(`lightcone_exponents.py`), so non-resonance holds. B5 part 1, the inner fixed point on the matching domain, is proved
+for each fixed M given B8's bound on the inner arc |x| = n^γ ([proof/B5_inner.md](proof/B5_inner.md)), in the sharper
+form W = O(1/n) relative. For M = 1 every constant is certified in ball arithmetic and the fixed point holds for
+D ≳ 10³²; the threshold is set by the radius |x²/n| ≈ 0.009 on which a perturbative fixed point around the inner series
+closes. The global continuation B8 is certified for M = 1 and delivers B5 part 1's hypothesis
+([proof/B8_constants.md](proof/B8_constants.md)). The model is the M-harmonic truncation with b and c on the even
+harmonics |ν| ≤ M + 1, the one of Theorem A(M = 1). Uniformity in M (gap (b)) is a separate question.
+
+The canonical status, link by link, is [proof/C_selection.md](proof/C_selection.md) §13:
+
+| Layer B item | Status |
+|---|---|
+| inner fixed point (B5 part 1) | proved for each fixed M given (H8); certified for M = 1, n ≥ e^{73.89} ([proof/B5_inner.md](proof/B5_inner.md)) |
+| global continuation (B8) | **certified for M = 1** (n ≥ e^{62}; (H8) of B5(1) for n ≥ e^{73.89}); proved for every fixed M without a numerical n₀(M) ([proof/B8_constants.md](proof/B8_constants.md)) |
+| outer Borel plane | hypothesis (H-σ): proved in the linear case and near ζ = 0; not used by Theorem B(M) ([proof/B3_borel.md](proof/B3_borel.md)) |
+| **Theorem B(1)** | **not proved**: the jump lemma B5(2)'s error is only estimated (ln n ≳ 285 at the certified κ₁ = 0.6); B6's block-diagonalization, the error control of the transport along x > 1 and B8's exact light-cone gauge are not written or not run; the B5, B8 and B3 certificate code has not been reviewed independently (C_selection.md §13.1) |
 
 **Architecture (after Xie–Tanveer).** Work with the self-similar unknowns (p, m, b, c) as functions of (x, θ) analytic
 in θ on a strip and in x on a complex domain that reaches the inner region x ~ √n and the light cone x = 1.
@@ -286,10 +299,11 @@ in θ on a strip and in x on a complex domain that reaches the inner region x ~ 
 - **B.2 Actual solutions near the formal one.** Borel summability of the 1/n expansion in sectors of the complex x-plane,
   for each fixed (F, ω, K_k), with the summed solution regular at the centre. This is gap (a). For finite harmonic
   truncation it is a parameter-dependent version of Costin (1998); for the full θ-dependence it needs Costin–Tanveer's
-  strip-analytic framework. A specific obstruction to check: the outer nonlinear late orders also carry x-independent
-  singularities of modulus about 0.13 driven by high harmonics; one must show these produce only ambiguities in the free
-  data (F's harmonics, K_k), not new light-cone branches. In the linear case the analogous ±iπ terms are pure phases
-  (Proposition 4), which is the model case.
+  strip-analytic framework. For a fixed number of harmonics the Borel sum is not needed: the proof uses actual solutions
+  and fixed-order truncations ([proof/B3_borel.md](proof/B3_borel.md) §1). Recomputed in ball arithmetic at M = 1 and 3
+  (with b, c on |ν| ≤ M − 1), the outer late orders show no singularity on or near ℝ⁺; at M = 3 there is an
+  x-independent one near the negative real axis (ζ ≈ −1.2), which may approach the origin as M grows (B3_borel.md §5; a
+  gap-(b) question).
 - **B.3 Inner–outer matching.** The outer fast mode e^{−nΦ}A matches the inner fast mode on 1 ≪ x ≪ √n, and the outer
   late-order constant equals the inner Stokes multiplier. Proved in the linear case (Proposition 4 with the Weber
   constant); the nonlinear matching follows Baldomá–Fontich–Guardia–Seara: solve the inner problem in a domain near the
