@@ -1,2 +1,7 @@
   resampled state from modecount_state_D30.0688_M48.npz
 === 2026-10-22 10:01:25 circles, D 30.068824, M 48, kfreeze None, omega 3.198742, lam_g 0.8264840435
+  circle |lam - (4.267000 +1.324000i)| = 0.35: winding of det M +1.000000, 24 points (+2 for beta), max step 0.369 rad, verification mismatches 0
+  |F| 2.5e-08 in this layout: Newton
+  |F| 8.2e-28; saved modecount_state_D30.0688_M48_kf13.npz
+=== 2026-10-22 10:12:17 circles, D 30.068824, M 48, kfreeze 13, omega 3.198742, lam_g 0.8264840435
+  circle |lam - (4.267000 +1.324000i)| = 0.35: winding of det M +0.000000, 16 points (+2 for beta), max step 0.053 rad, verification mismatches 0

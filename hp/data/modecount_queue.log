@@ -362,3 +362,25 @@ pushed to wip/mode-count
 === 2026-10-22 09:47:51 job: hp/data/seeds/local/up23_D61.0264.npz --M=48 --h0=0.6 --lam=2.043532530673195 --fmax=1e-15
   |F| 1.3e-06 in this layout: Newton
   |F| 1.3e-06 after Newton: Levenberg-Marquardt
+=== skip (done): check hp/data/seeds/local/up23_D61.0264.npz --quick
+=== skip (done): hp/data/seeds/local/up23_D61.0264.npz --lam=2.043532530673195
+=== skip (done): hp/data/states/up7_D45.0507.npz
+=== skip (done): hp/data/states/up6_D30.0688.npz --lam=2.079747703853
+=== skip (done): hp/data/seeds/local/up23_D61.0264.npz --lam=2.043532530673195 --v2
+=== skip (done): f64 --realscan=0.05
+=== skip (done): hp/data/states/up6_D30.0688.npz --M=48 --h0=0.6 --lam=2.079747703853 --fmax=1e-15
+=== 2026-10-22 10:19:57 job: hp/data/seeds/local/up23_D61.0264.npz --M=48 --h0=0.6 --lam=2.043532530673195 --fmax=1e-15
+  |F| 1.3e-06 in this layout: Newton
+  |F| 1.3e-06 after Newton: Levenberg-Marquardt
+  |F| 2.7e-15; saved modecount_state_D61.0264_M48_kf13.npz
+Traceback (most recent call last):
+  File "/home/claude/dss-residual-kernel/.claude/worktrees/agent-a1938a59bc6f39c16/hp/modecount_wind.py", line 315, in <module>
+    main()
+    ~~~~^^
+  File "/home/claude/dss-residual-kernel/.claude/worktrees/agent-a1938a59bc6f39c16/hp/modecount_wind.py", line 291, in main
+    st = setup(path, M=int(opts["M"]) if "M" in opts else None, threads=threads, kf=kf, log=log,
+               fmax=float(opts.get("fmax", 1e-20)))
+  File "/home/claude/dss-residual-kernel/.claude/worktrees/agent-a1938a59bc6f39c16/hp/modecount_common.py", line 95, in setup
+    raise RuntimeError(f"background not converged in this layout: |F| = {F:.1e} > {fmax:.0e} (M = {M})")
+RuntimeError: background not converged in this layout: |F| = 2.7e-15 > 1e-15 (M = 48)
+=== 2026-10-22 10:26:11 exit 1: hp/data/seeds/local/up23_D61.0264.npz --M=48 --h0=0.6 --lam=2.043532530673195 --fmax=1e-15
