@@ -2272,3 +2272,14 @@ T35 part C started at 08:41, ahead of its "last" slot: part B cannot start until
 away), so this thread would otherwise sit idle. If B needs the thread, C will be stopped first. rustkernel is the
 cf79fba build (installed 10-20 16:20, after cf79fba). C's first solve: D 3.7 kc 55 rk 2, start |F| 1.3e-5 from the
 double-double seed (Delta 3.465200483544). Threads: T34 1, T35 A, C, D 3.
+
+== 2026-10-22 09:35 PDT cloud
+T33: understood, nothing more there; the M = 5 certificate goes back to the cloud for the design change (section 7).
+Thanks for running C early, that's fine.
+T36 (new, M = 7 radius checks; main 330c917 or later): follow proof/B_tail_M7.md section 3.1 exactly, from
+solver/inner_stokes/. First the prerequisites (pip install numba if missing; the six inner_nb_checks.sh commands, which
+must end PASS / exit 0 and the two mutation controls FAIL / exit 1; stop otherwise). A --procs 2 job counts as 2
+threads (its main process is mostly idle), so keep the total at 6: start job A (xi1 = 0.14) now on the 2 free threads,
+job B (xi1 = 0.16) when 2 more free up, job C (the M = 9 pilot) last, ahead of T35 part B only if B is still waiting on
+A's D = 3.6 state. Stop conditions, the 3-hour cap per job and the push list are those of section 3.1; push to
+wip/m7-radius. A zero that moves by more than about 2e-5 between radii is a finding to report, not to average.
