@@ -21,8 +21,8 @@ os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
 import mpmath as mp  # noqa: E402
 import numpy as np  # noqa: E402
 
-from hpkernel.driver import (dd_add, dd_from_mp, delta_correction, load, make_solver, newton_solve, renode,  # noqa: E402
-                             resample_z)
+from hpkernel.driver import (dd_add, dd_from_mp, deflated_newton, delta_correction, load, make_solver,  # noqa: E402
+                             newton_solve, renode, resample_z)
 
 
 def harmonic_field(k, amp, M):
@@ -48,6 +48,7 @@ def main():
     ap.add_argument("--out", default=None)
     ap.add_argument("--label", default="")
     ap.add_argument("--quiet", action="store_true")
+    ap.add_argument("--corrector", default="newton", choices=["newton", "nols", "dnp"])
     a = ap.parse_args()
     zh, zl, meta = load(a.state)
     D, M0, nodes0 = meta["D"], meta["M"], list(meta["nodes"])
@@ -68,6 +69,12 @@ def main():
         zh[:M], zl[:M] = dd_add(zh[:M], zl[:M], hh, hl)
     s = make_solver(D, M, nodes=nodes, kt=a.kt, kc=kc, ks=ks, threads=a.threads, kfreeze=a.kfreeze or None)
     s.set_segs(s.plan(zh, zl, a.tol_step, a.hmax))
+    if a.corrector == "dnp":
+        # the scans' corrector: deflated Newton (weakest directions projected out), then plain Newton to the bottom
+        zh, zl, h0 = deflated_newton(s, zh, zl, tol=1e-40, it_max=a.its, w=16, verbose=not a.quiet)
+    elif a.corrector == "nols":
+        # full Newton steps without line search (the weak directions make |F|_2 non-monotone near the floor)
+        zh, zl, h0 = newton_solve(s, zh, zl, tol=1e-40, it_max=a.its, verbose=not a.quiet, ls=False)
     zh2, zl2, hist = newton_solve(s, zh, zl, tol=1e-40, it_max=a.its, verbose=not a.quiet)
     Fh, Fl = s.residual(zh2, zl2)
     F = float(np.abs(Fh + Fl).max())
@@ -80,7 +87,7 @@ def main():
     nb = (L - 1) // (4 * M)
     sens = [float(np.abs(yh[b * 4 * M:(b + 1) * 4 * M]).max()) for b in range(nb)]
     rec = dict(label=a.label, state=os.path.basename(a.state), D=D, M=M, kfreeze=a.kfreeze, kt=a.kt, kc=kc, ks=ks,
-               tol_step=a.tol_step, hmax=a.hmax, nodes=nodes, perturb=a.perturb, Delta=float(zh2[-1]), Delta_lo=float(zl2[-1]),
+               tol_step=a.tol_step, hmax=a.hmax, nodes=nodes, perturb=a.perturb, corrector=a.corrector, Delta=float(zh2[-1]), Delta_lo=float(zl2[-1]),
                F=F, est=est, its=len(hist), steps=sum(len(g) - 1 for g in s.get_segs()), sens=sens,
                seconds=round(time.time() - t0, 1))
     ref = (meta.get("Delta"), None)

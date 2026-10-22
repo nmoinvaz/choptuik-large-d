@@ -83,3 +83,25 @@ print("points with |dDelta_est| > 3e-16: leave-one-out residual (fit - Delta) vs
 for d, x in loo:
     if abs(est.get(d, 0)) > 3e-16:
         print(f"   D {d:10.6f} {run[d]:10s} loo {x:+.1e}  dDelta_est {est[d]:+.1e}")
+
+# cross-machine check (README: the second machine agrees with the cloud points to 2-4e-16 at D = 59.84-60.05): each
+# local point against a degree-6 fit through the 12 nearest CLOUD points; the same for each cloud point (leave-one-out
+# within the cloud set) as the reference level
+cloud = sorted(d for d in allD if not run[d].startswith("local"))
+local = sorted(d for d in allD if run[d].startswith("local") and d <= 60.1)
+
+
+def interp_from(src, d, nb=12, deg=6):
+    js = sorted(sorted((x for x in src if x != d), key=lambda x: abs(x - d))[:nb])
+    sc = max(abs(x - d) for x in js)
+    X = arb_mat([[arb((x - d) / sc) ** k for k in range(deg + 1)] for x in js])
+    y = arb_mat([[pts[x]] for x in js])
+    c = (X.transpose() * X).solve(X.transpose() * y)
+    return float((c[0, 0] - pts[d]).mid())
+
+
+lv = [interp_from(cloud, d) for d in local]
+cv = [interp_from(cloud, d) for d in cloud if 59.0 <= d <= 60.1]
+print(f"cross-machine: {len(local)} local points in {local[0]:.4f}..{local[-1]:.4f} vs cloud interpolant: "
+      f"max {max(abs(v) for v in lv):.1e} rms {(sum(v * v for v in lv) / len(lv)) ** 0.5:.1e}; cloud leave-one-out "
+      f"on 59-60.1: max {max(abs(v) for v in cv):.1e} rms {(sum(v * v for v in cv) / len(cv)) ** 0.5:.1e}")

@@ -26,6 +26,7 @@ flint.ctx.prec = 640
 HERE = os.path.dirname(os.path.abspath(__file__))
 CSV = os.path.join(os.path.dirname(HERE), "data", "delta_dd.csv")
 DEGS = (14, 16, 18, 20, 22)
+DECIMAL = "--decimal" in sys.argv
 
 
 def load(path=CSV):
@@ -34,7 +35,11 @@ def load(path=CSV):
     for line in list(open(path))[1:]:
         c = line.strip().split(",")
         d = float(c[0])
-        pts[d] = arb(fmpq(*(float(c[1])).as_integer_ratio())) + arb(fmpq(*(float(c[2])).as_integer_ratio()))
+        if DECIMAL:
+            # emulate hp/dd_fits_mp.load_points: the CSV's shortest-repr strings parsed as decimals (not as the doubles)
+            pts[d] = arb(c[1]) + arb(c[2])
+        else:
+            pts[d] = arb(fmpq(*(float(c[1])).as_integer_ratio())) + arb(fmpq(*(float(c[2])).as_integer_ratio()))
         run[d] = c[6]
     return pts, run
 
