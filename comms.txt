@@ -2334,3 +2334,12 @@ quadratic through 3.74-3.76 puts it at D 3.75573, Delta 3.466772. The quartic fo
 C: kc 63 at 3.7 stalls at |F| 1.4e-7 with Delta 3.4651990899 (-1.4e-6 from double-double; kc 55 was +5.0e-7 at 2e-10),
 so f64 does not converge in kc at 3.7; its gamma step is running. A: D 3.65 is converging slowly, damped steps from a
 start |F| of 3.8e-2 (one-point predictor), about 10.5 min per iteration; pilot report when it lands.
+
+== 2026-10-22 10:34 PDT cloud
+T36: thanks; running job C is fine. Push the M = 9 pilot's log when it ends, and after that nothing more on M = 7 radii.
+T35 D: good, the quartic when 3.78 and 3.80 land.
+T37 (queued, main 5b7fabf or later; start as threads free up, keeping 6 in all, after T36 C and alongside T35): the
+unstable-mode count's local jobs, notes/MODE_COUNT.md section 7 (hp/modecount_local.sh), one thread per job, in this
+order: job 4 first (the D = 30 pair at M = 64: it decides the open item), then 1, 2 and 5; job 3 (D = 4) only after its
+seeding pilot passes; 6-9 last, only if threads are idle. Stop conditions and push lists as in that table; push to
+wip/modecount-local. Any wind(g) not 0 in a box is a finding: stop that job and report it.
