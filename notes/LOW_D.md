@@ -6,15 +6,16 @@ for the local machine to go further. Status words as in AGENTS.md; every number 
 
 ## Summary
 
-- **Lowest D with a demonstrated-converged Delta: D = 3.7** (double-double solver): Delta(3.7) = __D37__, converged in
-  the tau resolution M = 48 / 64 / 80 and unchanged by the node layout, series lengths and Taylor-step tolerance to
-  __D37VAR__ (Sec. 3). gamma(3.7) = __G37__. The f64 solver does not get below D = 4 with a demonstrated 1e-8; its
-  kc 47 values at 3.64-3.7 are 3.6-5.2e-6 high (Sec. 3).
+- **Lowest D with a demonstrated-converged Delta: D = 3.7** (double-double solver): Delta(3.7) = 3.46520048 +- 3e-8
+  (M = 80: 3.4652004835; the bar is the last M difference, the M = 48 / 64 / 80 steps contracting 33-fold), unchanged to
+  < 1e-16 by two node layouts with longer series and tighter Taylor steps (Sec. 3). gamma(3.7) = 0.34865019 +- 8e-8
+  (M = 80; the M = 48 / 64 / 80 steps -5.5e-6, -8.4e-8). Both agree with Ecker et al. (2.1e-8, 7.5e-8). The f64 solver
+  does not get below D = 4 with a demonstrated 1e-8; its kc 47 values at 3.64-3.7 are 3.6-5.2e-6 high (Sec. 3).
 - **Validation at D = 4:** Delta = 3.4454524022410 (M = 80; M = 48 / 64 / 80 differences -2.6e-7, -1.8e-9), against
-  Martin-Garcia & Gundlach's 3.445452402(3): 2.4e-10. gamma(4) = 0.3739607120 (M = 64).
+  Martin-Garcia & Gundlach's 3.445452402(3): 2.4e-10. gamma(4) = 0.3739607160 (M = 80; M = 64 differs by -4.0e-9).
 - **The obstruction is representation, not precision.** Below D = 4 the echo's harmonics decay more slowly
   (|F_k| ~ e^(-beta k): beta = 0.157 at D = 4, 0.134 at 3.7, about 0.03 at 3.05 in Ecker et al.'s data) and its
-  amplitude grows like (D - 3)^(-1.09). This costs modes (about 73 at D = 4, 85-88 at 3.7, 104-118 at 3.5, 135-177 at
+  amplitude grows like (D - 3)^(-1.09). This costs modes (about 73 at D = 4, about 90 at 3.7, 104-118 at 3.5, 135-177 at
   3.3, several hundred near 3.05 for 1e-10 in Delta), and with the modes the centre and horizon series converge ever
   more slowly at the matching points, so the nodes must move toward the centre and the horizon as M grows.
 - **A converged residual is not a converged answer,** twice over here: the double-double solver reached |F| = 3e-30 at
@@ -71,6 +72,8 @@ that row is indicative. The kc 39 states give beta 0.01 higher than kc 47 at the
   calibrates A e^(-2 beta K) at D = 4 and continues beta and |F_1| to 3.046 two ways: for 1e-10, K = 73 (D = 4), 81-82
   (3.8), 85-88 (3.7), 95-101 (3.6), 104-118 (3.5), 117-142 (3.4), 135-177 (3.3), 167-234 (3.2), 239-343 (3.1),
   340-450 (3.05). The double-double kernel stops at M = 128 (K = 127): 1e-10 to about D = 3.4, 1e-8 to about 3.3.
+  At D = 3.7 the measured M = 48 -> 64 -> 80 steps contract 33-fold per 16 modes (0.22 per mode, less than 2 x 0.134),
+  so the estimates are on the low side there: 1e-10 needs M about 90 at 3.7.
 
 ### Conditioning (f64)
 
@@ -116,8 +119,9 @@ extends the nodes during a continuation when they exceed 1e-30.
 From an f64 kc 47 seed the double-double Newton goes straight to M = 64 only by failing (line search at |F| 4.3e-2, all in
 the first block; filling the missing harmonics by each field's geometric trend, `--fill_tail`, only brings the start to
 1.4e-2). Through M = 48 it converges in 5-11 Jacobians (linear at first, then quadratic); each higher M from the lower M's
-solution in 4-6. Time per Newton iteration here (2 threads, shared): about 260-340 s at M = 48, 600-700 s at M = 64,
-860 s at M = 80 (hp/data/lowD_dd.jsonl, seconds / its): about M^3, so about 2100 s at M = 96 and 5000 s at M = 128.
+solution in 4-6. Time per Newton iteration here (2 threads; hp/data/lowD_dd.jsonl, seconds / its): under a load of
+about 20, 260-340 s at M = 48, 625 s at M = 64, 865 s at M = 80; with the machine nearly idle, 180-280 s at M = 64 and
+400 s at M = 80. Roughly M^3 at fixed load, so about 2100 s at M = 96 and 5000 s at M = 128 under load.
 
 ## 3. Converged points
 
@@ -127,8 +131,13 @@ contraction between successive differences is below 0.5 (an estimator, tested on
 
 | D | Delta | M = 48 / 64 / 80 differences | other discretisation | tails (centre, horizon) | gamma |
 |---|---|---|---|---|---|
-| 4.0 | 3.4454524022410 | -2.6e-7, -1.8e-9 (ratio 0.007) | nodes 0.005..0.8, 100/250 terms, step tol 1e-30 at M = 64: < 1e-16 | 5e-57, 9e-31 | 0.3739607120 (M = 64) __G4_80__ |
-| 3.7 | __D37__ | __D37DIFFS__ | __D37VAR__ | __D37TAILS__ | __G37__ |
+| 4.0 | 3.4454524022 +- 1.8e-9 | -2.6e-7, -1.8e-9 (ratio 0.007) | nodes 0.005..0.8, 100/250 terms, step tol 1e-30, at M = 64: < 1e-16 | 5e-57, 9e-31 | 0.3739607120 (M = 64), 0.3739607160 (M = 80) |
+| 3.7 | 3.46520048 +- 2.8e-8 | -9.35e-7, -2.83e-8 (ratio 0.030; geometric tail 9e-10) | nodes 0.0025..0.9, 120/300 terms, step tol 1e-31 against 0.005..0.8, 100/250, 1e-30, at M = 64: < 1e-16 | 2e-85, 4e-70 | 0.3486501896 (M = 80; steps -5.5e-6, -8.4e-8) |
+
+Node sets: D = 4 on 0.01, 0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6, 0.7 (80 centre / 200 horizon terms); D = 3.7 on
+0.005, 0.01, then the same, and 0.8 (100 / 250 terms, step tolerance 1e-30). At D = 3.7 the 0.01..0.7 set is exact at
+M = 48 (< 1e-16 from the wider set) but 4.1e-8 off at M = 64, where its series tails are 5e-7 and 4e-6: the node set has
+to follow M.
 
 - D = 4 against others: Martin-Garcia & Gundlach 3.445452402(3) (2.4e-10); f64 kc 55 3.4454524280 (+2.6e-8);
   f64 kc 47 3.4454526772 (+2.75e-7); Ecker et al. 3.445452682 (+2.8e-7, their 512 modes).
@@ -144,13 +153,14 @@ contraction between successive differences is below 0.5 (an estimator, tested on
 ## 4. gamma
 
 - Double-double, `python3 hp/lowD_gamma.py <out> <state> --lam0=<guess>` (root of det M(lambda), the hp kernel's
-  growth-mode matrix; hp/data/lowD_gamma.jsonl): gamma(4) = 0.3739607120 at M = 64 __G4_80__; gamma(3.7) = __G37__.
+  growth-mode matrix; hp/data/lowD_gamma.jsonl): gamma(4) = 0.3739607120 / 0.3739607160 at M = 64 / 80 (Ecker et al.
+  0.373961 +- 1e-6; f64 kc 55 0.3739607061); gamma(3.7) = 0.3486557785 / 0.3486502734 / 0.3486501896 at M = 48 / 64 / 80 (Ecker et al. 0.3486502642; f64 kc 47 0.3486495942).
 - f64 (Rust mode matrix): gamma(3.7) = 0.3486470 (kc 39), 0.3486496 (kc 47).
 - **gamma(3.5) by extrapolation** (`python3 hp/lowD_gamma_extrap.py <ecc>`, hp/data/lowD_logs/gamma_extrap.log): from our
   points at 3.6425-4.0, degree-2 and -3 fits, gamma(3.5) = 0.3235 +- 0.0030 (twice the spread of the fits; an estimator
   range). The rule was first applied to Ecker et al.'s gamma curve at the same D and contained their gamma(3.5) =
   0.32239 (error 1.1e-3); `--mutate` (a curve turning by 0.01) fails it. Our points sit within 8e-7 of their curve.
-- Against Bland et al. 2005 (Table I): 0.349 +- 0.003 at 3.5 is 0.026 above, about 8 combined ranges; Ecker et al.'s
+- Against Bland et al. 2005 (Table I): 0.349 +- 0.003 at 3.5 is 0.0255 above, more than four times the two ranges added; Ecker et al.'s
   direct 0.32239 and Bland's 2007 thesis value 0.3235 +- 0.0018 *(unverified, from Ecker et al.'s data file)* agree with
   ours. So the 2005 value at 3.5 looks wrong; the README's "gamma(3.5) <~ 0.33, an open check" can be replaced.
 
@@ -164,9 +174,17 @@ error their Fourier test cannot see. At common D:
 
 | D | ours | Ecker et al. (512) | Ecker - ours |
 |---|---|---|---|
-| 4.0 | 3.4454524022 (dd) | 3.4454526819 | +2.8e-7 |
-| 3.7 | __D37SHORT__ (dd) | 3.4652005045 | __D37ECK__ |
-| 3.7 | gamma __G37SHORT__ (dd) | 0.3486503 | __G37ECK__ |
+| 4.0 | 3.4454524022 (dd, M = 80) | 3.4454526819 | +2.8e-7 |
+| 4.0 | gamma 0.3739607160 (dd, M = 80) | 0.3739606641 | -5.2e-8 |
+| 3.7 | 3.4652004835 (dd, M = 80) | 3.4652005045 | +2.1e-8 |
+| 3.7 | gamma 0.3486501896 (dd, M = 80) | 0.3486502642 | +7.5e-8 |
+| 3.7938 | 3.4661208961 (f64 kc 47) | 3.4661193384 (interpolated) | -1.6e-6 |
+| 3.675 | 3.4633685949 (f64 kc 47) | 3.4633638579 (interpolated) | -4.7e-6 |
+| 3.6425 | 3.4597739279 (f64 kc 47) | 3.4597686847 (interpolated) | -5.2e-6 |
+
+(hp/data/lowD_logs/ecker_compare.log.) At D = 3.7 the two independent computations agree to 2.1e-8 in Delta and 7.5e-8
+in gamma, inside our bars (2.8e-8, 8.4e-8) and their 256 -> 512 change of 3e-8; at D = 4 they are 2.8e-7 apart in
+Delta, their error (ours agrees with Martin-Garcia & Gundlach to 2.4e-10).
 
 Their maximum (Eq. 70, D = 3.755726, Delta = 3.466772) agrees with the README's kc 47 estimate to 2e-6. Below 3.7 they
 are, as far as we can check, the only values; with their 256 -> 512 changes they are good to about 5e-7 at 3.5, 2e-5 at
@@ -232,9 +250,9 @@ priority, at most 6 at a time, output to the logs named.
 For "Relation to published work", replacing the "Below D = 4" bullet:
 
 > - **Below D = 4.** The double-double solver, with its first node moved to x = 0.005 and its last to 0.8 (the series
->   there converge ever more slowly as D falls), gives Δ(3.7) = __D37SHORT__ and γ(3.7) = __G37SHORT__, converged in the
->   τ resolution (48, 64 and 80 points) and in the node layout (notes/LOW_D.md); Ecker et al. 2026 give 3.4652005
->   and 0.3486503 there. The f64 points below D = 4 (47 Fourier modes) are 4-5×10⁻⁶ high in Δ. Extrapolated from
+>   there converge ever more slowly as D falls), gives Δ(3.7) = 3.46520048 ± 3×10⁻⁸ and γ(3.7) = 0.34865019 ± 8×10⁻⁸,
+>   converged in the τ resolution (48, 64 and 80 points) and in the node layout (notes/LOW_D.md); Ecker et al. 2026
+>   give 3.4652005 and 0.3486503 there. The f64 points below D = 4 (47 Fourier modes) are 2-5×10⁻⁶ high in Δ. Extrapolated from
 >   3.64 ≤ D ≤ 4, γ(3.5) = 0.3235 ± 0.0030, in agreement with Ecker et al.'s 0.32239 and not with Bland et al.'s
 >   0.349 ± 0.003. The modes needed grow from about 73 at D = 4 to about 110 at 3.5 and several hundred near 3.05, and
 >   at D = 3 the scalar decouples from gravity in these equations, so the family cannot reach a regular D = 3 limit.

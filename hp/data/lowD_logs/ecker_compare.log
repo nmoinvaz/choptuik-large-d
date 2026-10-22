@@ -8,8 +8,13 @@ ours against their lists (DeltaList / GammaList at the same D; off their grid, c
   lowD_dd.jsonl                D 3.700000 M/kc 64: Delta 3.465200552420  Ecker 3.465200504469  Ecker-ours -4.80e-08
   lowD_dd.jsonl                D 3.700000 M/kc 48: Delta 3.465201447070  Ecker 3.465200504469  Ecker-ours -9.43e-07
   lowD_dd.jsonl                D 3.700000 M/kc 64: Delta 3.465200511803  Ecker 3.465200504469  Ecker-ours -7.33e-09
+  lowD_dd.jsonl                D 3.700000 M/kc 64: Delta 3.465200511803  Ecker 3.465200504469  Ecker-ours -7.33e-09
+  lowD_dd.jsonl                D 3.700000 M/kc 80: Delta 3.465200483544  Ecker 3.465200504469  Ecker-ours +2.09e-08
   lowD_gamma.jsonl             D 4.000000 M/kc 64:  gamma ours 0.373960712 Ecker 0.373960664 diff -4.8e-08
   lowD_gamma.jsonl             D 4.000000 M/kc 80:  gamma ours 0.373960716 Ecker 0.373960664 diff -5.2e-08
+  lowD_gamma.jsonl             D 3.700000 M/kc 48:  gamma ours 0.348655778 Ecker 0.348650264 diff -5.5e-06
+  lowD_gamma.jsonl             D 3.700000 M/kc 64:  gamma ours 0.348650273 Ecker 0.348650264 diff -9.2e-09
+  lowD_gamma.jsonl             D 3.700000 M/kc 80:  gamma ours 0.348650190 Ecker 0.348650264 diff +7.5e-08
   lowD_f64.jsonl               D 3.700000 M/kc 47: Delta 3.465204104945  Ecker 3.465200504469  Ecker-ours -3.60e-06
   lowD_f64.jsonl               D 3.700000 M/kc 47: Delta 3.465204076718  Ecker 3.465200504469  Ecker-ours -3.57e-06
   lowD_f64.jsonl               D 3.700000 M/kc 39: Delta 3.465227624333  Ecker 3.465200504469  Ecker-ours -2.71e-05  gamma ours 0.348646976 Ecker 0.348650264 diff +3.3e-06
