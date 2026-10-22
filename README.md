@@ -53,6 +53,8 @@ What this builds on, and what is new. From earlier work:
 
 Not found in the literature searched ([notes/LIT_REVIEW.md](notes/LIT_REVIEW.md)):
 - Δ(D) to D = 61 at about 15 digits, and the finite limit Δ∞ = 1.64389375 against the Δ → 0 conjecture;
+- a single formula for Δ(D) and γ(D) for all D ≥ 4 (an empirical rational fit; the only earlier fit, Bland et al.'s
+  exponential for γ, has a different form and limit);
 - Propositions 1–4: the 1/D expansion never fixes the period; the closed-form light-cone obstruction; its reading as a
   Stokes multiplier;
 - the selection rule (Conjecture 1) and the value Δ∞ = 1.6439 ± 0.0002 it gives from the D = ∞ equations alone;
@@ -463,6 +465,14 @@ From a literature search (October 2026); the references are listed at the end of
   decreasing). The double-double points give a finite Δ∞ = 1.64389375 if Δ is analytic in 1/D. Up to D = 61
   they show no sign of a turn toward 0, but they cannot exclude non-analytic behaviour beyond the data. γ∞ = 1/2
   agrees with the conjectures there; it is not new.
+- **Earlier formulas.** No earlier formula for Δ(D) was found ([notes/LIT_REVIEW.md](notes/LIT_REVIEW.md),
+  addendum). For γ, Bland et al. (2005) fitted γ ≈ 0.466(1 − e^{−0.408 D}) on 3.5 ≤ D ≤ 14, a different form whose
+  limit, 0.466, is not 1/2. Sorkin and Oren (2005) read their D ≤ 11 values as γ reaching a maximum and Δ a minimum
+  around D = 11–13; the points here show neither, as Δ decreases and γ increases monotonically to D = 61. Taves and
+  Kunstatter (2011) give values for D = 4–8 without a formula. Kol's 2π/Δ = √((10 − D)/(D − 2)) (2005) is for the
+  black-string merger, not for scalar collapse. The rational formula here is an empirical fit, a ratio of polynomials
+  with 13 coefficients, not a law derived from the equations. What it adds is one function for all D ≥ 4 that matches
+  the points to their precision and predicts the double-double points it never saw up to D = 61.
 - **Leading order.** That at leading order any periodic profile with any period solves the equations is in Ecker, Ecker
   & Grumiller 2026, and the free wave equation in similarity coordinates was analysed in 3+1 by Donninger (2008). Their
   next-to-leading-order condition is discussed next.
@@ -1665,6 +1675,8 @@ fixes λ∞ = 2, carried to D = ∞, where λ = 2 is exact (the r²-shift symmet
 - J. Bland et al., CQG 22, 5355 (2005), [gr-qc/0507088](https://arxiv.org/abs/gr-qc/0507088).
 - D. Garfinkle, C. Cutler and G. C. Duncan, PRD 60, 104007 (1999), [gr-qc/9908044](https://arxiv.org/abs/gr-qc/9908044).
 - E. Sorkin and Y. Oren, PRD 71, 124005 (2005), [hep-th/0502034](https://arxiv.org/abs/hep-th/0502034).
+- B. Kol, *Choptuik scaling and the merger transition*, JHEP 10 (2006) 017,
+  [hep-th/0502033](https://arxiv.org/abs/hep-th/0502033).
 - M. Rozali and B. Way, *Gravitating scalar stars in the large D limit*, JHEP 11 (2018) 106,
   [arXiv:1807.10283](https://arxiv.org/abs/1807.10283).
 - C. R. Clark and G. L. Pimentel, *Black hole critical collapse in infinite dimensions: continuous self-similar
