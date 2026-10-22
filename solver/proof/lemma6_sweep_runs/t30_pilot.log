@@ -1,0 +1,4 @@
+tube sweep over X = x^ + [-1e-9, 1e-9]^2: 7 reference arcs |u| = 260.0 ... 25.00 [1 s]
+ray tube |u| 107.00 -> [106.70 +/- 3e-7] (half-width [0.1067 +/- 3e-9]): finished True, 25 steps, 6 s, radius 5.58e-03 
+ray tube |u| [106.70 +/- 3e-7] -> 70.000 (half-width [0.07000 +/- 3e-9]): finished True, 82 steps, 19 s, radius 1.40e-02 
+ray tube |u| 70.000 -> 40.000 (half-width [0.04000 +/- 3e-10]): finished False, -1 steps, 76 s, radius inf step size underflow at t = 0.7018994390964508
