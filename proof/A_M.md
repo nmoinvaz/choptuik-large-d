@@ -157,7 +157,7 @@ third order in h and the Jacobian is enclosed in mean value form; that is not at
 |x_o − x_o*| ≪ h and the inner coordinates to ≪ w. hier.py's zeros are good to about 2×10⁻¹¹ (the spread between two
 solves), far from the 10⁻¹⁶–10⁻²⁰ the inner coordinates need. The centre is refined by Newton steps from
 `certify_M_lohner.numerics_run`, a plain Taylor integrator at 256 bits (order 30, steps from the Taylor coefficients and
-‖A₀‖h ≤ 2, and from the Taylor coefficients of the derivative columns; non-rigorous, and it need not be: any centre is allowed, the test is what is rigorous). (A first version took its steps from the trajectory alone, which is a slow solution: 98 steps for the whole path at M = 3. Its Dg was then accurate to only about 10⁻⁹ relative, because the derivative columns carry the large Stokes-switched fast components, and with the 10⁶-fold cancellation in the Schur complement the outer Newton steps converged only linearly, by a factor of about 80 per step; `logs/A_M_refine_M3_a.log`.) The steps alternate:
+‖A₀‖h ≤ 2, and from the Taylor coefficients of the derivative columns; non-rigorous, and it need not be: any centre is allowed, the test is what is rigorous). (A first version took its steps from the trajectory alone, which is a slow solution: 98 steps for the whole path at M = 3. Its Dg was then accurate to only about 10⁻⁹ relative, because the derivative columns carry the large Stokes-switched fast components, and with the 10⁶-fold cancellation in the Schur complement the outer Newton steps converged only linearly, by a factor of about 80 per step; `logs/A_M_refine_M3_a.log`. A second version still accumulated t in double precision, so every step restarted the series about 10⁻¹⁶ off the true time; the Stokes switching amplifies such slow-direction errors by about 10⁷ at M = 3, which left a noise floor of 1.4×10⁻¹⁰ in J₃ (10⁻¹⁷ in B₃) and stalled the Newton iteration at 3–4×10⁻¹³ in the outer coordinates; `logs/A_M_refine_M3_b.log`. The steps now lie on the exact grid 2⁻⁴⁰ℤ, as the rigorous integrator's lie on 2⁻³⁰ℤ.) The steps alternate:
 a Newton step in the higher harmonics alone at fixed (A, wf), then a full Newton step. (A full step from an untuned
 centre would leak the inner quadratic error into the outer coordinates through L.) The last refinement also gives the
 tilt C (from its Dg).
@@ -274,6 +274,29 @@ and with Y from the box run's own column midpoints, so the agreement checks the 
 with an empty inner block, and LohnerM against validated_int. The independent assembly `certify_M_recheck.py` (mpmath interval arithmetic, its own jump functionals and its own preconditioner, sharing only the saved Lohner sets) gives the same verdict and margins (0.863, 0.976) and the enclosure A ∈ [2.5421480475960, 2.5421480476371]. With Theorem A's A-interval shifted by 10⁻¹¹
 (`--mutate=m1ref`) the check reports NOT REPRODUCED. All M = 1 controls give their expected verdict
 (`logs/A_M_controls_M1.log`); C1 and C2 have absolute margins −59, −22 and −2.0, −0.35, the same as A_certify.md §9.5.
+
+## 7. Cost, and a proposed task for the local machine
+
+COST_TABLE
+
+**Proposed task for the local 8-thread machine** (for the coordinator to queue; COST_LOCAL).
+
+- *What:* LOCAL_WHAT
+- *Prerequisites:* python-flint 0.9.0 and numpy; this branch merged with the lemma agent's (so that
+  `solver/proof/fixed_point_M.py` sits next to `certify_M.py`), or `CERTIFY_M_FPM_DIR` pointing at it. Check first:
+  `python3 certify_M_sys.py selftest` (PASS) and `python3 certify_M.py startcheck 5` (contains).
+- *Threads:* LOCAL_THREADS, one process each, at below-normal priority.
+- *Commands* (from `solver/proof/`):
+
+```
+LOCAL_COMMANDS
+```
+
+- *Stop conditions:* a box run whose log shows `step size underflow`, or a derivative radius above 10³ in its progress
+  lines, is stopped (it will not pass); the refinement is stopped if its full Newton step does not shrink by at least
+  10³ per full iteration (the numerics are then not resolving Dg). A run interrupted by a restart is simply relaunched
+  with the same command: it resumes from its `.ckpt` file.
+- *Push:* `solver/proof/data/A_M_*M5*.json` (not the `.ckpt` files) and `solver/proof/logs/A_M_*M5*.log`.
 
 ## 8. Reproduce
 

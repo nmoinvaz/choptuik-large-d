@@ -247,6 +247,10 @@ def numerics_run(sys_, y0, w, cols0, path, N=24, tol=1e-40, log=None):
                 for k in (N - 1, N):
                     ck = max(float(abs(Vk[k][i, j]).mid()) for i in range(n)) / wj + 1e-300
                     h = min(h, (tol / ck) ** (1.0 / k))
+            # steps on the grid 2^-40 Z, so that t stays exact: a rounded t would restart the series at a time
+            # about 1e-16 off the true one, an error the Stokes switching amplifies by 1e7 (M = 3) and more
+            g40 = 2.0 ** -40
+            h = min(max(int(h / g40), 1) * g40, 1.0 - t)
             hh = acb(h)
             y = [acb(VI.evalpoly(Ys[i], hh, N).mid()) for i in range(nd)] + y[nd:]
             Wn = Vk[N]
