@@ -1,0 +1,77 @@
+% Choptuik's critical solution at large dimension: the physics paper. Build: see Makefile (pdflatex twice).
+% Companion: the mathematics paper in ../math/ (cited as [math]).
+\documentclass[aps,prd,onecolumn,superscriptaddress,nofootinbib,10pt]{revtex4-2}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{dcolumn}
+\usepackage{xurl}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+\newcommand{\Dinf}{\Delta_\infty}
+\newcommand{\eps}{\varepsilon}
+
+\begin{document}
+
+\title{Choptuik's echo period and critical exponent at large dimension:\\
+evidence for $\Delta_\infty = 1.64389375$ and an $r^2$-shift symmetry behind $\gamma_\infty = 1/2$}
+
+\author{Nathan Moinvaziri}
+\email{nathan@nathanm.com}
+\affiliation{Independent researcher}
+\date{October 2026; unreviewed draft}
+
+\begin{abstract}
+% TODO: abstract (written last).
+\end{abstract}
+
+\maketitle
+
+% OUTLINE
+% I.   Introduction: the problem, prior numerics and large-D work (credits), what this paper reports, the companion
+%      paper [math], conventions (gamma is the radius exponent).
+% II.  Equations and numerical method: self-similar equations; the f64 and double-double solvers; checks table;
+%      the growth rate as a root of the growth-mode determinant.
+% III. Delta(D) and gamma(D) for D >= 4: the rational formula (coefficients, values, figure); comparison with
+%      published values (D = 4, the maximum below D = 4, D = 5); physical reading (echo factor, fine-tuning per echo).
+% IV.  The limit D -> infinity: held-out tests of analyticity in 1/D; Delta_inf and its planted-truth check; the
+%      Delta -> 0 conjecture; closed forms tested; gamma_inf = 1/2 from the data.
+% V.   The large-D picture: how the solution scales; a free wave cannot echo and the period is selected beyond all
+%      orders (statements, proofs in [math]); the inner region x ~ sqrt(n) and Rozali-Way's heat equation; the
+%      r^2-shift and gamma_inf = 1/2; the D = infinity selection rule (conjecture, [math]) and what it reproduces;
+%      the next-to-leading-order condition of Ecker, Ecker and Grumiller.
+% VI.  Other matter at large D: which models keep the r^2-shift; axion-dilaton and complex scalar (CSS, D <= 80);
+%      the sigma-model CSS branch (ends near D = 8.5); the l = 1 multiplet (D <= 9, undecided).
+% VII. Discussion: summary, the assumption that the branch stays critical, open problems.
+% VIII. How this work was done; data and code.
+
+\section{Introduction}
+\label{sec:intro}
+
+\section{Equations and numerical method}
+\label{sec:method}
+
+\section{The echo period and critical exponent for $D \ge 4$}
+\label{sec:results}
+
+\section{The limit $D \to \infty$}
+\label{sec:limit}
+
+\section{The large-$D$ picture}
+\label{sec:picture}
+
+\section{Other matter at large $D$}
+\label{sec:matter}
+
+\section{Discussion}
+\label{sec:discussion}
+
+\section{How this work was done}
+\label{sec:how}
+
+\begin{thebibliography}{99}
+\bibitem{math} N. Moinvaziri, The echo period of Choptuik's critical solution at large dimension: a selection rule and
+a computer-assisted proof (in preparation).
+\end{thebibliography}
+
+\end{document}
