@@ -12,7 +12,8 @@ heat equation ([README, "Large D"](../README.md#large-d-what-the-1d-expansion-ca
   found nothing; it does not prove that nothing exists.
 - *Numbers.* Values are quoted as published, with the paper's convention for γ (mass or radius exponent).
 - *Remarks.* Statements marked *(remark)* are not from the literature. They are short derivations made while writing
-  this page, and the symbolic ones were checked with sympy. Treat them as leads, not results.
+  this page, and the symbolic ones were checked with sympy
+  ([`solver/matter/lit_remarks_check.py`](../solver/matter/lit_remarks_check.py)). Treat them as leads, not results.
 
 **Conventions** (as in the README):
 - D is the number of spacetime dimensions and n = D − 2, so the round sphere is $`S^n`$. The PDE literature counts
