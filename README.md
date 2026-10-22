@@ -64,7 +64,7 @@ Headline results:
 - **One formula for all D ≥ 4.** A rational function of 1/(D-2) gives Δ and γ within the precision of the
   computed points up to D = 30, and Δ to 6×10⁻⁸ up to D = 61 ([The formula](#the-formula), [Values](#values)).
 - **The large-D limit.** Δ is computed at 857 points from D = 8.25 to 61.03; the points fit smooth curves to about 4×10⁻¹⁵
-  (estimated error per point about 10⁻¹⁶ to D = 60.1, a few 10⁻¹⁵ above). The points support, but do not prove, that Δ is analytic in 1/D; then
+  (estimated error per point 10⁻¹⁶ to a few 10⁻¹⁵). The points support, but do not prove, that Δ is analytic in 1/D; then
   Δ∞ = 1.643893746 ± 1.5×10⁻⁸ (ω∞ = 2π/Δ∞ = 3.82213590 ± 4×10⁻⁸; the centre of 48 fit choices, lowered by the
   0.8×10⁻⁸ by which that centre overshoots known limits in synthetic data, with the spread of the fits as the bar), and γ∞ = 1/2 to about 5×10⁻⁷ (γ computed in double-double at 67 points, D = 8.25–61).
   γ∞ = 1/2 is explained, given the selection rule below and the uniqueness of the unstable mode: at D = ∞ an unstable
@@ -544,8 +544,8 @@ with computed points rather than an assumed form. Its points are used in [The fo
 | 32 / 48 / 64 collocation points in τ, D = 7–17 | Δ agrees to 10⁻¹⁶ |
 | first node at x = 0.02 / 0.05 / 0.1, D = 16.75 | Δ identical to 10⁻¹⁶ |
 | 32 / 48 collocation points in τ, D = 40 | Δ agrees to 9×10⁻²² |
-| harmonics frozen above 13 / above 15, D = 40 | Δ agrees to 3×10⁻¹⁷ |
-| second machine (Windows, i7-1185G7, own build), D = 59.84–60.05 | agrees with the cloud points to 2–4×10⁻¹⁶ |
+| harmonics frozen above 13 / above 15, D = 40, 50, 60 | Δ differs by +1.5, −1.1, −1.2×10⁻¹⁵ |
+| second machine (Windows, i7-1185G7, own build), D = 59.84–60.09 | 7.2×10⁻¹⁸ rms from the cloud points' interpolant (`hp/review/rv2_noise.py`) |
 | the 94 points above D = 60.1 (32 of them at 60.95–61.026: 25 from the second machine, 7 from the cloud) against the 1/D fit on D ≤ 60.1 (degree 18) | agree to 2.6×10⁻¹⁵ |
 
 </details>
@@ -589,7 +589,9 @@ What the solver has shown:
   so Newton's basin shrinks with D; at D = 8, 80 points in τ already fail to converge. From D = 35 the solver
   pins the centre data's harmonics above 13 at zero and drops their matching on the horizon side: the weakest singular
   value rises from 10⁻²⁴ to 10⁻¹⁷ and plain Newton converges again. The cut moves Δ by 5×10⁻¹⁵ at
-  D = 35 and 3×10⁻¹⁷ at D = 40; a cut at 11 does not converge at D = 40.
+  D = 35 and about 10⁻¹⁵ at D = 40–60 (freeing harmonic 15 changes Δ by +1.5, −1.1 and −1.2×10⁻¹⁵ at D = 40, 50 and 60,
+  with full Newton steps), which moves Δ∞ by at most 5.5×10⁻¹⁰ ([notes/NUMERICS_REVIEW.md](notes/NUMERICS_REVIEW.md)).
+  A cut at 11 does not converge at D = 40.
 - **How fast the selection weakens.** $`\max\lvert\partial\Delta/\partial F\rvert`$ grows about 1.8 times per unit of D below
   D = 27, 1.7 at 35–45, 1.6 at 45–56 and 1.5 at 56–61, to 9×10¹³ at D = 60 (table), and the
   residual floor rises about 1.4-fold per unit. Their product, a
@@ -598,10 +600,11 @@ What the solver has shown:
   10⁻²¹ and 10⁻¹⁷ from D = 35.3 to 60.1 and reaches 3×10⁻¹⁵ above, where the tolerance was relaxed.
 - **How good the values are.** The points themselves fit smooth curves to about 4×10⁻¹⁵ (degree 18–20) all the way to
   D = 60.1, not 10⁻²⁰. Points between
-  D = 27 and 35.2, solved before the freezing, carry a few 10⁻¹⁵ from the weak directions; about 25 of them sit
-  visibly off their neighbours and `hp/dd_fits_mp.py --clean` drops them (26 on today's file with `--dmax=60.1`). The frozen points from 35.35 to 37 carry the cut's ≤ 5×10⁻¹⁵, which falls off
-  with D. Elsewhere up to D = 60.1 the error is about 10⁻¹⁶; the 94 points above 60.1, solved to the looser
-  tolerance, carry up to about 3×10⁻¹⁵.
+  D = 27 and 35.2, solved before the freezing, carry up to 10⁻¹⁴ from the weak directions; about 25 of them sit
+  visibly off their neighbours and `hp/dd_fits_mp.py --clean` drops them (26 on today's file with `--dmax=60.1`). The cleaning leaves errors up to 5×10⁻¹⁵ there. The frozen points carry the
+  cut's smooth error, up to 5×10⁻¹⁵ from 35.35 to 37 and about 10⁻¹⁵ from 40 to 60, while their scatter about smooth
+  local fits is only 3–7×10⁻¹⁸ at D = 45–60.1. Below D = 27 the error is about 10⁻¹⁶; the 94 points above 60.1, solved
+  to the looser tolerance, carry up to about 3×10⁻¹⁵.
 - **The f64 points.** Against the double-double values they are within about 6×10⁻¹¹ at D = 15.6–21 (quoted
   3×10⁻¹¹), typically 3.6×10⁻⁹ and at most 6.4×10⁻⁹ (D = 24.5) at 22–29.3 (quoted
   1.5–2×10⁻⁹), 1.8×10⁻⁸ at 30.1 and
@@ -1725,7 +1728,8 @@ commits marked as co-authored. He has not checked the mathematics himself.
 What has been checked, and how:
 
 - **Numerics:** two independent solvers (f64 and double-double) agree where they overlap; two machines with separate builds
-  agree to 2–4×10⁻¹⁶; every fit table reproduces from the data with the command given next to it.
+  agree to 7×10⁻¹⁸ rms; an independent review re-derived the solver's equations, re-evaluated its residual in 200-bit
+  arithmetic and tested the Δ∞ fits ([notes/NUMERICS_REVIEW.md](notes/NUMERICS_REVIEW.md)); every fit table reproduces from the data with the command given next to it.
 - **Derivations:** Propositions 1–3 and the inner equations were re-derived by separate agents that had not written them
   (sympy where possible); the inner Stokes multiplier was computed by two implementations that share no code.
 - **Against the literature:** agreement with the published values at D = 4 and at the maximum of Δ

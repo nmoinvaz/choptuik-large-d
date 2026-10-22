@@ -141,9 +141,11 @@ Taylor series in $x$ of order 36 with truncation $10^{-32}$; centre and horizon 
 $\tau$ on the half period (32 points); an exact Jacobian by forward-mode duals~\cite{Wengert1964} with a double-double LU; continuation in
 $D$ with deflated Newton steps. The Jacobian has a ladder of near-null directions (high $\tau$-harmonics of the centre
 data, singular values falling roughly like $e^{-0.7k}$ with the harmonic $k$); from $D = 35$ the centre harmonics above
-13 are pinned, which moves $\Delta$ by $5\times10^{-15}$ at $D = 35$ and $3\times10^{-17}$ at $D = 40$. The checks are
+13 are pinned, which moves $\Delta$ by $5\times10^{-15}$ at $D = 35$ and about $10^{-15}$ at $D = 40$--$60$, and $\Dinf$ by at most
+$5.5\times10^{-10}$. The checks are
 listed in Table~\ref{tab:checks}. The 857 points fit smooth curves to about $4\times10^{-15}$; the estimated error per
-point is about $10^{-16}$ to $D = 60.1$ and a few $10^{-15}$ above, where the tolerance was relaxed. Above $D = 40$ these
+point is about $10^{-16}$ below $D = 27$ and up to a few $10^{-15}$ above (from the weak directions on $27$--$35$, the
+pinning above $D = 35$, and the relaxed tolerance above $D = 60.1$). Above $D = 40$ these
 checks are internal to the double-double solver (resolution, pinning, a second build on a second machine); the
 independent double-precision solver stops at $D = 40$.
 
@@ -172,8 +174,8 @@ Newton at $D = 8$ & quadratic, $|F| = 5\times10^{-31}$ in 4 steps \\
 $\Delta(7)$, $\Delta(7.75)$ against 39-mode double-precision references ($\pm3\times10^{-11}$) & $+3.1\times10^{-12}$, $-2.8\times10^{-12}$ \\
 32 / 48 / 64 collocation points in $\tau$, $D = 7$--$17$ & $\Delta$ agrees to $10^{-16}$ \\
 32 / 48 collocation points, $D = 40$ & $9\times10^{-22}$ \\
-harmonics pinned above 13 / above 15, $D = 40$ & $3\times10^{-17}$ \\
-second machine (separate build), $D = 59.84$--$60.05$ & $2$--$4\times10^{-16}$ \\
+harmonics pinned above 13 / above 15, $D = 40$, $50$, $60$ & $+1.5$, $-1.1$, $-1.2\times10^{-15}$ \\
+second machine (separate build), $D = 59.84$--$60.09$ & $7.2\times10^{-18}$ rms \\
 the 94 points above $D = 60.1$ against the $1/D$ fit on $D \le 60.1$ & $2.6\times10^{-15}$ \\
 \end{tabular}
 \end{ruledtabular}
@@ -793,7 +795,8 @@ N.~M. chose the problem, set the direction at each step and ran the long computa
 computations, the derivations and the text, including this paper, were produced by Claude, Anthropic's AI model, working
 as a set of coordinated agents. N.~M. has not checked the mathematics himself, and no human expert has reviewed the work.
 Checks made: two independent solvers agree where they overlap; two machines with separate builds agree to
-$2$--$4\times10^{-16}$; every fit table reproduces from the data with the stated command; the large-$D$ expansion and the
+$7\times10^{-18}$ rms; an independent review re-derived the solver's equations and re-evaluated its residual in 200-bit
+arithmetic; every fit table reproduces from the data with the stated command; the large-$D$ expansion and the
 inner equations were re-derived by separate agents (with sympy where possible); the inner Stokes multiplier was computed
 by two implementations that share no code; values at $D = 4$ and the maximum of $\Delta$ agree with the literature, and
 each matter solver reproduces the published four-dimensional values before it is continued in $D$; an independent agent
