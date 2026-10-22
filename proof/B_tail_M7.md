@@ -283,7 +283,8 @@ Write 1 for the harmonic-1 rows and H for the rows 3, …, M. Then:
    ∂_fŜ₁ (∂_fŜ_H)⁻¹ and h′ = −T_HH⁻¹ T_H1, whenever I − G h′ is invertible. So the zero is simple for one exactly when
    it is simple for the other.
 3. The same identity holds for the Schur complement of hier's leakage Jacobian K = D r = T DŜ: the entries of T, such as
-   ∂r₁/∂B₅ ≈ 10¹⁷ ≈ e^{π(5−1)ω/2} × (the finite-ξ de-mixing error), cancel exactly in it.
+   ∂r₁/∂B₅ ≈ 10¹⁷ (the label-5 jump leaking into the harmonic-1 row at finite ξ, with a weight of order
+   e^{π(5−1)ω/2}), cancel exactly in it.
 
 *Proof.* Assume also T_HH invertible (`hier.py` needs this to define its correction; its K_HH is invertible). Then
 Φ_H(Ŝ₁, Ŝ_H) = 0 is solved by Ŝ_H = h(Ŝ₁) with h(0) = 0 and h′(0) = −T_HH⁻¹T_H1 (implicit function theorem), and r₁ =
