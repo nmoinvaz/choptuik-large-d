@@ -1,0 +1,24 @@
+residual of the inner solution in the exact model, eps = 0.0000000001
+  arg z = 0.0, |z| = 5e-03: |r_Phi| |z|/eps =      32.47   |r_C|/eps = 3.047
+  arg z = 0.0, |z| = 2e-03: |r_Phi| |z|/eps =      34.11   |r_C|/eps = 3.157
+  arg z = 0.0, |z| = 1e-03: |r_Phi| |z|/eps =      34.65   |r_C|/eps = 3.194
+  arg z = 0.0, |z| = 5e-04: |r_Phi| |z|/eps =      34.92   |r_C|/eps = 3.212
+  arg z = 0.0, |z| = 2e-04: |r_Phi| |z|/eps =      35.08   |r_C|/eps = 3.224
+  arg z = 0.0, |z| = 1e-04: |r_Phi| |z|/eps =      35.13   |r_C|/eps = 3.227
+  arg z = 0.0, |z| = 5e-05: |r_Phi| |z|/eps =      35.16   |r_C|/eps = 3.229
+  arg z = 1.0, |z| = 5e-03: |r_Phi| |z|/eps =      36.65   |r_C|/eps = 3.131
+  arg z = 1.0, |z| = 2e-03: |r_Phi| |z|/eps =      35.75   |r_C|/eps = 3.191
+  arg z = 1.0, |z| = 1e-03: |r_Phi| |z|/eps =      35.46   |r_C|/eps = 3.211
+  arg z = 1.0, |z| = 5e-04: |r_Phi| |z|/eps =      35.32   |r_C|/eps = 3.221
+  arg z = 1.0, |z| = 2e-04: |r_Phi| |z|/eps =      35.24   |r_C|/eps = 3.227
+  arg z = 1.0, |z| = 1e-04: |r_Phi| |z|/eps =      35.21   |r_C|/eps = 3.229
+  arg z = 1.0, |z| = 5e-05: |r_Phi| |z|/eps =       35.2   |r_C|/eps = 3.23
+  arg z = 1.9, |z| = 5e-03: |r_Phi| |z|/eps =      39.63   |r_C|/eps = 3.294
+  arg z = 1.9, |z| = 2e-03: |r_Phi| |z|/eps =      36.86   |r_C|/eps = 3.256
+  arg z = 1.9, |z| = 1e-03: |r_Phi| |z|/eps =      36.01   |r_C|/eps = 3.244
+  arg z = 1.9, |z| = 5e-04: |r_Phi| |z|/eps =      35.59   |r_C|/eps = 3.237
+  arg z = 1.9, |z| = 2e-04: |r_Phi| |z|/eps =      35.35   |r_C|/eps = 3.234
+  arg z = 1.9, |z| = 1e-04: |r_Phi| |z|/eps =      35.26   |r_C|/eps = 3.232
+  arg z = 1.9, |z| = 5e-05: |r_Phi| |z|/eps =      35.22   |r_C|/eps = 3.232
+spread of |r_Phi| |z|/eps over |z| <= 1e-3: factor 1.04 (bounded: O(eps/|z|))
+exit 0

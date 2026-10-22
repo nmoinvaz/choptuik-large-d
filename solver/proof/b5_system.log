@@ -1,0 +1,5 @@
+M = 1: model (P, Q, C, Theta) form vs the outer equations in inner variables, worst scaled residual 6.42e-63 (PASS, threshold 1e-45)
+        eps = 0 limit vs fixed_point.py's inner system, worst difference 1.64e-39 (PASS, threshold 1e-30)
+        Phi' formula of f_eps vs the total derivative of the Phi relation along the flow, worst relative difference 1.1e-50 (PASS, threshold 1e-30)
+        f_eps - f_0 at eps = 1e-30 with vt arbitrary, worst |difference| |z|^2/eps = 14.9 (PASS: bounded, threshold 100; an O(1) vt-dependence of the limit would give 1e30)
+exit 0

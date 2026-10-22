@@ -1,0 +1,6 @@
+  g   : worst relative difference 5.05e-51 (PASS, threshold 1e-40)
+  zG0 : worst relative difference 5.28e-51 (PASS, threshold 1e-40)
+  jac : worst relative difference 6.08e-51 (PASS, threshold 1e-30)
+  res : worst relative difference 9.16e-48 (PASS, threshold 1e-30)
+  tF  : worst relative difference 1.57e-46 (PASS, threshold 1e-40)
+exit 0

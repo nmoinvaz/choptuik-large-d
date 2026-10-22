@@ -1,0 +1,3 @@
+  raw excess beyond the enclosures (relative): inner 0.00e+00, res 0.00e+00, jac 0.00e+00, vt 0.00e+00
+point checks (rigorous enclosure must contain the independent value; excess 0 = contained): inner 0, res 0, jac 0, vt 0  -> PASS
+exit 0
