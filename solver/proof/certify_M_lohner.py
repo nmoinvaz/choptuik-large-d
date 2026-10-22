@@ -173,13 +173,18 @@ class LohnerM(VI.Lohner):
         self.c, self.Q, self.q = cnew, Qn, [qn[i, 0] for i in range(2 * n)]
         return True
 
-    def run(self, leg, h0, verbose=False, log=None):
-        """validated_int.Lohner.run (t: 0 -> 1 on the grid 2^-30 Z) with optional progress lines to a log"""
+    def run(self, leg, h0, verbose=False, log=None, t_start=0.0, steps_start=0, ckpt=None):
+        """validated_int.Lohner.run (t: 0 -> 1 on the grid 2^-30 Z) with optional progress lines to a log; may start
+        at t_start (a resumed run) and calls ckpt(t, h, steps) about every CKPT_SEC seconds"""
         q = 2.0 ** -30
         hmax = getattr(self, "hmax", 1.0)
-        t, h, steps = 0.0, min(h0, hmax), 0
+        t, h, steps = t_start, min(h0, hmax), steps_start
+        last = time.time()
         while t < 1.0:
-            if getattr(self, "max_steps", None) is not None and self.total_steps >= self.max_steps:
+            if ckpt is not None and time.time() - last > CKPT_SEC:
+                ckpt(t, h, steps)
+                last = time.time()
+            if getattr(self, "max_steps", None) is not None and getattr(self, "total_steps", 0) >= self.max_steps:
                 raise PilotStop(f"{leg.kind} t = {t:.6f}")
             hs = min(max(round(h / q), 1) * q, 1.0 - t)
             if not self.step(leg, t, hs):
@@ -312,16 +317,54 @@ def start_set(sys_, vals_c, w_c, cols=None, wcol=None, dx=None, N=24, NJ=None):
     return lo
 
 
-def integrate(lo, path, h0=1e-3, verbose=False, log=None, keep_rho=False):
+CKPT_SEC = 600.0      # checkpoint interval of long runs (wall-clock seconds)
+
+
+def save_ckpt(path_file, key, lo, k, t, h, steps_done, steps_leg):
+    """the run's state (the Lohner sets exactly, the leg, t on the 2^-30 grid, the step size, the step counts),
+    written atomically"""
+    d = {"key": key, "leg": k, "t": float(t).hex(), "h": float(h).hex(), "steps_done": steps_done,
+         "steps_leg": steps_leg, "total_steps": getattr(lo, "total_steps", 0), "sets": dump_lohner(lo),
+         "prec": ctx.prec, "time": time.time()}
+    tmp = path_file + ".tmp"
+    with open(tmp, "w") as fh:
+        json.dump(d, fh)
+    os.replace(tmp, path_file)
+
+
+def integrate(lo, path, h0=1e-3, verbose=False, log=None, keep_rho=False, ckpt=None, key=None):
     """run the legs of path = (r0, phi0, rho, xi1); returns the step counts per leg (and the state at the end of
-    the arc if keep_rho)"""
+    the arc if keep_rho). With ckpt (a file name) the run saves its state about every CKPT_SEC seconds and at the end
+    of every leg, and resumes from that file if it exists and was written by a run with the same key (the run's
+    parameters); a resumed run continues from exactly the saved Lohner sets, so its result is a valid enclosure."""
     steps, at_rho = [], None
+    k0, t0_, h_, s0 = 0, 0.0, h0, 0
+    if ckpt and os.path.exists(ckpt):
+        with open(ckpt) as fh:
+            d = json.load(fh)
+        if d["key"] != key:
+            raise RuntimeError(f"checkpoint {ckpt} belongs to another run (key mismatch); remove it to start afresh")
+        lo.c, lo.Q, lo.q, lo.var = load_lohner(d["sets"])
+        lo.total_steps = d["total_steps"]
+        k0, t0_, h_, s0, steps = d["leg"], float.fromhex(d["t"]), float.fromhex(d["h"]), d["steps_leg"], d["steps_done"]
+        if log:
+            with open(log, "a") as fh:
+                fh.write(f"resumed from {ckpt}: leg {k0}, t {t0_:.6f}, {lo.total_steps} steps done\n")
     for k, leg in enumerate(CS.legs_for(path)):
+        if k < k0:
+            continue
         t1 = time.time()
-        steps.append(lo.run(leg, h0, verbose, log))
+        cb = None
+        if ckpt:
+            def cb(t, h, n, k=k):
+                save_ckpt(ckpt, key, lo, k, t, h, steps, n)
+        ts, ss, hh = (t0_, s0, h_) if k == k0 else (0.0, 0, h0)
+        steps.append(lo.run(leg, hh, verbose, log, t_start=ts, steps_start=ss, ckpt=cb))
         if log:
             with open(log, "a") as fh:
                 fh.write(f"leg {leg.kind} done: {steps[-1]} steps, {time.time() - t1:.0f} s\n")
+        if ckpt:
+            save_ckpt(ckpt, key, lo, k + 1, 0.0, h0, steps, 0)
         if k == 1 and keep_rho:
             at_rho = lo.box()
     return steps, at_rho

@@ -1,0 +1,7 @@
+Krawczyk M = 1: K(X) in int X: True; relative margins +0.863, +0.976
+   A        in [2.54214804759602, 2.54214804763710]  (radius 2.05e-11)
+   w/w_inf  in [0.776994013595306, 0.776994013624142]  (radius 1.44e-11)
+   smallest passing box: theta = 0.1216 (half-width 1.216e-10); the zero:
+   A        in [2.54214804761406, 2.54214804761906]  (radius 2.50e-12)
+   w/w_inf  in [0.776994013607969, 0.776994013611479]  (radius 1.75e-12)
+M = 1 reproduction: Krawczyk passes True; zero enclosure overlaps Theorem A(M = 1)'s: A False, w/w_inf True  -> NOT REPRODUCED

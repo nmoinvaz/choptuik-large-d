@@ -310,8 +310,11 @@ def box_run(M, pstr, Cm, h, ws, out=None, log=None, verbose=False, max_steps=Non
         with open(log, "a") as fh:
             fh.write(f"box run M = {M} at p^ = {pstr}, h = {h}, w = {ws}; start: {info['start']}\n")
     lo.max_steps = max_steps
+    key = json.dumps({"M": M, "p": list(pstr), "C": [[x.str(40) for x in r] for r in Cm], "h": h, "w": list(ws),
+                      "path": [path[0], ARG[M], path[2], path[3]], "N": [NT, NJ], "start": info.get("start")})
+    ckpt = (out + ".ckpt") if (out and max_steps is None) else None
     try:
-        steps, _ = CL.integrate(lo, path, verbose=verbose, log=log)
+        steps, _ = CL.integrate(lo, path, verbose=verbose, log=log, ckpt=ckpt, key=key)
     except CL.PilotStop as e:
         V = lo.var_box()
         X = lo.box()
@@ -326,6 +329,8 @@ def box_run(M, pstr, Cm, h, ws, out=None, log=None, verbose=False, max_steps=Non
               f"state radius {res['state_rad']:.2e}; derivative radii per column " +
               ", ".join(f"{x:.1e}" for x in res["der_rad"]))
         return res
+    if ckpt and os.path.exists(ckpt):
+        os.replace(ckpt, ckpt + ".done")
     res = {"kind": "box", "M": M, "p": list(pstr), "h": h, "w": list(ws), "C": [[CL.s_arb(x) for x in r] for r in Cm],
            "path": [path[0], ARG[M], path[2], path[3]], "start": info, "steps": steps, "sec": time.time() - t0,
            "prec": PREC, "sets": CL.dump_lohner(lo)}
@@ -415,6 +420,23 @@ def krawczyk_test(bx, pt=None, mutate=None, theta=None, verbose=True):
         tag = f" [mutation {mutate}]" if mutate else ""
         print(f"Krawczyk M = {M}{tag}: K(X) in int X: {ok}; relative margins " + ", ".join(f"{r:+.3f}" for r in rel))
     return res
+
+
+def shrink(bx, pt=None, lo=1e-4):
+    """the smallest theta (factor 0.9 steps from 1, down to lo) for which the test passes on theta X with the same
+    Dgt(X) enclosure (valid over every sub-box centred at 0); its K(theta X) is the sharpest enclosure of the zero.
+    Returns (theta, result) or (None, None) if theta = 1 fails."""
+    r1 = krawczyk_test(bx, pt, theta=None, verbose=False)
+    if not r1["ok"]:
+        return None, None
+    best, rbest, th = 1.0, r1, 1.0
+    while th * 0.9 >= lo:
+        th *= 0.9
+        r = krawczyk_test(bx, pt, theta=repr(th), verbose=False)
+        if not r["ok"]:
+            break
+        best, rbest = th, r
+    return best, rbest
 
 
 def outward(x, digits=15):
@@ -697,7 +719,7 @@ def crosscheck(M, pstr, mutate=False):
         worst = max(worst, err)
         print(f"   J_{nu}(0.2): this code {mine:.12e}, inner_np {ref:.12e}, |difference| / max|y| = {err:.1e}")
     ok = worst < 1e-9
-    print(f"crosscheck M = {M}{' [mutated: inner_np at wf + 1e-6]' if mutate else ''}: worst relative difference "
+    print(f"crosscheck M = {M}{' [mutated: inner_np at wf + 1e-6]' if mutate else ''}: worst |difference| / max|y| "
           f"{worst:.1e} -> {'AGREE' if ok else 'DISAGREE'} (inner_np r0 {info[0]:.4f}, its series to {info[1]} terms)")
     return ok
 
@@ -793,6 +815,13 @@ def main():
         print(f"   g(p^) radius {r['g_rad']:.1e}; max radius of Y Dgt(X) {r['YJ_rad']:.1e}")
         print(f"   box: h = {bx['h']}, w = {bx['w']}{', shrunk by theta = ' + th if th else ''}")
         print(describe(r, M))
+        if "shrink" in o and r["ok"] and th is None:
+            th_s, rs = shrink(bx, pt)
+            print(f"   smallest passing box: theta = {th_s:.4g} (half-widths {th_s * float(bx['h']):.3e} outer); "
+                  f"relative margins " + ", ".join(f"{x:+.3f}" for x in rs["rel_margins"]) +
+                  "\n   the zero (endpoints rounded outward):")
+            print(describe(rs, M))
+            r = rs if "hier_shrunk" in o else r
         if "hier" in o and r["ok"]:
             hok = hier_check(r, M, mutate=(o.get("mutate") == "hier"))
             return 0 if hok else 1
@@ -836,6 +865,11 @@ def m1_reproduce(o):
         bx = json.load(fh)
     r = krawczyk_test(bx, pt)
     print(describe(r, 1))
+    th_s, rs = shrink(bx, pt)
+    if rs is not None:
+        print(f"   smallest passing box: theta = {th_s:.4g} (half-width {th_s * 1e-9:.3e}); the zero:")
+        print(describe(rs, 1))
+        r = dict(r, pstar=[a.intersection(b) for a, b in zip(r["pstar"], rs["pstar"])])
     ref = THM_A1
     if o.get("mutate") == "m1ref":       # control: a reference shifted by 1e-11 must not be reproduced
         ref = {"A": ("2.54214804762338", "2.54214804762975"), "wf": ref["wf"]}

@@ -199,6 +199,14 @@ from their enclosures over the hull of P (exact parameter jets of the series alo
 combination is formed before any interval operation). At every step the state set over P is rebuilt as
 y(t; p̂) + V(t; X)·x (mean value theorem, validated_int's centre_set mode). Gives Dg̃(X) as Lohner sets.
 
+**Cross-check against independent code** (`python3 certify_M.py crosscheck M`). The jumps J_ν(0.2) at a point near
+the zero (where they have their natural size; at the zero they vanish), on hier.py's own path (ray 5π/16 from inner_np's
+r₀, arc at 0.2), from this code's Taylor integrator and from `inner_np.py` (scipy DOP853 at rtol 10⁻¹², its own series
+start, shares no integration code): at M = 3 they agree to 8.5×10⁻¹⁴ of the state (J₁, J₃ at
+p = (2.7, 1.0, 0.14, 0.01)); with inner_np at wf + 10⁻⁶ (`--mutate`) they must disagree. This checks the system, the
+start values and the path against the double-precision solver the zeros came from; it is not a check of the enclosure
+machinery (that is the Lohner step check above and A_review.md).
+
 **Self-test** (`python3 certify_M_sys.py selftest`): SysM's right-hand side and linearization against
 validated_int.Sys at M = 1 (to 10⁻⁷²) and against inner_np.Inner.rhs at M = 3, 5 (double precision, 5×10⁻¹⁶), the
 linearization against a central difference, the series recursion against series_arb.SeriesArb, and the parameter jets
@@ -265,3 +273,21 @@ python3 certify_M.py controls --box=data/A_M_box_M3_H.json              # C0-C8,
 python3 certify_M.py krawczyk --box=data/A_M_box_M3_H.json --hier --mutate=hier   # must fail
 python3 certify_M.py export6a --box=data/A_M_box_M3_H.json --out=data/A_M_6a_M3_H.json   # state box for lemma 6a(M)
 ```
+
+## 9. Proposed text for README.md, PROOF.md and A_certify.md
+
+(For the coordinator; numbers to be checked against §6 before use.)
+
+**PROOF.md §4, after the paragraph on Theorem A(M = 1):** "Beyond one harmonic ([proof/A_M.md](proof/A_M.md)). The point
+certificate is posed on the full (M + 1)-dimensional system of D-jumps at ξ₁ = 0.3, in coordinates that follow the
+higher harmonics' zero manifold to first order (hier.py's linear predictor), with a preconditioner whose outer rows are
+the Schur-corrected outer condition and whose inner rows are the interval Newton step for the higher-harmonic
+unknowns; the preconditioner is applied to the Lohner sets before any interval hull, so the 10¹⁷-sized leakage cancels
+exactly. RESULT_SENTENCE"
+
+**A_certify.md §7 ("From M = 1 to M = 5"), a closing line:** "Done in [A_M.md](A_M.md): the de-mixing and the Schur
+correction are a choice of preconditioner, the inner unknowns are measured from the linearized zero manifold, and one
+Krawczyk test on the whole system does what the nested test would. Multiprecision is needed for the preconditioner
+(condition about 10⁷ at M = 3 in raw jump units) but not for the integration, which runs at 256 bits as at M = 1."
+
+**README, where the M = 3 and M = 5 zeros are quoted (the selection-rule section):** "RESULT_README"
