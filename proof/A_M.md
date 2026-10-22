@@ -81,16 +81,16 @@ hier.py's de-mixed residuals at M = 5 (its docstring): ∂r₅/∂B₅ ≈ 4×10
 ∂r₃/∂B₃ ≈ 5×10⁵ and ∂r₁/∂A ≈ 10⁴. So r₁ ≈ L·r_H + (intrinsic part), with a leakage L of the higher conditions into the
 lower ones, and the outer derivative that matters is the Schur complement S, many orders of magnitude smaller than
 the raw entries. The same in the raw jumps J_ν at ξ₁ = 0.3, from the Newton runs of the centre refinement
-(`python3 certify_M.py plan --centre=data/A_M_refine_M{M}_a.json`, numerics; logs `logs/A_M_plan_M{M}.log`):
+(`python3 certify_M.py plan --centre=data/A_M_refine_M{M}_....json`, numerics; logs `logs/A_M_plan_M3.log`, `logs/A_M_plan_M5_it0.log`):
 
 | raw jump units at ξ₁ = 0.3 | M = 3 | M = 5 |
 |---|---|---|
-| outer Schur complement S, singular values | 0.443, 0.238 | PLAN5_S |
-| inner block ∂g_H/∂p_H, singular values | 1.05×10⁷, 1.04×10⁷ | PLAN5_H |
-| raw outer block ∂g_o/∂p_o, largest entry | 3.7×10⁵ | PLAN5_O |
-| ∂g_o/∂p_H, largest entry | 1.8×10⁶ | PLAN5_OH |
-| leakage L = ∂_H g_o (∂_H g_H)⁻¹, largest entry | 0.17 | PLAN5_L |
-| condition of Dg | 4.7×10⁷ | PLAN5_C |
+| outer Schur complement S, singular values | 0.443, 0.238 | 5.45, 0.248 |
+| inner block ∂g_H/∂p_H, singular values | 1.05×10⁷, 1.04×10⁷ | 3.24×10¹⁴ (twice), 1.07×10⁷ (twice) |
+| raw outer block ∂g_o/∂p_o, largest entry | 3.7×10⁵ | 6.9×10¹⁰ |
+| ∂g_o/∂p_H, largest entry | 1.8×10⁶ | 6.5×10¹² |
+| leakage L = ∂_H g_o (∂_H g_H)⁻¹, largest entry | 0.17 | 0.18 |
+| condition of Dg | 4.7×10⁷ | 1.6×10¹⁵ |
 
 Two things go wrong in a naive Krawczyk test on (A, wf, B₃, …, C_M) with an axis-aligned box:
 

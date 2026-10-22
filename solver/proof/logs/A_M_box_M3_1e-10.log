@@ -1,0 +1,8 @@
+box run M = 3 at p^ = ['2.7264758856308800372834222800288896458263657683534', '1.0156030948577332959818935898539950643117923696826', '0.14441947847007689382003847248966823205707988182888', '0.011087425888116708624533378935052262476049386867387'], h = 1e-10, w = ['4e-16']; start: fixed_point_M.start_data_M (rigorous given that lemma; /home/claude/dss-residual-kernel/.claude/worktrees/agent-a2fc719f20ab19cbf/solver/proof/fixed_point_M.py, sha256 589e5a810bc50289), arg 5pi/16, diag splitting
+   ray t 0.010098 h 4.14e-04 steps 25  state radius 9.09e-12  derivative radius 2.38e-10  [154 s]
+   ray t 0.020540 h 4.28e-04 steps 50  state radius 9.49e-12  derivative radius 3.40e-10  [199 s]
+   ray t 0.031336 h 4.42e-04 steps 75  state radius 9.91e-12  derivative radius 8.92e-10  [243 s]
+   ray t 0.042499 h 4.57e-04 steps 100  state radius 1.04e-11  derivative radius 1.62e-09  [288 s]
+   ray t 0.054366 h 4.73e-04 steps 125  state radius 1.09e-11  derivative radius 2.13e-09  [333 s]
+   ray t 0.066636 h 4.89e-04 steps 150  state radius 1.14e-11  derivative radius 2.97e-09  [376 s]
+   ray t 0.079323 h 5.05e-04 steps 175  state radius 1.19e-11  derivative radius 3.88e-09  [418 s]
