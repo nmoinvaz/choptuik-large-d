@@ -91,7 +91,7 @@ c_s = c\,\Big(\tfrac14 Y^2 + \frac1n\big(\tfrac12 sS^2 - \tfrac12 Y^2 - sYY_s\bi
 The O(1) part contains no explicit s; the O(1/n) part does (the flat-space part is the radial Laplacian of
 $`\mathbb R^{n+1}`$ in s = r²/(2n), $`\partial_s + \tfrac1n(\partial_s + 2s\partial_s^2)`$). So the 1/n terms break the
 s-translation that gives the λ = 2 mode, and nothing else: the time reparametrization t → T(t), c → T′c remains an
-exact symmetry of the corrected equations (it is one of the exact equations).
+exact symmetry of the corrected equations (it is a symmetry of the exact equations).
 
 *Checks* (`first_order_equations.py`, sympy): the three equations above are the exact equations to O(1/n) with no odd
 powers of ν; the heat form; the identity $`L\sigma = (\xi\partial_\xi - 1)(cy)`$; the s-translation breaking term of
@@ -206,10 +206,12 @@ L_2 W_y = \dots - \frac{2}{\xi^2}\,c\,\big(\xi\sigma_\xi - 2\sigma + E\sigma\big
 since $`\mathcal D Z_n`$ has zero multiplier when $`Z_n`$ has. This route needs only n = ∞ quantities, not $`Z_1`$, $`K_1`$ or $`\omega_1`$.
 *Check* (`first_order_checks.py symmetry`): with 25 harmonics, $`\mathcal D Z_1 + W`$ equals the direct route's mixed component
 order by order to 3×10⁻¹⁵ (orders 1–8, harmonics not reached by the truncation). So the two routes are the same
-in the full problem. In a truncated model they are not: there $`\mathcal S(2)`$ is not singular (the gauge step multiplies by
-P(θ) and does not commute with the truncation), and $`\mathcal D Z_1`$ has a jump, so the symmetry-route number depends on the
-matching radius (0.029 at ξ₁ = 0.2, 0.053 at 0.175 for M = 3) and is not a model quantity. The truncated results below
-use the direct route.
+in the full problem. In a truncated model they are not. The gauge step multiplies by P(θ) and does not commute with the
+truncation, so there $`\mathcal D Z_0`$ and $`\mathcal D Z_1`$ do not solve the model's equations, $`\mathcal S(2)`$ is not singular, and the
+"jump" of $`\mathcal D Z_1`$ at ξ₁ is not a fast-type solution of the model. The symmetry-route number then depends on the
+matching radius (0.029 at ξ₁ = 0.2, 0.053 at 0.175 for M = 3, against 3.080 by the direct route at both) and is not a
+model quantity. The truncated results below use the direct route; the symmetry route is the one to use in an
+untruncated computation, where it needs only n = ∞ objects.
 
 ## 5. Numerical method and checks
 
@@ -228,11 +230,13 @@ zero.
 **Deflation for M = 5** (`first_order_hier.py`). The de-mixed residual is block triangular with huge couplings
 (harmonic ν leaks into the harmonic-1 row with weight ~$`e^{\pi(\nu-1)\omega/2}`$ times the finite-ξ de-mixing error;
 at M = 5 the one-shot Jacobian has singular values from 6×10¹⁵ to 1.4×10⁻⁴ and Newton diverges from the
-nine-digit zero of hier.py). Every harmonic-1 direction is therefore deflated: a first integration gives the
-coefficients of the higher-harmonic directions that cancel its own higher-harmonic jump (block back-substitution from
-the top harmonic), a second integration of the deflated direction gives its harmonic-1 jump without the large
-leakage, and the remaining Schur correction acts on residuals of ~10⁻⁵ instead of ~10². This is hier.py's nested solve
-done with exact derivatives.
+nine-digit zero of hier.py; `logs/first_order_M5_oneshot_diverged.log`). Every harmonic-1 direction is therefore
+deflated: a first integration gives the coefficients of the higher-harmonic directions that cancel its own
+higher-harmonic jump (block back-substitution from the top harmonic), further integrations of the deflated direction
+refine them until that jump stops falling, and the harmonic-1 jump of the deflated direction then carries no large
+leakage. The remaining Schur correction acts on small residuals: for the zero ~10⁻⁵ instead of ~10²; for the 1/n
+direction 2×10⁻³ instead of 2.6×10¹¹; for the mixed component of λ₁ 10⁻² instead of 2.6×10¹². This is hier.py's nested
+solve done with exact derivatives. For M = 1, 3 the deflated and the one-shot drivers agree (§6).
 
 **Checks** (`first_order_checks.py`, which exits non-zero if any fails; each has a mutation that makes it fail,
 `--mutate=NAME`, all run and seen to fail):
@@ -255,7 +259,9 @@ at λ = 0.5 (control):
 |---|---|---|---|
 | 1 | 2.6×10⁻¹¹, 9.6×10⁻¹² | 1.0×10⁻¹⁰, 1.2×10⁻¹¹ | 3.4×10⁻² |
 | 3 | 5.4×10⁻¹⁰, 6.8×10⁻¹¹ | 8.6×10⁻¹¹, 5.5×10⁻¹¹ | 3.9×10⁻² |
-| 5 | M5_CHECK0 | M5_CHECK1 | M5_CHECK05 |
+| 5 | 2.0×10⁻⁶, 2.9×10⁻⁶ | 1.1×10⁻⁶, 2.1×10⁻⁶ | 3.9×10⁻² |
+
+(At M = 5 the floor is the noise of the deflated Schur complement, ~10⁻² against entries of 10⁴.)
 
 **Robustness:** the matching radius and the integration tolerance (§6).
 
@@ -351,26 +357,27 @@ down to only ~10⁻², so that its Schur correction still carries ~10⁻³ of th
 
 ## 7. What is rigorous, what is numerical, what is truncated
 
-**Derived and checked (exact, symbolic or to roundoff):**
+**Checked symbolically** (sympy, `first_order_equations.py`), and numerically against independent code:
 
-- the O(1/n) inner equations, from the exact equations, with η slaved and no half-integer powers (§1; sympy);
-- the matching data of the O(1/n) inner solution: $`K_1`$, $`\omega_1`$ and the gauge datum $`c_1(0) = -F^2`$ (§2; the O(1/n) inner
-  series equals the outer expansion's next-to-top coefficients to 10⁻¹³);
-- the symmetry-breaking term of the λ = 2 mode (§4; sympy for arbitrary fields, and the series identity
-  $`\mathcal D Z_1 + W`$ = direct route to 3×10⁻¹⁵);
+- the O(1/n) inner equations, from the exact equations, with η slaved and no half-integer powers (§1);
+- the symmetry-breaking term of the λ = 2 mode (§4), for arbitrary fields; and the series identity
+  $`\mathcal D Z_1 + W`$ = direct route to 3×10⁻¹⁵;
 - the exactness of the time reparametrization at O(1/n), hence the gauge independence of ω₁ and λ₁ in the full problem.
 
-**Argued, at the level of rigor of the selection rule itself:**
+**Derived, and checked numerically to roundoff:** the matching data of the O(1/n) inner solution, $`K_1`$, $`\omega_1`$ and the gauge
+datum $`c_1(0) = -F^2`$ (§2; the O(1/n) inner series equals the outer expansion's next-to-top coefficients to 10⁻¹³).
+
+**Conditional**, on Conjecture 1 and on the lemma chain of C_selection.md carried one order further (its "1/n
+refinement" of Lemma B5(2), written at appendix level there):
 
 - that the selection at O(1/n) is the vanishing of the multiplier of $`Z_0 + Z_1/n`$, and that the outer region (matching
   factors, transport, the light-cone exponent and its gravitational shift, the half-monodromy) contributes only
-  invertible factors at this order (§3). This is Conjecture 1 plus the lemma chain of C_selection.md carried one order
-  further (its "1/n refinement" of Lemma B5(2), written at appendix level there);
-- first-order perturbation theory for λ: λ* is a simple root and ℓ·∂_λS·f* ≠ 0 (seen numerically in every model:
-  ℓ·∂_λS·f* = −4.4×10³, −6.5×10⁴, −5.9×10⁴ for M = 1, 3, 5).
+  invertible factors at this order (§3);
+- first-order perturbation theory for λ, which also needs λ* to be a simple root with ℓ·∂_λS·f* ≠ 0 (seen in every
+  model: ℓ·∂_λS·f* = −4.4×10³, −6.5×10⁴, −5.9×10⁴ for M = 1, 3, 5, in the units of the de-mixed residual).
 
-**Numerical, for each truncated model:** the zeros, ω₁, λ* and λ₁ of the M-harmonic models, with exact jets and the
-numerical error of §6 (far below the truncation error).
+**Numerical evidence**, for each truncated model: the zeros, ω₁, λ* and λ₁ of the M-harmonic models, with exact jets and
+the numerical error of §6 (far below the truncation error).
 
 **Truncated:** the numbers are those of the M = 1, 3, 5 models. Their sequences converge toward the fits and bracket
 them, but the M → ∞ limit is not computed. In particular:
@@ -382,10 +389,17 @@ them, but the M → ∞ limit is not computed. In particular:
 
 **Open:**
 
-- M = 7, or an untruncated computation. The amplitude expansion of `solver/inner_amp/` (which gave ω∞ to 10⁻⁴ without
+- M = 7. Its zero is not known (hier.py's M = 7 runs only solved the higher levels at fixed (A, ω)). A pilot of the
+  deflated Newton from the M = 5 zero with hier.py's M = 7 harmonics (`logs/first_order_hier_M7_approach.log`, with
+  hier.py's approach radii 0.119 and 0.103 for harmonics 5 and 7) starts in the nonlinear regime (|r_H| ~ 4×10¹⁰) and
+  its linear inner step makes it worse (2×10¹⁵); at ~9 min per iteration it was stopped. The M = 7 zero needs hier.py's
+  level-by-level damped approach first; the O(1/n) steps would then follow as at M = 5;
+- an untruncated computation. The amplitude expansion of `solver/inner_amp/` (which gave ω∞ to 10⁻⁴ without
   truncation) would need its linear-response version: the O(1/n) forcing and the perturbation at λ = 2 expanded in the
   amplitude, with their late-order fits. With the symmetry route (§4) the λ₁ computation then needs only n = ∞
   objects: the λ = 2 mode of Proposition 5, the forced response W, and ∂_λS at λ = 2;
+- the λ₁ precision at M = 5 (±0.001) is set by the deflation of the mixed component; higher working precision (or a
+  better de-mixing of the jump at finite ξ₁) would improve it;
 - a proof of the O(1/n) step of the matching lemmas.
 
 ## Proposed text for the README and GAMMA.md
@@ -409,9 +423,13 @@ For the coordinator (agents do not edit the README). In the README after Proposi
 |---|---|---|
 | `first_order_equations.py` | sympy: the O(1/n) inner equations from the exact ones, heat form, s-translation breaking, exact reparametrization | 1 min |
 | `first_order_jet.py` | module: jets of the series and of the lateral integration (M-harmonic), the breaking forcing | |
-| `first_order_run.py M` | one-shot jets: zero, ω₁, checks at λ = 0, 1, λ*, λ₁ (direct), symmetry-route number; M = 1, 3 | 3–8 min |
-| `first_order_hier.py M` | the same with deflated directions (needed for M = 5), plus the gauge diagnostic | M = 5: ~1 h |
-| `first_order_checks.py` | the checks of §5 | 2 min |
-| `first_order_fits.py` | Δ₁, ω₁ and λ₁ fitted to the double-double points | 15 min |
+| `first_order_run.py M` | one-shot jets: zero, ω₁, checks at λ = 0, 1, λ*, λ₁ (direct), symmetry-route number; M = 1, 3 (diverges at M = 5) | 3–8 min |
+| `first_order_hier.py M [--checks]` | the same with deflated directions (needed for M = 5), the gauge diagnostic, and with `--checks` the exact modes λ = 0, 1 | M = 5: 30–40 min |
+| `first_order_checks.py [--mutate=NAME]` | the checks of §5; exit status 1 on failure | 1 min |
+| `first_order_fits.py [--planted]` | Δ₁, ω₁ and λ₁ fitted to the double-double points; `--planted` the planted-truth test | 10–15 min each |
+
+The numbers of §6 are reproduced, from `solver/inner_pert/`, by `python3 first_order_hier.py 5` (and `1`, `3`; add
+`--xi1=0.19` or `--rtol=1e-13` for the robustness runs; each resumes from its JSON, `--redo=omega1,lam,lam1` recomputes),
+`python3 first_order_run.py 3` and `python3 first_order_fits.py`.
 
 Results are in `solver/inner_pert/data/first_order_*.json`, logs in `solver/inner_pert/logs/`.
