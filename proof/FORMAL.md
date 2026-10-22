@@ -113,7 +113,7 @@ Lean code.
 1. **Computer-assisted certificates with a displayed hypothesis.** PairCeiling and our M = 1 certificate have the same
    architecture: rigorous enclosures computed outside the prover, then a finite test. The final Krawczyk step of
    A_certify §9 can move into the Lean kernel exactly as PairCeiling's row checks did. The enclosure step becomes an
-   `EnclOK` hypothesis, produced independently by `validated_int.py` (arb) and by the CAPD re-check being written.
+   `EnclOK` hypothesis, produced independently by `validated_int.py` (arb) and by the CAPD re-check (A_certify.md §10).
    This is the most valuable parallel (§4–5).
 2. **An unconditional formal core.** Several of our results are algebraic or special-function identities that Mathlib can
    already express: Proposition 1's parity induction, Proposition 2's reduction to Gauss's equation, the duplication
@@ -165,7 +165,7 @@ is exactly where PairCeiling's pattern applies.
 | Stage | Now | With the PairCeiling pattern |
 |---|---|---|
 | (i) start values, a contraction in a weighted space (`fixed_point.py`) | arb | stays outside; part of `EnclOK` |
-| (ii) validated Lohner integration with variational columns (`validated_int.py`) | arb; CAPD re-check in progress | stays outside; part of `EnclOK`, produced twice |
+| (ii) validated Lohner integration with variational columns (`validated_int.py`) | arb; CAPD re-check done (§10; exact hex bounds in `capd_check/results/capd_enclosures_*.json`) | stays outside; part of `EnclOK`, produced twice |
 | normalization κ (`krawczyk.normalization`) | arb | stays outside; enters `EnclOK` through g = κ J_D |
 | (iv) Krawczyk test (`krawczyk.krawczyk`) on the saved `validated_int_krawczyk_1e-9.json` | arb, about 20 lines of Python | a Lean theorem proved once, and a rational check of the saved data by `decide +kernel` |
 

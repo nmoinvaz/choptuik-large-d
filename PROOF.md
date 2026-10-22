@@ -188,7 +188,9 @@ zero in the box, and it is simple**, at A ∈ [2.54214804760, 2.54214804763], ω
 Two lemmas turn this into "the one-harmonic selection condition has exactly one simple zero there": (6a) that J_D(ξ₁) = 0
 forces the whole jump to vanish (the template's step 4, a contraction for y⁺ − y⁻), and (6b) that the continuation
 along the path is the Borel sum (y⁺ has a singularity between radii 0.30 and 0.35, just outside the swept region).
-Both hold in double precision and both are judged fixable. A CAPD re-implementation is in progress. Larger boxes fail because the interval Jacobian's excess grows like 7×10⁵·h (the solution is
+Both hold in double precision and both are judged fixable. An independent re-implementation in C++ with CAPD
+([proof/A_certify.md](proof/A_certify.md) §10), sharing no integration or test code with the Python proof, confirms the
+result and certifies the box ±10⁻⁸ as well, ten times larger, with the zero enclosed eight to ten times more tightly. Larger boxes fail because the interval Jacobian's excess grows like 7×10⁵·h (the solution is
 large where the ray meets the arc), so 10⁻³ boxes need a C² Lohner step; a lower path (ray to 0.2, then the real axis)
 should allow 10⁻⁸. The integration is stiff (fast modes shrink by e⁻³¹, so naive interval Taylor would overestimate by
 about e⁵⁰), which is why the Lohner wrapping is essential. At M = 5 the system is

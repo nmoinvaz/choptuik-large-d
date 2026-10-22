@@ -1169,7 +1169,9 @@ stated for the jump-conditioned truncation (`hier.py --schur`). The tail it must
 above M = 5 and 0.2–0.35 above M = 7, against about 4 needed for a 10⁻³ box. A computer-assisted certificate of the inner
 zero has a concrete route ([proof/A_certify.md](proof/A_certify.md), [proof/D_entire.md](proof/D_entire.md)), and for the
 one-harmonic model it is nearly done: a computer-assisted proof (ball arithmetic, a validated Lohner integrator,
-Krawczyk's test), checked by an independent review ([proof/A_review.md](proof/A_review.md)), shows that one component
+Krawczyk's test), checked by an independent review ([proof/A_review.md](proof/A_review.md)) and confirmed by a separate
+C++ implementation with the CAPD library, which also certifies a box ten times larger
+([proof/A_certify.md](proof/A_certify.md) §10), shows that one component
 of the selection condition's jump, at one radius, has exactly one zero, a simple one, in the box
 (2.5421480475, 0.7769940136) ± 10⁻⁹ in (A, ω/ω∞). Two lemmas (that this component vanishing means the whole jump
 vanishes, and that the path used gives the Borel sum) would make it the full one-harmonic selection condition. The
@@ -1665,7 +1667,8 @@ What has been checked, and how:
   ([Relation to published work](#relation-to-published-work)).
 - **A referee pass** by an agent that had not seen the work, whose findings were applied.
 - **The computer-assisted certificate:** an independent code review re-derived every input of its final test and found
-  no error, and narrowed the claim to what is proved ([proof/A_review.md](proof/A_review.md)). Eight deliberately
+  no error, and narrowed the claim to what is proved ([proof/A_review.md](proof/A_review.md)); a second implementation
+  in C++ with CAPD, sharing no integration or test code, confirms it (§10 of [proof/A_certify.md](proof/A_certify.md)). Eight deliberately
   broken versions of the final test fail or pass exactly as predicted (`solver/proof/mutation_controls.py`).
 - **The Δ∞ error bar:** a planted-truth test with known limits ([above](#is-the-period-analytic-in-1d)).
 - **Quoted numbers:** `check_numbers.py` ties 34 headline numbers to their source files, and a self-test shows each
@@ -1856,6 +1859,8 @@ solver/proof/       feasibility numbers for the proof roadmap (feasibility.py: s
                     series_arb.py, residual_poly.py, pm_dryrun.py, fixed_point.py, krawczyk.py, validated_int.py: the
                     M = 1 certificate in ball arithmetic (one jump component's zero certified in a 1e-9 box);
                     review/: the independent review's test scripts R1-R8 (proof/A_review.md);
+                    capd_check/: the independent C++/CAPD re-check (build.sh pins CAPD; A_certify.md section 10);
+                    mutation_controls.py: deliberately broken versions of the final test;
                     tail_harmonics.py, reconcile.py, amp_trunc.py, family_amps.py: the harmonic-tail analysis;
                     outer_borel.py, inner_corrections.py, lightcone_exponents.py: checks for the selection theorem)
 proof/              the proof roadmap's parts (A_certify.md: the computer-assisted certificate, prototyped at M = 1;
