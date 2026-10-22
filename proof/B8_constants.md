@@ -68,8 +68,8 @@ So δ = (8.3×10⁻⁵, 79.04, 3.232, 6.464) ≤ δ_ref = (1, 200, 10, 20). Wher
 precise, is listed in section 8.4: the normalization of Y⁺_out (c(0) = c^K(0), the light-cone gauge up to O(n^{−5})),
 the phase convention of the profile (immaterial for |W|), and a parameter box that contains 𝒦.
 
-**n₀(1).** B8(1) closes for every n ≥ e^{62} (section 7), and (H8)(ii) holds there with δ inside δ_ref down to at least
-ln n₀ = 62. The binding threshold is B5(1)'s own, ln n ≥ κ₁/(Z cos κ) = 73.89 (B5 section 5.1). So B8 does not raise
+**n₀(1).** B8(1) closes for every n ≥ e^{62} (section 7; it fails at e^{58}), and (H8)(ii) is certified at
+ln n₀ = 73.89, which is B5(1)'s own threshold, ln n ≥ κ₁/(Z cos κ) = 73.89 (B5 section 5.1). So B8 does not raise
 n₀(1): n₀(1) = e^{73.89} as far as B5(1) and B8(1) are concerned. The constant that blocks smaller n₀ in B8 is the
 fast-kernel gain γ_F on the far region (section 7.3).
 
@@ -408,12 +408,14 @@ gives P(h_k) < h_k strictly. (The plain test P(sh*) < sh* cannot work: P_V is li
 | 66 | 0.00952 | 0.1728 | 1.924 | 0.493 | 3.581×10⁶ | 9.436×10⁶ | 6.529×10⁵ | 1.985×10⁵ | 0.978, 0.984, 0.984, 0.986 |
 | 62 | 0.01013 | 0.1636 | 2.033 | 0.548 | 7.159×10⁶ | 1.908×10⁷ | 1.088×10⁶ | 3.570×10⁵ | 0.989, 0.989, 0.989, 0.989 |
 
-(`b8m_scan_K4_box.log`; RESULTS_BELOW_62.) Each line is a certificate: Lemma B8(1) holds for every n ≥ n₀ with those h.
+(`b8m_scan_K4_box.log`.) Each line is a certificate: Lemma B8(1) holds for every n ≥ n₀ with those h. At ln n₀ = 58
+the iteration does not converge: h grows until the lower bound of C is lost ("c lower bound" in the log). So B8(1)'s
+own threshold, with these settings (K = 4, κ = 0.3, κ₁ = 0.6, δ = 0.05, x_F = 20, r₁ = 0.05), lies between 58 and 62.
 
 ### 7.2 Where the bound comes from (ln n₀ = 73.89)
 
-- P_β = 6.10×10⁵ is almost all forcing: on N1 the local term |ĝ|/((n − 1)w) is 5.1×10⁵ (the residual ρ₃, i.e. τ_b of
-  size 7.9×10⁵ ε⁴ at the edge of N1), and it does not depend on h.
+- P_β = 6.10×10⁵ is almost all forcing: on N1 the local term |ĝ|/((n − 1)w) is 5.1×10⁵, and P_β is the same at
+  ln n₀ = 73.89 and 70 although h_S changes by 18%.
 - P_S = 5.91×10⁶ comes from F: local 5.2×10⁵ plus γ_F = 0.415 times 1.30×10⁷ for the integrand (|xG₁'| + |x||W₂|)/w.
   On N1 the integrand is larger (2.4×10⁸) but γ_N1 = 3.7×10⁻¹⁵.
 - P_V = |ω|(1/10 + φ_δ)h_S and P_c follow.
@@ -424,9 +426,10 @@ The remainder bound is conservative: at moderate n the actual remainder is far b
 
 The loop S → β̂ → S closes through W₂ (the R̂_β-terms of the S-equation) on F, with gain γ_F, and γ_F grows as ρ_max
 grows: γ_F ≈ K_F√(π/(N_Fs_α²)) with N_F ∝ 1/ρ_max ∝ ln n₀, and K_F = exp(H_F²/(4N_Fs_α²)). The forcing of S grows the
-same way. So the binding constant is the far-region fast-kernel gain γ_F (with K_F), and the first thing to sharpen is
-its arc part: the bound sin²φ_s − sin²φ_x ≥ s_α²u² and the use of ρ_max on all of F are both loose by factors near 2.
-None of this matters for n₀(1), which B5(1) fixes at e^{73.89}.
+same way. So the binding constant is the far-region fast-kernel gain γ_F (with K_F); between ln n₀ = 73.89 and 62 it
+grows from 0.415 to 0.548 and h_S triples. The first things to sharpen would be its arc part (the bound
+sin²φ_s − sin²φ_x ≥ s_α²u², and N_F taken at ρ_max on all of F) and the size of the S-forcing on F. None of this
+matters for n₀(1), which B5(1) fixes at e^{73.89}.
 
 ## 8. What B8 gives B5(1): hypothesis (H8)
 
@@ -475,7 +478,7 @@ geometric series with its tail.
 | Φ_{±1} | ε z | −15.714 ± 74.930 i, modulus 76.560 | φ₁ = 74.93 ± 15.71 i, 76.56 |
 | C₀, C_{±2} | ε | −3.2313, −1.6156 | −[F²], max 3.23 |
 | ϑ₀, ϑ_{±2} | ε | −6.4625, −3.2313 | −2[F²], max 6.46 |
-| P | ε z | 38.28 (so δ_P ∝ n₀^{−0.4}) | δ_P → 0 |
+| P | ε z | φ₁/2 (Φ = 2zP_z), so δ_P ∝ n₀^{−0.4} | δ_P → 0 |
 
   The factor i between the Φ columns is the θ-rotation of section 1.1. The independent computation in B5 agrees to all
   digits given.
@@ -509,7 +512,8 @@ P(0) = 2F at every order.) **So (H8)(ii) holds for every n ≥ e^{73.89}, every 
    ±10⁻⁶ there).
 4. **The domain of (i)** is a subset of 𝒟_n, which also contains the segment (0, n^γ) and the arc around the light cone.
    B8 makes no statement inside |x − 1| < δ/2; B5(1) does not need one.
-5. **Range of n.** (ii) is proved for n ≥ e^{73.89}, B5(1)'s own threshold; B8 alone would allow ln n ≥ 62.
+5. **Range of n.** (ii) is certified for n ≥ e^{73.89}, B5(1)'s own threshold. B8(1)'s bootstrap closes down to
+   ln n₀ = 62; (ii) was not evaluated below 73.89 because B5(1) does not need it.
 
 ### 8.5 No exponentially large fast content
 
@@ -555,12 +559,15 @@ coefficients. ∎ The scripts are written for M = 1; running them for M = 3, 5 n
 ## 11. Discrepancies and caveats
 
 1. **Harmonic truncation.** C_selection.md §1 and the paper's Definition of the M-model keep b, c on |ν| ≤ M − 1. Theorem
-   A(M = 1), B5(1) and this lemma use |ν| ≤ M + 1. `b3_outer_M.py` also uses the M − 1 convention (its header). The
-   coordinator should change §1 and the paper.
+   A(M = 1), B5(1) and this lemma use |ν| ≤ M + 1. `b3_outer_M.py` (commit bcc3eaa, not on main) also uses M − 1, and
+   it projects each equation once after forming full products, where B5(1) and B8 project every binary product; the
+   two projections agree for M = 1 and differ for M ≥ 3 (`b8m_model.py --mutate=proj`). The coordinator should change
+   §1 and the paper.
 2. **R_n.** C_selection.md §11 defines R_n = (κ₁n/ln n)^{1/2}; B5(1) needs (κ₁n/(cos κ ln n))^{1/2}. B8 is proved on the
    larger domain.
-3. **K\*.** C_selection.md §11 fixes K* = 3 from the transport loss. Here the transport is inside Lemma K and K = 3 closes
-   the bootstrap too (earlier runs); K = 4 is needed for (H8)(ii)'s Φ-bound at γ = 0.3 (section 8.2).
+3. **K\*.** C_selection.md §11 fixes K* = 3 from the transport loss. Here the transport is inside Lemma K and imposes no
+   condition on K of its own. K = 4 is what (H8)(ii)'s Φ-bound needs at γ = 0.3 (section 8.2), and only K = 4 is
+   certified. (K = 3 closed in runs made before the ρ₂ correction; those runs are withdrawn and were not repeated.)
 4. **Light-cone disc.** C_selection.md §11 handles the excluded disc through B6. B8 never enters it, and B5(1) does not
    need it. B6 matters only for the Stokes jump on x > 1.
 5. **The ρ₂ correction** (section 4): found and fixed in this pass; all certificates postdate it.

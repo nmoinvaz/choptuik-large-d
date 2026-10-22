@@ -171,29 +171,56 @@ def cplx_block(Mc):
     return np.block([[Mc.real, -Mc.imag], [Mc.imag, Mc.real]])
 
 
-def integrate_R(ser, n, w, path, R0, ts, rtol=1e-10):
-    """dR/dt = (J R + tau) x'(t) along x = path(t); returns R at the times ts"""
-    cache = {}
+class ZKfast:
+    """Z^K(x) in double precision from the mpmath coefficients (Horner per component)"""
 
-    def parts(t):
-        if t not in cache:
-            x, dx = path(t)
-            cache[t] = (jac(x, ser.ZK(x), n, w) * dx, ser.tau(x) * dx)
-            if len(cache) > 4000:
-                cache.pop(next(iter(cache)))
-        return cache[t]
+    def __init__(self, ser):
+        self.cs = []
+        for nm, keys in (("V", O), ("S", O), ("be", E), ("c", E)):
+            for h in keys:
+                lst = ser.co[(nm, h)]
+                deg = max(len(lst[k]) for k in range(ser.K + 1))
+                tab = np.zeros((ser.K + 1, deg), dtype=complex)
+                for k in range(ser.K + 1):
+                    for m, c in enumerate(lst[k]):
+                        tab[k, m] = complex(c)
+                self.cs.append(tab)
+        self.n = float(ser.n)
+
+    def __call__(self, x):
+        out = np.empty(10, dtype=complex)
+        for i, tab in enumerate(self.cs):
+            coef = (tab * (self.n ** -np.arange(tab.shape[0]))[:, None]).sum(axis=0)
+            out[i] = np.polyval(coef[::-1], x)
+        return out
+
+
+def integrate_R(ser, zk, n, w, path, R0, ts, tgrid, rtol=1e-9):
+    """dR/dt = (J R + tau) x'(t) along x = path(t); returns R at the times ts.  tau (mpmath) is sampled on tgrid and
+    interpolated by a cubic spline (its relative interpolation error is printed); J is evaluated directly."""
+    from scipy.interpolate import CubicSpline
+    tv = np.array([ser.tau(path(t)[0]) for t in tgrid])
+    sp = CubicSpline(tgrid, tv)
+    mid = 0.5 * (tgrid[:-1] + tgrid[1:])
+    sel = mid[:: max(1, len(mid) // 6)]
+    err = max(float(np.max(np.abs(sp(t) - ser.tau(path(t)[0]))) / (1e-300 + np.max(np.abs(ser.tau(path(t)[0])))))
+              for t in sel)
 
     def f(t, y):
-        Jt, tt = parts(t)
+        x, dx = path(t)
         r = y[:10] + 1j * y[10:]
-        d = Jt @ r + tt
+        d = (jac(x, zk(x), n, w) @ r + sp(t)) * dx
         return np.concatenate([d.real, d.imag])
 
+    def jf(t, y):
+        x, dx = path(t)
+        return cplx_block(jac(x, zk(x), n, w) * dx)
+
     sol = solve_ivp(f, (ts[0], ts[-1]), np.concatenate([R0.real, R0.imag]), method="Radau", t_eval=ts,
-                    jac=lambda t, y: cplx_block(parts(t)[0]), rtol=rtol, atol=1e-30)
+                    jac=jf, rtol=rtol, atol=1e-30)
     if not sol.success:
         raise RuntimeError(sol.message)
-    return [sol.y[:10, i] + 1j * sol.y[10:, i] for i in range(len(ts))]
+    return [sol.y[:10, i] + 1j * sol.y[10:, i] for i in range(len(ts))], err
 
 
 def integrate_model(n, w, path, U0, ts, rtol=1e-13):
@@ -236,19 +263,24 @@ def main():
     Rout = np.sqrt(KAPPA1 * n / (np.cos(KAPPA) * np.log(n)))
     e_a = np.exp(1j * ALPHA)
     x0 = 1e-3
-    ray = lambda t: (t * e_a, e_a)
+    zk = ZKfast(ser)
+    ray = lambda s: (np.exp(s) * e_a, np.exp(s) * e_a)          # s = ln |x|
     rs = np.unique(np.concatenate([np.geomspace(0.02, Rout, 28), [0.5, 2.0, 5.0, Rout]]))
     rs = rs[rs > x0]
     ts = np.concatenate([[x0], rs])
-    Rray = integrate_R(ser, n, w, ray, np.zeros(10, dtype=complex), ts)
+    Rray, e1 = integrate_R(ser, zk, n, w, ray, np.zeros(10, dtype=complex), np.log(ts),
+                           np.linspace(np.log(x0), np.log(Rout), 161))
     pts = [(r * e_a, R) for r, R in zip(ts[1:], Rray[1:])]
     arcs = [r for r in (0.5, 2.0, 5.0, Rout) if r < Rout + 1e-9]
+    spl = [e1]
     for r in arcs:
-        R0 = Rray[list(ts).index(r)] if r in ts else None
+        R0 = Rray[list(ts).index(r)]
         ang = np.linspace(0, ALPHA, 13)          # t = angle travelled from alpha
         arc = lambda t, r=r: (r * np.exp(1j * (ALPHA - t)), -1j * r * np.exp(1j * (ALPHA - t)))
-        Rarc = integrate_R(ser, n, w, arc, R0, ang)
+        Rarc, e2 = integrate_R(ser, zk, n, w, arc, R0, ang, np.linspace(0, ALPHA, 31))
+        spl.append(e2)
         pts += [(r * np.exp(1j * (ALPHA - t)), R) for t, R in zip(ang[1:], Rarc[1:])]
+    print(f"tau spline: max relative interpolation error {max(spl):.1e}", flush=True)
     # (A1) next orders
     a1 = 0.0
     for x, R in pts:
@@ -261,7 +293,7 @@ def main():
           flush=True)
     # (A2) independent integration of the original model along the ray and the outer arc
     U0 = to_model(np.concatenate([ser.ZK(x0 * e_a), [x0 * e_a]]), n)
-    Ur = integrate_model(n, w, ray, U0, ts)
+    Ur = integrate_model(n, w, ray, U0, np.log(ts))
     a2, cnt = 0.0, 0
     for (x, R), U in zip(pts[:len(ts) - 1], Ur[1:]):
         Zd = from_model(U, x, n)
@@ -302,7 +334,7 @@ def main():
     bound = 0.0
 
     def lam_parts(x):
-        Z = ser.ZK(x)
+        Z = zk(x)
         c, be = Z[7:10], Z[4:7]
         Cm = Cmat(c)
         Bb = Cmat(ee(c, be))
