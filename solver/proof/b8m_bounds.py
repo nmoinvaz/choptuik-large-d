@@ -34,7 +34,7 @@ MUT = OPTS.get("mutate", "")
 
 class Geo:
     def __init__(self, K, L0, outer="full", kappa="0.3", kappa1="0.6", gamma0="0.3", delta="0.05", xF="20", r1="0.05",
-                 rA="0", rW="0", atoms=None):
+                 rA="0", rW="0", atoms=None, arc=False):
         self.K = K
         self.L0 = arb(L0)
         self.n0 = self.L0.exp()
@@ -68,6 +68,15 @@ class Geo:
             "R": dict(Xlo=arb(1), Xhi=self.XF, thlo=arb(0), thhi=up(self.xF / self.XF), rho=up(self.XF ** 2 / n),
                       far=False),
             "F": dict(Xlo=self.XF, Xhi=None, thlo=lo(self.xF / self.XF), thhi=arb(1), rho=self.rho_max, far=True)}
+        if arc:
+            # the inner arc |x| = n^gamma0 of B5 (a subset of F for n >= n_0), as its own region: X = 1 + n^gamma0 >= Xlo,
+            # rho = (1 + n^gamma0)^2/n <= its value at n_0 (2 gamma0 < 1); evaluated by arc_sup below
+            xa = n ** self.gamma0
+            if not xa > self.xF:
+                raise ValueError("inner arc below x_F")
+            boxes["A"] = dict(Xlo=lo(1 + xa), Xhi=None, thlo=lo(xa / (1 + xa)), thhi=arb(1),
+                              rho=up((1 + xa) ** 2 / n), far=True)
+            self.ell["A"] = up((1 + xa) / (xa - 1))
         E.configure(boxes, n)
         if atoms is None:
             atoms = AT.atoms(K, rA, rW)
@@ -218,7 +227,7 @@ def kernel_consts(geo, k, nsub=1500):
 
 
 # ------------------------------------------------------------------ the improvement map
-def improve(geo, k, kc, b, verbose=False):
+def improve(geo, k, kc, b, verbose=False, full=False):
     K = geo.K
     n0 = geo.n0
     nf = up(n0 / (n0 - 1))
@@ -323,6 +332,9 @@ def improve(geo, k, kc, b, verbose=False):
             diag[f"int_{r}"] = E.bsup(integ, PATH_P[r])
             diag[f"gl_{r}"] = E.bsup_r(gl, r)
             diag[f"gi_{r}"] = E.bsup(gi, PATH_Q[r])
+    if full:
+        # the hypothesis bounds with their derivative bounds (|x R'|), for the conversion on the inner arc (b8m_h8.py)
+        return dict(V=bV, S=bS, b=bbn, c=bc), diag, dict(RS=RS, RbH=RbH, Rc=Rc, RV=RV, R2=R2)
     return dict(V=bV, S=bS, b=bbn, c=bc), diag
 
 
