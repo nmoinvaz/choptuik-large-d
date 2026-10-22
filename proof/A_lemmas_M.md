@@ -649,7 +649,51 @@ dimension (15 against 9 states, cubic in the matrix work) and the number of harm
 - M = 5 has 18 rows and 366 discs, 2.2 times the arc length, at about 3 times the cost per step: roughly 6 times M = 3.
   That means 8–12 hours on 5 local threads, after a pilot of its innermost row and its disc radii.
 
-LOCAL_TASK
+**Proposed task for the local 8-thread machine** (for the coordinator to queue in comms.txt; nothing has been written
+there). It runs at below-normal priority, one process per thread, from `solver/proof/` on a checkout that contains this
+branch.
+
+*Part A: lemma 6b₁(3) on the point certificate's box (5 threads, about 1–2 hours).* The point certificate
+(`proof/A_M.md`) uses a tilted box p̂ + TX with h = 10⁻⁹ in (A, ω/ω∞) and inner widths 10⁻¹⁶. Its axis-aligned hull
+lies in p̂ ± 10⁻⁹ (|C|·h ≤ 3.9×10⁻¹⁰ in B₃). Run the covering on that box, with p̂ the centre the certificate finally
+uses; below is `p_out` of its `data/A_M_refine_M3_a.json` at the time of writing:
+
+```
+P=2.7264758856311463335934955261561100705557331671411,1.0156030948577872100059533565790022881883333496973,0.14441947847010155933389143095194965903793037966287,0.011087425888116783540971263261694760868044985018780
+python3 lemma6b1_cover_M.py ray  --M=3 --h=1e-9 --tag=_cert --x=$P              # 1 thread, ~30-40 min; first
+python3 lemma6b1_cover_M.py rows --M=3 --h=1e-9 --tag=_cert --x=$P --only=11,0  # then 5 threads in parallel:
+python3 lemma6b1_cover_M.py rows --M=3 --h=1e-9 --tag=_cert --x=$P --only=10,1,6
+python3 lemma6b1_cover_M.py rows --M=3 --h=1e-9 --tag=_cert --x=$P --only=9,2,7
+python3 lemma6b1_cover_M.py rows --M=3 --h=1e-9 --tag=_cert --x=$P --only=8,3
+python3 lemma6b1_cover_M.py rows --M=3 --h=1e-9 --tag=_cert --x=$P --only=5,4
+python3 lemma6b1_cover_M.py check  --M=3 --h=1e-9 --tag=_cert --x=$P --json=lemmas_M_runs/lemma6b1_check_M3_cert.json
+python3 lemma6b1_cover_M.py check  --M=3 --h=1e-9 --tag=_cert --x=$P --drop=5,6       # mutation: must print FAIL
+python3 lemma6b1_cover_M.py mutate --M=3 --h=1e-9 --tag=_cert --x=$P --j=11           # mutation: 0 discs certified
+```
+
+- *Stop conditions.* Stop and report if the ray run fails or its box radius at |u| = 27 exceeds 10⁻⁵, which would mean
+  the box is wider than the one tested here. Also stop if any disc reports `ok False`: row 11 is the hardest, which is
+  why it runs first. The remedy for a failed disc is a smaller disc radius in that row (`disc_params`) or a smaller h.
+- *Push:* `lemma6b1_runs_M3_cert/` (ray.json, row_JJ.json), the check JSON, the logs.
+
+*Part B: lemma 6a(3) with the certificate's state box (1 thread, about 1 hour per run).* Once the certificate's box run
+exists, write its hull of y⁺(0.3; X) as JSON with keys M, h, x (p̂), xi1 = "0.3", yX_xi1 (13 [re, im] arb strings in
+`lateral_np.py`'s order), then:
+
+```
+python3 lemma6_jump_M.py --M=3 --box=<that JSON> --json=lemmas_M_runs/lemma6a_M3_cert.json
+```
+
+Pass: ρ₆ₐ < 1 (the pilot from 0.2 gave 0.030). Before it, a pilot from 0.3, the certificate's ξ₁, which has not been
+run: `python3 lemma6_jump_M.py --M=3 --pilot=1e-10 --xi1=0.3 --rho=0.2 --json=lemmas_M_runs/lemma6a_pilot_M3_xi0.3.json`.
+Stop if the backward integration fails (step-size underflow) or G_slow is not invertible.
+
+*Part C: M = 5, after its point certificate.*
+
+- Probe the disc radii (`probe --M=5`; 1 thread, about 15 min) and set `disc_params` for M = 5.
+- Pilot the innermost row (`ray`, then `row --j=17`).
+- Only then run the 18 rows (366 discs) on 5 threads: about 8–12 hours, the same commands with --M=5.
+- Lemma S, 6b₀ and the flat estimate at M = 5 are already certified here over x̂ ± 10⁻⁶.
 
 ## 10. Reproduce
 

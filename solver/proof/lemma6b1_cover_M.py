@@ -206,6 +206,175 @@ def ray_run(M, h):
     return out
 
 
+# ---------------------------------------------------------------- C^1 (mean-value) mode, --c1
+# The state set over X is y(t; x^) + V(t; X)(x - x^): the single trajectory from the box centre as a Lohner set, and
+# the M + 1 parameter-derivative columns as Lohner sets of their own (validated_int.Lohner's var and dx; the box runs of
+# A_certify.md section 9). The step Jacobian is enclosed over that set, which is a valid enclosure of every trajectory
+# from X (mean value theorem). The arcs continue from the ray's Lohner state, not from its hull.
+START_R0 = {1: "0.1", 3: "0.1", 5: "0.07"}     # radius of the old sector lemma used for the C^1 start data
+
+
+def start_data_u(M, h, u0, cauchy="1e-3"):
+    """SysUM state at u0 on the start ray, at the centre x^ (tight) and its derivatives in all M + 1 parameters over
+    X = x^ +- h, from the old sector lemma (Lemma FP(M), diag, rays |arg xi - 3pi/8| <= 0.2, |xi| <= START_R0):
+    Y_N(z0) + eta with |eta_j(z0)| <= (rho/w_j)|z0|^{k_j}; derivatives of Y_N by jets over X, of eta by Cauchy's estimate
+    over X + c(1 + i). Returns (point values, derivative columns [M + 1 lists of nd acb])."""
+    from fixed_point import Maj
+    ctx.prec = 320
+    r0 = START_R0[M]
+    xs = FPM.ZEROS[M]
+    xp = [acb(v) for v in xs]
+    xb = [acb(arb(v, arb(h))) for v in xs]
+    c = arb(cauchy)
+    xc = [acb(arb(v, arb(h) + c), arb(0, c)) for v in xs]
+    Maj.BOX = False
+    outP = FPM.run_M(xp, M, r0, "3pi/8", "0.2", verbose=False, diag=True)
+    Maj.BOX = True
+    outC = FPM.run_M(xc, M, r0, "3pi/8", "0.2", verbose=False, diag=True, kmins_in=outP["kmins"], N_in=outP["N"],
+                     k_in=outP["k"])
+    Maj.BOX = False
+    if not (outP["ok"] and outC["ok"]):
+        raise RuntimeError("old sector lemma failed (point or Cauchy box)")
+    z0 = 1 / u0
+    az = arb(abs(z0).upper())
+    if not az < outP["R"]:
+        raise ValueError("u0 outside the lemma's radius")
+
+    def ebs(out):
+        k, rho, wts, comps = out["k"], out["rho"], out["wts"], out["comps"]
+        return {cp: rho / arb(wts[i]) * az ** (k + 1 if cp[0] == "c" else k) for i, cp in enumerate(comps)}
+    ebP, ebC = ebs(outP), ebs(outC)
+
+    def disc(e):
+        r = arb(0, e.upper())
+        return acb(r, r)
+    odd, even = UM.harmonics(M)
+    kap = acb(UM.KAPPA)
+    P, Q, C = outP["P"], outP["Q"], outP["C"]
+    w = FPM.W0() * acb(xs[1])
+    vals = [P[m](z0) + disc(ebP[("p", m)]) for m in odd]
+    vals += [Q[m](z0) - (1 + acb(0, 1) * m * w) * P[m](z0) + disc(ebP[("v", m)]) for m in odd]
+    vals += [kap * (C[n](z0) - (1 if n == 0 else 0) + disc(ebP[("c", n)])) for n in even]
+    N = outP["N"]
+    oddj, evenj, d, s, g = FPM.series_jet_M(xb, M, N)
+    PM = M + 1
+    zp = [acb(1)]
+    for _ in range(N):
+        zp.append(zp[-1] * z0)
+
+    def jsum(coefs, m):
+        acc = FPM.JetN.const(0, PM)
+        for j in range(N):
+            acc = acc + coefs[j][m] * zp[j]
+        return acc
+    wj = FPM.JetN(FPM.W0() * acb(xb[1]), [acb(0), FPM.W0()] + [acb(0)] * (PM - 2))
+    cols = [[] for _ in range(PM)]
+    Pj = {m: jsum(d, m) for m in odd}
+    for m in odd:
+        for i in range(PM):
+            cols[i].append(Pj[m].d[i] + disc(ebC[("p", m)] / c))
+    for m in odd:
+        Vj = jsum(s, m) - Pj[m] * (wj * (acb(0, 1) * m) + FPM.JetN.const(1, PM))
+        for i in range(PM):
+            cols[i].append(Vj.d[i] + disc(ebC[("v", m)] / c))
+    for n in even:
+        Cj = jsum(g, n)
+        for i in range(PM):
+            cols[i].append(kap * (Cj.d[i] + disc(ebC[("c", n)] / c)))
+    return vals, cols
+
+
+def lohner_c1(M, vals, cols, h):
+    """the C^1 Lohner set: centre trajectory from the point values, derivative columns (rows y; w; A), dx = +-h"""
+    s = UM.SysUM(M)
+    n, nd, m = s.n, s.nd, M + 1
+    ctx.prec = VI.PREC
+    xs = FPM.ZEROS[M]
+    full = list(vals) + [acb(FPM.W0() * arb(xs[1])), acb(arb(xs[0]))]
+    c = [acb(z.mid()) for z in full]
+    q = [full[i] - c[i] for i in range(n)]
+    Q = acb_mat([[1 if i == j else 0 for j in range(n)] for i in range(n)])
+    Vb = acb_mat(n, m)
+    for jj in range(m):
+        for i in range(nd):
+            Vb[i, jj] = cols[jj][i]
+    Vb[nd, 1] = acb(FPM.W0())          # w = W0 wf
+    Vb[nd + 1, 0] = acb(1)             # the A state
+    cV = acb_mat([[acb(Vb[i, jj].mid()) for jj in range(m)] for i in range(n)])
+    qV = Vb - cV
+    lo = VI.Lohner(s, c, Q, q, ORDER, var=(cV, Q, qV))
+    lo.dx = [acb(arb(0, arb(h))) for _ in range(m)]
+    return lo
+
+
+def _sa(x):
+    return x.str(40, radius=True, more=True)
+
+
+def lohner_state(lo):
+    """the exact Lohner state (c, Q, q, var, dx) as strings: every ball reparses to a ball containing it"""
+    Q = lo.Q
+    cV, QV, qV = lo.var
+    return {"c": [LC.s_acb(z) for z in lo.c], "Q": [[_sa(Q[i, j]) for j in range(Q.ncols())] for i in range(Q.nrows())],
+            "q": [_sa(x) for x in lo.q],
+            "cV": [[LC.s_acb(cV[i, j]) for j in range(cV.ncols())] for i in range(cV.nrows())],
+            "QV": [[_sa(QV[i, j]) for j in range(QV.ncols())] for i in range(QV.nrows())],
+            "qV": [[_sa(qV[i, j]) for j in range(qV.ncols())] for i in range(qV.nrows())],
+            "dx": [LC.s_acb(z) for z in lo.dx]}
+
+
+def lohner_restore(M, st):
+    from flint import arb_mat
+    s = UM.SysUM(M)
+    ctx.prec = VI.PREC
+    c = [LC.p_acb(p) for p in st["c"]]
+    Q = arb_mat([[arb(v) for v in row] for row in st["Q"]])
+    q = [arb(v) for v in st["q"]]
+    cV = acb_mat([[LC.p_acb(p) for p in row] for row in st["cV"]])
+    QV = arb_mat([[arb(v) for v in row] for row in st["QV"]])
+    qV = arb_mat([[arb(v) for v in row] for row in st["qV"]])
+    lo = VI.Lohner(s, c, Q, q, ORDER, var=(cV, QV, qV))
+    lo.dx = [LC.p_acb(p) for p in st["dx"]]
+    return lo
+
+
+def ray_run_c1(M, h):
+    t00 = time.time()
+    rows = design(M)
+    nd = UM.SysUM(M).nd
+    E3 = (acb(0, -1) * UM.PHI_U).exp()
+    ctx.prec = 320
+    u0 = acb(arb(rows[0]["rho"])) * E3
+    vals, cols = start_data_u(M, h, u0)
+    lo = lohner_c1(M, vals, cols, h)
+    X = lo.box()
+    out = {"M": M, "h": h, "x": list(FPM.ZEROS[M]), "c1": True, "rho": [rw["rho"] for rw in rows],
+           "starts": {"0": [LC.s_acb(z) for z in X]}, "sets": {"0": lohner_state(lo)}, "start_rad": maxrad(X, nd),
+           "start_point_rad": max(VI.rad_of(z) for z in vals), "legs": []}
+    print(f"M = {M} (C^1): start data at |u| = {rows[0]['rho']} from the old sector lemma (r0 = {START_R0[M]}): centre "
+          f"radius {out['start_point_rad']:.2e}, state set over X = x^ +- {h}: radius {maxrad(X, nd):.2e}", flush=True)
+    os.makedirs(runs_dir(M), exist_ok=True)
+    for j in range(1, len(rows)):
+        t0 = time.time()
+        leg = UM.URay(str(rows[j - 1]["rho"]), str(rows[j]["rho"]))
+        n = lo.run(leg, 1e-2)
+        X = lo.box()
+        out["starts"][str(j)] = [LC.s_acb(z) for z in X]
+        out["sets"][str(j)] = lohner_state(lo)
+        cV, QV, qV = lo.var
+        out["legs"].append({"to": rows[j]["rho"], "steps": n, "sec": time.time() - t0, "rad": maxrad(X, nd),
+                            "point_rad": max(VI.rad_of(lo.c[i] + 0 * lo.c[i]) for i in range(nd))})
+        print(f"ray |u| {rows[j - 1]['rho']} -> {rows[j]['rho']}: {n} steps, {time.time() - t0:.0f} s, state set over X "
+              f"radius {maxrad(X, nd):.2e}", flush=True)
+        out["sec"] = time.time() - t00
+        with open(os.path.join(runs_dir(M), "ray_partial.json"), "w") as fh:
+            json.dump(out, fh)
+    out["sec"] = time.time() - t00
+    with open(os.path.join(runs_dir(M), "ray.json"), "w") as fh:
+        json.dump(out, fh)
+    return out
+
+
 def row_run(M, j, h, mutate=None):
     t00 = time.time()
     rows = design(M)
@@ -216,8 +385,11 @@ def row_run(M, j, h, mutate=None):
     assert ray.get("x", list(FPM.ZEROS[M])) == list(FPM.ZEROS[M]), "ray.json made with another centre (--x)"
     nd = UM.SysUM(M).nd
     ctx.prec = VI.PREC
-    H = [LC.p_acb(p) for p in ray["starts"][str(j)]]
-    lo = lohner_from_box(M, H)
+    if ray.get("c1"):
+        lo = lohner_restore(M, ray["sets"][str(j)])        # continue from the ray's Lohner state (C^1)
+    else:
+        H = [LC.p_acb(p) for p in ray["starts"][str(j)]]
+        lo = lohner_from_box(M, H)
     leg = UM.UArc(str(rw["rho"]))
     out = {"M": M, "j": j, "h": h, "rho": rw["rho"], "r": rw["r"], "n": rw["n"], "discs": [], "mutate": mutate}
     hstep, steps = 1e-3, 0
@@ -305,7 +477,10 @@ def main():
     elif cmd == "probe":
         probe(M, opts.get("rad", "1e-7"), [int(v) for v in opts["rows"].split(",")] if "rows" in opts else None)
     elif cmd == "ray":
-        ray_run(M, h)
+        if "c1" in opts:
+            ray_run_c1(M, h)
+        else:
+            ray_run(M, h)
     elif cmd == "row":
         row_run(M, int(opts["j"]), h)
     elif cmd == "rows":

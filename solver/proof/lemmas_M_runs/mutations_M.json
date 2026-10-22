@@ -161,5 +161,33 @@
    "G_slow is 9 x 11: not square, beta is not determined by the slow data; lemma 6a NOT established   [MUTATION partial: failure expected]"
   ],
   "sec": 50.2
+ },
+ {
+  "name": "jump_swap_M3",
+  "cmd": "lemma6_jump_M.py --M=3 --pilot=1e-10 --mutate=swap",
+  "expected": "caught",
+  "exit": 0,
+  "matches": true,
+  "what": "6a: y- = conj(y+) without the reflection mu -> -mu: must fail",
+  "tail": [
+   "lemma S (M = 3, rp = 0.1, k = 20): contraction 0.8252; flat estimate on 0 < z <= Z = 0.004489: Lambda = 0.2923",
+   "start box at xi1 = 0.2 (y+ and sigma(y+)): radius 3.50e-01",
+   "backward integration failed (step size underflow at t = 0.06813978124409914): lemma 6a NOT established   [MUTATION swap: failure expected]"
+  ],
+  "sec": 2867.0
+ },
+ {
+  "name": "jump_coords_M3",
+  "cmd": "lemma6_jump_M.py --M=3 --pilot=1e-10 --mutate=coords --load-B=lemmas_M_runs/lemma6a_pilot_M3_B.json",
+  "expected": "report",
+  "exit": 0,
+  "matches": true,
+  "what": "6a: (1 - i mu w) in the change of variables at xi_a; at M = 1 not caught (second order); reported only",
+  "tail": [
+   "backward along the real axis 0.2 -> 0.067: 389 steps, 0 s; final state radius 4.62e-07; max radius of B 5.35e-03",
+   "|H| = |G_fast G_slow^-1| entries <= 2.35e+01; G_slow^-1 entries <= 1.13e+00",
+   "rho_6a = 8.916e-01 < 1: True  => all J_D,mu(0.2) = 0 implies psi = 0 (whole jump): True   [MUTATION coords]   [PILOT: not rigorous]"
+  ],
+  "sec": 52.0
  }
 ]

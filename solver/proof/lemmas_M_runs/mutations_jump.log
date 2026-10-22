@@ -1,1 +1,4 @@
 jump_partial_M3  expected caught  exit 0: OK   (50.2 s)  G_slow is 9 x 11: not square, beta is not determined by the slow data; lemma 6a NOT established   [MUTATION partial: failure expected]
+jump_swap_M3     expected caught  exit 0: OK   (2867.0 s)  backward integration failed (step size underflow at t = 0.06813978124409914): lemma 6a NOT established   [MUTATION swap: failure expected]
+jump_coords_M3   expected report  exit 0: OK   (52.0 s)  rho_6a = 8.916e-01 < 1: True  => all J_D,mu(0.2) = 0 implies psi = 0 (whole jump): True   [MUTATION coords]   [PILOT: not rigorous]
+ALL VERDICTS AS EXPECTED: True
