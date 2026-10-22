@@ -19,3 +19,9 @@ start box at xi1 = 0.3 (y+ and sigma(y+)): radius 7.98e-06
    real t 0.924069 h 8.09e-04  max state radius 7.17e-05  [2255 s]
    real t 0.939274 h 5.49e-04  max state radius 7.27e-05  [2377 s]
    real t 0.952374 h 7.43e-04  max state radius 7.35e-05  [2494 s]
+   real t 0.964121 h 5.04e-04  max state radius 7.41e-05  [2619 s]
+   real t 0.976152 h 6.83e-04  max state radius 7.49e-05  [2749 s]
+   real t 0.986191 h 4.63e-04  max state radius 7.54e-05  [2871 s]
+   real t 0.995515 h 6.27e-04  max state radius 7.58e-05  [2990 s]
+backward along the real axis 0.3 -> 0.067: 450 steps, 3000 s; final state radius 7.60e-05; max radius of B 4.88e-01
+G_slow: invertibility not proved; lemma 6a NOT established

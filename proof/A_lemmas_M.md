@@ -616,7 +616,27 @@ At M = 3, with h = 10⁻⁹:
 
 A save and restore of the Lohner state contains the original set.
 
-ROW11_C1
+**The C¹ runs on the point certificate's box** (`lemma6b1_runs_M3_cert/`). The centre is the certificate's p̂ (`p_out`
+of its `data/A_M_refine_M3_a.json`); the box is p̂ ± 1.1×10⁻⁹ in all four parameters. It contains the axis-aligned hull
+of the certificate's tilted box with h = 10⁻⁹, and the hull of the h = 10⁻¹⁰ box it was running at the time of writing
+around its later centre (8×10⁻¹⁸ away).
+
+The ray run (resumed once after a container restart, from the saved Lohner state at row 6) has these set radii over X:
+
+| \|u\| | 262 | 235 | 209 | 182 | 155 | 129 | 102 | 80 | 62 | 47 | 36 | 27 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| C¹ set radius (×10⁻⁹) | 1.75 | 1.89 | 2.24 | 2.75 | 3.52 | 4.83 | 7.42 | 12.7 | 23.9 | 54.1 | 144 | 503 |
+| hull run at h = 10⁻⁹ (×10⁻⁹) | 58 | 10.6 | 11.6 | 12.7 | 14.0 | 19.3 | 30.9 | 55.1 | 107 | 252 | 698 | 2530 |
+
+At |u| = 27 the C¹ set (5.0×10⁻⁷) is about the true spread over this box (about 7×10⁻⁷ by the double-precision
+diagnostic).
+
+**Row 11, the hardest row: certified** (`row_11.json`, `cover_M3_cert_row11.log`). All 12 discs pass with
+r = 6, n = 50: Λ ≤ 0.179, box radius ≤ 3.4×10⁻⁵ (at the real axis; at most 1.1×10⁻⁶ before the last two discs),
+sup|y − y(c)| ≤ 7.5, 834 Lohner steps, 1566 s. The hull runs failed at disc 4 (h = 10⁻⁸) and disc 6 (h = 10⁻⁹) of
+this row.
+
+ROWS_REST
 
 ## 6. Theorem A(M), conditional on the point certificate
 

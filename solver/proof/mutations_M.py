@@ -43,11 +43,20 @@ CHEAP = [
      "control: lemma S at R+ = 0.13^2, beyond the contraction (0.83 at 0.1, label terms grow like R+)"),
     ("disc_m1", ["lemma6b1_disc_M.py"], "passes", "control: lemma D at M = 1 reproduces lemma6b1_disc.certify"),
 ]
+CERT = ["--M=3", "--h=1.1e-9", "--tag=_cert",
+        "--x=2.7264758856311463335934955261561100705557331671411,1.0156030948577872100059533565790022881883333496973,"
+        "0.14441947847010155933389143095194965903793037966287,0.011087425888116783540971263261694760868044985018780"]
 SAVED = [
-    ("cover_drop_M3", ["lemma6b1_cover_M.py", "check", "--M=3", "--h=1e-8", "--drop=5,6"], "fails",
+    ("cover_check_M3", ["lemma6b1_cover_M.py", "check"] + CERT, "passes",
+     "control: the 6b1 gluing and covering check C1-C8 on the M = 3 runs (C^1 mode, certificate's box): PASS"),
+    ("cover_drop_M3", ["lemma6b1_cover_M.py", "check", "--drop=5,6"] + CERT, "fails",
      "6b1 gluing check with tile (5, 6) left out: must print FAIL"),
-    ("cover_sign_M3", ["lemma6b1_cover_M.py", "mutate", "--M=3", "--h=1e-8", "--j=11"], "caught",
+    ("cover_sign_M3", ["lemma6b1_cover_M.py", "mutate", "--j=11"] + CERT, "caught",
      "6b1: every disc of the innermost row with the fast term of the wrong sign: none may be certified"),
+    ("c1_truth_M3", ["lemma6b1_cover_M.py", "c1check"] + CERT, "passes",
+     "control (double precision): y+ at x^ and x^ +- h e_i lies in the saved C^1 sets at rows 1, 6, 9, 11"),
+    ("c1_nov_M3", ["lemma6b1_cover_M.py", "c1check", "--mutate=nov"] + CERT, "caught",
+     "C^1 sets with the derivative columns dropped: the off-centre points must fall outside"),
     ("jump_partial_M3", ["lemma6_jump_M.py", "--M=3", "--pilot=1e-10", "--mutate=partial",
                          "--load-B=lemmas_M_runs/lemma6a_pilot_M3_B.json"], "caught",
      "6a: only J_D,1 = 0 assumed (J_D,3 dropped): G_slow is not square, 6a must not be established"),

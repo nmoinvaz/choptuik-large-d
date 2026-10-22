@@ -1,0 +1,5 @@
+row 1 (|u| = 235.36): set radius 1.00e-11; centre in, x0+h OUT, x0-h OUT, x1+h OUT, x1-h OUT, x2+h OUT, x2-h OUT, x3+h OUT, x3-h OUT
+row 6 (|u| = 102.16): set radius 1.01e-11; centre in, x0+h OUT, x0-h OUT, x1+h OUT, x1-h OUT, x2+h OUT, x2-h OUT, x3+h OUT, x3-h OUT
+row 9 (|u| = 47.14): set radius 1.05e-11; centre in, x0+h OUT, x0-h OUT, x1+h OUT, x1-h OUT, x2+h OUT, x2-h OUT, x3+h OUT, x3-h OUT
+row 11 (|u| = 26.98): set radius 1.42e-11; centre in, x0+h OUT, x0-h OUT, x1+h OUT, x1-h OUT, x2+h OUT, x2-h OUT, x3+h OUT, x3-h OUT
+MUTATION nov (derivative columns dropped): every off-centre point outside: True (must be True)
