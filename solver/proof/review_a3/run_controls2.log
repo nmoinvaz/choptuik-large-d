@@ -1,0 +1,45 @@
+=== python3 fixed_point_M.py --M=3 --mutate=series
+M = 3, r0 = [0.10000 +/- 1e-10] (R = r0^2), arg xi = 1.178097, kernel rate a = 0.35355, splitting plain: N = 53 terms, weight exponent k = 5 (forcing allows 5)
+  residual numerators: lower coefficients all contain 0: True; first nonzero orders [5, 6, 53] (structural, >= N - 1: False)
+  forcing ||T(0)||_w <= 1.561e+01
+  largest Lipschitz entries (unweighted): v+3<-p+3 3.19, v-3<-p-3 3.19, v+1<-p+1 0.946, v-1<-p-1 0.946, v-1<-p-3 0.597, v+1<-p+3 0.597
+  contraction constant (weighted max norm) <= 0.9227
+  ball rho = 8.074e+02: ||T(0)|| + Lip rho = 7.605e+02 < rho: True
+  => fixed point exists and is unique in the ball: False; |eta| <= 5.26e-08 at |z| = R (p, v, c variables)
+MUTATION series: the lemma holds: False (must be False)
+=== exit 0
+=== python3 fixed_point_M.py --M=3 --mutate=series --r0=0.0741 --arg=5pi/16 --diag
+M = 3, r0 = [0.074100 +/- 3e-10] (R = r0^2), arg xi = 0.981748, kernel rate a = 0.19134, splitting diag: N = 94 terms, weight exponent k = 5 (forcing allows 5)
+  residual numerators: lower coefficients all contain 0: True; first nonzero orders [5, 6, 94] (structural, >= N - 1: False)
+  forcing ||T(0)||_w <= 2.949e+01
+  largest Lipschitz entries (unweighted): v+3<-p+3 3.08, v-3<-p-3 3.08, v+1<-p+1 0.873, v-1<-p-1 0.873, v-1<-p-3 0.53, v+1<-p+3 0.53
+  contraction constant (weighted max norm) <= 0.6983
+  ball rho = 3.909e+02: ||T(0)|| + Lip rho = 3.025e+02 < rho: True
+  => fixed point exists and is unique in the ball: False; |eta| <= 1.18e-09 at |z| = R (p, v, c variables)
+MUTATION series: the lemma holds: False (must be False)
+=== exit 0
+=== python3 fixed_point_M.py --M=3 --r0=0.0741 --arg=5pi/16 --diag
+M = 3, r0 = [0.074100 +/- 3e-10] (R = r0^2), arg xi = 0.981748, kernel rate a = 0.19134, splitting diag: N = 94 terms, weight exponent k = 40 (forcing allows 93)
+  residual numerators: lower coefficients all contain 0: True; first nonzero orders [93, 94] (structural, >= N - 1: True)
+  forcing ||T(0)||_w <= 4.643e+44
+  largest Lipschitz entries (unweighted): v+3<-p+3 3.08, v-3<-p-3 3.08, v+1<-p+1 0.873, v-1<-p-1 0.873, v+1<-p+3 0.53, v-1<-p-3 0.53
+  contraction constant (weighted max norm) <= 0.3159
+  ball rho = 2.715e+45: ||T(0)|| + Lip rho = 1.322e+45 < rho: True
+  => fixed point exists and is unique in the ball: True; |eta| <= 5.51e-46 at |z| = R (p, v, c variables)
+=== exit 0
+=== python3 fixed_point_M.py --M=3 --mutate=cdrop
+lemma not established: integrand t^-1 not admissible for weight 0 (slow)
+MUTATION cdrop: the lemma holds: False (must be False)
+=== exit 0
+=== python3 fixed_point_M.py --M=3 --mutate=diagpath
+MUTATION diagpath: refused (the diag splitting is valid on rays only; refusing it with a non-ray kernel bound) -> caught
+=== exit 0
+=== python3 lemma6_usys_M.py --mutate=label
+M = 3 [MUTATION label]: (a) 1.4e-55 ok; (b) 3.5e-16 ok; (c) 2.6e+00 FAIL; (d) 3.5e-01 FAIL; (e) 5.3e-56 ok; (f) 3.7e+00 FAIL
+M = 5 [MUTATION label]: (a) 1.4e-55 ok; (b) 1.4e-15 ok; (c) 1.8e+00 FAIL; (d) 3.3e-01 FAIL; (e) 5.7e-55 ok; (f) 3.7e+01 FAIL
+MUTATION label: caught: True
+=== exit 0
+=== python3 lemma6_sector_M.py --M=3 --rp=0.1 --k=20 --mutate=series
+MUTATION series (top harmonic's coefficient off by 1e-6): lemma S holds: False (must be False)
+=== exit 0
+=== done

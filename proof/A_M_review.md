@@ -49,7 +49,8 @@ would make the theorem *conditional* or *not established*. By AGENTS.md's rule (
 before its claim is relied on), those two links still need a review.
 
 No finding below changes a number or a verdict. One proof-text gap needs a sentence (F3), and one check is weaker than
-the notes say (F2). The rest are cosmetic.
+the notes say (F2). F6 is about review coverage, and F8 strengthens a control the notes report as not catching. The
+rest are cosmetic.
 
 ## Summary of the checks
 
@@ -66,7 +67,7 @@ the notes say (F2). The rest are cosmetic.
 | the system is the inner_np.py model | reading both; selftest; K2 uses a right-hand side written from inner_np's docstring | OK |
 | jump functionals and path | reading; K1 rebuilds ℓ from the layout | OK |
 | H1, H2, H3 as inclusions | K3: exact rationals | hold (F4: the 6a ω-ball contains P's only by radius rounding) |
-| lemma 6a code and its input B₁ | reading lemma6_jump_M.py; K3 recomputes B₁ ⊇ state set over P; rerun | OK; ρ₆ₐ reproduced |
+| lemma 6a code and its input B₁ | reading lemma6_jump_M.py; K3 recomputes B₁ ⊇ state set over P; rerun | OK; ρ₆ₐ = 0.0413 reproduced; `partial` and `coords` caught on the certificate's B₁ |
 | 6b₁ gluing check and its drop mutation | rerun | PASS / FAIL as stated |
 | the notes' cheap mutation controls | rerun (§5) | all as stated |
 
@@ -138,8 +139,8 @@ data.
 
 K(X) = −Y g̃(0) + (I − Y Dg̃(X)) X with X centred at 0, Dg̃(X) an interval matrix containing Dg̃(x) for every x ∈ X,
 and Y a fixed real matrix. K(X) ⊂ int X implies that g̃ has exactly one zero in X and that every matrix in Dg̃(X), and
-Y, is non-singular (Krawczyk 1969; Neumaier 1990, as cited in A_M.md §2). T is invertible (unit lower-triangular), so g has
-exactly one zero in P and Dg is non-singular there. **Verdict: OK.**
+Y, is non-singular (Krawczyk 1969; Neumaier 1990, as cited in A_M.md §2). T is invertible (unit lower-triangular), so
+g has exactly one zero in P and Dg is non-singular there. **Verdict: OK.**
 
 **K1** (`review_a3/rv3_krawczyk_exact.py`) recomputes the test in exact rational interval arithmetic (Python
 fractions), from the JSON only. It uses its own state layout, its own jump rows, and its own preconditioner, the exact
@@ -168,7 +169,8 @@ same, term for term, grouping included. With λ = 1 the homotopy weights of inne
 
 - the self-test against `Inner.rhs`, 4.4×10⁻¹⁶ (M = 3);
 - `lemma6_usys_M.py`, all of (a)–(f);
-- K2, whose reference right-hand side I wrote from the docstring. It agrees with LohnerM's SysM steps to 10⁻⁵⁰.
+- K2, whose reference right-hand side I wrote from the docstring. At N = 20 its reference lies inside LohnerM's SysM
+  enclosures on all three legs, 10⁻⁵⁰ to 10⁻³³ from their midpoints.
 
 The profile F₁ = −iA/2 and F_ν = −iB_ν/2 + C_ν/2 is the same in inner_np.Fh_from, `CS.profile`, `FPM.fh_from` and K4.
 ω∞ = 2π/1.64389375 everywhere. **Verdict: OK**; the theorem is about this truncation.
@@ -176,7 +178,7 @@ The profile F₁ = −iA/2 and F_ν = −iB_ν/2 + C_ν/2 is the same in inner_n
 **The jump conditions.** J_ν = D_ν − conj(D_{−ν}) on the real coordinates: Re J = Re D_ν − Re D_{−ν},
 Im J = Im D_ν + Im D_{−ν} (certify_M.py:177–201). This is inner_np's `D - conj(D[::-1])` and A_lemmas_M.md §4.1's
 J_{D,μ}. The rows are ν = 1, 3, all (M + 1)/2 of them, as lemma 6a needs. The path's start ray 5π/16 and radius
-0.0741 are inner_np's `r0_for` (the start check prints r0 = 0.0741). **Verdict: OK.**
+0.0741 are inner_np's `r0_for` (`crosscheck 3` prints inner_np's r0 = 0.0741). **Verdict: OK.**
 
 ## 3. Lemma 6a and the hypotheses H1–H3
 
@@ -206,8 +208,20 @@ A, B and C enter only the start data.
 `--mutate=shift` (the 6b₁ centre moved by 2×10⁻⁹) makes H2 fail.
 
 **The rerun** of `lemma6_jump_M.py --M=3 --box=data/A_M_6a_M3_1e-10_in.json` (log
-`review_a3/lemma6a_M3_cert_rerun.log`) gives RERUN_6A. The `partial` mutation on the certificate's own B₁, rather than the
-pilot's (the notes' mutations used the pilot B₁, A_lemmas_M.md:801), gives PARTIAL_6A.
+`review_a3/lemma6a_M3_cert_rerun.log`, 353 s at load 1.5) reproduces the record exactly. It takes 449 steps, the
+largest radius of B is 1.99×10⁻³, |H| ≤ 11.6 and |G_slow⁻¹| ≤ 1.62, and ρ₆ₐ = 0.04134615071 ± 5.3×10⁻¹³, all as in
+`lemmas_M_runs/lemma6a_M3_cert.log`.
+
+The notes' 6a mutations ran on the pilot's B₁ (A_lemmas_M.md:801). I reran two of them on the certificate's own B₁,
+reusing the saved backward enclosure (`--load-B`; logs `lemma6a_M3_cert_{partial,coords,reloaded}.log`).
+
+- `partial` is caught: G_slow is 9 × 11, exit 0.
+- `coords` (1 − iμω in the change of variables) **is caught here**: ρ₆ₐ = 1.45 > 1. The clean run on the same reloaded
+  B gives 0.0785. On the pilot's B₁ the notes record this mutation as not caught (ρ₆ₐ = 0.89). It would be worth
+  updating A_lemmas_M.md §8.
+- The reloaded B is wider than the original (largest radius 9.05×10⁻³ against 1.99×10⁻³). `--save-B` writes
+  `str(80, radius=True)` without `more=True`, so arb prints only the digits it can certify and moves the rest into the
+  radius. It is still an enclosure, and it is used only by these post-processing mutations (cosmetic).
 
 **The assembly** (A_lemmas_M.md §6) holds together.
 
@@ -239,13 +253,16 @@ the complex Cauchy box.
 equations, in mpmath at 110 digits, truncated at its smallest term (10⁻¹¹⁶) at |ξ| = 0.05. It then integrates at 75
 digits out to 0.0741 on the ray 5π/16. The result lies in every one of `start_data_M`'s 13 start-value balls at the
 certificate's p̂, 2.1×10⁻⁶⁷ from the midpoints against radii up to 4.7×10⁻⁶⁶. With A moved by 10⁻⁴⁰ it falls outside
-(6.1×10⁻⁴² from the midpoints). This is a planted-truth check, not a proof (the truncation error at 0.05 is estimated, not bounded). It
-is independent of fixed_point_M.py, series_arb.py and certify_M*.py.
+(6.1×10⁻⁴² from the midpoints). This is a planted-truth check, not a proof: the truncation error at 0.05 is estimated,
+not bounded. It is independent of fixed_point_M.py, series_arb.py and certify_M*.py.
 
 **Lemma 6b₁.** I reran only `lemma6b1_cover_M.py check` on the certificate's box: PASS, 183 tiles, 579 polar
 rectangles, 461 links. With tiles (5, 6) dropped (`--drop=5,6`) it fails with exit 3 and three failures, as stated. I
 also read how the box is set: `params`, `start_data_u` and `lohner_c1` put x_b ± h on every one of the M + 1
-parameters (lemma6b1_cover_M.py:140–145, :223–313). The disc certificates themselves are not reviewed (§7).
+parameters (lemma6b1_cover_M.py:140–145, :223–313). The double-precision planted-truth control `c1check` passes:
+y⁺ at x_b and at x_b ± h·e_i lies in the saved C¹ sets at rows 1, 6, 9 and 11 (`review_a3/c1check.log`). Its `nov`
+mutation, which drops the derivative columns, puts all eight off-centre points outside at every tested row while the
+centre stays inside, as it must (`c1check_nov.log`). The disc certificates themselves are not reviewed (§7).
 
 ## 5. The mutation controls the notes cite
 
@@ -261,6 +278,15 @@ Rerun by `review_a3/run_controls.sh` (log `run_controls.log`); every exit status
 | `certify_M.py crosscheck 3` / `--mutate` | AGREE / DISAGREE | 8.6×10⁻¹⁴ / 5.5×10⁻⁶ |
 | `lemma6_usys_M.py` | all pass | all pass |
 | `lemma6b1_cover_M.py check` / `--drop=5,6` | PASS / FAIL | PASS / FAIL (exit 3) |
+| `fixed_point_M.py --M=3 --mutate=series` (fp_series_M3), `--mutate=cdrop`, `--mutate=diagpath` | caught | caught (exit 0 each) |
+| `fixed_point_M.py --M=3 --mutate=series --r0=0.0741 --arg=5pi/16 --diag` (the certificate's configuration; not in the notes' table at M = 3) / the same without the mutation | caught / holds | caught / holds (sup\|η\| 5.5×10⁻⁴⁶) |
+| `lemma6_usys_M.py --mutate=label` | caught | caught: (c), (d), (f) fire at M = 3 and 5 |
+| `lemma6_sector_M.py --M=3 --rp=0.1 --k=20 --mutate=series` | caught | caught |
+| `lemma6b1_cover_M.py c1check` / `--mutate=nov` (certificate box) | passes / caught | passes / caught |
+| `lemma6_jump_M.py … --mutate=partial` / `--mutate=coords` on the certificate's B₁ | caught / "report" | caught / **caught** (ρ₆ₐ 1.45; §3) |
+
+The fixed_point_M, lemma6_usys_M --mutate and lemma6_sector_M rows were run directly (`review_a3/run_controls2.sh`,
+log `run_controls2.log`), not through mutations_M.py, which would have overwritten `lemmas_M_runs/mutations_M.json`.
 
 Two of these are weaker than their names suggest. `startcheck` compares the step-(i) values with another truncation
 of the same formal series at hier.py's zero, not at p̂. It does not test the η bound (K4 does). `crosscheck` compares
@@ -274,9 +300,10 @@ None affects the certified statement or any quoted number.
 - **F1 (cosmetic).** A_M.md:322–323 says the h = 10⁻¹⁰ run "was interrupted once by a restart and resumed from its
   checkpoint". `logs/A_M_box_M3_1e-10.log` shows one uninterrupted run: one header line, no "resumed from" line, and
   the timer rising monotonically from 154 s to 3357 s. The leg times (2061 + 1122 + 119 s) plus the start data account
-  for the recorded 3392 s of one process. Either the sentence belongs to another run, or the log is incomplete. *Proposed:* drop the parenthesis, or point to the log that shows
-  the resume. (A resume would be sound in any case: the checkpoint stores the Lohner sets as enclosing strings, and a
-  ball-valued centre c is handled by the mean-value update.)
+  for the recorded 3392 s of one process. Either the sentence belongs to another run, or the log is incomplete.
+  *Proposed:* drop the parenthesis, or point to the log that shows the resume. (A resume would be sound in any case:
+  the checkpoint stores the Lohner sets as enclosing strings, and a ball-valued centre c is handled by the mean-value
+  update.)
 - **F2 (minor, a check weaker than stated).** fixed_point_M.py:279 checks `min(kmins) >= N - 1` over all rows. At the
   certificate's centre the orders are p, v: 95 = N and c: 94 = N − 1 (my run). So the p and v rows also drop their
   order-(N − 1) coefficient, on the evidence that the ball contains 0 at the centre. Over the box (`kmins_in`, :456 and
@@ -309,24 +336,32 @@ None affects the certified statement or any quoted number.
   notes' "trusted code" lists (A_lemmas_M.md §5.3, §7) should say this.
 - **F7 (cosmetic).** In the A_lemmas_M.md §6 proof, step 1, the start value is attributed to the old sector lemma's
   domain; it comes from Lemma FP(M) on the ray 5π/16 (§3 above).
+- **F8 (an improvement to record).** A_lemmas_M.md:785 and :798 say the `coords` mutation of 6a is "reported, not
+  caught" at M = 3 (ρ₆ₐ = 0.89 on the pilot's B₁). On the certificate's own B₁ it is caught: ρ₆ₐ = 1.45, against 0.0785
+  for the clean run on the same reloaded B (§3). *Proposed:* rerun the 6a mutations on the certificate's B₁ and update
+  §8. That also tests the proof's actual input rather than the pilot's.
+- **F9 (cosmetic).** lemma6_jump_M.py:184–189 saves B with `str(80, radius=True)` without `more=True`, so a reloaded B
+  is up to about 4.5 times wider (9.05×10⁻³ against 1.99×10⁻³ here). It is still an enclosure, and only the `--load-B`
+  mutations use it. `certify_M_lohner.s_arb` uses `more=True` and does not have this loss.
 
 ## 7. What I did not check
 
-- **The box run itself.** I did not rerun it (55 minutes). Its rigour rests on the code reading above, on K2 (single
+- **The box run itself.** I did not rerun it (55 minutes). Its rigor rests on the code reading above, on K2 (single
   steps), on the self-test, and on the agreement of the final enclosure with hier.py's and nested.py's zeros (to
   1.1×10⁻¹¹), which is consistent but not a proof.
 - **Lemma S, lemma 6b₀ and the flat estimate.** Not the majorant computations (`lipschitz_M`, `intbound_strict`, the
   Perron weights beyond `wnorm`'s exact bound), and not the lemma-S domain geometry. I read only the diag identity and
   the kernel.
-- **Lemma 6b₁.** Not the disc lemma (`lemma6b1_disc_M.certify`), not the C¹ row runs, not the planted-truth `c1check`
-  (≈5 min), and not the geometry inside `lemma6b1_cover.check`. Only the check's verdict, its drop mutation, and the
-  box inclusion.
+- **Lemma 6b₁.** Not the disc lemma (`lemma6b1_disc_M.certify`), not the C¹ row runs, and not the geometry inside
+  `lemma6b1_cover.check`. Only the check's verdict, its drop mutation, the box inclusion, and the double-precision
+  `c1check`.
 - **Step (i).** Not the majorant calculus or the Lipschitz matrix of `fixed_point_M.run_M`, beyond K4 at the centre
   (the box and Cauchy-box bounds are not tested by K4) and the reading in §4.
 - **The simplicity transfer** (A_certify.md §11.7, A_lemmas_M.md §4.2) and Braaksma's theorem's applicability on the
   ray 5π/16 (Lemma B4(M) of C_selection.md). These are mathematics I did not re-derive.
-- **The remaining mutations of `mutations_M.py`** (fp_*, S_*, jump_swap, jump_coords, cover_sign, c1_*), and the
-  M = 5 runs.
+- **The remaining entries of `mutations_M.py`**: fp_series_M5, fp_control_r0, fp_m1, S_control_rp, disc_m1,
+  jump_swap and cover_sign. Their recorded outcomes in `lemmas_M_runs/mutations_M.json` match the table of
+  A_lemmas_M.md §8. Also not checked: the M = 5 runs.
 
 ## 8. Reproduce
 
@@ -340,11 +375,20 @@ python3 rv3_hypotheses.py --mutate=shift                                    # H2
 python3 rv3_lohner_step.py                                                  # K2, ~5 min; exit 0
 python3 rv3_start_value.py                                                  # K4, ~8 min; exit 0
 sh run_controls.sh                                                          # section 5, ~6 min -> run_controls.log
+sh run_controls2.sh                                                         # section 5, ~3 min -> run_controls2.log
 ```
 
-From `solver/proof/`, the 6a rerun and its mutation (~18 min, then seconds):
+From `solver/proof/`, the 6a rerun and its mutations on the certificate's B₁ (6 min at load 1.5, then about a minute
+each for lemma S and the flat estimate), and the 6b₁ controls (about 5 minutes each):
 
 ```
 python3 lemma6_jump_M.py --M=3 --box=data/A_M_6a_M3_1e-10_in.json --json=review_a3/lemma6a_M3_cert_rerun.json --save-B=B.json
 python3 lemma6_jump_M.py --M=3 --box=data/A_M_6a_M3_1e-10_in.json --load-B=B.json --mutate=partial   # exit 0 = caught
+python3 lemma6_jump_M.py --M=3 --box=data/A_M_6a_M3_1e-10_in.json --load-B=B.json --mutate=coords    # rho_6a 1.45, exit 2
+python3 lemma6_jump_M.py --M=3 --box=data/A_M_6a_M3_1e-10_in.json --load-B=B.json                    # rho_6a 0.0785, exit 0
+P=2.7264758856311463335934955261561100705557331671411,1.0156030948577872100059533565790022881883333496973,0.14441947847010155933389143095194965903793037966287,0.011087425888116783540971263261694760868044985018780
+python3 lemma6b1_cover_M.py check --M=3 --h=1.1e-9 --tag=_cert --x=$P                 # PASS, exit 0
+python3 lemma6b1_cover_M.py check --M=3 --h=1.1e-9 --tag=_cert --x=$P --drop=5,6      # FAIL, exit 3
+python3 lemma6b1_cover_M.py c1check --M=3 --h=1.1e-9 --tag=_cert --x=$P               # exit 0
+python3 lemma6b1_cover_M.py c1check --mutate=nov --M=3 --h=1.1e-9 --tag=_cert --x=$P  # must be caught
 ```
