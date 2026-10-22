@@ -34,9 +34,14 @@ def struct(p, jmin=None, m0=0):
 
 
 def desc(p):
-    """(m0, w, {j: ||p_j||_1}) with ||.|| an arb upper bound"""
+    """(m0, w, {j: ||p_j||_1}, {(j, m): |p_jm|}) with arb upper bounds"""
     m0, w, norms = BF.wnorm(p)
-    return dict(m0=m0, w=w, norms=norms)
+    coef = {}
+    for j, q in p.items():
+        for m, cf in enumerate(q.coeffs()):
+            if not (cf == 0):
+                coef[(j, m)] = arb(abs(cf).upper())
+    return dict(m0=m0, w=w, norms=norms, coef=coef)
 
 
 def dmax(a, b):
@@ -46,9 +51,12 @@ def dmax(a, b):
     norms = dict(a["norms"])
     for j, v in b["norms"].items():
         norms[j] = v if j not in norms else (v if v > norms[j] else norms[j])
+    coef = dict(a["coef"])
+    for k, v in b["coef"].items():
+        coef[k] = v if k not in coef else (v if v > coef[k] else coef[k])
     m0 = min(a["m0"], b["m0"])
     w = max(a["w"], b["w"])
-    return dict(m0=m0, w=w, norms=norms)
+    return dict(m0=m0, w=w, norms=norms, coef=coef)
 
 
 def xd(p):
@@ -75,26 +83,34 @@ def atoms(K, rA="0", rW="0"):
     gam = struct(gam, 1, 0)
     D["gamma"] = desc(gam)
     D["xgamma'"] = desc(struct(xd(gam), 1, 2))
+    D["x(xgamma')'"] = desc(struct(xd(xd(gam)), 1, 2))
     D["c-1"] = desc(struct(BF.badd(c, BF.bscale(one, -1)), 1, 0))
     D["xc'"] = desc(struct(xd(c), 1, 2))
+    D["x(xc')'"] = desc(struct(xd(xd(c)), 1, 2))
     D["beta"] = desc(struct(be, 1, 2))
     D["xbeta'"] = desc(struct(xd(be), 1, 2))
+    D["x(xbeta')'"] = desc(struct(xd(xd(be)), 1, 2))
     # beta/x^2
     bx2 = {j: acb_poly(list(q.coeffs())[2:]) for j, q in struct(be, 1, 2).items()}
     D["beta/x2"] = desc(bx2)
     D["xbeta/x2'"] = desc(struct(xd(bx2), 1, 2))
-    for key in ("V", "xV'", "S", "xS'", "S/x2", "x(S/x2)'", "Am", "xA'", "eta", "ne", "rho2", "xrho2'"):
+    D["x(xbeta/x2')'"] = desc(struct(xd(xd(bx2)), 1, 2))
+    for key in ("V", "xV'", "x(xV')'", "S", "xS'", "x(xS')'", "S/x2", "x(S/x2)'", "x(x(S/x2)')'", "Am", "xA'",
+                "x(xA')'", "eta", "ne", "rho2", "xrho2'"):
         D[key] = None
     for mu in (1, -1):
         imw = acb(0, mu) * om
         D["V"] = dmax(D["V"], desc(struct(V[mu], 0, 0)))
         D["xV'"] = dmax(D["xV'"], desc(struct(xd(V[mu]), 1, 2)))
+        D["x(xV')'"] = dmax(D["x(xV')'"], desc(struct(xd(xd(V[mu])), 1, 2)))
         Sm = struct(S[mu], 1, 2)
         D["S"] = dmax(D["S"], desc(Sm))
         D["xS'"] = dmax(D["xS'"], desc(struct(xd(S[mu]), 1, 2)))
+        D["x(xS')'"] = dmax(D["x(xS')'"], desc(struct(xd(xd(S[mu])), 1, 2)))
         Sx2 = {j: acb_poly(list(q.coeffs())[2:]) for j, q in Sm.items()}
         D["S/x2"] = dmax(D["S/x2"], desc(Sx2))
         D["x(S/x2)'"] = dmax(D["x(S/x2)'"], desc(struct(xd(Sx2), 1, 2)))
+        D["x(x(S/x2)')'"] = dmax(D["x(x(S/x2)')'"], desc(struct(xd(xd(Sx2)), 1, 2)))
         # A^K = (n-1) c^2 b + ... = c^2 (1 - eps)/eps + c^2 beta - x^2 (1 + 2 i mu w - beta)
         A = BF.badd(BF.bshift(BF.badd(c2, BF.bscale(BF.bshift(c2, 1), -1)), -1), BF.bmul(c2, be),
                     BF.bscale(x2, -(1 + 2 * imw)), BF.bmul(x2, be))
@@ -102,12 +118,15 @@ def atoms(K, rA="0", rW="0"):
         Am = struct(Am, 0, 0)
         D["Am"] = dmax(D["Am"], desc(Am))
         D["xA'"] = dmax(D["xA'"], desc(struct(xd(A), 0, 2)))
+        D["x(xA')'"] = dmax(D["x(xA')'"], desc(struct(xd(xd(A)), 0, 2)))
         # eta = A - n + 1 + (n - 1) gamma
         eta = BF.badd(Am, one, BF.bshift(gam, -1), BF.bscale(gam, -1))
         eta = struct(eta, 0, 0)
         D["eta"] = dmax(D["eta"], desc(eta))
         ne = BF.badd(BF.bconst(-2 - 2 * imw), be, BF.bmul(c2, bx2))
         D["ne"] = dmax(D["ne"], desc(struct(ne, 0, 0)))
+        D["x(ne)'"] = dmax(D.get("x(ne)'"), desc(struct(xd(ne), 1, 2)))
+        D["x(x(ne)')'"] = dmax(D.get("x(x(ne)')'"), desc(struct(xd(xd(ne)), 1, 2)))
     R = BF.residuals(K, f, P, om, T)
     r2 = None
     xr2 = None
