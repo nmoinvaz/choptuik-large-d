@@ -152,7 +152,11 @@ def known(geo):
     ope = one_plus(geo, e)
     ellx2 = bbK * (k["S/x2"] + DltX * iCK)
     q = ellx2 * E.qinv(ope) * DK * eps1
-    rho2 = cK * k["tauD"] + x * k["xtauv"] + x * k["xc"] * iCK * k["tauv"] + x * cK * Om * iCK * k["tauv"]
+    # rho2 = x^2 M_rho4 C^-1 Y - C tau_D - x^2 tau_v' + x (x c') C^-1 tau_v - x C Om C^-1 tau_v (b8m_identities.py, I1).
+    # The first term comes from x c^K' = [c^K beta^K] + rho4 for the truncated series; it was missing up to commit
+    # 9d6e013 (b8m_identities.py --mutate=rho2old shows the identity failing without it).
+    rho2 = (x2 * k["rho4"] * iCK * k["Y"] + cK * k["tauD"] + x * k["xtauv"] + x * k["xc"] * iCK * k["tauv"]
+            + x * cK * Om * iCK * k["tauv"])
     if MUT == "drop_rho2":
         rho2 = E.const(0)
     rho3 = k["taub"] + bbK * iCK * k["tauv"] * (Dlt + k["Dl"]) * half
@@ -320,7 +324,7 @@ def improve(geo, k, kc, b, verbose=False, full=False):
     bS = max((up(E.bsup_r(loc, r) + gam[r] * E.bsup(integ, PATH_P[r])) for r in XREG), key=float)
     gl = gb.v * B.mono(nf, eN=-1) * iwS
     gi = gb.d * B.mono(nf, eN=-1) * iwS
-    fac = up(1 / n0 + geo.phid)
+    fac = up(nf / n0 + geo.phid)          # radial part: int_0^r (t/r)^(n-1) dt/t = 1/(n-1) <= nf/n_0
     bbn = max((up(E.bsup_r(gl, r) + fac * E.bsup(gi, PATH_Q[r])) for r in XREG), key=float)
     slow = up(arb(1) / (2 * K + 2) + geo.phid)
     bV = up(absw * slow * b["S"])
