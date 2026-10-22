@@ -839,8 +839,452 @@ with the gauge step, which multiplies by $P(\theta)$.
 % =====================================================================================================
 \section{The selection theorem programme}
 \label{sec:layerB}
-% The M-harmonic model; Theorem B(M) given the lemmas; proved lemmas B1, B2, B5.0, B5.1, B8.1, B8.2, B6';
-% what remains (two contractions); gaps (a)--(c); the harmonic tail (B_tail.md).
+
+This section sets out a proof of the selection rule for models with finitely many harmonics, after Xie and
+Tanveer~\cite{XieTanveer2003,Xie2019}, with inner--outer matching after Baldom\'a, Fontich, Guardia and
+Seara~\cite{BaldomaFontichGuardiaSeara}. It states what is proved, what is cited, and what remains (two contraction
+arguments). The details are in the repository's \repo{proof/C\_selection.md}; uniformity in the number of harmonics is
+discussed in Section~\ref{sec:tail}. Throughout this section $z = \xi^2 = x^2/n$.
+
+\subsection{The \texorpdfstring{$M$}{M}-harmonic model and the theorem}
+
+\begin{definition}\label{def:Mmodel}
+For odd $M$ let $P_M$ keep the harmonics $e^{\iu\mu\theta}$ with odd $|\mu| \le M$ for $p, m$ and even $|\mu| \le M - 1$ for
+$b, c$. The \emph{$M$-harmonic model} is \eqref{eq:E12}--\eqref{eq:E4} with $P_M$ applied to every right-hand side. For
+real fields it is a finite analytic system of ODEs in $x$, with $4N + 2(N-1) + 2$ real unknowns, $N = (M+1)/2$.
+\end{definition}
+
+The solvers of~\cite{companion} compute exactly such truncations, so statements about the $M$-harmonic model are
+statements about the systems actually solved, up to the convergence in $M$. $P_M$ commutes with $\partial_\theta$ and
+preserves the parity classes, which is all that the induction of Proposition~\ref{prop:1} uses.
+
+\begin{thmnamed}{B($M$)}\label{thm:B}
+Fix odd $M$ and let $(F_*, \omega_*)$ be a zero of the inner multipliers, $S_\mu(F_*, \omega_*) = 0$ for all odd
+$\mu \le M$, at which the Jacobian of $(\re S_\mu, \im S_\mu)$ with respect to ($F$'s harmonics, $\omega$), with the phase of
+$F_1$ fixed, is invertible. Assume Lemmas~B3($M$), B5($M$) and B6($M$) below in $C^1$ form, and the global continuation
+Lemma~B8($M$). Then:
+\begin{enumerate}[label=(\arabic*),leftmargin=2em]
+\item \emph{Characterization.} For $n \ge n_0$, the centre-regular solution with data $(F_n, \omega)$ near
+$(F_*, \omega_*)$ is analytic at the light cone exactly when, for all odd $\mu \le M$,
+\begin{equation}\label{eq:Cnmu}
+C_{n,\mu}(F_n, \omega) = \kappa_{n,\mu}\,\big[S_\mu(F_n^{(0)}, \omega) + R_{n,\mu}(F_n, \omega)\big] = 0 ,
+\end{equation}
+where $\kappa_{n,\mu} \ne 0$ is explicit, $R_{n,\mu} = O(1/n)$ in $C^1$ uniformly near $(F_*, \omega_*)$, and
+$F_n^{(0)}$ is the leading part of the profile (the corrections $K_k$ enter only through $R$). In the linear case
+$\kappa_{n,\mu} \propto -2\pi\iu\,(n+1)^{s+1/2}e^{-\iu\pi\Lambda_\mu}$, $s = \iu\mu\omega$, as in \eqref{eq:Clarge}, times the
+transport and matching factors.
+\item \emph{Existence and uniqueness of the branch.} There is a unique solution $(F_n, \omega_n)$ of these equations near
+$(F_*, \omega_*)$, with $F_n - F_* = O(1/n)$ and $\omega_n - \omega_* = O(1/n)$. It gives a discretely self-similar solution
+of the $M$-harmonic model, regular at the centre and analytic at the light cone.
+\item \emph{Converse.} If a sequence of such solutions has $(F_n, \omega_n) \to (F_\infty, \omega_\infty)$, then
+$S(F_\infty, \omega_\infty) = 0$.
+\end{enumerate}
+\end{thmnamed}
+
+\begin{proof}[Proof given the lemmas]
+The first equality in \eqref{eq:Cnmu} is the chain: the light-cone coefficient equals $k_{n,\mu}$ times the coefficient of
+the fast mode just inside $x = 1$ (Lemma~B6); this equals $k_{n,\mu}$ times the transport factor times the fast-mode content
+generated on $x > 1$ (Proposition~\ref{prop:3} and the half-monodromy); that content is the outer Stokes jump on the line
+$x > 1$ (Lemmas~B3 and B8); and the outer jump is the matching factor times $[S_\mu + O(1/n)]$ (Lemma~B5 with Lemma~B4).
+Every factor is non-zero and explicit at leading order, and the $O(1/n)$ is uniform in $C^1$. Divide by
+$\kappa_{n,\mu}$. The map $Z \mapsto S(Z) + R_n(Z)$ on a neighbourhood of $Z_* = (F_*, \omega_*)$ in $\mathbb R^{2N}$ is
+$C^1$-close to $S$, which has an invertible derivative at $Z_*$, so the finite-dimensional implicit function theorem (or a
+quantitative inverse-function theorem, since $\|R_n\|_{C^1} = O(1/n)$) gives a unique zero $Z_n$ with
+$|Z_n - Z_*| = O(1/n)$. The converse follows by continuity: $S(Z_n) = -R_n(Z_n) = O(1/n) \to 0$.
+\end{proof}
+
+The correction is $O(1/n)$, not $O(n^{-1/2})$, because the inner variable is $\xi^2 = x^2/n$ and the outer equations depend
+on $n$ only through $n$ and $x^2$ (Lemma~\ref{lem:B50}). The non-degeneracy hypothesis is what layer A certifies
+(Section~\ref{sec:thmA} for $M = 1$); at $M = 5$ the reduced $2\times2$ Jacobian has singular values about
+$6.8\times10^3$ and $3.9\times10^3$ numerically.
+
+Table~\ref{tab:Bstatus} summarizes the status of the lemmas.
+
+\begin{table}[t]
+\caption{The lemmas of Theorem~\ref{thm:B}.}
+\label{tab:Bstatus}
+\footnotesize
+\begin{tabular}{lll}
+\toprule
+Lemma & Content & Status \\
+\midrule
+B1($M$) & formal $1/n$ solution for every $(F, \omega)$ & proved \\
+B2($M$) & slow--fast structure; turning point at $x = \infty$ & proved \\
+B3($M$) & centre-regular solution with Gevrey-1 asymptotics & cited; hypotheses H-a1, H-a2 checked numerically \\
+B4($M$) & inner multipliers well defined & cited (Braaksma) \\
+B5.0 & exact equations $=$ inner problem $+$ corrections in $1/n$ & proved \\
+B5.1 & fast-mode variable and matching factor & proved \\
+B5($M$)(2) & outer jump $= \kappa[S + O(1/n)]$ & proved given B5($M$)(1) \\
+B5($M$)(1) & sectorial identification on $\mathcal M^\pm$ & contraction; proof at appendix level, constants not written \\
+B6$'$, B6($M$) & light-cone matching; Volterra bound & proved, up to a routine block-diagonalization \\
+B8.1, B8.2 & progressive paths; Stokes geometry & proved \\
+B8($M$) & global continuation & contraction, planned \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{The proved lemmas}
+
+\begin{lemnamed}{B1($M$)}\label{lem:B1}
+For every smooth $F$ with odd harmonics $|\mu| \le M$, every $\omega_0$ and every choice of the free data ($\omega_k$ and
+$K_k$, also truncated), the $M$-harmonic model has exactly one formal solution with the structure of
+Proposition~\ref{prop:1}.
+\end{lemnamed}
+
+\begin{proof}
+Repeat the induction of Proposition~\ref{prop:1} with $P_M$ applied to each right-hand side. Steps (1)--(5) use only
+algebraic operations and $\partial_\theta$, integration in $x$, and the parity of $x$-polynomials; $P_M$ acts on the
+$\theta$-dependence only, commutes with all of these, and maps even (odd) $x$-polynomials with periodic coefficients to
+the same class. Step (6) holds because $P_M$ preserves the odd and even harmonic classes.
+\end{proof}
+
+Write the system as $Y_x = n\,\mathcal F_1(x, Y) + \mathcal F_0(x, Y, \partial_\theta Y)$ with $Y = (p, m, b, c)$ and
+$\mathcal F_1$ collecting the terms of order $n$. The slow manifold of the formal solution is $b = 1 + O(\eps^2)$,
+$p + m = O(\eps^{3/2})$.
+
+\begin{lemnamed}{B2($M$)}\label{lem:B2}
+On the slow manifold, the Jacobian of $\mathcal F_1$ with respect to $(p, m, b, c)$ has, for each harmonic, the eigenvalues
+\[
+\lambda_u = \frac{c^2}{x\,(x^2-c^2)}, \qquad \lambda_b = -\frac1x, \qquad 0, \qquad 0 .
+\]
+The $\lambda_u$ eigenvector is the combination $u = p + m$ (with a $b$-component), the $\lambda_b$ eigenvector is $b - 1$,
+and $v = p - m$ and $c$ are slow. At $c = 1$, $\lambda_u = -\Phi'(x)$, the singulant of Proposition~\ref{prop:3}.
+\end{lemnamed}
+
+\begin{proof}
+The terms of order $n$ contain no $\theta$-derivative, so at leading order they act diagonally on harmonics. Read the
+four right-hand sides off the equations as functions of $(p, m, b, c)$, take the Jacobian, divide by $n$, let
+$n \to \infty$ and set $b = 1$, $m = -p$. The result is the list above (computed symbolically,
+\repo{solver/proof/fast\_eigenvalues.py}).
+\end{proof}
+
+Consequently: on $0 < x < 1$ and $1 < x < \infty$ (with $c \approx 1$) the fast eigenvalues are finite and non-zero, so
+there are no turning points on the real axis; $x = 0$ and $x = c(1) = 1$ are doubly singular points of the type
+$\eps\,(x - x_0)\,y' = f$; and $x = \infty$ is a turning point, because $\lambda_u \sim n/x^3$ and $\lambda_b = -n/x$ fall to
+the size $\sim 1/x$ of the slow terms at $x \sim \sqrt n$. That is the inner scaling $\xi = x/\sqrt n$: the inner problem
+is the turning-point equation of this singular perturbation problem, as in Xie and Tanveer's finger and Kruskal and
+Segur's dendrite. At leading order the fast block is $\lambda_u$ times the identity on the $N$ odd harmonics; the
+degeneracy is lifted at order $1$ by the $\theta$-transport and the gravity coupling, which produces the characteristics
+of Proposition~\ref{prop:3} and the matrix structure of the multipliers.
+
+\begin{lemnamed}{B5.0}\label{lem:B50}
+In the inner variables $x = \sqrt n\,\xi$, $y = p - m$, $\sigma = \sqrt n\,(p+m)$, $b = 1 + \eta/n$, with $\nu = n^{-1/2}$ and
+the $p - m$ equation multiplied by $\nu$, the exact equations \eqref{eq:E12}--\eqref{eq:E4} become
+\[
+\mathcal I(Z) + \nu^2\,\mathcal Q_1(Z) + \nu^4\,\mathcal Q_2(Z) = 0, \qquad Z = (y, \sigma, \eta, c),
+\]
+where $\mathcal I$ is the inner problem and $\mathcal Q_1$, $\mathcal Q_2$ are polynomials in $Z$ and its first derivatives.
+Explicitly, the leading parts and the $\nu^2$ corrections are: for the $c$ equation $\xi c_\xi - c\eta$ and $+c\eta$; for
+the $b$ equation $\eta - \tfrac12 y^2$ and $\xi\eta_\xi + \eta^2 - \tfrac12\eta y^2 - \eta - \tfrac12\sigma^2$ (with a $\nu^4$
+term); for the $p - m$ equation $\xi^2 y_\xi + \omega\xi y_\theta - c\sigma$ and $c\,(\sigma - \xi\sigma_\xi - \eta\sigma)$ (with a
+$\nu^4$ term); for the $p + m$ equation $\xi^2\sigma_\xi + \omega\xi\sigma_\theta - c\,\xi y_\xi + c\,(1 - \eta)\,y$ and $c\eta y$.
+Only even powers of $\nu$ occur, and the same holds for the $M$-harmonic model.
+\end{lemnamed}
+
+\begin{proof}
+Direct substitution, done symbolically (\repo{solver/proof/inner\_corrections.py}); projection onto $|\mu| \le M$ commutes
+with every step.
+\end{proof}
+
+With $\eta = \tfrac12 y^2$ the leading equations are \eqref{eq:inner}. The $\eta$ equation is singularly perturbed (its
+$\nu^2$ term contains $\xi\eta_\xi$): this is the $b$ fast mode $\eta \sim x^{-n}$, which is exponentially small in every
+direction for $|x| > 1$, so $\eta$ is slaved to $y$, $\eta = \tfrac12 y^2 + n^{-1}\eta_1 + O(n^{-2})$, and takes part in no
+Stokes phenomenon. A solution of the inner problem therefore solves the exact equations up to $n^{-1}\mathcal Q_1 + O(n^{-2})$,
+and the multipliers receive corrections in integer powers of $1/n$, the first from the linearized inner problem forced
+by $\mathcal Q_1$.
+
+For $|x| > 1$ put $w(x) = -\tfrac12\ln(1 - x^{-2})$.
+
+\begin{lemnamed}{B5.1}\label{lem:B51}
+\begin{enumerate}[label=(\arabic*),leftmargin=2em]
+\item Continuing $\Phi$ from $0 < x < 1$ to $x > 1$ through the upper or the lower half plane gives $\Phi = w \pm \iu\pi/2$, so
+$e^{-n\Phi} = e^{\mp\iu n\pi/2}e^{-nw}$.
+\item With $x^2 = nz$, $nw = \frac1{2z} + \frac1{4nz^2} + \frac1{6n^2z^3} + \dots$, so $e^{-nw} = e^{-1/(2z)}\big(1 + O(1/(n|z|^2))\big)$.
+\item The fast mode of Proposition~\ref{prop:3} contributes to $y$ and $\sigma$ the factors $-2x^2/(x^2-1) = -2(1 + \frac1{nz} + \dots)$
+and $-2\sqrt n\,x/(x^2-1) = -2z^{-1/2}(1 + \frac1{nz} + \dots)$.
+\item Along the characteristic the label continues as
+$\theta_0 = \theta - \omega\ln(1 - x^2) = \theta - 2\omega\ln\xi - \omega\ln n \pm \iu\pi\omega + O(\frac1{nz})$, and the gravity factor
+contains $(1 - x^2)^{\langle F^2\rangle} = e^{\mp\iu\pi\langle F^2\rangle}n^{\langle F^2\rangle}z^{\langle F^2\rangle}(1 - \frac{\langle F^2\rangle}{nz} + \dots)$.
+\end{enumerate}
+Hence, in inner variables, the outer fast mode with label harmonic $\mu$, in the gauge $\tilde A_0 = A_0e^{-\Pi}$, is the inner
+fast mode $e^{-1/(2z)}z^{\langle F^2\rangle}e^{\Pi(\theta)}e^{\iu\mu\theta_0^{\rm in}}$ times
+\begin{equation}\label{eq:kappa}
+\kappa^{\pm}_{n,\mu} = -2\,e^{\mp\iu n\pi/2}\,e^{\mp\iu\pi\langle F^2\rangle}\,n^{\langle F^2\rangle - \iu\mu\omega}\,e^{\mp\pi\mu\omega}\,
+\Big(1 + O\big(\tfrac1{n|z|^2}\big)\Big),
+\end{equation}
+which is explicit and non-zero. In the $M$-harmonic model the scalar $n^{\langle F^2\rangle - \iu\mu\omega}$ becomes the invertible
+matrix $n^{\mathcal G_M}$, with $\mathcal G_M$ the truncated transport generator. At $F = 0$ the factor is $n^{-s}$ times the
+$\sigma$-normalization $n^{1/2}$ and the half-monodromy phase: the large-$n$ form $(n+1)^{s+1/2}$ of the linear $C(n,s)$.
+\end{lemnamed}
+
+\begin{proof}
+(1) For $x > 1$, $1 - x^2 = (x^2-1)e^{\mp\iu\pi}$ on the two continuations, so $-\tfrac12\ln(1-x^2) = -\tfrac12\ln(x^2-1) \pm \iu\pi/2$
+and $\Phi = -\tfrac12\ln(1 - x^{-2}) \pm \iu\pi/2$. (2) $nw = -\tfrac n2\ln\big(1 - \tfrac1{nz}\big) = \tfrac n2\sum_{k\ge1}(nz)^{-k}/k$.
+(3) and (4) follow from $\delta m/\delta p = (1-x)/(1+x)$, from \eqref{eq:transportsol}, and from the same continuation as in
+(1); the expansions are printed by \repo{solver/proof/inner\_corrections.py}. Collecting the factors gives
+\eqref{eq:kappa}.
+\end{proof}
+
+The relative correction in (2) is $O(1/(n|z|^2))$, small only for $|z| \gg n^{-1/2}$, i.e.\ $|x| \gg n^{1/4}$; this sets the
+outer edge of the matching domain of Lemma~B5 below.
+
+\medskip
+\emph{The global geometry.} Fix $\delta \in (0, \tfrac14)$, an angle $\vartheta_0 \in (0, \pi/4)$ and $k_1 > \tfrac12$, and put
+$\alpha_B = \pi/4 + \vartheta_0/2$ and $R_n = (k_1 n/\ln n)^{1/2}$. Define
+\begin{equation}\label{eq:Dn}
+\mathcal D^+_n = \big\{x : 0 < |x| \le R_n,\ 0 \le \arg x \le \alpha_B\big\} \setminus \big\{|x - 1| < \delta/2\big\}, \qquad
+\mathcal D^-_n = \overline{\mathcal D^+_n}.
+\end{equation}
+$\mathcal D^+_n$ contains the segment $(0, 1 - \delta/2]$, an arc around the light cone through the upper half plane, the
+Stokes line $[1 + \delta/2, R_n]$, and, in $z = x^2/n$, the directions $\arg z \in (\pi/2, \pi/2 + \vartheta_0]$ near
+$|z| = k_1/\ln n$, where $e^{-1/(2z)}$ is exponentially large. It avoids $x = \pm1$ and the point $x = c(x) \approx n/F^2$
+beyond $R_n$.
+
+\begin{lemnamed}{B8.1 (progressive paths)}\label{lem:B81}
+For $x \in \mathcal D^+_n$ let $P_x$ be the path from $0$ along the ray $\arg x = \alpha_B$ to radius $|x|$, followed by the arc of
+radius $|x|$ clockwise to $\arg x$. Then $P_x \subset \mathcal D^+_n$, and $\re\Phi$ is non-decreasing along $P_x$; so is the
+real part of the $b$-mode phase $\ln x$.
+\end{lemnamed}
+
+\begin{proof}
+Write $r = |x|$, $\varphi = \arg x$ and $Q = |1 - x^2|^2 = 1 - 2r^2\cos 2\varphi + r^4$, so that $\re\Phi = \ln r - \tfrac14\ln Q$.
+On the ray $\varphi = \alpha_B$, $\partial_r\re\Phi = (1 - r^2\cos 2\alpha_B)/(rQ) > 0$, since $\cos 2\alpha_B < 0$ (this is where
+$\alpha_B > \pi/4$ is used). On the arc, $\partial_\varphi\re\Phi = -r^2\sin 2\varphi/Q < 0$ for $0 < \varphi < \pi/2$, so $\re\Phi$
+increases as $\varphi$ decreases from $\alpha_B$. Since $|re^{\iu\varphi} - 1|$ increases with $\varphi \in [0,\pi]$, the arc
+from $\alpha_B$ down to $\arg x$ stays outside the disc $|x - 1| < \delta/2$ whenever its endpoint $x$ does. Finally
+$\re\ln x = \ln r$ is constant on the arc and increasing on the ray.
+\end{proof}
+
+So every fast Volterra kernel $e^{-n(\Phi(x) - \Phi(x'))}$, with $x'$ before $x$ on $P_x$, has modulus at most $1$; the
+transport factor contributes at most $|x/x'|^{2\re\langle F^2\rangle}$.
+
+\begin{lemnamed}{B8.2 (Stokes geometry)}\label{lem:B82}
+On $\mathcal D^+_n$ the anti-Stokes curve $\re\Phi = 0$ runs from $x = 1/\sqrt2$ to $\infty e^{\iu\pi/4}$, and the only Stokes
+line is $x > 1$, where $\chi = \Phi \mp \iu\pi/2 = w$ is real and positive. Hence the continuation of the centre-regular
+solution through the upper half plane carries no free fast mode on $\mathcal D^+_n$: it has none near the centre, where
+$e^{-n\Phi}$ is exponentially large, and no Stokes line is crossed before $x > 1$ is reached from above. Its light-cone
+singularity is the monodromy of that continuation around $x = 1$, and the difference $Y^+ - Y^-$ of the two continuations
+on $x > 1$ is the Stokes jump; by the half-monodromy it equals $C_n(e^{-\iu\pi\Lambda} - e^{\iu\pi\Lambda})\phi$, with $\phi$ the
+Frobenius branch of Lemma~B6.
+\end{lemnamed}
+
+The light cone is handled by a Volterra bound. Near $x = 1$, with $t = 1 - x$, the transport of Proposition~\ref{prop:3}
+becomes $tA_t = \mathcal T A$ with $\mathcal T = -\omega\partial_\theta - 1 + F(\theta)^2$. Here $F^2$ couples the harmonics at
+order $1$, but the gauge $e^{\Pi}$ removes the coupling exactly: $(-\omega\partial_\theta + F^2)\psi = \lambda\psi$ has the
+periodic solutions $\psi = e^{\Pi(\theta)}e^{\iu\mu\theta}$ with $\lambda = \langle F^2\rangle - \iu\mu\omega$. So, untruncated, the
+light-cone exponents are
+\begin{equation}\label{eq:Lambda}
+\Lambda_\mu = \tfrac n2 - 1 - \iu\mu\omega + \langle F^2\rangle + O(1/n),
+\end{equation}
+and they differ pairwise by the non-zero imaginary amounts $\iu(\nu-\mu)\omega$: no two differ by an integer, for any $n$.
+In the $M$-harmonic model $\mathcal T$ is replaced by its truncation $\mathcal T_0 = P_M\mathcal TP_M$, which breaks the gauge step.
+At the $M = 5$ zero of Section~\ref{sec:trunc}, for $M = 1, 3, 5, 7, 9, 15, 25$, the eigenvalues for the central harmonics
+converge to $\langle F^2\rangle - 1 - \iu\mu\omega$ exponentially in $M$ (errors $10^{-2}$, $2\times10^{-4}$, $3\times10^{-6}$,
+$4\times10^{-8}$ at $M = 3, 5, 7, 9$), the two eigenvalues with $|\mu| = M$ are shifted by about $0.37$, and all pairwise
+differences have $|\im| \ge 6.9$ and $|\re| \le 0.019$ (\repo{solver/proof/lightcone\_exponents.py}).
+
+\begin{lemnamed}{B6$'$ (Volterra bound)}\label{lem:B6p}
+Let $t_0 = \tfrac12$. Split the linearized $M$-harmonic system on $t \in (0, t_0]$ into fast components $a$ (the $p + m$
+direction of Lemma~B2, one per odd harmonic) and slow components $v$ ($p - m$, $b - 1$ and $c$, after eliminating $b - 1$
+along its own fast direction), so that
+\[
+t\,a' = \big(n\,\ell(t)\,I + \mathcal T_0 + t\,\mathcal T_1(t)\big)\,a + t\,\mathcal Q(t)\,v, \qquad v' = \mathcal R(t)\,a + \mathcal S(t)\,v ,
+\]
+with $\ell(t) = t\,\Phi'(1-t) = 1/((1-t)(2-t))$, $\mathcal T_0 + t\mathcal T_1$ the order-$1$ transport, and $\mathcal Q, \mathcal R, \mathcal S$
+analytic and bounded uniformly in $n$. Let $U$ solve $t\,U' = (\mathcal T_0 + t\mathcal T_1)\,U$ exactly and put
+$\psi(t) = \int^t \ell(t')\,\dd t'/t'$. Then for every $\mathbf k \in \mathbb C^N$ there is a solution
+\[
+a = e^{n\psi(t)}\,U(t)\,\big(\mathbf k + r(t)\big), \qquad v = e^{n\psi(t)}\,O(t/n), \qquad \sup_{0 < t \le t_0}|r(t)| \le C|\mathbf k|/n ,
+\]
+with $C$ depending only on $M$, $F$, $\omega$ and $t_0$.
+\end{lemnamed}
+
+\begin{proof}
+(1) $\psi' = \ell/t > 0$ and $e^{n\psi} \sim t^{n/2} \to 0$ as $t \to 0$. (2) Take for $v$ the particular solution
+$v = \int_0^t(\cdots)$, which is fast-type; then $v' = \mathcal Sv + \mathcal R\,e^{n\psi}U(\mathbf k+r)$, and one integration by parts in the
+factor $e^{n\psi}$ gives $v = e^{n\psi}\big[t\,\mathcal RU(\mathbf k+r)/(n\ell) + O(t/n^2)\big]$, using $\ell \ne 0$; the boundary term at
+$t = 0$ vanishes. (3) Substituting the ansatz for $a$, the transport cancels exactly and
+$r' = e^{-n\psi}U^{-1}\mathcal Qv = t\,U^{-1}\mathcal Q\mathcal R U\,(\mathbf k+r)/(n\ell) + O(t/n^2)$. With $U(t) = t^{\mathcal T_0}(I + O(t))$, the
+entries of $U^{-1}(\mathcal Q\mathcal R)U$ are $O(t^{-\rho})$, where $\rho$ is the largest difference of the real parts of the
+eigenvalues of $\mathcal T_0$: $\rho = 0$ untruncated and $\rho \le 0.019$ in the truncations. So
+$|r'| \le C_2\,t^{1-\rho}(|\mathbf k| + |r|)/n$, which is integrable at $0$. (4) With $r(t_0) = 0$, Gronwall's inequality gives
+$|r(t)| \le |\mathbf k|\,\big(e^{C_2 t_0^{2-\rho}/n} - 1\big) \le C|\mathbf k|/n$ uniformly up to $t = 0$.
+\end{proof}
+
+As $t \to 0$, $a \sim t^{n\ell(0)}t^{\mathcal T_0}(\mathbf k + r(0))$, the Frobenius branch with $\Lambda_\mu = n/2 + $ (eigenvalues of
+$\mathcal T_0$). This gives:
+
+\begin{lemnamed}{B6($M$) (light-cone matching)}\label{lem:B6}
+The exact solution of the linearized $M$-harmonic system that agrees at $t_0$ with the WKB fast mode of label harmonic $\mu$
+equals $k_{n,\mu}\phi_\mu$ plus a solution analytic at $x = 1$, where $\phi_\mu = (1-x)^{\Lambda_\mu}(e_\mu + O(1-x))$ is the unique
+(by non-resonance) singular Frobenius branch, and $k_{n,\mu} = k^{(0)}_\mu(1 + O(1/n))$ with $k^{(0)}_\mu \ne 0$ explicit from the
+transport. In the linear case the identification is exact (Propositions~\ref{prop:2}--\ref{prop:3}).
+\end{lemnamed}
+
+What remains in Lemma~B6($M$) is the routine block-diagonalization of the order-$n$ part on $[t_0, 1 - \delta]$ by an
+analytic transformation bounded uniformly in $n$, which exists because the fast eigenvalue there is simple and
+non-vanishing (Lemma~B2).
+
+\subsection{The cited lemmas}
+
+\begin{lemnamed}{B3($M$)}\label{lem:B3}
+Fix $0 < \delta < \tfrac12$ and $(F_n, \omega)$ in a compact set. For $n \ge n_0$ the $M$-harmonic model has a unique solution
+on $0 \le x \le 1 - \delta$ that is regular at the centre, has the prescribed profile $F_n$ (the coefficient of $x$ in
+$p - m$ at $x = 0$) and satisfies $c(1-\delta) = c_{\rm formal}(1-\delta)$. It is asymptotic to the formal solution of
+Lemma~B1 in the Gevrey-1 sense uniformly on $[\delta, 1-\delta]$: the remainder after $K$ terms is at most
+$C\,A^KK!\,\eps^K$.
+\end{lemnamed}
+
+On $[\delta, 1-\delta]$ the fast eigenvalues are bounded away from $0$ and $\infty$ (Lemma~B2), and the theory of singularly
+perturbed analytic systems without turning points gives Gevrey-1 asymptotics and an actual solution exponentially close
+to the optimal truncation~\cite{CanalisDurandRamisSchaefkeSibuya2000}. At $x = 0$ the doubly singular structure
+($\eps x\,u' \approx -u$, invertible) is that of Canalis-Durand, Mozo-Fern\'andez and
+Sch\"afke~\cite{CanalisDurandMozoSchaefke2007} with $\sigma = 1$, $r = 0$, so monomial summability reduces to summability in
+$\eps$. Two things are needed beyond the citations: a written reduction of the mixed slow--fast system (routine, since
+the splitting is block-triangular at leading order), and the uniqueness by a contraction in a weighted space that
+excludes the singular branches $x^{2-n}$ and $x^{-(n-1)}$. For the stronger statement that the centre-regular solution is
+the $1$-sum in $\eps$ along $\arg\eps = 0$, the Borel transform in $\eps$ must have no singularity on the positive real
+axis for $x \in (0,1)$. The $u$-mode singulants $\chi_\ell = \Phi - \iu\pi(\ell + \tfrac12)$ are never there. Two hypotheses
+remain:
+\begin{itemize}
+\item[(H-a1)] the Borel singularities of the $b$-mode stay off $\mathbb R^+$ for $x \in (0,1)$ (its own singulants are
+$\ln x - \iu\pi(\ell + \tfrac12)$, whose imaginary part never vanishes); and
+\item[(H-a2)] the $x$-independent singularities of modulus about $0.13$ in the nonlinear outer late orders are not on
+$\mathbb R^+$.
+\end{itemize}
+Both were checked numerically (\repo{solver/proof/outer\_borel.py}): the outer recursion run to order $36$ with
+$F = 2.72\sin\theta$, $\omega = \winf$, and the nearest Borel singularities read off as poles of diagonal Pad\'e approximants
+(with Froissart doublets, pole--zero distance below $10^{-4}$ relative, discarded). For $M = 1$, $3$, $5$, $7$ the four
+nearest genuine singularities have moduli $1.44$--$1.86$, $0.66$--$0.88$, $0.45$--$0.54$ and $0.31$--$0.46$, with smallest
+$|\arg|$ equal to $0.51\pi$, $0.60\pi$, $0.57\pi$ and $0.58\pi$; untruncated, moduli $0.19$--$0.42$ and smallest $|\arg| = 0.48\pi$.
+The second-order singularity at $2\Phi(x)$, which would sit on $\mathbb R^+$ for $x > 1/\sqrt2$, is absent: the effective
+radius of the outer series varies smoothly through $x = 1/\sqrt2$. This is evidence within the resolved Borel disc, not a
+proof.
+
+\begin{lemnamed}{B4($M$)}\label{lem:B4}
+For fixed $M$, $F$ and $\omega$, the inner problem \eqref{eq:inner}, written for the harmonic components of
+$y = \xi\,\mathsf Y(z)$, $\sigma = \xi^2\,\mathsf\Sigma(z)$, $c = \mathsf C(z)$, is a finite system $z^2\,\dd\mathsf Z/\dd z = H(z, \mathsf Z)$ with $H$
+polynomial, $z = 0$ being an irregular singular point of Poincar\'e rank $1$. Its formal power-series solution with
+$\mathsf Y(0) = 2F$, $\mathsf C(0) = 1$ is $1$-summable in every direction except $\arg z = 0$~\cite{Braaksma1992}, its only
+exponential being $e^{-1/(2z)}$. The multipliers $S_\nu(F, \omega)$ of Definition~\ref{def:mult} are therefore well defined.
+\end{lemnamed}
+
+The first equation is $2z\mathsf Y_z + (1 + \iu\mu\omega)\mathsf Y = (\mathsf C\mathsf\Sigma)_\mu$, regular-singular; the $c$ equation
+$\mathsf C_z = \tfrac14(\mathsf C\mathsf Y^2)$ is regular; and eliminating $\mathsf Y_z$ from the second equation leaves
+$2z^2\mathsf\Sigma_z = (\mathsf C^2\mathsf\Sigma)_\mu + O(z)$. Braaksma's theorem needs only a meromorphic system and a formal
+power-series solution. Costin's sharper rank-one theorems~\cite{Costin1998} do not apply as stated, because the fast
+eigenvalue is repeated across harmonics and the slow directions have eigenvalue $0$; they are not needed, because only
+the formal power series, not a general transseries, is summed. The repeated eigenvalue makes the first exponential term
+a vector over harmonics: its $N$ complex coefficients are the $S_\nu$, the count the selection needs. Whether
+Braaksma's statement covers the parameter-analytic dependence of the sums used in Theorem~\ref{thm:B} remains to be checked
+against~\cite{Braaksma1992} or~\cite{Balser2000}.
+
+\subsection{What remains: two contractions}
+Fix $\tfrac14 < \varpi < \tfrac12$, with $\vartheta_0$ and $k_1$ as above, and let
+\[
+\mathcal M^+ = \big\{z : n^{-1+2\varpi} \le |z| \le k_1/\ln n,\ 0 \le \arg z \le \pi/2 + \vartheta_0\big\}, \qquad \mathcal M^- = \overline{\mathcal M^+},
+\]
+which is $n^{\varpi} \le |x| \le R_n$, $0 \le \arg x \le \alpha_B$, a subset of $\mathcal D^+_n$. On $\mathcal M^\pm$ the corrections of
+Lemmas~B5.0 and B5.1 have relative size at most $n^{1-4\varpi} \to 0$. By Braaksma's theorem the inner formal solution
+has two lateral sums, $Z^+_{\rm in}$ analytic and asymptotic to the series on $-\pi/2 < \arg z < 5\pi/2$ and $Z^-_{\rm in}$ on
+$-5\pi/2 < \arg z < \pi/2$; $Z^+_{\rm in}$ is characterized by being asymptotic to the series where $e^{-1/(2z)}$ is
+exponentially large, $\pi/2 < \arg z \le \pi/2 + \vartheta_0$.
+
+\begin{lemnamed}{B5($M$)}\label{lem:B5}
+Let $Y^\pm_{\rm out}$ be the continuations of the centre-regular solution through the upper and lower half planes, written in
+inner variables on $\mathcal M^\pm$, and let $m(z)$ be the size of $Z_{\rm in}$.
+\begin{enumerate}[label=(\arabic*),leftmargin=2em]
+\item \emph{Sectorial identification.} $Y^\pm_{\rm out} = Z^\pm_{\rm in} + W^\pm$ on $\mathcal M^\pm$, with
+$|W^\pm(z)| \le C\,m(z)/(n|z|^2)$, $C$ depending on $M$, $\varpi$, $\vartheta_0$, $k_1$ and a compact set of $(F, \omega)$.
+\item \emph{The jump.} On $\arg z = 0$, $Y^+_{\rm out} - Y^-_{\rm out}$ is a fast-type solution of the variational equation whose
+label function has $\mu$-th coefficient
+$J_{n,\mu} = \kappa_{n,\mu}\big[S_\mu(F,\omega) + O\big(n^{-1+1/(2k_1)}(\ln n)^2\big)\big]$, uniformly in $C^1$; including the first
+inner correction, the bracket is $S_\mu + n^{-1}S^{(1)}_\mu + O(n^{-2+1/(2k_1)}(\ln n)^2)$, i.e.\ $S_\mu + O(1/n)$.
+\end{enumerate}
+\end{lemnamed}
+
+Part (2) is proved given part (1). Both jumps are fast-type: $\Delta_{\rm in} = Z^+_{\rm in} - Z^-_{\rm in} =
+e^{-1/(2z)}z^{\langle F^2\rangle}e^{\Pi}k_{\rm in}(\theta_0)(1 + O(z))$ with $k_{\rm in} = S$, and $\Delta_{\rm out}$ has the same form up to
+the factor \eqref{eq:kappa}. At the evaluation point $z_* = k_1/\ln n$ on $\arg z = 0$, $|e^{-1/(2z_*)}| = n^{-1/(2k_1)}$, small
+only polynomially, so
+\[
+k_{\rm out} - k_{\rm in} = \frac{(W^+ - W^-)(z_*)}{e^{-1/(2z_*)}z_*^{\langle F^2\rangle}} + k\cdot O\Big(\frac{(\ln n)^2}{n}\Big)
+= O\big(n^{-1+1/(2k_1)}(\ln n)^2\big)
+\]
+by part (1), which is $o(1)$ since $k_1 > \tfrac12$. Translating to outer label harmonics multiplies by $\kappa_{n,\mu}$, and
+replacing $Z_{\rm in}$ by $Z_{\rm in} + n^{-1}Z^{(1)}$ gains a factor $1/n$. Part (1) is a contraction for $W$ in the norm
+$\sup_{\mathcal M^\pm} n|z|^2|W(z)|/m(z)$: $W$ solves $\mathcal LW = r + N(W)$ with $\mathcal L$ the inner variational operator,
+$|r| \le Cm/(n|z|^2)$ and $N$ quadratic; its data at the small-$|z|$ edge come from fixed-order truncations of the outer and
+inner series, which agree to $O(n^{-N})$ for any $N$ (no exponentially small information is used); fast components are
+integrated along progressive paths (ray $\arg z = \pi/2 + \vartheta_0$, then an arc), on which the kernels
+$\exp(\tfrac1{2z'} - \tfrac1{2z})$ have modulus at most $1$, gaining a factor $O(|z|) \le O(k_1/\ln n)$; and the identification
+uses that neither $Y^+_{\rm out}$ (Lemma~B8) nor $Z^+_{\rm in}$ has exponentially large fast content on $\arg z = \pi/2 + \vartheta_0$.
+The constants have not been written out; the gain $O(k_1/\ln n)$ is enough for $n \ge n_0$ but makes them poor, as in the
+logarithmic losses of~\cite{BaldomaFontichGuardiaSeara}.
+
+\begin{lemnamed}{B8($M$) (global continuation)}\label{lem:B8}
+For each $K_0 \ge K_*$ and $n \ge n_0$ the centre-regular solution continues analytically to $\mathcal D^\pm_n$, and there
+\[
+Y^\pm(x) = \sum_{k \le K_0}\eps^k\,Y_k(x) + R^\pm(x), \qquad |R^\pm(x)| \le C_{K_0}\,(1 + |x|)\Big(\frac{(1+|x|)^2}{n}\Big)^{K_0+1},
+\]
+with $Y_k$ the polynomial coefficients of Proposition~\ref{prop:1}, of degree at most $2k+1$.
+\end{lemnamed}
+
+On $\mathcal D^\pm_n$ the ratio $(1+|x|)^2/n \le 2k_1/\ln n$ is small, so $Y^\pm$ has no exponentially large fast content, and
+its error at the small-$|z|$ edge of $\mathcal M^\pm$ is polynomially small, which is what Lemma~B5(1) uses. The plan is a
+contraction in the norm $\sup_{\mathcal D^\pm_n}|R|/[(1+|x|)((1+|x|)^2/n)^{K_0+1}]$: the fast components ($p + m$ per harmonic, and
+$b - 1$) are integrated along the paths of Lemma~B8.1, gaining $1/(n|\Phi'(x)||x|) \sim |x|^2/n \le k_1/\ln n$ at large $|x|$
+and $O(1/n)$ on bounded sets; the slow components are integrated from $x = 0$, where regularity fixes them; the transport
+loss $|x/x'|^{2\re\langle F^2\rangle}$ is dominated by the growth $|x'|^{2K_0+3}$ of the forcing once
+$2K_0 + 3 > 2\re\langle F^2\rangle + 1$, which fixes $K_*$ ($K_* = 3$ for $\langle F^2\rangle \approx 3.7$); and near the excluded disc
+the structure is Lemma~B6, the light-cone term on $|x - 1| = \delta/2$ being of size $(\delta/2)^{n/2}$. No Gevrey bound uniform
+up to $|x| \sim R_n$ is needed, because the exponentially small information enters only at the evaluation point $z_*$.
+
+So what stands between these lemmas and Theorem~\ref{thm:B} for each fixed $M$ is: the two contractions with explicit
+constants, Lemma~B8($M$) on $\mathcal D^\pm_n$ and Lemma~B5($M$)(1) on $\mathcal M^\pm$; an analytic description of the outer Borel
+plane that turns (H-a1) and (H-a2) from numerics into a lemma; and the citation checks noted above (the mixed slow--fast
+version of Lemma~B3 and the parameter-analyticity in Lemma~B4).
+
+\subsection{Gap (b): the harmonic tail}
+\label{sec:tail}
+Every constant above depends on $M$. The selection theorem for the full problem needs them uniform in $M$, or a
+formulation in a space of functions analytic in a $\theta$-strip, as in Costin and Tanveer's Borel summability for
+PDEs~\cite{CostinTanveer2007}. The repository's analysis of this gap (\repo{proof/B\_tail.md}) finds it real but not fatal,
+and narrower than its statement in Section~\ref{sec:inner}:
+\begin{itemize}
+\item \emph{The weights cancel in the tuned problem.} Stated without harmonics, the condition is $S \equiv 0$ on the real
+label circle, and it involves $F$ only on the real line. The weights $e^{\pi|\nu|\omega/2}$ are the linear connection
+coefficients of each label harmonic: they multiply zero in $S \equiv 0$, and they cancel in each tuning equation, because the
+free and the forced parts of $S_\nu$ are jumps of the same mode, so that $f_\nu = -(\text{forced jump})/(2\times\text{linear
+coefficient})$ is an $O(1)$ functional of the lower harmonics. In the amplitude expansion of Section~\ref{sec:amp} the
+leading tuning ratio $q_\nu = f_{\nu+2}/f_\nu$ is independent of $\nu$ to six digits, $q_\infty = 0.008524 + 0.000808\iu$
+($|q|A^2 = 0.0633$), with no trace of the factor $e^{2\cdot6.004} = 1.6\times10^5$; the tuned profile decays by $0.0574$ per pair
+of harmonics, i.e.\ it is analytic on $|\im\theta| < \sigma_F = 1.428$; and the neighbour-family amplitudes in the late orders
+fall by $10^4$--$10^8$ per pair of harmonics instead of growing by about $25$.
+\item \emph{Naive truncation brings the weights back.} Projecting the amplitude recursion onto $|\mu| \le M$ changes $\sigma_M$
+by about $5\times10^{-4}$, as order counting predicts, but gives $\sigma_{M+1}$ too large by a factor $10^4$--$10^6$ ($-399$ at
+$M = 3$, $-1371$ at $M = 5$). A tail lemma must therefore be stated for the \emph{jump-conditioned} truncation ($S_3 = \dots = S_M = 0$
+imposed and the higher labels eliminated by a Schur complement), whose sequence converges (Section~\ref{sec:trunc}), not for a
+Galerkin projection of the equations.
+\item \emph{The tail size looks provable.} The jump-conditioned sequence alternates and shrinks by a ratio of $-0.045$ to
+$-0.057$ per pair, the profile's own decay times a coupling of $0.7$--$1.0$. That puts the tail above $M = 5$ at about $4$--$6$
+in the harmonic-1 residual $r_1$, above $M = 7$ at $0.2$--$0.35$, and above $M = 9$ at about $0.015$; a certified box of radius
+$10^{-3}$ needs the tail below about $4$, so with $M = 7$ explicit the margin is about $13$. Even a proven ratio of $0.25$ per
+pair would suffice.
+\item \emph{A framework.} For $0 < \varsigma < \sigma_F$ let $X_\varsigma$ be the odd trigonometric series with
+$\|F\|_\varsigma = \sum_\nu|F_\nu|e^{\varsigma|\nu|} < \infty$, an algebra of functions analytic on $|\im\theta| < \varsigma$, with
+the multipliers measured in the dual weights. At leading order the tuning map is the weighted shift $f_{\nu+2} = q_\infty A^2f_\nu$,
+of norm $0.0633\,e^{2\varsigma}$ on $X_\varsigma$, which is below $1$ for $\varsigma < 1.380$ (e.g.\ $0.47$ at $\varsigma = 1$). The target
+is then: \emph{in $X_\varsigma$ with $\varsigma \approx 1$, $\|(I - P_M)F\|_\varsigma \le C_1(|q_\infty|A^2e^{2\varsigma})^{(M+1)/2}$, and the
+residual of the jump-conditioned $M$-harmonic problem differs from the untruncated one by at most
+$L\,\|(I - P_M)F\|_\varsigma$, with explicit $C_1, L$ such that the bound at $M = 7$ is below about $2$.} The first half is a
+contraction estimate; the second, with $L$ estimated for the tuned system, is the genuinely new part.
+\item \emph{Secondary Stokes lines.} A singularity of $F$ at $\im\theta = \pm1.428$ reaches complex $\xi$ along
+$\arg\xi \to \mp0.374$ for large $|\xi|$, inside the sector between the Stokes and anti-Stokes lines, so in principle the
+continuation of the inner solution can meet singularities that are not those of the fast mode. At each finite order in
+the amplitude they are absent, since every order is a trigonometric polynomial; where these singular strings sit at
+$|\xi| = O(1)$ has not been computed, and a proof should define $S_1$ order by order in $A^2$ and sum in $A^2$ last.
+\end{itemize}
 
 % =====================================================================================================
 \section{Theorem A(\texorpdfstring{$M=1$}{M=1}): a computer-assisted proof}
