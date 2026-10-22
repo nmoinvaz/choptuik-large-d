@@ -42,7 +42,10 @@ With λ∞ = 2 fixed,
 
 ## 2. What the literature says
 
-- **Rozali and Way**, "Gravitating scalars and critical collapse in the large D limit", arXiv:1807.10283 (2018). At
+- **Rozali and Way**, "Gravitating scalars and critical collapse in the large D limit", arXiv:1807.10283 (2018); published
+  as "Gravitating scalar stars in the large D limit", JHEP 11 (2018) 106. Their leading-order large-D equations are
+  the inner problem of §3 in other variables (see §3), and they noted that the equations are parabolic with the roles of
+  space and time swapped. At
   large D, with rescaled time √D t, they find a family of "oscillaton" solutions labelled by an amplitude ε, whose metric
   function diverges where $`\varepsilon^2 e^{-r^2} = 1`$. Using the divergence radius as a proxy for the black-hole size,
   $`r_{\rm div} = \sqrt{2(\varepsilon - 1)} + O((\varepsilon-1)^{3/2})`$, hence γ = 1/2. They call this suggestive: the
@@ -88,7 +91,10 @@ Y_t = c\,S, \qquad S_t = c\Big(Y_s + \frac{Y^3}{4}\Big), \qquad c_s = \frac{c\,Y
 ```
 
 This is a nonlinear heat equation, $`Y_s = c^{-1}\partial_t(c^{-1}\partial_t Y) - Y^3/4`$, whose "time" is s = r²/(2n) and
-whose "space" is the physical time t. Two known facts fit this picture. The self-similar variable of a heat equation is
+whose "space" is the physical time t. It is Rozali and Way's leading-order flat-space system (their Sec. 2.2), who
+noted this parabolic character: with their (r, √D t) as our (ρ, t) and their 1 − δ₀ as our c², their equations read
+φ_s = c⁻¹∂_t(c⁻¹φ_t) and c_s = φ_t²/c, and Y = 2φ_t/c, S = Y_t/c satisfy the system above identically
+(`solver/inner_pert/rw_map.py`). What follows, the symmetry argument for the DSS solution, is new here. Two known facts fit this picture. The self-similar variable of a heat equation is
 t/√s, here −1/ξ, and the linear inner problem is indeed Hermite's (Weber's) equation. The fast mode of the inner problem,
 $`e^{-1/(2\xi^2)} = e^{-t^2/(4s)}`$, is the heat kernel.
 
@@ -156,8 +162,8 @@ This matches the data, λ = 2 + 3.0324/n.
 
 **The physical picture.** In the inner region the collapse is diffusion in s = r²/(2n). The unstable mode moves the
 solution along s, so a supercritical evolution forms its horizon at $`s_{\rm BH} \propto (p - p_*)`$, i.e.
-$`r_{\rm BH} \propto (p - p_*)^{1/2}`$. This is Rozali and Way's $`r_{\rm div} = \sqrt{2(\varepsilon-1)}`$, now for the DSS
-solution and from an exact symmetry.
+$`r_{\rm BH} \propto (p - p_*)^{1/2}`$. This is the DSS counterpart of Rozali and Way's $`r_{\rm div} = \sqrt{2(\varepsilon-1)}`$,
+from an exact symmetry; γ∞ = 1/2 follows given Conjecture 1, the uniqueness of the unstable mode and continuity of λ(D).
 
 **The one-harmonic model's 1.765.** There λ = 2 is not a root, for two reasons:
 - the model's background is not the D = ∞ solution (its ω is 22% low);

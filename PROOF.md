@@ -4,8 +4,8 @@ This page is a roadmap for turning Conjecture 1 of the [README](README.md#large-
 into a theorem: at D = ∞ the echo frequency ω∞ = 2π/Δ∞ is selected by the vanishing of the Stokes multipliers of the
 n-free inner problem. It says what is already proved here, which existing theorems and techniques supply the remaining
 steps, what is genuinely new, and in what order to attack it. It is written by Claude (Anthropic) under Nathan
-Moinvaziri's direction and has not been reviewed by a mathematician; the citations marked *(from memory)* should be
-checked against the published records.
+Moinvaziri's direction and has not been reviewed by a mathematician. Its citations were checked against published records
+([notes/REF_CHECK.md](notes/REF_CHECK.md)); the few that could not be confirmed are marked *(unverified)*.
 
 Contents
 
@@ -43,7 +43,9 @@ Contents
   for the untruncated multiplier; (B) the selection theorem for large n, first for a model with finitely many harmonics,
   then in a weighted space of functions analytic in a θ-strip; (C) then follows as a corollary of (B), with no further
   numerics. (A) is a substantial but standard computer-assisted proof; (B) is a research-level paper in exponential
-  asymptotics; together they would be the first rigorous derivation of a critical-collapse echo period.
+  asymptotics; together they would derive a critical-collapse echo period, the large-D limit Δ∞, rigorously from a
+  limiting problem. (A single finite-D echo period has already been enclosed rigorously: Reiterer and Trubowitz's
+  computer-assisted existence proof of the D = 4 solution encloses Δ to about 80 digits.)
 - **A new structural fact that helps both:** the amplitude-series coefficients satisfy
   |σ_k/σ_{k+1}| ≈ 0.60 k + 2.5 with remarkable regularity (k = 3–11, `solver/proof/feasibility.py`), so S₁(·, ω) is,
   numerically, an *entire* function of x = A² of order 1 and exponential type (about 1.67 in x;
@@ -101,18 +103,18 @@ coefficient, is proved. Everything nonlinear is open.
 
 | Work | What it proves | How it maps onto this problem |
 |---|---|---|
-| Kruskal & Segur, *Asymptotics beyond all orders in a model of crystal growth*, Stud. Appl. Math. 85 (1991) 129–181 *(from memory)* | the formal selection mechanism: a solution exists only if an exponentially small term, the Stokes multiplier of an inner equation near a complex singularity, vanishes | the same mechanism; our inner problem plays the role of their inner equation, and our light cone that of their symmetry condition |
-| Combescot, Dombre, Hakim, Pomeau & Pumir, PRL 56 (1986) 2036; Hong & Langer, PRL 56 (1986) 2032; Tanveer, Phys. Fluids 30 (1987) 1589 *(from memory)* | finger-width selection in Hele-Shaw flow by the zeros of an inner Stokes multiplier (formal) | a selected continuous parameter (finger width λ ↔ our ω) from the discrete zeros of S |
-| Xie & Tanveer, *Rigorous results in steady finger selection in viscous fingering*, Arch. Ration. Mech. Anal. 166 (2003) 219–286; Tanveer & Xie, *Analyticity and nonexistence of classical steady Hele-Shaw fingers*, Comm. Pure Appl. Math. 56 (2003) 353–402 *(from memory)* | the rigorous version: a steady finger exists for small surface tension iff the inner Stokes multiplier vanishes; at a simple zero the implicit function theorem gives the selected width | the template for Theorem B: weighted spaces of functions analytic in a complex domain, contraction for a "half problem" without the symmetry condition, then the symmetry condition ⇔ S = 0, then the IFT |
-| Xie, *Rigorous results in existence and selection of Saffman–Taylor fingers by kinetic undercooling*, arXiv:1610.00076 | the same for a variant where the coefficients are non-analytic at the tip; Theorem 1.11 there gives Im ψ₀ ~ S̃(α)e^(−η), and S̃(β₀) = 0, S̃′(β₀) ≠ 0 gives the selected branch by the IFT | the closest modern statement of "existence ⇔ S = 0 at a simple zero"; also how to handle Stokes lines meeting a non-analytic point (our light cone is a regular singular point, gap (c)) |
-| Xie, *Rigorous results in selection of steady needle crystals*, J. Differential Equations 197 (2004) 349–426 *(from memory)* | dendrite selection with anisotropic surface tension | a second instance of the same proof architecture |
-| Costin, *On Borel summation and Stokes phenomena for rank-1 nonlinear systems of ordinary differential equations*, Duke Math. J. 93 (1998) 289–344, arXiv:math/0608408; Costin, *Asymptotics and Borel summability*, CRC 2008 *(from memory)* | formal transseries solutions of analytic rank-one nonlinear ODE systems are Borel summable; resummed transseries are exactly the solutions decaying in sectors; the Stokes phenomenon as a change of transseries constant across a Stokes line | gap (a) for each fixed harmonic truncation: the inner problem at ξ → ∞ is (after t = 1/ξ) a rank-one irregular singular point; its fast mode $`e^{-1/(2\xi^2)}`$ is the exponential, and S is the Stokes constant in Costin's sense |
-| Costin & Tanveer, *Nonlinear evolution PDEs in R⁺ × C^d: existence and uniqueness of solutions, asymptotic and Borel summability properties*, Ann. IHP (C) 24 (2007) 795–823 *(journal details from memory)*; *Borel summability of Navier–Stokes equation in R³ and small time existence*, arXiv:math/0612063 | Borel summability for PDEs with data analytic in a strip, with weighted-Fourier-space norms | the tool for gap (b): treat the θ-dependence in a space of functions analytic on a strip $`\lvert\mathrm{Im}\,\theta\rvert\lt\sigma`$ instead of harmonic by harmonic |
-| Chapman, King & Adams, *Exponential asymptotics and Stokes lines in nonlinear ordinary differential equations*, Proc. R. Soc. A 454 (1998) 2733–2755 *(details from memory)* | the late-order (Dingle) method for nonlinear ODEs: singulant, prefactor, Stokes switching | the formal backbone of Proposition 4 and the outer–inner matching; already used here |
+| Kruskal & Segur, *Asymptotics beyond all orders in a model of crystal growth*, Stud. Appl. Math. 85 (1991) 129–181 | the formal selection mechanism: a solution exists only if an exponentially small term, the Stokes multiplier of an inner equation near a complex singularity, vanishes | the same mechanism; our inner problem plays the role of their inner equation, and our light cone that of their symmetry condition |
+| Combescot, Dombre, Hakim, Pomeau & Pumir, PRL 56 (1986) 2036; Hong & Langer, PRL 56 (1986) 2032; Tanveer, Phys. Fluids 30 (1987) 1589 *(Tanveer unverified)* | finger-width selection in Hele-Shaw flow by the zeros of an inner Stokes multiplier (formal) | a selected continuous parameter (finger width λ ↔ our ω) from the discrete zeros of S |
+| Xie & Tanveer, *Rigorous results in steady finger selection in viscous fingering*, Arch. Ration. Mech. Anal. 166 (2003) 219–286; Tanveer & Xie, *Analyticity and nonexistence of classical steady Hele-Shaw fingers*, Comm. Pure Appl. Math. 56 (2003) 353–402 | the rigorous version: a steady finger exists for small surface tension iff the inner Stokes multiplier vanishes; at a simple zero the implicit function theorem gives the selected width | the template for Theorem B: weighted spaces of functions analytic in a complex domain, contraction for a "half problem" without the symmetry condition, then the symmetry condition ⇔ S = 0, then the IFT |
+| Xie, *Rigorous results in existence and selection of Saffman–Taylor fingers by kinetic undercooling*, arXiv:1610.00076 | the same for a variant where the coefficients are non-analytic at the tip; Theorems 1.11–1.12 there give Im ψ₀ ~ S̃(α)e^(−η), and S̃(β₀) = 0, S̃′(β₀) ≠ 0 gives the selected branch by the IFT | the closest modern statement of "existence ⇔ S = 0 at a simple zero"; also how to handle Stokes lines meeting a non-analytic point (our light cone is a regular singular point, gap (c)) |
+| Xie, *Rigorous results in selection of steady needle crystals*, J. Differential Equations 197 (2004) 349–426 *(unverified)* | dendrite selection with anisotropic surface tension | a second instance of the same proof architecture |
+| Costin, *On Borel summation and Stokes phenomena for rank-1 nonlinear systems of ordinary differential equations*, Duke Math. J. 93 (1998) 289–344, arXiv:math/0608408; Costin, *Asymptotics and Borel summability*, CRC 2008 | formal transseries solutions of analytic rank-one nonlinear ODE systems are Borel summable; resummed transseries are exactly the solutions decaying in sectors; the Stokes phenomenon as a change of transseries constant across a Stokes line | gap (a) for each fixed harmonic truncation: the inner problem at ξ → ∞ is (after t = 1/ξ) a rank-one irregular singular point; its fast mode $`e^{-1/(2\xi^2)}`$ is the exponential, and S is the Stokes constant in Costin's sense |
+| Costin & Tanveer, *Nonlinear evolution PDEs in R⁺ × C^d: existence and uniqueness of solutions, asymptotic and Borel summability properties*, Ann. IHP (C) 24 (2007) 795–823; *Borel summability of Navier–Stokes equation in R³ and small time existence*, arXiv:math/0612063 | Borel summability for PDEs with data analytic in a strip, with weighted-Fourier-space norms | the tool for gap (b): treat the θ-dependence in a space of functions analytic on a strip $`\lvert\mathrm{Im}\,\theta\rvert\lt\sigma`$ instead of harmonic by harmonic |
+| Chapman, King & Adams, *Exponential asymptotics and Stokes lines in nonlinear ordinary differential equations*, Proc. R. Soc. A 454 (1998) 2733–2755 | the late-order (Dingle) method for nonlinear ODEs: singulant, prefactor, Stokes switching | the formal backbone of Proposition 4 and the outer–inner matching; already used here |
 | Baldomá, Fontich, Guardia & Seara, *Exponentially small splitting of separatrices beyond Melnikov analysis: rigorous results*, arXiv:1201.5152 | rigorous matching of inner-equation solutions to outer approximations; the difference of two inner solutions replaces the Melnikov integral | rigorous inner–outer matching (lemma B.3) |
 | Baldomá, Capiński, Guardia & Seara, *Breakdown of heteroclinic connections in the analytic Hopf-zero singularity: rigorous computation of the Stokes constant*, arXiv:2206.13840 | a computer-assisted proof of the value and non-vanishing of the Stokes constant of an inner equation: existence domains for the inner solutions, explicit operator bounds, fixed points, rigorous bounds | the template for Theorem A (with the difference that we need a *zero* of a multiplier, certified by an interval Newton/Krawczyk test, not a non-zero value) |
-| Lombardi, *Oscillatory integrals and phenomena beyond all algebraic orders*, Lecture Notes in Math. 1741, Springer 2000 *(from memory)* | rigorous beyond-all-orders analysis for reversible systems: existence of homoclinic or generalized solitary waves iff an exponentially small coefficient vanishes | another rigorous instance of "existence ⇔ exponentially small coefficient = 0", for a problem with an oscillatory (θ-like) component |
-| Reiterer & Trubowitz, *Choptuik's critical spacetime exists*, arXiv:1203.3766 | computer-assisted existence of a real-analytic discretely self-similar solution of the 4D Einstein–scalar equations near the past light cone, from a Fourier–Chebyshev approximate solution by a contraction argument with exact rational arithmetic; K (Δ = 2K) enclosed to 80 digits | proves that finite-D critical solutions can be certified; layer C can use the same method at a few finite D to identify the computed branch, and its high/low-frequency split is a model for the harmonic-tail bound in A.3 |
+| Lombardi, *Oscillatory integrals and phenomena beyond all algebraic orders*, Lecture Notes in Math. 1741, Springer 2000 | rigorous beyond-all-orders analysis for reversible systems: existence of homoclinic or generalized solitary waves iff an exponentially small coefficient vanishes | another rigorous instance of "existence ⇔ exponentially small coefficient = 0", for a problem with an oscillatory (θ-like) component |
+| Reiterer & Trubowitz, *Choptuik's critical spacetime exists*, Commun. Math. Phys. 368 (2019) 143, arXiv:1203.3766 | computer-assisted existence of a real-analytic discretely self-similar solution of the 4D Einstein–scalar equations near the past light cone, from a Fourier–Chebyshev approximate solution by a contraction argument with exact rational arithmetic; K (Δ = 2K) enclosed to 80 digits | proves that finite-D critical solutions can be certified; layer C can use the same method at a few finite D to identify the computed branch, and its high/low-frequency split is a model for the harmonic-tail bound in A.3 |
 | Gundlach, *The Choptuik spacetime as an eigenvalue problem*, gr-qc/9507054 | the formulation of the DSS solution as a nonlinear eigenvalue problem for Δ, with regularity at the centre and the light cone | the formulation used by both solvers here; the "eigenvalue" is selected by analyticity at the light cone, exactly the condition C = 0 |
 | Chatzikaleas, Donninger & Glogić, *On blowup of co-rotational wave maps in odd space dimensions*, arXiv:1701.05082 (and Donninger–Schörkhuber's method it builds on) | nonlinear asymptotic stability of self-similar blowup solutions in similarity coordinates | the functional-analytic setting (similarity coordinates, light cone as a boundary) for perturbations; relevant to γ (λ∞ = 2), not to the selection itself |
 
@@ -377,41 +379,42 @@ B, Tanveer or Costin.
 
 ## References
 
-Citations confirmed against arXiv abstracts during this write-up carry their arXiv number; those marked *(from memory)*
-should be checked.
+Citations confirmed against arXiv abstracts during this write-up carry their arXiv number. All entries were then checked
+against publisher, arXiv or catalogue records ([notes/REF_CHECK.md](notes/REF_CHECK.md)); the three still marked
+*(unverified)* could not be confirmed there.
 
 - O. Costin, *On Borel summation and Stokes phenomena for rank-1 nonlinear systems of ordinary differential equations*,
-  Duke Math. J. 93 (1998) 289–344 *(journal details from memory)*, [arXiv:math/0608408](https://arxiv.org/abs/math/0608408);
+  Duke Math. J. 93 (1998) 289–344, [arXiv:math/0608408](https://arxiv.org/abs/math/0608408);
   see also [arXiv:math/0608414](https://arxiv.org/abs/math/0608414).
-- O. Costin, *Asymptotics and Borel Summability*, Chapman & Hall/CRC (2008) *(from memory)*.
+- O. Costin, *Asymptotics and Borel Summability*, Chapman & Hall/CRC (2008; catalogues also give ©2009).
 - O. Costin, S. Tanveer, *Nonlinear evolution PDEs in R⁺ × C^d: existence and uniqueness of solutions, asymptotic and
-  Borel summability properties*, Ann. Inst. H. Poincaré Anal. Non Linéaire 24 (2007) 795–823 *(volume and pages from
-  memory)*.
+  Borel summability properties*, Ann. Inst. H. Poincaré Anal. Non Linéaire 24 (2007) 795–823, doi:10.1016/j.anihpc.2006.07.002.
 - O. Costin, S. Tanveer, *Borel summability of Navier–Stokes equation in R³ and small time existence*,
   [arXiv:math/0612063](https://arxiv.org/abs/math/0612063).
 - M. D. Kruskal, H. Segur, *Asymptotics beyond all orders in a model of crystal growth*, Stud. Appl. Math. 85 (1991)
-  129–181 *(details from memory)*.
+  129–181.
 - R. Combescot, T. Dombre, V. Hakim, Y. Pomeau, A. Pumir, PRL 56 (1986) 2036; D. C. Hong, J. S. Langer, PRL 56 (1986)
-  2032; S. Tanveer, Phys. Fluids 30 (1987) 1589 *(from memory)*.
+  2032; S. Tanveer, Phys. Fluids 30 (1987) 1589 *(unverified)*.
 - X. Xie, S. Tanveer, *Rigorous results in steady finger selection in viscous fingering*, Arch. Ration. Mech. Anal. 166
-  (2003) 219–286 *(from memory)*.
+  (2003) 219–286.
 - S. Tanveer, X. Xie, *Analyticity and nonexistence of classical steady Hele-Shaw fingers*, Comm. Pure Appl. Math. 56
-  (2003) 353–402 *(from memory)*.
+  (2003) 353–402.
 - X. Xie, *Rigorous results in selection of steady needle crystals*, J. Differential Equations 197 (2004) 349–426
-  *(from memory)*.
+  *(unverified)*.
 - X. Xie, *Rigorous results in existence and selection of Saffman–Taylor fingers by kinetic undercooling*,
-  [arXiv:1610.00076](https://arxiv.org/abs/1610.00076).
+  Eur. J. Appl. Math. 30 (2019) 63–116, doi:10.1017/S0956792517000390, [arXiv:1610.00076](https://arxiv.org/abs/1610.00076).
 - S. J. Chapman, J. R. King, K. L. Adams, *Exponential asymptotics and Stokes lines in nonlinear ordinary differential
-  equations*, Proc. R. Soc. Lond. A 454 (1998) 2733–2755 *(details from memory)*.
+  equations*, Proc. R. Soc. Lond. A 454 (1998) 2733–2755, doi:10.1098/rspa.1998.0278.
 - I. Baldomá, E. Fontich, M. Guardia, T. M. Seara, *Exponentially small splitting of separatrices beyond Melnikov
   analysis: rigorous results*, [arXiv:1201.5152](https://arxiv.org/abs/1201.5152).
 - I. Baldomá, M. J. Capiński, M. Guardia, T. M. Seara, *Breakdown of heteroclinic connections in the analytic Hopf-zero
   singularity: rigorous computation of the Stokes constant*, [arXiv:2206.13840](https://arxiv.org/abs/2206.13840);
-  J. Nonlinear Sci. (2023), doi:10.1007/s00332-022-09882-x.
-- E. Lombardi, *Oscillatory Integrals and Phenomena Beyond all Algebraic Orders*, Lecture Notes in Math. 1741, Springer
-  (2000) *(from memory)*.
-- M. Reiterer, E. Trubowitz, *Choptuik's critical spacetime exists*, [arXiv:1203.3766](https://arxiv.org/abs/1203.3766).
+  J. Nonlinear Sci. 33 (2023), doi:10.1007/s00332-022-09882-x.
+- E. Lombardi, *Oscillatory Integrals and Phenomena Beyond all Algebraic Orders, with Applications to Homoclinic Orbits in
+  Reversible Systems*, Lecture Notes in Math. 1741, Springer (2000).
+- M. Reiterer, E. Trubowitz, *Choptuik's critical spacetime exists*, Commun. Math. Phys. 368 (2019) 143–186,
+  [arXiv:1203.3766](https://arxiv.org/abs/1203.3766).
 - C. Gundlach, *The Choptuik spacetime as an eigenvalue problem*, PRL 75 (1995) 3214,
-  [gr-qc/9507054](https://arxiv.org/abs/gr-qc/9507054) *(journal details from memory)*.
+  [gr-qc/9507054](https://arxiv.org/abs/gr-qc/9507054).
 - A. Chatzikaleas, R. Donninger, I. Glogić, *On blowup of co-rotational wave maps in odd space dimensions*,
   [arXiv:1701.05082](https://arxiv.org/abs/1701.05082).
