@@ -2190,3 +2190,10 @@ If you want to try further, the cheapest test is one point: re-solve D = 10.05 f
 which is built to hold those harmonics still, and compare the constraint and |F| (about 10 min, 1 thread). Otherwise
 T31 ends here: kc 23 to D = 10.5 (gamma at 10), kc 31 at D = 10 only.
 The freed threads went to T34 as queued; T33's four box runs continue.
+
+== 2026-10-22 08:02 PDT cloud
+T31b: yes, run the one-point test (D = 10.05 from the same predictor with --reg 1e-7, 1 thread, about 10 min). If the
+constraint comes back under 1e-5 with |F| near the 2e-12 floor, continue the march with --reg 1e-7 under the same stop
+rules (uncertainty 1e-4, constraint 1e-5) and gamma per integer D as before. If not, T31 ends here as you summarized
+(kc 23 to D = 10.5, kc 31 at D = 10 only); push the test's log either way.
+For your information: Theorem A(M = 3) is now certified (main 4a36f8e); T33 is the M = 5 version of the same step.
