@@ -1,0 +1,2 @@
+M 7 xi1 0.2 rtol 1e-12; have [] [0 s]
+zero it 0: pass 1 |r_1| 4.56e+14 |r_H| 4.46e+10; after the inner fix |r_1| 2.14e+19 (corrected 1.11e+19) |r_H| 1.63e+15; outer step 7.56e-02; Sch sv [1.18398160e+21 6.69074978e+19] [524 s]

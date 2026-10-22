@@ -27,17 +27,17 @@ The O(1/n) inner problem gives both coefficients, in the M-harmonic truncation o
 | | M = 1 | M = 3 | M = 5 | fit (double-double) |
 |---|---|---|---|---|
 | ω*/ω∞ (n = ∞, for reference) | 0.776994 | 1.015603 | 0.999228 | 1 |
-| ω₁ | −21.052 | −23.709 | −24.149 | −24.1231 |
-| ω₁/ω* | −7.0887 | −6.1078 | −6.3230 | −6.3114 |
+| ω₁ | −21.052 | −23.709 | −24.149 | −24.123 |
+| ω₁/ω* | −7.0887 | −6.1078 | −6.3229 | −6.3114 |
 | Δ₁ = −2π ω₁/ω*² | 15.00 | 9.886 | 10.402 | 10.3753 |
 | λ* (n = ∞) | 1.76912 | 2.00680 | 1.99967 | 2 |
-| λ₁ | 7.757 | 3.0797 | 3.0223 | 3.0324 |
+| λ₁ | 7.757 | 3.0797 | 3.023 ± 0.001 | 3.0324 |
 
 with ω = ω* + ω₁/n + …, Δ = Δ* + Δ₁/n + …, λ = 1/γ = λ* + λ₁/n + …. At five harmonics the derived values are within
 0.1% (ω₁), 0.2% (ω₁/ω*), 0.3% (Δ₁) and 0.3% (λ₁) of the fitted ones. Every sequence approaches the fit as harmonics are
-added, the relative ones alternating like the truncation sequence of ω* itself, and for every quantity the fitted
-value lies between the M = 3 and M = 5 values, at 5% (ω), 6% (ω₁) and 18% (λ₁) of the way from M = 5 to M = 3. The
-truncated model's own growth rate tends to the exact 2 of Proposition 5 (−0.23, +0.0068, −0.00033).
+added, alternating from M = 3 on like the truncation sequence of ω* itself, and for every quantity the fitted value lies
+between the M = 3 and M = 5 values: 5% of the way from M = 5 to M = 3 for ω*, ω₁/ω* and Δ₁, 6% for ω₁ and 17% for λ₁.
+The truncated model's own growth rate tends to the exact 2 of Proposition 5 (λ* − 2 = −0.23, +0.0068, −0.00033).
 
 **Method.** The inner equations are expanded to O(1/n) from the exact equations (§1); the O(1/n) inner solution is
 fixed by the profile correction $`K_1`$, by $`\omega_1`$ and by the light-cone gauge (§2); the multiplier of the corrected
@@ -234,39 +234,57 @@ the top harmonic), a second integration of the deflated direction gives its harm
 leakage, and the remaining Schur correction acts on residuals of ~10⁻⁵ instead of ~10². This is hier.py's nested solve
 done with exact derivatives.
 
-**Checks** (`first_order_checks.py`):
+**Checks** (`first_order_checks.py`, which exits non-zero if any fails; each has a mutation that makes it fail,
+`--mutate=NAME`, all run and seen to fail):
 
-| check | result |
-|---|---|
-| background series = `inner_series.py` (flint), M = 3, orders ≤ 30 | 1.6×10⁻¹³ relative |
-| perturbation series = `pert.py` (flint), M = 5, λ = 1.7, orders ≤ 20 | 4.6×10⁻¹⁵ |
-| O(1/n) series = next-to-top outer coefficients (§2) | 1×10⁻¹³ |
-| value jump = inner_np's, M = 3 | 8×10⁻¹³ relative |
-| ∂/∂A, ∂/∂ω jets = centred differences of inner_np's jumps | 2×10⁻⁹, 1.6×10⁻⁸ (difference error) |
-| right-hand side = derivative of the summed series, every jet feature, ξ = 0.04 e^{0.3i} | 10⁻¹⁰–10⁻¹⁵ |
-| exact modes λ = 0 (f = F′) and λ = 1 (f = F + ωF′) at the zeros: smallest singular value | CHECKS_PLACEHOLDER |
-| symmetry route = direct route, untruncated series (§4) | 3×10⁻¹⁵ |
-| matching radius ξ₁ = 0.2 vs 0.175, M = 3 | ω₁ to 3×10⁻⁹, λ* to 3×10⁻¹⁰, λ₁ to 10⁻⁷ |
+| check | independent of the jets in | result (threshold) | mutation → result |
+|---|---|---|---|
+| background series = `solver/inner_borel/inner_series.py`, M = 3, orders ≤ 30 | flint, separate recursion | 2.7×10⁻¹³ (10⁻¹¹) | |
+| perturbation series = `pert.py`, M = 5, λ = 1.7, orders ≤ 20 | flint, separate recursion | 3.8×10⁻¹⁵ (10⁻¹¹) | λ + 10⁻³ → 2×10⁻³ |
+| O(1/n) series = next-to-top outer coefficients (§2), orders ≤ 8 | outer recursion (`largeD_late_orders.py`) | 1.7×10⁻¹³ (10⁻¹⁰) | sign of the y term → 0.64; c term dropped → 0.17; c₁(0) = 0 → 3.2 |
+| right-hand side = derivative of the summed series, every jet feature | series recursion vs ODE right-hand side | 1.0×10⁻⁹ (10⁻⁸) | sign of the y term in the rhs only → 460 |
+| value jump = `inner_np.py`'s, M = 3 | the lateral method is shared | 1.9×10⁻¹¹ (10⁻¹⁰) | |
+| ∂/∂A, ∂/∂ω jets = centred differences of inner_np's jumps | | 2×10⁻⁹, 1.6×10⁻⁸ (10⁻⁶) | ω direction scaled by 2 → 1.0 |
+| symmetry route = direct route, untruncated series (§4) | hand-written 𝒟Z₁ | 3.2×10⁻¹⁵ (10⁻¹²) | sign of the forcing → 3.8; sign of the y term → 0.48 |
+
+In `first_order_hier.py --checks` (the exact modes of every model): at the model's zero the 2 × 2 Schur complement of
+the perturbation map is singular at λ = 0 (null vector the harmonic-1 part of F′) and at λ = 1 (of F + ωF′), and not
+at λ = 0.5 (control):
+
+| M | λ = 0: σ_min/σ_max, angle to F′ | λ = 1: σ_min/σ_max, angle to F + ωF′ | λ = 0.5: σ_min/σ_max |
+|---|---|---|---|
+| 1 | 2.6×10⁻¹¹, 9.6×10⁻¹² | 1.0×10⁻¹⁰, 1.2×10⁻¹¹ | 3.4×10⁻² |
+| 3 | 5.4×10⁻¹⁰, 6.8×10⁻¹¹ | 8.6×10⁻¹¹, 5.5×10⁻¹¹ | 3.9×10⁻² |
+| 5 | M5_CHECK0 | M5_CHECK1 | M5_CHECK05 |
+
+**Robustness:** the matching radius and the integration tolerance (§6).
 
 ## 6. Results against the fits
 
 **The fitted coefficients** (`first_order_fits.py`). Δ: the 819 cleaned double-double points (as `hp/dd_fits_mp.py
---clean`), least squares at 60 digits with polynomials of degree 12–20 in 1/n or 1/D on D ≥ 10, 12 or 16. The first
-coefficient is the same in both variables (1/D = 1/n − 2/n² + …), and the fits that reach the points' precision
-(max |residual| ≤ 10⁻¹⁴) give
+--clean`), least squares at 60 digits with polynomials of degree 12–18 in 1/n or 1/D on D ≥ 10, 12 or 16. The first
+coefficient is the same in both variables (1/D = 1/n − 2/n² + …). The 17 fits that reach the points' precision
+(max |residual| ≤ 10⁻¹³) give Δ₁ from 10.375279 to 10.375321 (16 of them within 10.375279–10.375286), so
 
 ```math
-\Delta_1 = 10.37528 \pm 0.00001, \qquad \omega_1 = -\frac{\omega_\infty\Delta_1}{\Delta_\infty} = -24.12306 \pm 0.00003, \qquad \frac{\omega_1}{\omega_\infty} = -6.311408 \pm 0.000005
+\Delta_1 = 10.37528 \;(+0.00004), \qquad \omega_1 = -\frac{\omega_\infty\Delta_1}{\Delta_\infty} = -24.1231 \pm 0.0001, \qquad \frac{\omega_1}{\omega_\infty} = -6.31141 \pm 0.00002 ,
 ```
 
-(one under-constrained fit, D ≥ 16 at degree 20, gives −24.1233). λ: the 52 double-double growth rates (one per 0.5 in
-D, as `hp/gamma_compare.py`), polynomials in 1/n with λ∞ = 2 fixed. The 1/n coefficient rises with the degree and
-settles: on D ≥ 30, 3.03236, 3.03243, 3.03244 at degrees 8, 9, 10 (D ≥ 24: 3.03225, 3.03239, 3.03243); free fits
-put λ∞ − 2 at 5×10⁻⁸ and λ₁ = 3.03242. So
+the ranges being the spread over fit choices. λ: the 52 double-double growth rates (one per 0.5 in D, as
+`hp/gamma_compare.py`), polynomials in 1/n with λ∞ = 2 fixed. The 1/n coefficient rises with the degree and settles:
+on D ≥ 30, 3.03236, 3.03243, 3.03244 at degrees 8, 9, 10 (D ≥ 24: 3.03225, 3.03239, 3.03243); free fits put λ∞ − 2 at
+5×10⁻⁸ and λ₁ = 3.03242. So, as a spread over fit choices,
 
 ```math
 \lambda_1 = 3.0324 \pm 0.0001 .
 ```
+
+*Planted truth* (`first_order_fits.py --planted`, pass criteria fixed before the first run): the same fits on
+synthetic data at the same D, with known first coefficients (the README's rational formulas for Δ and γ, noise 10⁻¹⁴
+on Δ and 10⁻¹² on λ). Every Δ fit of degree 12–18 that meets the residual criterion recovers Δ₁ within 1.5×10⁻⁵;
+the λ fits of degree 9–10 recover λ₁ within 8×10⁻⁵ (all a little low, by 3–8×10⁻⁵). The first run also had degree-20
+Δ fits, which missed by 4×10⁻⁵ to 5×10⁻⁴ (overfitting); degree 20 was therefore removed from the estimator
+(`logs/first_order_fits_planted_first.log`), and the test passes as rerun.
 
 **The derived coefficients.** For each M: the model's zero (n = ∞), then the O(1/n) selection (§3), the model's growth
 rate near 2 and its first-order shift (§4, direct route). Full output in `data/first_order_M{1,3}_xi0.2.json` (one-shot
@@ -276,8 +294,10 @@ jets) and `data/first_order_hier_M{1,3,5}_xi0.2.json` (deflated; the same number
 |---|---|---|---|---|---|---|---|
 | 1 | 2.5421480 | 0.776994014 | −21.0519 | −7.08873 | 14.9977 | 1.769122008 | 7.7565 |
 | 3 | 2.7264759 | 1.015603095 | −23.7089 | −6.10776 | 9.88625 | 2.006804459 | 3.07967 |
-| 5 | 2.7185792 | 0.999228403 | −24.1488 | −6.32302 | 10.4024 | 1.99966851 | 3.0223 |
+| 5 | 2.7185792 | 0.999228403 | −24.1485 | −6.3229 | 10.4023 | 1.9996689 | 3.023 |
 | fit | | 1 | −24.1231 | −6.31141 | 10.3753 | 2 | 3.0324 |
+
+(M = 5: means of the three runs of the robustness table below; their spread is ±0.0003 in ω₁ and ±0.001 in λ₁.)
 
 The 1/n corrections of the profile come out large (for M = 5, $`A_1 = 14.45`$ against A = 2.72, and $`K_1`$'s harmonic 3
 relatively six times larger than F's), as the O(1/n) corrections of the solution are at finite D (README, "How the
@@ -292,7 +312,7 @@ solution scales with D").
 | Δ₁ | +44.6% | −4.7% | +0.26% | −0.11, −0.06 |
 | ω₁ | −12.7% | −1.7% | +0.11% | 0.13, −0.06 |
 | λ* − 2 | −0.231 | +0.0068 | −0.00033 | −0.03, −0.05 |
-| λ₁ | +156% | +1.56% | −0.33% | 0.01, −0.21 |
+| λ₁ | +156% | +1.56% | −0.31% | 0.01, −0.20 |
 
 From M = 3 to M = 5 every error changes sign and shrinks, by a factor of about 5 (λ₁) to 20 (the ω quantities), as
 the error of ω* does (20). With alternating signs the M → ∞ limit lies between the M = 3 and M = 5 values, and the
@@ -301,10 +321,10 @@ $`x_5 + \tfrac{-r}{1-r}(x_3 - x_5) \approx x_5 + 0.048\,(x_3 - x_5)`$:
 
 | | M = 5 | limit with r = −0.05 | limit with r = −0.2 | fit |
 |---|---|---|---|---|
-| ω₁ | −24.1488 | −24.128 | −24.075 | −24.1231 |
-| ω₁/ω* | −6.3230 | −6.3128 | −6.287 | −6.3114 |
-| Δ₁ | 10.4024 | 10.378 | 10.316 | 10.3753 |
-| λ₁ | 3.0223 | 3.0250 | 3.0319 | 3.0324 |
+| ω₁ | −24.1485 | −24.128 | −24.075 | −24.1231 |
+| ω₁/ω* | −6.3229 | −6.3127 | −6.287 | −6.3114 |
+| Δ₁ | 10.4023 | 10.378 | 10.316 | 10.3753 |
+| λ₁ | 3.023 | 3.026 | 3.032 | 3.0324 |
 
 The ω coefficients match the r = −0.05 reading (to 0.02–0.03%), λ₁ the r = −0.2 one, which is also the ratio its own
 last step showed. This is a reading of three-term sequences, not an error bound: the truncation error of the M = 5
@@ -315,7 +335,19 @@ $`c_1(0)`$ (§3). In the models it does: with $`c_1(0) = 0`$ instead of $`-g_1`$
 i.e. it moves by 7.6, 0.10 and 0.052. At M = 5 that is twice the remaining difference from the fit (0.026), consistent
 with the estimate above.
 
-ROBUSTNESS_PLACEHOLDER
+**Numerical error of the model values.** At M = 3, the one-shot and the deflated drivers and two matching radii
+(ξ₁ = 0.2, 0.175) agree to 10⁻⁸ in ω₁ and λ*, and to 10⁻⁵ in λ₁ (the deflated driver takes ∂_λ by centred differences).
+At M = 5, three runs that differ in the matching radius (0.2, 0.19) and the integration tolerance (10⁻¹², 10⁻¹³) give
+
+| run | ω₁ | ω₁/ω* | λ* | λ₁ |
+|---|---|---|---|---|
+| ξ₁ = 0.2 | −24.1488 | −6.32302 | 1.9996685 | 3.0223 |
+| ξ₁ = 0.19 | −24.1485 | −6.32295 | 1.9996694 | 3.0220 |
+| ξ₁ = 0.2, rtol 10⁻¹³ | −24.1482 | −6.32286 | 1.9996688 | 3.0242 |
+
+so ω₁ = −24.1485 ± 0.0003 and λ₁ = 3.023 ± 0.001 (half the spread of the three runs), well below the truncation
+error. What limits λ₁ is the mixed component's higher-harmonic jump, which the iterated deflation brings from 2.6×10¹²
+down to only ~10⁻², so that its Schur correction still carries ~10⁻³ of the result.
 
 ## 7. What is rigorous, what is numerical, what is truncated
 
@@ -355,6 +387,21 @@ them, but the M → ∞ limit is not computed. In particular:
   amplitude, with their late-order fits. With the symmetry route (§4) the λ₁ computation then needs only n = ∞
   objects: the λ = 2 mode of Proposition 5, the forced response W, and ∂_λS at λ = 2;
 - a proof of the O(1/n) step of the matching lemmas.
+
+## Proposed text for the README and GAMMA.md
+
+For the coordinator (agents do not edit the README). In the README after Proposition 5, "Still open: … the coefficient
+3.0324, which needs the O(1/n) inner equations …", and in GAMMA.md §6, "The 1/n coefficient", something like:
+
+> **The 1/n coefficients from the inner problem** ([notes/FIRST_ORDER.md](notes/FIRST_ORDER.md)). The inner equations
+> carry O(1/n) corrections (integer powers only, Lemma B5.0); with η slaved they are three explicit terms, and in the
+> heat form they are the only place where s = r²/(2n) appears explicitly. The O(1/n) inner solution is fixed by the
+> profile's 1/n correction, by ω₁ and by the light-cone gauge, and the vanishing of its multiplier gives ω₁; the
+> outer region contributes only invertible factors at this order (the gravitational shift of the light-cone exponent
+> included). First-order perturbation theory gives λ₁. In the M-harmonic truncation, with exact derivatives:
+> ω₁ = −21.05, −23.71, −24.149 and λ₁ = 7.76, 3.080, 3.023 for M = 1, 3, 5, against the fitted −24.123
+> (Δ₁ = 10.3753) and 3.0324. The sequences converge like the truncation sequence of ω* itself, and the fitted values
+> lie between the M = 3 and M = 5 values; at M = 5 the differences are 0.1% (ω₁) and 0.3% (λ₁).
 
 ## 8. Scripts
 

@@ -110,8 +110,17 @@ def jacobian(x, M, xi1, extra=None):
     return Rr[0], Rr[1:1 + n].T, (Rr[1 + n] if extra is not None else None)
 
 
-def find_zero(x, M, xi1, maxit=8, tol=3e-15):
+CKPT = None
+
+
+def find_zero(x, M, xi1, maxit=8, tol=3e-15, floor=1e-9):
+    """deflated Newton; checkpoints x after every iteration (CKPT, resumed on restart) and stops after two outer
+    steps below `floor` (the noise floor of the zero at M = 5 is ~1e-10)"""
     n = R.npar(M)
+    if CKPT and os.path.exists(CKPT):
+        x = np.array(json.load(open(CKPT))["x"])
+        log(f"resuming the zero from the checkpoint {CKPT}")
+    small = 0
     for it in range(maxit):
         r, K, _ = jacobian(x, M, xi1)
         L = Lin(K)
@@ -131,7 +140,11 @@ def find_zero(x, M, xi1, maxit=8, tol=3e-15):
             f"|r_1| {np.linalg.norm(r2[:2]):.2e} (corrected {np.linalg.norm(r1c):.2e}) |r_H| {np.linalg.norm(r2[2:]):.2e}; "
             f"outer step {np.abs(st).max():.2e}; Sch sv {np.linalg.svd(Sch, compute_uv=False)}")
         x = x + dx
-        if np.abs(st).max() < tol * 10 and it > 0:
+        if CKPT:
+            json.dump(dict(x=x.tolist(), it=it), open(CKPT, "w"))
+        log(f"   x {x.tolist()}")
+        small = small + 1 if np.abs(st).max() < floor else 0
+        if (np.abs(st).max() < tol * 10 and it > 0) or small >= 2:
             break
     r, K, _ = jacobian(x, M, xi1)
     L = Lin(K)
@@ -327,6 +340,8 @@ def main():
     tag = f"M{M}_xi{xi1:g}" + (f"_rtol{R.RTOL:g}" if R.RTOL != 1e-12 else "") \
         + ("_rows" + "_".join(f"{k}-{v:g}" for k, v in sorted(R.ROW_RADII.items())) if R.ROW_RADII else "")
     fn = opts.get("--out", os.path.join(HERE, "data", f"first_order_hier_{tag}.json"))
+    global CKPT
+    CKPT = fn.replace(".json", "_zero_ckpt.json")
     out = json.load(open(fn)) if os.path.exists(fn) else dict(M=M, xi1=xi1, rtol=R.RTOL)
 
     def save():
@@ -374,13 +389,15 @@ def main():
             Sch, C, _, resH = sch_lam(x, M, xi1, lam_c)
             sv = np.linalg.svd(Sch, compute_uv=False)
             e = np.linalg.svd(Sch)[2][-1]
-            ent = dict(sv=sv.tolist(), null=(e / e[0]).tolist())
+            ent = dict(sv=sv.tolist(), sv_ratio=float(sv[-1] / sv[0]), null=(e / np.linalg.norm(e)).tolist())
             if f1 is not None:
                 ex = np.array([-2 * f1.imag, 2 * f1.real])      # (sin, cos) coefficients of the harmonic-1 part
-                ent["exact"] = (ex / ex[0]).tolist()
+                ex = ex / np.linalg.norm(ex)
+                ent["exact"] = ex.tolist()
+                ent["sin_angle"] = float(abs(e[0] * ex[1] - e[1] * ex[0]) / np.linalg.norm(e))
             chk[f"{lam_c:g}"] = ent
-            log(f"CHECK lam = {lam_c:g}: Sch singular values {sv}; null vector {ent['null']}"
-                + (f"; exact {ent['exact']}" if f1 is not None else ""))
+            log(f"CHECK lam = {lam_c:g}: Sch singular values {sv} (ratio {ent['sv_ratio']:.1e}); null vector {ent['null']}"
+                + (f"; exact {ent['exact']}; sin(angle) {ent['sin_angle']:.1e}" if f1 is not None else ""))
         out.update(checks=chk)
         save()
     if "lam" not in out:

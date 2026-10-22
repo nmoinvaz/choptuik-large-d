@@ -24,6 +24,11 @@ from dd_fits_mp import load_points, clean  # noqa: E402
 
 mp.mp.dps = 60
 
+# Degrees of the Delta fits. Degree 20 was dropped after the planted-truth test (--planted): on synthetic data with a
+# known Delta_1 every fit of degree 12-18 recovers it within 1.5e-5, while the degree-20 fits miss by 4e-5 to 5e-4
+# (21 parameters overfit the 1e-14 noise; on the real data the degree-20 fit on D >= 16 is the outlier).
+DEGS = (12, 14, 16, 18)
+
 
 def polyfit(ts, ys, deg, fix0=None):
     """least squares in powers of t/t0 (t0 = max t); returns coefficients in powers of t"""
@@ -44,7 +49,7 @@ def delta_fits():
     rows = []
     for var, tf in (("1/n", lambda D: 1 / (mp.mpf(D) - 2)), ("1/D", lambda D: 1 / mp.mpf(D))):
         for Dmin in (10, 12, 16):
-            for deg in (12, 14, 16, 18, 20):
+            for deg in DEGS:
                 sel = [d for d in Ds if d >= Dmin]
                 if len(sel) < deg + 8:
                     continue
@@ -55,9 +60,9 @@ def delta_fits():
                 rows.append((var, Dmin, deg, d0, d1, w1, res))
                 print(f"  {var} D >= {Dmin:2d} deg {deg:2d}: Delta_inf {mp.nstr(d0, 12)}  Delta_1 {mp.nstr(d1, 10)}  "
                       f"omega_1 {mp.nstr(w1, 10)}  omega_1/omega_inf {mp.nstr(w1 / w0, 10)}  max|res| {mp.nstr(res, 2)}")
-    d1s = [r[4] for r in rows if r[6] < 1e-12]
-    w1s = [r[5] for r in rows if r[6] < 1e-12]
-    print(f"  fits with max|res| < 1e-12: Delta_1 in [{mp.nstr(min(d1s), 8)}, {mp.nstr(max(d1s), 8)}], "
+    d1s = [r[4] for r in rows if r[6] <= 1e-13]
+    w1s = [r[5] for r in rows if r[6] <= 1e-13]
+    print(f"  fits with max|res| <= 1e-13: Delta_1 in [{mp.nstr(min(d1s), 8)}, {mp.nstr(max(d1s), 8)}], "
           f"omega_1 in [{mp.nstr(min(w1s), 8)}, {mp.nstr(max(w1s), 8)}]")
     return rows
 
@@ -96,8 +101,11 @@ def planted():
     Delta: the README's rational formula for Delta(D) (denominator zeros at D = -3.2 and -11.0, like the data's
     singularity near D = -9 to -11), plus Gaussian noise 1e-14; its 1/n coefficient is a1 - a0 b1.
     lam: 1/gamma with the README's rational gamma(D), noise 1e-12 on lam; its 1/n coefficient is -4 (e1 - f1/2).
-    Pass criteria, fixed before running: Delta_1 recovered within 2e-5 by every fit with max|res| <= 1e-13 (the spread
-    quoted for the real data is 1e-5); lam_1 recovered within 2e-4 by the degree 9-10 fits on D >= 24, 30."""
+    Pass criteria, fixed before the first run: Delta_1 recovered within 2e-5 by every fit with max|res| <= 1e-13;
+    lam_1 recovered within 2e-4 by the degree 9-10 fits on D >= 24, 30.
+    History: the first run (degrees 14-20) FAILED on the degree-20 Delta fits (errors 4e-5 to 5e-4, all other fits
+    within 1.5e-5); degree 20 was then removed from the estimator (DEGS), not the threshold changed
+    (logs/first_order_fits_planted_first.log)."""
     import random
     random.seed(1)
     a = [mp.mpf(v) for v in ("1.6438975180", "40.378045077", "252.33285989", "206.73502321", "-357.09850575",
@@ -116,7 +124,7 @@ def planted():
     print(f"planted Delta: Delta_1 = {mp.nstr(D1_true, 12)}")
     for var, tf in (("1/n", lambda D: 1 / (mp.mpf(D) - 2)), ("1/D", lambda D: 1 / mp.mpf(D))):
         for Dmin in (10, 12, 16):
-            for deg in (14, 16, 18, 20):
+            for deg in DEGS:
                 sel = [d for d in Ds if d >= Dmin]
                 coef, res = polyfit([tf(d) for d in sel], [syn[d] for d in sel], deg)
                 err = coef[1] - D1_true
