@@ -118,25 +118,32 @@ What it gives:
   (Schur-corrected r₁ = −9.8×10⁴ − 6.3×10⁴i, raw −6.7×10⁴ − 3.2×10⁴i), so this run does **not** give r₁^{[7]}(p₅), and the
   M = 7 zero was not obtained.
 
-**Why level 3 stalls: not settled.** At M = 5 the same algorithm converges level 3 quadratically to |r₃| ~ 10⁻¹⁰. Three
-candidate causes at M = 7, each with a number behind it:
+**Why level 3 stalls, and the fix: the matching radius.** At M = 5 the same algorithm converges level 3 quadratically
+to |r₃| ~ 10⁻¹⁰. Three fixed-(A, ω) reruns at p₅, each from the previous one's state (logs in `logs/`):
 
-1. *Level-3 finite-difference steps below the noise of the corrected r₃.* `hier.py`'s steps (10⁻⁶ relative, with the
-   floor 10⁻³A for small coefficients) change r₃ by about 0.07 (B₃) and 0.007 (C₃), taking |∂r₃/∂B₃| ≈ 5×10⁵ from the
-   README. If the corrected r₃ carries noise of 10⁻³–10⁻², the C₃ column is unreliable, and a Newton step with a 50%
-   error in J reduces |r₃| by about half, as observed (34 → 16 → 9.1).
-2. *A poor linear prediction of the higher levels.* After each level-3 step the nested level-5 solve restarted from
-   |r₅| = 1–15 instead of ≲ 10⁻⁴: K's level-5 columns are taken with steps of 10⁻¹² relative, which move r₅ by about
-   2–3×10⁻⁶, while r₅'s noise floor at M = 7 is 2×10⁻⁷ (10³ times M = 5's), so those columns are good to only 5–10%.
-3. *A genuine noise floor of the corrected r₃ near 1–10*, which would put M = 7 at ξ₁ = 0.2 beyond double precision.
+| run | settings | level-3 history | final \|r₃\| | Schur-corrected r₁^{[7]}(p₅) |
+|---|---|---|---|---|
+| pilot | hier's defaults, ξ₁ = 0.2 | 2×10⁷ → 34 → 16 → 9.1, stop | 9.1 | −9.8×10⁴ − 6.3×10⁴i (meaningless) |
+| `…_h3_at_M5zero` | level-3 steps 100× larger (`--h3=1e-4`), ξ₁ = 0.2 | 9.1 → 2.1×10⁻², stop | 2.1×10⁻² | −538 − 90i |
+| `…_h3_rtol13_at_M5zero` | the same, integrator rtol 10⁻¹³ | → 3.8×10⁻², stop | 3.8×10⁻² | −253 − 252i |
+| `…_h3_xi015_at_M5zero` | `--h3=1e-4`, ξ₁ = 0.15 | → 4.4×10⁻⁸ → 2.2×10⁻⁸ | 2.2×10⁻⁸ | **−4.49 − 5.26i** |
 
-A rerun of the pilot with 100× larger level-3 steps (`--h3=1e-4`, log `logs/hier_nb_M7_fixA_h3_at_M5zero.log`) was cut
-off by a container restart during its first level-5 solve, and the full selection with `--h3=1e-4 --h1=1e-4` started
-after it (`logs/hier_nb_M7_full_cloud_h.log`) spent 40 minutes in one finite-difference column of its first level-5
-solve, on the expensive arc that the right-hand-side cap of §1 now removes, and was killed by the next restart without
-reaching level 3. So none of the three causes has been tested yet. The local task (§3.1) runs cause 1's remedy (job B)
-and adds a tighter integrator (job C). If both stall like job A, the next thing to vary is K's step for the levels ≥ 5
-(cause 2).
+So two things were wrong at ξ₁ = 0.2. The level-3 finite-difference steps were below the noise (the 100× larger steps
+take |r₃| from 9 to 0.02 in one step), and below that a floor remains near 2–4×10⁻² that a tighter integrator does not
+move. That floor is the noise of the Schur-corrected r₅ (2×10⁻⁷–2×10⁻⁶ at M = 7 and ξ = 0.2, 10³ times M = 5's, set by
+the harmonic-7 leakage) passed into r₃ with the weight |∂r₃/∂B₅|/|∂r₅/∂B₅| ≈ 10¹³/(4×10⁸) ≈ 2.5×10⁴, and r₃'s floor passes
+into r₁ with a weight of order 10⁴, which is why the two ξ₁ = 0.2 runs disagree on r₁ by hundreds. At ξ₁ = 0.15 the
+leakage weights are an order of magnitude smaller per step (`hier.py`'s docstring: one ulp of B₇ moves r₁ by ~200 at
+0.2 and ~15–20 at 0.15), the floors fall to |r₅| ≈ 4×10⁻¹⁰ and |r₇| ≈ 2.5×10⁻¹⁰, and level 3 converges to 2×10⁻⁸. The
+zero does not depend on ξ₁ (Lemma R; the README's M = 3 zero moves by less than 10⁻⁷ between ξ₁ = 0.175 and 0.225), so
+the M = 7 selection is run at ξ₁ = 0.15.
+
+The harmonic-1 residual at p₅, r₁^{[7]}(p₅) = −4.49 − 5.26i (|r₁| = 6.9, at ξ₁ = 0.15), is the increment δ₅ at p₅ in
+r₁ units: B_tail.md §5 estimated the M > 5 tail at 4–6 in r₁ (at ξ₁ = 0.2, whose normalisation differs by an O(1)
+factor). The profile at M = 7 and p₅, converged: F₃/F₁ = 0.054841 + 0.005441i, F₅/F₁ = 0.003104 + 0.000557i,
+F₇/F₁ = 0.000175 + 0.000045i.
+
+PLACEHOLDER-FULL7
 
 ## 3. The truncation sequence, as far as it goes
 
