@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Checks of the complex-lambda determinant (hp/modecount_cx) before the mode count.
 
-    python3 modecount_check.py STATE.npz [--M=N] [--threads=N] [--out=hp/data/modecount_check.jsonl]
+    python3 modecount_check.py STATE.npz [--M=N] [--threads=N] [--quick] [--out=hp/data/modecount_check.jsonl]
+
+--quick: item 2 at lambda = 1.7 only, no item 3, and only the gauge zero in item 4.
 
 1. complex LU (modecount_cx.cdet) against numpy.linalg.slogdet on random complex matrices;
 2. at real lambda: ln|det| and arg det against hpkernel's Solver.mode_det (sign, ln|det|), and the matrices entry by
@@ -52,7 +54,8 @@ def main():
     # 2. real lambda: complex kernel against hpkernel
     lam0 = 1 / gamma_formula(D)
     rows = []
-    for lam in (0.5, 1.7, 4.0):
+    quick = "quick" in opts
+    for lam in ((1.7,) if quick else (0.5, 1.7, 4.0)):
         t = timer()
         sg, la, pmin, pmax = st.det_real(lam)
         t1 = t()
@@ -75,7 +78,7 @@ def main():
 
     # 3. Cauchy-Riemann on ln det
     cr = []
-    for lam in (1.3, 3.0):
+    for lam in (() if quick else (1.3, 3.0)):
         h = 1e-5
         l0, a0, _, _ = st.det(lam, 0.0)
         lx, ax, _, _ = st.det(lam + h, 0.0)
@@ -93,7 +96,7 @@ def main():
         return sg * math.exp(la - ref)
 
     zeros = {}
-    for name, c, w in (("gauge", st.lam_g, 0.02), ("phys", lam0, 0.01)):
+    for name, c, w in (("gauge", st.lam_g, 0.02),) + ((("phys", lam0, 0.01),) if not quick else ()):
         ref = st.det_real(c)[1]
         a, b = c - w, c + w
         fa, fb = f(a), f(b)

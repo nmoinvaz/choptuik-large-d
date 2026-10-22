@@ -106,7 +106,10 @@ def count(det_fn, info, poles, opts, log, tag, res_file):
 
     # ---- geometry: vertical edges away from the candidate poles and the expected zeros
     y1, y2 = 0.5 * omega, im2 * omega
-    known = [0j, complex(lam_g), complex(lam_f), complex(lam_g, omega), complex(lam_g, -omega)]
+    # expected zeros: lam = 0 and lam_phys (and their copies 2 i k omega of the folded layout), lam_g + i k omega
+    kmax = int((y2 + 2 * omega) / omega) + 1
+    known = [complex(z, 2 * k * omega) for z in (0.0, lam_f) for k in range(-kmax, kmax + 1) if abs(2 * k * omega) < y2 + 2 * omega]
+    known += [complex(lam_g, k * omega) for k in range(-2 * kmax, 2 * kmax + 1) if abs(k * omega) < y2 + 2 * omega]
     pre = sorted(set(p.real for p in poles if abs(p.imag) < y2 + 0.5 * omega))
 
     def far(lo, hi, avoid):

@@ -1,0 +1,7 @@
+=== 2026-10-21 22:35:10 job: check hp/data/seeds/local/up23_D61.0264.npz --quick
+complex LU vs numpy slogdet (n = 7, 40, 129): max error 8.4e-13
+D 61.026449: M 32, kfreeze 13, |F| 3.8e-23; omega 3.476755; lam_g = 1 + <c1> = 0.899230539841
+  lam 1.7: hp sign -1 ln|det| 375.451794753692 (23.7 s) | cx ln|det| 375.451794754102 arg +3.142e+00 (45.7 s): d ln +4.1e-10, sign ok
+  M(1.7): max |M_cx - M_hp| = 0.0e+00 (max |M| 2.0e+09), max |Im M_cx| = 0.0e+00
+  real zero near gauge value 0.899230539841: 0.899230539891 (diff +4.9e-11)
+=== 2026-10-21 22:45:00 exit 0: check hp/data/seeds/local/up23_D61.0264.npz --quick
