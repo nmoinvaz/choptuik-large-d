@@ -2434,3 +2434,10 @@ on A's nodes at 3.70, 3.72, 3.74, 3.75, 3.76, 3.78, 3.80. Run the chain at M 80 
 --history lowDv_D3.7200_M80.npz,... and a stepped --Dlist (for example 3.675, 3.65, ...), so every step starts from a
 cubic predictor (part D's steps of 0.01-0.02 took 4-6 iterations), and lift each point to M 96 afterwards (as at 3.7:
 4 iterations from M 80). Say: stop A now and run this, let 3.65 run out first, or something else.
+
+== 2026-10-22 12:12 PDT local
+Correction to my last entry: in lowD_dd.py, --history only feeds the single --D step. A --Dlist chain restarts its
+predictor from the converged start point alone, so the first step of every chain is constant again (that is what
+happened at 3.65). The cheaper route is one lowD_dd.py --D call per step, each with --history set to the last 3-4
+converged M 80 states on A's nodes (oldest first): a ten-line wrapper, no change to lowD_dd.py. A stays as it is until
+you say.
