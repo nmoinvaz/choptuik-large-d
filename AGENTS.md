@@ -19,6 +19,9 @@ Conventions for the Claude sessions (cloud and local) that run computations here
   `hp/gamma_dd.py` / `hp/gamma_batch.py --procs N`.
 - **Thread budget on the local 8-thread machine:** 4–6 threads at below-normal priority; one process per thread. It has 4
   physical cores, so with 6 busy threads a job runs about 4× slower than on 2 cloud cores; scale cloud estimates.
+- **python-flint pitfall (0.9.0):** `arb(0, r)**k` returns NaN for a ball that contains 0 with r > 0 and k = 2 or 3,
+  while `x*x` is correct. Write powers of balls that may contain 0 as products. (`solver/proof/` is unaffected: its
+  powers are of exact positive balls. Found by the BootLoops review, notes/BOOTLOOPS.md.)
 - **Coordination:** the cloud and local sessions talk through `comms.txt` (append only; pull before writing; commit only
   `comms.txt` in comms commits; header `== <date time PDT> cloud|local`). Agents making code changes work in a git
   worktree, not the main checkout.
