@@ -77,6 +77,7 @@ class SysM:
         self.nd = len(self.keys)
         self.n = self.nd + 1
         self.idx = {k: i for i, k in enumerate(self.keys)}
+        self.OSET, self.ESET = set(self.ODD), set(self.EVEN)
 
     def unpack(self, Y):
         no, ne = self.no, self.ne
@@ -127,6 +128,85 @@ class SysM:
         ddC = {v: dcE[v] * ixi for v in EVEN}
         ddS = {m: (dr2[m] - I * m * (dw * xi * S[m] + w * xi * dS_[m])) * ixi2 for m in ODD}
         return self.pack(ddD, ddS, ddC, zero)
+
+
+    def lin_unit(self, cache, j, xi, ixi, zero):
+        """lin(cache, e_j): the same formulas with sparse dicts (a missing key is an exact zero), so that products with
+        zero series are skipped. Self-tested against lin."""
+        ODD, EVEN = self.OSET, self.ESET
+        D, S, C, w, E, cE, dD = cache
+        dD_, dS_, dC_, dw = {}, {}, {}, None
+        if j < self.nd:
+            kind, h = self.keys[j]
+            {"D": dD_, "S": dS_, "C": dC_}[kind][h] = None      # placeholder, replaced by the unit series below
+        one = zero + 1
+        for dct in (dD_, dS_, dC_):
+            for k in dct:
+                dct[k] = one
+        if j == self.nd:
+            dw = one
+        p = spadd(spr(dC_, S, ODD), spr(C, dS_, ODD))
+        keys = set(p) | set(dD_) | (set(self.ODD) if dw is not None else set())
+        ddD = {}
+        for m in keys:
+            t = p.get(m, zero)
+            u = None
+            if dw is not None:
+                u = dw * xi * D[m]
+            if m in dD_:
+                u = (u + w * xi * dD_[m]) if u is not None else w * xi * dD_[m]
+            if u is not None:
+                t = t - I * m * u
+            ddD[m] = t * (ixi * ixi)
+        dE = spr(D, dD_, EVEN)
+        dcE = spadd(spr(dC_, E, EVEN), spr(C, dE, EVEN))
+        xdD = {m: xi * dD[m] for m in self.ODD}
+        xddD = {m: xi * v for m, v in ddD.items()}
+        dr2 = spadd(spr(dC_, xdD, ODD), spr(C, xddD, ODD), spr(dcE, D, ODD), spr(cE, dD_, ODD))
+        dr2 = spsub(dr2, spadd(spr(dC_, D, ODD), spr(C, dD_, ODD)))
+        if "coupling" in MUTATE:
+            dr2 = spsub(spsub(dr2, spr(dcE, D, ODD)), spadd(spr(dcE, D, ODD), spr(cE, dD_, ODD), spr(cE, dD_, ODD)))
+        ddC = {v: dcE[v] * ixi for v in dcE}
+        keysS = set(dr2) | set(dS_) | (set(self.ODD) if dw is not None else set())
+        ddS = {}
+        for m in keysS:
+            t = dr2.get(m, zero)
+            u = None
+            if dw is not None:
+                u = dw * xi * S[m]
+            if m in dS_:
+                u = (u + w * xi * dS_[m]) if u is not None else w * xi * dS_[m]
+            if u is not None:
+                t = t - I * m * u
+            ddS[m] = t * (ixi * ixi)
+        return ([ddD.get(m, zero) for m in self.ODD] + [ddS.get(m, zero) for m in self.ODD]
+                + [ddC.get(v, zero) for v in self.EVEN] + [zero])
+
+
+def spr(X, Y, out):
+    """sparse projected product: {k: sum_{a+b=k} X_a Y_b} over the nonzero entries only, k in the set out"""
+    r = {}
+    for a, xa in X.items():
+        for b, yb in Y.items():
+            k = a + b
+            if k in out:
+                r[k] = r[k] + xa * yb if k in r else xa * yb
+    return r
+
+
+def spadd(*ds):
+    r = {}
+    for d in ds:
+        for k, v in d.items():
+            r[k] = r[k] + v if k in r else v
+    return r
+
+
+def spsub(a, b):
+    r = dict(a)
+    for k, v in b.items():
+        r[k] = r[k] - v if k in r else -v
+    return r
 
 
 class LegM:
@@ -388,11 +468,69 @@ def selftest():
     ok &= good
     print(f"M = 3: series_generic_M vs series_arb.SeriesArb: {es:.1e}; parameter jets vs central differences: {ej:.1e}  "
           f"{'ok' if good else 'MISMATCH'}")
+    # lin_unit (sparse) against lin on unit vectors, on series, M = 3 and 5
+    from flint import acb_series
+    for M in (3, 5):
+        s = SysM(M)
+        ctx.cap = 6
+        Ys = [acb_series([acb(complex(*rng.normal(size=2))) for _ in range(6)], prec=6) for _ in range(s.nd)]
+        Ys.append(acb_series([acb(3.8)], prec=6))
+        xs = acb_series([acb(0.15, 0.07), acb(0.01, 0.02)], prec=6)
+        zs = acb_series([0], prec=6)
+        _, cache = s.rhs(Ys, xs, 1 / xs, zs)
+        eu = 0.0
+        for j in range(s.n):
+            e = [acb_series([1 if i == j else 0], prec=6) for i in range(s.n)]
+            a = s.lin(cache, e, xs, 1 / xs, zs)
+            b = s.lin_unit(cache, j, xs, 1 / xs, zs)
+            for i in range(s.nd):
+                d = a[i] - b[i]
+                eu = max([eu] + [float(abs(c).upper()) for c in d.coeffs()])
+        good = eu < 1e-60
+        ok &= good
+        print(f"M = {M}: lin_unit vs lin on all unit vectors (series): {eu:.1e}  {'ok' if good else 'MISMATCH'}")
+    # one Lohner step of certify_M_lohner.LohnerM against validated_int.Lohner at M = 1 (same set, same step)
+    ok &= step_check()
     print("SELFTEST " + ("PASS" if ok else "FAIL"))
     return ok
 
 
-def timing(M, N=24, prec=256):
+def step_check():
+    """one step, M = 1, from the same Lohner set: LohnerM (growing Picard, sparse Jacobian columns, NJ = N) against
+    validated_int.Lohner with lemma6_common installed; the enclosures must overlap and agree to rounding"""
+    import validated_int as VI
+    import lemma6_common
+    lemma6_common.install()
+    import certify_M_lohner as CL
+    from flint import acb_mat
+    ctx.prec = 256
+    s1, sv = SysM(1), VI.Sys(gravity=True)
+    p = [arb("2.5421480475"), arb("0.7769940136")]
+    phi0 = 3 * arb.pi() / 8
+    xi0, vals, ders, _ = placeholder_start(p, 1, "0.1", phi0)
+    w = W0() * p[1]
+    c = [acb(v.mid()) for v in vals] + [acb(w.mid())]
+    q = [vals[i] - c[i] for i in range(s1.nd)] + [acb(w) - c[s1.nd]]
+    n1 = s1.n
+    Q1 = acb_mat([[1 if i == j else 0 for j in range(n1)] for i in range(n1)])
+    a = CL.LohnerM(s1, c, Q1, q, 24)
+    Qv = acb_mat([[1 if i == j else 0 for j in range(n1 + 1)] for i in range(n1 + 1)])
+    b = VI.Lohner(sv, c + [acb(p[0])], Qv, q + [acb(0)], 24)
+    lega = LegM("ray", "0.1", "0.2", phi0)
+    legb = VI.Leg("ray", "0.1", "0.2")
+    oka, okb = a.step(lega, 0.0, 2.0 ** -12), b.step(legb, 0.0, 2.0 ** -12)
+    Xa, Xb = a.box(), b.box()
+    ov = all(Xa[i].overlaps(Xb[i]) for i in range(s1.nd))
+    dm = max(float(abs(Xa[i].mid() - Xb[i].mid())) for i in range(s1.nd))
+    ra = max(float(Xa[i].rad()) for i in range(s1.nd)) if False else max(max(float(x.real.rad()), float(x.imag.rad())) for x in Xa[:s1.nd])
+    rb = max(max(float(x.real.rad()), float(x.imag.rad())) for x in Xb[:s1.nd])
+    good = oka and okb and ov and dm < 1e-40
+    print(f"M = 1: one step of LohnerM vs validated_int.Lohner: both ok {oka and okb}, overlap {ov}, midpoints differ "
+          f"{dm:.1e}, radii {ra:.1e} vs {rb:.1e}  {'ok' if good else 'MISMATCH'}")
+    return good
+
+
+def timing(M, N=24, prec=256, NJ=None):
     """time one validated_int.Lohner step with SysM (diagnostic)"""
     import validated_int as VI
     import lemma6_common
@@ -409,7 +547,9 @@ def timing(M, N=24, prec=256):
     c = [acb(v.mid()) for v in vals] + [acb((W0() * pa[1]).mid())]
     Q = acb_mat([[1 if i == j else 0 for j in range(s.n)] for i in range(s.n)])
     q = [vals[i] - c[i] for i in range(s.nd)] + [acb(0)]
-    lo = VI.Lohner(s, c, Q, q, N)
+    import certify_M_lohner as CL
+    lo = CL.LohnerM(s, c, Q, q, N)
+    lo.NJ = NJ
     leg = LegM("ray", r0, "0.2", phi0)
     for k in range(10, 20):
         t = time.time()
@@ -428,4 +568,4 @@ if __name__ == "__main__":
     if args and args[0] == "selftest":
         sys.exit(0 if selftest() else 1)
     if args and args[0] == "timing":
-        timing(int(args[1]), int(args[2]) if len(args) > 2 else 24)
+        timing(int(args[1]), int(args[2]) if len(args) > 2 else 24, 256, int(args[3]) if len(args) > 3 else None)

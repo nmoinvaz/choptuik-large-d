@@ -64,9 +64,46 @@ def taylor_Y(sys_, leg, t0, Y0, N):
     return Ys, (cache, xs, ixs, dxs, zero)
 
 
+def taylor_V(sys_, ctxv, N):
+    """validated_int.taylor_V with the columns of A(tau) = F_Y(Y(tau)) xi'(tau) from SysM.lin_unit (the same
+    linearization, products with zero series skipped); the coefficient recursion is the same:
+    V_{k+1} = (1/(k+1)) sum_{j <= k} A_{k-j} V_j, V_0 = I."""
+    cache, xs, ixs, dxs, zero = ctxv
+    L = N + 1
+    ctx.cap = L
+    n, nd = sys_.n, sys_.nd
+    Acols = []
+    for j in range(n):
+        F = sys_.lin_unit(cache, j, xs, ixs, zero)
+        Acols.append([(F[i] * dxs).coeffs() for i in range(nd)])
+    Ak = []
+    for k in range(N + 1):
+        Mk = acb_mat(n, n)
+        for j in range(n):
+            col = Acols[j]
+            for i in range(nd):
+                cs = col[i]
+                if k < len(cs):
+                    Mk[i, j] = cs[k]
+        Ak.append(Mk)
+    V = [acb_mat([[1 if i == j else 0 for j in range(n)] for i in range(n)])]
+    for k in range(N):
+        acc = Ak[k] * V[0]
+        for j in range(1, k + 1):
+            acc = acc + Ak[k - j] * V[j]
+        V.append(acc * acb(arb(1) / (k + 1)))
+    return V
+
+
 class LohnerM(VI.Lohner):
     """validated_int.Lohner with the fast taylor_Y above and lemma6_common's a-priori enclosures; the step is
-    validated_int.Lohner.step line by line otherwise."""
+    validated_int.Lohner.step line by line otherwise, except that the step Jacobian may use its own Taylor order
+    NJ <= N: J = sum_{k <= NJ} V_k(X) h^k + h^(NJ+1) Phi_{NJ+1}(Y~) V~. That remainder formula holds for any order
+    (integral form of the remainder: V^(NJ+1)(s) = (NJ+1)! Phi_{NJ+1}(Y(s)) V(s), Y(s) in Y~, V(s) in V~), so J is an
+    enclosure for every NJ; a lower NJ only widens it by about (h lambda)^(NJ+1), which is far below the width that
+    the parameter box gives it. NJ = N is validated_int's choice."""
+
+    NJ = None
 
     def step(self, leg, t0, h):
         try:
@@ -89,13 +126,18 @@ class LohnerM(VI.Lohner):
         Yr, ctr = taylor_Y(s, leg, T, Yt, N + 1)
         nd = s.nd
         phic = [VI.evalpoly(Yc[i], hh, N) + hN1 * VI.coef(Yr[i], N + 1) for i in range(nd)] + self.c[nd:]
-        _, ctxX = taylor_Y(s, leg, acb(t0), X, N)
-        Vk = VI.taylor_V(s, ctxX, N)
-        VR = VI.taylor_V(s, ctr, N + 1)
-        J = Vk[N]
-        for k in range(N - 1, -1, -1):
+        NJ = self.NJ or N
+        _, ctxX = taylor_Y(s, leg, acb(t0), X, NJ)
+        Vk = taylor_V(s, ctxX, NJ)
+        if NJ < N:
+            _, ctrJ = taylor_Y(s, leg, T, Yt, NJ + 1)
+        else:
+            ctrJ = ctr
+        VR = taylor_V(s, ctrJ, NJ + 1)
+        J = Vk[NJ]
+        for k in range(NJ - 1, -1, -1):
             J = J * hh + Vk[k]
-        J = J + hN1 * (VR[N + 1] * Vt)
+        J = J + hh ** (NJ + 1) * (VR[NJ + 1] * Vt)
         JR = VI.realify(J)
         cnew = [acb(v.mid()) for v in phic]
         e = VI.stack(acb_mat([[phic[i] - cnew[i]] for i in range(n)]))
@@ -148,9 +190,81 @@ class LohnerM(VI.Lohner):
         return steps
 
 
+# ---------------------------------------------------------------- numerics (NOT rigorous): for the centre refinement
+
+def numerics_run(sys_, y0, w, cols0, path, N=24, tol=1e-40, log=None):
+    """plain high-precision Taylor integration (midpoints only, no enclosure): y and the derivative columns along the
+    path. y0: nd acb (midpoints used); w: arb; cols0: m columns of nd + 1 entries (the last the w-component).
+    Step size from the last two Taylor coefficients: |Y_k| h^k <= tol (k = N - 1, N), in units of the leg parameter.
+    Used only to choose the centre p^ of the box (any centre is allowed; the test is what is rigorous)."""
+    n, nd = sys_.n, sys_.nd
+    y = [acb(v.mid()) for v in y0] + [acb(arb(w).mid())]
+    m = len(cols0)
+    W = acb_mat([[acb(cols0[j][i].mid()) for j in range(m)] for i in range(n)])
+    steps = []
+    for leg in CS.legs_for(path):
+        t, ns = 0.0, 0
+        while t < 1.0:
+            Ys, ctxs = taylor_Y(sys_, leg, acb(t), y, N)
+            cs = [Y.coeffs() for Y in Ys[:nd]]
+
+            def cmax(k):
+                return max(float(abs(c[k]).mid()) if k < len(c) else 0.0 for c in cs) + 1e-300
+            ymax = max(1.0, max(float(abs(c[0]).mid()) for c in cs))
+            h = min((tol * ymax / cmax(N)) ** (1.0 / N), (tol * ymax / cmax(N - 1)) ** (1.0 / (N - 1)), 1.0 - t)
+            Vk, A0 = taylor_V_cols(sys_, ctxs, N, W, with_A0=True)
+            h = min(h, 1.0 / A0)                  # the linearization's rate: growing modes are resolved
+            hh = acb(h)
+            y = [acb(VI.evalpoly(Ys[i], hh, N).mid()) for i in range(nd)] + y[nd:]
+            Wn = Vk[N]
+            for k in range(N - 1, -1, -1):
+                Wn = Wn * hh + Vk[k]
+            W = acb_mat([[acb(Wn[i, j].mid()) for j in range(m)] for i in range(n)])
+            t += h
+            ns += 1
+            if log and ns % 50 == 0:
+                with open(log, "a") as fh:
+                    fh.write(f"   numerics {leg.kind} t {t:.6f} h {h:.2e} steps {ns} [{time.time() - T0:.0f} s]\n")
+        steps.append(ns)
+    return y, W, steps
+
+
+def taylor_V_cols(sys_, ctxv, N, W0m, with_A0=False):
+    """Taylor coefficients of W(tau) = Phi(tau) W0 (n x m), W' = A(tau) W: W_{k+1} = (1/(k+1)) sum_j A_{k-j} W_j.
+    with_A0: also return the max row sum of |A_0| (the local rate of the linearization, per unit of the leg)."""
+    cache, xs, ixs, dxs, zero = ctxv
+    L = N + 1
+    ctx.cap = L
+    n, nd = sys_.n, sys_.nd
+    Acols = []
+    for j in range(n):
+        F = sys_.lin_unit(cache, j, xs, ixs, zero)
+        Acols.append([(F[i] * dxs).coeffs() for i in range(nd)])
+    Ak = []
+    for k in range(N + 1):
+        Mk = acb_mat(n, n)
+        for j in range(n):
+            col = Acols[j]
+            for i in range(nd):
+                cs = col[i]
+                if k < len(cs):
+                    Mk[i, j] = cs[k]
+        Ak.append(Mk)
+    Wk = [W0m]
+    for k in range(N):
+        acc = Ak[k] * Wk[0]
+        for j in range(1, k + 1):
+            acc = acc + Ak[k - j] * Wk[j]
+        Wk.append(acc * acb(arb(1) / (k + 1)))
+    if with_A0:
+        A0 = max(sum(float(abs(Ak[0][i, j]).mid()) for j in range(n)) for i in range(n)) + 1e-300
+        return Wk, A0
+    return Wk
+
+
 # ---------------------------------------------------------------- start sets
 
-def start_set(sys_, vals_c, w_c, cols=None, wcol=None, dx=None, N=24):
+def start_set(sys_, vals_c, w_c, cols=None, wcol=None, dx=None, N=24, NJ=None):
     """Lohner set at xi0.
     vals_c: enclosures of y+(xi0; p^) (nd acb); w_c: w at p^ (arb).
     cols: derivative columns over the parameter set (list of m lists of nd acb), wcol: their w-components (m arb).
@@ -171,6 +285,7 @@ def start_set(sys_, vals_c, w_c, cols=None, wcol=None, dx=None, N=24):
         cV = acb_mat([[acb(V0[i, j].mid()) for j in range(m)] for i in range(n)])
         var = (cV, Q, V0 - cV)
     lo = LohnerM(sys_, c, Q, q, N, var)
+    lo.NJ = NJ
     if dx is not None:
         lo.dx = list(dx)
     return lo

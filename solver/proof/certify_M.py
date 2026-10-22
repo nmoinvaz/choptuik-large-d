@@ -19,13 +19,17 @@ one zero in X and Dgt is non-singular there (Krawczyk 1969; Neumaier 1990, Thm 5
 the parallelepiped P = p^ + T X, and it is simple.
 
     python3 certify_M.py point M [--p=a,b,...] [--out=f.json] [--log=f.log]     C^1 point run (g, Dg at p^)
-    python3 certify_M.py refine M [--p=...] [--iters=k] [--tag=t]              Newton refinement of the centre
-                                                                               (non-rigorous numerics; point runs)
-    python3 certify_M.py box M --point=f.json --h=H --w=W[,W5,...] [--out=g.json]   box run over P (tilted columns)
-    python3 certify_M.py krawczyk --point=f.json --box=g.json [--mutate=...]    the test, from saved runs
-    python3 certify_M.py controls --point=f.json --box=g.json                   all mutation controls (exit 0 iff all
+    python3 certify_M.py refine M [--p=...] [--iters=k] [--modes=H,full,..] [--tag=t]   Newton refinement of the
+                                        centre (non-rigorous numerics) -> data/A_M_refine_M{M}_{tag}.json
+    python3 certify_M.py box M (--centre=refine.json [--use_out] | --point=f.json) --h=H --w=W3[,W5] [--out=g.json]
+                                        box run over P (tilted columns); its centre-trajectory set also gives g(p^)
+    python3 certify_M.py krawczyk --box=g.json [--point=f.json] [--mutate=...] [--theta=t] [--hier]   the test
+    python3 certify_M.py controls --box=g.json [--point=f.json]                 all mutation controls (exit 0 iff all
                                                                                verdicts are as expected)
-    python3 certify_M.py m1                                                     M = 1 reproduction of Theorem A(M=1)
+    python3 certify_M.py krawczyk --point=f.json --box=g.json --hier [--theta=t]   the test, then the comparison with
+                                                                               hier.py's zeros (--mutate=hier: must fail)
+    python3 certify_M.py startcheck M [--mutate]                               rigorous start data vs this file's series
+    python3 certify_M.py m1 [--mutate=m1ref]                                    M = 1 reproduction of Theorem A(M=1)
 """
 import json
 import os
@@ -69,15 +73,40 @@ HIER = {
 THM_A1 = {"A": ("2.54214804761338", "2.54214804761975"), "wf": ("0.776994013607438", "0.776994013612010")}
 
 
+R0 = {1: "0.1", 3: "0.0741", 5: "0.0622"}
+ARG = {1: "3pi/8", 3: "5pi/16", 5: "5pi/16"}
+NTAY, NJAC = 20, 12          # Taylor orders of the trajectory and of the step Jacobian (M >= 3); M = 1 uses 24, 24
+FPM_DIR = os.environ.get("CERTIFY_M_FPM_DIR")   # where fixed_point_M.py lives, if not next to this file
+
+
 def path_for(M):
-    """(r0, phi0, rho, xi1): M = 1 the lower path of Theorem A(M = 1); M >= 3 the same path from r0 = 0.08 (the
-    placeholder start radius, until fixed_point_M.py fixes it)"""
-    phi0 = 3 * arb.pi() / 8
-    return ("0.1", phi0, "0.2", "0.3") if M == 1 else ("0.08", phi0, "0.2", "0.3")
+    """(r0, phi0, rho, xi1). M = 1: the lower path of Theorem A(M = 1) (ray 3pi/8 from 0.1). M >= 3: the start ray of
+    inner_np.py / hier.py, arg xi = 5pi/16, from r0 = inner_np's r0_for (0.0741 at M = 3, 0.0622 at M = 5), where the
+    M-harmonic start-value lemma has small Cauchy bounds (fixed_point_M.py's table), then the same lower path: ray to
+    0.2, arc at 0.2, real axis to 0.3."""
+    phi0 = (3 if M == 1 else arb(5) / 2) * arb.pi() / 8
+    return (R0[M], phi0, "0.2", "0.3")
+
+
+def orders(M):
+    return (24, 24) if M == 1 else (NTAY, NJAC)
+
+
+def fpm_module():
+    """fixed_point_M (the M-harmonic start-value lemma, another agent's file) if importable, else None"""
+    if FPM_DIR and FPM_DIR not in sys.path:
+        sys.path.insert(0, FPM_DIR)
+    try:
+        import fixed_point_M
+        return fixed_point_M
+    except ImportError:
+        return None
 
 
 def start_mode(M):
-    return "fk" if M == 1 else "placeholder"
+    if M == 1:
+        return "fk"
+    return "fpm" if fpm_module() is not None and os.environ.get("CERTIFY_M_START") != "placeholder" else "placeholder"
 
 
 def exact_p(pstr):
@@ -112,6 +141,26 @@ def start_data(M, p, dirs, box=False):
         wcol = [W0 * dv[1] for dv in dirs]
         info = {"start": "fixed_point.start_data (rigorous)", "eta": float(eta_c[0].upper()),
                 "eta_der": float(eta_x[1].upper()), "rigorous": True}
+        return vals_c, cols, wcol, info
+    if start_mode(M) == "fpm":
+        import hashlib
+        FPM = fpm_module()
+        src = FPM.__file__
+        sha = hashlib.sha256(open(src, "rb").read()).hexdigest()[:16]
+        ctx.prec = 320
+        pc = [arb(x.mid()) for x in p]
+        _, vals_c, ders_c, eta_c = FPM.start_data_M(pc, M, path[0], ARG[M], +1, "1e-3", diag=True)
+        if box:
+            _, _, ders, eta_x = FPM.start_data_M([arb(x) for x in p], M, path[0], ARG[M], +1, "1e-3", diag=True)
+        else:
+            ders, eta_x = ders_c, eta_c
+        ctx.prec = PREC
+        m = M + 1
+        cols = [[sum((acb(dv[i]) * ders[i][k] for i in range(m)), acb(0)) for k in range(len(vals_c))] for dv in dirs]
+        wcol = [W0 * dv[1] for dv in dirs]
+        info = {"start": f"fixed_point_M.start_data_M (rigorous given that lemma; {src}, sha256 {sha}), arg {ARG[M]}, "
+                         f"diag splitting", "eta": float(eta_c[0].upper()), "eta_der": float(eta_x[1].upper()),
+                "rigorous": True, "fpm_sha256": sha}
         return vals_c, cols, wcol, info
     ctx.prec = PREC
     pc = [arb(x.mid()) for x in p]
@@ -185,13 +234,14 @@ def point_run(M, pstr, out=None, log=None, verbose=False):
     dirs = [[arb(1) if i == k else arb(0) for i in range(m)] for k in range(m)]
     vals, cols, wcol, info = start_data(M, p, dirs, box=False)
     ctx.prec = PREC
-    lo = CL.start_set(s, vals, CS.W0() * p[1], cols, wcol, dx=None)
+    NT, NJ = orders(M)
+    lo = CL.start_set(s, vals, CS.W0() * p[1], cols, wcol, dx=None, N=NT, NJ=NJ)
     path = path_for(M)
     if log:
         with open(log, "a") as fh:
             fh.write(f"point run M = {M} at p^ = {pstr}; start: {info['start']}\n")
     steps, _ = CL.integrate(lo, path, verbose=verbose, log=log)
-    res = {"kind": "point", "M": M, "p": list(pstr), "path": [path[0], "3pi/8", path[2], path[3]], "start": info,
+    res = {"kind": "point", "M": M, "p": list(pstr), "path": [path[0], ARG[M], path[2], path[3]], "start": info,
            "steps": steps, "sec": time.time() - t0, "prec": PREC, "sets": CL.dump_lohner(lo)}
     g, Dg = g_Dg(s, lo.c, lo.Q, lo.q, lo.var)
     res["g"] = [CL.s_arb(x) for x in g]
@@ -233,15 +283,14 @@ def T_matrix(Cm, M):
     return T
 
 
-def box_run(M, pt, h, ws, out=None, log=None, verbose=False):
-    """C^1 box run over P = p^ + T X, X = [-h, h]^2 x prod [-w, w]^2 (tilted columns dy/dx = dy/dp T)"""
+def box_run(M, pstr, Cm, h, ws, out=None, log=None, verbose=False):
+    """C^1 box run over P = p^ + T X, X = [-h, h]^2 x prod [-w, w]^2 (tilted columns dy/dx = dy/dp T); Cm the tilt
+    (rows of exact arb), from a point run or the refinement at (or near) p^"""
     t0 = time.time()
     ctx.prec = KPREC
     s = CS.SysM(M)
-    pstr = pt["p"]
     m = M + 1
-    Dg_mid = [[arb(arb(x).mid()) for x in row] for row in pt["Dg"]]
-    Cm = tilt_from(Dg_mid, M)
+    Cm = [[arb(x) for x in r] for r in Cm]
     T = T_matrix(Cm, M)
     widths = [arb(h), arb(h)] + [arb(ws[(i // 2) % len(ws)]) for i in range(M - 1)]
     # hull of P: p_o in p^_o + [-h, h], p_H in p^_H + C [-h, h] + [-w, w]
@@ -254,14 +303,15 @@ def box_run(M, pt, h, ws, out=None, log=None, verbose=False):
     vals, cols, wcol, info = start_data(M, pbox, dirs, box=True)
     ctx.prec = PREC
     dx = [acb(arb(0, wd)) for wd in widths]
-    lo = CL.start_set(s, vals, CS.W0() * p[1], cols, wcol, dx=dx)
+    NT, NJ = orders(M)
+    lo = CL.start_set(s, vals, CS.W0() * p[1], cols, wcol, dx=dx, N=NT, NJ=NJ)
     path = path_for(M)
     if log:
         with open(log, "a") as fh:
             fh.write(f"box run M = {M} at p^ = {pstr}, h = {h}, w = {ws}; start: {info['start']}\n")
     steps, _ = CL.integrate(lo, path, verbose=verbose, log=log)
     res = {"kind": "box", "M": M, "p": list(pstr), "h": h, "w": list(ws), "C": [[CL.s_arb(x) for x in r] for r in Cm],
-           "path": [path[0], "3pi/8", path[2], path[3]], "start": info, "steps": steps, "sec": time.time() - t0,
+           "path": [path[0], ARG[M], path[2], path[3]], "start": info, "steps": steps, "sec": time.time() - t0,
            "prec": PREC, "sets": CL.dump_lohner(lo)}
     if out:
         with open(out, "w") as fh:
@@ -271,32 +321,36 @@ def box_run(M, pt, h, ws, out=None, log=None, verbose=False):
 
 # ---------------------------------------------------------------- the Krawczyk test
 
-def krawczyk_test(pt, bx, mutate=None, theta=None, verbose=True):
-    """K(X) from a saved point run (g at p^) and box run (Dgt over X). mutate: None, or one of
-    'sign', 'noconj', 'negconj', 'scale' (function mutations), 'plant_out', 'plant_in', 'plant_H' (planted zeros),
-    'widen' (g(p^) widened). theta: shrink the box to theta X (Dgt(X) is valid over every sub-box centred at 0).
-    Returns a dict with ok, K, margins, the zero enclosure in p-coordinates."""
-    assert pt["p"] == bx["p"] and pt["M"] == bx["M"]
-    M = pt["M"]
+def krawczyk_test(bx, pt=None, mutate=None, theta=None, verbose=True):
+    """K(X) from a saved box run (Dgt over X, and g(p^) from its centre-trajectory set) and optionally a point run at
+    the same centre (then g(p^) and Y come from it). mutate: None, or one of 'sign', 'noconj', 'negconj', 'scale'
+    (function mutations), 'plant_out', 'plant_in', 'plant_H' (planted zeros), 'widen' (g(p^) widened). theta: shrink
+    the box to theta X (Dgt(X) is valid over every sub-box centred at 0). Returns a dict with ok, K, margins, the zero
+    enclosure in p-coordinates."""
+    if pt is not None:
+        assert pt["p"] == bx["p"] and pt["M"] == bx["M"]
+    M = bx["M"]
     m = M + 1
     ctx.prec = KPREC
     s = CS.SysM(M)
     fmut = mutate if mutate in ("sign", "noconj", "negconj", "scale") else None
     ell = jump_rows(s, fmut)
-    # g(p^) from the point run's centre set; Dg(p^) (for Y) from its columns
-    c, Q, q, var = CL.load_lohner(pt["sets"])
-    g = apply_set(ell, c, Q, q)
-    Dg = apply_var(ell, var)
     Cm = [[arb(x) for x in r] for r in bx["C"]]
     T = T_matrix(Cm, M)
     Tm = arb_mat(T)
-    Dgt0 = arb_mat(Dg) * Tm
+    cb, Qb, qb, varb = CL.load_lohner(bx["sets"])
+    if pt is not None:                             # g(p^) from the point run's centre set; Y from its columns
+        c, Q, q, var = CL.load_lohner(pt["sets"])
+        Dgt0 = arb_mat(apply_var(ell, var)) * Tm
+    else:                                          # both from the box run: its centre set, its column midpoints
+        c, Q, q = cb, Qb, qb
+        Dgt0 = arb_mat(apply_var(ell, varb))
+    g = apply_set(ell, c, Q, q)
     Dmid = arb_mat([[arb(Dgt0[i, j].mid()) for j in range(m)] for i in range(m)])
     Yb = Dmid.inv()
     Y = arb_mat([[arb(Yb[i, j].mid()) for j in range(m)] for i in range(m)])
     Yl = Y * ell
     Yg = apply_set(Yl, c, Q, q)
-    cb, Qb, qb, varb = CL.load_lohner(bx["sets"])
     YJ = apply_var(Yl, varb)                       # Y Dgt(X): the box run's columns are the tilted ones
     h = arb(bx["h"])
     widths = [h, h] + [arb(bx["w"][(i // 2) % len(bx["w"])]) for i in range(M - 1)]
@@ -336,11 +390,11 @@ def krawczyk_test(pt, bx, mutate=None, theta=None, verbose=True):
     margins = [float((widths[i] - abs(K[i]).upper()).lower()) for i in range(m)]
     rel = [mg / float(widths[i].mid()) for i, mg in enumerate(margins)]
     # the zero in p-coordinates: p* in p^ + T K
-    p = exact_p(pt["p"])
+    p = exact_p(bx["p"])
     pstar = [p[i] + sum((T[i][j] * K[j] for j in range(m)), arb(0)) for i in range(m)]
     res = {"ok": bool(ok), "K": K, "margins": margins, "rel_margins": rel, "pstar": pstar, "widths": widths,
            "g_rad": max(float(x.rad()) for x in g), "YJ_rad": max(float(YJ[i][j].rad()) for i in range(m) for j in range(m)),
-           "Yg": Yg, "YJ": YJ, "T": T}
+           "Yg": Yg, "YJ": YJ, "T": T, "p_hat": p}
     if verbose:
         tag = f" [mutation {mutate}]" if mutate else ""
         print(f"Krawczyk M = {M}{tag}: K(X) in int X: {ok}; relative margins " + ", ".join(f"{r:+.3f}" for r in rel))
@@ -362,52 +416,160 @@ def hull_contains(res, pvals):
     return all(res["pstar"][i].contains(arb(v)) for i, v in enumerate(pvals))
 
 
+def hier_check(res, M, mutate=False, verbose=True):
+    """the certified zero against hier.py's double-precision zeros (HIER[M], two solves each, their spread = hier's
+    accuracy). Two statements, both must hold:
+      (a) hier's zeros lie in the axis-aligned hull of the certified parallelepiped P = p^ + T X;
+      (b) in every coordinate they agree with the certified zero enclosure p^ + T K(X) to within 3x hier's spread.
+    (Literal containment in P itself is not expected: P is thinner in the higher-harmonic directions than hier's own
+    accuracy there.) mutate: hier's zeros moved by 100x the spread (at least 1e-9) in A: must fail."""
+    ctx.prec = KPREC
+    pts = [[arb(v) for v in pt] for pt in HIER[M]]
+    m = M + 1
+    spread = [max(abs(float(pts[a][i].mid()) - float(pts[b][i].mid())) for a in range(len(pts)) for b in range(len(pts)))
+              for i in range(m)]
+    spread = [max(s, 1e-15 * abs(float(pts[0][i].mid()))) for i, s in enumerate(spread)]
+    if mutate:
+        sh = max(100 * spread[0], 1e-9)
+        pts = [[p[0] + sh] + p[1:] for p in pts]
+    T = res["T"]
+    hull = []
+    for i in range(m):
+        acc = arb(0)
+        for j in range(m):
+            acc = acc + T[i][j] * arb(0, res["widths"][j])
+        hull.append(res["p_hat"][i] + acc)
+    ok_a = all(hull[i].contains(p[i]) for p in pts for i in range(m))
+    dev = [max(float(abs(p[i] - res["pstar"][i]).upper()) for p in pts) for i in range(m)]
+    ok_b = all(dev[i] <= float(res["pstar"][i].rad()) + 3 * spread[i] for i in range(m))
+    if verbose:
+        names = ["A", "w/w_inf"] + [f"{b}{nu}" for nu in range(3, M + 1, 2) for b in ("B", "C")]
+        print(f"hier.py check M = {M}{' [mutated: hier zeros shifted]' if mutate else ''}: (a) inside the hull of P: "
+              f"{ok_a}; (b) agreement within 3x hier's spread: {ok_b}")
+        for i, nm in enumerate(names):
+            print(f"   {nm:8s} |hier - certified| <= {dev[i]:.2e}   hier spread {spread[i]:.1e}   hull half-width "
+                  f"{float(hull[i].rad()):.1e}")
+    return ok_a and ok_b
+
+
+def start_check(M, mutate=False):
+    """the rigorous start data (fixed_point_M.start_data_M) must contain the midpoints of this file's own series
+    (certify_M_sys.series_generic_M, independent code) at the start point; mutate: the series values shifted by 1e-40
+    (relative to O(1) values, far above both radii): must fail"""
+    if fpm_module() is None:
+        print("start check: fixed_point_M.py not importable (set CERTIFY_M_FPM_DIR); skipped")
+        return None
+    p = exact_p(START[M])
+    m = M + 1
+    dirs = [[arb(1) if i == k else arb(0) for i in range(m)] for k in range(m)]
+    vf, cf, _, info = start_data(M, p, dirs)
+    old = os.environ.get("CERTIFY_M_START")
+    os.environ["CERTIFY_M_START"] = "placeholder"
+    vp, cp, _, _ = start_data(M, p, dirs)
+    if old is None:
+        del os.environ["CERTIFY_M_START"]
+    else:
+        os.environ["CERTIFY_M_START"] = old
+    sh = arb("1e-40") if mutate else arb(0)
+    okv = all(vf[i].contains(acb(vp[i].mid()) + sh) for i in range(len(vf)))
+    okd = all(cf[k][i].contains(acb(cp[k][i].mid())) for k in range(m) for i in range(len(vf)))
+    dv = max(float(abs(vf[i].mid() - vp[i].mid())) for i in range(len(vf)))
+    print(f"start check M = {M}{' [mutated]' if mutate else ''}: {info['start']}\n   contains this file's series values: "
+          f"{okv} (max difference {dv:.1e}, radius {max(float(v.rad()) for v in vf):.1e}); derivatives: {okd}")
+    return okv and okd
+
+
 # ---------------------------------------------------------------- refinement (non-rigorous numerics)
 
-def newton_step(pt, M, mode):
-    """the Newton step from a point run: mode 'H' (higher harmonics only, outer fixed) or 'full'"""
+def newton_steps(g, Dg, M):
+    """the Newton steps from g and Dg (lists of arb points): ('H', higher harmonics only at fixed (A, wf)) and
+    ('full'). Computed at KPREC: Dg has condition up to about 1e15 in these raw units."""
     ctx.prec = KPREC
     m = M + 1
-    g = [arb(arb(x).mid()) for x in pt["g"]]
-    D = arb_mat([[arb(arb(x).mid()) for x in row] for row in pt["Dg"]])
-    if mode == "H" and M > 1:
-        H = list(range(2, m))
-        DHH = arb_mat([[D[i, j] for j in H] for i in H])
-        st = DHH.solve(arb_mat([[g[i]] for i in H]))
-        step = [arb(0), arb(0)] + [-st[k, 0] for k in range(len(H))]
+    D = arb_mat([[arb(x) for x in row] for row in Dg])
+    sF = D.solve(arb_mat([[x] for x in g]))
+    full = [-sF[k, 0] for k in range(m)]
+    if M == 1:
+        return full, full
+    H = list(range(2, m))
+    DHH = arb_mat([[D[i, j] for j in H] for i in H])
+    st = DHH.solve(arb_mat([[g[i]] for i in H]))
+    hstep = [arb(0), arb(0)] + [-st[k, 0] for k in range(len(H))]
+    return hstep, full
+
+
+def numerics_point(M, pstr, log=None):
+    """g and Dg at p (NOT rigorous: plain high-precision Taylor integration from the series start values), midpoints"""
+    ctx.prec = PREC
+    s = CS.SysM(M)
+    p = exact_p(pstr)
+    m = M + 1
+    path = path_for(M)
+    old = os.environ.get("CERTIFY_M_START")
+    os.environ["CERTIFY_M_START"] = "placeholder"
+    if M == 1:
+        _, vals, ders, _ = CS.placeholder_start(p, M, path[0], path[1])
     else:
-        st = D.solve(arb_mat([[x] for x in g]))
-        step = [-st[k, 0] for k in range(m)]
-    return step
+        dirs = [[arb(1) if i == k else arb(0) for i in range(m)] for k in range(m)]
+        vals, cols_, _, _ = start_data(M, p, dirs)
+        ders = cols_
+    if old is None:
+        del os.environ["CERTIFY_M_START"]
+    else:
+        os.environ["CERTIFY_M_START"] = old
+    ctx.prec = PREC
+    W0 = CS.W0()
+    cols = [list(ders[k]) + [acb(W0 if k == 1 else 0)] for k in range(m)]
+    y, Wm, steps = CL.numerics_run(s, vals, W0 * p[1], cols, path, N=NUM_N, tol=NUM_TOL, log=log)
+    ell = jump_rows(s)
+    n = s.n
+    z = arb_mat([[y[i].real] for i in range(n)] + [[y[i].imag] for i in range(n)])
+    Z = arb_mat(2 * n, m)
+    for i in range(n):
+        for j in range(m):
+            Z[i, j], Z[n + i, j] = Wm[i, j].real, Wm[i, j].imag
+    gv, Dv = ell * z, ell * Z
+    g = [arb(gv[i, 0].mid()) for i in range(m)]
+    Dg = [[arb(Dv[i, j].mid()) for j in range(m)] for i in range(m)]
+    return g, Dg, steps
 
 
-def refine(M, pstr, iters, tag, verbose=False):
-    """alternate: H-Newton while the higher-harmonic step is above 1e-12 relative to the box we aim for, then full
-    Newton; each iteration is one C^1 point run, saved as data/A_M_point_M{M}_{tag}_it{k}.json"""
+NUM_N, NUM_TOL = 30, 1e-32
+
+
+def refine(M, pstr, iters, tag, modes=None):
+    """Newton refinement of the centre (NOT rigorous numerics; any centre is allowed). Iteration k: g, Dg at p_k by
+    numerics_point, then an 'H' step (higher harmonics only, at fixed (A, wf)) or a 'full' step; default modes:
+    H, full, H, full, ... Saves data/A_M_refine_M{M}_{tag}.json after every iteration (p_in, p_out, the tilt C at
+    p_in, |g|, the step sizes), which the box run reads (--centre=...)."""
     os.makedirs(DATA, exist_ok=True)
     os.makedirs(LOGS, exist_ok=True)
     log = os.path.join(LOGS, f"A_M_refine_M{M}_{tag}.log")
+    hist = []
     for it in range(iters):
-        outf = os.path.join(DATA, f"A_M_point_M{M}_{tag}_it{it}.json")
-        pt = point_run(M, pstr, out=outf, log=log, verbose=verbose)
-        ctx.prec = KPREC
-        sH = newton_step(pt, M, "H")
-        sF = newton_step(pt, M, "full")
-        nH = max([float(abs(x).upper()) for x in sH[2:]] + [0.0])
-        nF = max(float(abs(x).upper()) for x in sF)
-        mode = "H" if (M > 1 and it == 0) else "full"
+        t0 = time.time()
+        g, Dg, steps = numerics_point(M, pstr, log=log)
+        sH, sF = newton_steps(g, Dg, M)
+        mode = (modes[it] if modes else ("H" if it % 2 == 0 else "full")) if M > 1 else "full"
         step = sH if mode == "H" else sF
-        newp = [(arb(pstr[i]) + step[i]) for i in range(M + 1)]
-        newstr = [x.mid().str(45, radius=False) for x in newp]
-        msg = (f"refine M = {M} it {it}: |g| = {max(abs(float(arb(x).mid())) for x in pt['g']):.3e}, g radius "
-               f"{pt['g_rad']:.1e}, H-step {nH:.2e}, full step {nF:.2e} -> {mode} step; steps {pt['steps']}, "
-               f"{pt['sec']:.0f} s\n   new p = {newstr}")
+        ctx.prec = KPREC
+        newp = [exact_p([pstr[i]])[0] + step[i] for i in range(M + 1)]
+        newstr = [x.mid().str(50, radius=False) for x in newp]
+        Cm = tilt_from(Dg, M)
+        rec = {"it": it, "p_in": list(pstr), "mode": mode, "p_out": newstr,
+               "g": [x.str(20) for x in g], "full_step": [x.str(10) for x in sF], "H_step": [x.str(10) for x in sH],
+               "steps": steps, "sec": time.time() - t0}
+        hist.append(rec)
+        msg = (f"refine M = {M} it {it}: |g| = {max(abs(float(x)) for x in g):.3e}; H step "
+               f"{max([abs(float(x)) for x in sH[2:]] + [0.0]):.2e}; full step (outer) "
+               f"{max(abs(float(x)) for x in sF[:2]):.2e}, (inner) {max([abs(float(x)) for x in sF[2:]] + [0.0]):.2e} "
+               f"-> {mode} step; {sum(steps)} steps, {time.time() - t0:.0f} s")
         print(msg, flush=True)
         with open(log, "a") as fh:
-            fh.write(msg + "\n")
-        with open(os.path.join(DATA, f"A_M_centre_M{M}_{tag}.json"), "w") as fh:
-            json.dump({"M": M, "history": it, "p_in": list(pstr), "p_out": newstr, "H_step": nH, "full_step": nF,
-                       "mode": mode}, fh, indent=1)
+            fh.write(msg + "\n   p_out = " + ", ".join(newstr) + "\n")
+        with open(os.path.join(DATA, f"A_M_refine_M{M}_{tag}.json"), "w") as fh:
+            json.dump({"M": M, "p_in": list(pstr), "p_out": newstr, "C": [[x.str(60) for x in r] for r in Cm],
+                       "history": hist, "note": "non-rigorous numerics (certify_M_lohner.numerics_run)"}, fh, indent=1)
         pstr = newstr
     return pstr
 
@@ -427,14 +589,14 @@ CONTROLS = [
 ]
 
 
-def run_controls(pt, bx):
+def run_controls(bx, pt=None):
     ok_all = True
     rows = []
     clean = None
     for name, mut, expect, desc in CONTROLS:
-        if mut == "plant_H" and pt["M"] == 1:
+        if mut == "plant_H" and bx["M"] == 1:
             continue
-        r = krawczyk_test(pt, bx, mut, verbose=False)
+        r = krawczyk_test(bx, pt, mut, verbose=False)
         if mut is None:
             clean = r
         verdict = r["ok"] == expect
@@ -450,6 +612,21 @@ def run_controls(pt, bx):
               f"{'OK' if verdict else 'UNEXPECTED'}", flush=True)
     print("CONTROLS " + ("ALL AS EXPECTED" if ok_all else "SOME UNEXPECTED"))
     return ok_all, rows
+
+
+def centre_and_tilt(o, M):
+    """the centre p^ and the tilt C for a box run: --centre=refine.json (the refinement's final centre and the tilt of
+    its last Newton run) or --point=point.json (a point run's centre and its Dg)"""
+    if "centre" in o:
+        with open(o["centre"]) as fh:
+            d = json.load(fh)
+        ctx.prec = KPREC
+        return d["p_out"] if "use_out" in o else d["p_in"], [[arb(x) for x in r] for r in d["C"]]
+    with open(o["point"]) as fh:
+        pt = json.load(fh)
+    ctx.prec = KPREC
+    Dg_mid = [[arb(arb(x).mid()) for x in row] for row in pt["Dg"]]
+    return pt["p"], tilt_from(Dg_mid, M)
 
 
 def opts_of(argv):
@@ -473,30 +650,40 @@ def main():
     if mode == "refine":
         M = int(pos[0])
         pstr = o["p"].split(",") if "p" in o else START[M]
-        refine(M, pstr, int(o.get("iters", 3)), o.get("tag", "a"), verbose="verbose" in o)
+        modes = o["modes"].split(",") if "modes" in o else None
+        refine(M, pstr, int(o.get("iters", 3)), o.get("tag", "a"), modes)
         return 0
     if mode == "box":
         M = int(pos[0])
-        with open(o["point"]) as fh:
-            pt = json.load(fh)
+        pstr, Cm = centre_and_tilt(o, M)
         ws = o.get("w", "0").split(",")
-        r = box_run(M, pt, o["h"], ws, out=o.get("out"), log=o.get("log"), verbose="verbose" in o)
+        r = box_run(M, pstr, Cm, o["h"], ws, out=o.get("out"), log=o.get("log"), verbose="verbose" in o)
         print(f"box run M = {M}: steps {r['steps']}, {r['sec']:.0f} s")
         return 0
     if mode in ("krawczyk", "controls"):
-        with open(o["point"]) as fh:
-            pt = json.load(fh)
+        pt = None
+        if "point" in o:
+            with open(o["point"]) as fh:
+                pt = json.load(fh)
         with open(o["box"]) as fh:
             bx = json.load(fh)
-        M = pt["M"]
+        M = bx["M"]
         if mode == "controls":
-            ok, _ = run_controls(pt, bx)
+            ok, _ = run_controls(bx, pt)
             return 0 if ok else 1
-        r = krawczyk_test(pt, bx, o.get("mutate"))
+        th = o.get("theta")
+        r = krawczyk_test(bx, pt, o.get("mutate"), theta=th)
         print(f"   start values: {pt['start']['start']}")
         print(f"   g(p^) radius {r['g_rad']:.1e}; max radius of Y Dgt(X) {r['YJ_rad']:.1e}")
+        print(f"   box: h = {bx['h']}, w = {bx['w']}{', shrunk by theta = ' + th if th else ''}")
         print(describe(r, M))
+        if "hier" in o and r["ok"]:
+            hok = hier_check(r, M, mutate=(o.get("mutate") == "hier"))
+            return 0 if hok else 1
         return 0 if r["ok"] else 1
+    if mode == "startcheck":
+        ok = start_check(int(pos[0]), mutate="mutate" in o)
+        return 0 if ok else 1
     if mode == "m1":
         return m1_reproduce(o)
     print(__doc__)
@@ -514,10 +701,10 @@ def m1_reproduce(o):
     with open(pf) as fh:
         pt = json.load(fh)
     if not os.path.exists(bf) or "rerun" in o:
-        box_run(1, pt, "1e-9", ["0"], out=bf, log=log)
+        box_run(1, START[1], [], "1e-9", ["0"], out=bf, log=log)
     with open(bf) as fh:
         bx = json.load(fh)
-    r = krawczyk_test(pt, bx)
+    r = krawczyk_test(bx, pt)
     print(describe(r, 1))
     ref = THM_A1
     if o.get("mutate") == "m1ref":       # control: a reference shifted by 1e-11 must not be reproduced

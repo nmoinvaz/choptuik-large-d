@@ -36,11 +36,20 @@ J_\nu = D^+_\nu(\xi_1) - \overline{D^+_{-\nu}(\xi_1)} ,
 
 with y⁺ continued from the start ray along the path below. At M = 1 this is the function J_D of A_certify.md §11.2.
 
-**Path.** The lower path of Theorem A(M = 1): the ray arg ξ = φ₀ = 3π/8 from r₀ to ρ = 0.2, the arc |ξ| = 0.2 down to the
-real axis, the real axis from 0.2 to ξ₁ = 0.3. r₀ = 0.1 at M = 1; at M ≥ 3, r₀ = 0.08 until the M-harmonic start-value
-lemma fixes it. (hier.py evaluates at ξ₁ = 0.2 on the upper path from a ray at arg ξ = 5π/16. Same zero set if y⁺ is
-analytic between the paths, which is lemma 6b's business; ξ₁ = 0.3 is used because the outer signal there is about
-2×10⁴ times larger in absolute terms, as at M = 1, A_certify.md §5.1.)
+**Path.** A start ray arg ξ = φ₀ from r₀ to ρ = 0.2, the arc |ξ| = 0.2 down to the real axis, the real axis from 0.2 to
+ξ₁ = 0.3 (the lower path of Theorem A(M = 1)).
+
+| M | φ₀ | r₀ | why |
+|---|---|---|---|
+| 1 | 3π/8 | 0.1 | Theorem A(M = 1) exactly (fixed_point.py's ray) |
+| 3 | 5π/16 | 0.0741 | hier.py's / inner_np.py's start ray and radius (r0_for); the M-harmonic start-value lemma holds there with derivative bounds 6×10⁻¹⁴ |
+| 5 | 5π/16 | 0.0622 | the same; derivative bounds 4×10⁻²⁰, while on 3π/8 they are 5.3 (useless) |
+
+The derivative bounds are those of `fixed_point_M.py`'s table (the lemma agent's worktree, `lemmas_M_runs/fixed_point_M_table.log`,
+Cauchy radius 10⁻³). Up to ρ = 0.2 the path is hier.py's; hier.py stops at ξ₁ = 0.2 on the real axis, this certificate
+continues along the real axis to 0.3, where the outer signal is about 2×10⁴ times larger in absolute terms while the
+state stays of order one (as at M = 1, A_certify.md §5.1). The zero set is the same as at 0.2 if lemma 6a holds at both
+radii; the real leg needs no analyticity beyond the real axis.
 
 **What the code proves (the claim, kept separate from the theorem it serves).** Given enclosures of y⁺ and of its
 parameter derivatives at the start point (the start-value lemma), the code proves:
@@ -55,9 +64,13 @@ or anything about M > 5 or the untruncated problem.
 
 - Braaksma's 1-summability theorem, for the existence of y⁺ and its asymptotics on its sector (as in Theorem A(M = 1)).
 - The start-value lemma for the M-harmonic system: at M = 1 this is `fixed_point.start_data` (proved, A_certify.md §4.4–4.5).
-  **At M ≥ 3 it does not exist yet; the runs use a non-rigorous placeholder** (the series truncated at its smallest
-  term plus an assumed error ball, `certify_M_sys.placeholder_start`). Until `fixed_point_M.py` replaces it, every
-  M ≥ 3 result here is numerical evidence produced by the certificate's code path, not a certificate.
+  At M ≥ 3 it is `fixed_point_M.start_data_M` (another agent's file, notes in `proof/A_lemmas_M.md`; not yet merged or
+  reviewed when these runs were made). certify_M.py imports it when it is importable (next to it after the merge, or
+  from the directory in the environment variable `CERTIFY_M_FPM_DIR`) and records the file's path and SHA-256 in every
+  run; otherwise it falls back to a **non-rigorous placeholder** (the series truncated at its smallest term plus an
+  assumed error ball, `certify_M_sys.placeholder_start`), and a result obtained that way is numerical evidence produced
+  by the certificate's code path, not a certificate. `python3 certify_M.py startcheck M` checks that the lemma's
+  enclosure contains this file's own series (independent code; at M = 3 they agree to 4×10⁻⁷⁶).
 - The correctness of the code: python-flint 0.9 (arb/acb), validated_int.py's Lohner step (reviewed,
   [A_review.md](A_review.md)), and the new files above (not reviewed).
 
@@ -148,20 +161,40 @@ third order in h and the Jacobian is enclosed in mean value form; that is not at
 
 **The centre.** The box must be centred within a fraction of its widths of the zero, in every coordinate:
 |x_o − x_o*| ≪ h and the inner coordinates to ≪ w. hier.py's zeros are good to about 2×10⁻¹¹ (the spread between two
-solves). The centre is refined by Newton steps computed from C¹ point runs at 256 bits (non-rigorous numerics; any
-centre is allowed, the test is what is rigorous): first a Newton step in the higher harmonics alone at fixed (A, wf),
-then full Newton steps. (A full step from an untuned centre would leak the inner quadratic error into the outer
-coordinates through L.)
+solves), far from the 10⁻¹⁶–10⁻²⁰ the inner coordinates need. The centre is refined by Newton steps from
+`certify_M_lohner.numerics_run`, a plain Taylor integrator at 256 bits (order 30, steps from the Taylor coefficients and
+‖A₀‖h ≤ 1; non-rigorous, and it need not be: any centre is allowed, the test is what is rigorous). The steps alternate:
+a Newton step in the higher harmonics alone at fixed (A, wf), then a full Newton step. (A full step from an untuned
+centre would leak the inner quadratic error into the outer coordinates through L.) The last refinement also gives the
+tilt C (from its Dg).
+
+**One rigorous run.** The certificate needs one box run only: its centre-trajectory set (the set of y⁺(·; p̂), started
+from the point enclosure at p̂ and propagated with the step Jacobians enclosed over the box) gives g̃(0) = g(p̂), its
+columns give Dg̃(X), and Y is the inverse of the midpoint of the columns (any Y is allowed). A separate C¹ point run at
+p̂ can be supplied (`--point=`) but is not needed.
 
 ## 3. The runs
 
-All runs use `validated_int.Lohner` (A_certify.md §9.1) through `certify_M_lohner.LohnerM`, which changes three things
-that do not touch the mathematics of the step:
+All runs use `validated_int.Lohner` (A_certify.md §9.1) through `certify_M_lohner.LohnerM`, which changes four things:
 
-- the a-priori enclosures are lemma6_common's (a common inflation floor; containment still verified);
+- the a-priori enclosures are lemma6_common's (a common inflation floor; containment still verified), as on the lower
+  path of Theorem A(M = 1);
 - the Taylor coefficients come from Picard iteration with growing series length (iteration k needs length k + 2; the
   coefficients 0..N are the same numbers);
-- the system is `certify_M_sys.SysM` and the legs `certify_M_sys.LegM` (the start-ray angle is a parameter).
+- the columns of the linearization are computed by `SysM.lin_unit` (sparse: products with zero series skipped;
+  self-tested against `lin` to 10⁻⁷¹);
+- the step Jacobian may use a lower Taylor order NJ than the trajectory (order N). The enclosure
+  J ∈ Σ_{k≤NJ} V_k(X)h^k + h^{NJ+1}Φ_{NJ+1}(Ỹ)Ṽ holds for any order (integral form of the remainder:
+  V^{(NJ+1)}(s) = (NJ+1)! Φ_{NJ+1}(Y(s)) V(s) with Y(s) ∈ Ỹ, V(s) ∈ Ṽ), so a lower NJ only widens J, by about
+  (λh)^{NJ+1}/(NJ+1)!, far below the width the parameter box gives it. M = 1 uses N = NJ = 24 (validated_int's
+  choice); M ≥ 3 uses N = 20, NJ = 12.
+
+At M = 1 one step of LohnerM and one step of validated_int.Lohner from the same set give identical midpoints and radii
+(`certify_M_sys.py selftest`). One step costs about 1.5 s at M = 5 on an idle core (python-flint; 4–13 s on the shared
+machine at load 13–17). The steps are limited by the first-order a-priori enclosure, which fails beyond λh ≈ 0.2–0.3 for
+the local fast rate λ (`|ξ′|/|ξ|³` on the ray), whatever MAXREL is; the trajectory and its parameter derivatives are
+slow solutions and would allow λh of order one (the numerics integrator takes such steps). A higher-order a-priori
+enclosure would cut the step count several-fold; it was not built.
 
 **Point run** (C¹ along one trajectory): the set of y⁺(·; p̂) and the M + 1 columns ∂y⁺/∂p_k at p̂, each a Lohner set,
 started from the start values and their derivatives at p̂. Gives g(p̂) and Dg(p̂) with small radii. Used for g̃(0) in
