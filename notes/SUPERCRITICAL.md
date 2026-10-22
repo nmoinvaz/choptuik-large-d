@@ -327,8 +327,13 @@ for the CSS case; the general-τ statements rest on the quasi-static layer reduc
   exactly that case: c² = 1 − δ₀ = (1 − ε²e^{−ω²r²})/(1 − ε²e^{−ω²r²}sin²(ωτ−τ₀)) vanishes at r_div for every τ while
   ∂_τφ stays finite (`rw_oscillaton.py`, their Eq. (10) checked to 10⁻¹⁹⁰), so their divergence is a static front
   where Y = 2φ_τ/c diverges.
-- **What the polar chart cannot see.** Behind the front the slices are frozen and cover only a finite proper time, so
-  any horizon that forms later lies beyond the chart. In the CSS ODE the interior also carries a free mode
+- **Which side is frozen, and what the polar chart cannot see.** The frozen region is always on the side r < r_s(t).
+  For CSS in the past patch the front r_s = (−t)/β shrinks, so at fixed r the frozen region lies to the *past* of the
+  front's passage: the CSS member is the time reverse of an expanding front. The equations are time-symmetric (in
+  polar slicing θ₊ = −θ₋, so trapped and anti-trapped cannot be told apart). The time-reversed member (t > 0, x = r/t)
+  and the shifted solution of §4.3 have an expanding front with the frozen region to its future, the configuration of
+  black-hole formation. There the polar slices cover only a finite proper time behind the front, so any horizon that
+  forms later lies beyond the chart. In the CSS ODE the interior also carries a free mode
   δ(1/b) ∝ x^{−(n−1+P)} (a self-similar central mass; the inner boundary condition of `css_bvp.py` sets it to zero).
   A positive central mass would give 1/b = 0 inside the frozen region, at a radius set by that mass and not by
   β²x² = 1.
