@@ -1,0 +1,8 @@
+EEG (3a) - x**(-2) * repo (E2) = (-n*x**2 + n - x**2*u(x, tau) + x**2 + u(x, tau) - 1)*sig(x, tau)**2/(2*x**2)
+EEG (3b) - 1/(x**2*c(x, tau)) * repo (E1) = 0
+EEG (3c) - sqrt(2)/(2*x**2) * repo (A) = sqrt(2)*(-x**2*Derivative(sig(x, tau), x) + x*(-n*sig(x, tau) - sig(x, tau)*u(x, tau) + Derivative(sig(x, tau), x)) + (n + u(x, tau) - 1)*sig(x, tau))*c(x, tau)/(2*x**2)
+EEG (3d) - sqrt(2)/(2*x**3) * repo (B) = sqrt(2)*(x**2*Derivative(sig(x, tau), x) + x*(sig(x, tau) + Derivative(sig(x, tau), tau) - Derivative(sig(x, tau), x)) - Derivative(sig(x, tau), tau))/(2*x**2)
+model.rs E3 - E4 - (A) = 0
+model.rs E3 + E4 - (B) = 0
+model.rs b equation * (n-1) - (E2) = 0
+FAIL (mutation: psi)
