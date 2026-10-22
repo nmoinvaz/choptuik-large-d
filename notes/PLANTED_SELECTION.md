@@ -418,3 +418,130 @@ gives 1.00011 and the Padé and factored estimates 0.9999. On planted functions 
 The ± in the README's Δ∞ = 1.6439 ± 0.0002 is the spread of the best estimates, not a tested interval. Under the
 ring-free assumption the calibrated range (0.99992–1.00019, i.e. Δ∞ = 1.64358–1.64402) gives a similar number, but for
 a different reason, and with its centre 10⁻⁴ lower in Δ.
+
+## 5. Follow-up: the converged σ₁₃ (post-freeze)
+
+Everything in this section is post-freeze. Input: `solver/inner_amp/scan27J1000p960/`, σ₀…σ₁₃ at wf = 0.99, 1.00, 1.01,
+computed at 960 bits. Its err13 is about 10⁻²² (1.5–1.9×10⁻¹³ relative), so it meets the 10⁻¹⁰ requirement of section
+3.6. Its σ₀…σ₁₂ agree with `scan25phys` to 4×10⁻¹³. Script: `solver/inner_amp/planted_k13.py` (stages `real`, `calib`,
+`predict`, `recomplete`); outputs in `planted_results.jsonl` ("N0 scan27J1000p960") and `planted_checks.json`
+("K13 predict", "K13 recomplete").
+
+### 5.1 The real estimates at K = 13
+
+The harness gives:
+
+| estimator | K = 13 | K = 12 |
+|---|---|---|
+| arg crossing | 1.000046 | 1.000109 |
+| ratio | 0.999284 | 0.999152 |
+| central Padé, [3/9]–[8/4] | 0.99980–0.99990 (mid 0.999847) | |
+| G | 0.999995 | 0.999883 |
+| Aitken, k = 11–13 | 0.999886 | |
+
+The arg crossings keep falling monotonically: 1.000299, 1.000197, 1.000109, 1.000046 for k = 10–13. The frozen
+detectors that fire are the same two as at K = 12, D-ratio and D-ratiolaw (section 3.8). D-arg, D-bracket, D-padé and
+D-G stay silent.
+
+### 5.2 Calibration at K = 13
+
+Each ring-free plant's own error at K = 13 (estimate − ω_t), turned into the zero position the real K = 13 estimate
+implies. Errors are × 10⁴.
+
+| plants | arg error → zero | G error → zero |
+|---|---|---|
+| P-ARC (7) | +0.86 … +1.01 → 0.999945–0.999960 | +0.35 … +0.40 → 0.999955–0.999960 |
+| chord (7) | +0.82 … +0.96 → 0.999950–0.999964 | +0.31 … +0.37 → 0.999959–0.999964 |
+| mirror (7) | +0.53 … +0.69 → 0.999977–0.999992 | +0.36 … +0.46 → 0.999949–0.999959 |
+| β = 2 (7) | +1.21 … +1.30 → 0.999916–0.999925 | +0.74 … +0.75 → 0.999920–0.999922 |
+| **all 28 arc plants** | **+0.53 … +1.30 → 0.999916–0.999992** | **+0.31 … +0.75 → 0.999920–0.999964** |
+| C-EXP (K = 12 completion; its σ₁₃ is its own) | −0.01 → 1.000047 | +1.64 → 0.999831 |
+| REFIT plants with fit residual ≤ 10⁻⁴ (5) | +0.42 … +1.27 → 0.999919–1.000004 | +0.26 … +0.48 → 0.999947–0.999969 |
+
+- **The coordinator's numbers are confirmed.** For arg and G over the 28 arc plants, mirror included: arg +5.3×10⁻⁵ to
+  +1.30×10⁻⁴, so 0.999916–0.999992; G +3.1×10⁻⁵ to +7.5×10⁻⁵, so 0.999920–0.999964.
+- **C-EXP widens the single-estimator ranges** to 0.999916–1.000047 for arg and 0.999831–0.999964 for G. Its two
+  implied zeros disagree with each other by 2.2×10⁻⁴, so its error pattern does not fit the real data.
+- **REFIT plants that fit the real coefficients poorly behave worse.** Those with residual 1.6–8×10⁻⁴ have arg errors
+  down to −2.1×10⁻⁴ (ω_t = 1.005) and −1.2×10⁻³ (ω_t = 0.990). The calibration holds only for plants that match the
+  real coefficients to about 10⁻⁴.
+- **The other estimators do not calibrate.** Their errors depend on the family so strongly that the implied zeros do not
+  overlap:
+  - ratio: from 0.99744–0.99795 (mirror) to 0.99987–1.00000 (P-ARC);
+  - Padé: from 0.99986 (mirror) to 1.00034–1.00068 (P-ARC);
+  - Aitken: 0.99976–0.99991.
+
+### 5.3 Does the real σ₁₃ rule out the ring?
+
+Every completion of section 3.4 predicted σ₁₃ before it was known. The table compares those predictions with the
+converged value, by relative error at the three nodes. "Rejected by" lists the frozen detectors that fire at K = 13 on
+the completion but not on the real data.
+
+| completion (K = 12) | σ₁₃ error | τ₁₃ error | its arg₁₃ | rejected by |
+|---|---|---|---|---|
+| ring-free simple-zero law from τ₁₁, τ₁₂ | — | 7–8×10⁻⁴ | — | — |
+| C-W1–3, ratio-law tails (rings) | 1.1–2.1×10⁻³ | 1.9–3.2 (×2–3) | 1.0265 or none | D-arg, D-bracket, D-padé, D-G |
+| C-ARC, arc tails fitted at ω_t = 1, four shapes (rings) | 0.7–5×10⁻⁴ | 0.10–0.79 | 1.0008–1.0312 | D-arg, D-bracket, D-padé, D-G |
+| C-ARC, best-fit tails, four shapes (rings) | 1.5–5×10⁻⁴ | 0.25–0.80 | 0.9936–1.0295 | D-bracket, D-padé, D-G, and D-arg for three shapes |
+| C-ARC, arc tails fitted at 0.998 / 1.002 (rings) | 0.9–1.2×10⁻³ | 1.4–2.0 | none | D-arg, D-bracket, D-padé, D-G |
+| C-EXP, Borel–Padé [6/6] (ring-free) | 0.6–1.5×10⁻⁶ | 1.1–2.2×10⁻³ | 1.000161 | D-arg, D-bracket, D-padé |
+
+**No section-3.4 completion survives.** Every ring that a K = 12 junction produces predicted a τ₁₃ off by 10% to 300%,
+and the frozen detectors reject it. C-EXP, the ring-free one, came close: σ₁₃ to 10⁻⁶. But its arg₁₃ rises instead of
+falling, so D-arg rejects it too. The best prediction of τ₁₃ came from the plain simple-zero law (7–8×10⁻⁴). That is
+about what zeros at |x| ≈ 12 would cause, (7.4/12.1)¹³ ≈ 2×10⁻³, so the data look like the ring-free arc plants, whose
+next zero is at 12.1 + 0.9i.
+
+There are therefore no survivors to place the zero. The same recipes glued at σ₁₃ (tail from k = 14) give the
+following, with zeros counted at wf = 1.00:
+
+| re-glued completion (K = 13) | zero at | zeros in \|x\| < 7.3 / \|x\| < 12 |
+|---|---|---|
+| ratio-law tails, three windows | 0.997613–0.997934 | 7 / 13 |
+| best-fit arc tails, four shapes (L2 floors 1.0–4.3×10⁻⁴) | 0.999754 (β = 2), 1.000180 (arc), 1.000380 (chord), 1.000533 (mirror) | 3–5 / 11–12 |
+| Borel–Padé [6/7] from σ₀…σ₁₃ (all poles \|t\| ≤ 1.64, so it passes the frozen type rule; ring-free) | **0.999982** | 0 / 1 |
+
+The re-glued ratio-law and arc completions again carry rings. These have 11–13 zeros, are invisible to τ₁…τ₁₃, and
+will show at k = 14. So σ₁₃ has eliminated every ring that was on the table, but a ring of fourteen or more zeros cannot
+be excluded by thirteen coefficients. Each new coefficient tests the previous generation of rings, as σ₁₃ just did.
+
+The only ring-free exact completion is the [6/7] exponential sum. Against its zero:
+
+| estimator, K = 13 | error |
+|---|---|
+| arg₁₃ | +6.4×10⁻⁵ |
+| G₁₃ | +1.3×10⁻⁵ |
+| Padé mid | −1.35×10⁻⁴ |
+
+### 5.4 Verdict at K = 13
+
+**The ring-free assumption is now supported by data, but not proved.** It made a falsifiable prediction, and the
+converged σ₁₃ bore it out:
+
+- the arg crossings kept falling, to 1.000046;
+- τ₁₃ matched the simple-zero law to 8×10⁻⁴;
+- no new frozen detector fired.
+
+Every ring hypothesis on the table instead predicted a τ₁₃ off by 10%–300% and is rejected. A ring of fourteen or more
+zeros remains logically possible; σ₁₄ is its test. Under the ring-free assumption, two numbers follow:
+
+- **From the calibration.** arg₁₃ and G₁₃, calibrated on the 28 arc plants, put the zero at 0.999916–0.999992 and
+  0.999920–0.999964. These overlap at **0.99992–0.99996**.
+- **From the ring-free exact completion.** The Borel–Padé [6/7] function, the only one that passes the frozen type rule,
+  has its zero at 0.999982.
+
+Together these give **ω*/ω∞ = 0.99992–0.99998**, i.e. **Δ∞ = 1.64393–1.64403** (1.64398 ± 0.00005). That is an
+*estimator range*: the spread of plant-calibrated estimates over five ring-free function shapes, plus one ring-free
+completion. It is not a confidence interval and not a bound. Widened to the single-estimator envelope including C-EXP's
+calibration, it is 0.99983–1.00005, i.e. Δ∞ = 1.6438–1.6442. The finite-D value Δ∞ = 1.64389375 lies 4×10⁻⁵ below the
+narrow range and inside the wide one. Five plant shapes are too few to read that gap as evidence against Conjecture 1.
+
+Proposed README text, for the coordinator:
+
+> "With σ₁₃ converged (960 bits, `scan27J1000p960/`), the arg crossings keep falling (1.000109, 1.000046 at k = 12, 13)
+> and the factored series gives 0.999995. Calibrated on planted functions of the same class (Laplace integrals over a
+> Borel arc; notes/PLANTED_SELECTION.md §5), these put the real zero at ω*/ω∞ = 0.99992–0.99996. The one ring-free
+> function that reproduces σ₀…σ₁₃ exactly, a [6/7] Borel–Padé sum, puts it at 0.99998. So the D = ∞ inner equations alone
+> give Δ∞ = 1.6440 ± 0.0001 (estimator range, 1.64393–1.64403), against 1.64389375 from the finite-D solutions. This
+> assumes S₁ has no other zeros within |x| ≈ 12. Twelve coefficients could not test that; the thirteenth rejected every
+> alternative constructed so far, and σ₁₄ tests the next."

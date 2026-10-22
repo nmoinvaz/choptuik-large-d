@@ -71,8 +71,8 @@ of $r^2$ gives an exact unstable mode with growth rate $2$, which yields the cri
 and two further hypotheses. We reduce a selection theorem for models with finitely many harmonics to two contraction
 arguments, and prove by a computer-assisted argument, assuming Braaksma's summability theorem, that the selection
 condition of the one-harmonic model has exactly one zero in an explicit box, and that it is simple. Evaluated numerically
-without truncation, the conjectured rule gives $\Dinf = 1.6438 \pm 0.0002$ if the selection function has no other nearby
-zeros, and $1.641$--$1.650$ otherwise. The
+without truncation, the conjectured rule gives $\Dinf = 1.6440 \pm 0.0001$ if the selection function has no other nearby
+zeros, which the thirteenth coefficient supports. The
 work was done by an AI model (Claude, Anthropic) under the author's direction and has not been reviewed by a human expert.
 \end{abstract}
 
@@ -2032,23 +2032,32 @@ to $10^{-5}$, with the zero planted at $\omega/\winf = 0.996$--$1.004$. The pair
 misses one family of shapes, and its lower end comes from the ratio estimate, which is $1.3$--$5.4\times10^{-3}$ low on every
 plant. The Pad\'e and factored estimates are biased in opposite directions by up to $8\times10^{-4}$, so their agreement on
 the real data is not evidence of accuracy. The crossing estimate is the most reliable (errors $-0.8$ to $+1.9\times10^{-4}$);
-calibrated on the plants it puts the zero at $\omega^*/\winf = 0.99992$--$1.00019$, at $A_0 = 2.720$ (solutions: $2.70$--$2.72$). Read as a value of the echo period,
+at twelve orders, calibrated on the plants, it put the zero at $\omega^*/\winf = 0.99992$--$1.00019$, at
+$A_0 = 2.720$ (solutions: $2.70$--$2.72$), if $S_1$ has no zeros besides $x_0$ within $|x| \approx 9$. Twelve coefficients
+do not exclude them: functions with exactly the real $\sigma_0,\dots,\sigma_{12}$ have their zero anywhere in
+$0.996$--$1.002$, the far cases hiding a ring of zeros.
+
+With $\sigma_{13}$ converged (960 bits, relative error $2\times10^{-13}$), the crossings keep falling ($1.000299$,
+$1.000197$, $1.000109$, $1.000046$ at $k = 10$--$13$) and the factored series gives $0.999995$. Every ring completion of
+$\sigma_0,\dots,\sigma_{12}$ constructed so far mispredicts the thirteenth coefficient of $\ln S_1$ by $10$--$300\%$,
+while the ring-free simple-zero law misses it by $8\times10^{-4}$. Calibrated on the plants at thirteen orders, the
+crossing and factored estimates put the zero at $0.99992$--$0.99996$, and the one ring-free function that reproduces
+$\sigma_0,\dots,\sigma_{13}$ exactly, a $[6/7]$ Borel--Pad\'e sum, at $0.99998$. Read as a value of the echo period,
 \[
-\Dinf = 1.6438 \pm 0.0002
+\Dinf = 1.6440 \pm 0.0001 \qquad (1.64393\text{--}1.64403)
 \]
 from the $D = \infty$ inner equations alone, with no input from the finite-$D$ solutions, against $1.643893746$ from
-them~\cite{companion}. This holds only if $S_1$ has no zeros besides $x_0$ within $|x| \approx 9$. Twelve coefficients do not
-exclude them: functions with exactly the real $\sigma_0,\dots,\sigma_{12}$ have their zero anywhere in $0.996$--$1.002$
-($\Dinf = 1.641$--$1.650$), the far cases hiding a ring of zeros that only order $13$ reveals.
+them~\cite{companion}: $4\times10^{-5}$ below the range and inside the wider single-estimator range $1.6438$--$1.6442$.
+Five plant shapes are too few to read that gap as a disagreement. The range holds only if $S_1$ has no zeros besides
+$x_0$ within $|x| \approx 12$; a ring of fourteen or more zeros is still possible, and $\sigma_{14}$ is its test.
 
 \subsection{What the evidence does not show}
-The $\pm0.0002$ above is the range of a calibrated estimator, not an error bound, and it rests on the assumption about the
+The $\pm0.0001$ above is the range of calibrated estimators, not an error bound, and it rests on the assumption about the
 other zeros of $S_1$.
-The coefficients $\sigma_k$ come from late-order fits; two fit windows agree to about $10^{-19}$ for $\sigma_1$--$\sigma_{12}$, and the
+The coefficients $\sigma_k$ come from late-order fits; two fit windows agree to about $10^{-19}$ for $\sigma_1$--$\sigma_{12}$ ($\sigma_{13}$ to $2\times10^{-13}$ relative), and the
 estimates need them to about $10^{-10}$, but only $\sigma_1$ is enclosed rigorously (Lemma~\ref{lem:sigma1}). At the zero the series \eqref{eq:sigmak} is far from summed, and every
 estimator (crossings, ratios, Pad\'e approximants, the factored series) is a resummation whose convergence is observed, not
-proved; the arc-shaped Borel singularity of Section~\ref{sec:entire} is a known source of slow convergence. Settling the other zeros needs more orders, starting with a converged $\sigma_{13}$; order $13$ does not converge with the
-present late-order window. Finally, agreement of the numbers is evidence that the selection rule is the right one, not a proof
+proved; the arc-shaped Borel singularity of Section~\ref{sec:entire} is a known source of slow convergence. Settling the other zeros needs more orders, starting with $\sigma_{14}$. Finally, agreement of the numbers is evidence that the selection rule is the right one, not a proof
 of Conjecture~\ref{conj}.
 
 \subsection{Other matter}

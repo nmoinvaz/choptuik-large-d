@@ -80,10 +80,11 @@ Headline results:
   predict the shape of the echo, F₃/F₁ = 0.055 against 0.055 extrapolated from the data, and with three harmonics
   the full set of conditions gives Δ = 1.619, 1.5% below Δ∞, and with five harmonics Δ = 1.64516, 0.077% above (one
   harmonic: 29% above): the offset alternates in sign and shrinks fifteen- to twentyfold per harmonic pair. Without truncation, an
-  amplitude expansion to twelve orders puts the selected ω at ω∞ to about 2×10⁻⁴ (Δ∞ = 1.6438 ± 0.0002, an estimator
-  range tested on planted functions), at amplitude 2.720 (measured: 2.70–2.72), provided the selection function has
-  no further zeros near the selected one; twelve coefficients cannot exclude those, and with them the zero could lie
-  anywhere in 0.996–1.002 ω∞ (Δ∞ = 1.641–1.650). The finite-D solutions give 1.643893746. The rule itself is not yet
+  amplitude expansion to thirteen orders puts the selected ω at 0.99992–0.99998 ω∞ (Δ∞ = 1.6440 ± 0.0001, an
+  estimator range tested on planted functions), at amplitude 2.720 (measured: 2.70–2.72), provided the selection
+  function has no further zeros within |x| ≈ 12; the thirteenth coefficient rejected every such alternative built so
+  far, but a larger ring of zeros is still possible. The finite-D solutions give 1.643893746, 4×10⁻⁵ below that range and
+  inside its wider version (1.6438–1.6442); five planted shapes are too few to call that a disagreement. The rule itself is not yet
   proved ([Large D](#large-d-what-the-1d-expansion-can-and-cannot-see)).
 - **Relation to published work.** Agreement with the accepted values at D = 4 and at the maximum of Δ near D = 3.756;
   a 6×10⁻⁵ difference at D = 5 that the published higher-resolution data trace to resolution; and the published
@@ -1424,15 +1425,22 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   Borel arc whose coefficients match the real σ₀…σ₁₂ to 10⁻⁵, with the zero planted at ω/ω∞ = 0.996–1.004. The pair
   above is not a bracket: it misses one family of shapes, and its width comes from the ratio estimate, which is
   1.3–5.4×10⁻³ low on every plant. Padé and G are biased in opposite directions by up to 8×10⁻⁴, so their agreement here
-  is not evidence of accuracy. The arg crossing is the most reliable (errors −0.8 to +1.9×10⁻⁴); calibrated on the
-  plants, it puts the zero at 0.99992–1.00019, **Δ∞ = 1.6438 ± 0.0002 from the D = ∞ inner equations alone**, an
-  estimator range rather than a bound, with no input from the finite-D solutions (1.643893746). That holds only if S₁
-  has no zeros besides x₀ within |x| ≈ 9. Twelve coefficients do not exclude them: functions with exactly the real
-  σ₀…σ₁₂ have their zero anywhere in 0.996–1.002 (Δ∞ = 1.641–1.650), the far cases hiding a ring of zeros that only
-  order 13 reveals. The estimates also need every σₖ to about 10⁻¹⁰. A converged σ₁₃ is the next step.
-  Order 13 at J = 750 does not converge (its error estimate, 10⁻⁹–2.5×10⁻⁸, is the size of σ₁₃ itself, while σ₁–σ₁₂ stay
-  at 10⁻²⁰; `scan27phys/`, kept for reference): it needs a longer late-order window (J ≥ 1000, about 10 hours per ω on the
-  8-thread machine). The rule itself is still a conjecture (hypotheses H1–H2,
+  is not evidence of accuracy. The arg crossing is the most reliable (errors −0.8 to +1.9×10⁻⁴). At twelve orders, calibrated
+  on the plants, it put the zero at 0.99992–1.00019, provided S₁ has no zeros besides x₀ within |x| ≈ 9; twelve
+  coefficients could not exclude those, and functions with exactly the real σ₀…σ₁₂ have their zero anywhere in
+  0.996–1.002, the far cases hiding a ring of zeros. The estimates also need every σₖ to about 10⁻¹⁰.
+- *Thirteen orders.* σ₁₃ converges at 960 bits with the late-order window J = 1000
+  (`solver/inner_amp/scan27J1000p960/`, relative error 1.5–1.9×10⁻¹³; at J = 750 it did not, `scan27phys/`). The arg
+  crossings keep falling (1.000299, 1.000197, 1.000109, 1.000046 at k = 10–13), G gives 0.999995 and the central Padé
+  approximants 0.99980–0.99990. Every ring of zeros constructed to fit σ₀…σ₁₂ mispredicts the thirteenth coefficient of
+  ln S₁ by 10%–300%, while the ring-free simple-zero law misses it by 8×10⁻⁴. Calibrated on the plants at thirteen
+  orders, arg and G put the zero at 0.99992–0.99996, and the one ring-free function that reproduces σ₀…σ₁₃ exactly, a
+  [6/7] Borel–Padé sum, puts it at 0.99998. Together, **ω*/ω∞ = 0.99992–0.99998, Δ∞ = 1.6440 ± 0.0001 (1.64393–1.64403)
+  from the D = ∞ inner equations alone**: an estimator range over five plant shapes and one completion, not a bound,
+  with no input from the finite-D solutions. Their value, 1.643893746, lies 4×10⁻⁵ below it and inside the wider
+  single-estimator range 1.6438–1.6442; five plant shapes are too few to read that gap as a disagreement. The range
+  assumes no zeros besides x₀ within |x| ≈ 12. A ring of fourteen or more zeros is still possible, and σ₁₄ is its test
+  ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md) §5). The rule itself is still a conjecture (hypotheses H1–H2,
   gaps (a)–(c)). Tightening the number needs more orders, approximants that model the competing singularity
   explicitly (differential or algebraic approximants), or M = 7, which evaluates the multiplier at real amplitude with
   no series to resum (being fixed).

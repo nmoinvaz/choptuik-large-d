@@ -24,25 +24,27 @@ import planted_plants as PP  # noqa: E402
 import planted_run as R  # noqa: E402
 
 
-def arc_completion(kind, wt_fit, M=6):
+def arc_completion(kind, wt_fit, M=6, kc=12, real=None, funcs=None):
     mp.mp.dps = PP.DPS
-    real = PP.load_real()
+    real = real or PP.load_real()
     nodes, info, xr = {}, {}, {}
     for wf in PP.NODES:
         arc = PP.Arc(wf, "arc" if kind == "beta2" else kind)
         ex = mp.mpc(1) if kind == "beta2" else PP.mpc(PP.BETA[wf]) - 1
         lap = PP.Laplace(arc, ex, M)
         x0 = PP.x0_planted(wf, wt_fit)
-        res = lap.fit(real[wf][0], PP.factor([x0]))
+        res = lap.fit(real[wf][0], PP.factor([x0]), K=kc)
         pc = lap.coeffs(PP.factor([x0]), normalise=False)
         norm = pc[0]
         pc = [c / norm for c in pc]
-        sig = [real[wf][0][k] if k <= 12 else pc[k] for k in range(PP.KMAX + 1)]
-        corr = [real[wf][0][k] - pc[k] for k in range(13)]
+        sig = [real[wf][0][k] if k <= kc else pc[k] for k in range(PP.KMAX + 1)]
+        corr = [real[wf][0][k] - pc[k] for k in range(kc + 1)]
         L0 = lap.L(0)
 
         def f(x, lap=lap, x0=x0, corr=corr, L0=L0):
             return lap.L(x) * (1 - x / x0) / L0 + mp.polyval(corr[::-1], x)
+        if funcs is not None:
+            funcs[wf] = f
         z = mp.findroot(f, mp.mpc("7.40", "0"), tol=mp.mpf(10) ** -40, maxsteps=200)
         xr[wf] = z
         nodes[wf] = sig
@@ -56,11 +58,11 @@ def arc_completion(kind, wt_fit, M=6):
     return nodes, info, truth
 
 
-def refit_scan(kind, wts, M=6):
+def refit_scan(kind, wts, M=6, kc=12, real=None):
     """weighted L2 and max relative residual of the arc fit to the real sigma_0..12, against the planted wt
     (the moments do not depend on wt, so one Laplace object per node is refitted)"""
     mp.mp.dps = PP.DPS
-    real = PP.load_real()
+    real = real or PP.load_real()
     laps = {}
     for wf in PP.NODES:
         arc = PP.Arc(wf, "arc" if kind == "beta2" else kind)
@@ -70,7 +72,7 @@ def refit_scan(kind, wts, M=6):
     for wt in wts:
         l2, mx = 0.0, 0.0
         for wf in PP.NODES:
-            r = laps[wf].fit(real[wf][0], PP.factor([PP.x0_planted(wf, wt)]))
+            r = laps[wf].fit(real[wf][0], PP.factor([PP.x0_planted(wf, wt)]), K=kc)
             l2 += sum(x * x for x in r)
             mx = max(mx, max(r))
         out[wt] = (float(np.sqrt(l2)), mx)

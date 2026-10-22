@@ -254,30 +254,30 @@ class ArcFamily:
         return out
 
 
-def completion(kind, real=None, nmax=250):
+def completion(kind, real=None, nmax=250, kc=12):
     """C-W1/C-W2/C-W3 (ratio-law tail) or C-EXP (Borel-Pade [6/6] exponential sum). Returns ({wf: sigma list},
     {wf: function}, info)."""
     mp.mp.dps = DPS
     real = real or load_real()
     nodes, funcs, info = {}, {}, {}
     for wf in NODES:
-        sig = list(real[wf][0][:13])
+        sig = list(real[wf][0][:kc + 1])
         if kind.startswith("C-W"):
             lo = {"C-W1": 6, "C-W2": 8, "C-W3": 9}[kind]
-            rat = [sig[k] / sig[k + 1] for k in range(lo, 12)]
-            A = mp.matrix([[k, 1] for k in range(lo, 12)])
+            rat = [sig[k] / sig[k + 1] for k in range(lo, kc)]
+            A = mp.matrix([[k, 1] for k in range(lo, kc)])
             b = mp.matrix(rat)
             AH = A.H
             c = mp.lu_solve(AH * A, AH * b)
             kap, beta = 1 / c[0], c[1] / c[0]
-            for k in range(12, nmax):
+            for k in range(kc, nmax):
                 sig.append(sig[k] * kap / (k + beta))
             coeffs = sig
             funcs[wf] = (lambda cs: (lambda x: mp.polyval(cs[::-1], x)))(coeffs)
             info[wf] = {"kappa": [float(mp.re(kap)), float(mp.im(kap))], "beta": [float(mp.re(beta)), float(mp.im(beta))]}
         else:
-            a = [sig[k] * mp.factorial(k) for k in range(13)]
-            p, q = mp.pade(a, 6, 6)
+            a = [sig[k] * mp.factorial(k) for k in range(kc + 1)]
+            p, q = mp.pade(a, 6, kc - 6)        # [6/6] (kc = 12), [6/7] (kc = 13)
             us = mp.polyroots(q[::-1], maxsteps=400, extraprec=400)
             dq = [k * q[k] for k in range(1, len(q))]
             ts, rs = [], []
@@ -285,13 +285,13 @@ def completion(kind, real=None, nmax=250):
                 r = -mp.polyval(p[::-1], u) / (u * mp.polyval(dq[::-1], u))
                 ts.append(1 / u)
                 rs.append(r)
-            c0 = p[6] / q[6]
+            c0 = p[6] / q[6] if kc == 12 else mp.mpc(0)
             funcs[wf] = (lambda ts, rs, c0: (lambda x: c0 + mp.fsum(r * mp.exp(t * x) for t, r in zip(ts, rs))))(ts, rs, c0)
             coeffs = [(c0 if k == 0 else 0) + mp.fsum(r * t ** k for t, r in zip(ts, rs)) / mp.factorial(k)
                       for k in range(KMAX + 1)]
             info[wf] = {"poles": [[float(mp.re(t)), float(mp.im(t))] for t in ts],
                         "max_pole": max(float(abs(t)) for t in ts),
-                        "reproduce_max_rel": max(float(abs(coeffs[k] - sig[k]) / abs(sig[k])) for k in range(13))}
+                        "reproduce_max_rel": max(float(abs(coeffs[k] - sig[k]) / abs(sig[k])) for k in range(kc + 1))}
         nodes[wf] = coeffs
     # truth: the zero near 7.4 at each node, then the crossing of the quadratic through Im x and Im sqrt(x)
     xr = {}
