@@ -39,34 +39,37 @@ def ratio(x, A, nu):
     return complex(x[i], x[i + 1]) / A
 
 
-def m7_from_log():
-    """the last 'ZERO M 7' line of each logs/hier_nb_M7_full*.log; all are printed (they must agree to their noise), and
-    the one named by --log=NAME, or else the last file in sorted order, is used"""
-    files = sorted(glob.glob(os.path.join(ROOT, "solver/inner_stokes/logs/hier_nb_M7_full*.log")))
+def m7_from_log(tol=1.0):
+    """The M = 7 zero: among the fixed-(A, w) solves of the outer Newton (logs/hier_nb_M7_fixA_xi015_newton*.log,
+    m7_outer.py) and any hier ZERO lines (logs/hier_nb_M7_full*.log), the point with the smallest Schur-corrected |r_1|;
+    accepted as the zero only if |r_1| < tol (the ZERO lines of the failed level-1 runs have |r_1| ~ 7 and are listed but
+    rejected). --log=NAME restricts the choice to one log."""
+    files = sorted(glob.glob(os.path.join(ROOT, "solver/inner_stokes/logs/hier_nb_M7_fixA_xi015_newton*.log"))
+                   + glob.glob(os.path.join(ROOT, "solver/inner_stokes/logs/hier_nb_M7_full*.log")))
     pick = [a.split("=", 1)[1] for a in sys.argv if a.startswith("--log=")]
-    found = []
-    for fn in files:
-        txt = open(fn).read()
-        m = list(re.finditer(r"ZERO M 7: A ([0-9.]+)\s+w/w_inf ([0-9.]+)", txt))
-        if m:
-            found.append((os.path.basename(fn), float(m[-1].group(1)), float(m[-1].group(2))))
-    for name, A, c in found:
-        print(f"  {name}: A {A:.9f}  w/w_inf {c:.9f}")
     if pick:
         files = [f for f in files if os.path.basename(f) == pick[0]]
-    for fn in reversed(files):
-        txt = open(fn).read()
-        m = list(re.finditer(r"ZERO M 7: A ([0-9.]+)\s+w/w_inf ([0-9.]+).*?\n((?:\s+F_\d.*\n)+)", txt))
-        if m:
-            g = m[-1]
-            A, c = float(g.group(1)), float(g.group(2))
-            xs = []
-            for line in g.group(3).strip().splitlines():
-                z = re.search(r"F_(\d)/F_1 = ([+-][0-9.]+)([+-][0-9.]+)i", line)
-                rr = complex(float(z.group(2)), float(z.group(3)))
-                xs += [rr.real * A, rr.imag * A]
-            return dict(c=c, A=A, x=xs, src=os.path.relpath(fn, ROOT))
-    return None
+    pat = re.compile(r"(?:ZERO|FIXED-A) M 7: A ([0-9.]+)\s+w/w_inf ([0-9.]+).*?r_1 ([+-][0-9.]+e[+-]\d+)([+-][0-9.]+e[+-]\d+)i"
+                     r".*?\n((?:\s+F_\d.*\n)+)")
+    found = []
+    for fn in files:
+        m = list(pat.finditer(open(fn).read()))
+        if not m:
+            continue
+        g = m[-1]
+        A, c = float(g.group(1)), float(g.group(2))
+        r1 = abs(complex(float(g.group(3)), float(g.group(4))))
+        xs = []
+        for line in g.group(5).strip().splitlines():
+            z = re.search(r"F_(\d)/F_1 = ([+-][0-9.]+)([+-][0-9.]+)i", line)
+            rr = complex(float(z.group(2)), float(z.group(3)))
+            xs += [rr.real * A, rr.imag * A]
+        found.append(dict(c=c, A=A, x=xs, r1=r1, src=os.path.relpath(fn, ROOT)))
+        print(f"  {os.path.basename(fn)}: A {A:.9f}  w/w_inf {c:.9f}  |r_1| {r1:.3f}")
+    if not found:
+        return None
+    best = min(found, key=lambda d: d["r1"])
+    return best if best["r1"] < tol else None
 
 
 MUT = "--mutate=nocorr" in sys.argv     # planted test with the geometric correction dropped (L = c_7): must fail
