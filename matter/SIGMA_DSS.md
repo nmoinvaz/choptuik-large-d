@@ -1,6 +1,70 @@
 # The σ-model's echoing (DSS) critical solution in D dimensions
 
-DRAFT — results pending.
+[SIGMA.md](SIGMA.md) built the D-dimensional self-gravitating hedgehog σ-model (wave map into $`S^{D-1}`$, coupling
+η = 4πGf²) and followed its continuously self-similar (CSS) critical solution, which ends at a fold at D = 8.544
+(η = 0.14) and so cannot test the large-D exponent. This page computes the other critical solution, the discretely
+self-similar (DSS, echoing) one, as a periodic boundary-value problem: validated at D = 4 against Husa et al. and Lechner
+et al., then continued in D at η = 1 and η = 0.3. The question is the one of [STRUCTURE.md](STRUCTURE.md): at fixed η the
+D = ∞ inner problem has the term sin 2u/(4s), which breaks the s-translation behind γ∞ = 1/2 for the scalar, so γ∞ need
+not be 1/2 and should depend on η, tending to the ℓ = 1 multiplet's value as η → ∞.
+
+Notation as in the README and SIGMA.md: D = n + 2, x = r/(−t), τ = −ln(−t), s = r²/(2n), γ = 1/λ the radius exponent
+(the mass exponent is (D − 3)γ). Statements are marked **computed** (numerical, with its checks), **argued**, or
+**not established**.
+
+Contents
+
+- [1. Summary](#1-summary)
+- [2. Equations](#2-equations)
+- [3. Method](#3-method)
+- [4. Validation in D = 4](#4-validation-in-d--4)
+- [5. Continuation in D](#5-continuation-in-d)
+- [6. Checks along the branch](#6-checks-along-the-branch)
+- [7. Large D: what the data allow](#7-large-d-what-the-data-allow)
+- [8. Verdict](#8-verdict)
+- [9. Open issues and a proposed local-machine task](#9-open-issues-and-a-proposed-local-machine-task)
+- [10. Scripts and data](#10-scripts-and-data)
+- [11. References](#11-references)
+
+## 1. Summary
+
+- **Solver (computed).** The ℓ-multiplet agent's periodic DSS solver, copied and extended by the σ-model terms. At
+  η = ∞ (in the field normalisation ψ = √(η/n) u) the σ-model is exactly the ℓ = 1 multiplet, so the DSS solution is
+  reached by continuation in η⁻¹ from the ℓ = 1 solution at any D.
+- **D = 4 validation (computed).** Δ(η) for 0.18 ≤ η ≤ 10 agrees with Husa et al.'s Table I to 0.6% or better for
+  η ≥ 0.225 and 1–2% at η = 0.2; γ = 0.11563 at η = 1 and 0.11551 at η = 0.3 against their 0.1163/0.1155 and
+  0.1152/0.1146; at η = ∞, γ = 0.11878 against the large-η limit 0.1185 ± 0.0005. The DSS–CSS transition fits
+  η_c = 0.1702 with a slope 2/a = 5.6 (LTHA02: η_c ≈ 0.17, slope ≈ λ_CSS = 5.14). The half-period symmetry
+  u(τ + Δ/2) = −u(τ) is the published one and is stable: without it imposed, Newton returns to it (D = 6).
+- **Δ(D), γ(D) (computed, D ≤ 10).** One branch, continued without folds from D = 4 to D = 10.47 (η = 1) and 10.60
+  (η = 0.3); the growth rates are in the table below (§5 has Δ and the checks). One real unstable mode besides the gauge
+  mode (the real roots of det M in 0.2 ≤ λ ≤ 7.4 at D = 6 are the gauge rate and λ, nothing else). Δ(D) rises from
+  0.46 to a maximum (1.027 near D = 9 at η = 1, 1.1717 near D = 8 at η = 0.3) and then decreases slowly where it is
+  resolved.
+- **Where the continuation stops (computed).** Above D ≈ 10 the k_c = 15 solutions lose resolution (the ψ-constraint
+  grows from 6×10⁻⁵ at D = 9 to 2×10⁻³ at D = 10 and 6×10⁻² at 10.5) and the continuation stalls at D = 10.47 and
+  10.60. The Jacobian's weakest directions at D = 9 are the near-null high centre harmonics of the main solver's "junk"
+  band (s/s_max = 1.5×10⁻¹⁰, no Δ component), not a fold: the tangent |dz/dD| falls smoothly to D = 10. So nothing
+  indicates that the DSS branch ends, but beyond D ≈ 10 it was not computed; the ℓ = 1 agent's solver stalls nearby
+  (D ≈ 9.3–9.8).
+- **γ∞ (not established).** Free fits of λ = λ∞ + Σ c_k n⁻ᵏ to D ≤ 9 give λ∞ = 1.76, 2.74, 2.14, 2.31 (η = 1) and 1.87,
+  2.66, 2.15, 2.34 (η = 0.3) for 1–4 powers (D ≥ 5); imposing λ∞ = 2 fits about as well (residuals within a factor 2,
+  except a fragile factor 7 at η = 1 with four powers). A planted control shows the method would separate λ∞ = 2.3 from
+  2 on these D if three powers described the data, but on the real data the three-power residuals alternate in sign at
+  5×10⁻⁴, so the truncation is not adequate. The data allow γ∞ anywhere in about 0.36–0.57 and do not test γ∞ ≠ 1/2.
+- **What the data do show (computed).** At every D from 4 to 9, γ of the σ-model lies below the ℓ = 1 multiplet's by an
+  amount that depends on η and is nearly D-independent: −0.0028 to −0.0033 at η = 1, and −0.0146 to −0.0165 at η = 0.3
+  for D = 6–9. This is the η-dependence the prediction expects, in the direction η → ∞ → ℓ = 1, but whether the offset
+  survives to D = ∞ is an extrapolation of five points (fits: −0.003 to −0.005 at η = 1, −0.008 to −0.022 at η = 0.3).
+
+| D | 4 | 5 | 5.5 | 6 | 7 | 8 | 9 | 10 |
+|---|---|---|---|---|---|---|---|---|
+| γ, η = 1 | 0.11563 | 0.21265 | 0.24130 | 0.26273 | 0.29274 | 0.31307 | 0.32798 | 0.3425 |
+| γ, η = 0.3 | 0.11551 | 0.20568 | 0.23136 | 0.25097 | 0.27949 | 0.29966 | 0.31493 | 0.3245 |
+| γ, ℓ = 1 (η = ∞) | 0.11890 | 0.21551 | | 0.26557 | 0.29573 | 0.31620 | 0.33129 | |
+
+(k_c = 15 for the σ-model; the ℓ = 1 row is the ℓ-multiplet agent's k_c = 23 values, copied with attribution to
+`data/sigdss_l1_reference.jsonl`. The D = 10 values are less accurate, §6.)
 
 ## 2. Equations
 
@@ -120,3 +184,208 @@ symmetry (§6).
   7% of 2/λ_CSS = 0.389 (λ_CSS = 5.1428 at η = 0.17, SIGMA.md §4). Here a rises toward 0.389 as the fit window narrows
   (8% short at η ≤ 0.195), consistent with the heteroclinic picture: near η_c the DSS orbit spends a time
   (1/λ_CSS) ln 1/(η − η_c) near each of ±u_CSS per period.
+
+## 5. Continuation in D
+
+**Path.** The D = 4 continuation in η⁻¹ is §4. For D ≥ 5 the ℓ = 1 agent's k_c = 15 solution at D = 5 was continued
+in η⁻¹ to η = 1 and η = 0.3 (`data/sigdss_d5eta15*.jsonl`; at D = 5, Δ = 0.78335 → 0.80584 → 0.96431 for
+η = ∞, 1, 0.3), and from there in D at fixed η with k_c = 15 (`data/sigdss_m1up*.jsonl`, `data/sigdss_m03up*.jsonl`;
+the marches were restarted several times, after root-finder fixes and container restarts, always from saved
+solutions). From D = 9 on (η = 1) and D = 8 on (η = 0.3) the Newton solves use the main solver's smoothness prior on
+the high harmonics (`--reg 1e-8`, as in the ℓ-agent's code; §6) and accept |F| below 10⁻⁶. **Computed:**
+
+| D | η = 1: Δ | λ | γ | constraint | max abs u | λ_g | η = 0.3: Δ | λ | γ | constraint | max abs u |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 4 | 0.462226 | 8.64838 | 0.115629 | 4.8e-2 | 0.64 | 0.8981 | 0.533562 | 8.65735 | 0.115509 | 4.4e-3 | 1.33 |
+| 5 | 0.805845 | 4.70247 | 0.212654 | 1.9e-3 | 0.67 | 0.8684 | 0.964306 | 4.86186 | 0.205683 | 9.3e-4 | 1.31 |
+| 5.5 | 0.890368 | 4.14422 | 0.241300 | 5.2e-4 | 0.63 | 0.8574 | 1.059871 | 4.32227 | 0.231360 | 3.5e-4 | 1.21 |
+| 6 | 0.944491 | 3.80622 | 0.262728 | 2.1e-4 | 0.63 | 0.8485 | 1.115282 | 3.98458 | 0.250968 | 2.8e-4 | 1.19 |
+| 7 | 1.001249 | 3.41596 | 0.292744 | 2.6e-4 | 0.58 | 0.8359 | 1.163078 | 3.57795 | 0.279490 | 1.7e-4 | 1.09 |
+| 8 | 1.022509 | 3.19414 | 0.313073 | 1.8e-4 | 0.54 | 0.8283 | 1.171733 | 3.33713 | 0.299658 | 3.1e-5 | 1.01 |
+| 9 | 1.026904 | 3.04893 | 0.327984 | 6.0e-5 | 0.51 | 0.8243 | 1.164945 | 3.17532 | 0.314930 | 1.6e-5 | 0.95 |
+| 10 | 1.026142 | 2.91980 | 0.342490 | 1.6e-3 | 0.48 | 0.8222 | 1.154559 | 3.08142 | 0.324525 | 1.6e-3 | 0.89 |
+| last point | 1.0340 (D = 10.475) | | | 5.7e-2 | | | 1.115 (D = 10.597) | | | 7.1e-2 | |
+
+(λ_g = mean over τ of 1 − c_x(τ, 1), the growth rate of the gauge mode that relabels the light cone; max abs u is over
+the nodes 0.02 ≤ x ≤ 0.9 and the light cone.)
+
+- **γ rises monotonically** at both couplings, like the ℓ = 1 multiplet's and the scalar's, and stays below the ℓ = 1
+  values at every D (§7).
+- **Δ has a maximum.** At η = 1, Δ rises from 0.462 (D = 4) to 1.0270 near D = 9 and then decreases to 1.0244 at
+  D = 9.71; beyond that it rises again (1.0261 at D = 10, 1.0298 at 10.38) while the constraint grows from 4×10⁻⁴ to
+  7×10⁻³, so the values above D ≈ 9.7 are not reliable to better than a few 10⁻³. At η = 0.3, Δ peaks at 1.1717 near
+  D = 8 and decreases monotonically to 1.1546 at D = 10. The ℓ = 1 multiplet's Δ(D) is similar (0.9838, 0.9882 at D = 8,
+  9, k_c = 23; their k_c = 15 march turns over near D = 9).
+- **The amplitude** max|u| on 0 ≤ x ≤ 1 decreases with D (0.67 → 0.48 at η = 1, 1.31 → 0.89 at η = 0.3), and grows as η
+  decreases, as expected from u = κψ with ψ ∼ n^(−1/2) at fixed x. The O(1) nonlinearity that distinguishes the σ-model
+  from the multiplet at D = ∞ sits in the inner region x ∼ √n, outside the light cone (SIGMA.md §6.1), which the
+  periodic problem on 0 ≤ x ≤ 1 sees only through the analyticity condition at x = 1.
+- **No fold up to D = 10.** The secant tangent |dz/dD| falls smoothly from 0.91 (D = 6.1) to 0.25 (D = 9), dΔ/dD is
+  small and smooth, and the growth rate varies smoothly. The continuation stops at D = 10.475 (η = 1) and 10.597
+  (η = 0.3) for a numerical reason (§6), not because the branch ends: before the stop the constraint diagnostic has
+  grown by a factor 10³ and Δ jumps between neighbouring points (η = 0.3: 1.108–1.125 at D = 10.592–10.598), which a
+  smooth branch does not do.
+
+## 6. Checks along the branch
+
+- **Resolution, k_c = 23 against 15** ([`sigdss_run.py refine`](../solver/matter/sigdss_run.py),
+  `data/sigdss_refine_kc23.jsonl`). D = 6, η = 1: Δ = 0.94449116 against 0.94449059, λ = 3.8062216 against 3.8062242
+  (7×10⁻⁷ relative); constraint 2×10⁻⁶ against 2×10⁻⁴. D = 9, η = 1 (with the prior): λ = 3.048509 against 3.048927
+  (1.4×10⁻⁴ relative); Δ = 1.02703 against 1.02690, but at k_c = 23 Δ was still drifting by 10⁻⁵ per Newton step at
+  |F| = 2×10⁻¹⁰, along the near-null directions below, so it is determined only to about 10⁻⁴ there. D = 10:
+  D10KC23.
+- **The near-null band** ([`sigdss_svd.py`](../solver/matter/sigdss_svd.py), `data/sigdss_svd.jsonl`). At D = 9, η = 1
+  the smallest singular values of the Jacobian are 1.5×10⁻¹⁰, 6.6×10⁻¹⁰, 1.8×10⁻⁹, 5.3×10⁻⁹ relative (in Re/Im pairs),
+  with singular vectors almost entirely in the centre datum q(τ), harmonics k = 7–11, and Δ components below 10⁻⁶. This
+  is the "junk" band of the main solver (solver/notes.md: evanescent high-harmonic perturbations near the centre), here
+  already at D ≈ 9 for the hedgehog. It is why Newton stalls at |F| ≈ 10⁻⁸ above D ≈ 9 without the smoothness prior,
+  and the growth of the constraint above D = 10 shows that k_c = 15 no longer resolves the solution there. The prior
+  itself moves the solution little: re-converging the D = 9 (η = 1) and D = 8 (η = 0.3) solutions with it changes Δ by
+  1.4×10⁻⁸ and 1×10⁻⁹. The ℓ = 1 agent's k_c = 23 march with the prior stalls at D ≈ 9.2–9.8 in the same way (their
+  `logs/march_l1_kc23m.log`).
+- **Half-period symmetry** ([`sigdss_parity.py`](../solver/matter/sigdss_parity.py), `data/sigdss_parity.jsonl`). At
+  D = 6, η = 1 the symmetric solution is moved to a layout in which every field carries all harmonics 0 … 15 (2016
+  unknowns instead of 1015). Its residual is the same (1.7×10⁻¹⁰). The harmonics forbidden by u(τ + Δ/2) = −u(τ) were
+  then perturbed by 2×10⁻² (relative 10⁻³ per field) and Newton run without the symmetry: it returns to |F| = 7×10⁻¹⁵
+  with the forbidden harmonics at 5×10⁻¹⁰ and Δ unchanged to 3×10⁻¹⁰. So the symmetric solution is an isolated solution
+  of the unrestricted problem, as the evolutions of HLPTA00 and LTHA02 indicate.
+- **Unstable modes** (`data/sigdss_roots.jsonl`). At D = 6, η = 1 the sign changes of det M(λ) on 0.2 ≤ λ ≤ 7.4 (10
+  grid points, refined) are λ = 0.848495, equal to the gauge rate λ_g = 0.8484955, and λ = 3.806224: one physical real
+  unstable mode. Not checked: complex growth rates, and real ones of the opposite parity sector (perturbations that
+  break the half-period symmetry); an argument-principle count over a strip of height 2ω, prepared in
+  [`sigdss_count.py`](../solver/matter/sigdss_count.py), was too expensive for the shared machine (§9). At D = 4,
+  Lechner's thesis reports one unstable mode of the DSS solution, and the γ found here matches the evolutions, which
+  select the solution with one unstable mode.
+- **Growth-rate root finding.** The first version of the root finder (a secant on det M) stopped at its iteration cap
+  at two points, 3% and 8% from the root (D = 4 and 5.5 at η = 1); those values are discarded (records with
+  `last_step` above 10⁻³ in the jsonl files) and were recomputed.
+
+## 7. Large D: what the data allow
+
+**Fits of λ(D)** ([`sigdss_fit.py`](../solver/matter/sigdss_fit.py); `data/sigdss_fit_lam_eta1.json`,
+`data/sigdss_fit_lam_eta0.3.json`, `data/sigdss_fit_lam_l1ref.json`), D ≤ 9 (D = 10 is left out: its constraint is
+27 times that at D = 9 and its second difference in D is off the trend of the others), λ = λ∞ + Σ_{k ≤ m} c_k n⁻ᵏ free,
+against λ = 2 + Σ_{k ≤ m+1} c_k n⁻ᵏ (same number of parameters), rms residuals:
+
+| coupling | D range | m | λ∞ (free) | rms free | rms with λ∞ = 2 |
+|---|---|---|---|---|---|
+| η = 1 | 5–9 (6 points) | 1 | 1.758 | 6.8e-2 | 5.0e-2 |
+| | | 2 | 2.736 | 8.9e-3 | 2.1e-3 |
+| | | 3 | 2.141 | 4.7e-4 | 8.4e-4 |
+| | | 4 (1 dof) | 2.311 | 1.8e-5 | 1.3e-4 |
+| | 6–9 (4 points) | 1 | 2.019 | 1.6e-2 | 1.6e-2 |
+| η = 0.3 | 5–9 (6 points) | 1 | 1.870 | 5.5e-2 | 4.5e-2 |
+| | | 2 | 2.660 | 7.7e-3 | 2.2e-3 |
+| | | 3 | 2.147 | 5.3e-4 | 9.1e-4 |
+| | | 4 (1 dof) | 2.337 | 6.5e-5 | 9.8e-5 |
+| | 6–9 (4 points) | 1 | 2.081 | 1.2e-2 | 1.5e-2 |
+| ℓ = 1 (reference) | 5–9 (5 points) | 1 | 1.731 | 6.6e-2 | 4.6e-2 |
+| | | 2 | 2.658 | 6.6e-3 | 1.8e-3 |
+
+- **The free λ∞ moves by ±0.5 with the number of terms**, and imposing λ∞ = 2 fits as well or better at m ≤ 2 and is
+  within a factor 1.8 at m = 3. With four powers (one degree of freedom left) the free fits give 2.31 (η = 1) and 2.34
+  (η = 0.3) and the λ∞ = 2 fits are 7 and 1.5 times worse; but at η = 1 the factor drops to 2 (λ∞ = 2.29) when the D = 9
+  value is replaced by its k_c = 23 value, a change of 4×10⁻⁴, so this is not robust. The spread over fit choices,
+  λ∞ ≈ 1.7–2.7, i.e. γ∞ ≈ 0.36–0.57, is the honest range; it is not a statistical error bar.
+- **Planted control** (same code path, same D grid, Gaussian noise 10⁻⁴; `--plant`): data made from
+  λ = 2.3 + 6.5/n − 3/n² + 12/n³ give free λ∞ = 2.154, 2.444, 2.297 for m = 1, 2, 3, and the λ∞ = 2 fit is rejected at
+  m = 3 (rms 7.6×10⁻⁴ against 5.8×10⁻⁵); data made with λ∞ = 2 (2 + 8.5/n − 8/n² + 15/n³) give 2.037, 2.180, 1.997
+  and the λ∞ = 2 fit is as good (6.3×10⁻⁵ against 5.8×10⁻⁵). So the method separates λ∞ = 2.3 from 2 on D ≤ 9 when
+  three powers of 1/n describe the data. On the real data they do not: the three-power free fit leaves residuals of
+  5×10⁻⁴ that alternate in sign from point to point (truncation, not noise; the resolution error of λ is 3×10⁻⁶ at
+  D = 6 and 4×10⁻⁴ at D = 9, from the k_c = 23 checks), so higher powers matter and the extrapolation is not
+  controlled. The scalar needed D ≥ 24 and seven powers for 10⁻⁵ (GAMMA.md); D ≤ 9 is far from
+  that.
+- **The difference from the ℓ = 1 multiplet** ([`sigdss_diff.py`](../solver/matter/sigdss_diff.py),
+  `data/sigdss_diff.json`) is smoother than either curve:
+
+| D | 4 | 5 | 6 | 7 | 8 | 9 |
+|---|---|---|---|---|---|---|
+| γ(η = 1) − γ(ℓ = 1) | −0.00327 | −0.00286 | −0.00284 | −0.00299 | −0.00313 | −0.00330 |
+| γ(η = 0.3) − γ(ℓ = 1) | −0.00339 | −0.00983 | −0.01460 | −0.01624 | −0.01654 | −0.01636 |
+
+At η = 1 the offset is −0.003 at every D from 4 to 9; at η = 0.3 it grows to −0.0165 by D = 8 and is flat or slightly
+decreasing in magnitude at D = 9. Fits in 1/n over D ≥ 5, 6, 7 with 0–2 powers give d∞ between −0.0030 and −0.0048 at
+η = 1 and between −0.008 and −0.022 at η = 0.3 (spread over fit choices; the two-power fits on 4–5 points are the least
+reliable). The ℓ = 1 values are another agent's work in progress at k_c = 23; the σ-model's k_c = 15 values differ from
+k_c = 23 by at most 4×10⁻⁴ in λ (5×10⁻⁵ in γ) at D ≤ 9, well below the offsets.
+
+## 8. Verdict
+
+**Does γ∞ differ from 1/2 for the σ-model?** Not settled by these data.
+
+- The DSS branch exists and was continued, without a fold or a change in the number of real unstable modes where they
+  were counted, from D = 4 to D ≈ 10.5 at η = 1 and η = 0.3 (computed). Unlike the CSS branch (fold at D = 8.544 for
+  η = 0.14, SIGMA.md) it gives no sign of ending, so it is the candidate for a D = ∞ limit, as STRUCTURE.md expected.
+  Its survival beyond D ≈ 10.5 is not established: the k_c = 15 solver loses resolution there.
+- γ(D) rises monotonically, 0.116 → 0.342 (η = 1) and 0.116 → 0.325 (η = 0.3) between D = 4 and 10. Extrapolations from
+  D ≤ 9 give γ∞ anywhere in about 0.36–0.57, and fits with λ∞ = 2 imposed are as good as free ones. So γ∞ = 1/2 is
+  neither confirmed nor excluded (not established).
+- What the data do support is the structural half of the prediction at finite D: the σ-model's γ(D) depends on η and
+  lies below the ℓ = 1 multiplet's by an amount that is nearly independent of D for 6 ≤ D ≤ 9 (−0.003 at η = 1, −0.016 at
+  η = 0.3) and grows as η decreases, i.e. it vanishes in the direction η → ∞ where the σ-model becomes the multiplet.
+  If these offsets persisted to D = ∞, the σ-model and the multiplet could not both have γ∞ = 1/2, which is the
+  prediction's content (γ∞ is not protected and depends on η). The persistence is an extrapolation from D ≤ 9 (argued,
+  not established).
+
+## 9. Open issues and a proposed local-machine task
+
+- **Larger D.** The decisive data are γ(D) for D ≈ 10–30 at two or more couplings. The k_c = 15 solver stops near
+  D = 10.5, and the near-null centre-harmonic band appears already at D ≈ 9. Proposed for the local machine (several
+  hours, 2–4 threads, one process each): continue `sigdss_run.py cont` at k_c = 23 and 31 with the smoothness prior from
+  the saved D = 10 solutions (`data/sigdss_sol_m1up_D10.0000_eta1.0000.npy`, `data/sigdss_sol_m03up_D10.0000_eta0.3000.npy`),
+  adding the long horizon series of `solver/spec_long.py` (matching node 0.6, Ks ≥ 60) that carried the scalar to
+  D ≈ 30, and run the ℓ = 1 multiplet (η = ∞) on the same grid with the same code so that the offsets of §7 can be
+  extrapolated. Pilot: one step at D = 10.5 at k_c = 23 with the constraint below 10⁻⁴; stop condition: constraint above
+  10⁻³ or three failed steps in a row.
+- **Mode count.** Complex growth rates and the opposite parity sector were not counted (§6). `sigdss_count.py`
+  (argument principle over Re λ ∈ [0.05, 12], −ω/2 ≤ Im λ ≤ 3ω/2, light-cone resonance poles removed) is ready but not
+  run or tested; at k_c = 15 it needs a few hundred complex mode matrices.
+- **D = ∞ inner selection** (task item 4) was not attempted.
+- **η → ∞ check at large D.** The offsets of §7 use the ℓ = 1 agent's values; a run of this solver at η = ∞ (it
+  reproduces their D = 4 solution to 10⁻¹⁵) would make the comparison self-contained.
+- **η_c(D).** The DSS–CSS transition was located only at D = 4 (η_c = 0.170). Where it goes with D, and whether the DSS
+  branch at fixed small η meets the CSS branch, was not followed.
+
+## 10. Scripts and data
+
+All in [`solver/matter/`](../solver/matter/), run from that directory with `nice -n 10 python3 <script>`, single process.
+Data in `solver/matter/data/` (prefix `sigdss_`).
+
+| Script | What it does |
+|---|---|
+| `sigdss_solver.py` | the σ-model DSS solver (class `SigDSS`), root finders for λ (`lam_model`, `lam_root`), `make` |
+| `sigdss_run.py cont TAG SEED --par eps or D ...` | continuation in η⁻¹ or D, with λ at target points (`sigdss_{TAG}.jsonl`, `sigdss_sol_{TAG}_*.npy`, `sigdss_{TAG}.npz`) |
+| `sigdss_run.py lam`, `roots`, `refine` | growth rate near a guess; all real roots on a grid; regrid to another k_c, re-solve, λ |
+| `sigdss_parity.py SOL D eps kc` | the half-period symmetry check (§6) |
+| `sigdss_svd.py SOL D eps kc` | weakest Jacobian directions (§6) |
+| `sigdss_count.py SOL D eps kc` | argument-principle mode count (prepared, not run) |
+| `sigdss_etac.py` | D = 4 fit of Δ(η) near η_c |
+| `sigdss_fit.py FILES --eps E [--plant ...]` | fits of λ(D) with λ∞ free and fixed, planted controls |
+| `sigdss_diff.py` | γ(σ) − γ(ℓ = 1) and its fits |
+| `sigdss_tables.py` | tables from all jsonl files |
+
+Data: `sigdss_d4eta15.jsonl` (D = 4 against η), `sigdss_lam_d4b.jsonl`, `sigdss_lam_pts.jsonl` (growth rates at D = 4,
+5, 5.5), `sigdss_m1up*.jsonl` and `sigdss_m03up*.jsonl` (the D marches at η = 1 and 0.3), `sigdss_refine_kc23.jsonl`,
+`sigdss_parity.jsonl`, `sigdss_roots.jsonl`, `sigdss_svd.jsonl`, `sigdss_fit_*.json`, `sigdss_diff.json`,
+`sigdss_etac_d4.json`, `sigdss_l1_reference.jsonl` (the ℓ = 1 agent's values, copied), `sigdss_seed_*.npy` (their
+solutions used as seeds, copied), solutions `sigdss_sol_*.npy`, logs `sigdss_log_*.txt`. The record files from before
+the root-finder fix (`sigdss_lam_d4.jsonl`, `sigdss_m1up_part1.jsonl`) contain two unconverged growth rates, marked by
+`last_step` above 10⁻³.
+
+## 11. References
+
+- [HLPTA00] S. Husa, C. Lechner, M. Pürrer, J. Thornburg, P. C. Aichelburg, PRD 62, 104007 (2000),
+  [gr-qc/0002067](https://arxiv.org/abs/gr-qc/0002067). Table I and the quoted sentences were read from the arXiv HTML
+  version in this session.
+- [LTHA02] C. Lechner, J. Thornburg, S. Husa, P. C. Aichelburg, PRD 65, 081501 (2002),
+  [gr-qc/0112008](https://arxiv.org/abs/gr-qc/0112008). Read from the arXiv HTML version: η_c, the fit form and range,
+  γ_DSS ≈ 0.11, and the direct construction of the DSS solution "following Gundlach"; the values of Δ in their Fig. 1
+  are not given in the text.
+- [L01] C. Lechner, PhD thesis, University of Vienna (2001), [gr-qc/0507009](https://arxiv.org/abs/gr-qc/0507009). Only
+  the abstract and chapters 1–3 could be read here ("For large couplings we construct a DSS solution. Both solutions
+  have one unstable mode."); chapter 4, with the DSS construction and its numbers, could not be retrieved.
+- [OVCU07] I. Olabarrieta, J. F. Ventrella, M. W. Choptuik, W. G. Unruh, PRD 76, 124014 (2007),
+  [arXiv:0708.0513](https://arxiv.org/abs/0708.0513), as summarised in [LITERATURE.md](LITERATURE.md).
+- The ℓ-multiplet agent's solver and results (worktree `agent-a5bec5ffdf3db4330`, work in progress), as described in §3
+  and §7.

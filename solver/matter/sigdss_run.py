@@ -214,9 +214,9 @@ def cmd_refine():
     t0 = time.time()
     S = mk(a.D, a.eps, z)
     F0 = float(np.linalg.norm(S.residual(z[None, :])[0]))
-    z, nF, _ = lm(S, z, tol=a.tol, maxjac=12, verbose=True, prep=lambda zz: S.refreeze(zz, a.kappa), reg=a.reg)
+    z, nF, _ = lm(S, z, tol=a.tol, maxjac=a.maxjac, verbose=True, prep=lambda zz: S.refreeze(zz, a.kappa), reg=a.reg)
     S = mk(a.D, a.eps, z)
-    z, nF, _ = lm(S, z, tol=a.tol, maxjac=4, verbose=True, reg=a.reg)
+    z, nF, _ = lm(S, z, tol=a.tol, maxjac=min(4, a.maxjac), verbose=True, reg=a.reg)
     rec = describe(S, z, a.D, a.eps)
     rec.update(sol=os.path.basename(a.a1), kc_seed=a.kc_seed, Delta_seed=float(z0[-1]), F_start=F0, F=float(nF),
                solve_seconds=round(time.time() - t0))
