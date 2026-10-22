@@ -1,0 +1,3 @@
+D = 4.0: start |F| 2.18e-02, Delta guess 0.11933578
+   jac 0: |F| 8.167e-05 Delta 0.119778926589 mu 1e-07 corr 2 smin/smax 2.2e-11 (363 s)
+   jac 1: |F| 5.339e-05 Delta 0.119608340427 mu 1e-10 corr 2 smin/smax 2.2e-11 (704 s)

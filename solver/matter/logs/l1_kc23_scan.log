@@ -1,0 +1,27 @@
+D = 4.0: start |F| 1.57e-15, Delta guess 0.45986546
+{"D": 4.0, "l": 1, "kc": 23, "N": 72, "Ks": 16, "u0": 0.01, "rk": 1, "kappa": 0.5, "steps": 5378, "Delta": 0.45986545522185535, "F": 1.5705508143114931e-15, "lam_gauge": 0.8952979149345732, "constraint": 0.015304603450444314, "seconds": 9}
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:203: RuntimeWarning: overflow encountered in multiply
+  g = a2 * q * q
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:208: RuntimeWarning: overflow encountered in multiply
+  lt = L * c * a2 * q / x
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:209: RuntimeWarning: invalid value encountered in subtract
+  px = (-self.D(p, omega) + cx * p - c * p / x + pc - lt) / (x - c)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:210: RuntimeWarning: invalid value encountered in add
+  mx = (-self.D(m, omega) - cx * m + c * m / x - pc + lt) / (x + c)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:88: RuntimeWarning: invalid value encountered in matmul
+  return f @ self._Tm
+D = 4.25: start |F| nan, Delta guess 0.58450911
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:203: RuntimeWarning: invalid value encountered in multiply
+  g = a2 * q * q
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:204: RuntimeWarning: invalid value encountered in multiply
+  cx = c * ((n - 1) * (a2 - 1) - 2 * L * g) / x
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:205: RuntimeWarning: invalid value encountered in multiply
+  ax = a * ((p * p + m * m) + 2 * L * g + (n - 1) * (1 - a2)) / (2 * x)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:208: RuntimeWarning: invalid value encountered in multiply
+  lt = L * c * a2 * q / x
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:208: RuntimeWarning: invalid value encountered in divide
+  lt = L * c * a2 * q / x
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:209: RuntimeWarning: invalid value encountered in divide
+  px = (-self.D(p, omega) + cx * p - c * p / x + pc - lt) / (x - c)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:210: RuntimeWarning: invalid value encountered in divide
+  mx = (-self.D(m, omega) - cx * m + c * m / x - pc + lt) / (x + c)

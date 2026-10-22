@@ -1,0 +1,99 @@
+seed D = 4.0: Delta 0.4600214549 |dz/dD| 1.828e+01 dDelta/dD 0.49801
+{"D": 4.02, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.4698931703198191, "F": 1.2130984088153076e-15, "F_start": 0.0040768407707907125, "tan_norm": 17.203232873187126, "dDelta_dD": 0.48917459665349994, "constraint": 0.11013269050867751, "lam_gauge": 0.894554715172266, "step": 0.02, "seconds": 57}
+{"D": 4.05, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.4843714558434696, "F": 1.4264301265874459e-15, "F_start": 0.001984963900457159, "tan_norm": 15.747942521851733, "dDelta_dD": 0.476077242532612, "constraint": 0.0969269399987738, "lam_gauge": 0.8935300910659634, "step": 0.03, "seconds": 54}
+{"D": 4.095, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.5053601029530773, "F": 1.4460245870714274e-15, "F_start": 0.006913348998146241, "tan_norm": 13.863989085218005, "dDelta_dD": 0.4568384543838858, "constraint": 0.07772561781947696, "lam_gauge": 0.8920250163701505, "step": 0.045, "seconds": 54}
+{"D": 4.14, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.5254953046368965, "F": 1.2734761380006705e-15, "F_start": 0.008107007853491185, "tan_norm": 12.276360657866748, "dDelta_dD": 0.4381570968293953, "constraint": 0.06208849534914058, "lam_gauge": 0.8905558422608101, "step": 0.045, "seconds": 47}
+{"D": 4.185, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.5448033632368621, "F": 1.237940407135455e-15, "F_start": 0.00695127604133494, "tan_norm": 10.941781409899042, "dDelta_dD": 0.42008264537084095, "constraint": 0.050021818899741395, "lam_gauge": 0.889120284378954, "step": 0.045, "seconds": 52}
+{"D": 4.2299999999999995, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.5633122769182146, "F": 1.194039950533965e-15, "F_start": 0.005848995878798534, "tan_norm": 9.820858680533313, "dDelta_dD": 0.40264257638016776, "constraint": 0.040938227594855645, "lam_gauge": 0.8877164128299998, "step": 0.045, "seconds": 49}
+{"D": 4.2749999999999995, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.58105090796486, "F": 1.2664217591267448e-15, "F_start": 0.004929262858955095, "tan_norm": 8.870368909221842, "dDelta_dD": 0.3858491565901673, "constraint": 0.03404828742602083, "lam_gauge": 0.8863426158878336, "step": 0.045, "seconds": 49}
+{"D": 4.342499999999999, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.606278432369953, "F": 1.8583817190377957e-15, "F_start": 0.010789146542150243, "tan_norm": 7.684509358960831, "dDelta_dD": 0.3618754722468888, "constraint": 0.02664524121153839, "lam_gauge": 0.8843353991399567, "step": 0.0675, "seconds": 49}
+{"D": 4.409999999999999, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.629936542341489, "F": 1.7329119171033182e-15, "F_start": 0.008935270509230604, "tan_norm": 6.713890309007137, "dDelta_dD": 0.3393429821805418, "constraint": 0.021555854844304598, "lam_gauge": 0.8823890610969981, "step": 0.0675, "seconds": 49}
+{"D": 4.477499999999999, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.6521212387685097, "F": 1.2173761251667691e-15, "F_start": 0.006013208776210401, "tan_norm": 5.9077647045788355, "dDelta_dD": 0.31821053034618657, "constraint": 0.017925559208463695, "lam_gauge": 0.880500495994801, "step": 0.0675, "seconds": 45}
+{"D": 4.5, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.6592048458558071, "F": 9.831427298995573e-13, "F_start": 0.0003274232334677169, "tan_norm": 5.669369123548159, "dDelta_dD": 0.3114682585248121, "constraint": 0.016909526129183505, "lam_gauge": 0.8798833458752687, "step": 0.0675, "seconds": 25}
+{"D": 4.60125, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.6892711149138345, "F": 1.162091038550577e-15, "F_start": 0.00782634050194708, "tan_norm": 4.746903942591652, "dDelta_dD": 0.2829110022487459, "constraint": 0.011640020429841713, "lam_gauge": 0.8771796723445361, "step": 0.10125, "seconds": 39}
+{"D": 4.702500000000001, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.7165868398504245, "F": 1.3837716374967346e-15, "F_start": 0.010435944801676476, "tan_norm": 4.019066770055911, "dDelta_dD": 0.2570962993309679, "constraint": 0.010003683293646742, "lam_gauge": 0.8745911457637666, "step": 0.10125, "seconds": 36}
+{"D": 4.803750000000001, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.7414173438081882, "F": 1.3234364189232592e-15, "F_start": 0.0073128810514527685, "tan_norm": 3.444995713681686, "dDelta_dD": 0.23377963212794547, "constraint": 0.009111946274764783, "lam_gauge": 0.8721117239151082, "step": 0.10125, "seconds": 35}
+{"D": 4.905000000000001, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.7640033063249776, "F": 1.328675897038766e-15, "F_start": 0.0052793407639443145, "tan_norm": 2.9960188490743875, "dDelta_dD": 0.21272121060464, "constraint": 0.007463977570605377, "lam_gauge": 0.8697361977287233, "step": 0.10125, "seconds": 34}
+{"D": 5.0, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.7833477020838967, "F": 1.4012636646283459e-15, "F_start": 0.004016141489858831, "tan_norm": 2.6593625158488527, "dDelta_dD": 0.19481415734423208, "constraint": 0.005948081362638563, "lam_gauge": 0.8675976663442612, "step": 0.10125, "seconds": 34}
+{"D": 5.151875, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.8109627870201316, "F": 1.8396155081260047e-12, "F_start": 0.010931199066480903, "tan_norm": 2.2330219005576586, "dDelta_dD": 0.16947775249978167, "constraint": 0.003990394595267709, "lam_gauge": 0.8643518735643837, "step": 0.151875, "seconds": 33}
+{"D": 5.303750000000001, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.835003513698927, "F": 1.2448667541986306e-14, "F_start": 0.009668579426417719, "tan_norm": 1.897001475426747, "dDelta_dD": 0.1476491789195994, "constraint": 0.0024603097232317205, "lam_gauge": 0.8613078914379395, "step": 0.151875, "seconds": 33}
+{"D": 5.455625000000001, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.8559610130543336, "F": 2.7955404792414076e-14, "F_start": 0.006083966018622182, "tan_norm": 1.6274026428750619, "dDelta_dD": 0.12879380024374087, "constraint": 0.0015929085424658026, "lam_gauge": 0.8584540710950491, "step": 0.151875, "seconds": 34}
+{"D": 5.5, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.8615640956234092, "F": 2.4765354138988315e-13, "F_start": 0.00020536863602251757, "tan_norm": 1.559633247167921, "dDelta_dD": 0.12377928206989425, "constraint": 0.0014234456152534833, "lam_gauge": 0.8576545732189623, "step": 0.151875, "seconds": 24}
+{"D": 5.7278125, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.8870833721235467, "F": 1.7749419970017113e-15, "F_start": 0.005554708617498598, "tan_norm": 1.2779457507567396, "dDelta_dD": 0.10106199232361801, "constraint": 0.0010066840033654708, "lam_gauge": 0.8537818387735964, "step": 0.22781250000000003, "seconds": 59}
+{"D": 5.9556249999999995, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.9079318576830399, "F": 2.0712302006006204e-15, "F_start": 0.007246843056121906, "tan_norm": 1.104405277742427, "dDelta_dD": 0.08260501623454841, "constraint": 0.000774487145174509, "lam_gauge": 0.8502736107881296, "step": 0.22781250000000003, "seconds": 60}
+{"D": 6.0, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.9115262393566267, "F": 9.560799666161152e-13, "F_start": 0.0001376525569676887, "tan_norm": 1.0328511488063998, "dDelta_dD": 0.07942519957720667, "constraint": 0.0007826560405894962, "lam_gauge": 0.8496301069097477, "step": 0.22781250000000003, "seconds": 17}
+  D = 6.34172: failed (start |F| 1.12e-02, end 1.4783737661802893e-08); step -> 0.1709
+  D = 6.17086: failed (start |F| 1.61e-03, end 2.0741649580662767e-09); step -> 0.0854
+{"D": 6.0854296875, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.9180611127572891, "F": 3.779794138111365e-11, "F_start": 0.00024636664876063926, "tan_norm": 0.9751850533778879, "dDelta_dD": 0.07364173849789915, "constraint": 0.0007075479799238566, "lam_gauge": 0.8484262100106653, "step": 0.08542968750000002, "seconds": 20}
+{"D": 6.21357421875, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.9269812310153364, "F": 2.311787583201385e-15, "F_start": 0.0007406880100790892, "tan_norm": 0.8854249857728673, "dDelta_dD": 0.06573007548216711, "constraint": 0.0005575218344420519, "lam_gauge": 0.846704011172133, "step": 0.12814453125000003, "seconds": 33}
+  D = 6.40579: failed (start |F| 1.75e-03, end 1.187839300371553e-09); step -> 0.0961
+{"D": 6.3096826171875, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.9330353529446936, "F": 1.9461197434422833e-11, "F_start": 0.0003150227285345968, "tan_norm": 0.8296480412511577, "dDelta_dD": 0.06034007720924934, "constraint": 0.0004904279614633428, "lam_gauge": 0.845475814233255, "step": 0.09610839843750002, "seconds": 27}
+{"D": 6.45384521484375, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.9411958473453316, "F": 3.5500836995485826e-15, "F_start": 0.0007205723698079579, "tan_norm": 0.7492571525411236, "dDelta_dD": 0.05302764669833134, "constraint": 0.0004165605322784342, "lam_gauge": 0.8437308800463734, "step": 0.14416259765625003, "seconds": 41}
+{"D": 6.670089111328125, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.9516086634277602, "F": 2.6841611780725158e-11, "F_start": 0.0015039638896593725, "tan_norm": 0.7247140562341449, "dDelta_dD": 0.04356448464505013, "constraint": 0.0014466829770736723, "lam_gauge": 0.8413208483871909, "step": 0.21624389648437503, "seconds": 43}
+  D = 6.99445: failed (start |F| 4.42e-03, end 2.2002681301206682e-08); step -> 0.1622
+{"D": 6.832272033691407, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.9581696090191026, "F": 3.475264310625724e-15, "F_start": 0.0008025282158624726, "tan_norm": 0.619662737001658, "dDelta_dD": 0.037481484976834414, "constraint": 0.001751506706716896, "lam_gauge": 0.8396664994024388, "step": 0.16218292236328127, "seconds": 54}
+{"D": 7.0, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.9639820558716753, "F": 3.604948691764316e-15, "F_start": 0.0006508373769349333, "tan_norm": 0.5479862176760985, "dDelta_dD": 0.031955647623323355, "constraint": 0.00116521156396461, "lam_gauge": 0.8380848284898531, "step": 0.24327438354492192, "seconds": 52}
+{"D": 7.364911575317383, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.9737686996107275, "F": 1.0190818543765463e-14, "F_start": 0.0031656296183932334, "tan_norm": 0.541227282609029, "dDelta_dD": 0.022147872290950672, "constraint": 0.005664110033500379, "lam_gauge": 0.8350611657128727, "step": 0.3649115753173829, "seconds": 55}
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:204: RuntimeWarning: overflow encountered in multiply
+  cx = c * ((n - 1) * (a2 - 1) - 2 * L * g) / x
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:205: RuntimeWarning: overflow encountered in multiply
+  ax = a * ((p * p + m * m) + 2 * L * g + (n - 1) * (1 - a2)) / (2 * x)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:208: RuntimeWarning: overflow encountered in multiply
+  lt = L * c * a2 * q / x
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:209: RuntimeWarning: overflow encountered in multiply
+  px = (-self.D(p, omega) + cx * p - c * p / x + pc - lt) / (x - c)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:210: RuntimeWarning: overflow encountered in multiply
+  mx = (-self.D(m, omega) - cx * m + c * m / x - pc + lt) / (x + c)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:88: RuntimeWarning: invalid value encountered in matmul
+  return f @ self._Tm
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:202: RuntimeWarning: overflow encountered in multiply
+  a2 = a * a
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:204: RuntimeWarning: invalid value encountered in subtract
+  cx = c * ((n - 1) * (a2 - 1) - 2 * L * g) / x
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:205: RuntimeWarning: invalid value encountered in add
+  ax = a * ((p * p + m * m) + 2 * L * g + (n - 1) * (1 - a2)) / (2 * x)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:207: RuntimeWarning: overflow encountered in multiply
+  pc = n * c * (p + m) / (2 * x)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:203: RuntimeWarning: overflow encountered in multiply
+  g = a2 * q * q
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:209: RuntimeWarning: invalid value encountered in subtract
+  px = (-self.D(p, omega) + cx * p - c * p / x + pc - lt) / (x - c)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:210: RuntimeWarning: invalid value encountered in add
+  mx = (-self.D(m, omega) - cx * m + c * m / x - pc + lt) / (x + c)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:204: RuntimeWarning: overflow encountered in divide
+  cx = c * ((n - 1) * (a2 - 1) - 2 * L * g) / x
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:205: RuntimeWarning: overflow encountered in divide
+  ax = a * ((p * p + m * m) + 2 * L * g + (n - 1) * (1 - a2)) / (2 * x)
+  D = 7.91228: failed (start |F| 9.54e-03, end 2.058684295519472e-07); step -> 0.2737
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:210: RuntimeWarning: overflow encountered in divide
+  mx = (-self.D(m, omega) - cx * m + c * m / x - pc + lt) / (x + c)
+  D = 7.63860: failed (start |F| 1.77e-03, end 3.9709287905421665e-08); step -> 0.1368
+{"D": 7.501753416061402, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.9765890332247698, "F": 1.1230910566834175e-14, "F_start": 0.0003578994158322581, "tan_norm": 0.4336784143593777, "dDelta_dD": 0.01912714157019323, "constraint": 0.002066434937487242, "lam_gauge": 0.834062785497073, "step": 0.1368418407440186, "seconds": 59}
+{"D": 7.70701617717743, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.9800932579116451, "F": 2.173605824621533e-14, "F_start": 0.0005198415094475517, "tan_norm": 0.3931917327697313, "dDelta_dD": 0.015140264858359148, "constraint": 0.0012145998485974068, "lam_gauge": 0.8326917922769949, "step": 0.20526276111602787, "seconds": 54}
+{"D": 8.0, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.9838126701819707, "F": 2.393833978989018e-14, "F_start": 0.0008379477034465445, "tan_norm": 0.3492153232992232, "dDelta_dD": 0.010434876071949963, "constraint": 0.0014342985339131345, "lam_gauge": 0.8309745976510463, "step": 0.30789414167404183, "seconds": 46}
+  D = 8.46184: failed (start |F| 2.34e-03, end 1.8759321451583115e-08); step -> 0.2309
+{"D": 8.230920606255532, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.9858596931238045, "F": 5.1414485492296624e-14, "F_start": 0.0004200788624565299, "tan_norm": 0.3194720350978357, "dDelta_dD": 0.0073996106941574685, "constraint": 0.0008967441126922557, "lam_gauge": 0.8297992266351496, "step": 0.23092060625553137, "seconds": 47}
+{"D": 8.57730151563883, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.987743682486483, "F": 1.1357012899446658e-10, "F_start": 0.0008157432734309661, "tan_norm": 0.30026632152642424, "dDelta_dD": 0.003623103360448826, "constraint": 0.0031825257086374385, "lam_gauge": 0.8282950398206627, "step": 0.3463809093832971, "seconds": 116}
+  D = 9.00000: failed (start |F| 2.00e-03, end 1.0299163697992412e-07); step -> 0.2598
+{"D": 8.837087197676302, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.9883345875601689, "F": 2.8948563477378895e-10, "F_start": 0.0006038736564579676, "tan_norm": 0.39898866206622613, "dDelta_dD": 0.0009375543752789817, "constraint": 0.005813381729775028, "lam_gauge": 0.8273652430544844, "step": 0.2597856820374728, "seconds": 119}
+{"D": 9.0, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.9883327083028289, "F": 2.333791456181248e-10, "F_start": 0.00026442251495183584, "tan_norm": 0.5701392317743696, "dDelta_dD": -0.001005093847824226, "constraint": 0.008629995004919695, "lam_gauge": 0.8268850159501682, "step": 0.3896785230562092, "seconds": 135}
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:207: RuntimeWarning: overflow encountered in divide
+  pc = n * c * (p + m) / (2 * x)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:209: RuntimeWarning: overflow encountered in divide
+  px = (-self.D(p, omega) + cx * p - c * p / x + pc - lt) / (x - c)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:209: RuntimeWarning: invalid value encountered in add
+  px = (-self.D(p, omega) + cx * p - c * p / x + pc - lt) / (x - c)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:210: RuntimeWarning: invalid value encountered in subtract
+  mx = (-self.D(m, omega) - cx * m + c * m / x - pc + lt) / (x + c)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:208: RuntimeWarning: overflow encountered in divide
+  lt = L * c * a2 * q / x
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:85: RuntimeWarning: invalid value encountered in matmul
+  return f @ self._Dm
+  D = 9.58452: failed (start |F| 2.46e-02, end 1.1926696482387118e-05); step -> 0.2923
+{"D": 9.292258892292157, "l": 1, "kc": 15, "kappa": 1.0, "Delta": 0.9873239180221323, "F": 6.493490072041479e-10, "F_start": 0.0036011167758421268, "tan_norm": 2.8137539267864096, "dDelta_dD": -0.006498047147456748, "constraint": 0.05032418563841461, "lam_gauge": 0.8263474848372171, "step": 0.2922588922921569, "seconds": 164}
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:206: RuntimeWarning: invalid value encountered in add
+  qx = (p + m) / (2 * x)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:207: RuntimeWarning: invalid value encountered in add
+  pc = n * c * (p + m) / (2 * x)
+  D = 9.73065: failed (start |F| 4.84e-02, end 0.00021044393805033212); step -> 0.2192
+  D = 9.51145: failed (start |F| 6.50e-03, end 1.6072870018193056e-05); step -> 0.1096

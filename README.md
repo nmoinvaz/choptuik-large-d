@@ -1549,7 +1549,7 @@ Proposition 5.
 |---|---|---|---|
 | real scalar | autonomous heat system | yes | 1/2 (Proposition 5; data: 1/2 to 5×10⁻⁷) |
 | complex scalar, axion–dilaton | the same heat system | yes | 1/2; computed for the axion–dilaton to D = 80: 1/2 to about 3×10⁻⁶ |
-| scalar multiplet with angular momentum ℓ ≥ 1 | heat equation plus ℓφ/(2s) | broken | not fixed by any symmetry; generically ≠ 1/2 |
+| scalar multiplet with angular momentum ℓ ≥ 1 | heat equation plus ℓφ/(2s) | broken | not fixed by any symmetry; generically ≠ 1/2 (ℓ = 1 computed to D = 9: not yet decided) |
 | Yang–Mills (type II) | the ℓ = 1 multiplet's | broken | the ℓ = 1 value |
 | wave maps (σ-model), coupling η | a sin 2u/(4s) term, η-dependent | broken | η-dependent; the ℓ = 1 value as η → ∞ (its CSS branch ends at D ≈ 8.5, so only the DSS branch can test this) |
 
@@ -1570,6 +1570,24 @@ finite-D frequencies extrapolate to 3.1994 and 3.9784 (agreement about 1.5×10�
 solution, whose radius exponents go to 0, is a different solution: a real scalar with no regular centre and no analytic
 light cone. So the γ∞ = 1/2 mechanism needs a regular centre, an analytic light cone and the inner scaling, as well as no
 1/r² term.
+
+**Scalar multiplet with ℓ = 1** ([matter/ELL.md](matter/ELL.md)). The repository's DSS solver, adapted to the ℓ-multiplet
+and checked against the main solver at ℓ = 0 (Δ to 10⁻¹⁴), reproduces the published D = 4 values: Δ = 0.4598611 and
+γ = 0.118900, against 0.460 ± 0.002 and 0.119 ± 0.001 (Olabarrieta, Ventrella, Choptuik and Unruh 2007). Followed up in D:
+
+| D | 4 | 5 | 6 | 7 | 8 | 9 |
+|---|---|---|---|---|---|---|
+| Δ | 0.4598611 | 0.7833439 | 0.9115281 | 0.9639878 | 0.9837905 | 0.988205 |
+| γ | 0.118900 | 0.215509 | 0.265565 | 0.295733 | 0.316203 | 0.331286 |
+
+Beyond D = 9 the period is selected ever more weakly (|dΔ/dF| ≈ 4×10⁵, a level the ℓ = 0 solution reaches only near
+D = 21), and continuation needs steps of 0.05 in D, so the run stops there. Six points do not decide γ∞: free fits put
+λ∞ anywhere from 0.55 to 3.95, and fixing λ∞ = 2 fits as well. Compared with ℓ = 0 at the same D, λ₁ − λ₀ falls roughly
+like 5.6/n, and windowed fits of its limit bracket λ₁∞ − 2 heuristically in 0.09–0.31 (γ ≈ 0.43–0.48). That leans toward
+the predicted γ∞ ≠ 1/2, but it is not a result. Δ peaks near 0.988 at D ≈ 9 and then falls, so its limit looks finite
+and below the ℓ = 0 value of 1.6439. Settling γ∞ needs ℓ = 1 out to D ≈ 15–20, which needs the double-double solver's
+tools (frozen harmonics, nonlinear elimination). At ℓ = 2, an evolution gives Δ = 0.1193 at D = 4 (published
+0.119 ± 0.003), but the periodic solve did not converge.
 
 **σ-model, self-similar (CSS) branch** ([matter/SIGMA.md](matter/SIGMA.md)). The D-dimensional equations are checked
 against Bizoń and Wasserman's at D = 4, and the D = 4 values are reproduced: λ ≈ 5.14, γ ≈ 0.18, and the horizon

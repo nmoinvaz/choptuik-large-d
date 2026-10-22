@@ -1,0 +1,8 @@
+{
+ "n": 2.0,
+ "l": 2,
+ "A_lo": 0.0293481745710,
+ "A_hi": 0.0293481745785,
+ "dx": 0.0006,
+ "note": "bisection stopped by hand: runs were limited by t_end = 15 (black-hole times reached 14.97), so the last verdicts are undecided; A_lo here forms a black hole just after T = 15 and is tuned to about 1e-10, enough for an initial guess"
+}

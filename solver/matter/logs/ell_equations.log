@@ -1,0 +1,10 @@
+  self-similar equations follow from the (t, r) equations; psi_t = c Pi constraint is x-independent; L = 0 gives solver/dss.py: OK
+  horizon regularity condition: OK
+  n = 2: identical to Olabarrieta et al. (2007) Eqs. (15)-(18) with psi = sqrt((2l+1)/2) psi_paper: OK
+  centre series: det = -c0**2*(k - 1)*(k - l)*(k + l + n - 1)/k; at k = l the null vector is P_l = M_l: OK
+  explicit n = 2, l = 1 (L = 2, 3 harmonics): wave eq, G_tt, G_rr, G_tr, T off-diagonal OK
+  explicit n = 2, l = 2 (L = 6, 5 harmonics): wave eq, G_tt, G_rr, G_tr, T off-diagonal OK
+  explicit n = 3, l = 1 (L = 3, 4 harmonics): wave eq, G_tt, G_rr, G_tr, T off-diagonal OK
+  explicit n = 3, l = 2 (L = 8, 9 harmonics): wave eq, G_tt, G_rr, G_tr, T off-diagonal OK
+  explicit n = 4, l = 1 (L = 4, 5 harmonics): wave eq, G_tt, G_rr, G_tr, T off-diagonal OK
+all checks passed

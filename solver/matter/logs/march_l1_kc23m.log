@@ -1,0 +1,34 @@
+seed D = 8.0: Delta 0.9837904661 |dz/dD| 3.487e-01 dDelta/dD 0.01039
+{"D": 8.15, "l": 1, "kc": 23, "kappa": 0.7, "reg": 1e-07, "u0": 0.04, "Ks": 30, "Delta": 0.9851763178425932, "F": 7.23364400653599e-13, "F_start": 0.0007820113844588582, "dDelta_dF": 103858.34655767978, "tan_norm": 0.3276885689313635, "dDelta_dD": 0.008074114883592144, "constraint": 8.839402743419656e-06, "lam_gauge": 0.8302146763802557, "step": 0.15, "seconds": 85}
+{"D": 8.375, "l": 1, "kc": 23, "kappa": 0.7, "reg": 1e-07, "u0": 0.04, "Ks": 30, "Delta": 0.9867067491709017, "F": 7.868950291939389e-13, "F_start": 0.0002449395736360594, "dDelta_dF": 149539.34112684874, "tan_norm": 0.30227532955859715, "dDelta_dD": 0.005490688736710353, "constraint": 1.0089692837389571e-05, "lam_gauge": 0.8291817937168813, "step": 0.22499999999999998, "seconds": 72}
+{"D": 8.7125, "l": 1, "kc": 23, "kappa": 0.7, "reg": 1e-07, "u0": 0.04, "Ks": 30, "Delta": 0.9879556390222921, "F": 9.298604201333308e-13, "F_start": 0.0006361800127145933, "dDelta_dF": 252115.48852715406, "tan_norm": 0.26898064897408397, "dDelta_dD": 0.0022374515934321347, "constraint": 9.447146309360887e-06, "lam_gauge": 0.8278858147499748, "step": 0.33749999999999997, "seconds": 61}
+{"D": 9.0, "l": 1, "kc": 23, "kappa": 0.7, "reg": 1e-07, "u0": 0.04, "Ks": 30, "Delta": 0.9881869429724649, "F": 5.5070993461593705e-11, "F_start": 0.0003875573108253294, "dDelta_dF": 377297.86537857837, "tan_norm": 0.24284214190595088, "dDelta_dD": -0.0035901740920596843, "constraint": 1.0943096604741058e-05, "lam_gauge": 0.8270068348411116, "step": 0.50625, "seconds": 197}
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:211: RuntimeWarning: overflow encountered in multiply
+  a2 = a * a
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:213: RuntimeWarning: invalid value encountered in subtract
+  cx = c * ((n - 1) * (a2 - 1) - 2 * L * g) / x
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:214: RuntimeWarning: overflow encountered in multiply
+  ax = a * ((p * p + m * m) + 2 * L * g + (n - 1) * (1 - a2)) / (2 * x)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:214: RuntimeWarning: invalid value encountered in add
+  ax = a * ((p * p + m * m) + 2 * L * g + (n - 1) * (1 - a2)) / (2 * x)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:216: RuntimeWarning: overflow encountered in multiply
+  pc = n * c * (p + m) / (2 * x)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:218: RuntimeWarning: overflow encountered in multiply
+  px = (-self.D(p, omega) + cx * p - c * p / x + pc - lt) / (x - c)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:219: RuntimeWarning: overflow encountered in multiply
+  mx = (-self.D(m, omega) - cx * m + c * m / x - pc + lt) / (x + c)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:212: RuntimeWarning: overflow encountered in multiply
+  g = a2 * q * q
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:217: RuntimeWarning: overflow encountered in multiply
+  lt = L * c * a2 * q / x
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:218: RuntimeWarning: invalid value encountered in subtract
+  px = (-self.D(p, omega) + cx * p - c * p / x + pc - lt) / (x - c)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:219: RuntimeWarning: invalid value encountered in add
+  mx = (-self.D(m, omega) - cx * m + c * m / x - pc + lt) / (x + c)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:88: RuntimeWarning: invalid value encountered in matmul
+  return f @ self._Tm
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a5bec5ffdf3db4330/solver/matter/dss_ell.py:213: RuntimeWarning: overflow encountered in multiply
+  cx = c * ((n - 1) * (a2 - 1) - 2 * L * g) / x
+  D = 9.75938: failed (start |F| 4.77e-03, end 1.2678975108760259e-08); step -> 0.3797
+  D = 9.37969: failed (start |F| 8.08e-04, end 5.708625730516729e-09); step -> 0.1898
+  D = 9.18984: failed (start |F| 1.49e-04, end 2.476116392957704e-09); step -> 0.0949
