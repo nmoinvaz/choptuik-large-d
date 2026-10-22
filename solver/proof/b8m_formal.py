@@ -99,7 +99,9 @@ def ser(lst, k, keep, other=None, prod=False):
     return acc
 
 
-def formal(K, F, om, M=1, mutate=""):
+def formal(K, F, om, M=1, mutate="", gauge0_from=None):
+    """orders 0..K; with gauge0_from = K0 the orders k > K0 use the gauge c_k(0) = 0 instead of c_k(1) = 0, which is the
+    asymptotic expansion of the solution normalized by c(0) = c^K0(0) (b8m_numcheck.py, check A1)"""
     O, E = harm(M)
     Om = {m: acb(0, m) * om for m in O}
     V = [{m: acb_poly([2 * F[m]]) for m in O}]
@@ -134,7 +136,7 @@ def formal(K, F, om, M=1, mutate=""):
         ck = {}
         for kk in E:
             p = int_over_x(cbk[kk])
-            ck[kk] = p - acb_poly([p(acb(1))])
+            ck[kk] = p if (gauge0_from is not None and k > gauge0_from) else p - acb_poly([p(acb(1))])
         c.append(ck)
         c0 = {kk: acb_poly([ck[kk](acb(0))]) for kk in E}
         Vk = padd({m: int_over_x(Sk[m]) * Om[m] for m in O}, pmul(c0, {m: acb_poly([2 * F[m]]) for m in O}, O))

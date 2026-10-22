@@ -503,9 +503,14 @@ P(0) = 2F at every order.) **So (H8)(ii) holds for every n ≥ e^{73.89}, every 
 
 ### 8.4 Where this differs from B5's wording
 
-1. **The normalization of Y⁺_out.** B5 speaks of "the" centre-regular solution with profile F; the family has the
-   scaling (x, c) ↦ (λx, λc). B8 fixes c(0) = c^K(0) with c^K(1) = 1, i.e. the light-cone gauge up to O(n^{−5}). B5's
-   leading data assume exactly this gauge (C^{(1)}(0) = −[F²]); the δ_C, δ_ϑ above are for it.
+1. **The normalization of Y⁺_out.** B5 speaks of "the" centre-regular solution with profile F. For given F and ω the
+   centre-regular solutions form a family parametrized by the vector c(0) (on ℰ), which contains the scaling
+   (x, c) ↦ (λx, λc). B8 fixes c(0) = c^K(0), the value at 0 of the series normalized by c_k(1) = 0 on every harmonic,
+   i.e. the light-cone gauge to all orders in the series. B5's leading data assume this gauge (C^{(1)}(0) = −[F²]); the
+   δ_C, δ_ϑ above are for it. If another normalization c(0) = c^K(0) + d with |d| ≤ d₀n^{−K−1} is wanted (for instance
+   an exact condition at the light cone), the proof is unchanged except that R_V(0) = [d2F] and R_c(0) = d enter the
+   slow integrals: P_V and P_c increase by 2|F|₁d₀ and d₀ (since ρ^{K+1} ≥ n^{−K−1}). This extension is proved by hand
+   but was not run.
 2. **Profile phase.** B8 uses F_{±1} = A/2, B5 (`fixed_point.py`) F_{±1} = ∓iA/2: a rotation θ₀ = π/2, which multiplies
    harmonic μ by e^{iμθ₀} in both Y_out and Z_in. The moduli |W_μ| are unchanged.
 3. **Parameter box.** Certified over A* ± 2×10⁻⁶(1 + i) and w* ± 2×10⁻⁶(1 + i), which contains 𝒦 (imaginary parts
@@ -538,7 +543,7 @@ independently); the scripts have not been reviewed by a second person.
 ## 10. Every fixed M
 
 **Claim (proved, without a numerical n₀(M)).** For every odd M, κ ∈ (0, π/4), κ₁ > 0, δ ∈ (0, ¼), γ ∈ (0, ½) and
-K ≥ K_γ := ⌈(2 − 2γ)/(1 − 2γ)⌉ + 1 (K ≥ 4 for γ = 0.3), there is n₀(M) such that Lemma B8(M) and (H8) hold for n ≥ n₀(M),
+K ≥ K_γ := ⌊(2 − 2γ)/(1 − 2γ)⌋ + 1, the least K with (1 − 2γ)K > 2 − 2γ (K_γ = 4 for γ = 0.3), there is n₀(M) such that Lemma B8(M) and (H8) hold for n ≥ n₀(M),
 with δ = (δ_P, δ_Φ, δ_C, δ_ϑ) any numbers above the leading data (the ε-coefficients of section 8.2 for that M).
 
 *Proof.* Every step above is written for operators on the (M + 1)-dimensional odd space; only the numbers depend on M
