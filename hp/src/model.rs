@@ -16,7 +16,7 @@
 use crate::dd::DD;
 use crate::dv::DV;
 use crate::field::{cs, cs_range, cs_w, horner, DMat, Fl, State};
-use crate::lane::{Dtn, Du, F8, Fu, Lane};
+use crate::lane::{Dtn, Du, F8, Fu, Fun, Lane};
 use crate::linalg::{ld_for, DDLu};
 use rayon::prelude::*;
 
@@ -137,6 +137,45 @@ fn dtau<T: Lane, const B: usize>(ctx: &Ctx<B>, x: &Fl<T, B>, omega: T) -> Fl<T, 
     }
 }
 
+/// Early end of the centre and horizon series for the f64-tangent lanes (a Jacobian in f64 needs their terms only
+/// to the f64 rounding level, and the series orders kc, ks are set for double-double values): the series stops after
+/// order k once the tangent terms max |c_k| r^k (r the evaluation radius, over the four fields, all lanes and
+/// tangents) of TAIL_RUN consecutive orders are all below TAIL_TOL times the largest tangent term so far, k >=
+/// TAIL_MIN. The dropped tail is then below the rounding of an f64 sum (checked against the double-double Jacobian
+/// by hp/mixed_check.py). The double-double lanes never stop early.
+struct Tail {
+    rk: f64,
+    r: f64,
+    big: f64,
+    run: usize,
+}
+
+const TAIL_TOL: f64 = 8.673617379884035e-19; // 2^-60
+const TAIL_RUN: usize = 4;
+const TAIL_MIN: usize = 8;
+
+impl Tail {
+    fn new(r: f64) -> Tail {
+        Tail { rk: 1.0, r, big: 0.0, run: 0 }
+    }
+    /// record order k (called for k = 0, 1, 2, ... in turn); true when the series may stop after it
+    fn done<T: Lane, const B: usize>(&mut self, k: usize, f: [&Fl<T, B>; 4]) -> bool {
+        let mut a = 0.0f64;
+        for x in f {
+            for b in 0..B {
+                for t in 0..T::NT {
+                    a = a.max(x.0[b].tan64(t).abs().hmax());
+                }
+            }
+        }
+        let t = a * self.rk;
+        self.rk *= self.r;
+        self.big = self.big.max(t);
+        self.run = if t <= TAIL_TOL * self.big { self.run + 1 } else { 0 };
+        self.big > 0.0 && k >= TAIL_MIN && self.run >= TAIL_RUN
+    }
+}
+
 // ---------------------------------------------------------------------------------------------------------------
 // centre series (regular centre), evaluated at nodes[0]
 // ---------------------------------------------------------------------------------------------------------------
@@ -158,6 +197,11 @@ pub fn centre_series<T: Lane, const B: usize>(ctx: &Ctx<B>, p1: &Fl<T, B>, c0: &
     mm[1] = -*p1;
     a2[0] = aa[0] * aa[0];
     let invc = Fl::<T, B>::splat(DD::ONE) / cc[0];
+    let mut tail = Tail::new(ctx.nodes[0]);
+    if T::TAN_F64 {
+        tail.done(0, [&pp[0], &mm[0], &aa[0], &cc[0]]);
+        tail.done(1, [&pp[1], &mm[1], &aa[1], &cc[1]]);
+    }
     for k in 2..=kmax {
         let kf = k as f64;
         q2[k] = cs(&pp, &pp, k) + cs(&mm, &mm, k);
@@ -188,6 +232,12 @@ pub fn centre_series<T: Lane, const B: usize>(ctx: &Ctx<B>, p1: &Fl<T, B>, c0: &
         let idel = DD::ONE / (-(DD::from_f64(kf - 1.0) * (DD::from_f64(kf - 1.0) + n)));
         pp[k] = ((r4.muls(mu12) - r3.muls(mu22)) * invc).muls(idel);
         mm[k] = ((r3.muls(mu21) - r4.muls(mu11)) * invc).muls(idel);
+        if T::TAN_F64 && tail.done(k, [&pp[k], &mm[k], &aa[k], &cc[k]]) {
+            for v in [&mut pp, &mut mm, &mut aa, &mut cc] {
+                v.truncate(k + 1);
+            }
+            break;
+        }
     }
     [pp, mm, aa, cc]
 }
@@ -471,6 +521,8 @@ pub fn horizon_series<T: Lane, const B: usize>(
     ww[0] = wfun(&cc, 0);
     zc[0] = zfun(&cc, 0);
     let izc0 = one / zc[0];
+    let mut tail = Tail::new(ctx.u0().hi);
+    let mut last = ks;
     for kk in 0..=ks {
         let kf = kk as f64;
         let ik1 = recip_int(kk + 1);
@@ -487,7 +539,8 @@ pub fn horizon_series<T: Lane, const B: usize>(
         pp[kk] = psolve(ctx, &lus[kk], &lus_t[kk], &kappa, &(-r), omega);
         dp[kk] = dtau(ctx, &pp[kk], omega);
         q2[kk] = cs(&pp, &pp, kk) + cs(&mm, &mm, kk);
-        if kk == ks {
+        if kk == ks || (T::TAN_F64 && tail.done(kk, [&pp[kk], &mm[kk], &aa[kk], &cc[kk]])) {
+            last = kk;
             break;
         }
         let a3 = cs(&aa, &a2, kk);
@@ -501,10 +554,10 @@ pub fn horizon_series<T: Lane, const B: usize>(
         mm[kk + 1] = (rest * izc0).muls(ik1);
         dm[kk + 1] = dtau(ctx, &mm[kk + 1], omega);
     }
-    pp.truncate(ks + 1);
-    mm.truncate(ks + 1);
-    aa.truncate(ks + 1);
-    cc.truncate(ks + 1);
+    pp.truncate(last + 1);
+    mm.truncate(last + 1);
+    aa.truncate(last + 1);
+    cc.truncate(last + 1);
     [pp, mm, aa, cc]
 }
 
@@ -596,6 +649,12 @@ pub fn jacobian_f64<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: b
 /// columns of one block at a time), column-major with leading dimension ld_for(L): (J, ld).
 pub fn jacobian_dtn<const N: usize, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool) -> Result<(Vec<f64>, usize), String> {
     let (jh, _, ld) = jacobian_lanes::<Dtn<N>, B>(ctx, zh, zl, par)?;
+    Ok((jh, ld))
+}
+
+/// The f64 Jacobian with `Fun<N>` lanes: an f64 base trajectory and N f64 tangents per evaluation: (J, ld).
+pub fn jacobian_fun<const N: usize, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool) -> Result<(Vec<f64>, usize), String> {
+    let (jh, _, ld) = jacobian_lanes::<Fun<N>, B>(ctx, zh, zl, par)?;
     Ok((jh, ld))
 }
 
@@ -904,35 +963,38 @@ mod bench {
         println!("M = {}, L = {}, single thread; seconds for all columns of a block (from a sample)", 8 * B, ctx.len());
         prim::<Du, B>(&ctx, "Du");
         prim::<Fu, B>(&ctx, "Fu");
+        prim::<Fun<4>, B>(&ctx, "Fun<4>");
         prim::<Dtn<1>, B>(&ctx, "Dtn<1>");
         prim::<Dtn<4>, B>(&ctx, "Dtn<4>");
         prim::<Dtn<8>, B>(&ctx, "Dtn<8>");
         let all = jac_tasks(&ctx);
         let nb = ctx.k() + 1;
-        let names = ["Du", "Fu", "Dtn<1>", "Dtn<4>", "Dtn<8>", "Dtn<16>"];
-        let mut tot = [0.0; 6];
+        let names = ["Du", "Fu", "Fun<2>", "Fun<4>", "Fun<8>", "Dtn<1>", "Dtn<4>", "Dtn<8>"];
+        let mut tot = [0.0; 8];
         for b in 0..nb {
             let ncol = all.iter().filter(|t| t.0 == b).count() as f64;
-            // 16 consecutive lanes of the first input field (and Delta for the per-column lanes)
+            // 16 consecutive lanes of the second input field (each evaluation group within one field)
             let sample: Vec<(usize, usize, usize)> = all.iter().filter(|t| t.0 == b && t.1 == 1 && t.2 < 16).cloned().collect();
             let ts = [
                 time_cols::<Du, B>(&ctx, &zh, &zl, &lus, &sample[..4]),
                 time_cols::<Fu, B>(&ctx, &zh, &zl, &lus, &sample[..8]),
+                time_cols::<Fun<2>, B>(&ctx, &zh, &zl, &lus, &sample[..8]),
+                time_cols::<Fun<4>, B>(&ctx, &zh, &zl, &lus, &sample[..8]),
+                time_cols::<Fun<8>, B>(&ctx, &zh, &zl, &lus, &sample),
                 time_cols::<Dtn<1>, B>(&ctx, &zh, &zl, &lus, &sample[..4]),
                 time_cols::<Dtn<4>, B>(&ctx, &zh, &zl, &lus, &sample[..8]),
                 time_cols::<Dtn<8>, B>(&ctx, &zh, &zl, &lus, &sample),
-                time_cols::<Dtn<16>, B>(&ctx, &zh, &zl, &lus, &sample),
             ];
             let steps = if b > 0 && b < ctx.k() { ctx.segs[b - 1].len() - 1 } else { 0 };
             let mut line = format!("  block {b:2} ({ncol} columns, {steps:2} steps):");
-            for i in 0..6 {
+            for i in 0..8 {
                 tot[i] += ts[i] * ncol;
                 line += &format!(" {} {:6.3}", names[i], ts[i] * ncol);
             }
             println!("{line}");
         }
         let mut line = String::from("  total (one thread):");
-        for i in 0..6 {
+        for i in 0..8 {
             line += &format!(" {} {:.2} s ({:.1}x)", names[i], tot[i], tot[0] / tot[i]);
         }
         println!("{line}");

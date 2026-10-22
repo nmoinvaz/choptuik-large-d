@@ -706,6 +706,234 @@ impl DDLu {
     }
 }
 
+// ---------------------------------------------------------------------------------------------------------------
+// The same blocked LU in plain f64, for the mixed-precision Newton step (an f64 Jacobian)
+// ---------------------------------------------------------------------------------------------------------------
+
+/// `panel_getf2` in f64 (one array; multipliers by the pivot's reciprocal, as LAPACK's dgetf2).
+fn panel_getf2_f64(n: usize, ld: usize, j0: usize, jb: usize, pa: &mut [f64], perm: &mut [usize]) -> Result<(), String> {
+    let mut m = vec![0.0f64; ld];
+    let mut blocks: Vec<usize> = Vec::with_capacity(ld / 8);
+    for c in 0..jb {
+        let k = j0 + c;
+        let ck = c * ld;
+        let mut p = k;
+        let mut best = pa[ck + k].abs();
+        for i in k + 1..n {
+            let v = pa[ck + i].abs();
+            if v > best {
+                best = v;
+                p = i;
+            }
+        }
+        if best == 0.0 || !best.is_finite() {
+            return Err(format!("singular or non-finite pivot at column {k} ({best})"));
+        }
+        perm[k] = p;
+        if p != k {
+            for j in 0..jb {
+                pa.swap(j * ld + k, j * ld + p);
+            }
+        }
+        let inv = 1.0 / pa[ck + k];
+        for i in k + 1..n {
+            pa[ck + i] *= inv;
+        }
+        if k + 1 == n || c + 1 == jb {
+            continue;
+        }
+        let r0 = 8 * ((k + 1) / 8);
+        blocks.clear();
+        let mut i = r0;
+        while i < ld {
+            let mut nz = false;
+            for r in i..i + 8 {
+                m[r] = if r > k && r < n { pa[ck + r] } else { 0.0 };
+                nz |= m[r] != 0.0;
+            }
+            if nz {
+                blocks.push(i);
+            }
+            i += 8;
+        }
+        if blocks.is_empty() {
+            continue;
+        }
+        let (_, ra) = pa.split_at_mut((c + 1) * ld);
+        let w = jb - c - 1;
+        for ch in ra[..w * ld].chunks_mut(ld) {
+            if ch[k] == 0.0 {
+                continue;
+            }
+            let nt = V8::splat(-ch[k]);
+            for &i in &blocks {
+                V8::load(&m[i..i + 8]).fma(nt, V8::load(&ch[i..i + 8])).store(&mut ch[i..i + 8]);
+            }
+        }
+    }
+    Ok(())
+}
+
+#[inline(always)]
+#[allow(clippy::too_many_arguments)]
+fn tile_rows_f64<const R: usize, const W: usize>(ch: &mut [f64], cols: &[usize], nto: &[usize], nt: &[f64], rows: &[(usize, usize)], pk: &[f64], jb: usize) {
+    let mut acc = [[V8::zero(); W]; R];
+    for r in 0..R {
+        for q in 0..W {
+            let o = cols[q] + rows[r].0;
+            acc[r][q] = V8::load(&ch[o..o + 8]);
+        }
+    }
+    for c in 0..jb {
+        let mut l = [V8::zero(); R];
+        for r in 0..R {
+            let pb = rows[r].1 + c * 8;
+            l[r] = V8::load(&pk[pb..pb + 8]);
+        }
+        for q in 0..W {
+            let t = V8::splat(nt[nto[q] + c]);
+            for r in 0..R {
+                acc[r][q] = l[r].fma(t, acc[r][q]);
+            }
+        }
+    }
+    for r in 0..R {
+        for q in 0..W {
+            let o = cols[q] + rows[r].0;
+            acc[r][q].store(&mut ch[o..o + 8]);
+        }
+    }
+}
+
+/// `gemm` in f64 (4 row blocks x NC columns per register tile)
+fn gemm_f64(jb: usize, ch: &mut [f64], cols: &[usize], nto: &[usize], nt: &[f64], rows: &[(usize, usize)], pk: &[f64]) {
+    const TR64: usize = 4;
+    let mut j = 0;
+    while j < cols.len() {
+        let w = (cols.len() - j).min(NC);
+        let mut r = 0;
+        while r < rows.len() {
+            let h = (rows.len() - r).min(TR64);
+            if w == NC && h == TR64 {
+                tile_rows_f64::<TR64, NC>(ch, &cols[j..], &nto[j..], nt, &rows[r..], pk, jb);
+            } else {
+                for q in 0..w {
+                    for rr in 0..h {
+                        tile_rows_f64::<1, 1>(ch, &cols[j + q..], &nto[j + q..], nt, &rows[r + rr..], pk, jb);
+                    }
+                }
+            }
+            r += h;
+        }
+        j += w;
+    }
+}
+
+impl DDLu {
+    /// The blocked LU of `factor_blocked` (the same panels, row swaps, skipped zero blocks and register tiles) in plain
+    /// f64 on an f64 matrix: an f64 LU with partial pivoting (backward stable: L U = P (A + E), |E| of the order of
+    /// n eps |L| |U|), stored with lo = 0 so that the double-double solves (solve, solve_t, solve_many, chord) use these
+    /// factors as they are. For the mixed-precision Newton step, whose Jacobian is f64 to begin with.
+    pub fn factor_f64(n: usize, ld: usize, mut a: Vec<f64>, par: bool) -> Result<DDLu, String> {
+        assert!(ld % 8 == 0 && ld >= n && a.len() >= ld * n);
+        let mut perm = vec![0usize; n];
+        let mut j0 = 0;
+        while j0 < n {
+            let jb = NB.min(n - j0);
+            let je = j0 + jb;
+            let (left, rest) = a.split_at_mut(j0 * ld);
+            let (pan, right) = rest.split_at_mut(jb * ld);
+            panel_getf2_f64(n, ld, j0, jb, pan, &mut perm)?;
+            let pv = &perm[j0..je];
+            for ch in left.chunks_mut(ld) {
+                for (c, &p) in pv.iter().enumerate() {
+                    if p != j0 + c {
+                        ch.swap(j0 + c, p);
+                    }
+                }
+            }
+            if je == n {
+                break;
+            }
+            let pan: &[f64] = pan;
+            let mut tri = vec![0.0f64; jb * jb];
+            for c in 0..jb {
+                for i in j0 + c + 1..je.min(n) {
+                    tri[c * jb + i - j0] = pan[c * ld + i];
+                }
+            }
+            let nrb = (ld - je) / 8;
+            let mut pk = vec![0.0f64; nrb * jb * 8];
+            let mut rows: Vec<(usize, usize)> = Vec::with_capacity(nrb);
+            for rb in 0..nrb {
+                let mut nz = false;
+                for c in 0..jb {
+                    for r in 0..8 {
+                        let i = je + rb * 8 + r;
+                        if i < n {
+                            let x = pan[c * ld + i];
+                            pk[(rb * jb + c) * 8 + r] = x;
+                            nz |= x != 0.0;
+                        }
+                    }
+                }
+                if nz {
+                    rows.push((je + rb * 8, rb * jb * 8));
+                }
+            }
+            let ncols = n - je;
+            let task = |ch: &mut [f64]| {
+                let w = ch.len() / ld;
+                let mut nt = vec![0.0f64; w * jb];
+                let mut cols: Vec<usize> = Vec::with_capacity(w);
+                let mut nto: Vec<usize> = Vec::with_capacity(w);
+                for j in 0..w {
+                    let h = &mut ch[j * ld..(j + 1) * ld];
+                    for (c, &p) in pv.iter().enumerate() {
+                        if p != j0 + c {
+                            h.swap(j0 + c, p);
+                        }
+                    }
+                    if h[j0..je].iter().all(|&x| x == 0.0) {
+                        continue;
+                    }
+                    for c in 0..jb {
+                        let k = j0 + c;
+                        let t = -h[k];
+                        nt[j * jb + c] = t;
+                        if t == 0.0 {
+                            continue;
+                        }
+                        let tv = V8::splat(t);
+                        let mut i = 8 * ((k + 1) / 8);
+                        while i < je {
+                            let mv = V8::load(&tri[c * jb + i - j0..c * jb + i - j0 + 8]);
+                            mv.fma(tv, V8::load(&h[i..i + 8])).store(&mut h[i..i + 8]);
+                            i += 8;
+                        }
+                    }
+                    if nt[j * jb..(j + 1) * jb].iter().any(|&x| x != 0.0) {
+                        cols.push(j * ld);
+                        nto.push(j * jb);
+                    }
+                }
+                if !rows.is_empty() {
+                    gemm_f64(jb, ch, &cols, &nto, &nt, &rows, &pk);
+                }
+            };
+            let r = &mut right[..ncols * ld];
+            if par && ncols * (ld - j0) > 16384 {
+                r.par_chunks_mut(CW * ld).for_each(task);
+            } else {
+                r.chunks_mut(CW * ld).for_each(task);
+            }
+            j0 = je;
+        }
+        let lo = vec![0.0; a.len()];
+        Ok(DDLu { n, ld, hi: a, lo, perm })
+    }
+}
+
 /// Gram matrix G = J^T J and g = J^T b for a column-major J (n x n, leading dimension ld): G column-major with
 /// leading dimension ld (only what LU needs; G is symmetric and filled completely).
 pub fn gram(n: usize, ld: usize, jh: &[f64], jl: &[f64], bh: &[f64], bl: &[f64]) -> (Vec<f64>, Vec<f64>, Vec<DD>) {
@@ -831,6 +1059,34 @@ mod tests {
                 let d = same(&a.hi, &b.hi, "hi") + same(&a.lo, &b.lo, "lo");
                 eprintln!("{kind} n={n} par={par}: equal; {d} zero entries differ in sign");
             }
+        }
+    }
+
+    /// the f64 LU (factor_f64) of an f64 matrix: the dd solve with its factors agrees with the dd LU's solution to
+    /// f64 accuracy; a perturbed factorization (one pivot scaled by 1 + 1e-6) must fail the check
+    #[test]
+    fn f64_lu_solves() {
+        let check = |n: usize, h: &Vec<f64>, ld: usize, mutate: bool| -> f64 {
+            let mut lu = DDLu::factor_f64(n, ld, h.clone(), true).unwrap();
+            if mutate {
+                let i = ld * (n / 2) + n / 2;
+                lu.hi[i] *= 1.0 + 1e-6;
+            }
+            let dd = DDLu::factor(n, ld, h.clone(), vec![0.0; h.len()], false).unwrap();
+            let mut x: Vec<DD> = (0..n).map(|i| DD::from_f64(((i * 37) % 11) as f64 - 5.0)).collect();
+            let mut y = x.clone();
+            lu.solve(&mut x);
+            dd.solve(&mut y);
+            let xm = y.iter().map(|v| v.hi.abs()).fold(0.0, f64::max);
+            x.iter().zip(&y).map(|(a, b)| (a.hi - b.hi).abs()).fold(0.0, f64::max) / xm
+        };
+        for (n, sp) in [(90, false), (157, false), (300, true), (453, true)] {
+            let (ld, h, _) = if sp { sparse(n, 37, 11) } else { mat(n, 12) };
+            let d = check(n, &h, ld, false);
+            let dm = check(n, &h, ld, true);
+            eprintln!("n {n} sparse {sp}: f64 LU vs dd LU solution {d:.1e}; with a perturbed pivot {dm:.1e}");
+            assert!(d < 1e-10, "f64 LU solve differs by {d:e}");
+            assert!(dm > 1e-8, "the perturbed factorization is not detected ({dm:e})");
         }
     }
 

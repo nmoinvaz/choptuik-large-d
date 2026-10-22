@@ -695,3 +695,185 @@ impl<const N: usize> Lane for Dtn<N> {
         self.d[k] = t;
     }
 }
+
+/// Dual number with a plain-f64 value and N plain-f64 tangents (Fu with N columns per evaluation).
+#[derive(Clone, Copy, Debug)]
+pub struct Fun<const N: usize> {
+    pub v: V8,
+    pub d: [V8; N],
+}
+
+impl<const N: usize> Add for Fun<N> {
+    type Output = Self;
+    #[inline(always)]
+    fn add(self, o: Self) -> Self {
+        let mut d = self.d;
+        for i in 0..N {
+            d[i] = self.d[i].add(o.d[i]);
+        }
+        Fun { v: self.v.add(o.v), d }
+    }
+}
+impl<const N: usize> Sub for Fun<N> {
+    type Output = Self;
+    #[inline(always)]
+    fn sub(self, o: Self) -> Self {
+        let mut d = self.d;
+        for i in 0..N {
+            d[i] = self.d[i].sub(o.d[i]);
+        }
+        Fun { v: self.v.sub(o.v), d }
+    }
+}
+impl<const N: usize> Neg for Fun<N> {
+    type Output = Self;
+    #[inline(always)]
+    fn neg(self) -> Self {
+        let z = V8::zero();
+        Fun { v: z.sub(self.v), d: self.d.map(|x| z.sub(x)) }
+    }
+}
+impl<const N: usize> Mul for Fun<N> {
+    type Output = Self;
+    #[inline(always)]
+    fn mul(self, o: Self) -> Self {
+        let mut d = self.d;
+        for i in 0..N {
+            d[i] = self.v.fma(o.d[i], self.d[i].mul(o.v));
+        }
+        Fun { v: self.v.mul(o.v), d }
+    }
+}
+impl<const N: usize> Div for Fun<N> {
+    type Output = Self;
+    #[inline(always)]
+    fn div(self, o: Self) -> Self {
+        let q = self.v.div(o.v);
+        let mut d = self.d;
+        for i in 0..N {
+            d[i] = V8::zero().sub(q.fms(o.d[i], self.d[i])).div(o.v);
+        }
+        Fun { v: q, d }
+    }
+}
+
+impl<const N: usize> Lane for Fun<N> {
+    type Acc = (V8, [V8; N]);
+    const TANGENT: bool = true;
+    const VAL_F64: bool = true;
+    const TAN_F64: bool = true;
+    const NT: usize = N;
+    #[inline(always)]
+    fn zero() -> Self {
+        Fun { v: V8::zero(), d: [V8::zero(); N] }
+    }
+    #[inline(always)]
+    fn cst(c: DV) -> Self {
+        Fun { v: c.hi, d: [V8::zero(); N] }
+    }
+    #[inline(always)]
+    fn splat(x: DD) -> Self {
+        Fun { v: V8::splat(x.hi), d: [V8::zero(); N] }
+    }
+    #[inline(always)]
+    fn mulc(self, c: DV) -> Self {
+        Fun { v: self.v.mul(c.hi), d: self.d.map(|x| x.mul(c.hi)) }
+    }
+    #[inline(always)]
+    fn muls(self, s: DD) -> Self {
+        let c = V8::splat(s.hi);
+        Fun { v: self.v.mul(c), d: self.d.map(|x| x.mul(c)) }
+    }
+    #[inline(always)]
+    fn mulf(self, s: f64) -> Self {
+        let c = V8::splat(s);
+        Fun { v: self.v.mul(c), d: self.d.map(|x| x.mul(c)) }
+    }
+    #[inline(always)]
+    fn addc(self, c: DV) -> Self {
+        Fun { v: self.v.add(c.hi), d: self.d }
+    }
+    #[inline(always)]
+    fn bcast(self, j: usize) -> Self {
+        Fun { v: self.v.bcast(j), d: self.d.map(|x| x.bcast(j)) }
+    }
+    #[inline(always)]
+    fn val(self) -> DV {
+        DV { hi: self.v, lo: V8::zero() }
+    }
+    /// the first tangent
+    #[inline(always)]
+    fn tan(self) -> DV {
+        DV { hi: self.d[0], lo: V8::zero() }
+    }
+    /// value v, first tangent t, the others zero
+    #[inline(always)]
+    fn from_vt(v: DV, t: DV) -> Self {
+        let mut d = [V8::zero(); N];
+        d[0] = t.hi;
+        Fun { v: v.hi, d }
+    }
+    #[inline(always)]
+    fn acc0() -> Self::Acc {
+        (V8::zero(), [V8::zero(); N])
+    }
+    #[inline(always)]
+    fn acc(a: Self::Acc, x: Self, y: Self) -> Self::Acc {
+        let mut d = a.1;
+        for i in 0..N {
+            d[i] = x.v.fma(y.d[i], x.d[i].fma(y.v, a.1[i]));
+        }
+        (x.v.fma(y.v, a.0), d)
+    }
+    #[inline(always)]
+    fn accc(a: Self::Acc, x: Self, c: DV) -> Self::Acc {
+        let mut d = a.1;
+        for i in 0..N {
+            d[i] = x.d[i].fma(c.hi, a.1[i]);
+        }
+        (x.v.fma(c.hi, a.0), d)
+    }
+    #[inline(always)]
+    fn acc1(a: Self::Acc, x: Self) -> Self::Acc {
+        let mut d = a.1;
+        for i in 0..N {
+            d[i] = a.1[i].add(x.d[i]);
+        }
+        (a.0.add(x.v), d)
+    }
+    #[inline(always)]
+    fn fin(a: Self::Acc) -> Self {
+        Fun { v: a.0, d: a.1 }
+    }
+    #[inline(always)]
+    fn dmat_apply<const B: usize>(dm: &DMat<B>, f: &Fl<Self, B>) -> Fl<Self, B> {
+        let mut av = [V8::zero(); B];
+        let mut ad = [[V8::zero(); N]; B];
+        for jb in 0..B {
+            for jl in 0..8 {
+                let sv = f.0[jb].v.bcast(jl);
+                let sd = f.0[jb].d.map(|x| x.bcast(jl));
+                let col64 = &dm.cols64[8 * jb + jl];
+                for b in 0..B {
+                    av[b] = sv.fma(col64[b], av[b]);
+                    for i in 0..N {
+                        ad[b][i] = sd[i].fma(col64[b], ad[b][i]);
+                    }
+                }
+            }
+        }
+        let mut out = [Self::zero(); B];
+        for b in 0..B {
+            out[b] = Fun { v: av[b], d: ad[b] };
+        }
+        Fl(out)
+    }
+    #[inline(always)]
+    fn tan64(self, k: usize) -> V8 {
+        self.d[k]
+    }
+    #[inline(always)]
+    fn set_tan64(&mut self, k: usize, t: V8) {
+        self.d[k] = t;
+    }
+}
