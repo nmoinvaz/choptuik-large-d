@@ -1361,8 +1361,8 @@ late orders of the inner series fitted with the predicted fast-mode exponents).
   pathological arc while the top harmonic is untuned (`hier_nb.py`), and the matching radius ξ₁ = 0.15, at which the
   leakage of harmonics 5 and 7 into the low conditions is small enough for level 3 to converge (at 0.2 it stalls at
   |r₃| ≈ 10⁻²). The outer Newton runs over complete fixed-(A, ω) solves (`m7_outer.py`). The seven-harmonic zero is
-  **A = 2.71922, ω/ω∞ = 1.000022** (±2×10⁻⁵, from the scatter of repeated solves; not yet checked at other matching
-  radii), with F₇/F₅ = 0.0572. The offset in ω goes −22%, +1.56%, −0.077%, +0.0022% for M = 1, 3, 5, 7; the last
+  **A = 2.71922, ω/ω∞ = 1.000022** (±2×10⁻⁵, from the scatter of repeated solves; at the matching radii 0.14 and 0.16 the
+  solves did not converge well enough to give a zero, so the independence of ξ₁ is untested), with F₇/F₅ = 0.0572. The offset in ω goes −22%, +1.56%, −0.077%, +0.0022% for M = 1, 3, 5, 7; the last
   ratio, −0.049 per pair, is the profile decay of the added pair (0.057) times a coupling of 0.85. The geometric limit
   is ω/ω∞ = 0.999985, and the part above M = 7 is about 4×10⁻⁵ in ω.
 
