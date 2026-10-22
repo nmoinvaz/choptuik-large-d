@@ -47,7 +47,7 @@ What is new: not found in the literature searched ([notes/LIT_REVIEW.md](notes/L
   exponential for γ, has a different form and limit);
 - Propositions 1–4: the 1/D expansion never fixes the period; the closed-form light-cone obstruction; its reading as a
   Stokes multiplier;
-- the selection rule (Conjecture 1) and the value Δ∞ = 1.6439 ± 0.0002 it gives from the D = ∞ equations alone;
+- the selection rule (Conjecture 1) and the value Δ∞ ≈ 1.644 it gives from the D = ∞ equations alone;
 - the symmetry argument of Proposition 5 for γ∞ = 1/2 in the discretely self-similar solution;
 - the computer-assisted certificate in the one-harmonic model.
 
@@ -80,9 +80,10 @@ Headline results:
   predict the shape of the echo, F₃/F₁ = 0.055 against 0.055 extrapolated from the data, and with three harmonics
   the full set of conditions gives Δ = 1.619, 1.5% below Δ∞, and with five harmonics Δ = 1.64516, 0.077% above (one
   harmonic: 29% above): the offset alternates in sign and shrinks fifteen- to twentyfold per harmonic pair. Without truncation, an
-  amplitude expansion to twelve orders brackets the selected ω between 0.99915 and 1.00011 ω∞ (best estimates
-  0.9999–1.0001), at amplitude 2.720 (measured: 2.70–2.72). So the conjectured rule gives Δ∞ = 1.6439 ± 0.0002
-  from the D = ∞ equations alone, against 1.643893746 from the solutions; the rule itself is not yet
+  amplitude expansion to twelve orders puts the selected ω at ω∞ to about 2×10⁻⁴ (Δ∞ = 1.6438 ± 0.0002, an estimator
+  range tested on planted functions), at amplitude 2.720 (measured: 2.70–2.72), provided the selection function has
+  no further zeros near the selected one; twelve coefficients cannot exclude those, and with them the zero could lie
+  anywhere in 0.996–1.002 ω∞ (Δ∞ = 1.641–1.650). The finite-D solutions give 1.643893746. The rule itself is not yet
   proved ([Large D](#large-d-what-the-1d-expansion-can-and-cannot-see)).
 - **Relation to published work.** Agreement with the accepted values at D = 4 and at the maximum of Δ near D = 3.756;
   a 6×10⁻⁵ difference at D = 5 that the published higher-resolution data trace to resolution; and the published
@@ -719,7 +720,8 @@ The results, in order:
 - [The inner problem at large x](#the-inner-problem-at-large-x): near $`x \sim \sqrt n`$ the equations lose n altogether;
   without gravity they reduce to Kummer's equation, whose Stokes constant gives C(n,s) asymptotically (times a power of n
   and a phase). With gravity, the working hypothesis is that this multiplier vanishing is the selection rule (Conjecture 1);
-  computed without truncation to twelve orders in the amplitude, it selects ω within about 10⁻⁴ of ω∞.
+  computed without truncation to twelve orders in the amplitude, it selects ω within about 2×10⁻⁴ of ω∞, given an
+  assumption about the selection function's other zeros (within 0.4% without it).
 - [Proposition 5](#proposition-5-the-unstable-mode-at-infinite-d-is-exact): in s = r²/(2n) the inner problem is a
   nonlinear heat equation, and its shift symmetry in r² gives an exact unstable mode with λ = 2, which explains
   γ∞ = 1/2.
@@ -1406,22 +1408,30 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   orders are added (1.177, 1.077, 1.052, 1.021, 1.017, 1.013), so x₀ is a simple zero and the departure of c from 1 is contamination
   by singularities beyond it. That makes the crossings from above the asymptotically correct estimator. Their distance
   shrinks by a factor of about 0.4–0.6 per order (to 1.00011 at k = 12, still falling), and Aitken's extrapolations
-  of consecutive triples scatter around 1 at the 10⁻⁴ level (0.99976 to 1.00017 for the last six). The ratio estimates,
-  which let c float, come up from below (0.9978, 0.9992, 0.9992 at k = 10–12). Padé approximants of $`(\ln S_1)'`$ put Im A₀ = 0 at ω/ω∞ = 0.981–0.991 with
+  of consecutive triples scatter around 1 (0.99956 to 1.00066). The ratio estimates, which let c float, come up from
+  below and turn down at the last order (0.9978, 0.99919, 0.99915 at k = 10–12). Padé approximants of $`(\ln S_1)'`$ put Im A₀ = 0 at ω/ω∞ = 0.981–0.991 with
   seven coefficients, 0.987–0.998 with eight, 0.992–0.998 with nine, and with ten they straddle ω∞: 0.9949–1.0034, the
   mutually consistent [2/7], [6/3] and [4/5] at 0.9995, 1.0000 and 1.0007; with eleven, all nine approximants cross
   between 0.9975 and 1.0008, eight of them within 0.9992–1.0008 (mean 0.9999); with twelve, the five central
   approximants ([3/8] to [7/4]) agree at 0.99987–0.99991, and at ω∞ they are real to |Im A₀| ≈ 1.4×10⁻⁴, at
   A₀ = 2.7195–2.7198.
-- *Where that leaves it.* At twelve orders the bracket is 0.99915–1.00011 (eleven: 0.9992–1.0002, ten: 0.9978–1.0003,
-  nine: 0.9961–1.0006, eight: 0.9946–1.0011). Inside it the simple-zero crossings are still falling through 1.00011,
-  and the twelve-coefficient Padé approximants agree at 0.9999. A third estimator agrees: S₁ is numerically an entire
-  function of A² of exponential type, and the series of G = e^{−κ̄A²}S₁ (same zeros, no cancellation) puts the real zero
-  at 0.99988 at twelve orders, A₀ = 2.7194, isolated from the other zeros ([proof/D_entire.md](proof/D_entire.md)). The five-harmonic truncation gives 0.999228 and its
-  sequence alternates (0.777, 1.0156, 0.999228; Aitken 1.0003). So the selection rule of Conjecture 1 picks
-  ω/ω∞ = 0.9999–1.0001 (the bracket is the cautious range), at amplitude A₀ = 2.720 (the solutions: 2.70–2.72):
-  **Δ∞ = 1.6439 ± 0.0002 from the D = ∞ inner equations alone**, with no input from the finite-D solutions, against
-  1.643893746 from them. Whether the remaining 10⁻⁴ (the Padé value sits 1.1×10⁻⁴ below 1) closes needs more orders.
+- *Where that leaves it.* At twelve orders the two families give 0.99915–1.00011 (eleven: 0.9992–1.0002, ten:
+  0.9978–1.0003, nine: 0.9961–1.0006, eight: 0.9946–1.0011), the twelve-coefficient Padé approximants 0.9999, and a
+  third estimator the same: S₁ is numerically an entire function of A² of exponential type, and the series of
+  G = e^{−κ̄A²}S₁ (same zeros, no cancellation) puts the real zero at 0.99988, A₀ = 2.7194
+  ([proof/D_entire.md](proof/D_entire.md)). The five-harmonic truncation gives 0.999228 and its sequence alternates
+  (0.777, 1.0156, 0.999228; Aitken 1.0003).
+- *How far to trust those estimates.* A planted-truth test ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md))
+  ran the same estimators, through the same code, on synthetic functions of the same class: Laplace integrals over a
+  Borel arc whose coefficients match the real σ₀…σ₁₂ to 10⁻⁵, with the zero planted at ω/ω∞ = 0.996–1.004. The pair
+  above is not a bracket: it misses one family of shapes, and its width comes from the ratio estimate, which is
+  1.3–5.4×10⁻³ low on every plant. Padé and G are biased in opposite directions by up to 8×10⁻⁴, so their agreement here
+  is not evidence of accuracy. The arg crossing is the most reliable (errors −0.8 to +1.9×10⁻⁴); calibrated on the
+  plants, it puts the zero at 0.99992–1.00019, **Δ∞ = 1.6438 ± 0.0002 from the D = ∞ inner equations alone**, an
+  estimator range rather than a bound, with no input from the finite-D solutions (1.643893746). That holds only if S₁
+  has no zeros besides x₀ within |x| ≈ 9. Twelve coefficients do not exclude them: functions with exactly the real
+  σ₀…σ₁₂ have their zero anywhere in 0.996–1.002 (Δ∞ = 1.641–1.650), the far cases hiding a ring of zeros that only
+  order 13 reveals. The estimates also need every σₖ to about 10⁻¹⁰. A converged σ₁₃ is the next step.
   Order 13 at J = 750 does not converge (its error estimate, 10⁻⁹–2.5×10⁻⁸, is the size of σ₁₃ itself, while σ₁–σ₁₂ stay
   at 10⁻²⁰; `scan27phys/`, kept for reference): it needs a longer late-order window (J ≥ 1000, about 10 hours per ω on the
   8-thread machine). The rule itself is still a conjecture (hypotheses H1–H2,

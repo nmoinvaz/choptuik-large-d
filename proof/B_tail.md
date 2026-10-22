@@ -23,6 +23,9 @@ Contents
 
 ## Verdict
 
+*Note added: the untruncated "bracket" 0.99915–1.00011 used below is not a coverage guarantee, and twelve coefficients
+fix the zero only if S₁ has no other zeros within |x| ≈ 9 ([notes/PLANTED_SELECTION.md](../notes/PLANTED_SELECTION.md)).*
+
 Gap (b) is real but not fatal, and it is narrower than the README's statement of it suggests.
 
 - **Worry 1 (weights against decay) does not arise in the tuned problem.** The condition S ≡ 0 is stated on the real

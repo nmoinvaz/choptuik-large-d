@@ -80,7 +80,8 @@ F_n → F_∞, ω_n → ω_∞ in the sense of hypothesis (H1) has S(F_∞, ω_�
 
 The numerics so far are consistent with all three: the twelve-order amplitude expansion brackets ω*/ω∞ in
 0.99915–1.00011 with Padé estimates 0.9999, and the five-harmonic truncation gives 0.999228 (README, "Where that leaves
-it"). They are evidence, not part of the proof.
+it"). A planted-truth test of those estimators (notes/PLANTED_SELECTION.md) puts the zero at 0.99992–1.00019 if S₁ has no
+other zeros within |x| ≈ 9, and anywhere in 0.996–1.002 otherwise. They are evidence, not part of the proof.
 
 ## 2. What is already proved here
 
@@ -351,7 +352,7 @@ and if that zero is the unique simple zero in a box containing the numerical lim
   inside the basin of Theorem B's construction, would close this; alternatively, Theorem B's construction at n ≥ n₀ with
   explicit n₀ and a certified solution at some D ≥ n₀ + 2.
 
-The numerical agreement (ω*/ω∞ = 0.9999–1.0001) then becomes a consistency check of the theorem rather than its basis.
+The numerical agreement (ω*/ω∞ = 0.9999–1.0002 under the assumption above) then becomes a consistency check of the theorem rather than its basis.
 
 ## 7. Staged plan
 
