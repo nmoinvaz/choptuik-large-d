@@ -52,6 +52,30 @@ def data_points():
 
 
 @check
+def loader_exact():
+    """hp/dd_fits_mp.load_points must return hi + lo of every CSV row exactly. The CSV stores repr() of each double;
+    reading those strings as decimals at 60 digits moves a point by up to 2e-16 (notes/NUMERICS_REVIEW.md F7,
+    notes/LOADER_FIX.md). The control reads them that way here and must be caught by the same comparison."""
+    from fractions import Fraction
+    sys.path.insert(0, os.path.join(ROOT, "hp"))
+    import dd_fits_mp as F
+    mp = F.mp
+
+    def exact(x):                                    # an mpf as a Fraction, exactly
+        man, exp = x.man_exp
+        return Fraction(man) * Fraction(2) ** exp
+
+    pts, _ = F.load_points()
+    rows = [r.strip().split(",") for r in list(open(os.path.join(ROOT, "hp/data/delta_dd.csv")))[1:]]
+    want = {round(float(c[0]), 6): Fraction(float(c[1])) + Fraction(float(c[2])) for c in rows}
+    n_bad = sum(exact(pts[k]) != v for k, v in want.items()) + len(set(pts) ^ set(want))
+    old = {round(float(c[0]), 6): mp.mpf(c[1]) + mp.mpf(c[2]) for c in rows}     # the parse before the fix
+    n_old = sum(exact(old[k]) != v for k, v in want.items())
+    return [("CSV rows whose loaded value differs from the exact hi + lo", n_bad, 0, 1, []),
+            ("control: the decimal-string parse is caught (rows differing > 0)", int(n_old > 0), 1, 1, [])]
+
+
+@check
 def gamma_points():
     pts = {}
     for fn in ("hp/data/gamma_dd.jsonl", "hp/data/local/gamma_dd.jsonl"):
