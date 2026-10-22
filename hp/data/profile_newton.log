@@ -1,0 +1,8 @@
+M =  48, N = 2689: residual     0.0 s, Jacobian     7.5 s, dd LU + solve     0.8 s (Newton step 8.4 s); f64 LU 0.23 s; f64-vs-dd step difference 1.1e-13; pivots 1.8e-03..3.5e+01; zero entries 93.3%; nonzero 13x13 node blocks: 42
+M =  64, N = 3585: residual     0.1 s, Jacobian    16.7 s, dd LU + solve     1.1 s (Newton step 17.8 s); f64 LU 0.53 s; f64-vs-dd step difference 2.5e-14; pivots 1.3e-03..6.1e+00; zero entries 93.3%; nonzero 13x13 node blocks: 42
+M =  80, N = 4481: residual     0.1 s, Jacobian    31.5 s, dd LU + solve     1.2 s (Newton step 32.8 s); f64 LU 0.76 s; f64-vs-dd step difference 1.1e-13; pivots 1.4e-03..2.7e+01; zero entries 93.3%; nonzero 13x13 node blocks: 42
+  t_residual: grows like M^2.36
+  t_jacobian: grows like M^2.81
+  t_dd_lu_and_solve: grows like M^0.77
+  t_f64_lu: grows like M^2.38
+exit 0
