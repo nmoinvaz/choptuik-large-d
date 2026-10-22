@@ -62,9 +62,15 @@ def main():
         nweak = int(((r < 1e-10) & (r >= 3e-14)).sum())
         njunk = int((r < 3e-14).sum())
         n16 = int((r < 1e-16).sum())
+        # dDelta/dF = row of J^-1 for Delta: y = sum_i V[-1, i] u_i / s_i (all directions; and with the junk band
+        # (s/s_max < 3e-14) dropped, as ne_solve effectively does)
+        cvec = Vt[:, -1] / s
+        y_all = U @ cvec
+        y_cut = U[:, r >= 3e-14] @ cvec[r >= 3e-14]
+        sens_all, sens_cut = float(np.abs(y_all).sum()), float(np.abs(y_cut).sum())
         print(f"{os.path.basename(f)} (rk of state {rk_f}, Jacobian at rk {rk}): D {D} kc {kc} L {len(z)} |F| {np.abs(F).max():.1e} "
               f"s_max {s[0]:.2e} s_min/s_max {r[-1]:.1e}  weak band {nweak}  junk band {njunk}  below 1e-16 {n16}  "
-              f"({time.time() - t0:.0f} s)", flush=True)
+              f"|dDelta/dF|_1 {sens_all:.1e} (junk dropped {sens_cut:.1e})  ({time.time() - t0:.0f} s)", flush=True)
         rows = []
         for i in range(len(s) - 1, max(len(s) - 1 - nshow, -1), -1):
             v = Vt[i]
@@ -78,6 +84,7 @@ def main():
             with open(opts["json"], "a") as fh:
                 fh.write(json.dumps(dict(state=os.path.basename(f), D=D, kc=kc, rk_jac=rk, L=len(z), F=float(np.abs(F).max()),
                                          s_max=float(s[0]), n_weak=nweak, n_junk=njunk, n_below_1e16=n16,
+                                         sens_all=sens_all, sens_junk_dropped=sens_cut,
                                          sv_ladder=[float(f"{x:.3e}") for x in r[-60:]], weakest=rows)) + "\n")
 
 

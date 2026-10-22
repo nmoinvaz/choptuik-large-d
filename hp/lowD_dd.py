@@ -6,9 +6,13 @@ double-double state, with what is needed to judge convergence (notes/LOW_D.md).
     python3 lowD_dd.py OUT.jsonl --start STATE.npz [--D D_new] [--history a.npz,b.npz,...] --Ms 96 [options]
 
 --seed: a converged f64 solution (solver/data/neB_kc47_rk2_D*.npy: x_K = 0.6 layout, kc --kc_seed), resampled to the
-first M (the recipe of hp/compare/dd_D5.py). --start: a double-double state (hpkernel.driver.save format), resampled
-if its M differs; with --D the solve is at D_new (a continuation step; with --history, Lagrange extrapolation through
-the given states and the start, oldest first, all at the same M and nodes).
+first M (the recipe of hp/compare/dd_D5.py); several comma-separated f64 solutions with --D: Lagrange interpolation
+of them to D. --start: a double-double state (hpkernel.driver.save format), resampled if its M differs and re-noded
+(driver.renode) if --nodes differs; with --D the solve is at D_new (a continuation step; with --history, Lagrange
+extrapolation through the given states and the start, oldest first, all at the same M and nodes).
+A solve that does not reach |F| < --accept (1e-24) is recorded with converged false and saved as *_fail.npz, and the
+remaining M are skipped. Plain Newton from an f64 seed resampled straight to M = 64 fails at D = 4 (|F| 4e-2: the
+seed lacks harmonics 49-63); go through M = 48 first, with --solver dn.
 Options: --nodes (default 0.02,0.05,0.1,0.16,0.23,0.3,0.4,0.5,0.6), --kt 36 (Taylor order in x), --kcs 60 (centre
 series terms), --ks 100 (horizon series terms), --tol_step 1e-32 (Taylor step tolerance), --hmax 0.05, --tol 1e-29,
 --it_max 14, --threads 2, --tag (state file prefix), --solver newton|dn (dn: deflated Newton, driver.deflated_newton),
@@ -33,7 +37,7 @@ import numpy as np  # noqa: E402
 
 sys.path.insert(0, HERE)
 from hpkernel.driver import (deflated_newton, delta_correction, load, lm_solve, make_solver, newton_solve, predict,  # noqa: E402
-                             resample_z, save, seed_from_f64, weak_subspace, _normal_solve)
+                             renode, resample_z, save, seed_from_f64, weak_subspace, _normal_solve)
 
 NL = [0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6]
 
@@ -94,6 +98,7 @@ def main():
     ap.add_argument("--tol_step", type=float, default=1e-32)
     ap.add_argument("--hmax", type=float, default=0.05)
     ap.add_argument("--tol", type=float, default=1e-29)
+    ap.add_argument("--accept", type=float, default=1e-24, help="a solve counts as converged below this |F|")
     ap.add_argument("--it_max", type=int, default=14)
     ap.add_argument("--threads", type=int, default=2)
     ap.add_argument("--tag", default="lowD")
@@ -126,7 +131,13 @@ def main():
         zh, zl, meta = load(a.start)
         D, Mo, src = meta["D"], meta["M"], os.path.basename(a.start)
         if list(meta["nodes"]) != nodes:
-            raise SystemExit(f"start nodes {meta['nodes']} != {nodes} (re-noding not supported here)")
+            # re-node: every new node's state from the old solution (driver.renode: Taylor integration from the
+            # nearest old node below, or the centre series)
+            s0 = make_solver(D, Mo, nodes=list(meta["nodes"]), kt=a.kt, kc=a.kcs, ks=a.ks, threads=a.threads)
+            s0.set_segs(s0.plan(zh, zl, a.tol_step, a.hmax))
+            zh, zl = renode(s0, zh, zl, list(meta["nodes"]), nodes, Mo)
+            log(f"re-noded {meta['nodes']} -> {nodes}")
+            src += " (re-noded)"
         if a.D is not None and abs(a.D - D) > 1e-12:
             hist = []
             for f in filter(None, a.history.split(",")):
@@ -154,19 +165,33 @@ def main():
             zh, zl, hist = deflated_newton(s, zh, zl, tol=a.tol, it_max=a.it_max, w=a.w, verbose=True)
         else:
             zh, zl, hist = newton_solve(s, zh, zl, tol=a.tol, it_max=a.it_max, verbose=True)
-        if a.lm and (not hist or hist[-1]["F"] > max(a.tol, 1e-25)):
+        _rh, _rl = s.residual(zh, zl)
+        if a.lm and not float(np.abs(np.asarray(_rh) + np.asarray(_rl)).max()) < a.accept:
             log("  Newton stalled; Levenberg-Marquardt")
             zh, zl, h2 = lm_solve(s, zh, zl, tol=a.tol, it_max=a.lm, verbose=True, newton_after=1e-22)
             hist = hist + h2
         zh, zl = np.asarray(zh), np.asarray(zl)
-        # the LU stored in s must be at the final z for the sensitivities: newton_solve's last call factors at the
-        # returned z when it stopped on tol (its last record has no step); otherwise refresh it (one more Jacobian)
-        if hist and "lam" not in hist[-1] and "lm" not in hist[-1] and "failed" not in hist[-1] and a.solver == "newton":
-            Fh, Fl = s.residual(zh, zl)
-            pmin, pmax = hist[-1]["piv"]
+        Fh, Fl = s.residual(zh, zl)
+        F = float(np.abs(np.asarray(Fh) + np.asarray(Fl)).max())
+        if not F < a.accept:
+            # not converged: record it, keep the state under a _fail name (a start for a retry), no sensitivities
+            dt = time.time() - t0
+            rec = dict(D=D, M=M, Delta=float(zh[-1]), Delta_lo=float(zl[-1]), F=F, its=len(hist), seconds=round(dt, 1),
+                       nodes=nodes, kt=a.kt, kcs=a.kcs, ks=a.ks, tol_step=a.tol_step, hmax=a.hmax, solver=a.solver,
+                       source=src, threads=a.threads, converged=False)
+            with open(a.out, "a") as f:
+                f.write(json.dumps(rec) + "\n")
+            save(os.path.join(outdir, f"{a.tag}_D{D:.4f}_M{M}_fail.npz"), zh, zl,
+                 dict(D=D, M=M, nodes=nodes, kt=a.kt, kc=a.kcs, ks=a.ks))
+            log(f"D {D} M {M}: NOT converged, |F| {F:.1e} after {len(hist)} iterations ({dt:.0f}s); stopping")
+            break
+        # the LU stored in s must be at the final z for the sensitivities: the solvers' last s.newton call is at the
+        # returned z when they stopped on tol (last record without a step taken); otherwise refresh it (one Jacobian)
+        last = hist[-1] if hist else {}
+        if "piv" in last and ("lam" not in last or last.get("accepted") or "failed" in last):
+            pmin, pmax = last["piv"]
         else:
             _, _, Fh, Fl, pmin, pmax = s.newton(zh, zl)
-        F = float(np.abs(np.asarray(Fh) + np.asarray(Fl)).max())
         dt = time.time() - t0
         sens = sensitivity(s, M)
         tc, th = tails(s, zh, zl, nodes, M)
@@ -177,7 +202,7 @@ def main():
                    steps=sum(len(g) - 1 for g in s.get_segs()), piv=(pmin, pmax), sens_max=max(sens),
                    sens=[float(f"{v:.2e}") for v in sens], tail_c=tc, tail_h=th,
                    dDelta_est=delta_correction(s, Fh, Fl), F_harm=[float(f"{v:.4e}") for v in hk],
-                   solver=a.solver, source=src, threads=a.threads)
+                   solver=a.solver, source=src, threads=a.threads, converged=True)
         if a.svd:
             t1 = time.time()
             sv, dc = weakest(s, a.svd)

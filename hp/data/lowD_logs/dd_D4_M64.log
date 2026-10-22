@@ -1,0 +1,6 @@
+seed solver/data/neB_kc47_rk2_D4.0000.npy: D 4.0, f64 Delta 3.445452677190
+== Thu Oct 22 00:43:40 MST 2026 hp/lowD_dd.py hp/data/lowD_dd.jsonl --seed solver/data/neB_kc47_rk2_D4.0000.npy --Ms 64 --threads 2 --tag lowD
+seed solver/data/neB_kc47_rk2_D4.0000.npy: D 4.0, f64 Delta 3.445452677190
+D 4.0 M 64: L 2561, steps 222, start |F| 4.3e-02
+  newton 0: |F| 4.29e-02: no decrease along the Newton step, giving up
+== exit 143 Thu Oct 22 00:54:38 MST 2026
