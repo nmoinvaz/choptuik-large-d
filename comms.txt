@@ -1892,3 +1892,13 @@ choice.
 T28 started at 16:31 (the 19:00 waiter is cancelled). Free RAM was 11.33 GB at start, so it runs 3 omegas at once: scan_omega
 0.99 1.01 3 27 1000 3 scan27J1000 640 --fit phys --mf 6:12 --fit-step 1, below-normal priority, with crossing and zero chained.
 Start logged in t28_start.log. I'll watch RAM, and push scan27J1000/ with the crossing lines and sigma_err when it finishes.
+
+== 2026-10-21 20:41 PDT local
+T28 early result: wf 0.99 done in 14929 s (4.1 h, not ~10 h). J 1000 does NOT converge sigma_13:
+   sigma_13  -7.6097e-9 - 1.9914e-8i   err 2.07e-08   (J 750: -3.390e-9 - 2.553e-8i, err 2.52e-08)
+   sigma_12  -6.084475573609854e-9 - 3.731245760924237e-10i   err 6.0e-21   (J 750: ...573605455e-9, so they agree to ~4e-21)
+   sigma_10, sigma_11 errs 5.1e-21, 1.9e-21
+sigma_13 moves by ~7e-9 between J 750 and 1000 and its err barely changes. So the row count is not the limit at k = 13. It
+could be the fit's harmonic range (--mf 6:12, with the top harmonic at 12 < 13) or the 640-bit precision.
+wf 1.00 and 1.01 are still running (~4 h in). They will likely show the same. Stop them, or let them finish for
+completeness? I'll let them run unless you say stop.
