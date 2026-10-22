@@ -12,7 +12,7 @@ python-flint:
     digits (any Y is allowed);
   * K(X) = -Y g(0) + (I - Y Dgt(X)) X and the inclusion test, and the zero enclosure p^ + T K(X).
 
-    python3 certify_M_recheck.py data/A_M_box_M3_1e-9.json [--mutate]
+    python3 certify_M_recheck.py data/A_M_box_M3_1e-9.json [--sub=h,w3[,w5]] [--mutate]
 Exit status 0 if K(X) is in the interior of X, 1 otherwise. --mutate flips the sign of the jump
 (D_nu + conj D_-nu): the test must then fail.
 """
@@ -51,7 +51,7 @@ def layout(M):
     return odd, even, nd, nd + 1
 
 
-def main(path, mutate=False):
+def main(path, mutate=False, sub=None):
     bx = json.load(open(path))
     M = bx["M"]
     m = M + 1
@@ -109,6 +109,10 @@ def main(path, mutate=False):
     h = iv.mpf(bx["h"])
     ws = bx["w"]
     widths = [h, h] + [iv.mpf(ws[(i // 2) % len(ws)]) for i in range(M - 1)]
+    if sub is not None:                                  # a sub-box of the run's box (outer h', inner w', ...)
+        sw = [iv.mpf(sub[0]), iv.mpf(sub[0])] + [iv.mpf(sub[1 + (i // 2) % (len(sub) - 1)]) for i in range(M - 1)]
+        assert all(sw[i].b <= widths[i].b for i in range(m))
+        widths = sw
     K = []
     for i in range(m):
         t = -Yg[i]
@@ -131,4 +135,5 @@ def main(path, mutate=False):
 
 
 if __name__ == "__main__":
-    sys.exit(0 if main(sys.argv[1], "--mutate" in sys.argv) else 1)
+    sub = next((a.split("=", 1)[1].split(",") for a in sys.argv if a.startswith("--sub=")), None)
+    sys.exit(0 if main(sys.argv[1], "--mutate" in sys.argv, sub) else 1)

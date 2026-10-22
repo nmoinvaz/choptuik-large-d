@@ -342,7 +342,7 @@ def box_run(M, pstr, Cm, h, ws, out=None, log=None, verbose=False, max_steps=Non
 
 # ---------------------------------------------------------------- the Krawczyk test
 
-def krawczyk_test(bx, pt=None, mutate=None, theta=None, verbose=True):
+def krawczyk_test(bx, pt=None, mutate=None, theta=None, verbose=True, sub=None):
     """K(X) from a saved box run (Dgt over X, and g(p^) from its centre-trajectory set) and optionally a point run at
     the same centre (then g(p^) and Y come from it). mutate: None, or one of 'sign', 'noconj', 'negconj', 'scale'
     (function mutations), 'plant_out', 'plant_in', 'plant_H' (planted zeros), 'widen' (g(p^) widened). theta: shrink
@@ -375,10 +375,15 @@ def krawczyk_test(bx, pt=None, mutate=None, theta=None, verbose=True):
     YJ = apply_var(Yl, varb)                       # Y Dgt(X): the box run's columns are the tilted ones
     h = arb(bx["h"])
     widths = [h, h] + [arb(bx["w"][(i // 2) % len(bx["w"])]) for i in range(M - 1)]
+    if sub is not None:
+        # a sub-box X' of the run's box X (any box centred at 0 inside X): Dgt(X) encloses the Jacobian over X' too
+        sw = [arb(sub[0]), arb(sub[0])] + [arb(sub[1 + (i // 2) % (len(sub) - 1)]) for i in range(M - 1)]
+        assert all(bool(sw[i].upper() <= widths[i].upper()) for i in range(m)), "the sub-box must lie inside the run box"
+        widths = sw
     if theta is not None:
         widths = [arb(theta) * x for x in widths]
     # planted zeros: g -> g - L d with L the exact midpoint of Dgt(X) (moves the zero by d up to second order)
-    if mutate in ("plant_out", "plant_in", "plant_H"):
+    if mutate in ("plant_out", "plant_in", "plant_H") or (isinstance(mutate, tuple) and mutate[0] == "plant_d"):
         J_box = apply_var(ell, varb)
         L = arb_mat([[arb(J_box[i][j].mid()) for j in range(m)] for i in range(m)])
         d = [arb(0)] * m
@@ -388,6 +393,8 @@ def krawczyk_test(bx, pt=None, mutate=None, theta=None, verbose=True):
             d[0], d[1] = widths[0] / 2, -3 * widths[1] / 10
             for i in range(2, m):
                 d[i] = widths[i] / 4
+        elif isinstance(mutate, tuple):                # ("plant_d", fractions of the widths)
+            d = [arb(mutate[1][i]) * widths[i] for i in range(m)]
         else:
             d[2] = 2 * widths[2] if m > 2 else 2 * widths[0]
         Ld = L * arb_mat([[x] for x in d])
@@ -417,22 +424,36 @@ def krawczyk_test(bx, pt=None, mutate=None, theta=None, verbose=True):
            "g_rad": max(float(x.rad()) for x in g), "YJ_rad": max(float(YJ[i][j].rad()) for i in range(m) for j in range(m)),
            "Yg": Yg, "YJ": YJ, "T": T, "p_hat": p}
     if verbose:
-        tag = f" [mutation {mutate}]" if mutate else ""
+        tag = f" [mutation {mutate if isinstance(mutate, str) else mutate[0]}]" if mutate else ""
         print(f"Krawczyk M = {M}{tag}: K(X) in int X: {ok}; relative margins " + ", ".join(f"{r:+.3f}" for r in rel))
     return res
 
 
-def shrink(bx, pt=None, lo=1e-4):
+def best_outer(bx, pt=None, lo=1e-6):
+    """the largest outer half-width h' = h 0.9^k (inner widths kept) for which the test passes on the sub-box
+    [-h', h']^2 x prod [-w, w]^2 of the run's box. Returns (h', result) or (None, None)."""
+    h = float(bx["h"])
+    k = 0
+    while 0.9 ** k >= lo:
+        hp = h * 0.9 ** k
+        r = krawczyk_test(bx, pt, verbose=False, sub=[repr(hp)] + list(bx["w"]))
+        if r["ok"]:
+            return hp, r
+        k += 1
+    return None, None
+
+
+def shrink(bx, pt=None, lo=1e-4, sub=None):
     """the smallest theta (factor 0.9 steps from 1, down to lo) for which the test passes on theta X with the same
     Dgt(X) enclosure (valid over every sub-box centred at 0); its K(theta X) is the sharpest enclosure of the zero.
     Returns (theta, result) or (None, None) if theta = 1 fails."""
-    r1 = krawczyk_test(bx, pt, theta=None, verbose=False)
+    r1 = krawczyk_test(bx, pt, theta=None, verbose=False, sub=sub)
     if not r1["ok"]:
         return None, None
     best, rbest, th = 1.0, r1, 1.0
     while th * 0.9 >= lo:
         th *= 0.9
-        r = krawczyk_test(bx, pt, theta=repr(th), verbose=False)
+        r = krawczyk_test(bx, pt, theta=repr(th), verbose=False, sub=sub)
         if not r["ok"]:
             break
         best, rbest = th, r
@@ -510,13 +531,14 @@ def hier_check(res, M, mutate=False, verbose=True):
         for j in range(m):
             acc = acc + T[i][j] * arb(0, res["widths"][j])
         hull.append(res["p_hat"][i] + acc)
-    ok_a = all(hull[i].contains(p[i]) for p in pts for i in range(m))
+    ins = [all(hull[i].contains(p[i]) for i in range(m)) for p in pts]
+    ok_a = all(ins)
     dev = [max(float(abs(p[i] - res["pstar"][i]).upper()) for p in pts) for i in range(m)]
     ok_b = all(dev[i] <= float(res["pstar"][i].rad()) + 3 * spread[i] for i in range(m))
     if verbose:
         names = ["A", "w/w_inf"] + [f"{b}{nu}" for nu in range(3, M + 1, 2) for b in ("B", "C")]
         print(f"hier.py check M = {M}{' [mutated: hier zeros shifted]' if mutate else ''}: (a) inside the hull of P: "
-              f"{ok_a}; (b) agreement within 3x hier's spread: {ok_b}")
+              f"{ok_a} (per solve: {ins}); (b) agreement within 3x hier's spread: {ok_b}")
         for i, nm in enumerate(names):
             print(f"   {nm:8s} |hier - certified| <= {dev[i]:.2e}   hier spread {spread[i]:.1e}   hull half-width "
                   f"{float(hull[i].rad()):.1e}")
@@ -656,19 +678,24 @@ CONTROLS = [
     ("C4", "scale", True, "J_nu -> (nu + 1) J_nu (null: same zeros)"),
     ("C5", "plant_out", False, "zero planted outside, moved by 2h in A"),
     ("C6", "plant_in", True, "zero planted inside, moved by (h/2, -3h/10, w/4, ...)"),
+    ("C6b", "plant_half", True, "zero planted inside, moved by half the clean margins (alternating signs)"),
     ("C7", "widen", False, "g(p^) widened by 1e3 h |S| in the outer components"),
     ("C8", "plant_H", False, "zero planted outside in the first higher-harmonic coordinate, moved by 2w"),
 ]
 
 
-def run_controls(bx, pt=None):
+def run_controls(bx, pt=None, sub=None):
     ok_all = True
     rows = []
     clean = None
     for name, mut, expect, desc in CONTROLS:
         if mut == "plant_H" and bx["M"] == 1:
             continue
-        r = krawczyk_test(bx, pt, mut, verbose=False)
+        if mut == "plant_half":                        # CAPD's rule (A_certify.md 10.3): half the clean margins
+            fr = [0.5 * max(x, 0.0) * (-1) ** i for i, x in enumerate(clean["rel_margins"])]
+            r = krawczyk_test(bx, pt, ("plant_d", fr), verbose=False, sub=sub)
+        else:
+            r = krawczyk_test(bx, pt, mut, verbose=False, sub=sub)
         if mut is None:
             clean = r
         verdict = r["ok"] == expect
@@ -807,17 +834,25 @@ def main():
             bx = json.load(fh)
         M = bx["M"]
         if mode == "controls":
-            ok, _ = run_controls(bx, pt)
+            sub = o["sub"].split(",") if "sub" in o else None
+            ok, _ = run_controls(bx, pt, sub)
             return 0 if ok else 1
         th = o.get("theta")
-        r = krawczyk_test(bx, pt, o.get("mutate"), theta=th)
-        print(f"   start values: {pt['start']['start']}")
+        sub = o["sub"].split(",") if "sub" in o else None
+        if "best" in o:
+            hp, rb = best_outer(bx, pt)
+            print(f"   largest passing outer half-width with the run's inner widths: {hp}")
+            if hp is not None:
+                sub = [repr(hp)] + list(bx["w"])
+        r = krawczyk_test(bx, pt, o.get("mutate"), theta=th, sub=sub)
+        print(f"   start values: {(pt or bx)['start']['start']}")
         print(f"   g(p^) radius {r['g_rad']:.1e}; max radius of Y Dgt(X) {r['YJ_rad']:.1e}")
-        print(f"   box: h = {bx['h']}, w = {bx['w']}{', shrunk by theta = ' + th if th else ''}")
+        print(f"   box of the run: h = {bx['h']}, w = {bx['w']}; tested on: half-widths " +
+              ", ".join(f"{float(x.mid()):.3g}" for x in r["widths"]))
         print(describe(r, M))
         if "shrink" in o and r["ok"] and th is None:
-            th_s, rs = shrink(bx, pt)
-            print(f"   smallest passing box: theta = {th_s:.4g} (half-widths {th_s * float(bx['h']):.3e} outer); "
+            th_s, rs = shrink(bx, pt, sub=sub)
+            print(f"   smallest passing box: theta = {th_s:.4g} (half-widths {th_s * float(sub[0] if sub else bx['h']):.3e} outer); "
                   f"relative margins " + ", ".join(f"{x:+.3f}" for x in rs["rel_margins"]) +
                   "\n   the zero (endpoints rounded outward):")
             print(describe(rs, M))

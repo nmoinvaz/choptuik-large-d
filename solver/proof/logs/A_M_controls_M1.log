@@ -5,5 +5,6 @@ C3 -conj J (null: same zeros): expected pass, got pass (relative margins +8.63e-
 C4 J_nu -> (nu + 1) J_nu (null: same zeros): expected pass, got pass (relative margins +8.63e-01, +9.76e-01); zero enclosure overlaps C0's: True  OK
 C5 zero planted outside, moved by 2h in A: expected fail, got fail (relative margins -1.14e+00, +9.76e-01)  OK
 C6 zero planted inside, moved by (h/2, -3h/10, w/4, ...): expected pass, got pass (relative margins +3.63e-01, +6.95e-01)  OK
+C6b zero planted inside, moved by half the clean margins (alternating signs): expected pass, got pass (relative margins +4.31e-01, +5.07e-01)  OK
 C7 g(p^) widened by 1e3 h |S| in the outer components: expected fail, got fail (relative margins -1.27e+03, -9.22e+02)  OK
 CONTROLS ALL AS EXPECTED
