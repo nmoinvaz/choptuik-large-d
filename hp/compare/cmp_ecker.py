@@ -1,6 +1,10 @@
 """Ecker et al. (CriticalSpacetimeCrystal repo, FortranData/dimX/{256,512}/Delta.out and DeltaList.dat) against our
-Delta(D) (README rational formula, fitted on the f64 points 4 <= D <= 30.2; direct f64 points where available)."""
-import os, glob, json
+Delta(D) (README rational formula, fitted on the f64 points 4 <= D <= 30.2; direct f64 points where available).
+
+    git clone https://github.com/EckerChristian/CriticalSpacetimeCrystal ecc     # their published data (not included)
+    python3 cmp_ecker.py ecc
+"""
+import os, glob, json, sys
 import numpy as np
 A = [1.6438975180, 4.0378045077e1, 2.5233285989e2, 2.0673502321e2, -3.5709850575e2, 3.1347320996e2,
      -4.1891374574e2, 3.2695252782e2, -1.6050467699e2]
@@ -32,7 +36,7 @@ for D, a, b, o in [r for r in rows if r[0] in (4.0,4.15,4.3,4.43,4.5,4.6,4.7,4.7
     print(s)
 # our direct f64 points
 os.chdir(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "solver", "data"))
-import sys; sys.path.insert(0, "..")
+sys.path.insert(0, "..")
 from data_all import low_d
 lo = low_d()
 print("\nour direct f64 points vs Ecker DeltaList and gamma list:")

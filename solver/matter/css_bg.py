@@ -111,10 +111,16 @@ if __name__ == "__main__":
         ref = dict(omega=1.9154446, X=5.0035380, f0=f0, uh=0.39707205)
     else:
         raise SystemExit("give kappa = 0 or 1 for the D = 4 validation")
-    g = cm.Grid(N)
-    Y0 = guess_from_shooting(g, n, kap, om, f0, X)
-    g, Y, res = solve(N, n, kap, Y0, verbose=True)
+    A = 5.0 if kap == 1.0 else 4.0               # grid stretch toward the horizon, as in the scans
+    g = cm.Grid(N, A)
+    Y0 = guess_from_shooting(g, n, kap, om, f0, X, wcut=0.999)
+    g, Y, res = solve(N, n, kap, Y0, verbose=True, A=A)
     ob = observables(g, Y, n, kap)
     print("N = %d  residual %.2e" % (N, res))
+    worst = 0.0
     for k in ref:
         print("  %-6s computed %.12f   published %.12f   diff %.2e" % (k, ob[k], ref[k], ob[k] - ref[k]))
+        worst = max(worst, abs(ob[k] - ref[k]) / max(1.0, abs(ref[k])))
+    ok = worst < 1e-6
+    print("D = 4 validation %s (largest relative difference %.1e, tolerance 1e-6)" % ("PASSED" if ok else "FAILED", worst))
+    sys.exit(0 if ok else 1)

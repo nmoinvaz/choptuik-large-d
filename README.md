@@ -172,7 +172,7 @@ ten times tighter), they reproduce each point within its own precision:
 | D | Δ: formula − computed | precision of the points | γ: formula − computed | precision of the points |
 |---|---|---|---|---|
 | 4 – 4.3 | 5×10⁻¹⁰ | 3×10⁻⁷ | 3.4×10⁻⁷ | 5×10⁻⁷ |
-| 4.3 – 20 | ≤ 4×10⁻⁹ | 3×10⁻¹¹ – 4×10⁻⁹ (up to 4×10⁻¹⁰ at D ≈ 8–10) | ≤ 3.3×10⁻⁸ | ≤ 7×10⁻⁸ |
+| 4.3 – 20 | ≤ 4.3×10⁻⁹ | 3×10⁻¹¹ – 4×10⁻⁹ (up to 4×10⁻¹⁰ at D ≈ 8–10) | ≤ 3.3×10⁻⁸ | ≤ 7×10⁻⁸ |
 | 20 – 30 | ≤ 1×10⁻⁸ | ≤ 3×10⁻⁸ | ≤ 2.3×10⁻⁹ | ~ 10⁻⁷ (assigned 10⁻⁹, but the fits' $`\chi^2/\mathrm{dof}`$ is about 7000 against it) |
 | 30.2 – 61, never seen by the fit | ≤ 6×10⁻⁸ | ≤ 10⁻¹⁴ (double-double) | ≤ 5×10⁻⁷ up to D = 35.8 | |
 
@@ -216,7 +216,7 @@ D ≥ 8–12 give γ∞ = 0.4996–0.4998. The double-double γ (`hp/gamma_dd.py
 double-double and the root of det M(λ); 67 points, D = 8.25–61, about 10⁻¹² for D = 16–58, matching the f64 values to
 10⁻⁸–10⁻¹²; `hp/data/gamma_dd.jsonl` and `hp/data/local/gamma_dd.jsonl`) pins it much more tightly. In free fits in
 powers of 1/n, λ∞ − 2 (λ = 1/γ) falls by a factor of about 3.5 with each added power: on D ≥ 30, 2.4×10⁻⁴, 6.7×10⁻⁵,
-1.9×10⁻⁵, 5.5×10⁻⁶ and (1.6 ± 2.2)×10⁻⁶ for four to eight powers (`hp/gamma_compare.py`), with no sign of levelling
+1.9×10⁻⁵, 5.5×10⁻⁶ and (1.6 ± 2.2)×10⁻⁶ for four to eight powers (`cd hp && python3 gamma_compare.py data/gamma_dd.jsonl data/local/gamma_dd.jsonl`), with no sign of levelling
 off; fixing λ∞ = 2 fits better with the same number of parameters. So γ∞ = 1/2 to about 5×10⁻⁷, and λ = 2 + 3.0324/n − 34.3/n² + …
 (γ = 1/2 − 0.7581/n + …). The rational γ formula is within 10⁻⁹ of these points for D ≤ 30 and off by 1.0×10⁻⁷ at
 D = 61, where it extrapolates. 1/2 is also the value conjectured in the literature
@@ -359,7 +359,7 @@ integer-relation search could support a closed form; whether Δ∞ has one is op
 
 - **f64 test** (D ≤ 39.5, `solver/candidates.py`): each candidate forced as c₀ in 12 fits (variable 1/D,
   1/(D-1), 1/(D-2); degree 9 and 10; lower cut D ≥ 10 or 12). The table gives $`\chi^2/\mathrm{dof}`$ of the best
-  and the worst of the 12 (0.62 is the unconstrained fit) and the rms error on the held-out points at D = 34–39.5.
+  and the worst of the 12 (0.62 is the unconstrained fit) and the rms error on the held-out f64 points, 30.2 < D ≤ 39.5.
   Five candidates passed it; four were already excluded.
 - **Double-double test** (made on the points then available, up to D = 59.8; `hp/dd_candidates.py 45 --dmax=59.8`
   repeats it on today's file, where later runs from the second machine have added a few points in the same range, so
@@ -370,16 +370,16 @@ integer-relation search could support a closed form; whether Δ∞ has one is op
 
 | Candidate | Value | − double-double limit | f64 test: $`\chi^2/\mathrm{dof}`$; held-out rms | Double-double test: held-out error (× free) | Verdict |
 |---|---|---|---|---|---|
-| none (free fit) | 1.64389375 ± 0.000000015 | | 0.62 .. 3.4; 1.4×10⁻⁶ | 4.7×10⁻¹³ | |
-| $`\frac{5}{7}\sqrt{G}\, j_{0,1}`$ | 1.6439747 | +8.1×10⁻⁵ | 0.62 .. 8.6; 1.3×10⁻⁶ | 6.2×10⁻¹¹ (130×) | **ruled out** (passed the f64 test) |
-| $`\frac{7}{5}\,(\ln 2)^{-2}\,\pi^{-1/2}`$ | 1.6440014 | +1.1×10⁻⁴ | 0.62 .. 18; 1.2×10⁻⁶ | 1.1×10⁻¹⁰ (220×) | **ruled out** (passed the f64 test) |
+| none (free fit) | 1.64389375 ± 0.000000015 | | 0.62 .. 3.4; 1.5×10⁻⁶ | 4.7×10⁻¹³ | |
+| $`\frac{5}{7}\sqrt{G}\, j_{0,1}`$ | 1.6439747 | +8.1×10⁻⁵ | 0.62 .. 8.6; 1.4×10⁻⁶ | 6.2×10⁻¹¹ (130×) | **ruled out** (passed the f64 test) |
+| $`\frac{7}{5}\,(\ln 2)^{-2}\,\pi^{-1/2}`$ | 1.6440014 | +1.1×10⁻⁴ | 0.62 .. 18; 1.3×10⁻⁶ | 1.1×10⁻¹⁰ (220×) | **ruled out** (passed the f64 test) |
 | $`\frac{7}{2}\sqrt{\ln 2/\pi}`$ | 1.6440152 | +1.2×10⁻⁴ | 0.62 .. 26; 1.2×10⁻⁶ | 1.3×10⁻¹⁰ (270×) | **ruled out** (passed the f64 test) |
 | $`\frac{9}{8}\sqrt{j_{2,1}/j_{0,1}}`$ | 1.6440207 | +1.3×10⁻⁴ | 0.62 .. 30; 1.2×10⁻⁶ | 1.4×10⁻¹⁰ (290×) | **ruled out** (passed the f64 test) |
-| $`\frac{10}{9}\sqrt{j_{0,1}/\ln 3}`$ | 1.6439063 | +1.3×10⁻⁵ | 0.62 .. 118; 1.5×10⁻⁶ | 5.4×10⁻¹¹ (110×) | **ruled out** (passed the f64 test) |
-| π²/6 = ζ(2) | 1.6449341 | +1.0×10⁻³ | 3.6 .. 13000; 1.9×10⁻⁶ | 1.7×10⁻⁹ (3500×) | **ruled out** by both |
-| $`2\pi/j_{1,1}`$ | 1.6397878 | −4.1×10⁻³ | 67 .. 3×10⁵; 1.3×10⁻⁵ | 7.0×10⁻⁹ (15000×) | **ruled out** by both |
-| $`\sqrt{e}`$ | 1.6487213 | +4.8×10⁻³ | 82 .. 3×10⁵; 1.3×10⁻⁵ | 8.1×10⁻⁹ (17000×) | **ruled out** by both |
-| $`\varphi = (1+\sqrt5)/2`$ | 1.6180340 | −2.6×10⁻² | 2500 .. 10⁷; 7.7×10⁻⁵ | 4.4×10⁻⁸ (92000×) | **ruled out** by both |
+| $`\frac{10}{9}\sqrt{j_{0,1}/\ln 3}`$ | 1.6439063 | +1.3×10⁻⁵ | 0.62 .. 118; 1.6×10⁻⁶ | 5.4×10⁻¹¹ (110×) | **ruled out** (passed the f64 test) |
+| π²/6 = ζ(2) | 1.6449341 | +1.0×10⁻³ | 3.6 .. 13000; 2.9×10⁻⁶ | 1.7×10⁻⁹ (3500×) | **ruled out** by both |
+| $`2\pi/j_{1,1}`$ | 1.6397880 | −4.1×10⁻³ | 67 .. 3×10⁵; 1.8×10⁻⁵ | 7.0×10⁻⁹ (15000×) | **ruled out** by both |
+| $`\sqrt{e}`$ | 1.6487213 | +4.8×10⁻³ | 82 .. 3×10⁵; 1.8×10⁻⁵ | 8.1×10⁻⁹ (17000×) | **ruled out** by both |
+| $`\varphi = (1+\sqrt5)/2`$ | 1.6180340 | −2.6×10⁻² | 2500 .. 10⁷; 1.0×10⁻⁴ | 4.4×10⁻⁸ (92000×) | **ruled out** by both |
 
 The f64 test could not separate the first five: they move Δ(D) by less than 10⁻⁶ for D ≤ 40, below the
 precision of those points. The double-double points can. A
@@ -664,11 +664,12 @@ These limits are the Δ∞ quoted in [The formula](#the-formula) and [Values](#v
 `./reproduce.sh` reruns the headline numbers and prints PASS / FAIL / SKIP for each check, with the expected value
 next to the computed one: the data and the Values table, the rational formula, Δ∞ from five analytic fits on all
 cleaned points, the held-out test (fit on D ≤ 45, predict 45–61), and the theory checks of Propositions 1–3, the
-Stokes constant C(n,s) and both inner-multiplier methods (14 checks; about 4–6 minutes on a busy 2-core machine;
+Stokes constant C(n,s) and both inner-multiplier methods (14 checks; about 6 minutes on a busy 2-core machine, 2–3 on
+an idle laptop;
 `--full` adds the Proposition 4 check). It needs numpy, scipy, mpmath and sympy. python-flint (the Borel–Darboux check)
 and the compiled double-double kernel (the checks on saved solutions; build it with `hp/build.sh`, which needs Rust and
-maturin) are optional and skipped if missing. The saved solutions in `hp/data/states/` (53 states, one per integer D
-from 8 to 60, about 1 MB) are what the profile scripts read (`hp/states.py`). `hp/dinf_budget.py` tabulates how Δ∞
+maturin) are optional and skipped if missing. The saved solutions in `hp/data/states/` (53 states, about one per unit of D
+from 8.25 to 60, about 1 MB) are what the profile scripts read (`hp/states.py`). `hp/dinf_budget.py` tabulates how Δ∞
 moves with model, degree, fit range, cleaning and data snapshot.
 
 ## Large D: what the 1/D expansion can and cannot see
@@ -808,7 +809,7 @@ Nothing in the construction constrains F, ω₀ or the $`\omega_k`$. $`\square`$
 
 </details>
 
-The first orders, from `solver/largeD_expand.py` (sympy, run to fourth order):
+The first orders, from `solver/largeD_expand.py` (sympy; third order by default, `largeD_expand.py 4` for the fourth):
 
 ```math
 P_0 = xF, \quad B_2 = 2x^2F^2, \quad G_1 = F^2\,(1-x^2), \quad S_1 = 2x^2\,(F + \omega_0 F'),
@@ -1254,7 +1255,7 @@ late orders of the inner series fitted with the predicted fast-mode exponents).
   S(θ₀) involves F continued to $`\mathrm{Im}\,\theta = \mp\pi\omega/2 \approx \mp6`$, and a harmonic generated only by the
   nonlinearity already carries a jump 10²–10⁴ times that of harmonic 1.
 - *One harmonic* ($`F = A\sin\theta`$): the multiplier has a genuine, isolated zero at A = 2.542148, ω = 2.969777
-  (Δ = 2.11571). Both methods find it: lateral (`solver/inner_stokes/zero_M1.py`, the same at four matching radii) and
+  (Δ = 2.11571). Both methods find it: lateral (`solver/inner_stokes/zero_M1.py`, the same at three matching radii) and
   Darboux (`solver/inner_borel/inner_zero.py`, Newton converging quadratically, $`\lvert S\rvert = 3\times10^{-14}`$ at 220 orders; it is the only
   clean zero for 0.5 ≤ A ≤ 3, 0.5 ≤ ω/ω∞ ≤ 1.5). The amplitude is 6.5% below F₁ ≈ 2.72; ω is 22% below
   ω∞. Adding harmonic 3 destroys that zero (lateral residual 4.6×10⁶ at the one-harmonic zero with harmonic 3
@@ -1514,7 +1515,7 @@ series of δZ is 𝒟 applied to the background's. Lateral Borel–Laplace sums 
 multiplication by convergent series, so the jump of δZ across the Stokes line is 𝒟 applied to the background's jump,
 which is zero when the background's multipliers vanish. $`\square`$
 
-**Check** (`solver/inner_pert/pert_check3.py`). The perturbation recursion of `pert.py` includes gravity, imposes
+**Check** (`solver/inner_pert/pert_check3.py 45 11`). The perturbation recursion of `pert.py` includes gravity, imposes
 δc(0) = 0 and builds in nothing about symmetries. Run at λ = 2 from the profile f above, it reproduces the predicted
 coefficients to 10⁻¹⁸⁰ relative in every harmonic that the Galerkin truncation resolves, for
 F = 2.72 sin θ + 0.15 sin 3θ, through j = 11 at 45 harmonics. With λ = 1.9 or 2.1 the same f misses by 7.5% already at
@@ -1810,13 +1811,14 @@ the exact mode matrix M(λ) in double-double (Δ held fixed, phase row dropped),
 `Solver.mode_det` (sign and ln|det| from a double-double LU) expose it to Python; at λ = 0 the residual and Jacobian
 are bit-identical to before. `hp/gamma_dd.py` brackets the root of det M(λ) around the formula's value and refines it
 with brentq; above D = 35 it drops the weak directions with the kfreeze-13 cut, without which they bias λ by about
-10⁻⁹ at D = 60. `hp/gamma_batch.py` runs every saved state on N processes (resumable), and `hp/gamma_compare.py`
-compares with the f64 values and the formula.
+10⁻⁹ at D = 60. `hp/gamma_batch.py` runs every saved state on N processes (resumable), and `hp/gamma_compare.py` (given both
+`gamma_dd.jsonl` files as arguments) compares with the f64 values and the formula.
 
 
 ### Build and test
 
-Python side: numpy, scipy, mpmath and sympy; python-flint for `solver/inner_borel/` (`pip install python-flint`).
+Python side: numpy, scipy, mpmath, sympy and python-flint (`pip install python-flint`; needed by `check_numbers.py`,
+`solver/proof/`, `solver/inner_amp/` and `solver/inner_borel/`).
 
 ```sh
 pip install .                     # maturin build, enables the python feature
@@ -1852,6 +1854,7 @@ parallel parts in [PARALLEL.md](PARALLEL.md) §3.
 
 ```
 src/
+├── lib.rs          crate root: module list (the Python bindings come with the python feature)
 ├── model.rs        residual blocks, centre and horizon series, RK4, LU, plain-loop backend,
 │                   forward-mode linearization (Jacobian, growth-mode matrix)
 ├── scalar.rs       f64 / Complex64 / Dual / DD scalar trait, 64-byte aligned field type
@@ -1881,7 +1884,7 @@ hp/                 double-double solver (crate hpkernel)
 ├── export_dd.py    collects the runs' points into data/delta_dd.csv
 ├── dd_fits_mp.py   large-D model fits at 60 digits, held-out errors, predictions (--dmax for a data snapshot)
 ├── dd_candidates.py  candidate constants forced as the limit, held-out test (--dmax as above)
-├── plot_heldout.py heldout.svg (python3 plot_heldout.py; drawn before the points above D = 60.1 were added)
+├── plot_heldout.py heldout.svg (python3 plot_heldout.py --dmax=60.1: the points up to D = 60.1)
 ├── data/delta_dd.csv   every double-double point: D, Delta (hi + lo), |F|, max dDelta/dF
 ├── data/local/     the second machine's runs (scan_up*.jsonl), folded into delta_dd.csv by export_dd.py
 └── data/seeds/     saved solver states to restart continuation from
@@ -1889,6 +1892,7 @@ hp/largeD_*.py      large-D scaling of the solutions (profiles, F(theta), harmon
 comms.txt           task log between the cloud and the second machine
 PARALLEL.md         how the computations parallelize: shooting as CRC-style chunking, Jacobian columns, amp_flint, scans
 AGENTS.md           conventions for the AI sessions that run computations here (which scripts to use, thread budget, comms)
+paper/              the paper (main.tex, built as dss_large_D.pdf with make; figures/ holds the PDF figures)
 PROOF.md            roadmap for a proof of the selection rule (computer-assisted inner zero; analytic selection theorem)
 GAMMA.md            why gamma_inf = 1/2 (solver/inner_pert/heat_form.py: the heat-equation form; rw_map.py: it is Rozali-Way's
                     system; pert_check3.py: the exact lambda = 2 mode)
@@ -1925,7 +1929,11 @@ reproduce.sh, reproduce.py    one-command check of the headline numbers (PASS/FA
 check_numbers.py              ties the numbers quoted in the README, paper and proof notes to their source files
                               (--selftest: every check must reject a one-unit shift; --full: the Delta_inf fit grid)
 hp/states.py                  where saved solutions are read from (hp/data/states, else the runs' directory)
-hp/data/states/               53 double-double solutions, one per integer D = 8-60, for the profile scripts
+hp/planted_dinf.py            planted-truth test of the Delta_inf error bar (log in hp/data/planted_dinf.log)
+hp/dd_fits.py                 an earlier, double-precision version of the large-D fits (dd_fits_mp.py supersedes it)
+hp/pinning.py                 pin-to-trend for the weak p1 harmonics (used by scan_hp.py --pin, --predictor lagrange_dd)
+hp/compare_interp.py, hp/compare_old.py   the f64 data set against the double-double scans
+hp/data/states/               53 double-double solutions, about one per unit of D from 8.25 to 60, for the profile scripts
 hp/dinf_budget.py             error budget for Delta_inf: model x degree x fit range x cleaning x snapshot
 hp/gamma_dd.py                gamma(D) in double-double: root of det M(lambda) (gamma_batch.py --procs N; gamma_compare.py;
                               results in hp/data/gamma_dd.jsonl, 28 points D = 10-61,

@@ -23,7 +23,7 @@ Contents
 γ(D) has been computed in double-double precision at 67 points, D = 8.25–61 (`hp/gamma_dd.py`: the root of the
 determinant of the exact growth-mode matrix M(λ); `hp/data/gamma_dd.jsonl`, `hp/data/local/gamma_dd.jsonl`). The points
 are good to about 10⁻¹² for D = 16–58 and agree with the independent f64 values to 10⁻⁸–10⁻¹². Free fits of λ = 1/γ
-in powers of 1/n (`hp/gamma_compare.py`):
+in powers of 1/n (`cd hp && python3 gamma_compare.py data/gamma_dd.jsonl data/local/gamma_dd.jsonl`):
 
 | Fit range | 4 powers | 5 powers | 6 powers | 7 powers | 8 powers |
 |---|---|---|---|---|---|
@@ -38,7 +38,7 @@ With λ∞ = 2 fixed,
 \lambda = 2 + \frac{3.0324}{n} - \frac{34.3}{n^2} + \dots, \qquad \gamma = \frac12 - \frac{0.7581}{n} + \dots
 ```
 
-(the 1/n coefficient is stable to 10⁻⁴ over fit choices: 3.0313–3.0324).
+(the 1/n coefficient is stable to about 10⁻³ over fit choices: 3.0313–3.0324).
 
 ## 2. What the literature says
 
@@ -136,7 +136,7 @@ which restores h₀ = 0 when P + ωP′ = −2F² (solvable harmonic by harmonic
 f = (2 + \omega\partial_\theta)(F + \omega F') - 2F^3 + P\,(F + \omega F'), \qquad P + \omega P' = -2F^2 .
 ```
 
-**Check** (`solver/inner_pert/pert_check3.py`). The perturbation recursion of `pert.py` (gravity included, h₀ = 0 imposed,
+**Check** (`solver/inner_pert/pert_check3.py 45 11`). The perturbation recursion of `pert.py` (gravity included, h₀ = 0 imposed,
 nothing about symmetries built in) run at λ = 2 from this f reproduces the predicted a_j and h_j to 10⁻¹⁸⁰ relative in
 every harmonic the Galerkin truncation has not yet reached. The background is F = 2.72 sin θ + 0.15 sin 3θ, and the check
 runs to j = 11 at M = 45. The front where truncation errors enter moves with M (j ≈ 7 at M = 25, j ≈ 12 at M = 45), as it

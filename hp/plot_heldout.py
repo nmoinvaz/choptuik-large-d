@@ -37,9 +37,11 @@ def sup(e):
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("-o", "--output", default=os.path.join(HERE, "heldout.svg"))
+    ap.add_argument("--dmax", type=float, default=None,
+                    help="use only the points with D <= dmax (the committed figure: --dmax=60.1)")
     args = ap.parse_args()
     pts, _ = load_points()
-    Ds = clean(pts, sorted(d for d in pts if d >= 10), verbose=False)
+    Ds = clean(pts, sorted(d for d in pts if d >= 10 and (args.dmax is None or d <= args.dmax)), verbose=False)
     Dmax = Ds[-1]
     X0, X1 = 35.0, math.ceil(Dmax)
 
