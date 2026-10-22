@@ -1,0 +1,56 @@
+1. Self-similar second-order field equation from the covariant one
+  [ok] covariant Pi_t equation e^{-2 tau}/k0 = the self-similar operator above
+
+2. Flat space
+  [ok] phi_rr + n phi_r/r - l(l+n-1) phi/r^2 = r^l (psi_rr + (n+2l) psi_r/r)
+   indicial polynomial at x = 1 (phi ~ (x-1)^rho): -rho*(n - 2*rho - 2*sigma)/2   (q0 = 0 )
+  [ok] exponents at the light cone: rho = 0 and rho = n/2 - sigma, independent of L
+  [ok] indicial polynomial has no L
+
+3. Formal outer expansion (eps = 1/n = d^2; G and the K_k arbitrary functions of theta, omega_k arbitrary)
+
+   multiplet l = 1, to relative order eps^3:
+   order 1: no x^0 obstruction; Psi_1 even polynomial of degree 2 + K_1(theta); equation satisfied: True
+   order 2: no x^0 obstruction; Psi_2 even polynomial of degree 4 + K_2(theta); equation satisfied: True
+   order 3: no x^0 obstruction; Psi_3 even polynomial of degree 6 + K_3(theta); equation satisfied: True
+   Psi_1 = (2*K1_0 + 2*g0*x**2 + 3*g1*w0*x**2 + g2*w0**2*x**2)/2
+   b - 1 = eps^2 [2*g0**2*x**2] + ...
+   c - 1 = eps^2 [(x - 1)*(x + 1)*(g0**2*x**2 - g0**2 + 2*g0*g1*w0*x**2 + 2*g0*g1*w0 + g1**2*w0**2*x**2 + g1**2*w0**2)/2] + ...
+  [ok] gravity at x = O(1): b - 1 and c - 1 start at eps^2
+   so n c_x(1) = O(eps^1): no gravitational shift of the light-cone exponent at D = infinity
+
+   multiplet l = 2, to relative order eps^4:
+   order 1: no x^0 obstruction; Psi_1 even polynomial of degree 2 + K_1(theta); equation satisfied: True
+   order 2: no x^0 obstruction; Psi_2 even polynomial of degree 4 + K_2(theta); equation satisfied: True
+   order 3: no x^0 obstruction; Psi_3 even polynomial of degree 6 + K_3(theta); equation satisfied: True
+   order 4: no x^0 obstruction; Psi_4 even polynomial of degree 8 + K_4(theta); equation satisfied: True
+   Psi_1 = (2*K1_0 + 6*g0*x**2 + 5*g1*w0*x**2 + g2*w0**2*x**2)/2
+   b - 1 = eps^3 [4*g0**2*x**4] + ...
+   c - 1 = eps^3 [(x - 1)*(x + 1)*(4*g0**2*x**4 - 2*g0**2*x**2 - 2*g0**2 + 4*g0*g1*w0*x**4 + 4*g0*g1*w0*x**2 + 4*g0*g1*w0 + g1**2*w0**2*x**4 + g1**2*w0**2*x**2 + g1**2*w0**2)/3] + ...
+  [ok] gravity at x = O(1): b - 1 and c - 1 start at eps^3
+   so n c_x(1) = O(eps^2): no gravitational shift of the light-cone exponent at D = infinity
+
+   wave map (eta symbolic), to relative order eps^3:
+   order 1: no x^0 obstruction; Psi_1 even polynomial of degree 2 + K_1(theta); equation satisfied: True
+   order 2: no x^0 obstruction; Psi_2 even polynomial of degree 4 + K_2(theta); equation satisfied: True
+   order 3: no x^0 obstruction; Psi_3 even polynomial of degree 6 + K_3(theta); equation satisfied: True
+   Psi_1 = (6*K1_0 - 2*g0**3*x**2 + 6*g0*x**2 + 9*g1*w0*x**2 + 3*g2*w0**2*x**2)/6
+   b - 1 = eps^2 [2*eta*g0**2*x**2] + ...
+   c - 1 = eps^2 [eta*(x - 1)*(x + 1)*(g0**2*x**2 - g0**2 + 2*g0*g1*w0*x**2 + 2*g0*g1*w0 + g1**2*w0**2*x**2 + g1**2*w0**2)/2] + ...
+  [ok] gravity at x = O(1): b - 1 and c - 1 start at eps^2
+   so n c_x(1) = O(eps^1): no gravitational shift of the light-cone exponent at D = infinity
+
+4. l = lambda n: eikonal of the flat self-similar equation
+   O(n^2): P**2*x**2 - P**2 - P + lambda**2 + lambda
+  [ok] eikonal: (1 - x^2) P^2 + P - lambda(1 + lambda) = 0
+   O(n): contains d_tau A (transport): True
+  [ok] the eikonal has no omega/tau dependence
+  [ok] regular branch P(0) = lambda
+  [ok] regular branch is analytic at the light cone, P(1) = lambda (1 + lambda)
+  [ok] turning point (double root in P) at x_t^2 = 1 + 1/(4 lambda (1 + lambda))
+   x_t as lambda = l/n -> 0: 3*sqrt(l)/(4*sqrt(n)) + sqrt(n)/(2*sqrt(l))  (the fixed-l inner region x ~ sqrt(n))
+   lambda = 0.25: x_t = 1.34164,  S(x_t) - S(1) = 0.110019  -> gravity at the light cone suppressed by e^(-2 n * 0.11) relative to x_t
+   lambda = 1.0: x_t = 1.06066,  S(x_t) - S(1) = 0.143841  -> gravity at the light cone suppressed by e^(-2 n * 0.1438) relative to x_t
+   lambda = 4.0: x_t = 1.00623,  S(x_t) - S(1) = 0.152394  -> gravity at the light cone suppressed by e^(-2 n * 0.1524) relative to x_t
+
+all ok

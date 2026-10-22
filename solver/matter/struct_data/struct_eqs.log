@@ -1,0 +1,112 @@
+1. Einstein tensor, general-n formulas against brute force
+  [ok] n = 2: G^t_t
+  [ok] n = 2: G^r_r
+  [ok] n = 2: G_tr
+  [ok] n = 2: G^th_th isotropic
+  [ok] n = 3: G^t_t
+  [ok] n = 3: G^r_r
+  [ok] n = 3: G_tr
+  [ok] n = 3: G^th_th isotropic
+  [ok] n = 4: G^t_t
+  [ok] n = 4: G^r_r
+  [ok] n = 4: G_tr
+  [ok] n = 4: G^th_th isotropic
+
+2. Matter by brute force (non-symmetric fields summed or composed, full D-dimensional metric)
+  [ok] n=2 l=1: sum Y^2 = 1
+  [ok] n=2 l=1 multiplet: T^t_t = -rho
+  [ok] n=2 l=1 multiplet: T^r_r = P_r
+  [ok] n=2 l=1 multiplet: T_tr = K psi_t psi_r
+  [ok] n=2 l=1 multiplet: T_t,th = T_r,th = T_th,th' = 0
+  [ok] n=2 l=1 multiplet: T^th_th isotropic
+  [ok] n=2 l=1 multiplet: sqrt(-g) box(phi Y) + w Y EL = 0 (box phi_I = 0 <=> reduced EL)
+  [ok] n=2 l=2: sum Y^2 = 1
+  [ok] n=2 l=2 multiplet: T^t_t = -rho
+  [ok] n=2 l=2 multiplet: T^r_r = P_r
+  [ok] n=2 l=2 multiplet: T_tr = K psi_t psi_r
+  [ok] n=2 l=2 multiplet: T_t,th = T_r,th = T_th,th' = 0
+  [ok] n=2 l=2 multiplet: T^th_th isotropic
+  [ok] n=2 l=2 multiplet: sqrt(-g) box(phi Y) + w Y EL = 0 (box phi_I = 0 <=> reduced EL)
+  [ok] n=2 wave map: T^t_t = -rho
+  [ok] n=2 wave map: T^r_r = P_r
+  [ok] n=2 wave map: T_tr = K psi_t psi_r
+  [ok] n=2 wave map: T_t,th = T_r,th = T_th,th' = 0
+  [ok] n=2 wave map: T^th_th isotropic
+  [ok] n=2 wave map: sqrt(-g) (box U + |dU|^2 U) = -w EL d_u U  (all components)
+  [ok] n=2 Yang-Mills: T^t_t = -rho
+  [ok] n=2 Yang-Mills: T^r_r = P_r
+  [ok] n=2 Yang-Mills: T_tr = K psi_t psi_r
+  [ok] n=2 Yang-Mills: T_t,th = T_r,th = T_th,th' = 0
+  [ok] n=2 Yang-Mills: T^th_th isotropic
+  [ok] n=2 Yang-Mills: D_mu F^(mu nu) = 0 identically for nu = t, r
+  [ok] n=2 Yang-Mills: sqrt(-g) h_thth D_mu F^(mu th) = -(1/n) w EL (d_th n n^T - n d_th n^T), all angular components
+  [ok] n=3 l=1: sum Y^2 = 1
+  [ok] n=3 l=1 multiplet: T^t_t = -rho
+  [ok] n=3 l=1 multiplet: T^r_r = P_r
+  [ok] n=3 l=1 multiplet: T_tr = K psi_t psi_r
+  [ok] n=3 l=1 multiplet: T_t,th = T_r,th = T_th,th' = 0
+  [ok] n=3 l=1 multiplet: T^th_th isotropic
+  [ok] n=3 l=1 multiplet: sqrt(-g) box(phi Y) + w Y EL = 0 (box phi_I = 0 <=> reduced EL)
+  [ok] n=3 l=2: sum Y^2 = 1
+  [ok] n=3 l=2 multiplet: T^t_t = -rho
+  [ok] n=3 l=2 multiplet: T^r_r = P_r
+  [ok] n=3 l=2 multiplet: T_tr = K psi_t psi_r
+  [ok] n=3 l=2 multiplet: T_t,th = T_r,th = T_th,th' = 0
+  [ok] n=3 l=2 multiplet: T^th_th isotropic
+  [ok] n=3 l=2 multiplet: sqrt(-g) box(phi Y) + w Y EL = 0 (box phi_I = 0 <=> reduced EL)
+  [ok] n=3 wave map: T^t_t = -rho
+  [ok] n=3 wave map: T^r_r = P_r
+  [ok] n=3 wave map: T_tr = K psi_t psi_r
+  [ok] n=3 wave map: T_t,th = T_r,th = T_th,th' = 0
+  [ok] n=3 wave map: T^th_th isotropic
+  [ok] n=3 wave map: sqrt(-g) (box U + |dU|^2 U) = -w EL d_u U  (all components)
+  [ok] n=3 Yang-Mills: T^t_t = -rho
+  [ok] n=3 Yang-Mills: T^r_r = P_r
+  [ok] n=3 Yang-Mills: T_tr = K psi_t psi_r
+  [ok] n=3 Yang-Mills: T_t,th = T_r,th = T_th,th' = 0
+  [ok] n=3 Yang-Mills: T^th_th isotropic
+  [ok] n=3 Yang-Mills: D_mu F^(mu nu) = 0 identically for nu = t
+  [ok] n=3 Yang-Mills: sqrt(-g) h_thth D_mu F^(mu th) = -(1/n) w EL (d_th n n^T - n d_th n^T), all angular components
+
+   flat-space radial equations from the reduced Lagrangians (alpha = a = 1, general n):
+  [ok] Yang-Mills: W_tt = W_rr + (n-2) W_r/r + (n-1) W (1-W^2)/r^2   [(d-3), (d-2) with d = n+1]
+  [ok] wave map: u_tt = u_rr + n u_r/r - n sin(2u)/(2 r^2)   [(d-1) with d = n+1]
+
+3. D = 4 forms (general-n formulas at n = 2)
+  [ok] multiplet vs Olabarrieta et al. 2007, a_r/a (G = 1, kappa = 8 pi)
+  [ok] multiplet vs Olabarrieta et al. 2007, alpha_r/alpha
+  [ok] multiplet vs Olabarrieta et al. 2007, Pi_t equation
+  [ok] Yang-Mills vs Gundlach 1997 eq. 11, r a_r/a (units kappa/e^2 = 2)
+  [ok] Yang-Mills vs Gundlach 1997 eq. 12, r alpha_r/alpha
+  [ok] Yang-Mills vs Gundlach 1997 eq. 10, r Pi_t = r (c Phi)_r + a alpha W (1-W^2)/r
+   (wave map, D = 4: V = n sin^2 u/(2 r^2) = sin^2 u / r^2, the standard hedgehog energy; checked in 2.)
+
+4. Self-similar first-order systems (kappa = 2n, the solver's normalization)
+  [ok] multiplet: Hamiltonian
+  [ok] multiplet: slicing
+  [ok] multiplet: Phi_t = (c Pi)_r
+  [ok] multiplet: Pi_t equation
+  [ok] multiplet: f_t = c Pi
+  [ok] multiplet: f_r = Phi
+  [ok] multiplet at L = 0 is solver/dss.py: A_x
+  [ok] multiplet at L = 0 is solver/dss.py: c_x
+  [ok] multiplet at L = 0 is solver/dss.py: p_tau
+  [ok] multiplet at L = 0 is solver/dss.py: m_tau
+  [ok] multiplet at L = 0: f absent from the p, m, a, c equations
+  [ok] wave map: Hamiltonian
+  [ok] wave map: slicing
+  [ok] wave map: Phi_t = (c Pi)_r
+  [ok] wave map: Pi_t equation
+  [ok] wave map: f_t = c Pi
+  [ok] wave map: f_r = Phi
+
+5. Yang-Mills: the length scale and the scale-invariant small-scale system
+   (kappa/n) r^2 b rho_YM / b, self-similar variables: l_YM**2*(A**2*W**4*c**2*n - A**2*W**4*c**2 - 2*A**2*W**2*c**2*n + 2*A**2*W**2*c**2 + A**2*c**2*n - A**2*c**2 + 2*W_tau**2*x**2 + 4*W_tau*W_x*x**3 + 2*W_x**2*c**2*x**2 + 2*W_x**2*x**4)*exp(2*tau)/(4*A**2*c**2*x**2)
+  [ok] the YM source in x a_x/a is l_YM^2 e^{2 tau} x (tau-free): no exactly self-similar form
+  [ok] U-system field equation = l = 1 multiplet equation (L = n) + [-(n-2)(b-1) c U/r^2 + c_r U/r]
+  [ok] EL_W has no epsilon^0 term (W = 1 is vacuum)
+  [ok] kappa rho_YM has no negative powers of epsilon = r/l_YM-suppressed corrections only
+  [ok] kappa (rho + P_r)_U = n (U_t^2 / alpha^2 + (U + r U_r)^2 / (r^2 a^2)): kinetic only, as for every model
+  [ok] kappa (rho - P_r)_U = 2 n (n-1) U^2 / r^2  (l = 1 multiplet, U = sqrt2 U': n^2 U'^2 / r^2 = n^2 U^2/(2 r^2))
+
+all ok
