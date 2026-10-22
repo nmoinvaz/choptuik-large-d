@@ -109,6 +109,10 @@ def taylor_V(sys_, ctxv, N):
     return V
 
 
+class PilotStop(Exception):
+    """raised when a pilot run reaches its step budget (LohnerM.max_steps)"""
+
+
 class LohnerM(VI.Lohner):
     """validated_int.Lohner with the fast taylor_Y above and lemma6_common's a-priori enclosures; the step is
     validated_int.Lohner.step line by line otherwise, except that the step Jacobian may use its own Taylor order
@@ -175,6 +179,8 @@ class LohnerM(VI.Lohner):
         hmax = getattr(self, "hmax", 1.0)
         t, h, steps = 0.0, min(h0, hmax), 0
         while t < 1.0:
+            if getattr(self, "max_steps", None) is not None and self.total_steps >= self.max_steps:
+                raise PilotStop(f"{leg.kind} t = {t:.6f}")
             hs = min(max(round(h / q), 1) * q, 1.0 - t)
             if not self.step(leg, t, hs):
                 h = hs / 2
@@ -183,6 +189,7 @@ class LohnerM(VI.Lohner):
                 continue
             t = t + hs
             steps += 1
+            self.total_steps = getattr(self, "total_steps", 0) + 1
             h = min(hs * 1.25, hmax)
             if (verbose or log) and steps % 25 == 0:
                 X = self.box()
@@ -202,6 +209,9 @@ class LohnerM(VI.Lohner):
 
 
 # ---------------------------------------------------------------- numerics (NOT rigorous): for the centre refinement
+
+NUM_RATE = 4.0       # numerics: steps with (row-sum norm of A_0) h <= NUM_RATE
+
 
 def numerics_run(sys_, y0, w, cols0, path, N=24, tol=1e-40, log=None):
     """plain high-precision Taylor integration (midpoints only, no enclosure): y and the derivative columns along the
@@ -224,7 +234,7 @@ def numerics_run(sys_, y0, w, cols0, path, N=24, tol=1e-40, log=None):
             ymax = max(1.0, max(float(abs(c[0]).mid()) for c in cs))
             h = min((tol * ymax / cmax(N)) ** (1.0 / N), (tol * ymax / cmax(N - 1)) ** (1.0 / (N - 1)), 1.0 - t)
             Vk, A0 = taylor_V_cols(sys_, ctxs, N, W, with_A0=True)
-            h = min(h, 1.0 / A0)                  # the linearization's rate: growing modes are resolved
+            h = min(h, NUM_RATE / A0)             # the linearization's rate (row-sum norm): growing modes are resolved
             hh = acb(h)
             y = [acb(VI.evalpoly(Ys[i], hh, N).mid()) for i in range(nd)] + y[nd:]
             Wn = Vk[N]

@@ -137,7 +137,7 @@ K(X) = -\,Y\,\tilde g(0) + \big(I - Y\,D\tilde g(X)\big)\,X \subset \mathrm{int}
 \;\Rightarrow\; \tilde g \text{ has exactly one zero in } X, \text{ and } D\tilde g \text{ is non-singular there}
 ```
 
-(Krawczyk 1969; Neumaier, *Interval Methods for Systems of Equations*, 1990, Thm 5.1.8), hence g has exactly one zero in
+(Krawczyk 1969; Moore 1977; Neumaier, *Interval Methods for Systems of Equations*, 1990; as in A_certify.md §5.1), hence g has exactly one zero in
 P = p̂ + T X, and it is simple (T is invertible). The zero is reported in p-coordinates as p̂ + T·K(X).
 
 **Why this is "inner interval Newton, then the outer 2×2".** The inner rows of K are the interval Newton operator for

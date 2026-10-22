@@ -15,7 +15,7 @@ Y is block upper-triangular up to rounding: its outer rows are S^-1 (g_o - L g_H
 the leakage L = dg_o/dp_H (dg_H/dp_H)^-1 removed) and its inner rows are the interval Newton for the higher-harmonic
 unknowns. Y g and Y Dgt are evaluated by applying the real matrix Y l (l = the jump functionals) to the final Lohner
 sets c + Q q (no interval hull is taken before the leakage cancels). If K(X) is in the interior of X, gt has exactly
-one zero in X and Dgt is non-singular there (Krawczyk 1969; Neumaier 1990, Thm 5.1.8), i.e. g has exactly one zero in
+one zero in X and Dgt is non-singular there (Krawczyk 1969; Moore 1977; Neumaier 1990), i.e. g has exactly one zero in
 the parallelepiped P = p^ + T X, and it is simple.
 
     python3 certify_M.py point M [--p=a,b,...] [--out=f.json] [--log=f.log]     C^1 point run (g, Dg at p^)
@@ -283,7 +283,7 @@ def T_matrix(Cm, M):
     return T
 
 
-def box_run(M, pstr, Cm, h, ws, out=None, log=None, verbose=False):
+def box_run(M, pstr, Cm, h, ws, out=None, log=None, verbose=False, max_steps=None):
     """C^1 box run over P = p^ + T X, X = [-h, h]^2 x prod [-w, w]^2 (tilted columns dy/dx = dy/dp T); Cm the tilt
     (rows of exact arb), from a point run or the refinement at (or near) p^"""
     t0 = time.time()
@@ -309,7 +309,23 @@ def box_run(M, pstr, Cm, h, ws, out=None, log=None, verbose=False):
     if log:
         with open(log, "a") as fh:
             fh.write(f"box run M = {M} at p^ = {pstr}, h = {h}, w = {ws}; start: {info['start']}\n")
-    steps, _ = CL.integrate(lo, path, verbose=verbose, log=log)
+    lo.max_steps = max_steps
+    try:
+        steps, _ = CL.integrate(lo, path, verbose=verbose, log=log)
+    except CL.PilotStop as e:
+        V = lo.var_box()
+        X = lo.box()
+        res = {"kind": "pilot", "M": M, "p": list(pstr), "h": h, "w": list(ws), "stopped_at": str(e),
+               "steps": lo.total_steps, "sec": time.time() - t0, "sec_per_step": (time.time() - t0) / lo.total_steps,
+               "state_rad": max(CL.VI.rad_of(x) for x in X[:s.nd]),
+               "der_rad": [max(CL.VI.rad_of(V[i, j]) for i in range(s.nd)) for j in range(V.ncols())]}
+        if out:
+            with open(out, "w") as fh:
+                json.dump(res, fh, indent=1)
+        print(f"pilot stopped after {res['steps']} steps at {res['stopped_at']}: {res['sec_per_step']:.1f} s/step; "
+              f"state radius {res['state_rad']:.2e}; derivative radii per column " +
+              ", ".join(f"{x:.1e}" for x in res["der_rad"]))
+        return res
     res = {"kind": "box", "M": M, "p": list(pstr), "h": h, "w": list(ws), "C": [[CL.s_arb(x) for x in r] for r in Cm],
            "path": [path[0], ARG[M], path[2], path[3]], "start": info, "steps": steps, "sec": time.time() - t0,
            "prec": PREC, "sets": CL.dump_lohner(lo)}
@@ -401,13 +417,26 @@ def krawczyk_test(bx, pt=None, mutate=None, theta=None, verbose=True):
     return res
 
 
+def outward(x, digits=15):
+    """decimal strings of the endpoints of the ball x, rounded outward to `digits` significant digits"""
+    from decimal import Decimal, ROUND_FLOOR, ROUND_CEILING
+    out = []
+    for e, mode, sgn in ((x.lower(), ROUND_FLOOR, -1), (x.upper(), ROUND_CEILING, +1)):
+        d = Decimal(e.str(60, radius=False))         # within 1e-59 relative of the exact endpoint
+        nudge = abs(d) * Decimal("1e-55") + Decimal("1e-300")
+        d = d + sgn * nudge                           # move outward past the conversion error
+        q = Decimal(1).scaleb(d.adjusted() - digits + 1)
+        out.append(str(d.quantize(q, rounding=mode)))
+    return out
+
+
 def describe(res, M):
     names = ["A", "w/w_inf"] + [f"{b}{nu}" for nu in range(3, M + 1, 2) for b in ("B", "C")]
     lines = []
     for i, nm in enumerate(names):
         x = res["pstar"][i]
-        lo_, hi_ = x.lower(), x.upper()
-        lines.append(f"   {nm:8s} in [{lo_.str(17, radius=False)}, {hi_.str(17, radius=False)}]  (radius {float(x.rad()):.2e})")
+        lo_, hi_ = outward(x)
+        lines.append(f"   {nm:8s} in [{lo_}, {hi_}]  (radius {float(x.rad()):.2e})")
     return "\n".join(lines)
 
 
@@ -635,6 +664,33 @@ def run_controls(bx, pt=None):
     return ok_all, rows
 
 
+def plan(d):
+    """the block structure of Dg at the last refinement point (raw jump units at xi1): the outer Schur complement S,
+    the inner block Dg_HH, the leakage L = Dg_oH Dg_HH^-1, the tilt C, the Newton step sizes. Numerics, not rigorous."""
+    M = d["M"]
+    rec = d["history"][-1]
+    D = np.array([[float(arb(x).mid()) for x in r] for r in rec["Dg"]])
+    print(f"M = {M}, refinement iteration {rec['it']} ({rec['mode']} step), p = {rec['p_in']}")
+    print(f"   |g| = {max(abs(float(arb(x).mid())) for x in rec['g']):.3e}; full Newton step: outer "
+          f"{max(abs(float(arb(x).mid())) for x in rec['full_step'][:2]):.2e}, inner "
+          f"{max([abs(float(arb(x).mid())) for x in rec['full_step'][2:]] + [0.0]):.2e}")
+    if M == 1:
+        print(f"   Dg singular values {np.linalg.svd(D, compute_uv=False)}")
+        return
+    o, H = [0, 1], list(range(2, M + 1))
+    DHH, DHo, DoH, Doo = D[np.ix_(H, H)], D[np.ix_(H, o)], D[np.ix_(o, H)], D[np.ix_(o, o)]
+    L = DoH @ np.linalg.inv(DHH)
+    S = Doo - L @ DHo
+    C = -np.linalg.solve(DHH, DHo)
+    np.set_printoptions(precision=3, linewidth=150)
+    print(f"   |Dg_oo| (raw outer block) max {np.abs(Doo).max():.2e}; Schur complement S singular values "
+          f"{np.linalg.svd(S, compute_uv=False)}")
+    print(f"   Dg_HH singular values {np.linalg.svd(DHH, compute_uv=False)}; |Dg_oH| max {np.abs(DoH).max():.2e}")
+    print(f"   leakage L = Dg_oH Dg_HH^-1, max |entry| {np.abs(L).max():.2e}; tilt C =\n{C}")
+    print(f"   condition of Dg {np.linalg.cond(D):.2e}; of the tilted, block-triangular Dg T: "
+          f"{np.linalg.cond(np.block([[S, DoH], [np.zeros((M - 1, 2)), DHH]])):.2e}")
+
+
 def centre_and_tilt(o, M):
     """the centre p^ and the tilt C for a box run: --centre=refine.json (the refinement's final centre and the tilt of
     its last Newton run) or --point=point.json (a point run's centre and its Dg)"""
@@ -678,7 +734,8 @@ def main():
         M = int(pos[0])
         pstr, Cm = centre_and_tilt(o, M)
         ws = o.get("w", "0").split(",")
-        r = box_run(M, pstr, Cm, o["h"], ws, out=o.get("out"), log=o.get("log"), verbose="verbose" in o)
+        r = box_run(M, pstr, Cm, o["h"], ws, out=o.get("out"), log=o.get("log"), verbose="verbose" in o,
+                    max_steps=int(o["pilot"]) if "pilot" in o else None)
         print(f"box run M = {M}: steps {r['steps']}, {r['sec']:.0f} s")
         return 0
     if mode in ("krawczyk", "controls"):
@@ -702,6 +759,11 @@ def main():
             hok = hier_check(r, M, mutate=(o.get("mutate") == "hier"))
             return 0 if hok else 1
         return 0 if r["ok"] else 1
+    if mode == "plan":
+        with open(o["centre"]) as fh:
+            d = json.load(fh)
+        plan(d)
+        return 0
     if mode == "export6a":
         with open(o["box"]) as fh:
             bx = json.load(fh)
