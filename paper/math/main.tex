@@ -225,7 +225,7 @@ exact symmetry $m(x) = p(-x)$.
 \subsection{Numerical input}
 \label{sec:numbers}
 The companion paper~\cite{companion} computes the critical solution at 857 values $8.25 \le D \le 61.03$ in
-double-double arithmetic. If $\Delta$ is analytic in $1/D$, which held-out tests there support but do not prove,
+double-double arithmetic~\cite{Dekker1971}. If $\Delta$ is analytic in $1/D$, which held-out tests there support but do not prove,
 \begin{equation}\label{eq:Dinf}
 \Dinf = 1.64389375 \pm 1.5\times10^{-8}, \qquad \winf = 2\pi/\Dinf = 3.82213589 \pm 4\times10^{-8},
 \end{equation}
@@ -1154,7 +1154,7 @@ $\ln x - \iu\pi(\ell + \tfrac12)$, whose imaginary part never vanishes); and
 $\mathbb R^+$.
 \end{itemize}
 Both were checked numerically (\repo{solver/proof/outer\_borel.py}): the outer recursion run to order $36$ with
-$F = 2.72\sin\theta$, $\omega = \winf$, and the nearest Borel singularities read off as poles of diagonal Pad\'e approximants
+$F = 2.72\sin\theta$, $\omega = \winf$, and the nearest Borel singularities read off as poles of diagonal Pad\'e approximants~\cite{Pade1892}
 (with Froissart doublets, pole--zero distance below $10^{-4}$ relative, discarded). For $M = 1$, $3$, $5$, $7$ the four
 nearest genuine singularities have moduli $1.44$--$1.86$, $0.66$--$0.88$, $0.45$--$0.54$ and $0.31$--$0.46$, with smallest
 $|\arg|$ equal to $0.51\pi$, $0.60\pi$, $0.57\pi$ and $0.58\pi$; untruncated, moduli $0.19$--$0.42$ and smallest $|\arg| = 0.48\pi$.
@@ -1402,7 +1402,7 @@ same holds on every ray with $|\arg\xi \mp 3\pi/8| \le 0.2$.
 \emph{Forcing.} The numerators of $\rho_N$ are polynomials in $z$ whose coefficients below order $53$ (for $P$ and $V$) and
 $52$ (for $C$) vanish identically, because the recursion solves the order-by-order equations exactly; the computation
 checks that each of these balls contains $0$, and the independent review verified the vanishing exactly in
-$\mathrm{GF}(p)$ at random parameters (by Schwartz--Zippel, the chance of a false pass is below $10^{-50}$). The rest is
+$\mathrm{GF}(p)$ at random parameters (the chance of a false pass is below $10^{-50}$). The rest is
 bounded and pushed through \eqref{eq:kernels}, which gives $F = \|T(0)\|$ for the operator $T$ of \eqref{eq:inteq}. For
 $|\xi| \le 0.1$ the residual itself is at most $1.0\times10^{-33}$ in every direction.
 
@@ -1433,7 +1433,7 @@ Definition~\ref{def:M1sel}, and $53 > k + 1$; the lower ray gives $\mathsf y^-$ 
 \end{proof}
 
 \emph{Parameter derivatives.} The Krawczyk test needs $\partial\mathsf y/\partial\bx$ at $\xi_0$ over a real box $X$. The derivatives of
-$\mathsf Y_N$ are exact (forward-mode jets through the recursion). Since the contraction holds uniformly on the complex box
+$\mathsf Y_N$ are exact (forward-mode jets~\cite{Wengert1964} through the recursion). Since the contraction holds uniformly on the complex box
 $X + c_0(1+\iu)$, $c_0 = 10^{-3}$, $\eta$ is holomorphic in the parameters there, and Cauchy's estimate gives
 $|\partial_{x_i}\eta| \le c_0^{-1}\sup_{X + c_0(1+\iu)}|\eta|$; at $\xi_0$ this adds less than $10^{-8}$ to the derivative enclosures.
 
@@ -1706,7 +1706,7 @@ $25 \le |u| \le 260$.
 \begin{lemnamed}{6b$_1$}\label{lem:6b1}
 For every $\bx \in X$, $\mathsf y^+$ extends analytically to an open set containing the annular sector
 $A_1 = \{25 \le |u| \le 260,\ -3\pi/4 \le \arg u \le 0\}$, that is $0.0620 \le |\xi| \le 0.2$, $0 \le \arg\xi \le 3\pi/8$, and a neighbourhood of
-it; on each tile, $\mathsf y^+$ is enclosed by the Taylor model of its disc.
+it; on each tile, $\mathsf y^+$ is enclosed by the Taylor polynomial and the bound $M$ of its disc.
 \end{lemnamed}
 
 \begin{proof}
@@ -1766,7 +1766,7 @@ reviewed integrator and majorant code, but their new parts have not been reviewe
 
 \emph{A second implementation with CAPD.} Steps (ii)--(iv) were redone in C++ with the CAPD library~\cite{CAPD}, version
 6.1.0, sharing no integration or test code with the Python proof. The vector field is written from \eqref{eq:M1} and Taylor
-coefficients and Jacobians come from CAPD's automatic differentiation; the point run uses $128$-bit MPFR intervals with a
+coefficients and Jacobians come from CAPD's automatic differentiation~\cite{Wengert1964}; the point run uses $128$-bit MPFR intervals with a
 $C^0$ doubleton Lohner set at Taylor order $40$ ($205$ steps), and the box runs use double-precision intervals with CAPD's $C^1$
 Lohner set at order $20$, started from a mean-value form of the step-(i) data. The Krawczyk test is written anew and run twice, on
 $g = \kappa_0J$ and on $(\re J, \im J)$, which needs no normalization at all. On the ray--arc path at radius $0.3$ it passes for
@@ -1866,7 +1866,7 @@ The plain Taylor truncation is useless at these orders (its zero drifts from $A 
 other zeros of $G_K$ lie at $|\mathcal A| > 10$ and move outward with $K$, so the zero $\mathcal A_0 = A_0^2 \approx 7.40$ is isolated.
 
 \subsection{What a certificate would need}
-A Krawczyk or Miranda test for $(\re G, \im G)$ in $(A, \omega/\winf)$, where the Jacobian has singular values $0.53$ and $0.26$,
+A Krawczyk test for $(\re G, \im G)$ in $(A, \omega/\winf)$, where the Jacobian has singular values $0.53$ and $0.26$,
 needs the total error below about $2.6\times10^{-3}$ for a box of radius $0.01$ and $2.6\times10^{-4}$ for $10^{-3}$ (Rouch\'e's theorem on
 $|\mathcal A - \mathcal A_0| = 0.01$ at fixed $\omega$ needs $5.7\times10^{-4}$). A type bound calibrated at $k = 12$ puts the tail at about
 $2\times10^{-4}$, so $K = 12$ would certify a box of radius $0.01$ and $K \approx 14$--$15$ one of radius $10^{-3}$, \emph{if} the
@@ -1954,7 +1954,7 @@ $F_5/F_1 = 0.00309 + 0.00054\iu$, against $0.05482 + 0.00543\iu$ and $0.00310 + 
 no code with it; the differences are of the size of the omitted $F_7$.
 
 The offset in $\omega$ thus goes $-22\%$, $+1.56\%$, $-0.077\%$ for $M = 1$, $3$, $5$: it alternates in sign and shrinks fifteen- to
-twentyfold per added pair of harmonics, and Aitken's extrapolation of the three gives $\omega/\winf = 1.0003$ (three terms are a thin
+twentyfold per added pair of harmonics, and Aitken's extrapolation~\cite{Aitken1927} of the three gives $\omega/\winf = 1.0003$ (three terms are a thin
 basis). With the ratio of $-0.045$ to $-0.057$ per pair of Section~\ref{sec:tail}, the prediction for $M = 7$ is
 $\omega/\winf = 0.99997$--$1.00017$; that run has not been completed.
 
@@ -2093,8 +2093,9 @@ input of its final test and found no error, and steps (ii)--(iv) were re-impleme
 or test code; deliberately broken versions of the final test, of Lemma~S, of Lemma~6a and of the disc covering are caught,
 with the one documented exception in Lemma~6a; and the citations taken over from the repository's reference audit were
 checked against publisher or arXiv records, and the novelty claims against the closest prior work, read rather than
-recalled. The references for the interval methods and for Braaksma's theorem were not part of that audit. The parts of the
-proof not independently re-checked are listed in Section~\ref{sec:thmA}. Corrections are welcome.
+recalled; the references added for this paper were checked against publisher, library or arXiv records, and the two that
+could not be confirmed are marked. The parts of the proof not independently re-checked are listed in
+Section~\ref{sec:thmA}. Corrections are welcome.
 
 \emph{Data and code.} All data, code and derivation scripts are at \url{https://github.com/nmoinvaz/dss-residual-kernel}; the
 certificate is reproduced by the commands in \repo{proof/A\_certify.md}, and the statements of the proof roadmap are in
@@ -2110,6 +2111,9 @@ exponent to $D = 61$}, in preparation.
 \bibitem{repo} N. Moinvaziri, \emph{dss-residual-kernel} (data, code and derivation scripts),
 \url{https://github.com/nmoinvaz/dss-residual-kernel}.
 
+\bibitem{Aitken1927} A. C. Aitken, \emph{On Bernoulli's numerical solution of algebraic equations}, Proc. Roy. Soc.
+Edinburgh \textbf{46} (1927), 289--305.
+
 \bibitem{BaldomaCapinskiGuardiaSeara2023} I. Baldom\'a, M. J. Capi\'nski, M. Guardia and T. M. Seara,
 \emph{Breakdown of heteroclinic connections in the analytic Hopf-zero singularity: rigorous computation of the Stokes
 constant}, J. Nonlinear Sci. \textbf{33} (2023), doi:10.1007/s00332-022-09882-x, arXiv:2206.13840.
@@ -2118,20 +2122,21 @@ constant}, J. Nonlinear Sci. \textbf{33} (2023), doi:10.1007/s00332-022-09882-x,
 splitting of separatrices beyond Melnikov analysis: rigorous results}, arXiv:1201.5152.
 
 \bibitem{Balser2000} W. Balser, \emph{Formal Power Series and Linear Systems of Meromorphic Ordinary Differential
-Equations}, Springer, 2000.
+Equations}, Universitext, Springer, 2000.
 
 \bibitem{Braaksma1992} B. L. J. Braaksma, \emph{Multisummability of formal power series solutions of nonlinear
 meromorphic differential equations}, Ann. Inst. Fourier \textbf{42} (1992), 517--540.
 
-\bibitem{CAPD} CAPD (Computer Assisted Proofs in Dynamics), C++ library, version 6.1.0,
-\url{https://github.com/CAPDGroup/CAPD}, commit \texttt{37057e5899bccaa6cd5701057b7e6ea5e232ef8b}.
-
 \bibitem{CanalisDurandMozoSchaefke2007} M. Canalis-Durand, J. Mozo-Fern\'andez and R. Sch\"afke, \emph{Monomial
-summability and doubly singular differential equations}, J. Differential Equations \textbf{233} (2007), 485--511.
+summability and doubly singular differential equations}, J. Differential Equations \textbf{233} (2007), 485--511,
+doi:10.1016/j.jde.2006.11.005.
 
 \bibitem{CanalisDurandRamisSchaefkeSibuya2000} M. Canalis-Durand, J.-P. Ramis, R. Sch\"afke and Y. Sibuya,
 \emph{Gevrey solutions of singularly perturbed differential equations}, J. Reine Angew. Math. \textbf{518} (2000),
-95--129.
+95--129 \emph{(unverified)}.
+
+\bibitem{CAPD} CAPD (Computer Assisted Proofs in Dynamics), C++ library, version 6.1.0,
+\url{https://github.com/CAPDGroup/CAPD}, commit \texttt{37057e5899bccaa6cd5701057b7e6ea5e232ef8b}.
 
 \bibitem{ChapmanKingAdams1998} S. J. Chapman, J. R. King and K. L. Adams, \emph{Exponential asymptotics and Stokes
 lines in nonlinear ordinary differential equations}, Proc. R. Soc. Lond. A \textbf{454} (1998), 2733--2755.
@@ -2152,11 +2157,13 @@ differential equations}, Duke Math. J. \textbf{93} (1998), 289--344, arXiv:math/
 existence and uniqueness of solutions, asymptotic and Borel summability properties}, Ann. Inst. H. Poincar\'e Anal.
 Non Lin\'eaire \textbf{24} (2007), 795--823.
 
-\bibitem{DLMF} NIST Digital Library of Mathematical Functions, \S\S2.11, 12.9, 13.7 and 15.8,
-\url{https://dlmf.nist.gov}.
+\bibitem{Dekker1971} T. J. Dekker, Numer. Math. \textbf{18} (1971), 224--242, doi:10.1007/BF01397083.
 
 \bibitem{Dingle1973} R. B. Dingle, \emph{Asymptotic Expansions: Their Derivation and Interpretation}, Academic Press,
 1973.
+
+\bibitem{DLMF} NIST Digital Library of Mathematical Functions, \S\S2.11, 12.9, 13.7 and 15.8,
+\url{https://dlmf.nist.gov}.
 
 \bibitem{Donninger2009} R. Donninger, \emph{Asymptotics and analytic modes for the wave equation in similarity
 coordinates}, J. Evol. Equ. \textbf{9} (2009), 511--523, arXiv:0809.5177.
@@ -2186,7 +2193,8 @@ Computing \textbf{4} (1969), 187--201.
 growth}, Stud. Appl. Math. \textbf{85} (1991), 129--181.
 
 \bibitem{Lohner1987} R. J. Lohner, \emph{Enclosing the solutions of ordinary initial and boundary value problems}, in
-\emph{Computer Arithmetic: Scientific Computation and Programming Languages}, Teubner, 1987, 255--286.
+E. Kaucher, U. Kulisch and C. Ullrich (eds.), \emph{Computerarithmetic: Scientific Computation and Programming
+Languages}, Teubner, Stuttgart, 1987, 255--286 (chapter title and pages \emph{unverified}).
 
 \bibitem{Lombardi2000} E. Lombardi, \emph{Oscillatory Integrals and Phenomena Beyond all Algebraic Orders, with
 Applications to Homoclinic Orbits in Reversible Systems}, Lecture Notes in Math. \textbf{1741}, Springer, 2000.
@@ -2199,14 +2207,19 @@ arXiv:gr-qc/0304070.
 
 \bibitem{NedialkovJackson2001} N. S. Nedialkov and K. R. Jackson, \emph{A new perspective on the wrapping effect in
 interval methods for initial value problems for ordinary differential equations}, in \emph{Perspectives on Enclosure
-Methods}, Springer, 2001, 219--264.
+Methods}, Springer, 2001, 219--263.
 
-\bibitem{Neumaier1990} A. Neumaier, \emph{Interval Methods for Systems of Equations}, Cambridge University Press, 1990.
+\bibitem{Neumaier1990} A. Neumaier, \emph{Interval Methods for Systems of Equations}, Encyclopedia of Mathematics and
+its Applications \textbf{37}, Cambridge University Press, 1990.
 
 \bibitem{Nikolaev2023} N. Nikolaev, \emph{Existence and uniqueness of exact WKB solutions for second-order singularly
-perturbed linear ODEs}, Commun. Math. Phys. (2023), doi:10.1007/s00220-022-04603-7, arXiv:2106.10248.
+perturbed linear ODEs}, Commun. Math. Phys. \textbf{400} (2023), 463--517, doi:10.1007/s00220-022-04603-7,
+arXiv:2106.10248.
 
 \bibitem{Olver1974} F. W. J. Olver, \emph{Asymptotics and Special Functions}, Academic Press, 1974.
+
+\bibitem{Pade1892} H. Pad\'e, \emph{Sur la repr\'esentation approch\'ee d'une fonction par des fractions rationnelles},
+Ann. Sci. \'Ecole Norm. Sup. (3) \textbf{9} (1892), suppl\'ement, 3--93.
 
 \bibitem{Paris2013} R. B. Paris, \emph{Asymptotics of the Gauss hypergeometric function with large parameters, I},
 J. Classical Anal. \textbf{2} (2013), 183--203.
@@ -2220,11 +2233,13 @@ Phys. \textbf{11} (2018), 106, arXiv:1807.10283.
 \bibitem{TanveerXie2003} S. Tanveer and X. Xie, \emph{Analyticity and nonexistence of classical steady Hele-Shaw
 fingers}, Comm. Pure Appl. Math. \textbf{56} (2003), 353--402.
 
-\bibitem{XieTanveer2003} X. Xie and S. Tanveer, \emph{Rigorous results in steady finger selection in viscous
-fingering}, Arch. Ration. Mech. Anal. \textbf{166} (2003), 219--286.
+\bibitem{Wengert1964} R. E. Wengert, Commun. ACM \textbf{7} (1964), 463--464.
 
 \bibitem{Xie2019} X. Xie, \emph{Rigorous results in existence and selection of Saffman--Taylor fingers by kinetic
 undercooling}, European J. Appl. Math. \textbf{30} (2019), 63--116, arXiv:1610.00076.
+
+\bibitem{XieTanveer2003} X. Xie and S. Tanveer, \emph{Rigorous results in steady finger selection in viscous
+fingering}, Arch. Ration. Mech. Anal. \textbf{166} (2003), 219--286.
 
 \end{thebibliography}
 
