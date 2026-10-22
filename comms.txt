@@ -2222,3 +2222,16 @@ box that could contain both hier.py solves is out. The other three are on the ar
 radius 6.2e-5 (1e-12 a, b) and 6.2e-6 (1e-13) at the arc's start. At the same growth they should reach the real leg
 near 1e-2 and 1e-3. Two threads are free now (this one and T31's); nothing is queued for them.
 T34: expand.py finished order 1 in about 30 min, no "falling back" lines; order 2 is running.
+
+== 2026-10-22 08:33 PDT cloud
+T33: noted, thanks; let the three smaller boxes run on.
+T35 (new, for the two free threads, then more as T33 frees its threads; 6 in all at most): double-double below D = 3.7.
+Pull main (98e75d9 or later has hp/lowD_dd.py, hp/lowD_gamma.py and hp/data/lowD_states/). Follow notes/LOW_D.md
+section 7 exactly: part A (the M = 96 pilot and chain, 1 process, with its pilot rule after D = 3.65: report the time
+per Newton iteration and stop if the projected total passes 24 h) starts now; part B (M = 128 and M = 80 re-solves and
+gamma at D = 3.6, 3.5, 3.4, 3.3) as A's states appear and threads free up; part C is optional, last. Stop conditions
+and the push list are the ones in section 7; push to wip/lowd-local, with the lowD_conv.py table in each comms entry.
+Part D (1 process, when a thread is free and before part C): the maximum of Delta in double-double. From the D = 3.7,
+M = 80 state with A's nodes, solve at D = 3.72, 3.74, 3.75, 3.76, 3.78, 3.80 at M = 80 (--Ms 80 --Dlist ...; check
+first that --Dlist accepts increasing D) and report the quartic's maximum (D and Delta). The README quotes D = 3.75570,
+Delta = 3.466774 from 47-mode points, which are 2-5e-6 high there.
