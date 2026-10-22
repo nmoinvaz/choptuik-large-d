@@ -61,6 +61,18 @@ truth I could plant, but it is a fragile statistic, and its centre is probably h
   lowest-degree fits, not a calibrated error, and a better central value is 1.643893746. I would quote
   Δ∞ = 1.643893746 ± 1.5×10⁻⁸ (or keep 1.64389375 with ± 2×10⁻⁸) and say what the bar is.
 
+What I would change (none of it is done here):
+
+1. `dd_fits_mp.load_points`: parse the CSV fields as floats (F7).
+2. Replace the cleaning by the runs' own corrections, Δ + dDelta_est, or weight the fits by them; grade the floor on
+   the rms (or weighted) residual instead of the largest one (F1, F2, F6).
+3. State the bar as the spread of the minimal-degree fits, with the planted-truth bias, or move the centre to
+   1.643893746 (F3); test the rule on cleaner data before relying on its width (F1).
+4. Correct the README's kfreeze check (10⁻¹⁵ at D = 40–60, not 3×10⁻¹⁷) and the per-point error sentence (F5, F6);
+   quote the cross-machine agreement as 7×10⁻¹⁸ with the script that measures it (F8).
+5. `scan_hp.py`: store kfreeze, tol, corrector and junk options in every record, and refuse a point whose series
+   tail fails, instead of fixing the next one (F9).
+
 ## Summary of the checks
 
 | check | verdict | severity |
@@ -73,21 +85,21 @@ truth I could plant, but it is a fragile statistic, and its centre is probably h
 | 1f. f64 drops in the driver (predictor, deflated step, junk hold, resampling) | OK: all self-corrected by Newton | — |
 | 1g. Taylor order, step tolerance, series orders, node placement at D = 60 | OK, ≤ 6×10⁻¹⁸ (R2) | — |
 | 1h. convergence in M at D = 60 | OK: M = 48 moves Δ by 2.5×10⁻¹⁸ (R2) | — |
-| 1i. kfreeze-13 cut, D = 40, 50, 60 | +1.5, −1.1, −1.2×10⁻¹⁵, not the quoted 3×10⁻¹⁷ (R2) | cosmetic for Δ∞, ≤ 5.5×10⁻¹⁰ (F9) |
+| 1i. kfreeze-13 cut, D = 40, 50, 60 | +1.5, −1.1, −1.2×10⁻¹⁵, not the quoted 3×10⁻¹⁷ (R2) | cosmetic for Δ∞, ≤ 5.5×10⁻¹⁰ (F5) |
 | 1j. junk hold / trend and the dnp corrector | OK: Δ returns to 6×10⁻¹⁸ after 10⁻⁸ kicks (R2) | — |
-| 1k. junk_only acceptance (run up6) | accepts Δ errors up to 10⁻¹⁴ by design | affects error bar (small, F6) |
-| 1l. series tails checked only after a point is accepted | issue (no effect found) | cosmetic (F8) |
-| 2a. "about 10⁻¹⁶ to D = 60.1, a few 10⁻¹⁵ above" | noise: conservative at 45–60.1; error: 10⁻¹⁵ from 35.35 on (cut), up to 10⁻¹⁴ at 27–35 | cosmetic (F6, F9) |
+| 1k. junk_only acceptance (run up6) | accepts Δ errors up to 10⁻¹⁴ by design | cosmetic for Δ∞, ≤ 1.6×10⁻⁹ (F6) |
+| 1l. series tails checked only after a point is accepted | issue (no effect found) | cosmetic (F9) |
+| 2a. "about 10⁻¹⁶ to D = 60.1, a few 10⁻¹⁵ above" | noise: conservative at 45–60.1; error: 10⁻¹⁵ from 35.35 on (cut), up to 10⁻¹⁴ at 27–35 | cosmetic (F6, F5) |
 | 2b. dDelta_est as the per-point error | OK: matches leave-one-out residuals (R3) | — |
-| 2c. two machines "agree to 2–4×10⁻¹⁶" | agree to 7×10⁻¹⁸; the quoted check cannot resolve below one ulp | cosmetic (F5) |
+| 2c. two machines "agree to 2–4×10⁻¹⁶" | agree to 7×10⁻¹⁸; the quoted check cannot resolve below one ulp | cosmetic (F8) |
 | 3a. CSV = merge of the runs, local after cloud, last per D | OK (R4) | — |
 | 3b. D values exact, no duplicates, hi + lo normalised | OK (R4) | — |
-| 3c. `dd_fits_mp.load_points` parses hi as a decimal string | precision lost to ~2×10⁻¹⁶ per point | cosmetic for Δ∞ (F4) |
+| 3c. `dd_fits_mp.load_points` parses hi as a decimal string | precision lost to ~2×10⁻¹⁶ per point | cosmetic for Δ∞ (F7) |
 | 4a. 48-fit range, reproduced independently | OK (R5) | — |
 | 4b. top of the range from an under-resolved, uncleaned fit | issue | affects error bar (F2) |
 | 4c. selection rule chosen after the fact; fragile | issue | affects error bar (F1) |
 | 4d. centre of the range vs planted truths | 0.8×10⁻⁸ high in every plant | affects value, within the bar (F3) |
-| 4e. weight of the points above 60.1 | a coherent 3×10⁻¹⁵ there moves Δ∞ by up to 1.1×10⁻⁸ | affects error bar (F7) |
+| 4e. weight of the points above 60.1 | a coherent 3×10⁻¹⁵ there moves Δ∞ by up to 1.1×10⁻⁸ | affects error bar (F4) |
 | 4f. cleaning threshold vs noise above 60.1 | drops 2 points above 60.1, both with recorded corrections; keeps one with a 1.7×10⁻¹⁵ error | cosmetic |
 | 4g. planted test: truth made by the code under test | issue; an independent truth passes (R6) | cosmetic |
 | 5. γ (det root) | read only; no issue found | — |
@@ -108,7 +120,7 @@ end), but the bar is then a property of the rule, not of the data, and it does n
 | published data, three lowest | 70 | 1.64389364807 – 1.64389377857 | 6.5×10⁻⁸ |
 | published data, every degree at the floor | 94 | 1.64389318986 – 1.64389627808 | 1.5×10⁻⁶ |
 | published data, two lowest, degrees 13–21 odd / 14–22 all / 12–22 all / 16–22 even | 48 | 1.6438937435 – 1.6438937699 | 0.9–1.3×10⁻⁸ |
-| published data, two lowest, floor factor 1.5–10 instead of 2.5 | 48 | 1.64389374444 – 1.6438937616–63 | 0.9×10⁻⁸ |
+| published data, two lowest, floor factor 1.5 or 2 / 3, 5 or 10 instead of 2.5 | 48 | 1.64389374444 – 1.64389376158 / 1.64389376313 | 8.6 / 9.3×10⁻⁹ |
 | runs' own flags: 168 points with \|F\| > 10⁻²⁰ or \|dDelta_est\| > 10⁻¹⁶ removed, two lowest | 48 | 1.64389361982 – 1.64389381321 | 9.7×10⁻⁸ |
 | 27 ≤ D ≤ 37 removed, two lowest | 48 | 1.64389374196 – 1.64389374830 | 3.2×10⁻⁹ |
 | corrected by the recorded dDelta_est, two lowest | 48 | 1.64389374439 – 1.64389376156 | 8.6×10⁻⁹ |
@@ -139,47 +151,16 @@ the bar too small; but the centre (1.6438937538) is pulled up by it.
 The real centre is therefore probably near 1.643893746, not 1.6438937538. That is inside the bar, so the quoted
 statement is not wrong, but the last digit of 1.64389375 is the high side of the evidence.
 
-**F4 (precision; cosmetic for Δ∞). The fits do not see the double-double values.** `dd_fits_mp.load_points` (the
-default CSV path, line 57) does `mp.mpf(c[1]) + mp.mpf(c[2])`. `export_dd.py` writes `repr(hi)`, the shortest string
-that round-trips to the double, but its decimal value differs from the double by up to half an ulp. Parsing it at 60
-digits keeps that difference: every point moves by up to 2.1×10⁻¹⁶ (rms 5.0×10⁻¹⁷; above D = 45 rms 3.8×10⁻¹⁷,
-ten times the real scatter). `--scan=` reads JSON floats and is exact. Fix: `mp.mpf(float(c[1])) + mp.mpf(float(c[2]))`.
-
-- Effect on the quoted range: 5×10⁻¹¹ (R5 with `--decimal`, which emulates the loader).
-- It is why the repository's cleaning drops D = 10.75 on the D ≤ 60.1 snapshot (26 points, README) where exact data drop
-  25: that point sits 0.99×10⁻¹⁵ off its neighbours in exact arithmetic and 1.09×10⁻¹⁵ after the parse.
-- It reaches `dinf_budget.py`, `planted_dinf.py` and `reproduce.py`, which all load through it.
-
-**F5 (cosmetic). The cross-machine check is quoted at f64 resolution.** No two runs share a D (R4), and no script
-records how "agrees to 2–4×10⁻¹⁶" was measured. 2–4×10⁻¹⁶ is one to two ulps of Δ ≈ 1.81, so the comparison was made in
-f64 and could not have resolved anything smaller. In exact arithmetic the 13 local points at D = 59.84–60.09 lie
-7.2×10⁻¹⁸ rms (max 1.9×10⁻¹⁷) from a degree-6 interpolant of the cloud points, the same as the cloud points'
-own leave-one-out scatter (6.2×10⁻¹⁸ rms) (R3). The machines agree 30 times better than claimed.
-
-**F6 (cosmetic, but it bounds what the fits can do). The error per point is not "about 10⁻¹⁶" everywhere below 60.1.**
-Run up6 (D = 26.90–35.20, `--junk_only`) accepted 149 points at |F| up to 1.7×10⁻¹¹ whenever the linearised correction
-was below 10⁻¹⁴. Their errors are real: the leave-one-out residuals match the recorded dDelta_est (−8.1×10⁻¹⁵ vs
-−8.1×10⁻¹⁵ at D = 34.898, +1.0×10⁻¹⁴ vs +9.1×10⁻¹⁵ at 32.338, R3). The cleaning drops 24 of them; the rest carry up to
-5×10⁻¹⁵ (leave-one-out rms 1.2×10⁻¹⁵ after cleaning). The README describes this ("a few 10⁻¹⁵ … 25 of them sit visibly
-off"), so the issue is only that the headline sentence "about 10⁻¹⁶ to D = 60.1" omits it. The runs' own corrections
-could replace the cleaning: adding dDelta_est moves the quoted range by at most 1.6×10⁻⁹.
-
-**F7 (affects the error bar, small). The 94 points above 60.1 carry the most weight.** The limit is a linear functional
+**F4 (affects the error bar, small). The 94 points above 60.1 carry the most weight.** The limit is a linear functional
 of the data, Δ∞ = Σ wᵢΔᵢ. For the used fits ‖w‖₁ = 5×10⁵–8×10⁷, and Σ|wᵢ| over D > 60.1 is 7×10⁴–6×10⁶ (R5,
 `influence`). A coherent error of 3×10⁻¹⁵ on those points (the size of the largest recorded corrections there) moves
 the limit by up to 1.1×10⁻⁸, comparable to the bar. Their actual scatter is 3.9×10⁻¹⁶ rms with corrections of mixed
 sign (39 positive, 55 negative, mean 1.7×10⁻¹⁷), and adding the corrections moves the range by ≤ 1.6×10⁻⁹, so this is
 not happening; but the fits are unweighted although these points are 100 times noisier than their neighbours below
-60.1. The one coherent error I found there, the kfreeze cut (−1.2×10⁻¹⁵, F9), is smooth across 40–61 and moves Δ∞
+60.1. The one coherent error I found there, the kfreeze cut (−1.2×10⁻¹⁵, F5), is smooth across 40–61 and moves Δ∞
 by at most 5.5×10⁻¹⁰.
 
-**F8 (cosmetic). Series tails are checked after a point is accepted.** `scan_hp.py` raises kc or ks for the *next*
-point when the tail exceeds 10⁻³³, but records the current one. Two kept points have bad centre tails: D = 23.952249
-(2×10⁻¹⁵) and 26.82972 (2×10⁻¹¹, ×4×10⁻⁴ centre sensitivity ≈ 10⁻¹⁴). Their leave-one-out residuals are 7×10⁻¹⁴
-(spacing 0.13, interpolation-limited) and 1.4×10⁻¹⁶, so no harm was done, and removing 26.82972 moves the range by
-10⁻¹¹; but the check cannot fail for the point it is about.
-
-**F9 (cosmetic for Δ∞; a quoted check is wrong). The kfreeze-13 cut is a smooth bias of about 10⁻¹⁵ on every point
+**F5 (cosmetic for Δ∞; a quoted check is wrong). The kfreeze-13 cut is a smooth bias of about 10⁻¹⁵ on every point
 from D = 35.35 on, not 3×10⁻¹⁷.** The README: "harmonics frozen above 13 / above 15, D = 40: Δ agrees to 3×10⁻¹⁷",
 and "the cut moves Δ by 5×10⁻¹⁵ at D = 35 and 3×10⁻¹⁷ at D = 40 … which falls off with D". Re-converging saved
 kfreeze-13 states with harmonic 15 free (kfreeze 15; R2):
@@ -204,6 +185,37 @@ D = 40 check; a run that stopped without stepping would report agreement at the 
 `rv2_fits.py variants --kfcut=…`) moves the 48-fit range to 1.64389374499–1.64389376335, at most 5.5×10⁻¹⁰. The cut is
 smooth, so the polynomial fits absorb most of it. It matters for the per-point error statement (10⁻¹⁵, not 10⁻¹⁶,
 from D = 35.35 on), not for Δ∞.
+
+**F6 (cosmetic, but it bounds what the fits can do). The error per point is not "about 10⁻¹⁶" everywhere below 60.1.**
+Run up6 (D = 26.90–35.20, `--junk_only`) accepted 149 points at |F| up to 1.7×10⁻¹¹ whenever the linearised correction
+was below 10⁻¹⁴. Their errors are real: the leave-one-out residuals match the recorded dDelta_est (−8.1×10⁻¹⁵ vs
+−8.1×10⁻¹⁵ at D = 34.898, +1.0×10⁻¹⁴ vs +9.1×10⁻¹⁵ at 32.338, R3). The cleaning drops 24 of them; the rest carry up to
+5×10⁻¹⁵ (leave-one-out rms 1.2×10⁻¹⁵ after cleaning). The README describes this ("a few 10⁻¹⁵ … 25 of them sit visibly
+off"), so the issue is only that the headline sentence "about 10⁻¹⁶ to D = 60.1" omits it. The runs' own corrections
+could replace the cleaning: adding dDelta_est moves the quoted range by at most 1.6×10⁻⁹.
+
+**F7 (precision; cosmetic for Δ∞). The fits do not see the double-double values.** `dd_fits_mp.load_points` (the
+default CSV path, line 57) does `mp.mpf(c[1]) + mp.mpf(c[2])`. `export_dd.py` writes `repr(hi)`, the shortest string
+that round-trips to the double, but its decimal value differs from the double by up to half an ulp. Parsing it at 60
+digits keeps that difference: every point moves by up to 2.1×10⁻¹⁶ (rms 5.0×10⁻¹⁷; above D = 45 rms 3.8×10⁻¹⁷,
+ten times the real scatter). `--scan=` reads JSON floats and is exact. Fix: `mp.mpf(float(c[1])) + mp.mpf(float(c[2]))`.
+
+- Effect on the quoted range: 5×10⁻¹¹ (R5 with `--decimal`, which emulates the loader).
+- It is why the repository's cleaning drops D = 10.75 on the D ≤ 60.1 snapshot (26 points, README) where exact data drop
+  25: that point sits 0.99×10⁻¹⁵ off its neighbours in exact arithmetic and 1.09×10⁻¹⁵ after the parse.
+- It reaches `dinf_budget.py`, `planted_dinf.py` and `reproduce.py`, which all load through it.
+
+**F8 (cosmetic). The cross-machine check is quoted at f64 resolution.** No two runs share a D (R4), and no script
+records how "agrees to 2–4×10⁻¹⁶" was measured. 2–4×10⁻¹⁶ is one to two ulps of Δ ≈ 1.81, so the comparison was made in
+f64 and could not have resolved anything smaller. In exact arithmetic the 13 local points at D = 59.84–60.09 lie
+7.2×10⁻¹⁸ rms (max 1.9×10⁻¹⁷) from a degree-6 interpolant of the cloud points, the same as the cloud points'
+own leave-one-out scatter (6.2×10⁻¹⁸ rms) (R3). The machines agree 30 times better than claimed.
+
+**F9 (cosmetic). Series tails are checked after a point is accepted.** `scan_hp.py` raises kc or ks for the *next*
+point when the tail exceeds 10⁻³³, but records the current one. Two kept points have bad centre tails: D = 23.952249
+(2×10⁻¹⁵) and 26.82972 (2×10⁻¹¹, ×4×10⁻⁴ centre sensitivity ≈ 10⁻¹⁴). Their leave-one-out residuals are 7×10⁻¹⁴
+(spacing 0.13, interpolation-limited) and 1.4×10⁻¹⁶, so no harm was done, and removing 26.82972 moves the range by
+10⁻¹¹; but the check cannot fail for the point it is about.
 
 ## 1. The solver
 
@@ -272,7 +284,7 @@ n = D − 2 is formed in mpmath from the float D, so it is exact. `Du` (dual num
 
 All of these feed Newton's iterate, not its fixed point: a point accepted by plain Newton (or by the dnp polish) is a
 zero of the double-double residual whatever the start. Only the junk_only acceptance (run up6) stops on a deflated
-iterate (§1k). **Verdict: OK.** The precision drop that does matter is in the fits' loader (F4).
+iterate (§1k). **Verdict: OK.** The precision drop that does matter is in the fits' loader (F7).
 
 ### 1e. Independent residual (R1)
 
@@ -309,8 +321,8 @@ equations to the stated residual, and its Δ is within about 10⁻¹⁸ of the d
 
 So:
 
-- the residual the kernel reports is the true residual of the saved z to 2×10⁻³¹; the floor |F| ≈ 2×10⁻²³ is real
-  (Newton's linear solves stop reducing it), not evaluation noise;
+- the residual the kernel reports is the true residual of the saved z to 2×10⁻³¹; the floor |F| ≈ 2×10⁻²³ is real,
+  not evaluation noise (presumably Newton's steps, solved with LU pivots spanning 3×10⁻¹⁴ to 1.5×10⁷, stop reducing it);
 - the kernel's own evaluation error, projected on y, moves Δ by about 10⁻¹⁸, and the linearised distance of the saved
   point from the exact discrete solution is 10⁻¹⁸ by both evaluations.
 
@@ -363,9 +375,9 @@ Newton to the floor:
 - **Last node 0.75:** the re-noded start is already at the floor and Newton finds no descent; the horizon block's
   sensitivity rises from 9×10¹³ to 3×10¹⁷ with u₀ = 0.25, and the linearised correction is −1.5×10⁻¹⁶. Inconclusive
   at the 10⁻¹⁶ level, consistent with "about 10⁻¹⁶".
-- **kfreeze (F9).** With line search, Newton in the kfreeze-15 (and 17) layout takes no step from the kfreeze-13
+- **kfreeze (F5).** With line search, Newton in the kfreeze-15 (and 17) layout takes no step from the kfreeze-13
   point, so Δ "agrees exactly"; the linearised correction says −1.2×10⁻¹⁵. Full steps without line search converge
-  (|F| 6.6×10⁻²¹) and move Δ by −1.20×10⁻¹⁵, as linearised. The same at D = 50 and 40 is in F9.
+  (|F| 6.6×10⁻²¹) and move Δ by −1.20×10⁻¹⁵, as linearised. The same at D = 50 and 40 is in F5.
 - **M = 48.** Interpolated in f64 (`driver.resample_z`, which drops lo), the start carries 10⁻¹⁶ errors into the
   weak directions and plain Newton runs away (Δ off by 7×10⁻⁸ after 8 steps, |F| 6×10⁻⁸): that is the expected
   failure, and it shows the test can move Δ. Interpolated in double-double (`rv2_resolve.py`'s `resample_dd`, round
@@ -447,8 +459,8 @@ noise, sets the fits' 4×10⁻¹⁵ floor.
 **Verdict on the README's sentence** ("about 10⁻¹⁶ to D = 60.1, a few 10⁻¹⁵ above"): as point-to-point noise it is
 conservative for 45–60.1 (3–7×10⁻¹⁸; the Taylor, series, node and M tests at D = 60 agree) and right above 60.1. As
 the error against the true solution it is low by ten from D = 35.35 on, where the kfreeze cut adds a smooth
-10⁻¹⁵ that neither the noise tests nor dDelta_est can see (F9), and incomplete for 27–37 (up to 10⁻¹⁴ before cleaning,
-5×10⁻¹⁵ after; documented further down the README). The two-machine agreement is 7×10⁻¹⁸ (F5).
+10⁻¹⁵ that neither the noise tests nor dDelta_est can see (F5), and incomplete for 27–37 (up to 10⁻¹⁴ before cleaning,
+5×10⁻¹⁵ after; documented further down the README). The two-machine agreement is 7×10⁻¹⁸ (F8).
 
 ## 3. The data pipeline
 
@@ -459,9 +471,9 @@ then `hp/data/local`), written from `export_dd.py`'s docstring, and compares (R4
 - **B.** Every D equals round(D, 6) (so `dd_fits_mp`'s keys are the floats the solver ran at, and n = D − 2 is exact);
   no two D closer than 2.3×10⁻⁴. **OK.**
 - **C.** |lo| ≤ ulp(hi)/2 and hi + lo = hi in f64 for every row. **OK.**
-- **E.** No D appears in two runs, so "the local one is kept" never applied, and there is no pair to compare directly (F5).
+- **E.** No D appears in two runs, so "the local one is kept" never applied, and there is no pair to compare directly (F8).
 
-`--break=merge`, `--break=round` and `--break=lo` make A, B and C fail. The loader issue is F4. Re-noded records
+`--break=merge`, `--break=round` and `--break=lo` make A, B and C fail. The loader issue is F7. Re-noded records
 (`renoded: true`) would share a D with the point before them; none occur in the runs used.
 
 ## 4. The fits and the error bar
@@ -480,15 +492,16 @@ degree is too low (7.9×10⁻¹⁰) or one point is moved by 10⁻¹² (1.6×10�
 the README's 1.643893744–1.643893763. One fit compared at full length: the degree-18 1/D fit to the 823 cleaned points
 on 10–61.03 gives 1.64389374468460 with residual 4.305×10⁻¹⁵ when the repository's loader is emulated (`--decimal`),
 and `planted_dinf.log` prints P(0) = 1.6438937446846, residual 4.31×10⁻¹⁵: every printed digit agrees. With the exact
-values it is 1.64389374467885 (F4). **Verdict: OK.**
+values it is 1.64389374467885 (F7). **Verdict: OK.**
 
 ### 4b. How the limit depends on each point (R5, `influence`)
 
 Δ∞ = Σ wᵢΔᵢ with w = X(XᵀX)⁻¹e₀. For the 48 used fits ‖w‖₁ = 5×10⁵–8×10⁷ and ‖w‖₂ = 2×10⁴–3×10⁶. Consequences:
 
 - independent noise of 10⁻¹⁶ (D ≤ 60.1) and 3×10⁻¹⁵ (above) moves the limit by 2×10⁻¹² to 2×10⁻⁹;
-- a coherent 10⁻¹⁵ on the kfreeze-cut points 35.35–37 moves it by up to 1.1×10⁻⁹;
-- a coherent 3×10⁻¹⁵ above 60.1 by up to 1.1×10⁻⁸ (F7);
+- a coherent 10⁻¹⁵ on the kfreeze-cut points 35.35–37 moves it by up to 1.1×10⁻⁹, and the measured cut on every
+  point from 35.35 on (F5) by at most 5.5×10⁻¹⁰;
+- a coherent 3×10⁻¹⁵ above 60.1 by up to 1.1×10⁻⁸ (F4);
 - 10⁻¹⁴ on the bad-tail point D = 26.83 by up to 1.3×10⁻⁹.
 
 So the bar is not limited by noise; it is limited by model choice and by smooth errors at the 10⁻¹⁵ level, and only
@@ -505,8 +518,9 @@ every group against the data's actual precision.
 
 `clean()` (degree-18 global fit, residual minus the median of two neighbours on each side, threshold 10⁻¹⁵) drops 27 of 850
 points on 10–61.03: 24 up6 points, D = 35.3532 (the first kfreeze-13 point) and two above 60.1 (60.9259, 60.9626, both
-with recorded corrections of 1.3 and 2.8×10⁻¹⁵). It keeps 60.952991 (error 1.7×10⁻¹⁵) and up6 points with errors up to
-5×10⁻¹⁵ that sit in clusters. With noise of 4×10⁻¹⁶ rms above 60.1 a 10⁻¹⁵ threshold is a 2.5σ cut there, so it drops
+with recorded corrections of 1.3 and 2.8×10⁻¹⁵; the cloud's re-convergence of 60.9626 confirms +3.3×10⁻¹⁵). It keeps
+60.952991 (leave-one-out residual 1.7×10⁻¹⁵, recorded correction −1.2×10⁻¹⁵), 60.959857 (re-converged by the cloud:
+−8.9×10⁻¹⁶) and up6 points with errors up to 5×10⁻¹⁵ that sit in clusters. With noise of 4×10⁻¹⁶ rms above 60.1 a 10⁻¹⁵ threshold is a 2.5σ cut there, so it drops
 honest points and misses dishonest ones at about the same rate, which is what the planted test saw ("missed the junk
 point at its threshold"). Replacing the cleaning with the recorded corrections (§2b) removes the threshold altogether;
 it moves the quoted range by ≤ 1.6×10⁻⁹.
@@ -530,8 +544,8 @@ pattern, not of the truth, since N2 shows almost none.
 
 ### 4f. Failure classes
 
-- *Checks that cannot fail:* the cross-machine comparison at f64 resolution (F5); the series-tail check after acceptance
-  (F8); `dinf_budget.py`'s "consistency check vs dd_fits_mp.fit" prints a difference but asserts nothing.
+- *Checks that cannot fail:* the cross-machine comparison at f64 resolution (F8); the series-tail check after acceptance
+  (F9); `dinf_budget.py`'s "consistency check vs dd_fits_mp.fit" prints a difference but asserts nothing.
 - *Fixtures produced by the code under test:* `planted_dinf.py`'s truth (§4e); `reproduce.py`'s expected Δ∞ ± 10⁻⁸ is a
   regression value from the same code (fine as a regression test, not as a validation).
 - *Silent passes:* the junk_only acceptance (§1k) by design; `export_dd.py` silently lets the last run win on a duplicate D
@@ -570,10 +584,10 @@ From the repository root, with hpkernel built (`hp/build.sh`) and python-flint 0
 | | command | time on 2 busy cores |
 |---|---|---|
 | R1 | `python3 hp/review/rv2_residual.py hp/data/states/up13_D60.0020.npz` (`--perturb 1e-6`, `--break=delta`, `--break=eq`) | 7 min |
-| R2 | `hp/review/rv2_batch.sh hp/data/states/up13_D60.0020.npz OUT.jsonl full`; `hp/review/rv2_batch2.sh` | 2–3 h |
-| R3 | `python3 hp/review/rv2_noise.py` | 10 s |
-| R4 | `python3 hp/review/rv2_data.py [/home/claude/dss/hp_scan] [--break=merge\|round\|lo]` | 2 s |
-| R5 | `python3 hp/review/rv2_fits.py selftest\|budget\|influence\|rules\|variants\|clean [--decimal]` | 20 s – 2 min each |
+| R2 | `hp/review/rv2_batch.sh hp/data/states/up13_D60.0020.npz OUT.jsonl full`, then `rv2_batch2.sh`, `rv2_batch3.sh` (each line one `rv2_resolve.py` or `rv2_residual.py` call; `rv2_m48start.py`) | 3–4 h |
+| R3 | `python3 hp/review/rv2_noise.py`; `python3 hp/review/rv2_restarts.py` | 10 s |
+| R4 | `python3 hp/review/rv2_data.py [/home/claude/dss/hp_scan] [--break=merge\|round\|lo]`; `rv2_runs.py` | 2 s |
+| R5 | `python3 hp/review/rv2_fits.py selftest\|budget\|influence\|rules\|variants\|clean [--decimal] [--detail=K] [--kfcut=D:v,…]` | 20 s – 2 min each |
 | R6 | `python3 hp/review/rv2_planted.py` | 1 min |
 
 Logs: `hp/review/rv2_*.log`, `rv2_resolve_D*.jsonl`, `rv2_residual.jsonl`. `rv2_runs.py` lists every run's settings.
