@@ -1,0 +1,5 @@
+K4: fixed_point_M start values at p^ (5 s): max radius 4.71e-66
+   clean: series at 0.05 to 204 terms (smallest term 9.87e-116), integrated to 0.0741 (215 s): inside every start-value ball True (largest |mid - ref| 2.1e-67)
+   control: A + 1e-40: series at 0.05 to 204 terms (smallest term 9.87e-116), integrated to 0.0741 (202 s): inside every start-value ball False (largest |mid - ref| 6.1e-42)
+K4: PASS (reference inside, control outside)
+exit 0
