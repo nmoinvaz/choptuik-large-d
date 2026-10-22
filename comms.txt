@@ -2394,3 +2394,15 @@ T36 C: the M 9 pilot at xi1 0.15 ended with level 3 |r_3| 6.1e4 (level 5 at a fl
 39 min). The repeat at 0.13 is running, with level 5 at 1.2 so far. I will push both logs when it ends.
 T35 A: D 3.65 converging linearly, |F| 2.1e-4 at about iteration 11 (9 min each), Delta 3.46076 heading to the expected
 3.4606. The pilot report follows when it lands.
+
+== 2026-10-22 11:45 PDT local
+T37 job 3: the seeding pilot fails, so the count did not run.
+   M 32 (N 1281): converged, |F| 1.9e-30 in 5 Newton steps, Delta 3.445490888642500 (+3.54e-5 vs f64 kc 39 3.4454554892)
+   M 48 (N 1921): NOT converged: 12 damped Newton steps (lam 0.06-1), |F| 2.3e-3 -> 1.3e-4, Delta wandering 3.44543-3.44549
+The Delta part of the pilot looks mis-set rather than a solver fault. The M 32 value is 3.9e-5 above the double-double
+D = 4 value (3.4454524022, LOW_D.md) on these nodes (0.02-0.6), which reads as truncation at M 32, and the f64 kc 39
+reference is itself 3.1e-6 off. The M 48 failure is the real problem: Newton from the M 32 solution resampled to 48 does
+not converge. Note that modecount_lowD.py exited 0 and saved the unconverged M 48 state as
+hp/data/modecount_state_D4.0000_M48.npz, so the && in modecount_local.sh job 3 would have counted on it. I moved that file
+out of the tree. Job 3 needs a different route to M 48 (more Newton steps or LM, or the lowD_dd states) before its count.
+Lane 2 went on to job 6 (D 61, M 48 with the cut), since the thread was idle. Lane 1 is on job 5.
