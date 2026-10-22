@@ -1140,10 +1140,12 @@ $`(1-x)^{\Lambda}\varphi(\theta - \omega'\ln(1-x))`$ (ω' = ω/(1 − ⟨G(1)⟩
 $`e^{-i\pi\Lambda}e^{\pm\pi\mu\omega'}`$, a diagonal map with non-zero entries. So C ≡ 0 ⇔ S ≡ 0 at leading order. In the linear case this is
 exact (Proposition 2 and the large-n form of C(n,s), with the constant proved in Proposition 4).
 
-Where rigour fails: (a) Borel summability of the nonlinear series is not proved; the outer nonlinear late orders also
-carry x-independent singularities of modulus about 0.13, driven by high harmonics, and one must show that these give
-only ambiguities in the free data (F's harmonics, $`K_k`$), not light-cone branches (in the linear case the analogous
-x-independent singularities ±iπ are harmless pure phases, which is suggestive but not a proof). (b) Uniformity in the
+Where rigour fails: (a) Borel summability of the nonlinear series is not proved. For a fixed number of harmonics it is
+not needed: the selection theorem below works with actual solutions and fixed-order truncations
+([proof/B3_borel.md](proof/B3_borel.md) §1). Recomputed in ball arithmetic, the outer late orders show no singularity
+near the positive real axis at one and three harmonics; at three there is an x-independent one near the negative real
+axis (ζ ≈ −1.2), which does not obstruct summation along ℝ⁺ but may approach the origin as the number of harmonics grows
+(B3_borel.md §5). (b) Uniformity in the
 harmonic index: the weights $`e^{\pi\lvert\mu\rvert\omega/2}`$ grow like e^{6.0|μ|} while F's harmonics decay only like e^{−1.4|μ|}, so an O(1/n)
 relative error in a high harmonic is amplified when it mixes into low harmonics through $`e^{\Pi}`$; the leading-order
 equivalence holds harmonic by harmonic, but the n at which it becomes accurate may grow with the number of harmonics
@@ -1153,13 +1155,11 @@ singular there (A ∝ (1 − x)⁻¹) and must be matched to the Frobenius solut
 (Λ = n/2 − 1 − s + ⟨F²⟩ + O(1/n) on both sides), but the matching has not been written out.
 
 Status of these gaps ([PROOF.md](PROOF.md)): for a model truncated to M harmonics the selection theorem is written out
-lemma by lemma ([proof/C_selection.md](proof/C_selection.md)). Gap (c) reduces to Olver's error control, and the inner
-half of gap (a) to Braaksma's summability theorem; the outer half's two hypotheses on where Borel singularities lie are
-checked numerically (none within 0.48π of the positive real axis). The matching error is O(1/n) (the inner equations'
-corrections come in integer powers of 1/n), the matching factor is explicit, and the outer jump equals that factor times
-[S + O(1/n)] given an inner fixed point. What remains is two contraction arguments with explicit constants: the inner fixed
-point on the matching domain and the global continuation, both on published templates (Xie–Tanveer;
-Baldomá–Fontich–Guardia–Seara). Gap (b) is narrower than stated above ([proof/B_tail.md](proof/B_tail.md)). Stated
+lemma by lemma ([proof/C_selection.md](proof/C_selection.md)), on published templates (Xie–Tanveer;
+Baldomá–Fontich–Guardia–Seara). Gap (c) reduces to Olver's error control up to a routine step, and the inner half of
+gap (a) to Braaksma's summability theorem; the outer half is not needed at fixed M. Its status, and that of the
+one-harmonic theorem, is under [What is known about the selection](#what-is-known-about-the-selection-and-what-is-open).
+Gap (b) is narrower than stated above ([proof/B_tail.md](proof/B_tail.md)). Stated
 without harmonics, the condition is S(θ₀) ≡ 0 on the real label circle and uses F only on the real line; the weights
 $`e^{\pi\lvert\nu\rvert\omega/2}`$ are the linear connection coefficients of each label harmonic and cancel in every tuning
 equation. The data agree: the tuning ratio is the same for every ν to six digits (|q|A² = 0.0633), and the
@@ -1677,7 +1677,7 @@ state extrapolated to D = ∞, 1.9226 ± 0.0003.
   a finite rate, as the amplitude expansion of the inner problem predicts ([above](#the-inner-problem-at-large-x)), so
   F∞ is likely not entire.
 - **The nonlinear late orders are dominated by something else.** In the nonlinear recursion the ratio of successive
-  orders grows like 7k–8.6k (a singulant of modulus about 0.13), against $`\lvert\chi\rvert \ge \pi/2`$ for the fast mode, so the fast
+  orders grows like 7k–8.6k, against $`\lvert\chi\rvert \ge \pi/2`$ for the fast mode, so the fast
   singulant is not directly visible. `solver/largeD_late_structure.py` characterizes the dominant growth: the rate is the
   same at x = 0.25, 0.5, 0.75, 1 (at x = 0.25 it is carried by the x³ coefficient; the top-degree share at x = 1
   falls to 0.008 by order 27), and the dominant harmonic grows like 0.55k, almost independently of the amplitude
@@ -1688,7 +1688,16 @@ state extrapolated to D = ∞, 1.9226 ± 0.0003.
   towards 0 as the harmonic grows. Its ambiguities are exponentially small changes of F's high harmonics, like the
   solver's weak directions, not light-cone terms. (In the inner series the analogous fast high-harmonic growth turned out
   to be the fast singularity itself, carried by harmonics with large exponents; whether the same holds for this outer
-  growth is not settled.)
+  growth is not settled.) At a fixed number of harmonics there is no such singularity close to the origin: the
+  ball-arithmetic recomputation finds none at one harmonic and one near ζ ≈ −1.2 at three
+  ([proof/B3_borel.md](proof/B3_borel.md) §5).
+- **The selection theorem for a truncated model (layer B).** For M harmonics the theorem is reduced to lemmas
+  ([proof/C_selection.md](proof/C_selection.md)). For M = 1 the two contraction arguments are certified in ball
+  arithmetic: the global continuation of the centre-regular solution, and the inner–outer matching on the matching
+  domain, for n ≥ e^{73.89} ([proof/B8_constants.md](proof/B8_constants.md), [proof/B5_inner.md](proof/B5_inner.md)).
+  The one-harmonic selection theorem B(1) is not yet proved: the error of the jump lemma is only estimated, a light-cone
+  step and the transport of the jump along x > 1 are not written, the continuation's exact light-cone gauge has not been
+  run, and the new certificate code has not been reviewed independently. The canonical status, link by link, is C_selection.md §13.
 - **The critical exponent, and why γ∞ = 1/2: [Proposition 5](#proposition-5-the-unstable-mode-at-infinite-d-is-exact).**
   λ = 1/γ is also selected beyond all orders; in the inner problem λ = 0, 1 and 2 are exact, from symmetries, and the
   λ = 2 mode, from the r²-shift of the inner heat equation, explains γ∞ = 1/2. The 1/n coefficient 3.0324 is reproduced to
