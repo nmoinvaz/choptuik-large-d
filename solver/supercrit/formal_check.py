@@ -14,7 +14,7 @@ exits 1 if any equation's exponent is above -(K + 1) + 0.3.
 
     python3 formal_check.py logs/expand_K2_zero_css.pkl css           # K = 2, beta = 1.3, f = 0.9
     python3 formal_check.py logs/expand_K1_free.pkl tau               # K = 1, beta = 1.7 + 0.4 sin tau, f = 0.8 + 0.3 cos 2 tau
-    python3 formal_check.py logs/expand_K2_zero.pkl tau               # K = 2, same profile
+    python3 formal_check.py logs/expand_K2_zero_fconst.pkl tauf       # K = 2, beta = 1.7 + 0.4 sin tau, f = 0.9
     python3 formal_check.py logs/expand_K2_zero_css.pkl css --mutate=drop   # Y_K and C_K dropped: must FAIL
 """
 import pickle
@@ -34,6 +34,9 @@ z, eps, Bd, Fd, Ad, Cd, Lz, L1 = E["syms"]
 tau, x, e = sp.symbols("tau x e", positive=True)
 if prof == "css":
     beta_t, f_t = sp.Rational(13, 10), sp.Rational(9, 10)
+elif prof == "tauf":         # general beta(tau) in the gauge f = const
+    beta_t = sp.Rational(17, 10) + sp.Rational(2, 5) * sp.sin(tau)
+    f_t = sp.Rational(9, 10)
 else:
     beta_t = sp.Rational(17, 10) + sp.Rational(2, 5) * sp.sin(tau)
     f_t = sp.Rational(4, 5) + sp.Rational(3, 10) * sp.cos(2 * tau)

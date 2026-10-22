@@ -32,6 +32,8 @@ for formal_check.py.
     python3 expand.py 2 --norm=zero         # NLO and NNLO (K = 2), general beta(tau), f(tau)
     python3 expand.py 2 --norm=zero --css   # the same for CSS (beta, f constant): much faster
     --slow  partial fractions by sympy.apart instead of the term-by-term split (identical series; cmp_series.py)
+    python3 expand.py 2 --norm=zero --fconst   # general beta(tau) in the gauge f = const (no loss of generality,
+                                               # notes/SUPERCRITICAL.md section 1); much faster than free f(tau)
 """
 import pickle
 import sys
@@ -41,6 +43,7 @@ args = [a for a in sys.argv[1:] if not a.startswith("--")]
 K = int(args[0]) if args else 2
 norm = next((a.split("=", 1)[1] for a in sys.argv[1:] if a.startswith("--norm=")), "free")
 css = "--css" in sys.argv
+fconst = "--fconst" in sys.argv    # gauge f(tau) = f0 constant (f is a time-reparametrization gauge outside CSS)
 FAST = "--slow" not in sys.argv     # --slow: partial fractions by sympy.apart (the cross-check of the fast path)
 NDER = 2 * K + 4
 z, eps = sp.symbols("z epsilon", positive=True)
@@ -49,7 +52,7 @@ Fd = sp.symbols(f"f0:{NDER + 1}")
 Ad = {k: sp.symbols(f"A{k}_0:{NDER + 1}") for k in range(1, K + 1)}
 Cd = {k: sp.symbols(f"B{k}_0:{NDER + 1}") for k in range(1, K + 1)}
 Lz, L1 = sp.symbols("Lz L1")                  # ln z, ln(z+1)
-chains = [Bd, Fd] + list(Ad.values()) + list(Cd.values())
+chains = [Bd] + ([] if fconst else [Fd]) + list(Ad.values()) + list(Cd.values())
 
 
 def D(e):
@@ -293,7 +296,7 @@ for name, ser in (("Y", Y), ("C", C), ("U", U), ("S", S)):
         pw = sp.Poly(den, z).monoms()[-1][0] if den.has(z) else 0
         lowest = sp.Poly(num, z).monoms()[-1][0] if num.has(z) else 0
         print(f"   {name}_{k} ~ z^{lowest - pw}  (+ log z terms: {ee.has(sp.log(z))})")
-tag = f"K{K}_{norm}" + ("_css" if css else "") + ("_slow" if not FAST else "")
+tag = f"K{K}_{norm}" + ("_css" if css else "") + ("_fconst" if fconst else "") + ("_slow" if not FAST else "")
 with open(f"logs/expand_{tag}.pkl", "wb") as fh:
     pickle.dump({"K": K, "Y": Y, "C": C, "U": U, "S": S, "syms": (z, eps, Bd, Fd, Ad, Cd, Lz, L1)}, fh)
 print("saved", f"logs/expand_{tag}.pkl")
