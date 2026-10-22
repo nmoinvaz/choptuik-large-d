@@ -134,6 +134,95 @@ def weakest(s, w, iters=10):
     return [float(f"{sig[i]:.3e}") for i in o], [float(f"{abs(X[-1, i]):.2e}") for i in o]
 
 
+def solve_point(D, M, zh, zl, src, a, nodes, outdir, log):
+    """one (D, M) solve with checkpoints; returns (converged, zh, zl)"""
+    t0 = time.time()
+    done = os.path.join(outdir, f"{a.tag}_D{D:.4f}_M{M}.npz")
+    if a.resume and os.path.exists(done):
+        zh, zl, _ = load(done)
+        log(f"D {D} M {M}: already converged ({done}); skipped")
+        return True, zh, zl
+    ckpt = os.path.join(outdir, f"{a.tag}_D{D:.4f}_M{M}_ckpt.npz")
+    meta_c = dict(D=D, M=M, nodes=nodes, kt=a.kt, kc=a.kcs, ks=a.ks)
+    if a.resume and os.path.exists(ckpt):
+        zh, zl, mc = load(ckpt)
+        log(f"resuming from checkpoint {ckpt} (iteration {mc.get('it')})")
+    s = make_solver(D, M, nodes=nodes, kt=a.kt, kc=a.kcs, ks=a.ks, threads=a.threads)
+    segs = None
+    if a.resume and os.path.exists(ckpt) and mc.get("segs"):
+        segs = mc["segs"]             # keep the step plan of the interrupted run (the residual depends on it)
+    s.set_segs(segs or s.plan(zh, zl, a.tol_step, a.hmax))
+    meta_c["segs"] = s.get_segs()
+    fh, fl = s.residual(zh, zl)
+    F0 = float(np.abs(np.asarray(fh) + np.asarray(fl)).max())
+    log(f"D {D} M {M}: L {s.size}, steps {sum(len(g) - 1 for g in s.get_segs())}, start |F| {F0:.1e}")
+    hist = []
+    if a.solver == "dn" and not (a.resume and os.path.exists(ckpt)):
+        # deflated phase only (the weakest w directions removed from the step), then plain Newton below
+        zh, zl, hist = deflated_newton(s, zh, zl, tol=a.tol, it_max=a.dn_its, w=a.w, verbose=True)
+        save(ckpt, np.asarray(zh), np.asarray(zl), dict(meta_c, it=len(hist)))
+    # plain Newton with backtracking, one iteration per call so that every accepted step is checkpointed
+    for it in range(a.it_max):
+        if hist and (hist[-1].get("accepted") or ("lam" not in hist[-1] and "piv" in hist[-1] and hist[-1]["F"] < a.tol)
+                     or "failed" in hist[-1]):
+            break
+        zh, zl, h1 = newton_solve(s, zh, zl, tol=a.tol, it_max=1, verbose=True)
+        hist += h1
+        if h1 and "lam" in h1[-1]:
+            save(ckpt, np.asarray(zh), np.asarray(zl), dict(meta_c, it=len(hist)))
+    _rh, _rl = s.residual(zh, zl)
+    if a.lm and not float(np.abs(np.asarray(_rh) + np.asarray(_rl)).max()) < a.accept:
+        log("  Newton stalled; Levenberg-Marquardt")
+        zh, zl, h2 = lm_solve(s, zh, zl, tol=a.tol, it_max=a.lm, verbose=True, newton_after=1e-22)
+        hist = hist + h2
+    zh, zl = np.asarray(zh), np.asarray(zl)
+    Fh, Fl = s.residual(zh, zl)
+    F = float(np.abs(np.asarray(Fh) + np.asarray(Fl)).max())
+    if not F < a.accept:
+        # not converged: record it, keep the state under a _fail name (a start for a retry), no sensitivities
+        dt = time.time() - t0
+        rec = dict(D=D, M=M, Delta=float(zh[-1]), Delta_lo=float(zl[-1]), F=F, its=len(hist), seconds=round(dt, 1),
+                   nodes=nodes, kt=a.kt, kcs=a.kcs, ks=a.ks, tol_step=a.tol_step, hmax=a.hmax, solver=a.solver,
+                   source=src, threads=a.threads, converged=False)
+        with open(a.out, "a") as f:
+            f.write(json.dumps(rec) + "\n")
+        save(os.path.join(outdir, f"{a.tag}_D{D:.4f}_M{M}_fail.npz"), zh, zl,
+             dict(D=D, M=M, nodes=nodes, kt=a.kt, kc=a.kcs, ks=a.ks))
+        log(f"D {D} M {M}: NOT converged, |F| {F:.1e} after {len(hist)} iterations ({dt:.0f}s); stopping")
+        return False, zh, zl
+    # the LU stored in s must be at the final z for the sensitivities: the solvers' last s.newton call is at the
+    # returned z when they stopped on tol (last record without a step taken); otherwise refresh it (one Jacobian)
+    last = hist[-1] if hist else {}
+    if "piv" in last and ("lam" not in last or last.get("accepted") or "failed" in last):
+        pmin, pmax = last["piv"]
+    else:
+        _, _, Fh, Fl, pmin, pmax = s.newton(zh, zl)
+    dt = time.time() - t0
+    sens = sensitivity(s, M)
+    tc, th = tails(s, zh, zl, nodes, M)
+    p1 = zh[:M] + zl[:M]
+    hk = harmonics(np.sqrt(D - 2) * p1)
+    rec = dict(D=D, M=M, Delta=float(zh[-1]), Delta_lo=float(zl[-1]), F=F, its=len(hist), seconds=round(dt, 1),
+               nodes=nodes, kt=a.kt, kcs=a.kcs, ks=a.ks, tol_step=a.tol_step, hmax=a.hmax,
+               steps=sum(len(g) - 1 for g in s.get_segs()), piv=(pmin, pmax), sens_max=max(sens),
+               sens=[float(f"{v:.2e}") for v in sens], tail_c=tc, tail_h=th,
+               dDelta_est=delta_correction(s, Fh, Fl), F_harm=[float(f"{v:.4e}") for v in hk],
+               solver=a.solver, source=src, threads=a.threads, converged=True)
+    if a.svd:
+        t1 = time.time()
+        sv, dc = weakest(s, a.svd)
+        rec.update(weak_sv=sv, weak_delta=dc, svd_seconds=round(time.time() - t1, 1))
+    with open(a.out, "a") as f:
+        f.write(json.dumps(rec) + "\n")
+    save(done, zh, zl, dict(D=D, M=M, nodes=nodes, kt=a.kt, kc=a.kcs, ks=a.ks))
+    if os.path.exists(ckpt):
+        os.remove(ckpt)
+    log(f"D {D} M {M}: Delta {zh[-1]:.16f} ({zl[-1]:+.2e}) |F| {F:.1e} its {len(hist)} {dt:.0f}s "
+        f"dDelta/dF max {max(sens):.1e} tails {tc:.0e} {th:.0e} dDelta_est {rec['dDelta_est']:+.1e}")
+
+    return True, zh, zl
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("out")
@@ -159,7 +248,11 @@ def main():
     ap.add_argument("--solver", default="newton", choices=["newton", "dn"])
     ap.add_argument("--w", type=int, default=24)
     ap.add_argument("--dn_its", type=int, default=2, help="dn: iterations of the deflated phase before plain Newton")
-    ap.add_argument("--resume", action="store_true", help="start each (D, M) from its checkpoint if there is one")
+    ap.add_argument("--resume", action="store_true", help="start each (D, M) from its checkpoint if there is one, and "
+                    "skip a (D, M) whose converged state exists")
+    ap.add_argument("--Dlist", default="", help="after the start point: continue at the last M through these D "
+                    "(comma list), predictor through the last <= 4 converged states; a failed D gets a midpoint inserted")
+    ap.add_argument("--min_step", type=float, default=0.005, help="--Dlist: stop when the inserted step is below this")
     ap.add_argument("--fill_tail", action="store_true", help="--seed: extend the seed's harmonics above kc_seed by "
                     "each field's geometric trend (fill_tail)")
     ap.add_argument("--start_residual_only", action="store_true", help="print the start residual per block and exit")
@@ -242,90 +335,29 @@ def main():
         if M != Mo:
             zh, zl = resample_z(np.asarray(zh) + np.asarray(zl), Mo, M, len(nodes))
             Mo = M
-        t0 = time.time()
-        done = os.path.join(outdir, f"{a.tag}_D{D:.4f}_M{M}.npz")
-        if a.resume and os.path.exists(done):
-            zh, zl, _ = load(done)
-            log(f"D {D} M {M}: already converged ({done}); skipped")
+        ok, zh, zl = solve_point(D, M, zh, zl, src, a, nodes, outdir, log)
+        if not ok:
+            return
+    if not a.Dlist:
+        return
+    # continuation at the last M through the listed D: predictor = Lagrange through the last <= 4 converged states
+    M = Ms[-1]
+    hist = [(D, np.asarray(zh) + np.asarray(zl))]
+    targets = [float(v) for v in a.Dlist.split(",")]
+    while targets:
+        Dn = targets[0]
+        zp = predict(hist[-4:], Dn)
+        ok, zh2, zl2 = solve_point(Dn, M, zp, np.zeros_like(zp), f"continuation from D {hist[-1][0]}", a, nodes, outdir, log)
+        if ok:
+            hist.append((Dn, np.asarray(zh2) + np.asarray(zl2)))
+            targets.pop(0)
             continue
-        ckpt = os.path.join(outdir, f"{a.tag}_D{D:.4f}_M{M}_ckpt.npz")
-        meta_c = dict(D=D, M=M, nodes=nodes, kt=a.kt, kc=a.kcs, ks=a.ks)
-        if a.resume and os.path.exists(ckpt):
-            zh, zl, mc = load(ckpt)
-            log(f"resuming from checkpoint {ckpt} (iteration {mc.get('it')})")
-        s = make_solver(D, M, nodes=nodes, kt=a.kt, kc=a.kcs, ks=a.ks, threads=a.threads)
-        segs = None
-        if a.resume and os.path.exists(ckpt) and mc.get("segs"):
-            segs = mc["segs"]             # keep the step plan of the interrupted run (the residual depends on it)
-        s.set_segs(segs or s.plan(zh, zl, a.tol_step, a.hmax))
-        meta_c["segs"] = s.get_segs()
-        fh, fl = s.residual(zh, zl)
-        F0 = float(np.abs(np.asarray(fh) + np.asarray(fl)).max())
-        log(f"D {D} M {M}: L {s.size}, steps {sum(len(g) - 1 for g in s.get_segs())}, start |F| {F0:.1e}")
-        hist = []
-        if a.solver == "dn" and not (a.resume and os.path.exists(ckpt)):
-            # deflated phase only (the weakest w directions removed from the step), then plain Newton below
-            zh, zl, hist = deflated_newton(s, zh, zl, tol=a.tol, it_max=a.dn_its, w=a.w, verbose=True)
-            save(ckpt, np.asarray(zh), np.asarray(zl), dict(meta_c, it=len(hist)))
-        # plain Newton with backtracking, one iteration per call so that every accepted step is checkpointed
-        for it in range(a.it_max):
-            if hist and (hist[-1].get("accepted") or ("lam" not in hist[-1] and "piv" in hist[-1] and hist[-1]["F"] < a.tol)
-                         or "failed" in hist[-1]):
-                break
-            zh, zl, h1 = newton_solve(s, zh, zl, tol=a.tol, it_max=1, verbose=True)
-            hist += h1
-            if h1 and "lam" in h1[-1]:
-                save(ckpt, np.asarray(zh), np.asarray(zl), dict(meta_c, it=len(hist)))
-        _rh, _rl = s.residual(zh, zl)
-        if a.lm and not float(np.abs(np.asarray(_rh) + np.asarray(_rl)).max()) < a.accept:
-            log("  Newton stalled; Levenberg-Marquardt")
-            zh, zl, h2 = lm_solve(s, zh, zl, tol=a.tol, it_max=a.lm, verbose=True, newton_after=1e-22)
-            hist = hist + h2
-        zh, zl = np.asarray(zh), np.asarray(zl)
-        Fh, Fl = s.residual(zh, zl)
-        F = float(np.abs(np.asarray(Fh) + np.asarray(Fl)).max())
-        if not F < a.accept:
-            # not converged: record it, keep the state under a _fail name (a start for a retry), no sensitivities
-            dt = time.time() - t0
-            rec = dict(D=D, M=M, Delta=float(zh[-1]), Delta_lo=float(zl[-1]), F=F, its=len(hist), seconds=round(dt, 1),
-                       nodes=nodes, kt=a.kt, kcs=a.kcs, ks=a.ks, tol_step=a.tol_step, hmax=a.hmax, solver=a.solver,
-                       source=src, threads=a.threads, converged=False)
-            with open(a.out, "a") as f:
-                f.write(json.dumps(rec) + "\n")
-            save(os.path.join(outdir, f"{a.tag}_D{D:.4f}_M{M}_fail.npz"), zh, zl,
-                 dict(D=D, M=M, nodes=nodes, kt=a.kt, kc=a.kcs, ks=a.ks))
-            log(f"D {D} M {M}: NOT converged, |F| {F:.1e} after {len(hist)} iterations ({dt:.0f}s); stopping")
-            break
-        # the LU stored in s must be at the final z for the sensitivities: the solvers' last s.newton call is at the
-        # returned z when they stopped on tol (last record without a step taken); otherwise refresh it (one Jacobian)
-        last = hist[-1] if hist else {}
-        if "piv" in last and ("lam" not in last or last.get("accepted") or "failed" in last):
-            pmin, pmax = last["piv"]
-        else:
-            _, _, Fh, Fl, pmin, pmax = s.newton(zh, zl)
-        dt = time.time() - t0
-        sens = sensitivity(s, M)
-        tc, th = tails(s, zh, zl, nodes, M)
-        p1 = zh[:M] + zl[:M]
-        hk = harmonics(np.sqrt(D - 2) * p1)
-        rec = dict(D=D, M=M, Delta=float(zh[-1]), Delta_lo=float(zl[-1]), F=F, its=len(hist), seconds=round(dt, 1),
-                   nodes=nodes, kt=a.kt, kcs=a.kcs, ks=a.ks, tol_step=a.tol_step, hmax=a.hmax,
-                   steps=sum(len(g) - 1 for g in s.get_segs()), piv=(pmin, pmax), sens_max=max(sens),
-                   sens=[float(f"{v:.2e}") for v in sens], tail_c=tc, tail_h=th,
-                   dDelta_est=delta_correction(s, Fh, Fl), F_harm=[float(f"{v:.4e}") for v in hk],
-                   solver=a.solver, source=src, threads=a.threads, converged=True)
-        if a.svd:
-            t1 = time.time()
-            sv, dc = weakest(s, a.svd)
-            rec.update(weak_sv=sv, weak_delta=dc, svd_seconds=round(time.time() - t1, 1))
-        with open(a.out, "a") as f:
-            f.write(json.dumps(rec) + "\n")
-        save(done, zh, zl, dict(D=D, M=M, nodes=nodes, kt=a.kt, kc=a.kcs, ks=a.ks))
-        if os.path.exists(ckpt):
-            os.remove(ckpt)
-        log(f"D {D} M {M}: Delta {zh[-1]:.16f} ({zl[-1]:+.2e}) |F| {F:.1e} its {len(hist)} {dt:.0f}s "
-            f"dDelta/dF max {max(sens):.1e} tails {tc:.0e} {th:.0e} dDelta_est {rec['dDelta_est']:+.1e}")
-
+        Dm = round(0.5 * (hist[-1][0] + Dn), 6)
+        if abs(Dm - hist[-1][0]) < a.min_step:
+            log(f"continuation stops before D {Dn}: step below {a.min_step}")
+            return
+        log(f"D {Dn} failed; inserting D {Dm}")
+        targets.insert(0, Dm)
 
 if __name__ == "__main__":
     main()

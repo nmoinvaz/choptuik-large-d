@@ -6,3 +6,5 @@ D 3.7 kc 47 rk 2 nodes [0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6]: start 
 D 3.7 kc 47 rk 4 nodes [0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6]: start |F| 1.8e-09 (seed Delta 3.465204067887)
 {"D": 3.7, "kc": 47, "rk": 4, "nodes": [0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6], "Ks": 60, "Delta": 3.4652040767184635, "F": 4.2578476522712885e-16, "strong": 4.257847652271289e-16, "weak": 0.0, "junk": 0.0, "n_weak": 0, "weak_s": [], "n_outer": 1, "lam": null, "gamma": null, "F_start": 1.8234358887096803e-09, "source": "neB_kc47_rk2_D3.7000.npy", "seconds": 642}
 == exit 0 Thu Oct 22 02:36:41 MST 2026
+== Thu Oct 22 02:49:23 MST 2026 solver/lowD_f64.py solver/data/lowD_f64.jsonl --seed solver/data/neB_kc47_rk2_D3.7000.npy --kcs 39,47 --rks 2 --gamma --tag g
+D 3.7 kc 39 rk 2 nodes [0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6]: start |F| 1.0e-04 (seed Delta 3.465204067887)
