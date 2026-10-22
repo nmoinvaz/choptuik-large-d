@@ -15,6 +15,8 @@ implemented in scipy.integrate (coefficients imported from scipy.integrate._ivp.
                                              the tolerance (relative to the level's scale)
     python3 inner_nb.py check --mutate=sign  the same with a sign flipped in the compiled right-hand side: must fail
     python3 inner_nb.py time M               time one residual with the numba backend
+    python3 inner_nb.py capcheck             the right-hand-side cap (INNER_NB_MAXFEV) fires on the pathological arc
+                                             and leaves every other radius bit-identical; INNER_NB_MAXFEV=0 must FAIL
 
 Use from another script: `import inner_nb; inner_nb.install()` replaces inner_np.Inner by InnerNB (also in spawned
 worker processes, if the importing module calls install() at import time).
@@ -40,6 +42,13 @@ MUTATE = [0.0]
 # INNER_NB_RTOL=1e-13 (say) overrides the integrator tolerance hier.py passes (1e-12): a finer floor for M = 7, where the
 # Schur-corrected r_3 at xi = 0.2 inherits the integration noise of the large leaked harmonic-5 and -7 jumps.
 RTOL_OVERRIDE = float(os.environ["INNER_NB_RTOL"]) if os.environ.get("INNER_NB_RTOL") else None
+# A ray or arc that needs more than MAXFEV right-hand sides returns NaN instead of its end state. Near the tuned set an
+# M = 7 segment needs <= 6e3; one with the top harmonic far from tuned (its jump at xi = 0.2 large and nonlinear) needs
+# ~1.2e6, which is what stalled hier's worker processes for many minutes per finite-difference column. hier.py reacts to
+# a non-finite residual exactly as to a large one: it switches that level to its approach radius, or rejects the trial.
+# INNER_NB_MAXFEV=0 disables the cap (scipy's behaviour). CAPPED counts the capped segments.
+MAXFEV = [int(os.environ.get("INNER_NB_MAXFEV", "200000")) or 10 ** 12]
+CAPPED = [0]
 
 
 @nb.njit(cache=True)
@@ -286,7 +295,10 @@ class InnerNB(I.Inner):
             rtol = RTOL_OVERRIDE
         y, nfev, st = dop853(0 if kind == "ray" else 1, float(par), float(a), float(b),
                              np.ascontiguousarray(Y, np.complex128), rtol, atol, self._oi, self._ei, self._odd,
-                             self._even, self._imw, self.L, MUTATE[0], A_, B_, C_, E3_, E5_)
+                             self._even, self._imw, self.L, MUTATE[0], A_, B_, C_, E3_, E5_, MAXFEV[0])
+        if st == 2:
+            CAPPED[0] += 1
+            return np.full_like(y, np.nan)
         if st != 0:
             raise RuntimeError("dop853: step size too small")
         return y
@@ -361,6 +373,33 @@ if __name__ == "__main__":
         mut = any(a == "--mutate=sign" for a in sys.argv)
         Ms = [int(a) for a in sys.argv[2:] if not a.startswith("--")] or [1, 3, 5]
         ok = check(Ms, mut)
+        print("PASS" if ok else "FAIL")
+        sys.exit(0 if ok else 1)
+    elif sys.argv[1] == "capcheck":
+        # the right-hand-side cap: at the M = 5 zero with F_7 from the amplitude-expansion seed (1% off its tuned
+        # value) the arc at xi = 0.2 needs ~1.2e6 right-hand sides; with the cap it must come back as NaN, the other
+        # radii unchanged (bit-identical to the uncapped evaluation). Exit 1 otherwise.
+        import hier as H
+        install()
+        x5 = np.array([2.718579189, 0.999228404, 0.149203575, 0.014719052, 0.008405347, 0.001470345])
+        x = np.concatenate([x5, H.seed_from_C(H.DEFAULT_SEED, x5[0], 7)[4:]])
+        low, pol = H.Hier(7).radii(x)
+        radii = [0.2] + list(low.values()) + list(pol.values())
+        t = time.time()
+        Rc = H.demixed_multi(x, 7, radii)
+        tc, nc = time.time() - t, CAPPED[0]
+        MAXFEV[0] = 10 ** 12
+        t = time.time()
+        Ru = H.demixed_multi(x, 7, radii)
+        tu = time.time() - t
+        ok = nc >= 1 and not np.all(np.isfinite(Rc[0.2])) and np.all(np.isfinite(Ru[0.2]))
+        for r in sorted(Rc):
+            same = np.array_equal(Rc[r], Ru[r])
+            print(f"  xi {r:.4f}: capped finite {bool(np.all(np.isfinite(Rc[r])))}, uncapped finite "
+                  f"{bool(np.all(np.isfinite(Ru[r])))}, bit-identical {same}")
+            if r != 0.2:
+                ok = ok and same
+        print(f"capped: {tc:.1f} s, {nc} segment(s) capped; uncapped: {tu:.1f} s")
         print("PASS" if ok else "FAIL")
         sys.exit(0 if ok else 1)
     elif sys.argv[1] == "time":

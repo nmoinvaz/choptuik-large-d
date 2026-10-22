@@ -145,7 +145,7 @@ def amp():
         if len(sig) > M and M < len(SIG_FULL):
             D[M] = SIG_FULL[M] - sig[M]
             print(f"M = {M}: sigma_1..sigma_{M} differ from the untruncated by <= {exact:.1e};  Delta sigma_{M + 1} = "
-                  f"{D[M].real:+.4e}{D[M].imag:+.4e}i  (|.| {abs(D[M]):.3e}, {abs(D[M]) / abs(SIG_FULL[M]):.2%} of |sigma_{M + 1}|)")
+                  f"{D[M].real:+.4e}{D[M].imag:+.4e}i  (|.| {abs(D[M]):.3e}, {abs(D[M]) / abs(SIG_FULL[M]):.2e} of |sigma_{M + 1}|)")
     for M in (1, 3):
         if M in D and M + 2 in D:
             r = x * x * D[M + 2] / D[M]

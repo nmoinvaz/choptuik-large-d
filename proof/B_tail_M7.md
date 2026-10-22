@@ -29,8 +29,8 @@ Scripts (all new; nothing existing was changed):
   jobs on 6 threads, about an hour) is proposed in §3.1.
 - **A correction to B_tail.md §4.** `hier.py`'s model is a Galerkin truncation too; `amp_trunc.py`'s projection drops the
   even harmonic M + 1, which `hier.py` keeps. The amplitude expansion of `hier.py`'s own model (`amp_trunc_hiermodel.py`)
-  is exact through σ_M, as order counting predicts, and changes σ₄ by 0.12% at M = 3 where `amp_trunc.py` gives −399. The
-  lowest-order increments fall by 0.035 per pair (M = 1 → 3) (§4).
+  is exact through σ_M (M = 1, 3, 5), as order counting predicts, and changes σ₄ by 0.12% at M = 3 where `amp_trunc.py`
+  gives −399. The lowest-order increments fall by 0.035 (M = 1 → 3) and 0.012 (M = 3 → 5) per pair (§4).
 - **The tail lemma, stated** (§5): for consecutive jump-conditioned truncations, in X_σ and its dual, as a profile bound
   (T1), a coupling bound (T2) and consistency (T3), or in ratio form (R). A ratio κ ≤ ¼ per pair, enough with M = 7
   explicit, needs (T2) for some σ ≤ 0.736.
@@ -71,6 +71,17 @@ Two causes, both in the cost of one residual, and two fixes that leave `hier.py`
   staged ray segments are the same and every entry read is bit-identical (`hier_nb.py selftest`, all four mode
   combinations; `--mutate=radius` fails by 290). The only visible difference is the "start residuals" line, which prints 0
   for the entries not integrated.
+- **The same arc in polish mode.** The lazy residual does not cover evaluations in which every level is in polish mode
+  but the top harmonic has just been moved off its zero, e.g. the first evaluation of a level-5 finite-difference column
+  (B₅ moved by 10⁻⁶ relative, F₇ not yet re-tuned). The first full selection started in the cloud spent 40 minutes in
+  one such column of its first level-5 solve and never reached level 3 (`logs/hier_nb_M7_full_cloud_h.log`). `inner_nb.py`
+  therefore caps each ray or arc at 2×10⁵ right-hand sides (normal M = 7 segments need ≤ 6×10³) and returns NaN for a
+  capped segment. `hier.py` reacts to a non-finite residual in `_level` as to a large one (approach mode), and in
+  `_newton` by rejecting the trial, where a finite value would have been compared with |g|; so the path can differ, but
+  only at points far from the tuned set, never at the zero, where no segment comes near the cap. `inner_nb.py capcheck`: at the M = 5
+  zero with the seed F₇ the arc at ξ = 0.2 comes back NaN and every other radius bit-identical to the uncapped
+  evaluation; with the cap off (`INNER_NB_MAXFEV=0`) the check fails. Instrumented, a level-5 column at the cloud run's
+  start now takes 11–18 residuals and 3–4 s.
 
 With both, the first cold level-5 solve at M = 7 took 362 s (229 residuals) under that load.
 
@@ -120,10 +131,12 @@ candidate causes at M = 7, each with a number behind it:
 3. *A genuine noise floor of the corrected r₃ near 1–10*, which would put M = 7 at ξ₁ = 0.2 beyond double precision.
 
 A rerun of the pilot with 100× larger level-3 steps (`--h3=1e-4`, log `logs/hier_nb_M7_fixA_h3_at_M5zero.log`) was cut
-off by a container restart during its first level-5 solve, and the full selection with `--h3=1e-4 --h1=1e-4`, started
-after the restart (`logs/hier_nb_M7_full_cloud_h.log`), had not reached level 3 when these notes were written (see the
-final report for how far it got). The local task (§3.1) runs cause 1's remedy (job B) and adds a tighter integrator
-(job C). If both stall like job A, the next thing to vary is K's step for the levels ≥ 5 (cause 2).
+off by a container restart during its first level-5 solve, and the full selection with `--h3=1e-4 --h1=1e-4` started
+after it (`logs/hier_nb_M7_full_cloud_h.log`) spent 40 minutes in one finite-difference column of its first level-5
+solve, on the expensive arc that the right-hand-side cap of §1 now removes, and was killed by the next restart without
+reaching level 3. So none of the three causes has been tested yet. The local task (§3.1) runs cause 1's remedy (job B)
+and adds a tighter integrator (job C). If both stall like job A, the next thing to vary is K's step for the levels ≥ 5
+(cause 2).
 
 ## 3. The truncation sequence, as far as it goes
 
@@ -147,8 +160,9 @@ What is new without c₇:
   lie in the untruncated bracket); if κ stayed at −0.0686 the limit would be 1.00028 and c₇ = 1.00035, outside the
   untruncated bracket 0.99915–1.00011 (`reconcile.py`). So M = 7 decides between "the M = 1 → 3 step is pre-asymptotic"
   (B_tail.md's reading) and a tension between the two routes at the 2×10⁻⁴ level. It is still the sharp test it was.
-- **The lowest-order increments decrease at the same kind of rate** (§4): x²Δσ₄/Δσ₂ has modulus 0.035 for the
-  M = 1 → 3 step, an independent (order-by-order, no lateral integration) estimate of a per-pair ratio well below ¼.
+- **The lowest-order increments decrease at least as fast** (§4): x²Δσ₄/Δσ₂ and x²Δσ₆/Δσ₄ have moduli 0.035 and
+  0.012 for the M = 1 → 3 and M = 3 → 5 steps, an independent (order-by-order, no lateral integration) estimate of a
+  per-pair ratio well below ¼, and falling.
 
 ### 3.1 Proposed task for the local 8-thread machine (for the coordinator to queue; not written to comms.txt)
 
@@ -164,6 +178,7 @@ with numba 0.68.0), then
 
 ```
 python inner_nb.py check 3 5 7        # must end with PASS (about 2 min); stop the task if it does not
+python inner_nb.py capcheck           # must end with PASS (about 1 min)
 python hier_nb.py selftest            # must end with PASS
 ```
 
@@ -216,15 +231,19 @@ needs one correction, reported here and not fixed in B_tail.md:
 |---|---|---|---|---|
 | hier's model, M = 1 | odd ≤ 1, even ≤ 2 | σ₁ unchanged (4.5×10⁻¹⁰, fit level) | σ₂ changed by 0.0590 (14% of \|σ₂\|) | `trunc_hier_M1_K5_J500_w1.0000.json` |
 | hier's model, M = 3 | odd ≤ 3, even ≤ 4 | σ₁–σ₃ unchanged (≤ 2.7×10⁻¹⁰) | σ₄ changed by 3.74×10⁻⁵ (0.12% of \|σ₄\|) | `trunc_hier_M3_K9_J500_w1.0000.json` |
-| hier's model, M = 5 | odd ≤ 5, even ≤ 6 | σ₁–σ₄ unchanged (≤ 2.5×10⁻¹⁰; the first run was cut by a container restart after k = 9, `trunc_hier_M5_cut.log`) | PLACEHOLDER-M5AMP | `trunc_hier_M5.log` |
+| hier's model, M = 5 | odd ≤ 5, even ≤ 6 | σ₁–σ₅ unchanged (≤ 4.2×10⁻¹⁰) | σ₆ changed by 7.9×10⁻⁹ (7×10⁻⁶ of \|σ₆\|) | `trunc_hier_M5_K13_J500_w1.0000.json` (a first run, cut by a container restart, `trunc_hier_M5_cut.log`) |
 | `amp_trunc.py`, M = 3 | all ≤ 3 | σ₃ changed by 5.3×10⁻⁴ | σ₄ = −399 (true −0.029) | B_tail.md §4 |
 | `amp_trunc.py`, M = 5 | all ≤ 5 | σ₅ changed by 4.4×10⁻⁴ | σ₆ = −1371 (true −0.0011) | B_tail.md §4 |
 
 (`python3 trunc_seq_M7.py --amp`.) Lemma O's prediction holds exactly in both truncations: hier's model first changes at
 σ_{M+1}, `amp_trunc.py`'s at σ_M. And the explosion is a property of dropping the even harmonic M + 1, not of Galerkin
-truncation: with it kept, σ₄ changes by 0.12%, not by a factor 10⁴. The lowest-order increments themselves decrease
-fast: x² Δσ₄/Δσ₂ = −0.025 + 0.024i, modulus 0.035, at A = 2.7196 (the M = 1 → 3 step of Lemma L, against −0.069 for the
-same step of the zeros).
+truncation: with it kept, σ₄ changes by 0.12% (M = 3) and σ₆ by 7×10⁻⁶ (M = 5), not by factors of 10⁴–10⁶.
+([C_selection.md](C_selection.md) §1, on main since this work began, now defines the M-model this way and notes that with
+the even harmonics stopped at M − 1 the inner limit would be a different problem.) The lowest-order increments themselves
+decrease fast: at A = 2.7196, x² Δσ₄/Δσ₂ = −0.025 + 0.024i (modulus 0.035) and x² Δσ₆/Δσ₄ = −0.010 + 0.005i (modulus
+0.012), against −0.069 for the M = 1 → 3 step of the zeros. The error bar on Δσ₆ is the fit's: σ₁–σ₅ of the same run
+agree with the untruncated values to ≤ 4.2×10⁻¹⁰, so Δσ₆ = (7.7 + 1.9i)×10⁻⁹ is resolved to roughly 10% if the
+order-13 fit is as good (not checked with a second J).
 
 So the distinction that matters for the tail lemma is not "jump-conditioned versus Galerkin" but which harmonics the
 truncation keeps, and whether the increment is measured order by order or at the actual amplitude. The statement of §5
@@ -389,7 +408,7 @@ Every constant of Lemma T, with what it is (all *numerical evidence* unless mark
 | \|∂r₁/∂(ω/ω∞)\|, σ_min(J₅) | converts ω to r₁; certification margin | 6.7×10³; 3.9×10³ | `feasibility.py` |
 | tail needed for a 10⁻³ box | | 3.9 in r₁ (*arithmetic*) | PROOF.md A.4 |
 | raw leakage ∂r₁/∂B₅ | entries of T (Lemma R) | ~10¹⁷, against J ~ 7×10³ | README, `hier.py` |
-| Δσ_{M+1} (lowest order) | Lemma L | Δσ₂ = 0.0053 + 0.0587i (M = 1), Δσ₄ = (−2.83 − 2.45i)×10⁻⁵ (M = 3); x²Δσ₄/Δσ₂ = 0.035 in modulus | `amp_trunc_hiermodel.py`, §4 |
+| Δσ_{M+1} (lowest order) | Lemma L | Δσ₂ = 0.0053 + 0.0587i (M = 1), Δσ₄ = (−2.83 − 2.45i)×10⁻⁵ (M = 3), Δσ₆ = (7.7 + 1.9i)×10⁻⁹ (M = 5); per-pair ratios 0.035, 0.012 in modulus | `amp_trunc_hiermodel.py`, §4 |
 
 ## 8. The ratio bound: an attempt, and the inequality that needs a new idea
 
@@ -448,7 +467,7 @@ to six digits (B_tail.md §2), so the tuning steps are uniform in fact.
 ### 8.3 Why the lowest order does not settle the ratio at A*
 
 Suppose (U) were proved, so that the lowest-order increments obey |Δσ_{M+3}| x² ≤ κ_lo |Δσ_{M+1}| with an explicit
-κ_lo (measured: 0.035 for M = 1 → 3, §4). That is a statement about one coefficient of each increment's series in
+κ_lo (measured: 0.035 and 0.012 for M = 1 → 3 and 3 → 5, §4). That is a statement about one coefficient of each increment's series in
 x = A², at a value x* = 7.4 where the series of S₁ itself is far from its first terms (|σ_k| x*^k grows to about 240 at
 k = 9 before decaying; PROOF.md route A1). The increments δ_M(x) = Σ_{k ≥ M+1} Δσ_k^{[M]} x^k are series of the same kind,
 so their first terms neither bound them nor fix their ratios: the measured ratios differ by a factor two (0.035 at lowest
