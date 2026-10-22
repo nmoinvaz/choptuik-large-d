@@ -27,7 +27,7 @@ The O(1/n) inner problem gives both coefficients, in the M-harmonic truncation o
 | | M = 1 | M = 3 | M = 5 | fit (double-double) |
 |---|---|---|---|---|
 | ω*/ω∞ (n = ∞, for reference) | 0.776994 | 1.015603 | 0.999228 | 1 |
-| ω₁ | −21.052 | −23.709 | −24.149 | −24.123 |
+| ω₁ | −21.052 | −23.709 | −24.1485 | −24.123 |
 | ω₁/ω* | −7.0887 | −6.1078 | −6.3229 | −6.3114 |
 | Δ₁ = −2π ω₁/ω*² | 15.00 | 9.886 | 10.402 | 10.3753 |
 | λ* (n = ∞) | 1.76912 | 2.00680 | 1.99967 | 2 |
@@ -42,18 +42,19 @@ The truncated model's own growth rate tends to the exact 2 of Proposition 5 (λ*
 **Method.** The inner equations are expanded to O(1/n) from the exact equations (§1); the O(1/n) inner solution is
 fixed by the profile correction $`K_1`$, by $`\omega_1`$ and by the light-cone gauge (§2); the multiplier of the corrected
 inner solution must vanish at O(1/n), which is a linear system for $`(K_1, \omega_1)`$ whose ω component is
-ω₁ = −S₁/ₙ/∂_ωS with the profile correction eliminated (§3). The outer region adds nothing at this order: the
-light-cone exponent's gravitational shift and every matching factor multiply a multiplier that already vanishes (§3).
-λ₁ is first-order perturbation theory of the growth-rate condition, −ℓ·S₁/ₙ / ℓ·∂_λS (§4). All derivatives are exact
-jets of the lateral Stokes-jump integration (§5).
+$`\omega_1 = -S_{1/n}/\partial_\omega S`$ with the profile correction eliminated (§3). The outer region adds nothing at this
+order: the light-cone exponent's gravitational shift and every matching factor multiply a multiplier that already
+vanishes (§3). λ₁ is first-order perturbation theory of the growth-rate condition,
+$`\lambda_1 = -\ell\cdot S_{1/n}/\ell\cdot\partial_\lambda S\,f_*`$ (§4). All derivatives are exact jets of the lateral
+Stokes-jump integration (§5).
 
 **Status.** The O(1/n) inner equations, the matching data and the symmetry-breaking term are derived and checked
 symbolically and against the outer 1/n expansion. The selection at O(1/n) is conditional on the same things as the
 selection itself (Conjecture 1 and the lemma chain of C_selection.md, applied one order further). The numbers are
 numerical evidence from truncated models: the truncation error at M = 5, estimated from the sequences and from the
 gauge dependence of the models (which vanishes in the full problem), is ~0.2% for ω₁ and ~0.3–0.8% for λ₁, and is the
-dominant uncertainty (the numerical error of each M = 5 value is ~10⁻⁵ for ω₁ and 3×10⁻⁴ for λ₁, §6). M = 7 and an
-untruncated computation were not done.
+dominant uncertainty (the relative numerical error of the M = 5 values is ~10⁻⁵ for ω₁ and 3×10⁻⁴ for λ₁, §6). M = 7
+and an untruncated computation were not done.
 
 ## 1. The inner equations to O(1/n)
 
@@ -425,7 +426,7 @@ For the coordinator (agents do not edit the README). In the README after Proposi
 > profile's 1/n correction, by ω₁ and by the light-cone gauge, and the vanishing of its multiplier gives ω₁; the
 > outer region contributes only invertible factors at this order (the gravitational shift of the light-cone exponent
 > included). First-order perturbation theory gives λ₁. In the M-harmonic truncation, with exact derivatives:
-> ω₁ = −21.05, −23.71, −24.149 and λ₁ = 7.76, 3.080, 3.023 for M = 1, 3, 5, against the fitted −24.123
+> ω₁ = −21.05, −23.71, −24.1485 and λ₁ = 7.76, 3.080, 3.023 for M = 1, 3, 5, against the fitted −24.123
 > (Δ₁ = 10.3753) and 3.0324. The sequences converge like the truncation sequence of ω* itself, and the fitted values
 > lie between the M = 3 and M = 5 values; at M = 5 the differences are 0.1% (ω₁) and 0.3% (λ₁).
 
