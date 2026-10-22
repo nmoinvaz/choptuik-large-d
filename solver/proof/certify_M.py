@@ -591,7 +591,7 @@ def newton_steps(g, Dg, M):
     return hstep, full
 
 
-def numerics_point(M, pstr, log=None):
+def numerics_point(M, pstr, log=None, mixed=False):
     """g and Dg at p (NOT rigorous: plain high-precision Taylor integration from the series start values), midpoints"""
     ctx.prec = PREC
     s = CS.SysM(M)
@@ -613,24 +613,33 @@ def numerics_point(M, pstr, log=None):
     ctx.prec = PREC
     W0 = CS.W0()
     cols = [list(ders[k]) + [acb(W0 if k == 1 else 0)] for k in range(m)]
-    y, Wm, steps = CL.numerics_run(s, vals, W0 * p[1], cols, path, N=NUM_N, tol=NUM_TOL, log=log)
+    y, Wm, steps, legs_end = CL.numerics_run(s, vals, W0 * p[1], cols, path, N=NUM_N, tol=NUM_TOL, log=log,
+                                              with_legs=True)
     ell = jump_rows(s)
     n = s.n
-    z = arb_mat([[y[i].real] for i in range(n)] + [[y[i].imag] for i in range(n)])
-    Z = arb_mat(2 * n, m)
-    for i in range(n):
-        for j in range(m):
-            Z[i, j], Z[n + i, j] = Wm[i, j].real, Wm[i, j].imag
-    gv, Dv = ell * z, ell * Z
-    g = [arb(gv[i, 0].mid()) for i in range(m)]
-    Dg = [[arb(Dv[i, j].mid()) for j in range(m)] for i in range(m)]
+
+    def gD(yv, Wv):
+        z = arb_mat([[yv[i].real] for i in range(n)] + [[yv[i].imag] for i in range(n)])
+        Z = arb_mat(2 * n, m)
+        for i in range(n):
+            for j in range(m):
+                Z[i, j], Z[n + i, j] = Wv[i, j].real, Wv[i, j].imag
+        gv, Dv = ell * z, ell * Z
+        return [arb(gv[i, 0].mid()) for i in range(m)], [[arb(Dv[i, j].mid()) for j in range(m)] for i in range(m)]
+    g, Dg = gD(y, Wm)
+    if mixed:
+        # the inner conditions at the end of the arc (xi = rho, on the real axis), where the higher-harmonic jumps are
+        # e^{-1/(2 rho^2) + 1/(2 xi1^2)} (rho/xi1)^{2<F^2>} smaller and so linear in the inner unknowns much farther
+        # out (hier.py's "polish radius"); the outer conditions stay at xi1. Same zero (all jumps vanish there).
+        gr, Dgr = gD(*legs_end[1])
+        return g, Dg, steps, g[:2] + gr[2:], Dg[:2] + Dgr[2:]
     return g, Dg, steps
 
 
 NUM_N, NUM_TOL = 30, 1e-32
 
 
-def refine(M, pstr, iters, tag, modes=None):
+def refine(M, pstr, iters, tag, modes=None, mixed=False):
     """Newton refinement of the centre (NOT rigorous numerics; any centre is allowed). Iteration k: g, Dg at p_k by
     numerics_point, then an 'H' step (higher harmonics only, at fixed (A, wf)) or a 'full' step; default modes:
     H, full, H, full, ... Saves data/A_M_refine_M{M}_{tag}.json after every iteration (p_in, p_out, the tilt C at
@@ -641,16 +650,22 @@ def refine(M, pstr, iters, tag, modes=None):
     hist = []
     for it in range(iters):
         t0 = time.time()
-        g, Dg, steps = numerics_point(M, pstr, log=log)
+        if mixed:                                                  # one integration, both systems
+            gx, Dgx, steps, g, Dg = numerics_point(M, pstr, log=log, mixed=True)
+        else:
+            g, Dg, steps = numerics_point(M, pstr, log=log)
+            gx, Dgx = g, Dg
         sH, sF = newton_steps(g, Dg, M)
+        sHx, sFx = newton_steps(gx, Dgx, M)
         mode = (modes[it] if modes else ("H" if it % 2 == 0 else "full")) if M > 1 else "full"
         step = sH if mode == "H" else sF
         ctx.prec = KPREC
         newp = [exact_p([pstr[i]])[0] + step[i] for i in range(M + 1)]
         newstr = [x.mid().str(50, radius=False) for x in newp]
-        Cm = tilt_from(Dg, M)
+        Cm = tilt_from(Dgx, M)                                     # the tilt of the xi1 system's inner manifold
         rec = {"it": it, "p_in": list(pstr), "mode": mode, "p_out": newstr,
-               "g": [x.str(20) for x in g], "Dg": [[x.str(20) for x in r] for r in Dg],
+               "g": [x.str(20) for x in gx], "Dg": [[x.str(20) for x in r] for r in Dgx], "mixed": mixed,
+               "g_mixed": [x.str(20) for x in g], "full_step_xi1": [x.str(10) for x in sFx],
                "full_step": [x.str(10) for x in sF], "H_step": [x.str(10) for x in sH],
                "steps": steps, "sec": time.time() - t0}
         hist.append(rec)
@@ -815,7 +830,7 @@ def main():
         M = int(pos[0])
         pstr = o["p"].split(",") if "p" in o else START[M]
         modes = o["modes"].split(",") if "modes" in o else None
-        refine(M, pstr, int(o.get("iters", 3)), o.get("tag", "a"), modes)
+        refine(M, pstr, int(o.get("iters", 3)), o.get("tag", "a"), modes, mixed="mixed" in o)
         return 0
     if mode == "box":
         M = int(pos[0])

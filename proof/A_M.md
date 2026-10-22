@@ -169,6 +169,16 @@ a Newton step in the higher harmonics alone at fixed (A, wf), then a full Newton
 centre would leak the inner quadratic error into the outer coordinates through L.) The last refinement also gives the
 tilt C (from its Dg).
 
+At M = 5 the higher-harmonic Newton step at ξ₁ = 0.3 converges only linearly at first: the harmonic-5 state at ξ₁
+changes by about 3×10¹⁴ per unit of B₅ (the singular values of Dg_HH), so a step of 4.6×10⁻¹⁶ in B₅ is 15% of its
+natural scale and J₅ is not linear on it (`logs/A_M_refine_M5_a.log`, `_b.log`: H steps 4.6×10⁻¹⁶, then 1.1×10⁻¹⁶).
+The refinement therefore also has a *mixed* mode (`refine ... --mixed`): the outer conditions at ξ₁ = 0.3, the inner
+ones at the end of the arc, ξ = ρ = 0.2, where the higher-harmonic jumps are smaller by the Stokes factor
+e^{−1/(2ρ²)+1/(2ξ₁²)} and linear much farther out (hier.py's polish radius). Both systems vanish at the same point if
+the vanishing D-jumps at one radius force the whole jump to vanish (lemma 6a(M)); the refinement is numerics either
+way, and its record keeps g, Dg and the full Newton step of the ξ₁ system at every iterate, and the tilt C is taken
+from the ξ₁ system.
+
 **One rigorous run.** The certificate needs one box run only: its centre-trajectory set (the set of y⁺(·; p̂), started
 from the point enclosure at p̂ and propagated with the step Jacobians enclosed over the box) gives g̃(0) = g(p̂), its
 columns give Dg̃(X), and Y is the inverse of the midpoint of the columns (any Y is allowed). A separate C¹ point run at
@@ -336,7 +346,19 @@ x̂ ± 10⁻⁸ of `fixed_point_M.py`'s x̂ for M = 3 (hypotheses H1, H2 of A_le
 
 ## 7. Cost, and a proposed task for the local machine
 
-COST_TABLE
+Wall-clock times on the shared 2-core cloud machine at load 17–25 (each process got a fifth to an eighth of a core),
+one process each, under `nice -n 10`:
+
+| run | n (complex) | steps (ray, arc, real) | time | per step |
+|---|---|---|---|---|
+| M = 1 point run (C¹, 2 columns), N = NJ = 24 | 7 + ω | 303, 320, 46 | 18 min | 1.6 s |
+| M = 1 box run | 7 + ω | 303, 320, 46 | 21 min | 1.8 s |
+| M = 3 box run, N = 20, NJ = 12 | 13 + ω | 955, 552, 72 | 72 min | 2.7 s |
+| M = 3 refinement, one Newton iteration (numerics, order 30) | 13 + ω | 193 in all | 11–13 min | 3.6 s |
+| M = 5 refinement, one Newton iteration | 19 + ω | 307 in all | 41 min | 8 s |
+| M = 5 box run | 19 + ω | M5_STEPS | M5_TIME | M5_PER |
+
+The step counts are set by the first-order a-priori enclosure (§3), not by the accuracy needed.
 
 **Proposed task for the local 8-thread machine** (for the coordinator to queue; COST_LOCAL).
 

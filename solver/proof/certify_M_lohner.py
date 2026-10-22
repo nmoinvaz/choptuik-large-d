@@ -218,7 +218,7 @@ class LohnerM(VI.Lohner):
 NUM_RATE = 2.0       # numerics: steps with (row-sum norm of A_0) h <= NUM_RATE
 
 
-def numerics_run(sys_, y0, w, cols0, path, N=24, tol=1e-40, log=None):
+def numerics_run(sys_, y0, w, cols0, path, N=24, tol=1e-40, log=None, with_legs=False):
     """plain high-precision Taylor integration (midpoints only, no enclosure): y and the derivative columns along the
     path. y0: nd acb (midpoints used); w: arb; cols0: m columns of nd + 1 entries (the last the w-component).
     Step size from the last two Taylor coefficients: |Y_k| h^k <= tol (k = N - 1, N), in units of the leg parameter.
@@ -227,7 +227,7 @@ def numerics_run(sys_, y0, w, cols0, path, N=24, tol=1e-40, log=None):
     y = [acb(v.mid()) for v in y0] + [acb(arb(w).mid())]
     m = len(cols0)
     W = acb_mat([[acb(cols0[j][i].mid()) for j in range(m)] for i in range(n)])
-    steps = []
+    steps, legs_end = [], []
     for leg in CS.legs_for(path):
         t, ns = 0.0, 0
         while t < 1.0:
@@ -263,6 +263,9 @@ def numerics_run(sys_, y0, w, cols0, path, N=24, tol=1e-40, log=None):
                 with open(log, "a") as fh:
                     fh.write(f"   numerics {leg.kind} t {t:.6f} h {h:.2e} steps {ns} [{time.time() - T0:.0f} s]\n")
         steps.append(ns)
+        legs_end.append((list(y), W))
+    if with_legs:
+        return y, W, steps, legs_end
     return y, W, steps
 
 
