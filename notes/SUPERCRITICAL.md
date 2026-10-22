@@ -14,7 +14,7 @@ branch. Scripts and logs: [`solver/supercrit/`](../solver/supercrit/).
    Both branches are one family, y = √2 x/√(x² + C(τ)), with C = +1/β² (regular) or −1/β² (supercritical).
 2. **Nothing is forced at any order.** The expansion in 1/n exists to all orders, with two free functions of τ per order,
    which are shifts of β and f (*proved* by hand; *checked symbolically* through NNLO for CSS and through NLO for
-   general β(τ), f(τ), [NNLO general: see §2.4]). Every order solves the exact equations to the next power of 1/n
+   general β(τ), f(τ); the general NNLO is proposed as a local-machine task, §2.4). Every order solves the exact equations to the next power of 1/n
    (*numerical evidence*). There is no analogue of EEG's Eq. (20), and f(τ) is pure gauge (a time reparametrization)
    unless the solution is restricted to CSS, where κ_f = fβ is physical.
 3. **β²x² = 1 is not an apparent horizon.** The expansion of outgoing null rays, θ₊ = n/(r√b), is positive at every
@@ -157,9 +157,14 @@ S_2 = \frac{1}{\beta f^3}\Big[\frac{2(\kappa^2-1)(z+2)\ln z}{z^3} + \frac{2-4\ka
 terms. **Forced: nothing. Free: A₂, B₂.** The series computed with sympy's integrator and with the exact integrator
 are identical (`cmp_series.py logs/expand_K2_zero_css_sympyint.pkl logs/expand_K2_zero_css.pkl`).
 
-### 2.4 Next-to-next-to-leading order, general β(τ), f(τ)
+### 2.4 Next-to-next-to-leading order, general β(τ)
 
-`expand.py 2 --norm=zero` (log `logs/expand_K2_zero.log`). STATUS: see the end of this file (§9).
+Not completed here. In the gauge f = const, which loses no generality (§1), `expand.py 2 --norm=zero --fconst` reached
+order 2 but did not finish within its 90-minute limit on the shared cloud machine (about 10% of a core;
+`logs/expand_K2_zero_fconst.log`, exit 124). An earlier run with free f(τ) was stopped for the same reason. It is
+proposed as a local-machine task in §9. Proposition S already guarantees that nothing is forced at this order. The run
+would add the explicit coefficients, the n⁻³ residual check for a non-CSS β (`formal_check.py ... tauf`) and the NNLO
+matching with κ̃ (`match_check.py`).
 
 ### 2.5 The two ends of the interval
 
@@ -203,7 +208,7 @@ with z = 0.5–10):
 |---|---|---|
 | LO | the branch choice C < 0 (β²x² > 1); β has no zeros | β(τ), f(τ) (f gauge outside CSS) |
 | NLO | nothing | A₁ (β), B₁ (f) |
-| NNLO | nothing | A₂, B₂ |
+| NNLO | nothing (explicit for CSS; general β by Proposition S) | A₂, B₂ |
 | all orders | nothing (Proposition S) | A_k, B_k |
 
 - **Does a condition constrain β(τ), f(τ) or the period, like EEG's Eq. (20)?** No. Their condition comes from
@@ -482,7 +487,7 @@ python3 eqmap.py                                   # PASS                       
 python3 lo_check.py                                # PASS; residual x n constant             ~2 min
 python3 expand.py 1                                # NLO, A_1/B_1 free; writes logs/expand_K1_free.pkl   ~2 min
 python3 expand.py 2 --norm=zero --css              # NNLO, CSS; writes logs/expand_K2_zero_css.pkl       ~5 min
-python3 expand.py 2 --norm=zero                    # NNLO, general beta, f (see section 9)
+python3 expand.py 2 --norm=zero --fconst           # NNLO, general beta, gauge f = const: hours (local task, section 9)
 python3 nlo_factor.py                              # the NLO coefficients of section 2.2, factored          ~1 min
 python3 cmp_series.py logs/expand_K2_zero_css_sympyint.pkl logs/expand_K2_zero_css.pkl   # identical series
 python3 cmp_series.py logs/expand_K1_free_sympyint.pkl logs/expand_K1_free.pkl           # identical series
@@ -529,8 +534,20 @@ its integrand; its two integrators give identical series (CSS, NNLO).
   for the apparent horizon, citing Rozali and Way's conjecture. In this branch it is a lapse-collapse front with
   compactness O(n^{−1/2}), not a horizon (§3), except for a front at rest. Rozali and Way's own exact divergence is
   static, so the two findings are compatible; their conjecture is not tested by this note.
-- **General-τ NNLO.** The run `expand.py 2 --norm=zero` (exact integrator) was still in progress when this note was
-  first written; its outcome is recorded at the end of this section.
+- **Proposed local-machine task: the general-β NNLO.** One process at below-normal priority, from
+  `solver/supercrit/`:
+
+  ```
+  python3 expand.py 2 --norm=zero --fconst > logs/expand_K2_zero_fconst.log 2>&1
+  python3 formal_check.py logs/expand_K2_zero_fconst.pkl tauf > logs/formal_check_K2_tauf.log 2>&1
+  python3 match_check.py logs/expand_K2_zero_fconst.pkl > logs/match_check_K2_tauf.log 2>&1
+  ```
+
+  - Stop condition: 8 hours for the first command, or an `AssertionError` (report it). A "falling back to
+    sympy.integrate" line is not an error but means an unexpected term (e.g. a dilogarithm): report it.
+  - Pass: the formal check's four exponents within 0.3 of −3, and match_check PASS.
+  - Push: the three logs and `logs/expand_K2_zero_fconst.pkl`.
+  - Expected: no condition at NNLO (Proposition S), and the NNLO matching identity with κ̃ = fβ²/(β+β′).
 - **Not done.**
   - the next layer (u ~ n) for nearly static fronts;
   - a numerical check of the layer for non-CSS β(τ);
