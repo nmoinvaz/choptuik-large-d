@@ -1672,9 +1672,7 @@ What has been checked, and how:
   check would catch a one-digit change.
 - **References and novelty:** every citation was checked against publisher or arXiv records
   ([notes/REF_CHECK.md](notes/REF_CHECK.md)), and every novelty claim against the closest prior papers, read rather than
-  recalled ([notes/LIT_REVIEW.md](notes/LIT_REVIEW.md)). That audit found that the inner equations had been derived
-  earlier by Rozali and Way. Earlier versions of this repository did not credit them for it, and said the inner problem
-  had not been found in print. They now credit them wherever those equations are used.
+  recalled ([notes/LIT_REVIEW.md](notes/LIT_REVIEW.md)).
 
 No human expert has reviewed it. The results should be read with that in mind, and corrections are welcome.
 
