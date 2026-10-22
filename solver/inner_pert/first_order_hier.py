@@ -18,7 +18,13 @@ Steps: zero (deflated Newton from hier.py's M = 5 zero), omega1, lam* (Newton/se
 Sch the 2 x 2 Schur complement of the perturbation map), lam1 = -(ell_l . J_en^corr)/(ell_l Sch'(lam*) e*) with
 Sch' by centred differences.
 
-    python3 -u first_order_hier.py M [--xi1=0.2] [--rtol=1e-12] [--x=...] [--lam=2.0] [--redo=zero,omega1,lam,lam1]
+Also: the gauge diagnostic (omega1 with c1(0) = 0; with --lam-gauge lam1 with both O(1/n) gauge data 0; both
+independent of the gauge in the full problem, so their spread measures the truncation), and --checks (the exact modes
+lam = 0, 1 of every model). Results go to data/first_order_hier_M{M}_xi{xi1}[_rtol][_rows].json; a rerun resumes from it.
+
+    python3 -u first_order_hier.py M [--xi1=0.2] [--rtol=1e-12] [--x=...] [--lam=2.0] [--h=1e-3]
+                                     [--redo=zero,omega1,lam,lam1,gauge] [--checks] [--lam-gauge] [--no-gauge]
+                                     [--omega-only] [--zero-only] [--rows=5:0.1188,7:0.1028]
 """
 import json
 import os
@@ -264,9 +270,10 @@ def find_lam(x, M, xi1, lam, maxit=8, h=1e-4):
     return lam
 
 
-def lam1_step_w(x, M, xi1, lam, f, dx, wprof):
+def lam1_step_w(x, M, xi1, lam, f, dx, wprof, gauge=1.0):
     """the hyper-dual run (perturbation e at lam with profile f, 1/n direction n with the selected dx, mixed e|n with
-    inner profile wprof and gauge -h1); returns J_en, J_e, J_n rows"""
+    inner profile wprof and gauge -h1; gauge = 0: both gauge data set to 0, with dx the selection in that gauge);
+    returns J_en, J_e, J_n rows"""
     Fh = Fh_from(x, M)
     g1 = F2h(Fh, M)
     h1 = {}
@@ -283,10 +290,32 @@ def lam1_step_w(x, M, xi1, lam, f, dx, wprof):
     e, n = 1, 2
     dirs = [Dir("pert", lam=lam), Dir("n", q1=True, omega=W0 * dx[1])]
     masks = [0, e, n, e | n]
-    data = {e: (f, {}), n: (K1, {k: -v for k, v in g1.items()}), e | n: (wprof, {k: -v for k, v in h1.items()})}
+    data = {e: (f, {}), n: (K1, {k: -gauge * v for k, v in g1.items()}),
+            e | n: (wprof, {k: -gauge * v for k, v in h1.items()})}
     jm = JetModel(M, W0 * x[1], Fh, dirs, masks, data)
     Rr, info = R.residuals(jm, x, M, xi1)
     return Rr[jm.idx[e | n]], Rr[jm.idx[e]], Rr[jm.idx[n]]
+
+
+def lam1_gauge0(x, M, xi1, out):
+    """lambda_1 with both O(1/n) gauge data set to 0 (c1(0) = 0 with its own selection dx_gauge0, and delta c1(0) = 0),
+    reusing the stored eigenprofile, ell_l and denominator; identical to lam1 in the full problem"""
+    lam, dx0 = out["lam"], np.array(out["dx_gauge0"])
+    fvec, ll, den = np.array(out["fvec"]), np.array(out["ell_l"]), out["lam_den"]
+    f = R.profile_of(fvec, M)
+    S, _, _ = R.pert_matrix(x, M, xi1, lam)
+    Lp = Lin(S)
+    basis = R.pert_basis(M)
+
+    def run(Cin):
+        wprof = {}
+        for b, c in zip(basis[2:], Cin[0]):
+            for k, v in b.items():
+                wprof[k] = wprof.get(k, 0) + c * v
+        Jen, Je, Jn = lam1_step_w(x, M, xi1, lam, f, dx0, wprof, gauge=0.0)
+        return [Jen]
+    rows, Cin, hist = refine(run, [np.zeros(len(basis) - 2)], Lp, nit=6, label="e|n deflation (gauge 0)")
+    return float(-(ll @ Lp.corr(rows[0])) / den), hist
 
 
 def lam1(x, M, xi1, lam, dx, h=1e-3):
@@ -411,6 +440,13 @@ def main():
     log(f"   e|n deflation |r_H| by iteration {out.get('en_deflation_hist')}; ell.J_e {out.get('ellJe', 0):.2e} "
         f"(eigenmode, against ell.Sch'.e* {out['lam_den']:.3e})")
     log(f"LAMBDA1: lam = {lam:.9f} + ({out['lam1']:.6f})/n")
+    if "--lam-gauge" in opts and "lam1_gauge0" not in out:
+        l0, hist = lam1_gauge0(x, M, xi1, out)
+        out.update(lam1_gauge0=l0, lam1_gauge0_hist=hist)
+        save()
+    if "lam1_gauge0" in out:
+        log(f"GAUGE: lam1 with the light-cone gauge data: {out['lam1']:.6f};  with both set to 0: {out['lam1_gauge0']:.6f}  "
+            f"(difference {out['lam1'] - out['lam1_gauge0']:+.2e}; zero in the full problem)")
     log(f"wrote {fn}")
 
 

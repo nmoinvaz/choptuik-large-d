@@ -48,10 +48,12 @@ light-cone exponent's gravitational shift and every matching factor multiply a m
 jets of the lateral Stokes-jump integration (§5).
 
 **Status.** The O(1/n) inner equations, the matching data and the symmetry-breaking term are derived and checked
-symbolically and against the outer 1/n expansion. The selection at O(1/n) is as rigorous as the selection itself
-(Conjecture 1 and the lemma chain of C_selection.md, applied one order further). The numbers are those of truncated
-models; the truncation error at M = 5 is estimated from the sequences at ~0.05–0.3% and is the dominant
-uncertainty (the numerical error of each M = 5 value is far smaller, §6). An untruncated computation was not done.
+symbolically and against the outer 1/n expansion. The selection at O(1/n) is conditional on the same things as the
+selection itself (Conjecture 1 and the lemma chain of C_selection.md, applied one order further). The numbers are
+numerical evidence from truncated models: the truncation error at M = 5, estimated from the sequences and from the
+gauge dependence of the models (which vanishes in the full problem), is ~0.2% for ω₁ and ~0.3–0.8% for λ₁, and is the
+dominant uncertainty (the numerical error of each M = 5 value is ~10⁻⁵ for ω₁ and 3×10⁻⁴ for λ₁, §6). M = 7 and an
+untruncated computation were not done.
 
 ## 1. The inner equations to O(1/n)
 
@@ -333,13 +335,23 @@ $`x_5 + \tfrac{-r}{1-r}(x_3 - x_5) \approx x_5 + 0.048\,(x_3 - x_5)`$:
 | λ₁ | 3.023 | 3.026 | 3.032 | 3.0324 |
 
 The ω coefficients match the r = −0.05 reading (to 0.02–0.03%), λ₁ the r = −0.2 one, which is also the ratio its own
-last step showed. This is a reading of three-term sequences, not an error bound: the truncation error of the M = 5
-values is ~0.1–0.3%, and a sharper statement needs M = 7.
+last step showed. This is a reading of three-term sequences, not an error bound; a sharper statement needs M = 7.
 
-**A second measure of the truncation error: the gauge datum.** In the full problem ω₁ does not depend on the gauge datum
-$`c_1(0)`$ (§3). In the models it does: with $`c_1(0) = 0`$ instead of $`-g_1`$, ω₁ is −28.61, −23.81, −24.20 for M = 1, 3, 5,
-i.e. it moves by 7.6, 0.10 and 0.052. At M = 5 that is twice the remaining difference from the fit (0.026), consistent
-with the estimate above.
+**A second measure of the truncation error: the gauge data.** In the full problem ω₁ and λ₁ do not depend on the gauge
+data $`c_1(0)`$ and $`\delta c_1(0)`$ (§3, §4). In the models they do. With both set to 0 instead of the light-cone values
+(`--lam-gauge`; `omega1_gauge0`, `lam1_gauge0` in the JSON files):
+
+| M | ω₁, light-cone gauge | ω₁, gauge 0 | λ₁, light-cone gauge | λ₁, gauge 0 |
+|---|---|---|---|---|
+| 1 | −21.05 | −28.61 | 7.757 | 0.740 |
+| 3 | −23.709 | −23.811 | 3.0796 | 2.8268 |
+| 5 | −24.149 | −24.201 | 3.022 | 3.047 |
+| fit | −24.123 | | 3.0324 | |
+
+The gauge dependence falls with M (ω₁: 7.6, 0.10, 0.052; λ₁: 7.0, 0.25, 0.025), and at M = 5 it is about twice the
+remaining difference from the fit, consistent with the estimates above. The gauge-0 values of λ₁ also alternate, and
+at M = 5 the two gauges bracket the fitted value (3.022 \< 3.0324 \< 3.047). So the truncation error of the M = 5
+values is ~0.2% for ω₁ and ~0.3–0.8% for λ₁.
 
 **Numerical error of the model values.** At M = 3, the one-shot and the deflated drivers and two matching radii
 (ξ₁ = 0.2, 0.175) agree to 10⁻⁸ in ω₁ and λ*, and to 10⁻⁵ in λ₁ (the deflated driver takes ∂_λ by centred differences).
@@ -424,7 +436,7 @@ For the coordinator (agents do not edit the README). In the README after Proposi
 | `first_order_equations.py` | sympy: the O(1/n) inner equations from the exact ones, heat form, s-translation breaking, exact reparametrization | 1 min |
 | `first_order_jet.py` | module: jets of the series and of the lateral integration (M-harmonic), the breaking forcing | |
 | `first_order_run.py M` | one-shot jets: zero, ω₁, checks at λ = 0, 1, λ*, λ₁ (direct), symmetry-route number; M = 1, 3 (diverges at M = 5) | 3–8 min |
-| `first_order_hier.py M [--checks]` | the same with deflated directions (needed for M = 5), the gauge diagnostic, and with `--checks` the exact modes λ = 0, 1 | M = 5: 30–40 min |
+| `first_order_hier.py M [--checks] [--lam-gauge]` | the same with deflated directions (needed for M = 5), the gauge diagnostic of ω₁ (and of λ₁ with `--lam-gauge`), and with `--checks` the exact modes λ = 0, 1 | M = 5: 30–40 min |
 | `first_order_checks.py [--mutate=NAME]` | the checks of §5; exit status 1 on failure | 1 min |
 | `first_order_fits.py [--planted]` | Δ₁, ω₁ and λ₁ fitted to the double-double points; `--planted` the planted-truth test | 10–15 min each |
 
