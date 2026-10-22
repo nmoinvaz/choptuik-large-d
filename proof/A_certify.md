@@ -704,3 +704,28 @@ python3 validated_int.py krawczyk 1e-9 --point=validated_int_krawczyk_1e-9.json 
 python3 validated_int.py krawczyk 1e-8 --rho=0.2       # next: the lower path, expected to pass at 1e-8
 python3 validated_int.py linear                        # the linear check of 9.2 (xi1 = 0.2)
 ```
+
+### 9.5 Mutation controls: the test can fail
+
+Until now the Krawczyk test had only been seen to pass. A check that has never been seen to fail is untested, so
+`mutation_controls.py` mutates the *function*, reruns the full assembly from the saved runs, and compares each verdict
+with one written down before the controls were first run. (A mutation of J(X) alone is not a meaningful control: the
+test's soundness assumes J(X) encloses the true derivative, so a wrong J(X) can make it pass or fail either way.) The
+design follows the planted-truth discipline that the BootLoops review recommended ([notes/BOOTLOOPS.md](../notes/BOOTLOOPS.md)).
+
+| control | mutation | expected | result |
+|---|---|---|---|
+| C0 | none (clean twin) | pass | pass, margins 7.925×10⁻¹⁰, 9.247×10⁻¹⁰ |
+| C1 | jump sign flipped, D⁺₊₁ + conj(D⁺₋₁) | fail | fail, margins −59, −22 |
+| C2 | conjugation dropped, D⁺₊₁ − D⁺₋₁ | fail | fail, margins −2.0, −0.35 |
+| C3 | equivalent form −conj(J_D) (null) | pass, same zero | pass; K overlaps C0's |
+| C4 | normalization N → 2N (null) | pass, same K | pass; K identical to 30 digits |
+| C5 | zero planted outside the box, moved by (2h, 0) | fail | fail, margin −1.2×10⁻⁹ in A |
+| C6 | zero planted inside, moved by (h/2, −3h/10) | pass, zero recovered | pass; K contains C0's zero + d and excludes C0's zero + d + (h/4, 0) |
+| C7 | point enclosure of D⁺₊₁(ξ₁) widened by 10⁻⁹ | fail | fail, margins −4×10⁻⁸ |
+
+A planted zero is made by subtracting L d from g, with L the exact binary midpoint of J(X): that moves the zero by d
+up to the second-order remainder, and leaves J(X) unchanged. All 8 controls behave as expected (`python3
+mutation_controls.py`, under a second, exit status 0 only if every verdict matches). The controls were designed after
+the certificate had passed, which weakens them somewhat; but their expected verdicts follow from the construction, not
+from the real run's output.
