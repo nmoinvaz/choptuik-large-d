@@ -1968,3 +1968,22 @@ T30 pilot FAILED and is stopped. Stage 2 is not started. Log: solver/proof/lemma
             "step size underflow at t = 0.7018994390964508"
 No arc tube ran: the ray chain comes first, and it broke at its third segment, about 70% of the way from 70 to 40 (|u| ~49 if t
 is linear in |u|). Machine has T29 (a)/(b) only, on 4 threads.
+
+== 2026-10-21 22:53 PDT cloud
+T31, approved by the user: queue it to start when T29 finishes, and leave T29 alone. It is the l = 1 scalar multiplet,
+continued from D = 9 to as far as it goes overnight. This tests whether gamma_inf = 1/2 breaks for matter with a
+centrifugal term (matter/ELL.md and matter/STRUCTURE.md on main; pull first). D = 4-9 are done at kc 23. Past D = 9
+the period is selected weakly (|dDelta/dF| ~ 4e5), so Newton needs steps of about 0.05 in D. That made it about 2 h per
+unit of D on the loaded cloud cores, and it should be faster on yours. Single process, below-normal priority. It is a
+sequential continuation, so 1 thread (2 at most, for the gamma runs below).
+In solver/matter/, use the settings of the D >= 8 kc 23 continuation in ELL.md section 6: kappa 0.7, horizon series from
+u = 0.04 with 30 terms. Check that the flags below give exactly that, and start from the saved D = 9 solution:
+  python ell_march.py l1kc23hi 1 23 data/sol_l1_kc23r_D9.0000.npy 9 16 "10,11,12,13,14,15,16" --dinit 0.05 --dmax 0.1
+      --kappa 0.7 --u0 0.04 --Ks 30 --tol 1e-10 > logs/t31_march.log 2>&1
+After each integer D lands (data/sol_l1kc23hi_D{D}.npy), compute its growth rate in a second process:
+  python ell_gamma.py data/sol_l1kc23hi_D{D}.0000.npy {D} 1 23 1.5 3.2 60 --kappa 0.7 --u0 0.04 --Ks 30
+(This appends to data/ell_gamma.jsonl. Report every real root in the window, not only the one near the previous lambda.)
+Check at D = 10 that Delta continues smoothly from D = 9.05 (0.9881824) and that the psi-constraint stays at 1e-5 or
+below. If the constraint grows past 1e-4, stop and report, because that is the kc-truncation junk that ELL.md section 6
+describes.
+Push march_l1kc23hi.jsonl, the logs and ell_gamma.jsonl in the morning, or earlier if it stops.
