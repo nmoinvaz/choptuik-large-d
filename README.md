@@ -30,7 +30,8 @@ This project asks three questions:
 In brief: one rational formula in 1/(D − 2) fits all D ≥ 4; Δ tends to a finite limit, Δ∞ = 1.64389375, and γ to 1/2;
 a selection rule derived at D = ∞ reproduces Δ∞ to about 10⁻⁴ without using the finite-D solutions, and an exact symmetry
 explains γ∞ = 1/2. A proof of the selection rule is in progress ([PROOF.md](PROOF.md)); in a one-harmonic model case, a
-computer-assisted computation certifies the selected zero up to one remaining lemma.
+computer-assisted proof shows that the selection condition has exactly one simple zero (Theorem A(M = 1), assuming
+Braaksma's summability theorem).
 
 What is new: not found in the literature searched ([notes/LIT_REVIEW.md](notes/LIT_REVIEW.md)):
 - Δ(D) to D = 61 at about 15 digits, and the finite limit Δ∞ = 1.64389375 against the Δ → 0 conjecture;
@@ -1141,15 +1142,21 @@ Galerkin truncation (σ₆ from a five-harmonic projection is −1371 against �
 stated for the jump-conditioned truncation (`hier.py --schur`). The tail it must bound looks provable: about 4–6 in r₁
 above M = 5 and 0.2–0.35 above M = 7, against about 4 needed for a 10⁻³ box. A computer-assisted certificate of the inner
 zero has a concrete route ([proof/A_certify.md](proof/A_certify.md), [proof/D_entire.md](proof/D_entire.md)), and for the
-one-harmonic model it is nearly done: a computer-assisted proof (ball arithmetic, a validated Lohner integrator,
-Krawczyk's test), checked by an independent review and confirmed by a separate C++ implementation with the CAPD
-library ([How this work was done](#how-this-work-was-done)), which also certifies a box ten times larger
-([proof/A_certify.md](proof/A_certify.md) §10), shows that one component
-of the selection condition's jump, at one radius, has exactly one zero, a simple one, in the box
-(2.5421480475, 0.7769940136) ± 10⁻⁹ in (A, ω/ω∞). Of the two lemmas that make it the full one-harmonic selection
-condition, the first (this component vanishing means the whole jump vanishes) is now proved, and the second (the path
-gives the Borel sum) is proved near ξ = 0. One piece remains: analyticity of the solution on an annulus
-0.0624 ≤ |ξ| ≤ 0.2, which holds numerically and needs a validated sweep ([proof/A_certify.md](proof/A_certify.md) §11). The
+one-harmonic model it is done. **Theorem A(M = 1)** ([proof/A_certify.md](proof/A_certify.md) §12.6): assuming
+Braaksma's 1-summability theorem (the one fact taken from the literature), the one-harmonic selection condition has
+exactly one zero in the box (2.5421480475, 0.7769940136) ± 10⁻⁹ in (A, ω/ω∞), it is simple, and it lies at
+A ∈ [2.54214804761338, 2.54214804761975], ω/ω∞ ∈ [0.776994013607438, 0.776994013612010]. The proof is
+computer-assisted in ball arithmetic:
+- a validated Lohner integrator and Krawczyk's test certify one jump component at one radius (§9, redone on a lower
+  path in §11);
+- an independent review checked it ([proof/A_review.md](proof/A_review.md)), and a separate C++ implementation with CAPD
+  confirms it and certifies a box ten times larger (§10);
+- lemma 6a shows that this component vanishing means the whole jump vanishes (§11);
+- lemma 6b shows that the computed solution is the Borel sum: near ξ = 0 by a start-value contraction (§11), and on the
+  annulus 0.0624 ≤ |ξ| ≤ 0.2 by a covering with 178 validated Taylor discs (§12).
+
+The disc covering has not yet been independently re-implemented. The model is the one-harmonic truncation, not the full
+selection condition. The
 first coefficient σ₁ of the untruncated condition is also enclosed rigorously (±3.5×10⁻⁵).
 
 Evidence beyond the linear case: the conditions $`S_\nu = 0`$ for |ν| ≥ 3 alone predict the echo's shape as
@@ -1899,11 +1906,12 @@ solver/proof/       feasibility numbers for the proof roadmap (feasibility.py: s
                     capd_check/: the independent C++/CAPD re-check (build.sh pins CAPD; A_certify.md section 10);
                     mutation_controls.py: deliberately broken versions of the final test;
                     lemma6_*.py: lemma 6a, the start-value lemma near the real axis, the lower-path certificate,
-                    and the unfinished annulus sweep for 6b1 (A_certify.md section 11);
+                    and the tube sweep (superseded); lemma6b1_*.py: lemma 6b1 by validated Taylor discs and the
+                    covering check (A_certify.md section 12);
                     tail_harmonics.py, reconcile.py, amp_trunc.py, family_amps.py: the harmonic-tail analysis;
                     outer_borel.py, inner_corrections.py, lightcone_exponents.py: checks for the selection theorem)
 proof/              the proof roadmap's parts (A_certify.md: the computer-assisted certificate, prototyped at M = 1;
-                    A_review.md: its independent review (lemma 6a since proved; one lemma, 6b1, remains);
+                    A_review.md: its independent review (both lemmas it asked for are since proved);
                     B_tail.md: gap (b), the harmonic tail;
                     C_selection.md: the selection theorem for M harmonics, lemma by lemma;
                     D_entire.md: the entire-function route to a certified inner zero)

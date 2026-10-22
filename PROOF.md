@@ -192,8 +192,11 @@ Both hold in double precision and both are judged fixable. An independent re-imp
 ([proof/A_certify.md](proof/A_certify.md) §10), sharing no integration or test code with the Python proof, confirms the
 result and certifies the box ±10⁻⁸ as well, ten times larger, with the zero enclosed eight to ten times more tightly.
 Since then (§11) lemma 6a is proved, 6b is proved near ξ = 0, and the certificate is redone on a lower path that needs
-analyticity only for |ξ| ≤ 0.2. **Theorem A(M = 1) now holds conditionally on one lemma, 6b₁**: the analyticity of y⁺
-on the annular sector 0.0624 ≤ |ξ| ≤ 0.2, which holds numerically and needs a validated sweep. Larger boxes fail because the interval Jacobian's excess grows like 7×10⁵·h (the solution is
+analyticity only for |ξ| ≤ 0.2. Lemma 6b₁, the analyticity of y⁺ on the annular sector 0.0624 ≤ |ξ| ≤ 0.2, is proved by
+a covering with 178 validated Taylor discs (§12). **Theorem A(M = 1) is proved**, assuming Braaksma's summability theorem:
+the one-harmonic selection condition has exactly one zero in the box, it is simple, and it lies at
+A ∈ [2.54214804761338, 2.54214804761975], ω/ω∞ ∈ [0.776994013607438, 0.776994013612010]. Not yet done: an independent
+re-implementation of the disc covering. Larger boxes fail because the interval Jacobian's excess grows like 7×10⁵·h (the solution is
 large where the ray meets the arc), so 10⁻³ boxes need a C² Lohner step; a lower path (ray to 0.2, then the real axis)
 should allow 10⁻⁸. The integration is stiff (fast modes shrink by e⁻³¹, so naive interval Taylor would overestimate by
 about e⁵⁰), which is why the Lohner wrapping is essential. At M = 5 the system is
