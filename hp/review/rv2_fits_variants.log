@@ -1,0 +1,6 @@
+as published                                                                     48 fits 1.64389374444 .. 1.64389376313  centre 1.64389375379  half-width 9.3e-09
++ dDelta_est where recorded (cleaning on)                                        48 fits 1.64389374439 .. 1.64389376156  centre 1.64389375297  half-width 8.6e-09
++ dDelta_est, no cleaning (both 'clean' arms identical)                          48 fits 1.64389374439 .. 1.64389376156  centre 1.64389375297  half-width 8.6e-09
+run-flagged points removed (|F| > 1e-20 or |dDelta_est| > 1e-16: 168), no cleaning 48 fits 1.64389361982 .. 1.64389381321  centre 1.64389371651  half-width 9.7e-08
+27 <= D <= 37 removed (unfrozen junk runs and the kfreeze cut), cleaning on      48 fits 1.64389374196 .. 1.64389374830  centre 1.64389374513  half-width 3.2e-09
+D = 26.82972 (centre tail 2e-11) removed, cleaning on                            48 fits 1.64389374444 .. 1.64389376312  centre 1.64389375378  half-width 9.3e-09
