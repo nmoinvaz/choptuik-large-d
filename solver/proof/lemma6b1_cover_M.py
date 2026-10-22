@@ -344,23 +344,40 @@ def lohner_restore(M, st):
     return lo
 
 
-def ray_run_c1(M, h):
+def ray_run_c1(M, h, resume=False):
     t00 = time.time()
     rows = design(M)
     nd = UM.SysUM(M).nd
-    E3 = (acb(0, -1) * UM.PHI_U).exp()
-    ctx.prec = 320
-    u0 = acb(arb(rows[0]["rho"])) * E3
-    vals, cols = start_data_u(M, h, u0)
-    lo = lohner_c1(M, vals, cols, h)
-    X = lo.box()
-    out = {"M": M, "h": h, "x": list(FPM.ZEROS[M]), "c1": True, "rho": [rw["rho"] for rw in rows],
-           "starts": {"0": [LC.s_acb(z) for z in X]}, "sets": {"0": lohner_state(lo)}, "start_rad": maxrad(X, nd),
-           "start_point_rad": max(VI.rad_of(z) for z in vals), "legs": []}
-    print(f"M = {M} (C^1): start data at |u| = {rows[0]['rho']} from the old sector lemma (r0 = {START_R0[M]}): centre "
-          f"radius {out['start_point_rad']:.2e}, state set over X = x^ +- {h}: radius {maxrad(X, nd):.2e}", flush=True)
+    part = os.path.join(runs_dir(M), "ray_partial.json")
+    j0 = 1
+    if resume and os.path.exists(part):
+        # continue from the last saved exact Lohner state (written after every leg); the saved sets are enclosures, so
+        # a resumed run is as rigorous as an uninterrupted one
+        with open(part) as fh:
+            out = json.load(fh)
+        assert out.get("c1") and out["h"] == h and out["x"] == list(FPM.ZEROS[M]) and \
+            out["rho"] == [rw["rho"] for rw in rows], "ray_partial.json made with another box, centre or design"
+        last = max(int(k) for k in out["sets"])
+        lo = lohner_restore(M, out["sets"][str(last)])
+        j0 = last + 1
+        out.setdefault("resumed_at", []).append(last)
+        print(f"M = {M} (C^1): resumed at row {last} (|u| = {rows[last]['rho']}), set radius {maxrad(lo.box(), nd):.2e}",
+              flush=True)
+    else:
+        E3 = (acb(0, -1) * UM.PHI_U).exp()
+        ctx.prec = 320
+        u0 = acb(arb(rows[0]["rho"])) * E3
+        vals, cols = start_data_u(M, h, u0)
+        lo = lohner_c1(M, vals, cols, h)
+        X = lo.box()
+        out = {"M": M, "h": h, "x": list(FPM.ZEROS[M]), "c1": True, "rho": [rw["rho"] for rw in rows],
+               "starts": {"0": [LC.s_acb(z) for z in X]}, "sets": {"0": lohner_state(lo)}, "start_rad": maxrad(X, nd),
+               "start_point_rad": max(VI.rad_of(z) for z in vals), "legs": []}
+        print(f"M = {M} (C^1): start data at |u| = {rows[0]['rho']} from the old sector lemma (r0 = {START_R0[M]}): "
+              f"centre radius {out['start_point_rad']:.2e}, state set over X = x^ +- {h}: radius {maxrad(X, nd):.2e}",
+              flush=True)
     os.makedirs(runs_dir(M), exist_ok=True)
-    for j in range(1, len(rows)):
+    for j in range(j0, len(rows)):
         t0 = time.time()
         leg = UM.URay(str(rows[j - 1]["rho"]), str(rows[j]["rho"]))
         n = lo.run(leg, 1e-2)
@@ -544,7 +561,7 @@ def main():
         probe(M, opts.get("rad", "1e-7"), [int(v) for v in opts["rows"].split(",")] if "rows" in opts else None)
     elif cmd == "ray":
         if "c1" in opts:
-            ray_run_c1(M, h)
+            ray_run_c1(M, h, resume="resume" in opts)
         else:
             ray_run(M, h)
     elif cmd == "row":
