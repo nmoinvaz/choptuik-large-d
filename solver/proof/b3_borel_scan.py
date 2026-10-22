@@ -3,13 +3,15 @@
 For a series sum_{k>=1} c_k eps^k it forms the Borel transform B(zeta) = sum_k c_k zeta^(k-1)/(k-1)! and reports
   - the root-test radius |b_k|^(-1/k) of B at the last orders (the modulus of the nearest Borel singularity),
   - the poles of the diagonal Pade approximant [L/L] of B that have no Pade zero within relative distance --stab
-    (default 1e-6; Froissart doublets), each with its distance to the nearest pole of [L-2/L-2] ('move': isolated
+    (default 1e-30: only numerically exact doublets; the genuine poles of these series have pole-zero distances
+    1e-14 to 1e-7, so a larger threshold removes them), each with its distance to the nearest pole of [L-2/L-2] ('move': isolated
     poles are stable, poles on a branch cut move). Branch points show as the near end of a line of poles.
 Everything is done in mpmath at --dps digits (default 120); the coefficients' ball radii are checked first and orders
 whose relative radius exceeds 10^-(dps/3) are dropped.
 
     python3 b3_borel_scan.py file.json QUANTITY [--x=0.5] [--n=8] [--dps=120] [--K=...]
-      QUANTITY: g0 (G_k(0)), xstar (centre gauge X*), D, S, G, B (at --x), taylorD3, taylorD5, taylorG0, taylorG2
+      QUANTITY: g0 (G_k(0)), xstar (centre gauge X*), D, S, G, B (at --x), taylorD3, taylorD5, taylorG0, taylorG2;
+                for b3_outer_M.py files: g0:mu (harmonic mu of G_k(0)), D1, D3, ..., B0, B2, ... (at --x)
 """
 import json
 import sys
@@ -21,13 +23,15 @@ POS = [a for a in sys.argv[1:] if not a.startswith("--")]
 FN, QTY = POS[0], POS[1]
 mp.mp.dps = int(ARGS.get("dps", 120))
 NSHOW = int(ARGS.get("n", 8))
-STAB = float(ARGS.get("stab", 1e-6))
+STAB = float(ARGS.get("stab", 1e-30))   # only exact (numerically cancelled) doublets: near-doublets are genuine here
 
 
 def load(fn, qty, x=None):
     d = json.load(open(fn))
-    if qty in ("g0", "g1", "xstar"):
-        raw = d[qty]
+    if qty.split(":")[0] in ("g0", "g1", "xstar"):
+        raw = d[qty.split(":")[0]]
+        if isinstance(raw, dict):                  # b3_outer_M.py files: one series per even harmonic, g0:mu
+            raw = raw[qty.split(":")[1] if ":" in qty else "0"]
     elif qty.startswith("taylorD"):
         raw = d["taylorD"][qty[7:]]
     elif qty.startswith("taylorG"):

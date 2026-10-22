@@ -1,4 +1,4 @@
-"""Certified Gevrey-1 bound for the M = 1 outer formal series, centre gauge (proof/B3_borel.md, Lemma B3.7).
+"""Certified Gevrey-1 bound for the M = 1 outer formal series (proof/B3_borel.md, Lemma B3.7).
 
 Norm: for a polynomial p(x) = sum p_j x^j, ||p|| = sum |p_j| rho^j, so |p(x)| <= ||p|| on |x| <= rho; ||pq|| <= ||p|| ||q||,
 ||x p|| = rho ||p||, ||x p'|| <= deg(p) ||p||. Applied to the recursion of b3_outer_m1.py (centre gauge G_k(0) = 0),
@@ -19,7 +19,10 @@ Trusted code: this file (Phi and the check) and python-flint's arb.
 Independent check (can fail): the actual ||D_k||, ||S_k|| for k <= KCHK from b3_outer_m1.run() must obey the bounds.
 Mutation: --mutate=m0 uses one tenth of the true ||D_0|| in Phi (a wrong majorant); the comparison must then fail.
 
-    python3 b3_gevrey_certificate.py [--rho=0.75] [--A=2.72] [--w=1.0] [--margin=0.97] [--kchk=40] [--mutate=m0]
+    python3 b3_gevrey_certificate.py [--gauge=centre|lc] [--rho=0.75] [--A=2.72] [--w=1.0] [--margin=0.97] [--kchk=40]
+                                     [--mutate=m0]
+In the light-cone gauge (--gauge=lc, rho >= 1) the constant of G_k is -g(1) with |g(1)| <= ||g||, so the G row of Phi
+becomes (1 + t) mu~ instead of (1 + t) mu~ / 2; nothing else changes (B3_borel.md, Lemma B3.7).
 """
 import math
 import sys
@@ -34,6 +37,10 @@ WF = ARGS.get("w", "1.0")
 MARGIN = float(ARGS.get("margin", "0.97"))
 KCHK = int(ARGS.get("kchk", "40"))
 MUT = ARGS.get("mutate", "")
+GAUGE = ARGS.get("gauge", "centre")      # lc: G_k(1) = 0, needs rho >= 1 (then |G_k(1)| <= ||g||, so ||G_k|| <= 2 ||g||)
+GF = 1.0 if GAUGE == "lc" else 0.5      # G row: (1 + t) mu~ (lc) or (1 + t) mu~ / 2 (centre)
+if GAUGE == "lc" and float(ARGS.get("rho", "0.75")) < 1:
+    sys.exit("--gauge=lc needs rho >= 1")
 
 
 def Phi(t, V, rho, m0, om):
@@ -44,7 +51,7 @@ def Phi(t, V, rho, m0, om):
             + (g + t * be + t * g * be) * s + t * (1 + g) * (1 + t * be) * s,       #     [(1 - eps) c b]_l S_j
             t * (1 + t * be) * q + 2 * t * be + t * be * be + t * be + t * t * be * be,   # B_{k+1}
             (1 + g) * be,                                                           # [c (b-1)]_{k+1}
-            (1 + t) * mu / 2,                                                       # G_k
+            (1 + t) * mu * GF,                                                      # G_k
             (1 + g) * (1 + t * be),                                                 # [c b]_k
             s * s + m * m]                                                          # [S Sbar + D Dbar]_k
 
@@ -89,7 +96,7 @@ def main():
     W = Phi(t1, V, rho, m0, om)
     names = ["m (D)", "s (S)", "b~ (B_k+1)", "mu~", "g (G)", "kappa", "q"]
     ok = True
-    print(f"rho = {RHO}, A = {A}, w/w_inf = {WF}{'  [MUTATED: m0/10]' if MUT else ''}")
+    print(f"gauge = {GAUGE}, rho = {RHO}, A = {A}, w/w_inf = {WF}{'  [MUTATED: m0/10]' if MUT else ''}")
     print(f"largest t with a finite fixed point (float bisection): {tmax:.6f};  certified t1 = {float(t1.mid()):.6f}")
     for nm, v, w in zip(names, V, W):
         good = w.upper() <= v.lower()
@@ -107,7 +114,7 @@ def main():
     print(f"Borel transform analytic on |zeta| < {float(t1.lower()):.5f} for |x| <= {RHO}; |2 Phi(x)| < t1 on "
           f"[{lo_x:.5f}, {hi_x:.5f}] (around 1/sqrt 2)")
     # independent check against the actual coefficients
-    sys.argv = [sys.argv[0], str(KCHK), "--gauge=centre", "--prec=256", f"--A={A}", f"--w={WF}"]
+    sys.argv = [sys.argv[0], str(KCHK), f"--gauge={GAUGE}", "--prec=256", f"--A={A}", f"--w={WF}"]
     import importlib.util, os
     spec = importlib.util.spec_from_file_location("b3m1", os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                                                         "b3_outer_m1.py"))
