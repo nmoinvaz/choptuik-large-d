@@ -205,6 +205,14 @@ about e⁵⁰), which is why the Lohner wrapping is essential. At M = 5 the syst
 38-dimensional, and the certificate must use the Schur-corrected conditions (leakage up to 10¹⁷), i.e. multiprecision
 Lohner.
 
+*Toward M = 3 and 5* ([proof/A_M.md](proof/A_M.md), [proof/A_lemmas_M.md](proof/A_lemmas_M.md)). The point certificate
+is **certified** at M = 3: the four real D-jump conditions at ξ₁ = 0.3 have exactly one zero, with a non-singular
+Jacobian, in a box of outer half-width 10⁻¹⁰ about A = 2.7264758856, ω/ω∞ = 1.0156030949. The parts of Theorem A that
+turn a point certificate into the theorem have been generalized to M harmonics: the start-value fixed point with
+parameter derivatives, lemma S, and lemmas 6a, 6b₀ and 6b₁. At M = 3 all of them are certified on boxes that contain the
+point certificate's box, except the backward step of 6a, which needs that certificate's state box at ξ₁ = 0.3 (running).
+At M = 5 the point certificate and 6b₁ remain to be run. None of this code has had an independent review.
+
 Staged targets: **A(M=5)**, a certified simple zero of the five-harmonic multiplier (lemmas A.1, A.2, A.4 only; a
 standard computer-assisted proof); then **A(∞)**, the untruncated zero, adding A.3, or by the entire-function route below.
 

@@ -1,0 +1,15 @@
+   largest passing outer half-width with the run's inner widths: 9.697737297875248e-12
+Krawczyk M = 3: K(X) in int X: True; relative margins +0.916, +0.964, +0.100, +0.057
+   start values: fixed_point_M.start_data_M (rigorous given that lemma; /home/claude/dss-residual-kernel/.claude/worktrees/agent-a2fc719f20ab19cbf/solver/proof/fixed_point_M.py, sha256 589e5a810bc50289), arg 5pi/16, diag splitting
+   g(p^) radius 1.7e-16; max radius of Y Dgt(X) 2.6e+00
+   box of the run: h = 1e-9, w = ['1e-16']; tested on: half-widths 9.7e-12, 9.7e-12, 1e-16, 1e-16
+   A        in [2.72647588563033, 2.72647588563143]  (radius 5.44e-13)
+   w/w_inf  in [1.01560309485744, 1.01560309485803]  (radius 2.92e-13)
+   B3       in [0.144419478469928, 0.144419478470226]  (radius 1.49e-13)
+   C3       in [0.0110874258881081, 0.0110874258881253]  (radius 8.53e-15)
+   smallest passing box: theta = 0.6561 (half-widths 6.363e-12 outer); relative margins +0.902, +0.961, +0.079, +0.014
+   the zero (endpoints rounded outward):
+   A        in [2.72647588563052, 2.72647588563124]  (radius 3.57e-13)
+   w/w_inf  in [1.01560309485754, 1.01560309485793]  (radius 1.91e-13)
+   B3       in [0.144419478469979, 0.144419478470175]  (radius 9.76e-14)
+   C3       in [0.0110874258881111, 0.0110874258881224]  (radius 5.60e-15)

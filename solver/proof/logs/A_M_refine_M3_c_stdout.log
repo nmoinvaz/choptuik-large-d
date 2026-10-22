@@ -1,0 +1,3 @@
+refine M = 3 it 0: |g| = 8.364e-11; H step 8.25e-18; full step (outer) 2.66e-13, (inner) 2.47e-14 -> H step; 193 steps, 722 s
+refine M = 3 it 1: |g| = 6.641e-14; H step 6.34e-30; full step (outer) 2.66e-13, (inner) 2.47e-14 -> full step; 193 steps, 750 s
+refine M = 3 it 2: |g| = 4.500e-21; H step 4.39e-28; full step (outer) 1.54e-25, (inner) 3.60e-26 -> H step; 193 steps, 676 s

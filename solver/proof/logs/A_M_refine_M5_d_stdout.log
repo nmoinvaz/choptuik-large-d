@@ -1,0 +1,1 @@
+refine M = 5 it 0: |g| = 6.900e-31; H step 7.85e-43; full step (outer) 1.61e-41, (inner) 5.42e-42 -> full step; 307 steps, 668 s

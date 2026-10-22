@@ -1,0 +1,8 @@
+M = 3, refinement iteration 2 (H step), p = ['2.7264758856308800372834222800288896458263657683534', '1.0156030948577332959818935898539950643117923696826', '0.14441947847007689382003847205077797415032111540691', '0.011087425888116708624533379100416029714760431109963']
+   |g| = 4.500e-21; full Newton step: outer 1.54e-25, inner 3.60e-26
+   |Dg_oo| (raw outer block) max 3.72e+05; Schur complement S singular values [0.443 0.238]
+   Dg_HH singular values [10489372.114 10394876.022]; |Dg_oH| max 1.76e+06
+   leakage L = Dg_oH Dg_HH^-1, max |entry| 1.74e-01; tilt C =
+[[ 0.142 -0.245]
+ [ 0.004 -0.021]]
+   condition of Dg 4.73e+07; of the tilted, block-triangular Dg T: 4.59e+07
