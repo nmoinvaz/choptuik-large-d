@@ -80,7 +80,7 @@ def lam_fits():
         sel = [d for d in Ds if d >= Dmin]
         ts = [1 / (mp.mpf(d) - 2) for d in sel]
         ys = [mp.mpf(good[d]["lam"]) for d in sel]
-        for deg in (4, 5, 6, 7, 8):
+        for deg in (4, 5, 6, 7, 8, 9, 10):
             if len(sel) < deg + 5:
                 continue
             c, res = polyfit(ts, ys, deg, fix0=mp.mpf(2))
@@ -92,5 +92,6 @@ def lam_fits():
 
 
 if __name__ == "__main__":
-    delta_fits()
+    if "lam" not in sys.argv[1:]:
+        delta_fits()
     lam_fits()

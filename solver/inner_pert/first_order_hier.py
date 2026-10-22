@@ -138,72 +138,101 @@ def find_zero(x, M, xi1, maxit=8, tol=3e-15):
     return x, r, K, L
 
 
-def omega1(x, M, xi1, K, L):
+
+
+def refine(run, C, L, nit=5, label=""):
+    """Iterative deflation. run(C) -> list of residual vectors (one per deflated direction) for inner coefficients
+    C (list of arrays over the inner directions); C <- C - K_HH^-1 r_H until |r_H| stops falling by 10x.
+    Returns (rows, C, history of max |r_H|) of the best iterate."""
+    hist, best = [], None
+    C = [c.copy() for c in C]
+    for it in range(nit):
+        rows = run(C)
+        rH = max(np.linalg.norm(r[2:]) for r in rows) if len(rows[0]) > 2 else 0.0
+        hist.append(rH)
+        if best is None or rH < best[0]:
+            best = (rH, rows, [c.copy() for c in C])
+        if len(rows[0]) <= 2 or (it > 0 and rH > 0.1 * hist[-2]) or it == nit - 1:
+            break
+        C = [c + L.deflate(r[2:]) for c, r in zip(C, rows)]
+    if label:
+        log(f"   {label}: max |r_H| of the deflated directions by iteration {['%.1e' % v for v in hist]}")
+    return best[1], best[2], hist
+
+
+def omega1(x, M, xi1, K, L, gauge_scale=1.0):
+    """gauge_scale = 1: c1(0) = -g1 (the light-cone gauge c(x = 1) = 1); 0: c1(0) = 0. In the full problem a change of
+    c(xi = 0) by a function of theta is a time reparametrization, which maps jump-free solutions to jump-free ones, so
+    omega1 does not depend on it; in the M-model the dependence measures the truncation's breaking of that symmetry."""
     n = R.npar(M)
     g1 = F2h(Fh_from(x, M), M)
-    gauge = {k: -v for k, v in g1.items()}
+    gauge = {k: -gauge_scale * v for k, v in g1.items()}
     # pass 1: the 1/n direction's r_H
     _, _, Jn = jacobian(x, M, xi1, extra=(Dir("n", q1=True), ({}, gauge)))
-    cn = np.zeros(n); cn[2:] = L.deflate(Jn[2:])
-    cA = np.zeros(n); cA[0] = 1; cA[2:] = L.deflate(K[2:, 0])
-    cw = np.zeros(n); cw[1] = 1; cw[2:] = L.deflate(K[2:, 1])
-    # pass 2: deflated A, omega and n' = n + inner directions cn
-    dirs, masks, data = param_dirs(M, [cA, cw])
-    prof = {}
-    for p in range(2, n):
-        for k, v in dFh(p, M).items():
-            prof[k] = prof.get(k, 0) + cn[p] * v
-    dirs.append(Dir("n", q1=True))
-    masks.append(1 << 2)
-    data[1 << 2] = (prof, gauge)
-    Rr, _ = run_model(x, M, xi1, dirs, masks, data)
-    Sch = np.column_stack([L.corr(Rr[1]), L.corr(Rr[2])])
-    Jc = L.corr(Rr[3])
+    nin = n - 2
+
+    def run(C):
+        cA = np.zeros(n); cA[0] = 1; cA[2:] = C[0]
+        cw = np.zeros(n); cw[1] = 1; cw[2:] = C[1]
+        dirs, masks, data = param_dirs(M, [cA, cw])
+        prof = {}
+        for p in range(2, n):
+            for k, v in dFh(p, M).items():
+                prof[k] = prof.get(k, 0) + C[2][p - 2] * v
+        dirs.append(Dir("n", q1=True))
+        masks.append(1 << 2)
+        data[1 << 2] = (prof, gauge)
+        Rr, _ = run_model(x, M, xi1, dirs, masks, data)
+        return [Rr[1], Rr[2], Rr[3]]
+    C0 = [L.deflate(K[2:, 0]), L.deflate(K[2:, 1]), L.deflate(Jn[2:])] if nin else [np.zeros(0)] * 3
+    rows, C, hist = refine(run, C0, L, label="omega1 deflation")
+    Sch = np.column_stack([L.corr(rows[0]), L.corr(rows[1])])
+    Jc = L.corr(rows[2])
     st = -np.linalg.solve(Sch, Jc)
+    cA = np.zeros(n); cA[0] = 1; cA[2:] = C[0]
+    cw = np.zeros(n); cw[1] = 1; cw[2:] = C[1]
+    cn = np.zeros(n); cn[2:] = C[2]
     dx = cn + st[0] * cA + st[1] * cw
-    info = dict(Jn_pass1=Jn.tolist(), Jn_pass2=Rr[3].tolist(), JnH_pass2=float(np.linalg.norm(Rr[3][2:])),
-                JnH_pass1=float(np.linalg.norm(Jn[2:])), Sch_omega=Sch.tolist())
+    info = dict(Jn_pass1=Jn.tolist(), Jn_final=rows[2].tolist(), JnH_final=float(np.linalg.norm(rows[2][2:])),
+                JnH_pass1=float(np.linalg.norm(Jn[2:])), deflation_hist=hist, Sch_omega=Sch.tolist(),
+                Jn_corr=Jc.tolist())
     return dx, info
 
 
 # ---------------- perturbations
-def pert_pass1(x, M, xi1, lam):
-    S, dS, r0 = R.pert_matrix(x, M, xi1, lam)
-    return S
-
-
-def sch_lam(x, M, xi1, lam):
-    """Sch(lam) (2 x 2) from deflated harmonic-1 profiles; returns Sch, C (2N x 2: full profile vectors), L"""
-    S = pert_pass1(x, M, xi1, lam)
+def sch_lam(x, M, xi1, lam, S=None):
+    """Sch(lam) (2 x 2) from deflated harmonic-1 profiles; returns Sch, C (2N x 2: full profile vectors), L, |r_H|"""
+    if S is None:
+        S, _, _ = R.pert_matrix(x, M, xi1, lam)
     L = Lin(S)
     nb = S.shape[0]
     C = np.zeros((nb, 2))
     C[0, 0] = C[1, 1] = 1
-    if nb > 2:
-        C[2:, 0] = L.deflate(S[2:, 0])
-        C[2:, 1] = L.deflate(S[2:, 1])
-        basis = R.pert_basis(M)
+    if nb == 2:
+        return S.copy(), C, L, 0.0
+    basis = R.pert_basis(M)
+
+    def run(Cin):
         dirs = [Dir(f"pert{i}", lam=lam) for i in range(2)]
-        masks = [0, 1, 2]
         data = {}
         for i in range(2):
+            v = np.concatenate([C[:2, i], Cin[i]])
             prof = {}
-            for b, c in zip(basis, C[:, i]):
-                for k, v in b.items():
-                    prof[k] = prof.get(k, 0) + c * v
+            for b, c in zip(basis, v):
+                for k, w in b.items():
+                    prof[k] = prof.get(k, 0) + c * w
             data[1 << i] = (prof, {})
-        Rr, _ = run_model(x, M, xi1, dirs, masks, data)
-        Sch = np.column_stack([L.corr(Rr[1]), L.corr(Rr[2])])
-        resH = max(np.linalg.norm(Rr[1][2:]), np.linalg.norm(Rr[2][2:]))
-    else:
-        Sch = S.copy()
-        resH = 0.0
-    return Sch, C, L, resH
+        Rr, _ = run_model(x, M, xi1, dirs, [0, 1, 2], data)
+        return [Rr[1], Rr[2]]
+    rows, Cin, hist = refine(run, [L.deflate(S[2:, 0]), L.deflate(S[2:, 1])], L)
+    C[2:, 0], C[2:, 1] = Cin[0], Cin[1]
+    Sch = np.column_stack([L.corr(rows[0]), L.corr(rows[1])])
+    return Sch, C, L, hist[-1] if hist else 0.0
 
 
-def find_lam(x, M, xi1, lam, maxit=10, h=1e-4):
+def find_lam(x, M, xi1, lam, maxit=8, h=1e-4):
     g = lambda Sch, l: np.linalg.det(Sch) / (l * (l - 1))
-    hist = []
+    best = None
     for it in range(maxit):
         Sch, C, L, resH = sch_lam(x, M, xi1, lam)
         Schp, _, _, _ = sch_lam(x, M, xi1, lam + h)
@@ -212,96 +241,19 @@ def find_lam(x, M, xi1, lam, maxit=10, h=1e-4):
         step = float(np.clip(step, -0.15, 0.15))
         log(f"lam it {it}: lam {lam:.12f}  g {g0:+.6e}  Sch sv {np.linalg.svd(Sch, compute_uv=False)}  "
             f"r_H of the deflated directions {resH:.1e}  step {step:+.2e}")
-        hist.append((lam, g0))
+        if best is not None and abs(step) > 0.5 * abs(best):
+            if abs(step) < 1e-5:
+                break                              # noise floor
+        best = step if best is None else min(abs(best), abs(step))
         lam = lam + step
         if abs(step) < 1e-11:
             break
     return lam
 
 
-def main():
-    argv = sys.argv[1:]
-    opts = {a.split("=")[0]: (a.split("=", 1)[1] if "=" in a else True) for a in argv if a.startswith("--")}
-    args = [a for a in argv if not a.startswith("--")]
-    M = int(args[0])
-    xi1 = float(opts.get("--xi1", 0.2))
-    R.RTOL = float(opts.get("--rtol", 1e-12))
-    x0 = {1: [2.5421480476347464, 0.7769940135984376],
-          3: [2.7264758856227167, 1.015603094848114, 0.14441947847126993, 0.011087425888277868],
-          5: [2.718579189, 0.999228404, 0.149203575, 0.014719052, 0.008405347, 0.001470345]}[M] \
-        if "--x" not in opts else [float(t) for t in opts["--x"].split(",")]
-    tag = f"M{M}_xi{xi1:g}" + (f"_rtol{R.RTOL:g}" if R.RTOL != 1e-12 else "")
-    fn = opts.get("--out", os.path.join(HERE, "data", f"first_order_hier_{tag}.json"))
-    out = json.load(open(fn)) if os.path.exists(fn) else dict(M=M, xi1=xi1, rtol=R.RTOL)
-    save = lambda: json.dump(out, open(fn, "w"), indent=1)
-    if "--redo" in opts:
-        keys = {"zero": ["x"], "omega1": ["dx"], "lam": ["lam"], "lam1": ["lam1"]}
-        for key in opts["--redo"].split(","):
-            for k2 in keys[key]:
-                out.pop(k2, None)
-    log(f"M {M} xi1 {xi1} rtol {R.RTOL}; have {sorted(k for k in out if k in ('x', 'dx', 'lam', 'lam1'))}")
-    if "x" not in out:
-        x, r, K, L = find_zero(np.array(x0, float), M, xi1)
-        out.update(x=x.tolist(), r=r.tolist(), r1_corr=L.corr(r).tolist(), K=K.tolist(), wf=x[1], omega=W0 * x[1])
-        save()
-    x = np.array(out["x"]); K = np.array(out["K"]); L = Lin(K)
-    log(f"ZERO: x {x.tolist()}  r_1 {out['r'][:2]} (Schur-corrected {out['r1_corr']})  |r_H| {np.linalg.norm(out['r'][2:]):.1e}")
-    if "dx" not in out:
-        dx, info = omega1(x, M, xi1, K, L)
-        out.update(dx=dx.tolist(), omega1=W0 * dx[1], omega1_rel=dx[1] / x[1], **info)
-        save()
-    dx = np.array(out["dx"])
-    log(f"OMEGA1: dx {dx.tolist()}  (r_H of the 1/n direction: pass 1 {out['JnH_pass1']:.1e}, deflated {out['JnH_pass2']:.1e})")
-    log(f"   omega = {W0 * x[1]:.9f} + ({W0 * dx[1]:.6f})/n,  omega1/omega* = {dx[1] / x[1]:.6f};  "
-        f"Delta1 = {-2 * np.pi * W0 * dx[1] / (W0 * x[1]) ** 2:.6f}")
-    if "--omega-only" in opts:
-        return
-    if "lam" not in out:
-        lam = find_lam(x, M, xi1, float(opts.get("--lam", 2.0)))
-        out.update(lam=lam)
-        save()
-    lam = out["lam"]
-    if "lam1" not in out:
-        h = 1e-4
-        Sch, C, Lp, _ = sch_lam(x, M, xi1, lam)
-        U, sv, Vt = np.linalg.svd(Sch)
-        e, ll = Vt[-1], U[:, -1]
-        Schp, _, _, _ = sch_lam(x, M, xi1, lam + h)
-        Schm, _, _, _ = sch_lam(x, M, xi1, lam - h)
-        den = ll @ ((Schp - Schm) / (2 * h)) @ e
-        fvec = C @ e
-        nrm = fvec[0]
-        fvec, e = fvec / nrm, e / nrm
-        den = den / nrm
-        f = R.profile_of(fvec, M)
-        log(f"LAMBDA*: {lam:.12f}  Sch sv {sv}  eigenprofile {fvec.tolist()}  ell_l.Sch'.e* {den:.6e}")
-        # mixed run, pass 1 (with the inner perturbation profiles to deflate e|n)
-        Jen, Jel, Je, Jn2, r0 = R.lam1_step(x, M, xi1, lam, f, dx)
-        cen = Lp.deflate(Jen[2:]) if len(Jen) > 2 else np.zeros(0)
-        if len(Jen) > 2:
-            # pass 2: e|n with the inner perturbation profiles added to its data
-            basis = R.pert_basis(M)
-            wprof = {}
-            for b, c in zip(basis[2:], cen):
-                for k, v in b.items():
-                    wprof[k] = wprof.get(k, 0) + c * v
-            Jen2 = lam1_step_w(x, M, xi1, lam, f, dx, wprof)
-        else:
-            Jen2 = Jen
-        num = ll @ Lp.corr(Jen2)
-        lam1 = -num / den
-        out.update(lam1=lam1, lam_den=den, lam_num=num, fvec=fvec.tolist(), Jen_pass1=Jen.tolist(),
-                   Jen_pass2=Jen2.tolist(), Je=Je.tolist(), Jn_sel=Jn2.tolist(), ell_l=ll.tolist(), Sch_lam=Sch.tolist(),
-                   lam1_oneshot_like=float(-(ll @ Lp.corr(Jen)) / den))
-        save()
-    log(f"   e|n: |r_H| pass 1 {np.linalg.norm(out['Jen_pass1'][2:]):.2e}, deflated {np.linalg.norm(out['Jen_pass2'][2:]):.2e}; "
-        f"|J_n| (r_1) after the selection {np.linalg.norm(out['Jn_sel'][:2]):.2e}")
-    log(f"LAMBDA1: lam = {lam:.9f} + ({out['lam1']:.6f})/n   (pass-1 value {out['lam1_oneshot_like']:.6f})")
-    log(f"wrote {fn}")
-
-
 def lam1_step_w(x, M, xi1, lam, f, dx, wprof):
-    """R.lam1_step with an extra profile wprof in the e|n component; returns J_en"""
+    """the hyper-dual run (perturbation e at lam with profile f, 1/n direction n with the selected dx, mixed e|n with
+    inner profile wprof and gauge -h1); returns J_en, J_e, J_n rows"""
     Fh = Fh_from(x, M)
     g1 = F2h(Fh, M)
     h1 = {}
@@ -321,7 +273,99 @@ def lam1_step_w(x, M, xi1, lam, f, dx, wprof):
     data = {e: (f, {}), n: (K1, {k: -v for k, v in g1.items()}), e | n: (wprof, {k: -v for k, v in h1.items()})}
     jm = JetModel(M, W0 * x[1], Fh, dirs, masks, data)
     Rr, info = R.residuals(jm, x, M, xi1)
-    return Rr[jm.idx[e | n]]
+    return Rr[jm.idx[e | n]], Rr[jm.idx[e]], Rr[jm.idx[n]]
+
+
+def lam1(x, M, xi1, lam, dx, h=1e-3):
+    Sch, C, Lp, resH = sch_lam(x, M, xi1, lam)
+    U, sv, Vt = np.linalg.svd(Sch)
+    e, ll = Vt[-1], U[:, -1]
+    Schp, _, _, _ = sch_lam(x, M, xi1, lam + h)
+    Schm, _, _, _ = sch_lam(x, M, xi1, lam - h)
+    fvec = C @ e
+    nrm = fvec[0]
+    fvec, e = fvec / nrm, e / nrm
+    den = ll @ ((Schp - Schm) / (2 * h)) @ e
+    f = R.profile_of(fvec, M)
+    log(f"LAMBDA*: {lam:.12f}  Sch sv {sv}  eigenprofile {fvec.tolist()}  ell_l.Sch'.e* {den:.6e} (h = {h:g})")
+    basis = R.pert_basis(M)
+    nb = len(basis)
+
+    def run(Cin):
+        wprof = {}
+        for b, c in zip(basis[2:], Cin[0]):
+            for k, v in b.items():
+                wprof[k] = wprof.get(k, 0) + c * v
+        Jen, Je, Jn = lam1_step_w(x, M, xi1, lam, f, dx, wprof)
+        run.last = (Je, Jn)
+        return [Jen]
+    rows, Cin, hist = refine(run, [np.zeros(nb - 2)], Lp, nit=6, label="e|n deflation")
+    Je, Jn = run.last
+    num = ll @ Lp.corr(rows[0])
+    return dict(lam1=-num / den, lam_den=den, lam_num=num, fvec=fvec.tolist(), ell_l=ll.tolist(), Sch_lam=Sch.tolist(),
+                Jen_final=rows[0].tolist(), en_deflation_hist=hist, Je=Je.tolist(), Jn_sel=Jn.tolist(),
+                ellJe=float(ll @ Lp.corr(Je)), h=h)
+
+
+def main():
+    argv = sys.argv[1:]
+    opts = {a.split("=")[0]: (a.split("=", 1)[1] if "=" in a else True) for a in argv if a.startswith("--")}
+    args = [a for a in argv if not a.startswith("--")]
+    M = int(args[0])
+    xi1 = float(opts.get("--xi1", 0.2))
+    R.RTOL = float(opts.get("--rtol", 1e-12))
+    x0 = {1: [2.5421480476347464, 0.7769940135984376],
+          3: [2.7264758856227167, 1.015603094848114, 0.14441947847126993, 0.011087425888277868],
+          5: [2.718579189, 0.999228404, 0.149203575, 0.014719052, 0.008405347, 0.001470345]}[M] \
+        if "--x" not in opts else [float(t) for t in opts["--x"].split(",")]
+    tag = f"M{M}_xi{xi1:g}" + (f"_rtol{R.RTOL:g}" if R.RTOL != 1e-12 else "")
+    fn = opts.get("--out", os.path.join(HERE, "data", f"first_order_hier_{tag}.json"))
+    out = json.load(open(fn)) if os.path.exists(fn) else dict(M=M, xi1=xi1, rtol=R.RTOL)
+
+    def save():
+        json.dump(out, open(fn, "w"), indent=1)
+    if "--redo" in opts:
+        keys = {"zero": ["x"], "omega1": ["dx"], "lam": ["lam"], "lam1": ["lam1"], "gauge": ["omega1_gauge0"]}
+        for key in opts["--redo"].split(","):
+            for k2 in keys[key]:
+                out.pop(k2, None)
+    log(f"M {M} xi1 {xi1} rtol {R.RTOL}; have {sorted(k for k in out if k in ('x', 'dx', 'lam', 'lam1', 'omega1_gauge0'))}")
+    if "x" not in out:
+        x, r, K, L = find_zero(np.array(x0, float), M, xi1)
+        out.update(x=x.tolist(), r=r.tolist(), r1_corr=L.corr(r).tolist(), K=K.tolist(), wf=x[1], omega=W0 * x[1])
+        save()
+    x = np.array(out["x"]); K = np.array(out["K"]); L = Lin(K)
+    log(f"ZERO: x {x.tolist()}  r_1 {out['r'][:2]} (Schur-corrected {out['r1_corr']})  |r_H| {np.linalg.norm(out['r'][2:]):.1e}")
+    if "dx" not in out:
+        dx, info = omega1(x, M, xi1, K, L)
+        out.update(dx=dx.tolist(), omega1=W0 * dx[1], omega1_rel=dx[1] / x[1], **info)
+        save()
+    dx = np.array(out["dx"])
+    log(f"OMEGA1: dx {dx.tolist()}  (r_H of the 1/n direction: pass 1 {out['JnH_pass1']:.1e}, deflated "
+        f"{out.get('JnH_final', out.get('JnH_pass2', 0)):.1e})")
+    log(f"   omega = {W0 * x[1]:.9f} + ({W0 * dx[1]:.6f})/n,  omega1/omega* = {dx[1] / x[1]:.6f};  "
+        f"Delta1 = {-2 * np.pi * W0 * dx[1] / (W0 * x[1]) ** 2:.6f}")
+    if "omega1_gauge0" not in out and "--no-gauge" not in opts:
+        dx0, info0 = omega1(x, M, xi1, K, L, gauge_scale=0.0)
+        out.update(omega1_gauge0=W0 * dx0[1], dx_gauge0=dx0.tolist())
+        save()
+    if "omega1_gauge0" in out:
+        log(f"GAUGE: omega1 with c1(0) = -g1: {out['omega1']:.6f};  with c1(0) = 0: {out['omega1_gauge0']:.6f}  "
+            f"(difference {out['omega1'] - out['omega1_gauge0']:+.2e}; zero in the full problem)")
+    if "--omega-only" in opts:
+        return
+    if "lam" not in out:
+        lam = find_lam(x, M, xi1, float(opts.get("--lam", 2.0)))
+        out.update(lam=lam)
+        save()
+    lam = out["lam"]
+    if "lam1" not in out:
+        out.update(lam1(x, M, xi1, lam, dx, h=float(opts.get("--h", 1e-3))))
+        save()
+    log(f"   e|n deflation |r_H| by iteration {out.get('en_deflation_hist')}; ell.J_e {out.get('ellJe', 0):.2e} "
+        f"(eigenmode, against ell.Sch'.e* {out['lam_den']:.3e})")
+    log(f"LAMBDA1: lam = {lam:.9f} + ({out['lam1']:.6f})/n")
+    log(f"wrote {fn}")
 
 
 if __name__ == "__main__":
