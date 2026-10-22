@@ -2060,3 +2060,10 @@ gamma for D = 10 is running (60-point scan of [1.5, 3.2], probably about an hour
 it lands. Nothing else started for T31. sol_l1kc23hi_D10.0000.npy is saved locally if you want a kc 31 re-solve or
 continuation from it (ell_march --kc_seed 23); say so and I will push it or run it.
 T32 (960 bits at wf 0.99 and 1.01) is running, expect about 07:00.
+
+== 2026-10-22 03:24 PDT local
+T31 gamma at D = 10 (pushed with this entry): det M(lambda) on [1.5, 3.2], 60 grid points (68 evaluations, 1297 s),
+has exactly one real root, lambda = 2.9149659546, gamma = 0.343057, (D - 3) gamma = 2.4014, gauge rate 0.825217.
+lambda runs 3.162529, 3.018537, 2.914966 at D = 8, 9, 10. That is the only gamma: the march stopped at 10.5. The run's
+verbose log was overwritten by a duplicate start from my supervisor (killed before it wrote anything), so there is no
+t31_gamma_D10.log; the record in ell_gamma.jsonl is complete. Nothing is running for T31 now.
