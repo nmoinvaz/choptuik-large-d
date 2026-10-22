@@ -8,15 +8,24 @@ case. The code is in [`solver/proof/`](../solver/proof/): `certify_M1.py` (drive
 rigorous once it is fed rigorous enclosures; its accuracy budget is a dry run) and `pm_dryrun.py` (double precision, not
 rigorous).
 
-**Status in one paragraph.** Three of the four steps are now certified or fully specified: the normalization of the
-multiplier (exactly, in the linear case); the start-value lemma, step (i), now complete: a contraction (constant ≤ 0.292)
-in a weighted space proves that the lateral solution exists and lies within 5×10⁻³² of the truncated formal series at
-the start point, also with its parameter derivatives (§4.4–4.5); and the Krawczyk test of step (iv), implemented and
-validated on mock enclosures, with its accuracy budget (§5.1). One step is missing: validated integration of the
-lateral solution (and its variational equations) from the start point to the real axis, step (ii). The budget sharpens
-what that step must deliver. The jump is exponentially small compared with the lateral solutions themselves, so at the
-matching radius ξ₁ = 0.2 the two values D⁺₊₁(ξ₁) and D⁺₋₁(ξ₁) must be enclosed to about 10⁻⁹ absolute (10⁻¹¹ for a box
-of half-width 10⁻⁵). At ξ₁ = 0.3 the requirement relaxes to 2×10⁻⁵ (2×10⁻⁷), so ξ₁ = 0.3 is the radius to use.
+**Status in one paragraph.** All four steps run, and the certificate passes (§9). An independent review
+([A_review.md](A_review.md), with test scripts in [`solver/proof/review/`](../solver/proof/review/)) reproduced every
+input of the final test by separate methods and found no error in any enclosure, but it narrows what is proved. Proved:
+with y⁺ continued from the start ray arg ξ = 3π/8 along that ray to radius 0.3 and then along the arc of radius 0.3,
+the D-component of the jump at ξ₁ = 0.3, $`J_D = D^+_{+1}(0.3) - \overline{D^+_{-1}(0.3)}`$, has exactly one zero in the box
+(A, ω/ω∞) = (2.5421480475, 0.7769940136) ± 10⁻⁹, and it is simple. Two lemmas are needed to turn that into the
+statement about the selection condition (review §6a and §6b, both judged fixable):
+- **6a: one component at one point is the whole jump.** The template's step 4 (a contraction for the difference
+  y⁺ − y⁻, which is one complex Stokes constant times the fast modes) would show J_D(ξ₁) = 0 ⇔ y⁺ ≡ y⁻. In double
+  precision every component of the jump vanishes at the certified zero, at ξ₁ = 0.25 and 0.3.
+- **6b: the path gives the Borel sum.** y⁺ is defined as a germ at ξ = 0, and the computation continues it along one
+  path. The two agree if y⁺ is analytic in the region the path sweeps. That holds numerically below radius 0.3, but y⁺
+  has a singularity between radii 0.30 and 0.35, so ξ₁ = 0.3 is near the edge; a validated sweep over arc radii, or the
+  lower path through 0.2, would settle it.
+
+With 6b the certificate gives at most one zero of the one-harmonic selection condition in the box; with 6a as well,
+exactly one, at A ∈ [2.54214804760473, 2.54214804762839], ω/ω∞ ∈ [0.776994013601194, 0.776994013618254]
+(ω ≈ 2.969776709). An independent re-implementation in C++ with CAPD is in progress.
 
 Contents
 
@@ -507,12 +516,17 @@ assembly of §5.2 unchanged: `krawczyk.normalization` → `g_from_states` → `k
 X = \hat x + [-10^{-9}, 10^{-9}]^2, \qquad \hat x = (2.5421480475,\ 0.7769940136) .
 ```
 
-K(X) lies in the interior of X, with margins 7.9×10⁻¹⁰ and 9.2×10⁻¹⁰ (out of 10⁻⁹). So the truncated M = 1 selection condition
-J₁ = 0 has exactly one zero in X, and it is simple. The zero lies in K(X):
+K(X) lies in the interior of X, with margins 7.9×10⁻¹⁰ and 9.2×10⁻¹⁰ (out of 10⁻⁹). So $`J_D(0.3)`$, the D-component of
+the jump at ξ₁ = 0.3 with y⁺ continued along the ray-then-arc path, has exactly one zero in X, and it is simple. That it
+is the zero of the whole M = 1 selection condition J₁ ≡ 0 needs two lemmas, 6a and 6b of the review
+([A_review.md](A_review.md); see the status paragraph at the top). The same runs pass the test on the smaller box
+x̂ ± 1.3×10⁻¹⁰ (review §4), which encloses the zero, with endpoints rounded outward, in
 
 ```math
-A = 2.542148047617 \pm 9.1\times10^{-11}, \qquad \omega/\omega_\infty = 0.7769940136097 \pm 6.6\times10^{-11} .
+A \in [2.54214804760473,\ 2.54214804762839], \qquad \omega/\omega_\infty \in [0.776994013601194,\ 0.776994013618254] .
 ```
+
+(An earlier version quoted A = 2.542148047617 ± 9.1×10⁻¹¹, which misses the lower end of K(X) by 4×10⁻¹³; review §4.)
 
 Every input is rigorous:
 
@@ -520,7 +534,9 @@ Every input is rigorous:
 - this integration;
 - κ, from `krawczyk.normalization`.
 
-The certificate rests on the correctness of the code, which no second implementation has checked yet (§9.4).
+The certificate rests on the correctness of the code. The review ([A_review.md](A_review.md)) re-derived every input
+independently (start values to 5×10⁻³⁵, the point run to 10⁻³¹, one Lohner step against a 50-digit solution, K(X) with
+separate code) and found no error; a second implementation, in CAPD, is in progress.
 
 The box is much smaller than the 10⁻³ and 10⁻⁵ boxes §5.1 budgets for. The point values are far inside every budget.
 The obstacle is the derivative enclosures over a box: their excess grows like 10⁶ h (§9.3–9.4).
@@ -659,7 +675,11 @@ should pass on that path. It has not been run.
      - **A path through smaller |y|.** The lower path gains 3–4 times; an arc nearer 0.15 should gain more.
      - **Sub-box covering.** `--sub=k` runs k² boxes of half-width h/k and takes the union. That suits factors of a
        few, not 10⁶.
-2. **An independent check of the code.** The certificate now depends on `validated_int.py` together with
+0. **The two lemmas of the review** (6a: J_D(ξ₁) = 0 implies the whole jump vanishes, by the template's step 4;
+   6b: the ray-then-arc continuation is the Borel sum, by a validated sweep over arc radii and a start domain reaching
+   the real axis). These are what stands between the certificate and the statement about the selection condition.
+2. **An independent check of the code** (done by review, [A_review.md](A_review.md); CAPD re-implementation in
+   progress). The certificate now depends on `validated_int.py` together with
    `fixed_point.py` and `krawczyk.py`. A second implementation or a careful review should come next. CAPD's C¹ Lohner
    on the 18-dimensional real system is the natural one. Points to audit:
    - the remainder terms of steps 3–4 of §9.1;

@@ -179,10 +179,14 @@ state at the centre to about 2×10⁻⁵ for a 10⁻³ box, the derivatives over
 [proof/A_certify.md](proof/A_certify.md)): a Lohner-type validated integrator in ball arithmetic (QR wrapping with
 Lohner's pivoting, the variational columns as their own Lohner sets) carries the start data along the ray to ξ₁ = 0.3 and
 the arc to the real axis (743 steps, state enclosed to 3×10⁻¹⁹, matching double precision to 9×10⁻¹⁶). With it the
-Krawczyk test passes on the box (A, ω/ω∞) = (2.5421480475, 0.7769940136) ± 10⁻⁹: **the truncated one-harmonic selection
-condition has exactly one zero there, and it is simple**, at A = 2.542148047617 ± 9×10⁻¹¹, ω/ω∞ = 0.7769940136097 ± 7×10⁻¹¹.
-This is a computer-assisted proof of the truncated selection zero (not yet independently reviewed; CAPD is the natural
-cross-check). Larger boxes fail because the interval Jacobian's excess grows like 7×10⁵·h (the solution is
+Krawczyk test passes on the box (A, ω/ω∞) = (2.5421480475, 0.7769940136) ± 10⁻⁹. An independent review
+([proof/A_review.md](proof/A_review.md)) reproduced every input and found no error, and stated precisely what is
+proved: **one component of the jump, J_D at ξ₁ = 0.3 with y⁺ continued along the ray-then-arc path, has exactly one
+zero in the box, and it is simple**, at A ∈ [2.54214804760, 2.54214804763], ω/ω∞ ∈ [0.7769940136011, 0.7769940136183].
+Two lemmas turn this into "the one-harmonic selection condition has exactly one simple zero there": (6a) that J_D(ξ₁) = 0
+forces the whole jump to vanish (the template's step 4, a contraction for y⁺ − y⁻), and (6b) that the continuation
+along the path is the Borel sum (y⁺ has a singularity between radii 0.30 and 0.35, just outside the swept region).
+Both hold in double precision and both are judged fixable. A CAPD re-implementation is in progress. Larger boxes fail because the interval Jacobian's excess grows like 7×10⁵·h (the solution is
 large where the ray meets the arc), so 10⁻³ boxes need a C² Lohner step; a lower path (ray to 0.2, then the real axis)
 should allow 10⁻⁸. The integration is stiff (fast modes shrink by e⁻³¹, so naive interval Taylor would overestimate by
 about e⁵⁰), which is why the Lohner wrapping is essential. At M = 5 the system is

@@ -577,9 +577,11 @@ has not been written out.
 \emph{Computations with gravity.} Two independent implementations (lateral solutions on either side of the Stokes
 line, and Borel--Darboux fits in ball arithmetic) reproduce the linear constant to $10^{-11}$ and $6\times10^{-27}$. With
 $F = A\sin\theta$ alone, both find an isolated zero of the multiplier at $A = 2.542148$, $\omega = 2.969777$ (a computer-assisted
-proof in ball arithmetic, with a validated Lohner integrator and Krawczyk's test, certifies that this one-harmonic
-condition has exactly one zero, a simple one, within $10^{-9}$ of $(A, \omega/\omega_\infty) = (2.5421480475, 0.7769940136)$;
-repository, proof/A\_certify.md); it is not the
+proof in ball arithmetic, with a validated Lohner integrator and Krawczyk's test, certifies that one component of
+the jump at one radius has exactly one zero, a simple one, within $10^{-9}$ of
+$(A, \omega/\omega_\infty) = (2.5421480475, 0.7769940136)$; two lemmas, that this component vanishing forces the whole jump
+to vanish and that the integration path gives the Borel sum, would make it the full one-harmonic condition;
+repository, proof/A\_certify.md and A\_review.md); it is not the
 physical solution ($\omega$ 22\% low) and does not survive adding harmonic 3. Truncating harmonics is not a controlled
 approximation here: the linear multipliers grow like $F_\nu e^{\pi|\nu|\omega/2}$.
 

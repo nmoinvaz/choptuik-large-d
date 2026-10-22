@@ -33,8 +33,8 @@ This project asks three questions:
 
 In brief: one rational formula in 1/(D − 2) fits all D ≥ 4; Δ tends to a finite limit, Δ∞ = 1.64389375, and γ to 1/2;
 a selection rule derived at D = ∞ reproduces Δ∞ to about 10⁻⁴ without using the finite-D solutions, and an exact symmetry
-explains γ∞ = 1/2. A proof of the selection rule is in progress ([PROOF.md](PROOF.md)), and a computer-assisted
-certificate already covers a model case.
+explains γ∞ = 1/2. A proof of the selection rule is in progress ([PROOF.md](PROOF.md)); in a one-harmonic model case, a
+computer-assisted computation certifies the selected zero up to two remaining lemmas.
 
 How: Choptuik's solution is computed as a periodic boundary-value problem in self-similar variables. An f64 solver in
 [`solver/`](solver/), with a Rust kernel for its residual (this crate), covers D = 3.6–40, and a separate double-double
@@ -1124,9 +1124,12 @@ Galerkin truncation (σ₆ from a five-harmonic projection is −1371 against �
 stated for the jump-conditioned truncation (`hier.py --schur`). The tail it must bound looks provable: about 4–6 in r₁
 above M = 5 and 0.2–0.35 above M = 7, against about 4 needed for a 10⁻³ box. A computer-assisted certificate of the inner
 zero has a concrete route ([proof/A_certify.md](proof/A_certify.md), [proof/D_entire.md](proof/D_entire.md)), and for the
-one-harmonic model it is done: a computer-assisted proof (ball arithmetic, a validated Lohner integrator, Krawczyk's test)
-shows the one-harmonic selection condition has exactly one zero, a simple one, in the box (2.5421480475, 0.7769940136) ±
-10⁻⁹ in (A, ω/ω∞). The first coefficient σ₁ of the untruncated condition is also enclosed rigorously (±3.5×10⁻⁵).
+one-harmonic model it is nearly done: a computer-assisted proof (ball arithmetic, a validated Lohner integrator,
+Krawczyk's test), checked by an independent review ([proof/A_review.md](proof/A_review.md)), shows that one component
+of the selection condition's jump, at one radius, has exactly one zero, a simple one, in the box
+(2.5421480475, 0.7769940136) ± 10⁻⁹ in (A, ω/ω∞). Two lemmas (that this component vanishing means the whole jump
+vanishes, and that the path used gives the Borel sum) would make it the full one-harmonic selection condition. The
+first coefficient σ₁ of the untruncated condition is also enclosed rigorously (±3.5×10⁻⁵).
 
 Evidence beyond the linear case: the conditions $`S_\nu = 0`$ for |ν| ≥ 3 alone predict the echo's shape, F₃/F₁ = 0.055
 and F₅/F₁ = 0.0031, against 0.0549–0.0552 and 0.0032–0.0034 extrapolated from the solutions, and the predicted finite
@@ -1770,10 +1773,12 @@ solver/proof/       feasibility numbers for the proof roadmap (feasibility.py: s
                     exact_sigma.py: sigma_1 rigorously enclosed by an exact telescoped formula (no fit);
                     fast_eigenvalues.py: the outer system's fast eigenvalues, Lemma B2; certify_M1.py, lin_check.py,
                     series_arb.py, residual_poly.py, pm_dryrun.py, fixed_point.py, krawczyk.py, validated_int.py: the
-                    M = 1 certificate in ball arithmetic (the one-harmonic zero certified in a 1e-9 box);
+                    M = 1 certificate in ball arithmetic (one jump component's zero certified in a 1e-9 box);
+                    review/: the independent review's test scripts R1-R8 (proof/A_review.md);
                     tail_harmonics.py, reconcile.py, amp_trunc.py, family_amps.py: the harmonic-tail analysis;
                     outer_borel.py, inner_corrections.py, lightcone_exponents.py: checks for the selection theorem)
 proof/              the proof roadmap's parts (A_certify.md: the computer-assisted certificate, prototyped at M = 1;
+                    A_review.md: its independent review, with the two lemmas still needed;
                     B_tail.md: gap (b), the harmonic tail;
                     C_selection.md: the selection theorem for M harmonics, lemma by lemma;
                     D_entire.md: the entire-function route to a certified inner zero)
