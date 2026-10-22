@@ -302,20 +302,30 @@ def _point(M):
 
 
 def check(Ms, mutate=False):
-    """both backends through hier.demixed_multi at the same radii; per level the difference relative to the larger of
-    1 and |r_l| (the residuals are normalised multipliers, O(1) where the jump is linear)"""
+    """both backends through hier.demixed_multi at the same radii. Compared are the entries hier.py uses (r_1, r_3 at
+    xi_top = 0.2; r_nu, nu >= 5, at its approach and polish radii; the others are rounding noise amplified by up to
+    e^{1/(2 xi^2)} ~ 1e20 and unused). The yardstick is scipy's own noise: the change of the same entry when scipy's
+    rtol goes from 1e-12 to 0.8e-12. Pass: |numba - scipy| <= 10 max(noise, 1e-13 |r|) for every used entry."""
     import hier as H
     orig = I.Inner
+
+    class InnerRt(orig):
+        def jumps(self, r1s=(0.2,), r0=None, rtol=1e-12):
+            return orig.jumps(self, r1s, r0, 0.8e-12)
+
     ok = True
     for M in Ms:
         x = _point(M)
         h = H.Hier(M)
         low, pol = h.radii(x)
         radii = [0.2] + list(low.values()) + list(pol.values())
+        used = {(0.2, 1), (0.2, 3)} | {(low[nu], nu) for nu in low if nu >= 5} | {(pol[nu], nu) for nu in pol if nu >= 5}
         I.Inner = orig
         t = time.time()
         Rs = H.demixed_multi(x, M, radii)
         ts = time.time() - t
+        I.Inner = InnerRt
+        Rs2 = H.demixed_multi(x, M, radii)
         I.Inner = InnerNB
         MUTATE[0] = 1.0 if mutate else 0.0
         t = time.time()
@@ -323,15 +333,20 @@ def check(Ms, mutate=False):
         tn = time.time() - t
         I.Inner = orig
         worst = 0.0
-        for r in Rs:
-            a, b = Rs[r], Rn[r]
+        for r in sorted(Rs):
+            a, a2, b = Rs[r], Rs2[r], Rn[r]
             for li, nu in enumerate(range(1, M + 1, 2)):
-                za, zb = complex(*a[2 * li:2 * li + 2]), complex(*b[2 * li:2 * li + 2])
-                d = abs(za - zb) / max(1.0, abs(za))
-                worst = max(worst, d)
-                print(f"  M {M} xi {r:.4f} r_{nu}: scipy {za:+.6e}  numba {zb:+.6e}  rel diff {d:.1e}")
-        print(f"M {M}: scipy {ts:.1f} s, numba {tn:.2f} s, worst rel diff {worst:.1e}", flush=True)
-        ok = ok and worst < 1e-6
+                za, za2, zb = (complex(*v[2 * li:2 * li + 2]) for v in (a, a2, b))
+                noise = max(abs(za - za2), 1e-13 * abs(za))
+                q = abs(za - zb) / noise
+                u = (r, nu) in used
+                if u:
+                    worst = max(worst, q)
+                print(f"  M {M} xi {r:.4f} r_{nu}: scipy {za:+.6e}  numba {zb:+.6e}  |diff| {abs(za - zb):.1e}  "
+                      f"scipy rtol noise {abs(za - za2):.1e}  ratio {q:.2g}{'' if u else '  (unused)'}")
+        print(f"M {M}: scipy {ts:.1f} s, numba {tn:.2f} s, worst |numba - scipy| / noise over used entries {worst:.2g}",
+              flush=True)
+        ok = ok and worst <= 10
     MUTATE[0] = 0.0
     return ok
 
