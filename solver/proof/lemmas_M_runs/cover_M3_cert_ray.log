@@ -3,3 +3,5 @@ ray |u| 262.0 -> 235.36: 57 steps, 100 s, state set over X radius 1.89e-09
 ray |u| 235.36 -> 208.72: 61 steps, 109 s, state set over X radius 2.24e-09
 ray |u| 208.72 -> 182.08: 65 steps, 103 s, state set over X radius 2.75e-09
 ray |u| 182.08 -> 155.44: 71 steps, 108 s, state set over X radius 3.52e-09
+ray |u| 155.44 -> 128.8: 80 steps, 120 s, state set over X radius 4.83e-09
+ray |u| 128.8 -> 102.16: 93 steps, 144 s, state set over X radius 7.42e-09
