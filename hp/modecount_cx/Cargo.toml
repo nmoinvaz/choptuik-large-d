@@ -1,0 +1,23 @@
+[package]
+name = "modecount_cx"
+version = "0.1.0"
+edition = "2021"
+description = "Growth-mode determinant det M(lambda) of the double-double DSS kernel (hp/) at complex lambda, for the argument-principle mode count (notes/MODE_COUNT.md)"
+
+[lib]
+name = "modecount_cx"
+crate-type = ["cdylib"]
+
+[workspace]
+
+[dependencies]
+hpk = { package = "hpkernel", path = "..", default-features = false }
+pyo3 = { version = "0.30", features = ["extension-module"] }
+numpy = "0.30"
+rayon = "1.10"
+
+[profile.release]
+opt-level = 3
+codegen-units = 1
+lto = "fat"
+debug = false
