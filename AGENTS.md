@@ -24,6 +24,10 @@ Conventions for the Claude sessions (cloud and local) that run computations here
   powers are of exact positive balls. Found by the BootLoops review, notes/BOOTLOOPS.md.)
 - **Quoted numbers:** after changing a number in the README, the paper or the proof notes, run
   `python3 check_numbers.py --selftest`; when a new headline number has a machine-readable source, add a check for it.
+- **Novelty claims:** no sentence saying a result is new, "not found in print", or "first" goes into the README, the
+  paper or the proof notes until the closest prior work has actually been read (not recalled) and recorded in
+  notes/LIT_REVIEW.md, with what it does and does not contain. Credit prior equations and observations where they are
+  used, not only in the references.
 - **Coordination:** the cloud and local sessions talk through `comms.txt` (append only; pull before writing; commit only
   `comms.txt` in comms commits; header `== <date time PDT> cloud|local`). Agents making code changes work in a git
   worktree, not the main checkout.
