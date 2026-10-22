@@ -1,0 +1,13 @@
+{
+  "producer": "solver/proof/capd_check (CAPD 37057e5899bccaa6cd5701057b7e6ea5e232ef8b)",
+  "map": "F(A, wf) = (Re J_D, Im J_D), J_D = D+_{+1}(0.3) - conj(D+_{-1}(0.3)), path: ray arg xi = 3pi/8 to 0.20, arc, real axis to 0.3",
+  "numbers": "every interval is [lo, hi] with lo, hi exact binary doubles in C99 hex",
+  "xhat": ["2.5421480475", "0.7769940136"],
+  "xhat_enclosure": [["0x1.45651b72cd27p+1", "0x1.45651b72cd271p+1"], ["0x1.8dd228cb33164p-1", "0x1.8dd228cb33165p-1"]],
+  "h": "0x1.5798ee2308c3ap-27",
+  "F_at_xhat": [["0x1.28e200decad5fp-40", "0x1.28e200e02850dp-40"], ["-0x1.eb3bf90e09c46p-39", "-0x1.eb3bf90d9e238p-39"]],
+  "DF_over_X": [[["-0x1.7fe2fc044cd16p-7", "-0x1.03dd5d3d6e466p-11"], ["-0x1.5a3d465d81193p-5", "-0x1.cfa44eeb6c302p-6"]], [["0x1.aba3c81fe19ddp-6", "0x1.2ae5f76242c8p-5"], ["-0x1.72daa11004208p-6", "-0x1.3dcf39bf13c64p-7"]]],
+  "kappa": [["0x1.691cef86217ccp+11", "0x1.691cef86217cdp+11"], ["-0x1.280ce639a59dap+6", "-0x1.280ce639a59d9p+6"]],
+  "zero_enclosure": [["0x1.45651b72c7411p+1", "0x1.45651b735335fp+1"], ["0x1.8dd228ca74b45p-1", "0x1.8dd228cc1c3c7p-1"]],
+  "krawczyk_F_passes": true
+}

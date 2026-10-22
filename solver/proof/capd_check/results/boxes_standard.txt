@@ -1,0 +1,82 @@
+capd_check (CAPD, independent of validated_int.py): xi0 = 0.1 e^{3 i pi/8} -> ray -> |xi| = 0.30 -> arc -> xi1 = 0.3
+point run at x^: loaded from results/point_standard.txt
+   J_D(x^) = 1.054739676e-12 - 3.490429414e-12i  (radii 6.28e-24, 6.18e-24)
+   g(x^) = kappa J_D = 2.78871e-09 - 1.01616e-08i  (radii 1.86e-20, 1.83e-20)   (kappa = 2888.90423876 - 74.0125969894i  (radii 4.55e-13, 1.42e-14))
+   box run: ray to |xi| = 0.30 in 171 steps, state radius 5.87428e-08; arc to the real axis in 140 steps, state radius 7.83761e-10
+box run over x^ + [-h, h]^2, h = 1e-09: C1Rect2Set, double, Taylor order 20, 311 steps, 44.6 s
+   dD+_{-1}/d(A, wf) = 0.0125908 + 0.15542i  (radii 1.00e-04, 1.00e-04),  -0.00358577 - 0.364041i  (radii 1.18e-04, 1.18e-04)
+   dD+_{+1}/d(A, wf) = 0.00648528 - 0.124126i  (radii 6.35e-05, 6.35e-05),  -0.0388678 + 0.347874i  (radii 7.35e-05, 7.35e-05)
+   dJ_D/d(A, wf) over X = -0.006105 + 0.03129i  (radii 9.62e-05, 1.40e-04),  -0.03528 - 0.01617i  (radii 1.14e-04, 1.63e-04)
+   Krawczyk on F = (Re J_D, Im J_D): J(X) = [[-0.0061055 +- 9.62e-05, -0.035282 +- 1.14e-04], [0.031294 +- 1.40e-04, -0.016167 +- 1.63e-04]]
+      K(X) = (2.542148047617 +- 1.17e-11, 0.7769940136097 +- 7.00e-12)
+      K(X) in int X: true; margins 8.7173e-10, 9.8328e-10 (h = 1.0000e-09)
+      smallest passing sub-box tried: hp = 1.221e-10; its K(X') encloses the zero:
+      A in [2.5421480476151297, 2.5421480476179914],  wf in [0.77699401360886977, 0.77699401361057818]   (radii 1.43e-12, 8.54e-13)
+   g(x^) = (2.78871e-09 +- 1.86e-20, -1.01616e-08 +- 1.83e-20)
+   Krawczyk on g = kappa J_D: J(X) = [[-15.322 +- 2.88e-01, -103.12 +- 3.40e-01], [90.857 +- 4.11e-01, -44.093 +- 4.80e-01]]
+      K(X) = (2.542148047617 +- 1.19e-11, 0.7769940136097 +- 7.04e-12)
+      K(X) in int X: true; margins 8.7153e-10, 9.8323e-10 (h = 1.0000e-09)
+   jump components J_k = y+_k - conj(y+_{-k}) at xi1, at x^ and at the zero:
+      J_D  (D, mu = 1)  at x^: 1.05474e-12 - 3.49043e-12i  (radii 6.28e-24, 6.18e-24);  at the zero: |Re| <= 5.14e-14, |Im| <= 7.65e-14  (contains 0)
+      J_S  (S, mu = 1)  at x^: 1.92829e-12 - 1.38401e-11i  (radii 6.21e-24, 4.51e-24);  at the zero: |Re| <= 1.69e-13, |Im| <= 2.22e-13  (contains 0)
+      J_C2 (C, nu = 2)  at x^: -8.01474e-14 - 7.951e-14i  (radii 9.90e-24, 9.14e-24);  at the zero: |Re| <= 2.61e-14, |Im| <= 2.58e-14  (contains 0)
+      J_C0 (C, nu = 0)  at x^: 0 + 7.40243e-14i  (radii 0.00e+00, 1.21e-23);  at the zero: |Re| <= 0.00e+00, |Im| <= 3.22e-14  (contains 0)
+   control C1 jump sign flipped, D+1 + conj(D-1): fail (expected fail), margins -5.89e+01, -2.20e+01
+   control C2 conjugation dropped, D+1 - D-1: fail (expected fail), margins -2.00e+00, -3.47e-01
+   control C5 zero planted outside, moved by (2h, 0): fail (expected fail), margins -1.13e-09, 9.83e-10
+   control C6 zero planted inside, moved by (m_A/2, -m_w/2): pass (expected pass), margins 4.36e-10, 5.11e-10
+   control C7 J_D(x^) widened by 1e3 h: fail (expected fail), margins -4.28e-05, -3.11e-05
+   controls: every verdict as expected
+RESULT: the Krawczyk test passes on X = x^ + [-h, h]^2, h = 1e-09
+   enclosures written to results/capd_enclosures_1e-9.json
+   box run: ray to |xi| = 0.30 in 171 steps, state radius 5.85842e-07; arc to the real axis in 140 steps, state radius 5.73229e-09
+box run over x^ + [-h, h]^2, h = 1e-08: C1Rect2Set, double, Taylor order 20, 311 steps, 57.5 s
+   dD+_{-1}/d(A, wf) = 0.0125908 + 0.15542i  (radii 9.88e-04, 9.88e-04),  -0.00358577 - 0.364041i  (radii 1.16e-03, 1.16e-03)
+   dD+_{+1}/d(A, wf) = 0.00648528 - 0.124126i  (radii 6.26e-04, 6.26e-04),  -0.0388678 + 0.347874i  (radii 7.23e-04, 7.23e-04)
+   dJ_D/d(A, wf) over X = -0.006105 + 0.03129i  (radii 9.45e-04, 1.38e-03),  -0.03528 - 0.01617i  (radii 1.11e-03, 1.60e-03)
+   Krawczyk on F = (Re J_D, Im J_D): J(X) = [[-0.0061055 +- 9.45e-04, -0.035282 +- 1.11e-03], [0.031294 +- 1.38e-03, -0.016167 +- 1.60e-03]]
+      K(X) = (2.542148047617 +- 1.15e-09, 0.7769940136097 +- 6.87e-10)
+      K(X) in int X: true; margins 8.7320e-09, 9.3037e-09 (h = 1.0000e-08)
+      smallest passing sub-box tried: hp = 1.345e-10; its K(X') encloses the zero:
+      A in [2.5421480476010707, 2.5421480476320504],  wf in [0.77699401360048803, 0.77699401361895992]   (radii 1.55e-11, 9.24e-12)
+   g(x^) = (2.78871e-09 +- 1.86e-20, -1.01616e-08 +- 1.83e-20)
+   Krawczyk on g = kappa J_D: J(X) = [[-15.322 +- 2.83e+00, -103.12 +- 3.33e+00], [90.857 +- 4.05e+00, -44.093 +- 4.72e+00]]
+      K(X) = (2.542148047617 +- 1.17e-09, 0.7769940136097 +- 6.91e-10)
+      K(X) in int X: true; margins 8.7126e-09, 9.2991e-09 (h = 1.0000e-08)
+   jump components J_k = y+_k - conj(y+_{-k}) at xi1, at x^ and at the zero:
+      J_D  (D, mu = 1)  at x^: 1.05474e-12 - 3.49043e-12i  (radii 6.28e-24, 6.18e-24);  at the zero: |Re| <= 5.66e-13, |Im| <= 8.17e-13  (contains 0)
+      J_S  (S, mu = 1)  at x^: 1.92829e-12 - 1.38401e-11i  (radii 6.21e-24, 4.51e-24);  at the zero: |Re| <= 1.85e-12, |Im| <= 2.39e-12  (contains 0)
+      J_C2 (C, nu = 2)  at x^: -8.01474e-14 - 7.951e-14i  (radii 9.90e-24, 9.14e-24);  at the zero: |Re| <= 2.91e-13, |Im| <= 3.00e-13  (contains 0)
+      J_C0 (C, nu = 0)  at x^: 0 + 7.40243e-14i  (radii 0.00e+00, 1.21e-23);  at the zero: |Re| <= 0.00e+00, |Im| <= 3.73e-13  (contains 0)
+   control C1 jump sign flipped, D+1 + conj(D-1): fail (expected fail), margins -5.89e+01, -2.20e+01
+   control C2 conjugation dropped, D+1 - D-1: fail (expected fail), margins -2.00e+00, -3.47e-01
+   control C5 zero planted outside, moved by (2h, 0): fail (expected fail), margins -1.13e-08, 9.30e-09
+   control C6 zero planted inside, moved by (m_A/2, -m_w/2): pass (expected pass), margins 4.37e-09, 4.67e-09
+   control C7 J_D(x^) widened by 1e3 h: fail (expected fail), margins -4.28e-04, -3.11e-04
+   controls: every verdict as expected
+RESULT: the Krawczyk test passes on X = x^ + [-h, h]^2, h = 1e-08
+   enclosures written to results/capd_enclosures_1e-8.json
+   box run: ray to |xi| = 0.30 in 171 steps, state radius 5.8585e-06; arc to the real axis in 140 steps, state radius 7.07273e-08
+box run over x^ + [-h, h]^2, h = 1e-07: C1Rect2Set, double, Taylor order 20, 311 steps, 64.5 s
+   dD+_{-1}/d(A, wf) = 0.0125908 + 0.15542i  (radii 1.00e-02, 1.00e-02),  -0.00358577 - 0.364041i  (radii 1.18e-02, 1.18e-02)
+   dD+_{+1}/d(A, wf) = 0.00648528 - 0.124126i  (radii 6.33e-03, 6.33e-03),  -0.0388678 + 0.347874i  (radii 7.33e-03, 7.33e-03)
+   dJ_D/d(A, wf) over X = -0.006105 + 0.03129i  (radii 9.61e-03, 1.40e-02),  -0.03528 - 0.01617i  (radii 1.13e-02, 1.63e-02)
+   Krawczyk on F = (Re J_D, Im J_D): J(X) = [[-0.0061055 +- 9.61e-03, -0.035282 +- 1.13e-02], [0.031294 +- 1.40e-02, -0.016167 +- 1.63e-02]]
+      K(X) = (2.542148047617 +- 1.17e-07, 0.7769940136097 +- 6.98e-08)
+      K(X) in int X: false; margins -1.6973e-08, 3.0156e-08 (h = 1.0000e-07)
+   g(x^) = (2.78871e-09 +- 1.86e-20, -1.01616e-08 +- 1.83e-20)
+   Krawczyk on g = kappa J_D: J(X) = [[-15.322 +- 2.88e+01, -103.12 +- 3.39e+01], [90.857 +- 4.10e+01, -44.093 +- 4.79e+01]]
+      K(X) = (2.542148047617 +- 1.19e-07, 0.7769940136097 +- 7.03e-08)
+      K(X) in int X: false; margins -1.8938e-08, 2.9683e-08 (h = 1.0000e-07)
+   control C1 jump sign flipped, D+1 + conj(D-1): fail (expected fail), margins -5.89e+01, -2.20e+01
+   control C2 conjugation dropped, D+1 - D-1: fail (expected fail), margins -2.00e+00, -3.47e-01
+   control C5 zero planted outside, moved by (2h, 0): fail (expected fail), margins -2.17e-07, 3.02e-08
+   control C6 zero planted inside, moved by (m_A/2, -m_w/2): skipped (the clean test fails)
+   control C7 J_D(x^) widened by 1e3 h: fail (expected fail), margins -4.28e-03, -3.11e-03
+   controls: every verdict as expected
+RESULT: the Krawczyk test FAILS on X = x^ + [-h, h]^2, h = 1e-07
+   enclosures written to results/capd_enclosures_1e-7.json
+
+real	2m46.580s
+user	0m50.201s
+sys	0m0.074s

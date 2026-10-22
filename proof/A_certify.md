@@ -25,7 +25,10 @@ statement about the selection condition (review §6a and §6b, both judged fixab
 
 With 6b the certificate gives at most one zero of the one-harmonic selection condition in the box; with 6a as well,
 exactly one, at A ∈ [2.54214804760473, 2.54214804762839], ω/ω∞ ∈ [0.776994013601194, 0.776994013618254]
-(ω ≈ 2.969776709). An independent re-implementation in C++ with CAPD is in progress.
+(ω ≈ 2.969776709). An independent re-implementation in C++ with the CAPD library (§10), which shares no code with
+§9 beyond the step-(i) start data, confirms the certificate. It also certifies the larger box ± 10⁻⁸, puts the zero
+in A ∈ [2.54214804761512, 2.54214804761800], ω/ω∞ ∈ [0.77699401360886, 0.77699401361058], and passes along the
+lower path through radius 0.2, away from the singularity.
 
 Contents
 
@@ -44,6 +47,13 @@ Contents
 - [6. What is missing, and how to build it](#6-what-is-missing-and-how-to-build-it)
 - [7. From M = 1 to M = 5](#7-from-m--1-to-m--5)
 - [8. Reproduce](#8-reproduce)
+- [9. Step (ii): the validated integration (agent VI)](#9-step-ii-the-validated-integration-agent-vi)
+- [10. Independent check with CAPD (agent IC)](#10-independent-check-with-capd-agent-ic)
+  - [10.1 What was built](#101-what-was-built)
+  - [10.2 How independent it is](#102-how-independent-it-is)
+  - [10.3 Results at ξ₁ = 0.3](#103-results-at-ξ₁--03)
+  - [10.4 Evidence on lemmas 6a and 6b](#104-evidence-on-lemmas-6a-and-6b)
+  - [10.5 Reproduce](#105-reproduce)
 
 ## 1. The template
 
@@ -536,7 +546,8 @@ Every input is rigorous:
 
 The certificate rests on the correctness of the code. The review ([A_review.md](A_review.md)) re-derived every input
 independently (start values to 5×10⁻³⁵, the point run to 10⁻³¹, one Lohner step against a 50-digit solution, K(X) with
-separate code) and found no error; a second implementation, in CAPD, is in progress.
+separate code) and found no error. A second implementation, in C++ with CAPD (§10), confirms the certificate and
+extends it to the box ± 10⁻⁸.
 
 The box is much smaller than the 10⁻³ and 10⁻⁵ boxes §5.1 budgets for. The point values are far inside every budget.
 The obstacle is the derivative enclosures over a box: their excess grows like 10⁶ h (§9.3–9.4).
@@ -678,13 +689,10 @@ should pass on that path. It has not been run.
 0. **The two lemmas of the review** (6a: J_D(ξ₁) = 0 implies the whole jump vanishes, by the template's step 4;
    6b: the ray-then-arc continuation is the Borel sum, by a validated sweep over arc radii and a start domain reaching
    the real axis). These are what stands between the certificate and the statement about the selection condition.
-2. **An independent check of the code** (done by review, [A_review.md](A_review.md); CAPD re-implementation in
-   progress). The certificate now depends on `validated_int.py` together with
-   `fixed_point.py` and `krawczyk.py`. A second implementation or a careful review should come next. CAPD's C¹ Lohner
-   on the 18-dimensional real system is the natural one. Points to audit:
-   - the remainder terms of steps 3–4 of §9.1;
-   - the exact dyadic time grid;
-   - the mean value start set.
+2. **An independent check of the code.** Done twice:
+   - the review ([A_review.md](A_review.md)) re-derived every input;
+   - the CAPD re-implementation of §10 shares no code with `validated_int.py` or `krawczyk.py`. Its J_D(x̂)
+     agrees with §9's to 10⁻²⁸, it passes the same test with slightly larger margins, and passes at h = 10⁻⁸ as well.
 3. **The C⁰ route.** Poincaré–Miranda with a C⁰ mean value enclosure of G over the faces, as in §5, is not workable.
    At ξ₁ = 0.2 a face of half-width 3×10⁻⁶ in A gave H radii of 2.9 against the required 1 (`boxtest`): a C⁰ set over
    the box loses the cancellation in the jump. The C¹ Krawczyk route replaces it.
@@ -729,3 +737,261 @@ up to the second-order remainder, and leaves J(X) unchanged. All 8 controls beha
 mutation_controls.py`, under a second, exit status 0 only if every verdict matches). The controls were designed after
 the certificate had passed, which weakens them somewhat; but their expected verdicts follow from the construction, not
 from the real run's output.
+
+## 10. Independent check with CAPD (agent IC)
+
+`solver/proof/capd_check/` redoes steps (ii)–(iv) in C++ with CAPD (Computer Assisted Proofs in Dynamics), a published
+library for validated integration of ODEs. It shares no code with `validated_int.py` or `krawczyk.py`. The only input it
+takes from the Python proof is the step-(i) start data of §4.5, and those are checked against an independent evaluation
+of the formal series.
+
+**Result.** The CAPD check confirms the certificate of §9, in the narrowed form of the review
+([A_review.md](A_review.md)):
+
+> For x = (A, ω/ω∞) in X = (2.5421480475, 0.7769940136) ± h, the function
+> $`J_D(x) = D^+_{+1}(0.3) - \overline{D^+_{-1}(0.3)}`$, with y⁺ continued from the ray arg ξ = 3π/8 along that ray
+> to radius 0.3 and then along the arc of radius 0.3, has exactly one zero in X, and it is simple.
+
+It proves this for h = 10⁻⁹, the box of §9, with margins 8.7×10⁻¹⁰ and 9.8×10⁻¹⁰, and for h = 10⁻⁸, which §9 could
+not reach, with margins 8.7×10⁻⁹ and 9.3×10⁻⁹. Its enclosures agree with §9's: the two enclosures of J_D(x̂)
+intersect, and their midpoints differ by less than 10⁻²⁸. The zero lies in
+
+```math
+A \in [2.54214804761512,\ 2.54214804761800], \qquad \omega/\omega_\infty \in [0.77699401360886,\ 0.77699401361058]
+```
+
+(endpoints rounded outward), inside the enclosure of §9 and eight to ten times narrower.
+
+Lemmas 6a and 6b are still needed to turn this into a statement about the selection condition. §10.4 gives evidence on
+both: rigorous bounds on the other jump components at the zero, and the same certificate along the lower path.
+
+### 10.1 What was built
+
+| file | content |
+|---|---|
+| `capd_check.cpp` | the M = 1 vector field, the path, the two validated integrations, the Krawczyk test, the mutation controls |
+| `export_start.py` | the one call into the Python proof: `fixed_point.start_data` (and κ from `krawczyk.normalization`), written to `data/` as outward-rounded double and double-double intervals in exact hex |
+| `series_check.py` | an independent check of the exported start values against the formal series (mpmath, 60 digits) |
+| `compare.py` | compares saved point runs with each other and with §9's saved run |
+| `CMakeLists.txt`, `build.sh` | `build.sh` clones CAPD at the pinned commit, builds the library, then builds `capd_check` |
+| `results/` | the logs of the runs below, the saved point runs, and the Krawczyk inputs as exact hex bounds (`capd_enclosures_*.json`) |
+
+**CAPD** is free software under the GNU General Public License v3. It is not vendored: `build.sh` clones
+<https://github.com/CAPDGroup/CAPD> at commit `37057e5899bccaa6cd5701057b7e6ea5e232ef8b` (version 6.1.0) and builds
+only the library and filib, with MPFR support (about 5 minutes on 2 cores). `capd_check` links against it.
+
+**The vector field.** It is written in `capd_check.cpp` from the equations of §2, not from `validated_int.py`, and
+cross-checked against `lateral_np.py`'s `rhs`. With D_μ, S_μ (μ = ±1) and C_ν (ν = 0, ±2), and every product projected
+onto its result's harmonics,
+
+```math
+D_\mu' = \frac{[CS]_\mu - i\mu\omega\xi D_\mu}{\xi^2}, \qquad
+S_\mu' = \frac{[C\,\xi D']_\mu + [(CE)\,D]_\mu - [CD]_\mu - i\mu\omega\xi S_\mu}{\xi^2}, \qquad
+C_\nu' = \frac{[CE]_\nu}{\xi}, \qquad E = \tfrac12 [DD] .
+```
+
+The state is the 14 real parts and imaginary parts plus ω/ω∞, which is constant. A enters only through the start data.
+The complex arithmetic is spelled out on CAPD's automatic-differentiation nodes, so CAPD computes the Taylor
+coefficients and the Jacobians itself. The parameters are intervals: ω∞ = 2π · 160000/263023 (since
+1.64389375 = 263023/160000 exactly), 0.1, 0.3, 3π/8 and its cosine and sine.
+
+**The path.** One real time s ∈ [0, 2] covers the path of §5.2:
+
+```math
+\xi(s) = (0.1 + 0.2\,s)\,e^{3i\pi/8} \ \ (0 \le s \le 1), \qquad
+\xi(s) = 0.3\,e^{3i\pi(2-s)/8} \ \ (1 \le s \le 2),
+```
+
+with dY/ds = F(ξ(s), Y) ξ′(s). One set object is carried through both pieces. CAPD chooses the steps.
+
+**The point run, at x̂.** It uses multiprecision intervals (MPFR, 128 bits), a C⁰ doubleton Lohner set (`MpC0Rect2Set`),
+Taylor order 40 and step tolerance 10⁻²⁸. It starts from the step-(i) enclosure of y⁺(ξ₀; x̂), exported as
+double-double bounds, about 10⁻³³ wide. In double precision the same run ends with radius 1.2×10⁻¹⁰ (§10.3), too wide
+for g(x̂) at h = 10⁻⁹. The per-step rounding is about 10⁻¹⁵, and the flow amplifies it by up to 10³ along the path.
+
+**The box run, over X = x̂ + [−h, h]².** It uses double-precision intervals and CAPD's C¹ Lohner set (`C1Rect2Set`,
+Zgliczyński's C¹ algorithm). That set carries the state and the monodromy matrix Dφ, each in doubleton form, at Taylor
+order 20. The start set is the mean value form of the step-(i) data over X:
+
+```math
+z_0(x) \in z_0(\hat x) + \partial_x z_0(X)\,(x - \hat x), \qquad z_0 = (y^+(\xi_0),\ \omega/\omega_\infty),
+```
+
+written as x + C r₀, where C holds the midpoints of the two derivative columns, r₀ = x − x̂, and the rest goes into
+the interval vector x. Then ∂z(ξ₁)/∂x ∈ Dφ(start set) · ∂z₀/∂x(X) by the chain rule. Dφ is enclosed over the whole
+start set.
+
+**Correlations.** J_D is linear in the state: $`\mathrm{Re}\,J_D = \ell_0\cdot y`$ and
+$`\mathrm{Im}\,J_D = \ell_1\cdot y`$. It is evaluated twice. The first evaluation uses the interval hull. The second
+uses CAPD's doubleton representations and applies ℓ before the interval products: x + C r₀ + B r for the state, and
+D + C R₀ + B R for Dφ. Both are enclosures, and the code takes their intersection. The second keeps part of the
+correlation between D⁺₊₁ and D⁺₋₁.
+
+**The Krawczyk test.** It is written anew in `capd_check.cpp`. The test runs twice, on two maps with the same zeros:
+
+- F = (Re J_D, Im J_D), which needs no normalization at all;
+- g = κ J_D, with κ from `krawczyk.normalization`, to compare with §9.
+
+Y is the double inverse of mid J(X), used as an exact matrix. The test needs K(X) ⊂ int X. x̂ is the exact decimal,
+enclosed in a double interval of width at most 4.4×10⁻¹⁶. The start data cover x̂ ± h(1 + 2⁻¹⁶), so they contain X
+with room to spare.
+
+After a pass, the code shrinks the box to x̂ ± h′ with h′ = 0.95ᵏh while the test still passes. J(X) encloses the
+derivative over every sub-box, so the last K(X′) is a sharper enclosure of the same zero.
+
+### 10.2 How independent it is
+
+| | §9 (`validated_int.py`, `krawczyk.py`) | §10 (`capd_check`) |
+|---|---|---|
+| step-(i) start data | `fixed_point.start_data` | the same, exported; checked against an independent series (below) |
+| vector field | `validated_int.Sys`, Python | `capd_check.cpp`, from §2; Taylor coefficients by CAPD's automatic differentiation |
+| arithmetic | arb balls, 256 bits | MPFR intervals, 128 bits (point); filib double intervals (box) |
+| integrator | own QR-Lohner, own a-priori enclosure and remainders, order 24, dyadic steps | CAPD's C⁰ and C¹ doubleton Lohner algorithms, its own enclosure and step control |
+| derivatives over X | variational columns as Lohner sets, state set rebuilt by the mean value theorem | CAPD's C¹ set from a mean value start set; chain rule at the end |
+| path parametrization | t ∈ [0, 1] per leg | one time s ∈ [0, 2] |
+| Krawczyk test | `krawczyk.krawczyk`, arb | new code, CAPD intervals; also on F, without κ |
+
+What is shared:
+
+- the M = 1 equations of §2;
+- the step-(i) lemma and its code (`fixed_point.py`), which the review checked (R1, R2, R7);
+- κ, which only the second, κ-scaled test uses.
+
+**The start data.** `series_check.py` re-derives the formal series from §2 alone, with its own coefficient recursion
+(mpmath, 60 digits, N = 53 terms). At ξ₀ = 0.1e^{3iπ/8} it lies inside every exported interval:
+
+- the double-double bounds of the values, which are step (i)'s balls rounded outward (half-widths 5×10⁻³⁵ to
+  3×10⁻³³, η included);
+- the derivative bounds (Cauchy radii 1.6×10⁻⁹ to 4×10⁻⁹), for the series' own derivatives by central differences.
+
+### 10.3 Results at ξ₁ = 0.3
+
+All runs start from the same exported step-(i) data and use the path of §5.2. Radii are the larger of the real and the
+imaginary radius. The logs are in `results/`.
+
+**Point run at x̂** (`MpC0Rect2Set`, 128 bits): 205 steps, 112 on the ray and 93 on the arc. The state radius grows
+from 10⁻³³ to 8×10⁻²⁵ at the end of the ray and to 9×10⁻²⁴ at ξ₁.
+
+| quantity | CAPD (§10) | radius | §9 | radius |
+|---|---|---|---|---|
+| D⁺₋₁(ξ₁) | 0.094871263087139723 + 0.40363494228001201i | 6×10⁻²⁴ | 0.094871263087140 + 0.403634942280012i | 3×10⁻¹⁹ |
+| D⁺₊₁(ξ₁) | 0.094871263088194463 − 0.40363494228350244i | 4×10⁻²⁴ | 0.094871263088194 − 0.403634942283502i | 3×10⁻¹⁹ |
+| J_D(x̂) | 1.054739676292166×10⁻¹² − 3.490429414033870×10⁻¹²i | 6.3×10⁻²⁴ | the same digits | 4.1×10⁻¹⁹ |
+| g(x̂) = κ J_D | 2.78871×10⁻⁹ − 1.01616×10⁻⁸i | 1.9×10⁻²⁰ | 2.78871×10⁻⁹ − 1.01616×10⁻⁸i | 1.2×10⁻¹⁵ |
+
+The two enclosures of J_D(x̂) intersect, and their midpoints differ by 4.5×10⁻²⁹ and 6.6×10⁻²⁹ (`compare.py`).
+
+The same run in double precision (`C1Rect2Set`, order 20, 311 steps) agrees with these to about 10⁻¹⁶, but its radii
+are 5–8×10⁻¹¹, and 1.2×10⁻¹⁰ in J_D. That is too wide for h = 10⁻⁹: g = κJ_D with |κ| = 2890 then has radius
+3.5×10⁻⁷, against the 7×10⁻⁸ that §5.1's budget allows at that h. It is enough for h = 10⁻⁸ (below).
+
+**Box runs** (`C1Rect2Set`, double, order 20, 311 steps, about a minute each). They give the derivative enclosures over
+X, and then the test.
+
+| h | radius of ∂D⁺₋₁/∂(A, ω/ω∞) | radius of ∂D⁺₊₁/∂(A, ω/ω∞) | radii of J(X) for g = κJ_D | K(X) ⊂ int X | margins (of h) |
+|---|---|---|---|---|---|
+| 10⁻⁹ | 1.0×10⁻⁴, 1.2×10⁻⁴ | 6.4×10⁻⁵, 7.4×10⁻⁵ | 0.29–0.48 | **yes** | 8.72×10⁻¹⁰, 9.83×10⁻¹⁰ |
+| 10⁻⁸ | 9.9×10⁻⁴, 1.2×10⁻³ | 6.3×10⁻⁴, 7.2×10⁻⁴ | 2.8–4.7 | **yes** | 8.73×10⁻⁹, 9.30×10⁻⁹ |
+| 10⁻⁷ | 1.0×10⁻², 1.2×10⁻² | 6.3×10⁻³, 7.3×10⁻³ | 29–48 | no | −1.7×10⁻⁸, 3.0×10⁻⁸ |
+| §9, 10⁻⁹ | 6.4×10⁻⁴, 8.1×10⁻⁴ | 2.9×10⁻⁴, 3.7×10⁻⁴ | 2.7–3.5 | yes | 7.9×10⁻¹⁰, 9.2×10⁻¹⁰ |
+
+- **Agreement.** The midpoints of J(X) are those of §9: −15.32, −103.12, 90.86, −44.09.
+- **Where it stops.** At 10⁻⁷ the radii of J(X) (29–48) reach the tolerance of about 33 that §5.1 estimates, and the
+  test fails.
+- **Tighter enclosures.** The derivative enclosures are 5–7 times tighter than §9's at the same h, and J(X) 7–10
+  times. The excess is again linear in h. That is why h = 10⁻⁸ passes here, where §9's run failed narrowly.
+- **With or without κ.** The test on F = (Re J_D, Im J_D) and the test on g = κJ_D give the same margins to three
+  digits (8.7173 and 8.7153×10⁻¹⁰ in A).
+- **All in double.** With the double-precision point value instead (`--prec=0`), h = 10⁻⁸ still passes, with
+  margins 4.2×10⁻⁹ and 6.7×10⁻⁹. It fails at 10⁻⁹, as it must with a g(x̂) radius of 3.5×10⁻⁷. So the 10⁻⁸
+  certificate does not even need the multiprecision run.
+- **The zero.** The derivative enclosure over X also holds on every sub-box x̂ ± h′. The test passes down to
+  h′ = 1.22×10⁻¹⁰, and that K(X′) is the enclosure quoted in the Result, with radii 1.4×10⁻¹² in A and 8.5×10⁻¹³
+  in ω/ω∞.
+
+**Mutation controls** (as in §9.5; each changes the function, never an enclosure, and the expected verdict follows from
+the construction). All five give the expected verdict at both h:
+
+| control | expected | h = 10⁻⁹: margins | h = 10⁻⁸: margins |
+|---|---|---|---|
+| C1 jump sign flipped, D⁺₊₁ + conj(D⁺₋₁) | fail | −59, −22 | −59, −22 |
+| C2 conjugation dropped, D⁺₊₁ − D⁺₋₁ | fail | −2.0, −0.35 | −2.0, −0.35 |
+| C5 zero planted outside, moved by (2h, 0) | fail | −1.1×10⁻⁹, 9.8×10⁻¹⁰ | −1.1×10⁻⁸, 9.3×10⁻⁹ |
+| C6 zero planted inside, moved by half the clean margins | pass | 4.4×10⁻¹⁰, 5.1×10⁻¹⁰ | 4.4×10⁻⁹, 4.7×10⁻⁹ |
+| C7 J_D(x̂) widened by 10³h | fail | −4.3×10⁻⁵, −3.1×10⁻⁵ | −4.3×10⁻⁴, −3.1×10⁻⁴ |
+
+A planted zero is F − L d with L the exact midpoint of J(X). It shifts K(X) by Y L d, which is d up to rounding, so a
+shift by half the clean margins must still pass.
+
+### 10.4 Evidence on lemmas 6a and 6b
+
+**The other jump components at the zero (6a).** The point run also encloses every jump component at x̂, with radii of
+about 10⁻²³:
+
+```math
+J_S = S^+_{+1} - \overline{S^+_{-1}}, \qquad J_{C_2} = C^+_{+2} - \overline{C^+_{-2}}, \qquad
+J_{C_0} = C^+_0 - \overline{C^+_0} = 2i\,\mathrm{Im}\,C^+_0 .
+```
+
+The box run encloses their derivatives over X. The zero z lies in K(X′) ⊂ X, so the mean value theorem gives
+$`J_k(z) \in J_k(\hat x) + \partial_x J_k(X)\,(K(X') - \hat x)`$. From the 10⁻⁹ run:
+
+| component | at x̂ | at the certified zero |
+|---|---|---|
+| J_D | 1.05×10⁻¹² − 3.49×10⁻¹²i | \|Re\| ≤ 5.1×10⁻¹⁴, \|Im\| ≤ 7.7×10⁻¹⁴ (contains 0, as it must) |
+| J_S | 1.93×10⁻¹² − 1.38×10⁻¹¹i | \|Re\| ≤ 1.7×10⁻¹³, \|Im\| ≤ 2.2×10⁻¹³ |
+| J_C₂ | −8.0×10⁻¹⁴ − 8.0×10⁻¹⁴i | \|Re\| ≤ 2.6×10⁻¹⁴, \|Im\| ≤ 2.6×10⁻¹⁴ |
+| J_C₀ | 7.4×10⁻¹⁴ i | \|Im\| ≤ 3.2×10⁻¹⁴ |
+
+Every component is consistent with vanishing at the zero of J_D. J_S, the largest, is at most 1/50 of its value at x̂,
+a point only 1.2×10⁻¹⁰ away. These are rigorous bounds, not a proof of 6a. The C components are too small at x̂
+(about 10⁻¹³) for the bounds to say much. This agrees with the double-precision finding of the review (R6), now with
+rigorous bounds at ξ₁ = 0.3.
+
+**The lower path (6b).** `--rho=0.2` runs the path of the review's fix 3: the ray to 0.2, the arc at 0.2, then the
+real axis from 0.2 to 0.3 (s ∈ [2, 3]). That path stays away from the singularity of y⁺ between radii 0.30 and 0.35.
+
+- **The point run** (176 steps) encloses all eight real jump functionals at ξ₁ = 0.3, with radii up to 6×10⁻²². Each
+  enclosure intersects the standard path's, and their midpoints agree to 6×10⁻³⁰ (`compare.py`). J_D(x̂) agrees with
+  §9's to 7×10⁻²⁹.
+  - Overlapping enclosures do not prove that the two continuations are equal.
+  - But if a singularity lay between the paths, going around it would have to change all eight functionals by less
+    than 10⁻²². The review found that continuations on either side of the singularity beyond 0.3 differ by 82.
+- **The certificate on the lower path** passes at h = 10⁻⁹ (margins 8.32×10⁻¹⁰, 9.51×10⁻¹⁰) and at h = 10⁻⁸ (margins
+  4.77×10⁻⁹, 6.12×10⁻⁹). Its zero lies in A ∈ [2.54214804760992, 2.54214804762320],
+  ω/ω∞ ∈ [0.77699401360470, 0.77699401361475], which contains the standard path's.
+- **What this changes for 6b.** On the lower path, 6b only needs y⁺ analytic on the sector 0 < |ξ| ≤ 0.2,
+  0 ≤ arg ξ ≤ 3π/8. The last piece, along the real axis from 0.2 to 0.3, is part of the path itself. That sector lies
+  well inside the radius of the singularity.
+- **Derivative enclosures on the lower path.** In CAPD they are 3–5 times wider than on the standard path (4.8×10⁻⁴
+  against 1.0×10⁻⁴ for ∂D⁺₋₁ at 10⁻⁹). That is the opposite of what §9.3 found for `validated_int.py`.
+
+**Not done: a sweep over arc radii.** The review's fix for 6b sweeps the arc radius r over [r_min, 0.3]. Two quick
+attempts in CAPD failed, and the code was not kept.
+
+- **r as an interval parameter**, on the piece [0.20, 0.21]: the enclosure blew up on the ray, near |ξ| = 0.12.
+- **r as a constant state variable in the Lohner set**, with a common ray to r_min, on the pieces [0.29, 0.30] and
+  [0.29, 0.291]: the short ray segment from 0.29 to r alone inflated the set to radius 20 and 0.09, and the arc then
+  blew up. Near 0.3e^{3iπ/8}, y⁺ varies at a rate of order 10² per unit ξ, because the singularity is close.
+
+A sweep would need much narrower pieces near r = 0.3, or a family of paths that avoids that corner.
+
+### 10.5 Reproduce
+
+```
+cd solver/proof/capd_check
+./build.sh                    # clones CAPD 37057e5 into ~/.cache/capd_check/CAPD, builds it (MPFR on) and capd_check
+python3 series_check.py       # the start data against the independent series, seconds
+build/capd_check data/start_point.txt data/start_box_1e-9.txt data/start_box_1e-8.txt \
+    --save-point=results/point_standard.txt --enclosures=results       # the certificate: one point run, two box runs
+                                                                       # (about 10 CPU minutes)
+build/capd_check data/start_point.txt data/start_box_1e-9.txt data/start_box_1e-8.txt data/start_box_1e-7.txt \
+    --load-point=results/point_standard.txt                            # the box runs from the saved point run, minutes
+build/capd_check data/start_point.txt data/start_box_1e-8.txt --prec=0 # all in double precision, about a minute
+build/capd_check data/start_point.txt data/start_box_1e-9.txt data/start_box_1e-8.txt --rho=0.2 \
+    --save-point=results/point_rho0.2.txt                              # the lower path
+python3 compare.py results/point_standard.txt results/point_rho0.2.txt # the two paths and section 9's run
+python3 export_start.py       # regenerate data/ from fixed_point.start_data, seconds
+```
+
+The exit status is 0 only if every Krawczyk test passes and every control gives its expected verdict.

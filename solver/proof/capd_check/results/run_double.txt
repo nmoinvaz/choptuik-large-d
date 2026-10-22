@@ -1,0 +1,63 @@
+capd_check (CAPD, independent of validated_int.py): xi0 = 0.1 e^{3 i pi/8} -> ray -> |xi| = 0.30 -> arc -> xi1 = 0.3
+   point run (double): ray to |xi| = 0.30 in 171 steps, state radius 1.20448e-10; arc to the real axis in 140 steps, state radius 1.19476e-10
+point run at x^ in double precision: C1Rect2Set, Taylor order 20, 311 steps, 44.9 s
+   D-1(xi1) = 0.094871263087139709 + 0.4036349422800124i  (radii 5.15e-11, 5.15e-11)
+   D+1(xi1) = 0.094871263088194491 - 0.40363494228350233i  (radii 7.75e-11, 7.80e-11)
+   S-1(xi1) = 0.3547875634838164 - 0.07369939183986475i  (radii 6.94e-11, 6.93e-11)
+   S+1(xi1) = 0.35478756348574375 + 0.073699391826024738i  (radii 4.16e-11, 4.18e-11)
+   C-2(xi1) = -0.091222935409374678 + 0.021706926052499215i  (radii 6.64e-11, 6.64e-11)
+   C0 (xi1) = 1.1819388768619712 + 3.6448004754012531e-14i  (radii 1.19e-10, 1.19e-10)
+   C+2(xi1) = -0.09122293540945435 - 0.021706926052577416i  (radii 6.39e-11, 6.40e-11)
+   J_D(x^) = 1.054794541e-12 - 3.490048454e-12i  (radii 7.58e-11, 1.19e-10)   (the hull of the state gives radii 1.29e-10, 1.30e-10)
+   at x^: dD+_{-1}/d(A, wf) = 0.0125908 + 0.15542i  (radii 2.24e-06, 2.24e-06),  -0.00358577 - 0.364041i  (radii 2.92e-06, 2.92e-06)
+          dD+_{+1}/d(A, wf) = 0.00648528 - 0.124126i  (radii 1.34e-06, 1.34e-06),  -0.0388678 + 0.347874i  (radii 1.62e-06, 1.62e-06)
+   g(x^) = kappa J_D = 2.78889e-09 - 1.01605e-08i  (radii 2.28e-07, 3.50e-07)   (kappa = 2888.90423876 - 74.0125969894i  (radii 4.55e-13, 1.42e-14))
+   box run: ray to |xi| = 0.30 in 171 steps, state radius 5.9e-08; arc to the real axis in 140 steps, state radius 7.8e-10
+box run over x^ + [-h, h]^2, h = 1e-09: C1Rect2Set, double, Taylor order 20, 311 steps, 57.7 s
+   dD+_{-1}/d(A, wf) = 0.0125908 + 0.15542i  (radii 1.00e-04, 1.00e-04),  -0.00358577 - 0.364041i  (radii 1.18e-04, 1.18e-04)
+   dD+_{+1}/d(A, wf) = 0.00648528 - 0.124126i  (radii 6.35e-05, 6.35e-05),  -0.0388678 + 0.347874i  (radii 7.35e-05, 7.35e-05)
+   dJ_D/d(A, wf) over X = -0.006105 + 0.03129i  (radii 9.62e-05, 1.40e-04),  -0.03528 - 0.01617i  (radii 1.14e-04, 1.63e-04)
+   Krawczyk on F = (Re J_D, Im J_D): J(X) = [[-0.0061055 +- 9.62e-05, -0.035282 +- 1.14e-04], [0.031294 +- 1.40e-04, -0.016167 +- 1.63e-04]]
+      K(X) = (2.542148047617 +- 4.53e-09, 0.7769940136097 +- 2.58e-09)
+      K(X) in int X: false; margins -3.6479e-09, -1.5947e-09 (h = 1.0000e-09)
+   g(x^) = (2.78889e-09 +- 2.28e-07, -1.01605e-08 +- 3.50e-07)
+   Krawczyk on g = kappa J_D: J(X) = [[-15.322 +- 2.88e-01, -103.12 +- 3.40e-01], [90.857 +- 4.11e-01, -44.093 +- 4.80e-01]]
+      K(X) = (2.542148047617 +- 4.61e-09, 0.7769940136097 +- 2.60e-09)
+      K(X) in int X: false; margins -3.7257e-09, -1.6118e-09 (h = 1.0000e-09)
+   control C1 jump sign flipped, D+1 + conj(D-1): fail (expected fail), margins -5.89e+01, -2.20e+01
+   control C2 conjugation dropped, D+1 - D-1: fail (expected fail), margins -2.00e+00, -3.47e-01
+   control C5 zero planted outside, moved by (2h, 0): fail (expected fail), margins -5.65e-09, -1.59e-09
+   control C6 zero planted inside, moved by (m_A/2, -m_w/2): skipped (the clean test fails)
+   control C7 J_D(x^) widened by 1e3 h: fail (expected fail), margins -4.28e-05, -3.11e-05
+   controls: every verdict as expected
+RESULT: the Krawczyk test FAILS on X = x^ + [-h, h]^2, h = 1e-09
+   box run: ray to |xi| = 0.30 in 171 steps, state radius 5.85842e-07; arc to the real axis in 140 steps, state radius 5.73229e-09
+box run over x^ + [-h, h]^2, h = 1e-08: C1Rect2Set, double, Taylor order 20, 311 steps, 64.3 s
+   dD+_{-1}/d(A, wf) = 0.0125908 + 0.15542i  (radii 9.88e-04, 9.88e-04),  -0.00358577 - 0.364041i  (radii 1.16e-03, 1.16e-03)
+   dD+_{+1}/d(A, wf) = 0.00648528 - 0.124126i  (radii 6.26e-04, 6.26e-04),  -0.0388678 + 0.347874i  (radii 7.23e-04, 7.23e-04)
+   dJ_D/d(A, wf) over X = -0.006105 + 0.03129i  (radii 9.45e-04, 1.38e-03),  -0.03528 - 0.01617i  (radii 1.11e-03, 1.60e-03)
+   Krawczyk on F = (Re J_D, Im J_D): J(X) = [[-0.0061055 +- 9.45e-04, -0.035282 +- 1.11e-03], [0.031294 +- 1.38e-03, -0.016167 +- 1.60e-03]]
+      K(X) = (2.542148047617 +- 5.67e-09, 0.7769940136097 +- 3.26e-09)
+      K(X) in int X: true; margins 4.2124e-09, 6.7257e-09 (h = 1.0000e-08)
+      smallest passing sub-box tried: hp = 5.404e-09; its K(X') encloses the zero:
+      A in [2.5421480424747118, 2.5421480527583884],  wf in [0.77699401066076867, 0.77699401655868605]   (radii 5.14e-09, 2.95e-09)
+   g(x^) = (2.78889e-09 +- 2.28e-07, -1.01605e-08 +- 3.50e-07)
+   Krawczyk on g = kappa J_D: J(X) = [[-15.322 +- 2.83e+00, -103.12 +- 3.33e+00], [90.857 +- 4.05e+00, -44.093 +- 4.72e+00]]
+      K(X) = (2.542148047617 +- 5.77e-09, 0.7769940136097 +- 3.29e-09)
+      K(X) in int X: true; margins 4.1154e-09, 6.7040e-09 (h = 1.0000e-08)
+   jump components J_k = y+_k - conj(y+_{-k}) at xi1, at x^ and at the zero:
+      J_D  (D, mu = 1)  at x^: 1.05479e-12 - 3.49005e-12i  (radii 7.58e-11, 1.19e-10);  at the zero: |Re| <= 2.20e-10, |Im| <= 3.40e-10  (contains 0)
+      J_S  (S, mu = 1)  at x^: 1.92734e-12 - 1.384e-11i  (radii 8.50e-11, 5.88e-11);  at the zero: |Re| <= 6.10e-10, |Im| <= 8.18e-10  (contains 0)
+      J_C2 (C, nu = 2)  at x^: -7.9669e-14 - 7.82133e-14i  (radii 1.17e-10, 1.12e-10);  at the zero: |Re| <= 1.40e-10, |Im| <= 1.33e-10  (contains 0)
+      J_C0 (C, nu = 0)  at x^: -0 + 7.2896e-14i  (radii 0.00e+00, 2.38e-10);  at the zero: |Re| <= 0.00e+00, |Im| <= 2.65e-10  (contains 0)
+   control C1 jump sign flipped, D+1 + conj(D-1): fail (expected fail), margins -5.89e+01, -2.20e+01
+   control C2 conjugation dropped, D+1 - D-1: fail (expected fail), margins -2.00e+00, -3.47e-01
+   control C5 zero planted outside, moved by (2h, 0): fail (expected fail), margins -1.58e-08, 6.73e-09
+   control C6 zero planted inside, moved by (m_A/2, -m_w/2): pass (expected pass), margins 2.11e-09, 3.38e-09
+   control C7 J_D(x^) widened by 1e3 h: fail (expected fail), margins -4.28e-04, -3.11e-04
+   controls: every verdict as expected
+RESULT: the Krawczyk test passes on X = x^ + [-h, h]^2, h = 1e-08
+
+real	2m46.969s
+user	0m50.442s
+sys	0m0.072s
