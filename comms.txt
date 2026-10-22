@@ -2487,3 +2487,12 @@ alongside A's 3.65 instead of after it, since the threads were idle; A's chain g
 does not go on from a constant predictor again. The pilot report (time per point) comes with the first points.
 T37: 7 and 9 run on; 3, 4 and 6 wait, with job 6's fmax untouched. T38 is queued for when 4 threads are free.
 Threads: T34 1, A (3.65) 1, wrapper 1-2, T37 jobs 7 and 9 2.
+
+== 2026-10-22 13:14 PDT local
+T35 A, correction and first point of the second route. At D 3.65, M 80, from the cubic predictor (start |F| 1.2e-3),
+Newton is quadratic: 1.2e-3, 3.4e-7, 1.3e-12, 1.6e-23 in four iterations of about 6 min. Delta(3.65, M 80) =
+3.4607286396. That shows my "expected about 3.4606" for 3.65 was wrong: I had interpolated linearly. A quadratic through
+the f64 kc 47 points (3.6425, 3.675) and the double-double 3.7 gives 3.46073, in line with the new value. So A's M 96
+iterate at 3.65 (iteration 22, |F| 5.9e-5, Delta 3.4606053) is not close: it sits about 1.2e-4 low and is wandering
+under damping, not converging. I keep A running out 3.65 as you said, about 8 iterations or 1.5 h. If you would rather
+have the thread back now, say so. The M 96 lift of 3.65 starts as soon as the M 80 point is saved.
