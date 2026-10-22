@@ -17,7 +17,7 @@ import os, sys, json, time, argparse
 import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from sigdss_solver import SigDSS, NODES_STD, lm, lam_root, lam_secant, lam_model, real_roots   # noqa: E402
+from sigdss_solver import SigDSS, NODES_STD, lm, lam_root, lam_secant, lam_model, real_roots, harmonic_weights   # noqa: E402
 
 DATA = os.path.join(HERE, "data")
 
@@ -109,7 +109,15 @@ def cmd_cont():
         J = getattr(S, "_lastJ", None)            # Jacobian of the last Newton iterate (close enough for a predictor)
         if J is None:
             _, J = S.jacobian(z)
-        return -np.linalg.lstsq(J, S.dF_dpar(z, "n" if par == "D" else "eps"), rcond=None)[0]
+        dF = S.dF_dpar(z, "n" if par == "D" else "eps")
+        if a.reg:
+            # tangent of the regularised solution path, (J^T J + mu^2 W^2) dz = -J^T dF: without the prior the
+            # near-null centre harmonics (the 'junk' band) take huge tangent components and spoil the predictor
+            w = harmonic_weights(S, 4)
+            mu = a.reg * np.linalg.norm(J, 2)
+            return -np.linalg.lstsq(np.vstack([J, mu * np.diag(w)]), np.concatenate([dF, np.zeros(len(w))]),
+                                    rcond=None)[0]
+        return -np.linalg.lstsq(J, dF, rcond=None)[0]
 
     t0 = time.time()
     res, F0, nF = converge(*point(a.start), z)

@@ -64,7 +64,7 @@ Contents
 | γ, ℓ = 1 (η = ∞) | 0.11890 | 0.21551 | | 0.26557 | 0.29573 | 0.31620 | 0.33129 | |
 
 (k_c = 15 for the σ-model; the ℓ = 1 row is the ℓ-multiplet agent's k_c = 23 values, copied with attribution to
-`data/sigdss_l1_reference.jsonl`. The D = 10 values are less accurate, §6.)
+`data/sigdss_l1_reference.jsonl`. k_c = 23 checks at D = 6, 9, 10 agree to 10⁻⁴ in λ or better, §6.)
 
 ## 2. Equations
 
@@ -211,20 +211,25 @@ the nodes 0.02 ≤ x ≤ 0.9 and the light cone.)
 
 - **γ rises monotonically** at both couplings, like the ℓ = 1 multiplet's and the scalar's, and stays below the ℓ = 1
   values at every D (§7).
-- **Δ has a maximum.** At η = 1, Δ rises from 0.462 (D = 4) to 1.0270 near D = 9 and then decreases to 1.0244 at
-  D = 9.71; beyond that it rises again (1.0261 at D = 10, 1.0298 at 10.38) while the constraint grows from 4×10⁻⁴ to
-  7×10⁻³, so the values above D ≈ 9.7 are not reliable to better than a few 10⁻³. At η = 0.3, Δ peaks at 1.1717 near
-  D = 8 and decreases monotonically to 1.1546 at D = 10. The ℓ = 1 multiplet's Δ(D) is similar (0.9838, 0.9882 at D = 8,
-  9, k_c = 23; their k_c = 15 march turns over near D = 9).
+- **Δ is nearly flat above D ≈ 8.** At η = 1, Δ rises from 0.462 (D = 4) to 1.0269 at D = 9, dips to 1.0244 at
+  D = 9.71 and rises again (1.0261 at D = 10, confirmed at k_c = 23 to 10⁻⁶; 1.0270 at 10.1). At η = 0.3 it peaks at
+  1.1717 near D = 8 and decreases to 1.1545 at D = 10 and 1.1517 at 10.1. The ℓ = 1 multiplet's Δ(D) levels off in the
+  same way (0.9838, 0.9882 at D = 8, 9, k_c = 23; their k_c = 15 march turns over near D = 9).
+- **λ(D) changes its curvature near D ≈ 9.5 at η = 1.** Its second differences at unit spacing are 0.168, 0.077, 0.016
+  (D = 6–8, 7–9, 8–10), against 0.166, 0.079, 0.068 at η = 0.3; the D = 10 values are confirmed at k_c = 23 (§6), so this
+  is not a resolution effect.
 - **The amplitude** max|u| on 0 ≤ x ≤ 1 decreases with D (0.67 → 0.48 at η = 1, 1.31 → 0.89 at η = 0.3), and grows as η
   decreases, as expected from u = κψ with ψ ∼ n^(−1/2) at fixed x. The O(1) nonlinearity that distinguishes the σ-model
   from the multiplet at D = ∞ sits in the inner region x ∼ √n, outside the light cone (SIGMA.md §6.1), which the
   periodic problem on 0 ≤ x ≤ 1 sees only through the analyticity condition at x = 1.
-- **No fold up to D = 10.** The secant tangent |dz/dD| falls smoothly from 0.91 (D = 6.1) to 0.25 (D = 9), dΔ/dD is
-  small and smooth, and the growth rate varies smoothly. The continuation stops at D = 10.475 (η = 1) and 10.597
-  (η = 0.3) for a numerical reason (§6), not because the branch ends: before the stop the constraint diagnostic has
-  grown by a factor 10³ and Δ jumps between neighbouring points (η = 0.3: 1.108–1.125 at D = 10.592–10.598), which a
-  smooth branch does not do.
+- **No fold up to D = 10.** The secant tangent |dz/dD| falls smoothly from 0.91 (D = 6.1) to 0.23 (D = 9.7), with a
+  small Δ component. The first marches stopped at D = 10.475 (η = 1) and 10.597 (η = 0.3) because of the near-null
+  band (§6), not because the branch ends: between D = 10 and the stop the tangent grows from 0.3 to 6 (η = 1) and to
+  200–300 (η = 0.3), almost entirely in the centre datum q(τ) at harmonics 3–15, whose amplitudes grow from a few 10⁻²
+  to the size of the fundamental; Δ then jumps between neighbouring points (η = 0.3: 1.108–1.125 at D = 10.592–10.598),
+  which a smooth branch does not do. The tangent was computed without the smoothness prior, so it fed the near-null
+  directions. With the prior also in the tangent (`sigdss_run.py` now does this) the predictor residual at D = 10.1 is
+  10⁻⁴ and the march proceeds (`data/sigdss_m1hi.jsonl`, `data/sigdss_m03hi.jsonl`, D10HI).
 
 ## 6. Checks along the branch
 
@@ -232,14 +237,17 @@ the nodes 0.02 ≤ x ≤ 0.9 and the light cone.)
   `data/sigdss_refine_kc23.jsonl`). D = 6, η = 1: Δ = 0.94449116 against 0.94449059, λ = 3.8062216 against 3.8062242
   (7×10⁻⁷ relative); constraint 2×10⁻⁶ against 2×10⁻⁴. D = 9, η = 1 (with the prior): λ = 3.048509 against 3.048927
   (1.4×10⁻⁴ relative); Δ = 1.02703 against 1.02690, but at k_c = 23 Δ was still drifting by 10⁻⁵ per Newton step at
-  |F| = 2×10⁻¹⁰, along the near-null directions below, so it is determined only to about 10⁻⁴ there. D = 10:
-  D10KC23.
+  |F| = 2×10⁻¹⁰, along the near-null directions below, so it is determined only to about 10⁻⁴ there. D = 10 (with the
+  prior): η = 1, Δ = 1.0261425 against 1.0261416 and λ = 2.919835 against 2.919800 (1.2×10⁻⁵ relative); η = 0.3,
+  Δ = 1.15452 against 1.15456 and λ = 3.081100 against 3.081424 (1.0×10⁻⁴). The constraint at k_c = 23 is 8×10⁻⁶ and
+  8×10⁻⁵, against 1.6×10⁻³ at k_c = 15: at D = 10 the k_c = 15 constraint overstates the error of Δ and λ, which sits
+  in the high centre harmonics that Δ and λ hardly feel.
 - **The near-null band** ([`sigdss_svd.py`](../solver/matter/sigdss_svd.py), `data/sigdss_svd.jsonl`). At D = 9, η = 1
   the smallest singular values of the Jacobian are 1.5×10⁻¹⁰, 6.6×10⁻¹⁰, 1.8×10⁻⁹, 5.3×10⁻⁹ relative (in Re/Im pairs),
   with singular vectors almost entirely in the centre datum q(τ), harmonics k = 7–11, and Δ components below 10⁻⁶. This
   is the "junk" band of the main solver (solver/notes.md: evanescent high-harmonic perturbations near the centre), here
   already at D ≈ 9 for the hedgehog. It is why Newton stalls at |F| ≈ 10⁻⁸ above D ≈ 9 without the smoothness prior,
-  and the growth of the constraint above D = 10 shows that k_c = 15 no longer resolves the solution there. The prior
+  why the k_c = 15 constraint grows above D ≈ 9.7, and why the first marches stopped near D = 10.5 (§5). The prior
   itself moves the solution little: re-converging the D = 9 (η = 1) and D = 8 (η = 0.3) solutions with it changes Δ by
   1.4×10⁻⁸ and 1×10⁻⁹. The ℓ = 1 agent's k_c = 23 march with the prior stalls at D ≈ 9.2–9.8 in the same way (their
   `logs/march_l1_kc23m.log`).
@@ -263,9 +271,8 @@ the nodes 0.02 ≤ x ≤ 0.9 and the light cone.)
 ## 7. Large D: what the data allow
 
 **Fits of λ(D)** ([`sigdss_fit.py`](../solver/matter/sigdss_fit.py); `data/sigdss_fit_lam_eta1.json`,
-`data/sigdss_fit_lam_eta0.3.json`, `data/sigdss_fit_lam_l1ref.json`), D ≤ 9 (D = 10 is left out: its constraint is
-27 times that at D = 9 and its second difference in D is off the trend of the others), λ = λ∞ + Σ_{k ≤ m} c_k n⁻ᵏ free,
-against λ = 2 + Σ_{k ≤ m+1} c_k n⁻ᵏ (same number of parameters), rms residuals:
+`data/sigdss_fit_lam_eta0.3.json`, `data/sigdss_fit_lam_l1ref.json`), D ≤ 9, λ = λ∞ + Σ_{k ≤ m} c_k n⁻ᵏ free, against
+λ = 2 + Σ_{k ≤ m+1} c_k n⁻ᵏ (same number of parameters), rms residuals:
 
 | coupling | D range | m | λ∞ (free) | rms free | rms with λ∞ = 2 |
 |---|---|---|---|---|---|
@@ -287,6 +294,10 @@ against λ = 2 + Σ_{k ≤ m+1} c_k n⁻ᵏ (same number of parameters), rms res
   (η = 0.3) and the λ∞ = 2 fits are 7 and 1.5 times worse; but at η = 1 the factor drops to 2 (λ∞ = 2.29) when the D = 9
   value is replaced by its k_c = 23 value, a change of 4×10⁻⁴, so this is not robust. The spread over fit choices,
   λ∞ ≈ 1.7–2.7, i.e. γ∞ ≈ 0.36–0.57, is the honest range; it is not a statistical error bar.
+- **Adding D = 10 makes it worse** (`data/sigdss_fit_lam_eta1_D10.json`, `..._eta0.3_D10.json`): with D = 5–10 the free
+  λ∞ is 1.82, 2.59, 1.91, 1.34 (η = 1) and 1.95, 2.65, 2.41, 3.19 (η = 0.3) for m = 1–4, with residuals of 3–5×10⁻³ at
+  m = 3–4, ten times those on D ≤ 9. The D = 10 values are accurate (k_c = 23), so this is the curvature change of λ(D)
+  near D ≈ 9.5 (§5): low-order expansions in 1/n do not describe λ(D) across D = 5–10.
 - **Planted control** (same code path, same D grid, Gaussian noise 10⁻⁴; `--plant`): data made from
   λ = 2.3 + 6.5/n − 3/n² + 12/n³ give free λ∞ = 2.154, 2.444, 2.297 for m = 1, 2, 3, and the λ∞ = 2 fit is rejected at
   m = 3 (rms 7.6×10⁻⁴ against 5.8×10⁻⁵); data made with λ∞ = 2 (2 + 8.5/n − 8/n² + 15/n³) give 2.037, 2.180, 1.997
