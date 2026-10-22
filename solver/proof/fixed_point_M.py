@@ -269,8 +269,15 @@ def run_M(x, M, r0="0.1", arg=None, sector=None, prec=320, verbose=True, kmins_i
         L, comps, kw, rows = lipschitz_M(sa, P, Q, C, k, rho, wts, diag)
         lip = wnorm(L, wts)
     selfmap = F + lip * rho
-    ok = bool(lip < 1) and bool(selfmap < rho) and all(lows)
-    out = dict(M=M, N=N, k=k, kmax=kmax, kmins=kmins, low_ok=all(lows), lip=lip, F=F, rho=rho, selfmap=selfmap, ok=ok,
+    # structural vanishing: Y_N is the formal series truncated at N terms, so every residual numerator vanishes below
+    # order N - 1 (the orders the recursion solves exactly). A smaller first order means Y_N is not that series (a
+    # wrong coefficient or a wrong system); the contraction alone would still pass with a smaller weight exponent and
+    # prove a weaker statement about another polynomial, so this is checked explicitly (fixed_point.py detects the
+    # orders at the point and has no such check; its mutation test passes the orders in from an unmutated run).
+    struct_ok = min(kmins) >= N - 1
+    ok = bool(lip < 1) and bool(selfmap < rho) and all(lows) and struct_ok
+    out = dict(M=M, N=N, k=k, kmax=kmax, kmins=kmins, low_ok=all(lows), struct_ok=struct_ok, lip=lip, F=F, rho=rho,
+               selfmap=selfmap, ok=ok,
                wts=wts, comps=comps, kw=kw, L=L, sa=sa, P=P, Q=Q, C=C, R=R, r0=arb(r0), a=a, arg=argx, diag=diag,
                sector=sector)
     if verbose:
@@ -285,7 +292,7 @@ def report(out, x=None):
           f"{'diag' if out['diag'] else 'plain'}: N = {out['N']} terms, weight exponent k = {out['k']} "
           f"(forcing allows {out['kmax']})")
     print(f"  residual numerators: lower coefficients all contain 0: {out['low_ok']}; first nonzero orders "
-          f"{sorted(set(out['kmins']))}")
+          f"{sorted(set(out['kmins']))} (structural, >= N - 1: {out['struct_ok']})")
     print(f"  forcing ||T(0)||_w <= {float(out['F'].upper()):.3e}")
     big = sorted(((float(L[i][j].upper()), comps[i], comps[j]) for i in range(len(L)) for j in range(len(L))),
                  reverse=True)[:6]
@@ -775,7 +782,15 @@ def main():
         out = run_M(x, M, r0, arg, sector, kmins_in=c0["kmins"], N_in=c0["N"], k_in=c0["k"], diag=diag)
         Maj.BOX = False
     else:
-        out = run_M([acb(v) for v in xs], M, r0, arg, sector, kcap=kcap, diag=diag, mutate=mutate)
+        try:
+            out = run_M([acb(v) for v in xs], M, r0, arg, sector, kcap=kcap, diag=diag, mutate=mutate)
+        except ValueError as e:
+            # the harness refuses (e.g. no admissible weight exponent): the lemma is not established
+            print(f"lemma not established: {e}")
+            if mutate:
+                print(f"MUTATION {mutate}: the lemma holds: False (must be False)")
+                return 0
+            return 2
     if mutate:
         print(f"MUTATION {mutate}: the lemma holds: {out['ok']} (must be False)")
         return 0 if not out["ok"] else 3

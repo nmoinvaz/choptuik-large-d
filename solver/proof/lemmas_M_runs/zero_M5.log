@@ -1,0 +1,3 @@
+   level 5 solved: |r_5| 4.45e-10  (22 residuals, 271 s)  [271 s total]
+   Jacobian K computed (4 residuals) [331 s]
+   level 5 solved: |r_5| 3.90e-10  (4 residuals, 54 s)  [386 s total]

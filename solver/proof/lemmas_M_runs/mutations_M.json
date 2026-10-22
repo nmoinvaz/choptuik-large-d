@@ -1,0 +1,152 @@
+[
+ {
+  "name": "fp_series_M3",
+  "cmd": "fixed_point_M.py --M=3 --mutate=series",
+  "expected": "caught",
+  "exit": 3,
+  "matches": false,
+  "what": "step (i): one coefficient of the harmonic-3 D series off by a relative 1e-6",
+  "tail": [
+   "  ball rho = 8.074e+02: ||T(0)|| + Lip rho = 7.605e+02 < rho: True",
+   "  => fixed point exists and is unique in the ball: True; |eta| <= 5.26e-08 at |z| = R (p, v, c variables)",
+   "MUTATION series: the lemma holds: True (must be False)"
+  ],
+  "sec": 4.5
+ },
+ {
+  "name": "fp_series_M5",
+  "cmd": "fixed_point_M.py --M=5 --mutate=series --r0=0.0622 --arg=5pi/16 --diag",
+  "expected": "caught",
+  "exit": 3,
+  "matches": false,
+  "what": "step (i), M = 5 on inner_np's ray: one coefficient of the harmonic-5 D series off by 1e-6",
+  "tail": [
+   "  ball rho = 4.419e+02: ||T(0)|| + Lip rho = 3.682e+02 < rho: True",
+   "  => fixed point exists and is unique in the ball: True; |eta| <= 2.54e-10 at |z| = R (p, v, c variables)",
+   "MUTATION series: the lemma holds: True (must be False)"
+  ],
+  "sec": 27.3
+ },
+ {
+  "name": "fp_cdrop_M3",
+  "cmd": "fixed_point_M.py --M=3 --mutate=cdrop",
+  "expected": "caught",
+  "exit": 1,
+  "matches": false,
+  "what": "step (i): the series built without the c harmonics +-4 (an inconsistent harmonic set)",
+  "tail": [
+   "  File \"/home/claude/dss-residual-kernel/.claude/worktrees/agent-a2fc719f20ab19cbf/solver/proof/fixed_point.py\", line 212, in intbound",
+   "    raise ValueError(f\"integrand t^{q} not admissible for weight {k_i} ({kind})\")",
+   "ValueError: integrand t^-1 not admissible for weight 0 (slow)"
+  ],
+  "sec": 3.7
+ },
+ {
+  "name": "fp_diagpath_M3",
+  "cmd": "fixed_point_M.py --M=3 --mutate=diagpath",
+  "expected": "caught",
+  "exit": 0,
+  "matches": true,
+  "what": "guard, not a mutation: the diag splitting with a non-ray kernel bound (invalid there) must be refused",
+  "tail": [
+   "MUTATION diagpath: refused (the diag splitting is valid on rays only; refusing it with a non-ray kernel bound) -> caught"
+  ],
+  "sec": 1.7
+ },
+ {
+  "name": "fp_control_r0",
+  "cmd": "fixed_point_M.py --M=3 --r0=0.3 --diag",
+  "expected": "fails",
+  "exit": 2,
+  "matches": true,
+  "what": "control: start radius 0.3, the contraction must fail",
+  "tail": [
+   "  contraction constant (weighted max norm) <= 16.3920",
+   "  ball rho = 1.000e+00: ||T(0)|| + Lip rho = 8.477e+04 < rho: False",
+   "  => fixed point exists and is unique in the ball: False; |eta| <= 4.37e-03 at |z| = R (p, v, c variables)"
+  ],
+  "sec": 2.3
+ },
+ {
+  "name": "fp_m1",
+  "cmd": "fixed_point_M.py --check-m1",
+  "expected": "passes",
+  "exit": 0,
+  "matches": true,
+  "what": "control: M = 1 reproduces fixed_point.py (constants, start values, start data)",
+  "tail": [
+   "run over the complex box +-1e-3(1+i): fixed_point.py N 53, k 40, lip 0.292255, F 8.569284e+69, rho 4.843148e+70; fixed_point_M: N 53, k 40, lip 0.292255, F 8.569284e+69, rho 4.843148e+70; same N, k, vanishing orders and weights, constants equal to relative 1e-21: True",
+   "start_data over X = x^ +- 1e-9 (Cauchy 1e-3), 7 values and 14 derivatives: max midpoint difference 0.0e+00, max relative radius difference 0.0e+00, all overlap: True (12 s)",
+   "M = 1 REPRODUCES fixed_point.py: True"
+  ],
+  "sec": 18.7
+ },
+ {
+  "name": "usys_label",
+  "cmd": "lemma6_usys_M.py --mutate=label",
+  "expected": "caught",
+  "exit": 0,
+  "matches": true,
+  "what": "system: s_mu = i |mu| w in the u-form (the label sign lost); the comparisons with the xi-form and with fixed_point's encoding must fire",
+  "tail": [
+   "M = 3 [MUTATION label]: (a) 1.4e-55 ok; (b) 3.5e-16 ok; (c) 2.6e+00 FAIL; (d) 3.5e-01 FAIL; (e) 5.3e-56 ok; (f) 3.7e+00 FAIL",
+   "M = 5 [MUTATION label]: (a) 1.4e-55 ok; (b) 1.4e-15 ok; (c) 1.8e+00 FAIL; (d) 3.3e-01 FAIL; (e) 5.7e-55 ok; (f) 3.7e+01 FAIL",
+   "MUTATION label: caught: True"
+  ],
+  "sec": 7.0
+ },
+ {
+  "name": "usys_clean",
+  "cmd": "lemma6_usys_M.py",
+  "expected": "passes",
+  "exit": 0,
+  "matches": true,
+  "what": "control: the system self-tests at M = 3, 5",
+  "tail": [
+   "M = 3: (a) 1.4e-55 ok; (b) 3.5e-16 ok; (c) 4.0e-58 ok; (d) 9.2e-59 ok; (e) 5.3e-56 ok; (f) 1.6e-58 ok",
+   "M = 5: (a) 1.4e-55 ok; (b) 1.4e-15 ok; (c) 6.4e-58 ok; (d) 8.0e-59 ok; (e) 5.7e-55 ok; (f) 2.5e-57 ok",
+   "ALL SELF-TESTS PASS: True"
+  ],
+  "sec": 7.5
+ },
+ {
+  "name": "S_series_M3",
+  "cmd": "lemma6_sector_M.py --M=3 --rp=0.1 --k=20 --mutate=series",
+  "expected": "caught",
+  "exit": 0,
+  "matches": true,
+  "what": "lemma S: one coefficient of the harmonic-3 series off by 1e-6",
+  "tail": [
+   "MUTATION series (top harmonic's coefficient off by 1e-6): lemma S holds: False (must be False)"
+  ],
+  "sec": 8.5
+ },
+ {
+  "name": "S_control_rp",
+  "cmd": "lemma6_sector_M.py --M=3 --rp=0.13 --k=10",
+  "expected": "fails",
+  "exit": 2,
+  "matches": true,
+  "what": "control: lemma S at R+ = 0.13^2, beyond the contraction (0.83 at 0.1, label terms grow like R+)",
+  "tail": [
+   "flat estimate (M = 3) on 0 < z <= Z = 0.011711 (xi <= 0.10822), plain, a_r = 0.3829: ||T0|| <= Lambda = 0.7986 < 1: True; largest entries v+3<-p+3 3.51, v-3<-p-3 3.51, v+1<-p+1 1.06, v-1<-p-1 1.06",
+   "flat estimate (M = 3) on 0 < z <= Z = 0.011711 (xi <= 0.10822), diag, a_r = 0.3653: ||T0|| <= Lambda = 0.6110 < 1: True; largest entries v+3<-p+3 3.68, v-3<-p-3 3.68, v+1<-p+1 1.11, v-1<-p-1 1.11",
+   "ALL CHECKS PASS (M = 3): False"
+  ],
+  "sec": 11.9
+ },
+ {
+  "name": "disc_m1",
+  "cmd": "lemma6b1_disc_M.py",
+  "expected": "passes",
+  "exit": 0,
+  "matches": true,
+  "what": "control: lemma D at M = 1 reproduces lemma6b1_disc.certify",
+  "tail": [
+   "M = 1 disc at |u| = 102.16 on the start ray, r = 24, n = 70: lemma6b1_disc Lam 0.184226 ok True; lemma6b1_disc_M Lam 0.184226 ok True; relative difference of Lam, F0 0.0e+00",
+   "M = 1 disc at |u| = 24.94 on the start ray, r = 10, n = 40: lemma6b1_disc Lam 0.438972 ok True; lemma6b1_disc_M Lam 0.438972 ok True; relative difference of Lam, F0 0.0e+00",
+   "M = 1 REPRODUCES lemma6b1_disc: True"
+  ],
+  "sec": 13.4
+ }
+]

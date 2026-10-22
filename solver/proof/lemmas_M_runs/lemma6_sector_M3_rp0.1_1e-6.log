@@ -1,8 +1,8 @@
 lemma S (M = 3) on D (R+ = 0.1^2 = 0.01, U0 = sqrt2/R+ = 141.4), parameters x^ +- 1e-6: N = 53, k = 20 (forcing allows 52), a_eff = 0.2536
 M = 3, r0 = [0.10000 +/- 1e-10] (R = r0^2), arg xi = 1.178097, kernel rate a = 0.25355, splitting plain: N = 53 terms, weight exponent k = 20 (forcing allows 52)
-  residual numerators: lower coefficients all contain 0: True; first nonzero orders [52, 53]
+  residual numerators: lower coefficients all contain 0: True; first nonzero orders [52, 53] (structural, >= N - 1: True)
   forcing ||T(0)||_w <= 1.148e+34
-  largest Lipschitz entries (unweighted): v+3<-p+3 4.44, v-3<-p-3 4.44, v+1<-p+1 1.32, v-1<-p-1 1.32, v-1<-p-3 0.832, v+1<-p+3 0.832
+  largest Lipschitz entries (unweighted): v+3<-p+3 4.44, v-3<-p-3 4.44, v+1<-p+1 1.32, v-1<-p-1 1.32, v+1<-p+3 0.832, v-1<-p-3 0.832
   contraction constant (weighted max norm) <= 0.8252
   ball rho = 2.628e+35: ||T(0)|| + Lip rho = 2.284e+35 < rho: True
   => fixed point exists and is unique in the ball: True; |eta| <= 1.75e-05 at |z| = R (p, v, c variables)

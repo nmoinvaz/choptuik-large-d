@@ -27,7 +27,9 @@ PILOT (NOT rigorous): --pilot=1e-10 builds B1 from a double-precision y+(xi1) at
     inflated by the given radius. It measures the cost and rho_6a; it proves nothing.
 
     python3 lemma6_jump_M.py --M=3 --box=f.json [--xia=0.067] [--rp=0.1] [--k=20] [--json=out.json]
-    python3 lemma6_jump_M.py --M=3 --pilot=1e-10 [--xi1=0.2] [--rho=0.2]
+    python3 lemma6_jump_M.py --M=3 --pilot=1e-10 [--xi1=0.2] [--rho=0.2] [--save-B=b.json | --load-B=b.json]
+        --save-B stores the backward enclosure B (and the final state box); --load-B reuses it, for the mutations that
+        change only the post-processing (partial, coords)
     mutations: --mutate=swap    y- = conj(y+) without the reflection mu -> -mu: must fail
                --mutate=partial only J_{D,1} = 0 assumed (psi_{D,+-3} free): G_slow is not square, must fail
                --mutate=coords  (1 - i mu w) in the change of variables at xi_a: at M = 1 not caught (second order,
@@ -152,7 +154,22 @@ def main():
     nd = len(y)
     print(f"start box at xi1 = {xi1} (y+ and sigma(y+)): radius {max(VI.rad_of(z) for z in H[:nd]):.2e}", flush=True)
     try:
-        V, X, steps, sec = backward(M, H, xi1, xia, verbose="verbose" in opts)
+        if "load-B" in opts:
+            # the saved enclosure of a clean run with the same start box (the post-processing mutations reuse it)
+            with open(opts["load-B"]) as fh:
+                sb = json.load(fh)
+            assert sb["M"] == M and sb["xi1"] == xi1 and sb["xia"] == xia and mutate != "swap"
+            V = acb_mat([[parse(sb["B"][i][j]) for j in range(nd)] for i in range(nd)])
+            X, steps, sec = [parse(p) for p in sb["X"]], sb["steps"], 0.0
+        else:
+            V, X, steps, sec = backward(M, H, xi1, xia, verbose="verbose" in opts)
+            if "save-B" in opts:
+                def sj(z):
+                    return [z.real.str(80, radius=True), z.imag.str(80, radius=True)]
+                with open(opts["save-B"], "w") as fh:
+                    json.dump({"M": M, "xi1": xi1, "xia": xia, "steps": steps, "sec": sec,
+                               "X": [sj(z) for z in X[:nd]], "B": [[sj(V[i, j]) for j in range(nd)] for i in range(nd)]},
+                              fh)
     except RuntimeError as e:
         print(f"backward integration failed ({e}): lemma 6a NOT established"
               + (f"   [MUTATION {mutate}: failure expected]" if mutate else ""))

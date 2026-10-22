@@ -61,7 +61,7 @@ def runs_dir(M):
 def disc_params(M, rho):
     """(disc radius r, Taylor order n) by row radius; M = 1 is lemma6b1_cover.disc_params. M >= 3: y+ is larger and
     its singularities nearer at the inner rows (lemma6b1_estimate_M.py: 12.7 against 15 at 25 e^{-3 i pi/4}), so the
-    inner rows use smaller discs and higher orders (chosen with `probe`)."""
+    inner rows use smaller discs (chosen with `probe`, lemmas_M_runs/probe_M3.log)."""
     if M == 1:
         return LC.disc_params(rho)
     if rho >= 100:
@@ -70,7 +70,7 @@ def disc_params(M, rho):
         return 16, 60
     if rho >= 32:
         return 10, 50
-    return 8, 50
+    return 6, 50                     # probe: r = 8 fails at 25.96 e^{-3 i pi/4} (Lam 1.34), r = 6 passes (Lam 0.20)
 
 
 def design(M):

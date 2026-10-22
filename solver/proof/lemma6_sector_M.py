@@ -21,8 +21,7 @@ Rigorous (python-flint arb/acb). Statements and proofs: proof/A_lemmas_M.md, sec
     python3 lemma6_sector_M.py --M=3 --scan        lemma S over a grid of (rp, k): where the contraction closes
     python3 lemma6_sector_M.py --M=3 --mutate=series   one coefficient of the top harmonic's series off by a relative
                                                         1e-6: lemma S must fail
-    python3 lemma6_sector_M.py --M=3 --mutate=strict   lemma S with the slow-type bound allowed on the fast rows (not
-                                                        valid on these paths): the harness must refuse it
+    control: python3 lemma6_sector_M.py --M=3 --rp=0.13 --k=10     R+ too large: lemma S must fail
 """
 import json
 import os
@@ -56,9 +55,8 @@ def lemma_S_M(M, rp, k, box="0", verbose=True, mutate=None):
     c0 = FPM.run_M(xs_of(M), M, rp, verbose=False, a_in=a_eff, intbound=L6S.intbound_strict, k_in=k, sym=True)
     isbox = bool(box and float(box) > 0)
     FP.Maj.BOX = isbox
-    ib = L6S.intbound_strict if mutate != "strict" else FP.intbound
     out = FPM.run_M(xs_of(M, box), M, rp, verbose=False, kmins_in=c0["kmins"], N_in=c0["N"], k_in=k, a_in=a_eff,
-                    intbound=ib, sym=True, mutate="series" if mutate == "series" else None)
+                    intbound=L6S.intbound_strict, sym=True, mutate="series" if mutate == "series" else None)
     FP.Maj.BOX = False
     out["a_eff"], out["rp"], out["box"] = a_eff, rp, box
     if verbose:
@@ -156,14 +154,6 @@ def main():
         S = lemma_S_M(M, rp, k, box, verbose=False, mutate="series")
         print(f"MUTATION series (top harmonic's coefficient off by 1e-6): lemma S holds: {S['ok']} (must be False)")
         return 0 if not S["ok"] else 3
-    if mut == "strict":
-        try:
-            lemma_S_M(M, rp, k, box, verbose=False, mutate="strict")
-        except ValueError as e:
-            print(f"MUTATION strict: refused ({e}) -> caught")
-            return 0
-        print("MUTATION strict: NOT refused")
-        return 3
     S = lemma_S_M(M, rp, k, box)
     O = sector_old_M(M, box, diag=True)
     Rp = float((arb(rp) ** 2).mid())

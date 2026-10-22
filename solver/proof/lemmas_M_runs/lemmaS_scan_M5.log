@@ -19,3 +19,4 @@ M 5 rp 0.06   k 30: N 142 a_eff 0.2996 contraction 0.4057 ok True |eta| 1.9e-58 
 M 5 rp 0.055  k 10: N 168 a_eff 0.3384 contraction 0.4575 ok True |eta| 4.3e-70 [69.1 s]
 M 5 rp 0.055  k 20: N 168 a_eff 0.3233 contraction 0.3750 ok True |eta| 4.0e-70 [66.7 s]
 M 5 rp 0.055  k 30: N 168 a_eff 0.3082 contraction 0.3469 ok True |eta| 4.0e-70 [68.4 s]
+M 5 rp 0.05   k 10: N 203 a_eff 0.3411 contraction 0.4016 ok True |eta| 2.2e-85 [103.2 s]
