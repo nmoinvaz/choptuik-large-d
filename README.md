@@ -1568,12 +1568,15 @@ fixes λ∞ = 2, carried to D = ∞, where λ = 2 is exact (the r²-shift symmet
 - J. Bland et al., CQG 22, 5355 (2005), [gr-qc/0507088](https://arxiv.org/abs/gr-qc/0507088).
 - D. Garfinkle, C. Cutler and G. C. Duncan, PRD 60, 104007 (1999), [gr-qc/9908044](https://arxiv.org/abs/gr-qc/9908044).
 - E. Sorkin and Y. Oren, PRD 71, 124005 (2005), [hep-th/0502034](https://arxiv.org/abs/hep-th/0502034).
-- M. Rozali and B. Way, [arXiv:1807.10283](https://arxiv.org/abs/1807.10283).
-- J. Bland and G. Kunstatter, PRD 75, 101501 (2007), [hep-th/0702226](https://arxiv.org/abs/hep-th/0702226); J. Bland, PhD thesis,
-  University of Manitoba (2007).
-- R. Donninger, [arXiv:0809.5177](https://arxiv.org/abs/0809.5177).
-- R. Emparan and C. P. Herzog, large-D review, [arXiv:2003.11394](https://arxiv.org/abs/2003.11394).
-- C. Gundlach, D. Hilditch and J. M. Martín-García, review of critical phenomena in gravitational collapse (2025),
+- M. Rozali and B. Way, *Gravitating scalar stars in the large D limit*, JHEP 11 (2018) 106,
+  [arXiv:1807.10283](https://arxiv.org/abs/1807.10283).
+- J. Bland and G. Kunstatter, PRD 75, 101501 (2007), [hep-th/0702226](https://arxiv.org/abs/hep-th/0702226); J. Bland,
+  *Dimension dependence of the critical phenomena in gravitational collapse of massless scalar field*, PhD thesis,
+  University of Manitoba (2007), [hdl:1993/20437](http://hdl.handle.net/1993/20437).
+- R. Donninger, J. Evol. Equ. 9, 511 (2009), [arXiv:0809.5177](https://arxiv.org/abs/0809.5177).
+- R. Emparan and C. P. Herzog, *The large D limit of Einstein's equations*, RMP 92, 045005 (2020),
+  [arXiv:2003.11394](https://arxiv.org/abs/2003.11394).
+- C. Gundlach, D. Hilditch and J. M. Martín-García, *Critical phenomena in gravitational collapse* (2025),
   [arXiv:2507.07636](https://arxiv.org/abs/2507.07636).
 - C. Ecker, F. Ecker and D. Grumiller, PRL 136, 191401 (2026), [arXiv:2601.14358](https://arxiv.org/abs/2601.14358).
 - C. Ecker, F. Ecker, D. Grumiller and T. Jechtl, SciPost Phys. 20, 176 (2026), [arXiv:2602.10185](https://arxiv.org/abs/2602.10185).
