@@ -664,6 +664,44 @@ def run_controls(bx, pt=None):
     return ok_all, rows
 
 
+XCHECK = {3: ["2.7", "1.0", "0.14", "0.01"], 5: ["2.7", "1.0", "0.149", "0.0147", "0.0084", "0.00147"]}
+
+
+def crosscheck(M, pstr, mutate=False):
+    """the jumps J_nu(0.2) at a point near (not at) the zero, where they are of their natural size, from this code's
+    integrator (numerics_run, flint Taylor series) against
+    solver/inner_stokes/inner_np.py (scipy DOP853 at rtol 1e-12, its own series start; independent code), on the same
+    path: the ray arg xi = 5pi/16 from inner_np's r0 to 0.2 and the arc at 0.2 (hier.py's path; M >= 3).
+    Agreement: |difference| <= 1e-9 max|y| for every J_nu (inner_np's own accuracy is about 1e-12 of the state).
+    mutate: compare with inner_np at w/w_inf shifted by 1e-6 (must disagree)."""
+    sys.path.insert(0, os.path.join(HERE, "..", "inner_stokes"))
+    import inner_np as IN
+    ctx.prec = PREC
+    s = CS.SysM(M)
+    p = exact_p(pstr)
+    path = (R0[M], path_for(M)[1], "0.2", "0.2")
+    _, vals, _, _ = CS.placeholder_start(p, M, path[0], path[1], dirs=[])
+    y, _, steps = CL.numerics_run(s, vals, CS.W0() * p[1], [[acb(0)] * s.n], path, N=NUM_N, tol=NUM_TOL)
+    x = np.array([float(v) for v in pstr])
+    if mutate:
+        x[1] += 1e-6
+    m = IN.Inner(M, IN.W0 * x[1], IN.Fh_from(x, M), True)
+    J, info = m.jumps((0.2,), r0=float(R0[M]))
+    Jd = J[0.2]
+    scale = max(1.0, max(abs(complex(y[i].mid())) for i in range(s.nd)))
+    worst = 0.0
+    for nu in range(1, M + 1, 2):
+        mine = complex((y[s.idx[("D", nu)]] - y[s.idx[("D", -nu)]].conjugate()).mid())
+        ref = Jd[nu + m.L]
+        err = abs(mine - ref) / scale
+        worst = max(worst, err)
+        print(f"   J_{nu}(0.2): this code {mine:.12e}, inner_np {ref:.12e}, |difference| / max|y| = {err:.1e}")
+    ok = worst < 1e-9
+    print(f"crosscheck M = {M}{' [mutated: inner_np at wf + 1e-6]' if mutate else ''}: worst relative difference "
+          f"{worst:.1e} -> {'AGREE' if ok else 'DISAGREE'} (inner_np r0 {info[0]:.4f}, its series to {info[1]} terms)")
+    return ok
+
+
 def plan(d):
     """the block structure of Dg at the last refinement point (raw jump units at xi1): the outer Schur complement S,
     the inner block Dg_HH, the leakage L = Dg_oH Dg_HH^-1, the tilt C, the Newton step sizes. Numerics, not rigorous."""
@@ -759,6 +797,10 @@ def main():
             hok = hier_check(r, M, mutate=(o.get("mutate") == "hier"))
             return 0 if hok else 1
         return 0 if r["ok"] else 1
+    if mode == "crosscheck":
+        M = int(pos[0])
+        ok = crosscheck(M, o["p"].split(",") if "p" in o else XCHECK[M], mutate="mutate" in o)
+        return 0 if ok else 1
     if mode == "plan":
         with open(o["centre"]) as fh:
             d = json.load(fh)

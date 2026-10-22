@@ -76,29 +76,23 @@ or anything about M > 5 or the untruncated problem.
 
 ## 2. Design: the Schur-corrected Krawczyk test in a tilted box
 
-**The difficulty** (A_certify.md §7, PROOF.md A.3–A.4). In the raw jumps the higher harmonics dominate everything.
-Double-precision Jacobians of hier.py's de-mixed residual (`jac_explore`, scratch, not kept) at the zeros:
+**The difficulty** (A_certify.md §7, PROOF.md A.3–A.4). In the jumps the higher harmonics dominate everything. In
+hier.py's de-mixed residuals at M = 5 (its docstring): ∂r₅/∂B₅ ≈ 4×10⁸, ∂r₃/∂B₅ ≈ 10¹³, ∂r₁/∂B₅ ≈ 10¹⁷, against
+∂r₃/∂B₃ ≈ 5×10⁵ and ∂r₁/∂A ≈ 10⁴. So r₁ ≈ L·r_H + (intrinsic part), with a leakage L of the higher conditions into the
+lower ones, and the outer derivative that matters is the Schur complement S, many orders of magnitude smaller than
+the raw entries. The same in the raw jumps J_ν at ξ₁ = 0.3, from the Newton runs of the centre refinement
+(`python3 certify_M.py plan --centre=data/A_M_refine_M{M}_a.json`, numerics; logs `logs/A_M_plan_M{M}.log`):
 
-| | M = 3 | M = 5 |
-|---|---|---|
-| ∂r_M/∂(B_M, C_M) | 5×10⁵ | 4×10⁷ |
-| ∂r₁/∂(B_M, C_M) | 6×10⁹ | 6×10¹⁵ |
-| ∂r₁/∂(A, wf), raw | 10⁸–10⁹ | 10¹³ |
-| outer Schur complement, singular values | 8.8×10³, 4.5×10³ | not resolved in double precision |
-| dx_H/dx_o (tangent of the higher harmonics' zero manifold) | 0.004–0.25 | 0.003–0.21 |
-
-So r₁ ≈ L·r_H + (intrinsic part), with a leakage L ≈ 10⁴ (M = 3) and 1.5×10⁸ (M = 5, harmonic 5 into 1), and the
-outer derivative that matters is the Schur complement, 10⁴–10¹² times smaller than the raw entries. In the raw jumps
-J_ν at ξ₁ = 0.3 (M = 5) the state's sensitivity to B₅ is of order 10¹³–10¹⁴ against an outer signal of order 1.
+PLAN_TABLE
 
 Two things go wrong in a naive Krawczyk test on (A, wf, B₃, …, C_M) with an axis-aligned box:
 
 1. **Interval hulls lose the cancellation.** The outer rows of the preconditioned Jacobian are S⁻¹(Dg₁ − L Dg_H).
-   If Dg is first enclosed entrywise over the box, the radius of Dg₁ (the true variation of a 10¹⁵-sized entry) is not
-   cancelled by L Dg_H, and the test needs boxes of about 10⁻¹⁴ at M = 5.
+   If Dg is first enclosed entrywise over the box, the radius of Dg_o (the true variation of the leakage-dominated
+   entries, PLAN_RAWO times larger than S at M = 3) is not cancelled by L Dg_H.
 2. **The higher-harmonic box is first order.** An axis-aligned box must contain x_H*(x_o) over the outer box, which
-   moves by |dx_H/dx_o|·h ≈ 0.2h. Through the 10¹³-sized sensitivity that makes the state set over the box, and with it
-   the enclosed step Jacobians, enormously wider than the outer directions alone would.
+   moves by |C|·h ≈ 0.2h. Through the inner sensitivity (the norm of Dg_HH) that makes the state set over the box, and
+   with it the enclosed step Jacobians, far wider than the outer directions alone would.
 
 **The design.** One Krawczyk test on the full (M + 1)-dimensional system, posed so that both are avoided:
 
@@ -246,3 +240,28 @@ way), except C7, which widens g(p̂) and must make it fail.
 
 A planted zero is g − L d with L the exact midpoint of Dg̃(X): it moves the zero by d up to second order and leaves
 Dg̃(X) unchanged.
+
+## 8. Reproduce
+
+All commands from `solver/proof/`. At M ≥ 3 the rigorous start data come from `fixed_point_M.py`: after the merge it
+sits next to these files; before it, point `CERTIFY_M_FPM_DIR` at the directory that holds it. Times are on the shared
+2-core cloud machine at load 17–20 (one process gets a fifth of a core).
+
+```
+python3 certify_M_sys.py selftest                       # system, series, jets, one Lohner step vs validated_int; seconds
+python3 certify_M_sys.py selftest --mutate=coupling     # must FAIL
+python3 certify_M.py m1                                 # M = 1 through this code path (point + box run, ~40 min)
+python3 certify_M.py m1 --mutate=m1ref                  # must print NOT REPRODUCED (reuses the saved runs)
+python3 certify_M.py startcheck 3                       # rigorous start data vs this file's series (~2 min)
+python3 certify_M.py startcheck 3 --mutate              # must fail
+python3 certify_M.py crosscheck 3                       # J_nu(0.2) vs inner_np.py (independent integrator)
+python3 certify_M.py crosscheck 3 --mutate              # must DISAGREE
+python3 certify_M.py refine 3 --iters=3 --tag=a         # centre (numerics) -> data/A_M_refine_M3_a.json
+python3 certify_M.py plan --centre=data/A_M_refine_M3_a.json
+python3 certify_M.py box 3 --centre=data/A_M_refine_M3_a.json --use_out --h=H --w=W \
+    --out=data/A_M_box_M3_H.json --log=logs/A_M_box_M3_H.log          # the rigorous run
+python3 certify_M.py krawczyk --box=data/A_M_box_M3_H.json --hier       # the test (seconds), then hier.py's zeros
+python3 certify_M.py controls --box=data/A_M_box_M3_H.json              # C0-C8, exit 0 iff all as expected
+python3 certify_M.py krawczyk --box=data/A_M_box_M3_H.json --hier --mutate=hier   # must fail
+python3 certify_M.py export6a --box=data/A_M_box_M3_H.json --out=data/A_M_6a_M3_H.json   # state box for lemma 6a(M)
+```
