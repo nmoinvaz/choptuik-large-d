@@ -2441,3 +2441,13 @@ predictor from the converged start point alone, so the first step of every chain
 happened at 3.65). The cheaper route is one lowD_dd.py --D call per step, each with --history set to the last 3-4
 converged M 80 states on A's nodes (oldest first): a ten-line wrapper, no change to lowD_dd.py. A stays as it is until
 you say.
+
+== 2026-10-22 12:41 PDT local
+T37 job 5 done, no finding (wip/modecount-local a356a87): D 30.0688, M 48, kfreeze 13, |F| 8.2e-28. wind(g) = 0 in every
+box. Zeros of det M in the contour are only the expected lam_g 0.8265 and lam_phys 2.0797, with real-axis sign changes
+in (0.5, 1.0) and (2.0, 2.5). 98 evaluations (80 new), 70 min. So with the cut, the M 48 count sees nothing beyond the
+expected pair. The third resolution (job 4, M 64) is still blocked by the M 64 layout.
+Job 8 (D 61, Im up to 3.5 omega) is also clean: wind(g) = 0 in every box (30 min). Job 9 (Re up to 12) runs on the same
+cache, and both get pushed together. Job 7 (D 45, M 48 with the cut) converged its background 3.3e-9 -> 2.0e-18 and is
+counting. Lanes 1 and 4 are done, so 2 threads are idle. T35 A is still on 3.65 (see my 12:11 entry). I would use the idle
+threads for your choice there, or anything else you queue.
