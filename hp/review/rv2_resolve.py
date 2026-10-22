@@ -25,6 +25,37 @@ from hpkernel.driver import (dd_add, dd_from_mp, deflated_newton, delta_correcti
                              newton_solve, renode, resample_z)
 
 
+def resample_dd(zh, zl, M0, M, K):
+    """Change the tau grid in double-double (driver.resample_z works in f64 and drops lo, which at D ~ 60 puts
+    1e-16 into the weak directions and stalls Newton): trigonometric interpolation at 40 digits, field by field
+    (p1, m-like odd fields antiperiodic, a, c even), keeping the harmonics |k| < M0."""
+    parity = ["odd", "even"] + ["odd", "odd", "even", "even"] * K + ["odd", "even"]
+    out_h, out_l = [], []
+    with mp.workdps(40):
+        N0, N = 2 * M0, 2 * M
+        for f, par in enumerate(parity):
+            v = [mp.mpf(float(h)) + mp.mpf(float(l)) for h, l in zip(zh[f * M0:(f + 1) * M0], zl[f * M0:(f + 1) * M0])]
+            full = v + ([-x for x in v] if par == "odd" else v)
+            ks = range(1, M0, 2) if par == "odd" else range(0, M0 + 1, 2)
+            co = {}
+            for k in ks:
+                co[k] = sum(full[j] * mp.expj(-k * 2 * mp.pi * j / N0) for j in range(N0)) / N0
+            vals = []
+            for j in range(M):
+                th = 2 * mp.pi * j / N
+                s = mp.mpf(0)
+                for k, c in co.items():
+                    w = 1 if (k == 0 or k == M0) else 2
+                    s += w * mp.re(c * mp.expj(k * th))
+                vals.append(s)
+            h, l = dd_from_mp(vals)
+            out_h.append(h)
+            out_l.append(l)
+    out_h.append(zh[-1:])
+    out_l.append(zl[-1:])
+    return np.concatenate(out_h), np.concatenate(out_l)
+
+
 def harmonic_field(k, amp, M):
     """amp * cos(k theta_j) on the half grid, double-double"""
     with mp.workdps(40):
@@ -49,6 +80,7 @@ def main():
     ap.add_argument("--label", default="")
     ap.add_argument("--quiet", action="store_true")
     ap.add_argument("--corrector", default="newton", choices=["newton", "nols", "dnp"])
+    ap.add_argument("--resample", default="dd", choices=["dd", "f64"])
     a = ap.parse_args()
     zh, zl, meta = load(a.state)
     D, M0, nodes0 = meta["D"], meta["M"], list(meta["nodes"])
@@ -62,7 +94,10 @@ def main():
         s0.set_segs(s0.plan(zh, zl, a.tol_step, a.hmax))
         zh, zl = renode(s0, zh, zl, nodes0, nodes, M0)
     if M != M0:
-        zh, zl = resample_z(zh + zl, M0, M, len(nodes))
+        if a.resample == "f64":
+            zh, zl = resample_z(zh + zl, M0, M, len(nodes))
+        else:
+            zh, zl = resample_dd(zh, zl, M0, M, len(nodes))
     for item in filter(None, a.perturb.split(",")):
         k, amp = item.split(":")
         hh, hl = harmonic_field(int(k), float(amp), M)

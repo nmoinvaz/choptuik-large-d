@@ -1,0 +1,66 @@
+scan_up2.log     start   D  16.750000 M 32 nodes 8   log 2.1948205721157765  csv (up) 2.1948205721157765  diff +0.0e+00
+scan_up3.log     start   D  21.350101 M 32 nodes 5   log 2.0846840055568134  csv (up2) 2.0846840055568134  diff +0.0e+00
+scan_up3.log     history D  20.953372                log 2.0923906666904890  csv (up2) 2.0923906666904890  diff +0.0e+00
+scan_up3.log     history D  21.105960                log 2.0893943975169305  csv (up2) 2.0893943975169305  diff +0.0e+00
+scan_up3.log     history D  21.240238                log 2.0867910972472790  csv (up2) 2.0867910972472790  diff +0.0e+00
+scan_up4.log     start   D  23.579720 M 32 nodes 5   log 2.0459233629184901  csv (up3) 2.0459233629184901  diff +0.0e+00
+scan_up4.log     history D  22.852543                log 2.0577829996620678  csv (up3) 2.0577829996620678  diff +0.0e+00
+scan_up4.log     history D  23.043278                log 2.0546041658517127  csv (up3) 2.0546041658517127  diff +0.0e+00
+scan_up4.log     history D  23.281697                log 2.0506995574849793  csv (up3) 2.0506995574849793  diff +0.0e+00
+scan_up5.log     start   D  26.579720 M 32 nodes 5   log 2.0034920763487700  csv (up4) 2.0034920763487700  diff +0.0e+00
+scan_up5.log     history D  25.829720                log 2.0132273290527567  csv (up4) 2.0132273290527567  diff +0.0e+00
+scan_up5.log     history D  26.079720                log 2.0099235188024864  csv (up4) 2.0099235188024864  diff +0.0e+00
+scan_up5.log     history D  26.329720                log 2.0066789661296247  csv (up4) 2.0066789661296247  diff +0.0e+00
+scan_up6.log     start   D  26.839206 M 32 nodes 5   log 2.0002436033751025  csv (up5) 2.0002436033751025  diff +0.0e+00
+scan_up6.log     history D  26.579720                log 2.0034920763487700  csv (up4) 2.0034920763487700  diff +0.0e+00
+scan_up6.log     history D  26.697464                log 2.0020106612369792  csv (up5) 2.0020106612369792  diff +0.0e+00
+scan_up6.log     history D  26.798279                log 2.0007520153867198  csv (up5) 2.0007520153867198  diff +0.0e+00
+scan_up7.log     start   D  35.203229 M 32 nodes 5   log 1.9200513887778239  csv (up6) 1.9200513887778294  diff -5.6e-15
+scan_up7.log     history D  34.615403                log 1.9244802237080902  csv (up6) 1.9244802237080978  diff -7.5e-15
+scan_up7.log     history D  34.832223                log 1.9228300808404539  csv (up6) 1.9228300808404615  diff -7.5e-15
+scan_up7.log     history D  35.024756                log 1.9213810863865344  csv (up6) 1.9213810863865413  diff -6.9e-15
+scan_up8.log     start   D  45.330118 M 32 nodes 5   log 1.8610942094748952  csv (up7) 1.8610942094748952  diff +0.0e+00
+scan_up8.log     history D  45.303925                log 1.8612140509775099  csv (up7) 1.8612140509775099  diff +0.0e+00
+scan_up8.log     history D  45.312656                log 1.8611740890438622  csv (up7) 1.8611740890438622  diff +0.0e+00
+scan_up8.log     history D  45.321387                log 1.8611341418790650  csv (up7) 1.8611341418790650  diff +0.0e+00
+scan_up9.log     start   D  51.261398 M 32 nodes 5   log 1.8369948386993027  csv (up8) 1.8369948386993027  diff +0.0e+00
+scan_up9.log     history D  51.120773                log 1.8375038987729093  csv (up8) 1.8375038987729093  diff +0.0e+00
+scan_up9.log     history D  51.167648                log 1.8373339128772279  csv (up8) 1.8373339128772279  diff +0.0e+00
+scan_up9.log     history D  51.214523                log 1.8371642264505734  csv (up8) 1.8371642264505734  diff +0.0e+00
+scan_up10.log    start   D  53.741398 M 32 nodes 5   log 1.8284392786769861  csv (up9) 1.8284392786769861  diff +0.0e+00
+scan_up10.log    history D  53.591398                log 1.8289350705133616  csv (up9) 1.8289350705133616  diff +0.0e+00
+scan_up10.log    history D  53.641398                log 1.8287695096976444  csv (up9) 1.8287695096976444  diff +0.0e+00
+scan_up10.log    history D  53.691398                log 1.8286042460195164  csv (up9) 1.8286042460195164  diff +0.0e+00
+scan_up11.log    start   D  55.660148 M 32 nodes 5   log 1.8223246804990221  csv (up10) 1.8223246804990221  diff +0.0e+00
+scan_up11.log    history D  55.566398                log 1.8226139746829786  csv (up10) 1.8226139746829786  diff +0.0e+00
+scan_up11.log    history D  55.597648                log 1.8225174387350129  csv (up10) 1.8225174387350129  diff +0.0e+00
+scan_up11.log    history D  55.628898                log 1.8224210073971965  csv (up10) 1.8224210073971967  diff -2.2e-16
+scan_up12.log    start   D  56.295280 M 32 nodes 5   log 1.8203892715296228  csv (up11) 1.8203892715296228  diff +0.0e+00
+scan_up12.log    history D  56.188468                log 1.8207118022995592  csv (up11) 1.8207118022995592  diff +0.0e+00
+scan_up12.log    history D  56.218986                log 1.8206195291361380  csv (up11) 1.8206195291361380  diff +0.0e+00
+scan_up12.log    history D  56.257133                log 1.8205043250153774  csv (up11) 1.8205043250153774  diff +0.0e+00
+scan_up13.log    start   D  59.804109 M 32 nodes 5   log 1.8104131674902588  csv (up12) 1.8104131674902588  diff +0.0e+00
+scan_up13.log    history D  59.752950                log 1.8105504856323884  csv (up12) 1.8105504856323884  diff +0.0e+00
+scan_up13.log    history D  59.767567                log 1.8105112283152822  csv (up12) 1.8105112283152820  diff +2.2e-16
+scan_up13.log    history D  59.785838                log 1.8104621834239649  csv (up12) 1.8104621834239649  diff +0.0e+00
+scan_up18.log    start   D  60.962646 M 32 nodes 5   log 1.8073631479879051  csv (local-up17) 1.8073631479879018  diff +3.3e-15
+scan_up18.log    history D  60.959857                log 1.8073703558561283  csv (local-up17) 1.8073703558561292  diff -8.9e-16
+scan_up18.log    history D  60.960930                log 1.8073675827284581  csv (local-up17) 1.8073675827284581  diff +0.0e+00
+scan_up18.log    history D  60.961788                log 1.8073653653280111  csv (local-up17) 1.8073653653280111  diff +0.0e+00
+scan_up19.log    start   D  60.964146 M 32 nodes 5   log 1.8073592716641393  csv (up18) 1.8073592716641396  diff -2.2e-16
+scan_up19.log    history D  60.960930                log 1.8073675827284581  csv (local-up17) 1.8073675827284581  diff +0.0e+00
+scan_up19.log    history D  60.961788                log 1.8073653653280111  csv (local-up17) 1.8073653653280111  diff +0.0e+00
+scan_up19.log    history D  60.962646                log 1.8073631479879051  csv (local-up17) 1.8073631479879018  diff +3.3e-15
+scan_up20.log    start   D  60.964146 M 32 nodes 5   log 1.8073592716641393  csv (up18) 1.8073592716641396  diff -2.2e-16
+scan_up20.log    history D  60.960930                log 1.8073675827284581  csv (local-up17) 1.8073675827284581  diff +0.0e+00
+scan_up20.log    history D  60.961788                log 1.8073653653280111  csv (local-up17) 1.8073653653280111  diff +0.0e+00
+scan_up20.log    history D  60.962646                log 1.8073631479879051  csv (local-up17) 1.8073631479879018  diff +3.3e-15
+scan_up21.log    start   D  60.968646 M 32 nodes 5   log 1.8073476437992184  csv (up20) 1.8073476437992184  diff +0.0e+00
+scan_up21.log    history D  60.959857                log 1.8073703558561283  csv (local-up17) 1.8073703558561292  diff -8.9e-16
+scan_up21.log    history D  60.960930                log 1.8073675827284581  csv (local-up17) 1.8073675827284581  diff +0.0e+00
+scan_up21.log    history D  60.961788                log 1.8073653653280111  csv (local-up17) 1.8073653653280111  diff +0.0e+00
+scan_up21.log    history D  60.962646                log 1.8073631479879051  csv (local-up17) 1.8073631479879018  diff +3.3e-15
+scan_up21.log    history D  60.964146                log 1.8073592716641393  csv (up18) 1.8073592716641396  diff -2.2e-16
+scan_up21.log    history D  60.965646                log 1.8073553955247785  csv (up20) 1.8073553955247785  diff +0.0e+00
+scan_up21.log    history D  60.967146                log 1.8073515195698093  csv (up20) 1.8073515195698093  diff +0.0e+00
+65 re-converged points found in the CSV; max |diff| 7.5e-15 (hi printed to 16 decimals)

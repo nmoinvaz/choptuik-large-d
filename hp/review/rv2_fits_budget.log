@@ -34,16 +34,6 @@ D 15..61.03 clean 1/D N 803  14:1.643893747+(4.1e-15) 16:1.643893750+(4.2e-15) 1
 D 15..61.03 clean 1/n N 803  14:1.643893762 (2.4e-14) 16:1.643893748+(4.2e-15) 18:1.643893756+(4.2e-15) 20:1.643893658*(4.0e-15) 22:1.643893658*(4.1e-15)
 D 15..61.03 all   1/D N 830  14:1.643893747+(9.7e-15) 16:1.643893749+(9.6e-15) 18:1.643893755*(9.6e-15) 20:1.643893359*(9.5e-15) 22:1.643895688*(9.6e-15)
 D 15..61.03 all   1/n N 830  14:1.643893762 (2.4e-14) 16:1.643893748+(9.6e-15) 18:1.643893757+(9.5e-15) 20:1.643893666*(9.6e-15) 22:1.643893499*(9.5e-15)
-Traceback (most recent call last):
-  File "/home/claude/dss-residual-kernel/.claude/worktrees/agent-a0f052e39c456aa76/hp/review/rv2_fits.py", line 248, in <module>
-    {"budget": cmd_budget, "influence": cmd_influence, "rules": cmd_rules, "clean": cmd_clean,
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     "selftest": cmd_selftest}[cmd]()
-     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
-  File "/home/claude/dss-residual-kernel/.claude/worktrees/agent-a0f052e39c456aa76/hp/review/rv2_fits.py", line 141, in cmd_budget
-    print(f"{label:26s} {n:2d} fits: {fmt(lo)} .. {fmt(hi)}  centre {fmt((lo + hi) / 2)}  half-width {(hi - lo) / 2:.2e}")
-                                                                                                     ^^^^^^^^^^^^^^^^^^^
-TypeError: unsupported format string passed to flint.types.arb.arb.__format__
 D <= 45                    24 fits: 1.64389375338 .. 1.64389399905  centre 1.64389387621  half-width 1.23e-07
 D <= 60.1                  24 fits: 1.64389374444 .. 1.64389376313  centre 1.64389375379  half-width 9.34e-09
 D <= 61.03                 24 fits: 1.64389374462 .. 1.64389375669  centre 1.64389375066  half-width 6.03e-09

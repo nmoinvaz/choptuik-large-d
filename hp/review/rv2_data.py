@@ -90,6 +90,8 @@ fails += bool(badlo)
 print("D per-point indicators (kept points):")
 rows = []
 for c in csv:
+    if round(float(c[0]), 6) not in merged:
+        continue
     r, name = merged[round(float(c[0]), 6)]
     s = r["sens"]
     tb = max(r.get("tail_c", 0) * s[0], r.get("tail_h", 0) * s[-1])     # series truncation x block sensitivity
