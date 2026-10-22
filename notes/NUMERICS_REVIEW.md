@@ -84,7 +84,7 @@ What I would change (none of it is done here):
 | 1e. independent residual at saved states | OK, 2×10⁻³¹ (R1) | — |
 | 1f. f64 drops in the driver (predictor, deflated step, junk hold, resampling) | OK: all self-corrected by Newton | — |
 | 1g. Taylor order, step tolerance, series orders, node placement at D = 60 | OK, ≤ 6×10⁻¹⁸ (R2) | — |
-| 1h. convergence in M at D = 60 | OK: M = 48 moves Δ by 2.5×10⁻¹⁸ (R2) | — |
+| 1h. convergence in M at D = 50 and 60 | OK: M = 48 moves Δ by 3×10⁻²⁰ and 2.5×10⁻¹⁸ (R2) | — |
 | 1i. kfreeze-13 cut, D = 40, 50, 60 | +1.5, −1.1, −1.2×10⁻¹⁵, not the quoted 3×10⁻¹⁷ (R2) | cosmetic for Δ∞, ≤ 5.5×10⁻¹⁰ (F5) |
 | 1j. junk hold / trend and the dnp corrector | OK: Δ returns to 6×10⁻¹⁸ after 10⁻⁸ kicks (R2) | — |
 | 1k. junk_only acceptance (run up6) | accepts Δ errors up to 10⁻¹⁴ by design | cosmetic for Δ∞, ≤ 1.6×10⁻⁹ (F6) |
@@ -382,7 +382,8 @@ Newton to the floor:
   weak directions and plain Newton runs away (Δ off by 7×10⁻⁸ after 8 steps, |F| 6×10⁻⁸): that is the expected
   failure, and it shows the test can move Δ. Interpolated in double-double (`rv2_resolve.py`'s `resample_dd`, round
   trip 32 → 48 → 32 exact to 1.2×10⁻³²) and converged with the scans' corrector (deflated Newton, then Newton), M = 48
-  reaches the floor and moves Δ by +2.5×10⁻¹⁸. PENDING_M48START
+  reaches the floor and moves Δ by +2.5×10⁻¹⁸. At D = 50 (`up8_D50.0075`) the same gives +3.1×10⁻²⁰ at
+  |F| = 7.1×10⁻²⁵. PENDING_M48START
 
 ### 1k. junk_only acceptance and the up6 points
 
@@ -449,6 +450,9 @@ history states and prints Δ (hi, 16 decimals). For 65 of them the D is an earli
 | 45–55 | 7.1×10⁻¹⁸ (4.3×10⁻¹⁷) | 1.5×10⁻¹⁶ (2.8×10⁻¹⁶) |
 | 55–60.1 | 3.0×10⁻¹⁸ (1.0×10⁻¹⁷) | 1.0×10⁻¹⁶ (1.5×10⁻¹⁶) |
 | 60.1–61.03 | 3.9×10⁻¹⁶ (1.7×10⁻¹⁵) | 2.3×10⁻¹⁶ (1.2×10⁻¹⁵) |
+
+The test can fail: `rv2_noise.py --break` adds iid noise of 10⁻¹⁵ to the points at 45–55 and that band's
+leave-one-out rms rises from 7.1×10⁻¹⁸ to 7.1×10⁻¹⁶.
 
 Below D = 27 the spacing (0.25) makes the local interpolant itself the limit (10⁻¹⁰), so that band says nothing. At
 37–45 (spacing 0.1) the leave-one-out figure is probably interpolation-limited too. The global fit's residuals at
@@ -538,9 +542,18 @@ with three noise models, and runs the same 48-fit selection:
 | N1: the real data's residual pattern (junk, kfreeze band, noisier top) | −1.8×10⁻¹⁰ … +1.58×10⁻⁸ | +7.8×10⁻⁹ | 8.0×10⁻⁹ | yes |
 | N2: iid noise at the measured per-band levels | −1.7×10⁻⁹ … +3.6×10⁻⁹ | +0.9×10⁻⁹ | 2.6×10⁻⁹ | yes |
 | N3: N1 plus a coherent +3×10⁻¹⁵ above 60.1 | −1.8×10⁻¹⁰ … +2.22×10⁻⁸ | +1.1×10⁻⁸ | 1.1×10⁻⁸ | yes |
+| N4: N1 plus a coherent +3×10⁻¹⁴ above 60.1 | −1.8×10⁻¹⁰ … +7.17×10⁻⁸ | +3.6×10⁻⁸ | 3.6×10⁻⁸ | yes |
+| C1 (negative control): N1 plus 10⁻⁴(10/D)^{5/2}, non-analytic at 1/D = 0 | +3.4×10⁻⁹ … +1.87×10⁻⁸ | +1.1×10⁻⁸ | 7.6×10⁻⁹ | **no** |
 
 **Verdict:** the coverage claim survives an independent truth; the centre bias (F3) is a property of the data's error
-pattern, not of the truth, since N2 shows almost none.
+pattern, not of the truth, since N2 shows almost none. Two side results:
+
+- N4: an error confined to the points above 60.1 cannot push the truth out of the quoted range, only widen it,
+  because the range is the union of the D ≤ 60.1 and D ≤ 61.03 snapshots and the first does not see those points.
+  That makes the range robust, but it also means the planted tests cannot detect such an error.
+- C1, the control, does fail, as it must; but a non-analytic term as large as 10⁻⁴ at D = 10 moves the limit by
+  only 1.1×10⁻⁸ and still fits to the noise. The fits do not test analyticity; the held-out tests in the README do,
+  and the bar is conditional on it (as the README says).
 
 ### 4f. Failure classes
 
@@ -565,8 +578,9 @@ the sign test (the bracket starts at ±3×10⁻⁴). I did not rerun it.
 
 - **Analyticity in 1/D.** The bar assumes it (the README says so). Nothing here tests it beyond what the README's
   held-out tests do.
-- **M convergence below D = 60** except PENDING_M_LIST; the README's own checks cover D = 7–17 and 40 (no script
-  survives for the D = 40 ones), and the restart at D = 16.75 shows the M 48 → 32 change below the printed digit.
+- **M convergence below D = 50.** I ran M = 48 at D = 50 (3×10⁻²⁰, |F| 7×10⁻²⁵) and 60 only; the README's own
+  checks cover D = 7–17 and 40 (no script survives for the D = 40 ones), and the restart at D = 16.75 shows the
+  M 48 → 32 change below the printed digit.
 - **The kfreeze cut beyond harmonic 15–17**, and at D = 35.35–40 directly (I have the runs' restarts at 34.6–35.2 and
   my solves at 40, 50, 60). Taking kfreeze 15 as the truth assumes the harmonics above 15 matter less, which the
   kfreeze-17 linearisation supports at D = 60 only.

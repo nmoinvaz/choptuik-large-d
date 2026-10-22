@@ -54,3 +54,4 @@ total linearised Delta correction: kernel -5.65e-34, independent +2.21e-27; wors
 D 50.007491  Delta np.float64(1.8416311332022635) -8.247e-17  (saved np.float64(1.8416311332022635) -8.259e-17; diff -1.06e-15)  |F| 1.1e-24  est +1.2e-19  300s
 D 40.020065  Delta np.float64(1.8884516644906153) +5.622e-17  (saved np.float64(1.8884516644906153) +5.622e-17; diff +1.52e-15)  |F| 1.4e-26  est -7.2e-23  245s
 == M 48 at D = 50
+D 50.007491  Delta np.float64(1.8416311332022643) +9.394e-17  (saved np.float64(1.8416311332022643) +9.394e-17; diff +3.13e-20)  |F| 7.1e-25  est -7.9e-20  448s

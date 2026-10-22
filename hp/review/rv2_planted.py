@@ -73,13 +73,26 @@ def main():
         "N2 iid per-band noise": {d: R(d) + iid(d) for d in allD},
         "N3 N1 + 3e-15 above 60.1": {d: R(d) + resid[d] + (arb("3e-15") if d > 60.1 else 0) for d in allD},
     }
+    # informative: ten times N3's coherent error only widens the range (the 60.1 snapshot does not see it)
+    plants["N4 N1 + 3e-14 above 60.1"] = {d: R(d) + resid[d] + (arb("3e-14") if d > 60.1 else 0) for d in allD}
+
+    def nonan(d):
+        t10 = 10 / arb(RF.fmpq(*float(d).as_integer_ratio()))
+        return arb("1e-4") * t10 * t10 * t10.sqrt()
+
+    # negative control: a term non-analytic at 1/D = 0, 1e-4 (10/D)^(5/2), outside the fitted class: the limit is
+    # unchanged but the polynomial extrapolation cannot follow it, so the truth must fall outside the range
+    plants["C1 control: N1 + 1e-4 (10/D)^(5/2)"] = {d: R(d) + resid[d] + nonan(d) for d in allD}
     bad = 0
     for name, p in plants.items():
         rows = RF.grid(p, dmaxes=(60.1, 61.03))
         lo, hi, n = RF.span(rows)
         cen = (lo + hi) / 2
         inside = lo <= LIMIT.mid() <= hi
-        bad += not inside
+        if name.startswith("C"):
+            bad += inside            # the control must fall outside
+        else:
+            bad += not inside
         print(f"{name:28s} {n} fits: range {float((lo - LIMIT).mid()):+.2e} .. {float((hi - LIMIT).mid()):+.2e} about "
               f"the planted limit; centre off by {float((cen - LIMIT).mid()):+.2e}; half-width {float((hi - lo) / 2):.1e}; "
               f"{'inside' if inside else 'OUTSIDE'}", flush=True)
@@ -87,7 +100,7 @@ def main():
             if r["use"] and r["clean"]:
                 print(f"     D {r['dmin']:>2}..{r['dmax']:<5} {r['model']:3s} deg {r['deg']}: "
                       f"{float((r['lim'] - LIMIT).mid()):+.2e} (res {r['res']:.1e})")
-    print("PASS" if not bad else f"FAIL ({bad} of {len(plants)} plants outside the range)")
+    print("PASS (N1-N3 inside, control outside)" if not bad else f"FAIL ({bad} of {len(plants)} plants on the wrong side)")
 
 
 if __name__ == "__main__":
