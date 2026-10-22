@@ -114,7 +114,7 @@ fixed x is D + 2(β′/β)(z+1)∂_z, with D = ∂_τ at fixed z), and at order 
 - E1 reduces to 2(z+1)C_k′ = (known), so C_k = ∫(…)dz + B_k(τ);
 - (A) at the next order gives S_{k+1} algebraically.
 
-**Proposition S1** (*proved* by hand). For any smooth β(τ) > 0, f(τ) > 0 and any functions A_k(τ), B_k(τ), there is
+**Proposition S** (*proved* by hand). For any smooth β(τ) > 0, f(τ) > 0 and any functions A_k(τ), B_k(τ), there is
 exactly one formal solution of this form, every order defined on all of 0 < z < ∞. No step has a solvability
 condition: the ODEs for zY_k and C_k have no singular point on z > 0 (in particular none at the self-similarity
 horizon x = c, which in this scaling enters only through the O(ε) term x²∂_x(p+m)), and U_k, S_{k+1} need only division
@@ -175,14 +175,15 @@ can be imposed at z = 0 within the series. The layer of §3.3 is matched to it i
 the layer is unique up to its two symmetries (a shift in θ and a scaling), which are the outer β and f, and a change of
 the normalization A_k (β → β − ε^k A_k) moves it by O(n^{1/2−k}) in its own variable θ.
 
-- **z → ∞ (spatial infinity on a slice).** The terms ln z/z, ln²z/z, … are the expansion of x^{λ₋} for the
-  stationary solution's slow mode: from the CSS series, λ₁ = −1.0779457959, the ln² coefficient = λ₁²/8 =
-  0.1452458924 and λ₂ = −1.1619671389, equal to the exact root to 10 digits at κ = 1.17 (`y1_modes.py`). So the
-  logarithms are not an obstruction and impose no condition at x → ∞. (For general β(τ) the logarithm's
-  coefficient Λ above plays the same role; not compared with an exact exponent.)
-- **The self-similarity horizon.** For κ_f > 1 the supercritical CSS solution has c = x at
-  x_lc = f/√(f²β² − 1) > 1/β (for κ_f < 1 there is none). As in Proposition 1 it is not a singular point of any order,
-  so analyticity there is automatic order by order; any condition from it is beyond all orders.
+**z → ∞ (spatial infinity on a slice).** The terms ln z/z, ln²z/z, … are the expansion of x^{λ₋} for the stationary
+solution's slow mode: from the CSS series, λ₁ = −1.0779457959, the ln² coefficient = λ₁²/8 = 0.1452458924 and
+λ₂ = −1.1619671389, equal to the exact root to 10 digits at κ = 1.17 (`y1_modes.py`). So the logarithms are not an
+obstruction and impose no condition at x → ∞. (For general β(τ) the logarithm's coefficient Λ above plays the same
+role; not compared with an exact exponent.)
+
+**The self-similarity horizon.** For κ_f > 1 the supercritical CSS solution has c = x at x_lc = f/√(f²β² − 1) > 1/β
+(for κ_f < 1 there is none). As in Proposition 1 it is not a singular point of any order, so analyticity there is
+automatic order by order; any condition from it is beyond all orders.
 
 ### 2.6 Check against the exact equations (`formal_check.py`)
 
@@ -203,7 +204,7 @@ with z = 0.5–10):
 | LO | the branch choice C < 0 (β²x² > 1); β has no zeros | β(τ), f(τ) (f gauge outside CSS) |
 | NLO | nothing | A₁ (β), B₁ (f) |
 | NNLO | nothing | A₂, B₂ |
-| all orders | nothing (Proposition S1) | A_k, B_k |
+| all orders | nothing (Proposition S) | A_k, B_k |
 
 - **Does a condition constrain β(τ), f(τ) or the period, like EEG's Eq. (20)?** No. Their condition comes from
   f ≤ 1 near the self-similarity horizon x = 1 at the zeros of β, with f(1) = 1 imposed. In this branch β has no zeros
@@ -338,8 +339,10 @@ were checked against arXiv abstract pages unless marked.
 | P. R. Brady, M. W. Choptuik, C. Gundlach, D. W. Neilsen, CQG 19 (2002), DOI 10.1088/0264-9381/19/24/306, [gr-qc/0207096](https://arxiv.org/abs/gr-qc/0207096) | arXiv PDF | stiff fluid ↔ scalar field with timelike gradient; CSS ψ = h̄₀(x) + κτ; the 4πκ² ≈ 0.577 solution with an apparent horizon at x₂ ≈ 1.2 ("not actually on the black hole threshold" for the scalar field); Christodoulou's 4πκ² = 1/3 FRW solution | higher D | DOI from the arXiv page; page number not verified *(partly unverified)* |
 | Koushiki, R. Goswami, P. S. Joshi, [arXiv:2512.20998](https://arxiv.org/abs/2512.20998) | arXiv PDF (summary) | 4D, ansatz-free 1+1+2 analysis of apparent-horizon slopes | self-similar families; higher D | not needed |
 
-Not read (cited by the sources above): M. D. Roberts, Gen. Rel. Grav. 21, 907 (1989); D. Christodoulou, Ann. Math.
-140, 607 (1994) *(unverified)*; Soda and Hirata (the CSS-preserving exponent quoted by Clark and Pimentel);
+Not read (cited by the sources above): M. D. Roberts, Gen. Rel. Grav. 21, 907 (1989) (as listed in Frolov 1999's
+references); D. Christodoulou, "Examples of naked singularity formation in the gravitational collapse of a scalar
+field", Annals of Mathematics (1994) (cited by Brady 1995 and BCGN; volume and pages *(unverified)*); Soda and Hirata
+(the CSS-preserving exponent quoted by Clark and Pimentel);
 A. V. Frolov, PRD 59, 104011 (1999), gr-qc/9811001 (non-spherical perturbations of Roberts; from the author's CV).
 No D-dimensional version of Brady's κ ≠ 0 family was found in one targeted search.
 
@@ -397,15 +400,15 @@ Frolov's perturbations 1 instead, and Kim et al. quote (n−3)/√(2(n−2)), wh
 ## 5. Would a finite-D computation be worth doing?
 
 - **CSS members: cheap and worth doing as a check.** The CSS equations are ODEs in x. `css_bvp.py` already solves them
-  across the front for κ_f < 1. Extending it is a modest change:
+  across the front (κ_f = 0.8, and 1.5 inside the self-similarity horizon). Extending it is a modest change:
   - from the frozen interior, with the central-mass mode as a parameter;
   - through the front and through the self-similarity horizon for κ_f > 1, with analyticity there as the extra
     condition (one real condition, as for the regular branch's light cone);
   - out to the stationary asymptotics.
 
   It would show:
-  1. whether analyticity at x_lc restricts κ_f at finite n (expected: a condition beyond all orders, of the
-     Proposition 2–3 type with exponent n/2 − 1 for s = 0);
+  1. whether analyticity at x_lc restricts κ_f at finite n (expected: a condition invisible to the 1/n series, as
+     for the regular branch's light cone; the local exponents at x_lc were not computed);
   2. how the front and the frozen interior look at D = 5–10;
   3. whether the family continues to D = 4 into Brady's class I/II solutions.
 
@@ -430,7 +433,7 @@ Frolov's perturbations 1 instead, and Kim et al. quote (n−3)/√(2(n−2)), wh
 | EEG's rule gives the wrong sign of Ψ_LO for f₀ > 0 | checked symbolically (`lo_check.py --mutate=psisign`) |
 | f is gauge outside CSS; κ_f physical in CSS | proved; checked symbolically (`shift_check.py`, item 2) |
 | stationary solution exact; its exponents | checked symbolically (`y1_modes.py`) |
-| Proposition S1: all orders exist, nothing forced, A_k, B_k = shifts of β, f | proved; checked symbolically through NNLO (CSS) and NLO (general) |
+| Proposition S: all orders exist, nothing forced, A_k, B_k = shifts of β, f | proved; checked symbolically through NNLO (CSS) and NLO (general) |
 | large-x logarithms = expansion of the stationary exponent | checked symbolically through NNLO (CSS) |
 | series residuals fall like n^{−(K+1)} | numerical evidence (`formal_check.py`) |
 | breakdown at z ~ n^{−1/2}/κ̃ | checked symbolically (orders' singular powers, `expand.py`) |
