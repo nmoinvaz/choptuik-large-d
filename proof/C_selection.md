@@ -2,7 +2,7 @@
 
 This note works out layer B of [PROOF.md](../PROOF.md) (the analytic selection theorem) as far as it can be taken now,
 for the **M-harmonic model**: the large-D self-similar equations with the θ-dependence truncated to the odd harmonics
-|μ| ≤ M of p and m and the even harmonics |μ| ≤ M − 1 of b and c. Gap (b) of the README (uniformity in M) and layer A
+|μ| ≤ M of p and m and the even harmonics |ν| ≤ M + 1 of b and c (Section 1). Gap (b) of the README (uniformity in M) and layer A
 (the computer-assisted zero) are treated elsewhere; here M is fixed and every constant may depend on it.
 
 It was written by Claude (Anthropic) under Nathan Moinvaziri's direction and has not been checked by a mathematician.
@@ -20,7 +20,7 @@ Contents
 - [5. Gap (c): the light cone](#5-gap-c-the-light-cone)
 - [6. The selection theorem](#6-the-selection-theorem)
 - [7. What remains](#7-what-remains)
-- [8. New (second pass): hypotheses H-a1 and H-a2, checked numerically](#8-new-second-pass-hypotheses-h-a1-and-h-a2-checked-numerically)
+- [8. New (second pass): the outer Borel plane (superseded by B3_borel.md)](#8-new-second-pass-the-outer-borel-plane-superseded-by-b3_borelmd)
 - [9. New (second pass): Lemma B5.0, the inner limit is reached in powers of 1/n (proved)](#9-new-second-pass-lemma-b50-the-inner-limit-is-reached-in-powers-of-1n-proved)
 - [10. New (second pass): Lemma B5, the inner–outer matching](#10-new-second-pass-lemma-b5-the-innerouter-matching)
   - [10.1 Lemma B5.1: the fast-mode variable and the matching factor (proved)](#101-lemma-b51-the-fast-mode-variable-and-the-matching-factor-proved)
@@ -29,7 +29,8 @@ Contents
   - [10.4 Status of B5](#104-status-of-b5)
 - [11. New (second pass): Lemma B8, the global continuation](#11-new-second-pass-lemma-b8-the-global-continuation)
 - [12. New (second pass): Lemma B6 completed, with the light-cone exponents and the Volterra bound](#12-new-second-pass-lemma-b6-completed-with-the-light-cone-exponents-and-the-volterra-bound)
-- [13. New (second pass): status](#13-new-second-pass-status)
+- [13. Status](#13-status)
+  - [13.1 Theorem B(1): the status of the chain](#131-theorem-b1-the-status-of-the-chain)
 - [References](#references)
 
 ## Summary
@@ -53,11 +54,10 @@ Contents
     Costin's sharper rank-one theorems do not apply as stated: they assume an invertible linear part with eigenvalues of
     distinct arguments, while here the fast eigenvalue is repeated across harmonics and the slow directions have
     eigenvalue 0.
-  - *Outer problem: reduced to standard theory plus two checkable hypotheses.* Gevrey-1 asymptotics in ε = 1/n hold on
-    compact x-sets without turning points (Sibuya; Canalis-Durand–Ramis–Schäfke–Sibuya), and the centre and the light
-    cone are "doubly singular" points of the type Canalis-Durand–Mozo-Fernández–Schäfke treat. The checkable
-    hypotheses are where the Borel singularities lie: those of the b-mode, and the x-independent ones of modulus about
-    0.13 in the README.
+  - *Outer problem: no Borel sum needed.* The outer formal series is Gevrey-1 on every disc in x, for every M
+    ([B3_borel.md](B3_borel.md), Lemma B3.7). The actual centre-regular solution with fixed-order asymptotics is Lemma B8
+    restricted to the real segment. That it is also the Borel sum of the outer series is hypothesis (H-σ) (Section 4.2),
+    which Theorem B(M) does not use.
 - **Gap (c): reduced to standard asymptotic integration** (Lemma B6; the structural facts are proved, the error
   estimates are routine but not written).
   - Because x − c has a simple zero at the light cone, the WKB phase and the Frobenius exponent are the same object. The
@@ -66,22 +66,21 @@ Contents
   - The Frobenius singular branch of exponent Λ_μ is unique, because Λ_μ is not an integer (Im Λ_μ ≠ 0) and the Λ_μ
     differ for different μ.
   - So the matching constant is well defined, equals 1 + O(1/n), and equals exactly 1 in the linear case (Proposition 3).
-- **What is genuinely open** (Section 7): the global step that continues the centre-regular solution through an
-  n-dependent complex domain from (0, 1) around x = 1 to the Stokes line x > 1 and out to |x| ~ √n, with uniform bounds;
-  and the rigorous inner–outer matching (lemmas B4 and B5). Both follow known templates (Xie–Tanveer;
-  Baldomá–Fontich–Guardia–Seara), but neither has been written for a system of this kind. With them done, Theorem B(M)
-  is a theorem for each fixed M.
+- **The two contractions are written** (Sections 10–11): the global continuation B8 and the inner–outer matching B5(1) are
+  proved for each fixed M and certified with explicit constants for M = 1 ([B8_constants.md](B8_constants.md),
+  [B5_inner.md](B5_inner.md)). **Theorem B(1) is not yet proved**: Section 13.1 lists every link of the chain with its
+  status and its threshold in n, and what is still missing.
 
-| Step | Content | Status |
+| Step | Content | Status (details in Section 13) |
 |---|---|---|
 | B1(M) | formal 1/n solution for any (F, ω), Galerkin-truncated | **proved** (Proposition 1, Section 3.1) |
 | B2(M) | slow–fast structure; fast eigenvalues; no turning points on the real axis; turning point at ∞ | **proved** (Section 3.2) |
-| B3(M) | centre-regular actual solution with Gevrey-1 asymptotics on compacts of (0, 1) | **cited**, with hypotheses checked except H-a1, H-a2 (Section 4.2); *second pass:* H-a1, H-a2 checked numerically (Section 8) |
-| B4(M) | inner Stokes multipliers well defined | **cited** (Braaksma), Section 4.1 |
-| B5(M) | outer Stokes jump on x > 1 equals the inner multiplier times an explicit factor | **open** in general; **proved** in the linear case (Proposition 4 with the Weber constant); *second pass:* B5.0, B5.1 proved, part (2) proved given part (1), part (1) at appendix level (Sections 9–10) |
-| B6(M) | light-cone matching: WKB fast mode ↔ Frobenius branch, half-monodromy | **reduced** to standard asymptotic integration; structural facts proved (Section 5); *second pass:* proved for fixed M up to a routine block-diagonalization (Section 12) |
+| B3(M) | centre-regular actual solution, asymptotic to the formal series | formal half (Gevrey-1) **proved**; existence with fixed-order asymptotics = B8 on the real segment; the Borel-sum form is (H-σ), not needed (Section 4.2) |
+| B4(M) | inner Stokes multipliers well defined, analytic in (F, ω) | **cited** (Braaksma); parameter-analyticity **proved** given Braaksma (Section 4.1) |
+| B5(M) | outer Stokes jump on x > 1 equals the inner multiplier times an explicit factor | B5.0, B5.1 **proved**; B5(1) **proved given (H8)**, **certified** for M = 1; B5(2) **proved given B5(1)** (Sections 9–10) |
+| B6(M) | light-cone matching: WKB fast mode ↔ Frobenius branch, half-monodromy | **proved** for fixed M up to a routine block-diagonalization (Sections 5, 12) |
 | B7(M) | implicit function theorem | **proved** given B3–B6 in C¹ form (Section 6) |
-| global | continuation through the complex domain with uniform bounds | **open** (Section 7); *second pass:* domain, progressive paths and Stokes geometry proved, contraction planned (Section 11) |
+| B8(M) | continuation through the complex domain with uniform bounds | **proved** for each fixed M; **certified** for M = 1 (Section 11) |
 
 ## 1. The M-harmonic model
 
@@ -95,12 +94,18 @@ x(x-c)\,p_x = -\omega x\,p_\theta + G p - c p + \tfrac{n}{2}\,c\,(p+m), \qquad
 x(x+c)\,m_x = -\omega x\,m_\theta - G m + c m - \tfrac{n}{2}\,c\,(p+m),
 ```
 
-on 0 ≤ x ≤ 1, regular at x = 0, analytic at x = 1, with c(1) = 1. Let $`P_M`$ be the projection that keeps harmonics
-$`e^{i\mu\theta}`$ with |μ| ≤ M (odd μ for p and m, even μ, |μ| ≤ M − 1, for b and c). The **M-harmonic model** applies $`P_M`$
-to every right-hand side. For real fields it is a finite analytic ODE system in x, with
-4N + 2(N − 1) + 2 real unknowns per x. Here N = (M + 1)/2 is the number of positive odd harmonics.
+on 0 ≤ x ≤ 1, regular at x = 0, analytic at x = 1, with c(1) = 1. Let $`P_M`$ be the projection that keeps p and m on
+the odd harmonics $`e^{i\mu\theta}`$, |μ| ≤ M, and b and c on the even harmonics |ν| ≤ M + 1 (the truncation of the inner
+solvers and of Theorem A(M = 1); with |ν| ≤ M − 1 the inner limit would be a different problem, with c on {0} instead of
+{0, ±2} at M = 1). The **M-harmonic model** applies $`P_M`$ to every right-hand side. For real fields it is a finite
+analytic ODE system in x, with 4N + 2(2N + 1) = 8N + 2 real unknowns per x. Here N = (M + 1)/2 is the number of
+positive odd harmonics.
 
-Two remarks:
+Three remarks:
+- Lemmas B5(1) and B8 ([B5_inner.md](B5_inner.md) §1.1, [B8_constants.md](B8_constants.md) §1.1) project every binary
+  product onto its result's harmonics, e.g. Gp as [[c(b − 1)]p]. For M = 1 this is the same as projecting each
+  right-hand side once; for M ≥ 3 it is not (B8_constants.md §11). Which of the two the general-M statements should use
+  has not been decided.
 - The solvers in this repository (f64 and double-double) compute exactly such Galerkin or collocation truncations in θ,
   with kc Fourier modes. So Theorem B(M) is a statement about the systems actually solved, up to the convergence in M
   that gap (b) addresses.
@@ -158,8 +163,8 @@ So Costin's theorems cannot simply be quoted. What survives without nonresonance
 power-series* solutions (Section 4.1), and that is enough to define the multipliers.
 
 **Braaksma** (Ann. Inst. Fourier 42 (1992) 517–540): formal power-series solutions of nonlinear meromorphic
-differential equations are multisummable. This is Écalle's theorem, proved without nonresonance assumptions; the
-precise hypotheses should be checked against the paper.
+differential equations are multisummable. This is Écalle's theorem, proved without nonresonance assumptions; its
+hypotheses were checked against the paper ([B3_borel.md](B3_borel.md) §7.2).
 
 **Singular perturbation in a parameter.** These are the results for $`\varepsilon y' = f(x, y, \varepsilon)`$ and their
 doubly singular versions:
@@ -257,7 +262,7 @@ L y = c\,\sigma,\qquad L\sigma = c\,\xi y_\xi + c\,\big(\tfrac12 y^2 - 1\big)\,y
 becomes, for the harmonic components of $`y = \xi\,Y(u)`$, $`\sigma = \xi^2\Sigma(u)`$, c = C(u), a finite system
 
 ```math
-u^2\,\frac{dZ}{du} = H(u, Z), \qquad Z = (Y_\mu, \Sigma_\mu, C_\mu)_{\lvert\mu\rvert \le M},
+u^2\,\frac{dZ}{du} = H(u, Z), \qquad Z = \big((Y_\mu, \Sigma_\mu)_{\lvert\mu\rvert \le M},\ (C_\nu)_{\lvert\nu\rvert \le M+1}\big),
 ```
 
 with H polynomial in (u, Z); products of fields are convolutions over harmonics, truncated by $`P_M`$. Explicitly, with
@@ -281,15 +286,17 @@ inner series of the README, $`y = \sum_j d_j\xi^{2j+1}`$, and so on. It is uniqu
 *Hypothesis check.* Braaksma's theorem needs a meromorphic system at the singular point and a formal power-series
 solution. Both hold (H rational in u, polynomial in Z; the recursion gives the series). The repeated fast eigenvalue
 and the zero eigenvalues that block Costin's sharper theorems do not matter here, because only the formal power series,
-not a general transseries, is summed. *To check in the paper:* whether Braaksma's statement covers parameter-analytic
-dependence of the sums, which is needed for B7. If not, Balser's book (Formal power series and linear systems of
-meromorphic ODEs, Springer 2000) and its nonlinear extensions give it *(unverified)*.
+not a general transseries, is summed. Braaksma's theorem (checked against the paper) is stated for
+$`x^{\nu+1}y' = F(x, y)`$ without parameters, and neither it nor the abstract of Ramis–Sibuya (1994) addresses parameter
+dependence. Analytic dependence on (F, ω), which B7 needs, follows from uniqueness on a ray where $`e^{-1/(2u)}`$ is large
+and a contraction uniform in the parameters ([B3_borel.md](B3_borel.md) §7.2, Lemma B4.P, **proved** given Braaksma's
+theorem; carried out for M = 1 on a box in A_certify.md §4.5).
 
 *Remark.* The repeated fast eigenvalue makes the first exponential term a vector over harmonics. Its N complex
 coefficients are the $`S_\nu`$, which is the count the selection needs. This is the rigorous version of the README's "the
 multiplier is a matrix over harmonics".
 
-### 4.2 The outer problem: Gevrey asymptotics in ε (cited, with two hypotheses to verify)
+### 4.2 The outer problem: Gevrey asymptotics in ε
 
 **Lemma B3(M).** Fix 0 < δ < ½ and (F_n, ω) in a compact set. For n ≥ n₀ the M-harmonic model has a unique solution on
 0 ≤ x ≤ 1 − δ that is regular at the centre, has the prescribed profile F_n (coefficient of x in p − m at x = 0) and
@@ -303,7 +310,10 @@ on [δ, 1 − δ]: the remainder after K terms is bounded by $`C\,A^K K!\,\varep
   Sibuya 1990 and Canalis-Durand–Ramis–Schäfke–Sibuya 2000. Those results are stated for $`\varepsilon y' = f`$ with
   $`\partial_y f`$ invertible. Our system mixes fast components (u, b − 1) with slow ones (v, c); the standard reduction is
   to the slow manifold, whose Gevrey-1 character is the same statement, and then a regular-perturbation problem for
-  the slow components. *A precise citation for the mixed case should be pinned down.*
+  the slow components. No theorem read covers the mixed case: Canalis-Durand (1993) and
+  Canalis-Durand–Mozo-Fernández–Schäfke (2007) assume every component fast ([B3_borel.md](B3_borel.md) §7.1). The
+  formal half is proved directly (B3_borel.md, Lemma B3.7). The existence half with fixed-order asymptotics is B8
+  restricted to the real segment.
 - **At x = 0.** The doubly singular structure ($`\varepsilon x\,u' \approx -u`$, invertible) is the setting of
   Canalis-Durand–Mozo-Fernández–Schäfke 2007, with σ = 1, r = 0, so monomial summability reduces to summability in ε.
   It gives the unique solution regular at x = 0 for the fast components.
@@ -316,29 +326,15 @@ on [δ, 1 − δ]: the remainder after K terms is bounded by $`C\,A^K K!\,\varep
   - The uniqueness statement, by a contraction in a weighted space on [0, 1 − δ]: the singular branches $`x^{2-n}`$ and
     $`x^{-(n-1)}`$ are excluded by the weight $`x^{-1}`$ at the centre.
 
-**Borel singularities: two hypotheses to verify.** For the stronger statement used in Section 6, that the
-centre-regular solution is the 1-sum in ε along arg ε = 0 on (0, 1) (the "half problem" solution), the Borel transform
-in ε must have no singularity on the positive real axis for x ∈ (0, 1). Known singularities:
-
-- **u-mode:** $`\chi_\ell(x) = \Phi(x) - i\pi(\ell + \tfrac12)`$. Its imaginary part is −π(ℓ + ½) ≠ 0 for real x ∈ (0, 1),
-  so it is never on the positive real axis. **Checked** (Proposition 4, linear case; the nonlinear late orders confirm the
-  singulant numerically, README).
-- **(H-a1) b-mode.** λ_b = −n/x gives a singulant of the form ln(x/x_b), with x_b where the mode is generated. Since b − 1
-  is slaved to p² + m² (Riccati), x_b is a singularity of the forcing, i.e. of the u-mode Borel plane. Hypothesis: these
-  singularities are of the form $`\chi_\ell(x_*) + \ln(x/x_*)`$ and stay off the positive real axis for x ∈ (0, 1).
-  *Test:* the late orders of B_k at x = 0.5, 0.8, 0.95 from the sympy expansion. Note that ln x → 0 at x = 1: a b-mode
-  singularity approaching the origin near the light cone would make the series non-uniform there, which Proposition 1's
-  polynomial structure makes unlikely but does not exclude.
-- **(H-a2) x-independent singularities.** The README reports singularities of modulus about 0.13 in the nonlinear outer
-  late orders, driven by high harmonics. Hypothesis: their arguments are not 0. In the linear case the analogous ±iπ
-  are on the imaginary axis. *Test:* read the argument of the dominant singularity of the outer late orders at fixed
-  harmonic content, with the existing late-order scripts.
-
-If (H-a2) failed (a singularity on the positive real axis at modulus a ≈ 0.13), the 1-sum along arg ε = 0 would not
-exist. The centre-regular solution would still exist (Lemma B3 needs only Gevrey asymptotics), but its exponentially
-small content would include a term ~$`e^{-an}`$. The README's argument that such terms only shift the free data
-(F's harmonics, K_k) would then have to be proved. They are x-independent, so they act like a change of the constant
-data.
+**Borel singularities: hypothesis (H-σ).** For the stronger statement that the centre-regular solution is the 1-sum
+in ε along arg ε = 0, the Borel transform in ε must continue, with exponential bounds, to a neighbourhood
+$`S_\sigma = \{\zeta : \mathrm{dist}(\zeta, [0, \infty)) \lt \sigma\}`$ of the positive real axis, uniformly on compacts of
+(0, 1] (Nevanlinna–Sokal). This is not used by B5–B8, which work with actual solutions and fixed-order truncations.
+The earlier formulation, hypotheses H-a1 and H-a2 ("every singularity at |arg| ≥ 0.48π"), is false for x > 1/√2,
+because the u-mode singulant Φ(x) − iπ/2 itself has argument down to −0.30π at x = 0.95; it is harmless, since that
+singulant lies on Im ζ = −π/2. (H-σ) is proved in the linear case with σ = π/2, and near ζ = 0 for every M, where the
+outer series is Gevrey-1 on every disc in x. That excludes the would-be 2Φ(x) singularity near x = 1/√2. Elsewhere it
+is supported numerically. See [B3_borel.md](B3_borel.md) §§1–5.
 
 ## 5. Gap (c): the light cone
 
@@ -489,15 +485,15 @@ the large-n form of C(n, s). This matches the double-double finding that Δ(D) i
   near ξ = 0, solve the outer equation in a domain avoiding x = ∞, and bound the difference in the overlap with explicit
   constants.
 
-**To verify (cheap, numerical):**
-- (H-a1): the b-mode Borel singularities stay off ℝ⁺ on (0, 1);
-- (H-a2): the argument of the x-independent outer singularities (modulus about 0.13);
+**To verify:**
+- (H-σ), which replaces H-a1 and H-a2 (Section 4.2) and is not needed for Theorem B(M);
 - none for the non-resonance at x = 1: Λ_μ − Λ_ν ∉ ℤ is automatic (B6, step 3).
 
 **To write (routine):**
-- the mixed slow–fast version of B3 (or a precise citation);
-- the Volterra error bound of B6 for the M-harmonic coupling;
-- parameter-analyticity of the inner lateral sums for B4 (a citation check in Braaksma or Balser).
+- the mixed slow–fast version of B3 (or a precise citation) *(since done: Section 4.2)*;
+- the Volterra error bound of B6 for the M-harmonic coupling *(since done: Section 12)*;
+- parameter-analyticity of the inner lateral sums for B4 (a citation check in Braaksma or Balser) *(since done:
+  Section 4.1)*.
 
 **Not addressed here: uniformity in M (gap (b)).** Every constant above (n₀, the O(1/n), the contraction radii)
 depends on M. The selection theorem for the full problem needs them uniform in M, or a strip-analytic formulation in θ.
@@ -507,61 +503,48 @@ depends on M. The selection theorem for the full problem needs them uniform in M
   non-integrality, uniqueness, exact linear case).
 - Gap (a) is reduced, for the inner problem, to Braaksma's theorem. That makes the multipliers rigorously defined
   objects for every M, which layer A also needs.
-- For the outer problem, gap (a) is reduced to standard Gevrey theory plus two checkable hypotheses (H-a1, H-a2).
+- For the outer problem, gap (a) is reduced to standard Gevrey theory plus hypothesis (H-σ) (first stated as H-a1,
+  H-a2), which Theorem B(M) turned out not to need.
 - What stands between this note and a theorem for fixed M is the global continuation and the nonlinear inner–outer
   matching. Both are research-level but follow published templates. With them, Theorem B(M) holds for every fixed M,
   and with layer A at M = 5 it would give a rigorous five-harmonic selection ω_n → ω*(M = 5).
 
-## 8. New (second pass): hypotheses H-a1 and H-a2, checked numerically
+## 8. New (second pass): the outer Borel plane (superseded by B3_borel.md)
 
-*Added in a second pass, which also added Sections 9–13. Script: `solver/proof/outer_borel.py`.*
+*Superseded by [B3_borel.md](B3_borel.md) §5: the double-precision Padé readings of this section's first version were
+unreliable, and its table and its conclusions about H-a1 and H-a2 have been removed. The M = 1 "cluster" is the u-mode
+singulant itself, which at x = 0.8 and 0.95 lies at |arg| 0.44π and 0.30π on Im ζ = −π/2. The x-independent
+singularity is real for M ≥ 3 but lies near the negative real axis (ζ ≈ −1.2 at M = 3).*
 
-**The test.**
-- The outer 1/n recursion of `solver/largeD_late_orders.py` is run to order 36, with F = 2.72 sin θ, ω = ω∞ and the
-  higher ω_k, K_k set to 0.
-- It is run for the M-harmonic model, with every field projected to |j| ≤ M after each order, and untruncated.
-- The series read off are:
-  - D_k (p − m) at x = 0.5 and 1, at harmonic 1 and at the highest harmonic kept (M; 7 untruncated);
-  - B_{k+1} (b − 1) at harmonic 0 (a real series, at x = 0.5, 0.8, 0.95) and at the highest even harmonic (M − 1; 6
-    untruncated) at x = 0.8.
-- The nearest Borel singularities in ε are taken as the poles of diagonal Padé approximants of the Borel transform
-  Σ c_k ζ^k/k!.
-- Poles with a Padé zero within relative distance 10⁻⁴ are dropped. These are Froissart doublets, noise in the
-  double-precision coefficients. They sit at pole–zero distance 10⁻⁶ to 10⁻¹⁹ and move or vanish when the number of
-  terms changes. Genuine poles have their nearest zero at relative distance ≥ 10⁻². The doublets are what produced the
-  occasional "poles" on or near the positive real axis.
+What the first version did, and why it failed (B3_borel.md §5.1):
+- It ran the outer 1/n recursion of `solver/largeD_late_orders.py` to order 36 in double precision (F = 2.72 sin θ,
+  ω = ω∞, M = 1, 3, 5, 7 and untruncated) and read the nearest Borel singularities in ε off diagonal Padé approximants
+  (`solver/proof/outer_borel.py`).
+- *Precision.* At x = 1 the double-precision evaluation of D_k cancels coefficients of about 10⁴⁶ down to about 10³⁰.
+- *The doublet rule.* `outer_borel.py` drops every pole with a Padé zero within relative distance 10⁻⁴ as a Froissart
+  doublet. Genuine singularities of these series show up exactly as such close pole–zero pairs, so the rule removed
+  the singularities it was looking for.
+- *Too few terms.* Fed exact coefficients rounded to double and truncated to 36 terms, the procedure returns a ring of
+  poles at the edge of the resolved disc, not the nearest singularity.
 
-| Model | moduli \|a\| of the four nearest genuine singularities, all probes | smallest \|arg a\| |
-|---|---|---|
-| M = 1 | 1.44–1.86 | 0.51π |
-| M = 3 | 0.66–0.88 | 0.60π |
-| M = 5 | 0.45–0.54 | 0.57π |
-| M = 7 | 0.31–0.46 | 0.58π |
-| untruncated | 0.19–0.42 (harmonic 1: 0.28–0.34; harmonic 7: 0.19–0.24) | 0.48π |
+The recomputation in ball arithmetic (M = 1 to order 120, M = 3 to 100, M = 5 to 70; B3_borel.md §5.3) finds:
+- M = 1: the only singularities near ℝ⁺ are the u-mode ones on Im ζ = ∓π/2; the x-independent ones lie near ±3.1i;
+- M = 3: in addition, an x-independent singularity near ζ ≈ −1.22 ± 0.15i, opposite to ℝ⁺;
+- M = 5: not resolved by 70 orders;
+- nothing stable on or near ℝ⁺ for M = 1 and 3.
 
-Two further runs, M = 5 at (A, ω/ω∞) = (2.5, 1.1) and untruncated at (3.0, 0.9), give smallest |arg a| = 0.59π and
-0.57π. For every M the singularities form a cluster in the left half-plane. The cluster's distance from the origin
-shrinks with M, and its position hardly depends on x, which is the README's "x-independent" singularity.
+That recomputation uses the truncation with b and c on |ν| ≤ M − 1, each right-hand side projected once
+(`b3_outer_m1.py`, `b3_outer_M.py`), not the model of Section 1. For M = 1 that means b and c θ-independent.
 
-**(H-a2), the x-independent singularities.** No genuine singularity is within 0.48π of the positive real axis at any
-probe, so the 1-sum along arg ε = 0 is not obstructed by them.
-- The README's modulus 0.13 came from the growth 7k–8.6k of the θ-maximum of the late orders. It is consistent with the
-  table: the modulus falls with the harmonic, and the θ-maximum is dominated by the highest harmonics present.
-- For a fixed M only harmonics |j| ≤ M exist, and the highest one was probed.
+**The 2Φ(x) candidate.** The sum of the two conjugate u-mode singulants, 2Φ(x), is real and positive for x > 1/√2 and
+reaches 0 at x = 1/√2. It is excluded near x = 1/√2 for every M by Lemma B3.7 (the outer series is Gevrey-1 on every
+disc in x), and certified absent for x ∈ [0.7044, 0.7098] at M = 1 (B3_borel.md §6, for the truncation just named).
+B3.5 explains why: sums of singularities from opposite sides of ℝ⁺ do not reach the principal sheet of a convolution
+fixed point.
 
-**(H-a1), the b-mode.** The b − 1 series show the same cluster and nothing on ℝ⁺. Two analytic remarks support this.
-- *Its own singulants.* The b-mode is slaved to p² + m². The resonance between the free b-mode and the forced response to
-  the u-mode, x Φ′(x) = 1, happens only at x = 0. So the b-mode singulants are χ_b(x) = ln x − iπ(ℓ + ½), the limit
-  x_* → 0 of χ_ℓ(x_*) + ln(x/x_*). Their imaginary part is never 0.
-- *The one candidate that could sit on ℝ⁺.* That is the sum of the two conjugate u-mode singulants, 2Φ(x), which is real
-  and positive for x > 1/√2 and reaches 0 at x = 1/√2. It would make the radius of the outer series collapse at
-  x = 1/√2. It does not. At M = 1 the effective radius of D is 1.084, 1.041, 1.028, 1.026, 1.023, 1.015 at
-  x = 0.5, 0.65, 0.70, 0.7071, 0.72, 0.75, and it is just as smooth for B and at M = 3. So the second-order
-  singularity at 2Φ(x) is absent.
-
-**Caveat.** This is numerical evidence within the disc the late orders resolve. The u-mode singulants Φ ∓ iπ(ℓ + ½) lie
-outside it and are known to be off ℝ⁺ (Proposition 4, linear case). A proof of H-a1 and H-a2 needs a description of the
-Borel plane of the nonlinear outer series. The numerics make that a well-posed target rather than a risk.
+The b-mode remark of the first version stands as an analytic observation: the resonance between the free b-mode and the
+forced response to the u-mode, x Φ′(x) = 1, happens only at x = 0, so the b-mode singulants are
+χ_b(x) = ln x − iπ(ℓ + ½), whose imaginary part is never 0.
 
 ## 9. New (second pass): Lemma B5.0, the inner limit is reached in powers of 1/n (proved)
 
@@ -582,8 +565,8 @@ corrections are integer powers of 1/n:
 - p + m equation: $`\xi^2\sigma_\xi + \omega\xi\sigma_\theta - c\,\xi y_\xi + c\,(1 - \eta)\,y`$, with correction $`\nu^2 c\eta y`$.
 
 With η = ½y², the leading equations are exactly the README's inner problem. *Proof:* the computation, done symbolically
-by the script. Projection onto |μ| ≤ M commutes with every step, so the lemma also holds for the M-harmonic model.
-$`\square`$
+by the script. Projection onto |μ| ≤ M commutes with every step, so the lemma also holds for the M-harmonic model
+(checked for the model of Section 1 by `b5_system.py`, [B5_inner.md](B5_inner.md) §1.2). $`\square`$
 
 *Remarks.*
 - The η equation is singularly perturbed: its ν² term contains $`\xi\eta_\xi`$. This is the b fast mode of B2,
@@ -690,54 +673,38 @@ $`\lVert W\rVert = \sup_{\mathcal M^\pm} n\lvert u\rvert^2\,\lvert W(u)\rvert/m(
 **Lemma B5(M).** Let $`Y^\pm_{\rm out}`$ be the continuation of the centre-regular solution through the upper (lower) half plane,
 as constructed in Section 11, written in inner variables on $`\mathcal M^\pm`$.
 
-*(1) Sectorial identification.* $`Y^\pm_{\rm out} = Z^\pm_{\rm in} + W^\pm`$ on $`\mathcal M^\pm`$, with $`\lVert W^\pm\rVert \le C`$, i.e.
+*(1) Sectorial identification* ([B5_inner.md](B5_inner.md) §4). Assume (H8) (B5_inner.md §7: $`Y^+_{\rm out}`$ analytic
+on the working domain $`\mathcal W^\pm_n \supset \mathcal M^\pm`$, and within O(1/n) of $`Z^+_{\rm in}`$ on the inner arc |x| = n^γ).
+In the variables (P, Φ = 2uP_u, C, ϑ = Θ − [PP]/2) of B5_inner.md §1, $`W = Y^\pm_{\rm out} - Z^\pm_{\rm in}`$ satisfies
 
 ```math
-\lvert W^\pm(u)\rvert \le C\,\frac{m(u)}{n\lvert u\rvert^2} .
+\lvert W_j(u)\rvert \le \frac{x_j\,m_j(u)}{n}, \qquad m_\Phi = \lvert u\rvert,\quad m_j = 1 \text{ otherwise},
 ```
 
-C depends on M, γ, κ, κ₁ and a compact set of (F, ω).
+where x is any positive super-solution of the explicit linear inequality b + Lx < x of B5_inner.md §4. A super-solution
+exists for n ≥ n₀(M). For M = 1 it is certified for n ≥ max(e^{73.89}, n₈) (κ = 0.3, κ₁ = 0.6, γ = 0.3), with
+x = (392, 9.2×10⁴, 21, 30); n₈ is B8's threshold, and B8 delivers (H8) for n ≥ e^{73.89} (Section 11). Since |u| ≤ 1 on
+$`\mathcal M^\pm`$, this implies the weaker bound $`\lvert W^\pm(u)\rvert \le C\,m(u)/(n\lvert u\rvert^2)`$ of the first version.
 
 *(2) The jump.* On the Stokes line arg u = 0, $`Y^+_{\rm out} - Y^-_{\rm out}`$ is a fast-type solution of the variational equation. Its label
 function has μ-th coefficient
 
 ```math
-J_{n,\mu} = \kappa_{n,\mu}\,\Big[S_\mu(F, \omega) + O\big(n^{-1 + 1/(2\kappa_1)}(\ln n)^{2}\big)\Big],
+J_{n,\mu} = \kappa_{n,\mu}\,\Big[S_\mu(F, \omega) + O\big(n^{-1 + 1/(2\kappa_1)}(\ln n)^{\mathrm{Re}\langle F^2\rangle}\big)\Big],
 ```
 
-uniformly in C¹ near (F*, ω*). If the first inner correction $`S^{(1)}`$ of Section 9 is included, the bracket becomes
-$`S_\mu + n^{-1}S^{(1)}_\mu + O(n^{-2+1/(2\kappa_1)}(\ln n)^{2})`$, which is $`S_\mu + O(1/n)`$ as Theorem B(M) needs. The error term is additive,
-which is what the implicit function theorem uses at a zero of S.
+uniformly in C¹ near (F*, ω*). The power of ln n comes from the normalization $`u_*^{\langle F^2\rangle}`$ of the fast mode at the
+evaluation point below (B5_inner.md §7; the first version had (ln n)², from the weaker bound of (1) without that
+normalization). If the first inner correction $`S^{(1)}`$ of Section 9 is included (Z_in replaced by Z_in + n⁻¹Z^{(1)},
+which part (1) has not been run with), the bracket becomes $`S_\mu + n^{-1}S^{(1)}_\mu`$ plus an error smaller by a factor
+1/n, i.e. $`S_\mu + O(1/n)`$, as the rate in Theorem B(M) needs. The error term is additive, which is what the implicit function
+theorem uses at a zero of S.
 
-*Proof of (1).*
-- **The equation for W.** Both functions solve the exact equations, which in inner variables are 𝓘 + n⁻¹𝓠₁ + n⁻²𝓠₂
-  (B5.0). $`Z_{\rm in}`$ solves 𝓘 = 0, so it leaves the residual $`n^{-1}\mathcal Q_1(Z_{\rm in}) + O(n^{-2})`$, of relative size $`O(1/(n\lvert u\rvert))`$.
-  The fast-phase mismatch of B5.1(2) contributes relative $`O(1/(n\lvert u\rvert^2))`$. So W solves
-  $`\mathcal L W = r + N(W)`$, where 𝓛 is the inner variational operator, $`\lvert r\rvert \le C m/(n\lvert u\rvert^2)`$ and N is quadratic.
-- **Data at the small-|u| edge.** At $`u_0 = n^{-1+2\gamma}e^{i(\pi/2+\kappa)}`$ both functions are given by fixed-order truncations:
-  - $`Y_{\rm out}`$ by the outer series in (ε, x) truncated at order K₀ (Lemma B8);
-  - $`Z_{\rm in}`$ by the inner series in u truncated at order K₀ (Braaksma);
-  - each with relative error $`O(\lvert u_0\rvert^{K_0+1})`$, which is polynomially small.
-
-  The two truncated series differ by the lower-degree terms of the outer coefficients. These are the particular
-  response to r. (The README checks that the top-degree coefficients of the outer D_k, G_k, S_k equal the inner
-  d_k, −g_k, s_{k−1} to 2×10⁻¹³.) So W(u₀) agrees with that particular response up to $`O(n^{-N})`$ for any N, once K₀ is
-  large.
-
-  No exponentially small information is used. This is the point of BFGS's matching: compare actual functions with
-  polynomial accuracy, never truncated series at the exponentially small level.
-- **Progressive paths.** For $`u \in \mathcal M^+`$ take the path that runs from u₀ along the ray $`\arg u = \pi/2 + \kappa`$ to radius |u|, then along
-  the arc of that radius to arg u.
-  - On the ray Re(1/u) \< 0 and increases with |u|.
-  - On the arc, Re(1/(2u)) = cos(arg u)/(2|u|) increases as arg u decreases.
-  - So the fast Volterra kernels $`\exp\big(\tfrac1{2s} - \tfrac1{2u}\big)`$ (s earlier on the path) have modulus ≤ 1.
-  - The slow kernels are powers of u/s, bounded polynomially on $`\mathcal M^\pm`$.
-- **Fixed point.** The fast/slow rate ratio is $`1/\lvert u\rvert \ge \ln n/\kappa_1`$. Integrating the fast components along these
-  paths gains a factor $`O(\lvert u\rvert) \le O(\kappa_1/\ln n)`$, and the slow components are integrated from u₀. The map
-  $`W \mapsto \mathcal L^{-1}(r + N(W))`$ is a contraction in $`\lVert\cdot\rVert`$ for n ≥ n₀.
-- **Identification.** Both $`Y^+_{\rm out}`$ and $`Z^+_{\rm in}`$ have no exponentially large fast content along the ray
-  $`\arg u = \pi/2 + \kappa`$: for $`Y^+_{\rm out}`$ this is Lemma B8, for $`Z^+_{\rm in}`$ the characterization above. So W is the fixed point
-  and not the fixed point plus a free fast mode. $`\square`$
+*Proof of (1).* [B5_inner.md](B5_inner.md) §§2–4: a bootstrap (not a contraction mapping, because the b-mode needs
+radial paths and the fast mode progressive ones) on the working domain, with data on the whole inner arc |x| = n^γ from
+(H8), fast components integrated along progressive paths with kernels of modulus at most 1, and constants defined as
+suprema of explicit expressions in the inner solution. No exponentially small information is used: actual functions
+are compared with polynomial accuracy, as in BFGS's matching.
 
 *Proof of (2).*
 - **Both jumps are fast-type.** $`\Delta_{\rm out} = Y^+_{\rm out} - Y^-_{\rm out}`$ and $`\Delta_{\rm in} = Z^+_{\rm in} - Z^-_{\rm in}`$ are each the difference of two
@@ -750,10 +717,12 @@ which is what the implicit function theorem uses at a zero of S.
 **The difference of the label functions.** Then
 
 ```math
-k_{\rm out} - k_{\rm in} = \frac{(W^+ - W^-)(u_*)}{e^{-1/(2u_*)}u_*^{\langle F^2\rangle}} + k\cdot O\Big(\frac{(\ln n)^2}{n}\Big) = O\big(n^{-1+1/(2\kappa_1)}(\ln n)^2\big),
+k_{\rm out} - k_{\rm in} = \frac{(W^+ - W^-)(u_*)}{e^{-1/(2u_*)}u_*^{\langle F^2\rangle}} + k\cdot O\Big(\frac{(\ln n)^2}{n}\Big) = O\big(n^{-1+1/(2\kappa_1)}(\ln n)^{\mathrm{Re}\langle F^2\rangle}\big),
 ```
 
-by part (1). This is o(1) because κ₁ > ½.
+by part (1), since $`\lvert u_*^{\langle F^2\rangle}\rvert = (\kappa_1/\ln n)^{\mathrm{Re}\langle F^2\rangle}`$. This is o(1) because κ₁ > ½.
+For M = 1 the relative error is about $`x_\Phi\,n^{-1+1/(2\kappa_1)}(\ln n/\kappa_1)^{\mathrm{Re}\langle F^2\rangle}`$ with
+⟨F²⟩ = A²/2 = 3.23 (B5_inner.md §7).
 - **Translation and C¹.** Translating to outer label harmonics multiplies by $`\kappa_{n,\mu}`$ (B5.1). Every construction depends
   analytically on (F, ω), so the same argument gives the C¹ statement.
 - **The 1/n refinement.** Replace $`Z_{\rm in}`$ by $`Z_{\rm in} + n^{-1}Z^{(1)}`$, where $`Z^{(1)}`$ solves the variational equation forced by
@@ -764,18 +733,15 @@ by part (1). This is o(1) because κ₁ > ½.
 - **Proved.**
   - B5.0, the exact form of the corrections.
   - B5.1, the fast variable, the label continuation and the explicit matching factor κ.
-  - Part (2) given part (1), by the evaluation-point argument.
-- **Written at appendix level, details to check.** Part (1), the fixed point on $`\mathcal M^\pm`$. Its ingredients are all
-  standard:
-  - Braaksma's Gevrey bounds for the inner lateral sums on sectors;
-  - the fast/slow splitting of the inner variational operator at u → 0 (B2 in inner variables);
-  - the explicit progressive paths;
-  - fixed-order truncations at the small-|u| edge.
-
-  The one input from outside the matching domain is that $`Y^+_{\rm out}`$ has no exponentially large fast content along
-  arg u = π/2 + κ. Lemma B8 provides this.
-- **The weak point.** The gain in the fixed point is only $`O(\kappa_1/\ln n)`$ at the large-|u| edge. That is enough for
-  n ≥ n₀, but the explicit constants are poor. It is the same phenomenon as the logarithmic losses in BFGS.
+  - Part (2) given part (1), by the evaluation-point argument. Its error constant for M = 1 is only estimated
+    (B5_inner.md §7, `b5_threshold.py`; Section 13.1).
+- **Part (1).** **Proved conditional on (H8)** for fixed M; **certified** for M = 1 with n₀(1) = max(e^{73.89}, n₈)
+  ([B5_inner.md](B5_inner.md); trusted code `b5_bounds.py`, `b5_formulas.py`, not yet independently reviewed). The
+  input from B8 is (H8) of B5_inner.md §7: analyticity on the working domain and the O(1/n) bound on the inner arc,
+  whose upper end is the quantitative "no exponentially large fast content". B8 delivers it for n ≥ e^{73.89}
+  (Section 11). The weak point is as predicted: the outer edge κ₁/ln n must lie within |u| ≤ 0.009, where the
+  perturbative fixed point closes, so n₀ = exp(κ₁/(0.0085 cos κ)). A practical n₀ needs the exact inner variational flow
+  on a fixed sector (B5_inner.md §5.4).
 
 ## 11. New (second pass): Lemma B8, the global continuation
 
@@ -813,8 +779,9 @@ contributes at most $`\lvert x/s\rvert^{2\mathrm{Re}\langle F^2\rangle}`$.
 
 **Lemma B8.2 (Stokes geometry; proved).** On $`\Sigma^+_n`$ the anti-Stokes curve Re Φ = 0 runs from x = 1/√2 to ∞ e^{iπ/4}, and
 the only Stokes line is x > 1, where χ = Φ ∓ iπ/2 = w is real and positive. So the continuation of the centre-regular
-solution through the upper half plane is the upper lateral sum of the slow series on all of $`\Sigma^+_n`$, with no free fast
-mode. The reasons:
+solution through the upper half plane has no free fast mode on all of $`\Sigma^+_n`$, in the fixed-order sense of Lemma B8
+(its identification with the upper lateral Borel sum is the complex-x form of hypothesis (H-σ),
+[B3_borel.md](B3_borel.md), and is not needed). The reasons:
 - it has none near the centre, where $`e^{-n\Phi}`$ is exponentially large;
 - no Stokes line is crossed before x > 1 is reached from above.
 
@@ -846,11 +813,22 @@ uses.
   $`(\delta/2)^{n/2}`$, far below the bound.
 - **Fixed M.** Every step is finite-dimensional, so the constants depend on M.
 
-**What remains in B8.** Writing this contraction with constants. Unlike in the first pass, no Gevrey bound on the
-outer coefficients uniform up to $`\lvert x\rvert \sim R_n`$ is needed. The fixed-order truncation suffices, because B5(1) takes its
-data at the small-|u| edge and the exponentially small information comes only from the evaluation point u*. This makes
-B8 a long but standard argument: the regular-singular point at 0, explicit progressive paths, and one regular-singular
-point (x = 1) excised and handled by B6.
+**Lemma B8 with constants** ([B8_constants.md](B8_constants.md)). For the M-model with b, c on |ν| ≤ M + 1, κ = 0.3,
+κ₁ = 0.6, δ = 0.05 and K = 4, the centre-regular solution (gauge c(0) = c^K(0)) continues analytically to
+𝒟_n = {|x| ≤ (κ₁n/(cos κ ln n))^{1/2}, 0 ≤ arg x ≤ π/4 + κ/2} ∖ {|x − 1| < δ/2} for every n ≥ e^{62}, with
+|R_V| ≤ h_Vρ^5, |R_S| ≤ h_Sθρ^5, |R_β − qR_S| ≤ h_βθρ^5, |R_c| ≤ h_cρ^5 (ρ = (1 + |x|)²/n, θ = |x|/(1 + |x|), in the
+variables of B8_constants.md §1.2; **certified** for M = 1 over B5(1)'s parameter box; h = (2.4×10⁶, 6.3×10⁶, 6.2×10⁵,
+1.7×10⁵) at n₀ = e^{73.89}). It gives B5(1)'s hypothesis (H8) for n ≥ e^{73.89} with δ = (8.3×10⁻⁵, 79.04, 3.232, 6.464)
+≤ δ_ref. For every fixed M the same holds for n ≥ n₀(M) (**proved**, no numerical value). Trusted code: `b8_alg.py`,
+`b8m_formal.py`, `b8m_atoms.py`, `b8m_bounds.py`, `b8m_h8.py`; not yet reviewed independently.
+
+Where B8_constants.md departs from the plan above (its §11):
+- the domain carries the factor 1/cos κ in R′_n = (κ₁n/(cos κ ln n))^{1/2}, which B5(1) needs; R_n above lacks it;
+- the transport loss sits inside the fast-kernel bound and imposes no condition on K; K = 4 is what (H8)'s Φ-bound needs
+  at γ = 0.3, and only K = 4 is certified (the K* = 3 above is superseded);
+- B8 never enters the light-cone disc, and B5(1) does not need it; B6 matters only for the Stokes jump on x > 1;
+- the gauge is c(0) = c^K(0), the light-cone gauge up to O(n^{−5}); the extension to c(0) = c^K(0) + d with
+  |d| ≤ d₀n^{−K−1} is proved by hand but was not run (B8_constants.md §8.4).
 
 ## 12. New (second pass): Lemma B6 completed, with the light-cone exponents and the Volterra bound
 
@@ -927,35 +905,87 @@ with C depending only on M, F, ω and t₀.
 - What remains is the routine block-diagonalization of the order-n part on [t₀, 1 − δ] by an analytic transformation
   bounded uniformly in n. This holds because the fast eigenvalue there is simple and non-vanishing (B2).
 
-## 13. New (second pass): status
+## 13. Status
 
-| Step | First pass | After the second pass |
+This section is the canonical statement of layer B's status; PROOF.md and the README point here.
+
+| Step | Status | Details |
 |---|---|---|
-| H-a1, H-a2 (for B3) | to check | **checked numerically** in the resolved Borel disc for M = 1, 3, 5, 7 and untruncated, at the lowest and highest harmonics: all singularities at \|arg a\| ≥ 0.48π (≥ 0.57π for fixed M); the would-be 2Φ(x) singularity is absent (Section 8) |
-| B5.0: exact equations = inner problem + n⁻¹𝓠₁ + n⁻²𝓠₂ | — | **proved** (Section 9) |
-| B5.1: fast variable, label continuation, matching factor κ | — | **proved** (Section 10.1) |
-| B5(2): jump = κ [S + O(n^{−1+1/(2κ₁)}(ln n)²)], refinable to κ [S + O(1/n)] | open | **proved given B5(1)** (Section 10.3) |
-| B5(1): sectorial identification on $`\mathcal M^\pm`$ | open | **appendix-level proof**: fixed point with explicit progressive paths, data from fixed-order truncations (Section 10.3); constants not written |
-| B6: light-cone matching | reduced | **proved for fixed M** up to a routine block-diagonalization: exact non-resonance (gauge) and checked for the truncations; Volterra bound B6′ (Section 12); Section 5.1's "O(1/n) coupling" corrected to O(1) |
-| global continuation (B8) | open | **domain explicit; progressive paths and Stokes geometry proved** (B8.1, B8.2); the remaining contraction needs only fixed-order truncation, not a uniform Gevrey bound (Section 11) |
+| H-a1, H-a2 (for B3) | **false as stated, harmlessly; replaced by (H-σ)**: proved in the linear case and near ζ = 0 for every M (Gevrey-1 on every disc; 2Φ excluded near 1/√2, certified for M = 1 in the truncation with b, c θ-independent); conjecture beyond, with ball-arithmetic numerical evidence (M = 1, 3); not used by Theorem B(M). The first version's numerical check is withdrawn | Sections 4.2, 8; [B3_borel.md](B3_borel.md) |
+| B3: formal series Gevrey-1; actual solution | formal half **proved** for every M (B3.7); existence with fixed-order asymptotics = B8 on the real segment; the 1-sum ⇔ (H-σ), open and not needed | Section 4.2; B3_borel.md §7.1 |
+| B4: inner multipliers | **cited** (Braaksma 1992, hypotheses checked against the paper); parameter-analyticity **proved** given Braaksma (B4.P) | Section 4.1; B3_borel.md §7.2 |
+| B5.0: exact equations = inner problem + n⁻¹𝓠₁ + n⁻²𝓠₂ | **proved**; **checked symbolically** | Section 9 |
+| B5.1: fast variable, label continuation, matching factor κ | **proved** | Section 10.1 |
+| B5(1): sectorial identification on $`\mathcal M^\pm`$ | **proved conditional on (H8)** for fixed M; **certified** for M = 1, n ≥ max(e^{73.89}, n₈) | Section 10.4; [B5_inner.md](B5_inner.md) |
+| B5(2): jump = κ [S + O(n^{−1+1/(2κ₁)}(ln n)^{Re⟨F²⟩})] | **proved given B5(1)**; for M = 1 the error constant is only estimated | Section 10.3; B5_inner.md §7 |
+| B6: light-cone matching | **proved for fixed M** up to a routine block-diagonalization on [t₀, 1 − δ]: exact non-resonance (gauge), checked for the truncations; Volterra bound B6′; Section 5.1's "O(1/n) coupling" corrected to O(1) | Section 12 |
+| B8: global continuation | B8.1, B8.2 **proved**; B8 **certified** for M = 1 (n ≥ e^{62}), with (H8) of B5(1) **certified** for n ≥ e^{73.89}; **proved** for every fixed M without a numerical n₀(M) | Section 11; [B8_constants.md](B8_constants.md) |
 
-What now stands between this note and Theorem B(M) for each fixed M:
-- writing the two contractions with constants: B8 on $`\Sigma^\pm_n`$, and B5(1) on $`\mathcal M^\pm`$;
-- an analytic description of the outer Borel plane that turns H-a1/H-a2 from numerics into a lemma;
-- the citation checks already listed in Section 7 (the mixed slow–fast version of B3, and parameter-analyticity of the
-  inner lateral sums).
+### 13.1 Theorem B(1): the status of the chain
+
+**Theorem B(1), the selection theorem for the one-harmonic model, is not proved.** Most links are proved or certified,
+but the chain has no certified threshold in n, and the items listed after the table are missing.
+
+The model throughout is that of Section 1 with M = 1: p, m on the harmonics ±1, b and c on {0, ±2}. Theorem A(M = 1),
+B5(1) and B8 all use it. The parameters are (A, ω/ω∞) in the complex box 𝒦 of B5_inner.md §5.1, which contains a
+polydisc of radius 10⁻⁶ around every point of Theorem A's box.
+
+| Link | Status | Threshold in n |
+|---|---|---|
+| Theorem A(M = 1): the zero (A*, ω*) of S₁, simple | **certified** (A_certify.md §12.6), assuming Braaksma's theorem; the Krawczyk certificate was reviewed independently (A_review.md) and re-implemented with CAPD; the disc covering of lemma 6b₁ has not been re-implemented independently | none (n-free) |
+| B1(1): formal 1/n series | **proved** (Section 3.1; for this model Lemma F of B8_constants.md, checked) | none |
+| B2: slow–fast structure | **proved**, checked symbolically | none |
+| B3, formal half: the outer series is Gevrey-1 | **proved** (B3.7); its M = 1 constants are certified for the truncation with b, c θ-independent, not for this model. Not used by the links below, which need only fixed order | none |
+| B4, B4.P: multipliers defined, analytic in (A, ω) | **cited** (Braaksma) and **proved** given Braaksma; for M = 1 the contraction of B4.P is certified on a box (A_certify.md §4.5) | none |
+| B5.0, B5.1 | **proved** (B5.0 checked symbolically for this model) | none |
+| B8(1): continuation to 𝒟_n with remainder bounds | **certified** (κ₁ = 0.6, K = 4), in the gauge c(0) = c^K(0) | n ≥ e^{62} |
+| (H8): B8's output in B5(1)'s form | **certified** (κ₁ = 0.6, γ = 0.3) | n ≥ e^{73.89} |
+| B5(1): W = O(1/n) on the matching domain | **certified** given (H8) (κ = 0.3, κ₁ = 0.6, γ = 0.3, Z = 0.0085) | n ≥ e^{73.89} |
+| B5(2): the jump J_{n,1} = κ[S₁ + R] | **proved** given B5(1); the size of R is only **estimated** (`b5_threshold.py`) | estimate: ln n ≳ 285 at κ₁ = 0.6; ln n ≳ 104.7 at κ₁ = 0.85 |
+| B6, B6′: light-cone matching | B6′ **proved**; B6 **proved** up to the block-diagonalization on [t₀, 1 − δ] | not evaluated |
+| B7: implicit function theorem | **proved** given the C¹ bounds (Section 6); not run with explicit constants | needs \|R\| and its derivative ≲ 10⁻⁷ on the box (an estimate, B5_inner.md §7) |
+
+**What is missing.**
+1. *B5(2)'s error constant is only estimated* (`b5_threshold.py`, B5_inner.md §7). The estimate asks the relative error
+   of the jump, including its derivative through the Cauchy factor 10⁶, to be at most about 10⁻⁷. At κ₁ = 0.6, the
+   value at which B5(1), B8 and (H8) are certified, that needs ln n ≳ 285. The smaller ln n ≳ 104.7 quoted in
+   B5_inner.md needs κ₁ = 0.85, at which B8 and (H8) have not been run (B5(1)'s own condition there is ln n ≥ 104.68).
+2. *B6's routine block-diagonalization* of the order-n part on [t₀, 1 − δ] is not written, and B6's constants are not
+   evaluated for M = 1.
+3. *The transport of the jump along the Stokes line is not written.* The factor κ_{n,μ} in C_{n,μ} = κ_{n,μ}[S_μ + R]
+   links the light-cone coefficient to the label of the jump at the evaluation point u* (Section 6's chain: half-monodromy,
+   then Proposition 3's transport along x > 1, then B5.1). B6 and B6′ cover x ∈ [½, 1), Proposition 3 is a leading-order
+   statement, and no note bounds the error of that transport on x > 1, from the light cone out to the inner arc
+   |x| = n^γ. Whether conclusions (2) and (3) of Theorem B need it, or only the equivalence "analytic at x = 1 ⇔ Y⁺ = Y⁻
+   on x > 1 ⇔ the jump's label vanishes", is not settled in the notes.
+4. *B8's normalization.* B8 is certified in the gauge c(0) = c^K(0), the light-cone gauge up to O(n^{−5}). The extension
+   to c(0) = c^K(0) + O(n^{−5}), which the exact light-cone condition c(1) = 1 needs, is proved by hand but was not run
+   (B8_constants.md §8.4).
+5. *The 1/n rate.* Without the refinement by S^{(1)} (Section 10.3), which part (1) has not been run with, the branch
+   satisfies |(A_n, ω_n) − (A*, ω*)| = O(n^{−1+1/(2κ₁)}(ln n)^{3.23}) rather than O(1/n).
+6. *Independent review.* None of the certificate code of B5, B8 or B3 has had an independent review or a second
+   implementation: `b5_bounds.py`, `b5_formulas.py` (B5(1)); `b8_alg.py`, `b8m_formal.py`, `b8m_atoms.py`,
+   `b8m_bounds.py`, `b8m_h8.py` (B8 and (H8)); `b3_gevrey_certificate.py` (B3.7, not on the critical path). Theorem A's
+   disc covering (lemma 6b₁) has not been re-implemented independently either.
+7. *Assumed:* Braaksma's summability theorem, as in Theorem A(M = 1).
 
 ## References
 
-- O. Costin, *On Borel summation and Stokes phenomena of nonlinear differential systems*, Duke Math. J. 93 (1998)
-  289–344 *(journal details unverified)*, arXiv:math/0608408.
+- O. Costin, *On Borel summation and Stokes phenomena for rank-1 nonlinear systems of ordinary differential equations*,
+  Duke Math. J. 93 (1998) 289–344, arXiv:math/0608408 (notes/REF_CHECK.md §3).
 - O. Costin, *Exponential asymptotics, transseries, and generalized Borel summation for analytic, nonlinear, rank-one
   systems of ODEs*, arXiv:math/0608414 (Int. Math. Res. Notices 1995 *(unverified)*). Normal form
   $`y' = f_0 - \hat\Lambda y - x^{-1}\hat B y + g`$, $`\hat\Lambda`$ invertible, eigenvalues of distinct arguments.
 - O. Costin and R. D. Costin, *On the formation of singularities of solutions of nonlinear differential systems in
   antistokes directions*, Invent. Math. 145 (2001) *(volume unverified)*, arXiv:math/0202234.
 - B. L. J. Braaksma, *Multisummability of formal power series solutions of nonlinear meromorphic differential
-  equations*, Ann. Inst. Fourier 42 (1992) 517–540.
+  equations*, Ann. Inst. Fourier 42 (3) (1992) 517–540, doi:10.5802/aif.1301.
+- J.-P. Ramis, Y. Sibuya, *A new proof of multisummability of formal solutions of non linear meromorphic differential
+  equations*, Ann. Inst. Fourier 44 (3) (1994) 811–848.
+- M. Canalis-Durand, *Solution formelle Gevrey d'une équation singulièrement perturbée : le cas multidimensionnel*,
+  Ann. Inst. Fourier 43 (2) (1993) 469–483, doi:10.5802/aif.1341.
+- A. D. Sokal, *An improvement of Watson's theorem on Borel summability*, J. Math. Phys. 21 (2) (1980) 261–263
+  *(volume, issue and pages from a citing record)*.
 - M. Canalis-Durand, J.-P. Ramis, R. Schäfke and Y. Sibuya, *Gevrey solutions of singularly perturbed differential
   equations*, J. reine angew. Math. 518 (2000) 95–129 *(pages unverified)*.
 - M. Canalis-Durand, J. Mozo-Fernández and R. Schäfke, *Monomial summability and doubly singular differential
