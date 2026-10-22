@@ -219,7 +219,8 @@ come only from the summation over the Taylor index.
 - For M = 1, `b3_taylor_rational.py` (sympy) solves the Taylor recursion symbolically through x⁵ and checks that the
   residual vanishes. Besides the n = 0 of the scaling, it finds only the poles n = −1 and −3, again spacing 2
   (`b3_taylor_rational.log`; a run through x⁷ did not finish in 25 minutes). Its mutation `--mutate=eq` (n/3 for n/2 in
-  the m equation of the solved system) makes the residual test fail (`b3_taylor_rational_mut_eq.log`).
+  the m equation of the solved system) makes the residual test fail, already through x³
+  (`b3_taylor_rational_mut_eq.log`).
 - (P and M carry every power of x; only P − M is odd and P + M even.)
 
 ### 2.4 Lemma B3.4 (the linear case; proved)
@@ -514,14 +515,17 @@ with explicit constants, then (b).
 **Codes.**
 - `b3_outer_m1.py` (M = 1, either gauge) and `b3_outer_M.py` (any M, the projected ODE) compute Proposition 1's
   recursion in python-flint balls, at 640 bits (M = 1, K = 120) and 512 / 400 bits (M = 3, K = 100; M = 5, K = 70).
-  The relative ball radii at the last order are below 10⁻⁷⁰.
+  The largest relative ball radius at the last order, over all series kept, is 8.7 × 10⁻⁶⁹ (M = 1), 1.9 × 10⁻⁸⁷
+  (M = 3) and 9.2 × 10⁻⁷⁷ (M = 5) (`b3_ball_radii.log`).
 - Cross-checks:
   - against `solver/largeD_late_orders.py` (double, θ grid; shares only the equations): 3.1 × 10⁻¹⁴ at K = 12, M = 1
     (`b3_crosscheck_m1.log`);
   - the two ball codes against each other: 5.6 × 10⁻⁵⁷ at M = 1;
   - against the grid code at M = 3, orders 1–3: 9.3 × 10⁻¹⁶ of the order's size. From order 4 the truncations differ,
     because the grid code divides by cb on the grid and then projects (`b3_crosscheck_M.log`).
-  - Each cross-check has mutation controls (`omega_S`, `drop_bQ`, `scale_G`), which fail as they must.
+  - Each cross-check has mutation controls (`omega_S`, `drop_bQ`, `scale_G`). All three were run on both checks and
+    fail as they must; the driver keeps `omega_S` for the M = 1 check and `scale_G` for the M check
+    (`b3_crosscheck_*_mut_*.log`).
 - Analysis: diagonal Padé approximants at 120 digits of the Borel transform (`b3_borel_scan.py`, `b3_strip_check.py`,
   logs `b3_scan_all.log`, `b3_strip_check_*.log`), and a two-term-recurrence fit for conjugate pairs (`b3_pair_fit.py`).
   Both were first run on planted series with known singularities:
@@ -530,8 +534,10 @@ with explicit constants, then (b).
   - pair fit at ±iπ: error 8 × 10⁻⁴.
 
 **A methodological finding.** Genuine singularities of these series show up as Padé poles with a zero very close by:
-pole–zero distances 10⁻¹⁴ to 10⁻⁷, because of their large complex exponents (Im g ≈ μω). outer_borel.py drops every pole
-with a zero within 10⁻⁴ as a "Froissart doublet", so it removes exactly the singularities it is looking for. The checks
+pole–zero distances 10⁻¹⁴ to 10⁻⁷. The cause is not established: a planted pair with a comparable exponent
+(Im g = 3.82) has distances near 10⁻², so it is presumably the richer singularity structure of the real series.
+outer_borel.py drops every pole with a zero within 10⁻⁴ as a "Froissart doublet", so it removes exactly the
+singularities it is looking for. The checks
 here drop only exact doublets (zero distance below 10⁻³⁰). A candidate near ℝ⁺ counts only if the approximant from K − 6
 terms has a pole within 5 % of it. That rule was added after one unstable pole at M = 3 (§5.2), and both planted controls
 were rerun under it.
@@ -585,10 +591,10 @@ and at x = 0.8 (−1.15 to −1.23). It is x-independent and sits near the negat
 
 So the "x-independent cluster" of C_selection.md §8 is real for M ≥ 3. It is not at 0.66–0.88 and 0.60π as tabulated
 there, and it lies opposite to ℝ⁺. It limits σ to about its distance from the origin, and does not obstruct the 1-sum.
-Its origin is not identified. By Lemma B3.2 it must come from the θ-dependent light-cone normalization c(1, θ) = 1, i.e.
-from the even harmonics of c(0, θ) that no scaling removes. An x-independent real number near −1.2 is suggestive of
-global data at the light cone, not of the x-dependent singulants. (−π²/8 = −1.2337 is close, but nothing here supports a
-closed form.)
+Its origin is not identified. A natural candidate is the θ-dependent light-cone normalization c(1, θ) = 1: by Lemma
+B3.2 the even harmonics of c(0, θ) it fixes cannot be removed by scaling, and they are global data like X* at M = 1.
+This is not tested: `b3_outer_M.py` has only the light-cone gauge, and a centre-gauge run at M = 3 would decide it.
+Another candidate is the alternating effect of the two θ-derivatives per order, (iμω)² = −(μω)² < 0, which grows with μ.
 
 *Near ℝ⁺.* In the first run of the strip check, B0 at x = 0.8 had one pole at 1.653 − 0.696i. It appears only with
 K = 100 terms and is absent with K = 94, 88, 80 (`b3_pole_stability_M3_B0.log`), so it is drawn by the approximant
@@ -645,8 +651,9 @@ The natural certificate for "no singularity in a neighbourhood of ℝ⁺" has tw
   ‖D_k‖, ‖S_k‖ (k ≤ 40, ratios ≤ 0.38) is a consistency check, not a proof that Φ is a valid majorant.
 - *Improvement path, which costs only work.* The loss factor ≈ 100 against the true radius comes from the generating
   function treating interior convolutions as O(1). An induction on the plain majorant recursion keeps their O(1/k) size
-  and would give about 0.146 at ρ = 0.75 (`b3_majorant_recursion.py`; floating point, not certified). It needs a by-hand tail estimate with the factorial
-  convolution bound $`\sum_{i=a}^{k-a} i!(k-i)! \le (k-2a+1)\,a!(k-a)!`$ and a certified base range k ≤ K₀.
+  and would give about 0.146 at ρ = 0.75 (`b3_majorant_recursion.py`; floating point, not certified). It needs a
+  by-hand tail estimate with the factorial convolution bound $`\sum_{i=a}^{k-a} i!(k-i)! \le (k-2a+1)\,a!(k-a)!`$ and a
+  certified base range k ≤ K₀.
 
 **Stage 2, the neighbourhood $`S_\sigma`$ of [0, ∞): designed, not run.**
 - The Borel-plane system of §4, integrated along ℝ⁺ in ζ by validated Taylor models in (ζ, x). The x-dependence is
@@ -655,12 +662,12 @@ The natural certificate for "no singularity in a neighbourhood of ℝ⁺" has tw
 - Each ζ-step solves the transport equations by characteristics. The characteristic map Φ⁻¹ is explicit (Lemma B3.1), so
   its enclosures are cheap.
 - The start disc is stage 1.
-- The end condition is an exponential bound $`\lvert\hat Y\rvert \le Ce^{\nu\lvert\zeta\rvert}`$ beyond some ζ₁. It is proved by the contraction of §4 in
-  the weighted norm, where the gain 1/ν is uniform.
+- The end condition is an exponential bound $`\lvert\hat Y\rvert \le Ce^{\nu\lvert\zeta\rvert}`$ beyond some ζ₁. It is proved by the contraction
+  of §4 in the weighted norm, where the gain 1/ν is uniform.
 - The blocking issue is §4(a), the derivative loss. Until it is resolved by hand, a certified integration covers only a
   bounded piece of $`S_\sigma`$, which is not a proof of (H-σ).
-- Cost estimate: for M = 1, a 6-dimensional system with the x-dependence on ~10 discs and ~50 ζ-steps to |ζ| ≈ 6, about an
-  hour of CPU at 200 bits. Not attempted.
+- Size, as a rough guess (not measured): for M = 1, a 6-dimensional system with the x-dependence on about 10 discs and
+  about 50 ζ-steps to |ζ| ≈ 6. Not attempted.
 
 **Mutation controls kept as cross-checks.**
 - The old check `outer_borel.py` is kept. `b3_old_check_controls.py` gives it four planted inputs (P0 must pass; P1 and
@@ -668,7 +675,9 @@ The natural certificate for "no singularity in a neighbourhood of ℝ⁺" has tw
   documented.
 - The new check `b3_strip_check.py` passes on M = 1 and fails under `--plant=1.3,1e-3` and `--plant=2.2,1e-3`.
 - The certificate fails under `--mutate=m0`.
-- `b3_checks_all.py` runs all of these and checks their exit codes.
+- `b3_checks_all.py` runs all of these and checks their exit codes. Its last full run was cut by a container restart
+  after the planted controls (`b3_checks_all.log`, all as expected to that point). The remaining runs were redone with
+  `--only` (`b3_checks_all_M3.log`, `b3_checks_all_taylor.log`, `b3_checks_all_taylor_mut.log`): all as expected.
 
 ## 7. The citation checks of C_selection.md §7
 

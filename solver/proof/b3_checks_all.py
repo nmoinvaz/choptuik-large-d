@@ -34,7 +34,7 @@ if not QUICK:
                                         "--plant=2.2,1e-3"], 1),
         ("b3_strip_check_M3", ["b3_strip_check.py", "b3_outer_M3_K100.json", "--names=D1,D3,B0,B2,G0"], None),
         ("b3_taylor_rational", ["b3_taylor_rational.py", "5"], 0),
-        ("b3_taylor_rational_mut_eq", ["b3_taylor_rational.py", "5", "--mutate=eq"], 1),
+        ("b3_taylor_rational_mut_eq", ["b3_taylor_rational.py", "3", "--mutate=eq"], 1),   # order 3 suffices
     ]
 ONLY = [a.split("=", 1)[1].split(",") for a in sys.argv[1:] if a.startswith("--only=")]
 if ONLY:

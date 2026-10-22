@@ -1,0 +1,8 @@
+M2  : denominator factors [5*n + 6] -> poles at n = [-6/5]   <-- NOT of the form n + const
+M3  : denominator factors [n, n + 1, 5*n + 6, 5*n + 12] -> poles at n = [0, -1, -6/5, -12/5]   <-- NOT of the form n + const
+P2  : denominator factors [5*n + 6] -> poles at n = [-6/5]   <-- NOT of the form n + const
+P3  : denominator factors [n, n + 1, 5*n + 6, 5*n + 12] -> poles at n = [0, -1, -6/5, -12/5]   <-- NOT of the form n + const
+b2  : denominator factors [n, n + 1] -> poles at n = [0, -1]
+c2  : denominator factors [n, n + 1] -> poles at n = [0, -1]
+residual of the equations through x^3: NONZERO
+FAIL
