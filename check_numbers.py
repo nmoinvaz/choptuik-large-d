@@ -18,7 +18,7 @@ import sys
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DOCS = {name: open(os.path.join(ROOT, name), encoding="utf-8").read()
-        for name in ("README.md", "paper/main.tex", "proof/A_certify.md", "GAMMA.md")}
+        for name in ("README.md", "paper/physics/main.tex", "paper/math/main.tex", "proof/A_certify.md", "GAMMA.md")}
 
 
 def quoted_in(doc, text):
@@ -78,7 +78,7 @@ def dinf_quotes():
              ("bar covers the half-range", max(BAR, (RANGE[1] - RANGE[0]) / 2), BAR, 1e-9, [])]
     pat = re.compile(r"1\.64389375\s*(?:±|\\pm)\s*([0-9.]+)(?:\s*(?:×|\\times)\s*10\^?\{?([⁻\-−]?[0-9⁰¹²³⁴⁵⁶⁷⁸⁹]+)\}?)?")
     sup = str.maketrans("⁻⁰¹²³⁴⁵⁶⁷⁸⁹−", "-0123456789-")
-    for doc in ("README.md", "paper/main.tex"):
+    for doc in ("README.md", "paper/physics/main.tex", "paper/math/main.tex"):
         for m in pat.finditer(DOCS[doc]):
             v = float(m.group(1)) * (10 ** int(m.group(2).translate(sup)) if m.group(2) else 1)
             items.append((f"bar quoted in {doc}: '{m.group(0)}'", BAR, v, 1e-10, []))
@@ -92,7 +92,7 @@ def omega_quotes():
     items = [("omega_inf = 2 pi / Delta_inf", w, 3.82213589, 1e-8, [("README.md", "3.82213589")])]
     pat = re.compile(r"3\.82213589\s*(?:±|\\pm)\s*([0-9.]+)(?:\s*(?:×|\\times)\s*10\^?\{?([⁻\-−]?[0-9⁰¹²³⁴⁵⁶⁷⁸⁹]+)\}?)?")
     sup = str.maketrans("⁻⁰¹²³⁴⁵⁶⁷⁸⁹−", "-0123456789-")
-    for doc in ("README.md", "paper/main.tex"):
+    for doc in ("README.md", "paper/physics/main.tex", "paper/math/main.tex"):
         for m in pat.finditer(DOCS[doc]):
             v = float(m.group(1)) * (10 ** int(m.group(2).translate(sup)) if m.group(2) else 1)
             # an error bar may be rounded up, never down: accept dw <= quoted <= dw rounded up to one figure

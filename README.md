@@ -1,9 +1,15 @@
 # dss-residual-kernel
 
 **Critical collapse in D dimensions: the echo period and critical exponent, from numerics to first principles.**
-Papers (drafts, not yet reviewed): [physics](paper/physics/dss_physics.pdf), the numbers and the large-D picture;
-[mathematics](paper/math/dss_math.pdf), the propositions, the selection rule and the computer-assisted proof.
-The earlier combined draft is [paper/dss_large_D.pdf](paper/dss_large_D.pdf).
+
+Papers (drafts, not yet reviewed):
+
+- **Physics:** [*Choptuik's echo period and critical exponent at large dimension: evidence for Δ∞ = 1.643893746 and an
+  r²-shift symmetry behind γ∞ = 1/2*](paper/physics/dss_physics.pdf). The computed Δ(D) and γ(D), the formula, the
+  limit D → ∞, the large-D picture and other matter.
+- **Mathematics:** [*The echo period of Choptuik's critical solution at large dimension: a selection rule and a
+  computer-assisted proof*](paper/math/dss_math.pdf). Propositions 1–5 with proofs, the selection rule (Conjecture 1)
+  and Theorem A(M = 1).
 
 When a collapsing shell of scalar field is tuned exactly to the threshold between dispersing and forming a black hole,
 it approaches a universal solution, Choptuik's critical solution, which repeats itself on ever smaller scales: each
@@ -1896,7 +1902,7 @@ comms.txt           task log between the cloud and the second machine
 AGENTS.md           conventions for the AI sessions that run computations here (which scripts to use, thread budget, comms)
 paper/physics/      the physics paper (main.tex, built as dss_physics.pdf with make)
 paper/math/         the mathematics paper (main.tex, built as dss_math.pdf with make)
-paper/              the earlier combined draft (main.tex, built as dss_large_D.pdf; figures/ holds the PDF figures)
+paper/figures/      the PDF figures both papers share (conversions of the repo's SVG figures; make figures in paper/)
 PROOF.md            roadmap for a proof of the selection rule (computer-assisted inner zero; analytic selection theorem)
 GAMMA.md            why gamma_inf = 1/2 (solver/inner_pert/heat_form.py: the heat-equation form; rw_map.py: it is Rozali-Way's
                     system; pert_check3.py: the exact lambda = 2 mode)
