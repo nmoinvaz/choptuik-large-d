@@ -83,6 +83,23 @@ def model_rhs(M, x, n, w, pf, mf, bf, cf, mutate=""):
     return unvec(dp, O), unvec(dm, O), db, dc
 
 
+def model_residual(M, x, n, w, pf, mf, bf, cf, dp, dm, db, dc):
+    """residuals of the four model equations (not solved for the derivatives): (p), (m) as written, (b), (c)"""
+    O, E = harm(M)
+    bm1 = {k: bf[k] - (1 if k == 0 else 0) for k in E}
+    G = {k: (n - 1) * v for k, v in proj(cf, bm1, E).items()}
+    p2m2 = {k: proj(pf, pf, E)[k] + proj(mf, mf, E)[k] for k in E}
+    Gp, Gm = proj(G, pf, O), proj(G, mf, O)
+    cp, cm = proj(cf, pf, O), proj(cf, mf, O)
+    cpm = proj(cf, {m: pf[m] + mf[m] for m in O}, O)
+    cdp, cdm = proj(cf, dp, O), proj(cf, dm, O)
+    rp = {m: x * x * dp[m] - x * cdp[m] - (-w * x * 1j * m * pf[m] + Gp[m] - cp[m] + n / 2 * cpm[m]) for m in O}
+    rm = {m: x * x * dm[m] + x * cdm[m] - (-w * x * 1j * m * mf[m] - Gm[m] + cm[m] - n / 2 * cpm[m]) for m in O}
+    rb = {k: x * db[k] - (proj(bf, p2m2, E)[k] - (n - 1) * proj(bf, bm1, E)[k]) for k in E}
+    rc = {k: x * dc[k] - G[k] for k in E}
+    return rp, rm, rb, rc
+
+
 def reduced_rhs(M, x, n, w, V, S, be, c, mutate=""):
     O, E = harm(M)
     eps = 1 / n
