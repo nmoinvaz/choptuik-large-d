@@ -1558,10 +1558,28 @@ gauge mode λ = 1, and λ(D) is continuous at 1/n = 0. Then γ∞ = 1/2.
 
 At finite D the outer region and the 1/n corrections to the inner equations depend on r explicitly, so the symmetry is
 broken and the mode survives as an ordinary unstable mode with λ = 2 + O(1/n). The data give λ = 2 + 3.0324/n
-(γ = 1/2 − 0.758/n). Still open:
+(γ = 1/2 − 0.758/n).
+
+**The 1/n coefficients from the inner problem** ([notes/FIRST_ORDER.md](notes/FIRST_ORDER.md)). The inner equations
+carry O(1/n) corrections, in integer powers only; in the heat form they are the only place where s = r²/(2n) appears
+explicitly, so they are what breaks the r²-shift. Requiring the multiplier of the O(1/n) inner solution to vanish gives
+the frequency's coefficient ω₁ (the outer region contributes only invertible factors at this order), and first-order
+perturbation theory, $`\lambda_1 = -S_{1/n}/\partial_\lambda S`$, gives λ₁. In the M-harmonic truncations, with exact
+derivatives (ω = ω* + ω₁/n, Δ = Δ* + Δ₁/n, λ = λ* + λ₁/n):
+
+| | M = 1 | M = 3 | M = 5 | fit to the solutions |
+|---|---|---|---|---|
+| ω₁ | −21.05 | −23.71 | −24.1485 | −24.123 |
+| Δ₁ | 15.00 | 9.886 | 10.402 | 10.375 |
+| λ₁ | 7.76 | 3.080 | 3.023 | 3.0324 |
+
+The sequences converge like the truncation sequence of ω* itself, and every fitted value lies between the M = 3 and
+M = 5 values; at M = 5 the differences are 0.1% (ω₁) and 0.3% (Δ₁, λ₁). This is numerical evidence from truncated
+models, conditional on Conjecture 1 carried one order further; M = 7 and an untruncated computation are not done.
+
+Still open:
 - that λ = 2 is the only physical unstable mode at D = ∞;
-- the coefficient 3.0324, which needs the O(1/n) inner equations: by first-order perturbation theory it is
-  $`-S_{1/n}/\partial_\lambda S`$ at λ = 2, with S the perturbation's fast-mode multiplier.
+- the 1/n coefficients without truncation, and a proof of the O(1/n) matching.
 
 The one-harmonic model's root, λ = 1.765, is not a counterexample, for two reasons: its background is not the D = ∞
 solution, and Galerkin truncation does not commute with the gauge step, which multiplies by P(θ). More in
@@ -1663,8 +1681,8 @@ state extrapolated to D = ∞, 1.9226 ± 0.0003.
   growth is not settled.)
 - **The critical exponent, and why γ∞ = 1/2: [Proposition 5](#proposition-5-the-unstable-mode-at-infinite-d-is-exact).**
   λ = 1/γ is also selected beyond all orders; in the inner problem λ = 0, 1 and 2 are exact, from symmetries, and the
-  λ = 2 mode, from the r²-shift of the inner heat equation, explains γ∞ = 1/2. Open: that it is the only unstable mode
-  at D = ∞, and the 1/n coefficient 3.0324.
+  λ = 2 mode, from the r²-shift of the inner heat equation, explains γ∞ = 1/2. The 1/n coefficient 3.0324 is reproduced to
+  0.3% by the five-harmonic O(1/n) inner problem. Open: that λ = 2 is the only unstable mode at D = ∞.
 - **Open:** the D = ∞ selection rule itself. Without gravity the multiplier is C(n,s) (Proposition 2), asymptotically a
   $`{}_2F_0`$ Stokes constant (the inner problem), and propagation inside the light cone cannot change whether it
   vanishes (Proposition 3). With gravity, their vanishing with three and five harmonics, and without truncation,

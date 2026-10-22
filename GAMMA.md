@@ -178,7 +178,10 @@ from an exact symmetry; γ∞ = 1/2 follows given Conjecture 1, the uniqueness o
 - **The 1/n coefficient.** λ₁ = 3.0324 should follow from first-order perturbation theory in the symmetry breaking: with
   the O(1/n) corrections to the inner equations (which break the s-translation), $`\lambda_1 = -\,S_{1/n}/\partial_\lambda S\,\big|_{\lambda=2}`$,
   where S(λ) is the perturbation's fast-mode multiplier and $`S_{1/n}`$ the multiplier induced on the λ = 2 mode by the
-  O(1/n) terms. This needs the O(1/n) inner problem and ∂_λ S at λ = 2, neither computed here.
+  O(1/n) terms. Now computed in the M-harmonic truncations ([notes/FIRST_ORDER.md](notes/FIRST_ORDER.md)): λ₁ = 7.76,
+  3.080 and 3.023 for M = 1, 3, 5, against the fitted 3.0324, which lies between the M = 3 and M = 5 values. The
+  symmetry route above agrees with the direct one to 3×10⁻¹⁵ at the series level, but in truncated models it depends on
+  the matching radius, so the M-sequence uses the direct route. Not done without truncation.
 - **The eigenvector.** The predicted leading profile f(θ) in §4 can be compared with the unstable eigenvector of the
   double-double solver at large D (from `Solver.mode_matrix`), mapped to the outer leading-order profile. Not done here.
 - **Rigor.** The argument inherits the status of Conjecture 1 (gaps (a)–(c) in the README). Given the conjecture, the

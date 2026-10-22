@@ -132,6 +132,31 @@ def omega_quotes():
 
 
 @check
+def first_order():
+    """The 1/n coefficients from the O(1/n) inner problem (notes/FIRST_ORDER.md): omega_1, Delta_1 = -2 pi omega_1 /
+    omega*^2 and lambda_1 in the M-harmonic truncations (M = 5: the mean of the three runs), and the fitted values."""
+    d = os.path.join(ROOT, "solver/inner_pert/data")
+    def run(name):
+        return json.load(open(os.path.join(d, name + ".json")))
+    r1, r3 = run("first_order_hier_M1_xi0.2"), run("first_order_hier_M3_xi0.2")
+    r5 = [run(n) for n in ("first_order_hier_M5_xi0.2", "first_order_hier_M5_xi0.19", "first_order_hier_M5_xi0.2_rtol1e-13")]
+    mean = lambda k: sum(r[k] for r in r5) / len(r5)
+    D1 = lambda r: -2 * math.pi * r["omega1"] / r["omega"] ** 2
+    fit = open(os.path.join(ROOT, "solver/inner_pert/logs/first_order_fits.log")).read()
+    m = re.search(r"Delta_1 in \[([0-9.]+), ([0-9.]+)\], omega_1 in \[(-[0-9.]+), (-[0-9.]+)\]", fit)
+    t = [("README.md", "| ω₁ | −21.05 | −23.71 | −24.1485 | −24.123 |"), ("README.md", "| Δ₁ | 15.00 | 9.886 | 10.402 | 10.375 |"),
+         ("README.md", "| λ₁ | 7.76 | 3.080 | 3.023 | 3.0324 |")]
+    return [("omega_1, M = 1", r1["omega1"], -21.05, 1e-2, t[:1]), ("omega_1, M = 3", r3["omega1"], -23.71, 1e-2, t[:1]),
+            ("omega_1, M = 5", mean("omega1"), -24.1485, 1e-4, t[:1]),
+            ("Delta_1, M = 1", D1(r1), 15.00, 1e-2, t[1:2]), ("Delta_1, M = 3", D1(r3), 9.886, 1e-3, t[1:2]),
+            ("Delta_1, M = 5", sum(D1(r) for r in r5) / 3, 10.402, 1e-3, t[1:2]),
+            ("lambda_1, M = 1", r1["lam1"], 7.76, 1e-2, t[2:]), ("lambda_1, M = 3", r3["lam1"], 3.080, 1e-3, t[2:]),
+            ("lambda_1, M = 5", mean("lam1"), 3.023, 1e-3, t[2:]),
+            ("fitted Delta_1", (float(m.group(1)) + float(m.group(2))) / 2, 10.375, 1e-3, t[1:2]),
+            ("fitted omega_1", (float(m.group(3)) + float(m.group(4))) / 2, -24.123, 1e-3, t[:1])]
+
+
+@check
 def gamma_slope():
     line = next(l for l in open(os.path.join(ROOT, "hp/data/local/gamma_compare.txt"))
                 if l.startswith("D >= 30") and "fixed and 9 powers" in l)
