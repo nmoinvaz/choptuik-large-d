@@ -283,3 +283,18 @@ committed 4444cd6
   sign change in (2.67, 2.72): det M = 0 at 2.6740837626; nearest real full-grid resonance 2.288 away
   expected: lam_g = 1 + <c1> = 0.6138550105, lam_phys (formula) = 2.6740759201
 === 2026-10-22 07:55:07 exit 0: f64 --realscan=0.05
+committed 4d69a02
+pushed to wip/mode-count
+=== 2026-10-22 07:55:10 job: hp/data/states/up6_D30.0688.npz --M=48 --h0=0.6 --lam=2.079747703853
+  |F| 1.6e-11 in this layout: Newton
+  |F| 1.6e-11 after Newton: Levenberg-Marquardt
+Traceback (most recent call last):
+  File "/home/claude/dss-residual-kernel/.claude/worktrees/agent-a1938a59bc6f39c16/hp/modecount_wind.py", line 313, in <module>
+    main()
+    ~~~~^^
+  File "/home/claude/dss-residual-kernel/.claude/worktrees/agent-a1938a59bc6f39c16/hp/modecount_wind.py", line 290, in main
+    st = setup(path, M=int(opts["M"]) if "M" in opts else None, threads=threads, kf=kf, log=log)
+  File "/home/claude/dss-residual-kernel/.claude/worktrees/agent-a1938a59bc6f39c16/hp/modecount_common.py", line 85, in setup
+    raise RuntimeError(f"background not converged in this layout: |F| = {F:.1e} > {fmax:.0e} (M = {M})")
+RuntimeError: background not converged in this layout: |F| = 9.0e-18 > 1e-20 (M = 48)
+=== 2026-10-22 08:08:45 exit 1: hp/data/states/up6_D30.0688.npz --M=48 --h0=0.6 --lam=2.079747703853
