@@ -40,7 +40,20 @@ def ratio(x, A, nu):
 
 
 def m7_from_log():
+    """the last 'ZERO M 7' line of each logs/hier_nb_M7_full*.log; all are printed (they must agree to their noise), and
+    the one named by --log=NAME, or else the last file in sorted order, is used"""
     files = sorted(glob.glob(os.path.join(ROOT, "solver/inner_stokes/logs/hier_nb_M7_full*.log")))
+    pick = [a.split("=", 1)[1] for a in sys.argv if a.startswith("--log=")]
+    found = []
+    for fn in files:
+        txt = open(fn).read()
+        m = list(re.finditer(r"ZERO M 7: A ([0-9.]+)\s+w/w_inf ([0-9.]+)", txt))
+        if m:
+            found.append((os.path.basename(fn), float(m[-1].group(1)), float(m[-1].group(2))))
+    for name, A, c in found:
+        print(f"  {name}: A {A:.9f}  w/w_inf {c:.9f}")
+    if pick:
+        files = [f for f in files if os.path.basename(f) == pick[0]]
     for fn in reversed(files):
         txt = open(fn).read()
         m = list(re.finditer(r"ZERO M 7: A ([0-9.]+)\s+w/w_inf ([0-9.]+).*?\n((?:\s+F_\d.*\n)+)", txt))

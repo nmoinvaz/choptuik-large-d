@@ -107,7 +107,50 @@ What is new without c₇:
 - **The lowest-order increments decrease at the same kind of rate** (§4): x²Δσ₄/Δσ₂ has modulus 0.035 for the
   M = 1 → 3 step, an independent (order-by-order, no lateral integration) estimate of a per-pair ratio well below ¼.
 
-PLACEHOLDER-SEQ7
+### 3.1 Proposed task for the local 8-thread machine (for the coordinator to queue; not written to comms.txt)
+
+**Goal.** The M = 7 zero of the jump-conditioned truncation (`hier.py --schur` on the compiled backend), and whether the
+pilot's level-3 stall is a finite-difference-step effect.
+
+**Why local.** In this session each process got about 12% of a cloud core (load average 16–22): the pilot's one level-3
+solve took 22 min, and a full selection needs some ten of them. With 6 busy threads a local process gets roughly five
+times that, and the compiled backend makes an M = 7 residual about 0.3 s of CPU.
+
+**Prerequisites** (from `solver/inner_stokes/`, after pulling the branch): `pip install numba` if it is missing (tested
+with numba 0.68.0), then
+
+```
+python inner_nb.py check 3 5 7        # must end with PASS (about 2 min); stop the task if it does not
+python hier_nb.py selftest            # must end with PASS
+```
+
+**Threads.** 6 threads at below-normal priority, one process per thread: three jobs of `--procs 2` (each is a main
+process, mostly idle, plus two workers), started together.
+
+```
+python -u hier_nb.py 7 2.718579189229888 0.9992284031945021 --x=0.1492035749173264,0.01471905249087869,0.008405346906375517,0.0014703451817031647 --pretune --schur --predict --floor --procs 2 > logs/hier_nb_M7_full_local_A.log
+python -u hier_nb.py 7 2.718579189229888 0.9992284031945021 --x=0.1492035749173264,0.01471905249087869,0.008405346906375517,0.0014703451817031647 --pretune --schur --predict --floor --procs 2 --h3=1e-4 --h1=1e-4 > logs/hier_nb_M7_full_local_B.log
+INNER_NB_RTOL=1e-13 python -u hier_nb.py 7 2.718579189229888 0.9992284031945021 --x=0.1492035749173264,0.01471905249087869,0.008405346906375517,0.0014703451817031647 --pretune --schur --predict --floor --procs 2 --h3=1e-4 --h1=1e-4 > logs/hier_nb_M7_full_local_C.log
+```
+
+(On Windows set the variable first: `set INNER_NB_RTOL=1e-13`, in the window of job C only.) A is the cloud pilot's
+settings, B takes finite-difference steps 100× larger at level 3 (|Δr₃| ≈ 0.7 instead of 0.007 for the C₃ column) and
+level 1, C also tightens the integrator.
+
+**Stop conditions**, per job:
+
+- the first `level 3 solved: |r_3| …` line shows |r₃| > 10⁻³ and the following `level 1 it` lines do not decrease |r₁|
+  for two iterations: kill the job's process tree (`taskkill /T /F /PID <pid>`), keep the log;
+- any `Traceback` (except the harmless one at interpreter exit after the result is printed);
+- 4 hours of wall time;
+- done when it prints `ZERO M 7: …` with the F_ν lines.
+
+**Expected time.** First cold level-3 solve 5–10 min; a full selection 1000–3000 residuals, 30–90 min per job.
+
+**Push.** `solver/inner_stokes/logs/hier_nb_M7_full_local_{A,B,C}.log` only. Then, on the cloud side,
+`python3 solver/proof/trunc_seq_M7.py` reads the last `ZERO M 7` line (it globs `logs/hier_nb_M7_full*.log`; with several
+logs, compare them first: the jobs differ only in numerical parameters, so their zeros must agree to their noise, and
+that spread is the error bar to quote).
 
 ## 4. Which truncation: hier's model is a Galerkin truncation too
 
@@ -295,21 +338,31 @@ Every constant of Lemma T, with what it is (all *numerical evidence* unless mark
 | \|q∞\| A² | leading tuning map, (T1) contraction | 0.0633; × e^{2σ}: 0.27 at σ = 0.736, 0.47 at σ = 1 | B_tail.md §2, §6 |
 | A-series term ratio of each f_ν | corrections to the leading tuning map | ≈ 0.25 per order at A* | B_tail.md §2 |
 | σ needed for κ ≤ ¼ | (★) | ≤ 0.736 (*arithmetic*) | §5.2 |
-| d_M = c_M − c_{M−2} | increments in ω/ω∞ | +0.23861 (M = 3), −0.016375 (M = 5), PLACEHOLDER-D7 | `trunc_seq_M7.py` |
-| κ_M = d_M/d_{M−2} | ratio per pair, (R) | −0.0686 (M = 5; M = 1 is pre-asymptotic), PLACEHOLDER-K7 | `trunc_seq_M7.py` |
-| g_M = \|κ_M\|/ρ_M² | coupling per pair, Λe^{2σ} in (T2) | 1.21 (M = 5), PLACEHOLDER-G7 | `trunc_seq_M7.py` |
+| d_M = c_M − c_{M−2} | increments in ω/ω∞ | +0.23861 (M = 3), −0.016375 (M = 5); M = 7 not obtained | `trunc_seq_M7.py` |
+| κ_M = d_M/d_{M−2} | ratio per pair, (R) | −0.0686 (M = 5; M = 1 is pre-asymptotic) | `trunc_seq_M7.py` |
+| g_M = \|κ_M\|/ρ_M² | coupling per pair, Λe^{2σ} in (T2) | 1.21 (M = 5) | `trunc_seq_M7.py` |
 | \|∂r₁/∂(ω/ω∞)\|, σ_min(J₅) | converts ω to r₁; certification margin | 6.7×10³; 3.9×10³ | `feasibility.py` |
 | tail needed for a 10⁻³ box | | 3.9 in r₁ (*arithmetic*) | PROOF.md A.4 |
 | raw leakage ∂r₁/∂B₅ | entries of T (Lemma R) | ~10¹⁷, against J ~ 7×10³ | README, `hier.py` |
-| Δσ_{M+1} (lowest order) | Lemma L | PLACEHOLDER-DSIG | `amp_trunc_hiermodel.py`, §4 |
-
-PLACEHOLDER-LOCAL
+| Δσ_{M+1} (lowest order) | Lemma L | Δσ₂ = 0.0053 + 0.0587i (M = 1), Δσ₄ = (−2.83 − 2.45i)×10⁻⁵ (M = 3); x²Δσ₄/Δσ₂ = 0.035 in modulus | `amp_trunc_hiermodel.py`, §4 |
 
 ## 8. The ratio bound: an attempt, and the inequality that needs a new idea
 
-### 8.1 The mechanism the data show: a tuning cascade
+### 8.1 What the data say about the coupling
 
-PLACEHOLDER-CASCADE
+Two measurements bear on (★), both *numerical evidence*:
+
+- **Size.** The only increment ratio available, κ₅ = −0.0686, is the profile decay of the added pair (0.0569) times a
+  coupling g₅ = 1.21. In the language of (T2), Λ e^{2σ} ≈ 1.2 per pair, i.e. an effective σ of ½ ln 1.21 ≈ 0.1, far below
+  the 0.736 that κ ≤ ¼ needs. If B_tail.md's reading is right and M = 1 is pre-asymptotic, g is 0.8–1.0 and σ_eff ≤ 0.
+- **Structure.** Adding harmonic 7 at p₅ (§2) moves the re-tuned lower harmonics by |ΔF₅| ≈ 0.11 |F₇| and
+  |ΔF₃| ≈ 0.26 |F₇| (with |r₃| = 9 left, F₃'s change is uncertain by ~15%). The lower harmonics move by O(1) fractions of
+  the new one, and harmonic 3 moves more than harmonic 5: the effect is not a nearest-neighbour cascade down the tuning
+  chain but a direct O(1) coupling of the new pair to the low harmonics in normalised units, as (T2) with a ν-independent
+  Λ assumes.
+
+So the data are consistent with the simplest form of (★): the linearized coupling Λ_ν is O(1) and roughly independent of
+ν, as the tuning ratio q_ν is.
 
 ### 8.2 Lowest order in the amplitude: what can be proved
 
@@ -347,20 +400,28 @@ terms of the forcing), and it is where an attempt at (★) at lowest order shoul
 Measured, the outcome is known: the leading-order tuning ratio q_ν is ν-independent to six digits (B_tail.md §2), so the
 tuning steps are uniform in fact.
 
-PLACEHOLDER-LOWEST
-
 ### 8.3 Why the lowest order does not settle the ratio at A*
 
-PLACEHOLDER-WHYNOT
+Suppose (U) were proved, so that the lowest-order increments obey |Δσ_{M+3}| x² ≤ κ_lo |Δσ_{M+1}| with an explicit
+κ_lo (measured: 0.035 for M = 1 → 3, §4). That is a statement about one coefficient of each increment's series in
+x = A², at a value x* = 7.4 where the series of S₁ itself is far from its first terms (|σ_k| x*^k grows to about 240 at
+k = 9 before decaying; PROOF.md route A1). The increments δ_M(x) = Σ_{k ≥ M+1} Δσ_k^{[M]} x^k are series of the same kind,
+so their first terms neither bound them nor fix their ratios: the measured ratios differ by a factor two (0.035 at lowest
+order, 0.069 for the zeros). Controlling δ_M at x* needs the whole series, i.e. the entire-function bounds of route A3
+([D_entire.md](D_entire.md)) applied to the increments, or an argument at finite amplitude. The lowest order is therefore
+a consistency check and a formal (order-by-order) version of (R), not a route to the certificate.
 
 ### 8.4 The inequality that needs a new idea
 
-> **(★) Uniform coupling bound.** For the tuned untruncated problem on B and every odd ν ≥ 7, the linearized coupling of
-> identity H (the Schur complement G for the pair ν, integrated over λ) satisfies |G_ν| ≤ Λ e^{σν} |f_ν| with σ ≤ 0.736.
+> **(★) Uniform coupling bound.** On B and for every odd ν ≥ 7, the increment caused by adding the pair ν,
+> δ_{ν−2} = ∫₀¹ G dλ (identity H), satisfies |δ_{ν−2}| ≤ Λ e^{σν} |f^{[ν]}_ν| + (quadratic), with Λ independent of ν and
+> σ ≤ 0.736.
+
+This is the linear part of (T2), uniformly in ν.
 
 Everything else in Lemma T is either proved above (R, O, L, C, H), a contraction estimate of a standard kind (T1, in
 X_σ, B_tail.md §6), or a consistency statement (T3) that follows from (★) and (T1). The data say (★) holds with room to
-spare: the coupling per pair is g ≈ PLACEHOLDER-G, i.e. the effective σ is ½ ln g ≈ PLACEHOLDER-SIGEFF, while 0.736 is
+spare: the coupling per pair is g₅ ≈ 1.2, i.e. the effective σ is ½ ln g ≈ 0.1, while 0.736 is
 needed. The naive bound, through the linear connection coefficients, is e^{πων/2} = e^{6.0ν}.
 
 **Where the weights come from, as an angle.** On a ray ξ = |ξ| e^{iβ} the label harmonic is
@@ -382,6 +443,45 @@ individual labels, and so meets e^{πνω/2} before the cancellation. Two candid
    Im δy⁺ on the Stokes line, and δy⁺ is a Laplace integral along arg ζ = 0⁺ of a Borel transform whose growth near the
    real ζ axis is what has to be bounded. In the label variable that is a Costin–Tanveer strip-analytic Borel estimate
    (PROOF.md §3) with a strip of half-width 2ωβ ≈ 0.74 inside the analyticity strip 1.43.
-2. **The cascade as a transfer operator.** If the downward step of 8.1 is, at large ν, a fixed operator acting on label
-   space (as q_ν is a fixed ratio), its spectral radius is the coupling g; a proof of (★) is then a bound on one operator
-   instead of on infinitely many Schur complements. This is the route suggested by the ν-independence of q_ν.
+2. **The coupling as one operator.** If the map from the new pair's data to the re-tuned low harmonics is, for large ν,
+   the same operator up to a shift in label space (as the tuning ratio q_ν is the same number for every ν to six digits),
+   (★) reduces to a bound on one operator instead of on infinitely many Schur complements. The measured coupling (≈ 1,
+   §8.1) and the ν-independence of q_ν both suggest that this limit exists.
+
+## 9. Status
+
+| Statement | Status |
+|---|---|
+| Compiled backend = scipy backend to scipy's own rtol noise, M = 1–7 (`inner_nb.py check`) | numerical check, with a mutation control |
+| Lazy residual: every entry hier reads bit-identical (`hier_nb.py selftest`) | numerical check, with a mutation control |
+| M = 7 at p₅: F₅/F₁ = 0.003104 + 0.000557i, \|F₇/F₅\| = 0.0573 | numerical evidence (levels 5, 7 at their floors) |
+| M = 7 zero c₇ | not obtained (level-3 Newton stalls at \|r₃\| ≈ 9; local task §3.1) |
+| B_tail.md's prediction c₇ ∈ [0.99997, 1.00017] | untested |
+| hier's M-model expanded in A is exact through σ_M (M = 1, 3) and changes σ_{M+1} by 14% (M = 1), 0.12% (M = 3) | numerical evidence (fits); the exactness through σ_M is Lemma O, *proved* |
+| B_tail.md §4's Galerkin explosion comes from dropping the even harmonic M + 1 | numerical evidence (M = 3) plus Lemma O; M = 5 running |
+| Lemma T, ratio form (R) with κ ≤ ¼ | *conjecture*; numerical evidence κ₅ = −0.069, lowest-order 0.035 |
+| Lemma R (Schur-corrected residual ⇔ jump-conditioned multiplier; weights cancel in the Schur complement) | *conditional* on (H_6a^M) and T_HH invertible; proved by hand |
+| Lemma O (order counting), Lemma L (linearity at threshold), Lemma C (telescoping), identity H | *proved* (by hand) |
+| Lemma W (the weight cancels exactly in every tuning step, Darboux form) | *proved* as algebra, given the late-order normalisation of D_entire.md §6.1 |
+| (★) uniform coupling bound, σ ≤ 0.736 | *conjecture*; the one inequality that needs a new idea (§8.4) |
+| (T1) profile bound in X_σ | not proved here (contraction framework of B_tail.md §6); numerical evidence ρ_*² = 0.0574 |
+
+## 10. Reproduce
+
+From the repository root unless stated; times are for this session's loaded cloud cores.
+
+```
+cd solver/inner_stokes
+python3 inner_nb.py check 1 3 5 7                 # PASS; worst |numba - scipy| / scipy rtol noise 3.6 (~3 min)
+python3 inner_nb.py check 3 5 --mutate=sign       # FAIL (exit 1), ratio ~1e14-1e15
+python3 hier_nb.py selftest                       # PASS (~1 min)
+python3 hier_nb.py selftest --mutate=radius       # FAIL (exit 1), 2.9e+02
+python -u hier_nb.py 7 2.718579189229888 0.9992284031945021 --x=0.1492035749173264,0.01471905249087869,0.008405346906375517,0.0014703451817031647 --pretune --fixA --schur --predict --floor --procs 2 --verbose=2
+                                                  # the pilot (§2), ~23 min here; FIXED-A line with |r_3| 9.1
+cd ../proof
+python3 trunc_seq_M7.py                           # the sequence table of §3
+python3 trunc_seq_M7.py --planted                 # PASS (estimator on planted sequences)
+python3 trunc_seq_M7.py --planted --mutate=nocorr # FAIL (exit 1)
+python3 trunc_seq_M7.py --amp                     # Delta sigma_2, Delta sigma_4 and their ratio 0.0347 (§4)
+python3 amp_trunc_hiermodel.py 3 9 500            # sigma_4^[3] = -0.0288364238 + 0.0108028097i (~35 min here)
+```
