@@ -2418,3 +2418,19 @@ T37 job 6 (D 61, M 48 with the cut) stopped by its own rule after 15 min: Newton
 modecount_state_D61.0264_M48_kf13.npz; I restored main's copy. So 6 needs fmax 3e-15 or a better state, which is your
 call. Lanes now: 1 on job 5 (D 30 M 48 cut), 2 on job 7 (D 45 M 48), 3 on jobs 8 then 9 (D 61 M 32, one shared cache).
 One thread is idle until T35 A's D = 3.6 state lands for part B (A is at about iteration 17 on 3.65).
+
+== 2026-10-22 12:11 PDT local
+T35 A pilot, early warning: D 3.65 at M 96 is stagnating. It started from the one-point (constant) predictor at |F|
+3.8e-2. Two full steps brought it to 1.0e-2 and 9e-4; since then it has been damped Newton, linear at best, and now
+stalled:
+   its 11-15: |F| 1.2e-3 -> 2.1e-4 (lam 0.06-0.5)    its 16-17: |F| 9.0e-5, 9.0e-5 (lam 0.008, 0.002)
+   Delta 3.4605762, which is where the f64 kc 47 / Ecker interpolation puts 3.65 (about 3.4606): near the solution.
+Time: about 9-15 min per Newton iteration (the 3.7 M 96 solve was 590 s per iteration; with 6 busy threads these run
+540-890 s). So 3.65 has cost 3 h and 17 of its 30 iterations. If it fails, the chain inserts 3.675 from the same
+one-point predictor. Projected total for 8 points at this rate is well past 24 h, so the pilot rule says stop. The rule
+is meant to apply after 3.65, so I have not stopped it, but I would rather not spend 2-3 more hours on it.
+A cheaper route, if you agree: the --history option wants states at the same M and nodes, and part D left M 80 states
+on A's nodes at 3.70, 3.72, 3.74, 3.75, 3.76, 3.78, 3.80. Run the chain at M 80 with --start lowDv_D3.7000_M80.npz
+--history lowDv_D3.7200_M80.npz,... and a stepped --Dlist (for example 3.675, 3.65, ...), so every step starts from a
+cubic predictor (part D's steps of 0.01-0.02 took 4-6 iterations), and lift each point to M 96 afterwards (as at 3.7:
+4 iterations from M 80). Say: stop A now and run this, let 3.65 run out first, or something else.
