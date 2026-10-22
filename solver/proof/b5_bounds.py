@@ -319,22 +319,48 @@ def cell_residual(o, q, eps0, t0):
     return R_phi, R_C, TF
 
 
-def cell_vt_lip(o, q, eps0, Z, rc="0.2"):
-    """Lipschitz bound of the vt-row integrand t*Xi in the state (P, Pt, C, vt) (all components summed), by Cauchy's
-    estimate on a polydisc of radius rc in (P, Pt) and 0.01 in C, with Q recomputed from the ball; plus the explicit
-    vt-terms |t| (|E0| + 2|vt|)/2. Only enters multiplied by 2 eps0."""
+def exact_Q(o, z, e, t, P, Pt, C, vt):
+    """Q of the exact model from the state (P, Phi = z Pt, C, vt): Eop Q = Mop Phi + D P - e1 Cop Bop P"""
+    one = o.one
+    e1 = e * (1 - e)
+    E0 = {k: v / 2 for k, v in o.ee(P, P).items()}
+    Th = o.add(E0, vt)
+    CT = o.ee(C, Th)
+    Cop = lambda X: o.op(C, X)
+    Phi = o.sc(z, Pt)
+    rhs = o.add(Phi, o.sc(-t, Cop(Cop(Phi))), o.D(P), o.sc(-e1, Cop(o.op(CT, P))))
+    A = [[sum((C.get(a_ - c_, o.zero) * ((one - e * (1 + o.s[c_])) if c_ == b_ else o.zero) for c_ in ODD), o.zero)
+          + e1 * z * CT.get(a_ - b_, o.zero) for b_ in ODD] for a_ in ODD]
+    return dict(zip(ODD, o.solve_(A, [rhs[m] for m in ODD])))
+
+
+def vt_integrand(o, z, e, t, P, Pt, C, vt):
+    """z * Xi, Xi = the vt-row right-hand side minus its principal term -(1+eps) vt/(2 eps z):
+    (-E0 + z[Q Q]/2 - z[P Pt])/2 - z([E0 vt] + [vt vt])/2 + eps z ([Th Th] + (z/2)[Th [Q Q]])/2"""
+    Q = exact_Q(o, z, e, t, P, Pt, C, vt)
+    E0 = {k: v / 2 for k, v in o.ee(P, P).items()}
+    Th = o.add(E0, vt)
+    QQ = o.ee(Q, Q)
+    PPt = o.ee(P, Pt)
+    Ev, vv, TT, TQQ = o.ee(E0, vt), o.ee(vt, vt), o.ee(Th, Th), o.ee(Th, QQ)
+    return {k: (-E0[k] + z * QQ[k] / 2 - z * PPt[k]) / 2 - z * (Ev[k] + vv[k]) / 2
+            + e * z * (TT[k] + z / 2 * TQQ[k]) / 2 for k in EVEN}
+
+
+def cell_vt_lip(o, q, eps0, t0, Z, rc="0.2", rcC="0.01"):
+    """Lipschitz bound (sum over all components) of the vt-row integrand z*Xi in the state (P, Pt, C, vt), by Cauchy's
+    estimate: sup of |z Xi| on the polydisc of radius rc in P, Pt, vt and rcC in C (t, eps balls included), divided by
+    half the radius. Only enters the fixed-point map multiplied by 2/(n+1) <= 2 eps0."""
     z = q["z"]
-    r = arb(rc)
+    r, rC = arb(rc), arb(rcC)
     e = acb(arb(eps0 / 2, eps0 / 2))
+    tb = acb(arb(0, t0), arb(0, t0))
     Pb = {m: q["P"][m] + ball(r) for m in ODD}
     Ptb = {m: q["Pt"][m] + ball(r) for m in ODD}
-    Cb = {k: q["C"][k] + ball("0.01") for k in EVEN}
-    dQh, Q0 = dQhat(o, z, e, Pb, Ptb, Cb)
-    Qb = {m: Q0[m] + e * dQh[m] for m in ODD}
-    sup = amax(BF.tF_vt(o, z, e, Pb, Ptb, Qb))
-    E0 = {k: v / 2 for k, v in proj(q["P"], q["P"], EVEN, acb(0)).items()}
-    ncomp = len(ODD) * 2 + len(EVEN)
-    return sup / (r / 2) * ncomp + sup / (arb("0.01") / 2) * len(EVEN) + arb(Z) * (amax(E0) + 1)
+    Cb = {k: q["C"][k] + ball(rC) for k in EVEN}
+    vb = {k: ball(r) for k in EVEN}
+    sup = amax(vt_integrand(o, z, e, tb, Pb, Ptb, Cb, vb))
+    return sup / (r / 2) * (2 * len(ODD) + len(EVEN)) + sup / (rC / 2) * len(EVEN)
 
 
 def cell_eps_part(o, q, t0, tau1="0.01", rad=None):
@@ -446,7 +472,7 @@ def run(kappa=0.3, Z=0.008, rp="0.14", k=12, box=("1e-9", "1e-6"), n0exp=100, ga
         for key, v in el.items():
             ell[key] = v if key not in ell else max(ell[key], v, key=float)
         Gmax = max(Gmax, G, key=float)
-        vt_lip = max(vt_lip, cell_vt_lip(o, q, eps0, Z), key=float)
+        vt_lip = max(vt_lip, cell_vt_lip(o, q, eps0, t0, Z), key=float)
     L, idx = assemble(J, ell, Z, kappa, eps0, vt_lip)
     w = perron(L)
     lam = weighted(L, w)
@@ -598,6 +624,26 @@ def point_checks(kappa=0.3, rp="0.14", k=12, box=("2e-6", "1e-6"), npts=4):
                     err = max(abs(float(bx.real.mid()) - val.real) - float(bx.real.rad()),
                               abs(float(bx.imag.mid()) - val.imag) - float(bx.imag.rad()), 0.0)
                     worst["jac"] = max(worst["jac"], err / (1 + abs(val)))
+    # the vt-row integrand z*Xi at random states with vt != 0 vs b5_system.Model.f_eps (mpmath)
+    mp.mp.dps = 50
+    rnd = np.random.default_rng(11)
+    worst["vt"] = 0.0
+    for _ in range(3):
+        cr = lambda: mp.mpc(rnd.uniform(-1, 1), rnd.uniform(-1, 1))
+        zm = mp.mpc(rnd.uniform(0.002, 0.008), rnd.uniform(0, 0.004))
+        eps = mp.mpf("1e-6")
+        w = mp.mpf(wf_)
+        om = BF.mp_ops(w)
+        P = {m: 2 * cr() for m in ODD}
+        Pt = {m: 20 * cr() for m in ODD}
+        C = {k_: (1 if k_ == 0 else 0) + zm * cr() for k_ in EVEN}
+        vt = {k_: 0.1 * cr() for k_ in EVEN}
+        xi = vt_integrand(om, zm, eps, eps / zm, P, Pt, C, vt)
+        _, _, _, dvt = BS.Model(w, eps, mp).f_eps(zm, P, om.sc(zm, Pt), C, vt)
+        for k_ in EVEN:
+            ref = zm * (dvt[k_] + (1 + eps) * vt[k_] / (2 * eps * zm))
+            worst["vt"] = max(worst["vt"], float(abs(xi[k_] - ref) / (1 + abs(ref))))
+    worst["vt"] = 0.0 if worst["vt"] < 1e-30 else worst["vt"]
     # tolerances: double-precision inputs (inner 1e-12, res 1e-8), central differences (jac 1e-6)
     print("  raw excess beyond the enclosures (relative): " + ", ".join(f"{k_} {v:.2e}" for k_, v in worst.items()))
     worst["inner"] = 0.0 if worst["inner"] < 1e-12 else worst["inner"]

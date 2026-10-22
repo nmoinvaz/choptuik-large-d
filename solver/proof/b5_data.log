@@ -1,0 +1,5 @@
+cross-check with first_order_jet.py (independent O(1/n) recursion): P^(1)_1 = mu -1: 37.4651-7.85708j, mu +1: 37.4651+7.85708j; relative deviation from phi_1/2: 7.95e-08
+R(0) = lim z r_Phi/eps: mu -1: 35.1834, mu +1: 35.1834
+phi_1 (Phi^(1) = phi_1 z + ...): mu -1: (74.9299 - 15.7144j), mu +1: (74.9299 + 15.7144j)   (z = 1e-7 vs 1e-9: relative difference 4.678654251198341e-06)
+leading data: delta_P -> 0 (|W_P| ~ eps |phi_1|/2 r_n), delta_Phi -> 76.56, delta_C -> max|[F^2]| = 3.23125, delta_vt -> 2 max|[F^2]| = 6.46251
+checks: z-independence 4.7e-06 (< 1e-5), agreement with first_order_jet 8.0e-08 (< 1e-6): PASS
