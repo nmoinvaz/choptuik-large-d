@@ -34,7 +34,7 @@ Contents
 | M = 1 reproduces `fixed_point.py` | start values and start data bit for bit; constants to 10⁻¹⁶ | | §2.4 |
 | lemma S, lemma 6b₀ | **certified** over x̂ ± 10⁻⁶, R₊ = 0.01 (the M = 1 domain) | **certified** over x̂ ± 10⁻⁶, R₊ = 0.0064 | §3 |
 | lemma 6a | the flat estimate **certified** (Λ ≤ 0.29); the backward flow and ρ₆ₐ wait for the certificate's B₁; a pilot on a non-rigorous B₁ gives ρ₆ₐ = 0.030 (**numerical evidence**) | the flat estimate **certified** (Λ ≤ 0.42) | §4 |
-| lemma 6b₁ | proof carried over; ray run certified; row 11 COVER_STATUS | design only (366 discs): a local-machine task | §5 |
+| lemma 6b₁ | **certified** on the point certificate's box p̂ ± 1.1×10⁻⁹ (C¹ mode, 183 discs, check C1–C8 passes) | design only (366 discs): a local-machine task | §5 |
 | Theorem A(M) | **conditional** on the point certificate (H1–H3 of §6) | the same | §6–7 |
 
 - **What carries over verbatim:** the inverse operators, domains and kernel bounds (the fast eigenvalue repeats across
@@ -636,7 +636,40 @@ r = 6, n = 50: Λ ≤ 0.179, box radius ≤ 3.4×10⁻⁵ (at the real axis; at 
 sup|y − y(c)| ≤ 7.5, 834 Lohner steps, 1566 s. The hull runs failed at disc 4 (h = 10⁻⁸) and disc 6 (h = 10⁻⁹) of
 this row.
 
-ROWS_REST
+**All rows, and the check: lemma 6b₁(3) certified on the certificate's box** (`lemma6b1_runs_M3_cert/row_JJ.json`;
+`python3 lemma6b1_cover_M.py check ...`, exit status 0, `lemmas_M_runs/lemma6b1_check_M3_cert.json`). Trusted code:
+`lemma6b1_cover_M.py`, `lemma6b1_disc_M.py`, `lemma6_usys_M.py`, `fixed_point_M.py`, and from M = 1, unchanged,
+`validated_int.Lohner`, `lemma6_common.py` and `lemma6b1_cover.check`.
+
+| row | ρ_j | r, n | discs | Lohner steps | max Λ | max box radius | max sup\|y − y(c)\| | time |
+|---|---|---|---|---|---|---|---|---|
+| 0 | 262 | 24, 70 | 25 | 1299 | 0.185 | 1.8×10⁻⁹ | 0.151 | 2144 s |
+| 1 | 235.36 | 24, 70 | 23 | 1198 | 0.188 | 1.9×10⁻⁹ | 0.191 | 1919 s |
+| 2 | 208.72 | 24, 70 | 20 | 1138 | 0.191 | 2.3×10⁻⁹ | 0.248 | 1486 s |
+| 3 | 182.08 | 24, 70 | 18 | 1088 | 0.196 | 2.8×10⁻⁹ | 0.336 | 1422 s |
+| 4 | 155.44 | 24, 70 | 16 | 1034 | 0.202 | 3.6×10⁻⁹ | 0.48 | 1055 s |
+| 5 | 128.80 | 24, 70 | 13 | 946 | 0.212 | 4.9×10⁻⁹ | 0.743 | 975 s |
+| 6 | 102.16 | 24, 70 | 11 | 891 | 0.231 | 7.5×10⁻⁹ | 6.16 | 491 s |
+| 7 | 79.60 | 16, 60 | 13 | 835 | 0.191 | 1.3×10⁻⁸ | 1.42 | 495 s |
+| 8 | 61.84 | 16, 60 | 10 | 803 | 0.221 | 2.4×10⁻⁸ | 2.72 | 380 s |
+| 9 | 47.14 | 10, 50 | 12 | 811 | 0.182 | 5.5×10⁻⁸ | 2.97 | 424 s |
+| 10 | 36.04 | 10, 50 | 10 | 799 | 0.245 | 1.5×10⁻⁷ | 6.41 | 208 s |
+| 11 | 26.98 | 6, 50 | 12 | 834 | 0.179 | 3.4×10⁻⁵ | 7.54 | 1566 s |
+| all | | | 183 | 11 676 (+ 903 on the ray) | 0.245 | 3.4×10⁻⁵ | 7.54 | 12 565 s of process time |
+
+The check passes C1–C8: 183 tiles glued, with meeting sets of 579 polar rectangles joined by 461 proven links. The
+row times are wall-clock at loads from 2 to 22, and the rows ran two at a time.
+
+**Lemma 6b₁(3) (certified).** For every x in the box p̂ ± 1.1×10⁻⁹ (p̂ the certificate's centre above), y⁺ extends
+analytically to an open set containing the annular sector 25 ≤ |u| ≤ 260, −3π/4 ≤ arg u ≤ 0, i.e. 0.062 ≤ |ξ| ≤ 0.2,
+0 ≤ arg ξ ≤ 3π/8. Together with lemma 6b₀(3), which holds over x̂ ± 10⁻⁶ ⊃ p̂ ± 1.1×10⁻⁹, y⁺ is analytic on
+Ω = {0 < |ξ| ≤ 0.2, 0 ≤ arg ξ ≤ 3π/8} for every such x.
+
+**Controls for the C¹ mode** (`c1check`, double precision, not rigorous). At rows 1, 6, 9 and 11, y⁺ at p̂ and at the
+eight points p̂ ± h·e_i, computed independently of the Lohner code (series, then DOP853 along the ray), lies in the
+saved sets inflated by 10⁻¹¹. With the derivative columns dropped (`--mutate=nov`), all eight off-centre points fall
+outside while the centre stays inside, so the control discriminates. The centre trajectory alone is enclosed to about
+4×10⁻¹² at |u| = 27 (`c1check_M3_cert*.log`).
 
 ## 6. Theorem A(M), conditional on the point certificate
 
@@ -650,7 +683,7 @@ x ↦ (J^path_{D,μ}(ξ₁; x))_{μ = 1, 3, …, M} has exactly one zero in X_c 
 
 - (H1) X_c ⊂ X₆ = x̂ ± 10⁻⁶, the box over which lemma S(M), the old sector lemma and the flat estimate are proved here
   (§3.3);
-- (H2) X_c ⊂ X_b, the box of the 6b₁ covering (x̂ ± 10⁻⁸ at M = 3, §5.3), and the covering is complete;
+- (H2) X_c ⊂ X_b, the box of a complete 6b₁ covering: at M = 3, X_b = p̂ ± 1.1×10⁻⁹ (§5.3), certified;
 - (H3) lemma 6a(M) holds with B₁ the certificate's state box at ξ₁ over X_c.
 
 Then the M-harmonic selection condition y⁺ ≡ y⁻ (all of S_1, …, S_M vanish) holds at exactly one point x* of X_c, and
@@ -669,21 +702,43 @@ At M = 1 the same assembly is Theorem A(M = 1) of §12.6.
 
 ## 7. What waits for the point certificate
 
-What is proved or certified here holds for the parameter boxes named. What needs the point certificate's output:
+The point certificate is built on the branch `wip/layer-a-cert-m` (`solver/proof/certify_M.py`, notes
+`proof/A_M.md`). At the time of writing, its notes and data, read only, fix the following.
 
-1. **Its box X_c and the zero.** (H1) and (H2) are inclusions to check against x̂ ± 10⁻⁶ and x̂ ± 10⁻⁸. If X_c is
-   larger, or centred more than about 10⁻⁸ from x̂, `lemma6_sector_M.py --box=` and the covering must be rerun on a box
-   containing it. The covering's cost then grows with the box: the disc lemma tolerates Lohner boxes up to about 10⁻⁵.
-2. **Its state box B₁ at ξ₁ over X_c** (H3). `lemma6_jump_M.py --box=f.json` takes it in the format of
-   `lemma6_path_box_1e-9.json` (keys M, h, xi1, yX_xi1). Only the pilot of §4.3 has run, on a non-rigorous B₁.
-3. **Its path.** The covering here is for the region of §11.1 (|ξ| ≤ 0.2, 0 ≤ arg ξ ≤ 3π/8). A path with an arc above
-   0.2, or a start ray outside 3π/8 ± 0.2, needs a different covering: the arc radius sets u_in = 1/ρ_arc², and the
-   inner rows are where the cost and the singularity distance bite.
-4. **Its conditions.** 6a needs all (M + 1)/2 complex D-jumps J_{D,μ}(ξ₁) at one radius, or an invertible linear image
-   of them, such as `hier.py`'s de-mixed residuals. A certificate of S₁ = 0 alone at fixed higher harmonics would not
-   suffice.
-5. **Start data.** The certificate is expected to start from `fixed_point_M.start_data_M` (§2.3), with the recommended
-   configuration of §2.4 for its M.
+- *Path:* the start ray 5π/16 from r₀ = 0.0741, out to 0.2, the arc |ξ| = 0.2 to the real axis, then the real axis to
+  ξ₁ = 0.3. This is the lower path of §11.2, with `inner_np.py`'s start ray.
+- *Start data:* from `fixed_point_M.start_data_M`, with the configuration §2.4 recommends.
+- *Box:* a tilted box p̂ + TX around a refined centre p̂, with h = 10⁻⁹ (a later run uses 10⁻¹⁰) in (A, ω/ω∞) and
+  inner widths of order 10⁻¹⁶ in (B₃, C₃).
+- *Status:* its M = 3 box runs were still in progress.
+
+Against that, this note's status for M = 3:
+
+| hypothesis of §6 | status here | what it needs from the certificate |
+|---|---|---|
+| (H1) X_c ⊂ x̂ ± 10⁻⁶ (lemma S, 6b₀, flat estimate) | **certified** over x̂ ± 10⁻⁶; p̂ is within 4×10⁻¹⁰ of x̂ | only the inclusion, which holds for any h ≤ 10⁻⁷ around p̂ |
+| (H2) X_c ⊂ p̂ ± 1.1×10⁻⁹ (lemma 6b₁) | **certified** on that box (§5.3) | the inclusion: its final centre within about 10⁻¹⁰ of p̂ and h ≤ 10⁻⁹ (true of both of its runs) |
+| the path lies in Ω | yes: arc 0.2, start ray 5π/16 within 0.2 of 3π/8, start point at 0.0741 < 0.1 | none |
+| (H3) lemma 6a from its B₁ at ξ₁ = 0.3 | the flat estimate **certified**; the backward flow **waits** | its hull of y⁺(0.3; X_c), as JSON (keys M, h, x, xi1, yX_xi1); then `lemma6_jump_M.py --box=` (about 1 h) |
+| the zero and its simplicity | — | its Krawczyk test on the (M + 1) real D-jump conditions at ξ₁ |
+
+**The 6a pilots from ξ₁ = 0.3** (not rigorous). From x̂, the backward flow ran (450 steps), but G_slow was not
+proved invertible: the start hull was 8.0×10⁻⁶ and B's entries reached radius 0.49. The hull is mostly the pilot's
+own ψ(0.3) at x̂, which is about 4×10⁻¹⁰ from the zero in A, magnified by ∂J/∂x at 0.3. From the certificate's p̂,
+which is closer to the zero: PILOT_PHAT. The certificate's B₁ is a box over X_c around the zero, so its hull is its
+own width (about |∂y/∂x|·h), plausibly much tighter than the x̂ pilot's.
+
+If the certificate's final box or path differs from the above, these must be rerun:
+
+- a larger or shifted box: `lemma6_sector_M.py --box=` for (H1), and the covering with `--x=` and `--h=` for (H2), about
+  3.5 hours of process time at M = 3;
+- an arc above 0.2: a covering with u_in = 1/ρ_arc², with the inner rows probed first, since they are where the cost and
+  the singularity distance bite;
+- a certificate of S₁ = 0 alone, at fixed higher harmonics: that would not satisfy 6a, which needs all (M + 1)/2
+  complex J_{D,μ}(ξ₁), or an invertible linear image of them such as `hier.py`'s de-mixed residuals.
+
+At M = 5 everything waits for its certificate except lemma S, 6b₀, the flat estimate and step (i), which are certified
+here. 6b₁(5) is a local-machine task (§9).
 
 ## 8. Mutation table
 
@@ -704,64 +759,54 @@ MUTATION_TABLE
 | lemma S + old sector lemma + flat estimate over a box | minutes (not timed separately) | minutes |
 | `hier.py` zero, then `refine_zero_M.py` | 9 min, then 76 s | (8-thread run, README), then 35 min |
 | 6a backward flow (pilot), ξ₁ = 0.2 → 0.067 | 389 steps, 50 min | not run |
-| 6b₁ ray run (11 legs) | 903 steps, about 35 min | not run |
-| 6b₁ arc + discs, row 11 (pilot) | about 2 s per Lohner step, 5–15 s per disc | not run |
+| 6b₁ ray run (11 legs), C¹ mode | 903 steps, about 30 min (resumed once) | not run |
+| 6b₁ rows 0–11, C¹ mode, 183 discs | 11 676 Lohner steps, 12 565 s of process time (two processes, about 2 h wall) | not run |
 
 Per Lohner step, M = 3 costs about 6 times M = 1 (2 s against 0.3 s at comparable load). That is consistent with the
-dimension (15 against 9 states, cubic in the matrix work) and the number of harmonic products.
+dimension (15 against 9 states, cubic in the matrix work) and the number of harmonic products. The C¹ columns add
+almost nothing per step: 100 s for the first ray leg, against 102 s without them.
 
-**Estimates (not measured):**
-
-- The full M = 3 covering is 12 rows and 183 discs, about 6000 arc steps. That is about 4 hours on this machine at
-  this load, or 1.5–2 hours on 5 local threads with the rows in parallel.
-- M = 5 has 18 rows and 366 discs, 2.2 times the arc length, at about 3 times the cost per step: roughly 6 times M = 3.
-  That means 8–12 hours on 5 local threads, after a pilot of its innermost row and its disc radii.
+**Estimate for M = 5 (not measured):** 18 rows and 366 discs, 2.2 times the arc length of M = 3, at about 3 times the
+cost per step (19 against 13 states). That is roughly 6 times M = 3, about 20 hours of process time: 4–5 hours on
+5 local threads with the rows in parallel. A pilot of its innermost row and its disc radii comes first.
 
 **Proposed task for the local 8-thread machine** (for the coordinator to queue in comms.txt; nothing has been written
-there). It runs at below-normal priority, one process per thread, from `solver/proof/` on a checkout that contains this
-branch.
+there). Below-normal priority, one process per thread, from `solver/proof/` on a checkout containing this branch.
 
-*Part A: lemma 6b₁(3) on the point certificate's box (5 threads, about 1–2 hours).* The point certificate
-(`proof/A_M.md`) uses a tilted box p̂ + TX with h = 10⁻⁹ in (A, ω/ω∞) and inner widths 10⁻¹⁶. Its axis-aligned hull
-lies in p̂ ± 10⁻⁹ (|C|·h ≤ 3.9×10⁻¹⁰ in B₃). Run the covering on that box, with p̂ the centre the certificate finally
-uses; below is `p_out` of its `data/A_M_refine_M3_a.json` at the time of writing:
-
-```
-P=2.7264758856311463335934955261561100705557331671411,1.0156030948577872100059533565790022881883333496973,0.14441947847010155933389143095194965903793037966287,0.011087425888116783540971263261694760868044985018780
-python3 lemma6b1_cover_M.py ray  --M=3 --h=1e-9 --tag=_cert --x=$P              # 1 thread, ~30-40 min; first
-python3 lemma6b1_cover_M.py rows --M=3 --h=1e-9 --tag=_cert --x=$P --only=11,0  # then 5 threads in parallel:
-python3 lemma6b1_cover_M.py rows --M=3 --h=1e-9 --tag=_cert --x=$P --only=10,1,6
-python3 lemma6b1_cover_M.py rows --M=3 --h=1e-9 --tag=_cert --x=$P --only=9,2,7
-python3 lemma6b1_cover_M.py rows --M=3 --h=1e-9 --tag=_cert --x=$P --only=8,3
-python3 lemma6b1_cover_M.py rows --M=3 --h=1e-9 --tag=_cert --x=$P --only=5,4
-python3 lemma6b1_cover_M.py check  --M=3 --h=1e-9 --tag=_cert --x=$P --json=lemmas_M_runs/lemma6b1_check_M3_cert.json
-python3 lemma6b1_cover_M.py check  --M=3 --h=1e-9 --tag=_cert --x=$P --drop=5,6       # mutation: must print FAIL
-python3 lemma6b1_cover_M.py mutate --M=3 --h=1e-9 --tag=_cert --x=$P --j=11           # mutation: 0 discs certified
-```
-
-- *Stop conditions.* Stop and report if the ray run fails or its box radius at |u| = 27 exceeds 10⁻⁵, which would mean
-  the box is wider than the one tested here. Also stop if any disc reports `ok False`: row 11 is the hardest, which is
-  why it runs first. The remedy for a failed disc is a smaller disc radius in that row (`disc_params`) or a smaller h.
-- *Push:* `lemma6b1_runs_M3_cert/` (ray.json, row_JJ.json), the check JSON, the logs.
-
-*Part B: lemma 6a(3) with the certificate's state box (1 thread, about 1 hour per run).* Once the certificate's box run
-exists, write its hull of y⁺(0.3; X) as JSON with keys M, h, x (p̂), xi1 = "0.3", yX_xi1 (13 [re, im] arb strings in
-`lateral_np.py`'s order), then:
+*Part A, lemma 6a(3) with the certificate's state box: 1 thread, about 1 hour.* When the certificate's M = 3 box run is
+final, write its hull of y⁺(0.3; X_c) as JSON with keys M, h, x (its p̂), xi1 = "0.3" and yX_xi1 (13 [re, im] arb
+strings in `lateral_np.py`'s order). Then:
 
 ```
 python3 lemma6_jump_M.py --M=3 --box=<that JSON> --json=lemmas_M_runs/lemma6a_M3_cert.json
 ```
 
-Pass: ρ₆ₐ < 1 (the pilot from 0.2 gave 0.030). Before it, a pilot from 0.3, the certificate's ξ₁, which has not been
-run: `python3 lemma6_jump_M.py --M=3 --pilot=1e-10 --xi1=0.3 --rho=0.2 --json=lemmas_M_runs/lemma6a_pilot_M3_xi0.3.json`.
-Stop if the backward integration fails (step-size underflow) or G_slow is not invertible.
+- Pass: ρ₆ₐ < 1.
+- Stop if the backward integration fails (step-size underflow) or G_slow is not proved invertible. B₁'s width is then
+  the limit, as in the x̂ pilot of §7.
+- Also check (H2): its final centre within about 10⁻¹⁰ of the p̂ used in §5.3, and h ≤ 10⁻⁹. Otherwise rerun the
+  covering with `--x=` and `--h=` (Part B's commands with --M=3 and rows 0–11, about 3.5 hours of process time).
+- Push the JSON and the log.
 
-*Part C: M = 5, after its point certificate.*
+*Part B, lemma 6b₁(5), after the M = 5 certificate: 5 threads, about 5 hours.* With P the certificate's M = 5 centre
+and H ≥ its h:
 
-- Probe the disc radii (`probe --M=5`; 1 thread, about 15 min) and set `disc_params` for M = 5.
-- Pilot the innermost row (`ray`, then `row --j=17`).
-- Only then run the 18 rows (366 discs) on 5 threads: about 8–12 hours, the same commands with --M=5.
-- Lemma S, 6b₀ and the flat estimate at M = 5 are already certified here over x̂ ± 10⁻⁶.
+```
+python3 lemma6b1_cover_M.py probe --M=5                                           # NOT rigorous: disc radii, ~15 min
+python3 lemma6b1_cover_M.py ray --c1 --M=5 --h=$H --tag=_cert --x=$P              # ~1-2 h; --resume after a restart
+python3 lemma6b1_cover_M.py row  --M=5 --h=$H --tag=_cert --x=$P --j=17          # the innermost row first (pilot)
+python3 lemma6b1_cover_M.py rows --M=5 --h=$H --tag=_cert --x=$P --only=...      # the other 17 rows over 5 threads
+python3 lemma6b1_cover_M.py check --M=5 --h=$H --tag=_cert --x=$P --json=lemmas_M_runs/lemma6b1_check_M5_cert.json
+python3 lemma6b1_cover_M.py c1check --M=5 --h=$H --tag=_cert --x=$P                # control
+python3 lemma6b1_cover_M.py c1check --mutate=nov --M=5 --h=$H --tag=_cert --x=$P   # mutation
+```
+
+- Stop if the probe shows the M = 3 radii failing at the inner rows. In that case set `disc_params` for M = 5, which
+  changes the design, so the ray run must come after it.
+- Stop if row 17 has a disc that is not certified.
+- Stop if the ray run's start fails. The C¹ start data at M = 5 use the old sector lemma at r₀ = 0.07
+  (`START_R0`), whose complex Cauchy box has not been run at M = 5 with `--sector`.
+- Push `lemma6b1_runs_M5_cert/` and the logs.
 
 ## 10. Reproduce
 
@@ -788,10 +833,16 @@ python3 lemma6b1_estimate_M.py --M=3                       # planning: sizes and
 python3 lemma6b1_disc_M.py                                 # lemma D at M = 1 reproduces lemma6b1_disc, ~15 s
 python3 lemma6b1_cover_M.py design --M=3                   # the rows and tiles
 python3 lemma6b1_cover_M.py probe --M=3                    # NOT rigorous: disc radii at double-precision centres, ~5 min
-python3 lemma6b1_cover_M.py ray --M=3 --h=1e-8             # start box and ray run -> lemma6b1_runs_M3/ray.json
-python3 lemma6b1_cover_M.py row --M=3 --j=11 --h=1e-8      # one row (the hardest, innermost)
-python3 lemma6b1_cover_M.py rows --M=3 --h=1e-8 [--only=J1,J2,..]   # the remaining rows
-python3 lemma6b1_cover_M.py check --M=3 --h=1e-8 --json=lemmas_M_runs/lemma6b1_check_M3.json   # C1-C8: PASS / FAIL
+python3 lemma6b1_estimate_M.py --M=3 --arc=26.98 --h=1e-8 --box0=2.5e-5   # why the hull restart fails (row 11)
+python3 lemma6b1_cover_M.py ray --M=3 --h=1e-8             # the hull method (fails on row 11, kept for the record)
+P=2.7264758856311463335934955261561100705557331671411,1.0156030948577872100059533565790022881883333496973,0.14441947847010155933389143095194965903793037966287,0.011087425888116783540971263261694760868044985018780
+python3 lemma6b1_cover_M.py ray --c1 --M=3 --h=1.1e-9 --tag=_cert --x=$P   # C^1 ray run on the certificate's box,
+                                                           # ~30 min -> lemma6b1_runs_M3_cert/ray.json (--resume after a restart)
+python3 lemma6b1_cover_M.py row  --M=3 --h=1.1e-9 --tag=_cert --x=$P --j=11            # the hardest row, ~26 min
+python3 lemma6b1_cover_M.py rows --M=3 --h=1.1e-9 --tag=_cert --x=$P [--only=J1,J2,..] # the other rows, ~3 h
+python3 lemma6b1_cover_M.py check --M=3 --h=1.1e-9 --tag=_cert --x=$P --json=lemmas_M_runs/lemma6b1_check_M3_cert.json
+                                                           # C1-C8: must print PASS, 1 s
+python3 lemma6b1_cover_M.py c1check --M=3 --h=1.1e-9 --tag=_cert --x=$P    # planted truth for the C^1 sets, ~5 min
 python3 mutations_M.py [--all]                             # section 8; exit 0 only if every verdict matches
 python3 refine_zero_M.py --M=3 --A=2.726475886 --wf=1.015603095 --x=0.144419478,0.011087426   # the zero (double precision)
 python3 lemmas_M_report.py all                             # the tables of this note, from the saved runs

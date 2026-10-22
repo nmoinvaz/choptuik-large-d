@@ -189,5 +189,33 @@
    "rho_6a = 8.916e-01 < 1: True  => all J_D,mu(0.2) = 0 implies psi = 0 (whole jump): True   [MUTATION coords]   [PILOT: not rigorous]"
   ],
   "sec": 52.0
+ },
+ {
+  "name": "cover_check_M3",
+  "cmd": "lemma6b1_cover_M.py check --M=3 --h=1.1e-9 --tag=_cert --x=2.7264758856311463335934955261561100705557331671411,1.0156030948577872100059533565790022881883333496973,0.14441947847010155933389143095194965903793037966287,0.011087425888116783540971263261694760868044985018780",
+  "expected": "passes",
+  "exit": 0,
+  "matches": true,
+  "what": "control: the 6b1 gluing and covering check C1-C8 on the M = 3 runs (C^1 mode, certificate's box): PASS",
+  "tail": [
+   "row 11 |u| =   26.98: 12 discs (r = 6, n = 50),  834 Lohner steps, max Lam 0.179, max box radius 3.4e-05, max sup|y - y(c)| 7.54, 1566 s",
+   "ray: 903 steps, 938 s; tiles glued: 183 (meeting sets: 579 polar rectangles, 461 links)",
+   "LEMMA 6b_1 CHECK: PASS"
+  ],
+  "sec": 0.6
+ },
+ {
+  "name": "cover_drop_M3",
+  "cmd": "lemma6b1_cover_M.py check --drop=5,6 --M=3 --h=1.1e-9 --tag=_cert --x=2.7264758856311463335934955261561100705557331671411,1.0156030948577872100059533565790022881883333496973,0.14441947847010155933389143095194965903793037966287,0.011087425888116783540971263261694760868044985018780",
+  "expected": "fails",
+  "exit": 3,
+  "matches": true,
+  "what": "6b1 gluing check with tile (5, 6) left out: must print FAIL",
+  "tail": [
+   "row 11 |u| =   26.98: 12 discs (r = 6, n = 50),  834 Lohner steps, max Lam 0.179, max box radius 3.4e-05, max sup|y - y(c)| 7.54, 1566 s",
+   "ray: 903 steps, 938 s; tiles glued: 182 (meeting sets: 572 polar rectangles, 452 links)",
+   "LEMMA 6b_1 CHECK: FAIL (3 failures: ['tile (5, 7): agreement point not in the meeting set', 'tile (6, 5): meeting set not connected', 'point (|u| = 128.8, arg = phi_5,6) not covered without tile (5, 6)'])"
+  ],
+  "sec": 0.5
  }
 ]

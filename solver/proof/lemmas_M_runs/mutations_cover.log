@@ -1,0 +1,2 @@
+cover_check_M3   expected passes  exit 0: OK   (0.6 s)  LEMMA 6b_1 CHECK: PASS
+cover_drop_M3    expected fails   exit 3: OK   (0.5 s)  LEMMA 6b_1 CHECK: FAIL (3 failures: ['tile (5, 7): agreement point not in the meeting set', 'tile (6, 5): meeting set not connected', 'point (|u| = 128.8, arg = phi_5,6) not covered without tile (5, 6)'])

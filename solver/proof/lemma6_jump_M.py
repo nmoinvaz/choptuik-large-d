@@ -125,6 +125,10 @@ def main():
     from decimal import Decimal
     Z = str(Decimal(xia) ** 2)
     pilot = "pilot" in opts
+    if "x" in opts:
+        # another centre (decimal strings), e.g. the point certificate's p^, which is closer to the zero than the stored
+        # double-precision zero; lemma S and the flat estimate are then over that centre +- hbox
+        FPM.ZEROS[M] = opts["x"].split(",")
     if pilot:
         xi1 = opts.get("xi1", "0.2")
         rho = float(opts.get("rho", "0.2"))
