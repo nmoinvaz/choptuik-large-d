@@ -16,7 +16,7 @@ implemented in scipy.integrate (coefficients imported from scipy.integrate._ivp.
     python3 inner_nb.py check --mutate=sign  the same with a sign flipped in the compiled right-hand side: must fail
     python3 inner_nb.py time M               time one residual with the numba backend
     python3 inner_nb.py capcheck             the right-hand-side cap (INNER_NB_MAXFEV) fires on the pathological arc
-                                             and leaves every other radius bit-identical; INNER_NB_MAXFEV=0 must FAIL
+                                             and leaves every other radius bit-identical; INNER_NB_MAXFEV=100 must FAIL
 
 Use from another script: `import inner_nb; inner_nb.install()` replaces inner_np.Inner by InnerNB (also in spawned
 worker processes, if the importing module calls install() at import time).
@@ -122,6 +122,9 @@ def dop853(kind, par, t0, tb, y0, rtol, atol, oi, ei, odd, even, imw, L, mut, A,
     ns = A.shape[0]
     direction = 1.0 if tb >= t0 else -1.0
     y = y0.copy()
+    for i in range(y0.shape[0]):                        # a non-finite start (a capped earlier segment): give up at once
+        if not (np.isfinite(y0[i].real) and np.isfinite(y0[i].imag)):
+            return y, 0, 2
     t = t0
     f = fpath(kind, par, t, y, oi, ei, odd, even, imw, L, mut)
     nfev = 1
@@ -160,6 +163,8 @@ def dop853(kind, par, t0, tb, y0, rtol, atol, oi, ei, odd, even, imw, L, mut, A,
         while not accepted:
             if h_abs < min_step:
                 return y, nfev, 1
+            if nfev > maxfev:
+                return y, nfev, 2
             h = h_abs * direction
             t_new = t + h
             if direction * (t_new - tb) > 0:
@@ -377,8 +382,10 @@ if __name__ == "__main__":
         sys.exit(0 if ok else 1)
     elif sys.argv[1] == "capcheck":
         # the right-hand-side cap: at the M = 5 zero with F_7 from the amplitude-expansion seed (1% off its tuned
-        # value) the arc at xi = 0.2 needs ~1.2e6 right-hand sides; with the cap it must come back as NaN, the other
-        # radii unchanged (bit-identical to the uncapped evaluation). Exit 1 otherwise.
+        # value) the arc at xi = 0.2 needs ~1.2e6 right-hand sides (933 s against 25 s capped, under load:
+        # logs/inner_nb_capcheck_with_uncapped_reference.log); with the cap it must come back as NaN and the other
+        # radii must be bit-identical to an uncapped evaluation of those radii alone (same staged ray segments; the
+        # expensive arc is not repeated). Exit 1 otherwise; INNER_NB_MAXFEV=100 (every segment capped) must fail.
         import hier as H
         install()
         x5 = np.array([2.718579189, 0.999228404, 0.149203575, 0.014719052, 0.008405347, 0.001470345])
@@ -390,16 +397,16 @@ if __name__ == "__main__":
         tc, nc = time.time() - t, CAPPED[0]
         MAXFEV[0] = 10 ** 12
         t = time.time()
-        Ru = H.demixed_multi(x, 7, radii)
+        Ru = H.demixed_multi(x, 7, [r for r in radii if r < 0.2])
         tu = time.time() - t
-        ok = nc >= 1 and not np.all(np.isfinite(Rc[0.2])) and np.all(np.isfinite(Ru[0.2]))
+        ok = nc >= 1 and not np.all(np.isfinite(Rc[0.2]))
         for r in sorted(Rc):
-            same = np.array_equal(Rc[r], Ru[r])
-            print(f"  xi {r:.4f}: capped finite {bool(np.all(np.isfinite(Rc[r])))}, uncapped finite "
-                  f"{bool(np.all(np.isfinite(Ru[r])))}, bit-identical {same}")
+            same = r in Ru and np.array_equal(Rc[r], Ru[r])
+            print(f"  xi {r:.4f}: capped finite {bool(np.all(np.isfinite(Rc[r])))}"
+                  + (f", bit-identical to uncapped {same}" if r in Ru else " (not re-evaluated uncapped)"))
             if r != 0.2:
                 ok = ok and same
-        print(f"capped: {tc:.1f} s, {nc} segment(s) capped; uncapped: {tu:.1f} s")
+        print(f"capped: {tc:.1f} s, {nc} segment(s) capped; uncapped radii < 0.2: {tu:.1f} s")
         print("PASS" if ok else "FAIL")
         sys.exit(0 if ok else 1)
     elif sys.argv[1] == "time":

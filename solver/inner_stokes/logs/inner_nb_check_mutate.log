@@ -1,12 +1,12 @@
   M 3 xi 0.2000 r_1: scipy +1.630803e+07-7.437242e+06j  numba +3.422025e+08-6.479863e+08j  |diff| 7.2e+08  scipy rtol noise 3.3e-06  ratio 2.2e+14
   M 3 xi 0.2000 r_3: scipy -1.840442e+03-6.961746e+02j  numba -1.231624e+04+6.162547e+04j  |diff| 6.3e+04  scipy rtol noise 4.3e-10  ratio 1.5e+14
-M 3: scipy 7.2 s, numba 2.40 s, worst |numba - scipy| / noise over used entries 2.2e+14
+M 3: scipy 2.5 s, numba 30.74 s, worst |numba - scipy| / noise over used entries 2.2e+14
   M 5 xi 0.1188 r_1: scipy -1.127080e+05-2.532574e+03j  numba +2.696318e+18-9.157731e+17j  |diff| 2.8e+18  scipy rtol noise 8.7e+04  ratio 3.3e+13  (unused)
   M 5 xi 0.1188 r_3: scipy -1.178264e+01-2.119387e+00j  numba -5.731509e+12+3.949248e+12j  |diff| 7.0e+12  scipy rtol noise 1.6e-01  ratio 4.2e+13  (unused)
   M 5 xi 0.1188 r_5: scipy +9.154167e-04-1.188025e-03j  numba +5.294805e+06-2.660933e+06j  |diff| 5.9e+06  scipy rtol noise 1.0e-06  ratio 5.9e+12
   M 5 xi 0.2000 r_1: scipy +6.200835e+05+8.287264e+05j  numba -5.645071e+13+3.560422e+13j  |diff| 6.7e+13  scipy rtol noise 3.8e-02  ratio 1.7e+15
   M 5 xi 0.2000 r_3: scipy -1.379068e+02-7.469562e+01j  numba -3.654455e+09+5.625605e+09j  |diff| 6.7e+09  scipy rtol noise 5.7e-06  ratio 1.2e+15
   M 5 xi 0.2000 r_5: scipy +4.140139e-03+9.734621e-03j  numba +1.120982e+05+2.288636e+05j  |diff| 2.5e+05  scipy rtol noise 3.9e-10  ratio 6.6e+14
-M 5: scipy 12.5 s, numba 1.19 s, worst |numba - scipy| / noise over used entries 1.7e+15
+M 5: scipy 3.3 s, numba 0.33 s, worst |numba - scipy| / noise over used entries 1.7e+15
 FAIL
 exit 1
