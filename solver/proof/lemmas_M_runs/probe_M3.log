@@ -1,0 +1,3 @@
+probe M = 3 row 0 |u| = 262.0 (ray): r = 22, n = 70: ok True, Lam 0.164, sup 0.227  [13 s]
+probe M = 3 row 0 |u| = 262.0 (ray): r = 24, n = 70: ok True, Lam 0.179, sup 0.75  [12 s]
+probe M = 3 row 0 |u| = 262.0 (ray): r = 24, n = 80: ok True, Lam 0.157, sup 0.75  [17 s]

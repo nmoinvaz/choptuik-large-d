@@ -69,8 +69,8 @@ W0_STR = "1.64389375"
 # numerical zeros (double precision, not rigorous) of solver/inner_stokes/hier.py / nested.py:
 ZEROS = {
     1: ["2.5421480475", "0.7769940136"],                                         # A_certify.md section 5
-    3: ["2.726475886", "1.015603095", "0.144419478", "0.011087426"],             # hier.py --schur, |r_1| 6.5e-8
-                                                                                 # (lemmas_M_runs/hier_M3_zero.log)
+    3: ["2.726475886", "1.015603095", "0.144419478488", "0.011087425887"],       # hier.py --schur, then
+                                                                                 # refine_zero_M.py (zero_M3.json)
     5: ["2.718579189", "0.999228404", "0.149203575", "0.014719052", "0.008405347", "0.001470345"],  # hier.py --schur
 }
 
