@@ -39,31 +39,13 @@ order $\sqrt D$ times the time to the singularity, where the field equations are
 Its shift symmetry in $r^2$ gives an exact unstable mode with $1/\gamma = 2$ at $D = \infty$, which explains
 $\gamma_\infty = 1/2$ given a conjectured selection rule and the uniqueness of the unstable mode; that rule, evaluated on
 the $D = \infty$ equations alone, gives $\Dinf = 1.6439 \pm 0.0002$ (a range of estimators) and the shape of the echo. For
-the axion--dilaton and the complex scalar, whose large-$D$ equations keep the symmetry, $\gamma \to 1/2$ to $D = 80$; for
-matter with a centrifugal term, which breaks it, the computations so far do not decide $\gamma_\infty$. The work was done
+the axion--dilaton, whose large-$D$ equations keep the symmetry, $\gamma \to 1/2$ (computed to $D = 80$); for matter with
+a centrifugal term, which breaks it, the computations so far do not decide $\gamma_\infty$. The work was done
 by an AI model (Claude, Anthropic) under the author's direction and has not been reviewed by a human expert
 (Sec.~\ref{sec:how}).
 \end{abstract}
 
 \maketitle
-
-% OUTLINE
-% I.   Introduction: the problem, prior numerics and large-D work (credits), what this paper reports, the companion
-%      paper [math], conventions (gamma is the radius exponent).
-% II.  Equations and numerical method: self-similar equations; the f64 and double-double solvers; checks table;
-%      the growth rate as a root of the growth-mode determinant.
-% III. Delta(D) and gamma(D) for D >= 4: the rational formula (coefficients, values, figure); comparison with
-%      published values (D = 4, the maximum below D = 4, D = 5); physical reading (echo factor, fine-tuning per echo).
-% IV.  The limit D -> infinity: held-out tests of analyticity in 1/D; Delta_inf and its planted-truth check; the
-%      Delta -> 0 conjecture; closed forms tested; gamma_inf = 1/2 from the data.
-% V.   The large-D picture: how the solution scales; a free wave cannot echo and the period is selected beyond all
-%      orders (statements, proofs in [math]); the inner region x ~ sqrt(n) and Rozali-Way's heat equation; the
-%      r^2-shift and gamma_inf = 1/2; the D = infinity selection rule (conjecture, [math]) and what it reproduces;
-%      the next-to-leading-order condition of Ecker, Ecker and Grumiller.
-% VI.  Other matter at large D: which models keep the r^2-shift; axion-dilaton and complex scalar (CSS, D <= 80);
-%      the sigma-model CSS branch (ends near D = 8.5); the l = 1 multiplet (D <= 9, undecided).
-% VII. Discussion: summary, the assumption that the branch stays critical, open problems.
-% VIII. How this work was done; data and code.
 
 \section{Introduction}
 \label{sec:intro}
@@ -91,8 +73,8 @@ periodic profile with any period solves the equations, and, with~\cite{EckerEtAl
 $D \to \infty$; they also report the expectation $\gamma \to 1/2$. Bland's thesis~\cite{Bland2007} hypothesised
 $\Delta \to 5/2$.
 
-This paper computes $\Delta(D)$ and $\gamma(D)$ to high precision far beyond the dimensions studied before, asks what
-happens as $D \to \infty$, and explains what can be explained from the structure of the equations at large $D$. It reports:
+This paper computes $\Delta(D)$ and $\gamma(D)$ to high precision up to $D = 61$, asks what happens as $D \to \infty$,
+and explains what it can from the structure of the equations at large $D$. It reports:
 \begin{enumerate}
 \item $\Delta(D)$ at 857 points $8.25 \le D \le 61.03$ from a double-double (about 32-digit) solver, $\gamma(D)$ at 67
 points up to $D = 61$, and both for $4 \le D \le 40$ from an independent double-precision solver; one rational
@@ -110,9 +92,9 @@ nonlinear heat equation. Its shift symmetry
 in $r^2$ gives an exact unstable mode with $\lambda = 2$, which explains $\gamma_\infty = 1/2$ under stated conditions,
 and a conjectured selection rule posed there reproduces $\Dinf$ to about $10^{-4}$ and the shape of the echo from the
 $D = \infty$ equations alone.
-\item Tests on other matter (Sec.~\ref{sec:matter}): for the axion--dilaton and the complex scalar, whose large-$D$
-equations keep the $r^2$-shift, $\gamma \to 1/2$ and the selection rule reproduces the limiting frequency; for models
-with a centrifugal term, which breaks the symmetry, the computations so far do not decide $\gamma_\infty$.
+\item Tests on other matter (Sec.~\ref{sec:matter}): the axion--dilaton and the complex scalar keep the $r^2$-shift at
+large $D$; for the axion--dilaton $\gamma \to 1/2$, and for both the selection rule reproduces the limiting frequency. For
+models with a centrifugal term, which breaks the symmetry, the computations so far do not decide $\gamma_\infty$.
 \end{enumerate}
 The theory behind item 3 (the large-$D$ expansion and its Stokes structure, the selection rule with its hypotheses, and a
 computer-assisted proof in a model case) is developed in a companion paper~\cite{math}; here we state its results in
@@ -149,7 +131,7 @@ with $G = (n-1)\,c\,(b-1)$, on $0 \le x \le 1$; $p$, $m$ contain only odd harmon
 ones; the solution is regular at $x = 0$, analytic at the past light cone $x = 1$, and $c(1) = 1$ fixes the gauge: a
 periodic boundary-value problem with $\Delta$ as an eigenvalue.
 
-\emph{Double-precision solver} ($4 \le D \le 40$, with points down to $D = 3.7$): spectral multiple shooting in $x$ with
+\emph{Double-precision solver} ($3.6 \le D \le 40$): spectral multiple shooting in $x$ with
 Fourier modes in $\tau$ (23--47 modes), with the integration-step error extrapolated out; near $D = 4$ the points are
 extrapolated in the mode count. Above $D \approx 26$ rounding at $10^{-16}$ in the residual moves $\Delta$ by
 $10^{-7}$--$10^{-6}$ at $D = 30$--$40$.
@@ -263,7 +245,7 @@ $D$ & $\Delta$ & $\gamma$ & $D$ & $\Delta$ & $\gamma$ \\ \hline
 10 & 2.521078919562 & 0.4555879 & 70 & 1.78693476494 & \\
 12 & 2.389188553641 & 0.4614056 & 100 & 1.7450264844 & 0.49313 \\
 15 & 2.253098407194 & 0.4673656 & 1000 & 1.65424086 & 0.4992 \\
- & & & $\infty$ & $1.64389375 \pm 1.5\times10^{-8}$ & $1/2$ \\
+ & & & $\infty$ & $1.64389375 \pm 1.5\times10^{-8}$ & $1/2$ (assumed) \\
 \end{tabular}
 \end{ruledtabular}
 \end{table}
@@ -322,8 +304,8 @@ model fits its range to the level of the points, so the fit alone decides nothin
 $D \le 45$, the $1/D$ series predicts $\Delta$ fifteen units of $D$ ahead to $5\times10^{-13}$, while the series in
 half-integer powers miss by 40 to 300 times more, and their limits jump with the degree. Adding one non-analytic term
 ($D^{-1/2}$, $D^{-3/2}$, $\ln D/D$, $\ln D/D^2$ or $e^{-D/4}$) to the degree-16 series changes neither the prediction nor
-the limit, and the term's coefficient is not determined. The only structure the points show is a singularity near
-$D \approx -9$ to $-11$.
+the limit, and the term's coefficient is not determined. The only structure the points show is a singularity on the
+negative $D$ axis, near $D \approx -9$ to $-11$.
 
 \begin{table}[htbp]
 \caption{Held-out test of large-$D$ models (cleaned double-double points; snapshot $D \le 60.1$).}
@@ -430,7 +412,8 @@ $5\times10^{-7}$, with
 \end{equation}
 (the $1/n$ coefficient is stable to about $10^{-3}$ across fit choices: $3.0313$--$3.0324$). At $D = 61$, $\gamma = 0.48935$, and the points
 keep rising, which excludes the limit $0.466$ of the fit of~\cite{BlandEtAl2005}. The value $1/2$ itself is not new: it
-is Rozali and Way's estimate~\cite{RozaliWay2018}, reported in~\cite{EckerEckerGrumiller2026,EckerEtAl2026}. Like
+is Rozali and Way's estimate~\cite{RozaliWay2018}, and is discussed
+in~\cite{ClarkPimentel2025,EckerEckerGrumiller2026,EckerEtAl2026}. Like
 $\Dinf$, it is not fixed at any finite order of the $1/n$ expansion (Sec.~\ref{sec:allorders}); its explanation is in
 Sec.~\ref{sec:r2shift}.
 
@@ -438,8 +421,8 @@ Sec.~\ref{sec:r2shift}.
 \centering
 \includegraphics[width=0.78\linewidth]{../figures/gamma.pdf}
 \caption{Left: $\lambda = 1/\gamma$ against $1/(D-2)$ for 67 double-double points, with a fit fixing $\lambda_\infty = 2$ (solid,
-over its range $D \ge 16$) and its leading term $2 + 3.03/n$ (dashed); at $D = \infty$, $\lambda = 2$ is exact, from the
-$r^2$-shift symmetry of the inner heat equation (Sec.~\ref{sec:r2shift}). Right: with $\lambda_\infty$ left free, the
+over its range $D \ge 16$) and its leading term $2 + 3.03/n$ (dashed); at $D = \infty$, $\lambda = 2$ is an exact growth
+rate of the inner problem, from the $r^2$-shift symmetry of the inner heat equation (Sec.~\ref{sec:r2shift}). Right: with $\lambda_\infty$ left free, the
 fitted $\lambda_\infty - 2$ falls about 3.5-fold per added power of $1/n$, for three fit ranges.}
 \label{fig:gamma}
 \end{figure}
@@ -541,7 +524,8 @@ Y_t = c\,S, \qquad S_t = c\,\Big(Y_s + \frac{Y^3}{4}\Big), \qquad c_s = \frac{c\
 with $b - 1 = (p - m)^2/(2n)$: a nonlinear heat equation in which $s = r^2/(2n)$ plays the role of time and $t$ that of
 space, with no large parameter left. These are the leading-order large-$D$ equations of Rozali and Way, who noted this
 parabolic character: with their $r$, $\tau = \sqrt D\,t$ and lapse factor $1 - \delta_0$ identified with our $\rho$, $t$
-and $c^2$, $Y = 2\phi_t/c$ and $S = Y_t/c$ turn their equations into Eqs.~\eqref{eq:heat} (checked symbolically). A
+and $c^2$, their scalar field $\phi$ gives $Y = 2\phi_t/c$ and $S = Y_t/c$, which turn their equations into
+Eqs.~\eqref{eq:heat} (checked symbolically). A
 discretely self-similar solution depends on $\xi = \rho/(-t) = x/\sqrt n$ and $\theta$; its series at $\xi = 0$
 reproduces the top-degree terms of the outer $1/n$ expansion (to $2\times10^{-13}$ at orders 1--10). The outer fast mode
 $e^{-n/(2x^2)} = e^{-t^2/(4s)}$ is the heat kernel, and without gravity the inner problem is Weber's equation, whose
@@ -618,10 +602,11 @@ range of the estimators, not an error bound; whether the remaining $10^{-4}$ clo
 $\omega/\omega_\infty - 1 = -22\%$, $+1.56\%$ and $-0.077\%$ for $M = 1$, 3 and 5 ($\Delta$ 29\% above, 1.5\% below and
 $0.077\%$ above $\Dinf$), alternating in sign and shrinking fifteen- to twentyfold per added pair of harmonics. Harmonic
 truncation is not a controlled approximation here (the linear multipliers grow like $e^{\pi|\nu|\omega/2}$ with the
-harmonic $\nu$), which is why the untruncated expansion above is the primary estimate; at $M = 5$ the two give the same
-$F_3/F_1$ and $F_5/F_1$ to the size of the omitted $F_7$, from codes that share nothing. For the
-one-harmonic truncation, whose zero is not the physical one, the companion paper gives a computer-assisted proof,
-assuming Braaksma's summability theorem and following the template of Baldom\'a et al.~\cite{BaldomaEtAl2023}, that the
+harmonic $\nu$), which is why the untruncated expansion above is the primary estimate; at $M = 5$ and
+$(A, \omega) = (2.72, \omega_\infty)$ the truncated solve and the amplitude expansion, which share no code, give the same
+$F_3/F_1$ and $F_5/F_1$ to the size of the omitted $F_7$. For the
+one-harmonic truncation, whose zero is not the physical one, the companion paper certifies (computer-assisted, following
+the template of Baldom\'a et al.~\cite{BaldomaEtAl2023}, conditional on Braaksma's summability theorem) that the
 selection condition has exactly one zero in a small box around it, and that it is simple~\cite{math} (Reiterer and
 Trubowitz gave a computer-assisted existence proof of the $D = 4$ critical solution
 itself~\cite{ReitererTrubowitz2019}).
@@ -707,7 +692,7 @@ $D = 8.5$) \\
 The critical solutions of the Hirschmann--Eardley family~\cite{HirschmannEardley1997}, whose $\kappa = 1$ member is the
 axion--dilaton system~\cite{HamadeHorneStewart1996} and $\kappa = 0$ the free complex scalar~\cite{HirschmannEardley1995a},
 are spherically symmetric scalars with no potential. Their critical solutions rotate in phase and are continuously
-self-similar, $F = (-t)^{i\omega}f(x)$, so they solve ordinary differential equations, with $\omega$ selected by
+self-similar, $\phi = (-t)^{i\omega}f(x)$ for the complex field $\phi$, so they solve ordinary differential equations, with $\omega$ selected by
 analyticity at the past light cone. At $D = 4$ our codes reproduce $\omega = 1.176952724$ and $\gamma = 0.2641066$ for the
 axion--dilaton~\cite{HamadeHorneStewart1996}, and $\omega = 1.9154447$ and $\gamma = 0.3871055$ for the free complex
 scalar~\cite{HirschmannEardley1995a,HirschmannEardley1995b}. The axion--dilaton solution was followed to $D = 80$ by
@@ -744,8 +729,8 @@ solver reproduces the published four-dimensional values (e.g.\ $\gamma = 0.179$-
 $\approx 0.18$~\cite{LechnerEtAl2002}; also~\cite{BizonWasserman2000,BizonChmajTabor2000,BiernatBizonMaliborski2017}).
 At fixed $\eta = 0.14$ the CSS critical solution has
 one growing mode all along its branch, and $\gamma$ rises monotonically from 0.188 at $D = 4$ to $0.5135$ at a fold at
-$D = 8.5444$, where the branch ends. In flat space the branch instead collapses onto the singular equator cone as
-$D \to 8$, with $\gamma \to 1/2$; that value is inherited from the cone, not from an $r^2$-shift. So this branch never
+$D = 8.5444$, where the branch ends. Without gravity ($\eta = 0$) the branch instead collapses onto the singular equator
+cone as $D \to 8$, with $\gamma \to 1/2$; that value is inherited from the cone, not from an $r^2$-shift. So this branch never
 reaches large $D$ and cannot test $\gamma_\infty$; the test needs the $\sigma$-model's DSS branch, which has not been
 computed. A by-product checks the selection rule in a second model: at $\eta = 0.14$ the zero of the $D = \infty$ Stokes
 multiplier for the CSS ground state, $A_0 = 1.9225686$, matches the finite-$D$ ground state extrapolated to $D = \infty$,
@@ -772,7 +757,7 @@ Beyond $D = 9$ the period is selected ever more weakly ($|\partial\Delta/\partia
 $\ell = 0$ solution reaches only near $D = 21$), and the continuation in double precision stops there. Six points do not decide $\gamma_\infty$: free fits put
 $\lambda_\infty$ anywhere from 0.55 to 3.95, and fixing $\lambda_\infty = 2$ fits as well. Compared with $\ell = 0$ at the
 same $D$, $\lambda_1 - \lambda_0$ falls roughly like $5.6/n$, and windowed fits of its limit bracket $\lambda_{1,\infty} - 2$
-heuristically in 0.09--0.31 ($\gamma_\infty \approx 0.43$--$0.48$). That leans toward the predicted
+heuristically in 0.09--0.31 ($\gamma_\infty \approx 0.43$--$0.48$). That leans toward the expected
 $\gamma_\infty \ne 1/2$, but it is not a result: settling it needs $\ell = 1$ out to $D \approx 15$--$20$. The period peaks
 near $0.988$ at $D \approx 9$ and then falls, so on present evidence its limit is finite and below the $\ell = 0$ value.
 
@@ -780,9 +765,8 @@ near $0.988$ at $D \approx 9$ and then falls, so on present evidence its limit i
 \section{Discussion}
 \label{sec:discussion}
 
-The numerics favour a finite $\Dinf = 1.64389375 \pm 1.5\times10^{-8}$ strongly, under the assumption of analyticity in
-$1/D$ that they support but cannot prove, and give $\gamma_\infty = 1/2$; both are fixed beyond all orders in $1/D$, in
-Rozali and Way's inner region, whose $r^2$-shift explains $\gamma_\infty = 1/2$.
+The numerics favour a finite $\Dinf$ strongly, under the assumption of analyticity in $1/D$ that they support but cannot
+prove, and give $\gamma_\infty = 1/2$. One assumption and the open problems remain.
 
 \emph{An assumption.} We assume, without checking it, that the DSS branch we follow remains the critical solution at
 large $D$, with a single unstable mode: our growth rate is a local root of the growth-mode determinant near its predicted
@@ -791,12 +775,11 @@ acquired a second unstable mode, or a continuously self-similar solution~\cite{C
 $1/\lambda$ would not be the critical exponent. For the axion--dilaton the corresponding check was made at $D \le 40$
 (Sec.~\ref{sec:matter}).
 
-\emph{Open.} Higher orders of the selection rule, which would give $\Dinf$ (and possibly a closed form) from first
-principles to more digits; a proof of the rule~\cite{math}; the uniqueness of the $\lambda = 2$ mode at $D = \infty$ and
-its $1/n$ coefficient $3.0324$, which needs the $O(1/n)$ inner equations; an independent check of the double-double points
-above $D = 40$; the behaviour just below $D = 4$, where our $\gamma(3.5)$ and that of~\cite{BlandEtAl2005} differ; and, for
-other matter, the $\ell = 1$ multiplet beyond $D = 9$ and the DSS branch of the $\sigma$-model, which would show whether a
-centrifugal term moves $\gamma_\infty$ away from $1/2$.
+\emph{Open.} Higher orders of the selection rule, which would give $\Dinf$ (and possibly a closed form) to more digits;
+a proof of the rule~\cite{math}; the uniqueness of the $\lambda = 2$ mode at $D = \infty$ and its $1/n$ coefficient; an
+independent check of the double-double points above $D = 40$; $\gamma$ just below $D = 4$; and the $\ell = 1$ multiplet
+beyond $D = 9$ and the $\sigma$-model's DSS branch, which would show whether a centrifugal term moves $\gamma_\infty$ away
+from $1/2$.
 
 % =====================================================================================================
 \section{How this work was done}
