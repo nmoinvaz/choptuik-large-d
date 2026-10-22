@@ -503,6 +503,19 @@ Their conjecture Δ → 0 comes with no rate. Fitted on 10 ≤ D ≤ 45 and comp
 A power-law approach to 0 is excluded; a logarithmic one is disfavoured but cannot be excluded from D ≤ 61 alone.
 Scripts: [`solver/eeg20/`](solver/eeg20/).
 
+**Their supercritical branch.** They also note a second branch, $`f_{\rm LO} = f_0\sqrt{\beta^2x^2-1}`$ on β²x² > 1,
+whose singular point β²x² = 1 they treat as a proxy for the apparent horizon, citing Rozali and Way.[^6] In our
+variables the two branches are one leading-order family, y = √2 x/√(x² + C(τ)), with C > 0 regular and C < 0
+supercritical, and the r²-shift of Proposition 5 moves C by 2nσ₀ e^(2τ): the supercritical branch is the regular one
+pushed along the λ = 2 mode. Its 1/n expansion exists to all orders with nothing forced, as in Proposition 1. Near
+β²x² = 1 it is a series in 1/(n(β²x²−1)²) and breaks down at β²x² − 1 ~ n^(−1/2), where 2m/r^(n−1) is only of order
+n^(−1/2). There the solution crosses β²x² = 1 smoothly into a region where the polar lapse collapses exponentially.
+Behind this spacelike front, 2m/r^(n−1) stays near 1.63 κ̃ n^(−1/2), with κ̃ = fβ²/|β + β′| the inverse speed of the
+front. So for a moving front β²x² = 1 is not an apparent horizon; trapping needs the front to come to rest, as it does
+when the shifted solution's front stops at r² = 2n|σ₀|. The exact self-similar (CSS) equations solved at n = 100–6400
+bear this out. Details, checks and the comparison with the Roberts and Brady self-similar families:
+[notes/SUPERCRITICAL.md](notes/SUPERCRITICAL.md), scripts in [`solver/supercrit/`](solver/supercrit/).
+
 ## Evidence
 
 ### The double-double solver (`hp/`)

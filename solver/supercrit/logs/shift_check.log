@@ -1,0 +1,10 @@
+1. LO residuals (x y_x - (1 - y^2/2) y, x c_x - c u, u - y^2/2): [0, 0, 0]
+   C = +1/beta^2 is EEG's regular Pi_LO (difference): 0 ; C = -1/beta^2 the supercritical one (at x = 2/beta): 0
+2. y in (r, t) with C = rho/t^2, q = r^2 + rho: sqrt(2)*r/sqrt(q) (depends on r, rho only)
+   c / sqrt(r^2 + rho) with k = K (-t): K
+3. heat form: Y_s + Y^3/4 = 0 ; c_s - c Y^2/4 = 0 ; y = sqrt(s) Y matches (r^2 = 2ns, rho = 2n s_c): 0
+   Y(s + sigma0) - Y with s_c -> s_c + sigma0: 0
+   generator d/dsigma0 of the shifted family - Prop. 5's e^{2tau}(x y_x - y)/x^2 (times n): 0
+4. r_s^2 = -C t^2 = -C0*exp(-2*tau) + 2*S0*n -> 2 n S0 as tau -> oo; zero at tau* = ln(C0/(2 n S0))/2: 0
+   kappa~ = r_s/|dr_s/dT| = k0*(-C0 + 2*S0*n*exp(2*tau))/C0 -> grows like e^{2 tau}
+PASS 

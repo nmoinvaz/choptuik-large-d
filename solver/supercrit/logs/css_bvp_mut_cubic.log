@@ -1,0 +1,66 @@
+layer: Y1(-12) = 0.204053, C1(-12) = 6.929e+00   (beta = 1.0, f = 0.8, kappa_f = 0.8)
+/usr/local/lib/python3.13/dist-packages/scipy/integrate/_bvp.py:475: RuntimeWarning: overflow encountered in dot
+  cost_new = np.dot(step_new, step_new)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a09fa56bd1231d8ec/solver/supercrit/css_bvp.py:80: RuntimeWarning: overflow encountered in exp
+  c = np.exp(lc)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a09fa56bd1231d8ec/solver/supercrit/css_bvp.py:85: RuntimeWarning: invalid value encountered in add
+  yx = (x * x * a1 + x * c * a2) / det
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a09fa56bd1231d8ec/solver/supercrit/css_bvp.py:85: RuntimeWarning: invalid value encountered in divide
+  yx = (x * x * a1 + x * c * a2) / det
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a09fa56bd1231d8ec/solver/supercrit/css_bvp.py:86: RuntimeWarning: invalid value encountered in add
+  sx = (x * x * a2 + x * c * a1) / det
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a09fa56bd1231d8ec/solver/supercrit/css_bvp.py:86: RuntimeWarning: invalid value encountered in divide
+  sx = (x * x * a2 + x * c * a1) / det
+n = 100: solve_bvp: A singular Jacobian encountered when solving the collocation system.
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a09fa56bd1231d8ec/solver/supercrit/css_bvp.py:87: RuntimeWarning: overflow encountered in multiply
+  return np.vstack([x * yx, x * sx, (n - 1) * (1 - h) - h * P, u])
+/usr/local/lib/python3.13/dist-packages/scipy/integrate/_bvp.py:309: RuntimeWarning: invalid value encountered in subtract
+  0.125 * h * (f[:, 1:] - f[:, :-1]))
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a09fa56bd1231d8ec/solver/supercrit/css_bvp.py:82: RuntimeWarning: invalid value encountered in divide
+  u = (n - 1) * (1 - h) / h
+/usr/local/lib/python3.13/dist-packages/scipy/integrate/_bvp.py:311: RuntimeWarning: overflow encountered in add
+  col_res = y[:, 1:] - y[:, :-1] - h / 6 * (f[:, :-1] + f[:, 1:] +
+/usr/local/lib/python3.13/dist-packages/scipy/integrate/_bvp.py:312: RuntimeWarning: overflow encountered in multiply
+  4 * f_middle)
+/usr/local/lib/python3.13/dist-packages/scipy/integrate/_bvp.py:311: RuntimeWarning: invalid value encountered in add
+  col_res = y[:, 1:] - y[:, :-1] - h / 6 * (f[:, :-1] + f[:, 1:] +
+/usr/local/lib/python3.13/dist-packages/scipy/integrate/_bvp.py:41: RuntimeWarning: invalid value encountered in subtract
+  df_dy[:, i, :] = (f_new - f0) / hi
+/usr/local/lib/python3.13/dist-packages/scipy/integrate/_bvp.py:39: RuntimeWarning: invalid value encountered in subtract
+  hi = y_new[i] - y[i]
+/usr/local/lib/python3.13/dist-packages/scipy/integrate/_bvp.py:593: RuntimeWarning: overflow encountered in add
+  t = (yp[:, :-1] + yp[:, 1:] - 2 * slope) / h
+/usr/local/lib/python3.13/dist-packages/scipy/integrate/_bvp.py:593: RuntimeWarning: overflow encountered in divide
+  t = (yp[:, :-1] + yp[:, 1:] - 2 * slope) / h
+/usr/local/lib/python3.13/dist-packages/scipy/integrate/_bvp.py:594: RuntimeWarning: overflow encountered in divide
+  c[0] = t / h
+/usr/local/lib/python3.13/dist-packages/scipy/integrate/_bvp.py:595: RuntimeWarning: overflow encountered in divide
+  c[1] = (slope - yp[:, :-1]) / h - t
+/usr/local/lib/python3.13/dist-packages/scipy/integrate/_bvp.py:595: RuntimeWarning: overflow encountered in subtract
+  c[1] = (slope - yp[:, :-1]) / h - t
+/usr/local/lib/python3.13/dist-packages/scipy/integrate/_bvp.py:567: RuntimeWarning: invalid value encountered in divide
+  r_middle /= 1 + np.abs(f_middle)
+/usr/local/lib/python3.13/dist-packages/scipy/integrate/_bvp.py:568: RuntimeWarning: invalid value encountered in divide
+  r1 /= 1 + np.abs(f1)
+/usr/local/lib/python3.13/dist-packages/scipy/integrate/_bvp.py:569: RuntimeWarning: invalid value encountered in divide
+  r2 /= 1 + np.abs(f2)
+n = 400: solve_bvp: A singular Jacobian encountered when solving the collocation system.
+/usr/local/lib/python3.13/dist-packages/scipy/integrate/_bvp.py:458: RuntimeWarning: overflow encountered in dot
+  cost = np.dot(step, step)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a09fa56bd1231d8ec/solver/supercrit/css_bvp.py:81: RuntimeWarning: overflow encountered in multiply
+  P = 0.5 * (y * y + s * s)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a09fa56bd1231d8ec/solver/supercrit/css_bvp.py:83: RuntimeWarning: overflow encountered in multiply
+  det = x * x * (x * x - c * c)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a09fa56bd1231d8ec/solver/supercrit/css_bvp.py:85: RuntimeWarning: overflow encountered in multiply
+  yx = (x * x * a1 + x * c * a2) / det
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a09fa56bd1231d8ec/solver/supercrit/css_bvp.py:86: RuntimeWarning: overflow encountered in multiply
+  sx = (x * x * a2 + x * c * a1) / det
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a09fa56bd1231d8ec/solver/supercrit/css_bvp.py:84: RuntimeWarning: invalid value encountered in multiply
+  a1, a2 = c * ((n - 1) / h) * s, c * (u - 1) * y
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a09fa56bd1231d8ec/solver/supercrit/css_bvp.py:105: RuntimeWarning: overflow encountered in scalar multiply
+  ha - (n - 1) / (n - 1 + 0.5 * (ya * ya + sa * sa))])
+/usr/local/lib/python3.13/dist-packages/scipy/integrate/_bvp.py:38: RuntimeWarning: invalid value encountered in add
+  y_new[i] += h[i]
+n = 1600: solve_bvp: A singular Jacobian encountered when solving the collocation system.
+n =  6400: |theta|<5: max|y/y_layer - 1| = 8.557e+00, max|c/c_layer - 1| = 9.998e-01, max|s - s_layer|/kappa = 1.412e+00; at theta = -6: y/y_layer = 9.4076, (n-1)(b-1)/(kappa sqrt n) = 1.6481, 1 - 1/b = 0.0162, min h on the interval = 0.9838, c = 2.32e-05
+FAIL (mutation: cubic)

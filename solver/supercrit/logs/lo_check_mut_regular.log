@@ -1,0 +1,13 @@
+E1: O(1) part = -2*x**2*beta(tau)**2*f(tau)/((x**2*beta(tau)**2 - 1)*sqrt(x**2*beta(tau)**2 + 1))
+    O(eps) part is zero
+E2: O(1) part = 0
+    O(eps) part is non-zero: -2*x**2*beta(tau)**2/(x**4*beta(tau)**4 - 2*x**2*beta(tau)**2 + 1)
+E3: O(1) part = 0
+    O(eps) part is non-zero: sqrt(2)*x**2*(2*x**5*beta(tau)**5*f(tau) + x**5*beta(tau)**5*Derivative(f(tau), tau) + 5*x
+E4: O(1) part = 0
+    O(eps) part is non-zero: sqrt(2)*x**2*(2*x**5*beta(tau)**5*f(tau) + x**5*beta(tau)**5*Derivative(f(tau), tau) + 5*x
+max |residual| over x in {1, 1.5, 3, 8}, tau in {0, 1, 2}, beta = 1.7 + 0.4 sin tau, f = 0.8 + 0.3 cos 2tau:
+   n =    100: E1 1.706e+00  E2 1.636e-02  E3 4.434e-03  E4 2.758e-02   (x n: 170.563 1.636 0.443 2.758)
+   n =   1000: E1 1.706e+00  E2 1.620e-03  E3 4.434e-04  E4 2.758e-03   (x n: 1705.626 1.620 0.443 2.758)
+   n =  10000: E1 1.706e+00  E2 1.618e-04  E3 4.434e-05  E4 2.758e-04   (x n: 17056.264 1.618 0.443 2.758)
+FAIL (mutation: regular)

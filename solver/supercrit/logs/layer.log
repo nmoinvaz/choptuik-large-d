@@ -1,0 +1,13 @@
+theta0 =  40.0: status 'The solver successfully reached the end of the integration interval.', max|S1 - C1 Y1 + sqrt2| = 3.89e-11, Y1(-25) = 1.8038073272, C1(-25) = 9.847e-18, max Y1 = 1.803807
+theta0 =  80.0: status 'The solver successfully reached the end of the integration interval.', max|S1 - C1 Y1 + sqrt2| = 4.36e-11, Y1(-25) = 1.8038073272, C1(-25) = 9.846e-18, max Y1 = 1.803807
+Y1(-inf) = 1.803807327;  Y1(-inf)^2/2 = 1.626860437;  d ln C1/d theta behind the front = 1.626852490
+front (S1 = -sqrt2/2, i.e. C1 Y1 = sqrt2/2): theta_f = -1.002877, Y1 = 1.402243, C1 = 0.504268
+   theta = +10.0: Y1 = 0.314680  S1 = -0.003442  C1 = 4.483198e+00   (outer LO: Y1 = 0.316228, C1 = 4.472136)
+   theta =  +5.0: Y1 = 0.438954  S1 = -0.012790  C1 = 3.192644e+00   (outer LO: Y1 = 0.447214, C1 = 3.162278)
+   theta =  +2.0: Y1 = 0.646132  S1 = -0.055738  C1 = 2.102475e+00   (outer LO: Y1 = 0.707107, C1 = 2.000000)
+   theta =  +0.0: Y1 = 1.047304  S1 = -0.293206  C1 = 1.070374e+00   (outer LO: Y1 = singular)
+   theta =  -1.0: Y1 = 1.401216  S1 = -0.705624  C1 = 5.056960e-01   (outer LO: Y1 = singular)
+   theta =  -2.0: Y1 = 1.676041  S1 = -1.161823  C1 = 1.505875e-01   (outer LO: Y1 = singular)
+   theta =  -4.0: Y1 = 1.797967  S1 = -1.402121  C1 = 6.725536e-03   (outer LO: Y1 = singular)
+   theta =  -8.0: Y1 = 1.803799  S1 = -1.414195  C1 = 1.010176e-05   (outer LO: Y1 = singular)
+PASS 
