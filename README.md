@@ -1655,7 +1655,7 @@ Proposition 5.
 | complex scalar, axion–dilaton | the same heat system | yes | 1/2; computed for the axion–dilaton to D = 80: 1/2 to about 3×10⁻⁶ |
 | scalar multiplet with angular momentum ℓ ≥ 1 | heat equation plus ℓφ/(2s) | broken | not fixed by any symmetry; generically ≠ 1/2 (ℓ = 1 computed to D = 9: not yet decided) |
 | Yang–Mills (type II) | the ℓ = 1 multiplet's | broken | the ℓ = 1 value |
-| wave maps (σ-model), coupling η | a sin 2u/(4s) term, η-dependent | broken | η-dependent; the ℓ = 1 value as η → ∞ (its CSS branch ends at D ≈ 8.5, so only the DSS branch can test this) |
+| wave maps (σ-model), coupling η | a sin 2u/(4s) term, η-dependent | broken | η-dependent; the ℓ = 1 value as η → ∞ (its CSS branch ends at D ≈ 8.5; the DSS branch, computed to D ≈ 10.5–11: not yet decided) |
 
 The model equations, the D = ∞ inner problems and the symmetry search are derived and checked symbolically. The
 predictions for γ∞ are conjectures, tested numerically as follows.
@@ -1698,9 +1698,19 @@ against Bizoń and Wasserman's at D = 4, and the D = 4 values are reproduced: λ
 thresholds. Continued in D at fixed coupling η = 0.14, γ rises from 0.188 at D = 4 to 0.513 at a fold at D = 8.544,
 where the branch ends. In flat space it collapses onto a singular cone (u ≡ π/2) as D → 8, with λ → 2. So this branch
 never reaches large D and cannot test γ∞: its γ ends near 1/2 for a different reason. The test of the prediction needs
-the σ-model's DSS branch, which has not been computed. A by-product supports the selection rule in a second model: at
+the σ-model's DSS branch. A by-product supports the selection rule in a second model: at
 η = 0.14 the zero of the D = ∞ Stokes multiplier for the CSS ground state, A₀ = 1.9225686, matches the finite-D ground
 state extrapolated to D = ∞, 1.9226 ± 0.0003.
+
+**σ-model, echoing (DSS) branch** ([matter/SIGMA_DSS.md](matter/SIGMA_DSS.md)). Continued in 1/η from the ℓ = 1
+solution (the σ-model's limit as η → ∞), the branch reproduces Husa et al.'s D = 4 values: Δ to 0.6% or better for
+η ≥ 0.225 and γ to about 10⁻³, with the DSS–CSS transition at η_c = 0.170 (Lechner et al.: about 0.17), and one
+physical unstable mode at D = 6. Continued in D at η = 1 and η = 0.3 (15 Fourier modes; 23 change λ by at most 10⁻⁴),
+it shows no fold to D = 10.5 and 11. From D = 4 to 9 its γ lies below the ℓ = 1 value by a nearly D-independent offset,
+about −0.003 at η = 1 and −0.015 to −0.017 at η = 0.3, growing as η falls, the direction the prediction expects. γ∞ is
+not established: fits of λ(D) on 5 ≤ D ≤ 9 give γ∞ from 0.36 to 0.57 (a spread over fit choices), fit about as well with
+λ∞ = 2 imposed, and get worse when D = 10 is added; the points above D ≈ 10 are preliminary (a near-null band in the
+Jacobian and an unexplained drift of the gauge mode's root).
 
 ### What is known about the selection, and what is open
 

@@ -1,0 +1,7 @@
+   jac 0: |R| 6.086e-09 |F| 6.084e-09 Delta 1.154549187535 mu 1e-06 (335 s)
+   jac 1: |R| 6.053e-09 |F| 6.052e-09 Delta 1.154539219503 mu 1e-06 (567 s)
+   jac 0: |R| 6.030e-09 |F| 6.029e-09 Delta 1.154529286685 mu 1e-06 (208 s)
+   jac 1: |R| 6.008e-09 |F| 6.006e-09 Delta 1.154519388747 mu 1e-06 (405 s)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:772: RuntimeWarning: divide by zero encountered in log
+  F = lambda x: dd2(L - np.log(np.abs(l - x)))
+{"D": 10.0, "eps": 3.33333333333, "eta": 0.30000000000029997, "kc": 23, "N": 72, "Ks": 16, "u0": 0.01, "kappa": 0.7, "reg": 1e-08, "Delta": 1.1545193887468548, "constraint": 8.149713632249807e-05, "lam_gauge": 0.8068518611225086, "umax": 0.8961402434098283, "psimax": 0.17353681192971307, "steps": 1513, "sol": "sigdss_sol_m03up_D10.0000_eta0.3000.npy", "kc_seed": 15, "Delta_seed": 1.1545592018157376, "F_start": 4.839564481181267e-05, "F": 6.006161695467331e-09, "solve_seconds": 983, "lam_guess": 3.0814, "lam": 3.0811003565642183, "gamma": 0.3245593730400639, "n_eval": 5, "last_step": 3.5095554906661164e-08, "lam_seconds": 392}
