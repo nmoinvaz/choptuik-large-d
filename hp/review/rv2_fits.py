@@ -171,7 +171,8 @@ def cmd_influence():
 
 def cmd_rules():
     pts, _ = load()
-    base = grid(pts, dmaxes=(60.1, 61.03), nuse=0)          # every degree, flags computed below
+    ALL = tuple(range(12, 23))
+    base = grid(pts, dmaxes=(60.1, 61.03), nuse=0, degs=ALL)  # every degree 12-22, flags computed below
     by = {}
     for r in base:
         by.setdefault((r["dmax"], r["dmin"], r["clean"], r["model"]), []).append(r)
@@ -192,17 +193,15 @@ def cmd_rules():
             lo, hi, n = sel(factor, nuse)
             print(f"  factor {factor:4.1f}  {'all' if nuse == 0 else 'lowest ' + str(nuse):9s} {n:3d} fits  "
                   f"{fmt(lo)} .. {fmt(hi)}  centre {fmt((lo + hi) / 2)}  half-width {float((hi - lo) / 2):.1e}")
-    for degs in ((12, 14, 16, 18, 20, 22), (16, 18, 20, 22), (15, 16, 17, 18, 19, 20, 21, 22)):
-        bad = [d for d in degs if d not in DEGS]
-        if bad:
-            continue
+    print("factor 2.5, two lowest, other degree sets:")
+    for degs in ((12, 14, 16, 18, 20, 22), (16, 18, 20, 22), tuple(range(14, 23)), (13, 15, 17, 19, 21), tuple(range(12, 23))):
         lo, hi, n = sel(2.5, 2, degs)
-        print(f"  degrees {degs}: {n} fits {fmt(lo)} .. {fmt(hi)}")
-    print("all degrees 14-22 of every group, regardless of residual:")
-    L = [r["lim"].mid() for r in base]
+        print(f"  degrees {degs}: {n} fits {fmt(lo)} .. {fmt(hi)}  centre {fmt((lo + hi) / 2)}  half-width {float((hi - lo) / 2):.1e}")
+    print("all degrees 14-22 (even) of every group, regardless of residual:")
+    L = [r["lim"].mid() for r in base if r["deg"] in DEGS]
     print(f"  {len(L)} fits {fmt(min(L))} .. {fmt(max(L))}")
     for g, grp in sorted(by.items(), key=lambda kv: str(kv[0])):
-        print(f"  {g}: " + "  ".join(f"{r['deg']}:{fmt(r['lim'], 10)}({r['res']:.1e})" for r in grp))
+        print(f"  {g}: " + "  ".join(f"{r['deg']}:{fmt(r['lim'], 10)}({r['res']:.1e})" for r in grp if r["deg"] in DEGS))
 
 
 def cmd_clean():
@@ -252,6 +251,23 @@ def cmd_variants():
                      {d: v for d, v in pts.items() if not 27 <= d <= 37}, clean))
     variants.append(("D = 26.82972 (centre tail 2e-11) removed, cleaning on",
                      {d: v for d, v in pts.items() if d != 26.82972}, clean))
+    kfc = next((a[8:] for a in sys.argv if a.startswith("--kfcut=")), None)
+    if kfc:
+        # measured kfreeze-13 cut Delta_true - Delta_13 at a few D (rv2_resolve kfreeze15 / rv2_kfcut), linearly
+        # interpolated in D, constant beyond the last point, applied to every kfreeze-13 point (D >= 35.35)
+        pts_ = sorted((float(x.split(":")[0]), float(x.split(":")[1])) for x in kfc.split(","))
+
+        def cut(d):
+            if d < 35.35:
+                return 0.0
+            if d <= pts_[0][0]:
+                return pts_[0][1]
+            for (d0, v0), (d1, v1) in zip(pts_, pts_[1:]):
+                if d0 <= d <= d1:
+                    return v0 + (v1 - v0) * (d - d0) / (d1 - d0)
+            return pts_[-1][1]
+        variants.append((f"kfreeze-13 cut corrected (Delta + cut(D), cut through {kfc}), cleaning on",
+                         {d: v + arb(cut(d)) for d, v in pts.items()}, clean))
     detail = next((int(a[9:]) for a in sys.argv if a.startswith("--detail=")), None)
     if detail is not None:
         bands = {}

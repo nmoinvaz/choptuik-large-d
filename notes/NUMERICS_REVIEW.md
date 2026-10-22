@@ -27,12 +27,13 @@ covers every truth I could plant, but it is a fragile statistic, and its centre 
 - **Equations and arithmetic.** I re-derived the centre, Taylor and horizon recursions from the field equations of
   `solver/dss.py` and found no error. An independent evaluation of the residual (R1: python-flint at 200 bits, my own
   τ-derivative from the DFT, my own Picard integrator, the kernel's centre and horizon series verified order by order)
-  agrees with the kernel's residual to 2×10⁻³¹ in every block at D = 60.0, PENDING_R1_61 at the second machine's last
-  state (D = 61.026), and PENDING_R1_PERT away from the solution. The negative controls fire.
+  agrees with the kernel's residual to 2×10⁻³¹ in every block at D = 60.0 and at the second machine's last state
+  (D = 61.026), and PENDING_R1_PERT away from the solution. The negative controls fire.
 - **Discretisation at D = 60** (R2). Taylor order and step tolerance, series orders, the first node, and kicks of 10⁻⁸
-  to the weak p1 harmonics 9, 11 and 13 move Δ by at most 6×10⁻¹⁸. PENDING_M48. The kfreeze-13 cut is the one
-  approximation with a visible effect: its linearised size at D = 60 is −1.2×10⁻¹⁵ (PENDING_KF), larger than the
-  3×10⁻¹⁷ the README quotes at D = 40.
+  to the weak p1 harmonics 9, 11 and 13 move Δ by at most 6×10⁻¹⁸, and M = 48 τ-points by 2.5×10⁻¹⁸. The kfreeze-13
+  cut is the one approximation with a visible effect: freeing harmonic 15 moves Δ by −1.20×10⁻¹⁵ at D = 60
+  (PENDING_KF), against the README's 3×10⁻¹⁷ at D = 40 and "falls off with D". Through the fits it moves Δ∞ by at
+  most 10⁻⁹.
 - **Noise per point** (R3). Between D = 45 and 60.1 the points scatter about smooth local fits by 3–7×10⁻¹⁸ rms, and the
   second machine agrees with the cloud points to 7×10⁻¹⁸ rms (the README's "2–4×10⁻¹⁶" is the f64 resolution of the
   comparison, one ulp of Δ). The "about 10⁻¹⁶" is therefore conservative there. It is not true of every point below
@@ -69,7 +70,7 @@ covers every truth I could plant, but it is a fragile statistic, and its centre 
 | 1e. independent residual at saved states | OK, 2×10⁻³¹ (R1) | — |
 | 1f. f64 drops in the driver (predictor, deflated step, junk hold, resampling) | OK: all self-corrected by Newton | — |
 | 1g. Taylor order, step tolerance, series orders, node placement at D = 60 | OK, ≤ 6×10⁻¹⁸ (R2) | — |
-| 1h. convergence in M at D = 60 | PENDING_M48_ROW | |
+| 1h. convergence in M at D = 60 | OK: M = 48 moves Δ by 2.5×10⁻¹⁸ (R2) | — |
 | 1i. kfreeze-13 cut at D = 60 | −1.2×10⁻¹⁵ (linearised; PENDING_KF_ROW) | affects error bar (small) |
 | 1j. junk hold / trend and the dnp corrector | OK: Δ returns to 6×10⁻¹⁸ after 10⁻⁸ kicks (R2) | — |
 | 1k. junk_only acceptance (run up6) | accepts Δ errors up to 10⁻¹⁴ by design | affects error bar (small, F6) |
@@ -104,11 +105,14 @@ end), but the bar is then a property of the rule, not of the data, and it does n
 | published data, lowest only | 24 | 1.64389374524 – 1.64389376313 | 8.9×10⁻⁹ |
 | published data, three lowest | 70 | 1.64389364807 – 1.64389377857 | 6.5×10⁻⁸ |
 | published data, every degree at the floor | 94 | 1.64389318986 – 1.64389627808 | 1.5×10⁻⁶ |
+| published data, two lowest, degrees 13–21 odd / 14–22 all / 12–22 all / 16–22 even | 48 | 1.6438937435 – 1.6438937699 | 0.9–1.3×10⁻⁸ |
+| published data, two lowest, floor factor 1.5–10 instead of 2.5 | 48 | 1.64389374444 – 1.6438937616–63 | 0.9×10⁻⁸ |
 | runs' own flags: 168 points with \|F\| > 10⁻²⁰ or \|dDelta_est\| > 10⁻¹⁶ removed, two lowest | 48 | 1.64389361982 – 1.64389381321 | 9.7×10⁻⁸ |
 | 27 ≤ D ≤ 37 removed, two lowest | 48 | 1.64389374196 – 1.64389374830 | 3.2×10⁻⁹ |
 | corrected by the recorded dDelta_est, two lowest | 48 | 1.64389374439 – 1.64389376156 | 8.6×10⁻⁹ |
 
-*Failing scenario:* remove the points the runs themselves flag as least converged. The max-residual floor drops from
+The bar is robust to the degree set and to the floor factor; it is not robust to how many degrees count, nor to the
+data's quality. *Failing scenario:* remove the points the runs themselves flag as least converged. The max-residual floor drops from
 4×10⁻¹⁵ to 1–8×10⁻¹⁶, the floor test now admits degrees 20–22 on D ≥ 15, whose limits wander by 10⁻⁷, and the bar
 grows tenfold although the data got better. What keeps the published bar at 10⁻⁸ is that the floor is set at 4×10⁻¹⁵
 by a few dirty points (the kfreeze-cut points at 35.35–37 and the uncleaned up6 points), which stops the degree
@@ -266,8 +270,17 @@ At D = 60.001952 (`up13_D60.0020`):
 | 4 (0.6→0.7) | 3.47×10⁻²⁹ | 3.47×10⁻²⁹ | 1.4×10⁻³¹ | +4.9×10⁻¹⁸ | +6.1×10⁻¹⁸ |
 | 5 horizon | 2.32×10⁻²³ | 2.32×10⁻²³ | 1.7×10⁻³² | −3.7×10⁻¹⁸ | −2.3×10⁻¹⁸ |
 
-The series satisfy the equations to 7×10⁻³¹ (centre, weighted by x₀^k) and 1.4×10⁻³⁰ (horizon, by u₀^k), with the
-leading data exact. y = J⁻ᵀe_Δ is the kernel's. So:
+The series satisfy the equations to 7×10⁻³² (centre, coefficient k weighted by x₀^k, all 421 orders) and 1.4×10⁻³⁰
+(horizon, weighted by u₀^k), with the leading data exact. y = J⁻ᵀe_Δ is the kernel's. Summed over the blocks the
+linearised correction is +1.2×10⁻¹⁸ (kernel) and +3.8×10⁻¹⁸ (independent).
+
+The second machine's last state, `seeds/local/up23_D61.0264` (D = 61.026449, its own Windows build), gives the same
+picture: blocks agree to 2.3×10⁻³¹, block maxima 4.7×10⁻²⁴ (centre) and 3.8×10⁻²³ (horizon), series equations to
+1.1×10⁻³¹ and 2.9×10⁻³⁰, linearised correction +1.0×10⁻¹⁹ (kernel) and +1.1×10⁻¹⁸ (independent). That is an
+independent check of the other machine's point at the top of the range: it is a solution of the discretised
+equations to the stated residual, and its Δ is within about 10⁻¹⁸ of the discrete solution.
+
+So:
 
 - the residual the kernel reports is the true residual of the saved z to 2×10⁻³¹; the floor |F| ≈ 2×10⁻²³ is real
   (Newton's linear solves stop reducing it), not evaluation noise;
@@ -300,6 +313,8 @@ Newton to the floor:
 | last node 0.75 instead of 0.7 | 1.4×10⁻²³ (no step accepted) | — | −1.5×10⁻¹⁶ |
 | kfreeze 15 instead of 13 | 2.3×10⁻²³ (no step accepted) | — | −1.2×10⁻¹⁵ |
 | kfreeze 17 | 2.3×10⁻²³ (no step accepted) | — | −1.2×10⁻¹⁵ |
+| M = 48 τ-points (resampled in double-double; deflated Newton, then Newton) | 1.7×10⁻²³ | +2.5×10⁻¹⁸ | +6.5×10⁻¹⁸ |
+| kfreeze 15, full Newton steps without line search, then Newton | 6.6×10⁻²¹ | **−1.20×10⁻¹⁵** | +1.3×10⁻¹⁷ |
 | PENDING_R2_ROWS | | | |
 
 - **Taylor stepping, series truncation, first node: OK.** Their effect is at the 10⁻¹⁸ floor.
@@ -354,7 +369,18 @@ recorded correction is large, the two agree in sign and size:
 | 60.962646 | local-up17 | +3.5×10⁻¹⁵ | +2.8×10⁻¹⁵ |
 
 (32 points with |dDelta_est| > 3×10⁻¹⁶ in the log; a few disagree in sign at the 10⁻¹⁵ level, e.g. 60.952991, +1.7×10⁻¹⁵
-against −1.2×10⁻¹⁵.) **Verdict: dDelta_est is a faithful per-point error estimate.** It is a better tool than the cleaning.
+against −1.2×10⁻¹⁵.)
+
+A second, direct confirmation comes from the runs themselves (`rv2_restarts.py`). Every run re-converges its start and
+history states and prints Δ (hi, 16 decimals). For 65 of them the D is an earlier run's point:
+
+- same layout, both converged to the floor: identical to the printed digit, or one ulp (2.2×10⁻¹⁶) apart;
+- the cloud re-converging the second machine's 60.962646 (accepted at |F| 2.9×10⁻¹⁹): +3.3×10⁻¹⁵, against its recorded
+  dDelta_est +2.8×10⁻¹⁵; and 60.959857: −8.9×10⁻¹⁶ against −1.0×10⁻¹⁵;
+- layout changes: M 48 / 10 nodes → M 32 / 8 nodes at D = 16.75 and 8 → 5 nodes at 21.35, no change at the printed
+  digit; the kfreeze-13 cut switched on at 34.6–35.2: −5.6 to −7.5×10⁻¹⁵ (the README's −5.5×10⁻¹⁵).
+
+**Verdict: dDelta_est is a faithful per-point error estimate.** It is a better tool than the cleaning.
 
 ### 2c. The scatter by band (R3)
 
@@ -404,8 +430,10 @@ degree is too low (7.9×10⁻¹⁰) or one point is moved by 10⁻¹² (1.6×10�
 1.64389374444 \le \Delta_\infty \le 1.64389376313 \quad (\text{centre } 1.64389375379,\ \text{half-width } 9.3\times10^{-9}),
 ```
 
-the README's 1.643893744–1.643893763; per group the limits and residuals match `dinf_budget.py`'s table to the digits
-printed. **Verdict: OK.**
+the README's 1.643893744–1.643893763. One fit compared at full length: the degree-18 1/D fit to the 823 cleaned points
+on 10–61.03 gives 1.64389374468460 with residual 4.305×10⁻¹⁵ when the repository's loader is emulated (`--decimal`),
+and `planted_dinf.log` prints P(0) = 1.6438937446846, residual 4.31×10⁻¹⁵: every printed digit agrees. With the exact
+values it is 1.64389374467885 (F4). **Verdict: OK.**
 
 ### 4b. How the limit depends on each point (R5, `influence`)
 
