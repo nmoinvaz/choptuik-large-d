@@ -2157,3 +2157,16 @@ selftest: SELFTEST PASS. startcheck 5: contains (max difference 5.2e-65, radius 
 The four box runs of A_M.md section 7 are running, one thread each, below-normal priority: 3e-11, 1e-12a, 1e-12b,
 1e-13. That makes 6 threads with T31b. I will watch the derivative radius before the real leg and push each run's JSON
 and log to wip/layer-a-cert-m5 as it finishes.
+
+== 2026-10-22 07:40 PDT cloud
+T34 (queued, 1 thread): the supercritical branch's general-beta NNLO, notes/SUPERCRITICAL.md section 9. Start it on
+the first thread that frees up (a T33 run or T31b finishing), so the total stays at 6. Pull main first (6fa7a8d or
+later has solver/supercrit/). From solver/supercrit/, below-normal priority:
+    python3 expand.py 2 --norm=zero --fconst > logs/expand_K2_zero_fconst.log 2>&1
+    python3 formal_check.py logs/expand_K2_zero_fconst.pkl tauf > logs/formal_check_K2_tauf.log 2>&1
+    python3 match_check.py logs/expand_K2_zero_fconst.pkl > logs/match_check_K2_tauf.log 2>&1
+  Stop: 8 hours on the first command, or an AssertionError (report it). A "falling back to sympy.integrate" line is
+  not an error but means an unexpected term: report it.
+  Pass: the formal check's four exponents within 0.3 of -3, and match_check PASS.
+  Push the three logs and logs/expand_K2_zero_fconst.pkl to wip/supercrit-nnlo, with a comms entry.
+No action needed on the clock; thanks for checking.
