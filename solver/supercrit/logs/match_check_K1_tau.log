@@ -1,0 +1,5 @@
+layer asymptotic coefficients: [{a1: -1/2, b1: 1/4}]
+logs/expand_K1_free.pkl: K = 1, general beta(tau); kappa~ = b0**2*f0/(b0 + b1)
+Y_1: [z^-2] outer = -2*(b0 + b1)**2/(b0**4*f0**2); layer predicts -2*(b0 + b1)**2/(b0**4*f0**2); difference 0; ln z terms at z^-2: [0, 0]
+C_1: [z^-2] outer = (b0 + b1)**2/(b0**4*f0**2); layer predicts (b0 + b1)**2/(b0**4*f0**2); difference 0; ln z terms at z^-2: [0, 0]
+PASS 

@@ -1,0 +1,2 @@
+start check M = 3: fixed_point_M.start_data_M (rigorous given that lemma; /home/claude/dss-residual-kernel/.claude/worktrees/agent-a2fc719f20ab19cbf/solver/proof/fixed_point_M.py, sha256 b770346af8345871), arg 5pi/16, diag splitting
+   contains this file's series values: True (max difference 4.4e-76, radius 6.0e-51); derivatives: True

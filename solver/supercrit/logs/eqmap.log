@@ -1,0 +1,8 @@
+EEG (3a) - x**(-2) * repo (E2) = 0
+EEG (3b) - 1/(x**2*c(x, tau)) * repo (E1) = 0
+EEG (3c) - sqrt(2)/(2*x**2) * repo (A) = 0
+EEG (3d) - sqrt(2)/(2*x**3) * repo (B) = 0
+model.rs E3 - E4 - (A) = 0
+model.rs E3 + E4 - (B) = 0
+model.rs b equation * (n-1) - (E2) = 0
+PASS 

@@ -1,0 +1,10 @@
+P0 pair only, nothing on R+                      noise 0e+00: fires False (as expected); 1 doublets dropped; kept: |a| 1.555 arg +0.560pi, |a| 1.555 arg -0.560pi, |a| 1.605 arg +0.578pi, |a| 1.605 arg -0.578pi
+P0 pair only, nothing on R+                      noise 1e-13: fires False (as expected); 1 doublets dropped; kept: |a| 1.558 arg -0.560pi, |a| 1.563 arg +0.563pi, |a| 1.609 arg -0.578pi, |a| 1.626 arg +0.581pi
+P1 pair + R+ singularity at 1.2 (weight 0.05)    noise 0e+00: fires True  (as expected); 0 doublets dropped; kept: |a| 1.224 arg +0.000pi, |a| 1.312 arg +0.000pi, |a| 1.502 arg +0.000pi, |a| 1.569 arg +0.568pi
+P1 pair + R+ singularity at 1.2 (weight 0.05)    noise 1e-13: fires True  (as expected); 0 doublets dropped; kept: |a| 1.224 arg +0.000pi, |a| 1.312 arg +0.000pi, |a| 1.502 arg +0.000pi, |a| 1.569 arg +0.568pi
+P2 pair + R+ singularity at 2.0 (weight 0.05)    noise 0e+00: fires False (as expected); 1 doublets dropped; kept: |a| 1.560 arg +0.564pi, |a| 1.560 arg -0.564pi, |a| 1.635 arg -0.585pi, |a| 1.635 arg +0.585pi
+P2 pair + R+ singularity at 2.0 (weight 0.05)    noise 1e-13: fires False (as expected); 1 doublets dropped; kept: |a| 1.560 arg -0.564pi, |a| 1.560 arg +0.564pi, |a| 1.635 arg -0.585pi, |a| 1.635 arg +0.585pi
+P3 u-mode pair at x = 0.95 (|arg| 0.30 pi)       noise 0e+00: fires True  (as expected); 0 doublets dropped; kept: |a| 1.923 arg +0.320pi, |a| 1.923 arg -0.320pi, |a| 2.023 arg +0.334pi, |a| 2.023 arg -0.334pi
+P3 u-mode pair at x = 0.95 (|arg| 0.30 pi)       noise 1e-13: fires True  (as expected); 0 doublets dropped; kept: |a| 1.923 arg +0.320pi, |a| 1.923 arg -0.320pi, |a| 2.023 arg -0.334pi, |a| 2.023 arg +0.334pi
+real M = 1 series B_k+1 at x = 0.95 (ball data, 36 terms, double): fires False; 0 doublets dropped; kept: |a| 1.844 arg +0.965pi, |a| 1.844 arg -0.965pi, |a| 1.860 arg +0.708pi, |a| 1.860 arg -0.708pi
+real M = 1 series B_k+1 at x = 0.8 (ball data, 36 terms, double): fires False; 0 doublets dropped; kept: |a| 1.785 arg -0.650pi, |a| 1.785 arg +0.650pi, |a| 1.790 arg +0.585pi, |a| 1.790 arg -0.585pi

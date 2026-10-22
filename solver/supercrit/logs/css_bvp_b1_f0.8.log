@@ -1,0 +1,7 @@
+layer: Y1(-12) = 1.803807, C1(-12) = 1.487e-08   (beta = 1.0, f = 0.8, kappa_f = 0.8)
+n =   100: |theta|<5: max|y/y_layer - 1| = 1.210e-01, max|c/c_layer - 1| = 1.561e-01, max|s - s_layer|/kappa = 1.899e-01; at theta = -6: y/y_layer = 1.0054, (n-1)(b-1)/(kappa sqrt n) = 1.7169, 1 - 1/b = 0.1218, min h on the interval = 0.8782, c = 6.49e-05
+n =   400: |theta|<5: max|y/y_layer - 1| = 1.277e-01, max|c/c_layer - 1| = 2.991e-01, max|s - s_layer|/kappa = 1.070e-02; at theta = -6: y/y_layer = 1.0128, (n-1)(b-1)/(kappa sqrt n) = 1.7082, 1 - 1/b = 0.0641, min h on the interval = 0.9359, c = 3.33e-05
+n =  1600: |theta|<5: max|y/y_layer - 1| = 8.249e-02, max|c/c_layer - 1| = 1.735e-01, max|s - s_layer|/kappa = 2.579e-03; at theta = -6: y/y_layer = 1.0071, (n-1)(b-1)/(kappa sqrt n) = 1.6695, 1 - 1/b = 0.0323, min h on the interval = 0.9677, c = 2.89e-05
+n =  6400: |theta|<5: max|y/y_layer - 1| = 4.040e-02, max|c/c_layer - 1| = 8.180e-02, max|s - s_layer|/kappa = 4.520e-03; at theta = -6: y/y_layer = 1.0036, (n-1)(b-1)/(kappa sqrt n) = 1.6481, 1 - 1/b = 0.0162, min h on the interval = 0.9838, c = 2.32e-05
+max|y/y_layer - 1| falls like n^-0.269  (layer corrections expected at relative n^(-1/4))
+PASS 

@@ -1,0 +1,5 @@
+row 1 (|u| = 235.36): set radius 1.92e-09; centre in, x0+h in, x0-h in, x1+h in, x1-h in, x2+h in, x2-h in, x3+h in, x3-h in
+row 6 (|u| = 102.16): set radius 7.50e-09; centre in, x0+h in, x0-h in, x1+h in, x1-h in, x2+h in, x2-h in, x3+h in, x3-h in
+row 9 (|u| = 47.14): set radius 5.46e-08; centre in, x0+h in, x0-h in, x1+h in, x1-h in, x2+h in, x2-h in, x3+h in, x3-h in
+row 11 (|u| = 26.98): set radius 5.08e-07; centre in, x0+h in, x0-h in, x1+h in, x1-h in, x2+h in, x2-h in, x3+h in, x3-h in
+C1 PLANTED TRUTH: every point inside its set: True

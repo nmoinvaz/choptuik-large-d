@@ -204,3 +204,22 @@ Braaksma (numdam), Moore (SIAM), Krawczyk (researchr), Neumaier, Nedialkov–Jac
 Balser, Canalis-Durand–Mozo-Fernández–Schäfke, Nikolaev (Commun. Math. Phys. 400, 463–517), Padé (numdam), Aitken
 (Cambridge, 1927). Marked *(unverified)* in the paper: the chapter title and pages of Lohner (1987) (the book,
 Kaucher–Kulisch–Ullrich (eds.), Teubner 1987, was confirmed) and Canalis-Durand–Ramis–Schäfke–Sibuya (2000).
+
+## Addendum (2026-10-22): references verified for proof/B3_borel.md
+
+Checked by the agent that wrote [proof/B3_borel.md](../proof/B3_borel.md) (its §7 and §9; not re-checked here, except
+that a search for a publisher record of Sokal 1980 found none). Used in proof/C_selection.md and, for Braaksma,
+Canalis-Durand 1993, Ramis–Sibuya 1994 and Sokal 1980, in `paper/math/main.tex`.
+
+| Entry | Checked against | Verdict |
+|---|---|---|
+| Braaksma, Ann. Inst. Fourier 42 (3) (1992) 517–540, doi:10.5802/aif.1301 | numdam item AIF_1992__42_3_517_0 (title, author, volume, issue, pages, DOI); full text (OCR) on aif.centre-mersenne.org | OK; claim check: no parameter dependence stated (OCR text) |
+| Ramis, Sibuya, Ann. Inst. Fourier 44 (3) (1994) 811–848 | eudml record 75082 | OK (bibliographic); abstract read |
+| Canalis-Durand, Ann. Inst. Fourier 43 (2) (1993) 469–483, doi:10.5802/aif.1341 | numdam item AIF_1993__43_2_469_0 and full text | OK |
+| Ramis, Schäfke, Nonlinearity 9 (2) (1996) 353–384, doi:10.1088/0951-7715/9/2/004 | neicon archive record (arch.neicon.ru) | OK (bibliographic); not applicable to B3 |
+| Canalis-Durand, Mozo-Fernández, Schäfke, J. Differential Equations 233 (2007) 485–511 | earlier addendum; statement from the abstract on Schäfke's RIMS talk page; HAL and ScienceDirect blocked | bibliographic as before; claim: ∂_y f(0,0,0) invertible |
+| Canalis-Durand, Ramis, Schäfke, Sibuya, J. reine angew. Math. 518 (2000) 95–129 | academia.edu listing (journal, year only) | PARTIAL: keep *(unverified)* on volume/pages and on the statement |
+| Sokal, J. Math. Phys. 21 (2) (1980) 261–263 | sugaku.net (title, journal, year); bibliography of Gillam–Gurarii, arXiv:math/0508425 (volume, issue, pages) | PARTIAL: citing record for volume/pages; flagged in C_selection.md and the paper |
+| Sibuya, *Gevrey property of formal solutions in a parameter* (1990) | not found | UNVERIFIABLE |
+
+Also corrected in proof/C_selection.md: the title of Costin, Duke Math. J. 93 (1998), to the one verified in §3 above.

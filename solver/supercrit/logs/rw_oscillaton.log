@@ -1,0 +1,6 @@
+omega symbolic: max |residual| of (9b), (9c) at three points = 1.12e-190
+omega = 1: max |residual| of (9b), (9c) at three points = 5.61e-191
+c^2 = 1 - delta_0 = (epsilon**2 - exp(omega**2*r**2))/(epsilon**2*sin(omega*tau - tau0)**2 - exp(omega**2*r**2))
+c^2 at r_div = sqrt(2 ln eps)/omega: 0  (for every tau)
+d_tau phi at r_div: omega/cos(omega*tau - tau0)  (finite where cos != 0): Y = 2 phi_tau / c diverges there
+PASS 

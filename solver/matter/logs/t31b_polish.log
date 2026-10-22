@@ -1,0 +1,4 @@
+   jac 0: |F| 1.873e-12 Delta 0.984976657530 mu 1e-07 corr 2 smin/smax 8.3e-14 (51 s)
+   jac 1: |F| 1.862e-12 Delta 0.984976668231 mu 1e-07 corr 2 smin/smax 8.3e-14 (99 s)
+   jac 2: |F| 1.855e-12 Delta 0.984976682568 mu 1e-07 corr 2 smin/smax 8.3e-14 (146 s)
+{"D": 10.0, "Delta": 0.9849766825682391, "dDelta_vs_kc23": -2.6571518604301403e-06, "F": 1.854684858111449e-12, "dDelta_dF": 1418581.2870373598, "constraint": 7.96007218636224e-07, "seconds": 187}

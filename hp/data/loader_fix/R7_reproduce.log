@@ -1,0 +1,51 @@
+
+== 1. The double-double data (hp/data/delta_dd.csv)  (t = 0 s)
+  [PASS] points and range: got 857 points, D = 8.25 .. 61.0264 (expected 857 points, D = 8.25 .. 61.0264)
+  [PASS] Values table, Delta(D) at D = 10..60 interpolated from the CSV: got max |diff| 4.8e-13 (expected within rounding, <= 1e-12)
+  [PASS] rational formula vs every double-double point (8.25 <= D <= 61): got max |diff| 5.8e-08 (expected <= 6e-8 (README: 5.8e-8))
+  [PASS] formula at D = 4 vs Martin-Garcia & Gundlach 3.445452402(3): got 3.4454524088 (diff 7e-09) (expected |diff| <= 1e-7)
+
+== 2. Delta_inf from the analytic fits (hp/dd_fits_mp.py functions)  (t = 1 s)
+  cleaning drops 27 isolated points (README: 27 on 8.25..61.03), 823 kept
+  1/D  degree 16: max residual  8.6e-15, limit 1.6438937479
+  1/D  degree 18: max residual  4.3e-15, limit 1.6438937447
+  1/D  degree 20: max residual  4.2e-15, limit 1.6438937473
+  1/n  degree 18: max residual  1.5e-14, limit 1.6438937521
+  1/n  degree 20: max residual  4.3e-15, limit 1.6438937458
+  [PASS] Delta_inf, 5 analytic fits on all cleaned points: got 1.643893745 .. 1.643893752 (spread 7.4e-9) (expected 1.64389375 +- 1e-8 (README: 1.643893745-1.643893752))
+
+== 3. Held-out test: fit on D <= 45, predict 45 < D <= 61.03  (t = 1379 s)
+  1/D     degree 16: held-out max error 7.4e-13 on 471 points, limit 1.643893754
+  1/n     degree 18: held-out max error 3.9e-12 on 471 points, limit 1.643893772
+  n^-1/2  degree 20: held-out max error 1.9e-11 on 471 points, limit 1.637785564
+  [PASS] held-out error of the 1/D series (degree 16): got 7.4e-13 (expected <= 3e-12 (README: 5.2e-13 on the D <= 60.1 snapshot))
+  [PASS] half-integer series (n^-1/2, degree 20) predicts worse: got 26.4x (expected >= 10x the 1/D error)
+
+== 4. Theory checks  (t = 1522 s)
+  [PASS] Proposition 2 / inner problem: C(n,s) vs the 2F0 Stokes constant, mu = 1, n = 1e5 (largeD_stokes_C.py): got R = -1.0001386+0.0000764j (expected R -> -1 like 1/n: |R + 1| <= 2e-4)
+  [PASS] lateral solutions without gravity, harmonics 1 and 3 (inner_stokes/inner_np.py checklin 3): got 1.00000000 (expected R = 1.00000000)
+  [PASS] Borel-Darboux linear Stokes constant, 20 correction terms (inner_borel/inner_stokes.py linear): got 5.67e-27 (expected rel err <= 1e-20 (README: 6e-27))
+  [PASS] Proposition 3: fast-mode transport with gravity, error at n = 100/200/400 (largeD_fast_transport.py): got 0.569, 0.264, 0.127 (ratios 0.46, 0.48) (expected falls like 1/n (ratios ~0.5; README 0.57, 0.26, 0.13))
+  [PASS] Proposition 1: formal solution in the exact equations, residual x n^3 at n = 400 vs 800 (largeD_formal_check.py): got 1.011, 1.010, 1.001, 1.000 (expected constant: ratios within 2% of 1)
+
+== 5. Saved solutions (hp/data/states; needs hpkernel)  (t = 1754 s)
+  [PASS] |F3/F1| of the echo profile at D = 60 (hp/largeD_Fratios.py): got 0.08027 (expected 0.08027)
+  [PASS] |F3/F1| extrapolated to D = infinity (degree 2 in 1/n, 5 points) vs the inner-problem prediction: got 0.0552 (expected 0.055 (README: 0.0552-0.0549 from 16 points))
+
+== Summary (1762 s)
+  PASS  points and range
+  PASS  Values table, Delta(D) at D = 10..60 interpolated from the CSV
+  PASS  rational formula vs every double-double point (8.25 <= D <= 61)
+  PASS  formula at D = 4 vs Martin-Garcia & Gundlach 3.445452402(3)
+  PASS  Delta_inf, 5 analytic fits on all cleaned points
+  PASS  held-out error of the 1/D series (degree 16)
+  PASS  half-integer series (n^-1/2, degree 20) predicts worse
+  PASS  Proposition 2 / inner problem: C(n,s) vs the 2F0 Stokes constant, mu = 1, n = 1e5 (largeD_stokes_C.py)
+  PASS  lateral solutions without gravity, harmonics 1 and 3 (inner_stokes/inner_np.py checklin 3)
+  PASS  Borel-Darboux linear Stokes constant, 20 correction terms (inner_borel/inner_stokes.py linear)
+  PASS  Proposition 3: fast-mode transport with gravity, error at n = 100/200/400 (largeD_fast_transport.py)
+  PASS  Proposition 1: formal solution in the exact equations, residual x n^3 at n = 400 vs 800 (largeD_formal_check.py)
+  PASS  |F3/F1| of the echo profile at D = 60 (hp/largeD_Fratios.py)
+  PASS  |F3/F1| extrapolated to D = infinity (degree 2 in 1/n, 5 points) vs the inner-problem prediction
+
+14 passed, 0 failed, 0 skipped

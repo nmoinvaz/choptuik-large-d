@@ -1,0 +1,18 @@
+K = 4, ln n0 = 73.89, box centre: (T) delta = P 5.58426e-12, Phi 76.5602, C 3.23126, th 6.46252
+  P: structural cancellation |T - inner| on eps^0 z^j, j <= match: 1.21e-70; leading {'eps^1 z^0 [-1]': (0.0, 0.0, 0.0), 'eps^1 z^0 [1]': (0.0, 0.0, 0.0)}; rem 9.04e-83
+  Phi: structural cancellation |T - inner| on eps^0 z^j, j <= match: 9.60e-70; leading {'eps^1 z^1 [-1]': (-15.71416904770465, -74.93015179366996, 76.5601904169671), 'eps^1 z^1 [1]': (-15.71416904770465, 74.93015179366996, 76.5601904169671)}; rem 6.28e-82
+  C: structural cancellation |T - inner| on eps^0 z^j, j <= match: 4.46e-72; leading {'eps^1 z^0 [-2]': (-1.6156291738520157, 0.0, 1.6156291738520157), 'eps^1 z^0 [0]': (-3.2312583477040313, 0.0, 3.2312583477040313), 'eps^1 z^0 [2]': (-1.6156291738520157, 0.0, 1.6156291738520157)}; rem 1.50e-84
+  th: structural cancellation |T - inner| on eps^0 z^j, j <= match: 2.75e-71; leading {'eps^1 z^0 [-2]': (-3.2312583477040313, 0.0, 3.2312583477040313), 'eps^1 z^0 [0]': (-6.462516695408063, 0.0, 6.462516695408063), 'eps^1 z^0 [2]': (-3.2312583477040313, 0.0, 3.2312583477040313)}; rem 5.37e-82
+exit 0
+--- mutate=xc
+Traceback (most recent call last):
+  File "/home/claude/dss-residual-kernel/.claude/worktrees/agent-a6c7620b2201105a9/solver/proof/b8m_h8.py", line 339, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/home/claude/dss-residual-kernel/.claude/worktrees/agent-a6c7620b2201105a9/solver/proof/b8m_h8.py", line 299, in main
+    out, info = part_T(K, "0", "0")
+                ~~~~~~^^^^^^^^^^^^^
+  File "/home/claude/dss-residual-kernel/.claude/worktrees/agent-a6c7620b2201105a9/solver/proof/b8m_h8.py", line 213, in part_T
+    raise ValueError(f"{f}: eps^0 z^{j} coefficient differs from the inner series")
+ValueError: Phi: eps^0 z^1 coefficient differs from the inner series
+exit 1

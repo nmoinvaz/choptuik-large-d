@@ -1,0 +1,13 @@
+Krawczyk M = 3 [mutation hier]: K(X) in int X: True; relative margins +0.994, +0.997, +0.778, +0.778
+   start values: fixed_point_M.start_data_M (rigorous given that lemma; /home/claude/dss-residual-kernel/.claude/worktrees/agent-a2fc719f20ab19cbf/solver/proof/fixed_point_M.py, sha256 589e5a810bc50289), arg 5pi/16, diag splitting
+   g(p^) radius 1.7e-16; max radius of Y Dgt(X) 2.3e-01
+   box of the run: h = 1e-10, w = ['4e-16']; tested on: half-widths 1e-10, 1e-10, 4e-16, 4e-16
+   A        in [2.72647588563032, 2.72647588563144]  (radius 5.59e-13)
+   w/w_inf  in [1.01560309485743, 1.01560309485804]  (radius 2.98e-13)
+   B3       in [0.144419478469924, 0.144419478470230]  (radius 1.53e-13)
+   C3       in [0.0110874258881079, 0.0110874258881255]  (radius 8.75e-15)
+hier.py check M = 3 [mutated: hier zeros shifted]: (a) inside the hull of P: False (per solve: [False, False]); (b) agreement within 3x hier's spread: False
+   A        |hier - certified| <= 1.66e-09   hier spread 1.7e-11   hull half-width 1.0e-10
+   w/w_inf  |hier - certified| <= 1.09e-11   hier spread 1.7e-11   hull half-width 1.0e-10
+   B3       |hier - certified| <= 1.21e-12   hier spread 1.8e-12   hull half-width 3.9e-11
+   C3       |hier - certified| <= 1.79e-13   hier spread 2.8e-13   hull half-width 2.5e-12

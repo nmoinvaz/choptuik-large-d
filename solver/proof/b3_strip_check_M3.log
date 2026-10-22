@@ -1,0 +1,43 @@
+   sigma estimate (min dist to [0, oo) over poles in the disc): 1.092
+x = 0.5000 D1 : nearest pole     (-1.02536 - 0.375795j) (|a| 1.0921); in |zeta| <= 1.747, Re > -0.5: min |Im| = 1.3453 at (-0.0517944 + 1.34532j)
+   sigma estimate (min dist to [0, oo) over poles in the disc): 1.247
+x = 0.5000 D3 : nearest pole     (-1.23373 - 0.179634j) (|a| 1.2467); in |zeta| <= 1.995, Re > -0.5: min |Im| = 1.8307 at (-0.376885 - 1.83074j)
+   sigma estimate (min dist to [0, oo) over poles in the disc): 1.27
+x = 0.5000 B0 : nearest pole     (-1.24896 + 0.230217j) (|a| 1.27); in |zeta| <= 2.032, Re > -0.5: min |Im| = 1.8947 at (-0.342558 - 1.89467j)
+   sigma estimate (min dist to [0, oo) over poles in the disc): 1.263
+x = 0.5000 B2 : nearest pole      (-1.2555 - 0.138823j) (|a| 1.2631); in |zeta| <= 2.021, Re > -0.5: min |Im| = 1.8081 at (-0.492395 - 1.80814j)
+   sigma estimate (min dist to [0, oo) over poles in the disc): 0.7564
+x = 0.5000 G0 : nearest pole                  -0.756351 (|a| 0.75635); in |zeta| <= 1.21, Re > -0.5: min |Im| = +inf
+   sigma estimate (min dist to [0, oo) over poles in the disc): 1.199
+x = 0.8000 D1 : nearest pole     (-1.18117 - 0.205235j) (|a| 1.1989); in |zeta| <= 1.918, Re > -0.5: min |Im| = 1.4523 at (0.064378 - 1.45235j)
+   sigma estimate (min dist to [0, oo) over poles in the disc): 1.241
+x = 0.8000 D3 : nearest pole     (-1.22524 - 0.198953j) (|a| 1.2413); in |zeta| <= 1.986, Re > -0.5: min |Im| = 1.526 at (0.189195 - 1.526j)
+   (unstable pole(s) dropped, absent from the K - 6 approximant: (1.65304 - 0.69627j), (1.65304 + 0.69627j))
+   sigma estimate (min dist to [0, oo) over poles in the disc): 1.149
+x = 0.8000 B0 : nearest pole                   -1.14874 (|a| 1.1487); in |zeta| <= 1.838, Re > -0.5: min |Im| = 1.5739 at (0.00332727 - 1.57391j)
+   sigma estimate (min dist to [0, oo) over poles in the disc): 1.232
+x = 0.8000 B2 : nearest pole     (-1.22253 + 0.156112j) (|a| 1.2325); in |zeta| <= 1.972, Re > -0.5: min |Im| = 1.3444 at (0.0129983 - 1.34438j)
+   sigma estimate (min dist to [0, oo) over poles in the disc): 1.005
+x = 0.8000 G0 : nearest pole                   -1.00526 (|a| 1.0053); in |zeta| <= 1.608, Re > -0.5: min |Im| = 1.577 at (-0.0788989 + 1.57702j)
+   sigma estimate (min dist to [0, oo) over poles in the disc): 1.215
+x = 0.9500 D1 : nearest pole      (-1.19787 - 0.20206j) (|a| 1.2148); in |zeta| <= 1.944, Re > -0.5: min |Im| = 1.4705 at (0.558686 + 1.47052j)
+   sigma estimate (min dist to [0, oo) over poles in the disc): 1.235
+x = 0.9500 D3 : nearest pole      (-1.22585 - 0.14928j) (|a| 1.2349); in |zeta| <= 1.976, Re > -0.5: min |Im| = 1.3802 at (1.01469 - 1.38025j)
+   sigma estimate (min dist to [0, oo) over poles in the disc): 1.264
+x = 0.9500 B0 : nearest pole     (-1.25449 + 0.152358j) (|a| 1.2637); in |zeta| <= 2.022, Re > -0.5: min |Im| = 1.6734 at (0.784732 + 1.67335j)
+   sigma estimate (min dist to [0, oo) over poles in the disc): 1.232
+x = 0.9500 B2 : nearest pole    (-1.23026 - 0.0743066j) (|a| 1.2325); in |zeta| <= 1.972, Re > -0.5: min |Im| = 1.5204 at (0.953592 + 1.52036j)
+   (unstable pole(s) dropped, absent from the K - 6 approximant: 1.79231)
+   sigma estimate (min dist to [0, oo) over poles in the disc): 1.233
+x = 0.9500 G0 : nearest pole     (-1.21924 + 0.183829j) (|a| 1.233); in |zeta| <= 1.973, Re > -0.5: min |Im| = 1.8072 at (-0.393123 + 1.80719j)
+   sigma estimate (min dist to [0, oo) over poles in the disc): 1.242
+x = 1.0000 D1 : nearest pole     (-1.21007 - 0.279474j) (|a| 1.2419); in |zeta| <= 1.987, Re > -0.5: min |Im| = 1.858 at (-0.344062 - 1.85796j)
+   (unstable pole(s) dropped, absent from the K - 6 approximant: (-0.389243 + 0.878175j))
+   sigma estimate (min dist to [0, oo) over poles in the disc): 1.263
+x = 1.0000 D3 : nearest pole    (-0.389243 + 0.878175j) (|a| 0.96057); in |zeta| <= 1.537, Re > -0.5: min |Im| = +inf
+   (unstable pole(s) dropped, absent from the K - 6 approximant: 0.711363)
+   sigma estimate (min dist to [0, oo) over poles in the disc): +inf
+x = 1.0000 B0 : nearest pole                   0.711363 (|a| 0.71136); in |zeta| <= 1.138, Re > -0.5: min |Im| = +inf
+   sigma estimate (min dist to [0, oo) over poles in the disc): 1.235
+x = 1.0000 B2 : nearest pole     (-1.22994 - 0.108393j) (|a| 1.2347); in |zeta| <= 1.976, Re > -0.5: min |Im| = 1.8336 at (-0.458747 + 1.83358j)
+PASS: strip check |Im zeta| >= 1.0

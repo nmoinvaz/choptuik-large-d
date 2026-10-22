@@ -1,0 +1,6 @@
+rho = 0.75: m_(k+1)/(k+1) m_k and the radius it implies
+  k =   10: ratio/k = 8.91607  ->  radius 1/ratio = 0.11216
+  k =   50: ratio/k = 7.09653  ->  radius 1/ratio = 0.14091
+  k =  100: ratio/k = 6.91354  ->  radius 1/ratio = 0.14464
+  k =  150: ratio/k = 6.85427  ->  radius 1/ratio = 0.14589
+  k =  199: ratio/k = 6.82538  ->  radius 1/ratio = 0.14651

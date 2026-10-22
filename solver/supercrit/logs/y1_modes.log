@@ -1,0 +1,9 @@
+exact solution residuals E1..E4: [0, 0, 0, 0]
+det of the linearized system: kappa*lambda*x**3*(lambda + n)*(kappa**2*lambda**2 + kappa**2*lambda*n + 2*kappa**2*n - lambda**2)
+det / [lambda (lambda + n) ((1-kappa^2) lambda^2 - kappa^2 n lambda - 2 kappa^2 n)] = -kappa*x**3
+lambda_- = -2 + (-4*(kappa - 1)*(kappa + 1)/kappa**2)/n + (-16*(kappa - 1)**2*(kappa + 1)**2/kappa**4)/n^2 + ...
+kappa_f = f beta = 117/100:  y - sqrt2 = X [a0 + eps (A1 + a1 log X) + eps^2 (... + c21 log X + c22 log^2 X)], X = 1/x^2
+   lambda_1: from the NLO series -14756/13689 = -1.0779457959; exact root -1.0779457959
+   log^2 coefficient c22/a0 = 0.1452458924; lambda_1^2/8 = 0.1452458924
+   lambda_2: from the NNLO series -1.1619671389; exact root -1.1619671389
+PASS 

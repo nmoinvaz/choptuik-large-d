@@ -1,0 +1,263 @@
+[
+ {
+  "name": "fp_series_M3",
+  "cmd": "fixed_point_M.py --M=3 --mutate=series",
+  "expected": "caught",
+  "exit": 0,
+  "matches": true,
+  "what": "step (i): one coefficient of the harmonic-3 D series off by a relative 1e-6",
+  "tail": [
+   "  ball rho = 8.074e+02: ||T(0)|| + Lip rho = 7.605e+02 < rho: True",
+   "  => fixed point exists and is unique in the ball: False; |eta| <= 5.26e-08 at |z| = R (p, v, c variables)",
+   "MUTATION series: the lemma holds: False (must be False)"
+  ],
+  "sec": 4.7
+ },
+ {
+  "name": "fp_series_M5",
+  "cmd": "fixed_point_M.py --M=5 --mutate=series --r0=0.0622 --arg=5pi/16 --diag",
+  "expected": "caught",
+  "exit": 0,
+  "matches": true,
+  "what": "step (i), M = 5 on inner_np's ray: one coefficient of the harmonic-5 D series off by 1e-6",
+  "tail": [
+   "  ball rho = 4.419e+02: ||T(0)|| + Lip rho = 3.682e+02 < rho: True",
+   "  => fixed point exists and is unique in the ball: False; |eta| <= 2.54e-10 at |z| = R (p, v, c variables)",
+   "MUTATION series: the lemma holds: False (must be False)"
+  ],
+  "sec": 28.5
+ },
+ {
+  "name": "fp_cdrop_M3",
+  "cmd": "fixed_point_M.py --M=3 --mutate=cdrop",
+  "expected": "caught",
+  "exit": 0,
+  "matches": true,
+  "what": "step (i): the series built without the c harmonics +-4 (an inconsistent harmonic set)",
+  "tail": [
+   "lemma not established: integrand t^-1 not admissible for weight 0 (slow)",
+   "MUTATION cdrop: the lemma holds: False (must be False)"
+  ],
+  "sec": 4.6
+ },
+ {
+  "name": "fp_diagpath_M3",
+  "cmd": "fixed_point_M.py --M=3 --mutate=diagpath",
+  "expected": "caught",
+  "exit": 0,
+  "matches": true,
+  "what": "guard, not a mutation: the diag splitting with a non-ray kernel bound (invalid there) must be refused",
+  "tail": [
+   "MUTATION diagpath: refused (the diag splitting is valid on rays only; refusing it with a non-ray kernel bound) -> caught"
+  ],
+  "sec": 1.7
+ },
+ {
+  "name": "fp_control_r0",
+  "cmd": "fixed_point_M.py --M=3 --r0=0.3 --diag",
+  "expected": "fails",
+  "exit": 2,
+  "matches": true,
+  "what": "control: start radius 0.3, the contraction must fail",
+  "tail": [
+   "  contraction constant (weighted max norm) <= 16.3920",
+   "  ball rho = 1.000e+00: ||T(0)|| + Lip rho = 8.477e+04 < rho: False",
+   "  => fixed point exists and is unique in the ball: False; |eta| <= 4.37e-03 at |z| = R (p, v, c variables)"
+  ],
+  "sec": 2.3
+ },
+ {
+  "name": "fp_m1",
+  "cmd": "fixed_point_M.py --check-m1",
+  "expected": "passes",
+  "exit": 0,
+  "matches": true,
+  "what": "control: M = 1 reproduces fixed_point.py (constants, start values, start data)",
+  "tail": [
+   "run over the complex box +-1e-3(1+i): fixed_point.py N 53, k 40, lip 0.292255, F 8.569284e+69, rho 4.843148e+70; fixed_point_M: N 53, k 40, lip 0.292255, F 8.569284e+69, rho 4.843148e+70; same N, k, vanishing orders and weights, constants equal to relative 1e-21: True",
+   "start_data over X = x^ +- 1e-9 (Cauchy 1e-3), 7 values and 14 derivatives: max midpoint difference 0.0e+00, max relative radius difference 0.0e+00, all overlap: True (12 s)",
+   "M = 1 REPRODUCES fixed_point.py: True"
+  ],
+  "sec": 18.7
+ },
+ {
+  "name": "usys_label",
+  "cmd": "lemma6_usys_M.py --mutate=label",
+  "expected": "caught",
+  "exit": 0,
+  "matches": true,
+  "what": "system: s_mu = i abs(mu) w in the u-form (the label sign lost); the comparisons with the xi-form and with fixed_point's encoding must fire",
+  "tail": [
+   "M = 3 [MUTATION label]: (a) 1.4e-55 ok; (b) 3.5e-16 ok; (c) 2.6e+00 FAIL; (d) 3.5e-01 FAIL; (e) 5.3e-56 ok; (f) 3.7e+00 FAIL",
+   "M = 5 [MUTATION label]: (a) 1.4e-55 ok; (b) 1.4e-15 ok; (c) 1.8e+00 FAIL; (d) 3.3e-01 FAIL; (e) 5.7e-55 ok; (f) 3.7e+01 FAIL",
+   "MUTATION label: caught: True"
+  ],
+  "sec": 6.6
+ },
+ {
+  "name": "usys_clean",
+  "cmd": "lemma6_usys_M.py",
+  "expected": "passes",
+  "exit": 0,
+  "matches": true,
+  "what": "control: the system self-tests at M = 3, 5",
+  "tail": [
+   "M = 3: (a) 1.4e-55 ok; (b) 3.5e-16 ok; (c) 4.0e-58 ok; (d) 9.2e-59 ok; (e) 5.3e-56 ok; (f) 1.6e-58 ok",
+   "M = 5: (a) 1.4e-55 ok; (b) 1.4e-15 ok; (c) 6.4e-58 ok; (d) 8.0e-59 ok; (e) 5.7e-55 ok; (f) 2.5e-57 ok",
+   "ALL SELF-TESTS PASS: True"
+  ],
+  "sec": 7.5
+ },
+ {
+  "name": "S_series_M3",
+  "cmd": "lemma6_sector_M.py --M=3 --rp=0.1 --k=20 --mutate=series",
+  "expected": "caught",
+  "exit": 0,
+  "matches": true,
+  "what": "lemma S: one coefficient of the harmonic-3 series off by 1e-6",
+  "tail": [
+   "MUTATION series (top harmonic's coefficient off by 1e-6): lemma S holds: False (must be False)"
+  ],
+  "sec": 8.5
+ },
+ {
+  "name": "S_control_rp",
+  "cmd": "lemma6_sector_M.py --M=3 --rp=0.13 --k=10",
+  "expected": "fails",
+  "exit": 2,
+  "matches": true,
+  "what": "control: lemma S at R+ = 0.13^2, beyond the contraction (0.83 at 0.1, label terms grow like R+)",
+  "tail": [
+   "flat estimate (M = 3) on 0 < z <= Z = 0.011711 (xi <= 0.10822), plain, a_r = 0.3829: ||T0|| <= Lambda = 0.7986 < 1: True; largest entries v+3<-p+3 3.51, v-3<-p-3 3.51, v+1<-p+1 1.06, v-1<-p-1 1.06",
+   "flat estimate (M = 3) on 0 < z <= Z = 0.011711 (xi <= 0.10822), diag, a_r = 0.3653: ||T0|| <= Lambda = 0.6110 < 1: True; largest entries v+3<-p+3 3.68, v-3<-p-3 3.68, v+1<-p+1 1.11, v-1<-p-1 1.11",
+   "ALL CHECKS PASS (M = 3): False"
+  ],
+  "sec": 11.9
+ },
+ {
+  "name": "disc_m1",
+  "cmd": "lemma6b1_disc_M.py",
+  "expected": "passes",
+  "exit": 0,
+  "matches": true,
+  "what": "control: lemma D at M = 1 reproduces lemma6b1_disc.certify",
+  "tail": [
+   "M = 1 disc at |u| = 102.16 on the start ray, r = 24, n = 70: lemma6b1_disc Lam 0.184226 ok True; lemma6b1_disc_M Lam 0.184226 ok True; relative difference of Lam, F0 0.0e+00",
+   "M = 1 disc at |u| = 24.94 on the start ray, r = 10, n = 40: lemma6b1_disc Lam 0.438972 ok True; lemma6b1_disc_M Lam 0.438972 ok True; relative difference of Lam, F0 0.0e+00",
+   "M = 1 REPRODUCES lemma6b1_disc: True"
+  ],
+  "sec": 13.4
+ },
+ {
+  "name": "jump_partial_M3",
+  "cmd": "lemma6_jump_M.py --M=3 --pilot=1e-10 --mutate=partial --load-B=lemmas_M_runs/lemma6a_pilot_M3_B.json",
+  "expected": "caught",
+  "exit": 0,
+  "matches": true,
+  "what": "6a: only J_D,1 = 0 assumed (J_D,3 dropped): G_slow is not square, 6a must not be established",
+  "tail": [
+   "start box at xi1 = 0.2 (y+ and sigma(y+)): radius 3.92e-10",
+   "backward along the real axis 0.2 -> 0.067: 389 steps, 0 s; final state radius 4.62e-07; max radius of B 5.35e-03",
+   "G_slow is 9 x 11: not square, beta is not determined by the slow data; lemma 6a NOT established   [MUTATION partial: failure expected]"
+  ],
+  "sec": 50.2
+ },
+ {
+  "name": "jump_swap_M3",
+  "cmd": "lemma6_jump_M.py --M=3 --pilot=1e-10 --mutate=swap",
+  "expected": "caught",
+  "exit": 0,
+  "matches": true,
+  "what": "6a: y- = conj(y+) without the reflection mu -> -mu: must fail",
+  "tail": [
+   "lemma S (M = 3, rp = 0.1, k = 20): contraction 0.8252; flat estimate on 0 < z <= Z = 0.004489: Lambda = 0.2923",
+   "start box at xi1 = 0.2 (y+ and sigma(y+)): radius 3.50e-01",
+   "backward integration failed (step size underflow at t = 0.06813978124409914): lemma 6a NOT established   [MUTATION swap: failure expected]"
+  ],
+  "sec": 2867.0
+ },
+ {
+  "name": "jump_coords_M3",
+  "cmd": "lemma6_jump_M.py --M=3 --pilot=1e-10 --mutate=coords --load-B=lemmas_M_runs/lemma6a_pilot_M3_B.json",
+  "expected": "report",
+  "exit": 0,
+  "matches": true,
+  "what": "6a: (1 - i mu w) in the change of variables at xi_a; at M = 1 not caught (second order); reported only",
+  "tail": [
+   "backward along the real axis 0.2 -> 0.067: 389 steps, 0 s; final state radius 4.62e-07; max radius of B 5.35e-03",
+   "|H| = |G_fast G_slow^-1| entries <= 2.35e+01; G_slow^-1 entries <= 1.13e+00",
+   "rho_6a = 8.916e-01 < 1: True  => all J_D,mu(0.2) = 0 implies psi = 0 (whole jump): True   [MUTATION coords]   [PILOT: not rigorous]"
+  ],
+  "sec": 52.0
+ },
+ {
+  "name": "cover_check_M3",
+  "cmd": "lemma6b1_cover_M.py check --M=3 --h=1.1e-9 --tag=_cert --x=2.7264758856311463335934955261561100705557331671411,1.0156030948577872100059533565790022881883333496973,0.14441947847010155933389143095194965903793037966287,0.011087425888116783540971263261694760868044985018780",
+  "expected": "passes",
+  "exit": 0,
+  "matches": true,
+  "what": "control: the 6b1 gluing and covering check C1-C8 on the M = 3 runs (C^1 mode, certificate's box): PASS",
+  "tail": [
+   "row 11 |u| =   26.98: 12 discs (r = 6, n = 50),  834 Lohner steps, max Lam 0.179, max box radius 3.4e-05, max sup|y - y(c)| 7.54, 1566 s",
+   "ray: 903 steps, 938 s; tiles glued: 183 (meeting sets: 579 polar rectangles, 461 links)",
+   "LEMMA 6b_1 CHECK: PASS"
+  ],
+  "sec": 0.6
+ },
+ {
+  "name": "cover_drop_M3",
+  "cmd": "lemma6b1_cover_M.py check --drop=5,6 --M=3 --h=1.1e-9 --tag=_cert --x=2.7264758856311463335934955261561100705557331671411,1.0156030948577872100059533565790022881883333496973,0.14441947847010155933389143095194965903793037966287,0.011087425888116783540971263261694760868044985018780",
+  "expected": "fails",
+  "exit": 3,
+  "matches": true,
+  "what": "6b1 gluing check with tile (5, 6) left out: must print FAIL",
+  "tail": [
+   "row 11 |u| =   26.98: 12 discs (r = 6, n = 50),  834 Lohner steps, max Lam 0.179, max box radius 3.4e-05, max sup|y - y(c)| 7.54, 1566 s",
+   "ray: 903 steps, 938 s; tiles glued: 182 (meeting sets: 572 polar rectangles, 452 links)",
+   "LEMMA 6b_1 CHECK: FAIL (3 failures: ['tile (5, 7): agreement point not in the meeting set', 'tile (6, 5): meeting set not connected', 'point (|u| = 128.8, arg = phi_5,6) not covered without tile (5, 6)'])"
+  ],
+  "sec": 0.5
+ },
+ {
+  "name": "cover_sign_M3",
+  "cmd": "lemma6b1_cover_M.py mutate --j=11 --M=3 --h=1.1e-9 --tag=_cert --x=2.7264758856311463335934955261561100705557331671411,1.0156030948577872100059533565790022881883333496973,0.14441947847010155933389143095194965903793037966287,0.011087425888116783540971263261694760868044985018780",
+  "expected": "caught",
+  "exit": 0,
+  "matches": true,
+  "what": "6b1: every disc of the innermost row with the fast term of the wrong sign: none may be certified",
+  "tail": [
+   "M = 3 row 11 (|u| = 26.98, r = 6, n = 50) disc 10/11: ok False, Lam 0.135, box radius 3.8e-06, sup|y - y0| 1.884, 781 Lohner steps [579 s]; defect coefficients below order n contain 0: False",
+   "M = 3 row 11 (|u| = 26.98, r = 6, n = 50) disc 11/11: ok False, Lam 0.128, box radius 3.4e-05, sup|y - y0| 1.858, 834 Lohner steps [603 s]; defect coefficients below order n contain 0: False",
+   "MUTATION sign (V_u = +V/2 in the defect), M = 3: 0 of 12 discs of row 11 certified (must be 0)"
+  ],
+  "sec": 603.2
+ },
+ {
+  "name": "c1_truth_M3",
+  "cmd": "lemma6b1_cover_M.py c1check --M=3 --h=1.1e-9 --tag=_cert --x=2.7264758856311463335934955261561100705557331671411,1.0156030948577872100059533565790022881883333496973,0.14441947847010155933389143095194965903793037966287,0.011087425888116783540971263261694760868044985018780",
+  "expected": "passes",
+  "exit": 0,
+  "matches": true,
+  "what": "control (double precision): y+ at x^ and x^ +- h e_i lies in the saved C^1 sets at rows 1, 6, 9, 11",
+  "tail": [
+   "row 9 (|u| = 47.14): set radius 5.46e-08; centre in, x0+h in, x0-h in, x1+h in, x1-h in, x2+h in, x2-h in, x3+h in, x3-h in",
+   "row 11 (|u| = 26.98): set radius 5.08e-07; centre in, x0+h in, x0-h in, x1+h in, x1-h in, x2+h in, x2-h in, x3+h in, x3-h in",
+   "C1 PLANTED TRUTH: every point inside its set: True"
+  ],
+  "sec": 28.5
+ },
+ {
+  "name": "c1_nov_M3",
+  "cmd": "lemma6b1_cover_M.py c1check --mutate=nov --M=3 --h=1.1e-9 --tag=_cert --x=2.7264758856311463335934955261561100705557331671411,1.0156030948577872100059533565790022881883333496973,0.14441947847010155933389143095194965903793037966287,0.011087425888116783540971263261694760868044985018780",
+  "expected": "caught",
+  "exit": 0,
+  "matches": true,
+  "what": "C^1 sets with the derivative columns dropped: the off-centre points must fall outside",
+  "tail": [
+   "row 9 (|u| = 47.14): set radius 1.05e-11; centre in, x0+h OUT, x0-h OUT, x1+h OUT, x1-h OUT, x2+h OUT, x2-h OUT, x3+h OUT, x3-h OUT",
+   "row 11 (|u| = 26.98): set radius 1.42e-11; centre in, x0+h OUT, x0-h OUT, x1+h OUT, x1-h OUT, x2+h OUT, x2-h OUT, x3+h OUT, x3-h OUT",
+   "MUTATION nov (derivative columns dropped): every off-centre point outside: True (must be True)"
+  ],
+  "sec": 33.6
+ }
+]

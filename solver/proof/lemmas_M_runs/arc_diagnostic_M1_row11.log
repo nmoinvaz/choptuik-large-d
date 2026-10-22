@@ -1,0 +1,13 @@
+M = 1, arc |u| = 24.94: true spread over x^ +- 1e-09 vs the hull growth of a box restarted at the arc start (radius 7.9e-08)
+   t = 0.000: true spread 2.22e-08;  max abs row sum of the flow 1.00e+00, largest singular value 1.00e+00;  restarted box -> 7.90e-08
+   t = 0.091: true spread 2.01e-08;  max abs row sum of the flow 4.62e+00, largest singular value 3.18e+00;  restarted box -> 3.65e-07
+   t = 0.182: true spread 1.83e-08;  max abs row sum of the flow 7.57e+00, largest singular value 4.42e+00;  restarted box -> 5.98e-07
+   t = 0.273: true spread 1.67e-08;  max abs row sum of the flow 9.68e+00, largest singular value 5.67e+00;  restarted box -> 7.65e-07
+   t = 0.364: true spread 1.53e-08;  max abs row sum of the flow 1.11e+01, largest singular value 6.79e+00;  restarted box -> 8.80e-07
+   t = 0.455: true spread 1.43e-08;  max abs row sum of the flow 1.22e+01, largest singular value 7.77e+00;  restarted box -> 9.61e-07
+   t = 0.545: true spread 1.35e-08;  max abs row sum of the flow 1.30e+01, largest singular value 8.64e+00;  restarted box -> 1.03e-06
+   t = 0.636: true spread 1.29e-08;  max abs row sum of the flow 1.41e+01, largest singular value 9.42e+00;  restarted box -> 1.11e-06
+   t = 0.727: true spread 1.24e-08;  max abs row sum of the flow 1.49e+01, largest singular value 1.01e+01;  restarted box -> 1.18e-06
+   t = 0.818: true spread 1.21e-08;  max abs row sum of the flow 1.55e+01, largest singular value 1.07e+01;  restarted box -> 1.23e-06
+   t = 0.909: true spread 1.19e-08;  max abs row sum of the flow 1.68e+01, largest singular value 1.13e+01;  restarted box -> 1.33e-06
+   t = 1.000: true spread 1.19e-08;  max abs row sum of the flow 1.81e+01, largest singular value 1.17e+01;  restarted box -> 1.43e-06

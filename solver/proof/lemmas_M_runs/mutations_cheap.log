@@ -1,0 +1,12 @@
+fp_series_M3     expected caught  exit 3: MISMATCH   (4.5 s)  MUTATION series: the lemma holds: True (must be False)
+fp_series_M5     expected caught  exit 3: MISMATCH   (27.3 s)  MUTATION series: the lemma holds: True (must be False)
+fp_cdrop_M3      expected caught  exit 1: MISMATCH   (3.7 s)  ValueError: integrand t^-1 not admissible for weight 0 (slow)
+fp_diagpath_M3   expected caught  exit 0: OK   (1.7 s)  MUTATION diagpath: refused (the diag splitting is valid on rays only; refusing it with a non-ray kernel bound) -> caught
+fp_control_r0    expected fails   exit 2: OK   (2.3 s)    => fixed point exists and is unique in the ball: False; |eta| <= 4.37e-03 at |z| = R (p, v, c variables)
+fp_m1            expected passes  exit 0: OK   (18.7 s)  M = 1 REPRODUCES fixed_point.py: True
+usys_label       expected caught  exit 0: OK   (7.0 s)  MUTATION label: caught: True
+usys_clean       expected passes  exit 0: OK   (7.5 s)  ALL SELF-TESTS PASS: True
+S_series_M3      expected caught  exit 0: OK   (8.5 s)  MUTATION series (top harmonic's coefficient off by 1e-6): lemma S holds: False (must be False)
+S_control_rp     expected fails   exit 2: OK   (11.9 s)  ALL CHECKS PASS (M = 3): False
+disc_m1          expected passes  exit 0: OK   (13.4 s)  M = 1 REPRODUCES lemma6b1_disc: True
+ALL VERDICTS AS EXPECTED: False

@@ -9,7 +9,7 @@ Papers (drafts, not yet reviewed):
   limit D → ∞, the large-D picture and other matter.
 - **Mathematics:** [*The echo period of Choptuik's critical solution at large dimension: a selection rule and a
   computer-assisted proof*](paper/math/dss_math.pdf). Propositions 1–5 with proofs, the selection rule (Conjecture 1)
-  and Theorem A(M = 1).
+  and Theorems A(M = 1) and A(M = 3).
 
 When a collapsing shell of scalar field is tuned exactly to the threshold between dispersing and forming a black hole,
 it approaches a universal solution, Choptuik's critical solution, which repeats itself on ever smaller scales: each
@@ -39,7 +39,8 @@ In brief: one rational formula in 1/(D − 2) fits all D ≥ 4; Δ tends to a fi
 a selection rule derived at D = ∞ reproduces Δ∞ to about 10⁻⁴ without using the finite-D solutions, and an exact symmetry
 explains γ∞ = 1/2. A proof of the selection rule is in progress ([PROOF.md](PROOF.md)); in a one-harmonic model case, a
 computer-assisted proof shows that the selection condition has exactly one simple zero (Theorem A(M = 1), assuming
-Braaksma's summability theorem).
+Braaksma's summability theorem), and the same holds with three harmonics (Theorem A(M = 3), whose code is not yet
+independently reviewed).
 
 What is new: not found in the literature searched ([notes/LIT_REVIEW.md](notes/LIT_REVIEW.md)):
 - Δ(D) to D = 61 at about 15 digits, and the finite limit Δ∞ = 1.643893746 against the Δ → 0 conjecture;
@@ -47,7 +48,7 @@ What is new: not found in the literature searched ([notes/LIT_REVIEW.md](notes/L
   exponential for γ, has a different form and limit);
 - Propositions 1–4: the 1/D expansion never fixes the period; the closed-form light-cone obstruction; its reading as a
   Stokes multiplier;
-- the selection rule (Conjecture 1) and the value Δ∞ = 1.6439 ± 0.0002 it gives from the D = ∞ equations alone;
+- the selection rule (Conjecture 1) and the value Δ∞ ≈ 1.644 it gives from the D = ∞ equations alone;
 - the symmetry argument of Proposition 5 for γ∞ = 1/2 in the discretely self-similar solution;
 - the computer-assisted certificate in the one-harmonic model.
 
@@ -80,9 +81,11 @@ Headline results:
   predict the shape of the echo, F₃/F₁ = 0.055 against 0.055 extrapolated from the data, and with three harmonics
   the full set of conditions gives Δ = 1.619, 1.5% below Δ∞, and with five harmonics Δ = 1.64516, 0.077% above (one
   harmonic: 29% above): the offset alternates in sign and shrinks fifteen- to twentyfold per harmonic pair. Without truncation, an
-  amplitude expansion to twelve orders brackets the selected ω between 0.99915 and 1.00011 ω∞ (best estimates
-  0.9999–1.0001), at amplitude 2.720 (measured: 2.70–2.72). So the conjectured rule gives Δ∞ = 1.6439 ± 0.0002
-  from the D = ∞ equations alone, against 1.643893746 from the solutions; the rule itself is not yet
+  amplitude expansion to thirteen orders puts the selected ω at 0.99992–0.99998 ω∞ (Δ∞ = 1.6440 ± 0.0001, an
+  estimator range tested on planted functions), at amplitude 2.720 (measured: 2.70–2.72), provided the selection
+  function has no further zeros within |x| ≈ 12; the thirteenth coefficient rejected every such alternative built so
+  far, but a larger ring of zeros is still possible. The finite-D solutions give 1.643893746, 4×10⁻⁵ below that range and
+  inside its wider version (1.6438–1.6442); five planted shapes are too few to call that a disagreement. The rule itself is not yet
   proved ([Large D](#large-d-what-the-1d-expansion-can-and-cannot-see)).
 - **Relation to published work.** Agreement with the accepted values at D = 4 and at the maximum of Δ near D = 3.756;
   a 6×10⁻⁵ difference at D = 5 that the published higher-resolution data trace to resolution; and the published
@@ -368,21 +371,19 @@ integer-relation search could support a closed form; whether Δ∞ has one is op
   1/(D-1), 1/(D-2); degree 9 and 10; lower cut D ≥ 10 or 12). The table gives $`\chi^2/\mathrm{dof}`$ of the best
   and the worst of the 12 (0.62 is the unconstrained fit) and the rms error on the held-out f64 points, 30.2 < D ≤ 39.5.
   Five candidates passed it; four were already excluded.
-- **Double-double test** (made on the points then available, up to D = 59.8; `hp/dd_candidates.py 45 --dmax=59.8`
-  repeats it on today's file, where later runs from the second machine have added a few points in the same range, so
-  counts can differ by one or two): each candidate forced as the limit of a power series in 1/D fitted on
-  10 ≤ D ≤ 45 at degree 14 to 26, and compared with the 351 cleaned points from 45 to 59.8 that the fit never
-  saw. The table gives the best of those degrees and how many times worse it is than the free fit (4.7×10⁻¹³
-  at degree 16 on this range; held out to 60.1 the same fit gives 5.2×10⁻¹³, [below](#is-the-period-analytic-in-1d)).
+- **Double-double test** (`hp/dd_candidates.py 45 --dmax=59.8` on today's file): each candidate forced as the limit of a power series in 1/D fitted on
+  10 ≤ D ≤ 45 at degree 14 to 26, and compared with the 352 cleaned points from 45 to 59.8 that the fit never
+  saw. The table gives the best of those degrees and how many times worse it is than the free fit (4.8×10⁻¹³
+  at degree 16 on this range; held out to 60.1 the same fit gives 5.6×10⁻¹³, [below](#is-the-period-analytic-in-1d)).
 
 | Candidate | Value | − double-double limit | f64 test: $`\chi^2/\mathrm{dof}`$; held-out rms | Double-double test: held-out error (× free) | Verdict |
 |---|---|---|---|---|---|
-| none (free fit) | 1.643893746 ± 0.000000015 | | 0.62 .. 3.4; 1.5×10⁻⁶ | 4.7×10⁻¹³ | |
-| $`\frac{5}{7}\sqrt{G}\, j_{0,1}`$ | 1.6439747 | +8.1×10⁻⁵ | 0.62 .. 8.6; 1.4×10⁻⁶ | 6.2×10⁻¹¹ (130×) | **ruled out** (passed the f64 test) |
-| $`\frac{7}{5}\,(\ln 2)^{-2}\,\pi^{-1/2}`$ | 1.6440014 | +1.1×10⁻⁴ | 0.62 .. 18; 1.3×10⁻⁶ | 1.1×10⁻¹⁰ (220×) | **ruled out** (passed the f64 test) |
-| $`\frac{7}{2}\sqrt{\ln 2/\pi}`$ | 1.6440152 | +1.2×10⁻⁴ | 0.62 .. 26; 1.2×10⁻⁶ | 1.3×10⁻¹⁰ (270×) | **ruled out** (passed the f64 test) |
-| $`\frac{9}{8}\sqrt{j_{2,1}/j_{0,1}}`$ | 1.6440207 | +1.3×10⁻⁴ | 0.62 .. 30; 1.2×10⁻⁶ | 1.4×10⁻¹⁰ (290×) | **ruled out** (passed the f64 test) |
-| $`\frac{10}{9}\sqrt{j_{0,1}/\ln 3}`$ | 1.6439063 | +1.3×10⁻⁵ | 0.62 .. 118; 1.6×10⁻⁶ | 5.4×10⁻¹¹ (110×) | **ruled out** (passed the f64 test) |
+| none (free fit) | 1.643893746 ± 0.000000015 | | 0.62 .. 3.4; 1.5×10⁻⁶ | 4.8×10⁻¹³ | |
+| $`\frac{5}{7}\sqrt{G}\, j_{0,1}`$ | 1.6439747 | +8.1×10⁻⁵ | 0.62 .. 8.6; 1.4×10⁻⁶ | 6.3×10⁻¹¹ (130×) | **ruled out** (passed the f64 test) |
+| $`\frac{7}{5}\,(\ln 2)^{-2}\,\pi^{-1/2}`$ | 1.6440014 | +1.1×10⁻⁴ | 0.62 .. 18; 1.3×10⁻⁶ | 1.1×10⁻¹⁰ (230×) | **ruled out** (passed the f64 test) |
+| $`\frac{7}{2}\sqrt{\ln 2/\pi}`$ | 1.6440152 | +1.2×10⁻⁴ | 0.62 .. 26; 1.2×10⁻⁶ | 1.3×10⁻¹⁰ (280×) | **ruled out** (passed the f64 test) |
+| $`\frac{9}{8}\sqrt{j_{2,1}/j_{0,1}}`$ | 1.6440207 | +1.3×10⁻⁴ | 0.62 .. 30; 1.2×10⁻⁶ | 1.4×10⁻¹⁰ (300×) | **ruled out** (passed the f64 test) |
+| $`\frac{10}{9}\sqrt{j_{0,1}/\ln 3}`$ | 1.6439063 | +1.3×10⁻⁵ | 0.62 .. 118; 1.6×10⁻⁶ | 5.3×10⁻¹¹ (110×) | **ruled out** (passed the f64 test) |
 | π²/6 = ζ(2) | 1.6449341 | +1.0×10⁻³ | 3.6 .. 13000; 2.9×10⁻⁶ | 1.7×10⁻⁹ (3500×) | **ruled out** by both |
 | $`2\pi/j_{1,1}`$ | 1.6397880 | −4.1×10⁻³ | 67 .. 3×10⁵; 1.8×10⁻⁵ | 7.0×10⁻⁹ (15000×) | **ruled out** by both |
 | $`\sqrt{e}`$ | 1.6487213 | +4.8×10⁻³ | 82 .. 3×10⁵; 1.8×10⁻⁵ | 8.1×10⁻⁹ (17000×) | **ruled out** by both |
@@ -503,6 +504,19 @@ Their conjecture Δ → 0 comes with no rate. Fitted on 10 ≤ D ≤ 45 and comp
 A power-law approach to 0 is excluded; a logarithmic one is disfavoured but cannot be excluded from D ≤ 61 alone.
 Scripts: [`solver/eeg20/`](solver/eeg20/).
 
+**Their supercritical branch.** They also note a second branch, $`f_{\rm LO} = f_0\sqrt{\beta^2x^2-1}`$ on β²x² > 1,
+whose singular point β²x² = 1 they treat as a proxy for the apparent horizon, citing Rozali and Way.[^6] In our
+variables the two branches are one leading-order family, y = √2 x/√(x² + C(τ)), with C > 0 regular and C < 0
+supercritical, and the r²-shift of Proposition 5 moves C by 2nσ₀ e^(2τ): the supercritical branch is the regular one
+pushed along the λ = 2 mode. Its 1/n expansion exists to all orders with nothing forced, as in Proposition 1. Near
+β²x² = 1 it is a series in 1/(n(β²x²−1)²) and breaks down at β²x² − 1 ~ n^(−1/2), where 2m/r^(n−1) is only of order
+n^(−1/2). There the solution crosses β²x² = 1 smoothly into a region where the polar lapse collapses exponentially.
+Behind this spacelike front, 2m/r^(n−1) stays near 1.63 κ̃ n^(−1/2), with κ̃ = fβ²/|β + β′| the inverse speed of the
+front. So for a moving front β²x² = 1 is not an apparent horizon; trapping needs the front to come to rest, as it does
+when the shifted solution's front stops at r² = 2n|σ₀|. The exact self-similar (CSS) equations solved at n = 100–6400
+bear this out. Details, checks and the comparison with the Roberts and Brady self-similar families:
+[notes/SUPERCRITICAL.md](notes/SUPERCRITICAL.md), scripts in [`solver/supercrit/`](solver/supercrit/).
+
 ## Evidence
 
 ### The double-double solver (`hp/`)
@@ -601,7 +615,7 @@ What the solver has shown:
 - **How good the values are.** The points themselves fit smooth curves to about 4×10⁻¹⁵ (degree 18–20) all the way to
   D = 60.1, not 10⁻²⁰. Points between
   D = 27 and 35.2, solved before the freezing, carry up to 10⁻¹⁴ from the weak directions; about 25 of them sit
-  visibly off their neighbours and `hp/dd_fits_mp.py --clean` drops them (26 on today's file with `--dmax=60.1`). The cleaning leaves errors up to 5×10⁻¹⁵ there. The frozen points carry the
+  visibly off their neighbours and `hp/dd_fits_mp.py --clean` drops them (25 on today's file with `--dmax=60.1`). The cleaning leaves errors up to 5×10⁻¹⁵ there. The frozen points carry the
   cut's smooth error, up to 5×10⁻¹⁵ from 35.35 to 37 and about 10⁻¹⁵ from 40 to 60, while their scatter about smooth
   local fits is only 3–7×10⁻¹⁸ at D = 45–60.1. Below D = 27 the error is about 10⁻¹⁶; the 94 points above 60.1, solved
   to the looser tolerance, carry up to about 3×10⁻¹⁵.
@@ -624,24 +638,24 @@ degree-18 fit on D ≤ 60.1 (checks table above).
 
 | Model | max residual on 10 ≤ D ≤ 45 | worst error on 45 < D ≤ 60.1 | fitted on D ≤ 37.5: worst error up to 60.1 | limit |
 |---|---|---|---|---|
-| 1/D, degree 16 | 4.1×10⁻¹⁵ | 5.2×10⁻¹³ | 4.2×10⁻¹¹ | 1.64389375 |
-| 1/D, degree 18 | 4.0×10⁻¹⁵ | 1.8×10⁻¹² | 1.5×10⁻¹⁰ | 1.64389377 |
-| 1/(D-2), degree 18 | 4.0×10⁻¹⁵ | 2.8×10⁻¹² | 7.9×10⁻¹¹ | 1.64389377 |
-| $`(D-2)^{-1/2}`$, degree 20 | 3.9×10⁻¹⁵ | 2.0×10⁻¹¹ | 3.9×10⁻¹⁰ | 1.636 |
-| $`D^{-1/2}`$, degree 20 | 3.8×10⁻¹⁵ | 1.6×10⁻¹⁰ | 6.2×10⁻⁹ | 1.547 |
+| 1/D, degree 16 | 4.1×10⁻¹⁵ | 5.6×10⁻¹³ | 4.2×10⁻¹¹ | 1.64389375 |
+| 1/D, degree 18 | 4.1×10⁻¹⁵ | 1.6×10⁻¹² | 1.4×10⁻¹⁰ | 1.64389377 |
+| 1/(D-2), degree 18 | 4.0×10⁻¹⁵ | 3.1×10⁻¹² | 7.7×10⁻¹¹ | 1.64389377 |
+| $`(D-2)^{-1/2}`$, degree 20 | 4.0×10⁻¹⁵ | 1.3×10⁻¹¹ | 6.6×10⁻¹⁰ | 1.638 |
+| $`D^{-1/2}`$, degree 20 | 3.9×10⁻¹⁵ | 1.4×10⁻¹⁰ | 5.3×10⁻⁹ | 1.556 |
 
 Every model fits its range to the level of the points, so the fit alone decides nothing; the unseen points do. Fitted
-on D ≤ 45, the 1/D series predicts Δ fifteen units of D ahead to 5×10⁻¹³, about 100 times the
-noise of the points, while the series in half-integer powers miss by 40 to 300 times more. Their limits also jump with
-the degree (1.636 to 1.694 for $`(D-2)^{-1/2}`$ and 1.54 to 2.75 for $`D^{-1/2}`$ at degree 20–24 on all the points to D = 60), so they
+on D ≤ 45, the 1/D series predicts Δ fifteen units of D ahead to 6×10⁻¹³, about 100 times the
+noise of the points, while the series in half-integer powers miss by 20 to 250 times more. Their limits also jump with
+the degree (1.644 to 1.677 for $`(D-2)^{-1/2}`$ and 1.64 to 2.63 for $`D^{-1/2}`$ at degree 20–24 on the points to D = 60.1), so they
 give no usable Δ∞. Adding one non-analytic term ($`D^{-1/2}`$, $`D^{-3/2}`$, $`\ln D / D`$, $`\ln D / D^2`$ or
-$`e^{-D/4}`$) to the degree-16 series changes neither the prediction (1.6–5×10⁻¹³ at D = 60) nor the limit
-(1.64389375), and the term's coefficient is not determined: $`D^{-1/2}`$ gets 3×10⁻⁵ at degree 14 and
-1×10⁻⁷ at degree 16 (`hp/dd_fits_mp.py 10 45 --clean --mixed --dmax=60.1`).
+$`e^{-D/4}`$) to the degree-16 series does not degrade the prediction (1.2–3.2×10⁻¹³ at D = 60) and keeps the limit
+within the quoted bar (1.643893736 to 1.643893754), and the term's coefficient is not determined: $`D^{-1/2}`$ gets
+3×10⁻⁵ at degree 14 and 6×10⁻⁷ at degree 16 (`hp/dd_fits_mp.py 10 45 --clean --mixed --dmax=60.1`).
 
 Fitted on all the cleaned points, power series in 1/D of degree 16–20 and in 1/(D-2) of degree 18–20 (the ones that fit
-to the noise; 1/(D-2) at degree 16 leaves 3×10⁻¹³) fit the points from D = 10 to 61.03 to 4.2×10⁻¹⁵
-(8.6×10⁻¹⁵ for 1/D at degree 16, 1.5×10⁻¹⁴ for 1/(D-2) at degree 18) and give limits from 1.643893744 to 1.643893752 on
+to the noise; 1/(D-2) at degree 16 leaves 4×10⁻¹³) fit the points from D = 10 to 61.03 to 4.3×10⁻¹⁵
+(8.6×10⁻¹⁵ for 1/D at degree 16, 1.5×10⁻¹⁴ for 1/(D-2) at degree 18) and give limits from 1.643893744 to 1.643893753 on
 10 ≤ D ≤ 60.1 (`hp/dd_fits_mp.py 10 1e9 --clean --dmax=60.1`) and from 1.643893745 to 1.643893752 on all 823
 cleaned points to D = 61.03. Over 48 choices of model (1/D, 1/(D-2)), degree (the two lowest that reach the noise),
 lower and upper fit ends (D ≥ 10, 12, 15; D ≤ 60.1, 61.03) and cleaning on or off, the limit ranges over
@@ -719,7 +733,8 @@ The results, in order:
 - [The inner problem at large x](#the-inner-problem-at-large-x): near $`x \sim \sqrt n`$ the equations lose n altogether;
   without gravity they reduce to Kummer's equation, whose Stokes constant gives C(n,s) asymptotically (times a power of n
   and a phase). With gravity, the working hypothesis is that this multiplier vanishing is the selection rule (Conjecture 1);
-  computed without truncation to twelve orders in the amplitude, it selects ω within about 10⁻⁴ of ω∞.
+  computed without truncation to twelve orders in the amplitude, it selects ω within about 2×10⁻⁴ of ω∞, given an
+  assumption about the selection function's other zeros (within 0.4% without it).
 - [Proposition 5](#proposition-5-the-unstable-mode-at-infinite-d-is-exact): in s = r²/(2n) the inner problem is a
   nonlinear heat equation, and its shift symmetry in r² gives an exact unstable mode with λ = 2, which explains
   γ∞ = 1/2.
@@ -1138,10 +1153,12 @@ $`(1-x)^{\Lambda}\varphi(\theta - \omega'\ln(1-x))`$ (ω' = ω/(1 − ⟨G(1)⟩
 $`e^{-i\pi\Lambda}e^{\pm\pi\mu\omega'}`$, a diagonal map with non-zero entries. So C ≡ 0 ⇔ S ≡ 0 at leading order. In the linear case this is
 exact (Proposition 2 and the large-n form of C(n,s), with the constant proved in Proposition 4).
 
-Where rigour fails: (a) Borel summability of the nonlinear series is not proved; the outer nonlinear late orders also
-carry x-independent singularities of modulus about 0.13, driven by high harmonics, and one must show that these give
-only ambiguities in the free data (F's harmonics, $`K_k`$), not light-cone branches (in the linear case the analogous
-x-independent singularities ±iπ are harmless pure phases, which is suggestive but not a proof). (b) Uniformity in the
+Where rigour fails: (a) Borel summability of the nonlinear series is not proved. For a fixed number of harmonics it is
+not needed: the selection theorem below works with actual solutions and fixed-order truncations
+([proof/B3_borel.md](proof/B3_borel.md) §1). Recomputed in ball arithmetic, the outer late orders show no singularity
+near the positive real axis at one and three harmonics; at three there is an x-independent one near the negative real
+axis (ζ ≈ −1.2), which does not obstruct summation along ℝ⁺ but may approach the origin as the number of harmonics grows
+(B3_borel.md §5). (b) Uniformity in the
 harmonic index: the weights $`e^{\pi\lvert\mu\rvert\omega/2}`$ grow like e^{6.0|μ|} while F's harmonics decay only like e^{−1.4|μ|}, so an O(1/n)
 relative error in a high harmonic is amplified when it mixes into low harmonics through $`e^{\Pi}`$; the leading-order
 equivalence holds harmonic by harmonic, but the n at which it becomes accurate may grow with the number of harmonics
@@ -1151,13 +1168,11 @@ singular there (A ∝ (1 − x)⁻¹) and must be matched to the Frobenius solut
 (Λ = n/2 − 1 − s + ⟨F²⟩ + O(1/n) on both sides), but the matching has not been written out.
 
 Status of these gaps ([PROOF.md](PROOF.md)): for a model truncated to M harmonics the selection theorem is written out
-lemma by lemma ([proof/C_selection.md](proof/C_selection.md)). Gap (c) reduces to Olver's error control, and the inner
-half of gap (a) to Braaksma's summability theorem; the outer half's two hypotheses on where Borel singularities lie are
-checked numerically (none within 0.48π of the positive real axis). The matching error is O(1/n) (the inner equations'
-corrections come in integer powers of 1/n), the matching factor is explicit, and the outer jump equals that factor times
-[S + O(1/n)] given an inner fixed point. What remains is two contraction arguments with explicit constants: the inner fixed
-point on the matching domain and the global continuation, both on published templates (Xie–Tanveer;
-Baldomá–Fontich–Guardia–Seara). Gap (b) is narrower than stated above ([proof/B_tail.md](proof/B_tail.md)). Stated
+lemma by lemma ([proof/C_selection.md](proof/C_selection.md)), on published templates (Xie–Tanveer;
+Baldomá–Fontich–Guardia–Seara). Gap (c) reduces to Olver's error control up to a routine step, and the inner half of
+gap (a) to Braaksma's summability theorem; the outer half is not needed at fixed M. Its status, and that of the
+one-harmonic theorem, is under [What is known about the selection](#what-is-known-about-the-selection-and-what-is-open).
+Gap (b) is narrower than stated above ([proof/B_tail.md](proof/B_tail.md)). Stated
 without harmonics, the condition is S(θ₀) ≡ 0 on the real label circle and uses F only on the real line; the weights
 $`e^{\pi\lvert\nu\rvert\omega/2}`$ are the linear connection coefficients of each label harmonic and cancel in every tuning
 equation. The data agree: the tuning ratio is the same for every ν to six digits (|q|A² = 0.0633), and the
@@ -1181,7 +1196,16 @@ computer-assisted in ball arithmetic:
   annulus 0.0624 ≤ |ξ| ≤ 0.2 by a covering with 178 validated Taylor discs (§12).
 
 The disc covering has not yet been independently re-implemented. The model is the one-harmonic truncation, not the full
-selection condition. The
+selection condition.
+
+**Theorem A(M = 3)** ([proof/A_M.md](proof/A_M.md), [proof/A_lemmas_M.md](proof/A_lemmas_M.md) §7): assuming
+Braaksma's theorem, the three-harmonic selection condition (S₁ = S₃ = 0) has exactly one zero in a box of half-width
+10⁻¹⁰ about A = 2.7264758856, ω/ω∞ = 1.0156030949 (with B₃, C₃ about 0.1444194785, 0.0110874259), and it is simple:
+A ∈ [2.72647588563032, 2.72647588563144], ω/ω∞ ∈ [1.01560309485743, 1.01560309485804]. Unlike the one-harmonic zero
+(29% from the selected period), this one is 1.6% above ω∞, with the measured amplitude (2.70–2.72). The same steps carry
+over: a point certificate with four real jump conditions, and lemmas S, 6a, 6b₀ and 6b₁ for M harmonics, certified on
+boxes containing it (6a with ρ₆ₐ = 0.041, 6b₁ by 183 discs). This code has not been reviewed independently or
+re-implemented. M = 5 is running. The
 first coefficient σ₁ of the untruncated condition is also enclosed rigorously (±3.5×10⁻⁵).
 
 Evidence beyond the linear case: the conditions $`S_\nu = 0`$ for |ν| ≥ 3 alone predict the echo's shape as
@@ -1301,7 +1325,7 @@ late orders of the inner series fitted with the predicted fast-mode exponents).
   a 2×2 problem of condition about 2, converging quadratically), there is one zero. It is the same from two
   different starts and at three matching radii (ξ₁ = 0.175, 0.2, 0.225; it moves by less than 10⁻⁷):
   A = 2.7265, ω = 1.0156 ω∞ (Δ = 1.6186), F₃/F₁ = 0.0530 + 0.0041i, ⟨F²⟩ = 3.727. The shape is that of the
-  D = ∞ solution (extrapolated from the data: A ≈ 2.70–2.72, |F₃/F₁| ≈ 0.050–0.058, ⟨F²⟩ ≈ 3.65–3.7), and ω is
+  D = ∞ solution (extrapolated from the data: A ≈ 2.70–2.72, |F₃/F₁| ≈ 0.055–0.058, ⟨F²⟩ ≈ 3.65–3.7), and ω is
   1.56% above ω∞, against 22% below with one harmonic.
 - *Five harmonics* (`solver/inner_stokes/hier.py`). At M = 5 the couplings are larger still (∂r₅/∂B₅ ≈ 2×10⁸,
   ∂r₃/∂B₅ ≈ 10¹³, ∂r₁/∂B₅ ≈ 10¹⁷), and the nested solve's homotopy stalled. A hierarchical solve works: S_M = 0
@@ -1406,25 +1430,40 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   orders are added (1.177, 1.077, 1.052, 1.021, 1.017, 1.013), so x₀ is a simple zero and the departure of c from 1 is contamination
   by singularities beyond it. That makes the crossings from above the asymptotically correct estimator. Their distance
   shrinks by a factor of about 0.4–0.6 per order (to 1.00011 at k = 12, still falling), and Aitken's extrapolations
-  of consecutive triples scatter around 1 at the 10⁻⁴ level (0.99976 to 1.00017 for the last six). The ratio estimates,
-  which let c float, come up from below (0.9978, 0.9992, 0.9992 at k = 10–12). Padé approximants of $`(\ln S_1)'`$ put Im A₀ = 0 at ω/ω∞ = 0.981–0.991 with
+  of consecutive triples scatter around 1 (0.99956 to 1.00066). The ratio estimates, which let c float, come up from
+  below and turn down at the last order (0.9978, 0.99919, 0.99915 at k = 10–12). Padé approximants of $`(\ln S_1)'`$ put Im A₀ = 0 at ω/ω∞ = 0.981–0.991 with
   seven coefficients, 0.987–0.998 with eight, 0.992–0.998 with nine, and with ten they straddle ω∞: 0.9949–1.0034, the
   mutually consistent [2/7], [6/3] and [4/5] at 0.9995, 1.0000 and 1.0007; with eleven, all nine approximants cross
   between 0.9975 and 1.0008, eight of them within 0.9992–1.0008 (mean 0.9999); with twelve, the five central
   approximants ([3/8] to [7/4]) agree at 0.99987–0.99991, and at ω∞ they are real to |Im A₀| ≈ 1.4×10⁻⁴, at
   A₀ = 2.7195–2.7198.
-- *Where that leaves it.* At twelve orders the bracket is 0.99915–1.00011 (eleven: 0.9992–1.0002, ten: 0.9978–1.0003,
-  nine: 0.9961–1.0006, eight: 0.9946–1.0011). Inside it the simple-zero crossings are still falling through 1.00011,
-  and the twelve-coefficient Padé approximants agree at 0.9999. A third estimator agrees: S₁ is numerically an entire
-  function of A² of exponential type, and the series of G = e^{−κ̄A²}S₁ (same zeros, no cancellation) puts the real zero
-  at 0.99988 at twelve orders, A₀ = 2.7194, isolated from the other zeros ([proof/D_entire.md](proof/D_entire.md)). The five-harmonic truncation gives 0.999228 and its
-  sequence alternates (0.777, 1.0156, 0.999228; Aitken 1.0003). So the selection rule of Conjecture 1 picks
-  ω/ω∞ = 0.9999–1.0001 (the bracket is the cautious range), at amplitude A₀ = 2.720 (the solutions: 2.70–2.72):
-  **Δ∞ = 1.6439 ± 0.0002 from the D = ∞ inner equations alone**, with no input from the finite-D solutions, against
-  1.643893746 from them. Whether the remaining 10⁻⁴ (the Padé value sits 1.1×10⁻⁴ below 1) closes needs more orders.
-  Order 13 at J = 750 does not converge (its error estimate, 10⁻⁹–2.5×10⁻⁸, is the size of σ₁₃ itself, while σ₁–σ₁₂ stay
-  at 10⁻²⁰; `scan27phys/`, kept for reference): it needs a longer late-order window (J ≥ 1000, about 10 hours per ω on the
-  8-thread machine). The rule itself is still a conjecture (hypotheses H1–H2,
+- *Where that leaves it.* At twelve orders the two families give 0.99915–1.00011 (eleven: 0.9992–1.0002, ten:
+  0.9978–1.0003, nine: 0.9961–1.0006, eight: 0.9946–1.0011), the twelve-coefficient Padé approximants 0.9999, and a
+  third estimator the same: S₁ is numerically an entire function of A² of exponential type, and the series of
+  G = e^{−κ̄A²}S₁ (same zeros, no cancellation) puts the real zero at 0.99988, A₀ = 2.7194
+  ([proof/D_entire.md](proof/D_entire.md)). The five-harmonic truncation gives 0.999228 and its sequence alternates
+  (0.777, 1.0156, 0.999228; Aitken 1.0003).
+- *How far to trust those estimates.* A planted-truth test ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md))
+  ran the same estimators, through the same code, on synthetic functions of the same class: Laplace integrals over a
+  Borel arc whose coefficients match the real σ₀…σ₁₂ to 10⁻⁵, with the zero planted at ω/ω∞ = 0.996–1.004. The pair
+  above is not a bracket: it misses one family of shapes, and its width comes from the ratio estimate, which is
+  1.3–5.4×10⁻³ low on every plant. Padé and G are biased in opposite directions by up to 8×10⁻⁴, so their agreement here
+  is not evidence of accuracy. The arg crossing is the most reliable (errors −0.8 to +1.9×10⁻⁴). At twelve orders, calibrated
+  on the plants, it put the zero at 0.99992–1.00019, provided S₁ has no zeros besides x₀ within |x| ≈ 9; twelve
+  coefficients could not exclude those, and functions with exactly the real σ₀…σ₁₂ have their zero anywhere in
+  0.996–1.002, the far cases hiding a ring of zeros. The estimates also need every σₖ to about 10⁻¹⁰.
+- *Thirteen orders.* σ₁₃ converges at 960 bits with the late-order window J = 1000
+  (`solver/inner_amp/scan27J1000p960/`, relative error 1.5–1.9×10⁻¹³; at J = 750 it did not, `scan27phys/`). The arg
+  crossings keep falling (1.000299, 1.000197, 1.000109, 1.000046 at k = 10–13), G gives 0.999995 and the central Padé
+  approximants 0.99980–0.99990. Every ring of zeros constructed to fit σ₀…σ₁₂ mispredicts the thirteenth coefficient of
+  ln S₁ by 10%–300%, while the ring-free simple-zero law misses it by 8×10⁻⁴. Calibrated on the plants at thirteen
+  orders, arg and G put the zero at 0.99992–0.99996, and the one ring-free function that reproduces σ₀…σ₁₃ exactly, a
+  [6/7] Borel–Padé sum, puts it at 0.99998. Together, **ω*/ω∞ = 0.99992–0.99998, Δ∞ = 1.6440 ± 0.0001 (1.64393–1.64403)
+  from the D = ∞ inner equations alone**: an estimator range over five plant shapes and one completion, not a bound,
+  with no input from the finite-D solutions. Their value, 1.643893746, lies 4×10⁻⁵ below it and inside the wider
+  single-estimator range 1.6438–1.6442; five plant shapes are too few to read that gap as a disagreement. The range
+  assumes no zeros besides x₀ within |x| ≈ 12. A ring of fourteen or more zeros is still possible, and σ₁₄ is its test
+  ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md) §5). The rule itself is still a conjecture (hypotheses H1–H2,
   gaps (a)–(c)). Tightening the number needs more orders, approximants that model the competing singularity
   explicitly (differential or algebraic approximants), or M = 7, which evaluates the multiplier at real amplitude with
   no series to resum (being fixed).
@@ -1616,7 +1655,7 @@ scalar's large-D structure: weak gravity inside the light cone and an n-free inn
 with the target curvature included, have no explicit s, so the r²-shift gives λ = 2. A winding-number count finds a single
 unstable mode besides the gauge mode at D = 4, 10, 20 and 40. The selection rule passes a second, truncation-free test:
 the D = ∞ Stokes zero gives ω∞ = 3.1998939 for the axion–dilaton and 3.9789695 for the free complex scalar, and the
-finite-D frequencies extrapolate to 3.1994 and 3.9784 (agreement about 1.5×10⁻⁴). Clark and Pimentel's large-D CSS
+finite-D frequencies extrapolate to 3.1994 and 3.9784 (agreement 1.6×10⁻⁴ and 1.3×10⁻⁴, relative). Clark and Pimentel's large-D CSS
 solution, whose radius exponents go to 0, is a different solution: a real scalar with no regular centre and no analytic
 light cone. So the γ∞ = 1/2 mechanism needs a regular centre, an analytic light cone and the inner scaling, as well as no
 1/r² term.
@@ -1667,7 +1706,7 @@ state extrapolated to D = ∞, 1.9226 ± 0.0003.
   a finite rate, as the amplitude expansion of the inner problem predicts ([above](#the-inner-problem-at-large-x)), so
   F∞ is likely not entire.
 - **The nonlinear late orders are dominated by something else.** In the nonlinear recursion the ratio of successive
-  orders grows like 7k–8.6k (a singulant of modulus about 0.13), against $`\lvert\chi\rvert \ge \pi/2`$ for the fast mode, so the fast
+  orders grows like 7k–8.6k, against $`\lvert\chi\rvert \ge \pi/2`$ for the fast mode, so the fast
   singulant is not directly visible. `solver/largeD_late_structure.py` characterizes the dominant growth: the rate is the
   same at x = 0.25, 0.5, 0.75, 1 (at x = 0.25 it is carried by the x³ coefficient; the top-degree share at x = 1
   falls to 0.008 by order 27), and the dominant harmonic grows like 0.55k, almost independently of the amplitude
@@ -1678,7 +1717,16 @@ state extrapolated to D = ∞, 1.9226 ± 0.0003.
   towards 0 as the harmonic grows. Its ambiguities are exponentially small changes of F's high harmonics, like the
   solver's weak directions, not light-cone terms. (In the inner series the analogous fast high-harmonic growth turned out
   to be the fast singularity itself, carried by harmonics with large exponents; whether the same holds for this outer
-  growth is not settled.)
+  growth is not settled.) At a fixed number of harmonics there is no such singularity close to the origin: the
+  ball-arithmetic recomputation finds none at one harmonic and one near ζ ≈ −1.2 at three
+  ([proof/B3_borel.md](proof/B3_borel.md) §5).
+- **The selection theorem for a truncated model (layer B).** For M harmonics the theorem is reduced to lemmas
+  ([proof/C_selection.md](proof/C_selection.md)). For M = 1 the two contraction arguments are certified in ball
+  arithmetic: the global continuation of the centre-regular solution, and the inner–outer matching on the matching
+  domain, for n ≥ e^{73.89} ([proof/B8_constants.md](proof/B8_constants.md), [proof/B5_inner.md](proof/B5_inner.md)).
+  The one-harmonic selection theorem B(1) is not yet proved: the error of the jump lemma is only estimated, a light-cone
+  step and the transport of the jump along x > 1 are not written, the continuation's exact light-cone gauge has not been
+  run, and the new certificate code has not been reviewed independently. The canonical status, link by link, is C_selection.md §13.
 - **The critical exponent, and why γ∞ = 1/2: [Proposition 5](#proposition-5-the-unstable-mode-at-infinite-d-is-exact).**
   λ = 1/γ is also selected beyond all orders; in the inner problem λ = 0, 1 and 2 are exact, from symmetries, and the
   λ = 2 mode, from the r²-shift of the inner heat equation, explains γ∞ = 1/2. The 1/n coefficient 3.0324 is reproduced to

@@ -1,0 +1,10 @@
+n = 1000, K = 4: numpy reduced rhs vs b8m_model.reduced_rhs: 5.8e-15
+(A) skipped: 79 path points loaded from b8m_numcheck_n1000.npz
+(B) max |R|/bound (h of the ln n0 = 73.89 certificate, weight rho^6): V 1.18e-01, S 2.15e-01, b 1.79e+00, c 1.86e+00  FAIL
+(C) Lemma K on the arc |x| = 5: max over the arc of ln||E|| - (bound exponent) = 0.000e+00 (must be <= 0); final ln||E|| = -21.927, bound -15.376  OK
+SOME CHECK FAILED
+n = 1000, K = 4: numpy reduced rhs vs b8m_model.reduced_rhs: 5.8e-15
+(A) skipped: 79 path points loaded from b8m_numcheck_n1000.npz
+(B) max |R|/bound (h of the ln n0 = 73.89 certificate, weight rho^5): V 1.30e-02, S 2.39e-02, b 1.99e-01, c 7.99e-02  OK
+(C) Lemma K on the arc |x| = 5: max over the arc of ln||E|| - (bound exponent) = 4.689e+00 (must be <= 0); final ln||E|| = -21.927, bound -26.617  FAIL
+SOME CHECK FAILED

@@ -1,0 +1,4 @@
+M = 1, K = 3: relative residuals I1 rho2: 1.68e-79, I2 q forms: 2.26e-81, I2 S-remainder: 2.49e-77, I3 b-remainder: 1.29e-77, I4 c-remainder: 7.05e-81  OK
+M = 1, K = 4: relative residuals I1 rho2: 1.45e-77, I2 q forms: 2.68e-81, I2 S-remainder: 1.45e-78, I3 b-remainder: 3.48e-79, I4 c-remainder: 5.75e-81  OK
+M = 3, K = 2: relative residuals I1 rho2: 3.62e-81, I2 q forms: 2.2e-81, I2 S-remainder: 9.57e-79, I3 b-remainder: 4.92e-79, I4 c-remainder: 1.33e-80  OK
+ALL IDENTITIES HOLD

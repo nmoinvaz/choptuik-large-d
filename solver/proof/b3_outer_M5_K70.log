@@ -1,0 +1,15 @@
+  order 5  0.1s
+  order 10  1.5s
+  order 15  4.6s
+  order 20  11.7s
+  order 25  23.9s
+  order 30  50.9s
+  order 35  98.6s
+  order 40  173.0s
+  order 45  286.2s
+  order 50  423.7s
+  order 55  599.8s
+  order 60  832.0s
+  order 65  1107.8s
+  order 70  1479.8s
+wrote b3_outer_M5_K70.json

@@ -1,0 +1,20 @@
+fit on 352 points 10..45, held out 471 points 45..61.026
+analytic poly(1/D)                 deg 14: fit residual  5.1e-14   held-out max  3.2e-11   value at D = 1e30: 1.6438938
+analytic poly(1/D)                 deg 16: fit residual  4.1e-15   held-out max  7.4e-13   value at D = 1e30: 1.6438938
+analytic poly(1/D)                 deg 18: fit residual  4.1e-15   held-out max  2.1e-12   value at D = 1e30: 1.6438938
+D^-0.01 poly(1/D)                  deg 16: fit residual  1.2e-10   held-out max   5.6e-7   value at D = 1e30: 0.87890094
+D^-0.01 poly(1/D)                  deg 20: fit residual  1.5e-12   held-out max   6.3e-8   value at D = 1e30: 0.88079469
+D^-0.03 poly(1/D)                  deg 16: fit residual  3.9e-10   held-out max   1.8e-6   value at D = 1e30: 0.25111205
+D^-0.03 poly(1/D)                  deg 20: fit residual  4.8e-12   held-out max   2.0e-7   value at D = 1e30: 0.25273824
+D^-0.1 poly(1/D)                   deg 16: fit residual   1.6e-9   held-out max   7.0e-6   value at D = 1e30: 0.0031157624
+D^-0.1 poly(1/D)                   deg 20: fit residual  2.0e-11   held-out max   8.0e-7   value at D = 1e30: 0.0031834642
+D^-0.3 poly(1/D)                   deg 16: fit residual   8.8e-9   held-out max   3.4e-5   value at D = 1e30: 1.075203e-8
+D^-0.3 poly(1/D)                   deg 20: fit residual  1.2e-10   held-out max   4.0e-6   value at D = 1e30: 1.1466182e-8
+D^-1 poly(1/D)                     deg 16: fit residual   1.8e-7   held-out max  0.00043   value at D = 1e30: 6.0833053e-28
+D^-1 poly(1/D)                     deg 20: fit residual   2.9e-9   held-out max   5.9e-5   value at D = 1e30: 7.5199352e-28
+1/lnD * poly(1/lnD)  (-> 0)        deg 12: fit residual  2.2e-10   held-out max   1.0e-7   value at D = 1e30: 0.62438557
+1/lnD * poly(1/lnD)  (-> 0)        deg 16: fit residual  7.8e-15   held-out max  1.5e-11   value at D = 1e30: 0.88006528
+1/lnD * poly(1/lnD)  (-> 0)        deg 20: fit residual  4.1e-15   held-out max  3.8e-11   value at D = 1e30: 1.0733666
+D^-1/2 * poly(D^-1/2)  (-> 0)      deg 16: fit residual  1.6e-11   held-out max   2.2e-7   value at D = 1e30: 1.2169721e-13
+D^-1/2 * poly(D^-1/2)  (-> 0)      deg 20: fit residual  1.7e-14   held-out max   4.0e-9   value at D = 1e30: 1.5223756e-13
+D^-1/2 * poly(D^-1/2)  (-> 0)      deg 24: fit residual  3.9e-15   held-out max  7.9e-10   value at D = 1e30: 1.7176205e-13

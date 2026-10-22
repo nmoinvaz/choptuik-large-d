@@ -1,0 +1,25 @@
+PILOT (not rigorous): B1 = double-precision y+(0.2) at the hier.py zero (path: ray 3pi/8 to 0.2, arc, real axis to 0.2) inflated by 1e-10; lemma S and the flat estimate over x^ +- 1e-6
+lemma S (M = 3, rp = 0.1, k = 20): contraction 0.8252; flat estimate on 0 < z <= Z = 0.004489: Lambda = 0.2923
+start box at xi1 = 0.2 (y+ and sigma(y+)): radius 3.92e-10
+   real t 0.107593 h 8.67e-03  max state radius 2.07e-07  [193 s]
+   real t 0.235135 h 5.88e-03  max state radius 2.22e-07  [341 s]
+   real t 0.342195 h 3.98e-03  max state radius 2.15e-07  [498 s]
+   real t 0.437313 h 5.40e-03  max state radius 2.03e-07  [644 s]
+   real t 0.516683 h 3.66e-03  max state radius 1.90e-07  [784 s]
+   real t 0.585386 h 2.48e-03  max state radius 1.76e-07  [943 s]
+   real t 0.644578 h 3.36e-03  max state radius 1.63e-07  [1108 s]
+   real t 0.693970 h 2.28e-03  max state radius 1.51e-07  [1282 s]
+   real t 0.736724 h 1.54e-03  max state radius 1.40e-07  [1455 s]
+   real t 0.773559 h 2.09e-03  max state radius 1.30e-07  [1627 s]
+   real t 0.806589 h 1.42e-03  max state radius 1.21e-07  [1777 s]
+   real t 0.840417 h 1.92e-03  max state radius 1.12e-07  [1939 s]
+   real t 0.868645 h 1.30e-03  max state radius 1.05e-07  [2096 s]
+   real t 0.893078 h 8.81e-04  max state radius 9.82e-08  [2274 s]
+   real t 0.916478 h 1.19e-03  max state radius 9.70e-08  [2449 s]
+   real t 0.938917 h 8.09e-04  max state radius 9.57e-08  [2611 s]
+   real t 0.958250 h 1.10e-03  max state radius 9.43e-08  [2735 s]
+   real t 0.975585 h 7.43e-04  max state radius 9.29e-08  [2863 s]
+   real t 0.993339 h 1.01e-03  max state radius 9.13e-08  [2994 s]
+backward along the real axis 0.2 -> 0.067: 389 steps, 3014 s; final state radius 9.07e-08; max radius of B 1.09e-03
+|H| = |G_fast G_slow^-1| entries <= 1.07e+01; G_slow^-1 entries <= 1.13e+00
+rho_6a = 3.044e-02 < 1: True  => all J_D,mu(0.2) = 0 implies psi = 0 (whole jump): True   [PILOT: not rigorous]

@@ -7,6 +7,10 @@ multiplier, S₁(A, ω) = 0 near A ≈ 2.7196, ω/ω∞ ≈ 0.9999, be certified
 them so. Section 6 replaces the late-order fit by an exact telescoping formula and encloses σ₁ rigorously. Section 7
 studies the Borel arc behind the exponential type.
 
+
+*Note added: a planted-truth test ([notes/PLANTED_SELECTION.md](../notes/PLANTED_SELECTION.md)) finds that the factored series G
+is biased high by 2.6–6.4×10⁻⁴ on functions of this class at twelve orders, and that twelve coefficients do not exclude
+further zeros within |x| ≈ 9; a converged σ₁₃ (to about 10⁻¹⁰) is needed.*
 ## Summary
 
 - **S₁ is (numerically) an entire function of exponential type in x = A².** The ratios obey

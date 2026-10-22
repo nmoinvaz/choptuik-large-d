@@ -1,0 +1,13 @@
+E1: O(1) part = 0
+    O(eps) part is zero
+E2: O(1) part = 0
+    O(eps) part is non-zero: -2*x**2*beta(tau)**2/(x**4*beta(tau)**4 - 2*x**2*beta(tau)**2 + 1)
+E3: O(1) part = 0
+    O(eps) part is non-zero: sqrt(2)*x**2*(-2*x**4*beta(tau)**5*f(tau)**2 - 2*x**4*beta(tau)**4*f(tau)**2*Derivative(be
+E4: O(1) part = 0
+    O(eps) part is non-zero: sqrt(2)*x**2*(2*x**4*beta(tau)**5*f(tau)**2 + 2*x**4*beta(tau)**4*f(tau)**2*Derivative(bet
+max |residual| over x in {1, 1.5, 3, 8}, tau in {0, 1, 2}, beta = 1.7 + 0.4 sin tau, f = 0.8 + 0.3 cos 2tau:
+   n =    100: E1 0.000e+00  E2 1.637e-02  E3 1.366e-03  E4 4.078e-02   (x n: 0.000 1.637 0.137 4.078)
+   n =   1000: E1 0.000e+00  E2 1.620e-03  E3 1.366e-04  E4 4.078e-03   (x n: 0.000 1.620 0.137 4.078)
+   n =  10000: E1 0.000e+00  E2 1.618e-04  E3 1.366e-05  E4 4.078e-04   (x n: 0.000 1.618 0.137 4.078)
+PASS 

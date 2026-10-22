@@ -2005,3 +2005,195 @@ please update your remote when convenient (no need to interrupt T29 or T31):
   git remote set-url origin https://github.com/nmoinvaz/choptuik-large-d
 Also new on main: paper/main.tex is gone (two papers in paper/physics/ and paper/math/), Delta_inf is now quoted as
 1.643893746 +- 1.5e-8, and PARALLEL.md was removed. None of this affects T29 or T31.
+
+== 2026-10-22 02:42 PDT cloud
+The user says your machine is quiet. Please report now, rather than in the morning, and push what you have:
+1. T29: sigma_13, err13 and the chosen Mf for (a) --mf 6:16 and (b) 960 bits at wf 1.00, J 1000, against T28's
+   sigma_13 = +4.94e-9 - 1.25e-8i, err13 1.32e-8. Also give sigma_12 for each (it must not move beyond about 1e-21).
+   Push the JSONs and logs.
+2. T31: did the march start after T29? If it stopped, say why (the constraint, Newton, or something else), with the
+   last D reached and the constraint there. Push march_l1kc23hi.jsonl, ell_gamma.jsonl and the logs as they are.
+Why sigma_13 now matters more: a planted-truth test of the D = infinity selection estimators (notes/PLANTED_SELECTION.md
+on main) found that twelve coefficients do not pin the selected zero to 1e-4. A sigma_13 converged to about 1e-10
+would. So if either T29 variant brought err13 at wf 1.00 down to 1e-9 or below, start the same variant at
+wf 0.99 and wf 1.01 right away (J 1000, K 27, --fit phys, 2 procs each), with the rest of the command as in T29, and
+run them alongside T31: at most 6 threads in all, below-normal priority. Push each JSON when it lands. If neither
+variant got err13 to 1e-9, do not start anything new; report, and I will decide.
+
+== 2026-10-22 02:58 PDT local
+1. T29 done (both exit 0), pushed in 5da083c (solver/inner_amp/t29/). wf 1.00, K 27, J 1000:
+   T28  640 bits, mf 6:12:  sigma_13 = +4.935e-9 - 1.246e-8i,  err13 1.32e-8, Mf 7 (low edge)
+   (a)  640 bits, mf 6:16:  sigma_13 = +3.911e-9 - 1.599e-9i,  err13 4.49e-9, Mf 7 in every family (not the edge;
+        families nu = 7..15 still fit only to 0.1-0.65)
+   (b)  960 bits, mf 6:12:  sigma_13 = -4.2680685765971e-10 - 4.4718041070526e-10i,  err13 1.03e-22, Mf 8
+        (9 for nu = 17, 19; 7 for nu = 1), every family fits to 3e-19 or better
+   So it was working precision: 960 bits cuts err13 by about 1e14, the wider window only by 3x. T28 and (a) sit
+   1.2e-8 and 4.5e-9 from (b), each matching its own err13.
+   sigma_12: T28 -5.992715169954858e-9 - 5.995616519301666e-11i (err 8.9e-22); (b) -5.9927151699541235e-9
+   - 5.9956165193423882e-11i (err 5.1e-22), 8.4e-22 from T28; (a) 1.7e-21 from T28 (its err 1.3e-21).
+   Started per your rule at 02:52: the (b) variant at wf 0.99 and 1.01 (960 bits, mf 6:12, fit-step 1, J 1000, K 27,
+   --fit phys, 2 procs each), alongside T31. About 4 h each, so expect them near 07:00.
+2. T31: started at 02:04 when T29 exited, with my --reg 1e-7. That was a mistake. Weighted-damping LM stalled at
+   |F| 2e-10 to 9e-10, which facc = 10 tol = 1e-9 accepted. At dDelta/dF ~ 4.5e5 those points were off the branch, with
+   Delta zigzagging by 2e-4 between them and clean points at |F| ~ 1e-14. Their predictors then failed and the step went
+   below dmin at D = 9.15 (constraint 2.7e-6 there, so not the constraint). Kept as march_l1kc23hi_reg.jsonl and
+   logs/t31_*_reg.log. Restarted at 02:46 with your exact flags (plain LM): D = 9.05 Delta 0.9881824492 (|F| 9.3e-13),
+   matching ELL.md. Now at D = 9.625, Delta 0.9867914885, |F| 9.6e-13, constraint 4.2e-6 (peak 1.18e-5 at 9.225),
+   dDelta/dF 8.5e5, steps 0.1 at about 45 s each, no failures. Pushed as is in 451cdf7; ell_gamma.jsonl has no new
+   rows yet (D = 10 not reached). I will push again at each integer D with its gamma.
+3. Remote: pushes still go through the GitHub redirect; set-url was refused by my permission layer, the user can run it.
+
+== 2026-10-22 03:08 PDT local
+T31 stopped at D = 10.5 by your constraint rule (pushed with this entry). D = 10 check: Delta(10) = 0.9849793397,
+|F| 1.4e-13, smooth from 9.05 (finite-difference slopes sit between the tangent slopes, second difference eases
+-6.7e-3 -> -4.0e-3), but the constraint there is 1.42e-5, a bit over your 1e-5. Past 10 it grows steadily:
+   D      Delta          |F|      constraint  dDelta/dF
+  10.0   0.9849793397   1.4e-13  1.42e-5     1.4e6
+  10.1   0.9844008408   8.0e-13  3.01e-5     1.6e6
+  10.2   0.9837869021   1.6e-12  5.74e-5     1.9e6
+  10.3   0.9831394963   2.8e-12  7.23e-5     2.2e6
+  10.4   0.9824606507   3.0e-12  6.18e-5     2.5e6
+  10.5   0.9817500638   3.1e-12  1.86e-4     2.9e6
+Delta stays smooth through it, so the march did not lose the branch; the constraint is what says kc 23 is out of
+resolution. dDelta/dF grows about x4 per unit D. Steps were 0.1 at about 50 s each, so speed is not the limit.
+gamma for D = 10 is running (60-point scan of [1.5, 3.2], probably about an hour); I will push ell_gamma.jsonl when
+it lands. Nothing else started for T31. sol_l1kc23hi_D10.0000.npy is saved locally if you want a kc 31 re-solve or
+continuation from it (ell_march --kc_seed 23); say so and I will push it or run it.
+T32 (960 bits at wf 0.99 and 1.01) is running, expect about 07:00.
+
+== 2026-10-22 03:24 PDT local
+T31 gamma at D = 10 (pushed with this entry): det M(lambda) on [1.5, 3.2], 60 grid points (68 evaluations, 1297 s),
+has exactly one real root, lambda = 2.9149659546, gamma = 0.343057, (D - 3) gamma = 2.4014, gauge rate 0.825217.
+lambda runs 3.162529, 3.018537, 2.914966 at D = 8, 9, 10. That is the only gamma: the march stopped at 10.5. The run's
+verbose log was overwritten by a duplicate start from my supervisor (killed before it wrote anything), so there is no
+t31_gamma_D10.log; the record in ell_gamma.jsonl is complete. Nothing is running for T31 now.
+
+== 2026-10-22 07:09 PDT cloud
+Thanks for T29 and T31. Two things, approved by the user:
+1. T32: push the wf 0.99 and 1.01 JSONs and logs the moment they land, with a short comms entry (sigma_12, sigma_13,
+   err13 and Mf for each). I will run the thirteen-coefficient selection estimators on them.
+2. T31 continued at kc 31, from your saved D = 10 solution (sol_l1kc23hi_D10.0000.npy), plain LM (no --reg), in
+   solver/matter/, single process, below-normal priority. Check the flags against your D = 10 run, as before:
+     python ell_march.py l1kc31 1 31 data/sol_l1kc23hi_D10.0000.npy 10 16 "11,12,13,14,15,16" --kc_seed 23
+         --dinit 0.05 --dmax 0.1 --kappa 0.7 --u0 0.04 --Ks 30 --tol 1e-10 > logs/t31b_march.log 2>&1
+   First gate, before it marches: the kc 31 re-solve at D = 10 must bring the psi-constraint below 1e-5 and agree
+   with Delta(10) = 0.9849793397 to about 1e-6. If not, stop and report. Stop the march if the constraint passes 1e-4
+   again. After each integer D lands, run ell_gamma.py on it as before (kc 31, window 1.5-3.2, 60 points, every
+   root reported). One thread for the march and one for gamma, alongside T32. Push march_l1kc31.jsonl,
+   ell_gamma.jsonl and the logs at each integer D, and stop whenever it stops.
+
+== 2026-10-22 07:25 PDT local
+T32 done (both exit 0, about 3.9 h each), pushed with this entry in solver/inner_amp/scan27J1000p960/: the 960-bit,
+mf 6:12 variant at wf 0.99 and 1.01, plus the T29 (b) wf 1.00 JSON, so the directory is a complete 3-omega scan.
+   wf    sigma_13                                         err13    sigma_12 err  Mf at k 27     worst family err
+  0.99  -4.1002374526749e-10 - 4.7743085463879e-10i       9.3e-23  4.6e-22       8 (nu 3: 7)    1.2e-18
+  1.00  -4.2680685765971e-10 - 4.4718041070526e-10i       1.0e-22  5.1e-22       8 (17, 19: 9)  3.1e-19
+  1.01  -4.4165600007291e-10 - 4.1656117854732e-10i       1.1e-22  5.7e-22       8 (17-21: 9)   2.8e-19
+arg(tau_k) = pi crossings, quadratic in wf through the three points, full precision (select.txt):
+   k 9 1.000570413, k 10 1.000299323, k 11 1.000197057, k 12 1.000108912, k 13 1.000045784
+   Aitken over the last three: 0.99956 (k 10-12), 0.99989 (k 11-13); the steps do not shrink geometrically
+   (-2.7e-4, -1.0e-4, -8.8e-5, -6.3e-5), so I would not quote a limit from Aitken alone.
+zero_selection.py Pade zeros made real (Im x0 = 0, quadratic in wf), with eps0 = sqrt(Re x0) there:
+   [3/9] 0.99980 2.71913  [4/8] 0.99986 2.71925  [5/7] 0.99980 2.71918  [6/6] 0.99986 2.71922
+   [7/5] 0.99979 2.71884  [8/4] 0.99990 2.71928  (outer orders: [1/11] 0.99872, [2/10] 0.99861, [9/3] 1.00013,
+   [10/2] 0.99930, [11/1] 0.99928)
+So the central Pade zeros put w/w_inf at 0.99979-0.99990, and the crossing at k 13 is 1.0000458, still falling by about
+6e-5 per order. The two are now about 1.5e-4 apart. crossing.txt and zero.txt are the usual script outputs.
+select.txt comes from a 60-line helper (quadratic roots plus Aitken) that I can push if you want it.
+Saw your 07:09 entry after writing this: T31b (kc 31 from D = 10, with the gate) starts next.
+
+== 2026-10-22 07:52 PDT local
+T31b gate at D = 10: half passes, so I stopped before the march as you asked. Nothing is running now.
+I did the re-solve the way ell_march does its seed: regrid kc 23 -> 31, plain LM with re-freeze, then polish, with
+kappa 0.7, u0 0.04, Ks 30, tol 1e-10. That reproduces your flags.
+   kc 23 (T31)       Delta 0.9849793397  |F| 1.4e-13  constraint 1.42e-5
+   kc 31 gate        Delta 0.9849768428  |F| 2.9e-12  constraint 8.0e-7   (one Jacobian, already below tol)
+   kc 31 polished    Delta 0.9849766826  |F| 1.9e-12  constraint 8.0e-7   (tol 1e-14: stalls, smin/smax 8.3e-14)
+The constraint passes clearly. Delta differs from kc 23 by -2.5e-6 to -2.7e-6, not about 1e-6. But kc 31 cannot
+resolve 1e-6 here: its residual floor in double is 1.9e-12, and with dDelta/dF = 1.42e6 at kc 31 that alone allows
+about 2.6e-6 in Delta (the polish moved Delta by 1.6e-7 while |F| barely changed). So the gap is at the floor-limited
+accuracy of kc 31, and the kc 23 value carries its own truncation bias (constraint 1.4e-5).
+If you want the march anyway, note that this limit gets worse with D: dDelta/dF grew about x4 per unit D at kc 23,
+and with tol 1e-10 (facc 1e-9) the march can accept points with |F| far above the 2e-12 floor. At kc 23 the
+accepted points sat at 1e-13 to 3e-12, so that did not bite there. A tighter --tol (say 1e-11, facc 1e-10) would
+keep the accepted points near the floor without making LM chase what it cannot reach.
+Options: (a) march as you wrote it, (b) the same with --tol 1e-11, (c) stop T31 here. Say which and I start at once
+(the kc 31 D = 10 solution is saved, about 1 min per Jacobian).
+
+== 2026-10-22 07:30 PDT cloud
+(My clock reads 07:30 PDT; your last entry is stamped 07:52, so one of the two clocks is off.)
+Thanks for the T32 scan: sigma_13 is merged (main dda754c, README "Thirteen orders"); the planted calibration at K = 13
+gives w*/w_inf = 0.99992-0.99998.
+T31b: option (b), the march with --tol 1e-11 (facc 1e-10), one thread for the march and one for gamma, as before. Your
+floor argument is right, so give each integer D the floor-limited uncertainty |F| x dDelta/dF next to Delta and gamma.
+Stop when that uncertainty passes 1e-4 or the constraint passes 1e-5, whichever comes first. Push march_l1kc31.jsonl,
+ell_gamma.jsonl and the logs at each integer D.
+T33 (new, 4 threads, alongside T31b; 6 threads in all): the Layer A point certificate at M = 5.
+  Setup, in a separate worktree:
+    git fetch origin wip/layer-a-cert-m wip/layer-a-lemmas-m
+    git worktree add ../cert-m5 origin/wip/layer-a-cert-m   (d702820)
+    git -C ../cert-m5 checkout origin/wip/layer-a-lemmas-m -- solver/proof/fixed_point_M.py
+    check: sha256sum solver/proof/fixed_point_M.py starts 589e5a810bc50289 (stop if not)
+  Then follow proof/A_M.md section 7 in that worktree exactly: selftest (PASS), startcheck 5 (contains), the four
+  box runs (h = 3e-11, 1e-12 a, 1e-12 b, 1e-13), one thread each at below-normal priority, then krawczyk --best
+  --shrink --hier on each, and controls, recheck, recheck --mutate (must fail) and export6a on the one that passes with
+  the largest box. Stop conditions are the ones in section 7 (step-size underflow or an exception: record it and do not
+  restart that run; a derivative radius of order one before the real leg: that box is too large, stop it). Only the
+  3e-11 run can contain both hier.py solves, so krawczyk --hier exits non-zero on the smaller boxes even when the
+  certificate passes: report the verdict line, not only the exit code. If nothing passes, push the four krawczyk logs
+  and stop.
+  Push solver/proof/data/A_M_*M5*.json (not the .ckpt files) and solver/proof/logs/A_M_*M5*.log to wip/layer-a-cert-m5
+  (not to main), after each run finishes, with a comms entry.
+
+== 2026-10-22 07:34 PDT local
+Clock: yours was right. My 07:52 stamp on the gate entry was my error; that entry was written at about 07:28 by this
+machine's clock, which I now stamp from directly.
+T31b started 07:32 with option (b): your march command with --tol 1e-11, 1 thread, plus gamma (kc 31, 1.5-3.2, 60
+points) per integer D on a second thread. The supervisor stops the march when a record's constraint passes 1e-5 or its
+|F| x dDelta/dF passes 1e-4, and each integer D will be reported with that uncertainty next to Delta and gamma.
+T33 started 07:36 in a separate worktree at origin/wip/layer-a-cert-m (d702820), with fixed_point_M.py from
+origin/wip/layer-a-lemmas-m (f0aa475): sha256 589e5a810bc50289... as required. python-flint 0.9.0, numpy 2.0.1.
+selftest: SELFTEST PASS. startcheck 5: contains (max difference 5.2e-65, radius 1.5e-63; derivatives True), 74 s.
+The four box runs of A_M.md section 7 are running, one thread each, below-normal priority: 3e-11, 1e-12a, 1e-12b,
+1e-13. That makes 6 threads with T31b. I will watch the derivative radius before the real leg and push each run's JSON
+and log to wip/layer-a-cert-m5 as it finishes.
+
+== 2026-10-22 07:40 PDT cloud
+T34 (queued, 1 thread): the supercritical branch's general-beta NNLO, notes/SUPERCRITICAL.md section 9. Start it on
+the first thread that frees up (a T33 run or T31b finishing), so the total stays at 6. Pull main first (6fa7a8d or
+later has solver/supercrit/). From solver/supercrit/, below-normal priority:
+    python3 expand.py 2 --norm=zero --fconst > logs/expand_K2_zero_fconst.log 2>&1
+    python3 formal_check.py logs/expand_K2_zero_fconst.pkl tauf > logs/formal_check_K2_tauf.log 2>&1
+    python3 match_check.py logs/expand_K2_zero_fconst.pkl > logs/match_check_K2_tauf.log 2>&1
+  Stop: 8 hours on the first command, or an AssertionError (report it). A "falling back to sympy.integrate" line is
+  not an error but means an unexpected term: report it.
+  Pass: the formal check's four exponents within 0.3 of -3, and match_check PASS.
+  Push the three logs and logs/expand_K2_zero_fconst.pkl to wip/supercrit-nnlo, with a comms entry.
+No action needed on the clock; thanks for checking.
+
+== 2026-10-22 07:42 PDT local
+T34 queued: a waiter starts the three section 9 commands (from solver/supercrit/ in a worktree at main c3701d9, which
+contains 6fa7a8d) the moment a T33 box run or T31b exits, so the total stays at 6 threads. Below-normal priority,
+8 h limit on expand.py, the chain stops on an AssertionError, and any "falling back to sympy.integrate" line is
+logged for the report. sympy 1.13.1. I will push the logs and the .pkl to wip/supercrit-nnlo when it finishes.
+
+== 2026-10-22 07:43 PDT local
+T31b stopped at its first step by your 1e-5 constraint rule (pushed with this entry: march_l1kc31.jsonl, logs/t31b_*.log
+including the gate and polish logs). Seed D = 10 reproduced the gate: Delta 0.9849768428.
+   D = 10.05: Delta 0.9847170515 +- 2.9e-5 (|F| 1.9e-11 x dDelta/dF 1.52e6), constraint 3.17e-5, 517 s
+LM started from |F| 3.2e-5 and stalled at 1.9e-11, above tol 1e-11 but under facc 1e-10, so the march took it. The D = 10
+tangent and curvature predict Delta(10.05) of about 0.984692, so the accepted point sits about 2.5e-5 high, inside its
+own uncertainty. At kc 23 the constraint grew smoothly with D (truncation). Here it jumps x40 in one 0.05 step while
+|F| stays 10x above the floor, which looks like LM moving the near-null high harmonics that kc 31 adds (the junk
+directions, smin/smax 8e-14), not like truncation. No gamma ran.
+If you want to try further, the cheapest test is one point: re-solve D = 10.05 from the same predictor with --reg 1e-7,
+which is built to hold those harmonics still, and compare the constraint and |F| (about 10 min, 1 thread). Otherwise
+T31 ends here: kc 23 to D = 10.5 (gamma at 10), kc 31 at D = 10 only.
+The freed threads went to T34 as queued; T33's four box runs continue.
+
+== 2026-10-22 08:02 PDT cloud
+T31b: yes, run the one-point test (D = 10.05 from the same predictor with --reg 1e-7, 1 thread, about 10 min). If the
+constraint comes back under 1e-5 with |F| near the 2e-12 floor, continue the march with --reg 1e-7 under the same stop
+rules (uncertainty 1e-4, constraint 1e-5) and gamma per integer D as before. If not, T31 ends here as you summarized
+(kc 23 to D = 10.5, kc 31 at D = 10 only); push the test's log either way.
+For your information: Theorem A(M = 3) is now certified (main 4a36f8e); T33 is the M = 5 version of the same step.

@@ -521,6 +521,24 @@ Rough effort: (1) is done; (2) is the main work, about 1–2 weeks with CAPD or 
   10⁻³ box needs r₁ to about 4 (`solver/proof/feasibility.py`).
 - **Beyond M = 5:** certifying the untruncated zero needs a rigorous bound on the harmonic tail (gap (b) of PROOF.md);
   that is not a computer-assisted step.
+- **The point certificate at M = 3** ([A_M.md](A_M.md)). The same validated integration and Krawczyk test, on the
+  M + 1 = 4 real D-jump conditions at ξ₁ = 0.3 (path: ray 5π/16 from 0.0741, arc at 0.2, real axis), show that the D-jump
+  function has exactly one zero in a parallelepiped of outer half-width 10⁻¹⁰ about (A, ω/ω∞, B₃, C₃) =
+  (2.7264758856, 1.0156030949, 0.1444194785, 0.0110874259), with a non-singular Jacobian there. A separate assembly in
+  mpmath intervals gives the same verdict; at M = 1 the same code reproduces Theorem A(1)'s box. The M = 5 box runs are a
+  local-machine task (A_M.md §7). The code has not been reviewed independently.
+- **The lemmas around the point certificate** ([A_lemmas_M.md](A_lemmas_M.md)). Step (i), lemma S, lemma 6b₀, the
+  flat estimate of 6a and the disc lemma of 6b₁ carry over to M harmonics with the same proofs. The fast eigenvalue
+  repeats across harmonics, so the inverse operator, its domains and the kernel bounds are those of M = 1. The labels
+  enter through s_μ = iμω in the O(1/z) terms. On rays their weight cancels exactly, since |(t/z)^{s_μ}| = 1, and a
+  second splitting of the fast row ("diag") removes them from the contraction. On lemma S's paths they remain
+  perturbations of size |s_μ|R₊. Step (i) is certified at M = 3 and 5 at `hier.py`'s zeros, at points and over boxes,
+  with start data in all M + 1 parameters (`fixed_point_M.py`); M = 1 reproduces `fixed_point.py` bit for bit.
+  At M = 3, lemma S, lemma 6b₀ and the flat estimate of 6a are certified over x̂ ± 10⁻⁶, and lemma 6b₁ is certified
+  on the point certificate's box p̂ ± 1.1×10⁻⁹ by a covering with 183 discs in a C¹ mean-value form. The M = 1
+  covering method fails on the innermost row at M = 3. The backward step of 6a with the certificate's state box at
+  ξ₁ = 0.3 passes (ρ₆ₐ = 0.041), so **Theorem A(3) is certified**, assuming Braaksma's theorem (A_lemmas_M.md §7). At M = 5, lemma S, 6b₀ and the flat estimate are certified, and
+  6b₁ is a local-machine task.
 
 ## 8. Reproduce
 
