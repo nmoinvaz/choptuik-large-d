@@ -130,10 +130,9 @@ theorem, and follows Baldom\'a, Capi\'nski, Guardia and Seara~\cite{BaldomaCapin
 \item The untruncated multiplier is numerically an entire function of the squared amplitude, of exponential type; its
 first coefficient is enclosed rigorously (Section~\ref{sec:entire}).
 \end{enumerate}
-Evaluated numerically, the selection rule gives $\omega/\winf$ between $0.99915$ and $1.00011$ from twelve orders of an
-amplitude expansion, and $\Dinf = 1.6439 \pm 0.0002$ from the $D = \infty$ equations alone. This is evidence for
-Conjecture~\ref{conj}, not a proof, and the $\pm$ is the range of several estimators, not an error bound
-(Section~\ref{sec:evidence}). Table~\ref{tab:status} lists the statements and their status.
+Evaluated numerically to twelve orders, the selection rule gives $\Dinf = 1.6439 \pm 0.0002$ from the $D = \infty$ equations
+alone: evidence for Conjecture~\ref{conj}, with the $\pm$ a range of estimators (Section~\ref{sec:evidence}).
+Table~\ref{tab:status} lists the statements and their status.
 
 \begin{table}[t]
 \caption{The statements of this paper and their status.}
@@ -174,9 +173,9 @@ they are parabolic with the roles of space and time swapped, and estimated $\gam
 oscillating solutions. What is new here is their use for the discretely self-similar solution: the inner Stokes
 multipliers, the selection conjecture and the symmetry argument of Proposition~\ref{prop:5}. Clark and
 Pimentel~\cite{ClarkPimentel2025} constructed continuously self-similar critical solutions at large $D$ by matched
-asymptotics. The templates for the proofs are Xie and Tanveer for the selection theorem, Baldom\'a, Fontich, Guardia and
-Seara~\cite{BaldomaFontichGuardiaSeara} for rigorous inner--outer matching and continuation, and Baldom\'a, Capi\'nski,
-Guardia and Seara~\cite{BaldomaCapinskiGuardiaSeara2023} for the computer-assisted Stokes constant. Other rigorous
+asymptotics. The proof templates are Xie and Tanveer (selection), Baldom\'a, Fontich, Guardia and
+Seara~\cite{BaldomaFontichGuardiaSeara} (matching and continuation) and Baldom\'a, Capi\'nski, Guardia and
+Seara~\cite{BaldomaCapinskiGuardiaSeara2023} (the computer-assisted Stokes constant). Other rigorous
 instances of ``existence if and only if an exponentially small coefficient vanishes'' are in Lombardi's
 monograph~\cite{Lombardi2000}.
 
@@ -614,9 +613,9 @@ C(n,s) = -2\pi\iu\,K'(s)\,(n+1)^{s+1/2}\,e^{-\iu\pi\Lambda}\,\big(1 + O(s^2/n)\b
 \end{equation}
 Weber's classical Stokes constant $\sqrt{2\pi}/\Gamma(-\nu_W)$ with $\nu_W = -1-s$~\cite[\S12.9]{DLMF}. The ratio of the two
 sides is $1.00014$ at $n = 10^5$ for $\mu = 1$ ($1.0013$ for $\mu = 3$), with $n\,(\text{ratio} - 1) \to 13.9 - 7.6\iu$, of
-the size of $|s^2| = 14.6$ (\repo{solver/largeD\_stokes\_C.py}); at $D = 20$--$60$ the ratio is still $2.1$--$1.27$, since
-the asymptotics need $\mu^2\omega^2 \ll n$. So, for large $n$, the light-cone coefficient is the $n$-independent Stokes
-constant $K'(s)$ of a ${}_2F_0$, times $(n+1)^{s+1/2}$ and a phase. In the linear case the outer late-order constant $K$ of
+the size of $|s^2| = 14.6$ (\repo{solver/largeD\_stokes\_C.py}); the asymptotics need $\mu^2\omega^2 \ll n$. So, for large $n$,
+the light-cone coefficient is the $n$-independent Stokes constant $K'(s)$ of a ${}_2F_0$, times $(n+1)^{s+1/2}$ and a phase. In
+the linear case the outer late-order constant $K$ of
 Proposition~\ref{prop:4} and this inner Stokes constant are the same object; this is the exact linear version of the
 inner--outer matching.
 
@@ -810,9 +809,7 @@ in), run at $\lambda = 2$ from the profile \eqref{eq:f}, reproduces the predicte
 every harmonic the Galerkin truncation resolves, for $F = 2.72\sin\theta + 0.15\sin3\theta$, through $j = 11$ at $45$
 harmonics (\repo{solver/inner\_pert/pert\_check3.py 45 11}); with $\lambda = 1.9$ or $2.1$ the same $f$ misses by $7.5\%$ at
 the third order. The modes $\lambda = 0$ and $\lambda = 1$ pass the same kind of check, to $6\times10^{-30}$ and (with
-gravity) $10^{-177}$. Two remarks on the structure: the self-similar variable of a heat equation is $t/\sqrt s$, here a
-multiple of $1/\xi$, and the linear inner problem is indeed Hermite's equation; and the inner fast mode
-$e^{-1/(2\xi^2)} = e^{-t^2/(4s)}$ is the heat kernel.
+gravity) $10^{-177}$. The inner fast mode $e^{-1/(2\xi^2)} = e^{-t^2/(4s)}$ is the heat kernel.
 
 The mode is physical, not gauge. The reparametrization is gauge, and $t$-translation ($\lambda = 1$) shifts the
 accumulation time, but $s$-translation shifts $r^2$, and $r$ is the areal radius. A supercritical evolution therefore
@@ -963,14 +960,11 @@ $n \to \infty$ and set $b = 1$, $m = -p$. The result is the list above (computed
 \repo{solver/proof/fast\_eigenvalues.py}).
 \end{proof}
 
-Consequently: on $0 < x < 1$ and $1 < x < \infty$ (with $c \approx 1$) the fast eigenvalues are finite and non-zero, so
-there are no turning points on the real axis; $x = 0$ and $x = c(1) = 1$ are doubly singular points of the type
-$\eps\,(x - x_0)\,y' = f$; and $x = \infty$ is a turning point, because $\lambda_u \sim n/x^3$ and $\lambda_b = -n/x$ fall to
-the size $\sim 1/x$ of the slow terms at $x \sim \sqrt n$. That is the inner scaling $\xi = x/\sqrt n$: the inner problem
-is the turning-point equation of this singular perturbation problem, as in Xie and Tanveer's finger and Kruskal and
-Segur's dendrite. At leading order the fast block is $\lambda_u$ times the identity on the $N$ odd harmonics; the
-degeneracy is lifted at order $1$ by the $\theta$-transport and the gravity coupling, which produces the characteristics
-of Proposition~\ref{prop:3} and the matrix structure of the multipliers.
+Consequently there are no turning points on the real axis; $x = 0$ and $x = c(1) = 1$ are doubly singular points of the
+type $\eps\,(x - x_0)\,y' = f$; and $x = \infty$ is a turning point, because $\lambda_u \sim n/x^3$ and $\lambda_b = -n/x$ fall to the
+size $\sim 1/x$ of the slow terms at $x \sim \sqrt n$. The inner problem is the turning-point equation of this singular
+perturbation problem, as in Xie and Tanveer's finger and Kruskal and Segur's dendrite. The fast block is $\lambda_u$ times the
+identity on the $N$ odd harmonics at leading order; the transport and the gravity coupling lift the degeneracy at order $1$.
 
 \begin{lemnamed}{B5.0}\label{lem:B50}
 In the inner variables $x = \sqrt n\,\xi$, $y = p - m$, $\sigma = \sqrt n\,(p+m)$, $b = 1 + \eta/n$, with $\nu = n^{-1/2}$ and
@@ -1080,11 +1074,10 @@ light-cone exponents are
 \Lambda_\mu = \tfrac n2 - 1 - \iu\mu\omega + \langle F^2\rangle + O(1/n),
 \end{equation}
 and they differ pairwise by the non-zero imaginary amounts $\iu(\nu-\mu)\omega$: no two differ by an integer, for any $n$.
-In the $M$-harmonic model $\mathcal T$ is replaced by its truncation $\mathcal T_0 = P_M\mathcal TP_M$, which breaks the gauge step.
-At the $M = 5$ zero of Section~\ref{sec:trunc}, for $M = 1, 3, 5, 7, 9, 15, 25$, the eigenvalues for the central harmonics
-converge to $\langle F^2\rangle - 1 - \iu\mu\omega$ exponentially in $M$ (errors $10^{-2}$, $2\times10^{-4}$, $3\times10^{-6}$,
-$4\times10^{-8}$ at $M = 3, 5, 7, 9$), the two eigenvalues with $|\mu| = M$ are shifted by about $0.37$, and all pairwise
-differences have $|\im| \ge 6.9$ and $|\re| \le 0.019$ (\repo{solver/proof/lightcone\_exponents.py}).
+In the $M$-harmonic model $\mathcal T$ is replaced by its truncation $\mathcal T_0 = P_M\mathcal TP_M$, which breaks the gauge step; at
+the $M = 5$ zero of Section~\ref{sec:trunc} and for $M$ up to $25$, the central eigenvalues converge to
+$\langle F^2\rangle - 1 - \iu\mu\omega$ exponentially in $M$, and all pairwise differences have $|\im| \ge 6.9$ and $|\re| \le 0.019$
+(\repo{solver/proof/lightcone\_exponents.py}).
 
 \begin{lemnamed}{B6$'$ (Volterra bound)}\label{lem:B6p}
 Let $t_0 = \tfrac12$. Split the linearized $M$-harmonic system on $t \in (0, t_0]$ into fast components $a$ (the $p + m$
@@ -1228,8 +1221,8 @@ Y^\pm(x) = \sum_{k \le K_0}\eps^k\,Y_k(x) + R^\pm(x), \qquad |R^\pm(x)| \le C_{K
 with $Y_k$ the polynomial coefficients of Proposition~\ref{prop:1}, of degree at most $2k+1$.
 \end{lemnamed}
 
-On $\mathcal D^\pm_n$ the ratio $(1+|x|)^2/n \le 2k_1/\ln n$ is small, so $Y^\pm$ has no exponentially large fast content, and
-its error at the small-$|z|$ edge of $\mathcal M^\pm$ is polynomially small, which is what Lemma~B5(1) uses. The plan is a
+On $\mathcal D^\pm_n$, $(1+|x|)^2/n \le 2k_1/\ln n$, so $Y^\pm$ has no exponentially large fast content, as Lemma~B5(1) needs. The
+plan is a
 contraction in the norm $\sup_{\mathcal D^\pm_n}|R|/[(1+|x|)((1+|x|)^2/n)^{K_0+1}]$: the fast components ($p + m$ per harmonic, and
 $b - 1$) are integrated along the paths of Lemma~B8.1, gaining $1/(n|\Phi'(x)||x|) \sim |x|^2/n \le k_1/\ln n$ at large $|x|$
 and $O(1/n)$ on bounded sets; the slow components are integrated from $x = 0$, where regularity fixes them; the transport
@@ -1614,11 +1607,10 @@ So $\beta = 0$, and $\psi = 0$ on $(0, Z]$ by step 1. By uniqueness for the ODE,
 germs coincide.
 \end{proof}
 
-The margin is large ($\rho_{6a} = 0.004$ against $1$). Two mutations of the inputs are caught (a relative change $10^{-6}$ of one
-coefficient of the formal series makes Lemma~S fail; dropping the relabelling $\mu \mapsto -\mu$ in the reflection makes the
-backward integration fail). A third, $(1 - \iu\mu\omega)$ in place of $(1 + \iu\mu\omega)$ in the change of variables at $\xi_a$, is not
-caught ($\rho_{6a}$ becomes $0.12$): the wrong $V$ differs from the right one by $2\iu\mu\omega P$, and $P(Z)$ is itself bounded by the
-flat estimate. That formula is guarded instead by the self-tests of the variable changes against the integrator's system.
+The margin is large ($\rho_{6a} = 0.004$ against $1$). A relative change of $10^{-6}$ in one series coefficient makes Lemma~S fail, and
+dropping the relabelling $\mu \mapsto -\mu$ in the reflection makes the backward integration fail; but $(1 - \iu\mu\omega)$ in place of
+$(1 + \iu\mu\omega)$ in the change of variables at $\xi_a$ is not caught ($\rho_{6a} = 0.12$), since the wrong $V$ differs by
+$2\iu\mu\omega P$ and $P(Z)$ is itself small. That formula is guarded instead by self-tests against the integrator's system.
 
 \subsection{Lemma 6b\texorpdfstring{$_1$}{1}: a covering by validated Taylor discs}
 It remains to show that $\mathsf y^+$ is analytic on the annular sector between $|\xi| = 0.0624$ and $0.2$. A first-order family
@@ -1788,10 +1780,8 @@ yet; re-running the discs in CAPD would be the natural check.
 \subsection{What is not claimed}
 Theorem~\ref{thm:A} is a statement about the one-harmonic truncation ($M = 1$), not about the physical problem: its zero is
 $22\%$ below $\winf$ in frequency, and it does not survive the addition of harmonic $3$. Nothing is said about parameters outside
-$X$. The disc covering has no second implementation. Extending the proof to $M = 5$ means a $38$-dimensional real system whose
-higher harmonics leak into the lower conditions with weights up to $10^{17}$; a certificate there must be posed on the
-Schur-corrected conditions, which requires multiprecision Lohner integration. The untruncated problem needs, in addition, the
-harmonic-tail bound of Section~\ref{sec:tail} or the entire-function route of Section~\ref{sec:entire}.
+$X$. The disc covering has no second implementation. At $M = 5$ the higher harmonics leak into the lower conditions with weights up
+to $10^{17}$, so a certificate there must be posed on the Schur-corrected conditions, with multiprecision Lohner integration.
 
 % =====================================================================================================
 \section{The untruncated multiplier as an entire function}
@@ -1939,11 +1929,9 @@ $|S| = 3\times10^{-14}$ at $220$ orders, and the only clean zero in $0.5 \le A \
 Theorem~\ref{thm:A} certifies. Its amplitude is $6.5\%$ below the measured $F_1 \approx 2.72$ and its frequency $22\%$ below $\winf$; adding
 harmonic $3$ destroys it (the residual becomes $4.6\times10^6$).
 
-\emph{Three harmonics.} A joint solve of $S_1 = S_3 = 0$ for $(A, \omega, F_3)$ is badly conditioned (Jacobian singular values
-$6\times10^9$, $5\times10^9$, $23$, $0.4$): de-mixing leaves a leakage of the harmonic-3 condition into the harmonic-1 one about $10^4$
-times $r_3$, and the solve stops on false near-zeros. Solved nested instead ($S_3 = 0$ for $F_3$ at fixed $(A, \omega)$, then Newton
-on $(A, \omega)$ for $S_1 = 0$, a $2\times2$ problem of condition about $2$), there is one zero, the same from two starts and at three
-matching radii (moving by less than $10^{-7}$): $A = 2.7265$, $\omega = 1.0156\,\winf$ ($\Delta = 1.6186$), $F_3/F_1 = 0.0530 + 0.0041\iu$,
+\emph{Three harmonics.} A joint solve of $S_1 = S_3 = 0$ is badly conditioned (singular values $6\times10^9$ down to $0.4$) and
+stops on false near-zeros. Solved nested ($S_3 = 0$ for $F_3$ at fixed $(A, \omega)$, then a $2\times2$ Newton step for $S_1 = 0$), there
+is one zero, the same from two starts and at three matching radii (moving by less than $10^{-7}$): $A = 2.7265$, $\omega = 1.0156\,\winf$ ($\Delta = 1.6186$), $F_3/F_1 = 0.0530 + 0.0041\iu$,
 $\langle F^2\rangle = 3.727$.
 
 \emph{Five harmonics.} The couplings grow further ($\partial r_3/\partial B_5 \approx 10^{13}$, $\partial r_1/\partial B_5 \approx 10^{17}$). A hierarchical
@@ -1969,9 +1957,9 @@ finite rate. The measured ratios $|F_{\nu+2}/F_\nu|$, $\nu = 1, \dots, 9$, extra
 harmonic, close to $|q|A^2 \approx 0.063$ (Figure~\ref{fig:spectrum}; the extrapolations are not fully converged). This is the evidence
 behind the value $\sigma_F \approx 1.4$ in hypothesis (H1).
 
-\begin{figure}[t]
+\begin{figure}[htb]
 \centering
-\includegraphics[width=0.88\linewidth]{../figures/spectrum.pdf}
+\includegraphics[width=0.8\linewidth]{../figures/spectrum.pdf}
 \caption{Left: amplitude $|F_\nu|$ of each odd harmonic of the echo profile for $D = 4$--$60$ (from~\cite{companion}) and the
 $D = \infty$ prediction of the inner problem (dashed; beyond $\nu = 5$ the leading-order ratio, conjectured). Right: the decay
 rate per harmonic, $\frac12\ln|F_\nu/F_{\nu+2}|$, against $1/(D-2)$, with extrapolations from $D \ge 20$ and the predicted $D = \infty$
@@ -1994,7 +1982,7 @@ $10^{-4}$ level. With twelve coefficients the five central Pad\'e approximants o
 $0.99987$--$0.99991$ (at $\winf$ they are real to $|\im A_0| \approx 1.4\times10^{-4}$, at $A_0 = 2.7195$--$2.7198$), and the factored series $G$
 of Section~\ref{sec:entire} gives $0.99988$ at $A_0 = 2.7194$. The five-harmonic truncation, $0.999228$, lies inside the bracket.
 
-\begin{table}[t]
+\begin{table}[htb]
 \caption{Where the zero of $S_1$ becomes real, in $\omega/\winf$, order by order in the amplitude expansion.}
 \label{tab:bracket}
 \footnotesize
@@ -2014,9 +2002,9 @@ order $k$ & $\arg\tau_k = \pi$ (from above) & $\tau_{k-1}/\tau_k$ real (from bel
 \end{tabular}
 \end{table}
 
-\begin{figure}[t]
+\begin{figure}[htb]
 \centering
-\includegraphics[width=0.8\linewidth]{../figures/selection.pdf}
+\includegraphics[width=0.72\linewidth]{../figures/selection.pdf}
 \caption{The selection rule evaluated from the $D = \infty$ inner problem alone. Top: where the harmonic-1 multiplier has a real
 zero, order by order in the amplitude expansion; simple-zero estimates ($\arg\tau_k = \pi$) from above, floating-exponent estimates
 from below, Pad\'e ranges and the factored series inside the shaded bracket, which narrows onto $\winf$ from the finite-$D$
@@ -2061,13 +2049,9 @@ light-cone coefficient) is proved. What would turn the selection rule into a the
 \item \emph{Theorem~\ref{thm:B} for each fixed $M$}: the two contractions, Lemma~B8($M$) on $\mathcal D^\pm_n$ and Lemma~B5($M$)(1) on
 $\mathcal M^\pm$, with explicit constants; a description of the outer Borel plane that proves (H-a1) and (H-a2); and the two citation
 checks.
-\item \emph{A certified zero with more harmonics}, Theorem A($M = 5$): the $38$-dimensional system, posed on the
-Schur-corrected conditions with multiprecision Lohner integration; and a second implementation of the disc covering of
-Lemma~6b$_1$.
-\item \emph{The untruncated zero}, by either route: the harmonic-tail lemma of Section~\ref{sec:tail} for the jump-conditioned
-truncation, with $M = 7$ explicit; or rigorous $\sigma_k$ for $k \le 14$ together with a proof of the exponential type of $S_1$
-(Section~\ref{sec:entire}), which needs control of the inner problem at complex amplitude. The second route replaces the
-harmonic tail by a better-behaved amplitude tail.
+\item \emph{Theorem A($M = 5$)}, on the Schur-corrected conditions; and a second implementation of the disc covering.
+\item \emph{The untruncated zero}: the harmonic-tail lemma of Section~\ref{sec:tail} with $M = 7$ explicit, or rigorous
+$\sigma_k$, $k \le 14$, with a proof of the exponential type of $S_1$ (Section~\ref{sec:entire}).
 \item \emph{Uniformity in the harmonic index} (gap (b)) for the selection theorem itself, in a space of functions analytic in
 a $\theta$-strip.
 \item \emph{Identification}: that the computed branch of critical solutions is the branch of the selection theorem, for instance
