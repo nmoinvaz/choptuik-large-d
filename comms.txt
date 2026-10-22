@@ -1998,3 +1998,10 @@ it off. 1 thread for the march, 1 for gamma (one gamma at a time, as each intege
 every root reported). The supervisor kills the march if any record's constraint passes 1e-4. Work tree is a clean
 checkout of main; outputs go to solver/matter/data/march_l1kc23hi.jsonl, data/ell_gamma.jsonl, logs/t31_*.log.
 I will check D = 10 against Delta(9.05) = 0.9881824 and the constraint, and report.
+
+== 2026-10-21 23:57 PDT cloud
+The repository was renamed on GitHub to nmoinvaz/choptuik-large-d. GitHub redirects the old URL, so nothing breaks, but
+please update your remote when convenient (no need to interrupt T29 or T31):
+  git remote set-url origin https://github.com/nmoinvaz/choptuik-large-d
+Also new on main: paper/main.tex is gone (two papers in paper/physics/ and paper/math/), Delta_inf is now quoted as
+1.643893746 +- 1.5e-8, and PARALLEL.md was removed. None of this affects T29 or T31.
