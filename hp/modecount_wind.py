@@ -5,6 +5,7 @@ principle (notes/MODE_COUNT.md), for one saved double-double state.
     python3 modecount_wind.py STATE.npz [--M=N] [--kf=none|13] [--threads=N] [--tag=NAME] [--h0=0.4] [--tol=0.785]
                               [--Im2=1.5] [--aR=..] [--aL=..] [--aLL=..] [--cache=TAG] [--res=hp/data/modecount_results.jsonl]
 
+--fmax: the largest background residual accepted (default 1e-20, as hp/gamma_dd.py; a count needs far less).
 --tag names the run (log, record); --cache names the evaluation cache (default: the tag), so that runs on the same
 state and layout with other boxes can share evaluations.
 
@@ -287,7 +288,8 @@ def main():
         logs.append(m)
 
     kf = "default" if "kf" not in opts else (None if opts["kf"] == "none" else int(opts["kf"]))
-    st = setup(path, M=int(opts["M"]) if "M" in opts else None, threads=threads, kf=kf, log=log)
+    st = setup(path, M=int(opts["M"]) if "M" in opts else None, threads=threads, kf=kf, log=log,
+               fmax=float(opts.get("fmax", 1e-20)))
     D, M = st.D, st.M
     tag = opts.get("tag", f"D{D:.4f}_M{M}")
     logf = open(os.path.join(DATA, f"modecount_{tag}.log"), "a")

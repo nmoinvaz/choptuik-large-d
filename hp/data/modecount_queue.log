@@ -298,3 +298,22 @@ Traceback (most recent call last):
     raise RuntimeError(f"background not converged in this layout: |F| = {F:.1e} > {fmax:.0e} (M = {M})")
 RuntimeError: background not converged in this layout: |F| = 9.0e-18 > 1e-20 (M = 48)
 === 2026-10-22 08:08:45 exit 1: hp/data/states/up6_D30.0688.npz --M=48 --h0=0.6 --lam=2.079747703853
+committed 0ec5d95
+pushed to wip/mode-count
+=== 2026-10-22 08:08:49 job: hp/data/seeds/local/up23_D61.0264.npz --M=48 --h0=0.6 --lam=2.043532530673195
+  |F| 1.3e-06 in this layout: Newton
+=== skip (done): check hp/data/seeds/local/up23_D61.0264.npz --quick
+=== skip (done): hp/data/seeds/local/up23_D61.0264.npz --lam=2.043532530673195
+=== skip (done): hp/data/states/up7_D45.0507.npz
+=== skip (done): hp/data/states/up6_D30.0688.npz --lam=2.079747703853
+=== skip (done): hp/data/seeds/local/up23_D61.0264.npz --lam=2.043532530673195 --v2
+=== skip (done): f64 --realscan=0.05
+=== 2026-10-22 08:09:59 job: hp/data/states/up6_D30.0688.npz --M=48 --h0=0.6 --lam=2.079747703853 --fmax=1e-15
+  |F| 1.6e-11 in this layout: Newton
+  |F| 1.6e-11 after Newton: Levenberg-Marquardt
+  |F| 9.0e-18; saved modecount_state_D30.0688_M48.npz
+=== 2026-10-22 08:21:56  up6_D30.0688.npz: D 30.068824, M 48, kfreeze None, |F| 9.0e-18 (in 1.6e-11); Delta 1.964267876261, omega 3.198742; lam_g = 1 + <c1> = 0.8264840435; lam_phys (expected) 2.0797477039
+  contour: aLL -0.1500, aL 0.3000, a1 1.2318, a2 2.6797, aR 6.1820; y1 = omega/2 = 1.5994, y2 = 1.5 omega = 4.7981
+  candidate poles with |Im| < y2, Re in (-1, 9): [(7.4225, -3.1987), (-0.8423, -3.1987), (6.5961, -3.1987), (-0.0158, -3.1987), (2.4636, -3.1987), (0.8107, -3.1987), (8.249, -3.1987), (4.9431, -3.1987), (3.2901, -3.1987), (4.1166, -3.1987), (5.7696, -3.1987), (1.6372, -3.1987), (1.6372, 3.1987), (5.7696, 3.1987), (4.1166, 3.1987), (3.2901, 3.1987), (4.9431, 3.1987), (8.249, 3.1987), (0.8107, 3.1987), (2.4636, 3.1987), (-0.0158, 3.1987), (6.5961, 3.1987), (-0.8423, 3.1987), (7.4225, 3.1987)]
+  expected zeros: [(0.0, -6.397483), (0.0, 0.0), (0.0, 6.397483), (0.826484, -6.397483), (0.826484, 0.0), (0.826484, 6.397483), (2.079748, -6.397483), (2.079748, 0.0), (2.079748, 6.397483)]
+    10 evaluations, 51.0 s each

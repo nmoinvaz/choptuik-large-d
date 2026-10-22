@@ -1,0 +1,9 @@
+PASS none: B0 0, U0 0, B1a 0, B1b 0, B1c 0, B1 0, U 0, full 0; 94 evaluations, max step 0.013
+PASS B1c, complex pair: B0 0, U0 0, B1a 0, B1b 0, B1c 2, B1 2, U 0, full 2; 202 evaluations, max step 0.397
+PASS B1c, real: B0 0, U0 0, B1a 0, B1b 0, B1c 1, B1 1, U 0, full 1; 183 evaluations, max step 0.390
+PASS U, other-sector real mode: B0 0, U0 0, B1a 0, B1b 0, B1c 0, B1 0, U 1, full 2; 100 evaluations, max step 0.391
+PASS U, near the top edge: B0 0, U0 0, B1a 0, B1b 0, B1c 0, B1 0, U 1, full 2; 101 evaluations, max step 0.392
+PASS B0, slowly growing pair: B0 2, U0 0, B1a 0, B1b 0, B1c 0, B1 0, U 0, full 0; 136 evaluations, max step 0.387
+PASS B1b, second mode next to lam_phys: B0 0, U0 0, B1a 0, B1b 2, B1c 0, B1 2, U 0, full 2; 236 evaluations, max step 0.444
+PASS B1a, near an edge (0.05 from Re = aL): B0 0, U0 0, B1a 2, B1b 0, B1c 0, B1 2, U 0, full 2; 134 evaluations, max step 0.392
+all cases pass

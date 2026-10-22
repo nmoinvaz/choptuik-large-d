@@ -20,7 +20,7 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(HERE, "modecount_cx", "build"))
-from hpkernel.driver import load, make_solver, newton_solve, dmat_odd, phase_weights, plow_odd, dd_from_mp, resample_z, lm_solve  # noqa: E402
+from hpkernel.driver import load, save, make_solver, newton_solve, dmat_odd, phase_weights, plow_odd, dd_from_mp, resample_z, lm_solve  # noqa: E402
 import mpmath as mp  # noqa: E402
 import modecount_cx  # noqa: E402
 
@@ -59,26 +59,36 @@ def setup(path, M=None, threads=1, kf="default", fmax=1e-20, log=print):
     if kf == "default":
         kf = 13 if D >= 35 else None
     M0 = meta["M"]
+    saved = None
     if M is not None and M != M0:
-        K = len(meta["nodes"])
-        zh2, zl2 = resample_z(np.asarray(zh) + np.asarray(zl), M0, M, K)
-        if kf:
-            a_, b_ = plow_odd(M, kf)
-            zh2[:M] = (a_ + b_) @ zh2[:M]
-        zh, zl = zh2, zl2
-        meta = dict(meta, M=M)
+        # a state resampled to M tau points is re-converged once and kept in hp/data/modecount_state_D<D>_M<M>.npz
+        saved = os.path.join(HERE, "data", f"modecount_state_D{D:.4f}_M{M}.npz")
+        if os.path.exists(saved):
+            zh, zl, meta = load(saved)
+            log(f"  resampled state from {os.path.basename(saved)}")
+        else:
+            K = len(meta["nodes"])
+            zh2, zl2 = resample_z(np.asarray(zh) + np.asarray(zl), M0, M, K)
+            if kf:
+                a_, b_ = plow_odd(M, kf)
+                zh2[:M] = (a_ + b_) @ zh2[:M]
+            zh, zl = zh2, zl2
+            meta = dict(meta, M=M)
     M = meta["M"]
     s, c = build_pair(meta, zh, zl, M, kf, threads)
     F = resid(s, zh, zl)
     F_in = F
     if F > fmax:
         log(f"  |F| {F:.1e} in this layout: Newton")
-        zh, zl, hist = newton_solve(s, zh, zl, tol=1e-24, it_max=6, verbose=False)
+        zh, zl, hist = newton_solve(s, zh, zl, tol=min(fmax, 1e-24), it_max=12, verbose=False)
         F = resid(s, zh, zl)
         if F > fmax:
             log(f"  |F| {F:.1e} after Newton: Levenberg-Marquardt")
-            zh, zl, hist = lm_solve(s, zh, zl, tol=1e-27, it_max=20, verbose=False, newton_after=1e-22)
+            zh, zl, hist = lm_solve(s, zh, zl, tol=min(fmax, 1e-27), it_max=20, verbose=False, newton_after=1e-22)
             F = resid(s, zh, zl)
+        if saved:
+            save(saved, zh, zl, dict(meta, F=F))
+            log(f"  |F| {F:.1e}; saved {os.path.basename(saved)}")
     if F > fmax:
         # a count on a background that does not solve the equations of this layout means nothing (the M = 16
         # resampling at D = 61 stalled at |F| = 1.3e-9 and gave a spurious real sign change)

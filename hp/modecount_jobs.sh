@@ -7,9 +7,11 @@
 #     cached evaluations with the corrected list (the windings of det M are the same, only the bookkeeping changes);
 #   - resolution: M = 48 (resampled from the M = 32 states and re-converged). M = 16 was tried at D = 61 and did not
 #     converge (|F| 1.3e-9 after Levenberg-Marquardt), so that run is void; modecount_common.setup now refuses such a
-#     background;
+#     background (fmax 1e-20 by default; the M = 48 counts accept 1e-15, which moves det M by far less than a phase
+#     step: the resampled D = 30 state reaches 9e-18 after Levenberg-Marquardt);
 #   - the f64 Python mode matrix at complex lambda (modecount_f64.py without --realscan) failed its real-lambda check
-#     against the Rust kernel (central differences in the horizon block) and took 430 s per matrix; it is not used.
+#     against the Rust kernel (max |dM|/max |M| = 0.89 at lambda = 0.3, cause not identified) and took 430 s per
+#     matrix; it is not used. D = 4 is covered by the Rust kernel at real lambda (--realscan) only.
 cd "$(dirname "$0")/.." || exit 1
 exec bash hp/modecount_queue.sh \
  "check hp/data/seeds/local/up23_D61.0264.npz --quick" \
@@ -18,7 +20,7 @@ exec bash hp/modecount_queue.sh \
  "hp/data/states/up6_D30.0688.npz --lam=2.079747703853" \
  "hp/data/seeds/local/up23_D61.0264.npz --lam=2.043532530673195 --v2" \
  "f64 --realscan=0.05" \
- "hp/data/states/up6_D30.0688.npz --M=48 --h0=0.6 --lam=2.079747703853" \
- "hp/data/seeds/local/up23_D61.0264.npz --M=48 --h0=0.6 --lam=2.043532530673195" \
+ "hp/data/states/up6_D30.0688.npz --M=48 --h0=0.6 --lam=2.079747703853 --fmax=1e-15" \
  "hp/data/states/up2_D16.7600.npz --lam=2.127809048219261 --h0=0.6" \
+ "hp/data/seeds/local/up23_D61.0264.npz --M=48 --h0=0.6 --lam=2.043532530673195 --fmax=1e-15" \
  >> hp/data/modecount_queue.log 2>&1
