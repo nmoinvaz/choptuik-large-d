@@ -15,6 +15,8 @@ read are integrated; the used entries are bit-identical to hier's (`hier_nb.py s
 
     python -u hier_nb.py M A wf [hier.py options] [--pretune]
     python3 hier_nb.py selftest [--mutate=radius]       lazy against full residual (the mutation must fail)
+Options of this wrapper (removed before hier.main sees the arguments): --pretune; --h1=ABS, --h3=REL (finite-difference
+steps of levels 1 and 3, default hier's 1e-6); the environment variable INNER_NB_RTOL (integrator tolerance, inner_nb.py).
 e.g. the M = 7 selection from the M = 5 zero:
     python -u hier_nb.py 7 2.718579189229888 0.9992284031945021 --x=0.1492035749173264,0.01471905249087869,\
 0.008405346906375517,0.0014703451817031647 --pretune --schur --predict --floor --procs 2 --verbose=2
@@ -33,6 +35,10 @@ import hier as H                                        # noqa: E402
 import inner_np as I                                    # noqa: E402
 
 LAZY = [os.environ.get("HIER_NB_LAZY", "1") == "1"]
+FD_STEP = {}                                            # --h1=ABS, --h3=REL (see LazyHier.h); also read in workers via env
+for _k, _env in ((1, "HIER_NB_H1"), (3, "HIER_NB_H3")):
+    if os.environ.get(_env):
+        FD_STEP[_k] = float(os.environ[_env])
 MUT_RADIUS = [False]                                    # selftest --mutate=radius: read the approach level at the smallest radius
 
 
@@ -46,6 +52,17 @@ class LazyHier(H.Hier):
     the unused entries are set to 0. The radii below R are hier's own list (same staged ray segments), so every used
     entry is bit-identical to hier's. Why: with the top harmonic far from tuned, the arc at xi = 0.2 costs ~10^6
     right-hand sides. When no level is in approach mode the evaluation is hier's, unchanged. HIER_NB_LAZY=0 disables."""
+
+    def h(self, l, x):
+        """finite-difference steps: hier's, unless --h1=ABS (level 1, absolute steps in A and w/w_inf) or --h3=REL (level
+        3, relative steps as hier's 1e-6) are given. Why: at M = 7 the corrected r_3 and r_1 have noise floors far above
+        M = 5's, and hier's steps (|dr_3| ~ 1e-2 for C_3) can fall below them."""
+        if l == 1 and FD_STEP.get(1):
+            return np.array([FD_STEP[1], FD_STEP[1]])
+        if l == 3 and FD_STEP.get(3):
+            b = x[H.idx(l)]
+            return FD_STEP[3] * np.maximum(np.abs(b), 1e-3 * np.abs(x[0]))
+        return super().h(l, x)
 
     def res_raw(self, x):
         lows = [nu for nu in range(5, self.M + 1, 2) if self.mode.get(nu, "low") == "low"]
@@ -141,6 +158,12 @@ def main():
     argv = sys.argv[1:]
     if argv and argv[0] == "selftest":
         sys.exit(0 if selftest("--mutate=radius" in argv) else 1)
+    for k in (1, 3):                                    # --h1/--h3 -> environment, so spawned workers see them too
+        a = [t for t in argv if t.startswith(f"--h{k}=")]
+        if a:
+            os.environ[f"HIER_NB_H{k}"] = a[0].split("=", 1)[1]
+            FD_STEP[k] = float(os.environ[f"HIER_NB_H{k}"])
+    argv = [t for t in argv if not (t.startswith("--h1=") or t.startswith("--h3="))]
     if "--pretune" in argv:
         argv = [a for a in argv if a != "--pretune"]
         args = [a for a in argv if not a.startswith("--")]

@@ -48,7 +48,66 @@ Two causes, both in the cost of one residual, and two fixes that leave `hier.py`
 
 With both, the first cold level-5 solve at M = 7 took 362 s (229 residuals) under that load.
 
-PLACEHOLDER-M7
+## 2. The M = 7 pilot: one fixed-(A, ω) solve at the M = 5 zero
+
+Command (from `solver/inner_stokes/`; log `logs/hier_nb_M7_pilot_fixA_at_M5zero.log`):
+
+```
+python -u hier_nb.py 7 2.718579189229888 0.9992284031945021 --x=0.1492035749173264,0.01471905249087869,0.008405346906375517,0.0014703451817031647 --pretune --fixA --schur --predict --floor --procs 2 --verbose=2
+```
+
+It solves S₃ = S₅ = S₇ = 0 at the M = 5 zero p₅ = (2.718579189, 0.999228403), i.e. one level-3 solve with levels 5 and 7
+nested. Timing under the cloud load of this session (2 cores, load average 16–22, ~12% of a core per process):
+
+| stage | residuals | wall time |
+|---|---|---|
+| pretune of F₇ (approach radius 0.1029, then polish radius 0.1516) | ~25 | 15 s |
+| first (cold) level-5 solve, levels 7 nested | 229 | 362 s |
+| leakage Jacobian K (8 columns) | 8 | 13 s |
+| level-3 Newton, 2 accepted steps | ~850 | 897 s |
+| total | 1090 | 1358 s |
+
+What it gives:
+
+- **The profile at M = 7.** F₅/F₁ = 0.003104 + 0.000557i, against 0.003092 + 0.000541i at M = 5 and 0.00310 + 0.00056i
+  from the untruncated amplitude expansion at (2.72, ω∞) (README): adding harmonic 7 moves F₅ onto the untruncated value.
+  F₇/F₁ = 0.000175 + 0.000045i, so |F₇/F₅| = 0.0573 (the log rounds to six decimals), against the untruncated per-pair
+  decay ρ_*² = 0.0574 (B_tail.md §2). F₃/F₁ = 0.054843 + 0.005438i (M = 5: 0.054883 + 0.005414i), not yet converged (below). The re-tuning that
+  harmonic 7 causes is ΔF₅/F₁ = (1.2 + 1.6i)×10⁻⁵ and ΔF₃/F₁ = (−4.0 + 2.4i)×10⁻⁵, i.e. 0.11 and 0.26 of F₇/F₁: the
+  lower harmonics move by fractions of the new one, not through a slow nearest-neighbour cascade.
+- **No converged r₁.** The level-3 Newton went |r₃| 2×10⁷ → 34 → 16 → 9.1 and stopped there by `hier.py`'s own noise-floor
+  rule (a fresh Jacobian no longer halves |r₃|). At |r₃| = 9 the harmonic-1 residual is dominated by leakage
+  (Schur-corrected r₁ = −9.8×10⁴ − 6.3×10⁴i, raw −6.7×10⁴ − 3.2×10⁴i), so this run does **not** give r₁^{[7]}(p₅), and the
+  M = 7 zero was not obtained.
+
+PLACEHOLDER-DIAG
+
+## 3. The truncation sequence, as far as it goes
+
+`python3 trunc_seq_M7.py` (reads the refined M = 3 and M = 5 zeros of `solver/inner_pert/logs/first_order_hier_M{3,5}.log`
+and, once it exists, the last `ZERO M 7` line of `logs/hier_nb_M7_full*.log`):
+
+| M | c_M = ω/ω∞ | A | \|F_M/F_{M−2}\| at the zero | d_M = c_M − c_{M−2} | κ_M = d_M/d_{M−2} | coupling g_M = \|κ_M\|/\|F_M/F_{M−2}\| |
+|---|---|---|---|---|---|---|
+| 1 | 0.7769940136 | 2.542148048 | | | | |
+| 3 | 1.0156030949 | 2.726475886 | 0.0531 | +0.23861 | | |
+| 5 | 0.9992284032 | 2.718579189 | 0.0569 | −0.016375 | −0.0686 | 1.21 |
+| 7 | not obtained | | 0.0573 (at p₅, §2) | | | |
+
+What is new without c₇:
+
+- **The profile ratio of the added pair converges to the untruncated one**: |F_M/F_{M−2}| = 0.0531, 0.0569, 0.0573 for
+  M = 3, 5, 7 against 0.0574, and F₅ at M = 7 is the untruncated F₅ to the three digits available (§2). So the profile
+  half of (T1) is seen at M = 7, with ρ_*² = 0.0574 and no sign of a change of regime.
+- **The only measured coupling is g₅ = 1.21**, from a ratio that includes the pre-asymptotic M = 1. B_tail.md's prediction
+  for M = 7 (0.99997–1.00017) assumes κ between −0.045 and −0.057 (coupling 0.78–1.0, fixed by requiring the limit to
+  lie in the untruncated bracket); if κ stayed at −0.0686 the limit would be 1.00028 and c₇ = 1.00035, outside the
+  untruncated bracket 0.99915–1.00011 (`reconcile.py`). So M = 7 decides between "the M = 1 → 3 step is pre-asymptotic"
+  (B_tail.md's reading) and a tension between the two routes at the 2×10⁻⁴ level. It is still the sharp test it was.
+- **The lowest-order increments decrease at the same kind of rate** (§4): x²Δσ₄/Δσ₂ has modulus 0.035 for the
+  M = 1 → 3 step, an independent (order-by-order, no lateral integration) estimate of a per-pair ratio well below ¼.
+
+PLACEHOLDER-SEQ7
 
 ## 4. Which truncation: hier's model is a Galerkin truncation too
 
@@ -67,7 +126,19 @@ needs one correction, reported here and not fixed in B_tail.md:
   keeps the odd harmonics ≤ M and the even ones ≤ M + 1; its de-mixing loop needed a parity fix, documented in the
   script). Results at ω∞, J = 500, legacy fit with every family present:
 
-PLACEHOLDER-AMP
+| Truncation | kept harmonics | σ₁ … σ_M | σ_{M+1} | source |
+|---|---|---|---|---|
+| hier's model, M = 1 | odd ≤ 1, even ≤ 2 | σ₁ unchanged (4.5×10⁻¹⁰, fit level) | σ₂ changed by 0.0590 (14% of \|σ₂\|) | `trunc_hier_M1_K5_J500_w1.0000.json` |
+| hier's model, M = 3 | odd ≤ 3, even ≤ 4 | σ₁–σ₃ unchanged (≤ 2.7×10⁻¹⁰) | σ₄ changed by 3.74×10⁻⁵ (0.12% of \|σ₄\|) | `trunc_hier_M3_K9_J500_w1.0000.json` |
+| hier's model, M = 5 | odd ≤ 5, even ≤ 6 | PLACEHOLDER-M5AMP | | `trunc_hier_M5_K13_J500_w1.0000.json` |
+| `amp_trunc.py`, M = 3 | all ≤ 3 | σ₃ changed by 5.3×10⁻⁴ | σ₄ = −399 (true −0.029) | B_tail.md §4 |
+| `amp_trunc.py`, M = 5 | all ≤ 5 | σ₅ changed by 4.4×10⁻⁴ | σ₆ = −1371 (true −0.0011) | B_tail.md §4 |
+
+(`python3 trunc_seq_M7.py --amp`.) Lemma O's prediction holds exactly in both truncations: hier's model first changes at
+σ_{M+1}, `amp_trunc.py`'s at σ_M. And the explosion is a property of dropping the even harmonic M + 1, not of Galerkin
+truncation: with it kept, σ₄ changes by 0.12%, not by a factor 10⁴. The lowest-order increments themselves decrease
+fast: x² Δσ₄/Δσ₂ = −0.025 + 0.024i, modulus 0.035, at A = 2.7196 (the M = 1 → 3 step of Lemma L, against −0.069 for the
+same step of the zeros).
 
 So the distinction that matters for the tail lemma is not "jump-conditioned versus Galerkin" but which harmonics the
 truncation keeps, and whether the increment is measured order by order or at the actual amplitude. The statement of §5
@@ -213,7 +284,24 @@ This is the exact meaning of "the linearized coupling" below. *Proof:* chain rul
 the tuned set. ∎ (`inner_np.Inner`'s homotopy weight is a different interpolation: it also multiplies the new harmonics'
 linear terms, so at its λ = 0 the new block is degenerate rather than a decoupled tuned problem.)
 
-PLACEHOLDER-CONST
+## 7. Constants from the data
+
+Every constant of Lemma T, with what it is (all *numerical evidence* unless marked).
+
+| Constant | Role | Value | Source |
+|---|---|---|---|
+| σ_F | profile strip half-width | 1.428 | B_tail.md §2 (tuned harmonics, amplitude expansion) |
+| ρ_*² = \|F_{ν+2}/F_ν\| | profile decay per pair, (T1) | 0.0574 untruncated (ν ≥ 5); at the truncated zeros \|F₃/F₁\| = 0.0531 (M = 3), \|F₅/F₃\| = 0.0569 (M = 5), \|F₇/F₅\| = 0.0574 (M = 7 at p₅) | B_tail.md §2; `trunc_seq_M7.py`; §2 |
+| \|q∞\| A² | leading tuning map, (T1) contraction | 0.0633; × e^{2σ}: 0.27 at σ = 0.736, 0.47 at σ = 1 | B_tail.md §2, §6 |
+| A-series term ratio of each f_ν | corrections to the leading tuning map | ≈ 0.25 per order at A* | B_tail.md §2 |
+| σ needed for κ ≤ ¼ | (★) | ≤ 0.736 (*arithmetic*) | §5.2 |
+| d_M = c_M − c_{M−2} | increments in ω/ω∞ | +0.23861 (M = 3), −0.016375 (M = 5), PLACEHOLDER-D7 | `trunc_seq_M7.py` |
+| κ_M = d_M/d_{M−2} | ratio per pair, (R) | −0.0686 (M = 5; M = 1 is pre-asymptotic), PLACEHOLDER-K7 | `trunc_seq_M7.py` |
+| g_M = \|κ_M\|/ρ_M² | coupling per pair, Λe^{2σ} in (T2) | 1.21 (M = 5), PLACEHOLDER-G7 | `trunc_seq_M7.py` |
+| \|∂r₁/∂(ω/ω∞)\|, σ_min(J₅) | converts ω to r₁; certification margin | 6.7×10³; 3.9×10³ | `feasibility.py` |
+| tail needed for a 10⁻³ box | | 3.9 in r₁ (*arithmetic*) | PROOF.md A.4 |
+| raw leakage ∂r₁/∂B₅ | entries of T (Lemma R) | ~10¹⁷, against J ~ 7×10³ | README, `hier.py` |
+| Δσ_{M+1} (lowest order) | Lemma L | PLACEHOLDER-DSIG | `amp_trunc_hiermodel.py`, §4 |
 
 PLACEHOLDER-LOCAL
 

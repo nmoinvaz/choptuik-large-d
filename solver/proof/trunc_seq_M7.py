@@ -13,7 +13,7 @@ Estimators (planted-truth tested below before use, pass criteria fixed in advanc
   geometric: c_M - L = d r^((M-M0)/2) with r from the last two increments: L = c_M + d_M r / (1 - r)
   Aitken on the last three zeros (the same thing written differently; kept as a cross-check of the arithmetic)
 
-    python3 trunc_seq_M7.py [--c7=w,A,B3,C3,B5,C5,B7,C7] [--planted [--mutate=nocorr]]
+    python3 trunc_seq_M7.py [--c7=w,A,B3,C3,B5,C5,B7,C7] [--planted [--mutate=nocorr]] [--pilot] [--amp]
 """
 import glob
 import os
@@ -110,7 +110,40 @@ def pilot():
         print(f"     Delta(F_{nu}/F_1) = {d:+.3e}  |.| / |F_7/F_1| = {abs(d) / abs(F7):.3f}   relative {abs(d) / abs(rr[nu]):.2e}")
 
 
+SIG_FULL = [complex(0.74358457992, 0.52447485276), complex(0.11879383784, 0.39807457035),
+            complex(-0.05397185243, 0.11658742432), complex(-0.02886475753, 0.01077835879),
+            complex(-0.00555413676, -0.00280595708), complex(-2.7853745790e-4, -1.0776628405e-3)]   # README, J = 750/1000
+
+
+def amp():
+    """lowest-order increments (lemma L): Delta sigma_{M+1} = sigma_{M+1} - sigma^{[M]}_{M+1} from the amplitude expansion
+    of hier's M-model (amp_trunc_hiermodel.py), the per-pair ratio x^2 Delta sigma_{M+3} / Delta sigma_{M+1} at
+    A = 2.7196, and the check that sigma_1..sigma_M are unchanged (lemma O)"""
+    x = 2.7196 ** 2
+    D = {}
+    for M in (1, 3, 5):
+        fs = sorted(glob.glob(os.path.join(os.path.dirname(os.path.abspath(__file__)), f"trunc_hier_M{M}_K*_J500_w1.0000.json")))
+        if not fs:
+            continue
+        import json
+        d = json.load(open(fs[-1]))
+        sig = [complex(float(a), float(b)) for a, b in d["sigma_str"]][1:]       # sigma_1, sigma_2, ...
+        exact = max(abs(sig[j] - SIG_FULL[j]) for j in range(M))
+        if len(sig) > M and M < len(SIG_FULL):
+            D[M] = SIG_FULL[M] - sig[M]
+            print(f"M = {M}: sigma_1..sigma_{M} differ from the untruncated by <= {exact:.1e};  Delta sigma_{M + 1} = "
+                  f"{D[M].real:+.4e}{D[M].imag:+.4e}i  (|.| {abs(D[M]):.3e}, {abs(D[M]) / abs(SIG_FULL[M]):.2%} of |sigma_{M + 1}|)")
+    for M in (1, 3):
+        if M in D and M + 2 in D:
+            r = x * x * D[M + 2] / D[M]
+            print(f"lowest-order ratio per pair x^2 Delta sigma_{M + 3} / Delta sigma_{M + 1} = {r.real:+.4f}{r.imag:+.4f}i, "
+                  f"|.| {abs(r):.4f} (x = A^2 = {x:.3f})")
+
+
 def main():
+    if "--amp" in sys.argv:
+        amp()
+        return
     if "--pilot" in sys.argv:
         pilot()
         return
