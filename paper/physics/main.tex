@@ -85,7 +85,8 @@ to $D = 61$; given analyticity, nine constants tested as closed forms for $\Dinf
 to about $5\times10^{-7}$ (Sec.~\ref{sec:limit}).
 \item A physical picture of the large-$D$ limit (Sec.~\ref{sec:picture}). Inside the light cone the echo becomes a weak
 free wave, which on its own cannot echo; the period is fixed by effects smaller than every power of $1/D$, in an inner
-region at $r \sim \sqrt D\,(-t)$ where the equations become Rozali and Way's nonlinear heat equation. Its shift symmetry
+region at radii of order $\sqrt D$ times the time to the singularity, where the equations become Rozali and Way's
+nonlinear heat equation. Its shift symmetry
 in $r^2$ gives an exact unstable mode with $\lambda = 2$, which explains $\gamma_\infty = 1/2$ under stated conditions,
 and a conjectured selection rule posed there reproduces $\Dinf$ to about $10^{-4}$ and the shape of the echo from the
 $D = \infty$ equations alone.
@@ -95,9 +96,8 @@ with a centrifugal term, which breaks the symmetry, the computations so far do n
 \end{enumerate}
 The theory behind item 3 (the large-$D$ expansion and its Stokes structure, the selection rule with its hypotheses, and a
 computer-assisted proof in a model case) is developed in a companion paper~\cite{math}; here we state its results in
-physical terms, with the numerical evidence, and refer there for proofs. We also assume, as is standard but not checked
-here at large $D$, that the branch we follow remains the critical solution, with a single unstable mode
-(Sec.~\ref{sec:discussion}).
+physical terms, with the numerical evidence, and refer there for proofs. We assume, without checking it at large $D$,
+that the branch we follow remains the critical solution, with a single unstable mode (Sec.~\ref{sec:discussion}).
 
 \begin{figure}[t]
 \centering
@@ -189,10 +189,11 @@ With $\eps = 1/n = 1/(D-2)$,
 \gamma(D) = \frac{\tfrac12 + \sum_{k=1}^{7} e_k \eps^k}{1 + f_1\eps + f_2\eps^2},
 \label{eq:formula}
 \end{equation}
-with the coefficients of Table~\ref{tab:coef}, fitted on the double-precision points $4 \le D \le 30.2$. It is an
-empirical fit, not a law derived from the equations; no earlier formula for $\Delta(D)$ was found, and the earlier fit
-for $\gamma$, $0.466\,(1 - e^{-0.408D})$ on $3.5 \le D \le 14$~\cite{BlandEtAl2005}, has a different form and limit.
-The formulas reproduce $\Delta$ to $5\times10^{-10}$ ($4 \le D \le 4.3$), $4\times10^{-9}$ ($4.3$--$20$) and $10^{-8}$
+with the coefficients of Table~\ref{tab:coef} (11 fitted for $\Delta$ and 9 for $\gamma$), fitted on the
+double-precision points $4 \le D \le 30.2$. It is an empirical fit, not a law derived from the equations; no earlier
+formula for $\Delta(D)$ was found, and the earlier fit for $\gamma$, $0.466\,(1 - e^{-0.408D})$ on
+$3.5 \le D \le 14$~\cite{BlandEtAl2005}, has a different form and limit. The formulas reproduce $\Delta$ to
+$5\times10^{-10}$ ($4 \le D \le 4.3$), $4.3\times10^{-9}$ ($4.3$--$20$) and $10^{-8}$
 ($20$--$30$), and $\gamma$ to $3.4\times10^{-7}$, $3.3\times10^{-8}$ and $2.3\times10^{-9}$, each within the precision
 of the points. Against the double-double points, which the fit never saw, the formula holds to $2.7\times10^{-9}$ on
 $8.25$--$21$, $7.5\times10^{-9}$ to $D = 30$ and $5.8\times10^{-8}$ to $D = 61$ (Fig.~\ref{fig:delta}). Its constant
@@ -388,7 +389,7 @@ $\tfrac72\sqrt{\ln2/\pi}$ & 1.6440152 & $+1.2\times10^{-4}$ & $1.3\times10^{-10}
 $\tfrac98\sqrt{j_{2,1}/j_{0,1}}$ & 1.6440207 & $+1.3\times10^{-4}$ & $1.4\times10^{-10}$ (290) \\
 $\tfrac{10}{9}\sqrt{j_{0,1}/\ln3}$ & 1.6439063 & $+1.3\times10^{-5}$ & $5.4\times10^{-11}$ (110) \\
 $\pi^2/6$ & 1.6449341 & $+1.0\times10^{-3}$ & $1.7\times10^{-9}$ (3500) \\
-$2\pi/j_{1,1}$ & 1.6397878 & $-4.1\times10^{-3}$ & $7.0\times10^{-9}$ (15000) \\
+$2\pi/j_{1,1}$ & 1.6397880 & $-4.1\times10^{-3}$ & $7.0\times10^{-9}$ (15000) \\
 $\sqrt e$ & 1.6487213 & $+4.8\times10^{-3}$ & $8.1\times10^{-9}$ (17000) \\
 $(1+\sqrt5)/2$ & 1.6180340 & $-2.6\times10^{-2}$ & $4.4\times10^{-8}$ (92000) \\
 \end{tabular}
@@ -409,7 +410,7 @@ $5\times10^{-7}$, with
 \lambda = 2 + \frac{3.0324}{n} - \frac{34.3}{n^2} + \dots, \qquad \gamma = \frac12 - \frac{0.7581}{n} + \dots
 \label{eq:lambda}
 \end{equation}
-(the $1/n$ coefficient ranges over $3.0313$--$3.0324$ across fit choices). At $D = 61$, $\gamma = 0.48935$, and the points
+(the $1/n$ coefficient is stable to about $10^{-3}$ across fit choices: $3.0313$--$3.0324$). At $D = 61$, $\gamma = 0.48935$, and the points
 keep rising, which excludes the limit $0.466$ of the fit of~\cite{BlandEtAl2005}. The value $1/2$ itself is not new: it
 is Rozali and Way's estimate~\cite{RozaliWay2018}, reported in~\cite{EckerEckerGrumiller2026,EckerEtAl2026}. Like
 $\Dinf$, it is not fixed at any finite order of the $1/n$ expansion (Sec.~\ref{sec:allorders}); its explanation is in
@@ -427,6 +428,237 @@ fitted $\lambda_\infty - 2$ falls about 3.5-fold per added power of $1/n$, for t
 
 \section{The large-$D$ picture}
 \label{sec:picture}
+
+The numerics fix $\Dinf$ and $\gamma_\infty$; this section asks where they come from in the equations. The theory is
+developed, with proofs where they exist, in the companion paper~\cite{math}; here we state its results as physics and
+give the numerical evidence for each.
+
+\subsection{How the solution scales with $D$}
+\label{sec:scaling}
+
+On the double-double solutions at $D = 12$--$60$: $p \approx x F(\theta)/\sqrt n$ near the centre, and $p + m$ is
+smaller by a further factor of order $1/n$; $c = 1 - O(1/n)$ and $b - 1 = (p^2+m^2)/(n-1)$ to about 3\%; near the light
+cone $c$ stays within $10^{-3}$ of 1. The profile $F = \sqrt n\,\partial_x p(x = 0)$ converges as $D$ grows
+(Table~\ref{tab:scaling}). So the field and its gravity weaken inside the light cone: the centre slope falls like
+$2.72/\sqrt n$ and the departure of $c$ from 1 at the centre like $3.65/n$, and the last two columns of the table
+approach the same limit, as the large-$D$ expansion requires ($c = 1 - \eps F^2(1-x^2) + \dots$). This scaling is forced
+by one measured fact, $c - 1 = O(1/n)$: the $b$ equation then gives $b - 1 \approx (p^2+m^2)/(n-1)$, the $c$ equation
+$c - 1 = O(p^2)$, so $p = O(n^{-1/2})$, and the $O(n)$ terms of the $p$, $m$ equations force $p + m = O(p/n)$. At
+$D = \infty$ the echo inside the light cone is therefore a free scalar wave on flat space.
+
+\begin{table}[t]
+\caption{The echo profile $F = \sqrt n\,\partial_x p(0)$ and the strength of gravity at the centre on the double-double
+solutions, and their $D = \infty$ extrapolations.}
+\label{tab:scaling}
+\small
+\begin{ruledtabular}
+\begin{tabular}{rlllll}
+$D$ & first harmonic of $F$ & $|F_3/F_1|$ & $|F_5/F_1|$ & $n(1 - \langle c(0)\rangle)$ & $\langle F^2\rangle$ \\ \hline
+20 & 3.480 & 0.130 & 0.024 & 3.021 & 6.162 \\
+30 & 3.212 & 0.105 & 0.016 & 3.201 & 5.218 \\
+40 & 3.086 & 0.093 & 0.012 & 3.304 & 4.804 \\
+50 & 3.011 & 0.085 & 0.0097 & 3.372 & 4.568 \\
+60 & 2.962 & 0.080 & 0.0085 & 3.421 & 4.416 \\
+$\infty$ (extrapolated) & $\approx 2.72$ & 0.0549--0.0552 & 0.0032--0.0034 & $\approx 3.65$ & $\approx 3.7$ \\
+\end{tabular}
+\end{ruledtabular}
+\end{table}
+
+\subsection{A free wave cannot echo, and the period is selected beyond all orders}
+\label{sec:allorders}
+
+At leading order ($c = b = 1$) a single harmonic $e^{i\mu\theta}$ of the field, with $s = i\mu\omega$, solves
+Gauss's hypergeometric equation: the solution regular at the centre is $p - m = x\,{}_2F_1\big(\tfrac{1+s}{2},
+\tfrac{2+s}{2}; \tfrac{n+1}{2}; x^2\big)$, and by Gauss's connection formula~\cite{AbramowitzStegun} it contains, near the
+light cone, the non-analytic branch $(1-x^2)^{n/2-1-s}$ with coefficient
+\begin{equation}
+C(n,s) = \frac{\Gamma\!\left(\frac{n+1}{2}\right)\Gamma\!\left(s+1-\frac n2\right)}{\Gamma\!\left(\frac{1+s}{2}\right)\Gamma\!\left(\frac{2+s}{2}\right)} ,
+\label{eq:C}
+\end{equation}
+which is finite and non-zero for every real $\omega \ne 0$, odd $\mu$ and $n \ge 2$~\cite{math}. So a free wave that is
+periodic in $\tau$ and regular at the centre is never analytic at the light cone: on its own it cannot echo, in any
+$D \ge 4$. (The free wave equation in similarity coordinates was analysed in 3+1 dimensions by
+Donninger~\cite{Donninger2008}, which contains the $D = 4$ case.) For the fundamental at $\omega_\infty$,
+$|C| = 0.0121$, 0.0114, 0.0124, 0.0192, 0.0405 at $n = 18$, 38, 58, 200, 1000: small, through a factor of order
+$e^{-\pi\omega/2}$, but never zero. Gravity has to cancel this coefficient harmonic by harmonic, and that cancellation
+is what selects $\Delta$ and the profile $F$.
+
+The $1/n$ expansion of the field equations never sees it. Within the scaling measured above (integer powers of $1/n$
+after an overall $n^{-1/2}$ in the field), the expansion can be carried to all orders for \emph{any} periodic profile $F$
+and \emph{any} period, regular at the centre and analytic at the light cone at every order~\cite{math}; the leading-order
+part of this freedom, any periodic profile with any period, is in Ecker, Ecker and
+Grumiller~\cite{EckerEckerGrumiller2026}. Numerically: substituting the expansion through third order into the exact
+equations, with $F$ from the $D = 60$ solution, the relative residuals fall like $n^{-3}$ for $n = 50$--$800$, both for
+$\omega_0 = 2\pi/1.64389$ and for a wrong $\omega_0 = 2\pi/1.4$. The same holds for growing perturbations
+$e^{\lambda\tau}$ with any $\lambda$. So if $\Delta(D)$ and $\gamma(D)$ are analytic in $1/D$, their expansion coefficients
+cannot be computed order by order from the field equations: they are selected by effects smaller than every power of
+$1/n$. That is the exponential weakening of the selection seen in the solver (Sec.~\ref{sec:method}).
+Non-perturbative, trans-series corrections in $1/D$ are familiar in large-$D$ gravity~\cite{EmparanHerzog2020}; here they
+decide the period itself.
+
+The non-analytic piece is a fast WKB mode, $e^{-n\Phi(x)}$ with $\Phi = \ln x - \tfrac12\ln(1-x^2)$, exponentially small
+at fixed $x < 1$. Gravity acts on it at order one: along its characteristics it multiplies the mode by a factor that never
+vanishes (about 40 over $0.72 \le x \le 0.9$ at the $D = \infty$ amplitude, checked by direct integration with errors
+falling like $1/n$) and shifts its light-cone exponent by $\langle F^2\rangle \approx 3.7$, so an expansion in the wave
+amplitude cannot capture the selection, and gravity cannot cancel the piece on its way to the light cone. Every
+characteristic of the mode reaches the centre, where it is singular, so a solution regular at the centre carries none of
+it inside the light cone, at any order of the WKB expansion. The late orders of the $1/n$ series locate its
+origin~\cite{Dingle1973,math}: $C(n,s)$ is the Stokes multiplier of a mode born at infinite self-similar radius and switched
+on across a Stokes line along $x > 1$ that ends at the light cone. The period is therefore decided outside the past
+light cone, where the fast mode and the slow solution meet: at $x \sim \sqrt n$.
+
+\subsection{The inner region: Rozali and Way's heat equation}
+\label{sec:inner}
+
+At $x \sim \sqrt n$ the expansion is not uniform: $\eps x^2F^2 = O(1)$, so gravity is of order one there, and fast and
+slow modes are not separated. In physical variables this is the region $r = O(\sqrt n)$ at fixed $t$, which is Rozali
+and Way's regime~\cite{RozaliWay2018} (they keep $r$ fixed and rescale time by $\sqrt D$). Put $\rho = r/\sqrt n$,
+\begin{equation}
+s = \frac{\rho^2}{2} = \frac{r^2}{2n}, \qquad p - m = \sqrt s\;Y, \qquad \sqrt n\,(p + m) = \sqrt2\,s\,S ,
+\end{equation}
+with $t$ the time and $c$ the lapse-type function as before. At leading order in $1/n$ the field equations
+become~\cite{math}
+\begin{equation}
+Y_t = c\,S, \qquad S_t = c\,\Big(Y_s + \frac{Y^3}{4}\Big), \qquad c_s = \frac{c\,Y^2}{4},
+\qquad\text{i.e.}\qquad Y_s = \frac1c\,\partial_t\Big(\frac1c\,\partial_t Y\Big) - \frac{Y^3}{4},
+\label{eq:heat}
+\end{equation}
+with $b - 1 = (p - m)^2/(2n)$: a nonlinear heat equation in which $s = r^2/(2n)$ plays the role of time and $t$ that of
+space, with no large parameter left. These are Rozali and Way's leading-order large-$D$ equations: with their $r$,
+$\tau = \sqrt D\,t$ and lapse factor $1 - \delta_0$ identified with our $\rho$, $t$ and $c^2$, their equations read
+$\phi_s = c^{-1}\partial_t(c^{-1}\phi_t)$ and $c_s = \phi_t^2/c$, and $Y = 2\phi_t/c$, $S = Y_t/c$ satisfy
+Eqs.~\eqref{eq:heat} identically (checked symbolically). Rozali and Way noted this parabolic character, with space and
+time swapped. A discretely self-similar solution of Eqs.~\eqref{eq:heat} depends on $\xi = \rho/(-t) = x/\sqrt n$ and
+$\theta$; its formal series at $\xi = 0$ reproduces the top-degree terms of the outer $1/n$ expansion (to
+$2\times10^{-13}$ at orders 1--10). Two familiar objects appear. The fast mode of the outer region,
+$e^{-n/(2x^2)} = e^{-t^2/(4s)}$, is the heat kernel. And without gravity the inner problem is Weber's (Hermite's)
+equation, whose classical Stokes constant~\cite{DLMF} reproduces $C(n,s)$ at large $n$ (the ratio to Eq.~\eqref{eq:C} is
+$1.00014$ at $n = 10^5$), so the light-cone obstruction of Sec.~\ref{sec:allorders} is a property of this $n$-free
+problem. What this work adds to Rozali and Way's equations is the discretely self-similar problem posed on them: the
+selection rule (Sec.~\ref{sec:selection}) and the $r^2$-shift argument for $\gamma_\infty$, which we turn to now.
+
+\subsection{The $r^2$-shift and $\gamma_\infty = 1/2$}
+\label{sec:r2shift}
+
+Equations~\eqref{eq:heat} contain no explicit $s$ or $t$. They are invariant under $t$-translation, $s$-translation, the
+scaling $(t, s, Y, S) \to (at, a^2s, Y/a, S/a^2)$, and the time reparametrizations $t \to T(t)$, $c \to T'c$, which are
+gauge. A self-similar solution is invariant under (a discrete subgroup of) the scaling, and a continuous symmetry of
+scaling weight $k$ acting on it produces a linear perturbation $\propto e^{k\tau}$, because $\partial_t \propto e^{\tau}$
+and $\partial_s \propto e^{2\tau}$ at fixed $\xi$, $\theta$. The $t$-translation ($k = 1$) is the familiar $\lambda = 1$
+mode, a shift of the time of the singularity. The $s$-translation ($k = 2$) gives $\lambda = 2$. It moves the lapse at the
+centre, which the normalization $c = 1$ there forbids, but composed with the time reparametrization
+$t \to t - e^{\tau}P(\theta)$, where $P + \omega P' = -2F^2$, it leaves the centre lapse alone. The combination is an exact
+perturbation of the $D = \infty$ inner solution with $\lambda = 2$, regular at the centre~\cite{math}. As a check, a
+perturbation recursion with gravity that builds in nothing about symmetries, run at $\lambda = 2$, reproduces the mode to
+$10^{-180}$ in every resolved harmonic, while $\lambda = 1.9$ or $2.1$ miss by 7.5\% at the third order. Because the mode
+is the derivative of a family of exact solutions (shifted and reparametrized copies of the background), its fast-mode
+Stokes multipliers vanish whenever the background's do~\cite{math}: if the selection rule of Sec.~\ref{sec:selection} picks
+the background, $\lambda = 2$ is one of its growth rates, with no transcendental condition involved.
+
+The mode is physical, not gauge: the reparametrization is pure gauge and $t$-translation only shifts the accumulation
+time, but $s$-translation shifts $r^2$, with $r$ the areal radius. In the inner region critical collapse is diffusion in
+$s = r^2/(2n)$, and the unstable mode moves the solution along $s$. A supercritical evolution therefore forms its horizon
+at $r_{\rm BH}^2 \propto p - p^*$, so $r_{\rm BH} \propto (p - p^*)^{1/2}$ and $\gamma_\infty = 1/2$: the discretely
+self-similar counterpart of Rozali and Way's estimate~\cite{RozaliWay2018}, which came from the divergence radius of their
+oscillating solutions. This also explains why $\lambda_\infty$ is a simple number while $\omega_\infty$ is not: $\omega$ is
+fixed by the vanishing of a Stokes multiplier, $\lambda$ by a symmetry. The statement is conditional: \emph{if the
+$D = \infty$ critical solution is selected by the rule of Sec.~\ref{sec:selection}, has no unstable mode other than
+$\lambda = 2$ and the gauge mode $\lambda = 1$, and $\lambda(D)$ is continuous at $1/n = 0$, then $\gamma_\infty = 1/2$.}
+The uniqueness of the unstable mode at $D = \infty$ is not shown. At finite $D$ the outer region and the $1/n$
+corrections to Eqs.~\eqref{eq:heat} depend on $r$ explicitly, so the symmetry is broken and the mode survives as an
+ordinary unstable mode with $\lambda = 2 + O(1/n)$; the data give $2 + 3.0324/n$ [Eq.~\eqref{eq:lambda}], a coefficient
+that would need the $O(1/n)$ inner equations.
+
+\subsection{The selection rule at $D = \infty$}
+\label{sec:selection}
+
+The $D = \infty$ form of the condition that the solution be analytic at the light cone is conjectured to
+be~\cite{math}: \emph{the $D = \infty$ critical solution is the discretely self-similar solution of the inner
+problem~\eqref{eq:heat}, regular at the centre, whose fast-mode Stokes multipliers vanish.} That is one complex condition
+per odd harmonic, for unknowns that are the harmonics of the profile $F$ (less one phase) and $\omega$, so the count
+balances; it uses no input from finite $D$. Without gravity it reduces to $C = 0$, which has no solution, so the
+selection is gravity's doing even at $D = \infty$. The companion paper states the hypotheses under which the rule should
+follow from analyticity at the light cone, and the points where a proof is still missing~\cite{math}. Here we list what
+the rule, evaluated numerically on the $D = \infty$ equations alone, reproduces (Figs.~\ref{fig:selection}
+and~\ref{fig:spectrum}).
+
+\emph{The shape of the echo.} With the higher-harmonic multipliers tuned to zero at the amplitude $A = 2.72$ and
+$\omega = \omega_\infty$, the profile has $|F_3/F_1| = 0.0551$ and $|F_5/F_1| = 0.00314$; the double-double solutions at
+$D = 20$--$60$, extrapolated in $1/n$, give $0.0549$--$0.0552$ and $0.0032$--$0.0034$ (Table~\ref{tab:scaling}). The tuned
+ratios of successive harmonics are nearly the same for every harmonic, $|F_{\nu+2}/F_\nu| \approx 0.063$, so the decay
+rate per harmonic of the profile should level off near 1.4 as $D \to \infty$ rather than keep growing; the measured
+ratios ($\nu = 1, \dots, 9$) extrapolate to a rate of 1.3--1.45 (not fully converged). The $D = \infty$ echo profile is
+then not an entire function of $\theta$: it has singularities at a finite distance, $|\mathrm{Im}\,\theta| \approx 1.4$,
+from the real axis. The same relation evaluated at each $D$'s own amplitude and $\omega$ (a heuristic) tracks the measured
+$|F_3/F_1|$ at $D = 20$--$60$ to within $0.004$--$0.006$.
+
+\emph{The period, without truncation.} Expanding the harmonic-1 multiplier in powers of $A^2$, with every harmonic kept
+exactly at each order, to twelve orders, its zero becomes real at $\omega/\omega_\infty = 0.9999$--$1.0001$ (best
+estimates; two families of estimators approach from opposite sides and bracket it in $0.99915$--$1.00011$), at amplitude
+$A_0 = 2.720$, where the solutions extrapolate to 2.70--2.72. So the rule gives
+\begin{equation}
+\Dinf = 1.6439 \pm 0.0002
+\end{equation}
+from the $D = \infty$ inner equations alone, against $1.64389375$ from the finite-$D$ solutions. The $\pm0.0002$ is the
+range of the estimators, not an error bound; whether the remaining $10^{-4}$ closes needs more orders.
+
+\emph{The truncation sequence.} Keeping only $M$ harmonics in the profile, the full set of conditions selects
+$\omega/\omega_\infty - 1 = -22\%$, $+1.56\%$ and $-0.077\%$ for $M = 1$, 3 and 5 ($\Delta$ 29\% above, 1.5\% below and
+$0.077\%$ above $\Dinf$), alternating in sign and shrinking fifteen- to twentyfold per added pair of harmonics. Harmonic
+truncation is not a controlled approximation here (the linear multipliers grow like $e^{\pi|\nu|\omega/2}$ with the
+harmonic $\nu$), which is why the untruncated expansion above is the primary estimate. The multipliers were computed by
+two implementations that share no code (lateral solutions on either side of the Stokes line, and Borel--Darboux fits in
+ball arithmetic); at $M = 5$ and $(A, \omega) = (2.72, \omega_\infty)$ the first gives $F_3/F_1 = 0.05486 + 0.00541i$ and
+$F_5/F_1 = 0.00309 + 0.00054i$, against the amplitude expansion's $0.05482 + 0.00543i$ and $0.00310 + 0.00056i$. For the
+one-harmonic truncation, whose zero is not the physical one, the companion paper gives a computer-assisted proof,
+assuming Braaksma's summability theorem and following the template of Baldom\'a et al.~\cite{BaldomaEtAl2023}, that the
+selection condition has exactly one zero in a small box around it, and that it is simple~\cite{math} (Reiterer and
+Trubowitz gave a computer-assisted existence proof of the $D = 4$ critical solution
+itself~\cite{ReitererTrubowitz2019}).
+
+The matter models of Sec.~\ref{sec:matter} give two further, truncation-free tests of the rule.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{../figures/selection.pdf}
+\caption{The selection rule evaluated from the $D = \infty$ inner problem alone. Top: where the harmonic-1 multiplier has
+a real zero, order by order in the amplitude expansion; simple-zero estimates from above, floating-exponent estimates from
+below, Pad\'e ranges and a factored series inside the shaded bracket, which narrows onto $\omega_\infty$ from the
+finite-$D$ solutions (dashed). Bottom left: the truncated route, $|\omega^*/\omega_\infty - 1|$ for $M = 1$, 3, 5
+harmonics (alternating in sign) and a prediction for $M = 7$. Bottom right: the effective exponent of the zero tends to 1,
+a simple zero.}
+\label{fig:selection}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{../figures/spectrum.pdf}
+\caption{Left: amplitude $|F_\nu|$ of each odd harmonic of the echo profile for $D = 4$--$60$ and the $D = \infty$
+prediction of the inner problem (dashed; beyond $\nu = 5$ the leading-order ratio, conjectured). Right: the decay rate
+per harmonic, $\frac12\ln|F_\nu/F_{\nu+2}|$, against $1/(D-2)$, with extrapolations from $D \ge 20$ and the predicted
+$D = \infty$ band.}
+\label{fig:spectrum}
+\end{figure}
+
+\subsection{The next-to-leading-order condition of Ref.~\cite{EckerEckerGrumiller2026}}
+\label{sec:eeg}
+
+Ecker, Ecker and Grumiller use the same gauge: their $f = \alpha/a$ is our $c$, with $f = 1$ at the self-similarity horizon
+$x = 1$, and their profile is $\beta(\tau) \approx \sqrt{2/n}\,F(\omega\tau)$. At next-to-leading order they require
+$f \le 1$ near the horizon at the zeros of $\beta$, which leads to their Eq.~(20); in our variables the condition is
+$\omega^2F'' + 3\omega F' = 0$ at the zeros of $F$. This condition does not select $\Delta$. The inequality $f \le 1$
+holds for every regular solution, whatever the period: from $xb_x = b(p^2+m^2) - (n-1)b(b-1)$ with $b(0) = 1$, $b$ can
+never drop below 1, so $xc_x = (n-1)c(b-1) \ge 0$ and $c \le c(1) = 1$. In the large-$D$ expansion, near a zero of $F$,
+\begin{equation}
+b - 1 = 2\eps^2x^2F(\theta - \delta\theta)^2 + 2\eps^4\omega^2x^4F'^2 + \dots, \qquad
+\delta\theta(x) = -\eps\omega x^2\,\frac{3F' + \omega F''}{2F'},
+\end{equation}
+so the next-to-leading-order term is the cross term of a square whose square term arrives one order later. The
+double-double solutions bear this out: they violate the condition [$(\omega^2F''+3\omega F')/(3\omega F') = 0.98$--$1.06$
+at $D = 12$--$60$, since $F$ is nearly antisymmetric about its zeros], the zero line of $p - m$ tilts as $\delta\theta(x)$
+predicts (measured over predicted at $x = 1$: 0.69 to 0.88 for $D = 20$--$60$), and the maximum of $c$ at the centre
+approaches $1 - (\eps^3/2)\omega^2F'^2$, their Eq.~(22) in this scaling (ratio 0.36 to 0.86). The same condition is used
+by Lai and Wen~\cite{LaiWen2026}, who take it to select the period; the argument applies to that use as well.
 
 \section{Other matter at large $D$}
 \label{sec:matter}
