@@ -1,0 +1,5 @@
+M = 3 row 11 (|u| = 26.98, r = 6, n = 50) disc 0/11: ok True, Lam 0.185, box radius 2.5e-05, sup|y - y0| 19.734, 0 Lohner steps [7 s]
+M = 3 row 11 (|u| = 26.98, r = 6, n = 50) disc 1/11: ok True, Lam 0.343, box radius 3.3e-04, sup|y - y0| 232.511, 89 Lohner steps [198 s]
+M = 3 row 11 (|u| = 26.98, r = 6, n = 50) disc 2/11: ok True, Lam 0.267, box radius 2.7e-03, sup|y - y0| 208.918, 166 Lohner steps [383 s]
+M = 3 row 11 (|u| = 26.98, r = 6, n = 50) disc 3/11: ok True, Lam 0.215, box radius 2.7e-03, sup|y - y0| 181.025, 228 Lohner steps [530 s]
+M = 3 row 11 (|u| = 26.98, r = 6, n = 50) disc 4/11: ok False, Lam 2.156, box radius 5.6e-02, sup|y - y0| None, 279 Lohner steps [651 s]

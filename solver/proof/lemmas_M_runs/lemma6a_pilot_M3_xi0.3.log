@@ -1,0 +1,27 @@
+PILOT (not rigorous): B1 = double-precision y+(0.3) at the hier.py zero (path: ray 3pi/8 to 0.2, arc, real axis to 0.3) inflated by 1e-10; lemma S and the flat estimate over x^ +- 1e-6
+lemma S (M = 3, rp = 0.1, k = 20): contraction 0.8252; flat estimate on 0 < z <= Z = 0.004489: Lambda = 0.2923
+start box at xi1 = 0.3 (y+ and sigma(y+)): radius 7.98e-06
+   real t 0.124649 h 8.67e-03  max state radius 1.09e-05  [203 s]
+   real t 0.257612 h 5.88e-03  max state radius 2.41e-05  [354 s]
+   real t 0.368013 h 3.98e-03  max state radius 3.45e-05  [503 s]
+   real t 0.463131 h 5.40e-03  max state radius 4.43e-05  [646 s]
+   real t 0.542501 h 3.66e-03  max state radius 5.32e-05  [789 s]
+   real t 0.611204 h 2.48e-03  max state radius 6.10e-05  [936 s]
+   real t 0.665109 h 1.68e-03  max state radius 6.67e-05  [1078 s]
+   real t 0.712937 h 2.28e-03  max state radius 7.10e-05  [1201 s]
+   real t 0.754302 h 1.54e-03  max state radius 7.39e-05  [1345 s]
+   real t 0.791137 h 2.09e-03  max state radius 7.54e-05  [1480 s]
+   real t 0.821874 h 1.42e-03  max state radius 7.58e-05  [1614 s]
+   real t 0.848479 h 9.60e-04  max state radius 7.53e-05  [1739 s]
+   real t 0.871402 h 1.30e-03  max state radius 7.41e-05  [1869 s]
+   real t 0.890530 h 8.81e-04  max state radius 7.26e-05  [2005 s]
+   real t 0.907086 h 5.97e-04  max state radius 7.11e-05  [2133 s]
+   real t 0.924069 h 8.09e-04  max state radius 7.17e-05  [2255 s]
+   real t 0.939274 h 5.49e-04  max state radius 7.27e-05  [2377 s]
+   real t 0.952374 h 7.43e-04  max state radius 7.35e-05  [2494 s]
+   real t 0.964121 h 5.04e-04  max state radius 7.41e-05  [2619 s]
+   real t 0.976152 h 6.83e-04  max state radius 7.49e-05  [2749 s]
+   real t 0.986191 h 4.63e-04  max state radius 7.54e-05  [2871 s]
+   real t 0.995515 h 6.27e-04  max state radius 7.58e-05  [2990 s]
+backward along the real axis 0.3 -> 0.067: 450 steps, 3000 s; final state radius 7.60e-05; max radius of B 4.88e-01
+G_slow: invertibility not proved; lemma 6a NOT established

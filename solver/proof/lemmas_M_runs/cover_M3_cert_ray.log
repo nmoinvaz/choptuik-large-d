@@ -1,0 +1,13 @@
+M = 3 (C^1): start data at |u| = 262.0 from the old sector lemma (r0 = 0.1): centre radius 1.20e-48, state set over X = x^ +- 1.1e-9: radius 1.75e-09
+ray |u| 262.0 -> 235.36: 57 steps, 100 s, state set over X radius 1.89e-09
+ray |u| 235.36 -> 208.72: 61 steps, 109 s, state set over X radius 2.24e-09
+ray |u| 208.72 -> 182.08: 65 steps, 103 s, state set over X radius 2.75e-09
+ray |u| 182.08 -> 155.44: 71 steps, 108 s, state set over X radius 3.52e-09
+ray |u| 155.44 -> 128.8: 80 steps, 120 s, state set over X radius 4.83e-09
+ray |u| 128.8 -> 102.16: 93 steps, 144 s, state set over X radius 7.42e-09
+M = 3 (C^1): resumed at row 6 (|u| = 102.16), set radius 7.49e-09
+ray |u| 102.16 -> 79.6: 95 steps, 193 s, state set over X radius 1.27e-08
+ray |u| 79.6 -> 61.84: 92 steps, 185 s, state set over X radius 2.39e-08
+ray |u| 61.84 -> 47.14: 95 steps, 187 s, state set over X radius 5.41e-08
+ray |u| 47.14 -> 36.04: 92 steps, 175 s, state set over X radius 1.44e-07
+ray |u| 36.04 -> 26.98: 102 steps, 197 s, state set over X radius 5.03e-07

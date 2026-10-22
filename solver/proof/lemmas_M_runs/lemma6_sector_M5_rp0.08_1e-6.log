@@ -1,0 +1,13 @@
+lemma S (M = 5) on D (R+ = 0.08^2 = 0.0064, U0 = sqrt2/R+ = 221.0), parameters x^ +- 1e-6: N = 81, k = 20 (forcing allows 80), a_eff = 0.2896
+M = 5, r0 = [0.080000 +/- 1e-10] (R = r0^2), arg xi = 1.178097, kernel rate a = 0.28955, splitting plain: N = 81 terms, weight exponent k = 20 (forcing allows 80)
+  residual numerators: lower coefficients all contain 0: True; first nonzero orders [80, 81] (structural, >= N - 1: True)
+  forcing ||T(0)||_w <= 1.374e+35
+  largest Lipschitz entries (unweighted): v+5<-p+5 5.32, v-5<-p-5 5.32, v+3<-p+3 2.33, v-3<-p-3 2.33, v+1<-p+1 0.673, v-1<-p-1 0.673
+  contraction constant (weighted max norm) <= 0.7247
+  ball rho = 1.996e+36: ||T(0)|| + Lip rho = 1.584e+36 < rho: True
+  => fixed point exists and is unique in the ball: True; |eta| <= 1.82e-08 at |z| = R (p, v, c variables)
+  D covers the real segment 0 < xi <= 0.06727, and directions arg z <= 3pi/4 - 0.4 up to |xi| = 0.04992 (|u| >= 401.2)
+old sector lemma (M = 5, rays |arg xi - 3pi/8| <= 0.2, |xi| <= 0.1, diag): contraction 0.6493, F + Lip rho < rho: True, ok True
+flat estimate (M = 5) on 0 < z <= Z = 0.004489 (xi <= 0.06700), plain, a_r = 0.4102: ||T0|| <= Lambda = 0.4233 < 1: True; largest entries v+5<-p+5 2.6, v-5<-p-5 2.6, v+3<-p+3 1.13, v-3<-p-3 1.13
+flat estimate (M = 5) on 0 < z <= Z = 0.004489 (xi <= 0.06700), diag, a_r = 0.4035: ||T0|| <= Lambda = 0.2979 < 1: True; largest entries v+5<-p+5 2.64, v-5<-p-5 2.64, v+3<-p+3 1.15, v-3<-p-3 1.15
+ALL CHECKS PASS (M = 5): True

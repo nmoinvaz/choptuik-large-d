@@ -1,0 +1,25 @@
+M 3, xi1 0.2, full selection, procs 1; start x [2.7265, 1.0156, 0.1445, 0.01118]
+level radii (approach -> polish): r_1 0.2000 -> 0.2000, r_3 0.2000 -> 0.2000
+start residuals: |r_1| 7.88e+05  |r_3| 7.19e+01
+   level 3 solved: |r_3| 9.49e-11  (17 residuals, 43 s)  [45 s total]
+   Jacobian K computed (2 residuals) [55 s]
+   level 3 solved: |r_3| 9.49e-11  (7 residuals, 21 s)  [76 s total]
+   level 3 solved: |r_3| 1.22e-10  (9 residuals, 26 s)  [103 s total]
+   level 3 solved: |r_3| 5.68e-11  (12 residuals, 34 s)  [137 s total]
+   level 3 solved: |r_3| 2.19e-11  (15 residuals, 48 s)  [185 s total]
+level 1 it 0: |r_1| 8.316e-05  lam 1  x [2.726475903, 1.015603101, 0.14441948, 0.011087426]  [185 s, 64 residuals]
+   level 3 solved: |r_3| 1.38e-10  (10 residuals, 31 s)  [216 s total]
+level 1 it 1: |r_1| 1.096e-07  lam 1  x [2.726475886, 1.015603095, 0.144419478, 0.011087426]  [216 s, 74 residuals]
+   level 3 solved: |r_3| 7.37e-11  (8 residuals, 25 s)  [242 s total]
+   level 3 solved: |r_3| 1.05e-10  (7 residuals, 21 s)  [263 s total]
+   level 3 solved: |r_3| 2.00e-11  (12 residuals, 40 s)  [303 s total]
+   level 3 solved: |r_3| 2.66e-11  (11 residuals, 33 s)  [336 s total]
+   level 3 solved: |r_3| 1.70e-10  (7 residuals, 22 s)  [358 s total]
+   level 3 solved: |r_3| 1.17e-10  (10 residuals, 31 s)  [389 s total]
+   level 3 solved: |r_3| 7.73e-11  (9 residuals, 29 s)  [418 s total]
+   level 3 solved: |r_3| 9.06e-11  (15 residuals, 54 s)  [473 s total]
+   level 3 solved: |r_3| 4.07e-11  (14 residuals, 55 s)  [528 s total]
+   level 1 solved: |r_1| 6.51e-08  (166 residuals, 525 s)  [528 s total]
+ZERO M 3: A 2.726475886  w/w_inf 1.015603095  (w 3.88177, Delta 1.61864)  <F^2> 3.7273  r_1 -2.8446e-09-6.5020e-08i  [528 s, 167 residuals]
+      F_3/F_1 = +0.052969+0.004067i   |.| 0.053125  arg +0.0766   r_3 4.1e-11
+      (uncorrected r_1 -4.2444e-07-1.9487e-08i)
