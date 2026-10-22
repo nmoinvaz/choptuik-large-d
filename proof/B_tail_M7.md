@@ -237,8 +237,9 @@ needs one correction, reported here and not fixed in B_tail.md:
 
 (`python3 trunc_seq_M7.py --amp`.) Lemma O's prediction holds exactly in both truncations: hier's model first changes at
 σ_{M+1}, `amp_trunc.py`'s at σ_M. And the explosion is a property of dropping the even harmonic M + 1, not of Galerkin
-truncation (the two runs also differ slightly in the late-order fit basis, neighbour shifts up to 2M + 2 here against
-2M there, which cannot remove a factor 10⁴): with it kept, σ₄ changes by 0.12% (M = 3) and σ₆ by 7×10⁻⁶ (M = 5), not by factors of 10⁴–10⁶.
+truncation (the two runs also differ in the late-order fit basis, neighbour shifts up to 2M + 2 here against 2M there;
+`amp_trunc.py`'s basis has every family its own model contains, so this should not matter, but it was not tested
+separately): with it kept, σ₄ changes by 0.12% (M = 3) and σ₆ by 7×10⁻⁶ (M = 5), not by factors of 10⁴–10⁶.
 ([C_selection.md](C_selection.md) §1, on main since this work began, now defines the M-model this way and notes that with
 the even harmonics stopped at M − 1 the inner limit would be a different problem.) The lowest-order increments themselves
 decrease fast: at A = 2.7196, x² Δσ₄/Δσ₂ = −0.025 + 0.024i (modulus 0.035) and x² Δσ₆/Δσ₄ = −0.010 + 0.005i (modulus
