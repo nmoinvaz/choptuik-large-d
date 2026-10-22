@@ -384,3 +384,5 @@ Traceback (most recent call last):
     raise RuntimeError(f"background not converged in this layout: |F| = {F:.1e} > {fmax:.0e} (M = {M})")
 RuntimeError: background not converged in this layout: |F| = 2.7e-15 > 1e-15 (M = 48)
 === 2026-10-22 10:26:11 exit 1: hp/data/seeds/local/up23_D61.0264.npz --M=48 --h0=0.6 --lam=2.043532530673195 --fmax=1e-15
+committed 83a0254
+pushed to wip/mode-count
