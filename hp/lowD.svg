@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="516" viewBox="0 0 900 516" font-family="system-ui, sans-serif">
+<style>@media (prefers-color-scheme: dark){[fill="#fcfcfb"]{fill:#201f1d}[stroke="#fcfcfb"]{stroke:#201f1d}[fill="#0b0b0b"]{fill:#e8e6e3}[stroke="#0b0b0b"]{stroke:#e8e6e3}[fill="#52514e"]{fill:#a8a49d}[stroke="#52514e"]{stroke:#a8a49d}[fill="#e7e6e2"]{fill:#343230}[stroke="#e7e6e2"]{stroke:#343230}[fill="#efeeea"]{fill:#2a2927}[stroke="#efeeea"]{stroke:#2a2927}[fill="#eb6834"]{fill:#dd5c26}[stroke="#eb6834"]{stroke:#dd5c26}[fill="#7a7668"]{fill:#948e82}[stroke="#7a7668"]{stroke:#948e82}}</style>
+<rect width="900" height="516" fill="#fcfcfb"/>
+<text x="78.0" y="26.0" font-size="15" fill="#0b0b0b" text-anchor="start" font-weight="bold">Below D = 4: the maximum of Δ, and why the computation stops near D = 3.4</text>
+<text x="78.0" y="46.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">Double-double points at M = 80 τ modes against the 47-mode f64 points; hover for values</text>
+<text x="78.0" y="80.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">Δ near its maximum</text>
+<line x1="78.0" y1="460.0" x2="378.0" y2="460.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="70.0" y="464.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">3.440</text>
+<line x1="78.0" y1="346.7" x2="378.0" y2="346.7" stroke="#e7e6e2" stroke-width="1"/>
+<text x="70.0" y="350.7" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">3.450</text>
+<line x1="78.0" y1="233.3" x2="378.0" y2="233.3" stroke="#e7e6e2" stroke-width="1"/>
+<text x="70.0" y="237.3" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">3.460</text>
+<line x1="78.0" y1="120.0" x2="378.0" y2="120.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="70.0" y="124.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">3.470</text>
+<line x1="135.1" y1="120.0" x2="135.1" y2="460.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="135.1" y="476.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">3.7</text>
+<line x1="206.6" y1="120.0" x2="206.6" y2="460.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="206.6" y="476.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">3.8</text>
+<line x1="278.0" y1="120.0" x2="278.0" y2="460.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="278.0" y="476.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">3.9</text>
+<line x1="349.4" y1="120.0" x2="349.4" y2="460.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="349.4" y="476.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">4</text>
+<line x1="78.0" y1="460.0" x2="378.0" y2="460.0" stroke="#52514e" stroke-width="1"/>
+<text x="228.0" y="496.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal">D</text>
+<text x="34.0" y="290.0" font-size="11" fill="#52514e" text-anchor="middle" transform="rotate(-90 34.0 290.0)">Δ</text>
+<g><circle cx="135.1" cy="174.4" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>f64, 47 modes: D = 3.7, Δ = 3.465203982</title></g>
+<g><circle cx="170.9" cy="156.7" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>f64, 47 modes: D = 3.75, Δ = 3.466758372</title></g>
+<g><circle cx="178.0" cy="156.7" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>f64, 47 modes: D = 3.76, Δ = 3.466765180</title></g>
+<g><circle cx="206.6" cy="166.5" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>f64, 47 modes: D = 3.8, Δ = 3.465897511</title></g>
+<g><circle cx="278.0" cy="250.5" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>f64, 47 modes: D = 3.9, Δ = 3.458488596</title></g>
+<g><circle cx="135.1" cy="174.4" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>double-double, M = 80: D = 3.7, Δ = 3.4652004835</title></g>
+<g><circle cx="149.4" cy="163.7" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>double-double, M = 80: D = 3.72, Δ = 3.4661423100</title></g>
+<g><circle cx="163.7" cy="157.9" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>double-double, M = 80: D = 3.74, Δ = 3.4666527874</title></g>
+<g><circle cx="170.9" cy="156.8" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>double-double, M = 80: D = 3.75, Δ = 3.4667561199</title></g>
+<g><circle cx="178.0" cy="156.7" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>double-double, M = 80: D = 3.76, Δ = 3.4667631179</title></g>
+<g><circle cx="192.3" cy="159.6" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>double-double, M = 80: D = 3.78, Δ = 3.4665020407</title></g>
+<g><circle cx="206.6" cy="166.5" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>double-double, M = 80: D = 3.8, Δ = 3.4658960616</title></g>
+<g><circle cx="349.4" cy="398.2" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>double-double, M = 80: D = 4.0, Δ = 3.4454524022</title></g>
+<g><polygon points="174.9,151.1 180.4,156.6 174.9,162.1 169.4,156.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>maximum (quartic): D = 3.755725, Δ = 3.46677169</title></g>
+<text x="178.9" y="142.6" font-size="10.5" fill="#0b0b0b" text-anchor="start" font-weight="normal">maximum: D = 3.7557, Δ = 3.46677</text>
+<g><circle cx="83.0" cy="96.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>double-double</title></g>
+<text x="92.0" y="100.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">double-double</text>
+<g><circle cx="193.0" cy="96.0" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>f64, 47 modes</title></g>
+<text x="202.0" y="100.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">f64, 47 modes</text>
+<text x="448.0" y="80.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">f64 minus double-double</text>
+<line x1="448.0" y1="460.0" x2="608.0" y2="460.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="440.0" y="464.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">0</text>
+<line x1="448.0" y1="403.3" x2="608.0" y2="403.3" stroke="#e7e6e2" stroke-width="1"/>
+<text x="440.0" y="407.3" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">1</text>
+<line x1="448.0" y1="346.7" x2="608.0" y2="346.7" stroke="#e7e6e2" stroke-width="1"/>
+<text x="440.0" y="350.7" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">2</text>
+<line x1="448.0" y1="290.0" x2="608.0" y2="290.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="440.0" y="294.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">3</text>
+<line x1="448.0" y1="233.3" x2="608.0" y2="233.3" stroke="#e7e6e2" stroke-width="1"/>
+<text x="440.0" y="237.3" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">4</text>
+<line x1="448.0" y1="176.7" x2="608.0" y2="176.7" stroke="#e7e6e2" stroke-width="1"/>
+<text x="440.0" y="180.7" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">5</text>
+<line x1="448.0" y1="120.0" x2="608.0" y2="120.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="440.0" y="124.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">6</text>
+<line x1="470.9" y1="120.0" x2="470.9" y2="460.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="470.9" y="476.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">3.7</text>
+<line x1="499.4" y1="120.0" x2="499.4" y2="460.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="499.4" y="476.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">3.725</text>
+<line x1="528.0" y1="120.0" x2="528.0" y2="460.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="528.0" y="476.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">3.75</text>
+<line x1="556.6" y1="120.0" x2="556.6" y2="460.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="556.6" y="476.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">3.775</text>
+<line x1="585.1" y1="120.0" x2="585.1" y2="460.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="585.1" y="476.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">3.8</text>
+<line x1="448.0" y1="460.0" x2="608.0" y2="460.0" stroke="#52514e" stroke-width="1"/>
+<text x="528.0" y="496.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal">D</text>
+<text x="404.0" y="290.0" font-size="11" fill="#52514e" text-anchor="middle" transform="rotate(-90 404.0 290.0)">ΔΔ (×10⁻⁶)</text>
+<g><circle cx="470.9" cy="261.7" r="4.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.7: f64 − double-double = 3.50×10⁻⁶</title></g>
+<g><circle cx="528.0" cy="332.4" r="4.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.75: f64 − double-double = 2.25×10⁻⁶</title></g>
+<g><circle cx="539.4" cy="343.1" r="4.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.76: f64 − double-double = 2.06×10⁻⁶</title></g>
+<g><circle cx="585.1" cy="377.9" r="4.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.8: f64 − double-double = 1.45×10⁻⁶</title></g>
+<line x1="448.0" y1="460.0" x2="608.0" y2="460.0" stroke="#52514e" stroke-width="1.2" stroke-dasharray="6 4"/>
+<text x="678.0" y="80.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">τ modes for a 10⁻¹⁰ Δ</text>
+<line x1="678.0" y1="460.0" x2="868.0" y2="460.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="670.0" y="464.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">0</text>
+<line x1="678.0" y1="386.1" x2="868.0" y2="386.1" stroke="#e7e6e2" stroke-width="1"/>
+<text x="670.0" y="390.1" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">100</text>
+<line x1="678.0" y1="312.2" x2="868.0" y2="312.2" stroke="#e7e6e2" stroke-width="1"/>
+<text x="670.0" y="316.2" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">200</text>
+<line x1="678.0" y1="238.3" x2="868.0" y2="238.3" stroke="#e7e6e2" stroke-width="1"/>
+<text x="670.0" y="242.3" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">300</text>
+<line x1="678.0" y1="164.3" x2="868.0" y2="164.3" stroke="#e7e6e2" stroke-width="1"/>
+<text x="670.0" y="168.3" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">400</text>
+<line x1="678.0" y1="120.0" x2="678.0" y2="460.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="678.0" y="476.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">3</text>
+<line x1="716.0" y1="120.0" x2="716.0" y2="460.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="716.0" y="476.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">3.2</text>
+<line x1="754.0" y1="120.0" x2="754.0" y2="460.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="754.0" y="476.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">3.4</text>
+<line x1="792.0" y1="120.0" x2="792.0" y2="460.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="792.0" y="476.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">3.6</text>
+<line x1="830.0" y1="120.0" x2="830.0" y2="460.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="830.0" y="476.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">3.8</text>
+<line x1="868.0" y1="120.0" x2="868.0" y2="460.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="868.0" y="476.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">4</text>
+<line x1="678.0" y1="460.0" x2="868.0" y2="460.0" stroke="#52514e" stroke-width="1"/>
+<text x="773.0" y="496.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal">D</text>
+<text x="634.0" y="290.0" font-size="11" fill="#52514e" text-anchor="middle" transform="rotate(-90 634.0 290.0)">modes</text>
+<polygon points="687.5,128.8 692.1,172.1 696.8,205.0 701.4,231.1 706.0,252.3 710.6,270.0 715.3,284.9 719.9,297.8 724.5,308.9 729.2,318.6 733.8,327.2 738.4,334.9 743.0,341.7 747.7,347.8 752.3,353.4 756.9,358.5 761.6,363.1 766.2,367.3 770.8,371.2 775.4,374.8 780.1,378.1 784.7,381.2 789.3,384.1 793.9,386.8 798.6,389.3 803.2,391.0 807.8,392.5 812.5,395.6 817.1,396.5 821.7,397.5 826.3,398.4 831.0,399.4 835.6,400.3 840.2,401.2 844.9,402.1 849.5,403.0 854.1,403.8 858.7,404.6 863.4,405.5 868.0,406.3 868.0,406.3 863.4,405.6 858.7,404.9 854.1,404.3 849.5,403.6 844.9,402.8 840.2,402.1 835.6,401.3 831.0,400.6 826.3,399.8 821.7,399.0 817.1,398.2 812.5,397.3 807.8,395.8 803.2,393.9 798.6,392.0 793.9,390.6 789.3,389.2 784.7,387.6 780.1,385.9 775.4,384.1 770.8,382.2 766.2,380.1 761.6,377.8 756.9,375.4 752.3,372.7 747.7,369.8 743.0,366.5 738.4,362.9 733.8,358.8 729.2,354.2 724.5,348.8 719.9,342.7 715.3,335.3 710.6,326.5 706.0,315.5 701.4,301.4 696.8,282.3 692.1,254.3 687.5,207.4" fill="#2a78d6" fill-opacity="0.25"/>
+<line x1="678.0" y1="413.4" x2="868.0" y2="413.4" stroke="#52514e" stroke-width="1.2" stroke-dasharray="6 4"/>
+<text x="866.0" y="408.4" font-size="10" fill="#0b0b0b" text-anchor="end" font-weight="normal">f64 kernel: 63</text>
+<line x1="678.0" y1="365.4" x2="868.0" y2="365.4" stroke="#52514e" stroke-width="1.2" stroke-dasharray="6 4"/>
+<text x="866.0" y="360.4" font-size="10" fill="#0b0b0b" text-anchor="end" font-weight="normal">double-double kernel: 128</text>
+<text x="693.2" y="142.2" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">estimate</text>
+</svg>

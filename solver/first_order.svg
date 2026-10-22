@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="496" viewBox="0 0 900 496" font-family="system-ui, sans-serif">
+<style>@media (prefers-color-scheme: dark){[fill="#fcfcfb"]{fill:#201f1d}[stroke="#fcfcfb"]{stroke:#201f1d}[fill="#0b0b0b"]{fill:#e8e6e3}[stroke="#0b0b0b"]{stroke:#e8e6e3}[fill="#52514e"]{fill:#a8a49d}[stroke="#52514e"]{stroke:#a8a49d}[fill="#e7e6e2"]{fill:#343230}[stroke="#e7e6e2"]{stroke:#343230}[fill="#efeeea"]{fill:#2a2927}[stroke="#efeeea"]{stroke:#2a2927}[fill="#eb6834"]{fill:#dd5c26}[stroke="#eb6834"]{stroke:#dd5c26}[fill="#7a7668"]{fill:#948e82}[stroke="#7a7668"]{stroke:#948e82}}</style>
+<rect width="900" height="496" fill="#fcfcfb"/>
+<text x="78.0" y="26.0" font-size="15" fill="#0b0b0b" text-anchor="start" font-weight="bold">The D = ∞ theory carried one order further: the 1/D corrections, keeping M harmonics</text>
+<text x="78.0" y="46.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">Relative miss against the values measured on the computed solutions; each pair of harmonics cuts it 10–20 times. Hover for values.</text>
+<text x="78.0" y="80.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">Computed from the D = ∞ equations, against the measured value</text>
+<line x1="78.0" y1="440.0" x2="868.0" y2="440.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="70.0" y="444.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">0.001%</text>
+<line x1="78.0" y1="380.7" x2="868.0" y2="380.7" stroke="#e7e6e2" stroke-width="1"/>
+<text x="70.0" y="384.7" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">0.01%</text>
+<line x1="78.0" y1="321.5" x2="868.0" y2="321.5" stroke="#e7e6e2" stroke-width="1"/>
+<text x="70.0" y="325.5" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">0.1%</text>
+<line x1="78.0" y1="262.2" x2="868.0" y2="262.2" stroke="#e7e6e2" stroke-width="1"/>
+<text x="70.0" y="266.2" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">1%</text>
+<line x1="78.0" y1="203.0" x2="868.0" y2="203.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="70.0" y="207.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">10%</text>
+<line x1="78.0" y1="143.7" x2="868.0" y2="143.7" stroke="#e7e6e2" stroke-width="1"/>
+<text x="70.0" y="147.7" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">100%</text>
+<line x1="134.4" y1="120.0" x2="134.4" y2="440.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="134.4" y="456.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">M = 1</text>
+<line x1="360.1" y1="120.0" x2="360.1" y2="440.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="360.1" y="456.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">M = 3</text>
+<line x1="585.9" y1="120.0" x2="585.9" y2="440.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="585.9" y="456.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">M = 5</text>
+<line x1="811.6" y1="120.0" x2="811.6" y2="440.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="811.6" y="456.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">M = 7</text>
+<line x1="78.0" y1="440.0" x2="868.0" y2="440.0" stroke="#52514e" stroke-width="1"/>
+<text x="473.0" y="474.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal">harmonics kept</text>
+<text x="30.0" y="280.0" font-size="11" fill="#52514e" text-anchor="middle" transform="rotate(-90 30.0 280.0)">relative miss (log scale)</text>
+<path d="M134.4,182.3 L360.1,250.8 L585.9,328.1 L811.6,419.7" fill="none" stroke="#2a78d6" stroke-width="2" stroke-opacity="0.85" stroke-linejoin="round"/>
+<g><circle cx="134.4" cy="182.3" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>ω*/ω∞, M = 1: 0.776994 (-22.3% from the measured value)</title></g>
+<g><circle cx="360.1" cy="250.8" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>ω*/ω∞, M = 3: 1.0156 (+1.56% from the measured value)</title></g>
+<g><circle cx="585.9" cy="328.1" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>ω*/ω∞, M = 5: 0.999228 (-0.0772% from the measured value)</title></g>
+<g><circle cx="811.6" cy="419.7" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>ω*/ω∞, M = 7: 1.00002 (+0.0022% from the measured value)</title></g>
+<path d="M134.4,196.7 L360.1,248.3 L585.9,320.1" fill="none" stroke="#eda100" stroke-width="2" stroke-opacity="0.85" stroke-linejoin="round"/>
+<g><circle cx="134.4" cy="196.7" r="4.5" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>ω₁, M = 1: -21.0519 (-12.7% from the measured value)</title></g>
+<g><circle cx="360.1" cy="248.3" r="4.5" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>ω₁, M = 3: -23.7089 (-1.72% from the measured value)</title></g>
+<g><circle cx="585.9" cy="320.1" r="4.5" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>ω₁, M = 5: -24.1485 (+0.105% from the measured value)</title></g>
+<path d="M134.4,164.5 L360.1,222.3 L585.9,296.9" fill="none" stroke="#eb6834" stroke-width="2" stroke-opacity="0.85" stroke-linejoin="round"/>
+<g><circle cx="134.4" cy="164.5" r="4.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>Δ₁, M = 1: 14.9977 (+44.6% from the measured value)</title></g>
+<g><circle cx="360.1" cy="222.3" r="4.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>Δ₁, M = 3: 9.88625 (-4.71% from the measured value)</title></g>
+<g><circle cx="585.9" cy="296.9" r="4.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>Δ₁, M = 5: 10.4023 (+0.26% from the measured value)</title></g>
+<path d="M134.4,132.3 L360.1,250.8 L585.9,291.8" fill="none" stroke="#1baf7a" stroke-width="2" stroke-opacity="0.85" stroke-linejoin="round"/>
+<g><circle cx="134.4" cy="132.3" r="4.5" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>λ₁, M = 1: 7.7565 (+156% from the measured value)</title></g>
+<g><circle cx="360.1" cy="250.8" r="4.5" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>λ₁, M = 3: 3.07965 (+1.56% from the measured value)</title></g>
+<g><circle cx="585.9" cy="291.8" r="4.5" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>λ₁, M = 5: 3.02283 (-0.317% from the measured value)</title></g>
+<g><circle cx="84.0" cy="96.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>ω*/ω∞, the echo frequency</title></g>
+<text x="94.0" y="100.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">ω*/ω∞, the echo frequency</text>
+<g><circle cx="267.5" cy="96.0" r="4.5" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>ω₁, its 1/D term (-24.123)</title></g>
+<text x="277.5" y="100.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">ω₁, its 1/D term (-24.123)</text>
+<g><circle cx="456.9" cy="96.0" r="4.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>Δ₁, 1/D term of Δ (10.375)</title></g>
+<text x="466.9" y="100.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">Δ₁, 1/D term of Δ (10.375)</text>
+<g><circle cx="646.3" cy="96.0" r="4.5" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>λ₁, 1/D term of 1/γ (3.0324)</title></g>
+<text x="656.3" y="100.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">λ₁, 1/D term of 1/γ (3.0324)</text>
+</svg>

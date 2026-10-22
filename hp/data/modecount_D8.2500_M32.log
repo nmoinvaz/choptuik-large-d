@@ -1,0 +1,38 @@
+  |F| 7.5e-08 in this layout: Newton
+  |F| 8.6e-28; saved modecount_state_D8.2500_M32.npz
+=== 2026-10-22 11:11:12  up_D8.2500.npz: D 8.25, M 32, kfreeze None, |F| 8.6e-28 (in 7.5e-08); Delta 2.683434296073, omega 2.341472; lam_g = 1 + <c1> = 0.6572726533; lam_phys (expected) 2.2316917258
+  contour: aLL -0.0805, aL 0.2483, a1 1.4838, a2 2.8317, aR 6.7000; y1 = omega/2 = 1.1707, y2 = 1.5 omega = 3.5122
+  candidate poles with |Im| < y2, Re in (-1, 9): [(0.4959, -2.3415), (2.4677, -2.3415), (-0.1614, -2.3415), (1.1532, -2.3415), (1.8105, -2.3415), (-0.8186, -2.3415), (-0.8186, 2.3415), (1.8105, 2.3415), (1.1532, 2.3415), (-0.1614, 2.3415), (0.4959, 2.3415), (2.4677, 2.3415)]
+  expected zeros: [(0.0, -4.682943), (0.0, 0.0), (0.0, 4.682943), (0.657273, -4.682943), (0.657273, 0.0), (0.657273, 4.682943), (2.231692, -4.682943), (2.231692, 0.0), (2.231692, 4.682943)]
+    10 evaluations, 17.3 s each
+  real axis, sign of det M: 0.248:+, 0.500:+, 1.000:-, 1.484:-, 1.500:-, 2.000:-, 2.500:+, 2.832:+, 3.000:+, 3.500:+, 4.000:+, 4.500:+, 5.000:+, 5.500:+, 6.000:+, 6.500:+, 6.700:+
+  sign changes of det M on the real axis: [(np.float64(0.5), np.float64(1.0)), (np.float64(2.0), np.float64(2.5))]
+  404 candidate poles multiplied out, 9 expected zeros divided out; trend p(lam) = -0.3441 lam^2 + 98.5927 lam + 899.603 (residual on the real axis max 0.056)
+  edge Re=aR, Im 0->y1: 3 points, phase change of g +0.170733, max step 0.090 rad (det M itself: 3.053), spacing 5.85e-01..5.85e-01, ln|g| -0.04..0.06, verified 0 (mismatch 0)
+    20 evaluations, 17.1 s each
+  edge Re=a2, Im 0->y1: 3 points, phase change of g -0.039772, max step 0.024 rad (det M itself: 2.858), spacing 5.85e-01..5.85e-01, ln|g| 0.03..0.06, verified 0 (mismatch 0)
+  edge Re=a1, Im 0->y1: 3 points, phase change of g +0.063661, max step 0.037 rad (det M itself: 2.425), spacing 5.85e-01..5.85e-01, ln|g| 0.02..0.06, verified 0 (mismatch 0)
+  edge Re=aL, Im 0->y1: 3 points, phase change of g +0.078803, max step 0.077 rad (det M itself: 2.037), spacing 5.85e-01..5.85e-01, ln|g| -0.14..-0.03, verified 0 (mismatch 0)
+  edge Re=aLL, Im 0->y1: 3 points, phase change of g +0.006923, max step 0.054 rad (det M itself: 2.365), spacing 5.85e-01..5.85e-01, ln|g| -0.22..-0.01, verified 0 (mismatch 0)
+    30 evaluations, 17.1 s each
+  edge Im=y1, Re aR->a2: 8 points, phase change of g -0.210505, max step 0.080 rad (det M itself: 0.722), spacing 5.53e-01..5.53e-01, ln|g| -0.10..0.06, verified 0 (mismatch 0)
+  edge Im=y1, Re a2->a1: 4 points, phase change of g +0.103433, max step 0.039 rad (det M itself: 1.325), spacing 4.49e-01..4.49e-01, ln|g| 0.06..0.08, verified 0 (mismatch 0)
+  edge Im=y1, Re a1->aL: 4 points, phase change of g +0.015142, max step 0.030 rad (det M itself: 1.369), spacing 4.12e-01..4.12e-01, ln|g| -0.14..0.06, verified 0 (mismatch 0)
+    40 evaluations, 17.2 s each
+  edge Im=y1, Re aL->aLL: 3 points, phase change of g -0.071880, max step 0.043 rad (det M itself: 0.522), spacing 1.64e-01..1.64e-01, ln|g| -0.22..-0.14, verified 0 (mismatch 0)
+  edge Re=aR, Im y1->y2: 5 points, phase change of g +0.066510, max step 0.064 rad (det M itself: 3.045), spacing 5.85e-01..5.85e-01, ln|g| -0.80..-0.04, verified 0 (mismatch 0)
+  edge Re=aL, Im y1->y2: 5 points, phase change of g +0.913217, max step 0.348 rad (det M itself: 1.807), spacing 5.85e-01..5.85e-01, ln|g| -0.18..1.04, verified 0 (mismatch 0)
+    50 evaluations, 17.0 s each
+  edge Re=aLL, Im y1->y2: 7 points, phase change of g +1.402675, max step 0.298 rad (det M itself: 1.729), spacing 2.93e-01..5.85e-01, ln|g| -0.40..1.08, verified 2 (mismatch 0)
+    60 evaluations, 16.9 s each
+  edge Im=y2, Re aR->aL: 13 points, phase change of g +0.754777, max step 0.388 rad (det M itself: 1.934), spacing 2.93e-01..5.87e-01, ln|g| -0.80..1.04, verified 1 (mismatch 0)
+  edge Im=y2, Re aL->aLL: 3 points, phase change of g +0.417578, max step 0.220 rad (det M itself: 0.536), spacing 1.64e-01..1.64e-01, ln|g| 1.04..1.08, verified 0 (mismatch 0)
+  box B0   Re (-0.080, 0.248) Im (-1.171, +1.171): winding of g +0.000000 -> 0; expected zeros inside 1, candidate poles inside 0 -> winding of det M 1, zeros of det M <= 1; max phase step 0.077 rad, nearest pole / expected zero to the edge 1.174 / 0.080
+  box U0   Re (-0.080, 0.248) Im (+1.171, +3.512): winding of g +0.000000 -> 0; expected zeros inside 0, candidate poles inside 0 -> winding of det M 0, zeros of det M <= 0; max phase step 0.348 rad, nearest pole / expected zero to the edge 0.081 / 1.171
+  box B1a  Re (0.248, 1.484) Im (-1.171, +1.171): winding of g -0.000000 -> 0; expected zeros inside 1, candidate poles inside 0 -> winding of det M 1, zeros of det M <= 1; max phase step 0.077 rad, nearest pole / expected zero to the edge 1.171 / 0.248
+  box B1b  Re (1.484, 2.832) Im (-1.171, +1.171): winding of g +0.000000 -> 0; expected zeros inside 1, candidate poles inside 0 -> winding of det M 1, zeros of det M <= 1; max phase step 0.039 rad, nearest pole / expected zero to the edge 1.171 / 0.600
+  box B1c  Re (2.832, 6.700) Im (-1.171, +1.171): winding of g +0.000000 -> 0; expected zeros inside 0, candidate poles inside 0 -> winding of det M 0, zeros of det M <= 0; max phase step 0.090 rad, nearest pole / expected zero to the edge 1.226 / 0.600
+  box B1   Re (0.248, 6.700) Im (-1.171, +1.171): winding of g +0.000000 -> 0; expected zeros inside 2, candidate poles inside 0 -> winding of det M 2, zeros of det M <= 2; max phase step 0.090 rad, nearest pole / expected zero to the edge 1.171 / 0.248
+  box U    Re (0.248, 6.700) Im (+1.171, +3.512): winding of g +0.000000 -> 0; expected zeros inside 0, candidate poles inside 4 -> winding of det M -4, zeros of det M <= 0; max phase step 0.388 rad, nearest pole / expected zero to the edge 0.248 / 1.171
+  box full Re (0.248, 6.700) Im (-3.512, +3.512): winding of g +0.000000 -> 0; expected zeros inside 2, candidate poles inside 8 -> winding of det M -6, zeros of det M <= 2; max phase step 0.388 rad, nearest pole / expected zero to the edge 0.248 / 0.248
+  done: 68 evaluations in the cache (68 new)

@@ -1,0 +1,201 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="554" viewBox="0 0 900 554" font-family="system-ui, sans-serif">
+<style>@media (prefers-color-scheme: dark){[fill="#fcfcfb"]{fill:#201f1d}[stroke="#fcfcfb"]{stroke:#201f1d}[fill="#0b0b0b"]{fill:#e8e6e3}[stroke="#0b0b0b"]{stroke:#e8e6e3}[fill="#52514e"]{fill:#a8a49d}[stroke="#52514e"]{stroke:#a8a49d}[fill="#e7e6e2"]{fill:#343230}[stroke="#e7e6e2"]{stroke:#343230}[fill="#efeeea"]{fill:#2a2927}[stroke="#efeeea"]{stroke:#2a2927}[fill="#eb6834"]{fill:#dd5c26}[stroke="#eb6834"]{stroke:#dd5c26}[fill="#7a7668"]{fill:#948e82}[stroke="#7a7668"]{stroke:#948e82}}</style>
+<rect width="900" height="554" fill="#fcfcfb"/>
+<text x="78.0" y="26.0" font-size="15" fill="#0b0b0b" text-anchor="start" font-weight="bold">The critical exponent γ across matter models, against 1/D</text>
+<text x="78.0" y="46.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">Infinite dimension is the left edge; hover a mark for its value. Hollow: preliminary (σ-model, D ≥ 10).</text>
+<text x="78.0" y="78.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">γ = 1/λ for each model's critical solution</text>
+<line x1="78.0" y1="498.0" x2="868.0" y2="498.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="70.0" y="502.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">0.1</text>
+<line x1="78.0" y1="413.6" x2="868.0" y2="413.6" stroke="#e7e6e2" stroke-width="1"/>
+<text x="70.0" y="417.6" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">0.2</text>
+<line x1="78.0" y1="329.1" x2="868.0" y2="329.1" stroke="#e7e6e2" stroke-width="1"/>
+<text x="70.0" y="333.1" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">0.3</text>
+<line x1="78.0" y1="244.7" x2="868.0" y2="244.7" stroke="#e7e6e2" stroke-width="1"/>
+<text x="70.0" y="248.7" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">0.4</text>
+<line x1="78.0" y1="160.2" x2="868.0" y2="160.2" stroke="#e7e6e2" stroke-width="1"/>
+<text x="70.0" y="164.2" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">0.5</text>
+<line x1="78.0" y1="118.0" x2="78.0" y2="498.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="78.0" y="514.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0</text>
+<line x1="310.4" y1="118.0" x2="310.4" y2="498.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="310.4" y="514.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.1</text>
+<line x1="542.7" y1="118.0" x2="542.7" y2="498.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="542.7" y="514.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.2</text>
+<line x1="775.1" y1="118.0" x2="775.1" y2="498.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="775.1" y="514.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.3</text>
+<line x1="78.0" y1="498.0" x2="868.0" y2="498.0" stroke="#52514e" stroke-width="1"/>
+<text x="473.0" y="534.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal">1/D</text>
+<text x="34.0" y="308.0" font-size="11" fill="#52514e" text-anchor="middle" transform="rotate(-90 34.0 308.0)">γ</text>
+<line x1="78.0" y1="160.2" x2="868.0" y2="160.2" stroke="#52514e" stroke-width="1.3" stroke-dasharray="6 4"/>
+<text x="856.4" y="176.2" font-size="10" fill="#0b0b0b" text-anchor="end" font-weight="normal">1/2: the large-D value where the r² shift fixes it (scalar, axion–dilaton)</text>
+<path d="M706.0,288.0 L658.9,266.7 L624.7,254.7 L594.3,245.9 L567.2,239.1 L542.7,233.6 L520.6,229.1 L500.5,225.3 L482.1,222.1 L465.3,219.3 L449.8,216.8 L435.5,214.6 L422.2,212.7 L409.9,210.9 L398.5,209.3 L387.8,207.8 L377.8,206.5 L368.4,205.2 L359.6,204.1 L336.2,201.0 L310.4,197.7 L289.2,195.1 L271.6,192.8 L256.7,190.9 L244.0,189.2 L232.9,187.8 L216.6,185.6 L214.5,185.3 L205.8,184.1 L200.2,183.3 L193.9,182.4 L188.5,181.6 L182.2,180.7 L178.8,180.1 L174.5,179.5 L170.6,178.9 L167.1,178.3 L163.9,177.8 L160.8,177.3 L158.0,176.9 L155.3,176.4 L152.9,176.0 L150.6,175.6 L148.3,175.2 L146.2,174.9 L144.3,174.5 L142.4,174.2 L140.7,173.9 L139.1,173.6 L137.6,173.3 L136.1,173.1 L134.5,172.8 L133.3,172.6 L131.9,172.3 L130.7,172.1 L129.6,171.9 L128.5,171.7 L127.4,171.5 L126.4,171.3 L125.4,171.1 L124.5,170.9 L123.5,170.7 L122.6,170.5 L121.2,170.2 L121.0,170.2 L120.2,170.1 L119.5,169.9 L118.7,169.8 L118.1,169.6 L117.4,169.5 L116.9,169.4 L116.9,169.4 L116.9,169.4 L116.8,169.4 L116.7,169.3 L116.1,169.2 L116.1,169.2 L116.1,169.2 L116.1,169.2 L116.1,169.2 L116.1,169.2 L116.1,169.2 L116.1,169.2 L116.1,169.2 L116.1,169.2" fill="none" stroke="#2a78d6" stroke-width="1.6" stroke-opacity="0.85" stroke-linejoin="round"/>
+<g><circle cx="706.0" cy="288.0" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 3.7: γ = 0.348650</title></g>
+<g><circle cx="658.9" cy="266.7" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 4: γ = 0.373961</title></g>
+<g><circle cx="624.7" cy="254.7" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 4.25: γ = 0.388074</title></g>
+<g><circle cx="594.3" cy="245.9" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 4.5: γ = 0.398539</title></g>
+<g><circle cx="567.2" cy="239.1" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 4.75: γ = 0.406641</title></g>
+<g><circle cx="542.7" cy="233.6" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 5: γ = 0.413127</title></g>
+<g><circle cx="520.6" cy="229.1" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 5.25: γ = 0.418458</title></g>
+<g><circle cx="500.5" cy="225.3" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 5.5: γ = 0.422935</title></g>
+<g><circle cx="482.1" cy="222.1" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 5.75: γ = 0.426761</title></g>
+<g><circle cx="465.3" cy="219.3" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 6: γ = 0.430079</title></g>
+<g><circle cx="449.8" cy="216.8" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 6.25: γ = 0.432994</title></g>
+<g><circle cx="435.5" cy="214.6" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 6.5: γ = 0.435581</title></g>
+<g><circle cx="422.2" cy="212.7" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 6.75: γ = 0.437899</title></g>
+<g><circle cx="409.9" cy="210.9" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 7: γ = 0.439991</title></g>
+<g><circle cx="398.5" cy="209.3" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 7.25: γ = 0.441894</title></g>
+<g><circle cx="387.8" cy="207.8" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 7.5: γ = 0.443635</title></g>
+<g><circle cx="377.8" cy="206.5" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 7.75: γ = 0.445236</title></g>
+<g><circle cx="368.4" cy="205.2" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 8: γ = 0.446716</title></g>
+<g><circle cx="359.6" cy="204.1" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 8.25: γ = 0.448091</title></g>
+<g><circle cx="336.2" cy="201.0" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 9: γ = 0.451693</title></g>
+<g><circle cx="310.4" cy="197.7" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 10: γ = 0.455588</title></g>
+<g><circle cx="289.2" cy="195.1" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 11: γ = 0.458756</title></g>
+<g><circle cx="271.6" cy="192.8" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 12: γ = 0.461406</title></g>
+<g><circle cx="256.7" cy="190.9" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 13: γ = 0.463669</title></g>
+<g><circle cx="244.0" cy="189.2" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 14: γ = 0.465635</title></g>
+<g><circle cx="232.9" cy="187.8" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 15: γ = 0.467366</title></g>
+<g><circle cx="216.6" cy="185.6" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 16.76: γ = 0.469967</title></g>
+<g><circle cx="214.5" cy="185.3" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 17.018: γ = 0.470309</title></g>
+<g><circle cx="205.8" cy="184.1" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 18.1752: γ = 0.471741</title></g>
+<g><circle cx="200.2" cy="183.3" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 19.0192: γ = 0.472692</title></g>
+<g><circle cx="193.9" cy="182.4" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 20.0437: γ = 0.473754</title></g>
+<g><circle cx="188.5" cy="181.6" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 21.0297: γ = 0.474694</title></g>
+<g><circle cx="182.2" cy="180.7" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 22.3032: γ = 0.475805</title></g>
+<g><circle cx="178.8" cy="180.1" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 23.0433: γ = 0.476403</title></g>
+<g><circle cx="174.5" cy="179.5" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 24.0797: γ = 0.477189</title></g>
+<g><circle cx="170.6" cy="178.9" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 25.0797: γ = 0.477896</title></g>
+<g><circle cx="167.1" cy="178.3" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 26.0797: γ = 0.478558</title></g>
+<g><circle cx="163.9" cy="177.8" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 27.0422: γ = 0.479156</title></g>
+<g><circle cx="160.8" cy="177.3" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 28.0595: γ = 0.479751</title></g>
+<g><circle cx="158.0" cy="176.9" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 29.0518: γ = 0.480298</title></g>
+<g><circle cx="155.3" cy="176.4" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 30.0688: γ = 0.480828</title></g>
+<g><circle cx="152.9" cy="176.0" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 31.034: γ = 0.481303</title></g>
+<g><circle cx="150.6" cy="175.6" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 32.0213: γ = 0.481764</title></g>
+<g><circle cx="148.3" cy="175.2" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 33.0327: γ = 0.482213</title></g>
+<g><circle cx="146.2" cy="174.9" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 34.0521: γ = 0.482643</title></g>
+<g><circle cx="144.3" cy="174.5" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 35.0248: γ = 0.483033</title></g>
+<g><circle cx="142.4" cy="174.2" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 36.0732: γ = 0.483434</title></g>
+<g><circle cx="140.7" cy="173.9" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 37.0829: γ = 0.483802</title></g>
+<g><circle cx="139.1" cy="173.6" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 38.0204: γ = 0.484129</title></g>
+<g><circle cx="137.6" cy="173.3" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 39.0019: γ = 0.484457</title></g>
+<g><circle cx="136.1" cy="173.1" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 40.0201: γ = 0.484783</title></g>
+<g><circle cx="134.5" cy="172.8" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 41.089: γ = 0.485110</title></g>
+<g><circle cx="133.3" cy="172.6" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 42.0439: γ = 0.485390</title></g>
+<g><circle cx="131.9" cy="172.3" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 43.1353: γ = 0.485698</title></g>
+<g><circle cx="130.7" cy="172.1" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 44.0903: γ = 0.485956</title></g>
+<g><circle cx="129.6" cy="171.9" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 45.0507: γ = 0.486207</title></g>
+<g><circle cx="128.5" cy="171.7" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 46.0011: γ = 0.486446</title></g>
+<g><circle cx="127.4" cy="171.5" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 47.0082: γ = 0.486690</title></g>
+<g><circle cx="126.4" cy="171.3" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 48.0153: γ = 0.486925</title></g>
+<g><circle cx="125.4" cy="171.1" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 49.0224: γ = 0.487152</title></g>
+<g><circle cx="124.5" cy="170.9" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 50.0075: γ = 0.487367</title></g>
+<g><circle cx="123.5" cy="170.7" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 51.027: γ = 0.487581</title></g>
+<g><circle cx="122.6" cy="170.5" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 52.0414: γ = 0.487787</title></g>
+<g><circle cx="121.2" cy="170.2" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 53.7914: γ = 0.488127</title></g>
+<g><circle cx="121.0" cy="170.2" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 54.0414: γ = 0.488174</title></g>
+<g><circle cx="120.2" cy="170.1" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 55.0351: γ = 0.488357</title></g>
+<g><circle cx="119.5" cy="169.9" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 56.0117: γ = 0.488531</title></g>
+<g><circle cx="118.7" cy="169.8" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 57.0333: γ = 0.488708</title></g>
+<g><circle cx="118.1" cy="169.6" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 58.006: γ = 0.488871</title></g>
+<g><circle cx="117.4" cy="169.5" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 59.025: γ = 0.489037</title></g>
+<g><circle cx="116.9" cy="169.4" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 59.7676: γ = 0.489155</title></g>
+<g><circle cx="116.9" cy="169.4" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 59.7858: γ = 0.489158</title></g>
+<g><circle cx="116.9" cy="169.4" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 59.8041: γ = 0.489160</title></g>
+<g><circle cx="116.8" cy="169.4" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 59.8221: γ = 0.489163</title></g>
+<g><circle cx="116.7" cy="169.3" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 60.002: γ = 0.489191</title></g>
+<g><circle cx="116.1" cy="169.2" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 60.9609: γ = 0.489339</title></g>
+<g><circle cx="116.1" cy="169.2" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 60.9618: γ = 0.489339</title></g>
+<g><circle cx="116.1" cy="169.2" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 60.9641: γ = 0.489339</title></g>
+<g><circle cx="116.1" cy="169.2" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 60.9656: γ = 0.489339</title></g>
+<g><circle cx="116.1" cy="169.2" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 60.9671: γ = 0.489340</title></g>
+<g><circle cx="116.1" cy="169.2" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 60.9686: γ = 0.489340</title></g>
+<g><circle cx="116.1" cy="169.2" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 61.0211: γ = 0.489348</title></g>
+<g><circle cx="116.1" cy="169.2" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 61.0225: γ = 0.489348</title></g>
+<g><circle cx="116.1" cy="169.2" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 61.0243: γ = 0.489348</title></g>
+<g><circle cx="116.1" cy="169.2" r="2.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar (echoing), D = 61.0264: γ = 0.489349</title></g>
+<path d="M658.9,359.4 L594.3,320.8 L542.7,295.8 L500.5,278.2 L465.3,265.1 L435.5,254.9 L409.9,246.8 L387.8,240.1 L368.4,234.6 L336.2,225.7 L310.4,219.0 L289.2,213.7 L271.6,209.4 L256.7,205.8 L244.0,202.7 L232.9,200.1 L223.2,197.8 L214.7,195.8 L207.1,194.0 L194.2,191.0 L183.6,188.4 L174.8,186.3 L167.4,184.5 L161.0,183.0 L155.5,181.6 L150.6,180.4 L144.4,178.9 L139.1,177.6 L136.1,176.8 L129.6,175.1 L124.5,173.8 L120.2,172.6 L116.7,171.7 L111.2,170.2 L107.0,169.0" fill="none" stroke="#1baf7a" stroke-width="1.6" stroke-opacity="0.85" stroke-linejoin="round"/>
+<g><circle cx="658.9" cy="359.4" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 4: γ = 0.264107</title></g>
+<g><circle cx="594.3" cy="320.8" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 4.5: γ = 0.309792</title></g>
+<g><circle cx="542.7" cy="295.8" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 5: γ = 0.339439</title></g>
+<g><circle cx="500.5" cy="278.2" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 5.5: γ = 0.360294</title></g>
+<g><circle cx="465.3" cy="265.1" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 6: γ = 0.375811</title></g>
+<g><circle cx="435.5" cy="254.9" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 6.5: γ = 0.387841</title></g>
+<g><circle cx="409.9" cy="246.8" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 7: γ = 0.397465</title></g>
+<g><circle cx="387.8" cy="240.1" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 7.5: γ = 0.405359</title></g>
+<g><circle cx="368.4" cy="234.6" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 8: γ = 0.411964</title></g>
+<g><circle cx="336.2" cy="225.7" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 9: γ = 0.422431</title></g>
+<g><circle cx="310.4" cy="219.0" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 10: γ = 0.430393</title></g>
+<g><circle cx="289.2" cy="213.7" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 11: γ = 0.436684</title></g>
+<g><circle cx="271.6" cy="209.4" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 12: γ = 0.441802</title></g>
+<g><circle cx="256.7" cy="205.8" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 13: γ = 0.446062</title></g>
+<g><circle cx="244.0" cy="202.7" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 14: γ = 0.449674</title></g>
+<g><circle cx="232.9" cy="200.1" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 15: γ = 0.452782</title></g>
+<g><circle cx="223.2" cy="197.8" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 16: γ = 0.455490</title></g>
+<g><circle cx="214.7" cy="195.8" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 17: γ = 0.457875</title></g>
+<g><circle cx="207.1" cy="194.0" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 18: γ = 0.459995</title></g>
+<g><circle cx="194.2" cy="191.0" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 20: γ = 0.463605</title></g>
+<g><circle cx="183.6" cy="188.4" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 22: γ = 0.466574</title></g>
+<g><circle cx="174.8" cy="186.3" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 24: γ = 0.469066</title></g>
+<g><circle cx="167.4" cy="184.5" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 26: γ = 0.471191</title></g>
+<g><circle cx="161.0" cy="183.0" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 28: γ = 0.473029</title></g>
+<g><circle cx="155.5" cy="181.6" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 30: γ = 0.474635</title></g>
+<g><circle cx="150.6" cy="180.4" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 32: γ = 0.476053</title></g>
+<g><circle cx="144.4" cy="178.9" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 35: γ = 0.477895</title></g>
+<g><circle cx="139.1" cy="177.6" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 38: γ = 0.479465</title></g>
+<g><circle cx="136.1" cy="176.8" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 40: γ = 0.480390</title></g>
+<g><circle cx="129.6" cy="175.1" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 45: γ = 0.482366</title></g>
+<g><circle cx="124.5" cy="173.8" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 50: γ = 0.483973</title></g>
+<g><circle cx="120.2" cy="172.6" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 55: γ = 0.485306</title></g>
+<g><circle cx="116.7" cy="171.7" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 60: γ = 0.486432</title></g>
+<g><circle cx="111.2" cy="170.2" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 70: γ = 0.488229</title></g>
+<g><circle cx="107.0" cy="169.0" r="2.6" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton (self-similar), D = 80: γ = 0.489602</title></g>
+<path d="M658.9,482.0 L542.7,400.5 L465.3,358.2 L409.9,332.7 L368.4,315.4 L336.2,302.7" fill="none" stroke="#eb6834" stroke-width="1.6" stroke-opacity="0.85" stroke-linejoin="round"/>
+<g><circle cx="658.9" cy="482.0" r="3.6" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>ℓ = 1 multiplet (echoing), D = 4: γ = 0.118900</title></g>
+<g><circle cx="542.7" cy="400.5" r="3.6" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>ℓ = 1 multiplet (echoing), D = 5: γ = 0.215509</title></g>
+<g><circle cx="465.3" cy="358.2" r="3.6" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>ℓ = 1 multiplet (echoing), D = 6: γ = 0.265565</title></g>
+<g><circle cx="409.9" cy="332.7" r="3.6" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>ℓ = 1 multiplet (echoing), D = 7: γ = 0.295733</title></g>
+<g><circle cx="368.4" cy="315.4" r="3.6" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>ℓ = 1 multiplet (echoing), D = 8: γ = 0.316203</title></g>
+<g><circle cx="336.2" cy="302.7" r="3.6" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>ℓ = 1 multiplet (echoing), D = 9: γ = 0.331286</title></g>
+<path d="M658.9,484.8 L542.7,402.9 L500.5,378.7 L465.3,360.6 L409.9,335.2 L368.4,318.1 L336.2,305.4 L310.4,293.2 L299.3,291.6" fill="none" stroke="#e87ba4" stroke-width="1.6" stroke-opacity="0.85" stroke-linejoin="round"/>
+<g><circle cx="658.9" cy="484.8" r="3.6" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>σ-model, η = 1 (echoing), D = 4: γ = 0.115629</title></g>
+<g><circle cx="542.7" cy="402.9" r="3.6" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>σ-model, η = 1 (echoing), D = 5: γ = 0.212654</title></g>
+<g><circle cx="500.5" cy="378.7" r="3.6" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>σ-model, η = 1 (echoing), D = 5.5: γ = 0.241300</title></g>
+<g><circle cx="465.3" cy="360.6" r="3.6" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>σ-model, η = 1 (echoing), D = 6: γ = 0.262728</title></g>
+<g><circle cx="409.9" cy="335.2" r="3.6" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>σ-model, η = 1 (echoing), D = 7: γ = 0.292744</title></g>
+<g><circle cx="368.4" cy="318.1" r="3.6" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>σ-model, η = 1 (echoing), D = 8: γ = 0.313073</title></g>
+<g><circle cx="336.2" cy="305.4" r="3.6" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>σ-model, η = 1 (echoing), D = 9: γ = 0.328029</title></g>
+<g><circle cx="310.4" cy="293.2" r="3.6" fill="#fcfcfb" stroke="#e87ba4" stroke-width="1.6"/><title>σ-model, η = 1 (echoing), D = 10: γ = 0.342485</title></g>
+<g><circle cx="299.3" cy="291.6" r="3.6" fill="#fcfcfb" stroke="#e87ba4" stroke-width="1.6"/><title>σ-model, η = 1 (echoing), D = 10.5: γ = 0.344390</title></g>
+<path d="M658.9,484.9 L542.7,408.8 L500.5,387.1 L465.3,370.5 L409.9,346.4 L368.4,329.4 L336.2,316.5 L310.4,308.4 L299.3,307.2 L289.2,311.1" fill="none" stroke="#e87ba4" stroke-width="1.6" stroke-opacity="0.85" stroke-linejoin="round"/>
+<g><circle cx="658.9" cy="484.9" r="3.6" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>σ-model, η = 0.3 (echoing), D = 4: γ = 0.115509</title></g>
+<g><circle cx="542.7" cy="408.8" r="3.6" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>σ-model, η = 0.3 (echoing), D = 5: γ = 0.205683</title></g>
+<g><circle cx="500.5" cy="387.1" r="3.6" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>σ-model, η = 0.3 (echoing), D = 5.5: γ = 0.231360</title></g>
+<g><circle cx="465.3" cy="370.5" r="3.6" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>σ-model, η = 0.3 (echoing), D = 6: γ = 0.250968</title></g>
+<g><circle cx="409.9" cy="346.4" r="3.6" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>σ-model, η = 0.3 (echoing), D = 7: γ = 0.279490</title></g>
+<g><circle cx="368.4" cy="329.4" r="3.6" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>σ-model, η = 0.3 (echoing), D = 8: γ = 0.299658</title></g>
+<g><circle cx="336.2" cy="316.5" r="3.6" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>σ-model, η = 0.3 (echoing), D = 9: γ = 0.314929</title></g>
+<g><circle cx="310.4" cy="308.4" r="3.6" fill="#fcfcfb" stroke="#e87ba4" stroke-width="1.6"/><title>σ-model, η = 0.3 (echoing), D = 10: γ = 0.324559</title></g>
+<g><circle cx="299.3" cy="307.2" r="3.6" fill="#fcfcfb" stroke="#e87ba4" stroke-width="1.6"/><title>σ-model, η = 0.3 (echoing), D = 10.5: γ = 0.325890</title></g>
+<g><circle cx="289.2" cy="311.1" r="3.6" fill="#fcfcfb" stroke="#e87ba4" stroke-width="1.6"/><title>σ-model, η = 0.3 (echoing), D = 11: γ = 0.321292</title></g>
+<path d="M658.9,423.8 L641.3,416.5 L624.7,409.0 L609.1,401.2 L594.3,393.4 L580.4,385.6 L567.2,377.7 L554.6,369.8 L542.7,362.0 L531.4,354.1 L520.6,346.4 L510.3,338.7 L500.5,331.0 L491.1,323.4 L482.1,315.9 L473.5,308.4 L465.2,301.0 L457.3,293.6 L449.8,286.3 L442.5,279.0 L435.5,271.8 L428.7,264.7 L422.2,257.6 L416.0,250.5 L409.9,243.5 L404.1,236.4 L398.5,229.4 L393.0,222.4 L387.8,215.4 L382.7,208.3 L377.8,201.2 L373.0,194.1 L368.4,186.8 L364.0,179.3 L359.6,171.6 L355.4,163.4 L351.3,154.0 L351.2,153.6 L350.6,151.8 L350.2,150.4 L350.0,149.4 L349.9,148.8" fill="none" stroke="#eda100" stroke-width="2" stroke-opacity="0.85" stroke-linejoin="round" stroke-dasharray="5 3"/>
+<g><polygon points="349.9,143.3 355.4,148.8 349.9,154.3 344.4,148.8" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>σ-model self-similar branch ends at a fold: D = 8.5443, γ = 0.51355</title></g>
+<text x="668.9" y="255.4" font-size="10.5" fill="#0b0b0b" text-anchor="start" font-weight="normal">scalar, echoing (D = 3.7–61)</text>
+<text x="668.9" y="363.4" font-size="10.5" fill="#0b0b0b" text-anchor="start" font-weight="normal">axion–dilaton, self-similar (D = 4–80)</text>
+<text x="668.9" y="427.9" font-size="10.5" fill="#0b0b0b" text-anchor="start" font-weight="normal">σ-model, self-similar, η = 0.14</text>
+<text x="668.9" y="487.1" font-size="10.5" fill="#0b0b0b" text-anchor="start" font-weight="normal">ℓ = 1 multiplet and σ-model, echoing</text>
+<text x="291.3" y="285.6" font-size="10.5" fill="#0b0b0b" text-anchor="end" font-weight="normal">σ-model η = 1</text>
+<text x="281.2" y="329.1" font-size="10.5" fill="#0b0b0b" text-anchor="end" font-weight="normal">σ-model η = 0.3</text>
+<text x="359.9" y="142.8" font-size="10.5" fill="#0b0b0b" text-anchor="start" font-weight="normal">σ-model self-similar (η = 0.14): ends at a fold, D = 8.544</text>
+<g><circle cx="83.0" cy="94.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>scalar</title></g>
+<text x="92.0" y="98.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">scalar</text>
+<g><circle cx="151.0" cy="94.0" r="4.5" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>axion–dilaton</title></g>
+<text x="160.0" y="98.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">axion–dilaton</text>
+<g><circle cx="261.0" cy="94.0" r="4.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>ℓ = 1</title></g>
+<text x="270.0" y="98.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">ℓ = 1</text>
+<g><circle cx="323.0" cy="94.0" r="4.5" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>σ-model, echoing</title></g>
+<text x="332.0" y="98.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">σ-model, echoing</text>
+<line x1="446.0" y1="94.0" x2="468.0" y2="94.0" stroke="#eda100" stroke-width="2" stroke-dasharray="5 3"/>
+<text x="474.0" y="98.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">σ-model, self-similar</text>
+<line x1="618.0" y1="94.0" x2="640.0" y2="94.0" stroke="#52514e" stroke-width="2" stroke-dasharray="6 4"/>
+<text x="646.0" y="98.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">γ = 1/2</text>
+</svg>

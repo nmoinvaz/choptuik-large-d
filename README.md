@@ -207,6 +207,13 @@ D = 3.75570, Δ = 3.466774, 2×10⁻⁶ high, the size of their bias there (conv
 [notes/LOW_D.md](notes/LOW_D.md)); the rational formula, extended outside its range, peaks at D = 3.75558,
 Δ = 3.466781.
 
+![Below D = 4: double-double points and the maximum of Delta, the bias of the 47-mode f64 points, and the tau modes a 1e-10 Delta needs as D falls toward 3](hp/lowD.svg)
+
+**Below D = 4** (`hp/plot_lowD.py`). Left: the double-double points at M = 80 and the 47-mode f64 points near the
+maximum. Middle: the f64 points sit 1.5–3.5×10⁻⁶ high there. Right: the τ modes a 10⁻¹⁰ Δ needs (`hp/lowD_cost.py`, an
+estimate over four model variants, not a bound) cross the double-double kernel's limit of 128 near D = 3.4, which is
+where this computation stops; near D = 3 they run into the hundreds.
+
 As D → ∞ (ε → 0):
 
 ```math
@@ -525,6 +532,14 @@ front. So for a moving front β²x² = 1 is not an apparent horizon; trapping ne
 when the shifted solution's front stops at r² = 2n|σ₀|. The exact self-similar (CSS) equations solved at n = 100–6400
 bear this out. Details, checks and the comparison with the Roberts and Brady self-similar families:
 [notes/SUPERCRITICAL.md](notes/SUPERCRITICAL.md), scripts in [`solver/supercrit/`](solver/supercrit/).
+
+![The supercritical branch: the field across the front, the lapse collapsing behind it, and the exact CSS equations at n = 100-6400 approaching the layer](solver/supercrit.svg)
+
+**The front** (`solver/supercrit/plot_supercrit.py`). Left and middle: the layer solution of the D = ∞ equations, in
+the layer coordinate θ. Ahead of the front it follows the outer 1/n series (dashed), which is singular at θ = 0. Behind
+the front the field settles at Y₁ = 1.8038 and the lapse falls exponentially, so the slicing freezes without trapping.
+Right: the exact self-similar equations, solved at n = 100–6400 for two values of κ = fβ, approach the layer's value
+of (n − 1)(b − 1)/(κ√n) behind the front, 1.627.
 
 ## Evidence
 
@@ -1645,6 +1660,12 @@ The sequences converge like the truncation sequence of ω* itself, and every fit
 M = 5 values; at M = 5 the differences are 0.1% (ω₁) and 0.3% (Δ₁, λ₁). This is numerical evidence from truncated
 models, conditional on Conjecture 1 carried one order further; M = 7 and an untruncated computation are not done.
 
+![The first 1/D corrections from the D = infinity theory against the measured values, keeping M harmonics](solver/first_order.svg)
+
+**One order further** (`solver/plot_first_order.py`). How far each quantity computed from the D = ∞ equations misses
+the value measured on the solutions, as harmonics are added: the echo frequency itself (to M = 7) and its first 1/D
+corrections ω₁, Δ₁ and λ₁ (to M = 5). All four fall 10–20 times per pair of harmonics.
+
 Still open:
 - that λ = 2 is the only physical unstable mode at D = ∞;
 - the 1/n coefficients without truncation, and a proof of the O(1/n) matching.
@@ -1673,6 +1694,14 @@ Proposition 5.
 
 The model equations, the D = ∞ inner problems and the symmetry search are derived and checked symbolically. The
 predictions for γ∞ are conjectures, tested numerically as follows.
+
+![The critical exponent gamma against 1/D for the scalar, the axion-dilaton, the l = 1 multiplet and the sigma model's echoing and self-similar branches](solver/matter.svg)
+
+**γ across matter models** (`solver/plot_matter.py`). The scalar and the axion–dilaton, whose large-D equations have the
+r²-shift symmetry, rise toward 1/2 at the left edge. The ℓ = 1 multiplet and the σ-model's echoing branch, where the
+symmetry is broken, stay well below it as far as they have been computed (D ≤ 9 and ≤ 11), and the σ-model's γ sits
+under ℓ = 1's, more so at the smaller coupling. The σ-model's self-similar branch rises past 1/2 and ends at a fold at
+D = 8.544. Hollow marks (σ-model, D ≥ 10) are preliminary.
 
 **Axion–dilaton and complex scalar** ([matter/CSS.md](matter/CSS.md)). The critical solution rotates in phase and is
 continuously self-similar (CSS), so it solves ordinary differential equations. The D = 4 values are reproduced:
@@ -1777,13 +1806,14 @@ Jacobian and an unexplained drift of the gauge mode's root).
   ([above](#the-inner-problem-at-large-x)). What remains is to converge these further (M = 9 and radius checks of M = 7; the amplitude series beyond its twelve computed orders
   across ω), to see whether the harmonic-1 condition lands exactly on ω∞, and to prove the working hypothesis that this is the
   selection rule. That would be an equation for ω∞ and F∞ alone, from which Δ∞ would follow to any precision.
-- **Checked at D = 30, 45 and 61: one physical unstable mode.** The zeros of the growth-mode determinant were counted
-  by the argument principle in −0.08 < Re λ < 6.18 and a full period in Im λ, which holds the growth rates of both
-  symmetry sectors ([notes/MODE_COUNT.md](notes/MODE_COUNT.md)). Besides λ_phys there are only the τ translation (λ = 0)
+- **Checked at D = 8.25, 16.76, 30, 45 and 61: one physical unstable mode.** The zeros of the growth-mode determinant
+  were counted by the argument principle in −0.08 < Re λ < 6.18 and a full period in Im λ, which holds the growth rates
+  of both symmetry sectors ([notes/MODE_COUNT.md](notes/MODE_COUNT.md); at D = 61 also to Im λ = 3.5ω and to
+  Re λ = 12, figure below). Besides λ_phys there are only the τ translation (λ = 0)
   and a gauge mode of the formulation at λ = 1 + ⟨c₁⟩ (a change of time coordinate that keeps the light cone at x = 1).
   A planted-zero test runs a synthetic determinant through the same code and counts what was planted in all 8 cases.
-  Open: a second resolution (M = 48) shows one extra pair at D = 30, absent at M = 32 and with the high-harmonic cut, and
-  taken as a truncation artifact pending M = 64; lower D with complex λ; Re λ > 6.6; non-spherical perturbations; and
+  Open: a second resolution (M = 48) shows one extra pair at D = 30, absent at M = 32 and in the full M = 48 count
+  with the high-harmonic cut, and taken as a truncation artifact pending M = 64; lower D with complex λ; Re λ > 6.6; non-spherical perturbations; and
   no collapse has been evolved above D = 14, so a continuously self-similar solution (Clark and Pimentel,
   [arXiv:2504.10590](https://arxiv.org/abs/2504.10590)) taking over the threshold is not excluded.
 
@@ -1793,6 +1823,14 @@ Jacobian and an unexplained drift of the gauge mode's root).
 fixes λ∞ = 2, carried to D = ∞, where λ = 2 is exact (the r²-shift symmetry of the inner heat equation,
 [GAMMA.md](GAMMA.md)); dashed, the leading term 2 + 3.03/n. Right: with λ∞ left free, the fitted λ∞ − 2 falls about
 3.5-fold with each added power of 1/n, toward 0, for three fit ranges.
+
+![Counting the unstable modes: the lambda plane at D = 61 with the counting boxes, zeros and poles, and the real growth rates against 1/D](hp/modecount.svg)
+
+**Counting the unstable modes** (`hp/plot_modecount.py`). Left: the λ plane at D = 61. Each box is labelled with the
+winding of det M(λ) around it (zeros minus poles): +1 for the box holding λ = 0, the gauge mode and λ_phys each, 0 for
+the rest of the real strip, and −7 for each strip of seven poles (resonances of the horizon series at Im λ = ±ω; the lower strip is the mirror image of the upper).
+The grey dots are where det M was evaluated. Right: λ_phys (blue line: all 67 double-double points) and the gauge
+rate at the five D where the count was made.
 
 ### References
 
@@ -2081,6 +2119,11 @@ solver/plot_echo.py           echo.svg: the echo at D = 4, 10, 20, 60 (data: sol
 solver/plot_spectrum.py       spectrum.svg: the echo's harmonic spectrum and decay rates against the D = infinity prediction
 solver/plot_selection.py      selection.svg: the selection rule order by order (bracket, truncation sequence, exponent)
 solver/plot_selection_zoom.py selection_zoom.svg: the same estimates as distance from 1 (log), with the order-14 projections
+solver/plot_matter.py         matter.svg: gamma(D) across matter models, against 1/D
+solver/plot_first_order.py    first_order.svg: the first 1/D corrections from the D = infinity theory against M
+solver/supercrit/plot_supercrit.py  supercrit.svg: the supercritical front, the lapse behind it, finite-n CSS checks
+hp/plot_modecount.py          modecount.svg: the unstable-mode count in the lambda plane, and the real rates against 1/D
+hp/plot_lowD.py               lowD.svg: below D = 4: the maximum, the f64 bias, the tau modes needed
 solver/plot_gamma.py          gamma.svg: lambda = 1/gamma against 1/n with the lambda = 2 limit, and the free fits
 solver/simplify_math.py       converts trivial inline math in README.md to Unicode (GitHub renders at most ~1400 expressions)
 solver/largeD_expand.py       the 1/n expansion symbolically (sympy, Proposition 1)
