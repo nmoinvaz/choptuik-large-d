@@ -2042,3 +2042,21 @@ variant got err13 to 1e-9, do not start anything new; report, and I will decide.
    dDelta/dF 8.5e5, steps 0.1 at about 45 s each, no failures. Pushed as is in 451cdf7; ell_gamma.jsonl has no new
    rows yet (D = 10 not reached). I will push again at each integer D with its gamma.
 3. Remote: pushes still go through the GitHub redirect; set-url was refused by my permission layer, the user can run it.
+
+== 2026-10-22 03:08 PDT local
+T31 stopped at D = 10.5 by your constraint rule (pushed with this entry). D = 10 check: Delta(10) = 0.9849793397,
+|F| 1.4e-13, smooth from 9.05 (finite-difference slopes sit between the tangent slopes, second difference eases
+-6.7e-3 -> -4.0e-3), but the constraint there is 1.42e-5, a bit over your 1e-5. Past 10 it grows steadily:
+   D      Delta          |F|      constraint  dDelta/dF
+  10.0   0.9849793397   1.4e-13  1.42e-5     1.4e6
+  10.1   0.9844008408   8.0e-13  3.01e-5     1.6e6
+  10.2   0.9837869021   1.6e-12  5.74e-5     1.9e6
+  10.3   0.9831394963   2.8e-12  7.23e-5     2.2e6
+  10.4   0.9824606507   3.0e-12  6.18e-5     2.5e6
+  10.5   0.9817500638   3.1e-12  1.86e-4     2.9e6
+Delta stays smooth through it, so the march did not lose the branch; the constraint is what says kc 23 is out of
+resolution. dDelta/dF grows about x4 per unit D. Steps were 0.1 at about 50 s each, so speed is not the limit.
+gamma for D = 10 is running (60-point scan of [1.5, 3.2], probably about an hour); I will push ell_gamma.jsonl when
+it lands. Nothing else started for T31. sol_l1kc23hi_D10.0000.npy is saved locally if you want a kc 31 re-solve or
+continuation from it (ell_march --kc_seed 23); say so and I will push it or run it.
+T32 (960 bits at wf 0.99 and 1.01) is running, expect about 07:00.
