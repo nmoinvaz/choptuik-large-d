@@ -17,6 +17,7 @@ Two modes.
 
     python3 m7_outer.py LOG_BASE LOG_DA LOG_DW [LOG_NEXT ...]
     python3 m7_outer.py --local CENTER_LOG [CENTER_LOG ...] -- LOG_DA LOG_DW
+    python3 m7_outer.py --fit LOG ...          affine least-squares zero through the solves with |r_3| < 1e-6
 """
 import re
 import sys
@@ -65,6 +66,26 @@ def local(args):
           f"{dz_noise + dz_J:.1e} in (A, w/w_inf) ({dz_noise:.1e} from the centre's noise, {dz_J:.1e} from J)")
 
 
+def fit(args):
+    """affine least-squares model r_1 = r_0 + J (p - p_ref) through every solve with |r_3| < 1e-6; its zero, and the
+    residuals at the points (their size, against the repeats' noise, says whether the affine model is adequate)"""
+    pts = [point(f, True) for f in args]
+    use = [t for t in pts if t[3] < 1e-6]
+    for (_, p, r, r3), fn in zip(pts, args):
+        print(f"  {p[0]:.9f} {p[1]:.9f}   r_1 {r[0]:+.4f}{r[1]:+.4f}i   |r_3| {r3:.1e}"
+              f"{'' if r3 < 1e-6 else '  (not used)'}   ({fn})")
+    pref = np.mean([t[1] for t in use], axis=0)
+    X = np.array([[1.0, *(t[1] - pref)] for t in use])
+    Y = np.array([t[2] for t in use])
+    C, *_ = np.linalg.lstsq(X, Y, rcond=None)
+    J = C[1:].T
+    z = pref - np.linalg.solve(J, C[0])
+    res = Y - X @ C
+    print(f"{len(use)} solves used; J singular values {np.array2string(np.linalg.svd(J, compute_uv=False), precision=1)}")
+    print(f"zero of the affine model: A {z[0]:.6f}, w/w_inf {z[1]:.6f};  residuals |r_1 - model| "
+          f"{np.array2string(np.linalg.norm(res, axis=1), precision=3)}")
+
+
 def newton(args):
     pts = [point(fn) for fn in args]
     (M, p0, r0), (_, pa, ra), (_, pw, rw) = pts[:3]
@@ -89,5 +110,7 @@ def newton(args):
 if __name__ == "__main__":
     if sys.argv[1] == "--local":
         local(sys.argv[2:])
+    elif sys.argv[1] == "--fit":
+        fit(sys.argv[2:])
     else:
         newton(sys.argv[1:])
