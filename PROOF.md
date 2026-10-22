@@ -219,7 +219,9 @@ turn a point certificate into the theorem have been generalized to M harmonics: 
 parameter derivatives, lemma S, and lemmas 6a, 6b₀ and 6b₁. At M = 3 all of them are certified on boxes that contain the
 point certificate's box, lemma 6a with that certificate's state box at ξ₁ = 0.3 (ρ₆ₐ = 0.041). So **Theorem A(M = 3) is
 certified**, assuming Braaksma's theorem: the three-harmonic selection condition has exactly one zero in the
-certificate's box, and it is simple. At M = 5 the point certificate and 6b₁ remain to be run. None of the M-harmonic code
+certificate's box, and it is simple. At M = 5 the point certificate fails with the present
+first-order enclosures (A_M.md: the derivative radius grows past order one on the arc) and needs a second-order design;
+6b₁ also remains. None of the M-harmonic code
 has had an independent review.
 
 Staged targets: **A(M=5)**, a certified simple zero of the five-harmonic multiplier (lemmas A.1, A.2, A.4 only; a

@@ -1,0 +1,11 @@
+   largest passing outer half-width with the run's inner widths: None
+Krawczyk M = 5: K(X) in int X: False; relative margins -13.713, -11.788, +0.293, +0.332, -542.235, -511.240
+   start values: fixed_point_M.start_data_M (rigorous given that lemma; C:\Users\nathan\AppData\Local\Temp\claude\C--Users-nathan-Source-dss-residual-kernel\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\scratchpad\cert-m5\solver\proof\fixed_point_M.py, sha256 589e5a810bc50289), arg 5pi/16, diag splitting
+   g(p^) radius 1.2e-14; max radius of Y Dgt(X) 9.3e+07
+   box of the run: h = 1e-13, w = ['1e-19', '1e-23']; tested on: half-widths 1e-13, 1e-13, 1e-19, 1e-19, 1e-23, 1e-23
+   A        in [2.71857918921027, 2.71857918921322]  (radius 1.47e-12)
+   w/w_inf  in [0.999228403205289, 0.999228403207847]  (radius 1.28e-12)
+   B3       in [0.149203574910892, 0.149203574912003]  (radius 5.55e-13)
+   C3       in [0.0147190524901898, 0.0147190524903129]  (radius 6.15e-14)
+   B5       in [0.00840534690570294, 0.00840534690582038]  (radius 5.87e-14)
+   C5       in [0.00147034518158069, 0.00147034518160247]  (radius 1.09e-14)

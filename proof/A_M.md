@@ -9,8 +9,11 @@ point is being written separately (`solver/proof/fixed_point_M.py`, notes in `pr
 
 **Status.** M = 1: this code path reproduces Theorem A(M = 1)'s box (§6.1). M = 3: **certified**, given the M-harmonic
 start-value lemma `fixed_point_M.start_data_M` and Braaksma's theorem, on a parallelepiped of outer half-width 10⁻¹⁰
-(§6.2). M = 5: **not certified**; the centre is refined (numerical evidence) and the box runs are a proposed task for
-the local machine (§6.3, §7). The new code has not been reviewed. With lemma 6a run on this certificate's state box
+(§6.2). M = 5: **not certified**. The centre is refined (numerical evidence), but the four box runs of §7 on the local
+machine all failed: at h = 3×10⁻¹¹ and 10⁻¹² (twice) the derivative radius grew past order one on the arc, and the one
+run that finished (h = 10⁻¹³) fails the Krawczyk test (margins −13.7, −11.8, +0.29, +0.33, −542, −511;
+`logs/A_M_krawczyk_M5_1e-13.log`). By §7 the next step is a design change (a second-order chart or C² enclosures), not
+more runs. The new code has not been reviewed. With lemma 6a run on this certificate's state box
 (ρ₆ₐ = 0.041) and the other lemmas of [A_lemmas_M.md](A_lemmas_M.md), **Theorem A(3) is certified** (A_lemmas_M.md §7).
 
 Code: [`solver/proof/certify_M.py`](../solver/proof/certify_M.py) (driver, the Krawczyk test, refinement, controls),

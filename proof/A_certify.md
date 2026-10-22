@@ -526,7 +526,8 @@ Rough effort: (1) is done; (2) is the main work, about 1–2 weeks with CAPD or 
   function has exactly one zero in a parallelepiped of outer half-width 10⁻¹⁰ about (A, ω/ω∞, B₃, C₃) =
   (2.7264758856, 1.0156030949, 0.1444194785, 0.0110874259), with a non-singular Jacobian there. A separate assembly in
   mpmath intervals gives the same verdict; at M = 1 the same code reproduces Theorem A(1)'s box. The M = 5 box runs are a
-  local-machine task (A_M.md §7). The code has not been reviewed independently.
+  local-machine task (A_M.md §7); those runs failed, and M = 5 needs a second-order design. The code has not been
+  reviewed independently.
 - **The lemmas around the point certificate** ([A_lemmas_M.md](A_lemmas_M.md)). Step (i), lemma S, lemma 6b₀, the
   flat estimate of 6a and the disc lemma of 6b₁ carry over to M harmonics with the same proofs. The fast eigenvalue
   repeats across harmonics, so the inverse operator, its domains and the kernel bounds are those of M = 1. The labels

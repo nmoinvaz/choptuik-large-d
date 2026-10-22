@@ -1211,7 +1211,8 @@ A ∈ [2.72647588563032, 2.72647588563144], ω/ω∞ ∈ [1.01560309485743, 1.01
 (29% from the selected period), this one is 1.6% above ω∞, with the measured amplitude (2.70–2.72). The same steps carry
 over: a point certificate with four real jump conditions, and lemmas S, 6a, 6b₀ and 6b₁ for M harmonics, certified on
 boxes containing it (6a with ρ₆ₐ = 0.041, 6b₁ by 183 discs). This code has not been reviewed independently or
-re-implemented. M = 5 is running. The
+re-implemented. At M = 5 the same certificate fails (the interval enclosures grow too fast along the arc); it needs a
+second-order design ([proof/A_M.md](proof/A_M.md)). The
 first coefficient σ₁ of the untruncated condition is also enclosed rigorously (±3.5×10⁻⁵).
 
 Evidence beyond the linear case: the conditions $`S_\nu = 0`$ for |ν| ≥ 3 alone predict the echo's shape as
