@@ -538,7 +538,7 @@ with computed points rather than an assumed form. Its points are used in [The fo
 | 32 / 48 collocation points in τ, D = 40 | Δ agrees to 9×10⁻²² |
 | harmonics frozen above 13 / above 15, D = 40 | Δ agrees to 3×10⁻¹⁷ |
 | second machine (Windows, i7-1185G7, own build), D = 59.84–60.05 | agrees with the cloud points to 2–4×10⁻¹⁶ |
-| the 32 points at D = 60.95–61.026 (25 from the second machine, 7 from the cloud) against the 1/D fit on D ≤ 60.1 (degree 18) | agree to 2.6×10⁻¹⁵ |
+| the 94 points above D = 60.1 (32 of them at 60.95–61.026: 25 from the second machine, 7 from the cloud) against the 1/D fit on D ≤ 60.1 (degree 18) | agree to 2.6×10⁻¹⁵ |
 
 </details>
 
