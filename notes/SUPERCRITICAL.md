@@ -226,8 +226,17 @@ In the polar-areal metric −α²dt² + a²dr² + r²dΩ²_{n}, with the null ve
 \theta_\pm = \pm\frac{n}{a\,r} = \pm\frac{n}{r\sqrt b},\qquad \theta_+\theta_- \propto (\nabla r)^2 = \frac1b = 1 - \frac{2m}{r^{n-1}} .
 ```
 
-A marginally trapped sphere (θ₊ = 0, θ₋ < 0) needs 1/b = 0. Order by order, 1/b = 1/(1 + Û/(n−1)) =
-1 − εU₀ + O(ε²) with U₀ = (z+1)/z, so **θ₊ > 0 at every point of the branch at every finite order**. The truncated
+A marginally trapped sphere (θ₊ = 0, θ₋ < 0) needs 1/b = 0. Order by order, with (n−1)(b−1) = Û and
+n − 1 = (1−ε)/ε,
+
+```math
+\frac{r\,\theta_+}{n} = b^{-1/2} = 1 - \frac{\varepsilon}{2}\,U_0 + \varepsilon^2\Big(\frac38 U_0^2 - \frac12 U_0 - \frac12 U_1\Big) + O(\varepsilon^3),
+\qquad U_0 = \frac{z+1}{z},
+```
+
+and for CSS, with U₁ from §2.2, the ε² bracket is (3/8)U₀² − U₀/2 − ((z+1)/z²)[(1/κ² − 1) ln z + 1 − 2/(κ²z)]. Each
+coefficient is finite for z > 0, so **θ₊ > 0 at every point of the branch at every finite order**, and near z → 0
+the k-th term grows like ε^k/(κ̃^{2k−2} z^{2k−1}) (U_k ~ z^{−2k−1}). The truncated
 θ₊ ∝ 1 − εU₀/2 vanishes at z ≈ ε/2, inside the region z ≲ n^{−1/2} where the series has already broken down: that zero
 is an artefact. At leading order the formal zero sits at z = 0 (U₀ → ∞), which is what makes β²x² = 1 look like a
 horizon.
