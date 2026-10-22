@@ -166,6 +166,8 @@ D ≥ 4 and within the tolerances in the table below, by
 \varepsilon = \frac{1}{n} = \frac{1}{D-2},
 ```
 
+with these coefficients:
+
 | k | $`a_k`$ (Δ, numerator) | $`b_k`$ (Δ, denominator) | $`e_k`$ (γ, numerator) | $`f_k`$ (γ, denominator) |
 |---|---|---|---|---|
 | 0 | +1.6438975180 | 1 | +0.5 (fixed) | 1 |
