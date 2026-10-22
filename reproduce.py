@@ -125,7 +125,7 @@ for model, deg in (("1/D", 16), ("1/n", 18), ("n^-1/2", 20)):
     held[model] = max(abs(ev(d) - pts[d]) for d in hold)
     print(f"  {model:7s} degree {deg}: held-out max error {mp.nstr(held[model], 2)} on {len(hold)} points, "
           f"limit {mp.nstr(F.limit(ev), 10)}", flush=True)
-record("held-out error of the 1/D series (degree 16)", "<= 3e-12 (README: 5.2e-13 on the D <= 60.1 snapshot)",
+record("held-out error of the 1/D series (degree 16)", "<= 3e-12 (README: 5.6e-13 on the D <= 60.1 snapshot)",
        mp.nstr(held["1/D"], 2), held["1/D"] <= 3e-12)
 record("half-integer series (n^-1/2, degree 20) predicts worse", ">= 10x the 1/D error",
        f"{mp.nstr(held['n^-1/2'] / held['1/D'], 3)}x", held["n^-1/2"] >= 10 * held["1/D"])

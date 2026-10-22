@@ -1,0 +1,21 @@
+fit on 351 cleaned points 10 <= D <= 45, 352 held out up to D = 59.79
+free  deg 14: residual 4.6e-14  held-out max 2.5e-11  limit 1.6438938074
+free  deg 16: residual 4.1e-15  held-out max 4.8e-13  limit 1.6438937539
+free  deg 18: residual 4.0e-15  held-out max 1.7e-12  limit 1.6438937669
+free  deg 20: residual 4.0e-15  held-out max 1.2e-11  limit 1.6438939852
+free  deg 22: residual 4.0e-15  held-out max 1.1e-11  limit 1.6438937811
+free  deg 24: residual 3.8e-15  held-out max 7.4e-11  limit 1.6438774369
+free  deg 26: residual 3.9e-15  held-out max 2.5e-10  limit 1.643793253
+
+free fit: best held-out 4.8e-13 at degree 16, limit 1.6438937539
+
+candidate                      value - free lim  held-out max at degree      14      16      18      20      22      24      26     best x free
+5/7 sqrt(G) j01           1.64397468     8.1e-5                         7.6e-8  2.8e-8  9.5e-9  3.4e-9  1.2e-9 4.1e-10 6.2e-11  6.2e-11  130.0
+7/5 (ln 2)^-2 pi^-1/2     1.64400138    0.00011                         1.0e-7  3.7e-8  1.3e-8  4.6e-9  1.6e-9 5.4e-10 1.1e-10  1.1e-10  225.0
+7/2 sqrt(ln 2 / pi)       1.64401524    0.00012                         1.1e-7  4.1e-8  1.4e-8  5.1e-9  1.8e-9 6.1e-10 1.3e-10  1.3e-10  274.0
+9/8 sqrt(j21 / j01)       1.64402066    0.00013                         1.2e-7  4.3e-8  1.5e-8  5.4e-9  1.8e-9 6.3e-10 1.4e-10  1.4e-10  293.0
+10/9 sqrt(j01 / ln 3)     1.64390628     1.3e-5                         1.2e-8  4.3e-9  1.5e-9 5.3e-10 1.9e-10 6.9e-11 5.4e-11  5.4e-11  113.0
+pi^2/6                    1.64493407      0.001                         9.8e-7  3.5e-7  1.2e-7  4.4e-8  1.5e-8  5.2e-9  1.7e-9   1.7e-9 3.54e+3
+2 pi / j11                1.63978796    -0.0041                         3.9e-6  1.4e-6  4.8e-7  1.7e-7  5.9e-8  2.0e-8  7.0e-9   7.0e-9 1.47e+4
+sqrt(e)                   1.64872127     0.0048                         4.6e-6  1.6e-6  5.7e-7  2.0e-7  7.0e-8  2.4e-8  8.1e-9   8.1e-9 1.7e+4
+golden ratio              1.61803399     -0.026                         2.4e-5  8.8e-6  3.0e-6  1.1e-6  3.7e-7  1.3e-7  4.4e-8   4.4e-8 9.19e+4

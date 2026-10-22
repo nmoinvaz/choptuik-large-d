@@ -1,0 +1,4 @@
+parse error: max 2.12e-16, rms 4.99e-17; D > 45: max 1.07e-16
+D 10..60.1: N 756; fixed drops 25 keeps 731; old drops 26 keeps 730; only old drops [10.75]; only fixed drops []  (120 s)
+D 10..1000000000.0: N 850; fixed drops 27 keeps 823; old drops 27 keeps 823; only old drops []; only fixed drops []  (263 s)
+D 10..59.8: N 729; fixed drops 26 keeps 703; old drops 26 keeps 703; only old drops []; only fixed drops []  (360 s)

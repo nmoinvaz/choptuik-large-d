@@ -306,12 +306,12 @@ Sec.~\ref{sec:selection} gives 5.5\%.
 
 Each model in Table~\ref{tab:analytic} is a polynomial in one variable, fitted at 60 digits on the cleaned
 double-double points $10 \le D \le 45$ (or $\le 37.5$) and compared with every point above, up to $D = 60.1$, which it
-never saw (the data snapshot when the table was made; Fig.~\ref{fig:heldout} uses all points to $D = 61.0$). Every
+never saw (the data snapshot when the table and Fig.~\ref{fig:heldout} were made). Every
 model fits its range to the level of the points, so the fit alone decides nothing; the unseen points do. Fitted on
-$D \le 45$, the $1/D$ series predicts $\Delta$ fifteen units of $D$ ahead to $5\times10^{-13}$, while the series in
-half-integer powers miss by 40 to 300 times more, and their limits jump with the degree. Adding one non-analytic term
-($D^{-1/2}$, $D^{-3/2}$, $\ln D/D$, $\ln D/D^2$ or $e^{-D/4}$) to the degree-16 series changes neither the prediction nor
-the limit, and the term's coefficient is not determined. The only structure the points show is a singularity on the
+$D \le 45$, the $1/D$ series predicts $\Delta$ fifteen units of $D$ ahead to $6\times10^{-13}$, while the series in
+half-integer powers miss by 20 to 250 times more, and their limits jump with the degree. Adding one non-analytic term
+($D^{-1/2}$, $D^{-3/2}$, $\ln D/D$, $\ln D/D^2$ or $e^{-D/4}$) to the degree-16 series neither degrades the prediction nor
+moves the limit outside its uncertainty, and the term's coefficient is not determined. The only structure the points show is a singularity on the
 negative $D$ axis, near $D \approx -9$ to $-11$.
 
 \begin{table}[htbp]
@@ -321,11 +321,11 @@ negative $D$ axis, near $D \approx -9$ to $-11$.
 \begin{ruledtabular}
 \begin{tabular}{lllll}
 Model & max residual, $10 \le D \le 45$ & worst error, $45 < D \le 60.1$ & fitted on $D \le 37.5$: worst error & limit \\ \hline
-$1/D$, degree 16 & $4.1\times10^{-15}$ & $5.2\times10^{-13}$ & $4.2\times10^{-11}$ & 1.64389375 \\
-$1/D$, degree 18 & $4.0\times10^{-15}$ & $1.8\times10^{-12}$ & $1.5\times10^{-10}$ & 1.64389377 \\
-$1/(D-2)$, degree 18 & $4.0\times10^{-15}$ & $2.8\times10^{-12}$ & $7.9\times10^{-11}$ & 1.64389377 \\
-$(D-2)^{-1/2}$, degree 20 & $3.9\times10^{-15}$ & $2.0\times10^{-11}$ & $3.9\times10^{-10}$ & 1.636 \\
-$D^{-1/2}$, degree 20 & $3.8\times10^{-15}$ & $1.6\times10^{-10}$ & $6.2\times10^{-9}$ & 1.547 \\
+$1/D$, degree 16 & $4.1\times10^{-15}$ & $5.6\times10^{-13}$ & $4.2\times10^{-11}$ & 1.64389375 \\
+$1/D$, degree 18 & $4.1\times10^{-15}$ & $1.6\times10^{-12}$ & $1.4\times10^{-10}$ & 1.64389377 \\
+$1/(D-2)$, degree 18 & $4.0\times10^{-15}$ & $3.1\times10^{-12}$ & $7.7\times10^{-11}$ & 1.64389377 \\
+$(D-2)^{-1/2}$, degree 20 & $4.0\times10^{-15}$ & $1.3\times10^{-11}$ & $6.6\times10^{-10}$ & 1.638 \\
+$D^{-1/2}$, degree 20 & $3.9\times10^{-15}$ & $1.4\times10^{-10}$ & $5.3\times10^{-9}$ & 1.556 \\
 \end{tabular}
 \end{ruledtabular}
 \end{table}
@@ -341,7 +341,7 @@ $10 \le D \le 37.5$ (top) and $10 \le D \le 45$ (bottom); shaded: the level of t
 \subsection{The limit and its error bar}
 
 Fitted on all cleaned points, power series in $1/D$ of degree 16--20 and in $1/(D-2)$ of degree 18--20 fit to the
-noise and give limits from $1.643893744$ to $1.643893752$ (snapshot $D \le 60.1$) and from $1.643893745$ to
+noise and give limits from $1.643893744$ to $1.643893753$ (snapshot $D \le 60.1$) and from $1.643893745$ to
 $1.643893752$ (all 823 cleaned points to $D = 61.03$). Over 48 choices of model ($1/D$, $1/(D-2)$), degree, fit range
 and cleaning, the limit ranges over $1.643893744$--$1.643893763$, centred on $1.643893754$; fitting on $D \le 45$ alone
 pins it only to $2.5\times10^{-7}$. A spread over fit choices is not an error with a stated coverage, so we tested the
@@ -377,7 +377,7 @@ $\Dinf = 5/2$~\cite{Bland2007} is excluded by $\Delta(14) = 2.29$ and decreasing
 
 Five constants that a product search placed inside the window of the earlier double-precision estimate (about nine
 such coincidences are expected by chance in that search), and four classical constants, were tested. Each was forced as
-the limit of a power series in $1/D$ fitted on $10 \le D \le 45$ (degree 14 to 26) and compared with the 351 cleaned
+the limit of a power series in $1/D$ fitted on $10 \le D \le 45$ (degree 14 to 26) and compared with the 352 cleaned
 points from 45 to 59.8 (Table~\ref{tab:cand}). All nine are excluded, given analyticity in $1/D$: the closest sits
 $1.3\times10^{-5}$ from the limit, about 840 times its uncertainty, and every forced fit predicts the unseen points at
 least 100 times worse than the free fit. Nor is $\Dinf$ a product of two of the listed constants with rational prefactor
@@ -393,12 +393,12 @@ $G$ is Catalan's constant, $j_{\nu,k}$ the $k$-th zero of $J_\nu$.}
 \begin{ruledtabular}
 \begin{tabular}{llll}
 Candidate & value & minus $\Dinf$ & held-out error (ratio) \\ \hline
-none (free fit) & $1.643893746 \pm 1.5\times10^{-8}$ & & $4.7\times10^{-13}$ \\
-$\tfrac57\sqrt{G}\,j_{0,1}$ & 1.6439747 & $+8.1\times10^{-5}$ & $6.2\times10^{-11}$ (130) \\
-$\tfrac75(\ln2)^{-2}\pi^{-1/2}$ & 1.6440014 & $+1.1\times10^{-4}$ & $1.1\times10^{-10}$ (220) \\
-$\tfrac72\sqrt{\ln2/\pi}$ & 1.6440152 & $+1.2\times10^{-4}$ & $1.3\times10^{-10}$ (270) \\
-$\tfrac98\sqrt{j_{2,1}/j_{0,1}}$ & 1.6440207 & $+1.3\times10^{-4}$ & $1.4\times10^{-10}$ (290) \\
-$\tfrac{10}{9}\sqrt{j_{0,1}/\ln3}$ & 1.6439063 & $+1.3\times10^{-5}$ & $5.4\times10^{-11}$ (110) \\
+none (free fit) & $1.643893746 \pm 1.5\times10^{-8}$ & & $4.8\times10^{-13}$ \\
+$\tfrac57\sqrt{G}\,j_{0,1}$ & 1.6439747 & $+8.1\times10^{-5}$ & $6.3\times10^{-11}$ (130) \\
+$\tfrac75(\ln2)^{-2}\pi^{-1/2}$ & 1.6440014 & $+1.1\times10^{-4}$ & $1.1\times10^{-10}$ (230) \\
+$\tfrac72\sqrt{\ln2/\pi}$ & 1.6440152 & $+1.2\times10^{-4}$ & $1.3\times10^{-10}$ (280) \\
+$\tfrac98\sqrt{j_{2,1}/j_{0,1}}$ & 1.6440207 & $+1.3\times10^{-4}$ & $1.4\times10^{-10}$ (300) \\
+$\tfrac{10}{9}\sqrt{j_{0,1}/\ln3}$ & 1.6439063 & $+1.3\times10^{-5}$ & $5.3\times10^{-11}$ (110) \\
 $\pi^2/6$ & 1.6449341 & $+1.0\times10^{-3}$ & $1.7\times10^{-9}$ (3500) \\
 $2\pi/j_{1,1}$ & 1.6397880 & $-4.1\times10^{-3}$ & $7.0\times10^{-9}$ (15000) \\
 $\sqrt e$ & 1.6487213 & $+4.8\times10^{-3}$ & $8.1\times10^{-9}$ (17000) \\

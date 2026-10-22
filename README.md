@@ -369,21 +369,19 @@ integer-relation search could support a closed form; whether Δ∞ has one is op
   1/(D-1), 1/(D-2); degree 9 and 10; lower cut D ≥ 10 or 12). The table gives $`\chi^2/\mathrm{dof}`$ of the best
   and the worst of the 12 (0.62 is the unconstrained fit) and the rms error on the held-out f64 points, 30.2 < D ≤ 39.5.
   Five candidates passed it; four were already excluded.
-- **Double-double test** (made on the points then available, up to D = 59.8; `hp/dd_candidates.py 45 --dmax=59.8`
-  repeats it on today's file, where later runs from the second machine have added a few points in the same range, so
-  counts can differ by one or two): each candidate forced as the limit of a power series in 1/D fitted on
-  10 ≤ D ≤ 45 at degree 14 to 26, and compared with the 351 cleaned points from 45 to 59.8 that the fit never
-  saw. The table gives the best of those degrees and how many times worse it is than the free fit (4.7×10⁻¹³
-  at degree 16 on this range; held out to 60.1 the same fit gives 5.2×10⁻¹³, [below](#is-the-period-analytic-in-1d)).
+- **Double-double test** (`hp/dd_candidates.py 45 --dmax=59.8` on today's file): each candidate forced as the limit of a power series in 1/D fitted on
+  10 ≤ D ≤ 45 at degree 14 to 26, and compared with the 352 cleaned points from 45 to 59.8 that the fit never
+  saw. The table gives the best of those degrees and how many times worse it is than the free fit (4.8×10⁻¹³
+  at degree 16 on this range; held out to 60.1 the same fit gives 5.6×10⁻¹³, [below](#is-the-period-analytic-in-1d)).
 
 | Candidate | Value | − double-double limit | f64 test: $`\chi^2/\mathrm{dof}`$; held-out rms | Double-double test: held-out error (× free) | Verdict |
 |---|---|---|---|---|---|
-| none (free fit) | 1.643893746 ± 0.000000015 | | 0.62 .. 3.4; 1.5×10⁻⁶ | 4.7×10⁻¹³ | |
-| $`\frac{5}{7}\sqrt{G}\, j_{0,1}`$ | 1.6439747 | +8.1×10⁻⁵ | 0.62 .. 8.6; 1.4×10⁻⁶ | 6.2×10⁻¹¹ (130×) | **ruled out** (passed the f64 test) |
-| $`\frac{7}{5}\,(\ln 2)^{-2}\,\pi^{-1/2}`$ | 1.6440014 | +1.1×10⁻⁴ | 0.62 .. 18; 1.3×10⁻⁶ | 1.1×10⁻¹⁰ (220×) | **ruled out** (passed the f64 test) |
-| $`\frac{7}{2}\sqrt{\ln 2/\pi}`$ | 1.6440152 | +1.2×10⁻⁴ | 0.62 .. 26; 1.2×10⁻⁶ | 1.3×10⁻¹⁰ (270×) | **ruled out** (passed the f64 test) |
-| $`\frac{9}{8}\sqrt{j_{2,1}/j_{0,1}}`$ | 1.6440207 | +1.3×10⁻⁴ | 0.62 .. 30; 1.2×10⁻⁶ | 1.4×10⁻¹⁰ (290×) | **ruled out** (passed the f64 test) |
-| $`\frac{10}{9}\sqrt{j_{0,1}/\ln 3}`$ | 1.6439063 | +1.3×10⁻⁵ | 0.62 .. 118; 1.6×10⁻⁶ | 5.4×10⁻¹¹ (110×) | **ruled out** (passed the f64 test) |
+| none (free fit) | 1.643893746 ± 0.000000015 | | 0.62 .. 3.4; 1.5×10⁻⁶ | 4.8×10⁻¹³ | |
+| $`\frac{5}{7}\sqrt{G}\, j_{0,1}`$ | 1.6439747 | +8.1×10⁻⁵ | 0.62 .. 8.6; 1.4×10⁻⁶ | 6.3×10⁻¹¹ (130×) | **ruled out** (passed the f64 test) |
+| $`\frac{7}{5}\,(\ln 2)^{-2}\,\pi^{-1/2}`$ | 1.6440014 | +1.1×10⁻⁴ | 0.62 .. 18; 1.3×10⁻⁶ | 1.1×10⁻¹⁰ (230×) | **ruled out** (passed the f64 test) |
+| $`\frac{7}{2}\sqrt{\ln 2/\pi}`$ | 1.6440152 | +1.2×10⁻⁴ | 0.62 .. 26; 1.2×10⁻⁶ | 1.3×10⁻¹⁰ (280×) | **ruled out** (passed the f64 test) |
+| $`\frac{9}{8}\sqrt{j_{2,1}/j_{0,1}}`$ | 1.6440207 | +1.3×10⁻⁴ | 0.62 .. 30; 1.2×10⁻⁶ | 1.4×10⁻¹⁰ (300×) | **ruled out** (passed the f64 test) |
+| $`\frac{10}{9}\sqrt{j_{0,1}/\ln 3}`$ | 1.6439063 | +1.3×10⁻⁵ | 0.62 .. 118; 1.6×10⁻⁶ | 5.3×10⁻¹¹ (110×) | **ruled out** (passed the f64 test) |
 | π²/6 = ζ(2) | 1.6449341 | +1.0×10⁻³ | 3.6 .. 13000; 2.9×10⁻⁶ | 1.7×10⁻⁹ (3500×) | **ruled out** by both |
 | $`2\pi/j_{1,1}`$ | 1.6397880 | −4.1×10⁻³ | 67 .. 3×10⁵; 1.8×10⁻⁵ | 7.0×10⁻⁹ (15000×) | **ruled out** by both |
 | $`\sqrt{e}`$ | 1.6487213 | +4.8×10⁻³ | 82 .. 3×10⁵; 1.8×10⁻⁵ | 8.1×10⁻⁹ (17000×) | **ruled out** by both |
@@ -602,7 +600,7 @@ What the solver has shown:
 - **How good the values are.** The points themselves fit smooth curves to about 4×10⁻¹⁵ (degree 18–20) all the way to
   D = 60.1, not 10⁻²⁰. Points between
   D = 27 and 35.2, solved before the freezing, carry up to 10⁻¹⁴ from the weak directions; about 25 of them sit
-  visibly off their neighbours and `hp/dd_fits_mp.py --clean` drops them (26 on today's file with `--dmax=60.1`). The cleaning leaves errors up to 5×10⁻¹⁵ there. The frozen points carry the
+  visibly off their neighbours and `hp/dd_fits_mp.py --clean` drops them (25 on today's file with `--dmax=60.1`). The cleaning leaves errors up to 5×10⁻¹⁵ there. The frozen points carry the
   cut's smooth error, up to 5×10⁻¹⁵ from 35.35 to 37 and about 10⁻¹⁵ from 40 to 60, while their scatter about smooth
   local fits is only 3–7×10⁻¹⁸ at D = 45–60.1. Below D = 27 the error is about 10⁻¹⁶; the 94 points above 60.1, solved
   to the looser tolerance, carry up to about 3×10⁻¹⁵.
@@ -625,24 +623,24 @@ degree-18 fit on D ≤ 60.1 (checks table above).
 
 | Model | max residual on 10 ≤ D ≤ 45 | worst error on 45 < D ≤ 60.1 | fitted on D ≤ 37.5: worst error up to 60.1 | limit |
 |---|---|---|---|---|
-| 1/D, degree 16 | 4.1×10⁻¹⁵ | 5.2×10⁻¹³ | 4.2×10⁻¹¹ | 1.64389375 |
-| 1/D, degree 18 | 4.0×10⁻¹⁵ | 1.8×10⁻¹² | 1.5×10⁻¹⁰ | 1.64389377 |
-| 1/(D-2), degree 18 | 4.0×10⁻¹⁵ | 2.8×10⁻¹² | 7.9×10⁻¹¹ | 1.64389377 |
-| $`(D-2)^{-1/2}`$, degree 20 | 3.9×10⁻¹⁵ | 2.0×10⁻¹¹ | 3.9×10⁻¹⁰ | 1.636 |
-| $`D^{-1/2}`$, degree 20 | 3.8×10⁻¹⁵ | 1.6×10⁻¹⁰ | 6.2×10⁻⁹ | 1.547 |
+| 1/D, degree 16 | 4.1×10⁻¹⁵ | 5.6×10⁻¹³ | 4.2×10⁻¹¹ | 1.64389375 |
+| 1/D, degree 18 | 4.1×10⁻¹⁵ | 1.6×10⁻¹² | 1.4×10⁻¹⁰ | 1.64389377 |
+| 1/(D-2), degree 18 | 4.0×10⁻¹⁵ | 3.1×10⁻¹² | 7.7×10⁻¹¹ | 1.64389377 |
+| $`(D-2)^{-1/2}`$, degree 20 | 4.0×10⁻¹⁵ | 1.3×10⁻¹¹ | 6.6×10⁻¹⁰ | 1.638 |
+| $`D^{-1/2}`$, degree 20 | 3.9×10⁻¹⁵ | 1.4×10⁻¹⁰ | 5.3×10⁻⁹ | 1.556 |
 
 Every model fits its range to the level of the points, so the fit alone decides nothing; the unseen points do. Fitted
-on D ≤ 45, the 1/D series predicts Δ fifteen units of D ahead to 5×10⁻¹³, about 100 times the
-noise of the points, while the series in half-integer powers miss by 40 to 300 times more. Their limits also jump with
-the degree (1.636 to 1.694 for $`(D-2)^{-1/2}`$ and 1.54 to 2.75 for $`D^{-1/2}`$ at degree 20–24 on all the points to D = 60), so they
+on D ≤ 45, the 1/D series predicts Δ fifteen units of D ahead to 6×10⁻¹³, about 100 times the
+noise of the points, while the series in half-integer powers miss by 20 to 250 times more. Their limits also jump with
+the degree (1.644 to 1.677 for $`(D-2)^{-1/2}`$ and 1.64 to 2.63 for $`D^{-1/2}`$ at degree 20–24 on the points to D = 60.1), so they
 give no usable Δ∞. Adding one non-analytic term ($`D^{-1/2}`$, $`D^{-3/2}`$, $`\ln D / D`$, $`\ln D / D^2`$ or
-$`e^{-D/4}`$) to the degree-16 series changes neither the prediction (1.6–5×10⁻¹³ at D = 60) nor the limit
-(1.64389375), and the term's coefficient is not determined: $`D^{-1/2}`$ gets 3×10⁻⁵ at degree 14 and
-1×10⁻⁷ at degree 16 (`hp/dd_fits_mp.py 10 45 --clean --mixed --dmax=60.1`).
+$`e^{-D/4}`$) to the degree-16 series does not degrade the prediction (1.2–3.2×10⁻¹³ at D = 60) and keeps the limit
+within the quoted bar (1.643893736 to 1.643893754), and the term's coefficient is not determined: $`D^{-1/2}`$ gets
+3×10⁻⁵ at degree 14 and 6×10⁻⁷ at degree 16 (`hp/dd_fits_mp.py 10 45 --clean --mixed --dmax=60.1`).
 
 Fitted on all the cleaned points, power series in 1/D of degree 16–20 and in 1/(D-2) of degree 18–20 (the ones that fit
-to the noise; 1/(D-2) at degree 16 leaves 3×10⁻¹³) fit the points from D = 10 to 61.03 to 4.2×10⁻¹⁵
-(8.6×10⁻¹⁵ for 1/D at degree 16, 1.5×10⁻¹⁴ for 1/(D-2) at degree 18) and give limits from 1.643893744 to 1.643893752 on
+to the noise; 1/(D-2) at degree 16 leaves 4×10⁻¹³) fit the points from D = 10 to 61.03 to 4.3×10⁻¹⁵
+(8.6×10⁻¹⁵ for 1/D at degree 16, 1.5×10⁻¹⁴ for 1/(D-2) at degree 18) and give limits from 1.643893744 to 1.643893753 on
 10 ≤ D ≤ 60.1 (`hp/dd_fits_mp.py 10 1e9 --clean --dmax=60.1`) and from 1.643893745 to 1.643893752 on all 823
 cleaned points to D = 61.03. Over 48 choices of model (1/D, 1/(D-2)), degree (the two lowest that reach the noise),
 lower and upper fit ends (D ≥ 10, 12, 15; D ≤ 60.1, 61.03) and cleaning on or off, the limit ranges over

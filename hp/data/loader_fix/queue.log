@@ -1,0 +1,36 @@
+== 2026-10-22T06:56:04 start R1_fits_10_45: cd /home/claude/dss-residual-kernel/.claude/worktrees/agent-a8dba065a7c5e43c9 && python3 hp/dd_fits_mp.py 10 45 --clean --dmax=60.1
+== 2026-10-22T07:00:31 end R1_fits_10_45 rc=0 267 s
+== 2026-10-22T07:00:31 start R2_fits_10_37.5: cd /home/claude/dss-residual-kernel/.claude/worktrees/agent-a8dba065a7c5e43c9 && python3 hp/dd_fits_mp.py 10 37.5 --clean --dmax=60.1
+== 2026-10-22T07:03:20 end R2_fits_10_37.5 rc=0 169 s
+== 2026-10-22T07:03:20 start R3_mixed: cd /home/claude/dss-residual-kernel/.claude/worktrees/agent-a8dba065a7c5e43c9 && python3 hp/dd_fits_mp.py 10 45 --clean --mixed --dmax=60.1
+== 2026-10-22T07:06:06 end R3_mixed rc=0 166 s
+== 2026-10-22T07:06:06 start R4_plot_heldout: cd /home/claude/dss-residual-kernel/.claude/worktrees/agent-a8dba065a7c5e43c9/hp && python3 plot_heldout.py --dmax=60.1
+== 2026-10-22T07:08:27 end R4_plot_heldout rc=0 141 s
+== 2026-10-22T07:08:27 start R5_fits_all_601: cd /home/claude/dss-residual-kernel/.claude/worktrees/agent-a8dba065a7c5e43c9 && python3 hp/dd_fits_mp.py 10 1e9 --clean --dmax=60.1
+== 2026-10-22T07:41:41 end R5_fits_all_601 rc=0 1994 s
+== 2026-10-22T07:41:41 start R6_fits_all_6103: cd /home/claude/dss-residual-kernel/.claude/worktrees/agent-a8dba065a7c5e43c9 && python3 hp/dd_fits_mp.py 10 1e9 --clean
+== 2026-10-22T08:55:23 end R6_fits_all_6103 (orphaned from queue.sh) complete
+== 2026-10-22T08:55:23 start X2_rv2_budget_decimal: cd /home/claude/dss-residual-kernel/.claude/worktrees/agent-a8dba065a7c5e43c9 && python3 hp/review/rv2_fits.py budget --decimal
+== 2026-10-22T08:56:12 end X2_rv2_budget_decimal rc=0 49 s
+== 2026-10-22T08:56:12 start R7_reproduce: cd /home/claude/dss-residual-kernel/.claude/worktrees/agent-a8dba065a7c5e43c9 && ./reproduce.sh
+== 2026-10-22T09:25:36 end R7_reproduce rc=0 1764 s
+== 2026-10-22T09:25:36 start R8_dinf_budget: cd /home/claude/dss-residual-kernel/.claude/worktrees/agent-a8dba065a7c5e43c9 && python3 /tmp/claude-0/-home-claude/5cec0889-b97c-529a-89c7-507003649638/scratchpad/dinf_budget_wrap.py /tmp/claude-0/-home-claude/5cec0889-b97c-529a-89c7-507003649638/scratchpad/runs/R8_dinf_budget_rows.json
+== 2026-10-22T09:55:48 start R8_dinf_budget: cd /home/claude/dss-residual-kernel/.claude/worktrees/agent-a8dba065a7c5e43c9 && python3 /tmp/claude-0/-home-claude/5cec0889-b97c-529a-89c7-507003649638/scratchpad/dinf_budget_wrap.py /tmp/claude-0/-home-claude/5cec0889-b97c-529a-89c7-507003649638/scratchpad/runs/R8_dinf_budget_rows.json
+== 2026-10-22T10:25:51 end R8_dinf_budget rc=0 1803 s
+== 2026-10-22T10:25:51 start O1_fits_10_45: cd /home/claude/dss-residual-kernel/.claude/worktrees/agent-a8dba065a7c5e43c9 && python3 /tmp/claude-0/-home-claude/5cec0889-b97c-529a-89c7-507003649638/scratchpad/oldrun.py hp/dd_fits_mp.py 10 45 --clean --dmax=60.1
+== 2026-10-22T10:39:41 end O1_fits_10_45 rc=0 830 s
+== 2026-10-22T10:39:41 start O3_mixed: cd /home/claude/dss-residual-kernel/.claude/worktrees/agent-a8dba065a7c5e43c9 && python3 /tmp/claude-0/-home-claude/5cec0889-b97c-529a-89c7-507003649638/scratchpad/oldrun.py hp/dd_fits_mp.py 10 45 --clean --mixed --dmax=60.1
+== 2026-10-22T10:47:29 end O3_mixed rc=0 468 s
+== 2026-10-22T10:47:29 start A1_attrib_45: cd /home/claude/dss-residual-kernel/.claude/worktrees/agent-a8dba065a7c5e43c9 && python3 /tmp/claude-0/-home-claude/5cec0889-b97c-529a-89c7-507003649638/scratchpad/attrib.py 45
+== 2026-10-22T10:58:11 end A1_attrib_45 rc=0 642 s
+== 2026-10-22T10:58:11 start R10_dd_candidates: cd /home/claude/dss-residual-kernel/.claude/worktrees/agent-a8dba065a7c5e43c9 && python3 hp/dd_candidates.py 45 --dmax=59.8
+== 2026-10-22T11:29:45 end R10_dd_candidates rc=0 1894 s
+== 2026-10-22T11:29:45 start O2_fits_10_37.5: cd /home/claude/dss-residual-kernel/.claude/worktrees/agent-a8dba065a7c5e43c9 && python3 /tmp/claude-0/-home-claude/5cec0889-b97c-529a-89c7-507003649638/scratchpad/oldrun.py hp/dd_fits_mp.py 10 37.5 --clean --dmax=60.1
+== 2026-10-22T11:35:30 end O2_fits_10_37.5 rc=0 345 s
+== 2026-10-22T11:35:30 start A2_attrib_37.5: cd /home/claude/dss-residual-kernel/.claude/worktrees/agent-a8dba065a7c5e43c9 && python3 /tmp/claude-0/-home-claude/5cec0889-b97c-529a-89c7-507003649638/scratchpad/attrib.py 37.5
+== 2026-10-22T11:40:49 end A2_attrib_37.5 rc=0 319 s
+== 2026-10-22T11:40:49 start R9_check_numbers_full: cd /home/claude/dss-residual-kernel/.claude/worktrees/agent-a8dba065a7c5e43c9 && python3 check_numbers.py --full
+== 2026-10-22T11:52:25 end R9_check_numbers_full rc=0 696 s
+== 2026-10-22T11:52:25 start R11_zero_fits: cd /home/claude/dss-residual-kernel/.claude/worktrees/agent-a8dba065a7c5e43c9/solver/eeg20 && python3 zero_fits.py
+== 2026-10-22T11:54:47 end R11_zero_fits rc=0 142 s
+== 2026-10-22T11:54:47 start R11b_zero_fits2: cd /home/claude/dss-residual-kernel/.claude/worktrees/agent-a8dba065a7c5e43c9/solver/eeg20 && python3 zero_fits2.py

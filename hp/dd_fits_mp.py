@@ -54,7 +54,10 @@ def load_points(scan=None):
         for line in list(open(os.path.join(HERE, "data", "delta_dd.csv")))[1:]:
             c = line.strip().split(",")
             k = round(float(c[0]), 6)
-            pts[k] = mp.mpf(c[1]) + mp.mpf(c[2])
+            # hi and lo are written as repr(float): parse each to the double it denotes, then add exactly (60 digits
+            # hold hi + lo). mp.mpf(c[1]) would read the decimal string itself, which differs from the double by up
+            # to half an ulp (2e-16); check_numbers.py (loader_exact) fails if that comes back.
+            pts[k] = mp.mpf(float(c[1])) + mp.mpf(float(c[2]))
             src[k] = c[6]
     return pts, src
 

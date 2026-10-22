@@ -1,0 +1,13 @@
+fit on 352 points 10..45, held out 471 points 45..61.026
+ln0: (1/lnD) poly(1/lnD)           deg 14: fit residual  3.2e-12   held-out max   5.5e-9   value at D = 1e30: 0.76961176
+ln0: (1/lnD) poly(1/lnD)           deg 18: fit residual  4.0e-15   held-out max  1.3e-11   value at D = 1e30: 0.88412329
+lnfree: poly(1/lnD)                deg 14: fit residual  1.6e-13   held-out max  7.3e-10   value at D = 1e30: 2.3701447
+lnfree: poly(1/lnD)                deg 16: fit residual  4.0e-15   held-out max  2.5e-11   value at D = 1e30: 1.0438617
+lnfree: poly(1/lnD)                deg 18: fit residual  4.1e-15   held-out max  3.4e-11   value at D = 1e30: 2.284987
+lnfree: poly(1/lnD)                deg 20: fit residual  4.0e-15   held-out max  3.1e-11   value at D = 1e30: -72.536323
+   lnfree deg 14: value at 1/lnD = 0 (D = infinity): 2.9664453
+   lnfree deg 16: value at 1/lnD = 0 (D = infinity): 0.33151174
+   lnfree deg 18: value at 1/lnD = 0 (D = infinity): 3.0969548
+   lnfree deg 20: value at 1/lnD = 0 (D = infinity): -177.77111
+mixed poly14(1/D) + c/lnD: c = 2.43e-5, held-out max 2.1e-11, analytic part at D = inf 1.64389015
+mixed poly16(1/D) + c/lnD: c = 4.01e-7, held-out max 4.6e-13, analytic part at D = inf 1.64389369
