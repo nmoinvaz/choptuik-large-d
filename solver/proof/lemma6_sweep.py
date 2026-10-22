@@ -22,6 +22,15 @@ y+ continues analytically to the tube { u_c(t) + d } (section 11, the tube argum
 Reference arcs: rho_0 = 260, rho_{j+1} = 0.925 rho_j, down to 25; Delta_j = 0.045 rho_j, so consecutive tubes overlap.
 
     python3 lemma6_sweep.py [--h=1e-9] [--only=i,j] [--out=f.json]
+    python3 lemma6_sweep.py --dfrac=0.001 --ratio=0.9982 --ray-cache=ray.json --chunk=k/K --out=chunk_k.json
+                                                  the brute-force sweep, split into K interleaved chunks (arcs with
+                                                  j mod K = k) that can run in parallel; the ray tube chain is computed
+                                                  once and shared through --ray-cache. Merge and check the chunks with
+                                                  lemma6_sweep_merge.py. Coverage needs ratio >= (1-dfrac)/(1+dfrac):
+                                                  consecutive tubes then overlap (a square of half-side D contains the
+                                                  disc of radius D, so each arc tube covers the radial band rho_j +- D_j)
+    python3 lemma6_sweep.py --dfrac=0.001 --ratio=0.9982 --ray-cache=ray.json --ray-only=1 --out=ray_run.json
+                                                  only the shared ray tube chain (run it once, before the chunks)
     python3 lemma6_sweep.py --mutate=sign        mutation test: the fast term with the wrong sign (V_u = +V/2 + ...);
                                                   the sweep must fail
     python3 lemma6_sweep.py --rhos=11,9.5,8.3    negative control: arcs at |xi| = 0.30, 0.32, 0.35 (u = 11, 9.5, 8.3),
@@ -47,7 +56,11 @@ DFRAC = "0.045"                     # tube half-width Delta_j = DFRAC rho_j
 RAY0 = "107"                        # the ray tube starts at |u| = RAY0 (its square then stays in |u| >= 100)
 
 
-def nodes_u(rmax="260", rmin="25", ratio="0.925"):
+RATIO = "0.925"                     # rho_{j+1} = RATIO rho_j
+
+
+def nodes_u(rmax="260", rmin="25", ratio=None):
+    ratio = ratio or RATIO
     out, r = [arb(rmax)], arb(rmax)
     while True:
         r = r * arb(ratio)
@@ -106,7 +119,15 @@ def run_tube(lo, leg):
     return ok and rad < 1e3, n, time.time() - t0, X, rad, err
 
 
-def sweep(h="1e-9", only=None, mutate=None, rhos=None):
+def acb_s(z):
+    return [z.real.str(600, radius=True, more=True), z.imag.str(600, radius=True, more=True)]
+
+
+def acb_p(p):
+    return acb(arb(p[0]), arb(p[1]))
+
+
+def sweep(h="1e-9", only=None, mutate=None, rhos=None, ray_cache=None, out=None):
     t00 = time.time()
     ctx.prec = 320
     Ahat, wfhat = arb(AH), arb(WH)
@@ -119,7 +140,8 @@ def sweep(h="1e-9", only=None, mutate=None, rhos=None):
     rho = [arb(x) for x in rhos] if rhos else nodes_u()
     D = [arb(DFRAC) * r for r in rho]
     E3 = (acb(0, -1) * U.PHI_U).exp()                    # e^{-3 i pi/4}
-    res = {"h": h, "mutate": mutate, "order": ORDER, "kappa": U.KAPPA, "dfrac": DFRAC,
+    res = {"h": h, "mutate": mutate, "order": ORDER, "kappa": U.KAPPA, "dfrac": DFRAC, "ratio": RATIO,
+           "coverage_ok": bool(arb(RATIO) >= (1 - arb(DFRAC)) / (1 + arb(DFRAC))) if not rhos else None,
            "rho": [r.str(8) for r in rho], "arcs": [], "ray": []}
     print(f"tube sweep over X = x^ + [-{h}, {h}]^2: {len(rho)} reference arcs |u| = {rho[0].str(4)} ... "
           f"{rho[-1].str(4)}{', MUTATION ' + mutate if mutate else ''} [{time.time() - t00:.0f} s]", flush=True)
@@ -129,7 +151,19 @@ def sweep(h="1e-9", only=None, mutate=None, rhos=None):
         if j not in ray_nodes:
             ctx.prec = 320
             starts[j] = start_box(old, w, A, acb(r) * E3, D[j])
-    if ray_nodes:
+    cache = None
+    if ray_cache and os.path.exists(ray_cache):
+        with open(ray_cache) as fh:
+            cache = json.load(fh)
+        assert (cache["h"], cache["dfrac"], cache["ratio"], cache["rho"]) == (h, DFRAC, RATIO, res["rho"]), \
+            "ray cache made with other parameters"
+        if not cache["ok"]:
+            raise RuntimeError("the cached ray tube chain did not finish")
+        for j, H in cache["starts"].items():
+            starts[int(j)] = [acb_p(x) for x in H]
+        res["ray"] = cache["ray"]
+        print(f"ray tube chain loaded from {ray_cache} ({len(cache['starts'])} start boxes)", flush=True)
+    if ray_nodes and cache is None:
         ctx.prec = 320
         Dr = arb(DFRAC) * arb(RAY0)
         H = start_box(old, w, A, acb(arb(RAY0)) * E3, Dr)
@@ -145,6 +179,11 @@ def sweep(h="1e-9", only=None, mutate=None, rhos=None):
                 break
             H, prev = X[:9], rho[j]
             starts[j] = list(H)
+        if ray_cache:
+            with open(ray_cache, "w") as fh:
+                json.dump({"h": h, "dfrac": DFRAC, "ratio": RATIO, "rho": res["rho"], "ray": res["ray"],
+                           "ok": all(a["ok"] for a in res["ray"]),
+                           "starts": {str(j): [acb_s(z) for z in starts[j]] for j in ray_nodes if j in starts}}, fh)
     for j, r in enumerate(rho):
         if only is not None and j not in only:
             continue
@@ -159,6 +198,11 @@ def sweep(h="1e-9", only=None, mutate=None, rhos=None):
                "steps": n, "sec": sec, "start_rad": rad0, "end_rad": rad, "err": err,
                "y_end": [[z.real.str(20, radius=True), z.imag.str(20, radius=True)] for z in X[:7]] if ok else None}
         res["arcs"].append(rec)
+        if out:                                   # write after every arc, so a killed run keeps what it finished
+            res["ok"] = False
+            res["sec"] = time.time() - t00
+            with open(out, "w") as fh:
+                json.dump(res, fh, indent=1)
         print(f"arc tube |u| = {r.str(5)} (|xi| = {rec['xi']:.4f}, half-width {D[j].str(4)}): finished {ok}, {n} steps, "
               f"{sec:.0f} s; start radius {rad0:.2e}, end radius {rad:.2e} {err}", flush=True)
     res["ok"] = all(a["ok"] for a in res["arcs"]) and all(a["ok"] for a in res["ray"]) and \
@@ -172,8 +216,16 @@ if __name__ == "__main__":
     opts = {a.split("=", 1)[0][2:]: a.split("=", 1)[1] for a in sys.argv[1:] if a.startswith("--")}
     only = [int(x) for x in opts["only"].split(",")] if "only" in opts else None
     DFRAC = opts.get("dfrac", DFRAC)
+    RATIO = opts.get("ratio", RATIO)
     rhos = opts["rhos"].split(",") if "rhos" in opts else None
-    res = sweep(opts.get("h", "1e-9"), only, opts.get("mutate"), rhos)
+    if "chunk" in opts:                          # k/K: the arcs with j mod K = k
+        k, K = (int(x) for x in opts["chunk"].split("/"))
+        nn = len(rhos) if rhos else len(nodes_u())
+        only = [j for j in range(nn) if j % K == k]
+    if opts.get("ray-only"):
+        only = []
+    res = sweep(opts.get("h", "1e-9"), only, opts.get("mutate"), rhos, opts.get("ray-cache"), opts.get("out"))
+    res["chunk"] = opts.get("chunk")
     if "out" in opts:
         with open(opts["out"], "w") as fh:
             json.dump(res, fh, indent=1)
