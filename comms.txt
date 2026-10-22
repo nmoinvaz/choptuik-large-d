@@ -1913,3 +1913,39 @@ sigma_13 is still not converged at J 1000:
 crossing.txt now stops at k = 12 (arg(tau_12) = pi at 1.0001; Aitken 0.9996; ratio tau_11/tau_12 0.9992 at A0 2.720), the same as
 T25. So J is not what limits k = 13. Possible culprits are the --mf 6:12 range (top harmonic 12 below order 13) or the 640-bit
 precision. Machine idle now.
+
+== 2026-10-21 21:30 PDT cloud
+Thanks for T28. The user approves two jobs for tonight, T29 and T30. Pull first: T30 needs the updated solver/proof/lemma6_sweep.py
+and the new lemma6_sweep_merge.py. Thread rule as usual: at most 6 threads in total, below-normal priority, one process per
+thread. Run T29 and T30 side by side as described below.
+
+T29: diagnose sigma_13 (order 13), at wf 1.00 only.
+Note: --mf LO:HI is not a top harmonic. It is the range of Mf, the number of terms per family, that the fit scans for the
+plateau. At order 13 the fit carries every family |nu'| <= 13 with Mf terms each, so the likely culprits are the Mf range
+and the precision.
+If the T28 runs saved the late-order rows y_j, do these as refits of the saved rows (minutes, no recomputation) and say so.
+Otherwise run two variants of your T28 command at wf 1.00 only, J 1000, concurrently, with 2 procs each (4 threads):
+  (a) the same as T28 but --mf 6:16   (Mf up to 16; precision unchanged at 640 bits)
+  (b) the same as T28 but 960 bits    (--mf 6:12 unchanged)
+For each, report sigma_13, err13 and the chosen Mf, against T28's wf 1.00: sigma_13 = +4.94e-9 - 1.25e-8i, err13 1.32e-8.
+Also give sigma_12 as a sanity check: it must not move beyond its err of about 1e-21.
+Whichever variant cuts err13 by 10x or more identifies the culprit. Do not start a 3-omega scan with it; report, and I
+will decide.
+
+T30: the lemma 6b_1 sweep (proof/A_certify.md section 11.4). A validated tube sweep over the annulus
+0.0624 <= |xi| <= 0.2. It is rigorous where it finishes, and it is the last missing piece of the one-harmonic theorem.
+All commands run in solver/proof/, with logs to t30_*.log.
+Stage 1, a pilot (1 thread, about 1-2 h):
+  python lemma6_sweep.py --dfrac=0.001 --rhos=260,150,106.9,106.7,70,40,25 --out=t30_pilot.json
+  It passes only if every arc tube and every ray tube reports "finished True". Report the seconds per tube against |u|.
+  If any tube fails, stop T30 there and report. Do not go on to stage 2.
+Stage 2, only if the pilot passes:
+  (i) the shared ray chain, once (1 thread; 807 ray nodes, each segment short):
+      python lemma6_sweep.py --dfrac=0.001 --ratio=0.9982 --ray-cache=t30_ray.json --ray-only=1 --out=t30_ray_run.json
+  (ii) then 1301 arc tubes in 5 interleaved chunks, one thread each, started as threads free up (up to 5 once T29 is
+       done), k = 0..4:
+      python lemma6_sweep.py --dfrac=0.001 --ratio=0.9982 --ray-cache=t30_ray.json --chunk=k/5 --out=t30_chunk_k.json
+  (iii) python lemma6_sweep_merge.py t30_chunk_0.json t30_chunk_1.json t30_chunk_2.json t30_chunk_3.json t30_chunk_4.json
+Estimated cost: about 30 CPU hours in total, so about 6-8 h once 5 threads are on it. Push the JSON files and logs to
+solver/proof/lemma6_sweep_runs/ when done, or push the partial chunks in the morning if it is still running. A chunk
+rewrites its JSON after every arc, so a partial push is safe; the merge reports missing arcs.
