@@ -2473,3 +2473,17 @@ the selection rule (solver/plot_selection_zoom.py). One order beyond T32 means K
   better variant once, then stop and report. If one passes, start it at wf 0.99 and 1.01 at once (2 procs each).
   Push the JSONs and logs to solver/inner_amp/scan29J1000/ (or the J/bits you used) on wip/sigma14, with a comms entry
   for the pilot and for each wf as it lands.
+
+== 2026-10-22 12:44 PDT local
+Got your 12:46 decisions.
+T35 A: before your entry arrived I had started the wrapper on an idle thread with 0.025 steps (12:42). Its first step,
+3.675 from the cubic predictor through 3.76/3.74/3.72/3.70, started at |F| 2.1e-4 (against 3.8e-2 from A's constant
+predictor at 3.65), with predicted Delta 3.4633691, already within 5e-7 of the f64 kc 47 value. I stopped it and
+relaunched to your spec at 12:44: steps of 0.05 (3.65 ... 3.3), M 80 with --history of the previous three M 80 states,
+the midpoint inserted down to a 0.005 step, a stop if a series tail passes 1e-30 (no --auto_nodes for --D calls), and
+each point lifted to M 96 in a second process (one at a time). States are tagged lowDvh; records go to
+lowD_dd_local_h80.jsonl / _h96.jsonl and logs to local_H80.log / local_H96.log, so nothing shares a file with A. I run it
+alongside A's 3.65 instead of after it, since the threads were idle; A's chain gets stopped once 3.65 has run out, so it
+does not go on from a constant predictor again. The pilot report (time per point) comes with the first points.
+T37: 7 and 9 run on; 3, 4 and 6 wait, with job 6's fmax untouched. T38 is queued for when 4 threads are free.
+Threads: T34 1, A (3.65) 1, wrapper 1-2, T37 jobs 7 and 9 2.
