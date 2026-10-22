@@ -1,0 +1,57 @@
+== kfreeze 15 vs 13, full Newton steps (no line search)
+D 60.001952  Delta np.float64(1.8098842580017136) +2.263e-17  (saved np.float64(1.8098842580017136) +1.843e-17; diff -1.20e-15)  |F| 6.6e-21  est +1.3e-17  307s
+== M 48 at D = 60, resampled in double-double, deflated Newton then Newton (the scans' corrector)
+D 60.001952  Delta np.float64(1.809884258001715) -1.067e-16  (saved np.float64(1.809884258001715) -1.067e-16; diff +2.45e-18)  |F| 1.7e-23  est +6.5e-18  538s
+== independent residual at the saved state D = 60.001952 (all blocks)
+segment 3: 2 kernel steps x 2 (203s)
+segment 4: 3 kernel steps x 2 (260s)
+horizon series: equations through order 99: worst |coef_k| u0^k 1.4e-30; leading data 0.0e+00 (262s)
+ block  max|F_kernel|  max|F_indep|  max|diff|   max rad  -y.F_kernel   -y.F_indep
+     0       1.39e-23      1.39e-23   7.05e-33   1.2e-60    +1.47e-34    +1.47e-34
+     1       3.31e-25      3.31e-25   1.59e-31   0.0e+00    -5.65e-34    -5.66e-34
+     2       2.43e-26      2.43e-26   1.88e-31   0.0e+00    +9.43e-30    +9.84e-30
+     3       9.86e-28      9.86e-28   1.94e-31   0.0e+00    -1.97e-24    -1.38e-24
+     4       3.47e-29      3.47e-29   1.36e-31   0.0e+00    +4.85e-18    +6.10e-18
+     5       2.32e-23      2.32e-23   1.72e-32   3.7e-59    -3.67e-18    -2.32e-18
+ phase       2.16e-32      1.62e-33   2.00e-32   4.6e-59    -1.72e-43    -1.29e-44
+total linearised Delta correction: kernel +1.18e-18, independent +3.79e-18; worst |diff| / |F_kernel| per block 9.3e-01  (285s)
+== independent residual: second machine's last state (D = 61.026449)
+segment 3: 2 kernel steps x 2 (185s)
+segment 4: 3 kernel steps x 2 (245s)
+horizon series: equations through order 126: worst |coef_k| u0^k 2.9e-30; leading data 0.0e+00 (248s)
+ block  max|F_kernel|  max|F_indep|  max|diff|   max rad  -y.F_kernel   -y.F_indep
+     0       4.72e-24      4.72e-24   6.13e-33   1.2e-60    +2.10e-34    +2.10e-34
+     1       1.25e-25      1.25e-25   2.28e-31   0.0e+00    -3.31e-35    -3.32e-35
+     2       9.26e-27      9.26e-27   2.05e-31   0.0e+00    +2.38e-29    +2.32e-29
+     3       3.98e-28      3.98e-28   1.93e-31   0.0e+00    -1.67e-24    -2.21e-24
+     4       1.50e-29      1.51e-29   9.77e-32   0.0e+00    +1.75e-18    +3.30e-18
+     5       3.78e-23      3.78e-23   1.15e-32   3.7e-59    -1.65e-18    -2.25e-18
+ phase       4.47e-32      1.96e-33   4.27e-32   4.7e-59    -8.45e-42    -3.71e-43
+total linearised Delta correction: kernel +1.04e-19, independent +1.05e-18; worst |diff| / |F_kernel| per block 9.6e-01  (269s)
+== independent residual away from the solution (equation check), blocks 0, 1, 5
+centre series: equations through order 420: worst |coef_k| x0^k 6.3e-32; leading data 0.0e+00 (34s)
+segment 1: 8 kernel steps x 2 (163s)
+horizon series: equations through order 99: worst |coef_k| u0^k 1.4e-30; leading data 0.0e+00 (165s)
+ block  max|F_kernel|  max|F_indep|  max|diff|   max rad  -y.F_kernel   -y.F_indep
+     0       1.00e-06      1.00e-06   6.80e-33   1.2e-60    -1.32e-05    -1.32e-05
+     1       2.86e-06      2.86e-06   1.37e-31   0.0e+00    +1.86e-05    +1.86e-05
+     5       7.74e-02      7.74e-02   1.32e-32   3.9e-59    -4.40e+00    -4.40e+00
+ phase       2.16e-32      1.62e-33   2.00e-32   4.6e-59    -9.29e-32    -6.96e-33
+total linearised Delta correction: kernel -4.40e+00, independent -4.40e+00; worst |diff| / |F_kernel| per block 9.3e-01  (190s)
+== negative control: Delta + 1e-24 in the independent evaluation only (horizon block)
+horizon series: equations through order 99: worst |coef_k| u0^k 7.3e-25; leading data 0.0e+00 (3s)
+ block  max|F_kernel|  max|F_indep|  max|diff|   max rad  -y.F_kernel   -y.F_indep
+     5       2.32e-23      2.32e-23   1.72e-32   3.7e-59    -3.67e-18    -2.32e-18
+ phase       2.16e-32      1.62e-33   2.00e-32   4.6e-59    -1.72e-43    -1.29e-44
+total linearised Delta correction: kernel -3.67e-18, independent -2.32e-18; worst |diff| / |F_kernel| per block 9.3e-01  (22s)
+== negative control: n/2 c (p + m) coupling x (1 + 1e-15) in the independent evaluation (segment 1)
+segment 1: 3 kernel steps x 2 (52s)
+ block  max|F_kernel|  max|F_indep|  max|diff|   max rad  -y.F_kernel   -y.F_indep
+     1       3.31e-25      6.68e-18   6.68e-18   0.0e+00    -5.65e-34    +2.21e-27
+ phase       2.16e-32      1.62e-33   2.00e-32   4.6e-59    -1.72e-43    -1.29e-44
+total linearised Delta correction: kernel -5.65e-34, independent +2.21e-27; worst |diff| / |F_kernel| per block 2.0e+07  (74s)
+== kfreeze 15 vs 13 at D = 50 and 40
+D 50.007491  Delta np.float64(1.8416311332022635) -8.247e-17  (saved np.float64(1.8416311332022635) -8.259e-17; diff -1.06e-15)  |F| 1.1e-24  est +1.2e-19  300s
+D 40.020065  Delta np.float64(1.8884516644906153) +5.622e-17  (saved np.float64(1.8884516644906153) +5.622e-17; diff +1.52e-15)  |F| 1.4e-26  est -7.2e-23  245s
+== M 48 at D = 50
+D 50.007491  Delta np.float64(1.8416311332022643) +9.394e-17  (saved np.float64(1.8416311332022643) +9.394e-17; diff +3.13e-20)  |F| 7.1e-25  est -7.9e-20  448s
