@@ -634,6 +634,47 @@ impl DDLu {
         crate::field::Fl::<DV, B>::load(&h, &l)
     }
 
+    /// Solve A x = b in plain f64 with the hi parts of the factors (an f64 LU of A, accurate to about one ulp of its
+    /// entries), for the f64 lanes of the mixed-precision Jacobian.
+    pub fn solve_hi(&self, b: &mut [f64]) {
+        let (n, ld) = (self.n, self.ld);
+        for k in 0..n {
+            let p = self.perm[k];
+            if p != k {
+                b.swap(k, p);
+            }
+        }
+        for k in 0..n {
+            let nt = -b[k];
+            if nt == 0.0 {
+                continue;
+            }
+            let col = &self.hi[k * ld..k * ld + n];
+            for i in k + 1..n {
+                b[i] = col[i].mul_add(nt, b[i]);
+            }
+        }
+        for k in (0..n).rev() {
+            b[k] /= self.hi[k * ld + k];
+            let nt = -b[k];
+            let col = &self.hi[k * ld..k * ld + k];
+            for i in 0..k {
+                b[i] = col[i].mul_add(nt, b[i]);
+            }
+        }
+    }
+
+    /// `solve_lanes` in plain f64 (`solve_hi`): the field's hi parts in, lo parts zero out.
+    pub fn solve_lanes_hi<const B: usize>(&self, f: &crate::field::Fl<DV, B>) -> crate::field::Fl<DV, B> {
+        let m = 8 * B;
+        let mut h = vec![0.0; m];
+        let mut l = vec![0.0; m];
+        f.store(&mut h, &mut l);
+        self.solve_hi(&mut h);
+        l.iter_mut().for_each(|v| *v = 0.0);
+        crate::field::Fl::<DV, B>::load(&h, &l)
+    }
+
     /// (sign, ln|det|) of the factored matrix: product of the pivots u_kk, sign flipped per row interchange.
     pub fn logdet(&self) -> (f64, f64) {
         let mut sign = 1.0f64;

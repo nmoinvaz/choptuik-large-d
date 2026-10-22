@@ -20,6 +20,8 @@ trait Api: Send + Sync {
     fn m(&self) -> usize;
     fn residual(&self, zh: &[f64], zl: &[f64]) -> Result<V, String>;
     fn jacobian(&self, zh: &[f64], zl: &[f64]) -> Result<(Vec<f64>, Vec<f64>, usize), String>;
+    /// f64 Jacobian (model::jacobian_f64), column-major: (J, ld); mutate: Ctx::mutate for this call (0 = none)
+    fn jacobian_f64(&mut self, zh: &[f64], zl: &[f64], mutate: u8, lanes: usize) -> Result<(Vec<f64>, usize), String>;
     fn plan(&self, zh: &[f64], zl: &[f64], tol: f64, hmax: f64) -> Vec<Vec<f64>>;
     fn set_segs(&mut self, segs: Vec<Vec<f64>>) -> Result<(), String>;
     fn segs(&self) -> Vec<Vec<f64>>;
@@ -58,6 +60,20 @@ impl<const B: usize> Api for Ctx<B> {
     }
     fn jacobian(&self, zh: &[f64], zl: &[f64]) -> Result<(Vec<f64>, Vec<f64>, usize), String> {
         model::jacobian(self, zh, zl, true)
+    }
+    fn jacobian_f64(&mut self, zh: &[f64], zl: &[f64], mutate: u8, lanes: usize) -> Result<(Vec<f64>, usize), String> {
+        self.mutate = mutate;
+        let r = match lanes {
+            0 => model::jacobian_f64(self, zh, zl, true),
+            1 => model::jacobian_dtn::<1, B>(self, zh, zl, true),
+            2 => model::jacobian_dtn::<2, B>(self, zh, zl, true),
+            4 => model::jacobian_dtn::<4, B>(self, zh, zl, true),
+            8 => model::jacobian_dtn::<8, B>(self, zh, zl, true),
+            16 => model::jacobian_dtn::<16, B>(self, zh, zl, true),
+            _ => Err(format!("lanes must be 0 (all f64) or 1, 2, 4, 8, 16 (double-double base, f64 tangents), not {lanes}")),
+        };
+        self.mutate = 0;
+        r
     }
     fn plan(&self, zh: &[f64], zl: &[f64], tol: f64, hmax: f64) -> Vec<Vec<f64>> {
         use rayon::prelude::*;
@@ -184,6 +200,7 @@ macro_rules! make_ctx {
                 freeze: freeze_pair::<$bb>(&$plow),
                 match_node: $mn,
                 lam: DD::ZERO,
+                mutate: 0,
             }) as Box<dyn Api>, )*
             _ => return Err(PyValueError::new_err("M must be one of 8, 16, 32, 48, 64, 80, 96, 128")),
         }
@@ -309,6 +326,65 @@ impl Solver {
             a
         };
         Ok((to2(jh).into_pyarray(py), to2(jl).into_pyarray(py)))
+    }
+
+    /// The Jacobian in plain f64 (f64 lanes; constants and the base state rounded to f64) as one (L, L) array.
+    /// mutate (default 0): a deliberate breakage of the f64 path for the control of hp/mixed_check.py (1 no tau
+    /// derivative, 2 omega scaled by 1 + 1e-9, 3 the horizon solves' kappa tangent term dropped).
+    #[pyo3(signature = (zh, zl, mutate=0, lanes=0))]
+    fn jacobian_f64<'py>(&mut self, py: Python<'py>, zh: PyReadonlyArray1<'py, f64>, zl: PyReadonlyArray1<'py, f64>, mutate: u8, lanes: usize) -> PyResult<Bound<'py, PyArray2<f64>>> {
+        let (h, l) = (slice(&zh, "zh")?, slice(&zl, "zl")?);
+        if h.len() != self.api.len() || l.len() != self.api.len() {
+            return Err(PyValueError::new_err(format!("z must have length {}", self.api.len())));
+        }
+        let (api, pool) = (&mut self.api, &self.pool);
+        let n = api.len();
+        let (jh, ld) = py.detach(|| pool.install(|| api.jacobian_f64(h, l, mutate, lanes))).map_err(PyValueError::new_err)?;
+        let mut a = Array2::<f64>::zeros((n, n));
+        for c in 0..n {
+            for r in 0..n {
+                a[[r, c]] = jh[c * ld + r];
+            }
+        }
+        Ok(a.into_pyarray(py))
+    }
+
+    /// Mixed-precision Newton step: residual F in double-double, the Jacobian in f64 (jacobian_f64), promoted to
+    /// double-double with lo = 0 and factored by the double-double LU (kept for chord steps), dz = -J^-1 F.
+    /// Same return as newton: (dz_hi, dz_lo, F_hi, F_lo, min |u_kk|, max |u_kk|). Iterated, it converges to the same
+    /// solution as newton (linearly, with contraction ~ the f64 Jacobian's relative error times the condition).
+    #[allow(clippy::type_complexity)]
+    #[pyo3(signature = (zh, zl, lanes=0))]
+    fn newton_mixed<'py>(
+        &mut self,
+        py: Python<'py>,
+        zh: PyReadonlyArray1<'py, f64>,
+        zl: PyReadonlyArray1<'py, f64>,
+        lanes: usize,
+    ) -> PyResult<(Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<f64>>, f64, f64)> {
+        let (h, l) = (slice(&zh, "zh")?, slice(&zl, "zl")?);
+        if h.len() != self.api.len() || l.len() != self.api.len() {
+            return Err(PyValueError::new_err(format!("z must have length {}", self.api.len())));
+        }
+        let (api, pool) = (&mut self.api, &self.pool);
+        let n = api.len();
+        let res = py
+            .detach(|| {
+                pool.install(|| -> Result<_, String> {
+                    let (fh, fl) = api.residual(h, l)?;
+                    let (jh, ld) = api.jacobian_f64(h, l, 0, lanes)?;
+                    let jl = vec![0.0; jh.len()];
+                    let lu = DDLu::factor(n, ld, jh, jl, true)?;
+                    let mut b: Vec<DD> = (0..n).map(|i| -DD { hi: fh[i], lo: fl[i] }).collect();
+                    lu.solve(&mut b);
+                    Ok((b, fh, fl, lu))
+                })
+            })
+            .map_err(PyValueError::new_err)?;
+        let (b, fh, fl, lu) = res;
+        let (pmin, pmax) = lu.pivot_range();
+        self.lu = Some(lu);
+        Ok((arr(py, b.iter().map(|v| v.hi).collect()), arr(py, b.iter().map(|v| v.lo).collect()), arr(py, fh), arr(py, fl), pmin, pmax))
     }
 
     /// Mode matrix M(lam) (Delta fixed, no phase row) as two (L-1, L-1) arrays.

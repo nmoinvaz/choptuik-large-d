@@ -3,8 +3,14 @@
 //! * `DV`: values (double-double).
 //! * `Du`: value + one forward-mode tangent (v + d eps, eps^2 = 0), both double-double. One evaluation with a
 //!   unit tangent on one unknown gives one exact Jacobian column.
+//! * `F8`, `Fu`: the same in plain f64 (one `V8` per value / tangent), for the mixed-precision Newton's f64 Jacobian.
+//!   Constants and inputs, which the trait passes as double-double, enter as their hi parts.
+//! * `Dtn<N>`: a double-double value with N plain-f64 tangents: N Jacobian columns from one evaluation, the base
+//!   trajectory computed once (and to double-double accuracy) for all of them.
 use crate::dd::DD;
 use crate::dv::{DotAcc, DV};
+use crate::field::{DMat, Fl};
+use crate::v8::V8;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 pub trait Lane:
@@ -12,6 +18,12 @@ pub trait Lane:
 {
     type Acc: Copy;
     const TANGENT: bool;
+    /// values in plain f64 (`F8`, `Fu`): double-double constants and inputs enter rounded to their hi parts
+    const VAL_F64: bool = false;
+    /// tangents in plain f64 (`Fu`, `Dtn`)
+    const TAN_F64: bool = false;
+    /// number of f64 tangents (`tan64`; 0 unless TAN_F64)
+    const NT: usize = 0;
     fn zero() -> Self;
     /// a constant (zero tangent)
     fn cst(c: DV) -> Self;
@@ -43,6 +55,22 @@ pub trait Lane:
     /// a + x
     fn acc1(a: Self::Acc, x: Self) -> Self::Acc;
     fn fin(a: Self::Acc) -> Self;
+    /// D f for a constant matrix D (field::DMat::apply). The default multiplies by the double-double columns; the
+    /// f64 lanes use the matrix's f64 copy.
+    #[inline(always)]
+    fn dmat_apply<const B: usize>(d: &DMat<B>, f: &Fl<Self, B>) -> Fl<Self, B> {
+        d.apply_dd(f)
+    }
+    /// f64 tangent k < NT (TAN_F64 lanes)
+    #[inline(always)]
+    fn tan64(self, _k: usize) -> V8 {
+        unreachable!("no f64 tangents")
+    }
+    /// set f64 tangent k < NT (TAN_F64 lanes)
+    #[inline(always)]
+    fn set_tan64(&mut self, _k: usize, _t: V8) {
+        unreachable!("no f64 tangents")
+    }
 }
 
 impl Lane for DV {
@@ -209,5 +237,461 @@ impl Lane for Du {
     #[inline(always)]
     fn fin(a: Self::Acc) -> Self {
         Du { v: a.0.finish(), d: a.1.finish() }
+    }
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// plain f64 lanes
+// ---------------------------------------------------------------------------------------------------------------
+
+/// 8 lanes of plain f64 (values).
+#[derive(Clone, Copy, Debug)]
+pub struct F8(pub V8);
+
+impl Add for F8 {
+    type Output = F8;
+    #[inline(always)]
+    fn add(self, o: F8) -> F8 {
+        F8(self.0.add(o.0))
+    }
+}
+impl Sub for F8 {
+    type Output = F8;
+    #[inline(always)]
+    fn sub(self, o: F8) -> F8 {
+        F8(self.0.sub(o.0))
+    }
+}
+impl Neg for F8 {
+    type Output = F8;
+    #[inline(always)]
+    fn neg(self) -> F8 {
+        F8(V8::zero().sub(self.0))
+    }
+}
+impl Mul for F8 {
+    type Output = F8;
+    #[inline(always)]
+    fn mul(self, o: F8) -> F8 {
+        F8(self.0.mul(o.0))
+    }
+}
+impl Div for F8 {
+    type Output = F8;
+    #[inline(always)]
+    fn div(self, o: F8) -> F8 {
+        F8(self.0.div(o.0))
+    }
+}
+
+impl Lane for F8 {
+    type Acc = V8;
+    const TANGENT: bool = false;
+    const VAL_F64: bool = true;
+    #[inline(always)]
+    fn zero() -> Self {
+        F8(V8::zero())
+    }
+    #[inline(always)]
+    fn cst(c: DV) -> Self {
+        F8(c.hi)
+    }
+    #[inline(always)]
+    fn splat(x: DD) -> Self {
+        F8(V8::splat(x.hi))
+    }
+    #[inline(always)]
+    fn mulc(self, c: DV) -> Self {
+        F8(self.0.mul(c.hi))
+    }
+    #[inline(always)]
+    fn muls(self, s: DD) -> Self {
+        F8(self.0.mul(V8::splat(s.hi)))
+    }
+    #[inline(always)]
+    fn mulf(self, s: f64) -> Self {
+        F8(self.0.mul(V8::splat(s)))
+    }
+    #[inline(always)]
+    fn addc(self, c: DV) -> Self {
+        F8(self.0.add(c.hi))
+    }
+    #[inline(always)]
+    fn bcast(self, j: usize) -> Self {
+        F8(self.0.bcast(j))
+    }
+    #[inline(always)]
+    fn val(self) -> DV {
+        DV { hi: self.0, lo: V8::zero() }
+    }
+    #[inline(always)]
+    fn tan(self) -> DV {
+        DV::zero()
+    }
+    #[inline(always)]
+    fn from_vt(v: DV, _t: DV) -> Self {
+        F8(v.hi)
+    }
+    #[inline(always)]
+    fn acc0() -> V8 {
+        V8::zero()
+    }
+    #[inline(always)]
+    fn acc(a: V8, x: Self, y: Self) -> V8 {
+        x.0.fma(y.0, a)
+    }
+    #[inline(always)]
+    fn accc(a: V8, x: Self, c: DV) -> V8 {
+        x.0.fma(c.hi, a)
+    }
+    #[inline(always)]
+    fn acc1(a: V8, x: Self) -> V8 {
+        a.add(x.0)
+    }
+    #[inline(always)]
+    fn fin(a: V8) -> Self {
+        F8(a)
+    }
+    #[inline(always)]
+    fn dmat_apply<const B: usize>(d: &DMat<B>, f: &Fl<Self, B>) -> Fl<Self, B> {
+        let mut acc = [V8::zero(); B];
+        for jb in 0..B {
+            for jl in 0..8 {
+                let s = f.0[jb].0.bcast(jl);
+                let col = &d.cols64[8 * jb + jl];
+                for b in 0..B {
+                    acc[b] = s.fma(col[b], acc[b]);
+                }
+            }
+        }
+        Fl(acc.map(F8))
+    }
+}
+
+/// Forward-mode dual number over plain f64 lanes.
+#[derive(Clone, Copy, Debug)]
+pub struct Fu {
+    pub v: V8,
+    pub d: V8,
+}
+
+impl Add for Fu {
+    type Output = Fu;
+    #[inline(always)]
+    fn add(self, o: Fu) -> Fu {
+        Fu { v: self.v.add(o.v), d: self.d.add(o.d) }
+    }
+}
+impl Sub for Fu {
+    type Output = Fu;
+    #[inline(always)]
+    fn sub(self, o: Fu) -> Fu {
+        Fu { v: self.v.sub(o.v), d: self.d.sub(o.d) }
+    }
+}
+impl Neg for Fu {
+    type Output = Fu;
+    #[inline(always)]
+    fn neg(self) -> Fu {
+        let z = V8::zero();
+        Fu { v: z.sub(self.v), d: z.sub(self.d) }
+    }
+}
+impl Mul for Fu {
+    type Output = Fu;
+    #[inline(always)]
+    fn mul(self, o: Fu) -> Fu {
+        Fu { v: self.v.mul(o.v), d: self.v.fma(o.d, self.d.mul(o.v)) }
+    }
+}
+impl Div for Fu {
+    type Output = Fu;
+    #[inline(always)]
+    fn div(self, o: Fu) -> Fu {
+        // (d - q o.d) / o.v, with d - q o.d as one fused operation (negated q o.d - d)
+        let q = self.v.div(o.v);
+        Fu { v: q, d: V8::zero().sub(q.fms(o.d, self.d)).div(o.v) }
+    }
+}
+
+impl Lane for Fu {
+    type Acc = (V8, V8);
+    const TANGENT: bool = true;
+    const VAL_F64: bool = true;
+    const TAN_F64: bool = true;
+    const NT: usize = 1;
+    #[inline(always)]
+    fn tan64(self, _k: usize) -> V8 {
+        self.d
+    }
+    #[inline(always)]
+    fn set_tan64(&mut self, _k: usize, t: V8) {
+        self.d = t;
+    }
+    #[inline(always)]
+    fn zero() -> Self {
+        Fu { v: V8::zero(), d: V8::zero() }
+    }
+    #[inline(always)]
+    fn cst(c: DV) -> Self {
+        Fu { v: c.hi, d: V8::zero() }
+    }
+    #[inline(always)]
+    fn splat(x: DD) -> Self {
+        Fu { v: V8::splat(x.hi), d: V8::zero() }
+    }
+    #[inline(always)]
+    fn mulc(self, c: DV) -> Self {
+        Fu { v: self.v.mul(c.hi), d: self.d.mul(c.hi) }
+    }
+    #[inline(always)]
+    fn muls(self, s: DD) -> Self {
+        let c = V8::splat(s.hi);
+        Fu { v: self.v.mul(c), d: self.d.mul(c) }
+    }
+    #[inline(always)]
+    fn mulf(self, s: f64) -> Self {
+        let c = V8::splat(s);
+        Fu { v: self.v.mul(c), d: self.d.mul(c) }
+    }
+    #[inline(always)]
+    fn addc(self, c: DV) -> Self {
+        Fu { v: self.v.add(c.hi), d: self.d }
+    }
+    #[inline(always)]
+    fn bcast(self, j: usize) -> Self {
+        Fu { v: self.v.bcast(j), d: self.d.bcast(j) }
+    }
+    #[inline(always)]
+    fn val(self) -> DV {
+        DV { hi: self.v, lo: V8::zero() }
+    }
+    #[inline(always)]
+    fn tan(self) -> DV {
+        DV { hi: self.d, lo: V8::zero() }
+    }
+    #[inline(always)]
+    fn from_vt(v: DV, t: DV) -> Self {
+        Fu { v: v.hi, d: t.hi }
+    }
+    #[inline(always)]
+    fn acc0() -> Self::Acc {
+        (V8::zero(), V8::zero())
+    }
+    #[inline(always)]
+    fn acc(a: Self::Acc, x: Self, y: Self) -> Self::Acc {
+        (x.v.fma(y.v, a.0), x.d.fma(y.v, x.v.fma(y.d, a.1)))
+    }
+    #[inline(always)]
+    fn accc(a: Self::Acc, x: Self, c: DV) -> Self::Acc {
+        (x.v.fma(c.hi, a.0), x.d.fma(c.hi, a.1))
+    }
+    #[inline(always)]
+    fn acc1(a: Self::Acc, x: Self) -> Self::Acc {
+        (a.0.add(x.v), a.1.add(x.d))
+    }
+    #[inline(always)]
+    fn fin(a: Self::Acc) -> Self {
+        Fu { v: a.0, d: a.1 }
+    }
+    #[inline(always)]
+    fn dmat_apply<const B: usize>(d: &DMat<B>, f: &Fl<Self, B>) -> Fl<Self, B> {
+        let mut av = [V8::zero(); B];
+        let mut ad = [V8::zero(); B];
+        for jb in 0..B {
+            for jl in 0..8 {
+                let sv = f.0[jb].v.bcast(jl);
+                let sd = f.0[jb].d.bcast(jl);
+                let col = &d.cols64[8 * jb + jl];
+                for b in 0..B {
+                    av[b] = sv.fma(col[b], av[b]);
+                    ad[b] = sd.fma(col[b], ad[b]);
+                }
+            }
+        }
+        let mut out = [Fu::zero(); B];
+        for b in 0..B {
+            out[b] = Fu { v: av[b], d: ad[b] };
+        }
+        Fl(out)
+    }
+}
+
+
+/// Dual number with a double-double value and N plain-f64 tangents: the base trajectory to double-double accuracy,
+/// computed once for N Jacobian columns.
+#[derive(Clone, Copy, Debug)]
+pub struct Dtn<const N: usize> {
+    pub v: DV,
+    pub d: [V8; N],
+}
+
+impl<const N: usize> Add for Dtn<N> {
+    type Output = Self;
+    #[inline(always)]
+    fn add(self, o: Self) -> Self {
+        let mut d = self.d;
+        for i in 0..N {
+            d[i] = self.d[i].add(o.d[i]);
+        }
+        Dtn { v: self.v + o.v, d }
+    }
+}
+impl<const N: usize> Sub for Dtn<N> {
+    type Output = Self;
+    #[inline(always)]
+    fn sub(self, o: Self) -> Self {
+        let mut d = self.d;
+        for i in 0..N {
+            d[i] = self.d[i].sub(o.d[i]);
+        }
+        Dtn { v: self.v - o.v, d }
+    }
+}
+impl<const N: usize> Neg for Dtn<N> {
+    type Output = Self;
+    #[inline(always)]
+    fn neg(self) -> Self {
+        let mut d = self.d;
+        for i in 0..N {
+            d[i] = V8::zero().sub(self.d[i]);
+        }
+        Dtn { v: -self.v, d }
+    }
+}
+impl<const N: usize> Mul for Dtn<N> {
+    type Output = Self;
+    #[inline(always)]
+    fn mul(self, o: Self) -> Self {
+        let mut d = self.d;
+        for i in 0..N {
+            d[i] = self.v.hi.fma(o.d[i], self.d[i].mul(o.v.hi));
+        }
+        Dtn { v: self.v * o.v, d }
+    }
+}
+impl<const N: usize> Div for Dtn<N> {
+    type Output = Self;
+    #[inline(always)]
+    fn div(self, o: Self) -> Self {
+        // d_i = (d_i - q o.d_i) / o.v, as in Fu
+        let q = self.v / o.v;
+        let mut d = self.d;
+        for i in 0..N {
+            d[i] = V8::zero().sub(q.hi.fms(o.d[i], self.d[i])).div(o.v.hi);
+        }
+        Dtn { v: q, d }
+    }
+}
+
+impl<const N: usize> Lane for Dtn<N> {
+    type Acc = (DotAcc, [V8; N]);
+    const TANGENT: bool = true;
+    const TAN_F64: bool = true;
+    const NT: usize = N;
+    #[inline(always)]
+    fn zero() -> Self {
+        Dtn { v: DV::zero(), d: [V8::zero(); N] }
+    }
+    #[inline(always)]
+    fn cst(c: DV) -> Self {
+        Dtn { v: c, d: [V8::zero(); N] }
+    }
+    #[inline(always)]
+    fn mulc(self, c: DV) -> Self {
+        Dtn { v: self.v * c, d: self.d.map(|x| x.mul(c.hi)) }
+    }
+    #[inline(always)]
+    fn mulf(self, s: f64) -> Self {
+        let c = V8::splat(s);
+        Dtn { v: self.v.mul_f(s), d: self.d.map(|x| x.mul(c)) }
+    }
+    #[inline(always)]
+    fn addc(self, c: DV) -> Self {
+        Dtn { v: self.v + c, d: self.d }
+    }
+    #[inline(always)]
+    fn bcast(self, j: usize) -> Self {
+        Dtn { v: self.v.bcast(j), d: self.d.map(|x| x.bcast(j)) }
+    }
+    #[inline(always)]
+    fn val(self) -> DV {
+        self.v
+    }
+    /// the first tangent
+    #[inline(always)]
+    fn tan(self) -> DV {
+        DV { hi: self.d[0], lo: V8::zero() }
+    }
+    /// value v, first tangent t, the others zero
+    #[inline(always)]
+    fn from_vt(v: DV, t: DV) -> Self {
+        let mut d = [V8::zero(); N];
+        d[0] = t.hi;
+        Dtn { v, d }
+    }
+    #[inline(always)]
+    fn acc0() -> Self::Acc {
+        (DotAcc::zero(), [V8::zero(); N])
+    }
+    #[inline(always)]
+    fn acc(a: Self::Acc, x: Self, y: Self) -> Self::Acc {
+        let mut d = a.1;
+        for i in 0..N {
+            d[i] = x.v.hi.fma(y.d[i], x.d[i].fma(y.v.hi, a.1[i]));
+        }
+        (a.0.add_prod(x.v, y.v), d)
+    }
+    #[inline(always)]
+    fn accc(a: Self::Acc, x: Self, c: DV) -> Self::Acc {
+        let mut d = a.1;
+        for i in 0..N {
+            d[i] = x.d[i].fma(c.hi, a.1[i]);
+        }
+        (a.0.add_prod(x.v, c), d)
+    }
+    #[inline(always)]
+    fn acc1(a: Self::Acc, x: Self) -> Self::Acc {
+        let mut d = a.1;
+        for i in 0..N {
+            d[i] = a.1[i].add(x.d[i]);
+        }
+        (a.0.add(x.v), d)
+    }
+    #[inline(always)]
+    fn fin(a: Self::Acc) -> Self {
+        Dtn { v: a.0.finish(), d: a.1 }
+    }
+    #[inline(always)]
+    fn dmat_apply<const B: usize>(dm: &DMat<B>, f: &Fl<Self, B>) -> Fl<Self, B> {
+        let mut av = [DotAcc::zero(); B];
+        let mut ad = [[V8::zero(); N]; B];
+        for jb in 0..B {
+            for jl in 0..8 {
+                let sv = f.0[jb].v.bcast(jl);
+                let sd = f.0[jb].d.map(|x| x.bcast(jl));
+                let col = &dm.cols[8 * jb + jl];
+                let col64 = &dm.cols64[8 * jb + jl];
+                for b in 0..B {
+                    av[b] = av[b].add_prod(sv, col.0[b]);
+                    for i in 0..N {
+                        ad[b][i] = sd[i].fma(col64[b], ad[b][i]);
+                    }
+                }
+            }
+        }
+        let mut out = [Self::zero(); B];
+        for b in 0..B {
+            out[b] = Dtn { v: av[b].finish(), d: ad[b] };
+        }
+        Fl(out)
+    }
+    #[inline(always)]
+    fn tan64(self, k: usize) -> V8 {
+        self.d[k]
+    }
+    #[inline(always)]
+    fn set_tan64(&mut self, k: usize, t: V8) {
+        self.d[k] = t;
     }
 }

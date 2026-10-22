@@ -16,7 +16,7 @@
 use crate::dd::DD;
 use crate::dv::DV;
 use crate::field::{cs, cs_range, cs_w, horner, DMat, Fl, State};
-use crate::lane::{Du, Lane};
+use crate::lane::{Dtn, Du, F8, Fu, Lane};
 use crate::linalg::{ld_for, DDLu};
 use rayon::prelude::*;
 
@@ -48,6 +48,10 @@ pub struct Ctx<const B: usize> {
     /// Growth rate for the mode matrix: with lam != 0, every tau-derivative of a tangent (perturbation) gains + lam
     /// (perturbations ~ exp(lam tau)); values are unaffected. Zero for the residual and the ordinary Jacobian.
     pub lam: DD,
+    /// Deliberate breakage of the f64 lanes only (`jacobian_f64`), for the control of the Jacobian-agreement check
+    /// (hp/mixed_check.py --mutate): 0 none, 1 no tau derivative, 2 omega scaled by 1 + 1e-9, 3 the horizon solves'
+    /// kappa tangent term dropped. The double-double lanes never read it.
+    pub mutate: u8,
 }
 
 impl<const B: usize> Ctx<B> {
@@ -111,8 +115,22 @@ fn recip_int(k: usize) -> DD {
 /// d/dtau = omega D, plus lam on the tangent part (perturbations ~ exp(lam tau); see Ctx::lam).
 #[inline(always)]
 fn dtau<T: Lane, const B: usize>(ctx: &Ctx<B>, x: &Fl<T, B>, omega: T) -> Fl<T, B> {
+    if T::TAN_F64 && ctx.mutate == 1 {
+        return Fl::zero();
+    }
     let r = ctx.d.apply(x).mul_t(omega);
     if T::TANGENT && ctx.lam.hi != 0.0 {
+        if T::TAN_F64 {
+            // every f64 tangent gains lam (hi part) times itself
+            let (mut r, l) = (r, crate::v8::V8::splat(ctx.lam.hi));
+            for b in 0..B {
+                for k in 0..T::NT {
+                    let t = x.0[b].tan64(k).fma(l, r.0[b].tan64(k));
+                    r.0[b].set_tan64(k, t);
+                }
+            }
+            return r;
+        }
         r + Fl::from_vt(&Fl::zero(), &x.tan().muls(ctx.lam))
     } else {
         r
@@ -357,9 +375,43 @@ pub fn horizon_lus<const B: usize>(ctx: &Ctx<B>, a0: &Fl<DV, B>, delta: DD, par:
     }
 }
 
+/// f64 tangent k of a field (TAN_F64 lanes) as an f64 field
+#[inline(always)]
+fn tan_f8<T: Lane, const B: usize>(x: &Fl<T, B>, k: usize) -> Fl<F8, B> {
+    let mut r = [F8(crate::v8::V8::zero()); B];
+    for b in 0..B {
+        r[b] = F8(x.0[b].tan64(k));
+    }
+    Fl(r)
+}
+
 /// (omega D + diag kappa) f = r with the LU at the values; for tangents the derivative of the system:
 /// A_t f_d = r_d - omega_d D f_v - kappa_d f_v, with A_t = A + lam (lu_t; the same LU when lam = 0).
 fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, lu: &DDLu, lu_t: &DDLu, kappa: &Fl<T, B>, rhs: &Fl<T, B>, omega: T) -> Fl<T, B> {
+    if T::VAL_F64 || T::TAN_F64 {
+        // f64 values: the value solve in plain f64 with the hi parts of the double-double LU factors; f64 tangents:
+        // each tangent's solve likewise
+        let fv = if T::VAL_F64 { lu.solve_lanes_hi(&rhs.val()) } else { lu.solve_lanes(&rhs.val()) };
+        let z = Fl::<DV, B>::zero();
+        let mut out = Fl::<T, B>::from_vt(&fv, &z);
+        if !T::TANGENT {
+            return out;
+        }
+        let fv8 = Fl::<F8, B>::from_vt(&fv, &z);
+        let dfv = ctx.d.apply(&fv8);
+        for k in 0..T::NT {
+            let od = F8(omega.tan64(k));
+            let mut r = tan_f8(rhs, k) - dfv.mul_t(od);
+            if ctx.mutate != 3 {
+                r = r - tan_f8(kappa, k) * fv8;
+            }
+            let fd = lu_t.solve_lanes_hi(&r.val());
+            for b in 0..B {
+                out.0[b].set_tan64(k, fd.0[b].hi);
+            }
+        }
+        return out;
+    }
     let fv = lu.solve_lanes(&rhs.val());
     if !T::TANGENT {
         return Fl::from_vt(&fv, &Fl::zero());
@@ -466,7 +518,10 @@ pub fn horizon_state<T: Lane, const B: usize>(ctx: &Ctx<B>, m0: &Fl<T, B>, a0: &
 // blocks, residual, Jacobian
 // ---------------------------------------------------------------------------------------------------------------
 pub fn block_state<T: Lane, const B: usize>(ctx: &Ctx<B>, b: usize, inp: &[Fl<T, B>], delta: T, lus: &[DDLu], lus_t: &[DDLu]) -> State<T, B> {
-    let omega = T::splat(DD::TWO_PI) / delta;
+    let mut omega = T::splat(DD::TWO_PI) / delta;
+    if T::TAN_F64 && ctx.mutate == 2 {
+        omega = omega.mulf(1.0 + 1e-9);
+    }
     let k = ctx.k();
     if b == 0 {
         centre_state(ctx, &inp[0], &inp[1], omega)
@@ -526,6 +581,156 @@ pub fn residual<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool)
 
 /// Exact Jacobian dF/dz by forward-mode duals, column-major with leading dimension ld_for(L): (hi, lo, ld).
 pub fn jacobian<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool) -> Result<(Vec<f64>, Vec<f64>, usize), String> {
+    jacobian_lanes::<Du, B>(ctx, zh, zl, par)
+}
+
+/// The Jacobian in plain f64 (the same columns with `Fu` lanes: constants and the base state rounded to f64, the
+/// horizon solves with the hi parts of the double-double LU factors), column-major with leading dimension
+/// ld_for(L): (J, ld). For the mixed-precision Newton step (double-double residual, f64 Jacobian).
+pub fn jacobian_f64<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool) -> Result<(Vec<f64>, usize), String> {
+    let (jh, _, ld) = jacobian_lanes::<Fu, B>(ctx, zh, zl, par)?;
+    Ok((jh, ld))
+}
+
+/// The f64 Jacobian with `Dtn<N>` lanes: a double-double base trajectory and N f64 tangents per evaluation (N
+/// columns of one block at a time), column-major with leading dimension ld_for(L): (J, ld).
+pub fn jacobian_dtn<const N: usize, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool) -> Result<(Vec<f64>, usize), String> {
+    let (jh, _, ld) = jacobian_lanes::<Dtn<N>, B>(ctx, zh, zl, par)?;
+    Ok((jh, ld))
+}
+
+/// Several column tasks of one block from one evaluation with T::NT f64 tangents (TAN_F64 lanes): tangent k carries
+/// task g[k]; unused tangents stay zero. Returns the columns in the order of g.
+pub fn jac_columns_n<T: Lane, const B: usize>(
+    ctx: &Ctx<B>,
+    zh: &[f64],
+    zl: &[f64],
+    delta: DD,
+    lus: &[DDLu],
+    lus_t: &[DDLu],
+    g: &[(usize, usize, usize)],
+) -> Vec<Vec<DD>> {
+    assert!(T::TAN_F64 && !g.is_empty() && g.len() <= T::NT && g.iter().all(|t| t.0 == g[0].0));
+    let m = Ctx::<B>::M;
+    let b = g[0].0;
+    let z = Fl::<DV, B>::zero();
+    let inp: Vec<Fl<T, B>> = ctx
+        .block_inputs(b)
+        .iter()
+        .enumerate()
+        .map(|(fi, &o)| {
+            let mut x = Fl::<T, B>::from_vt(&ctx.fld(zh, zl, o), &z);
+            for (k, &(_, f, j)) in g.iter().enumerate() {
+                if f == fi {
+                    let mut e = [0.0; 8];
+                    e[j % 8] = 1.0;
+                    x.0[j / 8].set_tan64(k, crate::v8::V8::from_array(e));
+                }
+            }
+            x
+        })
+        .collect();
+    let mut d = T::from_vt(DV::splat(delta), DV::zero());
+    for (k, t) in g.iter().enumerate() {
+        if t.1 == usize::MAX {
+            d.set_tan64(k, crate::v8::V8::splat(1.0));
+        }
+    }
+    let s = block_state::<T, B>(ctx, b, &inp, d, lus, lus_t);
+    (0..g.len())
+        .map(|k| {
+            let mut out = Vec::with_capacity(4 * m);
+            for q in 0..4 {
+                let mut t = Fl::<DV, B>::zero();
+                for bb in 0..B {
+                    t.0[bb].hi = s[q].0[bb].tan64(k);
+                }
+                if let (true, 0, Some((lo, _))) = (b == ctx.k(), q, &ctx.freeze) {
+                    t = lo.apply(&t);
+                }
+                for i in 0..m {
+                    out.push(t.get(i));
+                }
+            }
+            out
+        })
+        .collect()
+}
+
+/// a[idx] = f(a[idx]) on a (hi, lo) matrix; an empty lo means lo parts zero and not kept
+#[inline(always)]
+fn upd(jh: &mut [f64], jl: &mut [f64], idx: usize, f: impl Fn(DD) -> DD) {
+    let keep = !jl.is_empty();
+    let v = f(DD { hi: jh[idx], lo: if keep { jl[idx] } else { 0.0 } });
+    jh[idx] = v.hi;
+    if keep {
+        jl[idx] = v.lo;
+    }
+}
+
+/// The Jacobian's column tasks: (block, input field index or usize::MAX for Delta, lane).
+pub fn jac_tasks<const B: usize>(ctx: &Ctx<B>) -> Vec<(usize, usize, usize)> {
+    let mut tasks: Vec<(usize, usize, usize)> = Vec::new();
+    for b in 0..ctx.k() + 1 {
+        let ins = ctx.block_inputs(b);
+        for f in 0..ins.len() {
+            for j in 0..Ctx::<B>::M {
+                tasks.push((b, f, j));
+            }
+        }
+        tasks.push((b, usize::MAX, 0));
+    }
+    tasks
+}
+
+/// One column task: block b's output state (4M values, before the -1 of the target node) differentiated along a
+/// unit tangent on lane j of input field f (Delta for f = usize::MAX), with dual lanes T.
+pub fn jac_column<T: Lane, const B: usize>(
+    ctx: &Ctx<B>,
+    zh: &[f64],
+    zl: &[f64],
+    delta: DD,
+    lus: &[DDLu],
+    lus_t: &[DDLu],
+    (b, f, j): (usize, usize, usize),
+) -> Vec<DD> {
+    let m = Ctx::<B>::M;
+    let ins = ctx.block_inputs(b);
+    let inp: Vec<Fl<T, B>> = ins
+        .iter()
+        .enumerate()
+        .map(|(fi, &o)| {
+            let v = ctx.fld(zh, zl, o);
+            let mut t = Fl::<DV, B>::zero();
+            if fi == f {
+                let mut th = vec![0.0; m];
+                let tl = vec![0.0; m];
+                th[j] = 1.0;
+                t = Fl::load(&th, &tl);
+            }
+            Fl::<T, B>::from_vt(&v, &t)
+        })
+        .collect();
+    let dt = if f == usize::MAX { DV::splat(DD::ONE) } else { DV::zero() };
+    let d = T::from_vt(DV::splat(delta), dt);
+    let s = block_state::<T, B>(ctx, b, &inp, d, lus, lus_t);
+    let mut out = Vec::with_capacity(4 * m);
+    for q in 0..4 {
+        let mut t = s[q].tan();
+        if let (true, 0, Some((lo, _))) = (b == ctx.k(), q, &ctx.freeze) {
+            t = lo.apply(&t);
+        }
+        for i in 0..m {
+            out.push(t.get(i));
+        }
+    }
+    out
+}
+
+/// Jacobian columns by forward-mode duals of the dual lane type T (one evaluation per column, a unit tangent on one
+/// unknown), assembled column-major with leading dimension ld_for(L): (hi, lo, ld). Du: the exact double-double
+/// Jacobian. Fu: f64; lo is then empty.
+fn jacobian_lanes<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool) -> Result<(Vec<f64>, Vec<f64>, usize), String> {
     let l = ctx.len();
     let m = Ctx::<B>::M;
     let ld = ld_for(l);
@@ -533,57 +738,37 @@ pub fn jacobian<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool)
     let lus = horizon_lus(ctx, &ctx.fld(zh, zl, ctx.off_ah()), delta, par, DD::ZERO)?;
     let lus_t = if ctx.lam.hi != 0.0 { horizon_lus(ctx, &ctx.fld(zh, zl, ctx.off_ah()), delta, par, ctx.lam)? } else { lus.clone() };
     let nb = ctx.k() + 1;
-    // tasks: (block, input field index or usize::MAX for Delta, lane)
-    let mut tasks: Vec<(usize, usize, usize)> = Vec::new();
-    for b in 0..nb {
-        let ins = ctx.block_inputs(b);
-        for f in 0..ins.len() {
-            for j in 0..m {
-                tasks.push((b, f, j));
+    let tasks = jac_tasks(ctx);
+    let cols: Vec<Vec<DD>> = if T::TAN_F64 && T::NT > 1 {
+        // several tangents per evaluation: the tasks of each block in groups of NT, in task order
+        let mut groups: Vec<Vec<(usize, usize, usize)>> = Vec::new();
+        for &t in &tasks {
+            match groups.last_mut() {
+                Some(g) if g.len() < T::NT && g[0].0 == t.0 => g.push(t),
+                _ => groups.push(vec![t]),
             }
         }
-        tasks.push((b, usize::MAX, 0));
-    }
-    let column = |&(b, f, j): &(usize, usize, usize)| -> Vec<DD> {
-        let ins = ctx.block_inputs(b);
-        let inp: Vec<Fl<Du, B>> = ins
-            .iter()
-            .enumerate()
-            .map(|(fi, &o)| {
-                let v = ctx.fld(zh, zl, o);
-                let mut t = Fl::<DV, B>::zero();
-                if fi == f {
-                    let mut th = vec![0.0; m];
-                    let tl = vec![0.0; m];
-                    th[j] = 1.0;
-                    t = Fl::load(&th, &tl);
-                }
-                Fl::<Du, B>::from_vt(&v, &t)
-            })
-            .collect();
-        let dt = if f == usize::MAX { DV::splat(DD::ONE) } else { DV::zero() };
-        let d = Du { v: DV::splat(delta), d: dt };
-        let s = block_state::<Du, B>(ctx, b, &inp, d, &lus, &lus_t);
-        let mut out = Vec::with_capacity(4 * m);
-        for q in 0..4 {
-            let mut t = s[q].tan();
-            if let (true, 0, Some((lo, _))) = (b == ctx.k(), q, &ctx.freeze) {
-                t = lo.apply(&t);
-            }
-            for i in 0..m {
-                out.push(t.get(i));
-            }
+        let group = |g: &Vec<(usize, usize, usize)>| jac_columns_n::<T, B>(ctx, zh, zl, delta, &lus, &lus_t, g);
+        let gc: Vec<Vec<Vec<DD>>> = if par { groups.par_iter().map(group).collect() } else { groups.iter().map(group).collect() };
+        gc.into_iter().flatten().collect()
+    } else {
+        let column = |t: &(usize, usize, usize)| -> Vec<DD> { jac_column::<T, B>(ctx, zh, zl, delta, &lus, &lus_t, *t) };
+        if par {
+            tasks.par_iter().map(column).collect()
+        } else {
+            tasks.iter().map(column).collect()
         }
-        out
     };
-    let cols: Vec<Vec<DD>> = if par { tasks.par_iter().map(column).collect() } else { tasks.iter().map(column).collect() };
+    let keep_lo = !T::TAN_F64;
     let mut jh = vec![0.0; ld * l];
-    let mut jl = vec![0.0; ld * l];
+    let mut jl = if keep_lo { vec![0.0; ld * l] } else { Vec::new() };
     for (&(b, f, j), col) in tasks.iter().zip(&cols) {
         let c = if f == usize::MAX { l - 1 } else { ctx.block_inputs(b)[f] + j };
         for (r, v) in col.iter().enumerate() {
             jh[c * ld + b * 4 * m + r] = v.hi;
-            jl[c * ld + b * 4 * m + r] = v.lo;
+            if keep_lo {
+                jl[c * ld + b * 4 * m + r] = v.lo;
+            }
         }
     }
     for b in 0..nb {
@@ -592,27 +777,177 @@ pub fn jacobian<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool)
             if let (true, Some((lo, hi))) = (b == ctx.k() && r < m, &ctx.freeze) {
                 // p rows of the horizon block: -Pi_low on the target node's p, +Pi_high on p1
                 for j in 0..m {
-                    let idx = (t + j) * ld + b * 4 * m + r;
-                    let v = DD { hi: jh[idx], lo: jl[idx] } - lo.cols[j].get(r);
-                    jh[idx] = v.hi;
-                    jl[idx] = v.lo;
-                    let idx = j * ld + b * 4 * m + r;
-                    let v = DD { hi: jh[idx], lo: jl[idx] } + hi.cols[j].get(r);
-                    jh[idx] = v.hi;
-                    jl[idx] = v.lo;
+                    upd(&mut jh, &mut jl, (t + j) * ld + b * 4 * m + r, |v| v - lo.cols[j].get(r));
+                    upd(&mut jh, &mut jl, j * ld + b * 4 * m + r, |v| v + hi.cols[j].get(r));
                 }
                 continue;
             }
-            let idx = (t + r) * ld + b * 4 * m + r;
-            let v = DD { hi: jh[idx], lo: jl[idx] } - DD::ONE;
-            jh[idx] = v.hi;
-            jl[idx] = v.lo;
+            upd(&mut jh, &mut jl, (t + r) * ld + b * 4 * m + r, |v| v - DD::ONE);
         }
     }
     for i in 0..m {
         let w = ctx.phase.get(i);
         jh[i * ld + l - 1] = w.hi;
-        jl[i * ld + l - 1] = w.lo;
+        if keep_lo {
+            jl[i * ld + l - 1] = w.lo;
+        }
     }
     Ok((jh, jl, ld))
+}
+
+/// A solver context read from a file written by hp/dump_ctx.py (Rust benches and data-driven tests).
+#[cfg(test)]
+pub(crate) mod ctxfile {
+    use super::*;
+
+    pub fn read(path: &str) -> Vec<f64> {
+        let b = std::fs::read(path).unwrap_or_else(|e| panic!("{path}: {e}"));
+        b.chunks(8).map(|c| f64::from_le_bytes(c.try_into().unwrap())).collect()
+    }
+
+    pub fn m_of(v: &[f64]) -> usize {
+        v[0] as usize
+    }
+
+    /// (ctx, zh, zl)
+    pub fn load<const B: usize>(v: &[f64]) -> (Ctx<B>, Vec<f64>, Vec<f64>) {
+        let m = v[0] as usize;
+        assert_eq!(m, 8 * B);
+        let n = DD::new(v[1], v[2]);
+        let (kt, kc, ks, k) = (v[3] as usize, v[4] as usize, v[5] as usize, v[6] as usize);
+        let mut i = 7;
+        let nodes = v[i..i + k].to_vec();
+        i += k;
+        let mut segs = Vec::new();
+        for _ in 0..k - 1 {
+            let len = v[i] as usize;
+            segs.push(v[i + 1..i + 1 + len].to_vec());
+            i += 1 + len;
+        }
+        let d = DMat::<B>::from_rows(&v[i..i + m * m], &v[i + m * m..i + 2 * m * m]);
+        i += 2 * m * m;
+        let phase = Fl::<DV, B>::load(&v[i..i + m], &v[i + m..i + 2 * m]);
+        i += 2 * m;
+        let l = v[i] as usize;
+        let zh = v[i + 1..i + 1 + l].to_vec();
+        let zl = v[i + 1 + l..i + 1 + 2 * l].to_vec();
+        let ctx = Ctx::<B> { n, d, phase, nodes, segs, kt, kc, ks, freeze: None, match_node: k - 1, lam: DD::ZERO, mutate: 0 };
+        assert_eq!(ctx.len(), l);
+        (ctx, zh, zl)
+    }
+}
+
+#[cfg(test)]
+mod bench {
+    use super::*;
+    use crate::field::cs;
+    use std::time::Instant;
+
+    /// seconds per column for the sample tasks (one block), one evaluation per column (T::NT <= 1) or groups of
+    /// T::NT columns per evaluation (the sample is then extended to whole groups of consecutive lanes)
+    fn time_cols<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], lus: &[DDLu], tasks: &[(usize, usize, usize)]) -> f64 {
+        let delta = delta_of(zh, zl);
+        let mut s = 0.0;
+        let t0 = Instant::now();
+        let n = if T::TAN_F64 && T::NT > 1 {
+            let mut n = 0;
+            for g in tasks.chunks(T::NT) {
+                s += jac_columns_n::<T, B>(ctx, zh, zl, delta, lus, lus, g)[0][3].hi;
+                n += g.len();
+            }
+            n
+        } else {
+            for &t in tasks {
+                s += jac_column::<T, B>(ctx, zh, zl, delta, lus, lus, t)[3].hi;
+            }
+            tasks.len()
+        };
+        assert!(s.is_finite());
+        t0.elapsed().as_secs_f64() / n as f64
+    }
+
+    fn prim<T: Lane, const B: usize>(ctx: &Ctx<B>, name: &str) {
+        let mut f = Fl::<T, B>::zero();
+        for b in 0..B {
+            f.0[b] = T::splat(DD::from_f64(0.1 + b as f64 * 0.01));
+        }
+        let reps = 20000;
+        let t0 = Instant::now();
+        for _ in 0..reps {
+            f = ctx.d.apply(&f).mulf(0.01);
+        }
+        let t_apply = t0.elapsed().as_secs_f64() / reps as f64;
+        let xs: Vec<Fl<T, B>> = (0..40).map(|k| f.mulf(1.0 / (k + 1) as f64)).collect();
+        let t0 = Instant::now();
+        let mut acc = Fl::<T, B>::zero();
+        for _ in 0..reps / 10 {
+            for k in 0..36 {
+                acc = acc + cs(&xs, &xs, k);
+            }
+        }
+        let t_cs = t0.elapsed().as_secs_f64() / (reps / 10 * 36) as f64;
+        let per = T::NT.max(1) as f64;
+        println!(
+            "  {name:6}: DMat::apply {:.2} us, cs (k = 0..35, mean) {:.3} us; per tangent {:.2} / {:.3} us   [{:.1e}]",
+            t_apply * 1e6,
+            t_cs * 1e6,
+            t_apply * 1e6 / per,
+            t_cs * 1e6 / per,
+            acc.val().amax()
+        );
+    }
+
+    fn run<const B: usize>(v: &[f64]) {
+        let (ctx, zh, zl) = ctxfile::load::<B>(v);
+        let delta = delta_of(&zh, &zl);
+        let lus = horizon_lus(&ctx, &ctx.fld(&zh, &zl, ctx.off_ah()), delta, false, DD::ZERO).unwrap();
+        println!("M = {}, L = {}, single thread; seconds for all columns of a block (from a sample)", 8 * B, ctx.len());
+        prim::<Du, B>(&ctx, "Du");
+        prim::<Fu, B>(&ctx, "Fu");
+        prim::<Dtn<1>, B>(&ctx, "Dtn<1>");
+        prim::<Dtn<4>, B>(&ctx, "Dtn<4>");
+        prim::<Dtn<8>, B>(&ctx, "Dtn<8>");
+        let all = jac_tasks(&ctx);
+        let nb = ctx.k() + 1;
+        let names = ["Du", "Fu", "Dtn<1>", "Dtn<4>", "Dtn<8>", "Dtn<16>"];
+        let mut tot = [0.0; 6];
+        for b in 0..nb {
+            let ncol = all.iter().filter(|t| t.0 == b).count() as f64;
+            // 16 consecutive lanes of the first input field (and Delta for the per-column lanes)
+            let sample: Vec<(usize, usize, usize)> = all.iter().filter(|t| t.0 == b && t.1 == 1 && t.2 < 16).cloned().collect();
+            let ts = [
+                time_cols::<Du, B>(&ctx, &zh, &zl, &lus, &sample[..4]),
+                time_cols::<Fu, B>(&ctx, &zh, &zl, &lus, &sample[..8]),
+                time_cols::<Dtn<1>, B>(&ctx, &zh, &zl, &lus, &sample[..4]),
+                time_cols::<Dtn<4>, B>(&ctx, &zh, &zl, &lus, &sample[..8]),
+                time_cols::<Dtn<8>, B>(&ctx, &zh, &zl, &lus, &sample),
+                time_cols::<Dtn<16>, B>(&ctx, &zh, &zl, &lus, &sample),
+            ];
+            let steps = if b > 0 && b < ctx.k() { ctx.segs[b - 1].len() - 1 } else { 0 };
+            let mut line = format!("  block {b:2} ({ncol} columns, {steps:2} steps):");
+            for i in 0..6 {
+                tot[i] += ts[i] * ncol;
+                line += &format!(" {} {:6.3}", names[i], ts[i] * ncol);
+            }
+            println!("{line}");
+        }
+        let mut line = String::from("  total (one thread):");
+        for i in 0..6 {
+            line += &format!(" {} {:.2} s ({:.1}x)", names[i], tot[i], tot[0] / tot[i]);
+        }
+        println!("{line}");
+    }
+
+    /// cargo test --release --lib bench_jac -- --ignored --nocapture   (env FILE from hp/dump_ctx.py)
+    #[test]
+    #[ignore]
+    fn bench_jac() {
+        let v = ctxfile::read(&std::env::var("FILE").expect("FILE"));
+        match ctxfile::m_of(&v) / 8 {
+            6 => run::<6>(&v),
+            8 => run::<8>(&v),
+            10 => run::<10>(&v),
+            b => panic!("B = {b} not built into the bench"),
+        }
+    }
 }
