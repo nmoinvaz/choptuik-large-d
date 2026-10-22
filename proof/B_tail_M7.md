@@ -16,7 +16,32 @@ Scripts (all new; nothing existing was changed):
 - `solver/proof/trunc_seq_M7.py`: the truncation sequence, ratios, coupling and limit estimates.
 - `solver/proof/amp_trunc_hiermodel.py`: the amplitude expansion of `hier.py`'s own M-harmonic model (§4).
 
-PLACEHOLDER-SUMMARY
+## Summary
+
+- **M = 7 is now affordable, but its zero was not obtained.** A compiled backend (equal to scipy's to scipy's own
+  noise, 15–20× faster) and a lazy residual (no expensive arc at ξ = 0.2 while the top harmonic approaches; every entry
+  `hier.py` reads is bit-identical) cut the first cold level-5 solve at M = 7 from more than 5 hours on the 8-thread
+  machine to 6 minutes on a loaded cloud core (§1). The pilot, a fixed-(A, ω) solve at the M = 5 zero, tunes harmonics 5
+  and 7 to their noise floors: F₅ moves onto the untruncated value (0.003104 + 0.000557i against 0.00310 + 0.00056i), and
+  |F₇/F₅| = 0.0573 against the untruncated ρ_*² = 0.0574 (§2). Its level-3 Newton stalls at |r₃| ≈ 9, so r₁ is not
+  resolved, c₇ is not known, and B_tail.md's prediction 0.99997–1.00017 is untested. PLACEHOLDER-DIAGSUM A local task
+  (three jobs on 6 threads, about an hour) is proposed in §3.1.
+- **A correction to B_tail.md §4.** `hier.py`'s model is a Galerkin truncation too; `amp_trunc.py`'s projection drops the
+  even harmonic M + 1, which `hier.py` keeps. The amplitude expansion of `hier.py`'s own model (`amp_trunc_hiermodel.py`)
+  is exact through σ_M, as order counting predicts, and changes σ₄ by 0.12% at M = 3 where `amp_trunc.py` gives −399. The
+  lowest-order increments fall by 0.035 per pair (M = 1 → 3) (§4).
+- **The tail lemma, stated** (§5): for consecutive jump-conditioned truncations, in X_σ and its dual, as a profile bound
+  (T1), a coupling bound (T2) and consistency (T3), or in ratio form (R). A ratio κ ≤ ¼ per pair, enough with M = 7
+  explicit, needs (T2) for some σ ≤ 0.736.
+- **Proved by hand** (§6, §8.2): Lemma R (the Schur-corrected residual has exactly the zeros of the jump-conditioned
+  multiplier, and the 10¹⁷ couplings of `hier.py` cancel exactly in its Schur complement; *conditional* on the jump
+  determining the multipliers), Lemma O (order counting: the M-model is exact through σ_M, `amp_trunc.py`'s through
+  σ_{M−1}), Lemma L (the lowest-order increment is linear in the tail), Lemma C (telescoping), identity H (the increment
+  as an integral of a Schur-complement coupling), Lemma W (the weight e^{πνω/2} cancels exactly in every tuning step).
+- **The inequality that needs a new idea** (§8.4): (★), a bound on the linearized coupling uniform in the harmonic, in
+  X_σ* with σ ≤ 0.736; geometrically, a representation of the tuned linear response along paths within 5.5° of the Stokes
+  line (the linear weights come from the anti-Stokes line at 45°). The data put the coupling at g₅ = 1.21 per pair
+  (effective σ ≈ 0.1). The attempt through Lemma W stops at the conditional convergence of its Darboux sums.
 
 ## 1. Making M = 7 affordable
 
@@ -485,3 +510,32 @@ python3 trunc_seq_M7.py --planted --mutate=nocorr # FAIL (exit 1)
 python3 trunc_seq_M7.py --amp                     # Delta sigma_2, Delta sigma_4 and their ratio 0.0347 (§4)
 python3 amp_trunc_hiermodel.py 3 9 500            # sigma_4^[3] = -0.0288364238 + 0.0108028097i (~35 min here)
 ```
+
+## 11. Proposed text (for the coordinator; README.md, PROOF.md and B_tail.md were not edited)
+
+**README.md**, "The inner problem at large x", *Five harmonics* bullet: replace the last sentence ("M = 7 is still out
+of reach: … so the truncation sequence stops at M = 5.") by
+
+> M = 7 is now affordable but not yet converged. On a compiled backend (`inner_stokes/inner_nb.py`: the same series and
+> the same DOP853 integrator, 15–20× faster) with lazy radii (`hier_nb.py`), the first cold level-5 solve, which had not
+> finished in 5 hours, takes 6 minutes. At the M = 5 zero, harmonic 7 moves F₅/F₁ to 0.003104 + 0.000557i, the
+> untruncated value, with |F₇/F₅| = 0.0573; the level-3 solve there stops at |r₃| ≈ 9, so the M = 7 zero is still open
+> ([proof/B_tail_M7.md](proof/B_tail_M7.md)).
+
+**PROOF.md** §4, end of the A.3 *Status* paragraph, add:
+
+> Since then ([proof/B_tail_M7.md](proof/B_tail_M7.md)): the tail lemma is stated for consecutive jump-conditioned
+> truncations; proved are that hier's Schur-corrected residual has exactly the zeros of the jump-conditioned multiplier
+> (the 10¹⁷ couplings cancel in its Schur complement), that the M-harmonic model is exact through σ_M in the amplitude
+> expansion, and that the weight e^{πνω/2} cancels exactly in every tuning step. A ratio of ¼ per pair needs the
+> linearized coupling bounded in X_σ* with σ ≤ 0.736, uniformly in the harmonic; that inequality is the open part.
+
+**B_tail.md** §4, after "…not for a Galerkin projection of the equations.", add:
+
+> (Correction: `hier.py`'s model is also a Galerkin truncation; it differs from `amp_trunc.py`'s in keeping the even
+> harmonic M + 1 of c and E. With that harmonic kept, the amplitude expansion changes σ₄ by 0.12% at M = 3 instead of
+> exploding; see [B_tail_M7.md](B_tail_M7.md) §4.)
+
+**check_numbers.py**: two checks with machine-readable sources, if the coordinator quotes these numbers: Δσ₄ of hier's
+M = 3 model (|Δσ₄| = 3.74×10⁻⁵, from `solver/proof/trunc_hier_M3_K9_J500_w1.0000.json` and the README's σ₄), and
+F₅/F₁ = 0.003104 + 0.000557i at M = 7 (from the `F_5/F_1` line of `solver/inner_stokes/logs/hier_nb_M7_pilot_fixA_at_M5zero.log`).
