@@ -18,15 +18,17 @@ Scripts (all new; nothing existing was changed):
 
 ## Summary
 
-- **M = 7 is now affordable, but its zero was not obtained.** A compiled backend (equal to scipy's to scipy's own noise,
-  15–20× faster) and a lazy residual (no expensive arc at ξ = 0.2 while the top harmonic approaches; every entry
-  `hier.py` reads is bit-identical) cut the first cold level-5 solve at M = 7 from more than 5 hours on the 8-thread
-  machine to 6 minutes on a loaded cloud core (§1). The pilot, a fixed-(A, ω) solve at the M = 5 zero, tunes harmonics 5
-  and 7 to their noise floors: F₅ moves onto the untruncated value (0.003104 + 0.000557i against 0.00310 + 0.00056i),
-  and |F₇/F₅| = 0.0573 against the untruncated ρ_*² = 0.0574 (§2). Its level-3 Newton stalls at |r₃| ≈ 9, so r₁ is not
-  resolved, c₇ is not known, and B_tail.md's prediction 0.99997–1.00017 is untested. Why is not settled (FD steps below
-  the noise of the corrected r₃, K's level-5 columns accurate to only 5–10%, or a genuine floor; §2). A local task (three
-  jobs on 6 threads, about an hour) is proposed in §3.1.
+- **The M = 7 zero: ω/ω∞ = 1.000022, A = 2.71922** (estimate ±2×10⁻⁵ in each, from the scatter of repeated solves;
+  numerical evidence, §2). It lies inside B_tail.md's prediction 0.99997–1.00017. The sequence 0.777, 1.0156, 0.999228,
+  1.000022 alternates with ratios −0.069 and −0.049 per pair; the second is the profile decay of the added pair (0.0572)
+  times a coupling of 0.85, inside B_tail.md's 0.78–1.0. The geometric limit is 0.999985 (±2×10⁻⁵), inside the
+  untruncated bracket 0.99915–1.00011, and the M > 7 tail is about 4×10⁻⁵ in ω, 0.25 in r₁ against 3.9 needed for a
+  10⁻³ box (margin 16, as predicted). Getting there needed three things beyond `hier.py`: a compiled backend (15–20×
+  faster, equal to scipy's to scipy's own noise), a residual that avoids a pathological arc while the top harmonic is
+  untuned (lazy radii plus a right-hand-side cap; the first cold level-5 solve went from more than 5 hours to about a
+  minute), and the matching radius ξ₁ = 0.15 instead of 0.2, at which the leakage of harmonics 5 and 7 into r₃ and r₁
+  is small enough for level 3 to converge (§1, §2). `hier.py`'s own level-1 Newton still accepts no outer step at M = 7,
+  so the outer Newton is done over complete fixed-(A, ω) solves (`m7_outer.py`).
 - **A correction to B_tail.md §4.** `hier.py`'s model is a Galerkin truncation too; `amp_trunc.py`'s projection drops the
   even harmonic M + 1, which `hier.py` keeps. The amplitude expansion of `hier.py`'s own model (`amp_trunc_hiermodel.py`)
   is exact through σ_M (M = 1, 3, 5), as order counting predicts, and changes σ₄ by 0.12% at M = 3 where `amp_trunc.py`
@@ -41,8 +43,9 @@ Scripts (all new; nothing existing was changed):
   as an integral of a Schur-complement coupling), Lemma W (the weight e^{πνω/2} cancels exactly in every tuning step).
 - **The inequality that needs a new idea** (§8.4): (★), a bound on the linearized coupling uniform in the harmonic, in
   X_σ* with σ ≤ 0.736; geometrically, a representation of the tuned linear response along paths within 5.5° of the Stokes
-  line (the linear weights come from the anti-Stokes line at 45°). The data put the coupling at g₅ = 1.21 per pair
-  (effective σ ≈ 0.1). The attempt through Lemma W stops at the conditional convergence of its Darboux sums.
+  line (the linear weights come from the anti-Stokes line at 45°). The data put the coupling at g₅ = 1.21 and
+  g₇ = 0.85 per pair (effective σ ≈ 0.1 and below 0). The attempt through Lemma W stops at the conditional convergence of
+  its Darboux sums.
 
 ## 1. Making M = 7 affordable
 
@@ -85,7 +88,7 @@ Two causes, both in the cost of one residual, and two fixes that leave `hier.py`
 
 With both, the first cold level-5 solve at M = 7 took 362 s (229 residuals) under that load.
 
-## 2. The M = 7 pilot: one fixed-(A, ω) solve at the M = 5 zero
+## 2. The M = 7 zero
 
 Command (from `solver/inner_stokes/`; log `logs/hier_nb_M7_pilot_fixA_at_M5zero.log`):
 
@@ -143,79 +146,118 @@ r₁ units: B_tail.md §5 estimated the M > 5 tail at 4–6 in r₁ (at ξ₁ = 
 factor). The profile at M = 7 and p₅, converged: F₃/F₁ = 0.054841 + 0.005441i, F₅/F₁ = 0.003104 + 0.000557i,
 F₇/F₁ = 0.000175 + 0.000045i.
 
-PLACEHOLDER-FULL7
+**The outer Newton.** `hier.py`'s level-1 Newton at ξ₁ = 0.15 accepts no step (`logs/hier_nb_M7_full_xi015*.log`): its
+nested level-3 re-solves after an outer step of 10⁻³ stop at |r₃| ~ 10⁻³, whose leakage into r₁ exceeds the step's
+effect, so every trial is rejected. The outer iteration is therefore done over complete fixed-(A, ω) solves at
+ξ₁ = 0.15 (`m7_outer.py`: forward differences, then Broyden), each converging levels 3, 5 and 7 by `hier.py`'s own rules:
 
-## 3. The truncation sequence, as far as it goes
+| point (A, ω/ω∞) | \|r₃\| at the end | Schur-corrected r₁ | log (`logs/hier_nb_M7_fixA_xi015_…`) |
+|---|---|---|---|
+| p₅ = (2.718579189, 0.999228403) | 2.2×10⁻⁸ | −4.494 − 5.262i | `h3_xi015_at_M5zero` |
+| p₅ + (2×10⁻³, 0) | 3.6×10⁻⁵ | +16.14 − 15.70i | `dA` |
+| p₅ + (0, 10⁻³) | 7.3×10⁻⁵ | −2.741 + 8.398i | `dw` |
+| (2.718926745, 0.999746375), Newton 1 | 8.8×10⁻⁹ | −1.959 − 1.456i | `newton1` |
+| (2.719181867, 1.000012415), Newton 2 | 1.2×10⁻⁷; 9.5×10⁻⁷; 1.5×10⁻⁵ | −0.248 + 0.117i; −0.270 + 0.038i; +0.594 − 0.135i | `newton2`, `…_repeat_a`, `…_repeat_b` |
+| (2.719213648, 1.000019347), Newton 3 | 2.9×10⁻⁶ | −0.616 + 1.422i | `newton3` |
+| (2.719381867, 1.000012415) | 6.1×10⁻⁶ | −0.243 − 0.146i | `local_dA` |
+| (2.719181867, 1.000112415) | 5.7×10⁻⁶ | −0.115 + 0.881i | `local_dw` |
+| (2.719228, 1.000028), affine fit of the first converged points | 3.1×10⁻⁷; 1.2×10⁻⁷ | +0.173 + 0.020i; −0.022 + 0.042i | `fit3`, `fit3_repeat` |
 
-`python3 trunc_seq_M7.py` (reads the refined M = 3 and M = 5 zeros of `solver/inner_pert/logs/first_order_hier_M{3,5}.log`
-and, once it exists, the last `ZERO M 7` line of `logs/hier_nb_M7_full*.log`):
+`hier.py` stops level 3 by its noise-floor rule anywhere between 10⁻⁸ and 10⁻⁴, and the Schur-corrected r₁ carries an error
+of roughly 10⁵–10⁶ |r₃|: repeated solves at one point agree to 0.1 when |r₃| ≤ 10⁻⁶ (Newton 2: 0.08; the fit point: 0.2)
+and differ by 0.9 when one stops at 1.5×10⁻⁵. So only the six solves with |r₃| < 10⁻⁶ are used. An affine least-squares
+model through them (`python3 m7_outer.py --fit logs/…`, §10) has residuals ≤ 0.12, the size of the repeats' scatter, a
+Jacobian with singular values 1.2×10⁴ and 5.7×10³, and its zero at
+
+```math
+A_7 = 2.71922, \qquad \omega_7/\omega_\infty = 1.000022 \qquad (\pm 2\times10^{-5}\ \text{each, the scatter } 0.1 \text{ over the smallest singular value}),
+```
+
+where the two solves at the fit point itself give r₁ = +0.17 + 0.02i and −0.02 + 0.04i, both zero within the scatter.
+The ± is a noise estimate, not an enclosure. The profile there: F₃/F₁ = 0.054787 + 0.005432i, F₅/F₁ = 0.003098 + 0.000556i,
+F₇/F₁ = 0.000174 + 0.000045i, |F₇/F₅| = 0.0572 (from the 9-decimal state of `fit3_repeat`). Total cost of the M = 7 zero
+in the cloud, at load 7–8: about 14 fixed-(A, ω) solves of 2–3 minutes each.
+
+**Radius independence: not yet checked to this accuracy.** Lemma R says the zero does not depend on the matching
+radius. Two solves at ξ₁ = 0.165 (`logs/hier_nb_M7_fixA_xi0165_at_{M5zero,zero}.log`) stopped level 3 at |r₃| ≈ 2×10⁻⁵, so
+their r₁ carries errors of order 1: r₁ = −3.83 − 4.30i at p₅ and +0.79 + 0.05i at the ξ₁ = 0.15 zero, i.e. a zero within
+about 1.5×10⁻⁴ of it, consistent but not sharp. At ξ₁ = 0.13 level 3 stopped at 8×10⁻⁵ (`…_xi013_at_newton2.log`). The
+check at the 2×10⁻⁵ level is part of the local task (§3.1).
+
+## 3. The truncation sequence with M = 7
+
+`python3 trunc_seq_M7.py --c7=1.000022,2.719219,0.148977988,0.014770713,0.008424206,0.001511189,0.000474205,0.00012168`
+(the refined M = 3 and M = 5 zeros of `solver/inner_pert/logs/first_order_hier_M{3,5}.log`, and the M = 7 zero of §2 with
+the state of `fit3_repeat`):
 
 | M | c_M = ω/ω∞ | A | \|F_M/F_{M−2}\| at the zero | d_M = c_M − c_{M−2} | κ_M = d_M/d_{M−2} | coupling g_M = \|κ_M\|/\|F_M/F_{M−2}\| |
 |---|---|---|---|---|---|---|
 | 1 | 0.7769940136 | 2.542148048 | | | | |
 | 3 | 1.0156030949 | 2.726475886 | 0.0531 | +0.23861 | | |
 | 5 | 0.9992284032 | 2.718579189 | 0.0569 | −0.016375 | −0.0686 | 1.21 |
-| 7 | not obtained | | 0.0573 (at p₅, §2) | | | |
+| 7 | 1.000022 | 2.719219 | 0.0572 | +7.94×10⁻⁴ | −0.0485 | 0.85 |
 
-What is new without c₇:
+What M = 7 says (*numerical evidence*; the ± on c₇ is the noise estimate of §2, ±2×10⁻⁵, which moves κ₇ by ±0.0013):
 
-- **The profile ratio of the added pair converges to the untruncated one**: |F_M/F_{M−2}| = 0.0531, 0.0569, 0.0573 for
-  M = 3, 5, 7 against 0.0574, and F₅ at M = 7 is the untruncated F₅ to the three digits available (§2). So the profile
-  half of (T1) is seen at M = 7, with ρ_*² = 0.0574 and no sign of a change of regime.
-- **The only measured coupling is g₅ = 1.21**, from a ratio that includes the pre-asymptotic M = 1. B_tail.md's prediction
-  for M = 7 (0.99997–1.00017) assumes κ between −0.045 and −0.057 (coupling 0.78–1.0, fixed by requiring the limit to
-  lie in the untruncated bracket); if κ stayed at −0.0686 the limit would be 1.00028 and c₇ = 1.00035, outside the
-  untruncated bracket 0.99915–1.00011 (`reconcile.py`). So M = 7 decides between "the M = 1 → 3 step is pre-asymptotic"
-  (B_tail.md's reading) and a tension between the two routes at the 2×10⁻⁴ level. It is still the sharp test it was.
-- **The lowest-order increments decrease at least as fast** (§4): x²Δσ₄/Δσ₂ and x²Δσ₆/Δσ₄ have moduli 0.035 and
-  0.012 for the M = 1 → 3 and M = 3 → 5 steps, an independent (order-by-order, no lateral integration) estimate of a
-  per-pair ratio well below ¼, and falling.
+- **B_tail.md's prediction holds.** c₇ = 1.000022 lies in 0.99997–1.00017, near its lower end. The per-pair ratio
+  κ₇ = d₇/d₅ = −0.0485 lies in the range −0.045 to −0.057 that B_tail.md derived by requiring the limit to fall in the
+  untruncated bracket, and the alternation continues (−, +, −, +).
+- **The coupling settles below 1.** g₅ = 1.21 included the pre-asymptotic M = 1 step; g₇ = |κ₇|/|F₇/F₅| = 0.0485/0.0572
+  = 0.85. So the M = 1 → 3 step was the pre-asymptotic one (B_tail.md's reading), and there is no tension between the
+  truncated and the untruncated routes at the 10⁻⁴ level.
+- **The limit.** With κ₇ held for the rest of the sequence, L = c₇ + d₇ κ₇/(1 − κ₇) = 0.999985 (±2×10⁻⁵ from c₇ alone;
+  the planted test of `trunc_seq_M7.py --planted` bounds the estimator's own error by |c₇ − L|(|e| + 0.05)/(1 − |κ|) for a
+  ratio drifting by a fraction e per pair, i.e. 6×10⁻⁶ for e = 0.1, the largest planted). It lies inside the untruncated bracket
+  0.99915–1.00011, 9.5×10⁻⁵ above the central Padé value 0.99989, and 1.5×10⁻⁵ below 1 (the finite-D solutions' ω∞).
+- **The tail above M = 7** is c₇ − L ≈ 3.7×10⁻⁵ in ω/ω∞, about 0.25 in r₁ at |∂r₁/∂(ω/ω∞)| = 6.7×10³ (ξ₁ = 0.2
+  normalisation, PROOF.md A.4), against 3.9 needed for a 10⁻³ box: the margin of 16 that B_tail.md estimated (13). A
+  proven per-pair ratio of ¼ would bound it by 1.8 in r₁, still inside 3.9.
+- **The profile ratio of the added pair converges to the untruncated one**: |F_M/F_{M−2}| = 0.0531, 0.0569, 0.0572 at the
+  M = 3, 5, 7 zeros against 0.0574 untruncated, and F₅ at M = 7 is the untruncated F₅ to the digits available.
+- **The lowest-order increments fall faster still** (§4): x²Δσ₄/Δσ₂ and x²Δσ₆/Δσ₄ have moduli 0.035 and 0.012.
 
 ### 3.1 Proposed task for the local 8-thread machine (for the coordinator to queue; not written to comms.txt)
 
-**Goal.** The M = 7 zero of the jump-conditioned truncation (`hier.py --schur` on the compiled backend), and whether the
-pilot's level-3 stall is a finite-difference-step effect.
+**Goal.** (1) The M = 7 zero at two other matching radii, ξ₁ = 0.14 and 0.16: Lemma R says it does not move, and the
+spread is an independent error bar for c₇. (2) A pilot of M = 9 at the M = 7 zero: does level 3 converge, and what is
+r₁^{[9]}(p₇)?
 
-**Why local.** In this session each process got about 12% of a cloud core (load average 16–22): the pilot's one level-3
-solve took 22 min, and a full selection needs some ten of them. With 6 busy threads a local process gets roughly five
-times that, and the compiled backend makes an M = 7 residual about 0.3 s of CPU.
+**Why local.** The work is a few dozen fixed-(A, ω) solves of 1–3 minutes each in the cloud at load 7–8, more at the
+usual load of 16–24; locally, with 6 busy threads, about a minute each.
 
 **Prerequisites** (from `solver/inner_stokes/`, after pulling the branch): `pip install numba` if it is missing (tested
-with numba 0.68.0), then
+with numba 0.68.0), then `sh inner_nb_checks.sh` on Linux, or on Windows the six commands in it one by one: the checks
+must end with PASS and exit 0, the two mutation controls with FAIL and exit 1. Stop the task otherwise.
+
+**Threads.** 6, below-normal priority, one process per thread: three jobs of `--procs 2` (a mostly idle main process plus
+two workers). Every job is a sequence of fixed-(A, ω) solves; `Z` below stands for the M = 7 zero's state,
 
 ```
-python inner_nb.py check 3 5 7        # must end with PASS (about 2 min); stop the task if it does not
-python inner_nb.py capcheck           # must end with PASS (about 1 min)
-python hier_nb.py selftest            # must end with PASS
+Z = 2.719219 1.000022 --x=0.148977988,0.014770713,0.008424206,0.001511189,0.000474205,0.00012168
 ```
 
-**Threads.** 6 threads at below-normal priority, one process per thread: three jobs of `--procs 2` (each is a main
-process, mostly idle, plus two workers), started together.
+and `S` for the common options `--pretune --fixA --schur --predict --floor --procs 2 --h3=1e-4`.
 
-```
-python -u hier_nb.py 7 2.718579189229888 0.9992284031945021 --x=0.1492035749173264,0.01471905249087869,0.008405346906375517,0.0014703451817031647 --pretune --schur --predict --floor --procs 2 > logs/hier_nb_M7_full_local_A.log
-python -u hier_nb.py 7 2.718579189229888 0.9992284031945021 --x=0.1492035749173264,0.01471905249087869,0.008405346906375517,0.0014703451817031647 --pretune --schur --predict --floor --procs 2 --h3=1e-4 --h1=1e-4 > logs/hier_nb_M7_full_local_B.log
-INNER_NB_RTOL=1e-13 python -u hier_nb.py 7 2.718579189229888 0.9992284031945021 --x=0.1492035749173264,0.01471905249087869,0.008405346906375517,0.0014703451817031647 --pretune --schur --predict --floor --procs 2 --h3=1e-4 --h1=1e-4 > logs/hier_nb_M7_full_local_C.log
-```
+- *Job A, ξ₁ = 0.14* (four solves): at Z; at Z with A + 2×10⁻⁴; at Z with ω/ω∞ + 10⁻⁴; at Z again from the
+  amplitude-expansion seed (omit `--x=`, for the repeat). For example the first:
+  `python -u hier_nb.py 7 2.719219 1.000022 --x=… --xi1=0.14 S > logs/hier_nb_M7_local_xi014_zero.log`, then
+  `…_dA.log`, `…_dw.log`, `…_zero_repeat.log`. Then
+  `python m7_outer.py --local logs/hier_nb_M7_local_xi014_zero.log logs/hier_nb_M7_local_xi014_zero_repeat.log -- logs/hier_nb_M7_local_xi014_dA.log logs/hier_nb_M7_local_xi014_dw.log`.
+- *Job B, ξ₁ = 0.16*: the same with `--xi1=0.16` and `xi016` in the log names.
+- *Job C, M = 9 pilot*: `python -u hier_nb.py 9 2.719219 1.000022 --x=0.148977988,0.014770713,0.008424206,0.001511189,0.000474205,0.00012168 --xi1=0.15 S --verbose=2 > logs/hier_nb_M9_pilot_xi015_at_M7zero.log`
+  (F₉ from the seed, pretuned); if level 3 ends above 10⁻⁶, repeat with `--xi1=0.13`.
 
-(On Windows set the variable first: `set INNER_NB_RTOL=1e-13`, in the window of job C only.) A is the cloud pilot's
-settings, B takes finite-difference steps 100× larger at level 3 (|Δr₃| ≈ 0.7 instead of 0.007 for the C₃ column) and
-level 1, C also tightens the integrator.
+**Stop conditions.** A solve whose `FIXED-A` block shows |r₃| > 10⁻⁶ is repeated once from its own end state (the
+9-decimal `x [...]` of its last line); if it stays above, mark it in the log name (`_r3high`) and go on. `m7_outer.py
+--local` refuses solves with |r₃| ≥ 10⁻⁶ by itself. Any `Traceback` before the result is printed stops the job (the
+`BytesIO` one at interpreter exit is harmless). Wall-time cap: 3 hours per job.
 
-**Stop conditions**, per job:
+**Expected result.** Jobs A and B: zeros within ~2×10⁻⁵ of (2.71922, 1.000022) if Lemma R's independence holds at this
+accuracy; a larger difference is a finding to report, not to average away. Job C: M = 9 converges or it does not; if it
+does, r₁^{[9]}(p₇) should be about κ₉ ≈ −0.05 times r₁^{[7]}(p₅) in size, i.e. a few tenths.
 
-- the first `level 3 solved: |r_3| …` line shows |r₃| > 10⁻³ and the following `level 1 it` lines do not decrease |r₁|
-  for two iterations: kill the job's process tree (`taskkill /T /F /PID <pid>`), keep the log;
-- any `Traceback` (except the harmless one at interpreter exit after the result is printed);
-- 4 hours of wall time;
-- done when it prints `ZERO M 7: …` with the F_ν lines.
-
-**Expected time.** First cold level-3 solve 5–10 min; a full selection 1000–3000 residuals, 30–90 min per job.
-
-**Push.** `solver/inner_stokes/logs/hier_nb_M7_full_local_{A,B,C}.log` only. Then, on the cloud side,
-`python3 solver/proof/trunc_seq_M7.py` reads the last `ZERO M 7` line (it globs `logs/hier_nb_M7_full*.log`; with several
-logs, compare them first: the jobs differ only in numerical parameters, so their zeros must agree to their noise, and
-that spread is the error bar to quote).
+**Push.** `solver/inner_stokes/logs/hier_nb_M7_local_*.log`, `logs/hier_nb_M9_pilot_*.log`, and the printed output of the
+two `m7_outer.py --local` calls (pasted into `logs/m7_outer_local.txt`).
 
 ## 4. Which truncation: hier's model is a Galerkin truncation too
 
