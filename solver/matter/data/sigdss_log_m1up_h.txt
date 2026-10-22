@@ -1,0 +1,89 @@
+seed D = 9.0: Delta 1.0269044142 |F| 5.54e-13 dDelta/dD -0.00112 (3614 s)
+{"D": 9.15, "eps": 1.0, "eta": 1.0, "kc": 15, "N": 48, "Ks": 16, "u0": 0.01, "kappa": 0.7, "reg": 1e-08, "Delta": 1.0266341482629566, "constraint": 2.421601630909644e-05, "lam_gauge": 0.8239700265392873, "umax": 0.5081039117608764, "psimax": 0.19002008916494165, "steps": 1092, "F": 8.024343427987503e-13, "F_start": 0.000402561088225585, "dDelta_dpar": -0.0025041509274505956, "par": "D", "step": 0.15, "target": false, "seconds": 2132}
+{"D": 9.375, "eps": 1.0, "eta": 1.0, "kc": 15, "N": 48, "Ks": 16, "u0": 0.01, "kappa": 0.7, "reg": 1e-08, "Delta": 1.025818561668471, "constraint": 4.4758303071191076e-05, "lam_gauge": 0.8236128740153248, "umax": 0.5003245619722676, "psimax": 0.1842344369851065, "steps": 1091, "F": 6.193310632982136e-11, "F_start": 9.359138929498162e-05, "dDelta_dpar": -0.003878362312898606, "par": "D", "step": 0.22499999999999998, "target": false, "seconds": 1735}
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:249: RuntimeWarning: overflow encountered in multiply
+  px = (-self.D(p, omega) + cx * p - c * p / x + pc - lt) / (x - c)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:250: RuntimeWarning: overflow encountered in multiply
+  mx = (-self.D(m, omega) - cx * m + c * m / x - pc + lt) / (x + c)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:45: RuntimeWarning: invalid value encountered in matmul
+  return f @ M
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:241: RuntimeWarning: overflow encountered in multiply
+  a2 = a * a
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:244: RuntimeWarning: invalid value encountered in subtract
+  cx = c * ((n - 1) * (a2 - 1) - 2 * L * g) / x
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:245: RuntimeWarning: overflow encountered in multiply
+  ax = a * ((p * p + m * m) + 2 * L * g + (n - 1) * (1 - a2)) / (2 * x)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:245: RuntimeWarning: invalid value encountered in add
+  ax = a * ((p * p + m * m) + 2 * L * g + (n - 1) * (1 - a2)) / (2 * x)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:247: RuntimeWarning: overflow encountered in multiply
+  pc = n * c * (p + m) / (2 * x)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:244: RuntimeWarning: overflow encountered in multiply
+  cx = c * ((n - 1) * (a2 - 1) - 2 * L * g) / x
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:248: RuntimeWarning: overflow encountered in multiply
+  lt = L * c * a2 * sq * gq / x
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:249: RuntimeWarning: invalid value encountered in subtract
+  px = (-self.D(p, omega) + cx * p - c * p / x + pc - lt) / (x - c)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:250: RuntimeWarning: invalid value encountered in add
+  mx = (-self.D(m, omega) - cx * m + c * m / x - pc + lt) / (x + c)
+{"D": 9.7125, "eps": 1.0, "eta": 1.0, "kc": 15, "N": 48, "Ks": 16, "u0": 0.01, "kappa": 0.7, "reg": 1e-08, "Delta": 1.024387571887579, "constraint": 0.00036311044459485733, "lam_gauge": 0.8235500266744072, "umax": 0.4864546251760624, "psimax": 0.17516395740773885, "steps": 1086, "F": 4.08524751192529e-09, "F_start": 0.00042501734840155633, "dDelta_dpar": 0.0012572442170003702, "par": "D", "step": 0.33749999999999997, "target": false, "seconds": 664}
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:772: RuntimeWarning: divide by zero encountered in log
+  F = lambda x: dd2(L - np.log(np.abs(l - x)))
+{"D": 10.0, "eps": 1.0, "eta": 1.0, "kc": 15, "N": 48, "Ks": 16, "u0": 0.01, "kappa": 0.7, "reg": 1e-08, "Delta": 1.026141550030831, "constraint": 0.0016226487677233829, "lam_gauge": 0.822237773005615, "umax": 0.4759172144378285, "psimax": 0.1682621448062004, "steps": 1083, "F": 4.120133911464205e-09, "F_start": 0.0013627305751556693, "dDelta_dpar": 0.007275816848414303, "par": "D", "step": 0.50625, "target": true, "seconds": 224, "lam_guess": 2.963159236096047, "lam": 2.9197998890034413, "gamma": 0.34248922460960524, "n_eval": 5, "last_step": 3.654200162106491e-05, "lam_seconds": 30}
+  D = 10.759375: failed (start |F| 6.73e-02, end None); step -> 0.37969
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:244: RuntimeWarning: overflow encountered in multiply
+  cx = c * ((n - 1) * (a2 - 1) - 2 * L * g) / x
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:245: RuntimeWarning: overflow encountered in multiply
+  ax = a * ((p * p + m * m) + 2 * L * g + (n - 1) * (1 - a2)) / (2 * x)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:248: RuntimeWarning: overflow encountered in multiply
+  lt = L * c * a2 * sq * gq / x
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:249: RuntimeWarning: invalid value encountered in subtract
+  px = (-self.D(p, omega) + cx * p - c * p / x + pc - lt) / (x - c)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:250: RuntimeWarning: invalid value encountered in add
+  mx = (-self.D(m, omega) - cx * m + c * m / x - pc + lt) / (x + c)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:45: RuntimeWarning: invalid value encountered in matmul
+  return f @ M
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:249: RuntimeWarning: overflow encountered in multiply
+  px = (-self.D(p, omega) + cx * p - c * p / x + pc - lt) / (x - c)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:250: RuntimeWarning: overflow encountered in multiply
+  mx = (-self.D(m, omega) - cx * m + c * m / x - pc + lt) / (x + c)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:241: RuntimeWarning: overflow encountered in multiply
+  a2 = a * a
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:244: RuntimeWarning: invalid value encountered in subtract
+  cx = c * ((n - 1) * (a2 - 1) - 2 * L * g) / x
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:245: RuntimeWarning: invalid value encountered in add
+  ax = a * ((p * p + m * m) + 2 * L * g + (n - 1) * (1 - a2)) / (2 * x)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:247: RuntimeWarning: overflow encountered in multiply
+  pc = n * c * (p + m) / (2 * x)
+/usr/local/lib/python3.13/dist-packages/numpy/linalg/_linalg.py:2803: RuntimeWarning: overflow encountered in multiply
+  s = (x.conj() * x).real
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:247: RuntimeWarning: overflow encountered in divide
+  pc = n * c * (p + m) / (2 * x)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:250: RuntimeWarning: overflow encountered in divide
+  mx = (-self.D(m, omega) - cx * m + c * m / x - pc + lt) / (x + c)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:244: RuntimeWarning: overflow encountered in divide
+  cx = c * ((n - 1) * (a2 - 1) - 2 * L * g) / x
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:245: RuntimeWarning: overflow encountered in add
+  ax = a * ((p * p + m * m) + 2 * L * g + (n - 1) * (1 - a2)) / (2 * x)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:249: RuntimeWarning: overflow encountered in divide
+  px = (-self.D(p, omega) + cx * p - c * p / x + pc - lt) / (x - c)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:250: RuntimeWarning: invalid value encountered in subtract
+  mx = (-self.D(m, omega) - cx * m + c * m / x - pc + lt) / (x + c)
+{"D": 10.3796875, "eps": 1.0, "eta": 1.0, "kc": 15, "N": 48, "Ks": 16, "u0": 0.01, "kappa": 0.7, "reg": 1e-08, "Delta": 1.0298300334354427, "constraint": 0.0070480628024300876, "lam_gauge": 0.8207483565367012, "umax": 0.4681904145494866, "psimax": 0.161736710708019, "steps": 1075, "F": 4.886032447247376e-09, "F_start": 0.01021059492432874, "dDelta_dpar": 0.049680125880349923, "par": "D", "step": 0.37968749999999996, "target": false, "seconds": 82}
+  D = 10.759375: failed (start |F| 2.43e-01, end None); step -> 0.18984
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:248: RuntimeWarning: overflow encountered in divide
+  lt = L * c * a2 * sq * gq / x
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:245: RuntimeWarning: overflow encountered in divide
+  ax = a * ((p * p + m * m) + 2 * L * g + (n - 1) * (1 - a2)) / (2 * x)
+  D = 10.569531: failed (start |F| 3.32e-02, end 1.553333042890654e-05); step -> 0.09492
+{"D": 10.474609375, "eps": 1.0, "eta": 1.0, "kc": 15, "N": 48, "Ks": 16, "u0": 0.01, "kappa": 0.7, "reg": 1e-08, "Delta": 1.0340058134612833, "constraint": 0.05733511538127027, "lam_gauge": 0.8202049664311146, "umax": 0.4686112625033764, "psimax": 0.16097294055473294, "steps": 1072, "F": 8.461841160974608e-07, "F_start": 0.0057723039161153315, "dDelta_dpar": -5.774887040642591, "par": "D", "step": 0.09492187499999999, "target": false, "seconds": 76}
+  D = 10.569531: failed (start |F| nan, end None); step -> 0.04746
+  D = 10.522070: failed (start |F| nan, end None); step -> 0.02373
+  D = 10.498340: failed (start |F| nan, end None); step -> 0.01187
+  D = 10.486475: failed (start |F| nan, end None); step -> 0.00593
+  D = 10.480542: failed (start |F| 5.49e-01, end None); step -> 0.00297
+  D = 10.477576: failed (start |F| 1.19e-01, end None); step -> 0.00148
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:249: RuntimeWarning: invalid value encountered in add
+  px = (-self.D(p, omega) + cx * p - c * p / x + pc - lt) / (x - c)
+  D = 10.476093: failed (start |F| 2.77e-02, end 2.048073875365555e-05); step -> 0.00074
+step below dmin; stopping
+done

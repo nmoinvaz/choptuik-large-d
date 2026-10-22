@@ -1,2 +1,31 @@
 symmetric |F| 1.710e-10; full layout |F| 1.710e-10; forbidden harmonics 3.27e-16 (allowed 4.990e+00); unknowns 1015 -> 2016
 perturbed: forbidden harmonics 1.96e-02, |F| 2.730e-02
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:244: RuntimeWarning: overflow encountered in multiply
+  cx = c * ((n - 1) * (a2 - 1) - 2 * L * g) / x
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:245: RuntimeWarning: overflow encountered in multiply
+  ax = a * ((p * p + m * m) + 2 * L * g + (n - 1) * (1 - a2)) / (2 * x)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:248: RuntimeWarning: overflow encountered in multiply
+  lt = L * c * a2 * sq * gq / x
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:249: RuntimeWarning: invalid value encountered in subtract
+  px = (-self.D(p, omega) + cx * p - c * p / x + pc - lt) / (x - c)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:250: RuntimeWarning: invalid value encountered in add
+  mx = (-self.D(m, omega) - cx * m + c * m / x - pc + lt) / (x + c)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:45: RuntimeWarning: invalid value encountered in matmul
+  return f @ M
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:244: RuntimeWarning: invalid value encountered in subtract
+  cx = c * ((n - 1) * (a2 - 1) - 2 * L * g) / x
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:241: RuntimeWarning: overflow encountered in multiply
+  a2 = a * a
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:245: RuntimeWarning: invalid value encountered in add
+  ax = a * ((p * p + m * m) + 2 * L * g + (n - 1) * (1 - a2)) / (2 * x)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:247: RuntimeWarning: overflow encountered in multiply
+  pc = n * c * (p + m) / (2 * x)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:249: RuntimeWarning: overflow encountered in multiply
+  px = (-self.D(p, omega) + cx * p - c * p / x + pc - lt) / (x - c)
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-adb8f791616fee9b7/solver/matter/sigdss_solver.py:250: RuntimeWarning: overflow encountered in multiply
+  mx = (-self.D(m, omega) - cx * m + c * m / x - pc + lt) / (x + c)
+   jac 0: |F| 7.511e-07 Delta 0.944291022609 mu 1e-03 corr 2 smin/smax 1.4e-08 (1095 s)
+   jac 1: |F| 4.610e-10 Delta 0.944490592589 mu 1e-11 corr 2 smin/smax 2.4e-08 (2307 s)
+   jac 2: |F| 6.963e-15 Delta 0.944490592603 mu 1e-11 corr 2 smin/smax 2.4e-08 (3346 s)
+re-solved without symmetry: |F| 6.963e-15, forbidden harmonics 5.17e-10, Delta 0.944490592603 (symmetric 0.944490592912) (3346 s)
+{"sol": "sigdss_sol_m1up_D6.0000_eta1.0000.npy", "D": 6.0, "eps": 1.0, "kc": 15, "Delta": 0.9444905929119859, "F_sym": 1.7099143098368826e-10, "F_full": 1.7099141227756108e-10, "n_sym": 1015, "n_full": 2016, "pert": 0.001, "forbidden_before": 0.019579264842707157, "F_perturbed": 0.02729615675865641, "F_resolved": 6.9633540072593764e-15, "forbidden_after": 5.168999264058239e-10, "Delta_resolved": 0.9444905926027689, "solve_seconds": 3346}
