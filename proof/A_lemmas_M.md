@@ -33,7 +33,7 @@ Contents
 | step (i): the start-value fixed point with derivatives in all M + 1 parameters | **certified** at the `hier.py` zero, at points and over real (±10⁻⁶) and complex (±10⁻³(1 + i)) boxes, on the rays 3π/8 and 5π/16 | **certified**, the same | §2 |
 | M = 1 reproduces `fixed_point.py` | start values and start data bit for bit; constants to 10⁻¹⁶ | | §2.4 |
 | lemma S, lemma 6b₀ | **certified** over x̂ ± 10⁻⁶, R₊ = 0.01 (the M = 1 domain) | **certified** over x̂ ± 10⁻⁶, R₊ = 0.0064 | §3 |
-| lemma 6a | the flat estimate **certified** (Λ ≤ 0.29); the backward flow and ρ₆ₐ wait for the certificate's B₁; a pilot on a non-rigorous B₁ gives ρ₆ₐ = 0.030 (**numerical evidence**) | the flat estimate **certified** (Λ ≤ 0.42) | §4 |
+| lemma 6a | the flat estimate **certified** (Λ ≤ 0.29); the backward flow and ρ₆ₐ wait for the certificate's B₁; pilots on non-rigorous B₁ give ρ₆ₐ = 0.030 from ξ₁ = 0.2 and 0.052 from 0.3, the certificate's radius (**numerical evidence**) | the flat estimate **certified** (Λ ≤ 0.42) | §4 |
 | lemma 6b₁ | **certified** on the point certificate's box p̂ ± 1.1×10⁻⁹ (C¹ mode, 183 discs, check C1–C8 passes) | design only (366 discs): a local-machine task | §5 |
 | Theorem A(M) | **conditional** on the point certificate (H1–H3 of §6) | the same | §6–7 |
 
@@ -494,7 +494,10 @@ flat estimate are over X₆, and ω is a ball over X₆.
 | entries of G_slow⁻¹, of H = G_fast G_slow⁻¹ | ≤ 1.26, ≤ 7.7 | ≤ 1.13, ≤ 10.7 |
 | ρ₆ₐ | 4.22×10⁻³ | **3.04×10⁻²** |
 
-So the 6a computation works at M = 3 with a margin of about 30, as numerical evidence. B is wider than at M = 1. One
+From the certificate's matching radius ξ₁ = 0.3, at its centre p̂, the same pilot gives **ρ₆ₐ = 0.052** (§7). From x̂
+it fails, because x̂ is too far from the zero for a hull at 0.3 (§7).
+
+So the 6a computation works at M = 3 with a margin of about 20–30, as numerical evidence. B is wider than at M = 1. One
 plausible contributor, not separated out here: ω ranges over X₆ (10⁻⁶) in this pilot, against a 10⁻⁹ box at M = 1.
 The run itself is the cost to plan for: about 50 minutes at load 15–19.
 
@@ -728,8 +731,10 @@ Against that, this note's status for M = 3:
 **The 6a pilots from ξ₁ = 0.3** (not rigorous). From x̂, the backward flow ran (450 steps), but G_slow was not
 proved invertible: the start hull was 8.0×10⁻⁶ and B's entries reached radius 0.49. The hull is mostly the pilot's
 own ψ(0.3) at x̂, which is about 4×10⁻¹⁰ from the zero in A, magnified by ∂J/∂x at 0.3. From the certificate's p̂,
-which is closer to the zero: PILOT_PHAT. The certificate's B₁ is a box over X_c around the zero, so its hull is its
-own width (about |∂y/∂x|·h), plausibly much tighter than the x̂ pilot's.
+which is closer to the zero, the start hull is 3.9×10⁻⁹ and the pilot passes: 449 steps, 912 s at low load, max
+radius of B 5.1×10⁻³, |G_slow⁻¹| ≤ 1.65, |H| ≤ 13.1, and **ρ₆ₐ = 0.052** (`lemma6a_pilot_M3_xi0.3_phat.*`). The
+certificate's B₁ is a box over X_c around the zero, so its hull is its own width, about |∂y/∂x|·h. That is comparable
+to this pilot's hull, so the run with the real B₁ is expected to pass with a similar margin. It remains to be run.
 
 If the certificate's final box or path differs from the above, these must be rerun:
 
