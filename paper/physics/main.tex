@@ -131,14 +131,14 @@ with $G = (n-1)\,c\,(b-1)$, on $0 \le x \le 1$; $p$, $m$ contain only odd harmon
 ones; the solution is regular at $x = 0$, analytic at the past light cone $x = 1$, and $c(1) = 1$ fixes the gauge: a
 periodic boundary-value problem with $\Delta$ as an eigenvalue.
 
-\emph{Double-precision solver} ($3.6 \le D \le 40$): spectral multiple shooting in $x$ with
+\emph{Double-precision solver} ($3.6 \le D \le 40$): spectral multiple shooting~\cite{MorrisonRileyZancanaro1962} in $x$ with
 Fourier modes in $\tau$ (23--47 modes), with the integration-step error extrapolated out; near $D = 4$ the points are
 extrapolated in the mode count. Above $D \approx 26$ rounding at $10^{-16}$ in the residual moves $\Delta$ by
 $10^{-7}$--$10^{-6}$ at $D = 30$--$40$.
 
-\emph{Double-double solver} ($8.25 \le D \le 61.03$): double-double arithmetic (about 32 digits) on SIMD vectors;
+\emph{Double-double solver} ($8.25 \le D \le 61.03$): double-double arithmetic~\cite{Dekker1971} (about 32 digits) on SIMD vectors;
 Taylor series in $x$ of order 36 with truncation $10^{-32}$; centre and horizon series to $10^{-33}$; collocation in
-$\tau$ on the half period (32 points); an exact Jacobian by forward-mode duals with a double-double LU; continuation in
+$\tau$ on the half period (32 points); an exact Jacobian by forward-mode duals~\cite{Wengert1964} with a double-double LU; continuation in
 $D$ with deflated Newton steps. The Jacobian has a ladder of near-null directions (high $\tau$-harmonics of the centre
 data, singular values falling roughly like $e^{-0.7k}$ with the harmonic $k$); from $D = 35$ the centre harmonics above
 13 are pinned, which moves $\Delta$ by $5\times10^{-15}$ at $D = 35$ and $3\times10^{-17}$ at $D = 40$. The checks are
@@ -860,6 +860,10 @@ arXiv:math-ph/9912009.
 arXiv:1608.07707.
 \bibitem{OlabarrietaEtAl2007} I. Olabarrieta, J. F. Ventrella, M. W. Choptuik and W. G. Unruh, Phys.\ Rev.\ D \textbf{76},
 124014 (2007), arXiv:0708.0513.
+\bibitem{MorrisonRileyZancanaro1962} D. D. Morrison, J. D. Riley and J. F. Zancanaro, Commun.\ ACM \textbf{5}, 613
+(1962), doi:10.1145/355580.369128.
+\bibitem{Wengert1964} R. E. Wengert, Commun.\ ACM \textbf{7}, 463 (1964).
+\bibitem{Dekker1971} T. J. Dekker, Numer.\ Math.\ \textbf{18}, 224 (1971), doi:10.1007/BF01397083.
 \end{thebibliography}
 
 \end{document}

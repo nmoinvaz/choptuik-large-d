@@ -68,6 +68,9 @@ Conventions for the Claude sessions (cloud and local) that run computations here
   notes/LIT_REVIEW.md, with what it does and does not contain. Credit prior equations and observations where they are
   used, not only in the references: in the README with a footnote reference ([^n], defined at the end of the file), in
   the papers with \cite. Do not write about earlier versions of the work or what they did not credit.
+- **Standard methods:** cite the original work where a numerical method is named (a README footnote, \cite in the
+  papers, a reference line in the code's docstring) instead of explaining it in a separate file; the prior art for the
+  methods used here is in notes/LIT_REVIEW.md.
 - **References:** verify every bibliographic entry against the publisher, arXiv or INSPIRE before adding it
   (notes/REF_CHECK.md); mark what could not be verified as *(unverified)*.
 - **Authorship:** the papers have one author, Nathan Moinvaziri. Never list Claude or Anthropic as an author; the use of

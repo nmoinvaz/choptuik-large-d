@@ -5,7 +5,8 @@ What changed against amp_flint.py (details in the docstrings below):
 1. Products (the convolutions over (j, mu)).  Order eps^k has only the harmonics mu = -k, -k+2, ..., k, so a product of
    orders k1 + k2 = k is packed with stride k + 1 (index (mu + k_i)/2 in a row) instead of 4K + 1, and only the first
    (J + 1)(k + 1) coefficients are formed (acb_series, a truncated product).  The two d d products of pass_even that are
-   mirror images are formed once.  All products of one order are independent; with --procs N they are spread over N
+   mirror images are formed once.  (Packing (j, mu) into one polynomial is Kronecker substitution, Kronecker 1882, as
+   in D. Harvey, arXiv:0712.4046; a truncated product is a short product, T. Mulders, AAECC 11, 69 (2000).)  All products of one order are independent; with --procs N they are spread over N
    worker processes, which keep their own copies of the finished tables (each table is sent once, when its order is done).
 2. The late-order fits (S_at).  The least-squares matrix depends only on nu, so it is built once per nu, in ball
    arithmetic, and reduced to G = (A^H A)^{-1} A^H; each fit is then c = G y.  The psi tables are built once per nu (acb

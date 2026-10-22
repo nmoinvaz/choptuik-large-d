@@ -507,13 +507,13 @@ with computed points rather than an assumed form. Its points are used in [The fo
 Δ∞), [Values](#values), the [candidate test](#closed-forms-tested-and-excluded), the
 [analyticity tests](#is-the-period-analytic-in-1d) and the large-D scaling ([How the solution scales with D](#how-the-solution-scales-with-d)).
 
-- **Arithmetic:** double-double (hi + lo, about 32 digits) on 8-lane vectors: one AVX-512 register per lane group, two
+- **Arithmetic:** double-double (hi + lo, about 32 digits)[^15] on 8-lane vectors: one AVX-512 register per lane group, two
   AVX2 registers, or a portable array, chosen at compile time (`hp/build.sh` builds with `-C target-cpu=native`).
-  Error-free two-sum and FMA two-product; sums of products accumulated Sum2-style.
+  Error-free two-sum and FMA two-product; sums of products accumulated Sum2-style[^16].
 - **No fixed-step error:** Taylor series in x (order 36, step points planned once per D so the truncation term is
   10⁻³²), centre and horizon series run until their tails are below 10⁻³³, and collocation in τ on the
   half period (p, m odd harmonics, a, c even harmonics in τ) with no spectral truncation of the products.
-- **Exact Jacobian:** forward-mode duals over double-double, double-double LU for Newton, a transpose solve that gives
+- **Exact Jacobian:** forward-mode duals[^17] over double-double, double-double LU for Newton, a transpose solve that gives
   $`\partial\Delta/\partial F`$ at every point, and a Levenberg–Marquardt fallback.
 - **Continuation in D:** prediction by the cubic through the last four converged points (a tangent from the
   Jacobian is wrong in the weak directions, below), Newton with the weakest directions deflated, and from D = 35 on
@@ -1724,7 +1724,7 @@ No human expert has reviewed it. The results should be read with that in mind, a
 
 ## Software: the Rust kernel
 
-Rust port of the multiple-shooting residual `F(z)` used to compute Choptuik's discretely self-similar critical solution in D = n + 2 dimensions. It covers the centre series, the RK4 shooting segments and the horizon series on the Python solver's spectral layout (941 unknowns in the production configuration; [`solver/`](solver/)), and is
+Rust port of the multiple-shooting[^18] residual `F(z)` used to compute Choptuik's discretely self-similar critical solution in D = n + 2 dimensions. It covers the centre series, the RK4 shooting segments and the horizon series on the Python solver's spectral layout (941 unknowns in the production configuration; [`solver/`](solver/)), and is
 called from Python through PyO3 as a drop-in for `S.residual`, the Python reference residual.
 
 ### Backends
@@ -1788,7 +1788,7 @@ from the Performance table's synthetic one).
 
 ### Exact Jacobian and growth-mode matrix
 
-`jacobian` and `mode_matrix` differentiate the residual in forward mode with a dual-number scalar
+`jacobian` and `mode_matrix` differentiate the residual in forward mode with a dual-number scalar[^17]
 (`scalar::Dual`): one evaluation of block b per unknown that block depends on, run on rayon threads.
 The value part reproduces the f64 residual bit for bit; the tangent is the exact derivative, with no
 finite-difference step.
@@ -1843,7 +1843,7 @@ One residual of a synthetic production-sized configuration (`tests/test_bindings
 
 `baseline` is slow because x86_64 without FMA turns every fused multiply-add into a libm call, which keeps it bitwise identical to the other backends. Only pre-2013 x86 CPUs land there.
 
-The double-double solver's Newton step (`hp/`): a blocked LU that skips exact zeros (panels of 32 columns, parallel
+The double-double solver's Newton step (`hp/`): a blocked LU[^19] that skips exact zeros (panels of 32 columns, parallel
 trailing update; 18–34× faster than the dense LU on one thread) and batched solves (`Solver.lu_solve_many`) for the
 deflation subspace bring one D-step from 15.4 to 9.5 s on one thread and from 10.1 to 5.5 s on two (D = 20, L = 1153),
 with every output bitwise identical; on 8 threads the estimate is about 2.3 s against 6.5 s. The step is now almost all
@@ -2008,3 +2008,9 @@ solver/largeD_late_structure.py  where the nonlinear late-order growth lives (x,
     [dlmf.nist.gov/15.8](https://dlmf.nist.gov/15.8).
 [^14]: R. B. Dingle, *Asymptotic Expansions: Their Derivation and Interpretation*, Academic Press (1973); S. J. Chapman,
     J. R. King and K. L. Adams, Proc. R. Soc. Lond. A 454, 2733 (1998).
+[^15]: T. J. Dekker, Numer. Math. 18, 224 (1971), doi:10.1007/BF01397083 (double-length arithmetic from pairs of
+    floating-point numbers, with the exact two-product).
+[^16]: T. Ogita, S. M. Rump and S. Oishi, SIAM J. Sci. Comput. 26, 1955 (2005), doi:10.1137/030601818.
+[^17]: R. E. Wengert, Commun. ACM 7, 463 (1964) (forward-mode automatic differentiation).
+[^18]: D. D. Morrison, J. D. Riley and J. F. Zancanaro, Commun. ACM 5, 613 (1962), doi:10.1145/355580.369128.
+[^19]: E. Anderson et al., *LAPACK Users' Guide*, 3rd ed., SIAM (1999) (the getf2 and blocked getrf factorizations).

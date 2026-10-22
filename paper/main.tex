@@ -137,14 +137,14 @@ x(x+c)\,m_x &= -\omega x\,m_\theta - G m + c m - \tfrac{n}{2}\,c\,(p+m), \label{
 with $G = (n-1)\,c\,(b-1)$, on $0 \le x \le 1$; $p$, $m$ contain only odd harmonics of $\theta$ and $b$, $c$ only even
 ones; the solution is regular at $x = 0$, analytic at the past light cone $x = 1$, and $c(1) = 1$ fixes the gauge.
 
-\emph{Double-precision solver} ($4 \le D \le 40$): spectral multiple shooting in $x$ with Fourier modes in $\tau$
+\emph{Double-precision solver} ($4 \le D \le 40$): spectral multiple shooting~\cite{MorrisonRileyZancanaro1962} in $x$ with Fourier modes in $\tau$
 (23--47 modes), with the integration-step error extrapolated out; near $D = 4$ the points are extrapolated in the
 mode count. Above $D \approx 26$ the period is selected by an effect that weakens exponentially with $D$, and rounding
 at $10^{-16}$ moves $\Delta$ by $10^{-7}$--$10^{-6}$ at $D = 30$--$40$.
 
-\emph{Double-double solver} ($8.25 \le D \le 61.03$): double-double arithmetic (about 32 digits) on SIMD vectors;
+\emph{Double-double solver} ($8.25 \le D \le 61.03$): double-double arithmetic~\cite{Dekker1971} (about 32 digits) on SIMD vectors;
 Taylor series in $x$ of order 36 with truncation $10^{-32}$; centre and horizon series to $10^{-33}$; collocation in
-$\tau$ on the half period (32 points); an exact Jacobian by forward-mode duals with a double-double LU; continuation in
+$\tau$ on the half period (32 points); an exact Jacobian by forward-mode duals~\cite{Wengert1964} with a double-double LU; continuation in
 $D$ with deflated Newton steps. The Jacobian has a ladder of near-null directions (high $\tau$-harmonics of the centre
 data, singular values falling roughly like $e^{-0.7k}$); from $D = 35$ the centre harmonics above 13 are pinned, which
 moves $\Delta$ by $5\times10^{-15}$ at $D = 35$ and $3\times10^{-17}$ at $D = 40$. Checks are listed in
@@ -895,6 +895,10 @@ arXiv:2601.14358.
 \bibitem{Dingle1973} R. B. Dingle, \emph{Asymptotic Expansions: Their Derivation and Interpretation} (Academic Press,
 1973).
 \bibitem{DLMF} NIST Digital Library of Mathematical Functions, \S\S2.11, 12.9, 13.7, \url{https://dlmf.nist.gov}.
+\bibitem{MorrisonRileyZancanaro1962} D. D. Morrison, J. D. Riley and J. F. Zancanaro, Commun.\ ACM \textbf{5}, 613
+(1962), doi:10.1145/355580.369128.
+\bibitem{Wengert1964} R. E. Wengert, Commun.\ ACM \textbf{7}, 463 (1964).
+\bibitem{Dekker1971} T. J. Dekker, Numer.\ Math.\ \textbf{18}, 224 (1971), doi:10.1007/BF01397083.
 \end{thebibliography}
 
 \end{document}

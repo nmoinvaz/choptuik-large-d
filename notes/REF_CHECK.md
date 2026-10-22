@@ -179,3 +179,20 @@ should cite the equation.
 - [x] No keys renamed; all `\cite` keys resolve (pdflatex log: no undefined citations).
 - [x] Rebuild: two pdflatex passes, 0 errors, 0 undefined citations; `paper/dss_large_D.pdf` refreshed; the rendered
       bibliography shows the five fixes.
+
+## Addendum (2026-10-21): method references
+
+Added as README footnotes [^15]–[^19], in both papers (Morrison–Riley–Zancanaro, Wengert, Dekker) and in the
+`amp_flint_par.py` docstring (Harvey, Mulders). Each checked against a source:
+
+| Entry | Checked against |
+|---|---|
+| Morrison, Riley, Zancanaro, Commun. ACM 5(12), 613–614 (1962), doi:10.1145/355580.369128 | CACM article page (title, journal); ixdf.org author record (authors, volume, issue, pages, DOI) |
+| Wengert, Commun. ACM 7(8), 463–464 (1964) | the article's own first page (cs.princeton.edu copy); CACM August 1964 issue listing |
+| Dekker, Numer. Math. 18, 224–242 (1971), doi:10.1007/BF01397083 | the article's first page (volume, pages); Springer/Altmetric record (DOI, year) |
+| Ogita, Rump, Oishi, SIAM J. Sci. Comput. 26(6), 1955–1988 (2005), doi:10.1137/030601818 | TUHH Open Research record |
+| Anderson et al., LAPACK Users' Guide, 3rd ed., SIAM (1999), ISBN 0-89871-447-8 | netlib.org/lapack/lug |
+| Mulders, AAECC 11, 69–88 (2000), doi:10.1007/s002000000037 | Unpaywall record |
+| Harvey, arXiv:0712.4046 | the arXiv abstract (credits Kronecker 1882) |
+
+Not added: Hanrot–Zimmermann (2004), whose HAL record refused the fetch.
