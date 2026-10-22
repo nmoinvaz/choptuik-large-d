@@ -18,3 +18,8 @@ D 4.0 M 48: L 1921, steps 175, start |F| 3.4e-05
   newton 0: |F| 2.39e-07 |dz| 9.52e-05 lam 1 dDelta -2.12e-09 Delta 3.445452796188229 piv 2.4e-03..2.6e+00  t 299.9s
   newton 0: |F| 1.63e-08 |dz| 5.71e-06 lam 1 dDelta -2.27e-11 Delta 3.445452796165538 piv 2.4e-03..4.0e+00  t 304.7s
   newton 0: |F| 9.00e-11 |dz| 2.85e-08 lam 1 dDelta -2.27e-13 Delta 3.445452796165311 piv 2.4e-03..4.0e+00  t 284.4s
+  newton 0: |F| 1.50e-15 |dz| 8.23e-13 lam 1 dDelta -9.17e-17 Delta 3.445452796165311 piv 2.4e-03..4.0e+00  t 295.4s
+  newton 0: |F| 1.37e-24 |dz| 7.44e-22 lam 1 dDelta +1.08e-25 Delta 3.445452796165311 piv 2.4e-03..4.0e+00  t 280.3s
+  newton 0: |F| 3.27e-30 converged (last |dz| 1.3e-26) Delta 3.445452796165311
+D 4.0 M 48: Delta 3.4454527961653110 (+1.19e-16) |F| 3.3e-30 its 11 3063s dDelta/dF max 3.2e+01 tails 7e-06 6e-07 dDelta_est -4.1e-30
+D 4.0 M 64: L 2561, steps 239, start |F| 4.2e-01
