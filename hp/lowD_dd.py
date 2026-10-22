@@ -104,6 +104,8 @@ def main():
     ap.add_argument("--tag", default="lowD")
     ap.add_argument("--solver", default="newton", choices=["newton", "dn"])
     ap.add_argument("--w", type=int, default=24)
+    ap.add_argument("--dn_its", type=int, default=2, help="dn: iterations of the deflated phase before plain Newton")
+    ap.add_argument("--resume", action="store_true", help="start each (D, M) from its checkpoint if there is one")
     ap.add_argument("--svd", type=int, default=0)
     ap.add_argument("--lm", type=int, default=0)
     a = ap.parse_args()
@@ -156,15 +158,39 @@ def main():
             zh, zl = resample_z(np.asarray(zh) + np.asarray(zl), Mo, M, len(nodes))
             Mo = M
         t0 = time.time()
+        done = os.path.join(outdir, f"{a.tag}_D{D:.4f}_M{M}.npz")
+        if a.resume and os.path.exists(done):
+            zh, zl, _ = load(done)
+            log(f"D {D} M {M}: already converged ({done}); skipped")
+            continue
+        ckpt = os.path.join(outdir, f"{a.tag}_D{D:.4f}_M{M}_ckpt.npz")
+        meta_c = dict(D=D, M=M, nodes=nodes, kt=a.kt, kc=a.kcs, ks=a.ks)
+        if a.resume and os.path.exists(ckpt):
+            zh, zl, mc = load(ckpt)
+            log(f"resuming from checkpoint {ckpt} (iteration {mc.get('it')})")
         s = make_solver(D, M, nodes=nodes, kt=a.kt, kc=a.kcs, ks=a.ks, threads=a.threads)
-        s.set_segs(s.plan(zh, zl, a.tol_step, a.hmax))
+        segs = None
+        if a.resume and os.path.exists(ckpt) and mc.get("segs"):
+            segs = mc["segs"]             # keep the step plan of the interrupted run (the residual depends on it)
+        s.set_segs(segs or s.plan(zh, zl, a.tol_step, a.hmax))
+        meta_c["segs"] = s.get_segs()
         fh, fl = s.residual(zh, zl)
         F0 = float(np.abs(np.asarray(fh) + np.asarray(fl)).max())
         log(f"D {D} M {M}: L {s.size}, steps {sum(len(g) - 1 for g in s.get_segs())}, start |F| {F0:.1e}")
-        if a.solver == "dn":
-            zh, zl, hist = deflated_newton(s, zh, zl, tol=a.tol, it_max=a.it_max, w=a.w, verbose=True)
-        else:
-            zh, zl, hist = newton_solve(s, zh, zl, tol=a.tol, it_max=a.it_max, verbose=True)
+        hist = []
+        if a.solver == "dn" and not (a.resume and os.path.exists(ckpt)):
+            # deflated phase only (the weakest w directions removed from the step), then plain Newton below
+            zh, zl, hist = deflated_newton(s, zh, zl, tol=a.tol, it_max=a.dn_its, w=a.w, verbose=True)
+            save(ckpt, np.asarray(zh), np.asarray(zl), dict(meta_c, it=len(hist)))
+        # plain Newton with backtracking, one iteration per call so that every accepted step is checkpointed
+        for it in range(a.it_max):
+            if hist and (hist[-1].get("accepted") or ("lam" not in hist[-1] and "piv" in hist[-1] and hist[-1]["F"] < a.tol)
+                         or "failed" in hist[-1]):
+                break
+            zh, zl, h1 = newton_solve(s, zh, zl, tol=a.tol, it_max=1, verbose=True)
+            hist += h1
+            if h1 and "lam" in h1[-1]:
+                save(ckpt, np.asarray(zh), np.asarray(zl), dict(meta_c, it=len(hist)))
         _rh, _rl = s.residual(zh, zl)
         if a.lm and not float(np.abs(np.asarray(_rh) + np.asarray(_rl)).max()) < a.accept:
             log("  Newton stalled; Levenberg-Marquardt")
@@ -209,8 +235,9 @@ def main():
             rec.update(weak_sv=sv, weak_delta=dc, svd_seconds=round(time.time() - t1, 1))
         with open(a.out, "a") as f:
             f.write(json.dumps(rec) + "\n")
-        save(os.path.join(outdir, f"{a.tag}_D{D:.4f}_M{M}.npz"), zh, zl,
-             dict(D=D, M=M, nodes=nodes, kt=a.kt, kc=a.kcs, ks=a.ks))
+        save(done, zh, zl, dict(D=D, M=M, nodes=nodes, kt=a.kt, kc=a.kcs, ks=a.ks))
+        if os.path.exists(ckpt):
+            os.remove(ckpt)
         log(f"D {D} M {M}: Delta {zh[-1]:.16f} ({zl[-1]:+.2e}) |F| {F:.1e} its {len(hist)} {dt:.0f}s "
             f"dDelta/dF max {max(sens):.1e} tails {tc:.0e} {th:.0e} dDelta_est {rec['dDelta_est']:+.1e}")
 
