@@ -8,4 +8,5 @@ __pycache__/
 *.so
 .venv/
 *.stackdump
-/.claude/
+/.claude/*
+!/.claude/settings.json
