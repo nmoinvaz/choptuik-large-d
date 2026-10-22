@@ -2019,3 +2019,26 @@ would. So if either T29 variant brought err13 at wf 1.00 down to 1e-9 or below, 
 wf 0.99 and wf 1.01 right away (J 1000, K 27, --fit phys, 2 procs each), with the rest of the command as in T29, and
 run them alongside T31: at most 6 threads in all, below-normal priority. Push each JSON when it lands. If neither
 variant got err13 to 1e-9, do not start anything new; report, and I will decide.
+
+== 2026-10-22 02:58 PDT local
+1. T29 done (both exit 0), pushed in 5da083c (solver/inner_amp/t29/). wf 1.00, K 27, J 1000:
+   T28  640 bits, mf 6:12:  sigma_13 = +4.935e-9 - 1.246e-8i,  err13 1.32e-8, Mf 7 (low edge)
+   (a)  640 bits, mf 6:16:  sigma_13 = +3.911e-9 - 1.599e-9i,  err13 4.49e-9, Mf 7 in every family (not the edge;
+        families nu = 7..15 still fit only to 0.1-0.65)
+   (b)  960 bits, mf 6:12:  sigma_13 = -4.2680685765971e-10 - 4.4718041070526e-10i,  err13 1.03e-22, Mf 8
+        (9 for nu = 17, 19; 7 for nu = 1), every family fits to 3e-19 or better
+   So it was working precision: 960 bits cuts err13 by about 1e14, the wider window only by 3x. T28 and (a) sit
+   1.2e-8 and 4.5e-9 from (b), each matching its own err13.
+   sigma_12: T28 -5.992715169954858e-9 - 5.995616519301666e-11i (err 8.9e-22); (b) -5.9927151699541235e-9
+   - 5.9956165193423882e-11i (err 5.1e-22), 8.4e-22 from T28; (a) 1.7e-21 from T28 (its err 1.3e-21).
+   Started per your rule at 02:52: the (b) variant at wf 0.99 and 1.01 (960 bits, mf 6:12, fit-step 1, J 1000, K 27,
+   --fit phys, 2 procs each), alongside T31. About 4 h each, so expect them near 07:00.
+2. T31: started at 02:04 when T29 exited, with my --reg 1e-7. That was a mistake. Weighted-damping LM stalled at
+   |F| 2e-10 to 9e-10, which facc = 10 tol = 1e-9 accepted. At dDelta/dF ~ 4.5e5 those points were off the branch, with
+   Delta zigzagging by 2e-4 between them and clean points at |F| ~ 1e-14. Their predictors then failed and the step went
+   below dmin at D = 9.15 (constraint 2.7e-6 there, so not the constraint). Kept as march_l1kc23hi_reg.jsonl and
+   logs/t31_*_reg.log. Restarted at 02:46 with your exact flags (plain LM): D = 9.05 Delta 0.9881824492 (|F| 9.3e-13),
+   matching ELL.md. Now at D = 9.625, Delta 0.9867914885, |F| 9.6e-13, constraint 4.2e-6 (peak 1.18e-5 at 9.225),
+   dDelta/dF 8.5e5, steps 0.1 at about 45 s each, no failures. Pushed as is in 451cdf7; ell_gamma.jsonl has no new
+   rows yet (D = 10 not reached). I will push again at each integer D with its gamma.
+3. Remote: pushes still go through the GitHub redirect; set-url was refused by my permission layer, the user can run it.
