@@ -2283,3 +2283,35 @@ threads (its main process is mostly idle), so keep the total at 6: start job A (
 job B (xi1 = 0.16) when 2 more free up, job C (the M = 9 pilot) last, ahead of T35 part B only if B is still waiting on
 A's D = 3.6 state. Stop conditions, the 3-hour cap per job and the push list are those of section 3.1; push to
 wip/m7-radius. A zero that moves by more than about 2e-5 between radii is a finding to report, not to average.
+
+== 2026-10-22 09:38 PDT local
+T36 started. Worktree at main 8fb171a (contains 330c917), solver/inner_stokes/. numba 0.60.0 was already installed
+(not 0.68.0). The six checks, 82 s: capcheck PASS exit 0, capcheck_mutate FAIL exit 1, check 1 3 5 7 PASS exit 0,
+check_mutate FAIL exit 1, hier_nb selftest PASS exit 0, selftest --mutate=radius FAIL exit 1. There are three mutation
+controls, and all fail as they should.
+Job A (xi1 = 0.14) is running now, --procs 2, in the order zero, dA, dw, zero_repeat, then m7_outer.py --local. A
+runner applies section 3.1's rules: a solve with |r_3| > 1e-6 is repeated once from its last x [...], keeping the first
+attempt as *_first.log and renaming a still-high repeat to *_r3high; a Traceback before FIXED-A stops the job; the
+3-hour cap applies. Job B (xi1 = 0.16) starts when two threads free up, and job C last, per your ordering.
+T35 so far: A converged D 3.7 at M 96, Delta 3.4652004823052729 (4 its, 2350 s, about 590 s per iteration; M 80 -> 96
+moves Delta by -1.24e-9) and is on 3.65. D converged 3.72 (3.4661423099798423) and 3.74 (3.4666527873640312) at M 80.
+C at kc 55: Delta 3.4652009839 at |F| 2.0e-10, 5.0e-7 above the double-double value; kc 63 is running.
+Threads: T34 1, T35 A/C/D 3, T36 A 2.
+
+== 2026-10-22 09:58 PDT local
+T36 job A (xi1 = 0.14) done in 19 min, with no zero: no solve reached |r_3| < 1e-6. Pushed to wip/m7-radius
+(0c137a7, new branch from main 8fb171a): eight logs plus logs/m7_outer_local.txt. Each solve, then its one repeat
+from its own end state:
+   solve         first: |r_3|  r_1                 repeat: |r_3|  r_1
+   zero          1.2e-6        +7.750 - 6.914i     2.2e-6         -1.109 + 1.119i   (_r3high)
+   dA            1.9e-6        +0.636 - 1.437i     1.2e-6         -6.639 - 6.744i   (_r3high)
+   dw            2.7e-6        +0.342 - 1.584i     1.0e-6         -0.467 + 0.651i   (kept, but m7_outer rejects it)
+   zero_repeat   1.6e-6        -0.506 - 0.486i     2.2e-6         -1.109 + 1.119i   (_r3high)
+m7_outer.py --local rejects all four: "not enough solves with |r_3| < 1e-6". The two zero solves (from your x and
+from the amplitude seed) ended at the same 9-decimal state, so their repeats were the same run. At |r_3| ~ 1e-6, r_1
+moves by 5-10 between solves at the same (A, w), larger than the dA and dw responses, so the radius check needs level 3
+well below 1e-6 here. The earlier xi1 = 0.15 local dA/dw logs also ended at 5.7e-6 and 6.1e-6, and only fit3_repeat
+reached 1.2e-7, so this may be about level 3 rather than about 0.14.
+Job B (xi1 = 0.16) started at 09:58 on the two freed threads, with the same rules. Job C stays last. If B ends the
+same way, I will report it and not start C unless you say so.
+T35 D: 3.75 converged, Delta 3.4667561198813828 (M 80, 5 its).
