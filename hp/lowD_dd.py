@@ -11,7 +11,11 @@ of them to D. --start: a double-double state (hpkernel.driver.save format), resa
 (driver.renode) if --nodes differs; with --D the solve is at D_new (a continuation step; with --history, Lagrange
 extrapolation through the given states and the start, oldest first, all at the same M and nodes).
 A solve that does not reach |F| < --accept (1e-24) is recorded with converged false and saved as *_fail.npz, and the
-remaining M are skipped. Plain Newton from an f64 seed resampled straight to M = 64 fails at D = 4 (|F| 4e-2: the
+remaining M are skipped. --Dlist d1,d2,...: after the start point, continuation at the last M through these D
+(predictor through the last <= 4 converged states; a failed D gets the midpoint inserted, down to --min_step); with
+--auto_nodes each converged point's series tails are checked and the nodes extended (first node halved, a node 0.1
+further out) when a tail exceeds --tail_max (1e-30), the point being re-solved on the new nodes. Every Newton step is
+checkpointed (--resume continues an interrupted run and skips converged (D, M)). Plain Newton from an f64 seed resampled straight to M = 64 fails at D = 4 (|F| 4e-2: the
 seed lacks harmonics 49-63); go through M = 48 first, with --solver dn.
 Options: --nodes (default 0.02,0.05,0.1,0.16,0.23,0.3,0.4,0.5,0.6), --kt 36 (Taylor order in x), --kcs 60 (centre
 series terms), --ks 100 (horizon series terms), --tol_step 1e-32 (Taylor step tolerance), --hmax 0.05, --tol 1e-29,
@@ -253,6 +257,9 @@ def main():
     ap.add_argument("--Dlist", default="", help="after the start point: continue at the last M through these D "
                     "(comma list), predictor through the last <= 4 converged states; a failed D gets a midpoint inserted")
     ap.add_argument("--min_step", type=float, default=0.005, help="--Dlist: stop when the inserted step is below this")
+    ap.add_argument("--auto_nodes", action="store_true", help="--Dlist: after each point, check the series tails and "
+                    "re-node (first node halved / a node 0.1 further out) and re-solve if a tail exceeds --tail_max")
+    ap.add_argument("--tail_max", type=float, default=1e-30)
     ap.add_argument("--fill_tail", action="store_true", help="--seed: extend the seed's harmonics above kc_seed by "
                     "each field's geometric trend (fill_tail)")
     ap.add_argument("--start_residual_only", action="store_true", help="print the start residual per block and exit")
@@ -348,6 +355,25 @@ def main():
         Dn = targets[0]
         zp = predict(hist[-4:], Dn)
         ok, zh2, zl2 = solve_point(Dn, M, zp, np.zeros_like(zp), f"continuation from D {hist[-1][0]}", a, nodes, outdir, log)
+        if ok and a.auto_nodes:
+            # series check at the converged point: a centre-series tail above tail_max at the first node halves it
+            # (a new first node); a horizon tail above it adds a node 0.1 further out (u0 smaller). The point is
+            # re-solved on the new nodes (a separate record and state) and the predictor restarts from it.
+            s_ = make_solver(Dn, M, nodes=nodes, kt=a.kt, kc=a.kcs, ks=a.ks, threads=a.threads)
+            tc, th = tails(s_, zh2, zl2, nodes, M)
+            new = list(nodes)
+            if tc > a.tail_max:
+                new = [round(nodes[0] / 2, 6)] + new
+            if th > a.tail_max and nodes[-1] < 0.85:
+                new = new + [round(nodes[-1] + 0.1, 6)]
+            if new != nodes:
+                log(f"D {Dn}: series tails {tc:.0e} (centre) {th:.0e} (horizon) above {a.tail_max:.0e}: nodes {nodes} -> {new}")
+                s_.set_segs(s_.plan(zh2, zl2, a.tol_step, a.hmax))
+                zr, zrl = renode(s_, zh2, zl2, nodes, new, M)
+                nodes = new
+                a.tag = a.tag.split("_x")[0] + f"_x{nodes[0]:g}-{nodes[-1]:g}"    # states on the new nodes get their own names
+                ok, zh2, zl2 = solve_point(Dn, M, zr, zrl, f"re-noded at D {Dn}", a, nodes, outdir, log)
+                hist = []
         if ok:
             hist.append((Dn, np.asarray(zh2) + np.asarray(zl2)))
             targets.pop(0)

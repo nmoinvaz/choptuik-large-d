@@ -7,3 +7,8 @@ D 4.0 M 48: L 2305, steps 215, start |F| 2.3e-06
   newton 0: |F| 3.76e-31 converged (last |dz| 4.4e-26) Delta 3.445452661587394
 D 4.0 M 48: Delta 3.4454526615873937 (+9.86e-17) |F| 3.8e-31 its 4 1374s dDelta/dF max 2.6e+00 tails 7e-65 4e-49 dDelta_est -3.3e-30
 D 4.0 M 64: L 3073, steps 251, start |F| 2.2e-04
+== Thu Oct 22 02:55:19 MST 2026 hp/lowD_dd.py hp/data/lowD_dd.jsonl --start hp/data/lowD_states/lowD_D4.0000_M48.npz --nodes 0.01,0.02,0.05,0.1,0.16,0.23,0.3,0.4,0.5,0.6,0.7 --Ms 48,64 --kcs 80 --ks 200 --solver newton --it_max 24 --threads 2 --tag lowDn --resume
+re-noded [0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6] -> [0.01, 0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6, 0.7]
+D 4.0 M 48: already converged (/home/claude/dss-residual-kernel/.claude/worktrees/agent-a52a49ad4e6f05e6e/hp/data/lowD_states/lowDn_D4.0000_M48.npz); skipped
+D 4.0 M 64: L 3073, steps 251, start |F| 2.2e-04
+  newton 0: |F| 2.16e-04 |dz| 1.22e-02 lam 1 dDelta -2.66e-07 Delta 3.445452395704304 piv 1.9e-03..5.8e+00  t 698.9s
