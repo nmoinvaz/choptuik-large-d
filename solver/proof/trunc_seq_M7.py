@@ -81,7 +81,39 @@ def planted():
     return ok
 
 
+J5 = [[3493.5, 1968.7], [-2169.7, 6394.7]]   # M = 5 outer Jacobian of r_1 (Re/Im rows; A, w/w_inf), feasibility.py
+
+
+def pilot():
+    """the fixed-(A, w) M = 7 solve at the M = 5 zero: r_1^[7](p_5) = delta_5 in r_1 units, and the Newton step it gives
+    with the M = 5 outer Jacobian (feasibility.py; finite differences of step 0.05 in w, so a first estimate only)"""
+    fn = os.path.join(ROOT, "solver/inner_stokes/logs/hier_nb_M7_pilot_fixA_at_M5zero.log")
+    txt = open(fn).read()
+    m = re.search(r"FIXED-A M 7: A ([0-9.]+)\s+w/w_inf ([0-9.]+).*?r_1 ([+-][0-9.e+-]+?)([+-][0-9.]+e[+-]\d+)i", txt)
+    if not m:
+        print("pilot: no FIXED-A line yet")
+        return
+    A, w, a, b = (float(m.group(i)) for i in range(1, 5))
+    det = J5[0][0] * J5[1][1] - J5[0][1] * J5[1][0]
+    dA = -(J5[1][1] * a - J5[0][1] * b) / det
+    dw = -(-J5[1][0] * a + J5[0][0] * b) / det
+    print(f"pilot (M = 7 at the M = 5 zero, levels 3-7 tuned): r_1 = {a:+.4f}{b:+.4f}i, |r_1| = {abs(complex(a, b)):.3f}")
+    print(f"   one Newton step with the M = 5 Jacobian: dA {dA:+.2e}, d(w/w_inf) {dw:+.2e} -> A {A + dA:.6f}, "
+          f"w/w_inf {w + dw:.6f}")
+    xs = re.findall(r"^level 3 it \d+: .*? x \[([^\]]+)\]", txt, re.M)
+    xl = [float(t) for t in xs[-1].split(",")]          # last accepted level-3 iterate, 9 decimals
+    rr = {nu: ratio(xl[2:], xl[0], nu) for nu in (3, 5, 7)}
+    F7 = rr[7]
+    print(f"   F_7/F_1 = {F7:.6f}; re-tuned lower harmonics against the M = 5 zero (same A, w):")
+    for nu in (3, 5):
+        d = rr[nu] - ratio(M5["x"], M5["A"], nu)
+        print(f"     Delta(F_{nu}/F_1) = {d:+.3e}  |.| / |F_7/F_1| = {abs(d) / abs(F7):.3f}   relative {abs(d) / abs(rr[nu]):.2e}")
+
+
 def main():
+    if "--pilot" in sys.argv:
+        pilot()
+        return
     if "--planted" in sys.argv:
         sys.exit(0 if planted() else 1)
     opt = [a for a in sys.argv[1:] if a.startswith("--c7=")]

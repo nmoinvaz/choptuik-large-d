@@ -215,6 +215,8 @@ linear terms, so at its λ = 0 the new block is degenerate rather than a decoupl
 
 PLACEHOLDER-CONST
 
+PLACEHOLDER-LOCAL
+
 ## 8. The ratio bound: an attempt, and the inequality that needs a new idea
 
 ### 8.1 The mechanism the data show: a tuning cascade
@@ -223,32 +225,39 @@ PLACEHOLDER-CASCADE
 
 ### 8.2 Lowest order in the amplitude: what can be proved
 
-By Lemma L, the lowest-order coefficient of the increment, Δσ_{M+1}, is linear in the top-degree harmonic M + 2. At top
-degree (harmonic h at order A^h, no conjugates) the inner problem closes on the positive harmonics: it is the inner problem
-for a holomorphic profile F⁺(w) = Σ_{ν > 0} f_ν^{(ν)} w^ν, w = A e^{iθ}, and its tuning conditions say that the top-degree
-jump is a pure label-1 jump. Each order is then one *linear* forced Weber problem for one harmonic,
+By Lemma L the lowest-order coefficient of the increment, Δσ_{M+1}, is linear in the top-degree harmonic M + 2, and
+every coefficient of the amplitude expansion is built by one kind of step: at order k, harmonic ν obeys amp_flint's
+scaled recursion (d̃_j = d_j/2^j; the operator is the c = 1 one, since order k depends on itself only through g₀ = 1)
 
 ```math
-y^{(\nu)}_\nu = 2 f^{(\nu)}_\nu\,u_\nu + y_{g_\nu}, \qquad \hat S_\nu\big[y^{(\nu)}_\nu\big] = f^{(\nu)}_\nu + \frac{S_\nu[y_{g_\nu}]}{2\kappa_\nu} = 0 ,
+\tilde d_{j+1} = a_j\,\tilde d_j - b_j, \qquad a_j = \frac{(j+\alpha_\nu)(j+\beta_\nu)}{j+1}, \qquad \alpha_\nu = \tfrac{1+i\nu\omega}{2},\ \beta_\nu = \tfrac{2+i\nu\omega}{2},
 ```
 
-with u_ν the regular Kummer series (multiplier κ_ν by definition) and y_g the formal solution with zero datum and the
-forcing g_ν built from lower top-degree harmonics. Two statements would give (T1) and (T2) at lowest order:
+with b_j the forcing from lower orders. This is the step for which the cancellation can be written exactly.
 
-- (W) **single-step cancellation**: S_ν[y_g] = κ_ν P_ν[ĝ] with P_ν a functional of the Borel transform ĝ that does not
-  contain κ_ν. *Sketch (not a proof):* in the Borel plane y_g = R_ν ∗ ĝ with R_ν the resolvent kernel of the Weber operator,
-  whose only singularity at ζ = ½ has strength κ_ν; if ĝ is analytic on [0, ½] (true at top degree, where every label
-  except 1 is tuned and label 1 enters harmonic ν only through e^{Π⁺}, as a separate family), the singular part of a
-  convolution at ½ is the singular part of R_ν convolved with ĝ, so κ_ν factors out. Then f_ν^{(ν)} = −P_ν[ĝ_ν]/2: the
-  weight cancels in every step (B_tail.md §2), exactly.
-- (U) **uniformity**: |P_ν[ĝ]| ≤ C ‖g‖ in a norm that the forcing's harmonic structure controls, with C independent of ν.
+**Lemma W (the weight cancels in every tuning step; proved, as algebra).** With T_j = (α_ν)_j(β_ν)_j/j! = Π_{m<j} a_m,
+the recursion solves in Darboux form, d̃_j = T_j (d̃₀ − Σ_{i<j} b_i/T_{i+1}). The late-order multiplier sequence of amp_flint
+is R_j = base_j (d̃_j + de-mixing terms) + normalisation terms, with base_j T_j = K_ν = 1/(Γ(α_ν)Γ(β_ν)) exactly
+([D_entire.md](D_entire.md) §6.1, where this telescoping is carried out and enclosed rigorously for σ₁). So the
+normalised order-k multiplier is
 
-(W) is classical in structure and should be provable with the explicit Kummer resolvent. (U) is where it stops: P_ν
-integrates ĝ against a kernel that oscillates like ζ^{iνω/2} (the Weber exponent α_ν = (1 + iνω)/2), and a bound uniform in
-ν needs either that oscillation (stationary phase, which gives decay in ν but with constants that depend on derivatives
-of ĝ that themselves grow with the order) or analytic continuation of ĝ off the real ζ axis (which brings back a factor
-e^{νω·angle}, see 8.4). Measured, the leading-order tuning ratio q_ν is ν-independent to six digits (B_tail.md §2), so (U)
-holds in fact for the profile; no proof of it is known here.
+```math
+\hat S^{(k)}_\nu = \lim_{j\to\infty}\Big[\tilde d^{(k)}_0 - \sum_{i\lt j}\frac{b^{(k)}_i}{T_{i+1}} + C^{(k)}_j\Big], \qquad f^{(k)}_\nu = \tfrac12\lim_{j\to\infty}\Big[\sum_{i\lt j}\frac{b^{(k)}_i}{T_{i+1}} - C^{(k)}_j\Big],
+```
+
+where C_j collects the de-mixing and ⟨F²⟩-normalisation terms (explicit in D_entire.md §6.1 for k = 3). K_ν ≍ e^{πνω/2}
+appears nowhere: B_tail.md §2's "the weights cancel in the tuning" is this identity. Moreover every denominator only grows
+with ν: |T^{(ν)}_i| = Π_{m<i} |m + α_ν| |m + β_ν|/(m + 1) is increasing in ν for each i, so term by term
+|b_i/T^{(ν)}_{i+1}| ≤ |b_i|/(½)_{i+1}. ∎
+
+**Why this does not yet give (★).** The sum converges only through cancellations: D_entire.md §6.1 needs two exact
+cancellations of the O(1/j) parts of the increments before they are O(j⁻²) and summable. The forcing b_i grows like the
+late orders of the lower harmonics, |T^{(μ)}_i| ≍ (½)_i up to oscillating factors, so the term-by-term majorant
+Σ|b_i|/(½)_{i+1} ~ Σ 1/i diverges (logarithmically). A ν-uniform bound needs the cancellations themselves to be ν-uniform. That is a concrete,
+finite-dimensional question per order (the cancellations are identities between the ψ-function terms of C_j and the first
+terms of the forcing), and it is where an attempt at (★) at lowest order should continue; it was not completed here.
+Measured, the outcome is known: the leading-order tuning ratio q_ν is ν-independent to six digits (B_tail.md §2), so the
+tuning steps are uniform in fact.
 
 PLACEHOLDER-LOWEST
 
