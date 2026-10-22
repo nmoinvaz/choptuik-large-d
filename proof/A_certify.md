@@ -48,12 +48,17 @@ Contents
 - [7. From M = 1 to M = 5](#7-from-m--1-to-m--5)
 - [8. Reproduce](#8-reproduce)
 - [9. Step (ii): the validated integration (agent VI)](#9-step-ii-the-validated-integration-agent-vi)
+  - [9.5 Mutation controls: the test can fail](#95-mutation-controls-the-test-can-fail)
 - [10. Independent check with CAPD (agent IC)](#10-independent-check-with-capd-agent-ic)
   - [10.1 What was built](#101-what-was-built)
   - [10.2 How independent it is](#102-how-independent-it-is)
   - [10.3 Results at ξ₁ = 0.3](#103-results-at-ξ₁--03)
   - [10.4 Evidence on lemmas 6a and 6b](#104-evidence-on-lemmas-6a-and-6b)
   - [10.5 Reproduce](#105-reproduce)
+- [11. Lemmas 6a and 6b](#11-lemmas-6a-and-6b)
+  - [11.2 The certificate on the lower path](#112-the-certificate-on-the-lower-path)
+  - [11.5 Lemma 6a](#115-lemma-6a)
+  - [11.7 The resulting theorem, and what remains](#117-the-resulting-theorem-and-what-remains)
 
 ## 1. The template
 
@@ -995,3 +1000,378 @@ python3 export_start.py       # regenerate data/ from fixed_point.start_data, se
 ```
 
 The exit status is 0 only if every Krawczyk test passes and every control gives its expected verdict.
+
+## 11. Lemmas 6a and 6b
+
+The review ([A_review.md](A_review.md) §6a, §6b) listed two steps between the certificate of §9 and a statement about
+the selection condition. This section proves 6a and the part of 6b near ξ = 0, moves the certificate to the lower path,
+and states exactly what is still open. All computations are in ball arithmetic (python-flint 0.9, 256–320 bits), on
+the parameter box
+
+```math
+X = \hat x + [-10^{-9}, 10^{-9}]^2, \qquad \hat x = (2.5421480475,\ 0.7769940136), \qquad x = (A,\ \omega/\omega_\infty) .
+```
+
+Times are wall-clock on the shared 2-core machine (load 8–10), single process under `nice`.
+
+**Summary.**
+
+| item | status | key numbers |
+|---|---|---|
+| certificate on the lower path (11.2) | **proved** | K(X) ⊂ int X, margins 8.57×10⁻¹⁰, 9.71×10⁻¹⁰ |
+| lemma S, start values on a domain reaching the real axis (11.3) | **proved** | contraction ≤ 0.4903 |
+| lemma 6b near 0: y⁺ analytic for 0 < \|ξ\| ≤ 0.0624, 0 ≤ arg ξ ≤ 3π/8 (11.4) | **proved** | |
+| lemma 6b on the annulus 0.0624 ≤ \|ξ\| ≤ 0.2 (11.4) | **open** (numerical evidence only) | validated sweeps attempted, see 11.4 |
+| lemma 6a, J_D(0.3) = 0 ⇔ y⁺ ≡ y⁻ (11.5) | **proved, given 6b** | ρ₆ₐ = 4.2×10⁻³ < 1 |
+| mutation tests (11.6) | two caught, one not caught (explained) | |
+
+So the theorem about the selection condition (11.7) is proved **conditionally on the annulus part of lemma 6b**.
+
+### 11.1 Definitions
+
+The system is the truncated M = 1 system of §2 with real parameters x ∈ X. With z = ξ², the lateral solution y⁺ is
+the solution asymptotic to the formal series on a sector of small radius containing 0 ≤ arg z ≤ 3π/4 (Braaksma's
+1-summability, as in §4.4 and review 2f; this is the one fact assumed, not proved, here). The reflection
+σ(y)_μ = conj(y₋μ) (and the same for the S and C components) maps solutions to solutions under ξ ↦ ξ̄ and fixes the formal series, so
+y⁻(ξ) = σ(y⁺(ξ̄)) is the lateral solution from below.
+
+The **selection condition** is y⁺ ≡ y⁻. Both continue along the real axis from near 0; write y⁺_ℝ for the continuation
+of the germ y⁺ along the real axis, and
+
+```math
+\psi = y^+_{\mathbb R} - y^-_{\mathbb R} = y^+_{\mathbb R} - \sigma(y^+_{\mathbb R}), \qquad J_D(\xi_1) = \psi_{D,+1}(\xi_1), \qquad \psi_{D,-1}(\xi_1) = -\overline{J_D(\xi_1)} .
+```
+
+ψ is anti-symmetric, σψ = −ψ. In the variables of §4.4 (p, v, c), β = v_ψ(Z) ∈ ℂ² satisfies β₋₁ = −conj(β₊₁), and
+Σ := β₊₁ is the single complex Stokes constant: 11.5 shows ψ ≡ 0 ⇔ Σ = 0.
+
+The certificate computes the continuation along a path. On the **lower path** (ray arg ξ = 3π/8 from 0.1 to 0.2, arc
+|ξ| = 0.2 down to the real axis, real axis from 0.2 to 0.3) it equals y⁺_ℝ(0.3) if y⁺ is analytic on
+
+```math
+\Omega = \{\, 0 \lt |\xi| \le 0.2,\ 0 \le \arg\xi \le 3\pi/8 \,\}
+```
+
+(the region between the path and the real axis; the last leg is the real axis itself). That is lemma 6b for this
+path.
+
+**Why the lower path.** On the path of §9 (arc at 0.3) lemma 6b would need analyticity up to |ξ| = 0.3, next to the
+singularity of y⁺ between radii 0.30 and 0.35 (review R6), where |y⁺| reaches 8.4 on the arc. The lower path needs
+only |ξ| ≤ 0.2, a third less radius and far from that singularity, and its certificate costs one more run of the
+existing integrator. The price is the real leg 0.2 → 0.3, along which the fast modes grow by about e⁷; it is
+harmless at this box size (11.2).
+
+### 11.2 The certificate on the lower path
+
+`lemma6_path.py` runs `validated_int.py`'s point and box runs (its integrator, start data and Krawczyk assembly,
+unchanged) on the lower path, and saves every state component, which 11.5 needs. One heuristic differs: the a-priori
+enclosure (`lemma6_common.py`). validated_int inflates each real and imaginary radius by 1.5 per Picard iteration; on
+the real axis the imaginary radius of the nearly real components starts at about 10⁻¹⁵ and never catches up with the
+wrapping from the other components, so the step size collapses to about 10⁻⁶ (the real leg would take 10⁶ steps). The
+replacement adds a common floor, 10⁻² times the largest radius, and refuses steps whose a-priori box grows by more
+than 5% of the state's size. Containment is still verified with `contains`, so every enclosure stays rigorous; only
+the step sizes change.
+
+| run | steps (ray, arc, real) | time | final radius |
+|---|---|---|---|
+| point at x̂ | 303, 322, 47 | 285 s | state 1.8×10⁻¹⁶ |
+| box over X, variational columns | 303, 322, 47 | 333 s | state set 5.2×10⁻¹⁰ |
+
+J_D(x̂) = 1.0547397×10⁻¹² − 3.4904294×10⁻¹²i (radius 6×10⁻¹⁷), the same as on the upper path (§9.3) to the digits shown there.
+The Krawczyk test of §5.1 passes: K(X) ⊂ int X with margins 8.570×10⁻¹⁰ and 9.712×10⁻¹⁰. J(X) also encloses the
+Jacobian over every sub-box centred at x̂, and the test passes on x̂ ± 1.2×10⁻¹⁰ as well. Hence, with endpoints rounded
+outward,
+
+```math
+J_D^{\rm path}(0.3;\,\cdot\,) \text{ has exactly one zero in } X, \text{ it is simple, and it lies in } A \in [2.54214804761338,\ 2.54214804761975], \quad \omega/\omega_\infty \in [0.776994013607438,\ 0.776994013612010]
+```
+
+(ω ≈ 2.96977670855). This box lies inside the enclosure from the upper path (§9), which is consistent with the two
+paths giving the same function, but does not prove it.
+
+### 11.3 Lemma S: start values on a domain that reaches the real axis
+
+`fixed_point.py` integrates the fast component v from z = 0 along the ray to z, which needs Re(1/z) < 0 on the ray, so
+its domains stay at |arg z − 3π/4| ≤ 0.4. To reach the real axis, change the integration path of v and nothing else.
+
+**Domain.** With u = 1/z, R₊ > 0, U₀ = √2/R₊ and the cone K = {w : −3π/4 ≤ arg w ≤ 0}, let
+
+```math
+D = \{\, z : 1/z \in U_0 + K \,\} .
+```
+
+Three properties follow from elementary geometry of the translated cone:
+
+- **Radius and coverage.** |z| ≤ R₊ on D. In the direction arg z = θ ∈ [0, 3π/4), D contains every z with
+  |z| ≤ R₊ sin(3π/4 − θ), which is at least R₊/√2 for θ ≤ π/2 and includes the real segment 0 < z ≤ R₊/√2.
+- **Star shape.** D is star-shaped about 0, so the slow components p and c are still integrated along the segment
+  [0, z], with the bound of §4.4.
+- **Path.** The path $`u + s\,e^{-3i\pi/4}`$, s ≥ 0, stays in D for every u ∈ D, and ends at z → 0 along arg z → 3π/4.
+
+**Fast operator.** For z ∈ D, integrate the v-equation along that path:
+
+```math
+v(z) = \int_{\gamma_z} e^{\frac{1}{2t}-\frac{1}{2z}}\,\Phi_v(t)\,dt, \qquad \frac1t = \frac1z + s\,e^{-3i\pi/4},\quad s \text{ from } \infty \text{ to } 0 .
+```
+
+Along it $`|e^{1/(2t)-1/(2z)}| = e^{-as}`$ with a = √2/4, and |dt| = |t|² ds. Let c = −cos φ, φ the angle between u and
+$`e^{-3i\pi/4}`$, and x = s/|u|. Then
+
+```math
+\frac{|u|^2}{|u + s e^{-3i\pi/4}|^2} = \frac{1}{1 - 2cx + x^2} \le e^{2cx} \qquad (0 \le c \le 1/\sqrt2),
+```
+
+because f(x) = ln(1 − 2cx + x²) + 2cx has f(0) = 0 and f′(x) = 2x(1 − 2c² + cx)/(1 − 2cx + x²) ≥ 0. On D one has
+c ≤ 1/√2 always, and c/|u| ≤ 1/(√2 U₀) = R₊/2 (the worst case is the real end of D, u = U₀). For c ≤ 0 the ratio is
+at most 1. Hence
+
+```math
+\int_{\gamma_z} \Big|e^{\frac{1}{2t}-\frac{1}{2z}}\Big|\,|t|^m\,|dt| \le |z|^{m+2} \int_0^\infty e^{-as + (m+2)\frac{c}{|u|}s}\,ds \le \frac{|z|^{m+2}}{a - (m+2)R_+/2} .
+```
+
+For an integrand $`K|t|^q`$ with q ≥ k − 2, write $`|t|^q \le R_+^{q-k+2}|t|^{k-2}`$. In the weighted norm of §4.4 the fast bound
+becomes $`K R_+^{q+2-k}/a_{\rm eff}`$ with
+
+```math
+a_{\rm eff} = \frac{\sqrt2}{4} - \frac{k R_+}{2} ,
+```
+
+the same form as fixed_point's $`K R^{q+2-k}/a`$. The slow-type alternative that `fixed_point.intbound` also allows for
+fast rows (integration from 0 with kernel ≤ 1) does not hold on these paths, so `lemma6_sector.py` removes it. Every
+other bound of §4.4 is a sum of |coefficients| times powers of the radius and holds on D with R = R₊.
+
+**Weights.** The Perron weights are made symmetric under μ ↦ −μ (w_j := min(w_j, w_σ(j)); any positive weights are
+valid), so that σ maps the ball to itself (needed in 11.5).
+
+**Result** (`lemma6_sector.py`, over X, R₊ = 0.1², weight exponent k = 30, N = 53):
+
+| quantity | value |
+|---|---|
+| a_eff | 0.20355 |
+| contraction constant | ≤ 0.4903 |
+| forcing F (weighted) | 1.04×10⁴⁴ |
+| ball ρ (weighted) | 8.14×10⁴⁴, with F + Λρ = 5.03×10⁴⁴ < ρ |
+
+**Lemma S.** For every x ∈ X the truncated system has a solution Y = Y_N + η on D, with η analytic in the interior of D
+and in the weighted ball above; it is unique in that ball, and it is y⁺.
+
+*Proof of the identification.* The domains D(U₀′) = {1/z ∈ U₀′ + K} decrease as U₀′ grows, the operator on D(U₀′)
+only uses values on D(U₀′) (paths and segments stay inside), and every bound is non-decreasing in R₊. So the
+contraction holds on each D(U₀′), U₀′ ≥ U₀. For large U₀′, D(U₀′) lies in the sector of asymptoticity of y⁺, where
+$`y^+ - Y_N = O(|z|^{53})`$. So y⁺ − Y_N satisfies the integral equation on D(U₀′): the boundary terms of p and c vanish at 0,
+and that of v is $`e^{-as}`$ times a bounded function. Its weighted norm on D(U₀′) tends to 0, so it lies in the ball and
+equals the fixed point there. Both are solutions of the ODE on the connected set D, so they agree on D. ∎
+
+The same run re-proves the sector lemma of §4.4 (`--sector=0.2`) over X (contraction 0.5107). Its fixed points on the
+rays |arg ξ − 3π/8| ≤ 0.2 form one analytic function on that sector: the ray integrals from 0 are path-independent
+there, because Re(1/t) → −∞ uniformly as t → 0 in that sector. It is y⁺ on the rays with arg z ≤ 3π/4, hence the
+continuation of y⁺ on the whole sector.
+
+### 11.4 Lemma 6b
+
+**What is proved.** D contains the directions 0 ≤ arg z ≤ 3π/4 − 0.4 up to a radius of at least R₊ sin 0.4 = 0.003894, and the sector
+lemma covers 3π/4 − 0.4 ≤ arg z ≤ 3π/4 up to |z| = 0.01. So:
+
+**Lemma 6b₀.** For every x ∈ X, y⁺ extends analytically to the interior of Ω₀ = {0 < |ξ| ≤ 0.0624, 0 ≤ arg ξ ≤ 3π/8},
+continuously up to its boundary, and to the real segment 0 < ξ ≤ 0.0841, where it is enclosed by lemma S.
+
+**What remains (lemma 6b₁).** Show that y⁺ extends analytically to the annular sector
+A₁ = {0.0624 ≤ |ξ| ≤ 0.2, 0 ≤ arg ξ ≤ 3π/8}, for every x ∈ X. Together with 6b₀ this gives analyticity on Ω, hence
+J_D^path(0.3) = J_D(0.3).
+
+The tool for 6b₁ is a validated sweep. A family of paths (t, d) ↦ u_c(t) + d, with the same velocity du/dt for every
+member, is integrated as one Lohner set with d as a constant state. If the run finishes, y⁺ continues analytically to
+the tube {u_c(t) + d}. The argument: let Ψ(t, d) be the solution along u_c + d started from y⁺(u_c(0) + d), and
+W = ∂_dΨ − F(u_c + d, Ψ). Then
+
+```math
+\partial_t W = F_Y(u_c + d, \Psi)\,u_c'(t)\,W, \qquad W(0, d) = 0 ,
+```
+
+so W ≡ 0. Hence Ψ(t, u − u_c(t)) does not depend on t, and it defines an analytic solution on the tube. For arcs with
+varying radius the same computation, with ∂_θ in place of ∂_t, gives the Cauchy–Riemann equations. Consecutive tubes
+overlap in connected sets that reach the start ray, where both functions are y⁺, so the tube functions glue to one
+analytic continuation of y⁺.
+
+The sweep was attempted in two sets of variables and with three kinds of family. None finishes at a practical cost:
+
+1. **Arcs in ξ with the radius as a ball** (validated_int's system). These blow up at once near r = 0.05. The fast rate
+   φ₀/r² ≈ 490 per unit t, evaluated on a radius interval, has an absolute width larger than the contraction it should
+   resolve.
+2. **The u = 1/ξ² variables** (`lemma6_usys.py`). These are the variables (P, V, C) of §4.4 with u as the independent
+   variable. There the fast mode is $`e^{-u/2}`$, with a constant rate, and the C components are scaled by κ = 100. The
+   system agrees with validated_int's at random points to 2×10⁻⁵⁸ (`python3 lemma6_usys.py`). A single arc is easy: at
+   |ξ| = 0.062 (|u| = 260) it takes 750 steps and 110 s, and the enclosure stays at 10⁻⁸. Families are not:
+   - with the radius as a ball, or as a state, they blow up for a relative radius interval of 1% (at 0.1% the
+     enclosure still grows, at a rate of about 4 per unit of the arc parameter);
+   - translated tubes (`lemma6_sweep.py`, `SysUD`, offset d as a state, its column in mean value form) blow up at
+     half-width 1.0 at |u| = 260 (t = 0.55 of the arc) and at 0.5 at |u| = 110 (t = 0.16); half-width 0.26 at
+     |u| = 260 finishes.
+3. **Diagnosis.** The parameter range widens the Jacobian of every step (first order in the width). That excess
+   multiplies the state set, whose width is also of first order, and the product feeds back quadratically. So a
+   first-order (C¹) family is limited to widths of about 0.1–0.2% of the radius.
+
+**Cost and what would finish 6b₁.**
+
+- **Brute force.** Covering A₁ with tubes of half-width 0.1% of the radius takes about 1200 tubes and 4×10⁵ steps, about
+  30 CPU hours on this machine. One such tube was run: at |u| = 260 with half-width 0.26 (`--rhos=260 --dfrac=0.001`) it
+  finishes in 787 steps and 209 s, with the enclosure growing from 2×10⁻³ to 1.8×10⁻². The nodes and the overlap
+  rule are in `lemma6_sweep.py`; the narrow width at smaller |u| has not been tested.
+- **A second-order treatment of the family parameter** (a C² Lohner step for d alone, or Taylor models in (t, d)). It
+  makes the excess quadratic in the width, so widths of about 5% become possible: about 30 tubes and 10⁴ steps.
+- **A start-value lemma reaching |ξ| = 0.2 near the real axis.** This needs the contraction to be built on the exact
+  linear (Kummer) fundamental matrix rather than on the rank-one principal part, as in the template; the majorant
+  bound of lemma S grows like R₊ and exceeds 1 well before R₊ = 0.04.
+
+**Numerical evidence for 6b₁** (not a proof):
+
+- In double precision the arcs at 0.2 and 0.3 give the same y⁺(0.3) to 2×10⁻¹² (review R6).
+- The certified zero on the lower path (11.2) lies inside the certified zero on the upper path (§9).
+- The backward real-axis run of 11.5 reproduces y⁺ along 0.067 ≤ ξ ≤ 0.3 with radius ≤ 2×10⁻⁹.
+
+### 11.5 Lemma 6a
+
+**Lemma 6a.** For every x ∈ X: if y⁺_ℝ(0.3; x) lies in the state-set box B₁ of the lower-path box run (11.2), then
+
+```math
+J_D(0.3;\,x) = 0 \iff \psi \equiv 0 \iff y^+ \equiv y^- \iff \Sigma(x) = 0 .
+```
+
+By 6b the hypothesis holds, because y⁺_ℝ(0.3) is then the path value enclosed in B₁. The implications from right to
+left are trivial.
+
+The proof has three steps. Set ξ_a = 0.067 and Z = ξ_a² = 0.004489 ≤ R₊/√2.
+
+**Step 1: flat estimate on the real segment 0 < z ≤ Z.** By lemma S, y⁺ = Y_N + η⁺ there with η⁺ in the ball. By the
+reflection and the symmetric weights, y⁻ = Y_N + σ(η⁺) is in the same ball, and so is the segment between them. So
+ψ = η⁺ − η⁻ satisfies, exactly,
+
+```math
+\psi = b + T_0\psi, \qquad b = \big(0,\ e^{\frac{1}{2Z}-\frac{1}{2z}}\,\beta,\ 0\big), \qquad \beta = v_\psi(Z) .
+```
+
+Here T₀ integrates the difference of the perturbation terms (linear in ψ by the mean value theorem on the ball):
+
+- p and c are integrated from 0, which is valid because ψ = O(z^k);
+- v is integrated backward from Z, by variation of constants: $`v(z) = e^{1/(2Z)-1/(2z)}v(Z) + \int_Z^z e^{1/(2t)-1/(2z)}\Phi_v\,dt`$.
+
+The backward kernel obeys, for n + 2 ≥ 0 and (n + 2)Z < 1/2,
+
+```math
+\int_z^Z e^{-\frac12\left(\frac1z-\frac1t\right)}\,t^n\,dt \le \frac{z^{n+2}}{\tfrac12 - (n+2)Z} .
+```
+
+To see this, substitute u = 1/t and use $`(U/u)^{n+2} \le e^{(n+2)Z(U-u)}`$. The weighted fast bound is therefore $`K Z^{q+2-k}/a_{\rm eff}`$
+with a_eff = 1/2 − kZ = 0.3653. With the derivative majorants of `fixed_point.lipschitz_and_forcing` over the ball of
+lemma S, the operator norm is
+
+```math
+\lVert T_0\rVert \le \Lambda = 0.1513 ,
+```
+
+with its own Perron weights w (`lemma6_sector.py`). Since $`z^{-k}e^{-1/(2z)}`$ increases on (0, Z] (kZ < 1/2),
+$`\lVert b\rVert = Z^{-k}\max_\mu w_{v,\mu}|\beta_\mu|`$. Hence ε := ‖ψ − b‖ ≤ Λ/(1 − Λ)‖b‖, and
+
+```math
+|p_\mu(Z)| \le Z^{k}\,\varepsilon/w_{p,\mu}, \qquad |c_\nu(Z)| \le Z^{k+1}\,\varepsilon/w_{c,\nu}, \qquad v_\psi(Z) = \beta .
+```
+
+**Step 2: the backward flow.** If J_D(0.3) = 0, then ψ(0.3) = (0, 0, u) with u = (ψ_S, ψ_C) ∈ ℂ⁵. The C¹ Lohner
+integrator runs backward along the real axis from 0.3 to ξ_a, where the fast modes decay by about $`e^{-106}`$. It starts
+from the hull of B₁ and σ(B₁), with the 7 identity columns as variational columns. The resulting enclosure B ∋ DΦ(y)
+holds for every y in that hull (291 steps, 130 s, max radius of B 1.8×10⁻⁶). By the mean value theorem
+ψ(ξ_a) ∈ B ψ(0.3). In the (p, v, c) variables at ξ_a, with T_a the exact change of variables
+(p = D/ξ, v = S/ξ² − (1 + iμω)D/ξ, c = C) and G = T_a B restricted to the columns of u:
+
+```math
+(p, c)(Z) = G_{\rm slow}\,u, \qquad \beta = G_{\rm fast}\,u .
+```
+
+**Step 3: the contraction in β.** G_slow (5×5) is invertible: arb inverts the whole ball, with entries of G_slow⁻¹ at
+most 1.26. So β = H (p, c)(Z) with H = G_fast G_slow⁻¹, whose entries are at most 7.7. With step 1,
+
+```math
+\max_\mu w_{v,\mu}|\beta_\mu| \le \rho_{6a}\,\max_\mu w_{v,\mu}|\beta_\mu|, \qquad
+\rho_{6a} = \frac{\Lambda}{1-\Lambda}\,\max_\mu w_{v,\mu}\sum_j |H_{\mu j}|\,\frac{Z^{k_j-k}}{w_j} \le 4.22\times10^{-3} .
+```
+
+So β = 0, hence b = 0 and ψ = T₀ψ with ‖T₀‖ < 1, so ψ = 0 on (0, Z]. By ODE uniqueness y⁺_ℝ ≡ y⁻_ℝ, and the two germs
+coincide. ∎
+
+The margin is large (ρ₆ₐ = 0.004 against 1). The large entries of H sit in the c-columns, which carry the extra factor
+Z/w_c.
+
+### 11.6 Mutation tests
+
+Each test breaks one input and checks that the corresponding check then fails.
+
+| mutation | where | result |
+|---|---|---|
+| one coefficient of the formal series (D₊₁, order z⁵) changed by a relative 10⁻⁶ | lemma S, `lemma6_sector.py --mutate=series` | **caught**: the residual no longer vanishes below order N, the lemma reports False |
+| y⁻ taken as conj(y⁺) without the reflection μ ↦ −μ (wrong mode labelling) | 6a, `lemma6_jump.py --mutate=swap` | **caught**: the start hull has radius 0.40 and the backward integration fails (step-size underflow); 6a is not established |
+| (1 − iμω) instead of (1 + iμω) in the change of variables at ξ_a (wrong mode normalization) | 6a, `lemma6_jump.py --mutate=coords` | **not caught**: ρ₆ₐ = 0.12 < 1 |
+
+The third mutation is not caught, and that is a real limit of the harness. The wrong v differs from the right one by
+2iμω p, and p(Z) is itself bounded by the flat estimate. So the error changes ρ₆ₐ by a second-order amount (0.004 to
+0.12) and does not flip the outcome. Read the other way, the 6a check is not sensitive to the normalization of v at
+the level of a sign in s. The change of variables used there is that of fixed_point.py (V = Q − (1 + s)P, review 2a),
+and the same formula in `lemma6_usys.py` is checked against validated_int's system by its self-test; that, not the 6a
+check, is what guards it.
+
+The sweep of 11.4 has no mutation test, because it does not pass even unmutated. `--mutate=sign` (the fast term with
+the wrong sign) is in the script for when it does.
+
+### 11.7 The resulting theorem, and what remains
+
+**Proved** (rigorous, given Braaksma's theorem for the existence of y⁺):
+
+1. J_D^path(0.3), the D-component of the jump along the lower path, has exactly one zero in X, and it is simple. It lies
+   in A ∈ [2.54214804761338, 2.54214804761975], ω/ω∞ ∈ [0.776994013607438, 0.776994013612010].
+2. Lemma S and lemma 6b₀: y⁺ is analytic on {0 < |ξ| ≤ 0.0624, 0 ≤ arg ξ ≤ 3π/8} and enclosed there and on the real
+   segment up to 0.0841.
+3. Lemma 6a in the form of 11.5.
+
+**Theorem (conditional on lemma 6b₁).** Assume that, for every x ∈ X, y⁺ is analytic on the annular sector
+0.0624 ≤ |ξ| ≤ 0.2, 0 ≤ arg ξ ≤ 3π/8. Then the M = 1 selection condition y⁺ ≡ y⁻ holds at exactly one point x* of X,
+
+```math
+x^* \in [2.54214804761338,\ 2.54214804761975] \times [0.776994013607438,\ 0.776994013612010],
+```
+
+and the zero is simple: x ↦ J_D(0.3; x) has a non-singular Jacobian at x*. Moreover Σ has a simple zero at x*. The
+reason: at x*, ψ ≡ 0, so φ = ∂ψ/∂x_j is a solution of the variational equation along y⁺ = y⁻ with finite weighted norm
+(each ψ(·; x) obeys the flat estimate). The argument of 11.5 applies to φ verbatim, because its coefficients lie in the
+same hulls. So the real-linear map 𝓛 : ∂Σ ↦ ∂J_D(0.3) is injective, DJ_D(x*) = 𝓛 ∘ DΣ(x*), and DΣ(x*) is non-singular.
+
+*Proof.* By 6b₀ and 6b₁, y⁺ is analytic on Ω, so J_D^path(0.3; x) = J_D(0.3; x) for x ∈ X. By 11.2 this function
+has exactly one simple zero x* in X. By 11.5 (whose hypothesis now holds), J_D(0.3; x) = 0 ⇔ y⁺ ≡ y⁻. ∎
+
+**What remains:** lemma 6b₁ only (11.4 lists three routes and their cost). Without it, the honest statement is item 1
+above together with 6a as stated.
+
+**Independence.**
+
+- The 6a backward run and the lower-path runs use validated_int's integrator, which the review audited; the
+  independent CAPD check is the subject of §10. Nothing here depends on it.
+- Lemma S reuses fixed_point.py's majorant code. Only the two kernel bounds above are new, and they are proved in the
+  text.
+- The u-system is checked against validated_int's system, not against independent code.
+- No reference value was used to tune anything: the box, ξ_a, k and R₊ were chosen for margin before the final runs.
+
+**Reproduce** (in `solver/proof/`):
+
+```
+python3 lemma6_sector.py --json=lemma6_sector_1e-9.json      # lemma S over X, the old sector lemma, the flat estimate; ~5 s
+python3 lemma6_path.py point --out=lemma6_path_point.json      # lower path, point run, ~5 min
+python3 lemma6_path.py box --h=1e-9 --out=lemma6_path_box_1e-9.json   # lower path, box run, ~6 min
+python3 lemma6_path.py krawczyk --point=lemma6_path_point.json --box=lemma6_path_box_1e-9.json   # K(X), seconds
+python3 lemma6_jump.py --box=lemma6_path_box_1e-9.json --json=lemma6_jump_1e-9.json   # lemma 6a, ~2-3 min
+python3 lemma6_sector.py --mutate=series                      # mutation: must report False
+python3 lemma6_jump.py --box=lemma6_path_box_1e-9.json --mutate=swap     # mutation: must fail
+python3 lemma6_jump.py --box=lemma6_path_box_1e-9.json --mutate=coords   # mutation: not caught (see 11.6)
+python3 lemma6_usys.py                                         # u-system vs validated_int's system
+python3 lemma6_sweep.py --rhos=260 --dfrac=0.001               # one narrow tube of the (unfinished) 6b1 sweep
+```
+
+The saved runs are `lemma6_path_point.json`, `lemma6_path_box_1e-9.json`, `lemma6_sector_1e-9.json` and
+`lemma6_jump_1e-9.json`.
