@@ -91,8 +91,10 @@ Conventions for the Claude sessions (cloud and local) that run computations here
 - **Worktrees:** agents making changes work in a git worktree, not the main checkout, and write only the files their task
   names. The coordinating session merges into main and edits the README and the papers; agents propose text for those
   in their notes.
-- **The container can restart without warning** and kill every running process. Commit work in progress in your worktree
-  at each milestone and before any run longer than about 10 minutes; write long runs' results incrementally to files.
+- **The container can restart without warning** and kill every running process, and it can be reclaimed with its disk. Commit
+  work in progress in your worktree at each milestone and before any run longer than about 10 minutes, then back it up
+  to GitHub: `git push -f origin HEAD:refs/heads/wip/<topic>` (a branch name the coordinator gives you). Write long runs'
+  results incrementally to files. The coordinator merges into main; never push to main yourself.
 - **Shared cores:** the cloud machine has 2 cores, usually shared by several agents. Run single-process under
   `nice -n 10`, put anything longer than a few minutes in the background with a log file, and keep single runs short.
 - **Web access:** WebSearch reaches any site; to target one, pass `allowed_domains`. WebFetch opens only URLs that
