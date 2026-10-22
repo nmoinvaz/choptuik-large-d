@@ -44,9 +44,10 @@ Contents
 - **Above D ≈ 10 (preliminary).** The Jacobian has a near-null band in the high harmonics of the centre datum (the main
   solver's "junk" directions: s/s_max = 1.5×10⁻¹⁰ at D = 9, 1.1×10⁻¹¹ at D = 10.25, no Δ component). A continuation
   that ignores it stalls at D ≈ 10.5; with a smoothness prior in both the Newton solve and the tangent it passes
-  D = 10.5. At η = 0.3 the branch stays smooth there; at η = 1 the solver found two different solutions at D = 10.475
-  (Δ = 0.9935 and 1.0340), so η = 1 above D ≈ 10.25 is not reliable. No fold direction was seen. Going further needs
-  higher resolution and more care than short runs on the shared machine allow (§9).
+  D = 10.5. At η = 0.3 the branch stays smooth there, and λ(D) flattens (3.0814 at D = 10, 3.0685 at 10.5, unchanged
+  to 2×10⁻⁵ at k_c = 23 or with a ten times weaker prior); at η = 1 the solver found two different solutions at
+  D = 10.475 (Δ = 0.9935 and 1.0340), so η = 1 above D ≈ 10.25 is not reliable. No fold direction was seen. Going
+  further needs higher resolution and more care than short runs on the shared machine allow (§9).
 - **γ∞ (not established).** Free fits of λ = λ∞ + Σ c_k n⁻ᵏ to D ≤ 9 give λ∞ = 1.76, 2.74, 2.14, 2.31 (η = 1) and 1.87,
   2.66, 2.15, 2.34 (η = 0.3) for 1–4 powers (D ≥ 5); imposing λ∞ = 2 fits about as well (residuals within a factor 2,
   except a fragile factor 7 at η = 1 with four powers). A planted control shows the method would separate λ∞ = 2.3 from
@@ -207,7 +208,7 @@ the high harmonics (`--reg 1e-8`, as in the ℓ-agent's code; §6) and accept |F
 | 8 | 1.022509 | 3.19414 | 0.313073 | 1.8e-4 | 0.54 | 0.8283 | 1.171733 | 3.33713 | 0.299658 | 3.1e-5 | 1.01 |
 | 9 | 1.026904 | 3.04893 | 0.327984 | 6.0e-5 | 0.51 | 0.8243 | 1.164945 | 3.17532 | 0.314930 | 1.6e-5 | 0.95 |
 | 10 | 1.026142 | 2.91980 | 0.342490 | 1.6e-3 | 0.48 | 0.8222 | 1.154559 | 3.08142 | 0.324525 | 1.6e-3 | 0.89 |
-| 10.5 (prior 10⁻⁷, preliminary) | 0.994292 | 2.90366 | 0.344392 | 1.6e-3 | | | 1.139115 | 3.06853 | 0.325888 | 1.7e-3 | |
+| 10.5 (prior 10⁻⁷; η = 1 uncertain, see text) | 0.994292 | 2.90366 | 0.344392 | 1.6e-3 | | | 1.139115 | 3.06853 | 0.325888 | 1.7e-3 | |
 
 (λ_g = mean over τ of 1 − c_x(τ, 1), the growth rate of the gauge mode that relabels the light cone; max abs u is over
 the nodes 0.02 ≤ x ≤ 0.9 and the light cone.)
@@ -239,9 +240,9 @@ the nodes 0.02 ≤ x ≤ 0.9 and the light cone.)
   D ≈ 10.25 the solver does not follow a single smooth branch, and the η = 1 values there are not reliable (at D = 10.25
   the weakest Jacobian directions are still the junk band, s/s_max = 1.1×10⁻¹¹ at harmonics 9–11 with Δ components
   ≤ 4×10⁻⁵, `data/sigdss_svd.jsonl`, so no isolated fold direction was seen).
-- **λ(D) flattens at D ≈ 10–10.5** in these preliminary points: λ = 2.9198 → 2.9037 (η = 1) and 3.0814 → 3.0685
-  (η = 0.3) between D = 10 and 10.5, slopes −0.03 per unit D against −0.13 and −0.09 between D = 9 and 10. Whether this
-  is the branch or an effect of the prior (which acts in the same harmonics) is not settled (§6).
+- **λ(D) flattens at D ≈ 10–10.5**: λ = 2.9198 → 2.9037 (η = 1) and 3.0814 → 3.0685 (η = 0.3) between D = 10 and 10.5,
+  slopes −0.03 per unit D against −0.13 and −0.09 between D = 9 and 10. At η = 0.3 this survives k_c = 23 and a ten
+  times weaker prior to 2×10⁻⁵ (§6); at η = 1 it rests on the second of the two D = 10.475 solutions.
 
 ## 6. Checks along the branch
 
@@ -253,7 +254,11 @@ the nodes 0.02 ≤ x ≤ 0.9 and the light cone.)
   prior): η = 1, Δ = 1.0261425 against 1.0261416 and λ = 2.919835 against 2.919800 (1.2×10⁻⁵ relative); η = 0.3,
   Δ = 1.15452 against 1.15456 and λ = 3.081100 against 3.081424 (1.0×10⁻⁴). The constraint at k_c = 23 is 8×10⁻⁶ and
   8×10⁻⁵, against 1.6×10⁻³ at k_c = 15: at D = 10 the k_c = 15 constraint overstates the error of Δ and λ, which sits
-  in the high centre harmonics that Δ and λ hardly feel.
+  in the high centre harmonics that Δ and λ hardly feel. D = 10.5 (prior 10⁻⁷): η = 0.3, λ = 3.068523 at k_c = 23
+  against 3.068528 (2×10⁻⁶ relative), Δ = 1.1391179 against 1.1391146; η = 1, λ = 2.903687 against 2.903657 (10⁻⁵),
+  Δ = 0.994302 against 0.994292. **Prior strength** at D = 10.5, η = 0.3 (k_c = 15): with 10⁻⁸ instead of 10⁻⁷,
+  λ = 3.068601 (2×10⁻⁵ relative) and Δ = 1.138994 (10⁻⁴). So the D = 10.5 values do not depend on resolution or prior
+  beyond about 10⁻⁴; what remains open at η = 1 is which of two solutions is the continuation of the branch (§5).
 - **The near-null band** ([`sigdss_svd.py`](../solver/matter/sigdss_svd.py), `data/sigdss_svd.jsonl`). At D = 9, η = 1
   the smallest singular values of the Jacobian are 1.5×10⁻¹⁰, 6.6×10⁻¹⁰, 1.8×10⁻⁹, 5.3×10⁻⁹ relative (in Re/Im pairs),
   with singular vectors almost entirely in the centre datum q(τ), harmonics k = 7–11, and Δ components below 10⁻⁶. This
@@ -366,8 +371,9 @@ k_c = 23 by at most 4×10⁻⁴ in λ (5×10⁻⁵ in γ) at D ≤ 9, well below
   same code so that the offsets of §7 can be extrapolated. Pilot: η = 1 from D = 10 to 10.5 at k_c = 23, which must
   reproduce a single smooth branch (the k_c = 15 runs found two solutions at D = 10.475); stop condition: two solutions at
   the same D, constraint above 10⁻³, or three failed steps in a row.
-- **The flattening of λ(D) at D = 10.5** (§5) is preliminary: it comes from runs with the stronger prior and is not yet
-  confirmed by a second prior strength or resolution (KC23_105).
+- **The flattening of λ(D) at D = 10.5** (§5) passed the resolution and prior checks at η = 0.3, but it is two points
+  past a change of curvature; whether λ(D) levels off near 3 (γ∞ near 1/3, well below 1/2), turns back up, or resumes
+  its fall toward 2 is exactly what the larger-D runs above must decide.
 - **Mode count.** Complex growth rates and the opposite parity sector were not counted (§6). `sigdss_count.py`
   (argument principle over Re λ ∈ [0.05, 12], −ω/2 ≤ Im λ ≤ 3ω/2, light-cone resonance poles removed) is ready but not
   run or tested; at k_c = 15 it needs a few hundred complex mode matrices.
