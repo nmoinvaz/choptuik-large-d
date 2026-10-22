@@ -3,6 +3,7 @@
 dss_physics.pdf: main.tex ../figures/*.pdf
 	pdflatex -interaction=nonstopmode main.tex
 	pdflatex -interaction=nonstopmode main.tex
+	pdflatex -interaction=nonstopmode main.tex
 	cp main.pdf dss_physics.pdf
 
 clean:
