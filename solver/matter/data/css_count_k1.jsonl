@@ -1,0 +1,5 @@
+{"D": 10.0, "box": [0.2, 4.5, -3.0, 3.0], "winding": 4.000000000000015, "evaluations": 408, "resonance_line_Im": 2.6279526987913533, "first_resonance_Re": 4.80105963543401}
+{"D": 40.0, "box": [0.2, 5.0, -2.5, 2.5], "winding": 2.0000000000028146, "evaluations": 332, "resonance_line_Im": 3.780001538934655, "first_resonance_Re": 19.910461801240935}
+{"D": 20.0, "box": [0.2, 6.0, -3.0, 3.0], "winding": 4.000000000000295, "evaluations": 436, "resonance_line_Im": 3.297606611791757, "first_resonance_Re": 9.8579621734596}
+{"D": 10.0, "box": [0.2, 4.5, -3.0, 3.0], "R_over_xh": 0.6, "winding": 4.000000000000125, "evaluations": 440, "resonance_line_Im": 2.6279526987913533, "first_resonance_Re": 4.80105963543401}
+{"D": 10.0, "box": [0.2, 4.5, -2.0, 2.0], "R_over_xh": 0.85, "winding": 2.00000000000002, "evaluations": 252, "resonance_line_Im": 2.6279526987913533, "first_resonance_Re": 4.80105963543401}
