@@ -14,7 +14,7 @@ for f in sorted(glob.glob(os.path.join(DATA, "sigdss_*.jsonl"))):
         r = json.loads(line)
         r["file"] = os.path.basename(f)
         # growth rates from the first (secant) root finder that stopped at maxit are not converged: drop them
-        if r.get("lam") and r.get("last_step") is not None and r["last_step"] > 1e-6 * r["lam"]:
+        if r.get("lam") and r.get("last_step") is not None and r["last_step"] > 1e-3:
             r["lam"] = None
         recs.append(r)
 

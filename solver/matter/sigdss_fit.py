@@ -17,14 +17,19 @@ ap.add_argument("--kc", type=int, default=None); ap.add_argument("--Dmin", defau
 ap.add_argument("--Dmax", type=float, default=1e9)
 ap.add_argument("--mmax", type=int, default=5); ap.add_argument("--key", default="lam")
 ap.add_argument("--out", default=None)
+ap.add_argument("--plant", default=None,
+                help="planted-truth control: 'lam_inf,c1,c2,...' replaces the data by lam_inf + sum c_k n^-k on the same D")
+ap.add_argument("--noise", type=float, default=0.0, help="with --plant: Gaussian noise of this size (seed 1)")
 a = ap.parse_args()
 
 pts = {}
 for f in a.files:
     for line in open(f):
         r = json.loads(line)
-        if abs(r.get("eps", -1) - a.eps) > 1e-9 or r.get(a.key) is None:
+        if abs(r.get("eps", -1) - a.eps) > 1e-3 or r.get(a.key) is None:
             continue
+        if a.key == "lam" and r.get("last_step") is not None and r["last_step"] > 1e-3:
+            continue                        # first (secant) root finder stopped at maxit: not converged
         if a.kc and r["kc"] != a.kc:
             continue
         D = round(r["D"], 6)
@@ -35,6 +40,10 @@ for f in a.files:
 Ds = np.array(sorted(pts))
 y = np.array([pts[D][a.key] for D in Ds])
 n = Ds - 2
+if a.plant:
+    cp = [float(v) for v in a.plant.split(",")]
+    y = sum(c * n ** -k for k, c in enumerate(cp)) + a.noise * np.random.default_rng(1).standard_normal(len(n))
+    print(f"PLANTED: {a.key} = " + " + ".join(f"{c:g} n^-{k}" for k, c in enumerate(cp)) + f", noise {a.noise:g}")
 print(f"eps = {a.eps}: {len(Ds)} points, D = {Ds.min()}..{Ds.max()}")
 for D, v in zip(Ds, y):
     print(f"  D {D:8.4f}  {a.key} {v:.10f}  kc {pts[D]['kc']}")

@@ -1,0 +1,6 @@
+{"D": 4.0, "eps": 0.0, "kc": 23, "lam": 8.410420009828307, "Delta": 0.45986545522185535, "source": "l-multiplet agent (worktree agent-a5bec5ffdf3db4330), solver/matter/data/l1_kc23_gamma.jsonl, copied 2026-10-22 (work in progress there)"}
+{"D": 5.0, "eps": 0.0, "kc": 23, "lam": 4.640173539318769, "Delta": 0.7833438998416179, "source": "l-multiplet agent, solver/matter/data/l1_kc23r.jsonl"}
+{"D": 6.0, "eps": 0.0, "kc": 23, "lam": 3.765554784050204, "Delta": 0.9115280870866821, "source": "l-multiplet agent, solver/matter/data/l1_kc23r.jsonl"}
+{"D": 7.0, "eps": 0.0, "kc": 23, "lam": 3.381429354245175, "Delta": 0.9639878011776564, "source": "l-multiplet agent, solver/matter/data/l1_kc23r.jsonl"}
+{"D": 8.0, "eps": 0.0, "kc": 23, "lam": 3.162528660330945, "Delta": 0.9837904661691412, "source": "l-multiplet agent, solver/matter/data/l1_kc23r.jsonl"}
+{"D": 9.0, "eps": 0.0, "kc": 23, "lam": 3.0185374151336974, "Delta": 0.9882045992920149, "source": "l-multiplet agent, solver/matter/data/l1_kc23r.jsonl"}

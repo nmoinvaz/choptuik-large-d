@@ -104,10 +104,10 @@ symmetry (§6).
 | 0.2 | 0.880336 | 0.8734 / 0.8654 | | | 0.1091 / 0.1150 | 1.73 | 1.0e-2 |
 | 0.18 | 1.276195 | 1.1044 / 1.0956 (approximately DSS) | | | 0.1063 / 0.1028 | 1.84 | 3.0e-2 |
 
-- **Δ agrees with HLPTA00 to within the spread of their two families** for 0.225 ≤ η ≤ 10 (differences ≤ 0.003, i.e.
-  ≤ 0.6%), and within 1–2% at η = 0.2. At η = 0.18 it does not (1.276 against 1.10): there Δ varies as
-  dΔ/dη ≈ −a/(η − η_c) ≈ −35, so the published value corresponds to η ≈ 0.185 on our curve, and HLPTA00 say their
-  evolution is only approximately DSS there.
+- **Δ agrees with HLPTA00** for 0.225 ≤ η ≤ 10 to 0.6% or better (differences ≤ 0.0025), mostly inside the spread of
+  their two families (at η = 0.5 both of theirs are 0.5% above ours), and to 1–2% at η = 0.2. At η = 0.18 it does not
+  (1.276 against 1.10): there Δ varies as dΔ/dη ≈ −a/(η − η_c) ≈ −37, the published value lies on our curve at
+  η ≈ 0.186, and HLPTA00 say their evolution is only approximately DSS there.
 - **γ agrees** at the two couplings computed: 0.11563 at η = 1 (theirs 0.1163/0.1155) and 0.11551 at η = 0.3
   (0.1152/0.1146). The η = ∞ value 0.11878 is within the large-η limit 0.1185 ± 0.0005 and OVCU07's 0.119 ± 0.001.
 - **Resolution.** At η = ∞ the k_c = 15 values differ from the ℓ-agent's high-resolution ones by +1.6×10⁻⁴ in Δ
