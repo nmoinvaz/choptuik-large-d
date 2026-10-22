@@ -45,3 +45,4 @@
   box U    Re (0.300, 6.182) Im (+1.599, +4.798): winding of g -0.000000 -> 0; expected zeros inside 0, candidate poles inside 7 -> winding of det M -7, zeros of det M <= 0; max phase step 0.498 rad, nearest pole / expected zero to the edge 0.316 / 1.599
   box full Re (0.300, 6.182) Im (-4.798, +4.798): winding of g +2.000000 -> 2; expected zeros inside 2, candidate poles inside 14 -> winding of det M -10, zeros of det M <= 4; max phase step 0.498 rad, nearest pole / expected zero to the edge 0.316 / 0.300
   done: 148 evaluations in the cache (148 new)
+=== 2026-10-22 10:01:25 circles, D 30.068824, M 48, kfreeze None, omega 3.198742, lam_g 0.8264840435

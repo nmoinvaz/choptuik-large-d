@@ -62,7 +62,7 @@ def setup(path, M=None, threads=1, kf="default", fmax=1e-20, log=print):
     saved = None
     if M is not None and M != M0:
         # a state resampled to M tau points is re-converged once and kept in hp/data/modecount_state_D<D>_M<M>.npz
-        saved = os.path.join(HERE, "data", f"modecount_state_D{D:.4f}_M{M}.npz")
+        saved = os.path.join(HERE, "data", f"modecount_state_D{D:.4f}_M{M}" + (f"_kf{kf}" if kf else "") + ".npz")
         if os.path.exists(saved):
             zh, zl, meta = load(saved)
             log(f"  resampled state from {os.path.basename(saved)}")

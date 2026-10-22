@@ -357,3 +357,8 @@ pushed to wip/mode-count
   box full Re (0.300, 6.182) Im (-4.798, +4.798): winding of g +2.000000 -> 2; expected zeros inside 2, candidate poles inside 14 -> winding of det M -10, zeros of det M <= 4; max phase step 0.498 rad, nearest pole / expected zero to the edge 0.316 / 0.300
   done: 148 evaluations in the cache (148 new)
 === 2026-10-22 09:47:49 exit 0: hp/data/states/up6_D30.0688.npz --M=48 --h0=0.6 --lam=2.079747703853 --fmax=1e-15
+committed cd4ac52
+pushed to wip/mode-count
+=== 2026-10-22 09:47:51 job: hp/data/seeds/local/up23_D61.0264.npz --M=48 --h0=0.6 --lam=2.043532530673195 --fmax=1e-15
+  |F| 1.3e-06 in this layout: Newton
+  |F| 1.3e-06 after Newton: Levenberg-Marquardt
