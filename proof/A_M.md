@@ -380,7 +380,10 @@ The mixed system (`--mixed`; `data/A_M_refine_M5_c.json`, `logs/A_M_refine_M5_c.
 of 3.5×10⁻²⁰ (outer) and 1.5×10⁻²¹ (inner), then 1.3×10⁻²¹ and 4.4×10⁻²², with the inner residuals at ρ = 0.2 down to
 3×10⁻³⁰ and |g| at ξ₁ = 5.2×10⁻²² in every component. At the second iterate the full Newton step of the ξ₁ system and
 that of the mixed system agree to all ten printed digits, so the two systems have the same zero to this accuracy.
-REFINE_D
+One more mixed iteration from that point (`data/A_M_refine_M5_d.json`, `logs/A_M_refine_M5_d.log`, 11 minutes at
+low load) shows quadratic convergence: |g| at ξ₁ at most 2.5×10⁻²⁹, full Newton steps 1.6×10⁻⁴¹ (outer) and 5.4×10⁻⁴²
+(inner). Its `p_out` is the centre for the M = 5 box runs; it is far closer to the zero of g than any box width a run
+can use.
 
 **Structure** (`logs/A_M_plan_M5_it0.log`): outer Schur complement S with singular values 5.45 and 0.248; Dg_HH with
 singular values 3.2×10¹⁴ (twice, harmonic 5) and 1.07×10⁷ (twice, harmonic 3); raw outer block up to 6.9×10¹⁰; leakage
@@ -415,7 +418,7 @@ one process each, under `nice -n 10`:
 | M = 3 box run, N = 20, NJ = 12 (h = 10⁻⁹) | 13 + ω | 955, 552, 72 | 72 min | 2.7 s |
 | M = 3 box run (h = 10⁻¹⁰) | 13 + ω | 955, 552, 72 | 55 min | 2.1 s |
 | M = 3 refinement, one Newton iteration (numerics, order 30) | 13 + ω | 193 in all | 11–13 min | 3.6 s |
-| M = 5 refinement, one Newton iteration | 19 + ω | 307 in all | 41 min | 8 s |
+| M = 5 refinement, one Newton iteration | 19 + ω | 307 in all | 41 min (11 min at load 2–4) | 8 s (2.2 s) |
 | M = 5 box run, pilot (40 steps, start data included) | 19 + ω | 40 of about 2000 | 147 s at load 4 | 3.7 s |
 
 The step counts are set by the first-order a-priori enclosure (§3), not by the accuracy needed.
@@ -435,10 +438,10 @@ The step counts are set by the first-order a-priori enclosure (§3), not by the 
 python3 certify_M_sys.py selftest                 # PASS
 python3 certify_M.py startcheck 5                  # contains
 # the four runs, one thread each (each resumes from its .ckpt if interrupted):
-python3 certify_M.py box 5 --centre=data/A_M_refine_M5_CTAG.json --use_out --h=3e-11 --w=3e-17,3e-21 --out=data/A_M_box_M5_3e-11.json --log=logs/A_M_box_M5_3e-11.log
-python3 certify_M.py box 5 --centre=data/A_M_refine_M5_CTAG.json --use_out --h=1e-12 --w=1e-18,1e-21 --out=data/A_M_box_M5_1e-12a.json --log=logs/A_M_box_M5_1e-12a.log
-python3 certify_M.py box 5 --centre=data/A_M_refine_M5_CTAG.json --use_out --h=1e-12 --w=1e-18,1e-22 --out=data/A_M_box_M5_1e-12b.json --log=logs/A_M_box_M5_1e-12b.log
-python3 certify_M.py box 5 --centre=data/A_M_refine_M5_CTAG.json --use_out --h=1e-13 --w=1e-19,1e-23 --out=data/A_M_box_M5_1e-13.json --log=logs/A_M_box_M5_1e-13.log
+python3 certify_M.py box 5 --centre=data/A_M_refine_M5_d.json --use_out --h=3e-11 --w=3e-17,3e-21 --out=data/A_M_box_M5_3e-11.json --log=logs/A_M_box_M5_3e-11.log
+python3 certify_M.py box 5 --centre=data/A_M_refine_M5_d.json --use_out --h=1e-12 --w=1e-18,1e-21 --out=data/A_M_box_M5_1e-12a.json --log=logs/A_M_box_M5_1e-12a.log
+python3 certify_M.py box 5 --centre=data/A_M_refine_M5_d.json --use_out --h=1e-12 --w=1e-18,1e-22 --out=data/A_M_box_M5_1e-12b.json --log=logs/A_M_box_M5_1e-12b.log
+python3 certify_M.py box 5 --centre=data/A_M_refine_M5_d.json --use_out --h=1e-13 --w=1e-19,1e-23 --out=data/A_M_box_M5_1e-13.json --log=logs/A_M_box_M5_1e-13.log
 # then, for each finished run (seconds each); --best tries outer sub-boxes h' = h 0.9^k with the inner widths kept:
 python3 certify_M.py krawczyk --box=data/A_M_box_M5_TAG.json --best --shrink --hier > logs/A_M_krawczyk_M5_TAG.log
 # for the run that passes with the largest box (SUB = the printed outer half-width and the run's two inner widths,
@@ -486,7 +489,8 @@ python3 certify_M_recheck.py data/A_M_box_M3_1e-10.json                     # in
 python3 certify_M_recheck.py data/A_M_box_M3_1e-10.json --mutate            # must fail
 python3 certify_M.py export6a --box=data/A_M_box_M3_1e-10.json --out=data/A_M_6a_M3_1e-10.json   # for lemma 6a(M)
 # M = 5 centre (numerics; 25-40 min per iteration): the mixed system, from refine b's p_out
-python3 certify_M.py refine 5 --p=P --iters=2 --modes=full,full --mixed --tag=c
+python3 certify_M.py refine 5 --iters=2 --modes=full,full --mixed --tag=c \
+    --p=2.7185791892117424130177654812835683278086250673336,0.99922840320656778344019660889181768356642428951284,0.14920357491144750568196056793271935041482093192331,0.014719052490251352879803044913775572795908602649635,0.0084053469057616610714063354028382829968062187683545,0.0014703451815915780266410531538042860832833504910601
 ```
 
 ## 9. Proposed text for README.md, PROOF.md and A_certify.md
