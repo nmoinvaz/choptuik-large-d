@@ -196,3 +196,11 @@ Added as README footnotes [^15]–[^19], in both papers (Morrison–Riley–Zanc
 | Harvey, arXiv:0712.4046 | the arXiv abstract (credits Kronecker 1882) |
 
 Not added: Hanrot–Zimmermann (2004), whose HAL record refused the fetch.
+
+## Addendum (2026-10-21): references of the mathematics paper
+
+Checked by the agent that wrote `paper/math/` against publisher or catalogue pages (its report; not re-checked here):
+Braaksma (numdam), Moore (SIAM), Krawczyk (researchr), Neumaier, Nedialkov–Jackson (pages 219–263, not 264), Olver,
+Balser, Canalis-Durand–Mozo-Fernández–Schäfke, Nikolaev (Commun. Math. Phys. 400, 463–517), Padé (numdam), Aitken
+(Cambridge, 1927). Marked *(unverified)* in the paper: the chapter title and pages of Lohner (1987) (the book,
+Kaucher–Kulisch–Ullrich (eds.), Teubner 1987, was confirmed) and Canalis-Durand–Ramis–Schäfke–Sibuya (2000).

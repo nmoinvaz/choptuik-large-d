@@ -1,7 +1,9 @@
 # dss-residual-kernel
 
 **Critical collapse in D dimensions: the echo period and critical exponent, from numerics to first principles.**
-Paper (draft, arXiv style, not yet reviewed): [paper/dss_large_D.pdf](paper/dss_large_D.pdf)
+Papers (drafts, not yet reviewed): [physics](paper/physics/dss_physics.pdf), the numbers and the large-D picture;
+[mathematics](paper/math/dss_math.pdf), the propositions, the selection rule and the computer-assisted proof.
+The earlier combined draft is [paper/dss_large_D.pdf](paper/dss_large_D.pdf).
 
 When a collapsing shell of scalar field is tuned exactly to the threshold between dispersing and forming a black hole,
 it approaches a universal solution, Choptuik's critical solution, which repeats itself on ever smaller scales: each
@@ -1892,7 +1894,9 @@ hp/                 double-double solver (crate hpkernel)
 hp/largeD_*.py      large-D scaling of the solutions (profiles, F(theta), harmonic content, light-cone exponent)
 comms.txt           task log between the cloud and the second machine
 AGENTS.md           conventions for the AI sessions that run computations here (which scripts to use, thread budget, comms)
-paper/              the paper (main.tex, built as dss_large_D.pdf with make; figures/ holds the PDF figures)
+paper/physics/      the physics paper (main.tex, built as dss_physics.pdf with make)
+paper/math/         the mathematics paper (main.tex, built as dss_math.pdf with make)
+paper/              the earlier combined draft (main.tex, built as dss_large_D.pdf; figures/ holds the PDF figures)
 PROOF.md            roadmap for a proof of the selection rule (computer-assisted inner zero; analytic selection theorem)
 GAMMA.md            why gamma_inf = 1/2 (solver/inner_pert/heat_form.py: the heat-equation form; rw_map.py: it is Rozali-Way's
                     system; pert_check3.py: the exact lambda = 2 mode)
