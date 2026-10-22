@@ -1,5 +1,5 @@
 % The echo period of Choptuik's critical solution at large dimension: a selection rule and a computer-assisted proof.
-% Mathematics paper (companion of the physics paper in ../physics/). Build: see Makefile (pdflatex twice).
+% Mathematics paper (companion of the physics paper in ../physics/). Build: see Makefile (pdflatex three times).
 \documentclass{amsart}
 \usepackage[letterpaper,margin=0.9in]{geometry}
 \usepackage{amsmath,amssymb,mathtools}
@@ -72,7 +72,7 @@ and two further hypotheses. We reduce a selection theorem for models with finite
 arguments, and prove by a computer-assisted argument, assuming Braaksma's summability theorem, that the selection
 condition of the one-harmonic model has exactly one zero in an explicit box, and that it is simple. Evaluated numerically
 without truncation, the conjectured rule gives $\Dinf = 1.6439 \pm 0.0002$ (a range of estimators, not an error bound). The
-work was produced by an AI model under the author's direction and has not been reviewed by a human expert.
+work was done by an AI model (Claude, Anthropic) under the author's direction and has not been reviewed by a human expert.
 \end{abstract}
 
 \maketitle
@@ -105,8 +105,8 @@ multiplier of an inner equation posed near a complex singular point~\cite{Combes
 Xie and Tanveer made this rigorous~\cite{XieTanveer2003,TanveerXie2003,Xie2019}. In our problem the small parameter is
 $1/n$, the selected quantities are the frequency $\omega = 2\pi/\Delta$ and the time profile of the solution, the
 symmetry condition is analyticity at the light cone, and the complex singular point is the point at infinity of the
-self-similar radius. The new feature is that the unknown depends on two variables, the radius and a periodic phase, so
-that the inner problem is an infinite system coupled through harmonics; neither of the templates we follow has that.
+self-similar radius. Here the unknown depends on the radius and a periodic phase, and the inner problem is an infinite
+system coupled through harmonics.
 
 \subsection*{Results}
 We work within a scaling ansatz for large $n$ that is measured on the numerical solutions (Ansatz~\ref{ans:scaling}).
@@ -130,7 +130,8 @@ contraction arguments.
 $10^{-9}$, and it is simple (Theorem~\ref{thm:A}). The proof is computer-assisted, assumes only Braaksma's summability
 theorem, and follows Baldom\'a, Capi\'nski, Guardia and Seara~\cite{BaldomaCapinskiGuardiaSeara2023}.
 \item The untruncated multiplier is numerically an entire function of the squared amplitude, of exponential type; its
-first coefficient is enclosed rigorously (Section~\ref{sec:entire}).
+first coefficient is enclosed rigorously, by a computer-assisted computation not yet independently reviewed
+(Section~\ref{sec:entire}).
 \end{enumerate}
 Evaluated numerically to twelve orders, the selection rule gives $\Dinf = 1.6439 \pm 0.0002$ from the $D = \infty$ equations
 alone: evidence for Conjecture~\ref{conj}, with the $\pm$ a range of estimators (Section~\ref{sec:evidence}).
@@ -154,7 +155,8 @@ Corollary~\ref{cor:gamma} & $\gamma_\infty = 1/2$ & conditional on Conjecture~\r
 Theorem~\ref{thm:B} & selection for the $M$-harmonic model & conditional on two contractions and cited lemmas \\
 Lemmas B1, B5.1, B6$'$, B8.1, B8.2; B2, B5.0 & ingredients of Theorem~\ref{thm:B} & proved; B2 and B5.0 checked symbolically \\
 Theorem~\ref{thm:A} & one simple zero of the $M = 1$ selection condition & certified (computer-assisted), assuming Braaksma's theorem \\
-Lemma~\ref{lem:sigma1} & enclosure of the first amplitude coefficient $\sigma_1$ & certified (computer-assisted) \\
+Lemma~\ref{lem:sigma1} & enclosure of the first amplitude coefficient $\sigma_1$ & certified (computer-assisted,\newline
+\repo{exact\_sigma.py}); not independently reviewed \\
 Section~\ref{sec:evidence} & $\omega^*/\winf = 0.9999$--$1.0001$ & numerical evidence \\
 \bottomrule
 \end{tabular}
@@ -163,7 +165,7 @@ Section~\ref{sec:evidence} & $\omega^*/\winf = 0.9999$--$1.0001$ & numerical evi
 \subsection*{Prior work}
 The leading-order freedom of the period, any periodic profile with any period, was found by Ecker, Ecker and
 Grumiller~\cite{EckerEckerGrumiller2026}, who constructed analytic DSS solutions at large $D$ in the same gauge;
-Proposition~\ref{prop:1} extends it to all orders. The free wave equation in similarity coordinates was analysed in $3+1$
+Proposition~\ref{prop:1} extends it to all orders (Remark~\ref{rem:eeg} discusses their next-to-leading-order condition). The free wave equation in similarity coordinates was analysed in $3+1$
 dimensions by Donninger~\cite{Donninger2009}, which contains the $D = 4$ case of Proposition~\ref{prop:2}; the
 coefficient $C(n,s)$ follows from Gauss's connection formula~\cite[Eq.~15.8.4]{DLMF} once the mode equation is recognised
 as hypergeometric, and we did not find it for general $D$ in the literature we searched. Proposition~\ref{prop:4} is an
@@ -227,26 +229,21 @@ exact symmetry $m(x) = p(-x)$.
 \label{sec:numbers}
 The companion paper~\cite{companion} computes the critical solution at 857 values $8.25 \le D \le 61.03$ in
 double-double arithmetic~\cite{Dekker1971}. If $\Delta$ is analytic in $1/D$, which held-out tests there support but do not prove,
-\begin{equation}\label{eq:Dinf}
-\Dinf = 1.643893746 \pm 1.5\times10^{-8}, \qquad 2\pi/\Dinf = 3.82213590 \pm 4\times10^{-8},
-\end{equation}
-where the value is the centre of 48 fit choices lowered by the $0.8\times10^{-8}$ by which that centre overshoots the known
-limits of synthetic data, and the $\pm$ is the spread of the fits, an estimator range rather than a calibrated error. The growth rate $\lambda$ of the unstable mode, $\lambda = 1/\gamma$
+$\Dinf = 1.643893746$ and $2\pi/\Dinf = 3.82213590$, to about $10^{-8}$ (an estimator range rather than a calibrated
+error; its construction is described there). The growth rate $\lambda$ of the unstable mode, $\lambda = 1/\gamma$
 with $\gamma$ the critical exponent of the black-hole radius, $r_{\rm BH} \propto (p - p^*)^{\gamma}$~\cite{KoikeHaraAdachi1995},
-tends to $2$: free fits in $1/n$ put $\lambda_\infty = 2$ to about $10^{-6}$, so $\gamma \to 1/2$ to about $5\times10^{-7}$,
-and with $\lambda_\infty = 2$ imposed $\lambda = 2 + 3.0324/n + \dots$. The time profile at the centre,
-$F_n(\theta) = \sqrt n\,\partial_x p(0, \theta)$, converges as $D$ grows: its first harmonic falls from $3.480$ at $D = 20$
-to $2.962$ at $D = 60$ and extrapolates to about $2.72$, and $n\,(1 - \langle c(0)\rangle)$ and $\langle F^2\rangle$
-approach a common limit near $3.7$ (angle brackets denote the mean over $\theta$). None of these numbers is used in a
+tends to $2$: free fits in $1/n$ put $\lambda_\infty = 2$ to about $10^{-6}$. The time profile at the centre,
+$F_n(\theta) = \sqrt n\,\partial_x p(0, \theta)$, converges as $D$ grows: its first harmonic extrapolates to about $2.72$,
+and $n\,(1 - \langle c(0)\rangle)$ and $\langle F^2\rangle$ approach a common limit near $3.7$ (angle brackets denote the
+mean over $\theta$); the measured values are tabulated in~\cite{companion}. None of these numbers is used in a
 proof below. Where an exact value of $\winf$ is needed, as in Theorem~\ref{thm:A}, we \emph{define}
 $\winf := 2\pi/1.64389375$, the reference value used in all the codes; this is a convention (it differs from
 $2\pi/\Dinf$ by $2.4\times10^{-9}$ relative), and the theorem is equally a statement about $\omega$ itself.
 
 \subsection{The scaling at large \texorpdfstring{$n$}{n}}
 \label{sec:ansatz}
-On the double-double solutions at $D = 12$--$60$~\cite{companion}: $p \approx x F(\theta)/\sqrt n$ near the centre, and
-$p + m$ is smaller than $p$ by a further factor of order $1/n$; $c = 1 - O(1/n)$; and $b - 1 = (p^2+m^2)/(n-1)$ to
-about $3\%$. Write $p = \eps^{1/2}P$, $m = \eps^{1/2}M$, $S = P + M$ and $\Delta_P = P - M$. The sum and the difference of
+On the double-double solutions~\cite{companion}, $p \approx x F(\theta)/\sqrt n$ near the centre, $p + m$ is smaller
+than $p$ by a further factor of order $1/n$, $c = 1 - O(1/n)$ and $b - 1 \approx (p^2+m^2)/(n-1)$. Write $p = \eps^{1/2}P$, $m = \eps^{1/2}M$, $S = P + M$ and $\Delta_P = P - M$. The sum and the difference of
 \eqref{eq:E3} and \eqref{eq:E4} are
 \begin{align}
 x\,c\,\partial_x \Delta_P - c\,\Delta_P &= x^2 \partial_x S + \omega x\,\partial_\theta S - \tfrac{1-\eps}{\eps}\, c\,(b-1)\,\Delta_P ,
@@ -264,7 +261,7 @@ b = 1 + \sum_{k\ge2}\eps^k B_k,\quad \omega = \sum_{k\ge0}\eps^k\omega_k ,
 with coefficients that are functions of $(x, \theta)$, $2\pi$-periodic in $\theta$.
 \end{ansatz}
 
-The scaling is forced by one measured fact, $c - 1 = O(1/n)$ (gravity is weak; $n(1 - \langle c(0)\rangle) \to 3.65$).
+The scaling is forced by one measured fact, $c - 1 = O(1/n)$ (gravity is weak: $n(1 - \langle c(0)\rangle)$ converges).
 The $b$ equation gives $b - 1 \approx (p^2+m^2)/(n-1)$; the $c$ equation then gives $c - 1 = O(n(b-1)) = O(p^2)$, so
 $c - 1 = O(1/n)$ requires $p = O(n^{-1/2})$; and the terms of order $n$ in \eqref{eq:E3}--\eqref{eq:E4} force
 $p + m = O(p/n)$, which is the measured $p + m = O(n^{-3/2})$. Integer powers of $\eps$ beyond the overall $\eps^{1/2}$
@@ -325,6 +322,18 @@ construction. Nothing in the construction constrains $F$, $\omega_0$ or the $\om
 \end{proof}
 
 The leading-order part of this freedom, any periodic profile with any period, is in~\cite{EckerEckerGrumiller2026}.
+
+\begin{remark}[a published next-to-leading-order condition]\label{rem:eeg}
+Ecker, Ecker and Grumiller, in the same gauge (their $f = \alpha/a$ is our $c$), require $f \le 1$ near the light cone and
+obtain from it, at next-to-leading order, a condition at the zeros of the profile ($\omega^2F'' + 3\omega F' = 0$ there,
+in our variables), which leads to their Eq.~(20) and which they take to fix the period~\cite{EckerEckerGrumiller2026}; Lai
+and Wen use the same condition to select the period~\cite{LaiWen2026}. It does not constrain the formal solution of
+Proposition~\ref{prop:1}. The inequality holds for every regular solution, whatever the period: by \eqref{eq:E12} with
+$b(0) = 1$, $b$ cannot fall below $1$, so $xc_x \ge 0$ and $c \le c(1) = 1$. Near a zero of $F$ the next-to-leading-order
+term of $b - 1$ is the cross term of a square whose square term arrives one order later, and the computed solutions do
+not satisfy the condition~\cite{companion}.
+\end{remark}
+
 The first orders (computed symbolically, to fourth order with \repo{solver/largeD\_expand.py 4}) are
 \begin{equation}\label{eq:firstorders}
 \begin{gathered}
@@ -346,7 +355,9 @@ $\lambda = 1/\gamma$ is also selected beyond all orders.
 \end{remark}
 
 \subsection{The leading-order problem}
-At leading order ($c = b = 1$) the equations are the scalar wave equation on flat space in self-similar form. For one
+At leading order ($c = b = 1$) the equations are the scalar wave equation on flat space in self-similar form. (In four
+dimensions Price and Pullin approximated the critical solution, in each of two regions, by flat-space scalar-field
+solutions~\cite{PricePullin1996}.) For one
 harmonic $e^{\iu\mu\theta}$ ($\mu$ odd) put
 \begin{equation}\label{eq:abk}
 s = \iu\mu\omega,\qquad \alpha = \tfrac{1+s}{2},\qquad \beta = \tfrac{2+s}{2},\qquad \kappa = \tfrac{n+1}{2}.
@@ -446,8 +457,8 @@ $\delta b$ and $\delta c$ kept, confirms that they enter only at order $\eps^{3/
 linearized equations reproduces the transported $A$ with relative errors falling like $1/n$ ($0.57$ at $n = 100$ to $0.031$ at
 $n = 1600$, for $F = 2.72\sin\theta + 0.22\sin3\theta$, $\omega = \winf$). Three consequences:
 \begin{enumerate}[label=(\roman*),leftmargin=2em]
-\item Gravity acts on the non-analytic piece at order $1$, not $1/n$ (over the interval above it multiplies it by about
-$40$). Near the light cone the characteristic winds through all phases and the factor behaves like
+\item Gravity acts on the non-analytic piece at order $1$, not $1/n$ (for the profile above it multiplies it by about $40$
+over $0.72 \le x \le 0.9$, the interval of the direct integration). Near the light cone the characteristic winds through all phases and the factor behaves like
 $(1-x^2)^{\langle F^2\rangle}$, so the light-cone exponent becomes $n/2 - 1 - s + \langle F^2\rangle$. With
 $\langle F^2\rangle \approx 3.7$, an expansion in the amplitude of the wave is not a route to the selection.
 \item The factor in \eqref{eq:transportsol} never vanishes, so gravity cannot cancel the fast mode on the way to the
@@ -734,8 +745,9 @@ derives the last.
 Write the inner problem in physical inner variables: $\rho = r/\sqrt n$, with $r$ the areal radius, and the time $t$.
 Then $\xi = \rho/(-t)$, $L = \rho\,\partial_t$ at fixed $\rho$, and $\xi\partial_\xi = \rho\partial_\rho$ at fixed $t$. Put
 \begin{equation}\label{eq:heatvars}
-s = \frac{\rho^2}{2} = \frac{r^2}{2n},\qquad y = \sqrt s\,Y,\qquad \sigma = \sqrt2\,s\,W .
+s = \frac{\rho^2}{2} = \frac{r^2}{2n},\qquad y = \sqrt s\,Y,\qquad \sigma = \sqrt2\,s\,W
 \end{equation}
+(this $s$ is unrelated to the $s = \iu\mu\omega$ of \eqref{eq:abk}).
 
 \begin{proposition}\label{prop:5}
 \begin{enumerate}[label=(\roman*),leftmargin=2em]
@@ -815,10 +827,9 @@ harmonics (\repo{solver/inner\_pert/pert\_check3.py 45 11}); with $\lambda = 1.9
 the third order. The modes $\lambda = 0$ and $\lambda = 1$ pass the same kind of check, to $6\times10^{-30}$ and (with
 gravity) $10^{-177}$. The inner fast mode $e^{-1/(2\xi^2)} = e^{-t^2/(4s)}$ is the heat kernel.
 
-The mode is physical, not gauge. The reparametrization is gauge, and $t$-translation ($\lambda = 1$) shifts the
-accumulation time, but $s$-translation shifts $r^2$, and $r$ is the areal radius. A supercritical evolution therefore
-forms its horizon at $r_{\rm BH}^2 \propto p - p^*$, which is the discretely self-similar counterpart of Rozali and Way's
-estimate $\gamma = 1/2$ from the divergence of their oscillating solutions~\cite{RozaliWay2018}.
+The mode is physical, not gauge: $s$-translation shifts $r^2$, with $r$ the areal radius, which gives
+$r_{\rm BH}^2 \propto p - p^*$, the discretely self-similar counterpart of Rozali and Way's estimate
+$\gamma = 1/2$~\cite{RozaliWay2018}; the physical reading is in~\cite{companion}.
 
 \begin{corollary}\label{cor:gamma}
 Suppose that Conjecture~\ref{conj} holds, that the $D = \infty$ critical solution has no unstable mode other than
@@ -834,9 +845,9 @@ of the unstable mode tends to $2$, and $\gamma = 1/\lambda \to 1/2$.
 
 At finite $D$ the outer region and the $1/n$ corrections to the inner equations depend on $r$ explicitly
 (Lemma~\ref{lem:B50}), so the symmetry is broken and the mode survives as an ordinary unstable mode with
-$\lambda = 2 + O(1/n)$; the data give $\lambda = 2 + 3.0324/n + \dots$, with the $1/n$ coefficient stable to about
-$10^{-3}$ over fit choices (3.0313--3.0324)~\cite{companion}. Two questions are open: whether $\lambda = 2$ is the only
-physical unstable mode at $D = \infty$, and the coefficient $3.0324$, which by first-order perturbation theory is
+$\lambda = 2 + O(1/n)$, whose $1/n$ coefficient is measured in~\cite{companion}. Two questions are open: whether
+$\lambda = 2$ is the only physical unstable mode at $D = \infty$, and that coefficient, which by first-order perturbation
+theory is
 $-S_{1/n}/\partial_\lambda S$ at $\lambda = 2$, with $S$ the perturbation's fast-mode multiplier and $S_{1/n}$ the part induced
 by the $O(1/n)$ inner equations. The one-harmonic model of Section~\ref{sec:thmA} has a root $\lambda = 1.765$; this is not a
 counterexample, because its background is not the $D = \infty$ solution and because Galerkin truncation does not commute
@@ -860,8 +871,10 @@ $b, c$. The \emph{$M$-harmonic model} is \eqref{eq:E12}--\eqref{eq:E4} with $P_M
 real fields it is a finite analytic system of ODEs in $x$, with $4N + 2(N-1) + 2$ real unknowns, $N = (M+1)/2$.
 \end{definition}
 
-The solvers of~\cite{companion} compute exactly such truncations, so statements about the $M$-harmonic model are
-statements about the systems actually solved, up to the convergence in $M$. $P_M$ commutes with $\partial_\theta$ and
+The solvers of~\cite{companion} are not such truncations: the double-precision solver works on a Fourier grid in $\tau$
+with a cut-off, and the double-double solver uses collocation in $\tau$ with no spectral truncation of the products. Both
+discretize the full problem, which the $M$-harmonic models approximate as $M$ grows, so the $M$-harmonic model is a model
+of the computed solutions, not the discrete system actually solved. $P_M$ commutes with $\partial_\theta$ and
 preserves the parity classes, which is all that the induction of Proposition~\ref{prop:1} uses.
 
 \begin{thmnamed}{B($M$)}\label{thm:B}
@@ -1080,8 +1093,8 @@ light-cone exponents are
 and they differ pairwise by the non-zero imaginary amounts $\iu(\nu-\mu)\omega$: no two differ by an integer, for any $n$.
 In the $M$-harmonic model $\mathcal T$ is replaced by its truncation $\mathcal T_0 = P_M\mathcal TP_M$, which breaks the gauge step; at
 the $M = 5$ zero of Section~\ref{sec:trunc} and for $M$ up to $25$, the central eigenvalues converge to
-$\langle F^2\rangle - 1 - \iu\mu\omega$ exponentially in $M$, and all pairwise differences have $|\im| \ge 6.9$ and $|\re| \le 0.019$
-(\repo{solver/proof/lightcone\_exponents.py}).
+$\langle F^2\rangle - 1 - \iu\mu\omega$ exponentially in $M$, and all pairwise differences have $|\re| < 0.02$ and
+$|\im| \ge 6.89$ ($|\im| \ge 7.26$ for $M \ge 3$) (\repo{solver/proof/lightcone\_exponents.py}).
 
 \begin{lemnamed}{B6$'$ (Volterra bound)}\label{lem:B6p}
 Let $t_0 = \tfrac12$. Split the linearized $M$-harmonic system on $t \in (0, t_0]$ into fast components $a$ (the $p + m$
@@ -1106,7 +1119,7 @@ factor $e^{n\psi}$ gives $v = e^{n\psi}\big[t\,\mathcal RU(\mathbf k+r)/(n\ell) 
 $t = 0$ vanishes. (3) Substituting the ansatz for $a$, the transport cancels exactly and
 $r' = e^{-n\psi}U^{-1}\mathcal Qv = t\,U^{-1}\mathcal Q\mathcal R U\,(\mathbf k+r)/(n\ell) + O(t/n^2)$. With $U(t) = t^{\mathcal T_0}(I + O(t))$, the
 entries of $U^{-1}(\mathcal Q\mathcal R)U$ are $O(t^{-\rho})$, where $\rho$ is the largest difference of the real parts of the
-eigenvalues of $\mathcal T_0$: $\rho = 0$ untruncated and $\rho \le 0.019$ in the truncations. So
+eigenvalues of $\mathcal T_0$: $\rho = 0$ untruncated and $\rho < 0.02$ in the truncations. So
 $|r'| \le C_2\,t^{1-\rho}(|\mathbf k| + |r|)/n$, which is integrable at $0$. (4) With $r(t_0) = 0$, Gronwall's inequality gives
 $|r(t)| \le |\mathbf k|\,\big(e^{C_2 t_0^{2-\rho}/n} - 1\big) \le C|\mathbf k|/n$ uniformly up to $t = 0$.
 \end{proof}
@@ -1909,7 +1922,8 @@ which contain the fitted values.
 The enclosures hold all rounding errors, the $j^{-3}$ remainder and the summation-by-parts remainder; they are about $60$ times
 inside the accuracy a $10^{-3}$ certificate needs for $\sigma_1$. The only inputs are the definition of $R_j$ (the de-mixing constant
 $E_2$, the normalization $h_2$ and the recursion), taken from the amplitude recursion as the definition of the multiplier.
-Not yet done: uniformity in $\omega$ over a box (with $\omega$ as a ball the enclosure is useless already at radius $10^{-7}$, because
+The code has not been reviewed independently: its recursion is an implementation separate from the amplitude code, whose
+$R_j$ it reproduces to $10^{-39}$ for $j \le 400$, but no second agent has checked the certificate. Not yet done: uniformity in $\omega$ over a box (with $\omega$ as a ball the enclosure is useless already at radius $10^{-7}$, because
 rectangular complex balls wrap through $J$ multiplications), and $\sigma_2$--$\sigma_6$, which telescope the same way with increments
 $O(\log^kj/j^2)$ and need the closed-form endpoint sums from $\sigma_2$ on; this is mechanical but long.
 
@@ -1936,7 +1950,9 @@ harmonic $3$ destroys it (the residual becomes $4.6\times10^6$).
 \emph{Three harmonics.} A joint solve of $S_1 = S_3 = 0$ is badly conditioned (singular values $6\times10^9$ down to $0.4$) and
 stops on false near-zeros. Solved nested ($S_3 = 0$ for $F_3$ at fixed $(A, \omega)$, then a $2\times2$ Newton step for $S_1 = 0$), there
 is one zero, the same from two starts and at three matching radii (moving by less than $10^{-7}$): $A = 2.7265$, $\omega = 1.0156\,\winf$ ($\Delta = 1.6186$), $F_3/F_1 = 0.0530 + 0.0041\iu$,
-$\langle F^2\rangle = 3.727$.
+$\langle F^2\rangle = 3.727$. Its shape is close to that of the $D = \infty$ solution extrapolated from the data
+($A \approx 2.70$--$2.72$, $|F_3/F_1| \to 0.0549$--$0.0552$, $\langle F^2\rangle \approx 3.7$~\cite{companion}), while its
+frequency is $1.56\%$ above $\winf$, against $22\%$ below with one harmonic.
 
 \emph{Five harmonics.} The couplings grow further ($\partial r_3/\partial B_5 \approx 10^{13}$, $\partial r_1/\partial B_5 \approx 10^{17}$). A hierarchical
 solve ($S_5 = 0$ innermost, then $S_3 = 0$, then $S_1 = 0$ for $(A, \omega)$), with a Schur-complement correction that evaluates $r_1$
@@ -1958,18 +1974,9 @@ higher-harmonic conditions $S_\nu = 0$, $|\nu| \ge 3$, alone, checked against th
 $f_{\nu+2}/f_\nu \approx qA^2$ with $q$ nearly independent of $\nu$, so $F \approx 2\re\big[F_1e^{\iu\theta}/(1 - qA^2e^{2\iu\theta})\big]$, with
 singularities at $|\im\theta| \approx \tfrac12\ln(1/|q|A^2) \approx 1.4$: $F_\infty$ is then not entire, and its harmonics decay at a
 finite rate. The measured ratios $|F_{\nu+2}/F_\nu|$, $\nu = 1, \dots, 9$, extrapolate to $0.055$--$0.072$, a decay rate of $1.3$--$1.45$ per
-harmonic, close to $|q|A^2 \approx 0.063$ (Figure~\ref{fig:spectrum}; the extrapolations are not fully converged). This is the evidence
+harmonic, close to the tuned profile's decay of $0.0574$ per pair of harmonics (Section~\ref{sec:tail}; $|q|A^2 \approx 0.063$ at
+leading order). The extrapolations, which are not fully converged, are plotted in~\cite{companion}. This is the evidence
 behind the value $\sigma_F \approx 1.4$ in hypothesis (H1).
-
-\begin{figure}[htb]
-\centering
-\includegraphics[width=0.8\linewidth]{../figures/spectrum.pdf}
-\caption{Left: amplitude $|F_\nu|$ of each odd harmonic of the echo profile for $D = 4$--$60$ (from~\cite{companion}) and the
-$D = \infty$ prediction of the inner problem (dashed; beyond $\nu = 5$ the leading-order ratio, conjectured). Right: the decay
-rate per harmonic, $\frac12\ln|F_\nu/F_{\nu+2}|$, against $1/(D-2)$, with extrapolations from $D \ge 20$ and the predicted $D = \infty$
-band.}
-\label{fig:spectrum}
-\end{figure}
 
 \subsection{The harmonic-1 condition}
 At $\winf$ the coefficients $\tau_k$ of $\ln S_1$ in $A^2$ have $\arg\tau_k/\pi = 0.878$, $0.944$, $0.978$, $0.986$, $0.992$, $0.995$ for
@@ -2036,11 +2043,10 @@ present late-order window. Finally, agreement of the numbers is evidence that th
 of Conjecture~\ref{conj}.
 
 \subsection{Other matter}
-The same rule has been tested on problems whose critical solutions are continuously self-similar, so that no harmonic
-truncation enters~\cite{companion}: for the axion--dilaton and the free complex scalar, the zero of the $D = \infty$ Stokes
-multiplier gives $\winf = 3.1998939$ and $3.9789695$, against $3.1994$ and $3.9784$ extrapolated from finite $D$ (agreement about
-$1.5\times10^{-4}$); and for a $\sigma$-model at coupling $0.14$, the zero for the self-similar ground state, $A_0 = 1.9225686$,
-against $1.9226 \pm 0.0003$ for the finite-$D$ ground state extrapolated to $D = \infty$.
+The same rule passes tests on continuously self-similar critical solutions, where no harmonic truncation enters: for the
+axion--dilaton and the free complex scalar the zero of the $D = \infty$ Stokes multiplier agrees with the frequency
+extrapolated from finite $D$ to $1.6\times10^{-4}$ and $1.3\times10^{-4}$ (relative), and for a $\sigma$-model it agrees
+with the extrapolated ground state within the extrapolation's error~\cite{companion}.
 
 % =====================================================================================================
 \section{Outlook}
@@ -2063,10 +2069,12 @@ by a computer-assisted existence proof in the manner of Reiterer and Trubowitz~\
 \end{enumerate}
 Together these would derive $\Dinf = 2\pi/\omega^*$ from the $D = \infty$ equations. Numerically the rule already gives $\Dinf$ to
 about $10^{-4}$; more orders, or $M = 7$, would sharpen that, and whether $\Dinf$ has a closed form is open. For the critical
-exponent, open are the uniqueness of the unstable mode at $D = \infty$ and the coefficient $3.0324$ of $1/n$. A centrifugal term
-of order $n/r^2$ (scalar multiplets with angular momentum, wave maps, Yang--Mills) becomes an explicit $1/s$ in the inner
-equations and removes the symmetry of Proposition~\ref{prop:5}, which makes other matter models a natural
-test~\cite{companion}.
+exponent, open are the uniqueness of the unstable mode at $D = \infty$ and the coefficient of $1/n$ in $\lambda$. A
+centrifugal term of order $n/r^2$ (scalar multiplets with angular momentum, wave maps, Yang--Mills) becomes an explicit
+$1/s$ in the inner equations and removes the symmetry of Proposition~\ref{prop:5}. Other matter models test this, and the
+companion paper reports the tests~\cite{companion}: for the axion--dilaton, whose inner problem keeps the symmetry,
+$\gamma \to 1/2$; for the $\ell = 1$ scalar multiplet the computations to $D = 9$ do not decide $\gamma_\infty$; and the
+continuously self-similar branch of the $\sigma$-model ends at a fold near $D = 8.54$, before large $D$ is reached.
 
 \section*{How this work was done}
 \label{sec:how}
@@ -2074,16 +2082,24 @@ test~\cite{companion}.
 N.~M. chose the problem, set the direction at each step and ran the long computations on his own machine. The code, the
 computations, the derivations, the proofs and the text, including this paper, were produced by Claude, Anthropic's AI
 model, working as a set of coordinated agents. N.~M. has not checked the mathematics himself, and no human expert has
-reviewed the work. Checks made: Propositions~\ref{prop:1}--\ref{prop:3} and the inner equations were re-derived by separate agents
-that had not written them, with sympy where possible; the inner Stokes multiplier was computed by two implementations that
-share no code; the computer-assisted proof of Theorem~\ref{thm:A} was reviewed by an independent agent, which re-derived every
-input of its final test and found no error, and steps (ii)--(iv) were re-implemented in C++ with CAPD, sharing no integration
-or test code; deliberately broken versions of the final test, of Lemma~S, of Lemma~6a and of the disc covering are caught,
-with the one documented exception in Lemma~6a; and the citations taken over from the repository's reference audit were
-checked against publisher or arXiv records, and the novelty claims against the closest prior work, read rather than
-recalled; the references added for this paper were checked against publisher, library or arXiv records, and the two that
-could not be confirmed are marked. The parts of the proof not independently re-checked are listed in
-Section~\ref{sec:thmA}. Corrections are welcome.
+reviewed the work.
+
+\emph{Checks of the results.} Propositions~\ref{prop:1}--\ref{prop:3} and the inner equations were re-derived by separate
+agents that had not written them, with sympy where possible; the inner Stokes multiplier was computed by two
+implementations that share no code; the computer-assisted proof of Theorem~\ref{thm:A} was reviewed by an independent
+agent, which re-derived every input of its final test and found no error, and steps (ii)--(iv) were re-implemented in C++
+with CAPD, sharing no integration or test code; and deliberately broken versions of the final test, of Lemma~S, of
+Lemma~6a and of the disc covering are caught, with the one documented exception in Lemma~6a. Not independently
+re-checked: Lemmas~S, 6b$_0$, 6a and 6b$_1$ of the proof of Theorem~\ref{thm:A} (Section~\ref{sec:thmA} lists what is and is
+not independent), and the enclosure of $\sigma_1$ (Lemma~\ref{lem:sigma1}).
+
+\emph{Checks of the text.} A separate agent wrote a simulated referee report on the combined draft from which this paper
+and its companion~\cite{companion} were split. The citations of that draft were checked against publisher or arXiv
+records, and its novelty claims against the closest prior work, read rather than recalled; the references added since
+were checked by web search against arXiv, publisher or catalogue records, and the fields that could not be confirmed are
+marked. After the split, the numbers in the two papers were cross-checked against the repository (every number of three
+or more significant digits was found in a repository file), and the two papers against each other. Corrections are
+welcome.
 
 \emph{Data and code.} All data, code and derivation scripts are at \url{https://github.com/nmoinvaz/choptuik-large-d}; the
 certificate is reproduced by the commands in \repo{proof/A\_certify.md}, and the statements of the proof roadmap are in
@@ -2093,8 +2109,8 @@ certificate is reproduced by the commands in \repo{proof/A\_certify.md}, and the
 \begin{thebibliography}{99}
 \footnotesize
 
-\bibitem{companion} N. Moinvaziri, \emph{Choptuik's critical collapse in $D$ dimensions: the echo period and critical
-exponent to $D = 61$}, in preparation.
+\bibitem{companion} N. Moinvaziri, \emph{Choptuik's echo period and critical exponent at large dimension: evidence for
+$\Delta_\infty = 1.643893746$ and an $r^2$-shift symmetry behind $\gamma_\infty = 1/2$}, in preparation.
 
 \bibitem{repo} N. Moinvaziri, \emph{choptuik-large-d} (data, code and derivation scripts),
 \url{https://github.com/nmoinvaz/choptuik-large-d}.
@@ -2180,6 +2196,9 @@ Computing \textbf{4} (1969), 187--201.
 \bibitem{KruskalSegur1991} M. D. Kruskal and H. Segur, \emph{Asymptotics beyond all orders in a model of crystal
 growth}, Stud. Appl. Math. \textbf{85} (1991), 129--181.
 
+\bibitem{LaiWen2026} S.-H. Lai and W.-Y. Wen, \emph{Polyakov backreaction in large $D$ discretely self-similar collapse},
+arXiv:2610.04960 (2026).
+
 \bibitem{Lohner1987} R. J. Lohner, \emph{Enclosing the solutions of ordinary initial and boundary value problems}, in
 E. Kaucher, U. Kulisch and C. Ullrich (eds.), \emph{Computerarithmetic: Scientific Computation and Programming
 Languages}, Teubner, Stuttgart, 1987, 255--286 (chapter title and pages \emph{unverified}).
@@ -2211,6 +2230,9 @@ Ann. Sci. \'Ecole Norm. Sup. (3) \textbf{9} (1892), suppl\'ement, 3--93.
 
 \bibitem{Paris2013} R. B. Paris, \emph{Asymptotics of the Gauss hypergeometric function with large parameters, I},
 J. Classical Anal. \textbf{2} (2013), 183--203.
+
+\bibitem{PricePullin1996} R. H. Price and J. Pullin, \emph{Analytic approximations to the spacetime of a critical
+gravitational collapse}, Phys. Rev. D \textbf{54} (1996), 3792, arXiv:gr-qc/9601009.
 
 \bibitem{ReitererTrubowitz2019} M. Reiterer and E. Trubowitz, \emph{Choptuik's critical spacetime exists}, Commun.
 Math. Phys. \textbf{368} (2019), 143--186, arXiv:1203.3766.
