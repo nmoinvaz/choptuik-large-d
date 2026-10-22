@@ -49,8 +49,8 @@ Contents
     with all singularities on the lines Im ζ = ±π/2, ±3π/2, … and Im ζ = ±π, ±2π, ….
   - B3.5: convolution keeps analyticity in star-shaped domains. So the sum 2Φ(x) of two u-mode singulants from opposite
     sides of ℝ⁺ cannot appear on the principal sheet of a convolution fixed point.
-  - B3.6: the linear fast transport in the Borel plane is singular exactly at the u-mode singulants Φ(x) − iπ(ℓ + ½),
-    the branch points of Φ⁻¹.
+  - B3.6: for the scalar model, the linear fast transport in the Borel plane is singular exactly at the u-mode
+    singulants Φ(x) − iπ(ℓ + ½), the branch points of Φ⁻¹.
   - **B3.7: the outer formal series of the M-harmonic model is Gevrey-1 uniformly on every disc |x| ≤ ρ, for every M,
     F and ω, in both gauges.** The proof is a majorant argument closed by the implicit function theorem for a positive
     polynomial system. It covers the formal half of B3, the case that no theorem read in §7 covers (slow and fast
@@ -72,9 +72,10 @@ Contents
     abstract of Ramis–Sibuya 1994. Parameter-analyticity needs a short extra argument, given here as Lemma B4.P: on a
     ray where e^{−1/(2u)} is large, the lateral sum is the fixed point of a contraction that is uniform in (F, ω). It is
     the argument A_certify.md §4.5 carries out on a box for M = 1.
-  - For the mixed slow–fast B3, every theorem read (Canalis-Durand 1993; Canalis-Durand–Mozo-Fernández–Schäfke 2007, by
-    its abstract) assumes an invertible fast linear part on all components. Ramis–Schäfke 1996 is about averaging, not
-    slow manifolds. None covers our case. The formal half is now Lemma B3.7. The fixed-order existence half is
+  - For the mixed slow–fast B3, every theorem read treats systems in which every component carries the factor ε:
+    Canalis-Durand 1993 (a turning point with a control parameter) and Canalis-Durand–Mozo-Fernández–Schäfke 2007 (by
+    its abstract, with ∂_y f invertible at the singular point). Ramis–Schäfke 1996 is about averaging, not slow
+    manifolds. None covers our case. The formal half is now Lemma B3.7. The fixed-order existence half is
     contained in B8, and the Borel-sum half is (H-σ).
 
 ## 1. Where H-a1 and H-a2 enter, and what replaces them
@@ -374,7 +375,7 @@ s &= (2\rho + \omega_M\rho)\,t\,m + 2t(1+g)\,s + (g + t\beta + tg\beta)\,s + t(1
 Here m₀ = ‖D₀‖ and γ = ½ (centre gauge) or 1 (light-cone gauge).
 - In this M = 1 instance the norm is taken on the harmonic +1 coefficient, so m₀ = Aρ and q = s² + m².
 - For general M, use the full norm of step 1: m₀ = 2ρ‖F‖₁, q = (s² + m²)/2, ω_M = Mω; nothing else changes.
-- The coefficient is well-founded: the order-k coefficient of each right-hand side involves only lower orders, or the
+- The coefficient recursion is well-founded: the order-k coefficient of each right-hand side involves only lower orders, or the
   same order in the acyclic sequence b̃ → μ̃ → g → κ → s → m → q.
 - Every right-hand side has nonnegative coefficients, so Φ is monotone in V and t, and the minimal solution is the limit
   of the iteration from V = 0.
@@ -410,7 +411,8 @@ The last column is an independent check that can fail. With the mutation `--muta
 *What it does not settle.*
 - The radius: t₁ ≈ 0.015 against the true distance ≈ 1.6 to the nearest singularity. The majorant loses the
   cancellations between x²D′ and xcS′, and the generating function also loses the 1/k smallness of interior
-  convolutions. The plain majorant recursion keeps that smallness and gives ≈ 0.146 at ρ = 0.75.
+  convolutions. The plain majorant recursion keeps that smallness: its growth rate gives 0.1465 at ρ = 0.75 by k = 199
+  (`b3_majorant_recursion.log`; floating point, not certified).
 - Anything beyond the disc, i.e. (H-σ) proper.
 
 ## 3. The hypothesis (H-σ) and what it gives
@@ -600,7 +602,7 @@ The natural certificate for "no singularity in a neighbourhood of ℝ⁺" has tw
 - Run time: seconds.
 - *Improvement path, which costs only work.* The loss factor ≈ 100 against the true radius comes from the generating
   function treating interior convolutions as O(1). An induction on the plain majorant recursion keeps their O(1/k) size
-  and gives ≈ 0.146 at ρ = 0.75 (float prototype; not certified). It needs a by-hand tail estimate with the factorial
+  and would give about 0.146 at ρ = 0.75 (`b3_majorant_recursion.py`; floating point, not certified). It needs a by-hand tail estimate with the factorial
   convolution bound $`\sum_{i=a}^{k-a} i!(k-i)! \le (k-2a+1)\,a!(k-a)!`$ and a certified base range k ≤ K₀.
 
 **Stage 2, the neighbourhood $`S_\sigma`$ of [0, ∞): designed, not run.**

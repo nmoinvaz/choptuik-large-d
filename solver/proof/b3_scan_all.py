@@ -1,6 +1,7 @@
 """Runs the Borel-plane scans and pair fits quoted in proof/B3_borel.md, Section 5, and writes them to one log.
 
     python3 b3_scan_all.py > b3_scan_all.log
+    python3 b3_scan_all.py --set=M5 > b3_scan_M5.log      (the M = 5 file, b3_outer_M5_K70.json)
 
 Inputs: b3_outer_m1_lc_K120.json, b3_outer_m1_centre_K120.json (b3_outer_m1.py), b3_outer_M3_K100.json
 (b3_outer_M.py). Each line of the log comes from b3_borel_scan.py or b3_pair_fit.py, run as a subprocess.
@@ -29,6 +30,12 @@ RUNS = [
     ("pair fit, M = 1 light-cone gauge c(0)", ["b3_pair_fit.py", LC, "g0"]),
     ("pair fit, M = 1 centre gauge X*", ["b3_pair_fit.py", CE, "xstar"]),
 ]
+M5 = os.path.join(HERE, "b3_outer_M5_K70.json")
+if "--set=M5" in sys.argv:
+    RUNS = [(f"M = 5, light-cone gauge, harmonic {mu} of c(0)", ["b3_borel_scan.py", M5, f"g0:{mu}", "--n=6"])
+            for mu in (0, 2, 4)]
+    RUNS += [(f"M = 5, light-cone gauge, D1 at x = {x}", ["b3_borel_scan.py", M5, "D1", f"--x={x}", "--n=6"])
+             for x in ("0.5", "0.8")]
 for label, cmd in RUNS:
     print(f"==== {label}: python3 {' '.join(os.path.basename(c) for c in cmd)}", flush=True)
     r = subprocess.run([sys.executable, os.path.join(HERE, cmd[0])] + cmd[1:], capture_output=True, text=True)
