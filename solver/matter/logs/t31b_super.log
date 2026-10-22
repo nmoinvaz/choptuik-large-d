@@ -1,0 +1,4 @@
+2026-10-22 07:32:11 march started: ell_march.py l1kc31 1 31 data/sol_l1kc23hi_D10.0000.npy 10 16 11,12,13,14,15,16 --kc_seed 23 --dinit 0.05 --dmax 0.1 --kappa 0.7 --u0 0.04 --Ks 30 --tol 1e-11
+2026-10-22 07:42:51 D 10.05000 Delta 0.9847170515 +- 2.9e-05 |F| 1.9e-11 constraint 3.17e-05 dDelta/dF 1.52e+06 step 0.0500 [517s]
+2026-10-22 07:42:51 STOP: constraint 3.17e-05 > 1e-05 at D 10.05000; march killed
+2026-10-22 07:43:12 march exited with code 1; 1 records, last D 10.05; gamma runs for D = []
