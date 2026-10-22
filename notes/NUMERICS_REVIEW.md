@@ -550,7 +550,7 @@ with three noise models, and runs the same 48-fit selection:
 | N2: iid noise at the measured per-band levels | −1.7×10⁻⁹ … +3.6×10⁻⁹ | +0.9×10⁻⁹ | 2.6×10⁻⁹ | yes |
 | N3: N1 plus a coherent +3×10⁻¹⁵ above 60.1 | −1.8×10⁻¹⁰ … +2.22×10⁻⁸ | +1.1×10⁻⁸ | 1.1×10⁻⁸ | yes |
 | N4: N1 plus a coherent +3×10⁻¹⁴ above 60.1 | −1.8×10⁻¹⁰ … +7.17×10⁻⁸ | +3.6×10⁻⁸ | 3.6×10⁻⁸ | yes |
-| C1 (negative control): N1 plus 10⁻⁴(10/D)^{5/2}, non-analytic at 1/D = 0 | +3.4×10⁻⁹ … +1.87×10⁻⁸ | +1.1×10⁻⁸ | 7.6×10⁻⁹ | **no** |
+| C1 (negative control): N1 plus 10⁻⁴·(10/D)^(5/2), non-analytic at 1/D = 0 | +3.4×10⁻⁹ … +1.87×10⁻⁸ | +1.1×10⁻⁸ | 7.6×10⁻⁹ | **no** |
 
 **Verdict:** the coverage claim survives an independent truth; the centre bias (F3) is a property of the data's error
 pattern, not of the truth, since N2 shows almost none. Two side results:
@@ -558,9 +558,12 @@ pattern, not of the truth, since N2 shows almost none. Two side results:
 - N4: an error confined to the points above 60.1 cannot push the truth out of the quoted range, only widen it,
   because the range is the union of the D ≤ 60.1 and D ≤ 61.03 snapshots and the first does not see those points.
   That makes the range robust, but it also means the planted tests cannot detect such an error.
-- C1, the control, does fail, as it must; but a non-analytic term as large as 10⁻⁴ at D = 10 moves the limit by
-  only 1.1×10⁻⁸ and still fits to the noise. The fits do not test analyticity; the held-out tests in the README do,
-  and the bar is conditional on it (as the README says).
+- C1, the control, falls outside the range as it must, but only just. A non-analytic term as large as 10⁻⁴ at
+  D = 10 moves the range by only 3–4×10⁻⁹, still fits to the noise, and leaves the centre within the quoted
+  ±1.5×10⁻⁸ of the truth. It falls out because in N1 the truth already sits 1.8×10⁻¹⁰ above the bottom of the range:
+  for a realistic error pattern the range has almost no margin below the truth (the quoted ±1.5×10⁻⁸ about the
+  centre has 1.5×10⁻⁸ − 7.8×10⁻⁹ ≈ 7×10⁻⁹). The fits do not test analyticity; the README's held-out tests do, and the bar is
+  conditional on it (as the README says).
 
 ### 4f. Failure classes
 
