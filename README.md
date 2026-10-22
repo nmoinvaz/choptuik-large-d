@@ -1498,6 +1498,15 @@ range predicted from M ≤ 5 (dashed).
 Bottom right: the effective exponent of the zero tends to 1, a simple zero, which is why the estimates from above are the
 asymptotically correct ones.
 
+![The selection rule's estimates as distance from the finite-D answer on a log scale, with the calibrated band and the order-14 projections](solver/selection_zoom.svg)
+
+**The same estimates as distance from the finite-D answer** (`solver/plot_selection_zoom.py`, with σ₁₃). On a log scale
+steady convergence is a straight line: from above, the estimates fall by about ×0.53 per order from k = 4 to 13. The
+shaded band is where the K = 13 calibration puts the zero, 2–8×10⁻⁵ below 1. The two pictures look alike so far, and the
+next order is where they separate. In a simple geometric model through k = 12 and 13 (not a calibrated estimator), the
+order-14 estimate lands 1.9×10⁻⁵ above 1 if the zero is exactly at 1, and 0.4–1.4×10⁻⁵ above 1 if it is in the band. So a
+converged σ₁₄ would favour one or the other. It is also the test for a ring of fourteen zeros.
+
 ![The echo's harmonic spectrum: amplitude of each odd harmonic for D = 4 to 60 with the D = infinity prediction, and the decay rate per harmonic against 1/(D-2)](solver/spectrum.svg)
 
 **The prediction against the spectrum** (`solver/plot_spectrum.py`). Left: the amplitude |F_ν| of each odd harmonic (log
@@ -2068,6 +2077,7 @@ solver/plot_physics.py        physics.svg: e^Delta, fine-tuning digits per echo,
 solver/plot_echo.py           echo.svg: the echo at D = 4, 10, 20, 60 (data: solver/echo_data.py -> solver/data/echo_spectrum.npz)
 solver/plot_spectrum.py       spectrum.svg: the echo's harmonic spectrum and decay rates against the D = infinity prediction
 solver/plot_selection.py      selection.svg: the selection rule order by order (bracket, truncation sequence, exponent)
+solver/plot_selection_zoom.py selection_zoom.svg: the same estimates as distance from 1 (log), with the order-14 projections
 solver/plot_gamma.py          gamma.svg: lambda = 1/gamma against 1/n with the lambda = 2 limit, and the free fits
 solver/simplify_math.py       converts trivial inline math in README.md to Unicode (GitHub renders at most ~1400 expressions)
 solver/largeD_expand.py       the 1/n expansion symbolically (sympy, Proposition 1)
