@@ -65,7 +65,8 @@ Contents
     light-cone position) lie near ±3.1i, plausibly ±iπ as in the linear case.
   - At M = 3 there is in addition an x-independent singularity near ζ ≈ −1.2, close to the negative real axis. So the
     old "x-independent cluster" is real for M ≥ 3, but it lies opposite to ℝ⁺. It limits σ without obstructing the
-    1-sum.
+    1-sum. At M = 5, 70 orders do not resolve the plane; the isolated poles near −0.8 suggest the singularity moves
+    toward the origin as M grows, which would make σ(M) → 0 (a gap-(b) question).
   - Strip checks with planted ℝ⁺ singularities of weight 10⁻³ fire, so the checks can fail.
 - **Literature** (§7):
   - Braaksma 1992 (read) covers B4's summability; its hypotheses hold. It says nothing about parameters, nor does the
@@ -581,7 +582,13 @@ K = 100 terms and is absent with K = 94, 88, 80 (`b3_pole_stability_M3_B0.log`),
 outside the disc of convergence. This is what prompted the stability rule above. The full M = 3 result under that rule
 is in `b3_strip_check_M3.log`: [M3_RESULT]
 
-*M = 5.* [M5_RESULT]
+*M = 5* (`b3_outer_M.py 5 70`, `b3_scan_M5.log`). K = 70 orders do not resolve the Borel plane at M = 5. For the three
+harmonics of c(0) and for D1 at x = 0.5 and 0.8, the Padé poles form a ring at |a| ≈ 0.91–1.05 around all directions,
+with large pole–zero distances (0.3–0.6) and Padé-order "moves" of 0.04–0.12: that is the circle of convergence, not a
+set of singularities. The only isolated poles are near the negative real axis: −0.80 − 0.06i (D1, x = 0.8) and
+−0.86 + 0.01i (D1, x = 0.5). This is weak numerical evidence that the x-independent singularity moves toward the
+origin with M (≈ −1.2 at M = 3, ≈ −0.8 at M = 5). Nothing can be said about the neighbourhood of ℝ⁺ beyond the disc at
+M = 5 from these data; Lemma B3.7 covers the disc.
 
 ### 5.3 Summary of the numerical picture
 
@@ -590,6 +597,7 @@ is in `b3_strip_check_M3.log`: [M3_RESULT]
 | linear (proved) | Φ ∓ iπ/2; iπm | π/2 | no |
 | M = 1 | Φ ∓ iπ/2 (x-dependent); near ±3.1i (x-independent) | ≈ 1.6 (x < 1), ≈ 3.1 (x = 1) | no |
 | M = 3 | Φ ∓ iπ/2; near −1.2 (x-independent) | [M3_SIGMA] | [M3_NEAR] |
+| M = 5 (K = 70) | not resolved (Padé ring at the circle of convergence, \|a\| ≈ 0.91–1.05); isolated poles near −0.8 | ≲ 0.8 | not resolvable from 70 orders |
 
 ## 6. The computer-assisted step: design and pilot
 
