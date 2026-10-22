@@ -20,5 +20,27 @@
   "junk_caught": false,
   "worst_used_residual": 2.0836977496041705e-14,
   "verdict": "FAIL"
+ },
+ "T3": {
+  "lo_minus_L": -2.9836858723965036e-09,
+  "hi_minus_L": 2.0532289287062603e-08,
+  "centre_minus_L": 8.77430170733305e-09,
+  "nfit": 48,
+  "inside": true,
+  "within_bar": true,
+  "junk_caught": false,
+  "worst_used_residual": 2.1821909109758275e-14,
+  "verdict": "FAIL"
+ },
+ "T4": {
+  "lo_minus_L": -2.967669369822198e-09,
+  "hi_minus_L": 1.866643850900279e-08,
+  "centre_minus_L": 7.849384569590296e-09,
+  "nfit": 48,
+  "inside": true,
+  "within_bar": true,
+  "junk_caught": false,
+  "worst_used_residual": 2.081228161191806e-14,
+  "verdict": "FAIL"
  }
 }
