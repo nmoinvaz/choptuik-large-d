@@ -2176,3 +2176,17 @@ T34 queued: a waiter starts the three section 9 commands (from solver/supercrit/
 contains 6fa7a8d) the moment a T33 box run or T31b exits, so the total stays at 6 threads. Below-normal priority,
 8 h limit on expand.py, the chain stops on an AssertionError, and any "falling back to sympy.integrate" line is
 logged for the report. sympy 1.13.1. I will push the logs and the .pkl to wip/supercrit-nnlo when it finishes.
+
+== 2026-10-22 07:43 PDT local
+T31b stopped at its first step by your 1e-5 constraint rule (pushed with this entry: march_l1kc31.jsonl, logs/t31b_*.log
+including the gate and polish logs). Seed D = 10 reproduced the gate: Delta 0.9849768428.
+   D = 10.05: Delta 0.9847170515 +- 2.9e-5 (|F| 1.9e-11 x dDelta/dF 1.52e6), constraint 3.17e-5, 517 s
+LM started from |F| 3.2e-5 and stalled at 1.9e-11, above tol 1e-11 but under facc 1e-10, so the march took it. The D = 10
+tangent and curvature predict Delta(10.05) of about 0.984692, so the accepted point sits about 2.5e-5 high, inside its
+own uncertainty. At kc 23 the constraint grew smoothly with D (truncation). Here it jumps x40 in one 0.05 step while
+|F| stays 10x above the floor, which looks like LM moving the near-null high harmonics that kc 31 adds (the junk
+directions, smin/smax 8e-14), not like truncation. No gamma ran.
+If you want to try further, the cheapest test is one point: re-solve D = 10.05 from the same predictor with --reg 1e-7,
+which is built to hold those harmonics still, and compare the constraint and |F| (about 10 min, 1 thread). Otherwise
+T31 ends here: kc 23 to D = 10.5 (gamma at 10), kc 31 at D = 10 only.
+The freed threads went to T34 as queued; T33's four box runs continue.
