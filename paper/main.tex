@@ -604,8 +604,9 @@ $F = A\sin\theta$ alone, both find an isolated zero of the multiplier at $A = 2.
 proof in ball arithmetic, following the template of Baldom\'a et al.~\cite{BaldomaEtAl2023} for inner Stokes constants,
 with a validated Lohner integrator and Krawczyk's test, certifies that one component of
 the jump at one radius has exactly one zero, a simple one, within $10^{-9}$ of
-$(A, \omega/\omega_\infty) = (2.5421480475, 0.7769940136)$; two lemmas, that this component vanishing forces the whole jump
-to vanish and that the integration path gives the Borel sum, would make it the full one-harmonic condition; an
+$(A, \omega/\omega_\infty) = (2.5421480475, 0.7769940136)$; that this component vanishing forces the whole jump to vanish is
+proved, and so is the analyticity near $\xi = 0$ that identifies the computed solution with the Borel sum, which leaves
+one lemma, analyticity on an annulus $0.0624 \le |\xi| \le 0.2$, for the full one-harmonic condition; an
 independent C++ implementation with the CAPD library confirms it and certifies a box ten times larger;
 repository, proof/A\_certify.md and A\_review.md; Reiterer and Trubowitz~\cite{ReitererTrubowitz2019} gave a
 computer-assisted existence proof of the $D = 4$ critical solution itself); it is not the

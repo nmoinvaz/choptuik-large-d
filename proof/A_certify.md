@@ -30,6 +30,14 @@ exactly one, at A ∈ [2.54214804760473, 2.54214804762839], ω/ω∞ ∈ [0.7769
 in A ∈ [2.54214804761512, 2.54214804761800], ω/ω∞ ∈ [0.77699401360886, 0.77699401361058], and passes along the
 lower path through radius 0.2, away from the singularity.
 
+**Since then (§11):** lemma 6a is proved, and so is the part of 6b near ξ = 0 (y⁺ analytic for |ξ| ≤ 0.0624 in the
+sector, by a start-value lemma on a domain that reaches the real axis). The certificate is redone on the lower path,
+where 6b only needs |ξ| ≤ 0.2. What remains is one lemma, 6b₁: y⁺ is analytic on the annular sector
+0.0624 ≤ |ξ| ≤ 0.2, 0 ≤ arg ξ ≤ 3π/8 for every x in the box. Given 6b₁, the theorem holds: **the M = 1 selection
+condition has exactly one zero in the box, and it is simple**, at A ∈ [2.54214804761338, 2.54214804761975],
+ω/ω∞ ∈ [0.776994013607438, 0.776994013612010] (§11.7). 6b₁ holds numerically (two paths agree to 2×10⁻¹²); a
+validated sweep of the annulus is the remaining computation (§11.4 lists three routes).
+
 Contents
 
 - [1. The template](#1-the-template)
