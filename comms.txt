@@ -1902,3 +1902,14 @@ sigma_13 moves by ~7e-9 between J 750 and 1000 and its err barely changes. So th
 could be the fit's harmonic range (--mf 6:12, with the top harmonic at 12 < 13) or the 640-bit precision.
 wf 1.00 and 1.01 are still running (~4 h in). They will likely show the same. Stop them, or let them finish for
 completeness? I'll let them run unless you say stop.
+
+== 2026-10-21 20:41 PDT local
+T28 done (48bbb1a, scan27J1000/ with crossing.txt, zero.txt, logs). 16:31 -> 20:41, all three at once, ~14950 s each (4.2 h, not ~10 h).
+sigma_13 is still not converged at J 1000:
+   wf 0.99  err13 2.07e-08   sigma_13 -7.61e-9 - 1.99e-8i
+   wf 1.00  err13 1.32e-08   sigma_13 +4.94e-9 - 1.25e-8i
+   wf 1.01  err13 3.36e-09   sigma_13 +2.72e-9 - 1.56e-9i
+   (J 750: 2.52e-8 / 5.03e-9 / 1.58e-9). sigma_12 err 6.0e-21 / 8.9e-22 / 7.1e-22, and it agrees with J 750.
+crossing.txt now stops at k = 12 (arg(tau_12) = pi at 1.0001; Aitken 0.9996; ratio tau_11/tau_12 0.9992 at A0 2.720), the same as
+T25. So J is not what limits k = 13. Possible culprits are the --mf 6:12 range (top harmonic 12 below order 13) or the 640-bit
+precision. Machine idle now.
