@@ -56,11 +56,62 @@ def arc_completion(kind, wt_fit, M=6):
     return nodes, info, truth
 
 
+def refit_scan(kind, wts, M=6):
+    """weighted L2 and max relative residual of the arc fit to the real sigma_0..12, against the planted wt
+    (the moments do not depend on wt, so one Laplace object per node is refitted)"""
+    mp.mp.dps = PP.DPS
+    real = PP.load_real()
+    laps = {}
+    for wf in PP.NODES:
+        arc = PP.Arc(wf, "arc" if kind == "beta2" else kind)
+        ex = mp.mpc(1) if kind == "beta2" else PP.mpc(PP.BETA[wf]) - 1
+        laps[wf] = PP.Laplace(arc, ex, M)
+    out = {}
+    for wt in wts:
+        l2, mx = 0.0, 0.0
+        for wf in PP.NODES:
+            r = laps[wf].fit(real[wf][0], PP.factor([PP.x0_planted(wf, wt)]))
+            l2 += sum(x * x for x in r)
+            mx = max(mx, max(r))
+        out[wt] = (float(np.sqrt(l2)), mx)
+    return out
+
+
+def best_wt(scan):
+    """minimum of the L2 residual: the vertex of a parabola through the smallest point and its neighbours"""
+    w = sorted(scan, key=float)
+    v = [scan[x][0] for x in w]
+    i = int(np.argmin(v))
+    i = min(max(i, 1), len(w) - 2)
+    xs = [float(w[j]) for j in (i - 1, i, i + 1)]
+    c = np.polyfit(xs, [v[j] ** 2 for j in (i - 1, i, i + 1)], 2)
+    return -c[1] / (2 * c[0])
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--scratch", default=os.path.join(os.environ.get("TMPDIR", "/tmp"), "planted_scratch"))
     a = ap.parse_args()
     R.DONE.update(R.done_names())
+    chk = R.load_checks()
+    # the wt each arc shape prefers (residual minimum), and the completion with that shape's best-fit tail
+    wts = [f"{0.9990 + 0.0001 * i:.4f}" for i in range(21)]
+    for kind in ("arc", "chord", "mirror", "beta2"):
+        key = f"REFIT-SCAN {kind}"
+        if key not in chk:
+            scan = refit_scan(kind, wts)
+            chk = R.load_checks()
+            chk[key] = {"scan": scan, "best_wt": best_wt(scan)}
+            R.save_checks(chk)
+        bw = f"{chk[key]['best_wt']:.5f}"
+        name = f"C-ARC {kind} fit-wt=best({bw})"
+        if name not in R.DONE:
+            nodes, info, truth = arc_completion(kind, bw)
+            chk = R.load_checks()
+            chk[name] = {"info": info, "truth": truth}
+            R.save_checks(chk)
+            R.run_plant(name, "C-ARC (post-freeze)", nodes, truth["im_x"], a.scratch,
+                        info={"truth_im_sqrt": truth["im_sqrt"], **info})
     chk = R.load_checks()
     for kind, wt in (("arc", "1.0000"), ("chord", "1.0000"), ("mirror", "1.0000"), ("beta2", "1.0000"),
                      ("arc", "0.9980"), ("arc", "1.0020")):

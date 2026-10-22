@@ -243,6 +243,31 @@ def main():
             print(f"| {base} | {n[len(base) + 1:]}{note} | " + " | ".join(f4(x) if x is not None else "none" for x in dl)
                   + f" | {', '.join(moved) or 'no'} | {', '.join(d) or 'none'} |")
 
+    # ---- noise: shift of each estimator against the clean plant
+    print("\n### Noise: |estimate(noisy) − estimate(clean)| at K = 12, × 10⁴: median / max (n with no value)\n")
+    print("| noise | plants | P1 covers | " + " | ".join(LABEL[e] for e in EST) + " |")
+    print("|---|---|---|" + "---|" * len(EST))
+    for lev in ("sigma_err", "rel=1e-12", "rel=1e-9", "rel=1e-6", "rel=1e-4"):
+        rs = [r for n, r in by.items() if n.startswith(f"P-NOISE {lev} ")]
+        if not rs:
+            continue
+        sh = {e: [] for e in EST}
+        miss = {e: 0 for e in EST}
+        cov = 0
+        for r in rs:
+            wt = r["name"].split("wt=")[1].split()[0]
+            clean = by.get(f"P-ARC wt={wt}")
+            g, gc = R.grade(r, 12), R.grade(clean, 12)
+            cov += g["P1"]
+            for e in EST:
+                if g["est"][e] is None or gc["est"][e] is None:
+                    miss[e] += 1
+                else:
+                    sh[e].append(abs(g["est"][e] - gc["est"][e]))
+        cells = [(f"{statistics.median(v) * 1e4:.2g} / {max(v) * 1e4:.2g}" if v else "—") + (f" ({miss[e]})" if miss[e] else "")
+                 for e, v in sh.items()]
+        print(f"| {lev} | {len(rs)} | {cov}/{len(rs)} | " + " | ".join(cells) + " |")
+
     # ---- self-test of the coverage check
     p = by.get("P-ARC wt=1.0000")
     if p:
