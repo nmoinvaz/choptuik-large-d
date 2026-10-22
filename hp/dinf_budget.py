@@ -63,8 +63,16 @@ def main():
     chk = fits_all_degrees(pts, Ds, "1/D")[16]
     print(f"check vs dd_fits_mp.fit (1/D, degree 16, 10 <= D <= 45): limit differs by {mp.nstr(abs(chk[0] - F.limit(ev)), 2)}, "
           f"max residual {mp.nstr(chk[1], 3)} vs {mp.nstr(res, 3)}", flush=True)
+    rows = grid(pts, allD, T0)
+    report(rows, T0)
+
+
+def grid(pts, allD, T0=None, verbose=True, dmaxes=(45, 60.1, 61.03)):
+    """The fit grid: one row (dmax, dmin, clean, model, deg, limit, max residual, used) per fit. Shared with
+    planted_dinf.py, which runs synthetic data through exactly this path."""
+    T0 = T0 or time.time()
     rows = []
-    for dmax in (45, 60.1, 61.03):
+    for dmax in dmaxes:
         for dmin in (10, 12, 15):
             base = [d for d in allD if dmin <= d <= dmax]
             for clean in (True, False):
@@ -76,10 +84,22 @@ def main():
                     use = set(at[:2])
                     for deg, (lim, res) in r.items():
                         rows.append((dmax, dmin, clean, model, deg, lim, res, deg in use))
+                    if not verbose:
+                        continue
                     print(f"D {dmin:>2}..{dmax:<5}  {'clean' if clean else 'all  '}  {model:3s}  N {len(Ds):3d}  "
                           + "  ".join(f"{deg}:{mp.nstr(lim, 10)}{'+' if deg in use else ('*' if deg in at else ' ')}"
                                       for deg, (lim, res) in r.items())
                           + f"   floor {mp.nstr(floor, 2)}   ({time.time() - T0:.0f} s)", flush=True)
+    return rows
+
+
+def quoted(rows):
+    """The selection behind the quoted bar (README): the used fits on D <= 60.1 and 61.03, any cleaning, any Dmin."""
+    L = [r[5] for r in rows if r[7] and r[0] > 50]
+    return min(L), max(L), len(L)
+
+
+def report(rows, T0):
     print("\n* = reaches the noise floor (max residual within 2.5x of the group's best); "
           "+ = one of the two lowest such degrees, used below")
     print("\nSpread of the limits used (+):")

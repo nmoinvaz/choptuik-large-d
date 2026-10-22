@@ -193,9 +193,9 @@ As D → ∞ (ε → 0):
 ```
 
 ```math
-\Delta_\infty = 1.64389375 \pm 0.00000001,
+\Delta_\infty = 1.64389375 \pm 0.000000015,
 \qquad
-\omega_\infty = \frac{2\pi}{\Delta_\infty} = 3.82213589 \pm 0.00000002,
+\omega_\infty = \frac{2\pi}{\Delta_\infty} = 3.82213589 \pm 0.00000004,
 \qquad
 \gamma_\infty = \frac{1}{2} .
 ```
@@ -361,7 +361,7 @@ window either.
 
 | Candidate | Value | − double-double limit | f64 test: $`\chi^2/\mathrm{dof}`$; held-out rms | Double-double test: held-out error (× free) | Verdict |
 |---|---|---|---|---|---|
-| none (free fit) | 1.64389375 ± 0.00000001 | | 0.62 .. 3.4; 1.4×10⁻⁶ | 4.7×10⁻¹³ | |
+| none (free fit) | 1.64389375 ± 0.000000015 | | 0.62 .. 3.4; 1.4×10⁻⁶ | 4.7×10⁻¹³ | |
 | $`\frac{5}{7}\sqrt{G}\, j_{0,1}`$ | 1.6439747 | +8.1×10⁻⁵ | 0.62 .. 8.6; 1.3×10⁻⁶ | 6.2×10⁻¹¹ (130×) | **ruled out** (passed the f64 test) |
 | $`\frac{7}{5}\,(\ln 2)^{-2}\,\pi^{-1/2}`$ | 1.6440014 | +1.1×10⁻⁴ | 0.62 .. 18; 1.2×10⁻⁶ | 1.1×10⁻¹⁰ (220×) | **ruled out** (passed the f64 test) |
 | $`\frac{7}{2}\sqrt{\ln 2/\pi}`$ | 1.6440152 | +1.2×10⁻⁴ | 0.62 .. 26; 1.2×10⁻⁶ | 1.3×10⁻¹⁰ (270×) | **ruled out** (passed the f64 test) |

@@ -1,0 +1,215 @@
+#!/usr/bin/env python3
+"""Tie the headline numbers quoted in README.md, the paper and the proof notes to the files they come from.
+
+Each check recomputes a quoted number from its source (a data file, a log, a saved run, or arithmetic on other quoted
+numbers), compares it at the quoted precision, and confirms that the quoted text is really in the documents. Numbers
+are compared as numbers, never as formatted strings. `--selftest` proves every check can fail: it shifts each
+recomputed value by one unit in the last quoted digit and demands that the check then rejects it. `--full` adds the
+slow checks (the Delta_inf fit grid, about 5 minutes).
+
+    python3 check_numbers.py [--selftest] [--full]       # exit status 0 only if every check passes
+"""
+import glob
+import json
+import math
+import os
+import re
+import sys
+
+ROOT = os.path.dirname(os.path.abspath(__file__))
+DOCS = {name: open(os.path.join(ROOT, name), encoding="utf-8").read()
+        for name in ("README.md", "paper/main.tex", "proof/A_certify.md", "GAMMA.md")}
+
+
+def quoted_in(doc, text):
+    return text in DOCS[doc]
+
+
+def rnd(x, places):
+    return float(f"{x:.{places}f}")
+
+
+CHECKS = []
+
+
+def check(fn):
+    CHECKS.append(fn)
+    return fn
+
+
+# Each check returns a list of items (label, computed value, quoted value, unit, documents-and-texts).
+# An item passes when |computed - quoted| <= unit/2 (the quoted value is the computed one rounded) and every text is
+# present in its document.
+
+@check
+def data_points():
+    rows = list(open(os.path.join(ROOT, "hp/data/delta_dd.csv")))[1:]
+    D = [float(r.split(",")[0]) for r in rows]
+    txt = [("README.md", "Δ is computed at 857 points from D = 8.25 to 61.03")]
+    return [("double-double points", len(D), 857, 1, txt),
+            ("lowest D", min(D), 8.25, 0.01, txt),
+            ("highest D", max(D), 61.03, 0.01, txt)]
+
+
+@check
+def gamma_points():
+    pts = {}
+    for fn in ("hp/data/gamma_dd.jsonl", "hp/data/local/gamma_dd.jsonl"):
+        for line in open(os.path.join(ROOT, fn)):
+            r = json.loads(line)
+            if r.get("lam"):
+                pts[round(r["D"], 4)] = r["lam"]
+    txt = [("README.md", "67 points, D = 8.25–61")]
+    return [("gamma points", len(pts), 67, 1, txt),
+            ("gamma lowest D", min(pts), 8.25, 0.01, txt),
+            ("gamma highest D", max(pts), 61, 1, txt)]
+
+
+DINF, BAR = 1.64389375, 1.5e-8
+RANGE = (1.643893744, 1.643893763)
+
+
+@check
+def dinf_quotes():
+    """The bar is the half-range of the 48 fits (README); the centre of that range rounds to the quoted value; every
+    quote of Delta_inf in the README and the paper carries the same bar."""
+    items = [("Delta_inf = centre of the fit range", (RANGE[0] + RANGE[1]) / 2, DINF, 1e-8,
+              [("README.md", "1.643893744–1.643893763")]),
+             ("bar covers the half-range", max(BAR, (RANGE[1] - RANGE[0]) / 2), BAR, 1e-9, [])]
+    pat = re.compile(r"1\.64389375\s*(?:±|\\pm)\s*([0-9.]+)(?:\s*(?:×|\\times)\s*10\^?\{?([⁻\-−]?[0-9⁰¹²³⁴⁵⁶⁷⁸⁹]+)\}?)?")
+    sup = str.maketrans("⁻⁰¹²³⁴⁵⁶⁷⁸⁹−", "-0123456789-")
+    for doc in ("README.md", "paper/main.tex"):
+        for m in pat.finditer(DOCS[doc]):
+            v = float(m.group(1)) * (10 ** int(m.group(2).translate(sup)) if m.group(2) else 1)
+            items.append((f"bar quoted in {doc}: '{m.group(0)}'", BAR, v, 1e-10, []))
+    return items
+
+
+@check
+def omega_quotes():
+    w = 2 * math.pi / DINF
+    dw = 2 * math.pi * BAR / DINF ** 2
+    items = [("omega_inf = 2 pi / Delta_inf", w, 3.82213589, 1e-8, [("README.md", "3.82213589")])]
+    pat = re.compile(r"3\.82213589\s*(?:±|\\pm)\s*([0-9.]+)(?:\s*(?:×|\\times)\s*10\^?\{?([⁻\-−]?[0-9⁰¹²³⁴⁵⁶⁷⁸⁹]+)\}?)?")
+    sup = str.maketrans("⁻⁰¹²³⁴⁵⁶⁷⁸⁹−", "-0123456789-")
+    for doc in ("README.md", "paper/main.tex"):
+        for m in pat.finditer(DOCS[doc]):
+            v = float(m.group(1)) * (10 ** int(m.group(2).translate(sup)) if m.group(2) else 1)
+            # an error bar may be rounded up, never down: accept dw <= quoted <= dw rounded up to one figure
+            up = math.ceil(dw / 10 ** math.floor(math.log10(dw))) * 10 ** math.floor(math.log10(dw))
+            ok = dw <= v <= up * (1 + 1e-9)
+            items.append((f"omega bar in {doc}: '{m.group(0)}' (2 pi bar / Delta^2 = {dw:.2e}; allowed {dw:.2e}..{up:.0e})",
+                          v if ok else float("nan"), v, 1e-9, []))
+    return items
+
+
+@check
+def gamma_slope():
+    line = next(l for l in open(os.path.join(ROOT, "hp/data/local/gamma_compare.txt"))
+                if l.startswith("D >= 30") and "fixed and 9 powers" in l)
+    a1 = float(re.search(r"a1 = ([0-9.]+)", line).group(1))
+    return [("lambda = 2 + a1/n (D >= 30, 9 powers, lambda_inf = 2 fixed)", a1, 3.0324, 1e-4,
+             [("README.md", "3.0324"), ("GAMMA.md", "3.0324")]),
+            ("gamma = 1/2 - (a1/4)/n", a1 / 4, 0.758, 1e-3, [("README.md", "0.758/n")])]
+
+
+@check
+def five_harmonics():
+    log = open(os.path.join(ROOT, "solver/inner_stokes/logs/hier_M5_full_schur.log")).read()
+    x = re.findall(r"x \[([0-9.]+), ([0-9.]+),", log)[-1]
+    A, wf = float(x[0]), float(x[1])
+    return [("M = 5 omega/omega_inf", wf, 0.999228, 1e-6, [("README.md", "0.999228")]),
+            ("M = 5 amplitude", A, 2.71858, 1e-5, [("README.md", "A = 2.71858")]),
+            ("M = 5 Delta = Delta_inf / wf", DINF / wf, 1.64516, 1e-5, [("README.md", "Δ = 1.64516")]),
+            ("M = 5 offset in Delta, percent", (1 / wf - 1) * 100, 0.077, 1e-3, [("README.md", "0.077% above")])]
+
+
+@check
+def certificate():
+    sys.path.insert(0, os.path.join(ROOT, "solver", "proof"))
+    import mutation_controls as MC
+    from flint import arb
+    import krawczyk as KR
+    d = json.load(open(MC.RUNS))
+    ok, K, margins = MC.assemble(d)
+    items = [("Krawczyk margin in A (1e-9 box)", margins[0], 7.925e-10, 1e-13, [("proof/A_certify.md", "7.925×10⁻¹⁰")]),
+             ("Krawczyk margin in omega", margins[1], 9.247e-10, 1e-13, [("proof/A_certify.md", "9.247×10⁻¹⁰")]),
+             ("test passes on the 1e-9 box", int(ok), 1, 1, [])]
+    # the quoted zero enclosure: the 1.3e-10 sub-box test (J over the 1e-9 box encloses J over any sub-box)
+    lo = ("2.54214804760473", "0.776994013601194")
+    hi = ("2.54214804762839", "0.776994013618254")
+    txt = [("proof/A_certify.md", f"A \\in [{lo[0]},\\ {hi[0]}]")]
+    Kp = sub_box_K(d, "1.3e-10", MC, KR, arb)
+    for i, nm in enumerate(("A", "omega/omega_inf")):
+        inside = bool(Kp[i].lower() >= arb(lo[i]) and Kp[i].upper() <= arb(hi[i]))
+        items.append((f"quoted {nm} enclosure contains K(X') (outward rounding)", int(inside), 1, 1, txt))
+    return items
+
+
+def sub_box_K(d, h, MC, KR, arb):
+    from flint import ctx
+    ctx.prec = 320
+    xhat = [arb(d["A"]), arb(d["wf"])]
+    Dm1, Dp1 = MC.parse_acb(d["point"]["Dm1"]), MC.parse_acb(d["point"]["Dp1"])
+    dDm1 = [MC.parse_acb(p) for p in d["box"]["dDm1"]]
+    dDp1 = [MC.parse_acb(p) for p in d["box"]["dDp1"]]
+    N, xs = KR.normalization(xhat, d["xi1"], prec=320)
+    g_hat, JX = KR.g_from_states(Dm1, Dp1, dDm1, dDp1, N, xs)
+    ok, K, _ = KR.krawczyk(xhat, g_hat, JX, [arb(h), arb(h)])
+    assert ok, "the sub-box test must pass"
+    return K
+
+
+def full_dinf():
+    sys.path.insert(0, os.path.join(ROOT, "hp"))
+    import dd_fits_mp as F
+    import dinf_budget as B
+    pts, _ = F.load_points()
+    rows = B.grid(pts, sorted(pts), verbose=False, dmaxes=(60.1, 61.03))
+    lo, hi, n = B.quoted(rows)
+    return [("fits in the quoted selection", n, 48, 1, []),
+            ("lowest limit", float(lo), RANGE[0], 1e-9, []),
+            ("highest limit", float(hi), RANGE[1], 1e-9, [])]
+
+
+def evaluate(items, shift=False):
+    bad = []
+    for label, val, q, unit, txt in items:
+        v = val + unit if shift else val
+        num_ok = abs(v - q) <= unit / 2 * (1 + 1e-9)
+        missing = [f"{doc}: '{t}'" for doc, t in txt if not quoted_in(doc, t)]
+        if not num_ok or missing:
+            bad.append((label, v, q, unit, missing))
+    return bad
+
+
+def main():
+    selftest, full = "--selftest" in sys.argv, "--full" in sys.argv
+    groups = [(fn.__name__, fn()) for fn in CHECKS]
+    if full:
+        groups.append(("full_dinf", full_dinf()))
+    n_items = sum(len(items) for _, items in groups)
+    n_bad = 0
+    for name, items in groups:
+        bad = evaluate(items)
+        n_bad += len(bad)
+        print(f"{name:16s} {len(items) - len(bad)} of {len(items)} pass")
+        for label, v, q, unit, missing in bad:
+            print(f"   FAIL {label}: computed {v!r}, quoted {q!r} (unit {unit:g})" +
+                  (f"; text missing: {missing}" if missing else ""))
+    print(f"{n_items - n_bad} of {n_items} checks pass")
+    if selftest:
+        caught = 0
+        for name, items in groups:
+            for it in items:
+                if evaluate([it], shift=True):
+                    caught += 1
+                else:
+                    print(f"   selftest: a one-unit shift is NOT caught for {name}: {it[0]}")
+        print(f"selftest: {caught} of {n_items} checks reject a value shifted by one unit")
+        n_bad += n_items - caught
+    sys.exit(1 if n_bad else 0)
+
+
+if __name__ == "__main__":
+    main()
