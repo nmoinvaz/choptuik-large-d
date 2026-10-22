@@ -1,4 +1,5 @@
 layer asymptotic coefficients: [{a1: -1/2, a2: 13/12, b1: 1/4, b2: -13/48}]
+logs/expand_K2_zero_css.pkl: K = 2, CSS; kappa~ = b0*f0
 Y_1: [z^-2] outer = -2/(b0**2*f0**2); layer predicts -2/(b0**2*f0**2); difference 0; ln z terms at z^-2: [0, 0]
 Y_2: [z^-4] outer = 52/(3*b0**4*f0**4); layer predicts 52/(3*b0**4*f0**4); difference 0; ln z terms at z^-4: [0, 0]
 C_1: [z^-2] outer = 1/(b0**2*f0**2); layer predicts 1/(b0**2*f0**2); difference 0; ln z terms at z^-2: [0, 0]
