@@ -1789,6 +1789,8 @@ solver/candidates.py   the f64 candidate-constant test: cd solver/data && python
 solver/plot_delta.py, plot_extrapolation.py, plot_candidates.py  delta.svg, extrapolation.svg, candidates.svg
                        (cd solver/data && python3 ../plot_delta.py, and likewise)
 reproduce.sh, reproduce.py    one-command check of the headline numbers (PASS/FAIL/SKIP; --full adds Proposition 4)
+check_numbers.py              ties the numbers quoted in the README, paper and proof notes to their source files
+                              (--selftest: every check must reject a one-unit shift; --full: the Delta_inf fit grid)
 hp/states.py                  where saved solutions are read from (hp/data/states, else the runs' directory)
 hp/data/states/               53 double-double solutions, one per integer D = 8-60, for the profile scripts
 hp/dinf_budget.py             error budget for Delta_inf: model x degree x fit range x cleaning x snapshot
