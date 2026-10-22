@@ -38,6 +38,12 @@ condition has exactly one zero in the box, and it is simple**, at A ∈ [2.54214
 ω/ω∞ ∈ [0.776994013607438, 0.776994013612010] (§11.7). 6b₁ holds numerically (two paths agree to 2×10⁻¹²); a
 validated sweep of the annulus is the remaining computation (§11.4 lists three routes).
 
+**Since then (§12):** lemma 6b₁ is proved. The annulus is covered by 178 validated Taylor discs (radius 10–24 in
+u = 1/ξ², orders 40–70). Their centre values come from single-trajectory Lohner runs along the start ray and 12 arcs,
+and the disc functions glue to one analytic continuation of y⁺. With §11 this gives **Theorem A(M = 1)** without
+conditions, given Braaksma's theorem for the existence of y⁺ (§12.6): the M = 1 selection condition has exactly one
+zero in the box, it is simple, at A ∈ [2.54214804761338, 2.54214804761975], ω/ω∞ ∈ [0.776994013607438, 0.776994013612010].
+
 Contents
 
 - [1. The template](#1-the-template)
@@ -67,6 +73,9 @@ Contents
   - [11.2 The certificate on the lower path](#112-the-certificate-on-the-lower-path)
   - [11.5 Lemma 6a](#115-lemma-6a)
   - [11.7 The resulting theorem, and what remains](#117-the-resulting-theorem-and-what-remains)
+- [12. Lemma 6b₁](#12-lemma-6b₁)
+  - [12.2 The disc lemma](#122-the-disc-lemma)
+  - [12.6 Theorem A(M = 1)](#126-theorem-am--1)
 
 ## 1. The template
 
@@ -1029,7 +1038,7 @@ Times are wall-clock on the shared 2-core machine (load 8–10), single process 
 | certificate on the lower path (11.2) | **proved** | K(X) ⊂ int X, margins 8.57×10⁻¹⁰, 9.71×10⁻¹⁰ |
 | lemma S, start values on a domain reaching the real axis (11.3) | **proved** | contraction ≤ 0.4903 |
 | lemma 6b near 0: y⁺ analytic for 0 < \|ξ\| ≤ 0.0624, 0 ≤ arg ξ ≤ 3π/8 (11.4) | **proved** | |
-| lemma 6b on the annulus 0.0624 ≤ \|ξ\| ≤ 0.2 (11.4) | **open** (numerical evidence only) | validated sweeps attempted, see 11.4 |
+| lemma 6b on the annulus 0.0624 ≤ \|ξ\| ≤ 0.2 (11.4) | **open** here (numerical evidence only); proved in §12 | validated sweeps attempted, see 11.4 |
 | lemma 6a, J_D(0.3) = 0 ⇔ y⁺ ≡ y⁻ (11.5) | **proved, given 6b** | ρ₆ₐ = 4.2×10⁻³ < 1 |
 | mutation tests (11.6) | two caught, one not caught (explained) | |
 
@@ -1355,7 +1364,8 @@ same hulls. So the real-linear map 𝓛 : ∂Σ ↦ ∂J_D(0.3) is injective, DJ
 has exactly one simple zero x* in X. By 11.5 (whose hypothesis now holds), J_D(0.3; x) = 0 ⇔ y⁺ ≡ y⁻. ∎
 
 **What remains:** lemma 6b₁ only (11.4 lists three routes and their cost). Without it, the honest statement is item 1
-above together with 6a as stated.
+above together with 6a as stated. (Lemma 6b₁ is proved in §12, and the theorem is restated there without the
+condition, §12.6.)
 
 **Independence.**
 
