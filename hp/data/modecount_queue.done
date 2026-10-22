@@ -2,3 +2,4 @@ check hp/data/seeds/local/up23_D61.0264.npz --quick
 hp/data/seeds/local/up23_D61.0264.npz --lam=2.043532530673195
 hp/data/states/up7_D45.0507.npz
 hp/data/states/up6_D30.0688.npz --lam=2.079747703853
+hp/data/seeds/local/up23_D61.0264.npz --lam=2.043532530673195 --v2
