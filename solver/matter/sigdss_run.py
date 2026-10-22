@@ -17,7 +17,7 @@ import os, sys, json, time, argparse
 import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from sigdss_solver import SigDSS, NODES_STD, lm, lam_root, real_roots   # noqa: E402
+from sigdss_solver import SigDSS, NODES_STD, lm, lam_root, lam_secant, lam_model, real_roots   # noqa: E402
 
 DATA = os.path.join(HERE, "data")
 
@@ -63,11 +63,8 @@ def converge(D, eps, zg):
     if not np.isfinite(F0) or F0 > a.fmax:
         return None, F0, None
     facc = a.facc if a.facc else 10 * a.tol
+    S._lastJ = None
     zs, nF, _ = lm(S, zg, tol=a.tol, maxjac=a.maxjac, verbose=False, prep=lambda zz: S.refreeze(zz, a.kappa), reg=a.reg)
-    if not nF < facc:
-        return None, F0, nF
-    S = mk(D, eps, zs)
-    zs, nF, _ = lm(S, zs, tol=a.tol, maxjac=4, verbose=False, reg=a.reg)
     if not nF < facc:
         return None, F0, nF
     return (S, zs), F0, nF
@@ -94,15 +91,20 @@ def cmd_cont():
         S1 = SigDSS(kc=a.kc, nodes=NODES_STD, n=D - 2, eps=eps, Delta_ref=z[-1], Ks=a.Ks, u0=a.u0, N=a.N)
         z = S1.regrid_from(z, S0)
     log = os.path.join(DATA, f"sigdss_{tag}.jsonl")
-    lam_hist = []
-    if a.lams:
-        lam_hist = [(a.start, float(a.lams))]
+    lam_hist = {}
+    if a.lams:          # "lam0" or "v1:lam1,v2:lam2,..." (known or estimated growth rates to start the extrapolation)
+        if ":" in a.lams:
+            lam_hist = {float(t.split(":")[0]): float(t.split(":")[1]) for t in a.lams.split(",")}
+        else:
+            lam_hist = {a.start: float(a.lams)}
 
     def point(v):
         return (a.D, v) if par == "eps" else (v, a.eps)
 
     def tangent(S, z):
-        _, J = S.jacobian(z)
+        J = getattr(S, "_lastJ", None)            # Jacobian of the last Newton iterate (close enough for a predictor)
+        if J is None:
+            _, J = S.jacobian(z)
         return -np.linalg.lstsq(J, S.dF_dpar(z, "n" if par == "D" else "eps"), rcond=None)[0]
 
     t0 = time.time()
@@ -148,17 +150,17 @@ def cmd_cont():
             np.save(fname(tag, Dp, ep), z)
             targets.pop(0)
             if a.lams:
-                if len(lam_hist) >= 2:
-                    (u1, l1), (u2, l2) = lam_hist[-2], lam_hist[-1]
-                    guess = l2 + (l2 - l1) * (v - u2) / (u2 - u1)
-                else:
-                    guess = lam_hist[-1][1]
+                # gamma = 1/lam (smoother than lam) through the <= 3 history points nearest v (an entry at v itself,
+                # e.g. an estimate from the l = 1 data, is returned as is); computed values replace estimates
+                near = sorted(lam_hist, key=lambda u: abs(u - v))[:3]
+                hv = np.array(near); hg = np.array([1 / lam_hist[u] for u in near])
+                guess = 1 / np.polyval(np.polyfit(hv, hg, len(hv) - 1), v) if len(hv) > 1 else lam_hist[near[0]]
                 tl = time.time()
-                lam, nev, nch = lam_root(S, z, guess)
-                rec.update(lam_guess=guess, lam=lam, gamma=(1 / lam if lam else None), n_eval=nev, n_signchanges=nch,
+                lam, nev, nch = lam_model(S, z, guess)
+                rec.update(lam_guess=guess, lam=lam, gamma=(1 / lam if lam else None), n_eval=nev, last_step=nch,
                            lam_seconds=round(time.time() - tl))
                 if lam:
-                    lam_hist.append((v, lam))
+                    lam_hist[v] = lam
         print(json.dumps(rec), flush=True)
         open(log, "a").write(json.dumps(rec) + "\n")
         if F0 < 0.1 * a.fmax:
@@ -181,10 +183,10 @@ def cmd_lam():
     S = mk(a.D, a.eps, z)
     F = float(np.linalg.norm(S.residual(z[None, :])[0]))
     t0 = time.time()
-    lam, nev, nch = lam_root(S, z, a.guess)
+    lam, nev, nch = lam_model(S, z, a.guess)
     rec = describe(S, z, a.D, a.eps)
     rec.update(sol=os.path.basename(a.a1), F=F, lam_guess=a.guess, lam=lam, gamma=(1 / lam if lam else None),
-               n_eval=nev, n_signchanges=nch, seconds=round(time.time() - t0))
+               n_eval=nev, last_step=nch, seconds=round(time.time() - t0))
     print(json.dumps(rec), flush=True)
     out = os.path.join(DATA, f"sigdss_lam{('_' + a.tag) if a.tag else ''}.jsonl")
     open(out, "a").write(json.dumps(rec) + "\n")
@@ -218,8 +220,8 @@ def cmd_refine():
     np.save(fname(f"ref_{tag}", a.D, a.eps), z)
     if a.guess and nF < 1e-8:
         tl = time.time()
-        lam, nev, nch = lam_root(S, z, a.guess)
-        rec.update(lam_guess=a.guess, lam=lam, gamma=(1 / lam if lam else None), n_eval=nev, n_signchanges=nch,
+        lam, nev, nch = lam_model(S, z, a.guess)
+        rec.update(lam_guess=a.guess, lam=lam, gamma=(1 / lam if lam else None), n_eval=nev, last_step=nch,
                    lam_seconds=round(time.time() - tl))
     print(json.dumps(rec), flush=True)
     open(os.path.join(DATA, f"sigdss_refine_{tag}.jsonl"), "a").write(json.dumps(rec) + "\n")

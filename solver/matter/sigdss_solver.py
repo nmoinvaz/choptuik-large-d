@@ -88,6 +88,9 @@ class SigDSS(DSSSpec):
         k2 = self.k2
         if k2 == 0:
             return q, np.ones_like(q)
+        if not isinstance(k2, complex) and k2 > 0:
+            kap = np.sqrt(k2)                    # real kappa: direct formula (exact also for complex-step psi)
+            return np.sin(kap * q) / kap, np.cos(kap * q)
         w = k2 * q * q
         small = np.abs(w) < 0.5
         # Taylor: sin(s)/s = sum (-w)^k/(2k+1)!, cos(s) = sum (-w)^k/(2k)!, 12 terms (|w|^12/24! ~ 1e-27)
@@ -627,6 +630,7 @@ def lm(S, z, tol=1e-12, maxjac=30, ncorr=2, verbose=True, mus=None, stall=3, pre
         if nF < tol:
             break
         _, J = S.jacobian(z)
+        S._lastJ = J
         U, s, Vt = np.linalg.svd(J, full_matrices=False)
         filt = np.stack([s / (s * s + (mu * s[0]) ** 2) for mu in mus])
         step = lambda Fb: -((U.T @ Fb.T).T * filt) @ Vt
@@ -670,6 +674,7 @@ def _lm_reg(S, z, tol, maxjac, ncorr, verbose, mus, prep, reg, regp):
         if prep is not None:
             prep(z)
         F, J = S.jacobian(z)
+        S._lastJ = J
         if mu_r is None:
             mu_r = reg * np.linalg.norm(J, 2)
         Rz = np.concatenate([F, mu_r * w * z]); nR = np.linalg.norm(Rz)
@@ -723,6 +728,97 @@ def lam_root(S, z, guess, widths=(0.02, 0.06, 0.15, 0.35), xtol_rel=2e-9):
                        rtol=1e-13)
             return r, len(cache), len(ch)
     return None, len(cache), 0
+
+
+def lam_secant(S, z, guess, h=2e-3, rtol=1e-9, maxit=12):
+    """Real root of det M(lam) by the secant method from guess and guess*(1+h) (fewer determinant evaluations than
+    bracketing when the guess is good). Returns lam, number of evaluations, |step| of the last iteration; falls back to
+    lam_root when the iteration leaves [0.5 guess, 2 guess]."""
+    cache = {}
+
+    def sd(l):
+        if l not in cache:
+            cache[l] = np.linalg.slogdet(S.mode_matrix(z, l))
+        return cache[l]
+    x0, x1 = guess, guess * (1 + h)
+    ref = sd(x0)[1]
+    f = lambda l: sd(l)[0] * np.exp(sd(l)[1] - ref)
+    f0, f1 = f(x0), f(x1)
+    step = np.inf
+    for _ in range(maxit):
+        if f1 == f0:
+            break
+        x2 = x1 - f1 * (x1 - x0) / (f1 - f0)
+        if not (0.5 * guess < x2 < 2 * guess):
+            r, ne, _ = lam_root(S, z, guess)
+            return r, ne + len(cache), None
+        step = abs(x2 - x1)
+        x0, f0, x1 = x1, f1, x2
+        f1 = f(x1)
+        if step < rtol * abs(x1):
+            break
+    return x1, len(cache), step
+
+
+def _model_root(P):
+    """Root lam0 of the model log|det| = log|lam - lam0| + a + b lam through the 3 points P = [(lam, sign, logabs)],
+    or None. The sign pattern fixes the interval (a simple root changes the sign)."""
+    from scipy.optimize import brentq
+    P = sorted(P)
+    l = np.array([p[0] for p in P]); s = [p[1] for p in P]; L = np.array([p[2] for p in P])
+
+    def dd2(v):
+        return ((v[2] - v[1]) / (l[2] - l[1]) - (v[1] - v[0]) / (l[1] - l[0])) / (l[2] - l[0])
+    F = lambda x: dd2(L - np.log(np.abs(l - x)))
+    w = l[2] - l[0]
+    if s[0] != s[1]:
+        ivs = [(l[0], l[1])]
+    elif s[1] != s[2]:
+        ivs = [(l[1], l[2])]
+    else:
+        ivs = [(l[0] - 5 * w, l[0]), (l[2], l[2] + 5 * w)]
+    roots = []
+    for a_, b_ in ivs:
+        e = 1e-13 * (b_ - a_)
+        xs = np.linspace(a_ + e, b_ - e, 41)
+        fs = [F(x) for x in xs]
+        for i in range(40):
+            if np.isfinite(fs[i]) and np.isfinite(fs[i + 1]) and fs[i] * fs[i + 1] < 0:
+                roots.append(brentq(F, xs[i], xs[i + 1], xtol=1e-14 * abs(xs[i])))
+    if not roots:
+        i = int(np.argmin(L))
+        if L[i] < np.sort(L)[1] - 15:                   # one point sits (almost) on the root
+            return float(l[i])
+        return None
+    mid = l[np.argmin(L)]
+    return min(roots, key=lambda r: abs(r - mid))
+
+
+def lam_model(S, z, guess, h=0.01, rtol=1e-9, maxit=12):
+    """Real root of det M(lam) near guess, fitting log|det| = log|lam - lam0| + a + b lam through the last three
+    evaluations (exact for a simple root times an exponential, which is how |det M| behaves; the plain secant on det
+    crawls when the exponential dominates). Returns lam, number of evaluations, last step."""
+    pts = []
+
+    def ev(l):
+        s, L = np.linalg.slogdet(S.mode_matrix(z, l))
+        pts.append((l, s, L))
+    ev(guess); ev(guess * (1 + h)); ev(guess * (1 - h))
+    step = np.inf
+    x = guess
+    for _ in range(maxit):
+        r = _model_root(pts[-3:])
+        if r is None or not (0.5 * guess < r < 2 * guess):
+            r0, ne, _ = lam_root(S, z, guess)
+            return r0, ne + len(pts), None
+        step = abs(r - x)
+        x = r
+        if step < rtol * abs(x):
+            break
+        ev(x)
+        if pts[-1][1] == 0 or not np.isfinite(pts[-1][2]):
+            return x, len(pts), 0.0                     # det exactly 0
+    return x, len(pts), step
 
 
 def real_roots(S, z, lo, hi, ngrid=9, xtol=1e-10):

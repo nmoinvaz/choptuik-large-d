@@ -1,0 +1,1 @@
+seed eps = 0.0: Delta 0.4598654552 |F| 1.57e-15 dDelta/deps -0.00072 (409 s)
