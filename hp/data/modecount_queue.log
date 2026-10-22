@@ -270,3 +270,16 @@ committed 4444cd6
 === 2026-10-22 07:33:26  neB_kc39_D4.0000.npy: D 4.0, kc 39, Ks 60, N 120, unknowns 1581; |F| 9.2e-16; Delta 3.4454554892, omega 1.823615; lam_g = 1 + <c1> = 0.6138550105
   full-grid resonances with Im an even multiple of omega (not poles in exact arithmetic), Re in (-1, 7), |Im| < 2.5 omega: [(-0.8416, -3.6472), (-0.8416, -0.0), (-0.8416, -0.0), (-0.8416, 3.6472), (-0.2277, -3.6472), (-0.2277, -0.0), (-0.2277, -0.0), (-0.2277, 3.6472), (0.3861, -3.6472), (0.3861, -0.0), (0.3861, -0.0), (0.3861, 3.6472)]
   lam 0.3: Rust (exact duals) sign +1 ln|det| -237.5803013083 (3.1 s) | Python complex FD ln|det| -229.4202306037 arg +3.14e+00 (429.6 s); max |dM| / max |M| = 8.9e-01
+=== skip (done): check hp/data/seeds/local/up23_D61.0264.npz --quick
+=== skip (done): hp/data/seeds/local/up23_D61.0264.npz --lam=2.043532530673195
+=== skip (done): hp/data/states/up7_D45.0507.npz
+=== skip (done): hp/data/states/up6_D30.0688.npz --lam=2.079747703853
+=== skip (done): hp/data/seeds/local/up23_D61.0264.npz --lam=2.043532530673195 --v2
+=== 2026-10-22 07:44:54 job: f64 --realscan=0.05
+=== 2026-10-22 07:44:58  neB_kc39_D4.0000.npy: D 4.0, kc 39, Ks 60, N 120, unknowns 1581; |F| 9.2e-16; Delta 3.4454554892, omega 1.823615; lam_g = 1 + <c1> = 0.6138550105
+  full-grid resonances with Im an even multiple of omega (not poles in exact arithmetic), Re in (-1, 7), |Im| < 2.5 omega: [(-0.8416, -3.6472), (-0.8416, -0.0), (-0.8416, -0.0), (-0.8416, 3.6472), (-0.2277, -3.6472), (-0.2277, -0.0), (-0.2277, -0.0), (-0.2277, 3.6472), (0.3861, -3.6472), (0.3861, -0.0), (0.3861, -0.0), (0.3861, 3.6472)]
+  real axis 0.02 .. 6.47 step 0.05: 130 determinants, 3.9 s each
+  sign change in (0.57, 0.62): det M = 0 at 0.6138559017; nearest real full-grid resonance 0.228 away
+  sign change in (2.67, 2.72): det M = 0 at 2.6740837626; nearest real full-grid resonance 2.288 away
+  expected: lam_g = 1 + <c1> = 0.6138550105, lam_phys (formula) = 2.6740759201
+=== 2026-10-22 07:55:07 exit 0: f64 --realscan=0.05
