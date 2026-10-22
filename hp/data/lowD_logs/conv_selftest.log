@@ -1,0 +1,7 @@
+planted Delta_inf 3.4654 A 2.0 b 0.27 c 0.0 M (64, 80, 96): best 3.465400000011069 err 8.212102109439456e-10 (geometric, ratio 0.013, tail estimate 1.1e-11) true error +1.1e-11 -> covered
+planted Delta_inf 3.4654 A 5.0 b 0.24 c 3.0 M (64, 96, 128): best 3.465400000000233 err 5.081477461033046e-10 (geometric, ratio 0.00046, tail estimate 2.3e-13) true error +2.3e-13 -> covered
+planted Delta_inf 2.9 A 1.0 b 0.16 c -2.0 M (80, 96, 128): best 2.900000001255479 err 2.0771906106276106e-07 (geometric, ratio 0.007, tail estimate 1.5e-09) true error +1.3e-09 -> covered
+planted Delta_inf 3.2 A 0.5 b 0.2 c 1.0 M (48, 64, 80): best 3.200000056970933 err 1.3449838891510524e-06 (geometric, ratio 0.041, tail estimate 5.7e-08) true error +5.7e-08 -> covered
+selftest ok
+planted Delta_inf 3.4654 A 2.0 b 0.02 c 0.0 M (64, 80, 96): best 3.758613924260700 err None (not demonstrated (ratio 0.73)) true error +2.9e-01 -> NOT covered
+mutation control: the estimator refused the unconverged sequence (as required)

@@ -1,0 +1,59 @@
+== Thu Oct 22 03:08:24 MST 2026 hp/lowD_dd.py hp/data/lowD_dd.jsonl --seed solver/data/neB_kc47_rk2_D3.7000.npy --nodes 0.01,0.02,0.05,0.1,0.16,0.23,0.3,0.4,0.5,0.6,0.7 --Ms 48,64 --kcs 80 --ks 200 --solver dn --dn_its 1 --it_max 30 --threads 2 --tag lowDn --resume
+seed solver/data/neB_kc47_rk2_D3.7000.npy: D 3.7, f64 Delta 3.465204067887
+seed re-noded [0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6] -> [0.01, 0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6, 0.7]
+Traceback (most recent call last):
+  File "/home/claude/dss-residual-kernel/.claude/worktrees/agent-a52a49ad4e6f05e6e/hp/lowD_dd.py", line 389, in <module>
+    main()
+    ~~~~^^
+  File "/home/claude/dss-residual-kernel/.claude/worktrees/agent-a52a49ad4e6f05e6e/hp/lowD_dd.py", line 318, in main
+    zh, zl, meta = load(a.start)
+                   ~~~~^^^^^^^^^
+  File "/usr/local/lib/python3.13/dist-packages/hpkernel/driver.py", line 240, in load
+    d = np.load(path)
+  File "/usr/local/lib/python3.13/dist-packages/numpy/lib/_npyio_impl.py", line 454, in load
+    fid = stack.enter_context(open(os.fspath(file), "rb"))
+                                   ~~~~~~~~~^^^^^^
+TypeError: expected str, bytes or os.PathLike object, not NoneType
+== exit 1 Thu Oct 22 03:08:33 MST 2026
+== Thu Oct 22 03:09:34 MST 2026 hp/lowD_dd.py hp/data/lowD_dd.jsonl --seed solver/data/neB_kc47_rk2_D3.7000.npy --nodes 0.01,0.02,0.05,0.1,0.16,0.23,0.3,0.4,0.5,0.6,0.7 --Ms 48,64 --kcs 80 --ks 200 --solver dn --dn_its 1 --it_max 30 --threads 2 --tag lowDn --resume
+seed solver/data/neB_kc47_rk2_D3.7000.npy: D 3.7, f64 Delta 3.465204067887
+seed re-noded [0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6] -> [0.01, 0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6, 0.7]
+D 3.7 M 48: L 2305, steps 210, start |F| 1.3e-04
+  dn 0 [all]: |F| 1.34e-04 -> 1.24e-07 lam 1 Delta 3.465201437736765 t 276s
+  newton 0: |F| 1.24e-07 |dz| 5.05e-03 lam 1 dDelta +8.99e-09 Delta 3.465201446726963 piv 2.1e-03..4.7e+00  t 263.3s
+  newton 0: |F| 8.52e-11 |dz| 3.17e-08 lam 1 dDelta +3.43e-10 Delta 3.465201447069621 piv 2.1e-03..4.7e+00  t 259.7s
+  newton 0: |F| 1.36e-19 |dz| 5.95e-17 lam 1 dDelta +4.86e-20 Delta 3.465201447069621 piv 2.1e-03..4.7e+00  t 248.4s
+  newton 0: |F| 4.13e-30 converged (last |dz| 1.0e-26) Delta 3.465201447069621
+D 3.7 M 48: Delta 3.4652014470696213 (-6.19e-17) |F| 4.1e-30 its 5 1308s dDelta/dF max 2.2e+00 tails 5e-47 6e-40 dDelta_est -1.2e-30
+D 3.7 M 64: L 3073, steps 277, start |F| 7.4e-04
+  dn 0 [all]: |F| 7.39e-04 -> 2.77e-07 lam 1 Delta 3.465200299948133 t 614s
+  newton 0: |F| 2.77e-07 |dz| 7.90e-03 lam 0.125 dDelta +2.31e-08 Delta 3.465200323000711 piv 1.6e-03..3.3e+00  t 576.7s
+  newton 0: |F| 2.43e-07 |dz| 6.80e-03 lam 0.25 dDelta +3.21e-08 Delta 3.465200355133038 piv 1.6e-03..5.5e+00  t 480.6s
+  newton 0: |F| 1.82e-07 |dz| 1.15e-02 lam 0.125 dDelta +1.83e-08 Delta 3.465200373479292 piv 1.6e-03..2.1e+00  t 485.1s
+  newton 0: |F| 1.59e-07 |dz| 1.04e-02 lam 0.0625 dDelta +8.65e-09 Delta 3.465200382132654 piv 1.6e-03..5.4e+00  t 477.0s
+  newton 0: |F| 1.49e-07 |dz| 5.56e-03 lam 0.0625 dDelta +8.19e-09 Delta 3.465200390317784 piv 1.6e-03..3.8e+00  t 509.4s
+  newton 0: |F| 1.40e-07 |dz| 3.74e-02 lam 0.0156 dDelta +4.44e-09 Delta 3.465200394759576 piv 1.6e-03..3.1e+00  t 387.4s
+  newton 0: |F| 1.43e-07 |dz| 4.33e-03 lam 0.0625 dDelta +9.26e-09 Delta 3.465200404014663 piv 1.6e-03..4.1e+00  t 357.2s
+  newton 0: |F| 1.35e-07 |dz| 3.82e-03 lam 0.0625 dDelta +9.36e-09 Delta 3.465200413379166 piv 1.6e-03..2.1e+00  t 348.3s
+  newton 0: |F| 1.29e-07 |dz| 3.41e-03 lam 0.125 dDelta +2.00e-08 Delta 3.465200433384262 piv 1.6e-03..5.8e+00  t 327.9s
+  newton 0: |F| 1.18e-07 |dz| 3.57e-03 lam 0.125 dDelta +8.98e-09 Delta 3.465200442367138 piv 1.6e-03..5.4e+00  t 327.5s
+  newton 0: |F| 1.57e-07 |dz| 2.62e-03 lam 0.25 dDelta +2.75e-08 Delta 3.465200469831347 piv 1.6e-03..3.7e+00  t 233.1s
+  newton 0: |F| 1.52e-07 |dz| 2.09e-03 lam 0.5 dDelta +4.26e-08 Delta 3.465200512387907 piv 1.6e-03..3.4e+00  t 170.4s
+  newton 0: |F| 9.37e-08 |dz| 1.25e-03 lam 0.5 dDelta +2.76e-08 Delta 3.465200539993107 piv 1.6e-03..3.2e+00  t 176.8s
+  newton 0: |F| 6.39e-08 |dz| 8.06e-04 lam 0.5 dDelta +1.30e-08 Delta 3.465200552970130 piv 1.6e-03..3.6e+00  t 180.8s
+  newton 0: |F| 6.04e-08 |dz| 6.32e-04 lam 1 dDelta +9.23e-09 Delta 3.465200562199997 piv 1.6e-03..4.4e+00  t 169.2s
+== Thu Oct 22 07:09:49 MST 2026 hp/lowD_dd.py hp/data/lowD_dd.jsonl --seed solver/data/neB_kc47_rk2_D3.7000.npy --nodes 0.01,0.02,0.05,0.1,0.16,0.23,0.3,0.4,0.5,0.6,0.7 --Ms 48,64,80 --kcs 80 --ks 200 --solver dn --dn_its 1 --it_max 30 --threads 2 --tag lowDn --resume
+seed solver/data/neB_kc47_rk2_D3.7000.npy: D 3.7, f64 Delta 3.465204067887
+seed re-noded [0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6] -> [0.01, 0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6, 0.7]
+D 3.7 M 48: already converged (/home/claude/dss-residual-kernel/.claude/worktrees/agent-a52a49ad4e6f05e6e/hp/data/lowD_states/lowDn_D3.7000_M48.npz); skipped
+resuming from checkpoint /home/claude/dss-residual-kernel/.claude/worktrees/agent-a52a49ad4e6f05e6e/hp/data/lowD_states/lowDn_D3.7000_M64_ckpt.npz (iteration 16)
+D 3.7 M 64: L 3073, steps 277, start |F| 6.1e-08
+  newton 0: |F| 6.13e-08 |dz| 3.94e-04 lam 1 dDelta -7.90e-09 Delta 3.465200554299671 piv 1.6e-03..3.9e+00  t 152.4s
+  newton 0: |F| 1.15e-08 |dz| 7.66e-05 lam 1 dDelta -1.86e-09 Delta 3.465200552443280 piv 1.6e-03..4.1e+00  t 116.6s
+  newton 0: |F| 2.40e-10 |dz| 1.11e-06 lam 1 dDelta -2.35e-11 Delta 3.465200552419818 piv 1.6e-03..4.1e+00  t 151.3s
+  newton 0: |F| 2.56e-14 |dz| 9.75e-11 lam 1 dDelta +3.07e-15 Delta 3.465200552419821 piv 1.6e-03..4.1e+00  t 152.6s
+  newton 0: |F| 1.32e-21 |dz| 2.69e-17 lam 1 dDelta -8.63e-22 Delta 3.465200552419821 piv 1.6e-03..4.1e+00  t 254.0s
+  newton 0: |F| 1.04e-30 converged (last |dz| 8.6e-26) Delta 3.465200552419821
+D 3.7 M 64: Delta 3.4652005524198208 (-1.50e-16) |F| 1.0e-30 its 6 1083s dDelta/dF max 2.8e+01 tails 5e-07 4e-06 dDelta_est +7.3e-30
+D 3.7 M 80: L 3841, steps 361, start |F| 1.7e-04
+== Thu Oct 22 07:28:56 MST 2026 M = 80 on nodes 0.01..0.7 stopped by hand: the M = 64 series tails (5e-7 centre at 0.01, 4e-6 horizon at u = 0.3) show this node set is too coarse at D = 3.7; M = 80 continues on nodes 0.005..0.8 (dd_D3.7v.log)

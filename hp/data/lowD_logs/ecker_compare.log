@@ -1,0 +1,26 @@
+ours against their lists (DeltaList / GammaList at the same D; off their grid, cubic through their 4 nearest points, marked ~)
+  lowD_dd.jsonl                D 4.000000 M/kc 48: Delta 3.445452796165  Ecker 3.445452681947  Ecker-ours -1.14e-07
+  lowD_dd.jsonl                D 4.000000 M/kc 48: Delta 3.445452661587  Ecker 3.445452681947  Ecker-ours +2.04e-08
+  lowD_dd.jsonl                D 3.700000 M/kc 48: Delta 3.465201447070  Ecker 3.465200504469  Ecker-ours -9.43e-07
+  lowD_dd.jsonl                D 4.000000 M/kc 64: Delta 3.445452404078  Ecker 3.445452681947  Ecker-ours +2.78e-07
+  lowD_dd.jsonl                D 4.000000 M/kc 80: Delta 3.445452402241  Ecker 3.445452681947  Ecker-ours +2.80e-07
+  lowD_dd.jsonl                D 4.000000 M/kc 64: Delta 3.445452404078  Ecker 3.445452681947  Ecker-ours +2.78e-07
+  lowD_dd.jsonl                D 3.700000 M/kc 64: Delta 3.465200552420  Ecker 3.465200504469  Ecker-ours -4.80e-08
+  lowD_dd.jsonl                D 3.700000 M/kc 48: Delta 3.465201447070  Ecker 3.465200504469  Ecker-ours -9.43e-07
+  lowD_dd.jsonl                D 3.700000 M/kc 64: Delta 3.465200511803  Ecker 3.465200504469  Ecker-ours -7.33e-09
+  lowD_dd.jsonl                D 3.700000 M/kc 64: Delta 3.465200511803  Ecker 3.465200504469  Ecker-ours -7.33e-09
+  lowD_dd.jsonl                D 3.700000 M/kc 80: Delta 3.465200483544  Ecker 3.465200504469  Ecker-ours +2.09e-08
+  lowD_gamma.jsonl             D 4.000000 M/kc 64:  gamma ours 0.373960712 Ecker 0.373960664 diff -4.8e-08
+  lowD_gamma.jsonl             D 4.000000 M/kc 80:  gamma ours 0.373960716 Ecker 0.373960664 diff -5.2e-08
+  lowD_gamma.jsonl             D 3.700000 M/kc 48:  gamma ours 0.348655778 Ecker 0.348650264 diff -5.5e-06
+  lowD_gamma.jsonl             D 3.700000 M/kc 64:  gamma ours 0.348650273 Ecker 0.348650264 diff -9.2e-09
+  lowD_gamma.jsonl             D 3.700000 M/kc 80:  gamma ours 0.348650190 Ecker 0.348650264 diff +7.5e-08
+  lowD_f64.jsonl               D 3.700000 M/kc 47: Delta 3.465204104945  Ecker 3.465200504469  Ecker-ours -3.60e-06
+  lowD_f64.jsonl               D 3.700000 M/kc 47: Delta 3.465204076718  Ecker 3.465200504469  Ecker-ours -3.57e-06
+  lowD_f64.jsonl               D 3.700000 M/kc 39: Delta 3.465227624333  Ecker 3.465200504469  Ecker-ours -2.71e-05  gamma ours 0.348646976 Ecker 0.348650264 diff +3.3e-06
+  lowD_f64.jsonl               D 3.700000 M/kc 47: Delta 3.465204067887  Ecker 3.465200504469  Ecker-ours -3.56e-06  gamma ours 0.348649594 Ecker 0.348650264 diff +6.7e-07
+  scan_lowD3_kc47.jsonl        D 4.000000 M/kc 47: Delta 3.445452677190  Ecker 3.445452681947  Ecker-ours +4.76e-09  gamma ours 0.373960623 Ecker 0.373960664 diff +4.1e-08
+  scan_lowD3_kc47.jsonl        D 3.793800 M/kc 47: Delta 3.466120896088  Ecker~ 3.466119338418  Ecker-ours -1.56e-06  gamma ours 0.357925578 Ecker~ 0.357925962 diff +3.8e-07
+  scan_lowD3_kc47.jsonl        D 3.700000 M/kc 47: Delta 3.465204067887  Ecker 3.465200504469  Ecker-ours -3.56e-06  gamma ours 0.348649594 Ecker 0.348650264 diff +6.7e-07
+  scan_lowD3_kc47.jsonl        D 3.675000 M/kc 47: Delta 3.463368594862  Ecker~ 3.463363857933  Ecker-ours -4.74e-06  gamma ours 0.345903865 Ecker~ 0.345904491 diff +6.3e-07
+  scan_lowD3_kc47.jsonl        D 3.642500 M/kc 47: Delta 3.459773927949  Ecker~ 3.459768684693  Ecker-ours -5.24e-06  gamma ours 0.342137110 Ecker~ 0.342137867 diff +7.6e-07

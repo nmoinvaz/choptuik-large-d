@@ -1,0 +1,19 @@
+== Thu Oct 22 02:25:14 MST 2026 hp/lowD_series.py hp/data/lowD_states/lowD_D4.0000_M48.npz --kc=200 --ks=300 --threads=1
+lowD_D4.0000_M48.npz: D 4.0 M 48 nodes 0.02..0.6 (state built with centre/horizon terms 60/100)
+  centre series, 201 terms: radius (root test, last third) nan; k 0-12: R 2843116.5694, k 12-24: R 2834608.8386, k 24-48: R 2839773.5771
+    at x = 0.005: last-3-term size with N terms: N 40: 4.3e-27, N 60: 1.6e-40, N 100: 3.2e-68, N 150: 0.0e+00, N 200: nan, N 201: nan
+    at x = 0.01: last-3-term size with N terms: N 40: 1.1e-15, N 60: 2.3e-23, N 100: 5.1e-39, N 150: 5.2e-58, N 200: nan, N 201: nan
+    at x = 0.02: last-3-term size with N terms: N 40: 3.0e-04, N 60: 6.7e-06, N 100: 1.0e-09, N 150: 1.9e-13, N 200: nan, N 201: nan
+  horizon series, 301 terms: radius (root test, last third) 0.4554; k 0-12: R 0.4544, k 12-24: R 0.4573, k 24-48: R 0.4561
+    at u = 0.2: last-3-term size with N terms: N 40: 2.2e-14, N 60: 6.3e-22, N 100: 2.7e-36, N 150: 6.4e-54, N 200: 5.8e-72, N 300: 1.8e-107, N 301: 3.9e-108
+    at u = 0.3: last-3-term size with N terms: N 40: 7.2e-08, N 60: 6.9e-12, N 100: 3.3e-19, N 150: 4.9e-28, N 200: 2.8e-37, N 300: 3.6e-55, N 301: 1.6e-55
+    at u = 0.4: last-3-term size with N terms: N 40: 3.0e-03, N 60: 9.1e-05, N 100: 5.7e-07, N 150: 1.1e-09, N 200: 1.4e-12, N 300: 4.6e-18, N 301: 3.6e-18
+== exit 0 Thu Oct 22 02:25:21 MST 2026
+lowDn_D3.7000_M64.npz: D 3.7 M 64 nodes 0.01..0.7 (state built with centre/horizon terms 80/200)
+  centre series, 201 terms: radius (root test, last third) nan; k 0-16: R 1083795479164.1875, k 16-32: R 1082491322465.1943, k 32-64: R 1086230007167.4739
+    at x = 0.0025: last-3-term size with N terms: N 40: 1.1e-26, N 60: 5.1e-40, N 100: 2.6e-67, N 150: 0.0e+00, N 200: nan, N 201: nan
+    at x = 0.005: last-3-term size with N terms: N 40: 1.8e-15, N 60: 1.5e-22, N 100: 6.4e-38, N 150: 0.0e+00, N 200: nan, N 201: nan
+    at x = 0.01: last-3-term size with N terms: N 40: 5.1e-04, N 60: 4.2e-05, N 100: 2.0e-08, N 150: 8.7e-12, N 200: nan, N 201: nan
+  horizon series, 401 terms: radius (root test, last third) 0.3166; k 0-16: R 0.3155, k 16-32: R 0.3180, k 32-64: R 0.3163
+    at u = 0.2: last-3-term size with N terms: N 40: 1.8e-08, N 60: 6.5e-13, N 100: 1.2e-20, N 150: 1.0e-30, N 200: 6.7e-41, N 300: 8.1e-61, N 401: 7.4e-81
+    at u = 0.3: last-3-term size with N terms: N 40: 5.9e-02, N 60: 9.9e-03, N 100: 1.7e-03, N 150: 8.0e-05, N 200: 3.9e-06, N 300: 2.4e-08, N 401: 1.2e-10

@@ -1,0 +1,5 @@
+planted curve (Ecker et al.'s GammaList) at our D, extrapolated to 3.5: fits 0.32420, 0.32271 -> 0.32345 +- 0.00298; planted value 0.32239: error +1.1e-03 -> within the range
+ours, extrapolated to 3.5: fits 0.32420, 0.32271 -> gamma(3.5) = 0.3235 +- 0.0030 (twice the spread of the two fits; an estimator range, not a bound)
+our points minus the planted curve at our D: +3.4e-07, -3.8e-07, -6.7e-07, -6.3e-07, -7.6e-07
+planted curve (Ecker et al.'s GammaList) at our D, extrapolated to 3.5: fits 0.32420, 0.32271 -> 0.32345 +- 0.00298; planted value 0.33239: error -8.9e-03 -> OUTSIDE the range
+planted test FAILED: no value quoted

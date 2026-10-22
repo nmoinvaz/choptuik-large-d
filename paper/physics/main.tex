@@ -284,9 +284,13 @@ $2.7\times10^{-7}$ at $D = 4$ (within their stated $\pm10^{-6}$) to $5\times10^{
 agree to $8\times10^{-8}$, so there is no difference of convention. Their $\gamma$ list has no points for
 $4.79 < D < 5.49$, where they report that their perturbation method fails, so their $\gamma(5)$ is not a direct
 computation in the published data; ours, $0.41312694$ (stable to $10^{-7}$ across resolutions), agrees with Bland and
-Kunstatter's $0.4131 \pm 0.0001$~\cite{BlandKunstatter2007}. Below $D = 4$, $\gamma$ extrapolated from our 47-mode points
-suggests $\gamma(3.5) \lesssim 0.33$, against $0.349 \pm 0.003$ in~\cite{BlandEtAl2005}; our points there are
-under-resolved, and this is an open check.
+Kunstatter's $0.4131 \pm 0.0001$~\cite{BlandKunstatter2007}. Below $D = 4$ the double-double solver, with its matching nodes moved to $x = 0.005$
+and $0.8$, gives $\Delta(3.7) = 3.46520048 \pm 3\times10^{-8}$ and $\gamma(3.7) = 0.34865019 \pm 8\times10^{-8}$, converged in
+the $\tau$ resolution (48, 64 and 80 points); our 47-mode f64 points there are $2$--$5\times10^{-6}$ high in $\Delta$.
+Extrapolated from $3.64 \le D \le 4$, $\gamma(3.5) = 0.3235 \pm 0.0030$, in agreement with~\cite{EckerEtAl2026}
+($0.32239$) and not with $0.349 \pm 0.003$ in~\cite{BlandEtAl2005}. The modes needed grow from about 73 at $D = 4$ to
+about 110 at $D = 3.5$ and several hundred near $D = 3.05$; at $D = 3$ the scalar field decouples from gravity in these
+equations, so the family cannot reach a regular $D = 3$ limit.
 
 \subsection{Physical reading}
 

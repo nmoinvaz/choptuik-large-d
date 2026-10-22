@@ -1,0 +1,4 @@
+Ecker et al.'s exported fields at the smallest x:
+  D 3.046: x 0.000050, 104 samples, period 102.120 samples (antiperiodicity error 4.1e-02): |F_1| 437.19, F_3/F_1 0.558, beta(9..31) 0.032
+  D 4.0: x 0.001000, 129 samples, period 128.000 samples (antiperiodicity error 1.1e-04): |F_1| 16.21, F_3/F_1 0.438, beta(9..31) 0.161
+  D 5.5: x 0.008000, 129 samples, period 128.000 samples (antiperiodicity error 7.1e-05): |F_1| 3.30, F_3/F_1 0.333, beta(9..31) 0.277

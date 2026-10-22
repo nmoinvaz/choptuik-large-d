@@ -1,0 +1,4 @@
+planted A 0.55 b 0.157: modes for 1e-10 71.4 (true 71.4)  ok
+planted A 2.0 b 0.12: modes for 1e-12 118.0 (true 118.0)  ok
+planted A 0.1 b 0.05: modes for 1e-08 161.2 (true 161.2)  ok
+control (beta 20% low): 77.5 modes  fires

@@ -1,0 +1,7 @@
+== Thu Oct 22 07:40:16 MST 2026 hp/lowD_dd.py hp/data/lowD_dd.jsonl --start hp/data/lowD_states/lowDn_D3.7000_M48.npz --nodes 0.005,0.01,0.02,0.05,0.1,0.16,0.23,0.3,0.4,0.5,0.6,0.7,0.8 --Ms 48 --kcs 100 --ks 250 --tol_step 1e-30 --solver newton --it_max 24 --threads 1 --tag lowDv --resume
+re-noded [0.01, 0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6, 0.7] -> [0.005, 0.01, 0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
+D 3.7 M 48: L 2689, steps 59, start |F| 1.1e-16
+  newton 0: |F| 1.11e-16 |dz| 1.11e-16 lam 1 dDelta +1.71e-30 Delta 3.465201447069621 piv 1.8e-03..5.9e+00  t 50.6s
+  newton 0: |F| 3.65e-30 converged (last |dz| 2.6e-27) Delta 3.465201447069621
+D 3.7 M 48: Delta 3.4652014470696213 (-6.19e-17) |F| 3.7e-30 its 2 104s dDelta/dF max 2.2e+00 tails 1e-88 6e-93 dDelta_est -3.7e-30
+== exit 0 Thu Oct 22 07:42:02 MST 2026

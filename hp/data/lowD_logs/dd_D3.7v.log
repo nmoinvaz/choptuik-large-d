@@ -1,0 +1,18 @@
+== Thu Oct 22 07:28:10 MST 2026 hp/lowD_dd.py hp/data/lowD_dd.jsonl --start hp/data/lowD_states/lowDn_D3.7000_M64.npz --nodes 0.005,0.01,0.02,0.05,0.1,0.16,0.23,0.3,0.4,0.5,0.6,0.7,0.8 --Ms 64 --kcs 100 --ks 250 --tol_step 1e-30 --solver newton --it_max 24 --threads 2 --tag lowDv --resume
+re-noded [0.01, 0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6, 0.7] -> [0.005, 0.01, 0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
+D 3.7 M 64: L 3585, steps 311, start |F| 1.6e-06
+  newton 0: |F| 1.60e-06 |dz| 6.32e-03 lam 1 dDelta -4.07e-08 Delta 3.465200511724529 piv 1.3e-03..9.2e+00  t 199.8s
+  newton 0: |F| 3.28e-11 |dz| 1.18e-07 lam 1 dDelta +7.83e-11 Delta 3.465200511802858 piv 1.3e-03..9.2e+00  t 172.8s
+  newton 0: |F| 1.39e-19 |dz| 1.64e-15 lam 1 dDelta +1.41e-20 Delta 3.465200511802858 piv 1.3e-03..9.2e+00  t 207.2s
+  newton 0: |F| 7.31e-30 converged (last |dz| 3.4e-26) Delta 3.465200511802858
+D 3.7 M 64: Delta 3.4652005118028577 (-1.81e-16) |F| 7.3e-30 its 4 849s dDelta/dF max 1.7e+00 tails 5e-87 5e-79 dDelta_est +6.5e-30
+== exit 0 Thu Oct 22 07:42:22 MST 2026
+== Thu Oct 22 07:42:32 MST 2026 hp/lowD_dd.py hp/data/lowD_dd.jsonl --start hp/data/lowD_states/lowDv_D3.7000_M64.npz --nodes 0.005,0.01,0.02,0.05,0.1,0.16,0.23,0.3,0.4,0.5,0.6,0.7,0.8 --Ms 80 --kcs 100 --ks 250 --tol_step 1e-30 --solver newton --it_max 24 --threads 2 --tag lowDv --resume
+D 3.7 M 80: L 4481, steps 311, start |F| 8.9e-05
+  newton 0: |F| 8.95e-05 |dz| 1.46e-02 lam 1 dDelta -3.13e-08 Delta 3.465200480546777 piv 1.4e-03..5.7e+00  t 451.3s
+  newton 0: |F| 5.66e-09 |dz| 1.08e-06 lam 1 dDelta +3.00e-09 Delta 3.465200483544031 piv 1.4e-03..5.7e+00  t 442.9s
+  newton 0: |F| 1.38e-16 |dz| 2.78e-14 lam 1 dDelta +1.20e-18 Delta 3.465200483544031 piv 1.4e-03..5.7e+00  t 350.0s
+  newton 0: |F| 1.10e-29 |dz| 3.98e-26 lam 1 dDelta +2.57e-31 Delta 3.465200483544031 piv 1.4e-03..5.7e+00  t 414.0s
+  newton 0: |F| 7.25e-30 converged (last |dz| 2.1e-26) Delta 3.465200483544031
+D 3.7 M 80: Delta 3.4652004835440313 (+1.57e-16) |F| 7.2e-30 its 5 1998s dDelta/dF max 1.3e+00 tails 2e-85 4e-70 dDelta_est -6.7e-30
+== exit 0 Thu Oct 22 08:15:52 MST 2026

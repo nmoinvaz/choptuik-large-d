@@ -1,0 +1,54 @@
+== Thu Oct 22 07:20:47 MST 2026 hp/lowD_gamma.py hp/data/lowD_gamma.jsonl hp/data/lowD_states/lowDn_D4.0000_M64.npz --threads=2 --lam0=2.674074
+lowDn_D4.0000_M64.npz: D 4.0 M 64 |F| 9.1e-30, guess lam 2.674074
+    lam 2.673974000000: sign -1 ln|det| 287.096563 pivots 1.69e-03..1.47e+01 (88.6 s)
+    lam 2.674074000000: sign -1 ln|det| 283.792211 pivots 1.69e-03..1.47e+01 (87.4 s)
+    lam 2.674174000000: sign +1 ln|det| 287.081127 pivots 1.69e-03..1.47e+01 (97.3 s)
+    lam 2.674077595340: sign -1 ln|det| 280.211219 pivots 1.69e-03..1.47e+01 (82.3 s)
+    lam 2.674077698224: sign +1 ln|det| 270.199120 pivots 2.46e-06..1.47e+01 (75.4 s)
+    lam 2.674077698219: sign -1 ln|det| 267.720351 pivots 2.06e-07..1.47e+01 (76.0 s)
+{"D": 4.0, "M": 64, "F": 9.096552313329792e-30, "lam": 2.6740776982193952, "gamma": 0.37396071201142594, "lam_guess": 2.674074, "n_signchanges": 1, "n_det": 6, "state": "lowDn_D4.0000_M64.npz", "seconds": 508.6}
+== exit 0 Thu Oct 22 07:29:18 MST 2026
+== Thu Oct 22 07:29:42 MST 2026 hp/lowD_gamma.py hp/data/lowD_gamma.jsonl hp/data/lowD_states/lowDn_D4.0000_M80.npz hp/data/lowD_states/lowDn_D3.7000_M48.npz --threads=2 --lam0=2.674078
+lowDn_D4.0000_M80.npz: D 4.0 M 80 |F| 3.7e-30, guess lam 2.674078
+== Thu Oct 22 07:29:56 MST 2026 hp/lowD_gamma.py hp/data/lowD_gamma.jsonl hp/data/lowD_states/lowDn_D4.0000_M80.npz --threads=2 --lam0=2.674078
+lowDn_D4.0000_M80.npz: D 4.0 M 80 |F| 3.7e-30, guess lam 2.674078
+    lam 2.673978000000: sign -1 ln|det| 344.798506 pivots 1.38e-03..2.47e+01 (101.3 s)
+    lam 2.674078000000: sign +1 ln|det| 339.125104 pivots 1.38e-03..2.47e+01 (86.9 s)
+    lam 2.674178000000: sign +1 ln|det| 344.878370 pivots 1.38e-03..2.47e+01 (110.7 s)
+    lam 2.674077657561: sign -1 ln|det| 335.833040 pivots 1.38e-03..2.47e+01 (116.0 s)
+    lam 2.674077669836: sign -1 ln|det| 326.812681 pivots 9.76e-07..2.47e+01 (122.7 s)
+    lam 2.674077669841: sign +1 ln|det| 327.675220 pivots 2.31e-06..2.47e+01 (161.1 s)
+{"D": 4.0, "M": 80, "F": 3.676985449824111e-30, "lam": 2.674077669835866, "gamma": 0.37396071598076647, "lam_guess": 2.674078, "n_signchanges": 1, "n_det": 6, "state": "lowDn_D4.0000_M80.npz", "seconds": 700.6}
+== exit 0 Thu Oct 22 07:41:38 MST 2026
+== Thu Oct 22 07:41:38 MST 2026 hp/lowD_gamma.py hp/data/lowD_gamma.jsonl hp/data/lowD_states/lowDn_D3.7000_M48.npz --threads=2 --lam0=2.868209
+lowDn_D3.7000_M48.npz: D 3.7 M 48 |F| 4.1e-30, guess lam 2.868209
+    lam 2.868109000000: sign -1 ln|det| 324.467551 pivots 3.46e-03..1.97e+01 (37.5 s)
+    lam 2.868209000000: sign +1 ln|det| 324.514217 pivots 3.46e-03..1.97e+01 (30.2 s)
+    lam 2.868309000000: sign +1 ln|det| 325.627593 pivots 3.46e-03..1.97e+01 (31.6 s)
+    lam 2.868157833560: sign -1 ln|det| 320.011470 pivots 3.46e-03..1.97e+01 (28.8 s)
+    lam 2.868158400782: sign +1 ln|det| 311.459000 pivots 4.05e-04..1.97e+01 (26.4 s)
+    lam 2.868158400673: sign -1 ln|det| 302.509105 pivots 5.25e-08..1.97e+01 (28.5 s)
+    lam 2.868158400678: sign +1 ln|det| 308.370146 pivots 1.84e-05..1.97e+01 (31.8 s)
+{"D": 3.7, "M": 48, "F": 4.129193800766234e-30, "lam": 2.868158400672576, "gamma": 0.34865577848333007, "lam_guess": 2.868209, "n_signchanges": 1, "n_det": 7, "state": "lowDn_D3.7000_M48.npz", "seconds": 215.8}
+== exit 0 Thu Oct 22 07:45:16 MST 2026
+== Thu Oct 22 07:51:18 MST 2026 hp/lowD_gamma.py hp/data/lowD_gamma.jsonl hp/data/lowD_states/lowDv_D3.7000_M64.npz --threads=2 --lam0=2.868209
+lowDv_D3.7000_M64.npz: D 3.7 M 64 |F| 7.3e-30, guess lam 2.868209
+    lam 2.868109000000: sign -1 ln|det| 525.187702 pivots 1.83e-03..2.67e+01 (92.7 s)
+    lam 2.868209000000: sign +1 ln|det| 522.341763 pivots 1.83e-03..3.01e+01 (91.4 s)
+    lam 2.868309000000: sign +1 ln|det| 525.363318 pivots 1.83e-03..2.67e+01 (88.4 s)
+    lam 2.868203510842: sign -1 ln|det| 518.937902 pivots 1.83e-03..2.67e+01 (85.7 s)
+    lam 2.868203687456: sign -1 ln|det| 512.639043 pivots 1.58e-03..2.67e+01 (77.4 s)
+    lam 2.868203687781: sign +1 ln|det| 497.626441 pivots 4.77e-10..2.67e+01 (84.9 s)
+    lam 2.868203687776: sign -1 ln|det| 508.464087 pivots 2.43e-05..2.67e+01 (74.2 s)
+{"D": 3.7, "M": 64, "F": 7.309289324938438e-30, "lam": 2.8682036877809627, "gamma": 0.34865027343077853, "lam_guess": 2.868209, "n_signchanges": 1, "n_det": 7, "state": "lowDv_D3.7000_M64.npz", "seconds": 595.9}
+== exit 0 Thu Oct 22 08:01:15 MST 2026
+== Thu Oct 22 08:16:16 MST 2026 hp/lowD_gamma.py hp/data/lowD_gamma.jsonl hp/data/lowD_states/lowDv_D3.7000_M80.npz --threads=2 --lam0=2.868204
+lowDv_D3.7000_M80.npz: D 3.7 M 80 |F| 7.2e-30, guess lam 2.868204
+    lam 2.868104000000: sign -1 ln|det| 646.485063 pivots 1.39e-03..2.89e+01 (173.1 s)
+    lam 2.868204000000: sign -1 ln|det| 640.944412 pivots 1.39e-03..2.90e+01 (128.9 s)
+    lam 2.868304000000: sign +1 ln|det| 646.564304 pivots 1.39e-03..2.90e+01 (148.7 s)
+    lam 2.868204361194: sign -1 ln|det| 637.781853 pivots 1.39e-03..2.90e+01 (135.2 s)
+    lam 2.868204377152: sign +1 ln|det| 626.294846 pivots 9.90e-07..2.90e+01 (132.5 s)
+    lam 2.868204377147: sign -1 ln|det| 629.680586 pivots 2.93e-05..2.90e+01 (124.2 s)
+{"D": 3.7, "M": 80, "F": 7.247659566718046e-30, "lam": 2.868204377151541, "gamma": 0.34865018963297023, "lam_guess": 2.868204, "n_signchanges": 1, "n_det": 6, "state": "lowDv_D3.7000_M80.npz", "seconds": 844.5}
+== exit 0 Thu Oct 22 08:30:22 MST 2026

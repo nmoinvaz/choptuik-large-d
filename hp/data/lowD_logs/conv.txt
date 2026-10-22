@@ -1,0 +1,15 @@
+D 3.7: M 48: 3.465201447069621  M 64: 3.465200511802858  M 80: 3.465200483544031
+     M 48 -> 64: -9.35e-07
+     M 64 -> 80: -2.83e-08
+     best 3.465200483544031  error estimate 2.8e-08  (geometric, ratio 0.03, tail estimate 8.8e-10)
+     variant M 48 nodes [0.01, 0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6, 0.7] tol_step 1e-32 kt 36 kcs 80 ks 200: +0.00e+00 from the reference
+     variant M 64 nodes [0.01, 0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6, 0.7] tol_step 1e-32 kt 36 kcs 80 ks 200: +4.06e-08 from the reference
+     variant M 64 nodes [0.0025, 0.005, 0.01, 0.02, 0.04, 0.07, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9] tol_step 1e-31 kt 36 kcs 120 ks 300: +0.00e+00 from the reference
+     at M 80: |F| 7.2e-30  max dDelta/dF 1.3e+00  tails 2e-85 4e-70  steps 311
+D 4.0: M 48: 3.445452661587394  M 64: 3.445452404078125  M 80: 3.445452402240971
+     M 48 -> 64: -2.58e-07
+     M 64 -> 80: -1.84e-09
+     best 3.445452402240971  error estimate 1.8e-09  (geometric, ratio 0.0071, tail estimate 1.3e-11)
+     variant M 48 nodes [0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6] tol_step 1e-32 kt 36 kcs 60 ks 100: +1.35e-07 from the reference
+     variant M 64 nodes [0.005, 0.01, 0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8] tol_step 1e-30 kt 36 kcs 100 ks 250: +0.00e+00 from the reference
+     at M 80: |F| 3.7e-30  max dDelta/dF 1.5e+00  tails 5e-57 9e-31  steps 286

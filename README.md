@@ -202,7 +202,8 @@ below D = 5 are extrapolations in the mode count. Above D ≈ 36 the computed γ
 is not reliable there. Below D = 4 the formula is not fitted; Δ(D) turns over there. The cubic through the
 47-mode points at D = 3.70, 3.75, 3.76, 3.80 (`solver/data/scan_down_kc47.jsonl`) puts the maximum at D = 3.75570,
 Δ = 3.466774 (a quartic with D = 3.9 added: the same to 2×10⁻⁶ in D, 3×10⁻⁸ in Δ), in agreement to 2×10⁻⁶ with
-Ecker, Ecker, Grumiller & Jechtl 2026 ([below](#relation-to-published-work)); the rational formula, extended
+Ecker, Ecker, Grumiller & Jechtl 2026 ([below](#relation-to-published-work)), the size of the 47-mode points' bias
+there (converged values below D = 4: [notes/LOW_D.md](notes/LOW_D.md)); the rational formula, extended
 outside its range, peaks at D = 3.75558, Δ = 3.466781.
 
 As D → ∞ (ε → 0):
@@ -439,9 +440,14 @@ From a literature search (October 2026); the references are listed at the end of
   4.79 < D < 5.49, the range where they report that their perturbation method fails, so their γ(5) is not a direct
   computation in the published data; ours, 0.41312694 (stable to 10⁻⁷ across resolutions), agrees with Bland &
   Kunstatter's 0.4131 ± 0.0001. No difference of convention: at D = 3.7 the two agree to 8×10⁻⁸.
-- **Below D = 4.** γ extrapolated from the 47-mode points (γ(3.7) = 0.34865) suggests $`\gamma(3.5) \lesssim 0.33`$, against
-  0.349 ± 0.003 from Bland et al. (2005). The points here below D = 4 are under-resolved in the Fourier modes; this is
-  an open check.
+- **Below D = 4.** The double-double solver, with its first node moved to x = 0.005 and its last to 0.8 (the series
+  there converge ever more slowly as D falls), gives Δ(3.7) = 3.46520048 ± 3×10⁻⁸ and γ(3.7) = 0.34865019 ± 8×10⁻⁸,
+  converged in the τ resolution (48, 64 and 80 points) and in the node layout
+  ([notes/LOW_D.md](notes/LOW_D.md)); Ecker et al. (2026) give 3.4652005 and 0.3486503 there. The f64 points below
+  D = 4 (47 Fourier modes) are 2–5×10⁻⁶ high in Δ. Extrapolated from 3.64 ≤ D ≤ 4, γ(3.5) = 0.3235 ± 0.0030, in
+  agreement with Ecker et al.'s 0.32239 and not with Bland et al.'s 0.349 ± 0.003. The modes needed grow from about 73
+  at D = 4 to about 110 at 3.5 and several hundred near 3.05, and at D = 3 the scalar decouples from gravity in these
+  equations, so the family cannot reach a regular D = 3 limit.
 - **Large D.** Ecker, Ecker & Grumiller (2026) and Ecker et al. (2026) conjecture Δ → 0 as D → ∞; Bland's 2007
   PhD thesis (University of Manitoba) hypothesizes Δ∞ = 5/2, which the data exclude (Δ(14) = 2.29 and
   decreasing). The double-double points give a finite Δ∞ = 1.643893746 if Δ is analytic in 1/D. Up to D = 61
