@@ -31,6 +31,7 @@ by W = (Y_out - T) + (T - Z_in), T the outer series truncated at eps^K and conve
 
     python3 b8m_h8.py K L0 --log=b8m_scan_....log [--rA=2e-6 --rW=2e-6] [--W=2.6] [--gamma=0.3]
            [--centre]  (validation of the structural cancellation at the box centre only)
+           [--mutate=xc]  (drops [x c' P] from Phi: the eps^0 part no longer matches the inner series; must fail)
     exit status 0 iff (H8)(ii) is proved with delta <= delta_ref = (1, 200, 10, 20).
 """
 import json
@@ -182,7 +183,10 @@ def part_T(K, rA, rW, N=31, verbose=True):
     xc = tm_series(fs["c"], Ev, K, "zdz2")
     Ec = tm_add(c, TM({(0, 0): {0: acb(1)}}), -1)
     P = tm_cinv(Ec, tm_add(V, S), O)
-    Phi = tm_cinv(Ec, tm_add(xY, tm_mul(xc, P, O), -1), O)
+    if OPTS.get("mutate") == "xc":          # mutation: drop [x c' P] from Phi = C^-1 (x Y' - [x c' P])
+        Phi = tm_cinv(Ec, xY, O)
+    else:
+        Phi = tm_cinv(Ec, tm_add(xY, tm_mul(xc, P, O), -1), O)
     Th = tm_mul(tm_series(fs["be"], Ev, K, "divz"), tm_geom(), Ev)
     th = tm_add(Th, tm_scale(tm_mul(P, P, Ev), acb("0.5")), -1)
     T = dict(P=P, Phi=Phi, C=c, th=th)
