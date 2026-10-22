@@ -2235,3 +2235,40 @@ Part D (1 process, when a thread is free and before part C): the maximum of Delt
 M = 80 state with A's nodes, solve at D = 3.72, 3.74, 3.75, 3.76, 3.78, 3.80 at M = 80 (--Ms 80 --Dlist ...; check
 first that --Dlist accepts increasing D) and report the quartic's maximum (D and Delta). The README quotes D = 3.75570,
 Delta = 3.466774 from 47-mode points, which are 2-5e-6 high there.
+
+== 2026-10-22 08:36 PDT local
+T33 correction and update. My 08:25 forecast (1e-12 boxes reaching the real leg near 1e-2) was wrong: the growth
+steepens toward the end of the arc. Before your 08:33 entry reached me, I stopped both 1e-12 runs by the section 7
+rule. They had derivative radius 0.86 at arc step 775 and 2.22 at step 800 (t 0.841). Their logs are on
+wip/layer-a-cert-m5 (6377697), and their .ckpt files are kept, so each resumes with its own command if you want them
+finished. Where each run's derivative radius crossed:
+   box      >= 1e-3            >= 0.1             >= 1
+   3e-11    arc step 25        475 (t 0.481)      650 (t 0.645)
+   1e-12    350 (t 0.368)      725 (t 0.729)      ~780 (t 0.80)
+   1e-13    575 (t 0.572)      800 (t 0.841)      850 (t 0.954)
+Shrinking the box 10x moves the crossing of 1 only about 35-150 steps later, toward the end of the arc (863 steps).
+The 1e-13 run is on the real leg (derivative radius 264 at real step 25), and I am letting it finish for its krawczyk
+log. With radius >> 1, krawczyk will not pass, which points to the section 7 design change rather than smaller boxes.
+T35 started 08:35 in a worktree at main 98a344d (contains 98e75d9). --Dlist takes increasing D (Lagrange predictor,
+no ordering assumed), checked in the code.
+   A: your section 7 command as written, 1 thread. Start D 3.7 M 96: L 5377, 346 steps, start |F| 1.1e-5.
+   D: the same start state and nodes, --Ms 80 --tag lowDv --resume --Dlist 3.72,3.74,3.75,3.76,3.78,3.80, 1 thread.
+      With --resume the D = 3.7 M 80 point is skipped as converged, so no committed state is rewritten. Its records go
+      to hp/data/lowD_dd_local_max.jsonl and its log to local_D.log, so the two processes never append to one file.
+      First step: D 3.72 from a one-point (constant) predictor, start |F| 1.4e-2.
+   B: will start for each of D = 3.6, 3.5, 3.4, 3.3 as A's M = 96 states land. C last, if at all.
+Threads now: T33 1, T34 1, T35 A and D 2.
+
+== 2026-10-22 08:38 PDT local
+T33 done: nothing passes. The h = 1e-13 run finished (steps 2118 ray, 863 arc, 101 real, 3591 s; derivative radius 264
+at real step 25). krawczyk --best --shrink --hier, verdict line:
+   Krawczyk M = 5: K(X) in int X: False; relative margins -13.713, -11.788, +0.293, +0.332, -542.235, -511.240
+   largest passing outer half-width with the run's inner widths: None; max radius of Y Dgt(X) 9.3e+07; g(p^) 1.2e-14
+Pushed to wip/layer-a-cert-m5 (282f295): A_M_box_M5_1e-13.json, its log, and A_M_krawczyk_M5_1e-13.log. Only that run
+produced a box JSON. The other three stopped on the arc (logs pushed, .ckpt kept), so there is one krawczyk log, not
+four. The margins fail in the outer pair and, by far, in the innermost pair, with the middle pair passing. By section 7
+the next step is the design change (second-order chart or C^2 enclosures), not more runs, so I start nothing more.
+T35 part C started at 08:41, ahead of its "last" slot: part B cannot start until A's D = 3.6 M = 96 state lands (hours
+away), so this thread would otherwise sit idle. If B needs the thread, C will be stopped first. rustkernel is the
+cf79fba build (installed 10-20 16:20, after cf79fba). C's first solve: D 3.7 kc 55 rk 2, start |F| 1.3e-5 from the
+double-double seed (Delta 3.465200483544). Threads: T34 1, T35 A, C, D 3.
