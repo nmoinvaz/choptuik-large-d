@@ -157,7 +157,7 @@ third order in h and the Jacobian is enclosed in mean value form; that is not at
 |x_o − x_o*| ≪ h and the inner coordinates to ≪ w. hier.py's zeros are good to about 2×10⁻¹¹ (the spread between two
 solves), far from the 10⁻¹⁶–10⁻²⁰ the inner coordinates need. The centre is refined by Newton steps from
 `certify_M_lohner.numerics_run`, a plain Taylor integrator at 256 bits (order 30, steps from the Taylor coefficients and
-‖A₀‖h ≤ 1; non-rigorous, and it need not be: any centre is allowed, the test is what is rigorous). The steps alternate:
+‖A₀‖h ≤ 2, and from the Taylor coefficients of the derivative columns; non-rigorous, and it need not be: any centre is allowed, the test is what is rigorous). (A first version took its steps from the trajectory alone, which is a slow solution: 98 steps for the whole path at M = 3. Its Dg was then accurate to only about 10⁻⁹ relative, because the derivative columns carry the large Stokes-switched fast components, and with the 10⁶-fold cancellation in the Schur complement the outer Newton steps converged only linearly, by a factor of about 80 per step; `logs/A_M_refine_M3_a.log`.) The steps alternate:
 a Newton step in the higher harmonics alone at fixed (A, wf), then a full Newton step. (A full step from an untuned
 centre would leak the inner quadratic error into the outer coordinates through L.) The last refinement also gives the
 tilt C (from its Dg).
@@ -182,6 +182,8 @@ All runs use `validated_int.Lohner` (A_certify.md §9.1) through `certify_M_lohn
   V^{(NJ+1)}(s) = (NJ+1)! Φ_{NJ+1}(Y(s)) V(s) with Y(s) ∈ Ỹ, V(s) ∈ Ṽ), so a lower NJ only widens J, by about
   (λh)^{NJ+1}/(NJ+1)!, far below the width the parameter box gives it. M = 1 uses N = NJ = 24 (validated_int's
   choice); M ≥ 3 uses N = 20, NJ = 12.
+
+**Checkpoints.** A box run saves its exact Lohner sets, the leg, t and the step size about every ten minutes and at the end of each leg (`data/...json.ckpt`, written atomically) and resumes from them when restarted with the same parameters (a key of M, p̂, C, h, w, the path, the orders and the start-data source must match). A resumed run continues from the saved balls, so its result is an enclosure; on a test path it agreed with an uninterrupted run in every midpoint and radius. Background commands on the cloud machine are stopped after two hours, so the long runs are relaunched until they finish.
 
 At M = 1 one step of LohnerM and one step of validated_int.Lohner from the same set give identical midpoints and radii
 (`certify_M_sys.py selftest`). One step costs about 1.5 s at M = 5 on an idle core (python-flint; 4–13 s on the shared
@@ -248,6 +250,28 @@ way), except C7, which widens g(p̂) and must make it fail.
 
 A planted zero is g − L d with L the exact midpoint of Dg̃(X): it moves the zero by d up to second order and leaves
 Dg̃(X) unchanged.
+
+## 6. Results
+
+### 6.1 M = 1: Theorem A(M = 1) reproduced through this code path
+
+`python3 certify_M.py m1` (lower path, fixed_point.start_data, h = 10⁻⁹; data `data/A_M_point_M1.json`,
+`data/A_M_box_M1_1e-9.json`, log `logs/A_M_m1.log`):
+
+| | this code | Theorem A(M = 1), A_certify.md §11.2 |
+|---|---|---|
+| steps (ray, arc, real), point run | 303, 320, 46 | 303, 322, 47 |
+| J_D(x̂) | 1.054739676292166×10⁻¹² − 3.490429414033870×10⁻¹²i, radius 7×10⁻¹⁷ | the same digits (§10.3), radius 6×10⁻¹⁷ |
+| K(X) ⊂ int X at h = 10⁻⁹ | yes, relative margins 0.863, 0.976 | yes, 0.857, 0.971 |
+| smallest passing sub-box | x̂ ± 1.22×10⁻¹⁰ | x̂ ± 1.2×10⁻¹⁰ |
+| the zero, A | [2.54214804761406, 2.54214804761906] | [2.54214804761338, 2.54214804761975] |
+| the zero, ω/ω∞ | [0.776994013607969, 0.776994013611479] | [0.776994013607438, 0.776994013612010] |
+
+The enclosure lies inside Theorem A(M = 1)'s (endpoints rounded outward). The test here is posed on g = J_D without κ
+and with Y from the box run's own column midpoints, so the agreement checks the generic assembly, the tilted-box code
+with an empty inner block, and LohnerM against validated_int. With Theorem A's A-interval shifted by 10⁻¹¹
+(`--mutate=m1ref`) the check reports NOT REPRODUCED. All M = 1 controls give their expected verdict
+(`logs/A_M_controls_M1.log`); C1 and C2 have absolute margins −59, −22 and −2.0, −0.35, the same as A_certify.md §9.5.
 
 ## 8. Reproduce
 

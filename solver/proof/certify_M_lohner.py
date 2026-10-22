@@ -215,7 +215,7 @@ class LohnerM(VI.Lohner):
 
 # ---------------------------------------------------------------- numerics (NOT rigorous): for the centre refinement
 
-NUM_RATE = 4.0       # numerics: steps with (row-sum norm of A_0) h <= NUM_RATE
+NUM_RATE = 2.0       # numerics: steps with (row-sum norm of A_0) h <= NUM_RATE
 
 
 def numerics_run(sys_, y0, w, cols0, path, N=24, tol=1e-40, log=None):
@@ -240,6 +240,13 @@ def numerics_run(sys_, y0, w, cols0, path, N=24, tol=1e-40, log=None):
             h = min((tol * ymax / cmax(N)) ** (1.0 / N), (tol * ymax / cmax(N - 1)) ** (1.0 / (N - 1)), 1.0 - t)
             Vk, A0 = taylor_V_cols(sys_, ctxs, N, W, with_A0=True)
             h = min(h, NUM_RATE / A0)             # the linearization's rate (row-sum norm): growing modes are resolved
+            # the derivative columns too: they carry the large, Stokes-switched fast components (the trajectory
+            # alone is slow and would allow much larger steps), each column relative to its own size
+            for j in range(m):
+                wj = max(float(abs(W[i, j]).mid()) for i in range(n)) + 1e-300
+                for k in (N - 1, N):
+                    ck = max(float(abs(Vk[k][i, j]).mid()) for i in range(n)) / wj + 1e-300
+                    h = min(h, (tol / ck) ** (1.0 / k))
             hh = acb(h)
             y = [acb(VI.evalpoly(Ys[i], hh, N).mid()) for i in range(nd)] + y[nd:]
             Wn = Vk[N]
