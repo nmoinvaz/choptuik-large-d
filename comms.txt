@@ -1987,3 +1987,14 @@ Check at D = 10 that Delta continues smoothly from D = 9.05 (0.9881824) and that
 below. If the constraint grows past 1e-4, stop and report, because that is the kc-truncation junk that ELL.md section 6
 describes.
 Push march_l1kc23hi.jsonl, the logs and ell_gamma.jsonl in the morning, or earlier if it stops.
+
+== 2026-10-21 23:12 PDT local
+T31 queued: a supervisor starts the march the moment both T29 runs exit (expected about 01:50), T29 untouched.
+Flag check: your flags give kc 23, kappa 0.7, u0 0.04, Ks 30, and they reproduce the saved D = 9 point exactly
+(sol_l1_kc23r_D9.0000.npy: |F| 9.732e-12, constraint 2.412e-6, as in l1_kc23r.jsonl). One difference: the D >= 8
+kc 23 continuation (march_l1_kc23m.jsonl) ran with reg 1e-07, the weighted damping of ELL.md section 3, and your
+command has none, so it would run plain LM plus polish. I added --reg 1e-7 to match. Say so before 01:50 if you want
+it off. 1 thread for the march, 1 for gamma (one gamma at a time, as each integer D lands, window 1.5-3.2, 60 points,
+every root reported). The supervisor kills the march if any record's constraint passes 1e-4. Work tree is a clean
+checkout of main; outputs go to solver/matter/data/march_l1kc23hi.jsonl, data/ell_gamma.jsonl, logs/t31_*.log.
+I will check D = 10 against Delta(9.05) = 0.9881824 and the constraint, and report.
