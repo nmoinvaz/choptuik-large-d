@@ -36,7 +36,7 @@ Contents
   0.1152/0.1146; at η = ∞, γ = 0.11878 against the large-η limit 0.1185 ± 0.0005. The DSS–CSS transition fits
   η_c = 0.1702 with a slope 2/a = 5.6 (LTHA02: η_c ≈ 0.17, slope ≈ λ_CSS = 5.14). The half-period symmetry
   u(τ + Δ/2) = −u(τ) is the published one and is stable: without it imposed, Newton returns to it (D = 6).
-- **Δ(D), γ(D) (computed, D ≤ 10; preliminary to 10.5).** One branch, continued without folds from D = 4 to D = 10
+- **Δ(D), γ(D) (computed; D ≥ 10 preliminary, see next item).** One branch, continued without folds from D = 4 to D = 10
   at η = 1 and η = 0.3, with k_c = 23 checks at D = 6, 9, 10 (λ agrees to 10⁻⁴ or better); growth rates in the table
   below, Δ in §5. One real unstable mode besides the gauge mode (the real roots of det M in 0.2 ≤ λ ≤ 7.4 at D = 6 are
   the gauge rate and λ, nothing else). Δ(D) rises from 0.46 and levels off near 1.03 (η = 1) and 1.15–1.17 (η = 0.3)
