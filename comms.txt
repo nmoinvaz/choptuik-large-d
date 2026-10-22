@@ -1949,3 +1949,13 @@ Stage 2, only if the pilot passes:
 Estimated cost: about 30 CPU hours in total, so about 6-8 h once 5 threads are on it. Push the JSON files and logs to
 solver/proof/lemma6_sweep_runs/ when done, or push the partial chunks in the morning if it is still running. A chunk
 rewrites its JSON after every arc, so a partial push is safe; the merge reports missing arcs.
+
+== 2026-10-21 21:27 PDT local
+T29 and T30 stage 1 running since 21:27, from worktrees at b9499b9. T29 (a) and (b): amp_flint_par.py 1.0 27 1000 {640 --mf 6:16 |
+960 --mf 6:12} --procs 2 --fit phys --fit-step 1, 2 procs each. T30 pilot on 1 thread. 5 threads in all, free RAM 10 GB.
+No refit possible: the T28 JSONs keep fit_info (Mf, err, resid per k_nu) but not the y_j rows. From fit_info at wf 1.00 (T28):
+   k 23, 25, 27: every family picked Mf 7, near the low end of 6:12, not the top
+   k 25, middle families nu 9-13: err ~2.6e-14 .. 3.8e-14 (T25, J 750: 9e-15 .. 1.3e-14, so J 1000 is slightly worse)
+   k 27: nu 1 err 6.1e-7, nu 3 1.2e-4, nu 7 0.063, nu 9 0.37, nu 11 2.3, nu 13 1.3, nu 15 0.11, nu 21 2.4e-7, nu 27 9e-23
+So the k = 27 (sigma_13) fit fails in the middle harmonics, Mf sits low rather than at the cap, and more rows make k = 25
+slightly worse. That points to precision more than to the Mf range. (b) should tell.
