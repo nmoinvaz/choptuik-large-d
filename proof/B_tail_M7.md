@@ -25,7 +25,7 @@ Scripts (all new; nothing existing was changed):
   and 7 to their noise floors: F₅ moves onto the untruncated value (0.003104 + 0.000557i against 0.00310 + 0.00056i),
   and |F₇/F₅| = 0.0573 against the untruncated ρ_*² = 0.0574 (§2). Its level-3 Newton stalls at |r₃| ≈ 9, so r₁ is not
   resolved, c₇ is not known, and B_tail.md's prediction 0.99997–1.00017 is untested. Why is not settled (FD steps below
-  the noise of the corrected r₃, K's level-5 columns accurate to only ~5%, or a genuine floor; §2). A local task (three
+  the noise of the corrected r₃, K's level-5 columns accurate to only 5–10%, or a genuine floor; §2). A local task (three
   jobs on 6 threads, about an hour) is proposed in §3.1.
 - **A correction to B_tail.md §4.** `hier.py`'s model is a Galerkin truncation too; `amp_trunc.py`'s projection drops the
   even harmonic M + 1, which `hier.py` keeps. The amplitude expansion of `hier.py`'s own model (`amp_trunc_hiermodel.py`)
@@ -116,7 +116,7 @@ candidate causes at M = 7, each with a number behind it:
    error in J reduces |r₃| by about half, as observed (34 → 16 → 9.1).
 2. *A poor linear prediction of the higher levels.* After each level-3 step the nested level-5 solve restarted from
    |r₅| = 1–15 instead of ≲ 10⁻⁴: K's level-5 columns are taken with steps of 10⁻¹² relative, which move r₅ by about
-   3×10⁻⁶, while r₅'s noise floor at M = 7 is 2×10⁻⁷ (10³ times M = 5's), so those columns are good to only ~5%.
+   2–3×10⁻⁶, while r₅'s noise floor at M = 7 is 2×10⁻⁷ (10³ times M = 5's), so those columns are good to only 5–10%.
 3. *A genuine noise floor of the corrected r₃ near 1–10*, which would put M = 7 at ξ₁ = 0.2 beyond double precision.
 
 A rerun of the pilot with 100× larger level-3 steps (`--h3=1e-4`, log `logs/hier_nb_M7_fixA_h3_at_M5zero.log`) was cut
