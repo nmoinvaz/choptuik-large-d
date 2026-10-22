@@ -116,7 +116,6 @@ Contents
   - [Layout](#layout)
   - [Limits](#limits)
 - Companion files
-  - [PARALLEL.md](PARALLEL.md): how the computations parallelize (CRC-style split and combine)
   - [AGENTS.md](AGENTS.md): conventions for the AI sessions that run computations here
   - [PROOF.md](PROOF.md): a roadmap for proving the selection rule (Conjecture 1): layers, precedents, staged plan, with
     parts in [proof/](proof/) (the M-harmonic selection theorem; the entire-function certificate)
@@ -1847,8 +1846,10 @@ One residual of a synthetic production-sized configuration (`tests/test_bindings
 The double-double solver's Newton step (`hp/`): a blocked LU that skips exact zeros (panels of 32 columns, parallel
 trailing update; 18–34× faster than the dense LU on one thread) and batched solves (`Solver.lu_solve_many`) for the
 deflation subspace bring one D-step from 15.4 to 9.5 s on one thread and from 10.1 to 5.5 s on two (D = 20, L = 1153),
-with every output bitwise identical; on 8 threads the estimate is about 2.3 s against 6.5 s. Details and the other
-parallel parts in [PARALLEL.md](PARALLEL.md) §3.
+with every output bitwise identical; on 8 threads the estimate is about 2.3 s against 6.5 s. The step is now almost all
+Jacobian (its columns already run in parallel); tangents that share one primal pass would save about 1.7×, not
+implemented. Continuation in D stays sequential, since each step starts from the previous solution inside Newton's
+basin; past D = 61 it costs about 22 hours per unit of D.
 
 ### Layout
 
@@ -1890,7 +1891,6 @@ hp/                 double-double solver (crate hpkernel)
 └── data/seeds/     saved solver states to restart continuation from
 hp/largeD_*.py      large-D scaling of the solutions (profiles, F(theta), harmonic content, light-cone exponent)
 comms.txt           task log between the cloud and the second machine
-PARALLEL.md         how the computations parallelize: shooting as CRC-style chunking, Jacobian columns, amp_flint, scans
 AGENTS.md           conventions for the AI sessions that run computations here (which scripts to use, thread budget, comms)
 paper/              the paper (main.tex, built as dss_large_D.pdf with make; figures/ holds the PDF figures)
 PROOF.md            roadmap for a proof of the selection rule (computer-assisted inner zero; analytic selection theorem)

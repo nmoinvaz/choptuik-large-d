@@ -376,3 +376,6 @@ summation-factor closed form with T_j = (α)_j(β)_j/j!, the 193-unknown condens
 pivoting), the measured speedups, and the late-order fit-basis finding of §4 (every neighbour family |ν′| ≤ k is needed).
 That last one is a numerics result about this computation; the general principle, that late orders carry every
 singularity's contribution, is standard in resurgence (Dingle; Berry–Howls).
+
+PARALLEL.md was removed afterwards (2026-10-21). Its measurements are in the README (Performance) and in the docstrings
+of `solver/inner_amp/amp_flint_par.py` and `hp/src/linalg.rs`; it is in the git history.

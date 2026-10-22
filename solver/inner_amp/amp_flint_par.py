@@ -1,6 +1,6 @@
 """Faster, multi-process version of amp_flint.Amp: same problem, same JSON output, results agree within ball radii.
 
-What changed against amp_flint.py (see PARALLEL notes in the docstrings below):
+What changed against amp_flint.py (details in the docstrings below):
 
 1. Products (the convolutions over (j, mu)).  Order eps^k has only the harmonics mu = -k, -k+2, ..., k, so a product of
    orders k1 + k2 = k is packed with stride k + 1 (index (mu + k_i)/2 in a row) instead of 4K + 1, and only the first

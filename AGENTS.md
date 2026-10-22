@@ -1,7 +1,7 @@
 # Notes for agents working in this repository
 
 Conventions for the Claude sessions (cloud and local) that run computations here. The physics and software are in
-[README.md](README.md); how the computations parallelize is in [PARALLEL.md](PARALLEL.md).
+[README.md](README.md).
 
 ## Tools and how to run them
 
