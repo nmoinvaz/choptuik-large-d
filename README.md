@@ -786,6 +786,9 @@ $`S_k`$ is an even polynomial in x starting at x², $`D_k - xK_k`$ is an odd pol
 and $`B_{k+1}`$ are even polynomials (B starting at x²) with $`G_k(1) = 0`$. Every order is regular at the centre and
 analytic at the light cone, and m(x) = p(-x) holds order by order.
 
+The leading-order part of this freedom, any periodic profile with any period, is in Ecker, Ecker and Grumiller[^8]; the
+all-orders statement was not found in the literature searched.
+
 <details>
 <summary>Proof of Proposition 1</summary>
 
@@ -846,7 +849,7 @@ the O(n) terms of E3–E4 force p + m = O(p/n), the measured p + m = O(n^{−3/2
 At leading order the equations are linear (the scalar wave equation on flat space in self-similar form, c = b = 1).
 For one harmonic $`e^{i\mu\theta}`$, put s = iμω.
 
-**Proposition 2.** The solution regular at the centre is, up to a constant,
+**Proposition 2.**[^12][^13] The solution regular at the centre is, up to a constant,
 
 ```math
 p - m = x\;{}_2F_1\!\left(\tfrac{1+s}{2},\,\tfrac{2+s}{2};\,\tfrac{n+1}{2};\,x^2\right),
@@ -894,8 +897,9 @@ fundamental at ω = ω∞, $`\lvert C\rvert = 0.0121,\ 0.0114,\ 0.0124,\ 0.0192,
 It grows like $`\sqrt n`$ ($`\lvert C\rvert/\sqrt n = 0.00128`$ at n = 1000, tending to
 $`2\pi\,2^{-1/2}e^{-\pi\omega}/\lvert\Gamma(\alpha)\Gamma(\beta)\rvert = 0.00126`$), small only through the factor of order $`e^{-\pi\mu\omega/2}`$.
 
-The free wave equation in similarity coordinates has been analysed in 3+1 dimensions before (Donninger,
-arXiv:0809.5177); what Proposition 2 adds is the closed-form light-cone coefficient for every D and harmonic.
+The free wave equation in similarity coordinates has been analysed in 3+1 dimensions before, which contains the D = 4
+case[^12], and the coefficient follows from Gauss's connection formula for the hypergeometric function[^13]. What
+Proposition 2 adds is the closed-form light-cone coefficient for every D and harmonic.
 
 **What this means.** At leading order the self-similar oscillation is a free scalar wave, and a free wave cannot be
 both regular at the centre and analytic at the light cone. The non-analytic piece $`(1-x^2)^{n/2-1-s}`$ is smaller than any
@@ -1005,8 +1009,7 @@ the leading order gives B = A(1-x)/(1+x), a₁, b₁ drop out of the projection,
 
 ### Proposition 4: late orders of the leading-order series
 
-A divergent series records the exponentially small terms it switches on in its late orders (Dingle, *Asymptotic
-Expansions: Their Derivation and Interpretation*, 1973): if the switched-on
+A divergent series records the exponentially small terms it switches on in its late orders[^14]: if the switched-on
 term is $`n^{-g}e^{-n\chi(x)}`$, the coefficients behave like $`y_k \sim K\,Q(x)\,\Gamma(k-g)/\chi(x)^{k-g}`$. At leading order this can
 be checked exactly, because the 1/n expansion of $`x\,{}_2F_1`$ from Proposition 2 is explicit. `solver/largeD_linear_late.py`
 computes it to order 122 at 90 digits and reads χ and g off consecutive ratios of $`y_k`$:
@@ -1039,7 +1042,7 @@ K = e^{-i\pi(1+s)}\,\frac{2^{-s-1/2}}{\Gamma(\alpha)\Gamma(\beta)} .
 
 (the first two columns carry the estimator's interference). The singulant, the exponent and the constant are proved:
 
-**Proposition 4 (late orders of the leading-order series).** Let 0 < x < 1, Φ = ln x − ½ ln(1 − x²),
+**Proposition 4 (late orders of the leading-order series).**[^14] Let 0 < x < 1, Φ = ln x − ½ ln(1 − x²),
 $`\tau_\ell = \Phi - i\pi(\ell+\tfrac12)`$, and let $`y = x\,{}_2F_1(\alpha,\beta;\kappa;x^2)`$ with κ = (n+1)/2, α = (1+s)/2, β = (2+s)/2,
 $`y \sim \sum_k y_k\varepsilon^k`$, ε = 1/n. If $`\lvert\Phi\rvert < (\sqrt3/2)\pi`$ (equivalently 0.066 < x < 0.998), then
 
@@ -1194,7 +1197,8 @@ L\,\sigma = c\,\xi\,\partial_\xi{y} + c\,\big(\tfrac12 y^2 - 1\big)\,{y}, \qquad
 \xi\,\partial_\xi c = \tfrac12\,c\,{y}^2 , \qquad \eta = \tfrac12 y^2 .
 ```
 
-No large parameter is left: this problem is the same for every n. (Derivation: in the difference equation the terms
+No large parameter is left: this problem is the same for every n. Up to a change of variables it is Rozali and Way's
+leading-order large-D system[^6] (see Proposition 5). (Derivation: in the difference equation the terms
 of order $`\sqrt n`$ are $`x^2\partial_x{y}`$, $`\omega x\,\partial_\theta{y}`$ and n c (p+m); in the sum, the order-1 terms are
 $`x^2\partial_x(p+m)`$, $`x c\,\partial_x{y}`$, $`\omega x\,\partial_\theta(p+m)`$ and $`(G - c)\,y`$ with G = cη; the b equation becomes
 algebraic, η = p² + m².)
@@ -1453,14 +1457,14 @@ $`L = \rho\,\partial_t`$ at fixed ρ and $`\xi\partial_\xi = \rho\partial_\rho`$
 s = \frac{\rho^2}{2} = \frac{r^2}{2n}, \qquad y = \sqrt{s}\,Y, \qquad \sigma = \sqrt2\,s\,S .
 ```
 
-**Proposition 5.** (i) In these variables the inner equations are
+**Proposition 5.**[^6] (i) In these variables the inner equations are
 
 ```math
 Y_t = c\,S, \qquad S_t = c\,\Big(Y_s + \frac{Y^3}{4}\Big), \qquad c_s = \frac{c\,Y^2}{4},
 ```
 
 a nonlinear heat equation in which s = r²/(2n) plays the role of time and t that of space. This is Rozali and Way's
-leading-order flat-space system (arXiv:1807.10283, Sec. 2.2) in other variables (proof below). They contain no explicit s
+leading-order flat-space system[^6] (their Sec. 2.2) in other variables (proof below). They contain no explicit s
 or t, so they are invariant under s-translation, t-translation, the scaling (t, s, Y, S) → (at, a²s, Y/a, S/a²) and the
 reparametrizations t → T(t), c → T′c.
 
@@ -1993,3 +1997,8 @@ solver/largeD_late_structure.py  where the nonlinear late-order growth lives (x,
 [^10]: M. Reiterer and E. Trubowitz, Commun. Math. Phys. 368, 143 (2019), [arXiv:1203.3766](https://arxiv.org/abs/1203.3766).
 [^11]: I. Baldomá, M. J. Capiński, M. Guardia and T. M. Seara, J. Nonlinear Sci. 33 (2023),
     [arXiv:2206.13840](https://arxiv.org/abs/2206.13840); X. Xie and S. Tanveer, Arch. Ration. Mech. Anal. 166, 219 (2003).
+[^12]: R. Donninger, J. Evol. Equ. 9, 511 (2009), [arXiv:0809.5177](https://arxiv.org/abs/0809.5177).
+[^13]: NIST Digital Library of Mathematical Functions, §15.8 (Gauss's connection formulas),
+    [dlmf.nist.gov/15.8](https://dlmf.nist.gov/15.8).
+[^14]: R. B. Dingle, *Asymptotic Expansions: Their Derivation and Interpretation*, Academic Press (1973); S. J. Chapman,
+    J. R. King and K. L. Adams, Proc. R. Soc. Lond. A 454, 2733 (1998).
