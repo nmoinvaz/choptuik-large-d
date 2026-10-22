@@ -21,8 +21,8 @@ branch. Scripts and logs: [`solver/supercrit/`](../solver/supercrit/).
    order. The series is one in 1/(n z²), z = β²x² − 1, and breaks down at z ~ n^{−1/2}. There the compactness
    2m/r^{n−1} = 1 − 1/b is only of order n^{−1/2}. Inside that layer the solution passes smoothly through β²x² = 1 into a
    region where the polar lapse collapses exponentially and 1 − 1/b → 1.627 κ̃/√n: a **lapse-collapse front, spacelike**,
-   not a marginally trapped surface (*numerical evidence*: exact CSS equations at n = 100–6400; formal layer analysis
-   for general β(τ)). Only for a front at rest (β + β′ = 0) does the compactness behind it become large; Rozali and Way's
+   not a marginally trapped surface (*numerical evidence*: exact CSS equations at n = 100–6400; for general β(τ) a
+   formal layer analysis, matched symbolically to the outer series at NLO). Only for a front at rest (β + β′ = 0) does the compactness behind it become large; Rozali and Way's
    exact divergence is of that static kind.
 4. **Known solutions.** The branch is not a large-D limit of the Roberts family or of its D-dimensional versions
    (Frolov; Kim, Moon and Yee; Clark and Pimentel), whose scalar field is invariant under the homothety, while here
@@ -286,7 +286,10 @@ agree to 10⁻¹⁰):
 Y₁ = θ^{−1/2}(1 − 1/(2θ²) + 13/(12θ⁴) + …), C₁ = √(2θ)(1 + 1/(4θ²) − 13/(48θ⁴) + …), derived from the layer ODE
 alone, reproduces exactly the most singular terms of the outer CSS series through NNLO: [z⁻²]Y₁/β = −2/κ²,
 [z⁻⁴]Y₂/β = 52/(3κ⁴), [z⁻²]C₁/f = 1/κ², [z⁻⁴]C₂/f = −13/(3κ⁴), with no ln z at those powers. The two sides share no
-code. `--mutate=layer` (C₁′ = C₁Y₁²/4) FAILS.
+code. For general β(τ), f(τ) the same identity holds at NLO with κ → κ̃ = fβ²/(β+β′): [z⁻²]Y₁/β = −2(β+β′)²/(f²β⁴),
+[z⁻²]C₁/f = (β+β′)²/(f²β⁴) (`match_check.py logs/expand_K1_free.pkl`), a symbolic check of the quasi-static layer
+reduction, since τ-derivatives in the layer are n^{−1/2} smaller and reach the outer series only at z^{−(2k−1)}.
+`--mutate=layer` (C₁′ = C₁Y₁²/4) FAILS.
 
 ### 3.4 Finite-n check: the exact CSS equations across the front (`css_bvp.py`)
 
@@ -309,7 +312,8 @@ x_lc = 0.894 lies outside the interval; `logs/css_bvp_b1.5_f1.0.log`) the deviat
 n = 100–6400; min 1/b ≥ 0.78. The lapse ratio c/c_layer agrees less well (16% at n = 6400, in the tail where c is
 already 10⁻⁵ of its outer value). `--mutate=cubic` (a wrong layer) FAILS: at n = 6400 the solve converges to the same
 solution and misses the wrong layer by a factor 8.6. This is *numerical evidence*
-for the CSS case; the general-τ statements rest on the quasi-static layer reduction and are not checked numerically.
+for the CSS case; the general-τ statements rest on the quasi-static layer reduction, which is matched symbolically to
+the outer series (§3.3) but not checked at finite n.
 
 ### 3.5 Verdict
 
@@ -458,10 +462,10 @@ Frolov's perturbations 1 instead, and Kim et al. quote (n−3)/√(2(n−2)), wh
 | series residuals fall like n^{−(K+1)} | numerical evidence (`formal_check.py`) |
 | breakdown at z ~ n^{−1/2}/κ̃ | checked symbolically (orders' singular powers, `expand.py`) |
 | layer equations and first integral | derived (formal leading order); first integral proved |
-| layer matches the outer series' most singular terms through NNLO (CSS) | checked symbolically (`match_check.py`) |
+| layer matches the outer series' most singular terms through NNLO (CSS) and at NLO for general β(τ), f(τ) | checked symbolically (`match_check.py`) |
 | layer: no blow-up, Y₁(−∞) = 1.803807327, front at θ_f = −1.003 | numerical evidence (`layer.py`) |
 | no apparent horizon across the front, CSS, finite n | numerical evidence (`css_bvp.py`, n ≤ 6400) |
-| no apparent horizon for general β(τ) with β + β′ ≠ 0 | conjecture (quasi-static layer, not checked numerically) |
+| no apparent horizon for general β(τ) with β + β′ ≠ 0 | conjecture (quasi-static layer: matched symbolically to the outer series, not integrated at finite n) |
 | front spacelike for β + β′ ≠ 0 | proved from the layer scalings (formal) |
 | trapping needs a nearly static front; it forms near r_BH as the shifted front stops | conjecture |
 | Rozali–Way's divergence is a static lapse-zero front | checked symbolically (`rw_oscillaton.py`) |
@@ -488,6 +492,7 @@ python3 formal_check.py logs/expand_K2_zero_css.pkl css    # exponents about -3 
 python3 y1_modes.py                                # lambda_1 = -1.0779457959, lambda_2 = -1.1619671389   ~2 min
 python3 layer.py                                   # Y1(-inf) = 1.803807327, theta_f = -1.002877           <1 min
 python3 match_check.py                             # layer vs outer singular terms through NNLO: PASS  ~1 min
+python3 match_check.py logs/expand_K1_free.pkl     # the same for general beta(tau), f(tau) at NLO: PASS
 python3 css_bvp.py 1 0.8                           # table of section 3.4                    ~10 min
 python3 shift_check.py                             # PASS                                    ~1 min
 python3 rw_oscillaton.py                           # PASS                                    ~1 min
