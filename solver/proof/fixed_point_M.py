@@ -69,7 +69,8 @@ W0_STR = "1.64389375"
 # numerical zeros (double precision, not rigorous) of solver/inner_stokes/hier.py / nested.py:
 ZEROS = {
     1: ["2.5421480475", "0.7769940136"],                                         # A_certify.md section 5
-    3: ["2.7265", "1.0156", "0.14450", "0.01118"],                               # README (nested.py), 4-5 digits
+    3: ["2.726475886", "1.015603095", "0.144419478", "0.011087426"],             # hier.py --schur, |r_1| 6.5e-8
+                                                                                 # (lemmas_M_runs/hier_M3_zero.log)
     5: ["2.718579189", "0.999228404", "0.149203575", "0.014719052", "0.008405347", "0.001470345"],  # hier.py --schur
 }
 
@@ -607,8 +608,114 @@ def check_series(M, x, r0="0.085", arg=None):
     return worst
 
 
+def r0_inner_np(M, wf):
+    """inner_np.Inner.r0_for: the start radius on arg xi^2 = 5pi/8 at which the weakest fast mode (label -M) still
+    dominates by e^12 (a numerical choice of the double-precision solver, quoted here only to test that ray)"""
+    w = float(W0().mid()) * float(wf)
+    sd = np.sin(np.pi / 8)
+    return float(np.sqrt(sd / (2 * (M * w * (np.pi / 2 + np.pi / 8) + 12.0))))
+
+
+def table(Ms=(3, 5), out_json=None):
+    """the validation grid of proof/A_lemmas_M.md section 2.4. Each row is the lemma at the hier.py zero or uniformly
+    over a box. kind 'lemma': a recommended configuration, must hold; 'limit': measured and reported (where the lemma
+    stops holding is a finding, not a control); 'control': must fail."""
+    rows = []
+
+    def row(M, kind, tag, r0, arg, diag, sector=None, box=None, cbox=None):
+        t0 = time.time()
+        ctx.prec = 320
+        xs = ZEROS[M]
+        try:
+            if box or cbox:
+                Maj.BOX = False
+                c0 = run_M([acb(v) for v in xs], M, r0, arg, sector, verbose=False, diag=diag)
+                Maj.BOX = True
+                if box:
+                    xx = [acb(arb(v, arb(box))) for v in xs]
+                else:
+                    xx = [acb(arb(v, arb(cbox)), arb(0, arb(cbox))) for v in xs]
+                o = run_M(xx, M, r0, arg, sector, verbose=False, kmins_in=c0["kmins"], N_in=c0["N"], k_in=c0["k"],
+                          diag=diag)
+                Maj.BOX = False
+            else:
+                o = run_M([acb(v) for v in xs], M, r0, arg, sector, verbose=False, diag=diag)
+            eb = max(float(v.upper()) for v in eta_bounds(o).values())
+            r = dict(M=M, kind=kind, tag=tag, r0=str(r0), arg=str(arg), sector=sector, diag=diag, box=box, cbox=cbox,
+                     N=o["N"], k=o["k"], a=float(o["a"]), lip=float(o["lip"].upper()), F=float(o["F"].upper()),
+                     rho=float(o["rho"].upper()), selfmap=float(o["selfmap"].upper()), eta=eb, ok=o["ok"],
+                     low_ok=o["low_ok"], sec=round(time.time() - t0, 1))
+        except ValueError as e:
+            Maj.BOX = False
+            r = dict(M=M, kind=kind, tag=tag, r0=str(r0), arg=str(arg), sector=sector, diag=diag, box=box, cbox=cbox,
+                     ok=False, err=str(e), sec=round(time.time() - t0, 1))
+        rows.append(r)
+        print(f"M {M} {kind:7s} {tag:24s} r0 {r0:6s} arg {arg:6s}{' +-' + str(sector) if sector else '':6s} "
+              f"{'diag ' if diag else 'plain'} {('box ' + box) if box else (('cbox ' + cbox) if cbox else 'point'):9s}: "
+              + (f"N {r['N']:3d} k {r['k']} a {r['a']:.4f} lip {r['lip']:.4f} F {r['F']:.2e} rho {r['rho']:.2e} "
+                 f"|eta| {r['eta']:.1e} ok {r['ok']}" if "N" in r else f"FAILED ({r['err']})") + f"  [{r['sec']} s]",
+              flush=True)
+        if out_json:
+            with open(out_json, "w") as fh:
+                json.dump(rows, fh, indent=1)
+        return r
+    for M in Ms:
+        r5 = f"{r0_inner_np(M, ZEROS[M][1]):.4f}"
+        # recommended: ray 3pi/8 at r0 = 0.085 (diag), and inner_np's ray 5pi/16 at its r0 (diag)
+        for r0, arg in (("0.085", "3pi/8"), (r5, "5pi/16")):
+            row(M, "lemma", "point", r0, arg, True)
+            row(M, "lemma", "point", r0, arg, False)
+            row(M, "lemma", "real box", r0, arg, True, box="1e-6")
+            row(M, "lemma", "complex (Cauchy) box", r0, arg, True, cbox="1e-3")
+        row(M, "lemma", "sector (old lemma)", "0.1", "3pi/8", True, sector="0.2")
+        # measured limits: r0 = 0.1 (the M = 1 radius)
+        row(M, "limit", "point", "0.1", "3pi/8", True)
+        row(M, "limit", "point", "0.1", "3pi/8", False)
+        row(M, "limit", "real box", "0.1", "3pi/8", True, box="1e-6")
+        row(M, "limit", "complex (Cauchy) box", "0.1", "3pi/8", True, cbox="1e-3")
+        row(M, "limit", "sector (old lemma)", "0.1", "3pi/8", False, sector="0.2")
+        row(M, "control", "r0 too large", "0.3", "3pi/8", True)
+    return rows
+
+
+def data_table(Ms=(3, 5), out_json=None):
+    """start data with parameter derivatives (start_data_M) over real boxes, recommended configurations"""
+    rows = []
+    for M in Ms:
+        r5 = f"{r0_inner_np(M, ZEROS[M][1]):.4f}"
+        for r0, arg in (("0.085", "3pi/8"), (r5, "5pi/16")):
+            for h in ("1e-9", "1e-6"):
+                t0 = time.time()
+                xb = [arb(v, arb(h)) for v in ZEROS[M]]
+                xi0, vals, ders, (eb, deb) = start_data_M(xb, M, r0, arg, +1, "1e-3", diag=True)
+                vr = max(max(float(v.real.rad()), float(v.imag.rad())) for v in vals)
+                dr = max(max(float(v.real.rad()), float(v.imag.rad())) for dl in ders for v in dl)
+                r = dict(M=M, r0=r0, arg=arg, h=h, val_rad=vr, der_rad=dr, eta=float(eb.upper()),
+                         deta=float(deb.upper()), sec=round(time.time() - t0, 1))
+                rows.append(r)
+                print(f"start data M {M}, ray {arg} r0 {r0}, box +- {h}: value radius {vr:.1e} (|eta| <= {r['eta']:.1e}),"
+                      f" derivative radius {dr:.1e} (Cauchy part {r['deta']:.1e})  [{r['sec']} s]", flush=True)
+                if out_json:
+                    with open(out_json, "w") as fh:
+                        json.dump(rows, fh, indent=1)
+    return rows
+
+
 def main():
     opts = {a.split("=", 1)[0][2:]: (a.split("=", 1)[1] if "=" in a else "1") for a in sys.argv[1:] if a.startswith("--")}
+    if "table" in opts:
+        Ms = tuple(int(v) for v in opts.get("Ms", "3,5").split(","))
+        rows = table(Ms, opts.get("json"))
+        good = all(r["ok"] for r in rows if r["kind"] == "lemma") and \
+            not any(r["ok"] for r in rows if r["kind"] == "control")
+        print(f"TABLE: every recommended configuration holds and every control fails: {good} (limits: "
+              + ", ".join(f"M {r['M']} {r['tag']} {'diag' if r['diag'] else 'plain'} {'holds' if r['ok'] else 'fails'}"
+                          for r in rows if r["kind"] == "limit") + ")")
+        sys.exit(0 if good else 3)
+    if "data-table" in opts:
+        Ms = tuple(int(v) for v in opts.get("Ms", "3,5").split(","))
+        data_table(Ms, opts.get("json"))
+        return 0
     if "check-m1" in opts:
         sys.exit(0 if check_m1() else 3)
     M = int(opts.get("M", "3"))
