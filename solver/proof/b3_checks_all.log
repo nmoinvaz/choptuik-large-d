@@ -1,0 +1,12 @@
+b3_crosscheck_m1                     exit 0 (expected 0) ok
+b3_crosscheck_m1_mut_omega_S         exit 1 (expected 1) ok
+b3_crosscheck_M                      exit 0 (expected 0) ok
+b3_crosscheck_M_mut_scale_G          exit 1 (expected 1) ok
+b3_gevrey_certificate_rho0.75        exit 0 (expected 0) ok
+b3_gevrey_certificate_rho1.05        exit 0 (expected 0) ok
+b3_gevrey_certificate_lc_rho1.05     exit 0 (expected 0) ok
+b3_gevrey_certificate_mutate_m0      exit 1 (expected 1) ok
+b3_old_check_controls                exit 0 (expected 0) ok
+b3_strip_check_M1                    exit 0 (expected 0) ok
+b3_strip_check_planted_1.3           exit 1 (expected 1) ok
+b3_strip_check_planted_2.2           exit 1 (expected 1) ok

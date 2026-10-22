@@ -1,4 +1,4 @@
-rho = 1.05, A = 2.72, w/w_inf = 1.0
+gauge = centre, rho = 1.05, A = 2.72, w/w_inf = 1.0
 largest t with a finite fixed point (float bisection): 0.008370;  certified t1 = 0.008119
   m (D)        V = 4.495791e+00   Phi(t1, V) <= 4.485262e+00   ok
   s (S)        V = 2.553945e-01   Phi(t1, V) <= 2.544353e-01   ok

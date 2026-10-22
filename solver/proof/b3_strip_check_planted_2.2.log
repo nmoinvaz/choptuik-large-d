@@ -1,0 +1,5 @@
+   sigma estimate (min dist to [0, oo) over poles in the disc): 0.001187
+x = 0.5000 D  : nearest pole       (1.15529 + 1.07117j) (|a| 1.5755); in |zeta| <= 2.521, Re > -0.5: min |Im| = 0.0011875 at (2.2021 - 0.0011875j)   <-- FAIL
+   sigma estimate (min dist to [0, oo) over poles in the disc): 1.22e-5
+x = 0.9500 D  : nearest pole       (1.06408 - 1.61488j) (|a| 1.9339); in |zeta| <= 3.094, Re > -0.5: min |Im| = 1.22e-5 at (2.20411 - 1.22002e-5j)   <-- FAIL
+FAIL: strip check |Im zeta| >= 1.0 (planted 2.2,1e-3)

@@ -1,0 +1,14 @@
+1. M = 1, K = 16: b3_outer_M vs b3_outer_m1, max relative difference 5.55e-57
+2. M = 3, x = 0.5, order 1: differences / (|value| + size of order) D1 D3 S1 S3 5.7e-17 7.1e-17 3.4e-17 3.4e-17
+2. M = 3, x = 0.5, order 2: differences / (|value| + size of order) D1 D3 S1 S3 5.8e-17 2.5e-16 1.0e-16 3.0e-16
+2. M = 3, x = 0.5, order 3: differences / (|value| + size of order) D1 D3 S1 S3 2.9e-16 5.2e-16 7.5e-17 2.0e-16
+2. M = 3, x = 0.5, order 4: differences / (|value| + size of order) D1 D3 S1 S3 2.8e-16 2.4e-03 5.1e-17 5.2e-16
+2. M = 3, x = 0.5, order 5: differences / (|value| + size of order) D1 D3 S1 S3 3.2e-03 2.3e-02 5.0e-16 6.6e-03
+2. M = 3, x = 0.5, order 6: differences / (|value| + size of order) D1 D3 S1 S3 6.6e-03 3.8e-02 1.4e-03 2.9e-02
+2. M = 3, x = 0.8, order 1: differences / (|value| + size of order) D1 D3 S1 S3 1.5e-16 6.4e-17 3.5e-17 2.6e-17
+2. M = 3, x = 0.8, order 2: differences / (|value| + size of order) D1 D3 S1 S3 6.5e-17 7.8e-17 1.3e-16 1.0e-16
+2. M = 3, x = 0.8, order 3: differences / (|value| + size of order) D1 D3 S1 S3 4.9e-16 9.3e-16 2.3e-16 1.6e-16
+2. M = 3, x = 0.8, order 4: differences / (|value| + size of order) D1 D3 S1 S3 2.2e-16 1.9e-04 1.0e-16 3.5e-04
+2. M = 3, x = 0.8, order 5: differences / (|value| + size of order) D1 D3 S1 S3 1.5e-04 2.1e-03 3.3e-05 7.6e-04
+2. M = 3, x = 0.8, order 6: differences / (|value| + size of order) D1 D3 S1 S3 1.0e-03 8.3e-03 3.2e-04 1.1e-03
+2. M = 3, orders 1-3 (before the truncation conventions differ): max difference / (|value| + size of order) 9.32e-16

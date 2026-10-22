@@ -194,8 +194,9 @@ $`P_M`$ acts on θ only, so the truncated models inherit the symmetry. $`\square
 
 In the centre gauge, write p = P/√n, m = M/√n. Every Taylor coefficient at x = 0 of the centre-regular solution of the
 M-harmonic model is a polynomial in (F̃'s harmonics, their conjugates, ω), with coefficients rational in n. The only
-possible poles are at n = 1 − j for 2 ≤ j ≤ (the order of the coefficient). Each Taylor coefficient of the formal series
-Y_ce is the expansion at n = ∞ of that rational function, so it converges, and its Borel transform is entire.
+possible poles are at n = 0 (the factor 1/n in p² + m² = (P² + M²)/n, a power of ε) and at n = 1 − j for
+2 ≤ j ≤ (the order of the coefficient). Each Taylor coefficient of the formal series Y_ce is the expansion at n = ∞ of
+that rational function, so it converges, and its Borel transform is entire.
 
 *Proof.* At x = 0 (C_selection.md §3.2) the coefficient of $`x^j`$ in each equation is determined by lower coefficients
 except through the indicial terms:
@@ -211,8 +212,14 @@ series in ε, because the determinants are invertible there. So the two agree, a
 n = ∞, since Proposition 1 has no negative powers of ε. $`\square`$
 
 *Meaning.* In the centre gauge an x-independent Borel singularity has zero strength at every fixed order in x. It can
-come only from the summation over the Taylor index. In the linear case the poles at n = −2, −4, … (spacing 2, from the
-parity of j) are what produce the Γ-function factors and the singularities at iπm (Lemma B3.4).
+come only from the summation over the Taylor index.
+- In the linear case the Taylor coefficients (α)_j(β)_j/((κ)_j j!) have poles at n = −1, −3, −5, … (spacing 2). These
+  produce the Γ-function factors and the singularities at iπm (Lemma B3.4).
+- The determinant factors j − 1 + n for odd j are not poles of the solution: they cancel against the numerators.
+- For M = 1, `b3_taylor_rational.py` (sympy) solves the Taylor recursion symbolically through x⁷ and checks the residual.
+  Besides the n = 0 of the scaling, it finds only the poles n = −1, −3, −5, again spacing 2
+  (`b3_taylor_rational.log`).
+- (P and M carry every power of x; only P − M is odd and P + M even.)
 
 ### 2.4 Lemma B3.4 (the linear case; proved)
 
@@ -608,6 +615,9 @@ The natural certificate for "no singularity in a neighbourhood of ℝ⁺" has tw
   closed for all k by monotonicity, with no induction by hand.
 - Trusted code: `b3_gevrey_certificate.py` (the system Φ and the check) and python-flint's arb.
 - Run time: seconds.
+- *Not yet independently reviewed.* A reviewer should rederive Φ term by term from the recursion of
+  `b3_outer_m1.py` (the derivation is in Lemma B3.7's proof and the script's docstring). The comparison with the actual
+  ‖D_k‖, ‖S_k‖ (k ≤ 40, ratios ≤ 0.38) is a consistency check, not a proof that Φ is a valid majorant.
 - *Improvement path, which costs only work.* The loss factor ≈ 100 against the true radius comes from the generating
   function treating interior convolutions as O(1). An induction on the plain majorant recursion keeps their O(1/k) size
   and would give about 0.146 at ρ = 0.75 (`b3_majorant_recursion.py`; floating point, not certified). It needs a by-hand tail estimate with the factorial
@@ -686,7 +696,7 @@ without ε. B3 as stated needs:
 
 | work | read on | statement | parameters? |
 |---|---|---|---|
-| B. L. J. Braaksma, *Multisummability of formal power series solutions of nonlinear meromorphic differential equations*, Ann. Inst. Fourier 42 (3) (1992) 517–540, doi:10.5802/aif.1301 | numdam landing page; full text on aif.centre-mersenne.org (OCR) | $`x^{\nu+1}y' = F(x, y)`$, x ∈ ℂ, y ∈ ℂⁿ, ν ≥ 1, F analytic in a neighbourhood of (0, a), with a formal power-series solution y = Σ c_m x^m, c₀ = a. Then y is multisummable (a proof of Écalle's theorem); the levels and singular directions come from the linear part's normal form (eigenvalues of the leading matrices); no nonresonance assumption | **no**: the words "parameter", "parameters" and "depending analytically" do not occur in the paper |
+| B. L. J. Braaksma, *Multisummability of formal power series solutions of nonlinear meromorphic differential equations*, Ann. Inst. Fourier 42 (3) (1992) 517–540, doi:10.5802/aif.1301 | numdam landing page; full text on aif.centre-mersenne.org (OCR) | $`x^{\nu+1}y' = F(x, y)`$, x ∈ ℂ, y ∈ ℂⁿ, ν ≥ 1, F analytic in a neighbourhood of (0, a), with a formal power-series solution y = Σ c_m x^m, c₀ = a. Then y is multisummable (a proof of Écalle's theorem); the levels and singular directions come from the linear part's normal form (eigenvalues of the leading matrices); no nonresonance assumption | **no**: the words "parameter", "parameters" and "depending analytically" do not occur in the paper's OCR text as read (the OCR garbles the formulas, not the prose) |
 | J.-P. Ramis, Y. Sibuya, *A new proof of multisummability of formal solutions of non linear meromorphic differential equations*, Ann. Inst. Fourier 44 (3) (1994) 811–848 | eudml record (abstract) | the same theorem, via the Malgrange–Ramis definition and the cohomological (Ramis–Sibuya) method | not in the abstract; the full text was not searched |
 | W. Balser, *Formal Power Series and Linear Systems of Meromorphic Ordinary Differential Equations*, Springer (2000) | not reread (bibliographic data verified in notes/REF_CHECK.md) | linear systems | — |
 | O. Costin, Duke Math. J. 93 (1998) 289–344 | arXiv page rate-limited; not reread | hypotheses (invertible Λ, nonresonance) fail here (C_selection.md §2) | — |
@@ -744,7 +754,7 @@ of Z⁺ and its asymptotics on the sector), as in A_certify.md.
 | B3.4 linear case: strip of width π/2 | | **proved** |
 | B3.5 convolution in star-shaped domains; 2Φ not on the principal sheet of a convolution fixed point | | **proved** |
 | B3.6 fast transport in the Borel plane; singular loci on Im ζ ∈ π(ℤ + ½) | scalar model | **proved** |
-| B3.7 outer formal series Gevrey-1 on every disc, every M, both gauges | | **proved**; constants **certified** for M = 1 (`b3_gevrey_certificate.py`) |
+| B3.7 outer formal series Gevrey-1 on every disc, every M, both gauges | | **proved**; constants **certified** for M = 1 (`b3_gevrey_certificate.py`; not yet independently reviewed) |
 | 2Φ absent near x = 1/√2 | | **proved** (every M, from B3.7); interval **certified** for M = 1 |
 | (H-σ), M = 1 | Borel transform analytic near [0, ∞) | **conjecture**; **numerical evidence** σ ≈ π/2; proof plan §4 with one open technical point (derivative loss) |
 | (H-σ), M ≥ 3 | | **conjecture**; numerical evidence that σ is set by an x-independent singularity near −1.2 (M = 3) |
@@ -820,7 +830,7 @@ as M grows (proof/B3_borel.md §5)".
 
 | Entry | Checked against | Verdict |
 |---|---|---|
-| Braaksma, Ann. Inst. Fourier 42 (3) (1992) 517–540, doi:10.5802/aif.1301 | numdam item AIF_1992__42_3_517_0 (title, author, volume, issue, pages, DOI); full text on aif.centre-mersenne.org | OK; claim check: no parameter dependence in the paper |
+| Braaksma, Ann. Inst. Fourier 42 (3) (1992) 517–540, doi:10.5802/aif.1301 | numdam item AIF_1992__42_3_517_0 (title, author, volume, issue, pages, DOI); full text (OCR) on aif.centre-mersenne.org | OK; claim check: no parameter dependence stated (OCR text) |
 | Ramis, Sibuya, Ann. Inst. Fourier 44 (3) (1994) 811–848 | eudml record 75082 | OK (bibliographic); abstract read |
 | Canalis-Durand, Ann. Inst. Fourier 43 (2) (1993) 469–483, doi:10.5802/aif.1341 | numdam item AIF_1993__43_2_469_0 and full text | OK |
 | Ramis, Schäfke, Nonlinearity 9 (2) (1996) 353–384, doi:10.1088/0951-7715/9/2/004 | neicon archive record (arch.neicon.ru) | OK (bibliographic); not applicable to B3 |
