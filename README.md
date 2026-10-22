@@ -461,6 +461,11 @@ From a literature search (October 2026); the references are listed at the end of
   black-string merger, not for scalar collapse. The rational formula here is an empirical fit, a ratio of polynomials
   with 13 coefficients, not a law derived from the equations. What it adds is one function for all D ≥ 4 that matches
   the points to their precision and predicts the double-double points it never saw up to D = 61.
+- **The large-D theory.** Proposition 2's light-cone coefficient follows from Gauss's connection formula once the mode
+  equation is recognised as hypergeometric; Donninger's 3+1 analysis (2008) contains the D = 4 case. Proposition 4 is an
+  instance of standard late-order (Dingle) analysis. The inner equations are, up to a change of variables, Rozali and
+  Way's leading-order large-D system (2018), whose heat-equation character they noted; Proposition 5 is the discretely
+  self-similar counterpart of their estimate γ = 1/2.
 - **Leading order.** That at leading order any periodic profile with any period solves the equations is in Ecker, Ecker
   & Grumiller 2026, and the free wave equation in similarity coordinates was analysed in 3+1 by Donninger (2008). Their
   next-to-leading-order condition is discussed next.
@@ -709,18 +714,6 @@ The results, in order:
 - [Proposition 5](#proposition-5-the-unstable-mode-at-infinite-d-is-exact): in s = r²/(2n) the inner problem is a
   nonlinear heat equation, and its shift symmetry in r² gives an exact unstable mode with λ = 2, which explains
   γ∞ = 1/2.
-
-What is new here, as far as a literature search shows ([Relation to published work](#relation-to-published-work)):
-the leading-order freedom (any periodic profile and any period solve the equations at leading order) is known in
-substance (Ecker, Ecker & Grumiller 2026), and the free wave equation in similarity coordinates has been studied
-in 3+1 (Donninger 2008).
-
-Not found in the critical-collapse or large-D literature searched ([notes/LIT_REVIEW.md](notes/LIT_REVIEW.md)): the
-all-orders statement (Proposition 1, within its ansatz), the closed-form light-cone coefficient in every dimension
-(Proposition 2, which follows from Gauss's connection formula; Donninger's 3+1 analysis contains the D = 4 case), and
-the Stokes reading (Propositions 3–4, an instance of standard late-order analysis, and the inner problem). The inner equations themselves are, up to a change of variables, Rozali
-and Way's leading-order large-D system (2018), and their heat-equation character was noted there. Proposition 5 is the
-discretely self-similar counterpart of Rozali and Way's estimate γ = 1/2, exact at D = ∞ given Conjecture 1.
 
 Everything below uses the scaling measured on the double-double solutions in
 [How the solution scales with D](#how-the-solution-scales-with-d), and the results are checked against those solutions
