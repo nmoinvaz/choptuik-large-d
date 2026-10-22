@@ -92,12 +92,13 @@ def main():
         print(f"{D:8.5f}  {f(g['128'])}  {f(g['256'])}  {f(g['512'])}  {f(g['1024'])}   {GL.get(round(D, 6), float('nan')):.9f}")
     # ours
     ours = []
-    for fn in [os.path.join(HERE, "data", "lowD_dd.jsonl")] + sorted(glob.glob(os.path.join(HERE, "..", "solver", "data", "lowD_*.jsonl"))):
+    for fn in [os.path.join(HERE, "data", "lowD_dd.jsonl")] + sorted(glob.glob(os.path.join(HERE, "..", "solver", "data", "lowD_f64*.jsonl"))):
         if os.path.exists(fn):
             for l in open(fn):
                 if l.strip():
                     r = json.loads(l)
-                    ours.append((os.path.basename(fn), r))
+                    if r.get("converged", True):
+                        ours.append((os.path.basename(fn), r))
     if ours:
         print("\nours against their lists (DeltaList / GammaList at the same D, where they have it)")
         for fn, r in ours:
