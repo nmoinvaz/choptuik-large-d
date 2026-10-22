@@ -199,12 +199,13 @@ Near D = 4 the points themselves set the limit: the solution needs many Fourier 
 moves by −4.3×10⁻⁴, −3.4×10⁻⁵ and −2.8×10⁻⁶ from 23 to 31 to 39 to 47 modes, so the points
 below D = 5 are extrapolations in the mode count. Above D ≈ 36 the computed γ scatter by up to
 6×10⁻⁵ around both this formula and the power series below, which agree with each other; the growth-rate solve
-is not reliable there. Below D = 4 the formula is not fitted; Δ(D) turns over there. The cubic through the
-47-mode points at D = 3.70, 3.75, 3.76, 3.80 (`solver/data/scan_down_kc47.jsonl`) puts the maximum at D = 3.75570,
-Δ = 3.466774 (a quartic with D = 3.9 added: the same to 2×10⁻⁶ in D, 3×10⁻⁸ in Δ), in agreement to 2×10⁻⁶ with
-Ecker, Ecker, Grumiller & Jechtl 2026 ([below](#relation-to-published-work)), the size of the 47-mode points' bias
-there (converged values below D = 4: [notes/LOW_D.md](notes/LOW_D.md)); the rational formula, extended
-outside its range, peaks at D = 3.75558, Δ = 3.466781.
+is not reliable there. Below D = 4 the formula is not fitted; Δ(D) turns over there. From double-double points at
+D = 3.70–3.80 (M = 80; `cd hp && python3 lowD_max.py`), polynomial fits put the maximum at D = 3.755725,
+Δ = 3.46677169 (spread over the fits 10⁻⁶ in D and 6×10⁻⁹ in Δ; the M = 80 truncation is about 10⁻⁹), in agreement
+with Ecker, Ecker, Grumiller & Jechtl 2026 ([below](#relation-to-published-work)). The 47-mode f64 points put it at
+D = 3.75570, Δ = 3.466774, 2×10⁻⁶ high, the size of their bias there (converged values below D = 4:
+[notes/LOW_D.md](notes/LOW_D.md)); the rational formula, extended outside its range, peaks at D = 3.75558,
+Δ = 3.466781.
 
 As D → ∞ (ε → 0):
 
@@ -290,29 +291,31 @@ limits the series to $`D \gtrsim 10`$ and forbids cutting it short (five terms a
 
 | D | Δ | γ |
 |---|---|---|
-| 4 | 3.4454524 | 0.3739610 |
+| 4 | 3.445452402 | 0.37396072 |
 | 5 | 3.2217019 | 0.4131269 |
 | 6 | 3.0094832 | 0.4300795 |
 | 7 | 2.8427532 | 0.4399912 |
 | 8 | 2.711790054444 | 0.4467164 |
-| 10 | 2.521078919562 | 0.4555879 |
-| 12 | 2.389188553641 | 0.4614056 |
-| 15 | 2.253098407194 | 0.4673656 |
-| 20 | 2.112080154580 | 0.4737107 |
-| 30 | 1.964957899258 | 0.4807927 |
-| 40 | 1.888568197910 | 0.484776 |
-| 50 | 1.841659503007 | 0.48736 |
-| 60 | 1.809889459975 | |
-| 70 | 1.78693476494 | |
-| 100 | 1.7450264844 | 0.49313 |
-| 1000 | 1.65424086 | 0.4992 |
-| ∞ | 1.643893746 ± 0.000000015 | 1/2 (assumed) |
+| 10 | 2.521078919562 | 0.4555879375 |
+| 12 | 2.389188553641 | 0.4614055891 |
+| 15 | 2.253098407194 | 0.4673655689 |
+| 20 | 2.112080154580 | 0.4737106 |
+| 30 | 1.964957899258 | 0.48079268 |
+| 40 | 1.888568197910 | 0.484776464 |
+| 50 | 1.841659503007 | 0.487364941 |
+| 60 | 1.809889459975 | 0.4891910657 |
+| 70 | 1.78693476494 | 0.490552 |
+| 100 | 1.7450264844 | 0.493134 |
+| 1000 | 1.65424086 | 0.499250 |
+| ∞ | 1.643893746 ± 0.000000015 | 1/2 (free fits: to about 5×10⁻⁷) |
 
 Δ for D = 10–60 is double-double, interpolated to 10⁻¹⁴ from [`hp/data/delta_dd.csv`](hp/data/delta_dd.csv)
 where D is not itself a computed point; Δ(8) is the solver's separate check run at D = 8 (Newton to
-$`\lvert F\rvert = 5\times10^{-31}`$, checks table below), which is not in the data file. Δ for D = 4–7 and γ up to
-D = 40 are from the f64 solver, within the precision of its points; γ(50), γ(100) and γ(1000) are the
-rational formula's values (the solver was not run there, and its γ is unreliable above D ≈ 36).
+$`\lvert F\rvert = 5\times10^{-31}`$, checks table below), which is not in the data file. Δ for D = 5–7 and γ for D = 5–8 are
+from the f64 solver, within the precision of its points; D = 4 is from the low-D double-double runs (M = 80,
+[notes/LOW_D.md](notes/LOW_D.md)). γ for D = 10–60 is double-double, a computed point at D = 10, 12 and 15 and
+interpolated elsewhere, given to the digits the interpolation supports; γ(70), γ(100) and γ(1000) extrapolate the
+double-double λ = 1/γ with λ∞ = 2 fixed, to within 1.3×10⁻⁶ over fit choices (`cd hp && python3 values_table.py`).
 Δ(70) and Δ(100) are extrapolations that every model fitting the double-double points agrees on,
 to 10⁻¹¹ and 2×10⁻⁸ (the half-integer series included). D = 1000 and ∞ assume analyticity in
 1/D; the half-integer series differ there by 3×10⁻⁶ and more.
@@ -425,8 +428,8 @@ From a literature search (October 2026); the references are listed at the end of
 - **D = 4.** Δ = 3.445452402(3) (Martín-García & Gundlach, PRD 68, 024011 (2003); see also Gundlach, PRD 55, 695
   (1997)) and γ = 0.373961 ± 10⁻⁶ (Ecker, Ecker, Grumiller & Jechtl 2026, who also give Δ = 3.445453). The formula's
   3.4454524 and 0.3739610 agree to about 10⁻⁸ and 10⁻⁷.
-- **The maximum below D = 4.** Ecker et al. 2026, Eq. (70): D = 3.755726 ± 10⁻⁶, Δ = 3.466772 ± 10⁻⁶. The 47-mode
-  points here give D = 3.75570, Δ = 3.466774 (agreement to about 2×10⁻⁶).
+- **The maximum below D = 4.** Ecker et al. 2026, Eq. (70): D = 3.755726 ± 10⁻⁶, Δ = 3.466772 ± 10⁻⁶. The double-double
+  points here give D = 3.755725, Δ = 3.46677169 (agreement within their ±10⁻⁶).
 - **D = 5: a resolution effect in the published value.** Ecker et al. 2026 give Δ = 3.22176, γ = 0.41322, which are
   5.8×10⁻⁵ and 9.3×10⁻⁵ above the values here. Our Δ(5) = 3.2217019446 comes from two independent codes: the f64
   solver at 31, 39 and 47 Fourier modes (3.221701945 ± 7×10⁻¹¹ extrapolated) and the double-double solver at

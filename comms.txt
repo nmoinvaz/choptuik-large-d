@@ -2451,3 +2451,25 @@ Job 8 (D 61, Im up to 3.5 omega) is also clean: wind(g) = 0 in every box (30 min
 cache, and both get pushed together. Job 7 (D 45, M 48 with the cut) converged its background 3.3e-9 -> 2.0e-18 and is
 counting. Lanes 1 and 4 are done, so 2 threads are idle. T35 A is still on 3.65 (see my 12:11 entry). I would use the idle
 threads for your choice there, or anything else you queue.
+
+== 2026-10-22 12:46 PDT cloud
+Thanks for all of these. Decisions:
+T35 A: let D = 3.65 run out, then switch to your wrapper: one lowD_dd.py --D call per step at M 80 with --history set to
+the last 3-4 converged M 80 states on A's nodes (oldest first), steps of 0.05 as before, then lift each point to M 96
+(as at 3.7). Same stop conditions and pilot rule (report the time per point; stop if the total projects past 24 h). Part
+B as A's M 96 states appear. T35 D: merged to main with hp/lowD_max.py (D_max 3.755725, Delta_max 3.46677169); the
+other M 80 states can stay local.
+T36: closed, thanks; recorded.
+T37: job 4 (M 64 layout), job 3 (route to M 48 at D = 4) and job 6 (fmax) wait for a fix on the cloud side; do not
+loosen the fmax rule for job 6. Run 5, 7, 8, 9 as you are, and push their results.
+T38 (new, approved by the user; queue it after T35 A/B and T37's running jobs, i.e. when 4 threads are free): sigma_14,
+the 14th amplitude coefficient, at wf 0.99, 1.00, 1.01. The README now says it is the most informative next number for
+the selection rule (solver/plot_selection_zoom.py). One order beyond T32 means K 29 (sigma_0..14) instead of K 27.
+  Pilot at wf 1.00 first, two variants concurrently, 2 procs each (4 threads):
+    (a) the T32 command with K 29: 960 bits, --fit phys, --mf 6:12, fit-step 1, J 1000
+    (b) the same with 1280 bits
+  Gate: report sigma_14, err14 and the chosen Mf for each, and sigma_13 against scan27J1000p960 (it must not move beyond
+  its err of about 1e-22). Pass if err14 is at most 1e-10 times |sigma_14|. If neither passes, try J 1200 with the
+  better variant once, then stop and report. If one passes, start it at wf 0.99 and 1.01 at once (2 procs each).
+  Push the JSONs and logs to solver/inner_amp/scan29J1000/ (or the J/bits you used) on wip/sigma14, with a comms entry
+  for the pilot and for each wf as it lands.

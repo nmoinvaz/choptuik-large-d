@@ -235,8 +235,9 @@ $k$ & $a_k$ & $b_k$ & $e_k$ & $f_k$ \\ \hline
 
 \begin{table}[htbp]
 \caption{Values. $\Delta$ for $D = 10$--$60$ is double-double (interpolated to $10^{-14}$ where $D$ is not a computed
-point); $\Delta(8)$ is a separate double-double run; $\Delta$ for $D = 4$--$7$ and $\gamma$ to $D = 40$ are
-double-precision; $\gamma(50)$, $\gamma(100)$, $\gamma(1000)$ are formula values. $\Delta(70)$ and $\Delta(100)$ are
+point); $\Delta(8)$ is a separate double-double run; $\Delta$ for $D = 5$--$7$ and $\gamma$ for $D = 5$--$8$ are
+double-precision, $D = 4$ is double-double; $\gamma$ for $D = 10$--$60$ is double-double (interpolated where $D$ is not
+a computed point), and $\gamma(70)$, $\gamma(100)$, $\gamma(1000)$ extrapolate it with $\lambda_\infty = 2$ fixed. $\Delta(70)$ and $\Delta(100)$ are
 extrapolations on which all models fitting the double-double points agree (to $10^{-11}$, $2\times10^{-8}$);
 $D = 1000$ and $\infty$ assume analyticity in $1/D$.}
 \label{tab:values}
@@ -244,15 +245,15 @@ $D = 1000$ and $\infty$ assume analyticity in $1/D$.}
 \begin{ruledtabular}
 \begin{tabular}{rll|rll}
 $D$ & $\Delta$ & $\gamma$ & $D$ & $\Delta$ & $\gamma$ \\ \hline
-4 & 3.4454524 & 0.3739610 & 20 & 2.112080154580 & 0.4737107 \\
-5 & 3.2217019 & 0.4131269 & 30 & 1.964957899258 & 0.4807927 \\
-6 & 3.0094832 & 0.4300795 & 40 & 1.888568197910 & 0.484776 \\
-7 & 2.8427532 & 0.4399912 & 50 & 1.841659503007 & 0.48736 \\
-8 & 2.711790054444 & 0.4467164 & 60 & 1.809889459975 & \\
-10 & 2.521078919562 & 0.4555879 & 70 & 1.78693476494 & \\
-12 & 2.389188553641 & 0.4614056 & 100 & 1.7450264844 & 0.49313 \\
-15 & 2.253098407194 & 0.4673656 & 1000 & 1.65424086 & 0.4992 \\
- & & & $\infty$ & $1.643893746 \pm 1.5\times10^{-8}$ & $1/2$ (assumed) \\
+4 & 3.445452402 & 0.37396072 & 20 & 2.112080154580 & 0.4737106 \\
+5 & 3.2217019 & 0.4131269 & 30 & 1.964957899258 & 0.48079268 \\
+6 & 3.0094832 & 0.4300795 & 40 & 1.888568197910 & 0.484776464 \\
+7 & 2.8427532 & 0.4399912 & 50 & 1.841659503007 & 0.487364941 \\
+8 & 2.711790054444 & 0.4467164 & 60 & 1.809889459975 & 0.4891910657 \\
+10 & 2.521078919562 & 0.4555879375 & 70 & 1.78693476494 & 0.490552 \\
+12 & 2.389188553641 & 0.4614055891 & 100 & 1.7450264844 & 0.493134 \\
+15 & 2.253098407194 & 0.4673655689 & 1000 & 1.65424086 & 0.499250 \\
+ & & & $\infty$ & $1.643893746 \pm 1.5\times10^{-8}$ & $1/2$ (fits: $\pm5\times10^{-7}$) \\
 \end{tabular}
 \end{ruledtabular}
 \end{table}
@@ -270,9 +271,9 @@ $4 \le D \le 30.2$; hollow points are held out, and green diamonds are double-do
 
 At $D = 4$ the formula gives $\Delta = 3.4454524$ and $\gamma = 0.3739610$, in agreement with
 $\Delta = 3.445452402(3)$~\cite{MartinGarciaGundlach2003} to about $10^{-8}$ and with
-$\gamma = 0.373961 \pm 10^{-6}$~\cite{EckerEtAl2026} to about $10^{-7}$. Below $D = 4$ a cubic through the 47-mode
-double-precision points at $D = 3.70$--$3.80$ puts the maximum of $\Delta$ at $D = 3.75570$, $\Delta = 3.466774$, in
-agreement to $2\times10^{-6}$ with $D = 3.755726$, $\Delta = 3.466772$ of~\cite{EckerEtAl2026}.
+$\gamma = 0.373961 \pm 10^{-6}$~\cite{EckerEtAl2026} to about $10^{-7}$. Below $D = 4$ polynomial fits to double-double
+points at $D = 3.70$--$3.80$ put the maximum of $\Delta$ at $D = 3.755725$, $\Delta = 3.46677169$ (spread over fits
+$6\times10^{-9}$), in agreement with $D = 3.755726$, $\Delta = 3.466772$ of~\cite{EckerEtAl2026} within their $\pm10^{-6}$.
 
 At $D = 5$, Ref.~\cite{EckerEtAl2026} gives $\Delta = 3.22176$ and $\gamma = 0.41322$, which are $5.8\times10^{-5}$ and
 $9.3\times10^{-5}$ above our values. Our $\Delta(5) = 3.2217019446$ comes from two independent codes that agree to
