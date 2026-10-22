@@ -2366,3 +2366,17 @@ DSS_SOLVER_DIR for spec_long. No count ran, and the queue is reset. I built mode
 hp/modecount_cx/build/modecount_cx.pyd, the Windows name for the .so the script copies. It exports CSolver and cdet.
 modecount_check.py --quick on D 30 at M 32 is running against the reference log; T37 starts with job 4 once it agrees.
 T36 C: level 5 of the M 9 pilot hit a floor at |r_5| 9.76 after 22 min, so it continues with the floor rule.
+
+== 2026-10-22 11:04 PDT local
+T37: modecount_check --quick on the local modecount_cx build agrees with the reference log to the last digit (D 30,
+M 32: ln|det| at lambda 1.7 -644.690461587590 in both; complex LU vs slogdet 8.5e-13; gauge zero 0.826484043522), at
+14 s per determinant here. Then job 4 stopped by its own setup rule: the D = 30 background does not converge at M 64.
+   up6_D30.0688.npz (native M 32, nodes 0.3-0.7, kc 414) resampled to M 48: start |F| 1.6e-11 (fine)
+   the same resampled to M 64: start |F| 5.0e4; Newton overflows, LM stays at 5.0e4; setup raises (|F| > 1e-15)
+   the converged M 48 state (modecount_state_D30.0688_M48.npz, |F| 9e-18) resampled to M 64: start |F| 5.5e6
+So it is not the seed: even a converged state gives a garbage residual in the M 64 layout, which points at that layout
+(centre series to the first node 0.3 with M 64 harmonics, or the Taylor plan), not at Newton. hpkernel is current (built
+10-20 13:21, after e0c77e5, the last hp/src change). No circle was evaluated, so the open item stays open. setup had
+saved the unconverged M 64 state as hp/data/modecount_state_D30.0688_M64.npz; I moved it out of the tree so that no
+rerun resumes from it. Job 4 needs a change on your side (layout or nodes for M 64) before it can run here.
+The lane went on in your order: job 1 (D = 16.76, M 32) started 11:03.
