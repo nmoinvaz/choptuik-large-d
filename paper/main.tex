@@ -80,7 +80,8 @@ are ruled out (Sec.~\ref{sec:limit}).
 \item The $1/D$ expansion never fixes the period (Proposition~\ref{prop:1}); the leading-order problem and its
 light-cone coefficient in closed form (Proposition~\ref{prop:2}); what gravity does to the non-analytic piece
 (Proposition~\ref{prop:3}); and a proof that the late orders of the $1/D$ series encode that coefficient as a Stokes multiplier
-(Proposition~\ref{prop:4}) (Sec.~\ref{sec:theory}).
+(Proposition~\ref{prop:4}) (Sec.~\ref{sec:theory}); and an exact unstable mode with $\lambda = 2$ at $D = \infty$, from a shift
+symmetry of $r^2$, which explains $\gamma_\infty = 1/2$ (Proposition~\ref{prop:5}).
 \item An $n$-free inner problem whose Stokes multipliers, by a conjecture stated with its hypotheses and the points where
 a proof is missing (Conjecture~\ref{conj}), select the period; its
 higher-harmonic conditions predict $|F_3/F_1| = 0.0551$ and $|F_5/F_1| = 0.00314$ for the echo profile at
@@ -693,20 +694,51 @@ $D = \infty$ band.}
 \end{figure}
 
 \emph{The critical exponent.} The double-double data give $\lambda_\infty = 2$ to about $10^{-6}$ (Sec.~\ref{sec:results}),
-and the inner problem explains it. In physical inner variables $s = r^2/(2n)$ and $t$, with $y = \sqrt{s}\,Y$ and
-$\sigma = \sqrt2\,s\,S$, the inner equations become a nonlinear heat equation with no explicit $s$ or $t$,
+and the inner problem explains it. Proposition~\ref{prop:1} holds for perturbations as well, so $\lambda$, like $\omega$, is
+selected beyond all orders; but one growth rate of the inner problem is exact. In physical inner variables, $\rho = r/\sqrt n$
+and $t$, one has $\xi = \rho/(-t)$, $L = \rho\,\partial_t$ at fixed $\rho$ and $\xi\partial_\xi = \rho\partial_\rho$ at fixed $t$. Put
+$s = \rho^2/2 = r^2/(2n)$, $y = \sqrt s\,Y$ and $\sigma = \sqrt2\,s\,S$.
+
+\begin{proposition}[an exact unstable mode at $D = \infty$]\label{prop:5}
+(i) In these variables the inner equations are the nonlinear heat equation
 \begin{equation}
 Y_t = cS,\qquad S_t = c\,\big(Y_s + \tfrac14 Y^3\big),\qquad c_s = \tfrac14 c\,Y^2 ,
 \end{equation}
-whose fast mode $e^{-1/(2\xi^2)}$ is the heat kernel. Its symmetries give exact growth rates: scaling (the self-similarity,
-$\lambda = 0$), $t$-translation ($\lambda = 1$, the time of the singularity) and $s$-translation, a shift of $r^2$, which is
-$e^{2\tau}$ in self-similar variables: $\lambda = 2$, combined with a reparametrization of $t$ that restores the normalization
-of $c$ at the centre. The perturbation recursion at $\lambda = 2$, started from the predicted profile, reproduces this mode to
-$10^{-180}$ in every resolved harmonic, while $\lambda = 1.9$ or $2.1$ miss by $7.5\%$ at the third order. Being the derivative of
-a family of exact solutions, the mode's Stokes multiplier vanishes whenever the background's does, so $\lambda_\infty = 2$
-needs no transcendental condition, unlike $\omega_\infty$. Physically the unstable mode shifts $r^2$, so
-$r_{\rm BH}^2 \propto p - p^*$ and $\gamma_\infty = 1/2$, the exact DSS form of the heuristic of Rozali and Way~\cite{RozaliWay2018}. Open are the
-uniqueness of this unstable mode at $D = \infty$ and the coefficient $3.0324/n$, which needs the $O(1/n)$ inner equations.
+with no explicit $s$ or $t$; they are invariant under $s$-translation, $t$-translation, the scaling
+$(t, s, Y, S) \to (at, a^2s, Y/a, S/a^2)$ and the reparametrizations $t \to T(t)$, $c \to T'c$.
+(ii) Let $(y, \sigma, c)(\xi, \theta)$ be a DSS inner solution with frequency $\omega$, regular at $\xi = 0$, with $y = 2F\xi + O(\xi^3)$
+and $c = 1 + F^2\xi^2 + O(\xi^4)$. Let $P$ be the periodic solution of $P + \omega P' = -2F^2$ and $X = \xi\partial_\xi + \omega\partial_\theta$. Then
+\begin{equation}
+\delta y = e^{2\tau}\Big(\frac{\xi y_\xi - y}{\xi^2} + P\,Xy\Big),\quad
+\delta\sigma = e^{2\tau}\Big(\frac{\xi\sigma_\xi - 2\sigma}{\xi^2} + P\,X\sigma\Big),\quad
+\delta c = e^{2\tau}\Big(\frac{c_\xi}{\xi} + (P + \omega P')\,c + P\,Xc\Big)
+\end{equation}
+solves the linearized inner equations: an exact perturbation with $\lambda = 2$. It is regular at $\xi = 0$, keeps $c(t, 0) = 1$,
+and has leading profile $\delta y = 2f\xi e^{2\tau} + O(\xi^3)$, $f = (2 + \omega\partial_\theta)(F + \omega F') - 2F^3 + P\,(F + \omega F')$.
+(iii) Wherever the fast-type Stokes multipliers of the background are defined by Borel summation, those of this
+perturbation are a linear image of them and vanish with them; so under Conjecture~\ref{conj}, $\lambda = 2$ is an exact growth
+rate of the $D = \infty$ critical solution.
+\end{proposition}
+
+\emph{Proof sketch.} (i) Direct substitution (sympy, residual $0$); no coefficient depends on $s$ or $t$. (ii) With
+$\tau = -\ln(-t)$, $\partial_t = e^\tau X$ on a DSS background and $\partial_s = e^{2\tau}\xi^{-2}\,\xi\partial_\xi$ at fixed $t$, so a generator of
+scaling weight $k$ gives a perturbation $\propto e^{k\tau}$; $s$-translation has weight $2$. It changes $c$ at the centre by
+$2F^2e^{2\tau}$, which the reparametrization $t \to t - e^\tau P(\theta)$ cancels exactly when $P + \omega P' = -2F^2$, solvable
+harmonic by harmonic since $1 + i\nu\omega \ne 0$. With $y = \sum_j d_j\xi^{2j+1}$, the $s$-translation part is
+$\sum_k 2(k+1)d_{k+1}\xi^{2k+1}$, and $X$ preserves parity. (iii) $\delta Z = \mathcal D Z$ for a first-order operator $\mathcal D$ with
+coefficients analytic away from $\xi = 0$; the regular formal solution with given leading profile is unique, and lateral
+Borel sums commute with $\mathcal D$, so the jump of $\delta Z$ is $\mathcal D$ applied to the background's jump. $\square$
+
+As a check, the perturbation recursion (gravity included, $\delta c(0) = 0$ imposed, nothing about symmetries built in) run at
+$\lambda = 2$ from $f$ reproduces the predicted coefficients to $10^{-180}$ in every resolved harmonic, while $\lambda = 1.9$ or $2.1$
+miss by $7.5\%$ at the third order. The mode is physical, not gauge: the reparametrization is gauge and $t$-translation
+($\lambda = 1$) shifts the accumulation time, but $s$-translation shifts $r^2$, with $r$ the areal radius. So
+$r_{\rm BH}^2 \propto p - p^*$ and $\gamma_\infty = 1/2$, the exact DSS form of the heuristic of Rozali and Way~\cite{RozaliWay2018}:
+\emph{if Conjecture~\ref{conj} holds, the $D = \infty$ solution has no unstable mode other than $\lambda = 2$ and the gauge mode
+$\lambda = 1$, and $\lambda(D)$ is continuous at $1/n = 0$, then $\gamma_\infty = 1/2$.} At finite $D$ the outer region and the $1/n$
+corrections depend on $r$ explicitly, so the mode survives as an ordinary unstable mode with $\lambda = 2 + O(1/n)$; the data
+give $2 + 3.0324/n$. Open are the uniqueness of the unstable mode at $D = \infty$ and the coefficient $3.0324$, which needs
+the $O(1/n)$ inner equations.
 
 \begin{figure}[t]
 \centering

@@ -92,6 +92,7 @@ Proved in the README and the paper, by the methods named; not yet refereed.
 | Proposition 4 | the late orders of the leading-order series carry the light-cone coefficient as a Stokes multiplier, with the ±iπ structure near the light cone, for 0.066 < x < 0.998 | Euler integral, Watson's lemma, Darboux | the linear case of B.3 (outer late orders ↔ inner Stokes constant) |
 | Inner linear constant | the inner Weber (parabolic-cylinder) Stokes constant equals the outer one: $`2^{-s-1/2}/(\Gamma(\alpha)\Gamma(\beta)) = 1/(\sqrt{2\pi}\,\Gamma(1+s))`$ | duplication formula; checked to 6×10⁻²⁷ by Borel–Darboux | the linear case of B.3 and A.1 |
 | Exact inner modes | the inner growth rates λ = 0 (θ shift) and λ = 1 (time shift) are exact | symmetries | the kernel to quotient out in B.7 |
+| Proposition 5 | in s = r²/(2n) the inner problem is an autonomous nonlinear heat equation; its r²-shift, gauge-fixed, is an exact λ = 2 mode whose multipliers vanish with the background's | symmetry, explicit series, Borel sums commute with the generator | γ∞ = 1/2 given Conjecture 1 and uniqueness of the unstable mode |
 
 So the linear (no-gravity) version of the whole chain, outer late orders → inner Stokes constant → light-cone
 coefficient, is proved. Everything nonlinear is open.
