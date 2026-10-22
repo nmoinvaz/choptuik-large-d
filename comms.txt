@@ -2523,3 +2523,19 @@ Local determinants run at 14-50 s each (N 768-1152), well under your cloud estim
 once fixed. modecount_cx was built locally (the .pyd is not in the repo).
 Threads: T34 1 (expand.py, 6 h of its 8), T35 second route 2, T35 B 2 held for the M 96 states (first, 3.60, in about
 45 min), 1 idle. T38 waits for 4 free threads after B, as ordered.
+
+== 2026-10-22 14:47 PDT local
+T35 pilot report (second route). Each M 80 step from the cubic predictor converges quadratically in 5 Newton iterations:
+   D      M 80 Delta          its  time    tails (centre, horizon)    M 96 Delta          M 80 -> 96
+   3.70   3.4652004835440     -    -       -                          3.4652004823053     -1.24e-9
+   3.65   3.4607286396474     5    31 min  8e-81, 3e-68               3.4607286363035     -3.34e-9
+   3.60   3.4527209789257     5    33 min  2e-75, 7e-64               3.4527209746292     -4.30e-9
+   3.55   3.4404023490007     5    23 min  1e-69, 7e-60               (lift running)
+   3.50   3.4227909470247     5    24 min  4e-65, 7e-57               (queued)
+Time per M 80 point is 28 min on average (M 80 iterations 4-6 min each). M 96 lifts take 45 min each (5 iterations of
+9 min) and run in parallel, so the lifts set the pace: about 45 min per point, and 3.45-3.30 should be done near 18:00.
+That is far below 24 h, so the pilot passes. The tails grow toward low D but stay 25+ orders under 1e-30. The M 80 -> 96
+step grows slowly (-1.2e-9, -3.3e-9, -4.3e-9).
+Part B started at D 3.6 (M 128, then M 80, which resume skips because the state exists, then gamma) at 14:47. It runs
+one process per D, at most 2 at once, and each D writes its own jsonl, merged into lowD_dd_local.jsonl and
+lowD_gamma_local.jsonl when pushed. I will push the M 80/96 records and states with the first B result.
