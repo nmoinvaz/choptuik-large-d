@@ -30,12 +30,13 @@ e2 = sp.diff(C1, th) - C1 * Y1 ** 2 / (4 if mut == "layer" else 2)
 u = sp.Symbol("u", positive=True)       # u = 1/theta
 r1 = sp.expand(sp.simplify(e1 * th ** sp.Rational(3, 2)).subs(th, 1 / u))
 r2 = sp.expand(sp.simplify(e2 * th ** sp.Rational(1, 2)).subs(th, 1 / u))
-eqs = []
-for p in range(1, 2 * K + 2):
-    eqs += [r1.coeff(u, p), r2.coeff(u, p)]
-eqs = [q for q in eqs if q != 0]
-sol = sp.solve(eqs[:2 * K], list(a) + list(bco), dict=True)
+# theta^{3/2} e1 and theta^{1/2} e2 are polynomials in u = 1/theta with even powers only; the coefficients
+# (e1: u^0, u^2, ...; e2: u^2, u^4, ...) determine (a_k, b_k) order by order (e2 at u^0 holds identically)
+assert sp.simplify(r2.coeff(u, 0)) == 0 or mut
+eqs = [r1.coeff(u, 2 * j) for j in range(K)] + [r2.coeff(u, 2 * j + 2) for j in range(K)]
+sol = sp.solve(eqs, list(a) + list(bco), dict=True)
 print("layer asymptotic coefficients:", sol)
+assert len(sol) == 1, "the order-by-order system is linear: one solution"
 sol = sol[0]
 
 with open("logs/expand_K2_zero_css.pkl", "rb") as fh:

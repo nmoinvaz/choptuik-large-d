@@ -1,0 +1,6 @@
+layer asymptotic coefficients: [{a1: -7/20, a2: 1503/2600, b1: 1/10, b2: -419/5200}]
+Y_1: [z^-2] outer = -2/(b0**2*f0**2); layer predicts -7/(5*b0**2*f0**2); difference -3/(5*b0**2*f0**2); ln z terms at z^-2: [0, 0]
+Y_2: [z^-4] outer = 52/(3*b0**4*f0**4); layer predicts 3006/(325*b0**4*f0**4); difference 7882/(975*b0**4*f0**4); ln z terms at z^-4: [0, 0]
+C_1: [z^-2] outer = 1/(b0**2*f0**2); layer predicts 2/(5*b0**2*f0**2); difference 3/(5*b0**2*f0**2); ln z terms at z^-2: [0, 0]
+C_2: [z^-4] outer = -13/(3*b0**4*f0**4); layer predicts -419/(325*b0**4*f0**4); difference -2968/(975*b0**4*f0**4); ln z terms at z^-4: [0, 0]
+FAIL (mutation: layer)

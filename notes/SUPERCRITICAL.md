@@ -273,6 +273,12 @@ agree to 10⁻¹⁰):
 
 `layer.py --mutate=sign` (the cubic's sign flipped) breaks the first integral (0.88) and FAILS.
 
+*Matching* (`match_check.py`, *checked symbolically*). The layer's own large-θ expansion,
+Y₁ = θ^{−1/2}(1 − 1/(2θ²) + 13/(12θ⁴) + …), C₁ = √(2θ)(1 + 1/(4θ²) − 13/(48θ⁴) + …), derived from the layer ODE
+alone, reproduces exactly the most singular terms of the outer CSS series through NNLO: [z⁻²]Y₁/β = −2/κ²,
+[z⁻⁴]Y₂/β = 52/(3κ⁴), [z⁻²]C₁/f = 1/κ², [z⁻⁴]C₂/f = −13/(3κ⁴), with no ln z at those powers. The two sides share no
+code. `--mutate=layer` (C₁′ = C₁Y₁²/4) FAILS.
+
 ### 3.4 Finite-n check: the exact CSS equations across the front (`css_bvp.py`)
 
 Integrating the exact equations inward from the outer region fails at once (`css_inward.py`, kept as a record): the b
@@ -438,6 +444,7 @@ Frolov's perturbations 1 instead, and Kim et al. quote (n−3)/√(2(n−2)), wh
 | series residuals fall like n^{−(K+1)} | numerical evidence (`formal_check.py`) |
 | breakdown at z ~ n^{−1/2}/κ̃ | checked symbolically (orders' singular powers, `expand.py`) |
 | layer equations and first integral | derived (formal leading order); first integral proved |
+| layer matches the outer series' most singular terms through NNLO (CSS) | checked symbolically (`match_check.py`) |
 | layer: no blow-up, Y₁(−∞) = 1.803807327, front at θ_f = −1.003 | numerical evidence (`layer.py`) |
 | no apparent horizon across the front, CSS, finite n | numerical evidence (`css_bvp.py`, n ≤ 6400) |
 | no apparent horizon for general β(τ) with β + β′ ≠ 0 | conjecture (quasi-static layer, not checked numerically) |
@@ -466,6 +473,7 @@ python3 formal_check.py logs/expand_K1_free.pkl tau        # exponents about -2 
 python3 formal_check.py logs/expand_K2_zero_css.pkl css    # exponents about -3                 ~5 min
 python3 y1_modes.py                                # lambda_1 = -1.0779457959, lambda_2 = -1.1619671389   ~2 min
 python3 layer.py                                   # Y1(-inf) = 1.803807327, theta_f = -1.002877           <1 min
+python3 match_check.py                             # layer vs outer singular terms through NNLO: PASS  ~1 min
 python3 css_bvp.py 1 0.8                           # table of section 3.4                    ~10 min
 python3 shift_check.py                             # PASS                                    ~1 min
 python3 rw_oscillaton.py                           # PASS                                    ~1 min
@@ -488,6 +496,7 @@ Each check was broken once on purpose and seen to fail (logs `logs/*_mut_*.log`)
 | `y1_modes.py` | `--mutate=y1` (Y₁ × 1.01) | FAIL: λ₁ −1.08873 vs −1.07795 |
 | `layer.py` | `--mutate=sign` (cubic's sign) | FAIL: first integral broken (0.88) |
 | `css_bvp.py` | `--mutate=cubic` (wrong layer: u = y²/4) | FAIL |
+| `match_check.py` | `--mutate=layer` (C₁′ = C₁Y₁²/4) | FAIL: [z⁻²]C₁ 2/5 vs 1 |
 | `shift_check.py` | `--mutate=rate` (shift ∝ e^{τ} instead of e^{2τ}) | FAIL: generator differs |
 | `rw_oscillaton.py` | `--mutate=sign` (sign in δ₀'s denominator) | FAIL: residual 10¹ |
 
