@@ -1,0 +1,7 @@
+  xi 0.1029: capped finite True, uncapped finite True, bit-identical True
+  xi 0.1188: capped finite True, uncapped finite True, bit-identical True
+  xi 0.1516: capped finite True, uncapped finite True, bit-identical True
+  xi 0.2000: capped finite False, uncapped finite True, bit-identical False
+capped: 24.8 s, 1 segment(s) capped; uncapped: 933.2 s
+PASS
+exit 0

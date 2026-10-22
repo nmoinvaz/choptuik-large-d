@@ -1355,8 +1355,15 @@ late orders of the inner series fitted with the predicted fast-mode exponents).
   full selection is slow; `--predict` (linear prediction of the higher levels' zeros from K) and `--floor` (stop each nested
   solve at 3× that level's measured noise floor) cut the nested solves after the first to a median of 1–3 residuals at
   levels 5 and 7 and 27 at level 3, and reproduce the M = 5 zero to 2×10⁻⁷ in about a third of the evaluations. M = 7 is
-  still out of reach: on the 8-thread machine its first cold level-5 solve, which runs on a single worker, had not finished
-  after 5 hours (`logs/hier_M7_fixA_floor*.log`), so the truncation sequence stops at M = 5.
+  now done ([proof/B_tail_M7.md](proof/B_tail_M7.md)). Three changes made it affordable and resolvable: a compiled
+  backend (`inner_stokes/inner_nb.py`, the same series and DOP853 integrator, 15–20× faster), a residual that skips a
+  pathological arc while the top harmonic is untuned (`hier_nb.py`), and the matching radius ξ₁ = 0.15, at which the
+  leakage of harmonics 5 and 7 into the low conditions is small enough for level 3 to converge (at 0.2 it stalls at
+  |r₃| ≈ 10⁻²). The outer Newton runs over complete fixed-(A, ω) solves (`m7_outer.py`). The seven-harmonic zero is
+  **A = 2.71922, ω/ω∞ = 1.000022** (±2×10⁻⁵, from the scatter of repeated solves; not yet checked at other matching
+  radii), with F₇/F₅ = 0.0572. The offset in ω goes −22%, +1.56%, −0.077%, +0.0022% for M = 1, 3, 5, 7; the last
+  ratio, −0.049 per pair, is the profile decay of the added pair (0.057) times a coupling of 0.85. The geometric limit
+  is ω/ω∞ = 0.999985, and the part above M = 7 is about 4×10⁻⁵ in ω.
 
 **Without truncation: the amplitude expansion** (`solver/inner_amp/`).
 
@@ -1447,8 +1454,8 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   0.9978–1.0003, nine: 0.9961–1.0006, eight: 0.9946–1.0011), the twelve-coefficient Padé approximants 0.9999, and a
   third estimator the same: S₁ is numerically an entire function of A² of exponential type, and the series of
   G = e^{−κ̄A²}S₁ (same zeros, no cancellation) puts the real zero at 0.99988, A₀ = 2.7194
-  ([proof/D_entire.md](proof/D_entire.md)). The five-harmonic truncation gives 0.999228 and its sequence alternates
-  (0.777, 1.0156, 0.999228; Aitken 1.0003).
+  ([proof/D_entire.md](proof/D_entire.md)). The truncation sequence alternates and converges (0.777, 1.0156, 0.999228,
+  1.000022; limit 0.999985, [proof/B_tail_M7.md](proof/B_tail_M7.md)).
 - *How far to trust those estimates.* A planted-truth test ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md))
   ran the same estimators, through the same code, on synthetic functions of the same class: Laplace integrals over a
   Borel arc whose coefficients match the real σ₀…σ₁₂ to 10⁻⁵, with the zero planted at ω/ω∞ = 0.996–1.004. The pair
@@ -1472,7 +1479,7 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md) §5). The rule itself is still a conjecture (hypotheses H1–H2,
   gaps (a)–(c)). Tightening the number needs more orders, approximants that model the competing singularity
   explicitly (differential or algebraic approximants), or M = 7, which evaluates the multiplier at real amplitude with
-  no series to resum (being fixed).
+  no series to resum (done: 1.000022).
 - *Shape.* The shape predictions at A = 2.72 are F₃/F₁ = 0.0551, F₅/F₁ = 0.00314 (data: above), and the D = ∞
   relation evaluated at each D's own amplitude and ω tracks the measured F₃/F₁ at D = 20–60 to within 0.004–0.006
   (0.126, 0.099, 0.087, 0.080, 0.075 against 0.130, 0.105, 0.093, 0.085, 0.080; `harm_pred.py`, heuristic).
@@ -1483,7 +1490,8 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
 has a real zero, order by order in the amplitude expansion. The simple-zero estimates (arg τ_k = π) come down from above,
 the floating-exponent estimates come up from below, and the shaded bracket between them narrows onto the line at 1, which
 is ω∞ from the finite-D solutions; the Padé approximants (ranges) and the factored series land inside it. Bottom left:
-keeping M harmonics, the error alternates in sign and shrinks fifteen- to twentyfold per pair, with the M = 7 prediction.
+keeping M harmonics, the error alternates in sign and shrinks fifteen- to twentyfold per pair; M = 7 lands inside the
+range predicted from M ≤ 5 (dashed).
 Bottom right: the effective exponent of the zero tends to 1, a simple zero, which is why the estimates from above are the
 asymptotically correct ones.
 
@@ -1741,7 +1749,7 @@ state extrapolated to D = ∞, 1.9226 ± 0.0003.
   $`{}_2F_0`$ Stokes constant (the inner problem), and propagation inside the light cone cannot change whether it
   vanishes (Proposition 3). With gravity, their vanishing with three and five harmonics, and without truncation,
   selects ω ever closer to ω∞ (to about 10⁻⁴ without truncation, at twelve orders), with the measured shape
-  ([above](#the-inner-problem-at-large-x)). What remains is to converge these further (M = 7; the amplitude series beyond its twelve computed orders
+  ([above](#the-inner-problem-at-large-x)). What remains is to converge these further (M = 9 and radius checks of M = 7; the amplitude series beyond its twelve computed orders
   across ω), to see whether the harmonic-1 condition lands exactly on ω∞, and to prove the working hypothesis that this is the
   selection rule. That would be an equation for ω∞ and F∞ alone, from which Δ∞ would follow to any precision.
 - **Assumed, not checked: the branch stays critical.** The growth rate is a local root of the growth-mode determinant near

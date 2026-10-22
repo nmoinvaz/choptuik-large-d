@@ -2023,7 +2023,11 @@ no code with it; the differences are of the size of the omitted $F_7$.
 The offset in $\omega$ thus goes $-22\%$, $+1.56\%$, $-0.077\%$ for $M = 1$, $3$, $5$: it alternates in sign and shrinks fifteen- to
 twentyfold per added pair of harmonics, and Aitken's extrapolation~\cite{Aitken1927} of the three gives $\omega/\winf = 1.0003$ (three terms are a thin
 basis). With the ratio of $-0.045$ to $-0.057$ per pair of Section~\ref{sec:tail}, the prediction for $M = 7$ is
-$\omega/\winf = 0.99997$--$1.00017$; that run has not been completed.
+$\omega/\winf = 0.99997$--$1.00017$. The seven-harmonic zero, computed with a compiled backend at matching radius
+$\xi_1 = 0.15$ (\repo{proof/B\_tail\_M7.md}), is $A = 2.71922$, $\omega/\winf = 1.000022$ ($\pm2\times10^{-5}$, from the
+scatter of repeated solves; not yet checked at other radii), inside the prediction. The last ratio, $-0.049$ per pair,
+is the decay of the added pair ($0.057$) times a coupling of $0.85$, and the geometric limit of the sequence is
+$\omega/\winf = 0.999985$.
 
 \subsection{The shape of the echo}
 Tuning the higher harmonics in the amplitude expansion of Section~\ref{sec:amp}, at $A = 2.72$ and $\omega = \winf$, gives
@@ -2050,7 +2054,7 @@ so the zero is simple and the crossings from above are the asymptotically correc
 by a factor of about $0.4$--$0.6$ per order, and Aitken's extrapolations of consecutive triples scatter around $1$ at the
 $10^{-4}$ level. With twelve coefficients the five central Pad\'e approximants of $(\ln S_1)'$ put the real zero at
 $0.99987$--$0.99991$ (at $\winf$ they are real to $|\im A_0| \approx 1.4\times10^{-4}$, at $A_0 = 2.7195$--$2.7198$), and the factored series $G$
-of Section~\ref{sec:entire} gives $0.99988$ at $A_0 = 2.7194$. The five-harmonic truncation gives $0.999228$.
+of Section~\ref{sec:entire} gives $0.99988$ at $A_0 = 2.7194$. The truncations give $0.999228$ ($M = 5$) and $1.000022$ ($M = 7$).
 
 \begin{table}[htb]
 \caption{Where the zero of $S_1$ becomes real, in $\omega/\winf$, order by order in the amplitude expansion.}
@@ -2078,8 +2082,8 @@ order $k$ & $\arg\tau_k = \pi$ (from above) & $\tau_{k-1}/\tau_k$ real (from bel
 \caption{The selection rule evaluated from the $D = \infty$ inner problem alone. Top: where the harmonic-1 multiplier has a real
 zero, order by order in the amplitude expansion; simple-zero estimates ($\arg\tau_k = \pi$) from above, floating-exponent estimates
 from below, Pad\'e ranges and the factored series inside the shaded bracket, which narrows onto $\winf$ from the finite-$D$
-solutions (dashed). Bottom left: the truncated route, $|\omega^*/\winf - 1|$ for $M = 1$, $3$, $5$ harmonics (alternating in sign) and
-the $M = 7$ prediction. Bottom right: the effective exponent of the zero tends to $1$.}
+solutions (dashed). Bottom left: the truncated route, $|\omega^*/\winf - 1|$ for $M = 1$, $3$, $5$, $7$ harmonics (alternating in sign),
+with the $M = 7$ range predicted from $M \le 5$ (dashed). Bottom right: the effective exponent of the zero tends to $1$.}
 \label{fig:selection}
 \end{figure}
 
@@ -2145,7 +2149,7 @@ a $\theta$-strip.
 by a computer-assisted existence proof in the manner of Reiterer and Trubowitz~\cite{ReitererTrubowitz2019} at one large $D$.
 \end{enumerate}
 Together these would derive $\Dinf = 2\pi/\omega^*$ from the $D = \infty$ equations. Numerically the rule already gives $\Dinf$ to
-about $10^{-4}$; more orders, or $M = 7$, would sharpen that, and whether $\Dinf$ has a closed form is open. For the critical
+about $10^{-4}$; more orders, or $M = 9$, would sharpen that, and whether $\Dinf$ has a closed form is open. For the critical
 exponent, open are the uniqueness of the unstable mode at $D = \infty$ and the coefficient of $1/n$ in $\lambda$. A
 centrifugal term of order $n/r^2$ (scalar multiplets with angular momentum, wave maps, Yang--Mills) becomes an explicit
 $1/s$ in the inner equations and removes the symmetry of Proposition~\ref{prop:5}. Other matter models test this, and the

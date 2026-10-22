@@ -160,6 +160,13 @@ harmonics, the multiplier is the jump across the Stokes line of solutions starte
   the target is a Lipschitz bound with per-pair constant about 0.05 (0.25 would suffice). Estimated tail in r₁: 4–6 above
   M = 5, 0.2–0.35 above M = 7, so certifying a 10⁻³ box needs M = 7 explicit with a margin of about 13. Prediction for
   M = 7: ω/ω∞ = 0.99997–1.00017. No evidence of secondary Stokes lines from F's complex singularities.
+  Since then ([proof/B_tail_M7.md](proof/B_tail_M7.md)): M = 7 gives ω/ω∞ = 1.000022 ± 2×10⁻⁵, inside the prediction,
+  with a per-pair ratio −0.049 (coupling 0.85); the tail above M = 7 is about 0.25 in r₁, against 3.9 needed for a 10⁻³
+  box. The tail lemma is stated for consecutive jump-conditioned truncations. Proved by hand: hier's Schur-corrected
+  residual has exactly the zeros of the jump-conditioned multiplier (the 10¹⁷ couplings cancel in its Schur complement),
+  the M-harmonic model is exact through σ_M in the amplitude expansion, and the weight e^{πνω/2} cancels exactly in
+  every tuning step. A ratio of ¼ per pair needs the linearized coupling bounded in X_σ* with σ ≤ 0.736, uniformly in
+  the harmonic; that inequality is the open part.
 - **A.4 Krawczyk / interval Newton** on the 2×2 real system r₁(A, ω) = 0 (real and imaginary parts), with the tuned
   higher harmonics eliminated. The outer Jacobian at M = 5 is well conditioned: singular values about 6.8×10³ and
   3.9×10³ (condition 1.7), with second derivatives about 1.3×10⁵. A box of radius ρ in (A, ω/ω∞) is certified if the

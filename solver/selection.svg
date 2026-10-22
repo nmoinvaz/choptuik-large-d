@@ -110,16 +110,18 @@
 <line x1="78.0" y1="660.0" x2="418.0" y2="660.0" stroke="#52514e" stroke-width="1"/>
 <text x="248.0" y="694.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal">harmonics kept</text>
 <text x="30.0" y="565.0" font-size="11" fill="#52514e" text-anchor="middle" transform="rotate(-90 30.0 565.0)">|ω*/ω∞ − 1|</text>
-<path d="M120.5,494.8 L205.5,538.7 L290.5,588.3" fill="none" stroke="#e87ba4" stroke-width="2" stroke-opacity="0.85" stroke-linejoin="round"/>
+<path d="M120.5,494.8 L205.5,538.7 L290.5,588.3 L375.5,647.0" fill="none" stroke="#e87ba4" stroke-width="2" stroke-opacity="0.85" stroke-linejoin="round"/>
 <g><circle cx="120.5" cy="494.8" r="4.5" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>M = 1: ω/ω∞ = 0.776994 (-22.301%)</title></g>
 <text x="129.5" y="488.8" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">−22.3%</text>
 <g><circle cx="205.5" cy="538.7" r="4.5" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>M = 3: ω/ω∞ = 1.015603 (+1.560%)</title></g>
 <text x="214.5" y="532.7" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">+1.56%</text>
 <g><circle cx="290.5" cy="588.3" r="4.5" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>M = 5: ω/ω∞ = 0.999228 (-0.077%)</title></g>
 <text x="299.5" y="582.3" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">−0.0772%</text>
-<line x1="375.5" y1="641.9" x2="375.5" y2="613.2" stroke="#e87ba4" stroke-width="2" stroke-dasharray="3 3"/>
-<g><circle cx="375.5" cy="613.2" r="4.5" fill="#fcfcfb" stroke="#e87ba4" stroke-width="1.6"/><title>M = 7 predicted: 0.99997–1.00017</title></g>
-<text x="384.5" y="617.2" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">M = 7 predicted</text>
+<g><circle cx="375.5" cy="647.0" r="4.5" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>M = 7: ω/ω∞ = 1.000022 (+0.002%)</title></g>
+<text x="384.5" y="641.0" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">+0.0022%</text>
+<line x1="375.5" y1="660.0" x2="375.5" y2="613.2" stroke="#e87ba4" stroke-width="2" stroke-dasharray="3 3"/>
+<g><circle cx="375.5" cy="613.2" r="4.5" fill="#fcfcfb" stroke="#e87ba4" stroke-width="1.6"/><title>M = 7 predicted from M ≤ 5: 0.99997–1.00017</title></g>
+<text x="366.5" y="617.2" font-size="10" fill="#0b0b0b" text-anchor="end" font-weight="normal">predicted</text>
 <text x="528.0" y="430.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">Is the zero simple? The effective exponent tends to 1</text>
 <line x1="528.0" y1="660.0" x2="868.0" y2="660.0" stroke="#e7e6e2" stroke-width="1"/>
 <text x="520.0" y="664.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">0.95</text>

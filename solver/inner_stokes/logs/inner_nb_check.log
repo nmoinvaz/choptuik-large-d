@@ -1,0 +1,31 @@
+  M 1 xi 0.2000 r_1: scipy +6.236368e+02+4.771639e+02j  numba +6.236368e+02+4.771639e+02j  |diff| 7.7e-08  scipy rtol noise 1.6e-07  ratio 0.47
+M 1: scipy 0.7 s, numba 0.78 s, worst |numba - scipy| / noise over used entries 0.47
+  M 3 xi 0.2000 r_1: scipy +1.630803e+07-7.437242e+06j  numba +1.630803e+07-7.437242e+06j  |diff| 2.2e-06  scipy rtol noise 3.3e-06  ratio 0.66
+  M 3 xi 0.2000 r_3: scipy -1.840442e+03-6.961746e+02j  numba -1.840442e+03-6.961746e+02j  |diff| 2.2e-10  scipy rtol noise 4.3e-10  ratio 0.53
+M 3: scipy 2.1 s, numba 0.05 s, worst |numba - scipy| / noise over used entries 0.66
+  M 5 xi 0.1188 r_1: scipy -1.127080e+05-2.532574e+03j  numba -8.375739e+04+5.865364e+03j  |diff| 3.0e+04  scipy rtol noise 8.7e+04  ratio 0.35  (unused)
+  M 5 xi 0.1188 r_3: scipy -1.178264e+01-2.119387e+00j  numba -1.176319e+01-2.135461e+00j  |diff| 2.5e-02  scipy rtol noise 1.6e-01  ratio 0.15  (unused)
+  M 5 xi 0.1188 r_5: scipy +9.154167e-04-1.188025e-03j  numba +9.143627e-04-1.188186e-03j  |diff| 1.1e-06  scipy rtol noise 1.0e-06  ratio 1.1
+  M 5 xi 0.2000 r_1: scipy +6.200835e+05+8.287264e+05j  numba +6.200835e+05+8.287264e+05j  |diff| 3.8e-02  scipy rtol noise 3.8e-02  ratio 0.99
+  M 5 xi 0.2000 r_3: scipy -1.379068e+02-7.469562e+01j  numba -1.379068e+02-7.469563e+01j  |diff| 5.6e-06  scipy rtol noise 5.7e-06  ratio 0.98
+  M 5 xi 0.2000 r_5: scipy +4.140139e-03+9.734621e-03j  numba +4.140139e-03+9.734621e-03j  |diff| 3.8e-10  scipy rtol noise 3.9e-10  ratio 0.97
+M 5: scipy 3.2 s, numba 0.15 s, worst |numba - scipy| / noise over used entries 1.1
+  M 7 xi 0.1028 r_1: scipy +7.608680e+09-8.322164e+09j  numba +5.932770e+09+1.816909e+09j  |diff| 1.0e+10  scipy rtol noise 1.9e+10  ratio 0.54  (unused)
+  M 7 xi 0.1028 r_3: scipy -1.205446e+06+5.299610e+05j  numba -1.199766e+06+5.435684e+05j  |diff| 1.5e+04  scipy rtol noise 5.0e+04  ratio 0.3  (unused)
+  M 7 xi 0.1028 r_5: scipy +1.752004e+02+1.539602e+02j  numba +1.750360e+02+1.540928e+02j  |diff| 2.1e-01  scipy rtol noise 1.4e-01  ratio 1.5  (unused)
+  M 7 xi 0.1028 r_7: scipy +2.275709e-02+1.208835e-02j  numba +2.275515e-02+1.208245e-02j  |diff| 6.2e-06  scipy rtol noise 1.7e-06  ratio 3.6
+  M 7 xi 0.1188 r_1: scipy +1.092783e+10-1.828402e+10j  numba +1.092779e+10-1.828397e+10j  |diff| 6.3e+04  scipy rtol noise 2.3e+04  ratio 2.7  (unused)
+  M 7 xi 0.1188 r_3: scipy +7.379305e+05-3.538798e+06j  numba +7.379307e+05-3.538798e+06j  |diff| 1.7e-01  scipy rtol noise 1.2e-01  ratio 1.5  (unused)
+  M 7 xi 0.1188 r_5: scipy +3.826471e+02-4.970128e+02j  numba +3.826471e+02-4.970128e+02j  |diff| 3.2e-06  scipy rtol noise 1.8e-06  ratio 1.7
+  M 7 xi 0.1188 r_7: scipy +2.755350e-02+4.919046e-02j  numba +2.755350e-02+4.919046e-02j  |diff| 1.4e-10  scipy rtol noise 1.1e-10  ratio 1.3  (unused)
+  M 7 xi 0.1515 r_1: scipy +6.054925e+10+8.912715e+10j  numba +6.054925e+10+8.912715e+10j  |diff| 1.9e+02  scipy rtol noise 2.7e+02  ratio 0.72  (unused)
+  M 7 xi 0.1515 r_3: scipy -7.002987e+05-2.703668e+07j  numba -7.002988e+05-2.703668e+07j  |diff| 5.4e-02  scipy rtol noise 7.0e-02  ratio 0.78  (unused)
+  M 7 xi 0.1515 r_5: scipy -3.852767e+03+4.911668e+02j  numba -3.852767e+03+4.911668e+02j  |diff| 7.8e-06  scipy rtol noise 1.0e-05  ratio 0.78  (unused)
+  M 7 xi 0.1515 r_7: scipy -1.971825e-01+1.642255e-01j  numba -1.971825e-01+1.642255e-01j  |diff| 5.2e-10  scipy rtol noise 6.6e-10  ratio 0.78
+  M 7 xi 0.2000 r_1: scipy -1.695601e+11-1.598184e+12j  numba -1.695601e+11-1.598184e+12j  |diff| 1.4e+03  scipy rtol noise 2.0e+03  ratio 0.71
+  M 7 xi 0.2000 r_3: scipy -5.268259e+07-1.366346e+08j  numba -5.268259e+07-1.366346e+08j  |diff| 1.5e-01  scipy rtol noise 1.9e-01  ratio 0.78
+  M 7 xi 0.2000 r_5: scipy -7.641851e+03-6.677519e+03j  numba -7.641851e+03-6.677519e+03j  |diff| 1.0e-05  scipy rtol noise 1.3e-05  ratio 0.78
+  M 7 xi 0.2000 r_7: scipy -3.458914e-01+1.201732e-01j  numba -3.458914e-01+1.201732e-01j  |diff| 3.7e-10  scipy rtol noise 4.7e-10  ratio 0.78  (unused)
+M 7: scipy 8.3 s, numba 0.51 s, worst |numba - scipy| / noise over used entries 3.6
+PASS
+exit 0

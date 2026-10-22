@@ -5,8 +5,9 @@
    the arg(tau_k) = pi crossings (simple-zero estimator, from above), the ratio estimates (exponent left free, from
    below), the central Pade approximants of (ln S_1)' (range over the consistent approximants) and the factored series
    G = exp(-kbar A^2) S_1. The line at 1 is w_inf from the finite-D solutions, which none of these use.
-2. The truncated route: |w/w_inf - 1| for M = 1, 3, 5 harmonics (hier.py, nested.py, zero_M1.py) and the M = 7
-   prediction of proof/B_tail.md, on a log scale; the sign alternates.
+2. The truncated route: |w/w_inf - 1| for M = 1, 3, 5, 7 harmonics (hier.py, nested.py, zero_M1.py; M = 7 from
+   m7_outer.py, proof/B_tail_M7.md) and the M = 7 range predicted from M <= 5 in proof/B_tail.md, on a log scale; the
+   sign alternates.
 3. The effective exponent c of tau_k ~ -c/(k x0^k) at w_inf, from three consecutive orders: it tends to 1, a simple zero,
    which is what makes the arg crossings the asymptotically correct estimator.
 
@@ -43,7 +44,7 @@ PADE = {7: (0.981, 0.991), 8: (0.987, 0.998), 9: (0.992, 0.998), 10: (0.9995, 1.
 # factored series G = exp(-kbar A^2) S_1 truncated at order K (solver/proof/entire_cert.py)
 ENTIRE = {9: 0.99767, 10: 1.00035, 11: 0.99987, 12: 0.99988}
 # truncated route: zero of the M-harmonic selection (zero_M1.py, nested.py, hier.py --schur)
-TRUNC = {1: 0.776994, 3: 1.015603, 5: 0.999228}
+TRUNC = {1: 0.776994, 3: 1.015603, 5: 0.999228, 7: 1.000022}  # M = 7: proof/B_tail_M7.md
 M7_PRED = (0.99997, 1.00017)          # proof/B_tail.md, reconcile.py
 # effective exponent Re c at w_inf from orders k-2..k
 EXPONENT = {6: 1.148, 7: 1.177, 8: 1.077, 9: 1.052, 10: 1.021, 11: 1.017, 12: 1.013}
@@ -172,9 +173,10 @@ def main():
         svg.text(x + 9, y - 6, f"{(v - 1) * 100:+.3g}%".replace("-", "−"), size=10, fill=INK)
     lo, hi = M7_PRED
     x7 = q.sx(7)
-    svg.line(x7, q.sy(max(abs(lo - 1), 1e-5)), x7, q.sy(abs(hi - 1)), cT, width=2, dash="3 3")
-    marker(svg, x7, q.sy(abs(hi - 1)), cT, f"M = 7 predicted: {lo}–{hi}", hollow=True)
-    svg.text(x7 + 9, q.sy(abs(hi - 1)) + 4, "M = 7 predicted", size=10, fill=INK)
+    ylo = 1e-5 if lo < 1 < hi else max(min(abs(lo - 1), abs(hi - 1)), 1e-5)  # a range that contains 1 reaches the floor
+    svg.line(x7, q.sy(ylo), x7, q.sy(max(abs(lo - 1), abs(hi - 1))), cT, width=2, dash="3 3")
+    marker(svg, x7, q.sy(abs(hi - 1)), cT, f"M = 7 predicted from M ≤ 5: {lo}–{hi}", hollow=True)
+    svg.text(x7 - 9, q.sy(abs(hi - 1)) + 4, "predicted", size=10, fill=INK, anchor="end")
 
     # panel 3: effective exponent
     r3 = Axes(svg, 528, yt, 340, 190, (5.5, 12.5), (0.95, 1.2), [(k, str(k)) for k in range(6, 13)],

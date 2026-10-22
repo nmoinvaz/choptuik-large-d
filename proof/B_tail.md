@@ -39,6 +39,9 @@ Gap (b) is real but not fatal, and it is narrower than the README's statement of
   5×10⁻⁴, as order counting predicts. It then gives σ_{M+1} too large by a factor 10⁴–10⁶, worse at M = 5 than at M = 3 (§4).
   A tail lemma must therefore be proved for the *jump-conditioned* truncation (S₃ = … = S_M = 0 imposed, the higher labels
   eliminated: `hier.py --schur`), whose sequence converges, not for a Galerkin projection of the equations.
+  (Correction: `hier.py`'s model is also a Galerkin truncation; it differs from `amp_trunc.py`'s in keeping the even
+  harmonic M + 1 of c and E. With that harmonic kept, the amplitude expansion changes σ₄ by 0.12% at M = 3 instead of
+  exploding; see [B_tail_M7.md](B_tail_M7.md) §4.)
 - **Worry 2 (tail size): the needed bound looks provable.** The jump-conditioned sequence alternates and shrinks by
   r ≈ −0.045 to −0.057 per pair, the profile's own decay times a coupling of 0.7–1.0 (§5). That puts the M > 5 tail at
   about 4–6 in r₁, the M > 7 tail at 0.2–0.35 and the M > 9 tail at about 0.015. With M = 7 carried explicitly, a 10⁻³ box
