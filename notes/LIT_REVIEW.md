@@ -326,3 +326,27 @@ The year range is unrestricted unless a year is named.
 **Not iterated to dry.** Round 4 still added a P3 work, and the INSPIRE and per-author channels are dead or owed. A
 fifth round should run the per-author sweeps and INSPIRE cited-by on Rozali–Way, EEG, EEGJ and Clark–Pimentel (with
 INSPIRE access), and re-run "oscillaton", "self-similarity horizon" and "critical spacetime crystal" as queries.
+
+## Addendum (2026-10-21): earlier formulas for Δ(D) and γ(D)
+
+Question: was the rational formula in 1/(D−2) for Δ(D) and γ(D) (README "The formula") published before? Abstracts and
+full texts checked:
+- **Bland et al.**, CQG 22, 5355 (2005), gr-qc/0507088 (abstract): an exponential fit for γ only,
+  "γ ∼ 0.466(1 − e^{−0.408 D})" over 3.5 ≤ D ≤ 14, with a large-D value of 0.466, not 1/2. No formula for Δ.
+- **Sorkin & Oren**, PRD 71, 124005 (2005), hep-th/0502034 (abstract): no formula; the trends "seem to indicate that
+  gamma reaches a maximum and Delta a minimum value around 11 <= D <= 13". The double-double data show neither: Δ
+  decreases and γ increases monotonically to D = 61.
+- **Bland & Kunstatter**, PRD 75, 101501 (2007), hep-th/0702226 (abstract): γ at D = 5 only. **Bland**'s thesis (2007)
+  conjectured Δ∞ = 5/2 (as already recorded).
+- **Taves & Kunstatter**, arXiv:1105.0878 (full text): values for D = 4–8 only, no formula.
+- **Ecker, Ecker, Grumiller & Jechtl**, SciPost Phys. 20, 176 (2026), arXiv:2602.10185 (abstract): numerical values for
+  3.05 ≤ D ≤ 5.5, analytic expansions in 1/D and in D − 3 suggesting Δ, γ → 0 as D → 3⁺, and the conjectures Δ → 0,
+  γ → 1/2 as D → ∞; no fitting formula.
+- **Kol**, hep-th/0502033 (full text, already recorded above): 2π/Δ = √((10 − D)/(D − 2)) and a formula for γ, but for
+  the black-string merger, not for scalar-field collapse.
+
+Verdict: no earlier formula for Δ(D) was found, and the only earlier fit for γ(D) (Bland et al.'s exponential) has a
+different form and limit. The rational formula is an empirical fit, a ratio of polynomials with 13 coefficients.
+Rational (Padé-type) fitting is a standard method, so what is new is the fitted function and its validation (precision
+across D ≥ 4, held-out agreement with the double-double points to D = 61, and the correct limits), not a law derived from
+the equations.
