@@ -18,7 +18,8 @@ n (double precision, not rigorous), on the complex paths of the proof.
   (C) Lemma K on an arc: the propagator E of the homogeneous fast equation x R_S' = Lam R_S (Lam = (D^K)^-1 A^K) along
       |x| = r from alpha down to arg x, against the bound exp(int (Re lam_scalar + |lam| ||H'||) du).
 
-Mutations: --mutate=tau  (tau of the S-components scaled by 1.01: (A1) and (A2) must fail);
+Mutations: --mutate=tau  (tau of the S-components scaled by 1.01: (A2) must fail; (A1) moves but stays within its
+           looser limit, which is set by the start error (x_0/|x|)^2 and the omitted orders);
            --mutate=weight (the bound with rho^(K+2) instead of rho^(K+1): (B) must fail at the larger n);
            --mutate=kernel (||H'|| dropped from the Lemma K exponent: (C) must fail).
 --load=file.npz reuses the path data saved by an earlier run (skips (A)).
@@ -399,7 +400,7 @@ def main():
     print(f"(C) Lemma K on the arc |x| = {rC:g}: max over the arc of ln||E|| - (bound exponent) = {worstC:.3e} "
           f"(must be <= 0); final ln||E|| = {np.log(np.max(np.sum(np.abs(Eprop), axis=0))):.3f}, bound {bound:.3f}  "
           f"{'OK' if okC else 'FAIL'}", flush=True)
-    okA = True if skipA else (a1 < 0.1 and a2 < 1e-2)
+    okA = True if skipA else (a1 < 0.1 and a2 < 2e-3)      # A2: 4x the spline interpolation error 5e-4
     if not skipA:
         print(f"(A) {'OK' if okA else 'FAIL'}")
     print("ALL CHECKS OK" if (okA and okB and okC) else "SOME CHECK FAILED")

@@ -534,8 +534,8 @@ At the upper end of the arc a fast component k e^{−1/(2z)} of Y⁺_out relativ
 | structural zeros of the atoms at the centre | `b8m_atoms.py 4 0 0` | removed entries ≤ 1.8×10⁻⁶⁶ | |
 | identities I1 to I4 (M = 1, K = 3, 4; M = 3, K = 2) | `b8m_identities.py` | ≤ 3×10⁻⁷⁷ | old ρ₂: I1 fails (0.07 to 0.36); q without (I+e)⁻¹: I2, I3 fail |
 | series part of (H8) vs B5's leading data; ε⁰ part vs the inner series | `b8m_h8.py --centre` | 76.5602, 3.23126, 6.46252; 10⁻⁶⁹ (`b8m_h8_centre.log`) | Φ without [xc′P]: the ε⁰ part no longer matches, fails |
-| (A1) actual remainder R at n = 10³ on the ray and 4 arcs (79 points) vs the next formal orders ε^{5..8}Z_k (in the solution's gauge), where ρ ≤ 0.03 | `b8m_numcheck.py 1000 4` | 2.0×10⁻³ | τ_S × 1.01: TAU_RESULT |
-| (A2) R vs Z − Z^K from an independent integration of the original (p, m, b, c) model, where resolvable | same | 5.0×10⁻⁴ (up to \|R\|/\|Z\| = 0.35) | τ_S × 1.01: TAU_RESULT |
+| (A1) actual remainder R at n = 10³ on the ray and 4 arcs (79 points) vs the next formal orders ε^{5..8}Z_k (in the solution's gauge), where ρ ≤ 0.03 | `b8m_numcheck.py 1000 4` | 2.0×10⁻³ (limit 0.1; the largest value is at \|x\| = 0.02, set by the start at x₀ = 10⁻³) | τ_S × 1.01 moves it to 6.0×10⁻³, below this check's resolution; caught by (A2) |
+| (A2) R vs Z − Z^K from an independent integration of the original (p, m, b, c) model, where resolvable | same | 5.0×10⁻⁴ (limit 2×10⁻³, four times the spline error; up to \|R\|/\|Z\| = 0.35) | τ_S × 1.01: 6.2×10⁻³ at every point, fails |
 | (B) R vs the certified bounds (h at ln n₀ = 73.89) | same | ratios V 0.013, S 0.024, β 0.20, c 0.080 | weight ρ⁶ instead of ρ⁵: β 1.8, c 1.9, fails |
 | (C) Lemma K: fast propagator on the arc \|x\| = 5 vs the log-norm bound | same | ln‖E‖ = −21.9 ≤ −15.4 | ‖H'‖ dropped: bound −26.6, fails |
 
