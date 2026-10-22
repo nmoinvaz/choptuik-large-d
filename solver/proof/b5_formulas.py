@@ -137,6 +137,8 @@ def jac_blocks(o, z, P, Phi, Pt, Ct, C, dP=None, dPhi=None, dC=None):
         dQ = o.Cinv(C, o.D(dP))
         out["P"] = o.add(o.sc(o.one / 2, Cop(o.add(o.op(dCE, P), o.op(CE, dP), o.sc(-o.one, o.D(dQ, 2))))),
                          o.sc(z / 2, o.add(o.op(dCE, Q0), o.op(CE, dQ))))
+        if MUT == "jacP":            # MUTATION: the P block scaled by 2
+            out["P"] = o.sc(2 * o.one, out["P"])
     if dPhi is not None:
         dQ = o.Cinv(C, dPhi)
         CtX = o.op(Ct, dPhi)
