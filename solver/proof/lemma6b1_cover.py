@@ -336,7 +336,7 @@ def check(h="1e-9", drop=None, verbose=True):
     # connectivity of each new tile's meeting set with the earlier union, and the agreement point in it (C7)
     G0 = PRect(arb(G0_RAD), None, -P34 - arb(G0_ANG), arb(0), "G0")
     done = [G0]
-    nedges = 0
+    nedges = npieces = 0
     for j, rw in enumerate(rows):
         for k, ph in enumerate(Phi[j]):
             if drop is not None and (j, k) == tuple(drop):
@@ -349,6 +349,7 @@ def check(h="1e-9", drop=None, verbose=True):
                 if ne is False:
                     continue
                 pieces.append((X.name, Pm, ne))
+            npieces += len(pieces)
             # agreement point: on the arc between the centres (k > 0), on the ray between the rows (k = 0, j > 0),
             # s_0 itself (tile (0, 0), against G0)
             if k:
@@ -385,13 +386,14 @@ def check(h="1e-9", drop=None, verbose=True):
         need(cov, f"point (|u| = {rows[jj]['rho']}, arg = phi_{jj},{kk}) not covered without tile ({jj}, {kk})")
     ok = not fails
     out = dict(ok=ok, fails=fails[:200], nfails=len(fails), rows=stats, tiles=len(done) - 1, ray=ray["legs"],
-               ray_sec=ray["sec"], start_rad=ray["start_rad"], drop=drop)
+               ray_sec=ray["sec"], start_rad=ray["start_rad"], drop=drop, pieces=npieces, links=nedges)
     if verbose:
         for s in stats:
             print(f"row {s['j']:2d} |u| = {s['rho']:7.2f}: {s['discs']:2d} discs (r = {s['r']}, n = {s['n']}), "
                   f"{s['steps']:4d} Lohner steps, max Lam {s['Lam']:.3f}, max box radius {s['box']:.1e}, "
                   f"max sup|y - y(c)| {s['sup']:.3g}, {s['sec']:.0f} s")
-        print(f"ray: {sum(l['steps'] for l in ray['legs'])} steps, {ray['sec']:.0f} s; tiles glued: {len(done) - 1}")
+        print(f"ray: {sum(l['steps'] for l in ray['legs'])} steps, {ray['sec']:.0f} s; tiles glued: {len(done) - 1} "
+              f"(meeting sets: {npieces} polar rectangles, {nedges} links)")
         print(f"LEMMA 6b_1 CHECK: {'PASS' if ok else 'FAIL'}" + ("" if ok else f" ({len(fails)} failures: {fails[:5]})"))
     return out
 
