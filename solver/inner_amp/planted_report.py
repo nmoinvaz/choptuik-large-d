@@ -59,7 +59,9 @@ def fam_label(r):
     if n.startswith("P-ARC wt"):
         return "P-ARC"
     if r["family"] == "C":
-        return "C (completions)"
+        return "C (completions)" if r["name"] != "C-EXP" else "C-EXP (rejected: pole |t| > 2)"
+    if r["family"] == "C-ARC (post-freeze)":
+        return r["family"]
     if r["family"] in ("REFIT",) or r["family"].startswith("P-NOISE"):
         return r["family"]
     return None
@@ -96,6 +98,8 @@ def main():
         ait = {int(k): v for k, v in e12["aitken_quad"].items()}
         print("\nAitken (quadratic crossings, triples ending at k = 7..12): "
               + ", ".join(f"{ait[k]:.6f}" for k in range(7, 13) if k in ait))
+    if n0:
+        print(f"\nDetectors on the real data (N0): K = 11 {R.detectors(n0, 11)}, K = 12 {R.detectors(n0, 12)}")
     n23 = by.get("N0 scan23phys")
     if n23:
         has12 = "12" in n23["est"]
@@ -127,7 +131,8 @@ def main():
     fams = group(by, fam_label)
     order = ["P-ARC", "P-ARC-B chord", "P-ARC-B mirror", "P-ARC-B beta2", "C (completions)", "P-NOISE-a",
              "P-NOISE-b 1e-12", "P-NOISE-b 1e-9", "P-NOISE-b 1e-6", "P-NOISE-b 1e-4",
-             "P-Z2 x2=9.0-1.0j", "P-Z2 x2=8.6+1.2j", "P-Z2 x2=9.3+0j", "REFIT"]
+             "P-Z2 x2=9.0-1.0j", "P-Z2 x2=8.6+1.2j", "P-Z2 x2=9.3+0j", "REFIT", "C-ARC (post-freeze)",
+             "C-EXP (rejected: pole |t| > 2)"]
     print("\n### Coverage (passes / plants)\n")
     print("| family | K | P1 bracket covers | P2 directions | P3 Padé ±1.2e-4 | P3 G ±1.2e-4 | P4 Aitken ±2e-4 |")
     print("|---|---|---|---|---|---|---|")
@@ -177,6 +182,8 @@ def main():
     print("| plant | ω_t | arg₁₂ | ratio₁₂ | Padé | G₁₂ | Aitken | P1 | detectors |")
     print("|---|---|---|---|---|---|---|---|---|")
     for f in order[:5] + order[10:]:
+        if f == "REFIT":
+            continue
         for r in fams.get(f, []):
             g = R.grade(r, 12)
             d = R.detectors(r, 12)
@@ -186,12 +193,13 @@ def main():
     # ---- completions
     chk = json.load(open(R.CHECKS)) if os.path.exists(R.CHECKS) else {}
     print("\n### Completions: truth\n")
-    for k in ("C-W1", "C-W2", "C-W3", "C-EXP"):
+    for k in ["C-W1", "C-W2", "C-W3", "C-EXP"] + [k for k in chk if k.startswith("C-ARC")]:
         if k in chk:
             c = chk[k]
             xr = {w: c["info"][w]["x_R"] for w in c["info"]}
             extra = {w: {kk: vv for kk, vv in c["info"][w].items() if kk in ("kappa", "beta", "max_pole",
-                                                                              "reproduce_max_rel")}
+                                                                              "reproduce_max_rel", "fit_resid_max",
+                                                                              "corr_at_x0_max")}
                      for w in c["info"]}
             print(f"- {k}: ω_R = {c['truth']['im_x']:.6f} (Im x), {c['truth']['im_sqrt']:.6f} (Im √x); "
                   f"x_R = {xr}; {extra}")
