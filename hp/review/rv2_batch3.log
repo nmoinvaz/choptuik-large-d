@@ -1,1 +1,5 @@
 == M = 48 residual of the double-double interpolated M = 32 state, D = 60
+D 60.001952 M 32: |F| per block 1.4e-23 3.3e-25 2.4e-26 9.9e-28 3.5e-29 2.3e-23 2.2e-32; linearised Delta change +1.2e-18
+D 60.001952 M 48: |F| per block 1.1e-15 7.9e-16 5.7e-16 2.8e-16 9.9e-17 2.9e-12 1.6e-32; linearised Delta change +4.4e-15
+== last node 0.75, full Newton steps without line search
+D 60.001952  Delta np.float64(1.8098842580017245) -7.213e-17  (saved np.float64(1.8098842580017245) -7.213e-17; diff +9.58e-15)  |F| 2.8e-20  est -1.1e-14  193s

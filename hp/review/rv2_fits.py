@@ -318,5 +318,6 @@ def cmd_selftest():
 
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "budget"
-    {"budget": cmd_budget, "influence": cmd_influence, "rules": cmd_rules, "clean": cmd_clean,
-     "selftest": cmd_selftest, "variants": cmd_variants}[cmd]()
+    r = {"budget": cmd_budget, "influence": cmd_influence, "rules": cmd_rules, "clean": cmd_clean,
+         "selftest": cmd_selftest, "variants": cmd_variants}[cmd]()
+    sys.exit(1 if r is False else 0)

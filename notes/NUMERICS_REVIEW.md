@@ -83,7 +83,8 @@ What I would change (none of it is done here):
 | 1d. double-double kernels (two-sum, FMA two-product, Sum2 dot, divide) | OK | — |
 | 1e. independent residual at saved states | OK, 2×10⁻³¹ (R1) | — |
 | 1f. f64 drops in the driver (predictor, deflated step, junk hold, resampling) | OK: all self-corrected by Newton | — |
-| 1g. Taylor order, step tolerance, series orders, node placement at D = 60 | OK, ≤ 6×10⁻¹⁸ (R2) | — |
+| 1g. Taylor order, step tolerance, series orders, first node at D = 60 | OK, ≤ 6×10⁻¹⁸ (R2) | — |
+| 1g′. last node moved 0.7 → 0.75 at D = 60 | inconclusive: that layout does not converge (R2) | — |
 | 1h. convergence in M at D = 50 and 60 | OK: M = 48 moves Δ by 3×10⁻²⁰ and 2.5×10⁻¹⁸ (R2) | — |
 | 1i. kfreeze-13 cut, D = 40, 50, 60 | +1.5, −1.1, −1.2×10⁻¹⁵, not the quoted 3×10⁻¹⁷ (R2) | cosmetic for Δ∞, ≤ 5.5×10⁻¹⁰ (F5) |
 | 1j. junk hold / trend and the dnp corrector | OK: Δ returns to 6×10⁻¹⁸ after 10⁻⁸ kicks (R2) | — |
@@ -107,7 +108,7 @@ What I would change (none of it is done here):
 ## Issues, ranked
 
 **F1 (affects the error bar). The selection rule is fragile, and was chosen after seeing the spread.**
-`dinf_budget.py`'s first version (commit 3f28532) used every degree that reaches the floor; ten minutes later (23946ff)
+`dinf_budget.py`'s first version (commit 3f28532) used every degree that reaches the floor; five minutes later (23946ff)
 it used the two lowest, with the explanation that higher degrees "wander by 10⁻⁷ to 10⁻⁶". The README's bar was set
 from the second version (32e4317). The explanation is reasonable (higher degrees add freedom only at the unconstrained
 end), but the bar is then a property of the rule, not of the data, and it does not respond to the data monotonically
@@ -367,14 +368,17 @@ Newton to the floor:
 | M = 48 τ-points (resampled in double-double; deflated Newton, then Newton) | 1.7×10⁻²³ | +2.5×10⁻¹⁸ | +6.5×10⁻¹⁸ |
 | kfreeze 15, full Newton steps without line search, then Newton | 6.6×10⁻²¹ | **−1.20×10⁻¹⁵** | +1.3×10⁻¹⁷ |
 | M = 48 interpolated in f64 (`resample_z`), plain Newton | 6.0×10⁻⁸ (diverged) | −7.0×10⁻⁸ | |
+| last node 0.75, full Newton steps without line search | 2.8×10⁻²⁰ (not settled) | +9.6×10⁻¹⁵ | −1.1×10⁻¹⁴ |
 
 - **Taylor stepping, series truncation, first node: OK.** Their effect is at the 10⁻¹⁸ floor.
 - **Junk handling: OK.** Kicks of 10⁻⁸ along the three weakest directions come back to within 6×10⁻¹⁸, so the predictor
   options (`--junk_hold`, `--junk_trend`) and the corrector's starting point do not bias Δ once a point is iterated to
   the floor.
-- **Last node 0.75:** the re-noded start is already at the floor and Newton finds no descent; the horizon block's
-  sensitivity rises from 9×10¹³ to 3×10¹⁷ with u₀ = 0.25, and the linearised correction is −1.5×10⁻¹⁶. Inconclusive
-  at the 10⁻¹⁶ level, consistent with "about 10⁻¹⁶".
+- **Last node 0.75: inconclusive.** The re-noded start is at the floor and Newton with line search finds no descent;
+  the horizon block's sensitivity rises from 9×10¹³ to 3×10¹⁷ with u₀ = 0.25. Full steps do not settle either: after
+  six, |F| = 2.8×10⁻²⁰, Δ − saved = +9.6×10⁻¹⁵ and the remaining linearised correction is −1.1×10⁻¹⁴ (the start's was
+  −1.5×10⁻¹⁶). This layout is worse conditioned than the one the runs use, and I could not converge it; it does not
+  bound the node-placement error at D = 60 better than about 10⁻¹⁴. The first-node move (0.25) is clean.
 - **kfreeze (F5).** With line search, Newton in the kfreeze-15 (and 17) layout takes no step from the kfreeze-13
   point, so Δ "agrees exactly"; the linearised correction says −1.2×10⁻¹⁵. Full steps without line search converge
   (|F| 6.6×10⁻²¹) and move Δ by −1.20×10⁻¹⁵, as linearised. The same at D = 50 and 40 is in F5.
@@ -383,7 +387,10 @@ Newton to the floor:
   failure, and it shows the test can move Δ. Interpolated in double-double (`rv2_resolve.py`'s `resample_dd`, round
   trip 32 → 48 → 32 exact to 1.2×10⁻³²) and converged with the scans' corrector (deflated Newton, then Newton), M = 48
   reaches the floor and moves Δ by +2.5×10⁻¹⁸. At D = 50 (`up8_D50.0075`) the same gives +3.1×10⁻²⁰ at
-  |F| = 7.1×10⁻²⁵. PENDING_M48START
+  |F| = 7.1×10⁻²⁵. The test has something to correct: the interpolated M = 32 state leaves an M = 48 residual of
+  10⁻¹⁵–3×10⁻¹² per block (`rv2_m48start.py`; 2.9×10⁻¹² in the horizon block) and a linearised Δ change of
+  +4.4×10⁻¹⁵, and the converged M = 48 solution still lands within 2.5×10⁻¹⁸ of the M = 32 one. (The linearised
+  change overstates the true one a thousandfold here: with |F| at 10⁻¹² the weak directions are far from linear.)
 
 ### 1k. junk_only acceptance and the up6 points
 
@@ -557,8 +564,10 @@ pattern, not of the truth, since N2 shows almost none. Two side results:
 
 ### 4f. Failure classes
 
-- *Checks that cannot fail:* the cross-machine comparison at f64 resolution (F8); the series-tail check after acceptance
-  (F9); `dinf_budget.py`'s "consistency check vs dd_fits_mp.fit" prints a difference but asserts nothing.
+- *Checks that cannot fail:* the kfreeze 13 / 15 comparison when Newton takes no step (F5): "agrees" by construction;
+  the cross-machine comparison at f64 resolution (F8); the series-tail check after acceptance (F9);
+  `dinf_budget.py`'s "consistency check vs dd_fits_mp.fit" prints a difference but asserts nothing; a planted error
+  confined to the points above 60.1 cannot push the truth out of the two-snapshot range (§4e, N4).
 - *Fixtures produced by the code under test:* `planted_dinf.py`'s truth (§4e); `reproduce.py`'s expected Δ∞ ± 10⁻⁸ is a
   regression value from the same code (fine as a regression test, not as a validation).
 - *Silent passes:* the junk_only acceptance (§1k) by design; `export_dd.py` silently lets the last run win on a duplicate D
@@ -584,6 +593,7 @@ the sign test (the bracket starts at ±3×10⁻⁴). I did not rerun it.
 - **The kfreeze cut beyond harmonic 15–17**, and at D = 35.35–40 directly (I have the runs' restarts at 34.6–35.2 and
   my solves at 40, 50, 60). Taking kfreeze 15 as the truth assumes the harmonics above 15 matter less, which the
   kfreeze-17 linearisation supports at D = 60 only.
+- **The last node's placement** (§1g–1j): moving it to 0.75 gives a layout I could not converge.
 - **Points below D = 27 at the 10⁻¹⁶ level.** The spacing there (0.25) is too coarse for the leave-one-out test, and I
   ran no solves below D = 40; the layout-change restarts at 16.75 and 21.35 agree to the printed digit.
 - **The runs' command lines.** kfreeze, tolerances and correctors are not stored in the JSON records; I took them from
@@ -603,5 +613,8 @@ From the repository root, with hpkernel built (`hp/build.sh`) and python-flint 0
 | R4 | `python3 hp/review/rv2_data.py [/home/claude/dss/hp_scan] [--break=merge\|round\|lo]`; `rv2_runs.py` | 2 s |
 | R5 | `python3 hp/review/rv2_fits.py selftest\|budget\|influence\|rules\|variants\|clean [--decimal] [--detail=K] [--kfcut=D:v,…]` | 20 s – 2 min each |
 | R6 | `python3 hp/review/rv2_planted.py` | 1 min |
+| misc | `python3 hp/review/rv2_misc.py` (loader error, cleaning sets, the D = 10.75 point, tails' leave-one-out, sign counts, 2π) | 2 min |
 
 Logs: `hp/review/rv2_*.log`, `rv2_resolve_D*.jsonl`, `rv2_residual.jsonl`. `rv2_runs.py` lists every run's settings.
+`rv2_residual.py`, `rv2_data.py`, `rv2_fits.py selftest`, `rv2_planted.py` and `rv2_misc.py` exit non-zero when their
+check fails; `--break=…` (R1, R4, R3) and the planted control C1 (R6) show each one firing.

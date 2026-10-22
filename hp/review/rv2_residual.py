@@ -27,6 +27,7 @@ y = J^-T e_Delta it gives the Delta error the kernel cannot see: -y . F_indep vs
 by a relative 1e-15 in it. Either must make the agreement check fail.
 """
 import argparse
+import sys
 import json
 import os
 import time
@@ -299,6 +300,9 @@ def main():
     tot_k = tot_i = arb(0)
     worst_rel = 0.0
     nbl = K + 1
+    # pass criteria: every block's two evaluations agree to max(1e-29, 1e-20 |F_kernel|), and the centre and horizon
+    # series satisfy the equations to 1e-27 (weighted by the node's x0^k or u0^k)
+    fail = [f"{k} series equations {v['eq_worst']:.1e}" for k, v in report.items() if v["eq_worst"] > 1e-27]
     for b in list(range(nbl)) + ["phase"]:
         idx = range(L - 1, L) if b == "phase" else range(b * 4 * M, (b + 1) * 4 * M)
         if any(Fi[i] is None for i in idx):
@@ -306,6 +310,8 @@ def main():
         fk = max(abs(float(Fk[i].mid())) for i in idx)
         fi = max(abs(float(Fi[i].mid())) for i in idx)
         df = max(abs(float((Fi[i] - Fk[i]).mid())) for i in idx)
+        if b != "phase" and df > max(1e-29, 1e-20 * fk):
+            fail.append(f"block {b} differs by {df:.1e}")
         rad = max(float(Fi[i].rad()) for i in idx)
         ek = -sum((y[i] * Fk[i] for i in idx), arb(0))
         ei = -sum((y[i] * Fi[i] for i in idx), arb(0))
@@ -318,9 +324,12 @@ def main():
           f"worst |diff| / |F_kernel| per block {worst_rel:.1e}  ({time.time() - T0:.0f}s)")
     report.update(dict(state=os.path.basename(a.state), D=D, perturb=a.perturb, brk=a.brk, kfreeze=kf,
                        est_k=float(tot_k.mid()), est_i=float(tot_i.mid()), worst_rel=worst_rel, KT=a.KT, SUB=a.SUB))
+    report["fail"] = fail
     if a.out:
         with open(a.out, "a") as f:
             f.write(json.dumps(report) + "\n")
+    print("FAIL: " + "; ".join(fail) if fail else "PASS")
+    sys.exit(1 if fail else 0)
 
 
 if __name__ == "__main__":

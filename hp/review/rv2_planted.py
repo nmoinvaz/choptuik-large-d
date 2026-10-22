@@ -101,6 +101,7 @@ def main():
                 print(f"     D {r['dmin']:>2}..{r['dmax']:<5} {r['model']:3s} deg {r['deg']}: "
                       f"{float((r['lim'] - LIMIT).mid()):+.2e} (res {r['res']:.1e})")
     print("PASS (N1-N3 inside, control outside)" if not bad else f"FAIL ({bad} of {len(plants)} plants on the wrong side)")
+    sys.exit(1 if bad else 0)
 
 
 if __name__ == "__main__":
