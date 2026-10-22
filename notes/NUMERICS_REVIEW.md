@@ -21,25 +21,27 @@ briefly `hp/gamma_dd.py`. Reviewer: agent RV2. Test scripts and their logs: `hp/
 
 ## Verdict
 
-**The solver is right, and the points are better than the README says where it matters most. The error bar on Δ∞
-covers every truth I could plant, but it is a fragile statistic, and its centre is probably high by about 10⁻⁸.**
+**The solver is right. The points are less noisy than the README says but carry a smooth bias of about 10⁻¹⁵ from
+the kfreeze cut that its check missed; neither changes Δ∞ at the quoted precision. The error bar on Δ∞ covers every
+truth I could plant, but it is a fragile statistic, and its centre is probably high by about 10⁻⁸.**
 
 - **Equations and arithmetic.** I re-derived the centre, Taylor and horizon recursions from the field equations of
   `solver/dss.py` and found no error. An independent evaluation of the residual (R1: python-flint at 200 bits, my own
   τ-derivative from the DFT, my own Picard integrator, the kernel's centre and horizon series verified order by order)
   agrees with the kernel's residual to 2×10⁻³¹ in every block at D = 60.0 and at the second machine's last state
-  (D = 61.026), and PENDING_R1_PERT away from the solution. The negative controls fire.
+  (D = 61.026), and to 10⁻²⁵ relative away from the solution (|F| up to 8×10⁻²). The negative controls fire.
 - **Discretisation at D = 60** (R2). Taylor order and step tolerance, series orders, the first node, and kicks of 10⁻⁸
   to the weak p1 harmonics 9, 11 and 13 move Δ by at most 6×10⁻¹⁸, and M = 48 τ-points by 2.5×10⁻¹⁸. The kfreeze-13
-  cut is the one approximation with a visible effect: freeing harmonic 15 moves Δ by −1.20×10⁻¹⁵ at D = 60
-  (PENDING_KF), against the README's 3×10⁻¹⁷ at D = 40 and "falls off with D". Through the fits it moves Δ∞ by at
-  most 10⁻⁹.
+  cut is the one approximation with a visible effect: freeing harmonic 15 moves Δ by +1.5×10⁻¹⁵ at D = 40,
+  −1.1×10⁻¹⁵ at 50 and −1.2×10⁻¹⁵ at 60, against the README's 3×10⁻¹⁷ at D = 40 and "falls off with D" (a check that
+  passes when Newton takes no step). Through the fits it moves Δ∞ by at most 5.5×10⁻¹⁰.
 - **Noise per point** (R3). Between D = 45 and 60.1 the points scatter about smooth local fits by 3–7×10⁻¹⁸ rms, and the
   second machine agrees with the cloud points to 7×10⁻¹⁸ rms (the README's "2–4×10⁻¹⁶" is the f64 resolution of the
-  comparison, one ulp of Δ). The "about 10⁻¹⁶" is therefore conservative there. It is not true of every point below
-  60.1: the junk-accepted run up6 (D = 26.9–35.2) carries errors up to 1.0×10⁻¹⁴, of which the cleaning removes 24 of
-  149 points and leaves errors up to 5×10⁻¹⁵, and the kfreeze-cut points 35.35–37 carry up to 4.6×10⁻¹⁵ (as the README
-  says). The linearised correction −∂Δ/∂F·F that every run recorded predicts these errors in sign and size.
+  comparison, one ulp of Δ). As noise, "about 10⁻¹⁶" is conservative there; as error it is not, because of the cut's
+  smooth 10⁻¹⁵ (above). Below 60.1 the junk-accepted run up6 (D = 26.9–35.2) carries errors up to 1.0×10⁻¹⁴, of which
+  the cleaning removes 24 of 149 points and leaves errors up to 5×10⁻¹⁵, and the first kfreeze-13 points (35.35–37)
+  carry up to 4.6×10⁻¹⁵ (as the README says). The linearised correction −∂Δ/∂F·F that every run recorded predicts the
+  convergence errors in sign and size; it cannot see the cut.
 - **Data pipeline.** The CSV is exactly the documented merge; no D appears twice; every hi + lo is normalised. One
   precision bug: `dd_fits_mp.load_points` parses the CSV's shortest-repr strings as decimals at 60 digits, which moves
   every point by up to 2.1×10⁻¹⁶. All fits, the budget and the planted test see the data rounded to about f64. The
@@ -71,11 +73,11 @@ covers every truth I could plant, but it is a fragile statistic, and its centre 
 | 1f. f64 drops in the driver (predictor, deflated step, junk hold, resampling) | OK: all self-corrected by Newton | — |
 | 1g. Taylor order, step tolerance, series orders, node placement at D = 60 | OK, ≤ 6×10⁻¹⁸ (R2) | — |
 | 1h. convergence in M at D = 60 | OK: M = 48 moves Δ by 2.5×10⁻¹⁸ (R2) | — |
-| 1i. kfreeze-13 cut at D = 60 | −1.2×10⁻¹⁵ (linearised; PENDING_KF_ROW) | affects error bar (small) |
+| 1i. kfreeze-13 cut, D = 40, 50, 60 | +1.5, −1.1, −1.2×10⁻¹⁵, not the quoted 3×10⁻¹⁷ (R2) | cosmetic for Δ∞, ≤ 5.5×10⁻¹⁰ (F9) |
 | 1j. junk hold / trend and the dnp corrector | OK: Δ returns to 6×10⁻¹⁸ after 10⁻⁸ kicks (R2) | — |
 | 1k. junk_only acceptance (run up6) | accepts Δ errors up to 10⁻¹⁴ by design | affects error bar (small, F6) |
 | 1l. series tails checked only after a point is accepted | issue (no effect found) | cosmetic (F8) |
-| 2a. "about 10⁻¹⁶ to D = 60.1, a few 10⁻¹⁵ above" | conservative at 45–60.1; wrong for 27–37 | cosmetic (F6) |
+| 2a. "about 10⁻¹⁶ to D = 60.1, a few 10⁻¹⁵ above" | noise: conservative at 45–60.1; error: 10⁻¹⁵ from 35.35 on (cut), up to 10⁻¹⁴ at 27–35 | cosmetic (F6, F9) |
 | 2b. dDelta_est as the per-point error | OK: matches leave-one-out residuals (R3) | — |
 | 2c. two machines "agree to 2–4×10⁻¹⁶" | agree to 7×10⁻¹⁸; the quoted check cannot resolve below one ulp | cosmetic (F5) |
 | 3a. CSV = merge of the runs, local after cloud, last per D | OK (R4) | — |
@@ -168,7 +170,8 @@ of the data, Δ∞ = Σ wᵢΔᵢ. For the used fits ‖w‖₁ = 5×10⁵–8×
 the limit by up to 1.1×10⁻⁸, comparable to the bar. Their actual scatter is 3.9×10⁻¹⁶ rms with corrections of mixed
 sign (39 positive, 55 negative, mean 1.7×10⁻¹⁷), and adding the corrections moves the range by ≤ 1.6×10⁻⁹, so this is
 not happening; but the fits are unweighted although these points are 100 times noisier than their neighbours below
-60.1. The kfreeze cut (F9) is the smooth error that could be coherent there.
+60.1. The one coherent error I found there, the kfreeze cut (−1.2×10⁻¹⁵, F9), is smooth across 40–61 and moves Δ∞
+by at most 5.5×10⁻¹⁰.
 
 **F8 (cosmetic). Series tails are checked after a point is accepted.** `scan_hp.py` raises kc or ks for the *next*
 point when the tail exceeds 10⁻³³, but records the current one. Two kept points have bad centre tails: D = 23.952249
@@ -176,7 +179,31 @@ point when the tail exceeds 10⁻³³, but records the current one. Two kept poi
 (spacing 0.13, interpolation-limited) and 1.4×10⁻¹⁶, so no harm was done, and removing 26.82972 moves the range by
 10⁻¹¹; but the check cannot fail for the point it is about.
 
-**F9 (PENDING_F9_SEVERITY). The kfreeze-13 cut at the top of the range.** PENDING_F9_TEXT
+**F9 (cosmetic for Δ∞; a quoted check is wrong). The kfreeze-13 cut is a smooth bias of about 10⁻¹⁵ on every point
+from D = 35.35 on, not 3×10⁻¹⁷.** The README: "harmonics frozen above 13 / above 15, D = 40: Δ agrees to 3×10⁻¹⁷",
+and "the cut moves Δ by 5×10⁻¹⁵ at D = 35 and 3×10⁻¹⁷ at D = 40 … which falls off with D". Re-converging saved
+kfreeze-13 states with harmonic 15 free (kfreeze 15; R2):
+
+| D | Δ(kfreeze 15) − Δ(kfreeze 13) | \|F\| reached | remaining linearised correction |
+|---|---|---|---|
+| 34.6–35.2 | +5.6 to +7.5×10⁻¹⁵ (unfrozen − kfreeze 13, from the runs' restarts; README −5.5×10⁻¹⁵ for 13 − unfrozen) | | |
+| 40.020065 | **+1.52×10⁻¹⁵** | 1.4×10⁻²⁶ | −7×10⁻²³ |
+| 50.007491 | **−1.06×10⁻¹⁵** | 1.1×10⁻²⁴ | +1×10⁻¹⁹ |
+| 60.001952 | **−1.20×10⁻¹⁵** | 6.6×10⁻²¹ | +1×10⁻¹⁷ |
+
+Freeing harmonic 17 as well gives the same linearised change at D = 60 (−1.2×10⁻¹⁵), so harmonic 15 carries the cut.
+The effect changes sign near D ≈ 45 and stays at about 10⁻¹⁵ to the top of the range: 50 times the quoted 3×10⁻¹⁷ at
+D = 40, and not falling off.
+
+*Failing scenario of the README's check:* at D = 60, plain Newton with line search from the kfreeze-13 state in the
+kfreeze-15 layout finds no descent direction, takes no step, and returns Δ unchanged: "agrees to 0". The first kfreeze-15
+run in R2 did exactly that. It needed full steps without line search to converge. I could not find a script for the
+D = 40 check; a run that stopped without stepping would report agreement at the 10⁻¹⁷ noise level, as quoted.
+
+*Effect on Δ∞:* correcting every kfreeze-13 point by the measured cut (linear in D between the table's points,
+`rv2_fits.py variants --kfcut=…`) moves the 48-fit range to 1.64389374499–1.64389376335, at most 5.5×10⁻¹⁰. The cut is
+smooth, so the polynomial fits absorb most of it. It matters for the per-point error statement (10⁻¹⁵, not 10⁻¹⁶,
+from D = 35.35 on), not for Δ∞.
 
 ## 1. The solver
 
@@ -287,7 +314,19 @@ So:
 - the kernel's own evaluation error, projected on y, moves Δ by about 10⁻¹⁸, and the linearised distance of the saved
   point from the exact discrete solution is 10⁻¹⁸ by both evaluations.
 
-PENDING_R1_DETAILS
+**Away from the solution** (`--perturb 1e-6`: every node field moved by 10⁻⁶ sin(3θ + q), Δ by 10⁻⁶), the blocks
+checked (centre, first segment, horizon) have |F| = 1.0×10⁻⁶, 2.9×10⁻⁶ and 7.7×10⁻², and the two evaluations agree
+to 6.8×10⁻³³, 1.4×10⁻³¹ and 1.3×10⁻³²: relative agreement 10⁻²⁵–10⁻³¹, so every term of the equations is the same
+in both codes (a wrong coefficient would show at the 10⁻⁶ level).
+
+**Negative controls.** They fire, and they show which part of R1 is independent:
+
+- changing the n/2·c(p + m) coupling by a relative 10⁻¹⁵ in my code only: segment 1 now disagrees by 6.7×10⁻¹⁸
+  (against 1.6×10⁻³¹);
+- adding 10⁻²⁴ to Δ in my code only: the horizon *block* still agrees (1.7×10⁻³²), because that block sums the
+  kernel's own series; what fires is the series check, whose worst equation residual rises from 1.4×10⁻³⁰ to
+  7.3×10⁻²⁵. For the centre and horizon blocks the independent part of R1 is therefore the order-by-order check of
+  the series, not the comparison of the block residuals; for the Taylor blocks both are independent.
 
 ### 1f. The f64 parts of the driver
 
@@ -315,7 +354,7 @@ Newton to the floor:
 | kfreeze 17 | 2.3×10⁻²³ (no step accepted) | — | −1.2×10⁻¹⁵ |
 | M = 48 τ-points (resampled in double-double; deflated Newton, then Newton) | 1.7×10⁻²³ | +2.5×10⁻¹⁸ | +6.5×10⁻¹⁸ |
 | kfreeze 15, full Newton steps without line search, then Newton | 6.6×10⁻²¹ | **−1.20×10⁻¹⁵** | +1.3×10⁻¹⁷ |
-| PENDING_R2_ROWS | | | |
+| M = 48 interpolated in f64 (`resample_z`), plain Newton | 6.0×10⁻⁸ (diverged) | −7.0×10⁻⁸ | |
 
 - **Taylor stepping, series truncation, first node: OK.** Their effect is at the 10⁻¹⁸ floor.
 - **Junk handling: OK.** Kicks of 10⁻⁸ along the three weakest directions come back to within 6×10⁻¹⁸, so the predictor
@@ -324,8 +363,14 @@ Newton to the floor:
 - **Last node 0.75:** the re-noded start is already at the floor and Newton finds no descent; the horizon block's
   sensitivity rises from 9×10¹³ to 3×10¹⁷ with u₀ = 0.25, and the linearised correction is −1.5×10⁻¹⁶. Inconclusive
   at the 10⁻¹⁶ level, consistent with "about 10⁻¹⁶".
-- **kfreeze (§F9).** PENDING_KF_BULLET
-- **M = 48.** PENDING_M48_BULLET
+- **kfreeze (F9).** With line search, Newton in the kfreeze-15 (and 17) layout takes no step from the kfreeze-13
+  point, so Δ "agrees exactly"; the linearised correction says −1.2×10⁻¹⁵. Full steps without line search converge
+  (|F| 6.6×10⁻²¹) and move Δ by −1.20×10⁻¹⁵, as linearised. The same at D = 50 and 40 is in F9.
+- **M = 48.** Interpolated in f64 (`driver.resample_z`, which drops lo), the start carries 10⁻¹⁶ errors into the
+  weak directions and plain Newton runs away (Δ off by 7×10⁻⁸ after 8 steps, |F| 6×10⁻⁸): that is the expected
+  failure, and it shows the test can move Δ. Interpolated in double-double (`rv2_resolve.py`'s `resample_dd`, round
+  trip 32 → 48 → 32 exact to 1.2×10⁻³²) and converged with the scans' corrector (deflated Newton, then Newton), M = 48
+  reaches the floor and moves Δ by +2.5×10⁻¹⁸. PENDING_M48START
 
 ### 1k. junk_only acceptance and the up6 points
 
@@ -399,9 +444,11 @@ Below D = 27 the spacing (0.25) makes the local interpolant itself the limit (10
 kfreeze-cut bias: a smooth 3×10⁻¹⁵ that the leave-one-out test hardly sees and the global fit does. This band, not
 noise, sets the fits' 4×10⁻¹⁵ floor.
 
-**Verdict on the README's sentence** ("about 10⁻¹⁶ to D = 60.1, a few 10⁻¹⁵ above"): conservative for 45–60.1
-(3–7×10⁻¹⁸ of noise; the discretisation tests at D = 60 agree), right above 60.1, and incomplete for 27–37 (up to
-10⁻¹⁴ before cleaning, 5×10⁻¹⁵ after; documented further down the README). The two-machine agreement is 7×10⁻¹⁸ (F5).
+**Verdict on the README's sentence** ("about 10⁻¹⁶ to D = 60.1, a few 10⁻¹⁵ above"): as point-to-point noise it is
+conservative for 45–60.1 (3–7×10⁻¹⁸; the Taylor, series, node and M tests at D = 60 agree) and right above 60.1. As
+the error against the true solution it is low by ten from D = 35.35 on, where the kfreeze cut adds a smooth
+10⁻¹⁵ that neither the noise tests nor dDelta_est can see (F9), and incomplete for 27–37 (up to 10⁻¹⁴ before cleaning,
+5×10⁻¹⁵ after; documented further down the README). The two-machine agreement is 7×10⁻¹⁸ (F5).
 
 ## 3. The data pipeline
 
@@ -504,8 +551,13 @@ the sign test (the bracket starts at ±3×10⁻⁴). I did not rerun it.
 
 - **Analyticity in 1/D.** The bar assumes it (the README says so). Nothing here tests it beyond what the README's
   held-out tests do.
-- **M convergence below D = 60** except PENDING_M_LIST; the README's own checks cover D = 7–17 and 40.
-- **The kfreeze cut as a function of D.** PENDING_KF_LIST.
+- **M convergence below D = 60** except PENDING_M_LIST; the README's own checks cover D = 7–17 and 40 (no script
+  survives for the D = 40 ones), and the restart at D = 16.75 shows the M 48 → 32 change below the printed digit.
+- **The kfreeze cut beyond harmonic 15–17**, and at D = 35.35–40 directly (I have the runs' restarts at 34.6–35.2 and
+  my solves at 40, 50, 60). Taking kfreeze 15 as the truth assumes the harmonics above 15 matter less, which the
+  kfreeze-17 linearisation supports at D = 60 only.
+- **Points below D = 27 at the 10⁻¹⁶ level.** The spacing there (0.25) is too coarse for the leave-one-out test, and I
+  ran no solves below D = 40; the layout-change restarts at 16.75 and 21.35 agree to the printed digit.
 - **The runs' command lines.** kfreeze, tolerances and correctors are not stored in the JSON records; I took them from
   `comms.txt` and `solver/notes.md`. A record field would make the data self-describing.
 - **The f64 solver**, the γ fits (`gamma_compare.py`) and the large-D theory are out of scope.
