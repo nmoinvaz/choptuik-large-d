@@ -217,5 +217,47 @@
    "LEMMA 6b_1 CHECK: FAIL (3 failures: ['tile (5, 7): agreement point not in the meeting set', 'tile (6, 5): meeting set not connected', 'point (|u| = 128.8, arg = phi_5,6) not covered without tile (5, 6)'])"
   ],
   "sec": 0.5
+ },
+ {
+  "name": "cover_sign_M3",
+  "cmd": "lemma6b1_cover_M.py mutate --j=11 --M=3 --h=1.1e-9 --tag=_cert --x=2.7264758856311463335934955261561100705557331671411,1.0156030948577872100059533565790022881883333496973,0.14441947847010155933389143095194965903793037966287,0.011087425888116783540971263261694760868044985018780",
+  "expected": "caught",
+  "exit": 0,
+  "matches": true,
+  "what": "6b1: every disc of the innermost row with the fast term of the wrong sign: none may be certified",
+  "tail": [
+   "M = 3 row 11 (|u| = 26.98, r = 6, n = 50) disc 10/11: ok False, Lam 0.135, box radius 3.8e-06, sup|y - y0| 1.884, 781 Lohner steps [579 s]; defect coefficients below order n contain 0: False",
+   "M = 3 row 11 (|u| = 26.98, r = 6, n = 50) disc 11/11: ok False, Lam 0.128, box radius 3.4e-05, sup|y - y0| 1.858, 834 Lohner steps [603 s]; defect coefficients below order n contain 0: False",
+   "MUTATION sign (V_u = +V/2 in the defect), M = 3: 0 of 12 discs of row 11 certified (must be 0)"
+  ],
+  "sec": 603.2
+ },
+ {
+  "name": "c1_truth_M3",
+  "cmd": "lemma6b1_cover_M.py c1check --M=3 --h=1.1e-9 --tag=_cert --x=2.7264758856311463335934955261561100705557331671411,1.0156030948577872100059533565790022881883333496973,0.14441947847010155933389143095194965903793037966287,0.011087425888116783540971263261694760868044985018780",
+  "expected": "passes",
+  "exit": 0,
+  "matches": true,
+  "what": "control (double precision): y+ at x^ and x^ +- h e_i lies in the saved C^1 sets at rows 1, 6, 9, 11",
+  "tail": [
+   "row 9 (|u| = 47.14): set radius 5.46e-08; centre in, x0+h in, x0-h in, x1+h in, x1-h in, x2+h in, x2-h in, x3+h in, x3-h in",
+   "row 11 (|u| = 26.98): set radius 5.08e-07; centre in, x0+h in, x0-h in, x1+h in, x1-h in, x2+h in, x2-h in, x3+h in, x3-h in",
+   "C1 PLANTED TRUTH: every point inside its set: True"
+  ],
+  "sec": 28.5
+ },
+ {
+  "name": "c1_nov_M3",
+  "cmd": "lemma6b1_cover_M.py c1check --mutate=nov --M=3 --h=1.1e-9 --tag=_cert --x=2.7264758856311463335934955261561100705557331671411,1.0156030948577872100059533565790022881883333496973,0.14441947847010155933389143095194965903793037966287,0.011087425888116783540971263261694760868044985018780",
+  "expected": "caught",
+  "exit": 0,
+  "matches": true,
+  "what": "C^1 sets with the derivative columns dropped: the off-centre points must fall outside",
+  "tail": [
+   "row 9 (|u| = 47.14): set radius 1.05e-11; centre in, x0+h OUT, x0-h OUT, x1+h OUT, x1-h OUT, x2+h OUT, x2-h OUT, x3+h OUT, x3-h OUT",
+   "row 11 (|u| = 26.98): set radius 1.42e-11; centre in, x0+h OUT, x0-h OUT, x1+h OUT, x1-h OUT, x2+h OUT, x2-h OUT, x3+h OUT, x3-h OUT",
+   "MUTATION nov (derivative columns dropped): every off-centre point outside: True (must be True)"
+  ],
+  "sec": 33.6
  }
 ]

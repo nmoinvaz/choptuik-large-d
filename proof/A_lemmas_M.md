@@ -529,7 +529,10 @@ G = G₀ ∪ ⋃ T_jk that contains the annular sector A₁ = {25 ≤ |u| ≤ 26
   and 402 at M = 5 (R₊ = 0.0064).
 - The disc radii and orders at the inner rows. At M = 3, y⁺ is larger near |ξ| = 0.2 (max |V| 8.6 against 4.5 at
   M = 1 on |u| = 25), and its nearest singularity is closer: the root-test estimate at 25e^{−3iπ/4} is 12.7, against
-  15.0 at M = 1, where the branch point located in §12.1 is 15.8 away. So the rows with ρ < 32 use r = 8 and n = 50.
+  15.0 at M = 1, where the branch point located in §12.1 is 15.8 away. So the rows with ρ < 32 use r = 6 and n = 50.
+- How the values reach the discs. The M = 1 method (one Lohner set over the box, arcs restarted from the ray's hull)
+  fails on the innermost row at M = 3. The C¹ mean-value mode of §5.3 replaces it, and needs no change to lemma D,
+  lemma G or the check.
 - The cost per disc and per Lohner step, from the dimension.
 
 With these, the proof is that of §12.4: lemma D for each disc (C1), then lemma G with C2–C7, then C8. ∎
@@ -746,7 +749,38 @@ Every check added here has a runnable mutation or control. Each verdict was writ
 column), and `mutations_M.py` compares it with the outcome; exit status 0 only if all match. Results are in
 `solver/proof/lemmas_M_runs/mutations_M.json`.
 
-MUTATION_TABLE
+| name | what is broken | expected | exit | as expected |
+|---|---|---|---|---|
+| `fp_series_M3` | step (i): one coefficient of the harmonic-3 D series off by a relative 1e-6 | caught | 0 | yes |
+| `fp_series_M5` | step (i), M = 5 on inner_np's ray: one coefficient of the harmonic-5 D series off by 1e-6 | caught | 0 | yes |
+| `fp_cdrop_M3` | step (i): the series built without the c harmonics +-4 (an inconsistent harmonic set) | caught | 0 | yes |
+| `fp_diagpath_M3` | guard, not a mutation: the diag splitting with a non-ray kernel bound (invalid there) must be refused | caught | 0 | yes |
+| `fp_control_r0` | control: start radius 0.3, the contraction must fail | fails | 2 | yes |
+| `fp_m1` | control: M = 1 reproduces fixed_point.py (constants, start values, start data) | passes | 0 | yes |
+| `usys_label` | system: s_mu = i abs(mu) w in the u-form (the label sign lost); the comparisons with the xi-form and with fixed_point's encoding must fire | caught | 0 | yes |
+| `usys_clean` | control: the system self-tests at M = 3, 5 | passes | 0 | yes |
+| `S_series_M3` | lemma S: one coefficient of the harmonic-3 series off by 1e-6 | caught | 0 | yes |
+| `S_control_rp` | control: lemma S at R+ = 0.13^2, beyond the contraction (0.83 at 0.1, label terms grow like R+) | fails | 2 | yes |
+| `disc_m1` | control: lemma D at M = 1 reproduces lemma6b1_disc.certify | passes | 0 | yes |
+| `jump_partial_M3` | 6a: only J_D,1 = 0 assumed (J_D,3 dropped): G_slow is not square, 6a must not be established | caught | 0 | yes |
+| `jump_swap_M3` | 6a: y- = conj(y+) without the reflection mu -> -mu: must fail | caught | 0 | yes |
+| `jump_coords_M3` | 6a: (1 - i mu w) in the change of variables at xi_a; at M = 1 not caught (second order); reported only | report | 0 | yes |
+| `cover_check_M3` | control: the 6b1 gluing and covering check C1-C8 on the M = 3 runs (C^1 mode, certificate's box): PASS | passes | 0 | yes |
+| `cover_drop_M3` | 6b1 gluing check with tile (5, 6) left out: must print FAIL | fails | 3 | yes |
+| `cover_sign_M3` | 6b1: every disc of the innermost row with the fast term of the wrong sign: none may be certified | caught | 0 | yes |
+| `c1_truth_M3` | control (double precision): y+ at x^ and x^ +- h e_i lies in the saved C^1 sets at rows 1, 6, 9, 11 | passes | 0 | yes |
+| `c1_nov_M3` | C^1 sets with the derivative columns dropped: the off-centre points must fall outside | caught | 0 | yes |
+
+Every verdict matches (`python3 mutations_M.py --all`; the entries ran in four batches, recorded in
+`lemmas_M_runs/mutations_cheap.log`, `mutations_jump.log` and `mutations_cover.log`). Notes:
+
+- `fp_series_M3` was first seen *not* to fire. Without the structural vanishing check, the harness lowered the weight
+  exponent to fit the mutated polynomial and proved a weaker, true lemma about it. The check was added and the entry
+  rerun (§2.2).
+- `jump_coords_M3` is reported, not caught: ρ₆ₐ = 0.89 < 1 with the wrong mode normalization (0.12 at M = 1). As at
+  M = 1 (§11.6), the error enters at second order through the flat estimate. What guards the normalization is
+  `lemma6_usys_M.py`'s test (c).
+- The 6a mutations ran on the pilot's B₁, so they test the harness, not a proof.
 
 ## 9. Cost, and a proposed task for the local machine
 
@@ -861,12 +895,17 @@ The coordinator edits those files; this is proposed text only.
 >   second splitting of the fast row ("diag") removes them from the contraction. On lemma S's paths they remain
 >   perturbations of size |s_μ|R₊. Step (i) is certified at M = 3 and 5 at `hier.py`'s zeros, at points and over boxes,
 >   with start data in all M + 1 parameters (`fixed_point_M.py`); M = 1 reproduces `fixed_point.py` bit for bit.
->   STATUS_SENTENCE
+>   At M = 3, lemma S, lemma 6b₀ and the flat estimate of 6a are certified over x̂ ± 10⁻⁶, and lemma 6b₁ is certified
+>   on the point certificate's box p̂ ± 1.1×10⁻⁹ by a covering with 183 discs in a C¹ mean-value form. The M = 1
+>   covering method fails on the innermost row at M = 3. The backward step of 6a waits for the certificate's state box
+>   at ξ₁ = 0.3. At M = 5, lemma S, 6b₀ and the flat estimate are certified, and 6b₁ is a local-machine task.
 
 **For PROOF.md §4, after "Prototype status at M = 1" (one paragraph):**
 
 > *Toward M = 3 and 5* ([proof/A_lemmas_M.md](proof/A_lemmas_M.md)). The parts of Theorem A that turn a point
 > certificate into the theorem have been generalized to M harmonics: the start-value fixed point with parameter
-> derivatives, lemma S, and lemmas 6a, 6b₀ and 6b₁. PROOF_STATUS_SENTENCE Theorem A(3) then follows from a point
+> derivatives, lemma S, and lemmas 6a, 6b₀ and 6b₁. At M = 3 all of them are certified on boxes that contain the
+> point certificate's box, except the backward step of 6a, which needs that certificate's state box at ξ₁ = 0.3.
+> At M = 5, 6b₁ remains to be run. Theorem A(3) then follows from a point
 > certificate (validated integration and a Krawczyk test on the M + 1 real D-jump conditions at one radius) whose box
 > lies in the boxes used there.
