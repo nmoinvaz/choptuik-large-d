@@ -1,0 +1,14 @@
+gauge = centre, rho = 0.75, A = 2.72, w/w_inf = 1.0  [MUTATED: m0/10]
+largest t with a finite fixed point (float bisection): 0.057788;  certified t1 = 0.056054
+  m (D)        V = 7.217684e-01   Phi(t1, V) <= 7.171529e-01   ok
+  s (S)        V = 2.208462e-01   Phi(t1, V) <= 2.198766e-01   ok
+  b~ (B_k+1)   V = 3.961552e-02   Phi(t1, V) <= 3.897582e-02   ok
+  mu~          V = 4.058776e-02   Phi(t1, V) <= 4.046684e-02   ok
+  g (G)        V = 2.148964e-02   Phi(t1, V) <= 2.143144e-02   ok
+  kappa        V = 1.024098e+00   Phi(t1, V) <= 1.023758e+00   ok
+  q            V = 5.735435e-01   Phi(t1, V) <= 5.697227e-01   ok
+CERTIFIED: Phi(t1, V) <= V at t1 = 0.056054
+Borel transform analytic on |zeta| < 0.05605 for |x| <= 0.75; |2 Phi(x)| < t1 on [0.69714, 0.71694] (around 1/sqrt 2)
+  k = 1: ||D_k|| exceeds the certified bound (ratio 1.03)
+  k = 1: ||S_k|| exceeds the certified bound (ratio 1.53)
+actual ||D_k||, ||S_k|| (k <= 40) / certified bound: max 1.534e+00  (FAIL)

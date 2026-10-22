@@ -1,0 +1,3 @@
+b3_taylor_rational                   exit 0 (expected 0) ok
+b3_taylor_rational_mut_eq            exit -15 (expected 1) UNEXPECTED
+SOME RUN NOT AS EXPECTED

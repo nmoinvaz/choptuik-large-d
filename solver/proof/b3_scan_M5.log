@@ -1,0 +1,80 @@
+==== M = 5, light-cone gauge, harmonic 0 of c(0): python3 b3_borel_scan.py b3_outer_M5_K70.json g0:0 --n=6
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a863ea3ed5cab7502/solver/proof/b3_outer_M5_K70.json g0:0: 70 orders (from order 1), root-test radius at the last orders: 0.681392, 0.683361, 0.697222
+   Pade [34/34] poles without a zero within 1e-30 (rel.): 34 of 34; 'move' = distance to the nearest [32/32] pole
+     |a|   0.93818295  arg/pi  -0.705952   move    0.094   zero-dist      0.6   a = (-0.5655446825 - 0.7485629255j)
+     |a|   0.93818295  arg/pi   0.705952   move    0.094   zero-dist      0.6   a = (-0.5655446825 + 0.7485629255j)
+     |a|   0.93890925  arg/pi  -0.742288   move    0.095   zero-dist     0.56   a = (-0.6476312061 - 0.6797973222j)
+     |a|   0.93890925  arg/pi   0.742288   move    0.095   zero-dist     0.56   a = (-0.6476312061 + 0.6797973222j)
+     |a|   0.94081359  arg/pi   0.670069   move    0.094   zero-dist     0.52   a = (-0.4790886633 + 0.8096939352j)
+     |a|   0.94081359  arg/pi  -0.670069   move    0.094   zero-dist     0.52   a = (-0.4790886633 - 0.8096939352j)
+   poles with |arg| < 0.45 pi (nearest 6; the H-a1/H-a2 question):
+     |a|    1.0261337  arg/pi   0.428734   move     0.12   zero-dist     0.43   a = (0.2278256234 + 1.000522841j)
+     |a|    1.0261337  arg/pi  -0.428734   move     0.12   zero-dist     0.43   a = (0.2278256234 - 1.000522841j)
+     |a|    1.0380132  arg/pi   0.386552   move     0.12   zero-dist     0.49   a = (0.3621740726 + 0.972780189j)
+     |a|    1.0380132  arg/pi  -0.386552   move     0.12   zero-dist     0.49   a = (0.3621740726 - 0.972780189j)
+     |a|    1.0570281  arg/pi   0.343083   move     0.11   zero-dist      0.5   a = (0.5002326151 + 0.9311690022j)
+     |a|    1.0570281  arg/pi  -0.343083   move     0.11   zero-dist      0.5   a = (0.5002326151 - 0.9311690022j)
+==== M = 5, light-cone gauge, harmonic 2 of c(0): python3 b3_borel_scan.py b3_outer_M5_K70.json g0:2 --n=6
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a863ea3ed5cab7502/solver/proof/b3_outer_M5_K70.json g0:2: 70 orders (from order 1), root-test radius at the last orders: 0.6595, 0.667961, 0.676622
+   Pade [34/34] poles without a zero within 1e-30 (rel.): 34 of 34; 'move' = distance to the nearest [32/32] pole
+     |a|   0.93514159  arg/pi  -0.699436   move    0.049   zero-dist     0.59   a = (-0.5483212846 - 0.7575180233j)
+     |a|   0.93592488  arg/pi  -0.664893   move    0.045   zero-dist     0.52   a = (-0.4634381265 - 0.8131300583j)
+     |a|   0.93702704  arg/pi  -0.734219   move    0.053   zero-dist     0.65   a = (-0.6289289968 - 0.6945991639j)
+     |a|   0.93936825  arg/pi  -0.630211   move    0.041   zero-dist     0.47   a = (-0.3736387652 - 0.8618623956j)
+     |a|   0.94171374  arg/pi   -0.76967   move    0.057   zero-dist     0.57   a = (-0.7057436997 - 0.6234986796j)
+     |a|   0.94553875  arg/pi  -0.595012   move    0.035   zero-dist     0.42   a = (-0.2780611214 - 0.9037286824j)
+   poles with |arg| < 0.45 pi (nearest 6; the H-a1/H-a2 question):
+     |a|    0.9922982  arg/pi  -0.445229   move    0.048   zero-dist     0.42   a = (0.1699021335 - 0.9776446053j)
+     |a|    1.0090394  arg/pi  -0.406259   move     0.05   zero-dist     0.47   a = (0.2928824473 - 0.9655984816j)
+     |a|    1.0269542  arg/pi   0.445841   move    0.085   zero-dist     0.38   a = (0.1738912994 + 1.012124822j)
+     |a|    1.0293731  arg/pi  -0.366253   move     0.05   zero-dist     0.54   a = (0.4199063041 - 0.9398338407j)
+     |a|    1.0361424  arg/pi   0.403833   move    0.079   zero-dist     0.43   a = (0.3082955161 + 0.9892143239j)
+     |a|    1.0528119  arg/pi   0.359977   move    0.074   zero-dist     0.49   a = (0.4483353368 + 0.9525798003j)
+==== M = 5, light-cone gauge, harmonic 4 of c(0): python3 b3_borel_scan.py b3_outer_M5_K70.json g0:4 --n=6
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a863ea3ed5cab7502/solver/proof/b3_outer_M5_K70.json g0:4: 69 orders (from order 2), root-test radius at the last orders: 0.594895, 0.603532, 0.612169
+   Pade [34/34] poles without a zero within 1e-30 (rel.): 34 of 34; 'move' = distance to the nearest [32/32] pole
+     |a|   0.90737339  arg/pi  -0.556152   move    0.036   zero-dist     0.11   a = (-0.1592367243 - 0.8932917391j)
+     |a|   0.90917744  arg/pi  -0.661132   move    0.068   zero-dist     0.44   a = (-0.4408299344 - 0.7951556991j)
+     |a|   0.90941916  arg/pi  -0.626748   move     0.06   zero-dist     0.33   a = (-0.3526271455 - 0.8382704291j)
+     |a|   0.91003588  arg/pi  -0.591778   move    0.051   zero-dist     0.22   a = (-0.2587703816 - 0.8724695954j)
+     |a|   0.91040369  arg/pi  -0.695282   move    0.075   zero-dist     0.54   a = (-0.5241457901 - 0.7443830124j)
+     |a|   0.91356811  arg/pi  -0.729548   move    0.073   zero-dist     0.64   a = (-0.6031805866 - 0.6861340006j)
+   poles with |arg| < 0.45 pi (nearest 6; the H-a1/H-a2 question):
+     |a|   0.96615594  arg/pi  -0.425683   move    0.071   zero-dist      0.3   a = (0.2235272826 - 0.9399430051j)
+     |a|   0.98815369  arg/pi  -0.387509   move    0.071   zero-dist     0.41   a = (0.3419900689 - 0.9270871136j)
+     |a|   0.99965602  arg/pi   0.425173   move      0.1   zero-dist     0.38   a = (0.2328353005 + 0.9721624749j)
+     |a|    1.0126464  arg/pi  -0.348134   move    0.068   zero-dist     0.52   a = (0.4650136933 - 0.8995637537j)
+     |a|    1.0151924  arg/pi   0.379081   move    0.092   zero-dist     0.46   a = (0.376440615 + 0.9428192228j)
+     |a|    1.0385008  arg/pi   0.329968   move    0.085   zero-dist     0.43   a = (0.5287298657 + 0.8938280872j)
+==== M = 5, light-cone gauge, D1 at x = 0.5: python3 b3_borel_scan.py b3_outer_M5_K70.json D1 --x=0.5 --n=6
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a863ea3ed5cab7502/solver/proof/b3_outer_M5_K70.json D1 x=0.5: 70 orders (from order 1), root-test radius at the last orders: 0.711549, 0.718255, 0.729989
+   Pade [34/34] poles without a zero within 1e-30 (rel.): 34 of 34; 'move' = distance to the nearest [32/32] pole
+     |a|   0.59775634  arg/pi  -0.847424   move      0.4   zero-dist   4.3e-9   a = (-0.530391217 - 0.275676985j)
+     |a|    0.8611503  arg/pi   0.995926   move    0.053   zero-dist    0.014   a = (-0.8610797634 + 0.01102179145j)
+     |a|   0.86556922  arg/pi   0.671763   move    0.037   zero-dist     0.45   a = (-0.4447304837 + 0.7425798809j)
+     |a|   0.86597961  arg/pi  -0.751488   move    0.016   zero-dist      0.4   a = (-0.6151953077 - 0.6094714238j)
+     |a|   0.86605394  arg/pi   0.709045   move    0.033   zero-dist     0.54   a = (-0.5287543729 + 0.6859068705j)
+     |a|   0.86654937  arg/pi  -0.713557   move    0.014   zero-dist     0.47   a = (-0.5387328549 - 0.6787302269j)
+   poles with |arg| < 0.45 pi (nearest 6; the H-a1/H-a2 question):
+     |a|   0.92096897  arg/pi   0.421547   move     0.07   zero-dist     0.32   a = (0.2246982628 + 0.8931374631j)
+     |a|   0.92830446  arg/pi  -0.447912   move     0.01   zero-dist     0.38   a = (0.1512309019 - 0.9159030443j)
+     |a|   0.94129731  arg/pi   0.379701   move    0.064   zero-dist     0.41   a = (0.3473370715 + 0.874870037j)
+     |a|   0.94391274  arg/pi  -0.407544   move    0.017   zero-dist     0.36   a = (0.2703296495 - 0.9043744499j)
+     |a|    0.9630021  arg/pi  -0.365974   move    0.027   zero-dist     0.31   a = (0.3936009484 - 0.8788921039j)
+     |a|    0.9646561  arg/pi   0.336127   move    0.058   zero-dist     0.33   a = (0.4749780864 + 0.8396173015j)
+==== M = 5, light-cone gauge, D1 at x = 0.8: python3 b3_borel_scan.py b3_outer_M5_K70.json D1 --x=0.8 --n=6
+/home/claude/dss-residual-kernel/.claude/worktrees/agent-a863ea3ed5cab7502/solver/proof/b3_outer_M5_K70.json D1 x=0.8: 70 orders (from order 1), root-test radius at the last orders: 0.676591, 0.685258, 0.690848
+   Pade [34/34] poles without a zero within 1e-30 (rel.): 34 of 34; 'move' = distance to the nearest [32/32] pole
+     |a|   0.80145861  arg/pi  -0.976645   move     0.12   zero-dist   0.0015   a = (-0.7993022868 - 0.05875170635j)
+     |a|   0.90808188  arg/pi   0.755082   move    0.056   zero-dist     0.54   a = (-0.6522808607 + 0.6317771585j)
+     |a|   0.90828532  arg/pi   0.717644   move     0.06   zero-dist     0.62   a = (-0.57376623 + 0.7041125903j)
+     |a|   0.91075929  arg/pi   0.794017   move    0.051   zero-dist     0.44   a = (-0.7266281924 + 0.5490846526j)
+     |a|    0.9114095  arg/pi   0.680949   move    0.065   zero-dist     0.54   a = (-0.4906505723 + 0.7680685437j)
+     |a|   0.91150904  arg/pi  -0.765654   move    0.052   zero-dist     0.54   a = (-0.6754398398 - 0.6120700574j)
+   poles with |arg| < 0.45 pi (nearest 6; the H-a1/H-a2 question):
+     |a|   0.98746568  arg/pi   0.434101   move     0.08   zero-dist     0.38   a = (0.2029749741 + 0.9663796553j)
+     |a|    0.9982525  arg/pi  -0.413533   move    0.072   zero-dist     0.48   a = (0.2678454503 - 0.9616479949j)
+     |a|    1.0018057  arg/pi   0.391729   move    0.075   zero-dist     0.44   a = (0.3342247541 + 0.9444090207j)
+     |a|    1.0149542  arg/pi  -0.372852   move    0.069   zero-dist      0.5   a = (0.3947244437 - 0.9350532447j)
+     |a|    1.0221783  arg/pi   0.347852   move    0.071   zero-dist     0.44   a = (0.4701947132 + 0.9076152517j)
+     |a|    1.0370326  arg/pi  -0.330297   move    0.066   zero-dist     0.44   a = (0.5270584158 - 0.8931103286j)

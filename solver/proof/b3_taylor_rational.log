@@ -1,0 +1,14 @@
+M2  : denominator factors [n + 1] -> poles at n = [-1]
+M3  : denominator factors [n, n + 1] -> poles at n = [0, -1]
+M4  : denominator factors [n, n + 3, n + 1] -> poles at n = [0, -3, -1]
+M5  : denominator factors [n + 3, n, n + 1] -> poles at n = [-3, 0, -1]
+P2  : denominator factors [n + 1] -> poles at n = [-1]
+P3  : denominator factors [n, n + 1] -> poles at n = [0, -1]
+P4  : denominator factors [n, n + 3, n + 1] -> poles at n = [0, -3, -1]
+P5  : denominator factors [n + 3, n, n + 1] -> poles at n = [-3, 0, -1]
+b2  : denominator factors [n, n + 1] -> poles at n = [0, -1]
+b4  : denominator factors [n + 3, n, n + 1] -> poles at n = [-3, 0, -1]
+c2  : denominator factors [n, n + 1] -> poles at n = [0, -1]
+c4  : denominator factors [n + 3, n, n + 1] -> poles at n = [-3, 0, -1]
+residual of the equations through x^5: zero
+PASS: every denominator is a product of factors (n + k), k >= 0 (poles at n = 0, -1, -2, ...)

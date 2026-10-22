@@ -1,0 +1,13 @@
+  order 10  deg D_k 21  0.0s
+  order 20  deg D_k 41  0.4s
+  order 30  deg D_k 61  2.1s
+  order 40  deg D_k 81  7.8s
+  order 50  deg D_k 101  18.9s
+  order 60  deg D_k 121  36.4s
+  order 70  deg D_k 141  67.0s
+  order 80  deg D_k 161  111.2s
+  order 90  deg D_k 181  166.5s
+  order 100  deg D_k 201  273.6s
+  order 110  deg D_k 221  405.3s
+  order 120  deg D_k 241  570.3s
+wrote b3_outer_m1_centre_K120.json
