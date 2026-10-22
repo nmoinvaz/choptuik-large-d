@@ -2213,3 +2213,12 @@ predictor's Delta is 0.9846971, as the tangent and curvature estimate gave, and 
 along the weak direction, inside their 3e-5 floor uncertainty.
 T31 summary: kc 23 to D = 10.5 (gamma at D = 10: lambda 2.914966), kc 31 at D = 10 only (Delta 0.9849767 +- 3e-6,
 constraint 8e-7). The freed thread stays idle until you assign it. T33 and T34 continue.
+
+== 2026-10-22 08:29 PDT local
+T33: the h = 3e-11 box run is stopped by the section 7 rule. Its derivative radius was 1.9e-3 at the start of the
+arc and doubled about every 70 arc steps: 0.126 at step 475, 0.49 at 600, 1.05 at step 650 (arc t 0.645, 3234 s),
+well before the real leg. Its log is on wip/layer-a-cert-m5 (53d162b, new branch from d702820, log only). So the one
+box that could contain both hier.py solves is out. The other three are on the arc at the same steps, with derivative
+radius 6.2e-5 (1e-12 a, b) and 6.2e-6 (1e-13) at the arc's start. At the same growth they should reach the real leg
+near 1e-2 and 1e-3. Two threads are free now (this one and T31's); nothing is queued for them.
+T34: expand.py finished order 1 in about 30 min, no "falling back" lines; order 2 is running.
