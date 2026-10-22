@@ -1393,3 +1393,373 @@ python3 lemma6_sweep.py --rhos=260 --dfrac=0.001               # one narrow tube
 
 The saved runs are `lemma6_path_point.json`, `lemma6_path_box_1e-9.json`, `lemma6_sector_1e-9.json` and
 `lemma6_jump_1e-9.json`.
+
+## 12. Lemma 6b₁
+
+This section proves lemma 6b₁ (11.4), the last open step of §11.7, and states Theorem A(M = 1) without conditions.
+Everything that enters the proof is ball arithmetic (python-flint 0.9). The parameter box is the X of §11. Times are
+wall-clock on the shared 2-core machine during the runs (load 11–14, so each process got about a fifth of a core),
+single process under `nice`.
+
+**Summary.**
+
+| item | status | key numbers |
+|---|---|---|
+| route assessment (12.1) | double precision, not a proof | route-1 loop gain 3.1 at \|ξ\| = 0.2 |
+| disc lemma (12.2) | proved | |
+| lemma 6b₁ (12.3, 12.4) | **proved** | 178 discs in 12 rows; contraction ≤ 0.439 |
+| mutation tests and a negative control (12.5) | all caught | |
+| Theorem A(M = 1) (12.6) | **proved**, given Braaksma's theorem | |
+
+### 12.1 Which route, and why
+
+`lemma6b1_estimate.py` (double precision, not rigorous) integrates y⁺ over the annulus from the formal series at
+|u| = 260 on the start ray. In the variables of `lemma6_usys.py`, with Q = V + (1 + s)P and W = V + [(C − 1)Q], the
+maxima over each arc are:
+
+| \|u\| | \|ξ\| | max \|P\| | max \|V\| | max \|Q\| | max \|C₀ − 1\| | route-1 loop gain g |
+|---|---|---|---|---|---|---|
+| 260 | 0.0620 | 2.63 | 0.23 | 8.44 | 0.013 | 0.09 |
+| 150 | 0.0816 | 2.70 | 0.41 | 8.81 | 0.022 | 0.17 |
+| 100 | 0.1000 | 2.79 | 0.65 | 9.29 | 0.034 | 0.27 |
+| 60 | 0.1291 | 2.98 | 1.22 | 10.38 | 0.058 | 0.57 |
+| 40 | 0.1581 | 3.24 | 2.12 | 12.05 | 0.090 | 1.12 |
+| 25 | 0.2000 | 3.85 | 4.53 | 16.25 | 0.154 | 3.11 |
+
+**Route 1** is a start-value contraction built on the exact linear (Kummer) flow, with the nonlinear terms as the
+perturbation. At |ξ| = 0.2 those terms are not a perturbation: C₀ − 1 reaches 0.15 and V reaches 4.5. The linearized
+nonlinear part contains the loop P → C → V → P:
+
+- C is driven by $`C_u = -z^2[CE]/2`$, whose P-derivative is about $`z^2|P|`$. Integrated from u = ∞ that gives
+  $`|\delta C| \lesssim |P|\,\lVert\delta P\rVert/|u|`$.
+- The fast equation contains −([(C − 1)Q] + [(C − 1)W])/2, with C-derivative about (Q + W)/2. Through the fast
+  kernel (rate a = √2/4 along the path of 11.3, on which |t| ≥ |u|/√2) that gives
+  $`|\delta V| \lesssim \tfrac{|Q| + |W|}{2}\,\tfrac{\sqrt2}{a}\,|\delta C|`$.
+- P is driven by $`P_u = -zV/2`$, so $`|\delta P(u)| \lesssim \int_{|u|}^\infty |\delta V|/(2t)\,dt`$.
+
+The gain of the loop in these natural norms on |u| ≥ ρ is
+
+```math
+g(\rho) = \max\frac{|Q| + |W|}{2}\cdot\frac{\sqrt2}{a}\cdot\frac{\max|P|}{2\rho} .
+```
+
+A contraction needs g < 1. Here g = 3.1 at |ξ| = 0.2, and it crosses 1 near |ξ| = 0.155. Power weights $`|u|^{-k}`$
+divide the two slow integrals by (k + 1)², but they lower the fast rate (the a_eff of 11.3), and the operator would
+need new kernel bounds on a non-convex domain. At best route 1 would reach about |ξ| = 0.13–0.15. That leaves the
+inner band, roughly 0.14 ≤ |ξ| ≤ 0.2, which contains the place where the pilot tube failed (|u| ≈ 49,
+|ξ| ≈ 0.143), so a hybrid would still need the hard part of the sweep. Route 1 was not pursued.
+
+**Route 2, pushed to its limit.** The tube family is a translation, Ψ(t, d) = y(u_c(t) + d). A Taylor model of Ψ in d
+at fixed t is therefore the Taylor expansion of y around u_c(t). Its natural radius is the distance from u_c(t) to
+the nearest singularity of y⁺, not 0.1% of |u|. The nearest singularity is the branch point of review R6. The same
+script locates it, by bisection on which side arcs and inward rays pass it:
+
+```math
+u^* = 9.6746\,e^{-2.1198\,i}, \qquad \xi^* = 0.3215\,e^{1.0599\,i} .
+```
+
+From the annulus it is at distance 15 or more. So the second-order treatment of d can be replaced by Taylor expansions
+of order 40–70 at isolated points, each validated on a disc (12.2). No family is integrated: one single-trajectory
+Lohner run per arc carries the values from disc to disc. The first-order excess that stopped the tubes (11.4 item 3)
+never arises. The cost is 178 discs and 3591 units of arc length in u, against about 1300 tubes for the brute-force
+sweep.
+
+### 12.2 The disc lemma
+
+The code is `lemma6b1_disc.py`. The variables are those of `lemma6_usys.SysU`,
+Y = (P₋₁, P₊₁, V₋₁, V₊₁, κC₋₂, κ(C₀ − 1), κC₊₂) with κ = 100. The system is y′ = F(u, y; w), polynomial in y and in
+z = 1/u (11.4).
+
+**Lemma D.** Let c and w be complex balls, Y₀ a box in ℂ⁷, n ≥ 1 and 0 < r < |c|. Suppose the computation
+below succeeds. Then for every exact c′ ∈ c, y₀ ∈ Y₀ and w′ ∈ w, the solution with y(c′) = y₀ extends analytically to
+the open disc |u − c′| < r, continuously to its closure, and |y_j(u) − y₀,j| ≤ M_j there.
+
+The computation has four parts.
+
+1. **Taylor coefficients.** The coefficients p_k (k ≤ n) of the solution in τ = u − c come from Picard iteration on
+   power series, in ball arithmetic, started from the balls. After n iterations the coefficients 0, …, n are final.
+   They enclose the Taylor coefficients of every solution in the statement.
+2. **The defect.** d = F(c + τ, p(τ)) − p′(τ) is computed as a polynomial with exact products. z enters through the
+   expansion below, with J = n + 8 and ζ replaced by a ball of the stated radius. At each fixed τ, ζ(τ) is one number
+   in that ball, so the coefficient balls enclose a polynomial whose value at τ is d(τ).
+3. **Vanishing orders.** For each exact initial value, p is the exact Taylor polynomial, so the coefficients of d below
+   order n vanish identically. The code checks that their balls contain 0 and drops them. Then
+   |d_i(τ)| ≤ Δ_i|τ|ⁿ with $`\Delta_i = \sum_{k \ge n} |d_{i,k}|\,r^{k-n}`$.
+4. **Bounds and the check.** It takes the sup bounds $`M^0_j = \sum_{1 \le k \le n} |p_{j,k}|\,r^k`$ of
+   |p_j(τ) − y₀,j|, the box B_j = Y₀,j + (disc of radius M⁰_j + b_j), and the ball Z = 1/c + disc(r/(|c|(|c| − r))),
+   which contains z. L_ij ≥ |∂F_i/∂y_j| over B × Z × w comes from `SysU.lin` in ball arithmetic. With positive
+   weights ω (any; the code uses the Perron vector of L) it forms Λ, F₀ and ρ (below). The check is Λ < 1,
+   F₀ + Λρ ≤ ρ and ρ r^{n+1}/ω_j ≤ b_j; the b_j are raised until the last holds. Then M_j = M⁰_j + b_j.
+
+The expansion of z on |τ| ≤ r:
+
+```math
+z = \frac{1}{c + \tau} = \sum_{j \le J} \frac{(-\tau)^j}{c^{j+1}} + \tau^{J+1}\zeta(\tau), \qquad |\zeta(\tau)| \le \frac{1}{|c|^{J+2}\,(1 - r/|c|)} .
+```
+
+The constants of part 4:
+
+```math
+\Lambda = \frac{r}{n+2}\,\max_i \sum_j \frac{\omega_i L_{ij}}{\omega_j}, \qquad F_0 = \max_i \frac{\omega_i \Delta_i}{n+1}, \qquad \rho = \frac{2F_0}{1 - \Lambda} .
+```
+
+*Proof.* The remainder R = y − p solves R = T(R), R(0) = 0, with the integral along the segment [0, τ]:
+
+```math
+T(R)(\tau) = \int_0^\tau \Big[ d(s) + F\big(c' + s,\, p(s) + R(s)\big) - F\big(c' + s,\, p(s)\big) \Big]\,ds .
+```
+
+Take the space of R analytic in the open disc and continuous on its closure, with finite norm
+$`\lVert R\rVert = \max_i \omega_i \sup_{|\tau| \le r} |R_i(\tau)|/|\tau|^{n+1}`$; it is a Banach space. Every R with
+‖R‖ ≤ ρ has |R_j| ≤ ρr^{n+1}/ω_j ≤ b_j, so p + R ∈ B. The mean value inequality on the convex box B gives
+|F_i(p + R) − F_i(p + R′)| ≤ Σ_j L_ij |R_j − R′_j|. Integrating $`|s|^n`$ and $`|s|^{n+1}`$ from 0 to |τ| gives
+
+```math
+\lVert T(0)\rVert \le F_0, \qquad \lVert T(R) - T(R')\rVert \le \Lambda\,\lVert R - R'\rVert .
+```
+
+So T maps the ball ‖R‖ ≤ ρ into itself and contracts. Its fixed point gives y = p + R, analytic in the disc, with
+y(c′) = y₀ and y′ = F. ∎
+
+The radius is limited by three things:
+
+- the contraction Λ, which grows like r/(n + 2);
+- the decay of the Taylor coefficients, set by the distance to the nearest singularity;
+- the wrapping of the start box through the ball Taylor recursion, which multiplies its radius by roughly
+  $`e^{r\lVert |F_y| \rVert}`$.
+
+At the Lohner box radii met here (up to 1.8×10⁻⁵), radius 24 is safe for |u| ≥ 100 and radius 10 at |u| = 25.
+The disc runs at 128 bits, the Lohner runs at 256.
+
+### 12.3 The covering and the gluing
+
+**Rows and tiles** (`lemma6b1_cover.py design`). Row j has a centre radius ρ_j, a disc radius r_j, an order n_j and a
+band a_j < |u| < b_j, with a_j = ρ_j − 0.6 r_j and b_j = ρ_j + 0.6 r_j. Its K_j + 1 centres lie on the arc
+|u| = ρ_j:
+
+```math
+c_{jk} = \rho_j\,e^{i\varphi_{jk}}, \qquad \varphi_{jk} = -\tfrac{3\pi}{4}\,(1 - t_{jk}), \qquad t_{jk} \approx k/K_j \text{ on the grid } 2^{-30}\mathbb Z, \qquad t_{j0} = 0, \quad t_{jK_j} = 1 .
+```
+
+So the first centre is on the start ray and the last on the real axis. Tile (j, k) is the open polar rectangle
+a_j < |u| < b_j, |arg u − φ_jk| < α_j, with α_j = 0.6 · (3π/4)/K_j.
+
+| row | ρ_j (in u) | \|ξ\| | band a_j – b_j | r_j | n_j | discs K_j + 1 |
+|---|---|---|---|---|---|---|
+| 0 | 262 | 0.0618 | 247.60 – 276.40 | 24 | 70 | 25 |
+| 1 | 235.36 | 0.0652 | 220.96 – 249.76 | 24 | 70 | 23 |
+| 2 | 208.72 | 0.0692 | 194.32 – 223.12 | 24 | 70 | 20 |
+| 3 | 182.08 | 0.0741 | 167.68 – 196.48 | 24 | 70 | 18 |
+| 4 | 155.44 | 0.0802 | 141.04 – 169.84 | 24 | 70 | 16 |
+| 5 | 128.8 | 0.0881 | 114.40 – 143.20 | 24 | 70 | 13 |
+| 6 | 102.16 | 0.0989 | 87.76 – 116.56 | 24 | 70 | 11 |
+| 7 | 79.6 | 0.1121 | 70.00 – 89.20 | 16 | 60 | 13 |
+| 8 | 61.84 | 0.1272 | 52.24 – 71.44 | 16 | 60 | 10 |
+| 9 | 47.14 | 0.1456 | 41.14 – 53.14 | 10 | 40 | 12 |
+| 10 | 36.04 | 0.1666 | 30.04 – 42.04 | 10 | 40 | 10 |
+| 11 | 24.94 | 0.2002 | 18.94 – 30.94 | 10 | 40 | 7 |
+
+The disc radii follow 12.2: 24 for ρ_j ≥ 100, 16 for 50 ≤ ρ_j < 100, 10 below. Each next band overlaps the previous one
+by 15% of the smaller half-height. The numbers are chosen in floating point, and every condition is re-checked in arb.
+
+**Values.** They come from three sources:
+
+- **The start box** at s₀ = 262e^{−3iπ/4} comes from the sector start-value lemma over X (11.3, contraction 0.5107,
+  via `lemma6_sweep.start_box`). It contains y⁺(s₀; x) for every x ∈ X; its radius is 2.9×10⁻⁸.
+- **The ray run.** One QR-Lohner run (`validated_int.Lohner`, order 12, on `lemma6_usys.SysU`, with w and A as constant
+  states, so it encloses the trajectory of every x ∈ X) goes inward along the start ray and stops at each
+  s_j = ρ_j e^{−3iπ/4}.
+- **The arc runs.** From the box at s_j, one Lohner run goes along the arc |u| = ρ_j and stops at each t_jk. Its box
+  at c_jk contains y_arc(c_jk; x), the continuation of y⁺ along the ray and then the arc, for every x.
+
+Lemma D is applied to each such box, with c_jk as a ball and w from the box.
+
+**Lemma G (gluing).** Let y⁺ be analytic on an open set G₀. Let T₁, …, T_N be open sets, and let each f_m solve the
+system and be analytic on an open disc D_m ⊃ T_m. Suppose that for each m the set
+M_m = T_m ∩ (G₀ ∪ T₁ ∪ … ∪ T_{m−1}) is connected and contains a point q_m with f_m(q_m) = f(q_m). Here f is y⁺ (if
+q_m ∈ G₀) or the f_l of an earlier tile T_l ∋ q_m. Then y⁺ extends analytically to G₀ ∪ T₁ ∪ … ∪ T_N and equals f_m
+on T_m.
+
+*Proof.* By induction on m. f_m and the function built so far both solve the system on the connected open set M_m and
+agree at q_m. So they agree near q_m (uniqueness for the system, which is regular for u ≠ 0), hence on M_m (identity
+theorem). ∎
+
+Here G₀ = {|u| > 257, −3π/4 − 0.4 < arg u < 0}, and y⁺ is analytic on it:
+
+- |u| > 257 is |ξ| < 0.06238, so G₀ is the union of the interior of Ω₀ (lemma 6b₀) and the part |u| > 257 of the open
+  sector of the sector lemma (11.3);
+- the two pieces overlap in a connected set where both are y⁺.
+
+The tiles are taken row by row from the outside, each row from the ray to the real axis. f_jk is the solution through
+(c_jk, y_arc(c_jk)), which by lemma D is analytic on the disc |u − c_jk| < r_j. `lemma6b1_cover.py check` verifies the
+following in arb, for the exact numbers of the construction. The ρ_j are the decimals the runs used; a_j, b_j, α_j and
+t_jk are binary floats.
+
+- **C1.** All 178 discs are certified, and every run is present and was made with this design and this X.
+- **C2.** Every closed tile lies in its open disc. For |θ − φ| ≤ α,
+  $`|\rho e^{i\theta} - \rho_j e^{i\varphi}|^2 \le \rho^2 + \rho_j^2 - 2\rho\rho_j\cos\alpha`$, which is convex in ρ,
+  so the check is at ρ = a_j and ρ = b_j.
+- **C3.** On each arc, the half-arcs from c_{j,k−1} and from c_jk to the midpoint q (at angle
+  (φ_{j,k−1} + φ_jk)/2) lie in their own discs: 2ρ_j sin((φ_jk − φ_{j,k−1})/4) < r_j.
+- **C4.** Consecutive tiles of a row overlap and non-consecutive ones do not: Δφ/2 < α_j < Δφ. The first tile reaches
+  below arg u = −3π/4 and the last above 0.
+- **C5.** Between rows j − 1 and j, the ray point q at radius (a_{j−1} + b_j)/2 lies in both bands and between ρ_j
+  and ρ_{j−1}, with ρ_{j−1} − |q| < r_{j−1} and |q| − ρ_j < r_j.
+- **C6.** s₀ ∈ G₀ (ρ₀ = 262 > 257).
+- **C7.** For each new tile, the meeting set M is a union of polar rectangles: its nonempty intersections with G₀ and
+  the earlier tiles. Every one of them is linked to the one containing q by proven-nonempty overlaps, so M is
+  connected, and q lies in the intersection with the right earlier piece.
+- **C8.** b₀ > 260, a₁₁ < 25 and consecutive bands overlap, so the tiles cover A₁ = {25 ≤ |u| ≤ 260, −3π/4 ≤ arg u ≤ 0}.
+
+The agreement points are where the functions provably meet:
+
+- for k ≥ 1, at q on the arc: $`f_{jk}(q) = y_{\rm arc}(q) = f_{j,k-1}(q)`$, because each half-arc lies in its disc
+  (C3) and solutions along a curve are unique;
+- for k = 0 and j ≥ 1, at q on the ray: $`f_{j0}(q) = y_{\rm ray}(q) = f_{j-1,0}(q)`$ by C5, since c_j0 = s_j and
+  f_j0 is the solution through (s_j, y_ray(s_j));
+- for (0, 0), at q = s₀ ∈ G₀: $`f_{00}(s_0) = y^+(s_0)`$.
+
+Every bound in the check is rigorous for those exact numbers: an intersection of two polar rectangles is kept unless
+it is proven empty, and an overlap counts as a link only if it is proven nonempty.
+
+### 12.4 Results
+
+**The ray run.** The start box at s₀ has radius 2.9×10⁻⁸. The run takes 452 steps in 11 legs and 142 s, and the
+state radius at s₁₁ (|u| = 24.94) is 7.9×10⁻⁸.
+
+**The rows.** Every one of the 178 certificates passes. "Box radius" is the radius of the Lohner box at the disc
+centres, the input of lemma D; it contains the spread over X. "sup" is the bound M on |y − y(c)| over the disc.
+
+| row | ρ_j | discs | Lohner steps | max Λ | max box radius | max sup \|y − y(c)\| | time |
+|---|---|---|---|---|---|---|---|
+| 0 | 262 | 25 | 789 | 0.173 | 2.9×10⁻⁸ | 0.13 | 439 s |
+| 1 | 235.36 | 23 | 717 | 0.174 | 1.2×10⁻⁸ | 0.16 | 383 s |
+| 2 | 208.72 | 20 | 657 | 0.175 | 1.6×10⁻⁸ | 0.21 | 351 s |
+| 3 | 182.08 | 18 | 579 | 0.177 | 2.3×10⁻⁸ | 0.28 | 232 s |
+| 4 | 155.44 | 16 | 558 | 0.179 | 3.5×10⁻⁸ | 0.40 | 220 s |
+| 5 | 128.8 | 13 | 461 | 0.183 | 5.7×10⁻⁸ | 0.62 | 166 s |
+| 6 | 102.16 | 11 | 402 | 0.191 | 1.0×10⁻⁷ | 1.07 | 149 s |
+| 7 | 79.6 | 13 | 350 | 0.152 | 2.1×10⁻⁷ | 1.15 | 124 s |
+| 8 | 61.84 | 10 | 316 | 0.164 | 4.3×10⁻⁷ | 2.14 | 127 s |
+| 9 | 47.14 | 12 | 275 | 0.158 | 1.2×10⁻⁶ | 2.27 | 106 s |
+| 10 | 36.04 | 10 | 268 | 0.189 | 3.6×10⁻⁶ | 4.63 | 100 s |
+| 11 | 24.94 | 7 | 249 | 0.439 | 1.8×10⁻⁵ | 15.5 | 95 s |
+| all | | 178 | 5621 | 0.439 | 1.8×10⁻⁵ | 15.5 | 2491 s |
+
+The contraction stays below 0.2 except on the innermost row, where the disc of radius 10 around the start-ray centre
+comes within 5.7 of u*. The total is 6073 Lohner steps, about 44 minutes of wall-clock time.
+
+**The check** (`lemma6b1_cover.py check`, 1 s) passes all of C1–C8. The meeting sets of the 178 tiles consist of 566
+polar rectangles joined by 450 proven links. The result is saved in `lemma6b1_check_1e-9.json`.
+
+**Lemma 6b₁ (proved).** For every x ∈ X, y⁺ extends analytically to the open set G = G₀ ∪ ⋃ T_jk. G contains the
+annular sector A₁ = {25 ≤ |u| ≤ 260, −3π/4 ≤ arg u ≤ 0}, that is 0.0620 ≤ |ξ| ≤ 0.2, 0 ≤ arg ξ ≤ 3π/8. It also
+contains a neighbourhood of A₁: the bands reach 0.0602 < |ξ| < 0.2298, and the tiles reach past both edge rays. On
+each tile, y⁺ is enclosed by the Taylor model of its disc.
+
+*Proof.* Lemma D for each disc (C1), then lemma G with C2–C7, then C8. ∎
+
+### 12.5 Mutation tests and a negative control
+
+Each test breaks one input and checks that the corresponding check then fails.
+
+| test | what is broken | must | result |
+|---|---|---|---|
+| `--mutate=sign` | lemma D's defect computed with the fast term of the wrong sign (V_u = +V/2 + …), on the 7 discs of row 11 | certify no disc | **caught**: 0 of 7 certified. On every disc the defect coefficients below order n no longer contain 0 (`lemma6b1_runs/mutate_sign.log`, 80 s) |
+| `check --drop=5,6` | tile (5, 6) left out of the covering | print FAIL | **caught**: FAIL, three failures. Tile (5, 7) has no agreement point, the meeting set of tile (6, 5) is disconnected, and the centre direction of (5, 6) at \|u\| = 128.8 is not covered |
+| `control` | discs at 14e^{−3iπ/4} of radius 2 to 8; the branch point u* (12.1) is at distance 5.12 | certify no radius above 5.12 | **consistent**: radii 2 and 3 certified (Λ = 0.09, 0.26); radii 4, 4.5, 5.5, 6 and 8 not (Λ = 1.11, 467, then far above 1). The ray run continued to \|u\| = 14 in 82 steps (`lemma6b1_runs/control.log`, 32 s) |
+
+The control is the meaningful one. Lemma D cannot pass on a disc that contains a singularity of the solution, and it
+does not. It does pass on the smaller discs at the same centre, so the failure comes from the singularity, not from
+the place. It stops before the singularity (radius 4 against distance 5.12) because y⁺ grows towards u*: on the disc
+of radius 3 the bound is already sup |y − y(c)| ≤ 40.
+
+What is not tested: a system that is wrong in the same way in the Taylor recursion and in the defect. Lemma D would
+then prove analyticity for the wrong system, since its conclusion is about whatever system it is given. The identity
+of the system is guarded instead by the self-tests: the generic right-hand side against `SysU.rhs`, `SysU` against
+`validated_int.Sys` (`lemma6_usys.py`), and `validated_int.Sys` against `lateral.py` (review R3, R8). The start box and
+the Lohner integrator have their own mutation tests (11.6, 9.5).
+
+### 12.6 Theorem A(M = 1)
+
+**Theorem A(M = 1).** Assume Braaksma's 1-summability theorem for the existence of the lateral solutions y± and
+their asymptotics (11.1; the one fact taken from the literature). Let x = (A, ω/ω∞) and
+X = (2.5421480475, 0.7769940136) + [−10⁻⁹, 10⁻⁹]². Then the M = 1 selection condition has exactly one zero in X, it
+is simple, and it lies at
+
+```math
+A \in [2.54214804761338,\ 2.54214804761975], \qquad \omega/\omega_\infty \in [0.776994013607438,\ 0.776994013612010]
+```
+
+(ω ≈ 2.96977670855). Precisely:
+
+- there is exactly one x* ∈ X with y⁺ ≡ y⁻, equivalently with Σ(x*) = 0, equivalently with J_D(0.3; x*) = 0;
+- x* lies in the box above;
+- the real 2 × 2 Jacobians of Σ and of x ↦ J_D(0.3; x) are non-singular at x*.
+
+*Proof.* This is the conditional theorem of 11.7, whose hypothesis is now lemma 6b₁ (12.4). In order:
+
+1. **J^path = J.** Lemma 6b₀ (11.4) gives the analyticity of y⁺ on the part |ξ| ≤ 0.0624 of Ω, lemma 6b₁ on a
+   neighbourhood of the annular sector, and the two overlap in G₀, where both are y⁺. So y⁺ is analytic on Ω, the
+   continuation along the lower path equals the continuation along the real axis, and
+   J_D^path(0.3; x) = J_D(0.3; x) for every x ∈ X.
+2. **One simple zero.** By 11.2, J_D^path(0.3; ·) has exactly one zero in X; it is simple and lies in the box above.
+3. **It is the selection condition.** By step 1, y⁺_ℝ(0.3; x) is the path value, so it lies in the state set B₁ of
+   the box run. That is the hypothesis of lemma 6a (11.5), which then gives J_D(0.3; x) = 0 ⇔ y⁺ ≡ y⁻ ⇔ Σ(x) = 0.
+4. **Simplicity.** As in 11.7, DJ_D(0.3; x*) = 𝓛 ∘ DΣ(x*) with 𝓛 injective, so DΣ(x*) is non-singular. ∎
+
+What is not claimed:
+
+- this is the one-harmonic truncation (M = 1), not the physical problem (§7; review 6c);
+- nothing is said about parameters outside X.
+
+### 12.7 What is assumed, what is new, and how to reproduce
+
+**Assumed.** Braaksma's theorem, as in §11 (the existence of y⁺ and its asymptotics on its sector). Nothing else.
+
+**Reused, and how each piece is checked.**
+
+- The start box is the sector start-value lemma of 11.3 (`lemma6_sector.sector_old` over X, evaluated by
+  `lemma6_sweep.start_box`), which has its own mutation test (11.6).
+- The integrator is `validated_int.Lohner` (reviewed, [A_review.md](A_review.md)), with the a-priori floor of
+  `lemma6_common.py`; containment is still verified there.
+- The system is `lemma6_usys.SysU`, checked against `validated_int.Sys` by `python3 lemma6_usys.py`.
+
+**New.**
+
+- `lemma6b1_disc.py`: lemma D. Its right-hand side is checked against `SysU.rhs` by `python3 lemma6b1_disc.py`
+  (mismatch 2.4×10⁻⁵⁹). Its Jacobian is `SysU.lin`, which the self-test of `lemma6_usys.py` checks against series
+  derivatives.
+- `lemma6b1_cover.py`: the design, the runs, the check of 12.3, the mutation test and the control.
+- `lemma6b1_estimate.py`: the double-precision assessment of 12.1. It is not part of the proof.
+- The saved runs are `lemma6b1_runs/ray.json`, `lemma6b1_runs/row_00.json` … `row_11.json` and the check
+  `lemma6b1_check_1e-9.json`.
+
+No existing script was changed. A few further points:
+
+- **Review.** The new files have not been reviewed independently. A second implementation of lemma D (for example the
+  discs re-run in CAPD, §10) would be the natural check.
+- **Arc starts.** Each arc run starts from the box of the ray run at s_j, not from its Lohner set. That drops the
+  correlation with the parameters, which is rigorous; it only makes the boxes wider.
+- **Precision.** Lemma D runs at 128 bits of relative precision. Its input boxes have radii of 10⁻⁹ and more, so
+  rounding is not what limits it.
+- **Powers.** No power of a ball that may contain 0 is taken (the python-flint pitfall in AGENTS.md); every power is
+  of an exact positive number.
+
+**Reproduce** (in `solver/proof/`; times as measured on the loaded machine):
+
+```
+python3 lemma6b1_disc.py                        # self-test of the generic right-hand side, seconds
+python3 lemma6b1_cover.py design                # the 12 rows and 178 tiles, no computation
+python3 lemma6b1_cover.py ray                   # start box and the ray run -> lemma6b1_runs/ray.json, ~2.5 min
+python3 lemma6b1_cover.py rows                  # 12 arc runs and 178 discs -> lemma6b1_runs/row_JJ.json, ~42 min
+python3 lemma6b1_cover.py check --json=lemma6b1_check_1e-9.json   # the checks of 12.3: must print PASS, 1 s
+python3 lemma6b1_cover.py --mutate=sign         # mutation: no disc of row 11 may be certified, ~1.5 min
+python3 lemma6b1_cover.py check --drop=5,6      # mutation: must print FAIL, 1 s
+python3 lemma6b1_cover.py control               # negative control at the branch point, ~0.5 min
+python3 lemma6b1_estimate.py                    # route assessment and the branch point (double precision), ~3 min
+```
+
+`rows` skips the rows already saved, so it can be restarted after an interruption; `row --j=J` runs one row.
+`python3 check_numbers.py` (repository root) ties the quoted 178 discs, 12 rows, contraction ≤ 0.439 and 6073 Lohner
+steps to `lemma6b1_check_1e-9.json`.

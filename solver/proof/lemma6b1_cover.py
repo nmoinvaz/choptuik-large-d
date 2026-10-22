@@ -214,9 +214,8 @@ def row_run(j, h="1e-9", mutate=None):
         out["discs"].append(d)
         print(f"row {j} (|u| = {rw['rho']}, r = {rw['r']}) disc {k}/{rw['K']}: ok {d['ok']}, Lam {d['Lam']:.3f}, "
               f"box radius {d['box_rad']:.1e}, sup|y - y0| {d['sup'] if d['sup'] is None else round(d['sup'], 3)}, "
-              f"{steps} Lohner steps [{time.time() - t00:.0f} s]", flush=True)
-        if mutate and not res["ok"]:
-            continue
+              f"{steps} Lohner steps [{time.time() - t00:.0f} s]"
+              + (f"; defect coefficients below order n contain 0: {d['low_ok']}" if mutate else ""), flush=True)
     out["steps"] = steps
     out["ok"] = all(d["ok"] for d in out["discs"])
     out["sec"] = time.time() - t00

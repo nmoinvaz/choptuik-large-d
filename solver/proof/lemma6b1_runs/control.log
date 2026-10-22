@@ -1,0 +1,8 @@
+ray continued to |u| = 14: 82 steps, state radius 4.8e-06
+control disc at 14 e^(-3 i pi/4), radius 2, n = 40: certified True, Lam 0.094, sup|y - y(c)| 16.1
+control disc at 14 e^(-3 i pi/4), radius 3, n = 40: certified True, Lam 0.263, sup|y - y(c)| 39.6
+control disc at 14 e^(-3 i pi/4), radius 4, n = 50: certified False, Lam 1.113 (no contraction)
+control disc at 14 e^(-3 i pi/4), radius 4.5, n = 60: certified False, Lam 467.147 (no contraction)
+control disc at 14 e^(-3 i pi/4), radius 5.5, n = 60: certified False, Lam 88560013429184.906 (no contraction)
+control disc at 14 e^(-3 i pi/4), radius 6, n = 60: certified False, Lam 309863214888001536000.000 (no contraction)
+control disc at 14 e^(-3 i pi/4), radius 8, n = 60: certified False, Lam 4353276875460275149065912882698007418503168.000 (no contraction)

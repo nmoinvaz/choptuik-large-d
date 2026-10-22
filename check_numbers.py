@@ -146,6 +146,24 @@ def certificate():
     return items
 
 
+@check
+def lemma6b1():
+    """proof/A_certify.md section 12: the disc covering of lemma 6b_1 (saved check of lemma6b1_cover.py)"""
+    d = json.load(open(os.path.join(ROOT, "solver/proof/lemma6b1_check_1e-9.json")))
+    discs = sum(r["discs"] for r in d["rows"])
+    lam = max(r["Lam"] for r in d["rows"])
+    steps = sum(r["steps"] for r in d["rows"]) + sum(leg["steps"] for leg in d["ray"])
+    txt = [("proof/A_certify.md", "178 discs in 12 rows; contraction ≤ 0.439")]
+    # the contraction is quoted as an upper bound: it may be rounded up, never down
+    q = 0.439
+    lam_ok = lam <= q and q - lam < 1e-3
+    return [("lemma 6b1 discs", discs, 178, 1, txt),
+            ("lemma 6b1 rows", len(d["rows"]), 12, 1, txt),
+            (f"lemma 6b1 max contraction {lam:.6f} (quoted rounded up)", q if lam_ok else float("nan"), q, 1e-3, txt),
+            ("lemma 6b1 Lohner steps (rows and ray)", steps, 6073, 1, [("proof/A_certify.md", "6073 Lohner steps")]),
+            ("lemma 6b1 check passes", int(d["ok"]), 1, 1, [])]
+
+
 def sub_box_K(d, h, MC, KR, arb):
     from flint import ctx
     ctx.prec = 320
