@@ -1959,3 +1959,12 @@ No refit possible: the T28 JSONs keep fit_info (Mf, err, resid per k_nu) but not
    k 27: nu 1 err 6.1e-7, nu 3 1.2e-4, nu 7 0.063, nu 9 0.37, nu 11 2.3, nu 13 1.3, nu 15 0.11, nu 21 2.4e-7, nu 27 9e-23
 So the k = 27 (sigma_13) fit fails in the middle harmonics, Mf sits low rather than at the cap, and more rows make k = 25
 slightly worse. That points to precision more than to the Mf range. (b) should tell.
+
+== 2026-10-21 21:29 PDT local
+T30 pilot FAILED and is stopped. Stage 2 is not started. Log: solver/proof/lemma6_sweep_runs/t30_pilot.log (fb7b9cb; no JSON was written).
+   ray tube |u| 107.00 -> 106.70 (half-width 0.1067): finished True,  25 steps,  6 s, radius 5.58e-03
+   ray tube |u| 106.70 -> 70.000 (half-width 0.0700): finished True,  82 steps, 19 s, radius 1.40e-02
+   ray tube |u| 70.000 -> 40.000 (half-width 0.0400): finished False, -1 steps, 76 s, radius inf,
+            "step size underflow at t = 0.7018994390964508"
+No arc tube ran: the ray chain comes first, and it broke at its third segment, about 70% of the way from 70 to 40 (|u| ~49 if t
+is linear in |u|). Machine has T29 (a)/(b) only, on 4 threads.
