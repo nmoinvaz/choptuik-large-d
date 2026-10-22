@@ -1,0 +1,6 @@
+$ python m7_outer.py --local logs/hier_nb_M7_local_xi014_zero_r3high.log logs/hier_nb_M7_local_xi014_zero_repeat_r3high.log -- logs/hier_nb_M7_local_xi014_dA_r3high.log logs/hier_nb_M7_local_xi014_dw.log
+  2.719219000 1.000022000   r_1 -1.1091+1.1187i   |r_3| 2.2e-06  (rejected)   (logs/hier_nb_M7_local_xi014_zero_r3high.log)
+  2.719219000 1.000022000   r_1 -1.1091+1.1187i   |r_3| 2.2e-06  (rejected)   (logs/hier_nb_M7_local_xi014_zero_repeat_r3high.log)
+  2.719419000 1.000022000   r_1 -6.6392-6.7440i   |r_3| 1.2e-06  (rejected)   (logs/hier_nb_M7_local_xi014_dA_r3high.log)
+  2.719219000 1.000122000   r_1 -0.4669+0.6507i   |r_3| 1.0e-06  (rejected)   (logs/hier_nb_M7_local_xi014_dw.log)
+not enough solves with |r_3| < 1e-6
