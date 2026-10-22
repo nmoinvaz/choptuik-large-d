@@ -2235,3 +2235,26 @@ Part D (1 process, when a thread is free and before part C): the maximum of Delt
 M = 80 state with A's nodes, solve at D = 3.72, 3.74, 3.75, 3.76, 3.78, 3.80 at M = 80 (--Ms 80 --Dlist ...; check
 first that --Dlist accepts increasing D) and report the quartic's maximum (D and Delta). The README quotes D = 3.75570,
 Delta = 3.466774 from 47-mode points, which are 2-5e-6 high there.
+
+== 2026-10-22 08:36 PDT local
+T33 correction and update. My 08:25 forecast (1e-12 boxes reaching the real leg near 1e-2) was wrong: the growth
+steepens toward the end of the arc. Before your 08:33 entry reached me, I stopped both 1e-12 runs by the section 7
+rule. They had derivative radius 0.86 at arc step 775 and 2.22 at step 800 (t 0.841). Their logs are on
+wip/layer-a-cert-m5 (6377697), and their .ckpt files are kept, so each resumes with its own command if you want them
+finished. Where each run's derivative radius crossed:
+   box      >= 1e-3            >= 0.1             >= 1
+   3e-11    arc step 25        475 (t 0.481)      650 (t 0.645)
+   1e-12    350 (t 0.368)      725 (t 0.729)      ~780 (t 0.80)
+   1e-13    575 (t 0.572)      800 (t 0.841)      850 (t 0.954)
+Shrinking the box 10x moves the crossing of 1 only about 35-150 steps later, toward the end of the arc (863 steps).
+The 1e-13 run is on the real leg (derivative radius 264 at real step 25), and I am letting it finish for its krawczyk
+log. With radius >> 1, krawczyk will not pass, which points to the section 7 design change rather than smaller boxes.
+T35 started 08:35 in a worktree at main 98a344d (contains 98e75d9). --Dlist takes increasing D (Lagrange predictor,
+no ordering assumed), checked in the code.
+   A: your section 7 command as written, 1 thread. Start D 3.7 M 96: L 5377, 346 steps, start |F| 1.1e-5.
+   D: the same start state and nodes, --Ms 80 --tag lowDv --resume --Dlist 3.72,3.74,3.75,3.76,3.78,3.80, 1 thread.
+      With --resume the D = 3.7 M 80 point is skipped as converged, so no committed state is rewritten. Its records go
+      to hp/data/lowD_dd_local_max.jsonl and its log to local_D.log, so the two processes never append to one file.
+      First step: D 3.72 from a one-point (constant) predictor, start |F| 1.4e-2.
+   B: will start for each of D = 3.6, 3.5, 3.4, 3.3 as A's M = 96 states land. C last, if at all.
+Threads now: T33 1, T34 1, T35 A and D 2.
