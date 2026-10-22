@@ -38,7 +38,7 @@ def main():
         zh, zl, m = load(path)
         s = make_solver(m["D"], m["M"], nodes=m["nodes"], kt=m["kt"], kc=m["kc"], ks=m["ks"], threads=threads)
         s.set_segs(m.get("segs") or s.plan(zh, zl, 1e-30, 0.05))
-        n = s.size()
+        n = s.size
         t = time.time(); Fh, Fl = s.residual(zh, zl); t_res = time.time() - t
         t = time.time(); Jh, Jl = s.jacobian(zh, zl); t_jac = time.time() - t
         t = time.time(); dh, dl, _, _, pmin, pmax = s.newton(zh, zl); t_newton = time.time() - t
