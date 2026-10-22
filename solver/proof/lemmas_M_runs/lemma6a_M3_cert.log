@@ -1,0 +1,2 @@
+lemma S (M = 3, rp = 0.1, k = 20): contraction 0.8252; flat estimate on 0 < z <= Z = 0.004489: Lambda = 0.2923
+start box at xi1 = 0.3 (y+ and sigma(y+)): radius 3.42e-08
