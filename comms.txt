@@ -2343,3 +2343,101 @@ unstable-mode count's local jobs, notes/MODE_COUNT.md section 7 (hp/modecount_lo
 order: job 4 first (the D = 30 pair at M = 64: it decides the open item), then 1, 2 and 5; job 3 (D = 4) only after its
 seeding pilot passes; 6-9 last, only if threads are idle. Stop conditions and push lists as in that table; push to
 wip/modecount-local. Any wind(g) not 0 in a box is a finding: stop that job and report it.
+
+== 2026-10-22 10:57 PDT local
+T35 D done: the maximum of Delta in double-double at M 80 (A's nodes 0.005..0.8, kcs 100, ks 250, tol_step 1e-30).
+   D     3.70 (M 80 ref)   3.72              3.74              3.75              3.76              3.78              3.80
+   Delta 3.4652004835440   3.4661423099798   3.4666527873640   3.4667561198814   3.4667631178829   3.4665020406849   3.4658960615678
+   (4-6 Newton its each, |F| <= 8e-30, about 18-30 min per point)
+   quartic, the six points 3.72-3.80 (least squares, max resid 1.5e-9):  D_max 3.755725, Delta_max 3.4667716863
+   quartic with 3.70 (7 points, resid 9.2e-9): 3.755725, 3.4667716800; quintic (7 points, resid 7.8e-11): 3.755726, 3.4667716860
+   So D_max = 3.75573 and Delta_max = 3.46677169 +- 5e-9 (fits), with an M 80 truncation error near 1e-9 at 3.7 (M 80 -> 96 is
+   -1.24e-9). Against the README (3.75570, 3.466774): Delta 2.3e-6 lower, D 2.5e-5 higher.
+Pushed to wip/lowd-local (ee53f91): lowD_dd_local.jsonl (A so far), lowD_dd_local_max.jsonl (D), local_A.log,
+local_D.log, lowDv_D3.7000_M96.npz. D's M 80 states (87 KB each) are kept locally; say if you want them.
+lowD_conv.py table:
+   D 3.7: M 48 3.465201447069621, M 64 3.465200511802858, M 80 3.465200483544031, M 96 3.465200482305273
+          steps -9.35e-07, -2.83e-08, -1.24e-09; best 3.465200482305273, error 1.2e-09 (ratio 0.044, tail 5.7e-11)
+   D 4.0: M 80 3.445452402240971, error 1.8e-09 (unchanged)
+T37: the first lane failed every job in 3 s and I stopped it at once. hp/modecount_cx had never been built here, so
+Python imported the bare directory as an empty namespace package ("no attribute CSolver"). Job 3 also needed
+DSS_SOLVER_DIR for spec_long. No count ran, and the queue is reset. I built modecount_cx the way modecount_build.sh does
+(cargo build --release --offline, target-cpu=native, -j 1; 3 min) and installed target/release/modecount_cx.dll as
+hp/modecount_cx/build/modecount_cx.pyd, the Windows name for the .so the script copies. It exports CSolver and cdet.
+modecount_check.py --quick on D 30 at M 32 is running against the reference log; T37 starts with job 4 once it agrees.
+T36 C: level 5 of the M 9 pilot hit a floor at |r_5| 9.76 after 22 min, so it continues with the floor rule.
+
+== 2026-10-22 11:04 PDT local
+T37: modecount_check --quick on the local modecount_cx build agrees with the reference log to the last digit (D 30,
+M 32: ln|det| at lambda 1.7 -644.690461587590 in both; complex LU vs slogdet 8.5e-13; gauge zero 0.826484043522), at
+14 s per determinant here. Then job 4 stopped by its own setup rule: the D = 30 background does not converge at M 64.
+   up6_D30.0688.npz (native M 32, nodes 0.3-0.7, kc 414) resampled to M 48: start |F| 1.6e-11 (fine)
+   the same resampled to M 64: start |F| 5.0e4; Newton overflows, LM stays at 5.0e4; setup raises (|F| > 1e-15)
+   the converged M 48 state (modecount_state_D30.0688_M48.npz, |F| 9e-18) resampled to M 64: start |F| 5.5e6
+So it is not the seed: even a converged state gives a garbage residual in the M 64 layout, which points at that layout
+(centre series to the first node 0.3 with M 64 harmonics, or the Taylor plan), not at Newton. hpkernel is current (built
+10-20 13:21, after e0c77e5, the last hp/src change). No circle was evaluated, so the open item stays open. setup had
+saved the unconverged M 64 state as hp/data/modecount_state_D30.0688_M64.npz; I moved it out of the tree so that no
+rerun resumes from it. Job 4 needs a change on your side (layout or nodes for M 64) before it can run here.
+The lane went on in your order: job 1 (D = 16.76, M 32) started 11:03.
+
+== 2026-10-22 11:31 PDT local
+T37 jobs 1 and 2 done, no finding: wind(g) = 0 in every box (B0, U0, B1a-c, B1, U, full) at both. Pushed to
+wip/modecount-local (6957d38, 423fbe5): logs, evals caches, results lines, and the D 8.25 M 32 state.
+   job 1, D 16.76 M 32: |F| 4.2e-30; zeros of det M in the contour = the expected ones (lam_g 0.7496, lam_phys
+         2.1278; real-axis sign changes in (0.5, 1.0) and (2.0, 2.5)); 73 determinants, 447 s
+   job 2, D 8.25 M 32 (from native M 48): Newton 7.5e-8 -> 8.6e-28; expected zeros only (lam_g 0.6573, lam_phys
+         2.2317; the same two sign changes); 68 determinants, 1179 s
+So one unstable mode plus the gauge zero at both D. Job 5 (D 30, M 48 with the cut) started 11:30. Job 4 waits on you
+(the M 64 layout, see my 11:05 entry).
+T36 C: the M 9 pilot at xi1 0.15 ended with level 3 |r_3| 6.1e4 (level 5 at a floor of 5-10; r_1 5.5e8 - 2.0e8i,
+39 min). The repeat at 0.13 is running, with level 5 at 1.2 so far. I will push both logs when it ends.
+T35 A: D 3.65 converging linearly, |F| 2.1e-4 at about iteration 11 (9 min each), Delta 3.46076 heading to the expected
+3.4606. The pilot report follows when it lands.
+
+== 2026-10-22 11:45 PDT local
+T37 job 3: the seeding pilot fails, so the count did not run.
+   M 32 (N 1281): converged, |F| 1.9e-30 in 5 Newton steps, Delta 3.445490888642500 (+3.54e-5 vs f64 kc 39 3.4454554892)
+   M 48 (N 1921): NOT converged: 12 damped Newton steps (lam 0.06-1), |F| 2.3e-3 -> 1.3e-4, Delta wandering 3.44543-3.44549
+The Delta part of the pilot looks mis-set rather than a solver fault. The M 32 value is 3.9e-5 above the double-double
+D = 4 value (3.4454524022, LOW_D.md) on these nodes (0.02-0.6), which reads as truncation at M 32, and the f64 kc 39
+reference is itself 3.1e-6 off. The M 48 failure is the real problem: Newton from the M 32 solution resampled to 48 does
+not converge. Note that modecount_lowD.py exited 0 and saved the unconverged M 48 state as
+hp/data/modecount_state_D4.0000_M48.npz, so the && in modecount_local.sh job 3 would have counted on it. I moved that file
+out of the tree. Job 3 needs a different route to M 48 (more Newton steps or LM, or the lowD_dd states) before its count.
+Lane 2 went on to job 6 (D 61, M 48 with the cut), since the thread was idle. Lane 1 is on job 5.
+
+== 2026-10-22 12:01 PDT local
+T36 C done: M = 9 does not converge at the M = 7 zero at either radius (logs on wip/m7-radius, 9411a95):
+   xi1 0.15: level 5 floor at |r_5| 5-10; level 3 |r_3| 6.1e4; r_1 +5.48e8 - 1.97e8i (39 min)
+   xi1 0.13: level 5 down to 0.23; level 3 |r_3| 2.7e3; r_1 +1.43e7 - 5.7e5i (56 min)
+That ends T36: no M = 7 radius check converged (jobs A and B), and no M = 9 pilot (job C). Nothing more on M = 7 radii,
+as you said.
+T37 job 6 (D 61, M 48 with the cut) stopped by its own rule after 15 min: Newton and LM from the saved state stay at
+|F| 2.7e-15 (the state's own value), and setup raises at fmax 1e-15. setup had rewritten the tracked
+modecount_state_D61.0264_M48_kf13.npz; I restored main's copy. So 6 needs fmax 3e-15 or a better state, which is your
+call. Lanes now: 1 on job 5 (D 30 M 48 cut), 2 on job 7 (D 45 M 48), 3 on jobs 8 then 9 (D 61 M 32, one shared cache).
+One thread is idle until T35 A's D = 3.6 state lands for part B (A is at about iteration 17 on 3.65).
+
+== 2026-10-22 12:11 PDT local
+T35 A pilot, early warning: D 3.65 at M 96 is stagnating. It started from the one-point (constant) predictor at |F|
+3.8e-2. Two full steps brought it to 1.0e-2 and 9e-4; since then it has been damped Newton, linear at best, and now
+stalled:
+   its 11-15: |F| 1.2e-3 -> 2.1e-4 (lam 0.06-0.5)    its 16-17: |F| 9.0e-5, 9.0e-5 (lam 0.008, 0.002)
+   Delta 3.4605762, which is where the f64 kc 47 / Ecker interpolation puts 3.65 (about 3.4606): near the solution.
+Time: about 9-15 min per Newton iteration (the 3.7 M 96 solve was 590 s per iteration; with 6 busy threads these run
+540-890 s). So 3.65 has cost 3 h and 17 of its 30 iterations. If it fails, the chain inserts 3.675 from the same
+one-point predictor. Projected total for 8 points at this rate is well past 24 h, so the pilot rule says stop. The rule
+is meant to apply after 3.65, so I have not stopped it, but I would rather not spend 2-3 more hours on it.
+A cheaper route, if you agree: the --history option wants states at the same M and nodes, and part D left M 80 states
+on A's nodes at 3.70, 3.72, 3.74, 3.75, 3.76, 3.78, 3.80. Run the chain at M 80 with --start lowDv_D3.7000_M80.npz
+--history lowDv_D3.7200_M80.npz,... and a stepped --Dlist (for example 3.675, 3.65, ...), so every step starts from a
+cubic predictor (part D's steps of 0.01-0.02 took 4-6 iterations), and lift each point to M 96 afterwards (as at 3.7:
+4 iterations from M 80). Say: stop A now and run this, let 3.65 run out first, or something else.
+
+== 2026-10-22 12:12 PDT local
+Correction to my last entry: in lowD_dd.py, --history only feeds the single --D step. A --Dlist chain restarts its
+predictor from the converged start point alone, so the first step of every chain is constant again (that is what
+happened at 3.65). The cheaper route is one lowD_dd.py --D call per step, each with --history set to the last 3-4
+converged M 80 states on A's nodes (oldest first): a ten-line wrapper, no change to lowD_dd.py. A stays as it is until
+you say.
