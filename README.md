@@ -179,7 +179,7 @@ An independent double-double computation ([below](#the-double-double-solver-hp))
 2.7×10⁻⁹ or better on 8.25 ≤ D ≤ 21, 7.5×10⁻⁹ up to D = 30, and 5.8×10⁻⁸ from there to
 D = 61, which the fit never saw. It also shows that the f64 points at D ≈ 8–10 (23 Fourier modes in time)
 sit up to 4×10⁻¹⁰ above the true values (from 1.3×10⁻¹¹ to 3.7×10⁻¹⁰ on 8.25–9.9; within
-3×10⁻¹¹ on 10–15.2 and 5.6×10⁻¹¹ on 15.6–21), so their quoted 3×10⁻¹¹ was optimistic
+3×10⁻¹¹ on 10–15.2 and about 6×10⁻¹¹ on 15.6–21), so their quoted 3×10⁻¹¹ was optimistic
 there; that is below the formula's tolerance and does not change it.
 
 At D = 4 the formula gives Δ = 3.4454524 and γ = 0.3739610, the accepted four-dimensional values
@@ -444,7 +444,7 @@ From a literature search (October 2026); the references are listed at the end of
   around D = 11–13; the points here show neither, as Δ decreases and γ increases monotonically to D = 61. Taves and
   Kunstatter (2011) give values for D = 4–8 without a formula. Kol's 2π/Δ = √((10 − D)/(D − 2)) (2005) is for the
   black-string merger, not for scalar collapse. The rational formula here is an empirical fit, a ratio of polynomials
-  with 13 coefficients, not a law derived from the equations. What it adds is one function for all D ≥ 4 that matches
+  with 11 fitted coefficients for Δ and 9 for γ, not a law derived from the equations. What it adds is one function for all D ≥ 4 that matches
   the points to their precision and predicts the double-double points it never saw up to D = 61.
 - **The large-D theory.** That at leading order any periodic profile with any period solves the equations is in
   Ecker, Ecker & Grumiller 2026 (Proposition 1). The free wave equation in similarity coordinates was analysed in 3+1 by
@@ -594,7 +594,7 @@ What the solver has shown:
   visibly off their neighbours and `hp/dd_fits_mp.py --clean` drops them (26 on today's file with `--dmax=60.1`). The frozen points from 35.35 to 37 carry the cut's ≤ 5×10⁻¹⁵, which falls off
   with D. Elsewhere up to D = 60.1 the error is about 10⁻¹⁶; the 94 points above 60.1, solved to the looser
   tolerance, carry up to about 3×10⁻¹⁵.
-- **The f64 points.** Against the double-double values they are within 5.5×10⁻¹¹ at D = 15.6–21 (quoted
+- **The f64 points.** Against the double-double values they are within about 6×10⁻¹¹ at D = 15.6–21 (quoted
   3×10⁻¹¹), typically 3.6×10⁻⁹ and at most 6.4×10⁻⁹ (D = 24.5) at 22–29.3 (quoted
   1.5–2×10⁻⁹), 1.8×10⁻⁸ at 30.1 and
   7×10⁻⁸ at 34.2, and 0.6–2.1×10⁻⁶ high from 35 to 40.3 (quoted 1–3×10⁻⁶). How well the
@@ -688,7 +688,7 @@ The results, in order:
 - [Proposition 3](#proposition-3-what-gravity-does-to-the-non-analytic-piece): gravity rescales the non-analytic piece by an
   n-independent factor that never vanishes (about 40 over the tested interval), so inside 0 < x < 1 it cannot cancel it
   on the way to the light cone.
-- [Proposition 4](#proposition-4-late-orders-of-the-leading-order-series): a derivation (not yet a full proof) that the
+- [Proposition 4](#proposition-4-late-orders-of-the-leading-order-series): a proof (Euler integral, Watson's lemma, Darboux's method) that the
   divergence of the 1/n series without gravity is that piece; its singulant, exponent and constant are derived and
   checked numerically, which identifies C(n,s) as the Stokes multiplier of a mode born at x = ∞.
 - [The inner problem at large x](#the-inner-problem-at-large-x): near $`x \sim \sqrt n`$ the equations lose n altogether;
@@ -1087,7 +1087,7 @@ What this says:
 
 With gravity this suggests a **working hypothesis**, stated precisely:
 
-**Conjecture (selection at D = ∞).** For n = D − 2 let $`F_n(\theta) = \sqrt n\,\partial_xp(0,\theta)`$ and $`\omega_n = 2\pi/\Delta(D)`$ be the profile and
+**Conjecture 1 (selection at D = ∞).** For n = D − 2 let $`F_n(\theta) = \sqrt n\,\partial_xp(0,\theta)`$ and $`\omega_n = 2\pi/\Delta(D)`$ be the profile and
 frequency of the critical solution. Assume (H1) $`F_n \to F_\infty`$ uniformly on a strip $`\lvert\mathrm{Im}\,\theta\rvert < \sigma`$ for some σ > 0 and
 ω_n → ω∞ > 0 (the data give σ ≈ 1.4, the harmonic decay rate), and (H2) the formal family of Proposition 1 with data
 (F_n, ω_n, K_k) is the asymptotic expansion of the solution uniformly on δ ≤ x ≤ 1 − δ (checked: residuals ∝ n⁻³ through
@@ -1324,7 +1324,7 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   probably part of why fixed-M truncation misbehaves.
 - *The higher-harmonic conditions predict F∞'s shape* (computed; compared with data). Tuning $`f_\nu`$ order by order
   so that $`S_\nu = 0`$ for $`\lvert\nu\rvert \ge 3`$ (residuals ≤ 10⁻⁹ of the linear sizes), at A = 2.72 and ω = ω∞,
-  gives $`\lvert F_3/F_1\rvert = 0.055`$ and $`\lvert F_5/F_1\rvert = 0.0030`$ (the f₃ series converges: 0.0855, 0.0131, 0.0016). The double-double
+  gives $`\lvert F_3/F_1\rvert = 0.055`$ and $`\lvert F_5/F_1\rvert = 0.0031`$ (the f₃ series converges: 0.0855, 0.0131, 0.0016). The double-double
   solutions at D = 20–60, extrapolated in 1/n (`hp/largeD_Fratios.py`, polynomials of degree 2–3), give
   $`\lvert F_3/F_1\rvert \to 0.0552`$–0.0549 and $`\lvert F_5/F_1\rvert \to 0.0034`$–0.0032 (degree 1: 0.058, 0.0041). This is the first number the
   D = ∞ selection rule has produced that can be checked against the solutions, and it agrees to the precision of the
@@ -1619,8 +1619,8 @@ state extrapolated to D = ∞, 1.9226 ± 0.0003.
   $`{}_2F_0`$ Stokes constant (the inner problem), and propagation inside the light cone cannot change whether it
   vanishes (Proposition 3). With gravity, their vanishing with three and five harmonics, and without truncation,
   selects ω ever closer to ω∞ (to about 10⁻⁴ without truncation, at twelve orders), with the measured shape
-  ([above](#the-inner-problem-at-large-x)). What remains is to converge these further (M = 5 and 7; σ₈ and beyond across
-  ω), to see whether the harmonic-1 condition lands exactly on ω∞, and to prove the working hypothesis that this is the
+  ([above](#the-inner-problem-at-large-x)). What remains is to converge these further (M = 7; the amplitude series beyond its twelve computed orders
+  across ω), to see whether the harmonic-1 condition lands exactly on ω∞, and to prove the working hypothesis that this is the
   selection rule. That would be an equation for ω∞ and F∞ alone, from which Δ∞ would follow to any precision.
 - **Assumed, not checked: the branch stays critical.** The growth rate is a local root of the growth-mode determinant near
   its predicted value; other unstable modes were not searched for, and no collapse has been evolved above D = 14. If the
@@ -1885,7 +1885,7 @@ solver/proof/       feasibility numbers for the proof roadmap (feasibility.py: s
                     tail_harmonics.py, reconcile.py, amp_trunc.py, family_amps.py: the harmonic-tail analysis;
                     outer_borel.py, inner_corrections.py, lightcone_exponents.py: checks for the selection theorem)
 proof/              the proof roadmap's parts (A_certify.md: the computer-assisted certificate, prototyped at M = 1;
-                    A_review.md: its independent review, with the two lemmas still needed;
+                    A_review.md: its independent review (lemma 6a since proved; one lemma, 6b1, remains);
                     B_tail.md: gap (b), the harmonic tail;
                     C_selection.md: the selection theorem for M harmonics, lemma by lemma;
                     D_entire.md: the entire-function route to a certified inner zero)
@@ -1902,7 +1902,8 @@ hp/states.py                  where saved solutions are read from (hp/data/state
 hp/data/states/               53 double-double solutions, one per integer D = 8-60, for the profile scripts
 hp/dinf_budget.py             error budget for Delta_inf: model x degree x fit range x cleaning x snapshot
 hp/gamma_dd.py                gamma(D) in double-double: root of det M(lambda) (gamma_batch.py --procs N; gamma_compare.py;
-                              results in hp/data/gamma_dd.jsonl, 28 points D = 10-61)
+                              results in hp/data/gamma_dd.jsonl, 28 points D = 10-61,
+                              and hp/data/local/gamma_dd.jsonl, all 67 points D = 8.25-61)
 solver/plot_physics.py        physics.svg: e^Delta, fine-tuning digits per echo, field and gravity strength vs D
 solver/plot_echo.py           echo.svg: the echo at D = 4, 10, 20, 60 (data: solver/echo_data.py -> solver/data/echo_spectrum.npz)
 solver/plot_spectrum.py       spectrum.svg: the echo's harmonic spectrum and decay rates against the D = infinity prediction
@@ -1966,7 +1967,8 @@ solver/largeD_late_structure.py  where the nonlinear late-order growth lives (x,
     [arXiv:2507.07636](https://arxiv.org/abs/2507.07636).
 [^10]: M. Reiterer and E. Trubowitz, Commun. Math. Phys. 368, 143 (2019), [arXiv:1203.3766](https://arxiv.org/abs/1203.3766).
 [^11]: I. Baldomá, M. J. Capiński, M. Guardia and T. M. Seara, J. Nonlinear Sci. 33 (2023),
-    [arXiv:2206.13840](https://arxiv.org/abs/2206.13840); X. Xie and S. Tanveer, Arch. Ration. Mech. Anal. 166, 219 (2003).
+    [arXiv:2206.13840](https://arxiv.org/abs/2206.13840); I. Baldomá, E. Fontich, M. Guardia and T. M. Seara,
+    [arXiv:1201.5152](https://arxiv.org/abs/1201.5152); X. Xie and S. Tanveer, Arch. Ration. Mech. Anal. 166, 219 (2003).
 [^12]: R. Donninger, J. Evol. Equ. 9, 511 (2009), [arXiv:0809.5177](https://arxiv.org/abs/0809.5177).
 [^13]: NIST Digital Library of Mathematical Functions, §15.8 (Gauss's connection formulas),
     [dlmf.nist.gov/15.8](https://dlmf.nist.gov/15.8).

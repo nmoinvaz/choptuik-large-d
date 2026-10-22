@@ -346,7 +346,7 @@ full texts checked:
   the black-string merger, not for scalar-field collapse.
 
 Verdict: no earlier formula for Δ(D) was found, and the only earlier fit for γ(D) (Bland et al.'s exponential) has a
-different form and limit. The rational formula is an empirical fit, a ratio of polynomials with 13 coefficients.
+different form and limit. The rational formula is an empirical fit, a ratio of polynomials with 11 fitted coefficients for Δ and 9 for γ.
 Rational (Padé-type) fitting is a standard method, so what is new is the fitted function and its validation (precision
 across D ≥ 4, held-out agreement with the double-double points to D = 61, and the correct limits), not a law derived from
 the equations.
