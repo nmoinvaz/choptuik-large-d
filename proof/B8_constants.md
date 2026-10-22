@@ -420,7 +420,7 @@ own threshold, with these settings (K = 4, κ = 0.3, κ₁ = 0.6, δ = 0.05, x_F
   On N1 the integrand is larger (2.4×10⁸) but γ_N1 = 3.7×10⁻¹⁵.
 - P_V = |ω|(1/10 + φ_δ)h_S and P_c follow.
 
-The remainder bound is conservative: at moderate n the actual remainder is far below it (section 9, check (B)).
+At n = 10³ the actual remainder on the sample paths reaches 20% of this bound (section 9, check (B)).
 
 ### 7.3 What blocks a smaller n₀ in B8
 
@@ -534,7 +534,14 @@ At the upper end of the arc a fast component k e^{−1/(2z)} of Y⁺_out relativ
 | structural zeros of the atoms at the centre | `b8m_atoms.py 4 0 0` | removed entries ≤ 1.8×10⁻⁶⁶ | |
 | identities I1 to I4 (M = 1, K = 3, 4; M = 3, K = 2) | `b8m_identities.py` | ≤ 3×10⁻⁷⁷ | old ρ₂: I1 fails (0.07 to 0.36); q without (I+e)⁻¹: I2, I3 fail |
 | series part of (H8) vs B5's leading data; ε⁰ part vs the inner series | `b8m_h8.py --centre` | 76.5602, 3.23126, 6.46252; 10⁻⁶⁹ (`b8m_h8_centre.log`) | Φ without [xc′P]: the ε⁰ part no longer matches, fails |
-| actual remainder on the complex paths (n = 10³, 10⁴) vs next formal orders, vs the original model, vs the bounds; Lemma K on an arc | `b8m_numcheck.py` | NUMCHECK_PENDING | NUMCHECK_PENDING |
+| (A1) actual remainder R at n = 10³ on the ray and 4 arcs (79 points) vs the next formal orders ε^{5..8}Z_k (in the solution's gauge), where ρ ≤ 0.03 | `b8m_numcheck.py 1000 4` | 2.0×10⁻³ | τ_S × 1.01: TAU_RESULT |
+| (A2) R vs Z − Z^K from an independent integration of the original (p, m, b, c) model, where resolvable | same | 5.0×10⁻⁴ (up to \|R\|/\|Z\| = 0.35) | τ_S × 1.01: TAU_RESULT |
+| (B) R vs the certified bounds (h at ln n₀ = 73.89) | same | ratios V 0.013, S 0.024, β 0.20, c 0.080 | weight ρ⁶ instead of ρ⁵: β 1.8, c 1.9, fails |
+| (C) Lemma K: fast propagator on the arc \|x\| = 5 vs the log-norm bound | same | ln‖E‖ = −21.9 ≤ −15.4 | ‖H'‖ dropped: bound −26.6, fails |
+
+What the numerical checks share with the certificate: the formal series (`b8m_formal.py`) and the definition of the
+model. (A2) shares nothing else: it integrates the original equations in (p, m, b, c). (B) uses only the certified
+constants h, not the bound code.
 
 What is not tested: an error made identically in `b8m_formal.py` and in the identity script (they share the formal
 coefficients but not the equations; the formal series is checked against the original model and the inner series
@@ -576,8 +583,11 @@ coefficients. ∎ The scripts are written for M = 1; running them for M = 3, 5 n
 4. **Light-cone disc.** C_selection.md §11 handles the excluded disc through B6. B8 never enters it, and B5(1) does not
    need it. B6 matters only for the Stokes jump on x > 1.
 5. **The ρ₂ correction** (section 4): found and fixed in this pass; all certificates postdate it.
-6. **The bounds are conservative** by several orders of magnitude (section 9, check (B)); this costs nothing for M = 1
-   because B5(1)'s threshold binds.
+6. **How sharp the bounds are.** At n = 10³ (far below n₀) the actual remainder on the sample paths uses at most 20%
+   of the bound with the n₀-certificate's h (β-component; 1 to 8% for V, S, c), and one order more of ρ in the weight
+   is violated by a factor 1.9 (section 9). So the shape of the bound is right and its constants are not wasteful at
+   moderate n; at n ≥ n₀ the remainder is much smaller relative to the bound. The large h (10⁵ to 10⁶) reflects the
+   growth of the formal coefficients (about ×15 per order), not slack.
 
 ## 12. Proposed text for C_selection.md, PROOF.md and the paper
 
@@ -608,5 +618,8 @@ python3 b8m_atoms.py 4 0 0                 # atoms and structural zeros at the c
 python3 b8m_identities.py                  # Lemma R (b8m_identities.log); --mutate=rho2old, --mutate=q
 nice -n 10 python3 b8m_scan.py 4 73.89,70,66,62 --rA=2e-6 --rW=2e-6 --log=b8m_scan_K4_box.log      # ~1-5 min each
 python3 b8m_h8.py 4 73.89 --log=b8m_scan_K4_box.log --rA=2e-6 --rW=2e-6      # (H8)(ii); --centre for the series check
-python3 b8m_numcheck.py 1000 4 --log=b8m_scan_K4_box.log                       # section 9
+python3 b8m_numcheck.py 1000 4 --log=b8m_scan_K4_box.log      # section 9 (b8m_numcheck_n1e3.log; saves the .npz)
+python3 b8m_numcheck.py 1000 4 --log=b8m_scan_K4_box.log --load=b8m_numcheck_n1000.npz --mutate=weight   # must fail
+python3 b8m_numcheck.py 1000 4 --log=b8m_scan_K4_box.log --load=b8m_numcheck_n1000.npz --mutate=kernel   # must fail
+python3 b8m_numcheck.py 1000 4 --mutate=tau                                                             # must fail
 ```
