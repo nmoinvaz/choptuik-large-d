@@ -51,15 +51,15 @@ Two causes, both in the cost of one residual, and two fixes that leave `hier.py`
 - **Python overhead.** One M = 7 residual is one series (J ≈ 240 terms of a 25-component system) and four ray-plus-arc
   DOP853 integrations, ~10⁴ right-hand sides of ~20 µs of arithmetic each, wrapped in ~100 µs of `solve_ivp` and
   `np.convolve` overhead. `inner_nb.py` compiles the same series and the same right-hand side, and transcribes scipy's
-  DOP853 (coefficients imported from scipy; initial step, error norm and step control as in `scipy/integrate/_ivp`).
-  At M = 3 the two backends take exactly the same number of right-hand sides on every ray and arc (1706, 4322, 3290,
-  1442) and agree to 10⁻¹⁴. Through `hier.demixed_multi`, at the M = 1, 3, 5 points and the tuned M = 7 point of
-  `logs/hier_M7_fixA_run2.log`, every residual entry that `hier.py` reads differs from scipy's by at most 3.6 times scipy's
-  own noise (its change when rtol goes from 10⁻¹² to 0.8×10⁻¹²); a sign flipped in the compiled right-hand side makes the
-  check fail by 10¹⁴ (`inner_nb.py check 1 3 5 7`, `--mutate=sign`; logs `inner_nb_check*.log`). The entries that `hier.py`
-  does not read (r₁, r₃ at the approach radii, where e^{1/(2ξ²)} ≈ 10²⁰ amplifies rounding) differ by up to 100%, as they
-  must. Speed under the cloud load of this session (load average 16–22 on 2 cores): 1.5 s against 25 s per M = 7
-  residual.
+  DOP853 (coefficients imported from scipy; initial step, error norm and step control as in `scipy/integrate/_ivp`). At
+  M = 3 the two backends take exactly the same number of right-hand sides on every ray and arc (1706, 4322, 3290, 1442)
+  and agree to 10⁻¹⁴. Through `hier.demixed_multi`, at the M = 1, 3, 5 points and the tuned M = 7 point of
+  `logs/hier_M7_fixA_run2.log`, every residual entry that `hier.py` reads differs from scipy's by at most 3.6 times
+  scipy's own noise (its change when rtol goes from 10⁻¹² to 0.8×10⁻¹²); a sign flipped in the compiled right-hand side
+  makes the check fail by 10¹⁴ (`inner_nb.py check 1 3 5 7`, `--mutate=sign`; logs `inner_nb_check*.log`). The entries
+  that `hier.py` does not read (r₁, r₃ at the approach radii, where e^{1/(2ξ²)} ≈ 10²⁰ amplifies rounding) differ by up
+  to 100%, as they must. Speed under the cloud load of this session (load average 16–22 on 2 cores): 1.5 s against 25 s
+  per M = 7 residual.
 - **The arc at ξ = 0.2 while the top harmonic is untuned.** `hier.py` evaluates every residual at all radii from one
   integration. With F₇ off its tuned value by 1% (the amplitude-expansion seed), the harmonic-7 jump at ξ = 0.2 is large
   and nonlinear and the arc to the real axis there takes about 1.2×10⁶ right-hand sides (in either backend), against
@@ -95,11 +95,12 @@ nested. Timing under the cloud load of this session (2 cores, load average 16–
 What it gives:
 
 - **The profile at M = 7.** F₅/F₁ = 0.003104 + 0.000557i, against 0.003092 + 0.000541i at M = 5 and 0.00310 + 0.00056i
-  from the untruncated amplitude expansion at (2.72, ω∞) (README): adding harmonic 7 moves F₅ onto the untruncated value.
-  F₇/F₁ = 0.000175 + 0.000045i, so |F₇/F₅| = 0.0573 (the log rounds to six decimals), against the untruncated per-pair
-  decay ρ_*² = 0.0574 (B_tail.md §2). F₃/F₁ = 0.054843 + 0.005438i (M = 5: 0.054883 + 0.005414i), not yet converged (below). The re-tuning that
-  harmonic 7 causes is ΔF₅/F₁ = (1.2 + 1.6i)×10⁻⁵ and ΔF₃/F₁ = (−4.0 + 2.4i)×10⁻⁵, i.e. 0.11 and 0.26 of F₇/F₁: the
-  lower harmonics move by fractions of the new one, not through a slow nearest-neighbour cascade.
+  from the untruncated amplitude expansion at (2.72, ω∞) (README): adding harmonic 7 moves F₅ onto the untruncated
+  value. F₇/F₁ = 0.000175 + 0.000045i, so |F₇/F₅| = 0.0573 (the log rounds to six decimals), against the untruncated
+  per-pair decay ρ_*² = 0.0574 (B_tail.md §2). F₃/F₁ = 0.054843 + 0.005438i (M = 5: 0.054883 + 0.005414i), not yet
+  converged (below). The re-tuning that harmonic 7 causes is ΔF₅/F₁ = (1.2 + 1.6i)×10⁻⁵ and ΔF₃/F₁ = (−4.0 + 2.4i)×10⁻⁵,
+  i.e. 0.11 and 0.26 of F₇/F₁: the lower harmonics move by fractions of the new one, not through a slow
+  nearest-neighbour cascade.
 - **No converged r₁.** The level-3 Newton went |r₃| 2×10⁷ → 34 → 16 → 9.1 and stopped there by `hier.py`'s own noise-floor
   rule (a fresh Jacobian no longer halves |r₃|). At |r₃| = 9 the harmonic-1 residual is dominated by leakage
   (Schur-corrected r₁ = −9.8×10⁴ − 6.3×10⁴i, raw −6.7×10⁴ − 3.2×10⁴i), so this run does **not** give r₁^{[7]}(p₅), and the
@@ -220,10 +221,10 @@ For odd M, 𝔐_M is the model `hier.py` solves (`inner_np.Inner` with every hom
 harmonics |μ| ≤ M, c (and E = y²/2) the even harmonics |μ| ≤ M + 1, and every product is projected onto these spaces.
 Its data are u = (A, ω, f₃, …, f_M) with F = A sin θ + Σ (B_ν sin νθ + C_ν cos νθ) and f_ν = F_ν.
 
-- **Multipliers.** At fixed M the formal solution regular at ξ = 0 is 1-summable (Braaksma; [C_selection.md](C_selection.md)
-  B4), and the difference of its lateral sums defines the label multipliers S_ν^{[M]}(u), |ν| ≤ M. Normalised:
-  Ŝ_ν = S_ν/(2κ_ν), with κ_ν the linear (Weber) connection coefficient of label ν, so that Ŝ_ν = F_ν + (nonlinear terms)
-  and |κ_ν| ≍ e^{π|ν|ω/2}.
+- **Multipliers.** At fixed M the formal solution regular at ξ = 0 is 1-summable (Braaksma;
+  [C_selection.md](C_selection.md) B4), and the difference of its lateral sums defines the label multipliers
+  S_ν^{[M]}(u), |ν| ≤ M. Normalised: Ŝ_ν = S_ν/(2κ_ν), with κ_ν the linear (Weber) connection coefficient of label ν, so
+  that Ŝ_ν = F_ν + (nonlinear terms) and |κ_ν| ≍ e^{π|ν|ω/2}.
 - **Jump-conditioned truncation.** Hypothesis (H_T^M): the Jacobian ∂(Ŝ₃, …, Ŝ_M)/∂(f₃, …, f_M) is invertible on the box.
   Then the tuned set {Ŝ₃^{[M]} = ⋯ = Ŝ_M^{[M]} = 0} is a graph f = f^{[M]}(A, ω), and
   s_M(A, ω) = Ŝ₁^{[M]}(A, ω, f^{[M]}(A, ω)). Its zero is p_M = (A_M, ω_M), and c_M = ω_M/ω∞.
@@ -278,44 +279,45 @@ Write 1 for the harmonic-1 rows and H for the rows 3, …, M. Then:
 
 1. On {r_H = 0}, r₁ = τ(Ŝ₁) with τ(0) = 0 and τ′(0) = T̃ = T₁₁ − T₁H T_HH⁻¹ T_H1, the Schur complement of T, which is
    invertible. So the zero `hier.py` finds (r₁ = 0 on r_H = 0) is the zero of s_M (Ŝ₁ = 0 on Ŝ_H = 0), exactly.
-2. At that zero the outer Jacobians are related by D_p(r₁|_{r_H=0}) = T̃ (I − G h′)⁻¹ J_s, where J_s = D_p s_M,
-   G = ∂_fŜ₁ (∂_fŜ_H)⁻¹ and h′ = −T_HH⁻¹ T_H1, whenever I − G h′ is invertible. So the zero is simple for one exactly when it is
-   simple for the other.
+2. At that zero the outer Jacobians are related by D_p(r₁|_{r_H=0}) = T̃ (I − G h′)⁻¹ J_s, where J_s = D_p s_M, G =
+   ∂_fŜ₁ (∂_fŜ_H)⁻¹ and h′ = −T_HH⁻¹ T_H1, whenever I − G h′ is invertible. So the zero is simple for one exactly when
+   it is simple for the other.
 3. The same identity holds for the Schur complement of hier's leakage Jacobian K = D r = T DŜ: the entries of T, such as
    ∂r₁/∂B₅ ≈ 10¹⁷ ≈ e^{π(5−1)ω/2} × (the finite-ξ de-mixing error), cancel exactly in it.
 
 *Proof.* Assume also T_HH invertible (`hier.py` needs this to define its correction; its K_HH is invertible). Then
-Φ_H(Ŝ₁, Ŝ_H) = 0 is solved by Ŝ_H = h(Ŝ₁) with h(0) = 0 and h′(0) = −T_HH⁻¹T_H1 (implicit function theorem), and
-r₁ = Φ₁(Ŝ₁, h(Ŝ₁)) =: τ(Ŝ₁) with τ′(0) = T₁₁ + T₁H h′(0) = T̃, invertible since det T = det T_HH · det T̃. For 2,
-differentiate Ŝ_H(p, f^r(p)) = h(Ŝ₁(p, f^r(p))) at the zero: with a = D_p(Ŝ₁ on {r_H = 0}), f^r′ = (∂_fŜ_H)⁻¹(h′a − ∂_pŜ_H), so
-a = J_s + G h′ a. For 3, K's Schur complement is D_p of r₁ along the linearised set {K_H du = 0}, which at the zero is the
-tangent of {r_H = 0}; apply 2. ∎
+Φ_H(Ŝ₁, Ŝ_H) = 0 is solved by Ŝ_H = h(Ŝ₁) with h(0) = 0 and h′(0) = −T_HH⁻¹T_H1 (implicit function theorem), and r₁ =
+Φ₁(Ŝ₁, h(Ŝ₁)) =: τ(Ŝ₁) with τ′(0) = T₁₁ + T₁H h′(0) = T̃, invertible since det T = det T_HH · det T̃. For 2,
+differentiate Ŝ_H(p, f^r(p)) = h(Ŝ₁(p, f^r(p))) at the zero: with a = D_p(Ŝ₁ on {r_H = 0}), f^r′ = (∂_fŜ_H)⁻¹(h′a −
+∂_pŜ_H), so a = J_s + G h′ a. For 3, K's Schur complement is D_p of r₁ along the linearised set {K_H du = 0}, which at
+the zero is the tangent of {r_H = 0}; apply 2. ∎
 
 h′ is the leakage of label 1 *up* into the rows of higher labels, which carries e^{−π(μ−1)ω/2}, so I − G h′ ≈ I. Lemma R
 is the precise form of the sentence "the weights multiply zero and cancel in the tuning" (B_tail.md §2): the ten to
 seventeen orders of magnitude in `hier.py`'s K are a property of measuring multipliers through a finite-ξ jump, and they
 leave neither the zero nor its Jacobian.
 
-**Lemma O (order counting in hier's model).** Expand 𝔐_M in the amplitude, F = A sin θ + Σ_{ν ≥ 3} f_ν(A) e^{iνθ} + c.c.,
-with every f_ν^{(k)}, 3 ≤ ν ≤ M, tuned order by order (Ŝ_ν^{(k)} = 0), and S₁/S₁^{(1)} = 1 + Σ σ_j^{[M]} x^j, x = A². Compare
-with the untruncated expansion (σ_j, f_ν^{(k)}). Then every coefficient of 𝔐_M at order A^k and harmonic h agrees with the
-untruncated one whenever k < 2M + 4 − |h|. In particular:
+**Lemma O (order counting in hier's model).** Expand 𝔐_M in the amplitude, F = A sin θ + Σ_{ν ≥ 3} f_ν(A) e^{iνθ} +
+c.c., with every f_ν^{(k)}, 3 ≤ ν ≤ M, tuned order by order (Ŝ_ν^{(k)} = 0), and S₁/S₁^{(1)} = 1 + Σ σ_j^{[M]} x^j, x =
+A². Compare with the untruncated expansion (σ_j, f_ν^{(k)}). Then every coefficient of 𝔐_M at order A^k and harmonic h
+agrees with the untruncated one whenever k < 2M + 4 − |h|. In particular:
 
 - σ_j^{[M]} = σ_j for j ≤ M, and f_ν^{(k),[M]} = f_ν^{(k)} for k ≤ 2M + 2 − ν;
 - for the truncation of `amp_trunc.py` (every function at |μ| ≤ M, so the even harmonics stop at M − 1) the threshold is
   2M + 2 − |h| instead, and σ_M is the first coefficient that changes.
 
-*Proof.* At order k only harmonics with |h| ≤ k, h ≡ k (mod 2), occur (true at k = 1; products add orders and harmonics; a
-tuned term f_ν^{(k)} has |ν| ≤ k). Call (k, h) *different* if the order-k, harmonic-h coefficient (of y, σ, c, E, or of
-the tuned F) differs between the two expansions. Claim: different ⇒ k ≥ τ(h) := 2M + 4 − |h|. A coefficient is different
-for one of three reasons. (i) h lies outside 𝔐_M's space (odd |h| ≥ M + 2 or even |h| ≥ M + 3): then k ≥ |h| ≥ τ(h).
-(ii) It is a sum of products one of whose factors, (k₁, h₁), is different: by induction k₁ ≥ τ(h₁), and the other
+*Proof.* At order k only harmonics with |h| ≤ k, h ≡ k (mod 2), occur (true at k = 1; products add orders and harmonics;
+a tuned term f_ν^{(k)} has |ν| ≤ k). Call (k, h) *different* if the order-k, harmonic-h coefficient (of y, σ, c, E, or
+of the tuned F) differs between the two expansions. Claim: different ⇒ k ≥ τ(h) := 2M + 4 − |h|. A coefficient is
+different for one of three reasons. (i) h lies outside 𝔐_M's space (odd |h| ≥ M + 2 or even |h| ≥ M + 3): then k ≥ |h| ≥
+τ(h). (ii) It is a sum of products one of whose factors, (k₁, h₁), is different: by induction k₁ ≥ τ(h₁), and the other
 factors have total order k − k₁ ≥ |h − h₁| ≥ |h₁| − |h|, so k ≥ τ(h₁) + |h₁| − |h| = τ(h). (iii) It is a tuned term
-f_ν^{(k)} whose order-k multiplier Ŝ_ν^{(k)} differs: that multiplier is a functional of the de-mixed late orders
-Σ_μ [e^{−Π}]^{(k″)}_{ν−μ} d^{(k′)}_μ with k′ + k″ = k, and a different d^{(k′)}_μ needs k′ ≥ τ(μ) while [e^{−Π}]^{(k″)}_{ν−μ} ≠ 0
-needs k″ ≥ |ν − μ|, so again k ≥ τ(ν) (the same holds for the ⟨F²⟩ series in the normalisation, harmonic 0). For h = 1,
-k ≥ 2M + 3, i.e. relative order A^{2M+2}: σ_{M+1}. For `amp_trunc.py` the first dropped harmonic is the even M + 1, at
-order M + 1, and the same induction with τ′(h) = 2M + 2 − |h| gives σ_M. ∎
+f_ν^{(k)} whose order-k multiplier Ŝ_ν^{(k)} differs: that multiplier is a functional of the de-mixed late orders Σ_μ
+[e^{−Π}]^{(k″)}_{ν−μ} d^{(k′)}_μ with k′ + k″ = k, and a different d^{(k′)}_μ needs k′ ≥ τ(μ) while
+[e^{−Π}]^{(k″)}_{ν−μ} ≠ 0 needs k″ ≥ |ν − μ|, so again k ≥ τ(ν); a different e^{−Π} coefficient (built from the tuned F)
+needs k″ ≥ τ(ν − μ) and k′ ≥ |μ|, which gives the same bound, and so does the ⟨F²⟩ series of the normalisation (harmonic
+0). For h = 1, k ≥ 2M + 3, i.e. relative order A^{2M+2}: σ_{M+1}. For `amp_trunc.py` the first dropped harmonic is the
+even M + 1, at order M + 1, and the same induction with τ′(h) = 2M + 2 − |h| gives σ_M. ∎
 
 (The multipliers here are the mathematical ones, defined order by order by lateral Borel sums; a late-order fit reads
 them to its own accuracy, ~10⁻¹⁰.)
@@ -359,7 +361,7 @@ Every constant of Lemma T, with what it is (all *numerical evidence* unless mark
 | Constant | Role | Value | Source |
 |---|---|---|---|
 | σ_F | profile strip half-width | 1.428 | B_tail.md §2 (tuned harmonics, amplitude expansion) |
-| ρ_*² = \|F_{ν+2}/F_ν\| | profile decay per pair, (T1) | 0.0574 untruncated (ν ≥ 5); at the truncated zeros \|F₃/F₁\| = 0.0531 (M = 3), \|F₅/F₃\| = 0.0569 (M = 5), \|F₇/F₅\| = 0.0574 (M = 7 at p₅) | B_tail.md §2; `trunc_seq_M7.py`; §2 |
+| ρ_*² = \|F_{ν+2}/F_ν\| | profile decay per pair, (T1) | 0.0574 untruncated (ν ≥ 5); at the truncated zeros \|F₃/F₁\| = 0.0531 (M = 3), \|F₅/F₃\| = 0.0569 (M = 5), \|F₇/F₅\| = 0.0573 (M = 7 at p₅) | B_tail.md §2; `trunc_seq_M7.py`; §2 |
 | \|q∞\| A² | leading tuning map, (T1) contraction | 0.0633; × e^{2σ}: 0.27 at σ = 0.736, 0.47 at σ = 1 | B_tail.md §2, §6 |
 | A-series term ratio of each f_ν | corrections to the leading tuning map | ≈ 0.25 per order at A* | B_tail.md §2 |
 | σ needed for κ ≤ ¼ | (★) | ≤ 0.736 (*arithmetic*) | §5.2 |
@@ -402,9 +404,9 @@ scaled recursion (d̃_j = d_j/2^j; the operator is the c = 1 one, since order k 
 with b_j the forcing from lower orders. This is the step for which the cancellation can be written exactly.
 
 **Lemma W (the weight cancels in every tuning step; proved, as algebra).** With T_j = (α_ν)_j(β_ν)_j/j! = Π_{m<j} a_m,
-the recursion solves in Darboux form, d̃_j = T_j (d̃₀ − Σ_{i<j} b_i/T_{i+1}). The late-order multiplier sequence of amp_flint
-is R_j = base_j (d̃_j + de-mixing terms) + normalisation terms, with base_j T_j = K_ν = 1/(Γ(α_ν)Γ(β_ν)) exactly
-([D_entire.md](D_entire.md) §6.1, where this telescoping is carried out and enclosed rigorously for σ₁). So the
+the recursion solves in Darboux form, d̃_j = T_j (d̃₀ − Σ_{i<j} b_i/T_{i+1}). The late-order multiplier sequence of
+amp_flint is R_j = base_j (d̃_j + de-mixing terms) + normalisation terms, with base_j T_j = K_ν = 1/(Γ(α_ν)Γ(β_ν))
+exactly ([D_entire.md](D_entire.md) §6.1, where this telescoping is carried out and enclosed rigorously for σ₁). So the
 normalised order-k multiplier is
 
 ```math
@@ -419,11 +421,11 @@ with ν: |T^{(ν)}_i| = Π_{m<i} |m + α_ν| |m + β_ν|/(m + 1) is increasing i
 **Why this does not yet give (★).** The sum converges only through cancellations: D_entire.md §6.1 needs two exact
 cancellations of the O(1/j) parts of the increments before they are O(j⁻²) and summable. The forcing b_i grows like the
 late orders of the lower harmonics, |T^{(μ)}_i| ≍ (½)_i up to oscillating factors, so the term-by-term majorant
-Σ|b_i|/(½)_{i+1} ~ Σ 1/i diverges (logarithmically). A ν-uniform bound needs the cancellations themselves to be ν-uniform. That is a concrete,
-finite-dimensional question per order (the cancellations are identities between the ψ-function terms of C_j and the first
-terms of the forcing), and it is where an attempt at (★) at lowest order should continue; it was not completed here.
-Measured, the outcome is known: the leading-order tuning ratio q_ν is ν-independent to six digits (B_tail.md §2), so the
-tuning steps are uniform in fact.
+Σ|b_i|/(½)_{i+1} ~ Σ 1/i diverges (logarithmically). A ν-uniform bound needs the cancellations themselves to be
+ν-uniform. That is a concrete, finite-dimensional question per order (the cancellations are identities between the
+ψ-function terms of C_j and the first terms of the forcing), and it is where an attempt at (★) at lowest order should
+continue; it was not completed here. Measured, the outcome is known: the leading-order tuning ratio q_ν is ν-independent
+to six digits (B_tail.md §2), so the tuning steps are uniform in fact.
 
 ### 8.3 Why the lowest order does not settle the ratio at A*
 
@@ -536,6 +538,7 @@ of reach: … so the truncation sequence stops at M = 5.") by
 > harmonic M + 1 of c and E. With that harmonic kept, the amplitude expansion changes σ₄ by 0.12% at M = 3 instead of
 > exploding; see [B_tail_M7.md](B_tail_M7.md) §4.)
 
-**check_numbers.py**: two checks with machine-readable sources, if the coordinator quotes these numbers: Δσ₄ of hier's
-M = 3 model (|Δσ₄| = 3.74×10⁻⁵, from `solver/proof/trunc_hier_M3_K9_J500_w1.0000.json` and the README's σ₄), and
-F₅/F₁ = 0.003104 + 0.000557i at M = 7 (from the `F_5/F_1` line of `solver/inner_stokes/logs/hier_nb_M7_pilot_fixA_at_M5zero.log`).
+**check_numbers.py**: two checks with machine-readable sources, if the coordinator quotes these numbers: Δσ₄ of hier's M
+= 3 model (|Δσ₄| = 3.74×10⁻⁵, from `solver/proof/trunc_hier_M3_K9_J500_w1.0000.json` and the README's σ₄), and F₅/F₁ =
+0.003104 + 0.000557i at M = 7 (from the `F_5/F_1` line of
+`solver/inner_stokes/logs/hier_nb_M7_pilot_fixA_at_M5zero.log`).
