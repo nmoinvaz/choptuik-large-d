@@ -2496,3 +2496,13 @@ the f64 kc 47 points (3.6425, 3.675) and the double-double 3.7 gives 3.46073, in
 iterate at 3.65 (iteration 22, |F| 5.9e-5, Delta 3.4606053) is not close: it sits about 1.2e-4 low and is wandering
 under damping, not converging. I keep A running out 3.65 as you said, about 8 iterations or 1.5 h. If you would rather
 have the thread back now, say so. The M 96 lift of 3.65 starts as soon as the M 80 point is saved.
+
+== 2026-10-22 13:39 PDT local
+T35 A: its own 3.65 ran out, NOT converged after 25 iterations (4.4 h), |F| 2.4e-5, Delta 3.4605817 (1.5e-4 from the
+M 80 value). Its chain then inserted 3.675 from the constant predictor again (start |F| 1.9e-2), so I stopped it, as you
+said. From here the chain is the second route only. 3.65 at M 80 converged in 5 iterations, 31 min, Delta
+3.4607286396474, tails 8e-81 and 3e-68. Its M 96 lift is running and 3.60 at M 80 is next. Pilot projection: about
+30 min per M 80 point, lifts in parallel, so roughly 4-5 h for 3.65-3.3, far under 24 h.
+Threads: T34 1, wrapper 2 (step and lift), T37 job 7 1; 2 idle. I am keeping them for part B, which starts as the M 96
+states at 3.6, 3.5, 3.4, 3.3 land (the first in about an hour), as your order puts A/B before T38. If you would rather
+start the T38 pilot on them now, say so.
