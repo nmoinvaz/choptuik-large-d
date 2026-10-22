@@ -46,6 +46,18 @@ for e in e4:
     print(f"| {eta_s(e)} | {', '.join(f'{d:.6f} (kc {k})' for k, d in Ds)} | {Ds[-1][1] / 2:.5f} | {ls} | {gs} | "
           f"{r0.get('umax', 0):.3f} | {r0.get('constraint', 0):.1e} |")
 
+if sys.argv[1:2] == ["tangent"]:
+    # secant tangents |dz/dD| and the centre-datum harmonics along the saved marches (data/sigdss_m*.npz)
+    for f in sorted(glob.glob(os.path.join(DATA, "sigdss_m*.npz"))):
+        d = np.load(f); v = d["v"]; Z = d["Z"]
+        print(os.path.basename(f))
+        for i in range(1, len(v)):
+            dz = (Z[i] - Z[i - 1]) / (v[i] - v[i - 1])
+            q = np.abs(Z[i][:8]) + np.abs(Z[i][8:16])            # |Re| + |Im| of q's odd harmonics 1..15 (k_c = 15)
+            print(f"  D {v[i - 1]:.4f} -> {v[i]:.4f}: |dz/dD| {np.linalg.norm(dz):9.3f}  dDelta/dD {dz[-1]:+.4f}  "
+                  f"q harmonics {np.round(q, 3).tolist()}")
+    sys.exit(0)
+
 for e in [float(v) for v in sys.argv[1:]] or sorted({round(r["eps"], 6) for r in recs}):
     Ds = sorted({round(r["D"], 6) for r in recs if abs(r["eps"] - e) < 1e-6})
     print(f"\nη = {eta_s(e)}\n")

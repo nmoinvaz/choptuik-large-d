@@ -44,17 +44,20 @@ Contents
 - **Above D ≈ 10 (preliminary).** The Jacobian has a near-null band in the high harmonics of the centre datum (the main
   solver's "junk" directions: s/s_max = 1.5×10⁻¹⁰ at D = 9, 1.1×10⁻¹¹ at D = 10.25, no Δ component). A continuation
   that ignores it stalls at D ≈ 10.5; with a smoothness prior in both the Newton solve and the tangent it passes
-  D = 10.5. At η = 0.3 the branch stays smooth there, and λ(D) flattens (3.0814 at D = 10, 3.0685 at 10.5, unchanged
-  to 2×10⁻⁵ at k_c = 23 or with a ten times weaker prior); at η = 1 the solver found two different solutions at
-  D = 10.475 (Δ = 0.9935 and 1.0340), so η = 1 above D ≈ 10.25 is not reliable. No fold direction was seen. Going
-  further needs higher resolution and more care than short runs on the shared machine allow (§9).
+  D = 10.5. At η = 0.3 the branch stays smooth to D = 11 and λ(D) turns: 3.0814, 3.0685, 3.1127 at D = 10, 10.5, 11
+  (γ = 0.3245, 0.3259, 0.3213), unchanged to 10⁻⁴ under k_c = 23, a ten times weaker prior and a longer horizon series.
+  At η = 1 the solver found two different solutions at D = 10.475 (Δ = 0.9935 and 1.0340), so η = 1 above D ≈ 10.25 is
+  not reliable. No fold direction was seen. The gauge mode's root drifts away from its exact value above D ≈ 8 (by 0.25
+  at D = 11), unexplained; so the D ≥ 10 growth rates are preliminary. Going further needs more care than short runs on
+  the shared machine allow (§9).
 - **γ∞ (not established).** Free fits of λ = λ∞ + Σ c_k n⁻ᵏ to D ≤ 9 give λ∞ = 1.76, 2.74, 2.14, 2.31 (η = 1) and 1.87,
   2.66, 2.15, 2.34 (η = 0.3) for 1–4 powers (D ≥ 5); imposing λ∞ = 2 fits about as well (residuals within a factor 2,
   except a fragile factor 7 at η = 1 with four powers). A planted control shows the method would separate λ∞ = 2.3 from
   2 on these D if three powers described the data, but on the real data the three-power residuals alternate in sign at
   5×10⁻⁴, so the truncation is not adequate. Adding D = 10 makes the fits worse (λ(D) changes curvature near
-  D ≈ 9.5), and the preliminary points at D = 10.5 flatten further (λ = 2.904 and 3.069). The data allow γ∞ anywhere in
-  about 0.36–0.57 and do not test γ∞ ≠ 1/2.
+  D ≈ 9.5), and the preliminary points beyond turn over (η = 0.3: γ = 0.3259 at D = 10.5, 0.3213 at D = 11). The D ≤ 9
+  extrapolations allow γ∞ anywhere in about 0.36–0.57; the turn at D ≈ 10.5, if it is the branch and not the
+  discretization, would put γ∞ below 1/2 at η = 0.3. Neither is established, so γ∞ ≠ 1/2 is not tested.
 - **What the data do show (computed).** At every D from 4 to 9, γ of the σ-model lies below the ℓ = 1 multiplet's by an
   amount that depends on η and is nearly D-independent: −0.0028 to −0.0033 at η = 1, and −0.0146 to −0.0165 at η = 0.3
   for D = 6–9. This is the η-dependence the prediction expects, in the direction η → ∞ → ℓ = 1, but whether the offset
@@ -68,7 +71,7 @@ Contents
 
 (k_c = 15 for the σ-model; the ℓ = 1 row is the ℓ-multiplet agent's k_c = 23 values, copied with attribution to
 `data/sigdss_l1_reference.jsonl`. k_c = 23 checks at D = 6, 9, 10 agree to 10⁻⁴ in λ or better, §6. Preliminary,
-D = 10.5 with the stronger prior: γ = 0.3444 (η = 1) and 0.3259 (η = 0.3).)
+with the stronger prior: γ = 0.3444 (η = 1, D = 10.5), 0.3259 and 0.3213 (η = 0.3, D = 10.5 and 11).)
 
 ## 2. Equations
 
@@ -129,6 +132,10 @@ Levenberg–Marquardt with one SVD per Jacobian. Changes:
   e^{λτ} × (periodic, same parity). |det M| varies exponentially in λ, so a secant on det crawls; the root is taken
   from the model log|det M| = log|λ − λ₀| + a + bλ through the last three evaluations (5–7 evaluations from a guess
   within a few per cent; a sign-change bracket with Brent's method as fallback). The guess is extrapolated in γ = 1/λ.
+- **Smoothness prior** (from D = 9 at η = 1, D = 8 at η = 0.3): Levenberg–Marquardt minimises |F|² + μ²|Wz|², with
+  W = (k/k_c)⁴ on each spectral unknown of harmonic k and μ = 10⁻⁸ or 10⁻⁷ times the largest singular value of the
+  Jacobian (the ℓ-agent's `_lm_reg`, after the main solver's `smooth_junk`); the continuation tangent solves the same
+  augmented least-squares system. It fixes the near-null high centre harmonics (§6).
 - **Diagnostics** per point: |F|, the ψ-constraint K = ψ_τ + (p + m)/2 − c(p − m)/(2x) relative to max|p| (zero for an
   exact solution, not imposed: it measures τ-truncation and integration error), the gauge rate
   λ_g = mean(1 − c_x(τ, 1)), and max|u| over the nodes.
@@ -209,6 +216,7 @@ the high harmonics (`--reg 1e-8`, as in the ℓ-agent's code; §6) and accept |F
 | 9 | 1.026904 | 3.04893 | 0.327984 | 6.0e-5 | 0.51 | 0.8243 | 1.164945 | 3.17532 | 0.314930 | 1.6e-5 | 0.95 |
 | 10 | 1.026142 | 2.91980 | 0.342490 | 1.6e-3 | 0.48 | 0.8222 | 1.154559 | 3.08142 | 0.324525 | 1.6e-3 | 0.89 |
 | 10.5 (prior 10⁻⁷; η = 1 uncertain, see text) | 0.994292 | 2.90366 | 0.344392 | 1.6e-3 | | | 1.139115 | 3.06853 | 0.325888 | 1.7e-3 | |
+| 11 (prior 10⁻⁷) | | | | | | | 1.117461 | 3.11265 | 0.321271 | 1.8e-3 | |
 
 (λ_g = mean over τ of 1 − c_x(τ, 1), the growth rate of the gauge mode that relabels the light cone; max abs u is over
 the nodes 0.02 ≤ x ≤ 0.9 and the light cone.)
@@ -240,9 +248,12 @@ the nodes 0.02 ≤ x ≤ 0.9 and the light cone.)
   D ≈ 10.25 the solver does not follow a single smooth branch, and the η = 1 values there are not reliable (at D = 10.25
   the weakest Jacobian directions are still the junk band, s/s_max = 1.1×10⁻¹¹ at harmonics 9–11 with Δ components
   ≤ 4×10⁻⁵, `data/sigdss_svd.jsonl`, so no isolated fold direction was seen).
-- **λ(D) flattens at D ≈ 10–10.5**: λ = 2.9198 → 2.9037 (η = 1) and 3.0814 → 3.0685 (η = 0.3) between D = 10 and 10.5,
-  slopes −0.03 per unit D against −0.13 and −0.09 between D = 9 and 10. At η = 0.3 this survives k_c = 23 and a ten
-  times weaker prior to 2×10⁻⁵ (§6); at η = 1 it rests on the second of the two D = 10.475 solutions.
+- **λ(D) turns at D ≈ 10.5.** λ = 2.9198 → 2.9037 (η = 1) and 3.0814 → 3.0685 (η = 0.3) between D = 10 and 10.5,
+  slopes −0.03 per unit D against −0.13 and −0.09 between D = 9 and 10; at η = 0.3, D = 11 gives λ = 3.1127: λ(D) has a
+  minimum near D = 10.5, i.e. γ(D) a maximum of about 0.326, and γ(11) = 0.3213. At η = 0.3 the D = 10.5 and 11 values
+  survive k_c = 23, a ten times weaker prior and a longer horizon series to 10⁻⁴ (§6); at η = 1 the D = 10.5 value
+  rests on the second of the two D = 10.475 solutions. Δ keeps decreasing smoothly at η = 0.3 (1.1391, 1.1300, 1.1175
+  at D = 10.5, 10.75, 11).
 
 ## 6. Checks along the branch
 
@@ -257,8 +268,19 @@ the nodes 0.02 ≤ x ≤ 0.9 and the light cone.)
   in the high centre harmonics that Δ and λ hardly feel. D = 10.5 (prior 10⁻⁷): η = 0.3, λ = 3.068523 at k_c = 23
   against 3.068528 (2×10⁻⁶ relative), Δ = 1.1391179 against 1.1391146; η = 1, λ = 2.903687 against 2.903657 (10⁻⁵),
   Δ = 0.994302 against 0.994292. **Prior strength** at D = 10.5, η = 0.3 (k_c = 15): with 10⁻⁸ instead of 10⁻⁷,
-  λ = 3.068601 (2×10⁻⁵ relative) and Δ = 1.138994 (10⁻⁴). So the D = 10.5 values do not depend on resolution or prior
-  beyond about 10⁻⁴; what remains open at η = 1 is which of two solutions is the continuation of the branch (§5).
+  λ = 3.068601 (2×10⁻⁵ relative) and Δ = 1.138994 (10⁻⁴). D = 11, η = 0.3: λ = 3.112655 (k_c = 15), 3.112436
+  (k_c = 23), 3.112305 (k_c = 15 with horizon series of order 30 evaluated at u = 0.04 instead of order 16 at 0.01); at
+  D = 10 the longer horizon series gives 3.081369 against 3.081424. So the D = 10.5 and 11 values do not depend on
+  resolution, prior or horizon treatment beyond about 10⁻⁴; what remains open at η = 1 is which of two solutions is the
+  continuation of the branch (§5).
+- **The gauge root drifts above D ≈ 8** (`data/sigdss_roots.jsonl`). The horizon-relabelling mode has the exact rate
+  λ_g = mean(1 − c_x(τ, 1)), and det M vanishes there to 5×10⁻⁷ at D = 6. At η = 0.3 the real root near λ_g lies at
+  0.80907 (λ_g = 0.80916, D = 8), 0.80872 (0.80787, D = 9), 0.87131 (0.80683, D = 10) and 1.06271 (0.81164, D = 11), and
+  no other root lies in 0.05 ≤ λ ≤ 1.6 at D = 10 and 11. The departure, 9×10⁻⁵, 9×10⁻⁴, 0.064, 0.25, is the same with the
+  longer horizon series (1.06371 at D = 11), so it is not a horizon-series artifact. Either the mode matrix becomes
+  inaccurate in this direction above D ≈ 9, growing roughly tenfold per unit D like the near-null band, or a real mode
+  crosses near λ_g and the two mix; this was not resolved. The physical root passes the k_c, prior and horizon-series
+  checks above, but this drift is the main reason the D ≥ 10 growth rates are marked preliminary.
 - **The near-null band** ([`sigdss_svd.py`](../solver/matter/sigdss_svd.py), `data/sigdss_svd.jsonl`). At D = 9, η = 1
   the smallest singular values of the Jacobian are 1.5×10⁻¹⁰, 6.6×10⁻¹⁰, 1.8×10⁻⁹, 5.3×10⁻⁹ relative (in Re/Im pairs),
   with singular vectors almost entirely in the centre datum q(τ), harmonics k = 7–11, and Δ components below 10⁻⁶. This
@@ -349,9 +371,11 @@ k_c = 23 by at most 4×10⁻⁴ in λ (5×10⁻⁵ in γ) at D ≤ 9, well below
   established: above D ≈ 10 the near-null band of the centre data makes the solver unreliable (two solutions at
   D = 10.475 for η = 1).
 - γ(D) rises monotonically, 0.116 → 0.342 (η = 1) and 0.116 → 0.325 (η = 0.3) between D = 4 and 10, with a change of
-  curvature near D ≈ 9.5 and (preliminary) a flattening to 0.344 and 0.326 at D = 10.5. Extrapolations from D ≤ 9 give
-  γ∞ anywhere in about 0.36–0.57, fits with λ∞ = 2 imposed are as good as free ones, and adding D = 10 makes all fits
-  worse. So γ∞ = 1/2 is neither confirmed nor excluded (not established).
+  curvature near D ≈ 9.5; at η = 0.3 it then has a maximum of about 0.326 near D = 10.5 and falls to 0.321 at D = 11
+  (preliminary: checked against k_c, prior and horizon series, but the gauge root drifts there). Extrapolations from
+  D ≤ 9 give γ∞ anywhere in about 0.36–0.57, fits with λ∞ = 2 imposed are as good as free ones, and adding D = 10 makes
+  all fits worse. So γ∞ = 1/2 is neither confirmed nor excluded (not established). If the maximum at D ≈ 10.5 is real,
+  γ(D) at η = 0.3 does not approach 1/2 from below the way the scalar's does, which would favour γ∞ ≠ 1/2.
 - What the data do support is the structural half of the prediction at finite D: the σ-model's γ(D) depends on η and
   lies below the ℓ = 1 multiplet's by an amount that is nearly independent of D for 6 ≤ D ≤ 9 (−0.003 at η = 1, −0.016 at
   η = 0.3) and grows as η decreases, i.e. it vanishes in the direction η → ∞ where the σ-model becomes the multiplet.
@@ -364,16 +388,18 @@ k_c = 23 by at most 4×10⁻⁴ in λ (5×10⁻⁵ in γ) at D ≤ 9, well below
 - **Larger D.** The decisive data are γ(D) for D ≈ 10–30 at two or more couplings. With k_c = 15 the solver becomes
   unreliable above D ≈ 10 (§5–6), and the near-null centre-harmonic band appears already at D ≈ 9. Proposed for the
   local machine (several hours, 2–4 threads, one process each): continue `sigdss_run.py cont ... --reg 1e-7` (prior in
-  the tangent too) at k_c = 23 and 31 from the saved D = 10 solutions (`data/sigdss_sol_m1up_D10.0000_eta1.0000.npy`,
-  `data/sigdss_sol_m03up_D10.0000_eta0.3000.npy`), with the long horizon series of `solver/spec_long.py` (matching node
+  the tangent too) at k_c = 23 and 31 from the saved solutions (`data/sigdss_sol_m1up_D10.0000_eta1.0000.npy`,
+  `data/sigdss_sol_m03hi_D11.0000_eta0.3000.npy`), with the long horizon series of `solver/spec_long.py` (matching node
   0.6, Ks ≥ 60) that carried the scalar to D ≈ 30; compare two prior strengths (10⁻⁸, 10⁻⁷) at each target, since the
   prior acts in the same harmonics as the near-null band; and run the ℓ = 1 multiplet (η = ∞) on the same grid with the
   same code so that the offsets of §7 can be extrapolated. Pilot: η = 1 from D = 10 to 10.5 at k_c = 23, which must
   reproduce a single smooth branch (the k_c = 15 runs found two solutions at D = 10.475); stop condition: two solutions at
   the same D, constraint above 10⁻³, or three failed steps in a row.
-- **The flattening of λ(D) at D = 10.5** (§5) passed the resolution and prior checks at η = 0.3, but it is two points
-  past a change of curvature; whether λ(D) levels off near 3 (γ∞ near 1/3, well below 1/2), turns back up, or resumes
-  its fall toward 2 is exactly what the larger-D runs above must decide.
+- **The turn of λ(D) at D ≈ 10.5** (§5) passed the resolution, prior and horizon-series checks at η = 0.3, but it rests
+  on two points (D = 10.5, 11) in the range where the gauge root drifts (§6). Whether λ(D) keeps rising (γ falling
+  well below 1/2), levels off, or turns back toward 2 is exactly what the larger-D runs above must decide; they should
+  also explain the gauge-root drift (track the root near λ_g against D and resolution, and look for a second real
+  mode near it).
 - **Mode count.** Complex growth rates and the opposite parity sector were not counted (§6). `sigdss_count.py`
   (argument principle over Re λ ∈ [0.05, 12], −ω/2 ≤ Im λ ≤ 3ω/2, light-cone resonance poles removed) is ready but not
   run or tested; at k_c = 15 it needs a few hundred complex mode matrices.
@@ -399,11 +425,12 @@ Data in `solver/matter/data/` (prefix `sigdss_`).
 | `sigdss_etac.py` | D = 4 fit of Δ(η) near η_c |
 | `sigdss_fit.py FILES --eps E [--plant ...]` | fits of λ(D) with λ∞ free and fixed, planted controls |
 | `sigdss_diff.py` | γ(σ) − γ(ℓ = 1) and its fits |
-| `sigdss_tables.py` | tables from all jsonl files |
+| `sigdss_tables.py` | tables from all jsonl files; `sigdss_tables.py tangent`: secant tangents and centre harmonics along the marches (§5) |
 
 Data: `sigdss_d4eta15.jsonl` (D = 4 against η), `sigdss_lam_d4b.jsonl`, `sigdss_lam_pts.jsonl` (growth rates at D = 4,
 5, 5.5), `sigdss_m1up*.jsonl` and `sigdss_m03up*.jsonl` (the D marches at η = 1 and 0.3), `sigdss_m1hi.jsonl` and
-`sigdss_m03hi.jsonl` (D = 10–10.5 with the stronger prior), `sigdss_refine_kc23.jsonl`,
+`sigdss_m03hi.jsonl` (D = 10–11 with the stronger prior), `sigdss_refine_kc23.jsonl`, `sigdss_refine_reg8.jsonl`,
+`sigdss_refine_ks30.jsonl`, `sigdss_lam_kc23.jsonl` (the checks of §6),
 `sigdss_parity.jsonl`, `sigdss_roots.jsonl`, `sigdss_svd.jsonl`, `sigdss_fit_*.json`, `sigdss_diff.json`,
 `sigdss_etac_d4.json`, `sigdss_l1_reference.jsonl` (the ℓ = 1 agent's values, copied), `sigdss_seed_*.npy` (their
 solutions used as seeds, copied), solutions `sigdss_sol_*.npy`, logs `sigdss_log_*.txt`. The record files from before
