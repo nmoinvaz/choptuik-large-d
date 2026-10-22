@@ -1,0 +1,13 @@
+{
+ "T1": {
+  "lo_minus_L": -2.967672224388541e-09,
+  "hi_minus_L": 1.8665139717631188e-08,
+  "centre_minus_L": 7.848733746621323e-09,
+  "nfit": 48,
+  "inside": true,
+  "within_bar": true,
+  "junk_caught": false,
+  "worst_used_residual": 2.081055243648419e-14,
+  "verdict": "FAIL"
+ }
+}

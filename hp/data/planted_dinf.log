@@ -1,1 +1,2 @@
 base: degree-18 1/D fit to the real cleaned points, residual 4.31e-15; planted limit P(0) = 1.6438937446846  (41 s)
+T1: 48 fits, range -2.97e-9 .. 1.87e-8 about the planted limit; centre off by 7.85e-9 (bar 1.5e-8); inside range True; within bar True; junk caught False (20); worst used residual 2.1e-14 -> FAIL  (306 s)
