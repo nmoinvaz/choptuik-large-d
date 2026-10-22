@@ -1556,8 +1556,9 @@ solution, and Galerkin truncation does not commute with the gauge step, which mu
 
 ### Other matter at large D
 
-Does the mechanism behind γ∞ = 1/2 carry over to other matter? A literature survey ([matter/LITERATURE.md](matter/LITERATURE.md)) found no large-D
-study of critical collapse for any matter other than the real scalar. A symbolic analysis
+Does the mechanism behind γ∞ = 1/2 carry over to other matter? A literature survey
+([matter/LITERATURE.md](matter/LITERATURE.md)) found no large-D study of critical collapse for any matter other than the
+real scalar. A symbolic analysis
 ([matter/STRUCTURE.md](matter/STRUCTURE.md), scripts `solver/matter/struct_*.py`) works out the large-D structure of
 several models. The deciding term is a centrifugal or potential term V/r² in the field equation: in the inner variable
 s = r²/(2n) it becomes V/(2ns), so a V of order n leaves an order-one 1/s term that breaks the s-translation of
