@@ -1,0 +1,143 @@
+== python3 b5_path.py --n=1e8 --mutate=stokes
+n = 1e+08, r_n = 6.310e-04, path to |z| = 0.008 then the arc to arg z = 0 [MUTATION: Stokes-side start]  (4 s)
+  integration failed: blow-up of the fast mode at |z| = 0.000657
+  max |W_P|/eps          = 6.533e+07   certified bound 169.6   ratio 3.85e+05   VIOLATED
+  max |W_Phi|/(eps|z|)   = 1.522e+14   certified bound 3.973e+04   ratio 3.83e+09   VIOLATED
+  max |W_C|/eps          = 147.6   certified bound 8.231   ratio 1.79e+01   VIOLATED
+  expected from eps Z^(1): |W_Phi|/(eps|z|) ~ |phi_1| = 76.6 near z = 0, |W_C|/eps ~ |[F^2]| = 3.23
+MUTATION stokes: the bound must be violated: caught
+   exit 0
+== python3 b5_system.py --mutate=epsCB
+M = 1: model (P, Q, C, Theta) form vs the outer equations in inner variables, worst scaled residual 0.000905 (FAIL, threshold 1e-45)
+        eps = 0 limit vs fixed_point.py's inner system, worst difference 1.64e-39 (PASS, threshold 1e-30)
+        Phi' formula of f_eps vs the total derivative of the Phi relation along the flow, worst relative difference 2.24 (FAIL, threshold 1e-30)
+        f_eps - f_0 at eps = 1e-30 with vt arbitrary, worst |difference| |z|^2/eps = 14.8 (PASS: bounded, threshold 100; an O(1) vt-dependence of the limit would give 1e30)
+MUTATION epsCB: some check must FAIL: caught
+   exit 0
+== python3 b5_system.py --mutate=theta
+M = 1: model (P, Q, C, Theta) form vs the outer equations in inner variables, worst scaled residual 0.000381 (FAIL, threshold 1e-45)
+        eps = 0 limit vs fixed_point.py's inner system, worst difference 1.64e-39 (PASS, threshold 1e-30)
+        Phi' formula of f_eps vs the total derivative of the Phi relation along the flow, worst relative difference 1.3e-50 (PASS, threshold 1e-30)
+        f_eps - f_0 at eps = 1e-30 with vt arbitrary, worst |difference| |z|^2/eps = 14.9 (PASS: bounded, threshold 100; an O(1) vt-dependence of the limit would give 1e30)
+MUTATION theta: some check must FAIL: caught
+   exit 0
+== python3 b5_system.py --mutate=t5
+M = 1: model (P, Q, C, Theta) form vs the outer equations in inner variables, worst scaled residual 6.42e-63 (PASS, threshold 1e-45)
+        eps = 0 limit vs fixed_point.py's inner system, worst difference 1.64e-39 (PASS, threshold 1e-30)
+        Phi' formula of f_eps vs the total derivative of the Phi relation along the flow, worst relative difference 0.702 (FAIL, threshold 1e-30)
+        f_eps - f_0 at eps = 1e-30 with vt arbitrary, worst |difference| |z|^2/eps = 6.02e+28 (FAIL: bounded, threshold 100; an O(1) vt-dependence of the limit would give 1e30)
+MUTATION t5: some check must FAIL: caught
+   exit 0
+== python3 b5_formulas.py --mutate=res
+  g   : worst relative difference 5.05e-51 (PASS, threshold 1e-40)
+  zG0 : worst relative difference 5.28e-51 (PASS, threshold 1e-40)
+  jac : worst relative difference 6.08e-51 (PASS, threshold 1e-30)
+  res : worst relative difference 0.00801 (FAIL, threshold 1e-30)
+  tF  : worst relative difference 1.57e-46 (PASS, threshold 1e-40)
+MUTATION res: some check must FAIL: caught
+   exit 0
+== python3 b5_numeric.py residual --mutate=offsol
+residual of the inner solution in the exact model, eps = 0.0000000001 [MUTATION offsol]
+  arg z = 0.0, |z| = 5e-03: |r_Phi| |z|/eps =      32.69   |r_C|/eps = 3.047
+  arg z = 0.0, |z| = 2e-03: |r_Phi| |z|/eps =      34.88   |r_C|/eps = 3.157
+  arg z = 0.0, |z| = 1e-03: |r_Phi| |z|/eps =      36.46   |r_C|/eps = 3.194
+  arg z = 0.0, |z| = 5e-04: |r_Phi| |z|/eps =      39.19   |r_C|/eps = 3.212
+  arg z = 0.0, |z| = 2e-04: |r_Phi| |z|/eps =      49.12   |r_C|/eps = 3.224
+  arg z = 0.0, |z| = 1e-04: |r_Phi| |z|/eps =       69.7   |r_C|/eps = 3.227
+  arg z = 0.0, |z| = 5e-05: |r_Phi| |z|/eps =      116.2   |r_C|/eps = 3.229
+  arg z = 1.0, |z| = 5e-03: |r_Phi| |z|/eps =      37.56   |r_C|/eps = 3.131
+  arg z = 1.0, |z| = 2e-03: |r_Phi| |z|/eps =      38.13   |r_C|/eps = 3.191
+  arg z = 1.0, |z| = 1e-03: |r_Phi| |z|/eps =      40.29   |r_C|/eps = 3.211
+  arg z = 1.0, |z| = 5e-04: |r_Phi| |z|/eps =      45.05   |r_C|/eps = 3.221
+  arg z = 1.0, |z| = 2e-04: |r_Phi| |z|/eps =      59.77   |r_C|/eps = 3.227
+  arg z = 1.0, |z| = 1e-04: |r_Phi| |z|/eps =      84.57   |r_C|/eps = 3.229
+  arg z = 1.0, |z| = 5e-05: |r_Phi| |z|/eps =      134.4   |r_C|/eps = 3.23
+  arg z = 1.9, |z| = 5e-03: |r_Phi| |z|/eps =      40.43   |r_C|/eps = 3.294
+  arg z = 1.9, |z| = 2e-03: |r_Phi| |z|/eps =      38.87   |r_C|/eps = 3.256
+  arg z = 1.9, |z| = 1e-03: |r_Phi| |z|/eps =      40.08   |r_C|/eps = 3.244
+  arg z = 1.9, |z| = 5e-04: |r_Phi| |z|/eps =      43.93   |r_C|/eps = 3.237
+  arg z = 1.9, |z| = 2e-04: |r_Phi| |z|/eps =       57.2   |r_C|/eps = 3.234
+  arg z = 1.9, |z| = 1e-04: |r_Phi| |z|/eps =      80.83   |r_C|/eps = 3.232
+  arg z = 1.9, |z| = 5e-05: |r_Phi| |z|/eps =      129.7   |r_C|/eps = 3.232
+spread of |r_Phi| |z|/eps over |z| <= 1e-3: factor 3.69 (GROWS: not O(eps/|z|))
+   exit 0
+== python3 b5_bounds.py check --mutate=res
+  raw excess beyond the enclosures (relative): inner 0.00e+00, res 3.59e-01, jac 0.00e+00, vt 0.00e+00
+point checks (rigorous enclosure must contain the independent value; excess 0 = contained): inner 0, res 0.359, jac 0, vt 0  -> FAIL
+MUTATION res: the check must FAIL: caught
+   exit 0
+== python3 b5_bounds.py check --mutate=jacP
+  raw excess beyond the enclosures (relative): inner 0.00e+00, res 0.00e+00, jac 8.88e-01, vt 0.00e+00
+point checks (rigorous enclosure must contain the independent value; excess 0 = contained): inner 0, res 0, jac 0.888, vt 0  -> FAIL
+MUTATION jacP: the check must FAIL: caught
+   exit 0
+== python3 b5_bounds.py --kappa=0.3 --Z=0.0085 --mutate=jac
+kappa = 0.3, Z = 0.0085 (lemma S: rp = 0.14, k = 12, contraction 0.9519, ok True; D covers |z| <= 0.00914 in 0 <= arg z <= pi/2 + kappa: True); derived polynomials exact: True; 145 cells
+  inner solution: N = 31 series terms; lemma S's eta at |z| = Z (and eta/|z|^2): p 2.7e-08 (0.00038), v 5.5e-07 (0.0077), c 6.5e-11 (9e-07)
+  Lambda <= 1.2693; forcing (weighted) F <= 1.16e+07; R_Phi <= 91.46, R_C <= 3.426, TF <= 4.15; eps-part ell = P 3.79e-15, F 3.79e-16, C 7.58e-14, v 3.79e-15 (G <= 34)
+  largest L entries: F-1<-C+0 278; F+1<-C+0 235; F+1<-P+1 202; F-1<-P-1 200; F+1<-C+2 173; F-1<-C-2 145
+  Perron weights P-1 414.1, P+1 414.1, F-1 1.397, F+1 1.397, C-2 4.161e+04, C+0 2.235e+04, C+2 4.161e+04, v-2 1.397e+06, v+0 1.397e+06, v+2 1.397e+06
+  super-solution (forcing + data delta = {'P': 1.0, 'F': 200.0, 'C': 10.0, 'v': 20.0}): certified False: x = -
+  super-solution (forcing only): certified False: x = -
+  super-solution (unit data in P): certified False: x = -
+  super-solution (unit data in F): certified False: x = -
+  super-solution (unit data in C): certified False: x = -
+  super-solution (unit data in v): certified False: x = -
+  => contraction: False;  domain condition gives ln n0 >= kappa1/(Z cos kappa) = 73.89 (kappa1 = 0.6); the run assumed ln n >= 73.88834834386486  [6 s]
+MUTATION jac: the run must FAIL: caught
+   exit 0
+== python3 b5_bounds.py --kappa=0.3 --Z=0.0085 --mutate=series
+kappa = 0.3, Z = 0.0085 (lemma S: rp = 0.14, k = 12, contraction 0.9519, ok False; D covers |z| <= 0.00914 in 0 <= arg z <= pi/2 + kappa: True); derived polynomials exact: True; 145 cells
+  inner solution: N = 31 series terms; lemma S's eta at |z| = Z (and eta/|z|^2): p 2.7e-08 (0.00038), v 5.5e-07 (0.0077), c 6.5e-11 (9e-07)
+  Lambda <= 0.9663; forcing (weighted) F <= 1.159e+07; R_Phi <= 91.46, R_C <= 3.426, TF <= 4.15; eps-part ell = P 3.79e-15, F 3.79e-16, C 7.58e-14, v 3.79e-15 (G <= 34)
+  largest L entries: F-1<-C+0 278; F+1<-C+0 235; F+1<-C+2 173; F-1<-C-2 145; F+1<-P+1 101; F-1<-P-1 100
+  Perron weights P-1 315, P+1 315, F-1 1.397, F+1 1.397, C-2 2.403e+04, C+0 1.288e+04, C+2 2.403e+04, v-2 1.397e+06, v+0 1.397e+06, v+2 1.397e+06
+  super-solution (forcing + data delta = {'P': 1.0, 'F': 200.0, 'C': 10.0, 'v': 20.0}): certified True: x = P-1 392, P+1 381.9, F-1 9.181e+04, F+1 8.942e+04, C-2 16.35, C+0 20.77, C+2 16.02, v-2 29.16, v+0 29.16, v+2 29.16
+  super-solution (forcing only): certified True: x = P-1 65.78, P+1 64.24, F-1 1.533e+04, F+1 1.497e+04, C-2 1.542, C+0 2.269, C+2 1.491, v-2 8.938, v+0 8.938, v+2 8.938
+  super-solution (unit data in P): certified True: x = P-1 10.05, P+1 9.837, F-1 2130, F+1 2079, C-2 0.125, C+0 0.2346, C+2 0.1175, v-2 0.001001, v+0 0.001001, v+2 0.001001
+  super-solution (unit data in F): certified True: x = P-1 0.1014, P+1 0.09903, F-1 23.62, F+1 23.07, C-2 0.002302, C+0 0.00342, C+2 0.002224, v-2 0.001001, v+0 0.001001, v+2 0.001001
+  super-solution (unit data in C): certified True: x = P-1 29.37, P+1 28.59, F-1 6911, F+1 6726, C-2 1.411, C+0 1.744, C+2 1.386, v-2 0.001001, v+0 0.001001, v+2 0.001001
+  super-solution (unit data in v): certified True: x = P-1 0.1703, P+1 0.1658, F-1 39.84, F+1 38.78, C-2 0.007791, C+0 0.009779, C+2 0.007643, v-2 1.002, v+0 1.002, v+2 1.002
+  => contraction: False;  domain condition gives ln n0 >= kappa1/(Z cos kappa) = 73.89 (kappa1 = 0.6); the run assumed ln n >= 73.88834834386486  [5 s]
+MUTATION series: the run must FAIL: caught
+   exit 0
+== python3 b5_data.py --mutate=gauge
+cross-check with first_order_jet.py (independent O(1/n) recursion): P^(1)_1 = mu -1: -11.3244+33.3112j, mu +1: -11.3244-33.3112j; relative deviation from phi_1/2: 1.81e+00
+R(0) = lim z r_Phi/eps: mu -1: 35.1834, mu +1: 35.1834
+phi_1 (Phi^(1) = phi_1 z + ...): mu -1: (74.9299 - 15.7144j), mu +1: (74.9299 + 15.7144j)   (z = 1e-7 vs 1e-9: relative difference 4.678654251198341e-06)
+leading data: delta_P -> 0 (|W_P| ~ eps |phi_1|/2 r_n), delta_Phi -> 76.56, delta_C -> max|[F^2]| = 3.23125, delta_vt -> 2 max|[F^2]| = 6.46251   [MUTATION gauge: c_0 = 0]
+checks: z-independence 4.7e-06 (< 1e-5), agreement with first_order_jet 1.8e+00 (< 1e-6): FAIL
+   exit 0
+== python3 b5_threshold.py --mutate=sum
+1. leading data delta0 = (0, 76.56, 3.23125, 6.46251): x = forcing + sum delta_B x^(B), max over harmonics: x_P 103.8, x_F 2.44e+04, x_C 5.962, x_v 6.555   [MUTATION sum]
+   check: superposition for delta_ref vs the directly certified x(delta_ref), worst relative difference 3.05e-01 (< 0.02): FAIL
+   n0 from B5(1)'s domain condition (kappa1 = 0.6, reference run): ln n0 = 73.8883, n0 = 1.23e+32 = 10^32.09
+   n0 from B5(1)'s domain condition (kappa1 = 0.6, Z = 0.009, certified in b5_bounds_scan.log): ln n0 = 69.7834, n0 = 2.03e+30 = 10^30.31
+2. ESTIMATE (not certified): jump error x_Phi n^(-1+1/(2 kappa1)) (ln n/kappa1)^<F^2> <= 1e-07, <F^2> = A^2/2 = 3.23126, Z = 0.0085, kappa = 0.3
+   x_Phi = 9.181e+04 (delta_ref):
+     kappa1 = 0.60: B5(2) needs ln n >=  284.75 [(1 - 1/(2 kappa1)) ln n =  47.46], B5(1) needs ln n >=   73.89;  chain: ln n >=  284.75
+     kappa1 = 0.70: B5(2) needs ln n >=  157.67 [(1 - 1/(2 kappa1)) ln n =  45.05], B5(1) needs ln n >=   86.20;  chain: ln n >=  157.67
+     kappa1 = 0.75: B5(2) needs ln n >=  132.82 [(1 - 1/(2 kappa1)) ln n =  44.27], B5(1) needs ln n >=   92.36;  chain: ln n >=  132.82
+     kappa1 = 0.80: B5(2) needs ln n >=  116.36 [(1 - 1/(2 kappa1)) ln n =  43.64], B5(1) needs ln n >=   98.52;  chain: ln n >=  116.36
+     kappa1 = 0.85: B5(2) needs ln n >=  104.67 [(1 - 1/(2 kappa1)) ln n =  43.10], B5(1) needs ln n >=  104.68;  chain: ln n >=  104.68
+     kappa1 = 0.90: B5(2) needs ln n >=   95.92 [(1 - 1/(2 kappa1)) ln n =  42.63], B5(1) needs ln n >=  110.83;  chain: ln n >=  110.83
+     kappa1 = 0.95: B5(2) needs ln n >=   89.13 [(1 - 1/(2 kappa1)) ln n =  42.22], B5(1) needs ln n >=  116.99;  chain: ln n >=  116.99
+     kappa1 = 1.00: B5(2) needs ln n >=   83.70 [(1 - 1/(2 kappa1)) ln n =  41.85], B5(1) needs ln n >=  123.15;  chain: ln n >=  123.15
+     kappa1 = 1.10: B5(2) needs ln n >=   75.56 [(1 - 1/(2 kappa1)) ln n =  41.21], B5(1) needs ln n >=  135.46;  chain: ln n >=  135.46
+     kappa1 = 1.20: B5(2) needs ln n >=   69.72 [(1 - 1/(2 kappa1)) ln n =  40.67], B5(1) needs ln n >=  147.78;  chain: ln n >=  147.78
+     best on this grid: kappa1 = 0.85, ln n >= 104.68
+   x_Phi = 2.44e+04 (leading data):
+     kappa1 = 0.60: B5(2) needs ln n >=  276.21 [(1 - 1/(2 kappa1)) ln n =  46.03], B5(1) needs ln n >=   73.89;  chain: ln n >=  276.21
+     kappa1 = 0.70: B5(2) needs ln n >=  152.67 [(1 - 1/(2 kappa1)) ln n =  43.62], B5(1) needs ln n >=   86.20;  chain: ln n >=  152.67
+     kappa1 = 0.75: B5(2) needs ln n >=  128.52 [(1 - 1/(2 kappa1)) ln n =  42.84], B5(1) needs ln n >=   92.36;  chain: ln n >=  128.52
+     kappa1 = 0.80: B5(2) needs ln n >=  112.54 [(1 - 1/(2 kappa1)) ln n =  42.20], B5(1) needs ln n >=   98.52;  chain: ln n >=  112.54
+     kappa1 = 0.85: B5(2) needs ln n >=  101.18 [(1 - 1/(2 kappa1)) ln n =  41.66], B5(1) needs ln n >=  104.68;  chain: ln n >=  104.68
+     kappa1 = 0.90: B5(2) needs ln n >=   92.69 [(1 - 1/(2 kappa1)) ln n =  41.20], B5(1) needs ln n >=  110.83;  chain: ln n >=  110.83
+     kappa1 = 0.95: B5(2) needs ln n >=   86.10 [(1 - 1/(2 kappa1)) ln n =  40.78], B5(1) needs ln n >=  116.99;  chain: ln n >=  116.99
+     kappa1 = 1.00: B5(2) needs ln n >=   80.83 [(1 - 1/(2 kappa1)) ln n =  40.41], B5(1) needs ln n >=  123.15;  chain: ln n >=  123.15
+     kappa1 = 1.10: B5(2) needs ln n >=   72.92 [(1 - 1/(2 kappa1)) ln n =  39.77], B5(1) needs ln n >=  135.46;  chain: ln n >=  135.46
+     kappa1 = 1.20: B5(2) needs ln n >=   67.25 [(1 - 1/(2 kappa1)) ln n =  39.23], B5(1) needs ln n >=  147.78;  chain: ln n >=  147.78
+     best on this grid: kappa1 = 0.85, ln n >= 104.68
+MUTATION sum: the check must FAIL: caught
+   exit 0
+BATCH DONE

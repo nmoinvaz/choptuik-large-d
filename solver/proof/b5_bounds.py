@@ -535,11 +535,21 @@ def run(kappa=0.3, Z=0.008, rp="0.14", k=12, box=("1e-9", "1e-6"), n0exp=100, ga
                                   for i in range(len(COMPS)) for j in range(len(COMPS))), reverse=True)[:10]
     # n0 from the domain condition: Z_n / cos(kappa) <= Z, Z_n = kappa1/ln n
     out["ln_n0_domain"] = kappa1 / (Z * math.cos(kappa))
+    # for the report: number of series terms and lemma S's eta bound at |z| = Z, per block (p, v, c), and divided by |z|^2
+    out["N"] = int(rep["N"])
+    out["eta_at_Z"] = {}
+    for blk in "pvc":
+        cps = [cp for cp in rep["comps"] if cp[0] == blk]
+        e0 = max(float((rep["eta"][cp][0] * arb(Z) ** rep["eta"][cp][1]).upper()) for cp in cps)
+        e2 = max(float((rep["eta"][cp][0] * arb(Z) ** (rep["eta"][cp][1] - 2)).upper()) for cp in cps)
+        out["eta_at_Z"][blk] = (e0, e2)
     out["time"] = time.time() - t_start
     if verbose:
         print(f"kappa = {kappa}, Z = {Z} (lemma S: rp = {rp}, k = {k}, contraction {out['lemmaS_lip']:.4f}, ok "
               f"{out['lemmaS_ok']}; D covers |z| <= {out['cover']:.5f} in 0 <= arg z <= pi/2 + kappa: {dom_ok}); "
               f"derived polynomials exact: {dp['ok']}; {len(cells)} cells")
+        print(f"  inner solution: N = {out['N']} series terms; lemma S's eta at |z| = Z (and eta/|z|^2): "
+              + ", ".join(f"{b} {e0:.2g} ({e2:.2g})" for b, (e0, e2) in out["eta_at_Z"].items()))
         print(f"  Lambda <= {out['lam']:.4f}; forcing (weighted) F <= {out['F']:.4g}; R_Phi <= {out['R_phi']:.4g}, "
               f"R_C <= {out['R_C']:.4g}, TF <= {out['TF']:.4g}; eps-part ell = "
               + ", ".join(f"{k_} {v:.2e}" for k_, v in out["ell"].items()) + f" (G <= {out['Gmax']:.3g})")

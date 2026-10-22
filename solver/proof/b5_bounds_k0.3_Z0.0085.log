@@ -1,4 +1,5 @@
 kappa = 0.3, Z = 0.0085 (lemma S: rp = 0.14, k = 12, contraction 0.9519, ok True; D covers |z| <= 0.00914 in 0 <= arg z <= pi/2 + kappa: True); derived polynomials exact: True; 145 cells
+  inner solution: N = 31 series terms; lemma S's eta at |z| = Z (and eta/|z|^2): p 2.7e-08 (0.00038), v 5.5e-07 (0.0077), c 6.5e-11 (9e-07)
   Lambda <= 0.9663; forcing (weighted) F <= 1.159e+07; R_Phi <= 91.46, R_C <= 3.426, TF <= 4.15; eps-part ell = P 3.79e-15, F 3.79e-16, C 7.58e-14, v 3.79e-15 (G <= 34)
   largest L entries: F-1<-C+0 278; F+1<-C+0 235; F+1<-C+2 173; F-1<-C-2 145; F+1<-P+1 101; F-1<-P-1 100
   Perron weights P-1 315, P+1 315, F-1 1.397, F+1 1.397, C-2 2.403e+04, C+0 1.288e+04, C+2 2.403e+04, v-2 1.397e+06, v+0 1.397e+06, v+2 1.397e+06
@@ -8,4 +9,5 @@ kappa = 0.3, Z = 0.0085 (lemma S: rp = 0.14, k = 12, contraction 0.9519, ok True
   super-solution (unit data in F): certified True: x = P-1 0.1014, P+1 0.09903, F-1 23.62, F+1 23.07, C-2 0.002302, C+0 0.00342, C+2 0.002224, v-2 0.001001, v+0 0.001001, v+2 0.001001
   super-solution (unit data in C): certified True: x = P-1 29.37, P+1 28.59, F-1 6911, F+1 6726, C-2 1.411, C+0 1.744, C+2 1.386, v-2 0.001001, v+0 0.001001, v+2 0.001001
   super-solution (unit data in v): certified True: x = P-1 0.1703, P+1 0.1658, F-1 39.84, F+1 38.78, C-2 0.007791, C+0 0.009779, C+2 0.007643, v-2 1.002, v+0 1.002, v+2 1.002
-  => contraction: True;  domain condition gives ln n0 >= kappa1/(Z cos kappa) = 73.89 (kappa1 = 0.6); the run assumed ln n >= 73.88834834386486  [8 s]
+  => contraction: True;  domain condition gives ln n0 >= kappa1/(Z cos kappa) = 73.89 (kappa1 = 0.6); the run assumed ln n >= 73.88834834386486  [7 s]
+exit 0

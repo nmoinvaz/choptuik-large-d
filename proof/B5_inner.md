@@ -37,19 +37,20 @@ Contents
     around the zero of Theorem A(M = 1). The inner solution comes from lemma S of [A_certify.md](A_certify.md#113-lemma-s-start-values-on-a-domain-that-reaches-the-real-axis),
     rerun over that box.
 - **n₀(1).** With (κ, κ₁, γ) = (0.3, 0.6, 0.3), the certified fixed point holds for every
-  $`n \ge n_0(1) = e^{73.89} \approx 1.2\times10^{32}`$ (D ≥ n₀ + 2).
+  $`n \ge n_0(1) = \max(e^{73.89}, n_8) = \max(1.23\times10^{32}, n_8)`$ (D = n + 2), where n₈ is Lemma B8's threshold.
   - The constant that sets it is the largest admissible radius of the working domain, Z = 0.0085 in $`z = x^2/n`$, since
-    $`n_0 = \exp(\kappa_1/(Z\cos\kappa))`$.
-  - Two things limit Z. First, the radius on which lemma S encloses the inner solution, $`R_+\sin(\pi/4-\kappa) = 0.0091`$.
-    Second, and more importantly, the contraction itself, whose constant is dominated by the loops through the fast row
-    (Φ ← P and Φ ← C, closed by P ← Φ and C ← P). At Z = 0.0085 it is 0.966 (certified), and the same norm sampled in
-    double precision is 0.937. So the limit is intrinsic to a perturbative fixed point on a disc around z = 0, not an
-    artifact of the enclosures.
-  - A practical n₀ needs the exact inner variational flow on a fixed sector up to |z| ≈ 0.04 (section 5.6). The
+    $`n_0 = \exp(\kappa_1/(Z\cos\kappa))`$. The scan also certifies Z = 0.009, i.e. $`n_0(1) = \max(e^{69.78}, n_8)`$, with
+    constants ten times larger (section 5.3).
+  - Two things limit Z, and at κ = 0.3 they nearly coincide. First, the radius on which lemma S encloses the inner
+    solution, $`R_+\sin(\pi/4-\kappa) = 0.0091`$. Second, the contraction itself, whose constant is dominated by the loops
+    through the fast row (Φ ← P and Φ ← C, closed by P ← Φ and C ← P). At Z = 0.0085 it is 0.966 (certified), and the
+    same norm sampled in double precision is 0.937. So the second limit is intrinsic to a perturbative fixed point on a
+    disc around z = 0, not an artifact of the enclosures.
+  - A practical n₀ needs the exact inner variational flow on a fixed sector up to |z| ≈ 0.04 (section 5.4). The
     matching domain's outer edge κ₁/ln n cannot be made n-independent without it.
 - **B5(2) needs more.** The jump estimate of B5(2) divides by $`\lvert e^{-1/(2u_*)}u_*^{\langle F^2\rangle}\rvert`$. With these
-  constants its error is small enough for the implicit function theorem on the certified box only for ln n ≳ 105–125
-  (κ₁ ≈ 0.85–1). That is an estimate, not part of this lemma (section 7).
+  constants its error is small enough for the implicit function theorem on the certified box only for ln n ≳ 105
+  (with the best κ₁ ≈ 0.85; `b5_threshold.py`). That is an estimate, not part of this lemma (section 7).
 - **A discrepancy, to resolve before B(1) and A(1) can be combined.**
   - C_selection.md §1 and the paper truncate b and c to even |ν| ≤ M − 1.
   - The certified inner problem (and every inner solver, `lateral_np.py`, `hier.py`, `first_order_jet.py`) keeps c on
@@ -93,8 +94,8 @@ z = \xi^2 = x^2/n,\qquad y = \xi P,\qquad \sigma = zQ,\qquad \eta = z\Theta,\qqu
 Here z is C_selection.md's u and the paper's z. On each harmonic s = iμω, D = 1 + s, D₂ = 2 + s (diagonal). The
 operators on odd vectors are 𝒞X = [CX], ℬX = [[CΘ]X], and $`\hat E_0 = [PP]/2`$.
 
-**Lemma 1 (the model in inner variables; checked symbolically and numerically).** The M-model is equivalent, for z ≠ 0,
-ε, to
+**Lemma 1 (the model in inner variables; checked symbolically and numerically).** For z ≠ 0 and ε ≠ 0 the M-model is
+equivalent to
 
 ```math
 2zP_z = \Phi,\qquad \Big(I - \tfrac{\varepsilon}{z}\mathcal C^2\Big)\Phi = \mathcal E Q - DP + \varepsilon(1-\varepsilon)\,\mathcal C\mathcal B P,\qquad
@@ -111,7 +112,7 @@ $`\hat E_\varepsilon = ([PP] + \varepsilon z[QQ])/2`$. At ε = 0 (Θ = Ê₀) it
 
 *Check.* `b5_system.py` derives the outer equations in inner variables per harmonic (sympy) and evaluates them at random
 complex states with these rates: residual 6×10⁻⁶³ at 60 digits. The ε = 0 limit agrees with `fixed_point.py`'s system to
-2×10⁻³⁹. Mutations: dropping the ε(1−ε)𝒞ℬP term, or (1+ε) → (1−ε) in h, give 10⁻³ (caught).
+2×10⁻³⁹. Mutations: dropping the ε(1−ε)𝒞ℬP term, or (1+ε) → (1−ε) in h, give 9×10⁻⁴ and 4×10⁻⁴ (caught).
 
 ### 1.3 The state (P, Φ, C, ϑ)
 
@@ -170,8 +171,9 @@ weighted ball). D contains $`\{\lvert z\rvert \le R_+\sin(3\pi/4 - \theta)\}`$ i
 
 ## 2. The equation for the difference W
 
-Let Y⁺_out be the continued centre-regular solution of the M-model with profile F_n = F and frequency ω (hypothesis (H8)),
-and W = Y⁺_out − Z⁺_in in the state (P, Φ, C, ϑ). Both satisfy P_z = Φ/(2z) exactly, and ϑ_in ≡ 0. So, with
+Let Y⁺_out be the continued centre-regular solution of the M-model with profile F_n and frequency ω (hypothesis (H8)). Let
+Z⁺_in be built with the same profile, P(0) = 2F_n, and the same ω; the 1/n corrections of Theorem B(M) then enter only
+through B5(2)'s remainder. Put W = Y⁺_out − Z⁺_in in the state (P, Φ, C, ϑ). Both satisfy P_z = Φ/(2z) exactly, and ϑ_in ≡ 0. So, with
 $`\Delta_\varepsilon := f^\varepsilon_\Phi - f^0_\Phi`$ (the exact Φ-rate minus its ε → 0 limit, as functions of the state):
 
 ```math
@@ -243,14 +245,16 @@ $`\mathcal N = \{1/Z_n \le \lvert U\rvert \le 1/r_n,\ -\alpha_z \le \arg U \le 0
    $`r_n \le \lvert z\rvert \le Z_n/\cos\kappa`$, 0 ≤ arg z ≤ α_z, and it contains 𝓜⁺_n.
 2. It is closed under the backward moves U ↦ U + s d (s ≥ 0) and U ↦ λU (λ ≥ 1), as long as |U| ≤ 1/r_n.
 3. Along U + s d the fast kernel satisfies $`\lvert e^{(U_s - U)/2}\rvert = e^{-as}`$ with a = sin κ/2. With
-   $`c := -\mathrm{Re}(\bar U d)/\lvert U\rvert \le \sin\kappa \le 1/\sqrt2`$, one also has $`\lvert U\rvert^2/\lvert U + sd\rvert^2 \le e^{2cs/\lvert U\rvert}`$.
+   $`c := -\mathrm{Re}(\bar U d)/\lvert U\rvert \le \sin\kappa \le 1/\sqrt2`$ and c⁺ = max(c, 0), one also has
+   $`\lvert U\rvert^2/\lvert U + sd\rvert^2 \le e^{2c^+s/\lvert U\rvert}`$.
 4. The functional ℓ(U) = Re(e^{iβ}U), β = 5π/4 + κ/2, strictly decreases along both backward moves.
 
 *Proof.*
 1. The sector is a convex cone containing d. The minimum of |U + sd| over s ≥ 0 is $`\lvert U\rvert\sqrt{1-c^2}`$ when c > 0,
    and c = −cos(α_z + arg U) ≤ −cos α_z = sin κ.
 2. A backward move of λ(U + sd) is λ(U + (s + s'/λ)d) or λλ'(U + sd).
-3. Re d = cos α_z = −sin κ. The bound is A_certify's: $`\ln(1 - 2cx + x^2) + 2cx`$ is non-decreasing for c ≤ 1/√2.
+3. Re d = cos α_z = −sin κ. For 0 ≤ c ≤ 1/√2 the bound is A_certify's: $`\ln(1 - 2cx + x^2) + 2cx`$ is non-decreasing.
+   For c < 0, |U + sd| ≥ |U|, so the ratio is at most 1.
 4. d/ds ℓ = cos(β − α_z) = cos(3π/4 − κ/2) < 0, and $`d\ell(\lambda U)/d\lambda = \lvert U\rvert\cos(\beta + \arg U) < 0`$, since
    β + arg U ∈ [3π/4 − κ/2, 5π/4 + κ/2]. $`\square`$
 
@@ -265,7 +269,8 @@ a − (q+2) sin κ Z > 0.
 - **b-mode (radial):** $`\int_{\gamma_r}\lvert(t/z)^{(1+\varepsilon)/(2\varepsilon)}\rvert\,\lvert g(t)\rvert\,\lvert dt\rvert \le \tfrac{2}{n+1}\sup_{\gamma_r}\lvert t\,g(t)\rvert`$.
 
 *Proof.*
-- Fast: |dt| = ds/|U_s|². By Lemma 4.3, $`\lvert t_s\rvert^{q+2} \le \lvert z\rvert^{q+2}e^{(q+2)c\lvert z\rvert s}`$; integrate e^{−as + (q+2)c|z|s} over s ≥ 0.
+- Fast: |dt| = ds/|U_s|². By Lemma 4.3, $`\lvert t_s\rvert^{q+2} \le \lvert z\rvert^{q+2}e^{(q+2)c^+\lvert z\rvert s}`$ with c⁺ ≤ sin κ;
+  integrate $`e^{-as + (q+2)\sin\kappa\,Z s}`$ over s ≥ 0.
 - Slow: direct integration.
 - b-mode: $`\lvert(t/z)^{(1+\varepsilon)/(2\varepsilon)}\rvert = (\lvert t\rvert/\lvert z\rvert)^{(n+1)/2}`$ on a radial path, and
   $`\int_0^{\lvert z\rvert}(\rho/\lvert z\rvert)^{(n+1)/2}d\rho/\rho = 2/(n+1)`$. $`\square`$
@@ -334,8 +339,9 @@ Then on $`\mathcal W^+_n \supset \mathcal M^+_n`$
 \lvert W_j(z)\rvert \le \frac{x_j\,m_j(z)}{n}\qquad\text{for every component } j .
 ```
 
-The same holds on 𝓜⁻_n by the reflection symmetry (real data, and 𝒦 closed under conjugation). In particular
-$`\lvert W\rvert \le C\,m(u)/(n\lvert u\rvert^2)`$ as stated in C_selection.md §10.3, with C = max_j x_j.
+The same holds on 𝓜⁻_n by the reflection symmetry (real data, and 𝒦 closed under conjugation). Since |u| ≤ 1 there,
+this implies the bound $`\lvert W\rvert \le C\,m(u)/(n\lvert u\rvert^2)`$ of C_selection.md §10.3, with m the size of the
+corresponding component of Z_in and C proportional to max_j x_j.
 
 *Proof.* Let B be the set of points of $`\mathcal W^+_n`$ where some $`\lvert W_j\rvert > x_j\varepsilon m_j`$. Suppose B ≠ ∅.
 1. B is relatively open, since W is continuous by (H8)(i). Let τ* = inf_B ℓ, and take U* in the closure of B with
@@ -370,8 +376,8 @@ $`\lvert W\rvert \le C\,m(u)/(n\lvert u\rvert^2)`$ as stated in C_selection.md �
   contraction is 0.9519 < 1.
   - A strict run at the box centre checks the structural vanishing of the residual below order N to rounding level.
     Over a box the coefficient balls are too wide to test it.
-  - At |z| = 0.0085 the η-bound is 3×10⁻⁸ for P and 4×10⁻⁴ after division by |z|²; both are included in every
-    enclosure.
+  - At |z| = 0.0085 the η-bound is 2.7×10⁻⁸ for p, 5.5×10⁻⁷ for v and 6.5×10⁻¹¹ for c (lemma S's components), and
+    3.8×10⁻⁴, 7.7×10⁻³ and 9×10⁻⁷ after division by |z|². These are included in every enclosure.
 - **Domain.** κ = 0.3, so α_z = 1.871 < 3π/4 − 0.4, and lemma S's D alone covers the working domain:
   $`R_+\sin(\pi/4 - \kappa) = 0.00914 \ge Z = 0.0085`$.
 - **Cells.** A disc cell |z| ≤ 0.12 Z and 144 polar cells (6 radial × 24 angular). On each cell the inner quantities P,
@@ -403,8 +409,9 @@ The certified componentwise super-solutions (b + Lx < x checked in arb; maxima o
 | unit data in ϑ | 0.170 | 39.8 | 0.0098 | 1.002 |
 
 Super-solutions add, so the bound for data δ is $`x = x^{\rm forcing} + \sum_B\delta_B\,x^{(B)}`$. Two cases:
-- With the leading data of section 7, δ = (0, 76.56, 3.23, 6.46): x = (170, 3.97×10⁴, 8.2, 15.4).
-- With the reference data δ_ref = (1, 200, 10, 20), certified directly: x = (392, 9.18×10⁴, 20.8, 29.2).
+- With the leading data of section 7, δ = (0, 76.56, 3.23, 6.46): x = (169.6, 3.97×10⁴, 8.23, 15.5) (`b5_threshold.py`).
+- With the reference data δ_ref = (1, 200, 10, 20), certified directly: x = (392, 9.18×10⁴, 20.8, 29.2). The
+  superposition reproduces this to 3×10⁻³ (the check in `b5_threshold.py`; dropping the forcing term gives 0.3).
 
 So, for M = 1, every n ≥ n₀(1) and (H8) with δ ≤ δ_ref:
 
@@ -421,20 +428,28 @@ The conditions on n, all certified or elementary at ln n ≥ 73.89:
 4. max x ≤ 10¹², the a priori radius used for the state enclosures.
 5. n ≥ n₈, the threshold of Lemma B8, which is not known here.
 
-So $`n_0(1) = \max(e^{73.89}, n_8)`$, i.e. D ≥ 1.2×10³² + 2.
+So, with the constants of section 5.2, $`n_0(1) = \max(e^{73.89}, n_8) = \max(1.23\times10^{32}, n_8)`$, and D = n + 2.
 
-Scan over κ, Z (`b5_bounds.py --kappa=K --Z=...`, κ₁ = 0.6):
+Scan over κ, Z (`b5_bounds_scan.log`; κ₁ = 0.6; "certified" means the super-solution for δ_ref is certified and Z is
+inside lemma S's coverage; Λ is the Perron-weighted norm of L, for information):
 
-| κ | lemma S coverage R₊ sin(π/4 − κ) | Z | certified | ln n₀ = κ₁/(Z cos κ) |
-|---|---|---|---|---|
-| 0.25 | 0.0100 | 0.0097 | no (contraction 1.17) | — |
-| 0.30 | 0.00914 | 0.0085 | yes (0.966) | 73.9 |
-| 0.30 | 0.00914 | 0.0090 | yes (Perron norm 1.004, super-solution found) | 69.8 |
-| 0.30 | 0.00914 | 0.0091 | no | — |
-| 0.35 | 0.00827 | 0.0082 | yes (0.867) | 77.9 |
+| κ | lemma S coverage R₊ sin(π/4 − κ) | Z | Λ | certified | ln n₀ = κ₁/(Z cos κ) |
+|---|---|---|---|---|---|
+| 0.25 | 0.0100 | 0.0075 | 0.985 | yes | 82.57 |
+| 0.25 | 0.0100 | 0.0082 | 1.045 | no (no super-solution) | — |
+| 0.25 | 0.0100 | 0.0097 | 1.173 | no (no super-solution) | — |
+| 0.30 | 0.00914 | 0.0085 | 0.966 | yes (reference) | 73.89 |
+| 0.30 | 0.00914 | 0.0090 | 1.004 | yes | 69.78 |
+| 0.30 | 0.00914 | 0.0091 | 1.012 | no (no super-solution) | — |
+| 0.35 | 0.00827 | 0.0075 | 0.818 | yes | 85.16 |
+| 0.35 | 0.00827 | 0.0082 | 0.867 | yes | 77.89 |
+| 0.35 | 0.00827 | 0.0097 | 0.972 | no (Z outside the coverage) | — |
 
-Smaller κ widens lemma S's domain but lowers the fast rate a = sin κ/2. The best is near κ = 0.3, Z ≈ 0.009. The
-reference choice (0.3, 0.0085) keeps a margin.
+- Smaller κ widens lemma S's domain but lowers the fast rate a = sin κ/2. At κ = 0.25 the contraction is the limit, at
+  κ = 0.35 the coverage is. The best is near κ = 0.3, Z ≈ 0.009.
+- The smallest certified value is at Z = 0.009: $`n_0(1) = \max(e^{69.78}, n_8) = \max(2.0\times10^{30}, n_8)`$. There the
+  super-solution is about ten times larger (x_Φ = 9.7×10⁵ for δ_ref, against 9.2×10⁴), since Λ is close to 1.
+- The reference choice (0.3, 0.0085) keeps a margin and is the one quoted elsewhere in these notes.
 
 ### 5.4 What prevents a smaller n₀
 
@@ -442,8 +457,9 @@ reference choice (0.3, 0.0085) keeps a margin.
   closes. n₀ = exp(κ₁/(Z_max cos κ)) because the matching domain must reach |u| = κ₁/ln n with κ₁ > 1/2: the jump
   e^{−1/(2u*)} must dominate W = O(1/n) there.
 - **Two limits on Z_max, nearly equal here:**
-  - (a) the radius on which lemma S encloses Z⁺_in, R₊ sin(π/4 − κ) ≈ 0.0091. Its own contraction, 0.952 at
-    R₊ = 0.0196, fails near R₊ = 0.0225.
+  - (a) the radius on which lemma S encloses Z⁺_in, R₊ sin(π/4 − κ) ≈ 0.0091. Its own contraction is 0.952 at
+    R₊ = 0.14², but 1.055 at R₊ = 0.145² and 1.171 at R₊ = 0.15² (`b5_bounds_rp.log`), so with k = 12 this radius
+    cannot grow by more than about 7 %.
   - (b) the contraction of the perturbative splitting, i.e. the loops of the inner variational operator through the
     fast row. The coefficients $`\lvert t\,\partial G^0/\partial P\rvert \approx 14`$ (|3Ê₀ − D₂D|/2 at t = 0) and
     $`\lvert t\,\partial G^0/\partial C\rvert \approx 34`$ enter with the fast-kernel factor 1/(a − sin κ Z) and come back
@@ -477,7 +493,8 @@ fail. All were run and the mutations seen to fail.
 | lemma S must fail for a wrong series coefficient (strict centre run) | `b5_bounds.py --mutate=series` | — | caught |
 | leading data φ₁ vs the O(1/n) recursion of notes/FIRST_ORDER.md (`first_order_jet.py`, shares only the equations) | `b5_data.py` | 8×10⁻⁸ | gauge c₀ = 0 on the jet side → 1.8 |
 | sampled contraction vs certified | `b5_numeric.py lip` | 0.937 vs 0.966 | (the same Jacobian mutation applies) |
-| end-to-end: the exact model integrated from u₀ = r_n e^{iα_z} (ray, then the arc to the Stokes line), n = 10⁸, compared with the certified bound | `b5_path.py` | W/bound: P 2.2×10⁻³, Φ 3.2×10⁻³, C 0.41 | start on the Stokes side → see below |
+| end-to-end: the exact model integrated from u₀ = r_n e^{iα_z} (ray, then the arc to the Stokes line), n = 10⁸, compared with the certified bound | `b5_path.py` | W/bound: P 2.2×10⁻³, Φ 3.2×10⁻³, C 0.41 | start on the Stokes side → fast mode blows up at \|z\| = 6.6×10⁻⁴; W_Φ/bound = 3.8×10⁹ |
+| x for the leading data by superposition; the same superposition for δ_ref vs the directly certified x | `b5_threshold.py` | 3×10⁻³ | forcing term dropped → 0.3 |
 
 On the end-to-end check:
 - **What it uses.** The b-mode deviation ϑ is slaved to first order rather than integrated, since its rate n/(2|z|)
@@ -487,7 +504,8 @@ On the end-to-end check:
 - **What it shows.** max|W_Φ|/(ε|z|) = 126 is close to |φ₁| = 77 near z = 0, as W ≈ εZ^{(1)} predicts, and
   max|W_C|/ε = 3.40 against |[F²]| = 3.23.
 - **The mutation** starts the same integration on the Stokes line with a relative 10⁻¹² free fast mode. That mode grows
-  like $`e^{(1/r_n - 1/z)/2}`$, and the bound must be violated (`b5_path.py --mutate=stokes`; result in section 10).
+  like $`e^{(1/r_n - 1/z)/2}`$, and the bound must be violated. It is: the integration stops at |z| = 6.6×10⁻⁴, just past
+  r_n = 6.3×10⁻⁴, with max|W_Φ|/(ε|z|) = 1.5×10¹⁴ (`b5_path.py --mutate=stokes`, in `b5_mutations.log`).
 
 What is not tested:
 - a system that is wrong in the same way in `b5_system.py` and in `b5_formulas.py`. The guard is the first check (the
@@ -544,8 +562,9 @@ relative error of the jump is of order $`x\,n^{-1+1/(2\kappa_1)}(\ln n/\kappa_1)
 - The error enters Theorem B(1) additively, S + R_n, at a zero of S. The implicit function theorem on the certified
   box needs |R_n| and, by Cauchy's estimate with the factor 10⁶ of section 5.1, its derivative small against
   σ_min(DS). That asks for an error of about 10⁻⁷ or less.
-- An estimate, not certified: with x_Φ ≈ 9×10⁴ that needs $`(1 - 1/(2\kappa_1))\ln n \gtrsim 43`$. Together with B5(1)'s
-  ln n ≥ κ₁/(Z cos κ) the best choice is κ₁ ≈ 0.85, giving ln n ≈ 105; κ₁ = 1 gives ln n ≈ 123.
+- An estimate, not certified (`b5_threshold.py`): with x_Φ = 9.18×10⁴ that needs $`(1 - 1/(2\kappa_1))\ln n \gtrsim 43`$.
+  Together with B5(1)'s ln n ≥ κ₁/(Z cos κ), the best choice on the grid is κ₁ = 0.85, giving ln n ≥ 104.7; κ₁ = 1
+  gives 123.2. With the leading-data x_Φ = 3.97×10⁴ the optimum is the same, since B5(1)'s condition binds there.
 - So the threshold of the full chain B(1) is set by B5(2) together with B5(1)'s Z_max, not by B5(1) alone.
 
 ## 8. Status
@@ -557,10 +576,10 @@ relative error of the jump is of order $`x\,n^{-1+1/(2\kappa_1)}(\ln n/\kappa_1)
 | Lemma 4 (geometry), Lemma 5 (kernels), the bootstrap | **proved** |
 | Lemma B5(1) for fixed M: \|W_j\| ≤ x_j m_j/n given a super-solution | **proved, conditional on (H8)** |
 | existence of a super-solution, hence some n₀(M), for each fixed M | **proved, conditional on (H8)**, with Braaksma's Gevrey bounds; no numerical n₀(M) |
-| M = 1: all constants, the super-solution, n₀(1) = max(e^{73.89}, n₈) | **certified** (`b5_bounds.py`, python-flint; with lemma S of A_certify.md rerun over the complex box); **conditional on (H8)** and on Braaksma's theorem as in Theorem A(M = 1) |
+| M = 1: all constants, the super-solution, n₀(1) = max(e^{73.89}, n₈) (max(e^{69.78}, n₈) at Z = 0.009) | **certified** (`b5_bounds.py`, python-flint; with lemma S of A_certify.md rerun over the complex box); **conditional on (H8)** and on Braaksma's theorem as in Theorem A(M = 1) |
 | leading data δ⁰ of (H8) | **numerical evidence** (`b5_data.py`; cross-checked) |
 | (H8) itself | **open**: B8's remainder in these variables, plus the series comparison of section 7 |
-| B5(2) error at n₀(1) | not part of this lemma; estimated in section 7 (ln n ≳ 95–125) |
+| B5(2) error at n₀(1) | not part of this lemma; estimated in section 7 (ln n ≳ 105, `b5_threshold.py`) |
 
 The trusted code: `b5_bounds.py` (new, not reviewed independently), `b5_formulas.py` (new), `fixed_point.py` and
 `lemma6_sector.py` (A_certify.md; reviewed in A_review.md, rerun over a different box), python-flint 0.9.
@@ -605,11 +624,16 @@ python3 b5_formulas.py --mutate=res                     # must be caught
 python3 b5_numeric.py residual                          # O(eps/z) structure; --mutate=offsol must be caught
 python3 b5_numeric.py lip --Z=0.0085 --kappa=0.3        # sampled contraction 0.937 (not rigorous)
 python3 b5_bounds.py --kappa=0.3 --Z=0.0085 --json=b5_bounds_k0.3_Z0.0085.json   # the certificate, ~10 s
+python3 b5_bounds.py --kappa=0.3 --Z=0.0085,0.009,0.0091     # scan of section 5.3 (also --kappa=0.25, 0.35); exit 1 if any Z fails
+python3 b5_bounds.py --kappa=0.3 --Z=0.0085 --rp=0.15         # lemma S at a larger radius (section 5.4); fails, exit 1
 python3 b5_bounds.py check                              # point containment; --mutate=res / --mutate=jacP caught
 python3 b5_bounds.py --kappa=0.3 --Z=0.0085 --mutate=jac      # must lose the super-solution
 python3 b5_bounds.py --kappa=0.3 --Z=0.0085 --mutate=series   # lemma S must fail
 python3 b5_data.py                                      # leading data and the FIRST_ORDER cross-check; --mutate=gauge caught
-python3 b5_path.py --n=1e8                              # end-to-end, ~1-2 min; --mutate=stokes must be caught
+python3 b5_threshold.py                                 # x for the leading data, n0 values, B5(2) estimate; --mutate=sum caught
+python3 b5_path.py --n=1e8                              # end-to-end, ~1 min; --mutate=stokes must be caught
 ```
 
-The saved outputs are `b5_bounds_k0.3_Z0.0085.{log,json}`, `b5_data.log` and `b5_path_n1e8.log`.
+The saved outputs, all in `solver/proof/`: `b5_bounds_k0.3_Z0.0085.{log,json}`, `b5_bounds_scan.log`, `b5_bounds_rp.log`,
+`b5_bounds_check.log`, `b5_system.log`, `b5_formulas.log`, `b5_numeric_residual.log`, `b5_numeric_lip.log`,
+`b5_data.log`, `b5_threshold.log`, `b5_path_n1e8.log`, and `b5_mutations.log` (every mutation above, with its verdict).

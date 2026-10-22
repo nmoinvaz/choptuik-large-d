@@ -1,0 +1,6 @@
+n = 1e+08, r_n = 6.310e-04, path to |z| = 0.008 then the arc to arg z = 0  (62 s)
+  max |W_P|/eps          = 0.3758   certified bound 169.6   ratio 2.22e-03   within
+  max |W_Phi|/(eps|z|)   = 126.3   certified bound 3.973e+04   ratio 3.18e-03   within
+  max |W_C|/eps          = 3.403   certified bound 8.231   ratio 4.13e-01   within
+  expected from eps Z^(1): |W_Phi|/(eps|z|) ~ |phi_1| = 76.6 near z = 0, |W_C|/eps ~ |[F^2]| = 3.23
+exit 0

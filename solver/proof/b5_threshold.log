@@ -1,0 +1,30 @@
+1. leading data delta0 = (0, 76.56, 3.23125, 6.46251): x = forcing + sum delta_B x^(B), max over harmonics: x_P 169.6, x_F 3.973e+04, x_C 8.231, x_v 15.49
+   check: superposition for delta_ref vs the directly certified x(delta_ref), worst relative difference 3.13e-03 (< 0.02): PASS
+   n0 from B5(1)'s domain condition (kappa1 = 0.6, reference run): ln n0 = 73.8883, n0 = 1.23e+32 = 10^32.09
+   n0 from B5(1)'s domain condition (kappa1 = 0.6, Z = 0.009, certified in b5_bounds_scan.log): ln n0 = 69.7834, n0 = 2.03e+30 = 10^30.31
+2. ESTIMATE (not certified): jump error x_Phi n^(-1+1/(2 kappa1)) (ln n/kappa1)^<F^2> <= 1e-07, <F^2> = A^2/2 = 3.23126, Z = 0.0085, kappa = 0.3
+   x_Phi = 9.181e+04 (delta_ref):
+     kappa1 = 0.60: B5(2) needs ln n >=  284.75 [(1 - 1/(2 kappa1)) ln n =  47.46], B5(1) needs ln n >=   73.89;  chain: ln n >=  284.75
+     kappa1 = 0.70: B5(2) needs ln n >=  157.67 [(1 - 1/(2 kappa1)) ln n =  45.05], B5(1) needs ln n >=   86.20;  chain: ln n >=  157.67
+     kappa1 = 0.75: B5(2) needs ln n >=  132.82 [(1 - 1/(2 kappa1)) ln n =  44.27], B5(1) needs ln n >=   92.36;  chain: ln n >=  132.82
+     kappa1 = 0.80: B5(2) needs ln n >=  116.36 [(1 - 1/(2 kappa1)) ln n =  43.64], B5(1) needs ln n >=   98.52;  chain: ln n >=  116.36
+     kappa1 = 0.85: B5(2) needs ln n >=  104.67 [(1 - 1/(2 kappa1)) ln n =  43.10], B5(1) needs ln n >=  104.68;  chain: ln n >=  104.68
+     kappa1 = 0.90: B5(2) needs ln n >=   95.92 [(1 - 1/(2 kappa1)) ln n =  42.63], B5(1) needs ln n >=  110.83;  chain: ln n >=  110.83
+     kappa1 = 0.95: B5(2) needs ln n >=   89.13 [(1 - 1/(2 kappa1)) ln n =  42.22], B5(1) needs ln n >=  116.99;  chain: ln n >=  116.99
+     kappa1 = 1.00: B5(2) needs ln n >=   83.70 [(1 - 1/(2 kappa1)) ln n =  41.85], B5(1) needs ln n >=  123.15;  chain: ln n >=  123.15
+     kappa1 = 1.10: B5(2) needs ln n >=   75.56 [(1 - 1/(2 kappa1)) ln n =  41.21], B5(1) needs ln n >=  135.46;  chain: ln n >=  135.46
+     kappa1 = 1.20: B5(2) needs ln n >=   69.72 [(1 - 1/(2 kappa1)) ln n =  40.67], B5(1) needs ln n >=  147.78;  chain: ln n >=  147.78
+     best on this grid: kappa1 = 0.85, ln n >= 104.68
+   x_Phi = 3.973e+04 (leading data):
+     kappa1 = 0.60: B5(2) needs ln n >=  279.35 [(1 - 1/(2 kappa1)) ln n =  46.56], B5(1) needs ln n >=   73.89;  chain: ln n >=  279.35
+     kappa1 = 0.70: B5(2) needs ln n >=  154.51 [(1 - 1/(2 kappa1)) ln n =  44.15], B5(1) needs ln n >=   86.20;  chain: ln n >=  154.51
+     kappa1 = 0.75: B5(2) needs ln n >=  130.10 [(1 - 1/(2 kappa1)) ln n =  43.37], B5(1) needs ln n >=   92.36;  chain: ln n >=  130.10
+     kappa1 = 0.80: B5(2) needs ln n >=  113.95 [(1 - 1/(2 kappa1)) ln n =  42.73], B5(1) needs ln n >=   98.52;  chain: ln n >=  113.95
+     kappa1 = 0.85: B5(2) needs ln n >=  102.47 [(1 - 1/(2 kappa1)) ln n =  42.19], B5(1) needs ln n >=  104.68;  chain: ln n >=  104.68
+     kappa1 = 0.90: B5(2) needs ln n >=   93.88 [(1 - 1/(2 kappa1)) ln n =  41.72], B5(1) needs ln n >=  110.83;  chain: ln n >=  110.83
+     kappa1 = 0.95: B5(2) needs ln n >=   87.21 [(1 - 1/(2 kappa1)) ln n =  41.31], B5(1) needs ln n >=  116.99;  chain: ln n >=  116.99
+     kappa1 = 1.00: B5(2) needs ln n >=   81.89 [(1 - 1/(2 kappa1)) ln n =  40.94], B5(1) needs ln n >=  123.15;  chain: ln n >=  123.15
+     kappa1 = 1.10: B5(2) needs ln n >=   73.89 [(1 - 1/(2 kappa1)) ln n =  40.30], B5(1) needs ln n >=  135.46;  chain: ln n >=  135.46
+     kappa1 = 1.20: B5(2) needs ln n >=   68.16 [(1 - 1/(2 kappa1)) ln n =  39.76], B5(1) needs ln n >=  147.78;  chain: ln n >=  147.78
+     best on this grid: kappa1 = 0.85, ln n >= 104.68
+exit 0
