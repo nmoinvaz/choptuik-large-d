@@ -199,7 +199,8 @@ Near D = 4 the points themselves set the limit: the solution needs many Fourier 
 moves by −4.3×10⁻⁴, −3.4×10⁻⁵ and −2.8×10⁻⁶ from 23 to 31 to 39 to 47 modes, so the points
 below D = 5 are extrapolations in the mode count. Above D ≈ 36 the computed γ scatter by up to
 6×10⁻⁵ around both this formula and the power series below, which agree with each other; the growth-rate solve
-is not reliable there. Below D = 4 the formula is not fitted; Δ(D) turns over there. From double-double points at
+is not reliable there. Below D = 4 the formula is not fitted; Δ(D) turns over there (a separate fit for 3 < D ≤ 4 is
+below). From double-double points at
 D = 3.70–3.80 (M = 80; `cd hp && python3 lowD_max.py`), polynomial fits put the maximum at D = 3.755725,
 Δ = 3.46677169 (spread over the fits 10⁻⁶ in D and 6×10⁻⁹ in Δ; the M = 80 truncation is about 10⁻⁹), in agreement
 with Ecker, Ecker, Grumiller & Jechtl 2026 ([below](#relation-to-published-work)). The 47-mode f64 points put it at
@@ -213,6 +214,23 @@ D = 3.75570, Δ = 3.466774, 2×10⁻⁶ high, the size of their bias there (conv
 maximum. Middle: the f64 points sit 1.5–3.5×10⁻⁶ high there. Right: the τ modes a 10⁻¹⁰ Δ needs (`hp/lowD_cost.py`, an
 estimate over four model variants, not a bound) cross the double-double kernel's limit of 128 near D = 3.4, which is
 where this computation stops; near D = 3 they run into the hundreds.
+
+**A formula for 3 < D ≤ 4** (`hp/lowD_formula.py`, fitted to Ecker, Ecker, Grumiller & Jechtl's published values for
+3.046 ≤ D ≤ 4, which are not included here). The variable that works is s = √(D − 3):
+
+```math
+\Delta \approx 1.752403 + 2.486429\,s + 8.257623\,s^2 - 29.245836\,s^3 + 44.944706\,s^4 - 45.106964\,s^5 + 30.660868\,s^6 - 12.653060\,s^7 + 2.349289\,s^8 ,
+```
+
+```math
+\gamma \approx 0.081437 + 0.285158\,s + 0.634589\,s^2 - 1.439299\,s^3 + 1.261792\,s^4 - 0.547493\,s^5 + 0.097777\,s^6 .
+```
+
+They fit those points to 8×10⁻⁶ (Δ) and 10⁻⁶ (γ), and match our own double-double values at D = 3.7–4, which the fit
+never saw, to 4×10⁻⁶ and 10⁻⁷. On points held out of the fit, a polynomial in D, a form with ln(D − 3), or a single
+power of (D − 3) times a polynomial, with as many terms, misses by 10 to several hundred times more. This is an interpolation, not a law: the value at
+D = 3 is not determined (Δ from 1.72 to 1.80 and γ from 0.07 to 0.44 as the degree changes), so it says nothing about
+Ecker et al.'s conjecture that Δ and γ go to 0 as D → 3.
 
 As D → ∞ (ε → 0):
 
