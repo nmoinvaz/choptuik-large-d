@@ -266,7 +266,7 @@ finite system with a rank-1 irregular point and is 1-summable by Braaksma's theo
 rigorously defined. Costin's rank-one theorems do not apply as stated: the fast eigenvalue repeats across harmonics, and
 the slow directions have eigenvalue 0. The outer formal series is Gevrey-1 on every disc in x, for every M (proved by
 majorants, constants certified for M = 1; [proof/B3_borel.md](proof/B3_borel.md)). Whether it is Borel summable along ℝ⁺
-(hypothesis (H-σ), which replaces the earlier H-a1/H-a2 and is proved in the linear case) is not needed for Theorem B(M),
+(hypothesis (H-σ), proved in the linear case) is not needed for Theorem B(M),
 whose outer steps use fixed-order truncations only. Further progress ([proof/C_selection.md](proof/C_selection.md)
 §9–12): in inner variables the exact equations are the inner problem plus corrections in integer powers of 1/n only
 (B5.0, `inner_corrections.py`), so the matching error is O(1/n), not O(n^{−1/2}); the change to the fast-mode variable
@@ -288,7 +288,7 @@ The canonical status, link by link, is [proof/C_selection.md](proof/C_selection.
 |---|---|
 | inner fixed point (B5 part 1) | proved for each fixed M given (H8); certified for M = 1, n ≥ e^{73.89} ([proof/B5_inner.md](proof/B5_inner.md)) |
 | global continuation (B8) | **certified for M = 1** (n ≥ e^{62}; (H8) of B5(1) for n ≥ e^{73.89}); proved for every fixed M without a numerical n₀(M) ([proof/B8_constants.md](proof/B8_constants.md)) |
-| outer Borel plane | (H-σ) replaces H-a1/H-a2: proved in the linear case and near ζ = 0; not used by Theorem B(M) ([proof/B3_borel.md](proof/B3_borel.md)) |
+| outer Borel plane | hypothesis (H-σ): proved in the linear case and near ζ = 0; not used by Theorem B(M) ([proof/B3_borel.md](proof/B3_borel.md)) |
 | **Theorem B(1)** | **not proved**: the jump lemma B5(2)'s error is only estimated (ln n ≳ 285 at the certified κ₁ = 0.6); B6's block-diagonalization, the error control of the transport along x > 1 and B8's exact light-cone gauge are not written or not run; the B5, B8 and B3 certificate code has not been reviewed independently (C_selection.md §13.1) |
 
 **Architecture (after Xie–Tanveer).** Work with the self-similar unknowns (p, m, b, c) as functions of (x, θ) analytic
