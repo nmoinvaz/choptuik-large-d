@@ -56,7 +56,25 @@ a selection rule and a computer-assisted proof}
 \date{October 2026; unreviewed draft}
 
 \begin{abstract}
-% ABSTRACT
+Choptuik's critical solution of spherical scalar-field collapse is discretely self-similar, with an echo period $\Delta$
+that depends on the spacetime dimension $D = n + 2$; numerically, $\Delta$ tends to $1.64389375$ as $D \to \infty$. We study the
+limit as a selection problem of exponential asymptotics. Within a scaling ansatz measured on the solutions, the $1/n$
+expansion of the self-similar field equations is unobstructed to all orders for any period and any time profile, so the
+period is selected beyond all orders. At leading order the problem is solved by ${}_2F_1$, with a closed-form,
+never-vanishing light-cone coefficient; gravity transports the corresponding fast WKB mode by a non-vanishing factor; and
+the late orders of the $1/n$ series encode the coefficient as the Stokes multiplier of a mode born at infinity. At
+$x \sim \sqrt n$ the equations reduce to an $n$-free inner problem, the leading-order large-$D$ system of Rozali and Way, and we
+conjecture that the period is selected by the vanishing of its fast-type Stokes multipliers, with hypotheses and the points
+where a proof is missing. In the inner problem a shift of $r^2$ gives an exact unstable mode with growth rate $2$, which
+yields the critical exponent $1/2$ under the conjecture and two further hypotheses. We set out a selection theorem for
+models with finitely many harmonics, reduced to two contraction arguments, and prove by a computer-assisted argument,
+assuming Braaksma's summability theorem, that the selection condition of the one-harmonic model has exactly one zero in an
+explicit box of half-width $10^{-9}$, and that it is simple; the proof uses a start-value fixed point, validated Lohner
+integration, a Krawczyk test and a covering by $178$ validated Taylor discs, and is checked by an independent review and a
+re-implementation with CAPD. The untruncated multiplier is numerically an entire function of the squared amplitude, of
+exponential type; evaluated to twelve orders, the conjectured rule gives $\Dinf = 1.6439 \pm 0.0002$ (a range of estimators,
+not an error bound). The work was produced by an AI model under the author's direction and has not been reviewed by a human
+expert.
 \end{abstract}
 
 \maketitle
@@ -1123,7 +1141,9 @@ transport. In the linear case the identification is exact (Propositions~\ref{pro
 
 What remains in Lemma~B6($M$) is the routine block-diagonalization of the order-$n$ part on $[t_0, 1 - \delta]$ by an
 analytic transformation bounded uniformly in $n$, which exists because the fast eigenvalue there is simple and
-non-vanishing (Lemma~B2).
+non-vanishing (Lemma~B2). Because $x - c$ has a simple zero at the light cone, the WKB phase and the Frobenius exponent are
+the same object, and the argument is Liouville--Green error control up to a regular singular point~\cite[Chs.~10--12]{Olver1974};
+for second-order linear equations the existence and Borel summability of exact WKB solutions is in~\cite{Nikolaev2023}.
 
 \subsection{The cited lemmas}
 
@@ -1804,19 +1824,325 @@ harmonic-tail bound of Section~\ref{sec:tail} or the entire-function route of Se
 % =====================================================================================================
 \section{The untruncated multiplier as an entire function}
 \label{sec:entire}
-% D_entire.md: ratio law, exponential type, Borel arc, factored series; rigorous sigma_1.
+
+\subsection{The amplitude expansion}
+\label{sec:amp}
+Truncating harmonics is not a controlled approximation (Section~\ref{sec:inner}), but there is an expansion in which every
+harmonic is kept exactly. Write
+\[
+F = A\sin\theta + \sum_{\nu\ge3} f_\nu(A)\,e^{\iu\nu\theta} + \text{c.c.}
+\]
+Harmonic $\mu$ first appears at order $A^{|\mu|}$, so keeping $|\mu| \le K$ at each order in $A$ is exact. At each order the
+inner equations are linear in the new unknowns, with forcing from lower orders; the late orders in $j$ of each harmonic are
+normalized by their exact linear form $\Gamma(\alpha + j - \delta/2)\Gamma(\beta + j - \delta/2)$, $\delta = \langle F^2\rangle$, de-mixed
+by $e^{-\Pi}$, and fitted with every neighbour family $\nu'$, $|\nu'| \le k$, present (they enter through the label $\theta_0$ at
+relative order $1/j$). Tuning $f_\nu$ order by order so that $S_\nu = 0$ for all $|\nu| \ge 3$, the harmonic-1 multiplier becomes
+a power series in $A^2$,
+\begin{equation}\label{eq:sigmak}
+S_1/S_1^{(1)} = 1 + \sigma_1A^2 + \sigma_2A^4 + \dots ,
+\end{equation}
+with $S_1^{(1)}$ the linear multiplier. The coefficients are computed in ball arithmetic at $640$ bits from late-order fits;
+at $\omega = \winf$ two fit windows, $J = 750$ and $1000$ terms, agree to about $10^{-19}$:
+$\sigma_1 = 0.74358457992 + 0.52447485276\iu$, $\sigma_2 = 0.11879383784 + 0.39807457035\iu$,
+$\sigma_3 = -0.05397185243 + 0.11658742432\iu$, $\sigma_4 = -0.02886475753 + 0.01077835879\iu$,
+$\sigma_5 = -0.00555413676 - 0.00280595708\iu$, $\sigma_6 = (-2.7853745790 - 10.776628405\iu)\times10^{-4}$,
+$\sigma_7 = (1.0223846436 - 1.4905053530\iu)\times10^{-4}$; $\sigma_1$--$\sigma_{12}$ are available at $\omega/\winf = 0.99$, $1.00$,
+$1.01$ (\repo{solver/inner\_amp/}). A fit is accurate but not an enclosure; Lemma~\ref{lem:sigma1} below encloses $\sigma_1$
+rigorously. Summing \eqref{eq:sigmak} directly at the zero is hopeless: the terms $|\sigma_k|A_0^{2k}$ grow to about $240$ at
+$k = 9$ and are still $160$ at $k = 12$, and would fall below $10^{-6}$ only near $k \approx 37$.
+
+\subsection{Exponential type}
+The coefficients follow a ratio law, $\sigma_k/\sigma_{k+1} \approx (k + \beta_\star)/\kappa_\star$, with constant increments
+$1/\kappa_\star \approx 0.462 - 0.384\iu$ for $k \ge 8$ (\repo{solver/proof/entire\_cert.py}):
+\begin{center}\footnotesize
+\begin{tabular}{cccc}
+\toprule
+$\omega/\winf$ & $\kappa_\star$ & type $|\kappa_\star|$ & $\beta_\star$ \\
+\midrule
+0.99 & $1.271 + 1.081\iu$ & 1.668 & $4.10 - 1.56\iu$ \\
+1.00 & $1.279 + 1.081\iu$ & 1.675 & $4.16 - 1.60\iu$ \\
+1.01 & $1.289 + 1.080\iu$ & 1.682 & $4.23 - 1.64\iu$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+So $|\sigma_k| \approx C|\kappa_\star|^k/\Gamma(k + \beta_\star)$: numerically, $S_1$ is an entire function of $\mathcal A = A^2$ of order $1$ and
+exponential type about $1.67$. At $\winf$, $|\sigma_k|\,\Gamma(k + 4.16)/1.675^k = 27.3$, $26.8$, $26.3$, $25.9$, $25.6$, $25.5$, $25.3$,
+$25.1$, $24.9$ for $k = 4$--$12$, which suggests the tail bound $|\sigma_k| \le C\,a_\star^k/\Gamma(k + b_\star)$ with $a_\star = 1.675$,
+$b_\star = 4.16$, $C = 27.3$; it is calibrated on $k \le 12$, not proved. The Borel transform $B(t) = \sum_k k!\,\sigma_k\,t^{-k-1}$ has, by
+Pad\'e approximation, a continuous singular support rather than isolated exponents: an arc from about $0.75 + 0.16\iu$ to
+$\kappa_\star$, with a density vanishing at $\kappa_\star$ like $(\kappa_\star - \zeta)^{\beta_\star - 1}$. So $S_1$ behaves like a Laplace integral of
+a density over that arc.
+
+Factoring out the arc's centre removes the cancellation. With $G = e^{-\bar\kappa\mathcal A}S_1$ (same zeros), $\bar\kappa$ chosen per
+truncation order $K$ to minimize the last terms at the zero, the terms of $G$ at the zero are $O(1)$ and fall to
+$3.6\times10^{-4}$ by $k = 12$:
+\begin{center}\footnotesize
+\begin{tabular}{ccccc}
+\toprule
+$K$ & $\bar\kappa$ & last terms at $\mathcal A_0$ & $A_0(\winf)$ & real zero at $\omega/\winf$ \\
+\midrule
+9 & $0.944 + 0.503\iu$ & $8.1\times10^{-3}$ & $2.71494 - 0.00284\iu$ & 0.99767 \\
+10 & $1.017 + 0.464\iu$ & $2.9\times10^{-3}$ & $2.72235 + 0.00054\iu$ & 1.00035 \\
+11 & $0.951 + 0.507\iu$ & $1.0\times10^{-3}$ & $2.71986 - 0.00019\iu$ & 0.99987 \\
+12 & $0.893 + 0.550\iu$ & $3.6\times10^{-4}$ & $2.71943 - 0.00017\iu$ & 0.99988 \\
+\bottomrule
+\end{tabular}
+\end{center}
+The plain Taylor truncation is useless at these orders (its zero drifts from $A = 1.99$ at $K = 6$ to $2.53$ at $K = 12$). The
+other zeros of $G_K$ lie at $|\mathcal A| > 10$ and move outward with $K$, so the zero $\mathcal A_0 = A_0^2 \approx 7.40$ is isolated.
+
+\subsection{What a certificate would need}
+In this form a certificate is close. Rouch\'e's theorem on $|\mathcal A - \mathcal A_0| = 0.01$ at fixed $\omega$ needs the total error below
+$5.7\times10^{-4}$ (the minimum of $|G_{12}|$ on that circle); a Krawczyk or Miranda test in $(A, \omega/\winf)$, where the Jacobian of
+$(\re G, \im G)$ has singular values $0.53$ and $0.26$, needs the error below about $2.6\times10^{-3}$ for a box of radius $0.01$ and
+$2.6\times10^{-4}$ for $10^{-3}$. A type bound calibrated at $k = 12$ puts the tail at about $2\times10^{-4}$, so $K = 12$ would certify a box
+of radius $0.01$ and $K \approx 14$--$15$ one of radius $10^{-3}$, \emph{if} the coefficients and the tail were rigorous. That needs:
+(1) rigorous $\sigma_k$ for $k \le 14$, each a Stokes constant of a linear inhomogeneous system, enclosed by validated lateral
+integration or by an exact pairing formula (standard but laborious); (2) a tail bound, which is the hard part: a majorant on
+the recursion gives only geometric bounds, so the bound must come from control of the inner problem at complex amplitude
+$|A| \approx 4$--$4.5$ (Cauchy estimates on a circle) or from a Laplace representation proving the exponential type; and (3)
+uniform control in $\omega$ between the scanned values. A plausible mechanism for the type is that, to leading order,
+$\langle F^2\rangle = \mathcal A/2$, so the late-order normalization $\xi^{2\langle F^2\rangle}$ is $\xi^{\mathcal A}$, integrated against an $\mathcal A$-independent kernel along a
+bounded complex path; writing order $2k + 1$ as a $k$-fold Borel convolution over a simplex, whose volume supplies the $1/k!$, is
+the proposed route to a proof. This replaces the harmonic tail (gap (b)) by an amplitude tail that is much better behaved.
+A certified box around $0.9999$ of radius $10^{-3}$ would contain $\winf$, but containing it is not proving equality: that needs the
+selection theorem.
+
+\subsection{A rigorous first coefficient}
+For $\sigma_1$ the late-order fit can be replaced by an exact formula (\repo{solver/proof/exact\_sigma.py}). In scaled variables
+$\tilde d_j = d_j/2^j$ for harmonic $+1$, with $\alpha, \beta$ as in \eqref{eq:abk} at $\mu = 1$,
+\[
+a_j = \frac{(j+\alpha)(j+\beta)}{j+1},\qquad T_j = \frac{(\alpha)_j(\beta)_j}{j!} = \prod_{m<j}a_m,\qquad K'' = \frac{1}{\Gamma(\alpha)\Gamma(\beta)} ,
+\]
+order $1$ is $\tilde d^{(1)}_j = d_0T_j$, and at order $3$ the recursion becomes the first-order recursion
+$\tilde d^{(3)}_{j+1} = a_j\tilde d^{(3)}_j - b_j$, where $b_j$ is an explicit combination of convolutions of order-$1$ sequences with the
+order-$2$ lapse coefficients. It solves in Darboux form, $\tilde d^{(3)}_j = -T_j\sum_{i<j}b_i/T_{i+1}$. The multiplier sequence $R_j$ of
+the amplitude recursion (normalized by the exact linear form and de-mixed) then satisfies, since $T_j$ times the
+normalization is exactly $K''$,
+\[
+\frac{R_j}{K''} = -\sum_{i<j}\frac{b_i}{T_{i+1}} + E_2\,\overline{d_0}\,\rho_j + h_2\,d_0\big(\psi(\alpha+j) + \psi(\beta+j)\big),\qquad
+\rho_j = \overline{T_j}/T_j,\quad |\rho_j| = 1,
+\]
+with $E_2 = 1/(8\iu\omega)$, $h_2 = 1/4$ and $\psi$ the digamma function, and $\sigma_1 = S^{(3)}/(d_0K'')$ with
+$S^{(3)} = R_J + \sum_{j\ge J}\Delta R_j$ exactly. Three facts make the tail sum computable: (1) a \emph{cancellation lemma},
+$\Delta R_j/K'' = F(j) + \rho_jG(j) + r_j/K''$ with $F$, $G$ explicit rational functions of degree $3$ over $5$, in which the $O(1/j)$
+parts cancel exactly in two pairs, so $\Delta R_j = O(j^{-2})$; (2) a \emph{remainder bound} from the log-convexity of $|T_l|$ for
+$l \ge 1$ (since $|a_m|$ increases for $m \ge 1$), giving $\sup_{j\ge J}j^3|r_j/K''| \le C_3$ with $C_3 = 110.3$ at $\winf$, $J = 800$, from one
+interval evaluation in $1/j$; and (3) \emph{closed-form tail sums}: $\sum_{j\ge J}F(j)$ by partial fractions in digamma and Hurwitz zeta
+functions (the simple-pole residues sum to zero), and $\sum_{j\ge J}\rho_jG(j)$ by two summations by parts with remainder at most
+$C_2/(J+1)$, $C_2 = 0.025$.
+
+\begin{lemma}[$\sigma_1$; computer-assisted]\label{lem:sigma1}
+At $\omega/\winf = 0.99$, $1.00$ and $1.01$, as point values of $\omega$ ($\winf = 2\pi/1.64389375$), with $J = 1600$, the first
+coefficient $\sigma_1$ of \eqref{eq:sigmak} lies in the boxes (componentwise, centre $\pm$ half-width)
+\begin{center}\footnotesize
+\begin{tabular}{ccccc}
+\toprule
+$\omega/\winf$ & $\re\sigma_1$ & $\im\sigma_1$ & half-width & fitted $\sigma_1$ minus centre \\
+\midrule
+0.99 & 0.736457587 & 0.528917680 & $3.46\times10^{-5}$ & $2.4\times10^{-6}$ \\
+1.00 & 0.743582522 & 0.524475851 & $3.54\times10^{-5}$ & $2.3\times10^{-6}$ \\
+1.01 & 0.750661133 & 0.520061240 & $3.62\times10^{-5}$ & $2.1\times10^{-6}$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+which contain the fitted values.
+\end{lemma}
+
+The enclosures hold all rounding errors, the $j^{-3}$ remainder and the summation-by-parts remainder; they are about $60$ times
+inside the accuracy a $10^{-3}$ certificate needs for $\sigma_1$. The only inputs are the definition of $R_j$ (the de-mixing constant
+$E_2$, the normalization $h_2$ and the recursion), taken from the amplitude recursion as the definition of the multiplier.
+Not yet done: uniformity in $\omega$ over a box (with $\omega$ as a ball the enclosure is useless already at radius $10^{-7}$, because
+rectangular complex balls wrap through $J$ multiplications), and $\sigma_2$--$\sigma_6$, which telescope the same way with increments
+$O(\log^kj/j^2)$ and need the closed-form endpoint sums from $\sigma_2$ on; this is mechanical but long.
 
 % =====================================================================================================
 \section{Numerical evidence for Conjecture~\ref{conj}}
 \label{sec:evidence}
-% Labelled as evidence: shape; truncation sequence; twelve-order amplitude expansion and the bracket; estimator caveat.
+
+Nothing in this section is a proof. It records what the selection rule gives when it is evaluated numerically, and how
+that compares with the critical solutions of~\cite{companion}.
+
+\subsection{Two implementations}
+The inner multipliers are computed by two implementations that share no code: \emph{lateral solutions}
+(\repo{solver/inner\_stokes/}: the inner equations integrated from just above and just below the Stokes line and differenced)
+and \emph{Borel--Darboux} (\repo{solver/inner\_borel/}: the late orders of the inner series fitted, in ball arithmetic, with the
+fast-mode exponents of Section~\ref{sec:inner}). Without gravity both reproduce the exact Stokes constant: the lateral jump
+divided by its closed form is $1.000000000002 - 7\times10^{-12}\iu$ at two matching radii, and Darboux recovers
+$d_0/(\Gamma(\alpha)\Gamma(\beta))$ to $6\times10^{-27}$ from $200$ orders.
+
+\subsection{The truncation sequence}
+\label{sec:trunc}
+\emph{One harmonic.} With $F = A\sin\theta$ the multiplier has an isolated zero at $A = 2.542148$, $\omega = 2.969777$ ($\Delta = 2.11571$),
+found by both methods (lateral, the same at three matching radii; Darboux, with Newton's method converging quadratically to
+$|S| = 3\times10^{-14}$ at $220$ orders, and the only clean zero in $0.5 \le A \le 3$, $0.5 \le \omega/\winf \le 1.5$). This is the zero that
+Theorem~\ref{thm:A} certifies. Its amplitude is $6.5\%$ below the measured $F_1 \approx 2.72$ and its frequency $22\%$ below $\winf$; adding
+harmonic $3$ destroys it (the residual becomes $4.6\times10^6$).
+
+\emph{Three harmonics.} A joint solve of $S_1 = S_3 = 0$ for $(A, \omega, F_3)$ is badly conditioned (Jacobian singular values
+$6\times10^9$, $5\times10^9$, $23$, $0.4$): de-mixing leaves a leakage of the harmonic-3 condition into the harmonic-1 one about $10^4$
+times $r_3$, and the solve stops on false near-zeros. Solved nested instead ($S_3 = 0$ for $F_3$ at fixed $(A, \omega)$, then Newton
+on $(A, \omega)$ for $S_1 = 0$, a $2\times2$ problem of condition about $2$), there is one zero, the same from two starts and at three
+matching radii (moving by less than $10^{-7}$): $A = 2.7265$, $\omega = 1.0156\,\winf$ ($\Delta = 1.6186$), $F_3/F_1 = 0.0530 + 0.0041\iu$,
+$\langle F^2\rangle = 3.727$.
+
+\emph{Five harmonics.} The couplings grow further ($\partial r_3/\partial B_5 \approx 10^{13}$, $\partial r_1/\partial B_5 \approx 10^{17}$). A hierarchical
+solve ($S_5 = 0$ innermost, then $S_3 = 0$, then $S_1 = 0$ for $(A, \omega)$), with a Schur-complement correction that evaluates $r_1$
+as if the higher harmonics sat exactly on their zeros, gives $A = 2.718579$, $\omega = 0.999228\,\winf$ ($\Delta = 1.64516$, $0.077\%$
+above $\Dinf$), with $|r_1|$ down to $8\times10^{-7}$. At fixed $(A, \omega) = (2.72, \winf)$ it gives $F_3/F_1 = 0.05486 + 0.00541\iu$ and
+$F_5/F_1 = 0.00309 + 0.00054\iu$, against $0.05482 + 0.00543\iu$ and $0.00310 + 0.00056\iu$ from the amplitude expansion, which shares
+no code with it; the differences are of the size of the omitted $F_7$.
+
+The offset in $\omega$ thus goes $-22\%$, $+1.56\%$, $-0.077\%$ for $M = 1$, $3$, $5$: it alternates in sign and shrinks fifteen- to
+twentyfold per added pair of harmonics, and Aitken's extrapolation of the three gives $\omega/\winf = 1.0003$ (three terms are a thin
+basis). With the ratio of $-0.045$ to $-0.057$ per pair of Section~\ref{sec:tail}, the prediction for $M = 7$ is
+$\omega/\winf = 0.99997$--$1.00017$; that run has not been completed.
+
+\subsection{The shape of the echo}
+Tuning the higher harmonics in the amplitude expansion of Section~\ref{sec:amp}, at $A = 2.72$ and $\omega = \winf$, gives
+$|F_3/F_1| = 0.0551$ and $|F_5/F_1| = 0.0031$ ($0.00314$ with more digits). The critical solutions at $D = 20$--$60$, extrapolated in
+$1/n$, give $|F_3/F_1| \to 0.0552$--$0.0549$ and $|F_5/F_1| \to 0.0034$--$0.0032$~\cite{companion}. This is a prediction of the
+higher-harmonic conditions $S_\nu = 0$, $|\nu| \ge 3$, alone, checked against the solutions, and it agrees. The tuned ratios are
+$f_{\nu+2}/f_\nu \approx qA^2$ with $q$ nearly independent of $\nu$, so $F \approx 2\re\big[F_1e^{\iu\theta}/(1 - qA^2e^{2\iu\theta})\big]$, with
+singularities at $|\im\theta| \approx \tfrac12\ln(1/|q|A^2) \approx 1.4$: $F_\infty$ is then not entire, and its harmonics decay at a
+finite rate. The measured ratios $|F_{\nu+2}/F_\nu|$, $\nu = 1, \dots, 9$, extrapolate to $0.055$--$0.072$, a decay rate of $1.3$--$1.45$ per
+harmonic, close to $|q|A^2 \approx 0.063$ (Figure~\ref{fig:spectrum}; the extrapolations are not fully converged). This is the evidence
+behind the value $\sigma_F \approx 1.4$ in hypothesis (H1).
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{../figures/spectrum.pdf}
+\caption{Left: amplitude $|F_\nu|$ of each odd harmonic of the echo profile for $D = 4$--$60$ (from~\cite{companion}) and the
+$D = \infty$ prediction of the inner problem (dashed; beyond $\nu = 5$ the leading-order ratio, conjectured). Right: the decay
+rate per harmonic, $\frac12\ln|F_\nu/F_{\nu+2}|$, against $1/(D-2)$, with extrapolations from $D \ge 20$ and the predicted $D = \infty$
+band.}
+\label{fig:spectrum}
+\end{figure}
+
+\subsection{The harmonic-1 condition}
+At $\winf$ the coefficients $\tau_k$ of $\ln S_1$ in $A^2$ have $\arg\tau_k/\pi = 0.878$, $0.944$, $0.978$, $0.986$, $0.992$, $0.995$ for
+$k = 2$--$7$, approaching $1$, as a real zero $A_0^2$ requires ($\tau_k \to -1/(kA_0^{2k})$; a complex zero would turn them with $k$).
+Pad\'e approximants $[1/5]$ to $[5/1]$ of $(\ln S_1)'$ put the zero at $A_0 = 2.728$--$2.756$ with $\im A_0$ between $-0.013$ and $-0.027$:
+within about $1\%$ of the amplitude $2.70$--$2.72$ measured on the solutions.
+
+Across $\omega$, two families of estimates of where the zero is exactly real approach $\winf$ from opposite sides
+(Table~\ref{tab:bracket}): the crossings $\arg\tau_k = \pi$, which assume a simple zero, and the ratio estimates, which let the
+exponent float. The coefficients behave as $-c_{\rm eff}/(kA_0^{2k})$ with an effective exponent $c_{\rm eff}$ that falls toward $1$ as
+orders are added, so the zero is simple, the departure of $c_{\rm eff}$ from $1$ is contamination by singularities beyond it, and the
+crossings from above are the asymptotically correct estimator. Their distance from $1$ shrinks by a factor of about $0.4$--$0.6$
+per order, to $1.00011$ at $k = 12$, and Aitken's extrapolations of consecutive triples scatter around $1$ at the $10^{-4}$ level
+($0.99976$ to $1.00017$ for the last six). Pad\'e approximants of $(\ln S_1)'$ put $\im A_0 = 0$ at $\omega/\winf = 0.981$--$0.991$ with
+seven coefficients, $0.987$--$0.998$ with eight and $0.992$--$0.998$ with nine; with ten to twelve they straddle $\winf$, and with
+twelve the five central approximants agree at $0.99987$--$0.99991$, and at $\winf$ they are real to $|\im A_0| \approx 1.4\times10^{-4}$, at
+$A_0 = 2.7195$--$2.7198$. The factored series $G$ of Section~\ref{sec:entire} gives $0.99988$ at $A_0 = 2.7194$. The five-harmonic
+truncation, $0.999228$, lies inside the bracket.
+
+\begin{table}[t]
+\caption{Where the zero of $S_1$ becomes real, in $\omega/\winf$, order by order in the amplitude expansion.}
+\label{tab:bracket}
+\footnotesize
+\begin{tabular}{cccc}
+\toprule
+order $k$ & $\arg\tau_k = \pi$ (from above) & $\tau_{k-1}/\tau_k$ real (from below) & effective exponent $c_{\rm eff}$ at $\winf$ \\
+\midrule
+5 & 1.0083 & 0.9821 & \\
+6 & 1.0040 & 0.9803 & $1.148 - 0.159\iu$ \\
+7 & 1.0021 & 0.9913 & $1.177 - 0.095\iu$ \\
+8 & 1.0011 & 0.9946 & $1.077 - 0.059\iu$ \\
+9 & 1.0006 & 0.9961 & $1.052 - 0.044\iu$ \\
+10 & 1.0003 & 0.9978 & $1.021 - 0.026\iu$ \\
+11 & 1.00020 & 0.99919 & $1.017 - 0.012\iu$ \\
+12 & 1.00011 & 0.99915 & $1.013 - 0.012\iu$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{../figures/selection.pdf}
+\caption{The selection rule evaluated from the $D = \infty$ inner problem alone. Top: where the harmonic-1 multiplier has a real
+zero, order by order in the amplitude expansion; simple-zero estimates ($\arg\tau_k = \pi$) from above, floating-exponent estimates
+from below, Pad\'e ranges and the factored series inside the shaded bracket, which narrows onto $\winf$ from the finite-$D$
+solutions (dashed). Bottom left: the truncated route, $|\omega^*/\winf - 1|$ for $M = 1$, $3$, $5$ harmonics (alternating in sign) and
+the $M = 7$ prediction. Bottom right: the effective exponent of the zero tends to $1$.}
+\label{fig:selection}
+\end{figure}
+
+So, at twelve orders, the selection rule picks $\omega^*/\winf$ in the bracket $0.99915$--$1.00011$, with the best estimates at
+$0.9999$--$1.0001$, at amplitude $A_0 = 2.720$ (measured on the solutions: $2.70$--$2.72$). Read as a value of the echo period,
+\[
+\Dinf = 1.6439 \pm 0.0002
+\]
+from the $D = \infty$ inner equations alone, with no input from the finite-$D$ solutions, against $1.64389375$ from
+them~\cite{companion}.
+
+\subsection{What the evidence does not show}
+The $\pm0.0002$ above, and the $\pm0.0001$ in $\omega^*/\winf = 1.0000 \pm 0.0001$, are the range of several estimators, not error bounds.
+The coefficients $\sigma_k$ come from late-order fits; two fit windows agree to about $10^{-19}$ for $\sigma_1$--$\sigma_{12}$, but only
+$\sigma_1$ is enclosed rigorously (Lemma~\ref{lem:sigma1}). At the zero the series \eqref{eq:sigmak} is far from summed, and every
+estimator (crossings, ratios, Pad\'e approximants, the factored series) is a resummation whose convergence is observed, not
+proved; the arc-shaped Borel singularity of Section~\ref{sec:entire} is a known source of slow convergence. Whether the remaining
+$10^{-4}$ closes (the central Pad\'e value lies $1.1\times10^{-4}$ below $1$) needs more orders; order $13$ does not converge with the
+present late-order window. Finally, agreement of the numbers is evidence that the selection rule is the right one, not a proof
+of Conjecture~\ref{conj}.
+
+\subsection{Other matter}
+The same rule has been tested on problems whose critical solutions are continuously self-similar, so that no harmonic
+truncation enters~\cite{companion}: for the axion--dilaton and the free complex scalar, the zero of the $D = \infty$ Stokes
+multiplier gives $\winf = 3.1998939$ and $3.9789695$, against $3.1994$ and $3.9784$ extrapolated from finite $D$ (agreement about
+$1.5\times10^{-4}$); and for a $\sigma$-model at coupling $0.14$, the zero for the self-similar ground state, $A_0 = 1.9225686$,
+against $1.9226 \pm 0.0003$ for the finite-$D$ ground state extrapolated to $D = \infty$.
 
 % =====================================================================================================
 \section{Outlook}
 \label{sec:outlook}
 
+The large-$D$ limit of Choptuik's critical solution is a selection problem of the Saffman--Taylor type, with a vector of
+harmonics in place of a scalar parameter. The linear version of the whole chain (outer late orders, inner Stokes constant,
+light-cone coefficient) is proved. What would turn the selection rule into a theorem, in order of difficulty:
+\begin{enumerate}[leftmargin=2em]
+\item \emph{Theorem~\ref{thm:B} for each fixed $M$}: the two contractions, Lemma~B8($M$) on $\mathcal D^\pm_n$ and Lemma~B5($M$)(1) on
+$\mathcal M^\pm$, with explicit constants; a description of the outer Borel plane that proves (H-a1) and (H-a2); and the two citation
+checks.
+\item \emph{A certified zero with more harmonics}, Theorem A($M = 5$): the $38$-dimensional system, posed on the
+Schur-corrected conditions with multiprecision Lohner integration; and a second implementation of the disc covering of
+Lemma~6b$_1$.
+\item \emph{The untruncated zero}, by either route: the harmonic-tail lemma of Section~\ref{sec:tail} for the jump-conditioned
+truncation, with $M = 7$ explicit; or rigorous $\sigma_k$ for $k \le 14$ together with a proof of the exponential type of $S_1$
+(Section~\ref{sec:entire}), which needs control of the inner problem at complex amplitude. The second route replaces the
+harmonic tail by a better-behaved amplitude tail.
+\item \emph{Uniformity in the harmonic index} (gap (b)) for the selection theorem itself, in a space of functions analytic in
+a $\theta$-strip.
+\item \emph{Identification}: that the computed branch of critical solutions is the branch of the selection theorem, for instance
+by a computer-assisted existence proof in the manner of Reiterer and Trubowitz~\cite{ReitererTrubowitz2019} at one large $D$.
+\end{enumerate}
+Together these would derive the large-$D$ limit of the echo period, $\Dinf = 2\pi/\omega^*$, from the $D = \infty$ equations.
+Numerically the rule already gives $\Dinf$ to about $10^{-4}$; more orders of the amplitude expansion, or the $M = 7$ truncation,
+would sharpen that, and with enough digits one could ask whether $\Dinf$ has a closed form, which is open. For the critical
+exponent, the open questions are whether $\lambda = 2$ is the only physical unstable mode at $D = \infty$ and the derivation of the
+coefficient $3.0324$ of $1/n$ from the $O(1/n)$ inner equations. Other matter models are a natural test of
+Proposition~\ref{prop:5}: a centrifugal term of order $n/r^2$, as for scalar multiplets with angular momentum, wave maps or
+Yang--Mills, becomes an explicit $1/s$ in the inner equations and removes the symmetry~\cite{companion}.
+
 \section*{How this work was done}
 \label{sec:how}
+
+N.~M. chose the problem, set the direction at each step and ran the long computations on his own machine. The code, the
+computations, the derivations, the proofs and the text, including this paper, were produced by Claude, Anthropic's AI
+model, working as a set of coordinated agents. N.~M. has not checked the mathematics himself, and no human expert has
+reviewed the work. Checks made: Propositions~\ref{prop:1}--\ref{prop:3} and the inner equations were re-derived by separate agents
+that had not written them, with sympy where possible; the inner Stokes multiplier was computed by two implementations that
+share no code; the computer-assisted proof of Theorem~\ref{thm:A} was reviewed by an independent agent, which re-derived every
+input of its final test and found no error, and steps (ii)--(iv) were re-implemented in C++ with CAPD, sharing no integration
+or test code; deliberately broken versions of the final test, of Lemma~S, of Lemma~6a and of the disc covering are caught,
+with the one documented exception in Lemma~6a; and the citations taken over from the repository's reference audit were
+checked against publisher or arXiv records, and the novelty claims against the closest prior work, read rather than
+recalled. The references for the interval methods and for Braaksma's theorem were not part of that audit. The parts of the
+proof not independently re-checked are listed in Section~\ref{sec:thmA}. Corrections are welcome.
+
+\emph{Data and code.} All data, code and derivation scripts are at \url{https://github.com/nmoinvaz/dss-residual-kernel}; the
+certificate is reproduced by the commands in \repo{proof/A\_certify.md}, and the statements of the proof roadmap are in
+\repo{PROOF.md} and \repo{proof/}.
 
 % =====================================================================================================
 \begin{thebibliography}{99}
@@ -1881,9 +2207,6 @@ coordinates}, J. Evol. Equ. \textbf{9} (2009), 511--523, arXiv:0809.5177.
 
 \bibitem{EckerEckerGrumiller2026} C. Ecker, F. Ecker and D. Grumiller, Phys. Rev. Lett. \textbf{136} (2026), 191401,
 arXiv:2601.14358.
-
-\bibitem{EckerEtAl2026} C. Ecker, F. Ecker, D. Grumiller and T. Jechtl, \emph{Critical spacetime crystals in continuous
-dimensions}, SciPost Phys. \textbf{20} (2026), 176, arXiv:2602.10185.
 
 \bibitem{EmparanHerzog2020} R. Emparan and C. P. Herzog, \emph{The large $D$ limit of Einstein's equations}, Rev. Mod.
 Phys. \textbf{92} (2020), 045005, arXiv:2003.11394.
