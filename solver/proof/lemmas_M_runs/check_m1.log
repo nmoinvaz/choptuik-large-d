@@ -1,0 +1,8 @@
+  relative differences of the upper bounds: lip 8e-17, F 0e+00, rho 3e-17, selfmap 7e-17
+run at x^: fixed_point.py N 53, k 40, lip 0.291842, F 1.315553e+48, rho 7.430851e+48; fixed_point_M: N 53, k 40, lip 0.291842, F 1.315553e+48, rho 7.430851e+48; same N, k, vanishing orders and weights, constants equal to relative 8e-17: True
+  start values on the ray arg xi = +3pi/8: midpoints differ by 0e+00, radii by relative 0e+00: True; D+1 = [0.23063658495062 +/- 1.85e-15] + [-0.12113752692877 +/- 4.92e-15]j, radius 2.38e-34
+  start values on the ray arg xi = -3pi/8: midpoints differ by 0e+00, radii by relative 0e+00: True; D+1 = [-0.25456359271845 +/- 2.29e-15] + [-0.11388094341079 +/- 1.37e-15]j, radius 2.38e-34
+  relative differences of the upper bounds: lip 4e-29, F 0e+00, rho 1e-21, selfmap 6e-22
+run over the complex box +-1e-3(1+i): fixed_point.py N 53, k 40, lip 0.292255, F 8.569284e+69, rho 4.843148e+70; fixed_point_M: N 53, k 40, lip 0.292255, F 8.569284e+69, rho 4.843148e+70; same N, k, vanishing orders and weights, constants equal to relative 1e-21: True
+start_data over X = x^ +- 1e-9 (Cauchy 1e-3), 7 values and 14 derivatives: max midpoint difference 0.0e+00, max relative radius difference 0.0e+00, all overlap: True (6 s)
+M = 1 REPRODUCES fixed_point.py: True
