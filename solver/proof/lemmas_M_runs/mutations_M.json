@@ -3,43 +3,42 @@
   "name": "fp_series_M3",
   "cmd": "fixed_point_M.py --M=3 --mutate=series",
   "expected": "caught",
-  "exit": 3,
-  "matches": false,
+  "exit": 0,
+  "matches": true,
   "what": "step (i): one coefficient of the harmonic-3 D series off by a relative 1e-6",
   "tail": [
    "  ball rho = 8.074e+02: ||T(0)|| + Lip rho = 7.605e+02 < rho: True",
-   "  => fixed point exists and is unique in the ball: True; |eta| <= 5.26e-08 at |z| = R (p, v, c variables)",
-   "MUTATION series: the lemma holds: True (must be False)"
+   "  => fixed point exists and is unique in the ball: False; |eta| <= 5.26e-08 at |z| = R (p, v, c variables)",
+   "MUTATION series: the lemma holds: False (must be False)"
   ],
-  "sec": 4.5
+  "sec": 4.7
  },
  {
   "name": "fp_series_M5",
   "cmd": "fixed_point_M.py --M=5 --mutate=series --r0=0.0622 --arg=5pi/16 --diag",
   "expected": "caught",
-  "exit": 3,
-  "matches": false,
+  "exit": 0,
+  "matches": true,
   "what": "step (i), M = 5 on inner_np's ray: one coefficient of the harmonic-5 D series off by 1e-6",
   "tail": [
    "  ball rho = 4.419e+02: ||T(0)|| + Lip rho = 3.682e+02 < rho: True",
-   "  => fixed point exists and is unique in the ball: True; |eta| <= 2.54e-10 at |z| = R (p, v, c variables)",
-   "MUTATION series: the lemma holds: True (must be False)"
+   "  => fixed point exists and is unique in the ball: False; |eta| <= 2.54e-10 at |z| = R (p, v, c variables)",
+   "MUTATION series: the lemma holds: False (must be False)"
   ],
-  "sec": 27.3
+  "sec": 28.5
  },
  {
   "name": "fp_cdrop_M3",
   "cmd": "fixed_point_M.py --M=3 --mutate=cdrop",
   "expected": "caught",
-  "exit": 1,
-  "matches": false,
+  "exit": 0,
+  "matches": true,
   "what": "step (i): the series built without the c harmonics +-4 (an inconsistent harmonic set)",
   "tail": [
-   "  File \"/home/claude/dss-residual-kernel/.claude/worktrees/agent-a2fc719f20ab19cbf/solver/proof/fixed_point.py\", line 212, in intbound",
-   "    raise ValueError(f\"integrand t^{q} not admissible for weight {k_i} ({kind})\")",
-   "ValueError: integrand t^-1 not admissible for weight 0 (slow)"
+   "lemma not established: integrand t^-1 not admissible for weight 0 (slow)",
+   "MUTATION cdrop: the lemma holds: False (must be False)"
   ],
-  "sec": 3.7
+  "sec": 4.6
  },
  {
   "name": "fp_diagpath_M3",

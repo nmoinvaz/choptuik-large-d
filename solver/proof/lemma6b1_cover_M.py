@@ -240,7 +240,7 @@ def row_run(M, j, h, mutate=None):
     return out
 
 
-def probe(M, rad="1e-7"):
+def probe(M, rad="1e-7", only=None):
     """NOT rigorous: certify discs of the design (and alternatives) around double-precision values of y+ at the start
     ray and real-axis centres of chosen rows, with the boxes inflated by rad; for choosing disc radii and orders"""
     import lemma6b1_estimate_M as EST
@@ -251,7 +251,9 @@ def probe(M, rad="1e-7"):
     wb = acb(arb(w.real, 1e-9), arb(w.imag, 1e-12))
     rows = design(M)
     for rw in rows:
-        if rw["rho"] > 110 and rw["j"] not in (0,):
+        if only is not None and rw["j"] not in only:
+            continue
+        if only is None and rw["rho"] > 110 and rw["j"] not in (0,):
             continue
         rho = rw["rho"]
         sa = EST.integrate(lambda t, r=rho: (r * np.exp(1j * t), 1j * r * np.exp(1j * t)), EST.val(sr, rho),
@@ -285,7 +287,7 @@ def main():
                   f"{rw['alpha']:.4f}, arc length {L:.0f}")
         print(f"M = {M}: total arc length {tot:.0f}; discs {sum(rw['K'] + 1 for rw in design(M))}")
     elif cmd == "probe":
-        probe(M, opts.get("rad", "1e-7"))
+        probe(M, opts.get("rad", "1e-7"), [int(v) for v in opts["rows"].split(",")] if "rows" in opts else None)
     elif cmd == "ray":
         ray_run(M, h)
     elif cmd == "row":

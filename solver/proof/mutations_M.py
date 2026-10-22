@@ -34,7 +34,7 @@ CHEAP = [
     ("fp_m1", ["fixed_point_M.py", "--check-m1"], "passes",
      "control: M = 1 reproduces fixed_point.py (constants, start values, start data)"),
     ("usys_label", ["lemma6_usys_M.py", "--mutate=label"], "caught",
-     "system: s_mu = i |mu| w in the u-form (the label sign lost); the comparisons with the xi-form and with "
+     "system: s_mu = i abs(mu) w in the u-form (the label sign lost); the comparisons with the xi-form and with "
      "fixed_point's encoding must fire"),
     ("usys_clean", ["lemma6_usys_M.py"], "passes", "control: the system self-tests at M = 3, 5"),
     ("S_series_M3", ["lemma6_sector_M.py", "--M=3", "--rp=0.1", "--k=20", "--mutate=series"], "caught",

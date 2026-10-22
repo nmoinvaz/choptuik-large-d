@@ -1,0 +1,6 @@
+probe M = 3 row 11 |u| = 26.98 (ray): r = 4, n = 50: ok True, Lam 0.096, sup 4.4  [6 s]
+probe M = 3 row 11 |u| = 26.98 (ray): r = 6, n = 50: ok True, Lam 0.277, sup 123  [6 s]
+probe M = 3 row 11 |u| = 26.98 (ray): r = 6, n = 60: ok True, Lam 0.231, sup 121  [10 s]
+probe M = 3 row 11 |u| = 26.98 (axis): r = 4, n = 50: ok True, Lam 0.076, sup 1.17  [5 s]
+probe M = 3 row 11 |u| = 26.98 (axis): r = 6, n = 50: ok True, Lam 0.128, sup 1.86  [5 s]
+probe M = 3 row 11 |u| = 26.98 (axis): r = 6, n = 60: ok True, Lam 0.107, sup 1.86  [9 s]

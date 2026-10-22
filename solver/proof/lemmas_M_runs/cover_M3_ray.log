@@ -1,1 +1,12 @@
 M = 3: start box at |u| = 262.0 on the start ray (old sector lemma over X = x^ +- 1e-8, contraction 0.5408): radius 5.83e-07
+ray |u| 262.0 -> 235.36: 57 steps, 112 s, state radius 1.06e-07
+ray |u| 235.36 -> 208.72: 61 steps, 124 s, state radius 1.16e-07
+ray |u| 208.72 -> 182.08: 65 steps, 132 s, state radius 1.27e-07
+ray |u| 182.08 -> 155.44: 71 steps, 154 s, state radius 1.40e-07
+ray |u| 155.44 -> 128.8: 80 steps, 152 s, state radius 1.93e-07
+ray |u| 128.8 -> 102.16: 93 steps, 182 s, state radius 3.09e-07
+ray |u| 102.16 -> 79.6: 95 steps, 202 s, state radius 5.51e-07
+ray |u| 79.6 -> 61.84: 92 steps, 216 s, state radius 1.07e-06
+ray |u| 61.84 -> 47.14: 95 steps, 213 s, state radius 2.52e-06
+ray |u| 47.14 -> 36.04: 92 steps, 205 s, state radius 6.98e-06
+ray |u| 36.04 -> 26.98: 102 steps, 208 s, state radius 2.54e-05

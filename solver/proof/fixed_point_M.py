@@ -71,7 +71,9 @@ ZEROS = {
     1: ["2.5421480475", "0.7769940136"],                                         # A_certify.md section 5
     3: ["2.726475886", "1.015603095", "0.144419478488", "0.011087425887"],       # hier.py --schur, then
                                                                                  # refine_zero_M.py (zero_M3.json)
-    5: ["2.718579189", "0.999228404", "0.149203575", "0.014719052", "0.008405347", "0.001470345"],  # hier.py --schur
+    5: ["2.718579189", "0.999228404", "0.149203574672", "0.014719052460", "0.008405346879", "0.001470345176"],
+                                                                                 # hier.py --schur, then
+                                                                                 # refine_zero_M.py (zero_M5.json)
 }
 
 
@@ -668,14 +670,18 @@ def table(Ms=(3, 5), out_json=None):
         return r
     for M in Ms:
         r5 = f"{r0_inner_np(M, ZEROS[M][1]):.4f}"
-        # recommended: ray 3pi/8 at r0 = 0.085 (diag), and inner_np's ray 5pi/16 at its r0 (diag)
-        for r0, arg in (("0.085", "3pi/8"), (r5, "5pi/16")):
+        r38 = R0_38[M]
+        # recommended: ray 3pi/8 at r0 = R0_38[M] (diag), and inner_np's ray 5pi/16 at its r0 (diag)
+        for r0, arg in ((r38, "3pi/8"), (r5, "5pi/16")):
             row(M, "lemma", "point", r0, arg, True)
             row(M, "lemma", "point", r0, arg, False)
             row(M, "lemma", "real box", r0, arg, True, box="1e-6")
             row(M, "lemma", "complex (Cauchy) box", r0, arg, True, cbox="1e-3")
         row(M, "lemma", "sector (old lemma)", "0.1", "3pi/8", True, sector="0.2")
-        # measured limits: r0 = 0.1 (the M = 1 radius)
+        # measured limits: r0 = 0.1 (the M = 1 radius), and 0.085 where the recommendation is smaller
+        if r38 != "0.085":
+            row(M, "limit", "real box", "0.085", "3pi/8", True, box="1e-6")
+            row(M, "limit", "complex (Cauchy) box", "0.085", "3pi/8", True, cbox="1e-3")
         row(M, "limit", "point", "0.1", "3pi/8", True)
         row(M, "limit", "point", "0.1", "3pi/8", False)
         row(M, "limit", "real box", "0.1", "3pi/8", True, box="1e-6")
@@ -685,12 +691,15 @@ def table(Ms=(3, 5), out_json=None):
     return rows
 
 
+R0_38 = {1: "0.1", 3: "0.085", 5: "0.07"}     # recommended start radius on the ray 3pi/8 (diag), per M
+
+
 def data_table(Ms=(3, 5), out_json=None):
     """start data with parameter derivatives (start_data_M) over real boxes, recommended configurations"""
     rows = []
     for M in Ms:
         r5 = f"{r0_inner_np(M, ZEROS[M][1]):.4f}"
-        for r0, arg in (("0.085", "3pi/8"), (r5, "5pi/16")):
+        for r0, arg in ((R0_38[M], "3pi/8"), (r5, "5pi/16")):
             for h in ("1e-9", "1e-6"):
                 t0 = time.time()
                 xb = [arb(v, arb(h)) for v in ZEROS[M]]

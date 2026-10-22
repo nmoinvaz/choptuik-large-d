@@ -181,7 +181,66 @@ x is a list of M + 1 real arb balls (the box X, made at 320 bits or more from de
 [D_μ (odd μ ascending), S_μ, C_ν (even ν ascending)], valid for every x ∈ X, and `ders[i]` is the list of ∂/∂x_i of
 those components, valid over X. ω∞ = 2π/1.64389375, as in the solvers.
 
-SECTION_2_RESULTS
+### 2.4 Results
+
+**M = 1 reproduces fixed_point.py** (`python3 fixed_point_M.py --check-m1`, exit status 0, `lemmas_M_runs/check_m1.log`):
+
+| | fixed_point.py | fixed_point_M.py at M = 1 |
+|---|---|---|
+| at x̂, ray 3π/8, r₀ = 0.1: N, k, contraction, forcing, ρ | 53, 40, 0.291842, 1.315553×10⁴⁸, 7.430851×10⁴⁸ | the same; upper bounds equal to 8×10⁻¹⁷ relative |
+| complex box ±10⁻³(1 + i): contraction, forcing, ρ | 0.292255, 8.569284×10⁶⁹, 4.843148×10⁷⁰ | the same, to 10⁻²¹ relative |
+| start values on both rays (7 balls each) | e.g. D₊₁ = 0.23063658495062 − 0.12113752692877i, radius 2.4×10⁻³⁴ | bit for bit, midpoints and radii |
+| `start_data` over x̂ ± 10⁻⁹, Cauchy radius 10⁻³ (7 values, 14 derivatives) | | bit for bit |
+
+The constants differ at 10⁻¹⁶ only through how a ball's radius is counted. `fixed_point.py` makes its rate √2/4 at
+import time, at 53 bits, and takes Python's `max` of balls, where an undecided comparison keeps the first ball; this
+module takes the largest upper bound. That can understate `fixed_point.py`'s bound by one ball radius, about 10⁻¹⁶
+relative, which is immaterial next to the margin (0.29 against 1).
+
+**M = 3 at the hier.py zero** x̂ = (2.726475886, 1.015603095, 0.144419478488, 0.011087425887). (A, ω/ω∞) are as
+`hier.py --schur` printed them; (B₃, C₃) are re-solved at that (A, ω) by `refine_zero_M.py`, which leaves
+|r₁| = 3×10⁻⁶ and |r₃| = 1.4×10⁻¹⁰ (`lemmas_M_runs/zero_M3.json`). Double-precision numerics, not rigorous; x̂ is within
+about 5×10⁻¹⁰ of the zero in (A, ω/ω∞). Rows of kind "lemma" are the recommended configurations, which must hold;
+"limit" rows are measured and reported; "control" must fail. `python3 fixed_point_M.py --table --Ms=3`, exit status 0
+(`lemmas_M_runs/fixed_point_M_table_M3.json`):
+
+FP_TABLE_M3
+
+**M = 5 at the hier.py zero** (`--table --Ms=5`, `lemmas_M_runs/fixed_point_M_table_M5.json`):
+
+FP_TABLE_M5
+
+**Start data with derivatives** (`--data-table`), real boxes around x̂, Cauchy radius 10⁻³, diag splitting. The value
+and derivative radii are those of the balls handed to the integrator: the true variation over the box plus the
+enclosure. The Cauchy part is the bound on |∂η/∂x| in the (p, v, c) variables:
+
+DATA_TABLE
+
+**Where the label weights show: the forcing over parameter boxes.** At a point, the forcing is the optimal truncation
+error of the series, and it is far smaller near the zero than away from it. At the M = 3 zero, sup|η| at r₀ = 0.1 is
+1.4×10⁻²⁷; at the cruder point (B₃, C₃ off by 6×10⁻¹⁰) it was 2.3×10⁻²⁴. That is expected: at a zero of the
+multipliers the late orders lose their leading growth. Over a box they regain it at first order, because the zero is
+simple. In ball arithmetic the residual's higher coefficients then lose all cancellation, and the forcing over a box of
+half-width h grows like a constant times h:
+
+- M = 1, r₀ = 0.1: about 10⁻⁷ h (§4.5);
+- M = 3, r₀ = 0.1: about 2h;
+- M = 5, r₀ = 0.1: about 5×10⁵ h. Over the complex box ±10⁻³ the contraction itself fails (Λ = 45), because the ball
+  of η is no longer small.
+
+A cruder estimate of the true variation (the jump of harmonic ν at the start point, ∝ h|∂S_ν|·|K′_ν|·e^{−1/(2R)},
+with $`\lvert K'_\nu\rvert \sim e^{\pi\nu\omega/2}`$) is many orders smaller, so most of this is dependency loss in the
+ball recursion. It is still a real cost. The label weights make the late orders of the higher harmonics large, and the
+cure is a smaller start radius (a factor $`e^{-1/(2R)}`$): at r₀ = 0.0741 (M = 3) and 0.0622 (M = 5) on `inner_np.py`'s
+ray, the complex box gives sup|η| = 5.9×10⁻¹⁷ and 3.6×10⁻²³. A mean-value form of the forcing (the residual at the
+centre plus the box times its derivative from jets) would remove most of the loss; it is not implemented.
+
+**Recommendation for the point certificate:**
+
+- M = 3: the ray θ = 5π/16 at r₀ = 0.0741 (the start point of `inner_np.py`), diag splitting. Cauchy part of the
+  derivatives 5.9×10⁻¹⁴, sup|η| over a 10⁻⁹ box 2.6×10⁻²³.
+- M = 5: the same ray at r₀ = 0.0622, or θ = 3π/8 at r₀ ≤ 0.07.
+- At M = 5, r₀ = 0.1 is too large for any box, and 0.085 gives Cauchy bounds too weak to use.
 
 ## 3. Lemma S and lemma 6b₀
 
@@ -220,7 +279,38 @@ perturbations with Lipschitz entries |3 + 2s_μ|R₊/(2a_eff). These grow like |
 proportional to 1/(Mω). The old sector lemma is on rays, so it can use the diag splitting, and the label weight drops
 out there. ∎
 
-SECTION_3_RESULTS
+### 3.3 Results
+
+**Where lemma S closes** (`--scan`, at the point x̂; `lemmas_M_runs/lemmaS_scan_M3.json`, `lemmaS_scan_M5.log`). The
+contraction constant, by r₊ (R₊ = r₊²) and weight exponent k:
+
+| r₊ | M = 1 (§11.3) | M = 3, k = 10 / 20 / 30 | M = 5, k = 10 / 20 / 30 |
+|---|---|---|---|
+| 0.1 | 0.4903 (k = 30) | 0.829 / 0.825 / 0.945 | **1.186 / 1.183 / 1.354 (fails)** |
+| 0.09 | | 0.682 / 0.644 / 0.690 | 0.980 / 0.927 / 0.993 |
+| 0.08 | | 0.557 / 0.502 / 0.510 | 0.803 / 0.725 / 0.737 |
+| 0.07 | | 0.450 / 0.388 / 0.378 | 0.650 / 0.563 / 0.549 |
+| 0.06 | | 0.358 / 0.297 / 0.279 | 0.517 / 0.431 / 0.406 |
+| 0.05 | | 0.278 / 0.223 / 0.203 | 0.402 (k = 10) |
+
+The contraction at fixed R₊ grows with M through the label terms, as §3.2 predicts. At M = 3 the M = 1 domain
+(R₊ = 0.01) still closes, so G₀ and the 6b₁ annulus are those of M = 1. At M = 5 it does not, and R₊ = 0.0064
+(contraction 0.72 at k = 20) gives g₀ = 1/(R₊ sin 0.4) = 401.2.
+
+**Over the box X₆ = x̂ ± 10⁻⁶** (`lemma6_sector_M.py --box=1e-6`, exit status 0):
+
+SECTOR_TABLE
+
+**Lemma S(3), lemma 6b₀(3) and the flat estimate at M = 3: certified** over X₆ = x̂ ± 10⁻⁶ (trusted code:
+`lemma6_sector_M.py`, `fixed_point_M.py` and `fixed_point.py`'s majorant helpers, python-flint).
+
+- Lemma S: R₊ = 0.01, k = 20, a_eff = 0.2536, contraction ≤ 0.8252.
+- Old sector lemma: diag splitting, contraction ≤ 0.5408.
+- Lemma 6b₀(3): y⁺ is analytic for 0 < |ξ| ≤ 0.0624, 0 ≤ arg ξ ≤ 3π/8, and on the real segment up to 0.0841, for every
+  x ∈ X₆. These radii are exactly those of M = 1.
+- Flat estimate at Z = 0.004489 (ξ_a = 0.067): Λ ≤ 0.2923 (plain) or 0.2199 (diag).
+
+M5_SECTOR
 
 ## 4. Lemma 6a
 
@@ -336,4 +426,118 @@ With these, the proof is that of §12.4: lemma D for each disc (C1), then lemma 
 
 SECTION_5_RESULTS
 
-SECTION_6_ONWARDS
+## 6. Theorem A(M), conditional on the point certificate
+
+Let x̂ be the double-precision zero (§2.4), X_c the box of the point certificate, and ξ₁ and ρ_arc its matching radius
+and arc radius. Assume the certificate passes along a path of the kind used in §11.2: the start ray at an angle
+θ ∈ [3π/8 − 0.2, 3π/8] from a radius r₀ ≤ 0.1, that ray out to ρ_arc ≤ 0.2, the arc |ξ| = ρ_arc to the real axis, and
+then (if ξ₁ > ρ_arc) the real axis to ξ₁.
+
+**Theorem A(M) (conditional).** Assume Braaksma's theorem (Lemma B4(M)). Suppose the point certificate proves that
+x ↦ (J^path_{D,μ}(ξ₁; x))_{μ = 1, 3, …, M} has exactly one zero in X_c and that it is simple. Suppose further:
+
+- (H1) X_c ⊂ X₆ = x̂ ± 10⁻⁶, the box over which lemma S(M), the old sector lemma and the flat estimate are proved here
+  (§3.3);
+- (H2) X_c ⊂ X_b, the box of the 6b₁ covering (x̂ ± 10⁻⁸ at M = 3, §5.3), and the covering is complete;
+- (H3) lemma 6a(M) holds with B₁ the certificate's state box at ξ₁ over X_c.
+
+Then the M-harmonic selection condition y⁺ ≡ y⁻ (all of S_1, …, S_M vanish) holds at exactly one point x* of X_c, and
+the real (M + 1) × (M + 1) Jacobian of (Re S_μ, Im S_μ)_μ is non-singular at x*.
+
+*Proof.* The steps are those of §12.6 in order.
+
+1. Lemma 6b₀(M) (from H1) and lemma 6b₁(M) (from H2) make y⁺ analytic on Ω = {0 < |ξ| ≤ 0.2, 0 ≤ arg ξ ≤ 3π/8}. The
+   certificate's path lies in Ω up to the real leg, and its start point lies in the domain of the old sector lemma, where
+   the start value is y⁺. So the path continuation is the continuation along the real axis, and J^path = J.
+2. The certificate gives one simple zero of J in X_c.
+3. Lemma 6a(M) (H3, with lemma S and the flat estimate from H1) gives J(ξ₁; x) = 0 ⇔ y⁺ ≡ y⁻.
+4. Simplicity transfers to S by §4.2. ∎
+
+At M = 1 the same assembly is Theorem A(M = 1) of §12.6.
+
+## 7. What waits for the point certificate
+
+What is proved or certified here holds for the parameter boxes named. What needs the point certificate's output:
+
+1. **Its box X_c and the zero.** (H1) and (H2) are inclusions to check against x̂ ± 10⁻⁶ and x̂ ± 10⁻⁸. If X_c is
+   larger, or centred more than about 10⁻⁸ from x̂, `lemma6_sector_M.py --box=` and the covering must be rerun on a box
+   containing it. The covering's cost then grows with the box: the disc lemma tolerates Lohner boxes up to about 10⁻⁵.
+2. **Its state box B₁ at ξ₁ over X_c** (H3). `lemma6_jump_M.py --box=f.json` takes it in the format of
+   `lemma6_path_box_1e-9.json` (keys M, h, xi1, yX_xi1). Only the pilot of §4.3 has run, on a non-rigorous B₁.
+3. **Its path.** The covering here is for the region of §11.1 (|ξ| ≤ 0.2, 0 ≤ arg ξ ≤ 3π/8). A path with an arc above
+   0.2, or a start ray outside 3π/8 ± 0.2, needs a different covering: the arc radius sets u_in = 1/ρ_arc², and the
+   inner rows are where the cost and the singularity distance bite.
+4. **Its conditions.** 6a needs all (M + 1)/2 complex D-jumps J_{D,μ}(ξ₁) at one radius, or an invertible linear image
+   of them, such as `hier.py`'s de-mixed residuals. A certificate of S₁ = 0 alone at fixed higher harmonics would not
+   suffice.
+5. **Start data.** The certificate is expected to start from `fixed_point_M.start_data_M` (§2.3), with the recommended
+   configuration of §2.4 for its M.
+
+## 8. Mutation table
+
+Every check added here has a runnable mutation or control. Each verdict was written down before the run (the expected
+column), and `mutations_M.py` compares it with the outcome; exit status 0 only if all match. Results are in
+`solver/proof/lemmas_M_runs/mutations_M.json`.
+
+MUTATION_TABLE
+
+## 9. Cost, and a proposed task for the local machine
+
+COST_SECTION
+
+## 10. Reproduce
+
+From `solver/proof/`. Times are wall-clock on the shared 2-core machine at load 15–19, single process under
+`nice -n 10`.
+
+```
+python3 lemma6_usys_M.py                                   # the system self-tests (a)-(f), M = 3 and 5, ~15 s
+python3 fixed_point_M.py --check-m1                        # M = 1 reproduces fixed_point.py, ~20 s
+python3 fixed_point_M.py --M=3                             # step (i) at the M = 3 zero, ray 3pi/8, r0 = 0.1, plain, seconds
+python3 fixed_point_M.py --M=3 --diag --r0=0.0741 --arg=5pi/16 --cbox=1e-3   # over the complex box, seconds
+python3 fixed_point_M.py --table --Ms=3 --json=lemmas_M_runs/fixed_point_M_table_M3.json        # section 2.4, ~3 min
+python3 fixed_point_M.py --table --Ms=5 --json=lemmas_M_runs/fixed_point_M_table_M5.json        # ~6 min
+python3 fixed_point_M.py --data-table --Ms=3 --json=lemmas_M_runs/fixed_point_M_data_M3.json    # start data, ~3 min
+python3 fixed_point_M.py --M=3 --data --box=1e-9 --r0=0.0741 --arg=5pi/16 --diag    # start data, printed per component
+python3 lemma6_sector_M.py --M=3 --scan --json=lemmas_M_runs/lemmaS_scan_M3.json      # lemma S over (r+, k), ~10 min
+python3 lemma6_sector_M.py --M=3 --rp=0.1 --k=20 --box=1e-6 --Z=0.004489 --json=lemmas_M_runs/lemma6_sector_M3_rp0.1_1e-6.json
+                                                           # lemma S, old sector lemma, flat estimate over x^ +- 1e-6, ~1 min
+python3 lemma6_sector_M.py --M=5 --rp=0.08 --k=20 --box=1e-6 --Z=0.004489 --json=lemmas_M_runs/lemma6_sector_M5_rp0.08_1e-6.json
+python3 lemma6_jump_M.py --M=3 --pilot=1e-10 --xi1=0.2 --rho=0.2 --save-B=lemmas_M_runs/lemma6a_pilot_M3_B.json \
+    --json=lemmas_M_runs/lemma6a_pilot_M3_xi0.2.json       # 6a pilot (NOT rigorous: double-precision B1), ~1 h
+python3 lemma6_jump_M.py --M=3 --box=<certificate box JSON>   # 6a proper, once the point certificate exists
+python3 lemma6b1_estimate_M.py --M=3                       # planning: sizes and singularity distances, ~2 min
+python3 lemma6b1_disc_M.py                                 # lemma D at M = 1 reproduces lemma6b1_disc, ~15 s
+python3 lemma6b1_cover_M.py design --M=3                   # the rows and tiles
+python3 lemma6b1_cover_M.py probe --M=3                    # NOT rigorous: disc radii at double-precision centres, ~5 min
+python3 lemma6b1_cover_M.py ray --M=3 --h=1e-8             # start box and ray run -> lemma6b1_runs_M3/ray.json
+python3 lemma6b1_cover_M.py row --M=3 --j=11 --h=1e-8      # one row (the hardest, innermost)
+python3 lemma6b1_cover_M.py rows --M=3 --h=1e-8 [--only=J1,J2,..]   # the remaining rows
+python3 lemma6b1_cover_M.py check --M=3 --h=1e-8 --json=lemmas_M_runs/lemma6b1_check_M3.json   # C1-C8: PASS / FAIL
+python3 mutations_M.py [--all]                             # section 8; exit 0 only if every verdict matches
+python3 refine_zero_M.py --M=3 --A=2.726475886 --wf=1.015603095 --x=0.144419478,0.011087426   # the zero (double precision)
+python3 lemmas_M_report.py all                             # the tables of this note, from the saved runs
+```
+
+## 11. Proposed text for A_certify.md and PROOF.md
+
+The coordinator edits those files; this is proposed text only.
+
+**For A_certify.md §7 ("From M = 1 to M = 5"), a new last bullet:**
+
+> - **The lemmas around the point certificate** ([A_lemmas_M.md](A_lemmas_M.md)). Step (i), lemma S, lemma 6b₀, the
+>   flat estimate of 6a and the disc lemma of 6b₁ carry over to M harmonics with the same proofs. The fast eigenvalue
+>   repeats across harmonics, so the inverse operator, its domains and the kernel bounds are those of M = 1. The labels
+>   enter through s_μ = iμω in the O(1/z) terms. On rays their weight cancels exactly, since |(t/z)^{s_μ}| = 1, and a
+>   second splitting of the fast row ("diag") removes them from the contraction. On lemma S's paths they remain
+>   perturbations of size |s_μ|R₊. Step (i) is certified at M = 3 and 5 at `hier.py`'s zeros, at points and over boxes,
+>   with start data in all M + 1 parameters (`fixed_point_M.py`); M = 1 reproduces `fixed_point.py` bit for bit.
+>   STATUS_SENTENCE
+
+**For PROOF.md §4, after "Prototype status at M = 1" (one paragraph):**
+
+> *Toward M = 3 and 5* ([proof/A_lemmas_M.md](proof/A_lemmas_M.md)). The parts of Theorem A that turn a point
+> certificate into the theorem have been generalized to M harmonics: the start-value fixed point with parameter
+> derivatives, lemma S, and lemmas 6a, 6b₀ and 6b₁. PROOF_STATUS_SENTENCE Theorem A(3) then follows from a point
+> certificate (validated integration and a Krawczyk test on the M + 1 real D-jump conditions at one radius) whose box
+> lies in the boxes used there.
