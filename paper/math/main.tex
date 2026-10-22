@@ -1,0 +1,129 @@
+% The echo period of Choptuik's critical solution at large dimension: a selection rule and a computer-assisted proof.
+% Mathematics paper (companion of the physics paper in ../physics/). Build: see Makefile (pdflatex twice).
+\documentclass[11pt]{amsart}
+\usepackage[letterpaper,margin=1.1in]{geometry}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{xurl}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+\numberwithin{equation}{section}
+
+% ---------------------------------------------------------------------------------------------------------------
+% Theorem-like environments.  Propositions 1-5, Conjecture 1 and the corollary are numbered globally, as in the
+% repository; lemmas that the repository names (B1(M), 6a, S, D, G, ...) keep their names.
+\theoremstyle{plain}
+\newtheorem{proposition}{Proposition}
+\newtheorem{conjecture}{Conjecture}
+\newtheorem{corollary}{Corollary}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{lemma}[definition]{Lemma}
+\newtheorem{innerthm}{Theorem}
+\newenvironment{thmnamed}[1]{\renewcommand\theinnerthm{#1}\innerthm}{\endinnerthm}
+\newtheorem{innerlem}{Lemma}
+\newenvironment{lemnamed}[1]{\renewcommand\theinnerlem{#1}\innerlem}{\endinnerlem}
+\theoremstyle{definition}
+\newtheorem{ansatz}[definition]{Ansatz}
+\newtheorem{hypothesis}[definition]{Hypothesis}
+\theoremstyle{remark}
+\newtheorem{remark}[definition]{Remark}
+\providecommand\theHinnerthm{innerthm.\arabic{innerthm}}
+\providecommand\theHinnerlem{innerlem.\arabic{innerlem}}
+
+% ---------------------------------------------------------------------------------------------------------------
+\newcommand{\Dinf}{\Delta_\infty}
+\newcommand{\winf}{\omega_\infty}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\re}{\operatorname{Re}}
+\newcommand{\im}{\operatorname{Im}}
+\newcommand{\bx}{\mathbf{x}}
+\newcommand{\hx}{\hat{\mathbf{x}}}
+\newcommand{\iu}{\mathrm{i}}
+\newcommand{\dd}{\mathrm{d}}
+\newcommand{\fF}{{}_2F_1}
+\newcommand{\repo}[1]{\texttt{#1}}
+
+\begin{document}
+
+\title[The echo period at large dimension]{The echo period of Choptuik's critical solution at large dimension:\\
+a selection rule and a computer-assisted proof}
+
+\author{Nathan Moinvaziri}
+\address{Independent researcher}
+\email{nathan@nathanm.com}
+\date{October 2026; unreviewed draft}
+
+\begin{abstract}
+% ABSTRACT
+\end{abstract}
+
+\maketitle
+\setcounter{tocdepth}{1}
+\tableofcontents
+
+% =====================================================================================================
+\section{Introduction}
+\label{sec:intro}
+% Problem; numerics as motivation; structure as a selection problem beyond all orders (Saffman--Taylor, dendrites);
+% summary of results with status table; prior work credited; organization.
+
+% =====================================================================================================
+\section{Setting}
+\label{sec:setting}
+% 2.1 Self-similar Einstein--scalar equations in D = n + 2, the DSS boundary-value problem.
+% 2.2 Numerical input from the companion paper (one paragraph).
+% 2.3 The large-n scaling, stated as an ansatz.
+
+% =====================================================================================================
+\section{The outer expansion and its late orders}
+\label{sec:outer}
+% Proposition 1 (unobstructed to all orders), Proposition 2 (2F1, closed-form light-cone coefficient),
+% Proposition 3 (transport of the fast WKB mode with gravity), Proposition 4 (late orders as a Stokes multiplier).
+
+% =====================================================================================================
+\section{The \texorpdfstring{$n$}{n}-free inner problem and the selection rule}
+\label{sec:inner}
+% Inner equations (Rozali--Way, rw_map.py); linear case (Weber); fast mode with gravity; multipliers (Braaksma);
+% Conjecture 1 with H1--H2 and the argument; gaps (a)--(c).
+
+% =====================================================================================================
+\section{An exact unstable mode at infinite dimension}
+\label{sec:prop5}
+% Proposition 5 with proof; Corollary gamma_infty = 1/2 (conditional).
+
+% =====================================================================================================
+\section{The selection theorem programme}
+\label{sec:layerB}
+% The M-harmonic model; Theorem B(M) given the lemmas; proved lemmas B1, B2, B5.0, B5.1, B8.1, B8.2, B6';
+% what remains (two contractions); gaps (a)--(c); the harmonic tail (B_tail.md).
+
+% =====================================================================================================
+\section{Theorem A(\texorpdfstring{$M=1$}{M=1}): a computer-assisted proof}
+\label{sec:thmA}
+% Template; M = 1 problem; start-value fixed point; Lohner integration; Krawczyk test and mutation controls;
+% lemma S, 6b0; lemma 6a; lemma 6b1 (disc lemma, gluing, 178 discs); the theorem; independent checks; not claimed.
+
+% =====================================================================================================
+\section{The untruncated multiplier as an entire function}
+\label{sec:entire}
+% D_entire.md: ratio law, exponential type, Borel arc, factored series; rigorous sigma_1.
+
+% =====================================================================================================
+\section{Numerical evidence for Conjecture~\ref{conj}}
+\label{sec:evidence}
+% Labelled as evidence: shape; truncation sequence; twelve-order amplitude expansion and the bracket; estimator caveat.
+
+% =====================================================================================================
+\section{Outlook}
+\label{sec:outlook}
+
+\section*{How this work was done}
+\label{sec:how}
+
+% =====================================================================================================
+\begin{thebibliography}{99}
+\end{thebibliography}
+
+\end{document}
