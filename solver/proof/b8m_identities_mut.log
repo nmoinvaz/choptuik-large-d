@@ -1,0 +1,8 @@
+M = 1, K = 3 (mutate=rho2old): relative residuals I1 rho2: 0.36, I2 q forms: 2.26e-81, I2 S-remainder: 1.0, I3 b-remainder: 1.0, I4 c-remainder: 7.05e-81  FAIL
+M = 1, K = 4 (mutate=rho2old): relative residuals I1 rho2: 0.0742, I2 q forms: 2.68e-81, I2 S-remainder: 0.694, I3 b-remainder: 0.00619, I4 c-remainder: 5.75e-81  FAIL
+M = 3, K = 2 (mutate=rho2old): relative residuals I1 rho2: 0.0132, I2 q forms: 2.2e-81, I2 S-remainder: 1.01, I3 b-remainder: 0.139, I4 c-remainder: 1.33e-80  FAIL
+SOME IDENTITY FAILS
+M = 1, K = 3 (mutate=q): relative residuals I1 rho2: 1.68e-79, I2 q forms: 0.206, I2 S-remainder: 1.93e-77, I3 b-remainder: 0.0958, I4 c-remainder: 7.05e-81  FAIL
+M = 1, K = 4 (mutate=q): relative residuals I1 rho2: 1.45e-77, I2 q forms: 0.0568, I2 S-remainder: 1.7e-78, I3 b-remainder: 0.00381, I4 c-remainder: 5.75e-81  FAIL
+M = 3, K = 2 (mutate=q): relative residuals I1 rho2: 3.62e-81, I2 q forms: 0.151, I2 S-remainder: 1.07e-78, I3 b-remainder: 0.011, I4 c-remainder: 1.33e-80  FAIL
+SOME IDENTITY FAILS

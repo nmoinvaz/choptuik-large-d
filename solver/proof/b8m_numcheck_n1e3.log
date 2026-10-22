@@ -1,0 +1,34 @@
+n = 1000, K = 4: numpy reduced rhs vs b8m_model.reduced_rhs: 5.8e-15
+tau and J splines: max relative interpolation error 5.1e-04
+(A1) remainder vs eps^(K+1) Z_(K+1) + ... + eps^(K+4) Z_(K+4) (gauge c_k(0) = 0 for k > K): max relative difference 2.00e-03 on the 50 points with rho <= 0.03 (7.57e-01 on all 79 points, rho up to 0.111)
+      |x| =   0.0200, arg x =  0.935, rho = 1.04e-03: relative difference 2.00e-03
+      |x| =   0.0787, arg x =  0.935, rho = 1.16e-03: relative difference 1.29e-04
+      |x| =   0.3100, arg x =  0.935, rho = 1.72e-03: relative difference 8.54e-06
+      |x| =   0.5000, arg x =  0.078, rho = 2.25e-03: relative difference 9.07e-06
+      |x| =   0.5000, arg x =  0.546, rho = 2.25e-03: relative difference 8.33e-06
+      |x| =   0.9713, arg x =  0.935, rho = 3.89e-03: relative difference 2.13e-05
+      |x| =   2.0000, arg x =  0.000, rho = 9.00e-03: relative difference 8.62e-05
+      |x| =   2.0000, arg x =  0.468, rho = 9.00e-03: relative difference 7.20e-05
+      |x| =   3.0433, arg x =  0.935, rho = 1.63e-02: relative difference 7.75e-05
+      |x| =   5.0000, arg x =  0.156, rho = 3.60e-02: relative difference 3.36e-03
+      |x| =   5.0000, arg x =  0.857, rho = 3.60e-02: relative difference 3.79e-03
+      |x| =   9.5352, arg x =  0.000, rho = 1.11e-01: relative difference 3.59e-01
+      |x| =   9.5352, arg x =  0.546, rho = 1.11e-01: relative difference 4.76e-01
+      |x| =   9.5352, arg x =  0.390, rho = 1.11e-01: relative difference 7.57e-01
+      ray |x| =   1.2206: |R|/|Z| = 1.0e-09, |(Z - Z^K) - R|/|R| = 3.34e-04
+      ray |x| =   1.5338: |R|/|Z| = 6.9e-09, |(Z - Z^K) - R|/|R| = 1.39e-04
+      ray |x| =   1.9273: |R|/|Z| = 5.7e-08, |(Z - Z^K) - R|/|R| = 5.15e-05
+      ray |x| =   2.0000: |R|/|Z| = 8.0e-08, |(Z - Z^K) - R|/|R| = 1.08e-04
+      ray |x| =   2.4219: |R|/|Z| = 5.1e-07, |(Z - Z^K) - R|/|R| = 3.07e-05
+      ray |x| =   3.0433: |R|/|Z| = 4.7e-06, |(Z - Z^K) - R|/|R| = 4.52e-05
+      ray |x| =   3.8242: |R|/|Z| = 4.4e-05, |(Z - Z^K) - R|/|R| = 5.20e-05
+      ray |x| =   4.8055: |R|/|Z| = 4.2e-04, |(Z - Z^K) - R|/|R| = 5.19e-05
+      ray |x| =   5.0000: |R|/|Z| = 6.2e-04, |(Z - Z^K) - R|/|R| = 1.12e-04
+      ray |x| =   6.0386: |R|/|Z| = 4.0e-03, |(Z - Z^K) - R|/|R| = 5.99e-05
+      ray |x| =   7.5881: |R|/|Z| = 3.9e-02, |(Z - Z^K) - R|/|R| = 7.61e-05
+      ray |x| =   9.5352: |R|/|Z| = 3.5e-01, |(Z - Z^K) - R|/|R| = 4.95e-04
+(A2) Z - Z^K from the original model vs R, at 7 ray points where resolvable (|R| > 1e-6 |Z|): max relative difference 4.95e-04
+(B) max |R|/bound (h of the ln n0 = 73.89 certificate, weight rho^5): V 1.30e-02, S 2.39e-02, b 1.99e-01, c 7.99e-02  OK
+(C) Lemma K on the arc |x| = 5: max over the arc of ln||E|| - (bound exponent) = 0.000e+00 (must be <= 0); final ln||E|| = -21.927, bound -15.376  OK
+(A) OK
+ALL CHECKS OK
