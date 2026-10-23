@@ -8,6 +8,7 @@ comms.txt. The coordinator keeps this file current: when an item starts, finishe
 | # | Item | Why it is needed | Where | Status |
 |---|---|---|---|---|
 | P1 | Close Theorem B(1), the selection theorem for the one-harmonic model | the whole chain from the inner zero to a solution exists for M = 1 except the links in C_selection.md §13.1 | cloud agent | **running** (from 2026-10-23) |
+| P1L | The light cone: gaps (a)–(c) of Theorem B(1) | P1 found that the remaining links rest on three open problems at x = 1: (a) control of the nonlinear solution in the half-discs near the light cone, (b) the exact light-cone gauge c(1) = 1, (c) a proof that the outer jump is fast-type; without them Theorem B(1) is conditional | the P1 agent, continuing after P1's item 6 | queued (approved 2026-10-23) |
 | P2 | Independent review and second implementations of the certificate code | no certificate of B5, B8 or (H8) has been reviewed; lemma 6b₁'s disc covering has not been re-implemented; at M = 3 the majorant code of lemmas S and 6b₀ and the 6b₁ discs are not reviewed | cloud agent that has not seen P1 | queued (next cloud slot) |
 | P3 | Theorem A(M = 5) | the five-harmonic zero, the first truncation close to the real answer (0.999228); the point certificate fails with first-order enclosures | cloud agent | queued |
 | P4 | σ₁₅ at ω/ω∞ = 0.99, 1.00, 1.01 | numerical evidence: tests the ring of fifteen zeros that σ₁₄ left open, and narrows the estimator range | local machine (T44, after T43) | queued |
@@ -46,6 +47,17 @@ Progress (wip/theoremB1):
 
 Done when C_selection.md §13.1 lists no missing link (Braaksma's theorem stays assumed) and the new certificate code
 has mutation controls. The independent review is P2's.
+
+## P1L: the light cone
+
+In order: (a), then (b), then (c), since both later ones rest on (a). The light cone is a regular singular point of
+the self-similar equations, so the natural tools are those for analytic nonlinear systems at a regular singular point
+(Briot–Bouquet type theorems: an analytic solution exists and is unique under non-resonance, B6's gauge already
+supplies the non-resonance), made explicit with majorant series for the Frobenius expansion at x = 1 and then validated
+integration out to B8's domain, as B8 does elsewhere; Reiterer and Trubowitz's existence proof at D = 4 treats the same
+light cone and is the closest precedent; Olver's error bounds at singularities cover the linear part. First a written
+plan with the exact statements (P1's write-up of (a)–(c) in C_selection.md §13.1), then the certificates, with mutation
+controls. Done when Theorem B(1) is unconditional apart from Braaksma's theorem.
 
 ## P2: review
 
