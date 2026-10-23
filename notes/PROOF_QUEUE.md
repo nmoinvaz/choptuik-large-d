@@ -29,6 +29,15 @@ The missing links of C_selection.md §13.1, in this order (the computational one
    write it and bound it.
 6. **B7:** the implicit function theorem with explicit constants, giving Theorem B(1) with an explicit n₀.
 
+Progress (wip/theoremB1):
+- 2026-10-23, item 1 done (785c895): B5(2)'s remainder is certified for M = 1 (new lemma L, `b5_label.py`;
+  `b5_jump.py`), |E| ≤ e^{76.91}/n for every n ≥ e^{73.89}. The evaluation point need not move with n, so the
+  certified B5(1), B8 and (H8) already cover it (the κ₁ = 0.85 reruns confirm; this also gives the O(1/n) rate, item 3).
+  `b5_threshold.py`'s error model used the wrong exponent (⟨F²⟩ = 3.23 instead of 1.73); the true error is about 10⁻⁵ of
+  its estimate. A link the notes did not list: B7 needs the Jacobian of the multiplier itself, while Theorem A certifies
+  the Jacobian of the D-jump conditions at ξ = 0.3; the forward propagation between them must be certified. Uncertified
+  estimate of the final threshold: ln n₀ ≈ 88–90.
+
 Done when C_selection.md §13.1 lists no missing link (Braaksma's theorem stays assumed) and the new certificate code
 has mutation controls. The independent review is P2's.
 
