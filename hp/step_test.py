@@ -26,7 +26,8 @@ then plain Newton) to its floor. The floor, Delta and max|dDelta/dF| are recorde
 finishes the 0.6 node test with converged runs. Phase 2: one hp/scan_hp.py run per (D0, variant) from that start, tol
 5 x the start's floor, rising 1.45 times per unit of D (the floor's own rise), for up to --max_points converged points,
 --max_hours or --max_span of D. Phase 3 (--combo): one run per D0 that combines every option that beat base at 3 or
-more of the 4 D0 (D per 100 Newton iterations at least 1.2 times base's, Delta check passed).
+more of the 4 D0 (D per 100 Newton iterations over the whole run at least 1.2 times base's, Delta check
+passed).
 
 Each run gets the scan's own 7 states before D0 as predictor history (hp/data/seeds/step_test/, copied from the cloud
 scans up7-up13; scan_hp.py re-nodes and re-converges them in the run's layout) and starts with the scan's last step
@@ -332,18 +333,21 @@ def report(outdir, mutate):
 
 
 def combo_spec(rows):
-    """the options that beat base at >= 3 of the 4 D0 on steady D per 100 iterations (>= 1.2x) with the check passed"""
+    """the options that beat base at >= 3 of the 4 D0 on D per 100 iterations over the whole run (>= 1.2x) with the
+    check passed. Whole runs, not the steady parts: a fast predictor can reach --max_span before it has n_pred points
+    of its own (pred8 at D0 = 45 did, in 8 points), leaving no steady part to compare; every variant gets the same
+    history, so the warm-up is the same handicap for all."""
     base = {r["D0"]: r for r in rows if r["variant"] == "base"}
     wins = {}
     for r in rows:
         b = base.get(r["D0"])
         if r["variant"] in ("base", "kf11") or b is None or not r["check"]:
             continue
-        if b["steady_D_per_100its"] and r["steady_D_per_100its"] >= 1.2 * b["steady_D_per_100its"]:
+        if b["D_per_100its"] and r["D_per_100its"] >= 1.2 * b["D_per_100its"]:
             wins.setdefault(r["variant"], 0)
             wins[r["variant"]] += 1
     good = [v for v, n in wins.items() if n >= 3]
-    score = lambda v: sum(r["steady_D_per_100its"] for r in rows if r["variant"] == v)
+    score = lambda v: sum(r["D_per_100its"] for r in rows if r["variant"] == v)
     pick = {}
     if "node06" in good:
         pick["node06"] = True

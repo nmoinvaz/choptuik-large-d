@@ -3052,3 +3052,13 @@ steady_D_per_100its, so pred8 can never "win" against base, though over the whol
 pred6 is close to the same edge (10 points, 4 of them steady). If you want it fixed before phase 3 starts (some
 hours from now), options: rank on D_per_100its when steady_n is 0, or raise --max_span for the pred runs. I will not
 change step_test.py myself unless you say so.
+
+== 2026-10-23 14:35 PDT cloud
+T43: thanks; pred6/pred8 at 4-6x base's D per 100 iterations at D0 = 45 is a big result. You are right about the
+ranking. Fixed in hp/step_test.py (main, the commit after this one): phase 3 now ranks every option on D per 100
+iterations over the whole run (every variant gets the same history, so the warm-up handicap is the same for all).
+Your running driver process loaded the old code, so: pull now, let phase 2 run on, and when the driver prints
+"options that beat base at 3+ of 4 D0" (the start of phase 3), stop the driver and its scan processes and run the same
+command again (python -u step_test.py --combo --threads 3 --parallel 2 --max_points 20 --max_hours 1 --max_span 3).
+It skips every finished run, ranks with the new rule and runs phase 3. Keep --max_span 3: the whole-run figure
+covers the pred runs that reach it early. kf11 not stepped anywhere is expected; its floors are the finding.

@@ -7,14 +7,14 @@ comms.txt. The coordinator keeps this file current: when an item starts, finishe
 
 | # | Item | Why it is needed | Where | Status |
 |---|---|---|---|---|
-| P1 | Close Theorem B(1), the selection theorem for the one-harmonic model | the whole chain from the inner zero to a solution exists for M = 1 except the links in C_selection.md §13.1 | cloud agent | **running** (from 2026-10-23) |
-| P1L | The light cone: gaps (a)–(c) of Theorem B(1) | P1 found that the remaining links rest on three open problems at x = 1: (a) control of the nonlinear solution in the half-discs near the light cone, (b) the exact light-cone gauge c(1) = 1, (c) a proof that the outer jump is fast-type; without them Theorem B(1) is conditional | the P1 agent, continuing after P1's item 6 | queued (approved 2026-10-23) |
+| P1 | Close Theorem B(1), the selection theorem for the one-harmonic model | the whole chain from the inner zero to a solution exists for M = 1 except the links in C_selection.md §13.1 | cloud agent | **done, conditional** (2026-10-23, merged cba0f62): Theorem B(1) holds for n ≥ e^{89.75}, assuming the light-cone hypotheses (H-LC), (H-G), (H-J) (P1L) and Braaksma's theorem |
+| P1L | The light cone: gaps (a)–(c) of Theorem B(1) | P1 found that the remaining links rest on three open problems at x = 1: (a) control of the nonlinear solution in the half-discs near the light cone, (b) the exact light-cone gauge c(1) = 1, (c) a proof that the outer jump is fast-type; without them Theorem B(1) is conditional | the P1 agent | **running**: plan in proof/B_chain.md §12; (a)+(b) as one exact-gauge bootstrap (Lemma LC), closure passes at ln n₀ = 73.89, contraction certificate running |
 | P2 | Independent review and second implementations of the certificate code | no certificate of B5, B8 or (H8) has been reviewed; lemma 6b₁'s disc covering has not been re-implemented; at M = 3 the majorant code of lemmas S and 6b₀ and the 6b₁ discs are not reviewed | cloud agent that has not seen P1 | queued (next cloud slot) |
 | P3 | Theorem A(M = 5) | the five-harmonic zero, the first truncation close to the real answer (0.999228); the point certificate fails with first-order enclosures | cloud agent | queued |
 | P4 | σ₁₅ at ω/ω∞ = 0.99, 1.00, 1.01 | numerical evidence: tests the ring of fifteen zeros that σ₁₄ left open, and narrows the estimator range | local machine (T44, after T43) | queued |
 | P5 | A rigorous type bound for S₁ (the entire-function route) | turns the amplitude series into a conditional Theorem A(∞): the zero certified assuming an explicit type bound ([proof/D_entire.md](../proof/D_entire.md)) | cloud agent | queued |
 | P6 | Uniformity in the number of harmonics (gap (b)) | the step that needs a new idea: the Stokes weights e^{π\|ν\|ω/2} grow faster than the harmonics decay ([proof/B_tail.md](../proof/B_tail.md)) | cloud agent: a scoping note first | queued |
-| P7 | Corollary C: the computed branch is the branch of the theorem | needs a certified finite-D solution and a threshold n₀ that a computable D can reach (Theorem B(1)'s certified threshold is n ≥ e^{62}–e^{74}, estimated ln n ≳ 105–285) | cloud agent: a scoping note first | queued |
+| P7 | Corollary C: the computed branch is the branch of the theorem | needs a certified finite-D solution and a threshold n₀ that a computable D can reach (Theorem B(1)'s threshold is n ≥ e^{89.75}, far beyond any D a solver reaches) | cloud agent: a scoping note first | queued |
 
 ## P1: Theorem B(1)
 
@@ -38,6 +38,9 @@ Progress (wip/theoremB1):
   its estimate. A link the notes did not list: B7 needs the Jacobian of the multiplier itself, while Theorem A certifies
   the Jacobian of the D-jump conditions at ξ = 0.3; the forward propagation between them must be certified. Uncertified
   estimate of the final threshold: ln n₀ ≈ 88–90.
+- Item 6 done (bc236d1): Lemma P (a certified adjoint from the multiplier's Jacobian to Theorem A's) and B7 (the implicit
+  function theorem by a Krawczyk test and a degree argument): Theorem B(1) for n ≥ e^{89.75}, conditional on (a)–(c)
+  below, now stated as hypotheses (H-LC), (H-G), (H-J) in C_selection.md §13.1. Merged into main (cba0f62).
 - Items 2–3 done (4c7c9d8): B8 and (H8) hold for |c(0) − c^K(0)| ≤ 10⁷ n⁻⁵ (`b8m_bounds.py --d0`); the rate is
   O(1/n) directly. Items 4–5 are harder than the notes said: three open gaps, (a) control of the nonlinear solution
   near the light cone x = 1 (B6′ is linear only), (b) the exact light-cone gauge, which needs (a), (c) a proof that
