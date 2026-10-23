@@ -617,3 +617,28 @@ ValueError: need 15 segments, got 14
 12:33:50 D 3.15: tails 4e-59 (centre) 2e-17 (horizon) above 1e-30: nodes [0.000625, 0.00125, 0.0025, 0.005, 0.01, 0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9] -> [0.000625, 0.00125, 0.0025, 0.005, 0.01, 0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]
 12:34:09   D 3.15 M 192: start 're-noded' |F| 4.85e-24 (398 steps)
 12:34:14 D 3.15 M 192: L 14593, steps 398, start |F| 4.8e-24
+  newton 0: |F| 4.85e-24 |dz| 5.94e-21 lam 1 dDelta +1.36e-27 Delta 2.961319642465269 piv 1.8e-04..5.5e+00  t 390.4s
+  newton 0: |F| 2.75e-28 |dz| 1.71e-26 lam 1 dDelta +6.75e-31 Delta 2.961319642465269 piv 1.8e-04..5.5e+00  t 477.6s
+  newton 0: |F| 1.56e-28 |dz| 1.98e-26 lam 0.25 dDelta -6.97e-31 Delta 2.961319642465269 piv 1.8e-04..5.5e+00  t 658.8s
+12:59:40 D 3.15 M 192: |F| 2.8e-28 -> 1.6e-28: below 1e-27 and no longer falling (the residual floor); stopping
+13:11:58 D 3.15 M 192: Delta 2.9613196424652686 (+1.05e-16) |F| 2.6e-29 its 3 2266s dDelta/dF max 5.7e-01 tails 3e-79 3e-98 dDelta_est -1.3e-30
+13:12:44   D 3.15 M 256: start 're-noded' |F| 1.10e-17 (626 steps)
+13:13:06 D 3.15 M 256: L 19457, steps 626, start |F| 1.1e-17
+  newton 0: |F| 1.10e-17 |dz| 7.97e-17 lam 1 dDelta -1.96e-22 Delta 2.961319642456003 piv 1.7e-04..8.7e+00  t 2095.5s
+  newton 0: |F| 1.04e-28 |dz| 3.90e-26 lam 1 dDelta -8.29e-31 Delta 2.961319642456003 piv 1.7e-04..8.7e+00  t 2349.3s
+  newton 0: |F| 1.24e-29 converged (last |dz| 4.3e-26) Delta 2.961319642456003
+15:11:38 D 3.15 M 256: Delta 2.9613196424560031 (+8.46e-18) |F| 1.2e-29 its 3 7129s dDelta/dF max 4.3e-01 tails 5e-71 3e-92 dDelta_est -3.0e-31
+15:11:38 D 3.15: Delta(M 256) = 2.9613196424560031 (+8.46e-18), M 192 -> 256: -9.27e-12; re-noded [0.000625, 0.00125, 0.0025, 0.005, 0.01, 0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9] -> [0.000625, 0.00125, 0.0025, 0.005, 0.01, 0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]
+15:11:44   D 3.15 M 160: start 're-noded' |F| 1.41e-28 (280 steps)
+15:11:47 D 3.15 M 160: L 12161, steps 280, start |F| 1.4e-28
+  newton 0: |F| 1.41e-28 |dz| 3.08e-26 lam 1 dDelta -1.89e-30 Delta 2.961319643680616 piv 2.2e-04..2.7e+01  t 302.4s
+  newton 0: |F| 5.68e-29 converged (last |dz| 2.5e-26) Delta 2.961319643680616
+15:22:01 D 3.15 M 160: Delta 2.9613196436806164 (-8.93e-18) |F| 5.7e-29 its 2 616s dDelta/dF max 6.9e-01 tails 9e-82 6e-103 dDelta_est +1.7e-30
+15:22:13   hist_c: 3 earlier states re-noded for the predictor
+15:22:29   hist_w: 3 earlier states re-noded for the predictor
+15:22:29   hist_n: 0 earlier states re-noded for the predictor
+15:22:29 point 3.15 took 195.8 min of solves, 347.3 min of running time; 13.29 h used
+15:22:29 --- D 3.1 (from 3.15), M 192 / 256, nodes 0.000625..0.95
+15:22:41   D 3.1 M 160: start 'predictor' |F| nan (304 steps)
+15:22:51   D 3.1 M 160: plan from start 'predictor' instead: 1151 steps, |F| 1.44e+00
+15:22:59 D 3.1 M 160: L 12161, steps 1151, start |F| 1.4e+00

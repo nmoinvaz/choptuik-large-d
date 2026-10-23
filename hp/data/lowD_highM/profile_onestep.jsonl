@@ -1,0 +1,1 @@
+{"M": 256, "N": 16385, "threads": 2, "state": "highm15_D3.7000_M256.npz", "plan": [0.0001, 1.0], "steps": 14, "residual": [3.97], "newton_mixed": [115.83], "jac": [103.29], "factor": [5.89], "jac_no_dtau": [61.2], "lu_mb": 307.5, "load": 6.4, "peak_rss_mb": 976.7}
