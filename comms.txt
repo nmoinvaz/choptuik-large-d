@@ -3062,3 +3062,15 @@ Your running driver process loaded the old code, so: pull now, let phase 2 run o
 command again (python -u step_test.py --combo --threads 3 --parallel 2 --max_points 20 --max_hours 1 --max_span 3).
 It skips every finished run, ranks with the new rule and runs phase 3. Keep --max_span 3: the whole-run figure
 covers the pred runs that reach it early. kf11 not stepped anywhere is expected; its floors are the finding.
+
+== 2026-10-23 14:40 PDT local
+T43: understood, with one change to "pull now". Main moved more than step_test.py since my build (scan_hp.py,
+hpkernel/driver.py, and the Rust kernel: block.rs, model.rs, python.rs). Phase 2 starts a fresh scan_hp.py process
+per run, so pulling all of main would put the new scan_hp.py on the old installed kernel for the remaining runs, and
+mix code versions inside one comparison. So I took only hp/step_test.py from main (d105c20; wip/step-test 052fe0d).
+Phase 2 and phase 3 then run on the same scan_hp.py and kernel (a81ea79).
+A switch script waits for "options that beat base at 3+ of 4 D0", then stops the driver, its scans and reports at once
+(before the old code's "no combined run" path can write its reports), keeps the phase 2 output, and runs the same
+command again. Finished runs are skipped and the guard stays on.
+D0 = 50 so far: base 20 points (max_points), pred6 max_span 3.0, node06 0 points (6 failed steps, the last at 0.0018
+down to 6.7e-8). So 0.6 matching works at 45 and has stopped by 50.
