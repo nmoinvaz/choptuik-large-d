@@ -370,11 +370,15 @@ def resid_vec(meth, s, Ah):
 
 def jacobian(meth, s, Ah, dps):
     with mp.workdps(dps):
-        h = mp.mpf(10) ** (-20 if dps >= 60 else -(dps // 3))
+        # five-point stencil: truncation O(h^4) = 1e-80 at h = 1e-20 (a central difference's O(h^2) = 1e-40 would
+        # mask determinants below about 1e-40, i.e. kappa above 1e40)
+        h = mp.mpf(10) ** (-20 if dps >= 60 else -(dps // 4))
         rp, A, B, _ = resid_vec(meth, s + h, Ah)
         rm, _, _, _ = resid_vec(meth, s - h, Ah)
+        rp2, _, _, _ = resid_vec(meth, s + 2 * h, Ah)
+        rm2, _, _, _ = resid_vec(meth, s - 2 * h, Ah)
         r0, A, B, amp = resid_vec(meth, s, Ah)
-        ds = [(rp[i] - rm[i]) / (2 * h) for i in range(2)]
+        ds = [(8 * (rp[i] - rm[i]) - (rp2[i] - rm2[i])) / (12 * h) for i in range(2)]
         if meth.two:
             J = [[ds[0], -B[0]], [ds[1], -B[1]]]
         else:
