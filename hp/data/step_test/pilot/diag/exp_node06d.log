@@ -1,0 +1,27 @@
+
+==== layout [0.3, 0.4, 0.5, 0.6, 0.7], ks 100: horizon columns 704..767
+col 704: |J col| 8.1e+06; |FD - J|/|J col| h 1e-18: 1.2e-14 h 1e-20: 6.6e-13 h 1e-22: 7.2e-11
+col 712: |J col| 6.1e+06; |FD - J|/|J col| h 1e-18: 8.1e-15 h 1e-20: 1.4e-12 h 1e-22: 1.3e-10
+col 720: |J col| 4.0e+05; |FD - J|/|J col| h 1e-18: 1.9e-13 h 1e-20: 1.2e-11 h 1e-22: 1.1e-09
+col 728: |J col| 6.6e+06; |FD - J|/|J col| h 1e-18: 1.1e-14 h 1e-20: 6.2e-13 h 1e-22: 9.5e-11
+col 736: |J col| 1.4e+09; |FD - J|/|J col| h 1e-18: 6.1e-15 h 1e-20: 2.9e-13 h 1e-22: 1.6e-12
+col 744: |J col| 1.4e+09; |FD - J|/|J col| h 1e-18: 7.2e-15 h 1e-20: 1.0e-12 h 1e-22: 1.2e-10
+col 752: |J col| 1.4e+09; |FD - J|/|J col| h 1e-18: 3.5e-15 h 1e-20: 2.0e-13 h 1e-22: 5.4e-12
+col 760: |J col| 1.4e+09; |FD - J|/|J col| h 1e-18: 3.8e-15 h 1e-20: 7.7e-14 h 1e-22: 3.0e-11
+col 766: |J col| 1.4e+09; |FD - J|/|J col| h 1e-18: 1.2e-15 h 1e-20: 2.3e-13 h 1e-22: 2.6e-11
+col 767: |J col| 1.4e+09; |FD - J|/|J col| h 1e-18: 1.4e-15 h 1e-20: 8.6e-13 h 1e-22: 9.5e-11
+worst over the horizon columns: h 1e-18: 1.9e-13 h 1e-20: 1.2e-11 h 1e-22: 1.1e-09; J(z* + 1e-30 Delta) - J(z*): 0.0e+00 relative
+
+==== layout [0.3, 0.4, 0.5, 0.6], ks 160: horizon columns 576..639
+col 576: |J col| 5.3e+10; |FD - J|/|J col| h 1e-18: 1.2e-14 h 1e-20: 6.6e-13 h 1e-22: 7.2e-11
+col 584: |J col| 4.0e+10; |FD - J|/|J col| h 1e-18: 8.1e-15 h 1e-20: 1.4e-12 h 1e-22: 1.3e-10
+col 592: |J col| 2.6e+09; |FD - J|/|J col| h 1e-18: 1.9e-13 h 1e-20: 1.2e-11 h 1e-22: 1.1e-09
+col 600: |J col| 4.3e+10; |FD - J|/|J col| h 1e-18: 1.1e-14 h 1e-20: 6.2e-13 h 1e-22: 9.5e-11
+col 608: |J col| 9.0e+12; |FD - J|/|J col| h 1e-18: 4.0e-11 h 1e-20: 2.9e-13 h 1e-22: 1.6e-12
+col 616: |J col| 8.9e+12; |FD - J|/|J col| h 1e-18: 2.8e-11 h 1e-20: 1.0e-12 h 1e-22: 1.2e-10
+col 624: |J col| 8.9e+12; |FD - J|/|J col| h 1e-18: 2.5e-11 h 1e-20: 2.0e-13 h 1e-22: 5.4e-12
+col 632: |J col| 9.0e+12; |FD - J|/|J col| h 1e-18: 3.0e-11 h 1e-20: 7.7e-14 h 1e-22: 3.0e-11
+col 638: |J col| 9.0e+12; |FD - J|/|J col| h 1e-18: 4.0e-11 h 1e-20: 2.3e-13 h 1e-22: 2.6e-11
+col 639: |J col| 9.0e+12; |FD - J|/|J col| h 1e-18: 4.0e-11 h 1e-20: 8.6e-13 h 1e-22: 9.5e-11
+worst over the horizon columns: h 1e-18: 4.0e-11 h 1e-20: 1.2e-11 h 1e-22: 1.1e-09; J(z* + 1e-30 Delta) - J(z*): 1.4e-17 relative
+done
