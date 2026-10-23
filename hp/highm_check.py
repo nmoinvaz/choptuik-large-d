@@ -8,7 +8,8 @@ storage of the mixed-precision Newton system (notes/HIGH_M.md).
     cd hp && python3 highm_check.py controls
     cd hp && python3 highm_check.py converge [--M=80] [--json=F]
     cd hp && python3 highm_check.py lift --M=160 [--start=STATE.npz] [--nodes=x0,x1,...] [--plan=start|source] [--tol1=1e-14] [--no_replan] [--tol=1e-28] [--out=F.jsonl] [--tag=highm]
-    cd hp && python3 highm_check.py profile --M=256 [--start=STATE.npz] [--reps=2] [--out=F.jsonl]
+    cd hp && python3 highm_check.py profile --M=256 [--start=STATE.npz] [--reps=2] [--out=F.jsonl] [--plan_tol=1e-30]
+        [--hmax=0.05] [--no_dtau_split]
 
 ref: bit-identity at M <= 128 of everything the kernel computes there (residual, the dense double-double Newton step
   and its pivots, chord and lu_solve_t after it, the dense f64 Jacobian, newton_mixed's step, pivots, lu_solve_t
@@ -45,7 +46,9 @@ lift: a converged state (--start, default hp/data/lowD_states/lowDv_D3.7000_M80.
 profile: at a state (--start, default the D = 3.7 state resampled to --M): seconds of a residual, of newton_mixed in
   block storage (residual + Jacobian + LU + solve), of its Jacobian build and of the block factorization
   (Solver.lu_info), and of the Jacobian build without the tau derivative (jac_mutate=1; the difference is the tau
-  derivative's time), --reps times, 2 threads.
+  derivative's time; not with --no_dtau_split), --reps times, 2 threads; the LU's MB, the load and the peak RSS.
+  --plan_tol / --hmax: a coarser Taylor plan for timing and memory at large M (the Jacobian's time is about proportional
+  to the Taylor steps, recorded; the LU's time and memory do not depend on them).
 """
 import hashlib
 import json
@@ -436,8 +439,12 @@ def profile(opts):
     threads = int(opts.get("threads", 2))
     reps = int(opts.get("reps", 2))
     path = opts.get("start")
-    s, zh, zl, m = solver_at(M, threads, path=path)
-    out = dict(M=M, N=s.size, threads=threads, state=m["source"], residual=[], newton_mixed=[], jac=[], factor=[])
+    # --plan_tol / --hmax: a coarser Taylor plan than the solves' (1e-30, 0.05) for timing and memory at large M; the
+    # Jacobian's time is about proportional to the steps, the LU's and its memory do not depend on them
+    plan = (float(opts.get("plan_tol", 1e-30)), float(opts.get("hmax", 0.05)))
+    s, zh, zl, m = solver_at(M, threads, path=path, plan=plan)
+    out = dict(M=M, N=s.size, threads=threads, state=m["source"], plan=list(plan),
+               steps=sum(len(g) - 1 for g in s.get_segs()), residual=[], newton_mixed=[], jac=[], factor=[])
     for _ in range(reps):
         t = time.time(); s.residual(zh, zl); out["residual"].append(round(time.time() - t, 2))
         t = time.time(); s.newton_mixed(zh, zl, block=True); out["newton_mixed"].append(round(time.time() - t, 2))
@@ -445,8 +452,11 @@ def profile(opts):
         out["jac"].append(round(tj, 2))
         out["factor"].append(round(tf, 2))
         # the same Jacobian without the tau derivative (Ctx::mutate 1): its time difference is the tau derivative's
-        s.newton_mixed(zh, zl, block=True, jac_mutate=1)
-        out.setdefault("jac_no_dtau", []).append(round(s.lu_info()[2], 2))
+        if not opts.get("no_dtau_split"):
+            s.newton_mixed(zh, zl, block=True, jac_mutate=1)
+            out.setdefault("jac_no_dtau", []).append(round(s.lu_info()[2], 2))
+    out["lu_mb"] = round(s.lu_info()[0] / 2 ** 20, 1)
+    out["load"] = round(os.getloadavg()[0], 2)
     out["peak_rss_mb"] = peak_rss_mb()
     print(json.dumps(out), flush=True)
     if "out" in opts:
