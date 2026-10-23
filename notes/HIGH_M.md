@@ -172,6 +172,38 @@ solves (plain and transposed) with the double-double LU of the same f64 matrix, 
 10⁻¹⁵; both controls (one pivot scaled by 1 + 10⁻⁶; the Δ copies untied) must fail that and do.
 `block_solve_many_is_solve` checks that several right-hand sides give each row bitwise as single solves.
 
+### 2.3 Block storage against the dense path (M ≤ 128)
+
+`cd hp && python3 highm_check.py block --Ms=16,48 --variants=f64x4,f64x1,dd4` and `--Ms=80,128` (f64x4)
+(`block_check_small.log`, `block_check_large.log`, JSON next to them): `newton_mixed` with block=True against
+block=False at the D = 3.7 state resampled to each M, and at a perturbed state (Δ + 10⁻⁶, fields + 10⁻⁸). The residuals
+are bit-identical (the same code). The step, the sensitivities ∂Δ/∂F (`lu_solve_t`) and a chord step after it are
+compared relative to their max, next to the floor of the dense f64 LU itself (the same right-hand side solved with the
+dense double-double LU of the same f64 Jacobian). Pass: every difference ≤ max(100 × floor, 10⁻¹²).
+
+| M (N) | variants | step | ∂Δ/∂F | chord | floor (step, ∂Δ/∂F) | LU, block / dense |
+|---|---|---|---|---|---|---|
+| 16 (897) | f64x4, f64x1, dd4 | 4.6×10⁻¹⁵–1.5×10⁻¹⁴ | 1.6–4.9×10⁻¹⁵ | 7×10⁻¹⁵–1.8×10⁻¹⁴ | 2–10×10⁻¹⁴, 2–4×10⁻¹⁴ | 1.1 / 12 MB |
+| 48 (2689) | f64x4, f64x1, dd4 | 4.1–8.2×10⁻¹⁴ | 1.9–3.7×10⁻¹⁴ | 5.1–7.9×10⁻¹⁴ | 3–7×10⁻¹⁴, 2–6×10⁻¹⁴ | 9.6 / 111 MB |
+| 80 (4481) | f64x4 | 5.4×10⁻¹⁴, 1.2×10⁻¹³ | 1.1×10⁻¹³, 4.0×10⁻¹³ | 3.8×10⁻¹⁴, 4.1×10⁻¹³ | 4.8×10⁻¹⁴–1.1×10⁻¹³, 0.9–2.7×10⁻¹³ | 26 / 307 MB |
+| 128 (7169) | f64x4 | 4.1×10⁻¹³, 1.2×10⁻¹¹ | 5.8×10⁻¹³, 1.6×10⁻¹¹ | 3.0–3.3×10⁻¹² | 2.8×10⁻¹³–7.7×10⁻¹², 1–12×10⁻¹² | 67 / 785 MB |
+
+All pass, and the block path's steps agree with the dense path's as closely as the dense f64 LU agrees with an exact
+solve of the same matrix. The block LU takes 8–12 times less memory and about the same time.
+
+### 2.4 Controls
+
+`python3 highm_check.py controls` (`block_controls.log`): at M = 48, one pivot of the middle step scaled by 1 + 10⁻⁶
+changes the step by 4.8×10⁻⁸–1.5×10⁻⁷ (the limit is 4×10⁻¹²), and the Δ copies untied (each link row replaced by
+δ_s = 0) by 0.21–0.44 and the sensitivities by 6.4×10²: both fire. The Rust test has the same two controls (2.2).
+
+### 2.5 Convergence to the same solution
+
+`python3 highm_check.py converge --M=80` (`converge_M80.log`): `driver.newton_solve(jac="f64")` from the D = 3.7 state
+with Δ + 10⁻⁶ and fields + 10⁻⁸ (seed 1), with the dense and with the block path, 7 Newton calls each: Δ agrees to
+1.3×10⁻³⁰ and max |z| to 5.0×10⁻²⁸ (relative), against 1.1×10⁻²⁷ between two dense solves from different starts (the
+control); pass (≤ max(10⁻²⁷, 10 × the control)).
+
 ## 3. D = 3.7 from M = 80 to 256
 
 From `hp/data/lowD_states/lowDv_D3.7000_M80.npz` (13 nodes 0.005…0.8, kc 100, ks 250, Taylor tolerance 10⁻³⁰,
