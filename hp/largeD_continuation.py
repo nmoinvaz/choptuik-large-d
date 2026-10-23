@@ -10,8 +10,9 @@ one unit apart, and a cubic through them is off by |F| = 0.04 (D = 40) and 0.35 
   - D = 60: the scan's own history, saved in hp/data/seeds: start up13_D59.8221, history up12_D59.7676 / 59.7858 /
     59.8041 (spacing 0.018), targets the scan's next two points (59.833359, 59.847422, run up13);
   - D = 40 and 50: first a double-double ladder from the saved state (history: the three saved states below it) to
-    D0 + 2e-5, 1e-4, 3e-4, 1e-3, 3e-3, 0.01, 0.02, 0.03, one scan_hp.py call per point (--dD the gap, so a failure halves
-    the step and ends the ladder; shared by all variants, directories 'ladder/kN'); then each variant
+    D0 + 2e-5, 1e-4, 3e-4, 1e-3, 3e-3, 0.01, 0.02, 0.03 (D = 50: from 3e-4 on in ratios of 1.5, since the step to 1e-3
+    failed there), one scan_hp.py call per point (--dD the gap, so a failure halves the step and ends the ladder;
+    shared by all variants, directories 'ladder/x<offset>'); then each variant
     from D0 + 0.03 with the ladder's points at D0 + 0.01, 0.02 and the one at 3e-3 as history, to D0 + 0.06 and
     D0 + 0.09 (steps of 0.03, as the scan's 0.04-0.06 there).
 Then:
@@ -45,7 +46,9 @@ from hpkernel.driver import load, make_solver, newton_step, weak_subspace  # noq
 
 # the scan's tolerance at each target (solver/notes.md: up7 1e-25, up8 1e-24, up13 3e-22: it accepted 1.6e-22)
 TOL = {40: 1e-25, 50: 1e-24, 60: 3e-22}
-LADDER = (2e-5, 1e-4, 3e-4, 1e-3, 3e-3, 0.01, 0.02, 0.03)
+LADDERS = {40: (2e-5, 1e-4, 3e-4, 1e-3, 3e-3, 0.01, 0.02, 0.03),
+           # at D = 50 the step from 3e-4 to 1e-3 failed (dd, |F| stalled at 4e-11): ratio 1.5 from there on
+           50: (2e-5, 1e-4, 3e-4, 5e-4, 8e-4, 1.2e-3, 1.8e-3, 2.7e-3, 4e-3, 6e-3, 9e-3, 0.0135, 0.02, 0.03)}
 STEPS = (0.06, 0.09)
 STATES = os.path.join(HERE, "data", "states")
 SEEDS = os.path.join(HERE, "data", "seeds")
@@ -101,7 +104,7 @@ def plan_for(Dt, outdir):
     i = min(range(len(st)), key=lambda k: abs(st[k][0] - Dt))
     D0, p0 = st[i]
     base = os.path.join(outdir, f"D{D0:.4f}")
-    pts = {round(load(p)[2]["D"], 6): p for p in glob.glob(os.path.join(base, "ladder", "k*", "dd_D*.npz"))}
+    pts = {round(load(p)[2]["D"], 6): p for p in glob.glob(os.path.join(base, "ladder", "x*", "dd_D*.npz"))}
     have = [pts.get(round(D0 + x, 6)) for x in (3e-3, 0.01, 0.02, 0.03)]
     targets = [round(D0 + x, 6) for x in STEPS]
     return base, have[-1], have[:-1], targets, {}, tol, (st[i - 3:i + 1], D0, pts)
@@ -114,9 +117,9 @@ def run_all(Ds, jacs, outdir, threads):
             coarse, D0, _ = lad
             chain = [p for _, p in coarse]          # the saved states, then the ladder's points as they come
             prev = D0
-            for k, x in enumerate(LADDER):
+            for x in LADDERS[min(LADDERS, key=lambda d: abs(d - Dt))]:
                 Dk = round(D0 + x, 6)
-                d = os.path.join(base, "ladder", f"k{k}")
+                d = os.path.join(base, "ladder", f"x{x:g}")
                 m = load(chain[-1])[2]
                 run_cmd(d, scan_cmd(os.path.join(d, "scan.jsonl"), chain[-1], chain[-4:-1], [Dk], m, tol, "dd", threads,
                                     dD=Dk - prev))

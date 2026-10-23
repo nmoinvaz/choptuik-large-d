@@ -15,3 +15,29 @@ history point D=40.023065: ok True, Delta 1.8884342507013911
   dn 1 [all]: |F| 6.44e-20 -> nan lam 0.000122 Delta 1.888393628228796 t 4s (12 products)
   dn 2 [full]: |F| 6.44e-20 -> 2.74e-26 lam 1 Delta 1.888393628228796 t 5s (12 products)
   dn 2: the remaining steps exact (dd)
+  dn 3: |F| 2.74e-26 converged, Delta 1.888393628228796
+history point D=40.030065: ok True, Delta 1.8883936282287959
+  dn 0 [all]: |F| 5.27e-17 -> 9.83e-20 lam 1 Delta 1.888335619676403 t 2s (12 products)
+  dn 1 [all]: |F| 9.83e-20 -> nan lam 0.000122 Delta 1.888335619676403 t 4s (12 products)
+  dn 2 [full]: |F| 9.83e-20 -> 2.03e-26 lam 1 Delta 1.888335619676403 t 6s (12 products)
+  dn 2: the remaining steps exact (dd)
+  dn 3: |F| 2.03e-26 converged, Delta 1.888335619676403
+history point D=40.040065: ok True, Delta 1.8883356196764032
+  dn 0 [all]: |F| 2.69e-08 -> 3.31e-15 lam 1 Delta 1.888103862162393 t 2s (6 products)
+  dn 1 [all]: |F| 3.31e-15 -> 3.32e-15 lam 1 Delta 1.888103862162393 t 3s (12 products)
+  dn: phase 'all' stalled at |F| 3.3e-15; phase 'full'
+  dn 2 [full]: |F| 3.32e-15 -> 2.25e-20 lam 1 Delta 1.888103862162417 t 5s (12 products)
+  dn 2: the remaining steps exact (dd)
+  dn 3 [full]: |F| 2.25e-20 -> 2.24e-20 lam 1 Delta 1.888103862162417 t 20s
+  dn 4 [full]: |F| 2.24e-20 -> 1.68e-26 lam 1 Delta 1.888103862162417 t 36s
+  dn 5: |F| 1.68e-26 converged, Delta 1.888103862162417
+D=40.0801 Delta=1.8881038621624169-3.39e-17 its 6 |F| 1.7e-26 51s piv 9.1e-07..1.1e+04 dDelta/dF max 1.0e+10 tails 4e-115 1e-47
+  dn 0 [all]: |F| 5.65e-08 -> 7.07e-15 lam 1 Delta 1.887930334000332 t 2s (6 products)
+  dn 1 [all]: |F| 7.07e-15 -> 7.21e-15 lam 1 Delta 1.887930334000333 t 3s (12 products)
+  dn: phase 'all' stalled at |F| 7.2e-15; phase 'full'
+  dn 2 [full]: |F| 7.21e-15 -> 4.23e-19 lam 1 Delta 1.887930334000367 t 5s (12 products)
+  dn 2: the remaining steps exact (dd)
+  dn 3 [full]: |F| 4.23e-19 -> 4.23e-19 lam 1 Delta 1.887930334000367 t 21s
+  dn 4 [full]: |F| 4.23e-19 -> 2.39e-26 lam 1 Delta 1.887930334000367 t 38s
+  dn 5: |F| 2.39e-26 converged, Delta 1.887930334000367
+D=40.1101 Delta=1.8879303340003668-8.32e-17 its 6 |F| 2.4e-26 54s piv 3.2e-06..1.1e+04 dDelta/dF max 1.0e+10 tails 3e-115 1e-47

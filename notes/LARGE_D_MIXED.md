@@ -246,6 +246,57 @@ error. `--calibrate` tries ε = 10⁻¹, 10⁻², … with the double-double var
 The basin is a start |F| of about 10⁻⁶ to 10⁻⁵ wherever the deflated Newton runs, and only 5.5×10⁻⁸ for the plain
 Newton at D = 20. In z it is tiny at large D: a step of 10⁻¹⁰ toward a neighbour one unit of D away.
 
+**The reference run here** (`python3 bench_variants.py --repeat=1 --threads=2 --out=data/bench_variants/bench_cloud.jsonl`,
+log `bench_cloud.log`; 3 177 s in all at a load average of 9–13; the correction loop then had at most 12 products per
+step). Whole-solve seconds, the speedup over dd at the same state, and the Newton calls (the last one confirms
+|F| < tol):
+
+| state (kc used / the state's) | dd | f64 | f64h | f64g | f64hg |
+|---|---|---|---|---|---|
+| D = 3.7, M = 80 (62 / 100) | 937 s, 4 | 138 s (6.8×), 5 | 515 s (1.8×), 5 | 123 s (7.7×), 4 | 414 s (2.3×), 4 |
+| 8.25, M = 48 (47 / 60) | 68.2 s, 4 | 15.7 s (4.3×), 5 | 19.7 s (3.5×), 4 | 14.4 s (4.7×), 4 | 21.3 s (3.2×), 4 |
+| 16.76 (77 / 80) | 21.7 s, 5 | 4.4 s (4.9×), 7 | 8.2 s (2.7×), 6 | 4.5 s (4.8×), 5 | 7.8 s (2.8×), 5 |
+| 20.04 (76 / 80) | 16.2 s, 4 | 4.2 s (3.8×), 7 | 8.3 s (2.0×), 6 | 3.9 s (4.2×), 4 | 7.0 s (2.3×), 4 |
+| 30.07, kfreeze 13 (217 / 414) | 38.9 s, 7 | 10.3 s (3.8×), 17 | 21.4 s (1.8×), 15 | 8.6 s (4.5×), 7 | 12.9 s (3.0×), 7 |
+| 40.02 (174 / 420) | 24.2 s, 6 | fails | 22.3 s (1.1×), 8 | 20.3 s (1.2×), 7 | 17.5 s (1.4×), 6 |
+| 45.05 (158 / 420) | 33.9 s, 9 | fails | 30.0 s (1.1×), 13 | 20.6 s (1.6×), 8 | 27.6 s (1.2×), 9 |
+| 50.01 (149 / 420) | 26.5 s, 7 | fails | fails (25) | 17.3 s (1.5×), 7 | 27.2 s (1.0×), 9 |
+| 55.04 (141 / 420) | 26.5 s, 7 | fails | 22.2 s (1.2×), 9 | 17.0 s (1.6×), 8 | 19.0 s (1.4×), 7 |
+| 60.00 (134 / 420) | 22.5 s, 6 | fails | fails (25) | fails (25) | 27.3 s (0.8×), 9 |
+
+With at most 30 products per step (now the default, `driver.GMRES`; `--max_products=30`, `bench_cloud_mp30.jsonl`):
+
+| state | dd | f64g | f64hg |
+|---|---|---|---|
+| 40.02 | 27.2 s, 6 | 11.0 s (2.5×), 6; 96 products | 12.3 s (2.2×), 6; 70 |
+| 45.05 | 36.5 s, 9 | 15.3 s (2.4×), 9; 168 | 19.6 s (1.9×), 9; 127 |
+| 50.01 | 28.2 s, 7 | 16.7 s (1.7×), 8; 169 | 20.8 s (1.4×), 8; 124 |
+| 55.04 | 25.5 s, 7 | 16.3 s (1.6×), 8; 200 | 16.1 s (1.6×), 7; 118 |
+| 60.00 | 22.9 s, 6 | fails (|F| 3.5×10⁻⁹) | 16.2 s (1.4×), 7; 129 |
+
+Every converged run's Δ agrees with the dd run's to the level of the dd run's own linearised Δ correction
+(dDelta_est) or, below D = 25 where the plain Newton records none, well inside what the tolerance fixes
+(|∂Δ/∂F| tol, 10⁻²⁶–2×10⁻²³): |Δ − Δ_dd| ≤ 6.4×10⁻³⁰ at D = 3.7 (2×10⁻³⁰ relative), ≤ 4.6×10⁻²⁹ at 8.25,
+≤ 5.7×10⁻²⁸ at 16.76, ≤ 3.2×10⁻²⁷ at 20, ≤ 1.3×10⁻²⁴ at 30, and 8×10⁻²³ – 1.8×10⁻²¹ (40), 7×10⁻²² – 1.6×10⁻²⁰ (45),
+3×10⁻²⁰ – 1.3×10⁻¹⁹ (50), 3×10⁻²⁰ – 5.9×10⁻¹⁹ (55), 2.0×10⁻¹⁸ – 4.8×10⁻¹⁸ (60), where the dd runs' dDelta_est is
+4.7×10⁻²², −7.9×10⁻²¹, −1.0×10⁻¹⁹, −9.5×10⁻¹⁹ and −3.8×10⁻¹⁸.
+
+What the table says:
+
+- **Below D ≈ 35 the plain f64 Jacobian and the loop on it (f64g) are the fast variants**, 4–8× faster than dd; f64g
+  needs as few or fewer Newton calls than f64. The horizon fix costs more than it saves there (the horizon block is
+  a large part of the double-double work: 161 of 4 481 columns at M = 80 but each a 250-order series), and is not
+  needed.
+- **From D = 40 the plain f64 Jacobian fails** (it stalls at |F| = 10⁻¹⁷–10⁻¹⁹), as MIXED_PRECISION §8 predicted.
+- **At D = 40–60 the gain over the double-double Newton is small, 1.4–2.5×,** once the double-double Jacobian uses a
+  sensible centre-series order (§7.2; with the scan's kc = 420 the dd runs take 3 times longer and so would every
+  exact step). The reason is the end of each solve: near the floor the residual lies in the weakest directions, which
+  an f64 LU does not resolve, so the loop needs 15–30 products per step there or the exact finish takes over
+  (`dd_finish`; with 12 products at most it took over in most large-D runs, whose Jacobian time is then mostly exact
+  steps).
+- **The robust variant at large D is f64hg**: it converged at every state. f64g fails at D = 60 and f64h at 50 and 60,
+  in the deflated Newton (§4).
+
 **Running it on the local machine** (Windows, i7-1185G7, 4 cores; from a checkout of `wip/largeD-mixed`):
 
 ```
@@ -331,6 +382,7 @@ products; one Newton call at a time; log and records in `data/mixed_precision/la
 |---|---|---|---|---|---|
 | 0 | 3.75×10⁻¹⁰ | 12: 0.38, 0.040, 0.020, 1.3e-3, 4.8e-4, 4.1e-5, 4.7e-6, 1.8e-7, 4.1e-9, 1.1e-9, 5.1e-11 | λ = 1/2 | 7.9×10⁻⁸ | +2.6×10⁻¹³ |
 | 1 | 1.87×10⁻¹⁰ | 12: 4.7, 0.028, 4.2e-3, 1.6e-3, 5.9e-5, 1.8e-5, 6.3e-7, 6.6e-8, 7.2e-9, 2.4e-10, 9.2e-12 | λ = 1/4 | 1.6×10⁻⁷ | +5.0×10⁻¹⁵ |
+| 2 | 1.41×10⁻¹⁰ | 12: 0.32, 0.034, 4.5e-3, 1.5e-3, 1.2e-4, 1.4e-5, 4.0e-7, 6.6e-8, 1.7e-9, 1.9e-10, 5.1e-12 | λ = 1 | 1.3×10⁻⁷ | +3.3×10⁻¹² |
 
 (The changes list starts at the second product; the first is 1 by definition.)
 

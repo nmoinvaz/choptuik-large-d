@@ -3,3 +3,5 @@ highm_p1_D3.7000_M192_stalled.npz: D 3.7 M 192 L 10753, 511 Taylor steps, |F| 3.
   step 0: |F| 3.75e-10, products 12, changes [1.0, 0.382, 0.0402, 0.0202, 0.00131, 0.000481, 4.07e-05, 4.7e-06, 1.78e-07, 4.13e-09, 1.1e-09, 5.08e-11], Jacobian 2221 s, LU 3 s, products 171.8 s
   newton 0: |F| 1.87e-10 |dz| 1.60e-07 lam 0.25 dDelta +4.96e-15 Delta 3.465200482271896 piv 5.7e-04..1.5e+03  t 2464.3s
   step 1: |F| 1.87e-10, products 12, changes [1.0, 4.69, 0.0277, 0.00421, 0.00158, 5.87e-05, 1.83e-05, 6.25e-07, 6.57e-08, 7.17e-09, 2.43e-10, 9.17e-12], Jacobian 2242 s, LU 3 s, products 180.4 s
+  newton 0: |F| 1.41e-10 |dz| 1.25e-07 lam 1 dDelta +3.25e-12 Delta 3.465200482275149 piv 5.7e-04..1.1e+03  t 1977.0s
+  step 2: |F| 1.41e-10, products 12, changes [1.0, 0.315, 0.0338, 0.00454, 0.00145, 0.000124, 1.44e-05, 3.98e-07, 6.6e-08, 1.66e-09, 1.9e-10, 5.05e-12], Jacobian 1829 s, LU 2 s, products 126.5 s

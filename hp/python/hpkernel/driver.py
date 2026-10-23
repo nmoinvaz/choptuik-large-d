@@ -177,8 +177,9 @@ JACS = ("dd", "f64", "f64h", "f64g", "f64hg")
 # Solver.jacobian_f64 / newton_mixed horizon_dd flags of the horizon fix (model.rs HDD_BLOCK: the horizon block's
 # columns from the double-double lanes, rounded to f64; the cheapest variant that steers at D = 50-60, largeD_horizon.py)
 HORIZON_DD = 4
-# defaults of the correction loop (gmres_refine)
-GMRES = dict(max_products=12, step_tol=1e-10, confirm=1)
+# defaults of the correction loop (gmres_refine): 3-6 products per step away from the floor, up to ~30 near it at
+# D >= 40, where 12 sent the deflated Newton to exact steps (dd_finish) too often (notes/LARGE_D_MIXED.md section 5)
+GMRES = dict(max_products=30, step_tol=1e-10, confirm=1)
 
 
 _SPLIT = 134217729.0  # 2^27 + 1
@@ -210,7 +211,7 @@ def dd_axpy(a, xh, xl, yh, yl):
     return dd_add(yh, yl, ph, pl)
 
 
-def gmres_refine(s, zh, zl, bh, bl, max_products=12, step_tol=1e-10, confirm=1, cut=True, verbose=False, ref=None):
+def gmres_refine(s, zh, zl, bh, bl, max_products=30, step_tol=1e-10, confirm=1, cut=True, verbose=False, ref=None):
     """Solve J x = b (b = bh + bl, double-double) for the exact Jacobian J at z: GMRES on J M^-1 (right
     preconditioning) in its GCR form (Eisenstat, Elman and Schultz, SIAM J. Numer. Anal. 20 (1983) 345), M the LU stored
     in s (the mixed step's f64 LU), the products J u exact in double-double (Solver.jvp; cut: its series stopped at
@@ -386,7 +387,7 @@ def newton_solve(s, zh, zl, tol=1e-28, it_max=12, chord=0, verbose=True, ls=True
                    piv=(pmin, pmax), t=round(time.time() - t0, 1))
         rec.update(info)
         hist.append(rec)
-        if (dd_finish and cur in ("f64h", "f64g", "f64hg")
+        if (dd_finish and cur in ("f64h", "f64g", "f64hg") and s.m <= DENSE_M_MAX
                 and (lam < 0.25 or info.get("retry_dd") or (info.get("products") and not info.get("gmres_converged", True)))):
             cur = "dd"
             rec["switch_dd"] = True
@@ -608,7 +609,7 @@ def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_hal
     search or finds no decrease, or its correction loop ends without converging, the remaining steps are exact
     (dd). Near the double-double floor at large D the residual lies in the weakest directions, which an f64 LU does
     not resolve (notes/LARGE_D_MIXED.md section 4); the exact steps finish there, and leave the exact LU stored for
-    the sensitivities."""
+    the sensitivities. Not above M = DENSE_M_MAX (no dense exact Jacobian there)."""
     if jac not in JACS:
         raise ValueError(f"jac must be one of {JACS}, not {jac!r}")
     hist = []
@@ -693,7 +694,7 @@ def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_hal
         rec = dict(it=it, F=nF, mode=mode, lam=lam, Delta=float(th[-1]), piv=(pmin, pmax), t=round(time.time() - t0, 1))
         rec.update(info)
         hist.append(rec)
-        if (dd_finish and cur in ("f64h", "f64g", "f64hg") and mode == "full"
+        if (dd_finish and cur in ("f64h", "f64g", "f64hg") and mode == "full" and s.m <= DENSE_M_MAX
                 and (not accepted or lam < 0.25 or (info.get("products") and not info.get("gmres_converged", True)))):
             cur = "dd"
             rec["switch_dd"] = True

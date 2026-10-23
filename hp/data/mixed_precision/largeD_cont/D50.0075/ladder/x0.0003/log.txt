@@ -1,0 +1,29 @@
+/usr/bin/python3 -u /home/claude/dss/agentLD/wt/hp/scan_hp.py /home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/k2/scan.jsonl /home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/k1/dd_D50.0076.npz 0 --history /home/claude/dss/agentLD/wt/hp/data/states/up8_D49.0224.npz,/home/claude/dss/agentLD/wt/hp/data/states/up8_D50.0075.npz,/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/k0/dd_D50.0075.npz --Dlist 50.007791 --dD 0.0002 --maxdD 0.0002 --M 32 --kc 420 --ks 100 --kt 36 --tol 1e-24 --w 24 --it_max 25 --lm 0 --threads 2 --tag dd --jac dd --verbose --kfreeze 13
+  dn 0 [all]: |F| 2.32e-16 -> 6.14e-17 lam 1 Delta 1.841630754539028 t 12s
+  dn: phase 'all' stalled at |F| 6.1e-17; phase 'full'
+  dn 1 [full]: |F| 6.14e-17 -> 5.11e-25 lam 1 Delta 1.841630754539028 t 24s
+  dn 2: |F| 5.11e-25 converged, Delta 1.841630754539028
+(re-)converged start D=50.007591 M=32 nodes=[0.3, 0.4, 0.5, 0.6, 0.7]: Delta 1.8416307545390282 ok True (35s)
+  dn 0 [all]: |F| 4.67e-17 -> 3.77e-17 lam 0.5 Delta 1.845433423552059 t 11s
+  dn: phase 'all' stalled at |F| 3.8e-17; phase 'full'
+  dn 1 [full]: |F| 3.77e-17 -> 3.88e-25 lam 1 Delta 1.845433423552059 t 22s
+  dn 2: |F| 3.88e-25 converged, Delta 1.845433423552059
+history point D=49.022384: ok True, Delta 1.8454334235520586
+  dn 0 [all]: |F| 9.46e-17 -> 3.24e-17 lam 1 Delta 1.841631133202264 t 12s
+  dn: phase 'all' stalled at |F| 3.2e-17; phase 'full'
+  dn 1 [full]: |F| 3.24e-17 -> 7.05e-25 lam 1 Delta 1.841631133202264 t 24s
+  dn 2: |F| 7.05e-25 converged, Delta 1.841631133202264
+history point D=50.007491: ok True, Delta 1.8416311332022643
+  dn 0 [all]: |F| 1.65e-16 -> 1.32e-16 lam 0.25 Delta 1.841631057469501 t 13s
+  dn: phase 'all' stalled at |F| 1.3e-16; phase 'full'
+  dn 1 [full]: |F| 1.32e-16 -> 6.30e-25 lam 1 Delta 1.841631057469501 t 24s
+  dn 2: |F| 6.30e-25 converged, Delta 1.841631057469501
+history point D=50.007511: ok True, Delta 1.8416310574695007
+  dn 0 [all]: |F| 3.47e-07 -> 4.71e-14 lam 1 Delta 1.841629997216905 t 12s
+  dn 1 [all]: |F| 4.71e-14 -> 1.78e-16 lam 1 Delta 1.841629997216914 t 24s
+  dn 2 [all]: |F| 1.78e-16 -> nan lam 0.000122 Delta 1.841629997216914 t 37s
+  dn 3 [full]: |F| 1.78e-16 -> 7.99e-23 lam 1 Delta 1.841629997216925 t 49s
+  dn 4 [full]: |F| 7.99e-23 -> 6.85e-24 lam 1 Delta 1.841629997216925 t 60s
+  dn 5 [full]: |F| 6.85e-24 -> 8.57e-25 lam 1 Delta 1.841629997216925 t 73s
+  dn 6: |F| 8.57e-25 converged, Delta 1.841629997216925
+D=50.0078 Delta=1.8416299972169254+1.30e-17 its 7 |F| 8.6e-25 86s piv 3.4e-06..4.9e+05 dDelta/dF max 1.5e+12 tails 7e-134 3e-45
