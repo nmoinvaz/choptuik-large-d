@@ -1,0 +1,165 @@
+inputs: |J_D(x^)| <= 3.6464e-12; ||J(X)^-1||_inf <= 44.3834; min over bd X of |J_D| >= 2.69311e-11
+        sup||l~||_1 <= 1.62556e-6, Cauchy radius 1.0e-8 -> |D l~| <= 162.556
+        eps_L = 0.35269174, ||V|| = 1.2426138, ||V^-1|| = 1.4809563, ||R|| <= 0.649043
+        C_E = e^76.939855 (mu = hi; b5_jump.py has e^76.939659)
+   ln n =  74.00: Krawczyk False (margins -2.44e-03, -1.78e-03), degree False (3.9261e-06 vs 2.3502e+01), |Q| <= 4.75e-05
+   ln n =  76.00: Krawczyk False (margins -3.31e-04, -2.40e-04), degree False (3.9261e-06 vs 3.1806e+00), |Q| <= 6.43e-06
+   ln n =  78.00: Krawczyk False (margins -4.48e-05, -3.25e-05), degree False (3.9261e-06 vs 4.3045e-01), |Q| <= 8.70e-07
+   ln n =  80.00: Krawczyk False (margins -6.06e-06, -4.40e-06), degree False (3.9261e-06 vs 5.8255e-02), |Q| <= 1.18e-07
+   ln n =  82.00: Krawczyk False (margins -8.19e-07, -5.95e-07), degree False (3.9261e-06 vs 7.8839e-03), |Q| <= 1.59e-08
+   ln n =  84.00: Krawczyk False (margins -1.10e-07, -7.97e-08), degree False (3.9261e-06 vs 1.0670e-03), |Q| <= 2.16e-09
+   ln n =  86.00: Krawczyk False (margins -1.42e-08, -9.95e-09), degree False (3.9261e-06 vs 1.4440e-04), |Q| <= 2.92e-10
+   ln n =  88.00: Krawczyk False (margins -1.18e-09, -5.06e-10), degree False (3.9261e-06 vs 1.9542e-05), |Q| <= 3.95e-11
+   ln n =  90.00: Krawczyk True (margins 5.82e-10, 7.71e-10), degree True (3.9261e-06 vs 2.6448e-06), |Q| <= 5.34e-12
+   ln n =  92.00: Krawczyk True (margins 8.20e-10, 9.44e-10), degree True (3.9261e-06 vs 3.5793e-07), |Q| <= 7.23e-13
+   ln n =  94.00: Krawczyk True (margins 8.52e-10, 9.68e-10), degree True (3.9261e-06 vs 4.8441e-08), |Q| <= 9.79e-14
+   ln n =  96.00: Krawczyk True (margins 8.57e-10, 9.71e-10), degree True (3.9261e-06 vs 6.5557e-09), |Q| <= 1.32e-14
+   ln n =  98.00: Krawczyk True (margins 8.57e-10, 9.71e-10), degree True (3.9261e-06 vs 8.8722e-10), |Q| <= 1.79e-15
+   ln n = 100.00: Krawczyk True (margins 8.57e-10, 9.71e-10), degree True (3.9261e-06 vs 1.2007e-10), |Q| <= 2.43e-16
+   ln n = 102.00: Krawczyk True (margins 8.57e-10, 9.71e-10), degree True (3.9261e-06 vs 1.6250e-11), |Q| <= 3.28e-17
+   ln n = 104.00: Krawczyk True (margins 8.57e-10, 9.71e-10), degree True (3.9261e-06 vs 2.1992e-12), |Q| <= 4.44e-18
+   ln n = 106.00: Krawczyk True (margins 8.57e-10, 9.71e-10), degree True (3.9261e-06 vs 2.9763e-13), |Q| <= 6.01e-19
+   ln n = 108.00: Krawczyk True (margins 8.57e-10, 9.71e-10), degree True (3.9261e-06 vs 4.0280e-14), |Q| <= 8.14e-20
+   ln n = 110.00: Krawczyk True (margins 8.57e-10, 9.71e-10), degree True (3.9261e-06 vs 5.4513e-15), |Q| <= 1.10e-20
+   ln n =  89.40: Krawczyk True, degree False (3.92612e-06 vs 4.81908e-06)
+   ln n =  89.45: Krawczyk True, degree False (3.92612e-06 vs 4.58405e-06)
+   ln n =  89.50: Krawczyk True, degree False (3.92612e-06 vs 4.36048e-06)
+   ln n =  89.55: Krawczyk True, degree False (3.92612e-06 vs 4.14782e-06)
+   ln n =  89.60: Krawczyk True, degree False (3.92612e-06 vs 3.94553e-06)
+   ln n =  89.65: Krawczyk True, degree True (3.92612e-06 vs 3.75310e-06)
+   ln n =  89.70: Krawczyk True, degree True (3.92612e-06 vs 3.57006e-06)
+   ln n =  89.75: Krawczyk True, degree True (3.92612e-06 vs 3.39595e-06)
+   ln n =  89.80: Krawczyk True, degree True (3.92612e-06 vs 3.23032e-06)
+   ln n =  89.85: Krawczyk True, degree True (3.92612e-06 vs 3.07278e-06)
+   ln n =  89.90: Krawczyk True, degree True (3.92612e-06 vs 2.92292e-06)
+   ln n =  89.95: Krawczyk True, degree True (3.92612e-06 vs 2.78037e-06)
+=> both tests pass for every ln n >= 89.65 on the 0.05 grid up to 110 (monotone in C_E/n with Y fixed, hence for every n >= e^89.65); C7 = 2.89512e+29 = e^67.838
+claim (n0 = e^89.75, C7 = e^67.84) CONFIRMED by this implementation
+== --mutate=JD
+inputs: |J_D(x^)| <= 6.9063e-11; ||J(X)^-1||_inf <= 44.3834; min over bd X of |J_D| >= 2.05911e-11
+        sup||l~||_1 <= 1.62556e-6, Cauchy radius 1.0e-8 -> |D l~| <= 162.556
+        eps_L = 0.35269174, ||V|| = 1.2426138, ||V^-1|| = 1.4809563, ||R|| <= 0.649043
+        C_E = e^76.939855 (mu = hi; b5_jump.py has e^76.939659)   [MUTATION JD]
+   ln n =  74.00: Krawczyk False (margins -2.44e-03, -1.78e-03), degree False (3.0018e-06 vs 2.3502e+01), |Q| <= 4.75e-05
+   ln n =  76.00: Krawczyk False (margins -3.31e-04, -2.40e-04), degree False (3.0018e-06 vs 3.1806e+00), |Q| <= 6.43e-06
+   ln n =  78.00: Krawczyk False (margins -4.48e-05, -3.25e-05), degree False (3.0018e-06 vs 4.3045e-01), |Q| <= 8.70e-07
+   ln n =  80.00: Krawczyk False (margins -6.06e-06, -4.40e-06), degree False (3.0018e-06 vs 5.8255e-02), |Q| <= 1.18e-07
+   ln n =  82.00: Krawczyk False (margins -8.20e-07, -5.97e-07), degree False (3.0018e-06 vs 7.8839e-03), |Q| <= 1.59e-08
+   ln n =  84.00: Krawczyk False (margins -1.11e-07, -8.12e-08), degree False (3.0018e-06 vs 1.0670e-03), |Q| <= 2.16e-09
+   ln n =  86.00: Krawczyk False (margins -1.47e-08, -1.15e-08), degree False (3.0018e-06 vs 1.4440e-04), |Q| <= 2.92e-10
+   ln n =  88.00: Krawczyk False (margins -1.74e-09, -2.06e-09), degree False (3.0018e-06 vs 1.9542e-05), |Q| <= 3.95e-11
+   ln n =  90.00: Krawczyk False (margins 2.08e-11, -7.83e-10), degree True (3.0018e-06 vs 2.6448e-06), |Q| <= 5.34e-12
+   ln n =  92.00: Krawczyk False (margins 2.59e-10, -6.10e-10), degree True (3.0018e-06 vs 3.5793e-07), |Q| <= 7.23e-13
+   ln n =  94.00: Krawczyk False (margins 2.91e-10, -5.87e-10), degree True (3.0018e-06 vs 4.8441e-08), |Q| <= 9.79e-14
+   ln n =  96.00: Krawczyk False (margins 2.95e-10, -5.84e-10), degree True (3.0018e-06 vs 6.5557e-09), |Q| <= 1.32e-14
+   ln n =  98.00: Krawczyk False (margins 2.96e-10, -5.83e-10), degree True (3.0018e-06 vs 8.8722e-10), |Q| <= 1.79e-15
+   ln n = 100.00: Krawczyk False (margins 2.96e-10, -5.83e-10), degree True (3.0018e-06 vs 1.2007e-10), |Q| <= 2.43e-16
+   ln n = 102.00: Krawczyk False (margins 2.96e-10, -5.83e-10), degree True (3.0018e-06 vs 1.6250e-11), |Q| <= 3.28e-17
+   ln n = 104.00: Krawczyk False (margins 2.96e-10, -5.83e-10), degree True (3.0018e-06 vs 2.1992e-12), |Q| <= 4.44e-18
+   ln n = 106.00: Krawczyk False (margins 2.96e-10, -5.83e-10), degree True (3.0018e-06 vs 2.9763e-13), |Q| <= 6.01e-19
+   ln n = 108.00: Krawczyk False (margins 2.96e-10, -5.83e-10), degree True (3.0018e-06 vs 4.0280e-14), |Q| <= 8.14e-20
+   ln n = 110.00: Krawczyk False (margins 2.96e-10, -5.83e-10), degree True (3.0018e-06 vs 5.4513e-15), |Q| <= 1.10e-20
+no ln n in [74, 110] passes both tests
+MUTATION JD: caught (no n passes)
+== --mutate=conj
+inputs: |J_D(x^)| <= 0.80727; ||J(X)^-1||_inf <= 53.6537; min over bd X of |J_D| >= 0.80727
+        sup||l~||_1 <= 1.62556e-6, Cauchy radius 1.0e-8 -> |D l~| <= 162.556
+        eps_L = 0.35269174, ||V|| = 1.2426138, ||V^-1|| = 1.4809563, ||R|| <= 0.649043
+        C_E = e^76.939855 (mu = hi; b5_jump.py has e^76.939659)   [MUTATION conj]
+   ln n =  74.00: Krawczyk False (margins -2.01e+00, -3.48e-01), degree True (1.1769e+05 vs 2.3502e+01), |Q| <= 4.75e-05
+   ln n =  76.00: Krawczyk False (margins -2.00e+00, -3.47e-01), degree True (1.1769e+05 vs 3.1806e+00), |Q| <= 6.43e-06
+   ln n =  78.00: Krawczyk False (margins -2.00e+00, -3.47e-01), degree True (1.1769e+05 vs 4.3045e-01), |Q| <= 8.70e-07
+   ln n =  80.00: Krawczyk False (margins -2.00e+00, -3.47e-01), degree True (1.1769e+05 vs 5.8255e-02), |Q| <= 1.18e-07
+   ln n =  82.00: Krawczyk False (margins -2.00e+00, -3.47e-01), degree True (1.1769e+05 vs 7.8839e-03), |Q| <= 1.59e-08
+   ln n =  84.00: Krawczyk False (margins -2.00e+00, -3.47e-01), degree True (1.1769e+05 vs 1.0670e-03), |Q| <= 2.16e-09
+   ln n =  86.00: Krawczyk False (margins -2.00e+00, -3.47e-01), degree True (1.1769e+05 vs 1.4440e-04), |Q| <= 2.92e-10
+   ln n =  88.00: Krawczyk False (margins -2.00e+00, -3.47e-01), degree True (1.1769e+05 vs 1.9542e-05), |Q| <= 3.95e-11
+   ln n =  90.00: Krawczyk False (margins -2.00e+00, -3.47e-01), degree True (1.1769e+05 vs 2.6448e-06), |Q| <= 5.34e-12
+   ln n =  92.00: Krawczyk False (margins -2.00e+00, -3.47e-01), degree True (1.1769e+05 vs 3.5793e-07), |Q| <= 7.23e-13
+   ln n =  94.00: Krawczyk False (margins -2.00e+00, -3.47e-01), degree True (1.1769e+05 vs 4.8441e-08), |Q| <= 9.79e-14
+   ln n =  96.00: Krawczyk False (margins -2.00e+00, -3.47e-01), degree True (1.1769e+05 vs 6.5557e-09), |Q| <= 1.32e-14
+   ln n =  98.00: Krawczyk False (margins -2.00e+00, -3.47e-01), degree True (1.1769e+05 vs 8.8722e-10), |Q| <= 1.79e-15
+   ln n = 100.00: Krawczyk False (margins -2.00e+00, -3.47e-01), degree True (1.1769e+05 vs 1.2007e-10), |Q| <= 2.43e-16
+   ln n = 102.00: Krawczyk False (margins -2.00e+00, -3.47e-01), degree True (1.1769e+05 vs 1.6250e-11), |Q| <= 3.28e-17
+   ln n = 104.00: Krawczyk False (margins -2.00e+00, -3.47e-01), degree True (1.1769e+05 vs 2.1992e-12), |Q| <= 4.44e-18
+   ln n = 106.00: Krawczyk False (margins -2.00e+00, -3.47e-01), degree True (1.1769e+05 vs 2.9763e-13), |Q| <= 6.01e-19
+   ln n = 108.00: Krawczyk False (margins -2.00e+00, -3.47e-01), degree True (1.1769e+05 vs 4.0280e-14), |Q| <= 8.14e-20
+   ln n = 110.00: Krawczyk False (margins -2.00e+00, -3.47e-01), degree True (1.1769e+05 vs 5.4513e-15), |Q| <= 1.10e-20
+no ln n in [74, 110] passes both tests
+MUTATION conj: caught (no n passes)
+== --mutate=CE5
+inputs: |J_D(x^)| <= 3.6464e-12; ||J(X)^-1||_inf <= 44.3834; min over bd X of |J_D| >= 2.69311e-11
+        sup||l~||_1 <= 1.62556e-6, Cauchy radius 1.0e-8 -> |D l~| <= 162.556
+        eps_L = 0.35269174, ||V|| = 1.2426138, ||V^-1|| = 1.4809563, ||R|| <= 0.649043
+        C_E = e^81.939855 (mu = hi; b5_jump.py has e^76.939659)   [MUTATION CE5]
+   ln n =  74.00: Krawczyk False (margins -3.63e-01, -2.64e-01), degree False (3.9261e-06 vs 3.4880e+03), |Q| <= 7.05e-03
+   ln n =  76.00: Krawczyk False (margins -4.91e-02, -3.57e-02), degree False (3.9261e-06 vs 4.7204e+02), |Q| <= 9.54e-04
+   ln n =  78.00: Krawczyk False (margins -6.64e-03, -4.83e-03), degree False (3.9261e-06 vs 6.3884e+01), |Q| <= 1.29e-04
+   ln n =  80.00: Krawczyk False (margins -8.99e-04, -6.54e-04), degree False (3.9261e-06 vs 8.6458e+00), |Q| <= 1.75e-05
+   ln n =  82.00: Krawczyk False (margins -1.22e-04, -8.85e-05), degree False (3.9261e-06 vs 1.1701e+00), |Q| <= 2.36e-06
+   ln n =  84.00: Krawczyk False (margins -1.65e-05, -1.20e-05), degree False (3.9261e-06 vs 1.5835e-01), |Q| <= 3.20e-07
+   ln n =  86.00: Krawczyk False (margins -2.23e-06, -1.62e-06), degree False (3.9261e-06 vs 2.1431e-02), |Q| <= 4.33e-08
+   ln n =  88.00: Krawczyk False (margins -3.01e-07, -2.18e-07), degree False (3.9261e-06 vs 2.9003e-03), |Q| <= 5.86e-09
+   ln n =  90.00: Krawczyk False (margins -4.00e-08, -2.87e-08), degree False (3.9261e-06 vs 3.9252e-04), |Q| <= 7.93e-10
+   ln n =  92.00: Krawczyk False (margins -4.67e-09, -3.04e-09), degree False (3.9261e-06 vs 5.3122e-05), |Q| <= 1.07e-10
+   ln n =  94.00: Krawczyk True (margins 1.10e-10, 4.28e-10), degree False (3.9261e-06 vs 7.1892e-06), |Q| <= 1.45e-11
+   ln n =  96.00: Krawczyk True (margins 7.56e-10, 8.98e-10), degree True (3.9261e-06 vs 9.7295e-07), |Q| <= 1.97e-12
+   ln n =  98.00: Krawczyk True (margins 8.44e-10, 9.61e-10), degree True (3.9261e-06 vs 1.3168e-07), |Q| <= 2.66e-13
+   ln n = 100.00: Krawczyk True (margins 8.56e-10, 9.70e-10), degree True (3.9261e-06 vs 1.7820e-08), |Q| <= 3.60e-14
+   ln n = 102.00: Krawczyk True (margins 8.57e-10, 9.71e-10), degree True (3.9261e-06 vs 2.4117e-09), |Q| <= 4.87e-15
+   ln n = 104.00: Krawczyk True (margins 8.57e-10, 9.71e-10), degree True (3.9261e-06 vs 3.2639e-10), |Q| <= 6.60e-16
+   ln n = 106.00: Krawczyk True (margins 8.57e-10, 9.71e-10), degree True (3.9261e-06 vs 4.4172e-11), |Q| <= 8.93e-17
+   ln n = 108.00: Krawczyk True (margins 8.57e-10, 9.71e-10), degree True (3.9261e-06 vs 5.9780e-12), |Q| <= 1.21e-17
+   ln n = 110.00: Krawczyk True (margins 8.57e-10, 9.71e-10), degree True (3.9261e-06 vs 8.0904e-13), |Q| <= 1.64e-18
+   ln n =  94.40: Krawczyk True, degree False (3.92612e-06 vs 4.81908e-06)
+   ln n =  94.45: Krawczyk True, degree False (3.92612e-06 vs 4.58405e-06)
+   ln n =  94.50: Krawczyk True, degree False (3.92612e-06 vs 4.36048e-06)
+   ln n =  94.55: Krawczyk True, degree False (3.92612e-06 vs 4.14782e-06)
+   ln n =  94.60: Krawczyk True, degree False (3.92612e-06 vs 3.94553e-06)
+   ln n =  94.65: Krawczyk True, degree True (3.92612e-06 vs 3.75310e-06)
+   ln n =  94.70: Krawczyk True, degree True (3.92612e-06 vs 3.57006e-06)
+   ln n =  94.75: Krawczyk True, degree True (3.92612e-06 vs 3.39595e-06)
+   ln n =  94.80: Krawczyk True, degree True (3.92612e-06 vs 3.23032e-06)
+   ln n =  94.85: Krawczyk True, degree True (3.92612e-06 vs 3.07278e-06)
+   ln n =  94.90: Krawczyk True, degree True (3.92612e-06 vs 2.92292e-06)
+   ln n =  94.95: Krawczyk True, degree True (3.92612e-06 vs 2.78037e-06)
+=> both tests pass for every ln n >= 94.65 on the 0.05 grid up to 110 (monotone in C_E/n with Y fixed, hence for every n >= e^94.65); C7 = 4.29673e+31 = e^72.838
+MUTATION CE5: n0 must move to about e^94.75: ln n0 = 94.65: caught
+== --mu=lo --nsub=40 (b5_jump.py's exponent, b7_ift.py's subdivision)
+inputs: |J_D(x^)| <= 3.6464e-12; ||J(X)^-1||_inf <= 44.3834; min over bd X of |J_D| >= 2.62646e-11
+        sup||l~||_1 <= 1.62556e-6, Cauchy radius 1.0e-8 -> |D l~| <= 162.556
+        eps_L = 0.35269174, ||V|| = 1.2426138, ||V^-1|| = 1.4809563, ||R|| <= 0.649043
+        C_E = e^76.939659 (mu = lo; b5_jump.py has e^76.939659)
+   ln n =  74.00: Krawczyk False (margins -2.44e-03, -1.78e-03), degree False (3.8289e-06 vs 2.3497e+01), |Q| <= 4.75e-05
+   ln n =  76.00: Krawczyk False (margins -3.31e-04, -2.40e-04), degree False (3.8289e-06 vs 3.1800e+00), |Q| <= 6.43e-06
+   ln n =  78.00: Krawczyk False (margins -4.48e-05, -3.25e-05), degree False (3.8289e-06 vs 4.3036e-01), |Q| <= 8.70e-07
+   ln n =  80.00: Krawczyk False (margins -6.06e-06, -4.40e-06), degree False (3.8289e-06 vs 5.8243e-02), |Q| <= 1.18e-07
+   ln n =  82.00: Krawczyk False (margins -8.19e-07, -5.95e-07), degree False (3.8289e-06 vs 7.8824e-03), |Q| <= 1.59e-08
+   ln n =  84.00: Krawczyk False (margins -1.10e-07, -7.97e-08), degree False (3.8289e-06 vs 1.0668e-03), |Q| <= 2.16e-09
+   ln n =  86.00: Krawczyk False (margins -1.42e-08, -9.94e-09), degree False (3.8289e-06 vs 1.4437e-04), |Q| <= 2.92e-10
+   ln n =  88.00: Krawczyk False (margins -1.17e-09, -5.06e-10), degree False (3.8289e-06 vs 1.9538e-05), |Q| <= 3.95e-11
+   ln n =  90.00: Krawczyk True (margins 5.82e-10, 7.71e-10), degree True (3.8289e-06 vs 2.6442e-06), |Q| <= 5.34e-12
+   ln n =  92.00: Krawczyk True (margins 8.20e-10, 9.44e-10), degree True (3.8289e-06 vs 3.5786e-07), |Q| <= 7.23e-13
+   ln n =  94.00: Krawczyk True (margins 8.52e-10, 9.68e-10), degree True (3.8289e-06 vs 4.8431e-08), |Q| <= 9.79e-14
+   ln n =  96.00: Krawczyk True (margins 8.57e-10, 9.71e-10), degree True (3.8289e-06 vs 6.5544e-09), |Q| <= 1.32e-14
+   ln n =  98.00: Krawczyk True (margins 8.57e-10, 9.71e-10), degree True (3.8289e-06 vs 8.8705e-10), |Q| <= 1.79e-15
+   ln n = 100.00: Krawczyk True (margins 8.57e-10, 9.71e-10), degree True (3.8289e-06 vs 1.2005e-10), |Q| <= 2.43e-16
+   ln n = 102.00: Krawczyk True (margins 8.57e-10, 9.71e-10), degree True (3.8289e-06 vs 1.6247e-11), |Q| <= 3.28e-17
+   ln n = 104.00: Krawczyk True (margins 8.57e-10, 9.71e-10), degree True (3.8289e-06 vs 2.1988e-12), |Q| <= 4.44e-18
+   ln n = 106.00: Krawczyk True (margins 8.57e-10, 9.71e-10), degree True (3.8289e-06 vs 2.9757e-13), |Q| <= 6.01e-19
+   ln n = 108.00: Krawczyk True (margins 8.57e-10, 9.71e-10), degree True (3.8289e-06 vs 4.0272e-14), |Q| <= 8.14e-20
+   ln n = 110.00: Krawczyk True (margins 8.57e-10, 9.71e-10), degree True (3.8289e-06 vs 5.4502e-15), |Q| <= 1.10e-20
+   ln n =  89.40: Krawczyk True, degree False (3.82895e-06 vs 4.81813e-06)
+   ln n =  89.45: Krawczyk True, degree False (3.82895e-06 vs 4.58315e-06)
+   ln n =  89.50: Krawczyk True, degree False (3.82895e-06 vs 4.35963e-06)
+   ln n =  89.55: Krawczyk True, degree False (3.82895e-06 vs 4.14700e-06)
+   ln n =  89.60: Krawczyk True, degree False (3.82895e-06 vs 3.94475e-06)
+   ln n =  89.65: Krawczyk True, degree True (3.82895e-06 vs 3.75236e-06)
+   ln n =  89.70: Krawczyk True, degree True (3.82895e-06 vs 3.56936e-06)
+   ln n =  89.75: Krawczyk True, degree True (3.82895e-06 vs 3.39528e-06)
+   ln n =  89.80: Krawczyk True, degree True (3.82895e-06 vs 3.22969e-06)
+   ln n =  89.85: Krawczyk True, degree True (3.82895e-06 vs 3.07218e-06)
+   ln n =  89.90: Krawczyk True, degree True (3.82895e-06 vs 2.92234e-06)
+   ln n =  89.95: Krawczyk True, degree True (3.82895e-06 vs 2.77982e-06)
+=> both tests pass for every ln n >= 89.65 on the 0.05 grid up to 110 (monotone in C_E/n with Y fixed, hence for every n >= e^89.65); C7 = 2.89455e+29 = e^67.8378
+claim (n0 = e^89.75, C7 = e^67.84) CONFIRMED by this implementation
