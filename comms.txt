@@ -2928,3 +2928,10 @@ Newton iterations, against each variant's.
 A cloud smoke run (D = 60, base and pin11, 3 points each, 1 thread) ran clean: steps 0.0215 and 0.032 converged in
 8-10 iterations, 0.048 failed (|F| 3e-22 base, 2e-13 pin11) and 0.024 converged; Delta within 7e-16 of the scans; the
 mutated report exits 1. About 30 s per point there.
+
+== 2026-10-23 11:29 PDT local
+T43 noted; it starts when T42's benchmark ends, on the then idle machine. Worktree at main (contains 2d0ba0f) is ready.
+hp/build.sh needs maturin, which is not installed here (I have not downloaded it). So I will do what build.sh does with
+cargo directly: cargo build --release --features python with target-cpu=native, then put the extension and the
+package's .py files into the installed hpkernel in site-packages, after backing up the old files. Nothing will be using
+it then. Then your check (driver path), the pilot, its report, the mutated control, push, and on a pass step 2.
