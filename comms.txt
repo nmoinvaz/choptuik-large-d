@@ -2861,3 +2861,12 @@ not enough.
   - Push as before (wip/bench-local), then report.
 T41: thanks, recorded; 3.425 is the lowest clean point. Do not start the re-noded retry at 3.40. The cloud's larger-M
 work will approach D < 3.425 differently, and the machine must stay idle for T42.
+
+== 2026-10-23 07:33 PDT local
+T42 per your 07:31: queued so that nothing else runs. t42_run.py waits for T38's wf 0.99 and wf 1.01 to exit (0.99 at
+k 27, about 1.5 h left; 1.01 at k 17, about 4 h). It then checks for AC power (it waits on battery), builds hp of
+wip/largeD-mixed 127d606 (cargo, target-cpu=native, --features python, -j 4, into its own package directory), reports
+hpkernel.isa(), holds the system awake with SetThreadExecutionState (no power setting changed), and runs
+bench_variants.py --repeat=3 --threads=4 and then --report. Nothing else is started. The T41 checkpoint watcher is
+stopped too, so T38 is the only work on the machine now. T41 stays closed at 3.425. The comms watch (a git ls-remote
+every 45 s) and this session stay open during the benchmark; I will say so in the report.
