@@ -901,6 +901,65 @@ fn qd_accuracy() {
     assert!(bad.is_empty(), "{} rows fail: {:?}", bad.len(), bad);
 }
 
+/// Near-cancelling sums where QD's accurate add drops v when all parts are read with three emitted (up to 86 u), and
+/// where the first repair here (u + v rounded to one double) still left up to 11 u. They were found by checking the
+/// upstream C++ library (github.com/BL-highprecision/qd) against mpmath with a = round(x), b = round(-x + d), x and d
+/// random with 424 bits, |d| ~ 2^-k |x|, k = 1..30, which this file's random categories had missed. Each sum must be
+/// within 1 u of the exact one, the 8-lane add must agree with the scalar one bit for bit, and QD's literal algorithm
+/// must miss by more than 1 u on at least one of them (the control).
+#[test]
+fn qd_ieee_add_regression() {
+    let cases: [([u64; 4], [u64; 4]); 11] = [
+        // QD 86.5 u, u + v 0 u
+        ([0x3ef951721a089dac, 0x3b9bfd25b612531b, 0x3828ccb5c92981ca, 0x34bfdb48ac690c3e], [0xbef9516c2de75542, 0xbb9ef9cf9d9adc96, 0x3837d7f1c298e636, 0x347fff9515590769]),
+        // QD 36.3 u, u + v 0 u
+        ([0x402b19c6d75a4d6e, 0xbcc2b2893130a8b5, 0xb92d8f0b92099d05, 0x35c3a15c7a42b826], [0xc02b19d4f23da799, 0x3ccc5a00064e2d90, 0xb93f649c2d5adb67, 0x35afff4fc9a005eb]),
+        // QD 24.4 u, u + v 0 u
+        ([0x40e8e8f019860773, 0x3d7c0b7495f54327, 0xba1ea4cb65a1dde9, 0x36b3d1ab6bbfea7f], [0xc0e8e997f59382e5, 0x3d7f337fa392d224, 0x39f81c33a8bef873, 0x369fffff555aa4e9]),
+        // QD 11 u, u + v 0 u
+        ([0x3fab4917aa6521c1, 0xbc431751b90eebbc, 0x38e457fd5ceb2937, 0xb581c291b33ec99a], [0xbfab47a3a55cf42d, 0x3c4acce345ad26ad, 0x38c1dd9152e35abb, 0xb55ffc8c15aa0bd5]),
+        // QD 5.51 u, u + v 0 u
+        ([0x3f233bff86a76a84, 0xbbbfbb82ff3b21df, 0xb845a1132e342815, 0xb4b5a63ed5712530], [0xbf233c2df82cb8d4, 0x3ba33f9553bbd4bf, 0x380904ba0a4aa555, 0xb49fe9840028655d]),
+        // QD 4.11 u, u + v 0 u
+        ([0x3f6bf05cb9fdf68b, 0xbc03bfd56bc70ef5, 0x38a0ef38ec9dbbf0, 0xb52639a5fc7c012f], [0xbf6bef63a3889911, 0x3bf199494adfff9d, 0xb88e8aca38c58a94, 0xb4fffa11888c72cd]),
+        // QD 3.91 u, u + v 3.91 u
+        ([0x404498cf8495391b, 0x3c9ff868cd9f016b, 0xb93581fb16ee53c6, 0xb598823c55a81995], [0xc044987d9f7f6628, 0x3cb7f325473af245, 0xb95c81ecfbadb115, 0xb5d296c70e5ffc27]),
+        // QD 3.46 u, u + v 0 u
+        ([0x3f7b8dcd4ea99299, 0xbc074e4764154a57, 0x38abd826ee7e9024, 0xb50ffc0f5ae41f2b], [0xbf7b8ef5a4d1abbe, 0x3c18613829fefd70, 0x38a5ad4d22961835, 0xb537c5c293313478]),
+        // QD 1.68 u, u + v 0 u
+        ([0x3f1fe8334ab9d3a3, 0xbbae4cb4c1d13471, 0xb84c14a49ca1a931, 0x347fd1b0bdfa9d37], [0xbf1fe7e70851524c, 0x3bac8b41c2227b93, 0x38344b4bce56d5e4, 0x34dd29a97e190def]),
+        // QD 1.32 u, u + v 1.32 u
+        ([0x40f9516d7b423272, 0xbd77b4d4c47d3b4f, 0xb9ea5903e5652218, 0xb6850a737a3acaa9], [0xc0f950ac0f3312f0, 0x3d4ff0595728ab83, 0xb9ea80293fdb0e41, 0xb661f5c78597f551]),
+        // QD 10.8 u, u + v 10.8 u
+        ([0x4118c13ebd58c314, 0xbd9ffa669caed1c3, 0xba3b0a1f7341752a, 0x36cbed49380a1951], [0xc118bfc27fb8259d, 0xbda01b0f65212978, 0x3a4a40bbd55040e7, 0xb6e16e495cfa947e]),
+    ];
+    let f = |p: [u64; 4]| QD { x: p.map(f64::from_bits) };
+    let mut worst = 0f64;
+    let mut literal_worst = 0f64;
+    for chunk in cases.chunks(8) {
+        let mut la = [QD { x: [0.0; 4] }; 8];
+        let mut lb = [QD { x: [0.0; 4] }; 8];
+        for (m, (a, b)) in chunk.iter().enumerate() {
+            la[m] = f(*a);
+            lb[m] = f(*b);
+        }
+        let lanes = QV::from_lanes(&la).ieee_add(QV::from_lanes(&lb)).lanes();
+        for m in 0..chunk.len() {
+            let (qa, qb) = (la[m], lb[m]);
+            let x = qa.exact().add(&qb.exact());
+            let r = qa.ieee_add(qb);
+            assert_eq!(r.x.map(f64::to_bits), lanes[m].x.map(f64::to_bits), "case {m}: scalar and 8-lane differ");
+            worst = worst.max(r.exact().sub(&x).abs().ratio(&x) / unit());
+            literal_worst = literal_worst.max(ieee_add_qd_literal(qa, qb).exact().sub(&x).abs().ratio(&x) / unit());
+        }
+    }
+    if report() {
+        println!("accurate add, {} regression sums: max error {worst:.3} u (QD's literal algorithm: {literal_worst:.3} u)", cases.len());
+    }
+    assert!(worst <= 1.0, "accurate add misses by {worst} u");
+    assert!(literal_worst > 1.0, "control: QD's literal algorithm should miss these ({literal_worst} u)");
+}
+
 #[test]
 fn qd_accumulator() {
     let n = env_usize("QD_N", 4000) / 8 * 8;

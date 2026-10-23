@@ -276,10 +276,13 @@ impl QV {
         let mut x = [z; 4];
         let mut k = z;
         let mut done = z.ne(z); // all false
+        // lanes that read every part with three emitted keep v as a fifth term (renorm5 below), as QD::ieee_add
+        let mut fifth = z;
+        let mut five = z.ne(z);
         for _ in 0..7 {
             let ea = i.ge(four);
             let eb = j.ge(four);
-            // all parts read: x[k] = u, x[k+1] = v (k < 3), stop
+            // all parts read: x[k] = u, x[k+1] = v (k < 3), or x[3] = u and v as a fifth term (k = 3); stop
             let fin = done.not().and(ea.and(eb));
             for m in 0..4 {
                 let at = fin.and(k.eq(V8::splat(m as f64)));
@@ -287,7 +290,9 @@ impl QV {
                     x[m] = at.sel(u, x[m]);
                     x[m + 1] = at.sel(v, x[m + 1]);
                 } else {
-                    x[m] = at.sel(u.add(v), x[m]);
+                    x[m] = at.sel(u, x[m]);
+                    fifth = at.sel(v, fifth);
+                    five = five.or(at);
                 }
             }
             done = done.or(fin);
@@ -326,7 +331,12 @@ impl QV {
         for kk in 0..4 {
             x[3] = j.ge(V8::splat(kk as f64 + 1.0)).sel(x[3], x[3].add(b[kk]));
         }
-        QV { c: renorm4(x[0], x[1], x[2], x[3]) }
+        let r4 = renorm4(x[0], x[1], x[2], x[3]);
+        if five.bits() == 0 {
+            return QV { c: r4 };
+        }
+        let r5 = renorm5(x[0], x[1], x[2], x[3], fifth);
+        QV { c: [five.sel(r5[0], r4[0]), five.sel(r5[1], r4[1]), five.sel(r5[2], r4[2]), five.sel(r5[3], r4[3])] }
     }
 
     #[inline]

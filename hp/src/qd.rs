@@ -344,9 +344,11 @@ impl QD {
                     k += 1;
                     x[k] = v;
                 } else {
-                    // QD stores u alone here and drops v; with cancellation u can have fewer than 53 significant
-                    // bits and v the rest (up to 17 u relative error in the tests), so both are kept
-                    x[k] = u + v;
+                    // QD stores u alone here and drops v. After cancellation the parts emitted so far can overlap,
+                    // so they hold fewer than 212 bits and v can lie well above the last bit of the result (QD:
+                    // up to 86 u; u + v rounded to one double still left up to 11 u, the first repair here). So v
+                    // is kept as a fifth term and the five are renormalized; all parts are read, nothing is left.
+                    return QD { x: renorm5(x[0], x[1], x[2], u, v) };
                 }
                 break;
             }

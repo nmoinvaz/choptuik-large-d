@@ -15,9 +15,10 @@ logs behind every number here are in `hp/data/quad_double/`, and the commands ru
   Here u = 2⁻²⁰⁹ ≈ 1.2×10⁻⁶³, so 2.1 u is 63 correct digits and 0.02 u is 65. The literature's ε_qd is 0.25 u
   (section 3).
 - **Two repairs of the QD library's algorithms**, each confirmed independently:
-  - The accurate (IEEE-style) add drops half of its last part in one branch: 16.8 u in 2 of 20 000 near-cancelling
-    sums, against the stated 0.5 u. It is repaired with a one-line change, after which the maximum is 0.12 u in
-    200 000 sums.
+  - The accurate (IEEE-style) add drops the accumulator's low part v in one branch: 16.8 u in 2 of 20 000
+    near-cancelling sums here, and up to 86 u in a later check of the current C++ library, against the stated 0.5 u.
+    The first repair (x₃ = u + v) was incomplete: it still left up to 11 u on some sums. The repair now in the code
+    renormalizes five terms, with a worst case of 0.016 u over 180 000 such sums (Finding 1, addendum).
   - The square root loses all but 53 bits above about 2⁸⁶⁰ and below about 2⁻⁸⁶⁰. Its operand is now scaled by an
     exact power of four.
 
@@ -73,7 +74,7 @@ eight parts by magnitude. Both branch on the data, and both are emulated exactly
 
 **Departures from QD, each for a reason found or stated here:**
 
-1. The accurate add keeps u + v where QD keeps u (section 3).
+1. The accurate add keeps v as a fifth term and renormalizes five terms where QD keeps u alone (section 3).
 2. sqrt scales its argument by an exact power of four into [1, 4) (section 3).
 3. The O(ε³) and O(ε⁴) partial products that QD sums in plain arithmetic are summed by FMA, in QD's order. A C
    compiler contracting QD's expression would do the same.
@@ -238,6 +239,18 @@ compares a literal copy of QD's algorithm with it:
 
 A first hypothesis, that the merge's leftover accumulator is dropped when four parts are emitted before all are
 read, was tested the same way and changed nothing (`diag_first_design.log`, "remainder kept").
+
+**Addendum (2026-10-22, coordinator): the u + v repair was incomplete.** A later check of the current C++ library
+(github.com/BL-highprecision/qd at b527a4b, whose `ieee_add` is unchanged) used sums a = round(x), b = round(−x + d)
+with x and d of 424 random bits, |d| ≈ 2⁻ᵏ|x|, k = 1–30, checked against mpmath. QD itself reached 86 u (about 1 sum
+in 6 000 above 1 u). Keeping x₃ = u + v still left 1.3, 3.9 and 10.8 u on some of them. The cause: after cancellation
+the emitted parts can overlap, so the four slots hold fewer than 212 bits, and v can lie above the last bit of the
+result while still falling below the rounding of u + v. The repair is now x₃ = u with v as a fifth term, and the five
+are renormalized with `renorm5` (scalar `QD::ieee_add`, and the 8-lane `QV::ieee_add` on the lanes that take that
+branch, selected by mask). Over 180 000 such sums the worst error is 0.016 u. `qd_ieee_add_regression` in
+`qd_tests.rs` holds 11 of these sums: each must be within 1 u, the 8 lanes must equal the scalar results bit for bit,
+and QD's literal algorithm must miss by more than 1 u (the control). The three-backend check passes with a new digest
+(`data/quad_double/backends/`), since the repaired add changes some results.
 
 ### Finding 2: QD's sqrt loses accuracy near the ends of the exponent range
 
