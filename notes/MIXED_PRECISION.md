@@ -432,3 +432,12 @@ What this shows:
    double-double and the rest in f64. Each would bring a large-D Newton step from about 6.5 s to under 1 s.
 5. A cheaper step does not remove the climb's real cost above D ≈ 60: the steps in D shrink there, to 0.0015–0.005
    (22 h per unit of D). Faster steps would cut that time by the same factor if the number of steps stays the same.
+6. Where the error lives (`hp/mixed_largeD_blocks.py`, log `hp/data/mixed_precision/largeD_blocks.log`). At
+   D = 50, 55 and 60 (two perturbations each), the f64 Jacobian gets one block replaced by the exact one, first a
+   block of 4M = 128 rows, then a block of 128 columns. Replacing the horizon block's rows (residual block 5 of 6: the
+   matching to the horizon series) brings the step error from 0.13–3.4 down to 4×10⁻⁷–6×10⁻⁶, the floor of an f64
+   LU. Replacing any other block of rows or columns changes nothing, or makes it worse. So the f64 errors that matter
+   at large D are all in the horizon block. A likely cause, not yet checked: at large D the solution varies over a
+   thin layer near the horizon, so the last segment and the horizon series carry large intermediate terms, as the top
+   harmonics do at M ≥ 48 (section 3). The simplest fix is to compute the horizon block's Jacobian in double-double
+   and the rest in f64.
