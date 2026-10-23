@@ -185,6 +185,12 @@ def solve_point(D, M, zh, zl, src, a, nodes, outdir, log, segs=None):
         hist += h1
         if h1 and "lam" in h1[-1]:
             save(ckpt, np.asarray(zh), np.asarray(zl), dict(meta_c, it=len(hist)))
+        # optional fail-fast (a.stop_lam, default off): two damped steps in a row with line-search factor <= stop_lam
+        # mean Newton is wandering in the weak directions (hp/lowD_highM.py; notes/HIGH_M.md section 5.4)
+        lams = [h.get("lam") for h in hist if "lam" in h]
+        if getattr(a, "stop_lam", 0) and len(lams) >= 2 and max(lams[-2:]) <= a.stop_lam:
+            log(f"D {D} M {M}: two steps with line-search factors {lams[-2]:g}, {lams[-1]:g} <= {a.stop_lam:g}; giving up")
+            break
     _rh, _rl = s.residual(zh, zl)
     if a.lm and not float(np.abs(np.asarray(_rh) + np.asarray(_rl)).max()) < a.accept:
         log("  Newton stalled; Levenberg-Marquardt")
