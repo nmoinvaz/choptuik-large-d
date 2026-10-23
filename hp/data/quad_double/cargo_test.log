@@ -1,0 +1,35 @@
+   Compiling crossbeam-utils v0.8.23
+   Compiling either v1.19.0
+   Compiling crossbeam-epoch v0.9.21
+   Compiling crossbeam-deque v0.8.8
+   Compiling rayon-core v1.13.0
+   Compiling rayon v1.12.0
+   Compiling hpkernel v0.1.0 (/home/claude/dss/agentQD/wt/hp)
+    Finished `release` profile [optimized] target(s) in 3m 45s
+     Running unittests src/lib.rs (target/qd_native/release/deps/_hpkernel-969a66fcf4bb08cb)
+
+running 15 tests
+test linalg::bench::bench_lu ... ignored
+test linalg::tests::f64_lu_solves ... ok
+test linalg::tests::solve_many_is_bitwise_solve ... ok
+test model::bench::bench_jac ... ignored
+test qd_residual::bench_qd_residual ... ignored
+test qd_residual::qv_lane_blocks_agree ... ok
+test qd_tests::bench_qd ... ignored
+test linalg::tests::blocked_lu_matches_getf2 ... ok
+test qd_tests::qd_accumulator ... ok
+test qd_tests::qd_constants ... ok
+test qd_tests::qd_decimal_io ... ok
+test qd_tests::qd_diag_accumulator ... ignored
+test qd_tests::qd_diag_accurate_add ... ignored
+test qd_tests::qd_dump ... ignored
+test qd_tests::qd_accuracy ... ok
+
+test result: ok. 8 passed; 0 failed; 7 ignored; 0 measured; 0 filtered out; finished in 1.70s
+
+   Doc-tests _hpkernel
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

@@ -2629,3 +2629,81 @@ Do not touch: the gamma runs (mode_det is exact double-double and is not part of
 How to stop safely: stop a process just after an iteration line appears in its log (the checkpoint is written then),
 load the checkpoint once to confirm it reads, then restart. If it does not load, restart from the last good state.
 Report: each process restarted, the iteration and |F| it resumed from, and its per-iteration time with f64.
+
+== 2026-10-22 19:14 PDT cloud
+T41 (user's goal: see how far toward D = 3 we can get). Change to T35's stop rule: when the M 96 chain stops resolving
+(M 96 -> 128 above 1e-8, or an M 96 point that does not converge after halving to 0.005), do not stop. Continue the
+chain directly at M 128 with --jac f64 from the last M 128 states (cubic predictor, steps of 0.05 with halving), as
+soon as your 3.6 f64-vs-dd M 128 check has passed; if it failed, at M 128 with dd. At each M 128 point keep the M 96
+value too (it is the error estimate). Stop when M 128 itself is unresolved (two failed halvings at 0.005), and report
+the lowest D with its M 96 -> 128 difference. 128 is the kernel's current cap; a branch lifting it (M 160-384, block
+storage of the Jacobian) is being built on the cloud, with a pilot run there. Gamma as before where threads allow.
+
+== 2026-10-22 19:18 PDT local
+3.6 M 128 check (T39): PASS. f64 Delta 3.4527209746080 (|F| 8.4e-30, 5 its, 1878 s) against dd (6 its, 13020 s):
+difference 1.3e-30, 6.9x faster. So M 128 at 3.4 and 3.3 runs f64. D 3.40 at M 96 (f64 chain) converged in 8 its,
+657 s: Delta 3.3662517901318, 1.28e-7 below the M 80 point there, tails 4.5e-49 / 1.4e-39. B 3.4 (f64 M 128) is
+running and 3.35 at M 96 is next.
+T40: two restarters are waiting for the next iteration line of each dd Newton job. Each will kill the job, load the
+checkpoint once with the t39 build, then restart the same command with --resume --jac f64:
+   3.30 M 80 (dd, at |F| 4.7e-21, probably converging on its current iteration; if so, nothing to restart)
+   3.5 M 128 (dd, part B, at |F| 3.6e-14 after 3 iterations of about 40 min)
+The new code writes its outdir under the t39 worktree, so I copy each checkpoint there first and the final state back
+afterwards. Records go to the same jsonl files as before. The gamma runs (3.6, later 3.5) and T38 are untouched.
+Nothing else in T35 is on dd any more: the M 96 chain and B 3.4/3.3 are f64.
+T41: t41_chain.py waits for the M 96 chain to reach 3.30, then carries on as you set out. Steps are 0.05 toward 3.00
+at M 96, each point also solved at M 128 from its M 96 state. When |M 96 -> 128| > 1e-8, or an M 96 step fails at
+0.005, it switches to M 128 steps (cubic predictor through the four lowest M 128 states, B's included), with M 96 at
+each point as the error estimate. It stops when a step fails at 0.005 and again at half that. Gamma at 3.2, 3.1, 3.0
+from the resolved state, one at a time.
+
+== 2026-10-22 19:34 PDT local
+T40 done: no T35 Newton job is on the dd Jacobian any more. Each was stopped right after an iteration line, its
+checkpoint loaded with the t39 build, then restarted as the same command with --resume --jac f64 (the new code's outdir
+is the t39 worktree, so each checkpoint was copied there and the final state copied back):
+   3.30 M 80: stopped after the line "|F| 7.78e-30 converged" (checkpoint it 11). The kill caught it between that line
+     and the record write. Resumed at |F| 7.8e-30: 1 iteration, 52 s, Delta 3.2672130309581449 (horizon tail 2e-26, so
+     M 80 is out of resolution there).
+   3.5 M 128 (part B): stopped after iteration 4 (|F| 4.1e-28; dd iterations took 1700-2500 s). Resumed at |F| 9.8e-30:
+     1 iteration, 231 s (Jacobian plus residual, about 7-10x a dd iteration), Delta 3.4227909330890940.
+   The gamma runs are untouched: 3.6 is done, 3.5 is running on dd mode_det.
+Results pushed to wip/lowd-local (6ad98b7): merged lowD_dd_local.jsonl and lowD_gamma_local.jsonl plus the per-run files,
+the M 96 / M 128 states, all local_*.log, and the T39 gate logs. lowD_conv.py:
+   D     M 80             M 96              M 128             best / error
+   3.70  3.465200483544   3.465200482305    -                 3.465200482305 +- 1.2e-9
+   3.65  3.460728639647   3.460728636304    -                 (two M: -3.3e-9)
+   3.60  3.452720978926   3.452720974629    3.452720974608    3.452720974608 +- 2.1e-11
+   3.55  3.440402349001   3.440402346486    -                 (two M: -2.5e-9)
+   3.50  3.422790947025   3.422790934317    3.422790933089    3.422790933089 +- 1.2e-9
+   3.45  3.398624718471   3.398624651988    -                 (two M: -6.6e-8)
+   3.40  3.366251917957   3.366251790132    (B running)       (two M: -1.3e-7; M 96 point from the M 96 chain)
+   3.35  3.323462177697   (chain running)
+   3.30  3.267213030958   -
+gamma(3.6) = 0.3368409842 (lam 2.9687598804, 11 determinants, one sign change).
+
+== 2026-10-22 19:44 PDT local
+T41: M 96 stops resolving at D 3.40, so the chain is now at M 128. Part B's f64 M 128 at 3.4, started from the M 96
+chain's 3.40 point, did not converge: start |F| about 0.2, one iteration in 31 min, |F| 2.0e-1, the same failure as
+M 80 -> 96 at 3.40. So the M 96 points at 3.40 (3.3662517901318) and 3.35 (3.3234620916758, 14 its, horizon tail
+1.5e-36) are converged M 96 solutions but not resolved ones. I stopped the M 96 chain (its 3.30 step and B 3.4's M 80
+and gamma) and the M 96-based T41 script.
+The new chain (t41b_chain.py, from 19:46) uses M 128 states only. First it lifts the resolved M 96 states at 3.55 and
+3.45 to M 128 (f64, in parallel). With the M 128 states at 3.6 (dd) and 3.5 (f64) they make four points for the cubic
+predictor. Then it steps of 0.05 from 3.45 toward 3.00 at M 128 (f64), with midpoint halving, an M 96 solve at each
+point as the error estimate, and gamma from each M 128 state at a multiple of 0.1 (one at a time). It stops when a step
+fails at 0.005 and again at half that, and I will report the lowest D with its M 96 -> 128 difference.
+Part B's 3.5 gamma (dd mode_det, on the resolved M 96 state) runs on. T38: 4 threads will be free once the 3.5 gamma
+ends and the lifts are done; I start the T38 pilot then, unless you would rather keep the threads for this chain.
+
+== 2026-10-22 20:26 PDT local
+T35 B done for 3.6 and 3.5 (pushed to wip/lowd-local): gamma(3.6) = 0.3368409842 (lam 2.9687598804), gamma(3.5) =
+0.3223855790 (lam 3.1018757202), both from the resolved M 96 states with one sign change of det M. The original B runner
+is stopped; 3.4 and 3.3 now fall to the M 128 chain.
+T41 so far: the 3.55 lift to M 128 converged (Delta 3.4404023462131, M 96 -> 128 -2.7e-10, 6 its, 20 min). The 3.45 lift
+did not: from the M 96 state the start is |F| 1.7e-4 and Newton stops after 2 iterations, so M 96 is not resolved at
+3.45 either. The chain therefore steps 3.5 -> 3.45 at M 128 from a quadratic predictor through 3.6, 3.55, 3.5. It also
+starts at |F| 1.7e-4; the f64 step gave no decrease there and the solver retried with the exact Jacobian (its own
+fallback). That step decides whether M 128 resolves 3.45.
+T38 started at 20:26 on the 4 free threads: pilot (a) 960 bits and (b) 1280 bits, K 29, J 1000, wf 1.00,
+--fit phys --mf 6:12 --fit-step 1, 2 procs each (hp-wt at b9499b9; amp_flint_par.py differs from main only in its
+docstring). T32's K 27 took about 4 h, so expect about 5 h for (a) and longer for (b).

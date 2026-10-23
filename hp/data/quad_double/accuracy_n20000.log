@@ -1,0 +1,135 @@
+    Finished `release` profile [optimized] target(s) in 0.03s
+     Running unittests src/lib.rs (target/qd_native/release/deps/_hpkernel-03c0e8055cd7be6d)
+
+running 10 tests
+test qd_residual::bench_qd_residual ... ignored
+test qd_residual::qv_lane_blocks_agree ... QV vs DV, all blocks of the synthetic context: max relative difference 5.75e-32; with Delta x (1 + 1e-20): 9.74e-23
+ok
+test qd_tests::bench_qd ... ignored
+test qd_tests::qd_accumulator ... dot accumulator: |error| / sum |a_i b_i| (units of 2^-209); threshold (8 + n)/8
+  operation      inputs          n        max      99.9%    max rel    thr  fails  lanes
+  dot n=1        random       5000      0.435      0.303      0.435  1.125      0      0
+  dot n=1        cancel       5000      0.427      0.315      0.427  1.125      0      0
+  dot n=1        wide         5000      0.303      0.247      0.303  1.125      0      0
+  dot n=1        mixed        5000      0.417      0.280      0.417  1.125      0      0
+  dot n=4        random       1248      0.362      0.215      4.189  1.500      0      0
+  dot n=4        cancel       1248      0.112      0.112    2.52e58  1.500      0      0
+  dot n=4        wide         1248      0.326      0.302      0.411  1.500      0      0
+  dot n=4        mixed        1248      0.424      0.256     10.950  1.500      0      0
+  dot n=16       random        312      0.243      0.199    116.650  3.000      0      0
+  dot n=16       cancel        312      0.143      0.124    1.87e30  3.000      0      0
+  dot n=16       wide          312      0.218      0.213      0.257  3.000      0      0
+  dot n=16       mixed         312      0.223      0.197      1.453  3.000      0      0
+  dot n=64       random        312      0.307      0.265     32.520  9.000      0      0
+  dot n=64       cancel        312      0.448      0.169     5.07e9  9.000      0      0
+  dot n=64       wide          312      0.352      0.290      0.352  9.000      0      0
+  dot n=64       mixed         312      0.279      0.258     39.473  9.000      0      0
+  dot n=128      random        312      0.404      0.342    236.434 17.000      0      0
+  dot n=128      cancel        312      0.358      0.280     1.18e8 17.000      0      0
+  dot n=128      wide          312      0.297      0.274      1.067 17.000      0      0
+  dot n=128      mixed         312      0.575      0.347     24.493 17.000      0      0
+ok
+test qd_tests::qd_accuracy ... quad-double accuracy (units of 2^-209; n per row; isa avx512)
+  operation      inputs          n        max      99.9%    max rel    thr  fails  lanes
+  sloppy add     wide        20000      0.015      0.013      0.015  1.000      0      0
+  sloppy add     cancel      20000    4.04e-3    7.25e-4      0.014  1.000      0      0
+  sloppy add     overflow    20000      0.015      0.014      0.015  1.000      0      0
+  sloppy add     underflow   20000          0          0          0  1.000      0      0
+  sloppy add     pow2        20000      0.016      0.015      0.016  1.000      0      0
+  sloppy add     sparse      20000    5.10e-3    2.53e-4    5.10e-3  1.000      0      0
+  sloppy add     computed    20000    3.07e-3    1.52e-4      0.014  1.000      0      0
+  accurate add   wide        20000      0.015      0.013      0.015  1.000      0      0
+  accurate add   cancel      20000      0.083    6.15e-3      0.083  1.000      0      0
+  accurate add   overflow    20000      0.026      0.014      0.026  1.000      0      0
+  accurate add   underflow   20000      0.010          0      0.010  1.000      0      0
+  accurate add   pow2        20000      0.021      0.015      0.021  1.000      0      0
+  accurate add   sparse      20000    9.13e-3    2.84e-4    9.13e-3  1.000      0      0
+  accurate add   computed    20000      0.010    2.59e-4      0.010  1.000      0      0
+  qd + f64       wide        20000      0.015      0.013      0.015  1.000      0      0
+  qd + f64       cancel      20000    7.04e-4          0    1.26e-3  1.000      0      0
+  qd + f64       overflow    20000      0.016      0.014      0.016  1.000      0      0
+  qd + f64       underflow   20000          0          0          0  1.000      0      0
+  qd + f64       pow2        20000      0.016      0.015      0.016  1.000      0      0
+  qd + f64       sparse      20000    9.61e-5   1.92e-11    9.61e-5  1.000      0      0
+  qd + f64       computed    20000          0          0          0  1.000      0      0
+  qd + dd        wide        20000      0.015      0.013      0.015  1.000      0      0
+  qd + dd        cancel      20000    3.07e-3          0      0.015  1.000      0      0
+  qd + dd        overflow    20000      0.015      0.015      0.016  1.000      0      0
+  qd + dd        underflow   20000          0          0          0  1.000      0      0
+  qd + dd        pow2        20000      0.016      0.015      0.016  1.000      0      0
+  qd + dd        sparse      20000    6.93e-3    8.49e-6    6.93e-3  1.000      0      0
+  qd + dd        computed    20000    2.40e-3          0      0.014  1.000      0      0
+  sloppy mul     wide        20000      0.325      0.179      0.325  2.000      0      0
+  sloppy mul     cancel      20000      0.187      0.088      0.187  2.000      0      0
+  sloppy mul     overflow    20000      0.376      0.170      0.376  2.000      0      0
+  sloppy mul     underflow   20000    3.01e46    1.62e46    3.01e46  2.000      0      0
+  sloppy mul     pow2        20000      0.349      0.152      0.349  2.000      0      0
+  sloppy mul     sparse      20000      0.110      0.017      0.110  2.000      0      0
+  sloppy mul     computed    20000      0.350      0.176      0.350  2.000      0      0
+  accurate mul   wide        20000      0.016      0.014      0.016  1.000      0      0
+  accurate mul   cancel      20000      0.016      0.015      0.016  1.000      0      0
+  accurate mul   overflow    20000      0.015      0.014      0.015  1.000      0      0
+  accurate mul   underflow   20000    4.04e46    1.42e46    4.04e46  1.000      0      0
+  accurate mul   pow2        20000      0.015      0.014      0.015  1.000      0      0
+  accurate mul   sparse      20000      0.015    8.06e-3      0.015  1.000      0      0
+  accurate mul   computed    20000      0.016      0.014      0.016  1.000      0      0
+  qd x f64       wide        20000      0.023      0.019      0.023  1.000      0      0
+  qd x f64       cancel      20000      0.022      0.014      0.022  1.000      0      0
+  qd x f64       overflow    20000      0.024      0.018      0.024  1.000      0      0
+  qd x f64       underflow   20000    2.71e46    1.34e46    2.71e46  1.000      0      0
+  qd x f64       pow2        20000      0.021      0.014      0.021  1.000      0      0
+  qd x f64       sparse      20000      0.016    1.93e-3      0.016  1.000      0      0
+  qd x f64       computed    20000      0.024      0.020      0.024  1.000      0      0
+  qd x dd        wide        20000      0.143      0.074      0.143  2.000      0      0
+  qd x dd        cancel      20000      0.078      0.040      0.078  2.000      0      0
+  qd x dd        overflow    20000      0.196      0.072      0.196  2.000      0      0
+  qd x dd        underflow   20000    2.52e46    1.72e46    2.52e46  2.000      0      0
+  qd x dd        pow2        20000      0.091      0.057      0.091  2.000      0      0
+  qd x dd        sparse      20000      0.018    6.62e-3      0.018  2.000      0      0
+  qd x dd        computed    20000      0.128      0.072      0.128  2.000      0      0
+  sqr            wide        20000      0.135      0.100      0.135  2.000      0      0
+  sqr            cancel      20000      0.144      0.098      0.144  2.000      0      0
+  sqr            overflow    20000      0.142      0.100      0.142  2.000      0      0
+  sqr            underflow   20000    2.90e46    1.54e46    2.90e46  2.000      0      0
+  sqr            pow2        20000      0.136      0.095      0.136  2.000      0      0
+  sqr            sparse      20000      0.053      0.013      0.053  2.000      0      0
+  sqr            computed    20000      0.149      0.101      0.149  2.000      0      0
+  sloppy div     wide        20000      0.922      0.451      0.922  4.000      0      0
+  sloppy div     cancel      20000      2.074      0.376      2.074  4.000      0      0
+  sloppy div     overflow    20000      1.592      0.536      1.592  4.000      0      0
+  sloppy div     underflow   20000    1.60e47    1.20e47    1.60e47  4.000      0      0
+  sloppy div     pow2        20000      0.974      0.460      0.974  4.000      0      0
+  sloppy div     sparse      20000      0.509      0.226      0.509  4.000      0      0
+  sloppy div     computed    20000      1.519      0.558      1.519  4.000      0      0
+  accurate div   wide        20000      0.031      0.022      0.031  2.000      0      0
+  accurate div   cancel      20000      0.028      0.019      0.028  2.000      0      0
+  accurate div   overflow    20000      0.036      0.022      0.036  2.000      0      0
+  accurate div   underflow   20000    1.45e47    1.17e47    1.45e47  2.000      0      0
+  accurate div   pow2        20000      0.027      0.020      0.027  2.000      0      0
+  accurate div   sparse      20000      0.019      0.014      0.019  2.000      0      0
+  accurate div   computed    20000      0.027      0.022      0.027  2.000      0      0
+  sqrt           wide        20000      0.375      0.176      0.375  4.000      0      0
+  sqrt           cancel      20000      0.251      0.140      0.251  4.000      0      0
+  sqrt           overflow    20000      0.317      0.186      0.317  4.000      0      0
+  sqrt           underflow   20000      0.281      0.162      0.281  4.000      0      0
+  sqrt           pow2        20000      0.214      0.142      0.214  4.000      0      0
+  sqrt           sparse      20000      0.209      0.113      0.209  4.000      0      0
+  sqrt           computed    20000      0.346      0.161      0.346  4.000      0      0
+qd digest 2dc05cbb643d39f5 (n 20000, seed 1, isa avx512)
+ok
+test qd_tests::qd_constants ... ok
+test qd_tests::qd_decimal_io ... decimal input/output and conversions
+  parse: n 20000 relative error max 0.015 u, 99.9% 0.014 u (threshold 0.25 u); outside: 0
+  parse: greedy round-to-nearest violated in 0 of 20000
+  print: not correctly rounded (or misformatted) in 0 of 45000 strings
+  round trip (exact): 0 of 5000 differ
+  round trip (70 digits): 0 of 5000 differ
+  to_dd: 0 of 20000 beyond 2^-105 relative; 8-lane mismatches 0
+  to_f64: 0 of 20000 beyond one ulp, 0 not the nearest; 8-lane mismatches 0
+ok
+test qd_tests::qd_diag_accumulator ... ignored
+test qd_tests::qd_diag_accurate_add ... ignored
+test qd_tests::qd_dump ... ignored
+
+test result: ok. 5 passed; 0 failed; 5 ignored; 0 measured; 5 filtered out; finished in 9.05s
+

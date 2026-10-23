@@ -588,7 +588,15 @@ with computed points rather than an assumed form. Its points are used in [The fo
   At M ≥ 48 the f64 Jacobian agrees with the exact one only to about 10⁻⁷, against 10⁻¹⁴ at M ≤ 32. The Taylor
   steps are planned for the solution, not for the top τ-harmonics of a single column, so rounding inside a step is
   amplified. That costs Newton speed (a contraction of about 10⁻⁷ per step), not accuracy, since the residual stays
-  double-double.
+  double-double. At large D the f64 Jacobian still steers up to about D = 45 but not reliably at D = 50–60, where the
+  errors that matter all sit in the horizon block of the Jacobian (notes/MIXED_PRECISION.md §8; a fix is planned).
+- **Quad-double arithmetic (not yet used by the solver):** `hp/src/qd.rs` and `qv.rs` add quad-double numbers
+  (four f64, about 64 digits), scalar and 8-lane SIMD, with bitwise the same results on AVX-512, AVX2 and portable
+  builds. They use the QD library's algorithms[^20], with two repairs found by the tests: the accurate add's last
+  part, and the square root near the ends of the exponent range. Against exact arithmetic they err by at most
+  2.1×2⁻²⁰⁹ (63 digits). They cost 8–29 times double-double per operation and 14–17 times in sums of products. A
+  quad-double residual would cost about 7 times the double-double one at the same orders
+  ([notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md); `hp/qd_check.py`).
 - **Continuation in D:** prediction by the cubic through the last four converged points (a tangent from the
   Jacobian is wrong in the weak directions, below), Newton with the weakest directions deflated, and from D = 35 on
   the centre data's τ-harmonics above 13 frozen (below). 32 collocation points in τ, nodes at
@@ -2079,6 +2087,7 @@ hp/                 double-double solver (crate hpkernel)
 ├── src/lane.rs     value and forward-mode dual lanes: double-double, f64, and batched f64 tangents
 ├── src/model.rs    centre series, Taylor stepping, horizon series, residual, Jacobian (double-double and f64)
 ├── src/linalg.rs   double-double LU, f64 LU, transpose solve, Gram matrix
+├── src/qd.rs, qv.rs  quad-double: scalar and 8-lane (not used by the solver yet); src/exact.rs exact reference
 ├── python/hpkernel/driver.py   grid, seeds, Newton, deflated Newton, Levenberg-Marquardt, re-noding
 ├── src/dd.rs       scalar double-double (constants, set-up)
 ├── src/field.rs    tau fields on the half grid, folded spectral derivative
@@ -2089,6 +2098,8 @@ hp/                 double-double solver (crate hpkernel)
 ├── profile_newton.py   time of a Newton step by part; --mixed --solve for the mixed-precision step
 ├── mixed_check.py  checks of the mixed-precision Newton: Jacobian agreement, controls, convergence, bit-identity
 ├── mixed_diag.py   why the f64 Jacobian agrees only to 1e-7 at M >= 48 (step size, harmonics, M)
+├── mixed_largeD*.py  the mixed-precision step at large D: where it fails (horizon block), the correction-loop prototype
+├── qd_check.py     checks of the quad-double arithmetic against mpmath, and across the SIMD backends
 ├── export_dd.py    collects the runs' points into data/delta_dd.csv
 ├── dd_fits_mp.py   large-D model fits at 60 digits, held-out errors, predictions (--dmax for a data snapshot)
 ├── dd_candidates.py  candidate constants forced as the limit, held-out test (--dmax as above)
@@ -2229,3 +2240,4 @@ solver/largeD_late_structure.py  where the nonlinear late-order growth lives (x,
 [^17]: R. E. Wengert, Commun. ACM 7, 463 (1964) (forward-mode automatic differentiation).
 [^18]: D. D. Morrison, J. D. Riley and J. F. Zancanaro, Commun. ACM 5, 613 (1962), doi:10.1145/355580.369128.
 [^19]: E. Anderson et al., *LAPACK Users' Guide*, 3rd ed., SIAM (1999) (the getf2 and blocked getrf factorizations).
+[^20]: Y. Hida, X. S. Li, D. H. Bailey, *Algorithms for quad-double precision floating point arithmetic*, Proc. 15th IEEE Symposium on Computer Arithmetic (ARITH-15), 155–162 (2001).

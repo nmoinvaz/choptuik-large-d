@@ -3,7 +3,9 @@
 //! (`f64::mul_add` for the fused operations, which the double-double algorithms need to be exact).
 //!
 //! All operations are IEEE round-to-nearest with no reassociation, as the error-free transformations in `dv`
-//! require.
+//! require. `M8` is an 8-lane mask (a `__mmask8`, two all-ones/all-zeros ymm registers, or a bit set) from the
+//! comparisons `ne`, `eq`, `gt`, `ge`, with per-lane select `sel`: the quad-double lanes (`qv`) run QD's data-dependent
+//! branches with them.
 
 #[cfg(all(target_arch = "x86_64", target_feature = "avx512f"))]
 mod imp {
@@ -72,6 +74,64 @@ mod imp {
         #[inline(always)]
         pub fn bcast(self, j: usize) -> Self {
             unsafe { V8(_mm512_permutexvar_pd(_mm512_set1_epi64(j as i64), self.0)) }
+        }
+        #[inline(always)]
+        pub fn sqrt(self) -> Self {
+            unsafe { V8(_mm512_sqrt_pd(self.0)) }
+        }
+        /// the exponent bits only: 2^floor(log2 |x|) for normal x
+        #[inline(always)]
+        pub fn pow2_floor(self) -> Self {
+            unsafe { V8(_mm512_castsi512_pd(_mm512_and_si512(_mm512_castpd_si512(self.0), _mm512_set1_epi64(0x7ff0_0000_0000_0000)))) }
+        }
+        /// self != o (true when either is NaN, as C's !=)
+        #[inline(always)]
+        pub fn ne(self, o: Self) -> M8 {
+            unsafe { M8(_mm512_cmp_pd_mask::<_CMP_NEQ_UQ>(self.0, o.0)) }
+        }
+        /// self == o (false when either is NaN)
+        #[inline(always)]
+        pub fn eq(self, o: Self) -> M8 {
+            unsafe { M8(_mm512_cmp_pd_mask::<_CMP_EQ_OQ>(self.0, o.0)) }
+        }
+        /// self > o (false when either is NaN)
+        #[inline(always)]
+        pub fn gt(self, o: Self) -> M8 {
+            unsafe { M8(_mm512_cmp_pd_mask::<_CMP_GT_OQ>(self.0, o.0)) }
+        }
+        /// self >= o (false when either is NaN)
+        #[inline(always)]
+        pub fn ge(self, o: Self) -> M8 {
+            unsafe { M8(_mm512_cmp_pd_mask::<_CMP_GE_OQ>(self.0, o.0)) }
+        }
+    }
+
+    /// 8-lane mask (one bit per lane).
+    #[derive(Clone, Copy, Debug)]
+    pub struct M8(pub __mmask8);
+
+    impl M8 {
+        #[inline(always)]
+        pub fn and(self, o: Self) -> Self {
+            M8(self.0 & o.0)
+        }
+        #[inline(always)]
+        pub fn or(self, o: Self) -> Self {
+            M8(self.0 | o.0)
+        }
+        #[inline(always)]
+        pub fn not(self) -> Self {
+            M8(!self.0)
+        }
+        /// per lane: t where set, f elsewhere
+        #[inline(always)]
+        pub fn sel(self, t: V8, f: V8) -> V8 {
+            unsafe { V8(_mm512_mask_blend_pd(self.0, f.0, t.0)) }
+        }
+        /// bit j = lane j
+        #[inline(always)]
+        pub fn bits(self) -> u8 {
+            self.0
         }
     }
 }
@@ -153,6 +213,71 @@ mod imp {
             let mut a = [0.0; 8];
             self.store(&mut a);
             Self::splat(a[j])
+        }
+        #[inline(always)]
+        pub fn sqrt(self) -> Self {
+            unsafe { V8([_mm256_sqrt_pd(self.0[0]), _mm256_sqrt_pd(self.0[1])]) }
+        }
+        /// the exponent bits only: 2^floor(log2 |x|) for normal x
+        #[inline(always)]
+        pub fn pow2_floor(self) -> Self {
+            unsafe {
+                let m = _mm256_castsi256_pd(_mm256_set1_epi64x(0x7ff0_0000_0000_0000));
+                V8([_mm256_and_pd(self.0[0], m), _mm256_and_pd(self.0[1], m)])
+            }
+        }
+        /// self != o (true when either is NaN, as C's !=)
+        #[inline(always)]
+        pub fn ne(self, o: Self) -> M8 {
+            unsafe { M8([_mm256_cmp_pd::<_CMP_NEQ_UQ>(self.0[0], o.0[0]), _mm256_cmp_pd::<_CMP_NEQ_UQ>(self.0[1], o.0[1])]) }
+        }
+        /// self == o (false when either is NaN)
+        #[inline(always)]
+        pub fn eq(self, o: Self) -> M8 {
+            unsafe { M8([_mm256_cmp_pd::<_CMP_EQ_OQ>(self.0[0], o.0[0]), _mm256_cmp_pd::<_CMP_EQ_OQ>(self.0[1], o.0[1])]) }
+        }
+        /// self > o (false when either is NaN)
+        #[inline(always)]
+        pub fn gt(self, o: Self) -> M8 {
+            unsafe { M8([_mm256_cmp_pd::<_CMP_GT_OQ>(self.0[0], o.0[0]), _mm256_cmp_pd::<_CMP_GT_OQ>(self.0[1], o.0[1])]) }
+        }
+        /// self >= o (false when either is NaN)
+        #[inline(always)]
+        pub fn ge(self, o: Self) -> M8 {
+            unsafe { M8([_mm256_cmp_pd::<_CMP_GE_OQ>(self.0[0], o.0[0]), _mm256_cmp_pd::<_CMP_GE_OQ>(self.0[1], o.0[1])]) }
+        }
+    }
+
+    /// 8-lane mask (all-ones / all-zeros 64-bit lanes in two ymm registers).
+    #[derive(Clone, Copy, Debug)]
+    pub struct M8(pub [__m256d; 2]);
+
+    #[allow(unused_unsafe)]
+    impl M8 {
+        #[inline(always)]
+        pub fn and(self, o: Self) -> Self {
+            unsafe { M8([_mm256_and_pd(self.0[0], o.0[0]), _mm256_and_pd(self.0[1], o.0[1])]) }
+        }
+        #[inline(always)]
+        pub fn or(self, o: Self) -> Self {
+            unsafe { M8([_mm256_or_pd(self.0[0], o.0[0]), _mm256_or_pd(self.0[1], o.0[1])]) }
+        }
+        #[inline(always)]
+        pub fn not(self) -> Self {
+            unsafe {
+                let ones = _mm256_castsi256_pd(_mm256_set1_epi64x(-1));
+                M8([_mm256_xor_pd(self.0[0], ones), _mm256_xor_pd(self.0[1], ones)])
+            }
+        }
+        /// per lane: t where set, f elsewhere
+        #[inline(always)]
+        pub fn sel(self, t: V8, f: V8) -> V8 {
+            unsafe { V8([_mm256_blendv_pd(f.0[0], t.0[0], self.0[0]), _mm256_blendv_pd(f.0[1], t.0[1], self.0[1])]) }
+        }
+        /// bit j = lane j
+        #[inline(always)]
+        pub fn bits(self) -> u8 {
+            unsafe { (_mm256_movemask_pd(self.0[0]) | (_mm256_movemask_pd(self.0[1]) << 4)) as u8 }
         }
     }
 }
@@ -243,10 +368,81 @@ mod imp {
         pub fn bcast(self, j: usize) -> Self {
             V8([self.0[j]; 8])
         }
+        #[inline(always)]
+        pub fn sqrt(self) -> Self {
+            V8(self.0.map(f64::sqrt))
+        }
+        /// the exponent bits only: 2^floor(log2 |x|) for normal x
+        #[inline(always)]
+        pub fn pow2_floor(self) -> Self {
+            V8(self.0.map(|x| f64::from_bits(x.to_bits() & 0x7ff0_0000_0000_0000)))
+        }
+        #[inline(always)]
+        fn cmp(self, o: Self, f: impl Fn(f64, f64) -> bool) -> M8 {
+            let mut m = 0u8;
+            for i in 0..8 {
+                if f(self.0[i], o.0[i]) {
+                    m |= 1 << i;
+                }
+            }
+            M8(m)
+        }
+        /// self != o (true when either is NaN, as C's !=)
+        #[inline(always)]
+        pub fn ne(self, o: Self) -> M8 {
+            self.cmp(o, |a, b| a != b)
+        }
+        /// self == o (false when either is NaN)
+        #[inline(always)]
+        pub fn eq(self, o: Self) -> M8 {
+            self.cmp(o, |a, b| a == b)
+        }
+        /// self > o (false when either is NaN)
+        #[inline(always)]
+        pub fn gt(self, o: Self) -> M8 {
+            self.cmp(o, |a, b| a > b)
+        }
+        /// self >= o (false when either is NaN)
+        #[inline(always)]
+        pub fn ge(self, o: Self) -> M8 {
+            self.cmp(o, |a, b| a >= b)
+        }
+    }
+
+    /// 8-lane mask (bit j = lane j).
+    #[derive(Clone, Copy, Debug)]
+    pub struct M8(pub u8);
+
+    impl M8 {
+        #[inline(always)]
+        pub fn and(self, o: Self) -> Self {
+            M8(self.0 & o.0)
+        }
+        #[inline(always)]
+        pub fn or(self, o: Self) -> Self {
+            M8(self.0 | o.0)
+        }
+        #[inline(always)]
+        pub fn not(self) -> Self {
+            M8(!self.0)
+        }
+        /// per lane: t where set, f elsewhere
+        #[inline(always)]
+        pub fn sel(self, t: V8, f: V8) -> V8 {
+            let mut r = [0.0; 8];
+            for i in 0..8 {
+                r[i] = if self.0 >> i & 1 == 1 { t.0[i] } else { f.0[i] };
+            }
+            V8(r)
+        }
+        #[inline(always)]
+        pub fn bits(self) -> u8 {
+            self.0
+        }
     }
 }
 
-pub use imp::V8;
+pub use imp::{M8, V8};
 
 impl V8 {
     #[inline(always)]
