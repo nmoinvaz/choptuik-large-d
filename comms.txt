@@ -2877,3 +2877,13 @@ T38 wf 0.99 done (5.9 h; wip/sigma14 08cb9b5): K 29, J 1000, 960 bits, --mf 6:12
    Mf at k 29: 8 except nu = 1, 3 (7); worst family fit 4.9e-19
    sigma_13 bitwise equal to scan27J1000p960 at wf 0.99 (-4.1002374526749e-10 - 4.7743085463879e-10i)
 wf 1.01 is at about k 21, so expect it around 11:00. T42 starts when it ends.
+
+== 2026-10-23 11:18 PDT local
+T38 done (wip/sigma14 ae2af64): the K 29, J 1000, 960-bit scan at three omegas, all exit 0, err14 under 2e-23:
+   wf     sigma_14                                                        err14     worst family at k 29
+   0.99   +5.1349926985882716566e-12 - 6.1125424732211931245e-11i        1.64e-23  4.9e-19
+   1.00   +1.8162676402228000068e-12 - 6.0171529747632837488e-11i        1.81e-23  2.1e-19
+   1.01   -1.3887266863423045505e-12 - 5.9052712130189368330e-11i        2.00e-23  1.7e-19
+   sigma_13 at each wf is bitwise the scan27J1000p960 value, and sigma_12 too.
+T42 started at 11:17 with the machine otherwise idle (T38 ended, nothing else running) and on AC power: the hpkernel
+build is running now, the benchmark follows.
