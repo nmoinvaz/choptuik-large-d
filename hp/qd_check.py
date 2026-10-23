@@ -21,7 +21,7 @@ backends: runs `cargo test --release --lib qd_` (the accuracy, agreement and dec
   directories hp/target/qd_<isa>); every build must pass, and the digests of all scalar results must agree (each
   build also checks that its 8-lane results equal the scalar ones bit for bit). Exit 1 otherwise. Each backend's
   result is written to DIR/<isa>.txt (default data/quad_double/backends) as soon as it is known, and a rerun skips
-  the backends already recorded there with the same n (--fresh reruns them; --only=... runs a subset, and the
+  the backends recorded there as passed with the same n and RUSTFLAGS (--fresh reruns them; --only=... runs a subset, and the
   digests are then compared over every recorded backend). The portable build takes 15-20 minutes on two cores.
 """
 import os
@@ -227,8 +227,8 @@ def main():
             path = os.path.join(out, f"{isa}.txt")
             if os.path.exists(path) and not o.get("fresh"):
                 rec = dict(ln.rstrip("\n").split("\t", 1) for ln in open(path))
-                if rec.get("n") == n:
-                    print(f"{isa:<9} recorded in {path}, skipped")
+                if rec.get("n") == n and rec.get("exit") == "0" and rec.get("rustflags") == BUILDS[isa]:
+                    print(f"{isa:<9} passed before, recorded in {path}, skipped")
                     continue
             rc, outp = cargo(["qd_", "--", "--test-threads=1", "--nocapture"], BUILDS[isa], f"qd_{isa}", {"QD_N": n})
             dg = re.search(r"qd digest (\w+) \(n \d+, seed \d+, isa (\w+)\)", outp)
