@@ -1,0 +1,5 @@
+23:53:23 --- D 3.65 (from 3.7), M 128 / 160, nodes 0.0025..0.9
+23:53:34   D 3.65 M 128: start 'predictor' |F| 3.85e-02 (170 steps)
+23:53:40 D 3.65 M 128: L 8193, steps 170, start |F| 3.8e-02
+  newton 0: |F| 3.85e-02 |dz| 2.86e+00 lam 0.25 dDelta -6.66e-03 Delta 3.458543574975462 piv 6.4e-04..1.8e+04  t 295.7s
+  newton 0: |F| 2.89e-02 |dz| 2.27e+01 lam 0.0156 dDelta -1.46e-04 Delta 3.458397356206040 piv 5.6e-04..9.1e+01  t 293.3s
