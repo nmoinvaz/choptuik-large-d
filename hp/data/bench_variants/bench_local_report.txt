@@ -1,0 +1,14 @@
+
+median whole-solve seconds (speedup over dd) / iterations / per-step Jacobian+LU+products seconds, from data/bench_variants/bench_local.jsonl
+state                                   dd                       f64                      f64h                      f64g                     f64hg
+D3.7000_M80             136.8s (1.0x)  4it         16.6s (8.3x)  5it         58.6s (2.3x)  5it         16.0s (8.5x)  4it         50.0s (2.7x)  4it
+D8.2500_M48              19.1s (1.0x)  4it          3.1s (6.2x)  5it          4.2s (4.6x)  4it          3.0s (6.4x)  4it          4.8s (4.0x)  4it
+D16.7600_M32              5.9s (1.0x)  5it          0.9s (6.3x)  7it          2.1s (2.8x)  6it          1.1s (5.5x)  5it          2.2s (2.6x)  5it
+D20.0437_M32              4.7s (1.0x)  4it          1.0s (4.9x)  7it          2.0s (2.4x)  6it          1.2s (4.1x)  4it          1.6s (2.9x)  4it
+D30.0688_M32             13.2s (1.0x)  7it          2.3s (5.6x) 16it          4.4s (3.0x) 13it          3.1s (4.2x)  7it          3.5s (3.7x)  7it
+D40.0201_M32              7.6s (1.0x)  6it                FAILED (3)          6.9s (1.1x)  8it          2.6s (3.0x)  6it          2.9s (2.6x)  6it
+D45.0507_M32             10.5s (1.0x)  9it                FAILED (3)                FAILED (3)          4.6s (2.3x)  9it          4.8s (2.2x)  9it
+D50.0075_M32              8.6s (1.0x)  8it                FAILED (3)                FAILED (3)          4.5s (1.9x)  9it          4.1s (2.1x)  7it
+D55.0351_M32              7.1s (1.0x)  7it                FAILED (3)          7.6s (0.9x) 11it          4.7s (1.5x)  8it          4.1s (1.8x)  7it
+D60.0020_M32              6.6s (1.0x)  7it                FAILED (3)                FAILED (3)                FAILED (3)          4.0s (1.6x)  7it
+max |Delta - Delta_dd| over all converged runs: 1.1e-18
