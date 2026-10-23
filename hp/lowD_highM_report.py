@@ -108,61 +108,81 @@ def project(opts):
             hi_s = min(hi_s, K / klo)       # K suffices: the needed K (scale x klo) is at most K
         else:
             lo_s = max(lo_s, K / klo)       # K does not: the needed K is above it
-        print(f"  D {D_:.2f}: K {K:3d} {'suffices    ' if ok else 'is too few  '} ({diff_:+.1e}); model {klo:5.0f}-{khi:<5.0f}"
+        print(f"  D {D_:.3f}: K {K:3d} {'suffices    ' if ok else 'is too few  '} ({diff_:+.1e}); model {klo:5.0f}-{khi:<5.0f}"
               f" -> scale of the lowest variant {'<=' if ok else '>'} {K / klo:.3f}")
-    scale = lo_s if lo_s > 0 else 1.0
-    print(f"the lowest variant fits with a scale in ({lo_s:.3f}, {hi_s:.3f}]; the higher variants do not (they need more"
-          f" than the K that sufficed). Used: {scale:.2f}")
-    # 2. measured wall time of the pilot's last complete point (all its resolutions, two-pass solves included), from
-    # logs/pilot.log; times for other resolutions scale as M^3 (one Newton iteration ~ c M^3, fitted below)
+    s_a, s_b = sorted((lo_s if lo_s > 0 else 1.0, hi_s if hi_s < float("inf") else 1.0))
+    print(f"the lowest variant needs a scale above {lo_s:.3f} (K too few) and at most {hi_s:.3f} (K sufficed)"
+          + ("" if lo_s <= hi_s else ": no single scale fits all (the M differences do not grow smoothly with D, e.g."
+             " 128 -> 160: -6.3e-9 at 3.2, -6.4e-9 at 3.175, -4.4e-8 at 3.15)")
+          + f"; K is projected with {s_a:.3f}-{s_b:.3f} times the lowest variant (the higher variants need more than the"
+          " K that sufficed)")
+    # 2. measured wall times from logs/pilot.log: each complete point (from its first start after the previous point's
+    # last record to its pair record; failed tries before a node change excluded) and each move up (from the decision
+    # to its record); other resolutions scale as M^3
     log = [ln.rstrip("\n") for ln in open(os.path.join(HERE, "data", "lowD_highM", "logs", "pilot.log"))]
-    last = [r for r in pairs if r["decision"] == "pair"][-1]
-    Dl = last["D"]
-    # from the first start of the point after the previous point's last record (failed attempts before a node change
-    # excluded) to its pair record
-    i1 = next(i for i, ln in enumerate(log) if ln[8:].startswith(f" D {Dl:g}: Delta(M") and ln.endswith("; pair"))
-    ip = max(i for i, ln in enumerate(log[:i1]) if ": Delta(M" in ln and not ln[8:].startswith(f" D {Dl:g}:"))
-    t0 = next(ln[:8] for ln in log[ip:i1] if f" --- D {Dl:g} (" in ln)
-    t1 = log[i1][:8]
     sec = lambda h: sum(int(x) * m for x, m in zip(h.split(":"), (3600, 60, 1)))  # noqa: E731
-    T0 = (sec(t1) - sec(t0)) % 86400
-    Ms0 = [m for m in (last.get("Mc"), last["Mw"], last["Mn"]) if m]
-    W0 = sum(m ** 3 for m in Ms0)
-    print(f"the pilot's last point, D {Dl:g} at M {'/'.join(map(str, Ms0))}: {T0 / 60:.0f} min wall ({t0} - {t1}, load about 2: "
-          f"the pilot alone on the 2 cores)")
-    loads = []
-    lp = os.path.join(HERE, "data", "lowD_highM", "logs", "load.log")
-    if os.path.exists(lp):
-        for ln in open(lp):
-            f = ln.split()
-            loads.append((datetime.datetime.fromisoformat(f[0]).timestamp(), float(f[1])))
-    # move up: the new M_n solved in two passes, about 1.2 x the M_n solve of a point (the pilot's M_n solves)
-    print(f"from D {Dl:g}, steps of {dD}: K = scale x the model's lowest variant; M_c/M_w/M_n the ladder rungs around it")
-    print(f"  (M_w the first with M - 1 >= K); hours per point = {T0 / 3600:.2f} h x sum(M^3) / {W0:.3g}, plus a move up (the new")
-    print("  M_n in two passes, 1.2 x its share) where the rung changes. Not included: node changes (about 10% of a point")
+    pts = []
+    for r in pairs:
+        if r["decision"] != "pair":
+            continue
+        D_ = r["D"]
+        i1 = next((i for i, ln in enumerate(log) if ln[8:].startswith(f" D {D_:g}: Delta(M") and ln.endswith("; pair")), None)
+        if i1 is None:
+            continue
+        ip = max((i for i, ln in enumerate(log[:i1]) if ": Delta(M" in ln and not ln[8:].startswith(f" D {D_:g}:")), default=0)
+        t0 = next((ln[:8] for ln in log[ip:i1] if f" --- D {D_:g} (" in ln), None)
+        if t0 is None:
+            continue
+        Ms_ = tuple(m for m in (r.get("Mc"), r["Mw"], r["Mn"]) if m)
+        pts.append((D_, Ms_, (sec(log[i1][:8]) - sec(t0)) % 86400))
+    mus = []
+    for i, ln in enumerate(log):
+        if "moving up to M" in ln:
+            M2 = int(ln.split("moving up to M")[1].split("/")[1])
+            j = next((k for k in range(i + 1, len(log)) if "; moved up" in log[k]), None)
+            if j is not None:
+                mus.append((float(ln.split(" D ")[1].split(":")[0]) if " D " in ln[:20] else None, M2, (sec(log[j][:8]) - sec(ln[:8])) % 86400))
+    lastM = pts[-1][1]
+    same = [t for D_, Ms_, t in pts if Ms_ == lastM]
+    W0 = sum(m ** 3 for m in lastM)
+    Ta, Tb = min(same), max(same)
+    print(f"points at M {'/'.join(map(str, lastM))}: " + ", ".join(f"D {D_:g} {t / 60:.0f} min" for D_, Ms_, t in pts if Ms_ == lastM)
+          + " (wall, load about 2: the pilot alone on the 2 cores; restarts and failed tries included)")
+    if mus:
+        print("moves up (the new M_n at that D, two passes): " + ", ".join(f"M {m} {t / 60:.0f} min" for _, m, t in mus))
+    mu_ref = mus[-1] if mus else None
+    print(f"from D {pairs[-1]['D']:g}, steps of {dD}: K from the scaled lowest variant; M_w the first rung with M - 1 >= K,")
+    print(f"  M_n the next, M_c the one below; hours per point = ({Ta / 3600:.2f}-{Tb / 3600:.2f} h) x sum(M^3) / {W0:.3g}, plus a move")
+    print("  up for each new M_n (the last measured one scaled as M^3). Not included: node changes (about 10% of a point")
     print("  each), step halvings, and the growth of the Taylor plans toward D = 3; so these are lower estimates.")
-    print(f"  {'D':>5} {'K model':>11} {'K':>4} {'M_c/M_w/M_n':>13} {'h/point':>8} {'move up h':>9} {'h cumulative':>12}")
-    D = round(Dl - dD, 6)
-    cum = 0.0
-    prev = (last.get("Mc"), last["Mw"], last["Mn"])
+    print(f"  {'D':>5} {'K model':>11} {'K':>9} {'M_c/M_w/M_n':>27} {'h/point':>9} {'move up h':>9} {'h cumulative':>12}")
+    D = round(pairs[-1]["D"] - dD, 6)
+    cum = [0.0, 0.0]
+    prev = [tuple(lastM), tuple(lastM)]
+    if pairs[-1]["decision"].startswith("moved up"):
+        prev = [(pairs[-1].get("Mc") or 0, pairs[-1]["Mw"], pairs[-1]["Mn"])] * 2
     while D >= 3.05 - 1e-9:
         klo, khi = kmodel(D)
-        K = klo * scale
-        iw_ = next((i for i, M in enumerate(ladder) if M - 1 >= K), None)
-        if iw_ is None or iw_ + 1 >= len(ladder):
-            print(f"  {D:5.2f} {klo:5.0f}-{khi:<5.0f} {K:4.0f}  beyond the ladder")
+        cells = []
+        for j, (sc, T) in enumerate(((s_a, Ta), (s_b, Tb))):
+            K = klo * sc
+            iw_ = next((i for i, M in enumerate(ladder) if M - 1 >= K), None)
+            if iw_ is None or iw_ + 1 >= len(ladder):
+                cells.append(None)
+                continue
+            Mc, Mw, Mn = (ladder[iw_ - 1] if iw_ else None), ladder[iw_], ladder[iw_ + 1]
+            tp = T * sum(m ** 3 for m in (Mc, Mw, Mn) if m) / W0
+            mu = sum(mu_ref[2] * (m / mu_ref[1]) ** 3 for m in {Mn, Mw} - set(prev[j][1:])) if mu_ref else 0.0
+            cum[j] += tp + mu
+            prev[j] = (Mc, Mw, Mn)
+            cells.append((K, f"{Mc}/{Mw}/{Mn}", tp, mu, cum[j]))
+        if None in cells:
+            print(f"  {D:5.2f} {klo:5.0f}-{khi:<5.0f}  beyond the ladder")
             break
-        Mc, Mw, Mn = (ladder[iw_ - 1] if iw_ else None), ladder[iw_], ladder[iw_ + 1]
-        tp = T0 * sum(m ** 3 for m in (Mc, Mw, Mn) if m) / W0
-        mu = 0.0
-        for m in sorted({Mn, Mw} - {prev[1], prev[2]}):
-            mu += 1.2 * T0 * m ** 3 / W0
-        cum += tp + mu
-        print(f"  {D:5.2f} {klo:5.0f}-{khi:<5.0f} {K:4.0f} {f'{Mc}/{Mw}/{Mn}':>13} {tp / 3600:8.1f} {mu / 3600:9.1f} {cum / 3600:12.1f}")
-        prev = (Mc, Mw, Mn)
+        a_, b_ = cells
+        print(f"  {D:5.2f} {klo:5.0f}-{khi:<5.0f} {a_[0]:4.0f}-{b_[0]:<4.0f} {a_[1]:>13}|{b_[1]:<13} {a_[2] / 3600:4.1f}-{b_[2] / 3600:<4.1f}"
+              f" {a_[3] / 3600:4.1f}-{b_[3] / 3600:<4.1f} {a_[4] / 3600:5.1f}-{b_[4] / 3600:<5.1f}")
         D = round(D - dD, 6)
-    if loads:
-        print(f"(load log: {len(loads)} samples)")
 
 
 def main():
@@ -233,7 +253,7 @@ def main():
         Ms = sorted(allv[D])
         ch = [f"{a}->{b} {mp.nstr(allv[D][b] - allv[D][a], 3)}" for a, b in zip(Ms, Ms[1:])]
         need = next((a for a, b in zip(Ms, Ms[1:]) if abs(allv[D][b] - allv[D][a]) < 1e-8), None)
-        print(f"  {D:5.2f}: M {','.join(map(str, Ms))}; {'; '.join(ch)}; needed {need if need else '?'}")
+        print(f"  {D:5.3f}: M {','.join(map(str, Ms))}; {'; '.join(ch)}; needed {need if need else '?'}")
     print("\nM 80 -> 96 against the local machine's (the task of this run):")
     for D, v in sorted(LOCAL_80_96.items(), reverse=True):
         d = allv.get(D, {})

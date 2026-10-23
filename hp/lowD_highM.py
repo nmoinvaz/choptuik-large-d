@@ -380,7 +380,13 @@ def main():
                 post["t_point"] = rn["seconds"] + r2["seconds"]
             post["stage"] = "nodes"
             save_prog()
-        if post["stage"] == "nodes":
+        el = time.time() - t_start
+        this = el - st["point_start"][1] if st.get("point_start") and abs(st["point_start"][0] - Dt) < 1e-9 else 0.0
+        if post["stage"] == "nodes" and "new_nodes" not in post and el + this > a.hours * 3600:
+            # a node change serves the next point, and that would end after --hours (projected by this point's time)
+            log(f"D {Dt}: the next point would end after {a.hours} h of wall time ({el / 3600:.2f} h used, this point "
+                f"{this / 3600:.2f} h): no node change")
+        elif post["stage"] == "nodes":
             if "new_nodes" not in post:
                 rlast = find_record(a.points, Dt, st["Mn"], st["nodes"])
                 tc, th = rlast.get("tail_c", 0.0), rlast.get("tail_h", 0.0)
