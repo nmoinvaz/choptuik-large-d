@@ -583,10 +583,14 @@ def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_hal
        smooth trend (the equations fix them only to tol / sigma, and Delta does not feel them);
     3. 'full': plain Newton, if the previous phase stalls above tol.
     A phase ends when |F| stops dropping by a factor 0.3 per step or a step finds no decrease.
-    jac: the Jacobian variant of each step (newton_step; "dd", the default, is the loop as before). With a mixed
-    variant the weak subspace comes from the step's stored f64 LU, the linearised Delta correction is the Delta
-    component of the step (equal to -dDelta/dF . F for that step's solve; exact with the correction loop), and at
-    convergence the step already computed is taken if |F| stays below tol (as newton_solve does)."""
+    jac="f64": the steps and the stored LU (from which the weak directions are computed) come from the mixed-precision
+    step s.newton_mixed(**mixed) (block storage above M = 128) instead of the exact Jacobian.
+    jac="f64h", "f64g", "f64hg" (the large-D variants of newton_step, notes/LARGE_D_MIXED.md; gmres: options of
+    gmres_refine): likewise the weak subspace comes from the step's stored f64 LU; at convergence the step already
+    computed is taken if |F| stays below tol (as newton_solve does: the convergence is linear); and with the correction
+    loop (f64g, f64hg) the linearised Delta correction is the Delta component of the refined step (equal to
+    -dDelta/dF . F for the exact J), since the stored LU is not the Jacobian the step solves with. "dd" and "f64" keep
+    the loop of wip/high-m 2b3b253 unchanged."""
     if jac not in JACS:
         raise ValueError(f"jac must be one of {JACS}, not {jac!r}")
     hist = []
@@ -598,11 +602,12 @@ def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_hal
     V = {}
     n_prev = None
     def dcorr(Fh, Fl, dz_delta):
-        # the linearised Delta correction -dDelta/dF . F: by the stored LU's transpose solve for dd (as before), else
-        # the Delta component of the step's solve (the same quantity, exact with the correction loop)
-        return delta_correction(s, Fh, Fl) if jac == "dd" else float(dz_delta)
+        # the linearised Delta correction -dDelta/dF . F: by the stored LU's transpose solve (as before), or with the
+        # correction loop the Delta component of the refined step (the same quantity for the exact J)
+        return float(dz_delta) if jac in ("f64g", "f64hg") else delta_correction(s, Fh, Fl)
 
     for it in range(it_max):
+        # (dd: s.newton; f64: s.newton_mixed(**mixed), as in 2b3b253; info: the step's seconds by part)
         dh, dl, Fh, Fl, pmin, pmax, info = newton_step(s, zh, zl, jac, mixed, gmres)
         dz_delta = float(dh[-1] + dl[-1])
         nF = dd_norm(Fh, Fl)
@@ -613,7 +618,7 @@ def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_hal
                        dDelta_est=dcorr(Fh, Fl, dz_delta), t=round(time.time() - t0, 1))
             polish = ""
             rec.update(info)
-            if jac != "dd":
+            if jac not in ("dd", "f64"):
                 th, tl = dd_add(zh, zl, dh, dl)
                 Th, Tl = s.residual(th, tl)
                 n1 = dd_norm(Th, Tl)

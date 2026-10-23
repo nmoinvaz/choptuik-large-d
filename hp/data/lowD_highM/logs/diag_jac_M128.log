@@ -1,0 +1,7 @@
+# python3 highm_diag.py jac data/lowD_states/highm_D3.7000_M128.npz 128   (run as scratch script jacdiag.py, same code)
+f64x4: 81 s, |F| 2.51e-30, |dz| 5.23e-26, dDelta +1.06e-29, pivots 7.5e-04..8.9e+00, model mismatch |(J - J~) dz| ~ 3.52e-27, |F(z + dz)| 7.07e-30
+f64x1: 72 s, |F| 2.51e-30, |dz| 5.23e-26, dDelta +1.06e-29, pivots 7.5e-04..8.9e+00, model mismatch |(J - J~) dz| ~ 3.52e-27, |F(z + dz)| 7.08e-30
+dd4: 110 s, |F| 2.51e-30, |dz| 5.23e-26, dDelta +1.06e-29, pivots 7.5e-04..8.9e+00, model mismatch |(J - J~) dz| ~ 3.52e-27, |F(z + dz)| 7.17e-30
+f64x4 vs f64x1: dz 2.36e-07, sensitivity 6.15e-06
+f64x4 vs dd4: dz 2.75e-07, sensitivity 1.33e-05
+f64x1 vs dd4: dz 2.34e-07, sensitivity 1.61e-05

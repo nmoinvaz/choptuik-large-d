@@ -1,0 +1,5 @@
+  M = 8 (N = 449, from lowDv_D3.7000_M48.npz): 24 outputs in 1 s
+  M = 16 (N = 897, from lowDv_D3.7000_M48.npz): 24 outputs in 4 s
+  M = 48 (N = 2689, from lowDv_D3.7000_M48.npz): 24 outputs in 27 s
+  M = 64 (N = 3585, from lowDv_D3.7000_M64.npz): 24 outputs in 66 s
+  M = 80 (N = 4481, from lowDv_D3.7000_M80.npz): 24 outputs in 112 s

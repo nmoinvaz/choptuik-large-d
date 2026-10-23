@@ -1,0 +1,9 @@
+# python3 highm_diag.py jac data/lowD_states/highm_p1_D3.7000_M192_stalled.npz 192   (the checkpoint after 3 plain Newton steps; run as jacdiag.py, same code)
+f64x4: 624 s, |F| 3.75e-10, |dz| 7.89e-08, dDelta +6.91e-13, pivots 5.7e-04..1.9e+03, model mismatch |(J - J~) dz| ~ 1.17e-12, |F(z + dz)| 1.80e-08
+f64x1: 586 s, |F| 3.75e-10, |dz| 7.95e-08, dDelta -3.59e-13, pivots 5.7e-04..1.9e+03, model mismatch |(J - J~) dz| ~ 1.20e-12, |F(z + dz)| 3.66e-09
+dd4: 525 s, |F| 3.75e-10, |dz| 7.96e-08, dDelta -1.08e-13, pivots 5.7e-04..1.9e+03, model mismatch |(J - J~) dz| ~ 4.14e-13, |F(z + dz)| 2.23e-09
+f64x4 vs f64x1: dz 3.79e-01, sensitivity 3.17e-01
+f64x4 vs dd4: dz 3.46e-01, sensitivity 6.56e-02
+f64x1 vs dd4: dz 8.91e-02, sensitivity 4.98e-01
+
+[exited with code 0]
