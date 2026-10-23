@@ -438,7 +438,9 @@ def main():
                             s0 = make_solver(D_, M_, nodes=old, kt=a.kt, kc=kc, ks=ks, threads=a.threads)
                             s0.set_segs(m.get("segs") or s0.plan(h, l, a.tol_step, a.hmax))
                             zr, zrl = renode(s0, h, l, old, new, M_, h=0.001)
-                            save(out, np.asarray(zr), np.asarray(zrl), dict(m, nodes=new, renoded_from=p_))
+                            # without the old state's plan ("segs"): it has one segment fewer than the new nodes
+                            save(out, np.asarray(zr), np.asarray(zrl),
+                                 dict({k: v for k, v in m.items() if k != "segs"}, nodes=new, renoded_from=p_))
                         pre.append([D_, out])
                     st[key] = pre + st[key]
                     log(f"  {key}: {len(pre)} earlier states re-noded for the predictor")
