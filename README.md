@@ -213,7 +213,21 @@ D = 3.75570, Δ = 3.466774, 2×10⁻⁶ high, the size of their bias there (conv
 **Below D = 4** (`hp/plot_lowD.py`). Left: the double-double points at M = 80 and the 47-mode f64 points near the
 maximum. Middle: the f64 points sit 1.5–3.5×10⁻⁶ high there. Right: the τ modes a 10⁻¹⁰ Δ needs (`hp/lowD_cost.py`, an
 estimate over four model variants, not a bound) cross the double-double kernel's limit of 128 near D = 3.4, which is
-where this computation stops; near D = 3 they run into the hundreds.
+where the computation at M ≤ 128 stops; near D = 3 they run into the hundreds (a branch raising the limit to
+M = 384 is under way).
+
+![Below D = 4: every double-double value of Delta and gamma so far against the sqrt(D - 3) formula, and how much Delta moves when the tau resolution is raised](hp/lowD_values.svg)
+
+**All our values below D = 4** (`hp/export_lowD.py` writes every converged double-double record below D = 8.25 to
+[`hp/data/delta_dd_lowD.csv`](hp/data/delta_dd_lowD.csv), one row per D and τ resolution M with γ where computed, and
+`hp/export_dd.py` puts the best value per D into [`hp/data/delta_dd.csv`](hp/data/delta_dd.csv) next to the 857
+continuation points, as run `lowD-M<M>`; `hp/plot_lowD_values.py` draws them; rerun all three as runs land). Left: Δ at the largest M at each D, filled where the two
+largest M agree to 10⁻⁸ (or M = 80 alone at D ≥ 3.7, where M 80 → 96 is 1.2×10⁻⁹) and hollow where they do not yet.
+Every point, resolved or not, lies within 7×10⁻⁶ of the √(D − 3) formula below. Middle: γ, from the exact growth-mode
+matrix at the largest M. Right: how much Δ moves when M is raised. The step from M = 80 to 96 grows a hundredfold from
+D = 3.7 to 3.4, while M = 96 → 128 stays at 1–2×10⁻⁹ down to D = 3.425, the lowest clean point. At D = 3.40 the
+M = 128 Newton converged only to a solution with content along the near-null directions (its centre-series tail
+10⁻⁹, against 10⁻⁵⁰ at 3.425); the CSV lists it as polluted and it is not used.
 
 **A formula for 3 < D ≤ 4** (`hp/lowD_formula.py`, fitted to Ecker, Ecker, Grumiller & Jechtl's published values for
 3.046 ≤ D ≤ 4, which are not included here). The variable that works is s = √(D − 3):
@@ -563,8 +577,8 @@ of (n − 1)(b − 1)/(κ√n) behind the front, 1.627.
 
 ### The double-double solver (`hp/`)
 
-Above D ≈ 26 the f64 points lose precision: the period is selected by an effect that weakens exponentially with
-D, so rounding at 10⁻¹⁶ in the residual moves Δ by 10⁻⁷–10⁻⁶ at D = 30–40 (through the sensitivity
+Above D ≈ 26 the f64 points lose precision: the condition that selects the period weakens with D (as a power of
+n in this solver, about n²² at D = 40–61; below), so rounding at 10⁻¹⁶ in the residual moves Δ by 10⁻⁷–10⁻⁶ at D = 30–40 (through the sensitivity
 $`\max\lvert\partial\Delta/\partial F\rvert`$ of the table below), and points far above D = 40 are out of
 reach. [`hp/`](hp/) (crate `hpkernel`) is a separate solver built for that regime, to settle the large-D behaviour
 with computed points rather than an assumed form. Its points are used in [The formula](#the-formula) (agreement and
@@ -588,7 +602,15 @@ with computed points rather than an assumed form. Its points are used in [The fo
   At M ≥ 48 the f64 Jacobian agrees with the exact one only to about 10⁻⁷, against 10⁻¹⁴ at M ≤ 32. The Taylor
   steps are planned for the solution, not for the top τ-harmonics of a single column, so rounding inside a step is
   amplified. That costs Newton speed (a contraction of about 10⁻⁷ per step), not accuracy, since the residual stays
-  double-double.
+  double-double. At large D the f64 Jacobian still steers up to about D = 45 but not reliably at D = 50–60, where the
+  errors that matter all sit in the horizon block of the Jacobian (notes/MIXED_PRECISION.md §8; a fix is planned).
+- **Quad-double arithmetic (not yet used by the solver):** `hp/src/qd.rs` and `qv.rs` add quad-double numbers
+  (four f64, about 64 digits), scalar and 8-lane SIMD, with bitwise the same results on AVX-512, AVX2 and portable
+  builds. They use the QD library's algorithms[^20], with two repairs found by the tests: the accurate add's last
+  part, and the square root near the ends of the exponent range. Against exact arithmetic they err by at most
+  2.1×2⁻²⁰⁹ (63 digits). They cost 8–29 times double-double per operation and 14–17 times in sums of products. A
+  quad-double residual would cost about 7 times the double-double one at the same orders
+  ([notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md); `hp/qd_check.py`).
 - **Continuation in D:** prediction by the cubic through the last four converged points (a tangent from the
   Jacobian is wrong in the weak directions, below), Newton with the weakest directions deflated, and from D = 35 on
   the centre data's τ-harmonics above 13 frozen (below). 32 collocation points in τ, nodes at
@@ -596,6 +618,14 @@ with computed points rather than an assumed form. Its points are used in [The fo
   point on two cores up to D = 60. The tolerance on $`\lvert F\rvert`$ goes from 10⁻²⁵ at D = 35 to 10⁻²² at D = 56,
   following the residual floor, which rises about 1.4-fold per unit of D. Above D = 60.1, on the second machine, it
   was relaxed to 3×10⁻¹⁹ for part of the climb ($`\lvert F\rvert`$ up to 2.9×10⁻¹⁹ there).
+- **Centre-series order (`scan_hp.py --kc_auto 30`):** the scan raised the centre series' order kc whenever its tail
+  check asked and never lowered it, so it ran with kc = 420 above D = 27, where the series' terms are 10⁻¹⁰⁷–10⁻¹⁵¹ by
+  that order. The order where they stay below 10⁻⁴⁵, plus 30, is 209 at D = 36 and 153–155 at D = 60–61. With it the
+  residual, the double-double Jacobian and the Newton step are bitwise those of kc = 420 at D = 36–61 (`hp/kc_check.py`;
+  with a margin of 10 the Jacobian's low parts change). The Jacobian is 2–4 times cheaper, and real continuation
+  steps at D = 59.84–59.88 with the scan's own arguments gave bitwise the same points 2.85–2.9 times faster
+  (`hp/data/kc_check_scan/`). `--kc_auto` lowers kc after a converged point only when the residual and the Jacobian
+  there are bitwise unchanged; the default keeps kc as given.
 
 <details>
 <summary>Checks of the solver</summary>
@@ -664,6 +694,14 @@ What the solver has shown:
   worst case that ignores the direction of F, bounds the error in Δ by 10⁻¹⁴ at D = 45 and 2×10⁻⁹ at
   D = 60. The linearised estimate $`-\partial\Delta/\partial F \cdot F`$, which accounts for it, stays between
   10⁻²¹ and 10⁻¹⁷ from D = 35.3 to 60.1 and reaches 3×10⁻¹⁵ above, where the tolerance was relaxed.
+  The falling per-unit factors are those of a power law, not an exponential: once the harmonic set is fixed (D = 40–61,
+  harmonics above 13 frozen) $`\max\lvert\partial\Delta/\partial F\rvert`$ is $`n^{21.7}`$ to 2% in ln, while
+  $`e^{n/2} n^p`$ misses by 15–17% (`solver/beyond_lc/sens_fit.py`). The fast mode that carries the selection,
+  $`e^{-n\Phi}`$ with $`\Phi = \ln x - \tfrac12\ln(1 - x^2)`$, has modulus 1 on $`\mathrm{Re}\,x^2 = \tfrac12`$, which crosses
+  the real axis at x = 1/√2. The solver matches at 0.7, where it is of order one, and moving the last node changes
+  $`\max\lvert\partial\Delta/\partial F\rvert`$ by $`e^{n[\Phi(x_m) - \Phi(0.7)]}`$, over 13 orders of magnitude with no
+  fitted parameter (`solver/beyond_lc/hp_node_test.py`). What grows is the high-harmonic ladder below; the residual
+  floor's 1.4-fold rise per unit of D is not explained ([notes/BEYOND_LIGHT_CONE.md](notes/BEYOND_LIGHT_CONE.md)).
 - **How good the values are.** The points themselves fit smooth curves to about 4×10⁻¹⁵ (degree 18–20) all the way to
   D = 60.1, not 10⁻²⁰. Points between
   D = 27 and 35.2, solved before the freezing, carry up to 10⁻¹⁴ from the weak directions; about 25 of them sit
@@ -1795,8 +1833,10 @@ Jacobian and an unexplained drift of the gauge mode's root).
   directions of the solver sections) are variations of F's high harmonics, which Proposition 1 leaves free, so their
   singular values plausibly measure how strongly the hidden condition pins each harmonic; that identification has not
   been checked directly. For harmonics k = 7, 9, 11, 13 they fall between D = 20 and 60 about like
-  $`n^{-10.5}, n^{-14}, n^{-17.5}, n^{-21}`$, roughly $`n^{-1.6k}`$; data at n = 18–58 cannot tell such power laws from the
-  exponential weakening seen in $`\max\lvert\partial\Delta/\partial F\rvert`$.
+  $`n^{-10.5}, n^{-14}, n^{-17.5}, n^{-21}`$, roughly $`n^{-1.6k}`$. $`\max\lvert\partial\Delta/\partial F\rvert`$ is itself a
+  power law where the harmonic set is fixed, $`n^{21.7}`$ on D = 40–61, so these power laws, not an exponential, are what
+  the solver measures: it matches at x = 0.7, where the selecting fast mode is of order one
+  ([notes/BEYOND_LIGHT_CONE.md](notes/BEYOND_LIGHT_CONE.md)).
 - **F's singularities recede, to a finite distance.** The decay rate of F's harmonics grows from 0.58 at D = 12 to
   1.02 at D = 60, which first suggested $`\tfrac14\ln n`$ growth and an entire F∞. The harmonic ratios extrapolate instead to
   a finite rate, as the amplitude expansion of the inner problem predicts ([above](#the-inner-problem-at-large-x)), so
@@ -2079,21 +2119,27 @@ hp/                 double-double solver (crate hpkernel)
 ├── src/lane.rs     value and forward-mode dual lanes: double-double, f64, and batched f64 tangents
 ├── src/model.rs    centre series, Taylor stepping, horizon series, residual, Jacobian (double-double and f64)
 ├── src/linalg.rs   double-double LU, f64 LU, transpose solve, Gram matrix
+├── src/qd.rs, qv.rs  quad-double: scalar and 8-lane (not used by the solver yet); src/exact.rs exact reference
 ├── python/hpkernel/driver.py   grid, seeds, Newton, deflated Newton, Levenberg-Marquardt, re-noding
 ├── src/dd.rs       scalar double-double (constants, set-up)
 ├── src/field.rs    tau fields on the half grid, folded spectral derivative
 ├── src/lib.rs      crate root
 ├── src/python.rs   PyO3 bindings (Solver)
 ├── build.sh        builds the crate for this machine's instruction set
-├── scan_hp.py      continuation in D
+├── scan_hp.py      continuation in D (--kc_auto 30: the centre-series order the solution needs, bitwise safe)
+├── kc_check.py     the centre-series order at large D: bitwise checks and timing
 ├── profile_newton.py   time of a Newton step by part; --mixed --solve for the mixed-precision step
 ├── mixed_check.py  checks of the mixed-precision Newton: Jacobian agreement, controls, convergence, bit-identity
 ├── mixed_diag.py   why the f64 Jacobian agrees only to 1e-7 at M >= 48 (step size, harmonics, M)
+├── mixed_largeD*.py  the mixed-precision step at large D: where it fails (horizon block), the correction-loop prototype
+├── qd_check.py     checks of the quad-double arithmetic against mpmath, and across the SIMD backends
 ├── export_dd.py    collects the runs' points into data/delta_dd.csv
 ├── dd_fits_mp.py   large-D model fits at 60 digits, held-out errors, predictions (--dmax for a data snapshot)
 ├── dd_candidates.py  candidate constants forced as the limit, held-out test (--dmax as above)
 ├── plot_heldout.py heldout.svg (python3 plot_heldout.py --dmax=60.1: the points up to D = 60.1)
-├── data/delta_dd.csv   every double-double point: D, Delta (hi + lo), |F|, max dDelta/dF
+├── data/delta_dd.csv   every double-double point: D, Delta (hi + lo), |F|, max dDelta/dF, run; the 857 continuation points
+│                       (D = 8.25-61.03) and the best low-D value per D (run lowD-M<M>, D = 3.3-4.0), which the large-D fits skip
+├── data/delta_dd_lowD.csv   the low-D points at every M, with gamma and status (export_lowD.py)
 ├── data/local/     the second machine's runs (scan_up*.jsonl), folded into delta_dd.csv by export_dd.py
 └── data/seeds/     saved solver states to restart continuation from
 hp/largeD_*.py      large-D scaling of the solutions (profiles, F(theta), harmonic content, light-cone exponent)
@@ -2157,6 +2203,7 @@ solver/plot_first_order.py    first_order.svg: the first 1/D corrections from th
 solver/supercrit/plot_supercrit.py  supercrit.svg: the supercritical front, the lapse behind it, finite-n CSS checks
 hp/plot_modecount.py          modecount.svg: the unstable-mode count in the lambda plane, and the real rates against 1/D
 hp/plot_lowD.py               lowD.svg: below D = 4: the maximum, the f64 bias, the tau modes needed
+hp/plot_lowD_values.py        lowD_values.svg: every double-double Delta and gamma below D = 4, and the change with M
 solver/plot_gamma.py          gamma.svg: lambda = 1/gamma against 1/n with the lambda = 2 limit, and the free fits
 solver/simplify_math.py       converts trivial inline math in README.md to Unicode (GitHub renders at most ~1400 expressions)
 solver/largeD_expand.py       the 1/n expansion symbolically (sympy, Proposition 1)
@@ -2229,3 +2276,4 @@ solver/largeD_late_structure.py  where the nonlinear late-order growth lives (x,
 [^17]: R. E. Wengert, Commun. ACM 7, 463 (1964) (forward-mode automatic differentiation).
 [^18]: D. D. Morrison, J. D. Riley and J. F. Zancanaro, Commun. ACM 5, 613 (1962), doi:10.1145/355580.369128.
 [^19]: E. Anderson et al., *LAPACK Users' Guide*, 3rd ed., SIAM (1999) (the getf2 and blocked getrf factorizations).
+[^20]: Y. Hida, X. S. Li, D. H. Bailey, *Algorithms for quad-double precision floating point arithmetic*, Proc. 15th IEEE Symposium on Computer Arithmetic (ARITH-15), 155–162 (2001).

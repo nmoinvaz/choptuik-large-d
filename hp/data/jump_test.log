@@ -1,0 +1,11 @@
+fit on 9 states, D = 36.0732..44.0903
+/usr/local/lib/python3.13/dist-packages/hpkernel/driver.py:163: RuntimeWarning: overflow encountered in square
+  return float(np.sqrt(np.sum((Fh + Fl) ** 2)))
+D 36-45 -> 47.008218: jump 2.0, degree 4: seed |F| 5.4e+02 (max |z - stored| 5.0e-06); NOT converged in 2 its, |F| 3.2e+02, Delta - stored -6.2e-03; 8 s; tol 2e-24
+D 36-45 -> 47.008218: jump 2.0, degree 6: seed |F| 5.6e+04 (max |z - stored| 9.2e-06); NOT converged in 2 its, |F| 2.6e+04, Delta - stored +5.5e-04; 7 s; tol 2e-24
+D 36-45 -> 50.007491: jump 5.0, degree 4: seed |F| 1.6e+09 (max |z - stored| 2.2e-05); NOT converged in 2 its, |F| 1.6e+09, Delta - stored +1.5e-05; 7 s; tol 1e-23
+D 36-45 -> 50.007491: jump 5.0, degree 6: seed |F| 1.0e+15 (max |z - stored| 9.9e-05); NOT converged in 2 its, |F| 1.0e+15, Delta - stored -8.2e-05; 8 s; tol 1e-23
+D 36-45 -> 55.035148: jump 10.0, degree 4: seed |F| 3.2e+17 (max |z - stored| 8.9e-05); NOT converged in 2 its, |F| 3.2e+17, Delta - stored +5.7e-05; 9 s; tol 4e-23
+D 36-45 -> 55.035148: jump 10.0, degree 6: seed |F| 2.8e+28 (max |z - stored| 8.5e-04); NOT converged in 2 its, |F| 2.8e+28, Delta - stored -7.0e-04; 8 s; tol 4e-23
+D 36-45 -> 60.001952: jump 15.0, degree 4: seed |F| 7.8e+24 (max |z - stored| 2.2e-04); NOT converged in 2 its, |F| 7.8e+24, Delta - stored +1.3e-04; 7 s; tol 2e-22
+D 36-45 -> 60.001952: jump 15.0, degree 6: seed |F| 6.6e+39 (max |z - stored| 3.1e-03); NOT converged in 2 its, |F| 6.6e+39, Delta - stored -2.6e-03; 8 s; tol 2e-22

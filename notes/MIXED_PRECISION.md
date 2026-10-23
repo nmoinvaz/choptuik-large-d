@@ -385,3 +385,70 @@ implemented" with:
 
 > tangents that share one primal pass are implemented for the f64 Jacobian of the mixed-precision Newton step (about
 > 1.2–1.35× on top of the f64 lanes; [notes/MIXED_PRECISION.md](notes/MIXED_PRECISION.md))
+
+## 8. Large D (added by the coordinator, 2026-10-22)
+
+Does the f64 Jacobian still steer where the Jacobian has directions 10¹⁷–10²⁴ times weaker than its strongest?
+`hp/mixed_largeD.py` (log and JSON in `hp/data/mixed_precision/largeD.*`) takes the saved scan states at D = 8.25–60
+(M = 32, or 48 at 8.25; from D = 40 with the p1 harmonics above 13 frozen, as the scan ran). At each state it
+perturbs the fields by 10⁻¹² relative and compares Newton steps with the double-double step:
+
+| D | σ_min/σ_max | f64 LU of the dd Jacobian's hi part | f64 Jacobian | f64 tangents on a dd base | Jacobian time: dd / f64 |
+|---|---|---|---|---|---|
+| 8.25 | 5×10⁻¹² | 5×10⁻⁷ | 2.6×10⁻³ | 6.8×10⁻³ | 8.8 / 1.5 s |
+| 16.76 | 6×10⁻¹⁸ | 5×10⁻⁶ | 8.6×10⁻⁴ | 2.2×10⁻⁴ | 2.2 / 0.44 s |
+| 20.04 | 2×10⁻²⁰ | 2×10⁻⁶ | 1.5×10⁻⁴ | 2.6×10⁻⁴ | 2.1 / 0.29 s |
+| 25.08 | 7×10⁻²⁴ | 2×10⁻⁵ | 0.14–0.97 | 0.17 | 4.7 / 0.29 s |
+| 30.07* | 4×10⁻²⁴ | 8×10⁻⁶ | 5.7×10⁻³ | 2.4×10⁻² | 6.5 / 0.33 s |
+| 40.02 | 2×10⁻¹⁸ | 3×10⁻⁶ | 1.2–2.9×10⁻³ | 2.4×10⁻⁴–1.7×10⁻³ | 6.0 / 0.22 s |
+| 45.05 | 2×10⁻¹⁸ | 1×10⁻⁷ | 2.6×10⁻³–1.4×10⁻² | 5.7×10⁻³–1.1×10⁻² | 6.3 / 0.25 s |
+| 50.01 | 8×10⁻¹⁸ | 5×10⁻⁶ | 0.03–2.2 | 0.09–0.24 | 6.6 / 0.26 s |
+| 55.04 | 3×10⁻¹⁸ | 2×10⁻⁶ | 1.2–2.8 | 0.47–0.69 | 6.1 / 0.19 s |
+| 60.00 | 2×10⁻¹⁸ | 7×10⁻⁶ | 0.73–13 | 0.58–1.0 | 6.2 / 0.27 s |
+
+The step columns give the relative difference from the double-double step. That difference is the contraction factor
+of the mixed Newton iteration: below 1 it converges, gaining −log₁₀ of it in digits per step once the quadratic part is
+spent. Ranges are over three draws of the random perturbation for the f64 Jacobian (`largeD_run1`, `largeD_run2`, `largeD`) and two for the dd base (`run1`, `largeD`). The Jacobian times are on 2 threads shared with
+two other jobs. \*At D = 30.07 the saved state has |F| = 3.3×10⁻¹² with these settings, which are the scan's: it is a
+point the scan accepted with `--junk_only` (run up6), as notes/LARGE_D_MIXED.md §7 found (an earlier version of this
+note said the scan used other settings there, which was wrong).
+
+What this shows:
+
+1. Up to D ≈ 45 the f64 Jacobian steers: the step is within 0.02–1.4% of the exact one, except near D = 25, before the
+   harmonics are frozen. Newton from the perturbed state converged to full accuracy with it at D = 8.25, 16.76 and
+   20.04: 4, 6 and 8 iterations against 3, 5 and 6, in 5.9, 2.5 and 3.6 s against 29, 12 and 18 s. Above D = 20 the
+   10⁻¹² perturbation was outside even the double-double plain Newton's basin; the scan uses deflated Newton there.
+   So whole solves above 20 still need testing, with smaller perturbations or the deflated Newton.
+2. At D = 50–60 it does not reliably steer: the contraction is 0.03 to 13 depending on the start.
+3. The f64 factorization is not the problem: an f64 LU of the exact Jacobian's hi part gives the step to 10⁻⁷–10⁻⁵ at
+   every D. The problem is the f64-built Jacobian's entries. Its errors are small against the largest entries
+   (10⁻¹³ to 2×10⁻⁷ as D grows) but large against the small entries that carry the weak directions. A double-double
+   base trajectory makes the entries 200–1000 times more accurate, yet the step error at D = 55–60 stays at 0.5–1.
+4. The error lives in 2–4 directions: the singular values of X_f64 − X_dd over 48 right-hand sides fall by 10³–10⁴
+   after the second to fourth. Correcting a handful of directions exactly would repair the step. Two ways:
+   (a) a few Krylov (GMRES) steps with the f64 LU as preconditioner and exact double-double Jacobian-vector
+   products, each costing about one dual pass per segment (a few % of a double-double Jacobian), which needs a JVP in
+   the kernel; (b) the existing deflated Newton (`driver.deflated_newton`), solving the weak subspace's part in
+   double-double and the rest in f64. Each would bring a large-D Newton step from about 6.5 s to under 1 s.
+5. A cheaper step does not remove the climb's real cost above D ≈ 60: the steps in D shrink there, to 0.0015–0.005
+   (22 h per unit of D). Faster steps would cut that time by the same factor if the number of steps stays the same.
+6. Where the error lives (`hp/mixed_largeD_blocks.py`, log `hp/data/mixed_precision/largeD_blocks.log`). At
+   D = 50, 55 and 60 (two perturbations each), the f64 Jacobian gets one block replaced by the exact one, first a
+   block of 4M = 128 rows, then a block of 128 columns. Replacing the horizon block's rows (residual block 5 of 6: the
+   matching to the horizon series) brings the step error from 0.13–3.4 down to 4×10⁻⁷–6×10⁻⁶, the floor of an f64
+   LU. Replacing any other block of rows or columns changes nothing, or makes it worse. So the f64 errors that matter
+   at large D are all in the horizon block. A likely cause, not yet checked: at large D the solution varies over a
+   thin layer near the horizon, so the last segment and the horizon series carry large intermediate terms, as the top
+   harmonics do at M ≥ 48 (section 3). The simplest fix is to compute the horizon block's Jacobian in double-double
+   and the rest in f64.
+7. The correction loop, prototyped (`hp/mixed_largeD_gmres.py`, log `hp/data/mixed_precision/largeD_gmres.log`).
+   GMRES on J M⁻¹ (right preconditioning), with M the f64 LU of the f64-built Jacobian. As a stand-in for an exact
+   Jacobian-vector product rounded to f64, it multiplies by the double-double Jacobian's hi part. At D = 50–60, a
+   GMRES tolerance of 10⁻⁸ takes 4–5 products and brings the step error from 0.9–3.4 down to 3×10⁻⁷–5×10⁻⁶. Once,
+   at D = 55, the 10⁻⁸ tolerance stopped at 4 products with the step still off by 6×10⁻⁴, and the other start needed
+   27 products. The residual is not a safe stopping test here, because an error in a weak direction barely shows in
+   the residual. The loop should stop on the change in the step instead, or on a fixed count followed by a check. A
+   tolerance of 10⁻¹² is not reachable with an f64 operator: the floor is about 10⁻¹⁰ relative. At D = 20–45 it takes
+   3 products. The plan is to build both fixes: the horizon block in double-double, and this loop on top, with an
+   exact double-double Jacobian-vector product (one dual pass per segment) in the kernel.

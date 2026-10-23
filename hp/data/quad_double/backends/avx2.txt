@@ -1,0 +1,7 @@
+isa	avx2
+n	4000
+rustflags	-C target-feature=+avx2,+fma
+exit	0
+isa_reported	avx2
+digest	aa5c661a6064c9d4
+result	test result: ok. 6 passed; 0 failed; 5 ignored; 0 measured; 5 filtered out; finished in 1.69s

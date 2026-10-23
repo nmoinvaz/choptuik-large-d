@@ -1,0 +1,11 @@
+model name	: Intel(R) Xeon(R) Processor @ 2.80GHz
+RUSTFLAGS="-C target-feature=+avx2,+fma"; other load: one single-threaded job of another session
+    Finished `release` profile [optimized] target(s) in 0.01s
+     Running unittests src/lib.rs (target/qd_avx2/release/deps/_hpkernel-8691d4c11dcb72ae)
+isa avx2, ns per lane and operation (one thread, 16 independent vectors, min of 5)
+  add (dd, qd: (a + b)/2 less the halving) f64   0.096  dd   0.749  qd    8.963   qd/dd   12.0  dd/f64   7.8
+  mul                                f64   0.087  dd   0.335  qd    9.649   qd/dd   28.8  dd/f64   3.8
+  div                                f64   0.598  dd   4.902  qd   67.183   qd/dd   13.7  dd/f64   8.2
+  a b + c, mul then add              f64   0.096  dd   1.424  qd   21.461   qd/dd   15.1  dd/f64  14.8
+  dot term (16-term sums, finished)  f64   0.088  dd   0.576  qd    7.792   qd/dd   13.5  dd/f64   6.6
+  qd only: accurate add 45.084, accurate mul 13.073, qd x f64 8.183, accurate div 88.227, sqrt 175.203 (f64 sqrt 0.925)

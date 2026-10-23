@@ -16,6 +16,8 @@ new, _ = F.load_points()
 old = {}
 for line in list(open(os.path.join(WT, "hp", "data", "delta_dd.csv")))[1:]:
     c = line.strip().split(",")
+    if c[6].startswith("lowD"):
+        continue
     old[round(float(c[0]), 6)] = mp.mpf(c[1]) + mp.mpf(c[2])
 base = sorted(d for d in new if 10 <= d <= 60.1)
 set_new = F.clean(new, base, verbose=False)

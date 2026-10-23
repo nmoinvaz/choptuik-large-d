@@ -4,7 +4,9 @@
     python3 export_dd.py [scan_dir]        (default /home/claude/dss/hp_scan, files scan_up*.jsonl)
 
 Runs from the local machine, pushed to hp/data/local/scan_up*.jsonl, are read after the cloud runs (run name prefixed
-"local-"); where both have a point at the same D the local one is kept.
+"local-"); where both have a point at the same D the local one is kept. Below D = 8.25 the CSV also holds the low-D
+runs' best value per D (export_lowD.py; run name lowD-M<M>, or lowD-M<M>-unresolved), which the fits (D >= 10) do not
+use.
 
 Columns: D, Delta as hi + lo (double-double), the final residual |F|, the largest |dDelta/dF| (how far a residual
 error moves Delta), the linearised Delta correction -dDelta/dF . F where the run recorded it, and the run name.
@@ -25,6 +27,16 @@ for f, prefix in files:
     for line in open(f):
         r = json.loads(line)
         rows[round(r["D"], 6)] = (r, run)
+# below D = 8.25: the best value per D of the low-D runs (export_lowD.py; one row per D at its largest clean M, run name
+# lowD-M<M>, with "-unresolved" when the two largest M differ by more than 1e-8); the per-M detail is in
+# data/delta_dd_lowD.csv. The fits use D >= 10 and do not see these rows.
+sys.path.insert(0, here)
+import export_lowD  # noqa: E402
+for r in export_lowD.build():
+    if r["best"] and round(r["D"], 6) not in rows:
+        rec = dict(D=r["D"], Delta=r["Delta_hi"], Delta_lo=r["Delta_lo"], F=r["F"], sens=[r["sens_max"] or float("nan")],
+                   dDelta_est=r["dDelta_est"])
+        rows[round(r["D"], 6)] = (rec, f"lowD-M{r['M']}" + ("" if r["resolved"] else "-unresolved"))
 out = os.path.join(here, "data", "delta_dd.csv")
 os.makedirs(os.path.dirname(out), exist_ok=True)
 with open(out, "w") as fh:

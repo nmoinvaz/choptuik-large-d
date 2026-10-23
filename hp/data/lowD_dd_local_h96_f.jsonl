@@ -1,0 +1,1 @@
+{"D": 3.35, "M": 96, "Delta": 3.323462177697469, "Delta_lo": 0.0, "F": 42297.48029429581, "its": 1, "seconds": 1412.0, "nodes": [0.005, 0.01, 0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8], "kt": 36, "kcs": 100, "ks": 250, "tol_step": 1e-30, "hmax": 0.05, "solver": "newton", "source": "lowDvh_D3.3500_M80.npz", "threads": 1, "converged": false}

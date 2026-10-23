@@ -81,11 +81,11 @@ class PinnedSolver:
         return dh, dl, Fh, Fl
 
 
-def predict_dd(hist, D):
-    """Lagrange extrapolation through the last up to 4 (D, zh, zl) points, in double-double: the increments
-    z_i - z_last are formed from hi and lo separately (exact for nearby points) and only their weighted sum is f64,
-    so the prediction carries no 1e-16 * |z| rounding (which the horizon block amplifies to ~1e-7 at D ~ 60)."""
-    pts = hist[-4:]
+def predict_dd(hist, D, n=4):
+    """Lagrange extrapolation through the last up to n (D, zh, zl) points (default 4: cubic), in double-double: the
+    increments z_i - z_last are formed from hi and lo separately (exact for nearby points) and only their weighted sum
+    is f64, so the prediction carries no 1e-16 * |z| rounding (which the horizon block amplifies to ~1e-7 at D ~ 60)."""
+    pts = hist[-n:]
     Ds = [p[0] for p in pts]
     zh0, zl0 = pts[-1][1], pts[-1][2]
     inc = np.zeros_like(zh0)

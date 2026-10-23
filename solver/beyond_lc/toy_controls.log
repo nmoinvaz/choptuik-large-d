@@ -1,0 +1,9 @@
+n= 20 C:1      |dR/ds|/|Y| = 3.67e+00   |R(s*)|/|Y| = 5.02e-110
+n= 20 Cuu:1    |dR/ds|/|Y| = 3.69e-91   |R(s*)|/|Y| = 8.33e-111
+n= 20 Csing:1  |dR/ds|/|Y| = 7.58e+00   |R(s*)|/|Y| = 2.34e+00
+   n=20: Cuu selects nothing (Jacobian at rounding): True; Csing does not have s* as a root: True
+n= 60 C:1      |dR/ds|/|Y| = 3.60e+00   |R(s*)|/|Y| = 8.30e-111
+n= 60 Cuu:1    |dR/ds|/|Y| = 1.27e-90   |R(s*)|/|Y| = 1.16e-111
+n= 60 Csing:1  |dR/ds|/|Y| = 9.74e+00   |R(s*)|/|Y| = 2.29e+00
+   n=60: Cuu selects nothing (Jacobian at rounding): True; Csing does not have s* as a root: True
+CONTROLS FIRE

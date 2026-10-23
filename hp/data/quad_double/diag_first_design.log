@@ -1,0 +1,18 @@
+test qd_tests::qd_diag_accumulator ... dot n=16   random: as built max 1.899 (99.9% 1.016) u;  level 3 exact, no finish: max 0.042 u;  threshold (8 + n)/8 = 3
+dot n=16   wide  : as built max 1.825 (99.9% 1.262) u;  level 3 exact, no finish: max 0.117 u;  threshold (8 + n)/8 = 3
+dot n=128  random: as built max 16.820 (99.9% 12.352) u;  level 3 exact, no finish: max 0.012 u;  threshold (8 + n)/8 = 17
+dot n=128  wide  : as built max 7.281 (99.9% 7.239) u;  level 3 exact, no finish: max 0.054 u;  threshold (8 + n)/8 = 17
+dot n=512  random: as built max 72.253 (99.9% 36.945) u;  level 3 exact, no finish: max 2.99e-3 u;  threshold (8 + n)/8 = 65
+dot n=512  wide  : as built max 63.984 (99.9% 25.645) u;  level 3 exact, no finish: max 0.045 u;  threshold (8 + n)/8 = 65
+ok
+test qd_tests::qd_diag_accurate_add ... accurate add, a + b = 2^-k a (200000 samples): max relative error in units of 2^-209
+  k   1..7   n   5440: QD    1.172  (1 above 1 u);  remainder kept    1.172
+  k   8..15  n   6151: QD   10.095  (3 above 1 u);  remainder kept   10.095
+  k  16..23  n   6152: QD    4.366  (1 above 1 u);  remainder kept    4.366
+  k  24..31  n   6042: QD        0  (0 above 1 u);  remainder kept        0
+  k  32..52  n  16162: QD        0  (0 above 1 u);  remainder kept        0
+  k  53..105 n  40886: QD        0  (0 above 1 u);  remainder kept        0
+  k 106..159 n  41703: QD        0  (0 above 1 u);  remainder kept        0
+  k 160..260 n  77464: QD        0  (0 above 1 u);  remainder kept        0
+ok
+

@@ -1,0 +1,24 @@
+    Finished `release` profile [optimized] target(s) in 0.02s
+     Running unittests src/lib.rs (target/qd_native/release/deps/_hpkernel-03c0e8055cd7be6d)
+
+running 2 tests
+test qd_tests::qd_diag_accumulator ... dot n=16   random: as built max 0.568 (99.9% 0.273) u; levels summed exactly, no finish 0.566 u; levels 3-4 exact, no finish 0.042 u; max |s3| 1.41e16 u, |s4| 1.882 u; threshold (8 + n)/8 = 3
+dot n=16   wide  : as built max 0.423 (99.9% 0.386) u; levels summed exactly, no finish 0.429 u; levels 3-4 exact, no finish 0.117 u; max |s3| 8.64e15 u, |s4| 2.220 u; threshold (8 + n)/8 = 3
+dot n=128  random: as built max 0.372 (99.9% 0.354) u; levels summed exactly, no finish 0.372 u; levels 3-4 exact, no finish 0.012 u; max |s3| 5.29e16 u, |s4| 12.397 u; threshold (8 + n)/8 = 17
+dot n=128  wide  : as built max 0.421 (99.9% 0.338) u; levels summed exactly, no finish 0.421 u; levels 3-4 exact, no finish 0.054 u; max |s3| 3.97e16 u, |s4| 7.138 u; threshold (8 + n)/8 = 17
+dot n=512  random: as built max 0.876 (99.9% 0.532) u; levels summed exactly, no finish 0.877 u; levels 3-4 exact, no finish 2.99e-3 u; max |s3| 1.88e17 u, |s4| 49.308 u; threshold (8 + n)/8 = 65
+dot n=512  wide  : as built max 0.685 (99.9% 0.501) u; levels summed exactly, no finish 0.686 u; levels 3-4 exact, no finish 0.045 u; max |s3| 2.00e17 u, |s4| 36.999 u; threshold (8 + n)/8 = 65
+ok
+test qd_tests::qd_diag_accurate_add ... accurate add, a + b = 2^-k a (200000 samples): max relative error in units of 2^-209
+  k   1..7   n   5440: QD 2.3    1.172  (1 above 1 u);  QD::ieee_add    0.116
+  k   8..15  n   6151: QD 2.3   10.095  (3 above 1 u);  QD::ieee_add    0.015
+  k  16..23  n   6152: QD 2.3    4.366  (1 above 1 u);  QD::ieee_add        0
+  k  24..31  n   6042: QD 2.3        0  (0 above 1 u);  QD::ieee_add        0
+  k  32..52  n  16162: QD 2.3        0  (0 above 1 u);  QD::ieee_add        0
+  k  53..105 n  40886: QD 2.3        0  (0 above 1 u);  QD::ieee_add        0
+  k 106..159 n  41703: QD 2.3        0  (0 above 1 u);  QD::ieee_add        0
+  k 160..260 n  77464: QD 2.3        0  (0 above 1 u);  QD::ieee_add        0
+ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 2.75s
+

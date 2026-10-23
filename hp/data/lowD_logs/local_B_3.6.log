@@ -1,0 +1,9 @@
+D 3.6 M 128: L 7169, steps 407, start |F| 4.8e-06
+  newton 0: |F| 4.76e-06 |dz| 1.19e-03 lam 1 dDelta -2.51e-11 Delta 3.452720974604147 piv 7.5e-04..1.1e+01  t 1590.7s
+  newton 0: |F| 9.75e-12 |dz| 2.02e-09 lam 1 dDelta +3.85e-12 Delta 3.452720974608002 piv 7.5e-04..1.1e+01  t 1849.5s
+  newton 0: |F| 3.46e-22 |dz| 7.19e-20 lam 1 dDelta +3.41e-23 Delta 3.452720974608002 piv 7.5e-04..1.1e+01  t 4181.1s
+  newton 0: |F| 3.93e-29 |dz| 4.43e-26 lam 1 dDelta -7.32e-30 Delta 3.452720974608002 piv 7.5e-04..1.1e+01  t 1351.6s
+  newton 0: |F| 1.32e-29 |dz| 5.09e-26 lam 0.5 dDelta -2.55e-31 Delta 3.452720974608002 piv 7.5e-04..1.1e+01  t 1742.0s
+  newton 0: |F| 2.01e-30 converged (last |dz| 4.7e-26) Delta 3.452720974608002
+D 3.6 M 128: Delta 3.4527209746080016 (-1.76e-16) |F| 2.0e-30 its 6 13020s dDelta/dF max 7.3e-01 tails 1e-63 5e-43 dDelta_est +1.3e-30
+D 3.6 M 80: already converged (C:\Users\nathan\AppData\Local\Temp\claude\C--Users-nathan-Source-dss-residual-kernel\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\scratchpad\t35-wt\hp\data\lowD_states\lowDvh_D3.6000_M80.npz); skipped

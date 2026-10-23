@@ -15,6 +15,8 @@ new, _ = F.load_points()
 old = {}
 for line in list(open(os.path.join(WT, "hp", "data", "delta_dd.csv")))[1:]:
     c = line.strip().split(",")
+    if c[6].startswith("lowD"):
+        continue
     old[round(float(c[0]), 6)] = mp.mpf(c[1]) + mp.mpf(c[2])
 err = {d: old[d] - new[d] for d in new}
 print(f"parse error: max {mp.nstr(max(abs(v) for v in err.values()), 3)}, rms "

@@ -33,6 +33,23 @@ def tails(s, zh, zl, nodes, M):
     return out
 
 
+def kc_needed(s, zh, zl, x0, M, kc, margin):
+    """The centre-series order past which the terms |c_k| x0^k (largest over fields and tau points) stay below 1e-45 of
+    the largest for three orders, plus margin, at most kc (hp/kc_check.py; with margin 30 the residual, the Jacobian and
+    the Newton step are bitwise those of kc = 420 at D = 36-61, and the double-double Jacobian 2-4 times cheaper)."""
+    h, l = s.series(zh, zl, 0)
+    c = np.abs((np.asarray(h) + np.asarray(l)).reshape(-1, 4, M)).max(axis=(1, 2))
+    t = c * x0 ** np.arange(len(c))
+    for k in range(20, len(t) - 3):
+        if (t[k:k + 3] < 1e-45 * t.max()).all():
+            return min(k + margin, kc)
+    return kc
+
+
+def same_bits(a, b):
+    return all(np.array_equal(np.asarray(x), np.asarray(y)) for x, y in zip(a, b))
+
+
 def sensitivity(s, M):
     """dDelta/dF (needs the LU of the last Newton step): max |y| per residual block"""
     L = s.size
@@ -104,6 +121,10 @@ def main():
     ap.add_argument("--M", type=int, default=None)
     ap.add_argument("--kt", type=int, default=36)
     ap.add_argument("--kc", type=int, default=40)
+    ap.add_argument("--kc_auto", type=int, default=0, help="lower kc after a converged point to the order where the "
+                    "centre series' terms stay below 1e-45, plus this margin (30 is bitwise safe at D = 36-61), if the "
+                    "residual and the Jacobian there are bitwise unchanged; 0 (default) keeps kc as given (it is "
+                    "still raised when the tail check asks)")
     ap.add_argument("--ks", type=int, default=100)
     ap.add_argument("--nodes", default=None)
     ap.add_argument("--tag", default="hp")
@@ -138,7 +159,24 @@ def main():
                     "D_end is then ignored")
     ap.add_argument("--schedule", default="", help="node changes during the scan: 'D1=x,x,...;D2=x,x,...' "
                     "(at the first converged point with D >= D_i the solution is re-noded and re-converged)")
+    # step control (hp/step_test.py); the defaults are the scans' rules
+    ap.add_argument("--pred_n", type=int, default=4, help="--predictor lagrange_dd: points in the extrapolation "
+                    "(default 4: cubic)")
+    ap.add_argument("--grow_its", type=int, default=8, help="grow dD after a point that took at most this many Newton "
+                    "iterations, polish excluded (default 8; a large value grows after every converged point)")
+    ap.add_argument("--grow", type=float, default=1.25, help="dD growth factor")
+    ap.add_argument("--fail_factor", type=float, default=0.5, help="dD factor after a failed step")
+    ap.add_argument("--min_dD", type=float, default=1e-3, help="stop when dD falls below this")
+    ap.add_argument("--tol_growth", type=float, default=1.0, help="multiply --tol by this per unit of D from the start "
+                    "(the residual floor rises about 1.4-1.46x per unit at D = 45-61); 1 (default): fixed tol")
+    ap.add_argument("--max_points", type=int, default=0, help="stop after this many converged points (0: no limit)")
+    ap.add_argument("--max_hours", type=float, default=0.0, help="stop when this much wall time has passed (0: no limit)")
+    ap.add_argument("--max_span", type=float, default=0.0, help="stop when D is this far from the start (0: no limit)")
+    ap.add_argument("--max_fail_row", type=int, default=0, help="stop after this many failed steps in a row (0: no limit)")
+    ap.add_argument("--attempts", default="", help="jsonl: one record per attempted step, converged or not, and a final "
+                    "record with the reason the scan ended")
     a = ap.parse_args()
+    T_start = time.time()
     zh, zl, meta = load(a.start)
     D, M0, nodes0 = meta["D"], meta["M"], list(meta["nodes"])
     M = a.M or M0
@@ -193,7 +231,18 @@ def main():
         targets = [float(v) for v in txt.replace("\n", ",").split(",") if v.strip()]
         a.D_end = targets[-1]
     direction = 1.0 if a.D_end > D else -1.0
+    D_start, tol0, n_ok, fail_row = D, a.tol, 0, 0
+
+    def attempt(**kw):
+        if a.attempts:
+            with open(a.attempts, "a") as f:
+                f.write(json.dumps(dict(kw, t_wall=round(time.time() - T_start, 1))) + "\n")
+
+    end_reason = "D_end reached"
     while (a.D_end - D) * direction > 1e-12:
+        if a.max_hours and time.time() - T_start > 3600 * a.max_hours:
+            end_reason = f"max_hours {a.max_hours}"
+            break
         while targets and (targets[0] - D) * direction <= 1e-12:
             targets.pop(0)
         goal = targets[0] if targets else a.D_end
@@ -201,7 +250,7 @@ def main():
         Dn = round(Dn, 6)
         zpl = None
         if a.predictor == "lagrange_dd" and len(hist_dd) > 1:
-            zp, zpl = predict_dd(hist_dd, Dn)
+            zp, zpl = predict_dd(hist_dd, Dn, a.pred_n)
         elif a.predictor in ("lagrange", "lagrange_dd") and len(hist_z) > 1:
             zp = predict([(h_[0], h_[1]) for h_ in hist_z], Dn)
             if a.junk_hold:
@@ -243,13 +292,25 @@ def main():
             zp = zp.copy(); zpl = zpl.copy()
             zp[:M], zpl[:M] = dd_add(zp[:M], zpl[:M], bh, bl)
             pin = (co, pin_ks)
+        a.tol = tol0 * a.tol_growth ** abs(Dn - D_start)
         s, zh2, zl2, hist, ok, dt = solve_at(Dn, zp, zpl, a, nodes, M, a.it_max, pin=pin)
+        attempt(D_from=D, D_to=Dn, dD=abs(Dn - D), ok=ok, its=len(hist), polish=sum(1 for r in hist if r.get("polish")),
+                F_seed=hist[0]["F"] if hist else None, F_last=hist[-1]["F"] if hist else None, tol=a.tol,
+                seconds=round(dt, 1), Delta=float(zh2[-1]) if ok else None, Delta_lo=float(zl2[-1]) if ok else None)
         if not ok:
-            print(f"D={Dn}: no convergence (|F| {hist[-1]['F'] if hist else float('nan'):.1e}); dD {dD} -> {dD / 2}", flush=True)
-            dD /= 2
-            if dD < 1e-3:
+            fail_row += 1
+            print(f"D={Dn}: no convergence (|F| {hist[-1]['F'] if hist else float('nan'):.1e}); dD {dD} -> "
+                  f"{dD * a.fail_factor}", flush=True)
+            dD *= a.fail_factor
+            if dD < a.min_dD:
+                attempt(end=f"step below min_dD {a.min_dD}", n_ok=n_ok, D=D)
                 raise SystemExit("step too small")
+            if a.max_fail_row and fail_row >= a.max_fail_row:
+                end_reason = f"{fail_row} failed steps in a row"
+                break
             continue
+        n_ok += 1
+        fail_row = 0
         D, zh, zl = Dn, zh2, zl2
         hist_z.append((D, zh + zl, tangent(s_of, s, D, zh, zl) if a.predictor == "hermite" else None))
         hist_dd.append((D, zh, zl))
@@ -269,7 +330,8 @@ def main():
         tc, th = tails(s, zh, zl, nodes, M)
         rec = dict(D=D, Delta=float(zh[-1]), Delta_lo=float(zl[-1]), F=hist[-1]["F"], its=len(hist), seconds=round(dt, 1),
                    M=M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks, tol_step=a.tol_step, steps=sum(len(g) - 1 for g in s.get_segs()),
-                   piv=hist[0].get("piv"), sens=sens, tail_c=tc, tail_h=th, dDelta_est=hist[-1].get("dDelta_est"))
+                   piv=hist[0].get("piv"), sens=sens, tail_c=tc, tail_h=th, dDelta_est=hist[-1].get("dDelta_est"),
+                   tol=a.tol, kfreeze=a.kfreeze, corrector=a.corrector)
         if rec["dDelta_est"] is None:
             rec["dDelta_est"] = delta_correction(s, *s.residual(zh, zl))
         rec["polish"] = sum(1 for r in hist if r.get("polish"))
@@ -283,14 +345,32 @@ def main():
         if tc > 1e-33:
             a.kc = int(a.kc * 1.25) + 2
             print(f"   centre series tail {tc:.1e}: kc -> {a.kc}", flush=True)
+        elif a.kc_auto:
+            k_need = kc_needed(s, zh, zl, nodes[0], M, a.kc, a.kc_auto)
+            if k_need < a.kc - 10:      # hysteresis: check (two Jacobians) only when it saves at least 10 orders
+                s_new = make_solver(D, M, nodes=nodes, kt=a.kt, kc=k_need, ks=a.ks, threads=a.threads,
+                                    kfreeze=a.kfreeze)
+                s_new.set_segs(s.get_segs())
+                if same_bits(s.residual(zh, zl), s_new.residual(zh, zl)) and \
+                        same_bits(s.jacobian(zh, zl), s_new.jacobian(zh, zl)):
+                    print(f"   kc {a.kc} -> {k_need} (residual and Jacobian bitwise unchanged)", flush=True)
+                    a.kc = k_need
+                else:
+                    print(f"   kc stays {a.kc}: kc {k_need} changes the residual or the Jacobian", flush=True)
         if th > 1e-33:
             a.ks = int(a.ks * 1.25) + 2
             print(f"   horizon series tail {th:.1e}: ks -> {a.ks}", flush=True)
         its_main = len(hist) - rec["polish"]
-        if its_main <= 8:
-            dD = min(a.maxdD, dD * 1.25)
+        if its_main <= a.grow_its:
+            dD = min(a.maxdD, dD * a.grow)
         elif its_main >= 14:
             dD *= 0.8
+        if a.max_points and n_ok >= a.max_points:
+            end_reason = f"max_points {a.max_points}"
+            break
+        if a.max_span and abs(D - D_start) >= a.max_span - 1e-12:
+            end_reason = f"max_span {a.max_span}"
+            break
         while sched and (D - sched[0][0]) * direction >= -1e-9:
             new_nodes = sched.pop(0)[1]
             if new_nodes == nodes:
@@ -310,6 +390,8 @@ def main():
             hist_z = [(D, zh + zl, tangent(s_of, s, D, zh, zl))]   # one point: Euler with the tangent
             hist_dd = [(D, zh, zl)]                                 # (the old layout's points cannot be mixed in)
             dD = min(dD, 0.5)
+    attempt(end=end_reason, n_ok=n_ok, D=D)
+    print(f"scan ended: {end_reason} ({n_ok} converged points, D = {D})", flush=True)
 
 
 if __name__ == "__main__":

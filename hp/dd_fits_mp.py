@@ -41,7 +41,8 @@ EXTRA = {
 
 
 def load_points(scan=None):
-    """{D rounded to 1e-6: Delta (mpf)} and {D: run name}."""
+    """{D rounded to 1e-6: Delta (mpf)} and {D: run name}, for the continuation runs' points (D >= 8.25); the low-D
+    rows of the CSV (run lowD-...) are skipped."""
     pts, src = {}, {}
     if scan:
         for f in sorted(glob.glob(os.path.join(scan, "scan_up*.jsonl"))):
@@ -53,6 +54,8 @@ def load_points(scan=None):
     else:
         for line in list(open(os.path.join(HERE, "data", "delta_dd.csv")))[1:]:
             c = line.strip().split(",")
+            if c[6].startswith("lowD"):     # the low-D runs' rows (D < 8.25, export_lowD.py) are not continuation points
+                continue
             k = round(float(c[0]), 6)
             # hi and lo are written as repr(float): parse each to the double it denotes, then add exactly (60 digits
             # hold hi + lo). mp.mpf(c[1]) would read the decimal string itself, which differs from the double by up

@@ -1,0 +1,4 @@
+S:0.9                  n= 100 steps=   61 kappa_J=8.34e+34 kappa_emp=9.86e+34 P_min=43 res(s*)=2.7e-113 amp=1.0e+00 (11.9 s)
+S:0.9                  n= 200 steps=  100 kappa_J=5.22e+66 kappa_emp=8.22e+66 P_min=75 res(s*)=1.7e-111 amp=1.0e+00 (23.4 s)
+S:0.8                  n= 100 steps=   53 kappa_J=6.98e+15 kappa_emp=2.26e+16 P_min=25 res(s*)=1.4e-114 amp=1.0e+00 (10.0 s)
+S:0.8                  n= 200 steps=   84 kappa_J=4.42e+28 kappa_emp=9.36e+28 P_min=37 res(s*)=2.6e-113 amp=1.0e+00 (16.5 s)

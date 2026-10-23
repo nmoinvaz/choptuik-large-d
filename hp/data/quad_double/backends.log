@@ -1,0 +1,8 @@
+avx512    n 4000  exit 0  isa reported avx512  digest cc1ea59faf5a7550  test result: ok. 5 passed; 0 failed; 5 ignored; 0 measured; 5 filtered out; finished in 2.54s
+avx2      n 4000  exit 0  isa reported avx2  digest cc1ea59faf5a7550  test result: ok. 5 passed; 0 failed; 5 ignored; 0 measured; 5 filtered out; finished in 3.15s
+portable  n 4000  exit 0  isa reported portable  digest cc1ea59faf5a7550  test result: ok. 5 passed; 0 failed; 5 ignored; 0 measured; 5 filtered out; finished in 1.80s
+digests agree across backends
+
+real	20m58.220s
+user	16m21.347s
+sys	0m4.210s

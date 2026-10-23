@@ -1,0 +1,8 @@
+lowDv_D3.7000_M48.npz resampled to M = 16 (N = 897), strict, variant f64x4, MUTATED: omega: jacobian 3.0 s, jacobian_f64 0.24 s
+  entrywise on the 55055 nonzero entries: max 1.08e-04 (median 1.3e-09, 90% 1.5e-08, 99% 1.6e-07, 99.9% 1.6e-06); worst at [386, 359], |J| 1.7e-05 in a column of max 1.0e+00
+  entries >= 1e-8 of their column max: max 1.08e-04; nonzero in f64 only: 0 (max 0.0e+00)
+  per column, by residual block (centre, segments 1..K-1, horizon): 1e-09 1e-09 2e-09 1e-08 3e-08 3e-08 1e-08 9e-09 9e-09 9e-09 9e-09 1e-08 1e-08 1e-09
+  per column max|dJ|/max|J|: 2.27e-08 (column 272); Frobenius 2.66e-09; Newton step at a perturbed state: 1.25e-08 (with the dd Jacobian rounded to f64: 5.34e-15)
+  FAIL (per-column and Frobenius <= 1e-12)
+  expected to fail: it did (the control fires)
+exit 0

@@ -2629,3 +2629,309 @@ Do not touch: the gamma runs (mode_det is exact double-double and is not part of
 How to stop safely: stop a process just after an iteration line appears in its log (the checkpoint is written then),
 load the checkpoint once to confirm it reads, then restart. If it does not load, restart from the last good state.
 Report: each process restarted, the iteration and |F| it resumed from, and its per-iteration time with f64.
+
+== 2026-10-22 19:14 PDT cloud
+T41 (user's goal: see how far toward D = 3 we can get). Change to T35's stop rule: when the M 96 chain stops resolving
+(M 96 -> 128 above 1e-8, or an M 96 point that does not converge after halving to 0.005), do not stop. Continue the
+chain directly at M 128 with --jac f64 from the last M 128 states (cubic predictor, steps of 0.05 with halving), as
+soon as your 3.6 f64-vs-dd M 128 check has passed; if it failed, at M 128 with dd. At each M 128 point keep the M 96
+value too (it is the error estimate). Stop when M 128 itself is unresolved (two failed halvings at 0.005), and report
+the lowest D with its M 96 -> 128 difference. 128 is the kernel's current cap; a branch lifting it (M 160-384, block
+storage of the Jacobian) is being built on the cloud, with a pilot run there. Gamma as before where threads allow.
+
+== 2026-10-22 19:18 PDT local
+3.6 M 128 check (T39): PASS. f64 Delta 3.4527209746080 (|F| 8.4e-30, 5 its, 1878 s) against dd (6 its, 13020 s):
+difference 1.3e-30, 6.9x faster. So M 128 at 3.4 and 3.3 runs f64. D 3.40 at M 96 (f64 chain) converged in 8 its,
+657 s: Delta 3.3662517901318, 1.28e-7 below the M 80 point there, tails 4.5e-49 / 1.4e-39. B 3.4 (f64 M 128) is
+running and 3.35 at M 96 is next.
+T40: two restarters are waiting for the next iteration line of each dd Newton job. Each will kill the job, load the
+checkpoint once with the t39 build, then restart the same command with --resume --jac f64:
+   3.30 M 80 (dd, at |F| 4.7e-21, probably converging on its current iteration; if so, nothing to restart)
+   3.5 M 128 (dd, part B, at |F| 3.6e-14 after 3 iterations of about 40 min)
+The new code writes its outdir under the t39 worktree, so I copy each checkpoint there first and the final state back
+afterwards. Records go to the same jsonl files as before. The gamma runs (3.6, later 3.5) and T38 are untouched.
+Nothing else in T35 is on dd any more: the M 96 chain and B 3.4/3.3 are f64.
+T41: t41_chain.py waits for the M 96 chain to reach 3.30, then carries on as you set out. Steps are 0.05 toward 3.00
+at M 96, each point also solved at M 128 from its M 96 state. When |M 96 -> 128| > 1e-8, or an M 96 step fails at
+0.005, it switches to M 128 steps (cubic predictor through the four lowest M 128 states, B's included), with M 96 at
+each point as the error estimate. It stops when a step fails at 0.005 and again at half that. Gamma at 3.2, 3.1, 3.0
+from the resolved state, one at a time.
+
+== 2026-10-22 19:34 PDT local
+T40 done: no T35 Newton job is on the dd Jacobian any more. Each was stopped right after an iteration line, its
+checkpoint loaded with the t39 build, then restarted as the same command with --resume --jac f64 (the new code's outdir
+is the t39 worktree, so each checkpoint was copied there and the final state copied back):
+   3.30 M 80: stopped after the line "|F| 7.78e-30 converged" (checkpoint it 11). The kill caught it between that line
+     and the record write. Resumed at |F| 7.8e-30: 1 iteration, 52 s, Delta 3.2672130309581449 (horizon tail 2e-26, so
+     M 80 is out of resolution there).
+   3.5 M 128 (part B): stopped after iteration 4 (|F| 4.1e-28; dd iterations took 1700-2500 s). Resumed at |F| 9.8e-30:
+     1 iteration, 231 s (Jacobian plus residual, about 7-10x a dd iteration), Delta 3.4227909330890940.
+   The gamma runs are untouched: 3.6 is done, 3.5 is running on dd mode_det.
+Results pushed to wip/lowd-local (6ad98b7): merged lowD_dd_local.jsonl and lowD_gamma_local.jsonl plus the per-run files,
+the M 96 / M 128 states, all local_*.log, and the T39 gate logs. lowD_conv.py:
+   D     M 80             M 96              M 128             best / error
+   3.70  3.465200483544   3.465200482305    -                 3.465200482305 +- 1.2e-9
+   3.65  3.460728639647   3.460728636304    -                 (two M: -3.3e-9)
+   3.60  3.452720978926   3.452720974629    3.452720974608    3.452720974608 +- 2.1e-11
+   3.55  3.440402349001   3.440402346486    -                 (two M: -2.5e-9)
+   3.50  3.422790947025   3.422790934317    3.422790933089    3.422790933089 +- 1.2e-9
+   3.45  3.398624718471   3.398624651988    -                 (two M: -6.6e-8)
+   3.40  3.366251917957   3.366251790132    (B running)       (two M: -1.3e-7; M 96 point from the M 96 chain)
+   3.35  3.323462177697   (chain running)
+   3.30  3.267213030958   -
+gamma(3.6) = 0.3368409842 (lam 2.9687598804, 11 determinants, one sign change).
+
+== 2026-10-22 19:44 PDT local
+T41: M 96 stops resolving at D 3.40, so the chain is now at M 128. Part B's f64 M 128 at 3.4, started from the M 96
+chain's 3.40 point, did not converge: start |F| about 0.2, one iteration in 31 min, |F| 2.0e-1, the same failure as
+M 80 -> 96 at 3.40. So the M 96 points at 3.40 (3.3662517901318) and 3.35 (3.3234620916758, 14 its, horizon tail
+1.5e-36) are converged M 96 solutions but not resolved ones. I stopped the M 96 chain (its 3.30 step and B 3.4's M 80
+and gamma) and the M 96-based T41 script.
+The new chain (t41b_chain.py, from 19:46) uses M 128 states only. First it lifts the resolved M 96 states at 3.55 and
+3.45 to M 128 (f64, in parallel). With the M 128 states at 3.6 (dd) and 3.5 (f64) they make four points for the cubic
+predictor. Then it steps of 0.05 from 3.45 toward 3.00 at M 128 (f64), with midpoint halving, an M 96 solve at each
+point as the error estimate, and gamma from each M 128 state at a multiple of 0.1 (one at a time). It stops when a step
+fails at 0.005 and again at half that, and I will report the lowest D with its M 96 -> 128 difference.
+Part B's 3.5 gamma (dd mode_det, on the resolved M 96 state) runs on. T38: 4 threads will be free once the 3.5 gamma
+ends and the lifts are done; I start the T38 pilot then, unless you would rather keep the threads for this chain.
+
+== 2026-10-22 20:26 PDT local
+T35 B done for 3.6 and 3.5 (pushed to wip/lowd-local): gamma(3.6) = 0.3368409842 (lam 2.9687598804), gamma(3.5) =
+0.3223855790 (lam 3.1018757202), both from the resolved M 96 states with one sign change of det M. The original B runner
+is stopped; 3.4 and 3.3 now fall to the M 128 chain.
+T41 so far: the 3.55 lift to M 128 converged (Delta 3.4404023462131, M 96 -> 128 -2.7e-10, 6 its, 20 min). The 3.45 lift
+did not: from the M 96 state the start is |F| 1.7e-4 and Newton stops after 2 iterations, so M 96 is not resolved at
+3.45 either. The chain therefore steps 3.5 -> 3.45 at M 128 from a quadratic predictor through 3.6, 3.55, 3.5. It also
+starts at |F| 1.7e-4; the f64 step gave no decrease there and the solver retried with the exact Jacobian (its own
+fallback). That step decides whether M 128 resolves 3.45.
+T38 started at 20:26 on the 4 free threads: pilot (a) 960 bits and (b) 1280 bits, K 29, J 1000, wf 1.00,
+--fit phys --mf 6:12 --fit-step 1, 2 procs each (hp-wt at b9499b9; amp_flint_par.py differs from main only in its
+docstring). T32's K 27 took about 4 h, so expect about 5 h for (a) and longer for (b).
+
+== 2026-10-22 22:20 PDT local
+T41 at M 128 (f64), with two corrections to my 19:46 entry.
+   D      M 128 Delta        its  time    horizon tail   M 96 Delta (from the M 128 state)   M 96 -> 128
+   3.550  3.4404023462131    6    20 min  2e-38          3.4404023464863 (h96 lift)          -2.7e-10
+   3.500  3.4227909330891    -    -       1e-35          3.4227909343167                     -1.2e-9
+   3.475  3.4116196409154    7    19 min  3e-35          3.4116196425118                     -1.6e-9
+   3.450  3.3986246505412    6    15 min  7e-33          3.3986246519875                     -1.45e-9
+   3.400  NOT converged: 14 damped iterations (lam 0.004-0.25), |F| stuck at 1-2e-2, pivot ratio up to 3e5 (about 4 at
+          3.45); Delta wandering near 3.36636-3.36642
+3.425 is being tried now.
+Corrections. (1) M 96 is not unresolved at 3.45: solved from the M 128 state it gives 3.3986246519875, the same to 13
+digits as the M 96 point from the lift route, 1.45e-9 from M 128. So the failed 3.45 lift (and probably the 3.40 one) was
+a Newton-basin failure of the resampled start, not a resolution limit. The M 96 chain values at 3.40 (3.3662517901318)
+and 3.35 may then be fine, which M 128 at those D would show. (2) The first "3.45 M 128 failed" in the chain was a
+resume of the failed lift's checkpoint (same tag, D and M), not a real step. I moved that checkpoint aside; the real 3.45
+step then converged. A watcher now moves each failed T41 checkpoint aside, so --resume never restarts a failure.
+The 3.40 failure looks different: the Jacobian is close to singular there (pivots 3e5), so the halving at 3.425 will
+show whether it is the step or the solution.
+
+== 2026-10-23 00:17 PDT local
+T41, M 128 at 3.425 and 3.40:
+   3.425  Delta 3.3835865503739, 7 its, tails 2.5e-50 / 4.8e-29;  M 96 from it 3.3835865513983 (-1.02e-9)  -> resolved
+   3.400  Delta 3.3662517880823 |F| 2.9e-30, but only at the 30th (last allowed) iteration, 80 min. The f64 Newton crawled:
+          lam 1/16 for many steps near |F| 7e-9, then contraction of about a third per step. Tails: centre 1.2e-9 (2.8e-52
+          at 3.45, 2.5e-50 at 3.425), horizon 5.3e-25.
+          The M 96 solve from this state starts at |F| 2.7e-4 and wanders under damping. From the 3.425 and 3.45 M 128
+          states the same solve started below 1e-5 and converged.
+My reading: the 3.40 M 128 solution has picked up content in its top harmonics (96-127) and in the centre series, along
+the near-null directions (the first 3.40 attempt showed pivots up to 3e5). Its Delta agrees with the M 96 chain's
+3.40 value (3.3662517901318, clean tails 4.5e-49 / 1.4e-39) to 2.0e-9, but the state is not a clean base. The chain goes
+on from it (3.375 next, then its own halving and stop rule). If 3.375 fails, I would redo 3.40 at M 128 with the exact
+dd Jacobian and/or the first node halved to 0.0025 (what --auto_nodes would ask for here, at your 0.0025 limit). Say
+which, or whether to stop T41 at 3.425 as the lowest clean point.
+T38 pilot: (a) 960 bits is at order 25 (sigma_12 at k 25 equals T32's to all printed digits), (b) 1280 bits at 23.
+
+== 2026-10-23 02:31 PDT local
+T38 pilot (a) PASSES (wip/sigma14 4984958, solver/inner_amp/scan29J1000/): K 29, J 1000, 960 bits, --mf 6:12, wf 1.00,
+5.98 h with 2 procs.
+   sigma_14 = 1.8162676402228000068e-12 - 6.0171529747632837488e-11i,  err14 1.81e-23,  |sigma_14| 6.02e-11
+   err14 / |sigma_14| = 3.0e-13 (gate 1e-10)
+   chosen Mf at k 29: 8 in every family except nu = 1 (7); worst family fit error 2.1e-19
+   sigma_13 and sigma_12 bitwise equal to scan27J1000p960 (differences 0; their errs 1.0e-22 and 5.1e-22)
+Started the passing variant at wf 0.99 at once (2 procs). wf 1.01 starts automatically when pilot (b) (1280 bits, now
+past k 25, sigma_12 there equal to (a)'s) finishes, in about 1.5 h. Starting both now would have made 7 threads, and
+(b)'s sigma_14 is an independent 1280-bit check of (a)'s. If you would rather have 1.01 sooner, I will stop (b).
+T41: 3.375 at M 128 is still grinding (|F| 7e-5, damped; the f64 step stalled and the solver fell back to the exact
+Jacobian), with the polluted 3.40 state at the end of its predictor history. gamma at 3.4 from that state finds no sign
+change of det M in its window (9 determinants; every clean point so far had exactly one), which fits the pollution.
+Still waiting on your call: redo 3.40 (dd Jacobian / first node 0.0025) or stop T41 at 3.425.
+
+== 2026-10-23 03:45 PDT cloud
+T38: well done. Let (b) finish as your independent 1280-bit check, then start wf 1.01 as planned. Keep T38 as it is.
+T41 decision (your 00:17 and 02:31 entries):
+  1. Stop the 3.375 step that is grinding now. Move the polluted 3.40 M 128 state out of every predictor history, but
+     keep it under another name for the record, with its Delta 3.3662517880823.
+  2. Redo 3.40 at M 128 with the exact dd Jacobian and the deflated Newton (lowD_dd.py --solver dn --w 24 --jac dd).
+     Start it from the cubic predictor through the clean M 128 states 3.5, 3.475, 3.45, 3.425. The deflated Newton
+     holds the near-null (junk) directions fixed, which is what the pollution came from. The cloud's large-D work found
+     the same thing: an f64 Jacobian cannot steer those directions, and no f64 LU resolves them.
+     Pass: tails clean (centre near 1e-50, as at 3.425), M 96 from it converges, and Delta agrees with your M 96 chain
+     value 3.3662517901318 to 1e-8.
+  3. If that passes, continue the chain the same way (--solver dn --jac dd) with the same stop rule. If it fails, retry
+     once with the first node 0.0025. If that also fails, stop T41 at 3.425 as the lowest clean point and report.
+T42 (new, approved by the user): benchmark the Newton variants along D on this machine. The cloud has built them.
+  Branch wip/largeD-mixed at 127d606 (notes/LARGE_D_MIXED.md §5). It includes the high-M work, merged as WIP; nothing
+  of it is on main yet.
+  Build it privately, as in T39: a separate worktree, cargo build of hp with -C target-cpu=native and --features
+  python, the .pyd next to the package's .py files, and PYTHONPATH for this job only. Leave the hpkernel that running
+  jobs use untouched.
+  Run, from hp/ of that worktree:
+      python bench_variants.py --repeat=3 --threads=2 --out=data/bench_variants/bench_local.jsonl
+      python bench_variants.py --report --out=data/bench_variants/bench_local.jsonl
+  It interleaves the five variants (dd, f64, f64h, f64g, f64hg) at each D, records the load, and resumes after an
+  interruption. Expect 20-60 min per repeat. Start it as soon as 2 threads are free, keeping 6 in all. It has priority
+  over further T41 steps once T41 reaches its stop rule.
+  Push the jsonl, the report and the log to wip/bench-local, with a comms entry giving your build's hpkernel.isa() and
+  the report table.
+
+== 2026-10-23 03:48 PDT local
+Done as you said at 03:45.
+T41: the f64 chain is stopped (its 3.375 step killed). The polluted states are renamed lowDvh41_D3.4000_M128_polluted.npz
+(Delta 3.3662517880823) and lowDvh41_D3.3875_M128_polluted.npz (Delta 3.3566328536593, centre tail 2.8e-10, built on the
+3.40 one; its M 96 solve did not converge either). Neither is in any history.
+t41c_chain.py (started 03:48) redoes 3.40 at M 128 with --solver dn --w 24 --jac dd from the cubic predictor through
+the clean 3.5 / 3.475 / 3.45 / 3.425 M 128 states, then applies your test (centre tail <= 1e-40, M 96 from it converges,
+|Delta - 3.3662517901318| <= 1e-8). On a pass it continues the same way under the same stop rule. On a fail it retries
+once with the first node 0.0025 (from 3.425, re-noded; --history needs equal nodes, so the predictor is constant), then
+stops. Gamma from clean M 128 states at 3.4, 3.3, ... one at a time, when a thread frees.
+Also running, started before your entry: a plain dd-Jacobian Newton at 3.40 (no deflation), same predictor and start
+|F| 3.9e-3: full steps (lam 1) and normal pivots (about 3), but linear rather than quadratic convergence (4.8e-6 ->
+2.5e-8), Delta 3.3662517887. I let it finish as a comparison for the deflated run.
+T42: worktree on wip/largeD-mixed set up. It waits for 2 free threads (T38 4, T41c 1, the dd 3.40 run 1). I build its
+hpkernel when the dd 3.40 run ends, then start the benchmark when two threads are free (T38's wf 0.99 / 1.01 end in
+roughly 5-6 h, or earlier if T41 reaches its stop rule).
+
+== 2026-10-23 05:17 PDT local
+T41 3.40 redo (--solver dn --w 24 --jac dd, cubic predictor through the clean 3.5/3.475/3.45/3.425 M 128 states, start
+|F| 3.9e-3): fails.
+   dn 0 [all]:   |F| 3.95e-3 -> 3.94e-3, lam 5e-4 (20 min)
+   dn 1 [full]:  |F| 3.94e-3 -> 1.28e-4, lam 1, Delta 3.36624992 (37 min)
+   then plain Newton (dd): 1.28e-4 -> 1.20e-4 -> 1.12e-4, lam 1/16 down to 1/128, pivots up to 2e4, about 17 min each
+I stopped it after the third stalled step (6% per iteration would not reach 1e-24 in the 30 allowed), so there is no
+record. The plain dd Newton (no deflation) from the same start went 3.9e-3 -> 4.8e-6 -> 2.5e-8 -> 1.5e-8 (lam 1/4) and
+also stalled, with Delta 3.3662517887. So both exact-Jacobian Newtons reach a floor at 1e-8 to 1e-4 near 3.40, and the
+f64 one, which did converge (30 its), ended in the polluted state.
+Following your step 3, the retry with the first node at 0.0025 is running: from the 3.425 M 128 state, re-noded,
+constant predictor (no --history across node sets), --solver dn --w 24 --jac dd. If it fails, T41 ends at 3.425.
+Two notes: the deflated Newton ran only its default 2 dn iterations before plain Newton (--dn_its 2); more of them
+might matter here. And the T42 build was stopped by my client under low memory (fat-LTO cargo build alongside the
+T38/T41 jobs). It restarts when you or the user say so, preferably after T38's runs end.
+
+== 2026-10-23 05:51 PDT local
+T41 ends at D = 3.425, the lowest clean point (your step 3). Pushed to wip/lowd-local (1b2b045): records, logs, clean
+M 96/128 states, and the two polluted states under _polluted names.
+   D      M 128 Delta         M 96 -> 128   centre / horizon tail at M 128
+   3.600  3.4527209746080     -2.1e-11      (B)
+   3.550  3.4404023462131     -2.7e-10      1e-60 / 2e-38
+   3.500  3.4227909330891     -1.2e-9       1e-56 / 1e-35
+   3.475  3.4116196409154     -1.6e-9       4e-55 / 3e-35
+   3.450  3.3986246505412     -1.45e-9      3e-52 / 7e-33
+   3.425  3.3835865503739     -1.02e-9      3e-50 / 5e-29      <- lowest clean point
+   3.400  3.3662517880823 (polluted; centre tail 1.2e-9; M 96 from it does not converge; gamma finds no sign change)
+At 3.40 three Newtons fail. The deflated dd (dn 2 its then plain) stalls at 1.1e-4 with lam down to 1/128 and pivots
+2e4. The plain dd stalls at 1.5e-8. The f64 one converges, but to the polluted state. The retry on nodes from 0.0025
+started from a constant predictor (|F| 5.9e-2, since --history cannot mix node sets) and made no progress in two
+iterations (lam 0.03, 0.008), so I stopped it. That retry does not test the node set fairly. A fairer one would first
+converge the 3.5/3.475/3.45/3.425 M 128 states on the new nodes (re-node, then 2-3 dn iterations each, about 4 h) and
+then step to 3.40 from the cubic predictor. Not started; say if you want it.
+Threads: T38 4 (pilot (b) at k 29, wf 0.99 at k 23), 2 idle. T42 is waiting only for its hpkernel build, which my
+client stopped under memory pressure and which I restart only when asked. Free RAM is about 6 GB of 32 with the T38
+jobs at 1-1.6 GB each.
+
+== 2026-10-23 05:58 PDT local
+T38 pilot (b) done (9.5 h; wip/sigma14 4aea6ca): at 1280 bits sigma_0..14 are bitwise equal to the 960-bit
+pilot (a); sigma_14 = 1.8162676402228000068e-12 - 6.0171529747632837488e-11i. Its error estimates are all inf (1.8e308).
+The order-1 fit reports "err inf, resid 0.0" at this precision (phys_prec 3840) and that propagates to every order, so
+only (a)'s errors (err14 1.8e-23) are usable. The fits themselves are fine (worst family at k 29: 2.1e-19; Mf 9 for
+nu = 21-29, 8 below, 7 for nu = 1, 3). wf 1.01 (960 bits) started at 05:57 as planned; wf 0.99 is at k 23.
+
+== 2026-10-23 07:31 PDT cloud
+T42 change (the user's order): run the benchmark only when no other job is running on this machine. Free threads are
+not enough.
+  - Wait until T38's wf 0.99 and wf 1.01 runs have both ended. Start nothing new in the meantime: no T41 node retry,
+    no gamma, nothing else queued.
+  - Then build the T42 hpkernel. Nothing else should run, so memory is not a problem this time.
+  - Then run the benchmark with the machine otherwise idle, and use all four cores:
+        python bench_variants.py --repeat=3 --threads=4 --out=data/bench_variants/bench_local.jsonl
+  - Plugged in, no sleep or power saving during the run, and no other jobs until it ends. Note in the comms entry
+    whether anything else was running (the jsonl records the load before and after each run, so a busy period will
+    show).
+  - Push as before (wip/bench-local), then report.
+T41: thanks, recorded; 3.425 is the lowest clean point. Do not start the re-noded retry at 3.40. The cloud's larger-M
+work will approach D < 3.425 differently, and the machine must stay idle for T42.
+
+== 2026-10-23 07:33 PDT local
+T42 per your 07:31: queued so that nothing else runs. t42_run.py waits for T38's wf 0.99 and wf 1.01 to exit (0.99 at
+k 27, about 1.5 h left; 1.01 at k 17, about 4 h). It then checks for AC power (it waits on battery), builds hp of
+wip/largeD-mixed 127d606 (cargo, target-cpu=native, --features python, -j 4, into its own package directory), reports
+hpkernel.isa(), holds the system awake with SetThreadExecutionState (no power setting changed), and runs
+bench_variants.py --repeat=3 --threads=4 and then --report. Nothing else is started. The T41 checkpoint watcher is
+stopped too, so T38 is the only work on the machine now. T41 stays closed at 3.425. The comms watch (a git ls-remote
+every 45 s) and this session stay open during the benchmark; I will say so in the report.
+
+== 2026-10-23 08:34 PDT local
+T38 wf 0.99 done (5.9 h; wip/sigma14 08cb9b5): K 29, J 1000, 960 bits, --mf 6:12.
+   sigma_14 = 5.1349926985882716566e-12 - 6.1125424732211931245e-11i,  err14 1.64e-23
+   Mf at k 29: 8 except nu = 1, 3 (7); worst family fit 4.9e-19
+   sigma_13 bitwise equal to scan27J1000p960 at wf 0.99 (-4.1002374526749e-10 - 4.7743085463879e-10i)
+wf 1.01 is at about k 21, so expect it around 11:00. T42 starts when it ends.
+
+== 2026-10-23 11:18 PDT local
+T38 done (wip/sigma14 ae2af64): the K 29, J 1000, 960-bit scan at three omegas, all exit 0, err14 under 2e-23:
+   wf     sigma_14                                                        err14     worst family at k 29
+   0.99   +5.1349926985882716566e-12 - 6.1125424732211931245e-11i        1.64e-23  4.9e-19
+   1.00   +1.8162676402228000068e-12 - 6.0171529747632837488e-11i        1.81e-23  2.1e-19
+   1.01   -1.3887266863423045505e-12 - 5.9052712130189368330e-11i        2.00e-23  1.7e-19
+   sigma_13 at each wf is bitwise the scan27J1000p960 value, and sigma_12 too.
+T42 started at 11:17 with the machine otherwise idle (T38 ended, nothing else running) and on AC power: the hpkernel
+build is running now, the benchmark follows.
+
+== 2026-10-23 11:27 PDT cloud
+T38: thanks, merged into main (f8fd19e); the K = 14 selection analysis is running in the cloud.
+T43 (queued: start when T42's benchmark has ended, on the then idle machine; T42 keeps its rule that nothing else
+runs during it). Step-size test for the large-D continuation: how large a step in D does Newton tolerate at D = 45,
+50, 55 and 60, and do three changes make it larger? The scans' steps were capped (--maxdD 0.03 from 59.8, growth
+only after <= 8 iterations), so their step history does not show the edge. Here the step grows x1.5 after every
+converged point and halves after every failure. Everything is in hp/step_test.py (docstring); scan_hp.py has new step
+options (defaults unchanged). Each run gets the scan's own 7 states before D0 as predictor history
+(hp/data/seeds/step_test/): a run cannot start from one state at these D (details in the docstring).
+Variants: base (the scans' setup), node06 (matching at 0.6), pred6 / pred8 (Lagrange predictor through 6 / 8 points),
+pin11 / pin9 (harmonic 13, or 11 and 13, held on a trend in D instead of solved), kf11 (harmonic 13 set to zero: a
+start check only, it failed at D = 40 and 45; stepped only if its floor is within 100x base's).
+
+0. Pull main (2d0ba0f or later) and rebuild hp from main: hp/build.sh (T42's build of wip/largeD-mixed went into its own
+   package directory; T43 uses main's hpkernel). Check: python -c "import hpkernel, hpkernel.driver as d; print(d.__file__)".
+1. Pilot (about 30-60 min), from hp/:
+     python -u step_test.py --outdir data/step_test/pilot --D 60.0020 --variants base,node06 --max_points 8 --max_hours 0.75 --threads 3 --parallel 2
+     python step_test.py --report --outdir data/step_test/pilot
+     python step_test.py --report --outdir data/step_test/pilot --mutate=ref      (control: must exit 1, FAIL on every run)
+   The pilot passes if: both start states converge (expect a floor of about 2e-23 at 0.7 and about 1.5e-19 at 0.6),
+   each run gets at least 4 converged points, base's Delta check passes, and the mutated report exits 1. If it
+   passes, push it, post the pilot table here and go on to step 2 without waiting for me. If not, stop and report.
+2. Full run (about 6-10 h; resumable: after an interruption run the same command again):
+     python -u step_test.py --combo --threads 3 --parallel 2 --max_points 20 --max_hours 1 --max_span 3
+   Defaults: D0 = 45.0507, 50.0075, 55.0351, 60.0020; variants base, node06, pred6, pred8, pin11, pin9, kf11. Phase 1
+   makes the start states (about 10 solves, serial, 6 threads); phase 2 runs two scans at a time, 3 threads each,
+   below normal priority (the script sets it); phase 3 (--combo) runs every option that beat base at 3 or more of the
+   4 D0 together, if there are at least two.
+   Then: python step_test.py --report   and   python step_test.py --report --mutate=ref   (the control must exit 1).
+Threads: 6 in all. Stop conditions per run are built in (20 converged points, 1 h, 3 units of D, 6 failures in a
+row, step below 1e-4). Stop the whole task and report if a base run fails its Delta check (|Delta - reference| above
+1e-12 up to D = 61, 1e-10 above), since the setup would then be wrong. A failed check on another variant is a
+finding, not a stop: report it.
+Push: hp/data/step_test/ (all jsonl, logs, summary.md / .json, start_states.jsonl, the start .npz files and the last
+8 states each run keeps) to wip/step-test. Report here after the pilot, after phase 2 and at the end, with
+summary.md's tables. What I will look at: per D0, base's edge (median of the last 8 attempted steps) and D per 100
+Newton iterations, against each variant's.
+A cloud smoke run (D = 60, base and pin11, 3 points each, 1 thread) ran clean: steps 0.0215 and 0.032 converged in
+8-10 iterations, 0.048 failed (|F| 3e-22 base, 2e-13 pin11) and 0.024 converged; Delta within 7e-16 of the scans; the
+mutated report exits 1. About 30 s per point there.
+
+== 2026-10-23 11:29 PDT local
+T43 noted; it starts when T42's benchmark ends, on the then idle machine. Worktree at main (contains 2d0ba0f) is ready.
+hp/build.sh needs maturin, which is not installed here (I have not downloaded it). So I will do what build.sh does with
+cargo directly: cargo build --release --features python with target-cpu=native, then put the extension and the
+package's .py files into the installed hpkernel in site-packages, after backing up the old files. Nothing will be using
+it then. Then your check (driver path), the pilot, its report, the mutated control, push, and on a pass step 2.

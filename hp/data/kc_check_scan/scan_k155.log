@@ -1,0 +1,7 @@
+(re-)converged start D=59.822109 M=32 nodes=[0.3, 0.4, 0.5, 0.6, 0.7]: Delta 1.8103649068645451 ok True (5s)
+history point D=59.767567: ok True, Delta 1.8105112283152822
+history point D=59.785838: ok True, Delta 1.8104621834239649
+history point D=59.804109: ok True, Delta 1.8104131674902588
+D=59.8401 Delta=1.8103166742942858-8.25e-17 its 9 |F| 7.9e-23 19s piv 1.1e-05..1.5e+07 dDelta/dF max 8.2e+13 tails 1e-55 8e-41
+D=59.8581 Delta=1.8102684697549514+4.25e-17 its 8 |F| 2.2e-23 17s piv 2.2e-05..1.5e+07 dDelta/dF max 8.3e+13 tails 1e-55 8e-41
+D=59.8750 Delta=1.8102232606226230-8.25e-18 its 7 |F| 3.2e-23 15s piv 3.6e-06..1.5e+07 dDelta/dF max 8.3e+13 tails 1e-55 1e-40

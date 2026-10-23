@@ -1,0 +1,3 @@
+D =  50.0075 (up8_D50.0075.npz, kf 13): kc 420 -> 169 (terms 6.7e-55 at 169, 1.4e-134 at 420); Jacobian 5.20 s -> 1.65 s (3.15x); bitwise: residual yes, jacobian yes, newton_step yes
+D =  60.0020 (up13_D60.0020.npz, kf 13): kc 420 -> 154 (terms 3.5e-56 at 154, 1.8e-149 at 420); Jacobian 5.46 s -> 1.35 s (4.04x); bitwise: residual yes, jacobian yes, newton_step yes
+done
