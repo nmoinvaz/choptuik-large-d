@@ -2887,3 +2887,44 @@ T38 done (wip/sigma14 ae2af64): the K 29, J 1000, 960-bit scan at three omegas, 
    sigma_13 at each wf is bitwise the scan27J1000p960 value, and sigma_12 too.
 T42 started at 11:17 with the machine otherwise idle (T38 ended, nothing else running) and on AC power: the hpkernel
 build is running now, the benchmark follows.
+
+== 2026-10-23 11:27 PDT cloud
+T38: thanks, merged into main (f8fd19e); the K = 14 selection analysis is running in the cloud.
+T43 (queued: start when T42's benchmark has ended, on the then idle machine; T42 keeps its rule that nothing else
+runs during it). Step-size test for the large-D continuation: how large a step in D does Newton tolerate at D = 45,
+50, 55 and 60, and do three changes make it larger? The scans' steps were capped (--maxdD 0.03 from 59.8, growth
+only after <= 8 iterations), so their step history does not show the edge. Here the step grows x1.5 after every
+converged point and halves after every failure. Everything is in hp/step_test.py (docstring); scan_hp.py has new step
+options (defaults unchanged). Each run gets the scan's own 7 states before D0 as predictor history
+(hp/data/seeds/step_test/): a run cannot start from one state at these D (details in the docstring).
+Variants: base (the scans' setup), node06 (matching at 0.6), pred6 / pred8 (Lagrange predictor through 6 / 8 points),
+pin11 / pin9 (harmonic 13, or 11 and 13, held on a trend in D instead of solved), kf11 (harmonic 13 set to zero: a
+start check only, it failed at D = 40 and 45; stepped only if its floor is within 100x base's).
+
+0. Pull main (2d0ba0f or later) and rebuild hp from main: hp/build.sh (T42's build of wip/largeD-mixed went into its own
+   package directory; T43 uses main's hpkernel). Check: python -c "import hpkernel, hpkernel.driver as d; print(d.__file__)".
+1. Pilot (about 30-60 min), from hp/:
+     python -u step_test.py --outdir data/step_test/pilot --D 60.0020 --variants base,node06 --max_points 8 --max_hours 0.75 --threads 3 --parallel 2
+     python step_test.py --report --outdir data/step_test/pilot
+     python step_test.py --report --outdir data/step_test/pilot --mutate=ref      (control: must exit 1, FAIL on every run)
+   The pilot passes if: both start states converge (expect a floor of about 2e-23 at 0.7 and about 1.5e-19 at 0.6),
+   each run gets at least 4 converged points, base's Delta check passes, and the mutated report exits 1. If it
+   passes, push it, post the pilot table here and go on to step 2 without waiting for me. If not, stop and report.
+2. Full run (about 6-10 h; resumable: after an interruption run the same command again):
+     python -u step_test.py --combo --threads 3 --parallel 2 --max_points 20 --max_hours 1 --max_span 3
+   Defaults: D0 = 45.0507, 50.0075, 55.0351, 60.0020; variants base, node06, pred6, pred8, pin11, pin9, kf11. Phase 1
+   makes the start states (about 10 solves, serial, 6 threads); phase 2 runs two scans at a time, 3 threads each,
+   below normal priority (the script sets it); phase 3 (--combo) runs every option that beat base at 3 or more of the
+   4 D0 together, if there are at least two.
+   Then: python step_test.py --report   and   python step_test.py --report --mutate=ref   (the control must exit 1).
+Threads: 6 in all. Stop conditions per run are built in (20 converged points, 1 h, 3 units of D, 6 failures in a
+row, step below 1e-4). Stop the whole task and report if a base run fails its Delta check (|Delta - reference| above
+1e-12 up to D = 61, 1e-10 above), since the setup would then be wrong. A failed check on another variant is a
+finding, not a stop: report it.
+Push: hp/data/step_test/ (all jsonl, logs, summary.md / .json, start_states.jsonl, the start .npz files and the last
+8 states each run keeps) to wip/step-test. Report here after the pilot, after phase 2 and at the end, with
+summary.md's tables. What I will look at: per D0, base's edge (median of the last 8 attempted steps) and D per 100
+Newton iterations, against each variant's.
+A cloud smoke run (D = 60, base and pin11, 3 points each, 1 thread) ran clean: steps 0.0215 and 0.032 converged in
+8-10 iterations, 0.048 failed (|F| 3e-22 base, 2e-13 pin11) and 0.024 converged; Delta within 7e-16 of the scans; the
+mutated report exits 1. About 30 s per point there.
