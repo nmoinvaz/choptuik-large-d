@@ -11,6 +11,7 @@
 //! * `qd`: scalar quad-double (~64 digits); `qv`: 8-lane quad-double built on `v8`, bitwise the same per lane; `exact`:
 //!   exact dyadic and decimal arithmetic for their decimal input/output and their tests. Not used by the solver yet
 //!   (notes/QUAD_DOUBLE.md).
+pub mod block;
 pub mod dd;
 pub mod dv;
 pub mod exact;
@@ -26,6 +27,8 @@ pub mod v8;
 mod qd_residual;
 #[cfg(test)]
 mod qd_tests;
+#[cfg(test)]
+mod jvp_tests;
 
 #[cfg(feature = "python")]
 mod python;

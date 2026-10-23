@@ -140,8 +140,18 @@ def weakest(s, w, iters=10):
     return [float(f"{sig[i]:.3e}") for i in o], [float(f"{abs(X[-1, i]):.2e}") for i in o]
 
 
-def solve_point(D, M, zh, zl, src, a, nodes, outdir, log):
-    """one (D, M) solve with checkpoints; returns (converged, zh, zl)"""
+def peak_rss_mb():
+    """the process's peak resident memory in MB (None where the resource module is missing, e.g. Windows)"""
+    try:
+        import resource
+    except ImportError:
+        return None
+    return round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024, 1)
+
+
+def solve_point(D, M, zh, zl, src, a, nodes, outdir, log, segs=None):
+    """one (D, M) solve with checkpoints; returns (converged, zh, zl). segs: the Taylor step points to use (default:
+    planned from the start z with --tol_step, --hmax; a checkpoint's own plan takes precedence on resume)"""
     t0 = time.time()
     done = os.path.join(outdir, f"{a.tag}_D{D:.4f}_M{M}.npz")
     if a.resume and os.path.exists(done):
@@ -154,7 +164,6 @@ def solve_point(D, M, zh, zl, src, a, nodes, outdir, log):
         zh, zl, mc = load(ckpt)
         log(f"resuming from checkpoint {ckpt} (iteration {mc.get('it')})")
     s = make_solver(D, M, nodes=nodes, kt=a.kt, kc=a.kcs, ks=a.ks, threads=a.threads)
-    segs = None
     if a.resume and os.path.exists(ckpt) and mc.get("segs"):
         segs = mc["segs"]             # keep the step plan of the interrupted run (the residual depends on it)
     s.set_segs(segs or s.plan(zh, zl, a.tol_step, a.hmax))
@@ -165,7 +174,7 @@ def solve_point(D, M, zh, zl, src, a, nodes, outdir, log):
     hist = []
     if a.solver == "dn" and not (a.resume and os.path.exists(ckpt)):
         # deflated phase only (the weakest w directions removed from the step), then plain Newton below
-        zh, zl, hist = deflated_newton(s, zh, zl, tol=a.tol, it_max=a.dn_its, w=a.w, verbose=True)
+        zh, zl, hist = deflated_newton(s, zh, zl, tol=a.tol, it_max=a.dn_its, w=a.w, verbose=True, jac=a.jac)
         save(ckpt, np.asarray(zh), np.asarray(zl), dict(meta_c, it=len(hist)))
     # plain Newton with backtracking, one iteration per call so that every accepted step is checkpointed
     for it in range(a.it_max):
@@ -176,6 +185,19 @@ def solve_point(D, M, zh, zl, src, a, nodes, outdir, log):
         hist += h1
         if h1 and "lam" in h1[-1]:
             save(ckpt, np.asarray(zh), np.asarray(zl), dict(meta_c, it=len(hist)))
+        # optional fail-fast (a.stop_lam, default off): two damped steps in a row with line-search factor <= stop_lam
+        # mean Newton is wandering in the weak directions (hp/lowD_highM.py; notes/HIGH_M.md section 5.4)
+        lams = [h.get("lam") for h in hist if "lam" in h]
+        if getattr(a, "stop_lam", 0) and len(lams) >= 2 and max(lams[-2:]) <= a.stop_lam:
+            log(f"D {D} M {M}: two steps with line-search factors {lams[-2]:g}, {lams[-1]:g} <= {a.stop_lam:g}; giving up")
+            break
+        # optional (a.floor_ratio, default off): stop at the residual floor, when |F| is below a.accept and the last
+        # step reduced it by less than this factor (at M = 256 the floor is 2-4e-28, above a tolerance of 1e-28)
+        Fs = [h["F"] for h in hist if "lam" in h]
+        if getattr(a, "floor_ratio", 0) and len(Fs) >= 2 and Fs[-1] < a.accept and Fs[-1] > a.floor_ratio * Fs[-2]:
+            log(f"D {D} M {M}: |F| {Fs[-2]:.1e} -> {Fs[-1]:.1e}: below {a.accept:g} and no longer falling (the residual "
+                f"floor); stopping")
+            break
     _rh, _rl = s.residual(zh, zl)
     if a.lm and not float(np.abs(np.asarray(_rh) + np.asarray(_rl)).max()) < a.accept:
         log("  Newton stalled; Levenberg-Marquardt")
@@ -216,13 +238,17 @@ def solve_point(D, M, zh, zl, src, a, nodes, outdir, log):
                solver=a.solver, source=src, threads=a.threads, converged=True)
     if a.jac != "dd":
         rec.update(jac=a.jac)
+    if peak_rss_mb() is not None:
+        rec.update(peak_rss_mb=peak_rss_mb())
+    # seconds of each Newton iteration of this run (Newton step plus its line search; resumed iterations not included)
+    rec.update(t_its=[h["t"] for h in hist if "t" in h and h.get("lm") is None])
     if a.svd:
         t1 = time.time()
         sv, dc = weakest(s, a.svd)
         rec.update(weak_sv=sv, weak_delta=dc, svd_seconds=round(time.time() - t1, 1))
     with open(a.out, "a") as f:
         f.write(json.dumps(rec) + "\n")
-    save(done, zh, zl, dict(D=D, M=M, nodes=nodes, kt=a.kt, kc=a.kcs, ks=a.ks))
+    save(done, zh, zl, dict(D=D, M=M, nodes=nodes, kt=a.kt, kc=a.kcs, ks=a.ks, segs=s.get_segs()))
     if os.path.exists(ckpt):
         os.remove(ckpt)
     log(f"D {D} M {M}: Delta {zh[-1]:.16f} ({zl[-1]:+.2e}) |F| {F:.1e} its {len(hist)} {dt:.0f}s "

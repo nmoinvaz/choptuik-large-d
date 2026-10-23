@@ -21,6 +21,9 @@ _TREE_SOLVER = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__f
 SOLVER_DIR = os.environ.get("DSS_SOLVER_DIR") or (
     _TREE_SOLVER if os.path.isdir(_TREE_SOLVER) else "/home/claude/dss-residual-kernel/solver")
 NODES_OLD = [0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6, 0.7]
+# the kernel's dense n x n paths (jacobian, newton, lm_steps, mode_det, ...) stop at this M; above it only
+# Solver.newton_mixed runs, in block storage (python.rs DENSE_M_MAX, notes/HIGH_M.md)
+DENSE_M_MAX = 128
 
 
 # ------------------------------------------------------------------ double-double helpers (numpy, elementwise)
@@ -163,14 +166,177 @@ def rnorm(Fh, Fl):
     return float(np.sqrt(np.sum((Fh + Fl) ** 2)))
 
 
-def newton_solve(s, zh, zl, tol=1e-28, it_max=12, chord=0, verbose=True, ls=True, max_halvings=10, jac="dd", mixed=None):
+# ------------------------------------------------------------------ mixed-precision steps at large D
+# The Jacobian variants of newton_step / newton_solve / deflated_newton (notes/LARGE_D_MIXED.md):
+#   dd     the exact double-double Jacobian and LU (Solver.newton)
+#   f64    the f64 Jacobian, its f64 LU, the solve in double-double (Solver.newton_mixed; notes/MIXED_PRECISION.md)
+#   f64h   f64 with the horizon block's columns in double-double (newton_mixed(horizon_dd=HORIZON_DD))
+#   f64g   f64, then the correction loop: GMRES on J M^-1 with M the f64 LU and exact products J v (Solver.jvp)
+#   f64hg  f64h, then the loop
+JACS = ("dd", "f64", "f64h", "f64g", "f64hg")
+# Solver.jacobian_f64 / newton_mixed horizon_dd flags of the horizon fix (model.rs HDD_BLOCK: the horizon block's
+# columns from the double-double lanes, rounded to f64; the cheapest variant that steers at D = 50-60, largeD_horizon.py)
+HORIZON_DD = 4
+# defaults of the correction loop (gmres_refine): 3-6 products per step away from the floor, up to ~30 near it at
+# D >= 40, where 12 sent the deflated Newton to exact steps (dd_finish) too often (notes/LARGE_D_MIXED.md section 5)
+GMRES = dict(max_products=30, step_tol=1e-10, confirm=1)
+
+
+_SPLIT = 134217729.0  # 2^27 + 1
+
+
+def _two_prod(a, b):
+    """a b = p + e exactly (Dekker), elementwise"""
+    p = a * b
+    t = _SPLIT * a
+    ah = t - (t - a)
+    al = a - ah
+    t = _SPLIT * b
+    bh = t - (t - b)
+    bl = b - bh
+    return p, ((ah * bh - p) + ah * bl + al * bh) + al * bl
+
+
+def dd_scale(xh, xl, a):
+    """a (xh + xl) in double-double, a an f64 scalar"""
+    p, e = _two_prod(np.full_like(xh, a), xh)
+    e = e + a * xl
+    h = p + e
+    return h, e - (h - p)
+
+
+def dd_axpy(a, xh, xl, yh, yl):
+    """y + a x in double-double, a an f64 scalar"""
+    ph, pl = dd_scale(xh, xl, a)
+    return dd_add(yh, yl, ph, pl)
+
+
+def gmres_refine(s, zh, zl, bh, bl, max_products=30, step_tol=1e-10, confirm=1, cut=True, verbose=False, ref=None):
+    """Solve J x = b (b = bh + bl, double-double) for the exact Jacobian J at z: GMRES on J M^-1 (right
+    preconditioning; Saad and Schultz, SIAM J. Sci. Stat. Comput. 7 (1986) 856, doi:10.1137/0907058) in its GCR form
+    (Eisenstat, Elman and Schultz, SIAM J. Numer. Anal. 20 (1983) 345, doi:10.1137/0720023), M the LU stored
+    in s (the mixed step's f64 LU), the products J u exact in double-double (Solver.jvp; cut: its series stopped at
+    double-double resolution). Each iteration takes the preconditioned residual u = M^-1 r as the new direction, w = J u
+    (one product), orthogonalizes w against the earlier w's (twice), applying the same coefficients to u, and updates
+    x += c u, r -= c w with c = w.r. The u, w, x and r are double-double and updated with the same coefficients, so r
+    stays the residual b - J x to double-double rounding without recomputing it (only the coefficients are f64).
+    In exact arithmetic the iterates are GMRES's.
+    Stopping is on the change of x, not on the residual (an error along a weak direction of J barely shows in the
+    residual; notes/MIXED_PRECISION.md section 8): the loop ends after `confirm` iterations in a row with
+    |c u| <= step_tol |x|, or after max_products products. The first iteration's u is M^-1 b, the plain mixed step.
+    ref (optional, a double-double vector): the exact solution, for the checks: info["errors"] gets |x - ref| / |ref|
+    after each iteration.
+    Returns (xh, xl, info): info = dict(products, changes, converged, t_prod, t_solve, errors)."""
+    n = s.size
+    xh, xl = np.zeros(n), np.zeros(n)
+    rh, rl = np.asarray(bh, dtype=float).copy(), np.asarray(bl, dtype=float).copy()
+    U, W, W64 = [], [], []
+    info = dict(products=0, changes=[], converged=False, t_prod=0.0, t_solve=0.0)
+    if ref is not None:
+        info["errors"] = []
+        refv = np.asarray(ref[0]) + np.asarray(ref[1])
+    run = 0
+    while info["products"] < max_products:
+        t = time.time()
+        uh, ul = (np.asarray(a) for a in s.lu_solve(np.ascontiguousarray(rh), np.ascontiguousarray(rl)))
+        info["t_solve"] += time.time() - t
+        t = time.time()
+        wh, wl = (np.asarray(a) for a in s.jvp(zh, zl, uh, ul, cut=cut)[:2])
+        info["t_prod"] += time.time() - t
+        info["products"] += 1
+        for _ in range(2):
+            for (Uh, Ul), (Wh, Wl), w64 in zip(U, W, W64):
+                beta = float(w64 @ (wh + wl))
+                wh, wl = dd_axpy(-beta, Wh, Wl, wh, wl)
+                uh, ul = dd_axpy(-beta, Uh, Ul, uh, ul)
+        nw = float(np.linalg.norm(wh + wl))
+        if not nw > 0:
+            break
+        wh, wl = dd_scale(wh, wl, 1.0 / nw)
+        uh, ul = dd_scale(uh, ul, 1.0 / nw)
+        w64 = wh + wl
+        c = float(w64 @ (rh + rl))
+        xh, xl = dd_axpy(c, uh, ul, xh, xl)
+        rh, rl = dd_axpy(-c, wh, wl, rh, rl)
+        U.append((uh, ul))
+        W.append((wh, wl))
+        W64.append(w64)
+        ch = abs(c) * float(np.linalg.norm(uh + ul)) / max(float(np.linalg.norm(xh + xl)), 1e-300)
+        info["changes"].append(ch)
+        if ref is not None:
+            info["errors"].append(float(np.linalg.norm((xh - ref[0]) + (xl - ref[1])) / np.linalg.norm(refv)))
+        if verbose:
+            print(f"    gcr {len(U)}: change {ch:.1e}" + (f", error {info['errors'][-1]:.1e}" if ref is not None else ""),
+                  flush=True)
+        run = run + 1 if (len(U) > 1 and ch <= step_tol) else 0
+        if run >= confirm:
+            info["converged"] = True
+            break
+    return xh, xl, info
+
+
+def newton_step(s, zh, zl, jac="dd", mixed=None, gmres=None, verbose=False):
+    """One Newton step dz = -J^-1 F(z) with the Jacobian variant jac (JACS above). The LU stored in s is the step's
+    factorization (the double-double one for dd, else the f64 LU of the f64 Jacobian, with the horizon block in
+    double-double for f64h / f64hg), which chord, lu_solve, lu_solve_t and weak_subspace then use. mixed: further
+    options of Solver.newton_mixed; gmres: options of gmres_refine (GMRES above, for f64g / f64hg).
+    Returns dh, dl, Fh, Fl, pmin, pmax, info: info = dict(t_res, t_jac, t_lu, t_solve, t_prod, products) in seconds."""
+    if jac not in JACS:
+        raise ValueError(f"jac must be one of {JACS}, not {jac!r}")
+    if jac == "dd":
+        dh, dl, Fh, Fl, pmin, pmax = s.newton(zh, zl)
+    else:
+        kw = dict(mixed or {})
+        if jac in ("f64h", "f64hg"):
+            kw["horizon_dd"] = HORIZON_DD
+        dh, dl, Fh, Fl, pmin, pmax = s.newton_mixed(zh, zl, **kw)
+    st = getattr(s, "step_timing", None)       # (absent in builds before notes/LARGE_D_MIXED.md)
+    tr, tj, tf, ts = st() if st else (float("nan"),) * 4
+    info = dict(t_res=tr, t_jac=tj, t_lu=tf, t_solve=ts, t_prod=0.0, products=0)
+    if jac in ("f64g", "f64hg"):
+        g = dict(GMRES, **(gmres or {}))
+        dh, dl, gi = gmres_refine(s, zh, zl, -np.asarray(Fh), -np.asarray(Fl), verbose=verbose, **g)
+        info.update(t_prod=gi["t_prod"], t_solve=ts + gi["t_solve"], products=gi["products"],
+                    gmres_converged=gi["converged"], changes=[float(f"{c:.2e}") for c in gi["changes"]])
+    return dh, dl, Fh, Fl, pmin, pmax, info
+
+
+def exact_last_step(s, zh, zl, tol):
+    """At a point a mixed-precision Newton reached |F| < tol: one exact Newton step (Solver.newton), taken if |F| stays
+    below tol. It is quadratic where the mixed steps converge linearly, so it removes the remainder they leave along
+    the weakly determined directions (which carry Delta's sensitivity at large D and which an f64 LU does not resolve),
+    and it leaves the exact LU stored for the sensitivities. Returns (zh, zl, record fields)."""
+    dh, dl, Fh, Fl, pmin, pmax = s.newton(zh, zl)
+    tr, tj, tf, ts = s.step_timing()
+    th, tl = dd_add(zh, zl, dh, dl)
+    Th, Tl = s.residual(th, tl)
+    n1 = dd_norm(Th, Tl)
+    out = dict(exact_last=True, t_jac_last=tj, F_last=n1)
+    if n1 < tol:
+        zh, zl = th, tl
+        out["dDelta_est"] = delta_correction(s, Th, Tl)
+    else:
+        out["dDelta_est"] = delta_correction(s, Fh, Fl)
+        out["exact_last_rejected"] = True
+    return zh, zl, out
+
+
+def newton_solve(s, zh, zl, tol=1e-28, it_max=12, chord=0, verbose=True, ls=True, max_halvings=10, jac="dd", mixed=None,
+                 gmres=None, dd_finish=True, dd_last=False):
     """Newton with exact Jacobians and backtracking on |F|_2 (Armijo, factor 1/2); optional chord steps with the
     stored LU after full Newton steps. Returns zh, zl, history.
     jac="f64": mixed precision, each step with the f64 Jacobian (s.newton_mixed(zh, zl, **mixed), mixed a dict of its
     options or None; the residual stays double-double, so the solution is the same; notes/MIXED_PRECISION.md). A step
     along which the line search finds no decrease is then retried once with the exact Jacobian (s.newton), and once
     |F| < tol the step computed at that point is still taken if |F| stays below tol: the linear convergence leaves an
-    error of about that step's size in the near-null directions, which |F| does not see."""
+    error of about that step's size in the near-null directions, which |F| does not see.
+    jac="f64h", "f64g", "f64hg": the large-D variants of newton_step (notes/LARGE_D_MIXED.md), with the same two
+    rules; gmres: options of gmres_refine. Their history records carry the step's time split (t_res, t_jac, t_lu,
+    t_solve, t_prod) and the products. With dd_finish (their default) the remaining steps are exact once a mixed step
+    is cut below lam = 1/4, needs the exact retry, or its correction loop ends without converging (as in
+    deflated_newton). dd_last: see deflated_newton."""
+    if jac not in JACS:
+        raise ValueError(f"jac must be one of {JACS}, not {jac!r}")
     hist = []
     t0 = time.time()
 
@@ -189,17 +355,23 @@ def newton_solve(s, zh, zl, tol=1e-28, it_max=12, chord=0, verbose=True, ls=True
             lam *= 0.5
         return accepted, lam, th, tl
 
+    cur = jac
     for it in range(it_max):
-        if jac == "f64":
-            dh, dl, Fh, Fl, pmin, pmax = s.newton_mixed(zh, zl, **(mixed or {}))
-        else:
-            dh, dl, Fh, Fl, pmin, pmax = s.newton(zh, zl)
+        # (jac "dd": s.newton; "f64": s.newton_mixed(**mixed), as before; info: the step's seconds by part)
+        dh, dl, Fh, Fl, pmin, pmax, info = newton_step(s, zh, zl, cur, mixed, gmres)
+        if cur != jac:
+            info = dict(info, jac=cur)
         n0 = rnorm(Fh, Fl)
         nF = dd_norm(Fh, Fl)
         if nF < tol:
             rec = dict(it=it, F=nF, dz=dd_norm(dh, dl), Delta=float(zh[-1]), piv=(pmin, pmax), t=round(time.time() - t0, 1))
+            rec.update(info)
             polish = ""
-            if jac == "f64":
+            if dd_last and cur not in ("dd", "f64") and s.m <= DENSE_M_MAX:
+                zh, zl, extra = exact_last_step(s, zh, zl, tol)
+                rec.update(extra)
+                polish = f"; one exact step, |F| {extra['F_last']:.2e}"
+            elif cur != "dd":
                 # Linear convergence leaves an error of about this step's size in the weakly determined (near-null)
                 # directions, which |F| does not see. The step is already computed: take it if |F| stays below tol.
                 th, tl = dd_add(zh, zl, dh, dl)
@@ -215,11 +387,20 @@ def newton_solve(s, zh, zl, tol=1e-28, it_max=12, chord=0, verbose=True, ls=True
                       flush=True)
             break
         accepted, lam, th, tl = search(zh, zl, dh, dl, n0)
-        if not accepted and jac == "f64":
-            if verbose:
-                print(f"  newton {it}: |F| {nF:.2e}: no decrease along the f64-Jacobian step; retrying with the exact "
-                      f"Jacobian", flush=True)
-            dh, dl, Fh, Fl, pmin, pmax = s.newton(zh, zl)
+        if not accepted and cur != "dd":
+            if s.m <= DENSE_M_MAX:
+                if verbose:
+                    print(f"  newton {it}: |F| {nF:.2e}: no decrease along the f64-Jacobian step; retrying with the exact "
+                          f"Jacobian", flush=True)
+                dh, dl, Fh, Fl, pmin, pmax = s.newton(zh, zl)
+                info["retry_dd"] = True
+            else:
+                # no dense exact Jacobian above DENSE_M_MAX: retry with the f64 tangents on a double-double base
+                # trajectory (the more accurate f64 Jacobian, 'dd4'), in block storage
+                if verbose:
+                    print(f"  newton {it}: |F| {nF:.2e}: no decrease along the f64-Jacobian step; retrying with the dd4 "
+                          f"Jacobian (M > {DENSE_M_MAX}: no exact dense Jacobian)", flush=True)
+                dh, dl, Fh, Fl, pmin, pmax = s.newton_mixed(zh, zl, **dict(mixed or {}, tangents=4, dd_base=True))
             accepted, lam, th, tl = search(zh, zl, dh, dl, n0)
         if not accepted:
             hist.append(dict(it=it, F=nF, failed="line search", Delta=float(zh[-1]), t=round(time.time() - t0, 1)))
@@ -229,7 +410,12 @@ def newton_solve(s, zh, zl, tol=1e-28, it_max=12, chord=0, verbose=True, ls=True
         zh, zl = th, tl
         rec = dict(it=it, F=nF, dz=dd_norm(dh, dl), lam=lam, dDelta=float(dh[-1] + dl[-1]) * lam, Delta=float(zh[-1]),
                    piv=(pmin, pmax), t=round(time.time() - t0, 1))
+        rec.update(info)
         hist.append(rec)
+        if (dd_finish and cur in ("f64h", "f64g", "f64hg") and s.m <= DENSE_M_MAX
+                and (lam < 0.25 or info.get("retry_dd") or (info.get("products") and not info.get("gmres_converged", True)))):
+            cur = "dd"
+            rec["switch_dd"] = True
         if verbose:
             print(f"  newton {it}: |F| {nF:.2e} |dz| {rec['dz']:.2e} lam {lam:.3g} dDelta {rec['dDelta']:+.2e} "
                   f"Delta {zh[-1]:.15f} piv {pmin:.1e}..{pmax:.1e}  t {rec['t']}s", flush=True)
@@ -427,7 +613,7 @@ def delta_correction(s, Fh, Fl):
 
 
 def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_halvings=12, junk_only=False,
-                    delta_max=1e-9, delta_tol=1e-14):
+                    delta_max=1e-9, delta_tol=1e-14, jac="dd", mixed=None, gmres=None, dd_finish=True, dd_last=False):
     """Newton in phases, all with backtracking on |F|_2:
     1. 'all': the step J^-1(-F) with its component in the w weakest right singular directions removed, so the
        well-determined part converges without its second-order error leaking into them;
@@ -435,7 +621,26 @@ def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_hal
        so the selection directions converge while the near-null centre ("junk") directions stay on the predictor's
        smooth trend (the equations fix them only to tol / sigma, and Delta does not feel them);
     3. 'full': plain Newton, if the previous phase stalls above tol.
-    A phase ends when |F| stops dropping by a factor 0.3 per step or a step finds no decrease."""
+    A phase ends when |F| stops dropping by a factor 0.3 per step or a step finds no decrease.
+    jac="f64": the steps and the stored LU (from which the weak directions are computed) come from the mixed-precision
+    step s.newton_mixed(**mixed) (block storage above M = 128) instead of the exact Jacobian.
+    jac="f64h", "f64g", "f64hg" (the large-D variants of newton_step, notes/LARGE_D_MIXED.md; gmres: options of
+    gmres_refine): likewise the weak subspace comes from the step's stored f64 LU; at convergence the step already
+    computed is taken if |F| stays below tol (as newton_solve does: the convergence is linear); and with the correction
+    loop (f64g, f64hg) the linearised Delta correction is the Delta component of the refined step (equal to
+    -dDelta/dF . F for the exact J), since the stored LU is not the Jacobian the step solves with. "dd" and "f64" keep
+    the loop of wip/high-m 2b3b253 unchanged.
+    dd_finish (f64h, f64g, f64hg): in the plain-Newton phase, once a mixed step is cut below lam = 1/4 by the line
+    search or finds no decrease, or its correction loop ends without converging, the remaining steps are exact
+    (dd). Near the double-double floor at large D the residual lies in the weakest directions, which an f64 LU does
+    not resolve (notes/LARGE_D_MIXED.md section 4); the exact steps finish there, and leave the exact LU stored for
+    the sensitivities. Not above M = DENSE_M_MAX (no dense exact Jacobian there).
+    dd_last (f64h, f64g, f64hg; default off): once |F| < tol, one exact step instead of taking the mixed step
+    (exact_last_step): at D ~ 60 the mixed iterations stop just below tol with a residual along the weakest directions,
+    which leaves Delta off by 1e-16..1e-15 where the exact Newton's is 1e-18 (notes/LARGE_D_MIXED.md section 4); the
+    exact step costs one double-double Jacobian per solve and also leaves the exact LU for the sensitivities."""
+    if jac not in JACS:
+        raise ValueError(f"jac must be one of {JACS}, not {jac!r}")
     hist = []
     t0 = time.time()
     # with junk_only there is no plain-Newton fallback: it would let the junk directions move to whatever tol / sigma
@@ -444,20 +649,45 @@ def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_hal
     ph = 0
     V = {}
     n_prev = None
+    cur = jac      # the variant of the next step (dd_finish switches it to dd)
+
+    def dcorr(Fh, Fl, dz_delta):
+        # the linearised Delta correction -dDelta/dF . F: by the stored LU's transpose solve (as before), or with the
+        # correction loop the Delta component of the refined step (the same quantity for the exact J)
+        return float(dz_delta) if cur in ("f64g", "f64hg") else delta_correction(s, Fh, Fl)
+
     for it in range(it_max):
-        dh, dl, Fh, Fl, pmin, pmax = s.newton(zh, zl)
+        # (dd: s.newton; f64: s.newton_mixed(**mixed), as in 2b3b253; info: the step's seconds by part)
+        dh, dl, Fh, Fl, pmin, pmax, info = newton_step(s, zh, zl, cur, mixed, gmres)
+        info = dict(info, jac=cur)
+        dz_delta = float(dh[-1] + dl[-1])
         nF = dd_norm(Fh, Fl)
         n0 = rnorm(Fh, Fl)
         mode = phases[ph]
         if nF < tol:
-            hist.append(dict(it=it, F=nF, Delta=float(zh[-1]), piv=(pmin, pmax), mode=mode, accepted=True,
-                             dDelta_est=delta_correction(s, Fh, Fl), t=round(time.time() - t0, 1)))
+            rec = dict(it=it, F=nF, Delta=float(zh[-1]), piv=(pmin, pmax), mode=mode, accepted=True,
+                       dDelta_est=dcorr(Fh, Fl, dz_delta), t=round(time.time() - t0, 1))
+            polish = ""
+            rec.update(info)
+            if dd_last and cur not in ("dd", "f64") and s.m <= DENSE_M_MAX:
+                zh, zl, extra = exact_last_step(s, zh, zl, tol)
+                rec.update(extra)
+                polish = f"; one exact step, |F| {extra['F_last']:.2e}"
+            elif cur not in ("dd", "f64"):
+                th, tl = dd_add(zh, zl, dh, dl)
+                Th, Tl = s.residual(th, tl)
+                n1 = dd_norm(Th, Tl)
+                if n1 < tol:
+                    zh, zl = th, tl
+                    rec.update(polished=True, F_polished=n1)
+                    polish = f"; last step taken, |F| {n1:.2e}"
+            hist.append(rec)
             if verbose:
-                print(f"  dn {it}: |F| {nF:.2e} converged, Delta {zh[-1]:.15f}", flush=True)
+                print(f"  dn {it}: |F| {nF:.2e} converged, Delta {zh[-1]:.15f}{polish}", flush=True)
             break
         if junk_only and mode == "sel" and n_prev is not None and n0 > 0.3 * n_prev:
             # stalled with the junk frozen: accept if Delta no longer moves (the floor is junk residual)
-            dd = delta_correction(s, Fh, Fl)
+            dd = dcorr(Fh, Fl, dz_delta)
             hist.append(dict(it=it, F=nF, Delta=float(zh[-1]), piv=(pmin, pmax), mode=mode, dDelta_est=dd,
                              accepted=abs(dd) < delta_tol, t=round(time.time() - t0, 1)))
             if verbose:
@@ -492,11 +722,22 @@ def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_hal
             lam *= 0.5
         if verbose:
             print(f"  dn {it} [{mode}]: |F| {nF:.2e} -> {dd_norm(Th, Tl) if accepted else float('nan'):.2e} lam {lam:.3g} "
-                  f"Delta {th[-1]:.15f} t {time.time() - t0:.0f}s", flush=True)
-        hist.append(dict(it=it, F=nF, mode=mode, lam=lam, Delta=float(th[-1]), piv=(pmin, pmax), t=round(time.time() - t0, 1)))
+                  f"Delta {th[-1]:.15f} t {time.time() - t0:.0f}s"
+                  + (f" ({info['products']} products)" if info and info.get("products") else ""), flush=True)
+        rec = dict(it=it, F=nF, mode=mode, lam=lam, Delta=float(th[-1]), piv=(pmin, pmax), t=round(time.time() - t0, 1))
+        rec.update(info)
+        hist.append(rec)
+        if (dd_finish and cur in ("f64h", "f64g", "f64hg") and mode == "full" and s.m <= DENSE_M_MAX
+                and (not accepted or lam < 0.25 or (info.get("products") and not info.get("gmres_converged", True)))):
+            cur = "dd"
+            rec["switch_dd"] = True
+            if verbose:
+                print(f"  dn {it}: the remaining steps exact (dd)", flush=True)
+            if not accepted:
+                continue
         if not accepted:
             if junk_only and mode == "sel":
-                dd = delta_correction(s, Fh, Fl)
+                dd = dcorr(Fh, Fl, dz_delta)
                 hist.append(dict(it=it, F=nF, Delta=float(zh[-1]), piv=(pmin, pmax), mode=mode, dDelta_est=dd,
                                  accepted=abs(dd) < delta_tol, t=round(time.time() - t0, 1)))
                 if verbose:

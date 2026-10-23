@@ -1,0 +1,77 @@
+bench_variants: {'host': 'vm', 'platform': 'Linux-6.18.44-fc-v153-x86_64-with-glibc2.39', 'processor': 'x86_64', 'cpus': 2, 'python': '3.13.16', 'isa': 'avx512', 'threads': 2, 'priority': 'nice 10'}
+D3.7000_M80: reference |F| 7.2e-30, tol 1e-28, kfreeze None, kc 62 (state's 100), 86 Taylor steps (bench_D3.7000_M80.npz)
+  D3.7000_M80 dd     rep 0: converged in 4 its, 937.4 s; per step: Jacobian 230.18 s, LU 3.06 s, products 0.00 s (0 in all); |F| 2.0e-29; load [13.27, 13.07, 12.33]
+  D3.7000_M80 f64    rep 0: converged in 5 its, 137.9 s; per step: Jacobian 24.88 s, LU 1.49 s, products 0.00 s (0 in all); |F| 1.2e-29; Delta - dd +3.7e-31; load [10.68, 11.36, 11.89]
+  D3.7000_M80 f64h   rep 0: converged in 5 its, 514.5 s; per step: Jacobian 100.11 s, LU 1.55 s, products 0.00 s (0 in all); |F| 1.3e-29; Delta - dd +2.7e-30; load [11.42, 11.41, 11.84]
+  D3.7000_M80 f64g   rep 0: converged in 4 its, 122.5 s; per step: Jacobian 25.08 s, LU 1.67 s, products 2.23 s (12 in all); |F| 1.6e-30; Delta - dd -6.4e-30; load [11.01, 11.09, 11.5]
+  D3.7000_M80 f64hg  rep 0: converged in 4 its, 414.0 s; per step: Jacobian 98.34 s, LU 1.43 s, products 2.12 s (12 in all); |F| 9.4e-30; Delta - dd -2.9e-30; load [11.38, 11.22, 11.5]
+D8.2500_M48: reference |F| 5.4e-31, tol 1e-28, kfreeze None, kc 47 (state's 60), 35 Taylor steps (up_D8.2500.npz)
+  D8.2500_M48 dd     rep 0: converged in 4 its, 68.2 s; per step: Jacobian 16.42 s, LU 0.50 s, products 0.00 s (0 in all); |F| 5.5e-31; load [10.93, 11.07, 11.34]
+  D8.2500_M48 f64    rep 0: converged in 5 its, 15.7 s; per step: Jacobian 2.70 s, LU 0.26 s, products 0.00 s (0 in all); |F| 3.5e-31; Delta - dd -4.4e-29; load [9.91, 10.74, 11.2]
+  D8.2500_M48 f64h   rep 0: converged in 4 its, 19.7 s; per step: Jacobian 4.46 s, LU 0.28 s, products 0.00 s (0 in all); |F| 2.5e-31; Delta - dd -1.7e-29; load [9.77, 10.67, 11.17]
+  D8.2500_M48 f64g   rep 0: converged in 4 its, 14.4 s; per step: Jacobian 2.58 s, LU 0.30 s, products 0.45 s (15 in all); |F| 3.9e-31; Delta - dd -2.9e-29; load [9.62, 10.58, 11.13]
+  D8.2500_M48 f64hg  rep 0: converged in 4 its, 21.3 s; per step: Jacobian 4.52 s, LU 0.25 s, products 0.33 s (12 in all); |F| 4.3e-31; Delta - dd -4.6e-29; load [9.48, 10.5, 11.1]
+D16.7600_M32: reference |F| 4.2e-30, tol 1e-28, kfreeze None, kc 77 (state's 80), 19 Taylor steps (up2_D16.7600.npz)
+  D16.7600_M32 dd     rep 0: converged in 5 its, 21.7 s; per step: Jacobian 4.18 s, LU 0.10 s, products 0.00 s (0 in all); |F| 6.5e-30; load [9.46, 10.41, 11.05]
+  D16.7600_M32 f64    rep 0: converged in 7 its, 4.4 s; per step: Jacobian 0.52 s, LU 0.05 s, products 0.00 s (0 in all); |F| 4.9e-30; Delta - dd +8.1e-29; load [9.4, 10.33, 11.01]
+  D16.7600_M32 f64h   rep 0: converged in 6 its, 8.2 s; per step: Jacobian 1.25 s, LU 0.06 s, products 0.00 s (0 in all); |F| 5.5e-30; Delta - dd +2.1e-28; load [9.37, 10.31, 11.0]
+  D16.7600_M32 f64g   rep 0: converged in 5 its, 4.5 s; per step: Jacobian 0.53 s, LU 0.06 s, products 0.20 s (20 in all); |F| 6.8e-30; Delta - dd +5.7e-28; load [9.39, 10.29, 10.98]
+  D16.7600_M32 f64hg  rep 0: converged in 5 its, 7.8 s; per step: Jacobian 1.24 s, LU 0.05 s, products 0.17 s (19 in all); |F| 4.3e-30; Delta - dd -5.4e-28; load [9.35, 10.26, 10.97]
+D20.0437_M32: reference |F| 1.9e-29, tol 2e-28, kfreeze None, kc 76 (state's 80), 18 Taylor steps (up2_D20.0437.npz)
+  D20.0437_M32 dd     rep 0: converged in 4 its, 16.2 s; per step: Jacobian 3.92 s, LU 0.09 s, products 0.00 s (0 in all); |F| 6.6e-29; load [9.29, 10.22, 10.95]
+  D20.0437_M32 f64    rep 0: converged in 7 its, 4.2 s; per step: Jacobian 0.50 s, LU 0.05 s, products 0.00 s (0 in all); |F| 2.0e-29; Delta - dd +1.0e-27; load [9.3, 10.18, 10.92]
+  D20.0437_M32 f64h   rep 0: converged in 6 its, 8.3 s; per step: Jacobian 1.28 s, LU 0.05 s, products 0.00 s (0 in all); |F| 2.1e-29; Delta - dd -3.2e-27; load [9.28, 10.16, 10.91]
+  D20.0437_M32 f64g   rep 0: converged in 4 its, 3.9 s; per step: Jacobian 0.52 s, LU 0.06 s, products 0.26 s (20 in all); |F| 2.0e-29; Delta - dd -1.3e-27; load [9.34, 10.15, 10.91]
+  D20.0437_M32 f64hg  rep 0: converged in 4 its, 7.0 s; per step: Jacobian 1.35 s, LU 0.06 s, products 0.23 s (19 in all); |F| 1.7e-29; Delta - dd +1.6e-27; load [9.31, 10.14, 10.9]
+D30.0688_M32: reference |F| 9.2e-28, tol 9e-27, kfreeze 13, kc 217 (state's 414), 12 Taylor steps (bench_D30.0688_M32.npz)
+  D30.0688_M32 dd     rep 0: converged in 7 its, 38.9 s; per step: Jacobian 5.35 s, LU 0.05 s, products 0.00 s (0 in all); |F| 6.2e-28; load [9.34, 10.11, 10.88]
+  D30.0688_M32 f64    rep 0: converged in 17 its, 10.3 s; per step: Jacobian 0.47 s, LU 0.03 s, products 0.00 s (0 in all); |F| 1.7e-27; Delta - dd +1.3e-24; load [9.3, 10.0, 10.81]
+  D30.0688_M32 f64h   rep 0: converged in 15 its, 21.4 s; per step: Jacobian 1.26 s, LU 0.03 s, products 0.00 s (0 in all); |F| 5.8e-28; Delta - dd +2.7e-25; load [9.25, 9.97, 10.79]
+  D30.0688_M32 f64g   rep 0: converged in 7 its, 8.6 s; per step: Jacobian 0.46 s, LU 0.02 s, products 0.55 s (57 in all); |F| 8.5e-28; Delta - dd -4.8e-25; load [9.33, 9.94, 10.76]
+  D30.0688_M32 f64hg  rep 0: converged in 7 its, 12.9 s; per step: Jacobian 1.23 s, LU 0.02 s, products 0.39 s (44 in all); |F| 9.0e-28; Delta - dd +5.7e-25; load [9.35, 9.93, 10.75]
+D40.0201_M32: reference |F| 2.0e-26, tol 2e-25, kfreeze 13, kc 174 (state's 420), 10 Taylor steps (up7_D40.0201.npz)
+  D40.0201_M32 dd     rep 0: converged in 6 its, 24.2 s; per step: Jacobian 3.84 s, LU 0.07 s, products 0.00 s (0 in all); |F| 2.8e-26; load [9.42, 9.91, 10.73]
+  D40.0201_M32 f64    rep 0: NOT converged in 21 its, 14.6 s; per step: Jacobian 0.44 s, LU 0.03 s, products 0.00 s (0 in all); |F| 2.1e-19; load [9.35, 9.85, 10.69]
+  D40.0201_M32 f64h   rep 0: converged in 8 its, 22.3 s; per step: Jacobian 2.60 s, LU 0.04 s, products 0.00 s (0 in all); |F| 2.0e-26; Delta - dd -2.4e-22; load [9.34, 9.83, 10.67]
+  D40.0201_M32 f64g   rep 0: converged in 7 its, 20.3 s; per step: Jacobian 2.50 s, LU 0.04 s, products 0.21 s (30 in all); |F| 2.1e-26; Delta - dd +1.3e-21; load [9.08, 9.74, 10.62]
+  D40.0201_M32 f64hg  rep 0: converged in 6 its, 17.5 s; per step: Jacobian 2.48 s, LU 0.04 s, products 0.23 s (28 in all); |F| 3.8e-26; Delta - dd +1.8e-21; load [8.98, 9.68, 10.58]
+D45.0507_M32: reference |F| 9.4e-26, tol 9e-25, kfreeze 13, kc 158 (state's 420), 10 Taylor steps (up7_D45.0507.npz)
+  D45.0507_M32 dd     rep 0: converged in 9 its, 33.9 s; per step: Jacobian 3.56 s, LU 0.05 s, products 0.00 s (0 in all); |F| 8.1e-26; load [8.98, 9.63, 10.54]
+  D45.0507_M32 f64    rep 0: NOT converged in 6 its, 4.3 s; per step: Jacobian 0.45 s, LU 0.02 s, products 0.00 s (0 in all); |F| 1.1e-17; load [8.87, 9.53, 10.48]
+  D45.0507_M32 f64h   rep 0: converged in 13 its, 30.0 s; per step: Jacobian 2.14 s, LU 0.05 s, products 0.00 s (0 in all); |F| 4.7e-25; Delta - dd -9.2e-21; load [8.96, 9.54, 10.47]
+  D45.0507_M32 f64g   rep 0: converged in 8 its, 20.6 s; per step: Jacobian 2.08 s, LU 0.05 s, products 0.26 s (42 in all); |F| 1.4e-25; Delta - dd +1.6e-20; load [9.29, 9.56, 10.45]
+  D45.0507_M32 f64hg  rep 0: converged in 9 its, 27.6 s; per step: Jacobian 2.61 s, LU 0.06 s, products 0.21 s (40 in all); |F| 1.0e-25; Delta - dd +7.2e-22; load [9.28, 9.54, 10.42]
+D50.0075_M32: reference |F| 9.7e-25, tol 1e-23, kfreeze 13, kc 149 (state's 420), 10 Taylor steps (up8_D50.0075.npz)
+  D50.0075_M32 dd     rep 0: converged in 7 its, 26.5 s; per step: Jacobian 3.57 s, LU 0.06 s, products 0.00 s (0 in all); |F| 1.1e-24; load [9.29, 9.52, 10.39]
+  D50.0075_M32 f64    rep 0: NOT converged in 5 its, 3.9 s; per step: Jacobian 0.46 s, LU 0.03 s, products 0.00 s (0 in all); |F| 7.7e-18; load [9.42, 9.53, 10.37]
+  D50.0075_M32 f64h   rep 0: NOT converged in 25 its, 80.9 s; per step: Jacobian 2.97 s, LU 0.05 s, products 0.00 s (0 in all); |F| 1.6e-17; load [9.39, 9.52, 10.36]
+  D50.0075_M32 f64g   rep 0: converged in 7 its, 17.3 s; per step: Jacobian 1.85 s, LU 0.04 s, products 0.33 s (45 in all); |F| 9.1e-25; Delta - dd +4.1e-20; load [9.98, 9.7, 10.35]
+  D50.0075_M32 f64hg  rep 0: converged in 9 its, 27.2 s; per step: Jacobian 2.59 s, LU 0.05 s, products 0.21 s (40 in all); |F| 9.6e-25; Delta - dd +1.2e-19; load [10.11, 9.76, 10.36]
+D55.0351_M32: reference |F| 4.4e-24, tol 4e-23, kfreeze 13, kc 141 (state's 420), 10 Taylor steps (up10_D55.0351.npz)
+  D55.0351_M32 dd     rep 0: converged in 7 its, 26.5 s; per step: Jacobian 3.56 s, LU 0.06 s, products 0.00 s (0 in all); |F| 4.1e-24; load [10.07, 9.78, 10.35]
+  D55.0351_M32 f64    rep 0: NOT converged in 5 its, 3.4 s; per step: Jacobian 0.43 s, LU 0.02 s, products 0.00 s (0 in all); |F| 1.6e-18; load [9.97, 9.78, 10.33]
+  D55.0351_M32 f64h   rep 0: converged in 9 its, 22.2 s; per step: Jacobian 2.27 s, LU 0.04 s, products 0.00 s (0 in all); |F| 3.9e-24; Delta - dd -4.0e-19; load [9.97, 9.79, 10.33]
+  D55.0351_M32 f64g   rep 0: converged in 8 its, 17.0 s; per step: Jacobian 1.54 s, LU 0.04 s, products 0.37 s (60 in all); |F| 2.4e-24; Delta - dd +5.8e-19; load [9.7, 9.73, 10.3]
+  D55.0351_M32 f64hg  rep 0: converged in 7 its, 19.0 s; per step: Jacobian 2.18 s, LU 0.04 s, products 0.27 s (41 in all); |F| 4.0e-24; Delta - dd +2.9e-20; load [9.76, 9.75, 10.29]
+D60.0020_M32: reference |F| 2.3e-23, tol 2e-22, kfreeze 13, kc 134 (state's 420), 11 Taylor steps (up13_D60.0020.npz)
+  D60.0020_M32 dd     rep 0: converged in 6 its, 22.5 s; per step: Jacobian 3.56 s, LU 0.06 s, products 0.00 s (0 in all); |F| 3.4e-23; load [9.56, 9.7, 10.26]
+  D60.0020_M32 f64    rep 0: NOT converged in 7 its, 4.7 s; per step: Jacobian 0.46 s, LU 0.03 s, products 0.00 s (0 in all); |F| 1.1e-18; load [9.56, 9.69, 10.25]
+  D60.0020_M32 f64h   rep 0: NOT converged in 25 its, 78.2 s; per step: Jacobian 2.84 s, LU 0.05 s, products 0.00 s (0 in all); |F| 2.1e-21; load [9.59, 9.7, 10.25]
+  D60.0020_M32 f64g   rep 0: NOT converged in 25 its, 96.2 s; per step: Jacobian 3.39 s, LU 0.06 s, products 0.07 s (36 in all); |F| 1.9e-09; load [9.7, 9.7, 10.2]
+  D60.0020_M32 f64hg  rep 0: converged in 9 its, 27.3 s; per step: Jacobian 2.55 s, LU 0.05 s, products 0.24 s (41 in all); |F| 5.3e-23; Delta - dd +4.8e-18; load [8.84, 9.39, 10.03]
+total 3177 s
+
+median whole-solve seconds (speedup over dd) / iterations / per-step Jacobian+LU+products seconds, from /home/claude/dss/agentLD/wt/hp/data/bench_variants/bench_cloud.jsonl
+state                                   dd                       f64                      f64h                      f64g                     f64hg
+D3.7000_M80             937.4s (1.0x)  4it        137.9s (6.8x)  5it        514.5s (1.8x)  5it        122.5s (7.7x)  4it        414.0s (2.3x)  4it
+D8.2500_M48              68.2s (1.0x)  4it         15.7s (4.3x)  5it         19.7s (3.5x)  4it         14.4s (4.7x)  4it         21.3s (3.2x)  4it
+D16.7600_M32             21.7s (1.0x)  5it          4.4s (4.9x)  7it          8.2s (2.7x)  6it          4.5s (4.8x)  5it          7.8s (2.8x)  5it
+D20.0437_M32             16.2s (1.0x)  4it          4.2s (3.8x)  7it          8.3s (2.0x)  6it          3.9s (4.2x)  4it          7.0s (2.3x)  4it
+D30.0688_M32             38.9s (1.0x)  7it         10.3s (3.8x) 17it         21.4s (1.8x) 15it          8.6s (4.5x)  7it         12.9s (3.0x)  7it
+D40.0201_M32             24.2s (1.0x)  6it                FAILED (1)         22.3s (1.1x)  8it         20.3s (1.2x)  7it         17.5s (1.4x)  6it
+D45.0507_M32             33.9s (1.0x)  9it                FAILED (1)         30.0s (1.1x) 13it         20.6s (1.6x)  8it         27.6s (1.2x)  9it
+D50.0075_M32             26.5s (1.0x)  7it                FAILED (1)                FAILED (1)         17.3s (1.5x)  7it         27.2s (1.0x)  9it
+D55.0351_M32             26.5s (1.0x)  7it                FAILED (1)         22.2s (1.2x)  9it         17.0s (1.6x)  8it         19.0s (1.4x)  7it
+D60.0020_M32             22.5s (1.0x)  6it                FAILED (1)                FAILED (1)                FAILED (1)         27.3s (0.8x)  9it
+max |Delta - Delta_dd| over all converged runs: 4.8e-18
+exit 0

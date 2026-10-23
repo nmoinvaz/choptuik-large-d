@@ -138,7 +138,7 @@ impl Lane for CDV {
 /// The odd-sector d/dtheta of hp/python/hpkernel/driver.py dmat_odd in f64 (lo parts zero), M = 8; nodes
 /// 0.005..0.1, four Taylor steps per segment; the state: centre data p1 = 0.3 sin(theta), c0 = 0.6 + 0.05 cos(2
 /// theta), the nodes integrated outward from the centre in double-double, the horizon data from the last node.
-fn synth() -> (Ctx<1>, Vec<f64>, Vec<f64>) {
+pub(crate) fn synth() -> (Ctx<1>, Vec<f64>, Vec<f64>) {
     let m = 8usize;
     let nn = 2 * m;
     let mut dh = vec![0.0; m * m];
@@ -161,7 +161,7 @@ fn synth() -> (Ctx<1>, Vec<f64>, Vec<f64>) {
     let nodes = vec![0.005, 0.01, 0.02, 0.05, 0.1];
     let segs: Vec<Vec<f64>> = nodes.windows(2).map(|w| (0..=4).map(|k| w[0] + (w[1] - w[0]) * k as f64 / 4.0).collect()).collect();
     let k = nodes.len();
-    let ctx = Ctx::<1> { n: DD::from_f64(1.7), d, phase, nodes, segs, kt: 20, kc: 30, ks: 30, freeze: None, match_node: k - 1, lam: DD::ZERO, mutate: 0 };
+    let ctx = Ctx::<1> { n: DD::from_f64(1.7), d, phase, nodes, segs, kt: 20, kc: 30, ks: 30, freeze: None, match_node: k - 1, lam: DD::ZERO, mutate: 0, f64_dd: 0 };
     let l = ctx.len();
     let (mut zh, mut zl) = (vec![0.0; l], vec![0.0; l]);
     let p1: Vec<f64> = th.iter().map(|t| 0.3 * (2.0 * t).sin()).collect();

@@ -1,0 +1,28 @@
+ dense:
+  newton 0: |F| 7.46e-06 |dz| 3.74e-02 lam 0.5 dDelta -1.67e-06 Delta 3.465199814828793 piv 1.4e-03..5.4e+02  t 31.9s
+  newton 1: |F| 5.69e-06 |dz| 1.71e-02 lam 1 dDelta -8.56e-08 Delta 3.465199729273092 piv 1.4e-03..2.6e+02  t 73.5s
+  newton 2: |F| 4.31e-06 |dz| 7.30e-03 lam 1 dDelta +7.49e-07 Delta 3.465200478636099 piv 1.4e-03..2.7e+01  t 109.6s
+  newton 3: |F| 3.84e-07 |dz| 3.68e-05 lam 1 dDelta +4.91e-09 Delta 3.465200483544066 piv 1.4e-03..2.7e+01  t 139.6s
+  newton 4: |F| 6.17e-13 |dz| 1.64e-10 lam 1 dDelta -3.47e-14 Delta 3.465200483544031 piv 1.4e-03..2.7e+01  t 168.1s
+  newton 5: |F| 6.79e-21 |dz| 1.36e-17 lam 1 dDelta -8.20e-23 Delta 3.465200483544031 piv 1.4e-03..2.7e+01  t 197.5s
+  newton 6: |F| 3.34e-30 converged (last |dz| 2.6e-25) Delta 3.465200483544031; last step taken, |F| 1.23e-29
+ block:
+  newton 0: |F| 7.46e-06 |dz| 3.74e-02 lam 0.5 dDelta -1.67e-06 Delta 3.465199814828793 piv 1.4e-03..5.4e+02  t 27.5s
+  newton 1: |F| 5.69e-06 |dz| 1.71e-02 lam 1 dDelta -8.56e-08 Delta 3.465199729273100 piv 1.4e-03..2.6e+02  t 68.0s
+  newton 2: |F| 4.31e-06 |dz| 7.30e-03 lam 1 dDelta +7.49e-07 Delta 3.465200478636098 piv 1.4e-03..2.7e+01  t 101.2s
+  newton 3: |F| 3.84e-07 |dz| 3.68e-05 lam 1 dDelta +4.91e-09 Delta 3.465200483544066 piv 1.4e-03..2.7e+01  t 128.6s
+  newton 4: |F| 6.17e-13 |dz| 1.64e-10 lam 1 dDelta -3.47e-14 Delta 3.465200483544031 piv 1.4e-03..2.7e+01  t 155.4s
+  newton 5: |F| 6.81e-21 |dz| 1.29e-17 lam 1 dDelta +4.51e-23 Delta 3.465200483544031 piv 1.4e-03..2.7e+01  t 181.8s
+  newton 6: |F| 2.25e-29 converged (last |dz| 2.2e-25) Delta 3.465200483544031; last step taken, |F| 1.89e-30
+ control:
+  newton 0: |F| 7.53e-06 |dz| 3.60e-02 lam 0.5 dDelta -7.82e-07 Delta 3.465198701167292 piv 1.4e-03..4.9e+02  t 29.9s
+  newton 1: |F| 5.73e-06 |dz| 1.53e-02 lam 1 dDelta +8.97e-07 Delta 3.465199598369299 piv 1.4e-03..2.4e+02  t 71.7s
+  newton 2: |F| 2.95e-06 |dz| 5.76e-03 lam 1 dDelta +8.82e-07 Delta 3.465200480457010 piv 1.4e-03..2.7e+01  t 106.3s
+  newton 3: |F| 2.47e-07 |dz| 2.59e-05 lam 1 dDelta +3.09e-09 Delta 3.465200483544048 piv 1.4e-03..2.7e+01  t 135.3s
+  newton 4: |F| 1.28e-13 |dz| 5.08e-11 lam 1 dDelta -1.68e-14 Delta 3.465200483544031 piv 1.4e-03..2.7e+01  t 164.4s
+  newton 5: |F| 8.51e-22 |dz| 5.54e-18 lam 1 dDelta -1.13e-22 Delta 3.465200483544031 piv 1.4e-03..2.7e+01  t 193.4s
+  newton 6: |F| 1.81e-29 converged (last |dz| 7.9e-26) Delta 3.465200483544031; last step taken, |F| 1.32e-29
+  dense   : 7 Newton calls, |F| 1.2e-29, 227.3 s, Delta 3.4652004835440313 +1.572e-16
+  block   : 7 Newton calls, |F| 1.9e-30, 208.7 s, Delta 3.4652004835440313 +1.572e-16
+  control : 7 Newton calls, |F| 1.3e-29, 222.2 s, Delta 3.4652004835440313 +1.572e-16
+  block vs dense: Delta 1.3e-30, max|dz|/max|z| 5.0e-28; control (dense, two starts) 7.1e-33, 1.1e-27 -> PASS

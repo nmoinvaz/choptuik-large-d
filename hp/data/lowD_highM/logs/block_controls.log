@@ -1,0 +1,7 @@
+  M = 48 (N = 2689) f64x4 state    : |F| 3.7e-30, residual bit-identical True; block vs dense: dz 1.5e-07, dDelta/dF 3.7e-14, chord 7.4e-08; floor (dense f64 vs dd LU) 4.0e-14 / 2.3e-14; limit 4e-12 -> FAIL; 5.8 s dense, 5.2 s block; LU 9.6 MB block vs 110.6 MB dense
+  M = 48 (N = 2689) f64x4 perturbed: |F| 1.2e-05, residual bit-identical True; block vs dense: dz 4.8e-08, dDelta/dF 2.2e-14, chord 4.6e-08; floor (dense f64 vs dd LU) 4.4e-14 / 4.0e-14; limit 4e-12 -> FAIL; 5.4 s dense, 5.1 s block; LU 9.6 MB block vs 110.6 MB dense
+  control pivot: fires
+  M = 48 (N = 2689) f64x4 state    : |F| 3.7e-30, residual bit-identical True; block vs dense: dz 4.4e-01, dDelta/dF 6.4e+02, chord 5.4e-01; floor (dense f64 vs dd LU) 4.0e-14 / 2.3e-14; limit 4e-12 -> FAIL; 5.4 s dense, 5.2 s block; LU 9.6 MB block vs 110.6 MB dense
+  M = 48 (N = 2689) f64x4 perturbed: |F| 1.2e-05, residual bit-identical True; block vs dense: dz 2.1e-01, dDelta/dF 6.4e+02, chord 1.2e-01; floor (dense f64 vs dd LU) 4.4e-14 / 4.0e-14; limit 4e-12 -> FAIL; 5.6 s dense, 5.3 s block; LU 9.6 MB block vs 110.6 MB dense
+  control link: fires
+controls: 2 of 2 fire PASS

@@ -1,0 +1,2 @@
+kc 100 ks 250: residual 0.51 s, |F| 1.18e-29, tails (centre, horizon) 3.9e-64 1.7e-96; Newton step 77 s, dDelta -2.6e-31 (load 3.2)
+kc 60 ks 150: residual 0.43 s, |F| 1.18e-29, tails (centre, horizon) 1.5e-38 6.3e-58, residual bitwise identical; Newton step 75 s, dDelta -2.6e-31, step bitwise identical (load 3.6)

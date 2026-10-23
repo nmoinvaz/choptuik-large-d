@@ -1,0 +1,26 @@
+   Compiling hpkernel v0.1.0 (/home/claude/dss/agentHM/wt/hp)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 43.34s
+     Running unittests src/lib.rs (/tmp/claude-0/-home-claude/5cec0889-b97c-529a-89c7-507003649638/scratchpad/hm/tgt_dbg/debug/deps/_hpkernel-f02f6d55a88a4d0c)
+
+running 20 tests
+test block::tests::block_solve_many_is_solve ... ok
+test block::tests::block_lu_matches_dense ... ok
+test jvp_tests::jvp_matches_dd_jacobian ... ok
+test linalg::bench::bench_lu ... ignored
+test jvp_tests::hdd_block_rows_are_dd ... ok
+test linalg::tests::f64_lu_solves ... ok
+test linalg::tests::solve_many_is_bitwise_solve ... ok
+test model::bench::bench_jac ... ignored
+test qd_residual::bench_qd_residual ... ignored
+
+thread 'qd_residual::qv_lane_blocks_agree' (27752) has overflowed its stack
+fatal runtime error: stack overflow, aborting
+error: test failed, to rerun pass `--lib`
+
+Caused by:
+  process didn't exit successfully: `/tmp/claude-0/-home-claude/5cec0889-b97c-529a-89c7-507003649638/scratchpad/hm/tgt_dbg/debug/deps/_hpkernel-f02f6d55a88a4d0c` (signal: 6, SIGABRT: process abort signal)
+
+real	0m54.177s
+user	1m8.004s
+sys	0m3.283s
+exit 101

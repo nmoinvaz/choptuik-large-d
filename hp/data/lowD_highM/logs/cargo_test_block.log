@@ -1,0 +1,12 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.08s
+     Running unittests src/lib.rs (/tmp/claude-0/-home-claude/5cec0889-b97c-529a-89c7-507003649638/scratchpad/hm/tgt_dbg/debug/deps/_hpkernel-f02f6d55a88a4d0c)
+
+running 1 test
+a 10 b 20 k 4 (n 101): error against the dd LU: block 1.3e-15 (transposed 1.7e-15), dense f64 LU 4.5e-15 (4.2e-15); pivot control 1.1e-7 / 4.4e-8; link control 3.2e-1 / 1.6e-1
+a 16 b 32 k 6 (n 225): error against the dd LU: block 5.9e-15 (transposed 6.5e-15), dense f64 LU 3.4e-15 (5.9e-15); pivot control 2.8e-7 / 1.7e-10; link control 2.1e-1 / 4.9e-2
+a 40 b 80 k 12 (n 1041): error against the dd LU: block 1.4e-13 (transposed 1.1e-13), dense f64 LU 1.9e-14 (1.2e-14); pivot control 2.5e-9 / 1.4e-9; link control 1.7e0 / 9.1e-1
+a 24 b 48 k 13 (n 673): error against the dd LU: block 5.3e-15 (transposed 3.5e-15), dense f64 LU 3.9e-15 (5.0e-15); pivot control 4.5e-7 / 1.1e-7; link control 6.5e-1 / 4.1e-1
+test block::tests::block_lu_matches_dense ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 6 filtered out; finished in 10.83s
+

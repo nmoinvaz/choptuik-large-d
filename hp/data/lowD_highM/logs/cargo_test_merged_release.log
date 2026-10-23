@@ -1,0 +1,39 @@
+   Compiling crossbeam-utils v0.8.23
+   Compiling crossbeam-epoch v0.9.21
+   Compiling crossbeam-deque v0.8.8
+   Compiling rayon-core v1.13.0
+   Compiling either v1.19.0
+   Compiling rayon v1.12.0
+   Compiling hpkernel v0.1.0 (/home/claude/dss/agentHM/wt/hp)
+    Finished `release` profile [optimized] target(s) in 2m 59s
+     Running unittests src/lib.rs (/tmp/claude-0/-home-claude/5cec0889-b97c-529a-89c7-507003649638/scratchpad/hm/tgt_rel_test/release/deps/_hpkernel-03c0e8055cd7be6d)
+
+running 20 tests
+test block::tests::block_solve_many_is_solve ... ok
+test jvp_tests::hdd_block_rows_are_dd ... ok
+test jvp_tests::jvp_matches_dd_jacobian ... ok
+test linalg::bench::bench_lu ... ignored
+test linalg::tests::blocked_lu_matches_getf2 ... ok
+test block::tests::block_lu_matches_dense ... ok
+test linalg::tests::f64_lu_solves ... ok
+test model::bench::bench_jac ... ignored
+test qd_residual::bench_qd_residual ... ignored
+test qd_residual::qv_lane_blocks_agree ... ok
+test qd_tests::bench_qd ... ignored
+test linalg::tests::solve_many_is_bitwise_solve ... ok
+test qd_tests::qd_accumulator ... ok
+test qd_tests::qd_constants ... ok
+test qd_tests::qd_decimal_io ... ok
+test qd_tests::qd_diag_accumulator ... ignored
+test qd_tests::qd_diag_accurate_add ... ignored
+test qd_tests::qd_dump ... ignored
+test qd_tests::qd_ieee_add_regression ... ok
+test qd_tests::qd_accuracy ... ok
+
+test result: ok. 13 passed; 0 failed; 7 ignored; 0 measured; 0 filtered out; finished in 1.72s
+
+
+real	3m1.443s
+user	2m58.627s
+sys	0m2.386s
+exit 0

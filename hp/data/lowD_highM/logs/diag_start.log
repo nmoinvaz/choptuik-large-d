@@ -1,0 +1,16 @@
+# python3 highm_diag.py start data/lowD_states/highm_D3.7000_M160.npz 192 [--fill] (run as filltest.py)
+resampled: plan 511 steps, |F| 5.71e-10, tails [1.0049536792978785e-20, 1.4914316641373209e-22]
+fill_tail klo=Mo-40: plan 517 steps, |F| 3.03e-10, tails [2.4102822107749824e-21, 4.512493344181912e-23]
+fill_tail klo=Mo-24: plan 518 steps, |F| 3.29e-10, tails [1.9730397557010043e-21, 1.5122381339028333e-23]
+# python3 highm_diag.py start data/lowD_states/highm_D3.7000_M160.npz 160|192|256 --nodes=... (run as nodetest.py with renode's default h = 0.004, and nodetest2.py with h = 0.001)
+nodes 0.0025..0.8 (14): M 160 re-noded: |F| 1.11e-16, tails [5.636476262621126e-90, 2.2373375144952485e-40]
+   resampled to M 192: plan 514 steps, |F| 5.71e-10, tails [3.1710746766244434e-50, 1.4914316641373209e-22]
+   resampled to M 256: plan 665 steps, |F| 9.25e+06, tails [8.537541689796501e-50, 10579307.874147657]
+nodes 0.005..0.9 (14): M 160 re-noded: |F| 8.33e+09, tails [1.7862706293709595e-60, 4.946438115793159e-115]
+   resampled to M 192: plan 590 steps, |F| 7.92e+09, tails [1.0049536792978785e-20, 3.297345341413097e-97]
+   resampled to M 256: plan 767 steps, |F| 8.04e+09, tails [2.7056549618860166e-20, 1.8223113515072442e-68]
+nodes 0.0025..0.9 (15): M 160 re-noded: |F| 8.33e+09, tails [5.636476262621126e-90, 4.946438115793159e-115]
+   resampled to M 192: plan 593 steps, |F| 7.92e+09, tails [3.1710746766244434e-50, 3.297345341413097e-97]
+   resampled to M 256: plan 770 steps, |F| 8.04e+09, tails [8.537541689796501e-50, 1.8223113515072442e-68]
+h 0.001: M 160 re-noded |F| 1.11e-16; per block ['1e-16', '7e-17', '8e-32', '3e-31', '2e-30', '2e-30', '2e-30', '1e-30', '7e-31', '4e-31', '4e-31', '3e-31', '5e-31', '4e-31', '5e-31', '4e-31', '8e-30']; steps 203; tails [5.636476262621126e-90, 4.946438115793159e-115]
+h 0.00025: M 160 re-noded |F| 1.11e-16; per block ['1e-16', '7e-17', '8e-32', '3e-31', '2e-30', '2e-30', '2e-30', '1e-30', '7e-31', '4e-31', '4e-31', '3e-31', '5e-31', '4e-31', '5e-31', '3e-31', '8e-30']; steps 203; tails [5.636476262621126e-90, 4.946438115793159e-115]

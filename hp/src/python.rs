@@ -1,5 +1,6 @@
 //! Python bindings: `Solver(M, n, dmat, phase, nodes, segs, kt, kc, ks, threads)`.
 //! Double-double arrays are passed as (hi, lo) pairs of float64 numpy arrays.
+use crate::block::BlockLu;
 use crate::dd::DD;
 use crate::dv::DV;
 use crate::field::{DMat, Fl, State};
@@ -21,6 +22,8 @@ type V = (Vec<f64>, Vec<f64>);
 struct F64Jac {
     tangents: usize,
     dd_base: bool,
+    /// Ctx::f64_dd for this Jacobian (model::HDD_* flags; 0 none)
+    hdd: u8,
 }
 
 trait Api: Send + Sync {
@@ -39,6 +42,13 @@ trait Api: Send + Sync {
     /// perturbation gains + lam), Delta held fixed: the leading (L-1) x (L-1) block (no Delta column, no phase row).
     /// Column-major with leading dimension ld_for(L-1): (hi, lo, ld).
     fn mode_matrix(&mut self, zh: &[f64], zl: &[f64], lam: DD) -> Result<(Vec<f64>, Vec<f64>, usize), String>;
+    /// The f64 Jacobian built and factored in block storage (model::jacobian_block); mutate: block::MUT_* (controls);
+    /// jac_mutate: Ctx::mutate for this call (0 = none; 1, no tau derivative, is used to time the tau derivative)
+    fn jacobian_block(&mut self, zh: &[f64], zl: &[f64], how: F64Jac, mutate: u8, jac_mutate: u8) -> Result<BlockLu, String>;
+    /// J v in double-double and the residual (model::jvp): (Jv hi, Jv lo, F hi, F lo); cut: the series stop at
+    /// double-double resolution (model::HDD_DU_CUT)
+    #[allow(clippy::type_complexity)]
+    fn jvp(&mut self, zh: &[f64], zl: &[f64], vh: &[f64], vl: &[f64], mutate: u8, cut: bool) -> Result<(Vec<f64>, Vec<f64>, Vec<f64>, Vec<f64>), String>;
 }
 
 fn state_of<const B: usize>(sh: &[f64], sl: &[f64]) -> State<DV, B> {
@@ -71,6 +81,7 @@ impl<const B: usize> Api for Ctx<B> {
     }
     fn jacobian_f64(&mut self, zh: &[f64], zl: &[f64], mutate: u8, how: F64Jac) -> Result<(Vec<f64>, usize), String> {
         self.mutate = mutate;
+        self.f64_dd = how.hdd;
         let r = match (how.dd_base, how.tangents) {
             (false, 1) => model::jacobian_f64(self, zh, zl, true),
             (false, 2) => model::jacobian_fun::<2, B>(self, zh, zl, true),
@@ -83,6 +94,7 @@ impl<const B: usize> Api for Ctx<B> {
             (_, t) => Err(format!("tangents must be 1, 2, 4 or 8, not {t}")),
         };
         self.mutate = 0;
+        self.f64_dd = 0;
         r
     }
     fn plan(&self, zh: &[f64], zl: &[f64], tol: f64, hmax: f64) -> Vec<Vec<f64>> {
@@ -160,7 +172,65 @@ impl<const B: usize> Api for Ctx<B> {
         }
         Ok((h, l, ld2))
     }
+    fn jacobian_block(&mut self, zh: &[f64], zl: &[f64], how: F64Jac, mutate: u8, jac_mutate: u8) -> Result<BlockLu, String> {
+        if how.hdd != 0 {
+            return Err("block storage: horizon_dd is not supported (the large-D runs use kfreeze, which block storage refuses)".into());
+        }
+        self.mutate = jac_mutate;
+        let r = match (how.dd_base, how.tangents) {
+            (false, 1) => model::jacobian_block::<crate::lane::Fu, B>(self, zh, zl, true, mutate),
+            (false, 4) => model::jacobian_block::<crate::lane::Fun<4>, B>(self, zh, zl, true, mutate),
+            (true, 4) => model::jacobian_block::<crate::lane::Dtn<4>, B>(self, zh, zl, true, mutate),
+            (d, t) => Err(format!("block storage: tangents {t}{} not built (f64x1, f64x4, dd4 are)", if d { " with dd_base" } else { "" })),
+        };
+        self.mutate = 0;
+        r
+    }
+    fn jvp(&mut self, zh: &[f64], zl: &[f64], vh: &[f64], vl: &[f64], mutate: u8, cut: bool) -> Result<(Vec<f64>, Vec<f64>, Vec<f64>, Vec<f64>), String> {
+        self.f64_dd = if cut { model::HDD_DU_CUT } else { 0 };
+        let r = model::jvp(self, zh, zl, vh, vl, true, mutate);
+        self.f64_dd = 0;
+        r
+    }
 }
+
+/// The stored LU of the last Newton step (or lu_factor): dense (DDLu, n x n) or in block storage (BlockLu).
+enum Lu {
+    Dense(DDLu),
+    Block(BlockLu),
+}
+
+impl Lu {
+    fn solve(&self, b: &mut [DD]) {
+        match self {
+            Lu::Dense(l) => l.solve(b),
+            Lu::Block(l) => l.solve(b),
+        }
+    }
+    fn solve_t(&self, b: &mut [DD]) {
+        match self {
+            Lu::Dense(l) => l.solve_t(b),
+            Lu::Block(l) => l.solve_t(b),
+        }
+    }
+    fn solve_many(&self, bh: &mut [f64], bl: &mut [f64], k: usize, transpose: bool, par: bool) {
+        match self {
+            Lu::Dense(l) => l.solve_many(bh, bl, k, transpose, par),
+            Lu::Block(l) => l.solve_many(bh, bl, k, transpose, par),
+        }
+    }
+    fn n(&self) -> usize {
+        match self {
+            Lu::Dense(l) => l.n,
+            Lu::Block(l) => l.n,
+        }
+    }
+}
+
+/// The largest M for which the dense n x n paths (jacobian, jacobian_f64, newton, newton_mixed with block=False,
+/// lm_steps, mode_matrix, mode_det, lu_factor) run. Above it the dense double-double Jacobian would take 1.3 GB or
+/// more (M = 160, 13 nodes: n = 8961), and only newton_mixed in block storage is available.
+const DENSE_M_MAX: usize = 128;
 
 fn slice<'a>(a: &'a PyReadonlyArray1<f64>, name: &str) -> PyResult<&'a [f64]> {
     a.as_slice().map_err(|_| PyValueError::new_err(format!("{name} must be contiguous")))
@@ -174,7 +244,21 @@ fn arr<'py>(py: Python<'py>, v: Vec<f64>) -> Bound<'py, PyArray1<f64>> {
 struct Solver {
     api: Box<dyn Api>,
     pool: Arc<rayon::ThreadPool>,
-    lu: Option<DDLu>,
+    lu: Option<Lu>,
+    /// seconds of the last newton / newton_mixed call: residual, Jacobian, factorization, solve (step_timing)
+    last_t: [f64; 4],
+}
+
+impl Solver {
+    fn dense_ok(&self, what: &str) -> PyResult<()> {
+        if self.api.m() > DENSE_M_MAX {
+            return Err(PyValueError::new_err(format!(
+                "{what}: the dense n x n path is limited to M <= {DENSE_M_MAX} (memory); at M = {} use newton_mixed (block storage)",
+                self.api.m()
+            )));
+        }
+        Ok(())
+    }
 }
 
 fn freeze_pair<const B: usize>(p: &Option<(Vec<f64>, Vec<f64>)>) -> Option<(DMat<B>, DMat<B>)> {
@@ -211,8 +295,9 @@ macro_rules! make_ctx {
                 match_node: $mn,
                 lam: DD::ZERO,
                 mutate: 0,
+                f64_dd: 0,
             }) as Box<dyn Api>, )*
-            _ => return Err(PyValueError::new_err("M must be one of 8, 16, 32, 48, 64, 80, 96, 128")),
+            _ => return Err(PyValueError::new_err("M must be one of 8, 16, 32, 48, 64, 80, 96, 128, 160, 192, 256, 320, 384, 512")),
         }
     };
 }
@@ -268,7 +353,7 @@ impl Solver {
             _ => None,
         };
         let mut api: Box<dyn Api> =
-            make_ctx!(m / 8, n, dh, dl, ph, pl, nodes.clone(), vec![], kt, kc, ks, plow, match_node.unwrap_or(nodes.len() - 1).min(nodes.len() - 1), [1, 2, 4, 6, 8, 10, 12, 16]);
+            make_ctx!(m / 8, n, dh, dl, ph, pl, nodes.clone(), vec![], kt, kc, ks, plow, match_node.unwrap_or(nodes.len() - 1).min(nodes.len() - 1), [1, 2, 4, 6, 8, 10, 12, 16, 20, 24, 32, 40, 48, 64]);
         let mn = match_node.unwrap_or(nodes.len() - 1).min(nodes.len() - 1);
         let segs = if segs.is_empty() {
             (1..nodes.len()).map(|b| if b > mn { vec![nodes[b], nodes[b - 1]] } else { vec![nodes[b - 1], nodes[b]] }).collect()
@@ -277,8 +362,10 @@ impl Solver {
         };
         api.set_segs(segs).map_err(PyValueError::new_err)?;
         let t = if threads == 0 { std::thread::available_parallelism().map(|v| v.get()).unwrap_or(1) } else { threads };
-        let pool = Arc::new(rayon::ThreadPoolBuilder::new().num_threads(t).build().unwrap());
-        Ok(Solver { api, pool, lu: None })
+        // a large stack for the workers: the field arrays live on the stack and grow with M (a state of Dtn<8> lanes
+        // at M = 384 is 120 kB); the pages are only touched as needed
+        let pool = Arc::new(rayon::ThreadPoolBuilder::new().num_threads(t).stack_size(256 << 20).build().unwrap());
+        Ok(Solver { api, pool, lu: None, last_t: [0.0; 4] })
     }
 
     #[getter]
@@ -322,6 +409,7 @@ impl Solver {
         zh: PyReadonlyArray1<'py, f64>,
         zl: PyReadonlyArray1<'py, f64>,
     ) -> PyResult<(Bound<'py, PyArray2<f64>>, Bound<'py, PyArray2<f64>>)> {
+        self.dense_ok("jacobian")?;
         let (h, l) = (slice(&zh, "zh")?, slice(&zl, "zl")?);
         let (api, pool) = (&self.api, &self.pool);
         let n = api.len();
@@ -345,7 +433,11 @@ impl Solver {
     /// Jacobian where the f64 base trajectory's rounding is amplified, but no faster Newton convergence; slower). mutate
     /// (default 0): a deliberate breakage of the f64 path for the controls of hp/mixed_check.py (1 no tau derivative,
     /// 2 omega scaled by 1 + 1e-9, 3 the horizon solves' kappa tangent term dropped).
-    #[pyo3(signature = (zh, zl, mutate=0, tangents=4, dd_base=false))]
+    /// horizon_dd (default 0): parts computed in double-double and rounded to f64, bit flags (model::HDD_*): 1 the
+    /// horizon series' periodic solves, 2 no early end of the horizon series, 4 the horizon block's columns (the
+    /// large-D fix; notes/LARGE_D_MIXED.md), 8 the last segment's columns, 16 the horizon block on a double-double
+    /// base trajectory (Dtn<4>). 0 changes nothing.
+    #[pyo3(signature = (zh, zl, mutate=0, tangents=4, dd_base=false, horizon_dd=0))]
     #[allow(clippy::too_many_arguments)]
     fn jacobian_f64<'py>(
         &mut self,
@@ -355,8 +447,10 @@ impl Solver {
         mutate: u8,
         tangents: usize,
         dd_base: bool,
+        horizon_dd: u8,
     ) -> PyResult<Bound<'py, PyArray2<f64>>> {
-        let how = F64Jac { tangents, dd_base };
+        self.dense_ok("jacobian_f64")?;
+        let how = F64Jac { tangents, dd_base, hdd: horizon_dd };
         let (h, l) = (slice(&zh, "zh")?, slice(&zl, "zl")?);
         if h.len() != self.api.len() || l.len() != self.api.len() {
             return Err(PyValueError::new_err(format!("z must have length {}", self.api.len())));
@@ -379,8 +473,16 @@ impl Solver {
     /// double-double with those factors. Same return as newton: (dz_hi, dz_lo, F_hi, F_lo, min |u_kk|, max |u_kk|).
     /// Iterated, it converges to the same solution as newton (linearly, with a contraction factor of about the f64
     /// Jacobian's relative error times the condition number; notes/MIXED_PRECISION.md).
-    #[allow(clippy::type_complexity)]
-    #[pyo3(signature = (zh, zl, tangents=4, dd_base=false, lu="f64"))]
+    /// block: build and factor the Jacobian in block storage (model::jacobian_block, block::BlockLu: only the node
+    /// blocks, never the dense n x n matrix; an f64 staircase LU with partial pivoting on a system augmented by one
+    /// Delta copy per residual block; lu must be "f64"; tangents 1 or 4, dd_base only with 4). None (default): block
+    /// storage when M > 128, the dense path otherwise (so M <= 128 is unchanged); notes/HIGH_M.md. block_mutate:
+    /// deliberate breakage of the block path for the controls of hp/highm_check.py (1 a pivot scaled by 1 + 1e-6,
+    /// 2 the Delta copies untied). jac_mutate (block path only): as jacobian_f64's mutate (1 drops the tau
+    /// derivative from the f64 lanes; hp/highm_check.py profile uses it to time the tau derivative). horizon_dd: as
+    /// jacobian_f64's (dense path only). The seconds of the parts are kept for step_timing.
+    #[allow(clippy::type_complexity, clippy::too_many_arguments)]
+    #[pyo3(signature = (zh, zl, tangents=4, dd_base=false, lu="f64", block=None, block_mutate=0, jac_mutate=0, horizon_dd=0))]
     fn newton_mixed<'py>(
         &mut self,
         py: Python<'py>,
@@ -389,6 +491,10 @@ impl Solver {
         tangents: usize,
         dd_base: bool,
         lu: &str,
+        block: Option<bool>,
+        block_mutate: u8,
+        jac_mutate: u8,
+        horizon_dd: u8,
     ) -> PyResult<(Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<f64>>, f64, f64)> {
         let (h, l) = (slice(&zh, "zh")?, slice(&zl, "zl")?);
         if h.len() != self.api.len() || l.len() != self.api.len() {
@@ -399,29 +505,110 @@ impl Solver {
             "dd" => false,
             _ => return Err(PyValueError::new_err("lu must be \"f64\" or \"dd\"")),
         };
+        let block = block.unwrap_or(self.api.m() > DENSE_M_MAX);
+        if block && !lu_f64 {
+            return Err(PyValueError::new_err("block storage factors in f64 only (lu=\"f64\")"));
+        }
+        if !block {
+            self.dense_ok("newton_mixed with block=False")?;
+        }
         let (api, pool) = (&mut self.api, &self.pool);
         let n = api.len();
         let res = py
             .detach(|| {
                 pool.install(|| -> Result<_, String> {
+                    let mut tm = [0.0f64; 4];
+                    let t0 = std::time::Instant::now();
                     let (fh, fl) = api.residual(h, l)?;
-                    let (jh, ld) = api.jacobian_f64(h, l, 0, F64Jac { tangents, dd_base })?;
-                    let lu = if lu_f64 {
-                        DDLu::factor_f64(n, ld, jh, true)?
-                    } else {
-                        let jl = vec![0.0; jh.len()];
-                        DDLu::factor(n, ld, jh, jl, true)?
-                    };
+                    tm[0] = t0.elapsed().as_secs_f64();
                     let mut b: Vec<DD> = (0..n).map(|i| -DD { hi: fh[i], lo: fl[i] }).collect();
-                    lu.solve(&mut b);
-                    Ok((b, fh, fl, lu))
+                    let how = F64Jac { tangents, dd_base, hdd: horizon_dd };
+                    let lu = if block {
+                        let lu = api.jacobian_block(h, l, how, block_mutate, jac_mutate)?;
+                        (tm[1], tm[2]) = (lu.t_fill, lu.t_factor);
+                        let t0 = std::time::Instant::now();
+                        lu.solve(&mut b);
+                        tm[3] = t0.elapsed().as_secs_f64();
+                        Lu::Block(lu)
+                    } else {
+                        let t0 = std::time::Instant::now();
+                        let (jh, ld) = api.jacobian_f64(h, l, 0, how)?;
+                        tm[1] = t0.elapsed().as_secs_f64();
+                        let t0 = std::time::Instant::now();
+                        let lu = if lu_f64 {
+                            DDLu::factor_f64(n, ld, jh, true)?
+                        } else {
+                            let jl = vec![0.0; jh.len()];
+                            DDLu::factor(n, ld, jh, jl, true)?
+                        };
+                        tm[2] = t0.elapsed().as_secs_f64();
+                        let t0 = std::time::Instant::now();
+                        lu.solve(&mut b);
+                        tm[3] = t0.elapsed().as_secs_f64();
+                        Lu::Dense(lu)
+                    };
+                    Ok((b, fh, fl, lu, tm))
                 })
             })
             .map_err(PyValueError::new_err)?;
-        let (b, fh, fl, lu) = res;
-        let (pmin, pmax) = lu.pivot_range();
+        let (b, fh, fl, lu, tm) = res;
+        self.last_t = tm;
+        let (pmin, pmax) = match &lu {
+            Lu::Dense(l) => l.pivot_range(),
+            Lu::Block(l) => l.pivot_range(),
+        };
         self.lu = Some(lu);
         Ok((arr(py, b.iter().map(|v| v.hi).collect()), arr(py, b.iter().map(|v| v.lo).collect()), arr(py, fh), arr(py, fl), pmin, pmax))
+    }
+
+    /// The stored LU: (bytes held by its factors, in block storage, and for block storage the seconds spent building
+    /// the Jacobian's blocks and factoring them).
+    fn lu_info(&self) -> PyResult<(usize, bool, Option<f64>, Option<f64>)> {
+        match &self.lu {
+            None => Err(PyValueError::new_err("no stored LU")),
+            Some(Lu::Dense(l)) => Ok((16 * l.hi.len(), false, None, None)),
+            Some(Lu::Block(l)) => Ok((l.bytes(), true, Some(l.t_fill), Some(l.t_factor))),
+        }
+    }
+
+    /// Seconds spent in the parts of the last newton or newton_mixed call: (residual, Jacobian, factorization, solve).
+    /// In block storage the Jacobian's blocks are built and factored in turn; their sums are reported.
+    fn step_timing(&self) -> (f64, f64, f64, f64) {
+        (self.last_t[0], self.last_t[1], self.last_t[2], self.last_t[3])
+    }
+
+    /// Exact Jacobian-vector product: J v in double-double (model::jvp; one forward-mode pass per block, the lanes of
+    /// the double-double Jacobian, with v as the tangent), where J is the exact Jacobian at z. Returns (Jv_hi, Jv_lo),
+    /// or with with_residual=True (Jv_hi, Jv_lo, F_hi, F_lo), F the residual at z (computed in the same pass).
+    /// mutate: deliberate breakage for the controls (1 the Delta tangent scaled by 1 + 1e-20, 2 the horizon block's
+    /// state tangent dropped, 3 the phase row dropped). cut=True: the centre and horizon series stop once the
+    /// tangent terms fall below double-double resolution (2^-110 of the largest, four orders in a row) instead of
+    /// running to kc and ks; at large D (kc = 420) that makes a product several times cheaper, and it agrees with the
+    /// full product to double-double accuracy, but not bitwise. cut=False (default): bitwise the double-double
+    /// Jacobian's column for a unit vector.
+    #[pyo3(signature = (zh, zl, vh, vl, mutate=0, with_residual=false, cut=false))]
+    #[allow(clippy::too_many_arguments, clippy::type_complexity)]
+    fn jvp<'py>(
+        &mut self,
+        py: Python<'py>,
+        zh: PyReadonlyArray1<'py, f64>,
+        zl: PyReadonlyArray1<'py, f64>,
+        vh: PyReadonlyArray1<'py, f64>,
+        vl: PyReadonlyArray1<'py, f64>,
+        mutate: u8,
+        with_residual: bool,
+        cut: bool,
+    ) -> PyResult<Vec<Bound<'py, PyArray1<f64>>>> {
+        let (h, l) = (slice(&zh, "zh")?, slice(&zl, "zl")?);
+        let (a, b) = (slice(&vh, "vh")?, slice(&vl, "vl")?);
+        let (api, pool) = (&mut self.api, &self.pool);
+        let (jh, jl, fh, fl) = py.detach(|| pool.install(|| api.jvp(h, l, a, b, mutate, cut))).map_err(PyValueError::new_err)?;
+        let mut out = vec![arr(py, jh), arr(py, jl)];
+        if with_residual {
+            out.push(arr(py, fh));
+            out.push(arr(py, fl));
+        }
+        Ok(out)
     }
 
     /// Mode matrix M(lam) (Delta fixed, no phase row) as two (L-1, L-1) arrays.
@@ -433,6 +620,7 @@ impl Solver {
         lam_hi: f64,
         lam_lo: f64,
     ) -> PyResult<(Bound<'py, PyArray2<f64>>, Bound<'py, PyArray2<f64>>)> {
+        self.dense_ok("mode_matrix")?;
         let (h, l) = (slice(&zh, "zh")?, slice(&zl, "zl")?);
         let (api, pool) = (&mut self.api, &self.pool);
         let n = api.len() - 1;
@@ -453,6 +641,7 @@ impl Solver {
     /// det M(lam) by double-double LU: (sign, ln|det|, min |u_kk|, max |u_kk|). Its sign changes at the growth rate of
     /// an unstable mode; the critical exponent is gamma = 1/lam.
     fn mode_det(&mut self, py: Python<'_>, zh: PyReadonlyArray1<'_, f64>, zl: PyReadonlyArray1<'_, f64>, lam_hi: f64, lam_lo: f64) -> PyResult<(f64, f64, f64, f64)> {
+        self.dense_ok("mode_det")?;
         let (h, l) = (slice(&zh, "zh")?, slice(&zl, "zl")?);
         let (api, pool) = (&mut self.api, &self.pool);
         let n = api.len() - 1;
@@ -480,23 +669,34 @@ impl Solver {
         zh: PyReadonlyArray1<'py, f64>,
         zl: PyReadonlyArray1<'py, f64>,
     ) -> PyResult<(Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<f64>>, f64, f64)> {
+        self.dense_ok("newton")?;
         let (h, l) = (slice(&zh, "zh")?, slice(&zl, "zl")?);
         let (api, pool) = (&self.api, &self.pool);
         let n = api.len();
         let res = py.detach(|| {
             pool.install(|| -> Result<_, String> {
+                let mut tm = [0.0f64; 4];
+                let t0 = std::time::Instant::now();
                 let (fh, fl) = api.residual(h, l)?;
+                tm[0] = t0.elapsed().as_secs_f64();
+                let t0 = std::time::Instant::now();
                 let (jh, jl, ld) = api.jacobian(h, l)?;
+                tm[1] = t0.elapsed().as_secs_f64();
+                let t0 = std::time::Instant::now();
                 let lu = DDLu::factor(n, ld, jh, jl, true)?;
+                tm[2] = t0.elapsed().as_secs_f64();
+                let t0 = std::time::Instant::now();
                 let mut b: Vec<DD> = (0..n).map(|i| -DD { hi: fh[i], lo: fl[i] }).collect();
                 lu.solve(&mut b);
-                Ok((b, fh, fl, lu))
+                tm[3] = t0.elapsed().as_secs_f64();
+                Ok((b, fh, fl, lu, tm))
             })
         })
         .map_err(PyValueError::new_err)?;
-        let (b, fh, fl, lu) = res;
+        let (b, fh, fl, lu, tm) = res;
+        self.last_t = tm;
         let (pmin, pmax) = lu.pivot_range();
-        self.lu = Some(lu);
+        self.lu = Some(Lu::Dense(lu));
         Ok((arr(py, b.iter().map(|v| v.hi).collect()), arr(py, b.iter().map(|v| v.lo).collect()), arr(py, fh), arr(py, fl), pmin, pmax))
     }
 
@@ -506,6 +706,7 @@ impl Solver {
     /// f64: factor the hi part by the f64 LU (DDLu::factor_f64) instead.
     #[pyo3(signature = (ah, al=None, f64=false))]
     fn lu_factor(&mut self, py: Python<'_>, ah: PyReadonlyArray2<'_, f64>, al: Option<PyReadonlyArray2<'_, f64>>, f64: bool) -> PyResult<(f64, f64)> {
+        self.dense_ok("lu_factor")?;
         let n = self.api.len();
         if ah.as_array().shape() != [n, n] || al.as_ref().is_some_and(|a| a.as_array().shape() != [n, n]) {
             return Err(PyValueError::new_err(format!("the matrix must be ({n}, {n})")));
@@ -527,7 +728,7 @@ impl Solver {
             .detach(|| pool.install(|| if f64 { DDLu::factor_f64(n, ld, h, true) } else { DDLu::factor(n, ld, h, l, true) }))
             .map_err(PyValueError::new_err)?;
         let r = lu.pivot_range();
-        self.lu = Some(lu);
+        self.lu = Some(Lu::Dense(lu));
         Ok(r)
     }
 
@@ -580,6 +781,7 @@ impl Solver {
         zl: PyReadonlyArray1<'py, f64>,
         mus: Vec<f64>,
     ) -> PyResult<(Vec<(Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<f64>>)>, Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<f64>>)> {
+        self.dense_ok("lm_steps")?;
         let (h, l) = (slice(&zh, "zh")?, slice(&zl, "zl")?);
         let (api, pool) = (&self.api, &self.pool);
         let n = api.len();
@@ -612,7 +814,7 @@ impl Solver {
             })
             .map_err(PyValueError::new_err)?;
         let (steps, fh, fl, lu) = res;
-        self.lu = Some(lu);
+        self.lu = Some(Lu::Dense(lu));
         let out = steps
             .into_iter()
             .map(|b| (arr(py, b.iter().map(|v| v.hi).collect()), arr(py, b.iter().map(|v| v.lo).collect())))
@@ -648,7 +850,7 @@ impl Solver {
         transpose: bool,
     ) -> PyResult<(Bound<'py, PyArray2<f64>>, Bound<'py, PyArray2<f64>>)> {
         let lu = self.lu.as_ref().ok_or_else(|| PyValueError::new_err("no stored LU: call newton first"))?;
-        let n = lu.n;
+        let n = lu.n();
         let sh = rh.as_array().shape().to_vec();
         if sh[1] != n || rl.as_array().shape() != sh.as_slice() {
             return Err(PyValueError::new_err(format!("R must be (k, {n}) for hi and lo")));

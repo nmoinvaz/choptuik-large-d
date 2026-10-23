@@ -1,0 +1,49 @@
+/usr/bin/python3 -u /home/claude/dss/agentLD/wt/hp/scan_hp.py /home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/k3/scan.jsonl /home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/k2/dd_D50.0078.npz 0 --history /home/claude/dss/agentLD/wt/hp/data/states/up8_D50.0075.npz,/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/k0/dd_D50.0075.npz,/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/k1/dd_D50.0076.npz --Dlist 50.008491 --dD 0.0007 --maxdD 0.0007 --M 32 --kc 420 --ks 100 --kt 36 --tol 1e-24 --w 24 --it_max 25 --lm 0 --threads 2 --tag dd --jac dd --verbose --kfreeze 13
+  dn 0 [all]: |F| 1.49e-16 -> 5.02e-17 lam 1 Delta 1.841629997216925 t 12s
+  dn: phase 'all' stalled at |F| 5.0e-17; phase 'full'
+  dn 1 [full]: |F| 5.02e-17 -> 9.10e-25 lam 1 Delta 1.841629997216925 t 23s
+  dn 2: |F| 9.10e-25 converged, Delta 1.841629997216925
+(re-)converged start D=50.007791 M=32 nodes=[0.3, 0.4, 0.5, 0.6, 0.7]: Delta 1.8416299972169254 ok True (34s)
+  dn 0 [all]: |F| 9.46e-17 -> 3.24e-17 lam 1 Delta 1.841631133202264 t 12s
+  dn: phase 'all' stalled at |F| 3.2e-17; phase 'full'
+  dn 1 [full]: |F| 3.24e-17 -> 7.05e-25 lam 1 Delta 1.841631133202264 t 24s
+  dn 2: |F| 7.05e-25 converged, Delta 1.841631133202264
+history point D=50.007491: ok True, Delta 1.8416311332022643
+  dn 0 [all]: |F| 1.65e-16 -> 1.32e-16 lam 0.25 Delta 1.841631057469501 t 13s
+  dn: phase 'all' stalled at |F| 1.3e-16; phase 'full'
+  dn 1 [full]: |F| 1.32e-16 -> 6.30e-25 lam 1 Delta 1.841631057469501 t 25s
+  dn 2: |F| 6.30e-25 converged, Delta 1.841631057469501
+history point D=50.007511: ok True, Delta 1.8416310574695007
+  dn 0 [all]: |F| 2.32e-16 -> 6.14e-17 lam 1 Delta 1.841630754539028 t 11s
+  dn: phase 'all' stalled at |F| 6.1e-17; phase 'full'
+  dn 1 [full]: |F| 6.14e-17 -> 5.11e-25 lam 1 Delta 1.841630754539028 t 23s
+  dn 2: |F| 5.11e-25 converged, Delta 1.841630754539028
+history point D=50.007591: ok True, Delta 1.8416307545390282
+  dn 0 [all]: |F| 1.08e-05 -> 5.69e-11 lam 1 Delta 1.841627346619726 t 14s
+  dn 1 [all]: |F| 5.69e-11 -> 3.61e-11 lam 1 Delta 1.841627346635107 t 26s
+  dn: phase 'all' stalled at |F| 3.6e-11; phase 'full'
+  dn 2 [full]: |F| 3.61e-11 -> 3.45e-11 lam 0.0156 Delta 1.841627378218982 t 40s
+  dn 3 [full]: |F| 3.45e-11 -> 3.40e-11 lam 0.00781 Delta 1.841627393274830 t 53s
+  dn 4 [full]: |F| 3.40e-11 -> 3.26e-11 lam 0.0156 Delta 1.841627422675085 t 66s
+  dn 5 [full]: |F| 3.26e-11 -> 3.28e-11 lam 0.00781 Delta 1.841627436678760 t 79s
+  dn 6 [full]: |F| 3.28e-11 -> 3.42e-11 lam 0.0156 Delta 1.841627464013059 t 93s
+  dn 7 [full]: |F| 3.42e-11 -> 3.54e-11 lam 0.0156 Delta 1.841627490029782 t 107s
+  dn 8 [full]: |F| 3.54e-11 -> 3.64e-11 lam 0.0156 Delta 1.841627514777138 t 120s
+  dn 9 [full]: |F| 3.64e-11 -> 3.73e-11 lam 0.0156 Delta 1.841627538301710 t 134s
+  dn 10 [full]: |F| 3.73e-11 -> 3.81e-11 lam 0.0156 Delta 1.841627560648502 t 147s
+  dn 11 [full]: |F| 3.81e-11 -> 3.87e-11 lam 0.0156 Delta 1.841627581860999 t 161s
+  dn 12 [full]: |F| 3.87e-11 -> 3.92e-11 lam 0.0156 Delta 1.841627601981215 t 175s
+  dn 13 [full]: |F| 3.92e-11 -> 3.96e-11 lam 0.0156 Delta 1.841627621049745 t 188s
+  dn 14 [full]: |F| 3.96e-11 -> 3.99e-11 lam 0.0156 Delta 1.841627639105816 t 202s
+  dn 15 [full]: |F| 3.99e-11 -> 4.01e-11 lam 0.0156 Delta 1.841627656187335 t 215s
+  dn 16 [full]: |F| 4.01e-11 -> 4.02e-11 lam 0.0156 Delta 1.841627672330936 t 228s
+  dn 17 [full]: |F| 4.02e-11 -> 4.16e-11 lam 0.0312 Delta 1.841627702813101 t 242s
+  dn 18 [full]: |F| 4.16e-11 -> 4.24e-11 lam 0.0312 Delta 1.841627729842871 t 256s
+  dn 19 [full]: |F| 4.24e-11 -> 4.28e-11 lam 0.0312 Delta 1.841627753681151 t 269s
+  dn 20 [full]: |F| 4.28e-11 -> 4.28e-11 lam 0.0312 Delta 1.841627774571482 t 282s
+  dn 21 [full]: |F| 4.28e-11 -> 4.43e-11 lam 0.0625 Delta 1.841627810910778 t 296s
+  dn 22 [full]: |F| 4.43e-11 -> 4.39e-11 lam 0.0625 Delta 1.841627837338933 t 309s
+  dn 23 [full]: |F| 4.39e-11 -> 4.23e-11 lam 0.0625 Delta 1.841627855398345 t 324s
+  dn 24 [full]: |F| 4.23e-11 -> 3.88e-11 lam 0.125 Delta 1.841627877451660 t 339s
+D=50.008491: no convergence (|F| 4.2e-11); dD 0.0007 -> 0.00035
+step too small

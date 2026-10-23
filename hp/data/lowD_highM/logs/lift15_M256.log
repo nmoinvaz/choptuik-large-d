@@ -1,0 +1,9 @@
+D 3.7 M 256: L 16385, steps 768, start |F| 1.5e-11
+  newton 0: |F| 1.54e-11 |dz| 2.44e-09 lam 1 dDelta +4.77e-17 Delta 3.465200482271639 piv 3.5e-04..2.3e+01  t 37014.2s
+  newton 0: |F| 3.03e-20 converged (last |dz| 1.8e-16) Delta 3.465200482271639; last step taken, |F| 7.04e-27
+D 3.7 M 256: Delta 3.4652004822716389 (+4.77e-17) |F| 7.0e-27 its 2 38310s dDelta/dF max 7.2e-01 tails 4e-66 1e-99 dDelta_est +5.1e-27
+D 3.7 M 256: L 16385, steps 377, start |F| 7.0e-27
+  newton 0: |F| 7.04e-27 |dz| 7.51e-23 lam 1 dDelta +5.07e-27 Delta 3.465200482271639 piv 3.5e-04..2.3e+01  t 862.6s
+  newton 0: |F| 1.95e-29 converged (last |dz| 3.5e-25) Delta 3.465200482271639; last step taken, |F| 1.83e-29
+D 3.7 M 256: Delta 3.4652004822716389 (+4.77e-17) |F| 1.8e-29 its 2 1462s dDelta/dF max 7.2e-01 tails 8e-70 1e-99 dDelta_est -6.5e-30
+D 3.7 M 256: Delta 3.4652004822716389 (+4.77e-17) |F| 1.8e-29; steps 768 -> 377; tails 8e-70 1e-99; Newton step 816.52 s (residual 2.09 s, Jacobian 811.71 s, factor 2.04 s, Jacobian without d/dtau 344.94 s); LU 307.5 MB; peak RSS 1079.9 MB; load 2.17

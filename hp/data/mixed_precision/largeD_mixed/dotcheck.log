@@ -1,0 +1,3 @@
+D 20.043653 M 32: dd_matvec  vs exact rationals on rows [0, 200, 500, 1083, 1152]: max error / (|J||v|) 5.9e-33 -> pass
+D 20.043653 M 32: dd_matvec with one term dropped (control) vs exact rationals on rows [0, 200, 500, 1083, 1152]: max error / (|J||v|) 2.4e-05 -> fails
+exit 0

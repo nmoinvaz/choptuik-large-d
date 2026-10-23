@@ -1,0 +1,274 @@
+{
+ "t_used": 37706.84693670273,
+ "Mw": 192,
+ "Mn": 256,
+ "nodes": [
+  0.000625,
+  0.00125,
+  0.0025,
+  0.005,
+  0.01,
+  0.02,
+  0.05,
+  0.1,
+  0.16,
+  0.23,
+  0.3,
+  0.4,
+  0.5,
+  0.6,
+  0.7,
+  0.8,
+  0.9,
+  0.95
+ ],
+ "tag": "lowDhm_x0.000625-0.95",
+ "hist_w": [
+  [
+   3.25,
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.9_D3.2500_M192_rn.npz"
+  ],
+  [
+   3.2,
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.9_D3.2000_M192.npz"
+  ],
+  [
+   3.175,
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.9_D3.1750_M192.npz"
+  ],
+  [
+   3.15,
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.9_D3.1500_M192.npz"
+  ]
+ ],
+ "hist_n": [
+  [
+   3.15,
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.9_D3.1500_M256.npz"
+  ]
+ ],
+ "pairs": [
+  [
+   3.65,
+   -3.3438618461064375e-09,
+   80,
+   96
+  ],
+  [
+   3.6,
+   -4.296509082095264e-09,
+   80,
+   96
+  ],
+  [
+   3.55,
+   -2.514380180451135e-09,
+   80,
+   96
+  ],
+  [
+   3.5,
+   -1.270797387739353e-08,
+   80,
+   96
+  ],
+  [
+   3.5,
+   -1.2275856212021883e-09,
+   96,
+   128
+  ],
+  [
+   3.45,
+   -1.4463538070034041e-09,
+   96,
+   128
+  ],
+  [
+   3.4,
+   -2.0745227122619596e-09,
+   96,
+   128
+  ],
+  [
+   3.35,
+   -2.087147617988674e-08,
+   96,
+   128
+  ],
+  [
+   3.35,
+   -7.336435828459161e-11,
+   128,
+   160
+  ],
+  [
+   3.3,
+   -1.8562795671333426e-10,
+   128,
+   160
+  ],
+  [
+   3.3,
+   -1.8562795671333426e-10,
+   128,
+   160
+  ],
+  [
+   3.25,
+   -9.79560453602212e-10,
+   128,
+   160
+  ],
+  [
+   3.25,
+   -1.3655302702722984e-11,
+   160,
+   192
+  ],
+  [
+   3.2,
+   -2.4207149618477963e-11,
+   160,
+   192
+  ],
+  [
+   3.2,
+   -2.4207149618477963e-11,
+   160,
+   192
+  ],
+  [
+   3.175,
+   -3.2989788017857256e-10,
+   160,
+   192
+  ],
+  [
+   3.15,
+   -1.2153477088501448e-09,
+   160,
+   192
+  ],
+  [
+   3.15,
+   -9.265573411766426e-12,
+   192,
+   256
+  ]
+ ],
+ "targets": [
+  3.1,
+  3.05
+ ],
+ "done": null,
+ "post": {
+  "D": 3.15,
+  "stage": "nodes",
+  "t_point": 1736.5,
+  "resumed_for_stage2": true,
+  "new_nodes": [
+   0.000625,
+   0.00125,
+   0.0025,
+   0.005,
+   0.01,
+   0.02,
+   0.05,
+   0.1,
+   0.16,
+   0.23,
+   0.3,
+   0.4,
+   0.5,
+   0.6,
+   0.7,
+   0.8,
+   0.9,
+   0.95
+  ],
+  "old_nodes": [
+   0.000625,
+   0.00125,
+   0.0025,
+   0.005,
+   0.01,
+   0.02,
+   0.05,
+   0.1,
+   0.16,
+   0.23,
+   0.3,
+   0.4,
+   0.5,
+   0.6,
+   0.7,
+   0.8,
+   0.9
+  ],
+  "old_hist": {
+   "hist_c": [
+    [
+     3.25,
+     "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.9_D3.2500_M160_rn.npz"
+    ],
+    [
+     3.2,
+     "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.9_D3.2000_M160.npz"
+    ],
+    [
+     3.175,
+     "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.9_D3.1750_M160.npz"
+    ]
+   ],
+   "hist_w": [
+    [
+     3.25,
+     "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.9_D3.2500_M192_rn.npz"
+    ],
+    [
+     3.2,
+     "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.9_D3.2000_M192.npz"
+    ],
+    [
+     3.175,
+     "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.9_D3.1750_M192.npz"
+    ]
+   ],
+   "hist_n": []
+  }
+ },
+ "last_point_s": 1736.5,
+ "Mc": 160,
+ "hist_c": [
+  [
+   3.35,
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.9_D3.3500_M160_rn.npz"
+  ],
+  [
+   3.3,
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.9_D3.3000_M160_rn.npz"
+  ],
+  [
+   3.25,
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.9_D3.2500_M160_rn.npz"
+  ],
+  [
+   3.2,
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.9_D3.2000_M160.npz"
+  ],
+  [
+   3.175,
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.9_D3.1750_M160.npz"
+  ],
+  [
+   3.15,
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.9_D3.1500_M160.npz"
+  ]
+ ],
+ "point_start": [
+  3.15,
+  26987.48335003853
+ ],
+ "last_point_wall": 10713.120264291763
+}
