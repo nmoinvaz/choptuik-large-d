@@ -1,0 +1,8 @@
+2026-10-23 07:33:15 waiting for T38 wf 0.99 and wf 1.01 to exit
+2026-10-23 11:17:21 T38 has exited
+2026-10-23 11:17:22 on AC power; building hpkernel
+2026-10-23 11:37:55 cargo exit 0 after 1233 s:     Finished `release` profile [optimized] target(s) in 20m 31s
+2026-10-23 11:37:57 hpkernel: C:\Users\nathan\AppData\Local\Temp\claude\C--Users-nathan-Source-dss-residual-kernel\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\scratchpad\t42\pkg\hpkernel\__init__.py avx512
+2026-10-23 11:37:57 benchmark started: bench_variants.py --repeat=3 --threads=4
+2026-10-23 12:06:11 benchmark exit 0 after 1694 s
+2026-10-23 12:06:12 report exit 0
