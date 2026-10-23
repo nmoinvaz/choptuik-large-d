@@ -524,7 +524,8 @@ products 85–180 s.)
 ## 9. Merge with wip/high-m
 
 This branch is wip/high-m (382d515) with main merged in, and wip/high-m's later commits merged when they appeared
-(2b3b253, 985b137, 59eca1e; then 6ddbe6f, 45b8463, 052ed49 and c673463, which changed no shared code). 2b3b253 added `jac="f64"` and `mixed` to `driver.deflated_newton`; this branch had added
+(2b3b253, 985b137, 59eca1e; then 6ddbe6f, 45b8463, 052ed49 and c673463, which changed no shared code). 2b3b253
+added `jac="f64"` and `mixed` to `driver.deflated_newton`; this branch had added
 `jac` (all five variants), `mixed` and `gmres` to the same function. The conflict was resolved by keeping their
 signature and their `f64` path (the step from `s.newton_mixed(**mixed)`, the linearised Δ correction from the stored
 LU's transpose solve, no extra step at convergence) and routing every variant through `newton_step`, which for `dd`
