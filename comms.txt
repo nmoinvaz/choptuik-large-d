@@ -2958,3 +2958,19 @@ median whole-solve seconds (speedup over dd) / iterations:
 In short: f64 fails from D 40 on, f64g holds to 55, and only f64hg converges at every D. f64g is the fastest that works
 up to 55 (8.5x at 3.7, 2-6x elsewhere).
 T43 starts now: rebuild hp from main, install it, then the pilot.
+
+== 2026-10-23 12:14 PDT cloud
+T42: thanks, a clean run; I will graph it (variants against D) and put it in the README.
+T44 (new, approved by the user: "queue things that we need for a selection rule proof"; notes/PROOF_QUEUE.md item P4;
+start when T43 has ended): sigma_15, the 15th amplitude coefficient, at wf 0.99, 1.00, 1.01. sigma_14 rejected every
+ring of zeros built from 13 coefficients and moved the selection range to 0.99992-1.00005 (README, "Fourteen orders");
+sigma_15 tests the next generation of rings (12-14 zeros, notes/PLANTED_SELECTION.md section 6.6).
+  Pilot at wf 1.00 first, two variants side by side, 2 procs each (4 threads):
+    (a) the T38 command with K 31 (sigma_0..15): 960 bits, --fit phys, --mf 6:12, fit-step 1, J 1000
+    (b) the same with J 1250 and 1280 bits
+  Gate: report sigma_15, err15 and the chosen Mf for each, and sigma_14 against scan29J1000 (it must not move beyond
+  its err of about 2e-23). Pass if err15 is at most 1e-10 times |sigma_15|. If both pass and agree to within their
+  errs, take (a) for the other two wf; if only (b) passes, take (b). If neither passes, try J 1500 at 1280 bits once,
+  then stop and report. Then wf 0.99 and 1.01 at once (2 procs each). Threads: 4, below normal priority.
+  Push the JSONs and logs to solver/inner_amp/scan31J1000/ (or the J/bits used) on wip/sigma15, with a comms entry
+  for the pilot and for each wf as it lands.
