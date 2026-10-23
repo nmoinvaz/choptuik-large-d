@@ -577,8 +577,8 @@ of (n − 1)(b − 1)/(κ√n) behind the front, 1.627.
 
 ### The double-double solver (`hp/`)
 
-Above D ≈ 26 the f64 points lose precision: the period is selected by an effect that weakens exponentially with
-D, so rounding at 10⁻¹⁶ in the residual moves Δ by 10⁻⁷–10⁻⁶ at D = 30–40 (through the sensitivity
+Above D ≈ 26 the f64 points lose precision: the condition that selects the period weakens with D (as a power of
+n in this solver, about n²² at D = 40–61; below), so rounding at 10⁻¹⁶ in the residual moves Δ by 10⁻⁷–10⁻⁶ at D = 30–40 (through the sensitivity
 $`\max\lvert\partial\Delta/\partial F\rvert`$ of the table below), and points far above D = 40 are out of
 reach. [`hp/`](hp/) (crate `hpkernel`) is a separate solver built for that regime, to settle the large-D behaviour
 with computed points rather than an assumed form. Its points are used in [The formula](#the-formula) (agreement and
@@ -694,6 +694,14 @@ What the solver has shown:
   worst case that ignores the direction of F, bounds the error in Δ by 10⁻¹⁴ at D = 45 and 2×10⁻⁹ at
   D = 60. The linearised estimate $`-\partial\Delta/\partial F \cdot F`$, which accounts for it, stays between
   10⁻²¹ and 10⁻¹⁷ from D = 35.3 to 60.1 and reaches 3×10⁻¹⁵ above, where the tolerance was relaxed.
+  The falling per-unit factors are those of a power law, not an exponential: once the harmonic set is fixed (D = 40–61,
+  harmonics above 13 frozen) $`\max\lvert\partial\Delta/\partial F\rvert`$ is $`n^{21.7}`$ to 2% in ln, while
+  $`e^{n/2} n^p`$ misses by 15–17% (`solver/beyond_lc/sens_fit.py`). The fast mode that carries the selection,
+  $`e^{-n\Phi}`$ with $`\Phi = \ln x - \tfrac12\ln(1 - x^2)`$, has modulus 1 on $`\mathrm{Re}\,x^2 = \tfrac12`$, which crosses
+  the real axis at x = 1/√2. The solver matches at 0.7, where it is of order one, and moving the last node changes
+  $`\max\lvert\partial\Delta/\partial F\rvert`$ by $`e^{n[\Phi(x_m) - \Phi(0.7)]}`$, over 13 orders of magnitude with no
+  fitted parameter (`solver/beyond_lc/hp_node_test.py`). What grows is the high-harmonic ladder below; the residual
+  floor's 1.4-fold rise per unit of D is not explained ([notes/BEYOND_LIGHT_CONE.md](notes/BEYOND_LIGHT_CONE.md)).
 - **How good the values are.** The points themselves fit smooth curves to about 4×10⁻¹⁵ (degree 18–20) all the way to
   D = 60.1, not 10⁻²⁰. Points between
   D = 27 and 35.2, solved before the freezing, carry up to 10⁻¹⁴ from the weak directions; about 25 of them sit
@@ -1825,8 +1833,10 @@ Jacobian and an unexplained drift of the gauge mode's root).
   directions of the solver sections) are variations of F's high harmonics, which Proposition 1 leaves free, so their
   singular values plausibly measure how strongly the hidden condition pins each harmonic; that identification has not
   been checked directly. For harmonics k = 7, 9, 11, 13 they fall between D = 20 and 60 about like
-  $`n^{-10.5}, n^{-14}, n^{-17.5}, n^{-21}`$, roughly $`n^{-1.6k}`$; data at n = 18–58 cannot tell such power laws from the
-  exponential weakening seen in $`\max\lvert\partial\Delta/\partial F\rvert`$.
+  $`n^{-10.5}, n^{-14}, n^{-17.5}, n^{-21}`$, roughly $`n^{-1.6k}`$. $`\max\lvert\partial\Delta/\partial F\rvert`$ is itself a
+  power law where the harmonic set is fixed, $`n^{21.7}`$ on D = 40–61, so these power laws, not an exponential, are what
+  the solver measures: it matches at x = 0.7, where the selecting fast mode is of order one
+  ([notes/BEYOND_LIGHT_CONE.md](notes/BEYOND_LIGHT_CONE.md)).
 - **F's singularities recede, to a finite distance.** The decay rate of F's harmonics grows from 0.58 at D = 12 to
   1.02 at D = 60, which first suggested $`\tfrac14\ln n`$ growth and an entire F∞. The harmonic ratios extrapolate instead to
   a finite rate, as the amplitude expansion of the inner problem predicts ([above](#the-inner-problem-at-large-x)), so

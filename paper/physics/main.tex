@@ -155,8 +155,9 @@ independent double-precision solver stops at $D = 40$.
 
 Why the extra precision is needed is itself a physical result. The sensitivity of $\Delta$ to the residual,
 $\max|\partial\Delta/\partial F|$, grows about 1.8-fold per unit of $D$ below $D = 27$ and 1.5-fold at $D = 56$--$61$, to
-$9\times10^{13}$ at $D = 60$: the condition that selects the period weakens exponentially with $D$
-(Sec.~\ref{sec:picture} explains why).
+$9\times10^{13}$ at $D = 60$: the condition that selects the period weakens with $D$. The falling factors are those of a
+power law: with the harmonic set fixed ($D = 40$--$61$) the sensitivity is $n^{21.7}$ to 2\%, and an exponential
+$e^{n/2}n^p$ misses by 17\% (Sec.~\ref{sec:picture} explains the selection itself).
 
 \emph{Critical exponent.} For perturbations $\propto e^{\lambda\tau}$ every $\tau$-derivative in the linearized equations
 gains $+\lambda$; the growth-mode matrix $M(\lambda)$ of the discretized problem is singular at a growth rate, and
@@ -509,7 +510,9 @@ equations, with $F$ from the $D = 60$ solution, the relative residuals fall like
 $\omega_0 = 2\pi/1.64389$ and for a wrong $\omega_0 = 2\pi/1.4$. The same holds for growing perturbations
 $e^{\lambda\tau}$ with any $\lambda$. So if $\Delta(D)$ and $\gamma(D)$ are analytic in $1/D$, their expansion coefficients
 cannot be computed order by order from the field equations: they are selected by effects smaller than every power of
-$1/n$. That is the exponential weakening of the selection seen in the solver (Sec.~\ref{sec:method}).
+$1/n$. The solver does not see them as exponentially small: it matches at $x = 0.7$, where the fast mode
+$e^{-n\Phi(x)}$, $\Phi = \ln x - \tfrac12\ln(1-x^2)$, is of order one ($|e^{-n\Phi}| = 1$ on $\mathrm{Re}\,x^2 = \tfrac12$),
+and its sensitivity grows like a power of $n$ (Sec.~\ref{sec:method}).
 Non-perturbative, trans-series corrections in $1/D$ are familiar in large-$D$ gravity~\cite{EmparanHerzog2020}; here they
 decide the period itself.
 
