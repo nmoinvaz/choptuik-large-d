@@ -134,3 +134,40 @@ the last converged double-double state at the same M, computed at that state's o
 --plan_margin (10⁻², about 14% more steps), and records, after convergence, how many steps the new solution's own plan
 would have (steps_own_w / steps_own_n in the pair records). In the small-M dry runs (M = 48 / 64 / 80, D = 3.7 → 3.6)
 this gave 63, 80, 78 and 94 steps where planning from the predictor gave 130–245; the values of Δ did not change.
+
+## 2. Verification
+
+All on the cloud machine (2 cores, AVX-512), private builds: main a1973f7 and this branch, both with
+`RUSTFLAGS="-C target-cpu=native"` and the release profile of `hp/build.sh`. Logs in `hp/data/lowD_highM/logs/`.
+
+### 2.1 Everything at M ≤ 128 is bit-identical to main
+
+- `cd hp && python3 mixed_check.py ref --compare=REF.npz`, REF written by main's build (`ref --save`): the 17 outputs of
+  the default double-double path at D = 3.7, M = 48 (residual, Jacobian, Newton step and pivots, chord, transpose
+  solve, mode matrix at λ = 0.3, the frozen-harmonics and inward-matching Jacobians) are bit-identical
+  (`ref_mixed_compare.log`).
+- `cd hp && python3 highm_check.py ref --compare=data/lowD_highM/REF_highm_main_a1973f7.json` (the hashes written by
+  main's build with `ref --save`, `ref_highm_save_main.log`): 24 outputs at each of M = 8, 16, 48, 64, 80, 96 and 128
+  (the D = 3.7 state resampled to each M): residual, plan, centre and horizon series, the dense double-double Newton
+  step with its pivots, the chord step and transpose solve after it, the dense f64 Jacobian, and `newton_mixed`'s
+  step, residual, pivots, chord step and transpose solve. All 168 are bit-identical (`ref_highm_compare.log`). The
+  outputs are compared as SHA-256 hashes of their float64 bytes, so the M = 128 Jacobians (0.4–0.8 GB) are not stored.
+
+### 2.2 Rust tests
+
+`cargo test --lib` (debug profile, `cargo_test_debug.log`): 5 pass, the 2 benches are ignored. The new
+`block::tests::block_lu_matches_dense` builds random systems with the multiple-shooting structure (near-identity
+propagators, outward and inward segments, a Δ column and a phase row; n = 101 to 1041) and compares the block LU's
+solves (plain and transposed) with the double-double LU of the same f64 matrix, next to the dense f64 LU's error
+(`cargo_test_block.log`):
+
+| n (groups, chain) | block LU error | dense f64 LU error | pivot control | link control |
+|---|---|---|---|---|
+| 101 (10/20, 4) | 1.3×10⁻¹⁵ / 1.7×10⁻¹⁵ | 4.5×10⁻¹⁵ / 4.2×10⁻¹⁵ | 1.1×10⁻⁷ / 4.4×10⁻⁸ | 0.32 / 0.16 |
+| 225 (16/32, 6) | 5.9×10⁻¹⁵ / 6.5×10⁻¹⁵ | 3.4×10⁻¹⁵ / 5.9×10⁻¹⁵ | 2.8×10⁻⁷ / 1.7×10⁻¹⁰ | 0.21 / 0.049 |
+| 1041 (40/80, 12) | 1.4×10⁻¹³ / 1.1×10⁻¹³ | 1.9×10⁻¹⁴ / 1.2×10⁻¹⁴ | 2.5×10⁻⁹ / 1.4×10⁻⁹ | 1.7 / 0.91 |
+| 673 (24/48, 13, inward from 8) | 5.3×10⁻¹⁵ / 3.5×10⁻¹⁵ | 3.9×10⁻¹⁵ / 5.0×10⁻¹⁵ | 4.5×10⁻⁷ / 1.1×10⁻⁷ | 0.65 / 0.41 |
+
+(relative to the solution's max, solve / transposed solve). Pass: the block error at most 100 × the dense f64 error +
+10⁻¹⁵; both controls (one pivot scaled by 1 + 10⁻⁶; the Δ copies untied) must fail that and do.
+`block_solve_many_is_solve` checks that several right-hand sides give each row bitwise as single solves.
