@@ -2656,3 +2656,27 @@ at M 96, each point also solved at M 128 from its M 96 state. When |M 96 -> 128|
 0.005, it switches to M 128 steps (cubic predictor through the four lowest M 128 states, B's included), with M 96 at
 each point as the error estimate. It stops when a step fails at 0.005 and again at half that. Gamma at 3.2, 3.1, 3.0
 from the resolved state, one at a time.
+
+== 2026-10-22 19:34 PDT local
+T40 done: no T35 Newton job is on the dd Jacobian any more. Each was stopped right after an iteration line, its
+checkpoint loaded with the t39 build, then restarted as the same command with --resume --jac f64 (the new code's outdir
+is the t39 worktree, so each checkpoint was copied there and the final state copied back):
+   3.30 M 80: stopped after the line "|F| 7.78e-30 converged" (checkpoint it 11). The kill caught it between that line
+     and the record write. Resumed at |F| 7.8e-30: 1 iteration, 52 s, Delta 3.2672130309581449 (horizon tail 2e-26, so
+     M 80 is out of resolution there).
+   3.5 M 128 (part B): stopped after iteration 4 (|F| 4.1e-28; dd iterations took 1700-2500 s). Resumed at |F| 9.8e-30:
+     1 iteration, 231 s (Jacobian plus residual, about 7-10x a dd iteration), Delta 3.4227909330890940.
+   The gamma runs are untouched: 3.6 is done, 3.5 is running on dd mode_det.
+Results pushed to wip/lowd-local (6ad98b7): merged lowD_dd_local.jsonl and lowD_gamma_local.jsonl plus the per-run files,
+the M 96 / M 128 states, all local_*.log, and the T39 gate logs. lowD_conv.py:
+   D     M 80             M 96              M 128             best / error
+   3.70  3.465200483544   3.465200482305    -                 3.465200482305 +- 1.2e-9
+   3.65  3.460728639647   3.460728636304    -                 (two M: -3.3e-9)
+   3.60  3.452720978926   3.452720974629    3.452720974608    3.452720974608 +- 2.1e-11
+   3.55  3.440402349001   3.440402346486    -                 (two M: -2.5e-9)
+   3.50  3.422790947025   3.422790934317    3.422790933089    3.422790933089 +- 1.2e-9
+   3.45  3.398624718471   3.398624651988    -                 (two M: -6.6e-8)
+   3.40  3.366251917957   3.366251790132    (B running)       (two M: -1.3e-7; M 96 point from the M 96 chain)
+   3.35  3.323462177697   (chain running)
+   3.30  3.267213030958   -
+gamma(3.6) = 0.3368409842 (lam 2.9687598804, 11 determinants, one sign change).
