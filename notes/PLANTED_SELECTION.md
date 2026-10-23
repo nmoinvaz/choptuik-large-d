@@ -545,3 +545,44 @@ Proposed README text, for the coordinator:
 > give Δ∞ = 1.6440 ± 0.0001 (estimator range, 1.64393–1.64403), against 1.64389375 from the finite-D solutions. This
 > assumes S₁ has no other zeros within |x| ≈ 12. Twelve coefficients could not test that; the thirteenth rejected every
 > alternative constructed so far, and σ₁₄ tests the next."
+
+## 6. Follow-up: the converged σ₁₄ (post-freeze)
+
+Everything in this section is post-freeze. Input: `solver/inner_amp/scan29J1000/`, σ₀…σ₁₄ at wf = 0.99, 1.00, 1.01
+(K 29, J 1000, 960 bits; the `_p960` files), and a 1280-bit pilot at wf 1.00. Script:
+`solver/inner_amp/planted_k14.py`; records in `planted_results_k14.jsonl`, checks in `planted_checks_k14.json`.
+
+### 6.0 Procedure, fixed before any K = 14 estimate was computed
+
+This subsection was written and committed before any estimator ran at K = 14, on any input. Already known at that
+point: the σ₁₄ values and the README's order-14 projection. The procedure is §5's, one order up; the pass criteria are:
+
+1. **σ₁₄ is converged** if, at every node: (a) err14 ≤ 10⁻¹⁰ |σ₁₄| (the requirement of §3.6); (b) σ₀…σ₁₃ are bitwise
+   the `scan27J1000p960` values; (c) the 1280-bit pilot's σ₀…σ₁₄ equal the 960-bit ones in every printed digit (except
+   σ₀'s imaginary round-off, below 10⁻²⁸⁰); (d) σ₁₄ continues the ratio law: the second difference of σ_k/σ_{k+1} at
+   k = 12 is at most 0.05 (the D-ratiolaw threshold, which holds from k = 7 on). Each check gets a mutation that
+   must make it fire.
+2. **The pipeline on plants first.** N1 (seven lone zeros) must be recovered by arg, ratio, Padé and G to 10⁻⁶ at
+   K = 14, and N2 must give no number. The 28 arc plants, C-EXP and the 13 REFIT plants are regenerated and run at
+   K = 12, 13, 14; their K = 12 and 13 estimates must equal the stored records (`planted_results.jsonl`) to 10⁻⁹, or
+   the plants are not the same functions and the work stops. Control that must fail: N1 graded against ω_t + 0.002.
+3. **Real data at K = 14** (record "N0 scan29J1000"): its K = 12 and 13 estimates must equal those of
+   "N0 scan27J1000p960" (the inputs are bitwise equal). Mutation control: σ₁₄ → −σ₁₄ at wf 1.00 must fire a detector.
+4. **Ring test.** Each K = 13 re-glued completion of §5.3 (C13-W1–3; C13-ARC, four shapes at their best-fit ω_t;
+   C13-EXP, the [6/7] sum) is regenerated, and its zero must reproduce the stored "K13 recomplete" truth to 10⁻⁹. Its
+   σ₁₄ and τ₁₄ are compared with the measured ones, and it is run through the harness at K = 14. As in §5.3, it
+   survives if no detector fires on it at K = 14 that does not fire on the real data. Benchmark: the simple-zero law
+   from τ₁₂, τ₁₃.
+5. **Calibration** as §5.2: the K = 14 error of each estimator on the ring-free plants (28 arc plants, C-EXP, REFIT
+   with fit residual ≤ 10⁻⁴), and the zero each implies for the real K = 14 estimate.
+6. **Next generation and ring-free completions.** The §5.3 recipes glued at σ₁₄ (tail from k = 15): ratio-law windows
+   k = 6–13, 8–13, 9–13; best-fit arc tails, four shapes, ω_t grid 0.9990–1.0010; the Borel–Padé sum [6/8] (the
+   recipe's [6/(K − 6)]). The other [m/(14 − m)], m = 3…7, are reported separately. The frozen type rule: every pole
+   has |t| < 2 at all three nodes. Zeros are counted at wf = 1.00 in |x| < 7.3 and |x| < 12.
+7. **Combination** as §5.4: the overlap of the calibrated arg and G ranges over the 28 arc plants, together with the
+   zero of each ring-free completion that passes the type rule. This is an estimator range, not a bound.
+8. **The order-14 projection.** The README's model, est_k = ω* + c r^k through k = 12 and 13, for ω* = 1 and the K = 13
+   band, is compared with the real arg₁₄. The hypothesis whose prediction lies nearer is favoured. The comparison is
+   called decisive only if the other prediction is farther from arg₁₄ than three times the model's own error, judged
+   by the same model through k − 2, k − 1 predicting k on the real data (largest error over k = 11–13, for the
+   hypothesis in question) and through k = 12, 13 predicting k = 14 on the 28 arc plants, given their true ω_t.
