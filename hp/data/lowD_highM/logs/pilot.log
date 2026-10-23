@@ -383,3 +383,50 @@
 05:14:59   D 3.2 M 128: start 'predictor' |F| nan (191 steps)
 05:15:01   D 3.2 M 128: plan from start 'predictor' instead: 606 steps, |F| 5.19e-01
 05:15:03 D 3.2 M 128: L 8705, steps 606, start |F| 5.2e-01
+  newton 0: |F| 5.19e-01 |dz| 2.68e+01 lam 1 dDelta -1.05e-02 Delta 3.086411186541428 piv 4.0e-04..5.3e+00  t 161.7s
+  newton 0: |F| 4.19e-02 |dz| 3.18e+01 lam 1 dDelta +5.58e-03 Delta 3.091991751875053 piv 4.0e-04..5.2e+00  t 156.5s
+  newton 0: |F| 1.25e-02 |dz| 4.73e+00 lam 1 dDelta +2.67e-03 Delta 3.094663085743143 piv 4.0e-04..3.9e+00  t 156.6s
+  newton 0: |F| 5.19e-04 |dz| 1.52e-01 lam 1 dDelta +7.43e-05 Delta 3.094737343165447 piv 4.0e-04..5.9e+00  t 157.6s
+  newton 0: |F| 4.67e-07 |dz| 1.47e-04 lam 1 dDelta +9.59e-08 Delta 3.094737439038504 piv 4.0e-04..4.8e+00  t 160.1s
+  newton 0: |F| 6.38e-13 |dz| 2.29e-09 lam 1 dDelta +6.06e-14 Delta 3.094737439038564 piv 4.0e-04..4.8e+00  t 156.5s
+  newton 0: |F| 1.18e-23 |dz| 3.52e-20 lam 1 dDelta +1.75e-24 Delta 3.094737439038564 piv 4.0e-04..4.8e+00  t 153.4s
+  newton 0: |F| 5.39e-29 converged (last |dz| 1.9e-26) Delta 3.094737439038564; last step taken, |F| 6.23e-29
+05:36:04 D 3.2 M 128: Delta 3.0947374390385645 (-1.77e-16) |F| 6.2e-29 its 8 1261s dDelta/dF max 6.8e-01 tails 2e-69 1e-56 dDelta_est +7.4e-32
+05:36:10   D 3.2 M 160: start 'predictor' |F| nan (242 steps)
+05:36:10   D 3.2 M 160: start 'lift of M_c' |F| nan (242 steps)
+05:36:14   D 3.2 M 160: plan from start 'predictor' instead: 701 steps, |F| 3.73e-01
+05:36:14   D 3.2 M 160: best start |F| 3.7e-01 > 1e-03 on the reused plan; two passes
+05:36:16   D 3.2 M 160: start 'predictor' |F| 3.73e-01 on its own plan (701 steps)
+05:36:19   D 3.2 M 160: start 'lift of M_c' |F| 4.85e-05 on its own plan (697 steps)
+05:36:23   D 3.2 M 160: start 'lift of M_c' |F| 4.85e-05 (697 steps)
+05:36:26 D 3.2 M 160: L 10881, steps 697, start |F| 4.9e-05
+  newton 0: |F| 4.85e-05 |dz| 5.89e-02 lam 1 dDelta -7.02e-09 Delta 3.094737432020479 piv 3.0e-04..4.8e+00  t 265.9s
+  newton 0: |F| 9.16e-10 |dz| 1.00e-06 lam 1 dDelta +7.06e-10 Delta 3.094737432726149 piv 3.0e-04..4.8e+00  t 266.8s
+  newton 0: |F| 8.18e-18 converged (last |dz| 7.8e-15) Delta 3.094737432726149; last step taken, |F| 1.74e-27
+05:49:46 D 3.2 M 160: Delta 3.0947374327261485 (-1.38e-16) |F| 1.7e-27 its 3 802s dDelta/dF max 5.5e-01 tails 2e-65 3e-51 dDelta_est +1.8e-28
+05:49:52   D 3.2 M 160: start 'pass 1' |F| 1.74e-27 (234 steps)
+05:49:55 D 3.2 M 160: L 10881, steps 234, start |F| 1.7e-27
+  newton 0: |F| 1.74e-27 |dz| 3.38e-24 lam 1 dDelta +1.75e-28 Delta 3.094737432726149 piv 3.0e-04..4.8e+00  t 91.8s
+  newton 0: |F| 1.59e-28 |dz| 1.10e-23 lam 1 dDelta -8.39e-32 Delta 3.094737432726149 piv 3.0e-04..4.8e+00  t 89.5s
+  newton 0: |F| 8.14e-29 converged (last |dz| 1.5e-23) Delta 3.094737432726149; last step taken, |F| 2.33e-29
+05:54:28 D 3.2 M 160: Delta 3.0947374327261485 (-1.38e-16) |F| 2.3e-29 its 3 276s dDelta/dF max 5.5e-01 tails 2e-65 3e-51 dDelta_est -2.1e-30
+05:54:31   D 3.2 M 160: the solution's own plan has 245 steps, more than the 234 used
+05:54:39   D 3.2 M 192: start 'lift of M_w' |F| nan (266 steps)
+05:54:44   D 3.2 M 192: plan from start 'lift of M_w' instead: 782 steps, |F| 5.26e-06
+05:54:50 D 3.2 M 192: L 13057, steps 782, start |F| 5.3e-06
+  newton 0: |F| 5.26e-06 |dz| 6.81e-03 lam 1 dDelta -2.94e-11 Delta 3.094737432696731 piv 2.7e-04..5.9e+00  t 471.6s
+  newton 0: |F| 8.82e-12 |dz| 1.38e-08 lam 1 dDelta +5.21e-12 Delta 3.094737432701941 piv 2.7e-04..5.9e+00  t 472.6s
+  newton 0: |F| 4.26e-20 |dz| 1.03e-17 lam 1 dDelta -2.41e-21 Delta 3.094737432701941 piv 2.7e-04..5.9e+00  t 477.9s
+  newton 0: |F| 3.00e-28 |dz| 6.47e-26 lam 1 dDelta +2.99e-30 Delta 3.094737432701941 piv 2.7e-04..5.9e+00  t 478.3s
+06:26:42 restarted by hand to load the horizon-side node rule (the horizon series radius in u shrinks: 0.195 at D 3.3, 0.155 at 3.2, M 160, logs/diag_radius_D3.3_D3.2_M160.log; the last node 0.9 could not move further); the M 192 solve resumes from its checkpoint
+06:26:43 resuming: M 160/192, last D 3.25, 5.85 h used
+06:26:43 --- D 3.2 (from 3.25), M 160 / 192, nodes 0.00125..0.9
+06:26:46   D 3.2 M 128: start 'predictor' |F| nan (191 steps)
+06:26:48   D 3.2 M 128: plan from start 'predictor' instead: 606 steps, |F| 5.19e-01
+06:26:48 D 3.2 M 128: already converged (/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.00125-0.9_D3.2000_M128.npz); skipped
+06:26:53   D 3.2 M 160: start 'predictor' |F| nan (242 steps)
+06:26:54   D 3.2 M 160: start 'lift of M_c' |F| nan (242 steps)
+06:26:57   D 3.2 M 160: plan from start 'predictor' instead: 701 steps, |F| 3.73e-01
+06:26:57 D 3.2 M 160: already converged (/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.00125-0.9_D3.2000_M160.npz); skipped
+06:26:59   D 3.2 M 160: the solution's own plan has 245 steps, more than the 234 used
+06:27:08   D 3.2 M 192: start 'lift of M_w' |F| nan (266 steps)

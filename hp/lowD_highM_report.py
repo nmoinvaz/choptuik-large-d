@@ -29,7 +29,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 # the README's formula (section "A formula for 3 < D <= 4"): Delta = sum c_k s^k, s = sqrt(D - 3)
 FORMULA = [1.752403, 2.486429, 8.257623, -29.245836, 44.944706, -45.106964, 30.660868, -12.653060, 2.349289]
 # the local machine's values quoted in comms.txt (2026-10-22 18:31 and the task of this run): (D, M) -> Delta
-LOCAL = {(3.7, 96): 3.4652004823053, (3.6, 128): 3.4527209746080, (3.55, 96): 3.4404023464863085839}
+LOCAL = {(3.7, 96): 3.4652004823053, (3.6, 128): 3.4527209746080, (3.55, 96): 3.4404023464863085839,
+         (3.4, 80): 3.3662519179569, (3.35, 80): 3.3234621776975}
 # the local machine's M 80 -> 96 changes of Delta (the task of this run)
 LOCAL_80_96 = {3.7: -1.2e-9, 3.65: -3.3e-9, 3.6: -4.3e-9, 3.55: -2.5e-9, 3.5: -1.27e-8, 3.45: -6.6e-8}
 
@@ -229,6 +230,8 @@ def main():
         Dn = r["Delta"] + r["Delta_lo"]
         vals[(D, r["Mn"])] = Dn
         vals[(D, r["Mw"])] = r["Delta_w"] + r["Delta_w_lo"]
+        if r.get("Mc"):
+            vals[(D, r["Mc"])] = r["Delta_c"] + r["Delta_c_lo"]
         print(f"{D:8.5f} {r['Mw']:>4}/{r['Mn']:<4} {r['Delta']:.16f} {r['diff']:+11.2e} {r['F_w']:8.1e} {r['F_n']:8.1e} "
               f"{r['its_w']:>2}+{r['its_n']:<2} {(r['seconds_w'] + r['seconds_n']) / 60:8.1f} {r['tail_c']:11.1e} {r['tail_h']:11.1e} "
               f"{formula(D) - Dn:+15.2e}  {r['decision'][:60]}")
