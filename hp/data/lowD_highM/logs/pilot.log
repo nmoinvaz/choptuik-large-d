@@ -200,3 +200,22 @@
 02:34:43 |M 96 -> 128 difference| 2.1e-08 > 1e-08: moving up to M 128 / 160
 02:34:53   D 3.35 M 160: start 'lift' |F| 3.55e-06 (579 steps)
 02:34:57 D 3.35 M 160: L 10241, steps 579, start |F| 3.6e-06
+  newton 0: |F| 3.55e-06 |dz| 1.97e-03 lam 1 dDelta -7.66e-11 Delta 3.323462070727699 piv 4.6e-04..6.3e+00  t 447.7s
+  newton 0: |F| 4.67e-12 |dz| 2.61e-09 lam 1 dDelta +3.25e-12 Delta 3.323462070730953 piv 4.6e-04..6.3e+00  t 446.7s
+  newton 0: |F| 1.73e-22 converged (last |dz| 1.3e-19) Delta 3.323462070730953; last step taken, |F| 4.82e-29
+02:57:12 D 3.35 M 160: Delta 3.3234620707309532 (+2.08e-16) |F| 4.8e-29 its 3 1338s dDelta/dF max 3.6e-01 tails 3e-63 8e-87 dDelta_est +7.9e-31
+02:57:19   D 3.35 M 160: start 'pass 1' |F| 4.82e-29 (197 steps)
+02:57:22 D 3.35 M 160: L 10241, steps 197, start |F| 4.8e-29
+  newton 0: |F| 4.82e-29 converged (last |dz| 1.2e-24) Delta 3.323462070730953; last step taken, |F| 1.90e-29
+03:00:01 D 3.35 M 160: Delta 3.3234620707309532 (+2.08e-16) |F| 1.9e-29 its 1 161s dDelta/dF max 3.6e-01 tails 1e-60 8e-87 dDelta_est +9.5e-31
+03:00:01 D 3.35: Delta(M 160) = 3.3234620707309532 (+2.08e-16), M 128 -> 160: -7.34e-11; moved up (|M 96 -> 128 difference| 2.1e-08 > 1e-08)
+03:00:01 point 3.35 took 32.0 min of solves; 2.46 h used
+03:00:01 --- D 3.3 (from 3.35), M 128 / 160, nodes 0.0025..0.9
+03:00:04   D 3.3 M 96: start 'predictor' |F| nan (136 steps)
+03:00:05   D 3.3 M 96: plan from start 'predictor' instead: 435 steps, |F| 1.20e-01
+03:00:06 D 3.3 M 96: L 6145, steps 435, start |F| 1.2e-01
+  newton 0: |F| 1.20e-01 |dz| 2.01e+00 lam 1 dDelta -1.70e-03 Delta 3.266342006212464 piv 7.3e-04..4.5e+00  t 82.9s
+  newton 0: |F| 2.13e-03 |dz| 2.83e+00 lam 1 dDelta +8.50e-04 Delta 3.267191511247116 piv 7.2e-04..4.6e+00  t 80.6s
+  newton 0: |F| 8.33e-05 |dz| 5.55e-02 lam 1 dDelta +2.11e-05 Delta 3.267212594333394 piv 7.2e-04..6.4e+00  t 79.6s
+  newton 0: |F| 3.97e-08 |dz| 4.00e-05 lam 1 dDelta +1.73e-08 Delta 3.267212611623356 piv 7.2e-04..6.4e+00  t 78.8s
+  newton 0: |F| 1.15e-14 |dz| 3.52e-12 lam 1 dDelta +3.61e-15 Delta 3.267212611623360 piv 7.2e-04..6.4e+00  t 80.6s
