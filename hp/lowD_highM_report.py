@@ -80,7 +80,7 @@ def project(opts):
     dD = float(opts.get("dD", 0.05))
     target = 1e-8
     pairs = [json.loads(ln) for ln in open(os.path.join(HERE, "data", "lowD_highM", "pilot.jsonl")) if ln.strip()]
-    pairs = [r for r in pairs if "Mw" in r]
+    pairs = [r for r in pairs if "Mw" in r and "D" in r]
     A4 = lowD_cost.calibrate(55, 2.6e-8, lowD_cost.BETA[0][1])
 
     def kmodel(D):
@@ -135,13 +135,21 @@ def project(opts):
             continue
         Ms_ = tuple(m for m in (r.get("Mc"), r["Mw"], r["Mn"]) if m)
         pts.append((D_, Ms_, (sec(log[i1][:8]) - sec(t0)) % 86400))
-    mus = []
-    for i, ln in enumerate(log):
-        if "moving up to M" in ln:
+    # a move up: from its first decision line after the point's pair record to the new pair's record (restarts and
+    # a cancelled move up, D 3.175, excluded by matching D and M)
+    mus, pend, Dp = [], {}, None
+    for ln in log:
+        body = ln[8:]
+        if body.startswith(" D ") and ": Delta(M" in body:
+            D_ = float(body.split(":")[0].split()[1])
+            M_ = int(body.split("Delta(M ")[1].split(")")[0])
+            if body.endswith("; pair"):
+                Dp = D_
+            elif "; moved up" in body and (D_, M_) in pend:
+                mus.append((D_, M_, (sec(ln[:8]) - pend.pop((D_, M_))) % 86400))
+        elif "moving up to M" in ln and Dp is not None:
             M2 = int(ln.split("moving up to M")[1].split("/")[1])
-            j = next((k for k in range(i + 1, len(log)) if "; moved up" in log[k]), None)
-            if j is not None:
-                mus.append((float(ln.split(" D ")[1].split(":")[0]) if " D " in ln[:20] else None, M2, (sec(log[j][:8]) - sec(ln[:8])) % 86400))
+            pend.setdefault((Dp, M2), sec(ln[:8]))
     lastM = pts[-1][1]
     same = [t for D_, Ms_, t in pts if Ms_ == lastM]
     W0 = sum(m ** 3 for m in lastM)
@@ -149,7 +157,7 @@ def project(opts):
     print(f"points at M {'/'.join(map(str, lastM))}: " + ", ".join(f"D {D_:g} {t / 60:.0f} min" for D_, Ms_, t in pts if Ms_ == lastM)
           + " (wall, load about 2: the pilot alone on the 2 cores; restarts and failed tries included)")
     if mus:
-        print("moves up (the new M_n at that D, two passes): " + ", ".join(f"M {m} {t / 60:.0f} min" for _, m, t in mus))
+        print("moves up (the new M_n at that D, two passes): " + ", ".join(f"M {m} at D {d:g} {t / 60:.0f} min" for d, m, t in mus))
     mu_ref = mus[-1] if mus else None
     print(f"from D {pairs[-1]['D']:g}, steps of {dD}: K from the scaled lowest variant; M_w the first rung with M - 1 >= K,")
     print(f"  M_n the next, M_c the one below; hours per point = ({Ta / 3600:.2f}-{Tb / 3600:.2f} h) x sum(M^3) / {W0:.3g}, plus a move")

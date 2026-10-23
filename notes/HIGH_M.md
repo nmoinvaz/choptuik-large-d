@@ -1,6 +1,43 @@
 # Larger τ resolutions for the double-double solver (`hp/`), and how far toward D = 3 they get
 
-Status: work in progress (numbers to follow as the runs finish).
+Status: done (branch `wip/high-m`); stage 1 verified, the pilot stopped by its 10-hour rule at D = 3.15.
+
+**Summary.**
+
+- **Larger M.** The kernel runs at M = 160, 192, 256, 320 and 384 besides 8–128. Above M = 128 the mixed-precision
+  Newton step builds and factors its f64 Jacobian in block storage (a staircase LU over the multiple-shooting blocks,
+  `hp/src/block.rs`), never as the dense n × n matrix: 8–12 times less memory. The dense paths (exact double-double
+  Jacobian, Levenberg–Marquardt, γ's mode matrix) refuse above M = 128. No FFT derivative: the τ-derivative is 24–46%
+  of the Jacobian's time at M = 160–192, not enough to pay for a rebuild (section 4).
+- **Verification (section 2).** Everything at M ≤ 128 is bit-identical to main (17 + 168 outputs compared); `cargo
+  test` passes; the block step equals the dense step to the dense f64 LU's own rounding at M = 16–128, and its two
+  controls fire; Newton converges to the same solution (Δ to 1.3×10⁻³⁰).
+- **D = 3.7, M = 80 to 256 (section 3).** Δ changes by −1.24×10⁻⁹, −3.4×10⁻¹¹, −3.2×10⁻¹⁵ and −1.6×10⁻¹⁸ from M = 80
+  to 96, 128, 160 and 192 (|F| ≤ 3.4×10⁻²⁹), shrinking fast but not at one rate; M_256_SUMMARY The local machine's
+  M = 96 value and M 80 → 96 change agree. M ≥ 192 needed a node set with the first node at 0.0025 and the last at
+  0.9 (section 1.4): its weakest directions are nonlinear there, which neither the f64 Jacobian nor exact
+  Jacobian–vector products fix.
+- **Time and memory (section 4).** One Newton step on the 2 cores with nothing else running: M = 160 90–100 s on
+  230–280 Taylor steps (4.5 minutes on a 700-step pass-1 plan), M = 192 3.4 minutes on 327 steps (7 on 723), M = 256
+  11 minutes on 564 steps (19–20 on 972); the Jacobian is 98–99% of it. The peak RSS of a solve is 0.4–0.8 GB up to
+  M = 256. M320_SUMMARY
+- **The pilot (section 5)** went from D = 3.7 to **D = 3.15: Δ = 2.9613196424560031 at M = 256, error estimate
+  9.3×10⁻¹²** (the change from M = 192), in 10.5 hours, and stopped by its 10-hour rule. M = 80 sufficed to 10⁻⁸ down
+  to D = 3.55, 96 to 3.4, 128 to 3.175 and 160 at 3.15. It matches the local machine where they overlap, and the
+  README's formula to 7.6×10⁻⁶ (its stated accuracy is 10⁻⁵). On the way the node set had to follow D (first node
+  0.0025 → 0.00125 → 0.000625; the last node is due next), most solves needed two passes, and the driver gained
+  rules for starts, plans, failures and the budget (5.4).
+- **Projection (section 6):** D = 3.1 about 2–3 more hours at M = 192 / 256; D = 3.05 about 9–25 more hours at
+  M_w = 256–320 and M_n up to 384, on the 2 cores.
+- **Discrepancies for the coordinator:** (1) `hp/lowD_cost.py` on main prints a time exponent of −1.29 "from
+  M = 64" where `hp/data/lowD_logs/cost.log` has 3.03 (an 11-node M = 64 record at 180 s per iteration in
+  `hp/data/lowD_dd.jsonl`); (2) `lowD_dd.py --auto_nodes` re-nodes with `driver.renode`'s default Taylor step 0.004,
+  which blows up toward a node at 0.9 at M = 160 (0.001 works), and its rule cannot move the last node past 0.85,
+  which D < 3.15 will need; (3) the earlier records (`hp/data/lowD_dd.jsonl`, the local machine's runs) planned from
+  resampled starts, so their plans are 2–4 times finer than needed (time, not accuracy); (4) the local machine's
+  "M = 80 does not resolve D ≤ 3.40" is right for Δ to 10⁻⁸, but its failing M 80 → 96 lifts are more likely the
+  centre series of the resampled start at its first node 0.005 (5.4): here, with 0.0025, that lift converged at
+  D = 3.40.
 
 ## 1. What changed
 
@@ -87,8 +124,9 @@ needed: that costs time, not accuracy.
 At D = 3.7 the lift to M = 192 (from the converged M = 160 state, pass 1 on its 511-step plan) did not converge
 with plain f64-Jacobian Newton: |F| 5.7×10⁻¹⁰ → 5.0×10⁻¹⁰ → 3.8×10⁻¹⁰ with line-search factors 0.125 and 0.25, steps
 |dz| ≈ 10⁻⁷ (200 times |F|), and the largest LU pivot up from about 10 (M ≤ 160) to 1.9×10³
-(`hp/data/lowD_highM/logs/lift_M192_plain_newton.log`). `python3 highm_diag.py jac` at that state (three f64 Jacobians that differ only in rounding, block storage;
-`hp/data/lowD_highM/logs/diag_jac_M192.log`, and `diag_jac_M128.log` for M = 128) gave:
+(`hp/data/lowD_highM/logs/lift_M192_plain_newton.log`). `python3 highm_diag.py jac` at that state (three f64 Jacobians
+that differ only in rounding, block storage; `hp/data/lowD_highM/logs/diag_jac_M192.log`, and `diag_jac_M128.log` for
+M = 128) gave:
 
 | | f64x4 | f64x1 | dd4 |
 |---|---|---|---|
@@ -97,15 +135,15 @@ with plain f64-Jacobian Newton: |F| 5.7×10⁻¹⁰ → 5.0×10⁻¹⁰ → 3.8�
 | \|F(z + dz)\| (|F(z)| = 3.75×10⁻¹⁰) | 1.8×10⁻⁸ | 3.7×10⁻⁹ | 2.2×10⁻⁹ |
 
 The steps differ by 9–38% between the variants and the sensitivities ∂Δ/∂F by 6–50%, while at the converged M = 128
-state the same comparison gives 2–3×10⁻⁷ and 10⁻⁵. Along each step the Jacobian is accurate to first order (the
-mismatch is 0.1–0.3% of |F|); what differs is the component in the weakest directions, which only the rounding
-fixes. Those components wreck the series (`python3 highm_diag.py radius`, `diag_radius.log`): at the M = 160 solution the horizon series has radius 0.28–0.30 in u
-(u₀/r = 0.7, tail 2×10⁻⁴¹) and the centre series 0.017–0.020 (x₀/r = 0.3); at the M = 192 state after the damped steps
-(|F| = 3.75×10⁻¹⁰; `hp/data/lowD_states/highm_p1_D3.7000_M192_stalled.npz`) they are 0.21 (u₀/r = 0.93, tail 3.7×10⁻¹¹) and 0.007 (x₀/r = 0.6–0.8), for every τ-harmonic. These are the
-"junk" directions of `driver.deflated_newton` (top centre and horizon harmonics, coupled to the matching point only
-exponentially weakly): at D = 3.7 the M = 192 grid is far beyond what Δ needs (its top harmonics are 10⁻¹³–10⁻¹⁵), so
-they are weaker than the f64 Jacobian's rounding can resolve. dd4 (double-double base trajectory) does not help,
-since its tangents are f64.
+state the same comparison gives 2–3×10⁻⁷ and 10⁻⁵. Along each step the Jacobian is accurate to first order (the mismatch
+is 0.1–0.3% of |F|); what differs is the component in the weakest directions, which only the rounding fixes. Those
+components wreck the series (`python3 highm_diag.py radius`, `diag_radius.log`): at the M = 160 solution the horizon
+series has radius 0.28–0.30 in u (u₀/r = 0.7, tail 2×10⁻⁴¹) and the centre series 0.017–0.020 (x₀/r = 0.3); at the
+M = 192 state after the damped steps (|F| = 3.75×10⁻¹⁰; `hp/data/lowD_states/highm_p1_D3.7000_M192_stalled.npz`) they
+are 0.21 (u₀/r = 0.93, tail 3.7×10⁻¹¹) and 0.007 (x₀/r = 0.6–0.8), for every τ-harmonic. These are the "junk" directions
+of `driver.deflated_newton` (top centre and horizon harmonics, coupled to the matching point only exponentially weakly):
+at D = 3.7 the M = 192 grid is far beyond what Δ needs (its top harmonics are 10⁻¹³–10⁻¹⁵), so they are weaker than the
+f64 Jacobian's rounding can resolve. dd4 (double-double base trajectory) does not help, since its tangents are f64.
 
 **Not only the rounding: the weak directions are nonlinear there.** The large-D agent ran its correction loop (GMRES
 with exact double-double Jacobian–vector products, the f64 LU as preconditioner; `driver.newton_solve(jac="f64g")`,
@@ -293,15 +331,15 @@ LU, 2.5 s for the residual and 535 MB peak RSS (`highm_check.py profile`; before
 largest single items at large M are the ks + 1 double-double horizon LUs (0.26 GB at M = 256, 0.6 GB at M = 384),
 built once per residual and once per Jacobian.
 
-**Where the time goes, and the τ-derivative.** The Jacobian is 98–99% of a Newton step at M ≥ 160 (the LU about
-0.5%, the residual 0.4–0.6%). Within it the dense M × M τ-derivative (`DMat::apply`) is 24–46% at M = 160–192; the
-rest is the Taylor recursions' Cauchy sums and field arithmetic, whose coefficient arrays (12 fields × 38 orders × M
-points × 5 lanes for f64x4) no longer fit the 2 MB L2 cache above M ≈ 128. A real-FFT or DCT derivative,
-O(M log M), would remove at most that 24–46%: a step 1.3–1.85 times faster even if the derivative were free, about
-1.2–1.5 times with a realistic FFT. It was not done: it needs a new kernel build (35 minutes here under load, with the
-container restarting every 30–60 minutes during this work), and the measurements say the larger costs are elsewhere:
-the Taylor plans (section 1.3, 2–4 times), the Cauchy sums' memory traffic, and the number of Taylor steps, which
-grows faster than M (converged plans: 56, 72, 86 steps at M = 48, 64, 80; 191 at 128; 252–279 at 160–192).
+**Where the time goes, and the τ-derivative.** The Jacobian is 98–99% of a Newton step at M ≥ 160 (the LU about 0.5%,
+the residual 0.4–0.6%). Within it the dense M × M τ-derivative (`DMat::apply`) is 24–46% at M = 160–192; the rest is the
+Taylor recursions' Cauchy sums and field arithmetic, whose coefficient arrays (12 fields × 38 orders × M points × 5
+lanes for f64x4) no longer fit the 2 MB L2 cache above M ≈ 128. A real-FFT or DCT derivative, O(M log M), would remove
+at most that 24–46%: a step 1.3–1.85 times faster even if the derivative were free, about 1.2–1.5 times with a realistic
+FFT. It was not done: it needs a new kernel build (35 minutes here under load, with the container restarting every 30–60
+minutes during this work), and the measurements say the larger costs are elsewhere: the Taylor plans (section 1.3, 2–4
+times), the Cauchy sums' memory traffic, and the number of Taylor steps, which grows faster than M (converged plans: 56,
+72, 86 steps at M = 48, 64, 80; 191 at 128; 252–279 at 160–192).
 
 ## 5. The pilot toward D = 3
 
@@ -310,34 +348,100 @@ grows faster than M (converged plans: 56, 72, 86 steps at M = 48, 64, 80; 191 at
 `hp/lowD_highM.py` (its docstring has the rules in full), started by `hp/data/lowD_highM/pilot.sh` under `nice -n 10`
 on 2 threads; log `hp/data/lowD_highM/logs/pilot.log`, one record per pair in `pilot.jsonl`, one per solve in
 `pilot_points.jsonl`, the continuation state in `pilot.jsonl.progress.json`; states `hp/data/lowD_states/lowDhm_*`
-(15 nodes) and `lowDhm_x<first>-<last>_*` (after node changes). It resumes from the last converged point and from
-the Newton checkpoints of an interrupted solve (it was restarted four times: once after a container restart, three
-times by hand, 5.4). The 10-hour budget counts the pilot's running time across restarts. `python3 lowD_highM_report.py` prints the tables of this section.
+(15 nodes) and `lowDhm_x<first>-<last>_*` (after node changes). It resumes from the last converged point and from the
+Newton checkpoints of an interrupted solve. It was resumed nine times: once after a container restart, once after a
+crash on a bug in the re-noding (fixed), and seven times after I stopped it by hand, to stop a solve that was going
+astray or to load a rule added on the way (5.4). The 10-hour budget counts the pilot's running time across restarts.
+`python3 lowD_highM_report.py` prints the tables of this section.
 
 - **Start:** D = 3.7 at M = 80 / 96 on the 15 nodes 0.0025, 0.005, 0.01, …, 0.8, 0.9 (section 1.4), the smallest pair
   that resolves D = 3.7 (80 → 96 is −1.24×10⁻⁹). A first attempt at 128 / 160 went astray in the weak directions
   from the first, constant predictor (`logs/pilot_attempt1_M128.log`).
-- **Each D** (steps of 0.05): the working M_w and the next M_n, and after the first move up the previous working M as
-  a helper M_c. The value is Δ(M_n), its error estimate |Δ(M_n) − Δ(M_w)| (an estimator from the next resolution, not
-  a bound). f64-Jacobian Newton (`newton_mixed`, block storage above M = 128) to |F| ≤ 10⁻²⁸.
+- **Each D** (steps of 0.05, halved on failure): the working M_w and the next M_n, and after the first move up the
+  previous working M as a helper M_c. The value is Δ(M_n), its error estimate |Δ(M_n) − Δ(M_w)| (an estimator from
+  the next resolution, not a bound). f64-Jacobian Newton (`newton_mixed`, block storage above M = 128) to
+  |F| ≤ 10⁻²⁸.
 - **Starts:** the cubic predictor through the last four points at the same M gets worse as D falls (|F| 0.02–0.03 at
-  D = 3.65–3.4, 0.27–0.5 at 3.25–3.2; its first Newton step is |dz| ≈ 3–30), and at M = 128 a predictor start went
+  D = 3.65–3.4, 0.15–0.7 at 3.25–3.15; its first Newton step is |dz| ≈ 3–30), and at M = 128 a predictor start went
   astray. So each resolution starts from the solution one rung below resampled (helper → M_w → M_n), with |F|
-  10⁻⁴–10⁻⁶, and only the helper starts from its predictor.
+  10⁻⁴–10⁻⁶, and only the helper starts from its predictor. A failed helper fails the point (the step is halved).
 - **Moving up:** when |Δ(M_n) − Δ(M_w)| > 10⁻⁸, or when a log-linear fit of the last three differences projects it
-  above 10⁻⁸ two points ahead; the new M_n is solved at that D in two passes (section 1.3).
+  above 10⁻⁸ two points ahead while it is already above 10⁻⁸ / 20; the new M_n is solved at that D in two passes
+  (section 1.3).
 - **Plans:** reused from the last converged state at the same M (section 1.5); a start that does not fit the reused
   plan (|F| not finite or above 10⁻³ on it) is solved in two passes, pass 1 on its own plan.
 - **Nodes:** besides `--auto_nodes` (a solution's series tail above 10⁻³⁰), the node set changes when a series tail
   of the next point's M_n start (the M_w solution resampled to M_n) passes 10⁻²⁰ (5.4); every resolution is then
   re-noded and re-solved at that D, and the three earlier states per resolution re-noded for the predictors.
+- **Giving up early:** a solve stops after two steps in a row with line-search factors ≤ 1/8 (`lowD_dd.solve_point`,
+  optional `stop_lam`; off by default there).
+
+### 5.2 The points
+
+`python3 lowD_highM_report.py` (one line per recorded pair; "moved up" and "re-noded" are the same D solved again at
+the new resolutions or nodes; Newton calls are those of the recorded solves, pass 2 for two-pass solves):
+
+| D | M_c / M_w / M_n | Δ at M_n | M_w → M_n (error estimate) | M_c → M_w | \|F\| (M_n) | Newton calls (c + w + n) | nodes (first) | tails at M_n (centre, horizon) | formula − Δ | |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 3.65 | – / 80 / 96 | 3.46072863630352 | −3.34×10⁻⁹ |  | 4.7×10⁻³⁰ | 8 + 5 | 15 (0.0025) | 4×10⁻¹⁰⁷, 1×10⁻¹³² | −4.7×10⁻⁶ |  |
+| 3.6 | – / 80 / 96 | 3.4527209746292183 | −4.30×10⁻⁹ |  | 3.4×10⁻³⁰ | 6 + 5 | 15 (0.0025) | 2×10⁻¹⁰³, 2×10⁻¹²⁹ | −4.7×10⁻⁶ |  |
+| 3.55 | – / 80 / 96 | 3.4404023464863086 | −2.51×10⁻⁹ |  | 6.4×10⁻³⁰ | 6 + 3 | 15 (0.0025) | 4×10⁻⁹⁹, 2×10⁻¹²⁷ | −2.0×10⁻⁶ |  |
+| 3.5 | – / 80 / 96 | 3.4227909343166796 | −1.27×10⁻⁸ |  | 8.5×10⁻³¹ | 6 + 5 | 15 (0.0025) | 5×10⁻⁹⁴, 3×10⁻¹²⁶ | +2.4×10⁻⁶ |  |
+| 3.5 | – / 96 / 128 | 3.422790933089094 | −1.23×10⁻⁹ |  | 2.4×10⁻²⁹ | 5 + 1 | 15 (0.0025) | 2×10⁻⁸⁶, 2×10⁻¹¹⁰ | +2.4×10⁻⁶ | moved up |
+| 3.45 | 80 / 96 / 128 | 3.3986246505411713 | −1.45×10⁻⁹ | −6.65×10⁻⁸ | 7.6×10⁻³⁰ | 6 + 6 + 5 | 15 (0.0025) | 6×10⁻⁸¹, 2×10⁻¹⁰⁷ | +6.0×10⁻⁶ |  |
+| 3.4 | 80 / 96 / 128 | 3.3662517880572863 | −2.07×10⁻⁹ | −1.28×10⁻⁷ | 2.3×10⁻²⁹ | 6 + 6 + 5 | 15 (0.0025) | 4×10⁻⁷⁶, 2×10⁻¹⁰⁰ | +6.5×10⁻⁶ |  |
+| 3.35 | 80 / 96 / 128 | 3.3234620708043178 | −2.09×10⁻⁸ | −8.60×10⁻⁸ | 4.8×10⁻²⁹ | 6 + 7 + 5 | 15 (0.0025) | 6×10⁻⁷⁰, 3×10⁻⁹⁷ | +2.8×10⁻⁶ |  |
+| 3.35 | – / 128 / 160 | 3.3234620707309534 | −7.34×10⁻¹¹ |  | 1.9×10⁻²⁹ | 5 + 1 | 15 (0.0025) | 1×10⁻⁶⁰, 8×10⁻⁸⁷ | +2.8×10⁻⁶ | moved up |
+| 3.3 | 96 / 128 / 160 | 3.2672125673881937 | −1.86×10⁻¹⁰ | −4.40×10⁻⁸ | 8.6×10⁻²⁹ | 7 + 6 + 6 | 15 (0.0025) | 3×10⁻⁵⁴, 2×10⁻⁷⁸ | −3.5×10⁻⁶ |  |
+| 3.3 | – / 128 / 160 | 3.2672125673881937 | −1.86×10⁻¹⁰ |  | 2.7×10⁻²⁹ | 2 + 2 | 16 (0.00125) | 8×10⁻⁸⁷, 2×10⁻⁷⁸ | −3.5×10⁻⁶ | re-noded |
+| 3.25 | 96 / 128 / 160 | 3.1931538137859671 | −9.80×10⁻¹⁰ | −6.16×10⁻⁸ | 1.4×10⁻²⁹ | 7 + 3 + 1 | 16 (0.00125) | 4×10⁻⁷⁸, 1×10⁻⁷⁰ | −7.6×10⁻⁶ |  |
+| 3.25 | – / 160 / 192 | 3.1931538137723118 | −1.37×10⁻¹¹ |  | 7.8×10⁻²⁹ | 1 + 1 | 16 (0.00125) | 3×10⁻⁷², 5×10⁻⁶⁶ | −7.6×10⁻⁶ | moved up |
+| 3.2 | 128 / 160 / 192 | 3.0947374327019413 | −2.42×10⁻¹¹ | −6.31×10⁻⁹ | 7.6×10⁻²⁹ | 8 + 3 + 1 | 16 (0.00125) | 1×10⁻⁶³, 4×10⁻⁴⁸ | −4.9×10⁻⁶ |  |
+| 3.2 | – / 160 / 192 | 3.0947374327019413 | −2.42×10⁻¹¹ |  | 7.0×10⁻²⁹ | 4 + 2 | 17 (0.000625) | 1×10⁻⁷⁹, 4×10⁻⁴⁸ | −4.9×10⁻⁶ | re-noded |
+| 3.175 | 128 / 160 / 192 | 3.0333229496324002 | −3.30×10⁻¹⁰ | −6.38×10⁻⁹ | 3.1×10⁻²⁹ | 6 + 3 + 5 | 17 (0.000625) | 3×10⁻⁸⁷, 3×10⁻³⁶ | −1.3×10⁻⁶ |  |
+| 3.15 | 128 / 160 / 192 | 2.9613196424652687 | −1.22×10⁻⁹ | −4.41×10⁻⁸ | 9.4×10⁻³⁰ | 8 + 3 + 5 | 17 (0.000625) | 1×10⁻⁷⁴, 1×10⁻²³ | +1.8×10⁻⁶ |  |
+| 3.15 | – / 192 / 256 | 2.9613196424560031 | −9.27×10⁻¹² |  | 2.1×10⁻²⁸ | 5 + 1 | 17 (0.000625) | 4×10⁻⁵⁹, 2×10⁻¹⁷ | +1.8×10⁻⁶ | moved up |
+
+So the pilot reached **D = 3.15: Δ = 2.9613196424560031 (M = 256), error estimate 9.3×10⁻¹² (the change from
+M = 192)**, with Δ = 2.9613196424652687 at M = 192 (1.2×10⁻⁹ from M = 160). Every point from D = 3.65 down has an
+error estimate below 10⁻⁸ at its larger M; the largest is 2.1×10⁻⁸ at D = 3.35 before the move up there
+(7.3×10⁻¹¹ after it).
+
+### 5.3 The M each D needed
+
+The smallest M whose change of Δ to the next resolution is below 10⁻⁸ (all the resolutions solved at each D, helper
+included; `python3 lowD_highM_report.py`, last table):
+
+| D | M solved | changes of Δ between them | M needed for 10⁻⁸ |
+|---|---|---|---|
+| 3.7 | 80, 96, 128, 160, 192 | −1.24×10⁻⁹, −3.4×10⁻¹¹, −3.2×10⁻¹⁵, −1.6×10⁻¹⁸ | 80 |
+| 3.65–3.55 | 80, 96 | −3.3×10⁻⁹, −4.3×10⁻⁹, −2.5×10⁻⁹ | 80 |
+| 3.5 | 80, 96, 128 | −1.27×10⁻⁸, −1.2×10⁻⁹ | 96 |
+| 3.45 | 80, 96, 128 | −6.6×10⁻⁸, −1.4×10⁻⁹ | 96 |
+| 3.4 | 80, 96, 128 | −1.3×10⁻⁷, −2.1×10⁻⁹ | 96 |
+| 3.35 | 80, 96, 128, 160 | −8.6×10⁻⁸, −2.1×10⁻⁸, −7.3×10⁻¹¹ | 128 |
+| 3.3 | 96, 128, 160 | −4.4×10⁻⁸, −1.9×10⁻¹⁰ | 128 |
+| 3.25 | 96, 128, 160, 192 | −6.2×10⁻⁸, −9.8×10⁻¹⁰, −1.4×10⁻¹¹ | 128 |
+| 3.2 | 128, 160, 192 | −6.3×10⁻⁹, −2.4×10⁻¹¹ | 128 |
+| 3.175 | 128, 160, 192 | −6.4×10⁻⁹, −3.3×10⁻¹⁰ | 128 |
+| 3.15 | 128, 160, 192, 256 | −4.4×10⁻⁸, −1.2×10⁻⁹, −9.3×10⁻¹² | 160 |
+
+The changes do not grow smoothly with D: 128 → 160 is −6.3×10⁻⁹ at D = 3.2, −6.4×10⁻⁹ at 3.175 and −4.4×10⁻⁸ at 3.15,
+and at a fixed D the successive changes fall by factors of 19 to 290 from one rung to the next. At D = 3.7, M = 192 (and
+the 256 of section 3) are far more than Δ needs, which is where the weak directions of section 1.4 came from; the pilot
+raised M only when the difference demanded it (after the change at D = 3.175 below), and M = 256 was used at D = 3.15
+only, as the resolution above the needed 160 and 192.
 
 ### 5.4 What changed on the way down
 
-- **D = 3.5, 3.35, 3.25: moving up.** 80 → 96 reached −1.27×10⁻⁸ at D = 3.5 and 96 → 128 −2.09×10⁻⁸ at 3.35; at 3.25
-  128 → 160 was −9.8×10⁻¹⁰, but the last three differences (−7.3×10⁻¹¹, −1.9×10⁻¹⁰, −9.8×10⁻¹⁰) projected 2.7×10⁻⁸ at
-  3.15, and the move up to 160 / 192 came then. (At D = 3.2 the helper's 128 → 160 was −6.3×10⁻⁹: the projection was
-  right that 128 would not last beyond 3.2.)
+- **Moving up: D = 3.5, 3.35, 3.25, 3.15.** 80 → 96 reached −1.27×10⁻⁸ at D = 3.5 and 96 → 128 −2.09×10⁻⁸ at 3.35; at
+  3.25 128 → 160 was −9.8×10⁻¹⁰, but the last three differences (−7.3×10⁻¹¹, −1.9×10⁻¹⁰, −9.8×10⁻¹⁰) projected
+  2.7×10⁻⁸ at 3.15, and the move up to 160 / 192 came then (128 → 160 was −4.4×10⁻⁸ at 3.15: the projection was right
+  that 128 would not last). At D = 3.175 the fit of −1.4×10⁻¹¹, −2.4×10⁻¹¹, −3.3×10⁻¹⁰ (160 → 192) projected 1.1×10⁻⁵
+  and moved up to 192 / 256 while the difference was 3.3×10⁻¹⁰; I stopped that (raise M only when the difference
+  demands it) and added the condition that the difference be above 10⁻⁸ / 20 already (it was 9.8×10⁻¹⁰ at D = 3.25,
+  so that move up stands). At D = 3.15 160 → 192 was −1.2×10⁻⁹ and the projection (3.8×10⁻⁶ at 3.05) moved up to
+  192 / 256 under the amended rule; by the model of section 6 the working M has to be 192 by D = 3.1.
 - **D = 3.25: the centre series of the lifted start, and the first node.** The M = 128 solution at D = 3.25,
   resampled to M = 160, had |F| = 3.5×10⁻³, all in the centre block (the next blocks 10⁻⁵): its centre series, summed
   at the first node x₀ = 0.0025, had a tail of 10⁻² (`highm_diag.py start`), against 1.2×10⁻⁴⁹ for the M = 128
@@ -361,16 +465,31 @@ times by hand, 5.4). The 10-hour budget counts the pilot's running time across r
   machine's to the 13 digits quoted (5.5); M = 80 does not resolve D ≤ 3.45 to 10⁻⁸ in Δ (80 → 96 = −6.6×10⁻⁸ at 3.45),
   as it says.
 - **The horizon node.** The horizon series' radius in u = 1 − x shrinks as D falls: 0.29 at D = 3.7, 0.195 at 3.3 and
-  0.155 at 3.2 (M = 160, all τ-harmonics alike; `logs/diag_radius_D3.3_D3.2_M160.log`), so with u₀ = 0.1 (last node
-  0.9) the solutions' horizon tails grew from 10⁻¹³² (D = 3.65) to 4×10⁻⁴⁸ (3.2). Extrapolated, the radius reaches
-  u₀ near D = 3.05. `lowD_dd.py`'s rule adds a node 0.1 further out only while the last is below 0.85; the pilot now
-  adds one halfway to the horizon (0.95, then 0.975) when a solution's horizon tail passes 10⁻³⁰ or a lifted start's
-  10⁻²⁰ (restart by hand at 06:26 to load it).
+  0.155 at 3.2 (M = 160, all τ-harmonics alike; `logs/diag_radius_D3.3_D3.2_M160.log`), so with u₀ = 0.1 (last node 0.9)
+  the solutions' horizon tails grew from 10⁻¹³² (D = 3.65) to 4×10⁻⁴⁸ (3.2), 3×10⁻³⁶ (3.175) and 10⁻²³ (3.15, M = 192;
+  2×10⁻¹⁷ at M = 256). Extrapolated, the radius reaches u₀ near D = 3.05. These tails are truncation errors of the
+  discrete problem, not of Δ beyond 10⁻¹⁷ (the sensitivities |∂Δ/∂F| are ≤ 0.7), but they say the last node has to move
+  before D = 3.1. `lowD_dd.py`'s rule adds a node 0.1 further out only while the last is below 0.85; the pilot now adds
+  one halfway to the horizon (0.95, then 0.975) when a solution's horizon tail passes 10⁻³⁰ or a lifted start's 10⁻²⁰
+  (restart by hand at 06:26 to load it). It did not fire before D = 3.15, where the M = 256 tail asked for it and the
+  budget (5.6) skipped it.
 - **Two passes.** From D = 3.25 the reused plans no longer fit the lifted starts (|F| not finite on them), so most
   solves are two-pass: pass 1 on the start's own plan (550–780 steps, 2.5–3 times the converged solution's 190–270),
   pass 2 on the pass-1 state's own plan. This roughly doubles the time per point.
 - **Series orders** (kc = 100, ks = 250, section 1.6): the solutions' centre tails stayed below 10⁻⁴⁹ (10⁻⁶³ after
   the node changes); the horizon tails are the ones that grow (above).
+- **D = 3.15 at the first try: the helper's predictor too far off.** The helper (M = 128) started from its cubic
+  predictor with |F| = 0.74 on its own 698-step plan, and Newton went astray (|dz| 1.7×10³, 9×10², 6×10²; line-search
+  factors 1/8, 1/8, 1/64; Δ at 2.923 against the formula's 2.961). Stopped by hand; the driver now gives up after two
+  such steps and fails the point when the helper fails, and the step was halved: D = 3.175 from |F| = 0.22 converged
+  in 6 calls, and then D = 3.15 from |F| = 0.15. The checkpoint is kept as
+  `lowDhm_x0.000625-0.9_D3.1500_M128_ckpt_failed.npz` (not committed).
+- **The residual floor at M = 256.** Pass 2 of the M = 256 solve at D = 3.15 stalled at |F| = 4.2×10⁻²⁸ and
+  2.5×10⁻²⁸ (Δ changing by 10⁻³⁰, each call 12–20 minutes under load 4 from other agents), so its last call ran with
+  --tol 5×10⁻²⁸ (|F| = 2.1×10⁻²⁸ recorded; every other solve of the pilot is at ≤ 10⁻²⁸). The |F| reached rises with
+  M and the Taylor steps: ≤ 5×10⁻²⁹ at M ≤ 128, ≤ 9×10⁻²⁹ at 160–192, 2×10⁻²⁸ at 256.
+- **A crash on a bug** in the new re-noding of the predictor states (they kept the old plan, one segment short; at
+  D = 3.2, the second node change); fixed, resumed from the saved stage.
 
 ### 5.5 Against the local machine and the formula
 
@@ -382,9 +501,53 @@ times by hand, 5.4). The 10-hour budget counts the pilot's running time across r
   M = 96 one here, its own M 96 → 128 change there. The node sets do not show at this level (section 3 and 5.4:
   10⁻³⁰).
 - **The formula in s = √(D − 3)** (README, fitted to Ecker, Ecker, Grumiller & Jechtl's values, good to about
-  10⁻⁵): formula − Δ is −4.7×10⁻⁶ to +6.5×10⁻⁶ over D = 3.65–3.35 and −7.6×10⁻⁶ to −1.3×10⁻⁶ over 3.3–3.175,
+  10⁻⁵): formula − Δ is −4.7×10⁻⁶ to +6.5×10⁻⁶ over D = 3.65–3.35 and −7.6×10⁻⁶ to +1.8×10⁻⁶ over 3.3–3.15,
   changing sign along D as a fit's error does; the pilot's error estimates (≤ 2.1×10⁻⁸) are far below that, so these
-  are the formula's own errors.
+  are the formula's own errors, within its stated accuracy.
+
+### 5.6 Where and why it stopped
+
+**Stop rule: 10 hours of wall time** (`STOP: 10.0 h of wall time used`, recorded in `pilot.jsonl`), after D = 3.15,
+at 10.47 h of the pilot's running time. The last point, D = 3.15 with its move up to M = 256, had started at 7.50 h
+and was projected to fit (its D = 3.175 predecessor took 66 minutes); the M = 256 solve took 2.2 hours (pass 1 on a
+972-step plan, 20 minutes per Newton call; load 2–4 from other agents) and then stalled at its residual floor (5.4).
+The rules apply between points, so the point was finished; the node change it asked for (the M = 256 horizon tail
+2×10⁻¹⁷) was skipped, since the next point (projected at that point's 3 hours) could not end within the budget.
+
+None of the other stop rules came near: the largest M used (256) is not the largest built (384); no point failed
+after halving to 0.005 (one step was halved once, to D = 3.175); the projected time of a point stayed below 3 hours.
+
+**Lowest D reached: 3.15, Δ = 2.9613196424560031 at M = 256, error estimate 9.3×10⁻¹²** (the change from M = 192;
+an estimator, not a bound).
+
+## 6. Projection: M and time for D = 3.2, 3.1 and 3.05
+
+D = 3.2 was reached (5.2): at M = 128 / 160 / 192 a point took 46–80 minutes of wall time from D = 3.2 to 3.15 on the
+2 cores (load 2–4), the move up to M = 256 at D = 3.15 2.2 hours, and the whole pilot from D = 3.7 to 3.15 10.5
+hours. `python3 lowD_highM_report.py --project` estimates the rest:
+
+- **Modes.** `hp/lowD_cost.py`'s model (four variants: the decay rate of the τ spectrum linear in D or a power of D − 3,
+  the amplitude constant or growing like |F₁|²) against the pilot's 25 checks (each pair and helper difference: did
+  K = M − 1 modes suffice for 10⁻⁸ or not). The higher variants need more modes than sufficed at D = 3.25–3.15; the
+  lowest variant fits when scaled by 0.95 from D = 3.65 to 3.2 (bounds: above 0.951 and 0.952 from D = 3.5 and 3.35, at
+  most 0.953 from 3.2), but D = 3.175, where 128 modes still sufficed, needs 0.889: the M differences do not grow
+  smoothly with D (5.3). So K is projected with 0.889–0.952 times the lowest variant.
+- **Time.** The points at M = 128 / 160 / 192 (46–80 minutes) scaled by the sum of M³ over the three resolutions, and
+  each new M_n the measured move up to M = 256 (2.2 hours) scaled by M³. Not included: node changes (each about 10% of
+  a point; the last node has to move before D = 3.1, 5.4), step halvings, and the growth of the Taylor plans toward
+  D = 3. So these are lower estimates, for an idle 2-core machine.
+
+| D | modes for 10⁻⁸ (model, 4 variants) | K projected | M_c / M_w / M_n | hours per point | moves up | hours from D = 3.15 |
+|---|---|---|---|---|---|---|
+| 3.2 | reached | 128 sufficed | 128 / 160 / 192 | 0.8–1.3 (measured) | | |
+| 3.1 | 191–286 | 170–181 | 160 / 192 / 256 | 1.6–2.8 | none (256 is in place) | 1.6–2.8 |
+| 3.05 | 273–377 | 243–260 | 192 / 256 / 320 or 256 / 320 / 384 | 3.3–10.7 | 320 (4.3 h), 384 (7.4 h) | 9–25 |
+
+So on this machine D = 3.1 is about 2–3 more hours from where the pilot stopped (one point at M = 192 / 256 after
+the node change), and D = 3.05 about 9–25 more hours, at M_w = 256–320 and M_n up to 384, the largest size built,
+with steps of 0.05 (D = 3.15 already needed a halving, so likely more points). The memory fits: at M = 256 a pilot
+process peaked at 0.78 GB (section 4 has the parts and M = 320–384). Below D = 3.05 the next rung, M = 512, is not
+built.
 
 ## 7. Proposed README text (not applied)
 
@@ -393,20 +556,38 @@ times by hand, 5.4). The 10-hour budget counts the pilot's running time across r
 > - **Larger τ grids:** M = 160, 192, 256, 320 and 384 collocation points besides 8–128. Above M = 128 the
 >   mixed-precision step builds and factors its f64 Jacobian in block storage (a staircase LU over the
 >   multiple-shooting blocks, `hp/src/block.rs`): 8–12 times less memory than the dense matrix (173 MB at M = 192), and
->   the same steps as the dense path to its rounding at M ≤ 128, where every other result is unchanged bit for bit. The
->   exact double-double Jacobian, the Levenberg–Marquardt fallback and γ stay at M ≤ 128. At D = 3.7, Δ changes by
->   −3.4×10⁻¹¹, −3.2×10⁻¹⁵ and −1.6×10⁻¹⁸ from M = 96 to 128, 160 and 192 ([notes/HIGH_M.md](notes/HIGH_M.md)).
+>   the same steps as the dense path to that path's rounding at M ≤ 128, where every other result is unchanged bit for
+>   bit. The exact double-double Jacobian, the Levenberg–Marquardt fallback and γ stay at M ≤ 128. At D = 3.7, Δ
+>   changes by −3.4×10⁻¹¹, −3.2×10⁻¹⁵ and −1.6×10⁻¹⁸ from M = 96 to 128, 160 and 192
+>   ([notes/HIGH_M.md](notes/HIGH_M.md)).
 
 **(b)** In the "Below D = 4" caption, replace "cross the double-double kernel's limit of 128 near D = 3.4, which is
 where this computation stops; near D = 3 they run into the hundreds." by:
 
-> cross 128 near D = 3.35, where the computed change of Δ from M = 96 to 128 is 2×10⁻⁸. The kernel now runs to
-> M = 384; a pilot continuation in double-double reached D = D_LOW with M up to M_TOP (each value with the change from
-> the next lower M as its error estimate, ERR_LOW at D_LOW), and the model, calibrated on it, puts D = 3.05 at
-> M ≈ 320 and more than a day on two cores ([notes/HIGH_M.md](notes/HIGH_M.md)).
+> pass 128 near D = 3.4 and run into the hundreds near D = 3. The kernel now runs to M = 384: a pilot continuation in
+> double-double reached D = 3.15, Δ = 2.96131964246 (the change from M = 192 to 256 is 9×10⁻¹²), where M = 160
+> gives Δ to 10⁻⁸; calibrated on it, the model puts D = 3.05 at M = 256–384 and 9–25 more hours on two cores
+> ([notes/HIGH_M.md](notes/HIGH_M.md)).
 
 **(c)** In "A formula for 3 < D ≤ 4", replace "and match our own double-double values at D = 3.7–4, which the fit
 never saw, to 4×10⁻⁶ and 10⁻⁷" by:
 
-> and match our own double-double values at D = D_LOW–4 (Δ; γ at 3.7–4), which the fit never saw, to FORMULA_MAX
-> (Δ) and 10⁻⁷ (γ)
+> and match our own double-double values at D = 3.15–4 (Δ; γ at 3.7–4), which the fit never saw, to 8×10⁻⁶ (Δ) and
+> 10⁻⁷ (γ)
+
+(the largest |formula − Δ| of the pilot is 7.6×10⁻⁶, at D = 3.25; section 5.5).
+
+## 8. Files
+
+- Kernel: `hp/src/block.rs` (new: block storage and staircase LU, tests), `hp/src/model.rs` (`jacobian_block`;
+  `jacobian_lanes` without the clone), `hp/src/python.rs` (sizes, `Lu`, `newton_mixed(block=...)`, `lu_info`, the
+  dense-path limit, the pool's stacks), `hp/src/lib.rs` (one line).
+- Python: `hp/python/hpkernel/driver.py` (`DENSE_M_MAX`, the dd4 retry above it, `deflated_newton(jac="f64")`),
+  `hp/lowD_dd.py` (checkpointed plans, peak RSS and per-iteration times in the records, optional `stop_lam`).
+- Scripts: `hp/highm_check.py` (ref, block, controls, converge, lift, profile), `hp/highm_diag.py` (jac, radius,
+  start, orders), `hp/lowD_highM.py` (the pilot), `hp/lowD_highM_report.py` (tables, --stage1, --project).
+- Data: `hp/data/lowD_highM/` (the D = 3.7 lifts `lift_D3.7*.jsonl`, the pilot `pilot*.jsonl`, the check JSONs, the
+  main build's reference hashes, the run scripts `checks.sh`, `stage1*.sh`, `pilot.sh`, and `logs/`);
+  `hp/data/lowD_states/highm*_D3.7000_M*.npz` (D = 3.7, M = 80–256) and `lowDhm*_D*_M*.npz` (the pilot's converged
+  states at every resolution, helper included; 0.1–0.4 MB each). Not committed: checkpoints, pass-1 states, failed
+  and re-noded predictor states.
