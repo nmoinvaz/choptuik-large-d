@@ -171,3 +171,37 @@ solves (plain and transposed) with the double-double LU of the same f64 matrix, 
 (relative to the solution's max, solve / transposed solve). Pass: the block error at most 100 × the dense f64 error +
 10⁻¹⁵; both controls (one pivot scaled by 1 + 10⁻⁶; the Δ copies untied) must fail that and do.
 `block_solve_many_is_solve` checks that several right-hand sides give each row bitwise as single solves.
+
+## 4. Time and memory
+
+**Load.** The cloud machine has 2 cores. During this work several other agents ran on it (load average 2–13); every
+time below is wall time on 2 threads with the load average at the time recorded next to it, and times at load L > 2
+are inflated by roughly L/2. They are measurements of this run, not of the kernel alone.
+
+**One Newton step** (`newton_mixed`: double-double residual, f64 Jacobian, LU, solve) at converged D = 3.7 states
+(`python3 lowD_highM_report.py --stage1`; dense storage at M ≤ 128, block above):
+
+| M | nodes | Taylor steps | step | Jacobian | of which τ-derivative | LU | residual | LU MB | peak RSS MB | load |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 128 | 13 | 191 | 76 s | | | (dense) | 0.5 s | 785 (dense) | 987 | 3.0 |
+| 160 | 13 | 279 | 100 s | 99 s | 31 s (31%) | 0.46 s | 0.6 s | 105 | 435 | 2.3 |
+| 160 | 15 | 256 | 350 s | 347 s | 143 s (41%) | 1.2 s | 1.4 s | 121 | 542 | 4.8 |
+
+The τ-derivative's share is the Jacobian's time minus the same Jacobian built without it (`jac_mutate=1`). A profile at
+M = 192 on a 500-step plan (load about 4) gave 561 s for the Jacobian, 46% of it the τ-derivative, 1.1 s for the
+LU, 2.5 s for the residual and 535 MB peak RSS (`highm_check.py profile`; before the plans were made lean).
+
+**Memory.** Block storage holds the factors in 105–121 MB at M = 160 against 1.3 GB for the dense f64 matrix (and
+2.6 GB for a dense double-double one); the peak RSS of a whole lift stays under 0.7 GB from M = 80 to 192. The
+largest single items at large M are the ks + 1 double-double horizon LUs (0.26 GB at M = 256, 0.6 GB at M = 384),
+built once per residual and once per Jacobian.
+
+**Where the time goes, and the τ-derivative.** The Jacobian is 98–99% of a Newton step at M ≥ 160 (the LU about
+0.5%, the residual 0.4–0.6%). Within it the dense M × M τ-derivative (`DMat::apply`) is 31–46% at M = 160–192; the
+rest is the Taylor recursions' Cauchy sums and field arithmetic, whose coefficient arrays (12 fields × 38 orders × M
+points × 5 lanes for f64x4) no longer fit the 2 MB L2 cache above M ≈ 128. A real-FFT or DCT derivative,
+O(M log M), would remove at most that 31–46%: a step 1.45–1.85 times faster even if the derivative were free, about
+1.3–1.5 times with a realistic FFT. It was not done: it needs a new kernel build (35 minutes here under load, with the
+container restarting every 30–60 minutes during this work), and the measurements say the larger costs are elsewhere:
+the Taylor plans (section 1.3, 2–4 times), the Cauchy sums' memory traffic, and the number of Taylor steps, which
+grows faster than M (converged plans: 56, 72, 86 steps at M = 48, 64, 80; 191 at 128; 252–279 at 160–192).
