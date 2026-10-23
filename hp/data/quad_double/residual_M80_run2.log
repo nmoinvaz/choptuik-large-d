@@ -1,0 +1,24 @@
+model name	: Intel(R) Xeon(R) Processor @ 2.80GHz
+RUSTFLAGS="-C target-cpu=x86-64-v4"; state data/lowD_states/lowDv_D3.7000_M80.npz via dump_ctx.py; other load: one single-threaded job of another session
+M = 80, L = 4481, kt 36, kc 100, ks 250, 13 nodes, 86 Taylor steps; isa avx512; one thread
+ns per 8-lane operation (dd, qd): add/sub 4.9/38.9, mul 2.2/64.7, div 201.3/640.8, neg 1.3/2.8, x f64 1.5/34.6, acc a b 2.7/32.3, acc a 2.0/15.5, finish 1.5/185.6
+ block       dd s qd lanes s      ratio   model dd   model qd  solves   operations (8-lane) by type
+     0     0.0035     0.0478       13.6     0.0027     0.0382       0   add/sub 18890, mul 3970, div 11, neg 10, x const 14930, x f64 202950, acc a b 662310, acc a c 158400, finish 14850
+     1     0.0006     0.0076       12.1     0.0005     0.0066       0   add/sub 7930, mul 1440, div 21, neg 360, x const 5440, x f64 13680, + const 60, acc a b 79200, acc a c 57600, finish 5020
+     2     0.0011     0.0152       13.7     0.0009     0.0132       0   add/sub 15860, mul 2880, div 41, neg 720, x const 10880, x f64 27360, + const 120, acc a b 158400, acc a c 115200, finish 10040
+     3     0.0038     0.0574       14.9     0.0032     0.0461       0   add/sub 55510, mul 10080, div 141, neg 2520, x const 38080, x f64 95760, + const 420, acc a b 554400, acc a c 403200, finish 35140
+     4     0.0089     0.1211       13.7     0.0073     0.1054       0   add/sub 126880, mul 23040, div 321, neg 5760, x const 87040, x f64 218880, + const 960, acc a b 1267200, acc a c 921600, finish 80320
+     5     0.0081     0.1132       13.9     0.0069     0.0988       0   add/sub 118950, mul 21600, div 301, neg 5400, x const 81600, x f64 205200, + const 900, acc a b 1188000, acc a c 864000, finish 75300
+     6     0.0043     0.0585       13.5     0.0037     0.0527       0   add/sub 63440, mul 11520, div 161, neg 2880, x const 43520, x f64 109440, + const 480, acc a b 633600, acc a c 460800, finish 40160
+     7     0.0027     0.0380       14.1     0.0023     0.0329       0   add/sub 39650, mul 7200, div 101, neg 1800, x const 27200, x f64 68400, + const 300, acc a b 396000, acc a c 288000, finish 25100
+     8     0.0032     0.0453       14.0     0.0027     0.0395       0   add/sub 47580, mul 8640, div 121, neg 2160, x const 32640, x f64 82080, + const 360, acc a b 475200, acc a c 345600, finish 30120
+     9     0.0027     0.0376       13.7     0.0023     0.0329       0   add/sub 39650, mul 7200, div 101, neg 1800, x const 27200, x f64 68400, + const 300, acc a b 396000, acc a c 288000, finish 25100
+    10     0.0033     0.0486       14.8     0.0027     0.0395       0   add/sub 47580, mul 8640, div 121, neg 2160, x const 32640, x f64 82080, + const 360, acc a b 475200, acc a c 345600, finish 30120
+    11     0.0051     0.0545       10.6     0.0032     0.0461       0   add/sub 55510, mul 10080, div 141, neg 2520, x const 38080, x f64 95760, + const 420, acc a b 554400, acc a c 403200, finish 35140
+    12     0.0051     0.0604       11.7     0.0037     0.0527       0   add/sub 63440, mul 11520, div 161, neg 2880, x const 43520, x f64 109440, + const 480, acc a b 633600, acc a c 460800, finish 40160
+    13     0.0472     0.2688        5.7     0.0203     0.1959     251   add/sub 67750, mul 7530, div 11, neg 10020, x const 27570, x f64 645050, + const 2510, acc a b 4412570, acc a c 401600, finish 40090
+   all     0.0999     0.9740        9.8     0.0623     0.8006
+operations in all blocks: add/sub 768620, mul 135340, div 1754, neg 40990, x const 510340, x f64 2024480, + const 7670, acc a b 11886080, acc a c 5513600, finish 486660
+residual (double-double, one thread) 0.1561 s = horizon LUs 0.0521 s (251 of 80 x 80) + blocks 0.0999 s (of which 251 horizon solves 0.0058 s) + assembly
+test qd_residual::bench_qd_residual ... ok
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 14 filtered out; finished in 4.63s
