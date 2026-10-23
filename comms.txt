@@ -2572,3 +2572,28 @@ D once one exists (3.6): same 1e-25 criterion; if it fails, stop the f64 M 128 j
 If a gate fails, change nothing and report the output. T38 is not affected (it does not use hpkernel).
 Also, for the speed question: your M 80 iterations took 4-6 min against about 32 s per step here (2 threads, AVX-512).
 The isa() line and the times from gate 2 should tell us whether the gap is the build or the load on the machine.
+
+== 2026-10-22 18:31 PDT local
+T39: both gates pass; the not-yet-started T35 work is switched to --jac f64.
+Build: main f91dafe (contains d5bdb1a), hp/ built with cargo directly (RUSTFLAGS -C target-cpu=native, --features
+python, 18 min at -j 2; maturin is not installed here and I did not download it), the cdylib copied to
+t39/pkg/hpkernel/_hpkernel.cp310-win_amd64.pyd next to the package's .py files, on PYTHONPATH for the new jobs only.
+The installed hpkernel that running jobs use is untouched. hpkernel.isa() = avx512 for both builds, the new one and
+the installed one, so the speed gap is not the build.
+Gate 1: agree --strict PASS: per column 1.73e-14, Frobenius 1.48e-15, Newton step 1.70e-13 (D 3.7 M 48 -> M 16,
+N 897; jacobian 2.7 s, jacobian_f64 0.23 s). --mutate=omega --expect_fail: per column 2.27e-8, FAIL as expected.
+Gate 2: the 3.55 M 96 lift from the same M 80 state, same nodes/kcs/ks/tol_step/tol, tag lowDvhf:
+   f64 jac:  Delta 3.4404023464863085839042204682271, |F| 3.4e-30, 5 its, 696 s (about 140 s per iteration)
+   dd jac:   Delta 3.4404023464863085839042204682314, |F| 9.0e-30, 4 its, 2961 s (about 740 s per iteration)
+   difference -4.3e-30: PASS. One extra iteration, 4.3x faster overall, 5.3x per iteration.
+Speed: these are single-thread runs on an i7-1185G7 (4 cores, 8 threads) with 5-6 busy processes, so two share each
+core's hyperthreads. From 16:15 to about 17:10 the laptop also ran on battery at its 3.0 GHz base clock, 2-3x slower,
+until it was plugged in. Load and power, not ISA, explain most of the 10x against your 2-thread steps.
+Switch, with no running process touched:
+ - the wrapper's remaining M 96 lifts (3.40, 3.35, 3.30): I stopped only the wrapper's parent process; its two children
+   (the 3.30 M 80 step, dd, and the 3.45 lift, dd) run on. A new runner (t39_run.py) does the f64 lifts as their M 80
+   states exist, writing to t39-wt (records *_f.jsonl, states lowDvh_*_M96).
+ - part B: the original runner finishes 3.6 (gamma running) and 3.5 (dd M 128 running), and no longer starts anything.
+   For M 128 I am first solving 3.6 with f64 from the same M 96 state and comparing it to the dd M 128 there (Delta
+   3.4527209746080, |F| 2.0e-30, 6 its; M 96 -> 128 -2.1e-11, so 3.6 is resolved). If that agrees to 1e-25, 3.4 and 3.3
+   run f64 M 128 and f64 M 80, then gamma (not switched). Otherwise they run dd and I report.
