@@ -1,0 +1,19 @@
+   Compiling hpkernel v0.1.0 (/home/claude/dss/agentHM/wt/hp)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 40s
+     Running unittests src/lib.rs (/tmp/claude-0/-home-claude/5cec0889-b97c-529a-89c7-507003649638/scratchpad/hm/tgt_dbg/debug/deps/_hpkernel-f02f6d55a88a4d0c)
+
+running 7 tests
+test block::tests::block_lu_matches_dense ... ok
+test block::tests::block_solve_many_is_solve ... ok
+test linalg::bench::bench_lu ... ignored
+test linalg::tests::blocked_lu_matches_getf2 ... ok
+test linalg::tests::f64_lu_solves ... ok
+test linalg::tests::solve_many_is_bitwise_solve ... ok
+test model::bench::bench_jac ... ignored
+
+test result: ok. 5 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 54.51s
+
+
+real	2m35.248s
+user	0m36.972s
+sys	0m1.072s

@@ -5,7 +5,13 @@ values where they overlap; and the README's formula in s = sqrt(D - 3) (hp/lowD_
 Grumiller & Jechtl's values, good to about 1e-5).
 
     cd hp && python3 lowD_highM_report.py [data/lowD_highM/pilot.jsonl] [--lift=data/lowD_highM/lift_D3.7.jsonl]
+    cd hp && python3 lowD_highM_report.py --stage1 [--lift=...]
+
+--stage1: the D = 3.7 lifts (hp/highm_check.py lift): per node set and M, Delta (hi + lo, 25 digits), the change from
+the previous M, |F|, the Taylor steps of the two passes, the series tails, one Newton step's seconds by part, the LU's
+MB, the peak RSS and the load average; and the change from the M = 80 state and from the local machine's M = 96 value.
 """
+import mpmath as mp
 import json
 import os
 import sys
@@ -23,7 +29,35 @@ def formula(D):
     return sum(c * s ** k for k, c in enumerate(FORMULA))
 
 
+def stage1(lift):
+    mp.mp.dps = 40
+    recs = [json.loads(ln) for ln in open(lift) if ln.strip()]
+    m80 = mp.mpf(3.4652004835440313) + mp.mpf(1.572231757910144e-16)    # hp/data/lowD_dd.jsonl, D = 3.7, M = 80
+    m96 = mp.mpf("3.4652004823053")                                       # the local machine (task of this run)
+    for tag in sorted({r.get("tag", "highm") for r in recs}):
+        rs = sorted((r for r in recs if r.get("tag", "highm") == tag), key=lambda r: r["M"])
+        print(f"tag {tag}, nodes {rs[0]['nodes'][0]}..{rs[0]['nodes'][-1]} ({len(rs[0]['nodes'])})")
+        print(f"  {'M':>4} {'N':>6} {'Delta':>27} {'change':>10} {'|F|':>8} {'steps':>9} {'tails c, h':>15} {'step s':>7} "
+              f"{'jac s':>6} {'no d/dtau':>9} {'LU s':>5} {'LU MB':>6} {'RSS MB':>7} {'load':>5}")
+        prev = None
+        for r in rs:
+            v = mp.mpf(r["Delta"]) + mp.mpf(r["Delta_lo"])
+            ch = mp.nstr(v - prev, 3) if prev is not None else "-"
+            f = lambda x, fmt: (fmt % x) if x is not None else "-"  # noqa: E731
+            print(f"  {r['M']:>4} {r['N']:>6} {mp.nstr(v, 25):>27} {ch:>10} {r['F']:8.1e} {f(r.get('steps_pass1'), '%d'):>4}>{r['steps']:<4} "
+                  f"{r['tail_c']:7.0e} {r['tail_h']:7.0e} {r['s_newton_step']:7.1f} {f(r['s_jacobian'], '%.1f'):>6} "
+                  f"{f(r['s_jacobian_no_dtau'], '%.1f'):>9} {f(r['s_factor'], '%.2f'):>5} {r['lu_mb']:6.1f} {r['peak_rss_mb']:7.1f} {r['load']:5.1f}")
+            prev = v
+        r128 = [r for r in rs if r["M"] == 128]
+        if r128:
+            v = mp.mpf(r128[0]["Delta"]) + mp.mpf(r128[0]["Delta_lo"])
+            print(f"  M = 128 minus the M = 80 state: {mp.nstr(v - m80, 4)}; minus the local machine's M = 96 value: {mp.nstr(v - m96, 4)}")
+
+
 def main():
+    if "--stage1" in sys.argv:
+        opts = dict(a[2:].split("=", 1) for a in sys.argv[1:] if a.startswith("--") and "=" in a)
+        return stage1(opts.get("lift", os.path.join(HERE, "data", "lowD_highM", "lift_D3.7.jsonl")))
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     opts = dict(a[2:].split("=", 1) for a in sys.argv[1:] if a.startswith("--") and "=" in a)
     path = args[0] if args else os.path.join(HERE, "data", "lowD_highM", "pilot.jsonl")
