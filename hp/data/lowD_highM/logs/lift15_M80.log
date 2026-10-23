@@ -1,0 +1,8 @@
+D 3.7 M 80: L 5121, steps 102, start |F| 1.1e-16
+  newton 0: |F| 1.11e-16 converged (last |dz| 1.1e-16) Delta 3.465200483544031; last step taken, |F| 9.56e-30
+D 3.7 M 80: Delta 3.4652004835440313 (+1.57e-16) |F| 9.6e-30 its 1 42s dDelta/dF max 2.3e+00 tails 6e-115 9e-145 dDelta_est +2.7e-30
+D 3.7 M 80: L 5121, steps 97, start |F| 9.6e-30
+  newton 0: |F| 9.56e-30 converged (last |dz| 9.1e-27) Delta 3.465200483544031; last step taken, |F| 1.88e-29
+D 3.7 M 80: Delta 3.4652004835440313 (+1.57e-16) |F| 1.9e-29 its 1 28s dDelta/dF max 2.3e+00 tails 6e-115 9e-145 dDelta_est +5.1e-30
+D 3.7 M 80: Delta 3.4652004835440313 (+1.57e-16) |F| 1.9e-29; steps 102 -> 97; tails 6e-115 9e-145; Newton step 26.79 s (residual 0.38 s, Jacobian None s, factor None s, Jacobian without d/dtau None s); LU 400.7 MB; peak RSS 307.5 MB; load 9.78
+D 3.7 M 80: already in /home/claude/dss/agentHM/wt/hp/data/lowD_highM/lift_D3.7.jsonl

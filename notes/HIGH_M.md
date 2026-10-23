@@ -134,3 +134,139 @@ the last converged double-double state at the same M, computed at that state's o
 --plan_margin (10⁻², about 14% more steps), and records, after convergence, how many steps the new solution's own plan
 would have (steps_own_w / steps_own_n in the pair records). In the small-M dry runs (M = 48 / 64 / 80, D = 3.7 → 3.6)
 this gave 63, 80, 78 and 94 steps where planning from the predictor gave 130–245; the values of Δ did not change.
+
+## 2. Verification
+
+All on the cloud machine (2 cores, AVX-512), private builds: main a1973f7 and this branch, both with
+`RUSTFLAGS="-C target-cpu=native"` and the release profile of `hp/build.sh`. Logs in `hp/data/lowD_highM/logs/`.
+
+### 2.1 Everything at M ≤ 128 is bit-identical to main
+
+- `cd hp && python3 mixed_check.py ref --compare=REF.npz`, REF written by main's build (`ref --save`): the 17 outputs of
+  the default double-double path at D = 3.7, M = 48 (residual, Jacobian, Newton step and pivots, chord, transpose
+  solve, mode matrix at λ = 0.3, the frozen-harmonics and inward-matching Jacobians) are bit-identical
+  (`ref_mixed_compare.log`).
+- `cd hp && python3 highm_check.py ref --compare=data/lowD_highM/REF_highm_main_a1973f7.json` (the hashes written by
+  main's build with `ref --save`, `ref_highm_save_main.log`): 24 outputs at each of M = 8, 16, 48, 64, 80, 96 and 128
+  (the D = 3.7 state resampled to each M): residual, plan, centre and horizon series, the dense double-double Newton
+  step with its pivots, the chord step and transpose solve after it, the dense f64 Jacobian, and `newton_mixed`'s
+  step, residual, pivots, chord step and transpose solve. All 168 are bit-identical (`ref_highm_compare.log`). The
+  outputs are compared as SHA-256 hashes of their float64 bytes, so the M = 128 Jacobians (0.4–0.8 GB) are not stored.
+
+### 2.2 Rust tests
+
+`cargo test --lib` (debug profile, `cargo_test_debug.log`): 5 pass, the 2 benches are ignored. The new
+`block::tests::block_lu_matches_dense` builds random systems with the multiple-shooting structure (near-identity
+propagators, outward and inward segments, a Δ column and a phase row; n = 101 to 1041) and compares the block LU's
+solves (plain and transposed) with the double-double LU of the same f64 matrix, next to the dense f64 LU's error
+(`cargo_test_block.log`):
+
+| n (groups, chain) | block LU error | dense f64 LU error | pivot control | link control |
+|---|---|---|---|---|
+| 101 (10/20, 4) | 1.3×10⁻¹⁵ / 1.7×10⁻¹⁵ | 4.5×10⁻¹⁵ / 4.2×10⁻¹⁵ | 1.1×10⁻⁷ / 4.4×10⁻⁸ | 0.32 / 0.16 |
+| 225 (16/32, 6) | 5.9×10⁻¹⁵ / 6.5×10⁻¹⁵ | 3.4×10⁻¹⁵ / 5.9×10⁻¹⁵ | 2.8×10⁻⁷ / 1.7×10⁻¹⁰ | 0.21 / 0.049 |
+| 1041 (40/80, 12) | 1.4×10⁻¹³ / 1.1×10⁻¹³ | 1.9×10⁻¹⁴ / 1.2×10⁻¹⁴ | 2.5×10⁻⁹ / 1.4×10⁻⁹ | 1.7 / 0.91 |
+| 673 (24/48, 13, inward from 8) | 5.3×10⁻¹⁵ / 3.5×10⁻¹⁵ | 3.9×10⁻¹⁵ / 5.0×10⁻¹⁵ | 4.5×10⁻⁷ / 1.1×10⁻⁷ | 0.65 / 0.41 |
+
+(relative to the solution's max, solve / transposed solve). Pass: the block error at most 100 × the dense f64 error +
+10⁻¹⁵; both controls (one pivot scaled by 1 + 10⁻⁶; the Δ copies untied) must fail that and do.
+`block_solve_many_is_solve` checks that several right-hand sides give each row bitwise as single solves.
+
+### 2.3 Block storage against the dense path (M ≤ 128)
+
+`cd hp && python3 highm_check.py block --Ms=16,48 --variants=f64x4,f64x1,dd4` and `--Ms=80,128` (f64x4)
+(`block_check_small.log`, `block_check_large.log`, JSON next to them): `newton_mixed` with block=True against
+block=False at the D = 3.7 state resampled to each M, and at a perturbed state (Δ + 10⁻⁶, fields + 10⁻⁸). The residuals
+are bit-identical (the same code). The step, the sensitivities ∂Δ/∂F (`lu_solve_t`) and a chord step after it are
+compared relative to their max, next to the floor of the dense f64 LU itself (the same right-hand side solved with the
+dense double-double LU of the same f64 Jacobian). Pass: every difference ≤ max(100 × floor, 10⁻¹²).
+
+| M (N) | variants | step | ∂Δ/∂F | chord | floor (step, ∂Δ/∂F) | LU, block / dense |
+|---|---|---|---|---|---|---|
+| 16 (897) | f64x4, f64x1, dd4 | 4.6×10⁻¹⁵–1.5×10⁻¹⁴ | 1.6–4.9×10⁻¹⁵ | 7×10⁻¹⁵–1.8×10⁻¹⁴ | 2–10×10⁻¹⁴, 2–4×10⁻¹⁴ | 1.1 / 12 MB |
+| 48 (2689) | f64x4, f64x1, dd4 | 4.1–8.2×10⁻¹⁴ | 1.9–3.7×10⁻¹⁴ | 5.1–7.9×10⁻¹⁴ | 3–7×10⁻¹⁴, 2–6×10⁻¹⁴ | 9.6 / 111 MB |
+| 80 (4481) | f64x4 | 5.4×10⁻¹⁴, 1.2×10⁻¹³ | 1.1×10⁻¹³, 4.0×10⁻¹³ | 3.8×10⁻¹⁴, 4.1×10⁻¹³ | 4.8×10⁻¹⁴–1.1×10⁻¹³, 0.9–2.7×10⁻¹³ | 26 / 307 MB |
+| 128 (7169) | f64x4 | 4.1×10⁻¹³, 1.2×10⁻¹¹ | 5.8×10⁻¹³, 1.6×10⁻¹¹ | 3.0–3.3×10⁻¹² | 2.8×10⁻¹³–7.7×10⁻¹², 1–12×10⁻¹² | 67 / 785 MB |
+
+All pass, and the block path's steps agree with the dense path's as closely as the dense f64 LU agrees with an exact
+solve of the same matrix. The block LU takes 8–12 times less memory and about the same time.
+
+### 2.4 Controls
+
+`python3 highm_check.py controls` (`block_controls.log`): at M = 48, one pivot of the middle step scaled by 1 + 10⁻⁶
+changes the step by 4.8×10⁻⁸–1.5×10⁻⁷ (the limit is 4×10⁻¹²), and the Δ copies untied (each link row replaced by
+δ_s = 0) by 0.21–0.44 and the sensitivities by 6.4×10²: both fire. The Rust test has the same two controls (2.2).
+
+### 2.5 Convergence to the same solution
+
+`python3 highm_check.py converge --M=80` (`converge_M80.log`): `driver.newton_solve(jac="f64")` from the D = 3.7 state
+with Δ + 10⁻⁶ and fields + 10⁻⁸ (seed 1), with the dense and with the block path, 7 Newton calls each: Δ agrees to
+1.3×10⁻³⁰ and max |z| to 5.0×10⁻²⁸ (relative), against 1.1×10⁻²⁷ between two dense solves from different starts (the
+control); pass (≤ max(10⁻²⁷, 10 × the control)).
+
+## 3. D = 3.7 from M = 80 to 256
+
+From `hp/data/lowD_states/lowDv_D3.7000_M80.npz` (13 nodes 0.005…0.8, kc 100, ks 250, Taylor tolerance 10⁻³⁰,
+hmax 0.05), each M lifted from the one below in two passes (`highm_check.py lift`; `stage1.sh`, `stage1_n15.sh`,
+`pilot.sh`); f64-Jacobian Newton to |F| ≤ 10⁻²⁸ (2.5×10⁻³⁰ to 3.4×10⁻²⁹ reached). On the 15 nodes 0.0025…0.9 (section
+1.4) the 80 and 96 states are the M = 80 state re-noded and lifted, the 128 and 160 states the 13-node ones re-noded.
+`python3 lowD_highM_report.py --stage1`:
+
+| M | nodes | Δ | change from the M before | Taylor steps (pass 1 → 2) | tails (centre, horizon) |
+|---|---|---|---|---|---|
+| 80 | 15 | 3.465200483544031475184929 | | 102 → 97 | 6×10⁻¹¹⁵, 9×10⁻¹⁴⁵ |
+| 96 | 15 | 3.465200482305272998798531 | −1.24×10⁻⁹ | 395 → 123 | 2×10⁻¹¹¹, 3×10⁻¹³⁶ |
+| 128 | 15 | 3.465200482271642183274714 | −3.36×10⁻¹¹ | 162 → 166 | 5×10⁻¹⁰⁰, 2×10⁻¹²³ |
+| 160 | 15 | 3.465200482271638953641 | −3.23×10⁻¹⁵ | 203 → 256 | 1×10⁻⁸⁹, 5×10⁻¹¹⁵ |
+| 192 | 15 | 3.465200482271638952016727 | −1.62×10⁻¹⁸ | 593 → 252 | 3×10⁻⁶⁶, 2×10⁻¹⁰⁸ |
+| 128 | 13 | 3.465200482271642183274714 | | 366 → 191 | 1×10⁻⁶⁹, 9×10⁻⁴⁹ |
+| 160 | 13 | 3.465200482271638953641 | −3.23×10⁻¹⁵ | 450 → 279 | 2×10⁻⁶⁰, 2×10⁻⁴⁰ |
+
+- **The M differences shrink fast but not at one rate:** −1.24×10⁻⁹ (80 → 96, 16 modes), −3.36×10⁻¹¹, −3.23×10⁻¹⁵,
+  −1.62×10⁻¹⁸ (32 modes each); successive ratios 0.027, 9.6×10⁻⁵, 5.0×10⁻⁴. So Δ(3.7) is converged in M to about
+  10⁻¹⁸ at M = 160–192, with the M = 192 value taken as Δ(3.7) = 3.465200482271638952 and the last difference as its
+  error estimate (an estimator, not a bound). The local machine's M = 96 value, 3.4652004823053, agrees with the M = 96
+  here to all its digits (3.4652004823052730), and its M 80 → 96 difference, −1.2×10⁻⁹, with −1.24×10⁻⁹.
+- **The node sets agree:** 13 against 15 nodes, 6.7×10⁻³¹ at M = 128 and 4.1×10⁻³⁰ at M = 160; the 15-node M = 80
+  differs from the original 13-node M = 80 state by −5.4×10⁻³⁰.
+- **The plans:** pass 1 runs on the resampled start's own plan (3–4 times the steps of the converged solution's),
+  pass 2 on the plan of the pass-1 solution. Changing the plan moves Δ by 10⁻²⁴ (M = 128, 366 → 191 steps) to
+  7×10⁻²² (M = 160, 450 → 279): the first Newton step of pass 2 corrects Δ by −1.5×10⁻²⁴ and +6.6×10⁻²² (logs).
+- **The largest sensitivity |∂Δ/∂F|** (from the f64 LU) is 0.7–2.3 from M = 80 to 160 and 4.8×10² at M = 192, where
+  the weakest directions are as weak as the f64 Jacobian's rounding (section 1.4): Δ is still fixed by |F| ≈ 10⁻²⁹ to
+  about 5×10⁻²⁷.
+
+## 4. Time and memory
+
+**Load.** The cloud machine has 2 cores. During this work several other agents ran on it (load average 2–13); every
+time below is wall time on 2 threads with the load average at the time recorded next to it, and times at load L > 2
+are inflated by roughly L/2. They are measurements of this run, not of the kernel alone.
+
+**One Newton step** (`newton_mixed`: double-double residual, f64 Jacobian, LU, solve) at converged D = 3.7 states
+(`python3 lowD_highM_report.py --stage1`; dense storage at M ≤ 128, block above):
+
+| M | nodes | Taylor steps | step | Jacobian | of which τ-derivative | LU | residual | LU MB | peak RSS MB | load |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 128 | 13 | 191 | 76 s | | | (dense) | 0.5 s | 785 (dense) | 987 | 3.0 |
+| 160 | 13 | 279 | 100 s | 99 s | 31 s (31%) | 0.46 s | 0.6 s | 105 | 435 | 2.3 |
+| 160 | 15 | 256 | 350 s | 347 s | 143 s (41%) | 1.2 s | 1.4 s | 121 | 542 | 4.8 |
+| 192 | 15 | 252 | 984 s | 973 s | 231 s (24%) | 3.3 s | 4.9 s | 173 | 721 | 13.2 |
+
+The τ-derivative's share is the Jacobian's time minus the same Jacobian built without it (`jac_mutate=1`). A profile at
+M = 192 on a 500-step plan (load about 4) gave 561 s for the Jacobian, 46% of it the τ-derivative, 1.1 s for the
+LU, 2.5 s for the residual and 535 MB peak RSS (`highm_check.py profile`; before the plans were made lean).
+
+**Memory.** Block storage holds the factors in 105–121 MB at M = 160 against 1.3 GB for the dense f64 matrix (and
+2.6 GB for a dense double-double one); the peak RSS of a whole lift stays under 0.7 GB from M = 80 to 192. The
+largest single items at large M are the ks + 1 double-double horizon LUs (0.26 GB at M = 256, 0.6 GB at M = 384),
+built once per residual and once per Jacobian.
+
+**Where the time goes, and the τ-derivative.** The Jacobian is 98–99% of a Newton step at M ≥ 160 (the LU about
+0.5%, the residual 0.4–0.6%). Within it the dense M × M τ-derivative (`DMat::apply`) is 24–46% at M = 160–192; the
+rest is the Taylor recursions' Cauchy sums and field arithmetic, whose coefficient arrays (12 fields × 38 orders × M
+points × 5 lanes for f64x4) no longer fit the 2 MB L2 cache above M ≈ 128. A real-FFT or DCT derivative,
+O(M log M), would remove at most that 24–46%: a step 1.3–1.85 times faster even if the derivative were free, about
+1.2–1.5 times with a realistic FFT. It was not done: it needs a new kernel build (35 minutes here under load, with the
+container restarting every 30–60 minutes during this work), and the measurements say the larger costs are elsewhere:
+the Taylor plans (section 1.3, 2–4 times), the Cauchy sums' memory traffic, and the number of Taylor steps, which
+grows faster than M (converged plans: 56, 72, 86 steps at M = 48, 64, 80; 191 at 128; 252–279 at 160–192).
