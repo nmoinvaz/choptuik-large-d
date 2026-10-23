@@ -21,6 +21,7 @@ Contents
 - [9. Discrepancies with the existing notes](#9-discrepancies-with-the-existing-notes)
 - [10. What the independent review (P2) should check](#10-what-the-independent-review-p2-should-check)
 - [11. Reproduce](#11-reproduce)
+- [12. P1L: plan for the light-cone hypotheses](#12-p1l-plan-for-the-light-cone-hypotheses)
 
 ## 0. Summary
 
@@ -541,3 +542,125 @@ python3 b7_adjoint.py check --adj=b7_adjoint_point_mutT.json --start=b7_box_poin
 python3 b7_ift.py --adj=b7_adjoint.json --jump=b5_jump_d0_1e7.json --json=b7_ift.json    # n0 = e^89.75 (b7_ift.log)
 python3 b7_ift.py --adj=b7_adjoint.json --jump=b5_jump_d0_1e7.json --mutate=JD         # caught (b7_ift_mutJD.log)
 ```
+
+## 12. P1L: plan for the light-cone hypotheses
+
+*Plan only (queue item P1L); nothing in this section is proved yet.*
+
+### 12.1 What the precedents give
+
+- **Reiterer–Trubowitz** (D = 4; read through a summary of arXiv:1203.3766, §§1–3; their §4 estimates not seen). The
+  light cone is the coordinate line ξ = 1, interior to the domain of analyticity (a Fourier–Chebyshev space on
+  |ξ| < 41/40), and the operator they invert, J = (1 + ξ)∂_ξ + 1, is the transport along the null direction transverse
+  to it, so nothing is divided by the coefficient that vanishes there; no boundary condition is imposed. Two things
+  carry over: fix the light cone at a coordinate value for all harmonics (here the exact gauge c(1) = 1), and write the
+  singular equation so that only the S-block sees the vanishing coefficient, in Fuchsian form. One thing does not:
+  their space contains only functions analytic across the light cone, i.e. only the selected solution, whereas
+  Theorem B(1)'s uniqueness needs control of the centre-regular solution for every p in the box, which for p ≠ p_n has
+  a $`(x-1)^{\Lambda}`$ branch (Re Λ ≈ n/2). A Chebyshev-type space is also out of reach at n ≈ e^{90}.
+- **Briot–Bouquet.** In the exact gauge, x = 1 is a regular singular point for S only: with t = x − 1,
+  $`tS' = \hat\Lambda(t)\,(S - S_*(t, V, \beta, c))`$, $`\hat\Lambda(0) = \tfrac{n-2}2 + \mathfrak B - \Omega + O(1)`$, and V, β, c are regular. The
+  exponents have imaginary parts ∓ω + O(1/n) ≠ 0, so no resonance, and the analytic solutions form a family
+  parametrized by (V(1), β(1)). The plan uses this structure through the inward Fuchsian kernel, rather than through
+  an explicit majorant series and a matching: a matching at a point x₁ = 1 − δ/2 would have to resolve the gauge
+  offset d = c(0) − c^K(0) (about 1.2×10⁵ n⁻⁵) from B8's enclosure, whose radius there is about 10¹⁰ n⁻⁵, so it would
+  need a variational bootstrap in d anyway.
+- **Olver / B6′.** Volterra bounds at a regular singular point of a linear system: the near-x = 1 piece of (c).
+
+### 12.2 Why (a) and (b) are one certificate
+
+In B8's gauge (c(0) = c^K(0) + d with d not the exact offset) the singular points are where x is an eigenvalue of
+C(x): x_± = c₀ ± (c₂c₋₂)^{1/2}, split by O(|R_c(1)|), real for real p and complex for complex p. B8's bound algebra
+divides by D = x² − C², whose lower bound vanishes near both, so B8 cannot be continued into the light-cone disc
+before the gauge is fixed. In the exact gauge, R_c(1) = 0, so δD := D − D^K = −(C^KR_C + R_CC^K + R_C²) is O(|x − 1|),
+D = (x − 1)D̃ and D^K = (x − 1)D̃^K with D̃, D̃^K invertible near x = 1, and every D⁻¹ in Lemma R can be rewritten in
+bounded form:
+- δD D⁻¹ = (δD/(x − 1))D̃⁻¹, with |δD/(x − 1)| bounded by sup|R_c′| on the segment [1, x];
+- $`xW_2 = \Lambda G_2`$, $`G_2 = (A^K)^{-1}D^KD^{-1}(CM_hS + x^2M_hC^{-1}Y)`$, with D^KD⁻¹ = D̃^KD̃⁻¹;
+- q = ℓ((n − 1)I + Λ)⁻¹ and xq′ are already bounded.
+
+So the S-equation becomes $`xR_S' = \Lambda(R_S + G_1 + G_2)`$ with G₁, G₂ bounded up to x = 1. But the gauge condition
+is imposed at x = 1 while centre-regularity is imposed at x = 0, so the problem becomes a two-point problem, and B8's
+continuation argument (Lemma B8.b, an initial-value argument) is replaced by a fixed-point argument.
+
+### 12.3 Lemma LC (target; gives (H-LC) and (H-G))
+
+Setting: M = 1, K = 4, κ = 0.3, κ₁ = 0.6, δ = 0.05, the complex parameter box 𝒦, and the domain
+$`\hat{\mathcal D}_n = \mathcal D'_n \cup \overline{H^+}`$ (B8's fixed-radius domain together with the closed upper half-disc at x = 1,
+including the real segment [1 − δ/2, 1 + δ/2]).
+
+**Statement.** There are n_LC and constants ĥ such that for every n ≥ n_LC and p ∈ 𝒦:
+1. exactly one centre-regular solution Z of the reduced system with Z − Z^K in the class (B_ĥ) on $`\hat{\mathcal D}_n`$
+   satisfies c(x) → 1 as x → 1 in $`\overline{H^+}`$;
+2. Z is holomorphic in p, and d(p) := c(0) − c^K(0) satisfies |d(p)|₁ ≤ d̂ n⁻⁵;
+3. Z and xZ′ are bounded on $`\overline{H^+}\setminus\{1\}`$ and extend continuously to x = 1.
+
+From these, Y⁺ = Z on H⁺ and Y⁻ = σZ(p̄) on H⁻ give (H-LC)(1)–(2), and part 2 gives (H-G). If d̂ ≤ 10⁷, then by
+uniqueness for the initial-value problem Z is B8's solution with normalization d(p), so (H8), B5(1), B5(2) and B7 apply
+as certified. Otherwise (H8) is rerun from ĥ, followed by `b5_jump.py` and `b7_ift.py` (minutes).
+
+**Route.** Reuse `b8m_bounds.improve`, with these changes:
+1. *c from x = 1.* $`R_c(x) = R_c(0) + \int_{Q_x}`$ with $`R_c(0) = -\int_0^1(\text{(I4) forcing})\,ds/s`$, and R_V(0) = [R_c(0)·2F], as in
+   the `--d0` extension, but with d self-consistent rather than given. The explicit part ρ₄ is integrated exactly.
+2. *New region L* = $`\overline{H^+}`$, using the bounded forms of §12.2, and a lower bound on D̃.
+3. *Paths.*
+   - S: P_{x′} to the radial projection x′ of x on the arc |x − 1| = δ/2, then radially toward 1. Along this path
+     |1 − s⁻²| is non-increasing (d/dr ln|1 − s⁻²| ≥ 1/r − 1/(2 − r) − 2/(1 − r) > 0 for r ≤ δ/2), so the kernel is
+     $`\lvert E(x,s)\rvert \le \lvert (x-1)/(s-1)\rvert^{(n-1)/2 - \lVert\eta\rVert/2 - \dots}`$, with gain ≈ |x − 1|/(n/2) after
+     integration by parts.
+   - β: radial from 0 at angle arg x (|s| increasing; the path stays in $`\hat{\mathcal D}_n`$).
+4. *Fixed point.* Closure P̂(ĥ) < ĥ shows that the integral operator T maps the class into itself. In addition, a
+   Lipschitz bound in the ĥ-weighted norm, with value and x-derivative components (the derivative is needed because
+   of the integration by parts), shows T is a contraction. This gives existence, uniqueness and holomorphy in p.
+   Planned certificate: P̂ is built from operations that are majorants with non-negative coefficients (sums, products,
+   1/(1 − ‖E‖), suprema), so t ↦ P̂(tĥ) is convex and $`DP̂(\hat h)\hat h \le (P̂((1+\eta)\hat h) - P̂(\hat h))/\eta`$. Each
+   operation will be checked for this property before relying on it; otherwise explicit difference bounds will be used.
+
+*Checks.*
+- the rewritten identities, in mpmath at random complex points near x = 1, with a mutation (as `b8m_identities.py`);
+- a high-precision numerical solution at moderate n (shooting for c(1) = 1, integrating into H⁺) compared with the
+  bound, and its d compared with the formal 1.2×10⁵ n⁻⁵ (numerical evidence);
+- closure and contraction mutations (drop the L-region kernel exponent, or the R_c(0) term): must fail.
+
+### 12.4 Lemma J (target; gives (H-J))
+
+**Statement.** For n ≥ n_J and real p ∈ X, let v solve the outer secant equation on the Stokes segment (1, x*],
+x* = (n u*)^{1/2}, with coefficients $`\int_0^1Df(Y^- + s(Y^+ - Y^-))\,ds`$. If v(x) → 0 as x → 1⁺ and L_{u*}(v) = 0,
+then v ≡ 0. Applied to v = Ψ_out, this gives (H-J); Lemma LC supplies v → 0 at 1⁺.
+
+**Route.** A flat estimate (the outer analogue of lemma 6a): v = T₀v, where:
+- the growing fast components (S near x = 1, Φ in inner variables) are integrated backward from x*, where the label
+  condition gives zero data; the kernel is $`\lvert e^{(n-1)(\Phi(x)-\Phi(y))}\rvert \le 1`$ for x < y;
+- the slow components (V, c) and the decaying b-mode are integrated forward from 1⁺ with zero data.
+
+Then ‖T₀‖ < 1 in a norm weighted by $`m(x) = \lvert e^{(n-1)\Phi(x)}\rvert\,x^{-a}(x-1)^{-b}`$. A rough count: the slow→fast
+gain is about sup‖B‖/(a − 1), the fast→slow gain about |ω|x²/n ≤ |ω|u*, so the loop gain is small. It runs on cells in
+three pieces:
+- (1, 1 + δ/2]: Fuchsian, with coefficients from Lemma LC;
+- [1 + δ/2, n^γ]: B8;
+- [n^γ, x*]: inner variables, with B5(1)'s enclosures and lemma L's eigen-coordinates.
+
+*Checks.* A numerical 2 × 2 matrix from light-cone amplitudes to labels at moderate n (numerical evidence), and a
+mutation of the kernel weight.
+
+### 12.5 Order, cost, and when to stop
+
+**Order:**
+1. LC identities and region-L kernel lemma;
+2. LC closure;
+3. LC contraction;
+4. consequences, with (H8), B5(2) and B7 rerun if needed;
+5. Lemma J;
+6. Theorem B(1) without (H-LC), (H-G) and (H-J).
+
+**Cost.** Each LC or J run is expected to take minutes on the shared 2-core machine, as B8's scans did; nothing
+long-running is foreseen.
+
+**When to stop and report:**
+- (R1) LC does not close because the self-consistent d is too large. Global constants give |d| ≲ h_c(4/n)⁵ ≈ 10⁸ n⁻⁵,
+  about 10³ times the formal value, and B8 itself does not close at d₀ = 10⁸. The remedy is constants per radial
+  band on |x| ≤ 1.5 together with the exact integral of ρ₄. If that fails too, report.
+- (R2) The contraction bound fails, or needs more than the majorant argument.
+- (R3) Lemma J's weighted norm does not contract across the transition between the outer and inner pieces.
+
+Braaksma's theorem remains assumed throughout.
