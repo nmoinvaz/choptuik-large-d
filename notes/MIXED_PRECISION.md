@@ -400,15 +400,15 @@ perturbs the fields by 10⁻¹² relative and compares Newton steps with the dou
 | 20.04 | 2×10⁻²⁰ | 2×10⁻⁶ | 1.5×10⁻⁴ | 2.6×10⁻⁴ | 2.1 / 0.29 s |
 | 25.08 | 7×10⁻²⁴ | 2×10⁻⁵ | 0.14–0.97 | 0.17 | 4.7 / 0.29 s |
 | 30.07* | 4×10⁻²⁴ | 8×10⁻⁶ | 5.7×10⁻³ | 2.4×10⁻² | 6.5 / 0.33 s |
-| 40.02 | 2×10⁻¹⁸ | 3×10⁻⁶ | 1.2–2.9×10⁻³ | 1.7×10⁻³ | 6.0 / 0.22 s |
-| 45.05 | 2×10⁻¹⁸ | 1×10⁻⁷ | 2.6×10⁻³–1.4×10⁻² | 1.1×10⁻² | 6.3 / 0.25 s |
-| 50.01 | 8×10⁻¹⁸ | 5×10⁻⁶ | 0.03–2.2 | 9.2×10⁻² | 6.6 / 0.26 s |
-| 55.04 | 3×10⁻¹⁸ | 2×10⁻⁶ | 1.2–2.8 | 0.47 | 6.1 / 0.19 s |
-| 60.00 | 2×10⁻¹⁸ | 7×10⁻⁶ | 0.73–13 | 0.58 | 6.2 / 0.27 s |
+| 40.02 | 2×10⁻¹⁸ | 3×10⁻⁶ | 1.2–2.9×10⁻³ | 2.4×10⁻⁴–1.7×10⁻³ | 6.0 / 0.22 s |
+| 45.05 | 2×10⁻¹⁸ | 1×10⁻⁷ | 2.6×10⁻³–1.4×10⁻² | 5.7×10⁻³–1.1×10⁻² | 6.3 / 0.25 s |
+| 50.01 | 8×10⁻¹⁸ | 5×10⁻⁶ | 0.03–2.2 | 0.09–0.24 | 6.6 / 0.26 s |
+| 55.04 | 3×10⁻¹⁸ | 2×10⁻⁶ | 1.2–2.8 | 0.47–0.69 | 6.1 / 0.19 s |
+| 60.00 | 2×10⁻¹⁸ | 7×10⁻⁶ | 0.73–13 | 0.58–1.0 | 6.2 / 0.27 s |
 
 The step columns give the relative difference from the double-double step. That difference is the contraction factor
 of the mixed Newton iteration: below 1 it converges, gaining −log₁₀ of it in digits per step once the quadratic part is
-spent. Ranges are over three runs with different random perturbations. The Jacobian times are on 2 threads shared with
+spent. Ranges are over three draws of the random perturbation for the f64 Jacobian (`largeD_run1`, `largeD_run2`, `largeD`) and two for the dd base (`run1`, `largeD`). The Jacobian times are on 2 threads shared with
 two other jobs. \*At D = 30.07 these solver settings leave |F| = 3×10⁻¹² at the saved state, so the scan used something
 else there; the linear algebra is still representative.
 
@@ -423,7 +423,7 @@ What this shows:
 3. The f64 factorization is not the problem: an f64 LU of the exact Jacobian's hi part gives the step to 10⁻⁷–10⁻⁵ at
    every D. The problem is the f64-built Jacobian's entries. Its errors are small against the largest entries
    (10⁻¹³ to 2×10⁻⁷ as D grows) but large against the small entries that carry the weak directions. A double-double
-   base trajectory makes the entries 200–1000 times more accurate, yet only halves the step error at D = 55–60.
+   base trajectory makes the entries 200–1000 times more accurate, yet the step error at D = 55–60 stays at 0.5–1.
 4. The error lives in 2–4 directions: the singular values of X_f64 − X_dd over 48 right-hand sides fall by 10³–10⁴
    after the second to fourth. Correcting a handful of directions exactly would repair the step. Two ways:
    (a) a few Krylov (GMRES) steps with the f64 LU as preconditioner and exact double-double Jacobian-vector
