@@ -1,0 +1,8 @@
+formula (J_F - G)/z vs jac_blocks: worst relative difference 7.16e-01 (FAIL, < 1e-30)
+certified eps_L dominates the numerical label variation: PASS   [MUTATION Ct2]
+MUTATION Ct2: a check must FAIL: caught
+exit 0
+certified eps_L dominates the numerical label variation: FAIL   [MUTATION scale]
+MUTATION scale: a check must FAIL: caught
+exit 0
+MUTATION sum: the check must FAIL: caught

@@ -10,7 +10,7 @@ The run is appended to the log as JSON lines.
 
     python3 b8m_scan.py K L0,L0,... [--outer=full|arc] [--slacks=1.1,1.5] [--eps=0.01] [--down=25] [--iters=120]
             [--log=file]
-            [b8m_bounds options: --kappa --kappa1 --gamma0 --delta --xF --r1 --rA --rW]
+            [b8m_bounds options: --kappa --kappa1 --gamma0 --delta --xF --r1 --rA --rW --d0]
 """
 import json
 import sys
@@ -34,7 +34,7 @@ at = AT.atoms(K, OPTS.get("rA", "0"), OPTS.get("rW", "0"))
 b = dict(V=arb(0), S=arb(0), b=arb(0), c=arb(0))
 for L in Ls:
     g = MB.Geo(K, repr(L), atoms=at, **kw)
-    rec = dict(K=K, L0=L, outer=g.outer, rho_max=float(g.rho_max), **{k: OPTS.get(k) for k in kw})
+    rec = dict(K=K, L0=L, outer=g.outer, rho_max=float(g.rho_max), d0=OPTS.get("d0", "0"), **{k: OPTS.get(k) for k in kw})
     try:
         k = MB.known(g)
         kc = MB.kernel_consts(g, k)

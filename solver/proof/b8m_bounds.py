@@ -13,7 +13,8 @@ The domain: |x| <= X_max - 1 with X_max - 1 = R'_n = (kappa1 n/(cos(kappa) ln n)
 B5(1), proof/B5_inner.md section 3) or n^gamma0 ("arc").
 
     python3 b8m_bounds.py K L0 [--outer=full|arc] [--kappa=0.3] [--kappa1=0.6] [--gamma0=0.3] [--delta=0.05]
-                              [--xF=5] [--rA=0] [--rW=0] [--mutate=NAME]
+                              [--xF=5] [--rA=0] [--rW=0] [--d0=0] [--mutate=NAME]
+    --d0: the normalization c(0) = c^K(0) + d with |d|_1 <= d0 n^-(K+1) (proof/B8_constants.md 8.4; default d = 0)
     L0 = ln(n_0).  --scan prints the smallest L0 (in steps) for which the bootstrap closes.
     mutations (each must make the bootstrap fail to close at an L0 where it closes): eta2 (the transport norm halved:
     must NOT be used to claim closure; instead it is checked that the kernel constant K_F changes), drop_rho2 (the
@@ -329,6 +330,13 @@ def improve(geo, k, kc, b, verbose=False, full=False):
     slow = up(arb(1) / (2 * K + 2) + geo.phid)
     bV = up(absw * slow * b["S"])
     bc = up(slow * E.bsup((Rc.v * R2["beta"].v + cK.v * R2["Rb"].v + rho4.v) * iwS, ("N0", "N1", "F")))
+    # normalization c(0) = c^K(0) + d, |d|_1 <= d0 n^-(K+1) (proof/B8_constants.md section 8.4, proof/B_chain.md
+    # section 4): R_V(0) = [d 2F] and R_c(0) = d enter the slow integrals; since rho^(K+1) >= n^-(K+1) everywhere,
+    # P_V gains |2F|_1 d0 <= 4 max|F_mu| d0 (M = 1) and P_c gains d0
+    d0 = arb(OPTS.get("d0", "0"))
+    if d0 > 0:
+        bV = up(bV + 4 * geo.C["absf"] * d0)
+        bc = up(bc + d0)
     diag = {}
     if verbose:
         for r in XREG:

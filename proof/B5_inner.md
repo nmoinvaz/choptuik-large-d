@@ -51,6 +51,8 @@ Contents
 - **B5(2) needs more.** The jump estimate of B5(2) divides by $`\lvert e^{-1/(2u_*)}u_*^{\langle F^2\rangle}\rvert`$. With these
   constants its error is small enough for the implicit function theorem on the certified box only for ln n ≳ 105
   (with the best κ₁ ≈ 0.85; `b5_threshold.py`). That is an estimate, not part of this lemma (section 7).
+  *Superseded:* the estimate uses the exponent ⟨F²⟩ where the fast mode of the Φ-component has
+  Re 𝒢 = ⟨F²⟩ − 3/2, and omits the weight m_Φ = |z|; B5(2) is now certified ([B_chain.md](B_chain.md) §3).
 - **A discrepancy, to resolve before B(1) and A(1) can be combined.**
   - C_selection.md §1 and the paper truncate b and c to even |ν| ≤ M − 1.
   - The certified inner problem (and every inner solver, `lateral_np.py`, `hier.py`, `first_order_jet.py`) keeps c on
@@ -563,6 +565,9 @@ relative error of the jump is of order $`x\,n^{-1+1/(2\kappa_1)}(\ln n/\kappa_1)
   box needs |R_n| and, by Cauchy's estimate with the factor 10⁶ of section 5.1, its derivative small against
   σ_min(DS). That asks for an error of about 10⁻⁷ or less.
 - An estimate, not certified (`b5_threshold.py`): with x_Φ = 9.18×10⁴ that needs $`(1 - 1/(2\kappa_1))\ln n \gtrsim 43`$.
+  *(Superseded by [B_chain.md](B_chain.md) §3: this model has a wrong exponent. The fast mode of the Φ-component is
+  $`e^{-1/(2z)}z^{\mathcal G}`$ with Re 𝒢 = ⟨F²⟩ − 3/2 = 1.73, not $`u^{\langle F^2\rangle}`$, and the Φ-bound carries the
+  weight |z|, so the true error is smaller by about $`u_*^{5/2}`$; and u* need not move with n.)*
   Together with B5(1)'s ln n ≥ κ₁/(Z cos κ), the best choice on the grid is κ₁ = 0.85, giving ln n ≥ 104.7; κ₁ = 1
   gives 123.2. With the leading-data x_Φ = 3.97×10⁴ the optimum is the same, since B5(1)'s condition binds there.
 - So the threshold of the full chain B(1) is set by B5(2) together with B5(1)'s Z_max, not by B5(1) alone.

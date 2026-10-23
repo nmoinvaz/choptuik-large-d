@@ -7,7 +7,9 @@ b5_bounds_k0.3_Z0.0085.json and the leading data of b5_data.py (b5_data.log).
    x = x^forcing + sum_B delta_B x^(B) is a super-solution for b = forcing + delta (each x^(B) certified in
    b5_bounds.py). The sums are taken in arb (upper bounds), per harmonic, then maximized over harmonics.
 
-2. An ESTIMATE, not certified, of the threshold of the chain B5(1) + B5(2) for M = 1 (section 7). The relative error of
+2. An ESTIMATE, not certified, of the threshold of the chain B5(1) + B5(2) for M = 1 (section 7). SUPERSEDED by
+   b5_jump.py (proof/B_chain.md section 3): the model below uses the exponent <F^2> for the fast mode, where the
+   Phi-component's fast mode is e^{-1/(2z)} z^G with Re G = <F^2> - 3/2, and it omits the weight m_Phi = |z|. The relative error of
    the jump at u* = kappa1/ln n is modelled as
         x_Phi n^{-1 + 1/(2 kappa1)} (ln n / kappa1)^{<F^2>},   <F^2> = A^2/2,
    and required to be <= MARGIN (default 1e-7, the size asked for by the implicit function theorem on the certified box
