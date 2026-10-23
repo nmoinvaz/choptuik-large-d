@@ -1,0 +1,14 @@
+start C:\Users\nathan\AppData\Local\Temp\claude\C--Users-nathan-Source-dss-residual-kernel\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\scratchpad\t39-wt\hp\data\lowD_states\lowDvh41_D3.4250_M128.npz (D 3.425, M 128); predictor through 4 point(s) to D 3.4: Delta 3.366285928821
+D 3.4 M 128: L 7169, steps 401, start |F| 3.9e-03
+  dn 0 [all]: |F| 3.95e-03 -> 3.94e-03 lam 0.000488 Delta 3.366285936589471 t 1199s
+  dn: phase 'all' stalled at |F| 3.9e-03; phase 'full'
+  dn 1 [full]: |F| 3.94e-03 -> 1.28e-04 lam 1 Delta 3.366249921711011 t 2242s
+  newton 0: |F| 1.28e-04 |dz| 9.05e-03 lam 0.0625 dDelta +1.24e-08 Delta 3.366249934109081 piv 9.1e-04..2.2e+04  t 1020.7s
+  newton 0: |F| 1.20e-04 |dz| 7.94e-03 lam 0.0625 dDelta -1.64e-07 Delta 3.366249770586484 piv 8.5e-04..2.1e+04  t 1029.1s
+  newton 0: |F| 1.12e-04 |dz| 1.02e-01 lam 0.00781 dDelta +6.96e-07 Delta 3.366250467059311 piv 3.6e-04..2.0e+04  t 1009.2s
+re-noded [0.005, 0.01, 0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8] -> [0.0025, 0.005, 0.01, 0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
+start C:\Users\nathan\AppData\Local\Temp\claude\C--Users-nathan-Source-dss-residual-kernel\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\scratchpad\t39-wt\hp\data\lowD_states\lowDvh41_D3.4250_M128.npz (D 3.425, M 128); predictor through 1 point(s) to D 3.4: Delta 3.383586550374
+D 3.4 M 128: L 7681, steps 401, start |F| 5.9e-02
+  dn 0 [all]: |F| 5.91e-02 -> 5.73e-02 lam 0.0312 Delta 3.382623741975439 t 1019s
+  dn: phase 'all' stalled at |F| 5.7e-02; phase 'full'
+  dn 1 [full]: |F| 5.73e-02 -> 5.68e-02 lam 0.00781 Delta 3.382396821824135 t 1996s

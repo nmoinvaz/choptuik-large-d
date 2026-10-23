@@ -1,0 +1,208 @@
+D 3.45 M 128: L 7169, steps 423, start |F| 1.7e-04
+  newton 0: |F| 1.66e-04 |dz| 2.05e-02 lam 0.00195 dDelta +2.57e-12 Delta 3.398624651990091 piv 1.1e-03..7.3e+00  t 20  newt  newton 0: |F| 1.66e-04: no decrease along the f64-Jacobian step; retrying with the exact Jacobian
+  newton 0: |F| 1.66e-04: no decrease along the Newton step, giving up
+D 3.45 M 128: NOT converged, |F| 1.7e-04 after 2 iterations (1772s); stopping
+25 |dz| 2.87e-21 lam 1 dDelta +1.27e-25 Delta 3.440402346213078 piv 7.5e-04..1.1e+01  t 178.1s
+  newton 0: |F| 1.59e-29 |dz| 5.89e-26 lam 0.5 dDelta -4.14e-30 Delta 3.440402346213078 piv 7.5e-04..1.1e+01  t 216.6s
+  newton 0: |F| 1.98e-30 converged (last |dz| 2.2e-26) Delta 3.440402346213078
+D 3.55 M 128: Delta 3.4404023462130784 (+1.03e-16) |F| 2.0e-30 its 6 1175s dDelta/dF max 6.7e-01 tails 1e-60 2e-38 dDelta_est -8.4e-31
+start C:\Users\nathan\AppData\Local\Temp\claude\C--Users-nathan-Source-dss-residual-kernel\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\scratchpad\t39-wt\hp\data\lowD_states\lowDvh_D3.5000_M128.npz (D 3.5, M 128); predictor through 3 point(s) to D 3.45: Delta 3.399886735236
+resuming from checkpoint C:\Users\nathan\AppData\Local\Temp\claude\C--Users-nathan-Source-dss-residual-kernel\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\scratchpad\t39-wt\hp\data\lowD_states\lowDvh41_D3.4500_M128_ckpt.npz (iteration 1)
+D 3.45 M 128: L 7169, steps 423, start |F| 1.7e-04
+  newton 0: |F| 1.66e-04: no decrease along the f64-Jacobian step; retrying with the exact Jacobian
+  newton 0: |F| 1.66e-04: no decrease along the Newton step, giving up
+D 3.45 M 128: NOT converged, |F| 1.7e-04 after 1 iterations (1279s); stopping
+start C:\Users\nathan\AppData\Local\Temp\claude\C--Users-nathan-Source-dss-residual-kernel\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\scratchpad\t39-wt\hp\data\lowD_states\lowDvh_D3.5000_M128.npz (D 3.5, M 128); predictor through 3 point(s) to D 3.475: Delta 3.412000432254
+D 3.475 M 128: L 7169, steps 385, start |F| 9.8e-03
+  newton 0: |F| 9.78e-03 |dz| 1.73e-01 lam 1 dDelta -3.86e-04 Delta 3.411614657145520 piv 6.5e-04..3.5e+00  t 138.9s
+  newton 0: |F| 5.52e-05 |dz| 3.04e-02 lam 1 dDelta +4.97e-06 Delta 3.411619631686831 piv 6.5e-04..3.6e+00  t 137.1s
+  newton 0: |F| 2.42e-08 |dz| 3.11e-06 lam 1 dDelta +9.23e-09 Delta 3.411619640915207 piv 6.5e-04..3.6e+00  t 144.7s
+  newton 0: |F| 4.24e-12 |dz| 2.19e-10 lam 1 dDelta +1.45e-13 Delta 3.411619640915351 piv 6.5e-04..3.6e+00  t 149.9s
+  newton 0: |F| 4.78e-20 |dz| 6.08e-17 lam 1 dDelta -7.04e-21 Delta 3.411619640915351 piv 6.5e-04..3.6e+00  t 166.9s
+  newton 0: |F| 9.46e-27 |dz| 1.67e-23 lam 1 dDelta -1.05e-26 Delta 3.411619640915351 piv 6.5e-04..3.6e+00  t 167.6s
+  newton 0: |F| 2.77e-30 converged (last |dz| 1.9e-26) Delta 3.411619640915351
+D 3.475 M 128: Delta 3.4116196409153514 (+1.79e-16) |F| 2.8e-30 its 7 1116s dDelta/dF max 5.7e-01 tails 4e-55 3e-35 dDelta_est -2.2e-30
+D 3.475 M 96: L 5377, steps 343, start |F| 5.5e-06
+  newton 0: |F| 5.48e-06 |dz| 3.97e-03 lam 1 dDelta +1.57e-09 Delta 3.411619642482022 piv 9.1e-04..3.8e+00  t 65.9s
+  newton 0: |F| 6.71e-11 |dz| 6.02e-09 lam 1 dDelta +2.97e-11 Delta 3.411619642511760 piv 9.1e-04..3.8e+00  t 68.7s
+  newton 0: |F| 3.99e-20 |dz| 5.19e-17 lam 1 dDelta +1.09e-21 Delta 3.411619642511760 piv 9.1e-04..3.8e+00  t 63.0s
+  newton 0: |F| 3.50e-29 |dz| 3.92e-26 lam 1 dDelta +1.60e-29 Delta 3.411619642511760 piv 9.1e-04..3.8e+00  t 62.8s
+  newton 0: |F| 3.50e-30 converged (last |dz| 1.0e-26) Delta 3.411619642511760; last step taken, |F| 5.98e-30
+D 3.475 M 96: Delta 3.4116196425117602 (-4.78e-17) |F| 6.0e-30 its 5 325s dDelta/dF max 7.6e-01 tails 2e-60 3e-48 dDelta_est -2.8e-30
+start C:\Users\nathan\AppData\Local\Temp\claude\C--Users-nathan-Source-dss-residual-kernel\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\scratchpad\t39-wt\hp\data\lowD_states\lowDvh41_D3.4750_M128.npz (D 3.475, M 128); predictor through 4 point(s) to D 3.45: Delta 3.398668202953
+D 3.45 M 128: L 7169, steps 388, start |F| 3.4e-03
+  newton 0: |F| 3.37e-03 |dz| 3.92e-02 lam 1 dDelta -4.23e-05 Delta 3.398625951183350 piv 6.8e-04..3.3e+00  t 143.1s
+  newton 0: |F| 5.36e-06 |dz| 2.11e-03 lam 1 dDelta -1.30e-06 Delta 3.398624650514650 piv 6.7e-04..3.3e+00  t 128.6s
+  newton 0: |F| 1.30e-10 |dz| 4.82e-08 lam 1 dDelta +2.65e-11 Delta 3.398624650541171 piv 6.7e-04..3.3e+00  t 164.0s
+  newton 0: |F| 7.37e-18 |dz| 1.10e-14 lam 1 dDelta -5.30e-18 Delta 3.398624650541171 piv 6.7e-04..3.3e+00  t 149.8s
+  newton 0: |F| 1.95e-24 |dz| 1.94e-21 lam 1 dDelta +7.58e-25 Delta 3.398624650541171 piv 6.7e-04..3.3e+00  t 153.0s
+  newton 0: |F| 5.05e-30 converged (last |dz| 2.5e-26) Delta 3.398624650541171
+D 3.45 M 128: Delta 3.3986246505411715 (-1.44e-16) |F| 5.0e-30 its 6 896s dDelta/dF max 5.4e-01 tails 3e-52 7e-33 dDelta_est +9.9e-30
+D 3.45 M 96: L 5377, steps 354, start |F| 7.5e-06
+  newton 0: |F| 7.45e-06 |dz| 5.42e-03 lam 1 dDelta +1.47e-09 Delta 3.398624652011083 piv 8.3e-04..3.6e+00  t 61.9s
+  newton 0: |F| 2.42e-09 |dz| 1.86e-06 lam 1 dDelta -2.36e-11 Delta 3.398624651987525 piv 8.3e-04..3.7e+00  t 60.1s
+  newton 0: |F| 3.99e-17 |dz| 5.52e-14 lam 1 dDelta +2.24e-19 Delta 3.398624651987525 piv 8.3e-04..3.7e+00  t 56.6s
+  newton 0: |F| 1.55e-26 |dz| 2.73e-23 lam 1 dDelta +5.01e-27 Delta 3.398624651987525 piv 8.3e-04..3.7e+00  t 62.2s
+  newton 0: |F| 3.07e-29 |dz| 1.51e-26 lam 1 dDelta +1.36e-30 Delta 3.398624651987525 piv 8.3e-04..3.7e+00  t 57.2s
+  newton 0: |F| 1.65e-29 |dz| 1.02e-26 lam 0.0625 dDelta +1.78e-32 Delta 3.398624651987525 piv 8.3e-04..3.7e+00  t 52.5s
+  newton 0: |F| 7.82e-30 converged (last |dz| 1.2e-26) Delta 3.398624651987525; last step taken, |F| 7.02e-30
+D 3.45 M 96: Delta 3.3986246519875252 (-4.07e-17) |F| 7.0e-30 its 7 405s dDelta/dF max 7.2e-01 tails 1e-56 1e-44 dDelta_est +2.0e-30
+start C:\Users\nathan\AppData\Local\Temp\claude\C--Users-nathan-Source-dss-residual-kernel\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\scratchpad\t39-wt\hp\data\lowD_states\lowDvh41_D3.4500_M128.npz (D 3.45, M 128); predictor through 4 point(s) to D 3.4: Delta 3.366423651814
+D 3.4 M 128: L 7169, steps 407, start |F| 1.6e-02
+  newton 0: |F| 1.60e-02 |dz| 1.25e-01 lam 0.00781 dDelta -1.27e-06 Delta 3.366422386000086 piv 2.2e-04..7.7e+01  t 154.1s
+  newton 0: |F| 1.59e-02 |dz| 2.22e-01 lam 0.00391 dDelta -1.20e-06 Delta 3.366421190462490 piv 1.3e-03..3.3e+05  t 165.2s
+  newton 0: |F| 1.58e-02 |dz| 1.12e+00 lam 0.00391 dDelta -3.85e-06 Delta 3.366417335693757 piv 1.2e-03..3.2e+05  t 170.0s
+  newton 0: |F| 1.58e-02 |dz| 5.38e-01 lam 0.0312 dDelta +3.07e-07 Delta 3.366417642223462 piv 1.2e-03..3.2e+05  t 170.8s
+  newton 0: |F| 1.53e-02 |dz| 1.64e-01 lam 0.125 dDelta -4.77e-05 Delta 3.366369946064841 piv 1.1e-03..3.2e+05  t 175.9s
+  newton 0: |F| 1.34e-02 |dz| 4.70e-01 lam 0.125 dDelta -5.08e-05 Delta 3.366319115144093 piv 1.2e-03..2.8e+05  t 167.4s
+  newton 0: |F| 1.17e-02 |dz| 3.15e-01 lam 0.25 dDelta +4.36e-05 Delta 3.366362671625413 piv 1.5e-03..2.5e+05  t 171.1s
+  newton 0: |F| 1.75e-02 |dz| 1.16e+00 lam 0.00391 dDelta +3.21e-06 Delta 3.366365883375600 piv 1.2e-03..2.2e+05  t 165.6s
+  newton 0: |F| 1.74e-02 |dz| 4.00e-01 lam 0.0625 dDelta +2.77e-05 Delta 3.366393568503605 piv 1.1e-03..2.1e+05  t 159.2s
+  newton 0: |F| 1.63e-02 |dz| 1.38e-01 lam 0.0312 dDelta +3.34e-06 Delta 3.366396912136673 piv 1.2e-03..1.9e+05  t 174.2s
+  newton 0: |F| 1.76e-02 |dz| 2.38e-01 lam 0.0312 dDelta -1.44e-06 Delta 3.366395476730649 piv 1.3e-03..1.9e+05  t 168.6s
+  newton 0: |F| 1.83e-02 |dz| 2.45e+00 lam 0.0156 dDelta -1.53e-05 Delta 3.366380132994236 piv 1.4e-03..1.8e+05  t 179.1s
+  newton 0: |F| 1.96e-02 |dz| 1.92e-01 lam 0.25 dDelta +4.01e-05 Delta 3.366420214306760 piv 1.4e-03..1.9e+05  t 183.7s
+  newton 0: |F| 1.39e-02: no decrease along the f64-Jacobian step; retrying with the exact Jacobian
+  newton 0: |F| 1.39e-02: no decrease along the Newton step, giving up
+D 3.4 M 128: NOT converged, |F| 1.4e-02 after 14 iterations (3490s); stopping
+start C:\Users\nathan\AppData\Local\Temp\claude\C--Users-nathan-Source-dss-residual-kernel\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\scratchpad\t39-wt\hp\data\lowD_states\lowDvh41_D3.4500_M128.npz (D 3.45, M 128); predictor through 4 point(s) to D 3.425: Delta 3.383620981122
+D 3.425 M 128: L 7169, steps 387, start |F| 3.2e-03
+  newton 0: |F| 3.21e-03 |dz| 3.56e-02 lam 1 dDelta -3.49e-05 Delta 3.383586076997188 piv 7.0e-04..4.1e+00  t 153.8s
+  newton 0: |F| 4.41e-06 |dz| 2.45e-03 lam 1 dDelta +4.73e-07 Delta 3.383586549909249 piv 6.9e-04..6.1e+00  t 157.1s
+  newton 0: |F| 7.69e-09 |dz| 3.19e-07 lam 1 dDelta +4.62e-10 Delta 3.383586550371420 piv 6.1e-04..3.3e+00  t 141.3s
+  newton 0: |F| 5.77e-11 |dz| 3.49e-09 lam 1 dDelta +2.45e-12 Delta 3.383586550373866 piv 6.1e-04..4.9e+00  t 139.5s
+  newton 0: |F| 8.05e-18 |dz| 1.17e-14 lam 1 dDelta -5.60e-19 Delta 3.383586550373866 piv 6.1e-04..4.9e+00  t 132.4s
+  newton 0: |F| 1.09e-24 |dz| 9.06e-22 lam 1 dDelta +2.38e-25 Delta 3.383586550373866 piv 6.1e-04..4.9e+00  t 134.8s
+  newton 0: |F| 2.61e-30 converged (last |dz| 1.5e-26) Delta 3.383586550373866
+D 3.425 M 128: Delta 3.3835865503738662 (+1.47e-16) |F| 2.6e-30 its 7 1003s dDelta/dF max 5.1e-01 tails 3e-50 5e-29 dDelta_est -1.7e-30
+D 3.425 M 96: L 5377, steps 359, start |F| 9.7e-06
+  newton 0: |F| 9.70e-06 |dz| 6.94e-03 lam 1 dDelta -3.20e-08 Delta 3.383586518352017 piv 9.2e-04..7.4e+00  t 56.7s
+  newton 0: |F| 3.25e-06 |dz| 3.08e-03 lam 0.25 dDelta +7.21e-08 Delta 3.383586590445216 piv 8.8e-04..3.2e+00  t 63.6s
+  newton 0: |F| 2.53e-06 |dz| 2.08e-03 lam 0.25 dDelta +3.55e-08 Delta 3.383586625972261 piv 9.0e-04..4.7e+00  t 64.0s
+  newton 0: |F| 2.74e-06 |dz| 1.25e-03 lam 0.5 dDelta +7.42e-09 Delta 3.383586633392612 piv 8.4e-04..3.9e+00  t 62.0s
+  newton 0: |F| 2.71e-06 |dz| 1.19e-03 lam 0.5 dDelta -7.71e-08 Delta 3.383586556299058 piv 7.9e-04..2.7e+00  t 62.2s
+  newton 0: |F| 1.43e-06 |dz| 4.01e-04 lam 1 dDelta -4.48e-09 Delta 3.383586551823830 piv 8.4e-04..3.0e+00  t 62.9s
+  newton 0: |F| 1.50e-08 |dz| 1.13e-05 lam 1 dDelta -4.26e-10 Delta 3.383586551398274 piv 8.5e-04..3.0e+00  t 59.6s
+  newton 0: |F| 4.98e-15 |dz| 4.82e-12 lam 1 dDelta +2.46e-16 Delta 3.383586551398274 piv 8.5e-04..3.0e+00  t 54.7s
+  newton 0: |F| 1.37e-24 |dz| 1.13e-21 lam 1 dDelta -3.54e-25 Delta 3.383586551398274 piv 8.5e-04..3.0e+00  t 55.8s
+  newton 0: |F| 3.09e-30 converged (last |dz| 2.2e-26) Delta 3.383586551398274
+D 3.425 M 96: Delta 3.3835865513982744 (+1.98e-16) |F| 3.1e-30 its 10 604s dDelta/dF max 6.7e-01 tails 7e-53 9e-42 dDelta_est -1.7e-30
+start C:\Users\nathan\AppData\Local\Temp\claude\C--Users-nathan-Source-dss-residual-kernel\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\scratchpad\t39-wt\hp\data\lowD_states\lowDvh41_D3.4250_M128.npz (D 3.425, M 128); predictor through 4 point(s) to D 3.4: Delta 3.366285928821
+D 3.4 M 128: L 7169, steps 401, start |F| 3.9e-03
+  newton 0: |F| 3.95e-03 |dz| 3.88e-02 lam 1 dDelta -3.60e-05 Delta 3.366249915327443 piv 7.8e-04..3.8e+00  t 155.7s
+  newton 0: |F| 4.82e-06 |dz| 3.51e-03 lam 1 dDelta +1.87e-06 Delta 3.366251787675600 piv 8.6e-04..1.0e+01  t 153.0s
+  newton 0: |F| 2.57e-08 |dz| 6.41e-07 lam 1 dDelta +1.04e-09 Delta 3.366251788715066 piv 7.8e-04..3.7e+00  t 147.3s
+  newton 0: |F| 1.29e-08 |dz| 1.46e-06 lam 0.25 dDelta -5.49e-11 Delta 3.366251788660179 piv 8.9e-04..8.1e+00  t 147.3s
+  newton 0: |F| 9.72e-09 |dz| 4.37e-06 lam 0.0625 dDelta -1.33e-10 Delta 3.366251788527373 piv 8.4e-04..7.6e+00  t 151.8s
+  newton 0: |F| 9.13e-09 |dz| 4.01e-06 lam 0.0625 dDelta -8.93e-11 Delta 3.366251788438041 piv 7.8e-04..7.7e+00  t 150.4s
+  newton 0: |F| 8.55e-09 |dz| 5.03e-06 lam 0.0625 dDelta -7.51e-11 Delta 3.366251788362966 piv 8.3e-04..8.3e+00  t 160.0s
+  newton 0: |F| 8.00e-09 |dz| 5.45e-06 lam 0.0625 dDelta -6.98e-11 Delta 3.366251788293122 piv 8.1e-04..9.8e+00  t 156.5s
+  newton 0: |F| 7.48e-09 |dz| 4.79e-06 lam 0.0625 dDelta -6.96e-11 Delta 3.366251788223518 piv 8.6e-04..7.4e+00  t 158.8s
+  newton 0: |F| 6.99e-09 |dz| 5.99e-06 lam 0.0625 dDelta -7.30e-11 Delta 3.366251788150506 piv 8.3e-04..7.5e+00  t 157.1s
+  newton 0: |F| 6.57e-09 |dz| 6.76e-06 lam 0.0625 dDelta -7.81e-11 Delta 3.366251788072419 piv 6.7e-04..5.7e+00  t 155.8s
+  newton 0: |F| 6.29e-09 |dz| 8.62e-06 lam 0.0312 dDelta -3.85e-11 Delta 3.366251788033930 piv 8.2e-04..5.9e+00  t 153.3s
+  newton 0: |F| 6.18e-09 |dz| 8.16e-06 lam 0.0312 dDelta -3.39e-11 Delta 3.366251788000031 piv 8.3e-04..1.2e+01  t 148.6s
+  newton 0: |F| 6.07e-09 |dz| 5.95e-06 lam 0.0312 dDelta -2.71e-11 Delta 3.366251787972886 piv 8.3e-04..2.5e+01  t 148.0s
+  newton 0: |F| 5.94e-09 |dz| 5.06e-06 lam 0.0625 dDelta -4.21e-11 Delta 3.366251787930741 piv 8.2e-04..3.7e+01  t 158.4s
+  newton 0: |F| 5.67e-09 |dz| 2.73e-06 lam 0.125 dDelta -5.34e-11 Delta 3.366251787877319 piv 8.6e-04..1.2e+01  t 154.8s
+  newton 0: |F| 4.94e-09 |dz| 1.56e-06 lam 0.25 dDelta -4.85e-11 Delta 3.366251787828853 piv 8.3e-04..7.1e+00  t 155.1s
+  newton 0: |F| 3.93e-09 |dz| 5.72e-07 lam 0.5 dDelta +2.61e-12 Delta 3.366251787831468 piv 6.6e-04..1.0e+01  t 150.5s
+  newton 0: |F| 2.30e-09 |dz| 2.67e-07 lam 1 dDelta +1.52e-10 Delta 3.366251787983289 piv 7.4e-04..5.5e+00  t 148.2s
+  newton 0: |F| 2.87e-09 |dz| 2.52e-07 lam 1 dDelta +6.65e-11 Delta 3.366251788049756 piv 7.6e-04..4.5e+00  t 145.8s
+  newton 0: |F| 5.78e-10 |dz| 1.75e-07 lam 0.125 dDelta +4.92e-12 Delta 3.366251788054676 piv 7.0e-04..4.1e+00  t 148.8s
+  newton 0: |F| 5.69e-10 |dz| 2.66e-08 lam 1 dDelta +3.00e-11 Delta 3.366251788084658 piv 6.9e-04..4.8e+00  t 143.9s
+  newton 0: |F| 1.94e-10 |dz| 9.98e-09 lam 1 dDelta -2.57e-12 Delta 3.366251788082088 piv 6.8e-04..5.8e+00  t 149.8s
+  newton 0: |F| 3.20e-11 |dz| 1.58e-09 lam 1 dDelta +1.87e-13 Delta 3.366251788082276 piv 7.1e-04..7.4e+00  t 144.7s
+  newton 0: |F| 8.16e-13 |dz| 3.75e-11 lam 1 dDelta +4.05e-15 Delta 3.366251788082280 piv 7.0e-04..5.4e+00  t 141.3s
+  newton 0: |F| 5.62e-16 |dz| 3.29e-14 lam 1 dDelta +7.60e-18 Delta 3.366251788082280 piv 7.0e-04..6.1e+00  t 173.7s
+  newton 0: |F| 2.55e-22 |dz| 1.84e-20 lam 1 dDelta +1.12e-23 Delta 3.366251788082280 piv 7.0e-04..6.1e+00  t 149.9s
+  newton 0: |F| 3.07e-29 |dz| 4.89e-26 lam 1 dDelta +1.12e-30 Delta 3.366251788082280 piv 7.0e-04..6.1e+00  t 152.0s
+  newton 0: |F| 3.14e-29 |dz| 2.89e-26 lam 1 dDelta +5.59e-30 Delta 3.366251788082280 piv 7.0e-04..6.1e+00  t 162.0s
+  newton 0: |F| 1.36e-29 |dz| 1.70e-26 lam 1 dDelta -1.96e-30 Delta 3.366251788082280 piv 7.0e-04..6.1e+00  t 167.7s
+D 3.4 M 128: Delta 3.3662517880822795 (-1.35e-16) |F| 2.9e-30 its 30 4768s dDelta/dF max 4.9e+01 tails 1e-09 5e-25 dDelta_est -1.9e-29
+D 3.4 M 96: L 5377, steps 357, start |F| 1.4e-03
+  newton 0: |F| 1.37e-03 |dz| 2.88e-01 lam 0.0312 dDelta +1.25e-06 Delta 3.366253041903540 piv 1.3e-03..1.5e+01  t 60.5s
+  newton 0: |F| 1.33e-03 |dz| 5.93e-01 lam 0.0312 dDelta +2.69e-06 Delta 3.366255733390210 piv 1.3e-03..1.7e+01  t 66.9s
+  newton 0: |F| 1.29e-03 |dz| 6.40e-02 lam 0.25 dDelta +5.22e-06 Delta 3.366260951605284 piv 1.3e-03..1.4e+02  t 63.8s
+  newton 0: |F| 1.04e-03 |dz| 2.26e-01 lam 0.125 dDelta -8.07e-06 Delta 3.366252881209178 piv 1.3e-03..1.2e+02  t 62.7s
+  newton 0: |F| 9.03e-04 |dz| 7.42e-02 lam 1 dDelta +1.28e-05 Delta 3.366265657835184 piv 1.3e-03..1.0e+02  t 60.3s
+  newton 0: |F| 5.58e-04 |dz| 5.42e+00 lam 0.00195 dDelta +5.72e-06 Delta 3.366271381855051 piv 1.3e-04..4.5e+01  t 66.2s
+  newton 0: |F| 5.57e-04 |dz| 1.38e-01 lam 0.5 dDelta -5.30e-05 Delta 3.366218370667208 piv 1.2e-03..5.0e+01  t 60.8s
+  newton 0: |F| 2.69e-04 |dz| 2.21e-01 lam 0.25 dDelta -1.66e-06 Delta 3.366216714784984 piv 1.3e-03..5.1e+01  t 58.5s
+  newton 0: |F| 2.62e-04 |dz| 4.51e+00 lam 0.00195 dDelta -3.38e-06 Delta 3.366213332334579 piv 5.5e-05..3.5e+01  t 63.7s
+  newton 0: |F| 2.62e-04 |dz| 2.15e-01 lam 0.25 dDelta +6.12e-06 Delta 3.366219447861056 piv 1.2e-03..3.6e+01  t 59.3s
+  newton 0: |F| 1.96e-04 |dz| 8.49e-02 lam 0.25 dDelta -5.26e-06 Delta 3.366214184289321 piv 1.3e-03..4.6e+01  t 63.6s
+  newton 0: |F| 1.68e-04 |dz| 6.34e-02 lam 0.5 dDelta +8.84e-06 Delta 3.366223024220627 piv 1.3e-03..4.9e+01  t 59.0s
+  newton 0: |F| 8.59e-05 |dz| 3.31e-01 lam 0.0625 dDelta +5.16e-06 Delta 3.366228186627891 piv 1.3e-03..8.1e+01  t 60.4s
+  newton 0: |F| 8.84e-05 |dz| 2.02e-01 lam 0.125 dDelta +7.64e-06 Delta 3.366235824499825 piv 1.1e-03..7.2e+01  t 59.7s
+  newton 0: |F| 9.13e-05 |dz| 1.49e+00 lam 0.00195 dDelta +3.26e-06 Delta 3.366239080591963 piv 1.2e-03..6.1e+01  t 64.0s
+  newton 0: |F| 9.12e-05 |dz| 3.35e-01 lam 0.0312 dDelta -5.56e-06 Delta 3.366233519120219 piv 1.3e-03..5.6e+01  t 61.5s
+  newton 0: |F| 9.10e-05 |dz| 2.25e-01 lam 0.0156 dDelta +4.45e-07 Delta 3.366233963765009 piv 1.2e-03..5.6e+01  t 62.8s
+  newton 0: |F| 9.17e-05 |dz| 4.74e-01 lam 0.00391 dDelta +1.27e-06 Delta 3.366235232638283 piv 1.2e-03..5.2e+01  t 62.9s
+  newton 0: |F| 9.25e-05: no decrease along the f64-Jacobian step; retrying with the exact Jacobian
+  newton 0: |F| 9.25e-05: no decrease along the Newton step, giving up
+D 3.4 M 96: NOT converged, |F| 9.2e-05 after 19 iterations (1641s); stopping
+start C:\Users\nathan\AppData\Local\Temp\claude\C--Users-nathan-Source-dss-residual-kernel\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\scratchpad\t39-wt\hp\data\lowD_states\lowDvh41_D3.4000_M128.npz (D 3.4, M 128); predictor through 4 point(s) to D 3.35: Delta 3.323678067802
+D 3.35 M 128: L 7169, steps 432, start |F| 6.5e-01
+  newton 0: |F| 6.49e-01: no decrease along the f64-Jacobian step; retrying with the exact Jacobian
+  newton 0: |F| 6.49e-01: no decrease along the Newton step, giving up
+D 3.35 M 128: NOT converged, |F| 6.5e-01 after 1 iterations (1487s); stopping
+start C:\Users\nathan\AppData\Local\Temp\claude\C--Users-nathan-Source-dss-residual-kernel\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\scratchpad\t39-wt\hp\data\lowD_states\lowDvh41_D3.4000_M128.npz (D 3.4, M 128); predictor through 4 point(s) to D 3.375: Delta 3.346366811335
+D 3.375 M 128: L 7169, steps 410, start |F| 6.0e-03
+  newton 0: |F| 5.95e-03 |dz| 4.89e-02 lam 0.25 dDelta -1.13e-05 Delta 3.346355472872962 piv 9.2e-04..2.1e+01  t 195.0s
+  newton 0: |F| 4.47e-03 |dz| 3.87e-02 lam 0.125 dDelta -4.00e-06 Delta 3.346351472925639 piv 8.6e-04..5.8e+03  t 192.8s
+  newton 0: |F| 3.91e-03 |dz| 3.52e-02 lam 0.125 dDelta -3.64e-06 Delta 3.346347829314753 piv 9.1e-04..5.0e+04  t 208.2s
+  newton 0: |F| 3.42e-03 |dz| 2.95e-02 lam 0.125 dDelta -6.13e-06 Delta 3.346341700431916 piv 8.7e-04..4.5e+04  t 205.0s
+  newton 0: |F| 2.99e-03 |dz| 2.61e-02 lam 1 dDelta -1.53e-05 Delta 3.346326412169404 piv 1.2e-03..4.0e+04  t 192.5s
+  newton 0: |F| 8.52e-04 |dz| 4.71e-02 lam 0.0625 dDelta +1.76e-06 Delta 3.346328173941813 piv 1.0e-03..1.6e+04  t 199.3s
+  newton 0: |F| 8.07e-04 |dz| 3.85e-02 lam 0.25 dDelta +9.49e-07 Delta 3.346329123379643 piv 1.1e-03..1.5e+04  t 195.1s
+  newton 0: |F| 6.89e-04 |dz| 1.29e-02 lam 0.5 dDelta -1.43e-05 Delta 3.346314832905395 piv 1.3e-03..1.2e+04  t 190.1s
+  newton 0: |F| 3.67e-04 |dz| 1.73e-01 lam 0.0156 dDelta +3.10e-07 Delta 3.346315142407012 piv 1.1e-03..1.8e+04  t 202.0s
+  newton 0: |F| 3.62e-04 |dz| 1.89e-02 lam 0.5 dDelta +1.43e-05 Delta 3.346329453775378 piv 1.2e-03..2.0e+04  t 201.1s
+  newton 0: |F| 2.91e-04 |dz| 2.13e-02 lam 0.5 dDelta +4.59e-06 Delta 3.346334043836865 piv 1.2e-03..1.4e+04  t 195.7s
+  newton 0: |F| 1.87e-04 |dz| 4.71e-02 lam 0.0625 dDelta +3.47e-06 Delta 3.346337512719816 piv 1.0e-03..1.5e+04  t 202.5s
+  newton 0: |F| 1.76e-04 |dz| 1.35e-01 lam 0.0156 dDelta +5.57e-06 Delta 3.346343085436983 piv 1.5e-03..1.4e+04  t 207.7s
+  newton 0: |F| 1.73e-04 |dz| 2.91e-02 lam 0.25 dDelta +1.03e-06 Delta 3.346344118082851 piv 1.1e-03..1.3e+04  t 196.8s
+  newton 0: |F| 1.34e-04 |dz| 3.83e-02 lam 0.125 dDelta +6.37e-06 Delta 3.346350490580992 piv 9.4e-04..1.4e+04  t 182.6s
+  newton 0: |F| 1.18e-04 |dz| 3.89e-02 lam 0.125 dDelta -6.54e-06 Delta 3.346343954734247 piv 1.4e-03..1.6e+04  t 169.9s
+  newton 0: |F| 1.05e-04 |dz| 5.97e-01 lam 0.00195 dDelta +8.44e-07 Delta 3.346344798376314 piv 2.2e-04..1.6e+04  t 178.0s
+  newton 0: |F| 1.05e-04 |dz| 2.67e-01 lam 0.0156 dDelta +2.09e-06 Delta 3.346346888379839 piv 4.5e-04..1.7e+04  t 178.9s
+  newton 0: |F| 1.02e-04 |dz| 4.23e-02 lam 0.25 dDelta -5.02e-07 Delta 3.346346386641562 piv 1.3e-03..1.8e+04  t 225.1s
+  newton 0: |F| 8.19e-05 |dz| 2.38e-02 lam 0.125 dDelta +2.09e-06 Delta 3.346348475972493 piv 1.1e-03..1.7e+04  t 216.9s
+  newton 0: |F| 7.16e-05 |dz| 2.06e-01 lam 0.00195 dDelta -4.09e-07 Delta 3.346348066786135 piv 1.2e-03..1.6e+04  t 215.4s
+  newton 0: |F| 7.15e-05 |dz| 8.72e-02 lam 0.0625 dDelta -4.79e-06 Delta 3.346343272076120 piv 1.2e-03..1.6e+04  t 211.7s
+  newton 0: |F| 6.71e-05 |dz| 5.47e-01 lam 0.000977 dDelta +5.83e-07 Delta 3.346343855449744 piv 1.1e-03..1.6e+04  t 187.9s
+  newton 0: |F| 6.70e-05: no decrease along the f64-Jacobian step; retrying with the exact Jacobian
+  newton 0: |F| 6.70e-05: no decrease along the Newton step, giving up
+D 3.375 M 128: NOT converged, |F| 6.7e-05 after 24 iterations (5733s); stopping
+start C:\Users\nathan\AppData\Local\Temp\claude\C--Users-nathan-Source-dss-residual-kernel\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\scratchpad\t39-wt\hp\data\lowD_states\lowDvh41_D3.4000_M128.npz (D 3.4, M 128); predictor through 4 point(s) to D 3.3875: Delta 3.356643923536
+D 3.3875 M 128: L 7169, steps 394, start |F| 1.6e-03
+  newton 0: |F| 1.60e-03 |dz| 1.40e-02 lam 1 dDelta -1.14e-05 Delta 3.356632531098720 piv 7.2e-04..3.1e+00  t 163.7s
+  newton 0: |F| 5.33e-07 |dz| 4.58e-04 lam 1 dDelta +3.22e-07 Delta 3.356632853485065 piv 8.8e-04..4.5e+00  t 178.9s
+  newton 0: |F| 6.67e-09 |dz| 3.42e-07 lam 1 dDelta +5.85e-11 Delta 3.356632853543568 piv 8.2e-04..9.3e+00  t 216.6s
+  newton 0: |F| 4.77e-09 |dz| 1.65e-07 lam 1 dDelta +9.67e-11 Delta 3.356632853640304 piv 6.8e-04..8.7e+00  t 181.5s
+  newton 0: |F| 6.06e-10 |dz| 2.83e-08 lam 1 dDelta +1.60e-11 Delta 3.356632853656341 piv 7.0e-04..1.0e+01  t 174.1s
+  newton 0: |F| 4.87e-11 |dz| 7.69e-09 lam 1 dDelta +1.55e-12 Delta 3.356632853657894 piv 6.8e-04..5.9e+00  t 199.8s
+  newton 0: |F| 1.21e-11 |dz| 6.32e-09 lam 1 dDelta +1.36e-12 Delta 3.356632853659252 piv 6.7e-04..6.6e+00  t 195.6s
+  newton 0: |F| 6.08e-12 |dz| 6.46e-10 lam 1 dDelta +2.62e-14 Delta 3.356632853659278 piv 6.8e-04..1.1e+01  t 176.8s
+  newton 0: |F| 9.84e-14 |dz| 7.79e-12 lam 1 dDelta +2.49e-15 Delta 3.356632853659281 piv 6.8e-04..4.4e+00  t 181.6s
+  newton 0: |F| 1.92e-18 |dz| 1.90e-15 lam 1 dDelta +3.72e-19 Delta 3.356632853659281 piv 6.8e-04..4.4e+00  t 223.2s
+  newton 0: |F| 7.61e-25 |dz| 8.94e-22 lam 1 dDelta +9.49e-26 Delta 3.356632853659281 piv 6.8e-04..4.4e+00  t 196.6s
+  newton 0: |F| 5.47e-29 |dz| 3.62e-26 lam 1 dDelta +8.60e-30 Delta 3.356632853659281 piv 6.8e-04..4.4e+00  t 177.3s
+  newton 0: |F| 5.06e-29 |dz| 1.37e-26 lam 1 dDelta +2.91e-30 Delta 3.356632853659281 piv 6.8e-04..4.4e+00  t 170.4s
+  newton 0: |F| 3.47e-30 converged (last |dz| 3.6e-26) Delta 3.356632853659281
+D 3.3875 M 128: Delta 3.3566328536592809 (-1.24e-16) |F| 3.5e-30 its 14 2636s dDelta/dF max 2.3e+01 tails 3e-10 3e-24 dDelta_est +5.1e-30
+D 3.3875 M 96: L 5377, steps 360, start |F| 3.1e-02
+  newton 0: |F| 3.15e-02 |dz| 3.01e+00 lam 0.00195 dDelta +4.42e-07 Delta 3.356633295609703 piv 1.4e-03..3.5e+01  t 80.1s
+  newton 0: |F| 3.14e-02 |dz| 1.37e+00 lam 0.00391 dDelta +1.30e-06 Delta 3.356634593117704 piv 1.7e-03..3.5e+01  t 79.5s
+  newton 0: |F| 3.13e-02 |dz| 1.29e+00 lam 0.00391 dDelta +2.56e-06 Delta 3.356637157397115 piv 1.7e-03..3.5e+01  t 82.6s
+  newton 0: |F| 3.11e-02 |dz| 1.02e+00 lam 0.0156 dDelta +1.04e-05 Delta 3.356647517526607 piv 1.7e-03..3.0e+02  t 79.7s
+  newton 0: |F| 3.06e-02 |dz| 4.97e-01 lam 0.125 dDelta +6.71e-05 Delta 3.356714635821315 piv 1.7e-03..3.0e+02  t 77.5s
+  newton 0: |F| 2.79e-02: no decrease along the f64-Jacobian step; retrying with the exact Jacobian
+  newton 0: |F| 2.79e-02: no decrease along the Newton step, giving up
+D 3.3875 M 96: NOT converged, |F| 2.8e-02 after 6 iterations (1029s); stopping
+start C:\Users\nathan\AppData\Local\Temp\claude\C--Users-nathan-Source-dss-residual-kernel\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\scratchpad\t39-wt\hp\data\lowD_states\lowDvh41_D3.3875_M128.npz (D 3.3875, M 128); predictor through 4 point(s) to D 3.375: Delta 3.346331387728
+D 3.375 M 128: L 7169, steps 395, start |F| 1.1e-03
+  newton 0: |F| 1.05e-03 |dz| 8.58e-03 lam 0.00391 dDelta -3.08e-08 Delta 3.346331356933042 piv 6.2e-04..6.7e+01  t 209.1s
+  newton 0: |F| 1.05e-03 |dz| 3.19e-01 lam 0.000977 dDelta -7.68e-08 Delta 3.346331280115069 piv 6.7e-05..1.6e+04  t 197.6s
+  newton 0: |F| 1.05e-03 |dz| 1.25e-02 lam 0.125 dDelta -9.31e-07 Delta 3.346330348831811 piv 1.2e-03..1.6e+04  t 181.7s
