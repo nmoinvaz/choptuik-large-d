@@ -277,3 +277,22 @@
   newton 0: |F| 7.89e-04 |dz| 7.72e-01 lam 0.00781 dDelta +4.08e-07 Delta 3.193163349458239 piv 8.1e-04..5.7e+01  t 108.2s
   newton 0: |F| 7.84e-04 |dz| 3.49e-01 lam 0.0625 dDelta -1.70e-06 Delta 3.193161651285099 piv 7.4e-04..5.8e+01  t 105.4s
 04:03:16 stopped by hand at D 3.25 M 160 (Newton astray in the weak directions from the lifted M 128 start on the reused plan, |F| 3.5e-3); t_used += the time since the last progress save; checkpoint kept as lowDhm_D3.2500_M160_ckpt_astray.npz
+04:04:31 resuming: M 128/160, last D 3.3, 3.51 h used
+04:04:31 --- D 3.25 (from 3.3), M 128 / 160, nodes 0.0025..0.9
+04:04:33   D 3.25 M 96: start 'predictor' |F| nan (143 steps)
+04:04:34   D 3.25 M 96: plan from start 'predictor' instead: 438 steps, |F| 2.65e-01
+04:04:34 D 3.25 M 96: already converged (/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.2500_M96.npz); skipped
+04:04:37   D 3.25 M 128: start 'predictor' |F| 2.66e-01 (190 steps)
+04:04:37   D 3.25 M 128: start 'lift of M_c' |F| 1.81e-04 (190 steps)
+04:04:37 D 3.25 M 128: already converged (/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.2500_M128.npz); skipped
+04:04:44   D 3.25 M 160: start 'predictor' |F| 3.50e-01 (257 steps)
+04:04:45   D 3.25 M 160: start 'lift of M_w' |F| 3.48e-03 (257 steps)
+04:04:45   D 3.25 M 160: best start |F| 3.5e-03 > 1e-03 on the reused plan; two passes
+04:04:48   D 3.25 M 160: start 'predictor' |F| 3.50e-01 on its own plan (672 steps)
+04:04:50   D 3.25 M 160: start 'lift of M_w' |F| 3.48e-03 on its own plan (629 steps)
+04:04:53   D 3.25 M 160: start 'lift of M_w' |F| 3.48e-03 (629 steps)
+04:04:57 D 3.25 M 160: L 10241, steps 629, start |F| 3.5e-03
+  newton 0: |F| 3.48e-03 |dz| 7.82e-02 lam 0.25 dDelta +7.36e-06 Delta 3.193161171656105 piv 6.7e-04..1.9e+02  t 237.0s
+  newton 0: |F| 3.07e-03 |dz| 1.07e-01 lam 0.5 dDelta +1.09e-05 Delta 3.193172082420570 piv 7.8e-04..1.7e+02  t 240.3s
+04:13:52 stopped by hand: pass 1 on the lifted start's own plan (629 steps) goes astray the same way (lam 1/4, 1/2, Delta +1.8e-5 off); the lifted start's residual is in the centre block (3e-3; centre series tail 1e-2 at x0 = 0.0025), not Taylor error. Checkpoint kept as lowDhm_p1_D3.2500_M160_ckpt_astray.npz
+04:15:45 node change set by hand at D 3.3 (the rule added to lowD_highM.py, --lift_tail_max 1e-20, would have fired there: the M 128 solution resampled to 160 had centre tail 3.8e-8 at D 3.3 and 1e-2 at D 3.25; with a first node at 0.00125 the D 3.25 start has tail 3.2e-32 and |F| 1.9e-5, logs/diag_start_D3.25_M160_x0.00125.log): nodes 0.0025..0.9 (15) -> 0.00125..0.9 (16)

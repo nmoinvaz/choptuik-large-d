@@ -27,8 +27,12 @@ The two start states are converged at the same D and nodes, at the working resol
      |F| <= 1e-14, state <tag>_p1_*; pass 2 on the plan of the pass-1 state, 2-4 times fewer steps), and the point is
      recorded again with the new pair;
   5. --auto_nodes: if the M_n solution's centre or horizon series tail (lowD_dd.tails) exceeds --tail_max (1e-30),
-     the nodes change as in lowD_dd.py (first node halved; a node 0.1 further out while the last is below 0.85), both
-     resolutions are re-noded (driver.renode) and re-solved at this D under a new tag, and the predictors restart.
+     the nodes change as in lowD_dd.py (a new first node at half the first; a node 0.1 further out while the last is
+     below 0.85), all resolutions are re-noded (driver.renode) and re-solved at this D under a new tag, and the up to
+     3 earlier states at each resolution are re-noded (not re-solved) so that the predictors keep their cubic. The
+     first node is also halved when the centre series tail of the next point's M_n start (the M_w solution resampled
+     to M_n) is above --lift_tail_max (1e-20): it grows far faster than the solutions' tails as D falls (D 3.3: 4e-8;
+     D 3.25: 1e-2, and Newton went astray from that start).
 The plans come from converged states or predictors through them: a state resampled to a larger M needs 3.5-4 times
 more Taylor steps (its new top harmonics are aliasing products that the tau-derivative amplifies), and a coarser plan
 blows up on it. A start whose residual on the given plan is not finite or above 1 gets its own plan instead.
@@ -58,7 +62,7 @@ os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
 import numpy as np  # noqa: E402
 
 import lowD_dd  # noqa: E402
-from hpkernel.driver import load, make_solver, predict, renode, resample_z  # noqa: E402
+from hpkernel.driver import load, make_solver, predict, renode, resample_z, save  # noqa: E402
 
 STATES = os.path.join(HERE, "data", "lowD_states")
 
@@ -112,6 +116,8 @@ def main():
     ap.add_argument("--hmax", type=float, default=0.05)
     ap.add_argument("--plan_margin", type=float, default=1e-2, help="the step tolerance of the plan reused from the "
                     "last converged state, relative to --tol_step")
+    ap.add_argument("--lift_tail_max", type=float, default=1e-20, help="with --auto_nodes, halve the first node when "
+                    "the centre series tail of the next point's M_n start (the M_w solution resampled) is above this")
     ap.add_argument("--two_pass_above", type=float, default=1e-3, help="solve M_w or M_n in two passes when its best "
                     "start's |F| on the reused plan is above this (0: never)")
     ap.add_argument("--resume", action="store_true")
@@ -286,6 +292,13 @@ def main():
         h, l, m = load(path)
         return resample_z(np.asarray(h) + np.asarray(l), m["M"], M_new, len(m["nodes"]))[0]
 
+    def lift_tail(path, M_new):
+        """centre series tail (lowD_dd.tails) of a state resampled to M_new, at its D and the current nodes"""
+        m = load(path)[2]
+        z = lifted(path, M_new)
+        s0 = make_solver(m["D"], M_new, nodes=st["nodes"], kt=a.kt, kc=kc, ks=ks, threads=a.threads)
+        return lowD_dd.tails(s0, z, 0 * z, st["nodes"], M_new)[0]
+
     def write_pair(D, rw, rn, decision, extra=None):
         Dw = rw["Delta"] + rw["Delta_lo"]
         diff = (rn["Delta"] - rw["Delta"]) + (rn["Delta_lo"] - rw["Delta_lo"])
@@ -351,8 +364,15 @@ def main():
                 rlast = find_record(a.points, Dt, st["Mn"], st["nodes"])
                 tc, th = rlast.get("tail_c", 0.0), rlast.get("tail_h", 0.0)
                 new = list(st["nodes"])
-                if a.auto_nodes and tc > a.tail_max:
+                # the start of the next point's M_n: the M_w solution resampled to M_n; its centre series converges far
+                # worse than the solutions' (D 3.3: tail 4e-8 against 1e-60; D 3.25: 1e-2, |F| 3.5e-3 in the centre
+                # block, and Newton went astray from it; with the first node halved, 3e-32 and |F| 1.9e-5)
+                lt = lift_tail(st["hist_w"][-1][1], st["Mn"])
+                log(f"D {Dt}: centre series tail of the M {st['Mw']} solution resampled to M {st['Mn']}: {lt:.1e}")
+                if a.auto_nodes and (tc > a.tail_max or lt > a.lift_tail_max):
                     new = [round(new[0] / 2, 6)] + new
+                    if lt > a.lift_tail_max:
+                        log(f"D {Dt}: that tail is above {a.lift_tail_max:.0e}: first node {new[1]} -> {new[0]}")
                 if a.auto_nodes and th > a.tail_max and new[-1] < 0.85:
                     new = new + [round(new[-1] + 0.1, 6)]
                 if tc > a.tail_max or th > a.tail_max:
@@ -366,6 +386,8 @@ def main():
                     save_prog()
             if "new_nodes" in post:
                 old, new = post["old_nodes"], post["new_nodes"]
+                post.setdefault("old_hist", {k: st[k][:-1][-3:] for k in ("hist_c", "hist_w", "hist_n")})
+                save_prog()
                 res = []
                 keys = ["hist_w", "hist_n"] + (["hist_c"] if st["hist_c"] and abs(st["hist_c"][-1][0] - Dt) < 1e-9 else [])
                 for key in keys:
@@ -391,6 +413,27 @@ def main():
                         post["t_point"] += rc2["seconds"]
                 st["pairs"].append([Dt, d2, st["Mw"], st["Mn"]])
                 post["t_point"] += rw2["seconds"] + rn2["seconds"]
+                # the predictors keep their cubic: the up to 3 states before this point at each resolution, re-noded
+                # (not re-solved: |F| ~ 1e-16 from the f64 evaluation of the centre series, far below a predictor's
+                # error), saved as <new tag>_D*_M*_rn.npz
+                for key in ("hist_c", "hist_w", "hist_n"):
+                    if not st[key]:
+                        continue
+                    M_ = load(st[key][-1][1])[2]["M"]
+                    pre = []
+                    for D_, p_ in post["old_hist"].get(key, []):
+                        h, l, m = load(p_)
+                        if m["M"] != M_:
+                            continue
+                        out = os.path.join(STATES, f"{st['tag']}_D{D_:.4f}_M{M_}_rn.npz")
+                        if not os.path.exists(out):
+                            s0 = make_solver(D_, M_, nodes=old, kt=a.kt, kc=kc, ks=ks, threads=a.threads)
+                            s0.set_segs(m.get("segs") or s0.plan(h, l, a.tol_step, a.hmax))
+                            zr, zrl = renode(s0, h, l, old, new, M_, h=0.001)
+                            save(out, np.asarray(zr), np.asarray(zrl), dict(m, nodes=new, renoded_from=p_))
+                        pre.append([D_, out])
+                    st[key] = pre + st[key]
+                    log(f"  {key}: {len(pre)} earlier states re-noded for the predictor")
         # projected time of the next point: the solves of the current pair at this point (after a move up, the pair
         # at the new resolutions; after a re-noding, both solve sets)
         st["last_point_s"] = post["t_point"]
