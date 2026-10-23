@@ -300,7 +300,7 @@ def newton_step(s, zh, zl, jac="dd", mixed=None, gmres=None, verbose=False):
 
 
 def newton_solve(s, zh, zl, tol=1e-28, it_max=12, chord=0, verbose=True, ls=True, max_halvings=10, jac="dd", mixed=None,
-                 gmres=None):
+                 gmres=None, dd_finish=True):
     """Newton with exact Jacobians and backtracking on |F|_2 (Armijo, factor 1/2); optional chord steps with the
     stored LU after full Newton steps. Returns zh, zl, history.
     jac="f64": mixed precision, each step with the f64 Jacobian (s.newton_mixed(zh, zl, **mixed), mixed a dict of its
@@ -310,7 +310,9 @@ def newton_solve(s, zh, zl, tol=1e-28, it_max=12, chord=0, verbose=True, ls=True
     error of about that step's size in the near-null directions, which |F| does not see.
     jac="f64h", "f64g", "f64hg": the large-D variants of newton_step (notes/LARGE_D_MIXED.md), with the same two
     rules; gmres: options of gmres_refine. Their history records carry the step's time split (t_res, t_jac, t_lu,
-    t_solve, t_prod) and the products."""
+    t_solve, t_prod) and the products. With dd_finish (their default) the remaining steps are exact once a mixed step
+    is cut below lam = 1/4, needs the exact retry, or its correction loop ends without converging (as in
+    deflated_newton)."""
     if jac not in JACS:
         raise ValueError(f"jac must be one of {JACS}, not {jac!r}")
     hist = []
@@ -331,16 +333,19 @@ def newton_solve(s, zh, zl, tol=1e-28, it_max=12, chord=0, verbose=True, ls=True
             lam *= 0.5
         return accepted, lam, th, tl
 
+    cur = jac
     for it in range(it_max):
         # (jac "dd": s.newton; "f64": s.newton_mixed(**mixed), as before; info: the step's seconds by part)
-        dh, dl, Fh, Fl, pmin, pmax, info = newton_step(s, zh, zl, jac, mixed, gmres)
+        dh, dl, Fh, Fl, pmin, pmax, info = newton_step(s, zh, zl, cur, mixed, gmres)
+        if cur != jac:
+            info = dict(info, jac=cur)
         n0 = rnorm(Fh, Fl)
         nF = dd_norm(Fh, Fl)
         if nF < tol:
             rec = dict(it=it, F=nF, dz=dd_norm(dh, dl), Delta=float(zh[-1]), piv=(pmin, pmax), t=round(time.time() - t0, 1))
             rec.update(info)
             polish = ""
-            if jac != "dd":
+            if cur != "dd":
                 # Linear convergence leaves an error of about this step's size in the weakly determined (near-null)
                 # directions, which |F| does not see. The step is already computed: take it if |F| stays below tol.
                 th, tl = dd_add(zh, zl, dh, dl)
@@ -356,7 +361,7 @@ def newton_solve(s, zh, zl, tol=1e-28, it_max=12, chord=0, verbose=True, ls=True
                       flush=True)
             break
         accepted, lam, th, tl = search(zh, zl, dh, dl, n0)
-        if not accepted and jac != "dd":
+        if not accepted and cur != "dd":
             if s.m <= DENSE_M_MAX:
                 if verbose:
                     print(f"  newton {it}: |F| {nF:.2e}: no decrease along the f64-Jacobian step; retrying with the exact "
@@ -381,6 +386,10 @@ def newton_solve(s, zh, zl, tol=1e-28, it_max=12, chord=0, verbose=True, ls=True
                    piv=(pmin, pmax), t=round(time.time() - t0, 1))
         rec.update(info)
         hist.append(rec)
+        if (dd_finish and cur in ("f64h", "f64g", "f64hg")
+                and (lam < 0.25 or info.get("retry_dd") or (info.get("products") and not info.get("gmres_converged", True)))):
+            cur = "dd"
+            rec["switch_dd"] = True
         if verbose:
             print(f"  newton {it}: |F| {nF:.2e} |dz| {rec['dz']:.2e} lam {lam:.3g} dDelta {rec['dDelta']:+.2e} "
                   f"Delta {zh[-1]:.15f} piv {pmin:.1e}..{pmax:.1e}  t {rec['t']}s", flush=True)
@@ -578,7 +587,7 @@ def delta_correction(s, Fh, Fl):
 
 
 def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_halvings=12, junk_only=False,
-                    delta_max=1e-9, delta_tol=1e-14, jac="dd", mixed=None, gmres=None):
+                    delta_max=1e-9, delta_tol=1e-14, jac="dd", mixed=None, gmres=None, dd_finish=True):
     """Newton in phases, all with backtracking on |F|_2:
     1. 'all': the step J^-1(-F) with its component in the w weakest right singular directions removed, so the
        well-determined part converges without its second-order error leaking into them;
@@ -594,7 +603,12 @@ def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_hal
     computed is taken if |F| stays below tol (as newton_solve does: the convergence is linear); and with the correction
     loop (f64g, f64hg) the linearised Delta correction is the Delta component of the refined step (equal to
     -dDelta/dF . F for the exact J), since the stored LU is not the Jacobian the step solves with. "dd" and "f64" keep
-    the loop of wip/high-m 2b3b253 unchanged."""
+    the loop of wip/high-m 2b3b253 unchanged.
+    dd_finish (f64h, f64g, f64hg): in the plain-Newton phase, once a mixed step is cut below lam = 1/4 by the line
+    search or finds no decrease, or its correction loop ends without converging, the remaining steps are exact
+    (dd). Near the double-double floor at large D the residual lies in the weakest directions, which an f64 LU does
+    not resolve (notes/LARGE_D_MIXED.md section 4); the exact steps finish there, and leave the exact LU stored for
+    the sensitivities."""
     if jac not in JACS:
         raise ValueError(f"jac must be one of {JACS}, not {jac!r}")
     hist = []
@@ -605,14 +619,17 @@ def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_hal
     ph = 0
     V = {}
     n_prev = None
+    cur = jac      # the variant of the next step (dd_finish switches it to dd)
+
     def dcorr(Fh, Fl, dz_delta):
         # the linearised Delta correction -dDelta/dF . F: by the stored LU's transpose solve (as before), or with the
         # correction loop the Delta component of the refined step (the same quantity for the exact J)
-        return float(dz_delta) if jac in ("f64g", "f64hg") else delta_correction(s, Fh, Fl)
+        return float(dz_delta) if cur in ("f64g", "f64hg") else delta_correction(s, Fh, Fl)
 
     for it in range(it_max):
         # (dd: s.newton; f64: s.newton_mixed(**mixed), as in 2b3b253; info: the step's seconds by part)
-        dh, dl, Fh, Fl, pmin, pmax, info = newton_step(s, zh, zl, jac, mixed, gmres)
+        dh, dl, Fh, Fl, pmin, pmax, info = newton_step(s, zh, zl, cur, mixed, gmres)
+        info = dict(info, jac=cur)
         dz_delta = float(dh[-1] + dl[-1])
         nF = dd_norm(Fh, Fl)
         n0 = rnorm(Fh, Fl)
@@ -622,7 +639,7 @@ def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_hal
                        dDelta_est=dcorr(Fh, Fl, dz_delta), t=round(time.time() - t0, 1))
             polish = ""
             rec.update(info)
-            if jac not in ("dd", "f64"):
+            if cur not in ("dd", "f64"):
                 th, tl = dd_add(zh, zl, dh, dl)
                 Th, Tl = s.residual(th, tl)
                 n1 = dd_norm(Th, Tl)
@@ -676,6 +693,14 @@ def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_hal
         rec = dict(it=it, F=nF, mode=mode, lam=lam, Delta=float(th[-1]), piv=(pmin, pmax), t=round(time.time() - t0, 1))
         rec.update(info)
         hist.append(rec)
+        if (dd_finish and cur in ("f64h", "f64g", "f64hg") and mode == "full"
+                and (not accepted or lam < 0.25 or (info.get("products") and not info.get("gmres_converged", True)))):
+            cur = "dd"
+            rec["switch_dd"] = True
+            if verbose:
+                print(f"  dn {it}: the remaining steps exact (dd)", flush=True)
+            if not accepted:
+                continue
         if not accepted:
             if junk_only and mode == "sel":
                 dd = dcorr(Fh, Fl, dz_delta)

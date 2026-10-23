@@ -294,7 +294,10 @@ def main():
             rec["dDelta_est"] = delta_correction(s, *s.residual(zh, zl))
         rec["polish"] = sum(1 for r in hist if r.get("polish"))
         if a.jac != "dd":
-            rec.update(jac=a.jac, split=step_split(hist))
+            # sens_lu: the LU the sensitivities came from (the last step's: f64 for a mixed step, dd after dd_finish
+            # switched); at D >= 50 an f64 LU's dDelta/dF is wrong by orders of magnitude (notes/LARGE_D_MIXED.md)
+            rec.update(jac=a.jac, split=step_split(hist), sens_lu=hist[-1].get("jac", a.jac),
+                       switched_dd=any(r.get("switch_dd") for r in hist))
         rec.update(pin_rec)
         with open(a.out, "a") as f:
             f.write(json.dumps(rec) + "\n")
