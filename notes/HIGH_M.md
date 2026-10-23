@@ -78,7 +78,7 @@ as aliasing terms that the τ-derivative amplifies; near the solution they are s
 resampled state (|F| = NaN at M = 128 on the 86-step plan of the M = 80 state), while the converged states keep
 |F| = 4–7×10⁻³⁰ on their own plans from 56 up to 311 steps. So the solves here use two passes when the resolution
 goes up: pass 1 on the resampled state's own plan to |F| ≤ 10⁻¹⁴, pass 2 on the plan of the pass-1 state to
-10⁻²⁸; and the continuation plans from its predictor (a cubic through converged states). The earlier records
+10⁻²⁸; the continuation reuses the plans of converged states (1.5). The earlier records
 (`hp/data/lowD_dd.jsonl`; the local machine's runs) planned from the resampled starts, so their plans are finer than
 needed: that costs time, not accuracy.
 
@@ -106,3 +106,31 @@ fixes. Those components wreck the series (`python3 highm_diag.py radius`, `diag_
 exponentially weakly): at D = 3.7 the M = 192 grid is far beyond what Δ needs (its top harmonics are 10⁻¹³–10⁻¹⁵), so
 they are weaker than the f64 Jacobian's rounding can resolve. dd4 (double-double base trajectory) does not help,
 since its tangents are f64.
+
+**The cure was the node set, not the Newton step.** The start itself (the M = 160 solution resampled to 192, before
+any step) already has series tails of 10⁻²⁰ (centre, first node 0.005) and 1.5×10⁻²² (horizon, last node 0.8), against
+2×10⁻⁶⁰ and 2×10⁻⁴⁰ for the M = 160 solution it came from; filling the new harmonics by each field's geometric trend
+(`lowD_dd.fill_tail`) changes that only to 2×10⁻²¹ (`python3 highm_diag.py start`, `diag_start.log`). With the first node
+at 0.0025 the centre tail of that start is 3×10⁻⁵⁰ (8.5×10⁻⁵⁰ at M = 256), and with a node at 0.9 (u₀ = 0.1) the horizon
+tail is 3×10⁻⁹⁷ (2×10⁻⁶⁸ at M = 256); with the last node at 0.8 the horizon series of the M = 256 start diverges
+(tail 10⁷). On the 15 nodes 0.0025, 0.005, 0.01, …, 0.8, 0.9 the M = 192 lift took its first step at λ = 1 and
+converged in two Newton calls (section 3). The node set has to follow M, as notes/LOW_D.md already found going from
+M = 48 to 64; here the decisive quantity is u₀ against the horizon series' radius, which shrinks as the top harmonics
+fill in. The deflated step with the junk directions frozen (`driver.deflated_newton(junk_only=True, jac="f64")`, now
+usable with the mixed step and block storage) was started on the 13-node set and stopped unfinished once the node set
+was found to be the cause.
+
+`driver.renode`'s default Taylor step (0.004) blows up integrating toward a node at 0.9 at M = 160 (|F| 8×10⁹); with
+0.001 the re-noded state has |F| 1.1×10⁻¹⁶ (the f64 evaluation of the centre series at the new first node). The scripts
+here pass 0.001; `lowD_dd.py --auto_nodes` still uses the default (a discrepancy for the coordinator).
+
+### 1.5 Plans for the continuation
+
+The plan of a state is lean only if the state is a regular solution at the D of the equations it is planned with. A
+state that is not (a predictor, a resampled state, even a converged state rounded to f64: the M = 48 state at D = 3.7
+needs 56 steps with its lo parts and 115 without) is not regular at the sonic line x = c, where the p equation is
+singular, and its Taylor coefficients there are large. `hp/lowD_highM.py` therefore reuses at each new D the plan of
+the last converged double-double state at the same M, computed at that state's own D with the step tolerance times
+--plan_margin (10⁻², about 14% more steps), and records, after convergence, how many steps the new solution's own plan
+would have (steps_own_w / steps_own_n in the pair records). In the small-M dry runs (M = 48 / 64 / 80, D = 3.7 → 3.6)
+this gave 63, 80, 78 and 94 steps where planning from the predictor gave 130–245; the values of Δ did not change.
