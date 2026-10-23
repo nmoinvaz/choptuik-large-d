@@ -383,11 +383,11 @@ the new resolutions or nodes; Newton calls are those of the recorded solves, pas
 
 | D | M_c / M_w / M_n | Δ at M_n | M_w → M_n (error estimate) | M_c → M_w | \|F\| (M_n) | Newton calls (c + w + n) | nodes (first) | tails at M_n (centre, horizon) | formula − Δ | |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 3.65 | – / 80 / 96 | 3.46072863630352 | −3.34×10⁻⁹ |  | 4.7×10⁻³⁰ | 8 + 5 | 15 (0.0025) | 4×10⁻¹⁰⁷, 1×10⁻¹³² | −4.7×10⁻⁶ |  |
+| 3.65 | – / 80 / 96 | 3.4607286363035200 | −3.34×10⁻⁹ |  | 4.7×10⁻³⁰ | 8 + 5 | 15 (0.0025) | 4×10⁻¹⁰⁷, 1×10⁻¹³² | −4.7×10⁻⁶ |  |
 | 3.6 | – / 80 / 96 | 3.4527209746292183 | −4.30×10⁻⁹ |  | 3.4×10⁻³⁰ | 6 + 5 | 15 (0.0025) | 2×10⁻¹⁰³, 2×10⁻¹²⁹ | −4.7×10⁻⁶ |  |
 | 3.55 | – / 80 / 96 | 3.4404023464863086 | −2.51×10⁻⁹ |  | 6.4×10⁻³⁰ | 6 + 3 | 15 (0.0025) | 4×10⁻⁹⁹, 2×10⁻¹²⁷ | −2.0×10⁻⁶ |  |
 | 3.5 | – / 80 / 96 | 3.4227909343166796 | −1.27×10⁻⁸ |  | 8.5×10⁻³¹ | 6 + 5 | 15 (0.0025) | 5×10⁻⁹⁴, 3×10⁻¹²⁶ | +2.4×10⁻⁶ |  |
-| 3.5 | – / 96 / 128 | 3.422790933089094 | −1.23×10⁻⁹ |  | 2.4×10⁻²⁹ | 5 + 1 | 15 (0.0025) | 2×10⁻⁸⁶, 2×10⁻¹¹⁰ | +2.4×10⁻⁶ | moved up |
+| 3.5 | – / 96 / 128 | 3.4227909330890940 | −1.23×10⁻⁹ |  | 2.4×10⁻²⁹ | 5 + 1 | 15 (0.0025) | 2×10⁻⁸⁶, 2×10⁻¹¹⁰ | +2.4×10⁻⁶ | moved up |
 | 3.45 | 80 / 96 / 128 | 3.3986246505411713 | −1.45×10⁻⁹ | −6.65×10⁻⁸ | 7.6×10⁻³⁰ | 6 + 6 + 5 | 15 (0.0025) | 6×10⁻⁸¹, 2×10⁻¹⁰⁷ | +6.0×10⁻⁶ |  |
 | 3.4 | 80 / 96 / 128 | 3.3662517880572863 | −2.07×10⁻⁹ | −1.28×10⁻⁷ | 2.3×10⁻²⁹ | 6 + 6 + 5 | 15 (0.0025) | 4×10⁻⁷⁶, 2×10⁻¹⁰⁰ | +6.5×10⁻⁶ |  |
 | 3.35 | 80 / 96 / 128 | 3.3234620708043178 | −2.09×10⁻⁸ | −8.60×10⁻⁸ | 4.8×10⁻²⁹ | 6 + 7 + 5 | 15 (0.0025) | 6×10⁻⁷⁰, 3×10⁻⁹⁷ | +2.8×10⁻⁶ |  |
@@ -428,9 +428,9 @@ included; `python3 lowD_highM_report.py`, last table):
 
 The changes do not grow smoothly with D: 128 → 160 is −6.3×10⁻⁹ at D = 3.2, −6.4×10⁻⁹ at 3.175 and −4.4×10⁻⁸ at 3.15,
 and at a fixed D the successive changes fall by factors of 19 to 290 from one rung to the next. At D = 3.7, M = 192 (and
-the 256 of section 3) are far more than Δ needs, which is where the weak directions of section 1.4 came from; the pilot
-raised M only when the difference demanded it (after the change at D = 3.175 below), and M = 256 was used at D = 3.15
-only, as the resolution above the needed 160 and 192.
+the 256 of section 3) are far more than Δ needs, which is where the weak directions of section 1.4 came from. The pilot
+raised M when the difference passed 10⁻⁸ (D = 3.5, 3.35) or neared it with a projection above it (3.25, 3.15; 5.4),
+and used M = 256 only at D = 3.15, as M_n above the working 192.
 
 ### 5.4 What changed on the way down
 
@@ -456,8 +456,8 @@ only, as the resolution above the needed 160 and 192.
   tail above 10⁻²⁰) would have fired at D = 3.3; at D = 3.2 it fired by itself (tail 2.7×10⁻¹⁵ for the M = 160
   solution resampled to 192; first node 0.00125 → 0.000625). So the centre series of a resampled state converges far
   worse than the solution's, and more so as D falls (why was not established; section 1.4 found the same for the
-  horizon series at D = 3.7, M = 192). The node set
-  agrees with the old one to 3×10⁻³² (M = 96), 3×10⁻³¹ (128) and 1.1×10⁻³⁰ (160) in Δ at D = 3.3.
+  horizon series at D = 3.7, M = 192). The node set agrees with the old one to 3×10⁻³² (M = 96), 3×10⁻³¹ (128) and
+  1.1×10⁻³⁰ (160) in Δ at D = 3.3.
 - **The local machine's M 80 → 96 lifts** that "do not converge" below D = 3.45 (|F| 0.1 at D = 3.40 and 4×10⁴ at
   3.35 after resampling, comms.txt 2026-10-22 19:01) are, I think, the same effect on its 13 nodes with x₀ = 0.005:
   here, on x₀ = 0.0025, the M 80 → 96 lift at D = 3.40 started at |F| 1.5×10⁻⁴ and converged in 6 calls. At 3.35 it
@@ -473,9 +473,10 @@ only, as the resolution above the needed 160 and 192.
   one halfway to the horizon (0.95, then 0.975) when a solution's horizon tail passes 10⁻³⁰ or a lifted start's 10⁻²⁰
   (restart by hand at 06:26 to load it). It did not fire before D = 3.15, where the M = 256 tail asked for it and the
   budget (5.6) skipped it.
-- **Two passes.** From D = 3.25 the reused plans no longer fit the lifted starts (|F| not finite on them), so most
-  solves are two-pass: pass 1 on the start's own plan (550–780 steps, 2.5–3 times the converged solution's 190–270),
-  pass 2 on the pass-1 state's own plan. This roughly doubles the time per point.
+- **Two passes.** From D = 3.25 the reused plans mostly no longer fit the lifted starts (|F| not finite on them; the
+  M = 192 lifts at D = 3.175 and 3.15 still fitted), so most solves at M_w and every move up were two-pass: pass 1 on
+  the start's own plan (550–970 steps, 1.7–3.4 times the converged solution's 190–560), pass 2 on the pass-1 state's own
+  plan. This roughly doubles the time of a solve.
 - **Series orders** (kc = 100, ks = 250, section 1.6): the solutions' centre tails stayed below 10⁻⁴⁹ (10⁻⁶³ after
   the node changes); the horizon tails are the ones that grow (above).
 - **D = 3.15 at the first try: the helper's predictor too far off.** The helper (M = 128) started from its cubic
@@ -508,9 +509,10 @@ only, as the resolution above the needed 160 and 192.
 ### 5.6 Where and why it stopped
 
 **Stop rule: 10 hours of wall time** (`STOP: 10.0 h of wall time used`, recorded in `pilot.jsonl`), after D = 3.15,
-at 10.47 h of the pilot's running time. The last point, D = 3.15 with its move up to M = 256, had started at 7.50 h
-and was projected to fit (its D = 3.175 predecessor took 66 minutes); the M = 256 solve took 2.2 hours (pass 1 on a
-972-step plan, 20 minutes per Newton call; load 2–4 from other agents) and then stalled at its residual floor (5.4).
+at 10.47 h of the pilot's running time. The last point, D = 3.15, had started at 7.50 h and was projected to fit (the
+D = 3.175 point took 66 minutes), but a move up is not part of that projection: the move up to M = 256 it decided
+took 2.2 hours (pass 1 on a 972-step plan, 20 minutes per Newton call; load 2–4 from other agents), and its last
+calls stalled at the residual floor (5.4).
 The rules apply between points, so the point was finished; the node change it asked for (the M = 256 horizon tail
 2×10⁻¹⁷) was skipped, since the next point (projected at that point's 3 hours) could not end within the budget.
 
