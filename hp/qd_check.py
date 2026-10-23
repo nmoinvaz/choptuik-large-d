@@ -4,25 +4,25 @@
     cd hp && python3 qd_check.py mpmath [--n=2000] [--seed=1] [--dump=DIR] [--mutate=ID]
     cd hp && python3 qd_check.py backends [--n=4000] [--only=avx512,avx2,portable] [--fresh] [--out=DIR]
 
-mpmath: the Rust test qd_dump (built for AVX-512, as the backends check's avx512 build, into hp/target/qd_native) writes inputs and scalar
-  results of every operation and input category, of the dot accumulator, and of decimal parsing and printing; this
-  script recomputes every reference with mpmath (working precision 3000 bits, so that every sum of parts is exact
-  even under deep cancellation; the 120 digits asked for are a lower bound) and reports, per operation and
-  category, the max and the 99.9th percentile of the error in units of 2^-209, with the pass thresholds and the
-  near-underflow allowance of the Rust tests. It shares no code with the Rust reference (src/exact.rs). Parsing is
-  checked against the exact decimal value (greedy round-to-nearest: |x - v| <= ulp(x3)/2), printing against correct
-  rounding of the exact value. --dump=DIR reads an existing dump instead of running cargo. Exit 1 on any failure.
-  --mutate=ID is the control: the dump is written by a build with the qd_mutate feature and mutation ID active
-  (qd::mutate in hp/src/qd.rs, e.g. 5: sloppy mul drops the error of a0 b2; 14: parse truncates its last part), so
-  this check must then fail (exit 1).
-backends: runs `cargo test --release --lib qd_` (the accuracy, agreement and decimal tests) with the AVX-512, the
-  AVX2 and the portable v8 backend (RUSTFLAGS "-C target-cpu=x86-64-v4", "-C target-feature=+avx2,+fma",
-  none: explicit features, so that a build does not depend on the host it was made on; build
-  directories hp/target/qd_<isa>); every build must pass, and the digests of all scalar results must agree (each
-  build also checks that its 8-lane results equal the scalar ones bit for bit). Exit 1 otherwise. Each backend's
-  result is written to DIR/<isa>.txt (default data/quad_double/backends) as soon as it is known, and a rerun skips
-  the backends recorded there as passed with the same n and RUSTFLAGS (--fresh reruns them; --only=... runs a subset, and the
-  digests are then compared over every recorded backend). The portable build takes 15-20 minutes on two cores.
+mpmath: the Rust test qd_dump (built for AVX-512 as in the backends check, into hp/target/qd_native) writes inputs and
+  scalar results of every operation and input category, of the dot accumulator, and of decimal parsing and printing;
+  this script recomputes every reference with mpmath (working precision 3000 bits, so that every sum of parts is exact
+  even under deep cancellation; the 120 digits asked for are a lower bound) and reports, per operation and category,
+  the max and the 99.9th percentile of the error in units of 2^-209, with the pass thresholds and the near-underflow
+  allowance of the Rust tests. It shares no code with the Rust reference (src/exact.rs). Parsing is checked against
+  the exact decimal value (greedy round-to-nearest: |x - v| <= ulp(x3)/2), printing against correct rounding of the
+  exact value. --dump=DIR reads an existing dump instead of running cargo. Exit 1 on any failure. --mutate=ID is the
+  control: the dump is written by a build with the qd_mutate feature and mutation ID active (qd::mutate in
+  hp/src/qd.rs, e.g. 5: sloppy mul drops the error of a0 b2; 14: parse truncates its last part), so this check must
+  then fail (exit 1).
+backends: runs `cargo test --release --lib qd_` (the accuracy, agreement and decimal tests) with the AVX-512, the AVX2
+  and the portable v8 backend (RUSTFLAGS "-C target-cpu=x86-64-v4", "-C target-feature=+avx2,+fma", none: explicit
+  features, so that a build does not depend on the host it was made on; build directories hp/target/qd_<isa>); every
+  build must pass, and the digests of all scalar results must agree (each build also checks that its 8-lane results
+  equal the scalar ones bit for bit). Exit 1 otherwise. Each backend's result is written to DIR/<isa>.txt (default
+  data/quad_double/backends) as soon as it is known, and a rerun skips the backends recorded there as passed with the
+  same n and RUSTFLAGS (--fresh reruns them; --only=... runs a subset, and the digests are then compared over every
+  recorded backend). The portable build takes 15-20 minutes on two cores.
 """
 import os
 import re
