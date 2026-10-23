@@ -43,7 +43,7 @@ def check(fn):
 
 @check
 def data_points():
-    rows = list(open(os.path.join(ROOT, "hp/data/delta_dd.csv")))[1:]
+    rows = [r for r in list(open(os.path.join(ROOT, "hp/data/delta_dd.csv")))[1:] if ",lowD" not in r]
     D = [float(r.split(",")[0]) for r in rows]
     txt = [("README.md", "Δ is computed at 857 points from D = 8.25 to 61.03")]
     return [("double-double points", len(D), 857, 1, txt),
@@ -66,7 +66,8 @@ def loader_exact():
         return Fraction(man) * Fraction(2) ** exp
 
     pts, _ = F.load_points()
-    rows = [r.strip().split(",") for r in list(open(os.path.join(ROOT, "hp/data/delta_dd.csv")))[1:]]
+    rows = [c for c in (r.strip().split(",") for r in list(open(os.path.join(ROOT, "hp/data/delta_dd.csv")))[1:])
+            if not c[6].startswith("lowD")]       # load_points reads the continuation rows only
     want = {round(float(c[0]), 6): Fraction(float(c[1])) + Fraction(float(c[2])) for c in rows}
     n_bad = sum(exact(pts[k]) != v for k, v in want.items()) + len(set(pts) ^ set(want))
     old = {round(float(c[0]), 6): mp.mpf(c[1]) + mp.mpf(c[2]) for c in rows}     # the parse before the fix

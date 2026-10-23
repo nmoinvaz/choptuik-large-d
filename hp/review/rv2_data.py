@@ -48,7 +48,9 @@ for mach, name, recs in R:
         merged[k] = (r, name)
         allrec.setdefault(k, []).append((mach, name, r))
 
-csv = [line.strip().split(",") for line in list(open(os.path.join(HP, "data", "delta_dd.csv")))[1:]]
+# the continuation runs' rows; the low-D rows (run lowD-..., D < 8.25, export_lowD.py) come from other files
+csv = [c for c in (line.strip().split(",") for line in list(open(os.path.join(HP, "data", "delta_dd.csv")))[1:])
+       if not c[6].startswith("lowD")]
 if brk == "round":
     csv[100][0] = repr(float(csv[100][0]) + 3e-7)
 if brk == "lo":

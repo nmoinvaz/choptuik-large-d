@@ -219,8 +219,9 @@ M = 384 is under way).
 ![Below D = 4: every double-double value of Delta and gamma so far against the sqrt(D - 3) formula, and how much Delta moves when the tau resolution is raised](hp/lowD_values.svg)
 
 **All our values below D = 4** (`hp/export_lowD.py` writes every converged double-double record below D = 8.25 to
-[`hp/data/delta_dd_lowD.csv`](hp/data/delta_dd_lowD.csv), one row per D and τ resolution M with γ where computed;
-`hp/plot_lowD_values.py` draws it; rerun both as runs land). Left: Δ at the largest M at each D, filled where the two
+[`hp/data/delta_dd_lowD.csv`](hp/data/delta_dd_lowD.csv), one row per D and τ resolution M with γ where computed, and
+`hp/export_dd.py` puts the best value per D into [`hp/data/delta_dd.csv`](hp/data/delta_dd.csv) next to the 857
+continuation points, as run `lowD-M<M>`; `hp/plot_lowD_values.py` draws them; rerun all three as runs land). Left: Δ at the largest M at each D, filled where the two
 largest M agree to 10⁻⁸ (or M = 80 alone at D ≥ 3.7, where M 80 → 96 is 1.2×10⁻⁹) and hollow where they do not yet.
 Every point, resolved or not, lies within 7×10⁻⁶ of the √(D − 3) formula below. Middle: γ, from the exact growth-mode
 matrix at the largest M. Right: how much Δ moves when M is raised. The step from M = 80 to 96 grows a hundredfold from
@@ -2126,8 +2127,9 @@ hp/                 double-double solver (crate hpkernel)
 ├── dd_fits_mp.py   large-D model fits at 60 digits, held-out errors, predictions (--dmax for a data snapshot)
 ├── dd_candidates.py  candidate constants forced as the limit, held-out test (--dmax as above)
 ├── plot_heldout.py heldout.svg (python3 plot_heldout.py --dmax=60.1: the points up to D = 60.1)
-├── data/delta_dd.csv   every double-double point of the continuation runs, D = 8.25-61.03: D, Delta (hi + lo), |F|, max dDelta/dF
-├── data/delta_dd_lowD.csv   every double-double point below D = 8.25, per D and M, with gamma (export_lowD.py)
+├── data/delta_dd.csv   every double-double point: D, Delta (hi + lo), |F|, max dDelta/dF, run; the 857 continuation points
+│                       (D = 8.25-61.03) and the best low-D value per D (run lowD-M<M>, D = 3.3-4.0), which the large-D fits skip
+├── data/delta_dd_lowD.csv   the low-D points at every M, with gamma and status (export_lowD.py)
 ├── data/local/     the second machine's runs (scan_up*.jsonl), folded into delta_dd.csv by export_dd.py
 └── data/seeds/     saved solver states to restart continuation from
 hp/largeD_*.py      large-D scaling of the solutions (profiles, F(theta), harmonic content, light-cone exponent)

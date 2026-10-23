@@ -17,6 +17,8 @@ def old_load(scan=None):
     pts, src = {}, {}
     for line in list(open(os.path.join(F.HERE, "data", "delta_dd.csv")))[1:]:
         c = line.strip().split(",")
+        if c[6].startswith("lowD"):
+            continue
         k = round(float(c[0]), 6)
         pts[k] = mp.mpf(c[1]) + mp.mpf(c[2])
         src[k] = c[6]

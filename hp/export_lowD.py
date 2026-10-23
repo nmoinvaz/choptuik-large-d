@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Collect every double-double point below D = 8.25 (the low-D runs, cloud and local) into hp/data/delta_dd_lowD.csv,
-the companion of delta_dd.csv (which holds the continuation runs from D = 8.25 up and which the large-D fits read).
+"""Collect every double-double point below D = 8.25 (the low-D runs, cloud and local) into hp/data/delta_dd_lowD.csv, one
+row per (D, M). The best value at each D (the largest clean M) also goes into delta_dd.csv with the continuation runs'
+points (hp/export_dd.py, run name lowD-M<M>, or lowD-M<M>-unresolved).
 
 Input: data/lowD_dd.jsonl, data/lowD_dd_local*.jsonl, data/lowD_highM/*points*.jsonl if present (records of
 hp/lowD_dd.py and the larger-M runs), and data/lowD_gamma*.jsonl for gamma. One row per (D, M); where several runs
@@ -41,7 +42,8 @@ def records(pattern):
                 yield r
 
 
-def main():
+def build():
+    """the rows of delta_dd_lowD.csv (dicts), sorted by D and M"""
     best = {}
     for r in list(records("lowD_dd*.jsonl")) + list(records("lowD_highM/*points*.jsonl")):
         if r.get("converged") is False or r.get("Delta") is None or r.get("D", 99) >= 8.25:
@@ -51,8 +53,9 @@ def main():
         key = (round(r["D"], 6), int(r["M"]))
         d = r["Delta"]
         hi, lo = (d[0], d[1]) if isinstance(d, (list, tuple)) else (d, r.get("Delta_lo", 0.0))
+        sens = r.get("sens_max", max(r["sens"]) if r.get("sens") else None)
         row = dict(D=key[0], M=key[1], Delta_hi=hi, Delta_lo=lo, F=r.get("F"), tail_c=r.get("tail_c"),
-                   tail_h=r.get("tail_h"), source=r["_src"])
+                   tail_h=r.get("tail_h"), sens_max=sens, dDelta_est=r.get("dDelta_est"), source=r["_src"])
         row["status"] = "polluted: " + POLLUTED[key] if key in POLLUTED else "clean"
         if key not in best or (row["F"] or 1) < (best[key]["F"] or 1):
             best[key] = row
@@ -76,6 +79,11 @@ def main():
             row["gamma"] = gam.get((D, M))
             rows.append(row)
     rows.sort(key=lambda r: (r["D"], r["M"]))
+    return rows
+
+
+def main():
+    rows = build()
     out = os.path.join(HERE, "data", "delta_dd_lowD.csv")
     cols = ["D", "M", "Delta_hi", "Delta_lo", "F", "tail_c", "tail_h", "change_from_lower_M", "best", "resolved", "gamma",
             "status", "source"]

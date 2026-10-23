@@ -34,6 +34,8 @@ def load(path=CSV):
     pts, run = {}, {}
     for line in list(open(path))[1:]:
         c = line.strip().split(",")
+        if c[6].startswith("lowD"):         # as hp/dd_fits_mp.load_points: continuation points only
+            continue
         d = float(c[0])
         if DECIMAL:
             # emulate hp/dd_fits_mp.load_points: the CSV's shortest-repr strings parsed as decimals (not as the doubles)
