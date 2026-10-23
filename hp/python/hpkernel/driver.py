@@ -178,92 +178,96 @@ JACS = ("dd", "f64", "f64h", "f64g", "f64hg")
 # columns from the double-double lanes, rounded to f64; the cheapest variant that steers at D = 50-60, largeD_horizon.py)
 HORIZON_DD = 4
 # defaults of the correction loop (gmres_refine)
-GMRES = dict(max_products=16, step_tol=1e-10, max_outer=3)
+GMRES = dict(max_products=12, step_tol=1e-10, confirm=1)
 
 
-def gmres_refine(s, zh, zl, bh, bl, max_products=16, step_tol=1e-10, max_outer=3, restart=30, verbose=False):
+_SPLIT = 134217729.0  # 2^27 + 1
+
+
+def _two_prod(a, b):
+    """a b = p + e exactly (Dekker), elementwise"""
+    p = a * b
+    t = _SPLIT * a
+    ah = t - (t - a)
+    al = a - ah
+    t = _SPLIT * b
+    bh = t - (t - b)
+    bl = b - bh
+    return p, ((ah * bh - p) + ah * bl + al * bh) + al * bl
+
+
+def dd_scale(xh, xl, a):
+    """a (xh + xl) in double-double, a an f64 scalar"""
+    p, e = _two_prod(np.full_like(xh, a), xh)
+    e = e + a * xl
+    h = p + e
+    return h, e - (h - p)
+
+
+def dd_axpy(a, xh, xl, yh, yl):
+    """y + a x in double-double, a an f64 scalar"""
+    ph, pl = dd_scale(xh, xl, a)
+    return dd_add(yh, yl, ph, pl)
+
+
+def gmres_refine(s, zh, zl, bh, bl, max_products=12, step_tol=1e-10, confirm=1, cut=True, verbose=False, ref=None):
     """Solve J x = b (b = bh + bl, double-double) for the exact Jacobian J at z: GMRES on J M^-1 (right
-    preconditioning), M the LU stored in s (the mixed step's f64 LU), with exact double-double products J v
-    (Solver.jvp), restarted from the double-double residual b - J x (GMRES-based iterative refinement; Carson and
-    Higham, SIAM J. Sci. Comput. 40 (2018) A817). The Arnoldi vectors and the small least-squares problems are f64;
-    x and the residuals are double-double.
-    Stopping is on the change of x, not on the residual: an error along a weak direction of J barely shows in the
-    residual (notes/MIXED_PRECISION.md section 8). Each GMRES iteration's correction d_k is compared with the previous
-    one; a cycle ends when |d_k - d_(k-1)| <= step_tol |x + d_k|, and the loop ends when a cycle's first correction
-    (one GMRES step on the new residual) already changes x by at most step_tol, or after max_products products, or
-    max_outer cycles. The first cycle starts from x = 0, so its first iterate is M^-1 b scaled (no product needed for
-    its residual).
-    Returns (xh, xl, info): info = dict(products, cycles, changes (per GMRES iteration), converged, t_prod, t_solve)."""
+    preconditioning) in its GCR form (Eisenstat, Elman and Schultz, SIAM J. Numer. Anal. 20 (1983) 345), M the LU stored
+    in s (the mixed step's f64 LU), the products J u exact in double-double (Solver.jvp; cut: its series stopped at
+    double-double resolution). Each iteration takes the preconditioned residual u = M^-1 r as the new direction, w = J u
+    (one product), orthogonalizes w against the earlier w's (twice), applying the same coefficients to u, and updates
+    x += c u, r -= c w with c = w.r. The u, w, x and r are double-double and updated with the same coefficients, so r
+    stays the residual b - J x to double-double rounding without recomputing it (only the coefficients are f64).
+    In exact arithmetic the iterates are GMRES's.
+    Stopping is on the change of x, not on the residual (an error along a weak direction of J barely shows in the
+    residual; notes/MIXED_PRECISION.md section 8): the loop ends after `confirm` iterations in a row with
+    |c u| <= step_tol |x|, or after max_products products. The first iteration's u is M^-1 b, the plain mixed step.
+    ref (optional, a double-double vector): the exact solution, for the checks: info["errors"] gets |x - ref| / |ref|
+    after each iteration.
+    Returns (xh, xl, info): info = dict(products, changes, converged, t_prod, t_solve, errors)."""
     n = s.size
-    zero = np.zeros(n)
     xh, xl = np.zeros(n), np.zeros(n)
-    info = dict(products=0, cycles=0, changes=[], converged=False, t_prod=0.0, t_solve=0.0)
-
-    def prod(uh, ul):
+    rh, rl = np.asarray(bh, dtype=float).copy(), np.asarray(bl, dtype=float).copy()
+    U, W, W64 = [], [], []
+    info = dict(products=0, changes=[], converged=False, t_prod=0.0, t_solve=0.0)
+    if ref is not None:
+        info["errors"] = []
+        refv = np.asarray(ref[0]) + np.asarray(ref[1])
+    run = 0
+    while info["products"] < max_products:
         t = time.time()
-        r = s.jvp(zh, zl, np.ascontiguousarray(uh), np.ascontiguousarray(ul))
+        uh, ul = (np.asarray(a) for a in s.lu_solve(np.ascontiguousarray(rh), np.ascontiguousarray(rl)))
+        info["t_solve"] += time.time() - t
+        t = time.time()
+        wh, wl = (np.asarray(a) for a in s.jvp(zh, zl, uh, ul, cut=cut)[:2])
         info["t_prod"] += time.time() - t
         info["products"] += 1
-        return np.asarray(r[0]), np.asarray(r[1])
-
-    def msolve(v):
-        t = time.time()
-        uh, ul = s.lu_solve(np.ascontiguousarray(v), zero)
-        info["t_solve"] += time.time() - t
-        return np.asarray(uh), np.asarray(ul)
-
-    for cyc in range(max_outer):
-        if cyc == 0:
-            rh, rl = np.asarray(bh, dtype=float).copy(), np.asarray(bl, dtype=float).copy()
-        else:
-            if info["products"] >= max_products:
-                break
-            jh, jl = prod(xh, xl)
-            rh, rl = dd_add(np.asarray(bh), np.asarray(bl), -jh, -jl)
-        info["cycles"] += 1
-        r = rh + rl
-        beta = float(np.linalg.norm(r))
-        if beta == 0.0:
-            info["converged"] = True
+        for _ in range(2):
+            for (Uh, Ul), (Wh, Wl), w64 in zip(U, W, W64):
+                beta = float(w64 @ (wh + wl))
+                wh, wl = dd_axpy(-beta, Wh, Wl, wh, wl)
+                uh, ul = dd_axpy(-beta, Uh, Ul, uh, ul)
+        nw = float(np.linalg.norm(wh + wl))
+        if not nw > 0:
             break
-        V = np.zeros((n, restart + 1))
-        U = np.zeros((n, restart))          # M^-1 v_j (f64)
-        H = np.zeros((restart + 1, restart))
-        V[:, 0] = r / beta
-        d_prev = np.zeros(n)
-        first_change = None
-        k = 0
-        while k < restart and info["products"] < max_products:
-            uh, ul = msolve(V[:, k])
-            U[:, k] = uh + ul
-            wh, wl = prod(uh, ul)
-            w = wh + wl
-            for _ in range(2):              # modified Gram-Schmidt, twice
-                for j in range(k + 1):
-                    c = V[:, j] @ w
-                    H[j, k] += c
-                    w = w - c * V[:, j]
-            H[k + 1, k] = float(np.linalg.norm(w))
-            if H[k + 1, k] > 0:
-                V[:, k + 1] = w / H[k + 1, k]
-            e1 = np.zeros(k + 2)
-            e1[0] = beta
-            y = np.linalg.lstsq(H[:k + 2, :k + 1], e1, rcond=None)[0]
-            d = U[:, :k + 1] @ y
-            ch = float(np.linalg.norm(d - d_prev)) / max(float(np.linalg.norm(xh + xl + d)), 1e-300)
-            info["changes"].append(ch)
-            if first_change is None:
-                first_change = ch
-            d_prev = d
-            k += 1
-            if verbose:
-                print(f"    gmres cycle {cyc} it {k}: change {ch:.1e} (products {info['products']})", flush=True)
-            if (cyc > 0 or k > 1) and ch <= step_tol:
-                break
-            if H[k, k - 1] == 0:
-                break
-        xh, xl = dd_add(xh, xl, d_prev, np.zeros(n))
-        if cyc > 0 and first_change is not None and first_change <= step_tol:
+        wh, wl = dd_scale(wh, wl, 1.0 / nw)
+        uh, ul = dd_scale(uh, ul, 1.0 / nw)
+        w64 = wh + wl
+        c = float(w64 @ (rh + rl))
+        xh, xl = dd_axpy(c, uh, ul, xh, xl)
+        rh, rl = dd_axpy(-c, wh, wl, rh, rl)
+        U.append((uh, ul))
+        W.append((wh, wl))
+        W64.append(w64)
+        ch = abs(c) * float(np.linalg.norm(uh + ul)) / max(float(np.linalg.norm(xh + xl)), 1e-300)
+        info["changes"].append(ch)
+        if ref is not None:
+            info["errors"].append(float(np.linalg.norm((xh - ref[0]) + (xl - ref[1])) / np.linalg.norm(refv)))
+        if verbose:
+            print(f"    gcr {len(U)}: change {ch:.1e}" + (f", error {info['errors'][-1]:.1e}" if ref is not None else ""),
+                  flush=True)
+        run = run + 1 if (len(U) > 1 and ch <= step_tol) else 0
+        if run >= confirm:
             info["converged"] = True
             break
     return xh, xl, info
@@ -290,7 +294,7 @@ def newton_step(s, zh, zl, jac="dd", mixed=None, gmres=None, verbose=False):
     if jac in ("f64g", "f64hg"):
         g = dict(GMRES, **(gmres or {}))
         dh, dl, gi = gmres_refine(s, zh, zl, -np.asarray(Fh), -np.asarray(Fl), verbose=verbose, **g)
-        info.update(t_prod=gi["t_prod"], t_solve=ts + gi["t_solve"], products=gi["products"], cycles=gi["cycles"],
+        info.update(t_prod=gi["t_prod"], t_solve=ts + gi["t_solve"], products=gi["products"],
                     gmres_converged=gi["converged"], changes=[float(f"{c:.2e}") for c in gi["changes"]])
     return dh, dl, Fh, Fl, pmin, pmax, info
 

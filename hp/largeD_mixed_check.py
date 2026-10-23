@@ -6,6 +6,7 @@
     cd hp && python3 largeD_mixed_check.py controls
     cd hp && python3 largeD_mixed_check.py dotcheck
     cd hp && python3 largeD_mixed_check.py steps [--D=20,40,45,50,55,60] [--seeds=1,2] [--out=F.jsonl] [--step_tol=1e-10]
+    cd hp && python3 largeD_mixed_check.py costs [--states=8.25,20,40,50,60] [--reps=3] [--out=F.json]
 
 jvp: at each state, J v by Solver.jvp (one forward-mode pass per block, double-double) against the double-double
   Jacobian (Solver.jacobian, hi and lo) times v, the product summed in double-double (dd_matvec below), for a random v
@@ -28,9 +29,11 @@ controls: every mutation at the D = 50.01 state and at M = 16; each must fire; e
 dotcheck: dd_matvec itself against exact rational arithmetic (fractions) on a few rows of the D = 20.04 Jacobian,
   and with one product term dropped as its control.
 steps: at the saved states nearest to --D (perturbed by 1e-12 relative as in hp/mixed_largeD_blocks.py, seeds
-  --seeds), the Newton step of each loop variant (f64g: the f64 Jacobian then gmres_refine; f64hg: the horizon fix then
-  gmres_refine) against the double-double step: relative difference, products, cycles, time. Pass: <= 1e-5 at every
-  state (the criterion of the horizon fix). Records appended to --out as they are done.
+  --seeds), the Newton step of each variant against the double-double step (relative difference): f64 and f64h
+  (newton_mixed without and with the horizon fix), and the loop on each (f64g, f64hg: driver.gmres_refine with the
+  f64 or f64h LU as preconditioner, options --step_tol, --confirm, --max_products), with the products, the change of
+  the step and its error after every product. Pass: <= 1e-5 for f64h, f64g and f64hg at every state (the criterion of
+  the horizon fix). Records appended to --out as they are done.
 """
 import glob
 import json
@@ -45,7 +48,7 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
-from hpkernel.driver import GMRES, dd_add, load, make_solver, newton_step, resample_z  # noqa: E402
+from hpkernel.driver import GMRES, dd_add, load, make_solver, resample_z  # noqa: E402
 
 LOWD = os.path.join(HERE, "data", "lowD_states", "lowDv_D3.7000_M48.npz")
 _SPLIT = 134217729.0  # 2^27 + 1
@@ -240,20 +243,20 @@ def dotcheck(opts):
 
 
 def steps(opts):
-    import scipy.linalg as sla  # noqa: F401
+    """the loop variants' Newton steps against the double-double step (see the module doc)"""
+    from hpkernel.driver import HORIZON_DD, gmres_refine  # noqa: PLC0415
     threads = int(opts.get("threads", 2))
     Ds = [float(x) for x in str(opts.get("D", "20,40,45,50,55,60")).split(",")]
     seeds = [int(x) for x in str(opts.get("seeds", "1,2")).split(",")]
-    variants = str(opts.get("variants", "f64,f64h,f64g,f64hg")).split(",")
-    g = dict(GMRES)
-    for k in ("step_tol", "max_products", "max_outer"):
+    g = dict(GMRES, max_products=int(opts.get("max_products", 16)))
+    for k, typ in (("step_tol", float), ("confirm", int)):
         if k in opts:
-            g[k] = type(GMRES[k])(float(opts[k])) if k == "step_tol" else int(opts[k])
+            g[k] = typ(opts[k])
     out = opts.get("out")
     done = set()
     if out and os.path.exists(out):
         done = {(round(r["D"], 4), r["seed"]) for r in map(json.loads, open(out))}
-    worst = {v: 0.0 for v in variants}
+    worst = {}
     for D0 in Ds:
         s, zh, zl, label = solver_at(D0, threads)
         n = s.size
@@ -267,31 +270,75 @@ def steps(opts):
             t = time.time()
             dh, dl, Fh, Fl, *_ = s.newton(ph, pl)
             t_dd = time.time() - t
-            ddz = np.asarray(dh) + np.asarray(dl)
+            ref = (np.asarray(dh), np.asarray(dl))
+            ddz = ref[0] + ref[1]
             nr = np.linalg.norm(ddz)
             rec = dict(D=D, seed=seed, t_dd=round(t_dd, 2), gmres=g, v={})
             line = []
-            for v in variants:
+            for v, hdd in (("f64", 0), ("f64h", HORIZON_DD)):
+                xh, xl, *_ = s.newton_mixed(ph, pl, horizon_dd=hdd)
+                tm = s.step_timing()
+                c0 = float(np.linalg.norm(np.asarray(xh) + np.asarray(xl) - ddz) / nr)
+                rec["v"][v] = dict(err=c0, t_jac=round(tm[1], 3), t_lu=round(tm[2], 3))
+                worst[v] = max(worst.get(v, 0.0), c0)
+                gv = {"f64": "f64g", "f64h": "f64hg"}[v]
                 t = time.time()
-                xh, xl, *_r, info = newton_step(s, ph, pl, v, gmres=g)
+                yh, yl, info = gmres_refine(s, ph, pl, -np.asarray(Fh), -np.asarray(Fl), ref=ref, **g)
                 tt = time.time() - t
-                c = float(np.linalg.norm(np.asarray(xh) + np.asarray(xl) - ddz) / nr)
-                worst[v] = max(worst[v], c)
-                rec["v"][v] = dict(err=c, t=round(tt, 3), **{k: info[k] for k in info if k != "changes"},
-                                   changes=info.get("changes"))
-                line.append(f"{v} {c:.1e} ({info.get('products', 0)} products, {tt:.2f} s)")
+                c = float(np.linalg.norm(yh + yl - ddz) / nr)
+                rec["v"][gv] = dict(err=c, t_loop=round(tt, 3), products=info["products"], converged=info["converged"],
+                                    changes=info["changes"], errors=info["errors"], t_prod=round(info["t_prod"], 3))
+                worst[gv] = max(worst.get(gv, 0.0), c)
+                line.append(f"{v} {c0:.1e} -> {gv} {c:.1e} ({info['products']} products, {tt:.2f} s; changes "
+                            + " ".join(f"{x:.0e}" for x in info["changes"]) + "; errors "
+                            + " ".join(f"{x:.0e}" for x in info["errors"]) + ")")
             print(f"{label} seed {seed} (dd step {t_dd:.2f} s): " + "; ".join(line), flush=True)
             if out:
                 with open(out, "a") as f:
                     f.write(json.dumps(rec) + "\n")
-    print("worst step difference: " + ", ".join(f"{v} {worst[v]:.1e}" for v in variants))
-    return 0 if all(worst[v] <= 1e-5 for v in variants if v != "f64") else 1
+    print("worst step difference: " + ", ".join(f"{v} {x:.1e}" for v, x in worst.items()))
+    return 0 if all(worst[v] <= 1e-5 for v in worst if v != "f64") else 1
+
+
+def costs(opts):
+    """seconds of the parts of a step at each state, interleaved, --reps times (medians): the residual, the
+    double-double Jacobian, the f64 Jacobian without and with the horizon fix (horizon_dd=4), the f64 LU (from
+    newton_mixed's step_timing), one exact product (jvp); with the load average before and after"""
+    threads = int(opts.get("threads", 2))
+    specs = str(opts.get("states", "8.25,20,40,50,60")).split(",")
+    reps = int(opts.get("reps", 3))
+    out = opts.get("out")
+    recs = []
+    for spec in specs:
+        s, zh, zl, label = solver_at(spec, threads)
+        n = s.size
+        v = np.random.default_rng(5).standard_normal(n)
+        T = {k: [] for k in ("residual", "jac_dd", "jac_f64", "jac_f64h", "lu_f64", "jvp")}
+        l0 = os.getloadavg()[0] if hasattr(os, "getloadavg") else None
+        for _ in range(reps):
+            t = time.time(); s.residual(zh, zl); T["residual"].append(time.time() - t)
+            t = time.time(); s.jacobian(zh, zl); T["jac_dd"].append(time.time() - t)
+            t = time.time(); s.jacobian_f64(zh, zl); T["jac_f64"].append(time.time() - t)
+            t = time.time(); s.jacobian_f64(zh, zl, horizon_dd=4); T["jac_f64h"].append(time.time() - t)
+            s.newton_mixed(zh, zl); T["lu_f64"].append(s.step_timing()[2])
+            t = time.time(); s.jvp(zh, zl, v, np.zeros(n)); T["jvp"].append(time.time() - t)
+        l1 = os.getloadavg()[0] if hasattr(os, "getloadavg") else None
+        med = {k: float(np.median(x)) for k, x in T.items()}
+        rec = dict(state=label, N=n, reps=reps, load=[l0, l1], **{k: round(x, 4) for k, x in med.items()})
+        recs.append(rec)
+        print(f"{label} (N {n}): residual {med['residual']:.3f} s, Jacobian dd {med['jac_dd']:.2f} s, f64 {med['jac_f64']:.3f} s, "
+              f"f64 + horizon in dd {med['jac_f64h']:.3f} s (+{med['jac_f64h'] - med['jac_f64']:.3f} s; dd/f64h "
+              f"{med['jac_dd'] / med['jac_f64h']:.1f}x), f64 LU {med['lu_f64']:.3f} s, product {med['jvp'] * 1e3:.0f} ms "
+              f"({med['jac_f64'] / med['jvp']:.1f} per f64 Jacobian); load {l0} -> {l1}", flush=True)
+    if out:
+        json.dump(recs, open(out, "w"), indent=1)
+    return 0
 
 
 def main():
     pos, opts = opts_of(sys.argv[1:])
     cmd = pos[0] if pos else "jvp"
-    return {"jvp": jvp_check, "controls": controls, "dotcheck": dotcheck, "steps": steps}[cmd](opts)
+    return {"jvp": jvp_check, "controls": controls, "dotcheck": dotcheck, "steps": steps, "costs": costs}[cmd](opts)
 
 
 if __name__ == "__main__":

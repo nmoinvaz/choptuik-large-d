@@ -27,6 +27,8 @@ pub mod v8;
 mod qd_residual;
 #[cfg(test)]
 mod qd_tests;
+#[cfg(test)]
+mod jvp_tests;
 
 #[cfg(feature = "python")]
 mod python;

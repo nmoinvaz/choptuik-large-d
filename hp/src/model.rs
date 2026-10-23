@@ -70,6 +70,11 @@ pub const HDD_LASTSEG: u8 = 8;
 /// `Ctx::f64_dd`: the horizon block's column tasks with `Dtn<4>` lanes (a double-double base trajectory, f64
 /// tangents); with HDD_SOLVE also the tangent solves in double-double
 pub const HDD_DTN: u8 = 16;
+/// `Ctx::f64_dd`, for the double-double tangent lanes (`Du`) of `jvp`: the centre and horizon series stop once their
+/// tangent terms are below double-double resolution (`Tail` with TAIL_TOL_DD), instead of running to kc and ks. The
+/// scan's kc = 420 at large D is far past that (the centre series' terms fall to 1e-134 at D = 50), and the centre
+/// series is most of a product's cost there.
+pub const HDD_DU_CUT: u8 = 32;
 
 impl<const B: usize> Ctx<B> {
     pub const M: usize = 8 * B;
@@ -168,12 +173,36 @@ struct Tail {
 }
 
 const TAIL_TOL: f64 = 8.673617379884035e-19; // 2^-60
+/// the cut of HDD_DU_CUT (double-double tangents)
+const TAIL_TOL_DD: f64 = 7.703719777548943e-34; // 2^-110
 const TAIL_RUN: usize = 4;
 const TAIL_MIN: usize = 8;
 
 impl Tail {
     fn new(r: f64) -> Tail {
         Tail { rk: 1.0, r, big: 0.0, run: 0 }
+    }
+    /// whether the series of lane type T stops early under ctx: f64 tangents always (TAIL_TOL), double-double
+    /// tangents with HDD_DU_CUT (TAIL_TOL_DD)
+    fn active<T: Lane, const B: usize>(ctx: &Ctx<B>) -> bool {
+        T::TAN_F64 || (T::TANGENT && ctx.f64_dd & HDD_DU_CUT != 0)
+    }
+    /// record order k as `done`, for the lanes `active` allows
+    fn done_any<T: Lane, const B: usize>(&mut self, k: usize, f: [&Fl<T, B>; 4]) -> bool {
+        if T::TAN_F64 {
+            return self.done(k, f);
+        }
+        let mut a = 0.0f64;
+        for x in f {
+            for b in 0..B {
+                a = a.max(x.0[b].tan().hi.abs().hmax());
+            }
+        }
+        let t = a * self.rk;
+        self.rk *= self.r;
+        self.big = self.big.max(t);
+        self.run = if t <= TAIL_TOL_DD * self.big { self.run + 1 } else { 0 };
+        self.big > 0.0 && k >= TAIL_MIN && self.run >= TAIL_RUN
     }
     /// record order k (called for k = 0, 1, 2, ... in turn); true when the series may stop after it
     fn done<T: Lane, const B: usize>(&mut self, k: usize, f: [&Fl<T, B>; 4]) -> bool {
@@ -215,9 +244,10 @@ pub fn centre_series<T: Lane, const B: usize>(ctx: &Ctx<B>, p1: &Fl<T, B>, c0: &
     a2[0] = aa[0] * aa[0];
     let invc = Fl::<T, B>::splat(DD::ONE) / cc[0];
     let mut tail = Tail::new(ctx.nodes[0]);
-    if T::TAN_F64 {
-        tail.done(0, [&pp[0], &mm[0], &aa[0], &cc[0]]);
-        tail.done(1, [&pp[1], &mm[1], &aa[1], &cc[1]]);
+    let cut = Tail::active::<T, B>(ctx);
+    if cut {
+        tail.done_any(0, [&pp[0], &mm[0], &aa[0], &cc[0]]);
+        tail.done_any(1, [&pp[1], &mm[1], &aa[1], &cc[1]]);
     }
     for k in 2..=kmax {
         let kf = k as f64;
@@ -249,7 +279,7 @@ pub fn centre_series<T: Lane, const B: usize>(ctx: &Ctx<B>, p1: &Fl<T, B>, c0: &
         let idel = DD::ONE / (-(DD::from_f64(kf - 1.0) * (DD::from_f64(kf - 1.0) + n)));
         pp[k] = ((r4.muls(mu12) - r3.muls(mu22)) * invc).muls(idel);
         mm[k] = ((r3.muls(mu21) - r4.muls(mu11)) * invc).muls(idel);
-        if T::TAN_F64 && tail.done(k, [&pp[k], &mm[k], &aa[k], &cc[k]]) {
+        if cut && tail.done_any(k, [&pp[k], &mm[k], &aa[k], &cc[k]]) {
             for v in [&mut pp, &mut mm, &mut aa, &mut cc] {
                 v.truncate(k + 1);
             }
@@ -541,6 +571,7 @@ pub fn horizon_series<T: Lane, const B: usize>(
     zc[0] = zfun(&cc, 0);
     let izc0 = one / zc[0];
     let mut tail = Tail::new(ctx.u0().hi);
+    let cut = Tail::active::<T, B>(ctx) && ctx.f64_dd & HDD_NOTAIL == 0;
     let mut last = ks;
     for kk in 0..=ks {
         let kf = kk as f64;
@@ -558,7 +589,7 @@ pub fn horizon_series<T: Lane, const B: usize>(
         pp[kk] = psolve(ctx, &lus[kk], &lus_t[kk], &kappa, &(-r), omega);
         dp[kk] = dtau(ctx, &pp[kk], omega);
         q2[kk] = cs(&pp, &pp, kk) + cs(&mm, &mm, kk);
-        if kk == ks || (T::TAN_F64 && ctx.f64_dd & HDD_NOTAIL == 0 && tail.done(kk, [&pp[kk], &mm[kk], &aa[kk], &cc[kk]])) {
+        if kk == ks || (cut && tail.done_any(kk, [&pp[kk], &mm[kk], &aa[kk], &cc[kk]])) {
             last = kk;
             break;
         }
@@ -927,7 +958,7 @@ pub fn jvp<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], vh: &[f64], vl:
     let delta = delta_of(zh, zl);
     let mut dv = delta_of(vh, vl);
     if mutate == JVP_MUT_DELTA {
-        dv = dv * DD::from_f64(1.0 + 1e-20);
+        dv = dv + dv * DD::from_f64(1e-20);
     }
     let lus = horizon_lus(ctx, &ctx.fld(zh, zl, ctx.off_ah()), delta, par, DD::ZERO)?;
     let one_block = |b: usize| -> State<Du, B> {

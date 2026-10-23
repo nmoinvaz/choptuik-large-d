@@ -138,7 +138,7 @@ impl Lane for CDV {
 /// The odd-sector d/dtheta of hp/python/hpkernel/driver.py dmat_odd in f64 (lo parts zero), M = 8; nodes
 /// 0.005..0.1, four Taylor steps per segment; the state: centre data p1 = 0.3 sin(theta), c0 = 0.6 + 0.05 cos(2
 /// theta), the nodes integrated outward from the centre in double-double, the horizon data from the last node.
-fn synth() -> (Ctx<1>, Vec<f64>, Vec<f64>) {
+pub(crate) fn synth() -> (Ctx<1>, Vec<f64>, Vec<f64>) {
     let m = 8usize;
     let nn = 2 * m;
     let mut dh = vec![0.0; m * m];

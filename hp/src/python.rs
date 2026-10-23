@@ -45,8 +45,10 @@ trait Api: Send + Sync {
     /// The f64 Jacobian built and factored in block storage (model::jacobian_block); mutate: block::MUT_* (controls);
     /// jac_mutate: Ctx::mutate for this call (0 = none; 1, no tau derivative, is used to time the tau derivative)
     fn jacobian_block(&mut self, zh: &[f64], zl: &[f64], how: F64Jac, mutate: u8, jac_mutate: u8) -> Result<BlockLu, String>;
-    /// J v in double-double and the residual (model::jvp): (Jv hi, Jv lo, F hi, F lo)
-    fn jvp(&self, zh: &[f64], zl: &[f64], vh: &[f64], vl: &[f64], mutate: u8) -> Result<(Vec<f64>, Vec<f64>, Vec<f64>, Vec<f64>), String>;
+    /// J v in double-double and the residual (model::jvp): (Jv hi, Jv lo, F hi, F lo); cut: the series stop at
+    /// double-double resolution (model::HDD_DU_CUT)
+    #[allow(clippy::type_complexity)]
+    fn jvp(&mut self, zh: &[f64], zl: &[f64], vh: &[f64], vl: &[f64], mutate: u8, cut: bool) -> Result<(Vec<f64>, Vec<f64>, Vec<f64>, Vec<f64>), String>;
 }
 
 fn state_of<const B: usize>(sh: &[f64], sl: &[f64]) -> State<DV, B> {
@@ -184,8 +186,11 @@ impl<const B: usize> Api for Ctx<B> {
         self.mutate = 0;
         r
     }
-    fn jvp(&self, zh: &[f64], zl: &[f64], vh: &[f64], vl: &[f64], mutate: u8) -> Result<(Vec<f64>, Vec<f64>, Vec<f64>, Vec<f64>), String> {
-        model::jvp(self, zh, zl, vh, vl, true, mutate)
+    fn jvp(&mut self, zh: &[f64], zl: &[f64], vh: &[f64], vl: &[f64], mutate: u8, cut: bool) -> Result<(Vec<f64>, Vec<f64>, Vec<f64>, Vec<f64>), String> {
+        self.f64_dd = if cut { model::HDD_DU_CUT } else { 0 };
+        let r = model::jvp(self, zh, zl, vh, vl, true, mutate);
+        self.f64_dd = 0;
+        r
     }
 }
 
@@ -576,11 +581,15 @@ impl Solver {
     /// the double-double Jacobian, with v as the tangent), where J is the exact Jacobian at z. Returns (Jv_hi, Jv_lo),
     /// or with with_residual=True (Jv_hi, Jv_lo, F_hi, F_lo), F the residual at z (computed in the same pass).
     /// mutate: deliberate breakage for the controls (1 the Delta tangent scaled by 1 + 1e-20, 2 the horizon block's
-    /// state tangent dropped, 3 the phase row dropped).
-    #[pyo3(signature = (zh, zl, vh, vl, mutate=0, with_residual=false))]
+    /// state tangent dropped, 3 the phase row dropped). cut=True: the centre and horizon series stop once the
+    /// tangent terms fall below double-double resolution (2^-110 of the largest, four orders in a row) instead of
+    /// running to kc and ks; at large D (kc = 420) that makes a product several times cheaper, and it agrees with the
+    /// full product to double-double accuracy, but not bitwise. cut=False (default): bitwise the double-double
+    /// Jacobian's column for a unit vector.
+    #[pyo3(signature = (zh, zl, vh, vl, mutate=0, with_residual=false, cut=false))]
     #[allow(clippy::too_many_arguments, clippy::type_complexity)]
     fn jvp<'py>(
-        &self,
+        &mut self,
         py: Python<'py>,
         zh: PyReadonlyArray1<'py, f64>,
         zl: PyReadonlyArray1<'py, f64>,
@@ -588,11 +597,12 @@ impl Solver {
         vl: PyReadonlyArray1<'py, f64>,
         mutate: u8,
         with_residual: bool,
+        cut: bool,
     ) -> PyResult<Vec<Bound<'py, PyArray1<f64>>>> {
         let (h, l) = (slice(&zh, "zh")?, slice(&zl, "zl")?);
         let (a, b) = (slice(&vh, "vh")?, slice(&vl, "vl")?);
-        let (api, pool) = (&self.api, &self.pool);
-        let (jh, jl, fh, fl) = py.detach(|| pool.install(|| api.jvp(h, l, a, b, mutate))).map_err(PyValueError::new_err)?;
+        let (api, pool) = (&mut self.api, &self.pool);
+        let (jh, jl, fh, fl) = py.detach(|| pool.install(|| api.jvp(h, l, a, b, mutate, cut))).map_err(PyValueError::new_err)?;
         let mut out = vec![arr(py, jh), arr(py, jl)];
         if with_residual {
             out.push(arr(py, fh));
