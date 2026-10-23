@@ -397,6 +397,32 @@ What the table shows (numerical evidence):
 - **The floor at 0.7 is not fast-mode amplification:** at D = 60 it is the same at 0.75 and 0.8. Its 1.46-fold growth per
   unit of D has another source, not identified here.
 
+### 5.1 Follow-up: Newton does not converge at 0.6, but the 0.7 solution can be certified there (2026-10-23)
+
+The converged runs asked for above: the local machine's step-size pilot (T43, `hp/step_test.py`, comms 2026-10-23
+12:43 local, `hp/data/step_test/pilot/` on wip/step-test) started a continuation at D = 60 with the last node at 0.6.
+It converged at the start (floor 1.1×10⁻¹⁹, max|∂Δ/∂F| 4.9×10⁷, product 5.3×10⁻¹²; at 0.7: 1.6×10⁻²³, 8.9×10¹³,
+1.4×10⁻⁹), but no continuation step converged, down to steps of 3.4×10⁻⁴. The diagnosis there: the predictor is good
+(4.6×10⁻⁹ from the 0.7 solution cut to 0.3–0.6), the double-double Jacobian is right, but the residual at 0.6 is
+strongly nonlinear in the horizon data (a 3.3×10⁻¹⁴ move changes Jacobian entries by up to 35%, against 3×10⁻⁴ at
+0.7), and the linearisation error, divided by the near-null singular values, throws the Newton step out.
+
+The 0.7 solution, cut to 0.3–0.6, already sits at the 0.6 floor. So `hp/scan_hp.py --certify_nodes 0.3,0.4,0.5,0.6`
+steps at 0.7 and checks each converged point in the 0.6 layout without a Newton step: the residual there, max|∂Δ/∂F|
+from that layout's double-double LU, the linearised correction −y·F, and the first-order bound Σ|yᵢFᵢ|
+(`hp/data/step_test/cert_test/`, two points at D = 60.02 and 60.05, one thread on the cloud machine, about 15 s per
+check):
+
+| layout of the check | \|F\| | max\|∂Δ/∂F\| | −y·F | Σ\|yᵢFᵢ\| |
+|---|---|---|---|---|
+| 0.3–0.7 (the run's own: control) | 2.8×10⁻²³, 1.5×10⁻²³ | 8.9×10¹³, 9.0×10¹³ | +1.4×10⁻¹⁷, +3.6×10⁻¹⁸ | 7.2×10⁻⁹, 4.9×10⁻⁹ |
+| 0.3–0.6 | 1.8×10⁻¹⁹, 1.0×10⁻¹⁹ | 4.9×10⁷, 5.0×10⁷ | +2.3×10⁻¹⁶, +2.3×10⁻¹⁶ | 2.7×10⁻¹¹, 2.1×10⁻¹¹ |
+
+The control reproduces the run's own |F| and max|∂Δ/∂F|. At 0.6 the first-order bound is 230–270 times smaller than
+at 0.7, the gain section 5 predicted from the products. Both bounds are first-order (exact y and F assumed, second-order
+terms dropped): worst cases over the sign of F, not enclosures. The linearised corrections themselves are 10⁻¹⁶ or
+less in both layouts.
+
 ## 6. What limits the double-double solver, and how that extrapolates
 
 - **Sensitivity: a power law from the high harmonics** (`sens_fit.py`, `lin_ladder.py`). The free-wave obstruction of

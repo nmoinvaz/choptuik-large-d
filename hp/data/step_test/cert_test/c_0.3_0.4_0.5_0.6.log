@@ -1,0 +1,14 @@
+(re-)converged start D=60.001952 M=32 nodes=[0.3, 0.4, 0.5, 0.6, 0.7]: Delta 1.8098842580017149 ok True (26s)
+history point D=59.865: ok True, Delta 1.8102500228650358
+history point D=59.882578: ok True, Delta 1.8102029859479660
+history point D=59.900156: ok True, Delta 1.8101559757078058
+history point D=59.922129: ok True, Delta 1.8100972490514837
+history point D=59.949595: ok True, Delta 1.8100238998997300
+history point D=59.963328: ok True, Delta 1.8099872496740668
+history point D=59.980494: ok True, Delta 1.8099414603654598
+   certified at nodes [0.3, 0.4, 0.5, 0.6]: |F| 1.8e-19, dDelta/dF max 4.9e+07, dDelta_est +2.3e-16, bound sum|y F| 2.7e-11 (here: 2.5e-09 as |F| x max dDelta/dF)
+D=60.0235 Delta=1.8098269833151448+1.09e-16 its 8 |F| 2.8e-23 59s piv 1.6e-05..1.5e+07 dDelta/dF max 8.9e+13 tails 1e-77 1e-40
+   kc 220 -> 154 (residual and Jacobian bitwise unchanged)
+   certified at nodes [0.3, 0.4, 0.5, 0.6]: |F| 1.0e-19, dDelta/dF max 5.0e+07, dDelta_est +2.3e-16, bound sum|y F| 2.1e-11 (here: 1.4e-09 as |F| x max dDelta/dF)
+D=60.0503 Delta=1.8097554456923564+1.03e-16 its 13 |F| 1.5e-23 41s piv 2.1e-05..1.6e+07 dDelta/dF max 9.0e+13 tails 2e-55 6e-41
+scan ended: max_points 2 (2 converged points, D = 60.050327)
