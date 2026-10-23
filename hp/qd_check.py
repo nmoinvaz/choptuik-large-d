@@ -4,7 +4,7 @@
     cd hp && python3 qd_check.py mpmath [--n=2000] [--seed=1] [--dump=DIR] [--mutate=ID]
     cd hp && python3 qd_check.py backends [--n=4000] [--only=avx512,avx2,portable] [--fresh] [--out=DIR]
 
-mpmath: the Rust test qd_dump (built with -C target-cpu=native into hp/target/qd_native) writes inputs and scalar
+mpmath: the Rust test qd_dump (built for AVX-512, as the backends check's avx512 build, into hp/target/qd_native) writes inputs and scalar
   results of every operation and input category, of the dot accumulator, and of decimal parsing and printing; this
   script recomputes every reference with mpmath (working precision 3000 bits, so that every sum of parts is exact
   even under deep cancellation; the 120 digits asked for are a lower bound) and reports, per operation and
@@ -16,7 +16,8 @@ mpmath: the Rust test qd_dump (built with -C target-cpu=native into hp/target/qd
   (qd::mutate in hp/src/qd.rs, e.g. 5: sloppy mul drops the error of a0 b2; 14: parse truncates its last part), so
   this check must then fail (exit 1).
 backends: runs `cargo test --release --lib qd_` (the accuracy, agreement and decimal tests) with the AVX-512, the
-  AVX2 and the portable v8 backend (RUSTFLAGS "-C target-cpu=native", "-C target-feature=+avx2,+fma", none; build
+  AVX2 and the portable v8 backend (RUSTFLAGS "-C target-feature=+avx512f,+avx2,+fma", "-C target-feature=+avx2,+fma",
+  none: explicit features, so that a build does not depend on the host it was made on; build
   directories hp/target/qd_<isa>); every build must pass, and the digests of all scalar results must agree (each
   build also checks that its 8-lane results equal the scalar ones bit for bit). Exit 1 otherwise. Each backend's
   result is written to DIR/<isa>.txt (default data/quad_double/backends) as soon as it is known, and a rerun skips
@@ -36,7 +37,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 mp.mp.prec = 3000
 U = mp.mpf(2) ** -209
 TINY = 16 * mp.mpf(2) ** -1074
-BUILDS = {"avx512": "-C target-cpu=native", "avx2": "-C target-feature=+avx2,+fma", "portable": ""}
+BUILDS = {"avx512": "-C target-feature=+avx512f,+avx2,+fma", "avx2": "-C target-feature=+avx2,+fma", "portable": ""}
 
 KIND = {"sloppy add": "add", "accurate add": "add", "qd + f64": "add", "qd + dd": "add", "sloppy mul": "mul",
         "accurate mul": "mul", "qd x f64": "mul", "qd x dd": "mul", "sqr": "sqr", "sloppy div": "div",
