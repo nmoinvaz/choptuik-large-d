@@ -300,7 +300,8 @@ def main():
                     h, l, m = load(p_)
                     s0 = make_solver(D_, m["M"], nodes=old, kt=a.kt, kc=kc, ks=ks, threads=a.threads)
                     s0.set_segs(m.get("segs") or s0.plan(h, l, a.tol_step, a.hmax))
-                    zr, zrl = renode(s0, h, l, old, new, m["M"])
+                    # Taylor steps of 0.001: renode's default 0.004 blows up toward a node at 0.9 at M = 160
+                    zr, zrl = renode(s0, h, l, old, new, m["M"], h=0.001)
                     res.append((m["M"], np.asarray(zr) + np.asarray(zrl)))
                 okw, rw2, pw2 = solve(Dt, res[0][0], [("re-noded", res[0][1])], plan_of(res[0][1], res[0][0], Dt))
                 okn, rn2, pn2 = (solve(Dt, res[1][0], [("re-noded", res[1][1])], plan_of(res[1][1], res[1][0], Dt)) if okw

@@ -7,7 +7,7 @@ storage of the mixed-precision Newton system (notes/HIGH_M.md).
     cd hp && python3 highm_check.py block [--Ms=16,48,80,128] [--variants=f64x4,f64x1,dd4] [--mutate=pivot|link] [--expect_fail] [--json=F]
     cd hp && python3 highm_check.py controls
     cd hp && python3 highm_check.py converge [--M=80] [--json=F]
-    cd hp && python3 highm_check.py lift --M=160 [--start=STATE.npz] [--plan=start|source] [--tol1=1e-14] [--no_replan] [--tol=1e-28] [--out=F.jsonl] [--tag=highm]
+    cd hp && python3 highm_check.py lift --M=160 [--start=STATE.npz] [--nodes=x0,x1,...] [--plan=start|source] [--tol1=1e-14] [--no_replan] [--tol=1e-28] [--out=F.jsonl] [--tag=highm]
     cd hp && python3 highm_check.py profile --M=256 [--start=STATE.npz] [--reps=2] [--out=F.jsonl]
 
 ref: bit-identity at M <= 128 of everything the kernel computes there (residual, the dense double-double Newton step
@@ -34,7 +34,8 @@ lift: a converged state (--start, default hp/data/lowD_states/lowDv_D3.7000_M80.
   Pass 2 on the plan of the pass-1 state, which needs 2-4 times fewer steps (the resampled state's new top harmonics
   are aliasing products that the tau-derivative amplifies; near the solution they are small), to |F| <= --tol (1e-28);
   if the re-planned residual is not small, pass 1 continues instead. --no_replan: one pass on the start's plan to --tol.
-  Both passes run through lowD_dd.solve_point (records in <out>_points.jsonl; states
+  --nodes: re-node the start at its own M first (driver.renode with Taylor steps of 0.001; the default 0.004 blows up
+  toward a node at 0.9 at M = 160). Both passes run through lowD_dd.solve_point (records in <out>_points.jsonl; states
   hp/data/lowD_states/<tag>_p1_D<D>_M<M>.npz and <tag>_D<D>_M<M>.npz with their plans; every accepted Newton step
   checkpointed, so a rerun of the same command resumes). Then one Newton step at the solution is timed by part
   (residual, Jacobian, block factorization, and the Jacobian without the tau derivative). The record in --out
@@ -341,6 +342,20 @@ def lift(opts):
     os.makedirs(os.path.dirname(outp), exist_ok=True)
     zh, zl, m = load(start)
     D, Mo, nodes = m["D"], m["M"], list(m["nodes"])
+    renoded = None
+    if opts.get("nodes"):
+        new = [float(v) for v in str(opts["nodes"]).split(",")]
+        if new != nodes:
+            # re-node the start at its own M (driver.renode: the new node states from the old solution by Taylor
+            # integration from the nearest old node below, or the centre series); h = 0.001: the default 0.004 blows up
+            # toward a node at 0.9 at M = 160 (|F| 8e9)
+            from hpkernel.driver import renode
+            s0 = make_solver(D, Mo, nodes=nodes, kt=m["kt"], kc=m["kc"], ks=m["ks"], threads=threads)
+            s0.set_segs(m.get("segs") or s0.plan(zh, zl, 1e-30, 0.05))
+            zh, zl = renode(s0, zh, zl, nodes, new, Mo, h=float(opts.get("renode_h", 0.001)))
+            zh, zl = np.asarray(zh), np.asarray(zl)
+            renoded = f"{nodes[0]}..{nodes[-1]} ({len(nodes)}) -> {new[0]}..{new[-1]} ({len(new)})"
+            nodes = new
     if os.path.exists(outp) and any(json.loads(ln).get("M") == M and json.loads(ln).get("tag", "highm") == tag
                                     for ln in open(outp) if ln.strip()):
         print(f"D {D} M {M}: already in {outp}")
@@ -399,7 +414,7 @@ def lift(opts):
         s.newton_mixed(zh, zl, jac_mutate=1)
         t_nodtau = s.lu_info()[2]
     rec = dict(D=D, M=M, N=s.size, tag=tag, Delta=fin["Delta"], Delta_lo=fin["Delta_lo"], F=fin["F"], converged=True,
-               start=os.path.basename(start), start_M=Mo, nodes=nodes, kt=m["kt"], kc=m["kc"], ks=m["ks"], tol_step=1e-30,
+               start=os.path.basename(start), start_M=Mo, renoded=renoded, nodes=nodes, kt=m["kt"], kc=m["kc"], ks=m["ks"], tol_step=1e-30,
                hmax=0.05, steps=fin["steps"], steps_pass1=passes[0]["steps"] if len(passes) > 1 else None,
                its=[p["its"] for p in passes], tail_c=fin["tail_c"], tail_h=fin["tail_h"],
                t_its=[p.get("t_its") for p in passes], s_residual=round(t_res, 2), s_newton_step=round(t_nm, 2),
