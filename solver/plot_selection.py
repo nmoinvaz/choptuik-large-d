@@ -8,14 +8,14 @@
 2. The truncated route: |w/w_inf - 1| for M = 1, 3, 5, 7 harmonics (hier.py, nested.py, zero_M1.py; M = 7 from
    m7_outer.py, proof/B_tail_M7.md) and the M = 7 range predicted from M <= 5 in proof/B_tail.md, on a log scale; the
    sign alternates.
-3. The effective exponent c of tau_k ~ -c/(k x0^k) at w_inf, from three consecutive orders: it tends to 1, a simple zero,
+3. The effective exponent c of tau_k ~ -c/(k x0^k) at w_inf, from two consecutive orders: it tends to 1, a simple zero,
    which is what makes the arg crossings the asymptotically correct estimator.
 
-The arg crossings (k = 4..12) and the ratio estimates (k = 9..12) are recomputed from inner_amp/scan25phys/ (sigma_1..12
-at w/w_inf = 0.99, 1.00, 1.01, quadratic interpolation); the k = 5..8 ratio estimates come from the wider scans
-(scan15phys/, scan17phys/), the Pade ranges from the zero.txt files of the K 15 ... K 25 scans, the factored-series
-values from solver/proof/entire_cert.py, the effective exponents from the K 17 ... K 25 runs (README, "Where that leaves
-it").
+The arg crossings (k = 4..14), the ratio estimates (k = 9..14) and the effective exponents (k = 6..14, at w_inf) are
+recomputed from inner_amp/scan29J1000/ (sigma_1..14 at w/w_inf = 0.99, 1.00, 1.01, the 960-bit files; quadratic
+interpolation); the k = 5..8 ratio estimates come from the wider scans (scan15phys/, scan17phys/), the Pade ranges from
+the zero.txt files of the K 15 ... K 25 scans (k <= 12) and notes/PLANTED_SELECTION.md sections 5.1 and 6.3
+(k = 13, 14), the factored-series values from solver/proof/entire_cert.py (k <= 12) and the same sections (k = 13, 14).
 
     python3 plot_selection.py [-o selection.svg]
 """
@@ -38,21 +38,36 @@ mp.mp.dps = 50
 
 # from below: ratio tau_{k-1}/tau_k real (exponent free); k = 5..8 from the wide scans, 9..12 recomputed below
 RATIO_WIDE = {5: 0.9821, 6: 0.9803, 7: 0.9913, 8: 0.9946}
+# k = 14 (notes/PLANTED_SELECTION.md section 6.3): central Pade [3/10]-[9/4] and the factored series (production kbar)
+PADE14 = (0.99995, 1.00013)
+G14 = 1.000027
 # Pade approximants of (ln S_1)' with k coefficients: range of the Im A_0 = 0 crossings over the consistent approximants
+# (k = 13, 14: the central ones, notes/PLANTED_SELECTION.md sections 5.1 and 6.3)
 PADE = {7: (0.981, 0.991), 8: (0.987, 0.998), 9: (0.992, 0.998), 10: (0.9995, 1.0007), 11: (0.9992, 1.0008),
-        12: (0.99987, 0.99991)}
-# factored series G = exp(-kbar A^2) S_1 truncated at order K (solver/proof/entire_cert.py)
-ENTIRE = {9: 0.99767, 10: 1.00035, 11: 0.99987, 12: 0.99988}
+        12: (0.99987, 0.99991), 13: (0.99980, 0.99990), 14: PADE14}
+# factored series G = exp(-kbar A^2) S_1 truncated at order K (solver/proof/entire_cert.py; k = 13, 14: the same sections)
+ENTIRE = {9: 0.99767, 10: 1.00035, 11: 0.99987, 12: 0.99988, 13: 0.999995, 14: G14}
 # truncated route: zero of the M-harmonic selection (zero_M1.py, nested.py, hier.py --schur)
 TRUNC = {1: 0.776994, 3: 1.015603, 5: 0.999228, 7: 1.000022}  # M = 7: proof/B_tail_M7.md
 M7_PRED = (0.99997, 1.00017)          # proof/B_tail.md, reconcile.py
-# effective exponent Re c at w_inf from orders k-2..k
-EXPONENT = {6: 1.148, 7: 1.177, 8: 1.077, 9: 1.052, 10: 1.021, 11: 1.017, 12: 1.013}
+SCAN = os.path.join(HERE, "inner_amp", "scan29J1000")
+SCAN_FILES = "*_p960.json"              # the directory also holds a 1280-bit pilot at w_inf (bitwise the same sigma_k)
 
 
-def crossings(scandir):
+def exponents(scandir, pattern="*.json", wf=1.0):
+    """effective exponent c of tau_k = -c/(k x0^k) at w/w_inf = wf, with x0 = (k-1) tau_{k-1}/(k tau_k) from orders
+    k-1, k (this reproduces the README table's column and the earlier hard-coded k = 6..12 values)"""
+    for fn in sorted(glob.glob(os.path.join(scandir, pattern))):
+        r = json.load(open(fn))
+        if abs(r["wf"] - wf) < 1e-9:
+            t = taus([mp.mpc(mp.mpf(a), mp.mpf(b)) for a, b in r["sigma_str"]])
+            return {k: complex(-k * t[k] * ((k - 1) * t[k - 1] / (k * t[k])) ** k) for k in range(6, len(t))}
+    raise FileNotFoundError(wf)
+
+
+def crossings(scandir, pattern="*.json"):
     rows = []
-    for fn in sorted(glob.glob(os.path.join(scandir, "*.json"))):
+    for fn in sorted(glob.glob(os.path.join(scandir, pattern))):
         r = json.load(open(fn))
         sig = [mp.mpc(mp.mpf(a), mp.mpf(b)) for a, b in r["sigma_str"]]
         rows.append((r["wf"], taus(sig)))
@@ -114,8 +129,10 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("-o", default=os.path.join(HERE, "selection.svg"))
     args = ap.parse_args()
-    above, below9 = crossings(os.path.join(HERE, "inner_amp", "scan25phys"))
+    above, below9 = crossings(SCAN, SCAN_FILES)
     below = {**RATIO_WIDE, **below9}
+    expo = {k: c.real for k, c in exponents(SCAN, SCAN_FILES).items()}
+    kmax = max(above)
     cA, cB, cP, cE = SERIES[0], SERIES[1], SERIES[2], SERIES[3]
     cT = SERIES[4]
 
@@ -126,8 +143,8 @@ def main():
              "(the line at 1); hover a mark for its value", size=11)
 
     # panel 1
-    p = Axes(svg, 78, 120, 790, 260, (3.5, 12.6), (0.976, 1.022),
-             [(k, str(k)) for k in range(4, 13)], [(v / 100, f"{v / 100:.2f}") for v in range(98, 103)],
+    p = Axes(svg, 78, 120, 790, 260, (3.5, kmax + 0.6), (0.976, 1.022),
+             [(k, str(k)) for k in range(4, kmax + 1)], [(v / 100, f"{v / 100:.2f}") for v in range(98, 103)],
              "Order by order: two estimates close in from opposite sides", "order k of the amplitude expansion in A²",
              "ω*/ω∞")
     ks = sorted(set(above) & set(below))
@@ -152,8 +169,9 @@ def main():
     for k, v in ENTIRE.items():
         square(svg, p.sx(k - 0.12), p.sy(v), cE, f"factored series to order {k}: ω/ω∞ = {v}")
     svg.text(p.sx(4) + 10, p.sy(above[4]) + 4, f"{above[4]:.4f}", size=10, fill=INK)
-    svg.text(p.sx(12.4), p.sy(1.0) + 30, "bracket at k = 12:", size=10, fill=INK, anchor="end")
-    svg.text(p.sx(12.4), p.sy(1.0) + 44, f"{below[12]:.5f} – {above[12]:.5f}", size=10, fill=INK, anchor="end")
+    svg.text(p.sx(kmax + 0.4), p.sy(1.0) + 30, f"bracket at k = {kmax}:", size=10, fill=INK, anchor="end")
+    svg.text(p.sx(kmax + 0.4), p.sy(1.0) + 44, f"{below[kmax]:.5f} – {above[kmax]:.5f}", size=10, fill=INK,
+             anchor="end")
     svg.text(p.sx(6.2), p.sy(1.016), "from above: simple-zero estimate (arg τ_k = π)", size=10, fill=INK)
     svg.text(p.sx(6.2), p.sy(0.979), "from below: exponent left free (ratio of τ_k−1, τ_k)", size=10, fill=INK)
     p.key(lambda x, y: marker(svg, x, y, cA, "from above"), "from above (simple zero)")
@@ -179,19 +197,21 @@ def main():
     svg.text(x7 - 9, q.sy(abs(hi - 1)) + 4, "predicted", size=10, fill=INK, anchor="end")
 
     # panel 3: effective exponent
-    r3 = Axes(svg, 528, yt, 340, 190, (5.5, 12.5), (0.95, 1.2), [(k, str(k)) for k in range(6, 13)],
+    r3 = Axes(svg, 528, yt, 340, 190, (5.5, kmax + 0.5), (0.95, 1.2), [(k, str(k)) for k in range(6, kmax + 1)],
               [(v / 100, f"{v / 100:.2f}") for v in range(95, 121, 5)],
               "Is the zero simple? The effective exponent tends to 1", "last order used, k", "effective exponent, Re c")
     svg.line(r3.px, r3.sy(1.0), r3.px + r3.pw, r3.sy(1.0), INK_SOFT, width=1.2, dash="6 4")
     svg.text(r3.px + r3.pw - 4, r3.sy(1.0) + 14, "simple zero: c = 1", size=10, anchor="end")
-    pts = [(r3.sx(k), r3.sy(v)) for k, v in EXPONENT.items()]
+    pts = [(r3.sx(k), r3.sy(v)) for k, v in expo.items()]
     svg.path(pts, cA, width=2)
-    for (k, v), (x, y) in zip(EXPONENT.items(), pts):
-        marker(svg, x, y, cA, f"orders {k - 2}–{k}: Re c = {v}")
+    for (k, v), (x, y) in zip(expo.items(), pts):
+        marker(svg, x, y, cA, f"orders {k - 1}–{k}: Re c = {v:.3f}")
 
     H = yt + 190 + 52
     open(args.o, "w").write(svg.finish(H))
     print("wrote", args.o, {k: round(v, 6) for k, v in above.items()}, {k: round(v, 5) for k, v in below.items()})
+    print("effective exponent c at w_inf:",
+          {k: f"{c.real:.3f}{c.imag:+.3f}i" for k, c in exponents(SCAN, SCAN_FILES).items()})
 
 
 if __name__ == "__main__":

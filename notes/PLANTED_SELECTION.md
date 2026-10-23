@@ -586,3 +586,300 @@ point: the σ₁₄ values and the README's order-14 projection. The procedure i
    called decisive only if the other prediction is farther from arg₁₄ than three times the model's own error, judged
    by the same model through k − 2, k − 1 predicting k on the real data (largest error over k = 11–13, for the
    hypothesis in question) and through k = 12, 13 predicting k = 14 on the 28 arc plants, given their true ω_t.
+
+The stages are `converge`, `plants`, `real`, `ring`, `calib`, `recomplete`, `project` (section 6.0) and `posthoc`
+(section 6.8, added after those runs), each run as `nice -n 10 python3 planted_k14.py STAGE` from `solver/inner_amp/`.
+Every number below is printed by one of them and stored in `planted_checks_k14.json`.
+
+### 6.1 σ₁₄ is converged
+
+The local machine's values are the files' values, digit for digit:
+
+| wf | σ₁₄ | err14 (relative) | σ₀…σ₁₃ against `scan27J1000p960` | ratio law: \|Δ²\| at k = 12 |
+|---|---|---|---|---|
+| 0.99 | +5.1349926985882716566×10⁻¹² − 6.1125424732211931245×10⁻¹¹i | 1.64×10⁻²³ (2.7×10⁻¹³) | bitwise equal, 14/14 | 0.0115 |
+| 1.00 | +1.8162676402228000068×10⁻¹² − 6.0171529747632837488×10⁻¹¹i | 1.81×10⁻²³ (3.0×10⁻¹³) | bitwise equal, 14/14 | 0.0116 |
+| 1.01 | −1.3887266863423045505×10⁻¹² − 5.9052712130189368330×10⁻¹¹i | 2.00×10⁻²³ (3.4×10⁻¹³) | bitwise equal, 14/14 | 0.0118 |
+
+- **All four criteria of section 6.0 pass.** err14 is 3×10⁻¹³ relative, against the 10⁻¹⁰ that section 3.6 asks for.
+  σ₀…σ₁₃ and their sigma_err are bitwise those of `scan27J1000p960`. The 1280-bit pilot equals the 960-bit run at wf
+  1.00 in every printed digit, σ₁…σ₁₄. σ₁₄ continues the ratio law: the second differences of σ_k/σ_{k+1} for
+  k = 7–12 are 0.002–0.048 and fall to 0.012 at k = 12. Each criterion has a mutation (`--mutate=err|low|pilot|ratiolaw`)
+  that makes it fire.
+- **What err14 is.** It is the late-order fit's plateau step, |S(Mf) − S(Mf − 1)| at fixed J = 1000: an estimate of the
+  fit-truncation error, not a bound. No second J was run for σ₁₄. The pilot tests arithmetic precision only. The
+  multiplier fits S₁^(k), k = 3–29, choose the same Mf with the same plateau step at 960 and 1280 bits. The pilot's own
+  sigma_err is inf at every k, an artifact: its k = 1 fit has residual exactly 0 at every Mf, so `pick_plateau` finds no
+  falling residual. "err14 under 2×10⁻²³" therefore refers to the 960-bit runs.
+- **Spread in wf.** σ₁₄ changes by 5.7% of itself between the nodes, as σ₁₂ and σ₁₃ do (5.4%, 5.5%). Its second
+  difference over its first is 0.059 (0.056, 0.057 for k = 12, 13). err14 is 6×10⁻¹² of that change.
+
+### 6.2 The pipeline on plants first
+
+These ran before the real data, as section 6.0 requires. 51 plants: N1 (7), N2 (2), the 28 arc plants, C-EXP and the 13
+REFIT plants, at K = 12, 13, 14.
+
+- **The plants are the same functions.** Their K = 12 and 13 estimates equal the stored records to 5.5×10⁻¹³ at worst.
+- **N1 passes, 7/7.** A lone simple zero is recovered at K = 14 by arg, ratio, Padé and G to 3.5×10⁻⁷ at worst.
+  Graded against ω_t + 0.002 it fails, as it must.
+- **N2 passes, 2/2.** No estimator prints a number.
+
+### 6.3 The real estimates at K = 14
+
+The record "N0 scan29J1000" equals "N0 scan27J1000p960" at K = 12 and 13 to the last bit. At K = 14:
+
+| estimator | K = 14 | K = 13 | K = 12 |
+|---|---|---|---|
+| arg crossing | 1.000026 | 1.000046 | 1.000109 |
+| ratio | 0.999769 | 0.999284 | 0.999152 |
+| central Padé | [3/10]–[9/4]: 0.99995–1.00013 (mid 1.000043) | [3/9]–[8/4]: 0.99980–0.99990 (mid 0.999847) | 0.99987–0.99991 |
+| G (production κ̄) | 1.000027 | 0.999995 | 0.999883 |
+| Aitken, k − 2 … k | 1.000017 | 0.999886 | 0.999559 |
+| effective exponent c at ω∞ | 1.000 − 0.004i | 1.004 − 0.010i | 1.013 − 0.012i |
+
+- **The arg crossings keep falling monotonically:** 1.000299, 1.000197, 1.000109, 1.000046, 1.000026 for k = 10–14.
+  Their distance from 1 shrank by ×0.42, then ×0.57.
+- **The simple-zero law predicts τ₁₄ from τ₁₂, τ₁₃ to 4.9–6.3×10⁻⁴.** It predicted τ₁₃ to 7.2–8.0×10⁻⁴.
+- **The effective exponent reaches 1.** c = −kτ_k x₀^k with x₀ = (k − 1)τ_{k−1}/(kτ_k) reproduces the README's column
+  exactly. Despite the README's "three consecutive orders", it uses two.
+- **The numerical uncertainty is negligible.** Under noise of size sigma_err on every σ_k (20 seeds), arg₁₄ moves by
+  at most 5×10⁻¹⁰.
+- **Detectors.** D-ratio and D-ratiolaw fire as at K = 12 and 13 (section 3.8). D-arg, D-padé and D-G stay silent.
+- **D-bracket fires on the real data for the first time.** Per the protocol it was diagnosed before going on:
+  - The cause: G₁₄ lies 1.2×10⁻⁶ above arg₁₄, and the Padé mid 1.7×10⁻⁵ above it. At K = 12 they were 2.2×10⁻⁴ below.
+  - It is not a sign of a ring. On the ring-free plants at K = 14 it fires 15 times out of 29 (every mirror and β = 2
+    plant, and C-EXP), always for this reason.
+  - The detector assumes the arg crossing is the top edge of the bracket. It stops discriminating once arg is as close
+    to the zero as the other estimators' own errors.
+  - It was not changed. Section 6.4 compares against the real data's detectors, so it no longer rejects a completion
+    by itself.
+- **The mutation controls fire.** σ₁₄ → −σ₁₄ at wf 1.00 fires D-arg, D-padé and D-G. σ₁₄ × (1 + 10⁻³) fires D-padé
+  and D-G. Each moves the estimates by about 10⁻².
+
+### 6.4 The ring test: what each K = 13 completion predicted for σ₁₄
+
+Every completion of section 5.3 was regenerated, and its zero equals the stored one to 10⁻⁹. Its K = 13 estimates are
+the real ones exactly. "Beyond the real data's" lists the detectors that fire on it at K = 14 but not on the real data
+(the section 5.3 rule).
+
+| completion (from σ₀…σ₁₃) | its zero | zeros in \|x\| < 7.3 / 12 | σ₁₄ rel. error | τ₁₄ rel. error | its arg₁₄ | beyond the real data's | survives |
+|---|---|---|---|---|---|---|---|
+| simple-zero law from τ₁₂, τ₁₃ | — | — | — | 4.9–6.3×10⁻⁴ | — | — | — |
+| C13-W1–3, ratio-law tails | 0.99761–0.99793 | 7 / 13 | 1.7–3.2×10⁻³ | 2.3–3.9 | none | D-arg, D-padé, D-G | no |
+| C13-ARC arc | 1.000180 | 3 / 11 | 2.7–3.5×10⁻⁴ | 0.35–0.40 | 1.0202 | D-arg, D-padé, D-G | no |
+| C13-ARC chord | 1.000380 | 5 / 12 | 2.7–4.1×10⁻⁴ | 0.35–0.48 | 1.0048 | D-arg, D-padé, D-G | no |
+| C13-ARC mirror | 1.000533 | 5 / 12 | 5.2–6.9×10⁻⁴ | 0.67–0.80 | 0.9857 | D-padé, D-G | no |
+| C13-ARC β = 2 | 0.999754 | 4 / 12 | 2.8–4.2×10⁻⁴ | 0.36–0.49 | 1.0175 | D-arg, D-padé, D-G | no |
+| C13-EXP, Borel–Padé [6/7] (ring-free) | 0.999982 | 0 / 1 | 1.3–1.4×10⁻⁷ | 1.6–1.7×10⁻⁴ | 1.000025 | none | **yes** |
+| *post-hoc* Borel–Padé [5/8] (ring-free, section 6.6) | 0.999957 | — / 1 | 3.6–6.1×10⁻⁷ | 4.7–7.1×10⁻⁴ | 1.000034 | none | **yes** |
+
+**No ring survives, and the ring-free sums do.**
+
+- Every ring completion predicted a τ₁₄ off by 35% to 390%, and two or three frozen detectors reject it.
+- The [6/7] Borel–Padé sum, the one ring-free completion of section 5.3, predicted σ₁₄ to 1.3×10⁻⁷. Its τ₁₄ is closer
+  than the simple-zero law's, and its arg₁₄ differs from the real one by 1.1×10⁻⁶.
+- The [5/8] sum, which section 5 did not examine (section 6.6), survives too.
+
+So σ₁₄ has done to the second generation of rings what σ₁₃ did to the first.
+
+### 6.5 Calibration at K = 14
+
+As section 5.2, one order up. Each family's error range (estimate − ω_t, × 10⁴), and the zero that range implies for the
+real K = 14 estimate:
+
+| plants | arg: error → zero | G: error → zero | Padé mid: error → zero |
+|---|---|---|---|
+| P-ARC (7) | +0.52 … +0.64 → 0.999962–0.999974 | −0.27 … −0.19 → 1.000047–1.000054 | −2.19 … +0.05 → 1.000038–1.000262 |
+| chord (7) | +0.26 … +0.33 → 0.999993–1.000001 | −0.19 … −0.14 → 1.000042–1.000046 | −0.89 … −0.69 → 1.000112–1.000132 |
+| mirror (7) | −0.22 … −0.14 → 1.000040–1.000048 | −0.17 … −0.12 → 1.000039–1.000045 | +0.62 … +0.74 → 0.999969–0.999981 |
+| β = 2 (7) | +0.70 … +0.74 → 0.999952–0.999956 | −0.44 … −0.35 → 1.000062–1.000071 | +1.25 … +2.54 → 0.999789–0.999918 |
+| **all 28 arc plants** | **−0.22 … +0.74 → 0.999952–1.000048** | **−0.44 … −0.12 → 1.000039–1.000071** | −2.19 … +2.54 → 0.999789–1.000262 |
+| C-EXP (the K = 12 completion) | −0.22 → 1.000048 | +0.78 → 0.999949 | +2.83 → 0.999760 |
+| REFIT, residual ≤ 10⁻⁴ (5) | +0.52 … +0.68 → 0.999958–0.999975 | −0.28 … −0.17 → 1.000044–1.000056 | −0.06 … +5.16 → 0.999527–1.000049 |
+
+- **The same calibration at K = 13 from the new records reproduces section 5.2.** It gives arg 0.999916–0.999992 and
+  G 0.999920–0.999964.
+- **The calibrated arg and G overlap at 1.000039–1.000048 at K = 14.** At K = 13 they overlapped at 0.99992–0.99996.
+  The two ranges are disjoint. Moving one order up shifted the calibrated zero by 8×10⁻⁵, more than either range is
+  wide.
+- **G's error changed sign on every arc plant.** It was +0.31 … +0.75×10⁻⁴ at K = 13 and is −0.44 … −0.12×10⁻⁴ at
+  K = 14. The arg errors shrank by about half, and the mirrored arc's turned negative again, as at K = 12.
+- **The ratio and Aitken estimates still do not calibrate.** The ratio estimate is 4–12×10⁻⁴ low on every plant.
+  Aitken errs on β = 2 by up to 4.8×10⁻³ either way.
+
+### 6.6 The next generation of rings, and the ring-free completions at K = 14
+
+The section 5.3 recipes glued at σ₁₄ (tail from k = 15), with zeros counted at wf = 1.00. Each function reproduces
+σ₀…σ₁₄ exactly (the Borel–Padé sums to 10⁻⁴⁶), so the real estimates at K ≤ 14 are its estimates. The last column is the
+real arg₁₄ minus the function's zero.
+
+| completion (from σ₀…σ₁₄) | zero at | zeros in \|x\| < 7.3 / 12 / 16 | type rule (max \|t\|) | arg₁₄ error |
+|---|---|---|---|---|
+| ratio-law tails, windows k = 6–13, 8–13, 9–13 | 0.998876, 0.999218, 0.999343 | 7 / 14 / — | — | +6.8 … +11.5×10⁻⁴ |
+| best-fit arc tails, four shapes (L2 floors 2.2–6.3×10⁻⁴) | 1.000097 (β = 2), 1.000223 (mirror), 1.000313 (arc), 1.000353 (chord) | 4–6 / 12–13 / — | — | −0.7 … −3.3×10⁻⁴ |
+| Borel–Padé [3/11] | 1.000056 | 0 / 8 / 12 | passes (1.58) | −0.29×10⁻⁴ |
+| Borel–Padé [4/10] | 0.999991 | 0 / 4 / 10 | passes (1.64) | +0.35×10⁻⁴ |
+| **Borel–Padé [5/9]** (ring-free) | **0.999983** | 0 / 1 / 8 | passes (1.64) | +0.43×10⁻⁴ |
+| **Borel–Padé [6/8]**, the recipe's [6/(K − 6)] (ring-free) | **0.999993** | 0 / 1 / 7 | passes (1.66) | +0.33×10⁻⁴ |
+| Borel–Padé [7/7] | 0.999993 | 0 / 1 / 7 | passes (1.66) | +0.33×10⁻⁴ |
+
+- **The ratio-law and arc completions again carry rings,** now of 12–14 zeros. They will show at k = 15.
+- **[3/11] and [4/10] pass the type rule but carry rings** of 8 and 4 zeros inside |x| < 12.
+- **[6/8] and [7/7] are the same function.** [6/8] is six exponentials on the arc, t = 0.74 + 0.14i … 1.30 + 1.03i,
+  plus two spurious poles with residues 2.7×10⁻⁷ (t ≈ 0) and 7.8×10⁻⁹ (t = 0.44 − 0.96i). [7/7] carries the t ≈ 0
+  term as its constant.
+- **[5/9] has five poles along the same arc and one at 0.749 + 0.005i** (residue 3.5×10⁻³), plus a cluster of three
+  poles at |t| < 0.01 (residues 3×10⁻³ each).
+- **So the ring-free exact completions at K = 14 that pass the frozen type rule put the zero at 0.999983 and
+  0.999993.** Against them the real K = 14 estimates err by: arg +0.33 to +0.43×10⁻⁴, G +0.34 to +0.44×10⁻⁴, Padé mid
+  +0.50 to +0.60×10⁻⁴.
+- **A discrepancy with section 5.3.** The same scan at K = 13 shows that [6/7] was not the only ring-free sum passing
+  the type rule. [5/8] (max |t| 1.61, one zero in |x| < 12) puts the zero at 0.999957. [4/9] (1.000002) and [3/10]
+  (1.000154) pass the type rule but have 3 and 7 zeros in |x| < 12. Section 5.3 examined only the recipe's
+  [6/(K − 6)].
+
+### 6.7 The README's order-14 projection
+
+The model est_k = ω* + c r^k, through the arg crossings at k = 12 and 13, predicted these values of arg₁₄ − 1:
+
+| zero at | predicted arg₁₄ − 1 | measured − predicted | same model's misses at k = 11, 12, 13 (real data) |
+|---|---|---|---|
+| 1 | +1.92×10⁻⁵ | +0.68×10⁻⁵ | +4.0, −2.1, −1.4×10⁻⁵ |
+| 0.99998 | +1.36×10⁻⁵ | +1.25×10⁻⁵ | +4.4, −1.9, −1.1×10⁻⁵ |
+| 0.99995 | +0.77×10⁻⁵ | +1.83×10⁻⁵ | +5.0, −1.6, −0.6×10⁻⁵ |
+| 0.99992 | +0.38×10⁻⁵ | +2.23×10⁻⁵ | +5.6, −1.3, −0.3×10⁻⁵ |
+
+**The measured arg₁₄ − 1 is +2.61×10⁻⁵.** It lies above every prediction, nearest the one for a zero at 1.
+
+- **It favours a zero at 1 over the K = 13 band, but not decisively.** The disfavoured predictions lie 1.25×10⁻⁵ away or
+  more. Section 6.0's criterion asks for three times the model's own error. That error is at least 1.4×10⁻⁵ (the
+  model's k = 13 miss for a zero at 1) and at most 8.3×10⁻⁵ (its largest miss on the 28 arc plants, given their true
+  ω_t). Either way the criterion fails.
+- **The misses (measured − predicted) on the real data alternate in sign and shrink:** +4.0, −2.1, −1.4, +0.7×10⁻⁵ at
+  k = 11–14 for a zero at 1. The 0.7×10⁻⁵ at k = 14 is within that pattern.
+- **The long-baseline trend agrees.** The zoom figure's dashed line, a straight-line fit to log(arg_k − 1) over
+  k = 4–13 (which assumes the zero at 1), extrapolates to 2.57×10⁻⁵ at k = 14, 0.4×10⁻⁶ from the measured value. That
+  model too is uncalibrated.
+- **The three-point geometric limit adds nothing.** Aitken on k = 12–14 gives 1.000017. Over k = 9–14 its values
+  scatter over 0.99956–1.00014, and on the arc plants it errs by up to 4.8×10⁻³ either way.
+
+### 6.8 Post-hoc: why the calibrated range moved
+
+Added after the runs above (stage `posthoc`), to find out why the arc-plant calibration at K = 14 is disjoint from the one
+at K = 13.
+
+- **The arc plants do not follow the real coefficients from one order to the next. The Borel–Padé functions do.**
+  - From K = 13 to 14 the real arg crossing moved −1.97×10⁻⁵. On the arc plants it moved −3.4 to −9.1×10⁻⁵, on C-EXP
+    and C13-EXP −2.08×10⁻⁵.
+  - The real G moved +3.2×10⁻⁵, on the arc plants −4.6 to −11.8×10⁻⁵.
+  - The arc plants miss the measured σ₁₃ by at least 1.5×10⁻⁴ and σ₁₄ by at least 4.8×10⁻⁴ (relative, worst node). C-EXP
+    misses them by 1.5×10⁻⁶ and 1.5×10⁻⁵.
+  - A calibration transfers only between functions that behave alike at the order in question. At K = 14 the arc plants
+    do not, for G at all.
+- **G is fragile in a way the calibration hides.** Its objective, the last two terms of G_K at X0, has four to six local
+  minima of similar depth. The production optimiser takes the one nearest its fixed start, 0.93 + 0.5i:
+  - On the real data that is the global minimum at K = 12, the fourth-best at K = 13 and the third-best at K = 14.
+  - Over the minima within a factor 5 of the best objective, the real G spans 0.99947–1.00020 at K = 12,
+    0.99988–1.00029 at K = 13 and 0.99976–1.00003 at K = 14.
+  - On the arc plants (ω_t = 1) the same spread at K = 14 is 0.99996–1.00016.
+  - The calibration measures G with the optimiser's start held fixed, so it does not include this spread.
+  - The global minimum separates the two families again. On the real data it gives 0.999883, 0.999878, 0.999886 at
+    K = 12, 13, 14. On the four arc plants at K = 14 it is within +0.4 to +1.2×10⁻⁵ of the truth. On the ring-free
+    completions, whose G at any κ̄ is the real one, it errs by −1.0 to −1.1×10⁻⁴.
+- **G and Padé respond strongly to the last coefficient.** C13-EXP's σ₁₄ differs from the real one by 1.3×10⁻⁷, and
+  σ₀…σ₁₃ are identical. Yet its K = 14 Padé mid differs from the real one by 3.1×10⁻⁴ and its G₁₄ by 3.2×10⁻⁵ (its
+  optimiser also lands in another minimum). The arg crossing differs by 1.1×10⁻⁶. This is section 3.6's amplification,
+  at the last order.
+
+### 6.9 Verdict at K = 14
+
+**The ring-free assumption passed its second test.**
+
+- σ₁₄ is converged.
+- Every ring on the table predicted a τ₁₄ off by 35%–390% and is rejected.
+- The ring-free Borel–Padé sums of σ₀…σ₁₃ predicted σ₁₄ to 1.3×10⁻⁷ and 6×10⁻⁷.
+- The arg crossings kept falling.
+- The effective exponent reached 1.000.
+
+A ring of fifteen or more zeros remains possible: the re-glued completions of section 6.6 carry rings of 12–14 zeros.
+σ₁₅ is their test.
+
+**The K = 13 estimator range did not survive.**
+
+- By the rule of section 6.0 (the calibrated arg ∩ G overlap over the 28 arc plants, together with the ring-free
+  completions that pass the type rule), K = 14 gives **ω*/ω∞ = 0.99998–1.00005**. Its two halves disagree:
+  - the calibrated arg and G put the zero at 1.000039–1.000048;
+  - the ring-free completions put it at 0.999983–0.999993.
+- The K = 13 result, 0.99992–0.99998, lies entirely below.
+- The cause is section 6.8:
+  - the arc plants stopped resembling the real function at k = 13–14;
+  - G depends on which minimum of its objective is taken.
+- Without G, the calibrated arg crossing alone gives 0.99995–1.00005. That range contains every ring-free completion
+  (0.99996–0.99999 over K = 13, 14) and contains 1.
+
+**The honest statement is the union over the two orders.** It is ω*/ω∞ = 0.99992–1.00005, i.e. Δ∞ = 1.64381–1.64403
+(1.6439 ± 0.0001).
+
+- This is an *estimator range* over two orders, five plant shapes and four ring-free completions. It is not a
+  confidence interval and not a bound.
+- At K = 14 alone the range is 0.99998–1.00005 (Δ∞ = 1.64381–1.64393).
+- The finite-D value, ω*/ω∞ = 1 (Δ∞ = 1.643893746), lies inside both. The 4×10⁻⁵ gap that section 5.4 reported is gone.
+- Within the range:
+  - the ring-free completions, the most stable element (0.999957 → 0.999983 and 0.999982 → 0.999993 from K = 13 to 14),
+    sit 0.7–4×10⁻⁵ below 1;
+  - the plant-calibrated K = 14 estimates sit 4–5×10⁻⁵ above;
+  - the order-14 projection prefers 1.
+- None of these is calibrated well enough to choose among them. Narrowing the range needs σ₁₅, or a calibration family
+  that matches σ₀…σ₁₄ (the Borel–Padé functions do; the arc plants do not).
+
+### 6.10 Proposed text, for the coordinator
+
+**README, replacing the "*Thirteen orders.*" bullet:**
+
+> - *Fourteen orders.* σ₁₃ and σ₁₄ converge at 960 bits with the late-order window J = 1000
+>   (`solver/inner_amp/scan29J1000/`; σ₁₄ to 3×10⁻¹³ relative, and a 1280-bit run agrees in every printed digit; at
+>   J = 750 σ₁₃ did not converge, `scan27phys/`). The arg crossings keep falling (1.000299, 1.000197, 1.000109,
+>   1.000046, 1.000026 at k = 10–14), and the effective exponent reaches 1.000. At k = 13 and 14 the factored series
+>   gives 0.999995 and 1.000027, and the central Padé approximants give 0.99980–0.99990 and 0.99995–1.00013. Every ring
+>   of zeros constructed to fit the known coefficients mispredicted the next coefficient of ln S₁: by 10%–300% at
+>   k = 13 and by 35%–390% at k = 14. The ring-free Borel–Padé sums of σ₀…σ₁₃ predicted σ₁₄ to 1–6×10⁻⁷. Their
+>   zeros, and those of the ring-free sums of σ₀…σ₁₄, lie at 0.99996–0.99999. Calibrated on planted functions, arg
+>   and G put the zero at 0.99992–0.99996 at thirteen orders but at 1.00004–1.00005 at fourteen. That shift is larger
+>   than either range, because the planted functions do not follow the real coefficients from one order to the next
+>   ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md) §6). Taken together, **ω*/ω∞ = 0.99992–1.00005,
+>   Δ∞ = 1.6439 ± 0.0001 (1.64381–1.64403) from the D = ∞ inner equations alone**. This is an estimator range over two
+>   orders, five plant shapes and four completions, not a bound, and it uses no input from the finite-D solutions.
+>   Their value, 1.643893746, lies inside it. The range assumes no zeros besides x₀ within |x| ≈ 12. A ring of fifteen
+>   or more zeros is still possible, and σ₁₅ is its test. The rule itself is still a conjecture (hypotheses H1–H2,
+>   gaps (a)–(c)). Tightening the number needs more orders, approximants that model the competing singularity
+>   explicitly (differential or algebraic approximants), or M = 7, which evaluates the multiplier at real amplitude
+>   with no series to resum (done: 1.000022).
+
+**README, the zoom figure's caption:**
+
+> **The same estimates as distance from the finite-D answer** (`solver/plot_selection_zoom.py`, with σ₁₄). On a log
+> scale steady convergence is a straight line: from above, the estimates fall by about ×0.53 per order from k = 4 to
+> 14. The shaded band is where the K = 13 calibration put the zero, 2–8×10⁻⁵ below 1. The hollow marks at k = 14 are
+> what a simple geometric model through k = 12 and 13 (not a calibrated estimator) predicted before σ₁₄ was known:
+> 1.9×10⁻⁵ above 1 if the zero is exactly at 1, and 0.4–1.4×10⁻⁵ if it is in the band. The measured crossing is
+> 2.6×10⁻⁵ above 1, nearer the first. The dashed trend of k = 4–13 extrapolated to 2.57×10⁻⁵. The same model had missed
+> k = 13 by 1.4×10⁻⁵, so this favours a zero at 1 without excluding the band. At fourteen orders the calibrated range
+> moved up and now contains 1 ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md) §6).
+
+**Smaller README changes the new data imply:**
+
+- *The table of crossings (after "Two families of estimates approach from opposite sides")*:
+  - add the rows | 13 | 1.00005 | 0.99928 | 1.004 − 0.010i | and | 14 | 1.00003 | 0.99977 | 1.000 − 0.004i |;
+  - name `scan29J1000/` for σ₁–σ₁₄.
+- *The paragraph below the table*:
+  - "from three consecutive orders" → "from two consecutive orders";
+  - append 1.004, 1.000 to the exponent list;
+  - the ratio estimates "turn down at the last order (0.9978, 0.99919, 0.99915 at k = 10–12)" now rise again (0.99928,
+    0.99977 at k = 13, 14).
+- *The main figure's caption*: "the Padé approximants (ranges) and the factored series land inside it" holds through
+  k = 13. At k = 14 they reach just above its top edge (G by 1×10⁻⁶).
+- *The other places that quote the K = 13 range need the same update*: the summary near the top of the README (line
+  84), `PROOF.md` §1, `paper/physics/main.tex` (around "at thirteen orders") and `paper/math/main.tex` (the evidence
+  table and the σ₁₃ paragraph). Suggested wording: "at fourteen orders, ω*/ω∞ = 0.99992–1.00005 (Δ∞ = 1.6439 ± 0.0001,
+  an estimator range over two orders), which contains the finite-D value; σ₁₄ rejected every ring of zeros constructed
+  from thirteen coefficients, and σ₁₅ tests the next."

@@ -135,7 +135,8 @@ def stage_converge(mutate=None):
     p960 = raw_scan(SCAN14, "*_p960.json")
     p1280 = raw_scan(SCAN14, "*_p1280.json")
     old = raw_scan(SCAN13)
-    print(f"files: 960 bits at wf {sorted(p960)}; 1280-bit pilot at wf {sorted(p1280)}; scan27J1000p960 at wf {sorted(old)}")
+    print(f"files: 960 bits at wf {sorted(p960)}; 1280-bit pilot at wf {sorted(p1280)}; "
+          f"scan27J1000p960 at wf {sorted(old)}")
     for w, r in sorted(p960.items()):
         print(f"  wf {w}: K {r['K']} J {r['J']} prec {r['prec']} fit {r['fit']} mf {r['mf']} phys_prec {r['phys_prec']}, "
               f"{len(r['sigma_str'])} coefficients")
@@ -395,7 +396,8 @@ def stage_ring(scratch):
     print(f"| completion (K = 13) | sigma_14 rel. error (0.99 / 1.00 / 1.01) | tau_14 rel. error | its arg_14 | "
           f"K = 14 detectors beyond the real data's | survives |")
     print("|---|---|---|---|---|---|")
-    print(f"| simple-zero law from tau_12, tau_13 | - | {' / '.join(f'{x:.1e}' for x in simple_zero_rel(rt, 14))} | - | - | - |")
+    sz = " / ".join(f"{x:.1e}" for x in simple_zero_rel(rt, 14))
+    print(f"| simple-zero law from tau_12, tau_13 | - | {sz} | - | - | - |")
     for name, (nodes, _, truth, _) in comps.items():
         mp.mp.dps = 50
         se = [float(abs(nodes[wf][14] - real[wf][0][14]) / abs(real[wf][0][14])) for wf in PP.NODES]
@@ -470,8 +472,9 @@ def stage_calib():
             cells = []
             for x in EST:
                 c = row["cells"][x]
+                none = f" ({row['n'] - c['n']} none)" if c["n"] < row["n"] else ""
                 cells.append("-" if "lo" not in c else f"{c['lo'] * 1e4:+.2f} ... {c['hi'] * 1e4:+.2f} -> "
-                             f"{c['zero'][0]:.6f}-{c['zero'][1]:.6f}" + (f" ({row['n'] - c['n']} none)" if c['n'] < row['n'] else ""))
+                             f"{c['zero'][0]:.6f}-{c['zero'][1]:.6f}" + none)
             print(f"| {fam} | {row['n']} | " + " | ".join(cells) + " |")
     # check against section 5.2 (K = 13, stored records): the same calibration from the K = 14 records
     a = out["13"]["all 28 arc plants"]["cells"]
@@ -643,6 +646,12 @@ def stage_project():
         print(f"  zero at {w}: predicted arg_14 - 1 = {p - 1:+.3e}; real - predicted = {a14 - p:+.2e}; "
               f"back-test (real - predicted) at k = 11, 12, 13: "
               + ", ".join(f"{back[k]:+.1e}" for k in (11, 12, 13)))
+    for lo, hi in ((4, 13), (4, 14)):          # the zoom figure's dashed trend: log10(arg_k - 1) linear in k
+        ks = list(range(lo, hi + 1))
+        sl, ic = np.polyfit(ks, [np.log10(a[k] - 1) for k in ks], 1)
+        out[f"trend_{lo}_{hi}"] = {"per_order": 10 ** sl, "at14": 10 ** (ic + 14 * sl)}
+        print(f"  log-linear trend of arg_k - 1 (zero at 1) over k = {lo}-{hi}: x{10 ** sl:.3f} per order; "
+              f"at k = 14: {10 ** (ic + 14 * sl):.3e}")
     ait = {k: aitken(a, k) for k in range(6, 15)}
     out["aitken"] = ait
     print("  Aitken (3-point geometric limit) on k-2..k, k = 6..14: " + ", ".join(f"{ait[k]:.6f}" for k in range(6, 15)))
@@ -771,8 +780,8 @@ def stage_posthoc(scratch):
             res["kbar"] = km
             save_checks("K14 posthoc", res)
             prod = by[REAL14 if name == "real" else (f"{name} wt=1.0000" if name != "C-EXP" else "C-EXP")]["est"][str(K)]
-            print(f"(ii) {key}: production kbar {prod['G_kbar'][0]:.4f}{prod['G_kbar'][1]:+.4f}i -> G {prod['G']:.6f}; minima: "
-                  + "; ".join(f"{m['kbar'][0]:.4f}{m['kbar'][1]:+.4f}i obj {m['obj']:.1e} G "
+            print(f"(ii) {key}: production kbar {prod['G_kbar'][0]:.4f}{prod['G_kbar'][1]:+.4f}i -> G {prod['G']:.6f}; "
+                  "minima: " + "; ".join(f"{m['kbar'][0]:.4f}{m['kbar'][1]:+.4f}i obj {m['obj']:.1e} G "
                               + ("none" if m["G"] is None else f"{m['G']:.6f}") for m in km[key]), flush=True)
     # (iii) the K = 13 Borel-Pade sums that pass the type rule and are ring-free, against sigma_14
     real13 = PP.load_real(SCAN13)
@@ -781,7 +790,7 @@ def stage_posthoc(scratch):
     real_det = set(R.detectors(by[REAL14], 14))
     bp = res.get("C13-BP sigma14", {})
     for m in (5, 6):
-        name = f"C13-BP [{m}/{13 - m}]"
+        name = f"C13-BP {m}-{13 - m}"           # no brackets: the name becomes a scratch directory, read by glob
         nodes, funcs, info = borel_pade(real13, m, 13 - m)
         truth, _ = truth_of(funcs)
         R.run_plant(name, "C13-BP (post-hoc)", nodes, truth["im_x"], scratch)
@@ -792,8 +801,9 @@ def stage_posthoc(scratch):
         extra = sorted(set(R.detectors(rec, 14)) - real_det)
         bp[name] = {"truth": truth["im_x"], "sigma14_rel": se, "tau14_rel": te, "extra_detectors": extra,
                     "est14": R.grade(rec, 14)["est"]}
+        e14 = {k: round(v, 7) if v else v for k, v in R.grade(rec, 14)["est"].items()}
         print(f"(iii) {name}: zero {truth['im_x']:.7f}; sigma_14 rel. error {' / '.join(f'{x:.1e}' for x in se)}; tau_14 "
-              f"{' / '.join(f'{x:.1e}' for x in te)}; K = 14 estimates {({k: round(v, 7) if v else v for k, v in R.grade(rec, 14)['est'].items()})}; "
+              f"{' / '.join(f'{x:.1e}' for x in te)}; K = 14 estimates {e14}; "
               f"detectors beyond the real data's: {extra or 'none'}")
     res["C13-BP sigma14"] = bp
     save_checks("K14 posthoc", res)
@@ -813,6 +823,36 @@ def stage_posthoc(scratch):
         print(f"(iv) [{m}/{14 - m}] at wf 1.00, poles t and residues r: "
               + "; ".join(f"t {t.real:.4f}{t.imag:+.4f}i |r| {abs(r):.1e}" for t, r in rows))
     res["C14-BP poles"] = rp
+    # (v) summaries: G over the kbar minima within a factor 5 of the best objective; D-bracket on the ring-free plants
+    span = {}
+    for key, ms in km.items():
+        g = [m["G"] for m in ms if m["obj"] <= 5 * ms[0]["obj"] and m["G"] is not None]
+        prod = by[REAL14 if key.startswith("real") else ("C-EXP" if key.startswith("C-EXP") else
+                                                        key.rsplit(" ", 1)[0] + " wt=1.0000")]["est"][key[-2:]]["G_kbar"]
+        rank = 1 + min(range(len(ms)), key=lambda i: abs(ms[i]["kbar"][0] - prod[0]) + abs(ms[i]["kbar"][1] - prod[1]))
+        span[key] = {"lo": min(g), "hi": max(g), "n": len(g), "global": ms[0]["G"], "production_rank": rank}
+        print(f"(v) {key}: G over the {len(g)} minima within x5 of the best objective {min(g):.6f}-{max(g):.6f}; "
+              f"global minimum {ms[0]['G']:.6f}; production kbar is minimum no. {rank}")
+    arcs14 = [span[f"{t} K14"] for t in ARC_FAMS]
+    print(f"(v) arc plants (w_t = 1), K = 14: G over minima {min(s['lo'] for s in arcs14):.6f}-"
+          f"{max(s['hi'] for s in arcs14):.6f}")
+    res["G span over minima"] = span
+    dbr = {}
+    for K in (12, 13, 14):
+        fired, why = [], {}
+        rf = [r for r in by.values() if r["family"] in ("P-ARC", "P-ARC-B") or r["name"] == "C-EXP"]
+        for r in rf:
+            if "D-bracket" in R.detectors(r, K):
+                e = R.grade(r, K)["est"]
+                w = ",".join(x for x, c in (("G>arg", e["G"] is not None and e["G"] > e["arg"]),
+                                            ("pade>arg", e["pade"] is not None and e["pade"] > e["arg"]),
+                                            ("G<ratio", e["G"] is not None and e["G"] < e["ratio"]),
+                                            ("pade<ratio", e["pade"] is not None and e["pade"] < e["ratio"])) if c)
+                fired.append(r["name"])
+                why[w] = why.get(w, 0) + 1
+        dbr[str(K)] = {"fired": len(fired), "of": len(rf), "why": why}
+        print(f"(v) D-bracket on the ring-free plants at K = {K}: {len(fired)} of {len(rf)}; reasons {why}")
+    res["D-bracket on ring-free plants"] = dbr
     save_checks("K14 posthoc", res)
 
 
