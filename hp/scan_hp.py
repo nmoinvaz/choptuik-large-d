@@ -33,6 +33,23 @@ def tails(s, zh, zl, nodes, M):
     return out
 
 
+def kc_needed(s, zh, zl, x0, M, kc, margin):
+    """The centre-series order past which the terms |c_k| x0^k (largest over fields and tau points) stay below 1e-45 of
+    the largest for three orders, plus margin, at most kc (hp/kc_check.py; with margin 30 the residual, the Jacobian and
+    the Newton step are bitwise those of kc = 420 at D = 36-61, and the double-double Jacobian 2-4 times cheaper)."""
+    h, l = s.series(zh, zl, 0)
+    c = np.abs((np.asarray(h) + np.asarray(l)).reshape(-1, 4, M)).max(axis=(1, 2))
+    t = c * x0 ** np.arange(len(c))
+    for k in range(20, len(t) - 3):
+        if (t[k:k + 3] < 1e-45 * t.max()).all():
+            return min(k + margin, kc)
+    return kc
+
+
+def same_bits(a, b):
+    return all(np.array_equal(np.asarray(x), np.asarray(y)) for x, y in zip(a, b))
+
+
 def sensitivity(s, M):
     """dDelta/dF (needs the LU of the last Newton step): max |y| per residual block"""
     L = s.size
@@ -104,6 +121,10 @@ def main():
     ap.add_argument("--M", type=int, default=None)
     ap.add_argument("--kt", type=int, default=36)
     ap.add_argument("--kc", type=int, default=40)
+    ap.add_argument("--kc_auto", type=int, default=0, help="lower kc after a converged point to the order where the "
+                    "centre series' terms stay below 1e-45, plus this margin (30 is bitwise safe at D = 36-61), if the "
+                    "residual and the Jacobian there are bitwise unchanged; 0 (default) keeps kc as given (it is "
+                    "still raised when the tail check asks)")
     ap.add_argument("--ks", type=int, default=100)
     ap.add_argument("--nodes", default=None)
     ap.add_argument("--tag", default="hp")
@@ -283,6 +304,18 @@ def main():
         if tc > 1e-33:
             a.kc = int(a.kc * 1.25) + 2
             print(f"   centre series tail {tc:.1e}: kc -> {a.kc}", flush=True)
+        elif a.kc_auto:
+            k_need = kc_needed(s, zh, zl, nodes[0], M, a.kc, a.kc_auto)
+            if k_need < a.kc - 10:      # hysteresis: check (two Jacobians) only when it saves at least 10 orders
+                s_new = make_solver(D, M, nodes=nodes, kt=a.kt, kc=k_need, ks=a.ks, threads=a.threads,
+                                    kfreeze=a.kfreeze)
+                s_new.set_segs(s.get_segs())
+                if same_bits(s.residual(zh, zl), s_new.residual(zh, zl)) and \
+                        same_bits(s.jacobian(zh, zl), s_new.jacobian(zh, zl)):
+                    print(f"   kc {a.kc} -> {k_need} (residual and Jacobian bitwise unchanged)", flush=True)
+                    a.kc = k_need
+                else:
+                    print(f"   kc stays {a.kc}: kc {k_need} changes the residual or the Jacobian", flush=True)
         if th > 1e-33:
             a.ks = int(a.ks * 1.25) + 2
             print(f"   horizon series tail {th:.1e}: ks -> {a.ks}", flush=True)

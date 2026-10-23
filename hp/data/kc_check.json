@@ -1,0 +1,142 @@
+[
+ {
+  "D": 36.073229,
+  "state": "up7_D36.0732.npz",
+  "M": 32,
+  "kfreeze": 13,
+  "kc_state": 420,
+  "kc_min": 189,
+  "term_at_kc_min": 1.7773176332101986e-48,
+  "term_at_kc_state": 9.463282587122746e-107,
+  "jacobian_s": [
+   5.55,
+   1.83
+  ],
+  "speedup": 3.02,
+  "bitwise": {
+   "residual": true,
+   "jacobian": true,
+   "newton_step": true
+  }
+ },
+ {
+  "D": 40.020065,
+  "state": "up7_D40.0201.npz",
+  "M": 32,
+  "kfreeze": 13,
+  "kc_state": 420,
+  "kc_min": 174,
+  "term_at_kc_min": 2.0476225685631828e-48,
+  "term_at_kc_state": 1.3591295839195956e-115,
+  "jacobian_s": [
+   5.24,
+   1.69
+  ],
+  "speedup": 3.1,
+  "bitwise": {
+   "residual": true,
+   "jacobian": true,
+   "newton_step": true
+  }
+ },
+ {
+  "D": 45.050722,
+  "state": "up7_D45.0507.npz",
+  "M": 32,
+  "kfreeze": 13,
+  "kc_state": 420,
+  "kc_min": 158,
+  "term_at_kc_min": 1.9907556176332323e-48,
+  "term_at_kc_state": 1.3093875828422298e-125,
+  "jacobian_s": [
+   5.13,
+   1.48
+  ],
+  "speedup": 3.47,
+  "bitwise": {
+   "residual": true,
+   "jacobian": true,
+   "newton_step": true
+  }
+ },
+ {
+  "D": 50.007491,
+  "state": "up8_D50.0075.npz",
+  "M": 32,
+  "kfreeze": 13,
+  "kc_state": 420,
+  "kc_min": 149,
+  "term_at_kc_min": 3.401933262953017e-49,
+  "term_at_kc_state": 1.4435638484630633e-134,
+  "jacobian_s": [
+   5.33,
+   1.47
+  ],
+  "speedup": 3.63,
+  "bitwise": {
+   "residual": true,
+   "jacobian": false,
+   "newton_step": false
+  }
+ },
+ {
+  "D": 55.035148,
+  "state": "up10_D55.0351.npz",
+  "M": 32,
+  "kfreeze": 13,
+  "kc_state": 420,
+  "kc_min": 141,
+  "term_at_kc_min": 4.0306097727602336e-49,
+  "term_at_kc_state": 1.7493915295007402e-142,
+  "jacobian_s": [
+   5.15,
+   1.31
+  ],
+  "speedup": 3.92,
+  "bitwise": {
+   "residual": true,
+   "jacobian": false,
+   "newton_step": false
+  }
+ },
+ {
+  "D": 60.001952,
+  "state": "up13_D60.0020.npz",
+  "M": 32,
+  "kfreeze": 13,
+  "kc_state": 420,
+  "kc_min": 134,
+  "term_at_kc_min": 4.547883635884671e-49,
+  "term_at_kc_state": 1.8478101032976838e-149,
+  "jacobian_s": [
+   5.14,
+   1.44
+  ],
+  "speedup": 3.56,
+  "bitwise": {
+   "residual": true,
+   "jacobian": false,
+   "newton_step": false
+  }
+ },
+ {
+  "D": 61.026449,
+  "state": "up23_D61.0264.npz",
+  "M": 32,
+  "kfreeze": 13,
+  "kc_state": 420,
+  "kc_min": 133,
+  "term_at_kc_min": 3.3822046718837056e-49,
+  "term_at_kc_state": 7.114095423955914e-151,
+  "jacobian_s": [
+   5.62,
+   1.65
+  ],
+  "speedup": 3.4,
+  "bitwise": {
+   "residual": true,
+   "jacobian": false,
+   "newton_step": false
+  }
+ }
+]

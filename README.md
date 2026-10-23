@@ -218,13 +218,15 @@ M = 384 is under way).
 
 ![Below D = 4: every double-double value of Delta and gamma so far against the sqrt(D - 3) formula, and how much Delta moves when the tau resolution is raised](hp/lowD_values.svg)
 
-**All our values below D = 4** (`hp/plot_lowD_values.py`, which reads every converged double-double record in
-`hp/data`; rerun it as runs land). Left: Δ at the largest τ resolution M computed at each D, filled where the two
+**All our values below D = 4** (`hp/export_lowD.py` writes every converged double-double record below D = 8.25 to
+[`hp/data/delta_dd_lowD.csv`](hp/data/delta_dd_lowD.csv), one row per D and τ resolution M with γ where computed;
+`hp/plot_lowD_values.py` draws it; rerun both as runs land). Left: Δ at the largest M at each D, filled where the two
 largest M agree to 10⁻⁸ (or M = 80 alone at D ≥ 3.7, where M 80 → 96 is 1.2×10⁻⁹) and hollow where they do not yet.
 Every point, resolved or not, lies within 7×10⁻⁶ of the √(D − 3) formula below. Middle: γ, from the exact growth-mode
 matrix at the largest M. Right: how much Δ moves when M is raised. The step from M = 80 to 96 grows a hundredfold from
-D = 3.7 to 3.4, and below D ≈ 3.45 neither M = 80 nor M = 96 resolves the solution: those points are converged
-discrete solutions, and M = 128 started from them does not converge.
+D = 3.7 to 3.4, while M = 96 → 128 stays at 1–2×10⁻⁹ down to D = 3.425, the lowest clean point. At D = 3.40 the
+M = 128 Newton converged only to a solution with content along the near-null directions (its centre-series tail
+10⁻⁹, against 10⁻⁵⁰ at 3.425); the CSV lists it as polluted and it is not used.
 
 **A formula for 3 < D ≤ 4** (`hp/lowD_formula.py`, fitted to Ecker, Ecker, Grumiller & Jechtl's published values for
 3.046 ≤ D ≤ 4, which are not included here). The variable that works is s = √(D − 3):
@@ -615,6 +617,14 @@ with computed points rather than an assumed form. Its points are used in [The fo
   point on two cores up to D = 60. The tolerance on $`\lvert F\rvert`$ goes from 10⁻²⁵ at D = 35 to 10⁻²² at D = 56,
   following the residual floor, which rises about 1.4-fold per unit of D. Above D = 60.1, on the second machine, it
   was relaxed to 3×10⁻¹⁹ for part of the climb ($`\lvert F\rvert`$ up to 2.9×10⁻¹⁹ there).
+- **Centre-series order (`scan_hp.py --kc_auto 30`):** the scan raised the centre series' order kc whenever its tail
+  check asked and never lowered it, so it ran with kc = 420 above D = 27, where the series' terms are 10⁻¹⁰⁷–10⁻¹⁵¹ by
+  that order. The order where they stay below 10⁻⁴⁵, plus 30, is 209 at D = 36 and 153–155 at D = 60–61. With it the
+  residual, the double-double Jacobian and the Newton step are bitwise those of kc = 420 at D = 36–61 (`hp/kc_check.py`;
+  with a margin of 10 the Jacobian's low parts change). The Jacobian is 2–4 times cheaper, and real continuation
+  steps at D = 59.84–59.88 with the scan's own arguments gave bitwise the same points 2.85–2.9 times faster
+  (`hp/data/kc_check_scan/`). `--kc_auto` lowers kc after a converged point only when the residual and the Jacobian
+  there are bitwise unchanged; the default keeps kc as given.
 
 <details>
 <summary>Checks of the solver</summary>
@@ -2105,7 +2115,8 @@ hp/                 double-double solver (crate hpkernel)
 ├── src/lib.rs      crate root
 ├── src/python.rs   PyO3 bindings (Solver)
 ├── build.sh        builds the crate for this machine's instruction set
-├── scan_hp.py      continuation in D
+├── scan_hp.py      continuation in D (--kc_auto 30: the centre-series order the solution needs, bitwise safe)
+├── kc_check.py     the centre-series order at large D: bitwise checks and timing
 ├── profile_newton.py   time of a Newton step by part; --mixed --solve for the mixed-precision step
 ├── mixed_check.py  checks of the mixed-precision Newton: Jacobian agreement, controls, convergence, bit-identity
 ├── mixed_diag.py   why the f64 Jacobian agrees only to 1e-7 at M >= 48 (step size, harmonics, M)
@@ -2115,7 +2126,8 @@ hp/                 double-double solver (crate hpkernel)
 ├── dd_fits_mp.py   large-D model fits at 60 digits, held-out errors, predictions (--dmax for a data snapshot)
 ├── dd_candidates.py  candidate constants forced as the limit, held-out test (--dmax as above)
 ├── plot_heldout.py heldout.svg (python3 plot_heldout.py --dmax=60.1: the points up to D = 60.1)
-├── data/delta_dd.csv   every double-double point: D, Delta (hi + lo), |F|, max dDelta/dF
+├── data/delta_dd.csv   every double-double point of the continuation runs, D = 8.25-61.03: D, Delta (hi + lo), |F|, max dDelta/dF
+├── data/delta_dd_lowD.csv   every double-double point below D = 8.25, per D and M, with gamma (export_lowD.py)
 ├── data/local/     the second machine's runs (scan_up*.jsonl), folded into delta_dd.csv by export_dd.py
 └── data/seeds/     saved solver states to restart continuation from
 hp/largeD_*.py      large-D scaling of the solutions (profiles, F(theta), harmonic content, light-cone exponent)

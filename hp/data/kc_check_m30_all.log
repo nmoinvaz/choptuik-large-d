@@ -1,0 +1,8 @@
+D =  36.0732 (up7_D36.0732.npz, kf 13): kc 420 -> 209 (terms 4.8e-54 at 209, 9.5e-107 at 420); Jacobian 5.21 s -> 2.00 s (2.61x); bitwise: residual yes, jacobian yes, newton_step yes
+D =  40.0201 (up7_D40.0201.npz, kf 13): kc 420 -> 194 (terms 8.1e-54 at 194, 1.4e-115 at 420); Jacobian 5.55 s -> 1.84 s (3.01x); bitwise: residual yes, jacobian yes, newton_step yes
+D =  45.0507 (up7_D45.0507.npz, kf 13): kc 420 -> 178 (terms 1.0e-53 at 178, 1.3e-125 at 420); Jacobian 5.30 s -> 2.44 s (2.17x); bitwise: residual yes, jacobian yes, newton_step yes
+D =  50.0075 (up8_D50.0075.npz, kf 13): kc 420 -> 169 (terms 6.7e-55 at 169, 1.4e-134 at 420); Jacobian 8.02 s -> 2.41 s (3.33x); bitwise: residual yes, jacobian yes, newton_step yes
+D =  55.0351 (up10_D55.0351.npz, kf 13): kc 420 -> 161 (terms 7.2e-56 at 161, 1.7e-142 at 420); Jacobian 7.59 s -> 2.33 s (3.26x); bitwise: residual yes, jacobian yes, newton_step yes
+D =  60.0020 (up13_D60.0020.npz, kf 13): kc 420 -> 154 (terms 3.5e-56 at 154, 1.8e-149 at 420); Jacobian 5.69 s -> 1.50 s (3.80x); bitwise: residual yes, jacobian yes, newton_step yes
+D =  61.0264 (up23_D61.0264.npz, kf 13): kc 420 -> 153 (terms 2.9e-56 at 153, 7.1e-151 at 420); Jacobian 5.86 s -> 1.84 s (3.18x); bitwise: residual yes, jacobian yes, newton_step yes
+done

@@ -3,15 +3,12 @@
 fit to Ecker, Ecker, Grumiller & Jechtl's published values, good to about 1e-5 in Delta and 1e-6 in gamma), and how
 much Delta moves when the tau resolution M is raised, which is what stops the computation as D falls toward 3.
 
-Data (every converged double-double record):
-  - data/lowD_dd.jsonl and data/lowD_dd_local*.jsonl (cloud and local runs, M = 48-128);
-  - data/lowD_highM/*points*.jsonl if present (the larger-M runs, M = 128-384);
-  - data/lowD_gamma*.jsonl (gamma, the largest M at each D).
-At each D the value shown is the largest M's. A point counts as resolved when the two largest M agree to 1e-8, or
-when it has M = 80 alone at D >= 3.7, where M 80 -> 96 is 1.2e-9. The other points are drawn hollow: converged
-solutions at that M, not yet resolved.
+Data: data/delta_dd_lowD.csv (hp/export_lowD.py: every converged double-double record below D = 8.25, one row per
+(D, M), with gamma where computed; the rows marked polluted are left out). At each D the value shown is the largest
+clean M's. A point counts as resolved when the two largest M agree to 1e-8, or when it has M = 80 alone at D >= 3.7,
+where M 80 -> 96 is 1.2e-9. The other points are drawn hollow: converged solutions at that M, not yet resolved.
 
-    cd hp && python3 plot_lowD_values.py [-o lowD_values.svg]
+    cd hp && python3 export_lowD.py && python3 plot_lowD_values.py [-o lowD_values.svg]
 """
 import argparse
 import glob
@@ -37,54 +34,29 @@ def formula(c, D):
     return sum(v * s ** k for k, v in enumerate(c))
 
 
-def records(pattern):
-    out = []
-    for f in sorted(glob.glob(os.path.join(HERE, "data", pattern))):
-        for line in open(f):
-            if line.strip():
-                r = json.loads(line)
-                r["_file"] = os.path.relpath(f, HERE)
-                out.append(r)
-    return out
-
-
-def delta_of(r):
-    d = r.get("Delta")
-    if isinstance(d, (list, tuple)):
-        return d[0] + d[1]
-    if d is None and "Delta_hi" in r:
-        return r["Delta_hi"] + r.get("Delta_lo", 0.0)
-    return d
-
-
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("-o", default=os.path.join(HERE, "lowD_values.svg"))
     args = ap.parse_args()
+    import csv
+    rows = [r for r in csv.DictReader(open(os.path.join(HERE, "data", "delta_dd_lowD.csv"))) if r["status"] == "clean"]
     by_d = {}
-    for r in records("lowD_dd*.jsonl") + records("lowD_highM/*points*.jsonl"):
-        if r.get("converged") is False or delta_of(r) is None or r.get("D", 9) > 4.0 + 1e-9:
-            continue
-        D, M = round(r["D"], 4), int(r["M"])
-        if r.get("F") is not None and r["F"] > 1e-25:
-            continue
-        by_d.setdefault(D, {})[M] = (delta_of(r), r["_file"])
+    for r in rows:
+        by_d.setdefault(float(r["D"]), {})[int(r["M"])] = (float(r["Delta_hi"]) + float(r["Delta_lo"]), r)
     gam = {}
-    for r in records("lowD_gamma*.jsonl"):
-        D, M = round(r["D"], 4), int(r["M"])
-        if r.get("gamma") is not None and M >= gam.get(D, (0, 0))[0]:
-            gam[D] = (M, r["gamma"])
-
-    pts = []          # (D, Delta, M, error estimate or None, resolved)
+    for r in rows:
+        if r["gamma"] and int(r["M"]) >= gam.get(float(r["D"]), (0, 0))[0]:
+            gam[float(r["D"])] = (int(r["M"]), float(r["gamma"]))
+    pts = []          # (D, Delta, M, change from the next lower M or None, resolved)
     steps = {}        # (M_lo, M_hi) -> [(D, |change|)]
     for D, ms in sorted(by_d.items()):
         Ms = sorted(ms)
         for a, b in zip(Ms, Ms[1:]):
             steps.setdefault((a, b), []).append((D, abs(ms[b][0] - ms[a][0])))
         top = Ms[-1]
-        err = abs(ms[top][0] - ms[Ms[-2]][0]) if len(Ms) > 1 else None
-        ok = (err is not None and err <= RESOLVED) or (err is None and top == 80 and D >= 3.7)
-        pts.append((D, ms[top][0], top, err, ok))
+        r = ms[top][1]
+        err = abs(float(r["change_from_lower_M"])) if r["change_from_lower_M"] else None
+        pts.append((D, ms[top][0], top, err, r["resolved"] == "1"))
 
     cR, cU, cF = SERIES[0], SERIES[3], INK_SOFT
     W = 900
