@@ -191,6 +191,13 @@ def solve_point(D, M, zh, zl, src, a, nodes, outdir, log, segs=None):
         if getattr(a, "stop_lam", 0) and len(lams) >= 2 and max(lams[-2:]) <= a.stop_lam:
             log(f"D {D} M {M}: two steps with line-search factors {lams[-2]:g}, {lams[-1]:g} <= {a.stop_lam:g}; giving up")
             break
+        # optional (a.floor_ratio, default off): stop at the residual floor, when |F| is below a.accept and the last
+        # step reduced it by less than this factor (at M = 256 the floor is 2-4e-28, above a tolerance of 1e-28)
+        Fs = [h["F"] for h in hist if "lam" in h]
+        if getattr(a, "floor_ratio", 0) and len(Fs) >= 2 and Fs[-1] < a.accept and Fs[-1] > a.floor_ratio * Fs[-2]:
+            log(f"D {D} M {M}: |F| {Fs[-2]:.1e} -> {Fs[-1]:.1e}: below {a.accept:g} and no longer falling (the residual "
+                f"floor); stopping")
+            break
     _rh, _rl = s.residual(zh, zl)
     if a.lm and not float(np.abs(np.asarray(_rh) + np.asarray(_rl)).max()) < a.accept:
         log("  Newton stalled; Levenberg-Marquardt")

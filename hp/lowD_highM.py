@@ -39,7 +39,8 @@ more Taylor steps (its new top harmonics are aliasing products that the tau-deri
 blows up on it. A start whose residual on the given plan is not finite or above 1 gets its own plan instead.
 A failed solve (the helper's included) inserts the midpoint between the last converged D and the target (halving the
 step); a solve gives up after two steps in a row with line-search factors <= --stop_lam (1/8: Newton wandering in the
-weak directions from a predictor too far off, as at D 3.15 from |F| 0.7).
+weak directions from a predictor too far off, as at D 3.15 from |F| 0.7), and stops at the residual floor (|F| below
+--accept and falling by less than --floor_ratio in a step).
 Stop rules (each recorded with its reason): the largest M in --Ms cannot keep the difference below --diff_max; a
 point fails with the step below --min_step; the projected time of the next point (the last point's solves or its
 running time, the larger) exceeds --point_hours; --hours of wall time in all, counted across restarts, or the next
@@ -124,6 +125,8 @@ def main():
                     "the centre series tail of the next point's M_n start (the M_w solution resampled) is above this")
     ap.add_argument("--near_factor", type=float, default=20.0, help="move up on the projected difference only when "
                     "the difference itself is above --diff_max / near_factor")
+    ap.add_argument("--floor_ratio", type=float, default=0.5, help="a solve stops when |F| is below --accept and the last "
+                    "step reduced it by less than this factor (the residual floor, which rises with M; 0: never)")
     ap.add_argument("--stop_lam", type=float, default=0.125, help="a solve gives up after two steps in a row with "
                     "line-search factors at most this (Newton wandering in the weak directions; 0: never)")
     ap.add_argument("--two_pass_above", type=float, default=1e-3, help="solve M_w or M_n in two passes when its best "
@@ -161,7 +164,8 @@ def main():
     def ns(M, tag=None, tol=None):
         return argparse.Namespace(out=a.points, tag=tag or st["tag"], resume=True, kt=a.kt, kcs=kc, ks=ks, tol_step=a.tol_step,
                                   hmax=a.hmax, solver="newton", it_max=a.it_max, tol=tol or a.tol, accept=tol or a.accept,
-                                  lm=0, jac="f64", threads=a.threads, svd=0, dn_its=2, w=24, stop_lam=a.stop_lam)
+                                  lm=0, jac="f64", threads=a.threads, svd=0, dn_its=2, w=24, stop_lam=a.stop_lam,
+                                  floor_ratio=a.floor_ratio)
 
     def save_prog():
         st["t_used"] = time.time() - t_start
