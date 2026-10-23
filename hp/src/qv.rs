@@ -13,17 +13,24 @@
 //!
 //! `QDotAcc` accumulates a sum of quad-double products, in the spirit of `dv::DotAcc`: each product is expanded to
 //! its partial products by order (a0b0; a0b1, a1b0 and the error of a0b0; ...; the O(eps^3) products by FMA, the
-//! O(eps^4) ones dropped, as in the sloppy multiply), and level l of the accumulator (l = 0..2) sums the order-l
-//! terms with error-free two-sums whose errors go to level l + 1; level 3 sums in plain f64 (Ogita-Rump-Oishi SumK
-//! with K = 4, per order). `finish` adds the four levels with qd + f64. The error is the dropped O(eps^4) partial
-//! products (a few 2^-212 |a b| per term) plus level 3's rounding; for n terms, typically below
-//! (8 + n) 2^-212 sum |a_i b_i|; the worst case grows like n^4 2^-212 sum |a_i b_i| (the SumK bound, gamma_{2n}^4).
-//! It costs about a third of a sloppy multiply plus a sloppy add.
+//! O(eps^4) ones dropped, as in the sloppy multiply), and level l of the accumulator (l = 0..3) sums the order-l
+//! terms with error-free two-sums whose errors go to level l + 1; level 4 sums in plain f64 (Ogita-Rump-Oishi SumK,
+//! per order). `finish` adds the five levels with qd + f64. The two-sum errors of adding into a running level sum are
+//! relative to that sum, not to the terms, so the levels grow (level 3 to about n^1.5 2^-159 sum |a_i b_i|): a first
+//! design that summed level 3 in plain f64, with those errors mixed into the per-term ones, gave errors growing
+//! like n (72 u at n = 512, u = 2^-209). Here every running-sum error enters the next level by its own two-sum,
+//! level 4 is the only plain sum, and the error is that of the dropped O(eps^4) partial products and of `finish`
+//! (notes/QUAD_DOUBLE.md). It costs about a third of a sloppy multiply plus a sloppy add.
 use crate::dd::DD;
 use crate::dv::{quick_two_sum, two_prod, two_sum, DV};
 use crate::qd::{mutate, QD};
 use crate::v8::{M8, V8};
 use std::ops::{Add, Div, Mul, Neg, Sub};
+
+// Inlining: the hot operations (renormalizations, sloppy add and multiply, times and plus f64, the accumulator) are
+// forced inline on the SIMD backends; on the portable backend (8-element arrays) forced inlining of these large
+// bodies made the test build exceed 3 GB of memory and 17 minutes, so there the compiler decides. The other large
+// operations are never forced.
 
 #[derive(Clone, Copy, Debug)]
 pub struct QV {
@@ -51,7 +58,8 @@ fn is_inf(x: V8) -> M8 {
 }
 
 /// QD's renormalization of four parts, all lanes (see the module doc)
-#[inline(always)]
+#[cfg_attr(any(target_feature = "avx512f", all(target_feature = "avx2", target_feature = "fma")), inline(always))]
+#[cfg_attr(not(any(target_feature = "avx512f", all(target_feature = "avx2", target_feature = "fma"))), inline)]
 pub fn renorm4(c0: V8, c1: V8, c2: V8, c3: V8) -> [V8; 4] {
     let z = V8::zero();
     let inf = is_inf(c0);
@@ -79,7 +87,8 @@ pub fn renorm4(c0: V8, c1: V8, c2: V8, c3: V8) -> [V8; 4] {
 }
 
 /// QD's renormalization of five parts to four, all lanes (see the module doc)
-#[inline(always)]
+#[cfg_attr(any(target_feature = "avx512f", all(target_feature = "avx2", target_feature = "fma")), inline(always))]
+#[cfg_attr(not(any(target_feature = "avx512f", all(target_feature = "avx2", target_feature = "fma"))), inline)]
 pub fn renorm5(c0: V8, c1: V8, c2: V8, c3: V8, c4: V8) -> [V8; 4] {
     let z = V8::zero();
     let inf = is_inf(c0);
@@ -210,7 +219,7 @@ impl QV {
     pub fn abs_hi(self) -> V8 {
         self.c[0].abs()
     }
-    #[inline(always)]
+    #[inline]
     pub fn abs(self) -> QV {
         let neg = V8::zero().gt(self.c[0]);
         let n = -self;
@@ -228,7 +237,8 @@ impl QV {
     // ---------------------------------------------------------------------------------------------------------
 
     /// the sloppy add (the default `+`), as QD::sloppy_add
-    #[inline(always)]
+    #[cfg_attr(any(target_feature = "avx512f", all(target_feature = "avx2", target_feature = "fma")), inline(always))]
+    #[cfg_attr(not(any(target_feature = "avx512f", all(target_feature = "avx2", target_feature = "fma"))), inline)]
     pub fn sloppy_add(self, b: QV) -> QV {
         let (a, b) = (self.c, b.c);
         let (s0, t0) = two_sum(a[0], b[0]);
@@ -243,8 +253,9 @@ impl QV {
         QV { c: renorm5(s0, s1, s2, s3, t0) }
     }
 
-    /// the accurate merge add, as QD::ieee_add (see the module doc)
-    #[inline(always)]
+    /// the accurate merge add, as QD::ieee_add (QD's algorithm with its last part u + v when all parts are read with
+    /// three emitted; see the module doc and QD::ieee_add)
+    #[inline]
     pub fn ieee_add(self, b: QV) -> QV {
         let (a, b) = (self.c, b.c);
         let z = V8::zero();
@@ -272,9 +283,11 @@ impl QV {
             let fin = done.not().and(ea.and(eb));
             for m in 0..4 {
                 let at = fin.and(k.eq(V8::splat(m as f64)));
-                x[m] = at.sel(u, x[m]);
                 if m < 3 {
+                    x[m] = at.sel(u, x[m]);
                     x[m + 1] = at.sel(v, x[m + 1]);
+                } else {
+                    x[m] = at.sel(u.add(v), x[m]);
                 }
             }
             done = done.or(fin);
@@ -316,13 +329,14 @@ impl QV {
         QV { c: renorm4(x[0], x[1], x[2], x[3]) }
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn ieee_sub(self, b: QV) -> QV {
         self.ieee_add(-b)
     }
 
     /// qd + exact f64 vector, as QD::add_f
-    #[inline(always)]
+    #[cfg_attr(any(target_feature = "avx512f", all(target_feature = "avx2", target_feature = "fma")), inline(always))]
+    #[cfg_attr(not(any(target_feature = "avx512f", all(target_feature = "avx2", target_feature = "fma"))), inline)]
     pub fn add_v(self, b: V8) -> QV {
         let a = self.c;
         let (c0, e) = two_sum(a[0], b);
@@ -338,7 +352,7 @@ impl QV {
     }
 
     /// qd + dd, as QD::add_dd
-    #[inline(always)]
+    #[inline]
     pub fn add_dv(self, b: DV) -> QV {
         let a = self.c;
         let (s0, t0) = two_sum(a[0], b.hi);
@@ -356,7 +370,8 @@ impl QV {
     // ---------------------------------------------------------------------------------------------------------
 
     /// times an exact f64 vector, as QD::mul_f
-    #[inline(always)]
+    #[cfg_attr(any(target_feature = "avx512f", all(target_feature = "avx2", target_feature = "fma")), inline(always))]
+    #[cfg_attr(not(any(target_feature = "avx512f", all(target_feature = "avx2", target_feature = "fma"))), inline)]
     pub fn mul_v(self, b: V8) -> QV {
         let a = self.c;
         let (p0, q0) = two_prod(a[0], b);
@@ -378,7 +393,7 @@ impl QV {
     }
 
     /// times double-double lanes, as QD::mul_dd
-    #[inline(always)]
+    #[inline]
     pub fn mul_dv(self, b: DV) -> QV {
         let a = self.c;
         let (p0, q0) = two_prod(a[0], b.hi);
@@ -402,7 +417,8 @@ impl QV {
     }
 
     /// the sloppy multiply (the default `*`), as QD::sloppy_mul
-    #[inline(always)]
+    #[cfg_attr(any(target_feature = "avx512f", all(target_feature = "avx2", target_feature = "fma")), inline(always))]
+    #[cfg_attr(not(any(target_feature = "avx512f", all(target_feature = "avx2", target_feature = "fma"))), inline)]
     pub fn sloppy_mul(self, b: QV) -> QV {
         let (a, b) = (self.c, b.c);
         let (p0, q0) = two_prod(a[0], b[0]);
@@ -427,7 +443,7 @@ impl QV {
     }
 
     /// the accurate multiply, as QD::accurate_mul
-    #[inline(always)]
+    #[inline]
     pub fn accurate_mul(self, b: QV) -> QV {
         let (a, b) = (self.c, b.c);
         let (p0, q0) = two_prod(a[0], b[0]);
@@ -467,7 +483,7 @@ impl QV {
     }
 
     /// the square, as QD::sqr
-    #[inline(always)]
+    #[inline]
     pub fn sqr(self) -> QV {
         let a = self.c;
         let two = V8::splat(2.0);
@@ -502,7 +518,7 @@ impl QV {
     // ---------------------------------------------------------------------------------------------------------
 
     /// the sloppy divide (the default `/`), as QD::sloppy_div
-    #[inline(always)]
+    #[inline]
     pub fn sloppy_div(self, b: QV) -> QV {
         let q0 = self.c[0].div(b.c[0]);
         let r = self - b.mul_v(q0);
@@ -515,7 +531,7 @@ impl QV {
     }
 
     /// the accurate divide, as QD::accurate_div
-    #[inline(always)]
+    #[inline]
     pub fn accurate_div(self, b: QV) -> QV {
         let q0 = self.c[0].div(b.c[0]);
         let r = self - b.mul_v(q0);
@@ -529,13 +545,13 @@ impl QV {
         QV { c: renorm5(q0, q1, q2, q3, q4) }
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn recip(self) -> QV {
         QV::splat_f(1.0) / self
     }
 
     /// the square root, as QD::sqrt (scaled by a power of four into [1, 4); zero lanes give zero)
-    #[inline(always)]
+    #[inline]
     pub fn sqrt(self) -> QV {
         let z = V8::zero();
         let one = V8::splat(1.0);
@@ -598,16 +614,17 @@ impl Div for QV {
 /// Accumulator for sums of quad-double products (see the module doc); the 8-lane twin of `qd::QdAcc`.
 #[derive(Clone, Copy, Debug)]
 pub struct QDotAcc {
-    pub s: [V8; 4],
+    pub s: [V8; 5],
 }
 
 impl QDotAcc {
     #[inline(always)]
     pub fn zero() -> QDotAcc {
-        QDotAcc { s: [V8::zero(); 4] }
+        QDotAcc { s: [V8::zero(); 5] }
     }
     /// self + a b
-    #[inline(always)]
+    #[cfg_attr(any(target_feature = "avx512f", all(target_feature = "avx2", target_feature = "fma")), inline(always))]
+    #[cfg_attr(not(any(target_feature = "avx512f", all(target_feature = "avx2", target_feature = "fma"))), inline)]
     pub fn add_prod(self, a: QV, b: QV) -> QDotAcc {
         let (a, b) = (a.c, b.c);
         let (p00, e00) = two_prod(a[0], b[0]);
@@ -631,16 +648,19 @@ impl QDotAcc {
         let (z7, w7) = two_sum(z5, z6);
         let (z8, w8) = two_sum(z7, y4);
         let (s2, w9) = two_sum(self.s[2], z8);
-        let w = if mutate::on(mutate::ACC_L3) {
-            V8::zero()
+        let (w, w9) = if mutate::on(mutate::ACC_L3) {
+            (V8::zero(), V8::zero())
         } else {
-            w1.add(w2).add(w3.add(w4)).add(w5.add(w6).add(w7.add(w8))).add(w9)
+            (w1.add(w2).add(w3.add(w4)).add(w5.add(w6).add(w7.add(w8))), w9)
         };
         let r = w.add(r3).add(e02.add(e11)).add(e20);
-        QDotAcc { s: [s0, s1, s2, self.s[3].add(r)] }
+        let (s3, x9) = two_sum(self.s[3], w9);
+        let (s3, x10) = two_sum(s3, r);
+        QDotAcc { s: [s0, s1, s2, s3, self.s[4].add(x9.add(x10))] }
     }
     /// self + a
-    #[inline(always)]
+    #[cfg_attr(any(target_feature = "avx512f", all(target_feature = "avx2", target_feature = "fma")), inline(always))]
+    #[cfg_attr(not(any(target_feature = "avx512f", all(target_feature = "avx2", target_feature = "fma"))), inline)]
     pub fn add(self, a: QV) -> QDotAcc {
         let a = a.c;
         let (s0, t0) = two_sum(self.s[0], a[0]);
@@ -649,12 +669,86 @@ impl QDotAcc {
         let (z1, w1) = two_sum(a[2], y1);
         let (z2, w2) = two_sum(z1, y2);
         let (s2, w3) = two_sum(self.s[2], z2);
-        let r = w1.add(w2).add(w3).add(a[3]);
-        QDotAcc { s: [s0, s1, s2, self.s[3].add(r)] }
+        let r = w1.add(w2).add(a[3]);
+        let (s3, x3) = two_sum(self.s[3], w3);
+        let (s3, x4) = two_sum(s3, r);
+        QDotAcc { s: [s0, s1, s2, s3, self.s[4].add(x3.add(x4))] }
     }
-    #[inline(always)]
+    #[cfg_attr(any(target_feature = "avx512f", all(target_feature = "avx2", target_feature = "fma")), inline(always))]
+    #[cfg_attr(not(any(target_feature = "avx512f", all(target_feature = "avx2", target_feature = "fma"))), inline)]
     pub fn finish(self) -> QV {
         let z = V8::zero();
-        QV { c: [self.s[0], z, z, z] }.add_v(self.s[1]).add_v(self.s[2]).add_v(self.s[3])
+        QV { c: [self.s[0], z, z, z] }.add_v(self.s[1]).add_v(self.s[2]).add_v(self.s[3]).add_v(self.s[4])
+    }
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// the model's lane trait (notes/QUAD_DOUBLE.md, stage 2)
+// ---------------------------------------------------------------------------------------------------------------
+
+/// Quad-double values as a `Lane`, so that the model's generic code (centre series, Taylor stepping, horizon series)
+/// compiles and runs with quad-double lanes. The trait passes constants and inputs as double-double (`DV`): they
+/// enter exactly (`from_dv`) but carry only double-double accuracy, and `val` rounds back to double-double; the
+/// horizon block's periodic solves stay double-double (`DDLu`). So this instantiation computes in quad-double with
+/// double-double data: it measures the cost of quad-double lanes and checks that the generic code runs with them,
+/// but does not give a quad-double residual (what that needs is in notes/QUAD_DOUBLE.md). No solver uses it.
+impl crate::lane::Lane for QV {
+    type Acc = QDotAcc;
+    const TANGENT: bool = false;
+    #[inline(always)]
+    fn zero() -> Self {
+        QV::zero()
+    }
+    #[inline(always)]
+    fn cst(c: DV) -> Self {
+        QV::from_dv(c)
+    }
+    #[inline(always)]
+    fn mulc(self, c: DV) -> Self {
+        self * QV::from_dv(c)
+    }
+    #[inline(always)]
+    fn mulf(self, s: f64) -> Self {
+        self.mul_f(s)
+    }
+    #[inline(always)]
+    fn addc(self, c: DV) -> Self {
+        self + QV::from_dv(c)
+    }
+    #[inline(always)]
+    fn bcast(self, j: usize) -> Self {
+        QV::bcast(self, j)
+    }
+    #[inline(always)]
+    fn val(self) -> DV {
+        self.to_dv()
+    }
+    #[inline(always)]
+    fn tan(self) -> DV {
+        DV::zero()
+    }
+    #[inline(always)]
+    fn from_vt(v: DV, _t: DV) -> Self {
+        QV::from_dv(v)
+    }
+    #[inline(always)]
+    fn acc0() -> QDotAcc {
+        QDotAcc::zero()
+    }
+    #[inline(always)]
+    fn acc(a: QDotAcc, x: Self, y: Self) -> QDotAcc {
+        a.add_prod(x, y)
+    }
+    #[inline(always)]
+    fn accc(a: QDotAcc, x: Self, c: DV) -> QDotAcc {
+        a.add_prod(x, QV::from_dv(c))
+    }
+    #[inline(always)]
+    fn acc1(a: QDotAcc, x: Self) -> QDotAcc {
+        a.add(x)
+    }
+    #[inline(always)]
+    fn fin(a: QDotAcc) -> Self {
+        a.finish()
     }
 }

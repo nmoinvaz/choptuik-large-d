@@ -15,7 +15,9 @@
 use crate::dd::DD;
 use crate::dv::{DotAcc, DV};
 use crate::exact::{BigU, Dy};
-use crate::qd::{mutate, QdAcc, QD};
+#[cfg(feature = "qd_mutate")]
+use crate::qd::mutate;
+use crate::qd::{QdAcc, QD};
 use crate::qv::{QDotAcc, QV};
 use crate::v8::V8;
 use std::cmp::Ordering;
@@ -959,13 +961,17 @@ fn qd_dump() {
     let dir = std::env::var("QD_DUMP").expect("QD_DUMP=directory");
     let n = env_usize("QD_N", 2000) / 8 * 8;
     let seed = env_usize("QD_SEED", 1) as u64;
+    // QD_MUTATE=id (feature qd_mutate): break one algorithm during the arithmetic, for the control of qd_check.py
+    let id = env_usize("QD_MUTATE", 0) as u32;
     std::fs::create_dir_all(&dir).unwrap();
     let mut bin = std::io::BufWriter::new(std::fs::File::create(format!("{dir}/ops.bin")).unwrap());
     let mut idx = std::fs::File::create(format!("{dir}/ops.txt")).unwrap();
     for op in OPS {
         for cat in CATS {
             let inp = inputs(op, cat, n, seed);
+            set_mutation(id);
             let (rs, _) = results(op, &inp);
+            set_mutation(0);
             writeln!(idx, "{}\t{}\t{}\t{}", op_name(op), cat_name(cat), n, op_thr(op)).unwrap();
             for (k, &(a, b)) in inp.iter().enumerate() {
                 for v in a.x.iter().chain(b.x.iter()).chain(rs[k].x.iter()) {
@@ -981,11 +987,13 @@ fn qd_dump() {
     for _ in 0..n / 8 {
         let a: Vec<[QD; 8]> = (0..len).map(|_| std::array::from_fn(|_| qd_of(&rde(&mut r, -3, 3)))).collect();
         let b: Vec<[QD; 8]> = (0..len).map(|_| std::array::from_fn(|_| qd_of(&rde(&mut r, -3, 3)))).collect();
+        set_mutation(id);
         let mut acc = QDotAcc::zero();
         for i in 0..len {
             acc = acc.add_prod(QV::from_lanes(&a[i]), QV::from_lanes(&b[i]));
         }
         let res = acc.finish().lanes();
+        set_mutation(0);
         for i in 0..len {
             for lane in 0..8 {
                 for v in a[i][lane].x.iter().chain(b[i][lane].x.iter()) {
@@ -1009,13 +1017,15 @@ fn qd_dump() {
             d.push((b'0' + (r.next() % 10) as u8) as char);
         }
         let s = format!("{}{}e{}", if r.coin() { "-" } else { "" }, d, r.int(-250 - nd as i64, 300 - nd as i64));
+        set_mutation(id);
         let q = QD::parse(&s).unwrap();
+        set_mutation(0);
         writeln!(io, "P {s} {}", q.x.map(|v| format!("{:016x}", v.to_bits())).join(" ")).unwrap();
         let x = qd_of(&rde(&mut r, -1000, 1000));
         let digits = [1usize, 17, 33, 64, 66, 70, 100][r.int(0, 6) as usize];
         writeln!(io, "S {} {digits} {}", x.x.map(|v| format!("{:016x}", v.to_bits())).join(" "), x.to_sci(digits)).unwrap();
     }
-    println!("wrote {dir}/ops.bin, ops.txt, io.txt (n {n}, seed {seed})");
+    println!("wrote {dir}/ops.bin, ops.txt, io.txt (n {n}, seed {seed}, mutation {id})");
 }
 
 // -------------------------------------------------------------------------------------------------------------
@@ -1023,7 +1033,7 @@ fn qd_dump() {
 // -------------------------------------------------------------------------------------------------------------
 
 /// cargo test --release --lib bench_qd -- --ignored --nocapture: nanoseconds per lane and operation, one thread,
-/// 16 independent vectors per pass (throughput, not latency)
+/// 16 independent vectors per pass (throughput, not latency); each row the minimum of 5 timings
 #[test]
 #[ignore]
 fn bench_qd() {
@@ -1045,33 +1055,74 @@ fn bench_qd() {
     let fy: Vec<V8> = qy.iter().map(|q| q.c[0]).collect();
     let fz: Vec<V8> = qz.iter().map(|q| q.c[0]).collect();
     let per = (reps * NV * 8) as f64;
+    // x[i] = body(x[i], i) over NV independent chains, reps passes
     macro_rules! time {
         ($x:expr, $body:expr) => {{
-            let mut x = $x.clone();
-            let t0 = Instant::now();
-            for _ in 0..reps {
-                for i in 0..NV {
-                    x[i] = ($body)(x[i], i);
+            let mut best = f64::INFINITY;
+            for _ in 0..5 {
+                let mut x = $x.clone();
+                let t0 = Instant::now();
+                for _ in 0..reps {
+                    for i in 0..NV {
+                        x[i] = ($body)(x[i], i);
+                    }
+                    black_box(&mut x);
                 }
-                black_box(&mut x);
+                best = best.min(t0.elapsed().as_secs_f64() * 1e9 / per);
+                black_box(&x);
             }
-            let ns = t0.elapsed().as_secs_f64() * 1e9 / per;
-            black_box(&x);
-            ns
+            best
+        }};
+    }
+    // 16-term sums of products through an accumulator, finished: ns per lane and term
+    macro_rules! dot {
+        ($a:expr, $b:expr, $zero:expr) => {{
+            let mut best = f64::INFINITY;
+            for _ in 0..5 {
+                let t0 = Instant::now();
+                for _ in 0..reps {
+                    for i in 0..NV {
+                        let mut acc = $zero;
+                        for k in 0..16 {
+                            acc = acc.add_prod($a[(i + k) % NV], $b[k]);
+                        }
+                        black_box(acc.finish());
+                    }
+                }
+                best = best.min(t0.elapsed().as_secs_f64() * 1e9 / (per * 16.0));
+            }
+            best
         }};
     }
     let half = V8::splat(0.5);
-    println!("isa {}, ns per lane and operation (one thread, {NV} independent vectors)", V8::ISA);
-    let f_add = time!(fa, |x: V8, i: usize| x.add(fz[i]).mul(half));
+    println!("isa {}, ns per lane and operation (one thread, {NV} independent vectors, min of 5)", V8::ISA);
+    let f_add = time!(fa, |x: V8, i: usize| x.add(fz[i]));
     let f_mul = time!(fa, |x: V8, i: usize| x.mul(fy[i]));
     let f_div = time!(fa, |x: V8, i: usize| x.div(fy[i]));
     let f_fma = time!(fa, |x: V8, i: usize| x.fma(half, fz[i]));
     let f_sqrt = time!(fa, |x: V8, i: usize| x.abs().sqrt().add(fz[i].abs()));
+    let f_dot = {
+        let mut best = f64::INFINITY;
+        for _ in 0..5 {
+            let t0 = Instant::now();
+            for _ in 0..reps {
+                for i in 0..NV {
+                    let mut acc = V8::zero();
+                    for k in 0..16 {
+                        acc = fa[(i + k) % NV].fma(fy[k], acc);
+                    }
+                    black_box(acc);
+                }
+            }
+            best = best.min(t0.elapsed().as_secs_f64() * 1e9 / (per * 16.0));
+        }
+        best
+    };
     let d_add = time!(da, |x: DV, i: usize| (x + dz[i]).mul_f(0.5));
     let d_mul = time!(da, |x: DV, i: usize| x * dy[i]);
     let d_div = time!(da, |x: DV, i: usize| x / dy[i]);
     let d_fma = time!(da, |x: DV, i: usize| x.mul_f(0.5) * dy[i] + dz[i]);
-    let d_acc = time!(da, |x: DV, i: usize| DotAcc::zero().add(dz[i]).add_prod(x.mul_f(0.5), dy[i]).finish());
+    let d_dot = dot!(da, dy, DotAcc::zero());
     let q_add = time!(qa, |x: QV, i: usize| (x + qz[i]).mul_pwr2(0.5));
     let q_iadd = time!(qa, |x: QV, i: usize| x.ieee_add(qz[i]).mul_pwr2(0.5));
     let q_mul = time!(qa, |x: QV, i: usize| x * qy[i]);
@@ -1081,45 +1132,195 @@ fn bench_qd() {
     let q_adiv = time!(qa, |x: QV, i: usize| x.accurate_div(qy[i]));
     let q_sqrt = time!(qa, |x: QV, i: usize| x.abs().sqrt() + qz[i].abs());
     let q_fma = time!(qa, |x: QV, i: usize| x.mul_pwr2(0.5) * qy[i] + qz[i]);
-    let q_acc = time!(qa, |x: QV, i: usize| QDotAcc::zero().add(qz[i]).add_prod(x.mul_pwr2(0.5), qy[i]).finish());
-    // the accumulator per term: 16 terms into one accumulator per vector
-    let q_term = {
-        let t0 = Instant::now();
-        let mut s = 0.0;
-        for _ in 0..reps {
-            for i in 0..NV {
-                let mut acc = QDotAcc::zero();
-                for k in 0..16 {
-                    acc = acc.add_prod(qa[(i + k) % NV], qy[k]);
-                }
-                s += acc.s[0].to_array()[0];
-            }
-        }
-        black_box(s);
-        t0.elapsed().as_secs_f64() * 1e9 / (per * 16.0)
-    };
-    let d_term = {
-        let t0 = Instant::now();
-        let mut s = 0.0;
-        for _ in 0..reps {
-            for i in 0..NV {
-                let mut acc = DotAcc::zero();
-                for k in 0..16 {
-                    acc = acc.add_prod(da[(i + k) % NV], dy[k]);
-                }
-                s += acc.s.to_array()[0];
-            }
-        }
-        black_box(s);
-        t0.elapsed().as_secs_f64() * 1e9 / (per * 16.0)
-    };
-    let row = |name: &str, f: f64, d: f64, q: f64| println!("  {name:<28} f64 {f:7.3}  dd {d:7.3}  qd {q:8.3}   qd/dd {:6.1}  dd/f64 {:5.1}", q / d, d / f);
-    row("add (a + b)/2", f_add, d_add, q_add);
+    let q_dot = dot!(qa, qy, QDotAcc::zero());
+    let q_pow2 = time!(qa, |x: QV, _i: usize| x.mul_pwr2(0.5));
+    let d_mulf = time!(da, |x: DV, _i: usize| x.mul_f(0.5));
+    let row = |name: &str, f: f64, d: f64, q: f64| println!("  {name:<34} f64 {f:7.3}  dd {d:7.3}  qd {q:8.3}   qd/dd {:6.1}  dd/f64 {:5.1}", q / d, d / f);
+    row("add (dd, qd: (a + b)/2 less the halving)", f_add, d_add - d_mulf, q_add - q_pow2);
     row("mul", f_mul, d_mul, q_mul);
     row("div", f_div, d_div, q_div);
-    row("a b + c (two operations)", f_fma, d_fma, q_fma);
-    row("a b + c (accumulator)", f_fma, d_acc, q_acc);
-    row("dot term (accumulator)", f_fma, d_term, q_term);
-    println!("  qd only: accurate add {q_iadd:.3}, accurate mul {q_amul:.3}, qd x f64 {q_mulf:.3}, accurate div {q_adiv:.3}, sqrt {q_sqrt:.3} (f64 sqrt {f_sqrt:.3})");
+    row("a b + c, mul then add", f_fma, d_fma - d_mulf, q_fma - q_pow2);
+    row("dot term (16-term sums, finished)", f_dot, d_dot, q_dot);
+    println!("  qd only: accurate add {:.3}, accurate mul {q_amul:.3}, qd x f64 {q_mulf:.3}, accurate div {q_adiv:.3}, sqrt {:.3} (f64 sqrt {f_sqrt:.3})", q_iadd - q_pow2, q_sqrt - (q_add - q_pow2));
 }
 
+
+// -------------------------------------------------------------------------------------------------------------
+// diagnostics of the two exceedances of the pre-registered thresholds (notes/QUAD_DOUBLE.md, section 3)
+// -------------------------------------------------------------------------------------------------------------
+
+/// QD's accurate add exactly as in QD 2.3 (qd_inline.h, ieee_add), for comparison with `QD::ieee_add`, which keeps
+/// u + v where this keeps u when all parts are read with three emitted
+fn ieee_add_qd_literal(a: QD, b: QD) -> QD {
+    use crate::dd::quick_two_sum;
+    use crate::qd::renorm4;
+    let (a, b) = (a.x, b.x);
+    let (mut i, mut j, mut k) = (0usize, 0usize, 0usize);
+    let mut x = [0.0f64; 4];
+    let (mut u, mut v);
+    if a[i].abs() > b[j].abs() {
+        u = a[i];
+        i += 1;
+    } else {
+        u = b[j];
+        j += 1;
+    }
+    if a[i].abs() > b[j].abs() {
+        v = a[i];
+        i += 1;
+    } else {
+        v = b[j];
+        j += 1;
+    }
+    (u, v) = quick_two_sum(u, v);
+    while k < 4 {
+        if i >= 4 && j >= 4 {
+            x[k] = u;
+            if k < 3 {
+                k += 1;
+                x[k] = v;
+            }
+            break;
+        }
+        let t;
+        if i >= 4 {
+            t = b[j];
+            j += 1;
+        } else if j >= 4 || a[i].abs() > b[j].abs() {
+            t = a[i];
+            i += 1;
+        } else {
+            t = b[j];
+            j += 1;
+        }
+        let (s, bb) = crate::dd::two_sum(v, t);
+        let (s, aa) = crate::dd::two_sum(u, s);
+        if aa != 0.0 && bb != 0.0 {
+            u = aa;
+            v = bb;
+            x[k] = s;
+            k += 1;
+        } else if bb == 0.0 {
+            v = aa;
+            u = s;
+        } else {
+            u = s;
+            v = bb;
+        }
+    }
+    for kk in i..4 {
+        x[3] += a[kk];
+    }
+    for kk in j..4 {
+        x[3] += b[kk];
+    }
+    QD { x: renorm4(x[0], x[1], x[2], x[3]) }
+}
+
+/// QD_N samples (default 200000) of near-cancelling a + b (a + b = 2^-k a): the accurate add's relative error by
+/// depth k, QD's algorithm as published and `QD::ieee_add`
+#[test]
+#[ignore]
+fn qd_diag_accurate_add() {
+    let n = env_usize("QD_N", 200000);
+    let mut r = Rng::new(11);
+    let bins = [1i64, 8, 16, 24, 32, 53, 106, 160, 261];
+    let mut worst = vec![(0f64, 0f64, 0usize, 0usize); bins.len() - 1];
+    for _ in 0..n {
+        let e = r.int(-50, 50);
+        let k = r.int(1, 260);
+        let a = rand_dy(&mut r, e);
+        let d = rand_dy(&mut r, e - k);
+        let (qa, qb) = (qd_of(&a), qd_of(&a.neg().add(&d)));
+        let x = qa.exact().add(&qb.exact());
+        let e1 = ieee_add_qd_literal(qa, qb).exact().sub(&x).abs().ratio(&x) / unit();
+        let e2 = qa.ieee_add(qb).exact().sub(&x).abs().ratio(&x) / unit();
+        let bi = bins.iter().rposition(|&b| b <= k).unwrap().min(bins.len() - 2);
+        let w = &mut worst[bi];
+        w.0 = w.0.max(e1);
+        w.1 = w.1.max(e2);
+        w.2 += (e1 > 1.0) as usize;
+        w.3 += 1;
+    }
+    println!("accurate add, a + b = 2^-k a ({n} samples): max relative error in units of 2^-209");
+    for (i, w) in worst.iter().enumerate() {
+        println!("  k {:>3}..{:<3} n {:>6}: QD 2.3 {:>8}  ({} above 1 u);  QD::ieee_add {:>8}", bins[i], bins[i + 1] - 1, w.3, fmt_u(w.0), w.2, fmt_u(w.1));
+    }
+}
+
+/// The dot accumulator's error split: as built; its levels summed exactly (no finish); and with levels 3-4 replaced
+/// by the exact sum of the level-3 increments (recomputed by a scalar copy of QdAcc::add_prod), which leaves only
+/// the products' truncation; |error| / sum |a_i b_i| in units of 2^-209
+#[test]
+#[ignore]
+fn qd_diag_accumulator() {
+    use crate::dd::{two_prod, two_sum};
+    let nsamp = env_usize("QD_N", 4000);
+    for len in [16usize, 128, 512] {
+        for cat in ["random", "wide"] {
+            let mut r = Rng::new(5 + len as u64);
+            let (mut m1, mut m2, mut m3, mut m4, mut m5, mut v1) = (0f64, 0f64, 0f64, 0f64, 0f64, Vec::new());
+            for _ in 0..nsamp * 16 / len {
+                let mut acc = QdAcc::zero();
+                let mut lvl3 = Dy::zero();
+                let (mut x, mut s) = (Dy::zero(), Dy::zero());
+                for _ in 0..len {
+                    let (ea, eb) = if cat == "wide" { (r.int(-100, 100), r.int(-100, 100)) } else { (r.int(-3, 3), r.int(-3, 3)) };
+                    let (da, db) = (rand_dy(&mut r, ea), rand_dy(&mut r, eb));
+                    let (qa, qb) = (qd_of(&da), qd_of(&db));
+                    let t = qa.exact().mul(&qb.exact());
+                    x = x.add(&t);
+                    s = s.add(&t.abs());
+                    // the level-3 increment of QdAcc::add_prod, recomputed (same operations)
+                    let (a, b) = (qa.x, qb.x);
+                    let (p00, e00) = two_prod(a[0], b[0]);
+                    let (p01, e01) = two_prod(a[0], b[1]);
+                    let (p10, e10) = two_prod(a[1], b[0]);
+                    let (p02, e02) = two_prod(a[0], b[2]);
+                    let (p11, e11) = two_prod(a[1], b[1]);
+                    let (p20, e20) = two_prod(a[2], b[0]);
+                    let r3 = a[3].mul_add(b[0], a[2].mul_add(b[1], a[1].mul_add(b[2], a[0] * b[3])));
+                    let (_, t0) = two_sum(acc.s[0], p00);
+                    let (x1, y1) = two_sum(p01, p10);
+                    let (x2, y2) = two_sum(e00, t0);
+                    let (x3, y3) = two_sum(x1, x2);
+                    let (_, y4) = two_sum(acc.s[1], x3);
+                    let (z1, w1) = two_sum(p02, p20);
+                    let (z2, w2) = two_sum(p11, e01);
+                    let (z3, w3) = two_sum(e10, y1);
+                    let (z4, w4) = two_sum(y2, y3);
+                    let (z5, w5) = two_sum(z1, z2);
+                    let (z6, w6) = two_sum(z3, z4);
+                    let (z7, w7) = two_sum(z5, z6);
+                    let (z8, w8) = two_sum(z7, y4);
+                    let (_, w9) = two_sum(acc.s[2], z8);
+                    lvl3 = lvl3.add(&Dy::sum(&[w1, w2, w3, w4, w5, w6, w7, w8, w9, r3, e02, e11, e20]));
+                    acc = acc.add_prod(qa, qb);
+                }
+                let e_built = acc.finish().exact().sub(&x).abs().ratio(&s) / unit();
+                // levels 0-2 as built, level 3 exact, summed exactly: the error left is the products' truncation
+                let ex = Dy::sum(&acc.s[..3]).add(&lvl3);
+                let e_exact3 = ex.sub(&x).abs().ratio(&s) / unit();
+                // the four levels as built, summed exactly (no finish): the error left is level 3's rounding
+                let e_nofin = Dy::sum(&acc.s).sub(&x).abs().ratio(&s) / unit();
+                m3 = m3.max(e_nofin);
+                m4 = m4.max(Dy::from_f64(acc.s[3]).ratio(&s) / unit());
+                m5 = m5.max(Dy::from_f64(acc.s[4]).ratio(&s) / unit());
+                m1 = m1.max(e_built);
+                m2 = m2.max(e_exact3);
+                v1.push(e_built);
+            }
+            let p = pct(&mut v1, 0.999);
+            println!(
+                "dot n={len:<4} {cat:<6}: as built max {} (99.9% {}) u; levels summed exactly, no finish {} u; levels 3-4 exact, no finish {} u; max |s3| {} u, |s4| {} u; threshold (8 + n)/8 = {}",
+                fmt_u(m1),
+                fmt_u(p),
+                fmt_u(m3),
+                fmt_u(m2),
+                fmt_u(m4),
+                fmt_u(m5),
+                (8 + len) as f64 / 8.0
+            );
+        }
+    }
+}

@@ -306,8 +306,11 @@ impl QD {
         QD { x: renorm5(s0, s1, s2, s3, t0) }
     }
 
-    /// QD's accurate add (merge by magnitude, double-length accumulator): IEEE-style error bound
-    #[inline(always)]
+    /// QD's accurate add (merge by magnitude, double-length accumulator), IEEE-style error bound, with one change:
+    /// when every part has been read with three already emitted, the last part is u + v where QD keeps u alone
+    /// (notes/QUAD_DOUBLE.md: QD's version reached 16.8 u relative error in 2 of 20000 near-cancelling sums, this
+    /// one 0.12 u in 200000)
+    #[inline]
     pub fn ieee_add(self, b: QD) -> QD {
         let (a, b) = (self.x, b.x);
         let gt = |x: f64, y: f64| if mutate::on(mutate::IEEE_ADD_ORDER) { x.abs() < y.abs() } else { x.abs() > y.abs() };
@@ -332,10 +335,14 @@ impl QD {
         (u, v) = quick_two_sum(u, v);
         while k < 4 {
             if i >= 4 && j >= 4 {
-                x[k] = u;
                 if k < 3 {
+                    x[k] = u;
                     k += 1;
                     x[k] = v;
+                } else {
+                    // QD stores u alone here and drops v; with cancellation u can have fewer than 53 significant
+                    // bits and v the rest (up to 17 u relative error in the tests), so both are kept
+                    x[k] = u + v;
                 }
                 break;
             }
@@ -386,7 +393,7 @@ impl QD {
     }
 
     /// qd + dd
-    #[inline(always)]
+    #[inline]
     pub fn add_dd(self, b: DD) -> QD {
         let a = self.x;
         let (s0, t0) = two_sum(a[0], b.hi);
@@ -422,7 +429,7 @@ impl QD {
     }
 
     /// qd x dd
-    #[inline(always)]
+    #[inline]
     pub fn mul_dd(self, b: DD) -> QD {
         let a = self.x;
         let (p0, q0) = two_prod(a[0], b.hi);
@@ -474,7 +481,7 @@ impl QD {
     }
 
     /// QD's accurate multiply: partial products to O(eps^4)
-    #[inline(always)]
+    #[inline]
     pub fn accurate_mul(self, b: QD) -> QD {
         let (a, b) = (self.x, b.x);
         let (p0, q0) = two_prod(a[0], b[0]);
@@ -517,7 +524,7 @@ impl QD {
     }
 
     /// QD's square
-    #[inline(always)]
+    #[inline]
     pub fn sqr(self) -> QD {
         let a = self.x;
         let (p0, q0) = two_prod(a[0], a[0]);
@@ -550,7 +557,7 @@ impl QD {
     // ---------------------------------------------------------------------------------------------------------
 
     /// QD's sloppy divide (the default `/`): four quotient terms
-    #[inline(always)]
+    #[inline]
     pub fn sloppy_div(self, b: QD) -> QD {
         let q0 = self.x[0] / b.x[0];
         let r = self - b.mul_f(q0);
@@ -563,7 +570,7 @@ impl QD {
     }
 
     /// QD's accurate divide: five quotient terms
-    #[inline(always)]
+    #[inline]
     pub fn accurate_div(self, b: QD) -> QD {
         let q0 = self.x[0] / b.x[0];
         let r = self - b.mul_f(q0);
@@ -586,7 +593,7 @@ impl QD {
     /// scaled by an exact power of four into [1, 4) and the result scaled back. Unscaled, as in QD, the iteration
     /// loses accuracy above about 2^860 (1/a's lower parts underflow) and below about 2^-860 (a/2 drops bits of
     /// subnormal parts); the near-overflow tests found it (notes/QUAD_DOUBLE.md).
-    #[inline(always)]
+    #[inline]
     pub fn sqrt(self) -> QD {
         if self.is_zero() {
             return QD::ZERO;
@@ -811,7 +818,7 @@ impl Div for QD {
 /// Scalar sum-of-products accumulator, the twin of `qv::QDotAcc` (same algorithm, bitwise the same per lane).
 #[derive(Clone, Copy, Debug, Default)]
 pub struct QdAcc {
-    pub s: [f64; 4],
+    pub s: [f64; 5],
 }
 
 impl QdAcc {
@@ -846,10 +853,14 @@ impl QdAcc {
         let (z7, w7) = two_sum(z5, z6);
         let (z8, w8) = two_sum(z7, y4);
         let (s2, w9) = two_sum(self.s[2], z8);
-        // level 3
-        let w = if mutate::on(mutate::ACC_L3) { 0.0 } else { (((w1 + w2) + (w3 + w4)) + ((w5 + w6) + (w7 + w8))) + w9 };
+        // level 3: w9, the error of the running level-2 sum, is as large as that sum's ulp and goes in by itself;
+        // the per-term errors and O(eps^3) products are summed first
+        let (w, w9) = if mutate::on(mutate::ACC_L3) { (0.0, 0.0) } else { (((w1 + w2) + (w3 + w4)) + ((w5 + w6) + (w7 + w8)), w9) };
         let r = ((w + r3) + (e02 + e11)) + e20;
-        QdAcc { s: [s0, s1, s2, self.s[3] + r] }
+        let (s3, x9) = two_sum(self.s[3], w9);
+        let (s3, x10) = two_sum(s3, r);
+        // level 4
+        QdAcc { s: [s0, s1, s2, s3, self.s[4] + (x9 + x10)] }
     }
     /// self + a
     #[inline(always)]
@@ -861,12 +872,14 @@ impl QdAcc {
         let (z1, w1) = two_sum(a[2], y1);
         let (z2, w2) = two_sum(z1, y2);
         let (s2, w3) = two_sum(self.s[2], z2);
-        let r = ((w1 + w2) + w3) + a[3];
-        QdAcc { s: [s0, s1, s2, self.s[3] + r] }
+        let r = (w1 + w2) + a[3];
+        let (s3, x3) = two_sum(self.s[3], w3);
+        let (s3, x4) = two_sum(s3, r);
+        QdAcc { s: [s0, s1, s2, s3, self.s[4] + (x3 + x4)] }
     }
-    /// the sum as a quad-double: the four levels added in turn with qd + f64
+    /// the sum as a quad-double: the five levels added in turn with qd + f64
     #[inline(always)]
     pub fn finish(self) -> QD {
-        QD::from_f64(self.s[0]).add_f(self.s[1]).add_f(self.s[2]).add_f(self.s[3])
+        QD::from_f64(self.s[0]).add_f(self.s[1]).add_f(self.s[2]).add_f(self.s[3]).add_f(self.s[4])
     }
 }

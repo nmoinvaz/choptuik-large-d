@@ -23,6 +23,8 @@ pub mod qv;
 pub mod v8;
 
 #[cfg(test)]
+mod qd_residual;
+#[cfg(test)]
 mod qd_tests;
 
 #[cfg(feature = "python")]
