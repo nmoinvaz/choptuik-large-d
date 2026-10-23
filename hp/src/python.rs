@@ -4,7 +4,6 @@ use crate::block::BlockLu;
 use crate::dd::DD;
 use crate::dv::DV;
 use crate::field::{DMat, Fl, State};
-use crate::lane::Lane;
 use crate::linalg::DDLu;
 use crate::model::{self, Ctx, TWork};
 use crate::v8::V8;
@@ -976,6 +975,6 @@ fn _hpkernel(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(dd_solve, m)?)?;
     m.add_function(wrap_pyfunction!(dd_op, m)?)?;
     m.add_function(wrap_pyfunction!(isa, m)?)?;
-    let _ = <DV as Lane>::TANGENT;
+    let _ = <DV as crate::lane::BaseLane>::TANGENT;
     Ok(())
 }

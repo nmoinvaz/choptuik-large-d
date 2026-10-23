@@ -588,8 +588,11 @@ with computed points rather than an assumed form. Its points are used in [The fo
 [analyticity tests](#is-the-period-analytic-in-1d) and the large-D scaling ([How the solution scales with D](#how-the-solution-scales-with-d)).
 
 - **Arithmetic:** double-double (hi + lo, about 32 digits)[^15] on 8-lane vectors: one AVX-512 register per lane group, two
-  AVX2 registers, or a portable array, chosen at compile time (`hp/build.sh` builds with `-C target-cpu=native`).
-  Error-free two-sum and FMA two-product; sums of products accumulated Sum2-style[^16].
+  AVX2 registers, four SSE2 or NEON registers, or a portable array, chosen at compile time (`hp/build.sh` builds with
+  `-C target-cpu=native`). Error-free two-sum and FMA two-product; sums of products accumulated Sum2-style[^16]. The
+  arithmetic, the dual lanes and the double-double LU are the separate crate
+  [multidouble](https://github.com/nmoinvaz/multidouble), which `hp/Cargo.toml` pins to one commit; every backend gives
+  bitwise the same results, and the solver's outputs are unchanged bit for bit by the move.
 - **No fixed-step error:** Taylor series in x (order 36, step points planned once per D so the truncation term is
   10⁻³²), centre and horizon series run until their tails are below 10⁻³³, and collocation in τ on the
   half period (p, m odd harmonics, a, c even harmonics in τ) with no spectral truncation of the products.
@@ -616,13 +619,13 @@ with computed points rather than an assumed form. Its points are used in [The fo
   bit. The exact double-double Jacobian, the Levenberg–Marquardt fallback and γ stay at M ≤ 128. At D = 3.7, Δ
   changes by −3.4×10⁻¹¹, −3.2×10⁻¹⁵, −1.6×10⁻¹⁸ and −3.2×10⁻²¹ in the steps from M = 96 to 128, 160, 192 and 256
   ([notes/HIGH_M.md](notes/HIGH_M.md)).
-- **Quad-double arithmetic (not yet used by the solver):** `hp/src/qd.rs` and `qv.rs` add quad-double numbers
+- **Quad-double arithmetic (not yet used by the solver):** the `qd` and `qv` modules add quad-double numbers
   (four f64, about 64 digits), scalar and 8-lane SIMD, with bitwise the same results on AVX-512, AVX2 and portable
   builds. They use the QD library's algorithms[^20], with two repairs found by the tests: the accurate add's last
   part, and the square root near the ends of the exponent range. Against exact arithmetic they err by at most
   2.1×2⁻²⁰⁹ (63 digits). They cost 8–29 times double-double per operation and 14–17 times in sums of products. A
   quad-double residual would cost about 7 times the double-double one at the same orders
-  ([notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md); `hp/qd_check.py`).
+  ([notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md); `hp/qd_check.py`, which runs the tests in a multidouble checkout).
 - **Continuation in D:** prediction by the cubic through the last four converged points (a tangent from the
   Jacobian is wrong in the weak directions, below), Newton with the weakest directions deflated, and from D = 35 on
   the centre data's τ-harmonics above 13 frozen (below). 32 collocation points in τ, nodes at
@@ -2143,15 +2146,13 @@ src/
 python/rustkernel/  Python wrapper, RustResidual
 tests/              bindings test
 hp/                 double-double solver (crate hpkernel)
-├── src/v8.rs       8-lane f64 vector: AVX-512 / AVX2 / portable
-├── src/dv.rs       8-lane double-double, Sum2 dot accumulator
-├── src/lane.rs     value and forward-mode dual lanes: double-double, f64, and batched f64 tangents
+├── Cargo.toml      the arithmetic comes from the multidouble crate (github.com/nmoinvaz/multidouble), pinned to a
+│                   commit: double-double and quad-double, scalar and 8-lane SIMD (AVX-512 / AVX2 / SSE2 / NEON /
+│                   portable), dual lanes and the double-double LU; hp re-exports its modules (hpkernel::dd, ::dv, ...)
+├── src/lane.rs     hp's Lane trait over multidouble's dual lanes: adds the D-matrix product of each lane type
 ├── src/model.rs    centre series, Taylor stepping, horizon series, residual, Jacobian (double-double and f64)
-├── src/linalg.rs   double-double LU, f64 LU, transpose solve, Gram matrix
-├── src/qd.rs, qv.rs  quad-double: scalar and 8-lane (not used by the solver yet); src/exact.rs exact reference
 ├── python/hpkernel/driver.py   grid, seeds, Newton, deflated Newton, Levenberg-Marquardt, re-noding
-├── src/dd.rs       scalar double-double (constants, set-up)
-├── src/field.rs    tau fields on the half grid, folded spectral derivative
+├── src/field.rs    tau fields on the half grid, folded spectral derivative; the many-right-hand-side LU solves
 ├── src/lib.rs      crate root
 ├── src/python.rs   PyO3 bindings (Solver)
 ├── build.sh        builds the crate for this machine's instruction set

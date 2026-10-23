@@ -10,8 +10,8 @@
 //! ```
 use crate::dd::DD;
 use crate::dv::{DotAcc, DV};
-use crate::field::{DMat, Fl, State};
-use crate::lane::Lane;
+use crate::field::{DMat, FieldSolve, Fl, State};
+use crate::lane::{BaseLane, Lane};
 use crate::model::{block_state, centre_state, horizon_lus, residual, taylor_path, Ctx, TWork};
 use crate::qd::QD;
 use crate::qv::{QDotAcc, QV};
@@ -77,7 +77,9 @@ impl Neg for CDV {
     }
 }
 
-impl Lane for CDV {
+impl Lane for CDV {}
+
+impl BaseLane for CDV {
     type Acc = DotAcc;
     const TANGENT: bool = false;
     fn zero() -> Self {

@@ -11,22 +11,20 @@
 //! * `qd`: scalar quad-double (~64 digits); `qv`: 8-lane quad-double built on `v8`, bitwise the same per lane; `exact`:
 //!   exact dyadic and decimal arithmetic for their decimal input/output and their tests. Not used by the solver yet
 //!   (notes/QUAD_DOUBLE.md).
+//!
+//! `v8`, `dd`, `dv`, `qd`, `qv`, `exact` and `linalg`, and the lane types, are the multidouble crate's; this crate adds
+//! the tau fields, the model, the block LU, the `lane::Lane` extension (`dmat_apply`) and `field::FieldSolve`.
 pub mod block;
-pub mod dd;
-pub mod dv;
-pub mod exact;
 pub mod field;
 pub mod lane;
-pub mod linalg;
 pub mod model;
-pub mod qd;
-pub mod qv;
-pub mod v8;
+
+// The arithmetic, the dual lanes and the dense LU live in the multidouble crate (github.com/nmoinvaz/multidouble),
+// split out of this one; re-exported under their old paths so the solver code reads as before.
+pub use multidouble::{dd, dv, exact, linalg, qd, qv, v8};
 
 #[cfg(test)]
 mod qd_residual;
-#[cfg(test)]
-mod qd_tests;
 #[cfg(test)]
 mod jvp_tests;
 

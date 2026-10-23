@@ -10,7 +10,7 @@
    P(0) printed in hp/data/planted_dinf.log;
 4. leave-one-out residuals of the two kept points with bad centre-series tails (D = 23.952249, 26.82972);
 5. sign statistics of the recorded dDelta_est (run up6; points above 60.1);
-6. the double-double 2 pi of hp/src/dd.rs.
+6. the double-double 2 pi of dd.rs (now in the multidouble crate).
 Exits non-zero if the loader error is absent (it would mean the CSV or the loader changed) or the 2 pi split is wrong.
 """
 import os

@@ -285,3 +285,36 @@ impl<const B: usize> DMat<B> {
         Fl(out)
     }
 }
+
+/// Solves of a `multidouble::linalg::DDLu` for an M-point field given as B lane vectors (M = n): `solve_lanes` in
+/// double-double, `solve_lanes_hi` in plain f64 with the hi parts of the factors (`DDLu::solve_hi`; lo parts out zero).
+pub trait FieldSolve {
+    fn solve_lanes<const B: usize>(&self, f: &Fl<DV, B>) -> Fl<DV, B>;
+    fn solve_lanes_hi<const B: usize>(&self, f: &Fl<DV, B>) -> Fl<DV, B>;
+}
+
+impl FieldSolve for multidouble::linalg::DDLu {
+    fn solve_lanes<const B: usize>(&self, f: &Fl<DV, B>) -> Fl<DV, B> {
+        let m = 8 * B;
+        let mut h = vec![0.0; m];
+        let mut l = vec![0.0; m];
+        f.store(&mut h, &mut l);
+        let mut b: Vec<DD> = (0..m).map(|i| DD { hi: h[i], lo: l[i] }).collect();
+        self.solve(&mut b);
+        for i in 0..m {
+            h[i] = b[i].hi;
+            l[i] = b[i].lo;
+        }
+        Fl::<DV, B>::load(&h, &l)
+    }
+
+    fn solve_lanes_hi<const B: usize>(&self, f: &Fl<DV, B>) -> Fl<DV, B> {
+        let m = 8 * B;
+        let mut h = vec![0.0; m];
+        let mut l = vec![0.0; m];
+        f.store(&mut h, &mut l);
+        self.solve_hi(&mut h);
+        l.iter_mut().for_each(|v| *v = 0.0);
+        Fl::<DV, B>::load(&h, &l)
+    }
+}

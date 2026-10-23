@@ -1,5 +1,9 @@
 # Mixed-precision Newton for the double-double solver (`hp/`)
 
+> The lane types, `v8.rs` and `linalg.rs` named below now live in the crate
+> [multidouble](https://github.com/nmoinvaz/multidouble) (pinned in `hp/Cargo.toml`). hp keeps its `Lane` trait in
+> `hp/src/lane.rs` (the D-matrix products) and the many-right-hand-side solves in `hp/src/field.rs` (`FieldSolve`).
+
 A Newton step of the double-double DSS solver spent 96% of its time in the exact Jacobian (forward-mode duals over
 double-double, one Taylor integration per column; `hp/data/profile_newton.log`). The mixed-precision step keeps the
 residual in double-double and computes the Jacobian in plain f64 on SIMD f64 lanes. Newton with an approximate

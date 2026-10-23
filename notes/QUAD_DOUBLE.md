@@ -1,5 +1,11 @@
 # Quad-double arithmetic in the Rust kernel (`hp/`)
 
+> **Moved.** The arithmetic described here (`dd.rs`, `v8.rs`, `dv.rs`, `qd.rs`, `qv.rs`, `exact.rs`, `qd_tests.rs`, the
+> dual lanes and the LU) now lives in the separate crate [multidouble](https://github.com/nmoinvaz/multidouble), which
+> `hp/Cargo.toml` pins to one commit. Paths `hp/src/<file>` below are that crate's `src/<file>`; the feature `qd_mutate`
+> is its feature `mutate`; `hp/qd_check.py` runs the Rust tests in a checkout of it. The logs below were made before the
+> move; the code is the same.
+
 Quad-double numbers (an unevaluated sum of four f64, about 64 significant digits) are now in the `hpkernel` crate:
 a scalar type `QD` and an 8-lane SIMD type `QV` with bitwise the same results, on the AVX-512, AVX2 and portable
 backends of `v8.rs`. Nothing in the solver uses them yet. Every existing output is bit-identical (section 9). The
