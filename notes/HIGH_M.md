@@ -81,3 +81,28 @@ goes up: pass 1 on the resampled state's own plan to |F| ≤ 10⁻¹⁴, pass 2 
 10⁻²⁸; and the continuation plans from its predictor (a cubic through converged states). The earlier records
 (`hp/data/lowD_dd.jsonl`; the local machine's runs) planned from the resampled starts, so their plans are finer than
 needed: that costs time, not accuracy.
+
+### 1.4 The weakest directions at M ≥ 192 (D = 3.7)
+
+At D = 3.7 the lift to M = 192 (from the converged M = 160 state, pass 1 on its 511-step plan) did not converge
+with plain f64-Jacobian Newton: |F| 5.7×10⁻¹⁰ → 5.0×10⁻¹⁰ → 3.8×10⁻¹⁰ with line-search factors 0.125 and 0.25, steps
+|dz| ≈ 10⁻⁷ (200 times |F|), and the largest LU pivot up from about 10 (M ≤ 160) to 1.9×10³
+(`hp/data/lowD_highM/logs/lift_M192_plain_newton.log`). A diagnostic at that state (three f64 Jacobians that differ
+only in rounding, block storage; script in the log) gave:
+
+| | f64x4 | f64x1 | dd4 |
+|---|---|---|---|
+| Δ correction of the step | +6.9×10⁻¹³ | −3.6×10⁻¹³ | −1.1×10⁻¹³ |
+| \|(J − J̃) dz\| (linear-model mismatch at t = 10⁻³) | 1.2×10⁻¹² | 1.2×10⁻¹² | 4.1×10⁻¹³ |
+| \|F(z + dz)\| (|F(z)| = 3.75×10⁻¹⁰) | 1.8×10⁻⁸ | 3.7×10⁻⁹ | 2.2×10⁻⁹ |
+
+The steps differ by 9–38% between the variants and the sensitivities ∂Δ/∂F by 6–50%, while at the converged M = 128
+state the same comparison gives 2–3×10⁻⁷ and 10⁻⁵. Along each step the Jacobian is accurate to first order (the
+mismatch is 0.1–0.3% of |F|); what differs is the component in the weakest directions, which only the rounding
+fixes. Those components wreck the series: at the M = 160 solution the horizon series has radius 0.28–0.30 in u
+(u₀/r = 0.7, tail 2×10⁻⁴¹) and the centre series 0.017–0.020 (x₀/r = 0.3); after the three damped steps at M = 192 the
+radii are 0.21 (u₀/r = 0.93, tail 3.7×10⁻¹¹) and 0.007 (x₀/r = 0.6–0.8), for every τ-harmonic. These are the
+"junk" directions of `driver.deflated_newton` (top centre and horizon harmonics, coupled to the matching point only
+exponentially weakly): at D = 3.7 the M = 192 grid is far beyond what Δ needs (its top harmonics are 10⁻¹³–10⁻¹⁵), so
+they are weaker than the f64 Jacobian's rounding can resolve. dd4 (double-double base trajectory) does not help,
+since its tangents are f64.

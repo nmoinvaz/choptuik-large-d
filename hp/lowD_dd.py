@@ -174,7 +174,7 @@ def solve_point(D, M, zh, zl, src, a, nodes, outdir, log, segs=None):
     hist = []
     if a.solver == "dn" and not (a.resume and os.path.exists(ckpt)):
         # deflated phase only (the weakest w directions removed from the step), then plain Newton below
-        zh, zl, hist = deflated_newton(s, zh, zl, tol=a.tol, it_max=a.dn_its, w=a.w, verbose=True)
+        zh, zl, hist = deflated_newton(s, zh, zl, tol=a.tol, it_max=a.dn_its, w=a.w, verbose=True, jac=a.jac)
         save(ckpt, np.asarray(zh), np.asarray(zl), dict(meta_c, it=len(hist)))
     # plain Newton with backtracking, one iteration per call so that every accepted step is checkpointed
     for it in range(a.it_max):

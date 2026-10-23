@@ -438,7 +438,7 @@ def delta_correction(s, Fh, Fl):
 
 
 def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_halvings=12, junk_only=False,
-                    delta_max=1e-9, delta_tol=1e-14):
+                    delta_max=1e-9, delta_tol=1e-14, jac="dd", mixed=None):
     """Newton in phases, all with backtracking on |F|_2:
     1. 'all': the step J^-1(-F) with its component in the w weakest right singular directions removed, so the
        well-determined part converges without its second-order error leaking into them;
@@ -446,7 +446,9 @@ def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_hal
        so the selection directions converge while the near-null centre ("junk") directions stay on the predictor's
        smooth trend (the equations fix them only to tol / sigma, and Delta does not feel them);
     3. 'full': plain Newton, if the previous phase stalls above tol.
-    A phase ends when |F| stops dropping by a factor 0.3 per step or a step finds no decrease."""
+    A phase ends when |F| stops dropping by a factor 0.3 per step or a step finds no decrease.
+    jac="f64": the steps and the stored LU (from which the weak directions are computed) come from the mixed-precision
+    step s.newton_mixed(**mixed) (block storage above M = 128) instead of the exact Jacobian."""
     hist = []
     t0 = time.time()
     # with junk_only there is no plain-Newton fallback: it would let the junk directions move to whatever tol / sigma
@@ -456,7 +458,10 @@ def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_hal
     V = {}
     n_prev = None
     for it in range(it_max):
-        dh, dl, Fh, Fl, pmin, pmax = s.newton(zh, zl)
+        if jac == "f64":
+            dh, dl, Fh, Fl, pmin, pmax = s.newton_mixed(zh, zl, **(mixed or {}))
+        else:
+            dh, dl, Fh, Fl, pmin, pmax = s.newton(zh, zl)
         nF = dd_norm(Fh, Fl)
         n0 = rnorm(Fh, Fl)
         mode = phases[ph]
