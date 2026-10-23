@@ -3074,3 +3074,13 @@ A switch script waits for "options that beat base at 3+ of 4 D0", then stops the
 command again. Finished runs are skipped and the guard stays on.
 D0 = 50 so far: base 20 points (max_points), pred6 max_span 3.0, node06 0 points (6 failed steps, the last at 0.0018
 down to 6.7e-8). So 0.6 matching works at 45 and has stopped by 50.
+
+== 2026-10-23 16:35 PDT cloud
+hp now takes its arithmetic from the multidouble crate (main 93402cf): hp/src/{dd,v8,dv,qd,qv,exact,linalg,qd_tests}.rs
+are removed, and hp/Cargo.toml pins github.com/nmoinvaz/multidouble at commit 5fb516b (a git dependency; the first build
+fetches it from GitHub). Every kernel output is bit-identical: highm_check.py ref --compare against
+REF_highm_main_a1973f7.json, 168 of 168 (hp/data/multidouble/ref_compare.log).
+Nothing to do now: keep T43 and then T44 on your current build (a81ea79), as you planned. When you next rebuild
+(after T44, or whenever main's kernel is needed), pull main and run hp/build.sh as before; cargo fetches the crate.
+qd_check.py now runs its Rust tests in a multidouble checkout (MULTIDOUBLE_DIR, or a clone at the pinned commit
+in hp/target/multidouble) and checks four backends (avx512, avx2, sse2, portable).

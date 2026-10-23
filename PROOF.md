@@ -311,7 +311,7 @@ The canonical status, link by link, is [proof/C_selection.md](proof/C_selection.
 | inner fixed point (B5 part 1) | proved for each fixed M given (H8); certified for M = 1, n ≥ e^{73.89} ([proof/B5_inner.md](proof/B5_inner.md)) |
 | global continuation (B8) | **certified for M = 1** (n ≥ e^{62}; (H8) of B5(1) for n ≥ e^{73.89}); proved for every fixed M without a numerical n₀(M) ([proof/B8_constants.md](proof/B8_constants.md)) |
 | outer Borel plane | hypothesis (H-σ): proved in the linear case and near ζ = 0; not used by Theorem B(M) ([proof/B3_borel.md](proof/B3_borel.md)) |
-| **Theorem B(1)** | **not proved**: the jump lemma B5(2)'s error is only estimated (ln n ≳ 285 at the certified κ₁ = 0.6); B6's block-diagonalization, the error control of the transport along x > 1 and B8's exact light-cone gauge are not written or not run; the B5, B8 and B3 certificate code has not been reviewed independently (C_selection.md §13.1) |
+| **Theorem B(1)** | **certified, assuming Braaksma's theorem** (n ≥ e^{89.75}, \|p_n − p*\| ≤ e^{67.84}/n; [proof/B_chain.md](proof/B_chain.md) §15): B5(2) in label form (lemma L), Lemma P and B7 by a Krawczyk test; the light cone by Lemma LC (B8 in the exact light-cone gauge up to x = 1) and Lemma J; B6 and the transport factor are not needed. Not yet reviewed independently ([notes/PROOF_QUEUE.md](notes/PROOF_QUEUE.md) P2) |
 
 **Architecture (after Xie–Tanveer).** Work with the self-similar unknowns (p, m, b, c) as functions of (x, θ) analytic
 in θ on a strip and in x on a complex domain that reaches the inner region x ~ √n and the light cone x = 1.

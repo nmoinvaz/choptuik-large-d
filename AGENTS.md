@@ -18,7 +18,7 @@ Conventions for the Claude sessions (cloud and local) that run computations here
   the thread budget with several jobs rather than one job with more processes. For M ≥ 7 add `--schur` (without it one
   ulp of B₇ is a 0.3–3% floor on ω); `--verbose=2` prints every level's solves. Killing a hier.py main process leaves its
   spawn workers running: on Windows kill the tree, `taskkill /T /F /PID <pid>`.
-- **Double-double solver (`hp/`):** rebuild with `hp/build.sh` after pulling changes to `hp/src`. γ(D) comes from
+- **Double-double solver (`hp/`):** rebuild with `hp/build.sh` after pulling changes to `hp/src` or `hp/Cargo.toml`. Its arithmetic is the crate multidouble (github.com/nmoinvaz/multidouble), a git dependency pinned to one commit in `hp/Cargo.toml`: cargo fetches it on the first build (needs access to GitHub). A change to the arithmetic goes into that repository first, then the pinned commit here is bumped, and the bit-identity checks are rerun. γ(D) comes from
   `hp/gamma_dd.py` / `hp/gamma_batch.py --procs N`. Its root search is local (around the formula's value): to count
   unstable modes, use a winding count of det M(λ) (notes/MODE_COUNT.md, if present).
 - **Other matter models:** the ℓ-multiplet solver is `solver/matter/dss_ell.py` (a copy-and-adapt of `solver/dss.py`;

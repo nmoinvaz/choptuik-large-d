@@ -1,0 +1,15 @@
+# python3 qd_check.py mpmath --n=400; then --mutate=5 (control, must fail); then backends --n=400 --only=sse2,portable
+multidouble 5fb516b4823679ab397f4fdf7989d18f4cb6789e in /home/claude/dss-residual-kernel/hp/target/multidouble
+quad-double results against mpmath (3000-bit working precision); units of 2^-209; dump /tmp/qd_dump_rkt05ti_
+all within the thresholds
+exit 0
+3365 FAILURES
+exit 1
+multidouble 5fb516b4823679ab397f4fdf7989d18f4cb6789e in /home/claude/dss-residual-kernel/hp/target/multidouble
+avx512    not run yet
+avx2      not run yet
+sse2      n 400  exit 0  isa reported sse2  digest eac0ade343747a1c  multidouble 5fb516b48236  test result: ok. 5 passed; 0 failed; 4 ignored; 0 measured; 6 filtered out; finished in 0.27s
+portable  n 400  exit 0  isa reported portable  digest eac0ade343747a1c  multidouble 5fb516b48236  test result: ok. 5 passed; 0 failed; 4 ignored; 0 measured; 6 filtered out; finished in 0.22s
+DIGESTS DIFFER OR MISSING
+exit 1
+

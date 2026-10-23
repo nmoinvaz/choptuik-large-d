@@ -7,9 +7,9 @@ comms.txt. The coordinator keeps this file current: when an item starts, finishe
 
 | # | Item | Why it is needed | Where | Status |
 |---|---|---|---|---|
-| P1 | Close Theorem B(1), the selection theorem for the one-harmonic model | the whole chain from the inner zero to a solution exists for M = 1 except the links in C_selection.md §13.1 | cloud agent | **done, conditional** (2026-10-23, merged cba0f62): Theorem B(1) holds for n ≥ e^{89.75}, assuming the light-cone hypotheses (H-LC), (H-G), (H-J) (P1L) and Braaksma's theorem |
-| P1L | The light cone: gaps (a)–(c) of Theorem B(1) | P1 found that the remaining links rest on three open problems at x = 1: (a) control of the nonlinear solution in the half-discs near the light cone, (b) the exact light-cone gauge c(1) = 1, (c) a proof that the outer jump is fast-type; without them Theorem B(1) is conditional | the P1 agent | **running**: plan in proof/B_chain.md §12; (a)+(b) as one exact-gauge bootstrap (Lemma LC), closure passes at ln n₀ = 73.89, contraction certificate running |
-| P2 | Independent review and second implementations of the certificate code | no certificate of B5, B8 or (H8) has been reviewed; lemma 6b₁'s disc covering has not been re-implemented; at M = 3 the majorant code of lemmas S and 6b₀ and the 6b₁ discs are not reviewed | cloud agent that has not seen P1 | queued (next cloud slot) |
+| P1 | Close Theorem B(1), the selection theorem for the one-harmonic model | the whole chain from the inner zero to a solution exists for M = 1 except the links in C_selection.md §13.1 | cloud agent | **done** (2026-10-23; merged cba0f62 and 7d25496): with P1L, Theorem B(1) is certified for M = 1 for n ≥ e^{89.75}, assuming Braaksma's theorem; not yet reviewed (P2) |
+| P1L | The light cone: gaps (a)–(c) of Theorem B(1) | P1 found that the remaining links rest on three open problems at x = 1: (a) control of the nonlinear solution in the half-discs near the light cone, (b) the exact light-cone gauge c(1) = 1, (c) a proof that the outer jump is fast-type; without them Theorem B(1) is conditional | the P1 agent | **done** (2026-10-23, merged 7d25496): Lemma LC (B8 into the light-cone half-disc in the exact gauge c(1) = 1, a contraction, θ = 0.7355, gauge offset ≤ 3.59×10⁶n⁻⁵) gives (a) and (b); Lemma J (θ = 0.176) gives (c); proof/B_chain.md §§13–15 |
+| P2 | Independent review and second implementations of the certificate code | no certificate of B5, B8 or (H8) has been reviewed, nor P1's lemma L, B5(2), Lemma P, B7, Lemma LC and Lemma J (B_chain.md §10 lists the code and the hand arguments); lemma 6b₁'s disc covering has not been re-implemented; at M = 3 the majorant code of lemmas S and 6b₀ and the 6b₁ discs are not reviewed | cloud agent that has not seen P1 | queued (next cloud slot) |
 | P3 | Theorem A(M = 5) | the five-harmonic zero, the first truncation close to the real answer (0.999228); the point certificate fails with first-order enclosures | cloud agent | queued |
 | P4 | σ₁₅ at ω/ω∞ = 0.99, 1.00, 1.01 | numerical evidence: tests the ring of fifteen zeros that σ₁₄ left open, and narrows the estimator range | local machine (T44, after T43) | queued |
 | P5 | A rigorous type bound for S₁ (the entire-function route) | turns the amplitude series into a conditional Theorem A(∞): the zero certified assuming an explicit type bound ([proof/D_entire.md](../proof/D_entire.md)) | cloud agent | queued |
@@ -51,6 +51,12 @@ Progress (wip/theoremB1):
 Done when C_selection.md §13.1 lists no missing link (Braaksma's theorem stays assumed) and the new certificate code
 has mutation controls. The independent review is P2's.
 
+Outcome (2026-10-23): done together with P1L. Theorem B(1) is certified for M = 1 (B_chain.md §15): for every
+n ≥ e^{89.75} exactly one p_n in Theorem A's box gives a light-cone-gauge, centre-regular solution analytic at x = 1,
+with |p_n − p*|_∞ ≤ e^{67.84}/n. It assumes Braaksma's theorem (through Theorem A and lemma S), and "the" solution is
+unique within the class 𝒦_h of Lemma LC, a neighbourhood of the formal series. Items 4–5 (B6, the transport) turned out
+not to be needed. Seven discrepancies with the earlier notes are recorded in B_chain.md §9.
+
 ## P1L: the light cone
 
 In order: (a), then (b), then (c), since both later ones rest on (a). The light cone is a regular singular point of
@@ -62,12 +68,23 @@ light cone and is the closest precedent; Olver's error bounds at singularities c
 plan with the exact statements (P1's write-up of (a)–(c) in C_selection.md §13.1), then the certificates, with mutation
 controls. Done when Theorem B(1) is unconditional apart from Braaksma's theorem.
 
+Outcome (2026-10-23, cdc9aa4 and d1354fd): (a) and (b) as one lemma, Lemma LC (`b8m_lc.py`): B8 continued into the
+light-cone half-disc in the exact gauge c(1) = 1, every D⁻¹ near x = 1 rewritten in bounded form, constants per radial
+band; closure for n ≥ e^{73.89}, contraction θ = 0.7355 from a 40×40 Lipschitz matrix; gauge offset
+|c(0) − c^K(0)|₁ ≤ 3.59×10⁶n⁻⁵, inside B8's certified 10⁷ range. (c) is Lemma J (`b8m_lcj.py`): a flat estimate on the
+Stokes segment in a norm weighted by half the fast exponent, θ = 0.176. Mutation controls fire for every new
+certificate; a numerical check at n = 10³ (`b8m_lc_numcheck.py`) passes. In the exact gauge the light cone helps: the
+S-mode is attracting toward x = 1. Briot–Bouquet theory was not needed.
+
 ## P2: review
 
 A fresh agent, given the code and the statements but not P1's notes on how they were reached, re-derives or
 re-implements: `b5_bounds.py` and `b5_formulas.py` (B5(1)); `b8_alg.py` and `b8m_*.py` (B8 and (H8)); lemma 6b₁'s
 disc covering at M = 1 and M = 3; lemmas S and 6b₀'s majorant code at M = 3; and P1's new certificates once they
-exist. Shared machinery between the two implementations is recorded (AGENTS.md: independent checks are independent).
+exist: `b5_label.py`, `b5_jump.py`, `b8m_bounds.py --d0`, `b7_adjoint.py`, `b7_ift.py`, `b8m_lc.py`, `b8m_lcj.py`, and the
+hand arguments of B_chain.md §10 (most of all, in Lemma LC, that the majorant's derivative bounds the Lipschitz
+constant, and the double-sector symmetry). Shared machinery between the two implementations is recorded (AGENTS.md:
+independent checks are independent).
 
 ## P3: Theorem A(M = 5)
 

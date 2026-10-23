@@ -16,7 +16,8 @@
 use crate::dd::DD;
 use crate::dv::DV;
 use crate::field::{cs, cs_range, cs_w, horner, DMat, Fl, State};
-use crate::lane::{Dtn, Du, F8, Fu, Fun, Lane};
+use crate::lane::{BaseLane, Dtn, Du, F8, Fu, Fun, Lane};
+use crate::field::FieldSolve;
 use crate::linalg::{ld_for, DDLu};
 use rayon::prelude::*;
 

@@ -1,0 +1,4 @@
+  contraction constants: theta = 1.2183e+30 (weights {'V': 1e-12, 'S': 1.0, 'b': 1e-12, 'c': 1e-12}), theta0 = 5.8367e-05
+MUTATION kernel: the contraction must FAIL: caught
+  contraction constants: theta = 2.8342e+02 (weights {'V': 1.0, 'S': 0.004771792523427867, 'b': 0.02135936024788961, 'c': 1.8389855900676457e-06}), theta0 = 5.2844e-01
+MUTATION Om: the contraction must FAIL: caught

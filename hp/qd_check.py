@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
-"""Independent checks of the quad-double arithmetic in hp/src/qd.rs and hp/src/qv.rs (notes/QUAD_DOUBLE.md).
+"""Independent checks of the quad-double arithmetic of the multidouble crate (src/qd.rs, src/qv.rs; notes/QUAD_DOUBLE.md).
 
     cd hp && python3 qd_check.py mpmath [--n=2000] [--seed=1] [--dump=DIR] [--mutate=ID]
-    cd hp && python3 qd_check.py backends [--n=4000] [--only=avx512,avx2,portable] [--fresh] [--out=DIR]
+    cd hp && python3 qd_check.py backends [--n=4000] [--only=avx512,avx2,sse2,portable] [--fresh] [--out=DIR]
+
+The arithmetic lives in the multidouble crate (https://github.com/nmoinvaz/multidouble), which hp/Cargo.toml pins to
+one commit. The Rust tests run in a checkout of that crate: MULTIDOUBLE_DIR if set (its commit is reported and must
+equal the pinned one unless --any_rev), otherwise a clone at the pinned commit in hp/target/multidouble.
 
 mpmath: the Rust test qd_dump (built for AVX-512 as in the backends check, into hp/target/qd_native) writes inputs and
   scalar results of every operation and input category, of the dot accumulator, and of decimal parsing and printing;
@@ -12,16 +16,17 @@ mpmath: the Rust test qd_dump (built for AVX-512 as in the backends check, into 
   allowance of the Rust tests. It shares no code with the Rust reference (src/exact.rs). Parsing is checked against
   the exact decimal value (greedy round-to-nearest: |x - v| <= ulp(x3)/2), printing against correct rounding of the
   exact value. --dump=DIR reads an existing dump instead of running cargo. Exit 1 on any failure. --mutate=ID is the
-  control: the dump is written by a build with the qd_mutate feature and mutation ID active (qd::mutate in
-  hp/src/qd.rs, e.g. 5: sloppy mul drops the error of a0 b2; 14: parse truncates its last part), so this check must
+  control: the dump is written by a build with the mutate feature and mutation ID active (qd::mutate in
+  multidouble's src/qd.rs, e.g. 5: sloppy mul drops the error of a0 b2; 14: parse truncates its last part), so this check must
   then fail (exit 1).
-backends: runs `cargo test --release --lib qd_` (the accuracy, agreement and decimal tests) with the AVX-512, the AVX2
-  and the portable v8 backend (RUSTFLAGS "-C target-cpu=x86-64-v4", "-C target-feature=+avx2,+fma", none: explicit
-  features, so that a build does not depend on the host it was made on; build directories hp/target/qd_<isa>); every
+backends: runs `cargo test --release --lib qd_` (the accuracy, agreement and decimal tests) with the AVX-512, AVX2,
+  SSE2 and portable v8 backends (RUSTFLAGS "-C target-cpu=x86-64-v4", "-C target-feature=+avx2,+fma", none, and none
+  with the cargo feature portable: explicit features, so that a build does not depend on the host it was made on;
+  build directories hp/target/qd_<isa>); every
   build must pass, and the digests of all scalar results must agree (each build also checks that its 8-lane results
   equal the scalar ones bit for bit). Exit 1 otherwise. Each backend's result is written to DIR/<isa>.txt (default
   data/quad_double/backends) as soon as it is known, and a rerun skips the backends recorded there as passed with the
-  same n and RUSTFLAGS (--fresh reruns them; --only=... runs a subset, and the digests are then compared over every
+  same n, RUSTFLAGS, features and multidouble commit (--fresh reruns them; --only=... runs a subset, and the digests are then compared over every
   recorded backend). The portable build takes 15-20 minutes on two cores.
 """
 import os
@@ -33,11 +38,14 @@ import tempfile
 
 import mpmath as mp
 
+CRATE = None
 HERE = os.path.dirname(os.path.abspath(__file__))
 mp.mp.prec = 3000
 U = mp.mpf(2) ** -209
 TINY = 16 * mp.mpf(2) ** -1074
-BUILDS = {"avx512": "-C target-cpu=x86-64-v4", "avx2": "-C target-feature=+avx2,+fma", "portable": ""}
+# backend: (RUSTFLAGS, cargo features)
+BUILDS = {"avx512": ("-C target-cpu=x86-64-v4", ""), "avx2": ("-C target-feature=+avx2,+fma", ""), "sse2": ("", ""),
+          "portable": ("", "portable")}
 
 KIND = {"sloppy add": "add", "accurate add": "add", "qd + f64": "add", "qd + dd": "add", "sloppy mul": "mul",
         "accurate mul": "mul", "qd x f64": "mul", "qd x dd": "mul", "sqr": "sqr", "sloppy div": "div",
@@ -49,11 +57,42 @@ def opts():
     return dict((a[2:].split("=", 1) + [True])[:2] for a in sys.argv[2:] if a.startswith("--"))
 
 
-def cargo(args, rustflags, target, env=None):
+def pinned_rev():
+    m = re.search(r'multidouble\s*=\s*\{[^}]*rev\s*=\s*"([0-9a-f]+)"', open(os.path.join(HERE, "Cargo.toml")).read())
+    return m.group(1)
+
+
+def git(args, cwd):
+    return subprocess.run(["git"] + args, cwd=cwd, capture_output=True, text=True, check=True).stdout.strip()
+
+
+def crate_dir(any_rev=False):
+    """A checkout of multidouble at the commit hp/Cargo.toml pins (or MULTIDOUBLE_DIR), and its commit."""
+    rev = pinned_rev()
+    d = os.environ.get("MULTIDOUBLE_DIR")
+    if not d:
+        d = os.path.join(HERE, "target", "multidouble")
+        if not os.path.isdir(os.path.join(d, ".git")):
+            os.makedirs(os.path.dirname(d), exist_ok=True)
+            git(["clone", "--quiet", "https://github.com/nmoinvaz/multidouble", d], HERE)
+        if git(["rev-parse", "HEAD"], d) != rev:
+            git(["fetch", "--quiet", "origin"], d)
+            git(["checkout", "--quiet", "--detach", rev], d)
+    head = git(["rev-parse", "HEAD"], d)
+    dirty = git(["status", "--porcelain", "--untracked-files=no"], d) != ""
+    if (head != rev or dirty) and not any_rev:
+        sys.exit(f"{d} is at {head[:12]}{' with local changes' if dirty else ''}, not the pinned {rev[:12]}; "
+                 "pass --any_rev to test it anyway")
+    return d, head + ("+dirty" if dirty else "")
+
+
+def cargo(args, build, target, env=None, features=""):
+    rustflags, feat = BUILDS[build] if isinstance(build, str) else build
+    feat = ",".join(f for f in (feat, features) if f)
     e = dict(os.environ, RUSTFLAGS=rustflags, CARGO_TARGET_DIR=os.path.join(HERE, "target", target))
     e.update(env or {})
-    r = subprocess.run(["nice", "-n", "10", "cargo", "test", "--release", "--lib"] + args, cwd=HERE, env=e,
-                       capture_output=True, text=True)
+    cmd = ["nice", "-n", "10", "cargo", "test", "--release", "--lib"] + (["--features", feat] if feat else []) + args
+    r = subprocess.run(cmd, cwd=CRATE, env=e, capture_output=True, text=True)
     return r.returncode, r.stdout + r.stderr
 
 
@@ -218,6 +257,9 @@ def main():
         print(__doc__)
         sys.exit(2)
     o = opts()
+    global CRATE
+    CRATE, rev = crate_dir(bool(o.get("any_rev")))
+    print(f"multidouble {rev} in {CRATE}")
     if sys.argv[1] == "backends":
         n = str(o.get("n", 4000))
         out = os.path.join(HERE, str(o.get("out", os.path.join("data", "quad_double", "backends"))))
@@ -227,13 +269,15 @@ def main():
             path = os.path.join(out, f"{isa}.txt")
             if os.path.exists(path) and not o.get("fresh"):
                 rec = dict(ln.rstrip("\n").split("\t", 1) for ln in open(path))
-                if rec.get("n") == n and rec.get("exit") == "0" and rec.get("rustflags") == BUILDS[isa]:
+                if (rec.get("n") == n and rec.get("exit") == "0" and rec.get("rustflags") == BUILDS[isa][0]
+                        and rec.get("features", "") == BUILDS[isa][1] and rec.get("multidouble") == rev):
                     print(f"{isa:<9} passed before, recorded in {path}, skipped")
                     continue
-            rc, outp = cargo(["qd_", "--", "--test-threads=1", "--nocapture"], BUILDS[isa], f"qd_{isa}", {"QD_N": n})
+            rc, outp = cargo(["qd_", "--", "--test-threads=1", "--nocapture"], isa, f"qd_{isa}", {"QD_N": n})
             dg = re.search(r"qd digest (\w+) \(n \d+, seed \d+, isa (\w+)\)", outp)
             res = re.findall(r"test result: .*", outp)
-            rec = {"isa": isa, "n": n, "rustflags": BUILDS[isa], "exit": str(rc), "isa_reported": dg.group(2) if dg else "?",
+            rec = {"isa": isa, "n": n, "rustflags": BUILDS[isa][0], "features": BUILDS[isa][1], "multidouble": rev,
+                   "exit": str(rc), "isa_reported": dg.group(2) if dg else "?",
                    "digest": dg.group(1) if dg else "?", "result": res[-1] if res else "no result"}
             with open(path, "w") as f:
                 f.write("".join(f"{k}\t{v}\n" for k, v in rec.items()))
@@ -245,7 +289,8 @@ def main():
                 bad += 1
                 continue
             rec = dict(ln.rstrip("\n").split("\t", 1) for ln in open(path))
-            print(f"{isa:<9} n {rec['n']}  exit {rec['exit']}  isa reported {rec['isa_reported']}  digest {rec['digest']}  {rec['result']}")
+            print(f"{isa:<9} n {rec['n']}  exit {rec['exit']}  isa reported {rec['isa_reported']}  digest {rec['digest']}  "
+                  f"multidouble {rec.get('multidouble', '(in hp)')[:12]}  {rec['result']}")
             digests[isa] = rec["digest"] if rec["n"] == n else None
             bad += rec["exit"] != "0" or rec["digest"] == "?" or rec["isa_reported"] != isa
         same = len(digests) == len(BUILDS) and len(set(digests.values())) == 1 and None not in digests.values()
@@ -256,10 +301,10 @@ def main():
     if not d:
         d = tempfile.mkdtemp(prefix="qd_dump_")
         mut = str(o.get("mutate", 0))
-        feat = ["--features", "qd_mutate"] if mut != "0" else []
-        rc, out = cargo(feat + ["qd_dump", "--", "--ignored", "--nocapture"], BUILDS["avx512"],
+        feat = "mutate" if mut != "0" else ""
+        rc, out = cargo(["qd_dump", "--", "--ignored", "--nocapture"], "avx512",
                         "qd_native_mutate" if feat else "qd_native", {"QD_DUMP": d, "QD_N": n, "QD_SEED": seed,
-                                                                      "QD_MUTATE": mut})
+                                                                      "QD_MUTATE": mut}, features=feat)
         if rc != 0:
             print(out)
             sys.exit(1)
