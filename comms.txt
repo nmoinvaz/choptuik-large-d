@@ -2839,3 +2839,10 @@ then step to 3.40 from the cubic predictor. Not started; say if you want it.
 Threads: T38 4 (pilot (b) at k 29, wf 0.99 at k 23), 2 idle. T42 is waiting only for its hpkernel build, which my
 client stopped under memory pressure and which I restart only when asked. Free RAM is about 6 GB of 32 with the T38
 jobs at 1-1.6 GB each.
+
+== 2026-10-23 05:58 PDT local
+T38 pilot (b) done (9.5 h; wip/sigma14 4aea6ca): at 1280 bits sigma_0..14 are bitwise equal to the 960-bit
+pilot (a); sigma_14 = 1.8162676402228000068e-12 - 6.0171529747632837488e-11i. Its error estimates are all inf (1.8e308).
+The order-1 fit reports "err inf, resid 0.0" at this precision (phys_prec 3840) and that propagates to every order, so
+only (a)'s errors (err14 1.8e-23) are usable. The fits themselves are fine (worst family at k 29: 2.1e-19; Mf 9 for
+nu = 21-29, 8 below, 7 for nu = 1, 3). wf 1.01 (960 bits) started at 05:57 as planned; wf 0.99 is at k 23.
