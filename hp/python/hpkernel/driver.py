@@ -284,7 +284,8 @@ def newton_step(s, zh, zl, jac="dd", mixed=None, gmres=None, verbose=False):
         if jac in ("f64h", "f64hg"):
             kw["horizon_dd"] = HORIZON_DD
         dh, dl, Fh, Fl, pmin, pmax = s.newton_mixed(zh, zl, **kw)
-    tr, tj, tf, ts = s.step_timing()
+    st = getattr(s, "step_timing", None)       # (absent in builds before notes/LARGE_D_MIXED.md)
+    tr, tj, tf, ts = st() if st else (float("nan"),) * 4
     info = dict(t_res=tr, t_jac=tj, t_lu=tf, t_solve=ts, t_prod=0.0, products=0)
     if jac in ("f64g", "f64hg"):
         g = dict(GMRES, **(gmres or {}))
@@ -327,19 +328,13 @@ def newton_solve(s, zh, zl, tol=1e-28, it_max=12, chord=0, verbose=True, ls=True
         return accepted, lam, th, tl
 
     for it in range(it_max):
-        info = None
-        if jac == "f64":
-            dh, dl, Fh, Fl, pmin, pmax = s.newton_mixed(zh, zl, **(mixed or {}))
-        elif jac != "dd":
-            dh, dl, Fh, Fl, pmin, pmax, info = newton_step(s, zh, zl, jac, mixed, gmres)
-        else:
-            dh, dl, Fh, Fl, pmin, pmax = s.newton(zh, zl)
+        # (jac "dd": s.newton; "f64": s.newton_mixed(**mixed), as before; info: the step's seconds by part)
+        dh, dl, Fh, Fl, pmin, pmax, info = newton_step(s, zh, zl, jac, mixed, gmres)
         n0 = rnorm(Fh, Fl)
         nF = dd_norm(Fh, Fl)
         if nF < tol:
             rec = dict(it=it, F=nF, dz=dd_norm(dh, dl), Delta=float(zh[-1]), piv=(pmin, pmax), t=round(time.time() - t0, 1))
-            if info is not None:
-                rec.update(info)
+            rec.update(info)
             polish = ""
             if jac != "dd":
                 # Linear convergence leaves an error of about this step's size in the weakly determined (near-null)
@@ -363,8 +358,7 @@ def newton_solve(s, zh, zl, tol=1e-28, it_max=12, chord=0, verbose=True, ls=True
                     print(f"  newton {it}: |F| {nF:.2e}: no decrease along the f64-Jacobian step; retrying with the exact "
                           f"Jacobian", flush=True)
                 dh, dl, Fh, Fl, pmin, pmax = s.newton(zh, zl)
-                if info is not None:
-                    info["retry_dd"] = True
+                info["retry_dd"] = True
             else:
                 # no dense exact Jacobian above DENSE_M_MAX: retry with the f64 tangents on a double-double base
                 # trajectory (the more accurate f64 Jacobian, 'dd4'), in block storage
@@ -381,8 +375,7 @@ def newton_solve(s, zh, zl, tol=1e-28, it_max=12, chord=0, verbose=True, ls=True
         zh, zl = th, tl
         rec = dict(it=it, F=nF, dz=dd_norm(dh, dl), lam=lam, dDelta=float(dh[-1] + dl[-1]) * lam, Delta=float(zh[-1]),
                    piv=(pmin, pmax), t=round(time.time() - t0, 1))
-        if info is not None:
-            rec.update(info)
+        rec.update(info)
         hist.append(rec)
         if verbose:
             print(f"  newton {it}: |F| {nF:.2e} |dz| {rec['dz']:.2e} lam {lam:.3g} dDelta {rec['dDelta']:+.2e} "
@@ -604,18 +597,13 @@ def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_hal
     ph = 0
     V = {}
     n_prev = None
-    info = None
-
     def dcorr(Fh, Fl, dz_delta):
         # the linearised Delta correction -dDelta/dF . F: by the stored LU's transpose solve for dd (as before), else
         # the Delta component of the step's solve (the same quantity, exact with the correction loop)
         return delta_correction(s, Fh, Fl) if jac == "dd" else float(dz_delta)
 
     for it in range(it_max):
-        if jac == "dd":
-            dh, dl, Fh, Fl, pmin, pmax = s.newton(zh, zl)
-        else:
-            dh, dl, Fh, Fl, pmin, pmax, info = newton_step(s, zh, zl, jac, mixed, gmres)
+        dh, dl, Fh, Fl, pmin, pmax, info = newton_step(s, zh, zl, jac, mixed, gmres)
         dz_delta = float(dh[-1] + dl[-1])
         nF = dd_norm(Fh, Fl)
         n0 = rnorm(Fh, Fl)
@@ -624,8 +612,8 @@ def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_hal
             rec = dict(it=it, F=nF, Delta=float(zh[-1]), piv=(pmin, pmax), mode=mode, accepted=True,
                        dDelta_est=dcorr(Fh, Fl, dz_delta), t=round(time.time() - t0, 1))
             polish = ""
+            rec.update(info)
             if jac != "dd":
-                rec.update(info)
                 th, tl = dd_add(zh, zl, dh, dl)
                 Th, Tl = s.residual(th, tl)
                 n1 = dd_norm(Th, Tl)
@@ -677,8 +665,7 @@ def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_hal
                   f"Delta {th[-1]:.15f} t {time.time() - t0:.0f}s"
                   + (f" ({info['products']} products)" if info and info.get("products") else ""), flush=True)
         rec = dict(it=it, F=nF, mode=mode, lam=lam, Delta=float(th[-1]), piv=(pmin, pmax), t=round(time.time() - t0, 1))
-        if info is not None:
-            rec.update(info)
+        rec.update(info)
         hist.append(rec)
         if not accepted:
             if junk_only and mode == "sel":

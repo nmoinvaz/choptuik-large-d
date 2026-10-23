@@ -55,6 +55,19 @@ def freeze_p1(zh, zl, a, M):
     return zh, zl
 
 
+def gmres_opts(a):
+    """options of driver.gmres_refine from --step_tol / --max_products (driver.GMRES defaults otherwise)"""
+    return {k: v for k, v in (("step_tol", a.step_tol), ("max_products", a.max_products)) if v is not None}
+
+
+def step_split(hist):
+    """seconds of the Newton steps by part (residual, Jacobian, LU, solves, products) and the products, summed over a
+    point's history (driver.newton_step's records)"""
+    out = {k: round(sum(r.get(k, 0.0) for r in hist if r.get(k) == r.get(k)), 3) for k in ("t_res", "t_jac", "t_lu", "t_solve", "t_prod")}
+    out["products"] = sum(r.get("products", 0) for r in hist)
+    return out
+
+
 def solve_at(D, zh, zl, a, nodes, M, it_max, pin=None):
     """pin: None, or (coeffs, ks) - p1's harmonics ks (all in (a.pin, a.kfreeze]) held at the given cos/sin
     coefficients (PinnedSolver), the rest solved"""
@@ -65,15 +78,16 @@ def solve_at(D, zh, zl, a, nodes, M, it_max, pin=None):
         hh, hl = band_field(pin[0], pin[1], M)
         s = PinnedSolver(s, M, hh, hl)
     t0 = time.time()
+    jkw = {} if a.jac == "dd" else dict(jac=a.jac, gmres=gmres_opts(a))
     if a.corrector in ("dn", "dnp"):
         zh2, zl2, hist = deflated_newton(s, zh, zl, tol=a.tol, it_max=it_max, w=a.w, verbose=a.verbose,
-                                         junk_only=a.junk_only, delta_tol=a.delta_tol)
+                                         junk_only=a.junk_only, delta_tol=a.delta_tol, **jkw)
     else:
-        zh2, zl2, hist = newton_solve(s, zh, zl, tol=a.tol, it_max=it_max, verbose=a.verbose)
+        zh2, zl2, hist = newton_solve(s, zh, zl, tol=a.tol, it_max=it_max, verbose=a.verbose, **jkw)
     if a.corrector == "dnp" and hist and hist[-1]["F"] < a.polish_from:
         # polish: plain Newton to the bottom (deflated Newton stops at the first iterate under tol, or stalls just
         # above it, and leaves that point's error in the predictor's history)
-        zh3, zl3, h3 = newton_solve(s, zh2, zl2, tol=1e-40, it_max=a.polish_its, verbose=a.verbose)
+        zh3, zl3, h3 = newton_solve(s, zh2, zl2, tol=1e-40, it_max=a.polish_its, verbose=a.verbose, **jkw)
         if h3 and h3[-1]["F"] < hist[-1]["F"]:
             zh2, zl2 = zh3, zl3
             hist = hist + [dict(r, polish=True) for r in h3]
@@ -136,6 +150,12 @@ def main():
     ap.add_argument("--lm", type=int, default=15, help="Levenberg-Marquardt iterations after a failed Newton (0: off)")
     ap.add_argument("--Dlist", default="", help="explicit D values to visit in order (comma list or @file); "
                     "D_end is then ignored")
+    ap.add_argument("--jac", default="dd", choices=["dd", "f64", "f64h", "f64g", "f64hg"],
+                    help="Newton step's Jacobian (driver.newton_step; notes/LARGE_D_MIXED.md): dd exact (default); f64 "
+                    "mixed precision; f64h with the horizon block in double-double; f64g / f64hg with the GMRES "
+                    "correction loop (exact products); the sensitivities then come from the step's f64 LU")
+    ap.add_argument("--step_tol", type=float, default=None, help="f64g / f64hg: the loop's step-change tolerance")
+    ap.add_argument("--max_products", type=int, default=None, help="f64g / f64hg: the loop's product budget per step")
     ap.add_argument("--schedule", default="", help="node changes during the scan: 'D1=x,x,...;D2=x,x,...' "
                     "(at the first converged point with D >= D_i the solution is re-noded and re-converged)")
     a = ap.parse_args()
@@ -273,6 +293,8 @@ def main():
         if rec["dDelta_est"] is None:
             rec["dDelta_est"] = delta_correction(s, *s.residual(zh, zl))
         rec["polish"] = sum(1 for r in hist if r.get("polish"))
+        if a.jac != "dd":
+            rec.update(jac=a.jac, split=step_split(hist))
         rec.update(pin_rec)
         with open(a.out, "a") as f:
             f.write(json.dumps(rec) + "\n")

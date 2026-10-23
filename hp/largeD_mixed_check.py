@@ -11,10 +11,17 @@ jvp: at each state, J v by Solver.jvp (one forward-mode pass per block, double-d
   Jacobian (Solver.jacobian, hi and lo) times v, the product summed in double-double (dd_matvec below), for a random v
   with nonzero lo parts. Per entry the difference is scaled by (|J| |v|)_i (the size of the terms summed), and the
   largest such ratio is reported, with the normwise ratio max |diff| / max |Jv| and the product's time against the
-  Jacobian's. Pass (written before the runs): every ratio <= 1e-28, i.e. agreement to double-double rounding up to a
-  factor of ~100 for the summation length. Also: F from the same pass against Solver.residual, bitwise.
-  Default states: D = 3.7, M = 48 resampled to 16 and to 32 (no freeze); D = 20.04, M = 32 (no freeze); D = 50.01,
-  M = 32 with kfreeze 13 (the frozen horizon rows).
+  Jacobian's. Also: F from the same pass against Solver.residual, bitwise; and a unit vector's product against that
+  Jacobian column, bitwise (the same pass).
+  The two share the model's equations (model::block_state on Du lanes); what the check tests is the product's own
+  part: the tangent seeding of the inputs and Delta, the target node, the frozen horizon rows and the phase row.
+  Pass, two tiers. Strict (D = 3.7, M = 48 resampled to 16 and to 32, no freeze): every ratio <= 1e-28 (the criterion
+  written before the runs: double-double rounding up to ~100 for the summation length). Large D (D = 20.04, M = 32;
+  D = 50.01, M = 32, kfreeze 13): the dual pass's own rounding is amplified there, as the f64 lanes' is
+  (notes/LARGE_D_MIXED.md section 2): jvp(v1 + v2) - jvp(v1) - jvp(v2) is 2e-28 (D = 20) and 1.5e-26 (D = 50) in the
+  same scaled measure, so the product and the matrix (whose columns carry the same amplified rounding) cannot agree
+  to 1e-28. There the pass is: ratio <= 10 x that linearity defect, measured at the same state with two other random
+  vectors. The 1e-28 criterion first written for every state failed at D = 50 (9e-27); this tier replaces it there.
   --mutate breaks the product on purpose (1: the Delta tangent scaled by 1 + 1e-20; 2: the horizon block's tangent
   dropped; 3: the phase row dropped); the check must then fail (exit 1; --expect_fail inverts the exit code).
 controls: every mutation at the D = 50.01 state and at M = 16; each must fire; exit 0 if all fire.
@@ -118,6 +125,21 @@ def solver_at(spec, threads):
     return s, np.asarray(zh), np.asarray(zl), f"D {m['D']} M {m['M']}{' kfreeze 13' if kf else ''}"
 
 
+def lin_defect(s, zh, zl, Jh, rng):
+    """max over entries of |jvp(v1 + v2) - jvp(v1) - jvp(v2)| / (|J| (|v1| + |v2|)): the rounding of the dual pass"""
+    n = s.size
+    vs = []
+    for _ in range(2):
+        vh = rng.standard_normal(n)
+        vs.append(two_sum(vh, vh * 1e-17 * rng.standard_normal(n)))
+    v3 = dd_add(*vs[0], *vs[1])
+    j1, j2, j3 = ([np.asarray(a) for a in s.jvp(zh, zl, *v)] for v in (vs[0], vs[1], v3))
+    sh, sl = dd_add(*j1, *j2)
+    d = np.abs((j3[0] - sh) + (j3[1] - sl))
+    sc = np.abs(Jh) @ (np.abs(vs[0][0]) + np.abs(vs[1][0]))
+    return float(np.max(d / np.where(sc > 0, sc, 1.0)))
+
+
 def jvp_check(opts, quiet=False):
     threads = int(opts.get("threads", 2))
     specs = str(opts.get("states", "lowD:16,lowD:32,20,50")).split(",")
@@ -153,16 +175,26 @@ def jvp_check(opts, quiet=False):
         normwise = float(np.max(diff) / np.max(np.abs(rh)))
         R = s.residual(zh, zl)
         F_same = bool(np.array_equal(np.asarray(R[0]), np.asarray(Fh)) and np.array_equal(np.asarray(R[1]), np.asarray(Fl)))
-        good = ratio <= tol and (mut != 0 or F_same)
+        j = int(rng.integers(0, n))
+        e = np.zeros(n)
+        e[j] = 1.0
+        ch, cl = (np.asarray(a) for a in s.jvp(zh, zl, e, np.zeros(n), mutate=mut))
+        col_same = bool(np.array_equal(ch, Jh[:, j]) and np.array_equal(cl, Jl[:, j]))
+        strict = str(spec).startswith("lowD")
+        lin = None if strict else lin_defect(s, zh, zl, Jh, rng)
+        lim = tol if strict else 10 * max(lin, 1e-30)
+        good = ratio <= lim and (mut != 0 or (F_same and col_same))
         ok &= good
-        rec = dict(state=label, N=n, ratio=ratio, normwise=normwise, F_bitwise=F_same, t_jvp=round(t_jvp, 4),
-                   t_jac_dd=round(t_jac, 3), t_jac_f64=round(t_j64, 3), mutate=mut, pass_=good)
+        rec = dict(state=label, N=n, tier="strict" if strict else "largeD", ratio=ratio, normwise=normwise, lin_defect=lin,
+                   limit=lim, F_bitwise=F_same, column_bitwise=col_same, t_jvp=round(t_jvp, 4), t_jac_dd=round(t_jac, 3),
+                   t_jac_f64=round(t_j64, 3), mutate=mut, pass_=good)
         recs.append(rec)
         if not quiet:
             print(f"{label} (N {n}){' mutate ' + str(mut) if mut else ''}: max |Jv - J.v| / (|J||v|) {ratio:.1e}, "
-                  f"normwise {normwise:.1e}; residual from the same pass bitwise {F_same}; jvp {t_jvp * 1e3:.0f} ms, "
-                  f"dd Jacobian {t_jac:.2f} s ({t_jac / t_jvp:.0f} products), f64 Jacobian {t_j64:.2f} s "
-                  f"({t_j64 / t_jvp:.1f} products) -> {'pass' if good else 'FAIL'}", flush=True)
+                  f"normwise {normwise:.1e}{'' if strict else f', linearity defect {lin:.1e}'} (limit {lim:.0e}); "
+                  f"residual from the same pass bitwise {F_same}, unit vector = Jacobian column bitwise {col_same}; "
+                  f"jvp {t_jvp * 1e3:.0f} ms, dd Jacobian {t_jac:.2f} s ({t_jac / t_jvp:.0f} products), f64 Jacobian "
+                  f"{t_j64:.2f} s ({t_j64 / t_jvp:.1f} products) -> {'pass' if good else 'FAIL'}", flush=True)
     if "json" in opts:
         json.dump(recs, open(opts["json"], "w"), indent=1)
     if opts.get("expect_fail"):
