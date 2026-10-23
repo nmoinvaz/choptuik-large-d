@@ -102,6 +102,8 @@ def main():
     ap.add_argument("--kt", type=int, default=36)
     ap.add_argument("--tol_step", type=float, default=1e-30)
     ap.add_argument("--hmax", type=float, default=0.05)
+    ap.add_argument("--plan_margin", type=float, default=1e-2, help="the step tolerance of the plan reused from the "
+                    "last converged state, relative to --tol_step")
     ap.add_argument("--resume", action="store_true")
     a = ap.parse_args()
     os.makedirs(os.path.dirname(a.out), exist_ok=True)
@@ -154,11 +156,33 @@ def main():
     def state_path(D, M):
         return os.path.join(STATES, f"{st['tag']}_D{D:.4f}_M{M}.npz")
 
-    def plan_of(z, M, D):
-        """Taylor plan (--tol_step, --hmax) of a state z at its own M, with the equations at D"""
+    def plan_of(z, M, D, tol=None):
+        """Taylor plan (--tol_step or tol, --hmax) of a state z (an f64 array, or a (hi, lo) pair: a converged state's
+        plan needs its lo parts, rounded to f64 it is irregular enough at the sonic line to double the steps) at its
+        own M, with the equations at D"""
         s0 = make_solver(D, M, nodes=st["nodes"], kt=a.kt, kc=kc, ks=ks, threads=a.threads)
-        zz = np.asarray(z, float)
-        return s0.plan(zz, np.zeros_like(zz), a.tol_step, a.hmax)
+        zh, zl = (np.asarray(z[0], float), np.asarray(z[1], float)) if isinstance(z, tuple) else (np.asarray(z, float), None)
+        return s0.plan(zh, np.zeros_like(zh) if zl is None else zl, tol or a.tol_step, a.hmax)
+
+    def zdd(path):
+        h, l, _ = load(path)
+        return np.asarray(h), np.asarray(l)
+
+    def plan_prev(hist, M):
+        """the plan for the next D at M: the plan of the last converged state at M, at its own D, with --plan_margin
+        times the step tolerance. A state that is not a solution at the D of its equations (a predictor, a resampled
+        state) is not regular at the sonic line, and its plan has 2.5-4 times more steps."""
+        D_, p_ = hist[-1]
+        return plan_of(zdd(p_), M, D_, a.tol_step * a.plan_margin)
+
+    def plan_check(D, M, path, used):
+        """steps of the converged solution's own plan against the steps used (a ratio above 1: the plan used was
+        coarser than the solution's own at --tol_step)"""
+        need = sum(len(g) - 1 for g in plan_of(zdd(path), M, D))
+        have = sum(len(g) - 1 for g in used)
+        if need > have:
+            log(f"  D {D} M {M}: the solution's own plan has {need} steps, more than the {have} used")
+        return need
 
     def solve(D, M, starts, segs, tag=None, tol=None):
         """solve at (D, M) on the plan segs from the start with the smallest |F| among starts [(label, z)];
@@ -169,23 +193,24 @@ def main():
         s.set_segs(segs)
         best = None
         for lab, z in starts:
-            zz = np.asarray(z, float)
-            F = float(np.abs(np.add(*s.residual(zz, np.zeros_like(zz)))).max())
+            zz = (np.asarray(z[0], float), np.asarray(z[1], float)) if isinstance(z, tuple) else (np.asarray(z, float), np.zeros(len(z)))
+            F = float(np.abs(np.add(*s.residual(*zz))).max())
             log(f"  D {D} M {M}: start '{lab}' |F| {F:.2e} ({sum(len(g) - 1 for g in segs)} steps)")
             if np.isfinite(F) and (best is None or F < best[0]):
                 best = (F, lab, zz)
         if best is None or best[0] > 1.0:
             # the plan does not hold for these starts (top harmonics blown up): plan from the first start itself
-            zz = np.asarray(starts[0][1], float)
-            segs = s.plan(zz, np.zeros_like(zz), a.tol_step, a.hmax)
+            z = starts[0][1]
+            zz = (np.asarray(z[0], float), np.asarray(z[1], float)) if isinstance(z, tuple) else (np.asarray(z, float), np.zeros(len(z)))
+            segs = s.plan(*zz, a.tol_step, a.hmax)
             s.set_segs(segs)
-            F = float(np.abs(np.add(*s.residual(zz, np.zeros_like(zz)))).max())
+            F = float(np.abs(np.add(*s.residual(*zz))).max())
             log(f"  D {D} M {M}: plan from start '{starts[0][0]}' instead: {sum(len(g) - 1 for g in segs)} steps, |F| {F:.2e}")
             if not np.isfinite(F):
                 return False, None, None
             best = (F, starts[0][0], zz)
         t = time.time()
-        ok, zh, zl = lowD_dd.solve_point(D, M, best[2], np.zeros_like(best[2]), f"pilot: {best[1]}", ns(M, tag, tol), st["nodes"],
+        ok, zh, zl = lowD_dd.solve_point(D, M, best[2][0], best[2][1], f"pilot: {best[1]}", ns(M, tag, tol), st["nodes"],
                                          STATES, log, segs=segs)
         if tol is not None:
             return ok, None, os.path.join(STATES, f"{tag or st['tag']}_D{D:.4f}_M{M}.npz")
@@ -206,8 +231,7 @@ def main():
         if not ok1:
             return False, None, None
         t1 = time.time() - t
-        z1 = zof(p1)
-        ok2, r2, p2 = solve(D, M2, [("pass 1", z1)], plan_of(z1, M2, D))
+        ok2, r2, p2 = solve(D, M2, [("pass 1", zdd(p1))], plan_of(zdd(p1), M2, D))
         if ok2:
             r2["seconds_pass1"] = round(t1, 1)
             r2["seconds"] = round(r2["seconds"] + t1, 1)
@@ -223,6 +247,8 @@ def main():
         rec = dict(D=D, Mw=rw["M"], Mn=rn["M"], Delta=rn["Delta"], Delta_lo=rn["Delta_lo"], err_est=abs(diff), diff=diff,
                    Delta_w=rw["Delta"], Delta_w_lo=rw["Delta_lo"], F_w=rw["F"], F_n=rn["F"], its_w=rw["its"], its_n=rn["its"],
                    seconds_w=rw["seconds"], seconds_n=rn["seconds"], steps_w=rw.get("steps"), steps_n=rn.get("steps"),
+                   steps_own_w=rw.get("steps_own"), steps_own_n=rn.get("steps_own"), t_its_w=rw.get("t_its"),
+                   t_its_n=rn.get("t_its"),
                    tail_c=rn.get("tail_c"), tail_h=rn.get("tail_h"), tail_c_w=rw.get("tail_c"), tail_h_w=rw.get("tail_h"),
                    peak_rss_mb_n=rn.get("peak_rss_mb"), nodes=st["nodes"], tag=st["tag"], decision=decision,
                    hours=round((time.time() - t_start) / 3600, 3))
@@ -302,9 +328,9 @@ def main():
                     s0.set_segs(m.get("segs") or s0.plan(h, l, a.tol_step, a.hmax))
                     # Taylor steps of 0.001: renode's default 0.004 blows up toward a node at 0.9 at M = 160
                     zr, zrl = renode(s0, h, l, old, new, m["M"], h=0.001)
-                    res.append((m["M"], np.asarray(zr) + np.asarray(zrl)))
-                okw, rw2, pw2 = solve(Dt, res[0][0], [("re-noded", res[0][1])], plan_of(res[0][1], res[0][0], Dt))
-                okn, rn2, pn2 = (solve(Dt, res[1][0], [("re-noded", res[1][1])], plan_of(res[1][1], res[1][0], Dt)) if okw
+                    res.append((m["M"], np.asarray(zr) + np.asarray(zrl), (np.asarray(zr), np.asarray(zrl))))
+                okw, rw2, pw2 = solve(Dt, res[0][0], [("re-noded", res[0][2])], plan_of(res[0][2], res[0][0], Dt))
+                okn, rn2, pn2 = (solve(Dt, res[1][0], [("re-noded", res[1][2])], plan_of(res[1][2], res[1][0], Dt)) if okw
                                  else (False, None, None))
                 if not (okw and okn):
                     return f"re-noded solve failed at D {Dt}"
@@ -337,14 +363,19 @@ def main():
         log(f"--- D {Dt} (from {Dl}), M {st['Mw']} / {st['Mn']}, nodes {st['nodes'][0]}..{st['nodes'][-1]}")
         Mw, Mn = st["Mw"], st["Mn"]
         zpw = predict([(d, zof(p)) for d, p in st["hist_w"][-4:]], Dt)
-        ok_w, rw, path_w = solve(Dt, Mw, [("predictor", zpw)], plan_of(zpw, Mw, Dt))
+        segs_w = plan_prev(st["hist_w"], Mw)
+        ok_w, rw, path_w = solve(Dt, Mw, [("predictor", zpw)], segs_w)
         ok_n = False
         if ok_w:
+            rw["steps_own"] = plan_check(Dt, Mw, path_w, load(path_w)[2]["segs"])
             zpn = predict([(d, zof(p)) for d, p in st["hist_n"][-4:]], Dt)
             starts = [("lift of M_w", lifted(path_w, Mn))]
             if len(st["hist_n"]) >= 2:
                 starts.insert(0, ("predictor", zpn))
-            ok_n, rn, path_n = solve(Dt, Mn, starts, plan_of(zpn, Mn, Dt))
+            segs_n = plan_prev(st["hist_n"], Mn)
+            ok_n, rn, path_n = solve(Dt, Mn, starts, segs_n)
+            if ok_n:
+                rn["steps_own"] = plan_check(Dt, Mn, path_n, load(path_n)[2]["segs"])
         if not (ok_w and ok_n):
             Dm = round(0.5 * (Dl + Dt), 6)
             if abs(Dm - Dl) < a.min_step:
