@@ -273,8 +273,14 @@ def main():
                 r2["two_pass_from"] = lab1
             return ok2, r2, p2
         t = time.time()
-        ok, zh, zl = lowD_dd.solve_point(D, M, best[2][0], best[2][1], f"pilot: {best[1]}", ns(M, tag, tol), st["nodes"],
-                                         STATES, log, segs=segs)
+        try:
+            ok, zh, zl = lowD_dd.solve_point(D, M, best[2][0], best[2][1], f"pilot: {best[1]}", ns(M, tag, tol),
+                                             st["nodes"], STATES, log, segs=segs)
+        except ValueError as e:
+            # a non-finite Jacobian (the LU refuses it): Newton went astray far enough for the Taylor steps to overflow
+            # (D 3.1, M 160 helper: |dz| 5e3 at line-search factor 1/32, then NaN); a failed solve
+            log(f"D {D} M {M}: {e}; failed")
+            ok = False
         if not ok:
             # a later try at this (D, M) must not resume from the failed run's checkpoint
             ck = os.path.join(STATES, f"{tag or st['tag']}_D{D:.4f}_M{M}_ckpt.npz")
