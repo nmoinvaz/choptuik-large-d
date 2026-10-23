@@ -7,6 +7,7 @@ Grumiller & Jechtl's values, good to about 1e-5).
     cd hp && python3 lowD_highM_report.py [data/lowD_highM/pilot.jsonl] [--lift=data/lowD_highM/lift_D3.7.jsonl]
     cd hp && python3 lowD_highM_report.py --stage1 [--lift=...]
     cd hp && python3 lowD_highM_report.py --project [--ladder=80,96,128,160,192,256,320,384,512] [--dD=0.05]
+        [--Ds=3.1,3.05,3.04,3.03,3.02,3.01 --D_last=3.01]
 
 --project: an estimate (not a bound) of the M and the time a continuation from the pilot's last D to D = 3.05 would
 need at the pilot's criterion (the M difference below 1e-8). Modes: hp/lowD_cost.py's model (four variants) checked
@@ -164,12 +165,13 @@ def project(opts):
     print("  up for each new M_n (the last measured one scaled as M^3). Not included: node changes (about 10% of a point")
     print("  each), step halvings, and the growth of the Taylor plans toward D = 3; so these are lower estimates.")
     print(f"  {'D':>5} {'K model':>11} {'K':>9} {'M_c/M_w/M_n':>27} {'h/point':>9} {'move up h':>9} {'h cumulative':>12}")
-    D = round(pairs[-1]["D"] - dD, 6)
+    Ds = [float(v) for v in opts["Ds"].split(",")] if opts.get("Ds") else None
+    D = Ds.pop(0) if Ds else round(pairs[-1]["D"] - dD, 6)
     cum = [0.0, 0.0]
     prev = [tuple(lastM), tuple(lastM)]
     if pairs[-1]["decision"].startswith("moved up"):
         prev = [(pairs[-1].get("Mc") or 0, pairs[-1]["Mw"], pairs[-1]["Mn"])] * 2
-    while D >= 3.05 - 1e-9:
+    while D is not None and D >= float(opts.get("D_last", 3.05)) - 1e-9:
         klo, khi = kmodel(D)
         cells = []
         for j, (sc, T) in enumerate(((s_a, Ta), (s_b, Tb))):
@@ -185,12 +187,12 @@ def project(opts):
             prev[j] = (Mc, Mw, Mn)
             cells.append((K, f"{Mc}/{Mw}/{Mn}", tp, mu, cum[j]))
         if None in cells:
-            print(f"  {D:5.2f} {klo:5.0f}-{khi:<5.0f}  beyond the ladder")
+            print(f"  {D:5.3f} {klo:5.0f}-{khi:<5.0f}  beyond the ladder ({ladder[-1]})")
             break
         a_, b_ = cells
-        print(f"  {D:5.2f} {klo:5.0f}-{khi:<5.0f} {a_[0]:4.0f}-{b_[0]:<4.0f} {a_[1]:>13}|{b_[1]:<13} {a_[2] / 3600:4.1f}-{b_[2] / 3600:<4.1f}"
-              f" {a_[3] / 3600:4.1f}-{b_[3] / 3600:<4.1f} {a_[4] / 3600:5.1f}-{b_[4] / 3600:<5.1f}")
-        D = round(D - dD, 6)
+        print(f"  {D:5.3f} {klo:5.0f}-{khi:<5.0f} {a_[0]:4.0f}-{b_[0]:<4.0f} {a_[1]:>13}|{b_[1]:<13} {a_[2] / 3600:5.1f}-{b_[2] / 3600:<5.1f}"
+              f" {a_[3] / 3600:5.1f}-{b_[3] / 3600:<5.1f} {a_[4] / 3600:6.1f}-{b_[4] / 3600:<6.1f}")
+        D = (Ds.pop(0) if Ds else None) if Ds is not None else round(D - dD, 6)
 
 
 def main():

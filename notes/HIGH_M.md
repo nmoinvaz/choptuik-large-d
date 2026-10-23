@@ -289,13 +289,15 @@ hmax 0.05), each M lifted from the one below in two passes (`highm_check.py lift
 | 128 | 15 | 3.465200482271642183274714 | −3.36×10⁻¹¹ | 162 → 166 | 5×10⁻¹⁰⁰, 2×10⁻¹²³ |
 | 160 | 15 | 3.465200482271638953641 | −3.23×10⁻¹⁵ | 203 → 256 | 1×10⁻⁸⁹, 5×10⁻¹¹⁵ |
 | 192 | 15 | 3.465200482271638952016727 | −1.62×10⁻¹⁸ | 593 → 252 | 3×10⁻⁶⁶, 2×10⁻¹⁰⁸ |
+| 256 | 15 | 3.465200482271638952013494 | −3.23×10⁻²¹ | 768 → 377 | 8×10⁻⁷⁰, 1×10⁻⁹⁹ |
 | 128 | 13 | 3.465200482271642183274714 | | 366 → 191 | 1×10⁻⁶⁹, 9×10⁻⁴⁹ |
 | 160 | 13 | 3.465200482271638953641 | −3.23×10⁻¹⁵ | 450 → 279 | 2×10⁻⁶⁰, 2×10⁻⁴⁰ |
 
 - **The M differences shrink fast but not at one rate:** −1.24×10⁻⁹ (80 → 96, 16 modes), −3.36×10⁻¹¹, −3.23×10⁻¹⁵,
-  −1.62×10⁻¹⁸ (32 modes each); successive ratios 0.027, 9.6×10⁻⁵, 5.0×10⁻⁴. So Δ(3.7) is converged in M to about
-  10⁻¹⁸ at M = 160–192, with the M = 192 value taken as Δ(3.7) = 3.465200482271638952 and the last difference as its
-  error estimate (an estimator, not a bound). The local machine's M = 96 value, 3.4652004823053, agrees with the M = 96
+  −1.62×10⁻¹⁸ (32 modes each) and −3.23×10⁻²¹ (192 → 256, 64 modes); successive ratios 0.027, 9.6×10⁻⁵, 5.0×10⁻⁴ and
+  2.0×10⁻³. So Δ(3.7) is converged in M to about 10⁻¹⁸ at M = 192, with the M = 256 value taken as
+  Δ(3.7) = 3.4652004822716389520 and the last difference as its error estimate (an estimator, not a bound; the last
+  change is at the level at which a change of the Taylor plan moves Δ, 10⁻²⁴–7×10⁻²², below). The local machine's M = 96 value, 3.4652004823053, agrees with the M = 96
   here to all its digits (3.4652004823052730), and its M 80 → 96 difference, −1.2×10⁻⁹, with −1.24×10⁻⁹.
 - **The node sets agree:** 13 against 15 nodes, 6.7×10⁻³¹ at M = 128 and 4.1×10⁻³⁰ at M = 160; the 15-node M = 80
   differs from the original 13-node M = 80 state by −5.4×10⁻³⁰.
@@ -321,6 +323,7 @@ are inflated by roughly L/2. They are measurements of this run, not of the kerne
 | 160 | 13 | 279 | 100 s | 99 s | 31 s (31%) | 0.46 s | 0.6 s | 105 | 435 | 2.3 |
 | 160 | 15 | 256 | 350 s | 347 s | 143 s (41%) | 1.2 s | 1.4 s | 121 | 542 | 4.8 |
 | 192 | 15 | 252 | 984 s | 973 s | 231 s (24%) | 3.3 s | 4.9 s | 173 | 721 | 13.2 |
+| 256 | 15 | 377 | 817 s | 812 s | 467 s (57%) | 2.0 s | 2.1 s | 308 | 1080 | 2.2* |
 
 The τ-derivative's share is the Jacobian's time minus the same Jacobian built without it (`jac_mutate=1`). A profile at
 M = 192 on a 500-step plan (load about 4) gave 561 s for the Jacobian, 46% of it the τ-derivative, 1.1 s for the
@@ -340,6 +343,12 @@ FFT. It was not done: it needs a new kernel build (35 minutes here under load, w
 minutes during this work), and the measurements say the larger costs are elsewhere: the Taylor plans (section 1.3, 2–4
 times), the Cauchy sums' memory traffic, and the number of Taylor steps, which grows faster than M (converged plans: 56,
 72, 86 steps at M = 48, 64, 80; 191 at 128; 252–279 at 160–192).
+
+**At M = 256 that changes:** the τ-derivative is 57% of the Jacobian (467 of 812 s; the dense M × M apply grows like
+M² per field and Taylor order, the rest like M), so at M = 256 a free derivative would make a step 2.3 times faster and
+a realistic FFT about 1.7 times, more at M = 384–512. For the continuation below D = 3.05 (section 6) an FFT or DCT
+derivative is the first optimization I would make; it is not in this branch. (*At M = 256 a kernel build ran at lower
+priority, nice 15, during the timed step; the load average was 2.2.)
 
 ## 5. The pilot toward D = 3
 
