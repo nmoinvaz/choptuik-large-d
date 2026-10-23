@@ -2,7 +2,7 @@
 """Independent checks of the quad-double arithmetic in hp/src/qd.rs and hp/src/qv.rs (notes/QUAD_DOUBLE.md).
 
     cd hp && python3 qd_check.py mpmath [--n=2000] [--seed=1] [--dump=DIR] [--mutate=ID]
-    cd hp && python3 qd_check.py backends [--n=4000]
+    cd hp && python3 qd_check.py backends [--n=4000] [--only=avx512,avx2,portable] [--fresh] [--out=DIR]
 
 mpmath: the Rust test qd_dump (built with -C target-cpu=native into hp/target/qd_native) writes inputs and scalar
   results of every operation and input category, of the dot accumulator, and of decimal parsing and printing; this
@@ -18,7 +18,10 @@ mpmath: the Rust test qd_dump (built with -C target-cpu=native into hp/target/qd
 backends: runs `cargo test --release --lib qd_` (the accuracy, agreement and decimal tests) with the AVX-512, the
   AVX2 and the portable v8 backend (RUSTFLAGS "-C target-cpu=native", "-C target-feature=+avx2,+fma", none; build
   directories hp/target/qd_<isa>); every build must pass, and the digests of all scalar results must agree (each
-  build also checks that its 8-lane results equal the scalar ones bit for bit). Exit 1 otherwise.
+  build also checks that its 8-lane results equal the scalar ones bit for bit). Exit 1 otherwise. Each backend's
+  result is written to DIR/<isa>.txt (default data/quad_double/backends) as soon as it is known, and a rerun skips
+  the backends already recorded there with the same n (--fresh reruns them; --only=... runs a subset, and the
+  digests are then compared over every recorded backend). The portable build takes 15-20 minutes on two cores.
 """
 import os
 import re
@@ -216,17 +219,36 @@ def main():
     o = opts()
     if sys.argv[1] == "backends":
         n = str(o.get("n", 4000))
+        out = os.path.join(HERE, str(o.get("out", os.path.join("data", "quad_double", "backends"))))
+        os.makedirs(out, exist_ok=True)
+        only = str(o.get("only", ",".join(BUILDS))).split(",")
+        for isa in only:
+            path = os.path.join(out, f"{isa}.txt")
+            if os.path.exists(path) and not o.get("fresh"):
+                rec = dict(ln.rstrip("\n").split("\t", 1) for ln in open(path))
+                if rec.get("n") == n:
+                    print(f"{isa:<9} recorded in {path}, skipped")
+                    continue
+            rc, outp = cargo(["qd_", "--", "--test-threads=1", "--nocapture"], BUILDS[isa], f"qd_{isa}", {"QD_N": n})
+            dg = re.search(r"qd digest (\w+) \(n \d+, seed \d+, isa (\w+)\)", outp)
+            res = re.findall(r"test result: .*", outp)
+            rec = {"isa": isa, "n": n, "rustflags": BUILDS[isa], "exit": str(rc), "isa_reported": dg.group(2) if dg else "?",
+                   "digest": dg.group(1) if dg else "?", "result": res[-1] if res else "no result"}
+            with open(path, "w") as f:
+                f.write("".join(f"{k}\t{v}\n" for k, v in rec.items()))
         digests, bad = {}, 0
-        for isa, flags in BUILDS.items():
-            rc, out = cargo(["qd_", "--", "--test-threads=1", "--nocapture"], flags, f"qd_{isa}", {"QD_N": n})
-            dg = re.search(r"qd digest (\w+) \(n \d+, seed \d+, isa (\w+)\)", out)
-            res = re.findall(r"test result: .*", out)
-            print(f"{isa:<9} exit {rc}  isa reported {dg.group(2) if dg else '?'}  digest {dg.group(1) if dg else '?'}  "
-                  f"{res[-1] if res else 'no result'}")
-            digests[isa] = dg.group(1) if dg else None
-            bad += rc != 0 or dg is None or dg.group(2) != isa
-        same = len(set(digests.values())) == 1 and None not in digests.values()
-        print("digests agree across backends" if same else "DIGESTS DIFFER")
+        for isa in BUILDS:
+            path = os.path.join(out, f"{isa}.txt")
+            if not os.path.exists(path):
+                print(f"{isa:<9} not run yet")
+                bad += 1
+                continue
+            rec = dict(ln.rstrip("\n").split("\t", 1) for ln in open(path))
+            print(f"{isa:<9} n {rec['n']}  exit {rec['exit']}  isa reported {rec['isa_reported']}  digest {rec['digest']}  {rec['result']}")
+            digests[isa] = rec["digest"] if rec["n"] == n else None
+            bad += rec["exit"] != "0" or rec["digest"] == "?" or rec["isa_reported"] != isa
+        same = len(digests) == len(BUILDS) and len(set(digests.values())) == 1 and None not in digests.values()
+        print("digests agree across backends" if same else "DIGESTS DIFFER OR MISSING")
         sys.exit(0 if same and not bad else 1)
     n, seed = str(o.get("n", 2000)), str(o.get("seed", 1))
     d = o.get("dump")
