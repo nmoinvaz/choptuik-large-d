@@ -297,7 +297,7 @@ macro_rules! make_ctx {
                 mutate: 0,
                 f64_dd: 0,
             }) as Box<dyn Api>, )*
-            _ => return Err(PyValueError::new_err("M must be one of 8, 16, 32, 48, 64, 80, 96, 128, 160, 192, 256, 320, 384")),
+            _ => return Err(PyValueError::new_err("M must be one of 8, 16, 32, 48, 64, 80, 96, 128, 160, 192, 256, 320, 384, 512")),
         }
     };
 }
@@ -353,7 +353,7 @@ impl Solver {
             _ => None,
         };
         let mut api: Box<dyn Api> =
-            make_ctx!(m / 8, n, dh, dl, ph, pl, nodes.clone(), vec![], kt, kc, ks, plow, match_node.unwrap_or(nodes.len() - 1).min(nodes.len() - 1), [1, 2, 4, 6, 8, 10, 12, 16, 20, 24, 32, 40, 48]);
+            make_ctx!(m / 8, n, dh, dl, ph, pl, nodes.clone(), vec![], kt, kc, ks, plow, match_node.unwrap_or(nodes.len() - 1).min(nodes.len() - 1), [1, 2, 4, 6, 8, 10, 12, 16, 20, 24, 32, 40, 48, 64]);
         let mn = match_node.unwrap_or(nodes.len() - 1).min(nodes.len() - 1);
         let segs = if segs.is_empty() {
             (1..nodes.len()).map(|b| if b > mn { vec![nodes[b], nodes[b - 1]] } else { vec![nodes[b - 1], nodes[b]] }).collect()
