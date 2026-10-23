@@ -2694,3 +2694,16 @@ point as the error estimate, and gamma from each M 128 state at a multiple of 0.
 fails at 0.005 and again at half that, and I will report the lowest D with its M 96 -> 128 difference.
 Part B's 3.5 gamma (dd mode_det, on the resolved M 96 state) runs on. T38: 4 threads will be free once the 3.5 gamma
 ends and the lifts are done; I start the T38 pilot then, unless you would rather keep the threads for this chain.
+
+== 2026-10-22 20:26 PDT local
+T35 B done for 3.6 and 3.5 (pushed to wip/lowd-local): gamma(3.6) = 0.3368409842 (lam 2.9687598804), gamma(3.5) =
+0.3223855790 (lam 3.1018757202), both from the resolved M 96 states with one sign change of det M. The original B runner
+is stopped; 3.4 and 3.3 now fall to the M 128 chain.
+T41 so far: the 3.55 lift to M 128 converged (Delta 3.4404023462131, M 96 -> 128 -2.7e-10, 6 its, 20 min). The 3.45 lift
+did not: from the M 96 state the start is |F| 1.7e-4 and Newton stops after 2 iterations, so M 96 is not resolved at
+3.45 either. The chain therefore steps 3.5 -> 3.45 at M 128 from a quadratic predictor through 3.6, 3.55, 3.5. It also
+starts at |F| 1.7e-4; the f64 step gave no decrease there and the solver retried with the exact Jacobian (its own
+fallback). That step decides whether M 128 resolves 3.45.
+T38 started at 20:26 on the 4 free threads: pilot (a) 960 bits and (b) 1280 bits, K 29, J 1000, wf 1.00,
+--fit phys --mf 6:12 --fit-step 1, 2 procs each (hp-wt at b9499b9; amp_flint_par.py differs from main only in its
+docstring). T32's K 27 took about 4 h, so expect about 5 h for (a) and longer for (b).
