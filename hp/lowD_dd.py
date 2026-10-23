@@ -149,8 +149,9 @@ def peak_rss_mb():
     return round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024, 1)
 
 
-def solve_point(D, M, zh, zl, src, a, nodes, outdir, log):
-    """one (D, M) solve with checkpoints; returns (converged, zh, zl)"""
+def solve_point(D, M, zh, zl, src, a, nodes, outdir, log, segs=None):
+    """one (D, M) solve with checkpoints; returns (converged, zh, zl). segs: the Taylor step points to use (default:
+    planned from the start z with --tol_step, --hmax; a checkpoint's own plan takes precedence on resume)"""
     t0 = time.time()
     done = os.path.join(outdir, f"{a.tag}_D{D:.4f}_M{M}.npz")
     if a.resume and os.path.exists(done):
@@ -163,7 +164,6 @@ def solve_point(D, M, zh, zl, src, a, nodes, outdir, log):
         zh, zl, mc = load(ckpt)
         log(f"resuming from checkpoint {ckpt} (iteration {mc.get('it')})")
     s = make_solver(D, M, nodes=nodes, kt=a.kt, kc=a.kcs, ks=a.ks, threads=a.threads)
-    segs = None
     if a.resume and os.path.exists(ckpt) and mc.get("segs"):
         segs = mc["segs"]             # keep the step plan of the interrupted run (the residual depends on it)
     s.set_segs(segs or s.plan(zh, zl, a.tol_step, a.hmax))
@@ -233,7 +233,7 @@ def solve_point(D, M, zh, zl, src, a, nodes, outdir, log):
         rec.update(weak_sv=sv, weak_delta=dc, svd_seconds=round(time.time() - t1, 1))
     with open(a.out, "a") as f:
         f.write(json.dumps(rec) + "\n")
-    save(done, zh, zl, dict(D=D, M=M, nodes=nodes, kt=a.kt, kc=a.kcs, ks=a.ks))
+    save(done, zh, zl, dict(D=D, M=M, nodes=nodes, kt=a.kt, kc=a.kcs, ks=a.ks, segs=s.get_segs()))
     if os.path.exists(ckpt):
         os.remove(ckpt)
     log(f"D {D} M {M}: Delta {zh[-1]:.16f} ({zl[-1]:+.2e}) |F| {F:.1e} its {len(hist)} {dt:.0f}s "

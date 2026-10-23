@@ -7,7 +7,7 @@ storage of the mixed-precision Newton system (notes/HIGH_M.md).
     cd hp && python3 highm_check.py block [--Ms=16,48,80,128] [--variants=f64x4,f64x1,dd4] [--mutate=pivot|link] [--expect_fail] [--json=F]
     cd hp && python3 highm_check.py controls
     cd hp && python3 highm_check.py converge [--M=80] [--json=F]
-    cd hp && python3 highm_check.py lift --M=160 [--start=STATE.npz] [--tol=1e-28] [--out=F.jsonl] [--tag=highm]
+    cd hp && python3 highm_check.py lift --M=160 [--start=STATE.npz] [--plan=start|source] [--tol1=1e-14] [--no_replan] [--tol=1e-28] [--out=F.jsonl] [--tag=highm]
     cd hp && python3 highm_check.py profile --M=256 [--start=STATE.npz] [--reps=2] [--out=F.jsonl]
 
 ref: bit-identity at M <= 128 of everything the kernel computes there (residual, the dense double-double Newton step
@@ -27,12 +27,17 @@ controls: block --mutate=pivot and --mutate=link at M = 48, each must fail; exit
 converge: driver.newton_solve with jac="f64" from the perturbed state with the dense and with the block path, and a
   control (dense, a second start: Delta - 1e-6, seed 2); pass: Delta and max|z| differences <= max(1e-27, 10 x the
   control's), relative.
-lift: the D = 3.7 state (default hp/data/lowD_states/lowDv_D3.7000_M80.npz; its meta has the nodes, kc 100, ks 250)
-  resampled to --M and solved with the f64-Jacobian Newton (block storage above M = 128) to |F| <= --tol, Taylor
-  plan tol_step 1e-30, hmax 0.05 as the M = 80 state. Times every newton_mixed call and every residual; records Delta
-  (hi, lo), |F|, iterations, the plan's step count, the series tails (lowD_dd.tails), the stored LU's bytes, the
-  peak RSS of the process (run one M per process) and seconds per Newton step. The state is saved as
-  hp/data/lowD_states/<tag>_D3.7000_M<M>.npz; the record goes to --out (default hp/data/lowD_highM/lift_D3.7.jsonl).
+lift: a converged state (--start, default hp/data/lowD_states/lowDv_D3.7000_M80.npz; its meta has the nodes, kc 100,
+  ks 250) resampled to --M and solved with the f64-Jacobian Newton (block storage above M = 128), in two passes. Pass
+  1 on the Taylor plan (tol_step 1e-30, hmax 0.05) of the resampled start (--plan=start; --plan=source, the plan of the
+  start state at its own M, blows up on the resampled state, |F| NaN at M = 128 from 80) to |F| <= --tol1 (1e-14).
+  Pass 2 on the plan of the pass-1 state, which needs 2-4 times fewer steps (the resampled state's new top harmonics
+  are aliasing products that the tau-derivative amplifies; near the solution they are small), to |F| <= --tol (1e-28);
+  if the re-planned residual is not small, pass 1 continues instead. --no_replan: one pass on the start's plan to --tol.
+  Times every newton_mixed call and every residual; records Delta (hi, lo), |F|, iterations, the final plan's step
+  count, the series tails (lowD_dd.tails), the stored LU's bytes, the load average, the peak RSS of the process (run
+  one M per process) and seconds per Newton step. The state is saved as hp/data/lowD_states/<tag>_D<D>_M<M>.npz with
+  its plan in the meta; the record goes to --out (default hp/data/lowD_highM/lift_D3.7.jsonl).
 profile: at a state (--start, default the D = 3.7 state resampled to --M): seconds of a residual, of newton_mixed in
   block storage (residual + Jacobian + LU + solve), of its Jacobian build and of the block factorization
   (Solver.lu_info), and of the Jacobian build without the tau derivative (jac_mutate=1; the difference is the tau
@@ -145,12 +150,21 @@ def ref(opts):
     Ms = [int(v) for v in str(opts.get("Ms", "8,16,48,64,80,96,128")).split(",")]
     threads = int(opts.get("threads", 2))
     allh = {}
-    for M in Ms:
-        allh[str(M)] = ref_hashes(M, threads)
     if "save" in opts:
-        json.dump(allh, open(opts["save"], "w"), indent=1)
+        # incremental: one M at a time, so an interrupted run keeps what it has (M already in the file are skipped)
+        if os.path.exists(opts["save"]):
+            allh = json.load(open(opts["save"]))
+        for M in Ms:
+            if str(M) in allh:
+                print(f"  M = {M}: already saved")
+                continue
+            allh[str(M)] = ref_hashes(M, threads)
+            json.dump(allh, open(opts["save"] + ".tmp", "w"), indent=1)
+            os.replace(opts["save"] + ".tmp", opts["save"])
         print(f"saved {sum(len(v) for v in allh.values())} hashes to {opts['save']}")
         return 0
+    for M in Ms:
+        allh[str(M)] = ref_hashes(M, threads)
     want = json.load(open(opts["compare"]))
     bad = 0
     n = 0
@@ -315,45 +329,86 @@ def lift(opts):
     tol = float(opts.get("tol", 1e-28))
     tag = opts.get("tag", "highm")
     start = opts.get("start", STATE(80))
+    plan_from = opts.get("plan", "start")
+    tol1 = float(opts.get("tol1", 1e-14))
     outp = opts.get("out", os.path.join(HERE, "data", "lowD_highM", "lift_D3.7.jsonl"))
     os.makedirs(os.path.dirname(outp), exist_ok=True)
     zh, zl, m = load(start)
     D, Mo, nodes = m["D"], m["M"], list(m["nodes"])
+    kw = dict(nodes=nodes, kt=m["kt"], kc=m["kc"], ks=m["ks"], threads=threads)
     t0 = time.time()
+    if plan_from == "source":
+        # the plan of the converged source state at its own M (a resampled state needs 3.5-4 times more steps)
+        s0 = make_solver(D, Mo, **kw)
+        segs1 = s0.plan(zh, zl, 1e-30, 0.05)
+        del s0
     if M != Mo:
         zh, zl = resample_z(zh + zl, Mo, M, len(nodes))
-    s = make_solver(D, M, nodes=nodes, kt=m["kt"], kc=m["kc"], ks=m["ks"], threads=threads)
-    s.set_segs(s.plan(zh, zl, 1e-30, 0.05))
-    t_plan = time.time() - t0
-    F0 = dd_norm(*s.residual(zh, zl))
-    steps = sum(len(g) - 1 for g in s.get_segs())
-    print(f"D {D} M {M} (N {s.size}) from {os.path.basename(start)} (M {Mo}): plan {steps} steps ({t_plan:.0f} s), "
-          f"start |F| {F0:.2e}, RSS {peak_rss_mb()} MB", flush=True)
-    ts = Timed(s)
-    t1 = time.time()
-    zh, zl, hist = newton_solve(ts, zh, zl, tol=tol, it_max=int(opts.get("it_max", 14)), verbose=True, jac="f64")
-    t_solve = time.time() - t1
-    zh, zl = np.asarray(zh), np.asarray(zl)
-    F = dd_norm(*s.residual(zh, zl))
-    nbytes, isblock, t_jac, t_fac = s.lu_info()
+    s = make_solver(D, M, **kw)
+    if plan_from == "start":
+        segs1 = s.plan(zh, zl, 1e-30, 0.05)
+    print(f"D {D} M {M} (N {s.size}) from {os.path.basename(start)} (M {Mo}); pass 1 plan from the {plan_from} "
+          f"({time.time() - t0:.0f} s)", flush=True)
+
+    def run(segs, zh, zl, label, tol=tol):
+        s.set_segs(segs)
+        F0 = dd_norm(*s.residual(zh, zl))
+        steps = sum(len(g) - 1 for g in s.get_segs())
+        print(f" {label}: {steps} Taylor steps, start |F| {F0:.2e}", flush=True)
+        ts = Timed(s)
+        t1 = time.time()
+        zh, zl, hist = newton_solve(ts, zh, zl, tol=tol, it_max=int(opts.get("it_max", 14)), verbose=True, jac="f64")
+        zh, zl = np.asarray(zh), np.asarray(zl)
+        F = dd_norm(*s.residual(zh, zl))
+        nbytes, isblock, t_jac, t_fac = s.lu_info()
+        r = dict(label=label, steps=steps, start_F=F0, F=F, converged=bool(F <= tol), newton_calls=len(hist),
+                 Delta=float(zh[-1]), Delta_lo=float(zl[-1]), seconds=round(time.time() - t1, 1),
+                 t_newton_mixed=[round(v, 2) for v in ts.t["newton_mixed"]], t_residual=[round(v, 2) for v in ts.t["residual"]],
+                 s_per_newton_step=round(float(np.mean(ts.t["newton_mixed"])), 2),
+                 s_per_residual=round(float(np.mean(ts.t["residual"])), 2), s_last_jacobian=t_jac, s_last_factor=t_fac,
+                 lu_mb=round(nbytes / 2 ** 20, 1), lu_block=isblock, load=os.getloadavg()[0])
+        print(f" {label}: Delta {zh[-1]:.16f} ({zl[-1]:+.2e}) |F| {F:.1e}, {len(hist)} Newton calls, {r['seconds']:.0f} s, "
+              f"{r['s_per_newton_step']} s per newton_mixed", flush=True)
+        return r, zh, zl
+
+    passes = []
+    if opts.get("no_replan"):
+        r1, zh, zl = run(segs1, zh, zl, "single pass")
+        passes.append(r1)
+    else:
+        # pass 1 on the resampled start's own plan, only to --tol1; pass 2 on the plan of that nearly converged state
+        # (leaner by 2-4 times), to --tol. If the re-planned residual is not small, pass 1 continues to --tol instead.
+        r1, zh1, zl1 = run(segs1, zh, zl, "pass 1", tol=tol1)
+        passes.append(r1)
+        segs2 = s.plan(zh1, zl1, 1e-30, 0.05)
+        s.set_segs(segs2)
+        F2 = dd_norm(*s.residual(zh1, zl1))
+        if np.isfinite(F2) and F2 <= max(1e3 * r1["F"], 1e-12):
+            r2, zh, zl = run(segs2, zh1, zl1, "pass 2 (re-planned)")
+        else:
+            print(f" re-planned residual {F2:.1e}: pass 1 continues on its own plan", flush=True)
+            r2, zh, zl = run(segs1, zh1, zl1, "pass 1 continued")
+        passes.append(r2)
+    fin = passes[-1]
     tc, th = lowD_dd.tails(s, zh, zl, nodes, M)
     p1 = zh[:M] + zl[:M]
     hk = lowD_dd.harmonics(np.sqrt(D - 2) * p1)
-    rec = dict(D=D, M=M, N=s.size, Delta=float(zh[-1]), Delta_lo=float(zl[-1]), F=F, converged=bool(F <= tol),
-               newton_calls=len(hist), start=os.path.basename(start), start_M=Mo, start_F=F0, nodes=nodes, kt=m["kt"],
-               kc=m["kc"], ks=m["ks"], tol_step=1e-30, hmax=0.05, steps=steps, tail_c=tc, tail_h=th,
-               t_newton_mixed=[round(v, 2) for v in ts.t["newton_mixed"]], t_residual=[round(v, 2) for v in ts.t["residual"]],
-               s_per_newton_step=round(float(np.mean(ts.t["newton_mixed"])), 2), s_per_residual=round(float(np.mean(ts.t["residual"])), 2),
-               s_last_jacobian=t_jac, s_last_factor=t_fac, seconds=round(t_solve, 1), lu_mb=round(nbytes / 2 ** 20, 1), lu_block=isblock, peak_rss_mb=peak_rss_mb(),
-               threads=threads, F_harm=[float(f"{v:.4e}") for v in hk], jac="f64")
-    if F <= tol:
-        save(os.path.join(STATES, f"{tag}_D{D:.4f}_M{M}.npz"), zh, zl, dict(D=D, M=M, nodes=nodes, kt=m["kt"], kc=m["kc"], ks=m["ks"]))
+    rec = dict(D=D, M=M, N=s.size, Delta=fin["Delta"], Delta_lo=fin["Delta_lo"], F=fin["F"], converged=fin["converged"],
+               start=os.path.basename(start), start_M=Mo, plan_from=plan_from, nodes=nodes, kt=m["kt"], kc=m["kc"],
+               ks=m["ks"], tol_step=1e-30, hmax=0.05, steps=fin["steps"], tail_c=tc, tail_h=th,
+               newton_calls=sum(p["newton_calls"] for p in passes), s_per_newton_step=fin["s_per_newton_step"], lu_mb=fin["lu_mb"], lu_block=fin["lu_block"],
+               passes=passes, seconds=round(time.time() - t0, 1), peak_rss_mb=peak_rss_mb(), threads=threads,
+               F_harm=[float(f"{v:.4e}") for v in hk], jac="f64")
+    if fin["converged"]:
+        save(os.path.join(STATES, f"{tag}_D{D:.4f}_M{M}.npz"), zh, zl,
+             dict(D=D, M=M, nodes=nodes, kt=m["kt"], kc=m["kc"], ks=m["ks"], segs=s.get_segs()))
     with open(outp, "a") as f:
         f.write(json.dumps(rec) + "\n")
-    print(f"D {D} M {M}: Delta {zh[-1]:.16f} ({zl[-1]:+.2e}) |F| {F:.1e}, {len(hist)} Newton calls, {t_solve:.0f} s; "
-          f"{rec['s_per_newton_step']} s per newton_mixed, {rec['s_per_residual']} s per residual; steps {steps}; tails "
-          f"{tc:.0e} {th:.0e}; LU {rec['lu_mb']} MB; peak RSS {rec['peak_rss_mb']} MB", flush=True)
-    return 0 if F <= tol else 1
+    pe = ""
+    print(f"D {D} M {M}: Delta {rec['Delta']:.16f} ({rec['Delta_lo']:+.2e}) |F| {rec['F']:.1e}; steps {rec['steps']}; tails "
+          f"{tc:.0e} {th:.0e}; {rec['s_per_newton_step']} s per newton_mixed; LU {rec['lu_mb']} MB; peak RSS "
+          f"{rec['peak_rss_mb']} MB{pe}", flush=True)
+    return 0 if fin["converged"] else 1
 
 
 def profile(opts):

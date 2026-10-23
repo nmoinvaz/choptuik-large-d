@@ -54,7 +54,8 @@ def find_record(path, D, M, nodes):
         for ln in open(path):
             if ln.strip():
                 r = json.loads(ln)
-                if r.get("converged") and abs(r["D"] - D) < 1e-9 and r["M"] == M and list(r["nodes"]) == list(nodes):
+                if (r.get("converged") and r["F"] <= 1e-24 and abs(r["D"] - D) < 1e-9 and r["M"] == M
+                        and list(r["nodes"]) == list(nodes)):
                     out = r
     return out
 
@@ -119,10 +120,10 @@ def main():
         n = int(round((D0 - a.D_end) / a.dD))
         st["targets"] = [round(D0 - a.dD * (i + 1), 6) for i in range(n) if D0 - a.dD * (i + 1) > a.D_end + 1e-9]
 
-    def ns(M):
-        return argparse.Namespace(out=a.points, tag=f"{st['tag']}", resume=True, kt=a.kt, kcs=kc, ks=ks, tol_step=a.tol_step,
-                                  hmax=a.hmax, solver="newton", it_max=a.it_max, tol=a.tol, accept=a.accept, lm=0, jac="f64",
-                                  threads=a.threads, svd=0, dn_its=2, w=24)
+    def ns(M, tag=None, tol=None):
+        return argparse.Namespace(out=a.points, tag=tag or st["tag"], resume=True, kt=a.kt, kcs=kc, ks=ks, tol_step=a.tol_step,
+                                  hmax=a.hmax, solver="newton", it_max=a.it_max, tol=tol or a.tol, accept=tol or a.accept,
+                                  lm=0, jac="f64", threads=a.threads, svd=0, dn_its=2, w=24)
 
     def save_prog():
         st["t_used"] = time.time() - t_start
@@ -144,27 +145,64 @@ def main():
     def state_path(D, M):
         return os.path.join(STATES, f"{st['tag']}_D{D:.4f}_M{M}.npz")
 
-    def solve(D, M, starts):
-        """solve at (D, M) from the start with the smallest |F| among starts [(label, z)]; returns (ok, record, path)"""
+    def plan_of(z, M, D):
+        """Taylor plan (--tol_step, --hmax) of a state z at its own M, with the equations at D"""
+        s0 = make_solver(D, M, nodes=st["nodes"], kt=a.kt, kc=kc, ks=ks, threads=a.threads)
+        zz = np.asarray(z, float)
+        return s0.plan(zz, np.zeros_like(zz), a.tol_step, a.hmax)
+
+    def solve(D, M, starts, segs, tag=None, tol=None):
+        """solve at (D, M) on the plan segs from the start with the smallest |F| among starts [(label, z)];
+        returns (ok, record, path). The plan comes from a converged state or a predictor through converged states: a
+        state resampled to a larger M needs 3.5-4 times more steps (its new top harmonics are aliasing products that
+        the tau-derivative amplifies), which costs time, not accuracy."""
         s = make_solver(D, M, nodes=st["nodes"], kt=a.kt, kc=kc, ks=ks, threads=a.threads)
+        s.set_segs(segs)
         best = None
         for lab, z in starts:
             zz = np.asarray(z, float)
-            s.set_segs(s.plan(zz, np.zeros_like(zz), a.tol_step, a.hmax))
             F = float(np.abs(np.add(*s.residual(zz, np.zeros_like(zz)))).max())
-            log(f"  D {D} M {M}: start '{lab}' |F| {F:.2e}")
+            log(f"  D {D} M {M}: start '{lab}' |F| {F:.2e} ({sum(len(g) - 1 for g in segs)} steps)")
             if np.isfinite(F) and (best is None or F < best[0]):
                 best = (F, lab, zz)
-        if best is None:
-            return False, None, None
+        if best is None or best[0] > 1.0:
+            # the plan does not hold for these starts (top harmonics blown up): plan from the first start itself
+            zz = np.asarray(starts[0][1], float)
+            segs = s.plan(zz, np.zeros_like(zz), a.tol_step, a.hmax)
+            s.set_segs(segs)
+            F = float(np.abs(np.add(*s.residual(zz, np.zeros_like(zz)))).max())
+            log(f"  D {D} M {M}: plan from start '{starts[0][0]}' instead: {sum(len(g) - 1 for g in segs)} steps, |F| {F:.2e}")
+            if not np.isfinite(F):
+                return False, None, None
+            best = (F, starts[0][0], zz)
         t = time.time()
-        ok, zh, zl = lowD_dd.solve_point(D, M, best[2], np.zeros_like(best[2]), f"pilot: {best[1]}", ns(M), st["nodes"], STATES, log)
+        ok, zh, zl = lowD_dd.solve_point(D, M, best[2], np.zeros_like(best[2]), f"pilot: {best[1]}", ns(M, tag, tol), st["nodes"],
+                                         STATES, log, segs=segs)
+        if tol is not None:
+            return ok, None, os.path.join(STATES, f"{tag or st['tag']}_D{D:.4f}_M{M}.npz")
         rec = find_record(a.points, D, M, st["nodes"]) if ok else None
         if ok and rec is None:
             return False, None, None
         if rec is not None:
             rec["wall"] = round(time.time() - t, 1)
-        return ok, rec, state_path(D, M)
+        return ok, rec, os.path.join(STATES, f"{tag or st['tag']}_D{D:.4f}_M{M}.npz")
+
+    def solve_up(D, path_src, M2):
+        """the solve at a larger M2 from a converged state, in two passes: pass 1 from the state resampled to M2 on that
+        start's own plan (a coarser plan blows up on it) to |F| <= 1e-14, pass 2 on the plan of the pass-1 solution
+        (2-4 times leaner) to --tol. The record and state of pass 2 are the ones used."""
+        z0 = lifted(path_src, M2)
+        t = time.time()
+        ok1, _, p1 = solve(D, M2, [("lift", z0)], plan_of(z0, M2, D), tag=st["tag"] + "_p1", tol=1e-14)
+        if not ok1:
+            return False, None, None
+        t1 = time.time() - t
+        z1 = zof(p1)
+        ok2, r2, p2 = solve(D, M2, [("pass 1", z1)], plan_of(z1, M2, D))
+        if ok2:
+            r2["seconds_pass1"] = round(t1, 1)
+            r2["seconds"] = round(r2["seconds"] + t1, 1)
+        return ok2, r2, p2
 
     def lifted(path, M_new):
         h, l, m = load(path)
@@ -197,14 +235,15 @@ def main():
             return stop(f"projected time of the next point {last_point_s / 3600:.1f} h > {a.point_hours} h")
         log(f"--- D {Dt} (from {Dl}), M {st['Mw']} / {st['Mn']}, nodes {st['nodes'][0]}..{st['nodes'][-1]}")
         Mw, Mn = st["Mw"], st["Mn"]
-        pw = [(d, zof(p)) for d, p in st["hist_w"][-4:]]
-        ok_w, rw, path_w = solve(Dt, Mw, [("predictor", predict(pw, Dt))])
+        zpw = predict([(d, zof(p)) for d, p in st["hist_w"][-4:]], Dt)
+        ok_w, rw, path_w = solve(Dt, Mw, [("predictor", zpw)], plan_of(zpw, Mw, Dt))
         ok_n = False
         if ok_w:
+            zpn = predict([(d, zof(p)) for d, p in st["hist_n"][-4:]], Dt)
             starts = [("lift of M_w", lifted(path_w, Mn))]
             if len(st["hist_n"]) >= 2:
-                starts.insert(0, ("predictor", predict([(d, zof(p)) for d, p in st["hist_n"][-4:]], Dt)))
-            ok_n, rn, path_n = solve(Dt, Mn, starts)
+                starts.insert(0, ("predictor", zpn))
+            ok_n, rn, path_n = solve(Dt, Mn, starts, plan_of(zpn, Mn, Dt))
         if not (ok_w and ok_n):
             Dm = round(0.5 * (Dl + Dt), 6)
             if abs(Dm - Dl) < a.min_step:
@@ -239,7 +278,7 @@ def main():
             else:
                 M2 = Ms[Ms.index(Mn) + 1]
                 log(f"{why}: moving up to M {Mn} / {M2}")
-                ok2, r2, p2 = solve(Dt, M2, [("lift of M_n", lifted(path_n, M2))])
+                ok2, r2, p2 = solve_up(Dt, path_n, M2)
                 if not ok2:
                     return stop(f"the move up to M {M2} failed at D {Dt}")
                 write_pair(Dt, rn, r2, f"moved up ({why})")
@@ -270,8 +309,9 @@ def main():
                     res.append((m["M"], np.asarray(zr) + np.asarray(zrl)))
                 st["nodes"] = new
                 st["tag"] = st["tag"].split("_x")[0] + f"_x{new[0]:g}-{new[-1]:g}"
-                okw, rw2, pw2 = solve(Dt, res[0][0], [("re-noded", res[0][1])])
-                okn, rn2, pn2 = solve(Dt, res[1][0], [("re-noded", res[1][1])]) if okw else (False, None, None)
+                okw, rw2, pw2 = solve(Dt, res[0][0], [("re-noded", res[0][1])], plan_of(res[0][1], res[0][0], Dt))
+                okn, rn2, pn2 = (solve(Dt, res[1][0], [("re-noded", res[1][1])], plan_of(res[1][1], res[1][0], Dt)) if okw
+                                 else (False, None, None))
                 if not (okw and okn):
                     return stop(f"re-noded solve failed at D {Dt}")
                 write_pair(Dt, rw2, rn2, f"re-noded {old} -> {new}")
