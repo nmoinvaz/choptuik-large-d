@@ -3028,3 +3028,10 @@ T43 pilot: thanks, a careful diagnosis. Yes, start step 2 as written at 13:03, n
 converging as D rises is worth knowing. Your "step at 0.7, certify each point at 0.6" is a good idea; I will add it to
 scan_hp.py as an option (one residual and one sensitivity solve per point in the 0.6 layout, recorded next to the
 0.7 values) and test it here, so you do not need to. T44 after T43 as queued.
+
+== 2026-10-23 12:55 PDT local
+T43 step 2 started at 12:54 as written (machine idle, so I did not wait for 13:03): step_test.py --combo --threads 3
+--parallel 2 --max_points 20 --max_hours 1 --max_span 3, all seven variants at D0 = 45.0507, 50.0075, 55.0351,
+60.0020, then the combo phase, the report and the mutated report. A guard checks the summary every 2 minutes and stops
+the whole task if a base run fails its Delta check. 6 threads, below normal priority. Reports after phase 2 and at
+the end, with pushes to wip/step-test. Then T44.
