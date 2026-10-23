@@ -1,0 +1,4 @@
+2026-10-23 05:16:57 D 3.4 M 128 (dn, nodes from 0.005): NOT converged (exit 1, no record)
+2026-10-23 05:16:57 3.40 retry with the first node 0.0025 (from 3.425, re-noded, constant predictor)
+2026-10-23 05:50:48 D 3.4 M 128 (dn, nodes from 0.0025): NOT converged (exit 1, no record)
+2026-10-23 05:50:48 3.40 fails again with the first node 0.0025: T41 ends at 3.425, the lowest clean point
