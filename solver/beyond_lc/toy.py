@@ -460,6 +460,8 @@ def main():
     ap.add_argument('--out', default=os.path.join(HERE, 'toy_results.jsonl'))
     ap.add_argument('--sstar', default=None)
     ap.add_argument('--plant', action='store_true')
+    ap.add_argument('--redo', action='store_true', help='recompute (method, n) even if present; the new line is appended '
+                    'and replaces the old one in toy_table.py')
     a = ap.parse_args()
     sstar = mp.mpc(0, OMEGA) if a.sstar is None else mp.mpc(complex(a.sstar))
     if a.plant:
@@ -484,7 +486,7 @@ def main():
     key_s = (float(mp.re(sstar)), float(mp.im(sstar)))
     for spec in a.methods.split(','):
         for n in [int(v) for v in a.n.split(',')]:
-            if (spec, n, key_s) in done:
+            if (spec, n, key_s) in done and not a.redo:
                 continue
             rec = measure(spec, n, sstar)
             with open(a.out, 'a') as f:

@@ -46,5 +46,6 @@ if __name__ == '__main__':
     for xm in ['0.5', '0.7071067811865475', '0.8', '0.9']:
         print('x_m =', xm, ' columns n =', ns)
         for k in [1, 3, 5, 7, 9, 13]:
-            row = [f'{float(angle(n, k, mp.mpf(xm))):.1e}' for n in ns]
+            # values below 1e-37 are at the 40-digit working precision's floor: printed as such, not as numbers
+            row = [(f'{float(v):.1e}' if v > 1e-37 else ' <1e-37') for v in (angle(n, k, mp.mpf(xm)) for n in ns)]
             print(f'  k={k:2d}', ' '.join(row), flush=True)
