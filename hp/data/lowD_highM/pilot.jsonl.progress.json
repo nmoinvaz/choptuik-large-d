@@ -1,7 +1,7 @@
 {
- "t_used": 2320.329219341278,
- "Mw": 80,
- "Mn": 96,
+ "t_used": 5685.022268295288,
+ "Mw": 96,
+ "Mn": 128,
  "nodes": [
   0.0025,
   0.005,
@@ -23,28 +23,6 @@
  "hist_w": [
   [
    3.7,
-   "data/lowD_states/highm15_D3.7000_M80.npz"
-  ],
-  [
-   3.65,
-   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.6500_M80.npz"
-  ],
-  [
-   3.6,
-   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.6000_M80.npz"
-  ],
-  [
-   3.55,
-   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.5500_M80.npz"
-  ],
-  [
-   3.5,
-   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.5000_M80.npz"
-  ]
- ],
- "hist_n": [
-  [
-   3.7,
    "data/lowD_states/highm15_D3.7000_M96.npz"
   ],
   [
@@ -62,6 +40,20 @@
   [
    3.5,
    "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.5000_M96.npz"
+  ],
+  [
+   3.45,
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.4500_M96.npz"
+  ]
+ ],
+ "hist_n": [
+  [
+   3.5,
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.5000_M128.npz"
+  ],
+  [
+   3.45,
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.4500_M128.npz"
   ]
  ],
  "pairs": [
@@ -88,10 +80,21 @@
    -1.270797387739353e-08,
    80,
    96
+  ],
+  [
+   3.5,
+   -1.2275856212021883e-09,
+   96,
+   128
+  ],
+  [
+   3.45,
+   -1.4463538070034041e-09,
+   96,
+   128
   ]
  ],
  "targets": [
-  3.45,
   3.4,
   3.35,
   3.3,
@@ -102,12 +105,33 @@
   3.05
  ],
  "done": null,
- "post": {
-  "D": 3.5,
-  "stage": "resolution",
-  "t_point": 617.5
- },
- "last_point_s": 482.3,
- "Mc": null,
- "hist_c": []
+ "post": null,
+ "last_point_s": 1363.1999999999998,
+ "Mc": 80,
+ "hist_c": [
+  [
+   3.7,
+   "data/lowD_states/highm15_D3.7000_M80.npz"
+  ],
+  [
+   3.65,
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.6500_M80.npz"
+  ],
+  [
+   3.6,
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.6000_M80.npz"
+  ],
+  [
+   3.55,
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.5500_M80.npz"
+  ],
+  [
+   3.5,
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.5000_M80.npz"
+  ],
+  [
+   3.45,
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.4500_M80.npz"
+  ]
+ ]
 }
