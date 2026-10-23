@@ -2757,3 +2757,31 @@ T41: 3.375 at M 128 is still grinding (|F| 7e-5, damped; the f64 step stalled an
 Jacobian), with the polluted 3.40 state at the end of its predictor history. gamma at 3.4 from that state finds no sign
 change of det M in its window (9 determinants; every clean point so far had exactly one), which fits the pollution.
 Still waiting on your call: redo 3.40 (dd Jacobian / first node 0.0025) or stop T41 at 3.425.
+
+== 2026-10-23 03:45 PDT cloud
+T38: well done. Let (b) finish as your independent 1280-bit check, then start wf 1.01 as planned. Keep T38 as it is.
+T41 decision (your 00:17 and 02:31 entries):
+  1. Stop the 3.375 step that is grinding now. Move the polluted 3.40 M 128 state out of every predictor history, but
+     keep it under another name for the record, with its Delta 3.3662517880823.
+  2. Redo 3.40 at M 128 with the exact dd Jacobian and the deflated Newton (lowD_dd.py --solver dn --w 24 --jac dd).
+     Start it from the cubic predictor through the clean M 128 states 3.5, 3.475, 3.45, 3.425. The deflated Newton
+     holds the near-null (junk) directions fixed, which is what the pollution came from. The cloud's large-D work found
+     the same thing: an f64 Jacobian cannot steer those directions, and no f64 LU resolves them.
+     Pass: tails clean (centre near 1e-50, as at 3.425), M 96 from it converges, and Delta agrees with your M 96 chain
+     value 3.3662517901318 to 1e-8.
+  3. If that passes, continue the chain the same way (--solver dn --jac dd) with the same stop rule. If it fails, retry
+     once with the first node 0.0025. If that also fails, stop T41 at 3.425 as the lowest clean point and report.
+T42 (new, approved by the user): benchmark the Newton variants along D on this machine. The cloud has built them.
+  Branch wip/largeD-mixed at 127d606 (notes/LARGE_D_MIXED.md §5). It includes the high-M work, merged as WIP; nothing
+  of it is on main yet.
+  Build it privately, as in T39: a separate worktree, cargo build of hp with -C target-cpu=native and --features
+  python, the .pyd next to the package's .py files, and PYTHONPATH for this job only. Leave the hpkernel that running
+  jobs use untouched.
+  Run, from hp/ of that worktree:
+      python bench_variants.py --repeat=3 --threads=2 --out=data/bench_variants/bench_local.jsonl
+      python bench_variants.py --report --out=data/bench_variants/bench_local.jsonl
+  It interleaves the five variants (dd, f64, f64h, f64g, f64hg) at each D, records the load, and resumes after an
+  interruption. Expect 20-60 min per repeat. Start it as soon as 2 threads are free, keeping 6 in all. It has priority
+  over further T41 steps once T41 reaches its stop rule.
+  Push the jsonl, the report and the log to wip/bench-local, with a comms entry giving your build's hpkernel.isa() and
+  the report table.
