@@ -172,6 +172,38 @@ solves (plain and transposed) with the double-double LU of the same f64 matrix, 
 10⁻¹⁵; both controls (one pivot scaled by 1 + 10⁻⁶; the Δ copies untied) must fail that and do.
 `block_solve_many_is_solve` checks that several right-hand sides give each row bitwise as single solves.
 
+## 3. D = 3.7 from M = 80 to 256
+
+From `hp/data/lowD_states/lowDv_D3.7000_M80.npz` (13 nodes 0.005…0.8, kc 100, ks 250, Taylor tolerance 10⁻³⁰,
+hmax 0.05), each M lifted from the one below in two passes (`highm_check.py lift`; `stage1.sh`, `stage1_n15.sh`,
+`pilot.sh`); f64-Jacobian Newton to |F| ≤ 10⁻²⁸ (2.5×10⁻³⁰ to 3.4×10⁻²⁹ reached). On the 15 nodes 0.0025…0.9 (section
+1.4) the 80 and 96 states are the M = 80 state re-noded and lifted, the 128 and 160 states the 13-node ones re-noded.
+`python3 lowD_highM_report.py --stage1`:
+
+| M | nodes | Δ | change from the M before | Taylor steps (pass 1 → 2) | tails (centre, horizon) |
+|---|---|---|---|---|---|
+| 80 | 15 | 3.465200483544031475184929 | | 102 → 97 | 6×10⁻¹¹⁵, 9×10⁻¹⁴⁵ |
+| 96 | 15 | 3.465200482305272998798531 | −1.24×10⁻⁹ | 395 → 123 | 2×10⁻¹¹¹, 3×10⁻¹³⁶ |
+| 128 | 15 | 3.465200482271642183274714 | −3.36×10⁻¹¹ | 162 → 166 | 5×10⁻¹⁰⁰, 2×10⁻¹²³ |
+| 160 | 15 | 3.465200482271638953641 | −3.23×10⁻¹⁵ | 203 → 256 | 1×10⁻⁸⁹, 5×10⁻¹¹⁵ |
+| 192 | 15 | 3.465200482271638952016727 | −1.62×10⁻¹⁸ | 593 → 252 | 3×10⁻⁶⁶, 2×10⁻¹⁰⁸ |
+| 128 | 13 | 3.465200482271642183274714 | | 366 → 191 | 1×10⁻⁶⁹, 9×10⁻⁴⁹ |
+| 160 | 13 | 3.465200482271638953641 | −3.23×10⁻¹⁵ | 450 → 279 | 2×10⁻⁶⁰, 2×10⁻⁴⁰ |
+
+- **The M differences shrink fast but not at one rate:** −1.24×10⁻⁹ (80 → 96, 16 modes), −3.36×10⁻¹¹, −3.23×10⁻¹⁵,
+  −1.62×10⁻¹⁸ (32 modes each); successive ratios 0.027, 9.6×10⁻⁵, 5.0×10⁻⁴. So Δ(3.7) is converged in M to about
+  10⁻¹⁸ at M = 160–192, with the M = 192 value taken as Δ(3.7) = 3.465200482271638952 and the last difference as its
+  error estimate (an estimator, not a bound). The local machine's M = 96 value, 3.4652004823053, agrees with the M = 96
+  here to all its digits (3.4652004823052730), and its M 80 → 96 difference, −1.2×10⁻⁹, with −1.24×10⁻⁹.
+- **The node sets agree:** 13 against 15 nodes, 6.7×10⁻³¹ at M = 128 and 4.1×10⁻³⁰ at M = 160; the 15-node M = 80
+  equals the original M = 80 state to all digits.
+- **The plans:** pass 1 runs on the resampled start's own plan (3–4 times the steps of the converged solution's),
+  pass 2 on the plan of the pass-1 solution. Changing the plan moves Δ by 10⁻²⁴ (M = 128, 366 → 191 steps) to
+  7×10⁻²² (M = 160, 450 → 279): the first Newton step of pass 2 corrects Δ by −1.5×10⁻²⁴ and +6.6×10⁻²² (logs).
+- **The largest sensitivity |∂Δ/∂F|** (from the f64 LU) is 0.7–2.3 from M = 80 to 160 and 4.8×10² at M = 192, where
+  the weakest directions are as weak as the f64 Jacobian's rounding (section 1.4): Δ is still fixed by |F| ≈ 10⁻²⁹ to
+  about 5×10⁻²⁷.
+
 ## 4. Time and memory
 
 **Load.** The cloud machine has 2 cores. During this work several other agents ran on it (load average 2–13); every
