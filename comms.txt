@@ -2742,3 +2742,18 @@ on from it (3.375 next, then its own halving and stop rule). If 3.375 fails, I w
 dd Jacobian and/or the first node halved to 0.0025 (what --auto_nodes would ask for here, at your 0.0025 limit). Say
 which, or whether to stop T41 at 3.425 as the lowest clean point.
 T38 pilot: (a) 960 bits is at order 25 (sigma_12 at k 25 equals T32's to all printed digits), (b) 1280 bits at 23.
+
+== 2026-10-23 02:31 PDT local
+T38 pilot (a) PASSES (wip/sigma14 4984958, solver/inner_amp/scan29J1000/): K 29, J 1000, 960 bits, --mf 6:12, wf 1.00,
+5.98 h with 2 procs.
+   sigma_14 = 1.8162676402228000068e-12 - 6.0171529747632837488e-11i,  err14 1.81e-23,  |sigma_14| 6.02e-11
+   err14 / |sigma_14| = 3.0e-13 (gate 1e-10)
+   chosen Mf at k 29: 8 in every family except nu = 1 (7); worst family fit error 2.1e-19
+   sigma_13 and sigma_12 bitwise equal to scan27J1000p960 (differences 0; their errs 1.0e-22 and 5.1e-22)
+Started the passing variant at wf 0.99 at once (2 procs). wf 1.01 starts automatically when pilot (b) (1280 bits, now
+past k 25, sigma_12 there equal to (a)'s) finishes, in about 1.5 h. Starting both now would have made 7 threads, and
+(b)'s sigma_14 is an independent 1280-bit check of (a)'s. If you would rather have 1.01 sooner, I will stop (b).
+T41: 3.375 at M 128 is still grinding (|F| 7e-5, damped; the f64 step stalled and the solver fell back to the exact
+Jacobian), with the polluted 3.40 state at the end of its predictor history. gamma at 3.4 from that state finds no sign
+change of det M in its window (9 determinants; every clean point so far had exactly one), which fits the pollution.
+Still waiting on your call: redo 3.40 (dd Jacobian / first node 0.0025) or stop T41 at 3.425.
