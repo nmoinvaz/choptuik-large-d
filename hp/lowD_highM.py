@@ -7,8 +7,13 @@
 
 The two start states are converged at the same D and nodes, at the working resolution M_w and the next one M_n
 (consecutive in --Ms). At each new D (a grid of --dD below the start, D_end excluded):
-  1. M_w: predictor = Lagrange (cubic) through the last <= 4 converged states at M_w, Newton on the predictor's Taylor
-     plan (lowD_dd.solve_point: the f64-Jacobian Newton, Solver.newton_mixed, in block storage above M = 128);
+  0. after the first move up, the previous working resolution M_c is kept as a helper: solved first from its own
+     predictor (cheap), its solution resampled to M_w is a start for M_w (a predictor's first Newton step is large,
+     |dz| ~ 3 at |F| ~ 3e-2, and at M = 128 it went astray in the weak directions; lifted starts converge in 3-5
+     calls); its Delta is recorded with the pair (Delta_c, diff_c);
+  1. M_w: predictor = Lagrange (cubic) through the last <= 4 converged states at M_w, or the lifted helper solution if
+     its |F| is smaller; Newton (lowD_dd.solve_point: the f64-Jacobian Newton, Solver.newton_mixed, in block storage
+     above M = 128) on the plan of the last converged state at M_w;
   2. M_n: plan from the predictor through the last <= 4 states at M_n; start from the better (smaller |F|) of that
      predictor (with 2 or more states) and the M_w solution just found, resampled to M_n;
   3. the value is Delta(M_n), its error estimate |Delta(M_n) - Delta(M_w)| (an estimator: the change from the next

@@ -196,7 +196,7 @@ hmax 0.05), each M lifted from the one below in two passes (`highm_check.py lift
   error estimate (an estimator, not a bound). The local machine's M = 96 value, 3.4652004823053, agrees with the M = 96
   here to all its digits (3.4652004823052730), and its M 80 → 96 difference, −1.2×10⁻⁹, with −1.24×10⁻⁹.
 - **The node sets agree:** 13 against 15 nodes, 6.7×10⁻³¹ at M = 128 and 4.1×10⁻³⁰ at M = 160; the 15-node M = 80
-  equals the original M = 80 state to all digits.
+  differs from the original 13-node M = 80 state by −5.4×10⁻³⁰.
 - **The plans:** pass 1 runs on the resampled start's own plan (3–4 times the steps of the converged solution's),
   pass 2 on the plan of the pass-1 solution. Changing the plan moves Δ by 10⁻²⁴ (M = 128, 366 → 191 steps) to
   7×10⁻²² (M = 160, 450 → 279): the first Newton step of pass 2 corrects Δ by −1.5×10⁻²⁴ and +6.6×10⁻²² (logs).
@@ -218,6 +218,7 @@ are inflated by roughly L/2. They are measurements of this run, not of the kerne
 | 128 | 13 | 191 | 76 s | | | (dense) | 0.5 s | 785 (dense) | 987 | 3.0 |
 | 160 | 13 | 279 | 100 s | 99 s | 31 s (31%) | 0.46 s | 0.6 s | 105 | 435 | 2.3 |
 | 160 | 15 | 256 | 350 s | 347 s | 143 s (41%) | 1.2 s | 1.4 s | 121 | 542 | 4.8 |
+| 192 | 15 | 252 | 984 s | 973 s | 231 s (24%) | 3.3 s | 4.9 s | 173 | 721 | 13.2 |
 
 The τ-derivative's share is the Jacobian's time minus the same Jacobian built without it (`jac_mutate=1`). A profile at
 M = 192 on a 500-step plan (load about 4) gave 561 s for the Jacobian, 46% of it the τ-derivative, 1.1 s for the
@@ -229,11 +230,11 @@ largest single items at large M are the ks + 1 double-double horizon LUs (0.26 G
 built once per residual and once per Jacobian.
 
 **Where the time goes, and the τ-derivative.** The Jacobian is 98–99% of a Newton step at M ≥ 160 (the LU about
-0.5%, the residual 0.4–0.6%). Within it the dense M × M τ-derivative (`DMat::apply`) is 31–46% at M = 160–192; the
+0.5%, the residual 0.4–0.6%). Within it the dense M × M τ-derivative (`DMat::apply`) is 24–46% at M = 160–192; the
 rest is the Taylor recursions' Cauchy sums and field arithmetic, whose coefficient arrays (12 fields × 38 orders × M
 points × 5 lanes for f64x4) no longer fit the 2 MB L2 cache above M ≈ 128. A real-FFT or DCT derivative,
-O(M log M), would remove at most that 31–46%: a step 1.45–1.85 times faster even if the derivative were free, about
-1.3–1.5 times with a realistic FFT. It was not done: it needs a new kernel build (35 minutes here under load, with the
+O(M log M), would remove at most that 24–46%: a step 1.3–1.85 times faster even if the derivative were free, about
+1.2–1.5 times with a realistic FFT. It was not done: it needs a new kernel build (35 minutes here under load, with the
 container restarting every 30–60 minutes during this work), and the measurements say the larger costs are elsewhere:
 the Taylor plans (section 1.3, 2–4 times), the Cauchy sums' memory traffic, and the number of Taylor steps, which
 grows faster than M (converged plans: 56, 72, 86 steps at M = 48, 64, 80; 191 at 128; 252–279 at 160–192).
