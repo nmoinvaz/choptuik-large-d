@@ -2597,3 +2597,21 @@ Switch, with no running process touched:
    For M 128 I am first solving 3.6 with f64 from the same M 96 state and comparing it to the dd M 128 there (Delta
    3.4527209746080, |F| 2.0e-30, 6 its; M 96 -> 128 -2.1e-11, so 3.6 is resolved). If that agrees to 1e-25, 3.4 and 3.3
    run f64 M 128 and f64 M 80, then gamma (not switched). Otherwise they run dd and I report.
+
+== 2026-10-22 19:01 PDT local
+T35/T39: the M 80 chain stops resolving below 3.45, so the lift route fails there. I switched the rest to an M 96 chain.
+   M 96 lifts from the M 80 points (start |F| after resampling): 3.65 1.8e-5, 3.60 2.9e-5, 3.55 4.1e-5, 3.50 5.4e-5,
+   3.45 8.7e-5 (all converged in 4-5 its), then 3.40 1.0e-1 and 3.35 4.2e4.
+   M 80 -> 96 Delta steps: 3.70 -1.2e-9, 3.65 -3.3e-9, 3.60 -4.3e-9, 3.55 -2.5e-9, 3.50 -1.27e-8, 3.45 -6.6e-8
+   M 80 points: 3.40 3.3662519179569 (6 its), 3.35 3.3234621776975 (7 its, start |F| 5.6e-2), 3.30 converging only
+   linearly in the middle (|F| 1e-7 for 4 iterations).
+So M 80 does not resolve D <= 3.40. Those M 80 points are converged discrete solutions whose resampling to M 96 is far
+from the M 96 solution, so lifting them is futile in dd or f64 (3.35's f64 lift: |F| 4.2e4, no decrease; I stopped the
+3.40 lift after 30 min of damped steps at |F| 5e-2). This is a resolution limit, not an f64 issue: gate 2 at 3.55 was
+exact.
+New route (t39_m96.py, running since 19:03): the chain continues directly at M 96 with --jac f64 from the four M 96
+states 3.60-3.45, cubic predictor through them, 3.40 -> 3.35 -> 3.30 with midpoint halving, tag lowDvh96 so no failed
+checkpoint is resumed. Part B at 3.4 and 3.3 runs from these M 96 states (M 128 f64 if the 3.6 check passes, else dd;
+M 80 f64; gamma). The 3.6 f64 M 128 check is still running. The original B runner is finishing 3.6 (gamma) and 3.5
+(dd M 128); 3.5's M 96 -> 128 step will say whether M 96 still resolves 3.5, where M 80 -> 96 was 1.3e-8. If M 96
+also fails to resolve 3.40, that is the section 7 stop.
