@@ -16,6 +16,9 @@ The two start states are converged at the same D and nodes, at the working resol
      above M = 128) on the plan of the last converged state at M_w;
   2. M_n: plan from the predictor through the last <= 4 states at M_n; start from the better (smaller |F|) of that
      predictor (with 2 or more states) and the M_w solution just found, resampled to M_n;
+  2a. if the best start of M_w or M_n has |F| above --two_pass_above (1e-3) on the reused plan, that plan does not fit
+     it (on a lean plan the start's |F| is mostly Taylor error, and Newton went astray in the weak directions at
+     D 3.25, M 160 from 3.5e-3): two passes as in a move up (4), from the start whose |F| is smallest on its own plan;
   3. the value is Delta(M_n), its error estimate |Delta(M_n) - Delta(M_w)| (an estimator: the change from the next
      resolution, not a bound);
   4. if that difference exceeds --diff_max, or a log-linear fit of the last 3 differences in D projects it above
@@ -109,6 +112,8 @@ def main():
     ap.add_argument("--hmax", type=float, default=0.05)
     ap.add_argument("--plan_margin", type=float, default=1e-2, help="the step tolerance of the plan reused from the "
                     "last converged state, relative to --tol_step")
+    ap.add_argument("--two_pass_above", type=float, default=1e-3, help="solve M_w or M_n in two passes when its best "
+                    "start's |F| on the reused plan is above this (0: never)")
     ap.add_argument("--resume", action="store_true")
     a = ap.parse_args()
     os.makedirs(os.path.dirname(a.out), exist_ok=True)
@@ -192,11 +197,13 @@ def main():
             log(f"  D {D} M {M}: the solution's own plan has {need} steps, more than the {have} used")
         return need
 
-    def solve(D, M, starts, segs, tag=None, tol=None):
+    def solve(D, M, starts, segs, tag=None, tol=None, two_pass=False):
         """solve at (D, M) on the plan segs from the start with the smallest |F| among starts [(label, z)];
         returns (ok, record, path). The plan comes from a converged state or a predictor through converged states: a
         state resampled to a larger M needs 3.5-4 times more steps (its new top harmonics are aliasing products that
-        the tau-derivative amplifies), which costs time, not accuracy."""
+        the tau-derivative amplifies), which costs time, not accuracy. two_pass: if the best start's |F| on segs is
+        above --two_pass_above, solve in two passes as in a move up (pass 1 from the start that is best on its own
+        plan, to 1e-14; pass 2 on the plan of the pass-1 state)."""
         s = make_solver(D, M, nodes=st["nodes"], kt=a.kt, kc=kc, ks=ks, threads=a.threads)
         s.set_segs(segs)
         best = None
@@ -217,6 +224,36 @@ def main():
             if not np.isfinite(F):
                 return False, None, None
             best = (F, starts[0][0], zz)
+        if (two_pass and a.two_pass_above and best[0] > a.two_pass_above
+                and not os.path.exists(os.path.join(STATES, f"{st['tag']}_D{D:.4f}_M{M}.npz"))):
+            # the reused plan does not fit the starts: a lifted or predicted state is not regular at the sonic line, so
+            # on a lean plan its |F| is mostly Taylor error, and Newton's correction of it lies in the weak directions
+            # (at D 3.25, M 160 the lifted M 128 solution had |F| 3.5e-3 on the reused 257-step plan, and Newton went
+            # astray: line-search factors 1/4, 1/128, 1/16). Each start on its own plan instead, then two passes.
+            log(f"  D {D} M {M}: best start |F| {best[0]:.1e} > {a.two_pass_above:.0e} on the reused plan; two passes")
+            own = []
+            for lab, z in starts:
+                zz = (np.asarray(z[0], float), np.asarray(z[1], float)) if isinstance(z, tuple) else (np.asarray(z, float), np.zeros(len(z)))
+                sg = s.plan(*zz, a.tol_step, a.hmax)
+                s.set_segs(sg)
+                F = float(np.abs(np.add(*s.residual(*zz))).max())
+                log(f"  D {D} M {M}: start '{lab}' |F| {F:.2e} on its own plan ({sum(len(g) - 1 for g in sg)} steps)")
+                if np.isfinite(F):
+                    own.append((F, lab, zz, sg))
+            if not own:
+                return False, None, None
+            F1, lab1, zz1, sg1 = min(own, key=lambda o: o[0])
+            t = time.time()
+            ok1, _, p1 = solve(D, M, [(lab1, zz1)], sg1, tag=st["tag"] + "_p1", tol=1e-14)
+            if not ok1:
+                return False, None, None
+            t1 = time.time() - t
+            ok2, r2, p2 = solve(D, M, [("pass 1", zdd(p1))], plan_of(zdd(p1), M, D))
+            if ok2:
+                r2["seconds_pass1"] = round(t1, 1)
+                r2["seconds"] = round(r2["seconds"] + t1, 1)
+                r2["two_pass_from"] = lab1
+            return ok2, r2, p2
         t = time.time()
         ok, zh, zl = lowD_dd.solve_point(D, M, best[2][0], best[2][1], f"pilot: {best[1]}", ns(M, tag, tol), st["nodes"],
                                          STATES, log, segs=segs)
@@ -392,7 +429,7 @@ def main():
         zpw = predict([(d, zof(p)) for d, p in st["hist_w"][-4:]], Dt)
         segs_w = plan_prev(st["hist_w"], Mw)
         starts_w = [("predictor", zpw)] + ([("lift of M_c", lifted(path_c, Mw))] if path_c else [])
-        ok_w, rw, path_w = solve(Dt, Mw, starts_w, segs_w)
+        ok_w, rw, path_w = solve(Dt, Mw, starts_w, segs_w, two_pass=True)
         ok_n = False
         if ok_w:
             rw["steps_own"] = plan_check(Dt, Mw, path_w, load(path_w)[2]["segs"])
@@ -401,7 +438,7 @@ def main():
             if len(st["hist_n"]) >= 2:
                 starts.insert(0, ("predictor", zpn))
             segs_n = plan_prev(st["hist_n"], Mn)
-            ok_n, rn, path_n = solve(Dt, Mn, starts, segs_n)
+            ok_n, rn, path_n = solve(Dt, Mn, starts, segs_n, two_pass=True)
             if ok_n:
                 rn["steps_own"] = plan_check(Dt, Mn, path_n, load(path_n)[2]["segs"])
         if not (ok_w and ok_n):
