@@ -22,7 +22,7 @@ The two start states are converged at the same D and nodes, at the working resol
   3. the value is Delta(M_n), its error estimate |Delta(M_n) - Delta(M_w)| (an estimator: the change from the next
      resolution, not a bound);
   4. if that difference exceeds --diff_max, or a log-linear fit of the last 3 differences in D projects it above
-     --diff_max two points ahead, the resolution moves up (M_w <- M_n, M_n <- the next in --Ms): the new M_n is solved
+     --diff_max two points ahead while it is already above --diff_max / --near_factor (20), the resolution moves up (M_w <- M_n, M_n <- the next in --Ms): the new M_n is solved
      at this D from the new M_w's solution resampled, in two passes (pass 1 on the resampled state's own plan to
      |F| <= 1e-14, state <tag>_p1_*; pass 2 on the plan of the pass-1 state, 2-4 times fewer steps), and the point is
      recorded again with the new pair;
@@ -122,6 +122,8 @@ def main():
                     "last converged state, relative to --tol_step")
     ap.add_argument("--lift_tail_max", type=float, default=1e-20, help="with --auto_nodes, halve the first node when "
                     "the centre series tail of the next point's M_n start (the M_w solution resampled) is above this")
+    ap.add_argument("--near_factor", type=float, default=20.0, help="move up on the projected difference only when "
+                    "the difference itself is above --diff_max / near_factor")
     ap.add_argument("--stop_lam", type=float, default=0.125, help="a solve gives up after two steps in a row with "
                     "line-search factors at most this (Newton wandering in the weak directions; 0: never)")
     ap.add_argument("--two_pass_above", type=float, default=1e-3, help="solve M_w or M_n in two passes when its best "
@@ -343,13 +345,20 @@ def main():
             Mw, Mn = st["Mw"], st["Mn"]
             diff = [x for d, x, w_, n_ in st["pairs"] if abs(d - Dt) < 1e-9 and (w_, n_) == (Mw, Mn)][-1]
             same = [(d, x) for d, x, w_, n_ in st["pairs"] if (w_, n_) == (Mw, Mn)]
-            D2 = round(Dt - 2 * a.dD, 6)
+            # two points ahead on the grid still to do (the target list after this point)
+            D2 = st["targets"][1] if len(st["targets"]) > 1 else round(Dt - 2 * a.dD, 6)
             proj = projected_diff(same, D2)
             why = None
             if abs(diff) > a.diff_max:
                 why = f"|M {Mw} -> {Mn} difference| {abs(diff):.1e} > {a.diff_max:g}"
-            elif proj is not None and proj > a.diff_max:
+            elif proj is not None and proj > a.diff_max and abs(diff) > a.diff_max / a.near_factor:
+                # only when the difference already nears the limit: the fit of three differences is noisy (D 3.175:
+                # 1.4e-11, 2.4e-11, 3.3e-10 projected 1.1e-5 at D 3.075, while the model of section 6 puts the need
+                # for M_w = 192 near D 3.1)
                 why = f"difference projected to {proj:.1e} at D {D2} (> {a.diff_max:g})"
+            elif proj is not None and proj > a.diff_max:
+                log(f"D {Dt}: difference projected to {proj:.1e} at D {D2}, but |{diff:.1e}| is still below "
+                    f"{a.diff_max:g} / {a.near_factor:g}: no move up")
             if why and Ms.index(Mn) + 1 >= len(Ms):
                 if abs(diff) > a.diff_max:
                     return (f"the largest M built ({Mn}) cannot keep the difference below {a.diff_max:g} at D {Dt} "
