@@ -41,8 +41,9 @@ A failed solve (the helper's included) inserts the midpoint between the last con
 step); a solve gives up after two steps in a row with line-search factors <= --stop_lam (1/8: Newton wandering in the
 weak directions from a predictor too far off, as at D 3.15 from |F| 0.7).
 Stop rules (each recorded with its reason): the largest M in --Ms cannot keep the difference below --diff_max; a
-point fails with the step below --min_step; the projected time of the next point (the last point's solves) exceeds
---point_hours; --hours of wall time in all, counted across restarts.
+point fails with the step below --min_step; the projected time of the next point (the last point's solves or its
+running time, the larger) exceeds --point_hours; --hours of wall time in all, counted across restarts, or the next
+point would end after them.
 Restarts: every Newton step is checkpointed and every converged solve saved (lowD_dd.solve_point); the progress file
 <out>.progress.json holds the continuation state, including a pending move up or re-noding; rerun the same command
 with --resume to continue from the last converged point (a converged (D, M) is not solved again, a pair is not
@@ -456,7 +457,11 @@ def main():
         # projected time of the next point: the solves of the current pair at this point (after a move up, the pair
         # at the new resolutions; after a re-noding, both solve sets)
         st["last_point_s"] = post["t_point"]
-        log(f"point {Dt} took {post['t_point'] / 60:.1f} min of solves; {(time.time() - t_start) / 3600:.2f} h used")
+        if st.get("point_start") and abs(st["point_start"][0] - Dt) < 1e-9:
+            st["last_point_wall"] = time.time() - t_start - st["point_start"][1]
+        log(f"point {Dt} took {post['t_point'] / 60:.1f} min of solves"
+            + (f", {st['last_point_wall'] / 60:.1f} min of running time" if st.get("last_point_wall") else "")
+            + f"; {(time.time() - t_start) / 3600:.2f} h used")
         st["post"] = None
         save_prog()
         return None
@@ -473,8 +478,16 @@ def main():
             return stop(f"{a.hours} h of wall time used")
         Dt = st["targets"][0]
         Dl = st["hist_n"][-1][0]
-        if st.get("last_point_s") and st["last_point_s"] > a.point_hours * 3600:
-            return stop(f"projected time of the next point {st['last_point_s'] / 3600:.1f} h > {a.point_hours} h")
+        # the next point's time: the last point's, as its solves' seconds or (more complete: failed tries, re-noding,
+        # restarts) as the running time from its start to its end
+        proj = max(st.get("last_point_s") or 0.0, st.get("last_point_wall") or 0.0)
+        if proj > a.point_hours * 3600:
+            return stop(f"projected time of the next point {proj / 3600:.1f} h > {a.point_hours} h")
+        if proj and time.time() - t_start + proj > a.hours * 3600:
+            return stop(f"the next point (projected {proj / 3600:.1f} h) would end after {a.hours} h of wall time "
+                        f"({(time.time() - t_start) / 3600:.2f} h used)")
+        if not st.get("point_start") or abs(st["point_start"][0] - Dt) > 1e-9:
+            st["point_start"] = [Dt, time.time() - t_start]
         log(f"--- D {Dt} (from {Dl}), M {st['Mw']} / {st['Mn']}, nodes {st['nodes'][0]}..{st['nodes'][-1]}")
         Mw, Mn, Mc = st["Mw"], st["Mn"], st["Mc"]
         # the helper resolution (the previous working M, after a move up): solved from its own predictor, its solution
