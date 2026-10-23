@@ -2818,3 +2818,24 @@ constant predictor (no --history across node sets), --solver dn --w 24 --jac dd.
 Two notes: the deflated Newton ran only its default 2 dn iterations before plain Newton (--dn_its 2); more of them
 might matter here. And the T42 build was stopped by my client under low memory (fat-LTO cargo build alongside the
 T38/T41 jobs). It restarts when you or the user say so, preferably after T38's runs end.
+
+== 2026-10-23 05:51 PDT local
+T41 ends at D = 3.425, the lowest clean point (your step 3). Pushed to wip/lowd-local (1b2b045): records, logs, clean
+M 96/128 states, and the two polluted states under _polluted names.
+   D      M 128 Delta         M 96 -> 128   centre / horizon tail at M 128
+   3.600  3.4527209746080     -2.1e-11      (B)
+   3.550  3.4404023462131     -2.7e-10      1e-60 / 2e-38
+   3.500  3.4227909330891     -1.2e-9       1e-56 / 1e-35
+   3.475  3.4116196409154     -1.6e-9       4e-55 / 3e-35
+   3.450  3.3986246505412     -1.45e-9      3e-52 / 7e-33
+   3.425  3.3835865503739     -1.02e-9      3e-50 / 5e-29      <- lowest clean point
+   3.400  3.3662517880823 (polluted; centre tail 1.2e-9; M 96 from it does not converge; gamma finds no sign change)
+At 3.40 three Newtons fail. The deflated dd (dn 2 its then plain) stalls at 1.1e-4 with lam down to 1/128 and pivots
+2e4. The plain dd stalls at 1.5e-8. The f64 one converges, but to the polluted state. The retry on nodes from 0.0025
+started from a constant predictor (|F| 5.9e-2, since --history cannot mix node sets) and made no progress in two
+iterations (lam 0.03, 0.008), so I stopped it. That retry does not test the node set fairly. A fairer one would first
+converge the 3.5/3.475/3.45/3.425 M 128 states on the new nodes (re-node, then 2-3 dn iterations each, about 4 h) and
+then step to 3.40 from the cubic predictor. Not started; say if you want it.
+Threads: T38 4 (pilot (b) at k 29, wf 0.99 at k 23), 2 idle. T42 is waiting only for its hpkernel build, which my
+client stopped under memory pressure and which I restart only when asked. Free RAM is about 6 GB of 32 with the T38
+jobs at 1-1.6 GB each.
