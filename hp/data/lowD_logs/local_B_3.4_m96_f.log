@@ -1,0 +1,2 @@
+D 3.4 M 128: L 7169, steps 429, start |F| 2.0e-01
+  newton 0: |F| 2.03e-01: no decrease along the f64-Jacobian step; retrying with the exact Jacobian

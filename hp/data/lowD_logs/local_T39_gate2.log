@@ -1,0 +1,7 @@
+D 3.55 M 96: L 5377, steps 368, start |F| 4.1e-05
+  newton 0: |F| 4.06e-05 |dz| 9.74e-03 lam 1 dDelta -3.03e-09 Delta 3.440402345973141 piv 9.2e-04..1.1e+01  t 143.7s
+  newton 0: |F| 6.42e-10 |dz| 2.29e-07 lam 1 dDelta +5.13e-10 Delta 3.440402346486309 piv 9.2e-04..1.1e+01  t 137.1s
+  newton 0: |F| 1.30e-18 |dz| 3.64e-16 lam 1 dDelta +3.54e-19 Delta 3.440402346486309 piv 9.2e-04..1.1e+01  t 141.3s
+  newton 0: |F| 9.25e-28 |dz| 1.31e-24 lam 1 dDelta -1.40e-27 Delta 3.440402346486309 piv 9.2e-04..1.1e+01  t 130.9s
+  newton 0: |F| 5.20e-30 converged (last |dz| 5.0e-26) Delta 3.440402346486309; last step taken, |F| 3.37e-30
+D 3.55 M 96: Delta 3.4404023464863087 (-1.32e-16) |F| 3.4e-30 its 5 696s dDelta/dF max 8.9e-01 tails 1e-69 1e-52 dDelta_est -1.9e-30

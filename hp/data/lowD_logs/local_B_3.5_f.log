@@ -1,0 +1,4 @@
+resuming from checkpoint C:\Users\nathan\AppData\Local\Temp\claude\C--Users-nathan-Source-dss-residual-kernel\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\scratchpad\t39-wt\hp\data\lowD_states\lowDvh_D3.5000_M128_ckpt.npz (iteration 4)
+D 3.5 M 128: L 7169, steps 420, start |F| 9.8e-30
+  newton 0: |F| 9.82e-30 converged (last |dz| 3.0e-26) Delta 3.422790933089094; last step taken, |F| 3.37e-30
+D 3.5 M 128: Delta 3.4227909330890940 (-3.63e-17) |F| 3.4e-30 its 1 231s dDelta/dF max 6.0e-01 tails 1e-56 1e-35 dDelta_est -1.9e-30
