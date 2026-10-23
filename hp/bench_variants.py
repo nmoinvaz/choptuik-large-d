@@ -42,7 +42,8 @@ Recorded per run: converged, iterations (Newton steps, the last confirming |F| <
 (driver dd_finish: the mixed variants finish with exact steps once a mixed step stalls), whole-solve seconds, the
 steps' seconds by part summed (residual, Jacobian, LU, solves, products) and per step, the products, final |F|,
 Delta (hi, lo) and its difference from the dd run of the same state and repeat. --step_tol and --max_products set the
-correction loop's options (driver.GMRES otherwise).
+correction loop's options (driver.GMRES otherwise); --dd_last adds one exact step at the end of every mixed solve
+(driver.exact_last_step).
 
 --calibrate: for each state, eps = 1e-1, 1e-2, ... down to 1e-13 (1e-8 ... 1e-14 with --perturb=random): the
 double-double variant from that start, at most 10 Newton steps (a start with |F| above 1e-4 is not tried: the dd
@@ -195,7 +196,7 @@ def start_of(st, eps, kind="secant", seed=1):
     return st["zh"] + eps * st["secant"], st["zl"].copy()
 
 
-def solve(st, jac, eps, threads, seed=1, it_max=None, kind="secant", gmres=None):
+def solve(st, jac, eps, threads, seed=1, it_max=None, kind="secant", gmres=None, dd_last=False):
     m = st["meta"]
     s = make_solver(m["D"], m["M"], nodes=m["nodes"], kt=m["kt"], kc=m["kc"], ks=m["ks"], threads=threads, kfreeze=st["kf"])
     s.set_segs(st["segs"])
@@ -205,9 +206,11 @@ def solve(st, jac, eps, threads, seed=1, it_max=None, kind="secant", gmres=None)
     t = time.time()
     try:
         if deflated:
-            a, b, hist = deflated_newton(s, zh, zl, tol=st["tol"], it_max=it_max or 25, w=24, verbose=False, jac=jac, gmres=gmres)
+            a, b, hist = deflated_newton(s, zh, zl, tol=st["tol"], it_max=it_max or 25, w=24, verbose=False, jac=jac,
+                                         gmres=gmres, dd_last=dd_last)
         else:
-            a, b, hist = newton_solve(s, zh, zl, tol=st["tol"], it_max=it_max or 12, verbose=False, jac=jac, gmres=gmres)
+            a, b, hist = newton_solve(s, zh, zl, tol=st["tol"], it_max=it_max or 12, verbose=False, jac=jac, gmres=gmres,
+                                      dd_last=dd_last)
         err = None
     except Exception as e:  # noqa: BLE001
         a, b, hist, err = zh, zl, [], f"{type(e).__name__}: {e}"[:300]
@@ -215,6 +218,7 @@ def solve(st, jac, eps, threads, seed=1, it_max=None, kind="secant", gmres=None)
     Fend = dd_norm(*s.residual(a, b)) if err is None else float("nan")
     conv = err is None and Fend < st["tol"]
     parts = {k: sum(r.get(k, 0.0) for r in hist if r.get(k) == r.get(k)) for k in ("t_res", "t_jac", "t_lu", "t_solve", "t_prod")}
+    parts["t_jac"] += sum(r.get("t_jac_last", 0.0) for r in hist)
     steps = sum(1 for r in hist if "t_jac" in r)
     return dict(converged=bool(conv), its=len(hist), steps=steps, wall=round(wall, 3), F_start=F_start, F=Fend, Delta=float(a[-1]),
                 Delta_lo=float(b[-1]), parts={k: round(v, 4) for k, v in parts.items()},
@@ -263,9 +267,9 @@ def run(opts):
                 kind = opts.get("perturb", eps_tab.get(label, {}).get("perturb", "secant"))
                 l0 = loadavg()
                 g = {k: typ(opts[k]) for k, typ in (("step_tol", float), ("max_products", int)) if k in opts} or None
-                r = solve(st, v, eps, threads, kind=kind, gmres=g)
+                r = solve(st, v, eps, threads, kind=kind, gmres=g, dd_last=bool(opts.get("dd_last")))
                 rec = dict(state=label, D=st["D"], M=st["M"], kc=st["meta"]["kc"], kc_state=st["meta"]["kc_meta"], variant=v,
-                           repeat=rep, eps=eps, perturb=kind, gmres=g,
+                           repeat=rep, eps=eps, perturb=kind, gmres=g, dd_last=bool(opts.get("dd_last")),
                            neighbour=st["neighbour"], tol=st["tol"], load_before=l0,
                            load_after=loadavg(), machine=machine, time=time.strftime("%Y-%m-%d %H:%M:%S"), **r)
                 ref = done.get((label, "dd", rep))

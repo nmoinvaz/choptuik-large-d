@@ -25,6 +25,7 @@ Then:
     subspaces.
 
     cd hp && python3 largeD_continuation.py [--D=40,50,60] [--jacs=dd,f64,f64h,f64g,f64hg] [--threads=2]
+                                            (a variant name ending in _last, e.g. f64hg_last, adds --dd_last)
                                             [--out=data/mixed_precision/largeD_cont] [--report]
 A run whose directory has a 'done' marker is skipped (rerun to resume); --report only prints the comparison.
 """
@@ -66,7 +67,7 @@ def scan_cmd(out, start, hist, targets, m, tol, jac, threads, dD=1.0):
     cmd = [sys.executable, "-u", os.path.join(HERE, "scan_hp.py"), out, start, "0", "--Dlist",
            ",".join(f"{x:.6f}" for x in targets), "--dD", f"{dD:g}", "--maxdD", f"{dD:g}", "--M", str(m["M"]), "--kc", str(m["kc"]), "--ks", str(m["ks"]),
            "--kt", str(m["kt"]), "--tol", f"{tol:g}", "--w", "24", "--it_max", "25", "--lm", "0", "--threads", str(threads),
-           "--tag", jac, "--jac", jac, "--verbose", "--kfreeze", "13"]
+           "--tag", jac, "--jac", jac.replace("_last", ""), "--verbose", "--kfreeze", "13"] + (["--dd_last"] if jac.endswith("_last") else [])
     if hist:
         cmd[6:6] = ["--history", ",".join(hist)]
     return cmd

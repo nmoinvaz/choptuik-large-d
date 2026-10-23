@@ -1,0 +1,139 @@
+/usr/bin/python3 -u /home/claude/dss/agentLD/wt/hp/scan_hp.py /home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D59.8221/f64g/scan.jsonl /home/claude/dss/agentLD/wt/hp/data/seeds/up13_D59.8221.npz 0 --history /home/claude/dss/agentLD/wt/hp/data/seeds/up12_D59.7676.npz,/home/claude/dss/agentLD/wt/hp/data/seeds/up12_D59.7858.npz,/home/claude/dss/agentLD/wt/hp/data/seeds/up12_D59.8041.npz --Dlist 59.833359,59.847422 --dD 1 --maxdD 1 --M 32 --kc 420 --ks 100 --kt 36 --tol 3e-22 --w 24 --it_max 25 --lm 0 --threads 2 --tag f64g --jac f64g --verbose --kfreeze 13
+  dn 0 [all]: |F| 7.01e-17 -> 1.76e-18 lam 1 Delta 1.810364906864545 t 2s (30 products)
+  dn 1 [all]: |F| 1.76e-18 -> nan lam 0.000122 Delta 1.810364906864545 t 3s (30 products)
+  dn 2 [full]: |F| 1.76e-18 -> 2.98e-23 lam 1 Delta 1.810364906864545 t 4s (30 products)
+  dn 2: the remaining steps exact (dd)
+  dn 3: |F| 2.98e-23 converged, Delta 1.810364906864545
+(re-)converged start D=59.822109 M=32 nodes=[0.3, 0.4, 0.5, 0.6, 0.7]: Delta 1.8103649068645451 ok True (10s)
+  dn 0 [all]: |F| 8.70e-17 -> 2.60e-18 lam 1 Delta 1.810511228315282 t 1s (30 products)
+  dn 1 [all]: |F| 2.60e-18 -> nan lam 0.000122 Delta 1.810511228315282 t 2s (30 products)
+  dn 2 [full]: |F| 2.60e-18 -> 7.02e-23 lam 1 Delta 1.810511228315282 t 4s (30 products)
+  dn 2: the remaining steps exact (dd)
+  dn 3: |F| 7.02e-23 converged, Delta 1.810511228315282
+history point D=59.767567: ok True, Delta 1.8105112283152820
+  dn 0 [all]: |F| 7.04e-17 -> 4.63e-19 lam 1 Delta 1.810462183423965 t 1s (30 products)
+  dn 1 [all]: |F| 4.63e-19 -> 2.99e-19 lam 1 Delta 1.810462183423965 t 2s (30 products)
+  dn: phase 'all' stalled at |F| 3.0e-19; phase 'full'
+  dn 2 [full]: |F| 2.99e-19 -> 2.23e-23 lam 1 Delta 1.810462183423965 t 3s (30 products)
+  dn 2: the remaining steps exact (dd)
+  dn 3: |F| 2.23e-23 converged, Delta 1.810462183423965
+history point D=59.785838: ok True, Delta 1.8104621834239649
+  dn 0 [all]: |F| 4.80e-17 -> 1.97e-18 lam 1 Delta 1.810413167490259 t 1s (30 products)
+  dn 1 [all]: |F| 1.97e-18 -> 1.93e-18 lam 1 Delta 1.810413167490259 t 2s (30 products)
+  dn: phase 'all' stalled at |F| 1.9e-18; phase 'full'
+  dn 2 [full]: |F| 1.93e-18 -> 3.46e-23 lam 1 Delta 1.810413167490259 t 3s (30 products)
+  dn 2: the remaining steps exact (dd)
+  dn 3: |F| 3.46e-23 converged, Delta 1.810413167490259
+history point D=59.804109: ok True, Delta 1.8104131674902588
+  dn 0 [all]: |F| 1.17e-06 -> 5.36e-09 lam 1 Delta 1.810334757964531 t 1s (17 products)
+  dn 1 [all]: |F| 5.36e-09 -> nan lam 0.000122 Delta 1.810334757964627 t 2s (21 products)
+  dn 2 [full]: |F| 5.36e-09 -> nan lam 0.000122 Delta 1.810334707259061 t 4s (21 products)
+  dn 2: the remaining steps exact (dd)
+  dn 3 [full]: |F| 5.36e-09 -> nan lam 0.000122 Delta 1.810334707259061 t 10s
+D=59.833359: no convergence (|F| 5.4e-09); dD 1.0 -> 0.5
+  dn 0 [all]: |F| 1.17e-06 -> 5.36e-09 lam 1 Delta 1.810334757964531 t 1s (17 products)
+  dn 1 [all]: |F| 5.36e-09 -> nan lam 0.000122 Delta 1.810334757964627 t 2s (21 products)
+  dn 2 [full]: |F| 5.36e-09 -> nan lam 0.000122 Delta 1.810334707259061 t 4s (21 products)
+  dn 2: the remaining steps exact (dd)
+  dn 3 [full]: |F| 5.36e-09 -> nan lam 0.000122 Delta 1.810334707259061 t 11s
+D=59.833359: no convergence (|F| 5.4e-09); dD 0.5 -> 0.25
+  dn 0 [all]: |F| 1.17e-06 -> 5.36e-09 lam 1 Delta 1.810334757964531 t 1s (17 products)
+  dn 1 [all]: |F| 5.36e-09 -> nan lam 0.000122 Delta 1.810334757964627 t 2s (21 products)
+  dn 2 [full]: |F| 5.36e-09 -> nan lam 0.000122 Delta 1.810334707259061 t 4s (21 products)
+  dn 2: the remaining steps exact (dd)
+  dn 3 [full]: |F| 5.36e-09 -> nan lam 0.000122 Delta 1.810334707259061 t 10s
+D=59.833359: no convergence (|F| 5.4e-09); dD 0.25 -> 0.125
+  dn 0 [all]: |F| 1.17e-06 -> 5.36e-09 lam 1 Delta 1.810334757964531 t 1s (17 products)
+  dn 1 [all]: |F| 5.36e-09 -> nan lam 0.000122 Delta 1.810334757964627 t 2s (21 products)
+  dn 2 [full]: |F| 5.36e-09 -> nan lam 0.000122 Delta 1.810334707259061 t 4s (21 products)
+  dn 2: the remaining steps exact (dd)
+  dn 3 [full]: |F| 5.36e-09 -> nan lam 0.000122 Delta 1.810334707259061 t 10s
+D=59.833359: no convergence (|F| 5.4e-09); dD 0.125 -> 0.0625
+  dn 0 [all]: |F| 1.17e-06 -> 5.36e-09 lam 1 Delta 1.810334757964531 t 1s (17 products)
+  dn 1 [all]: |F| 5.36e-09 -> nan lam 0.000122 Delta 1.810334757964627 t 3s (21 products)
+  dn 2 [full]: |F| 5.36e-09 -> nan lam 0.000122 Delta 1.810334707259061 t 5s (21 products)
+  dn 2: the remaining steps exact (dd)
+  dn 3 [full]: |F| 5.36e-09 -> nan lam 0.000122 Delta 1.810334707259061 t 11s
+D=59.833359: no convergence (|F| 5.4e-09); dD 0.0625 -> 0.03125
+  dn 0 [all]: |F| 1.17e-06 -> 5.36e-09 lam 1 Delta 1.810334757964531 t 1s (17 products)
+  dn 1 [all]: |F| 5.36e-09 -> nan lam 0.000122 Delta 1.810334757964627 t 3s (21 products)
+  dn 2 [full]: |F| 5.36e-09 -> nan lam 0.000122 Delta 1.810334707259061 t 5s (21 products)
+  dn 2: the remaining steps exact (dd)
+  dn 3 [full]: |F| 5.36e-09 -> nan lam 0.000122 Delta 1.810334707259061 t 12s
+D=59.833359: no convergence (|F| 5.4e-09); dD 0.03125 -> 0.015625
+  dn 0 [all]: |F| 1.17e-06 -> 5.36e-09 lam 1 Delta 1.810334757964531 t 1s (17 products)
+  dn 1 [all]: |F| 5.36e-09 -> nan lam 0.000122 Delta 1.810334757964627 t 3s (21 products)
+  dn 2 [full]: |F| 5.36e-09 -> nan lam 0.000122 Delta 1.810334707259061 t 4s (21 products)
+  dn 2: the remaining steps exact (dd)
+  dn 3 [full]: |F| 5.36e-09 -> nan lam 0.000122 Delta 1.810334707259061 t 11s
+D=59.833359: no convergence (|F| 5.4e-09); dD 0.015625 -> 0.0078125
+  dn 0 [all]: |F| 1.09e-06 -> 8.80e-09 lam 1 Delta 1.810343969479250 t 1s (17 products)
+  dn 1 [all]: |F| 8.80e-09 -> 8.69e-09 lam 0.000244 Delta 1.810343969470357 t 2s (21 products)
+  dn: phase 'all' stalled at |F| 8.7e-09; phase 'full'
+  dn 2 [full]: |F| 8.69e-09 -> nan lam 0.000122 Delta 1.810343743211053 t 4s (21 products)
+  dn 2: the remaining steps exact (dd)
+  dn 3 [full]: |F| 8.69e-09 -> nan lam 0.000122 Delta 1.810343743211053 t 11s
+D=59.829921: no convergence (|F| 8.7e-09); dD 0.0078125 -> 0.00390625
+  dn 0 [all]: |F| 5.81e-07 -> 4.31e-09 lam 1 Delta 1.810354438570276 t 1s (17 products)
+  dn 1 [all]: |F| 4.31e-09 -> 4.31e-09 lam 0.00781 Delta 1.810354438579351 t 2s (21 products)
+  dn: phase 'all' stalled at |F| 4.3e-09; phase 'full'
+  dn 2 [full]: |F| 4.31e-09 -> 4.31e-09 lam 0.000488 Delta 1.810354439221361 t 3s (21 products)
+  dn 2: the remaining steps exact (dd)
+  dn 3 [full]: |F| 4.31e-09 -> 4.30e-09 lam 0.000488 Delta 1.810354439862200 t 9s
+  dn 4 [full]: |F| 4.30e-09 -> 4.30e-09 lam 0.000488 Delta 1.810354440501910 t 16s
+  dn 5 [full]: |F| 4.30e-09 -> 4.30e-09 lam 0.000488 Delta 1.810354441140543 t 22s
+  dn 6 [full]: |F| 4.30e-09 -> 4.30e-09 lam 0.000488 Delta 1.810354441778158 t 30s
+  dn 7 [full]: |F| 4.30e-09 -> 4.30e-09 lam 0.000244 Delta 1.810354442096492 t 36s
+  dn 8 [full]: |F| 4.30e-09 -> 4.30e-09 lam 0.000244 Delta 1.810354442414597 t 43s
+  dn 9 [full]: |F| 4.30e-09 -> 4.30e-09 lam 0.000244 Delta 1.810354442732475 t 49s
+  dn 10 [full]: |F| 4.30e-09 -> 4.30e-09 lam 0.000244 Delta 1.810354443050129 t 55s
+  dn 11 [full]: |F| 4.30e-09 -> 4.29e-09 lam 0.000244 Delta 1.810354443367563 t 61s
+  dn 12 [full]: |F| 4.29e-09 -> 4.29e-09 lam 0.000244 Delta 1.810354443684780 t 68s
+  dn 13 [full]: |F| 4.29e-09 -> 4.29e-09 lam 0.000244 Delta 1.810354444001784 t 75s
+  dn 14 [full]: |F| 4.29e-09 -> 4.29e-09 lam 0.000244 Delta 1.810354444318577 t 82s
+  dn 15 [full]: |F| 4.29e-09 -> 4.29e-09 lam 0.000244 Delta 1.810354444635164 t 88s
+  dn 16 [full]: |F| 4.29e-09 -> 4.29e-09 lam 0.000244 Delta 1.810354444951548 t 95s
+  dn 17 [full]: |F| 4.29e-09 -> 4.29e-09 lam 0.000244 Delta 1.810354445267734 t 102s
+  dn 18 [full]: |F| 4.29e-09 -> 4.29e-09 lam 0.000244 Delta 1.810354445583726 t 109s
+  dn 19 [full]: |F| 4.29e-09 -> 4.29e-09 lam 0.000244 Delta 1.810354445899528 t 116s
+  dn 20 [full]: |F| 4.29e-09 -> 4.29e-09 lam 0.000244 Delta 1.810354446215144 t 123s
+  dn 21 [full]: |F| 4.29e-09 -> 4.28e-09 lam 0.000244 Delta 1.810354446530579 t 130s
+  dn 22 [full]: |F| 4.28e-09 -> 4.28e-09 lam 0.000244 Delta 1.810354446845838 t 138s
+  dn 23 [full]: |F| 4.28e-09 -> 4.28e-09 lam 0.000244 Delta 1.810354447160926 t 144s
+  dn 24 [full]: |F| 4.28e-09 -> 4.28e-09 lam 0.000244 Delta 1.810354447475848 t 151s
+D=59.826015: no convergence (|F| 4.3e-09); dD 0.00390625 -> 0.001953125
+  dn 0 [all]: |F| 3.92e-07 -> 1.62e-10 lam 1 Delta 1.810359672280826 t 1s (18 products)
+  dn 1 [all]: |F| 1.62e-10 -> 1.54e-11 lam 1 Delta 1.810359672272136 t 2s (23 products)
+  dn 2 [all]: |F| 1.54e-11 -> 2.35e-13 lam 1 Delta 1.810359672274207 t 3s (25 products)
+  dn 3 [all]: |F| 2.35e-13 -> 7.13e-17 lam 1 Delta 1.810359672274240 t 5s (28 products)
+  dn 4 [all]: |F| 7.13e-17 -> 1.37e-17 lam 1 Delta 1.810359672274240 t 6s (30 products)
+  dn 5 [all]: |F| 1.37e-17 -> nan lam 0.000122 Delta 1.810359672274240 t 8s (30 products)
+  dn 6 [full]: |F| 1.37e-17 -> 7.53e-23 lam 1 Delta 1.810359672274240 t 9s (30 products)
+  dn 6: the remaining steps exact (dd)
+  dn 7: |F| 7.53e-23 converged, Delta 1.810359672274240
+D=59.8241 Delta=1.8103596722742401-6.32e-19 its 8 |F| 7.5e-23 16s piv 6.6e-08..1.4e+07 dDelta/dF max 8.1e+13 tails 2e-148 2e-35
+  dn 0 [all]: |F| 7.89e-07 -> 6.57e-09 lam 1 Delta 1.810353130102599 t 1s (17 products)
+  dn 1 [all]: |F| 6.57e-09 -> 5.72e-09 lam 0.00781 Delta 1.810353130084025 t 2s (21 products)
+  dn: phase 'all' stalled at |F| 5.7e-09; phase 'full'
+  dn 2 [full]: |F| 5.72e-09 -> 5.78e-09 lam 0.00391 Delta 1.810353063097101 t 3s (21 products)
+  dn 2: the remaining steps exact (dd)
+  dn 3 [full]: |F| 5.78e-09 -> 5.78e-09 lam 0.000977 Delta 1.810353046514816 t 9s
+  dn 4 [full]: |F| 5.78e-09 -> 5.79e-09 lam 0.000977 Delta 1.810353029978397 t 16s
+  dn 5 [full]: |F| 5.79e-09 -> 5.79e-09 lam 0.000488 Delta 1.810353021733043 t 23s
+  dn 6 [full]: |F| 5.79e-09 -> 5.79e-09 lam 0.000488 Delta 1.810353013499449 t 29s
+  dn 7 [full]: |F| 5.79e-09 -> 5.79e-09 lam 0.000488 Delta 1.810353005277602 t 36s
+  dn 8 [full]: |F| 5.79e-09 -> 5.79e-09 lam 0.000488 Delta 1.810352997067487 t 43s
+  dn 9 [full]: |F| 5.79e-09 -> 5.79e-09 lam 0.000488 Delta 1.810352988869091 t 49s
+  dn 10 [full]: |F| 5.79e-09 -> 5.79e-09 lam 0.000488 Delta 1.810352980682401 t 55s
+  dn 11 [full]: |F| 5.79e-09 -> 5.79e-09 lam 0.000488 Delta 1.810352972507403 t 63s
+  dn 12 [full]: |F| 5.79e-09 -> 5.79e-09 lam 0.000488 Delta 1.810352964344084 t 70s
+  dn 13 [full]: |F| 5.79e-09 -> 5.79e-09 lam 0.000488 Delta 1.810352956192431 t 77s
+  dn 14 [full]: |F| 5.79e-09 -> 5.80e-09 lam 0.000488 Delta 1.810352948052429 t 84s
+  dn 15 [full]: |F| 5.80e-09 -> 5.80e-09 lam 0.000488 Delta 1.810352939924066 t 92s
+  dn 16 [full]: |F| 5.80e-09 -> 5.80e-09 lam 0.000488 Delta 1.810352931807329 t 98s
+  dn 17 [full]: |F| 5.80e-09 -> 5.80e-09 lam 0.000488 Delta 1.810352923702204 t 106s
+  dn 18 [full]: |F| 5.80e-09 -> 5.80e-09 lam 0.000488 Delta 1.810352915608679 t 112s
+  dn 19 [full]: |F| 5.80e-09 -> 5.80e-09 lam 0.000488 Delta 1.810352907526739 t 120s
+  dn 20 [full]: |F| 5.80e-09 -> 5.80e-09 lam 0.000244 Delta 1.810352903491555 t 127s
+  dn 21 [full]: |F| 5.80e-09 -> 5.80e-09 lam 0.000244 Delta 1.810352899459309 t 134s
+  dn 22 [full]: |F| 5.80e-09 -> 5.80e-09 lam 0.000244 Delta 1.810352895429998 t 143s

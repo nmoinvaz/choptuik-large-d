@@ -1,0 +1,2 @@
+bench_variants: {'host': 'vm', 'platform': 'Linux-6.18.44-fc-v153-x86_64-with-glibc2.39', 'processor': 'x86_64', 'cpus': 2, 'python': '3.13.16', 'isa': 'avx512', 'threads': 2, 'priority': 'nice 10'}
+D50.0075_M32: reference |F| 9.7e-25, tol 1e-23, kfreeze 13, kc 149 (state's 420), 10 Taylor steps (up8_D50.0075.npz)

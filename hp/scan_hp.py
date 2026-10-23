@@ -78,7 +78,7 @@ def solve_at(D, zh, zl, a, nodes, M, it_max, pin=None):
         hh, hl = band_field(pin[0], pin[1], M)
         s = PinnedSolver(s, M, hh, hl)
     t0 = time.time()
-    jkw = {} if a.jac == "dd" else dict(jac=a.jac, gmres=gmres_opts(a))
+    jkw = {} if a.jac == "dd" else dict(jac=a.jac, gmres=gmres_opts(a), dd_last=a.dd_last)
     if a.corrector in ("dn", "dnp"):
         zh2, zl2, hist = deflated_newton(s, zh, zl, tol=a.tol, it_max=it_max, w=a.w, verbose=a.verbose,
                                          junk_only=a.junk_only, delta_tol=a.delta_tol, **jkw)
@@ -156,6 +156,9 @@ def main():
                     "correction loop (exact products); the sensitivities then come from the step's f64 LU")
     ap.add_argument("--step_tol", type=float, default=None, help="f64g / f64hg: the loop's step-change tolerance")
     ap.add_argument("--max_products", type=int, default=None, help="f64g / f64hg: the loop's product budget per step")
+    ap.add_argument("--dd_last", action="store_true", help="mixed --jac: one exact Newton step once |F| < tol "
+                    "(driver.exact_last_step: Delta to the exact Newton's accuracy at D ~ 60, and the exact LU for the "
+                    "sensitivities)")
     ap.add_argument("--schedule", default="", help="node changes during the scan: 'D1=x,x,...;D2=x,x,...' "
                     "(at the first converged point with D >= D_i the solution is re-noded and re-converged)")
     a = ap.parse_args()
