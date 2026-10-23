@@ -1,0 +1,4 @@
+op 0 max rel err 1.2368928032408912e-32
+op 1 max rel err 1.278369793543824e-32
+op 2 max rel err 1.6377078012488604e-32
+dd_solve max err 9.797205384746342e-31 isa avx512

@@ -1,0 +1,90 @@
+quad-double results against mpmath (3000-bit working precision); units of 2^-209; dump /tmp/qd_dump_xva72kkb
+operation      inputs          n        max      99.9%    max rel    thr  fails
+sloppy add     wide         1000      0.014      0.013      0.014  1.000      0
+sloppy add     cancel       1000   8.76e-04   7.25e-04   7.31e-03  1.000      0
+sloppy add     overflow     1000      0.013      0.012      0.013  1.000      0
+sloppy add     underflow    1000          0          0          0  1.000      0
+sloppy add     pow2         1000      0.014      0.014      0.014  1.000      0
+sloppy add     sparse       1000   2.12e-03   8.65e-04   2.12e-03  1.000      0
+sloppy add     computed     1000   2.77e-04   2.09e-04   5.72e-03  1.000      0
+accurate add   wide         1000      0.014      0.013      0.014  1.000      0
+accurate add   cancel       1000   8.46e-03   4.02e-03   8.46e-03  1.000      0
+accurate add   overflow     1000      0.015      0.013      0.015  1.000      0
+accurate add   underflow    1000          0          0          0  1.000      0
+accurate add   pow2         1000      0.015      0.015      0.015  1.000      0
+accurate add   sparse       1000   5.05e-03   2.49e-05   5.05e-03  1.000      0
+accurate add   computed     1000      0.010   9.26e-03      0.010  1.000      0
+qd + f64       wide         1000      0.015      0.011      0.015  1.000      0
+qd + f64       cancel       1000          0          0          0  1.000      0
+qd + f64       overflow     1000      0.016      0.014      0.016  1.000      0
+qd + f64       underflow    1000          0          0          0  1.000      0
+qd + f64       pow2         1000      0.014      0.014      0.014  1.000      0
+qd + f64       sparse       1000   5.00e-10   2.38e-15   5.00e-10  1.000      0
+qd + f64       computed     1000          0          0          0  1.000      0
+qd + dd        wide         1000      0.014      0.013      0.014  1.000      0
+qd + dd        cancel       1000   1.80e-03   1.86e-04   5.67e-03  1.000      0
+qd + dd        overflow     1000      0.015      0.015      0.015  1.000      0
+qd + dd        underflow    1000          0          0          0  1.000      0
+qd + dd        pow2         1000      0.016      0.015      0.016  1.000      0
+qd + dd        sparse       1000   1.63e-10   3.28e-14   1.63e-10  1.000      0
+qd + dd        computed     1000          0          0          0  1.000      0
+sloppy mul     wide         1000      0.193      0.165      0.193  2.000      0
+sloppy mul     cancel       1000      0.138      0.104      0.138  2.000      0
+sloppy mul     overflow     1000      0.179      0.157      0.179  2.000      0
+sloppy mul     underflow    1000   1.96e+46   1.55e+46   1.96e+46  2.000      0
+sloppy mul     pow2         1000      0.149      0.128      0.149  2.000      0
+sloppy mul     sparse       1000   9.84e-03   8.07e-03   9.84e-03  2.000      0
+sloppy mul     computed     1000      0.172      0.168      0.172  2.000      0
+accurate mul   wide         1000      0.015      0.013      0.015  1.000      0
+accurate mul   cancel       1000      0.015      0.013      0.015  1.000      0
+accurate mul   overflow     1000      0.015      0.013      0.015  1.000      0
+accurate mul   underflow    1000   1.11e+46   9.61e+45   1.11e+46  1.000      0
+accurate mul   pow2         1000      0.014      0.012      0.014  1.000      0
+accurate mul   sparse       1000   9.55e-03   4.32e-03   9.55e-03  1.000      0
+accurate mul   computed     1000      0.014      0.014      0.014  1.000      0
+qd x f64       wide         1000      0.021      0.019      0.021  1.000      0
+qd x f64       cancel       1000      0.022      0.017      0.022  1.000      0
+qd x f64       overflow     1000      0.018      0.017      0.018  1.000      0
+qd x f64       underflow    1000   1.27e+46   9.27e+45   1.27e+46  1.000      0
+qd x f64       pow2         1000      0.014      0.013      0.014  1.000      0
+qd x f64       sparse       1000   2.98e-03   9.49e-04   2.98e-03  1.000      0
+qd x f64       computed     1000      0.019      0.017      0.019  1.000      0
+qd x dd        wide         1000      0.087      0.066      0.087  2.000      0
+qd x dd        cancel       1000      0.032      0.030      0.032  2.000      0
+qd x dd        overflow     1000      0.079      0.075      0.079  2.000      0
+qd x dd        underflow    1000   2.10e+46   1.59e+46   2.10e+46  2.000      0
+qd x dd        pow2         1000      0.048      0.035      0.048  2.000      0
+qd x dd        sparse       1000   5.46e-03   4.89e-03   5.46e-03  2.000      0
+qd x dd        computed     1000      0.061      0.061      0.061  2.000      0
+sqr            wide         1000      0.111      0.109      0.111  2.000      0
+sqr            cancel       1000      0.082      0.080      0.082  2.000      0
+sqr            overflow     1000      0.112      0.084      0.112  2.000      0
+sqr            underflow    1000   1.64e+46   1.42e+46   1.64e+46  2.000      0
+sqr            pow2         1000      0.091      0.077      0.091  2.000      0
+sqr            sparse       1000      0.022      0.017      0.022  2.000      0
+sqr            computed     1000      0.118      0.106      0.118  2.000      0
+sloppy div     wide         1000      0.446      0.381      0.446  4.000      0
+sloppy div     cancel       1000      1.266      0.513      1.266  4.000      0
+sloppy div     overflow     1000      0.366      0.275      0.366  4.000      0
+sloppy div     underflow    1000   1.09e+47   1.03e+47   1.09e+47  4.000      0
+sloppy div     pow2         1000      0.686      0.488      0.686  4.000      0
+sloppy div     sparse       1000      0.105      0.081      0.105  4.000      0
+sloppy div     computed     1000      0.466      0.414      0.466  4.000      0
+accurate div   wide         1000      0.018      0.018      0.018  2.000      0
+accurate div   cancel       1000      0.016      0.016      0.016  2.000      0
+accurate div   overflow     1000      0.031      0.024      0.031  2.000      0
+accurate div   underflow    1000   1.45e+47   1.28e+47   1.45e+47  2.000      0
+accurate div   pow2         1000      0.021      0.019      0.021  2.000      0
+accurate div   sparse       1000      0.014      0.013      0.014  2.000      0
+accurate div   computed     1000      0.022      0.022      0.022  2.000      0
+sqrt           wide         1000      0.185      0.163      0.185  4.000      0
+sqrt           cancel       1000      0.208      0.094      0.208  4.000      0
+sqrt           overflow     1000      0.151      0.146      0.151  4.000      0
+sqrt           underflow    1000      0.170      0.142      0.170  4.000      0
+sqrt           pow2         1000      0.194      0.119      0.194  4.000      0
+sqrt           sparse       1000      0.115      0.115      0.115  4.000      0
+sqrt           computed     1000      0.188      0.168      0.188  4.000      0
+dot n=16       random       1000      0.322      0.250             3.000      0
+parse: n 1000, relative error max 0.028 u, 99.9% 0.027 u; greedy round-to-nearest violated: 470
+print: n 1000, not correctly rounded: 0; differing from mpmath's nstr: 0
+470 FAILURES
