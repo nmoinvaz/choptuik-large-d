@@ -409,8 +409,9 @@ perturbs the fields by 10⁻¹² relative and compares Newton steps with the dou
 The step columns give the relative difference from the double-double step. That difference is the contraction factor
 of the mixed Newton iteration: below 1 it converges, gaining −log₁₀ of it in digits per step once the quadratic part is
 spent. Ranges are over three draws of the random perturbation for the f64 Jacobian (`largeD_run1`, `largeD_run2`, `largeD`) and two for the dd base (`run1`, `largeD`). The Jacobian times are on 2 threads shared with
-two other jobs. \*At D = 30.07 these solver settings leave |F| = 3×10⁻¹² at the saved state, so the scan used something
-else there; the linear algebra is still representative.
+two other jobs. \*At D = 30.07 the saved state has |F| = 3.3×10⁻¹² with these settings, which are the scan's: it is a
+point the scan accepted with `--junk_only` (run up6), as notes/LARGE_D_MIXED.md §7 found (an earlier version of this
+note said the scan used other settings there, which was wrong).
 
 What this shows:
 
