@@ -1,6 +1,6 @@
 #!/bin/bash
-# Stage 1 of notes/HIGH_M.md: the D = 3.7 lifts M = 80 -> 128 -> 160 -> 192 -> 256 -> 320 -> 384 (two passes each,
-# checkpointed), the plan comparison at M = 128, and the checks. Idempotent: a rerun after an interruption resumes
+# Stage 1 of notes/HIGH_M.md: the D = 3.7 lifts M = 80 -> 128 -> 160 -> 192 -> 256 (two passes each, checkpointed),
+# the plan comparison at M = 128, and the checks (stage1_big.sh: the lifts to 320 and 384). Idempotent: a rerun after an interruption resumes
 # from the checkpoints and skips what is done. Run from hp/ with PYTHONPATH pointing at a build of this branch and
 # REF_MAIN at the directory with a build of the parent commit (for the bit-identity references).
 set -u
@@ -19,8 +19,4 @@ grep -q "PASS\|FAIL" $L/ref_highm_compare.log 2>/dev/null || nice -n 10 python3 
 grep -q "^PASS\|^FAIL" $L/block_check.log 2>/dev/null || nice -n 10 python3 -u highm_check.py block --Ms=16,48,80,128 --variants=f64x4,f64x1,dd4 --json=data/lowD_highM/block_check.json > $L/block_check.log 2>&1
 grep -q "controls:" $L/block_controls.log 2>/dev/null || nice -n 10 python3 -u highm_check.py controls > $L/block_controls.log 2>&1
 grep -q "PASS\|FAIL" $L/converge_M80.log 2>/dev/null || nice -n 10 python3 -u highm_check.py converge --M=80 --json=data/lowD_highM/converge_M80.json > $L/converge_M80.log 2>&1
-for M in 320 384; do
-  nice -n 10 python3 -u highm_check.py lift --M=$M --start=$prev >> $L/lift_M$M.log 2>&1 || { echo "lift M $M failed"; exit 1; }
-  prev=data/lowD_states/highm_D3.7000_M$M.npz
-done
 echo STAGE1_DONE
