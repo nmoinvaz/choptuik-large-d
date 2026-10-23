@@ -1,0 +1,2 @@
+lowDvh_D3.5000_M96.npz: D 3.5 M 96 |F| 4.4e-30, guess lam 3.092124
+    lam 3.092024212621: sign -1 ln|det| 962.400099 pivots 1.07e-03..5.62e+01 (244.5 s)
