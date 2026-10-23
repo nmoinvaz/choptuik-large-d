@@ -1,0 +1,15 @@
+previous host (before the container moved): Intel Xeon with AVX-512 F/BW/CD/DQ/VL/IFMA/VBMI, RUSTFLAGS="-C target-cpu=native" (AVX-512) and "-C target-feature=+avx2,+fma"; the accumulator was then the four-level first design, so the dot-term rows do not describe the current QDotAcc
+isa avx512, ns per lane and operation (one thread, 16 independent vectors, min of 5)
+  add (dd, qd: (a + b)/2 less the halving) f64   0.054  dd   0.413  qd    4.050   qd/dd    9.8  dd/f64   7.7
+  mul                                f64   0.055  dd   0.182  qd    4.996   qd/dd   27.5  dd/f64   3.3
+  div                                f64   0.702  dd   3.440  qd   45.445   qd/dd   13.2  dd/f64   4.9
+  a b + c, mul then add              f64   0.059  dd   0.760  qd   10.312   qd/dd   13.6  dd/f64  13.0
+  dot term (16-term sums, finished)  f64   0.051  dd   0.350  qd    4.024   qd/dd   11.5  dd/f64   6.8
+  qd only: accurate add 22.534, accurate mul 6.276, qd x f64 3.933, accurate div 63.209, sqrt 129.075 (f64 sqrt 1.050)
+isa avx2, ns per lane and operation (one thread, 16 independent vectors, min of 5)
+  add (dd, qd: (a + b)/2 less the halving) f64   0.115  dd   0.689  qd    7.877   qd/dd   11.4  dd/f64   6.0
+  mul                                f64   0.113  dd   0.286  qd    9.226   qd/dd   32.3  dd/f64   2.5
+  div                                f64   0.715  dd   4.123  qd   56.600   qd/dd   13.7  dd/f64   5.8
+  a b + c, mul then add              f64   0.091  dd   1.011  qd   19.230   qd/dd   19.0  dd/f64  11.1
+  dot term (16-term sums, finished)  f64   0.094  dd   0.415  qd    6.003   qd/dd   14.5  dd/f64   4.4
+  qd only: accurate add 44.586, accurate mul 11.569, qd x f64 8.723, accurate div 79.203, sqrt 170.052 (f64 sqrt 1.073)
