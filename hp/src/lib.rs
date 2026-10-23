@@ -8,6 +8,7 @@
 //! * `field`: a tau field on the half grid (M = 8 B points) as B lane vectors; Cauchy products, d/dtheta.
 //! * `linalg`: dense double-double LU with partial pivoting (periodic solves, Newton), and the same blocked LU in f64.
 //! * `model`: centre series, Taylor stepping in x, horizon series, residual and Jacobian (double-double or f64).
+pub mod block;
 pub mod dd;
 pub mod dv;
 pub mod field;

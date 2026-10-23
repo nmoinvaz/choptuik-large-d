@@ -21,6 +21,9 @@ _TREE_SOLVER = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__f
 SOLVER_DIR = os.environ.get("DSS_SOLVER_DIR") or (
     _TREE_SOLVER if os.path.isdir(_TREE_SOLVER) else "/home/claude/dss-residual-kernel/solver")
 NODES_OLD = [0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6, 0.7]
+# the kernel's dense n x n paths (jacobian, newton, lm_steps, mode_det, ...) stop at this M; above it only
+# Solver.newton_mixed runs, in block storage (python.rs DENSE_M_MAX, notes/HIGH_M.md)
+DENSE_M_MAX = 128
 
 
 # ------------------------------------------------------------------ double-double helpers (numpy, elementwise)
@@ -216,10 +219,18 @@ def newton_solve(s, zh, zl, tol=1e-28, it_max=12, chord=0, verbose=True, ls=True
             break
         accepted, lam, th, tl = search(zh, zl, dh, dl, n0)
         if not accepted and jac == "f64":
-            if verbose:
-                print(f"  newton {it}: |F| {nF:.2e}: no decrease along the f64-Jacobian step; retrying with the exact "
-                      f"Jacobian", flush=True)
-            dh, dl, Fh, Fl, pmin, pmax = s.newton(zh, zl)
+            if s.m <= DENSE_M_MAX:
+                if verbose:
+                    print(f"  newton {it}: |F| {nF:.2e}: no decrease along the f64-Jacobian step; retrying with the exact "
+                          f"Jacobian", flush=True)
+                dh, dl, Fh, Fl, pmin, pmax = s.newton(zh, zl)
+            else:
+                # no dense exact Jacobian above DENSE_M_MAX: retry with the f64 tangents on a double-double base
+                # trajectory (the more accurate f64 Jacobian, 'dd4'), in block storage
+                if verbose:
+                    print(f"  newton {it}: |F| {nF:.2e}: no decrease along the f64-Jacobian step; retrying with the dd4 "
+                          f"Jacobian (M > {DENSE_M_MAX}: no exact dense Jacobian)", flush=True)
+                dh, dl, Fh, Fl, pmin, pmax = s.newton_mixed(zh, zl, **dict(mixed or {}, tangents=4, dd_base=True))
             accepted, lam, th, tl = search(zh, zl, dh, dl, n0)
         if not accepted:
             hist.append(dict(it=it, F=nF, failed="line search", Delta=float(zh[-1]), t=round(time.time() - t0, 1)))

@@ -140,6 +140,15 @@ def weakest(s, w, iters=10):
     return [float(f"{sig[i]:.3e}") for i in o], [float(f"{abs(X[-1, i]):.2e}") for i in o]
 
 
+def peak_rss_mb():
+    """the process's peak resident memory in MB (None where the resource module is missing, e.g. Windows)"""
+    try:
+        import resource
+    except ImportError:
+        return None
+    return round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024, 1)
+
+
 def solve_point(D, M, zh, zl, src, a, nodes, outdir, log):
     """one (D, M) solve with checkpoints; returns (converged, zh, zl)"""
     t0 = time.time()
@@ -216,6 +225,8 @@ def solve_point(D, M, zh, zl, src, a, nodes, outdir, log):
                solver=a.solver, source=src, threads=a.threads, converged=True)
     if a.jac != "dd":
         rec.update(jac=a.jac)
+    if peak_rss_mb() is not None:
+        rec.update(peak_rss_mb=peak_rss_mb())
     if a.svd:
         t1 = time.time()
         sv, dc = weakest(s, a.svd)

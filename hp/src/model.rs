@@ -795,7 +795,10 @@ fn jacobian_lanes<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64],
     let ld = ld_for(l);
     let delta = delta_of(zh, zl);
     let lus = horizon_lus(ctx, &ctx.fld(zh, zl, ctx.off_ah()), delta, par, DD::ZERO)?;
-    let lus_t = if ctx.lam.hi != 0.0 { horizon_lus(ctx, &ctx.fld(zh, zl, ctx.off_ah()), delta, par, ctx.lam)? } else { lus.clone() };
+    // the shifted LUs only for a mode matrix (lam != 0); otherwise the same factors, not a copy (at M = 384 and
+    // ks = 250 one set is 0.6 GB)
+    let lus_shift = if ctx.lam.hi != 0.0 { Some(horizon_lus(ctx, &ctx.fld(zh, zl, ctx.off_ah()), delta, par, ctx.lam)?) } else { None };
+    let lus_t: &[DDLu] = lus_shift.as_deref().unwrap_or(&lus);
     let nb = ctx.k() + 1;
     let tasks = jac_tasks(ctx);
     let cols: Vec<Vec<DD>> = if T::TAN_F64 && T::NT > 1 {
@@ -807,11 +810,11 @@ fn jacobian_lanes<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64],
                 _ => groups.push(vec![t]),
             }
         }
-        let group = |g: &Vec<(usize, usize, usize)>| jac_columns_n::<T, B>(ctx, zh, zl, delta, &lus, &lus_t, g);
+        let group = |g: &Vec<(usize, usize, usize)>| jac_columns_n::<T, B>(ctx, zh, zl, delta, &lus, lus_t, g);
         let gc: Vec<Vec<Vec<DD>>> = if par { groups.par_iter().map(group).collect() } else { groups.iter().map(group).collect() };
         gc.into_iter().flatten().collect()
     } else {
-        let column = |t: &(usize, usize, usize)| -> Vec<DD> { jac_column::<T, B>(ctx, zh, zl, delta, &lus, &lus_t, *t) };
+        let column = |t: &(usize, usize, usize)| -> Vec<DD> { jac_column::<T, B>(ctx, zh, zl, delta, &lus, lus_t, *t) };
         if par {
             tasks.par_iter().map(column).collect()
         } else {
@@ -852,6 +855,85 @@ fn jacobian_lanes<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64],
         }
     }
     Ok((jh, jl, ld))
+}
+
+/// The Newton system of the mixed-precision step in block storage: the f64 Jacobian (TAN_F64 lanes T: `Fu`,
+/// `Fun<N>` or `Dtn<N>`), built block by block and factored by the staircase LU (`block::BlockLu`) without forming
+/// the dense matrix. Each residual block's columns are computed (in parallel when par) by the same functions as in
+/// `jacobian_lanes`, so its entries are those of the dense f64 Jacobian; then the block's step is factored. Not for
+/// the frozen-harmonics layout (Ctx::freeze couples the horizon block to p1) or a mode matrix (lam != 0).
+/// mutate: block::MUT_* (controls).
+pub fn jacobian_block<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool, mutate: u8) -> Result<crate::block::BlockLu, String> {
+    use crate::block::{BlockLu, Group};
+    if ctx.freeze.is_some() {
+        return Err("block storage does not support the frozen-harmonics layout (kfreeze)".into());
+    }
+    if ctx.lam.hi != 0.0 || !T::TAN_F64 {
+        return Err("block storage is for the f64 Jacobian only".into());
+    }
+    let m = Ctx::<B>::M;
+    let k = ctx.k();
+    let l = ctx.len();
+    let delta = delta_of(zh, zl);
+    let lus = horizon_lus(ctx, &ctx.fld(zh, zl, ctx.off_ah()), delta, par, DD::ZERO)?;
+    let mut groups = vec![Group { delta: false, zoff: 0, zlen: 2 * m }];
+    for t in 0..k {
+        groups.push(Group { delta: true, zoff: ctx.off_node(t), zlen: 4 * m });
+    }
+    groups.push(Group { delta: true, zoff: ctx.off_mh(), zlen: 2 * m });
+    let rblocks: Vec<(usize, usize)> = (0..=k).map(|b| (b * 4 * m, 4 * m)).collect();
+    let tasks = jac_tasks(ctx);
+    let gs = groups.clone();
+    let fill = |b: usize, w: &mut [f64], ld: usize, r0: usize| -> Result<(), String> {
+        let (p, q) = (gs[b], gs[b + 1]);
+        let np = p.len();
+        // column of z index zi within this step (panel group p, right group q; Delta -> q's copy)
+        let pos = |zi: usize| -> Result<usize, String> {
+            if zi == l - 1 {
+                Ok(np)
+            } else if zi >= p.zoff && zi < p.zoff + p.zlen {
+                Ok(p.delta as usize + zi - p.zoff)
+            } else if zi >= q.zoff && zi < q.zoff + q.zlen {
+                Ok(np + q.delta as usize + zi - q.zoff)
+            } else {
+                Err(format!("block {b}: unknown {zi} outside its two groups"))
+            }
+        };
+        let bt: Vec<(usize, usize, usize)> = tasks.iter().filter(|t| t.0 == b).cloned().collect();
+        let cols: Vec<Vec<DD>> = if T::NT > 1 {
+            let groups_b: Vec<&[(usize, usize, usize)]> = bt.chunks(T::NT).collect();
+            let one = |g: &&[(usize, usize, usize)]| jac_columns_n::<T, B>(ctx, zh, zl, delta, &lus, &lus, g);
+            let gc: Vec<Vec<Vec<DD>>> = if par { groups_b.par_iter().map(one).collect() } else { groups_b.iter().map(one).collect() };
+            gc.into_iter().flatten().collect()
+        } else {
+            let one = |t: &(usize, usize, usize)| jac_column::<T, B>(ctx, zh, zl, delta, &lus, &lus, *t);
+            if par {
+                bt.par_iter().map(one).collect()
+            } else {
+                bt.iter().map(one).collect()
+            }
+        };
+        let ins = ctx.block_inputs(b);
+        for (&(_, f, j), col) in bt.iter().zip(&cols) {
+            let c = if f == usize::MAX { np } else { pos(ins[f] + j)? };
+            for (r, v) in col.iter().enumerate() {
+                w[c * ld + r0 + r] = v.hi;
+            }
+        }
+        let t = ctx.block_target(b);
+        for r in 0..4 * m {
+            let c = pos(t + r)?;
+            let o = c * ld + r0 + r;
+            w[o] = (DD { hi: w[o], lo: 0.0 } - DD::ONE).hi;
+        }
+        if b == 0 {
+            for i in 0..m {
+                w[pos(i)? * ld + r0 - 1] = ctx.phase.get(i).hi;
+            }
+        }
+        Ok(())
+    };
+    BlockLu::factor(l, groups, &rblocks, l - 1, l - 1, fill, par, mutate)
 }
 
 /// A solver context read from a file written by hp/dump_ctx.py (Rust benches and data-driven tests).
