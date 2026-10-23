@@ -211,9 +211,10 @@ D = 3.75570, Δ = 3.466774, 2×10⁻⁶ high, the size of their bias there (conv
 
 **Below D = 4** (`hp/plot_lowD.py`). Left: the double-double points at M = 80 and the 47-mode f64 points near the
 maximum. Middle: the f64 points sit 1.5–3.5×10⁻⁶ high there. Right: the τ modes a 10⁻¹⁰ Δ needs (`hp/lowD_cost.py`, an
-estimate over four model variants, not a bound) cross the double-double kernel's limit of 128 near D = 3.4, which is
-where the computation at M ≤ 128 stops; near D = 3 they run into the hundreds (a branch raising the limit to
-M = 384 is under way).
+estimate over four model variants, not a bound) pass 128 near D = 3.4 and run into the hundreds near D = 3. The kernel
+now runs to M = 384: a continuation in double-double reached D = 3.15, Δ = 2.96131964246 (the change from M = 192 to
+256 is 9×10⁻¹²), where M = 160 already gives Δ to 10⁻⁸. Calibrated on it, the model puts D = 3.05 at M = 256–384 and
+9–25 more hours on two cores; that run is under way ([notes/HIGH_M.md](notes/HIGH_M.md)).
 
 ![Below D = 4: every double-double value of Delta and gamma so far against the sqrt(D - 3) formula, and how much Delta moves when the tau resolution is raised](hp/lowD_values.svg)
 
@@ -222,9 +223,11 @@ M = 384 is under way).
 `hp/export_dd.py` puts the best value per D into [`hp/data/delta_dd.csv`](hp/data/delta_dd.csv) next to the 857
 continuation points, as run `lowD-M<M>`; `hp/plot_lowD_values.py` draws them; rerun all three as runs land). Left: Δ at the largest M at each D, filled where the two
 largest M agree to 10⁻⁸ (or M = 80 alone at D ≥ 3.7, where M 80 → 96 is 1.2×10⁻⁹) and hollow where they do not yet.
-Every point, resolved or not, lies within 7×10⁻⁶ of the √(D − 3) formula below. Middle: γ, from the exact growth-mode
+Every point, resolved or not, lies within 8×10⁻⁶ of the √(D − 3) formula below. Middle: γ, from the exact growth-mode
 matrix at the largest M. Right: how much Δ moves when M is raised. The step from M = 80 to 96 grows a hundredfold from
-D = 3.7 to 3.4, while M = 96 → 128 stays at 1–2×10⁻⁹ down to D = 3.425, the lowest clean point. At D = 3.40 the
+D = 3.7 to 3.4, while M = 96 → 128 stays at 1–2×10⁻⁹ down to D = 3.425. Below that the larger grids take over
+(M = 128 → 160 → 192 → 256, each step one to two orders smaller than the one before), down to D = 3.15, the lowest
+point so far (192 → 256: 9×10⁻¹²). At D = 3.40 the
 M = 128 Newton converged only to a solution with content along the near-null directions (its centre-series tail
 10⁻⁹, against 10⁻⁵⁰ at 3.425); the CSV lists it as polluted and it is not used.
 
@@ -239,8 +242,8 @@ M = 128 Newton converged only to a solution with content along the near-null dir
 \gamma \approx 0.081437 + 0.285158\,s + 0.634589\,s^2 - 1.439299\,s^3 + 1.261792\,s^4 - 0.547493\,s^5 + 0.097777\,s^6 .
 ```
 
-They fit those points to 8×10⁻⁶ (Δ) and 10⁻⁶ (γ), and match our own double-double values at D = 3.7–4, which the fit
-never saw, to 4×10⁻⁶ and 10⁻⁷. On points held out of the fit, a polynomial in D, a form with ln(D − 3), or a single
+They fit those points to 8×10⁻⁶ (Δ) and 10⁻⁶ (γ), and match our own double-double values at D = 3.15–4 (Δ; γ at
+3.7–4), which the fit never saw, to 8×10⁻⁶ (Δ) and 10⁻⁷ (γ). On points held out of the fit, a polynomial in D, a form with ln(D − 3), or a single
 power of (D − 3) times a polynomial, with as many terms, misses by 10 to several hundred times more. This is an interpolation, not a law: the value at
 D = 3 is not determined (Δ from 1.72 to 1.80 and γ from 0.07 to 0.44 as the degree changes), so it says nothing about
 Ecker et al.'s conjecture that Δ and γ go to 0 as D → 3.
@@ -601,8 +604,18 @@ with computed points rather than an assumed form. Its points are used in [The fo
   At M ≥ 48 the f64 Jacobian agrees with the exact one only to about 10⁻⁷, against 10⁻¹⁴ at M ≤ 32. The Taylor
   steps are planned for the solution, not for the top τ-harmonics of a single column, so rounding inside a step is
   amplified. That costs Newton speed (a contraction of about 10⁻⁷ per step), not accuracy, since the residual stays
-  double-double. At large D the f64 Jacobian still steers up to about D = 45 but not reliably at D = 50–60, where the
-  errors that matter all sit in the horizon block of the Jacobian (notes/MIXED_PRECISION.md §8; a fix is planned).
+  double-double. At large D the f64 Jacobian stops steering (from D = 40 in the benchmark below): the errors that matter all
+  sit in the horizon block (notes/MIXED_PRECISION.md §8). Two repairs restore the step
+  ([notes/LARGE_D_MIXED.md](notes/LARGE_D_MIXED.md)): the horizon block's columns in double-double (`horizon_dd=4`),
+  and a correction loop (GMRES preconditioned by the f64 LU, with exact double-double Jacobian-vector products,
+  `Solver.jvp`). With both, Newton converges at every D tried, to the same Δ.
+- **Larger τ grids:** M = 160, 192, 256, 320 and 384 collocation points besides 8–128. Above M = 128 the
+  mixed-precision step builds and factors its f64 Jacobian in block storage (a staircase LU over the
+  multiple-shooting blocks, `hp/src/block.rs`): 8–12 times less memory than the dense matrix (173 MB at M = 192), and
+  the same steps as the dense path to that path's rounding at M ≤ 128, where every other result is unchanged bit for
+  bit. The exact double-double Jacobian, the Levenberg–Marquardt fallback and γ stay at M ≤ 128. At D = 3.7, Δ
+  changes by −3.4×10⁻¹¹, −3.2×10⁻¹⁵, −1.6×10⁻¹⁸ and −3.2×10⁻²¹ in the steps from M = 96 to 128, 160, 192 and 256
+  ([notes/HIGH_M.md](notes/HIGH_M.md)).
 - **Quad-double arithmetic (not yet used by the solver):** `hp/src/qd.rs` and `qv.rs` add quad-double numbers
   (four f64, about 64 digits), scalar and 8-lane SIMD, with bitwise the same results on AVX-512, AVX2 and portable
   builds. They use the QD library's algorithms[^20], with two repairs found by the tests: the accurate add's last
@@ -625,6 +638,15 @@ with computed points rather than an assumed form. Its points are used in [The fo
   steps at D = 59.84–59.88 with the scan's own arguments gave bitwise the same points 2.85–2.9 times faster
   (`hp/data/kc_check_scan/`). `--kc_auto` lowers kc after a converged point only when the residual and the Jacobian
   there are bitwise unchanged; the default keeps kc as given.
+
+![The Newton variants of the double-double solver against D: seconds per solve and speedup over the double-double Jacobian, with the failures marked](hp/bench_variants.svg)
+
+**The Newton variants against D** (`hp/plot_bench_variants.py`; data from `hp/bench_variants.py --repeat=3 --threads=4`
+on an otherwise idle laptop, i7-1185G7 with AVX-512, in `hp/data/bench_variants/bench_local.jsonl`). Left: seconds
+per whole solve, the median of three; right: the speedup over the double-double Jacobian; crosses mark a variant that
+did not converge. Up to D = 30 the f64 Jacobian alone, or with the loop, is 5–8 times faster; alone it fails from
+D = 40, and with the loop alone (f64g) from D = 60. Only the horizon fix with the loop (f64hg) converges at every D, 1.6–2.6 times faster
+than double-double at D = 40–60. Every converged run gives the same Δ to 1.1×10⁻¹⁸.
 
 <details>
 <summary>Checks of the solver</summary>
@@ -2139,13 +2161,17 @@ hp/                 double-double solver (crate hpkernel)
 ├── mixed_check.py  checks of the mixed-precision Newton: Jacobian agreement, controls, convergence, bit-identity
 ├── mixed_diag.py   why the f64 Jacobian agrees only to 1e-7 at M >= 48 (step size, harmonics, M)
 ├── mixed_largeD*.py  the mixed-precision step at large D: where it fails (horizon block), the correction-loop prototype
+├── bench_variants.py, plot_bench_variants.py  the Newton variants timed against D, and bench_variants.svg
+├── src/block.rs    block storage and staircase LU for the f64 Jacobian above M = 128
+├── highm_check.py, lowD_highM.py  checks of the larger tau grids, and the continuation toward D = 3 on them
+├── step_test.py    the largest step in D that Newton tolerates at D = 45-60, for several solver variants (local task T43)
 ├── qd_check.py     checks of the quad-double arithmetic against mpmath, and across the SIMD backends
 ├── export_dd.py    collects the runs' points into data/delta_dd.csv
 ├── dd_fits_mp.py   large-D model fits at 60 digits, held-out errors, predictions (--dmax for a data snapshot)
 ├── dd_candidates.py  candidate constants forced as the limit, held-out test (--dmax as above)
 ├── plot_heldout.py heldout.svg (python3 plot_heldout.py --dmax=60.1: the points up to D = 60.1)
 ├── data/delta_dd.csv   every double-double point: D, Delta (hi + lo), |F|, max dDelta/dF, run; the 857 continuation points
-│                       (D = 8.25-61.03) and the best low-D value per D (run lowD-M<M>, D = 3.3-4.0), which the large-D fits skip
+│                       (D = 8.25-61.03) and the best low-D value per D (run lowD-M<M>, D = 3.15-4.0), which the large-D fits skip
 ├── data/delta_dd_lowD.csv   the low-D points at every M, with gamma and status (export_lowD.py)
 ├── data/local/     the second machine's runs (scan_up*.jsonl), folded into delta_dd.csv by export_dd.py
 └── data/seeds/     saved solver states to restart continuation from

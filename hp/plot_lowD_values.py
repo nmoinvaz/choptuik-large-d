@@ -42,7 +42,8 @@ def main():
     rows = [r for r in csv.DictReader(open(os.path.join(HERE, "data", "delta_dd_lowD.csv"))) if r["status"] == "clean"]
     by_d = {}
     for r in rows:
-        by_d.setdefault(float(r["D"]), {})[int(r["M"])] = (float(r["Delta_hi"]) + float(r["Delta_lo"]), r)
+        by_d.setdefault(float(r["D"]), {})[int(r["M"])] = (float(r["Delta_hi"]) + float(r["Delta_lo"]), r,
+                                                           float(r["Delta_hi"]), float(r["Delta_lo"]))
     gam = {}
     for r in rows:
         if r["gamma"] and int(r["M"]) >= gam.get(float(r["D"]), (0, 0))[0]:
@@ -52,14 +53,15 @@ def main():
     for D, ms in sorted(by_d.items()):
         Ms = sorted(ms)
         for a, b in zip(Ms, Ms[1:]):
-            steps.setdefault((a, b), []).append((D, abs(ms[b][0] - ms[a][0])))
+            # in double-double: the hi parts' difference is exact for nearby values, so changes below 1e-16 survive
+            steps.setdefault((a, b), []).append((D, abs((ms[b][2] - ms[a][2]) + (ms[b][3] - ms[a][3]))))
         top = Ms[-1]
         r = ms[top][1]
         err = abs(float(r["change_from_lower_M"])) if r["change_from_lower_M"] else None
         pts.append((D, ms[top][0], top, err, r["resolved"] == "1"))
 
     cR, cU, cF = SERIES[0], SERIES[3], INK_SOFT
-    W = 900
+    W = 1010
     svg = Svg(W)
     svg.text(78, 26, "Below D = 4: every double-double value so far, and the resolution it took", size=15, fill=INK,
              weight="bold")
@@ -85,8 +87,8 @@ def main():
     g.key("dot", cR, "ours")
     g.key("line", cF, "formula", dash="5 4")
 
-    lows = [math.log10(max(c, 1e-16)) for (a, b), lst in steps.items() if a >= 64 for _, c in lst]
-    q = Panel(svg, 648, 120, 220, 340, (3.35, 4.05), (math.floor(min(lows + [-9])) - 0.5, -6),
+    lows = [math.log10(max(c, 1e-24)) for (a, b), lst in steps.items() if a >= 64 for _, c in lst]
+    q = Panel(svg, 648, 120, 330, 340, (3.1, 4.05), (math.floor(min(lows + [-9])) - 0.5, -6),
               "Change in Δ when M is raised", "D",
               "log₁₀ |change in Δ|", yfmt="{:g}")
     svg.line(q.px, q.sy(-8), q.px + q.pw, q.sy(-8), INK_SOFT, width=1.2, dash="6 4")
@@ -96,11 +98,11 @@ def main():
             continue
         col = SERIES[(i + 1) % len(SERIES)]
         lst = sorted(lst)
-        q.curve([d for d, _ in lst], [math.log10(max(c, 1e-16)) for _, c in lst], col, width=1.4, opacity=0.6)
+        q.curve([d for d, _ in lst], [math.log10(max(c, 1e-24)) for _, c in lst], col, width=1.4, opacity=0.6)
         for D, c in lst:
-            marker(svg, q.sx(D), q.sy(math.log10(max(c, 1e-16))), col, f"D = {D}: M {a} → {b} moves Δ by {c:.2e}", r=4)
-        D0, c0 = lst[0]
-        svg.text(q.sx(D0) - 8, q.sy(math.log10(max(c0, 1e-16))) - 8, f"{a}→{b}", size=10, fill=INK, anchor="end")
+            marker(svg, q.sx(D), q.sy(math.log10(max(c, 1e-24))), col, f"D = {D}: M {a} → {b} moves Δ by {c:.2e}", r=4)
+        D1, c1 = lst[-1]
+        svg.text(q.sx(D1) + 7, q.sy(math.log10(max(c1, 1e-24))) + 4, f"{a}→{b}", size=10, fill=INK)
     open(args.o, "w").write(svg.finish(120 + 340 + 56))
     print("wrote", args.o)
     for D, v, M, err, ok in pts:
