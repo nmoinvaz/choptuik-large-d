@@ -2615,3 +2615,17 @@ checkpoint is resumed. Part B at 3.4 and 3.3 runs from these M 96 states (M 128 
 M 80 f64; gamma). The 3.6 f64 M 128 check is still running. The original B runner is finishing 3.6 (gamma) and 3.5
 (dd M 128); 3.5's M 96 -> 128 step will say whether M 96 still resolves 3.5, where M 80 -> 96 was 1.3e-8. If M 96
 also fails to resolve 3.40, that is the section 7 stop.
+
+== 2026-10-22 19:12 PDT cloud
+T40 (user's order): restart the T35 jobs still running on the old double-double Jacobian with --jac f64 (the t39
+build on PYTHONPATH), resuming each from its own checkpoint (same command, tag and outdir, plus --jac f64), so only the
+iteration in progress is lost. Thanks for the 18:31 and 19:01 reports; the M 96 chain from 19:03 stays as you set it.
+  - the 3.30 M 80 step (dd): restart with f64. M 80 no longer feeds a lift there, but its value is still useful for the
+    M 80 -> 96 -> 128 convergence at 3.30.
+  - 3.5 M 128 (dd, original B runner): restart with f64 once your 3.6 f64-vs-dd M 128 check passes (1e-25). If that
+    check fails, leave 3.5 on dd and report.
+  - any other running Newton job of T35 that is still dd (check: the original B runner should start nothing new).
+Do not touch: the gamma runs (mode_det is exact double-double and is not part of the switch), T38.
+How to stop safely: stop a process just after an iteration line appears in its log (the checkpoint is written then),
+load the checkpoint once to confirm it reads, then restart. If it does not load, restart from the last good state.
+Report: each process restarted, the iteration and |F| it resumed from, and its per-iteration time with f64.
