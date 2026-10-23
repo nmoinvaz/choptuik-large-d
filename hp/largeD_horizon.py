@@ -16,8 +16,12 @@ At each saved state (hp/data/states, nearest to each --D; kfreeze 13 from D = 35
     17  16 + 1: double-double base trajectory and double-double solves, f64 tangent arithmetic
     4   the horizon block's columns in double-double (Du lanes, the exact Jacobian's columns), rounded to f64
 and the Newton step solved with its f64 LU (scipy) is compared with the double-double step (Solver.newton): the
-relative difference |dz - dz_dd| / |dz_dd| is the mixed iteration's contraction factor. Also printed: the horizon
-rows' largest entry error against the double-double Jacobian's hi part, and the Jacobian's time (the dd one first).
+relative difference |dz - dz_dd| / |dz_dd| is the mixed iteration's contraction factor; printed as "scipy / kernel":
+with scipy's f64 LU (as the prototypes), and with the kernel's f64 LU and double-double solve (Solver.lu_factor(J,
+f64=True), lu_solve; what newton_mixed does). The first column is the floor of any f64 factorization: the same for an
+f64 LU of the double-double Jacobian's hi part. Also printed: the horizon rows' largest entry error against the
+double-double Jacobian's hi part, and the Jacobian's time (the dd one first). 36 = 4 + 32: the horizon block's
+double-double columns with their series cut at double-double resolution (HDD_DU_CUT).
 Pass for a variant: step difference <= --pass (1e-5) at every state and seed.
 
     cd hp && python3 largeD_horizon.py [--D=50,55,60] [--seeds=1,2] [--variants=0,1,2,3,8,16,17,4] [--threads=2]
@@ -48,7 +52,7 @@ def main():
     opts = dict(a[2:].split("=", 1) if "=" in a else (a[2:], "1") for a in sys.argv[1:] if a.startswith("--"))
     Ds = [float(x) for x in opts.get("D", "50,55,60").split(",")]
     seeds = [int(x) for x in opts.get("seeds", "1,2").split(",")]
-    variants = [int(x) for x in opts.get("variants", "0,1,2,3,8,16,17,4").split(",")]
+    variants = [int(x) for x in opts.get("variants", "0,1,2,3,8,16,17,4,36").split(",")]
     threads, eps, pas = int(opts.get("threads", 2)), float(opts.get("eps", 1e-12)), float(opts.get("pass", 1e-5))
     out = opts.get("out", os.path.join(HERE, "data", "mixed_precision", "largeD_horizon.jsonl"))
     done = {}
@@ -82,21 +86,32 @@ def main():
             ddz = np.asarray(dh) + np.asarray(dl)
             b = -(np.asarray(Fh) + np.asarray(Fl))
             nr = np.linalg.norm(ddz)
-            rec = dict(D=m["D"], M=M, N=n, kfreeze=kf, seed=seed, eps=eps, t_jac_dd=round(t_dd, 3), step={}, jac_horizon={}, t_jac={})
-            line = []
+            rec = dict(D=m["D"], M=M, N=n, kfreeze=kf, seed=seed, eps=eps, t_jac_dd=round(t_dd, 3), step={}, step_kernel={},
+                       jac_horizon={}, t_jac={})
+
+            def kstep(J):
+                # the kernel's f64 LU (DDLu::factor_f64) and its double-double solve, as newton_mixed uses them
+                s.lu_factor(np.ascontiguousarray(J), None, True)
+                xh, xl = s.lu_solve(-np.asarray(Fh), -np.asarray(Fl))
+                return float(np.linalg.norm(np.asarray(xh) + np.asarray(xl) - ddz) / nr)
+            # the floor of any f64 factorization: an f64 LU of the exact Jacobian's hi part
+            rec["step"]["hi"] = float(np.linalg.norm(sla.lu_solve(sla.lu_factor(Jh, check_finite=False), b, check_finite=False) - ddz) / nr)
+            rec["step_kernel"]["hi"] = kstep(Jh)
+            line = [f"f64 LU of the dd Jacobian's hi part {rec['step']['hi']:.1e} / {rec['step_kernel']['hi']:.1e}"]
             for v in variants:
                 t = time.time()
                 J = np.asarray(s.jacobian_f64(ph, pl, horizon_dd=v))
                 tj = time.time() - t
                 c = float(np.linalg.norm(sla.lu_solve(sla.lu_factor(J, check_finite=False), b, check_finite=False) - ddz) / nr)
+                ck = kstep(J)
                 jd = float(np.max(np.abs(J[hr] - Jh[hr])) / np.max(np.abs(Jh[hr])))
-                rec["step"][str(v)], rec["jac_horizon"][str(v)], rec["t_jac"][str(v)] = c, jd, round(tj, 3)
+                rec["step"][str(v)], rec["step_kernel"][str(v)], rec["jac_horizon"][str(v)], rec["t_jac"][str(v)] = c, ck, jd, round(tj, 3)
                 worst[v] = max(worst[v], c)
-                line.append(f"{v}: {c:.1e} (J {jd:.0e}, {tj:.2f} s)")
+                line.append(f"{v}: {c:.1e} / {ck:.1e} (J {jd:.0e}, {tj:.2f} s)")
             with open(out, "a") as f:
                 f.write(json.dumps(rec) + "\n")
             print(f"D {m['D']:.4f} seed {seed} (dd Jacobian {t_dd:.2f} s): " + "; ".join(line), flush=True)
-    print("worst step difference per variant (this run): " + ", ".join(f"{v}: {worst[v]:.1e}{' PASS' if worst[v] <= pas else ''}" for v in variants))
+    print("worst step difference per variant (this run, scipy LU): " + ", ".join(f"{v}: {worst[v]:.1e}{' PASS' if worst[v] <= pas else ''}" for v in variants))
 
 
 if __name__ == "__main__":

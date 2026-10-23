@@ -10,8 +10,13 @@ section 5). Runs on Linux and Windows (no shell; paths by os.path), single proce
     python bench_variants.py --calibrate [--states=...]    (the perturbation search, see below)
     python bench_variants.py --prepare                      (the two prepared states, below; done once, committed)
 
-What one run is. A state (below) is perturbed: every entry of z, Delta included, times 1 + eps xi with xi standard
-normal (numpy default_rng(seed 1)), eps from data/bench_variants/eps.json per state. From that start the solve runs
+What one run is. A state (below) is perturbed toward its neighbouring saved solution: z + eps (z_nb - z), z_nb the
+saved state with the same nodes nearest above in D (below for the last one), resampled to the state's M and frozen
+like it, eps from data/bench_variants/eps.json per state. This is a smooth perturbation of the size and kind of a
+continuation predictor's error. A random one (--perturb=random: every entry times 1 + eps xi, xi standard normal) is
+no use at large D: the horizon block amplifies it (at D = 60, eps = 1e-14 gives |F| = 2.4e-5 and a first Newton step
+|dz| = 0.24), and the double-double deflated Newton did not converge from eps = 1e-8 ... 1e-14 there
+(notes/LARGE_D_MIXED.md section 5). From that start the solve runs
 with one Jacobian variant (driver.newton_step: dd exact; f64 the f64 Jacobian; f64h with the horizon block in double-
 double; f64g / f64hg with the GMRES correction loop of exact products) to |F| < tol: plain Newton (driver.newton_solve)
 below D = 25, deflated Newton with w = 24 (driver.deflated_newton, as hp/scan_hp.py runs it) from D = 25, which is
@@ -32,9 +37,10 @@ Recorded per run: converged, iterations (Newton steps, the last confirming |F| <
 seconds by part summed (residual, Jacobian, LU, solves, products) and per step, the products, final |F|, Delta (hi,
 lo) and its difference from the dd run of the same state and repeat.
 
---calibrate: for each state, eps = 1e-8, 1e-9, ... down to 1e-14: the double-double variant from that start; the first
-eps (from the top) that converges, divided by 10, is written to eps.json (a margin of one decade). Writes
-data/bench_variants/calibrate.jsonl with every try.
+--calibrate: for each state, eps = 1e-1, 1e-2, ... down to 1e-13 (1e-8 ... 1e-14 with --perturb=random): the
+double-double variant from that start, at most 10 Newton steps (a start with |F| above 1e-4 is not tried: the dd
+Newton failed from every such start at D = 55 and 60); the first eps (from the top) that converges, divided by 10, is
+written to eps.json (a margin of one decade). Writes data/bench_variants/calibrate.jsonl with every try.
 """
 import glob
 import json
@@ -52,11 +58,13 @@ import numpy as np  # noqa: E402
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import hpkernel  # noqa: E402
-from hpkernel.driver import JACS, dd_norm, deflated_newton, load, make_solver, newton_solve, plow_odd, save  # noqa: E402
+from hpkernel.driver import JACS, dd_norm, deflated_newton, load, make_solver, newton_solve, plow_odd, resample_z, save  # noqa: E402
 
 BENCH = os.path.join(HERE, "data", "bench_variants")
 DEFAULT_STATES = "3.7,8.25,16.76,20,30,40,45,50,55,60"
 DEFLATED_FROM = 25.0     # deflated Newton (w = 24) from here, plain Newton below
+CAL_ITS = 10             # --calibrate: a start that the double-double Newton does not bring below tol in 10 steps is too far
+CAL_FMAX = 1e-4          # --calibrate: starts with |F| above this are not tried (the dd Newton failed from all such)
 FREEZE_FROM = 35.0       # kfreeze 13 from here, as the scan ran (a prepared state's meta 'kfreeze' takes precedence)
 
 
@@ -104,6 +112,33 @@ def state_path(spec):
     return p, f"D{m['D']:.4f}_M{m['M']}", kf, tol_step
 
 
+def freeze(z, M, kf):
+    """p1's harmonics above kf set to zero (scan_hp.py freeze_p1), on an f64 vector"""
+    z = np.asarray(z, dtype=float).copy()
+    if kf:
+        lo, lo2 = plow_odd(M, kf)
+        z[:M] = (lo + lo2) @ z[:M]
+    return z
+
+
+def neighbour(m, kf):
+    """the secant direction z_nb - z of a state: z_nb the saved state with the same nodes nearest above in D (else
+    nearest below), resampled to M if its M differs, frozen like the state; returns (direction (f64), its path)"""
+    cands = []
+    for q in glob.glob(os.path.join(HERE, "data", "states", "up*_D*.npz")) + glob.glob(os.path.join(HERE, "data", "lowD_states", "lowD*_D*.npz")):
+        _, _, mq = load(q)
+        if list(mq["nodes"]) == list(m["nodes"]) and abs(mq["D"] - m["D"]) > 1e-9:
+            cands.append((mq["D"], q, mq))
+    above = sorted([c for c in cands if c[0] > m["D"]], key=lambda c: c[0] - m["D"])
+    below = sorted([c for c in cands if c[0] < m["D"]], key=lambda c: m["D"] - c[0])
+    D_nb, q, mq = (above or below)[0]
+    hh, hl, _ = load(q)
+    z = np.asarray(hh) + np.asarray(hl)
+    if mq["M"] != m["M"]:
+        z, _ = resample_z(z, mq["M"], m["M"], len(m["nodes"]))
+    return freeze(z, m["M"], kf), q
+
+
 def setup(spec, threads):
     p, label, kf, tol_step = state_path(spec)
     zh, zl, m = load(p)
@@ -111,18 +146,27 @@ def setup(spec, threads):
     segs = s.plan(zh, zl, tol_step, 0.05)
     s.set_segs(segs)
     F0 = dd_norm(*s.residual(zh, zl))
+    znb, pnb = neighbour(m, kf)
+    sec = znb - (np.asarray(zh) + np.asarray(zl))
     return dict(path=p, label=label, D=m["D"], M=m["M"], meta=m, kf=kf, segs=segs, zh=np.asarray(zh), zl=np.asarray(zl),
-                F0=F0, tol=max(1e-28, 10 * F0))
+                F0=F0, tol=max(1e-28, 10 * F0), secant=sec, neighbour=os.path.basename(pnb))
 
 
-def solve(st, jac, eps, threads, seed=1, it_max=None):
+def start_of(st, eps, kind="secant", seed=1):
+    """the perturbed start: secant (default): z + eps (z_nb - z), toward the neighbouring saved solution (a smooth
+    perturbation, like a continuation predictor's error); random: z (1 + eps xi), xi standard normal"""
+    if kind == "random":
+        rng = np.random.default_rng(seed)
+        return st["zh"] * (1 + eps * rng.standard_normal(len(st["zh"]))), st["zl"].copy()
+    return st["zh"] + eps * st["secant"], st["zl"].copy()
+
+
+def solve(st, jac, eps, threads, seed=1, it_max=None, kind="secant"):
     m = st["meta"]
     s = make_solver(m["D"], m["M"], nodes=m["nodes"], kt=m["kt"], kc=m["kc"], ks=m["ks"], threads=threads, kfreeze=st["kf"])
     s.set_segs(st["segs"])
-    rng = np.random.default_rng(seed)
-    n = s.size
-    zh = st["zh"] * (1 + eps * rng.standard_normal(n))
-    zl = st["zl"].copy()
+    zh, zl = start_of(st, eps, kind, seed)
+    F_start = dd_norm(*s.residual(zh, zl))
     deflated = m["D"] >= DEFLATED_FROM
     t = time.time()
     try:
@@ -138,7 +182,7 @@ def solve(st, jac, eps, threads, seed=1, it_max=None):
     conv = err is None and Fend < st["tol"]
     parts = {k: sum(r.get(k, 0.0) for r in hist if r.get(k) == r.get(k)) for k in ("t_res", "t_jac", "t_lu", "t_solve", "t_prod")}
     steps = sum(1 for r in hist if "t_jac" in r)
-    return dict(converged=bool(conv), its=len(hist), steps=steps, wall=round(wall, 3), F=Fend, Delta=float(a[-1]),
+    return dict(converged=bool(conv), its=len(hist), steps=steps, wall=round(wall, 3), F_start=F_start, F=Fend, Delta=float(a[-1]),
                 Delta_lo=float(b[-1]), parts={k: round(v, 4) for k, v in parts.items()},
                 per_step={k: round(v / max(steps, 1), 4) for k, v in parts.items()},
                 products=int(sum(r.get("products", 0) for r in hist)), retry_dd=sum(1 for r in hist if r.get("retry_dd")),
@@ -179,10 +223,12 @@ def run(opts):
                     st = setup(spec, threads)
                     print(f"{label}: reference |F| {st['F0']:.1e}, tol {st['tol']:.0e}, kfreeze {st['kf']}, "
                           f"{sum(len(g) - 1 for g in st['segs'])} Taylor steps ({os.path.basename(st['path'])})", flush=True)
-                eps = float(eps_tab.get(label, {}).get("eps", opts.get("eps", 1e-12)))
+                eps = float(opts.get("eps", eps_tab.get(label, {}).get("eps", 1e-4)))
+                kind = opts.get("perturb", eps_tab.get(label, {}).get("perturb", "secant"))
                 l0 = loadavg()
-                r = solve(st, v, eps, threads)
-                rec = dict(state=label, D=st["D"], M=st["M"], variant=v, repeat=rep, eps=eps, tol=st["tol"], load_before=l0,
+                r = solve(st, v, eps, threads, kind=kind)
+                rec = dict(state=label, D=st["D"], M=st["M"], variant=v, repeat=rep, eps=eps, perturb=kind,
+                           neighbour=st["neighbour"], tol=st["tol"], load_before=l0,
                            load_after=loadavg(), machine=machine, time=time.strftime("%Y-%m-%d %H:%M:%S"), **r)
                 ref = done.get((label, "dd", rep))
                 if ref is not None and ref.get("converged") and r["converged"]:
@@ -249,20 +295,32 @@ def calibrate(opts):
             print(f"{label}: eps {tab[label]['eps']:.0e} (already calibrated)")
             continue
         found = None
-        for k in range(8, 15):
+        kind = opts.get("perturb", "secant")
+        for k in (range(8, 15) if kind == "random" else range(1, 14)):
             eps = 10.0 ** -k
             r = tried.get((label, eps))
             if r is None:
-                r = dict(state=label, eps=eps, tol=st["tol"], **solve(st, "dd", eps, threads))
+                m = st["meta"]
+                s0 = make_solver(m["D"], m["M"], nodes=m["nodes"], kt=m["kt"], kc=m["kc"], ks=m["ks"], threads=threads, kfreeze=st["kf"])
+                s0.set_segs(st["segs"])
+                F_start = dd_norm(*s0.residual(*start_of(st, eps, kind)))
+                if F_start > CAL_FMAX:
+                    r = dict(state=label, eps=eps, tol=st["tol"], perturb=kind, neighbour=st["neighbour"], converged=False,
+                             its=0, wall=0.0, F_start=F_start, F=F_start, skipped=f"start |F| above {CAL_FMAX:g}")
+                else:
+                    r = dict(state=label, eps=eps, tol=st["tol"], perturb=kind, neighbour=st["neighbour"],
+                             **solve(st, "dd", eps, threads, it_max=CAL_ITS, kind=kind))
                 with open(log, "a") as f:
                     f.write(json.dumps(r) + "\n")
-            print(f"{label}: eps {eps:.0e}: {'converged' if r['converged'] else 'not converged'} in {r['its']} its, "
-                  f"{r['wall']:.0f} s, |F| {r['F']:.1e}", flush=True)
+            print(f"{label}: eps {eps:.0e} ({kind}, toward {st['neighbour']}): start |F| {r.get('F_start', float('nan')):.1e}, "
+                  f"{'converged' if r['converged'] else 'not converged'} in {r['its']} its, {r['wall']:.0f} s, |F| {r['F']:.1e}",
+                  flush=True)
             if r["converged"]:
                 found = eps
                 break
         if found is not None:
-            tab[label] = dict(eps=found / 10, largest_converging=found, solver="deflated" if st["D"] >= DEFLATED_FROM else "newton")
+            tab[label] = dict(eps=found / 10, largest_converging=found, perturb=kind, neighbour=st["neighbour"],
+                              solver="deflated" if st["D"] >= DEFLATED_FROM else "newton")
             json.dump(tab, open(path, "w"), indent=1)
 
 

@@ -1,0 +1,1 @@
+highm_p1_D3.7000_M192_stalled.npz: D 3.7 M 192 L 10753, 511 Taylor steps, |F| 3.75e-10; newton_solve(jac='f64g', gmres={'step_tol': 1e-10, 'max_products': 12}), tol 1e-28

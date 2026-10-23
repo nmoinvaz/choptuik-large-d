@@ -1,0 +1,36 @@
+lowDv_D3.7000_M48.npz: 34 outputs in 171 s
+  residual_hi            sha256 8fe09f6cbd109d1d bit-identical
+  residual_lo            sha256 e575bf3985b08db4 bit-identical
+  jacobian_hi            sha256 93cefe2cb7a96434 bit-identical
+  jacobian_lo            sha256 36c12dbd4aee5aef bit-identical
+  newton_dz_hi           sha256 8bf87f41ac01c821 bit-identical
+  newton_dz_lo           sha256 fa035aef87d6a39f bit-identical
+  newton_piv             sha256 b36c9ad18a5ce292 bit-identical
+  chord_hi               sha256 ff81f6ebee843ba1 bit-identical
+  chord_lo               sha256 aa403ab07cf4542f bit-identical
+  lu_solve_t_hi          sha256 3cc0524ac13b0717 bit-identical
+  lu_solve_t_lo          sha256 ced2229d67b668c4 bit-identical
+  mode_matrix_hi         sha256 d42752e238b739fa bit-identical
+  mode_matrix_lo         sha256 21ad52bbae512da8 bit-identical
+  jacobian_freeze_hi     sha256 6469a3ea8f3d2640 bit-identical
+  jacobian_freeze_lo     sha256 7b0acdfe6fbc1032 bit-identical
+  jacobian_inward_hi     sha256 904d1f6953f110c0 bit-identical
+  jacobian_inward_lo     sha256 f28a9bcbaec640b0 bit-identical
+  jacobian_f64           sha256 7ea64a032271b0f5 bit-identical
+  newton_mixed_hi        sha256 4b4c0d56976fdcc5 bit-identical
+  newton_mixed_lo        sha256 41dc3be91cc2ef83 bit-identical
+  newton_mixed_piv       sha256 22e5a8b9cdc469c7 bit-identical
+  largeD_residual_hi     sha256 053239261f4a32bc bit-identical
+  largeD_residual_lo     sha256 3c8600a9b5333e6d bit-identical
+  largeD_jacobian_hi     sha256 ee09957417f57c73 bit-identical
+  largeD_jacobian_lo     sha256 61b57e8222a2bf65 bit-identical
+  largeD_newton_hi       sha256 0ff7fa7874601a0c bit-identical
+  largeD_newton_lo       sha256 6a9b732085ab0232 bit-identical
+  largeD_newton_piv      sha256 63c50a1253eeb4b2 bit-identical
+  largeD_lu_solve_t_hi   sha256 3b181afc81d59fd8 bit-identical
+  largeD_lu_solve_t_lo   sha256 1e86cb10b38d88e0 bit-identical
+  largeD_jacobian_f64    sha256 5482c7e0fd526fd8 bit-identical
+  largeD_newton_mixed_hi sha256 90f26dfc94e3bc15 bit-identical
+  largeD_newton_mixed_lo sha256 73683da2b0779e77 bit-identical
+  largeD_newton_mixed_piv sha256 c032c6d4a8bcc297 bit-identical
+PASS: bit-identical

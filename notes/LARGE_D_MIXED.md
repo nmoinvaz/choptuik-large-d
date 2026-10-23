@@ -1,0 +1,189 @@
+# The mixed-precision Newton step at large D (`hp/`)
+
+notes/MIXED_PRECISION.md §8 found that the mixed-precision Newton step (double-double residual, f64 Jacobian, f64 LU)
+stops steering at D ≥ 50: its step differs from the double-double step by 0.03–13, the error comes from the f64
+Jacobian's horizon block alone, and it lives in 2–4 directions. This note covers the two repairs built for it (a
+horizon block in double-double, and a correction loop with exact Jacobian-vector products), the large-D solver with
+them, and a benchmark for the local machine. Branch `wip/largeD-mixed`; all runs on the cloud machine (2 cores,
+AVX-512), two threads, with private builds; every command runs in `hp/`.
+
+**Machine load.** The two cores were shared with the high-M agent's three jobs and several of this work's runs at
+once; the load average was 6–14 during the measurements below. The accuracy numbers do not depend on it. The times do:
+they are inflated by a factor of about 2–6 against an idle machine, and only ratios measured in the same run
+(interleaved) are comparable. The benchmark (§5) interleaves the variants for that reason.
+
+## 1. The horizon fix (`horizon_dd`)
+
+**What was built.** `Ctx::f64_dd` (model.rs) holds bit flags that move parts of the f64 Jacobian to double-double;
+`Solver.jacobian_f64(..., horizon_dd=FLAGS)` and `Solver.newton_mixed(..., horizon_dd=FLAGS)` set it for one call,
+and 0 (the default) changes nothing (§6). The flags are the candidate fixes the task listed, plus two more:
+
+| flag | what is double-double |
+|---|---|
+| 1 `HDD_SOLVE` | the horizon series' periodic solves (`psolve`), value and tangents, with the full double-double LU factors (the f64 path uses their hi parts) |
+| 2 `HDD_NOTAIL` | nothing; the horizon series of the f64 tangents runs to ks instead of stopping at 2⁻⁶⁰ (`Tail`) |
+| 8 `HDD_LASTSEG` | the last segment's columns (block K − 1): `Du` lanes, rounded to f64 |
+| 16 `HDD_DTN` | the horizon block on a double-double base trajectory (`Dtn<4>`, f64 tangents); 17 adds the solves |
+| 4 `HDD_BLOCK` | the horizon block's columns (m_h, a_h, Δ): `Du` lanes, i.e. the double-double Jacobian's columns, rounded to f64 |
+| 32 `HDD_DU_CUT` | with 4: those columns' series stopped at double-double resolution (see §2) |
+
+`jacobian_lanes` builds the tasks of the flagged blocks on their own lanes and the rest as before (groups of four
+f64 tangents). The driver's `f64h` variant uses `HORIZON_DD = 4`.
+
+**What was measured** (`python3 largeD_horizon.py --D=50,55,60,20,40,45`; `data/mixed_precision/largeD_horizon.jsonl`
+and `.log`). At each saved scan state (kfreeze 13 from D = 35), perturbed by 10⁻¹² relative with the two seeds of
+`mixed_largeD_blocks.py`, the Newton step with each variant against the double-double step (`Solver.newton`). Each
+cell is the relative step difference with scipy's f64 LU (as in the prototypes) / with the kernel's f64 LU and
+double-double solve (what `newton_mixed` does). "hi" is the floor of any f64 factorization: an f64 LU of the exact
+Jacobian's hi part.
+
+| D, seed | hi | 0 (f64) | 1 | 3 | 8 | 16 | 17 | 4 |
+|---|---|---|---|---|---|---|---|---|
+| 50.01, 1 | 1.8e-6 / 8.4e-7 | 0.13 | 0.12 | 0.12 | 0.13 | 0.18 | 0.10 | 6.1e-7 / 1.3e-6 |
+| 50.01, 2 | 4.8e-6 / 1.3e-5 | 3.4 | 0.28 | 0.28 | 3.4 | 0.59 | 0.38 | 5.4e-6 / 1.7e-5 |
+| 55.04, 1 | 1.4e-5 / 6.0e-6 | 3.4 | 2.7 | 2.7 | 3.4 | 11 | 10 | 5.7e-6 / 1.5e-5 |
+| 55.04, 2 | 1.3e-5 / 3.7e-5 | 0.96 | 1.0 | 1.0 | 0.96 | 2.2 | 0.83 | 3.7e-6 / 1.3e-5 |
+| 60.00, 1 | 5.4e-7 / 1.1e-6 | 2.2 | 0.79 | 0.79 | 2.2 | 0.062 | 0.27 | 3.5e-7 / 6.3e-7 |
+| 60.00, 2 | 1.1e-6 / 1.2e-6 | 0.89 | 0.16 | 0.16 | 0.89 | 0.47 | 0.49 | 5.0e-6 / 1.3e-6 |
+| 40.02, 1 | 2.7e-6 / 1.9e-6 | 4.7e-4 | 2.0e-4 | 2.0e-4 | 4.7e-4 | 4.5e-4 | 1.6e-4 | 5.0e-7 / 8.8e-7 |
+| 40.02, 2 | 7.2e-7 / 1.8e-5 | 5.9e-3 | 2.0e-3 | 2.0e-3 | 5.9e-3 | 9.1e-4 | 1.7e-3 | 4.0e-6 / 1.1e-5 |
+| 45.05, 1 | 4.5e-7 / 1.8e-7 | 9.5e-3 | 1.2e-2 | 1.2e-2 | 9.5e-3 | 2.0e-2 | 1.3e-2 | 1.7e-7 / 2.8e-7 |
+| 45.05, 2 | 2.1e-7 / 2.6e-6 | 4.5e-3 | 1.6e-2 | 1.6e-2 | 4.5e-3 | 3.4e-2 | 9.0e-3 | 7.3e-6 / 2.3e-6 |
+| 20.04, 1 | 6.7e-7 / 4.1e-7 | 2.9e-4 | 1.7e-4 | 1.7e-4 | 3.0e-4 | 1.0e-4 | 2.1e-5 | 1.5e-5 / 1.6e-5 |
+| 20.04, 2 | 9.0e-7 / 5.4e-7 | 3.8e-4 | 3.2e-4 | 3.2e-4 | 4.0e-4 | 4.8e-4 | 2.0e-4 | 2.7e-5 / 2.7e-5 |
+
+(Columns 0–17 agree between the two LUs to the digits shown; flag 2 alone gives column 0's numbers and 36 gives
+column 4's, bitwise the same Jacobian.)
+
+- Only the horizon block's columns in double-double (4) repair the step. The double-double solves (1) help at a few
+  states but leave 0.1–2.7 at D = 50–60. The last segment (8) changes nothing, as the block-replacement test of
+  MIXED_PRECISION §8 predicted. A double-double base trajectory (16), even with double-double solves (17), makes the
+  horizon entries 1000 times more accurate (8×10⁻¹²–10⁻⁹ relative against 5×10⁻⁹–2×10⁻⁷) and the step no better: the
+  step at D ≥ 50 needs those entries to about f64 rounding, so the tangent arithmetic itself has to be double-double.
+- **Pass criterion (step error ≤ 10⁻⁵ at D = 50, 55, 60, both seeds): met with scipy's LU (3.5×10⁻⁷–5.7×10⁻⁶), not
+  with the kernel's** (6.3×10⁻⁷–1.7×10⁻⁵; three of six cases at 1.3–1.7×10⁻⁵). The kernel's f64 LU of the *exact*
+  Jacobian's hi part gives 8.4×10⁻⁷–3.7×10⁻⁵ at the same states, so the horizon-fixed Jacobian is at the floor of an
+  f64 factorization, which is about 10⁻⁵ here; no change of the Jacobian can go below it. The correction loop does
+  (§3).
+- At D = 20 the fix gains only a factor 14–19 (2.9×10⁻⁴ → 1.5–2.7×10⁻⁵): there the f64 errors are not confined to
+  the horizon block. At D = 40–45 it brings 5×10⁻⁴–10⁻² to 1.7×10⁻⁷–1.1×10⁻⁵.
+
+**Cost.** In the same runs (load average about 8): f64 Jacobian 0.48–0.79 s, with the horizon block in double-double
+1.18–1.80 s, the double-double Jacobian 12.9–21.0 s at D = 40–60 (M = 32, N = 769). So the fix adds about as much as the
+whole f64 Jacobian costs (×2.2–2.7), and the fixed Jacobian is still 11–14 times cheaper than the double-double one.
+The horizon block is 65 of 769 columns, but each is a double-double horizon series of ks = 100 orders with a tangent.
+Stopping those series at double-double resolution (flag 36) gave the same columns bitwise and no saving.
+`python3 largeD_mixed_check.py costs` (`data/mixed_precision/largeD_mixed/costs.json`, `.log`) has the parts of a
+step, three repeats each, at D = 8.25–60.
+
+## 2. The exact Jacobian-vector product (`Solver.jvp`)
+
+**What was built.** `model::jvp`: J v by one forward-mode pass per block with `Du` lanes (the double-double
+Jacobian's lanes), the block's inputs and Δ carrying v's entries as their tangent; then the target node's −v, the
+frozen horizon rows (Π_low(·) + Π_high v_p1) and the phase row, as the residual assembles them. The value part of the
+same pass is the residual, so `Solver.jvp(zh, zl, vh, vl, with_residual=True)` also returns F (bitwise
+`Solver.residual`). `mutate=1|2|3` breaks it for the controls (the Δ tangent scaled by 1 + 10⁻²⁰, the horizon block's
+tangent dropped, the phase row dropped).
+
+`cut=True` stops the centre and horizon series once their tangent terms fall below 2⁻¹¹⁰ of the largest, four orders
+in a row (`HDD_DU_CUT`), instead of running to kc and ks. At large D the scan raised kc to 420, while the centre
+series' terms at the first node fall to 10⁻¹³⁴ by then (D = 50; 10⁻⁵⁸ would be f64 level at order 57, 10⁻³³ at about
+140), and the centre series was most of a product's cost: 133 ms at kc = 420, 49 ms at 210, 15–30 ms at 105, the
+same on one thread as on two (D = 50). With the cut a product takes 54 ms instead of 182 ms at D = 50 and agrees with
+the full one as closely as the full one agrees with the matrix (below). The correction loop uses `cut=True`.
+
+**Check** (`python3 largeD_mixed_check.py jvp`; `data/mixed_precision/largeD_mixed/jvp_check.log`, `.json`). J v
+against the double-double Jacobian (hi and lo) times v, summed in double-double (`dd_matvec`, itself checked against
+exact rationals on five rows of the D = 20 Jacobian: 5.9×10⁻³³ of Σ|J_ij v_j|, and 2.4×10⁻⁵ with one term dropped as its
+control; `dotcheck.log`), v random with lo parts. The measure is max_i |Jv − J·v|_i / (|J| |v|)_i.
+
+| state | full product | cut product | J(v₁+v₂) − Jv₁ − Jv₂ (same measure) | limit | product time (cut) | f64 Jacobian / cut product |
+|---|---|---|---|---|---|---|
+| D = 3.7, M = 48 → 16 | 3.7×10⁻³¹ | 3.7×10⁻³¹ | | 10⁻²⁸ | 110 (64) ms | 7.5 |
+| D = 3.7, M = 48 → 32 | 4.8×10⁻³⁰ | 4.8×10⁻³⁰ | | 10⁻²⁸ | 262 (247) ms | 15 |
+| D = 20.04, M = 32 | 1.4×10⁻²⁸ | 1.4×10⁻²⁸ | 1.0×10⁻²⁸ | 10⁻²⁷ | 58 (57) ms | 8.7 |
+| D = 50.01, M = 32, kfreeze 13 | 1.6×10⁻²⁶ | 1.6×10⁻²⁶ | 1.3×10⁻²⁶ | 10⁻²⁵ | 182 (54) ms | 8.7 |
+
+The residual from the same pass is bitwise `Solver.residual`, and the full product of a unit vector is bitwise that
+Jacobian column, at every state. The two share the model's equations (`block_state` on `Du` lanes); what the check
+tests is the product's own part: the seeding of the tangents, Δ, the target node, the frozen rows, the phase row.
+
+**A discrepancy, and what replaced the criterion.** The pass criterion written first was 10⁻²⁸ at every state. It
+holds at the low-D states and fails at D = 50 (1.6×10⁻²⁶; 9.2×10⁻²⁷ in the first run). The cause is the same
+amplification of rounding that makes the f64 Jacobian fail there (MIXED_PRECISION §3, §8), now at the double-double
+level: the dual pass is not exactly linear in its tangent, and J(v₁ + v₂) − J v₁ − J v₂ is 1.3×10⁻²⁶ at D = 50 and
+10⁻²⁸ at D = 20 in the same measure (2×10⁻³⁰ at D = 3.7, M = 32). The Jacobian's columns carry the same kind of error
+(a tangent on two columns, a e_i + b e_j, differs from a J_i + b J_j by up to 3×10⁻²⁴ (D = 20) and 7×10⁻²³ (D = 50)
+relative to |a J_i| + |b J_j|). So no two double-double evaluations of J v can agree to 10⁻²⁸ there. The check keeps the
+10⁻²⁸ criterion at the low-D states (the strict tier) and, at D = 20 and 50, requires agreement within 10 times the
+measured linearity defect at that state. For the correction loop the products only need f64 accuracy (§3).
+
+**Controls** (`python3 largeD_mixed_check.py controls`; `jvp_controls.log`): each mutation at D = 50.01 and at
+M = 16, 6 of 6 fire. The first run of the controls found that mutation 1 did not fire: `1.0 + 1e-20` is 1 in f64, so
+the product was unchanged. It now adds 10⁻²⁰ v_Δ in double-double.
+
+**Cost.** One product with the cut is 1/7.5–1/15 of an f64 Jacobian and 1/66–1/240 of a double-double one in the
+table's runs.
+
+## 3. The correction loop (`driver.gmres_refine`)
+
+**What was built.** GMRES on J M⁻¹ (right preconditioning), M the f64 LU that the mixed step stored, the products J u
+from `Solver.jvp(cut=True)`, written in its GCR form (Eisenstat, Elman and Schultz 1983; the same iterates as GMRES in
+exact arithmetic). Each iteration takes u = M⁻¹ r, w = J u (one product), orthogonalizes w against the earlier w's
+(modified Gram–Schmidt twice), applies the same coefficients to u, normalizes, and updates x += c u, r −= c w with
+c = w·r. u, w, x and r are double-double and updated with the same f64 coefficients, so r stays the residual b − J x
+to double-double rounding without recomputing it: an outer refinement loop with recomputed residuals is not needed.
+The first iteration's u is M⁻¹ b, the plain mixed step.
+
+**Stopping.** On the change of the step: the loop ends when an iteration changes x by at most `step_tol` |x| (default
+10⁻¹⁰; `confirm` iterations in a row, default 1), or after `max_products` (default 12). The residual is not used:
+an error along a weak direction barely shows in it (MIXED_PRECISION §8, where a residual tolerance of 10⁻⁸ stopped
+with the step still off by 6×10⁻⁴).
+
+**Check** (`python3 largeD_mixed_check.py steps`; `data/mixed_precision/largeD_mixed/steps.jsonl`, `steps.log`). Same
+states and perturbations as §1; the step error against the double-double step after every product:
+
+| D, seed | f64 | f64g: products, error | errors after each product | f64h (kernel LU) | f64hg: products, error |
+|---|---|---|---|---|---|
+| 20.04, 1 | 2.9×10⁻⁴ | 4, 2.3×10⁻¹⁵ | 3e-4 1e-7 2e-11 2e-15 | 1.6×10⁻⁵ | 4, 2.6×10⁻¹⁶ |
+| 20.04, 2 | 3.7×10⁻⁴ | 4, 6.1×10⁻¹⁶ | 4e-4 4e-8 5e-12 6e-16 | 2.7×10⁻⁵ | 4, 1.2×10⁻¹⁶ |
+| 40.02, 1 | 4.7×10⁻⁴ | 4, 4.7×10⁻¹⁴ | 5e-4 7e-7 4e-11 5e-14 | 8.8×10⁻⁷ | 3, 4.2×10⁻¹⁷ |
+| 40.02, 2 | 5.8×10⁻³ | 5, 5.7×10⁻¹⁷ | 6e-3 5e-6 1e-9 4e-13 3e-17 | 1.1×10⁻⁵ | 3, 2.9×10⁻¹⁶ |
+| 45.05, 1 | 9.5×10⁻³ | 5, 7.0×10⁻¹⁵ | 9e-3 6e-6 8e-9 8e-12 7e-15 | 2.8×10⁻⁷ | 3, 4.8×10⁻¹⁶ |
+| 45.05, 2 | 4.5×10⁻³ | 5, 2.4×10⁻¹⁴ | 5e-3 2e-4 2e-8 5e-12 2e-14 | 2.3×10⁻⁶ | 3, 7.5×10⁻¹⁷ |
+| 50.01, 1 | 0.13 | 5, 1.1×10⁻¹³ | 1e-1 8e-3 2e-7 8e-11 1e-13 | 1.3×10⁻⁶ | 3, 2.2×10⁻¹⁷ |
+| 50.01, 2 | 3.4 | 6, 1.1×10⁻¹⁶ | 3e0 1e-1 2e-6 3e-9 4e-13 9e-17 | 1.7×10⁻⁵ | 3, 3.7×10⁻¹⁶ |
+| 55.04, 1 | 3.4 | 6, 8.8×10⁻¹⁵ | 3e0 2e0 6e-4 8e-8 5e-11 9e-15 | 1.5×10⁻⁵ | 3, 3.6×10⁻¹⁶ |
+| 55.04, 2 | 0.96 | 6, 1.2×10⁻¹⁵ | 1e0 9e-1 6e-4 3e-7 4e-11 1e-15 | 1.3×10⁻⁵ | 3, 1.4×10⁻¹⁶ |
+| 60.00, 1 | 2.2 | 6, 1.1×10⁻¹⁵ | 2e0 7e-1 2e-4 1e-8 2e-12 1e-15 | 6.3×10⁻⁷ | 3, 2.9×10⁻¹⁶ |
+| 60.00, 2 | 0.89 | 6, 6.1×10⁻¹⁵ | 9e-1 6e-1 7e-4 1e-7 4e-12 6e-15 | 1.3×10⁻⁶ | 3, 3.1×10⁻¹⁶ |
+
+- The loop on the plain f64 LU (f64g) takes 4 products at D = 20–40, 5 at 40–50, 6 at 50–60, and leaves the step
+  within 1.1×10⁻¹³ of the double-double step everywhere; on the horizon-fixed LU (f64hg) 3 products (4 at D = 20) and
+  ≤ 5×10⁻¹⁶. Pass (≤ 10⁻⁵) for both at every state. The run's exit code is 1 because its criterion also covered f64h
+  alone, which is 1.3–2.7×10⁻⁵ at five states (the f64 LU floor of §1).
+- The change of an iteration equals, to the digit, the error before it (the logged changes and errors line up shifted
+  by one), so the stopping rule is conservative by one product: when it stops, the error is already about the product
+  of the last two changes.
+- The loop's time was 0.14–0.34 s per step under load, against 0.5–0.8 s for the f64 Jacobian and 13–21 s for the
+  double-double one. The loop on the plain f64 Jacobian is cheaper than the horizon fix (§1: +0.7–1.0 s) and ends
+  closer to the exact step.
+
+**Transposed solves.** The loop corrects the forward solve only. With f64g the stored LU is the f64 Jacobian's, whose
+horizon block is wrong at D ≥ 50, so J⁻ᵀ e_Δ (the sensitivities ∂Δ/∂F), the weak subspace of the deflated Newton
+(inverse iteration with J⁻¹ and J⁻ᵀ) and `delta_correction` from that LU are as wrong as the step was. What the driver
+does with f64g / f64hg: the linearised Δ correction −∂Δ/∂F·F is the Δ component of the refined step (the same
+quantity for the exact J, so it is exact to the loop's tolerance); the weak subspace and the scan's per-block
+sensitivities still come from the f64 LU. §4 measures how far they are from the double-double ones.
+
+## 4. The large-D solver with these
+
+## 5. The benchmark (`hp/bench_variants.py`)
+
+## 6. The default paths are unchanged
+
+## 7. Other findings
+
+## 8. The M = 192 stall at D = 3.7 (for notes/HIGH_M.md §1.4)
+
+## 9. Merge with wip/high-m

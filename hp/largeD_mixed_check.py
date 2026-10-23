@@ -12,8 +12,9 @@ jvp: at each state, J v by Solver.jvp (one forward-mode pass per block, double-d
   Jacobian (Solver.jacobian, hi and lo) times v, the product summed in double-double (dd_matvec below), for a random v
   with nonzero lo parts. Per entry the difference is scaled by (|J| |v|)_i (the size of the terms summed), and the
   largest such ratio is reported, with the normwise ratio max |diff| / max |Jv| and the product's time against the
-  Jacobian's. Also: F from the same pass against Solver.residual, bitwise; and a unit vector's product against that
-  Jacobian column, bitwise (the same pass).
+  Jacobian's. The same for the product with its series cut at double-double resolution (jvp(cut=True), what the
+  correction loop uses). Also: F from the same pass against Solver.residual, bitwise; and a unit vector's product
+  against that Jacobian column, bitwise (the same pass).
   The two share the model's equations (model::block_state on Du lanes); what the check tests is the product's own
   part: the tangent seeding of the inputs and Delta, the target node, the frozen horizon rows and the phase row.
   Pass, two tiers. Strict (D = 3.7, M = 48 resampled to 16 and to 32, no freeze): every ratio <= 1e-28 (the criterion
@@ -170,12 +171,19 @@ def jvp_check(opts, quiet=False):
             yh, yl, Fh, Fl = s.jvp(zh, zl, vh, vl, mutate=mut, with_residual=True)
         t_jvp = (time.time() - t) / reps
         yh, yl = np.asarray(yh), np.asarray(yl)
+        t = time.time()
+        for _ in range(reps):
+            ch_, cl_ = s.jvp(zh, zl, vh, vl, mutate=mut, cut=True)
+        t_cut = (time.time() - t) / reps
         rh, rl = dd_matvec(Jh, Jl, vh, vl)
-        dh, dl = dd_add(yh, yl, -rh, -rl)
-        diff = np.abs(dh + dl)
         scale = np.abs(Jh) @ np.abs(vh)
-        ratio = float(np.max(diff / np.where(scale > 0, scale, 1.0)))
-        normwise = float(np.max(diff) / np.max(np.abs(rh)))
+
+        def cmp(ah, al):
+            dh, dl = dd_add(np.asarray(ah), np.asarray(al), -rh, -rl)
+            diff = np.abs(dh + dl)
+            return float(np.max(diff / np.where(scale > 0, scale, 1.0))), float(np.max(diff) / np.max(np.abs(rh)))
+        ratio, normwise = cmp(yh, yl)
+        ratio_cut, _ = cmp(ch_, cl_)
         R = s.residual(zh, zl)
         F_same = bool(np.array_equal(np.asarray(R[0]), np.asarray(Fh)) and np.array_equal(np.asarray(R[1]), np.asarray(Fl)))
         j = int(rng.integers(0, n))
@@ -186,18 +194,21 @@ def jvp_check(opts, quiet=False):
         strict = str(spec).startswith("lowD")
         lin = None if strict else lin_defect(s, zh, zl, Jh, rng)
         lim = tol if strict else 10 * max(lin, 1e-30)
-        good = ratio <= lim and (mut != 0 or (F_same and col_same))
+        good = ratio <= lim and ratio_cut <= lim and (mut != 0 or (F_same and col_same))
         ok &= good
-        rec = dict(state=label, N=n, tier="strict" if strict else "largeD", ratio=ratio, normwise=normwise, lin_defect=lin,
-                   limit=lim, F_bitwise=F_same, column_bitwise=col_same, t_jvp=round(t_jvp, 4), t_jac_dd=round(t_jac, 3),
-                   t_jac_f64=round(t_j64, 3), mutate=mut, pass_=good)
+        rec = dict(state=label, N=n, tier="strict" if strict else "largeD", ratio=ratio, ratio_cut=ratio_cut,
+                   normwise=normwise, lin_defect=lin, limit=lim, F_bitwise=F_same, column_bitwise=col_same,
+                   t_jvp=round(t_jvp, 4), t_jvp_cut=round(t_cut, 4), t_jac_dd=round(t_jac, 3), t_jac_f64=round(t_j64, 3),
+                   mutate=mut, pass_=good)
         recs.append(rec)
         if not quiet:
-            print(f"{label} (N {n}){' mutate ' + str(mut) if mut else ''}: max |Jv - J.v| / (|J||v|) {ratio:.1e}, "
-                  f"normwise {normwise:.1e}{'' if strict else f', linearity defect {lin:.1e}'} (limit {lim:.0e}); "
+            print(f"{label} (N {n}){' mutate ' + str(mut) if mut else ''}: max |Jv - J.v| / (|J||v|) {ratio:.1e} "
+                  f"(series cut: {ratio_cut:.1e}), normwise {normwise:.1e}{'' if strict else f', linearity defect {lin:.1e}'} "
+                  f"(limit {lim:.0e}); "
                   f"residual from the same pass bitwise {F_same}, unit vector = Jacobian column bitwise {col_same}; "
-                  f"jvp {t_jvp * 1e3:.0f} ms, dd Jacobian {t_jac:.2f} s ({t_jac / t_jvp:.0f} products), f64 Jacobian "
-                  f"{t_j64:.2f} s ({t_j64 / t_jvp:.1f} products) -> {'pass' if good else 'FAIL'}", flush=True)
+                  f"jvp {t_jvp * 1e3:.0f} ms (cut {t_cut * 1e3:.0f} ms), dd Jacobian {t_jac:.2f} s ({t_jac / t_cut:.0f} cut "
+                  f"products), f64 Jacobian {t_j64:.2f} s ({t_j64 / t_cut:.1f} cut products) -> {'pass' if good else 'FAIL'}",
+                  flush=True)
     if "json" in opts:
         json.dump(recs, open(opts["json"], "w"), indent=1)
     if opts.get("expect_fail"):
@@ -313,23 +324,26 @@ def costs(opts):
         s, zh, zl, label = solver_at(spec, threads)
         n = s.size
         v = np.random.default_rng(5).standard_normal(n)
-        T = {k: [] for k in ("residual", "jac_dd", "jac_f64", "jac_f64h", "lu_f64", "jvp")}
+        T = {k: [] for k in ("residual", "jac_dd", "jac_f64", "jac_f64h", "jac_f64h_cut", "lu_f64", "jvp", "jvp_cut")}
         l0 = os.getloadavg()[0] if hasattr(os, "getloadavg") else None
         for _ in range(reps):
             t = time.time(); s.residual(zh, zl); T["residual"].append(time.time() - t)
             t = time.time(); s.jacobian(zh, zl); T["jac_dd"].append(time.time() - t)
             t = time.time(); s.jacobian_f64(zh, zl); T["jac_f64"].append(time.time() - t)
             t = time.time(); s.jacobian_f64(zh, zl, horizon_dd=4); T["jac_f64h"].append(time.time() - t)
+            t = time.time(); s.jacobian_f64(zh, zl, horizon_dd=36); T["jac_f64h_cut"].append(time.time() - t)
             s.newton_mixed(zh, zl); T["lu_f64"].append(s.step_timing()[2])
             t = time.time(); s.jvp(zh, zl, v, np.zeros(n)); T["jvp"].append(time.time() - t)
+            t = time.time(); s.jvp(zh, zl, v, np.zeros(n), cut=True); T["jvp_cut"].append(time.time() - t)
         l1 = os.getloadavg()[0] if hasattr(os, "getloadavg") else None
         med = {k: float(np.median(x)) for k, x in T.items()}
         rec = dict(state=label, N=n, reps=reps, load=[l0, l1], **{k: round(x, 4) for k, x in med.items()})
         recs.append(rec)
         print(f"{label} (N {n}): residual {med['residual']:.3f} s, Jacobian dd {med['jac_dd']:.2f} s, f64 {med['jac_f64']:.3f} s, "
               f"f64 + horizon in dd {med['jac_f64h']:.3f} s (+{med['jac_f64h'] - med['jac_f64']:.3f} s; dd/f64h "
-              f"{med['jac_dd'] / med['jac_f64h']:.1f}x), f64 LU {med['lu_f64']:.3f} s, product {med['jvp'] * 1e3:.0f} ms "
-              f"({med['jac_f64'] / med['jvp']:.1f} per f64 Jacobian); load {l0} -> {l1}", flush=True)
+              f"{med['jac_dd'] / med['jac_f64h']:.1f}x; with the series cut {med['jac_f64h_cut']:.3f} s), f64 LU "
+              f"{med['lu_f64']:.3f} s, product {med['jvp'] * 1e3:.0f} ms, cut {med['jvp_cut'] * 1e3:.0f} ms "
+              f"({med['jac_f64'] / med['jvp_cut']:.1f} per f64 Jacobian); load {l0} -> {l1}", flush=True)
     if out:
         json.dump(recs, open(out, "w"), indent=1)
     return 0

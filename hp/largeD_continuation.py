@@ -1,17 +1,27 @@
 #!/usr/bin/env python3
 """Real continuation steps at large D with each Newton variant, against all-double-double (notes/LARGE_D_MIXED.md
-section 4). For each target D, hp/scan_hp.py runs as the scan ran there: the start is the saved scan state nearest to
-it, the history the three saved states before it, the steps go to the scan's next two recorded points (from
-hp/data/delta_dd.csv, same run), with kfreeze 13, deflated Newton with w = 24, the scan's tolerance there, the Lagrange
-predictor, it_max 25, no Levenberg-Marquardt. One run per Jacobian variant (scan_hp.py --jac), each in its own
-directory; then:
-  - per point: Delta against the dd run's (and against the scan's recorded value), iterations, seconds, the time split
-    (Jacobian / LU / solves / products), the products, |F|, dDelta_est; and the failures (halved steps) in the logs;
-  - at the last point of each run: the sensitivities dDelta/dF (J^-T e_Delta) and the w = 24 weakest right singular
-    directions from the variant's stored LU (the f64 LU for every mixed variant, as scan_hp.py uses them), against
+section 4). hp/scan_hp.py runs as the scan ran there (kfreeze 13, deflated Newton with w = 24, the scan's tolerance,
+the Lagrange predictor through the last four converged points, it_max 25, no Levenberg-Marquardt), once per Jacobian
+variant (scan_hp.py --jac), each in its own directory, from the same start and history to the same targets.
+
+The scan's predictor needs a history spaced like its steps (0.01-0.1 in D); the saved states in hp/data/states are
+one unit apart, and a cubic through them is off by |F| = 0.04 (D = 40) and 0.35 (D = 50) per unit of step, already
+3.7e-6 and 3.5e-5 for a step of 1e-4 (outside the double-double Newton's basin for the scan's steps). So:
+  - D = 60: the scan's own history, saved in hp/data/seeds: start up13_D59.8221, history up12_D59.7676 / 59.7858 /
+    59.8041 (spacing 0.018), targets the scan's next two points (59.833359, 59.847422, run up13);
+  - D = 40 and 50: first a double-double ladder from the saved state (history: the three saved states below it) to
+    D0 + 2e-5, 1e-4, 3e-4, 1e-3, 3e-3, 0.01, 0.02, 0.03, one scan_hp.py call per point (--dD the gap, so a failure halves
+    the step and ends the ladder; shared by all variants, directories 'ladder/kN'); then each variant
+    from D0 + 0.03 with the ladder's points at D0 + 0.01, 0.02 and the one at 3e-3 as history, to D0 + 0.06 and
+    D0 + 0.09 (steps of 0.03, as the scan's 0.04-0.06 there).
+Then:
+  - per point: Delta against the dd run's (and the scan's recorded value where there is one), iterations, seconds, the
+    time split (Jacobian / LU / solves / products), the products, |F|, dDelta_est; and the failures (halved steps);
+  - at the dd run's last point: the sensitivities dDelta/dF (J^-T e_Delta) and the w = 24 weakest right singular
+    directions from each variant's stored LU (the f64 LU for every mixed variant, as scan_hp.py uses them), against
     those of the double-double LU at the same state: the largest relative difference of dDelta/dF (per block maximum,
-    as the scan records it, and over the whole vector), and the sine of the largest principal angle between the two
-    weak subspaces.
+    as the scan records it, and over the whole vector), and the sine of the largest principal angle between the weak
+    subspaces.
 
     cd hp && python3 largeD_continuation.py [--D=40,50,60] [--jacs=dd,f64,f64h,f64g,f64hg] [--threads=2]
                                             [--out=data/mixed_precision/largeD_cont] [--report]
@@ -21,7 +31,6 @@ import csv
 import glob
 import json
 import os
-import re
 import subprocess
 import sys
 import time
@@ -34,52 +43,95 @@ sys.path.insert(0, HERE)
 os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
 from hpkernel.driver import load, make_solver, newton_step, weak_subspace  # noqa: E402
 
-# the scan's tolerance at each target (solver/notes.md: up7 1e-25, up8 1e-24, up13 ~3e-22)
-TOL = {40: 1e-25, 45: 1e-25, 50: 1e-24, 55: 1e-22, 60: 3e-22}
+# the scan's tolerance at each target (solver/notes.md: up7 1e-25, up8 1e-24, up13 3e-22: it accepted 1.6e-22)
+TOL = {40: 1e-25, 50: 1e-24, 60: 3e-22}
+LADDER = (2e-5, 1e-4, 3e-4, 1e-3, 3e-3, 0.01, 0.02, 0.03)
+STEPS = (0.06, 0.09)
+STATES = os.path.join(HERE, "data", "states")
+SEEDS = os.path.join(HERE, "data", "seeds")
 
 
 def saved():
-    out = []
-    for p in glob.glob(os.path.join(HERE, "data", "states", "up*_D*.npz")):
-        out.append((float(re.search(r"_D([0-9.]+)\.npz$", p).group(1)), p))
-    return sorted(out)
+    return sorted((load(p)[2]["D"], p) for p in glob.glob(os.path.join(STATES, "up*_D*.npz")))
 
 
-def plan_for(Dt):
-    """(start path, three history paths, the scan's next two D values and their recorded Delta, run label, tol)"""
-    st = saved()
-    i = min(range(len(st)), key=lambda k: abs(st[k][0] - Dt))
-    D0, p0 = st[i]
-    hist = [p for _, p in st[i - 3:i]]
-    rows = list(csv.DictReader(open(os.path.join(HERE, "data", "delta_dd.csv"))))
-    run = next(r["run"] for r in rows if abs(float(r["D"]) - D0) < 1e-6)
-    nxt = sorted((float(r["D"]), float(r["Delta_hi"]), float(r["Delta_lo"]), r.get("dDelta_est")) for r in rows
-                 if r["run"] == run and float(r["D"]) > D0 + 1e-9)[:2]
-    tol = TOL[min(TOL, key=lambda d: abs(d - Dt))]
-    return p0, hist, nxt, run, tol
+def csv_rows():
+    return list(csv.DictReader(open(os.path.join(HERE, "data", "delta_dd.csv"))))
 
 
-def run_one(Dt, jac, outdir, threads):
-    p0, hist, nxt, run, tol = plan_for(Dt)
-    _, _, m = load(p0)
-    d = os.path.join(outdir, f"D{m['D']:.4f}", jac)
+def scan_cmd(out, start, hist, targets, m, tol, jac, threads, dD=1.0):
+    cmd = [sys.executable, "-u", os.path.join(HERE, "scan_hp.py"), out, start, "0", "--Dlist",
+           ",".join(f"{x:.6f}" for x in targets), "--dD", f"{dD:g}", "--maxdD", f"{dD:g}", "--M", str(m["M"]), "--kc", str(m["kc"]), "--ks", str(m["ks"]),
+           "--kt", str(m["kt"]), "--tol", f"{tol:g}", "--w", "24", "--it_max", "25", "--lm", "0", "--threads", str(threads),
+           "--tag", jac, "--jac", jac, "--verbose", "--kfreeze", "13"]
+    if hist:
+        cmd[6:6] = ["--history", ",".join(hist)]
+    return cmd
+
+
+def run_cmd(d, cmd):
     os.makedirs(d, exist_ok=True)
     if os.path.exists(os.path.join(d, "done")):
-        print(f"D {m['D']:.4f} {jac}: done, skipped", flush=True)
+        print(f"{d}: done, skipped", flush=True)
         return
     for f in glob.glob(os.path.join(d, "*")):
         os.remove(f)
-    cmd = [sys.executable, "-u", os.path.join(HERE, "scan_hp.py"), os.path.join(d, "scan.jsonl"), p0, "0",
-           "--history", ",".join(hist), "--Dlist", ",".join(f"{x[0]}" for x in nxt), "--M", str(m["M"]),
-           "--kc", str(m["kc"]), "--ks", str(m["ks"]), "--kt", str(m["kt"]), "--kfreeze", "13", "--tol", f"{tol:g}",
-           "--w", "24", "--it_max", "25", "--lm", "0", "--threads", str(threads), "--tag", jac, "--jac", jac, "--verbose"]
     t = time.time()
     with open(os.path.join(d, "log.txt"), "w") as log:
         log.write(" ".join(cmd) + "\n")
         log.flush()
         r = subprocess.run(cmd, cwd=HERE, stdout=log, stderr=subprocess.STDOUT)
     json.dump(dict(returncode=r.returncode, wall=round(time.time() - t, 1), cmd=cmd), open(os.path.join(d, "done"), "w"))
-    print(f"D {m['D']:.4f} {jac}: exit {r.returncode}, {time.time() - t:.0f} s", flush=True)
+    print(f"{d}: exit {r.returncode}, {time.time() - t:.0f} s", flush=True)
+
+
+def plan_for(Dt, outdir):
+    """(base directory, start path, history paths, targets, the scan's recorded values {D: (hi, lo)}, tol, ladder
+    step (dir, cmd) or None)"""
+    rows = csv_rows()
+    tol = TOL[min(TOL, key=lambda d: abs(d - Dt))]
+    if Dt >= 59:
+        start = os.path.join(SEEDS, "up13_D59.8221.npz")
+        hist = [os.path.join(SEEDS, f) for f in ("up12_D59.7676.npz", "up12_D59.7858.npz", "up12_D59.8041.npz")]
+        D0 = load(start)[2]["D"]
+        nxt = sorted((float(r["D"]), float(r["Delta_hi"]), float(r["Delta_lo"])) for r in rows
+                     if r["run"] == "up13" and float(r["D"]) > D0 + 1e-9)[:2]
+        return os.path.join(outdir, f"D{D0:.4f}"), start, hist, [x[0] for x in nxt], {round(x[0], 6): x[1:] for x in nxt}, tol, None
+    st = saved()
+    i = min(range(len(st)), key=lambda k: abs(st[k][0] - Dt))
+    D0, p0 = st[i]
+    base = os.path.join(outdir, f"D{D0:.4f}")
+    pts = {round(load(p)[2]["D"], 6): p for p in glob.glob(os.path.join(base, "ladder", "k*", "dd_D*.npz"))}
+    have = [pts.get(round(D0 + x, 6)) for x in (3e-3, 0.01, 0.02, 0.03)]
+    targets = [round(D0 + x, 6) for x in STEPS]
+    return base, have[-1], have[:-1], targets, {}, tol, (st[i - 3:i + 1], D0, pts)
+
+
+def run_all(Ds, jacs, outdir, threads):
+    for Dt in Ds:
+        base, start, hist, targets, _, tol, lad = plan_for(Dt, outdir)
+        if lad is not None:
+            coarse, D0, _ = lad
+            chain = [p for _, p in coarse]          # the saved states, then the ladder's points as they come
+            prev = D0
+            for k, x in enumerate(LADDER):
+                Dk = round(D0 + x, 6)
+                d = os.path.join(base, "ladder", f"k{k}")
+                m = load(chain[-1])[2]
+                run_cmd(d, scan_cmd(os.path.join(d, "scan.jsonl"), chain[-1], chain[-4:-1], [Dk], m, tol, "dd", threads,
+                                    dD=Dk - prev))
+                got = [p for p in glob.glob(os.path.join(d, "dd_D*.npz")) if abs(load(p)[2]["D"] - Dk) < 1e-9]
+                if not got:
+                    break
+                chain.append(got[0])
+                prev = Dk
+            base, start, hist, targets, _, tol, lad = plan_for(Dt, outdir)
+            if start is None or any(h is None for h in hist):
+                print(f"D {Dt}: the double-double ladder did not reach every point; no variant runs", flush=True)
+                continue
+        m = load(start)[2]
+        for jac in jacs:
+            run_cmd(os.path.join(base, jac), scan_cmd(os.path.join(base, jac, "scan.jsonl"), start, hist, targets, m, tol, jac, threads))
 
 
 def lu_quantities(s, zh, zl, jac, w=24):
@@ -96,15 +148,13 @@ def lu_quantities(s, zh, zl, jac, w=24):
 def report(Ds, jacs, outdir, threads):
     out = []
     for Dt in Ds:
-        p0, hist, nxt, run, tol = plan_for(Dt)
-        _, _, m0 = load(p0)
-        base = os.path.join(outdir, f"D{m0['D']:.4f}")
+        base, start, hist, targets, scanned, tol, _ = plan_for(Dt, outdir)
         recs = {}
         for jac in jacs:
             f = os.path.join(base, jac, "scan.jsonl")
             recs[jac] = [json.loads(x) for x in open(f)] if os.path.exists(f) else []
-        scanned = {round(x[0], 6): x for x in nxt}
-        print(f"\n== D {m0['D']:.4f} (run {run}, tol {tol:g}): steps to {', '.join(str(x[0]) for x in nxt)}")
+        print(f"\n== {os.path.basename(base)} (tol {tol:g}): from {os.path.basename(start or '?')} to "
+              f"{', '.join(str(x) for x in targets)}")
         ref = {round(r["D"], 6): r for r in recs.get("dd", [])}
         for jac in jacs:
             log = os.path.join(base, jac, "log.txt")
@@ -112,19 +162,16 @@ def report(Ds, jacs, outdir, threads):
             for r in recs[jac]:
                 key = round(r["D"], 6)
                 q = ref.get(key)
-                dDelta = None
-                if q is not None:
-                    dDelta = float((r["Delta"] - q["Delta"]) + (r["Delta_lo"] - q["Delta_lo"]))
+                dDelta = float((r["Delta"] - q["Delta"]) + (r["Delta_lo"] - q["Delta_lo"])) if q is not None else None
                 sc = scanned.get(key)
-                dscan = float((r["Delta"] - sc[1]) + (r["Delta_lo"] - sc[2])) if sc else None
+                dscan = float((r["Delta"] - sc[0]) + (r["Delta_lo"] - sc[1])) if sc else None
                 sp = r.get("split", {})
-                row = dict(D=r["D"], jac=jac, its=r["its"], seconds=r["seconds"], F=r["F"], dDelta_est=r.get("dDelta_est"),
-                           dDelta_vs_dd=dDelta, dDelta_vs_scan=dscan, split=sp, fails=fails)
-                out.append(row)
+                out.append(dict(D=r["D"], jac=jac, its=r["its"], seconds=r["seconds"], F=r["F"], dDelta_est=r.get("dDelta_est"),
+                                dDelta_vs_dd=dDelta, dDelta_vs_scan=dscan, split=sp, fails=fails))
                 print(f"  {jac:6s} D {r['D']:.6f}: its {r['its']:2d}, {r['seconds']:6.1f} s, |F| {r['F']:.1e}, "
-                      f"dDelta_est {r.get('dDelta_est', 0):+.1e}, Delta - dd {dDelta if dDelta is not None else float('nan'):+.1e}, "
-                      f"Delta - scan {dscan if dscan is not None else float('nan'):+.1e}"
-                      + (f"; jac {sp.get('t_jac', 0):.1f} s, LU {sp.get('t_lu', 0):.2f} s, products {sp.get('t_prod', 0):.1f} s "
+                      f"dDelta_est {r.get('dDelta_est') or 0:+.1e}, Delta - dd {dDelta if dDelta is not None else float('nan'):+.1e}"
+                      + (f", Delta - scan {dscan:+.1e}" if dscan is not None else "")
+                      + (f"; Jacobian {sp.get('t_jac', 0):.1f} s, LU {sp.get('t_lu', 0):.2f} s, products {sp.get('t_prod', 0):.1f} s "
                          f"({sp.get('products', 0)})" if sp else "") + (f"; {fails} halved steps" if fails else ""), flush=True)
         # sensitivities and weak subspaces at the dd run's last point, from each variant's LU vs the dd LU
         last = sorted(glob.glob(os.path.join(base, "dd", "dd_D*.npz")))
@@ -157,9 +204,7 @@ def main():
     threads = int(opts.get("threads", 2))
     outdir = opts.get("out", os.path.join(HERE, "data", "mixed_precision", "largeD_cont"))
     if "report" not in opts:
-        for Dt in Ds:
-            for jac in jacs:
-                run_one(Dt, jac, outdir, threads)
+        run_all(Ds, jacs, outdir, threads)
     report(Ds, jacs, outdir, threads)
 
 
