@@ -3,7 +3,7 @@
 Quad-double numbers (an unevaluated sum of four f64, about 64 significant digits) are now in the `hpkernel` crate:
 a scalar type `QD` and an 8-lane SIMD type `QV` with bitwise the same results, on the AVX-512, AVX2 and portable
 backends of `v8.rs`. Nothing in the solver uses them yet. Every existing output is bit-identical (section 9). The
-logs behind every number here are in `hp/data/quad_double/`.
+logs behind every number here are in `hp/data/quad_double/`, and the commands run in `hp/`.
 
 **Summary.**
 
@@ -178,7 +178,8 @@ The input categories, for every operation:
 | sparse | sums of 1–4 small integers with random binary gaps (exact sums, zero error terms: the renormalization's branches) |
 | computed | operands from quad-double arithmetic (x·y·(1/y)), so with QD-renormalized parts instead of greedy ones; for the adds b = −x·y·(1/y) or b = −(a + d), so a + b is about 2⁻²¹⁰\|a\|, as in a residual's subtraction |
 
-**Results** (`QD_N=20000 QD_REPORT=1 cargo test --release --lib qd_`; `hp/data/quad_double/accuracy_n20000.log`;
+**Results** (in `hp/`, `QD_N=20000 QD_REPORT=1 cargo test --release --lib qd_`, with RUSTFLAGS choosing the backend;
+`hp/data/quad_double/accuracy_n20000.log`;
 20 000 inputs per operation and category; max and 99.9th percentile over the six categories other than underflow;
 units of u = 2⁻²⁰⁹):
 
@@ -396,8 +397,8 @@ Measured by `FILE=ctx.bin cargo test --release --lib bench_qd_residual -- --igno
 
 Weighted by each operation's quad-double cost (run 2), the shares are: Cauchy products 48%, D products 22%, `finish`
 11%, × integer 9%, the rest 10%. Counts times costs predict the blocks at 0.062–0.073 s in double-double and
-0.78–0.80 s in quad-double (ratio 11–13). That is about 20–35% below the measured times, from the memory traffic
-and latency a throughput benchmark does not see.
+0.78–0.80 s in quad-double (ratio 11–13). That is 18–38% below the measured times, from the memory traffic and
+latency a throughput benchmark does not see.
 
 **Direct measurement:** `QV` implements `Lane` (section 8), so the same blocks run with quad-double lanes:
 
@@ -473,8 +474,8 @@ quad-double residual, since the constants' zero lower parts are not exploited.
      steps f += LU⁻¹(r − (ωD + κ)f), with the residual formed in quad-double by `dmat_apply`.
    - A double-double LU gives about 32 digits times the condition number per step. The pivots here range over
      10⁻³–10², so two steps reach quad-double.
-   - Cost: about 0.012 s at M = 80 against 0.6 s for quad-double LUs of the 251 matrices at the measured ratio,
-     which would also need a new blocked LU.
+   - Cost: about 0.012 s at M = 80, against 0.7–1.1 s for quad-double LUs of the 251 matrices at the measured
+     ratios, which would also need a new blocked LU.
    - For the tangent lanes nothing changes.
 4. **The residual function and the state** (1 day).
    - `residual_qd(z0, z1, z2, z3) -> (F0, F1, F2, F3)`: the blocks with `QV`, the targets read as four parts, the
