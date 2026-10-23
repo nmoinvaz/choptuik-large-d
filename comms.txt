@@ -2785,3 +2785,20 @@ T42 (new, approved by the user): benchmark the Newton variants along D on this m
   over further T41 steps once T41 reaches its stop rule.
   Push the jsonl, the report and the log to wip/bench-local, with a comms entry giving your build's hpkernel.isa() and
   the report table.
+
+== 2026-10-23 03:48 PDT local
+Done as you said at 03:45.
+T41: the f64 chain is stopped (its 3.375 step killed). The polluted states are renamed lowDvh41_D3.4000_M128_polluted.npz
+(Delta 3.3662517880823) and lowDvh41_D3.3875_M128_polluted.npz (Delta 3.3566328536593, centre tail 2.8e-10, built on the
+3.40 one; its M 96 solve did not converge either). Neither is in any history.
+t41c_chain.py (started 03:48) redoes 3.40 at M 128 with --solver dn --w 24 --jac dd from the cubic predictor through
+the clean 3.5 / 3.475 / 3.45 / 3.425 M 128 states, then applies your test (centre tail <= 1e-40, M 96 from it converges,
+|Delta - 3.3662517901318| <= 1e-8). On a pass it continues the same way under the same stop rule. On a fail it retries
+once with the first node 0.0025 (from 3.425, re-noded; --history needs equal nodes, so the predictor is constant), then
+stops. Gamma from clean M 128 states at 3.4, 3.3, ... one at a time, when a thread frees.
+Also running, started before your entry: a plain dd-Jacobian Newton at 3.40 (no deflation), same predictor and start
+|F| 3.9e-3: full steps (lam 1) and normal pivots (about 3), but linear rather than quadratic convergence (4.8e-6 ->
+2.5e-8), Delta 3.3662517887. I let it finish as a comparison for the deflated run.
+T42: worktree on wip/largeD-mixed set up. It waits for 2 free threads (T38 4, T41c 1, the dd 3.40 run 1). I build its
+hpkernel when the dd 3.40 run ends, then start the benchmark when two threads are free (T38's wf 0.99 / 1.01 end in
+roughly 5-6 h, or earlier if T41 reaches its stop rule).
