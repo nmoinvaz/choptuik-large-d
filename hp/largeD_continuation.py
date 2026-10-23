@@ -189,7 +189,7 @@ def report(Ds, jacs, outdir, threads):
         nb = (s.size - 1) // (4 * M)
         blk = lambda y: np.array([np.abs(y[b * 4 * M:(b + 1) * 4 * M]).max() for b in range(nb)])  # noqa: E731
         for jac in jacs:
-            if jac == "dd":
+            if jac == "dd" or jac.endswith("_last"):     # (_last: the base variant's LU, or the exact one)
                 continue
             y, V = lu_quantities(s, zh, zl, jac)
             rb = float(np.max(np.abs(blk(y) - blk(y_dd)) / blk(y_dd)))

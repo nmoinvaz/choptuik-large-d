@@ -21,7 +21,8 @@ AVX-512), two threads, with private builds; every command runs in `hp/`.
   states at D = 50–60. What limits them is not the step but the f64 LU's weakest directions: at D ≥ 40 its weak
   subspace has a principal angle of 90° to the exact one and its ∂Δ/∂F is off by up to 10⁵–10⁹ (§4, §7.4).
 - **Speedups** (whole solves, same machine, interleaved; §5): 4–8× below D = 35 (f64 or f64g), 1.4–2.5× at D = 40–60
-  (f64g, f64hg). At large D the double-double baseline here uses a sensible centre-series order: the scan's kc = 420 is
+  (f64g, f64hg), against a double-double Newton with a sensible centre-series order. Against the double-double Newton
+  as the scan runs it (kc = 420) a continuation point is 4–8 times faster with f64hg (§4). The scan's kc = 420 is about
   three times what the series needs and makes the double-double Jacobian three times slower for bitwise the same
   result (§7.2), the cheapest speedup of all.
 - The M = 192 stall at D = 3.7 is not cured by exact steps: the loop corrects the f64 step (by 0.3–4.7 of its size),
@@ -255,6 +256,61 @@ of 10⁻⁴. So:
   `largeD_cont/D50.0075_first_ladder`), so the ladder continues there in ratios of 1.5 (5×10⁻⁴, 8×10⁻⁴, …, 0.0135,
   0.02, 0.03) and the history is 9×10⁻³, 0.0135, 0.02.
 
+Results (`largeD_cont_report.log`; the times are each point's solve, without `scan_hp.py`'s re-convergence of the
+start and history; double-double with the scan's kc = 420; load average 3.5–6 for these runs, except f64h at D = 40,
+which ran earlier at 9–13):
+
+| D (targets) | variant | points reached | Newton calls | seconds per point | ΔΔ against dd | dd's own dDelta_est |
+|---|---|---|---|---|---|---|
+| 59.83, 59.85 | dd | 2 of 2 | 7, 8 | 42.4, 48.2 | | −2.6×10⁻¹⁹, −4.0×10⁻¹⁸ |
+| | f64 | 0 (10 halvings, "step too small") | | | | |
+| | f64h | 6 points at steps of 0.001–0.004 (12 halvings), stopped before 59.847 | 6–9 | 3.6–6.1 | +2.2×10⁻¹⁶ at 59.833 | |
+| | f64g | 1 (59.824; 11 halvings) | 8 | 15.9 | | |
+| | **f64hg** | **2 of 2** | 8, 8 | **10.4, 10.7** (147, 146 products) | **+3.9×10⁻¹⁹, +2.6×10⁻¹⁸** | |
+| | f64hg + exact last step | 2 of 2 | 8, 8 | 16.6, 17.0 | +3.9×10⁻¹⁹, +2.6×10⁻¹⁸ | |
+| 40.08, 40.11 | dd | 2 of 2 | 6, 6 | 41.2, 36.8 | | −5.5×10⁻²², −2.8×10⁻²² |
+| | f64 | 0 (10 halvings) | | | | |
+| | f64h | 2 of 2 (exact finish) | 14, 7 | 114, 54 (load 12) | −4.9×10⁻²³, +6.9×10⁻²² | |
+| | **f64g** | **2 of 2** | 6, 6 | **5.0, 5.5** (96 products each) | **−2.2×10⁻²², −5.2×10⁻²²** | |
+| | f64hg | 2 of 2 | 6, 6 | 6.5, 6.5 (69, 67) | −4.9×10⁻²², −7.4×10⁻²² | |
+| | f64g / f64hg + exact last step | 2 of 2 | 6, 6 | 11.4–12.2 | as without | |
+| 50.07, 50.10 | dd | 2 of 2 | 8, 7 | 54.3, 48.5 | | −6.7×10⁻²¹, −7.9×10⁻²⁰ |
+| | f64 | 0 | | | | |
+| | f64h | 0 (8 halvings, "step too small") | | | | |
+| | **f64g** | **2 of 2** | 8, 7 | **7.8, 6.5** (166, 145) | **−1.8×10⁻¹⁹, −1.2×10⁻¹⁹** | |
+| | f64hg | 2 of 2 | 7, 8 | 7.1, 9.8 (108, 126) | −8.0×10⁻²⁰, −1.2×10⁻¹⁹ | |
+| | f64g + exact last step | 2 of 2 | 8, 7 | 13.2, 13.0 | −7.1×10⁻²⁰, −2.7×10⁻¹⁹ | |
+| | f64hg + exact last step | 2 of 2 | 7, 8 | 14.7, 15.4 | −8.0×10⁻²⁰, −1.2×10⁻¹⁹ | |
+
+- **f64hg did every step at all three D**, 4–8 times faster per point than the double-double Newton as the scan ran
+  (kc = 420); with a sensible kc the double-double point would take about a third (§7.2), and the gain is then about
+  1.5–2.5×, as in the benchmark (§5). Its Δ agrees with the double-double run's to within that run's own linearised Δ
+  correction, i.e. to the precision the tolerance fixes Δ. At D = 59.83 the scan's recorded values differ from both by
+  2–5×10⁻¹⁸ (its predictor came from a longer history).
+- f64g did every step at D = 40 and 50, as fast as f64hg or faster, but failed at 59.8 (in the deflated phase: its weak
+  subspace comes from the plain f64 LU). f64h failed at 50 and 59.8 (and at 59.8, where it did converge on shorter
+  steps, Δ was off by 2.2×10⁻¹⁶, 1000 times the double-double run's dDelta_est; its own dDelta_est, from the f64 LU, said
+  −1.6×10⁻¹⁵). The plain f64 Jacobian failed everywhere.
+- The exact last step (`--dd_last`) costs one double-double Jacobian (6–7 s at kc = 420) and changed Δ by at most
+  1×10⁻¹⁹; what it buys is the stored LU: the record's ∂Δ/∂F is then the double-double one (8.1×10¹³ at D = 59.83,
+  against 1.8×10⁸ from f64hg's f64 LU).
+
+**Sensitivities and the weak subspace from the f64 LU** (the same report, at the double-double run's last point; each
+variant's LU from one step there against the double-double LU's):
+
+| D | f64 / f64g LU: per-block max ∂Δ/∂F, worst relative difference | f64h / f64hg LU | weak subspace (24 directions): sine of the largest principal angle |
+|---|---|---|---|
+| 40.11 | 4.7×10³ | 3.6×10³ | 1.0 (all variants) |
+| 50.10 | 5.5×10⁵ | 5.3×10⁵ | 1.0 |
+| 59.85 | 1.3×10⁹ | 3.2×10⁵ | 1.0 |
+
+So with or without the horizon fix, the f64 LU's sensitivities and weakest directions are not usable at D ≥ 40: the
+weakest singular values (10⁻¹⁸ of the largest) are below what an f64 factorization resolves. The horizon fix does not
+change that; it repairs the step, whose right-hand side has little weight on those directions. What the variants rely
+on instead: the loop's exact forward solves (the Δ correction from the refined step), and the exact last step when the
+sensitivities are wanted. The deflated Newton still runs with the f64 LU's weak subspace; that it converges with
+f64hg (and f64g at D ≤ 50) is an observation, not something the subspace guarantees.
+
 ## 5. The benchmark (`hp/bench_variants.py`)
 
 **What one run is.** A state is perturbed, and the solve runs from there with one Jacobian variant to |F| < tol: plain
@@ -365,8 +421,15 @@ python bench_variants.py --report --out=data\bench_variants\bench_<host>.jsonl
 The records go to `data\bench_variants\bench_<host>.jsonl` (`--out` to change it); an interrupted run resumes where it
 stopped when started again with the same arguments. The script lowers its own priority (`os.nice` on Linux; on
 Windows through psutil, if installed, to below normal; `--no-nice` keeps it) and records the load average (psutil's
-on Windows) before and after every run. `--states=50,55,60 --variants=dd,f64h,f64hg` restricts a run. Nothing else is
-needed: the prepared states and `eps.json` are in the repository.
+on Windows) before and after every run. `--states=50,55,60 --variants=dd,f64g,f64hg` restricts a run, `--dd_last`
+adds the exact last step to the mixed variants, `--kc=meta` uses the states' own centre-series order (the scan's).
+Nothing else is needed: the prepared states and `eps.json` are in the repository.
+
+Expected run time: the reference run took 53 minutes for one repeat on two cloud cores at a load average of 9–13, two
+thirds of it the D = 3.7, M = 80 state (its double-double solve alone 15.6 min). Idle, that machine would take about a
+third of the time. On the laptop with `--threads=4`, plan for 20–60 minutes per repeat depending on what else runs,
+i.e. 1–3 hours for `--repeat=3`; `--states=8.25,16.76,20,30,40,45,50,55,60` leaves out the M = 80 state and takes
+about a third.
 
 ## 6. The default paths are unchanged
 
