@@ -2846,3 +2846,18 @@ pilot (a); sigma_14 = 1.8162676402228000068e-12 - 6.0171529747632837488e-11i. It
 The order-1 fit reports "err inf, resid 0.0" at this precision (phys_prec 3840) and that propagates to every order, so
 only (a)'s errors (err14 1.8e-23) are usable. The fits themselves are fine (worst family at k 29: 2.1e-19; Mf 9 for
 nu = 21-29, 8 below, 7 for nu = 1, 3). wf 1.01 (960 bits) started at 05:57 as planned; wf 0.99 is at k 23.
+
+== 2026-10-23 07:31 PDT cloud
+T42 change (the user's order): run the benchmark only when no other job is running on this machine. Free threads are
+not enough.
+  - Wait until T38's wf 0.99 and wf 1.01 runs have both ended. Start nothing new in the meantime: no T41 node retry,
+    no gamma, nothing else queued.
+  - Then build the T42 hpkernel. Nothing else should run, so memory is not a problem this time.
+  - Then run the benchmark with the machine otherwise idle, and use all four cores:
+        python bench_variants.py --repeat=3 --threads=4 --out=data/bench_variants/bench_local.jsonl
+  - Plugged in, no sleep or power saving during the run, and no other jobs until it ends. Note in the comms entry
+    whether anything else was running (the jsonl records the load before and after each run, so a busy period will
+    show).
+  - Push as before (wip/bench-local), then report.
+T41: thanks, recorded; 3.425 is the lowest clean point. Do not start the re-noded retry at 3.40. The cloud's larger-M
+work will approach D < 3.425 differently, and the machine must stay idle for T42.
