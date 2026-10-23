@@ -1,0 +1,10 @@
+start data/lowD_states/lowDv_D3.7000_M48.npz (D 3.7, M 48); predictor through 1 point(s) to D 3.69: Delta 3.465201447070
+D 3.69 M 48: L 2689, steps 180, start |F| 7.4e-03
+  newton 0: |F| 7.38e-03 |dz| 5.27e-01 lam 1 dDelta -1.81e-03 Delta 3.463391882416047 piv 1.8e-03..6.6e+00  t 16.0s
+  newton 0: |F| 3.35e-04 |dz| 3.71e-02 lam 1 dDelta +1.17e-03 Delta 3.464559164222402 piv 1.8e-03..3.9e+00  t 16.1s
+  newton 0: |F| 6.47e-07 |dz| 9.58e-05 lam 1 dDelta -7.69e-07 Delta 3.464558395113696 piv 1.8e-03..4.2e+00  t 14.2s
+  newton 0: |F| 2.22e-12 |dz| 8.87e-10 lam 1 dDelta +4.68e-14 Delta 3.464558395113743 piv 1.8e-03..4.2e+00  t 15.3s
+  newton 0: |F| 1.44e-23 |dz| 2.90e-20 lam 1 dDelta +2.84e-23 Delta 3.464558395113743 piv 1.8e-03..4.2e+00  t 15.2s
+  newton 0: |F| 6.59e-30 converged (last |dz| 2.7e-26) Delta 3.464558395113743
+D 3.69 M 48: Delta 3.4645583951137429 (+1.74e-17) |F| 6.6e-30 its 6 93s dDelta/dF max 2.2e+00 tails 2e-87 2e-92 dDelta_est +2.1e-30
+exit 0

@@ -22,7 +22,8 @@ agree: the f64 Jacobian (Solver.jacobian_f64, --variant) against the hi part of 
   configuration): the D = 3.7, M = 48 state at its own M (or --state, --M); pass: per-column and Frobenius <= 1e-6.
   At M >= 48 the Taylor steps planned for the double-double solution do not resolve the top tau-harmonics of a
   tangent, and the f64 base trajectory's rounding inside a step is amplified to ~1e-7 (~5e-10 with a double-double
-  base); see notes/MIXED_PRECISION.md. --tol overrides the threshold.
+  base); see notes/MIXED_PRECISION.md. --tol overrides the threshold. --kfreeze=K and --match_node=N check the other
+  layouts (the p1 harmonics above K frozen, Ctx::freeze; the segments past node N integrated inward).
     --mutate breaks the f64 path on purpose (dtau: no tau derivative; omega: omega scaled by 1 + 1e-9; kappa: the
   horizon solves lose the kappa tangent term, so only the horizon block's columns change); the check must then fail
   (exit 1; --expect_fail turns a failure into exit 0 and a pass into exit 1).
@@ -144,7 +145,8 @@ def agree(opts, quiet=False):
     tol = float(opts.get("tol", 1e-12 if strict else 1e-6))
     var = opts.get("variant", DEFAULT_VARIANT)
     mut = opts.get("mutate")
-    s, zh, zl, m = solver_for(path, threads, M)
+    layout = {k: int(opts[k]) for k in ("kfreeze", "match_node") if k in opts}
+    s, zh, zl, m = solver_for(path, threads, M, **layout)
     t = time.time(); Jh, Jl = s.jacobian(zh, zl); t_dd = time.time() - t
     t = time.time(); Jf = s.jacobian_f64(zh, zl, MUTATIONS[mut] if mut else 0, **jac_kw(var)); t_f = time.time() - t
     Jh, Jf = np.asarray(Jh), np.asarray(Jf)
@@ -163,9 +165,10 @@ def agree(opts, quiet=False):
     r["step_rounding_floor"] = float(np.linalg.norm(x_r - x_dd) / max(np.linalg.norm(x_dd), 1e-300))
     ok = r["column_max"] <= tol and r["frobenius"] <= tol
     r.update(state=os.path.basename(path), M=m["M"], N=s.size, threads=threads, variant=var, mutate=mut,
-             tier="strict" if strict else "production", t_jacobian=round(t_dd, 2), t_jacobian_f64=round(t_f, 2),
+             tier="strict" if strict else "production", layout=layout, t_jacobian=round(t_dd, 2), t_jacobian_f64=round(t_f, 2),
              tol=tol, passed=bool(ok))
-    tag = f"{r['state']}{' resampled to M = %d' % m['M'] if M else ''} (N = {r['N']}), {r['tier']}, variant {var}"
+    tag = (f"{r['state']}{' resampled to M = %d' % m['M'] if M else ''} (N = {r['N']}), {r['tier']}, variant {var}"
+           + "".join(f", {k} {v}" for k, v in layout.items()))
     print(f"{tag}{', MUTATED: ' + mut if mut else ''}: jacobian {t_dd:.1f} s, jacobian_f64 {t_f:.2f} s")
     if not quiet:
         print(f"  entrywise on the {r['nonzero']} nonzero entries: max {r['entry_max']:.2e} (median {r['entry_q'][0]:.1e}, "

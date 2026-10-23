@@ -1,0 +1,25 @@
+M = 48, L = 2689, single thread; seconds for all columns of a block (from a sample)
+  Du    : DMat::apply 2.26 us, cs (k = 0..35, mean) 1.262 us; per tangent 2.26 / 1.262 us   [0.0e0]
+  Fu    : DMat::apply 0.21 us, cs (k = 0..35, mean) 0.078 us; per tangent 0.21 / 0.078 us   [0.0e0]
+  Fun<4>: DMat::apply 0.59 us, cs (k = 0..35, mean) 0.049 us; per tangent 0.15 / 0.012 us   [0.0e0]
+  Dtn<1>: DMat::apply 1.10 us, cs (k = 0..35, mean) 0.293 us; per tangent 1.10 / 0.293 us   [0.0e0]
+  Dtn<4>: DMat::apply 1.33 us, cs (k = 0..35, mean) 0.295 us; per tangent 0.33 / 0.074 us   [0.0e0]
+  Dtn<8>: DMat::apply 1.72 us, cs (k = 0..35, mean) 1.401 us; per tangent 0.21 / 0.175 us   [0.0e0]
+  block  0 (97 columns,  0 steps): Du  0.438 Fu  0.022 Fun<2>  0.018 Fun<4>  0.019 Fun<8>  0.020 Dtn<1>  0.037 Dtn<4>  0.022 Dtn<8>  0.023
+  block  1 (193 columns,  1 steps): Du  0.128 Fu  0.023 Fun<2>  0.018 Fun<4>  0.025 Fun<8>  0.030 Dtn<1>  0.091 Dtn<4>  0.049 Dtn<8>  0.038
+  block  2 (193 columns,  2 steps): Du  0.242 Fu  0.043 Fun<2>  0.035 Fun<4>  0.040 Fun<8>  0.045 Dtn<1>  0.111 Dtn<4>  0.059 Dtn<8>  0.061
+  block  3 (193 columns,  6 steps): Du  0.742 Fu  0.128 Fun<2>  0.106 Fun<4>  0.103 Fun<8>  0.111 Dtn<1>  0.325 Dtn<4>  0.147 Dtn<8>  0.151
+  block  4 (193 columns, 10 steps): Du  1.150 Fu  0.202 Fun<2>  0.171 Fun<4>  0.161 Fun<8>  0.175 Dtn<1>  0.520 Dtn<4>  0.236 Dtn<8>  0.236
+  block  5 (193 columns,  8 steps): Du  0.894 Fu  0.164 Fun<2>  0.135 Fun<4>  0.132 Fun<8>  0.146 Dtn<1>  0.459 Dtn<4>  0.202 Dtn<8>  0.304
+  block  6 (193 columns,  6 steps): Du  1.025 Fu  0.163 Fun<2>  0.134 Fun<4>  0.137 Fun<8>  0.144 Dtn<1>  0.462 Dtn<4>  0.211 Dtn<8>  0.188
+  block  7 (193 columns,  4 steps): Du  0.463 Fu  0.082 Fun<2>  0.067 Fun<4>  0.070 Fun<8>  0.078 Dtn<1>  0.214 Dtn<4>  0.103 Dtn<8>  0.105
+  block  8 (193 columns,  4 steps): Du  0.476 Fu  0.082 Fun<2>  0.069 Fun<4>  0.070 Fun<8>  0.078 Dtn<1>  0.217 Dtn<4>  0.102 Dtn<8>  0.105
+  block  9 (193 columns,  3 steps): Du  0.348 Fu  0.062 Fun<2>  0.053 Fun<4>  0.054 Fun<8>  0.062 Dtn<1>  0.162 Dtn<4>  0.080 Dtn<8>  0.082
+  block 10 (193 columns,  3 steps): Du  0.358 Fu  0.062 Fun<2>  0.053 Fun<4>  0.055 Fun<8>  0.060 Dtn<1>  0.166 Dtn<4>  0.081 Dtn<8>  0.082
+  block 11 (193 columns,  4 steps): Du  0.458 Fu  0.084 Fun<2>  0.067 Fun<4>  0.070 Fun<8>  0.077 Dtn<1>  0.213 Dtn<4>  0.103 Dtn<8>  0.105
+  block 12 (193 columns,  5 steps): Du  0.582 Fu  0.105 Fun<2>  0.086 Fun<4>  0.090 Fun<8>  0.098 Dtn<1>  0.268 Dtn<4>  0.126 Dtn<8>  0.134
+  block 13 (97 columns,  0 steps): Du  3.957 Fu  0.120 Fun<2>  0.090 Fun<4>  0.085 Fun<8>  0.087 Dtn<1>  0.238 Dtn<4>  0.113 Dtn<8>  0.107
+  total (one thread): Du 11.26 s (1.0x) Fu 1.34 s (8.4x) Fun<2> 1.10 s (10.2x) Fun<4> 1.11 s (10.1x) Fun<8> 1.21 s (9.3x) Dtn<1> 3.48 s (3.2x) Dtn<4> 1.63 s (6.9x) Dtn<8> 1.72 s (6.5x)
+test model::bench::bench_jac ... ok
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 1.31s
+exit 0

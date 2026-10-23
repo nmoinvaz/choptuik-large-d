@@ -1,0 +1,19 @@
+    Finished `release` profile [optimized] target(s) in 3.57s
+     Running unittests src/lib.rs (target/release/deps/_hpkernel-969a66fcf4bb08cb)
+
+running 5 tests
+test linalg::bench::bench_lu ... ignored
+test linalg::tests::f64_lu_solves ... ok
+test linalg::tests::solve_many_is_bitwise_solve ... ok
+test model::bench::bench_jac ... ignored
+test linalg::tests::blocked_lu_matches_getf2 ... ok
+
+test result: ok. 3 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 0.12s
+
+   Doc-tests _hpkernel
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+exit 0

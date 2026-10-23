@@ -1,0 +1,53 @@
+lowDv_D3.7000_M64.npz at M = 64: start |F| 5.68e-07 (Delta 1e-06, fields 1e-08)
+ newton:
+  newton 0: |F| 5.68e-07 |dz| 3.73e-04 lam 1 dDelta -6.86e-07 Delta 3.465200825333898 piv 1.3e-03..5.4e+01  t 16.3s
+  newton 1: |F| 5.71e-07 |dz| 3.73e-04 lam 1 dDelta -3.14e-07 Delta 3.465200511784619 piv 1.3e-03..6.1e+00  t 32.2s
+  newton 2: |F| 3.99e-11 |dz| 1.00e-08 lam 1 dDelta +1.82e-11 Delta 3.465200511802858 piv 1.3e-03..6.1e+00  t 48.4s
+  newton 3: |F| 1.63e-17 |dz| 4.11e-16 lam 1 dDelta -2.32e-18 Delta 3.465200511802858 piv 1.3e-03..6.1e+00  t 64.3s
+  newton 4: |F| 9.58e-30 converged (last |dz| 1.9e-26) Delta 3.465200511802858
+ newton_mixed f64x4:
+  newton 0: |F| 5.68e-07 |dz| 3.73e-04 lam 1 dDelta -6.86e-07 Delta 3.465200825333897 piv 1.3e-03..5.4e+01  t 2.1s
+  newton 1: |F| 5.71e-07 |dz| 3.73e-04 lam 1 dDelta -3.14e-07 Delta 3.465200511784619 piv 1.3e-03..6.1e+00  t 3.9s
+  newton 2: |F| 3.99e-11 |dz| 1.00e-08 lam 1 dDelta +1.82e-11 Delta 3.465200511802858 piv 1.3e-03..6.1e+00  t 5.7s
+  newton 3: |F| 1.63e-17 |dz| 1.29e-15 lam 1 dDelta -2.34e-18 Delta 3.465200511802858 piv 1.3e-03..6.1e+00  t 7.6s
+  newton 4: |F| 3.63e-27 |dz| 2.48e-22 lam 1 dDelta +1.10e-26 Delta 3.465200511802858 piv 1.3e-03..6.1e+00  t 9.5s
+  newton 5: |F| 7.63e-30 converged (last |dz| 1.7e-26) Delta 3.465200511802858; last step taken, |F| 6.09e-30
+ newton_mixed f64x4+ddlu:
+  newton 0: |F| 5.68e-07 |dz| 3.73e-04 lam 1 dDelta -6.86e-07 Delta 3.465200825333897 piv 1.3e-03..5.4e+01  t 2.1s
+  newton 1: |F| 5.71e-07 |dz| 3.73e-04 lam 1 dDelta -3.14e-07 Delta 3.465200511784619 piv 1.3e-03..6.1e+00  t 4.3s
+  newton 2: |F| 3.99e-11 |dz| 1.00e-08 lam 1 dDelta +1.82e-11 Delta 3.465200511802858 piv 1.3e-03..6.1e+00  t 6.5s
+  newton 3: |F| 1.63e-17 |dz| 1.29e-15 lam 1 dDelta -2.34e-18 Delta 3.465200511802858 piv 1.3e-03..6.1e+00  t 8.6s
+  newton 4: |F| 3.63e-27 |dz| 2.48e-22 lam 1 dDelta +1.10e-26 Delta 3.465200511802858 piv 1.3e-03..6.1e+00  t 10.8s
+  newton 5: |F| 3.09e-30 converged (last |dz| 1.3e-26) Delta 3.465200511802858; last step taken, |F| 3.54e-30
+ newton_mixed f64x1:
+  newton 0: |F| 5.68e-07 |dz| 3.73e-04 lam 1 dDelta -6.86e-07 Delta 3.465200825333897 piv 1.3e-03..5.4e+01  t 2.5s
+  newton 1: |F| 5.71e-07 |dz| 3.73e-04 lam 1 dDelta -3.14e-07 Delta 3.465200511784618 piv 1.3e-03..6.1e+00  t 4.9s
+  newton 2: |F| 3.99e-11 |dz| 1.01e-08 lam 1 dDelta +1.82e-11 Delta 3.465200511802858 piv 1.3e-03..6.1e+00  t 7.1s
+  newton 3: |F| 1.63e-17 |dz| 1.34e-15 lam 1 dDelta -2.32e-18 Delta 3.465200511802858 piv 1.3e-03..6.1e+00  t 9.4s
+  newton 4: |F| 2.87e-27 |dz| 1.76e-22 lam 1 dDelta +1.04e-26 Delta 3.465200511802858 piv 1.3e-03..6.1e+00  t 11.7s
+  newton 5: |F| 6.50e-31 converged (last |dz| 8.3e-27) Delta 3.465200511802858; last step taken, |F| 6.88e-30
+ newton_mixed dd4:
+  newton 0: |F| 5.68e-07 |dz| 3.73e-04 lam 1 dDelta -6.86e-07 Delta 3.465200825333897 piv 1.3e-03..5.4e+01  t 2.8s
+  newton 1: |F| 5.71e-07 |dz| 3.73e-04 lam 1 dDelta -3.14e-07 Delta 3.465200511784618 piv 1.3e-03..6.1e+00  t 5.7s
+  newton 2: |F| 3.99e-11 |dz| 1.00e-08 lam 1 dDelta +1.82e-11 Delta 3.465200511802858 piv 1.3e-03..6.1e+00  t 8.7s
+  newton 3: |F| 1.63e-17 |dz| 1.08e-15 lam 1 dDelta -2.30e-18 Delta 3.465200511802858 piv 1.3e-03..6.1e+00  t 11.8s
+  newton 4: |F| 3.48e-27 |dz| 2.44e-22 lam 1 dDelta +5.54e-28 Delta 3.465200511802858 piv 1.3e-03..6.1e+00  t 14.5s
+  newton 5: |F| 1.09e-29 converged (last |dz| 1.3e-26) Delta 3.465200511802858; last step taken, |F| 1.53e-29
+ control (newton from a second start):
+  newton 0: |F| 3.71e-07 |dz| 1.45e-04 lam 1 dDelta +9.09e-07 Delta 3.465200420652317 piv 1.3e-03..2.6e+01  t 15.9s
+  newton 1: |F| 1.76e-07 |dz| 1.45e-04 lam 1 dDelta +9.12e-08 Delta 3.465200511804399 piv 1.3e-03..8.7e+00  t 31.9s
+  newton 2: |F| 1.47e-11 |dz| 3.12e-09 lam 1 dDelta -1.54e-12 Delta 3.465200511802858 piv 1.3e-03..6.1e+00  t 47.8s
+  newton 3: |F| 2.16e-18 |dz| 4.93e-17 lam 1 dDelta -2.28e-20 Delta 3.465200511802858 piv 1.3e-03..6.1e+00  t 63.7s
+  newton 4: |F| 4.56e-30 converged (last |dz| 1.2e-26) Delta 3.465200511802858
+  newton                : 5 Newton calls, |F| 9.6e-30, 80.5 s, Delta 3.4652005118028577 -1.808e-16
+  newton_mixed f64x4    : 6 Newton calls, |F| 6.1e-30, 11.3 s, Delta 3.4652005118028577 -1.808e-16
+    vs newton: Delta 4.7e-31 relative, max|dz|/max|z| 1.1e-27 (limits 1e-27, 7e-27)
+  newton_mixed f64x4+ddlu: 6 Newton calls, |F| 3.5e-30, 13.0 s, Delta 3.4652005118028577 -1.808e-16
+    vs newton: Delta 3.0e-31 relative, max|dz|/max|z| 9.1e-28 (limits 1e-27, 7e-27)
+  newton_mixed f64x1    : 6 Newton calls, |F| 6.9e-30, 14.1 s, Delta 3.4652005118028577 -1.808e-16
+    vs newton: Delta 1.4e-30 relative, max|dz|/max|z| 6.9e-28 (limits 1e-27, 7e-27)
+  newton_mixed dd4      : 6 Newton calls, |F| 1.5e-29, 17.4 s, Delta 3.4652005118028577 -1.808e-16
+    vs newton: Delta 9.6e-31 relative, max|dz|/max|z| 1.0e-27 (limits 1e-27, 7e-27)
+  control, newton from two starts: Delta 1.4e-30, max|dz|/max|z| 6.7e-28
+  PASS
+exit 0

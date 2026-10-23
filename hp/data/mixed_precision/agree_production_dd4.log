@@ -1,0 +1,7 @@
+lowDv_D3.7000_M48.npz (N = 2689), production, variant dd4: jacobian 7.5 s, jacobian_f64 1.04 s
+  entrywise on the 484655 nonzero entries: max 1.06e-05 (median 2.0e-13, 90% 1.9e-10, 99% 4.2e-09, 99.9% 4.2e-08); worst at [2182, 2055], |J| 1.6e-07 in a column of max 8.6e+00
+  entries >= 1e-8 of their column max: max 1.06e-05; nonzero in f64 only: 0 (max 0.0e+00)
+  per column, by residual block (centre, segments 1..K-1, horizon): 2e-15 6e-15 1e-14 4e-13 4e-11 2e-10 4e-11 3e-11 9e-11 2e-10 4e-10 2e-10 2e-10 1e-13
+  per column max|dJ|/max|J|: 4.41e-10 (column 1844); Frobenius 1.04e-10; Newton step at a perturbed state: 8.83e-08 (with the dd Jacobian rounded to f64: 5.28e-14)
+  PASS (per-column and Frobenius <= 1e-06)
+exit 0
