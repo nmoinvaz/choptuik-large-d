@@ -406,6 +406,8 @@ Stages 1 and 2 are achievable with current tools and would already be a publisha
 certificate that the five-harmonic inner problem selects ω/ω∞ = 0.9992 ± 10⁻⁶, together with the measured convergence
 in M and the untruncated bracket. Stage 4 is where a new idea is needed.
 
+What is being worked on now, and in what order: [notes/PROOF_QUEUE.md](notes/PROOF_QUEUE.md).
+
 ## 8. Who works on this
 
 - **Exponential asymptotics and selection problems:** S. Tanveer and O. Costin (Ohio State; Borel summability, rigorous
