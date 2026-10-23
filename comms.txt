@@ -2726,3 +2726,19 @@ resume of the failed lift's checkpoint (same tag, D and M), not a real step. I m
 step then converged. A watcher now moves each failed T41 checkpoint aside, so --resume never restarts a failure.
 The 3.40 failure looks different: the Jacobian is close to singular there (pivots 3e5), so the halving at 3.425 will
 show whether it is the step or the solution.
+
+== 2026-10-23 00:17 PDT local
+T41, M 128 at 3.425 and 3.40:
+   3.425  Delta 3.3835865503739, 7 its, tails 2.5e-50 / 4.8e-29;  M 96 from it 3.3835865513983 (-1.02e-9)  -> resolved
+   3.400  Delta 3.3662517880823 |F| 2.9e-30, but only at the 30th (last allowed) iteration, 80 min. The f64 Newton crawled:
+          lam 1/16 for many steps near |F| 7e-9, then contraction of about a third per step. Tails: centre 1.2e-9 (2.8e-52
+          at 3.45, 2.5e-50 at 3.425), horizon 5.3e-25.
+          The M 96 solve from this state starts at |F| 2.7e-4 and wanders under damping. From the 3.425 and 3.45 M 128
+          states the same solve started below 1e-5 and converged.
+My reading: the 3.40 M 128 solution has picked up content in its top harmonics (96-127) and in the centre series, along
+the near-null directions (the first 3.40 attempt showed pivots up to 3e5). Its Delta agrees with the M 96 chain's
+3.40 value (3.3662517901318, clean tails 4.5e-49 / 1.4e-39) to 2.0e-9, but the state is not a clean base. The chain goes
+on from it (3.375 next, then its own halving and stop rule). If 3.375 fails, I would redo 3.40 at M 128 with the exact
+dd Jacobian and/or the first node halved to 0.0025 (what --auto_nodes would ask for here, at your 0.0025 limit). Say
+which, or whether to stop T41 at 3.425 as the lowest clean point.
+T38 pilot: (a) 960 bits is at order 25 (sigma_12 at k 25 equals T32's to all printed digits), (b) 1280 bits at 23.
