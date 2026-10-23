@@ -37,6 +37,12 @@ Progress (wip/theoremB1):
   its estimate. A link the notes did not list: B7 needs the Jacobian of the multiplier itself, while Theorem A certifies
   the Jacobian of the D-jump conditions at ξ = 0.3; the forward propagation between them must be certified. Uncertified
   estimate of the final threshold: ln n₀ ≈ 88–90.
+- Items 2–3 done (4c7c9d8): B8 and (H8) hold for |c(0) − c^K(0)| ≤ 10⁷ n⁻⁵ (`b8m_bounds.py --d0`); the rate is
+  O(1/n) directly. Items 4–5 are harder than the notes said: three open gaps, (a) control of the nonlinear solution
+  near the light cone x = 1 (B6′ is linear only), (b) the exact light-cone gauge, which needs (a), (c) a proof that
+  the outer jump is fast-type (C_selection 10.3 asserted it), which also rests on (a). Now: item 6 (B7 and the
+  certified link from the multiplier's Jacobian to Theorem A's), giving Theorem B(1) conditional on (a)–(c) with an
+  explicit n₀; then (a)–(c) written up as the open hypotheses.
 
 Done when C_selection.md §13.1 lists no missing link (Braaksma's theorem stays assumed) and the new certificate code
 has mutation controls. The independent review is P2's.
