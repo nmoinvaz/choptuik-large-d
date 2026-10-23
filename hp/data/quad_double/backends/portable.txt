@@ -1,0 +1,7 @@
+isa	portable
+n	4000
+rustflags	
+exit	0
+isa_reported	portable
+digest	cc1ea59faf5a7550
+result	test result: ok. 5 passed; 0 failed; 5 ignored; 0 measured; 5 filtered out; finished in 1.80s

@@ -1,0 +1,24 @@
+    Finished `release` profile [optimized] target(s) in 0.06s
+     Running unittests src/lib.rs (target/qd_native_mutate/release/deps/_hpkernel-7f2d6b79865c5f49)
+
+running 1 test
+control  1 renorm: last first-pass two-sum in plain f64       fires: 104 rows fail, worst 2.06e47 u, 0 lane mismatches; e.g. sloppy add/wide, sloppy add/cancel, sloppy add/overflow, sloppy add/underflow, sloppy add/pow2, sloppy add/sparse
+control  2 sloppy add: error of a0 + b0 dropped               fires:  13 rows fail, worst 9.07e46 u, 0 lane mismatches; e.g. sloppy add/wide, sloppy add/cancel, sloppy add/overflow, sloppy add/underflow, sloppy add/pow2, sloppy add/sparse
+control  3 accurate add: merge takes the smaller part first   fires:   7 rows fail, worst inf u, 0 lane mismatches; e.g. accurate add/wide, accurate add/cancel, accurate add/overflow, accurate add/underflow, accurate add/pow2, accurate add/sparse
+control  4 sloppy mul: error of a0 b0 dropped                 fires:  14 rows fail, worst 1.29e47 u, 0 lane mismatches; e.g. sloppy mul/wide, sloppy mul/cancel, sloppy mul/overflow, sloppy mul/underflow, sloppy mul/pow2, sloppy mul/sparse
+control  5 sloppy mul: error of a0 b2 dropped                 fires:  14 rows fail, worst 2.07e46 u, 0 lane mismatches; e.g. sloppy mul/wide, sloppy mul/cancel, sloppy mul/overflow, sloppy mul/underflow, sloppy mul/pow2, sloppy mul/sparse
+control  6 accurate mul: error of a0 b1 dropped               fires:   7 rows fail, worst 2.16e46 u, 0 lane mismatches; e.g. accurate mul/wide, accurate mul/cancel, accurate mul/overflow, accurate mul/underflow, accurate mul/pow2, accurate mul/sparse
+control  7 qd x f64: error of a1 b dropped                    fires:  21 rows fail, worst 1.01e47 u, 0 lane mismatches; e.g. qd x f64/wide, qd x f64/cancel, qd x f64/overflow, qd x f64/underflow, qd x f64/pow2, qd x f64/sparse
+control  8 qd x dd: error of a0 b.lo dropped                  fires:   7 rows fail, worst 1.23e46 u, 0 lane mismatches; e.g. qd x dd/wide, qd x dd/cancel, qd x dd/overflow, qd x dd/underflow, qd x dd/pow2, qd x dd/sparse
+control  9 qd + f64: error of a0 + b dropped                  fires:  25 rows fail, worst 9.07e46 u, 0 lane mismatches; e.g. qd + f64/wide, qd + f64/overflow, qd + f64/underflow, qd + f64/pow2, qd + f64/sparse, dot n=1/random
+control 10 qd + dd: error of a1 + b.lo dropped                fires:   7 rows fail, worst 5.93e30 u, 0 lane mismatches; e.g. qd + dd/wide, qd + dd/cancel, qd + dd/overflow, qd + dd/underflow, qd + dd/pow2, qd + dd/sparse
+control 11 divide: third remainder update skipped             fires:  14 rows fail, worst 1.01e47 u, 0 lane mismatches; e.g. sloppy div/wide, sloppy div/cancel, sloppy div/overflow, sloppy div/underflow, sloppy div/pow2, sloppy div/sparse
+control 12 sqrt: one Newton iteration instead of three        fires:   7 rows fail, worst 4.67e31 u, 0 lane mismatches; e.g. sqrt/wide, sqrt/cancel, sqrt/overflow, sqrt/underflow, sqrt/pow2, sqrt/sparse
+control 13 dot accumulator: level-2 errors dropped            fires:  20 rows fail, worst 1.39e16 u, 0 lane mismatches; e.g. dot n=1/random, dot n=1/cancel, dot n=1/wide, dot n=1/mixed, dot n=4/random, dot n=4/cancel
+control 14 parse: last component truncated                    fires:   3 rows fail, worst 255.000 u, 0 lane mismatches; e.g. parse/greedy RN, round trip/exact, round trip/70 digits
+control 15 8-lane renorm: zero test ignored (step c2)         fires:  29 rows fail, worst 1.01e47 u, 18413 lane mismatches; e.g. sloppy add/cancel, sloppy add/sparse, sloppy add/computed, qd + f64/cancel, qd + f64/sparse, qd + f64/computed
+control 16 8-lane accurate add: next part of a read one late  fires:   7 rows fail, worst 0.015 u, 6354 lane mismatches; e.g. accurate add/wide, accurate add/cancel, accurate add/overflow, accurate add/underflow, accurate add/pow2, accurate add/sparse
+test qd_tests::qd_controls ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 15 filtered out; finished in 7.04s
+
