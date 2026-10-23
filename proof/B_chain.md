@@ -13,6 +13,8 @@ Contents
 - [1. The matching radius can be held fixed](#1-the-matching-radius-can-be-held-fixed)
 - [2. Lemma L: labels of fast-type solutions on the Stokes line](#2-lemma-l-labels-of-fast-type-solutions-on-the-stokes-line)
 - [3. Lemma B5(2) with constants](#3-lemma-b52-with-constants)
+- [4. B8's normalization](#4-b8s-normalization)
+- [5. The 1/n rate](#5-the-1n-rate)
 
 ## 0. Summary
 
@@ -228,3 +230,49 @@ was also not derived from the implicit function theorem; §8 replaces it.
 
 Check: the superposition of the certified super-solutions reproduces the super-solution certified directly for the
 reference data to 3.1×10⁻³ (dropping the forcing term gives 0.30, `--mutate=sum`, caught).
+
+## 4. B8's normalization
+
+*Scripts: `b8m_bounds.py --d0=...` (new option), `b8m_scan.py`, `b8m_h8.py`; logs `b8m_scan_K4_d0.log`,
+`b8m_h8_K4_L73.89_d0_1e6.log`, `b8m_h8_K4_L73.89_d0_1e7.log`.*
+
+B8 was certified in the gauge c(0) = c^K(0). B8_constants.md §8.4 proves by hand that the bootstrap is unchanged for
+c(0) = c^K(0) + d with $`\lvert d\rvert_1 \le d_0n^{-K-1}`$, except that R_V(0) = [d·2F] and R_c(0) = d enter the slow
+integrals: P_V and P_c increase by $`\lvert 2F\rvert_1d_0 \le 4\max_\mu\lvert F_\mu\rvert\,d_0`$ and d₀, since
+ρ^{K+1} ≥ n^{−K−1} everywhere. `b8m_bounds.py --d0` adds exactly these two terms.
+
+**Result (certified; K = 4, κ = 0.3, κ₁ = 0.6, ln n₀ = 73.89, B5(1)'s box):**
+
+| d₀ | closes | h = (h_V, h_S, h_β, h_c) | P(h)/h | (H8): δ = (δ_P, δ_Φ, δ_C, δ_ϑ) |
+|---|---|---|---|---|
+| 0 (certified before) | yes | (2.41×10⁶, 6.27×10⁶, 6.17×10⁵, 1.67×10⁵) | ≤ 0.990 | (8.2×10⁻⁵, 79.03, 3.231, 6.463) |
+| 10⁵ | yes | (3.00×10⁶, 6.58×10⁶, 6.72×10⁵, 2.80×10⁵) | ≤ 0.983 | not run |
+| 10⁶ | yes | (1.07×10⁷, 1.45×10⁷, 1.45×10⁶, 1.37×10⁶) | ≤ 0.988 | (8.2×10⁻⁵, 82.18, 3.231, 6.463) |
+| 10⁷ | yes | (9.71×10⁷, 1.20×10⁸, 1.13×10⁷, 1.28×10⁷) | ≤ 0.989 | (8.2×10⁻⁵, 122.31, 3.231, 6.463) |
+| 10⁸ | no (c lower bound lost) | | | |
+
+So B8(1) and (H8) hold for every normalization $`\lvert c(0) - c^K(0)\rvert_1 \le 10^7n^{-5}`$, n ≥ e^{73.89}, with δ ≤ δ_ref.
+
+**What this does and does not settle.** The run is what §13.1 item 4 asked for. It does not show that the exact
+light-cone gauge c(1) = 1 lies in that range, and nothing in B8_constants.md or C_selection.md shows it either: c(1) is
+the value at the light cone, inside the disc |x − 1| < δ/2 that B8 excludes, so it needs control of the solution there
+(§6). As a formal estimate (numerical evidence, `b8m_formal.formal`): the gauge that makes c(1) = 1 order by order
+differs from c^K(0) by $`\sum_{k\ge5}\varepsilon^kc_k(0)`$ with $`\lvert c_5(0)\rvert_1 = 1.227\times10^5`$, and the
+next coefficients grow by about 12–13 per order ($`\lvert c_6(0)\rvert_1 = 1.52\times10^6`$, $`\lvert c_7(0)\rvert_1 = 1.95\times10^7`$),
+so for n ≥ e^{73.89} the expected offset is about 1.23×10⁵ n⁻⁵, a factor 8 inside d₀ = 10⁶.
+
+## 5. The 1/n rate
+
+§13.1 item 5 said that without the refinement by S^{(1)} the branch converges like $`O(n^{-1+1/(2\kappa_1)}(\ln n)^{3.23})`$.
+That rate comes only from evaluating the jump at $`u_* = \kappa_1/\ln n`$. With the fixed u* = 0.0081 of §1, B5(2)
+(§3) gives an additive error $`\lvert\tilde E\rvert \le C_E/n`$ and a C¹ bound $`10^6C_E/n`$, uniformly on the box, for every
+n ≥ e^{73.89}. The implicit function theorem (§8) then gives $`\lvert(A_n, \omega_n) - (A_*, \omega_*)\rvert \le C_7/n`$ with
+an explicit C₇. So the O(1/n) rate of Theorem B needs no S^{(1)}.
+
+What S^{(1)} would add: the coefficient of 1/n. Replacing Z_in by Z_in + n⁻¹Z^{(1)} in B5(1) makes the forcing of the
+W-system O(n⁻²), and the jump becomes $`S + n^{-1}S^{(1)} + O(e^{1/(2u_*)}n^{-2})`$, so
+$`(A_n, \omega_n) = (A_*, \omega_*) - n^{-1}DS^{-1}S^{(1)} + O(n^{-2})`$. It would also lower n₀, since C_E = e^{76.9} is
+dominated by e^{1/(2u*)} times the O(1/n) data of (H8), which Z^{(1)} absorbs. That needs Z^{(1)} as a certified lateral
+solution of the linearized inner problem with forcing (a lemma-S-type fixed point for an inhomogeneous linear
+problem, then its own validated integration for S^{(1)}). It was not attempted: it is not needed for Theorem B(1) as
+stated.
