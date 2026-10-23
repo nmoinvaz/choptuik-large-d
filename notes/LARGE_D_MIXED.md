@@ -19,8 +19,8 @@ AVX-512), two threads, with private builds; every command runs in `hp/`.
   step tried, with Δ equal to the double-double run's to the level of that run's own linearised Δ correction (§4,
   §5). The plain f64 Jacobian fails from D = 40, the horizon fix alone (f64h) and the loop alone (f64g) fail at some
   states at D = 50–60. What limits them is not the step but the f64 LU's weakest directions: at D ≥ 40 its weak
-  subspace has a principal angle of 90° to the exact one and its ∂Δ/∂F is off by up to 10⁵–10⁹ (§4, §7.4).
-- **Speedups** (whole solves, same machine, interleaved; §5): 4–8× below D = 35 (f64 or f64g), 1.4–2.5× at D = 40–60
+  subspace has a principal angle of 90° to the exact one and its ∂Δ/∂F is off by factors of 10³–10⁹ (§4, §7.4).
+- **Speedups** (whole solves, same machine, interleaved; §5): 3.8–7.7× below D = 35 (f64 or f64g), 1.4–2.5× at D = 40–60
   (f64g, f64hg), against a double-double Newton with a sensible centre-series order. Against the double-double Newton
   as the scan runs it (kc = 420) a continuation point is 4–8 times faster with f64hg (§4). The scan's kc = 420 is about
   three times what the series needs and makes the double-double Jacobian three times slower for bitwise the same
@@ -29,7 +29,7 @@ AVX-512), two threads, with private builds; every command runs in `hp/`.
   but the exact step's line search still cuts it to 1/2–1/8 (§8).
 
 **Machine load.** The two cores were shared with the high-M agent's three jobs and several of this work's runs at
-once; the load average was 6–14 during the measurements below. The accuracy numbers do not depend on it. The times do:
+once; the load average was 3.5–14 during the measurements below (each table gives its own). The accuracy numbers do not depend on it. The times do:
 they are inflated by a factor of about 2–6 against an idle machine, and only ratios measured in the same run
 (interleaved) are comparable. The benchmark (§5) interleaves the variants for that reason.
 
@@ -438,7 +438,7 @@ Everything new is opt-in: `horizon_dd=0`, `Solver.jvp` and `step_timing` are new
 `newton_mixed(**mixed)` as before. Checked:
 
 - `python3 mixed_check.py ref --save=REF.npz` with a private build of main (e6c908a), then `--compare=REF.npz` with
-  this branch's build: 34 arrays, all bit-identical (`data/mixed_precision/largeD_mixed/ref_save_main_build.log`,
+  this branch's final build (its Rust as of be55e4a; nothing in `hp/src` changed after): 34 arrays, all bit-identical (`data/mixed_precision/largeD_mixed/ref_save_main_build.log`,
   `ref_compare.log`). `ref` now also covers the mixed defaults (`jacobian_f64`, `newton_mixed`) at D = 3.7, M = 48, and
   residual, Jacobian, Newton step, `lu_solve_t`, `jacobian_f64` and `newton_mixed` at the D = 50.01 scan state with
   kfreeze 13; a reference file from before reports the arrays it lacks as not compared.

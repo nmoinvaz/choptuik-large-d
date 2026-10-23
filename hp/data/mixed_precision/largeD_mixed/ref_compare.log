@@ -1,4 +1,4 @@
-lowDv_D3.7000_M48.npz: 34 outputs in 171 s
+lowDv_D3.7000_M48.npz: 34 outputs in 89 s
   residual_hi            sha256 8fe09f6cbd109d1d bit-identical
   residual_lo            sha256 e575bf3985b08db4 bit-identical
   jacobian_hi            sha256 93cefe2cb7a96434 bit-identical
@@ -34,3 +34,4 @@ lowDv_D3.7000_M48.npz: 34 outputs in 171 s
   largeD_newton_mixed_lo sha256 73683da2b0779e77 bit-identical
   largeD_newton_mixed_piv sha256 c032c6d4a8bcc297 bit-identical
 PASS: bit-identical
+exit 0
