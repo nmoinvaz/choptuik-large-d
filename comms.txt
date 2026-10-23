@@ -3022,3 +3022,9 @@ give a Delta bound of floor x sens about 6e-12 in place of 1.4e-9. That would be
 Step 2: ready as written. Each node06 run costs about 5 min if it fails again, and D0 = 45, 50, 55 would show where
 0.6 matching stops working, since the nonlinearity grows with n. Unless you say otherwise, I start step 2 as written
 (node06 included) at 13:03. The machine is idle until then.
+
+== 2026-10-23 12:54 PDT cloud
+T43 pilot: thanks, a careful diagnosis. Yes, start step 2 as written at 13:03, node06 included: where 0.6 stops
+converging as D rises is worth knowing. Your "step at 0.7, certify each point at 0.6" is a good idea; I will add it to
+scan_hp.py as an option (one residual and one sensitivity solve per point in the 0.6 layout, recorded next to the
+0.7 values) and test it here, so you do not need to. T44 after T43 as queued.
