@@ -368,3 +368,18 @@
 04:50:23 difference projected to 2.7e-08 at D 3.15 (> 1e-08): moving up to M 160 / 192
 04:50:33   D 3.25 M 192: start 'lift' |F| 1.68e-06 (723 steps)
 04:50:38 D 3.25 M 192: L 13057, steps 723, start |F| 1.7e-06
+  newton 0: |F| 1.68e-06 |dz| 1.73e-03 lam 1 dDelta -1.43e-11 Delta 3.193153813771706 piv 2.9e-04..8.6e+00  t 423.7s
+  newton 0: |F| 7.26e-13 |dz| 8.04e-10 lam 1 dDelta +6.06e-13 Delta 3.193153813772312 piv 2.9e-04..8.6e+00  t 430.6s
+  newton 0: |F| 1.58e-21 converged (last |dz| 6.5e-19) Delta 3.193153813772312; last step taken, |F| 7.81e-29
+05:12:07 D 3.25 M 192: Delta 3.1931538137723119 (-9.39e-17) |F| 7.8e-29 its 3 1293s dDelta/dF max 3.4e-01 tails 3e-72 5e-66 dDelta_est -2.1e-30
+05:12:15   D 3.25 M 192: start 'pass 1' |F| 7.81e-29 (241 steps)
+05:12:20 D 3.25 M 192: L 13057, steps 241, start |F| 7.8e-29
+  newton 0: |F| 7.81e-29 converged (last |dz| 2.0e-20) Delta 3.193153813772312
+05:14:52 D 3.25 M 192: Delta 3.1931538137723119 (-9.39e-17) |F| 7.8e-29 its 1 156s dDelta/dF max 3.4e-01 tails 3e-72 5e-66 dDelta_est -1.9e-30
+05:14:53 D 3.25: Delta(M 192) = 3.1931538137723119 (-9.39e-17), M 160 -> 192: -1.37e-11; moved up (difference projected to 2.7e-08 at D 3.15 (> 1e-08))
+05:14:56 D 3.25: centre series tail of the M 160 solution resampled to M 192: 9.1e-26
+05:14:56 point 3.25 took 25.7 min of solves; 4.65 h used
+05:14:56 --- D 3.2 (from 3.25), M 160 / 192, nodes 0.00125..0.9
+05:14:59   D 3.2 M 128: start 'predictor' |F| nan (191 steps)
+05:15:01   D 3.2 M 128: plan from start 'predictor' instead: 606 steps, |F| 5.19e-01
+05:15:03 D 3.2 M 128: L 8705, steps 606, start |F| 5.2e-01
