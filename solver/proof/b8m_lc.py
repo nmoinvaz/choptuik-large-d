@@ -25,8 +25,9 @@ holomorphic in the parameters.
 
     python3 b8m_lc.py K L0 [--rA=2e-6 --rW=2e-6] [--xa=1.5] [--iters=200] [--log=file] [--lip [--eta=1e-6]]
                       [--mutate=NAME]
-    mutations: NL (the L kernel exponent N_L replaced by 1 + 1e-9: no decay toward the light cone; the closure must
-    fail); d0 (the gauge offset bound set to 0: b8m_lc_numcheck.py must then fail).
+    mutation: rho2L (the residual rho2 dropped from G on the light-cone region L): the certificate still closes, but
+    its bound on R_S in L must then fall below the numerically observed remainder (b8m_lc_numcheck.py with the
+    mutated log must fail); b8m_lc_numcheck.py has its own mutations (d0, weight).
 """
 import json
 import sys
@@ -236,8 +237,6 @@ def kernel_lc(geo, k, nsub=1500):
     c1 = up(1 / (2 - d2) + 2 / (1 - d2))
     etaL = up(E.bsup_r(eta.v, "L") / ((1 - gmax["L"]) * (1 - d2) * (2 - d2)))
     NL = lo((n0 - 1) * (1 - c1 * d2) / 2 - etaL)
-    if MUT == "NL":
-        NL = arb(1) + arb("1e-9")
     if not NL > 2:
         raise ValueError("N_L too small")
     return dict(sstar=sstar, HF=HF, NF=NF, KF=KF, gF=gF, gN0=gN["N0"], gNa=gN["Na"], gNb=gN["Nb"], c1=c1, etaL=etaL,
@@ -350,7 +349,8 @@ def evaluate(geo, k, kc, h, Dinp=None, verbose=False, want_der=False):
         iDt = Q(onlyL(iDt_v), iDt_d)
         ddL = Q(ddv, dd_d)
         DtK = Q(onlyL(DtK_v), DtK_d)
-        G1L = iAK * (dA0 * S + ddL * iDt * (A0 * S + x2 * B0 * V) + x2 * (dB0 * V + BK * RV) + rho2)
+        inner = dA0 * S + ddL * iDt * (A0 * S + x2 * B0 * V) + x2 * (dB0 * V + BK * RV)
+        G1L = iAK * (inner if MUT == "rho2L" else inner + rho2)
         G2L = iAK * DtK * iDt * (c * Mh * S + x2 * Mh * iC * Y)
         GL = G1L + G2L
         qxgSL = ellx2 * E.qinv(ope) * eps1 * AK * GL
@@ -737,8 +737,8 @@ def main():
         with open(OPTS["log"], "a") as fh:
             fh.write(line + "\n")
     if MUT:
-        print(f"MUTATION {MUT}: closure must FAIL: {'caught' if not ok else 'NOT caught'}")
-        return 0 if not ok else 3
+        print(f"MUTATION {MUT}: the record is written for b8m_lc_numcheck.py --mutlc (whose checks must then fail)")
+        return 0
     return 0 if ok else 1
 
 

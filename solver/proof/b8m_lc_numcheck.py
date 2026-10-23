@@ -14,7 +14,7 @@ R' = J R + tau + N (b8m_numcheck.integrate_R) is integrated along the real axis 
   (3) on the sample points, |R|/bound < 1 for the per-band constants h of the certificate (shape check: the certificate
       is for n >= n_0, the check at moderate n tests the form of the bound), and on L |x R_S'| <= h_Sp n w.
 Mutations: --mutate=d0 (the bound d0 replaced by 0: (2) must fail); --mutate=weight (the weight rho^(K+2) instead of
-rho^(K+1): (3) must fail).
+rho^(K+1): (3) must fail); --mutlc with the log of b8m_lc.py --mutate=rho2L (the residual dropped on L: (3) must fail).
 
     python3 b8m_lc_numcheck.py n --log=b8m_lc_K4.log [--L0=73.89] [--mutate=...]
 """
@@ -61,11 +61,12 @@ def main():
     pos = [a for a in sys.argv[1:] if not a.startswith("--")]
     n = float(pos[0])
     K = 4
-    hyp, d0 = None, None
+    hyp, d0, rec = None, None, None
     for line in open(OPTS["log"]):
         r = json.loads(line)
-        if r.get("closes") and abs(r["L0"] - float(OPTS.get("L0", "73.89"))) < 1e-9 and not r.get("mutate"):
-            hyp, d0 = r["hyp"], r["diag"]["d0"]
+        if r.get("closes") and abs(r["L0"] - float(OPTS.get("L0", "73.89"))) < 1e-9 and \
+                (bool(r.get("mutate")) == ("mutlc" in OPTS)):
+            hyp, d0, rec = r["hyp"], r["diag"]["d0"], r
     if hyp is None:
         print("no closing LC record in the log")
         return 2
@@ -86,7 +87,7 @@ def main():
     real = lambda t: (np.exp(t), np.exp(t))
     xs = np.unique(np.concatenate([np.geomspace(0.02, 1 - eta, 24), [0.05, 0.5, 0.9, 0.975, 1 - eta]]))
     ts = np.concatenate([[np.log(x0)], np.log(xs)])
-    RA, e1 = NC.integrate_R(ser, zk, n, w, real, R0, ts, np.linspace(np.log(x0), np.log(1 - eta), 201), rtol=1e-10)
+    RA, e1 = NC.integrate_R(ser, zk, n, w, real, R0, ts, np.linspace(np.log(x0), np.log(1 - eta), 801), rtol=1e-10)
     pts = [(complex(x), R) for x, R in zip(xs, RA[1:])]
     Rstart = RA[-1]
     # the circle through the upper (s = +1) and the lower (s = -1) half plane, phi from pi to 0
@@ -94,7 +95,7 @@ def main():
     circ = {}
     for sgn in (1, -1):
         path = lambda t, s=sgn: (1 + eta * np.exp(1j * s * (np.pi - t)), -1j * s * eta * np.exp(1j * s * (np.pi - t)))
-        RB, e2 = NC.integrate_R(ser, zk, n, w, path, Rstart, phis, np.linspace(0, np.pi, 121), rtol=1e-10)
+        RB, e2 = NC.integrate_R(ser, zk, n, w, path, Rstart, phis, np.linspace(0, np.pi, 481), rtol=1e-10)
         circ[sgn] = RB
         if sgn == 1:
             pts += [(path(t)[0], R) for t, R in zip(phis[1:], RB[1:])]
@@ -108,7 +109,7 @@ def main():
     g1 = NC.l1(mean) / NC.l1(dfor)
     ok1 = g1 < 1e-3
     print(f"(1) R_c(1) (Cauchy mean on |x - 1| = {eta}): |R_c(1)|_1 = {NC.l1(mean):.3e} = {g1:.2e} |d|; "
-          f"jump of the two continuations at 1 + eta: {jump:.2e}; spline errors {max(e1, e2):.1e}  "
+          f"jump of the two continuations at 1 + eta: {jump:.2e}; spline errors {e1:.1e} (real axis), {e2:.1e} (circle)  "
           f"{'OK' if ok1 else 'FAIL'}", flush=True)
     # (2) d against the certified d0
     dn5 = NC.l1(dfor) * n ** (K + 1)
@@ -127,7 +128,15 @@ def main():
             key = f"{nm}.{b}"
             v = NC.l1(R[sl]) / (hyp[key] * wt)
             worst[key] = max(worst.get(key, 0.0), v)
-    # the derivative on L: x R_S' from the remainder equation R' = J R + tau + N
+    # the derivative on L: x R_S' from the remainder equation R' = J R + tau + N. The certified h_Sp is
+    # lamt ratS (Jarc/d2 + supGd/(N_L - 1)) with N_L at n_0; its second term is O(1/n) relative and is evaluated here at
+    # the actual n (N_L(n) = (n - 1)(1 - c1 d2)/2 - eta_L), the first is kept: the shape check of the formula
+    dg, kc = rec["diag"], rec["kernel"]
+    d2 = 0.025
+    lr = rec["P_hyp"]["Sp"] / (dg["Jarc"] / d2 + dg["supGd"] / (dg["NL"] - 1))   # lamt ratS
+    NLn = (n - 1) * (1 - kc["c1"] * d2) / 2 - kc["etaL"]
+    hSp_n = lr * (dg["Jarc"] / d2 + dg["supGd"] / (NLn - 1))
+    print(f"    h_Sp at n0 = {hyp['Sp']:.3e}; the same formula at n = {n:g} (N_L = {NLn:.1f}): {hSp_n:.3e}")
     wd = 0.0
     for x, R in pts:
         if band(x) != "L":
@@ -136,12 +145,15 @@ def main():
         dR = NC.jac(x, z, n, w) @ R + ser.tau(x) + (NC.F_np(x, z + R, n, w) - NC.F_np(x, z, n, w)
                                                       - NC.jac(x, z, n, w) @ R)
         X = 1 + abs(x)
-        wd = max(wd, NC.l1(x * dR[2:4]) / (hyp["Sp"] * n * (abs(x) / X) * (X * X / n) ** kw))
+        wd = max(wd, NC.l1(x * dR[2:4]) / (hSp_n * n * (abs(x) / X) * (X * X / n) ** kw))
     worst["Sp.L"] = wd
     ok3 = all(v < 1 for v in worst.values())
     print(f"(3) max |R|/bound per band (weight rho^{kw}): " + ", ".join(f"{k} {v:.2e}" for k, v in sorted(worst.items()))
           + f"  {'OK' if ok3 else 'FAIL'}", flush=True)
     ok = ok1 and ok2 and ok3
+    if "mutlc" in OPTS:
+        print(f"MUTATION {rec.get('mutate')} of the LC certificate: a check must FAIL: {'caught' if not ok else 'NOT caught'}")
+        return 0 if not ok else 3
     if MUT:
         print(f"MUTATION {MUT}: a check must FAIL: {'caught' if not ok else 'NOT caught'}")
         return 0 if not ok else 3

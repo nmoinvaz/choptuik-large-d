@@ -572,7 +572,8 @@ python3 b7_ift.py --adj=b7_adjoint.json --jump=b5_jump_d0_1e7.json --json=b7_ift
 python3 b7_ift.py --adj=b7_adjoint.json --jump=b5_jump_d0_1e7.json --mutate=JD         # caught (b7_ift_mutJD.log)
 python3 b8m_lc.py 4 73.89 --rA=2e-6 --rW=2e-6 --lip --log=b8m_lc_K4.log   # Lemma LC, ~4 + 8 min (b8m_lc_K4.out)
 python3 b8m_lc.py --lipcheck=b8m_lc_lip.json        # contraction constant from the saved matrix: theta = 0.7355
-python3 b8m_lc.py 4 73.89 --rA=2e-6 --rW=2e-6 --mutate=NL   # the closure must fail (b8m_lc_mutNL.log)
+python3 b8m_lc.py 4 73.89 --rA=2e-6 --rW=2e-6 --mutate=rho2L --log=b8m_lc_K4_mut_rho2L.log   # mutated certificate
+python3 b8m_lc_numcheck.py 1000 --log=b8m_lc_K4_mut_rho2L.log --mutlc   # must fail (b8m_lc_numcheck_mut.log)
 python3 b8m_lc_numcheck.py 1000 --log=b8m_lc_K4.log # numerical check at n = 1e3 (b8m_lc_numcheck_n1e3.log)
 python3 b8m_lc_numcheck.py 1000 --log=b8m_lc_K4.log --mutate=d0      # caught (also --mutate=weight)
 python3 b8m_lcj.py --log=b8m_lc_K4.log --json=b8m_lcj.json   # Lemma J, ~1 min (b8m_lcj.log)
@@ -581,7 +582,10 @@ python3 b8m_lcj.py --log=b8m_lc_K4.log --mutate=kernel     # caught (also --muta
 
 ## 12. P1L: plan for the light-cone hypotheses
 
-*Plan only (queue item P1L); nothing in this section is proved yet.*
+*The plan as written before the work (queue item P1L). Outcome: (a) and (b) are Lemma LC (§13); (c) is Lemma J (§14).
+Risk R1 did not materialize, because constants per band give |d| ≤ 3.59×10⁶n⁻⁵. Risk R2 was handled by exact secants
+of the convex majorant (§13.4). Risk R3 was avoided by a norm weighted by half the fast exponent, which needs no
+inner-variable piece (§14).*
 
 ### 12.1 What the precedents give
 
@@ -841,9 +845,22 @@ The checks are run by `b8m_lc_numcheck.py` at n = 10³, at the box centre. They 
 solution integrated with mpmath residuals in double precision (not rigorous): the remainder equation is integrated
 along the real axis to 1 − 0.02, then around the circle |x − 1| = 0.02 through both half planes.
 
-*(see the log, filled in below)*
+The results (`b8m_lc_numcheck_n1e3.log`; spline interpolation errors 2.7×10⁻³ on the real axis and 3×10⁻¹² on the
+circle):
+1. *The gauge.* The light-cone-gauge offset is |d|₁n⁵ = 1.21×10⁵ (formal orders 5–8; the c₅(0) part is 1.23×10⁵),
+   below the certified d₀ = 3.59×10⁶. The Cauchy mean on the circle gives R_c(1) = 4.9×10⁻⁸|d|, the size of the
+   omitted formal orders. The continuations through the two half planes agree at 1 + 0.02 to 10⁻²⁰.
+2. *The bounds.* |R|/bound is at most 0.43 per band and component (largest: β on L 0.43, S on N0 0.23, S on L 0.20).
+   The derivative bound on L, re-evaluated at n = 10³, gives 0.026. Its O(1/n) term supGd/(N_L − 1) is evaluated at
+   the actual N_L = 461; at n₀ the certified h_Sp has N_L ≈ 5.8×10³¹.
 
-The mutation NL (N_L = 1 + 10⁻⁹, no decay toward the light cone) makes the closure fail (`b8m_lc_mutNL.log`).
+The certificate is for n ≥ e^{73.89}, so this tests the form of the bounds, not their constants.
+
+*Mutations* (`b8m_lc_numcheck_mut.log`), all caught:
+- the bound d₀ replaced by 0: check 1 fails;
+- the weight ρ⁶ instead of ρ⁵: check 2 fails (ratios up to 205);
+- the residual ρ₂ dropped from G on L (`b8m_lc.py --mutate=rho2L`): the mutated certificate still closes, with
+  h_{S,L} = 3×10⁻⁸, but check 2 fails on L (ratio 1.4×10¹⁰).
 
 ## 14. Lemma J: the outer jump is determined by its label (certified)
 
