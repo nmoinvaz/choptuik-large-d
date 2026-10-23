@@ -81,12 +81,11 @@ Headline results:
   predict the shape of the echo, F₃/F₁ = 0.055 against 0.055 extrapolated from the data, and with three harmonics
   the full set of conditions gives Δ = 1.619, 1.5% below Δ∞, and with five harmonics Δ = 1.64516, 0.077% above (one
   harmonic: 29% above): the offset alternates in sign and shrinks fifteen- to twentyfold per harmonic pair. Without truncation, an
-  amplitude expansion to thirteen orders puts the selected ω at 0.99992–0.99998 ω∞ (Δ∞ = 1.6440 ± 0.0001, an
-  estimator range tested on planted functions), at amplitude 2.720 (measured: 2.70–2.72), provided the selection
-  function has no further zeros within |x| ≈ 12; the thirteenth coefficient rejected every such alternative built so
-  far, but a larger ring of zeros is still possible. The finite-D solutions give 1.643893746, 4×10⁻⁵ below that range and
-  inside its wider version (1.6438–1.6442); five planted shapes are too few to call that a disagreement. The rule itself is not yet
-  proved ([Large D](#large-d-what-the-1d-expansion-can-and-cannot-see)).
+  amplitude expansion to fourteen orders puts the selected ω at 0.99992–1.00005 ω∞ (Δ∞ = 1.6439 ± 0.0001, an
+  estimator range over two orders, tested on planted functions), at amplitude 2.720 (measured: 2.70–2.72), provided the
+  selection function has no further zeros within |x| ≈ 12; the thirteenth and fourteenth coefficients rejected every
+  such alternative built so far, but a larger ring of zeros is still possible. The finite-D solutions give 1.643893746,
+  inside that range. The rule itself is not yet proved ([Large D](#large-d-what-the-1d-expansion-can-and-cannot-see)).
 - **Relation to published work.** Agreement with the accepted values at D = 4 and at the maximum of Δ near D = 3.756;
   a 6×10⁻⁵ difference at D = 5 that the published higher-resolution data trace to resolution; and the published
   conjecture Δ → 0 as D → ∞ is not
@@ -1510,8 +1509,8 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   $`(\ln S_1)'`$ put the zero at A₀ = 2.728–2.756 with Im A₀ = −0.013 to −0.027 (residues 1.05–1.22, ideally 1), and the
   ratio estimates from τ₅/τ₆ and τ₆/τ₇ give 2.744 − 0.026i and 2.748 − 0.013i. The D = ∞ amplitude measured from the
   solutions is 2.70–2.72, so the zero lies within about 1% of it.
-- *Across ω: where the zero is exactly real.* Two families of estimates approach from opposite sides (σ₁–σ₁₂ at ω/ω∞ =
-  0.99, 1.00, 1.01, K = 25, `scan25phys/`; σ₁–σ₁₁ at the same ω, K = 23, `scan23phys/`; σ₁–σ₁₀ at the same ω, K = 21, `scan21phys/`; σ₁–σ₉ at the same ω, K = 19, `scan19phys/`; σ₁–σ₈ at five ω, 0.98–1.02, `scan17phys/`; σ₁–σ₇ at seven ω, 0.97–1.03,
+- *Across ω: where the zero is exactly real.* Two families of estimates approach from opposite sides (σ₁–σ₁₄ at ω/ω∞ =
+  0.99, 1.00, 1.01, K = 29, J = 1000, `scan29J1000/`; σ₁–σ₁₂ at the same ω, K = 25, `scan25phys/`; σ₁–σ₁₁ at the same ω, K = 23, `scan23phys/`; σ₁–σ₁₀ at the same ω, K = 21, `scan21phys/`; σ₁–σ₉ at the same ω, K = 19, `scan19phys/`; σ₁–σ₈ at five ω, 0.98–1.02, `scan17phys/`; σ₁–σ₇ at seven ω, 0.97–1.03,
   `scan15phys/`; earlier coarser scans agree to 10⁻⁴):
 
 | Order k | arg τₖ = π crossing (from above) | ratio τₖ₋₁/τₖ real (from below) | effective exponent c at ω∞ |
@@ -1524,14 +1523,16 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
 | 10 | 1.0003 | 0.9978 | 1.021 − 0.026i |
 | 11 | 1.00020 | 0.99919 | 1.017 − 0.012i |
 | 12 | 1.00011 | 0.99915 | 1.013 − 0.012i |
+| 13 | 1.00005 | 0.99928 | 1.004 − 0.010i |
+| 14 | 1.00003 | 0.99977 | 1.000 − 0.004i |
 
   The arg = π criterion assumes x₀ is a simple zero, $`\tau_k \to -1/(k\,x_0^k)`$; the coefficients behave as
-  $`-c/(k\,x_0^k)`$ with an effective exponent c (last column, from three consecutive orders) that falls toward 1 as
-  orders are added (1.177, 1.077, 1.052, 1.021, 1.017, 1.013), so x₀ is a simple zero and the departure of c from 1 is contamination
+  $`-c/(k\,x_0^k)`$ with an effective exponent c (last column, from two consecutive orders) that falls toward 1 as
+  orders are added (1.177, 1.077, 1.052, 1.021, 1.017, 1.013, 1.004, 1.000), so x₀ is a simple zero and the departure of c from 1 is contamination
   by singularities beyond it. That makes the crossings from above the asymptotically correct estimator. Their distance
-  shrinks by a factor of about 0.4–0.6 per order (to 1.00011 at k = 12, still falling), and Aitken's extrapolations
+  shrinks by a factor of about 0.4–0.6 per order (to 1.000026 at k = 14, still falling), and Aitken's extrapolations
   of consecutive triples scatter around 1 (0.99956 to 1.00066). The ratio estimates, which let c float, come up from
-  below and turn down at the last order (0.9978, 0.99919, 0.99915 at k = 10–12). Padé approximants of $`(\ln S_1)'`$ put Im A₀ = 0 at ω/ω∞ = 0.981–0.991 with
+  below, dip at k = 12 and rise again (0.9978, 0.99919, 0.99915, 0.99928, 0.99977 at k = 10–14). Padé approximants of $`(\ln S_1)'`$ put Im A₀ = 0 at ω/ω∞ = 0.981–0.991 with
   seven coefficients, 0.987–0.998 with eight, 0.992–0.998 with nine, and with ten they straddle ω∞: 0.9949–1.0034, the
   mutually consistent [2/7], [6/3] and [4/5] at 0.9995, 1.0000 and 1.0007; with eleven, all nine approximants cross
   between 0.9975 and 1.0008, eight of them within 0.9992–1.0008 (mean 0.9999); with twelve, the five central
@@ -1552,21 +1553,24 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   on the plants, it put the zero at 0.99992–1.00019, provided S₁ has no zeros besides x₀ within |x| ≈ 9; twelve
   coefficients could not exclude those, and functions with exactly the real σ₀…σ₁₂ have their zero anywhere in
   0.996–1.002, the far cases hiding a ring of zeros. The estimates also need every σₖ to about 10⁻¹⁰.
-- *Thirteen orders.* σ₁₃ converges at 960 bits with the late-order window J = 1000
-  (`solver/inner_amp/scan27J1000p960/`, relative error 1.5–1.9×10⁻¹³; at J = 750 it did not, `scan27phys/`). The arg
-  crossings keep falling (1.000299, 1.000197, 1.000109, 1.000046 at k = 10–13), G gives 0.999995 and the central Padé
-  approximants 0.99980–0.99990. Every ring of zeros constructed to fit σ₀…σ₁₂ mispredicts the thirteenth coefficient of
-  ln S₁ by 10%–300%, while the ring-free simple-zero law misses it by 8×10⁻⁴. Calibrated on the plants at thirteen
-  orders, arg and G put the zero at 0.99992–0.99996, and the one ring-free function that reproduces σ₀…σ₁₃ exactly, a
-  [6/7] Borel–Padé sum, puts it at 0.99998. Together, **ω*/ω∞ = 0.99992–0.99998, Δ∞ = 1.6440 ± 0.0001 (1.64393–1.64403)
-  from the D = ∞ inner equations alone**: an estimator range over five plant shapes and one completion, not a bound,
-  with no input from the finite-D solutions. Their value, 1.643893746, lies 4×10⁻⁵ below it and inside the wider
-  single-estimator range 1.6438–1.6442; five plant shapes are too few to read that gap as a disagreement. The range
-  assumes no zeros besides x₀ within |x| ≈ 12. A ring of fourteen or more zeros is still possible, and σ₁₄ is its test
-  ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md) §5). The rule itself is still a conjecture (hypotheses H1–H2,
+- *Fourteen orders.* σ₁₃ and σ₁₄ converge at 960 bits with the late-order window J = 1000
+  (`solver/inner_amp/scan29J1000/`; σ₁₄ to 3×10⁻¹³ relative, and a 1280-bit run agrees in every printed digit; at
+  J = 750 σ₁₃ did not converge, `scan27phys/`). The arg crossings keep falling (1.000299, 1.000197, 1.000109,
+  1.000046, 1.000026 at k = 10–14), and the effective exponent reaches 1.000. At k = 13 and 14 the factored series
+  gives 0.999995 and 1.000027, and the central Padé approximants give 0.99980–0.99990 and 0.99995–1.00013. Every ring
+  of zeros constructed to fit the known coefficients mispredicted the next coefficient of ln S₁: by 10%–300% at
+  k = 13 and by 35%–390% at k = 14. The ring-free Borel–Padé sums of σ₀…σ₁₃ predicted σ₁₄ to 1–6×10⁻⁷. Their
+  zeros, and those of the ring-free sums of σ₀…σ₁₄, lie at 0.99996–0.99999. Calibrated on planted functions, arg
+  and G put the zero at 0.99992–0.99996 at thirteen orders but at 1.00004–1.00005 at fourteen. That shift is larger
+  than either range, because the planted functions do not follow the real coefficients from one order to the next
+  ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md) §6). Taken together, **ω*/ω∞ = 0.99992–1.00005,
+  Δ∞ = 1.6439 ± 0.0001 (1.64381–1.64403) from the D = ∞ inner equations alone**. This is an estimator range over two
+  orders, five plant shapes and four completions, not a bound, and it uses no input from the finite-D solutions.
+  Their value, 1.643893746, lies inside it. The range assumes no zeros besides x₀ within |x| ≈ 12. A ring of fifteen
+  or more zeros is still possible, and σ₁₅ is its test. The rule itself is still a conjecture (hypotheses H1–H2,
   gaps (a)–(c)). Tightening the number needs more orders, approximants that model the competing singularity
-  explicitly (differential or algebraic approximants), or M = 7, which evaluates the multiplier at real amplitude with
-  no series to resum (done: 1.000022).
+  explicitly (differential or algebraic approximants), or M = 7, which evaluates the multiplier at real amplitude
+  with no series to resum (done: 1.000022).
 - *Shape.* The shape predictions at A = 2.72 are F₃/F₁ = 0.0551, F₅/F₁ = 0.00314 (data: above), and the D = ∞
   relation evaluated at each D's own amplitude and ω tracks the measured F₃/F₁ at D = 20–60 to within 0.004–0.006
   (0.126, 0.099, 0.087, 0.080, 0.075 against 0.130, 0.105, 0.093, 0.085, 0.080; `harm_pred.py`, heuristic).
@@ -1576,7 +1580,8 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
 **The selection rule from the inner problem alone** (`solver/plot_selection.py`). Top: where the harmonic-1 multiplier
 has a real zero, order by order in the amplitude expansion. The simple-zero estimates (arg τ_k = π) come down from above,
 the floating-exponent estimates come up from below, and the shaded bracket between them narrows onto the line at 1, which
-is ω∞ from the finite-D solutions; the Padé approximants (ranges) and the factored series land inside it. Bottom left:
+is ω∞ from the finite-D solutions; the Padé approximants (ranges) and the factored series land inside it through k = 13
+and reach just above its top edge at k = 14. Bottom left:
 keeping M harmonics, the error alternates in sign and shrinks fifteen- to twentyfold per pair; M = 7 lands inside the
 range predicted from M ≤ 5 (dashed).
 Bottom right: the effective exponent of the zero tends to 1, a simple zero, which is why the estimates from above are the
@@ -1584,12 +1589,14 @@ asymptotically correct ones.
 
 ![The selection rule's estimates as distance from the finite-D answer on a log scale, with the calibrated band and the order-14 projections](solver/selection_zoom.svg)
 
-**The same estimates as distance from the finite-D answer** (`solver/plot_selection_zoom.py`, with σ₁₃). On a log scale
-steady convergence is a straight line: from above, the estimates fall by about ×0.53 per order from k = 4 to 13. The
-shaded band is where the K = 13 calibration puts the zero, 2–8×10⁻⁵ below 1. The two pictures look alike so far, and the
-next order is where they separate. In a simple geometric model through k = 12 and 13 (not a calibrated estimator), the
-order-14 estimate lands 1.9×10⁻⁵ above 1 if the zero is exactly at 1, and 0.4–1.4×10⁻⁵ above 1 if it is in the band. So a
-converged σ₁₄ would favour one or the other. It is also the test for a ring of fourteen zeros.
+**The same estimates as distance from the finite-D answer** (`solver/plot_selection_zoom.py`, with σ₁₄). On a log
+scale steady convergence is a straight line: from above, the estimates fall by about ×0.53 per order from k = 4 to
+14. The shaded band is where the K = 13 calibration put the zero, 2–8×10⁻⁵ below 1. The hollow marks at k = 14 are
+what a simple geometric model through k = 12 and 13 (not a calibrated estimator) predicted before σ₁₄ was known:
+1.9×10⁻⁵ above 1 if the zero is exactly at 1, and 0.4–1.4×10⁻⁵ if it is in the band. The measured crossing is
+2.6×10⁻⁵ above 1, nearer the first. The dashed trend of k = 4–13 extrapolated to 2.57×10⁻⁵. The same model had missed
+k = 13 by 1.4×10⁻⁵, so this favours a zero at 1 without excluding the band. At fourteen orders the calibrated range
+moved up and now contains 1 ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md) §6).
 
 ![The echo's harmonic spectrum: amplitude of each odd harmonic for D = 4 to 60 with the D = infinity prediction, and the decay rate per harmonic against 1/(D-2)](solver/spectrum.svg)
 

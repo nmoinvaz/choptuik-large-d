@@ -80,9 +80,10 @@ F_n → F_∞, ω_n → ω_∞ in the sense of hypothesis (H1) has S(F_∞, ω_�
 
 The numerics so far are consistent with all three: the twelve-order amplitude expansion brackets ω*/ω∞ in
 0.99915–1.00011 with Padé estimates 0.9999, and the five-harmonic truncation gives 0.999228 (README, "Where that leaves
-it"). A planted-truth test of those estimators (notes/PLANTED_SELECTION.md) puts the zero at 0.99992–0.99998 at
-thirteen orders if S₁ has no other zeros within |x| ≈ 12; the thirteenth coefficient rejected every ring of zeros
-constructed so far, but cannot exclude a larger one. They are evidence, not part of the proof.
+it"). A planted-truth test of those estimators (notes/PLANTED_SELECTION.md) puts the zero at 0.99992–1.00005 over
+thirteen and fourteen orders (an estimator range, which contains the finite-D value) if S₁ has no other zeros within
+|x| ≈ 12; the thirteenth and fourteenth coefficients rejected every ring of zeros constructed so far, but cannot
+exclude a larger one. They are evidence, not part of the proof.
 
 ## 2. What is already proved here
 
