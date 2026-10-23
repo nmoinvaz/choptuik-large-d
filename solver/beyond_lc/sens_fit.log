@@ -1,0 +1,20 @@
+window          N    free fit a n + p ln n (a, p, rms) | exp (a, rms) | power (p, rms) | e^(n/2) n^p (p, rms)
+D   40-61.1   517   a= 0.004 p= 21.51 rms=0.023 | a=0.437 rms=0.147 | p=21.71 rms=0.023 | p= -3.07 rms=0.167
+   frozen regime D = 40-61: power law (power-law rms 0.023 vs e^(n/2) n^p rms 0.167)
+D   45-61.1   473   a=-0.049 p= 24.29 rms=0.019 | a=0.421 rms=0.096 | p=21.76 rms=0.021 | p= -4.04 rms=0.112
+D   36-61.1   559   a= 0.046 p= 19.38 rms=0.030 | a=0.452 rms=0.204 | p=21.55 rms=0.038 | p= -2.16 rms=0.227
+D   15-26.5   102   a= 0.418 p=  3.48 rms=0.093 | a=0.612 rms=0.104 | p=10.95 rms=0.136 | p=  2.02 rms=0.095
+
+local growth of s per unit of D (least squares in 3-unit bins), and the power law n^p it implies
+  D 36-39: x1.737 per unit  (n^p with p = 19.6)
+  D 39-42: x1.706 per unit  (n^p with p = 20.6)
+  D 42-45: x1.680 per unit  (n^p with p = 21.5)
+  D 45-48: x1.644 per unit  (n^p with p = 22.1)
+  D 48-51: x1.584 per unit  (n^p with p = 21.8)
+  D 51-54: x1.541 per unit  (n^p with p = 21.9)
+  D 54-57: x1.497 per unit  (n^p with p = 21.6)
+  D 57-60: x1.456 per unit  (n^p with p = 21.2)
+  D 60-63: x1.401 per unit  (n^p with p = 20.1)
+
+accepted residual |F|, D = 36-60.1: x1.455 per unit of D (README: floor rises about 1.4-fold); 1/x_m for x_m = 0.7: 1.4286
+PASS
