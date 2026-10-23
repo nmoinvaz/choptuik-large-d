@@ -611,3 +611,9 @@ ValueError: need 15 segments, got 14
 11:06:58 D 3.15: the next point would end after 10.0 h of wall time (10.47 h used, this point 2.98 h): no node change
 11:06:58 point 3.15 took 28.9 min of solves, 178.6 min of running time; 10.47 h used
 11:06:58 STOP: 10.0 h of wall time used
+12:33:43 stage 2 (coordinator): resumed from D 3.15 with the merged build (main + wip/largeD-mixed + M = 512), --hours 30 (stop at D 3.05 or 30 h), --point_hours 20 (the 3-hour point rule would stop points at M = 256-384), M up to 384; first the node change at D 3.15 that the budget skipped
+12:33:44 resuming: M 192/256, last D 3.15, 10.47 h used
+12:33:50 D 3.15: series tails of the M 192 solution resampled to M 256: 2.3e-28 (centre), 1.3e-23 (horizon)
+12:33:50 D 3.15: tails 4e-59 (centre) 2e-17 (horizon) above 1e-30: nodes [0.000625, 0.00125, 0.0025, 0.005, 0.01, 0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9] -> [0.000625, 0.00125, 0.0025, 0.005, 0.01, 0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95]
+12:34:09   D 3.15 M 192: start 're-noded' |F| 4.85e-24 (398 steps)
+12:34:14 D 3.15 M 192: L 14593, steps 398, start |F| 4.8e-24

@@ -12,10 +12,10 @@ Status: done (branch `wip/high-m`); stage 1 verified, the pilot stopped by its 1
 - **Verification (section 2).** Everything at M ≤ 128 is bit-identical to main (17 + 168 outputs compared); `cargo
   test` passes; the block step equals the dense step to the dense f64 LU's own rounding at M = 16–128, and its two
   controls fire; Newton converges to the same solution (Δ to 1.3×10⁻³⁰).
-- **D = 3.7, M = 80 to 256 (section 3).** Δ changes by −1.24×10⁻⁹, −3.4×10⁻¹¹, −3.2×10⁻¹⁵ and −1.6×10⁻¹⁸ from M = 80
-  to 96, 128, 160 and 192 (|F| ≤ 3.4×10⁻²⁹), shrinking fast but not at one rate; M_256_SUMMARY The local machine's
-  M = 96 value and M 80 → 96 change agree. M ≥ 192 needed a node set with the first node at 0.0025 and the last at
-  0.9 (section 1.4): its weakest directions are nonlinear there, which neither the f64 Jacobian nor exact
+- **D = 3.7, M = 80 to 256 (section 3).** Δ changes by −1.24×10⁻⁹, −3.4×10⁻¹¹, −3.2×10⁻¹⁵ and −1.6×10⁻¹⁸ from M = 80 to
+  96, 128, 160 and 192, and −3.2×10⁻²¹ to M = 256 (|F| ≤ 3.4×10⁻²⁹ throughout), shrinking fast but not at one rate. The
+  local machine's M = 96 value and M 80 → 96 change agree. M ≥ 192 needed a node set with the first node at 0.0025 and
+  the last at 0.9 (section 1.4): its weakest directions are nonlinear there, which neither the f64 Jacobian nor exact
   Jacobian–vector products fix.
 - **Time and memory (section 4).** One Newton step on the 2 cores with nothing else running: M = 160 90–100 s on
   230–280 Taylor steps (4.5 minutes on a 700-step pass-1 plan), M = 192 3.4 minutes on 327 steps (7 on 723), M = 256
@@ -295,10 +295,11 @@ hmax 0.05), each M lifted from the one below in two passes (`highm_check.py lift
 
 - **The M differences shrink fast but not at one rate:** −1.24×10⁻⁹ (80 → 96, 16 modes), −3.36×10⁻¹¹, −3.23×10⁻¹⁵,
   −1.62×10⁻¹⁸ (32 modes each) and −3.23×10⁻²¹ (192 → 256, 64 modes); successive ratios 0.027, 9.6×10⁻⁵, 5.0×10⁻⁴ and
-  2.0×10⁻³. So Δ(3.7) is converged in M to about 10⁻¹⁸ at M = 192, with the M = 256 value taken as
-  Δ(3.7) = 3.4652004822716389520 and the last difference as its error estimate (an estimator, not a bound; the last
-  change is at the level at which a change of the Taylor plan moves Δ, 10⁻²⁴–7×10⁻²², below). The local machine's M = 96 value, 3.4652004823053, agrees with the M = 96
-  here to all its digits (3.4652004823052730), and its M 80 → 96 difference, −1.2×10⁻⁹, with −1.24×10⁻⁹.
+  2.0×10⁻³. So Δ(3.7) is converged in M to about 10⁻¹⁸ at M = 192, with the M = 256 value taken as Δ(3.7) =
+  3.4652004822716389520 and the last difference as its error estimate (an estimator, not a bound; the last change is at
+  the level at which a change of the Taylor plan moves Δ, 10⁻²⁴–7×10⁻²², below). The local machine's M = 96 value,
+  3.4652004823053, agrees with the M = 96 here to all its digits (3.4652004823052730), and its M 80 → 96 difference,
+  −1.2×10⁻⁹, with −1.24×10⁻⁹.
 - **The node sets agree:** 13 against 15 nodes, 6.7×10⁻³¹ at M = 128 and 4.1×10⁻³⁰ at M = 160; the 15-node M = 80
   differs from the original 13-node M = 80 state by −5.4×10⁻³⁰.
 - **The plans:** pass 1 runs on the resampled start's own plan (3–4 times the steps of the converged solution's),
