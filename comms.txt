@@ -2629,3 +2629,12 @@ Do not touch: the gamma runs (mode_det is exact double-double and is not part of
 How to stop safely: stop a process just after an iteration line appears in its log (the checkpoint is written then),
 load the checkpoint once to confirm it reads, then restart. If it does not load, restart from the last good state.
 Report: each process restarted, the iteration and |F| it resumed from, and its per-iteration time with f64.
+
+== 2026-10-22 19:14 PDT cloud
+T41 (user's goal: see how far toward D = 3 we can get). Change to T35's stop rule: when the M 96 chain stops resolving
+(M 96 -> 128 above 1e-8, or an M 96 point that does not converge after halving to 0.005), do not stop. Continue the
+chain directly at M 128 with --jac f64 from the last M 128 states (cubic predictor, steps of 0.05 with halving), as
+soon as your 3.6 f64-vs-dd M 128 check has passed; if it failed, at M 128 with dd. At each M 128 point keep the M 96
+value too (it is the error estimate). Stop when M 128 itself is unresolved (two failed halvings at 0.005), and report
+the lowest D with its M 96 -> 128 difference. 128 is the kernel's current cap; a branch lifting it (M 160-384, block
+storage of the Jacobian) is being built on the cloud, with a pilot run there. Gamma as before where threads allow.
