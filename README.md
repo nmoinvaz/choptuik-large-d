@@ -1892,9 +1892,14 @@ Jacobian and an unexplained drift of the gauge mode's root).
   ([proof/C_selection.md](proof/C_selection.md)). For M = 1 the two contraction arguments are certified in ball
   arithmetic: the global continuation of the centre-regular solution, and the inner–outer matching on the matching
   domain, for n ≥ e^{73.89} ([proof/B8_constants.md](proof/B8_constants.md), [proof/B5_inner.md](proof/B5_inner.md)).
-  The one-harmonic selection theorem B(1) is not yet proved: the error of the jump lemma is only estimated, a light-cone
-  step and the transport of the jump along x > 1 are not written, the continuation's exact light-cone gauge has not been
-  run, and the new certificate code has not been reviewed independently. The canonical status, link by link, is C_selection.md §13.
+  **The one-harmonic selection theorem B(1) is certified, assuming Braaksma's theorem:** for every n ≥ e^{89.75},
+  exactly one parameter p_n = (A_n, ω_n/ω∞) in Theorem A's box gives a centre-regular solution, in the light-cone
+  gauge, that is analytic across the light cone, and |p_n − p*| ≤ e^{67.84}/n ([proof/B_chain.md](proof/B_chain.md)
+  §15). The last links were the light cone itself: the continuation carried up to x = 1 in the exact light-cone gauge
+  (Lemma LC, a contraction) and a proof that the outer jump vanishes with its label (Lemma J). "The" solution is unique
+  within a neighbourhood of the formal series. None of the certificate code has been reviewed independently yet
+  ([notes/PROOF_QUEUE.md](notes/PROOF_QUEUE.md), P2), and the threshold is far beyond any D a solver reaches, so it
+  does not yet identify the computed branch (P7). The canonical status, link by link, is C_selection.md §13.
 - **The critical exponent, and why γ∞ = 1/2: [Proposition 5](#proposition-5-the-unstable-mode-at-infinite-d-is-exact).**
   λ = 1/γ is also selected beyond all orders; in the inner problem λ = 0, 1 and 2 are exact, from symmetries, and the
   λ = 2 mode, from the r²-shift of the inner heat equation, explains γ∞ = 1/2. The 1/n coefficient 3.0324 is reproduced to

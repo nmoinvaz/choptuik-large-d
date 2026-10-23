@@ -68,9 +68,11 @@ the late orders of the $1/n$ series encode the coefficient as the Stokes multipl
 $x \sim \sqrt n$ the equations reduce to an $n$-free inner problem, the leading-order large-$D$ system of Rozali and Way, and we
 conjecture that the period is selected by the vanishing of its fast-type Stokes multipliers. In the inner problem a shift
 of $r^2$ gives an exact unstable mode with growth rate $2$, which yields the critical exponent $1/2$ under the conjecture
-and two further hypotheses. We reduce a selection theorem for models with finitely many harmonics to lemmas, certify its
-two contraction arguments for one harmonic, and prove by a computer-assisted argument, assuming Braaksma's summability theorem, that the selection
-condition of the one-harmonic model has exactly one zero in an explicit box, and that it is simple. Evaluated numerically
+and two further hypotheses. We reduce a selection theorem for models with finitely many harmonics to lemmas, and prove by a
+computer-assisted argument, assuming Braaksma's summability theorem, that the selection condition of the one-harmonic model
+has exactly one zero in an explicit box, and that it is simple. For that model the selection theorem itself is then
+certified, assuming Braaksma's theorem: for $n \ge e^{89.75}$ exactly one parameter in the box gives a solution analytic
+across the light cone, within $e^{67.84}/n$ of the zero. Evaluated numerically
 without truncation, the conjectured rule gives $\Dinf = 1.6439 \pm 0.0001$ if the selection function has no other nearby
 zeros. The work was done by an AI model (Claude, Anthropic) under the author's direction and has not been reviewed by a human expert.
 \end{abstract}
@@ -126,8 +128,9 @@ exact perturbation with growth rate $2$ (Proposition~\ref{prop:5}); under Conjec
 unstable mode and continuity in $1/n$, the critical exponent tends to $1/2$ (Corollary~\ref{cor:gamma}).
 \item A selection theorem for $M$-harmonic models (Theorem~\ref{thm:B}), after Xie and Tanveer, is reduced to lemmas.
 The two contraction arguments among them, the global continuation and the inner--outer matching, are proved for each
-fixed $M$ and carried out with computer-assisted constants for $M = 1$ and $n \ge e^{73.89}$; what the one-harmonic theorem
-still lacks is listed in Section~\ref{sec:B1status}.
+fixed $M$ and carried out with computer-assisted constants for $M = 1$ and $n \ge e^{73.89}$. For $M = 1$ the theorem is
+certified, assuming Braaksma's theorem, for $n \ge e^{89.75}$, with the light cone handled in the exact light-cone gauge
+(Section~\ref{sec:B1status}); the certificate code has not been reviewed independently.
 \item For the one-harmonic truncation, the selection condition has exactly one zero in an explicit box of half-width
 $10^{-9}$, and it is simple (Theorem~\ref{thm:A}). The proof is computer-assisted, assumes only Braaksma's summability
 theorem, and follows Baldom\'a, Capi\'nski, Guardia and Seara~\cite{BaldomaCapinskiGuardiaSeara2023}.
@@ -155,7 +158,7 @@ Proposition~\ref{prop:4} & late orders of the leading-order series; $C(n,s)$ as 
 Conjecture~\ref{conj} & selection at $D = \infty$ by the inner multipliers & conjecture, with argument \\
 Proposition~\ref{prop:5} & exact $\lambda = 2$ mode of the inner problem & proved; part (i) checked symbolically \\
 Corollary~\ref{cor:gamma} & $\gamma_\infty = 1/2$ & conditional on Conjecture~\ref{conj} and two hypotheses \\
-Theorem~\ref{thm:B} & selection for the $M$-harmonic model & conditional on the lemmas of Table~\ref{tab:Bstatus}; for $M = 1$ not yet proved (Section~\ref{sec:B1status}) \\
+Theorem~\ref{thm:B} & selection for the $M$-harmonic model & conditional on the lemmas of Table~\ref{tab:Bstatus}; for $M = 1$ certified, assuming Braaksma's theorem, $n \ge e^{89.75}$ (Section~\ref{sec:B1status}); not independently reviewed \\
 Lemmas B1, B5.1, B6$'$, B8.1, B8.2; B2, B5.0 & ingredients of Theorem~\ref{thm:B} & proved; B2 and B5.0 checked symbolically \\
 Theorem~\ref{thm:A} & one simple zero of the $M = 1$ selection condition & certified (computer-assisted), assuming Braaksma's theorem \\
 Section~\ref{sec:A3} & one simple zero of the $M = 3$ selection condition & certified (computer-assisted), assuming Braaksma's theorem; not independently reviewed \\
@@ -948,10 +951,12 @@ B4($M$) & inner multipliers well defined, analytic in $(F, \omega)$ & cited (Bra
 B5.0 & exact equations $=$ inner problem $+$ corrections in $1/n$ & proved \\
 B5.1 & fast-mode variable and matching factor & proved \\
 B5($M$)(1) & sectorial identification on $\mathcal M^\pm$ & proved given (H8); certified for $M = 1$, $n \ge e^{73.89}$ \\
-B5($M$)(2) & outer jump $= \kappa[S + o(1)]$ & proved given B5($M$)(1); for $M = 1$ the error constant is only estimated \\
-B6$'$, B6($M$) & light-cone matching; Volterra bound & proved, up to a routine block-diagonalization \\
+B5($M$)(2) & outer jump $= \kappa[S + o(1)]$ & proved given B5($M$)(1); for $M = 1$ certified in label form, error $\le e^{76.94}/n$ for $n \ge e^{73.89}$ \\
+B6$'$, B6($M$) & light-cone matching; Volterra bound & proved, up to a routine block-diagonalization; not needed for $M = 1$ in label form \\
+B7($M$) & implicit function theorem & proved given the lemmas; for $M = 1$ certified (Krawczyk test), $n \ge e^{89.75}$ \\
 B8.1, B8.2 & progressive paths; Stokes geometry & proved \\
-B8($M$) & global continuation & proved; certified for $M = 1$, $n \ge e^{62}$, and (H8) for $n \ge e^{73.89}$ \\
+B8($M$) & global continuation & proved; certified for $M = 1$, $n \ge e^{62}$, and (H8) for $n \ge e^{73.89}$; for $M = 1$ also up to $x = 1$ in the exact light-cone gauge \\
+light cone & the jump vanishes with its label & certified for $M = 1$, $n \ge e^{73.89}$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1283,21 +1288,33 @@ small information enters only at the evaluation point $z_*$.
 
 \subsection{Status of Theorem B(\texorpdfstring{$1$}{1})}
 \label{sec:B1status}
-For $M = 1$ the model is that of Definition~\ref{def:Mmodel}, which is also the model of Theorem~\ref{thm:A}, and every link
-of the chain is proved or certified except the following, so Theorem~\ref{thm:B} for $M = 1$ is not yet proved
-(\repo{proof/C\_selection.md}, \S13.1, lists every link with its status and its threshold in $n$):
+For $M = 1$ the model is that of Definition~\ref{def:Mmodel}, which is also the model of Theorem~\ref{thm:A}. Every link of
+the chain is now proved or certified, assuming Braaksma's theorem, with the selection function taken to be the label of the
+outer jump at a fixed point of the Stokes line rather than the light-cone coefficient $C_{n,\mu}$ of \eqref{eq:Cnmu}
+(\repo{proof/B\_chain.md}, \S15; \repo{proof/C\_selection.md}, \S13.1, lists every link with its status and its threshold in $n$):
+
+\begin{quote}
+\emph{Theorem B($1$), certified form.} For every $n \ge n_0 = e^{89.75}$ there is exactly one $p_n = (A_n, \omega_n/\omega_\infty)$
+in the box $X$ of Theorem~\ref{thm:A} for which the centre-regular solution of the one-harmonic model in the light-cone gauge
+$c(1) = 1$ is analytic at the light cone, and $|p_n - p_*|_\infty \le e^{67.84}/n$, where $p_*$ is the zero of
+Theorem~\ref{thm:A}. Uniqueness of the light-cone-gauge solution holds within a neighbourhood of the formal series.
+\end{quote}
+
+The links beyond those of the previous subsections are:
 \begin{itemize}
-\item the error in Lemma~B5(2) is only estimated: for the implicit function theorem on the box of Theorem~\ref{thm:A} it must
-be about $10^{-7}$ or less, including its derivative, which needs $\ln n \gtrsim 285$ at $k_1 = 0.6$, where Lemmas~B5(1) and B8
-are certified, or $\ln n \gtrsim 104.7$ at $k_1 = 0.85$, where Lemma~B8 has not been run;
-\item the block-diagonalization in Lemma~B6($M$) is not written;
-\item the error control of the outer transport of the jump along $x > 1$, from the light cone to the inner arc, which
-enters the explicit factor $\kappa_{n,\mu}$, is not written (Lemmas~B6$'$ and B6 cover $x < 1$);
-\item Lemma~B8 is certified in the gauge $c(0) = c^K(0)$, the light-cone gauge up to $O(n^{-5})$; its extension to the exact
-light-cone gauge is proved by hand but has not been run;
-\item the certificate code of Lemmas~B5(1) and B8 has not been reviewed independently.
+\item the labels of the inner fast-type solutions (relative error at most $0.353$), and Lemma~B5(2) in label form, with an
+error at most $e^{76.94}/n$ for $n \ge e^{73.89}$; the evaluation point need not move with $n$;
+\item an adjoint link between the Jacobian of Theorem~\ref{thm:A} and that of the multiplier, and Lemma~B7 by a Krawczyk test
+and a degree argument;
+\item Lemma~B8 continued into the light-cone half-disc in the exact light-cone gauge: near $x = 1$ every $D^{-1}$ is rewritten
+in bounded form, the constants are taken per radial band, and the continuation is a contraction (constant $0.7355$), with
+gauge offset $|c(0) - c^K(0)|_1 \le 3.59\times10^{6}\,n^{-5}$, inside the range for which Lemma~B8 and (H8) are certified;
+\item the outer jump vanishes when its label does: a contraction (constant $0.176$) on the Stokes segment, in a norm weighted by
+half the fast exponent.
 \end{itemize}
-Braaksma's theorem is assumed, as in Theorem~\ref{thm:A}.
+Lemma~B6 and the factor $\kappa_{n,\mu}$ are not needed in this form. Every certificate is in ball arithmetic and has a mutation control that makes it
+fail. None of the certificate code has been reviewed independently, and the threshold $n_0$ is far beyond any dimension a
+numerical solver reaches, so the theorem does not by itself identify the computed branch.
 
 \subsection{Gap (b): the harmonic tail}
 \label{sec:tail}
