@@ -60,6 +60,12 @@ def cross(svg, x, y, color, title, r=4.5):
             f'{y - r:.1f}" stroke="{color}" stroke-width="2"/><title>{esc(title)}</title></g>')
 
 
+def arrow(svg, x1, y1, x2, y2, width=1.3):
+    """a line from (x1, y1) with an arrowhead at (x2, y2); the head is the marker defined in main"""
+    svg.add(f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" stroke="{INK_SOFT}" '
+            f'stroke-width="{width}" marker-end="url(#bench-arrow)"/>')
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("-o", default=os.path.join(HERE, "bench_variants.svg"))
@@ -69,6 +75,8 @@ def main():
     Ds = sorted({D for D, _ in t})
     color = dict(zip(VARIANTS, SERIES))
     svg = Svg(980)
+    svg.add(f'<defs><marker id="bench-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" '
+            f'orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="{INK_SOFT}"/></marker></defs>')
     xr = (0, 64)
     # left: seconds per solve, log scale, with a "failed" row under the axis range
     lo, hi = math.log10(0.5), math.log10(200)
@@ -114,6 +122,24 @@ def main():
             for p in pts:
                 if p is not None:
                     marker(svg, p[0], p[1], c, p[2], r=4)
+    # which way is better: down on the left (less time), up on the right (more speedup)
+    ax = L.px + L.pw - 16
+    arrow(svg, ax, L.sy(math.log10(60)), ax, L.sy(math.log10(12)), width=1.6)
+    svg.text(ax - 6, L.sy(math.log10(30)) + 4, "faster", size=11, fill=INK, anchor="end")
+    ax = R.px + R.pw - 16
+    arrow(svg, ax, R.sy(6.2), ax, R.sy(8.4), width=1.6)
+    svg.text(ax - 6, R.sy(7.3) + 4, "faster", size=11, fill=INK, anchor="end")
+    # what to read off the right panel
+    f64_last = max(D for D in Ds if t[(D, "f64")]["wall"] is not None)
+    sp = t[(f64_last, "dd")]["wall"] / t[(f64_last, "f64")]["wall"]
+    svg.text(R.sx(34), R.sy(8.05), "f64 alone: fast, but fails", size=11, fill=INK)
+    svg.text(R.sx(34), R.sy(8.05) + 14, "from D = 40", size=11, fill=INK)
+    arrow(svg, R.sx(33.5), R.sy(7.85), R.sx(f64_last) + 4, R.sy(sp) - 7)
+    hg_last = max(Ds)
+    sp = t[(hg_last, "dd")]["wall"] / t[(hg_last, "f64hg")]["wall"]
+    svg.text(R.sx(37), R.sy(5.2), "only f64 + dd horizon + GMRES", size=11, fill=INK)
+    svg.text(R.sx(37), R.sy(5.2) + 14, "converges at every D", size=11, fill=INK)
+    arrow(svg, R.sx(52), R.sy(5.2) + 20, R.sx(hg_last) - 2, R.sy(sp) - 8)
     # one legend row for both panels
     kx = 70
     for v in VARIANTS:

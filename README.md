@@ -643,8 +643,8 @@ with computed points rather than an assumed form. Its points are used in [The fo
 
 **The Newton variants against D** (`hp/plot_bench_variants.py`; data from `hp/bench_variants.py --repeat=3 --threads=4`
 on an otherwise idle laptop, i7-1185G7 with AVX-512, in `hp/data/bench_variants/bench_local.jsonl`). Left: seconds
-per whole solve, the median of three; right: the speedup over the double-double Jacobian; crosses mark a variant that
-did not converge. Up to D = 30 the f64 Jacobian alone, or with the loop, is 5–8 times faster; alone it fails from
+per whole solve, the median of three; right: the speedup over the double-double Jacobian; the arrows point the faster
+way, and crosses mark a variant that did not converge. Up to D = 30 the f64 Jacobian alone, or with the loop, is 5–8 times faster; alone it fails from
 D = 40, and with the loop alone (f64g) from D = 60. Only the horizon fix with the loop (f64hg) converges at every D, 1.6–2.6 times faster
 than double-double at D = 40–60. Every converged run gives the same Δ to 1.1×10⁻¹⁸.
 
