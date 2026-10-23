@@ -38,9 +38,11 @@ Each (state, variant, repeat) writes one JSON line to --out as soon as it is don
 an interrupted run resumes. At each state the variants run in turn, repeat after repeat, so that the machine's load
 hits them alike. The load (os.getloadavg, else psutil's, else none) is recorded before and after each run.
 
-Recorded per run: converged, iterations (Newton steps, the last confirming |F| < tol), whole-solve seconds, the steps'
-seconds by part summed (residual, Jacobian, LU, solves, products) and per step, the products, final |F|, Delta (hi,
-lo) and its difference from the dd run of the same state and repeat.
+Recorded per run: converged, iterations (Newton steps, the last confirming |F| < tol), how many of them were exact
+(driver dd_finish: the mixed variants finish with exact steps once a mixed step stalls), whole-solve seconds, the
+steps' seconds by part summed (residual, Jacobian, LU, solves, products) and per step, the products, final |F|,
+Delta (hi, lo) and its difference from the dd run of the same state and repeat. --step_tol and --max_products set the
+correction loop's options (driver.GMRES otherwise).
 
 --calibrate: for each state, eps = 1e-1, 1e-2, ... down to 1e-13 (1e-8 ... 1e-14 with --perturb=random): the
 double-double variant from that start, at most 10 Newton steps (a start with |F| above 1e-4 is not tried: the dd
@@ -193,7 +195,7 @@ def start_of(st, eps, kind="secant", seed=1):
     return st["zh"] + eps * st["secant"], st["zl"].copy()
 
 
-def solve(st, jac, eps, threads, seed=1, it_max=None, kind="secant"):
+def solve(st, jac, eps, threads, seed=1, it_max=None, kind="secant", gmres=None):
     m = st["meta"]
     s = make_solver(m["D"], m["M"], nodes=m["nodes"], kt=m["kt"], kc=m["kc"], ks=m["ks"], threads=threads, kfreeze=st["kf"])
     s.set_segs(st["segs"])
@@ -203,9 +205,9 @@ def solve(st, jac, eps, threads, seed=1, it_max=None, kind="secant"):
     t = time.time()
     try:
         if deflated:
-            a, b, hist = deflated_newton(s, zh, zl, tol=st["tol"], it_max=it_max or 25, w=24, verbose=False, jac=jac)
+            a, b, hist = deflated_newton(s, zh, zl, tol=st["tol"], it_max=it_max or 25, w=24, verbose=False, jac=jac, gmres=gmres)
         else:
-            a, b, hist = newton_solve(s, zh, zl, tol=st["tol"], it_max=it_max or 12, verbose=False, jac=jac)
+            a, b, hist = newton_solve(s, zh, zl, tol=st["tol"], it_max=it_max or 12, verbose=False, jac=jac, gmres=gmres)
         err = None
     except Exception as e:  # noqa: BLE001
         a, b, hist, err = zh, zl, [], f"{type(e).__name__}: {e}"[:300]
@@ -218,6 +220,7 @@ def solve(st, jac, eps, threads, seed=1, it_max=None, kind="secant"):
                 Delta_lo=float(b[-1]), parts={k: round(v, 4) for k, v in parts.items()},
                 per_step={k: round(v / max(steps, 1), 4) for k, v in parts.items()},
                 products=int(sum(r.get("products", 0) for r in hist)), retry_dd=sum(1 for r in hist if r.get("retry_dd")),
+                exact_steps=sum(1 for r in hist if "t_jac" in r and r.get("jac", jac) == "dd"),
                 solver="deflated" if deflated else "newton", error=err,
                 dDelta_est=next((r.get("dDelta_est") for r in reversed(hist) if r.get("dDelta_est") is not None), None))
 
@@ -259,9 +262,10 @@ def run(opts):
                 eps = float(opts.get("eps", eps_tab.get(label, {}).get("eps", 1e-4)))
                 kind = opts.get("perturb", eps_tab.get(label, {}).get("perturb", "secant"))
                 l0 = loadavg()
-                r = solve(st, v, eps, threads, kind=kind)
+                g = {k: typ(opts[k]) for k, typ in (("step_tol", float), ("max_products", int)) if k in opts} or None
+                r = solve(st, v, eps, threads, kind=kind, gmres=g)
                 rec = dict(state=label, D=st["D"], M=st["M"], kc=st["meta"]["kc"], kc_state=st["meta"]["kc_meta"], variant=v,
-                           repeat=rep, eps=eps, perturb=kind,
+                           repeat=rep, eps=eps, perturb=kind, gmres=g,
                            neighbour=st["neighbour"], tol=st["tol"], load_before=l0,
                            load_after=loadavg(), machine=machine, time=time.strftime("%Y-%m-%d %H:%M:%S"), **r)
                 ref = done.get((label, "dd", rep))
@@ -271,7 +275,8 @@ def run(opts):
                     f.write(json.dumps(rec) + "\n")
                 done[(label, v, rep)] = rec
                 ps = r["per_step"]
-                print(f"  {label} {v:6s} rep {rep}: {'converged' if r['converged'] else 'NOT converged'} in {r['its']} its, "
+                print(f"  {label} {v:6s} rep {rep}: {'converged' if r['converged'] else 'NOT converged'} in {r['its']} its"
+                      + (f" ({r['exact_steps']} exact)" if v != "dd" and r["exact_steps"] else "") + ", "
                       f"{r['wall']:.1f} s; per step: Jacobian {ps['t_jac']:.2f} s, LU {ps['t_lu']:.2f} s, products "
                       f"{ps['t_prod']:.2f} s ({r['products']} in all); |F| {r['F']:.1e}"
                       + (f"; Delta - dd {rec['dDelta_vs_dd']:+.1e}" if "dDelta_vs_dd" in rec else "")

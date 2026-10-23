@@ -246,6 +246,23 @@ error. `--calibrate` tries ε = 10⁻¹, 10⁻², … with the double-double var
 The basin is a start |F| of about 10⁻⁶ to 10⁻⁵ wherever the deflated Newton runs, and only 5.5×10⁻⁸ for the plain
 Newton at D = 20. In z it is tiny at large D: a step of 10⁻¹⁰ toward a neighbour one unit of D away.
 
+**Running it on the local machine** (Windows, i7-1185G7, 4 cores; from a checkout of `wip/largeD-mixed`):
+
+```
+cd hp
+bash build.sh                          (or, in PowerShell: $env:RUSTFLAGS="-C target-cpu=native";
+                                        maturin build --release --out dist;
+                                        pip install --force-reinstall --no-deps (Get-Item dist\hpkernel-0.1.0-*.whl))
+python bench_variants.py --repeat=3 --threads=4
+python bench_variants.py --report --out=data\bench_variants\bench_<host>.jsonl
+```
+
+The records go to `data\bench_variants\bench_<host>.jsonl` (`--out` to change it); an interrupted run resumes where it
+stopped when started again with the same arguments. The script lowers its own priority (`os.nice` on Linux; on
+Windows through psutil, if installed, to below normal; `--no-nice` keeps it) and records the load average (psutil's
+on Windows) before and after every run. `--states=50,55,60 --variants=dd,f64h,f64hg` restricts a run. Nothing else is
+needed: the prepared states and `eps.json` are in the repository.
+
 ## 6. The default paths are unchanged
 
 Everything new is opt-in: `horizon_dd=0`, `Solver.jvp` and `step_timing` are new, `jac="dd"` (the default of
@@ -266,12 +283,72 @@ Everything new is opt-in: `horizon_dd=0`, `Solver.jvp` and `step_timing` are new
 
 ## 7. Other findings
 
+1. **The D = 30.07 state's settings are the scan's; the state is a junk-accepted point.** MIXED_PRECISION §8 notes
+   that `mixed_largeD.py`'s settings leave |F| = 3×10⁻¹² there and concludes that the scan used something else. With
+   those settings (nodes 0.3–0.7, kt 36, kc 414, ks 100, no kfreeze, plan(z, 10⁻³², 0.05)) the residual is
+   3.3277×10⁻¹², and `hp/data/delta_dd.csv` records 3.328×10⁻¹² for that point (run up6). The same settings reproduce
+   the recorded |F| at D = 29.05 (6.283×10⁻¹⁶), 25.08 (1.217×10⁻²⁸) and 40.02 (1.964×10⁻²⁶, kfreeze 13). Run up6
+   (D = 26.9–35.2) ran with `--junk_only` and accepted points whose linearised Δ correction was below 10⁻¹⁴ at |F| up
+   to 1.7×10⁻¹¹ (NUMERICS_REVIEW §1k). So the settings are right, and the footnote's inference is not: the state is
+   not converged in its junk directions. The bench uses it frozen at kfreeze 13 and converged (§5).
+2. **The scan's kc = 420 at large D costs a factor 3 in the double-double Jacobian for nothing.** At the D = 50 state
+   the centre series' terms |c_k| x₀^k fall to 7×10⁻¹³⁴ by order 420 (7×10⁻⁵² by 160). With kc = 160 the residual and
+   the double-double Jacobian are bitwise the same as with 420, and the Jacobian takes 5.8 s instead of 18.6 s, the
+   residual 0.042 s instead of 0.126 s (same run, load average 13). The order at which the terms stay below 10⁻⁴⁵,
+   plus 10, is 134 (D = 60), 149 (50), 174 (40) and 217 (30.07), and the residual is bitwise unchanged at each
+   (`bench_variants.py --kc=auto`). The scan raised kc by 1.25 whenever its tail check saw a tail above 10⁻³³ (it
+   reached 414 by D = 27, in the unfrozen junk-accepted run); it never lowers it. Lowering it is the cheapest speedup
+   of the double-double path at large D and changes no number; proposed for the coordinator. It also matters for the
+   comparisons here: the double-double times at large D in §4 (as the scan ran, kc = 420) are about 3 times what they
+   need to be, while the f64 Jacobian stops its series by itself (`Tail`).
+3. **Rounding amplification reaches the double-double Jacobian.** The dual pass is not exactly linear in its tangent
+   at large D (§2): J(v₁ + v₂) − J v₁ − J v₂ is 10⁻²⁸ (D = 20) and 1.3×10⁻²⁶ (D = 50) of (|J| |v|), and a tangent on two
+   columns differs from the sum of the two columns by up to 7×10⁻²³ of their size at D = 50. So the double-double
+   Jacobian's columns are accurate to about 10⁻²³–10⁻²⁶ relative there, not 10⁻³². This is harmless for Newton, whose
+   steps need far less, but it bounds any check of a double-double derivative at large D.
+4. **An f64 LU's ∂Δ/∂F is wrong by orders of magnitude at D ≈ 60.** The scan's per-point max |∂Δ/∂F| from the
+   double-double LU is 8.1–8.2×10¹³ at D = 59.83–59.85; from the f64 LU of the horizon-fixed Jacobian the same runs
+   recorded 2.8×10⁷–1.0×10⁸. The weakest singular value there (about 2×10⁻¹⁸ of the largest, MIXED_PRECISION §8) is
+   below what an f64 factorization resolves (2⁻⁵³ of the largest), so the transposed solve misses the direction that
+   carries the sensitivity. The forward steps are still accurate where the residual has little weight on that
+   direction (§1, §3), but the sensitivities, the Δ correction from the LU, and the weakest directions of the deflated
+   Newton are not. See §4 for what the solver does about it.
+5. **The plain Newton's basin at D = 20 is a start |F| of about 5×10⁻⁸** (from the calibration: 5.5×10⁻⁸ converged in
+   6 steps, 5.5×10⁻⁷ failed its first line search), 100 times smaller than the deflated Newton's at D = 30–60.
+6. **`scan_hp.py --predictor hermite` from a single state failed at D = 50**: the Euler step from the D = 50.01 state
+   with the tangent of `driver.tangent` gave a non-finite Jacobian ("singular or non-finite pivot at column 0 (NaN)")
+   at D = 50.0175 (`kfreeze 13`). Not investigated; the scan runs with the Lagrange predictor.
+
 ## 8. The M = 192 stall at D = 3.7 (for notes/HIGH_M.md §1.4)
+
+The question from the coordinator: does f64 + the correction loop with exact products get the M = 192 lift at D = 3.7
+to converge from the state where the plain f64-Jacobian Newton stalled
+(`hp/data/lowD_states/highm_p1_D3.7000_M192_stalled.npz`, |F| = 3.75×10⁻¹⁰, its own 511-step plan, 13 nodes,
+L = 10 753)? `python3 highm_gmres_check.py` (`newton_solve(jac="f64g")`, block storage, step_tol 10⁻¹⁰, at most 12
+products; one Newton call at a time; log and records in `data/mixed_precision/largeD_mixed/M192_f64g.log`, `.json`):
+
+| step | \|F\| before | loop: products, change of the step after each | line search | \|dz\| | ΔΔ |
+|---|---|---|---|---|---|
+| 0 | 3.75×10⁻¹⁰ | 12: 0.38, 0.040, 0.020, 1.3e-3, 4.8e-4, 4.1e-5, 4.7e-6, 1.8e-7, 4.1e-9, 1.1e-9, 5.1e-11 | λ = 1/2 | 7.9×10⁻⁸ | +2.6×10⁻¹³ |
+| 1 | 1.87×10⁻¹⁰ | 12: 4.7, 0.028, 4.2e-3, 1.6e-3, 5.9e-5, 1.8e-5, 6.3e-7, 6.6e-8, 7.2e-9, 2.4e-10, 9.2e-12 | λ = 1/4 | 1.6×10⁻⁷ | +5.0×10⁻¹⁵ |
+
+(The changes list starts at the second product; the first is 1 by definition.)
+
+- The plain f64 step is far from the exact step at M = 192: the loop's first corrections are 0.38 and 4.7 of the
+  step, so the high-M agent's diagnosis holds as far as it goes: the f64 Jacobian's rounding misplaces the step in a few
+  directions, which the loop corrects (to 10⁻¹¹ in 12 products, 15 s each against 2 220 s for the f64 Jacobian in
+  block storage under load 12).
+- **But the exact step does not converge either**: the line search cuts it to 1/2 and then 1/4, and |F| falls only from
+  3.75×10⁻¹⁰ to 1.9×10⁻¹⁰ to (step 2, below). At |F| ≈ 2×10⁻¹⁰ a Newton step of |dz| ≈ 10⁻⁷ along the weakest (junk)
+  directions is outside the quadratic model's range, as for the plain Newton at large D (MIXED_PRECISION §8, §5
+  above). So the stall at M = 192 is the weak directions' nonlinearity, not only the Jacobian's rounding; the
+  deflated Newton (the step with the weakest directions removed, which `deflated_newton(jac="f64g")` now provides)
+  or a start closer to the solution is what it needs. Not tried here (a single measurement, as asked).
 
 ## 9. Merge with wip/high-m
 
-This branch is wip/high-m (382d515) with main merged in, and wip/high-m's later commits 2b3b253, 985b137 and 59eca1e
-merged when they appeared. 2b3b253 added `jac="f64"` and `mixed` to `driver.deflated_newton`; this branch had added
+This branch is wip/high-m (382d515) with main merged in, and wip/high-m's later commits merged when they appeared
+(2b3b253, 985b137, 59eca1e; then 6ddbe6f, 45b8463, 052ed49, which changed no shared code). 2b3b253 added `jac="f64"` and `mixed` to `driver.deflated_newton`; this branch had added
 `jac` (all five variants), `mixed` and `gmres` to the same function. The conflict was resolved by keeping their
 signature and their `f64` path (the step from `s.newton_mixed(**mixed)`, the linearised Δ correction from the stored
 LU's transpose solve, no extra step at convergence) and routing every variant through `newton_step`, which for `dd`

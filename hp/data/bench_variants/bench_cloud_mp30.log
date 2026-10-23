@@ -1,0 +1,3 @@
+bench_variants: {'host': 'vm', 'platform': 'Linux-6.18.44-fc-v153-x86_64-with-glibc2.39', 'processor': 'x86_64', 'cpus': 2, 'python': '3.13.16', 'isa': 'avx512', 'threads': 2, 'priority': 'nice 10'}
+D40.0201_M32: reference |F| 2.0e-26, tol 2e-25, kfreeze 13, kc 174 (state's 420), 10 Taylor steps (up7_D40.0201.npz)
+  D40.0201_M32 dd     rep 0: converged in 6 its, 27.2 s; per step: Jacobian 4.31 s, LU 0.08 s, products 0.00 s (0 in all); |F| 2.8e-26; load [8.5, 9.23, 9.94]
