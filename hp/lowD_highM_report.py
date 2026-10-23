@@ -6,15 +6,14 @@ Grumiller & Jechtl's values, good to about 1e-5).
 
     cd hp && python3 lowD_highM_report.py [data/lowD_highM/pilot.jsonl] [--lift=data/lowD_highM/lift_D3.7.jsonl]
     cd hp && python3 lowD_highM_report.py --stage1 [--lift=...]
-    cd hp && python3 lowD_highM_report.py --project [--ladder=80,96,128,160,192,256,320,384,512]
+    cd hp && python3 lowD_highM_report.py --project [--ladder=80,96,128,160,192,256,320,384,512] [--dD=0.05]
 
---project: an estimate (not a bound) of the M and the time a continuation to D = 3.2, 3.1 and 3.05 would need at the
-pilot's criterion (the M difference below 1e-8): the modes K needed for 1e-8 from hp/lowD_cost.py's four model
-variants, scaled by the pilot's own crossing (the D where the M_w difference first exceeded 1e-8, with K = M_w - 1 at
-that D, against the model's lower value there); M_w the first rung of --ladder above K, M_n the next, M_c the one
-below; seconds per Newton iteration c M^3, c fitted to the pilot's iterations (t_its of hp/data/lowD_highM/
-pilot_points.jsonl, scaled to an idle 2-core machine by min(1, 2 / load) with the load from logs/load.log at that
-time); per point the pilot's mean iterations per solve at each role; the points at --dD (0.05) from the pilot's last D.
+--project: an estimate (not a bound) of the M and the time a continuation from the pilot's last D to D = 3.05 would
+need at the pilot's criterion (the M difference below 1e-8). Modes: hp/lowD_cost.py's model (four variants) checked
+against every pair and helper difference of the pilot (K = M - 1 sufficed or not); the lowest variant, scaled to fit
+them all, gives K. M_w is the first rung of --ladder with M - 1 >= K, M_n the next, M_c the one below. Time: the wall
+time of the pilot's last complete point (from logs/pilot.log; all its solves, two-pass solves included) scaled by
+sum(M^3) over its resolutions, plus a move up (the new M_n in two passes, 1.2 times its share) where the rungs change.
 --stage1: the D = 3.7 lifts (hp/highm_check.py lift): per node set and M, Delta (hi + lo, 25 digits), the change from
 the previous M, |F|, the Taylor steps of the two passes, the series tails, one Newton step's seconds by part, the LU's
 MB, the peak RSS and the load average; and the change from the M = 80 state and from the local machine's M = 96 value.
@@ -74,80 +73,14 @@ def load_at(t, loads):
 
 
 def project(opts):
+    """see the module docstring (--project)"""
     import datetime
-    import math
     import lowD_cost
     ladder = [int(v) for v in opts.get("ladder", "80,96,128,160,192,256,320,384,512").split(",")]
     dD = float(opts.get("dD", 0.05))
-    pts_path = os.path.join(HERE, "data", "lowD_highM", "pilot_points.jsonl")
+    target = 1e-8
     pairs = [json.loads(ln) for ln in open(os.path.join(HERE, "data", "lowD_highM", "pilot.jsonl")) if ln.strip()]
     pairs = [r for r in pairs if "Mw" in r]
-    loads = []
-    lp = os.path.join(HERE, "data", "lowD_highM", "logs", "load.log")
-    if os.path.exists(lp):
-        for ln in open(lp):
-            f = ln.split()
-            loads.append((datetime.datetime.fromisoformat(f[0]).timestamp(), float(f[1])))
-    # seconds per Newton iteration, scaled to an idle machine, per M
-    per = {}
-    for ln in open(pts_path):
-        r = json.loads(ln)
-        if not r.get("converged") or not r.get("t_its"):
-            continue
-        # the record is written at the end of the solve: its iterations ended about 'seconds' before... use the
-        # load logged at the record's end time when the solve's own time is not known; records carry no timestamp, so
-        # take the pilot log's timestamps instead
-        per.setdefault(r["M"], []).extend(r["t_its"])
-    stamp = {}
-    for ln in open(os.path.join(HERE, "data", "lowD_highM", "logs", "pilot.log")):
-        f = ln.split()
-        if len(f) > 4 and f[1] == "D" and f[3] == "M" and "Delta" in ln and ":" in f[0]:
-            stamp.setdefault((float(f[2]), int(f[4].rstrip(":"))), f[0])
-    day = datetime.date.fromisoformat(opts.get("day", "2026-10-23"))
-    samples = []
-    for ln in open(pts_path):
-        r = json.loads(ln)
-        if not r.get("converged") or not r.get("t_its"):
-            continue
-        hh = stamp.get((r["D"], r["M"]))
-        L = None
-        if hh and loads:
-            t = datetime.datetime.combine(day if hh < "12" else day - datetime.timedelta(days=1),
-                                          datetime.time.fromisoformat(hh)).timestamp()
-            L = load_at(t, loads)
-        for ti in r["t_its"][1:]:            # the first iteration of a resumed run includes the start-up
-            samples.append((r["M"], ti, L))
-    use = [(M, t * min(1.0, 2.0 / L)) for M, t, L in samples if L]
-    if not use:
-        use = [(M, t) for M, t, L in samples]
-        print("no load log for the samples: unscaled times")
-    # the timed Newton steps of the D = 3.7 lifts (block storage above M = 128), with the load recorded with them
-    lift = os.path.join(HERE, "data", "lowD_highM", "lift_D3.7.jsonl")
-    if os.path.exists(lift):
-        for ln in open(lift):
-            r = json.loads(ln)
-            if r.get("lu_block") and r.get("s_newton_step"):
-                use.append((r["M"], r["s_newton_step"] * min(1.0, 2.0 / max(r.get("load", 2.0), 1e-9))))
-    # c from the block-storage sizes (M > 128) when there are any: the dense LU at M <= 128 is slower than c M^3
-    big = [(M, t) for M, t in use if M > 128]
-    c = sum(t / M ** 3 for M, t in (big or use)) / len(big or use)
-    print(f"seconds per Newton iteration ~ c M^3 with c = {c:.2e} (an idle 2-core machine; fitted on "
-          f"{'M > 128 (block storage)' if big else 'all M'}; {len(use)} iterations at M = {sorted({M for M, _ in use})})")
-    byM = {}
-    for M, t in use:
-        byM.setdefault(M, []).append(t)
-    for M in sorted(byM):
-        print(f"  M {M}: measured (scaled) {sum(byM[M]) / len(byM[M]):7.1f} s per iteration over {len(byM[M])}; c M^3 = {c * M ** 3:7.1f} s")
-    # iterations per solve by role
-    its_c = [r["its_c"] for r in pairs if r.get("its_c")]
-    its_w = [r["its_w"] for r in pairs if r["decision"] == "pair"]
-    its_n = [r["its_n"] for r in pairs if r["decision"] == "pair"]
-    ic = sum(its_c) / len(its_c) if its_c else 6.0
-    iw = sum(its_w) / len(its_w)
-    inn = sum(its_n) / len(its_n)
-    print(f"Newton calls per solve (pilot means): helper {ic:.1f}, working {iw:.1f}, next {inn:.1f}")
-    # the pilot's crossing: the first pair whose difference exceeded 1e-8
-    target = 1e-8
     A4 = lowD_cost.calibrate(55, 2.6e-8, lowD_cost.BETA[0][1])
 
     def kmodel(D):
@@ -155,51 +88,81 @@ def project(opts):
         f1 = lowD_cost.F1_of(D)
         ks = [lowD_cost.modes_needed(A, b, target) for b in (bl, bp) for A in (A4, A4 * (f1 / 16.23) ** 2)]
         return min(ks), max(ks)
-    cross = [r for r in pairs if abs(r["diff"]) > target]
-    scale = 1.0
-    if cross:
-        r0 = cross[0]
-        Kc = r0["Mw"] - 1
-        scale = Kc / kmodel(r0["D"])[0]
-        print(f"pilot crossing: M {r0['Mw']} -> {r0['Mn']} = {r0['diff']:+.2e} at D {r0['D']}: K = {Kc} there against the "
-              f"model's {kmodel(r0['D'])[0]:.0f}-{kmodel(r0['D'])[1]:.0f}; scale {scale:.2f}")
-    D_last = pairs[-1]["D"]
-    print(f"from the pilot's last D {D_last}, steps of {dD}:")
-    print("  K: modes for 1e-8 (model range, and scaled by the pilot's crossing); M_c/M_w/M_n for the low and the high K;")
-    print("  hours on an idle 2-core machine, per point and cumulative from the pilot's last D (low K - high K); move ups")
-    print("  (two passes, 3-4 times a solve), node changes, step halvings and the growth of the Taylor steps toward D = 3")
-    print("  are not included")
-    print(f"  {'D':>5} {'K (model)':>11} {'K scaled':>9} {'low K':>13} | {'high K':>13} {'h/point':>11} {'h cumulative':>13}")
-    tot = 0.0
-    D = round(D_last - dD, 6)
-    rows = []
+    # 1. the modes K = M_w - 1 the pilot found sufficient (|Delta(M_n) - Delta(M_w)| < 1e-8) or not, against the model
+    print("modes for a 1e-8 Delta: the pilot's pairs against hp/lowD_cost.py's model (lowest - highest of its 4 variants)")
+    lo_s, hi_s = 0.0, float("inf")
+    seen = set()
+    checks = []
+    for r in pairs:       # the pair (M_w -> M_n) and the helper (M_c -> M_w)
+        checks.append((r["D"], r["Mw"], r["diff"]))
+        if r.get("Mc") and r.get("diff_c") is not None:
+            checks.append((r["D"], r["Mc"], r["diff_c"]))
+    for D_, Mw_, diff_ in sorted(checks, key=lambda c: (-c[0], c[1])):
+        if (D_, Mw_) in seen:
+            continue
+        seen.add((D_, Mw_))
+        klo, khi = kmodel(D_)
+        ok = abs(diff_) < target
+        K = Mw_ - 1
+        if ok:
+            hi_s = min(hi_s, K / klo)       # K suffices: the needed K (scale x klo) is at most K
+        else:
+            lo_s = max(lo_s, K / klo)       # K does not: the needed K is above it
+        print(f"  D {D_:.2f}: K {K:3d} {'suffices    ' if ok else 'is too few  '} ({diff_:+.1e}); model {klo:5.0f}-{khi:<5.0f}"
+              f" -> scale of the lowest variant {'<=' if ok else '>'} {K / klo:.3f}")
+    scale = lo_s if lo_s > 0 else 1.0
+    print(f"the lowest variant fits with a scale in ({lo_s:.3f}, {hi_s:.3f}]; the higher variants do not (they need more"
+          f" than the K that sufficed). Used: {scale:.2f}")
+    # 2. measured wall time of the pilot's last complete point (all its resolutions, two-pass solves included), from
+    # logs/pilot.log; times for other resolutions scale as M^3 (one Newton iteration ~ c M^3, fitted below)
+    log = [ln.rstrip("\n") for ln in open(os.path.join(HERE, "data", "lowD_highM", "logs", "pilot.log"))]
+    last = [r for r in pairs if r["decision"] == "pair"][-1]
+    Dl = last["D"]
+    # from the first start of the point after the previous point's last record (failed attempts before a node change
+    # excluded) to its pair record
+    i1 = next(i for i, ln in enumerate(log) if ln[8:].startswith(f" D {Dl:g}: Delta(M") and ln.endswith("; pair"))
+    ip = max(i for i, ln in enumerate(log[:i1]) if ": Delta(M" in ln and not ln[8:].startswith(f" D {Dl:g}:"))
+    t0 = next(ln[:8] for ln in log[ip:i1] if f" --- D {Dl:g} (" in ln)
+    t1 = log[i1][:8]
+    sec = lambda h: sum(int(x) * m for x, m in zip(h.split(":"), (3600, 60, 1)))  # noqa: E731
+    T0 = (sec(t1) - sec(t0)) % 86400
+    Ms0 = [m for m in (last.get("Mc"), last["Mw"], last["Mn"]) if m]
+    W0 = sum(m ** 3 for m in Ms0)
+    print(f"the pilot's last point, D {Dl:g} at M {'/'.join(map(str, Ms0))}: {T0 / 60:.0f} min wall ({t0} - {t1}, load about 2: "
+          f"the pilot alone on the 2 cores)")
+    loads = []
+    lp = os.path.join(HERE, "data", "lowD_highM", "logs", "load.log")
+    if os.path.exists(lp):
+        for ln in open(lp):
+            f = ln.split()
+            loads.append((datetime.datetime.fromisoformat(f[0]).timestamp(), float(f[1])))
+    # move up: the new M_n solved in two passes, about 1.2 x the M_n solve of a point (the pilot's M_n solves)
+    print(f"from D {Dl:g}, steps of {dD}: K = scale x the model's lowest variant; M_c/M_w/M_n the ladder rungs around it")
+    print(f"  (M_w the first with M - 1 >= K); hours per point = {T0 / 3600:.2f} h x sum(M^3) / {W0:.3g}, plus a move up (the new")
+    print("  M_n in two passes, 1.2 x its share) where the rung changes. Not included: node changes (about 10% of a point")
+    print("  each), step halvings, and the growth of the Taylor plans toward D = 3; so these are lower estimates.")
+    print(f"  {'D':>5} {'K model':>11} {'K':>4} {'M_c/M_w/M_n':>13} {'h/point':>8} {'move up h':>9} {'h cumulative':>12}")
+    D = round(Dl - dD, 6)
+    cum = 0.0
+    prev = (last.get("Mc"), last["Mw"], last["Mn"])
     while D >= 3.05 - 1e-9:
         klo, khi = kmodel(D)
-        ks = (klo * scale, khi * scale)
-        out = []
-        for K in ks:
-            iw_ = next((i for i, M in enumerate(ladder) if M - 1 >= K), None)
-            if iw_ is None or iw_ + 1 >= len(ladder):
-                out.append(None)
-                continue
-            Mw, Mn = ladder[iw_], ladder[iw_ + 1]
-            Mc = ladder[iw_ - 1] if iw_ > 0 else None
-            tp = (ic * c * Mc ** 3 if Mc else 0) + iw * c * Mw ** 3 + inn * c * Mn ** 3
-            out.append((Mc, Mw, Mn, tp))
-        rows.append((D, klo, khi, ks, out))
+        K = klo * scale
+        iw_ = next((i for i, M in enumerate(ladder) if M - 1 >= K), None)
+        if iw_ is None or iw_ + 1 >= len(ladder):
+            print(f"  {D:5.2f} {klo:5.0f}-{khi:<5.0f} {K:4.0f}  beyond the ladder")
+            break
+        Mc, Mw, Mn = (ladder[iw_ - 1] if iw_ else None), ladder[iw_], ladder[iw_ + 1]
+        tp = T0 * sum(m ** 3 for m in (Mc, Mw, Mn) if m) / W0
+        mu = 0.0
+        for m in sorted({Mn, Mw} - {prev[1], prev[2]}):
+            mu += 1.2 * T0 * m ** 3 / W0
+        cum += tp + mu
+        print(f"  {D:5.2f} {klo:5.0f}-{khi:<5.0f} {K:4.0f} {f'{Mc}/{Mw}/{Mn}':>13} {tp / 3600:8.1f} {mu / 3600:9.1f} {cum / 3600:12.1f}")
+        prev = (Mc, Mw, Mn)
         D = round(D - dD, 6)
-    cum = [0.0, 0.0]
-    for D, klo, khi, ks, out in rows:
-        cells = []
-        for j, o in enumerate(out):
-            if o is None:
-                cells.append(("beyond the ladder", None))
-                cum[j] = float("inf")
-            else:
-                cum[j] += o[3]
-                cells.append((f"{o[0]}/{o[1]}/{o[2]}", o[3]))
-        print(f"  {D:5.2f} {klo:5.0f}-{khi:<5.0f} {ks[0]:4.0f}-{ks[1]:<4.0f} {cells[0][0]:>13} | {cells[1][0]:>13} "
-              f"{(cells[0][1] or 0) / 3600:5.1f}-{(cells[1][1] or float('inf')) / 3600:<5.1f} {cum[0] / 3600:6.1f}-{cum[1] / 3600:<6.1f}")
+    if loads:
+        print(f"(load log: {len(loads)} samples)")
 
 
 def main():
