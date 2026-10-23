@@ -371,3 +371,42 @@ times by hand, 5.4). The 10-hour budget counts the pilot's running time across r
   pass 2 on the pass-1 state's own plan. This roughly doubles the time per point.
 - **Series orders** (kc = 100, ks = 250, section 1.6): the solutions' centre tails stayed below 10⁻⁴⁹ (10⁻⁶³ after
   the node changes); the horizon tails are the ones that grow (above).
+
+### 5.5 Against the local machine and the formula
+
+- **The local machine** (comms.txt; 13 nodes 0.005…0.8 there, 15–17 nodes here): its M 80 → 96 changes of Δ,
+  −1.2×10⁻⁹ (D = 3.70), −3.3×10⁻⁹ (3.65), −4.3×10⁻⁹ (3.60), −2.5×10⁻⁹ (3.55), −1.27×10⁻⁸ (3.50) and −6.6×10⁻⁸ (3.45),
+  are −1.24×10⁻⁹, −3.34×10⁻⁹, −4.30×10⁻⁹, −2.51×10⁻⁹, −1.27×10⁻⁸ and −6.65×10⁻⁸ here. Its values agree to all the
+  digits it quotes: M = 96 at D = 3.7 (3.4652004823053) and 3.55 (3.4404023464863), M = 80 at 3.40 (3.3662519179569)
+  and 3.35 (3.3234621776975), within 3×10⁻¹⁴. Its M = 128 value at D = 3.6, 3.4527209746080, is 2.1×10⁻¹¹ below the
+  M = 96 one here, its own M 96 → 128 change there. The node sets do not show at this level (section 3 and 5.4:
+  10⁻³⁰).
+- **The formula in s = √(D − 3)** (README, fitted to Ecker, Ecker, Grumiller & Jechtl's values, good to about
+  10⁻⁵): formula − Δ is −4.7×10⁻⁶ to +6.5×10⁻⁶ over D = 3.65–3.35 and −7.6×10⁻⁶ to −1.3×10⁻⁶ over 3.3–3.175,
+  changing sign along D as a fit's error does; the pilot's error estimates (≤ 2.1×10⁻⁸) are far below that, so these
+  are the formula's own errors.
+
+## 7. Proposed README text (not applied)
+
+**(a)** In "The double-double solver (`hp/`)", after the bullet "Mixed-precision Newton (opt-in)":
+
+> - **Larger τ grids:** M = 160, 192, 256, 320 and 384 collocation points besides 8–128. Above M = 128 the
+>   mixed-precision step builds and factors its f64 Jacobian in block storage (a staircase LU over the
+>   multiple-shooting blocks, `hp/src/block.rs`): 8–12 times less memory than the dense matrix (173 MB at M = 192), and
+>   the same steps as the dense path to its rounding at M ≤ 128, where every other result is unchanged bit for bit. The
+>   exact double-double Jacobian, the Levenberg–Marquardt fallback and γ stay at M ≤ 128. At D = 3.7, Δ changes by
+>   −3.4×10⁻¹¹, −3.2×10⁻¹⁵ and −1.6×10⁻¹⁸ from M = 96 to 128, 160 and 192 ([notes/HIGH_M.md](notes/HIGH_M.md)).
+
+**(b)** In the "Below D = 4" caption, replace "cross the double-double kernel's limit of 128 near D = 3.4, which is
+where this computation stops; near D = 3 they run into the hundreds." by:
+
+> cross 128 near D = 3.35, where the computed change of Δ from M = 96 to 128 is 2×10⁻⁸. The kernel now runs to
+> M = 384; a pilot continuation in double-double reached D = D_LOW with M up to M_TOP (each value with the change from
+> the next lower M as its error estimate, ERR_LOW at D_LOW), and the model, calibrated on it, puts D = 3.05 at
+> M ≈ 320 and more than a day on two cores ([notes/HIGH_M.md](notes/HIGH_M.md)).
+
+**(c)** In "A formula for 3 < D ≤ 4", replace "and match our own double-double values at D = 3.7–4, which the fit
+never saw, to 4×10⁻⁶ and 10⁻⁷" by:
+
+> and match our own double-double values at D = D_LOW–4 (Δ; γ at 3.7–4), which the fit never saw, to FORMULA_MAX
+> (Δ) and 10⁻⁷ (γ)
