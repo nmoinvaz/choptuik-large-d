@@ -3035,3 +3035,20 @@ T43 step 2 started at 12:54 as written (machine idle, so I did not wait for 13:0
 60.0020, then the combo phase, the report and the mutated report. A guard checks the summary every 2 minutes and stops
 the whole task if a base run fails its Delta check. 6 threads, below normal priority. Reports after phase 2 and at
 the end, with pushes to wip/step-test. Then T44.
+
+== 2026-10-23 13:56 PDT local
+T43 step 2, D0 = 45.0507 so far (start states: kf11 floors 5.2e-14, 1.0e-14, 3.9e-8, 3.1e-8 at 45/50/55/60, so it
+is not stepped anywhere):
+  run      ok/failed  D covered  edge    Newton its  D per 100 its (steady)  max |Delta - ref|
+  base     20 / 11    2.2895     0.119   473         0.484 (0.477)           1.6e-15
+  node06   20 / 13    0.3968     0.030   498         0.080 (0.099)           4.2e-15
+  pred6    10 / 3     3.1349     0.458   165         1.900 (1.246)           1.6e-15
+  pred8     8 / 1     3.0572     0.470   111         2.754 (0.0)             1.6e-15
+  pin11, pin9 running (12 ok each so far, edges 0.149 and 0.129)
+So node06 does converge at 45, at a quarter of base's edge, and at 60 not at all.
+One problem before phase 3: pred8's steady figure is 0. It reached max_span 3 in 8 converged points, and the steady
+part only starts after n_pred = 8 points, so it has no steady attempts at all. combo_spec ranks on
+steady_D_per_100its, so pred8 can never "win" against base, though over the whole run it is the fastest variant.
+pred6 is close to the same edge (10 points, 4 of them steady). If you want it fixed before phase 3 starts (some
+hours from now), options: rank on D_per_100its when steady_n is 0, or raise --max_span for the pred runs. I will not
+change step_test.py myself unless you say so.
