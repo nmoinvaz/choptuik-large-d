@@ -383,6 +383,11 @@ products; one Newton call at a time; log and records in `data/mixed_precision/la
 | 0 | 3.75×10⁻¹⁰ | 12: 0.38, 0.040, 0.020, 1.3e-3, 4.8e-4, 4.1e-5, 4.7e-6, 1.8e-7, 4.1e-9, 1.1e-9, 5.1e-11 | λ = 1/2 | 7.9×10⁻⁸ | +2.6×10⁻¹³ |
 | 1 | 1.87×10⁻¹⁰ | 12: 4.7, 0.028, 4.2e-3, 1.6e-3, 5.9e-5, 1.8e-5, 6.3e-7, 6.6e-8, 7.2e-9, 2.4e-10, 9.2e-12 | λ = 1/4 | 1.6×10⁻⁷ | +5.0×10⁻¹⁵ |
 | 2 | 1.41×10⁻¹⁰ | 12: 0.32, 0.034, 4.5e-3, 1.5e-3, 1.2e-4, 1.4e-5, 4.0e-7, 6.6e-8, 1.7e-9, 1.9e-10, 5.1e-12 | λ = 1 | 1.3×10⁻⁷ | +3.3×10⁻¹² |
+| 3 | 1.97×10⁻¹⁰ | 12: 0.27, 0.22, 0.096, 8.2e-3, 1.0e-3, 3.6e-5, 1.8e-6, 2.2e-7, 1.6e-8, 2.6e-10, 5.1e-12 | λ = 1/8 | 3.2×10⁻⁷ | −2.7×10⁻¹² |
+
+(|F| is the largest entry; the line search works on the 2-norm, which fell at every step. The run was stopped after
+four Newton calls, 2 h 19 min under load 10–13: the f64 Jacobian in block storage took 1 350–2 240 s per step, the 12
+products 85–180 s.)
 
 (The changes list starts at the second product; the first is 1 by definition.)
 
@@ -390,12 +395,14 @@ products; one Newton call at a time; log and records in `data/mixed_precision/la
   step, so the high-M agent's diagnosis holds as far as it goes: the f64 Jacobian's rounding misplaces the step in a few
   directions, which the loop corrects (to 10⁻¹¹ in 12 products, 15 s each against 2 220 s for the f64 Jacobian in
   block storage under load 12).
-- **But the exact step does not converge either**: the line search cuts it to 1/2 and then 1/4, and |F| falls only from
-  3.75×10⁻¹⁰ to 1.9×10⁻¹⁰ to (step 2, below). At |F| ≈ 2×10⁻¹⁰ a Newton step of |dz| ≈ 10⁻⁷ along the weakest (junk)
-  directions is outside the quadratic model's range, as for the plain Newton at large D (MIXED_PRECISION §8, §5
-  above). So the stall at M = 192 is the weak directions' nonlinearity, not only the Jacobian's rounding; the
-  deflated Newton (the step with the weakest directions removed, which `deflated_newton(jac="f64g")` now provides)
-  or a start closer to the solution is what it needs. Not tried here (a single measurement, as asked).
+- **Answer: no.** The exact steps do not converge either: the line search cuts them to 1/2, 1/4, 1 and 1/8, and |F|
+  stays at 1.4–2.0×10⁻¹⁰ over four calls, while Δ moves by 10⁻¹² per step. The loop needed 12 products per step
+  (it converged at the 12th each time, the change then 5×10⁻¹¹–9×10⁻¹²). At |F| ≈ 2×10⁻¹⁰ an exact Newton step of
+  |dz| = 10⁻⁷–3×10⁻⁷ is outside the quadratic model's range, the same basin problem as the plain Newton's at large D
+  (§5). So the stall at M = 192 is the weak directions' nonlinearity, and only in part the f64 Jacobian's rounding
+  (which misplaces the step by 0.3–4.7 of its size, and which the loop removes). A deflated Newton (the step with the
+  weakest directions removed) or a start closer to the solution is what it needs; with an f64 LU, though, the weakest
+  directions it would remove are themselves not resolved (§7.4). Not tried here (a single measurement, as asked).
 
 ## 9. Merge with wip/high-m
 
