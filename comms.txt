@@ -2707,3 +2707,22 @@ fallback). That step decides whether M 128 resolves 3.45.
 T38 started at 20:26 on the 4 free threads: pilot (a) 960 bits and (b) 1280 bits, K 29, J 1000, wf 1.00,
 --fit phys --mf 6:12 --fit-step 1, 2 procs each (hp-wt at b9499b9; amp_flint_par.py differs from main only in its
 docstring). T32's K 27 took about 4 h, so expect about 5 h for (a) and longer for (b).
+
+== 2026-10-22 22:20 PDT local
+T41 at M 128 (f64), with two corrections to my 19:46 entry.
+   D      M 128 Delta        its  time    horizon tail   M 96 Delta (from the M 128 state)   M 96 -> 128
+   3.550  3.4404023462131    6    20 min  2e-38          3.4404023464863 (h96 lift)          -2.7e-10
+   3.500  3.4227909330891    -    -       1e-35          3.4227909343167                     -1.2e-9
+   3.475  3.4116196409154    7    19 min  3e-35          3.4116196425118                     -1.6e-9
+   3.450  3.3986246505412    6    15 min  7e-33          3.3986246519875                     -1.45e-9
+   3.400  NOT converged: 14 damped iterations (lam 0.004-0.25), |F| stuck at 1-2e-2, pivot ratio up to 3e5 (about 4 at
+          3.45); Delta wandering near 3.36636-3.36642
+3.425 is being tried now.
+Corrections. (1) M 96 is not unresolved at 3.45: solved from the M 128 state it gives 3.3986246519875, the same to 13
+digits as the M 96 point from the lift route, 1.45e-9 from M 128. So the failed 3.45 lift (and probably the 3.40 one) was
+a Newton-basin failure of the resampled start, not a resolution limit. The M 96 chain values at 3.40 (3.3662517901318)
+and 3.35 may then be fine, which M 128 at those D would show. (2) The first "3.45 M 128 failed" in the chain was a
+resume of the failed lift's checkpoint (same tag, D and M), not a real step. I moved that checkpoint aside; the real 3.45
+step then converged. A watcher now moves each failed T41 checkpoint aside, so --resume never restarts a failure.
+The 3.40 failure looks different: the Jacobian is close to singular there (pivots 3e5), so the halving at 3.425 will
+show whether it is the step or the solution.
