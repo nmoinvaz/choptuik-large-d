@@ -1,5 +1,5 @@
 {
- "t_used": 683.7864904403687,
+ "t_used": 1679.811951637268,
  "Mw": 80,
  "Mn": 96,
  "nodes": [
@@ -28,6 +28,14 @@
   [
    3.65,
    "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.6500_M80.npz"
+  ],
+  [
+   3.6,
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.6000_M80.npz"
+  ],
+  [
+   3.55,
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.5500_M80.npz"
   ]
  ],
  "hist_n": [
@@ -38,6 +46,14 @@
   [
    3.65,
    "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.6500_M96.npz"
+  ],
+  [
+   3.6,
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.6000_M96.npz"
+  ],
+  [
+   3.55,
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.5500_M96.npz"
   ]
  ],
  "pairs": [
@@ -46,11 +62,21 @@
    -3.3438618461064375e-09,
    80,
    96
+  ],
+  [
+   3.6,
+   -4.296509082095264e-09,
+   80,
+   96
+  ],
+  [
+   3.55,
+   -2.514380180451135e-09,
+   80,
+   96
   ]
  ],
  "targets": [
-  3.6,
-  3.55,
   3.5,
   3.45,
   3.4,
@@ -64,5 +90,7 @@
  ],
  "done": null,
  "post": null,
- "last_point_s": 661.5
+ "last_point_s": 482.3,
+ "Mc": null,
+ "hist_c": []
 }

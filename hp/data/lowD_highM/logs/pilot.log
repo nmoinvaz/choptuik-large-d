@@ -24,3 +24,65 @@
 00:36:10   D 3.6 M 80: start 'predictor' |F| 2.99e-02 (113 steps)
 00:36:12 D 3.6 M 80: L 5121, steps 113, start |F| 3.0e-02
   newton 0: |F| 2.99e-02 |dz| 9.80e-01 lam 1 dDelta -2.01e-03 Delta 3.454250393089883 piv 9.8e-04..7.4e+00  t 34.8s
+  newton 0: |F| 7.80e-04 |dz| 1.74e-01 lam 1 dDelta -1.53e-03 Delta 3.452719968356626 piv 9.7e-04..7.2e+00  t 35.3s
+  newton 0: |F| 2.27e-06 |dz| 4.83e-04 lam 1 dDelta +1.01e-06 Delta 3.452720978905749 piv 9.8e-04..7.3e+00  t 36.0s
+  newton 0: |F| 3.09e-11 |dz| 1.10e-08 lam 1 dDelta +2.00e-11 Delta 3.452720978925727 piv 9.8e-04..7.3e+00  t 35.5s
+  newton 0: |F| 8.22e-18 |dz| 6.24e-17 lam 1 dDelta +5.85e-20 Delta 3.452720978925727 piv 9.8e-04..7.3e+00  t 35.4s
+  newton 0: |F| 7.01e-30 converged (last |dz| 2.5e-25) Delta 3.452720978925727; last step taken, |F| 1.56e-29
+00:39:48 D 3.6 M 80: Delta 3.4527209789257274 (-1.07e-17) |F| 1.6e-29 its 6 216s dDelta/dF max 1.7e+00 tails 7e-105 1e-138 dDelta_est +1.4e-30
+00:39:58   D 3.6 M 96: start 'predictor' |F| 2.99e-02 (136 steps)
+00:40:00   D 3.6 M 96: start 'lift of M_w' |F| 2.88e-05 (136 steps)
+00:40:03 D 3.6 M 96: L 6145, steps 136, start |F| 2.9e-05
+  newton 0: |F| 2.88e-05 |dz| 5.73e-03 lam 1 dDelta -4.60e-09 Delta 3.452720974326680 piv 9.2e-04..8.6e+00  t 95.5s
+  newton 0: |F| 1.43e-08 |dz| 1.25e-07 lam 1 dDelta +3.03e-10 Delta 3.452720974629218 piv 9.2e-04..8.7e+00  t 95.6s
+  newton 0: |F| 5.73e-17 |dz| 1.75e-14 lam 1 dDelta -3.71e-17 Delta 3.452720974629218 piv 9.2e-04..8.7e+00  t 94.6s
+  newton 0: |F| 3.74e-28 |dz| 8.13e-23 lam 1 dDelta -1.24e-27 Delta 3.452720974629218 piv 9.2e-04..8.7e+00  t 95.7s
+  newton 0: |F| 1.85e-29 converged (last |dz| 3.0e-26) Delta 3.452720974629218; last step taken, |F| 3.37e-30
+00:48:10 D 3.6 M 96: Delta 3.4527209746292185 (-1.66e-16) |F| 3.4e-30 its 5 487s dDelta/dF max 1.4e+00 tails 2e-103 2e-129 dDelta_est +3.1e-30
+00:48:14 D 3.6: Delta(M 96) = 3.4527209746292185 (-1.66e-16), M 80 -> 96: -4.30e-09; pair
+00:48:14 point 3.6 took 11.7 min of solves; 0.39 h used
+00:48:14 --- D 3.55 (from 3.6), M 80 / 96, nodes 0.0025..0.9
+00:48:19   D 3.55 M 80: start 'predictor' |F| 1.34e-02 (107 steps)
+00:48:22 D 3.55 M 80: L 5121, steps 107, start |F| 1.3e-02
+  newton 0: |F| 1.34e-02 |dz| 2.34e-01 lam 1 dDelta -7.69e-04 Delta 3.440408871798628 piv 8.0e-04..6.3e+00  t 38.6s
+  newton 0: |F| 9.40e-05 |dz| 7.43e-02 lam 1 dDelta -6.67e-06 Delta 3.440402199572009 piv 8.0e-04..5.0e+00  t 38.1s
+  newton 0: |F| 2.86e-07 |dz| 2.50e-05 lam 1 dDelta +1.49e-07 Delta 3.440402349000656 piv 8.0e-04..6.7e+00  t 38.4s
+  newton 0: |F| 3.07e-13 |dz| 6.30e-11 lam 1 dDelta +3.28e-14 Delta 3.440402349000689 piv 8.0e-04..6.7e+00  t 38.1s
+  newton 0: |F| 1.86e-24 |dz| 4.93e-19 lam 1 dDelta +5.42e-24 Delta 3.440402349000689 piv 8.0e-04..6.7e+00  t 39.3s
+  newton 0: |F| 1.51e-29 converged (last |dz| 3.0e-26) Delta 3.440402349000689; last step taken, |F| 4.21e-30
+00:52:17 D 3.55 M 80: Delta 3.4404023490006890 (-2.11e-16) |F| 4.2e-30 its 6 236s dDelta/dF max 1.5e+00 tails 4e-99 2e-134 dDelta_est -2.2e-30
+00:52:28   D 3.55 M 96: start 'predictor' |F| 1.35e-02 (131 steps)
+00:52:29   D 3.55 M 96: start 'lift of M_w' |F| 4.06e-05 (131 steps)
+00:52:33 D 3.55 M 96: L 6145, steps 131, start |F| 4.1e-05
+  newton 0: |F| 4.06e-05 |dz| 9.74e-03 lam 1 dDelta -1.30e-09 Delta 3.440402347696640 piv 8.5e-04..3.7e+00  t 94.5s
+  newton 0: |F| 4.45e-07 |dz| 2.69e-06 lam 1 dDelta -1.21e-09 Delta 3.440402346486358 piv 8.5e-04..7.1e+00  t 90.9s
+=== 00:56:04 restarted with the helper resolution (hp/lowD_highM.py)
+00:56:11 resuming: M 80/96, last D 3.6, 0.39 h used
+00:56:11 --- D 3.55 (from 3.6), M 80 / 96, nodes 0.0025..0.9
+00:56:16   D 3.55 M 80: start 'predictor' |F| 1.34e-02 (107 steps)
+00:56:16 D 3.55 M 80: already converged (/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.5500_M80.npz); skipped
+00:56:25   D 3.55 M 96: start 'predictor' |F| 1.35e-02 (131 steps)
+00:56:25   D 3.55 M 96: start 'lift of M_w' |F| 4.06e-05 (131 steps)
+00:56:25 resuming from checkpoint /home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.5500_M96_ckpt.npz (iteration 2)
+00:56:29 D 3.55 M 96: L 6145, steps 131, start |F| 1.2e-12
+  newton 0: |F| 1.19e-12 |dz| 3.79e-11 lam 1 dDelta -4.95e-14 Delta 3.440402346486309 piv 8.5e-04..4.0e+00  t 82.5s
+  newton 0: |F| 8.96e-22 |dz| 1.63e-19 lam 1 dDelta +3.00e-24 Delta 3.440402346486309 piv 8.5e-04..4.0e+00  t 78.1s
+  newton 0: |F| 2.93e-30 converged (last |dz| 1.9e-26) Delta 3.440402346486309; last step taken, |F| 6.44e-30
+01:00:35 D 3.55 M 96: Delta 3.4404023464863087 (-1.32e-16) |F| 6.4e-30 its 3 246s dDelta/dF max 1.2e+00 tails 4e-99 2e-127 dDelta_est -4.3e-30
+01:00:39 D 3.55: Delta(M 96) = 3.4404023464863087 (-1.32e-16), M 80 -> 96: -2.51e-09; pair
+01:00:39 point 3.55 took 8.0 min of solves; 0.47 h used
+01:00:39 --- D 3.5 (from 3.55), M 80 / 96, nodes 0.0025..0.9
+01:00:43   D 3.5 M 80: start 'predictor' |F| 1.32e-02 (114 steps)
+01:00:46 D 3.5 M 80: L 5121, steps 114, start |F| 1.3e-02
+  newton 0: |F| 1.32e-02 |dz| 1.38e-01 lam 1 dDelta -1.95e-04 Delta 3.422802645323077 piv 9.4e-04..3.5e+00  t 34.6s
+  newton 0: |F| 4.83e-05 |dz| 2.19e-02 lam 1 dDelta -1.17e-05 Delta 3.422790940172055 piv 9.4e-04..3.5e+00  t 34.7s
+  newton 0: |F| 1.04e-08 |dz| 2.36e-06 lam 1 dDelta +6.85e-09 Delta 3.422790947024653 piv 9.4e-04..3.5e+00  t 35.2s
+  newton 0: |F| 4.73e-16 |dz| 1.10e-13 lam 1 dDelta +1.05e-16 Delta 3.422790947024653 piv 9.4e-04..3.5e+00  t 34.2s
+  newton 0: |F| 1.40e-27 |dz| 1.34e-22 lam 1 dDelta -1.62e-27 Delta 3.422790947024653 piv 9.4e-04..3.5e+00  t 34.6s
+  newton 0: |F| 1.27e-29 converged (last |dz| 1.2e-26) Delta 3.422790947024653; last step taken, |F| 7.35e-30
+01:04:17 D 3.5 M 80: Delta 3.4227909470246534 (+8.91e-17) |F| 7.4e-30 its 6 212s dDelta/dF max 1.2e+00 tails 1e-94 2e-131 dDelta_est -5.3e-30
+01:04:26   D 3.5 M 96: start 'predictor' |F| 1.31e-02 (133 steps)
+01:04:27   D 3.5 M 96: start 'lift of M_w' |F| 5.38e-05 (133 steps)
+01:04:31 D 3.5 M 96: L 6145, steps 133, start |F| 5.4e-05
+  newton 0: |F| 5.38e-05 |dz| 1.93e-02 lam 1 dDelta -1.34e-08 Delta 3.422790933608510 piv 6.8e-04..4.3e+00  t 79.0s
+  newton 0: |F| 1.88e-06 |dz| 3.97e-05 lam 1 dDelta +7.05e-10 Delta 3.422790934313908 piv 6.8e-04..4.7e+00  t 79.1s
