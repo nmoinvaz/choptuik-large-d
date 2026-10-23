@@ -4,6 +4,7 @@
     cd hp && python3 highm_diag.py jac STATE.npz M            (the state's meta must have its plan, segs)
     cd hp && python3 highm_diag.py radius STATE.npz M
     cd hp && python3 highm_diag.py start STATE.npz M_new [--nodes=x0,x1,...] [--renode_h=0.001] [--fill]
+    cd hp && python3 highm_diag.py orders STATE.npz M [--orders=kc/ks,...] [--newton]
 
 jac: do f64 Jacobians that differ only in rounding agree? Newton steps of Solver.newton_mixed in block storage with
   f64x4, f64x1 and dd4 at the state: their relative differences in dz and in the sensitivity y = J^-T e_Delta; the
@@ -16,6 +17,10 @@ radius: radius of convergence of the horizon series (in u = 1 - x) and of the ce
 start: the start of a lift: the state (optionally re-noded at its own M with driver.renode, Taylor steps --renode_h)
   resampled to M_new (with --fill also lowD_dd.fill_tail: the harmonics above the old M by each field's geometric
   trend), its Taylor plan, |F| per residual block and the series tails.
+orders: do lower centre / horizon series orders (kc, ks) change anything at a converged state? The residual on the
+  state's own plan with its (kc, ks) and with each --orders pair: seconds (best of 3), |F|, the series tails, and
+  whether the residual is bitwise identical; with --newton also one newton_mixed step (seconds, its Delta correction,
+  whether the step is bitwise identical).
 """
 import os
 import sys
@@ -111,11 +116,45 @@ def start(path, M, opts):
           f"{' '.join('%.1e' % v for v in lowD_dd.tails(s, z, 0 * z, nodes, M))}", flush=True)
 
 
+def orders(path, M, opts):
+    zh, zl, m = load(path)
+    pairs = [(m["kc"], m["ks"])] + [tuple(int(v) for v in p.split("/")) for p in str(opts.get("orders", "60/150")).split(",")]
+    base = None
+    for kc, ks in pairs:
+        s = make_solver(m["D"], M, nodes=m["nodes"], kt=m["kt"], kc=kc, ks=ks, threads=2)
+        s.set_segs(m["segs"])
+        tr = []
+        for _ in range(3):
+            t = time.time()
+            Fh, Fl = s.residual(zh, zl)
+            tr.append(time.time() - t)
+        Fh, Fl = np.asarray(Fh), np.asarray(Fl)
+        tl = lowD_dd.tails(s, zh, zl, m["nodes"], M)
+        line = (f"kc {kc} ks {ks}: residual {min(tr):.2f} s, |F| {dd_norm(Fh, Fl):.2e}, tails (centre, horizon) "
+                f"{tl[0]:.1e} {tl[1]:.1e}")
+        if base is not None:
+            same = np.array_equal(Fh, base[0]) and np.array_equal(Fl, base[1])
+            line += f", residual {'bitwise identical' if same else 'differs by %.1e' % np.abs((Fh - base[0]) + (Fl - base[1])).max()}"
+        if opts.get("newton"):
+            t = time.time()
+            dh, dl, _, _, p0, p1 = s.newton_mixed(zh, zl)
+            line += f"; Newton step {time.time() - t:.0f} s, dDelta {float(dh[-1]) + float(dl[-1]):+.1e}"
+            if base is not None and base[2] is not None:
+                line += f", step {'bitwise identical' if np.array_equal(np.asarray(dh), base[2]) else 'differs by %.1e' % np.abs(np.asarray(dh) - base[2]).max()}"
+            dh = np.asarray(dh)
+        else:
+            dh = None
+        if base is None:
+            base = (Fh, Fl, dh)
+        print(line + f" (load {os.getloadavg()[0]:.1f})", flush=True)
+
+
 def main():
     pos = [a for a in sys.argv[1:] if not a.startswith("--")]
     opts = dict((a[2:].split("=", 1) + [True])[:2] for a in sys.argv[1:] if a.startswith("--"))
     cmd, path, M = pos[0], pos[1], int(pos[2])
-    {"jac": lambda: jac(path, M), "radius": lambda: radius(path, M), "start": lambda: start(path, M, opts)}[cmd]()
+    {"jac": lambda: jac(path, M), "radius": lambda: radius(path, M), "start": lambda: start(path, M, opts),
+     "orders": lambda: orders(path, M, opts)}[cmd]()
 
 
 if __name__ == "__main__":

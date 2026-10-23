@@ -107,6 +107,17 @@ exponentially weakly): at D = 3.7 the M = 192 grid is far beyond what Δ needs (
 they are weaker than the f64 Jacobian's rounding can resolve. dd4 (double-double base trajectory) does not help,
 since its tangents are f64.
 
+**Not only the rounding: the weak directions are nonlinear there.** The large-D agent ran its correction loop (GMRES
+with exact double-double Jacobian–vector products, the f64 LU as preconditioner; `driver.newton_solve(jac="f64g")`,
+branch `wip/largeD-mixed` at 127d606, notes/LARGE_D_MIXED.md §8) on the stalled state: the loop corrects the f64 step,
+which was off by 0.3–4.7 of its own size, to 10⁻¹¹ in 12 products per step, but the exact steps are still cut back by
+the line search (λ = 1/2, 1/4, 1, 1/8), and |F| stays at 1.4–2.0×10⁻¹⁰ over four Newton calls (stopped after
+2 h 19 min under load 10–13). At |F| ≈ 2×10⁻¹⁰ an exact step of |dz| = 10⁻⁷–3×10⁻⁷ is already outside the range of
+the quadratic model. So the stall comes from the nonlinearity of the weak directions, and only in part from the f64
+Jacobian's rounding (which misplaces the step, and which the loop removes). That fits what cured it: on a node set
+where both series are evaluated well inside their radii (below), the same lift took full steps and converged
+quadratically.
+
 **The cure was the node set, not the Newton step.** The start itself (the M = 160 solution resampled to 192, before
 any step) already has series tails of 10⁻²⁰ (centre, first node 0.005) and 1.5×10⁻²² (horizon, last node 0.8), against
 2×10⁻⁶⁰ and 2×10⁻⁴⁰ for the M = 160 solution it came from; filling the new harmonics by each field's geometric trend
@@ -134,6 +145,27 @@ the last converged double-double state at the same M, computed at that state's o
 --plan_margin (10⁻², about 14% more steps), and records, after convergence, how many steps the new solution's own plan
 would have (steps_own_w / steps_own_n in the pair records). In the small-M dry runs (M = 48 / 64 / 80, D = 3.7 → 3.6)
 this gave 63, 80, 78 and 94 steps where planning from the predictor gave 130–245; the values of Δ did not change.
+
+### 1.6 The series orders (kc = 100, ks = 250) cost little and change nothing
+
+The large-D agent found that a centre-series order of 420 made its double-double Jacobian 3 times slower for
+bitwise-identical results. Here the orders are kc = 100 (centre) and ks = 250 (horizon), from the low-D states.
+`python3 highm_diag.py orders STATE M --orders=... [--newton]` evaluates a converged state's residual on its own plan
+with lower orders (`diag_orders_D3.3_M96.log`, `diag_orders_D3.3_M96_newton.log`; the pilot's D = 3.3, M = 96
+state, 15 nodes):
+
+| kc / ks | residual | centre / horizon tail | residual against 100 / 250 | Newton step |
+|---|---|---|---|---|
+| 100 / 250 | 0.51 s | 4×10⁻⁶⁴ / 2×10⁻⁹⁶ | | 77 s (load 3.2) |
+| 80 / 200 | 0.46 s | 2×10⁻⁵¹ / 5×10⁻⁷⁷ | bitwise identical | |
+| 60 / 150 | 0.43 s | 1.5×10⁻³⁸ / 6×10⁻⁵⁸ | bitwise identical | 75 s (load 3.6), bitwise identical step |
+| 50 / 120 | 0.43 s | 3×10⁻³² / 4×10⁻⁴⁶ | differs by 3.9×10⁻³⁴ | |
+| 40 / 100 | 0.38 s | 3×10⁻²⁵ / 6×10⁻³⁹ | differs by 8.8×10⁻²⁸ | |
+
+So at low D the orders are above what the results need (60 / 150 gives the same bits at D = 3.3), but they cost
+about 16% of a residual and 3% of a Newton step, whose time is in the Taylor steps; lowering them is not worth the
+margin. The margin shrinks toward D = 3: the centre tail at kc = 100 grows from 10⁻¹¹⁰ (D = 3.7, M = 80) to 10⁻⁴⁹
+(D = 3.25, M = 128) (section 5), and `--auto_nodes` moves the first node in when it passes --tail_max (10⁻³⁰).
 
 ## 2. Verification
 

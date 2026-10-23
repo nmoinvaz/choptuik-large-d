@@ -30,6 +30,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 FORMULA = [1.752403, 2.486429, 8.257623, -29.245836, 44.944706, -45.106964, 30.660868, -12.653060, 2.349289]
 # the local machine's values quoted in comms.txt (2026-10-22 18:31 and the task of this run): (D, M) -> Delta
 LOCAL = {(3.7, 96): 3.4652004823053, (3.6, 128): 3.4527209746080, (3.55, 96): 3.4404023464863085839}
+# the local machine's M 80 -> 96 changes of Delta (the task of this run)
+LOCAL_80_96 = {3.7: -1.2e-9, 3.65: -3.3e-9, 3.6: -4.3e-9, 3.55: -2.5e-9, 3.5: -1.27e-8, 3.45: -6.6e-8}
 
 
 def formula(D):
@@ -245,6 +247,32 @@ def main():
             line += f"; here M {M} {same[0]:.13f} ({same[0] - v:+.1e})"
         line += f"; here M {big[0]} {big[1]:.13f}, minus local M {M}: {big[1] - v:+.2e}"
         print(line)
+    # every M solved at each D (working pair and helper), as hi + lo in mpmath, and the differences of consecutive M
+    mp.mp.dps = 40
+    allv = {}
+    if os.path.exists(lift):
+        for ln in open(lift):
+            r = json.loads(ln)
+            if r.get("converged") and r.get("tag", "highm") == "highm15":       # the pilot's 15 nodes
+                allv.setdefault(r["D"], {})[r["M"]] = mp.mpf(r["Delta"]) + mp.mpf(r["Delta_lo"])
+    for r in pts:
+        d = allv.setdefault(r["D"], {})
+        d[r["Mn"]] = mp.mpf(r["Delta"]) + mp.mpf(r["Delta_lo"])
+        d[r["Mw"]] = mp.mpf(r["Delta_w"]) + mp.mpf(r["Delta_w_lo"])
+        if r.get("Mc"):
+            d[r["Mc"]] = mp.mpf(r["Delta_c"]) + mp.mpf(r["Delta_c_lo"])
+    print("\nevery M solved at each D, and the change of Delta from the M before (the M the pilot needed: the smallest M "
+          "whose change to the next is below 1e-8)")
+    for D in sorted(allv, reverse=True):
+        Ms = sorted(allv[D])
+        ch = [f"{a}->{b} {mp.nstr(allv[D][b] - allv[D][a], 3)}" for a, b in zip(Ms, Ms[1:])]
+        need = next((a for a, b in zip(Ms, Ms[1:]) if abs(allv[D][b] - allv[D][a]) < 1e-8), None)
+        print(f"  {D:5.2f}: M {','.join(map(str, Ms))}; {'; '.join(ch)}; needed {need if need else '?'}")
+    print("\nM 80 -> 96 against the local machine's (the task of this run):")
+    for D, v in sorted(LOCAL_80_96.items(), reverse=True):
+        d = allv.get(D, {})
+        mine = d[96] - d[80] if 80 in d and 96 in d else None
+        print(f"  D {D}: local {v:+.2e}, here {mp.nstr(mine, 3) if mine is not None else '-'}")
 
 
 if __name__ == "__main__":
