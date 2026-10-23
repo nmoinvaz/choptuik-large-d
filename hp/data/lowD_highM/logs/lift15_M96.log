@@ -7,3 +7,4 @@ D 3.7 M 96: L 6145, steps 123, start |F| 1.6e-29
   newton 0: |F| 1.55e-29 converged (last |dz| 7.6e-26) Delta 3.465200482305273; last step taken, |F| 5.63e-30
 D 3.7 M 96: Delta 3.4652004823052729 (+1.10e-16) |F| 5.6e-30 its 1 77s dDelta/dF max 1.9e+00 tails 2e-111 3e-136 dDelta_est -2.2e-31
 D 3.7 M 96: Delta 3.4652004823052729 (+1.10e-16) |F| 5.6e-30; steps 395 -> 123; tails 2e-111 3e-136; Newton step 71.89 s (residual 0.79 s, Jacobian None s, factor None s, Jacobian without d/dtau None s); LU 576.8 MB; peak RSS 683.6 MB; load 10.8
+D 3.7 M 96: already in /home/claude/dss/agentHM/wt/hp/data/lowD_highM/lift_D3.7.jsonl

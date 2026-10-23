@@ -1,5 +1,5 @@
 {
- "t_used": 1679.811951637268,
+ "t_used": 2320.329219341278,
  "Mw": 80,
  "Mn": 96,
  "nodes": [
@@ -36,6 +36,10 @@
   [
    3.55,
    "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.5500_M80.npz"
+  ],
+  [
+   3.5,
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.5000_M80.npz"
   ]
  ],
  "hist_n": [
@@ -54,6 +58,10 @@
   [
    3.55,
    "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.5500_M96.npz"
+  ],
+  [
+   3.5,
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.5000_M96.npz"
   ]
  ],
  "pairs": [
@@ -74,10 +82,15 @@
    -2.514380180451135e-09,
    80,
    96
+  ],
+  [
+   3.5,
+   -1.270797387739353e-08,
+   80,
+   96
   ]
  ],
  "targets": [
-  3.5,
   3.45,
   3.4,
   3.35,
@@ -89,7 +102,11 @@
   3.05
  ],
  "done": null,
- "post": null,
+ "post": {
+  "D": 3.5,
+  "stage": "resolution",
+  "t_point": 617.5
+ },
  "last_point_s": 482.3,
  "Mc": null,
  "hist_c": []

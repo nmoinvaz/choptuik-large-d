@@ -6,3 +6,11 @@
   M = 96 (N = 5377, from lowDv_D3.7000_M80.npz): 24 outputs in 646 s
   M = 128 (N = 7169, from lowDv_D3.7000_M80.npz): 24 outputs in 1745 s
 saved 168 hashes to /tmp/claude-0/-home-claude/5cec0889-b97c-529a-89c7-507003649638/scratchpad/hm/REF_highm_main.json
+  M = 8: already saved
+  M = 16: already saved
+  M = 48: already saved
+  M = 64: already saved
+  M = 80: already saved
+  M = 96: already saved
+  M = 128: already saved
+saved 168 hashes to /tmp/claude-0/-home-claude/5cec0889-b97c-529a-89c7-507003649638/scratchpad/hm/REF_highm_main.json
