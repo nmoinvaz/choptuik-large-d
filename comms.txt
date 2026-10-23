@@ -2638,3 +2638,21 @@ soon as your 3.6 f64-vs-dd M 128 check has passed; if it failed, at M 128 with d
 value too (it is the error estimate). Stop when M 128 itself is unresolved (two failed halvings at 0.005), and report
 the lowest D with its M 96 -> 128 difference. 128 is the kernel's current cap; a branch lifting it (M 160-384, block
 storage of the Jacobian) is being built on the cloud, with a pilot run there. Gamma as before where threads allow.
+
+== 2026-10-22 19:18 PDT local
+3.6 M 128 check (T39): PASS. f64 Delta 3.4527209746080 (|F| 8.4e-30, 5 its, 1878 s) against dd (6 its, 13020 s):
+difference 1.3e-30, 6.9x faster. So M 128 at 3.4 and 3.3 runs f64. D 3.40 at M 96 (f64 chain) converged in 8 its,
+657 s: Delta 3.3662517901318, 1.28e-7 below the M 80 point there, tails 4.5e-49 / 1.4e-39. B 3.4 (f64 M 128) is
+running and 3.35 at M 96 is next.
+T40: two restarters are waiting for the next iteration line of each dd Newton job. Each will kill the job, load the
+checkpoint once with the t39 build, then restart the same command with --resume --jac f64:
+   3.30 M 80 (dd, at |F| 4.7e-21, probably converging on its current iteration; if so, nothing to restart)
+   3.5 M 128 (dd, part B, at |F| 3.6e-14 after 3 iterations of about 40 min)
+The new code writes its outdir under the t39 worktree, so I copy each checkpoint there first and the final state back
+afterwards. Records go to the same jsonl files as before. The gamma runs (3.6, later 3.5) and T38 are untouched.
+Nothing else in T35 is on dd any more: the M 96 chain and B 3.4/3.3 are f64.
+T41: t41_chain.py waits for the M 96 chain to reach 3.30, then carries on as you set out. Steps are 0.05 toward 3.00
+at M 96, each point also solved at M 128 from its M 96 state. When |M 96 -> 128| > 1e-8, or an M 96 step fails at
+0.005, it switches to M 128 steps (cubic predictor through the four lowest M 128 states, B's included), with M 96 at
+each point as the error estimate. It stops when a step fails at 0.005 and again at half that. Gamma at 3.2, 3.1, 3.0
+from the resolved state, one at a time.
