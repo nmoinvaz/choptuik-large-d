@@ -34,10 +34,13 @@ lift: a converged state (--start, default hp/data/lowD_states/lowDv_D3.7000_M80.
   Pass 2 on the plan of the pass-1 state, which needs 2-4 times fewer steps (the resampled state's new top harmonics
   are aliasing products that the tau-derivative amplifies; near the solution they are small), to |F| <= --tol (1e-28);
   if the re-planned residual is not small, pass 1 continues instead. --no_replan: one pass on the start's plan to --tol.
-  Times every newton_mixed call and every residual; records Delta (hi, lo), |F|, iterations, the final plan's step
-  count, the series tails (lowD_dd.tails), the stored LU's bytes, the load average, the peak RSS of the process (run
-  one M per process) and seconds per Newton step. The state is saved as hp/data/lowD_states/<tag>_D<D>_M<M>.npz with
-  its plan in the meta; the record goes to --out (default hp/data/lowD_highM/lift_D3.7.jsonl).
+  Both passes run through lowD_dd.solve_point (records in <out>_points.jsonl; states
+  hp/data/lowD_states/<tag>_p1_D<D>_M<M>.npz and <tag>_D<D>_M<M>.npz with their plans; every accepted Newton step
+  checkpointed, so a rerun of the same command resumes). Then one Newton step at the solution is timed by part
+  (residual, Jacobian, block factorization, and the Jacobian without the tau derivative). The record in --out
+  (default hp/data/lowD_highM/lift_D3.7.jsonl): Delta (hi, lo), |F|, iterations and seconds of each, the plans' step
+  counts, the series tails (lowD_dd.tails), the timings, the stored LU's bytes, the load average and the peak RSS of
+  the process (run one M per process). A rerun skips an M already in --out.
 profile: at a state (--start, default the D = 3.7 state resampled to --M): seconds of a residual, of newton_mixed in
   block storage (residual + Jacobian + LU + solve), of its Jacobian build and of the block factorization
   (Solver.lu_info), and of the Jacobian build without the tau derivative (jac_mutate=1; the difference is the tau
@@ -323,92 +326,94 @@ class Timed:
 
 
 def lift(opts):
+    """two-pass lift through lowD_dd.solve_point (every accepted Newton step checkpointed; a rerun resumes, and skips a
+    pass whose converged state exists), then a timing of one Newton step at the solution (prof)"""
+    import argparse
     import lowD_dd
     M = int(opts["M"])
     threads = int(opts.get("threads", 2))
     tol = float(opts.get("tol", 1e-28))
+    tol1 = float(opts.get("tol1", 1e-14))
     tag = opts.get("tag", "highm")
     start = opts.get("start", STATE(80))
-    plan_from = opts.get("plan", "start")
-    tol1 = float(opts.get("tol1", 1e-14))
     outp = opts.get("out", os.path.join(HERE, "data", "lowD_highM", "lift_D3.7.jsonl"))
+    points = outp.replace(".jsonl", "_points.jsonl")
     os.makedirs(os.path.dirname(outp), exist_ok=True)
     zh, zl, m = load(start)
     D, Mo, nodes = m["D"], m["M"], list(m["nodes"])
+    if os.path.exists(outp) and any(json.loads(ln).get("M") == M and json.loads(ln).get("tag", "highm") == tag
+                                    for ln in open(outp) if ln.strip()):
+        print(f"D {D} M {M}: already in {outp}")
+        return 0
     kw = dict(nodes=nodes, kt=m["kt"], kc=m["kc"], ks=m["ks"], threads=threads)
+    log = lambda t: print(t, flush=True)  # noqa: E731
+
+    def ns(tg, tl):
+        return argparse.Namespace(out=points, tag=tg, resume=True, kt=m["kt"], kcs=m["kc"], ks=m["ks"], tol_step=1e-30,
+                                  hmax=0.05, solver="newton", it_max=int(opts.get("it_max", 14)), tol=tl, accept=tl, lm=0,
+                                  jac="f64", threads=threads, svd=0, dn_its=2, w=24)
+
+    def last_rec(tg_tol):
+        r = None
+        for ln in open(points):
+            x = json.loads(ln)
+            if x["M"] == M and abs(x["D"] - D) < 1e-9 and x.get("converged") and (x["F"] <= tg_tol):
+                r = x
+        return r
+
     t0 = time.time()
-    if plan_from == "source":
-        # the plan of the converged source state at its own M (a resampled state needs 3.5-4 times more steps)
-        s0 = make_solver(D, Mo, **kw)
-        segs1 = s0.plan(zh, zl, 1e-30, 0.05)
-        del s0
     if M != Mo:
         zh, zl = resample_z(zh + zl, Mo, M, len(nodes))
     s = make_solver(D, M, **kw)
-    if plan_from == "start":
-        segs1 = s.plan(zh, zl, 1e-30, 0.05)
-    print(f"D {D} M {M} (N {s.size}) from {os.path.basename(start)} (M {Mo}); pass 1 plan from the {plan_from} "
-          f"({time.time() - t0:.0f} s)", flush=True)
-
-    def run(segs, zh, zl, label, tol=tol):
-        s.set_segs(segs)
-        F0 = dd_norm(*s.residual(zh, zl))
-        steps = sum(len(g) - 1 for g in s.get_segs())
-        print(f" {label}: {steps} Taylor steps, start |F| {F0:.2e}", flush=True)
-        ts = Timed(s)
-        t1 = time.time()
-        zh, zl, hist = newton_solve(ts, zh, zl, tol=tol, it_max=int(opts.get("it_max", 14)), verbose=True, jac="f64")
-        zh, zl = np.asarray(zh), np.asarray(zl)
-        F = dd_norm(*s.residual(zh, zl))
-        nbytes, isblock, t_jac, t_fac = s.lu_info()
-        r = dict(label=label, steps=steps, start_F=F0, F=F, converged=bool(F <= tol), newton_calls=len(hist),
-                 Delta=float(zh[-1]), Delta_lo=float(zl[-1]), seconds=round(time.time() - t1, 1),
-                 t_newton_mixed=[round(v, 2) for v in ts.t["newton_mixed"]], t_residual=[round(v, 2) for v in ts.t["residual"]],
-                 s_per_newton_step=round(float(np.mean(ts.t["newton_mixed"])), 2),
-                 s_per_residual=round(float(np.mean(ts.t["residual"])), 2), s_last_jacobian=t_jac, s_last_factor=t_fac,
-                 lu_mb=round(nbytes / 2 ** 20, 1), lu_block=isblock, load=os.getloadavg()[0])
-        print(f" {label}: Delta {zh[-1]:.16f} ({zl[-1]:+.2e}) |F| {F:.1e}, {len(hist)} Newton calls, {r['seconds']:.0f} s, "
-              f"{r['s_per_newton_step']} s per newton_mixed", flush=True)
-        return r, zh, zl
-
-    passes = []
     if opts.get("no_replan"):
-        r1, zh, zl = run(segs1, zh, zl, "single pass")
-        passes.append(r1)
+        ok, zh, zl = lowD_dd.solve_point(D, M, zh, zl, f"lift from {os.path.basename(start)}, start plan", ns(tag, tol), nodes,
+                                         STATES, log, segs=s.plan(zh, zl, 1e-30, 0.05))
+        passes = [last_rec(tol)] if ok else []
     else:
-        # pass 1 on the resampled start's own plan, only to --tol1; pass 2 on the plan of that nearly converged state
-        # (leaner by 2-4 times), to --tol. If the re-planned residual is not small, pass 1 continues to --tol instead.
-        r1, zh1, zl1 = run(segs1, zh, zl, "pass 1", tol=tol1)
-        passes.append(r1)
-        segs2 = s.plan(zh1, zl1, 1e-30, 0.05)
-        s.set_segs(segs2)
-        F2 = dd_norm(*s.residual(zh1, zl1))
-        if np.isfinite(F2) and F2 <= max(1e3 * r1["F"], 1e-12):
-            r2, zh, zl = run(segs2, zh1, zl1, "pass 2 (re-planned)")
-        else:
-            print(f" re-planned residual {F2:.1e}: pass 1 continues on its own plan", flush=True)
-            r2, zh, zl = run(segs1, zh1, zl1, "pass 1 continued")
-        passes.append(r2)
+        # pass 1 on the resampled start's own plan, to tol1; pass 2 on the plan of the pass-1 state, to tol
+        ok, zh, zl = lowD_dd.solve_point(D, M, zh, zl, f"lift from {os.path.basename(start)}, pass 1", ns(tag + "_p1", tol1),
+                                         nodes, STATES, log, segs=s.plan(zh, zl, 1e-30, 0.05))
+        passes = [last_rec(tol1)] if ok else []
+        if ok:
+            segs2 = s.plan(zh, zl, 1e-30, 0.05)
+            s.set_segs(segs2)
+            F2 = dd_norm(*s.residual(zh, zl))
+            if not (np.isfinite(F2) and F2 <= 1e-12):
+                print(f" re-planned residual {F2:.1e}: pass 2 on the pass-1 plan instead", flush=True)
+                segs2 = load(os.path.join(STATES, f"{tag}_p1_D{D:.4f}_M{M}.npz"))[2]["segs"]
+            ok, zh, zl = lowD_dd.solve_point(D, M, zh, zl, "pass 2 (re-planned)", ns(tag, tol), nodes, STATES, log, segs=segs2)
+            if ok:
+                passes.append(last_rec(tol))
+    if not ok:
+        print(f"D {D} M {M}: NOT converged", flush=True)
+        return 1
     fin = passes[-1]
-    tc, th = lowD_dd.tails(s, zh, zl, nodes, M)
-    p1 = zh[:M] + zl[:M]
-    hk = lowD_dd.harmonics(np.sqrt(D - 2) * p1)
-    rec = dict(D=D, M=M, N=s.size, Delta=fin["Delta"], Delta_lo=fin["Delta_lo"], F=fin["F"], converged=fin["converged"],
-               start=os.path.basename(start), start_M=Mo, plan_from=plan_from, nodes=nodes, kt=m["kt"], kc=m["kc"],
-               ks=m["ks"], tol_step=1e-30, hmax=0.05, steps=fin["steps"], tail_c=tc, tail_h=th,
-               newton_calls=sum(p["newton_calls"] for p in passes), s_per_newton_step=fin["s_per_newton_step"], lu_mb=fin["lu_mb"], lu_block=fin["lu_block"],
-               passes=passes, seconds=round(time.time() - t0, 1), peak_rss_mb=peak_rss_mb(), threads=threads,
-               F_harm=[float(f"{v:.4e}") for v in hk], jac="f64")
-    if fin["converged"]:
-        save(os.path.join(STATES, f"{tag}_D{D:.4f}_M{M}.npz"), zh, zl,
-             dict(D=D, M=M, nodes=nodes, kt=m["kt"], kc=m["kc"], ks=m["ks"], segs=s.get_segs()))
+    # one Newton step at the solution, timed by part (the same Jacobian without the tau derivative for its share)
+    zh, zl, mm = load(os.path.join(STATES, f"{tag}_D{D:.4f}_M{M}.npz"))
+    s.set_segs(mm["segs"])
+    t = time.time(); s.residual(zh, zl); t_res = time.time() - t
+    t = time.time(); s.newton_mixed(zh, zl); t_nm = time.time() - t
+    nbytes, isblock, t_jac, t_fac = s.lu_info()
+    t_nodtau = None
+    if isblock and not opts.get("no_dtau_timing"):
+        s.newton_mixed(zh, zl, jac_mutate=1)
+        t_nodtau = s.lu_info()[2]
+    rec = dict(D=D, M=M, N=s.size, tag=tag, Delta=fin["Delta"], Delta_lo=fin["Delta_lo"], F=fin["F"], converged=True,
+               start=os.path.basename(start), start_M=Mo, nodes=nodes, kt=m["kt"], kc=m["kc"], ks=m["ks"], tol_step=1e-30,
+               hmax=0.05, steps=fin["steps"], steps_pass1=passes[0]["steps"] if len(passes) > 1 else None,
+               its=[p["its"] for p in passes], tail_c=fin["tail_c"], tail_h=fin["tail_h"],
+               t_its=[p.get("t_its") for p in passes], s_residual=round(t_res, 2), s_newton_step=round(t_nm, 2),
+               s_jacobian=None if t_jac is None else round(t_jac, 2), s_factor=None if t_fac is None else round(t_fac, 2),
+               s_jacobian_no_dtau=None if t_nodtau is None else round(t_nodtau, 2), lu_mb=round(nbytes / 2 ** 20, 1),
+               lu_block=isblock, load=round(os.getloadavg()[0], 2), peak_rss_mb=peak_rss_mb(), threads=threads,
+               wall=round(time.time() - t0, 1), jac="f64")
     with open(outp, "a") as f:
         f.write(json.dumps(rec) + "\n")
-    pe = ""
-    print(f"D {D} M {M}: Delta {rec['Delta']:.16f} ({rec['Delta_lo']:+.2e}) |F| {rec['F']:.1e}; steps {rec['steps']}; tails "
-          f"{tc:.0e} {th:.0e}; {rec['s_per_newton_step']} s per newton_mixed; LU {rec['lu_mb']} MB; peak RSS "
-          f"{rec['peak_rss_mb']} MB{pe}", flush=True)
-    return 0 if fin["converged"] else 1
+    print(f"D {D} M {M}: Delta {rec['Delta']:.16f} ({rec['Delta_lo']:+.2e}) |F| {rec['F']:.1e}; steps {rec['steps_pass1']} -> "
+          f"{rec['steps']}; tails {rec['tail_c']:.0e} {rec['tail_h']:.0e}; Newton step {rec['s_newton_step']} s (residual "
+          f"{rec['s_residual']} s, Jacobian {rec['s_jacobian']} s, factor {rec['s_factor']} s, Jacobian without d/dtau "
+          f"{rec['s_jacobian_no_dtau']} s); LU {rec['lu_mb']} MB; peak RSS {rec['peak_rss_mb']} MB; load {rec['load']}", flush=True)
+    return 0
 
 
 def profile(opts):

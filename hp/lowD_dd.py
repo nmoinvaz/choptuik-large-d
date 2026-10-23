@@ -227,6 +227,8 @@ def solve_point(D, M, zh, zl, src, a, nodes, outdir, log, segs=None):
         rec.update(jac=a.jac)
     if peak_rss_mb() is not None:
         rec.update(peak_rss_mb=peak_rss_mb())
+    # seconds of each Newton iteration of this run (Newton step plus its line search; resumed iterations not included)
+    rec.update(t_its=[h["t"] for h in hist if "t" in h and h.get("lm") is None])
     if a.svd:
         t1 = time.time()
         sv, dc = weakest(s, a.svd)

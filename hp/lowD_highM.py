@@ -7,26 +7,35 @@
 
 The two start states are converged at the same D and nodes, at the working resolution M_w and the next one M_n
 (consecutive in --Ms). At each new D (a grid of --dD below the start, D_end excluded):
-  1. M_w: predictor = Lagrange (cubic) through the last <= 4 converged states at M_w (lowD_dd.solve_point: the
-     f64-Jacobian Newton, Solver.newton_mixed, in block storage above M = 128; every step checkpointed);
-  2. M_n: the better (smaller |F|) of the predictor through the last <= 4 states at M_n (if there are 2 or more) and
-     the M_w solution just found, resampled to M_n;
+  1. M_w: predictor = Lagrange (cubic) through the last <= 4 converged states at M_w, Newton on the predictor's Taylor
+     plan (lowD_dd.solve_point: the f64-Jacobian Newton, Solver.newton_mixed, in block storage above M = 128);
+  2. M_n: plan from the predictor through the last <= 4 states at M_n; start from the better (smaller |F|) of that
+     predictor (with 2 or more states) and the M_w solution just found, resampled to M_n;
   3. the value is Delta(M_n), its error estimate |Delta(M_n) - Delta(M_w)| (an estimator: the change from the next
      resolution, not a bound);
   4. if that difference exceeds --diff_max, or a log-linear fit of the last 3 differences in D projects it above
-     --diff_max two points ahead, the resolution moves up (M_w <- M_n, M_n <- the next in --Ms), the new M_n solved at
-     this D from the new M_w's solution, and the point recorded again with the new pair;
+     --diff_max two points ahead, the resolution moves up (M_w <- M_n, M_n <- the next in --Ms): the new M_n is solved
+     at this D from the new M_w's solution resampled, in two passes (pass 1 on the resampled state's own plan to
+     |F| <= 1e-14, state <tag>_p1_*; pass 2 on the plan of the pass-1 state, 2-4 times fewer steps), and the point is
+     recorded again with the new pair;
   5. --auto_nodes: if the M_n solution's centre or horizon series tail (lowD_dd.tails) exceeds --tail_max (1e-30),
      the nodes change as in lowD_dd.py (first node halved; a node 0.1 further out while the last is below 0.85), both
      resolutions are re-noded (driver.renode) and re-solved at this D under a new tag, and the predictors restart.
+The plans come from converged states or predictors through them: a state resampled to a larger M needs 3.5-4 times
+more Taylor steps (its new top harmonics are aliasing products that the tau-derivative amplifies), and a coarser plan
+blows up on it. A start whose residual on the given plan is not finite or above 1 gets its own plan instead.
 A failed solve inserts the midpoint between the last converged D and the target (halving the step).
 Stop rules (each recorded with its reason): the largest M in --Ms cannot keep the difference below --diff_max; a
-point fails with the step below --min_step; the projected time of the next point exceeds --point_hours (the last
-point's two solves, times (M'/M)^2.9 for a move up); --hours of wall time in all (counted across restarts through
-the progress file <out>.progress.json; --resume continues from it).
-Records: one per solve in --points (lowD_dd.solve_point's record: Delta hi/lo, |F|, iterations, seconds, steps, tails,
-sensitivities, harmonics, peak RSS), one per point and resolution pair in --out (D, M_w, M_n, both Deltas, the
-difference, |F|, iterations, seconds, tails, the decision). States: hp/data/lowD_states/<tag>_D<D>_M<M>.npz.
+point fails with the step below --min_step; the projected time of the next point (the last point's solves) exceeds
+--point_hours; --hours of wall time in all, counted across restarts.
+Restarts: every Newton step is checkpointed and every converged solve saved (lowD_dd.solve_point); the progress file
+<out>.progress.json holds the continuation state, including a pending move up or re-noding; rerun the same command
+with --resume to continue from the last converged point (a converged (D, M) is not solved again, a pair is not
+recorded twice).
+Records: one per solve in --points (lowD_dd.solve_point's record: Delta hi/lo, |F|, iterations, seconds per
+iteration, steps, tails, sensitivities, harmonics, peak RSS), one per point and resolution pair in --out (D, M_w,
+M_n, both Deltas, the difference, |F|, iterations, seconds, tails, the decision). States:
+hp/data/lowD_states/<tag>_D<D>_M<M>.npz.
 """
 import argparse
 import json
@@ -107,8 +116,8 @@ def main():
     nodes = list(mw["nodes"])
     kc, ks = mw["kc"], mw["ks"]
     D0 = mw["D"]
-    st = dict(t_used=0.0, Mw=mw["M"], Mn=mn["M"], nodes=nodes, tag=a.tag,
-              hist_w=[[D0, a.start_w]], hist_n=[[D0, a.start_n]], pairs=[], targets=None, done=None)
+    st = dict(t_used=0.0, Mw=mw["M"], Mn=mn["M"], nodes=nodes, tag=a.tag, hist_w=[[D0, a.start_w]],
+              hist_n=[[D0, a.start_n]], pairs=[], targets=None, done=None, post=None, last_point_s=None)
     if a.resume and os.path.exists(prog_path):
         st = json.load(open(prog_path))
         log(f"resuming: M {st['Mw']}/{st['Mn']}, last D {st['hist_n'][-1][0]}, {st['t_used'] / 3600:.2f} h used")
@@ -219,20 +228,111 @@ def main():
                    hours=round((time.time() - t_start) / 3600, 3))
         if extra:
             rec.update(extra)
-        with open(a.out, "a") as f:
-            f.write(json.dumps(rec) + "\n")
+        seen = os.path.exists(a.out) and any(
+            r.get("Mw") == rec["Mw"] and r.get("Mn") == rec["Mn"] and abs(r.get("D", -9) - D) < 1e-9 and r.get("nodes") == rec["nodes"]
+            for r in (json.loads(ln) for ln in open(a.out) if ln.strip()))
+        if not seen:            # a resumed run does not record a pair twice
+            with open(a.out, "a") as f:
+                f.write(json.dumps(rec) + "\n")
         log(f"D {D}: Delta(M {rn['M']}) = {rn['Delta']:.16f} ({rn['Delta_lo']:+.2e}), M {rw['M']} -> {rn['M']}: {diff:+.2e}; "
             f"{decision}")
         return Dw, diff
 
-    last_point_s = None
-    while st["targets"]:
+    def post_point(post):
+        """after a converged pair at post["D"]: the resolution decision (and the move up), then the series tails (and the
+        re-noding). Resumable: the stage and its inputs are in the progress file, and the solves resume from their
+        checkpoints or converged states. Returns a stop reason or None."""
+        Dt = post["D"]
+        if post["stage"] == "resolution":
+            Mw, Mn = st["Mw"], st["Mn"]
+            diff = [x for d, x, w_, n_ in st["pairs"] if abs(d - Dt) < 1e-9 and (w_, n_) == (Mw, Mn)][-1]
+            same = [(d, x) for d, x, w_, n_ in st["pairs"] if (w_, n_) == (Mw, Mn)]
+            D2 = round(Dt - 2 * a.dD, 6)
+            proj = projected_diff(same, D2)
+            why = None
+            if abs(diff) > a.diff_max:
+                why = f"|M {Mw} -> {Mn} difference| {abs(diff):.1e} > {a.diff_max:g}"
+            elif proj is not None and proj > a.diff_max:
+                why = f"difference projected to {proj:.1e} at D {D2} (> {a.diff_max:g})"
+            if why and Ms.index(Mn) + 1 >= len(Ms):
+                if abs(diff) > a.diff_max:
+                    return (f"the largest M built ({Mn}) cannot keep the difference below {a.diff_max:g} at D {Dt} "
+                            f"(M {Mw} -> {Mn}: {diff:+.2e})")
+                log(f"{why}, but M {Mn} is the largest built; continuing at M {Mw} / {Mn}")
+            elif why:
+                M2 = Ms[Ms.index(Mn) + 1]
+                log(f"{why}: moving up to M {Mn} / {M2}")
+                ok2, r2, p2 = solve_up(Dt, st["hist_n"][-1][1], M2)
+                if not ok2:
+                    return f"the move up to M {M2} failed at D {Dt}"
+                rn = find_record(a.points, Dt, Mn, st["nodes"])
+                _, d2 = write_pair(Dt, rn, r2, f"moved up ({why})")
+                st["Mw"], st["Mn"] = Mn, M2
+                st["hist_w"] = st["hist_n"]
+                st["hist_n"] = [[Dt, p2]]
+                st["pairs"].append([Dt, d2, Mn, M2])
+                post["t_point"] = rn["seconds"] + r2["seconds"]
+            post["stage"] = "nodes"
+            save_prog()
+        if post["stage"] == "nodes":
+            if "new_nodes" not in post:
+                rlast = find_record(a.points, Dt, st["Mn"], st["nodes"])
+                tc, th = rlast.get("tail_c", 0.0), rlast.get("tail_h", 0.0)
+                new = list(st["nodes"])
+                if a.auto_nodes and tc > a.tail_max:
+                    new = [round(new[0] / 2, 6)] + new
+                if a.auto_nodes and th > a.tail_max and new[-1] < 0.85:
+                    new = new + [round(new[-1] + 0.1, 6)]
+                if tc > a.tail_max or th > a.tail_max:
+                    log(f"D {Dt}: tails {tc:.0e} (centre) {th:.0e} (horizon) above {a.tail_max:.0e}"
+                        + (f": nodes {st['nodes']} -> {new}" if new != st["nodes"] else
+                           (": the nodes cannot move further" if a.auto_nodes else " (no --auto_nodes)")))
+                if new != st["nodes"]:
+                    post.update(new_nodes=new, old_nodes=st["nodes"])
+                    st["nodes"] = new
+                    st["tag"] = st["tag"].split("_x")[0] + f"_x{new[0]:g}-{new[-1]:g}"
+                    save_prog()
+            if "new_nodes" in post:
+                old, new = post["old_nodes"], post["new_nodes"]
+                res = []
+                for key in ("hist_w", "hist_n"):
+                    D_, p_ = st[key][-1]
+                    h, l, m = load(p_)
+                    s0 = make_solver(D_, m["M"], nodes=old, kt=a.kt, kc=kc, ks=ks, threads=a.threads)
+                    s0.set_segs(m.get("segs") or s0.plan(h, l, a.tol_step, a.hmax))
+                    zr, zrl = renode(s0, h, l, old, new, m["M"])
+                    res.append((m["M"], np.asarray(zr) + np.asarray(zrl)))
+                okw, rw2, pw2 = solve(Dt, res[0][0], [("re-noded", res[0][1])], plan_of(res[0][1], res[0][0], Dt))
+                okn, rn2, pn2 = (solve(Dt, res[1][0], [("re-noded", res[1][1])], plan_of(res[1][1], res[1][0], Dt)) if okw
+                                 else (False, None, None))
+                if not (okw and okn):
+                    return f"re-noded solve failed at D {Dt}"
+                _, d2 = write_pair(Dt, rw2, rn2, f"re-noded {old} -> {new}")
+                st["hist_w"], st["hist_n"] = [[Dt, pw2]], [[Dt, pn2]]
+                st["pairs"].append([Dt, d2, st["Mw"], st["Mn"]])
+                post["t_point"] += rw2["seconds"] + rn2["seconds"]
+        # projected time of the next point: the solves of the current pair at this point (after a move up, the pair
+        # at the new resolutions; after a re-noding, both solve sets)
+        st["last_point_s"] = post["t_point"]
+        log(f"point {Dt} took {post['t_point'] / 60:.1f} min of solves; {(time.time() - t_start) / 3600:.2f} h used")
+        st["post"] = None
+        save_prog()
+        return None
+
+    while True:
+        if st.get("post"):
+            why = post_point(st["post"])
+            if why:
+                return stop(why)
+            continue
+        if not st["targets"]:
+            return stop(f"reached the end of the D grid ({a.D_end})")
         if time.time() - t_start > a.hours * 3600:
             return stop(f"{a.hours} h of wall time used")
         Dt = st["targets"][0]
         Dl = st["hist_n"][-1][0]
-        if last_point_s is not None and last_point_s > a.point_hours * 3600:
-            return stop(f"projected time of the next point {last_point_s / 3600:.1f} h > {a.point_hours} h")
+        if st.get("last_point_s") and st["last_point_s"] > a.point_hours * 3600:
+            return stop(f"projected time of the next point {st['last_point_s'] / 3600:.1f} h > {a.point_hours} h")
         log(f"--- D {Dt} (from {Dl}), M {st['Mw']} / {st['Mn']}, nodes {st['nodes'][0]}..{st['nodes'][-1]}")
         Mw, Mn = st["Mw"], st["Mn"]
         zpw = predict([(d, zof(p)) for d, p in st["hist_w"][-4:]], Dt)
@@ -252,83 +352,13 @@ def main():
             st["targets"].insert(0, Dm)
             save_prog()
             continue
-        # a converged pair
-        t_point = rw["seconds"] + rn["seconds"]
         _, diff = write_pair(Dt, rw, rn, "pair")
         st["hist_w"].append([Dt, path_w])
         st["hist_n"].append([Dt, path_n])
         st["pairs"].append([Dt, diff, Mw, Mn])
         st["targets"].pop(0)
+        st["post"] = dict(D=Dt, stage="resolution", t_point=rw["seconds"] + rn["seconds"])
         save_prog()
-        # resolution: move up when the difference exceeds diff_max, or is projected to two points ahead
-        same = [(d, x) for d, x, w_, n_ in st["pairs"] if (w_, n_) == (Mw, Mn)]
-        D2 = round(Dt - 2 * a.dD, 6)
-        proj = projected_diff(same, D2)
-        why = None
-        if abs(diff) > a.diff_max:
-            why = f"|M {Mw} -> {Mn} difference| {abs(diff):.1e} > {a.diff_max:g}"
-        elif proj is not None and proj > a.diff_max:
-            why = f"difference projected to {proj:.1e} at D {D2} (> {a.diff_max:g})"
-        if why:
-            if Ms.index(Mn) + 1 >= len(Ms):
-                if abs(diff) > a.diff_max:
-                    return stop(f"the largest M built ({Mn}) cannot keep the difference below {a.diff_max:g} at D {Dt} "
-                                f"(M {Mw} -> {Mn}: {diff:+.2e})")
-                log(f"{why}, but M {Mn} is the largest built; continuing at M {Mw} / {Mn}")
-            else:
-                M2 = Ms[Ms.index(Mn) + 1]
-                log(f"{why}: moving up to M {Mn} / {M2}")
-                ok2, r2, p2 = solve_up(Dt, path_n, M2)
-                if not ok2:
-                    return stop(f"the move up to M {M2} failed at D {Dt}")
-                write_pair(Dt, rn, r2, f"moved up ({why})")
-                st["Mw"], st["Mn"] = Mn, M2
-                st["hist_w"] = st["hist_n"]
-                st["hist_n"] = [[Dt, p2]]
-                t_point = rn["seconds"] + r2["seconds"]
-                save_prog()
-        # series tails and nodes (of the current M_n solution at this D)
-        rlast = find_record(a.points, Dt, st["Mn"], st["nodes"])
-        tc, th = rlast.get("tail_c", 0.0), rlast.get("tail_h", 0.0)
-        if a.auto_nodes and (tc > a.tail_max or th > a.tail_max):
-            new = list(st["nodes"])
-            if tc > a.tail_max:
-                new = [round(new[0] / 2, 6)] + new
-            if th > a.tail_max and new[-1] < 0.85:
-                new = new + [round(new[-1] + 0.1, 6)]
-            if new != st["nodes"]:
-                log(f"D {Dt}: tails {tc:.0e} (centre) {th:.0e} (horizon) above {a.tail_max:.0e}: nodes {st['nodes']} -> {new}")
-                old = st["nodes"]
-                res = []
-                for key in ("hist_w", "hist_n"):
-                    D_, p_ = st[key][-1]
-                    h, l, m = load(p_)
-                    s0 = make_solver(D_, m["M"], nodes=old, kt=a.kt, kc=kc, ks=ks, threads=a.threads)
-                    s0.set_segs(s0.plan(h, l, a.tol_step, a.hmax))
-                    zr, zrl = renode(s0, h, l, old, new, m["M"])
-                    res.append((m["M"], np.asarray(zr) + np.asarray(zrl)))
-                st["nodes"] = new
-                st["tag"] = st["tag"].split("_x")[0] + f"_x{new[0]:g}-{new[-1]:g}"
-                okw, rw2, pw2 = solve(Dt, res[0][0], [("re-noded", res[0][1])], plan_of(res[0][1], res[0][0], Dt))
-                okn, rn2, pn2 = (solve(Dt, res[1][0], [("re-noded", res[1][1])], plan_of(res[1][1], res[1][0], Dt)) if okw
-                                 else (False, None, None))
-                if not (okw and okn):
-                    return stop(f"re-noded solve failed at D {Dt}")
-                write_pair(Dt, rw2, rn2, f"re-noded {old} -> {new}")
-                st["hist_w"], st["hist_n"] = [[Dt, pw2]], [[Dt, pn2]]
-                t_point += rw2["seconds"] + rn2["seconds"]
-                save_prog()
-            else:
-                log(f"D {Dt}: tails {tc:.0e} {th:.0e} above {a.tail_max:.0e}, but the nodes cannot move further")
-        elif tc > a.tail_max or th > a.tail_max:
-            log(f"D {Dt}: tails {tc:.0e} (centre) {th:.0e} (horizon) above {a.tail_max:.0e} (no --auto_nodes)")
-        # projected time of the next point: the two solves of the current pair at this point (after a move up, the
-        # pair at the new resolutions)
-        last_point_s = t_point
-        log(f"point {Dt} took {t_point / 60:.1f} min; next point projected {last_point_s / 60:.1f} min; "
-            f"{(time.time() - t_start) / 3600:.2f} h used")
-    stop(f"reached the end of the D grid ({a.D_end})")
-
 
 if __name__ == "__main__":
     main()
