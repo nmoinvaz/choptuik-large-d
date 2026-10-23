@@ -441,3 +441,13 @@ What this shows:
    thin layer near the horizon, so the last segment and the horizon series carry large intermediate terms, as the top
    harmonics do at M ≥ 48 (section 3). The simplest fix is to compute the horizon block's Jacobian in double-double
    and the rest in f64.
+7. The correction loop, prototyped (`hp/mixed_largeD_gmres.py`, log `hp/data/mixed_precision/largeD_gmres.log`).
+   GMRES on J M⁻¹ (right preconditioning), with M the f64 LU of the f64-built Jacobian. As a stand-in for an exact
+   Jacobian-vector product rounded to f64, it multiplies by the double-double Jacobian's hi part. At D = 50–60, a
+   GMRES tolerance of 10⁻⁸ takes 4–5 products and brings the step error from 0.9–3.4 down to 3×10⁻⁷–5×10⁻⁶. Once,
+   at D = 55, the 10⁻⁸ tolerance stopped at 4 products with the step still off by 6×10⁻⁴, and the other start needed
+   27 products. The residual is not a safe stopping test here, because an error in a weak direction barely shows in
+   the residual. The loop should stop on the change in the step instead, or on a fixed count followed by a check. A
+   tolerance of 10⁻¹² is not reachable with an f64 operator: the floor is about 10⁻¹⁰ relative. At D = 20–45 it takes
+   3 products. The plan is to build both fixes: the horizon block in double-double, and this loop on top, with an
+   exact double-double Jacobian-vector product (one dual pass per segment) in the kernel.
