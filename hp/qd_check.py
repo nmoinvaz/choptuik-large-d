@@ -16,7 +16,7 @@ mpmath: the Rust test qd_dump (built for AVX-512, as the backends check's avx512
   (qd::mutate in hp/src/qd.rs, e.g. 5: sloppy mul drops the error of a0 b2; 14: parse truncates its last part), so
   this check must then fail (exit 1).
 backends: runs `cargo test --release --lib qd_` (the accuracy, agreement and decimal tests) with the AVX-512, the
-  AVX2 and the portable v8 backend (RUSTFLAGS "-C target-feature=+avx512f,+avx2,+fma", "-C target-feature=+avx2,+fma",
+  AVX2 and the portable v8 backend (RUSTFLAGS "-C target-cpu=x86-64-v4", "-C target-feature=+avx2,+fma",
   none: explicit features, so that a build does not depend on the host it was made on; build
   directories hp/target/qd_<isa>); every build must pass, and the digests of all scalar results must agree (each
   build also checks that its 8-lane results equal the scalar ones bit for bit). Exit 1 otherwise. Each backend's
@@ -37,7 +37,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 mp.mp.prec = 3000
 U = mp.mpf(2) ** -209
 TINY = 16 * mp.mpf(2) ** -1074
-BUILDS = {"avx512": "-C target-feature=+avx512f,+avx2,+fma", "avx2": "-C target-feature=+avx2,+fma", "portable": ""}
+BUILDS = {"avx512": "-C target-cpu=x86-64-v4", "avx2": "-C target-feature=+avx2,+fma", "portable": ""}
 
 KIND = {"sloppy add": "add", "accurate add": "add", "qd + f64": "add", "qd + dd": "add", "sloppy mul": "mul",
         "accurate mul": "mul", "qd x f64": "mul", "qd x dd": "mul", "sqr": "sqr", "sloppy div": "div",
