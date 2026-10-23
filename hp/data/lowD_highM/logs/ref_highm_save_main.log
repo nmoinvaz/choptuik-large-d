@@ -3,3 +3,6 @@
   M = 48 (N = 2689, from lowDv_D3.7000_M48.npz): 24 outputs in 27 s
   M = 64 (N = 3585, from lowDv_D3.7000_M64.npz): 24 outputs in 66 s
   M = 80 (N = 4481, from lowDv_D3.7000_M80.npz): 24 outputs in 112 s
+  M = 96 (N = 5377, from lowDv_D3.7000_M80.npz): 24 outputs in 646 s
+  M = 128 (N = 7169, from lowDv_D3.7000_M80.npz): 24 outputs in 1745 s
+saved 168 hashes to /tmp/claude-0/-home-claude/5cec0889-b97c-529a-89c7-507003649638/scratchpad/hm/REF_highm_main.json
