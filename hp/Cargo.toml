@@ -10,6 +10,8 @@ crate-type = ["cdylib", "rlib"]
 
 [features]
 python = ["dep:pyo3", "dep:numpy"]
+# deliberate breakage of the quad-double algorithms, for the controls of their accuracy tests (qd::mutate)
+qd_mutate = []
 
 [dependencies]
 pyo3 = { version = "0.30", features = ["extension-module"], optional = true }

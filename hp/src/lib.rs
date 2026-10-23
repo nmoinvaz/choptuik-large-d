@@ -8,13 +8,22 @@
 //! * `field`: a tau field on the half grid (M = 8 B points) as B lane vectors; Cauchy products, d/dtheta.
 //! * `linalg`: dense double-double LU with partial pivoting (periodic solves, Newton), and the same blocked LU in f64.
 //! * `model`: centre series, Taylor stepping in x, horizon series, residual and Jacobian (double-double or f64).
+//! * `qd`: scalar quad-double (~64 digits); `qv`: 8-lane quad-double built on `v8`, bitwise the same per lane; `exact`:
+//!   exact dyadic and decimal arithmetic for their decimal input/output and their tests. Not used by the solver yet
+//!   (notes/QUAD_DOUBLE.md).
 pub mod dd;
 pub mod dv;
+pub mod exact;
 pub mod field;
 pub mod lane;
 pub mod linalg;
 pub mod model;
+pub mod qd;
+pub mod qv;
 pub mod v8;
+
+#[cfg(test)]
+mod qd_tests;
 
 #[cfg(feature = "python")]
 mod python;
