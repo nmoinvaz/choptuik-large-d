@@ -213,7 +213,18 @@ D = 3.75570, Δ = 3.466774, 2×10⁻⁶ high, the size of their bias there (conv
 **Below D = 4** (`hp/plot_lowD.py`). Left: the double-double points at M = 80 and the 47-mode f64 points near the
 maximum. Middle: the f64 points sit 1.5–3.5×10⁻⁶ high there. Right: the τ modes a 10⁻¹⁰ Δ needs (`hp/lowD_cost.py`, an
 estimate over four model variants, not a bound) cross the double-double kernel's limit of 128 near D = 3.4, which is
-where this computation stops; near D = 3 they run into the hundreds.
+where the computation at M ≤ 128 stops; near D = 3 they run into the hundreds (a branch raising the limit to
+M = 384 is under way).
+
+![Below D = 4: every double-double value of Delta and gamma so far against the sqrt(D - 3) formula, and how much Delta moves when the tau resolution is raised](hp/lowD_values.svg)
+
+**All our values below D = 4** (`hp/plot_lowD_values.py`, which reads every converged double-double record in
+`hp/data`; rerun it as runs land). Left: Δ at the largest τ resolution M computed at each D, filled where the two
+largest M agree to 10⁻⁸ (or M = 80 alone at D ≥ 3.7, where M 80 → 96 is 1.2×10⁻⁹) and hollow where they do not yet.
+Every point, resolved or not, lies within 7×10⁻⁶ of the √(D − 3) formula below. Middle: γ, from the exact growth-mode
+matrix at the largest M. Right: how much Δ moves when M is raised. The step from M = 80 to 96 grows a hundredfold from
+D = 3.7 to 3.4, and below D ≈ 3.45 neither M = 80 nor M = 96 resolves the solution: those points are converged
+discrete solutions, and M = 128 started from them does not converge.
 
 **A formula for 3 < D ≤ 4** (`hp/lowD_formula.py`, fitted to Ecker, Ecker, Grumiller & Jechtl's published values for
 3.046 ≤ D ≤ 4, which are not included here). The variable that works is s = √(D − 3):
@@ -2168,6 +2179,7 @@ solver/plot_first_order.py    first_order.svg: the first 1/D corrections from th
 solver/supercrit/plot_supercrit.py  supercrit.svg: the supercritical front, the lapse behind it, finite-n CSS checks
 hp/plot_modecount.py          modecount.svg: the unstable-mode count in the lambda plane, and the real rates against 1/D
 hp/plot_lowD.py               lowD.svg: below D = 4: the maximum, the f64 bias, the tau modes needed
+hp/plot_lowD_values.py        lowD_values.svg: every double-double Delta and gamma below D = 4, and the change with M
 solver/plot_gamma.py          gamma.svg: lambda = 1/gamma against 1/n with the lambda = 2 limit, and the free fits
 solver/simplify_math.py       converts trivial inline math in README.md to Unicode (GitHub renders at most ~1400 expressions)
 solver/largeD_expand.py       the 1/n expansion symbolically (sympy, Proposition 1)
