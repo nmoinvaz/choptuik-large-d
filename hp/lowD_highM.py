@@ -119,13 +119,16 @@ def main():
     kc, ks = mw["kc"], mw["ks"]
     D0 = mw["D"]
     st = dict(t_used=0.0, Mw=mw["M"], Mn=mn["M"], nodes=nodes, tag=a.tag, hist_w=[[D0, a.start_w]],
-              hist_n=[[D0, a.start_n]], pairs=[], targets=None, done=None, post=None, last_point_s=None)
+              hist_n=[[D0, a.start_n]], pairs=[], targets=None, done=None, post=None, last_point_s=None, Mc=None,
+              hist_c=[])
     if a.resume and os.path.exists(prog_path):
         st = json.load(open(prog_path))
         log(f"resuming: M {st['Mw']}/{st['Mn']}, last D {st['hist_n'][-1][0]}, {st['t_used'] / 3600:.2f} h used")
     if st.get("done"):
         log(f"already stopped: {st['done']}")
         return
+    st.setdefault("Mc", None)
+    st.setdefault("hist_c", [])
     t_start = time.time() - st["t_used"]
     if st["targets"] is None:
         n = int(round((D0 - a.D_end) / a.dD))
@@ -293,6 +296,7 @@ def main():
                     return f"the move up to M {M2} failed at D {Dt}"
                 rn = find_record(a.points, Dt, Mn, st["nodes"])
                 _, d2 = write_pair(Dt, rn, r2, f"moved up ({why})")
+                st["Mc"], st["hist_c"] = Mw, st["hist_w"]
                 st["Mw"], st["Mn"] = Mn, M2
                 st["hist_w"] = st["hist_n"]
                 st["hist_n"] = [[Dt, p2]]
@@ -321,7 +325,8 @@ def main():
             if "new_nodes" in post:
                 old, new = post["old_nodes"], post["new_nodes"]
                 res = []
-                for key in ("hist_w", "hist_n"):
+                keys = ["hist_w", "hist_n"] + (["hist_c"] if st["hist_c"] and abs(st["hist_c"][-1][0] - Dt) < 1e-9 else [])
+                for key in keys:
                     D_, p_ = st[key][-1]
                     h, l, m = load(p_)
                     s0 = make_solver(D_, m["M"], nodes=old, kt=a.kt, kc=kc, ks=ks, threads=a.threads)
@@ -336,6 +341,12 @@ def main():
                     return f"re-noded solve failed at D {Dt}"
                 _, d2 = write_pair(Dt, rw2, rn2, f"re-noded {old} -> {new}")
                 st["hist_w"], st["hist_n"] = [[Dt, pw2]], [[Dt, pn2]]
+                st["hist_c"] = []
+                if len(res) > 2:
+                    okc, rc2, pc2 = solve(Dt, res[2][0], [("re-noded", res[2][2])], plan_of(res[2][2], res[2][0], Dt))
+                    if okc:
+                        st["hist_c"] = [[Dt, pc2]]
+                        post["t_point"] += rc2["seconds"]
                 st["pairs"].append([Dt, d2, st["Mw"], st["Mn"]])
                 post["t_point"] += rw2["seconds"] + rn2["seconds"]
         # projected time of the next point: the solves of the current pair at this point (after a move up, the pair
@@ -361,10 +372,22 @@ def main():
         if st.get("last_point_s") and st["last_point_s"] > a.point_hours * 3600:
             return stop(f"projected time of the next point {st['last_point_s'] / 3600:.1f} h > {a.point_hours} h")
         log(f"--- D {Dt} (from {Dl}), M {st['Mw']} / {st['Mn']}, nodes {st['nodes'][0]}..{st['nodes'][-1]}")
-        Mw, Mn = st["Mw"], st["Mn"]
+        Mw, Mn, Mc = st["Mw"], st["Mn"], st["Mc"]
+        # the helper resolution (the previous working M, after a move up): solved from its own predictor, its solution
+        # lifted is the working resolution's start; a predictor's first Newton step is large (|dz| ~ 3 at |F| ~ 3e-2)
+        # and at M = 128 it went astray in the weak directions, while starts lifted from a converged lower M converge
+        # in 3-5 calls
+        rc = path_c = None
+        if Mc and st["hist_c"]:
+            zpc = predict([(d, zof(p)) for d, p in st["hist_c"][-4:]], Dt)
+            ok_c, rc, path_c = solve(Dt, Mc, [("predictor", zpc)], plan_prev(st["hist_c"], Mc))
+            if not ok_c:
+                log(f"  D {Dt}: the helper M {Mc} did not converge; M {Mw} from its predictor")
+                rc = path_c = None
         zpw = predict([(d, zof(p)) for d, p in st["hist_w"][-4:]], Dt)
         segs_w = plan_prev(st["hist_w"], Mw)
-        ok_w, rw, path_w = solve(Dt, Mw, [("predictor", zpw)], segs_w)
+        starts_w = [("predictor", zpw)] + ([("lift of M_c", lifted(path_c, Mw))] if path_c else [])
+        ok_w, rw, path_w = solve(Dt, Mw, starts_w, segs_w)
         ok_n = False
         if ok_w:
             rw["steps_own"] = plan_check(Dt, Mw, path_w, load(path_w)[2]["segs"])
@@ -384,12 +407,18 @@ def main():
             st["targets"].insert(0, Dm)
             save_prog()
             continue
-        _, diff = write_pair(Dt, rw, rn, "pair")
+        extra = None
+        if rc:
+            extra = dict(Mc=Mc, Delta_c=rc["Delta"], Delta_c_lo=rc["Delta_lo"], F_c=rc["F"], its_c=rc["its"],
+                         seconds_c=rc["seconds"], diff_c=(rw["Delta"] - rc["Delta"]) + (rw["Delta_lo"] - rc["Delta_lo"]))
+        _, diff = write_pair(Dt, rw, rn, "pair", extra)
         st["hist_w"].append([Dt, path_w])
         st["hist_n"].append([Dt, path_n])
+        if rc:
+            st["hist_c"].append([Dt, path_c])
         st["pairs"].append([Dt, diff, Mw, Mn])
         st["targets"].pop(0)
-        st["post"] = dict(D=Dt, stage="resolution", t_point=rw["seconds"] + rn["seconds"])
+        st["post"] = dict(D=Dt, stage="resolution", t_point=rw["seconds"] + rn["seconds"] + (rc["seconds"] if rc else 0))
         save_prog()
 
 if __name__ == "__main__":
