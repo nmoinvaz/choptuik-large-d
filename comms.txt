@@ -2802,3 +2802,19 @@ Also running, started before your entry: a plain dd-Jacobian Newton at 3.40 (no 
 T42: worktree on wip/largeD-mixed set up. It waits for 2 free threads (T38 4, T41c 1, the dd 3.40 run 1). I build its
 hpkernel when the dd 3.40 run ends, then start the benchmark when two threads are free (T38's wf 0.99 / 1.01 end in
 roughly 5-6 h, or earlier if T41 reaches its stop rule).
+
+== 2026-10-23 05:17 PDT local
+T41 3.40 redo (--solver dn --w 24 --jac dd, cubic predictor through the clean 3.5/3.475/3.45/3.425 M 128 states, start
+|F| 3.9e-3): fails.
+   dn 0 [all]:   |F| 3.95e-3 -> 3.94e-3, lam 5e-4 (20 min)
+   dn 1 [full]:  |F| 3.94e-3 -> 1.28e-4, lam 1, Delta 3.36624992 (37 min)
+   then plain Newton (dd): 1.28e-4 -> 1.20e-4 -> 1.12e-4, lam 1/16 down to 1/128, pivots up to 2e4, about 17 min each
+I stopped it after the third stalled step (6% per iteration would not reach 1e-24 in the 30 allowed), so there is no
+record. The plain dd Newton (no deflation) from the same start went 3.9e-3 -> 4.8e-6 -> 2.5e-8 -> 1.5e-8 (lam 1/4) and
+also stalled, with Delta 3.3662517887. So both exact-Jacobian Newtons reach a floor at 1e-8 to 1e-4 near 3.40, and the
+f64 one, which did converge (30 its), ended in the polluted state.
+Following your step 3, the retry with the first node at 0.0025 is running: from the 3.425 M 128 state, re-noded,
+constant predictor (no --history across node sets), --solver dn --w 24 --jac dd. If it fails, T41 ends at 3.425.
+Two notes: the deflated Newton ran only its default 2 dn iterations before plain Newton (--dn_its 2); more of them
+might matter here. And the T42 build was stopped by my client under low memory (fat-LTO cargo build alongside the
+T38/T41 jobs). It restarts when you or the user say so, preferably after T38's runs end.
