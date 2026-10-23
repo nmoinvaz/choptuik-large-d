@@ -178,7 +178,73 @@ sensitivities still come from the f64 LU. §4 measures how far they are from the
 
 ## 4. The large-D solver with these
 
+**What was built** (`hp/python/hpkernel/driver.py`). `newton_step(s, zh, zl, jac, mixed=None, gmres=None)` makes one
+Newton step with one of five Jacobian variants and returns the step, F, the pivots and the step's seconds by part
+(`Solver.step_timing`: residual, Jacobian, LU, solves; plus the products' time and count):
+
+| `jac` | step |
+|---|---|
+| `dd` | `Solver.newton`: the exact double-double Jacobian and LU (unchanged) |
+| `f64` | `Solver.newton_mixed(**mixed)` (MIXED_PRECISION.md, unchanged) |
+| `f64h` | `newton_mixed(horizon_dd=4)`: the horizon block in double-double (§1) |
+| `f64g` | `f64`, then `gmres_refine` on its LU (§3) |
+| `f64hg` | `f64h`, then `gmres_refine` on its LU |
+
+`newton_solve(..., jac=..., mixed=..., gmres=...)` and `deflated_newton(..., jac=..., mixed=..., gmres=...)` take
+all five; `scan_hp.py --jac VARIANT [--step_tol T] [--max_products N]` passes it on and records each point's time
+split and products (`split` in its jsonl). The stored LU after a mixed step is the f64 LU, so chord steps,
+`lu_solve_t` (the sensitivities ∂Δ/∂F), `weak_subspace` and `junk_subspace` use it.
+
+- With the horizon fix the weak subspace and the sensitivities come from the f64 LU of an accurate Jacobian (step error
+  10⁻⁵–10⁻⁷, §1); the comparison with the double-double LU is below.
+- With the loop alone (f64g) the stored LU is the plain f64 Jacobian's, wrong at D ≥ 50 in a few directions. The Δ
+  correction uses the refined step (§3); the deflated Newton's weak subspace and the scan's per-block sensitivities
+  come from that LU. A transposed loop would need products with Jᵀ (reverse mode), which the kernel does not have.
+
 ## 5. The benchmark (`hp/bench_variants.py`)
+
+**What one run is.** A state is perturbed, and the solve runs from there with one Jacobian variant to |F| < tol: plain
+Newton (`newton_solve`) below D = 25, deflated Newton with w = 24 (`deflated_newton`, as `scan_hp.py`) from D = 25,
+kfreeze 13 from D = 35 (and at the prepared D = 30 state). The Taylor plan is the reference state's, the same for every
+variant; tol is 10 × the reference state's |F|, at least 10⁻²⁸. Recorded per (state, variant, repeat), one JSON line
+as soon as it is done: converged, iterations, whole-solve seconds, the steps' seconds by part (residual, Jacobian, LU,
+solves, products) summed and per step, the products, the start and final |F|, Δ and its difference from the dd run of
+the same state and repeat, the load average before and after (os.getloadavg, else psutil's), the machine. A rerun
+skips the lines present. At each state the variants run in turn, then the next repeat, so that load changes hit them
+alike. `--report` prints the table of medians from a records file.
+
+**States** (default `--states=3.7,8.25,16.76,20,30,40,45,50,55,60`): the saved scan state nearest each D
+(hp/data/states; M = 48 at 8.25, 32 above), and two prepared ones in `hp/data/bench_variants/states/`
+(`python3 bench_variants.py --prepare`): D = 3.7 at M = 80 (`lowDv_D3.7000_M80` confirmed by one double-double Newton
+call, |F| 7.2×10⁻³⁰), and D = 30.07 frozen at kfreeze 13 and converged by the double-double deflated Newton to
+9.2×10⁻²⁸ (the saved up6 state is a junk-accepted point, §7).
+
+**The perturbation, and how it was chosen.** A random relative perturbation (every entry × (1 + ε ξ), as in
+`mixed_largeD.py`) is no use at large D: the horizon block amplifies it. At D = 60, ε = 10⁻¹⁴ already gives
+|F| = 2.4×10⁻⁵, plain Newton's first step is |dz| = 0.24 and it cannot decrease |F|; the double-double deflated Newton
+did not converge in 10 steps from any ε in 10⁻⁸…10⁻¹⁴ at D = 60, and needed ε ≤ 10⁻¹⁴ at 55 and 10⁻¹³ at 50
+(`data/bench_variants/calibrate_random.jsonl`). The bench therefore perturbs toward the neighbouring saved solution,
+z + ε (z_nb − z), z_nb the saved state with the same nodes nearest above in D (below at 60), resampled to the state's
+M (D = 3.7: lowDv_D4.0000_M64 to M = 80) and frozen like it: a smooth perturbation, like a continuation predictor's
+error. `--calibrate` tries ε = 10⁻¹, 10⁻², … with the double-double variant (at most 10 Newton steps; a start with
+|F| > 10⁻⁴ is not tried, since none converged), keeps the first ε that converges and uses a tenth of it
+(`data/bench_variants/eps.json`, every try in `calibrate.jsonl`):
+
+| state | largest ε that converged (start \|F\|, steps) | bench ε | neighbour |
+|---|---|---|---|
+| D = 3.7, M = 80 | | | lowDv_D4.0000_M64 |
+| 8.25 | 10⁻⁴ (1.2×10⁻⁵, 5) | 10⁻⁵ | up_D9.0000 |
+| 16.76 | 10⁻⁴ (8.0×10⁻⁶, 7) | 10⁻⁵ | up2_D17.0180 |
+| 20.04 | 10⁻⁷ (5.5×10⁻⁸, 6) | 10⁻⁸ | up2_D21.0297 |
+| 30.07 | 10⁻⁶ (6.1×10⁻⁶, 9) | 10⁻⁷ | up6_D31.0340 |
+| 40.02 | 10⁻⁸ (1.0×10⁻⁶, 9) | 10⁻⁹ | up7_D41.0890 |
+| 45.05 | 10⁻⁸ (3.9×10⁻⁶, 9) | 10⁻⁹ | up8_D46.0011 |
+| 50.01 | 10⁻⁹ (1.8×10⁻⁶, 9) | 10⁻¹⁰ | up8_D51.0270 |
+| 55.04 | 10⁻¹⁰ (8.1×10⁻⁷, 7) | 10⁻¹¹ | up11_D56.0117 |
+| 60.00 | 10⁻¹⁰ (4.0×10⁻⁶, 9) | 10⁻¹¹ | up12_D59.0250 |
+
+The basin is a start |F| of about 10⁻⁶ to 10⁻⁵ wherever the deflated Newton runs, and only 5.5×10⁻⁸ for the plain
+Newton at D = 20. In z it is tiny at large D: a step of 10⁻¹⁰ toward a neighbour one unit of D away.
 
 ## 6. The default paths are unchanged
 

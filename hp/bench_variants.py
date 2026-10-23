@@ -29,6 +29,11 @@ The states (data/bench_variants/states/ when present, else the saved scan states
     30     the D = 30.07 scan state is a junk-accepted point (|F| 3.3e-12, run up6); the bench uses it frozen at
            kfreeze 13 and converged by the double-double Newton (bench_D30.0688_kf13.npz)
 
+--kc=auto (default): the centre series' order is cut to where the reference state's terms are below 1e-45 (+10),
+when the residual stays bitwise the same; the scan's kc = 420 at large D is about 3 times that and makes the double-
+double Jacobian 3 times slower for nothing (D = 50: 18.6 s at 420, 5.8 s at 160, bitwise the same Jacobian).
+--kc=meta keeps the state's kc, as the scan ran; --kc=N sets it.
+
 Each (state, variant, repeat) writes one JSON line to --out as soon as it is done; a rerun skips the lines present, so
 an interrupted run resumes. At each state the variants run in turn, repeat after repeat, so that the machine's load
 hits them alike. The load (os.getloadavg, else psutil's, else none) is recorded before and after each run.
@@ -139,13 +144,40 @@ def neighbour(m, kf):
     return freeze(z, m["M"], kf), q
 
 
-def setup(spec, threads):
+def kc_auto(s, zh, zl, m):
+    """the smallest centre-series order past which the reference state's terms |c_k| x0^k stay below 1e-45 (three
+    orders in a row), plus 10; the scan's kc (420 above D = 27) is far past it at large D (notes/LARGE_D_MIXED.md)"""
+    h, l = s.series(zh, zl, 0)
+    M = m["M"]
+    c = np.abs((np.asarray(h) + np.asarray(l)).reshape(-1, 4, M)).max(axis=(1, 2))
+    t = c * m["nodes"][0] ** np.arange(len(c))
+    for k in range(20, len(t) - 3):
+        if (t[k:k + 3] < 1e-45 * t.max()).all():
+            return min(k + 10, m["kc"])
+    return m["kc"]
+
+
+def setup(spec, threads, kc="auto"):
     p, label, kf, tol_step = state_path(spec)
     zh, zl, m = load(p)
     s = make_solver(m["D"], m["M"], nodes=m["nodes"], kt=m["kt"], kc=m["kc"], ks=m["ks"], threads=threads, kfreeze=kf)
     segs = s.plan(zh, zl, tol_step, 0.05)
     s.set_segs(segs)
-    F0 = dd_norm(*s.residual(zh, zl))
+    Fh, Fl = s.residual(zh, zl)
+    F0 = dd_norm(Fh, Fl)
+    m = dict(m)
+    m["kc_meta"] = m["kc"]
+    if kc == "auto":
+        k = kc_auto(s, zh, zl, m)
+        if k < m["kc"]:
+            s2 = make_solver(m["D"], m["M"], nodes=m["nodes"], kt=m["kt"], kc=k, ks=m["ks"], threads=threads, kfreeze=kf)
+            s2.set_segs(segs)
+            F2h, F2l = s2.residual(zh, zl)
+            # only if the residual is bitwise the same (the dropped terms are below double-double resolution)
+            if np.array_equal(np.asarray(F2h), np.asarray(Fh)) and np.array_equal(np.asarray(F2l), np.asarray(Fl)):
+                m["kc"] = k
+    elif kc != "meta":
+        m["kc"] = int(kc)
     znb, pnb = neighbour(m, kf)
     sec = znb - (np.asarray(zh) + np.asarray(zl))
     return dict(path=p, label=label, D=m["D"], M=m["M"], meta=m, kf=kf, segs=segs, zh=np.asarray(zh), zl=np.asarray(zl),
@@ -220,14 +252,16 @@ def run(opts):
                 if (label, v, rep) in done:
                     continue
                 if st is None:
-                    st = setup(spec, threads)
-                    print(f"{label}: reference |F| {st['F0']:.1e}, tol {st['tol']:.0e}, kfreeze {st['kf']}, "
-                          f"{sum(len(g) - 1 for g in st['segs'])} Taylor steps ({os.path.basename(st['path'])})", flush=True)
+                    st = setup(spec, threads, opts.get("kc", "auto"))
+                    print(f"{label}: reference |F| {st['F0']:.1e}, tol {st['tol']:.0e}, kfreeze {st['kf']}, kc {st['meta']['kc']} "
+                          f"(state's {st['meta']['kc_meta']}), {sum(len(g) - 1 for g in st['segs'])} Taylor steps "
+                          f"({os.path.basename(st['path'])})", flush=True)
                 eps = float(opts.get("eps", eps_tab.get(label, {}).get("eps", 1e-4)))
                 kind = opts.get("perturb", eps_tab.get(label, {}).get("perturb", "secant"))
                 l0 = loadavg()
                 r = solve(st, v, eps, threads, kind=kind)
-                rec = dict(state=label, D=st["D"], M=st["M"], variant=v, repeat=rep, eps=eps, perturb=kind,
+                rec = dict(state=label, D=st["D"], M=st["M"], kc=st["meta"]["kc"], kc_state=st["meta"]["kc_meta"], variant=v,
+                           repeat=rep, eps=eps, perturb=kind,
                            neighbour=st["neighbour"], tol=st["tol"], load_before=l0,
                            load_after=loadavg(), machine=machine, time=time.strftime("%Y-%m-%d %H:%M:%S"), **r)
                 ref = done.get((label, "dd", rep))
