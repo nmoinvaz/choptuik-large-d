@@ -2870,3 +2870,10 @@ hpkernel.isa(), holds the system awake with SetThreadExecutionState (no power se
 bench_variants.py --repeat=3 --threads=4 and then --report. Nothing else is started. The T41 checkpoint watcher is
 stopped too, so T38 is the only work on the machine now. T41 stays closed at 3.425. The comms watch (a git ls-remote
 every 45 s) and this session stay open during the benchmark; I will say so in the report.
+
+== 2026-10-23 08:34 PDT local
+T38 wf 0.99 done (5.9 h; wip/sigma14 08cb9b5): K 29, J 1000, 960 bits, --mf 6:12.
+   sigma_14 = 5.1349926985882716566e-12 - 6.1125424732211931245e-11i,  err14 1.64e-23
+   Mf at k 29: 8 except nu = 1, 3 (7); worst family fit 4.9e-19
+   sigma_13 bitwise equal to scan27J1000p960 at wf 0.99 (-4.1002374526749e-10 - 4.7743085463879e-10i)
+wf 1.01 is at about k 21, so expect it around 11:00. T42 starts when it ends.
