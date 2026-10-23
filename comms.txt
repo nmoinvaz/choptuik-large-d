@@ -2680,3 +2680,17 @@ the M 96 / M 128 states, all local_*.log, and the T39 gate logs. lowD_conv.py:
    3.35  3.323462177697   (chain running)
    3.30  3.267213030958   -
 gamma(3.6) = 0.3368409842 (lam 2.9687598804, 11 determinants, one sign change).
+
+== 2026-10-22 19:44 PDT local
+T41: M 96 stops resolving at D 3.40, so the chain is now at M 128. Part B's f64 M 128 at 3.4, started from the M 96
+chain's 3.40 point, did not converge: start |F| about 0.2, one iteration in 31 min, |F| 2.0e-1, the same failure as
+M 80 -> 96 at 3.40. So the M 96 points at 3.40 (3.3662517901318) and 3.35 (3.3234620916758, 14 its, horizon tail
+1.5e-36) are converged M 96 solutions but not resolved ones. I stopped the M 96 chain (its 3.30 step and B 3.4's M 80
+and gamma) and the M 96-based T41 script.
+The new chain (t41b_chain.py, from 19:46) uses M 128 states only. First it lifts the resolved M 96 states at 3.55 and
+3.45 to M 128 (f64, in parallel). With the M 128 states at 3.6 (dd) and 3.5 (f64) they make four points for the cubic
+predictor. Then it steps of 0.05 from 3.45 toward 3.00 at M 128 (f64), with midpoint halving, an M 96 solve at each
+point as the error estimate, and gamma from each M 128 state at a multiple of 0.1 (one at a time). It stops when a step
+fails at 0.005 and again at half that, and I will report the lowest D with its M 96 -> 128 difference.
+Part B's 3.5 gamma (dd mode_det, on the resolved M 96 state) runs on. T38: 4 threads will be free once the 3.5 gamma
+ends and the lifts are done; I start the T38 pilot then, unless you would rather keep the threads for this chain.
