@@ -87,8 +87,8 @@ needed: that costs time, not accuracy.
 At D = 3.7 the lift to M = 192 (from the converged M = 160 state, pass 1 on its 511-step plan) did not converge
 with plain f64-Jacobian Newton: |F| 5.7×10⁻¹⁰ → 5.0×10⁻¹⁰ → 3.8×10⁻¹⁰ with line-search factors 0.125 and 0.25, steps
 |dz| ≈ 10⁻⁷ (200 times |F|), and the largest LU pivot up from about 10 (M ≤ 160) to 1.9×10³
-(`hp/data/lowD_highM/logs/lift_M192_plain_newton.log`). A diagnostic at that state (three f64 Jacobians that differ
-only in rounding, block storage; script in the log) gave:
+(`hp/data/lowD_highM/logs/lift_M192_plain_newton.log`). `python3 highm_diag.py jac` at that state (three f64 Jacobians that differ only in rounding, block storage;
+`hp/data/lowD_highM/logs/diag_jac_M192.log`, and `diag_jac_M128.log` for M = 128) gave:
 
 | | f64x4 | f64x1 | dd4 |
 |---|---|---|---|
@@ -99,9 +99,9 @@ only in rounding, block storage; script in the log) gave:
 The steps differ by 9–38% between the variants and the sensitivities ∂Δ/∂F by 6–50%, while at the converged M = 128
 state the same comparison gives 2–3×10⁻⁷ and 10⁻⁵. Along each step the Jacobian is accurate to first order (the
 mismatch is 0.1–0.3% of |F|); what differs is the component in the weakest directions, which only the rounding
-fixes. Those components wreck the series: at the M = 160 solution the horizon series has radius 0.28–0.30 in u
-(u₀/r = 0.7, tail 2×10⁻⁴¹) and the centre series 0.017–0.020 (x₀/r = 0.3); after the three damped steps at M = 192 the
-radii are 0.21 (u₀/r = 0.93, tail 3.7×10⁻¹¹) and 0.007 (x₀/r = 0.6–0.8), for every τ-harmonic. These are the
+fixes. Those components wreck the series (`python3 highm_diag.py radius`, `diag_radius.log`): at the M = 160 solution the horizon series has radius 0.28–0.30 in u
+(u₀/r = 0.7, tail 2×10⁻⁴¹) and the centre series 0.017–0.020 (x₀/r = 0.3); at the M = 192 state after the damped steps
+(|F| = 3.75×10⁻¹⁰; `hp/data/lowD_states/highm_p1_D3.7000_M192_stalled.npz`) they are 0.21 (u₀/r = 0.93, tail 3.7×10⁻¹¹) and 0.007 (x₀/r = 0.6–0.8), for every τ-harmonic. These are the
 "junk" directions of `driver.deflated_newton` (top centre and horizon harmonics, coupled to the matching point only
 exponentially weakly): at D = 3.7 the M = 192 grid is far beyond what Δ needs (its top harmonics are 10⁻¹³–10⁻¹⁵), so
 they are weaker than the f64 Jacobian's rounding can resolve. dd4 (double-double base trajectory) does not help,
