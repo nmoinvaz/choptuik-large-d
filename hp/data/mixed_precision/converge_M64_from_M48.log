@@ -1,0 +1,25 @@
+lowDv_D3.7000_M48.npz at M = 64: start |F| 7.39e-04 (Delta 1e-06, fields 1e-08)
+ newton:
+  newton 0: |F| 7.39e-04 |dz| 1.10e-01 lam 1 dDelta -2.16e-06 Delta 3.465200287937570 piv 1.3e-03..9.2e+00  t 42.0s
+  newton 1: |F| 2.14e-07 |dz| 7.39e-05 lam 1 dDelta +2.24e-07 Delta 3.465200511802810 piv 1.3e-03..9.2e+00  t 83.2s
+  newton 2: |F| 4.09e-13 |dz| 8.46e-11 lam 1 dDelta +4.77e-14 Delta 3.465200511802858 piv 1.3e-03..9.2e+00  t 125.0s
+  newton 3: |F| 6.01e-25 |dz| 2.72e-22 lam 1 dDelta +2.14e-25 Delta 3.465200511802858 piv 1.3e-03..9.2e+00  t 173.4s
+  newton 4: |F| 4.35e-30 converged (last |dz| 3.8e-26) Delta 3.465200511802858
+ newton_mixed f64x4:
+  newton 0: |F| 7.39e-04 |dz| 1.10e-01 lam 1 dDelta -2.16e-06 Delta 3.465200287937570 piv 1.3e-03..9.2e+00  t 6.4s
+  newton 1: |F| 2.14e-07 |dz| 7.39e-05 lam 1 dDelta +2.24e-07 Delta 3.465200511802810 piv 1.3e-03..9.2e+00  t 13.8s
+  newton 2: |F| 4.09e-13 |dz| 8.46e-11 lam 1 dDelta +4.77e-14 Delta 3.465200511802858 piv 1.3e-03..9.2e+00  t 21.1s
+  newton 3: |F| 6.02e-25 |dz| 3.06e-21 lam 1 dDelta -2.11e-25 Delta 3.465200511802858 piv 1.3e-03..9.2e+00  t 27.3s
+  newton 4: |F| 5.31e-30 converged (last |dz| 3.3e-26) Delta 3.465200511802858; last step taken, |F| 3.03e-30
+ control (newton from a second start):
+  newton 0: |F| 7.39e-04 |dz| 1.10e-01 lam 1 dDelta -1.59e-07 Delta 3.465200287935571 piv 1.3e-03..9.2e+00  t 43.1s
+  newton 1: |F| 2.14e-07 |dz| 7.32e-05 lam 1 dDelta +2.24e-07 Delta 3.465200511802810 piv 1.3e-03..9.2e+00  t 85.3s
+  newton 2: |F| 4.02e-13 |dz| 8.43e-11 lam 1 dDelta +4.77e-14 Delta 3.465200511802858 piv 1.3e-03..9.2e+00  t 127.4s
+  newton 3: |F| 6.00e-25 |dz| 1.45e-22 lam 1 dDelta +2.12e-25 Delta 3.465200511802858 piv 1.3e-03..9.2e+00  t 170.4s
+  newton 4: |F| 4.55e-30 converged (last |dz| 2.7e-26) Delta 3.465200511802858
+  newton                : 5 Newton calls, |F| 4.4e-30, 218.5 s, Delta 3.4652005118028577 -1.808e-16
+  newton_mixed f64x4    : 5 Newton calls, |F| 3.0e-30, 33.5 s, Delta 3.4652005118028577 -1.808e-16
+    vs newton: Delta 8.3e-31 relative, max|dz|/max|z| 2.3e-27 (limits 1e-27, 2e-26)
+  control, newton from two starts: Delta 1.3e-30, max|dz|/max|z| 2.2e-27
+  PASS
+exit 0

@@ -163,21 +163,18 @@ def rnorm(Fh, Fl):
     return float(np.sqrt(np.sum((Fh + Fl) ** 2)))
 
 
-def newton_solve(s, zh, zl, tol=1e-28, it_max=12, chord=0, verbose=True, ls=True, max_halvings=10):
+def newton_solve(s, zh, zl, tol=1e-28, it_max=12, chord=0, verbose=True, ls=True, max_halvings=10, jac="dd", mixed=None):
     """Newton with exact Jacobians and backtracking on |F|_2 (Armijo, factor 1/2); optional chord steps with the
-    stored LU after full Newton steps. Returns zh, zl, history."""
+    stored LU after full Newton steps. Returns zh, zl, history.
+    jac="f64": mixed precision, each step with the f64 Jacobian (s.newton_mixed(zh, zl, **mixed), mixed a dict of its
+    options or None; the residual stays double-double, so the solution is the same; notes/MIXED_PRECISION.md). A step
+    along which the line search finds no decrease is then retried once with the exact Jacobian (s.newton), and once
+    |F| < tol the step computed at that point is still taken if |F| stays below tol: the linear convergence leaves an
+    error of about that step's size in the near-null directions, which |F| does not see."""
     hist = []
     t0 = time.time()
-    for it in range(it_max):
-        dh, dl, Fh, Fl, pmin, pmax = s.newton(zh, zl)
-        n0 = rnorm(Fh, Fl)
-        nF = dd_norm(Fh, Fl)
-        if nF < tol:
-            hist.append(dict(it=it, F=nF, dz=dd_norm(dh, dl), Delta=float(zh[-1]), piv=(pmin, pmax),
-                             t=round(time.time() - t0, 1)))
-            if verbose:
-                print(f"  newton {it}: |F| {nF:.2e} converged (last |dz| {dd_norm(dh, dl):.1e}) Delta {zh[-1]:.15f}", flush=True)
-            break
+
+    def search(zh, zl, dh, dl, n0):
         lam = 1.0
         accepted = not ls
         for h in range(max_halvings + 1):
@@ -190,6 +187,40 @@ def newton_solve(s, zh, zl, tol=1e-28, it_max=12, chord=0, verbose=True, ls=True
                 accepted = True
                 break
             lam *= 0.5
+        return accepted, lam, th, tl
+
+    for it in range(it_max):
+        if jac == "f64":
+            dh, dl, Fh, Fl, pmin, pmax = s.newton_mixed(zh, zl, **(mixed or {}))
+        else:
+            dh, dl, Fh, Fl, pmin, pmax = s.newton(zh, zl)
+        n0 = rnorm(Fh, Fl)
+        nF = dd_norm(Fh, Fl)
+        if nF < tol:
+            rec = dict(it=it, F=nF, dz=dd_norm(dh, dl), Delta=float(zh[-1]), piv=(pmin, pmax), t=round(time.time() - t0, 1))
+            polish = ""
+            if jac == "f64":
+                # Linear convergence leaves an error of about this step's size in the weakly determined (near-null)
+                # directions, which |F| does not see. The step is already computed: take it if |F| stays below tol.
+                th, tl = dd_add(zh, zl, dh, dl)
+                Th, Tl = s.residual(th, tl)
+                n1 = dd_norm(Th, Tl)
+                if n1 < tol:
+                    zh, zl = th, tl
+                    rec.update(polished=True, F_polished=n1)
+                    polish = f"; last step taken, |F| {n1:.2e}"
+            hist.append(rec)
+            if verbose:
+                print(f"  newton {it}: |F| {nF:.2e} converged (last |dz| {dd_norm(dh, dl):.1e}) Delta {zh[-1]:.15f}{polish}",
+                      flush=True)
+            break
+        accepted, lam, th, tl = search(zh, zl, dh, dl, n0)
+        if not accepted and jac == "f64":
+            if verbose:
+                print(f"  newton {it}: |F| {nF:.2e}: no decrease along the f64-Jacobian step; retrying with the exact "
+                      f"Jacobian", flush=True)
+            dh, dl, Fh, Fl, pmin, pmax = s.newton(zh, zl)
+            accepted, lam, th, tl = search(zh, zl, dh, dl, n0)
         if not accepted:
             hist.append(dict(it=it, F=nF, failed="line search", Delta=float(zh[-1]), t=round(time.time() - t0, 1)))
             if verbose:

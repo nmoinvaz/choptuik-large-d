@@ -1,0 +1,30 @@
+lowDv_D3.7000_M48.npz resampled to M = 16 (N = 897), strict, variant f64x4, MUTATED: dtau: jacobian 0.9 s, jacobian_f64 0.12 s
+  per column max|dJ|/max|J|: 3.61e+00 (column 223); Frobenius 7.29e-01; Newton step at a perturbed state: 2.65e+00 (with the dd Jacobian rounded to f64: 8.02e-15)
+  FAIL (per-column and Frobenius <= 1e-12)
+  expected to fail: it did (the control fires)
+lowDv_D3.7000_M48.npz resampled to M = 16 (N = 897), strict, variant f64x4, MUTATED: omega: jacobian 0.9 s, jacobian_f64 0.10 s
+  per column max|dJ|/max|J|: 2.27e-08 (column 272); Frobenius 2.66e-09; Newton step at a perturbed state: 1.25e-08 (with the dd Jacobian rounded to f64: 8.02e-15)
+  FAIL (per-column and Frobenius <= 1e-12)
+  expected to fail: it did (the control fires)
+lowDv_D3.7000_M48.npz resampled to M = 16 (N = 897), strict, variant f64x4, MUTATED: kappa: jacobian 0.8 s, jacobian_f64 0.10 s
+  per column max|dJ|/max|J|: 3.87e-02 (column 894); Frobenius 1.06e-02; Newton step at a perturbed state: 5.75e-01 (with the dd Jacobian rounded to f64: 8.02e-15)
+  FAIL (per-column and Frobenius <= 1e-12)
+  expected to fail: it did (the control fires)
+lowDv_D3.7000_M48.npz resampled to M = 16 (N = 897), strict, variant f64x1, MUTATED: dtau: jacobian 0.8 s, jacobian_f64 0.14 s
+  per column max|dJ|/max|J|: 3.61e+00 (column 223); Frobenius 7.29e-01; Newton step at a perturbed state: 2.65e+00 (with the dd Jacobian rounded to f64: 8.02e-15)
+  FAIL (per-column and Frobenius <= 1e-12)
+  expected to fail: it did (the control fires)
+lowDv_D3.7000_M48.npz resampled to M = 16 (N = 897), strict, variant dd4, MUTATED: dtau: jacobian 0.8 s, jacobian_f64 0.14 s
+  per column max|dJ|/max|J|: 3.61e+00 (column 223); Frobenius 7.29e-01; Newton step at a perturbed state: 2.65e+00 (with the dd Jacobian rounded to f64: 8.02e-15)
+  FAIL (per-column and Frobenius <= 1e-12)
+  expected to fail: it did (the control fires)
+lowDv_D3.7000_M48.npz (N = 2689), production, variant f64x4, MUTATED: dtau: jacobian 7.0 s, jacobian_f64 0.57 s
+  per column max|dJ|/max|J|: 3.80e+00 (column 669); Frobenius 9.96e-01; Newton step at a perturbed state: 1.02e+00 (with the dd Jacobian rounded to f64: 5.28e-14)
+  FAIL (per-column and Frobenius <= 1e-06)
+  expected to fail: it did (the control fires)
+lowDv_D3.7000_M48.npz (N = 2689), production, variant f64x4, MUTATED: kappa: jacobian 7.2 s, jacobian_f64 0.65 s
+  per column max|dJ|/max|J|: 1.29e-02 (column 2682); Frobenius 9.13e-04; Newton step at a perturbed state: 1.04e-01 (with the dd Jacobian rounded to f64: 5.28e-14)
+  FAIL (per-column and Frobenius <= 1e-06)
+  expected to fail: it did (the control fires)
+controls: 7 of 7 fire PASS
+exit 0

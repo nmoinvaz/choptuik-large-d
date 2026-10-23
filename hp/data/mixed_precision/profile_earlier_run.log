@@ -1,0 +1,8 @@
+M =  48, N = 2689: residual     0.0 s, Jacobian     7.3 s, dd LU + solve     0.3 s (Newton step 7.6 s); f64 LU 0.33 s; f64-vs-dd step difference 1.5e-13; pivots 1.8e-03..3.5e+01; zero entries 93.3%; nonzero 13x13 node blocks: 42
+  mixed: jacobian_f64 f64x1 0.82 s (8.8x), f64x4 0.65 s (11.2x), dd4 0.96 s (7.6x); f64 LU 0.14 s; newton_mixed f64x4 0.76 s (10.0x), f64x4+ddlu 0.91 s (8.3x)
+  whole solve to 1e-28: newton 50.2 s (7 calls); newton_mixed f64x4 5.6 s (7 calls, 9.0x, Delta differs by 2e-30); newton_mixed f64x4+ddlu 7.0 s (7 calls, 7.2x, Delta differs by 2e-30)
+M =  64, N = 3585: residual     0.1 s, Jacobian    15.5 s, dd LU + solve     0.3 s (Newton step 15.9 s); f64 LU 0.70 s; f64-vs-dd step difference 2.6e-14; pivots 1.3e-03..6.1e+00; zero entries 93.3%; nonzero 13x13 node blocks: 42
+  mixed: jacobian_f64 f64x1 1.93 s (8.0x), f64x4 1.61 s (9.6x), dd4 2.48 s (6.3x); f64 LU 0.27 s; newton_mixed f64x4 1.82 s (8.7x), f64x4+ddlu 2.19 s (7.3x)
+  whole solve to 1e-28: newton 77.8 s (5 calls); newton_mixed f64x4 11.0 s (6 calls, 7.1x, Delta differs by 1e-30); newton_mixed f64x4+ddlu 13.0 s (6 calls, 6.0x, Delta differs by 6e-31)
+M =  80, N = 4481: residual     0.1 s, Jacobian    29.2 s, dd LU + solve    -0.4 s (Newton step 28.9 s); f64 LU 1.22 s; f64-vs-dd step difference 8.1e-14; pivots 1.4e-03..2.7e+01; zero entries 93.3%; nonzero 13x13 node blocks: 42
+  mixed: jacobian_f64 f64x1 3.66 s (8.0x), f64x4 3.05 s (9.6x), dd4 4.96 s (5.9x); f64 LU 0.47 s; newton_mixed f64x4 3.32 s (8.7x), f64x4+ddlu 3.89 s (7.4x)

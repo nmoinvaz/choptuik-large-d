@@ -1,0 +1,20 @@
+M =  48, N = 2689: residual     0.0 s, Jacobian     7.5 s, dd LU + solve     0.3 s (Newton step 7.8 s); f64 LU 0.35 s; f64-vs-dd step difference 1.5e-13; pivots 1.8e-03..3.5e+01; zero entries 93.3%; nonzero 13x13 node blocks: 42
+  mixed: jacobian_f64 f64x1 0.97 s (7.8x), f64x4 0.72 s (10.5x), dd4 0.99 s (7.6x); f64 LU 0.14 s; newton_mixed f64x4 0.80 s (9.8x), f64x4+ddlu 1.09 s (7.2x)
+  whole solve to 1e-28: newton 56.8 s (7 calls); newton_mixed f64x4 6.5 s (7 calls, 8.7x, Delta differs by 9e-31); newton_mixed f64x4+ddlu 7.4 s (7 calls, 7.7x, Delta differs by 2e-30)
+M =  64, N = 3585: residual     0.1 s, Jacobian    16.8 s, dd LU + solve     2.6 s (Newton step 19.5 s); f64 LU 0.75 s; f64-vs-dd step difference 2.6e-14; pivots 1.3e-03..6.1e+00; zero entries 93.3%; nonzero 13x13 node blocks: 42
+  mixed: jacobian_f64 f64x1 2.28 s (7.4x), f64x4 1.70 s (9.9x), dd4 3.39 s (5.0x); f64 LU 0.39 s; newton_mixed f64x4 2.01 s (9.7x), f64x4+ddlu 2.76 s (7.1x)
+  whole solve to 1e-28: newton 92.2 s (5 calls); newton_mixed f64x4 12.5 s (6 calls, 7.4x, Delta differs by 5e-31); newton_mixed f64x4+ddlu 14.3 s (6 calls, 6.4x, Delta differs by 3e-31)
+M =  80, N = 4481: residual     0.1 s, Jacobian    31.0 s, dd LU + solve     1.1 s (Newton step 32.2 s); f64 LU 1.26 s; f64-vs-dd step difference 8.1e-14; pivots 1.4e-03..2.7e+01; zero entries 93.3%; nonzero 13x13 node blocks: 42
+  mixed: jacobian_f64 f64x1 3.77 s (8.2x), f64x4 3.26 s (9.5x), dd4 5.32 s (5.8x); f64 LU 0.50 s; newton_mixed f64x4 3.54 s (9.1x), f64x4+ddlu 4.30 s (7.5x)
+  whole solve to 1e-28: newton 218.9 s (7 calls); newton_mixed f64x4 27.8 s (7 calls, 7.9x, Delta differs by 4e-31); newton_mixed f64x4+ddlu 31.9 s (7 calls, 6.9x, Delta differs by 3e-31)
+  t_residual: grows like M^2.51
+  t_jacobian: grows like M^2.77
+  t_dd_lu_and_solve: grows like M^2.99
+  t_f64_lu: grows like M^2.49
+  t_jacobian_f64_f64x1: grows like M^2.67
+  t_jacobian_f64_f64x4: grows like M^2.96
+  t_jacobian_f64_dd4: grows like M^3.34
+  t_f64_blocked_lu: grows like M^2.54
+  t_newton_mixed_f64x4: grows like M^2.93
+  t_newton_mixed_f64x4+ddlu: grows like M^2.71
+exit 0

@@ -579,6 +579,16 @@ with computed points rather than an assumed form. Its points are used in [The fo
   half period (p, m odd harmonics, a, c even harmonics in τ) with no spectral truncation of the products.
 - **Exact Jacobian:** forward-mode duals[^17] over double-double, double-double LU for Newton, a transpose solve that gives
   $`\partial\Delta/\partial F`$ at every point, and a Levenberg–Marquardt fallback.
+- **Mixed-precision Newton (opt-in):** `Solver.newton_mixed` keeps the residual in double-double but computes the
+  Jacobian with f64 vector lanes (four columns per pass over the base trajectory) and factors it in f64. Newton then
+  converges to the same solution: at D = 3.7, M = 64 and 80, Δ agrees with the all-double-double solve to
+  5×10⁻³¹ and the fields to 1×10⁻²⁷, about as closely as two all-double-double solves from different starts agree
+  (6–7×10⁻²⁸). It needs at most one extra step. A step is 9–10 times faster at M = 48–80 and a whole solve 7–9 times
+  ([notes/MIXED_PRECISION.md](notes/MIXED_PRECISION.md); `hp/lowD_dd.py --jac f64`, `driver.newton_solve(jac="f64")`).
+  At M ≥ 48 the f64 Jacobian agrees with the exact one only to about 10⁻⁷, against 10⁻¹⁴ at M ≤ 32. The Taylor
+  steps are planned for the solution, not for the top τ-harmonics of a single column, so rounding inside a step is
+  amplified. That costs Newton speed (a contraction of about 10⁻⁷ per step), not accuracy, since the residual stays
+  double-double.
 - **Continuation in D:** prediction by the cubic through the last four converged points (a tangent from the
   Jacobian is wrong in the weak directions, below), Newton with the weakest directions deflated, and from D = 35 on
   the centre data's τ-harmonics above 13 frozen (below). 32 collocation points in τ, nodes at
@@ -2039,8 +2049,10 @@ The double-double solver's Newton step (`hp/`): a blocked LU[^19] that skips exa
 trailing update; 18–34× faster than the dense LU on one thread) and batched solves (`Solver.lu_solve_many`) for the
 deflation subspace bring one D-step from 15.4 to 9.5 s on one thread and from 10.1 to 5.5 s on two (D = 20, L = 1153),
 with every output bitwise identical; on 8 threads the estimate is about 2.3 s against 6.5 s. The step is now almost all
-Jacobian (its columns already run in parallel); tangents that share one primal pass would save about 1.7×, not
-implemented. Continuation in D stays sequential, since each step starts from the previous solution inside Newton's
+Jacobian (its columns already run in parallel). The mixed-precision step computes the Jacobian in f64 instead, with
+several columns sharing one pass over the base trajectory (1.2–1.35× on top of the f64 lanes); at D = 3.7 the
+Jacobian goes from 7.5 to 0.72 s at M = 48 and from 31 to 3.3 s at M = 80 on two threads
+([notes/MIXED_PRECISION.md](notes/MIXED_PRECISION.md), `hp/profile_newton.py --mixed --solve`). Continuation in D stays sequential, since each step starts from the previous solution inside Newton's
 basin; past D = 61 it costs about 22 hours per unit of D.
 
 ### Layout
@@ -2064,9 +2076,9 @@ tests/              bindings test
 hp/                 double-double solver (crate hpkernel)
 ├── src/v8.rs       8-lane f64 vector: AVX-512 / AVX2 / portable
 ├── src/dv.rs       8-lane double-double, Sum2 dot accumulator
-├── src/lane.rs     value and forward-mode dual lanes
-├── src/model.rs    centre series, Taylor stepping, horizon series, residual, Jacobian
-├── src/linalg.rs   double-double LU, transpose solve, Gram matrix
+├── src/lane.rs     value and forward-mode dual lanes: double-double, f64, and batched f64 tangents
+├── src/model.rs    centre series, Taylor stepping, horizon series, residual, Jacobian (double-double and f64)
+├── src/linalg.rs   double-double LU, f64 LU, transpose solve, Gram matrix
 ├── python/hpkernel/driver.py   grid, seeds, Newton, deflated Newton, Levenberg-Marquardt, re-noding
 ├── src/dd.rs       scalar double-double (constants, set-up)
 ├── src/field.rs    tau fields on the half grid, folded spectral derivative
@@ -2074,6 +2086,9 @@ hp/                 double-double solver (crate hpkernel)
 ├── src/python.rs   PyO3 bindings (Solver)
 ├── build.sh        builds the crate for this machine's instruction set
 ├── scan_hp.py      continuation in D
+├── profile_newton.py   time of a Newton step by part; --mixed --solve for the mixed-precision step
+├── mixed_check.py  checks of the mixed-precision Newton: Jacobian agreement, controls, convergence, bit-identity
+├── mixed_diag.py   why the f64 Jacobian agrees only to 1e-7 at M >= 48 (step size, harmonics, M)
 ├── export_dd.py    collects the runs' points into data/delta_dd.csv
 ├── dd_fits_mp.py   large-D model fits at 60 digits, held-out errors, predictions (--dmax for a data snapshot)
 ├── dd_candidates.py  candidate constants forced as the limit, held-out test (--dmax as above)

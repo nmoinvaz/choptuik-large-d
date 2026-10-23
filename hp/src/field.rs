@@ -4,6 +4,7 @@
 use crate::dd::DD;
 use crate::dv::DV;
 use crate::lane::Lane;
+use crate::v8::V8;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 #[derive(Clone, Copy, Debug)]
@@ -148,6 +149,9 @@ impl<const B: usize> Fl<DV, B> {
 /// Cauchy product coefficient sum_{j=0..k} x[j] y[k-j]
 #[inline(always)]
 pub fn cs<T: Lane, const B: usize>(x: &[Fl<T, B>], y: &[Fl<T, B>], k: usize) -> Fl<T, B> {
+    if T::VAL_F64 || T::TAN_F64 {
+        return cs_il(x, y, k, 0, k, |_| 1.0, false);
+    }
     let mut out = [T::zero(); B];
     for b in 0..B {
         let mut a = T::acc0();
@@ -162,6 +166,9 @@ pub fn cs<T: Lane, const B: usize>(x: &[Fl<T, B>], y: &[Fl<T, B>], k: usize) -> 
 /// sum_{j=lo..=hi} x[j] y[k-j]
 #[inline(always)]
 pub fn cs_range<T: Lane, const B: usize>(x: &[Fl<T, B>], y: &[Fl<T, B>], k: usize, lo: usize, hi: usize) -> Fl<T, B> {
+    if T::VAL_F64 || T::TAN_F64 {
+        return cs_il(x, y, k, lo, hi, |_| 1.0, false);
+    }
     let mut out = [T::zero(); B];
     for b in 0..B {
         let mut a = T::acc0();
@@ -183,6 +190,9 @@ pub fn cs_w<T: Lane, const B: usize>(
     hi: usize,
     w: impl Fn(usize) -> f64,
 ) -> Fl<T, B> {
+    if T::VAL_F64 || T::TAN_F64 {
+        return cs_il(x, y, k, lo, hi, w, true);
+    }
     let mut out = [T::zero(); B];
     for b in 0..B {
         let mut a = T::acc0();
@@ -192,6 +202,28 @@ pub fn cs_w<T: Lane, const B: usize>(
         out[b] = T::fin(a);
     }
     Fl(out)
+}
+
+/// sum_{j=lo..=hi} (w(j) x[j]) y[k-j] (weights only if weighted) with the B lane vectors' accumulations
+/// interleaved, for the f64 lanes, whose single accumulation chains are latency-bound; each lane vector still sums its
+/// terms in the order j = lo..=hi.
+#[inline(always)]
+fn cs_il<T: Lane, const B: usize>(x: &[Fl<T, B>], y: &[Fl<T, B>], k: usize, lo: usize, hi: usize, w: impl Fn(usize) -> f64, weighted: bool) -> Fl<T, B> {
+    let mut a = [T::acc0(); B];
+    for j in lo..=hi {
+        let (xj, yj) = (&x[j].0, &y[k - j].0);
+        if weighted {
+            let wj = w(j);
+            for b in 0..B {
+                a[b] = T::acc(a[b], xj[b].mulf(wj), yj[b]);
+            }
+        } else {
+            for b in 0..B {
+                a[b] = T::acc(a[b], xj[b], yj[b]);
+            }
+        }
+    }
+    Fl(a.map(T::fin))
 }
 
 /// Horner evaluation sum_k s[k] h^k
@@ -204,10 +236,13 @@ pub fn horner<T: Lane, const B: usize>(s: &[Fl<T, B>], h: DD) -> Fl<T, B> {
     out
 }
 
-/// Constant M x M double-double matrix stored by columns (column j as a field over the rows).
+/// Constant M x M double-double matrix stored by columns (column j as a field over the rows), with a copy of the
+/// columns' hi parts for the f64 lanes.
 #[derive(Clone)]
 pub struct DMat<const B: usize> {
     pub cols: Vec<Fl<DV, B>>,
+    /// cols64[j][b] = cols[j].0[b].hi
+    pub cols64: Vec<[V8; B]>,
 }
 
 impl<const B: usize> DMat<B> {
@@ -220,12 +255,19 @@ impl<const B: usize> DMat<B> {
             let cl: Vec<f64> = (0..m).map(|i| lo[i * m + j]).collect();
             cols.push(Fl::<DV, B>::load(&ch, &cl));
         }
-        DMat { cols }
+        let cols64 = cols.iter().map(|c| c.0.map(|v| v.hi)).collect();
+        DMat { cols, cols64 }
     }
 
-    /// out = D f
+    /// out = D f (in the lane type's precision: `Lane::dmat_apply`)
     #[inline(always)]
     pub fn apply<T: Lane>(&self, f: &Fl<T, B>) -> Fl<T, B> {
+        T::dmat_apply(self, f)
+    }
+
+    /// out = D f with the double-double columns (accumulated by `Lane::accc`)
+    #[inline(always)]
+    pub fn apply_dd<T: Lane>(&self, f: &Fl<T, B>) -> Fl<T, B> {
         let mut acc = [T::acc0(); B];
         for jb in 0..B {
             for jl in 0..8 {

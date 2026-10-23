@@ -22,7 +22,9 @@ series terms), --ks 100 (horizon series terms), --tol_step 1e-32 (Taylor step to
 --it_max 14, --threads 2, --tag (state file prefix), --solver newton|dn (dn: deflated Newton, driver.deflated_newton),
 --w 24 (dn: weak directions frozen in its first phase), --svd N (also the N weakest singular values of the Jacobian at
 the solution, by inverse subspace iteration with the stored LU), --lm N (Levenberg-Marquardt iterations if Newton
-stalls).
+stalls), --jac dd|f64 (f64: the plain Newton steps use the f64 Jacobian, Solver.newton_mixed; the residual and so
+the solution stay double-double; the LU kept for the sensitivities is then the f64 Jacobian's, which changes them by
+about 1e-7 relative; notes/MIXED_PRECISION.md).
 Each M appends one record to OUT.jsonl: Delta (hi, lo), |F|, iterations, seconds, the steps of the Taylor plan,
 max |dDelta/dF| per block, the series tails, the linearised Delta correction, and the centre slope's odd harmonics
 |F_k| (k = 1, 3, ..., M - 1; F = sqrt(D - 2) dp/dx at x = 0, normalised as amplitudes of cos/sin pairs). The state is saved
@@ -170,7 +172,7 @@ def solve_point(D, M, zh, zl, src, a, nodes, outdir, log):
         if hist and (hist[-1].get("accepted") or ("lam" not in hist[-1] and "piv" in hist[-1] and hist[-1]["F"] < a.tol)
                      or "failed" in hist[-1]):
             break
-        zh, zl, h1 = newton_solve(s, zh, zl, tol=a.tol, it_max=1, verbose=True)
+        zh, zl, h1 = newton_solve(s, zh, zl, tol=a.tol, it_max=1, verbose=True, jac=a.jac)
         hist += h1
         if h1 and "lam" in h1[-1]:
             save(ckpt, np.asarray(zh), np.asarray(zl), dict(meta_c, it=len(hist)))
@@ -200,7 +202,7 @@ def solve_point(D, M, zh, zl, src, a, nodes, outdir, log):
     if "piv" in last and ("lam" not in last or last.get("accepted") or "failed" in last):
         pmin, pmax = last["piv"]
     else:
-        _, _, Fh, Fl, pmin, pmax = s.newton(zh, zl)
+        _, _, Fh, Fl, pmin, pmax = s.newton_mixed(zh, zl) if a.jac == "f64" else s.newton(zh, zl)
     dt = time.time() - t0
     sens = sensitivity(s, M)
     tc, th = tails(s, zh, zl, nodes, M)
@@ -212,6 +214,8 @@ def solve_point(D, M, zh, zl, src, a, nodes, outdir, log):
                sens=[float(f"{v:.2e}") for v in sens], tail_c=tc, tail_h=th,
                dDelta_est=delta_correction(s, Fh, Fl), F_harm=[float(f"{v:.4e}") for v in hk],
                solver=a.solver, source=src, threads=a.threads, converged=True)
+    if a.jac != "dd":
+        rec.update(jac=a.jac)
     if a.svd:
         t1 = time.time()
         sv, dc = weakest(s, a.svd)
@@ -267,6 +271,7 @@ def main():
                     "data (reintegrate)")
     ap.add_argument("--svd", type=int, default=0)
     ap.add_argument("--lm", type=int, default=0)
+    ap.add_argument("--jac", default="dd", choices=["dd", "f64"], help="f64: mixed-precision Newton (Solver.newton_mixed)")
     a = ap.parse_args()
     nodes = [float(v) for v in a.nodes.split(",")] if a.nodes else NL
     Ms = [int(m) for m in a.Ms.split(",")]

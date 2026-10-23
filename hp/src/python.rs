@@ -15,11 +15,21 @@ use std::sync::Arc;
 
 type V = (Vec<f64>, Vec<f64>);
 
+/// How the f64 Jacobian is evaluated: `tangents` columns per evaluation (1: `Fu` lanes, N > 1: `Fun<N>`), and with
+/// dd_base the base trajectory in double-double (`Dtn<N>` lanes: N f64 tangents on a double-double value).
+#[derive(Clone, Copy)]
+struct F64Jac {
+    tangents: usize,
+    dd_base: bool,
+}
+
 trait Api: Send + Sync {
     fn len(&self) -> usize;
     fn m(&self) -> usize;
     fn residual(&self, zh: &[f64], zl: &[f64]) -> Result<V, String>;
     fn jacobian(&self, zh: &[f64], zl: &[f64]) -> Result<(Vec<f64>, Vec<f64>, usize), String>;
+    /// f64 Jacobian, column-major: (J, ld); `F64Jac` the lanes; mutate: Ctx::mutate for this call (0 = none)
+    fn jacobian_f64(&mut self, zh: &[f64], zl: &[f64], mutate: u8, how: F64Jac) -> Result<(Vec<f64>, usize), String>;
     fn plan(&self, zh: &[f64], zl: &[f64], tol: f64, hmax: f64) -> Vec<Vec<f64>>;
     fn set_segs(&mut self, segs: Vec<Vec<f64>>) -> Result<(), String>;
     fn segs(&self) -> Vec<Vec<f64>>;
@@ -58,6 +68,22 @@ impl<const B: usize> Api for Ctx<B> {
     }
     fn jacobian(&self, zh: &[f64], zl: &[f64]) -> Result<(Vec<f64>, Vec<f64>, usize), String> {
         model::jacobian(self, zh, zl, true)
+    }
+    fn jacobian_f64(&mut self, zh: &[f64], zl: &[f64], mutate: u8, how: F64Jac) -> Result<(Vec<f64>, usize), String> {
+        self.mutate = mutate;
+        let r = match (how.dd_base, how.tangents) {
+            (false, 1) => model::jacobian_f64(self, zh, zl, true),
+            (false, 2) => model::jacobian_fun::<2, B>(self, zh, zl, true),
+            (false, 4) => model::jacobian_fun::<4, B>(self, zh, zl, true),
+            (false, 8) => model::jacobian_fun::<8, B>(self, zh, zl, true),
+            (true, 1) => model::jacobian_dtn::<1, B>(self, zh, zl, true),
+            (true, 2) => model::jacobian_dtn::<2, B>(self, zh, zl, true),
+            (true, 4) => model::jacobian_dtn::<4, B>(self, zh, zl, true),
+            (true, 8) => model::jacobian_dtn::<8, B>(self, zh, zl, true),
+            (_, t) => Err(format!("tangents must be 1, 2, 4 or 8, not {t}")),
+        };
+        self.mutate = 0;
+        r
     }
     fn plan(&self, zh: &[f64], zl: &[f64], tol: f64, hmax: f64) -> Vec<Vec<f64>> {
         use rayon::prelude::*;
@@ -184,6 +210,7 @@ macro_rules! make_ctx {
                 freeze: freeze_pair::<$bb>(&$plow),
                 match_node: $mn,
                 lam: DD::ZERO,
+                mutate: 0,
             }) as Box<dyn Api>, )*
             _ => return Err(PyValueError::new_err("M must be one of 8, 16, 32, 48, 64, 80, 96, 128")),
         }
@@ -311,6 +338,92 @@ impl Solver {
         Ok((to2(jh).into_pyarray(py), to2(jl).into_pyarray(py)))
     }
 
+    /// The Jacobian in plain f64 as one (L, L) array: f64 vector lanes, constants and the base state rounded to f64
+    /// (the horizon solves with the hi parts of the double-double LU factors; the centre and horizon series stopped
+    /// once their tangent terms are below f64 rounding). tangents: columns per evaluation (1, 2, 4 (default), 8; the
+    /// columns agree to rounding whatever the count); dd_base: the base trajectory in double-double (a more accurate
+    /// Jacobian where the f64 base trajectory's rounding is amplified, but no faster Newton convergence; slower). mutate
+    /// (default 0): a deliberate breakage of the f64 path for the controls of hp/mixed_check.py (1 no tau derivative,
+    /// 2 omega scaled by 1 + 1e-9, 3 the horizon solves' kappa tangent term dropped).
+    #[pyo3(signature = (zh, zl, mutate=0, tangents=4, dd_base=false))]
+    #[allow(clippy::too_many_arguments)]
+    fn jacobian_f64<'py>(
+        &mut self,
+        py: Python<'py>,
+        zh: PyReadonlyArray1<'py, f64>,
+        zl: PyReadonlyArray1<'py, f64>,
+        mutate: u8,
+        tangents: usize,
+        dd_base: bool,
+    ) -> PyResult<Bound<'py, PyArray2<f64>>> {
+        let how = F64Jac { tangents, dd_base };
+        let (h, l) = (slice(&zh, "zh")?, slice(&zl, "zl")?);
+        if h.len() != self.api.len() || l.len() != self.api.len() {
+            return Err(PyValueError::new_err(format!("z must have length {}", self.api.len())));
+        }
+        let (api, pool) = (&mut self.api, &self.pool);
+        let n = api.len();
+        let (jh, ld) = py.detach(|| pool.install(|| api.jacobian_f64(h, l, mutate, how))).map_err(PyValueError::new_err)?;
+        let mut a = Array2::<f64>::zeros((n, n));
+        for c in 0..n {
+            for r in 0..n {
+                a[[r, c]] = jh[c * ld + r];
+            }
+        }
+        Ok(a.into_pyarray(py))
+    }
+
+    /// Mixed-precision Newton step: residual F in double-double, the Jacobian in f64 (jacobian_f64 with tangents,
+    /// dd_base), its LU (lu = "f64": the blocked LU in plain f64, DDLu::factor_f64; "dd": promoted to double-double
+    /// with lo = 0 and factored by the double-double LU), kept for chord steps, and dz = -J^-1 F solved in
+    /// double-double with those factors. Same return as newton: (dz_hi, dz_lo, F_hi, F_lo, min |u_kk|, max |u_kk|).
+    /// Iterated, it converges to the same solution as newton (linearly, with a contraction factor of about the f64
+    /// Jacobian's relative error times the condition number; notes/MIXED_PRECISION.md).
+    #[allow(clippy::type_complexity)]
+    #[pyo3(signature = (zh, zl, tangents=4, dd_base=false, lu="f64"))]
+    fn newton_mixed<'py>(
+        &mut self,
+        py: Python<'py>,
+        zh: PyReadonlyArray1<'py, f64>,
+        zl: PyReadonlyArray1<'py, f64>,
+        tangents: usize,
+        dd_base: bool,
+        lu: &str,
+    ) -> PyResult<(Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<f64>>, f64, f64)> {
+        let (h, l) = (slice(&zh, "zh")?, slice(&zl, "zl")?);
+        if h.len() != self.api.len() || l.len() != self.api.len() {
+            return Err(PyValueError::new_err(format!("z must have length {}", self.api.len())));
+        }
+        let lu_f64 = match lu {
+            "f64" => true,
+            "dd" => false,
+            _ => return Err(PyValueError::new_err("lu must be \"f64\" or \"dd\"")),
+        };
+        let (api, pool) = (&mut self.api, &self.pool);
+        let n = api.len();
+        let res = py
+            .detach(|| {
+                pool.install(|| -> Result<_, String> {
+                    let (fh, fl) = api.residual(h, l)?;
+                    let (jh, ld) = api.jacobian_f64(h, l, 0, F64Jac { tangents, dd_base })?;
+                    let lu = if lu_f64 {
+                        DDLu::factor_f64(n, ld, jh, true)?
+                    } else {
+                        let jl = vec![0.0; jh.len()];
+                        DDLu::factor(n, ld, jh, jl, true)?
+                    };
+                    let mut b: Vec<DD> = (0..n).map(|i| -DD { hi: fh[i], lo: fl[i] }).collect();
+                    lu.solve(&mut b);
+                    Ok((b, fh, fl, lu))
+                })
+            })
+            .map_err(PyValueError::new_err)?;
+        let (b, fh, fl, lu) = res;
+        let (pmin, pmax) = lu.pivot_range();
+        self.lu = Some(lu);
+        Ok((arr(py, b.iter().map(|v| v.hi).collect()), arr(py, b.iter().map(|v| v.lo).collect()), arr(py, fh), arr(py, fl), pmin, pmax))
+    }
+
     /// Mode matrix M(lam) (Delta fixed, no phase row) as two (L-1, L-1) arrays.
     fn mode_matrix<'py>(
         &mut self,
@@ -385,6 +498,37 @@ impl Solver {
         let (pmin, pmax) = lu.pivot_range();
         self.lu = Some(lu);
         Ok((arr(py, b.iter().map(|v| v.hi).collect()), arr(py, b.iter().map(|v| v.lo).collect()), arr(py, fh), arr(py, fl), pmin, pmax))
+    }
+
+    /// Factor a given (L, L) matrix (hi, and lo or None for an f64 matrix) by the double-double LU and store it as the
+    /// LU for chord / lu_solve / lu_solve_t / lu_solve_many (as newton does with the Jacobian). Returns
+    /// (min |u_kk|, max |u_kk|).
+    /// f64: factor the hi part by the f64 LU (DDLu::factor_f64) instead.
+    #[pyo3(signature = (ah, al=None, f64=false))]
+    fn lu_factor(&mut self, py: Python<'_>, ah: PyReadonlyArray2<'_, f64>, al: Option<PyReadonlyArray2<'_, f64>>, f64: bool) -> PyResult<(f64, f64)> {
+        let n = self.api.len();
+        if ah.as_array().shape() != [n, n] || al.as_ref().is_some_and(|a| a.as_array().shape() != [n, n]) {
+            return Err(PyValueError::new_err(format!("the matrix must be ({n}, {n})")));
+        }
+        let ld = crate::linalg::ld_for(n);
+        let (a, b) = (ah.as_array(), al.as_ref().map(|a| a.as_array()));
+        let mut h = vec![0.0; ld * n];
+        let mut l = vec![0.0; ld * n];
+        for c in 0..n {
+            for r in 0..n {
+                h[c * ld + r] = a[[r, c]];
+                if let Some(b) = &b {
+                    l[c * ld + r] = b[[r, c]];
+                }
+            }
+        }
+        let pool = &self.pool;
+        let lu = py
+            .detach(|| pool.install(|| if f64 { DDLu::factor_f64(n, ld, h, true) } else { DDLu::factor(n, ld, h, l, true) }))
+            .map_err(PyValueError::new_err)?;
+        let r = lu.pivot_range();
+        self.lu = Some(lu);
+        Ok(r)
     }
 
     /// Chord step with the stored LU: dz = -J0^-1 F(z). Returns (dz_hi, dz_lo, F_hi, F_lo).

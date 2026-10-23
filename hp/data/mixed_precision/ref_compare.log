@@ -1,0 +1,20 @@
+lowDv_D3.7000_M48.npz: 17 outputs in 41 s
+  residual_hi            sha256 8fe09f6cbd109d1d bit-identical
+  residual_lo            sha256 e575bf3985b08db4 bit-identical
+  jacobian_hi            sha256 93cefe2cb7a96434 bit-identical
+  jacobian_lo            sha256 36c12dbd4aee5aef bit-identical
+  newton_dz_hi           sha256 8bf87f41ac01c821 bit-identical
+  newton_dz_lo           sha256 fa035aef87d6a39f bit-identical
+  newton_piv             sha256 b36c9ad18a5ce292 bit-identical
+  chord_hi               sha256 ff81f6ebee843ba1 bit-identical
+  chord_lo               sha256 aa403ab07cf4542f bit-identical
+  lu_solve_t_hi          sha256 3cc0524ac13b0717 bit-identical
+  lu_solve_t_lo          sha256 ced2229d67b668c4 bit-identical
+  mode_matrix_hi         sha256 d42752e238b739fa bit-identical
+  mode_matrix_lo         sha256 21ad52bbae512da8 bit-identical
+  jacobian_freeze_hi     sha256 6469a3ea8f3d2640 bit-identical
+  jacobian_freeze_lo     sha256 7b0acdfe6fbc1032 bit-identical
+  jacobian_inward_hi     sha256 904d1f6953f110c0 bit-identical
+  jacobian_inward_lo     sha256 f28a9bcbaec640b0 bit-identical
+PASS: bit-identical
+exit 0
