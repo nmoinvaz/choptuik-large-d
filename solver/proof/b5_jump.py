@@ -15,7 +15,8 @@ sigma(W+(z; p^bar)) so |W-_Phi,mu| <= x_Phi,-mu u*/n, and |(u*^-Lambda)_ii| = u*
 All three terms are holomorphic in p on K, so for real p with |p - x^| <= 1e-6 (componentwise) Cauchy's estimate on
 the polydisc of radius 1e-6 gives |d_j E~| <= C_E/(n 1e-6) and ||d_j R~|| <= eps_L/1e-6.
 
-    python3 b5_jump.py [--label=b5_label.json] [--ustar=0.0081]
+    python3 b5_jump.py [--label=b5_label.json] [--ustar=0.0081] [--h8log=b8m_h8_K4_L73.89.log] [--json=out.json]
+        --h8log: the (H8) record to use, e.g. b8m_h8_K4_L73.89_d0_1e6.log (B8 with the normalization offset d0 = 1e6)
     python3 b5_jump.py --mutate=sum     drops the forcing term from the superposition: the consistency check against
                                          the directly certified super-solution for delta_ref must then FAIL
 """
@@ -34,13 +35,13 @@ INFL = arb("1e-12")      # the JSON stores floats of arb upper bounds: inflate b
 
 
 def load_h8_delta():
-    with open(os.path.join(HERE, "b8m_h8_K4_L73.89.log")) as fh:
+    with open(os.path.join(HERE, OPTS.get("h8log", "b8m_h8_K4_L73.89.log"))) as fh:
         for line in fh:
             if line.startswith("{") and '"delta"' in line:
                 d = json.loads(line)
                 if d.get("ok"):
                     return {"P": d["delta"]["P"], "F": d["delta"]["Phi"], "C": d["delta"]["C"], "v": d["delta"]["th"]}
-    raise RuntimeError("no certified (H8) record in b8m_h8_K4_L73.89.log")
+    raise RuntimeError("no certified (H8) record in the (H8) log")
 
 
 def superpose(ss, delta):
@@ -102,7 +103,7 @@ def main():
     for L in (73.89, 80, 85, 90, 95, 100, 105):
         print(f"   ln n = {L:6.2f}: |E~| <= {float((CE * arb(-L).exp()).upper()):.3e}")
     ok = ok_sup and ok_ref and ok_dom and lab["ok"]
-    out = dict(ustar=float(ustar.mid()), Zc=float(Zc.lower()), delta=delta, xPhi=[float(xF[-1].upper()), float(xF[1].upper())],
+    out = dict(h8log=OPTS.get("h8log", "b8m_h8_K4_L73.89.log"), ustar=float(ustar.mid()), Zc=float(Zc.lower()), delta=delta, xPhi=[float(xF[-1].upper()), float(xF[1].upper())],
                epsL=float(epsL.upper()), Vinv=float(Vinv.upper()), mu_lo=float(mu_lo.lower()), CE=float(CE.upper()),
                lnCE=float(lnCE.upper()), cauchy=1e-6, ok=bool(ok))
     if "json" in OPTS:
