@@ -11,6 +11,10 @@
 //! The operators use the library's default configuration: `+`, `-` the sloppy add, `*` the sloppy multiply, `/` the
 //! sloppy divide; `ieee_add`, `accurate_mul` and `accurate_div` are the others.
 //!
+//! Two repairs of QD, both found by the tests (notes/QUAD_DOUBLE.md, section 3): the accurate add keeps u + v where
+//! QD keeps u alone (when all parts are read with three emitted), and sqrt scales its argument by an exact power of
+//! four into [1, 4) (QD's iteration loses accuracy above about 2^860 and below about 2^-860).
+//!
 //! `QdAcc` is a sum-of-products accumulator (the scalar twin of `qv::QDotAcc`, see there for its error). Decimal
 //! parsing and printing are exact (via `exact`): `parse` rounds the decimal value to four parts by greedy
 //! round-to-nearest (error <= 2^-212 relative), `to_sci` prints the four-part sum correctly rounded.

@@ -7,6 +7,8 @@
 //! cargo test --release --lib --features qd_mutate qd_controls      every deliberate breakage must fail a check
 //! QD_DUMP=DIR cargo test --release --lib qd_dump -- --ignored      inputs and results for hp/qd_check.py (mpmath)
 //! cargo test --release --lib bench_qd -- --ignored --nocapture     throughput per lane: f64, dd, qd
+//! cargo test --release --lib qd_diag -- --ignored --nocapture      the two exceedances of the first runs:
+//!     QD's accurate add against `QD::ieee_add` by cancellation depth, and the accumulator's error by source
 //! ```
 //! QD_N sets the samples per operation and input category (default 4000), QD_SEED the seed (default 1), QD_REPORT=1
 //! prints the tables. RUSTFLAGS selects the `v8` backend: "-C target-cpu=native" (AVX-512 here), "-C

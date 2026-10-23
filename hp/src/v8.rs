@@ -3,7 +3,9 @@
 //! (`f64::mul_add` for the fused operations, which the double-double algorithms need to be exact).
 //!
 //! All operations are IEEE round-to-nearest with no reassociation, as the error-free transformations in `dv`
-//! require.
+//! require. `M8` is an 8-lane mask (a `__mmask8`, two all-ones/all-zeros ymm registers, or a bit set) from the
+//! comparisons `ne`, `eq`, `gt`, `ge`, with per-lane select `sel`: the quad-double lanes (`qv`) run QD's data-dependent
+//! branches with them.
 
 #[cfg(all(target_arch = "x86_64", target_feature = "avx512f"))]
 mod imp {
