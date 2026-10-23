@@ -37,7 +37,9 @@ The two start states are converged at the same D and nodes, at the working resol
 The plans come from converged states or predictors through them: a state resampled to a larger M needs 3.5-4 times
 more Taylor steps (its new top harmonics are aliasing products that the tau-derivative amplifies), and a coarser plan
 blows up on it. A start whose residual on the given plan is not finite or above 1 gets its own plan instead.
-A failed solve inserts the midpoint between the last converged D and the target (halving the step).
+A failed solve (the helper's included) inserts the midpoint between the last converged D and the target (halving the
+step); a solve gives up after two steps in a row with line-search factors <= --stop_lam (1/8: Newton wandering in the
+weak directions from a predictor too far off, as at D 3.15 from |F| 0.7).
 Stop rules (each recorded with its reason): the largest M in --Ms cannot keep the difference below --diff_max; a
 point fails with the step below --min_step; the projected time of the next point (the last point's solves) exceeds
 --point_hours; --hours of wall time in all, counted across restarts.
@@ -119,6 +121,8 @@ def main():
                     "last converged state, relative to --tol_step")
     ap.add_argument("--lift_tail_max", type=float, default=1e-20, help="with --auto_nodes, halve the first node when "
                     "the centre series tail of the next point's M_n start (the M_w solution resampled) is above this")
+    ap.add_argument("--stop_lam", type=float, default=0.125, help="a solve gives up after two steps in a row with "
+                    "line-search factors at most this (Newton wandering in the weak directions; 0: never)")
     ap.add_argument("--two_pass_above", type=float, default=1e-3, help="solve M_w or M_n in two passes when its best "
                     "start's |F| on the reused plan is above this (0: never)")
     ap.add_argument("--resume", action="store_true")
@@ -154,7 +158,7 @@ def main():
     def ns(M, tag=None, tol=None):
         return argparse.Namespace(out=a.points, tag=tag or st["tag"], resume=True, kt=a.kt, kcs=kc, ks=ks, tol_step=a.tol_step,
                                   hmax=a.hmax, solver="newton", it_max=a.it_max, tol=tol or a.tol, accept=tol or a.accept,
-                                  lm=0, jac="f64", threads=a.threads, svd=0, dn_its=2, w=24)
+                                  lm=0, jac="f64", threads=a.threads, svd=0, dn_its=2, w=24, stop_lam=a.stop_lam)
 
     def save_prog():
         st["t_used"] = time.time() - t_start
@@ -264,6 +268,11 @@ def main():
         t = time.time()
         ok, zh, zl = lowD_dd.solve_point(D, M, best[2][0], best[2][1], f"pilot: {best[1]}", ns(M, tag, tol), st["nodes"],
                                          STATES, log, segs=segs)
+        if not ok:
+            # a later try at this (D, M) must not resume from the failed run's checkpoint
+            ck = os.path.join(STATES, f"{tag or st['tag']}_D{D:.4f}_M{M}_ckpt.npz")
+            if os.path.exists(ck):
+                os.replace(ck, ck[:-len(".npz")] + "_failed.npz")
         if tol is not None:
             return ok, None, os.path.join(STATES, f"{tag or st['tag']}_D{D:.4f}_M{M}.npz")
         rec = find_record(a.points, D, M, st["nodes"]) if ok else None
@@ -473,17 +482,20 @@ def main():
         # and at M = 128 it went astray in the weak directions, while starts lifted from a converged lower M converge
         # in 3-5 calls
         rc = path_c = None
+        ok_c = True
         if Mc and st["hist_c"]:
             zpc = predict([(d, zof(p)) for d, p in st["hist_c"][-4:]], Dt)
             ok_c, rc, path_c = solve(Dt, Mc, [("predictor", zpc)], plan_prev(st["hist_c"], Mc))
             if not ok_c:
-                log(f"  D {Dt}: the helper M {Mc} did not converge; M {Mw} from its predictor")
+                # its predictor was too far off (D 3.15: |F| 0.7, Newton astray); M_w's is no better, so the point
+                # fails and the step is halved
                 rc = path_c = None
-        zpw = predict([(d, zof(p)) for d, p in st["hist_w"][-4:]], Dt)
-        segs_w = plan_prev(st["hist_w"], Mw)
-        starts_w = [("predictor", zpw)] + ([("lift of M_c", lifted(path_c, Mw))] if path_c else [])
-        ok_w, rw, path_w = solve(Dt, Mw, starts_w, segs_w, two_pass=True)
-        ok_n = False
+        ok_w = ok_n = False
+        if ok_c:
+            zpw = predict([(d, zof(p)) for d, p in st["hist_w"][-4:]], Dt)
+            segs_w = plan_prev(st["hist_w"], Mw)
+            starts_w = [("predictor", zpw)] + ([("lift of M_c", lifted(path_c, Mw))] if path_c else [])
+            ok_w, rw, path_w = solve(Dt, Mw, starts_w, segs_w, two_pass=True)
         if ok_w:
             rw["steps_own"] = plan_check(Dt, Mw, path_w, load(path_w)[2]["segs"])
             zpn = predict([(d, zof(p)) for d, p in st["hist_n"][-4:]], Dt)
@@ -496,9 +508,10 @@ def main():
                 rn["steps_own"] = plan_check(Dt, Mn, path_n, load(path_n)[2]["segs"])
         if not (ok_w and ok_n):
             Dm = round(0.5 * (Dl + Dt), 6)
+            Mf = Mc if not ok_c else (Mw if not ok_w else Mn)
             if abs(Dm - Dl) < a.min_step:
-                return stop(f"D {Dt} failed at M {Mw if not ok_w else Mn} with the step below {a.min_step}")
-            log(f"D {Dt} failed at M {Mw if not ok_w else Mn}; inserting D {Dm}")
+                return stop(f"D {Dt} failed at M {Mf} with the step below {a.min_step}")
+            log(f"D {Dt} failed at M {Mf}; inserting D {Dm}")
             st["targets"].insert(0, Dm)
             save_prog()
             continue
