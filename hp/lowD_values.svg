@@ -118,7 +118,7 @@
 <path d="M758.0,215.7 L852.3,289.1" fill="none" stroke="#1baf7a" stroke-width="1.4" stroke-opacity="0.6" stroke-linejoin="round"/>
 <g><circle cx="758.0" cy="215.7" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.7: M 64 → 80 moves Δ by 2.83e-08</title></g>
 <g><circle cx="852.3" cy="289.1" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>D = 4.0: M 64 → 80 moves Δ by 1.84e-09</title></g>
-<text x="752.0" y="219.7" font-size="10" fill="#0b0b0b" text-anchor="end" font-weight="normal">64→80</text>
+<text x="750.0" y="207.7" font-size="10" fill="#0b0b0b" text-anchor="end" font-weight="normal">64→80</text>
 <path d="M663.7,175.2 L679.4,192.8 L695.1,237.2 L710.9,280.7 L726.6,266.3 L742.3,273.0 L758.0,299.7" fill="none" stroke="#eda100" stroke-width="1.4" stroke-opacity="0.6" stroke-linejoin="round"/>
 <g><circle cx="663.7" cy="175.2" r="4" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.4: M 80 → 96 moves Δ by 1.28e-07</title></g>
 <g><circle cx="679.4" cy="192.8" r="4" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.45: M 80 → 96 moves Δ by 6.65e-08</title></g>
@@ -127,9 +127,9 @@
 <g><circle cx="726.6" cy="266.3" r="4" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.6: M 80 → 96 moves Δ by 4.30e-09</title></g>
 <g><circle cx="742.3" cy="273.0" r="4" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.65: M 80 → 96 moves Δ by 3.34e-09</title></g>
 <g><circle cx="758.0" cy="299.7" r="4" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.7: M 80 → 96 moves Δ by 1.24e-09</title></g>
-<text x="657.7" y="179.2" font-size="10" fill="#0b0b0b" text-anchor="end" font-weight="normal">80→96</text>
+<text x="655.7" y="167.2" font-size="10" fill="#0b0b0b" text-anchor="end" font-weight="normal">80→96</text>
 <path d="M695.1,299.9 L726.6,408.9" fill="none" stroke="#e87ba4" stroke-width="1.4" stroke-opacity="0.6" stroke-linejoin="round"/>
 <g><circle cx="695.1" cy="299.9" r="4" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.5: M 96 → 128 moves Δ by 1.23e-09</title></g>
 <g><circle cx="726.6" cy="408.9" r="4" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.6: M 96 → 128 moves Δ by 2.12e-11</title></g>
-<text x="689.1" y="303.9" font-size="10" fill="#0b0b0b" text-anchor="end" font-weight="normal">96→128</text>
+<text x="687.1" y="291.9" font-size="10" fill="#0b0b0b" text-anchor="end" font-weight="normal">96→128</text>
 </svg>

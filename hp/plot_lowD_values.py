@@ -128,7 +128,7 @@ def main():
         for D, c in lst:
             marker(svg, q.sx(D), q.sy(math.log10(max(c, 1e-16))), col, f"D = {D}: M {a} → {b} moves Δ by {c:.2e}", r=4)
         D0, c0 = lst[0]
-        svg.text(q.sx(D0) - 6, q.sy(math.log10(max(c0, 1e-16))) + 4, f"{a}→{b}", size=10, fill=INK, anchor="end")
+        svg.text(q.sx(D0) - 8, q.sy(math.log10(max(c0, 1e-16))) - 8, f"{a}→{b}", size=10, fill=INK, anchor="end")
     open(args.o, "w").write(svg.finish(120 + 340 + 56))
     print("wrote", args.o)
     for D, v, M, err, ok in pts:
