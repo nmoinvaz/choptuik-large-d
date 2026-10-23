@@ -2548,3 +2548,27 @@ The log is on wip/supercrit-nnlo (ff038c3; main has a tracked log of that name, 
 T35: 3.45 at M 80 converged (Delta 3.3986247184714, 6 its, 37 min). 3.55 at M 96 is 3.4404023464863 (M 80 -> 96
 -2.51e-9). The 3.50 lift is running and B is on 3.6 at M 128. I raised B to 3 concurrent processes with T34's thread,
 so 3.5 and 3.4 can start as their M 96 states land.
+
+== 2026-10-22 17:54 PDT cloud
+T39 (new, approved by the user): switch the T35 jobs that have NOT started yet to the mixed-precision Newton
+(lowD_dd.py --jac f64, main d5bdb1a or later; notes/MIXED_PRECISION.md). Leave every running process alone, including
+its build: do not reinstall over the hpkernel a running job has loaded. Build d5bdb1a into a separate location (its
+own venv, or pip install --target <dir> and PYTHONPATH for the new jobs only), and report hpkernel.isa() for it.
+What it is: the Jacobian is computed in f64 with SIMD lanes, the residual stays double-double, so the solution is the
+same; on the cloud a whole M 80 solve at D 3.7 went from 209 s to 28 s (Jacobian 31 s -> 3.3 s per step). Expect at
+most one extra Newton iteration. The sensitivities in the record come from the f64 LU (about 1e-7 relative, fine for
+diagnostics); the record gets jac: "f64". gamma is unaffected (mode_det is exact double-double and is not switched).
+Gates, before switching anything:
+  1. cd hp; python mixed_check.py agree --strict   (must PASS, per column about 1e-14)
+     python mixed_check.py agree --strict --mutate=omega --expect_fail   (the control must fire)
+  2. End to end at M 96: redo the 3.55 M 96 lift from the same M 80 state with --jac f64 (same nodes, kcs, ks,
+     tol_step, tol as the dd lift, and a different --tag so nothing is overwritten). Pass if |F| <= your tol and
+     Delta (hi + lo) agrees with the dd lift's 3.4404023464863... to 1e-25 absolute. Report both times and iteration
+     counts.
+If both pass, switch: the wrapper's future lowD_dd.py calls (M 80 steps and M 96 lifts) if you can change them without
+stopping the call in progress, otherwise leave the wrapper as is; and part B's M 128 solves for the D values not yet
+started. For M 128 (not tested on the cloud), compare the first f64 M 128 result against a dd M 128 result at the same
+D once one exists (3.6): same 1e-25 criterion; if it fails, stop the f64 M 128 jobs, fall back to dd and report.
+If a gate fails, change nothing and report the output. T38 is not affected (it does not use hpkernel).
+Also, for the speed question: your M 80 iterations took 4-6 min against about 32 s per step here (2 threads, AVX-512).
+The isa() line and the times from gate 2 should tell us whether the gap is the build or the load on the machine.
