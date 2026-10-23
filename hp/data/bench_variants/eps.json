@@ -1,0 +1,72 @@
+{
+ "D60.0020_M32": {
+  "eps": 1.0000000000000001e-11,
+  "largest_converging": 1e-10,
+  "perturb": "secant",
+  "neighbour": "up12_D59.0250.npz",
+  "solver": "deflated"
+ },
+ "D55.0351_M32": {
+  "eps": 1.0000000000000001e-11,
+  "largest_converging": 1e-10,
+  "perturb": "secant",
+  "neighbour": "up11_D56.0117.npz",
+  "solver": "deflated"
+ },
+ "D50.0075_M32": {
+  "eps": 1e-10,
+  "largest_converging": 1e-09,
+  "perturb": "secant",
+  "neighbour": "up8_D51.0270.npz",
+  "solver": "deflated"
+ },
+ "D45.0507_M32": {
+  "eps": 1e-09,
+  "largest_converging": 1e-08,
+  "perturb": "secant",
+  "neighbour": "up8_D46.0011.npz",
+  "solver": "deflated"
+ },
+ "D40.0201_M32": {
+  "eps": 1e-09,
+  "largest_converging": 1e-08,
+  "perturb": "secant",
+  "neighbour": "up7_D41.0890.npz",
+  "solver": "deflated"
+ },
+ "D30.0688_M32": {
+  "eps": 1e-07,
+  "largest_converging": 1e-06,
+  "perturb": "secant",
+  "neighbour": "up6_D31.0340.npz",
+  "solver": "deflated"
+ },
+ "D20.0437_M32": {
+  "eps": 1e-08,
+  "largest_converging": 1e-07,
+  "perturb": "secant",
+  "neighbour": "up2_D21.0297.npz",
+  "solver": "newton"
+ },
+ "D16.7600_M32": {
+  "eps": 1e-05,
+  "largest_converging": 0.0001,
+  "perturb": "secant",
+  "neighbour": "up2_D17.0180.npz",
+  "solver": "newton"
+ },
+ "D8.2500_M48": {
+  "eps": 1e-05,
+  "largest_converging": 0.0001,
+  "perturb": "secant",
+  "neighbour": "up_D9.0000.npz",
+  "solver": "newton"
+ },
+ "D3.7000_M80": {
+  "eps": 1e-05,
+  "largest_converging": 0.0001,
+  "perturb": "secant",
+  "neighbour": "lowDv_D4.0000_M64.npz",
+  "solver": "newton"
+ }
+}

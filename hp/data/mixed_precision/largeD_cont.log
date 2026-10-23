@@ -1,0 +1,44 @@
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D59.8221/dd: exit 0, 481 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D59.8221/f64: exit 1, 123 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D59.8221/f64h: exit 0, 409 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D59.8221/f64g: exit 1, 296 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D59.8221/f64hg: exit -15, 822 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/ladder/k0: exit 0, 394 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/ladder/k1: exit 0, 331 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/ladder/k2: exit 0, 296 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/ladder/k3: exit 0, 335 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/ladder/k4: exit 0, 344 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/ladder/k5: exit 0, 351 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/ladder/k6: exit 0, 324 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/ladder/k7: exit 0, 246 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/dd: exit 0, 353 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/f64: exit 1, 147 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/f64h: exit 0, 311 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/f64g: exit 0, 186 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/f64hg: exit 0, 178 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/k0: exit 0, 259 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/k1: exit 0, 195 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/k2: exit 0, 226 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/k3: exit 1, 479 s
+D 50.0: the double-double ladder did not reach every point; no variant runs
+
+== D59.8221 (tol 3e-22): from up13_D59.8221.npz to 59.833359, 59.847422
+  dd     D 59.833359: its  7,  126.7 s, |F| 3.4e-23, dDelta_est -2.6e-19, Delta - dd +0.0e+00, Delta - scan -2.4e-18
+  dd     D 59.847422: its  8,  146.2 s, |F| 2.9e-23, dDelta_est -4.0e-18, Delta - dd +0.0e+00, Delta - scan +2.5e-18
+  at D 59.847422, f64    LU vs dd LU: dDelta/dF per-block max rel. diff 1.3e+09, whole vector 1.0e+00; weak subspace (w 24) largest principal angle sin 1.0e+00
+  at D 59.847422, f64h   LU vs dd LU: dDelta/dF per-block max rel. diff 3.2e+05, whole vector 1.0e+00; weak subspace (w 24) largest principal angle sin 1.0e+00
+  at D 59.847422, f64g   LU vs dd LU: dDelta/dF per-block max rel. diff 1.3e+09, whole vector 1.0e+00; weak subspace (w 24) largest principal angle sin 1.0e+00
+  at D 59.847422, f64hg  LU vs dd LU: dDelta/dF per-block max rel. diff 3.2e+05, whole vector 1.0e+00; weak subspace (w 24) largest principal angle sin 1.0e+00
+
+== D40.0201 (tol 1e-25): from dd_D40.0501.npz to 40.080065, 40.110065
+  dd     D 40.080065: its  6,   90.4 s, |F| 2.5e-26, dDelta_est -5.5e-22, Delta - dd +0.0e+00
+  dd     D 40.110065: its  6,   92.9 s, |F| 2.4e-26, dDelta_est -2.8e-22, Delta - dd +0.0e+00
+  f64h   D 40.080065: its 14,  114.3 s, |F| 2.6e-26, dDelta_est -3.2e-22, Delta - dd -4.9e-23; Jacobian 109.0 s, LU 0.66 s, products 0.0 s (0)
+  f64h   D 40.110065: its  7,   54.0 s, |F| 2.3e-26, dDelta_est -1.7e-21, Delta - dd +6.9e-22; Jacobian 51.0 s, LU 0.32 s, products 0.0 s (0)
+  at D 40.110065, f64    LU vs dd LU: dDelta/dF per-block max rel. diff 4.7e+03, whole vector 9.7e-01; weak subspace (w 24) largest principal angle sin 1.0e+00
+  at D 40.110065, f64h   LU vs dd LU: dDelta/dF per-block max rel. diff 3.6e+03, whole vector 2.5e+00; weak subspace (w 24) largest principal angle sin 1.0e+00
+  at D 40.110065, f64g   LU vs dd LU: dDelta/dF per-block max rel. diff 4.7e+03, whole vector 9.7e-01; weak subspace (w 24) largest principal angle sin 1.0e+00
+  at D 40.110065, f64hg  LU vs dd LU: dDelta/dF per-block max rel. diff 3.6e+03, whole vector 2.5e+00; weak subspace (w 24) largest principal angle sin 1.0e+00
+
+== D50.0075 (tol 1e-24): from ? to 50.067491, 50.097491
+exit 0

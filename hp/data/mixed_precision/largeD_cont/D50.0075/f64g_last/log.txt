@@ -1,0 +1,41 @@
+/usr/bin/python3 -u /home/claude/dss/agentLD/wt/hp/scan_hp.py /home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/f64g_last/scan.jsonl /home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.03/dd_D50.0375.npz 0 --history /home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.009/dd_D50.0165.npz,/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.0135/dd_D50.0210.npz,/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.02/dd_D50.0275.npz --Dlist 50.067491,50.097491 --dD 1 --maxdD 1 --M 32 --kc 420 --ks 100 --kt 36 --tol 1e-24 --w 24 --it_max 25 --lm 0 --threads 2 --tag f64g_last --jac f64g --verbose --kfreeze 13 --dd_last
+  dn 0 [all]: |F| 4.08e-17 -> 1.09e-19 lam 1 Delta 1.841517599520007 t 1s (23 products)
+  dn 1 [all]: |F| 1.09e-19 -> nan lam 0.000122 Delta 1.841517599520007 t 2s (24 products)
+  dn 2 [full]: |F| 1.09e-19 -> 1.01e-24 lam 1 Delta 1.841517599520007 t 3s (24 products)
+  dn 3 [full]: |F| 1.01e-24 -> 8.02e-25 lam 1 Delta 1.841517599520007 t 4s (23 products)
+  dn 4: |F| 8.02e-25 converged, Delta 1.841517599520007; one exact step, |F| 8.76e-25
+(re-)converged start D=50.037491 M=32 nodes=[0.3, 0.4, 0.5, 0.6, 0.7]: Delta 1.8415175995200070 ok True (10s)
+  dn 0 [all]: |F| 5.21e-17 -> 1.36e-19 lam 1 Delta 1.841597059343488 t 1s (23 products)
+  dn 1 [all]: |F| 1.36e-19 -> nan lam 0.000122 Delta 1.841597059343488 t 2s (24 products)
+  dn 2 [full]: |F| 1.36e-19 -> 7.98e-25 lam 1 Delta 1.841597059343488 t 3s (24 products)
+  dn 3: |F| 7.98e-25 converged, Delta 1.841597059343488; one exact step, |F| 1.09e-24
+history point D=50.016491: ok True, Delta 1.8415970593434885
+  dn 0 [all]: |F| 5.84e-17 -> 1.62e-19 lam 1 Delta 1.841580026836469 t 1s (24 products)
+  dn 1 [all]: |F| 1.62e-19 -> nan lam 0.000122 Delta 1.841580026836469 t 2s (24 products)
+  dn 2 [full]: |F| 1.62e-19 -> 6.33e-25 lam 1 Delta 1.841580026836469 t 3s (24 products)
+  dn 3: |F| 6.33e-25 converged, Delta 1.841580026836469; one exact step, |F| 1.18e-24
+history point D=50.020991: ok True, Delta 1.8415800268364688
+  dn 0 [all]: |F| 8.16e-17 -> 1.54e-19 lam 1 Delta 1.841555429529248 t 1s (24 products)
+  dn 1 [all]: |F| 1.54e-19 -> nan lam 0.000122 Delta 1.841555429529248 t 2s (24 products)
+  dn 2 [full]: |F| 1.54e-19 -> 8.98e-25 lam 1 Delta 1.841555429529248 t 3s (24 products)
+  dn 3: |F| 8.98e-25 converged, Delta 1.841555429529248; one exact step, |F| 8.09e-25
+history point D=50.027491: ok True, Delta 1.8415554295292478
+  dn 0 [all]: |F| 2.36e-06 -> 2.77e-12 lam 1 Delta 1.841404196699626 t 1s (7 products)
+  dn 1 [all]: |F| 2.77e-12 -> 4.65e-15 lam 1 Delta 1.841404196700333 t 2s (21 products)
+  dn 2 [all]: |F| 4.65e-15 -> 4.66e-15 lam 1 Delta 1.841404196700333 t 3s (23 products)
+  dn: phase 'all' stalled at |F| 4.7e-15; phase 'full'
+  dn 3 [full]: |F| 4.66e-15 -> 1.49e-20 lam 1 Delta 1.841404196700330 t 4s (23 products)
+  dn 4 [full]: |F| 1.49e-20 -> 1.35e-20 lam 1 Delta 1.841404196700330 t 5s (23 products)
+  dn 5 [full]: |F| 1.35e-20 -> 1.06e-24 lam 1 Delta 1.841404196700330 t 6s (23 products)
+  dn 6 [full]: |F| 1.06e-24 -> 8.94e-25 lam 0.5 Delta 1.841404196700330 t 7s (23 products)
+  dn 7: |F| 8.94e-25 converged, Delta 1.841404196700330; one exact step, |F| 7.57e-25
+D=50.0675 Delta=1.8414041967003298-1.15e-17 its 8 |F| 8.9e-25 13s piv 6.6e-06..5.0e+05 dDelta/dF max 1.5e+12 tails 6e-134 3e-45
+  dn 0 [all]: |F| 8.78e-07 -> 1.74e-11 lam 1 Delta 1.841290924517266 t 1s (8 products)
+  dn 1 [all]: |F| 1.74e-11 -> 2.86e-15 lam 1 Delta 1.841290924516139 t 2s (21 products)
+  dn 2 [all]: |F| 2.86e-15 -> 2.79e-15 lam 1 Delta 1.841290924516138 t 3s (24 products)
+  dn: phase 'all' stalled at |F| 2.8e-15; phase 'full'
+  dn 3 [full]: |F| 2.79e-15 -> 1.53e-18 lam 1 Delta 1.841290924516228 t 4s (23 products)
+  dn 4 [full]: |F| 1.53e-18 -> 1.53e-18 lam 1 Delta 1.841290924516229 t 5s (23 products)
+  dn 5 [full]: |F| 1.53e-18 -> 8.24e-25 lam 1 Delta 1.841290924516229 t 6s (24 products)
+  dn 6: |F| 8.24e-25 converged, Delta 1.841290924516229; one exact step, |F| 6.75e-25
+D=50.0975 Delta=1.8412909245162292+6.83e-17 its 7 |F| 8.2e-25 13s piv 1.4e-07..5.1e+05 dDelta/dF max 1.5e+12 tails 5e-134 3e-45

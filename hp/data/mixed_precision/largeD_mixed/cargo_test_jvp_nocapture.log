@@ -1,0 +1,3 @@
+jvp vs double-double Jacobian times v: 3.83e-30; with the Delta tangent x (1 + 1e-20): 3.67e-24
+HDD_BLOCK: horizon rows = dd hi true, other rows = f64 true; HDD_LASTSEG: horizon rows = dd hi false, rows outside the horizon block = f64 false; last segment rows = dd hi true, others = f64 true
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 18 filtered out; finished in 0.77s

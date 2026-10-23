@@ -1,0 +1,29 @@
+/usr/bin/python3 -u /home/claude/dss/agentLD/wt/hp/scan_hp.py /home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/ladder/k4/scan.jsonl /home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/ladder/k3/dd_D40.0211.npz 0 --history /home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/ladder/k0/dd_D40.0201.npz,/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/ladder/k1/dd_D40.0202.npz,/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/ladder/k2/dd_D40.0204.npz --Dlist 40.023065 --dD 0.002 --maxdD 0.002 --M 32 --kc 420 --ks 100 --kt 36 --tol 1e-25 --w 24 --it_max 25 --lm 0 --threads 2 --tag dd --jac dd --verbose --kfreeze 13
+  dn 0 [all]: |F| 1.44e-16 -> 1.01e-16 lam 1 Delta 1.888445859616939 t 18s
+  dn: phase 'all' stalled at |F| 1.0e-16; phase 'full'
+  dn 1 [full]: |F| 1.01e-16 -> 3.40e-26 lam 1 Delta 1.888445859616939 t 34s
+  dn 2: |F| 3.40e-26 converged, Delta 1.888445859616939
+(re-)converged start D=40.021065 M=32 nodes=[0.3, 0.4, 0.5, 0.6, 0.7]: Delta 1.8884458596169391 ok True (51s)
+  dn 0 [all]: |F| 7.38e-17 -> 5.34e-17 lam 1 Delta 1.888451548390423 t 17s
+  dn: phase 'all' stalled at |F| 5.3e-17; phase 'full'
+  dn 1 [full]: |F| 5.34e-17 -> 2.30e-26 lam 1 Delta 1.888451548390423 t 34s
+  dn 2: |F| 2.30e-26 converged, Delta 1.888451548390423
+history point D=40.020085: ok True, Delta 1.8884515483904230
+  dn 0 [all]: |F| 1.24e-16 -> 7.66e-17 lam 1 Delta 1.888451083990768 t 17s
+  dn: phase 'all' stalled at |F| 7.7e-17; phase 'full'
+  dn 1 [full]: |F| 7.66e-17 -> 2.67e-26 lam 1 Delta 1.888451083990768 t 32s
+  dn 2: |F| 2.67e-26 converged, Delta 1.888451083990768
+history point D=40.020165: ok True, Delta 1.8884510839907684
+  dn 0 [all]: |F| 5.74e-17 -> 2.83e-17 lam 1 Delta 1.888449922999397 t 16s
+  dn: phase 'all' stalled at |F| 2.8e-17; phase 'full'
+  dn 1 [full]: |F| 2.83e-17 -> 2.01e-26 lam 1 Delta 1.888449922999397 t 34s
+  dn 2: |F| 2.01e-26 converged, Delta 1.888449922999397
+history point D=40.020365: ok True, Delta 1.8884499229993965
+  dn 0 [all]: |F| 3.55e-07 -> 7.09e-14 lam 1 Delta 1.888434250701322 t 20s
+  dn 1 [all]: |F| 7.09e-14 -> 1.02e-14 lam 1 Delta 1.888434250701343 t 40s
+  dn 2 [all]: |F| 1.02e-14 -> nan lam 0.000122 Delta 1.888434250701343 t 61s
+  dn 3 [full]: |F| 1.02e-14 -> 1.14e-23 lam 1 Delta 1.888434250701391 t 81s
+  dn 4 [full]: |F| 1.14e-23 -> 3.69e-24 lam 1 Delta 1.888434250701391 t 100s
+  dn 5 [full]: |F| 3.69e-24 -> 2.88e-26 lam 1 Delta 1.888434250701391 t 120s
+  dn 6: |F| 2.88e-26 converged, Delta 1.888434250701391
+D=40.0231 Delta=1.8884342507013911-1.67e-17 its 7 |F| 2.9e-26 140s piv 1.5e-06..1.0e+04 dDelta/dF max 9.6e+09 tails 5e-115 1e-47

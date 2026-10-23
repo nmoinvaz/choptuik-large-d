@@ -38,8 +38,10 @@ converge: Newton with the exact double-double Jacobian (driver.newton_solve with
   skips it). Pass: all converge, and the Delta and max |z| differences are at most max(1e-27, 10 x the control)
   relative (1e-27 without the control). --json=FILE writes the records.
 ref: bit-identity of the default double-double path (residual, jacobian, newton, chord, lu_solve_t, mode_matrix at
-  lam = 0.3, a Jacobian with frozen harmonics and one with an inward matching node) at the D = 3.7, M = 48 state
-  against a file written by an earlier build (--save writes it; --compare exits 1 on any differing bit).
+  lam = 0.3, a Jacobian with frozen harmonics and one with an inward matching node) at the D = 3.7, M = 48 state, of
+  the mixed-precision defaults (jacobian_f64, newton_mixed) there, and of residual, jacobian, newton, lu_solve_t,
+  jacobian_f64 and newton_mixed at the D = 50.01 scan state with kfreeze 13, against a file written by an earlier
+  build (--save writes it; --compare exits 1 on any differing bit).
 """
 import hashlib
 import json
@@ -55,6 +57,7 @@ os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
 from hpkernel.driver import dd_add, dd_norm, load, make_solver, newton_solve, resample_z  # noqa: E402
 
 STATE = lambda M: os.path.join(HERE, "data", "lowD_states", f"lowDv_D3.7000_M{M}.npz")  # noqa: E731
+LARGE_D = os.path.join(HERE, "data", "states", "up8_D50.0075.npz")
 MUTATIONS = {"dtau": 1, "omega": 2, "kappa": 3}
 DEFAULT_VARIANT = "f64x4"
 
@@ -286,6 +289,23 @@ def ref_outputs(path, threads):
     out["jacobian_freeze_hi"], out["jacobian_freeze_lo"] = s2.jacobian(zh, zl)
     s3, _, _, _ = solver_for(path, threads, match_node=8)
     out["jacobian_inward_hi"], out["jacobian_inward_lo"] = s3.jacobian(zh, zl)
+    # the mixed-precision defaults (notes/MIXED_PRECISION.md) and a large-D state with kfreeze 13 (notes/LARGE_D_MIXED.md)
+    out["jacobian_f64"] = s.jacobian_f64(zh, zl)
+    dh, dl, _, _, pmin, pmax = s.newton_mixed(zh, zl)
+    out["newton_mixed_hi"], out["newton_mixed_lo"], out["newton_mixed_piv"] = dh, dl, np.array([pmin, pmax])
+    zh5, zl5, m5 = load(LARGE_D)
+    s5 = make_solver(m5["D"], m5["M"], nodes=m5["nodes"], kt=m5["kt"], kc=m5["kc"], ks=m5["ks"], threads=threads, kfreeze=13)
+    s5.set_segs(s5.plan(zh5, zl5, 1e-32, 0.05))
+    out["largeD_residual_hi"], out["largeD_residual_lo"] = s5.residual(zh5, zl5)
+    out["largeD_jacobian_hi"], out["largeD_jacobian_lo"] = s5.jacobian(zh5, zl5)
+    dh, dl, _, _, pmin, pmax = s5.newton(zh5, zl5)
+    out["largeD_newton_hi"], out["largeD_newton_lo"], out["largeD_newton_piv"] = dh, dl, np.array([pmin, pmax])
+    e = np.zeros(s5.size)
+    e[-1] = 1.0
+    out["largeD_lu_solve_t_hi"], out["largeD_lu_solve_t_lo"] = s5.lu_solve_t(e, np.zeros(s5.size))
+    out["largeD_jacobian_f64"] = s5.jacobian_f64(zh5, zl5)
+    dh, dl, _, _, pmin, pmax = s5.newton_mixed(zh5, zl5)
+    out["largeD_newton_mixed_hi"], out["largeD_newton_mixed_lo"], out["largeD_newton_mixed_piv"] = dh, dl, np.array([pmin, pmax])
     return {k: np.ascontiguousarray(np.asarray(v, dtype=np.float64)) for k, v in out.items()}
 
 
@@ -304,6 +324,9 @@ def ref(opts):
     want = np.load(opts["compare"])
     bad = 0
     for k, v in out.items():
+        if k not in want:
+            print(f"  {k:22s} not in {opts['compare']} (an older reference file): not compared")
+            continue
         w = want[k]
         same = w.shape == v.shape and np.array_equal(w.view(np.uint64), v.view(np.uint64))
         bad += not same

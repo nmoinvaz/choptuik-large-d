@@ -52,7 +52,29 @@ pub struct Ctx<const B: usize> {
     /// (hp/mixed_check.py --mutate): 0 none, 1 no tau derivative, 2 omega scaled by 1 + 1e-9, 3 the horizon solves'
     /// kappa tangent term dropped. The double-double lanes never read it.
     pub mutate: u8,
+    /// Parts of the f64 Jacobian (TAN_F64 lanes) computed in double-double instead, rounded to f64; bit flags HDD_*
+    /// (notes/LARGE_D_MIXED.md). 0, the default, changes nothing. The double-double lanes never read it.
+    pub f64_dd: u8,
 }
+
+/// `Ctx::f64_dd`: the horizon series' periodic solves (`psolve`) in double-double for the f64 lanes, value and
+/// tangents, with the full double-double LU factors instead of their hi parts
+pub const HDD_SOLVE: u8 = 1;
+/// `Ctx::f64_dd`: no early end of the horizon series for f64 tangents (`Tail`); the series runs to ks
+pub const HDD_NOTAIL: u8 = 2;
+/// `Ctx::f64_dd`: the horizon block's column tasks (m_h, a_h, Delta) with `Du` lanes, i.e. the double-double
+/// Jacobian's columns of that block, rounded to f64
+pub const HDD_BLOCK: u8 = 4;
+/// `Ctx::f64_dd`: the last segment's column tasks (block K - 1) with `Du` lanes
+pub const HDD_LASTSEG: u8 = 8;
+/// `Ctx::f64_dd`: the horizon block's column tasks with `Dtn<4>` lanes (a double-double base trajectory, f64
+/// tangents); with HDD_SOLVE also the tangent solves in double-double
+pub const HDD_DTN: u8 = 16;
+/// `Ctx::f64_dd`, for the double-double tangent lanes (`Du`) of `jvp`: the centre and horizon series stop once their
+/// tangent terms are below double-double resolution (`Tail` with TAIL_TOL_DD), instead of running to kc and ks. The
+/// scan's kc = 420 at large D is far past that (the centre series' terms fall to 1e-134 at D = 50), and the centre
+/// series is most of a product's cost there.
+pub const HDD_DU_CUT: u8 = 32;
 
 impl<const B: usize> Ctx<B> {
     pub const M: usize = 8 * B;
@@ -151,12 +173,36 @@ struct Tail {
 }
 
 const TAIL_TOL: f64 = 8.673617379884035e-19; // 2^-60
+/// the cut of HDD_DU_CUT (double-double tangents)
+const TAIL_TOL_DD: f64 = 7.703719777548943e-34; // 2^-110
 const TAIL_RUN: usize = 4;
 const TAIL_MIN: usize = 8;
 
 impl Tail {
     fn new(r: f64) -> Tail {
         Tail { rk: 1.0, r, big: 0.0, run: 0 }
+    }
+    /// whether the series of lane type T stops early under ctx: f64 tangents always (TAIL_TOL), double-double
+    /// tangents with HDD_DU_CUT (TAIL_TOL_DD)
+    fn active<T: Lane, const B: usize>(ctx: &Ctx<B>) -> bool {
+        T::TAN_F64 || (T::TANGENT && ctx.f64_dd & HDD_DU_CUT != 0)
+    }
+    /// record order k as `done`, for the lanes `active` allows
+    fn done_any<T: Lane, const B: usize>(&mut self, k: usize, f: [&Fl<T, B>; 4]) -> bool {
+        if T::TAN_F64 {
+            return self.done(k, f);
+        }
+        let mut a = 0.0f64;
+        for x in f {
+            for b in 0..B {
+                a = a.max(x.0[b].tan().hi.abs().hmax());
+            }
+        }
+        let t = a * self.rk;
+        self.rk *= self.r;
+        self.big = self.big.max(t);
+        self.run = if t <= TAIL_TOL_DD * self.big { self.run + 1 } else { 0 };
+        self.big > 0.0 && k >= TAIL_MIN && self.run >= TAIL_RUN
     }
     /// record order k (called for k = 0, 1, 2, ... in turn); true when the series may stop after it
     fn done<T: Lane, const B: usize>(&mut self, k: usize, f: [&Fl<T, B>; 4]) -> bool {
@@ -198,9 +244,10 @@ pub fn centre_series<T: Lane, const B: usize>(ctx: &Ctx<B>, p1: &Fl<T, B>, c0: &
     a2[0] = aa[0] * aa[0];
     let invc = Fl::<T, B>::splat(DD::ONE) / cc[0];
     let mut tail = Tail::new(ctx.nodes[0]);
-    if T::TAN_F64 {
-        tail.done(0, [&pp[0], &mm[0], &aa[0], &cc[0]]);
-        tail.done(1, [&pp[1], &mm[1], &aa[1], &cc[1]]);
+    let cut = Tail::active::<T, B>(ctx);
+    if cut {
+        tail.done_any(0, [&pp[0], &mm[0], &aa[0], &cc[0]]);
+        tail.done_any(1, [&pp[1], &mm[1], &aa[1], &cc[1]]);
     }
     for k in 2..=kmax {
         let kf = k as f64;
@@ -232,7 +279,7 @@ pub fn centre_series<T: Lane, const B: usize>(ctx: &Ctx<B>, p1: &Fl<T, B>, c0: &
         let idel = DD::ONE / (-(DD::from_f64(kf - 1.0) * (DD::from_f64(kf - 1.0) + n)));
         pp[k] = ((r4.muls(mu12) - r3.muls(mu22)) * invc).muls(idel);
         mm[k] = ((r3.muls(mu21) - r4.muls(mu11)) * invc).muls(idel);
-        if T::TAN_F64 && tail.done(k, [&pp[k], &mm[k], &aa[k], &cc[k]]) {
+        if cut && tail.done_any(k, [&pp[k], &mm[k], &aa[k], &cc[k]]) {
             for v in [&mut pp, &mut mm, &mut aa, &mut cc] {
                 v.truncate(k + 1);
             }
@@ -440,8 +487,10 @@ fn tan_f8<T: Lane, const B: usize>(x: &Fl<T, B>, k: usize) -> Fl<F8, B> {
 fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, lu: &DDLu, lu_t: &DDLu, kappa: &Fl<T, B>, rhs: &Fl<T, B>, omega: T) -> Fl<T, B> {
     if T::VAL_F64 || T::TAN_F64 {
         // f64 values: the value solve in plain f64 with the hi parts of the double-double LU factors; f64 tangents:
-        // each tangent's solve likewise
-        let fv = if T::VAL_F64 { lu.solve_lanes_hi(&rhs.val()) } else { lu.solve_lanes(&rhs.val()) };
+        // each tangent's solve likewise. With HDD_SOLVE both in double-double (the f64 right-hand side solved exactly
+        // by the double-double factors, then rounded to f64).
+        let dds = ctx.f64_dd & HDD_SOLVE != 0;
+        let fv = if T::VAL_F64 && !dds { lu.solve_lanes_hi(&rhs.val()) } else { lu.solve_lanes(&rhs.val()) };
         let z = Fl::<DV, B>::zero();
         let mut out = Fl::<T, B>::from_vt(&fv, &z);
         if !T::TANGENT {
@@ -455,7 +504,7 @@ fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, lu: &DDLu, lu_t: &DDLu, kappa: 
             if ctx.mutate != 3 {
                 r = r - tan_f8(kappa, k) * fv8;
             }
-            let fd = lu_t.solve_lanes_hi(&r.val());
+            let fd = if dds { lu_t.solve_lanes(&r.val()) } else { lu_t.solve_lanes_hi(&r.val()) };
             for b in 0..B {
                 out.0[b].set_tan64(k, fd.0[b].hi);
             }
@@ -522,6 +571,7 @@ pub fn horizon_series<T: Lane, const B: usize>(
     zc[0] = zfun(&cc, 0);
     let izc0 = one / zc[0];
     let mut tail = Tail::new(ctx.u0().hi);
+    let cut = Tail::active::<T, B>(ctx) && ctx.f64_dd & HDD_NOTAIL == 0;
     let mut last = ks;
     for kk in 0..=ks {
         let kf = kk as f64;
@@ -539,7 +589,7 @@ pub fn horizon_series<T: Lane, const B: usize>(
         pp[kk] = psolve(ctx, &lus[kk], &lus_t[kk], &kappa, &(-r), omega);
         dp[kk] = dtau(ctx, &pp[kk], omega);
         q2[kk] = cs(&pp, &pp, kk) + cs(&mm, &mm, kk);
-        if kk == ks || (T::TAN_F64 && tail.done(kk, [&pp[kk], &mm[kk], &aa[kk], &cc[kk]])) {
+        if kk == ks || (cut && tail.done_any(kk, [&pp[kk], &mm[kk], &aa[kk], &cc[kk]])) {
             last = kk;
             break;
         }
@@ -801,7 +851,32 @@ fn jacobian_lanes<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64],
     let lus_t: &[DDLu] = lus_shift.as_deref().unwrap_or(&lus);
     let nb = ctx.k() + 1;
     let tasks = jac_tasks(ctx);
-    let cols: Vec<Vec<DD>> = if T::TAN_F64 && T::NT > 1 {
+    let cols: Vec<Vec<DD>> = if T::TAN_F64 && ctx.f64_dd & (HDD_BLOCK | HDD_LASTSEG | HDD_DTN) != 0 {
+        // the f64 Jacobian with some blocks' tasks on other lanes (Ctx::f64_dd): Du (double-double, rounded to f64
+        // when stored below) or Dtn<4>; the other tasks as in the branches below
+        let k = ctx.k();
+        let du = |b: usize| (ctx.f64_dd & HDD_BLOCK != 0 && b == k) || (ctx.f64_dd & HDD_LASTSEG != 0 && k >= 2 && b == k - 1);
+        let dtn = |b: usize| ctx.f64_dd & HDD_DTN != 0 && b == k && !du(b);
+        // (lane kind, tasks): 0 T in groups of NT (one task per unit when NT = 1), 1 Du, 2 Dtn<4>
+        let mut units: Vec<(u8, Vec<(usize, usize, usize)>)> = Vec::new();
+        for &t in &tasks {
+            let (kind, cap) = if du(t.0) { (1u8, 1) } else if dtn(t.0) { (2, 4) } else { (0, T::NT.max(1)) };
+            match units.last_mut() {
+                Some((kd, g)) if *kd == kind && g.len() < cap && g[0].0 == t.0 => g.push(t),
+                _ => units.push((kind, vec![t])),
+            }
+        }
+        let unit = |u: &(u8, Vec<(usize, usize, usize)>)| -> Vec<Vec<DD>> {
+            match u.0 {
+                1 => vec![jac_column::<Du, B>(ctx, zh, zl, delta, &lus, lus_t, u.1[0])],
+                2 => jac_columns_n::<Dtn<4>, B>(ctx, zh, zl, delta, &lus, lus_t, &u.1),
+                _ if T::NT > 1 => jac_columns_n::<T, B>(ctx, zh, zl, delta, &lus, lus_t, &u.1),
+                _ => vec![jac_column::<T, B>(ctx, zh, zl, delta, &lus, lus_t, u.1[0])],
+            }
+        };
+        let gc: Vec<Vec<Vec<DD>>> = if par { units.par_iter().map(unit).collect() } else { units.iter().map(unit).collect() };
+        gc.into_iter().flatten().collect()
+    } else if T::TAN_F64 && T::NT > 1 {
         // several tangents per evaluation: the tasks of each block in groups of NT, in task order
         let mut groups: Vec<Vec<(usize, usize, usize)>> = Vec::new();
         for &t in &tasks {
@@ -855,6 +930,71 @@ fn jacobian_lanes<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64],
         }
     }
     Ok((jh, jl, ld))
+}
+
+/// Deliberate breakage of `jvp`, for the controls of hp/largeD_mixed_check.py: the Delta tangent scaled by
+/// 1 + 1e-20 (a subtle error in one column's contribution)
+pub const JVP_MUT_DELTA: u8 = 1;
+/// `jvp` control: the horizon block's state tangent dropped
+pub const JVP_MUT_HORIZON: u8 = 2;
+/// `jvp` control: the phase row's product dropped
+pub const JVP_MUT_PHASE: u8 = 3;
+
+/// Exact Jacobian-vector product J v in double-double: the tangent of the residual along v, by one forward-mode
+/// pass per block (`Du` lanes, the lanes of the double-double Jacobian) with the block's inputs and Delta carrying
+/// v's entries as their tangent. It equals the double-double Jacobian times v to double-double rounding, for a cost of
+/// about K + 1 Jacobian columns. Returns (Jv hi, Jv lo, F hi, F lo): the residual comes with it. mutate: JVP_MUT_*
+/// (controls; 0 none).
+#[allow(clippy::type_complexity)]
+pub fn jvp<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], vh: &[f64], vl: &[f64], par: bool, mutate: u8) -> Result<(Vec<f64>, Vec<f64>, Vec<f64>, Vec<f64>), String> {
+    let l = ctx.len();
+    let m = Ctx::<B>::M;
+    if zh.len() != l || zl.len() != l || vh.len() != l || vl.len() != l {
+        return Err(format!("z and v must have length {l}"));
+    }
+    if ctx.lam.hi != 0.0 {
+        return Err("jvp: no mode-matrix shift (lam) supported".into());
+    }
+    let delta = delta_of(zh, zl);
+    let mut dv = delta_of(vh, vl);
+    if mutate == JVP_MUT_DELTA {
+        dv = dv + dv * DD::from_f64(1e-20);
+    }
+    let lus = horizon_lus(ctx, &ctx.fld(zh, zl, ctx.off_ah()), delta, par, DD::ZERO)?;
+    let one_block = |b: usize| -> State<Du, B> {
+        let inp: Vec<Fl<Du, B>> = ctx.block_inputs(b).iter().map(|&o| Fl::from_vt(&ctx.fld(zh, zl, o), &ctx.fld(vh, vl, o))).collect();
+        block_state::<Du, B>(ctx, b, &inp, Du::from_vt(DV::splat(delta), DV::splat(dv)), &lus, &lus)
+    };
+    let nb = ctx.k() + 1;
+    // the blocks are few (K + 1) and unequal; with par, each runs on its own task
+    let states: Vec<State<Du, B>> = if par { (0..nb).into_par_iter().map(one_block).collect() } else { (0..nb).map(one_block).collect() };
+    let (mut jh, mut jl) = (vec![0.0; l], vec![0.0; l]);
+    let (mut fh, mut fl) = (vec![0.0; l], vec![0.0; l]);
+    let kb = ctx.k();
+    for (b, s) in states.iter().enumerate() {
+        let t = ctx.block_target(b);
+        for q in 0..4 {
+            let mut d = s[q].tan() - ctx.fld(vh, vl, t + q * m);
+            let mut f = s[q].val() - ctx.fld(zh, zl, t + q * m);
+            if mutate == JVP_MUT_HORIZON && b == kb {
+                d = -ctx.fld(vh, vl, t + q * m);
+            }
+            if let (true, 0, Some((lo, hi))) = (b == kb, q, &ctx.freeze) {
+                d = lo.apply(&d) + hi.apply(&ctx.fld(vh, vl, 0));
+                f = lo.apply(&f) + hi.apply(&ctx.fld(zh, zl, 0));
+            }
+            let o = b * 4 * m + q * m;
+            d.store(&mut jh[o..o + m], &mut jl[o..o + m]);
+            f.store(&mut fh[o..o + m], &mut fl[o..o + m]);
+        }
+    }
+    let ph = if mutate == JVP_MUT_PHASE { DD::ZERO } else { phase_row(ctx, &ctx.fld(vh, vl, 0)) };
+    jh[l - 1] = ph.hi;
+    jl[l - 1] = ph.lo;
+    let pf = phase_row(ctx, &ctx.fld(zh, zl, 0));
+    fh[l - 1] = pf.hi;
+    fl[l - 1] = pf.lo;
+    Ok((jh, jl, fh, fl))
 }
 
 /// The Newton system of the mixed-precision step in block storage: the f64 Jacobian (TAN_F64 lanes T: `Fu`,
@@ -972,7 +1112,7 @@ pub(crate) mod ctxfile {
         let l = v[i] as usize;
         let zh = v[i + 1..i + 1 + l].to_vec();
         let zl = v[i + 1 + l..i + 1 + 2 * l].to_vec();
-        let ctx = Ctx::<B> { n, d, phase, nodes, segs, kt, kc, ks, freeze: None, match_node: k - 1, lam: DD::ZERO, mutate: 0 };
+        let ctx = Ctx::<B> { n, d, phase, nodes, segs, kt, kc, ks, freeze: None, match_node: k - 1, lam: DD::ZERO, mutate: 0, f64_dd: 0 };
         assert_eq!(ctx.len(), l);
         (ctx, zh, zl)
     }

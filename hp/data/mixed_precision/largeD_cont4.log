@@ -1,0 +1,80 @@
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D59.8221/dd: exit 0, 160 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D59.8221/f64: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D59.8221/f64h: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D59.8221/f64g: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D59.8221/f64hg: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D59.8221/f64hg_last: exit 0, 74 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D59.8221/f64g_last: exit 1, 589 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/ladder/x2e-05: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/ladder/x0.0001: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/ladder/x0.0003: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/ladder/x0.001: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/ladder/x0.003: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/ladder/x0.01: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/ladder/x0.02: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/ladder/x0.03: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/dd: exit 0, 149 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/f64: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/f64h: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/f64g: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/f64hg: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/f64hg_last: exit 0, 59 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/f64g_last: exit 0, 60 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x2e-05: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.0001: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.0003: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.0005: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.0008: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.0012: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.0018: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.0027: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.004: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.006: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.009: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.0135: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.02: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.03: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/dd: exit 0, 183 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/f64: exit 1, 86 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/f64h: exit 1, 1142 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/f64g: exit 0, 32 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/f64hg: exit 0, 34 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/f64hg_last: exit 0, 69 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/f64g_last: exit 0, 64 s
+
+== D59.8221 (tol 3e-22): from up13_D59.8221.npz to 59.833359, 59.847422
+  dd     D 59.833359: its  7,   42.4 s, |F| 3.4e-23, dDelta_est -2.6e-19, Delta - dd +0.0e+00, Delta - scan -2.4e-18
+  dd     D 59.847422: its  8,   48.2 s, |F| 2.9e-23, dDelta_est -4.0e-18, Delta - dd +0.0e+00, Delta - scan +2.5e-18
+  f64h   D 59.829921: its  7,    4.7 s, |F| 5.0e-23, dDelta_est +5.9e-18, Delta - dd +nan; Jacobian 3.9 s, LU 0.07 s, products 0.0 s (0); 12 halved steps
+  f64h   D 59.832362: its  7,    5.1 s, |F| 1.4e-22, dDelta_est -8.2e-16, Delta - dd +nan; Jacobian 4.1 s, LU 0.08 s, products 0.0 s (0); 12 halved steps
+  f64h   D 59.833359: its  7,    5.2 s, |F| 1.4e-22, dDelta_est -1.6e-15, Delta - dd +2.2e-16, Delta - scan +2.2e-16; Jacobian 4.3 s, LU 0.08 s, products 0.0 s (0); 12 halved steps
+  f64h   D 59.835266: its  6,    3.6 s, |F| 2.3e-22, dDelta_est -8.0e-17, Delta - dd +nan; Jacobian 3.0 s, LU 0.06 s, products 0.0 s (0); 12 halved steps
+  f64h   D 59.836458: its  6,    4.5 s, |F| 1.4e-22, dDelta_est +9.6e-17, Delta - dd +nan; Jacobian 3.4 s, LU 0.06 s, products 0.0 s (0); 12 halved steps
+  f64h   D 59.837948: its  9,    6.1 s, |F| 2.2e-22, dDelta_est -1.0e-16, Delta - dd +nan; Jacobian 4.8 s, LU 0.08 s, products 0.0 s (0); 12 halved steps
+  f64g   D 59.824062: its  8,   15.9 s, |F| 7.5e-23, dDelta_est -1.5e-17, Delta - dd +nan; Jacobian 8.6 s, LU 0.10 s, products 4.8 s (184); 11 halved steps
+  f64hg  D 59.833359: its  8,   10.4 s, |F| 2.8e-23, dDelta_est -8.7e-19, Delta - dd +3.9e-19, Delta - scan -2.0e-18; Jacobian 4.9 s, LU 0.09 s, products 3.8 s (147)
+  f64hg  D 59.847422: its  8,   10.7 s, |F| 2.5e-23, dDelta_est +6.3e-18, Delta - dd +2.6e-18, Delta - scan +5.1e-18; Jacobian 5.0 s, LU 0.11 s, products 3.9 s (146)
+  f64hg_last D 59.833359: its  8,   16.6 s, |F| 2.8e-23, dDelta_est +2.0e-19, Delta - dd +3.9e-19, Delta - scan -2.0e-18; Jacobian 4.5 s, LU 0.13 s, products 3.8 s (147)
+  f64hg_last D 59.847422: its  8,   17.0 s, |F| 2.5e-23, dDelta_est -5.4e-18, Delta - dd +2.6e-18, Delta - scan +5.1e-18; Jacobian 5.0 s, LU 0.10 s, products 3.9 s (146)
+  f64g_last D 59.824062: its  8,   14.6 s, |F| 7.5e-23, dDelta_est -1.5e-17, Delta - dd +nan; Jacobian 7.8 s, LU 0.09 s, products 4.3 s (184); 11 halved steps
+  at D 59.847422, f64    LU vs dd LU: dDelta/dF per-block max rel. diff 1.3e+09, whole vector 1.0e+00; weak subspace (w 24) largest principal angle sin 1.0e+00
+  at D 59.847422, f64h   LU vs dd LU: dDelta/dF per-block max rel. diff 3.2e+05, whole vector 1.0e+00; weak subspace (w 24) largest principal angle sin 1.0e+00
+  at D 59.847422, f64g   LU vs dd LU: dDelta/dF per-block max rel. diff 1.3e+09, whole vector 1.0e+00; weak subspace (w 24) largest principal angle sin 1.0e+00
+  at D 59.847422, f64hg  LU vs dd LU: dDelta/dF per-block max rel. diff 3.2e+05, whole vector 1.0e+00; weak subspace (w 24) largest principal angle sin 1.0e+00
+Traceback (most recent call last):
+  File "/home/claude/dss/agentLD/wt/hp/largeD_continuation.py", line 216, in <module>
+    main()
+    ~~~~^^
+  File "/home/claude/dss/agentLD/wt/hp/largeD_continuation.py", line 212, in main
+    report(Ds, jacs, outdir, threads)
+    ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/claude/dss/agentLD/wt/hp/largeD_continuation.py", line 194, in report
+    y, V = lu_quantities(s, zh, zl, jac)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/home/claude/dss/agentLD/wt/hp/largeD_continuation.py", line 144, in lu_quantities
+    newton_step(s, zh, zl, jac)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-claude/5cec0889-b97c-529a-89c7-507003649638/scratchpad/ld/py_rel2/hpkernel/driver.py", line 285, in newton_step
+    raise ValueError(f"jac must be one of {JACS}, not {jac!r}")
+ValueError: jac must be one of ('dd', 'f64', 'f64h', 'f64g', 'f64hg'), not 'f64hg_last'
+exit 1

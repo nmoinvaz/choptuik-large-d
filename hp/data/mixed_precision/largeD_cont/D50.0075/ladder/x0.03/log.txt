@@ -1,0 +1,32 @@
+/usr/bin/python3 -u /home/claude/dss/agentLD/wt/hp/scan_hp.py /home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.03/scan.jsonl /home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.02/dd_D50.0275.npz 0 --history /home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.006/dd_D50.0135.npz,/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.009/dd_D50.0165.npz,/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.0135/dd_D50.0210.npz --Dlist 50.037491 --dD 0.01 --maxdD 0.01 --M 32 --kc 420 --ks 100 --kt 36 --tol 1e-24 --w 24 --it_max 25 --lm 0 --threads 2 --tag dd --jac dd --verbose --kfreeze 13
+  dn 0 [all]: |F| 8.16e-17 -> 6.84e-17 lam 0.25 Delta 1.841555429529248 t 6s
+  dn: phase 'all' stalled at |F| 6.8e-17; phase 'full'
+  dn 1 [full]: |F| 6.84e-17 -> 5.51e-25 lam 1 Delta 1.841555429529248 t 11s
+  dn 2: |F| 5.51e-25 converged, Delta 1.841555429529248
+(re-)converged start D=50.027491 M=32 nodes=[0.3, 0.4, 0.5, 0.6, 0.7]: Delta 1.8415554295292478 ok True (17s)
+  dn 0 [all]: |F| 1.23e-16 -> 1.23e-16 lam 0.0625 Delta 1.841608415985893 t 7s
+  dn: phase 'all' stalled at |F| 1.2e-16; phase 'full'
+  dn 1 [full]: |F| 1.23e-16 -> 8.95e-25 lam 1 Delta 1.841608415985893 t 13s
+  dn 2: |F| 8.95e-25 converged, Delta 1.841608415985893
+history point D=50.013491: ok True, Delta 1.8416084159858928
+  dn 0 [all]: |F| 5.21e-17 -> 4.67e-17 lam 0.5 Delta 1.841597059343488 t 6s
+  dn: phase 'all' stalled at |F| 4.7e-17; phase 'full'
+  dn 1 [full]: |F| 4.67e-17 -> 1.02e-24 lam 1 Delta 1.841597059343488 t 13s
+  dn 2 [full]: |F| 1.02e-24 -> 1.03e-24 lam 1 Delta 1.841597059343488 t 18s
+  dn 3 [full]: |F| 1.03e-24 -> 6.95e-25 lam 1 Delta 1.841597059343488 t 24s
+  dn 4: |F| 6.95e-25 converged, Delta 1.841597059343488
+history point D=50.016491: ok True, Delta 1.8415970593434885
+  dn 0 [all]: |F| 5.84e-17 -> 5.80e-17 lam 0.125 Delta 1.841580026836469 t 6s
+  dn: phase 'all' stalled at |F| 5.8e-17; phase 'full'
+  dn 1 [full]: |F| 5.80e-17 -> 7.46e-25 lam 1 Delta 1.841580026836469 t 11s
+  dn 2: |F| 7.46e-25 converged, Delta 1.841580026836469
+history point D=50.020991: ok True, Delta 1.8415800268364688
+  dn 0 [all]: |F| 4.22e-07 -> 1.71e-13 lam 1 Delta 1.841517599519969 t 6s
+  dn 1 [all]: |F| 1.71e-13 -> 5.41e-16 lam 1 Delta 1.841517599520003 t 13s
+  dn 2 [all]: |F| 5.41e-16 -> nan lam 0.000122 Delta 1.841517599520003 t 20s
+  dn 3 [full]: |F| 5.41e-16 -> 3.45e-23 lam 1 Delta 1.841517599520007 t 26s
+  dn 4 [full]: |F| 3.45e-23 -> 5.58e-24 lam 1 Delta 1.841517599520007 t 32s
+  dn 5 [full]: |F| 5.58e-24 -> 1.05e-24 lam 1 Delta 1.841517599520007 t 38s
+  dn 6 [full]: |F| 1.05e-24 -> 5.95e-25 lam 1 Delta 1.841517599520007 t 44s
+  dn 7: |F| 5.95e-25 converged, Delta 1.841517599520007
+D=50.0375 Delta=1.8415175995200070+1.03e-16 its 8 |F| 5.9e-25 50s piv 7.3e-06..5.0e+05 dDelta/dF max 1.5e+12 tails 6e-134 3e-45
