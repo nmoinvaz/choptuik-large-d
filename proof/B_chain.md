@@ -15,31 +15,40 @@ Contents
 - [3. Lemma B5(2) with constants](#3-lemma-b52-with-constants)
 - [4. B8's normalization](#4-b8s-normalization)
 - [5. The 1/n rate](#5-the-1n-rate)
-- [6. The light cone: what Theorem B(1) needs there (open)](#6-the-light-cone-what-theorem-b1-needs-there-open)
-- [7. The outer jump is determined by its label (open)](#7-the-outer-jump-is-determined-by-its-label-open)
+- [6. The light cone: what Theorem B(1) needs there](#6-the-light-cone-what-theorem-b1-needs-there)
+- [7. The outer jump is determined by its label](#7-the-outer-jump-is-determined-by-its-label)
 - [8. Lemma P, B7 and Theorem B(1)](#8-lemma-p-b7-and-theorem-b1)
 - [9. Discrepancies with the existing notes](#9-discrepancies-with-the-existing-notes)
 - [10. What the independent review (P2) should check](#10-what-the-independent-review-p2-should-check)
 - [11. Reproduce](#11-reproduce)
 - [12. P1L: plan for the light-cone hypotheses](#12-p1l-plan-for-the-light-cone-hypotheses)
+- [13. Lemma LC: the solution up to the light cone in the light-cone gauge (certified)](#13-lemma-lc-the-solution-up-to-the-light-cone-in-the-light-cone-gauge-certified)
+- [14. Lemma J: the outer jump is determined by its label (certified)](#14-lemma-j-the-outer-jump-is-determined-by-its-label-certified)
+- [15. Theorem B(1) (certified, assuming Braaksma's theorem)](#15-theorem-b1-certified-assuming-braaksmas-theorem)
 
 ## 0. Summary
 
-- **Certified for M = 1** (python-flint, trusted code named in each section; not yet reviewed independently):
-  - *B5(2)* with constants (§§2–3): the label of the outer jump at the fixed point u* = 0.0081 of the Stokes line is
-    $`(I + R)S + E`$, S the inner multiplier, ‖R‖ ≤ 0.353, |E| ≤ e^{76.94}/n, for every n ≥ e^{73.89} and every normalization
-    |c(0) − c^K(0)|₁ ≤ 10⁷n⁻⁵. New: lemma L
-    (fast-type solutions of the inner secant equation and their labels).
-  - *B8's normalization* (§4): B8 and (H8) hold for |c(0) − c^K(0)|₁ ≤ 10⁷n⁻⁵.
-  - *The 1/n rate* (§5) follows from the fixed evaluation point; S^{(1)} is not needed.
-  - *Lemma P and B7* (§8): for every n ≥ n₀ = e^{89.75}, exactly one parameter in Theorem A's box makes the label of
-    the outer jump vanish, within e^{67.84}/n of Theorem A's zero.
-- **Open** (§§6–7): three hypotheses at the light cone, without which Theorem B(1) is conditional: (H-LC) control of the
-  nonlinear solution in the half-discs at x = 1, (H-G) the exact light-cone gauge, (H-J) the outer jump is determined
-  by its label. (H-G) and (H-J) rest on (H-LC). They replace the queue's items 4–5 (B6's block-diagonalization and the
-  transport along x > 1), which Theorem B(1) turns out not to need.
-- **Theorem B(1)** (§8.4) is therefore *conditional on (H-LC), (H-G), (H-J)* (and on Braaksma's theorem), with
-  n₀ = e^{89.75}.
+**Theorem B(1) is certified for M = 1, assuming Braaksma's theorem (§15).** For every n ≥ n₀ = e^{89.75}, exactly
+one parameter in Theorem A's box gives a light-cone-gauge solution that is analytic at the light cone, within
+e^{67.84}/n of Theorem A's zero. None of the certificate code has had an independent review yet (§10).
+
+The certified links (python-flint; trusted code named in each section):
+- *B5(2)* with constants (§§2–3). The label of the outer jump at the fixed point u* = 0.0081 of the Stokes line is
+  $`(I + R)S + E`$, S the inner multiplier, with ‖R‖ ≤ 0.353 and |E| ≤ e^{76.94}/n, for every n ≥ e^{73.89} and every
+  normalization |c(0) − c^K(0)|₁ ≤ 10⁷n⁻⁵. The new ingredient is lemma L, on fast-type solutions of the inner secant
+  equation and their labels.
+- *B8's normalization* (§4). B8 and (H8) hold for |c(0) − c^K(0)|₁ ≤ 10⁷n⁻⁵.
+- *The 1/n rate* (§5) follows from the fixed evaluation point; S^{(1)} is not needed.
+- *Lemma P and B7* (§8). For every n ≥ e^{89.75}, exactly one parameter in Theorem A's box makes the label of the outer
+  jump vanish, within e^{67.84}/n of Theorem A's zero.
+- *Lemma LC* (§13; P1L (a) and (b)). B8 is continued into the light-cone disc in the exact gauge c(1) = 1, as a
+  contraction (θ = 0.74) with constants per band. It gives the light-cone-gauge solution for n ≥ e^{73.89}: unique
+  near the formal series, holomorphic in the parameters, C¹ up to x = 1, with gauge offset
+  |c(0) − c^K(0)|₁ ≤ 3.59×10⁶n⁻⁵. So (H-LC) and (H-G) hold.
+- *Lemma J* (§14; P1L (c)). The jump vanishes if its label does: a contraction (θ = 0.18) in a norm weighted by half
+  the fast exponent. So (H-J) holds.
+
+The plan of P1L is §12. Discrepancies with the earlier notes are listed in §9, and the review list for P2 in §10.
 
 ## 1. The matching radius can be held fixed
 
@@ -301,7 +310,7 @@ solution of the linearized inner problem with forcing (a lemma-S-type fixed poin
 problem, then its own validated integration for S^{(1)}). It was not attempted: it is not needed for Theorem B(1) as
 stated.
 
-## 6. The light cone: what Theorem B(1) needs there (open)
+## 6. The light cone: what Theorem B(1) needs there
 
 Items 4 and 5 of the queue asked for B6's block-diagonalization with constants and for the transport of the jump along
 x > 1. Working them through shows that the chain needs something different, and harder, than either. This section
@@ -315,14 +324,16 @@ disc through the upper and lower half planes. To connect them one needs:
 **(E)** *For n ≥ n₀ and real p in the box, the solution in the light-cone gauge is analytic at x = 1 if and only if
 Ψ_out ≡ 0 on the Stokes segment.*
 
-**Hypothesis (H-LC) (open).** For n ≥ n₀ and real p in Theorem A's box, the centre-regular solution in the light-cone
+*(H-LC), (H-G) and (H-J) were open when this section was written; §§13–14 prove them for M = 1.*
+
+**Hypothesis (H-LC).** For n ≥ n₀ and real p in Theorem A's box, the centre-regular solution in the light-cone
 gauge (H-G below):
 1. continues analytically from (0, 1 − δ/2] to the real segment (0, 1) and to the open half-discs
    $`H^\pm = \{0 \lt \lvert x - 1\rvert \lt \delta/2,\ \pm\mathrm{Im}\,x \gt 0\}`$, and is bounded there;
 2. has continuations Y^± that are C¹ up to x = 1 from within $`\overline{H^\pm}`$, with the same value and derivative at
    x = 1, so that $`\lvert\Psi_{\rm out}(x)\rvert \le C(x - 1)`$ on (1, 1 + δ/2).
 
-**Hypothesis (H-G) (open).** There is a normalization c(0) = c^K(0) + d with $`\lvert d\rvert_1 \le 10^7n^{-5}`$ (the range
+**Hypothesis (H-G).** There is a normalization c(0) = c^K(0) + d with $`\lvert d\rvert_1 \le 10^7n^{-5}`$ (the range
 in which B8 and (H8) are certified, §4) for which c(x) → 1 as x → 1⁻ on every harmonic.
 
 *Proof of (E) given (H-LC).* (⇐) If Ψ_out ≡ 0, put Y = Y⁺ on H⁺ and Y = Y⁻ on H⁻. Both continue the real solution
@@ -354,11 +365,12 @@ R_c from x = 1 (a contraction mapping rather than a continuation in |x|). The an
 selection proofs is Xie and Tanveer's treatment near the finger tip (Xie, arXiv:1610.00076, as summarized in
 C_selection.md §2); those papers were not read for this note.
 
-**Not attempted here**, as agreed with the coordinator: (H-LC) and (H-G) are a project of the size of B8.
+**Done in §13** (Lemma LC), by the bootstrap route described above with the gauge imposed at x = 1 and a
+contraction in place of B8's continuation argument.
 
-## 7. The outer jump is determined by its label (open)
+## 7. The outer jump is determined by its label
 
-**Hypothesis (H-J) (open).** For n ≥ n₀ and real p in the box: if $`L_{u_*}(\Psi_{\rm out}) = 0`$ then Ψ_out ≡ 0 on the
+**Hypothesis (H-J)** (proved for M = 1 in §14). For n ≥ n₀ and real p in the box: if $`L_{u_*}(\Psi_{\rm out}) = 0`$ then Ψ_out ≡ 0 on the
 Stokes segment.
 
 This is what C_selection.md §10.3's "both jumps are fast-type" asserted for the outer jump (now corrected there). For
@@ -461,6 +473,8 @@ the zero of J_D out of X) fails at every n of the scan (`--mutate=JD`), caught.
 
 ### 8.4 Theorem B(1)
 
+*Superseded by §15: (H-LC), (H-G) and (H-J) are now proved for M = 1.*
+
 **Theorem B(1) (M = 1; conditional on (H-LC), (H-G), (H-J) and on Braaksma's theorem).** For every n ≥ n₀ = e^{89.75}
 (D = n + 2) there is exactly one p_n = (A_n, ω_n/ω∞) in Theorem A's box X = x̂ ± 10⁻⁹ for which the centre-regular
 solution of the one-harmonic model with profile A_n sin θ, frequency ω_n and the light-cone gauge is analytic at the
@@ -497,8 +511,13 @@ annotations to B5_inner.md and `b5_threshold.py`:
 6. **B7** needed a link the notes did not list, from Theorem A's Jacobian of J_D(0.3) to the Jacobian of the multiplier:
    Lemma P (§8.2).
 7. **notes/PROOF_QUEUE.md, P7 row** quotes "certified threshold n ≥ e^{62}–e^{74}, estimated ln n ≳ 105–285" for
-   Theorem B(1); the chain's threshold is now n₀ = e^{89.75}, conditional on (H-LC), (H-G), (H-J). (Left to the
-   coordinator.)
+   Theorem B(1). The chain's threshold is now n₀ = e^{89.75} (§15). That row is left to the coordinator.
+8. **B8's gauge statement.** C_selection.md §11 and B8_constants.md call c(0) = c^K(0) "the light-cone gauge up to
+   O(n⁻⁵)". This is true (§13: |d| ≤ 3.59×10⁶n⁻⁵), but the notes gave no proof, and the formal argument alone does not
+   give it.
+9. **The S-mode at the light cone is attracting toward x = 1** (|E(x, s)| ≤ (|x − 1|/|s − 1|)^{N_L}, N_L ≈ n/2). In the
+   exact gauge the light cone helps the estimates rather than obstructing them. The notes treated it through the
+   linear B6/B6′ (C_selection.md §12), which are not needed.
 
 ## 10. What the independent review (P2) should check
 
@@ -509,11 +528,21 @@ New certificate code and the claims it carries (none reviewed yet):
 | `b5_label.py` | lemma L (L1): the Volterra/Grönwall bound ε_L(0.0081) ≤ 0.3527; the identity for (J_F − 𝒢)/z (`jf_div`); the 2 × 2 eigen-decomposition over 𝒦 (`eigen`); (L2) via `lemma6_sector.flat_estimate` on lemma S over 𝒦 | `b5_bounds.py` (inner enclosures on cells), `b5_formulas.py` (Jacobian blocks), `lemma6_sector.py`, `fixed_point.py` |
 | `b5_jump.py` | B5(2): C_E = e^{76.940} (d₀ = 10⁷ data), the superposition of B5(1)'s super-solutions | the B5(1) certificate JSON, the (H8) logs |
 | `b8m_bounds.py --d0` | the two added terms of B8_constants.md §8.4 | B8 (unchanged otherwise) |
+| `b8m_lc.py` | Lemma LC: the closure with constants per band and the region L (`build_L`: the bounded forms of §13.3; `kernel_lc`: N_L; the S-, c- and d-formulas on L in `evaluate`); the Lipschitz matrix (`lipschitz`: ball-mode secants per candidate, the sum hypotheses on the ray parts, the perturbation of the derivative bounds through `CONTAINS`) and the Perron check (`contraction_check`) | `b8m_bounds.py` (`known`, the atoms), `b8_alg.py` (the up/lo functions are swapped for ball-mode versions; `b8_alg` itself is unchanged) |
+| `b8m_lcj.py` | Lemma J: the forward differentiation `DQ` (the secant coefficients, inverses with frozen lower bounds, the v_c′ pseudo-component on L), the gain matrix Γ and its derivation (§14), the endpoint at x* | `b8m_lc.py`, `b8m_bounds.py` |
 | `b7_adjoint.py` | Lemma P: `start_data_c` (fixed_point.start_data for complex boxes), `AdjLohner.step` (validated_int's step plus the adjoint block), the secant argument B̄_k ∈ J_k | `validated_int.py`, `fixed_point.py`, `lemma6_common.py` |
 | `b7_ift.py` | B7: `ell_bound` (the pairing and its remainder terms), the Krawczyk assembly, `min_bd_JD`, the degree condition | Theorem A's saved runs |
 
-Hand proofs to check: Lemma D′ (§1, including that `b8m_bounds.py` uses the outer radius only through ρ_max),
-lemma L's proof (§2.3), B5(2) (§3.2), (E) given (H-LC) (§6), Lemma P (§8.2), the B7 logic and the degree argument (§8.3).
+Hand proofs to check:
+- Lemma D′ (§1), including that `b8m_bounds.py` uses the outer radius only through ρ_max;
+- lemma L's proof (§2.3);
+- B5(2) (§3.2);
+- (E) given (H-LC) (§6);
+- Lemma P (§8.2);
+- the B7 logic and the degree argument (§8.3);
+- Lemma LC (§13): the fixed-point formulation, the bounded forms near x = 1, the L kernel, the majorant-derivative
+  argument for the Lipschitz matrix, and the double-sector symmetry;
+- Lemma J (§14): the secant system, the label endpoint, the gain matrix, and the a priori argument.
 A second implementation of lemma L's bound (for example a validated integration of the label equation) and of the
 adjoint (for example a forward Lohner run of the variational equation in the growing direction, or CAPD) would be the
 natural independent checks.
@@ -541,11 +570,22 @@ python3 b7_adjoint.py adjoint --box=b7_box_point.json --out=b7_adjoint_point_mut
 python3 b7_adjoint.py check --adj=b7_adjoint_point_mutT.json --start=b7_box_point.json --mutate=transpose   # caught
 python3 b7_ift.py --adj=b7_adjoint.json --jump=b5_jump_d0_1e7.json --json=b7_ift.json    # n0 = e^89.75 (b7_ift.log)
 python3 b7_ift.py --adj=b7_adjoint.json --jump=b5_jump_d0_1e7.json --mutate=JD         # caught (b7_ift_mutJD.log)
+python3 b8m_lc.py 4 73.89 --rA=2e-6 --rW=2e-6 --lip --log=b8m_lc_K4.log   # Lemma LC, ~4 + 8 min (b8m_lc_K4.out)
+python3 b8m_lc.py --lipcheck=b8m_lc_lip.json        # contraction constant from the saved matrix: theta = 0.7355
+python3 b8m_lc.py 4 73.89 --rA=2e-6 --rW=2e-6 --mutate=rho2L --log=b8m_lc_K4_mut_rho2L.log   # mutated certificate
+python3 b8m_lc_numcheck.py 1000 --log=b8m_lc_K4_mut_rho2L.log --mutlc   # must fail (b8m_lc_numcheck_mut.log)
+python3 b8m_lc_numcheck.py 1000 --log=b8m_lc_K4.log # numerical check at n = 1e3 (b8m_lc_numcheck_n1e3.log)
+python3 b8m_lc_numcheck.py 1000 --log=b8m_lc_K4.log --mutate=d0      # caught (also --mutate=weight)
+python3 b8m_lcj.py --log=b8m_lc_K4.log --json=b8m_lcj.json   # Lemma J, ~1 min (b8m_lcj.log)
+python3 b8m_lcj.py --log=b8m_lc_K4.log --mutate=kernel     # caught (also --mutate=Om; b8m_lcj_mutations.log)
 ```
 
 ## 12. P1L: plan for the light-cone hypotheses
 
-*Plan only (queue item P1L); nothing in this section is proved yet.*
+*The plan as written before the work (queue item P1L). Outcome: (a) and (b) are Lemma LC (§13); (c) is Lemma J (§14).
+Risk R1 did not materialize, because constants per band give |d| ≤ 3.59×10⁶n⁻⁵. Risk R2 was handled by exact secants
+of the convex majorant (§13.4). Risk R3 was avoided by a norm weighted by half the fast exponent, which needs no
+inner-variable piece (§14).*
 
 ### 12.1 What the precedents give
 
@@ -664,3 +704,234 @@ long-running is foreseen.
 - (R3) Lemma J's weighted norm does not contract across the transition between the outer and inner pieces.
 
 Braaksma's theorem remains assumed throughout.
+
+## 13. Lemma LC: the solution up to the light cone in the light-cone gauge (certified)
+
+*Script: `solver/proof/b8m_lc.py` (log `b8m_lc_K4.log`, output `b8m_lc_K4.out`, Lipschitz matrix `b8m_lc_lip.json`);
+numerical check `solver/proof/b8m_lc_numcheck.py`. This gives (H-LC) and (H-G) of §6 for M = 1.*
+
+### 13.1 Statement
+
+Let Σ_n = {0 ≤ arg x ≤ α, |x| ≤ R′_n} be B8's closed sector (α = π/4 + κ/2, κ = 0.3; R′_n for κ₁ = 0.6, fixed outer
+radius as in Lemma D′), *with* the light-cone disc: Σ_n = 𝒟′_n ∪ L, L = {|x − 1| ≤ δ/2, Im x ≥ 0}, δ = 0.05. The bands
+are:
+- N0: |x| ≤ 0.05;
+- Na: 0.05 ≤ |x| ≤ 1.5, outside the disc;
+- L;
+- Nb: 1.5 ≤ |x| ≤ 20;
+- F: |x| ≥ 20.
+
+The paths use the ray parts Ra and Rb and the arc Ac = {|x − 1| = δ/2} ∩ Σ_n. Let w₁ = ρ^{K+1} and w = θρ^{K+1} (K = 4).
+
+For constants h (per band, for R_V, R_S, R̂_β, R_c) and h_Sp, let 𝒦_h be the set of U = (R_V, R_S, R̂_β, R_c) that are
+analytic in the interior of Σ_n, continuous with x-derivative on Σ_n ∖ {0}, and satisfy:
+- on each band r, |R_V| ≤ h_{V,r}w₁, |R_S| ≤ h_{S,r}w, |R̂_β| ≤ h_{β,r}w and |R_c| ≤ h_{c,r}w₁;
+- the x-derivative bounds D₀(h) that the equations give (pass 1 of B8_constants.md Lemma B8.a; on L,
+  |xR_S′| ≤ h_Sp n w).
+
+**Lemma LC (M = 1; certified).** Take the constants of `b8m_lc_K4.log`, any n ≥ n₀ = e^{73.89} and any p in B8's
+complex parameter box (A, ω/ω∞ within 2×10⁻⁶(1 + i) of B5's centre, which contains 𝒦).
+1. Exactly one U ∈ 𝒦_h makes Z = Z^K + U a centre-regular solution of the reduced system with c(x) → 1 as x → 1 (the
+   light-cone gauge, on every harmonic).
+2. U is holomorphic in p. The gauge offset d(p) := c(0) − c^K(0) satisfies |d(p)|₁ ≤ d₀n⁻⁵ with d₀ = 3.59×10⁶.
+3. Z and xZ′ are bounded on L and continuous up to x = 1.
+
+The same holds on the double sector Σ_n ∪ Σ̄_n, slit along the Stokes segment (1, R′_n] (the mirror estimates are
+those for p̄, which lies in the same box). For real p the solution there is σ-symmetric.
+
+**Consequences.**
+- *(H-G)* holds with d(p) holomorphic and |d|₁ ≤ 3.59×10⁶ n⁻⁵ ≤ 10⁷ n⁻⁵. The centre-regular solution with a given
+  c(0) is unique, so on 𝒟′_n, Z coincides with B8's solution for the normalization d(p). Hence B8, (H8) (the data of
+  d₀ = 10⁷, §4), B5(1), B5(2) (C_E = e^{76.94}) and B7 (n ≥ e^{89.75}) apply to the light-cone-gauge solution.
+- *(H-LC)* (1): Z is analytic and bounded on H⁺ (and its mirror on H⁻). (2): Y⁺ := Z|_{Σ_n} and Y⁻ := Z|_{Σ̄_n} are
+  C¹ up to x = 1, and both continue the same solution on [0, 1). So they have the same value and derivative at x = 1,
+  and |Ψ_out(x)| ≤ C(x − 1) on (1, 1 + δ/2).
+
+### 13.2 The fixed-point formulation
+
+For U ∈ 𝒦_h put F_c(U) = [R_cβ] + [c^KR_β] − ρ₄ (the (I4) forcing, R_β = R̂_β + qR_S) and
+
+```math
+d(U) = -\int_0^1 F_c(U)\,\frac{ds}{s},\qquad T_c(U)(x) = d(U) + \int_{Q_x}F_c(U)\,\frac{ds}{s},\qquad
+T_V(U)(x) = [d(U)\,2F] + \int_{Q_x}\Omega R_S\,\frac{ds}{s},
+```
+```math
+T_\beta(U)(x) = \int_{Q_x}(s/x)^{n-1}\,\hat g(U)\,\frac{ds}{s},\qquad
+T_S(U)(x) = \int_{\hat P_x}E(x,s)\Big[\frac{\Lambda(s)}{s}G(U)(s) + W(U)(s)\Big]ds .
+```
+
+Here G = G₁ and W = W₂ off L, and G = G₁ + G₂ with W = 0 on L (§13.3). The S-path P̂_x is B8's P_x off L. For x ∈ L it
+is P_{x′} to the radial projection x′ of x on the arc Ac, then the segment toward 1. The integrands are analytic and the
+sector is simply connected, so the integrals do not depend on the path, and T(U) is analytic.
+
+A fixed point is a solution: by Lemma R it satisfies (I2)–(I4) with zero defects. It is centre-regular, with S(0) = 0,
+β(0) = 0, c(0) = c^K(0) + d and V(0) = [c(0)2F]. Its c(1) is c^K(1) + d + ∫₀¹F_c ds/s = 1.
+
+### 13.3 The light-cone region
+
+Since R_c(1) = 0, δD := D − D^K = −(C^KR_C + R_CC^K + R_C²) vanishes at x = 1, so D = (x − 1)D̃ and
+D^K = (x − 1)D̃^K with D̃^K = (x + 1)(I − Γ). Every D⁻¹ of Lemma R then takes a bounded form:
+- δD D⁻¹ = (δD/(x − 1))D̃⁻¹, with |δD/(x − 1)| ≤ (2|c^K| + |R_c|) sup_{[1,x]}|R_c′| (the segment [1, x] lies in L);
+- xW₂ = ΛG₂ with G₂ = (A^K)⁻¹D̃^KD̃⁻¹(CM_hS + x²M_hC⁻¹Y);
+- q·xgS = ℓx⁻²(I + e)⁻¹ε₁A^K(G₁ + G₂).
+
+The lower bound of D̃ is (2 − δ/2)(1 − ‖Γ‖) − sup|δD/(x − 1)| = 1.975. On L the S-equation is xR_S′ = Λ(R_S + G).
+
+*Kernel.* Along a segment toward 1, d/dr ln|1 − s⁻²| ≥ 1/r − c₁ with c₁ = 1/(2 − δ/2) + 2/(1 − δ/2), and
+|λ|‖H′‖ ≤ η_L/r. Therefore |E(x, s)| ≤ (|x − 1|/|s − 1|)^{N_L}, where
+
+```math
+N_L = \frac{(n_0-1)(1 - c_1\delta/2)}{2} - \eta_L \approx 5.8\times10^{31},\qquad \eta_L = 6.17 .
+```
+
+*S on L.* With u = R_S + G, u′ = (Λ/x)u − G′ on the segment, so
+
+```math
+R_S(x) = -G(x) + E(x,x')\,u(x') + \int_{x'}^xE(x,s)\,G'(s)\,ds ,
+```
+
+with |∫| ≤ sup|G′|·|x − 1|/(N_L − 1). The value u(x′) = G₂(x′) + ∫_{P_{x′}}E(G₁′ + W₂) comes from B8's integration by
+parts at x′. Hence |xR_S′| = ‖Λ‖|u| ≤ ‖(D̃^K)⁻¹A^K‖·(|u(x′)|/(δ/2) + sup|G′|/(N_L − 1)): bounded up to x = 1, which is
+part 3.
+
+*c on L.* |R_c(x)| ≤ |x − 1| sup_L|R_c′|.
+
+### 13.4 Invariance and contraction (certified, `b8m_lc_K4.log`)
+
+**Closure.** P̂(h) < h holds for every component and band (ratios ≤ 0.990), with
+
+| band | h_V | h_S | h_β | h_c |
+|---|---|---|---|---|
+| N0 | 1.84×10⁷ | 3.84×10³ | 21.7 | 3.62×10⁶ |
+| Na | 1.84×10⁷ | 5.15×10⁴ | 3.74×10⁴ | 3.64×10⁶ |
+| L | 1.84×10⁷ | 2.06×10³ | 1.75×10³ | 63.7 |
+| Nb | 1.85×10⁷ | 1.70×10⁵ | 1.97×10⁵ | 3.67×10⁶ |
+| F | 3.41×10⁷ | 4.12×10⁷ | 4.12×10⁶ | 4.63×10⁶ |
+
+and h_Sp = 6.0×10⁻⁷. The gauge offset is d₀ = 3.59×10⁶, of which the explicit residual ρ₄ contributes 1.90×10⁵
+(computed exactly; the formal value |c₅(0)|₁ is 1.23×10⁵). Constants per band are what make d small: with B8's
+single constant per component, |d| would be bounded only by about 10⁸ n⁻⁵.
+
+So T maps 𝒦_h into itself:
+- the value bounds follow from the closure;
+- the derivative bounds follow from pass 1 with own values ≤ h.
+
+**Contraction.** Use the norm N(U) = max over components and bands of sup|U|/(hw) and sup|xU′|/(h′m), where
+m = nw (nw/X² on F) for S and β, m = w for V and c, and h′ = sup D₀/m.
+
+*Why the matrix below bounds the Lipschitz constant.* By induction over the bound algebra (sums, products, inverses
+with ‖g⁻¹ − g̃⁻¹‖ ≤ ‖g⁻¹‖‖g̃⁻¹‖‖g − g̃‖, and the integral operators, which are linear), the difference of any node at
+U, Ũ ∈ 𝒦_h is bounded by the derivative of its majorant along the perturbed input. Each output is a maximum of
+candidates. Each candidate is a sum of term-wise suprema of power series in the perturbation t with non-negative
+coefficients, hence convex in t. So its slope at t = 0 is at most the secant (M(η) − M(0))/η.
+
+*Computation.* The secant is computed exactly, in ball mode with no outward rounding between the two runs (η = 10⁻⁶).
+This gives a 40 × 40 matrix (values and derivatives × 4 components × 5 bands), with spectral radius 0.705. The weights
+v = (I − M/λ)⁻¹1 at λ = 0.755 give Mv ≤ θv with θ = 0.7355 (recomputed in arb from the saved upper bounds,
+`b8m_lc.py --lipcheck=b8m_lc_lip.json`).
+
+So T is a contraction on the complete set 𝒦_h. This gives existence and uniqueness. Holomorphy in p follows because
+the iterates T_p^k(0) are holomorphic in p and converge uniformly. This proves parts 1–2.
+
+*Double sector.* On Σ_n ∪ Σ̄_n slit along (1, R′_n], define T on the upper part as above and on the lower part as its
+mirror; the c-offset is the shared integral over [0, 1]. Off the slit, the upper and lower paths to a point of (0, 1)
+are homotopic, so T(U) is analytic across (0, 1). The estimates are those for p and p̄, so T is a contraction there
+too. Its unique fixed point restricts to the solution above on each half. For real p, its mirror image is also a fixed
+point, so it is σ-symmetric.
+
+### 13.5 Checks
+
+The checks are run by `b8m_lc_numcheck.py` at n = 10³, at the box centre. They compare against the light-cone-gauge
+solution integrated with mpmath residuals in double precision (not rigorous): the remainder equation is integrated
+along the real axis to 1 − 0.02, then around the circle |x − 1| = 0.02 through both half planes.
+
+The results (`b8m_lc_numcheck_n1e3.log`; spline interpolation errors 2.7×10⁻³ on the real axis and 3×10⁻¹² on the
+circle):
+1. *The gauge.* The light-cone-gauge offset is |d|₁n⁵ = 1.21×10⁵ (formal orders 5–8; the c₅(0) part is 1.23×10⁵),
+   below the certified d₀ = 3.59×10⁶. The Cauchy mean on the circle gives R_c(1) = 4.9×10⁻⁸|d|, the size of the
+   omitted formal orders. The continuations through the two half planes agree at 1 + 0.02 to 10⁻²⁰.
+2. *The bounds.* |R|/bound is at most 0.43 per band and component (largest: β on L 0.43, S on N0 0.23, S on L 0.20).
+   The derivative bound on L, re-evaluated at n = 10³, gives 0.026. Its O(1/n) term supGd/(N_L − 1) is evaluated at
+   the actual N_L = 461; at n₀ the certified h_Sp has N_L ≈ 5.8×10³¹.
+
+The certificate is for n ≥ e^{73.89}, so this tests the form of the bounds, not their constants.
+
+*Mutations* (`b8m_lc_numcheck_mut.log`), all caught:
+- the bound d₀ replaced by 0: check 1 fails;
+- the weight ρ⁶ instead of ρ⁵: check 2 fails (ratios up to 205);
+- the residual ρ₂ dropped from G on L (`b8m_lc.py --mutate=rho2L`): the mutated certificate still closes, with
+  h_{S,L} = 3×10⁻⁸, but check 2 fails on L (ratio 1.4×10¹⁰).
+
+## 14. Lemma J: the outer jump is determined by its label (certified)
+
+*Script: `solver/proof/b8m_lcj.py` (`b8m_lcj.log`, `b8m_lcj.json`, mutations `b8m_lcj_mutations.log`). This gives
+(H-J) of §7.*
+
+**Lemma J (M = 1; certified).** For every n ≥ e^{73.89} and real p in the box, let Y^± be the light-cone-gauge
+solution of Lemma LC and its mirror, and Ψ_out = Y⁺ − Y⁻ on the Stokes segment (1, x*], x* = (nu*)^{1/2}. If
+$`L_{u_*}(\Psi_{\rm out}) = 0`$, then Ψ_out ≡ 0.
+
+*Proof.* v = Ψ_out = R⁺ − R⁻ solves the differences of the remainder equations (in the bounded form of §13.3):
+
+```math
+xv_V' = \Omega v_S,\qquad xv_S' = \Lambda\,(v_S + \delta G),\qquad xv_\beta' + (n-1)v_\beta = \delta\hat g,\qquad xv_c' = \delta F_c .
+```
+
+*Coefficients.* Both R⁺ and R⁻, and every point of the segment between them, lie in 𝒦_h on the Stokes segment. So the
+secant coefficients are bounded locally, |δG(x)| ≤ Σ_j ℓ_{G,j}(x)|v_j(x)|, and likewise for δĝ and δF_c. The ℓ are
+computed by forward differentiation of the bound algebra (`DQ`), with the inverses' lower bounds held fixed. On L,
+the term δD/(x − 1) brings in the pseudo-component sup_{[1,x]}|v_c′|, which is bounded through δF_c.
+
+*Label condition.* L_{u*}(v) = 0 means Φ⁺ = Φ⁻ at u* in B5's variables, with Φ = C⁻¹(xY′ − [xc′P]). Since
+δ(xY′) = Ωv_S + Λ(v_S + δG), this gives
+
+```math
+\Lambda(v_S + \delta G)(x_*) = -\Omega v_S + \delta C\,\Phi^- + \delta[xc'P] .
+```
+
+*The map T₀.* It takes the fast component backward from x*, with that endpoint value, and the slow components and the
+b-mode forward from 1 with zero data. Use the norm N(v) = max_j sup|v_j|/(s_j m), with m = e^{(n−1)Φ(x)/2} (half the
+fast exponent) and the nondecreasing shapes s_S = 1, s_V = s_c = ρ, s_β = ρ/n + ρ².
+
+Backward, ‖E(x, y)‖ ≤ e^{−(n−1)(1−h_H)(Φ(y)−Φ(x))}, with h_H = sup‖H′‖ = 0.108 on the segment. Forward,
+∫₁^x m dy/y ≤ m(x)·2(x² − 1)/(n − 1). Hence N(T₀v)_i ≤ Σ_j Γ_ij N_j(v), with
+
+```math
+\Gamma_{S,j} = \frac{1 + h_H}{1/2 - h_H}\sup(\ell_{G,j}s_j) + e_j s_j(x_*),\quad \Gamma_{V,S} = \frac{2\lvert\omega\rvert n}{n-1},\quad
+\Gamma_{c,j} = \frac{2n}{n-1}\sup(\ell_{F_c,j}s_j),\quad \Gamma_{\beta,j} = \frac{n}{n-1}\sup\frac{\ell_{\hat g,j}s_j}{n s_\beta} ,
+```
+
+where e_j are the endpoint coefficients (‖Λ⁻¹(x*)‖ ≤ 9.5×10⁻³, |Φ⁻| ≤ 2.0). The certified matrix
+(`b8m_lcj.log`) has a Perron weight with θ = 0.176 < 1. The largest loops are S → V → S (5.9 × 1.4×10⁻³) and the
+self-coupling of S (0.046). So T₀ is a contraction.
+
+*Ψ_out lies in the space.* On (1, 1 + δ/2], with m = 1, the affine map with the actual endpoint value v_S(1 + δ/2) is
+a contraction in both norms (θ₀ = 5.8×10⁻⁵). Ψ_out is bounded and tends to 0 at x = 1 (Lemma LC), so it is the sum of
+the Neumann series there. That series converges in N as well, so N(Ψ_out) < ∞.
+
+Ψ_out = T₀Ψ_out with N(Ψ_out) < ∞, and T₀ is a contraction, so Ψ_out = 0. ∎
+
+*Mutations* (`b8m_lcj_mutations.log`), both caught:
+- the backward kernel without decay (Γ_S multiplied by n₀): θ = 10³⁰;
+- |ω| multiplied by 10⁴: θ = 283.
+
+## 15. Theorem B(1) (certified, assuming Braaksma's theorem)
+
+**Theorem B(1) (M = 1).** For every n ≥ n₀ = e^{89.75} (D = n + 2) there is exactly one p_n = (A_n, ω_n/ω∞) in
+Theorem A's box X = x̂ ± 10⁻⁹ for which the centre-regular solution of the one-harmonic model in the light-cone gauge
+(c(1) = 1, the solution of Lemma LC) is analytic at the light cone x = 1. Moreover
+$`\lvert p_n - p_*\rvert_\infty \le e^{67.84}/n`$, where p* is Theorem A(M = 1)'s zero of the inner multiplier.
+
+*Proof.*
+- (H-LC) and (H-G) hold by Lemma LC (§13), and (H-J) by Lemma J (§14).
+- By (E) (§6), the solution is analytic at x = 1 if and only if Ψ_out ≡ 0.
+- By (H-J) and (E), that holds if and only if L_{u*}(Ψ_out) = 0.
+- By B5(2) (§3, with the data of d₀ = 10⁷) and B7 (§8.3, with d(p) holomorphic by Lemma LC), exactly one p ∈ X
+  satisfies L_{u*}(Ψ_out) = 0, within e^{67.84}/n of p*. ∎
+
+**What it rests on.**
+- Braaksma's theorem, through Theorem A(M = 1) and lemma S.
+- Certificate code not yet reviewed independently (§10).
+
+Uniqueness holds among light-cone-gauge solutions in the class 𝒦_h, a neighbourhood of the formal series. That is the
+sense of "the" centre-regular solution in the light-cone gauge.
