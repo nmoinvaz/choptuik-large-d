@@ -483,3 +483,12 @@ ValueError: need 15 segments, got 14
 06:50:43   D 3.15 M 128: start 'predictor' |F| nan (211 steps)
 06:50:45   D 3.15 M 128: plan from start 'predictor' instead: 698 steps, |F| 7.43e-01
 06:50:47 D 3.15 M 128: L 9217, steps 698, start |F| 7.4e-01
+  newton 0: |F| 7.43e-01 |dz| 1.75e+03 lam 0.125 dDelta -5.25e-02 Delta 2.912918031351792 piv 2.2e-04..1.1e+01  t 191.3s
+  newton 0: |F| 5.94e-01 |dz| 9.03e+02 lam 0.125 dDelta +8.89e-03 Delta 2.921811604468760 piv 2.3e-04..1.2e+01  t 186.6s
+  newton 0: |F| 5.13e-01 |dz| 6.39e+02 lam 0.0156 dDelta +1.44e-03 Delta 2.923251586694886 piv 2.3e-04..5.3e+02  t 193.1s
+07:01:46 stopped by hand at D 3.15: the helper M 128 from its predictor (|F| 0.74 on its own 698-step plan) went astray (|dz| 1.7e3, 9e2, 6e2; line-search factors 1/8, 1/8, 1/64; Delta 2.923 against the formula's 2.961). New rules in lowD_highM.py / lowD_dd.solve_point: a solve gives up after two steps with factors <= 1/8, a failed helper fails the point, and a failed solve's checkpoint is set aside; applied here by hand: D 3.175 inserted (step halved), checkpoint kept as lowDhm_x0.000625-0.9_D3.1500_M128_ckpt_failed.npz; t_used includes the time to this note
+07:01:47 resuming: M 160/192, last D 3.2, 6.39 h used
+07:01:47 --- D 3.175 (from 3.2), M 160 / 192, nodes 0.000625..0.9
+07:01:51   D 3.175 M 128: start 'predictor' |F| nan (211 steps)
+07:01:53   D 3.175 M 128: plan from start 'predictor' instead: 618 steps, |F| 2.21e-01
+07:01:55 D 3.175 M 128: L 9217, steps 618, start |F| 2.2e-01
