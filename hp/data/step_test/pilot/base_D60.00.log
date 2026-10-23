@@ -1,0 +1,22 @@
+(re-)converged start D=60.001952 M=32 nodes=[0.3, 0.4, 0.5, 0.6, 0.7]: Delta 1.8098842580017149 ok True (18s)
+history point D=59.865: ok True, Delta 1.8102500228650358
+history point D=59.882578: ok True, Delta 1.8102029859479660
+history point D=59.900156: ok True, Delta 1.8101559757078058
+history point D=59.922129: ok True, Delta 1.8100972490514837
+history point D=59.949595: ok True, Delta 1.8100238998997300
+history point D=59.963328: ok True, Delta 1.8099872496740668
+history point D=59.980494: ok True, Delta 1.8099414603654598
+D=60.0235 Delta=1.8098269833151450-1.01e-16 its 12 |F| 1.9e-23 37s piv 1.6e-05..1.5e+07 dDelta/dF max 8.9e+13 tails 1e-77 7e-41
+   kc 220 -> 154 (residual and Jacobian bitwise unchanged)
+D=60.0557 Delta=1.8097411455927424-7.08e-17 its 13 |F| 2.7e-23 24s piv 2.5e-05..1.6e+07 dDelta/dF max 9.1e+13 tails 2e-55 1e-40
+D=60.1041 Delta=1.8096125559255629+2.52e-18 its 17 |F| 2.9e-23 35s piv 9.9e-06..1.6e+07 dDelta/dF max 9.2e+13 tails 2e-55 1e-40
+D=60.176639: no convergence (|F| 6.4e-08); dD 0.0725625 -> 0.03628125
+D=60.1404 Delta=1.8095162455374567+1.11e-16 its 19 |F| 2.9e-23 29s piv 1.0e-05..1.6e+07 dDelta/dF max 9.3e+13 tails 2e-55 1e-40
+D=60.19478: no convergence (|F| 1.3e-08); dD 0.054421875 -> 0.0272109375
+D=60.1676 Delta=1.8094440857491436+6.10e-17 its 10 |F| 2.8e-23 24s piv 2.1e-05..1.6e+07 dDelta/dF max 9.4e+13 tails 2e-55 1e-40
+D=60.2084 Delta=1.8093359655845440+5.28e-18 its 22 |F| 4.5e-23 33s piv 1.3e-05..1.6e+07 dDelta/dF max 9.5e+13 tails 2e-55 1e-40
+D=60.26961: no convergence (|F| 2.4e-08); dD 0.061224609375 -> 0.0306123046875
+D=60.2390 Delta=1.8092549683890644+7.23e-17 its 13 |F| 2.9e-23 20s piv 1.9e-05..1.7e+07 dDelta/dF max 9.5e+13 tails 2e-55 1e-40
+D=60.284915: no convergence (|F| 2.0e-18); dD 0.04591845703125 -> 0.022959228515625
+D=60.2620 Delta=1.8091942726850800-3.07e-17 its 13 |F| 3.6e-23 29s piv 2.7e-05..1.7e+07 dDelta/dF max 9.6e+13 tails 2e-55 1e-40
+scan ended: max_points 8 (8 converged points, D = 60.261956)
