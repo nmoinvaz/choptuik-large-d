@@ -1,5 +1,5 @@
 {
- "t_used": 5685.022268295288,
+ "t_used": 7324.314826250076,
  "Mw": 96,
  "Mn": 128,
  "nodes": [
@@ -44,6 +44,14 @@
   [
    3.45,
    "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.4500_M96.npz"
+  ],
+  [
+   3.4,
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.4000_M96.npz"
+  ],
+  [
+   3.35,
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.3500_M96.npz"
   ]
  ],
  "hist_n": [
@@ -54,6 +62,14 @@
   [
    3.45,
    "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.4500_M128.npz"
+  ],
+  [
+   3.4,
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.4000_M128.npz"
+  ],
+  [
+   3.35,
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.3500_M128.npz"
   ]
  ],
  "pairs": [
@@ -92,11 +108,21 @@
    -1.4463538070034041e-09,
    96,
    128
+  ],
+  [
+   3.4,
+   -2.0745227122619596e-09,
+   96,
+   128
+  ],
+  [
+   3.35,
+   -2.087147617988674e-08,
+   96,
+   128
   ]
  ],
  "targets": [
-  3.4,
-  3.35,
   3.3,
   3.25,
   3.2,
@@ -105,8 +131,12 @@
   3.05
  ],
  "done": null,
- "post": null,
- "last_point_s": 1363.1999999999998,
+ "post": {
+  "D": 3.35,
+  "stage": "resolution",
+  "t_point": 848.0
+ },
+ "last_point_s": 755.3000000000001,
  "Mc": 80,
  "hist_c": [
   [
@@ -132,6 +162,14 @@
   [
    3.45,
    "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.4500_M80.npz"
+  ],
+  [
+   3.4,
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.4000_M80.npz"
+  ],
+  [
+   3.35,
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_D3.3500_M80.npz"
   ]
  ]
 }
