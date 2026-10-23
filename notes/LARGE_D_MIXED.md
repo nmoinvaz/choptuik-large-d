@@ -182,8 +182,33 @@ sensitivities still come from the f64 LU. §4 measures how far they are from the
 
 ## 6. The default paths are unchanged
 
+Everything new is opt-in: `horizon_dd=0`, `Solver.jvp` and `step_timing` are new, `jac="dd"` (the default of
+`newton_solve`, `deflated_newton` and `scan_hp.py --jac`) runs the loops as before, and `jac="f64"` calls
+`newton_mixed(**mixed)` as before. Checked:
+
+- `python3 mixed_check.py ref --save=REF.npz` with a private build of main (e6c908a), then `--compare=REF.npz` with
+  this branch's build: 34 arrays, all bit-identical (`data/mixed_precision/largeD_mixed/ref_save_main_build.log`,
+  `ref_compare.log`). `ref` now also covers the mixed defaults (`jacobian_f64`, `newton_mixed`) at D = 3.7, M = 48, and
+  residual, Jacobian, Newton step, `lu_solve_t`, `jacobian_f64` and `newton_mixed` at the D = 50.01 scan state with
+  kfreeze 13; a reference file from before reports the arrays it lacks as not compared.
+- `cargo test --release --lib`: 13 passed, 7 ignored (benches and diagnostics), among them two new tests
+  (`hp/src/jvp_tests.rs`, on the synthetic M = 8 context of `qd_residual.rs`): `jvp_matches_dd_jacobian` (3.8×10⁻³⁰;
+  with the Δ tangent × (1 + 10⁻²⁰) 3.7×10⁻²⁴, which must fail) and `hdd_block_rows_are_dd` (with `HDD_BLOCK` the
+  horizon rows are bitwise the double-double Jacobian's hi parts and every other row bitwise the default f64 Jacobian's;
+  with `HDD_LASTSEG` the horizon rows are not, the last segment's are) (`cargo_test.log`,
+  `cargo_test_jvp_nocapture.log`).
+
 ## 7. Other findings
 
 ## 8. The M = 192 stall at D = 3.7 (for notes/HIGH_M.md §1.4)
 
 ## 9. Merge with wip/high-m
+
+This branch is wip/high-m (382d515) with main merged in, and wip/high-m's later commits 2b3b253, 985b137 and 59eca1e
+merged when they appeared. 2b3b253 added `jac="f64"` and `mixed` to `driver.deflated_newton`; this branch had added
+`jac` (all five variants), `mixed` and `gmres` to the same function. The conflict was resolved by keeping their
+signature and their `f64` path (the step from `s.newton_mixed(**mixed)`, the linearised Δ correction from the stored
+LU's transpose solve, no extra step at convergence) and routing every variant through `newton_step`, which for `dd`
+and `f64` makes exactly their calls. The new variants differ in two documented ways: at convergence they take the
+already-computed step if |F| stays below tol (as `newton_solve` does for `f64`), and with the correction loop the Δ
+correction is the refined step's Δ component. No Rust conflicted (wip/high-m changed no Rust after 382d515).
