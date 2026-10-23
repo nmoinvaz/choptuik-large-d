@@ -60,6 +60,32 @@ def sensitivity(s, M):
     return [float(np.abs(yh[b * 4 * M:(b + 1) * 4 * M]).max()) for b in range(nb)]
 
 
+def certify(D, zh, zl, s, a, nodes, M):
+    """the converged point (zh, zl) checked in the layout a.certify_nodes without a Newton step: the state cut to the
+    layout (driver.renode; the node states it keeps, the centre and horizon data and Delta are unchanged), its residual
+    there, and from that layout's double-double Jacobian and LU the sensitivity max|dDelta/dF| per block, the
+    linearised Delta correction -y.F and the first-order bound sum|y_i F_i| (y = J^-T e_Delta)"""
+    cn = [float(v) for v in a.certify_nodes.split(",")]
+    if any(x not in nodes for x in cn):
+        raise SystemExit(f"--certify_nodes {cn} must be a subset of the run's nodes {nodes}")
+    t0 = time.time()
+    ch, cl = renode(s, zh, zl, nodes, cn, M)
+    sc = make_solver(D, M, nodes=cn, kt=a.kt, kc=a.kc, ks=a.certify_ks, threads=a.threads, kfreeze=a.kfreeze)
+    sc.set_segs(sc.plan(ch, cl, a.tol_step, a.hmax))
+    sc.newton(ch, cl)                       # Jacobian and LU at the point; the step is not taken
+    Fh, Fl = sc.residual(ch, cl)
+    F = np.asarray(Fh) + np.asarray(Fl)
+    L = sc.size
+    e = np.zeros(L)
+    e[-1] = 1.0
+    yh, yl = sc.lu_solve_t(e, np.zeros(L))
+    y = np.asarray(yh) + np.asarray(yl)
+    _, th = tails(sc, ch, cl, cn, M)
+    return dict(nodes=cn, ks=a.certify_ks, F=float(np.abs(F).max()), sens=max(sensitivity(sc, M)),
+                dDelta_est=delta_correction(sc, Fh, Fl), bound=float(np.sum(np.abs(y * F))), tail_h=th,
+                seconds=round(time.time() - t0, 1))
+
+
 def freeze_p1(zh, zl, a, M):
     """p1's harmonics above kfreeze set to zero (they are pinned there by the frozen formulation)"""
     if not a.kfreeze:
@@ -198,6 +224,11 @@ def main():
     ap.add_argument("--max_fail_row", type=int, default=0, help="stop after this many failed steps in a row (0: no limit)")
     ap.add_argument("--attempts", default="", help="jsonl: one record per attempted step, converged or not, and a final "
                     "record with the reason the scan ended")
+    ap.add_argument("--certify_nodes", default="", help="check each converged point in this node layout too (a subset of "
+                    "the run's nodes, e.g. 0.3,0.4,0.5,0.6): the state cut to it, its residual there and that layout's "
+                    "dDelta/dF, with no Newton step (Newton does not converge at 0.6 matching at D ~ 60, but the 0.7 "
+                    "solution sits at the 0.6 floor; comms 2026-10-23 12:43 local). Recorded as 'cert'")
+    ap.add_argument("--certify_ks", type=int, default=160, help="--certify_nodes: horizon series order there")
     a = ap.parse_args()
     T_start = time.time()
     zh, zl, meta = load(a.start)
@@ -364,6 +395,12 @@ def main():
             rec.update(jac=a.jac, split=step_split(hist), sens_lu=hist[-1].get("jac", a.jac),
                        switched_dd=any(r.get("switch_dd") for r in hist))
         rec.update(pin_rec)
+        if a.certify_nodes:
+            rec["cert"] = certify(D, zh, zl, s, a, nodes, M)
+            c = rec["cert"]
+            print(f"   certified at nodes {c['nodes']}: |F| {c['F']:.1e}, dDelta/dF max {c['sens']:.1e}, "
+                  f"dDelta_est {c['dDelta_est']:+.1e}, bound sum|y F| {c['bound']:.1e} (here: {rec['F'] * max(sens):.1e} "
+                  f"as |F| x max dDelta/dF)", flush=True)
         with open(a.out, "a") as f:
             f.write(json.dumps(rec) + "\n")
         save(os.path.join(outdir, f"{a.tag}_D{D:.4f}.npz"), zh, zl, dict(D=D, M=M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks))
