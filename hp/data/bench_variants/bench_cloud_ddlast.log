@@ -1,2 +1,22 @@
 bench_variants: {'host': 'vm', 'platform': 'Linux-6.18.44-fc-v153-x86_64-with-glibc2.39', 'processor': 'x86_64', 'cpus': 2, 'python': '3.13.16', 'isa': 'avx512', 'threads': 2, 'priority': 'nice 10'}
 D50.0075_M32: reference |F| 9.7e-25, tol 1e-23, kfreeze 13, kc 149 (state's 420), 10 Taylor steps (up8_D50.0075.npz)
+  D50.0075_M32 dd     rep 0: converged in 7 its, 19.9 s; per step: Jacobian 2.63 s, LU 0.06 s, products 0.00 s (0 in all); |F| 1.1e-24; load [3.55, 3.72, 5.19]
+  D50.0075_M32 f64g   rep 0: converged in 8 its, 13.4 s; per step: Jacobian 0.62 s, LU 0.02 s, products 0.72 s (169 in all); |F| 7.3e-25; Delta - dd -1.3e-19; load [4.32, 3.89, 5.21]
+  D50.0075_M32 f64hg  rep 0: converged in 8 its, 14.3 s; per step: Jacobian 1.02 s, LU 0.02 s, products 0.51 s (124 in all); |F| 6.2e-25; Delta - dd +2.8e-20; load [5.01, 4.06, 5.25]
+D55.0351_M32: reference |F| 4.4e-24, tol 4e-23, kfreeze 13, kc 141 (state's 420), 10 Taylor steps (up10_D55.0351.npz)
+  D55.0351_M32 dd     rep 0: converged in 7 its, 16.7 s; per step: Jacobian 2.25 s, LU 0.04 s, products 0.00 s (0 in all); |F| 4.1e-24; load [5.15, 4.14, 5.25]
+  D55.0351_M32 f64g   rep 0: converged in 8 its, 14.1 s; per step: Jacobian 0.61 s, LU 0.02 s, products 0.80 s (200 in all); |F| 5.4e-24; Delta - dd +5.9e-19; load [5.27, 4.21, 5.26]
+  D55.0351_M32 f64hg  rep 0: converged in 7 its, 12.1 s; per step: Jacobian 1.03 s, LU 0.02 s, products 0.46 s (118 in all); |F| 4.1e-24; Delta - dd -3.0e-19; load [5.5, 4.32, 5.28]
+D60.0020_M32: reference |F| 2.3e-23, tol 2e-22, kfreeze 13, kc 134 (state's 420), 11 Taylor steps (up13_D60.0020.npz)
+  D60.0020_M32 dd     rep 0: converged in 6 its, 16.0 s; per step: Jacobian 2.53 s, LU 0.04 s, products 0.00 s (0 in all); |F| 3.4e-23; load [5.9, 4.47, 5.31]
+  D60.0020_M32 f64g   rep 0: NOT converged in 4 its (1 exact), 6.5 s; per step: Jacobian 0.79 s, LU 0.02 s, products 0.47 s (62 in all); |F| 3.5e-09; load [6.0, 4.56, 5.33]
+  D60.0020_M32 f64hg  rep 0: converged in 7 its, 14.0 s; per step: Jacobian 1.14 s, LU 0.03 s, products 0.57 s (129 in all); |F| 2.6e-23; Delta - dd -2.0e-18; load [6.0, 4.58, 5.33]
+total 130 s
+
+median whole-solve seconds (speedup over dd) / iterations / per-step Jacobian+LU+products seconds, from /home/claude/dss/agentLD/wt/hp/data/bench_variants/bench_cloud_ddlast.jsonl
+state                                   dd                      f64g                     f64hg
+D50.0075_M32             19.9s (1.0x)  7it         13.4s (1.5x)  8it         14.3s (1.4x)  8it
+D55.0351_M32             16.7s (1.0x)  7it         14.1s (1.2x)  8it         12.1s (1.4x)  7it
+D60.0020_M32             16.0s (1.0x)  6it                FAILED (1)         14.0s (1.1x)  7it
+max |Delta - Delta_dd| over all converged runs: 2.0e-18
+exit 0

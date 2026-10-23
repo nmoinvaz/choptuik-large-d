@@ -7,6 +7,26 @@ horizon block in double-double, and a correction loop with exact Jacobian-vector
 them, and a benchmark for the local machine. Branch `wip/largeD-mixed`; all runs on the cloud machine (2 cores,
 AVX-512), two threads, with private builds; every command runs in `hp/`.
 
+**Summary.**
+
+- **The Newton step is repaired.** Computing the horizon block's columns in double-double (`horizon_dd=4`, the only
+  one of the candidate fixes that works) brings the step error at D = 50–60 from 0.13–3.4 to the floor of an f64
+  factorization (3.5×10⁻⁷–1.7×10⁻⁵), for a Jacobian 1.7–2.7 times dearer. A correction loop (GMRES in GCR form,
+  preconditioned by the f64 LU, with exact double-double Jacobian-vector products) brings it to ≤ 1.1×10⁻¹³ in 4–6
+  products on the plain f64 LU and ≤ 5×10⁻¹⁶ in 3 on the horizon-fixed one, at 1/9–1/23 of an f64 Jacobian per
+  product (§1–§3).
+- **Continuation at large D works with the loop on the horizon-fixed LU (f64hg)**, which converged at every state and
+  step tried, with Δ equal to the double-double run's to the level of that run's own linearised Δ correction (§4,
+  §5). The plain f64 Jacobian fails from D = 40, the horizon fix alone (f64h) and the loop alone (f64g) fail at some
+  states at D = 50–60. What limits them is not the step but the f64 LU's weakest directions: at D ≥ 40 its weak
+  subspace has a principal angle of 90° to the exact one and its ∂Δ/∂F is off by up to 10⁵–10⁹ (§4, §7.4).
+- **Speedups** (whole solves, same machine, interleaved; §5): 4–8× below D = 35 (f64 or f64g), 1.4–2.5× at D = 40–60
+  (f64g, f64hg). At large D the double-double baseline here uses a sensible centre-series order: the scan's kc = 420 is
+  three times what the series needs and makes the double-double Jacobian three times slower for bitwise the same
+  result (§7.2), the cheapest speedup of all.
+- The M = 192 stall at D = 3.7 is not cured by exact steps: the loop corrects the f64 step (by 0.3–4.7 of its size),
+  but the exact step's line search still cuts it to 1/2–1/8 (§8).
+
 **Machine load.** The two cores were shared with the high-M agent's three jobs and several of this work's runs at
 once; the load average was 6–14 during the measurements below. The accuracy numbers do not depend on it. The times do:
 they are inflated by a factor of about 2–6 against an idle machine, and only ratios measured in the same run
@@ -73,8 +93,20 @@ column 4's, bitwise the same Jacobian.)
 whole f64 Jacobian costs (×2.2–2.7), and the fixed Jacobian is still 11–14 times cheaper than the double-double one.
 The horizon block is 65 of 769 columns, but each is a double-double horizon series of ks = 100 orders with a tangent.
 Stopping those series at double-double resolution (flag 36) gave the same columns bitwise and no saving.
-`python3 largeD_mixed_check.py costs` (`data/mixed_precision/largeD_mixed/costs.json`, `.log`) has the parts of a
-step, three repeats each, at D = 8.25–60.
+`python3 largeD_mixed_check.py costs` (`data/mixed_precision/largeD_mixed/costs.json`, `.log`; medians of three
+interleaved repeats, load average 11.5–13.5, the states' own kc):
+
+| state | residual | dd Jacobian | f64 Jacobian | f64 + horizon in dd | f64 LU | product (full / cut) |
+|---|---|---|---|---|---|---|
+| D = 8.25, M = 48 | 0.088 s | 26.7 s | 4.40 s | 7.45 s | 0.40 s | 189 / 188 ms |
+| 20.04, M = 32 | 0.038 s | 6.30 s | 0.84 s | 2.10 s | 0.077 s | 61 / 56 ms |
+| 40.02 (kc 420) | 0.124 s | 19.1 s | 0.62 s | 1.66 s | 0.042 s | 306 / 67 ms |
+| 50.01 (kc 420) | 0.119 s | 19.5 s | 0.64 s | 1.66 s | 0.029 s | 292 / 61 ms |
+| 60.00 (kc 420) | 0.103 s | 19.0 s | 0.72 s | 1.70 s | 0.046 s | 292 / 64 ms |
+
+The fix makes the f64 Jacobian 1.7–2.7 times dearer at every D. At D = 40–60 the horizon-fixed Jacobian is still
+11–12 times cheaper than the double-double one with the scan's kc = 420, and about 3.5 times with a sensible kc (§7.2:
+the dd Jacobian then takes about a third as long). One cut product costs 1/9–1/23 of an f64 Jacobian.
 
 ## 2. The exact Jacobian-vector product (`Solver.jvp`)
 
@@ -136,7 +168,8 @@ to double-double rounding without recomputing it: an outer refinement loop with 
 The first iteration's u is M⁻¹ b, the plain mixed step.
 
 **Stopping.** On the change of the step: the loop ends when an iteration changes x by at most `step_tol` |x| (default
-10⁻¹⁰; `confirm` iterations in a row, default 1), or after `max_products` (default 12). The residual is not used:
+10⁻¹⁰; `confirm` iterations in a row, default 1), or after `max_products` (default 30; 12 in the first benchmark run,
+§5, which sent most large-D solves to exact steps near the floor; this check used 16). The residual is not used:
 an error along a weak direction barely shows in it (MIXED_PRECISION §8, where a residual tolerance of 10⁻⁸ stopped
 with the step still off by 6×10⁻⁴).
 
@@ -200,6 +233,27 @@ split and products (`split` in its jsonl). The stored LU after a mixed step is t
 - With the loop alone (f64g) the stored LU is the plain f64 Jacobian's, wrong at D ≥ 50 in a few directions. The Δ
   correction uses the refined step (§3); the deflated Newton's weak subspace and the scan's per-block sensitivities
   come from that LU. A transposed loop would need products with Jᵀ (reverse mode), which the kernel does not have.
+- `dd_finish` (default on for f64h, f64g, f64hg): in the plain-Newton phase, once a mixed step is cut below λ = 1/4 or
+  finds no decrease, or its loop ends without converging, the remaining steps are exact. `dd_last` (default off; the
+  scan's `--dd_last`): once |F| < tol, one exact step (one double-double Jacobian), which also leaves the exact LU for
+  the sensitivities. Both only up to M = 128 (the dense limit).
+
+**Real continuation steps** (`python3 largeD_continuation.py --D=60,40,50`; one directory per variant under
+`data/mixed_precision/largeD_cont/`, with `scan_hp.py`'s jsonl, log and states, and `report.json`). `scan_hp.py`
+runs as the scan ran (kfreeze 13, deflated Newton w = 24, Lagrange predictor through the last four points, the scan's
+tolerance and kc = 420, it_max 25, no LM), once per variant, from the same start and history to the same two targets.
+The scan's predictor needs a history spaced like its steps, and the saved states are one unit of D apart: a cubic
+through them misses by |F| = 0.04 (D = 40) and 0.35 (D = 50) per unit of step, 4×10⁻⁶ and 3.5×10⁻⁵ already for a step
+of 10⁻⁴. So:
+
+- D ≈ 60: the scan's own history, kept in `hp/data/seeds`: start 59.8221, history 59.7676, 59.7858, 59.8041 (run up12/
+  up13), targets the scan's next two points 59.833359 and 59.847422, tol 3×10⁻²²;
+- D = 40 and 50: a double-double ladder first, from the saved state with the three saved states below as history, to
+  D₀ + 2×10⁻⁵, 10⁻⁴, 3×10⁻⁴, 10⁻³, 3×10⁻³, 0.01, 0.02, 0.03 (one `scan_hp.py` call per point); then the variants
+  from D₀ + 0.03 with the ladder's three points before it as history, to D₀ + 0.06 and D₀ + 0.09. At D = 50 the
+  ladder's step from 3×10⁻⁴ to 10⁻³ failed for the double-double Newton (|F| stuck at 4×10⁻¹¹, "step too small";
+  `largeD_cont/D50.0075_first_ladder`), so the ladder continues there in ratios of 1.5 (5×10⁻⁴, 8×10⁻⁴, …, 0.0135,
+  0.02, 0.03) and the history is 9×10⁻³, 0.0135, 0.02.
 
 ## 5. The benchmark (`hp/bench_variants.py`)
 

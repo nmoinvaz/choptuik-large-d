@@ -13,8 +13,8 @@ one unit apart, and a cubic through them is off by |F| = 0.04 (D = 40) and 0.35 
     D0 + 2e-5, 1e-4, 3e-4, 1e-3, 3e-3, 0.01, 0.02, 0.03 (D = 50: from 3e-4 on in ratios of 1.5, since the step to 1e-3
     failed there), one scan_hp.py call per point (--dD the gap, so a failure halves the step and ends the ladder;
     shared by all variants, directories 'ladder/x<offset>'); then each variant
-    from D0 + 0.03 with the ladder's points at D0 + 0.01, 0.02 and the one at 3e-3 as history, to D0 + 0.06 and
-    D0 + 0.09 (steps of 0.03, as the scan's 0.04-0.06 there).
+    from D0 + 0.03 with the ladder's three points before it as history, to D0 + 0.06 and D0 + 0.09 (steps of 0.03, as
+    the scan's 0.04-0.06 there).
 Then:
   - per point: Delta against the dd run's (and the scan's recorded value where there is one), iterations, seconds, the
     time split (Jacobian / LU / solves / products), the products, |F|, dDelta_est; and the failures (halved steps);
@@ -106,7 +106,7 @@ def plan_for(Dt, outdir):
     D0, p0 = st[i]
     base = os.path.join(outdir, f"D{D0:.4f}")
     pts = {round(load(p)[2]["D"], 6): p for p in glob.glob(os.path.join(base, "ladder", "x*", "dd_D*.npz"))}
-    have = [pts.get(round(D0 + x, 6)) for x in (3e-3, 0.01, 0.02, 0.03)]
+    have = [pts.get(round(D0 + x, 6)) for x in LADDERS[min(LADDERS, key=lambda d: abs(d - Dt))][-4:]]
     targets = [round(D0 + x, 6) for x in STEPS]
     return base, have[-1], have[:-1], targets, {}, tol, (st[i - 3:i + 1], D0, pts)
 

@@ -213,7 +213,8 @@ def dd_axpy(a, xh, xl, yh, yl):
 
 def gmres_refine(s, zh, zl, bh, bl, max_products=30, step_tol=1e-10, confirm=1, cut=True, verbose=False, ref=None):
     """Solve J x = b (b = bh + bl, double-double) for the exact Jacobian J at z: GMRES on J M^-1 (right
-    preconditioning) in its GCR form (Eisenstat, Elman and Schultz, SIAM J. Numer. Anal. 20 (1983) 345), M the LU stored
+    preconditioning; Saad and Schultz, SIAM J. Sci. Stat. Comput. 7 (1986) 856, doi:10.1137/0907058) in its GCR form
+    (Eisenstat, Elman and Schultz, SIAM J. Numer. Anal. 20 (1983) 345, doi:10.1137/0720023), M the LU stored
     in s (the mixed step's f64 LU), the products J u exact in double-double (Solver.jvp; cut: its series stopped at
     double-double resolution). Each iteration takes the preconditioned residual u = M^-1 r as the new direction, w = J u
     (one product), orthogonalizes w against the earlier w's (twice), applying the same coefficients to u, and updates

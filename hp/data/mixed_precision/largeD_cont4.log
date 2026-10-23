@@ -1,0 +1,38 @@
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D59.8221/dd: exit 0, 160 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D59.8221/f64: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D59.8221/f64h: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D59.8221/f64g: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D59.8221/f64hg: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D59.8221/f64hg_last: exit 0, 74 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D59.8221/f64g_last: exit 1, 589 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/ladder/x2e-05: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/ladder/x0.0001: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/ladder/x0.0003: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/ladder/x0.001: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/ladder/x0.003: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/ladder/x0.01: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/ladder/x0.02: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/ladder/x0.03: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/dd: exit 0, 149 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/f64: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/f64h: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/f64g: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/f64hg: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/f64hg_last: exit 0, 59 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D40.0201/f64g_last: exit 0, 60 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x2e-05: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.0001: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.0003: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.0005: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.0008: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.0012: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.0018: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.0027: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.004: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.006: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.009: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.0135: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.02: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/ladder/x0.03: done, skipped
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/dd: exit 0, 183 s
+/home/claude/dss/agentLD/wt/hp/data/mixed_precision/largeD_cont/D50.0075/f64: exit 1, 86 s
