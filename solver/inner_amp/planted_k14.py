@@ -17,7 +17,10 @@ pass criteria are section 6.0; each stage exits non-zero when one of its checks 
               m = 3..7: the zero, the type rule, the zero counts
   project     the README's order-14 projection (est_k = w* + c r^k through k = 12, 13) against the real arg_14, with
               back-tests on the real data and on the arc plants, and the spread of arg_14 under sigma_err noise
-  table       every table of notes/PLANTED_SELECTION.md section 6, from the records
+  posthoc     added after the runs above (section 6.7): the order-to-order change of arg and G, real against plants;
+              the local minima of G's kbar objective and G at each; the K = 13 Borel-Pade sums [5/8], [6/7] against
+              sigma_14; the poles and residues of the K = 14 sums [5/9], [6/8]
+  table       the stored checks of section 6, as JSON
 
     nice -n 10 python3 planted_k14.py STAGE [--scratch DIR] [--mutate=...]
 """
@@ -483,15 +486,13 @@ def stage_calib():
             tr[r["name"]] = {x: [R.grade(r, K)["err"][x] for K in (12, 13, 14)] for x in ("arg", "G", "pade")}
     out["per_plant_err_12_13_14"] = tr
     devs = load_checks().get("K14 plant sigma13-14 deviation", {})
-    out["sigma_dev_summary"] = {f: [min(max(devs[n][w][i] for w in devs[n]) for n in devs if n.startswith(f)),
-                                    max(max(devs[n][w][i] for w in devs[n]) for n in devs if n.startswith(f))]
-                                for f in ("P-ARC wt", "P-ARC-B chord", "P-ARC-B mirror", "P-ARC-B beta2", "C-EXP")
-                                for i in (0, 1)} if devs else {}
+    out["sigma_dev_summary"] = {}
     for f in ("P-ARC wt", "P-ARC-B chord", "P-ARC-B mirror", "P-ARC-B beta2", "C-EXP", "REFIT"):
         ns = [n for n in devs if n.startswith(f)]
         if ns:
             d13 = [max(devs[n][w][0] for w in devs[n]) for n in ns]
             d14 = [max(devs[n][w][1] for w in devs[n]) for n in ns]
+            out["sigma_dev_summary"][f] = {"sigma13": [min(d13), max(d13)], "sigma14": [min(d14), max(d14)]}
             print(f"  {f}: plant sigma_13 vs measured {min(d13):.1e}-{max(d13):.1e}, sigma_14 {min(d14):.1e}-{max(d14):.1e}"
                   " (relative, worst node)")
     save_checks("K14 calib", out)
@@ -695,6 +696,126 @@ def stage_project():
     save_checks("K14 project", out)
 
 
+# ---------------------------------------------------------------- post-hoc diagnostics (after section 6.0's runs)
+def kbar_minima(sig, K, starts=(np.linspace(0.6, 1.35, 6), np.linspace(0.2, 0.8, 5))):
+    """local minima of entire_cert's kbar objective (the last two terms of G_K at X0) from a grid of Nelder-Mead starts"""
+    import entire_cert as EC
+    from scipy.optimize import minimize
+    mp.mp.dps = 60
+
+    def f(v):
+        g = EC.gcoef(sig, mp.mpc(v[0], v[1]), K)
+        return float(abs(g[K]) * EC.X0 ** K + abs(g[K - 1]) * EC.X0 ** (K - 1))
+    mins = []
+    for a in starts[0]:
+        for b in starts[1]:
+            r = minimize(f, [a, b], method="Nelder-Mead", options=dict(xatol=1e-7, fatol=1e-15, maxiter=3000))
+            if r.success and not any(abs(r.x[0] - m[0]) < 1e-3 and abs(r.x[1] - m[1]) < 1e-3 for m in mins):
+                mins.append((float(r.x[0]), float(r.x[1]), float(r.fun)))
+    return sorted(mins, key=lambda m: m[2])
+
+
+def G_at(nodes, kb, K):
+    """entire_cert.resummed's crossing for a given kbar"""
+    import entire_cert as EC
+    mp.mp.dps = 60
+    zs = {wf: mp.findroot(EC.poly(EC.gcoef(nodes[wf], kb, K)), mp.mpc(EC.X0, 0)) for wf in PP.NODES}
+    c = np.polyfit(PP.NODES, [float(mp.im(mp.sqrt(zs[w]))) for w in PP.NODES], 2)
+    r = [x.real for x in np.roots(c) if abs(x.imag) < 1e-12 and 0.97 < x.real < 1.03]
+    return min(r, key=lambda x: abs(x - 1)) if r else None
+
+
+def stage_posthoc(scratch):
+    use14()
+    by = new_records()
+    res = load_checks().get("K14 posthoc", {})
+    real = load_real14()
+    rn = {w: real[w][0] for w in PP.NODES}
+    # (i) order-to-order change of arg and G, 12 -> 13 -> 14
+    if "steps" not in res:
+        st = {}
+        for n, r in by.items():
+            if r["family"] in ("P-ARC", "P-ARC-B") or n in (REAL14, "C-EXP", "C13-EXP"):
+                g = {K: R.grade(r, K)["est"] for K in (12, 13, 14)}
+                st[n] = {e: [None if None in (g[K][e], g[K + 1][e]) else g[K + 1][e] - g[K][e] for K in (12, 13)]
+                         for e in ("arg", "G", "pade")}
+        res["steps"] = st
+        save_checks("K14 posthoc", res)
+    st = res["steps"]
+    for e in ("arg", "G"):
+        arcs = [v[e][1] for n, v in st.items() if n.startswith("P-ARC") and v[e][1] is not None]
+        arcs12 = [v[e][0] for n, v in st.items() if n.startswith("P-ARC") and v[e][0] is not None]
+        print(f"(i) {e}: change 12->13 real {st[REAL14][e][0]:+.2e}, arc plants {min(arcs12):+.2e} ... {max(arcs12):+.2e}; "
+              f"13->14 real {st[REAL14][e][1]:+.2e}, arc plants {min(arcs):+.2e} ... {max(arcs):+.2e}; "
+              f"C-EXP {st['C-EXP'][e][1]:+.2e}; C13-EXP {st['C13-EXP'][e][1]:+.2e}")
+    # (ii) the kbar objective's local minima and G at each: real data and the four arc shapes and C-EXP (wt = 1)
+    km = res.get("kbar", {})
+    fams = {"real": (rn, None)}
+    for tag in ARC_FAMS:
+        fams[tag] = (None, 1.0)
+    fams["C-EXP"] = (None, by["C-EXP"]["truth"])
+    for name, (nodes, truth) in fams.items():
+        for K in (12, 13, 14):
+            key = f"{name} K{K}"
+            if key in km:
+                continue
+            if nodes is None:
+                if name == "C-EXP":
+                    nodes = PP.completion("C-EXP")[0]
+                else:
+                    fam = PP.ArcFamily(name.split()[-1] if name != "P-ARC" else "arc")
+                    nodes = fam.nodes("1.0000")
+                fams[name] = (nodes, truth)
+            mins = kbar_minima(nodes[1.0], K)
+            km[key] = [{"kbar": [m[0], m[1]], "obj": m[2], "G": G_at(nodes, mp.mpc(m[0], m[1]), K)} for m in mins[:6]]
+            res["kbar"] = km
+            save_checks("K14 posthoc", res)
+            prod = by[REAL14 if name == "real" else (f"{name} wt=1.0000" if name != "C-EXP" else "C-EXP")]["est"][str(K)]
+            print(f"(ii) {key}: production kbar {prod['G_kbar'][0]:.4f}{prod['G_kbar'][1]:+.4f}i -> G {prod['G']:.6f}; minima: "
+                  + "; ".join(f"{m['kbar'][0]:.4f}{m['kbar'][1]:+.4f}i obj {m['obj']:.1e} G "
+                              + ("none" if m["G"] is None else f"{m['G']:.6f}") for m in km[key]), flush=True)
+    # (iii) the K = 13 Borel-Pade sums that pass the type rule and are ring-free, against sigma_14
+    real13 = PP.load_real(SCAN13)
+    mp.mp.dps = 50
+    rt = {wf: taus(list(real[wf][0][:15])) for wf in PP.NODES}
+    real_det = set(R.detectors(by[REAL14], 14))
+    bp = res.get("C13-BP sigma14", {})
+    for m in (5, 6):
+        name = f"C13-BP [{m}/{13 - m}]"
+        nodes, funcs, info = borel_pade(real13, m, 13 - m)
+        truth, _ = truth_of(funcs)
+        R.run_plant(name, "C13-BP (post-hoc)", nodes, truth["im_x"], scratch)
+        rec = new_records()[name]
+        mp.mp.dps = 50
+        se = [float(abs(nodes[wf][14] - real[wf][0][14]) / abs(real[wf][0][14])) for wf in PP.NODES]
+        te = [float(abs(taus(list(nodes[wf][:15]))[14] - rt[wf][14]) / abs(rt[wf][14])) for wf in PP.NODES]
+        extra = sorted(set(R.detectors(rec, 14)) - real_det)
+        bp[name] = {"truth": truth["im_x"], "sigma14_rel": se, "tau14_rel": te, "extra_detectors": extra,
+                    "est14": R.grade(rec, 14)["est"]}
+        print(f"(iii) {name}: zero {truth['im_x']:.7f}; sigma_14 rel. error {' / '.join(f'{x:.1e}' for x in se)}; tau_14 "
+              f"{' / '.join(f'{x:.1e}' for x in te)}; K = 14 estimates {({k: round(v, 7) if v else v for k, v in R.grade(rec, 14)['est'].items()})}; "
+              f"detectors beyond the real data's: {extra or 'none'}")
+    res["C13-BP sigma14"] = bp
+    save_checks("K14 posthoc", res)
+    # (iv) the poles and residues of the K = 14 Borel-Pade sums that pass the type rule
+    rp = {}
+    for m in (5, 6):
+        nodes, funcs, info = borel_pade(real, m, 14 - m)
+        mp.mp.dps = PP.DPS
+        sig = list(real[1.0][0][:15])
+        a = [sig[k] * mp.factorial(k) for k in range(15)]
+        p, q = mp.pade(a, m, 14 - m)
+        us = mp.polyroots(q[::-1], maxsteps=400, extraprec=400)
+        dq = [k * q[k] for k in range(1, len(q))]
+        rows = sorted(([complex(1 / u), complex(-mp.polyval(p[::-1], u) / (u * mp.polyval(dq[::-1], u)))] for u in us),
+                      key=lambda z: abs(z[0]))
+        rp[f"[{m}/{14 - m}]"] = rows
+        print(f"(iv) [{m}/{14 - m}] at wf 1.00, poles t and residues r: "
+              + "; ".join(f"t {t.real:.4f}{t.imag:+.4f}i |r| {abs(r):.1e}" for t, r in rows))
+    res["C14-BP poles"] = rp
+    save_checks("K14 posthoc", res)
+
+
 # ---------------------------------------------------------------- tables
 def stage_table():
     c = load_checks()
@@ -711,6 +832,7 @@ def main():
     {"converge": lambda: stage_converge(a.mutate), "plants": lambda: stage_plants(a.scratch),
      "real": lambda: stage_real(a.scratch), "ring": lambda: stage_ring(a.scratch), "calib": stage_calib,
      "recomplete": stage_recomplete, "project": stage_project, "table": stage_table,
+     "posthoc": lambda: stage_posthoc(a.scratch),
      "plants-check": plants_check}[a.stage]()
     if FAILED:
         print(f"\n{len(FAILED)} check(s) failed")
