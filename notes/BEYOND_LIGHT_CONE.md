@@ -125,7 +125,7 @@ not e^{n/2}-ill-conditioned in the toy, and the candidate has nothing exponentia
 
 *Two departures from this plan, both made before the results they affect were seen:*
 - A's horizon series is evaluated at z = 1.5, not 1.9. At 1.9 the alternating series cancels catastrophically at large n
-  (terms near e^{2.2n/2}). The prediction for A becomes e^{(n/2)ln(z_s/(z_s−1))} = e^{0.55n}.
+  (terms up to about e^{1.1n}). The prediction for A becomes e^{(n/2)ln(z_s/(z_s−1))} = e^{0.55n}.
 - The empirical P_min is measured with injected noise rather than by lowering the working precision. At s* the toy's
   solution is a polynomial and its series terminate, so plain low-precision arithmetic is almost exact and would
   understate the error (first pilot: κ_emp 10³ times below κ_J). The noise model adds a random error of relative size
@@ -191,9 +191,9 @@ x ~ ξ_max√n on the real axis can select Δ. (This answers part of question 2(
   (1 − x)^{Λ_μ}φ(θ − ω′ln(1 − x)) is C^{⌊Re Λ⌋}. At large n the selection therefore asks for more than any fixed order
   of smoothness at the light cone: it asks for analyticity.
 - **x = −1** (the m-equation's x + c = 0): the mirror of x = 1 under the centre series' symmetry m(x) = p(−x).
-- **x = ∞,** in w = 1/x: (1 − cw)p_w = (ω/w)p_θ + …, a regular singular point with exponents iμω. So p → e^{iμ(θ − ω ln x)} =
-  e^{−iμω ln r}: at t = 0 the solution becomes a function of r alone. This is the t = 0 hypersurface. The inner problem
-  is regular there in t = 1/ξ (README, the Weber form).
+- **x = ∞** is the t = 0 hypersurface. For c = b = 1, in w = 1/x, (1 − w)p_w = (ω/w)p_θ + …: a regular singular point
+  with exponents iμω, so p → e^{iμ(θ − ω ln x)} = e^{−iμω ln r}, a function of r alone at t = 0. The inner problem is
+  regular there in t = 1/ξ (README, the Weber form).
 - **The real continuation.** The solution analytic at x = 1 continues along the real axis through t = 0 to the future
   light cone. Martín-García and Gundlach found that the D = 4 critical solution is analytic up to the future light cone, a
   Cauchy horizon where the curvature is only C⁰, and that its continuation beyond it is not unique[^mg].
@@ -206,10 +206,11 @@ x ~ ξ_max√n on the real axis can select Δ. (This answers part of question 2(
   | radius of the horizon series (in 1 − x) | 0.921 | 0.832 | 0.812 | 0.793 | 0.774 | 0.746 |
 
   Both are consistent with one complex-conjugate pair of singularities: near x ≈ 0.47e^{±1.16i} at D = 17 and
-  0.67e^{±0.85i} at D = 60, that is x² ≈ 0.45e^{±1.69i} at D = 60. The pair is off the real axis, so it does not limit the
+  0.67e^{±0.84i} at D = 60, that is x² ≈ 0.45e^{±1.68i} at D = 60. The pair is off the real axis, so it does not limit the
   real continuation, but every complex path (formulation (c)) must avoid it. The horizon series converges at u₀ = 0.3 with
-  a margin that shrinks with D (radius 0.75 at D = 60). |x|² grows roughly like 0.005n, suggesting a singularity of the
-  inner problem near |ξ²| ≈ 0.008. That is a guess from two radii per D, not checked.
+  a margin that shrinks with D (radius 0.75 at D = 60). |x|² grows by about 0.0053 per unit of n over D = 17–60; if that
+  continued, the pair would sit at a fixed ξ² of about 0.005 in the inner variable. That is a guess from two radii per D,
+  not checked.
 
 ### 2.4 What happens to the τ-periodicity
 
@@ -313,7 +314,7 @@ The standard layout, for comparison, is (E1) at x_m = 0.7. It is **already polyn
 
 `python3 toy.py` (sweep, ≈ 20 min on one core), `python3 toy.py --redo --n 100,200 --methods S:0.9,S:0.8` (a five-point
 stencil, after the first run's central difference masked κ > 10⁴⁰ at n = 200; values below that are unchanged),
-`python3 toy.py --plant` (plants and controls), `python3 toy_table.py` (tables and the criterion; `--selftest`
+`python3 toy.py --plant` (plants), `python3 toy.py --controls`, `python3 toy_table.py` (tables and the criterion; `--selftest`
 checks the classifier). Data: `toy_results.jsonl`; logs: `toy_run.log`, `toy_redo.log`, `toy_plant.log`,
 `toy_table.log`.
 
@@ -327,7 +328,7 @@ injected after every series evaluation and Taylor step (the largest of 3 draws),
 | **S(0.7), the `hp/` layout** | **2.6×10²** | **3.8×10²** | **2.9×10²** | **8.0×10¹** | **−0.021** | −0.020 |
 | S(1/√2) | 3.9×10² | 1.3×10³ | 2.2×10³ | 4.4×10³ | −0.001 | 0 |
 | S(0.8) | 1.2×10⁵ | 4.1×10¹⁰ | 7.0×10¹⁵ | 4.4×10²⁸ | +0.287 | +0.288 |
-| S(0.9) | 9.3×10⁸ | 1.2×10²² | 8.3×10³⁴ | 5.2×10⁶⁶ | see `toy_table.log` | +0.725 |
+| S(0.9) | 9.3×10⁸ | 1.2×10²² | 8.3×10³⁴ | 5.2×10⁶⁶ | +0.724 | +0.725 |
 | **C(1), candidate (c)** | **0.27** | **0.28** | **0.28** | **0.28** | **0.000** | polynomial |
 | A(1.5), candidate (a) on the real axis (κ_emp) | 7.2×10⁹ | 9.6×10¹⁹ | 4.2×10²⁹ | 5.6×10⁵³ | +0.546 | +0.549 |
 
@@ -337,10 +338,18 @@ Precision needed for s to 10⁻⁸: 11–12 digits for S(0.7) and C(1) at every 
 
 **Criterion** (`toy_table.log`): a_C = 0.000 < 0.05 holds; a_S(0.7) = −0.021 > 0.3 fails. **NOT MET**, as predicted in §0.
 
-**Plants and controls** (`toy_plant.log`). Newton from s* + (0.05 − 0.04i) converges quadratically to both plants, s* =
-iω* and 0.3 + 2.5i, at n = 60, for S(0.7) and C(1) (final |s − s*| ≈ 10⁻⁶² at 60 digits; the C lines are in the log). The
-controls are reported in `toy_plant.log`. Cuu (both paths above) has an identically vanishing residual, so it must select
-nothing. Csing (started from the centre-singular branch) must not return s*. See the log for what they did.
+**Plants and controls** (`toy_plant.log`, `toy_controls.log`).
+- Newton from s* + (0.05 − 0.04i) converges quadratically to both plants, s* = iω* and 0.3 + 2.5i, at n = 60, for S(0.7)
+  and C(1): final |s − s*| = 4×10⁻⁶²–9×10⁻⁶¹ at 60 digits.
+- **Control Cuu** (both paths above the light cone): the residual's s-derivative is 3.7×10⁻⁹¹ and 1.3×10⁻⁹⁰ of the
+  state at n = 20 and 60, the rounding level at 110 digits, against 3.6–3.7 for C(1). Nothing is selected: the condition
+  needs the monodromy around x = 1.
+- **Control Csing** (started from the centre-singular branch): |R(s*)| = 2.3|Y| at n = 20 and 60, so s* is not a root.
+  The condition needs the centre-regular solution.
+- **Control on the fit** (`sens_fit.py --mutate=exp`): a planted e^{n/2}n² is classified exponential (a = 0.500).
+
+All controls fire (`python3 toy.py --controls` exits 0; `toy_table.py --selftest` and `series_radius.py --mutate` check
+the classifier and the radius estimator the same way).
 
 What the toy cannot show: it is linear, so it has no Newton-basin effects and no nonlinear mixing of harmonics. Its
 selected solution is a polynomial, so it has no growing intermediate terms in its series either. The full-equation test
@@ -378,9 +387,9 @@ What the table shows (numerical evidence):
   is of order one at 0.7.
 - **The floor moves the other way inside 0.7.** For x_m < 0.7 the |F| at which Newton stops (here mostly the re-noded
   residual, since the line search found no decrease) rises roughly as the sensitivity falls. Their product stays within
-  a factor 6 at D = 40 (0.6: 7×10⁻¹⁶, 0.7: 1.2×10⁻¹⁶). For x_m > 0.7 the floor no longer falls, about 10⁻²³ at D = 60,
+  a factor of about 6 at D = 40 (0.6: 7×10⁻¹⁶, 0.7: 1.2×10⁻¹⁶). For x_m > 0.7 the floor no longer falls, about 10⁻²³ at D = 60,
   while the sensitivity keeps growing. The `hp/` choice of 0.7 is at, or near, the optimum: at D = 50–60 the product is
-  10–200 times smaller at 0.6, a hint that the optimum drifts inward with D, worth a separate check with converged
+  70–220 times smaller at 0.6, a hint that the optimum drifts inward with D, worth a separate check with converged
   Newton runs.
 - **Δ is the same in every layout** (hi part 1.8884516644906137, 1.8416311332022643/6, 1.8098842580017149), and the
   linearised corrections are within the expected errors.
@@ -403,9 +412,10 @@ What the table shows (numerical evidence):
   - Harmonic 1 is not weakened at all. The high harmonics weaken with n while (kω)² ≳ n: their slow solution is damped
     like e^{−(kω)²x²/(2n)} before the matching point, and the damping lifts as n grows. They level off only at their
     large-n limit, of order e^{−πkω/2}√n.
-  - This reproduces the measured weak directions of `hp/` (README: n^{−10.5}, n^{−14}, n^{−17.5}, n^{−21} for
-    k = 7–13 over D = 20–60) to within the effect of gravity, and the power n^{21.7} of max|∂Δ/∂F| is that of the top
-    kept harmonics. This identification is numerical evidence (same exponents), not a proof.
+  - This is close to the measured weak directions of `hp/` (README: n^{−10.5}, n^{−14}, n^{−17.5}, n^{−21} for
+    k = 7–13 over D = 20–60; the free-wave exponents are 8–20% steeper, with gravity left out), and the power n^{21.7}
+    of max|∂Δ/∂F| is that of the top kept harmonics. This identification is numerical evidence (similar exponents), not
+    a proof.
   - Below D = 35 all 16 odd harmonics were active and the growth looked exponential (a = 0.42–0.61 on D = 15–26.5); a
     ladder with ever higher k does that.
 - **Extrapolation** (estimates from the linear ladder, with 13 as the top harmonic and gravity's effect assumed to stay
@@ -413,8 +423,8 @@ What the table shows (numerical evidence):
   be about 10¹⁹ at D = 100 and 10²³ at D = 200.
 - **Floor.** 1.46-fold per unit of D (D = 36–60, `sens_fit.log`). If it continues, it reaches 10¹⁶ ε at D = 100 and
   10³² ε at D = 200 (ε the arithmetic's unit). That is fatal in double-double at D = 200, about 10⁻³² in quad-double.
-- **Worst-case product, in quad-double:** about 10⁻²⁹ at D = 100 and 10⁻⁹ at D = 200. Linearised errors have run about
-  10⁹ times smaller than this worst case (D = 60: 3×10⁻¹⁸ against 1.6×10⁻⁹).
+- **Worst-case product, in quad-double:** about 10⁻²⁹ at D = 100 and 10⁻⁹ at D = 200. Linearised errors have run far
+  below this worst case (D = 60: 3×10⁻¹⁸ against 1.6×10⁻⁹, a factor 5×10⁸).
 
 ## 7. Why the complex path does not pay for the full problem
 
@@ -468,7 +478,7 @@ All in `solver/beyond_lc/`, run from there:
 | `sens_fit.py` | fits of max\|∂Δ/∂F\| (hp/data/delta_dd.csv); `--mutate=exp` plants e^{n/2}n² (must be classified exponential) | `sens_fit.log` |
 | `lin_angle.py` | free-wave matching angle per harmonic at x_m = 0.5, 1/√2, 0.8, 0.9 (exact ₂F₁) | `lin_angle.log` |
 | `lin_ladder.py` | the ladder at x_m = 0.7 and the Stokes-line jump per harmonic | `lin_ladder.log` |
-| `toy.py` | the pre-registered toy test; `--plant` plants and controls; `--redo` | `toy_results.jsonl`, `toy_*.log` |
+| `toy.py` | the pre-registered toy test; `--plant` plants; `--controls` controls (exit 1 if one does not fire); `--redo` | `toy_results.jsonl`, `toy_*.log` |
 | `toy_table.py` | tables, fits, the criterion; `--selftest` | `toy_table.log` |
 | `hp_node_test.py` | the full-equation node test (installed hpkernel) | `hp_node_test.jsonl`, `.log` |
 | `series_radius.py` | radii of the centre and horizon series; `--mutate` plants R = 0.5 | `series_radius.log`, `.json` |

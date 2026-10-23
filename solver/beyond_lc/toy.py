@@ -460,17 +460,41 @@ def main():
     ap.add_argument('--out', default=os.path.join(HERE, 'toy_results.jsonl'))
     ap.add_argument('--sstar', default=None)
     ap.add_argument('--plant', action='store_true')
+    ap.add_argument('--controls', action='store_true')
     ap.add_argument('--redo', action='store_true', help='recompute (method, n) even if present; the new line is appended '
                     'and replaces the old one in toy_table.py')
     a = ap.parse_args()
     sstar = mp.mpc(0, OMEGA) if a.sstar is None else mp.mpc(complex(a.sstar))
+    if a.controls:
+        # one-shot diagnostics at the exact s*: a control fails (as it must) if its Jacobian vanishes to rounding (no
+        # s selected) or its residual at s* is of order one (s* not a root); C:1 is shown for comparison
+        ok = True
+        for n in (20, 60):
+            toy = Toy(n, sstar)
+            out = {}
+            for spec in ('C:1', 'Cuu:1', 'Csing:1'):
+                with mp.workdps(PLAN_DPS):
+                    meth = Method(toy, spec)
+                    J, A, B, r0, _ = jacobian(meth, toy.sstar, None, PLAN_DPS)
+                    sc = vec_norm(A)
+                    jrel = float(vec_norm([J[0][0], J[1][0]]) / sc)
+                    rrel = float(vec_norm(r0) / sc)
+                out[spec] = (jrel, rrel)
+                print(f'n={n:3d} {spec:8s} |dR/ds|/|Y| = {jrel:.2e}   |R(s*)|/|Y| = {rrel:.2e}', flush=True)
+            fires_uu = out['Cuu:1'][0] < 1e-60 * out['C:1'][0]
+            fires_sing = out['Csing:1'][1] > 1e-3
+            ok &= fires_uu and fires_sing and out['C:1'][1] < 1e-90
+            print(f'   n={n}: Cuu selects nothing (Jacobian at rounding): {fires_uu};'
+                  f' Csing does not have s* as a root: {fires_sing}', flush=True)
+        print('CONTROLS FIRE' if ok else 'A CONTROL DID NOT FIRE')
+        return 0 if ok else 1
     if a.plant:
         for spec in ['S:0.7', 'C:1']:
             for sst, n in ((mp.mpc(0.3, 2.5), 60), (mp.mpc(0, OMEGA), 60)):
                 s, hist = newton_check(spec, n, sst, mp.mpc(0.05, -0.04))
                 print(f'plant {spec} n={n} s*={complex(sst)}: Newton -> {complex(s)}  |s-s*| = {float(abs(s - sst)):.1e}'
                       f'  steps {["%.0e" % h for h in hist]}', flush=True)
-        for spec in ['Cuu:1', 'Csing:1']:
+        for spec in []:   # the controls are run by --controls (one-shot diagnostics at s*)
             try:
                 s, hist = newton_check(spec, 60, mp.mpc(0, OMEGA), mp.mpc(0.05, -0.04), iters=12)
                 print(f'control {spec} n=60: Newton -> {complex(s)}  |s-s*| = {float(abs(s - mp.mpc(0, OMEGA))):.1e}'
