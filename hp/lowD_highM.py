@@ -28,11 +28,12 @@ The two start states are converged at the same D and nodes, at the working resol
      recorded again with the new pair;
   5. --auto_nodes: if the M_n solution's centre or horizon series tail (lowD_dd.tails) exceeds --tail_max (1e-30),
      the nodes change as in lowD_dd.py (a new first node at half the first; a node 0.1 further out while the last is
-     below 0.85), all resolutions are re-noded (driver.renode) and re-solved at this D under a new tag, and the up to
-     3 earlier states at each resolution are re-noded (not re-solved) so that the predictors keep their cubic. The
-     first node is also halved when the centre series tail of the next point's M_n start (the M_w solution resampled
-     to M_n) is above --lift_tail_max (1e-20): it grows far faster than the solutions' tails as D falls (D 3.3: 4e-8;
-     D 3.25: 1e-2, and Newton went astray from that start).
+     below 0.85, then one halfway between the last and the horizon), all resolutions are re-noded (driver.renode)
+     and re-solved at this D under a new tag, and the up to 3 earlier states at each resolution are re-noded (not
+     re-solved) so that the predictors keep their cubic. The
+     nodes also change when a series tail of the next point's M_n start (the M_w solution resampled to M_n) is above
+     --lift_tail_max (1e-20): the centre tail of that start grows far faster than the solutions' as D falls (D 3.3:
+     4e-8; D 3.25: 1e-2, and Newton went astray from that start).
 The plans come from converged states or predictors through them: a state resampled to a larger M needs 3.5-4 times
 more Taylor steps (its new top harmonics are aliasing products that the tau-derivative amplifies), and a coarser plan
 blows up on it. A start whose residual on the given plan is not finite or above 1 gets its own plan instead.
@@ -293,11 +294,12 @@ def main():
         return resample_z(np.asarray(h) + np.asarray(l), m["M"], M_new, len(m["nodes"]))[0]
 
     def lift_tail(path, M_new):
-        """centre series tail (lowD_dd.tails) of a state resampled to M_new, at its D and the current nodes"""
+        """centre and horizon series tails (lowD_dd.tails) of a state resampled to M_new, at its D and the current
+        nodes"""
         m = load(path)[2]
         z = lifted(path, M_new)
         s0 = make_solver(m["D"], M_new, nodes=st["nodes"], kt=a.kt, kc=kc, ks=ks, threads=a.threads)
-        return lowD_dd.tails(s0, z, 0 * z, st["nodes"], M_new)[0]
+        return lowD_dd.tails(s0, z, 0 * z, st["nodes"], M_new)
 
     def write_pair(D, rw, rn, decision, extra=None):
         Dw = rw["Delta"] + rw["Delta_lo"]
@@ -367,14 +369,20 @@ def main():
                 # the start of the next point's M_n: the M_w solution resampled to M_n; its centre series converges far
                 # worse than the solutions' (D 3.3: tail 4e-8 against 1e-60; D 3.25: 1e-2, |F| 3.5e-3 in the centre
                 # block, and Newton went astray from it; with the first node halved, 3e-32 and |F| 1.9e-5)
-                lt = lift_tail(st["hist_w"][-1][1], st["Mn"])
-                log(f"D {Dt}: centre series tail of the M {st['Mw']} solution resampled to M {st['Mn']}: {lt:.1e}")
+                lt, lth = lift_tail(st["hist_w"][-1][1], st["Mn"])
+                log(f"D {Dt}: series tails of the M {st['Mw']} solution resampled to M {st['Mn']}: {lt:.1e} (centre), "
+                    f"{lth:.1e} (horizon)")
                 if a.auto_nodes and (tc > a.tail_max or lt > a.lift_tail_max):
                     new = [round(new[0] / 2, 6)] + new
                     if lt > a.lift_tail_max:
-                        log(f"D {Dt}: that tail is above {a.lift_tail_max:.0e}: first node {new[1]} -> {new[0]}")
-                if a.auto_nodes and th > a.tail_max and new[-1] < 0.85:
-                    new = new + [round(new[-1] + 0.1, 6)]
+                        log(f"D {Dt}: the centre tail is above {a.lift_tail_max:.0e}: first node {new[1]} -> {new[0]}")
+                # the horizon series' radius in u = 1 - x shrinks as D falls (0.29 at D 3.7, 0.195 at 3.3, 0.155 at
+                # 3.2, M = 160), so u0 = 1 - (last node) has to follow: a node 0.1 further out while the last is below
+                # 0.85, then one halfway to the horizon
+                if a.auto_nodes and (th > a.tail_max or lth > a.lift_tail_max):
+                    new = new + [round(new[-1] + 0.1, 6) if new[-1] < 0.85 else round(1 - (1 - new[-1]) / 2, 6)]
+                    if lth > a.lift_tail_max:
+                        log(f"D {Dt}: the horizon tail is above {a.lift_tail_max:.0e}: last node {new[-2]} -> {new[-1]}")
                 if tc > a.tail_max or th > a.tail_max:
                     log(f"D {Dt}: tails {tc:.0e} (centre) {th:.0e} (horizon) above {a.tail_max:.0e}"
                         + (f": nodes {st['nodes']} -> {new}" if new != st["nodes"] else
