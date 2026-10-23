@@ -2986,3 +2986,39 @@ step 2 on a pass.
 T44 (sigma_15) noted. It starts when T43 ends: the wf 1.00 pilot with (a) K 31 J 1000 960 bits and (b) K 31 J 1250
 1280 bits side by side (2 procs each), then the gate as you wrote it, then wf 0.99 and 1.01 at once, to
 solver/inner_amp/scan31J<J>/ on wip/sigma15.
+
+== 2026-10-23 12:43 PDT local
+T43 pilot: FAIL on node06, so step 2 has not started. Pushed to wip/step-test (29a14ac): hp/data/step_test/pilot/
+(start states, both runs' jsonl, attempts and logs, base's 8 states, summary.md/.json and the mutated summary).
+  start states   0.7: |F| 2.3e-23 -> floor 1.6e-23 (10 its), sens 8.9e13, floor x sens 1.4e-9
+                 0.6: |F| 1.5e-19 -> floor 1.1e-19 (3 its),  sens 4.9e7,  floor x sens 5.3e-12
+  base_D60.00    8 ok / 4 failed, D 60.0020 -> 60.2620, largest step 0.0484, edge 0.0385, 202 its,
+                 0.129 D per 100 its (steady 0.105), 2.12 D per hour, max |Delta - ref| 2.4e-15: pass
+  node06_D60.00  0 ok / 6 failed (steps 0.0215 down to 3.4e-4), "6 failed steps in a row"
+  report exit 0, mutated report exit 1 (base FAILs at 1.0e-9, as it must)
+So base passes everything. Its edge at D = 60 is 0.0385, about 10 times the scans' 0.002-0.005 at D = 61.
+
+Why node06 fails (scripts and logs: wip/step-test, hp/data/step_test/pilot/diag/, 9d18e71). It is the corrector, not the
+predictor, and the cause is the 0.6 matching itself:
+1. The seed is good. At D 60.023452 the node06 seed is 4.6e-9 from base's converged state truncated to 0.3-0.6
+   (Delta off by 4.7e-14), and that truncated state has |F| 1.2e-19 in the 0.6 system, at the 0.6 floor. node06's
+   seed |F| (1.7e-2) is base's (2.6e-6) times about 7e3, the floor ratio. All of it comes from the horizon data
+   (seed error 3.3e-14 there; the node and centre errors give 2e-10 and Newton removes them in one step).
+2. The dd Jacobian is right. Its horizon columns match central differences of the dd residual to 1e-11 (0.6) and
+   1e-13 (0.7) at z*.
+3. The residual is strongly nonlinear in the horizon data at 0.6. Moving z* by the seed's horizon error (3.3e-14)
+   changes Jacobian entries by up to 35% at 0.6 (1.8e11 of 5.2e11) but by 3e-4 at 0.7, and J(z*) e misses
+   F(z*+e) - F(z*) by 5e-2 at 0.6 against 1e-5 at 0.7.
+4. That linearisation error, divided by the near-null singular values, puts a step of size ~0.2 into the near-null
+   directions: the full Newton step from the seed takes |F| from 1.7e-2 to 5.4e34 at 0.6 (base: 2.6e-6 -> 2.8e-4,
+   which its line search survives). Plain Newton finds no decrease in 10 halvings; deflated Newton (w 16) none in
+   12 at 60.0235, and at 60.0026 it gains one step (1.3e-4 -> 5.2e-5) and then crawls at lam 4.9e-4.
+5. Levenberg-Marquardt (the runs pass --lm 0) gets further but stalls: 1.7e-2 -> 4.1e-12 and 1.3e-4 -> 1.7e-15 in
+   15 its, flat at the end, far above the 0.6 floor 1.1e-19. Plain Newton with 30 halvings: step size 0.23, no
+   decrease down to lam 1.2e-7.
+What 0.6 can still give: base's converged state at 0.7, cut to 0.3-0.6, already has |F| 1.2e-19 there, the 0.6 floor.
+So step at 0.7 and certify each point at 0.6 with no Newton at all: one residual and one sensitivity solve (~2 s)
+give a Delta bound of floor x sens about 6e-12 in place of 1.4e-9. That would be a small change to scan_hp.py.
+Step 2: ready as written. Each node06 run costs about 5 min if it fails again, and D0 = 45, 50, 55 would show where
+0.6 matching stops working, since the nonlinearity grows with n. Unless you say otherwise, I start step 2 as written
+(node06 included) at 13:03. The machine is idle until then.
