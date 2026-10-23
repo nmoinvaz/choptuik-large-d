@@ -1,8 +1,9 @@
 {
- "t_used": 21044.288382530212,
+ "t_used": 22346.57715177536,
  "Mw": 160,
  "Mn": 192,
  "nodes": [
+  0.000625,
   0.00125,
   0.0025,
   0.005,
@@ -20,25 +21,33 @@
   0.8,
   0.9
  ],
- "tag": "lowDhm_x0.00125-0.9",
+ "tag": "lowDhm_x0.000625-0.9",
  "hist_w": [
   [
    3.35,
-   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.00125-0.9_D3.3500_M160_rn.npz"
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.9_D3.3500_M160_rn.npz"
   ],
   [
    3.3,
-   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.00125-0.9_D3.3000_M160.npz"
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.9_D3.3000_M160_rn.npz"
   ],
   [
    3.25,
-   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.00125-0.9_D3.2500_M160.npz"
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.9_D3.2500_M160_rn.npz"
+  ],
+  [
+   3.2,
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.9_D3.2000_M160.npz"
   ]
  ],
  "hist_n": [
   [
    3.25,
-   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.00125-0.9_D3.2500_M192.npz"
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.9_D3.2500_M192_rn.npz"
+  ],
+  [
+   3.2,
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.9_D3.2000_M192.npz"
   ]
  ],
  "pairs": [
@@ -119,38 +128,45 @@
    -1.3655302702722984e-11,
    160,
    192
+  ],
+  [
+   3.2,
+   -2.4207149618477963e-11,
+   160,
+   192
+  ],
+  [
+   3.2,
+   -2.4207149618477963e-11,
+   160,
+   192
   ]
  ],
  "targets": [
-  3.2,
   3.15,
   3.1,
   3.05
  ],
  "done": null,
  "post": null,
- "last_point_s": 1544.3,
+ "last_point_s": 2826.2999999999997,
  "Mc": 128,
  "hist_c": [
   [
-   3.45,
-   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.00125-0.9_D3.4500_M128_rn.npz"
-  ],
-  [
-   3.4,
-   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.00125-0.9_D3.4000_M128_rn.npz"
-  ],
-  [
    3.35,
-   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.00125-0.9_D3.3500_M128_rn.npz"
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.9_D3.3500_M128_rn.npz"
   ],
   [
    3.3,
-   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.00125-0.9_D3.3000_M128.npz"
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.9_D3.3000_M128_rn.npz"
   ],
   [
    3.25,
-   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.00125-0.9_D3.2500_M128.npz"
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.9_D3.2500_M128_rn.npz"
+  ],
+  [
+   3.2,
+   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.9_D3.2000_M128.npz"
   ]
  ]
 }

@@ -302,3 +302,72 @@ O(M log M), would remove at most that 24–46%: a step 1.3–1.85 times faster e
 container restarting every 30–60 minutes during this work), and the measurements say the larger costs are elsewhere:
 the Taylor plans (section 1.3, 2–4 times), the Cauchy sums' memory traffic, and the number of Taylor steps, which
 grows faster than M (converged plans: 56, 72, 86 steps at M = 48, 64, 80; 191 at 128; 252–279 at 160–192).
+
+## 5. The pilot toward D = 3
+
+### 5.1 How it runs
+
+`hp/lowD_highM.py` (its docstring has the rules in full), started by `hp/data/lowD_highM/pilot.sh` under `nice -n 10`
+on 2 threads; log `hp/data/lowD_highM/logs/pilot.log`, one record per pair in `pilot.jsonl`, one per solve in
+`pilot_points.jsonl`, the continuation state in `pilot.jsonl.progress.json`; states `hp/data/lowD_states/lowDhm_*`
+(15 nodes) and `lowDhm_x<first>-<last>_*` (after node changes). It resumes from the last converged point and from
+the Newton checkpoints of an interrupted solve (it was restarted four times: once after a container restart, three
+times by hand, 5.4). The 10-hour budget counts the pilot's running time across restarts. `python3 lowD_highM_report.py` prints the tables of this section.
+
+- **Start:** D = 3.7 at M = 80 / 96 on the 15 nodes 0.0025, 0.005, 0.01, …, 0.8, 0.9 (section 1.4), the smallest pair
+  that resolves D = 3.7 (80 → 96 is −1.24×10⁻⁹). A first attempt at 128 / 160 went astray in the weak directions
+  from the first, constant predictor (`logs/pilot_attempt1_M128.log`).
+- **Each D** (steps of 0.05): the working M_w and the next M_n, and after the first move up the previous working M as
+  a helper M_c. The value is Δ(M_n), its error estimate |Δ(M_n) − Δ(M_w)| (an estimator from the next resolution, not
+  a bound). f64-Jacobian Newton (`newton_mixed`, block storage above M = 128) to |F| ≤ 10⁻²⁸.
+- **Starts:** the cubic predictor through the last four points at the same M gets worse as D falls (|F| 0.02–0.03 at
+  D = 3.65–3.4, 0.27–0.5 at 3.25–3.2; its first Newton step is |dz| ≈ 3–30), and at M = 128 a predictor start went
+  astray. So each resolution starts from the solution one rung below resampled (helper → M_w → M_n), with |F|
+  10⁻⁴–10⁻⁶, and only the helper starts from its predictor.
+- **Moving up:** when |Δ(M_n) − Δ(M_w)| > 10⁻⁸, or when a log-linear fit of the last three differences projects it
+  above 10⁻⁸ two points ahead; the new M_n is solved at that D in two passes (section 1.3).
+- **Plans:** reused from the last converged state at the same M (section 1.5); a start that does not fit the reused
+  plan (|F| not finite or above 10⁻³ on it) is solved in two passes, pass 1 on its own plan.
+- **Nodes:** besides `--auto_nodes` (a solution's series tail above 10⁻³⁰), the node set changes when a series tail
+  of the next point's M_n start (the M_w solution resampled to M_n) passes 10⁻²⁰ (5.4); every resolution is then
+  re-noded and re-solved at that D, and the three earlier states per resolution re-noded for the predictors.
+
+### 5.4 What changed on the way down
+
+- **D = 3.5, 3.35, 3.25: moving up.** 80 → 96 reached −1.27×10⁻⁸ at D = 3.5 and 96 → 128 −2.09×10⁻⁸ at 3.35; at 3.25
+  128 → 160 was −9.8×10⁻¹⁰, but the last three differences (−7.3×10⁻¹¹, −1.9×10⁻¹⁰, −9.8×10⁻¹⁰) projected 2.7×10⁻⁸ at
+  3.15, and the move up to 160 / 192 came then. (At D = 3.2 the helper's 128 → 160 was −6.3×10⁻⁹: the projection was
+  right that 128 would not last beyond 3.2.)
+- **D = 3.25: the centre series of the lifted start, and the first node.** The M = 128 solution at D = 3.25,
+  resampled to M = 160, had |F| = 3.5×10⁻³, all in the centre block (the next blocks 10⁻⁵): its centre series, summed
+  at the first node x₀ = 0.0025, had a tail of 10⁻² (`highm_diag.py start`), against 1.2×10⁻⁴⁹ for the M = 128
+  solution itself and 3.8×10⁻⁸ for the same lift at D = 3.3, where |F| was 7.6×10⁻⁶. Newton from it went astray in the
+  weak directions twice: on the reused 257-step plan (line-search factors 1/4, 1/128, 1/16, Δ moving 10⁻⁵ away from the
+  M = 128 value) and, after the two-pass rule was added, on the start's own 629-step plan (1/4, 1/2), whose |F| was
+  the same 3.5×10⁻³: the residual was not Taylor error. Both runs were stopped by hand
+  (`lowDhm_D3.2500_M160_ckpt_astray.npz`, `lowDhm_p1_D3.2500_M160_ckpt_astray.npz`, not committed). With a new first
+  node at 0.00125 the same start has centre tail 3×10⁻³² and |F| = 1.9×10⁻⁵
+  (`logs/diag_start_D3.25_M160_x0.00125.log`), and the pilot, resumed with that node change at D = 3.3, solved
+  D = 3.25 at 128 and 160 from lifted starts in 3 Newton calls each. The rule now in the driver (a lifted start's
+  tail above 10⁻²⁰) would have fired at D = 3.3; at D = 3.2 it fired by itself (tail 2.7×10⁻¹⁵ for the M = 160
+  solution resampled to 192; first node 0.00125 → 0.000625). So the centre series of a resampled state converges far
+  worse than the solution's, and more so as D falls (why was not established; section 1.4 found the same for the
+  horizon series at D = 3.7, M = 192). The node set
+  agrees with the old one to 3×10⁻³² (M = 96), 3×10⁻³¹ (128) and 1.1×10⁻³⁰ (160) in Δ at D = 3.3.
+- **The local machine's M 80 → 96 lifts** that "do not converge" below D = 3.45 (|F| 0.1 at D = 3.40 and 4×10⁴ at
+  3.35 after resampling, comms.txt 2026-10-22 19:01) are, I think, the same effect on its 13 nodes with x₀ = 0.005:
+  here, on x₀ = 0.0025, the M 80 → 96 lift at D = 3.40 started at |F| 1.5×10⁻⁴ and converged in 6 calls. At 3.35 it
+  gave NaN on the reused plan and the predictor was used instead. The M = 80 solutions themselves agree with the local
+  machine's to the 13 digits quoted (5.5); M = 80 does not resolve D ≤ 3.45 to 10⁻⁸ in Δ (80 → 96 = −6.6×10⁻⁸ at 3.45),
+  as it says.
+- **The horizon node.** The horizon series' radius in u = 1 − x shrinks as D falls: 0.29 at D = 3.7, 0.195 at 3.3 and
+  0.155 at 3.2 (M = 160, all τ-harmonics alike; `logs/diag_radius_D3.3_D3.2_M160.log`), so with u₀ = 0.1 (last node
+  0.9) the solutions' horizon tails grew from 10⁻¹³² (D = 3.65) to 4×10⁻⁴⁸ (3.2). Extrapolated, the radius reaches
+  u₀ near D = 3.05. `lowD_dd.py`'s rule adds a node 0.1 further out only while the last is below 0.85; the pilot now
+  adds one halfway to the horizon (0.95, then 0.975) when a solution's horizon tail passes 10⁻³⁰ or a lifted start's
+  10⁻²⁰ (restart by hand at 06:26 to load it).
+- **Two passes.** From D = 3.25 the reused plans no longer fit the lifted starts (|F| not finite on them), so most
+  solves are two-pass: pass 1 on the start's own plan (550–780 steps, 2.5–3 times the converged solution's 190–270),
+  pass 2 on the pass-1 state's own plan. This roughly doubles the time per point.
+- **Series orders** (kc = 100, ks = 250, section 1.6): the solutions' centre tails stayed below 10⁻⁴⁹ (10⁻⁶³ after
+  the node changes); the horizon tails are the ones that grow (above).
