@@ -1,0 +1,9 @@
+D 3.425 M 160: L 8961, steps 496, start |F| 2.8e+04
+/Users/nathan/Source/choptuik-large-d/.venv/lib/python3.13/site-packages/hpkernel/driver.py:149: RuntimeWarning: overflow encountered in square
+  return float(np.sqrt(np.sum((Fh + Fl) ** 2)))
+/Users/nathan/Source/choptuik-large-d/.venv/lib/python3.13/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+  newton 0: |F| 2.79e+04: no decrease along the f64-Jacobian step; retrying with the dd4 Jacobian (M > 128: no exact dense Jacobian)
+  newton 0: |F| 2.79e+04: no decrease along the Newton step, giving up
+D 3.425 M 160: NOT converged, |F| 2.8e+04 after 1 iterations (1224s); stopping
+D 3.425 M 160: NOT converged

@@ -1,0 +1,43 @@
+== highm_D3.7000_M160 -> M 192
+meta {'D': 3.7, 'M': 160, 'kt': 36, 'kc': 100, 'ks': 250, 'segs': '12 segs'} nodes 13
+M 160 saved plan: |F| 7.580e-30 (1.7s)
+M 160 fresh plan (1.4s): |F| 7.580e-30
+M 192 resampled, its plan (9.6s, 512 steps): |F| 5.714e-10, max |F_i| 5.714e-10 at 874 of 10753
+== highm_D3.7000_M128 -> M 160
+meta {'D': 3.7, 'M': 128, 'kt': 36, 'kc': 100, 'ks': 250, 'segs': '12 segs'} nodes 13
+M 128 saved plan: |F| 2.508e-30 (1.2s)
+M 128 fresh plan (0.7s): |F| 2.508e-30
+M 160 resampled, its plan (5.6s, 452 steps): |F| 3.335e-08, max |F_i| 3.335e-08 at 1367 of 8961
+== lowDvh41_D3.4250_M96 -> M 128
+meta {'D': 3.425, 'M': 96, 'kt': 36, 'kc': 100, 'ks': 250} nodes 13
+M 96 fresh plan (0.4s): |F| 3.094e-30
+M 128 resampled, its plan (3.9s, 430 steps): |F| 1.174e-02, max |F_i| 1.174e-02 at 375 of 7169
+== lowDvh41_D3.4250_M128 -> M 160
+meta {'D': 3.425, 'M': 128, 'kt': 36, 'kc': 100, 'ks': 250} nodes 13
+M 128 fresh plan (0.8s): |F| 2.613e-30
+M 160 resampled, its plan (6.9s, 496 steps): |F| 2.795e+04, max |F_i| 2.795e+04 at 468 of 8961
+== lowDvh41_D3.4500_M128 -> M 160
+meta {'D': 3.45, 'M': 128, 'kt': 36, 'kc': 100, 'ks': 250} nodes 13
+M 128 fresh plan (0.8s): |F| 5.047e-30
+M 160 resampled, its plan (6.5s, 483 steps): |F| 4.160e+01, max |F_i| 4.160e+01 at 468 of 8961
+== lowDvh41_D3.4750_M128 -> M 160
+meta {'D': 3.475, 'M': 128, 'kt': 36, 'kc': 100, 'ks': 250} nodes 13
+M 128 fresh plan (0.7s): |F| 2.773e-30
+M 160 resampled, its plan (6.4s, 475 steps): |F| 2.214e-02, max |F_i| 2.214e-02 at 463 of 8961
+== lowDvh_D3.5000_M128 -> M 160
+meta {'D': 3.5, 'M': 128, 'kt': 36, 'kc': 100, 'ks': 250} nodes 13
+M 128 fresh plan (0.9s): |F| 3.373e-30
+M 160 resampled, its plan (6.5s, 472 steps): |F| 3.065e-06, max |F_i| 3.065e-06 at 464 of 8961
+== lowDvh41_D3.5500_M128 -> M 160
+meta {'D': 3.55, 'M': 128, 'kt': 36, 'kc': 100, 'ks': 250} nodes 13
+M 128 fresh plan (0.8s): |F| 1.981e-30
+M 160 resampled, its plan (6.2s, 472 steps): |F| 1.960e-07, max |F_i| 1.960e-07 at 1368 of 8961
+== lowDhm_D3.4000_M128 -> M 160
+meta {'D': 3.4, 'M': 128, 'kt': 36, 'kc': 100, 'ks': 250, 'segs': '14 segs'} nodes 15
+M 128 saved plan: |F| 2.324e-29 (0.7s)
+M 128 fresh plan (0.9s): |F| 2.324e-29
+M 160 resampled, its plan (6.9s, 567 steps): |F| 1.558e-06, max |F_i| 1.558e-06 at 1370 of 10241
+== lowDvh_D3.6500_M96 -> M 128
+meta {'D': 3.65, 'M': 96, 'kt': 36, 'kc': 100, 'ks': 250} nodes 13
+M 96 fresh plan (0.4s): |F| 1.584e-30
+M 128 resampled, its plan (3.9s, 400 steps): |F| 3.007e-06, max |F_i| 3.007e-06 at 1096 of 7169
