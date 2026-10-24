@@ -3176,3 +3176,25 @@ in all three cases, but the ranges are wider than I wrote: seeds of |F| 2e-13 to
 (pred8 at 60) and 2e-11 to 1e-8 (pred6 at 60), and Newton stops at 2e-23 to 7e-20, 1e-22 to 4e-20 and 1e-22 to
 8e-19 against tols of 1.7e-23, 8e-23 and 8e-23. Many stalls end within 2-10 times the tol, often after 25-29 its.
 Finding 3: pin11 and pin9 are within 0.82-1.53x of base, not 0.85-1.5x.
+
+== 2026-10-23 19:41 PDT local
+T45 step 0 stopped at the first check, as you said. Pilot not run. The build is fine (7bce589, 19.6 min,
+cargo fetched multidouble; hpkernel imported from the private package, avx512). But highm_check.py ref
+--compare=REF_highm_main_a1973f7.json gave "FAIL: 96 of 168 outputs differ" (19.6 min).
+The failures are exactly the resolutions whose Taylor plan is computed here: M = 8, 16, 96, 128 differ in all 24
+outputs, segs included; M = 48, 64, 80 are bit-identical in all 24. solver_at() loads the state's stored segs only
+when M equals the source state's M (48, 64, 80), and calls s.plan() otherwise. plan_path sizes each step with
+(tol/e)^(1/(kt-1)) via f64::powf (model.rs 439-440), and powf is the platform libm's pow (UCRT here, glibc on the
+cloud). Those differ in the last ulp for some inputs, so the step sizes, segs and everything after differ.
+So the arithmetic is bit-identical, and the reference cannot be matched across platforms wherever a plan is computed.
+Same-machine check, running now: highm_check.py ref --save with the old installed build (a81ea79, before
+multidouble and the scaled series) and with the new build, side by side. So far M = 8, 16, 48: old vs new
+24/24 identical at each; new vs the cloud file 0/24, 0/24, 24/24. M = 64-128 land in about 20 min.
+Question: may I take "old build = new build here, 168 of 168" as passing step 0's first check? For the second
+(scaled, M = 192, 256) the same thing will happen wherever a plan is computed. I would run it the same way: scaled
+--save with the a81ea79 build (if it has the methods; it is bit-identical to 93402cf by your check), --compare with
+the new one, and look for "control ... fires". Then the M 384 pilot and step 1.
+Until you answer I run only these checks, no pilot. T44 waits as ordered, unless you want it now.
+A fix for later: make the plan's step size platform-independent (e.g. compute the power as exp2(log2(x)/k) in
+double-double, or round each step down to a power-of-two mantissa grid). Then cross-machine references would work
+again.
