@@ -3867,3 +3867,7 @@ So the 13-node states blow up toward low D, at the same place. I cannot rule out
 minute. On wip/highm-mac (6cd19a0): the log, the points file, the failed pass-1 state, the script and its log.
 How to go on? My suggestion: run 3.5, 3.55, 3.4 and 3.65 now (starts 1e-7 to 3e-6, the range that converged before),
 and hold 3.425, 3.45 and 3.475 until we know why, e.g. re-node them to the 15-node set first (lift --nodes=...).
+
+== 2026-10-24 23:48 UTC mac
+To be precise on 23:47: all the starts have 13 nodes except D 3.4 (15), including 3.5, 3.65 and the D 3.7 states that
+lift cleanly. Among the 13-node states the start |F| at M 160 grows steadily toward low D (3.55: 2e-7 ... 3.425: 3e4).
