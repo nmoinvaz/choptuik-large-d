@@ -228,7 +228,7 @@ matrix at the largest M. Right: how much Δ moves when M is raised. The step fro
 D = 3.7 to 3.4, while M = 96 → 128 stays at 1–2×10⁻⁹ down to D = 3.425. Below that the larger grids take over
 (M = 128 → 160 → 192 → 256, each step one to two orders smaller than the one before): at D = 3.15 the step from 192
 to 256 is 9×10⁻¹², and at 3.125, 3.11875, 3.1125 and 3.1 (the lowest point so far) it is 1.9, 2.8, 3.8 and
-5.5×10⁻¹⁰. At D = 3.40 the
+5.5×10⁻¹⁰; at 3.1 the next step, 256 → 320, is 7.2×10⁻¹³. At D = 3.40 the
 M = 128 Newton converged only to a solution with content along the near-null directions (its centre-series tail
 10⁻⁹, against 10⁻⁵⁰ at 3.425); the CSV lists it as polluted and it is not used.
 
