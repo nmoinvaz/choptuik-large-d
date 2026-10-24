@@ -58,6 +58,11 @@ pub struct Ctx<const B: usize> {
     /// Parts of the f64 Jacobian (TAN_F64 lanes) computed in double-double instead, rounded to f64; bit flags HDD_*
     /// (notes/LARGE_D_MIXED.md). 0, the default, changes nothing. The double-double lanes never read it.
     pub f64_dd: u8,
+    /// How the horizon series and `horizon_lus` handle a = 1 + alpha (HALPHA_*): 0, the default, as before (in a);
+    /// HALPHA_ON carries alpha = a - 1 and writes a^2 - 1 and a - a^3 in alpha, where they no longer cancel;
+    /// HALPHA_MUT, the control, carries alpha but forms them from 1 + alpha as before (the cancellation put back).
+    /// All lanes read it.
+    pub horizon_alpha: u8,
 }
 
 /// `Ctx::f64_dd`: the horizon series' periodic solves (`psolve`) in double-double for the f64 lanes, value and
@@ -78,6 +83,18 @@ pub const HDD_DTN: u8 = 16;
 /// scan's kc = 420 at large D is far past that (the centre series' terms fall to 1e-134 at D = 50), and the centre
 /// series is most of a product's cost there.
 pub const HDD_DU_CUT: u8 = 32;
+
+/// `Ctx::horizon_alpha`: the horizon series carries alpha = a - 1 (a(1) = a_h = 1 + O(1e-3) at large D) and forms
+/// a^2 - 1 = 2 alpha + alpha^2 and a - a^3 = -(2 alpha + 3 alpha^2 + alpha^3) from it; `horizon_lus` likewise
+/// c1 = (n - 1)(1 - a_h^2) = -(n - 1)(2 alpha_h + alpha_h^2). In a, both differences lose about -log10(alpha_h) digits
+/// to cancellation, and the horizon series' rounding errors excite the mass mode, which grows by G = x_m^-(n-1)
+/// between the horizon and the last node x_m (7e8 at D = 60): the large-D residual floor (notes/LARGE_D_MIXED.md
+/// section 10). alpha_h = a_h - 1 is exact, so the unknowns and the solution are unchanged; only the rounding in the
+/// series differs.
+pub const HALPHA_ON: u8 = 1;
+/// `Ctx::horizon_alpha`: the control of HALPHA_ON. alpha is carried as with HALPHA_ON, but a^2 - 1 and a - a^3 are
+/// formed from a = 1 + alpha as without it (the cancellation put back); the results are those of 0 bit for bit.
+pub const HALPHA_MUT: u8 = 2;
 
 impl<const B: usize> Ctx<B> {
     pub const M: usize = 8 * B;
@@ -464,7 +481,12 @@ pub fn horizon_lus<const B: usize>(ctx: &Ctx<B>, a0: &Fl<DV, B>, delta: DD, par:
     let ld = ld_for(m);
     let omega = DD::TWO_PI / delta;
     let n1 = ctx.n - DD::ONE;
-    let c1 = (Fl::<DV, B>::splat(DD::ONE) - *a0 * *a0).muls(n1);
+    let c1 = if ctx.horizon_alpha == HALPHA_ON {
+        let al = *a0 - Fl::<DV, B>::splat(DD::ONE);
+        -(al.mulf(2.0) + al * al).muls(n1)
+    } else {
+        (Fl::<DV, B>::splat(DD::ONE) - *a0 * *a0).muls(n1)
+    };
     let c1s: Vec<DD> = (0..m).map(|i| c1.get(i)).collect();
     // omega D (column-major, ld)
     let mut base_h = vec![0.0; ld * m];
@@ -572,10 +594,21 @@ pub fn horizon_series<T: Lane, const B: usize>(
     let mut vv = vec![z; len];
     let mut ww = vec![z; len];
     let mut zc = vec![z; len];
-    aa[0] = *a0;
+    // Ctx::horizon_alpha: aa holds alpha = a - 1 (its order 0 only differs) and a2 alpha^2; am1 is a^2 - 1. The
+    // control (HALPHA_MUT) rebuilds a = 1 + alpha (af, af2 = a^2) and forms everything from it as without alpha.
+    let alpha = ctx.horizon_alpha != 0;
+    let ctl = ctx.horizon_alpha == HALPHA_MUT;
+    let mut am1 = if alpha { vec![z; len] } else { Vec::new() };
+    let mut af = if ctl { vec![z; len] } else { Vec::new() };
+    let mut af2 = if ctl { vec![z; len] } else { Vec::new() };
+    aa[0] = if alpha { *a0 - one } else { *a0 };
     cc[0] = one;
     mm[0] = *m0;
     a2[0] = aa[0] * aa[0];
+    if ctl {
+        af[0] = aa[0] + one;
+        af2[0] = af[0] * af[0];
+    }
     dm[0] = dtau(ctx, &mm[0], omega);
     // the scaled coefficients (sigma^i times) of w = (1 - u) - c and z = c + (1 - u); `sone` is the u term's sigma
     let sone = one.mul_pwr2(sig);
@@ -604,8 +637,16 @@ pub fn horizon_series<T: Lane, const B: usize>(
     for kk in 0..=ks {
         let kf = kk as f64;
         let ik1 = recip_int(kk + 1);
-        let t = cs(&cc, &a2, kk);
-        cc[kk + 1] = (cc[kk].mulf(kf) - (t - cc[kk]).muls(n1)).muls(ik1).mul_pwr2(sig);
+        // (c (a^2 - 1))_kk
+        let ca1 = if ctl {
+            cs(&cc, &af2, kk) - cc[kk]
+        } else if alpha {
+            am1[kk] = aa[kk].mulf(2.0) + a2[kk];
+            cs(&cc, &am1, kk)
+        } else {
+            cs(&cc, &a2, kk) - cc[kk]
+        };
+        cc[kk + 1] = (cc[kk].mulf(kf) - ca1.muls(n1)).muls(ik1).mul_pwr2(sig);
         ww[kk + 1] = wfun(&cc, kk + 1) - wfun(&cc, kk).mul_pwr2(sig);
         vv[kk] = cc[kk + 1].mulf((kk + 1) as f64).mul_pwr2(isig) - cc[kk].mulf(kf);
         zc[kk + 1] = zfun(&cc, kk + 1) - zfun(&cc, kk).mul_pwr2(sig);
@@ -623,16 +664,30 @@ pub fn horizon_series<T: Lane, const B: usize>(
             last = kk;
             break;
         }
-        let a3 = cs(&aa, &a2, kk);
-        let ag = cs(&aa, &q2, kk) + (aa[kk] - a3).muls(n1);
+        // (a q2)_kk + (n - 1) (a - a^3)_kk
+        let ag = if ctl {
+            cs(&af, &q2, kk) + (af[kk] - cs(&af, &af2, kk)).muls(n1)
+        } else if alpha {
+            let a_a3 = -((aa[kk].mulf(2.0) + a2[kk].mulf(3.0)) + cs(&aa, &a2, kk));
+            (q2[kk] + cs(&aa, &q2, kk)) + a_a3.muls(n1)
+        } else {
+            cs(&aa, &q2, kk) + (aa[kk] - cs(&aa, &a2, kk)).muls(n1)
+        };
         aa[kk + 1] = (aa[kk].mulf(kf) - ag.mulf(0.5)).muls(ik1).mul_pwr2(sig);
         a2[kk + 1] = cs(&aa, &aa, kk + 1);
+        if ctl {
+            af[kk + 1] = aa[kk + 1];
+            af2[kk + 1] = cs(&af, &af, kk + 1);
+        }
         let tau = if kk >= 1 { dm[kk] - dm[kk - 1].mul_pwr2(sig) } else { dm[kk] };
         pm[kk] = pp[kk] + mm[kk];
         let zmu = cs_w(&mm, &zc, kk + 1, 0, kk, |i| i as f64).mul_pwr2(isig);
         let rest = (((tau - zmu) - cs(&vv, &mm, kk)) - cs(&cc, &mm, kk)) + cs(&cc, &pm, kk).muls(nh);
         mm[kk + 1] = (rest * izc0).muls(ik1).mul_pwr2(sig);
         dm[kk + 1] = dtau(ctx, &mm[kk + 1], omega);
+    }
+    if alpha {
+        aa[0] = *a0;
     }
     pp.truncate(last + 1);
     mm.truncate(last + 1);
@@ -1142,7 +1197,7 @@ pub(crate) mod ctxfile {
         let l = v[i] as usize;
         let zh = v[i + 1..i + 1 + l].to_vec();
         let zl = v[i + 1 + l..i + 1 + 2 * l].to_vec();
-        let ctx = Ctx::<B> { n, d, phase, nodes, segs, kt, kc, ks, freeze: None, match_node: k - 1, lam: DD::ZERO, mutate: 0, f64_dd: 0 };
+        let ctx = Ctx::<B> { n, d, phase, nodes, segs, kt, kc, ks, freeze: None, match_node: k - 1, lam: DD::ZERO, mutate: 0, f64_dd: 0, horizon_alpha: 0 };
         assert_eq!(ctx.len(), l);
         (ctx, zh, zl)
     }

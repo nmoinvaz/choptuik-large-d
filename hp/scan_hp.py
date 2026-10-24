@@ -70,7 +70,8 @@ def certify(D, zh, zl, s, a, nodes, M):
         raise SystemExit(f"--certify_nodes {cn} must be a subset of the run's nodes {nodes}")
     t0 = time.time()
     ch, cl = renode(s, zh, zl, nodes, cn, M)
-    sc = make_solver(D, M, nodes=cn, kt=a.kt, kc=a.kc, ks=a.certify_ks, threads=a.threads, kfreeze=a.kfreeze)
+    sc = make_solver(D, M, nodes=cn, kt=a.kt, kc=a.kc, ks=a.certify_ks, threads=a.threads, kfreeze=a.kfreeze,
+                     horizon_alpha=a.horizon_alpha)
     sc.set_segs(sc.plan(ch, cl, a.tol_step, a.hmax))
     sc.newton(ch, cl)                       # Jacobian and LU at the point; the step is not taken
     Fh, Fl = sc.residual(ch, cl)
@@ -115,7 +116,7 @@ def solve_at(D, zh, zl, a, nodes, M, it_max, pin=None):
     """pin: None, or (coeffs, ks) - p1's harmonics ks (all in (a.pin, a.kfreeze]) held at the given cos/sin
     coefficients (PinnedSolver), the rest solved"""
     s = make_solver(D, M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks, threads=a.threads,
-                    kfreeze=a.pin if pin is not None else a.kfreeze)
+                    kfreeze=a.pin if pin is not None else a.kfreeze, horizon_alpha=a.horizon_alpha)
     s.set_segs(s.plan(zh, zl, a.tol_step, a.hmax))
     if pin is not None:
         hh, hl = band_field(pin[0], pin[1], M)
@@ -176,6 +177,9 @@ def main():
     ap.add_argument("--verbose", action="store_true")
     ap.add_argument("--kfreeze", type=int, default=None, help="pin p1 harmonics above this to zero and drop the matching of "
                     "p's harmonics above it at the horizon block (removes the near-null centre directions)")
+    ap.add_argument("--horizon_alpha", type=int, default=0, choices=[0, 1, 2],
+                    help="the horizon series in alpha = a - 1 (1; a lower residual floor at large D, the same solution; "
+                    "notes/LARGE_D_MIXED.md section 10), 2 its control; 0 (default) as before")
     ap.add_argument("--corrector", default="dn", choices=["dn", "dnp", "newton"],
                     help="dn: deflated Newton (default); dnp: deflated Newton, then plain Newton to the bottom")
     ap.add_argument("--polish_its", type=int, default=4, help="dnp: plain Newton steps after the deflated phase")
