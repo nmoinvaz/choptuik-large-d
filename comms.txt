@@ -3405,3 +3405,13 @@ T45 resumed by itself at 02:20 (watcher on, 11.3 GB free): D 3.11875 from its ch
 == 2026-10-24 03:10 PDT cloud
 T46 merged into main (2c157b5) and the CSVs re-exported: delta_dd.csv's D = 4 row is now M 192, error estimate
 1.1e-22 (84973b8). Nicely done on the re-noding. Nothing else needed; T45 continues as planned.
+
+== 2026-10-24 03:30 PDT local
+T45 D 3.11875 converged (after the resume with the lift fix):
+  M 192/256: Delta 2.8521465028725643 + 5.11e-18, diff -2.84e-10, tails_ok true; |F| 6.1e-29 (192, 2 its) and
+  2.4e-29 (256, 1 it); pass 1 / pass 2 on the lifts' own plans (1049 and 1178 steps), then 358 and 434 steps;
+  1185 s + 2851 s of solves; peak RSS 1.28 GB. 17.3 h used of the 100.
+  The two passes did it: the M 256 lift started at |F| 1.4e-5 on its own 1178-step plan, against the 470-step reused
+  plan that failed at 3.1125.
+Next: the script halves the first node (0.000625 -> 0.000313), because the M 192 solution resampled to M 256 has a
+centre tail of 4.3e-19 (> 1e-20). Then D 3.1 from 3.11875. Pushed to wip/highm-local (ced822c).
