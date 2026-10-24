@@ -1,0 +1,1044 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="932" viewBox="0 0 1080 932" font-family="system-ui, sans-serif">
+<style>@media (prefers-color-scheme: dark){[fill="#fcfcfb"]{fill:#201f1d}[stroke="#fcfcfb"]{stroke:#201f1d}[fill="#0b0b0b"]{fill:#e8e6e3}[stroke="#0b0b0b"]{stroke:#e8e6e3}[fill="#52514e"]{fill:#a8a49d}[stroke="#52514e"]{stroke:#a8a49d}[fill="#e7e6e2"]{fill:#343230}[stroke="#e7e6e2"]{stroke:#343230}[fill="#c98500"]{fill:#d69a2d}[stroke="#c98500"]{stroke:#d69a2d}[fill="#eb6834"]{fill:#dd5c26}[stroke="#eb6834"]{stroke:#dd5c26}[fill="#eda100"]{fill:#c08800}[stroke="#eda100"]{stroke:#c08800}[fill="#e87ba4"]{fill:#d1678f}[stroke="#e87ba4"]{stroke:#d1678f}[fill="#4a3aa7"]{fill:#7263cf}[stroke="#4a3aa7"]{stroke:#7263cf}[fill="#a6339a"]{fill:#c257b5}[stroke="#a6339a"]{stroke:#c257b5}[fill="#7a7668"]{fill:#948e82}[stroke="#7a7668"]{stroke:#948e82}}</style>
+<rect width="1080" height="932" fill="#fcfcfb"/>
+<text x="16.0" y="28.0" font-size="15" fill="#0b0b0b" text-anchor="start" font-weight="bold">How long each D took to solve</text>
+<text x="1064.0" y="58.0" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="normal">the solve that gave the value</text>
+<circle cx="869.0" cy="54" r="4.5" fill="#eb6834"/>
+<text x="853.0" y="58.0" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="normal">every solve at this D</text>
+<circle cx="709.0" cy="54" r="4.5" fill="#2a78d6"/>
+<text x="80.0" y="58.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">3 &lt; D ≤ 4: hours of solving per point</text>
+<text x="80.0" y="74.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">Every solve at that D (all τ resolutions M, both passes of each lift, failed and check solves) and the converged solves at the largest M that gave the value (both passes of a lift). Triangles: no value yet.</text>
+<line x1="80.0" y1="104.0" x2="80.0" y2="404.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="80.0" y="419.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">3.0</text>
+<line x1="270.4" y1="104.0" x2="270.4" y2="404.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="270.4" y="419.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">3.2</text>
+<line x1="460.8" y1="104.0" x2="460.8" y2="404.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="460.8" y="419.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">3.4</text>
+<line x1="651.2" y1="104.0" x2="651.2" y2="404.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="651.2" y="419.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">3.6</text>
+<line x1="841.6" y1="104.0" x2="841.6" y2="404.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="841.6" y="419.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">3.8</text>
+<line x1="1032.0" y1="104.0" x2="1032.0" y2="404.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="1032.0" y="419.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">4.0</text>
+<line x1="80.0" y1="404.0" x2="1032.0" y2="404.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="74.0" y="408.0" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">0.05 h</text>
+<line x1="80.0" y1="369.3" x2="1032.0" y2="369.3" stroke="#e7e6e2" stroke-width="1"/>
+<text x="74.0" y="373.3" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">0.1 h</text>
+<line x1="80.0" y1="334.6" x2="1032.0" y2="334.6" stroke="#e7e6e2" stroke-width="1"/>
+<text x="74.0" y="338.6" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">0.2 h</text>
+<line x1="80.0" y1="288.7" x2="1032.0" y2="288.7" stroke="#e7e6e2" stroke-width="1"/>
+<text x="74.0" y="292.7" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">0.5 h</text>
+<line x1="80.0" y1="254.0" x2="1032.0" y2="254.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="74.0" y="258.0" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">1 h</text>
+<line x1="80.0" y1="219.3" x2="1032.0" y2="219.3" stroke="#e7e6e2" stroke-width="1"/>
+<text x="74.0" y="223.3" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">2 h</text>
+<line x1="80.0" y1="173.4" x2="1032.0" y2="173.4" stroke="#e7e6e2" stroke-width="1"/>
+<text x="74.0" y="177.4" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">5 h</text>
+<line x1="80.0" y1="138.7" x2="1032.0" y2="138.7" stroke="#e7e6e2" stroke-width="1"/>
+<text x="74.0" y="142.7" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">10 h</text>
+<line x1="80.0" y1="104.0" x2="1032.0" y2="104.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="74.0" y="108.0" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">20 h</text>
+<line x1="80.0" y1="404.0" x2="1032.0" y2="404.0" stroke="#52514e" stroke-width="1"/>
+<line x1="80.0" y1="104.0" x2="80.0" y2="404.0" stroke="#52514e" stroke-width="1"/>
+<text x="556.0" y="438.0" font-size="12" fill="#0b0b0b" text-anchor="middle" font-weight="normal">dimension D</text>
+<text x="23.7" y="254.0" font-size="12" fill="#0b0b0b" text-anchor="middle" transform="rotate(-90 23.7 254.0)">hours (log scale)</text>
+<g opacity="0.35"><line x1="1050.0" y1="134.0" x2="1050.0" y2="190.0" stroke="#52514e" stroke-width="2"/><polygon points="1050.0,196.0 1046.0,187.0 1054.0,187.0" fill="#52514e"/><text x="1050.0" y="158.0" font-size="11" fill="#52514e" text-anchor="middle" transform="rotate(90.0 1050.0 165.0)">faster</text></g>
+<g><polygon points="151.4,297.1 157.9,309.1 144.9,309.1" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.075: 0.37 h in 1 solves, no value yet</title></g>
+<g><circle cx="163.3" cy="179.6" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.0875: 4.42 h in 5 solves</title></g>
+<g><circle cx="163.3" cy="202.3" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.0875: the M = 320 solve that gave the value, 2.81 h</title></g>
+<g><circle cx="175.2" cy="177.7" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.1: 4.59 h in 10 solves</title></g>
+<g><circle cx="175.2" cy="209.1" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.1: the M = 320 solve that gave the value, 2.45 h</title></g>
+<g><circle cx="187.1" cy="218.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.1125: 2.05 h in 8 solves</title></g>
+<g><circle cx="187.1" cy="267.9" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.1125: the M = 256 solve that gave the value, 0.76 h</title></g>
+<g><circle cx="193.0" cy="215.1" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.11875: 2.18 h in 8 solves</title></g>
+<g><circle cx="193.0" cy="230.4" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.11875: the M = 256 solve that gave the value, 1.60 h</title></g>
+<g><circle cx="199.0" cy="198.5" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.125: 3.03 h in 4 solves</title></g>
+<g><circle cx="199.0" cy="250.3" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.125: the M = 256 solve that gave the value, 1.08 h</title></g>
+<g><circle cx="222.8" cy="176.3" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.15: 4.72 h in 9 solves</title></g>
+<g><circle cx="222.8" cy="196.4" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.15: the M = 256 solve that gave the value, 3.16 h</title></g>
+<g><circle cx="246.6" cy="252.8" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.175: 1.02 h in 4 solves</title></g>
+<g><circle cx="246.6" cy="305.5" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.175: the M = 192 solve that gave the value, 0.36 h</title></g>
+<g><circle cx="270.4" cy="253.6" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.2: 1.01 h in 7 solves</title></g>
+<g><circle cx="270.4" cy="329.5" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.2: the M = 192 solve that gave the value, 0.22 h</title></g>
+<g><circle cx="318.0" cy="250.2" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.25: 1.08 h in 9 solves</title></g>
+<g><circle cx="318.0" cy="299.6" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.25: the M = 192 solve that gave the value, 0.40 h</title></g>
+<g><circle cx="365.6" cy="272.5" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.3: 0.69 h in 7 solves</title></g>
+<g><circle cx="365.6" cy="306.7" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.3: the M = 160 solve that gave the value, 0.35 h</title></g>
+<g><circle cx="413.2" cy="205.6" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.35: 2.63 h in 8 solves</title></g>
+<g><circle cx="413.2" cy="297.9" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.35: the M = 160 solve that gave the value, 0.42 h</title></g>
+<g><polygon points="437.0,224.2 443.5,236.2 430.5,236.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.375: 1.59 h in 1 solves, no value yet</title></g>
+<g><polygon points="448.9,246.6 455.4,258.6 442.4,258.6" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.3875: 1.02 h in 2 solves, no value yet</title></g>
+<g><circle cx="460.8" cy="182.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.4: 4.21 h in 8 solves</title></g>
+<g><circle cx="460.8" cy="362.3" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.4: the M = 128 solve that gave the value, 0.12 h</title></g>
+<g><circle cx="484.6" cy="294.4" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.425: 0.45 h in 2 solves</title></g>
+<g><circle cx="484.6" cy="318.0" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.425: the M = 128 solve that gave the value, 0.28 h</title></g>
+<g><circle cx="508.4" cy="190.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.45: 3.59 h in 9 solves</title></g>
+<g><circle cx="508.4" cy="323.6" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.45: the M = 128 solve that gave the value, 0.25 h</title></g>
+<g><circle cx="532.2" cy="299.9" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.475: 0.40 h in 2 solves</title></g>
+<g><circle cx="532.2" cy="312.7" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.475: the M = 128 solve that gave the value, 0.31 h</title></g>
+<g><circle cx="556.0" cy="203.6" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.5: 2.73 h in 7 solves</title></g>
+<g><circle cx="556.0" cy="391.5" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.5: the M = 128 solve that gave the value, 0.06 h</title></g>
+<g><circle cx="603.6" cy="222.8" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.55: 1.86 h in 6 solves</title></g>
+<g><circle cx="603.6" cy="310.1" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.55: the M = 128 solve that gave the value, 0.33 h</title></g>
+<g><circle cx="651.2" cy="167.4" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.6: 5.64 h in 6 solves</title></g>
+<g><circle cx="651.2" cy="189.6" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.6: the M = 128 solve that gave the value, 3.62 h</title></g>
+<g><circle cx="698.8" cy="165.4" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.65: 5.87 h in 5 solves</title></g>
+<g><circle cx="698.8" cy="267.7" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.65: the M = 96 solve that gave the value, 0.76 h</title></g>
+<g><circle cx="746.4" cy="115.8" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.7: 15.79 h in 23 solves</title></g>
+<g><circle cx="746.4" cy="133.7" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.7: the M = 256 solve that gave the value, 11.05 h</title></g>
+<g><circle cx="765.4" cy="288.5" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.72: 0.50 h in 1 solves</title></g>
+<g><circle cx="765.4" cy="288.5" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.72: the M = 80 solve that gave the value, 0.50 h</title></g>
+<g><circle cx="784.5" cy="303.4" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.74: 0.37 h in 1 solves</title></g>
+<g><circle cx="784.5" cy="303.4" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.74: the M = 80 solve that gave the value, 0.37 h</title></g>
+<g><circle cx="794.0" cy="294.7" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.75: 0.44 h in 1 solves</title></g>
+<g><circle cx="794.0" cy="294.7" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.75: the M = 80 solve that gave the value, 0.44 h</title></g>
+<g><circle cx="803.5" cy="306.5" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.76: 0.35 h in 1 solves</title></g>
+<g><circle cx="803.5" cy="306.5" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.76: the M = 80 solve that gave the value, 0.35 h</title></g>
+<g><circle cx="822.6" cy="313.4" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.78: 0.31 h in 1 solves</title></g>
+<g><circle cx="822.6" cy="313.4" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.78: the M = 80 solve that gave the value, 0.31 h</title></g>
+<g><circle cx="841.6" cy="314.4" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.8: 0.30 h in 1 solves</title></g>
+<g><circle cx="841.6" cy="314.4" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.8: the M = 80 solve that gave the value, 0.30 h</title></g>
+<g><circle cx="1032.0" cy="192.9" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 4: 3.39 h in 19 solves</title></g>
+<g><circle cx="1032.0" cy="352.2" r="5.5" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = 4: the M = 192 solve that gave the value, 0.14 h</title></g>
+<circle cx="746.4" cy="115.8" r="10" fill="none" stroke="#0b0b0b" stroke-width="1.5"/>
+<line x1="736.6" y1="113.9" x2="716.4" y2="109.8" stroke="#0b0b0b" stroke-width="1"/>
+<text x="712.4" y="113.8" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="bold">D = 3.7: 16 h, the resolution study to M = 256</text>
+<circle cx="163.3" cy="179.6" r="10" fill="none" stroke="#0b0b0b" stroke-width="1.5"/>
+<line x1="171.4" y1="173.6" x2="193.3" y2="157.6" stroke="#0b0b0b" stroke-width="1"/>
+<text x="197.3" y="161.6" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="bold">D = 3.0875: lowest point, M = 320</text>
+<text x="1064.0" y="496.0" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="normal">Windows i7-1185G7</text>
+<circle cx="945.5" cy="492" r="4.5" fill="#eda100"/>
+<text x="929.5" y="496.0" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="normal">cloud (2 shared cores)</text>
+<circle cx="779.2" cy="492" r="4.5" fill="#1baf7a"/>
+<text x="80.0" y="496.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">8.25 ≤ D ≤ 61.6: seconds per continuation point</text>
+<text x="80.0" y="512.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">The Newton solve of each accepted point; failed steps are not counted. Hover a point for its run, seconds and iterations.</text>
+<line x1="291.6" y1="542.0" x2="291.6" y2="842.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="291.6" y="857.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">20</text>
+<line x1="644.1" y1="542.0" x2="644.1" y2="842.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="644.1" y="857.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">40</text>
+<line x1="996.7" y1="542.0" x2="996.7" y2="842.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="996.7" y="857.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">60</text>
+<line x1="80.0" y1="842.0" x2="1032.0" y2="842.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="74.0" y="846.0" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">5 s</text>
+<line x1="80.0" y1="785.6" x2="1032.0" y2="785.6" stroke="#e7e6e2" stroke-width="1"/>
+<text x="74.0" y="789.6" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">10 s</text>
+<line x1="80.0" y1="729.3" x2="1032.0" y2="729.3" stroke="#e7e6e2" stroke-width="1"/>
+<text x="74.0" y="733.3" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">20 s</text>
+<line x1="80.0" y1="654.7" x2="1032.0" y2="654.7" stroke="#e7e6e2" stroke-width="1"/>
+<text x="74.0" y="658.7" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">50 s</text>
+<line x1="80.0" y1="598.4" x2="1032.0" y2="598.4" stroke="#e7e6e2" stroke-width="1"/>
+<text x="74.0" y="602.4" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">100 s</text>
+<line x1="80.0" y1="542.0" x2="1032.0" y2="542.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="74.0" y="546.0" font-size="11" fill="#52514e" text-anchor="end" font-weight="normal" font-variant-numeric="tabular-nums">200 s</text>
+<line x1="80.0" y1="842.0" x2="1032.0" y2="842.0" stroke="#52514e" stroke-width="1"/>
+<line x1="80.0" y1="542.0" x2="80.0" y2="842.0" stroke="#52514e" stroke-width="1"/>
+<text x="556.0" y="876.0" font-size="12" fill="#0b0b0b" text-anchor="middle" font-weight="normal">dimension D</text>
+<text x="30.1" y="692.0" font-size="12" fill="#0b0b0b" text-anchor="middle" transform="rotate(-90 30.1 692.0)">seconds (log scale)</text>
+<g opacity="0.35"><line x1="1050.0" y1="572.0" x2="1050.0" y2="628.0" stroke="#52514e" stroke-width="2"/><polygon points="1050.0,634.0 1046.0,625.0 1054.0,625.0" fill="#52514e"/><text x="1050.0" y="596.0" font-size="11" fill="#52514e" text-anchor="middle" transform="rotate(90.0 1050.0 603.0)">faster</text></g>
+<circle cx="84.4" cy="639.9" r="2.4" fill="#1baf7a"><title>D = 8.2500: 60.0 s, 8 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="88.8" cy="678.6" r="2.4" fill="#1baf7a"><title>D = 8.5000: 37.3 s, 5 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="93.2" cy="678.1" r="2.4" fill="#1baf7a"><title>D = 8.7500: 37.5 s, 5 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="97.6" cy="675.4" r="2.4" fill="#1baf7a"><title>D = 9.0000: 38.8 s, 5 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="102.0" cy="679.4" r="2.4" fill="#1baf7a"><title>D = 9.2500: 36.9 s, 5 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="106.4" cy="679.2" r="2.4" fill="#1baf7a"><title>D = 9.5000: 37.0 s, 5 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="110.9" cy="680.3" r="2.4" fill="#1baf7a"><title>D = 9.7500: 36.5 s, 5 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="115.3" cy="679.9" r="2.4" fill="#1baf7a"><title>D = 10.0000: 36.7 s, 5 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="119.7" cy="684.2" r="2.4" fill="#1baf7a"><title>D = 10.2500: 34.8 s, 5 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="124.1" cy="684.4" r="2.4" fill="#1baf7a"><title>D = 10.5000: 34.7 s, 5 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="128.5" cy="684.4" r="2.4" fill="#1baf7a"><title>D = 10.7500: 34.7 s, 5 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="132.9" cy="683.5" r="2.4" fill="#1baf7a"><title>D = 11.0000: 35.1 s, 5 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="137.3" cy="684.2" r="2.4" fill="#1baf7a"><title>D = 11.2500: 34.8 s, 5 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="141.7" cy="684.0" r="2.4" fill="#1baf7a"><title>D = 11.5000: 34.9 s, 5 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="146.1" cy="682.8" r="2.4" fill="#1baf7a"><title>D = 11.7500: 35.4 s, 5 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="150.5" cy="684.4" r="2.4" fill="#1baf7a"><title>D = 12.0000: 34.7 s, 5 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="154.9" cy="686.1" r="2.4" fill="#1baf7a"><title>D = 12.2500: 34.0 s, 5 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="159.3" cy="682.4" r="2.4" fill="#1baf7a"><title>D = 12.5000: 35.6 s, 5 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="163.7" cy="684.7" r="2.4" fill="#1baf7a"><title>D = 12.7500: 34.6 s, 5 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="168.1" cy="685.2" r="2.4" fill="#1baf7a"><title>D = 13.0000: 34.4 s, 5 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="172.6" cy="681.7" r="2.4" fill="#1baf7a"><title>D = 13.2500: 35.9 s, 5 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="177.0" cy="682.8" r="2.4" fill="#1baf7a"><title>D = 13.5000: 35.4 s, 5 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="181.4" cy="686.8" r="2.4" fill="#1baf7a"><title>D = 13.7500: 33.7 s, 5 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="185.8" cy="682.6" r="2.4" fill="#1baf7a"><title>D = 14.0000: 35.5 s, 5 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="190.2" cy="684.7" r="2.4" fill="#1baf7a"><title>D = 14.2500: 34.6 s, 5 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="194.6" cy="683.7" r="2.4" fill="#1baf7a"><title>D = 14.5000: 35.0 s, 5 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="199.0" cy="667.8" r="2.4" fill="#1baf7a"><title>D = 14.7500: 42.6 s, 6 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="203.4" cy="668.5" r="2.4" fill="#1baf7a"><title>D = 15.0000: 42.2 s, 6 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="207.8" cy="669.5" r="2.4" fill="#1baf7a"><title>D = 15.2500: 41.7 s, 6 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="212.2" cy="655.9" r="2.4" fill="#1baf7a"><title>D = 15.5000: 49.3 s, 7 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="214.4" cy="686.1" r="2.4" fill="#1baf7a"><title>D = 15.6250: 34.0 s, 5 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="216.6" cy="683.3" r="2.4" fill="#1baf7a"><title>D = 15.7500: 35.2 s, 5 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="218.8" cy="682.8" r="2.4" fill="#1baf7a"><title>D = 15.8750: 35.4 s, 5 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="221.0" cy="683.3" r="2.4" fill="#1baf7a"><title>D = 16.0000: 35.2 s, 5 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="223.2" cy="669.5" r="2.4" fill="#1baf7a"><title>D = 16.1250: 41.7 s, 6 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="225.4" cy="683.5" r="2.4" fill="#1baf7a"><title>D = 16.2500: 35.1 s, 5 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="227.6" cy="667.2" r="2.4" fill="#1baf7a"><title>D = 16.3750: 42.9 s, 6 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="228.8" cy="657.2" r="2.4" fill="#1baf7a"><title>D = 16.4375: 48.5 s, 7 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="229.9" cy="685.2" r="2.4" fill="#1baf7a"><title>D = 16.5000: 34.4 s, 5 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="231.0" cy="658.4" r="2.4" fill="#1baf7a"><title>D = 16.5625: 47.8 s, 7 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="232.1" cy="659.6" r="2.4" fill="#1baf7a"><title>D = 16.6250: 47.1 s, 7 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="233.2" cy="685.6" r="2.4" fill="#1baf7a"><title>D = 16.6875: 34.2 s, 5 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="234.3" cy="646.7" r="2.4" fill="#1baf7a"><title>D = 16.7500: 55.2 s, 8 iterations (cloud (2 shared cores), run up)</title></circle>
+<circle cx="887.3" cy="688.8" r="2.4" fill="#1baf7a"><title>D = 53.7914: 32.9 s, 10 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="888.2" cy="688.8" r="2.4" fill="#1baf7a"><title>D = 53.8414: 32.9 s, 10 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="889.0" cy="688.8" r="2.4" fill="#1baf7a"><title>D = 53.8914: 32.9 s, 10 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="889.9" cy="685.6" r="2.4" fill="#1baf7a"><title>D = 53.9414: 34.2 s, 10 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="890.8" cy="681.9" r="2.4" fill="#1baf7a"><title>D = 53.9914: 35.8 s, 10 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="891.7" cy="684.9" r="2.4" fill="#1baf7a"><title>D = 54.0414: 34.5 s, 10 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="892.6" cy="686.8" r="2.4" fill="#1baf7a"><title>D = 54.0914: 33.7 s, 10 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="893.5" cy="685.6" r="2.4" fill="#1baf7a"><title>D = 54.1414: 34.2 s, 10 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="894.3" cy="684.2" r="2.4" fill="#1baf7a"><title>D = 54.1914: 34.8 s, 10 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="895.2" cy="685.6" r="2.4" fill="#1baf7a"><title>D = 54.2414: 34.2 s, 10 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="896.1" cy="686.3" r="2.4" fill="#1baf7a"><title>D = 54.2914: 33.9 s, 10 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="897.0" cy="677.3" r="2.4" fill="#1baf7a"><title>D = 54.3414: 37.9 s, 11 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="897.9" cy="677.3" r="2.4" fill="#1baf7a"><title>D = 54.3914: 37.9 s, 11 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="898.3" cy="693.1" r="2.4" fill="#1baf7a"><title>D = 54.4164: 31.2 s, 9 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="898.7" cy="701.0" r="2.4" fill="#1baf7a"><title>D = 54.4414: 28.3 s, 8 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="899.3" cy="703.7" r="2.4" fill="#1baf7a"><title>D = 54.4726: 27.4 s, 8 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="900.0" cy="685.4" r="2.4" fill="#1baf7a"><title>D = 54.5117: 34.3 s, 10 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="900.7" cy="684.4" r="2.4" fill="#1baf7a"><title>D = 54.5508: 34.7 s, 10 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="901.4" cy="693.1" r="2.4" fill="#1baf7a"><title>D = 54.5898: 31.2 s, 9 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="902.1" cy="693.4" r="2.4" fill="#1baf7a"><title>D = 54.6289: 31.1 s, 9 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="902.7" cy="668.3" r="2.4" fill="#1baf7a"><title>D = 54.6680: 42.3 s, 12 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="903.4" cy="694.4" r="2.4" fill="#1baf7a"><title>D = 54.7070: 30.7 s, 9 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="904.1" cy="678.6" r="2.4" fill="#1baf7a"><title>D = 54.7461: 37.3 s, 11 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="904.8" cy="683.7" r="2.4" fill="#1baf7a"><title>D = 54.7851: 35.0 s, 10 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="905.5" cy="646.5" r="2.4" fill="#1baf7a"><title>D = 54.8242: 55.3 s, 16 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="906.0" cy="692.1" r="2.4" fill="#1baf7a"><title>D = 54.8555: 31.6 s, 9 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="906.6" cy="684.4" r="2.4" fill="#1baf7a"><title>D = 54.8867: 34.7 s, 10 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="907.1" cy="701.6" r="2.4" fill="#1baf7a"><title>D = 54.9180: 28.1 s, 8 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="907.8" cy="693.6" r="2.4" fill="#1baf7a"><title>D = 54.9570: 31.0 s, 9 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="908.5" cy="686.6" r="2.4" fill="#1baf7a"><title>D = 54.9961: 33.8 s, 10 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="909.2" cy="685.9" r="2.4" fill="#1baf7a"><title>D = 55.0351: 34.1 s, 10 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="909.9" cy="684.0" r="2.4" fill="#1baf7a"><title>D = 55.0742: 34.9 s, 10 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="910.6" cy="695.2" r="2.4" fill="#1baf7a"><title>D = 55.1133: 30.4 s, 9 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="911.3" cy="684.2" r="2.4" fill="#1baf7a"><title>D = 55.1523: 34.8 s, 10 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="912.0" cy="656.2" r="2.4" fill="#1baf7a"><title>D = 55.1914: 49.1 s, 14 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="912.5" cy="691.5" r="2.4" fill="#1baf7a"><title>D = 55.2226: 31.8 s, 9 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="913.1" cy="687.1" r="2.4" fill="#1baf7a"><title>D = 55.2539: 33.6 s, 9 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="913.6" cy="689.3" r="2.4" fill="#1baf7a"><title>D = 55.2851: 32.7 s, 9 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="914.2" cy="692.3" r="2.4" fill="#1baf7a"><title>D = 55.3164: 31.5 s, 9 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="914.7" cy="693.1" r="2.4" fill="#1baf7a"><title>D = 55.3476: 31.2 s, 9 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="915.3" cy="696.0" r="2.4" fill="#1baf7a"><title>D = 55.3789: 30.1 s, 9 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="915.8" cy="688.5" r="2.4" fill="#1baf7a"><title>D = 55.4101: 33.0 s, 10 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="916.4" cy="690.3" r="2.4" fill="#1baf7a"><title>D = 55.4414: 32.3 s, 10 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="916.9" cy="689.8" r="2.4" fill="#1baf7a"><title>D = 55.4726: 32.5 s, 10 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="917.5" cy="699.0" r="2.4" fill="#1baf7a"><title>D = 55.5039: 29.0 s, 9 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="918.0" cy="701.6" r="2.4" fill="#1baf7a"><title>D = 55.5351: 28.1 s, 9 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="918.6" cy="700.5" r="2.4" fill="#1baf7a"><title>D = 55.5664: 28.5 s, 9 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="919.1" cy="702.2" r="2.4" fill="#1baf7a"><title>D = 55.5976: 27.9 s, 9 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="919.7" cy="703.7" r="2.4" fill="#1baf7a"><title>D = 55.6289: 27.4 s, 9 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="920.2" cy="701.9" r="2.4" fill="#1baf7a"><title>D = 55.6601: 28.0 s, 9 iterations (cloud (2 shared cores), run up10)</title></circle>
+<circle cx="920.9" cy="695.5" r="2.4" fill="#1baf7a"><title>D = 55.7001: 30.3 s, 10 iterations (cloud (2 shared cores), run up11)</title></circle>
+<circle cx="921.6" cy="695.2" r="2.4" fill="#1baf7a"><title>D = 55.7401: 30.4 s, 10 iterations (cloud (2 shared cores), run up11)</title></circle>
+<circle cx="922.0" cy="726.9" r="2.4" fill="#1baf7a"><title>D = 55.7601: 20.6 s, 7 iterations (cloud (2 shared cores), run up11)</title></circle>
+<circle cx="922.4" cy="726.5" r="2.4" fill="#1baf7a"><title>D = 55.7851: 20.7 s, 7 iterations (cloud (2 shared cores), run up11)</title></circle>
+<circle cx="923.0" cy="716.1" r="2.4" fill="#1baf7a"><title>D = 55.8164: 23.5 s, 8 iterations (cloud (2 shared cores), run up11)</title></circle>
+<circle cx="923.7" cy="697.7" r="2.4" fill="#1baf7a"><title>D = 55.8555: 29.5 s, 10 iterations (cloud (2 shared cores), run up11)</title></circle>
+<circle cx="924.4" cy="681.2" r="2.4" fill="#1baf7a"><title>D = 55.8945: 36.1 s, 12 iterations (cloud (2 shared cores), run up11)</title></circle>
+<circle cx="925.1" cy="697.9" r="2.4" fill="#1baf7a"><title>D = 55.9336: 29.4 s, 10 iterations (cloud (2 shared cores), run up11)</title></circle>
+<circle cx="925.7" cy="689.8" r="2.4" fill="#1baf7a"><title>D = 55.9726: 32.5 s, 11 iterations (cloud (2 shared cores), run up11)</title></circle>
+<circle cx="926.4" cy="691.8" r="2.4" fill="#1baf7a"><title>D = 56.0117: 31.7 s, 11 iterations (cloud (2 shared cores), run up11)</title></circle>
+<circle cx="927.1" cy="690.3" r="2.4" fill="#1baf7a"><title>D = 56.0508: 32.3 s, 11 iterations (cloud (2 shared cores), run up11)</title></circle>
+<circle cx="927.8" cy="697.9" r="2.4" fill="#1baf7a"><title>D = 56.0898: 29.4 s, 10 iterations (cloud (2 shared cores), run up11)</title></circle>
+<circle cx="928.5" cy="672.3" r="2.4" fill="#1baf7a"><title>D = 56.1289: 40.3 s, 14 iterations (cloud (2 shared cores), run up11)</title></circle>
+<circle cx="928.8" cy="729.7" r="2.4" fill="#1baf7a"><title>D = 56.1445: 19.9 s, 7 iterations (cloud (2 shared cores), run up11)</title></circle>
+<circle cx="929.1" cy="727.6" r="2.4" fill="#1baf7a"><title>D = 56.1641: 20.4 s, 7 iterations (cloud (2 shared cores), run up11)</title></circle>
+<circle cx="929.5" cy="716.8" r="2.4" fill="#1baf7a"><title>D = 56.1885: 23.3 s, 8 iterations (cloud (2 shared cores), run up11)</title></circle>
+<circle cx="930.1" cy="717.5" r="2.4" fill="#1baf7a"><title>D = 56.2190: 23.1 s, 8 iterations (cloud (2 shared cores), run up11)</title></circle>
+<circle cx="930.8" cy="691.3" r="2.4" fill="#1baf7a"><title>D = 56.2571: 31.9 s, 11 iterations (cloud (2 shared cores), run up11)</title></circle>
+<circle cx="931.4" cy="699.0" r="2.4" fill="#1baf7a"><title>D = 56.2953: 29.0 s, 10 iterations (cloud (2 shared cores), run up11)</title></circle>
+<circle cx="932.0" cy="673.3" r="2.4" fill="#1baf7a"><title>D = 56.3303: 39.8 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="932.7" cy="670.7" r="2.4" fill="#1baf7a"><title>D = 56.3653: 41.1 s, 9 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="933.3" cy="637.9" r="2.4" fill="#1baf7a"><title>D = 56.4003: 61.5 s, 12 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="933.9" cy="651.4" r="2.4" fill="#1baf7a"><title>D = 56.4353: 52.1 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="934.5" cy="647.9" r="2.4" fill="#1baf7a"><title>D = 56.4703: 54.4 s, 11 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="935.1" cy="651.9" r="2.4" fill="#1baf7a"><title>D = 56.5053: 51.8 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="935.4" cy="680.3" r="2.4" fill="#1baf7a"><title>D = 56.5228: 36.5 s, 7 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="935.8" cy="668.7" r="2.4" fill="#1baf7a"><title>D = 56.5447: 42.1 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="936.3" cy="660.3" r="2.4" fill="#1baf7a"><title>D = 56.5720: 46.7 s, 9 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="936.8" cy="669.3" r="2.4" fill="#1baf7a"><title>D = 56.5993: 41.8 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="937.4" cy="672.3" r="2.4" fill="#1baf7a"><title>D = 56.6335: 40.3 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="938.0" cy="673.7" r="2.4" fill="#1baf7a"><title>D = 56.6677: 39.6 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="938.3" cy="702.8" r="2.4" fill="#1baf7a"><title>D = 56.6848: 27.7 s, 7 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="938.7" cy="689.0" r="2.4" fill="#1baf7a"><title>D = 56.7062: 32.8 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="939.1" cy="691.3" r="2.4" fill="#1baf7a"><title>D = 56.7329: 31.9 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="939.7" cy="681.9" r="2.4" fill="#1baf7a"><title>D = 56.7662: 35.8 s, 9 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="940.3" cy="657.4" r="2.4" fill="#1baf7a"><title>D = 56.7996: 48.4 s, 12 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="940.9" cy="672.5" r="2.4" fill="#1baf7a"><title>D = 56.8330: 40.2 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="941.5" cy="672.7" r="2.4" fill="#1baf7a"><title>D = 56.8664: 40.1 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="942.1" cy="672.1" r="2.4" fill="#1baf7a"><title>D = 56.8998: 40.4 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="942.7" cy="672.3" r="2.4" fill="#1baf7a"><title>D = 56.9331: 40.3 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="943.3" cy="673.3" r="2.4" fill="#1baf7a"><title>D = 56.9665: 39.8 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="943.8" cy="673.7" r="2.4" fill="#1baf7a"><title>D = 56.9999: 39.6 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="944.4" cy="673.9" r="2.4" fill="#1baf7a"><title>D = 57.0333: 39.5 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="945.0" cy="673.1" r="2.4" fill="#1baf7a"><title>D = 57.0666: 39.9 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="945.6" cy="665.9" r="2.4" fill="#1baf7a"><title>D = 57.1000: 43.6 s, 11 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="946.2" cy="672.9" r="2.4" fill="#1baf7a"><title>D = 57.1334: 40.0 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="946.8" cy="672.9" r="2.4" fill="#1baf7a"><title>D = 57.1668: 40.0 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="947.4" cy="674.7" r="2.4" fill="#1baf7a"><title>D = 57.2002: 39.1 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="948.0" cy="673.9" r="2.4" fill="#1baf7a"><title>D = 57.2335: 39.5 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="948.6" cy="674.9" r="2.4" fill="#1baf7a"><title>D = 57.2669: 39.0 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="949.1" cy="672.9" r="2.4" fill="#1baf7a"><title>D = 57.3003: 40.0 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="949.4" cy="692.8" r="2.4" fill="#1baf7a"><title>D = 57.3170: 31.3 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="949.8" cy="690.0" r="2.4" fill="#1baf7a"><title>D = 57.3379: 32.4 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="950.3" cy="701.9" r="2.4" fill="#1baf7a"><title>D = 57.3639: 28.0 s, 7 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="950.8" cy="657.7" r="2.4" fill="#1baf7a"><title>D = 57.3965: 48.2 s, 12 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="951.4" cy="681.5" r="2.4" fill="#1baf7a"><title>D = 57.4291: 36.0 s, 9 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="952.0" cy="674.3" r="2.4" fill="#1baf7a"><title>D = 57.4617: 39.3 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="952.6" cy="659.9" r="2.4" fill="#1baf7a"><title>D = 57.4943: 46.9 s, 11 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="953.1" cy="652.0" r="2.4" fill="#1baf7a"><title>D = 57.5269: 51.7 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="953.7" cy="661.2" r="2.4" fill="#1baf7a"><title>D = 57.5595: 46.2 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="954.3" cy="658.9" r="2.4" fill="#1baf7a"><title>D = 57.5921: 47.5 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="954.9" cy="673.1" r="2.4" fill="#1baf7a"><title>D = 57.6247: 39.9 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="955.4" cy="655.7" r="2.4" fill="#1baf7a"><title>D = 57.6573: 49.4 s, 12 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="956.0" cy="673.7" r="2.4" fill="#1baf7a"><title>D = 57.6899: 39.6 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="956.6" cy="672.3" r="2.4" fill="#1baf7a"><title>D = 57.7225: 40.3 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="957.2" cy="671.9" r="2.4" fill="#1baf7a"><title>D = 57.7551: 40.5 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="957.7" cy="679.0" r="2.4" fill="#1baf7a"><title>D = 57.7877: 37.1 s, 9 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="958.0" cy="689.3" r="2.4" fill="#1baf7a"><title>D = 57.8040: 32.7 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="958.4" cy="689.5" r="2.4" fill="#1baf7a"><title>D = 57.8243: 32.6 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="958.8" cy="687.6" r="2.4" fill="#1baf7a"><title>D = 57.8498: 33.4 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="959.4" cy="679.2" r="2.4" fill="#1baf7a"><title>D = 57.8816: 37.0 s, 9 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="960.0" cy="681.5" r="2.4" fill="#1baf7a"><title>D = 57.9135: 36.0 s, 9 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="960.5" cy="672.1" r="2.4" fill="#1baf7a"><title>D = 57.9453: 40.4 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="960.8" cy="689.3" r="2.4" fill="#1baf7a"><title>D = 57.9612: 32.7 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="961.1" cy="700.2" r="2.4" fill="#1baf7a"><title>D = 57.9811: 28.6 s, 7 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="961.6" cy="671.1" r="2.4" fill="#1baf7a"><title>D = 58.0060: 40.9 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="962.0" cy="681.9" r="2.4" fill="#1baf7a"><title>D = 58.0309: 35.8 s, 9 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="962.5" cy="648.0" r="2.4" fill="#1baf7a"><title>D = 58.0557: 54.3 s, 14 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="962.8" cy="690.0" r="2.4" fill="#1baf7a"><title>D = 58.0756: 32.4 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="963.3" cy="672.7" r="2.4" fill="#1baf7a"><title>D = 58.1005: 40.1 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="963.7" cy="639.4" r="2.4" fill="#1baf7a"><title>D = 58.1254: 60.4 s, 15 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="964.0" cy="691.5" r="2.4" fill="#1baf7a"><title>D = 58.1453: 31.8 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="964.5" cy="690.8" r="2.4" fill="#1baf7a"><title>D = 58.1701: 32.1 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="965.0" cy="682.6" r="2.4" fill="#1baf7a"><title>D = 58.2012: 35.5 s, 9 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="965.6" cy="681.2" r="2.4" fill="#1baf7a"><title>D = 58.2323: 36.1 s, 9 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="965.9" cy="692.6" r="2.4" fill="#1baf7a"><title>D = 58.2478: 31.4 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="966.2" cy="691.0" r="2.4" fill="#1baf7a"><title>D = 58.2673: 32.0 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="966.6" cy="666.1" r="2.4" fill="#1baf7a"><title>D = 58.2916: 43.5 s, 11 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="967.0" cy="689.8" r="2.4" fill="#1baf7a"><title>D = 58.3158: 32.5 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="967.6" cy="692.6" r="2.4" fill="#1baf7a"><title>D = 58.3462: 31.4 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="968.3" cy="675.2" r="2.4" fill="#1baf7a"><title>D = 58.3841: 38.9 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="968.6" cy="681.5" r="2.4" fill="#1baf7a"><title>D = 58.4031: 36.0 s, 9 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="968.9" cy="691.8" r="2.4" fill="#1baf7a"><title>D = 58.4221: 31.7 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="969.3" cy="682.4" r="2.4" fill="#1baf7a"><title>D = 58.4458: 35.6 s, 9 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="969.8" cy="689.0" r="2.4" fill="#1baf7a"><title>D = 58.4695: 32.8 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="970.3" cy="678.4" r="2.4" fill="#1baf7a"><title>D = 58.4992: 37.4 s, 9 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="970.8" cy="679.7" r="2.4" fill="#1baf7a"><title>D = 58.5288: 36.8 s, 9 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="971.3" cy="670.7" r="2.4" fill="#1baf7a"><title>D = 58.5585: 41.1 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="971.8" cy="682.6" r="2.4" fill="#1baf7a"><title>D = 58.5881: 35.5 s, 9 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="972.1" cy="699.6" r="2.4" fill="#1baf7a"><title>D = 58.6029: 28.8 s, 7 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="972.4" cy="688.5" r="2.4" fill="#1baf7a"><title>D = 58.6215: 33.0 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="972.8" cy="705.2" r="2.4" fill="#1baf7a"><title>D = 58.6446: 26.9 s, 7 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="973.4" cy="679.9" r="2.4" fill="#1baf7a"><title>D = 58.6736: 36.7 s, 9 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="973.9" cy="597.0" r="2.4" fill="#1baf7a"><title>D = 58.7025: 101.7 s, 25 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="974.3" cy="672.3" r="2.4" fill="#1baf7a"><title>D = 58.7257: 40.3 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="974.7" cy="679.4" r="2.4" fill="#1baf7a"><title>D = 58.7488: 36.9 s, 9 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="975.1" cy="690.8" r="2.4" fill="#1baf7a"><title>D = 58.7720: 32.1 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="975.6" cy="678.1" r="2.4" fill="#1baf7a"><title>D = 58.8010: 37.5 s, 9 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="975.9" cy="691.5" r="2.4" fill="#1baf7a"><title>D = 58.8154: 31.8 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="976.2" cy="701.6" r="2.4" fill="#1baf7a"><title>D = 58.8335: 28.1 s, 7 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="976.6" cy="689.0" r="2.4" fill="#1baf7a"><title>D = 58.8561: 32.8 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="976.8" cy="699.9" r="2.4" fill="#1baf7a"><title>D = 58.8703: 28.7 s, 7 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="977.1" cy="701.9" r="2.4" fill="#1baf7a"><title>D = 58.8880: 28.0 s, 7 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="977.5" cy="687.6" r="2.4" fill="#1baf7a"><title>D = 58.9100: 33.4 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="978.0" cy="689.5" r="2.4" fill="#1baf7a"><title>D = 58.9377: 32.6 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="978.3" cy="701.6" r="2.4" fill="#1baf7a"><title>D = 58.9549: 28.1 s, 7 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="978.7" cy="679.9" r="2.4" fill="#1baf7a"><title>D = 58.9765: 36.7 s, 9 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="979.1" cy="689.3" r="2.4" fill="#1baf7a"><title>D = 58.9980: 32.7 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="979.6" cy="688.3" r="2.4" fill="#1baf7a"><title>D = 59.0250: 33.1 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="979.8" cy="686.3" r="2.4" fill="#1baf7a"><title>D = 59.0419: 33.9 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="980.2" cy="669.7" r="2.4" fill="#1baf7a"><title>D = 59.0629: 41.6 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="980.6" cy="679.4" r="2.4" fill="#1baf7a"><title>D = 59.0840: 36.9 s, 9 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="981.0" cy="670.3" r="2.4" fill="#1baf7a"><title>D = 59.1051: 41.3 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="981.3" cy="676.0" r="2.4" fill="#1baf7a"><title>D = 59.1261: 38.5 s, 9 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="981.7" cy="686.6" r="2.4" fill="#1baf7a"><title>D = 59.1472: 33.8 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="982.2" cy="668.5" r="2.4" fill="#1baf7a"><title>D = 59.1735: 42.2 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="982.6" cy="669.3" r="2.4" fill="#1baf7a"><title>D = 59.1999: 41.8 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="983.1" cy="686.6" r="2.4" fill="#1baf7a"><title>D = 59.2262: 33.8 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="983.7" cy="670.3" r="2.4" fill="#1baf7a"><title>D = 59.2591: 41.3 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="984.0" cy="667.0" r="2.4" fill="#1baf7a"><title>D = 59.2756: 43.0 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="984.3" cy="688.5" r="2.4" fill="#1baf7a"><title>D = 59.2920: 33.0 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="984.6" cy="669.9" r="2.4" fill="#1baf7a"><title>D = 59.3126: 41.5 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="985.0" cy="685.9" r="2.4" fill="#1baf7a"><title>D = 59.3332: 34.1 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="985.4" cy="688.0" r="2.4" fill="#1baf7a"><title>D = 59.3589: 33.2 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="986.0" cy="669.3" r="2.4" fill="#1baf7a"><title>D = 59.3910: 41.8 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="986.3" cy="677.3" r="2.4" fill="#1baf7a"><title>D = 59.4071: 37.9 s, 9 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="986.6" cy="678.1" r="2.4" fill="#1baf7a"><title>D = 59.4232: 37.5 s, 9 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="986.9" cy="699.9" r="2.4" fill="#1baf7a"><title>D = 59.4392: 28.7 s, 7 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="987.2" cy="687.3" r="2.4" fill="#1baf7a"><title>D = 59.4593: 33.5 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="987.7" cy="683.7" r="2.4" fill="#1baf7a"><title>D = 59.4844: 35.0 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="988.2" cy="678.4" r="2.4" fill="#1baf7a"><title>D = 59.5158: 37.4 s, 9 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="988.5" cy="685.4" r="2.4" fill="#1baf7a"><title>D = 59.5315: 34.3 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="988.8" cy="674.3" r="2.4" fill="#1baf7a"><title>D = 59.5511: 39.3 s, 9 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="989.2" cy="698.8" r="2.4" fill="#1baf7a"><title>D = 59.5707: 29.1 s, 7 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="989.6" cy="686.8" r="2.4" fill="#1baf7a"><title>D = 59.5953: 33.7 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="989.9" cy="689.5" r="2.4" fill="#1baf7a"><title>D = 59.6106: 32.6 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="990.2" cy="686.6" r="2.4" fill="#1baf7a"><title>D = 59.6298: 33.8 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="990.6" cy="677.1" r="2.4" fill="#1baf7a"><title>D = 59.6537: 38.0 s, 9 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="991.1" cy="686.1" r="2.4" fill="#1baf7a"><title>D = 59.6776: 34.0 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="991.6" cy="669.9" r="2.4" fill="#1baf7a"><title>D = 59.7076: 41.5 s, 10 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="991.8" cy="686.6" r="2.4" fill="#1baf7a"><title>D = 59.7225: 33.8 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="992.2" cy="688.5" r="2.4" fill="#1baf7a"><title>D = 59.7413: 33.0 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="992.4" cy="685.4" r="2.4" fill="#1baf7a"><title>D = 59.7529: 34.3 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="992.6" cy="688.5" r="2.4" fill="#1baf7a"><title>D = 59.7676: 33.0 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="993.0" cy="678.6" r="2.4" fill="#1baf7a"><title>D = 59.7858: 37.3 s, 9 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="993.3" cy="666.3" r="2.4" fill="#1baf7a"><title>D = 59.8041: 43.4 s, 8 iterations (cloud (2 shared cores), run up12)</title></circle>
+<circle cx="993.6" cy="686.6" r="2.4" fill="#1baf7a"><title>D = 59.8221: 33.8 s, 8 iterations (cloud (2 shared cores), run up13)</title></circle>
+<circle cx="993.8" cy="686.1" r="2.4" fill="#1baf7a"><title>D = 59.8334: 34.0 s, 8 iterations (cloud (2 shared cores), run up13)</title></circle>
+<circle cx="994.1" cy="689.0" r="2.4" fill="#1baf7a"><title>D = 59.8474: 32.8 s, 6 iterations (cloud (2 shared cores), run up13)</title></circle>
+<circle cx="994.4" cy="657.9" r="2.4" fill="#1baf7a"><title>D = 59.8650: 48.1 s, 9 iterations (cloud (2 shared cores), run up13)</title></circle>
+<circle cx="994.7" cy="657.7" r="2.4" fill="#1baf7a"><title>D = 59.8826: 48.2 s, 9 iterations (cloud (2 shared cores), run up13)</title></circle>
+<circle cx="995.0" cy="665.9" r="2.4" fill="#1baf7a"><title>D = 59.9002: 43.6 s, 8 iterations (cloud (2 shared cores), run up13)</title></circle>
+<circle cx="995.4" cy="668.3" r="2.4" fill="#1baf7a"><title>D = 59.9221: 42.3 s, 8 iterations (cloud (2 shared cores), run up13)</title></circle>
+<circle cx="995.9" cy="653.9" r="2.4" fill="#1baf7a"><title>D = 59.9496: 50.5 s, 9 iterations (cloud (2 shared cores), run up13)</title></circle>
+<circle cx="996.1" cy="684.7" r="2.4" fill="#1baf7a"><title>D = 59.9633: 34.6 s, 8 iterations (cloud (2 shared cores), run up13)</title></circle>
+<circle cx="996.4" cy="684.9" r="2.4" fill="#1baf7a"><title>D = 59.9805: 34.5 s, 8 iterations (cloud (2 shared cores), run up13)</title></circle>
+<circle cx="996.8" cy="684.0" r="2.4" fill="#1baf7a"><title>D = 60.0020: 34.9 s, 8 iterations (cloud (2 shared cores), run up13)</title></circle>
+<circle cx="997.2" cy="656.2" r="2.4" fill="#1baf7a"><title>D = 60.0288: 49.1 s, 10 iterations (cloud (2 shared cores), run up13)</title></circle>
+<circle cx="997.7" cy="663.7" r="2.4" fill="#1baf7a"><title>D = 60.0556: 44.8 s, 8 iterations (cloud (2 shared cores), run up13)</title></circle>
+<circle cx="1013.7" cy="674.1" r="2.4" fill="#1baf7a"><title>D = 60.9641: 39.4 s, 8 iterations (cloud (2 shared cores), run up18)</title></circle>
+<circle cx="234.4" cy="776.4" r="2.4" fill="#1baf7a"><title>D = 16.7600: 11.2 s, 7 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="234.6" cy="823.2" r="2.4" fill="#1baf7a"><title>D = 16.7700: 6.3 s, 4 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="234.8" cy="828.5" r="2.4" fill="#1baf7a"><title>D = 16.7825: 5.9 s, 4 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="235.1" cy="798.8" r="2.4" fill="#1baf7a"><title>D = 16.7981: 8.5 s, 4 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="235.5" cy="779.4" r="2.4" fill="#1baf7a"><title>D = 16.8177: 10.8 s, 4 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="235.9" cy="776.4" r="2.4" fill="#1baf7a"><title>D = 16.8421: 11.2 s, 4 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="236.4" cy="773.6" r="2.4" fill="#1baf7a"><title>D = 16.8726: 11.6 s, 4 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="237.1" cy="772.9" r="2.4" fill="#1baf7a"><title>D = 16.9107: 11.7 s, 4 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="237.9" cy="791.5" r="2.4" fill="#1baf7a"><title>D = 16.9584: 9.3 s, 4 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="239.0" cy="824.5" r="2.4" fill="#1baf7a"><title>D = 17.0180: 6.2 s, 4 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="240.3" cy="789.8" r="2.4" fill="#1baf7a"><title>D = 17.0925: 9.5 s, 5 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="241.9" cy="755.4" r="2.4" fill="#1baf7a"><title>D = 17.1857: 14.5 s, 5 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="244.0" cy="753.2" r="2.4" fill="#1baf7a"><title>D = 17.3021: 14.9 s, 5 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="246.6" cy="753.7" r="2.4" fill="#1baf7a"><title>D = 17.4476: 14.8 s, 5 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="249.8" cy="738.3" r="2.4" fill="#1baf7a"><title>D = 17.6295: 17.9 s, 6 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="253.0" cy="785.6" r="2.4" fill="#1baf7a"><title>D = 17.8114: 10.0 s, 6 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="256.2" cy="746.4" r="2.4" fill="#1baf7a"><title>D = 17.9933: 16.2 s, 7 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="259.4" cy="708.2" r="2.4" fill="#1baf7a"><title>D = 18.1752: 25.9 s, 9 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="262.0" cy="770.1" r="2.4" fill="#1baf7a"><title>D = 18.3207: 12.1 s, 8 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="264.0" cy="791.5" r="2.4" fill="#1baf7a"><title>D = 18.4371: 9.3 s, 6 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="266.1" cy="774.3" r="2.4" fill="#1baf7a"><title>D = 18.5535: 11.5 s, 6 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="268.1" cy="788.1" r="2.4" fill="#1baf7a"><title>D = 18.6700: 9.7 s, 6 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="270.2" cy="797.0" r="2.4" fill="#1baf7a"><title>D = 18.7864: 8.7 s, 6 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="272.2" cy="777.9" r="2.4" fill="#1baf7a"><title>D = 18.9028: 11.0 s, 7 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="274.3" cy="769.5" r="2.4" fill="#1baf7a"><title>D = 19.0192: 12.2 s, 8 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="275.9" cy="793.3" r="2.4" fill="#1baf7a"><title>D = 19.1123: 9.1 s, 6 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="277.5" cy="790.7" r="2.4" fill="#1baf7a"><title>D = 19.2055: 9.4 s, 6 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="279.2" cy="795.1" r="2.4" fill="#1baf7a"><title>D = 19.2986: 8.9 s, 6 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="280.8" cy="794.2" r="2.4" fill="#1baf7a"><title>D = 19.3917: 9.0 s, 6 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="282.5" cy="790.7" r="2.4" fill="#1baf7a"><title>D = 19.4849: 9.4 s, 6 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="284.1" cy="793.3" r="2.4" fill="#1baf7a"><title>D = 19.5780: 9.1 s, 6 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="285.8" cy="793.3" r="2.4" fill="#1baf7a"><title>D = 19.6711: 9.1 s, 6 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="287.4" cy="788.9" r="2.4" fill="#1baf7a"><title>D = 19.7643: 9.6 s, 6 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="289.0" cy="777.1" r="2.4" fill="#1baf7a"><title>D = 19.8574: 11.1 s, 7 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="290.7" cy="780.9" r="2.4" fill="#1baf7a"><title>D = 19.9505: 10.6 s, 7 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="292.3" cy="780.9" r="2.4" fill="#1baf7a"><title>D = 20.0437: 10.6 s, 7 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="294.0" cy="757.7" r="2.4" fill="#1baf7a"><title>D = 20.1368: 14.1 s, 9 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="295.3" cy="779.4" r="2.4" fill="#1baf7a"><title>D = 20.2113: 10.8 s, 7 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="296.6" cy="781.7" r="2.4" fill="#1baf7a"><title>D = 20.2858: 10.5 s, 7 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="297.9" cy="781.7" r="2.4" fill="#1baf7a"><title>D = 20.3603: 10.5 s, 7 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="299.2" cy="792.4" r="2.4" fill="#1baf7a"><title>D = 20.4348: 9.2 s, 6 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="300.5" cy="775.0" r="2.4" fill="#1baf7a"><title>D = 20.5093: 11.4 s, 7 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="301.8" cy="768.8" r="2.4" fill="#1baf7a"><title>D = 20.5838: 12.3 s, 8 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="302.9" cy="777.1" r="2.4" fill="#1baf7a"><title>D = 20.6434: 11.1 s, 7 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="303.9" cy="781.7" r="2.4" fill="#1baf7a"><title>D = 20.7030: 10.5 s, 7 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="305.0" cy="770.1" r="2.4" fill="#1baf7a"><title>D = 20.7626: 12.1 s, 8 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="305.8" cy="792.4" r="2.4" fill="#1baf7a"><title>D = 20.8103: 9.2 s, 6 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="306.7" cy="779.4" r="2.4" fill="#1baf7a"><title>D = 20.8580: 10.8 s, 7 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="307.5" cy="780.1" r="2.4" fill="#1baf7a"><title>D = 20.9057: 10.7 s, 7 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="308.4" cy="768.1" r="2.4" fill="#1baf7a"><title>D = 20.9534: 12.4 s, 8 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="309.0" cy="779.4" r="2.4" fill="#1baf7a"><title>D = 20.9915: 10.8 s, 7 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="309.7" cy="792.4" r="2.4" fill="#1baf7a"><title>D = 21.0297: 9.2 s, 6 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="310.4" cy="780.1" r="2.4" fill="#1baf7a"><title>D = 21.0678: 10.7 s, 7 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="311.1" cy="769.5" r="2.4" fill="#1baf7a"><title>D = 21.1060: 12.2 s, 8 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="311.6" cy="778.6" r="2.4" fill="#1baf7a"><title>D = 21.1365: 10.9 s, 7 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="312.1" cy="768.1" r="2.4" fill="#1baf7a"><title>D = 21.1670: 12.4 s, 8 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="312.6" cy="793.3" r="2.4" fill="#1baf7a"><title>D = 21.1914: 9.1 s, 6 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="313.0" cy="794.2" r="2.4" fill="#1baf7a"><title>D = 21.2158: 9.0 s, 6 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="313.4" cy="780.1" r="2.4" fill="#1baf7a"><title>D = 21.2402: 10.7 s, 7 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="313.9" cy="796.0" r="2.4" fill="#1baf7a"><title>D = 21.2647: 8.8 s, 6 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="314.3" cy="780.9" r="2.4" fill="#1baf7a"><title>D = 21.2891: 10.6 s, 7 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="314.5" cy="794.2" r="2.4" fill="#1baf7a"><title>D = 21.3013: 9.0 s, 6 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="314.7" cy="797.0" r="2.4" fill="#1baf7a"><title>D = 21.3135: 8.7 s, 6 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="314.9" cy="794.2" r="2.4" fill="#1baf7a"><title>D = 21.3257: 9.0 s, 6 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="315.1" cy="780.1" r="2.4" fill="#1baf7a"><title>D = 21.3379: 10.7 s, 7 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="315.4" cy="793.3" r="2.4" fill="#1baf7a"><title>D = 21.3501: 9.1 s, 6 iterations (cloud (2 shared cores), run up2)</title></circle>
+<circle cx="1013.8" cy="617.3" r="2.4" fill="#1baf7a"><title>D = 60.9656: 79.2 s, 15 iterations (cloud (2 shared cores), run up20)</title></circle>
+<circle cx="1013.8" cy="630.0" r="2.4" fill="#1baf7a"><title>D = 60.9671: 67.8 s, 13 iterations (cloud (2 shared cores), run up20)</title></circle>
+<circle cx="1013.8" cy="598.4" r="2.4" fill="#1baf7a"><title>D = 60.9686: 100.0 s, 18 iterations (cloud (2 shared cores), run up20)</title></circle>
+<circle cx="1013.8" cy="644.5" r="2.4" fill="#1baf7a"><title>D = 60.9701: 56.7 s, 11 iterations (cloud (2 shared cores), run up21)</title></circle>
+<circle cx="1013.9" cy="635.0" r="2.4" fill="#1baf7a"><title>D = 60.9720: 63.7 s, 13 iterations (cloud (2 shared cores), run up21)</title></circle>
+<circle cx="1013.9" cy="612.6" r="2.4" fill="#1baf7a"><title>D = 60.9739: 83.9 s, 16 iterations (cloud (2 shared cores), run up21)</title></circle>
+<circle cx="319.8" cy="781.7" r="2.4" fill="#1baf7a"><title>D = 21.6001: 10.5 s, 7 iterations (cloud (2 shared cores), run up3)</title></circle>
+<circle cx="325.3" cy="778.6" r="2.4" fill="#1baf7a"><title>D = 21.9126: 10.9 s, 7 iterations (cloud (2 shared cores), run up3)</title></circle>
+<circle cx="332.2" cy="772.2" r="2.4" fill="#1baf7a"><title>D = 22.3032: 11.8 s, 8 iterations (cloud (2 shared cores), run up3)</title></circle>
+<circle cx="336.5" cy="770.8" r="2.4" fill="#1baf7a"><title>D = 22.5474: 12.0 s, 8 iterations (cloud (2 shared cores), run up3)</title></circle>
+<circle cx="341.8" cy="772.2" r="2.4" fill="#1baf7a"><title>D = 22.8525: 11.8 s, 8 iterations (cloud (2 shared cores), run up3)</title></circle>
+<circle cx="345.2" cy="778.6" r="2.4" fill="#1baf7a"><title>D = 23.0433: 10.9 s, 7 iterations (cloud (2 shared cores), run up3)</title></circle>
+<circle cx="349.4" cy="779.4" r="2.4" fill="#1baf7a"><title>D = 23.2817: 10.8 s, 7 iterations (cloud (2 shared cores), run up3)</title></circle>
+<circle cx="354.7" cy="769.5" r="2.4" fill="#1baf7a"><title>D = 23.5797: 12.2 s, 8 iterations (cloud (2 shared cores), run up3)</title></circle>
+<circle cx="361.2" cy="687.3" r="2.4" fill="#1baf7a"><title>D = 23.9522: 33.5 s, 24 iterations (cloud (2 shared cores), run up3)</title></circle>
+<circle cx="359.1" cy="724.5" r="2.4" fill="#1baf7a"><title>D = 23.8297: 21.2 s, 9 iterations (cloud (2 shared cores), run up4)</title></circle>
+<circle cx="363.5" cy="715.8" r="2.4" fill="#1baf7a"><title>D = 24.0797: 23.6 s, 10 iterations (cloud (2 shared cores), run up4)</title></circle>
+<circle cx="367.9" cy="713.1" r="2.4" fill="#1baf7a"><title>D = 24.3297: 24.4 s, 10 iterations (cloud (2 shared cores), run up4)</title></circle>
+<circle cx="372.3" cy="716.1" r="2.4" fill="#1baf7a"><title>D = 24.5797: 23.5 s, 10 iterations (cloud (2 shared cores), run up4)</title></circle>
+<circle cx="376.7" cy="717.5" r="2.4" fill="#1baf7a"><title>D = 24.8297: 23.1 s, 10 iterations (cloud (2 shared cores), run up4)</title></circle>
+<circle cx="381.1" cy="716.8" r="2.4" fill="#1baf7a"><title>D = 25.0797: 23.3 s, 10 iterations (cloud (2 shared cores), run up4)</title></circle>
+<circle cx="385.5" cy="715.1" r="2.4" fill="#1baf7a"><title>D = 25.3297: 23.8 s, 10 iterations (cloud (2 shared cores), run up4)</title></circle>
+<circle cx="389.9" cy="711.1" r="2.4" fill="#1baf7a"><title>D = 25.5797: 25.0 s, 11 iterations (cloud (2 shared cores), run up4)</title></circle>
+<circle cx="394.3" cy="711.4" r="2.4" fill="#1baf7a"><title>D = 25.8297: 24.9 s, 11 iterations (cloud (2 shared cores), run up4)</title></circle>
+<circle cx="398.7" cy="708.2" r="2.4" fill="#1baf7a"><title>D = 26.0797: 25.9 s, 11 iterations (cloud (2 shared cores), run up4)</title></circle>
+<circle cx="403.1" cy="710.5" r="2.4" fill="#1baf7a"><title>D = 26.3297: 25.2 s, 11 iterations (cloud (2 shared cores), run up4)</title></circle>
+<circle cx="407.6" cy="725.7" r="2.4" fill="#1baf7a"><title>D = 26.5797: 20.9 s, 9 iterations (cloud (2 shared cores), run up4)</title></circle>
+<circle cx="412.0" cy="692.6" r="2.4" fill="#1baf7a"><title>D = 26.8297: 31.4 s, 14 iterations (cloud (2 shared cores), run up4)</title></circle>
+<circle cx="407.8" cy="709.5" r="2.4" fill="#1baf7a"><title>D = 26.5953: 25.5 s, 7 iterations (cloud (2 shared cores), run up5)</title></circle>
+<circle cx="408.2" cy="719.3" r="2.4" fill="#1baf7a"><title>D = 26.6149: 22.6 s, 6 iterations (cloud (2 shared cores), run up5)</title></circle>
+<circle cx="408.6" cy="720.4" r="2.4" fill="#1baf7a"><title>D = 26.6393: 22.3 s, 6 iterations (cloud (2 shared cores), run up5)</title></circle>
+<circle cx="408.9" cy="735.2" r="2.4" fill="#1baf7a"><title>D = 26.6545: 18.6 s, 5 iterations (cloud (2 shared cores), run up5)</title></circle>
+<circle cx="409.2" cy="733.0" r="2.4" fill="#1baf7a"><title>D = 26.6736: 19.1 s, 5 iterations (cloud (2 shared cores), run up5)</title></circle>
+<circle cx="409.6" cy="732.6" r="2.4" fill="#1baf7a"><title>D = 26.6975: 19.2 s, 5 iterations (cloud (2 shared cores), run up5)</title></circle>
+<circle cx="410.2" cy="720.0" r="2.4" fill="#1baf7a"><title>D = 26.7273: 22.4 s, 6 iterations (cloud (2 shared cores), run up5)</title></circle>
+<circle cx="410.5" cy="724.1" r="2.4" fill="#1baf7a"><title>D = 26.7459: 21.3 s, 6 iterations (cloud (2 shared cores), run up5)</title></circle>
+<circle cx="410.9" cy="735.2" r="2.4" fill="#1baf7a"><title>D = 26.7692: 18.6 s, 5 iterations (cloud (2 shared cores), run up5)</title></circle>
+<circle cx="411.4" cy="733.4" r="2.4" fill="#1baf7a"><title>D = 26.7983: 19.0 s, 5 iterations (cloud (2 shared cores), run up5)</title></circle>
+<circle cx="411.7" cy="732.6" r="2.4" fill="#1baf7a"><title>D = 26.8165: 19.2 s, 5 iterations (cloud (2 shared cores), run up5)</title></circle>
+<circle cx="412.1" cy="731.7" r="2.4" fill="#1baf7a"><title>D = 26.8392: 19.4 s, 5 iterations (cloud (2 shared cores), run up5)</title></circle>
+<circle cx="413.2" cy="748.9" r="2.4" fill="#1baf7a"><title>D = 26.8992: 15.7 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="413.8" cy="719.0" r="2.4" fill="#1baf7a"><title>D = 26.9367: 22.7 s, 6 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="414.7" cy="732.2" r="2.4" fill="#1baf7a"><title>D = 26.9836: 19.3 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="415.7" cy="732.2" r="2.4" fill="#1baf7a"><title>D = 27.0422: 19.3 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="417.0" cy="734.7" r="2.4" fill="#1baf7a"><title>D = 27.1154: 18.7 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="417.8" cy="746.9" r="2.4" fill="#1baf7a"><title>D = 27.1612: 16.1 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="418.8" cy="733.0" r="2.4" fill="#1baf7a"><title>D = 27.2184: 19.1 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="420.1" cy="728.9" r="2.4" fill="#1baf7a"><title>D = 27.2899: 20.1 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="421.7" cy="732.2" r="2.4" fill="#1baf7a"><title>D = 27.3793: 19.3 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="423.6" cy="715.8" r="2.4" fill="#1baf7a"><title>D = 27.4911: 23.6 s, 7 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="424.9" cy="720.8" r="2.4" fill="#1baf7a"><title>D = 27.5610: 22.2 s, 7 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="426.4" cy="732.6" r="2.4" fill="#1baf7a"><title>D = 27.6483: 19.2 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="426.9" cy="730.9" r="2.4" fill="#1baf7a"><title>D = 27.6756: 19.6 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="427.5" cy="733.4" r="2.4" fill="#1baf7a"><title>D = 27.7097: 19.0 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="428.2" cy="720.4" r="2.4" fill="#1baf7a"><title>D = 27.7523: 22.3 s, 6 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="429.2" cy="718.2" r="2.4" fill="#1baf7a"><title>D = 27.8056: 22.9 s, 6 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="430.3" cy="733.9" r="2.4" fill="#1baf7a"><title>D = 27.8722: 18.9 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="431.8" cy="721.9" r="2.4" fill="#1baf7a"><title>D = 27.9555: 21.9 s, 6 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="433.6" cy="733.4" r="2.4" fill="#1baf7a"><title>D = 28.0595: 19.0 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="434.8" cy="736.9" r="2.4" fill="#1baf7a"><title>D = 28.1246: 18.2 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="436.2" cy="718.2" r="2.4" fill="#1baf7a"><title>D = 28.2059: 22.9 s, 6 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="438.0" cy="733.0" r="2.4" fill="#1baf7a"><title>D = 28.3076: 19.1 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="439.1" cy="719.3" r="2.4" fill="#1baf7a"><title>D = 28.3711: 22.6 s, 7 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="440.5" cy="736.0" r="2.4" fill="#1baf7a"><title>D = 28.4505: 18.4 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="442.3" cy="732.6" r="2.4" fill="#1baf7a"><title>D = 28.5498: 19.2 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="443.4" cy="719.3" r="2.4" fill="#1baf7a"><title>D = 28.6118: 22.6 s, 7 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="444.7" cy="733.4" r="2.4" fill="#1baf7a"><title>D = 28.6893: 19.0 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="446.5" cy="734.3" r="2.4" fill="#1baf7a"><title>D = 28.7863: 18.8 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="448.6" cy="724.9" r="2.4" fill="#1baf7a"><title>D = 28.9074: 21.1 s, 7 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="449.3" cy="723.0" r="2.4" fill="#1baf7a"><title>D = 28.9453: 21.6 s, 6 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="450.1" cy="734.3" r="2.4" fill="#1baf7a"><title>D = 28.9926: 18.8 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="451.1" cy="734.7" r="2.4" fill="#1baf7a"><title>D = 29.0518: 18.7 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="452.4" cy="720.0" r="2.4" fill="#1baf7a"><title>D = 29.1258: 22.4 s, 7 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="454.1" cy="734.3" r="2.4" fill="#1baf7a"><title>D = 29.2182: 18.8 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="455.1" cy="722.3" r="2.4" fill="#1baf7a"><title>D = 29.2760: 21.8 s, 7 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="456.4" cy="733.4" r="2.4" fill="#1baf7a"><title>D = 29.3482: 19.0 s, 6 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="458.0" cy="736.5" r="2.4" fill="#1baf7a"><title>D = 29.4385: 18.3 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="458.9" cy="736.5" r="2.4" fill="#1baf7a"><title>D = 29.4949: 18.3 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="460.2" cy="722.6" r="2.4" fill="#1baf7a"><title>D = 29.5654: 21.7 s, 7 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="461.7" cy="723.0" r="2.4" fill="#1baf7a"><title>D = 29.6536: 21.6 s, 7 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="462.7" cy="735.2" r="2.4" fill="#1baf7a"><title>D = 29.7087: 18.6 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="463.9" cy="722.6" r="2.4" fill="#1baf7a"><title>D = 29.7776: 21.7 s, 6 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="465.4" cy="734.7" r="2.4" fill="#1baf7a"><title>D = 29.8637: 18.7 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="466.4" cy="734.7" r="2.4" fill="#1baf7a"><title>D = 29.9175: 18.7 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="467.6" cy="723.0" r="2.4" fill="#1baf7a"><title>D = 29.9847: 21.6 s, 7 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="469.1" cy="734.7" r="2.4" fill="#1baf7a"><title>D = 30.0688: 18.7 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="470.0" cy="721.9" r="2.4" fill="#1baf7a"><title>D = 30.1214: 21.9 s, 7 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="471.1" cy="735.6" r="2.4" fill="#1baf7a"><title>D = 30.1871: 18.5 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="472.6" cy="724.5" r="2.4" fill="#1baf7a"><title>D = 30.2692: 21.2 s, 7 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="473.5" cy="720.8" r="2.4" fill="#1baf7a"><title>D = 30.3205: 22.2 s, 7 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="474.6" cy="721.1" r="2.4" fill="#1baf7a"><title>D = 30.3846: 22.1 s, 7 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="476.0" cy="721.5" r="2.4" fill="#1baf7a"><title>D = 30.4648: 22.0 s, 7 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="476.9" cy="725.3" r="2.4" fill="#1baf7a"><title>D = 30.5149: 21.0 s, 7 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="478.0" cy="736.0" r="2.4" fill="#1baf7a"><title>D = 30.5776: 18.4 s, 6 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="479.4" cy="727.6" r="2.4" fill="#1baf7a"><title>D = 30.6559: 20.4 s, 6 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="480.3" cy="734.7" r="2.4" fill="#1baf7a"><title>D = 30.7048: 18.7 s, 6 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="481.4" cy="725.7" r="2.4" fill="#1baf7a"><title>D = 30.7660: 20.9 s, 6 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="482.7" cy="737.4" r="2.4" fill="#1baf7a"><title>D = 30.8425: 18.1 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="483.5" cy="723.8" r="2.4" fill="#1baf7a"><title>D = 30.8902: 21.4 s, 7 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="484.6" cy="724.5" r="2.4" fill="#1baf7a"><title>D = 30.9500: 21.2 s, 6 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="485.3" cy="721.9" r="2.4" fill="#1baf7a"><title>D = 30.9873: 21.9 s, 7 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="486.1" cy="723.8" r="2.4" fill="#1baf7a"><title>D = 31.0340: 21.4 s, 6 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="487.1" cy="733.4" r="2.4" fill="#1baf7a"><title>D = 31.0923: 19.0 s, 6 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="488.4" cy="725.3" r="2.4" fill="#1baf7a"><title>D = 31.1653: 21.0 s, 6 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="489.2" cy="735.6" r="2.4" fill="#1baf7a"><title>D = 31.2108: 18.5 s, 6 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="490.2" cy="721.9" r="2.4" fill="#1baf7a"><title>D = 31.2678: 21.9 s, 6 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="490.8" cy="736.5" r="2.4" fill="#1baf7a"><title>D = 31.3034: 18.3 s, 6 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="491.6" cy="734.7" r="2.4" fill="#1baf7a"><title>D = 31.3479: 18.7 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="492.6" cy="734.3" r="2.4" fill="#1baf7a"><title>D = 31.4036: 18.8 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="493.8" cy="723.8" r="2.4" fill="#1baf7a"><title>D = 31.4731: 21.4 s, 6 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="495.4" cy="735.2" r="2.4" fill="#1baf7a"><title>D = 31.5601: 18.6 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="496.3" cy="723.0" r="2.4" fill="#1baf7a"><title>D = 31.6144: 21.6 s, 7 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="497.5" cy="721.5" r="2.4" fill="#1baf7a"><title>D = 31.6823: 22.0 s, 6 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="499.0" cy="735.6" r="2.4" fill="#1baf7a"><title>D = 31.7672: 18.5 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="499.9" cy="733.9" r="2.4" fill="#1baf7a"><title>D = 31.8203: 18.9 s, 6 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="501.1" cy="723.4" r="2.4" fill="#1baf7a"><title>D = 31.8866: 21.5 s, 7 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="502.6" cy="734.7" r="2.4" fill="#1baf7a"><title>D = 31.9695: 18.7 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="503.5" cy="722.6" r="2.4" fill="#1baf7a"><title>D = 32.0213: 21.7 s, 6 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="504.6" cy="737.8" r="2.4" fill="#1baf7a"><title>D = 32.0861: 18.0 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="506.1" cy="734.3" r="2.4" fill="#1baf7a"><title>D = 32.1671: 18.8 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="506.9" cy="734.3" r="2.4" fill="#1baf7a"><title>D = 32.2177: 18.8 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="507.5" cy="736.0" r="2.4" fill="#1baf7a"><title>D = 32.2493: 18.4 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="508.2" cy="735.6" r="2.4" fill="#1baf7a"><title>D = 32.2888: 18.5 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="509.1" cy="735.2" r="2.4" fill="#1baf7a"><title>D = 32.3382: 18.6 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="510.2" cy="735.6" r="2.4" fill="#1baf7a"><title>D = 32.4000: 18.5 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="510.8" cy="720.4" r="2.4" fill="#1baf7a"><title>D = 32.4386: 22.3 s, 6 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="511.7" cy="733.4" r="2.4" fill="#1baf7a"><title>D = 32.4869: 19.0 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="512.8" cy="720.4" r="2.4" fill="#1baf7a"><title>D = 32.5472: 22.3 s, 6 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="514.1" cy="735.2" r="2.4" fill="#1baf7a"><title>D = 32.6226: 18.6 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="514.9" cy="730.9" r="2.4" fill="#1baf7a"><title>D = 32.6697: 19.6 s, 6 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="516.0" cy="721.9" r="2.4" fill="#1baf7a"><title>D = 32.7286: 21.9 s, 6 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="517.3" cy="733.9" r="2.4" fill="#1baf7a"><title>D = 32.8023: 18.9 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="518.9" cy="735.6" r="2.4" fill="#1baf7a"><title>D = 32.8943: 18.5 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="519.9" cy="732.2" r="2.4" fill="#1baf7a"><title>D = 32.9518: 19.3 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="520.5" cy="746.4" r="2.4" fill="#1baf7a"><title>D = 32.9878: 16.2 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="521.3" cy="733.4" r="2.4" fill="#1baf7a"><title>D = 33.0327: 19.0 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="522.3" cy="733.9" r="2.4" fill="#1baf7a"><title>D = 33.0889: 18.9 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="523.5" cy="733.0" r="2.4" fill="#1baf7a"><title>D = 33.1591: 19.1 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="525.1" cy="736.9" r="2.4" fill="#1baf7a"><title>D = 33.2469: 18.2 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="526.1" cy="734.3" r="2.4" fill="#1baf7a"><title>D = 33.3018: 18.8 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="527.3" cy="734.7" r="2.4" fill="#1baf7a"><title>D = 33.3704: 18.7 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="528.8" cy="736.0" r="2.4" fill="#1baf7a"><title>D = 33.4561: 18.4 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="529.7" cy="721.5" r="2.4" fill="#1baf7a"><title>D = 33.5097: 22.0 s, 6 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="530.9" cy="736.9" r="2.4" fill="#1baf7a"><title>D = 33.5766: 18.2 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="531.6" cy="733.0" r="2.4" fill="#1baf7a"><title>D = 33.6185: 19.1 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="532.6" cy="733.0" r="2.4" fill="#1baf7a"><title>D = 33.6708: 19.1 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="533.1" cy="730.9" r="2.4" fill="#1baf7a"><title>D = 33.7035: 19.6 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="533.9" cy="733.4" r="2.4" fill="#1baf7a"><title>D = 33.7444: 19.0 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="534.8" cy="734.3" r="2.4" fill="#1baf7a"><title>D = 33.7955: 18.8 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="535.3" cy="732.6" r="2.4" fill="#1baf7a"><title>D = 33.8274: 19.2 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="535.7" cy="737.8" r="2.4" fill="#1baf7a"><title>D = 33.8474: 18.0 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="536.1" cy="735.6" r="2.4" fill="#1baf7a"><title>D = 33.8723: 18.5 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="536.7" cy="733.9" r="2.4" fill="#1baf7a"><title>D = 33.9035: 18.9 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="537.4" cy="733.9" r="2.4" fill="#1baf7a"><title>D = 33.9425: 18.9 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="538.2" cy="733.4" r="2.4" fill="#1baf7a"><title>D = 33.9912: 19.0 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="539.3" cy="748.4" r="2.4" fill="#1baf7a"><title>D = 34.0521: 15.8 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="540.6" cy="733.4" r="2.4" fill="#1baf7a"><title>D = 34.1283: 19.0 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="541.1" cy="731.7" r="2.4" fill="#1baf7a"><title>D = 34.1521: 19.4 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="541.6" cy="735.2" r="2.4" fill="#1baf7a"><title>D = 34.1818: 18.6 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="542.2" cy="733.9" r="2.4" fill="#1baf7a"><title>D = 34.2190: 18.9 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="543.1" cy="734.7" r="2.4" fill="#1baf7a"><title>D = 34.2655: 18.7 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="544.1" cy="736.0" r="2.4" fill="#1baf7a"><title>D = 34.3236: 18.4 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="545.4" cy="735.6" r="2.4" fill="#1baf7a"><title>D = 34.3962: 18.5 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="546.2" cy="733.9" r="2.4" fill="#1baf7a"><title>D = 34.4415: 18.9 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="546.7" cy="735.6" r="2.4" fill="#1baf7a"><title>D = 34.4699: 18.5 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="547.0" cy="735.2" r="2.4" fill="#1baf7a"><title>D = 34.4876: 18.6 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="547.4" cy="735.2" r="2.4" fill="#1baf7a"><title>D = 34.5098: 18.6 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="547.8" cy="733.4" r="2.4" fill="#1baf7a"><title>D = 34.5375: 19.0 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="548.5" cy="736.5" r="2.4" fill="#1baf7a"><title>D = 34.5721: 18.3 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="549.2" cy="748.4" r="2.4" fill="#1baf7a"><title>D = 34.6154: 15.8 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="550.2" cy="734.7" r="2.4" fill="#1baf7a"><title>D = 34.6695: 18.7 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="551.4" cy="736.5" r="2.4" fill="#1baf7a"><title>D = 34.7371: 18.3 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="552.1" cy="737.8" r="2.4" fill="#1baf7a"><title>D = 34.7794: 18.0 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="553.0" cy="730.5" r="2.4" fill="#1baf7a"><title>D = 34.8322: 19.7 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="554.2" cy="734.7" r="2.4" fill="#1baf7a"><title>D = 34.8983: 18.7 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="554.6" cy="734.7" r="2.4" fill="#1baf7a"><title>D = 34.9189: 18.7 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="554.8" cy="736.0" r="2.4" fill="#1baf7a"><title>D = 34.9318: 18.4 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="555.1" cy="721.9" r="2.4" fill="#1baf7a"><title>D = 34.9479: 21.9 s, 6 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="555.4" cy="736.5" r="2.4" fill="#1baf7a"><title>D = 34.9681: 18.3 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="555.9" cy="733.9" r="2.4" fill="#1baf7a"><title>D = 34.9933: 18.9 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="556.4" cy="734.3" r="2.4" fill="#1baf7a"><title>D = 35.0248: 18.8 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="557.1" cy="745.9" r="2.4" fill="#1baf7a"><title>D = 35.0641: 16.3 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="558.0" cy="733.4" r="2.4" fill="#1baf7a"><title>D = 35.1133: 19.0 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="559.1" cy="734.3" r="2.4" fill="#1baf7a"><title>D = 35.1748: 18.8 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="559.3" cy="731.7" r="2.4" fill="#1baf7a"><title>D = 35.1844: 19.4 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="559.4" cy="732.2" r="2.4" fill="#1baf7a"><title>D = 35.1904: 19.3 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="559.5" cy="732.6" r="2.4" fill="#1baf7a"><title>D = 35.1979: 19.2 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="559.5" cy="731.7" r="2.4" fill="#1baf7a"><title>D = 35.2003: 19.4 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="559.6" cy="734.7" r="2.4" fill="#1baf7a"><title>D = 35.2032: 18.7 s, 5 iterations (cloud (2 shared cores), run up6)</title></circle>
+<circle cx="562.2" cy="633.9" r="2.4" fill="#1baf7a"><title>D = 35.3532: 64.6 s, 19 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="564.3" cy="686.1" r="2.4" fill="#1baf7a"><title>D = 35.4732: 34.0 s, 10 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="566.5" cy="684.9" r="2.4" fill="#1baf7a"><title>D = 35.5932: 34.5 s, 10 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="568.6" cy="693.6" r="2.4" fill="#1baf7a"><title>D = 35.7132: 31.0 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="570.7" cy="684.4" r="2.4" fill="#1baf7a"><title>D = 35.8332: 34.7 s, 10 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="572.8" cy="679.7" r="2.4" fill="#1baf7a"><title>D = 35.9532: 36.8 s, 11 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="574.9" cy="671.9" r="2.4" fill="#1baf7a"><title>D = 36.0732: 40.5 s, 12 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="577.0" cy="705.8" r="2.4" fill="#1baf7a"><title>D = 36.1932: 26.7 s, 8 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="579.7" cy="659.1" r="2.4" fill="#1baf7a"><title>D = 36.3432: 47.4 s, 14 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="581.8" cy="679.0" r="2.4" fill="#1baf7a"><title>D = 36.4632: 37.1 s, 11 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="583.9" cy="663.5" r="2.4" fill="#1baf7a"><title>D = 36.5832: 44.9 s, 13 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="586.0" cy="705.2" r="2.4" fill="#1baf7a"><title>D = 36.7032: 26.9 s, 8 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="587.3" cy="705.2" r="2.4" fill="#1baf7a"><title>D = 36.7782: 26.9 s, 8 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="589.0" cy="696.0" r="2.4" fill="#1baf7a"><title>D = 36.8720: 30.1 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="590.7" cy="705.2" r="2.4" fill="#1baf7a"><title>D = 36.9657: 26.9 s, 8 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="592.7" cy="707.6" r="2.4" fill="#1baf7a"><title>D = 37.0829: 26.1 s, 8 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="595.3" cy="625.4" r="2.4" fill="#1baf7a"><title>D = 37.2294: 71.7 s, 22 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="597.4" cy="680.1" r="2.4" fill="#1baf7a"><title>D = 37.3466: 36.6 s, 11 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="599.4" cy="697.7" r="2.4" fill="#1baf7a"><title>D = 37.4638: 29.5 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="601.5" cy="705.8" r="2.4" fill="#1baf7a"><title>D = 37.5810: 26.7 s, 8 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="604.1" cy="696.3" r="2.4" fill="#1baf7a"><title>D = 37.7274: 30.0 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="606.7" cy="670.7" r="2.4" fill="#1baf7a"><title>D = 37.8739: 41.1 s, 13 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="609.2" cy="621.5" r="2.4" fill="#1baf7a"><title>D = 38.0204: 75.2 s, 23 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="611.3" cy="696.6" r="2.4" fill="#1baf7a"><title>D = 38.1376: 29.9 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="613.4" cy="679.7" r="2.4" fill="#1baf7a"><title>D = 38.2548: 36.8 s, 11 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="614.4" cy="695.7" r="2.4" fill="#1baf7a"><title>D = 38.3134: 30.2 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="615.4" cy="694.1" r="2.4" fill="#1baf7a"><title>D = 38.3720: 30.8 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="616.5" cy="697.1" r="2.4" fill="#1baf7a"><title>D = 38.4306: 29.7 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="617.5" cy="707.0" r="2.4" fill="#1baf7a"><title>D = 38.4892: 26.3 s, 8 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="618.8" cy="695.5" r="2.4" fill="#1baf7a"><title>D = 38.5624: 30.3 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="620.1" cy="697.1" r="2.4" fill="#1baf7a"><title>D = 38.6357: 29.7 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="621.4" cy="695.5" r="2.4" fill="#1baf7a"><title>D = 38.7089: 30.3 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="622.7" cy="693.4" r="2.4" fill="#1baf7a"><title>D = 38.7821: 31.1 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="624.0" cy="696.8" r="2.4" fill="#1baf7a"><title>D = 38.8554: 29.8 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="625.3" cy="692.1" r="2.4" fill="#1baf7a"><title>D = 38.9286: 31.6 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="626.6" cy="695.7" r="2.4" fill="#1baf7a"><title>D = 39.0019: 30.2 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="627.8" cy="693.9" r="2.4" fill="#1baf7a"><title>D = 39.0751: 30.9 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="629.1" cy="699.0" r="2.4" fill="#1baf7a"><title>D = 39.1483: 29.0 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="630.4" cy="695.7" r="2.4" fill="#1baf7a"><title>D = 39.2216: 30.2 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="631.7" cy="674.1" r="2.4" fill="#1baf7a"><title>D = 39.2948: 39.4 s, 12 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="632.4" cy="703.4" r="2.4" fill="#1baf7a"><title>D = 39.3315: 27.5 s, 8 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="633.2" cy="715.1" r="2.4" fill="#1baf7a"><title>D = 39.3772: 23.8 s, 7 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="634.2" cy="717.5" r="2.4" fill="#1baf7a"><title>D = 39.4344: 23.1 s, 7 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="635.4" cy="703.4" r="2.4" fill="#1baf7a"><title>D = 39.5060: 27.5 s, 8 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="637.0" cy="677.3" r="2.4" fill="#1baf7a"><title>D = 39.5954: 37.9 s, 11 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="638.6" cy="698.8" r="2.4" fill="#1baf7a"><title>D = 39.6848: 29.1 s, 8 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="640.6" cy="693.1" r="2.4" fill="#1baf7a"><title>D = 39.7965: 31.2 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="642.5" cy="691.5" r="2.4" fill="#1baf7a"><title>D = 39.9083: 31.8 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="644.5" cy="694.1" r="2.4" fill="#1baf7a"><title>D = 40.0201: 30.8 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="645.5" cy="694.7" r="2.4" fill="#1baf7a"><title>D = 40.0759: 30.6 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="646.5" cy="701.6" r="2.4" fill="#1baf7a"><title>D = 40.1318: 28.1 s, 8 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="647.7" cy="694.9" r="2.4" fill="#1baf7a"><title>D = 40.2017: 30.5 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="648.9" cy="695.2" r="2.4" fill="#1baf7a"><title>D = 40.2715: 30.4 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="650.2" cy="705.8" r="2.4" fill="#1baf7a"><title>D = 40.3414: 26.7 s, 8 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="651.7" cy="697.4" r="2.4" fill="#1baf7a"><title>D = 40.4287: 29.6 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="653.2" cy="704.0" r="2.4" fill="#1baf7a"><title>D = 40.5160: 27.3 s, 8 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="655.2" cy="690.5" r="2.4" fill="#1baf7a"><title>D = 40.6251: 32.2 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="657.1" cy="672.3" r="2.4" fill="#1baf7a"><title>D = 40.7343: 40.3 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="659.0" cy="671.5" r="2.4" fill="#1baf7a"><title>D = 40.8434: 40.7 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="660.9" cy="683.3" r="2.4" fill="#1baf7a"><title>D = 40.9525: 35.2 s, 8 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="663.3" cy="671.9" r="2.4" fill="#1baf7a"><title>D = 41.0890: 40.5 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="665.8" cy="676.6" r="2.4" fill="#1baf7a"><title>D = 41.2254: 38.2 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="668.2" cy="699.3" r="2.4" fill="#1baf7a"><title>D = 41.3618: 28.9 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="670.6" cy="697.1" r="2.4" fill="#1baf7a"><title>D = 41.4982: 29.7 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="673.0" cy="698.2" r="2.4" fill="#1baf7a"><title>D = 41.6347: 29.3 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="675.4" cy="697.4" r="2.4" fill="#1baf7a"><title>D = 41.7711: 29.6 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="677.8" cy="683.5" r="2.4" fill="#1baf7a"><title>D = 41.9075: 35.1 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="680.2" cy="677.9" r="2.4" fill="#1baf7a"><title>D = 42.0439: 37.6 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="682.6" cy="682.8" r="2.4" fill="#1baf7a"><title>D = 42.1804: 35.4 s, 10 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="685.0" cy="684.0" r="2.4" fill="#1baf7a"><title>D = 42.3168: 34.9 s, 10 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="687.4" cy="666.6" r="2.4" fill="#1baf7a"><title>D = 42.4532: 43.2 s, 10 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="689.8" cy="663.9" r="2.4" fill="#1baf7a"><title>D = 42.5896: 44.7 s, 10 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="692.2" cy="652.3" r="2.4" fill="#1baf7a"><title>D = 42.7261: 51.5 s, 11 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="694.6" cy="668.9" r="2.4" fill="#1baf7a"><title>D = 42.8625: 42.0 s, 11 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="697.0" cy="672.5" r="2.4" fill="#1baf7a"><title>D = 42.9989: 40.2 s, 11 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="699.4" cy="674.7" r="2.4" fill="#1baf7a"><title>D = 43.1353: 39.1 s, 11 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="701.8" cy="672.7" r="2.4" fill="#1baf7a"><title>D = 43.2718: 40.1 s, 11 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="704.2" cy="667.0" r="2.4" fill="#1baf7a"><title>D = 43.4082: 43.0 s, 12 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="706.6" cy="615.9" r="2.4" fill="#1baf7a"><title>D = 43.5446: 80.6 s, 22 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="708.6" cy="672.7" r="2.4" fill="#1baf7a"><title>D = 43.6537: 40.1 s, 11 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="710.5" cy="671.9" r="2.4" fill="#1baf7a"><title>D = 43.7629: 40.5 s, 11 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="712.4" cy="665.3" r="2.4" fill="#1baf7a"><title>D = 43.8720: 43.9 s, 12 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="714.3" cy="674.7" r="2.4" fill="#1baf7a"><title>D = 43.9812: 39.1 s, 11 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="716.3" cy="673.7" r="2.4" fill="#1baf7a"><title>D = 44.0903: 39.6 s, 11 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="718.2" cy="661.9" r="2.4" fill="#1baf7a"><title>D = 44.1994: 45.8 s, 13 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="720.1" cy="674.9" r="2.4" fill="#1baf7a"><title>D = 44.3086: 39.0 s, 11 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="722.0" cy="668.3" r="2.4" fill="#1baf7a"><title>D = 44.4177: 42.3 s, 12 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="724.0" cy="674.3" r="2.4" fill="#1baf7a"><title>D = 44.5269: 39.3 s, 11 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="725.9" cy="667.8" r="2.4" fill="#1baf7a"><title>D = 44.6360: 42.6 s, 12 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="727.8" cy="674.9" r="2.4" fill="#1baf7a"><title>D = 44.7451: 39.0 s, 11 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="729.7" cy="660.3" r="2.4" fill="#1baf7a"><title>D = 44.8543: 46.7 s, 13 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="731.7" cy="654.3" r="2.4" fill="#1baf7a"><title>D = 44.9634: 50.3 s, 14 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="733.2" cy="674.5" r="2.4" fill="#1baf7a"><title>D = 45.0507: 39.2 s, 11 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="734.7" cy="636.6" r="2.4" fill="#1baf7a"><title>D = 45.1380: 62.5 s, 17 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="736.0" cy="624.7" r="2.4" fill="#1baf7a"><title>D = 45.2079: 72.3 s, 16 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="736.5" cy="666.4" r="2.4" fill="#1baf7a"><title>D = 45.2358: 43.3 s, 12 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="736.7" cy="670.1" r="2.4" fill="#1baf7a"><title>D = 45.2498: 41.4 s, 12 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="736.9" cy="666.3" r="2.4" fill="#1baf7a"><title>D = 45.2638: 43.4 s, 11 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="737.2" cy="681.9" r="2.4" fill="#1baf7a"><title>D = 45.2777: 35.8 s, 8 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="737.3" cy="675.2" r="2.4" fill="#1baf7a"><title>D = 45.2865: 38.9 s, 10 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="737.5" cy="679.4" r="2.4" fill="#1baf7a"><title>D = 45.2952: 36.9 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="737.7" cy="679.0" r="2.4" fill="#1baf7a"><title>D = 45.3039: 37.1 s, 10 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="737.8" cy="681.9" r="2.4" fill="#1baf7a"><title>D = 45.3127: 35.8 s, 10 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="738.0" cy="689.5" r="2.4" fill="#1baf7a"><title>D = 45.3214: 32.6 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="738.1" cy="721.1" r="2.4" fill="#1baf7a"><title>D = 45.3301: 22.1 s, 6 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="738.2" cy="690.8" r="2.4" fill="#1baf7a"><title>D = 45.3356: 32.1 s, 9 iterations (cloud (2 shared cores), run up7)</title></circle>
+<circle cx="738.6" cy="707.3" r="2.4" fill="#1baf7a"><title>D = 45.3601: 26.2 s, 7 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="739.3" cy="709.5" r="2.4" fill="#1baf7a"><title>D = 45.3976: 25.5 s, 7 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="740.1" cy="698.2" r="2.4" fill="#1baf7a"><title>D = 45.4445: 29.3 s, 8 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="741.2" cy="674.3" r="2.4" fill="#1baf7a"><title>D = 45.5031: 39.3 s, 11 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="742.2" cy="694.4" r="2.4" fill="#1baf7a"><title>D = 45.5617: 30.7 s, 8 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="743.5" cy="699.9" r="2.4" fill="#1baf7a"><title>D = 45.6349: 28.7 s, 8 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="745.1" cy="691.5" r="2.4" fill="#1baf7a"><title>D = 45.7265: 31.8 s, 9 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="746.7" cy="684.4" r="2.4" fill="#1baf7a"><title>D = 45.8180: 34.7 s, 10 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="748.3" cy="683.5" r="2.4" fill="#1baf7a"><title>D = 45.9096: 35.1 s, 10 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="749.9" cy="676.0" r="2.4" fill="#1baf7a"><title>D = 46.0011: 38.5 s, 11 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="751.6" cy="674.7" r="2.4" fill="#1baf7a"><title>D = 46.0927: 39.1 s, 11 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="753.2" cy="673.5" r="2.4" fill="#1baf7a"><title>D = 46.1842: 39.7 s, 11 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="754.8" cy="679.2" r="2.4" fill="#1baf7a"><title>D = 46.2758: 37.0 s, 10 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="756.4" cy="683.5" r="2.4" fill="#1baf7a"><title>D = 46.3673: 35.1 s, 10 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="758.0" cy="681.5" r="2.4" fill="#1baf7a"><title>D = 46.4589: 36.0 s, 10 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="759.6" cy="682.1" r="2.4" fill="#1baf7a"><title>D = 46.5505: 35.7 s, 10 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="761.2" cy="684.2" r="2.4" fill="#1baf7a"><title>D = 46.6420: 34.8 s, 10 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="762.9" cy="680.8" r="2.4" fill="#1baf7a"><title>D = 46.7336: 36.3 s, 10 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="764.5" cy="672.1" r="2.4" fill="#1baf7a"><title>D = 46.8251: 40.4 s, 11 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="766.1" cy="681.9" r="2.4" fill="#1baf7a"><title>D = 46.9167: 35.8 s, 10 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="767.7" cy="683.1" r="2.4" fill="#1baf7a"><title>D = 47.0082: 35.3 s, 10 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="769.3" cy="680.6" r="2.4" fill="#1baf7a"><title>D = 47.0998: 36.4 s, 10 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="770.9" cy="681.7" r="2.4" fill="#1baf7a"><title>D = 47.1913: 35.9 s, 10 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="772.5" cy="680.8" r="2.4" fill="#1baf7a"><title>D = 47.2829: 36.3 s, 10 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="774.2" cy="684.2" r="2.4" fill="#1baf7a"><title>D = 47.3744: 34.8 s, 10 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="775.8" cy="683.3" r="2.4" fill="#1baf7a"><title>D = 47.4660: 35.2 s, 10 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="777.4" cy="683.1" r="2.4" fill="#1baf7a"><title>D = 47.5575: 35.3 s, 10 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="779.0" cy="685.9" r="2.4" fill="#1baf7a"><title>D = 47.6491: 34.1 s, 10 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="780.6" cy="685.6" r="2.4" fill="#1baf7a"><title>D = 47.7406: 34.2 s, 10 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="782.2" cy="684.0" r="2.4" fill="#1baf7a"><title>D = 47.8322: 34.9 s, 10 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="783.8" cy="684.4" r="2.4" fill="#1baf7a"><title>D = 47.9237: 34.7 s, 10 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="785.5" cy="683.5" r="2.4" fill="#1baf7a"><title>D = 48.0153: 35.1 s, 10 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="787.1" cy="680.3" r="2.4" fill="#1baf7a"><title>D = 48.1069: 36.5 s, 10 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="788.7" cy="683.3" r="2.4" fill="#1baf7a"><title>D = 48.1984: 35.2 s, 10 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="790.3" cy="673.5" r="2.4" fill="#1baf7a"><title>D = 48.2900: 39.7 s, 11 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="791.9" cy="676.6" r="2.4" fill="#1baf7a"><title>D = 48.3815: 38.2 s, 11 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="793.5" cy="677.1" r="2.4" fill="#1baf7a"><title>D = 48.4731: 38.0 s, 11 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="795.1" cy="677.5" r="2.4" fill="#1baf7a"><title>D = 48.5646: 37.8 s, 11 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="796.8" cy="665.9" r="2.4" fill="#1baf7a"><title>D = 48.6562: 43.6 s, 12 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="798.4" cy="669.5" r="2.4" fill="#1baf7a"><title>D = 48.7477: 41.7 s, 12 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="800.0" cy="669.7" r="2.4" fill="#1baf7a"><title>D = 48.8393: 41.6 s, 12 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="801.6" cy="670.7" r="2.4" fill="#1baf7a"><title>D = 48.9308: 41.1 s, 12 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="803.2" cy="661.9" r="2.4" fill="#1baf7a"><title>D = 49.0224: 45.8 s, 13 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="804.8" cy="657.1" r="2.4" fill="#1baf7a"><title>D = 49.1139: 48.6 s, 14 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="806.1" cy="670.9" r="2.4" fill="#1baf7a"><title>D = 49.1872: 41.0 s, 12 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="807.4" cy="675.2" r="2.4" fill="#1baf7a"><title>D = 49.2604: 38.9 s, 11 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="808.7" cy="675.8" r="2.4" fill="#1baf7a"><title>D = 49.3337: 38.6 s, 11 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="810.0" cy="669.7" r="2.4" fill="#1baf7a"><title>D = 49.4069: 41.6 s, 11 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="811.3" cy="643.4" r="2.4" fill="#1baf7a"><title>D = 49.4801: 57.5 s, 12 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="812.6" cy="653.5" r="2.4" fill="#1baf7a"><title>D = 49.5534: 50.8 s, 11 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="813.9" cy="648.6" r="2.4" fill="#1baf7a"><title>D = 49.6266: 53.9 s, 13 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="815.2" cy="661.0" r="2.4" fill="#1baf7a"><title>D = 49.6999: 46.3 s, 13 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="816.4" cy="655.1" r="2.4" fill="#1baf7a"><title>D = 49.7731: 49.8 s, 14 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="817.5" cy="675.8" r="2.4" fill="#1baf7a"><title>D = 49.8317: 38.6 s, 11 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="818.5" cy="675.4" r="2.4" fill="#1baf7a"><title>D = 49.8903: 38.8 s, 11 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="819.5" cy="674.7" r="2.4" fill="#1baf7a"><title>D = 49.9489: 39.1 s, 11 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="820.6" cy="675.4" r="2.4" fill="#1baf7a"><title>D = 50.0075: 38.8 s, 11 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="821.6" cy="673.9" r="2.4" fill="#1baf7a"><title>D = 50.0661: 39.5 s, 11 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="822.6" cy="673.9" r="2.4" fill="#1baf7a"><title>D = 50.1247: 39.5 s, 11 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="823.7" cy="644.5" r="2.4" fill="#1baf7a"><title>D = 50.1833: 56.7 s, 16 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="824.5" cy="693.9" r="2.4" fill="#1baf7a"><title>D = 50.2301: 30.9 s, 9 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="825.3" cy="695.7" r="2.4" fill="#1baf7a"><title>D = 50.2770: 30.2 s, 9 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="826.2" cy="685.2" r="2.4" fill="#1baf7a"><title>D = 50.3239: 34.4 s, 10 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="827.0" cy="694.1" r="2.4" fill="#1baf7a"><title>D = 50.3708: 30.8 s, 9 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="827.8" cy="686.1" r="2.4" fill="#1baf7a"><title>D = 50.4176: 34.0 s, 10 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="828.6" cy="693.4" r="2.4" fill="#1baf7a"><title>D = 50.4645: 31.1 s, 9 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="829.5" cy="684.4" r="2.4" fill="#1baf7a"><title>D = 50.5114: 34.7 s, 10 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="830.3" cy="687.6" r="2.4" fill="#1baf7a"><title>D = 50.5583: 33.4 s, 10 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="831.1" cy="677.1" r="2.4" fill="#1baf7a"><title>D = 50.6051: 38.0 s, 11 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="831.9" cy="695.5" r="2.4" fill="#1baf7a"><title>D = 50.6520: 30.3 s, 9 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="832.8" cy="677.1" r="2.4" fill="#1baf7a"><title>D = 50.6989: 38.0 s, 11 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="833.6" cy="689.8" r="2.4" fill="#1baf7a"><title>D = 50.7458: 32.5 s, 9 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="834.4" cy="678.1" r="2.4" fill="#1baf7a"><title>D = 50.7926: 37.5 s, 11 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="835.2" cy="685.9" r="2.4" fill="#1baf7a"><title>D = 50.8395: 34.1 s, 10 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="836.1" cy="685.2" r="2.4" fill="#1baf7a"><title>D = 50.8864: 34.4 s, 10 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="836.9" cy="695.7" r="2.4" fill="#1baf7a"><title>D = 50.9333: 30.2 s, 9 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="837.7" cy="673.7" r="2.4" fill="#1baf7a"><title>D = 50.9801: 39.6 s, 12 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="838.6" cy="693.4" r="2.4" fill="#1baf7a"><title>D = 51.0270: 31.1 s, 9 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="839.4" cy="676.4" r="2.4" fill="#1baf7a"><title>D = 51.0739: 38.3 s, 11 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="840.2" cy="684.0" r="2.4" fill="#1baf7a"><title>D = 51.1208: 34.9 s, 10 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="841.0" cy="676.8" r="2.4" fill="#1baf7a"><title>D = 51.1676: 38.1 s, 11 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="841.9" cy="665.5" r="2.4" fill="#1baf7a"><title>D = 51.2145: 43.8 s, 13 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="842.7" cy="688.5" r="2.4" fill="#1baf7a"><title>D = 51.2614: 33.0 s, 10 iterations (cloud (2 shared cores), run up8)</title></circle>
+<circle cx="843.4" cy="693.9" r="2.4" fill="#1baf7a"><title>D = 51.3014: 30.9 s, 9 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="844.1" cy="703.4" r="2.4" fill="#1baf7a"><title>D = 51.3414: 27.5 s, 8 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="845.0" cy="685.6" r="2.4" fill="#1baf7a"><title>D = 51.3914: 34.2 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="845.9" cy="686.8" r="2.4" fill="#1baf7a"><title>D = 51.4414: 33.7 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="846.7" cy="685.6" r="2.4" fill="#1baf7a"><title>D = 51.4914: 34.2 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="847.6" cy="685.4" r="2.4" fill="#1baf7a"><title>D = 51.5414: 34.3 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="848.5" cy="684.2" r="2.4" fill="#1baf7a"><title>D = 51.5914: 34.8 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="849.4" cy="678.4" r="2.4" fill="#1baf7a"><title>D = 51.6414: 37.4 s, 11 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="850.3" cy="688.3" r="2.4" fill="#1baf7a"><title>D = 51.6914: 33.1 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="851.1" cy="687.3" r="2.4" fill="#1baf7a"><title>D = 51.7414: 33.5 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="852.0" cy="681.0" r="2.4" fill="#1baf7a"><title>D = 51.7914: 36.2 s, 11 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="852.9" cy="689.0" r="2.4" fill="#1baf7a"><title>D = 51.8414: 32.8 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="853.8" cy="690.8" r="2.4" fill="#1baf7a"><title>D = 51.8914: 32.1 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="854.7" cy="690.8" r="2.4" fill="#1baf7a"><title>D = 51.9414: 32.1 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="855.6" cy="682.1" r="2.4" fill="#1baf7a"><title>D = 51.9914: 35.7 s, 11 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="856.4" cy="689.5" r="2.4" fill="#1baf7a"><title>D = 52.0414: 32.6 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="857.3" cy="693.4" r="2.4" fill="#1baf7a"><title>D = 52.0914: 31.1 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="858.2" cy="702.8" r="2.4" fill="#1baf7a"><title>D = 52.1414: 27.7 s, 9 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="859.1" cy="693.6" r="2.4" fill="#1baf7a"><title>D = 52.1914: 31.0 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="860.0" cy="693.1" r="2.4" fill="#1baf7a"><title>D = 52.2414: 31.2 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="860.8" cy="696.0" r="2.4" fill="#1baf7a"><title>D = 52.2914: 30.1 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="861.7" cy="695.5" r="2.4" fill="#1baf7a"><title>D = 52.3414: 30.3 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="862.6" cy="695.7" r="2.4" fill="#1baf7a"><title>D = 52.3914: 30.2 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="863.5" cy="695.2" r="2.4" fill="#1baf7a"><title>D = 52.4414: 30.4 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="864.4" cy="697.4" r="2.4" fill="#1baf7a"><title>D = 52.4914: 29.6 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="865.2" cy="697.9" r="2.4" fill="#1baf7a"><title>D = 52.5414: 29.4 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="866.1" cy="697.9" r="2.4" fill="#1baf7a"><title>D = 52.5914: 29.4 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="867.0" cy="696.6" r="2.4" fill="#1baf7a"><title>D = 52.6414: 29.9 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="867.9" cy="698.8" r="2.4" fill="#1baf7a"><title>D = 52.6914: 29.1 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="868.8" cy="697.7" r="2.4" fill="#1baf7a"><title>D = 52.7414: 29.5 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="869.7" cy="698.5" r="2.4" fill="#1baf7a"><title>D = 52.7914: 29.2 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="870.5" cy="699.3" r="2.4" fill="#1baf7a"><title>D = 52.8414: 28.9 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="871.4" cy="700.2" r="2.4" fill="#1baf7a"><title>D = 52.8914: 28.6 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="872.3" cy="700.5" r="2.4" fill="#1baf7a"><title>D = 52.9414: 28.5 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="873.2" cy="700.5" r="2.4" fill="#1baf7a"><title>D = 52.9914: 28.5 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="874.1" cy="701.0" r="2.4" fill="#1baf7a"><title>D = 53.0414: 28.3 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="874.9" cy="697.9" r="2.4" fill="#1baf7a"><title>D = 53.0914: 29.4 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="875.8" cy="698.5" r="2.4" fill="#1baf7a"><title>D = 53.1414: 29.2 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="876.7" cy="700.2" r="2.4" fill="#1baf7a"><title>D = 53.1914: 28.6 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="877.6" cy="699.6" r="2.4" fill="#1baf7a"><title>D = 53.2414: 28.8 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="878.5" cy="699.6" r="2.4" fill="#1baf7a"><title>D = 53.2914: 28.8 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="879.4" cy="699.9" r="2.4" fill="#1baf7a"><title>D = 53.3414: 28.7 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="880.2" cy="698.5" r="2.4" fill="#1baf7a"><title>D = 53.3914: 29.2 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="881.1" cy="700.2" r="2.4" fill="#1baf7a"><title>D = 53.4414: 28.6 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="882.0" cy="700.7" r="2.4" fill="#1baf7a"><title>D = 53.4914: 28.4 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="882.9" cy="701.6" r="2.4" fill="#1baf7a"><title>D = 53.5414: 28.1 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="883.8" cy="702.2" r="2.4" fill="#1baf7a"><title>D = 53.5914: 27.9 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="884.6" cy="699.9" r="2.4" fill="#1baf7a"><title>D = 53.6414: 28.7 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="885.5" cy="704.3" r="2.4" fill="#1baf7a"><title>D = 53.6914: 27.2 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="886.4" cy="703.1" r="2.4" fill="#1baf7a"><title>D = 53.7414: 27.6 s, 10 iterations (cloud (2 shared cores), run up9)</title></circle>
+<circle cx="993.9" cy="672.9" r="2.4" fill="#eda100"><title>D = 59.8401: 40.0 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="994.3" cy="669.5" r="2.4" fill="#eda100"><title>D = 59.8626: 41.7 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="994.8" cy="661.0" r="2.4" fill="#eda100"><title>D = 59.8907: 46.3 s, 9 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="995.1" cy="673.1" r="2.4" fill="#eda100"><title>D = 59.9048: 39.9 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="995.4" cy="671.7" r="2.4" fill="#eda100"><title>D = 59.9224: 40.6 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="995.8" cy="672.3" r="2.4" fill="#eda100"><title>D = 59.9443: 40.3 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="996.2" cy="672.1" r="2.4" fill="#eda100"><title>D = 59.9718: 40.4 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="996.5" cy="679.9" r="2.4" fill="#eda100"><title>D = 59.9868: 36.7 s, 7 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="996.8" cy="696.6" r="2.4" fill="#eda100"><title>D = 60.0056: 29.9 s, 6 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="997.3" cy="653.8" r="2.4" fill="#eda100"><title>D = 60.0290: 50.6 s, 10 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="997.7" cy="627.3" r="2.4" fill="#eda100"><title>D = 60.0524: 70.1 s, 14 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="998.0" cy="663.3" r="2.4" fill="#eda100"><title>D = 60.0712: 45.0 s, 9 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="998.3" cy="674.1" r="2.4" fill="#eda100"><title>D = 60.0899: 39.4 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="998.7" cy="673.7" r="2.4" fill="#eda100"><title>D = 60.1134: 39.6 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="999.0" cy="674.1" r="2.4" fill="#eda100"><title>D = 60.1280: 39.4 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="999.3" cy="656.7" r="2.4" fill="#eda100"><title>D = 60.1463: 48.8 s, 10 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="999.6" cy="664.8" r="2.4" fill="#eda100"><title>D = 60.1646: 44.2 s, 9 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1000.0" cy="673.5" r="2.4" fill="#eda100"><title>D = 60.1830: 39.7 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1000.4" cy="672.3" r="2.4" fill="#eda100"><title>D = 60.2058: 40.3 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1000.9" cy="674.1" r="2.4" fill="#eda100"><title>D = 60.2345: 39.4 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1001.1" cy="685.2" r="2.4" fill="#eda100"><title>D = 60.2495: 34.4 s, 7 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1001.5" cy="673.1" r="2.4" fill="#eda100"><title>D = 60.2682: 39.9 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1001.9" cy="673.3" r="2.4" fill="#eda100"><title>D = 60.2916: 39.8 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1002.1" cy="673.7" r="2.4" fill="#eda100"><title>D = 60.3063: 39.6 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1002.5" cy="674.7" r="2.4" fill="#eda100"><title>D = 60.3246: 39.1 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1002.7" cy="685.2" r="2.4" fill="#eda100"><title>D = 60.3360: 34.4 s, 7 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1002.9" cy="686.3" r="2.4" fill="#eda100"><title>D = 60.3504: 33.9 s, 7 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1003.2" cy="669.7" r="2.4" fill="#eda100"><title>D = 60.3682: 41.6 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1003.6" cy="674.1" r="2.4" fill="#eda100"><title>D = 60.3906: 39.4 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1003.9" cy="673.5" r="2.4" fill="#eda100"><title>D = 60.4046: 39.7 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1004.2" cy="675.2" r="2.4" fill="#eda100"><title>D = 60.4220: 38.9 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1004.6" cy="675.6" r="2.4" fill="#eda100"><title>D = 60.4438: 38.7 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1004.8" cy="674.1" r="2.4" fill="#eda100"><title>D = 60.4575: 39.4 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1005.1" cy="672.7" r="2.4" fill="#eda100"><title>D = 60.4745: 40.1 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1005.5" cy="674.1" r="2.4" fill="#eda100"><title>D = 60.4959: 39.4 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1005.7" cy="674.5" r="2.4" fill="#eda100"><title>D = 60.5092: 39.2 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1006.0" cy="674.1" r="2.4" fill="#eda100"><title>D = 60.5258: 39.4 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1006.4" cy="666.1" r="2.4" fill="#eda100"><title>D = 60.5466: 43.5 s, 9 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1006.7" cy="673.3" r="2.4" fill="#eda100"><title>D = 60.5675: 39.8 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1007.0" cy="685.2" r="2.4" fill="#eda100"><title>D = 60.5805: 34.4 s, 7 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1007.3" cy="675.6" r="2.4" fill="#eda100"><title>D = 60.5967: 38.7 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1007.6" cy="674.5" r="2.4" fill="#eda100"><title>D = 60.6171: 39.2 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1007.8" cy="680.8" r="2.4" fill="#eda100"><title>D = 60.6298: 36.3 s, 7 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1008.1" cy="666.1" r="2.4" fill="#eda100"><title>D = 60.6457: 43.5 s, 9 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1008.4" cy="674.1" r="2.4" fill="#eda100"><title>D = 60.6615: 39.4 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1008.8" cy="673.9" r="2.4" fill="#eda100"><title>D = 60.6814: 39.5 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1009.0" cy="672.9" r="2.4" fill="#eda100"><title>D = 60.6938: 40.0 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1009.2" cy="673.9" r="2.4" fill="#eda100"><title>D = 60.7093: 39.5 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1009.6" cy="674.9" r="2.4" fill="#eda100"><title>D = 60.7287: 39.0 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1009.8" cy="673.7" r="2.4" fill="#eda100"><title>D = 60.7408: 39.6 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1010.1" cy="671.1" r="2.4" fill="#eda100"><title>D = 60.7560: 40.9 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1010.2" cy="674.7" r="2.4" fill="#eda100"><title>D = 60.7654: 39.1 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1010.4" cy="605.2" r="2.4" fill="#eda100"><title>D = 60.7773: 92.0 s, 19 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1010.6" cy="662.9" r="2.4" fill="#eda100"><title>D = 60.7867: 45.2 s, 9 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1010.8" cy="691.0" r="2.4" fill="#eda100"><title>D = 60.7962: 32.0 s, 6 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1011.0" cy="670.9" r="2.4" fill="#eda100"><title>D = 60.8080: 41.0 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1011.1" cy="674.1" r="2.4" fill="#eda100"><title>D = 60.8154: 39.4 s, 8 iterations (Windows i7-1185G7, run up14)</title></circle>
+<circle cx="1011.3" cy="664.8" r="2.4" fill="#eda100"><title>D = 60.8244: 44.2 s, 9 iterations (Windows i7-1185G7, run up15)</title></circle>
+<circle cx="1011.4" cy="696.8" r="2.4" fill="#eda100"><title>D = 60.8334: 29.8 s, 6 iterations (Windows i7-1185G7, run up15)</title></circle>
+<circle cx="1011.6" cy="618.7" r="2.4" fill="#eda100"><title>D = 60.8447: 77.9 s, 16 iterations (Windows i7-1185G7, run up15)</title></circle>
+<circle cx="1011.8" cy="696.0" r="2.4" fill="#eda100"><title>D = 60.8537: 30.1 s, 6 iterations (Windows i7-1185G7, run up15)</title></circle>
+<circle cx="1012.0" cy="606.0" r="2.4" fill="#eda100"><title>D = 60.8649: 91.0 s, 18 iterations (Windows i7-1185G7, run up15)</title></circle>
+<circle cx="1012.1" cy="662.8" r="2.4" fill="#eda100"><title>D = 60.8739: 45.3 s, 9 iterations (Windows i7-1185G7, run up15)</title></circle>
+<circle cx="1012.3" cy="696.6" r="2.4" fill="#eda100"><title>D = 60.8829: 29.9 s, 6 iterations (Windows i7-1185G7, run up15)</title></circle>
+<circle cx="1012.5" cy="697.1" r="2.4" fill="#eda100"><title>D = 60.8919: 29.7 s, 6 iterations (Windows i7-1185G7, run up16)</title></circle>
+<circle cx="1012.6" cy="648.6" r="2.4" fill="#eda100"><title>D = 60.8975: 53.9 s, 11 iterations (Windows i7-1185G7, run up16)</title></circle>
+<circle cx="1012.7" cy="655.2" r="2.4" fill="#eda100"><title>D = 60.9032: 49.7 s, 10 iterations (Windows i7-1185G7, run up16)</title></circle>
+<circle cx="1012.8" cy="695.7" r="2.4" fill="#eda100"><title>D = 60.9088: 30.2 s, 6 iterations (Windows i7-1185G7, run up16)</title></circle>
+<circle cx="1012.9" cy="592.9" r="2.4" fill="#eda100"><title>D = 60.9158: 107.0 s, 22 iterations (Windows i7-1185G7, run up16)</title></circle>
+<circle cx="1013.0" cy="603.2" r="2.4" fill="#eda100"><title>D = 60.9214: 94.2 s, 19 iterations (Windows i7-1185G7, run up16)</title></circle>
+<circle cx="1013.1" cy="710.8" r="2.4" fill="#eda100"><title>D = 60.9259: 25.1 s, 5 iterations (Windows i7-1185G7, run up16)</title></circle>
+<circle cx="1013.1" cy="696.3" r="2.4" fill="#eda100"><title>D = 60.9304: 30.0 s, 6 iterations (Windows i7-1185G7, run up17)</title></circle>
+<circle cx="1013.2" cy="696.6" r="2.4" fill="#eda100"><title>D = 60.9361: 29.9 s, 6 iterations (Windows i7-1185G7, run up17)</title></circle>
+<circle cx="1013.4" cy="697.1" r="2.4" fill="#eda100"><title>D = 60.9431: 29.7 s, 6 iterations (Windows i7-1185G7, run up17)</title></circle>
+<circle cx="1013.4" cy="696.6" r="2.4" fill="#eda100"><title>D = 60.9475: 29.9 s, 6 iterations (Windows i7-1185G7, run up17)</title></circle>
+<circle cx="1013.5" cy="696.0" r="2.4" fill="#eda100"><title>D = 60.9530: 30.1 s, 6 iterations (Windows i7-1185G7, run up17)</title></circle>
+<circle cx="1013.7" cy="696.6" r="2.4" fill="#eda100"><title>D = 60.9599: 29.9 s, 6 iterations (Windows i7-1185G7, run up17)</title></circle>
+<circle cx="1013.7" cy="604.4" r="2.4" fill="#eda100"><title>D = 60.9609: 92.8 s, 19 iterations (Windows i7-1185G7, run up17)</title></circle>
+<circle cx="1013.7" cy="633.4" r="2.4" fill="#eda100"><title>D = 60.9618: 65.0 s, 13 iterations (Windows i7-1185G7, run up17)</title></circle>
+<circle cx="1013.7" cy="683.7" r="2.4" fill="#eda100"><title>D = 60.9626: 35.0 s, 7 iterations (Windows i7-1185G7, run up17)</title></circle>
+<circle cx="1013.9" cy="650.8" r="2.4" fill="#eda100"><title>D = 60.9716: 52.5 s, 10 iterations (Windows i7-1185G7, run up22)</title></circle>
+<circle cx="1013.9" cy="621.9" r="2.4" fill="#eda100"><title>D = 60.9735: 74.9 s, 12 iterations (Windows i7-1185G7, run up22)</title></circle>
+<circle cx="1014.0" cy="632.8" r="2.4" fill="#eda100"><title>D = 60.9765: 65.5 s, 13 iterations (Windows i7-1185G7, run up23)</title></circle>
+<circle cx="1014.0" cy="637.1" r="2.4" fill="#eda100"><title>D = 60.9795: 62.1 s, 12 iterations (Windows i7-1185G7, run up23)</title></circle>
+<circle cx="1014.1" cy="637.4" r="2.4" fill="#eda100"><title>D = 60.9833: 61.9 s, 12 iterations (Windows i7-1185G7, run up23)</title></circle>
+<circle cx="1014.1" cy="646.1" r="2.4" fill="#eda100"><title>D = 60.9856: 55.6 s, 11 iterations (Windows i7-1185G7, run up23)</title></circle>
+<circle cx="1014.2" cy="653.8" r="2.4" fill="#eda100"><title>D = 60.9885: 50.6 s, 10 iterations (Windows i7-1185G7, run up23)</title></circle>
+<circle cx="1014.2" cy="640.0" r="2.4" fill="#eda100"><title>D = 60.9922: 59.9 s, 12 iterations (Windows i7-1185G7, run up23)</title></circle>
+<circle cx="1014.3" cy="616.5" r="2.4" fill="#eda100"><title>D = 60.9968: 80.0 s, 16 iterations (Windows i7-1185G7, run up23)</title></circle>
+<circle cx="1014.4" cy="627.1" r="2.4" fill="#eda100"><title>D = 61.0014: 70.2 s, 14 iterations (Windows i7-1185G7, run up23)</title></circle>
+<circle cx="1014.5" cy="632.8" r="2.4" fill="#eda100"><title>D = 61.0059: 65.5 s, 12 iterations (Windows i7-1185G7, run up23)</title></circle>
+<circle cx="1014.6" cy="626.0" r="2.4" fill="#eda100"><title>D = 61.0105: 71.2 s, 14 iterations (Windows i7-1185G7, run up23)</title></circle>
+<circle cx="1014.6" cy="635.6" r="2.4" fill="#eda100"><title>D = 61.0128: 63.3 s, 9 iterations (Windows i7-1185G7, run up23)</title></circle>
+<circle cx="1014.6" cy="606.3" r="2.4" fill="#eda100"><title>D = 61.0157: 90.7 s, 13 iterations (Windows i7-1185G7, run up23)</title></circle>
+<circle cx="1014.7" cy="613.8" r="2.4" fill="#eda100"><title>D = 61.0171: 82.7 s, 12 iterations (Windows i7-1185G7, run up23)</title></circle>
+<circle cx="1014.7" cy="624.0" r="2.4" fill="#eda100"><title>D = 61.0189: 73.0 s, 11 iterations (Windows i7-1185G7, run up23)</title></circle>
+<circle cx="1014.7" cy="631.8" r="2.4" fill="#eda100"><title>D = 61.0211: 66.3 s, 12 iterations (Windows i7-1185G7, run up23)</title></circle>
+<circle cx="1014.8" cy="655.1" r="2.4" fill="#eda100"><title>D = 61.0225: 49.8 s, 8 iterations (Windows i7-1185G7, run up23)</title></circle>
+<circle cx="1014.8" cy="641.1" r="2.4" fill="#eda100"><title>D = 61.0243: 59.1 s, 11 iterations (Windows i7-1185G7, run up23)</title></circle>
+<circle cx="1014.8" cy="578.9" r="2.4" fill="#eda100"><title>D = 61.0264: 127.1 s, 24 iterations (Windows i7-1185G7, run up23)</title></circle>
+<circle cx="1008.3" cy="662.1" r="2.4" fill="#1baf7a"><title>D = 60.6535: 45.7 s, 12 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1008.9" cy="668.1" r="2.4" fill="#1baf7a"><title>D = 60.6884: 42.4 s, 14 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1009.3" cy="673.1" r="2.4" fill="#1baf7a"><title>D = 60.7146: 39.9 s, 14 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1010.0" cy="658.6" r="2.4" fill="#1baf7a"><title>D = 60.7539: 47.7 s, 17 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1010.6" cy="642.8" r="2.4" fill="#1baf7a"><title>D = 60.7834: 57.9 s, 20 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1010.9" cy="683.7" r="2.4" fill="#1baf7a"><title>D = 60.8056: 35.0 s, 11 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1011.5" cy="669.7" r="2.4" fill="#1baf7a"><title>D = 60.8387: 41.6 s, 14 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1012.0" cy="688.3" r="2.4" fill="#1baf7a"><title>D = 60.8636: 33.1 s, 11 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1012.6" cy="609.3" r="2.4" fill="#1baf7a"><title>D = 60.9009: 87.4 s, 29 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1013.1" cy="668.9" r="2.4" fill="#1baf7a"><title>D = 60.9289: 42.0 s, 14 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1013.5" cy="677.5" r="2.4" fill="#1baf7a"><title>D = 60.9499: 37.8 s, 13 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1014.0" cy="679.4" r="2.4" fill="#1baf7a"><title>D = 60.9814: 36.9 s, 14 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1014.5" cy="707.0" r="2.4" fill="#1baf7a"><title>D = 61.0050: 26.3 s, 14 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1015.1" cy="705.8" r="2.4" fill="#1baf7a"><title>D = 61.0405: 26.7 s, 14 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1015.6" cy="713.1" r="2.4" fill="#1baf7a"><title>D = 61.0670: 24.4 s, 13 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1015.9" cy="712.4" r="2.4" fill="#1baf7a"><title>D = 61.0870: 24.6 s, 13 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1016.4" cy="715.1" r="2.4" fill="#1baf7a"><title>D = 61.1168: 23.8 s, 13 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1016.8" cy="696.3" r="2.4" fill="#1baf7a"><title>D = 61.1393: 30.0 s, 16 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1017.4" cy="710.5" r="2.4" fill="#1baf7a"><title>D = 61.1729: 25.2 s, 13 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1017.9" cy="648.2" r="2.4" fill="#1baf7a"><title>D = 61.1981: 54.2 s, 29 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1018.5" cy="695.7" r="2.4" fill="#1baf7a"><title>D = 61.2359: 30.2 s, 16 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1019.0" cy="683.7" r="2.4" fill="#1baf7a"><title>D = 61.2643: 35.0 s, 17 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1019.4" cy="714.4" r="2.4" fill="#1baf7a"><title>D = 61.2856: 24.0 s, 13 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1020.0" cy="708.5" r="2.4" fill="#1baf7a"><title>D = 61.3175: 25.8 s, 14 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1020.4" cy="666.6" r="2.4" fill="#1baf7a"><title>D = 61.3415: 43.2 s, 16 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1021.0" cy="694.9" r="2.4" fill="#1baf7a"><title>D = 61.3774: 30.5 s, 17 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1021.5" cy="708.9" r="2.4" fill="#1baf7a"><title>D = 61.4043: 25.7 s, 10 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1021.9" cy="710.5" r="2.4" fill="#1baf7a"><title>D = 61.4245: 25.2 s, 13 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1022.4" cy="705.8" r="2.4" fill="#1baf7a"><title>D = 61.4548: 26.7 s, 14 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1022.8" cy="701.0" r="2.4" fill="#1baf7a"><title>D = 61.4775: 28.3 s, 15 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1023.4" cy="687.8" r="2.4" fill="#1baf7a"><title>D = 61.5116: 33.3 s, 14 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1023.6" cy="714.1" r="2.4" fill="#1baf7a"><title>D = 61.5244: 24.1 s, 13 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1024.0" cy="719.3" r="2.4" fill="#1baf7a"><title>D = 61.5436: 22.6 s, 9 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1024.5" cy="701.9" r="2.4" fill="#1baf7a"><title>D = 61.5723: 28.0 s, 14 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1024.8" cy="720.4" r="2.4" fill="#1baf7a"><title>D = 61.5939: 22.3 s, 11 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="1025.4" cy="708.5" r="2.4" fill="#1baf7a"><title>D = 61.6263: 25.8 s, 13 iterations (cloud (2 shared cores), run pilotB)</title></circle>
+<circle cx="234.4" cy="776.4" r="10" fill="none" stroke="#0b0b0b" stroke-width="1.5"/>
+<line x1="239.9" y1="784.8" x2="260.4" y2="816.4" stroke="#0b0b0b" stroke-width="1"/>
+<text x="264.4" y="820.4" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="bold">D = 16.76: M 48 → 32 τ modes, 10 → 8 nodes</text>
+<circle cx="319.8" cy="781.7" r="10" fill="none" stroke="#0b0b0b" stroke-width="1.5"/>
+<line x1="325.2" y1="773.3" x2="345.8" y2="741.7" stroke="#0b0b0b" stroke-width="1"/>
+<text x="349.8" y="745.7" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="bold">D = 21.60: centre series 80 → 260+ terms, 5 nodes</text>
+<circle cx="562.2" cy="633.9" r="10" fill="none" stroke="#0b0b0b" stroke-width="1.5"/>
+<line x1="557.1" y1="625.3" x2="536.2" y2="589.9" stroke="#0b0b0b" stroke-width="1"/>
+<text x="532.2" y="593.9" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="bold">D = 35.35: harmonics above 13 frozen from here</text>
+<text x="16.0" y="920.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">hp/data/solve_times.csv (plot_solve_times.py --export)  ·  wall-clock seconds of each solve</text>
+<text x="16.0" y="904.0" font-size="10" fill="#c98500" text-anchor="start" font-weight="normal">⚠</text>
+<text x="30.0" y="904.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">machines and thread counts differ (cloud 2 shared cores; Windows 4-6 threads), and the solver settings changed between runs</text>
+<a href="https://github.com/nmoinvaz/choptuik-large-d"><text x="1064" y="920" font-size="10" fill="#52514e" text-anchor="end" text-decoration="underline">github.com/nmoinvaz/choptuik-large-d</text></a>
+</svg>

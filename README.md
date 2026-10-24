@@ -668,6 +668,17 @@ way, and crosses mark a variant that did not converge. Up to D = 30 the f64 Jaco
 D = 40, and with the loop alone (f64g) from D = 60. Only the horizon fix with the loop (f64hg) converges at every D, 1.6–2.6 times faster
 than double-double at D = 40–60. Every converged run gives the same Δ to 1.1×10⁻¹⁸.
 
+![How long each D took to solve: hours per point below D = 4, every solve and the one that gave the value; seconds per continuation point above D = 8.25, by machine](hp/solve_times.svg)
+
+**How long each D took** (`hp/plot_solve_times.py`, from [`hp/data/solve_times.csv`](hp/data/solve_times.csv), which
+`--export` writes from the solve records). Below D = 4 a point costs hours: about 77 in all, counting every
+resolution, both passes of each lift and the failed and check solves. The solve that gives the value is mostly under
+an hour above D = 3.2 and 2.5–2.8 h at M = 320 at D = 3.1 and 3.0875; D = 3.7 took 16 h because the resolution study
+ran there. Above D = 8.25 each accepted continuation point's Newton solve takes 6–130 s, 8.1 h for all 893 points
+(failed steps are not recorded). The cost hardly grows with D; its steps come from the runs' settings, marked on the
+graph. The machines differ (the cloud's 2 shared cores, the laptop's 4–6 threads), so this shows the effort, not a
+benchmark.
+
 <details>
 <summary>Checks of the solver</summary>
 
@@ -2212,6 +2223,7 @@ hp/                 double-double solver (crate hpkernel)
 ├── mixed_diag.py   why the f64 Jacobian agrees only to 1e-7 at M >= 48 (step size, harmonics, M)
 ├── mixed_largeD*.py  the mixed-precision step at large D: where it fails (horizon block), the correction-loop prototype
 ├── bench_variants.py, plot_bench_variants.py  the Newton variants timed against D, and bench_variants.svg
+├── plot_solve_times.py  solve_times.svg, how long each D took (--export writes data/solve_times.csv from the solve records)
 ├── src/block.rs    block storage and staircase LU for the f64 Jacobian above M = 128
 ├── highm_check.py, lowD_highM.py  checks of the larger tau grids, and the continuation toward D = 3 on them
 ├── step_test.py    the largest step in D that Newton tolerates at D = 45-60, for several solver variants (local task T43)
