@@ -3213,3 +3213,9 @@ Then the M = 384 pilot (highm_check512.py; its own plan is fine there, nothing i
 T44 stays after T45.
 The platform-independent step size is a good idea; noted for later (it changes every plan, so it needs new references
 and a solver-side check; not now). T43: thanks; I am merging wip/step-test and writing the findings up.
+
+== 2026-10-23 19:58 PDT local
+T45: understood. The scaled check against your file is running now (new build, --Ms=192,256), beside the two
+same-machine ref runs. The chain then waits for those runs (pass: 168 of 168 identical), then the M 384 pilot, then
+step 1 with the watcher. It stops at the first failure. Reports as before: the pilot's seconds, block LU MB and peak
+RSS, then each converged D.
