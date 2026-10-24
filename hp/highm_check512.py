@@ -8,7 +8,6 @@ Jacobian's and the factorization's, the block LU's MB and the peak RSS. Records 
 """
 import json
 import os
-import resource
 import sys
 import time
 
@@ -20,7 +19,7 @@ from hpkernel.driver import load, make_solver, resample_z  # noqa: E402
 
 
 def rss():
-    return round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024, 1)
+    return lowD_dd.peak_rss_mb()
 
 
 def main():
@@ -46,7 +45,7 @@ def main():
         rec = dict(M=M, D=m["D"], start=os.path.basename(start), nodes=len(m["nodes"]), kc=kc, ks=ks, N=s.size,
                    steps=sum(len(g) - 1 for g in sg), F=F, s_make=round(t_make, 1), s_plan=round(t_plan, 1),
                    s_residual=round(t_res, 1), tail_c=tc, tail_h=th, peak_rss_mb_residual=rss())
-        print(json.dumps(dict(rec, peak_rss_mb=rss(), load=round(os.getloadavg()[0], 2))), flush=True)
+        print(json.dumps(dict(rec, peak_rss_mb=rss(), load=lowD_dd.load_avg())), flush=True)
         if opts.get("newton"):
             # "own": the residual's plan; a coarser plan can overflow (a non-finite pivot) near a first node at 0.000625
             if str(opts.get("newton_plan", "own")) == "own":
@@ -71,7 +70,7 @@ def main():
             rec.update(newton_plan=[tol, hmax], newton_steps=sum(len(g) - 1 for g in sg2), s_newton=round(t_nm, 1),
                        s_jacobian=round(t_jac, 1), s_factor=round(t_fac, 2), lu_mb=round(lu_bytes / 2 ** 20, 1),
                        pivots=[p0, p1], dDelta=float(dh[-1]) + float(dl[-1]), F_after_step=F1)
-        rec.update(peak_rss_mb=rss(), load=round(os.getloadavg()[0], 2))
+        rec.update(peak_rss_mb=rss(), load=lowD_dd.load_avg())
         print(json.dumps(rec), flush=True)
         with open(os.path.join("data", "lowD_highM", "check512.jsonl"), "a") as f:
             f.write(json.dumps(rec) + "\n")

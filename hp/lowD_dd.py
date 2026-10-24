@@ -148,12 +148,25 @@ def weakest(s, w, iters=10):
 
 
 def peak_rss_mb():
-    """the process's peak resident memory in MB (None where the resource module is missing, e.g. Windows)"""
+    """the process's peak resident memory in MB: the resource module on Unix; on Windows psutil's peak working set if
+    psutil is installed, else None"""
     try:
         import resource
     except ImportError:
-        return None
+        try:
+            import psutil
+            return round(psutil.Process().memory_info().peak_wset / 2**20, 1)
+        except (ImportError, AttributeError):
+            return None
     return round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024, 1)
+
+
+def load_avg():
+    """the 1-minute load average (None where the OS has none, e.g. Windows)"""
+    try:
+        return round(os.getloadavg()[0], 2)
+    except (AttributeError, OSError):
+        return None
 
 
 def solve_point(D, M, zh, zl, src, a, nodes, outdir, log, segs=None):

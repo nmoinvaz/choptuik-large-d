@@ -1,0 +1,28 @@
+{
+ "192": {
+  "centre_hi": "908f626e1731b2e66fa8ff530b451da6e404314f5dbf540e4910adf63464117a",
+  "centre_lo": "81f8701d23847094bbd4eadd8abe2f238e7fa9801d614fc25b43e43e8350f185",
+  "centre_finite": true,
+  "horizon_hi": "998d71879d26c0e96d7c7c93986d86e39eaf49cd1c9a49d24c4b1ea725015fe9",
+  "horizon_lo": "feb8f28bbc1eeac748f74c2e404b6eeeedf018ad01b9831ad530680fa1b22250",
+  "horizon_finite": true,
+  "residual_hi": "3955028d92dd7bfada56a8b2c8f11c4422baa4ad9d959b8bef9eaed9eb1b4ad4",
+  "residual_lo": "e08f15a6e7041eb06c8813016d38d8544ee7205c4b3c314913de98025fa5061c",
+  "step_hi": "f36476a977124655a7cc33545f06f7ec8eb2c09f1c5883dcb28b79153bf7e8d5",
+  "step_lo": "8a0bf5962c4ad6bcb34a6eb4961bff9e6ba36b7858be23d913b676532991b6b8",
+  "piv": "a83de97900df4d6b167a01ef020670b6cdf19918b85ade43c4165face992de54"
+ },
+ "256": {
+  "centre_hi": "c9aed233145f0404de47618088b2268d2e72e1e4ee7242f9109bee62cf26b40c",
+  "centre_lo": "46287ac4a0fbcd89563358611d8b3b610b1b4d6281e31549e020abc066c366de",
+  "centre_finite": true,
+  "horizon_hi": "ae377322d34b2dd95e5c9da13aea351e0d53bc784b9d32d1f3c4685955c000e6",
+  "horizon_lo": "d2645766ede472feae2647762071ee59da3191695f2b2168b9ca69db6ace721c",
+  "horizon_finite": true,
+  "residual_hi": "997de46cc9e83f2726ce8ee599ddd2059b276ef911b019854ea2e18fa6be4a4d",
+  "residual_lo": "32dcced31c7daf2fd63044347b9e8474fbd5f73211fb0dca4df05cfa1831a734",
+  "step_hi": "f9872dc90380105652da75bc09da31a917840916e3f63901405e3c4eb593fbb3",
+  "step_lo": "73125a9a82f03999fbab5ad16d40384896c06574953195217d95e5c5ce4482eb",
+  "piv": "4e42e329411d7512fa5ffacb37f828d1e3374f0fd6c4b243a3af0774666f635b"
+ }
+}

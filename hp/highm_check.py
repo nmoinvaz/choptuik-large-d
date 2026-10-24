@@ -69,6 +69,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
 from hpkernel.driver import dd_add, dd_norm, load, make_solver, newton_solve, resample_z, save  # noqa: E402
+import lowD_dd  # noqa: E402
 
 STATES = os.path.join(HERE, "data", "lowD_states")
 STATE = lambda M: os.path.join(STATES, f"lowDv_D3.7000_M{M}.npz")  # noqa: E731
@@ -86,8 +87,7 @@ def opts_of(argv):
 
 
 def peak_rss_mb():
-    import resource
-    return round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024, 1)
+    return lowD_dd.peak_rss_mb()
 
 
 def source_for(M):
@@ -430,7 +430,7 @@ def lift(opts):
                t_its=[p.get("t_its") for p in passes], s_residual=round(t_res, 2), s_newton_step=round(t_nm, 2),
                s_jacobian=None if t_jac is None else round(t_jac, 2), s_factor=None if t_fac is None else round(t_fac, 2),
                s_jacobian_no_dtau=None if t_nodtau is None else round(t_nodtau, 2), lu_mb=round(nbytes / 2 ** 20, 1),
-               lu_block=isblock, load=round(os.getloadavg()[0], 2), peak_rss_mb=peak_rss_mb(), threads=threads,
+               lu_block=isblock, load=lowD_dd.load_avg(), peak_rss_mb=peak_rss_mb(), threads=threads,
                wall=round(time.time() - t0, 1), jac="f64")
     with open(outp, "a") as f:
         f.write(json.dumps(rec) + "\n")
@@ -469,7 +469,7 @@ def profile(opts):
             s.newton_mixed(zh, zl, block=True, jac_mutate=1)
             out.setdefault("jac_no_dtau", []).append(round(s.lu_info()[2], 2))
     out["lu_mb"] = round(s.lu_info()[0] / 2 ** 20, 1)
-    out["load"] = round(os.getloadavg()[0], 2)
+    out["load"] = lowD_dd.load_avg()
     out["peak_rss_mb"] = peak_rss_mb()
     print(json.dumps(out), flush=True)
     if "out" in opts:

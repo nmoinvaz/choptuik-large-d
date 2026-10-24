@@ -725,3 +725,50 @@ at D = 3.125 and the same nodes under the tag `..._kc60_ks150`, with `--tail_max
 tails of both resolutions and `tails_ok`, and a tail above 10⁻³³ moves a node). It never ran: the pilot was stopped at
 17:30 PDT on 2026-10-23, at the user's request, while D = 3.125 was solving at M = 192 (converged at M = 160,
 Δ = 2.8759922399…), and the kernel fix of 9.5 replaces it.
+
+### 9.5 The fix: the series in a power-of-two scaled variable
+
+The centre series is now computed in x/σ and the horizon series in u/σ, with σ the power of two nearest to the first
+node x₀ (to u₀ = 1 − the last node) (`hp/src/model.rs`, `series_scale`). Entry k is then c_kσ^k, which shrinks
+roughly like (x₀/r)^k ≈ 0.4^k instead of growing like r^−k, so nothing approaches the f64 range at any order or node
+set the pilot uses. In the recursions, a term built from order k − 1 alone gains one factor σ (the τ-derivative and
+x p′ terms in the centre's order-k equation; in the horizon's, the coefficients of order kk + 1 made from order kk), a
+Cauchy sum of index sum kk + 1 in an order-kk equation loses one, and the first-order coefficient that κ_kk takes is
+unscaled; the evaluation is Horner's at x₀/σ (u₀/σ). Every scaling is multidouble's `mul_pwr2` (6e93c58), which
+multiplies every part (value, low part, tangents) by the power of two and is exact barring overflow and underflow.
+Since multiplying by a power of two commutes with every rounding, each intermediate value of the scaled recursion is
+the unscaled one times a power of two, so the results are bitwise the same wherever the unscaled recursion stays in
+range. The series tails (`lowD_dd.tails`) read the scaled coefficients; `Solver.series(..., scaled=False)` still
+returns the coefficients in x (inf where they leave the f64 range) and `Solver.series_scale(which)` gives σ.
+
+Checks, on a private build of this tree (AVX-512) against a build of main 93402cf (the unscaled series):
+
+- **At D = 3.15, kc = 100, ks = 250, the pilot's 18 nodes (first node 0.000625), M = 192 and 256**
+  (`highm_check.py scaled`; reference `data/lowD_highM/scaled_ref_main93402cf.json`, `logs/scaled_save.log`,
+  `logs/scaled_compare.log`): the centre and horizon series in x, the residual, and one newton_mixed step in block
+  storage with its pivots, 22 SHA-256 hashes, all bit-identical. The control, `Ctx::mutate` 6 (the scale doubled at
+  order 7 of the f64 Jacobian's centre series), changes the Newton step, so the comparison can fail.
+- **At M ≤ 128** (`highm_check.py ref --compare=REF_highm_main_a1973f7.json`, `logs/ref_compare_scaled.log`):
+  all 168 outputs bit-identical. `cargo test --release --lib`: 5 passed.
+- multidouble's `mul_pwr2` tests (equal to `mulf` bit for bit and the 2^k, 2^−k round trip on every lane type, with
+  controls) pass on its SSE2, portable, AVX2 and AVX-512 backends.
+
+Not checked here: an M = 384 or 512 Newton step with the scaled build (0.5–5 hours on these 2 cores). It is the first
+step of the local machine's task T45 (9.6).
+
+### 9.6 Handover: the pilot continues on the local machine (T45)
+
+At the user's request (2026-10-23) the push toward D = 3 moved to the local machine (4 cores, 8 threads, AVX-512), and
+the cloud pilot was stopped. Where it stands:
+
+- D = 3.15 is converged at M = 160, 192 and 256 (Δ(256) = 2.961319642456…, |Δ(256) − Δ(192)| = 9.3×10⁻¹²); D = 3.125 is
+  converged at M = 160, the helper (Δ = 2.8759922399…), and was solving at M_w = 192 when stopped (M_n = 256). D = 3.1
+  had failed once in the helper and the step was halved (5.4).
+- 18 nodes, 0.000625 … 0.95; kc = 100, ks = 250 (no need to lower them with the scaled series).
+- The progress file `data/lowD_highM/pilot.jsonl.progress.json` (repository-relative paths since the handover) has the
+  remaining targets 3.125, 3.1, 3.05 and 13.6 hours used of the --hours budget (counted across restarts).
+- Memory per process: about 1.1 GB at M = 256, 1.4–1.7 GB at 384, about 3 GB at 512 (estimate); time per Taylor step
+  of a Newton call about M³-scaled from 2.4 core-seconds at M = 256 (9.3).
+
+The commands, thread budget and stop conditions are in comms.txt (T45).
+
