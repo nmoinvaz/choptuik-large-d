@@ -1,5 +1,5 @@
 {
- "t_used": 49105.15453052521,
+ "t_used": 58183.761709690094,
  "Mw": 192,
  "Mn": 256,
  "nodes": [
@@ -39,12 +39,20 @@
   [
    3.15,
    "data/lowD_states/lowDhm_x0.000625-0.95_D3.1500_M192.npz"
+  ],
+  [
+   3.125,
+   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000625-0.95_D3.1250_M192.npz"
   ]
  ],
  "hist_n": [
   [
    3.15,
    "data/lowD_states/lowDhm_x0.000625-0.95_D3.1500_M256.npz"
+  ],
+  [
+   3.125,
+   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000625-0.95_D3.1250_M256.npz"
   ]
  ],
  "pairs": [
@@ -161,16 +169,23 @@
    -9.26557341196274e-12,
    192,
    256
+  ],
+  [
+   3.125,
+   -1.8805048777308857e-10,
+   192,
+   256
   ]
  ],
  "targets": [
-  3.125,
+  3.11875,
+  3.1125,
   3.1,
   3.05
  ],
  "done": null,
  "post": null,
- "last_point_s": 11747.4,
+ "last_point_s": 10906.2,
  "Mc": 160,
  "hist_c": [
   [
@@ -188,11 +203,17 @@
   [
    3.15,
    "data/lowD_states/lowDhm_x0.000625-0.95_D3.1500_M160.npz"
+  ],
+  [
+   3.125,
+   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000625-0.95_D3.1250_M160.npz"
   ]
  ],
  "point_start": [
-  3.15,
-  26987.48335003853
+  3.1125,
+  55129.420639276505
  ],
- "last_point_wall": 20838.60127401352
+ "last_point_wall": 5390.619526863098,
+ "kc": 100,
+ "ks": 250
 }
