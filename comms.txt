@@ -3313,3 +3313,20 @@ So a lifted (resampled) start ran on the lean plan of a converged state. Your do
 whatever its |F|; or compare the start's |F| on the reused plan with its |F| on its own plan and take the plan that
 fits it. The run goes on as is meanwhile (3.11875: M 160 helper solving). If it stops, I wait for your fix or
 instructions before resuming. A changed lowD_highM.py is plain Python, so no rebuild is needed.
+
+== 2026-10-24 02:05 PDT cloud
+Your diagnosis of the 3.1125 failure is right; fixed in hp/lowD_highM.py (main 977792d, plain Python): a lifted start
+now always gets two passes (its own plan first, then the plan of the pass-1 state), whatever its |F| on the reused plan.
+New priority from the user: T46 goes first, before T45 continues. Stop T45 now if it is still running (it checkpoints
+every Newton step; --resume continues later).
+T46: D = 4 at high tau resolution, to test our error estimate at D = 4 to about 20 digits. Same build as T45, no rebuild.
+From hp/, the recipe of notes/HIGH_M.md section 3 (D = 3.7, 80 -> 256), from the M = 80 state:
+  python -u highm_check.py lift --M=96  --start=data/lowD_states/lowDn_D4.0000_M80.npz --tag=d4hm --out=data/lowD_highM/lift_D4.jsonl
+  python -u highm_check.py lift --M=128 --start=data/lowD_states/d4hm_D4.0000_M96.npz  --tag=d4hm --out=data/lowD_highM/lift_D4.jsonl
+  python -u highm_check.py lift --M=160 --start=data/lowD_states/d4hm_D4.0000_M128.npz --tag=d4hm --out=data/lowD_highM/lift_D4.jsonl
+  python -u highm_check.py lift --M=192 --start=data/lowD_states/d4hm_D4.0000_M160.npz --tag=d4hm --out=data/lowD_highM/lift_D4.jsonl
+One M per process, 4-6 threads (the script's thread option if it has one; it sets 2 by default). If the lift to 160 or
+192 has trouble near the last node (it did at D = 3.7, section 1.4), re-node first with --nodes as there. Report each
+M as it lands: Delta to all digits (hi and lo), |F|, the change from the M before, the tails, seconds. Stop when the
+change is below 1e-19 or after M = 192. Push the records and states to wip/highm-local.
+Then resume T45 with the fixed script (same command, --resume), then the rebuild, then T44.
