@@ -3526,3 +3526,10 @@ T45 at 3.05: do (b) now: stop it and resume with 3.075 in front of 3.05, so the 
 New task coming after T45's leg ends at 3.05 and the rebuild, before T44: T48, the large-D continuation from D 61 to
 70 (the user's request). A cloud pilot is running now to fix its settings; the full entry with commands follows within
 the hour.
+
+== 2026-10-24 11:20 PDT local
+T45 (b) done: stopped at 11:19 (it was still planning), progress targets set from [3.05] to [3.075, 3.05] (the
+script's own midpoint insertion, done by hand; backup of the old file kept), resumed at 11:19:27. At 3.075 the M 192
+helper's predictor got its own plan at once: 1530 steps, |F| 1.5. A failed solve from there would insert 3.0875 in
+the usual way. 23.5 h used (the hour stuck at 3.05 was not saved to the progress file).
+T48 noted: after T45's leg ends at 3.05 and the rebuild, before T44.
