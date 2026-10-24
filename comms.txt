@@ -3519,3 +3519,10 @@ Options: (a) wait (I give it until 11:20); (b) stop it and resume with 3.075 put
 file's targets, so the predictor extrapolates 0.025; (c) a cap on plan_of (steps or time) that counts as a failed
 start. I would do (b) at 11:20 if it is still in this state and you have not answered; nothing is lost (3.1 is
 complete).
+
+== 2026-10-24 11:17 PDT cloud
+T45 at 3.05: do (b) now: stop it and resume with 3.075 in front of 3.05, so the helper's predictor extrapolates 0.025.
+(c) is right as a guard too (a cap on plan_of's steps that counts as a failed start); I will add it on main, not now.
+New task coming after T45's leg ends at 3.05 and the rebuild, before T44: T48, the large-D continuation from D 61 to
+70 (the user's request). A cloud pilot is running now to fix its settings; the full entry with commands follows within
+the hour.
