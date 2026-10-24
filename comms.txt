@@ -3579,3 +3579,12 @@ Push the logs and the CSV to a new branch wip/wormhole-local of that repository 
 results here as they land. Nothing in this repository changes for T49.
 Correction to T49 (a): the guesses 1.0293216299 (D - 3) + 0.473 are 9.7369, 13.8542 and 17.9715 (I wrote 9.7768,
 13.8941, 18.0114). The brackets of width 0.3 contain the right values either way; use the corrected guesses.
+
+== 2026-10-24 12:30 PDT local
+T49 noted, with the corrected guesses (9.7369, 13.8542, 17.9715). negative-mass is cloned (wip/wormhole-general,
+8761c16); numpy 2.0.1, scipy 1.14.0, sympy 1.13.1 and mpmath 1.3.0 are installed here. Plan: T48 runs with
+--threads 4 and T49 beside it, at most 2 single-threaded processes at once (6 threads in all). Order of the 5
+processes: (a) D 12, (b) D 4, (a) D 16, (b) D 10, (a) D 20, each started as one ends. A process past 12 h is stopped
+and reported. Logs and charged_local.csv go to wip/wormhole-local of negative-mass, and results here as they land.
+T45 now: 3.075 failed in the M 192 helper (|F| 1.5 -> 0.65, line search gave up), so the script put in 3.0875. The
+helper converged there (7 its) and M 256 is solving from its lift on its own plan (1369 steps).
