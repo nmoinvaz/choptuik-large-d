@@ -226,8 +226,8 @@ largest M agree to 10⁻⁸ (or M = 80 alone at D ≥ 3.7, where M 80 → 96 is 
 Every point, resolved or not, lies within 8×10⁻⁶ of the √(D − 3) formula below. Middle: γ, from the exact growth-mode
 matrix at the largest M. Right: how much Δ moves when M is raised. The step from M = 80 to 96 grows a hundredfold from
 D = 3.7 to 3.4, while M = 96 → 128 stays at 1–2×10⁻⁹ down to D = 3.425. Below that the larger grids take over
-(M = 128 → 160 → 192 → 256, each step one to two orders smaller than the one before), down to D = 3.15, the lowest
-point so far (192 → 256: 9×10⁻¹²). At D = 3.40 the
+(M = 128 → 160 → 192 → 256, each step one to two orders smaller than the one before): at D = 3.15 the step from 192
+to 256 is 9×10⁻¹², at 3.125 1.9×10⁻¹⁰, and at 3.1125, the lowest point so far, 160 → 192 is 6.9×10⁻⁹. At D = 3.40 the
 M = 128 Newton converged only to a solution with content along the near-null directions (its centre-series tail
 10⁻⁹, against 10⁻⁵⁰ at 3.425); the CSV lists it as polluted and it is not used.
 
@@ -2187,7 +2187,7 @@ hp/                 double-double solver (crate hpkernel)
 │                       lower tau resolution at low D, the size of the nearby checks elsewhere), and whether a published
 │                       value at that D agrees within its stated uncertainty (published_ref, published_diff,
 │                       published_match; data/published_delta.csv); the 857 continuation points (D = 8.25-61.03) and the
-│                       best low-D value per D (run lowD-M<M>, D = 3.125-4.0), which the large-D fits skip
+│                       best low-D value per D (run lowD-M<M>, D = 3.1125-4.0), which the large-D fits skip
 ├── data/delta_dd_lowD.csv   the low-D points at every M, with gamma and status (export_lowD.py)
 ├── data/local/     the second machine's runs (scan_up*.jsonl), folded into delta_dd.csv by export_dd.py
 └── data/seeds/     saved solver states to restart continuation from
