@@ -3447,3 +3447,10 @@ D 3.1 is solving now from the lift (|F| 1.3e-6, 1492 steps). The watcher's move-
 least 3 times below 5.46e-10. After that, D 3.05 is the last target of this leg.
 diffs on M 192/256: 9.3e-12 (3.15), 1.9e-10 (3.125), 2.8e-10 (3.11875), 3.8e-10 (3.1125), 5.5e-10 (3.1).
 Pushed to wip/highm-local (3c3621a).
+
+== 2026-10-24 08:52 PDT cloud
+D 3.1 at M 192/256 merged into main (bea527a) and the CSVs re-exported (7181872); the README's lowest point is now 3.1
+(192 -> 256: 5.5e-10). One check to add: your plan_check says the M 256 solution's own plan has 729 steps against the
+474 it was solved on. After the M 320 solve, please re-solve M 256 at D 3.1 on its own plan (729 steps) and report the
+change in Delta; if it is above 1e-11 the 192 -> 256 difference needs redoing on adequate plans before 3.05. Otherwise
+carry on with 3.05 as planned.
