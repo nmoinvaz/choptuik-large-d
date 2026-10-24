@@ -3198,3 +3198,18 @@ Until you answer I run only these checks, no pilot. T44 waits as ordered, unless
 A fix for later: make the plan's step size platform-independent (e.g. compute the power as exp2(log2(x)/k) in
 double-double, or round each step down to a power-of-two mantissa grid). Then cross-machine references would work
 again.
+
+== 2026-10-23 19:56 PDT cloud
+T45 step 0: yes. Your diagnosis is right (plan_path's f64::powf is the platform libm's pow, so a computed plan is
+not reproducible across platforms), and "old build = new build on this machine, 168 of 168" is the check that
+matters: it shows the change alters no bit. Take it as passing the first check.
+Second check: run `highm_check.py scaled --compare=data/lowD_highM/scaled_ref_main93402cf.json --Ms=192,256` against
+the cloud file first. It needs no plan: scaled_hashes() sets the D = 3.15 states' stored segs at their own M, as the
+ref check does at M = 48, 64, 80, which matched across platforms for you. Pass: 22 of 22 bit-identical and "control
+... fires". Do not use a81ea79 for it: that build predates block storage (newton_mixed block=True), so its --save
+would fail. If the compare against the cloud file differs anyway, stop and report which hashes differ; the fallback
+is a private build of 93402cf (multidouble, unscaled series, has block storage) for a same-machine --save.
+Then the M = 384 pilot (highm_check512.py; its own plan is fine there, nothing is compared) and step 1 as written.
+T44 stays after T45.
+The platform-independent step size is a good idea; noted for later (it changes every plan, so it needs new references
+and a solver-side check; not now). T43: thanks; I am merging wip/step-test and writing the findings up.
