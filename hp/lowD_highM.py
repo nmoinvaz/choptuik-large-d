@@ -16,7 +16,8 @@ The two start states are converged at the same D and nodes, at the working resol
      above M = 128) on the plan of the last converged state at M_w;
   2. M_n: plan from the predictor through the last <= 4 states at M_n; start from the better (smaller |F|) of that
      predictor (with 2 or more states) and the M_w solution just found, resampled to M_n;
-  2a. if the best start of M_w or M_n has |F| above --two_pass_above (1e-3) on the reused plan, that plan does not fit
+  2a. if the best start of M_w or M_n is a lift (a solution resampled to this M), or has |F| above --two_pass_above
+     (1e-3) on the reused plan, that plan does not fit
      it (on a lean plan the start's |F| is mostly Taylor error, and Newton went astray in the weak directions at
      D 3.25, M 160 from 3.5e-3): two passes as in a move up (4), from the start whose |F| is smallest on its own plan;
   3. the value is Delta(M_n), its error estimate |Delta(M_n) - Delta(M_w)| (an estimator: the change from the next
@@ -269,13 +270,20 @@ def main():
             if not np.isfinite(F):
                 return False, None, None
             best = (F, starts[0][0], zz)
-        if (two_pass and a.two_pass_above and best[0] > a.two_pass_above
+        # a lifted start (a solution resampled to this M) always gets two passes: on the lean plan of a converged state
+        # its |F| can look small while the plan does not fit it (D 3.1125, M 256: |F| 1.8e-5 on the 470-step plan of
+        # the 3.125 solution, and Newton found no decrease; at 3.125 the same lift converged in 4 iterations on its own
+        # 1149-step plan; the local machine's diagnosis, comms 2026-10-24 01:37)
+        lifted_best = best[1].startswith("lift")
+        if (two_pass and ((a.two_pass_above and best[0] > a.two_pass_above) or lifted_best)
                 and not os.path.exists(os.path.join(STATES, f"{st['tag']}_D{D:.4f}_M{M}.npz"))):
             # the reused plan does not fit the starts: a lifted or predicted state is not regular at the sonic line, so
             # on a lean plan its |F| is mostly Taylor error, and Newton's correction of it lies in the weak directions
             # (at D 3.25, M 160 the lifted M 128 solution had |F| 3.5e-3 on the reused 257-step plan, and Newton went
             # astray: line-search factors 1/4, 1/128, 1/16). Each start on its own plan instead, then two passes.
-            log(f"  D {D} M {M}: best start |F| {best[0]:.1e} > {a.two_pass_above:.0e} on the reused plan; two passes")
+            why = (f"best start |F| {best[0]:.1e} > {a.two_pass_above:.0e} on the reused plan" if best[0] > a.two_pass_above
+                   else f"best start '{best[1]}' is a lift (|F| {best[0]:.1e} on the reused plan)")
+            log(f"  D {D} M {M}: {why}; two passes")
             own = []
             for lab, z in starts:
                 zz = (np.asarray(z[0], float), np.asarray(z[1], float)) if isinstance(z, tuple) else (np.asarray(z, float), np.zeros(len(z)))
