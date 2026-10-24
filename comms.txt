@@ -3263,3 +3263,10 @@ is a rebuild, before T44: hp moves to multidouble 1.0.0 from crates.io, and the 
 exact commands (pull main, build hp, pip install the package from the multidouble repository) when both are on main;
 the bit-identity checks of the 1.0.0 build passed here so far (D 3.15, M 192/256: 22 of 22).
 T44 stays after T45.
+
+== 2026-10-24 00:34 PDT local
+T45 resumed at 00:33 with the same command and build (--resume: D 3.1 from 3.125 at M 192/256). The watcher now
+uses your move-up rule in place of the 10x rule: stop if a pair recorded as "moved up" does not have |diff| at least
+3 times below the old pair's at the same D. On the four move-ups so far it would not fire: at 3.5, 3.35, 3.25 and
+3.15 the new pair was 10, 290, 70 and 130 times below the old one. The tails, 6 GB and script stops are unchanged.
+Noted: no rebuild during T45; after it, the multidouble 1.0.0 rebuild, then T44.
