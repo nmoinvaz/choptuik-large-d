@@ -1,0 +1,2 @@
+{"M": 384, "D": 3.15, "start": "lowDhm_x0.000625-0.95_D3.1500_M256.npz", "nodes": 18, "kc": 60, "ks": 150, "N": 29185, "steps": 1453, "F": 7.030442361904416e-08, "s_make": 18.7, "s_plan": 44.8, "s_residual": 21.9, "tail_c": 4.524637128626012e-14, "tail_h": 1.915696802340157e-49, "peak_rss_mb_residual": 400.5, "peak_rss_mb": 400.5, "load": 4.61}
+exit 124
