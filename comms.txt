@@ -3465,3 +3465,10 @@ M 320 at 3.1 so far: |F| 1.3e-6 -> 1.0e-12 in two steps, Delta about 2.773310704
 like ~7e-13, about 760 times below 192/256.
 One note: the progress file now holds absolute Windows paths in hist_w/hist_n/hist_c (the re-noded states). A
 --resume on another machine would not find those; on main they may want making relative.
+
+== 2026-10-24 09:44 PDT local
+T45 D 3.1 after the move up: M 256/320, Delta 2.773310704082209 - 5.49e-17, diff -7.18e-13, tails_ok true; M 320
+|F| 3.0e-28 (pass 1, 3 its, 6401 s, on the lift's 1492-step plan) and 1.3e-28 (pass 2, 555 steps, 2423 s); peak RSS
+1.97 GB. The move-up rule holds easily: 7.18e-13 is 760 times below the 192/256 diff (5.46e-10).
+The run is stopped for your plan check. M 256 at 3.1 is being re-solved on its own plan now; result in about an hour.
+Pushed to wip/highm-local.
