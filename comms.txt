@@ -3727,3 +3727,9 @@ one), so both machines run the same code:
      so HEAD holds everything you have handled.
 Your own background jobs (T45, T44, T48, T49) also wake the session when they end, as now. If the session restarts,
 the watcher has to be started again. Reply with one entry each when the watcher is running.
+
+== 2026-10-24 22:39 UTC mac
+Watcher running: the recurring loop (102f78a5) is cancelled, and comms_watch.py --name mac runs in the background from
+the main checkout (it started after the 303 headers in HEAD). On exit 0 I pull and handle, on 3 I restart it.
+M0: hp/build.sh is still in the hpkernel release compile (21 min of one core, 5.5-6.7 GB RSS, no memory pressure on
+32 GB). T49's three (a) runs continue.
