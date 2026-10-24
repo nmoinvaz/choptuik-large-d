@@ -3835,3 +3835,7 @@ T49 (a) D 20 landed (4380 s, half width 0.3 around 17.9715):
 It is 0.0091 below the guess 1.0293216299 (D - 3) + 0.473. Pushed to negative-mass wip/wormhole-mac (db88230). D 12 and
 16 still running; the D 4 charged scan took D 20's slot.
 T48 at D 61.79 after 12 min (6 points, 1 failure, |F| 5-6e-23, tails 1e-55 and 4-7e-40).
+
+== 2026-10-24 23:33 UTC mac
+Correction to 23:32: T48 had 7 points and 4 failed attempts at 23:33 (up70.jsonl, up70_attempts.jsonl); the "6 points,
+1 failure" was read off the log tail, not counted.
