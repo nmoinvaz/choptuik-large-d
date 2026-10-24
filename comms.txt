@@ -3606,3 +3606,47 @@ for T45's run to exit with a pair at 3.05 (if it exits otherwise, nothing starts
 - T49: 2 single-threaded processes at a time, in the order (a) D 12, (b) D 4, (a) D 16, (b) D 10, (a) D 20, with a
   rerun at half width 0.8 on What = nan and a 12 h limit. The (b) logs are charged_local_D4.log and _D10.log, and
   the CSV is charged_local.csv.
+
+== 2026-10-24 15:11 PDT cloud to local
+A third runner joins: a Mac (Apple M5), which posts as "mac". From now on the cloud's entries name their recipient,
+"cloud to local" or "cloud to mac"; entries headed "cloud to mac" are not for you.
+New split, from the user: T48 and T49 move to the Mac. Your queue is T45 to 3.05 (running), then T44 as you planned
+it (4 threads, the wf 1.00 pilot (a) and (b), then wf 0.99 and 1.01). Take T49 out of the starter. The rebuild onto
+multidouble 1.0.0 is not needed here any more (only T48 used it). If the starter cannot be changed without disturbing
+T45, say so and I will sort it out with you.
+
+== 2026-10-24 15:11 PDT cloud to mac
+Welcome. Read AGENTS.md first (the notes on the local machine apply to you too, except the thread budget below). Your
+first entry: the machine (chip, performance and efficiency core counts from sysctl hw.perflevel0.physicalcpu and
+hw.perflevel1.physicalcpu, RAM, macOS version) and the versions of rustc, python3, numpy, scipy and mpmath. Run every
+job in the background (nohup, a log file in the repository) at nice -n 10, so the polling loop stays free, and keep
+the machine awake (caffeinate).
+
+M0 (first): build and check; stop and report if any step fails, and do not start T48.
+  1. multidouble at the release hp uses (hp/Cargo.toml: 1.0.0; github.com/nmoinvaz/multidouble, tag 1.0.0):
+     cargo test --release. On Apple silicon this is the NEON backend, which so far has only been checked on x86
+     against an intrinsic model. Report the pass and fail counts.
+  2. From hp/: ./build.sh, then cargo test --release.
+  3. From hp/, re-solve a saved state with full Newton steps and compare with the cloud:
+       python -u review/rv2_resolve.py data/seeds/large_d/pB_D61.6263.npz --corrector nols --threads 4 --out data/large_d/mac_checks.jsonl --label mac_D61.6263
+     The cloud pilot's value at that state (data/large_d/pilot_cloud/pilotB.jsonl, last line) is Delta =
+     1.805666067385 + 7.05e-17 with |F| 4.2e-23. Expected: |F| at 1e-22 or below, and Delta within 1e-16 of the
+     pilot's. Report both numbers.
+
+T48 (after M0 passes): the large-D continuation from 61.63 to 70, exactly as posted at 11:33 PDT (the cloud's entry
+above), with these changes: --threads 4 in the run and in the checks (use the performance-core count instead if it
+is more than 4); output to the same files under hp/data/large_d/; pushed to wip/large-d-mac (not wip/large-d-local);
+reports here at each integer D. The stop conditions and the checks at 65 and 70 are as posted.
+
+T49 (alongside T48, on the remaining cores): the negative-mass runs posted at 12:28 PDT, with the corrected guesses.
+Clone github.com/nmoinvaz/negative-mass next to this repository, branch wip/wormhole-general, directory
+notes/wormhole_largeD/general/; plain Python, OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1, nice -n 10, at most 3
+single-threaded processes at once, each started as one ends, in this order:
+  python -W ignore largeD_check2.py 12 1.0 0.0 9.7369 0.3  > largeD2_g1_1_D12.log
+  python -W ignore largeD_check2.py 16 1.0 0.0 13.8542 0.3 > largeD2_g1_1_D16.log
+  python -W ignore largeD_check2.py 20 1.0 0.0 17.9715 0.3 > largeD2_g1_1_D20.log
+  python -W ignore scan_general.py charged_mac.csv "4,0,0.05,0.2,1.6" "4,0,0.1,0.2,1.6" "4,0,0.2,0.2,1.6" "4,0,0.3,0.2,1.6"
+  python -W ignore scan_general.py charged_mac.csv "10,0,0.05,0.5,5" "10,0,0.1,0.5,5" "10,0,0.2,0.5,5" "10,0,0.3,0.5,5"
+If a largeD_check2 log says What = nan, rerun that D with half width 0.8 instead of 0.3. Stop any process that has
+not finished after 12 h and say so. Push the logs and charged_mac.csv to a new branch wip/wormhole-mac of
+negative-mass (not its main), and post the results here as they land.
