@@ -603,3 +603,124 @@ never saw, to 4×10⁻⁶ and 10⁻⁷" by:
   `hp/data/lowD_states/highm*_D3.7000_M*.npz` (D = 3.7, M = 80–256) and `lowDhm*_D*_M*.npz` (the pilot's converged
   states at every resolution, helper included; 0.1–0.4 MB each). Not committed: checkpoints, pass-1 states, failed
   and re-noded predictor states.
+
+## 9. Stage 2: the merge, M = 512, and the pilot from D = 3.15 on
+
+### 9.1 The merge
+
+At the coordinator's request the branch merged origin/main (15fa7ec, the quad-double types; conflict only in the
+module list of `hp/src/lib.rs`) and `wip/largeD-mixed` (127d606: `Solver.jvp`, the `horizon_dd` option, the GMRES
+correction loop; no conflicts), then added M = 512 (B = 64) to the size list. The build of that tree (0a131fa) is
+bit-identical to main at M ≤ 128: `mixed_check.py ref`, extended by the large-D agent with the mixed-precision defaults
+and a D = 50.01 state with kfreeze 13, against a reference written by the main build (`ref_mixed_compare_merged.log`),
+and the 168 hashes of `highm_check.py ref` (`ref_highm_compare_merged.log`). `cargo test --release --lib`: 13 passed,
+7 benches ignored (`cargo_test_merged_release.log`). In a debug build main's `qd_residual::qv_lane_blocks_agree`
+overflows the test thread's stack (`cargo_test_merged.log`); notes/QUAD_DOUBLE.md runs its tests with `--release`.
+
+### 9.2 What M = 512 needs
+
+Measured in the lifts and the pilot, on a coarse plan (`highm_check.py profile --plan_tol=1e-8 --hmax=0.5
+--no_dtau_split`, the D = 3.7 M = 256 state resampled, 15 nodes; `profile_big.jsonl`, `logs/profile_big.log`), and as
+a residual on the resampled state's own plan (`hp/highm_check512.py`, `check512.jsonl`, `logs/check512.log`):
+
+| M | block LU (15 nodes) | peak RSS of the process | one Newton step | residual (own plan of the resampled M = 256 state) |
+|---|---|---|---|---|
+| 192 | 173 MB | 0.72 GB | 3.4 min on 327 steps (pilot, load 2) | |
+| 256 | 308 MB | 0.78–1.08 GB | 11 min on 564 steps, 19–20 on 972 (pilot, load 2) | |
+| 384 | 691 MB | 1.40 GB | 75 min on 450 steps (nice 15 beside the pilot, load 5) | 28 s, 1160 steps, \|F\| 2.6×10⁻¹³ |
+| 512 | 1230 MB (scaled) | about 3 GB (estimate) | about 9–10 s per Taylor step (M³ from 256) | 82 s, 1561 steps, \|F\| 1.2×10⁶ (below) |
+
+- **Memory.** The block LU grows exactly like M² (308 → 691 MB is 2.24 times for (384/256)² = 2.25; its size does not
+  depend on the plan) and like the number of nodes: 1.23 GB at M = 512 on 15 nodes, 1.5 GB on the pilot's 18. The
+  other large item is the ks + 1 = 251 double-double horizon LUs, 16 M² bytes each: 0.26 GB at M = 256, 0.59 GB at
+  384, 1.05 GB at 512. With the workspace (about 0.4 GB at M = 256–384), an M = 512 solve needs about 3 GB.
+- **The memory that is actually available is less than the machine's 8 GB:** all agents' processes share one memory
+  cgroup capped at 6.27 GB, and at 15:05 its OOM killer killed two release builds of the kernel (rustc at 4.9 and 3.8
+  GB, fat LTO) and a 1.1 GB check of mine. An M = 512 solve fits only when no kernel build runs beside it.
+- **Time** by M³ scaling from M = 256 (1.2 s per Taylor step per Newton call on 2 threads at load 2): about 9.6 s per
+  step at M = 512, so 1.5–4 hours per Newton call on the 560–1560-step plans seen at M = 256–512, and a solve of 5
+  calls 8–20 hours on this machine. The τ-derivative's share grows with M (57% at M = 256), so an FFT derivative would
+  cut that by about half (section 4).
+- **A small check.** M = 384 and 512 build and run: the resampled D = 3.7 state at M = 384 has |F| = 2.6×10⁻¹³ on its
+  own plan; at M = 512 the same state has |F| = 1.2×10⁶ because its horizon series diverges at u₀ = 0.1 (tail
+  1.5×10⁶; centre tail 6×10⁻²¹): the node set must follow M (section 1.4). From the pilot's D = 3.15 state (18 nodes,
+  0.000625…0.95) resampled to M = 512 the residual is right: |F| = 7.4×10⁻⁸ (the M 256 → 512 truncation) on its own
+  1897-step plan, 45 s, horizon tail 3×10⁻⁵², process RSS 1.1 GB (`check512_D3.15.log`).
+- **But the Newton step overflows (9.4).** At that state the f64 Jacobian fails in its first block with an infinite or
+  zero pivot at M = 512, and at M = 384 too (B = 48, so not a problem of B = 64), on the state's own plan, while the
+  double-double residual is finite. The centre series is computed in x with kc = 100 orders, and its coefficients
+  grow like r^−k (r the series' radius, about x₀ / 0.4): max |c_k| is 3×10²⁴⁸ at D = 3.15, M = 256 and 1.5×10²⁹⁸ at
+  M = 384 (2.8×10¹⁸⁹ at D = 3.7, x₀ = 0.0025). The tangent columns of the f64 Jacobian, with flatter spectra, pass
+  the f64 range of 1.8×10³⁰⁸ first; the next halving of the first node multiplies c₁₀₀ by 2¹⁰⁰ = 10³⁰ and would
+  overflow the residual itself. (Thinned or coarser plans fail earlier, for the same reason or by Taylor overflow.)
+- **Rust tests:** `cargo test --release --lib` passes on the build with B = 64 (9.1); the tests do not run B = 64.
+
+### 9.3 Projection to D = 3.02 and 3.01, and how close to D = 3
+
+`python3 lowD_highM_report.py --project --Ds=3.1,3.05,3.04,3.03,3.02,3.01,3.005,3.001 --D_last=3.001` (the model of
+section 6; hours for 2 cores at load about 2, from D = 3.15, lower estimates):
+
+| D | modes for 10⁻⁸ (the 4 variants) | K, the variant that fits the pilot | M_c / M_w / M_n | hours from D = 3.15 |
+|---|---|---|---|---|
+| 3.1 | 191, 225, 242, 286 | 170–181 | 160 / 192 / 256 | 1.6–2.8 |
+| 3.05 | 273, 279, 369, 377 | 243–260 | 192 / 256 / 320 – 256 / 320 / 384 | 9–25 |
+| 3.02 | 326, 438, 476, 640 | 290–310 | 256 / 320 / 384 | 35–57 |
+| 3.01 | 345, 533, 626, 967 | 307–329 | 256 / 320 / 384 – 320 / 384 / 512 | 41–98 |
+| 3.001 | 365, 663, 2058, 3742 | 324–347 | 320 / 384 / 512 | 78–143 |
+
+How close the model says we can get, honestly:
+
+- **It cannot say for D < 3.05.** The variant that fits the pilot (decay rate of the τ spectrum linear in D, amplitude
+  constant) keeps a finite decay rate at D = 3 (0.025 per mode), so its K stays near 300–350 all the way down; the
+  three others, with the amplitude growing like |F₁|² ∝ (D − 3)^−2.2 or the decay rate vanishing like a power of
+  D − 3, need 440–970 modes at D = 3.02–3.01 and diverge at D = 3. The pilot's data stop at D = 3.15, where the
+  variants differ by less than the data's scatter in D (section 6); the points at D = 3.1 and 3.05 are the test.
+- **So:** D = 3.05 is reachable here (M = 320–384, a day or more on these 2 cores under the present load). D = 3.02–3.01
+  needs M = 384–512 if the fitted variant holds and M = 512–1024 if the amplitude growth enters; M = 512 is built,
+  640–1024 are not, and above M = 512 neither the memory (block LU about 6 GB at M = 1024 on 18 nodes, horizon LUs 4
+  GB) nor the time (a Newton call 8 times M = 512's) fits this machine.
+- **D = 3 itself is out of reach** of this method in any variant that lets the amplitude grow: the needed M diverges,
+  and so do the other costs, which grew faster than M³ on the way down (the first node halved at D = 3.3 and 3.2, the
+  last node moved at 3.15, the plans grew from 190 to 560 steps, two passes for most solves, and the step in D halved
+  at 3.15 since Δ(D) changes like √(D − 3)).
+- **Hardware:** the Jacobian, 98–99% of a Newton call, is independent column work, and parallelizes nearly linearly;
+  the block LU is 0.3% of a call. On a 64-core AVX-512 machine with 64 GB, an M = 512 Newton call would take minutes
+  instead of hours, D = 3.01 at M = 384–512 hours to a day, and M = 768–1024 (for the amplitude-growth variants) would fit
+  in memory. An FFT τ-derivative would roughly halve the time at M ≥ 256 on any hardware.
+
+**Per-core time and peak memory**, for judging another machine (2 threads here, load about 2; the time of a Newton
+call is the Taylor steps of its plan times the per-step cost; plans at D ≈ 3.15: 230–390 steps for a converged
+state's own plan, 550–1900 for a resampled start's):
+
+| M | core-seconds per Taylor step of a Newton call | one Newton call on 2 cores | peak RSS of one process |
+|---|---|---|---|
+| 192 | 1.2 (measured) | 3.4 min on 327 steps, 7 on 723 | 0.7 GB |
+| 256 | 2.4 (measured) | 11 min on 564 steps, 20 on 972 | 0.8–1.1 GB |
+| 384 | 8 (M³ from 256) | 0.5 h on 450 steps, 1.3 h on 1160 | 1.4 GB on 15 nodes (measured), about 1.7 GB on 18 |
+| 512 | 19 (M³ from 256) | 1.5 h on 560 steps, 5 h on 1900 | about 3 GB (M512_RSS_NOTE) |
+
+The projection to D = 3.01–3.02 above, 40–100 hours on these 2 cores, is 80–200 core-hours at this per-core speed
+(AVX-512, 2.x GHz cloud cores), a lower estimate, and needs about 3 GB for one process at M = 512 (one process at a
+time; the pilot's helper, working and next resolutions are solved one after another). Scaling beyond 2 threads was not
+measured here: the Jacobian's columns are independent tasks (rayon), the block LU and the residual are 1–2% of a call.
+
+### 9.4 The series orders lowered: kc 100 → 60, ks 250 → 150
+
+Two ways out of the overflow: fewer orders, or a scaled variable (9.5). Fewer orders need no rebuild. Evidence, as in
+section 1.6 (`highm_diag.py orders`):
+
+| state | kc / ks | residual against 100 / 250 | centre / horizon tail |
+|---|---|---|---|
+| D = 3.3, M = 96, 15 nodes (`diag_orders_D3.3_M96*.log`) | 60 / 150 | bitwise identical, and the Newton step | 1.5×10⁻³⁸ / 6×10⁻⁵⁸ |
+| D = 3.15, M = 256, 18 nodes (`diag_orders_D3.15_M256.log`) | 80 / 200 | bitwise identical | 2.6×10⁻⁵⁵ / 5.6×10⁻⁷⁴ |
+| | 60 / 150 | bitwise identical | 8.7×10⁻⁴² / 4.2×10⁻⁵⁶ |
+| | 50 / 120 | bitwise identical | 3.6×10⁻³⁶ / 3.5×10⁻⁴⁴ |
+
+With kc = 60 / ks = 150 the M = 384 Newton step at the D = 3.15 state runs (it failed at once with 100 / 250; stopped
+after 10 minutes by the test's time limit, `logs/check_M384_D3.15_kc60.log`; the failure with 100 / 250: `check_M384_D3.15_kc100.log`). The horizon tail, which the
+coordinator asked to watch (radius 0.1–0.15 in u at 150 orders), is 4×10⁻⁵⁶ at u₀ = 0.05 there.
+
+The pilot switched at the point boundary after D = 3.125 (`--kc 60 --ks 150`, a re-solve of every resolution at
+D = 3.125 and the same nodes under the tag `..._kc60_ks150`), with `--tail_max 1e-33`: every pair records both tails
+of both resolutions and `tails_ok`, and a tail above 10⁻³³ moves a node (as before at 10⁻³⁰). The change of Δ from
+the switch at D = 3.125: DDELTA_SWITCH.

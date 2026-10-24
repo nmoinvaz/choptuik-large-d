@@ -9,8 +9,14 @@ storage of the mixed-precision Newton system (notes/HIGH_M.md).
     cd hp && python3 highm_check.py converge [--M=80] [--json=F]
     cd hp && python3 highm_check.py lift --M=160 [--start=STATE.npz] [--nodes=x0,x1,...] [--plan=start|source] [--tol1=1e-14] [--no_replan] [--tol=1e-28] [--out=F.jsonl] [--tag=highm]
     cd hp && python3 highm_check.py profile --M=256 [--start=STATE.npz] [--reps=2] [--out=F.jsonl] [--plan_tol=1e-30]
-        [--hmax=0.05] [--no_dtau_split]
+        [--hmax=0.05] [--no_dtau_split] [--steps_per_seg=n]
+    cd hp && python3 highm_check.py scaled --save=F.json [--Ms=192,256]     (with a build before the scaled series)
+    cd hp && python3 highm_check.py scaled --compare=F.json [--Ms=192,256]  (with the scaled build)
 
+scaled: bit-identity of the power-of-two scaled centre and horizon series (model::series_scale) at the D = 3.15 states
+  (18 nodes, first node 0.000625, kc 100, ks 250; their own plans) at M = 192 and 256: the series in x, the residual and
+  one newton_mixed step in block storage, as SHA-256 hashes; the control, Ctx::mutate 6 (the scale wrong at one order
+  of the f64 Jacobian's centre series), must change the step.
 ref: bit-identity at M <= 128 of everything the kernel computes there (residual, the dense double-double Newton step
   and its pivots, chord and lu_solve_t after it, the dense f64 Jacobian, newton_mixed's step, pivots, lu_solve_t
   and chord, the centre and horizon series, the Taylor plan) at the D = 3.7 state resampled to each M (from M = 48
@@ -48,7 +54,8 @@ profile: at a state (--start, default the D = 3.7 state resampled to --M): secon
   (Solver.lu_info), and of the Jacobian build without the tau derivative (jac_mutate=1; the difference is the tau
   derivative's time; not with --no_dtau_split), --reps times, 2 threads; the LU's MB, the load and the peak RSS.
   --plan_tol / --hmax: a coarser Taylor plan for timing and memory at large M (the Jacobian's time is about proportional
-  to the Taylor steps, recorded; the LU's time and memory do not depend on them).
+  to the Taylor steps, recorded; the LU's time and memory do not depend on them). --steps_per_seg=n: n equal
+  Taylor steps per segment (an inaccurate residual; for the memory at large M).
 """
 import hashlib
 import json
@@ -443,6 +450,12 @@ def profile(opts):
     # Jacobian's time is about proportional to the steps, the LU's and its memory do not depend on them
     plan = (float(opts.get("plan_tol", 1e-30)), float(opts.get("hmax", 0.05)))
     s, zh, zl, m = solver_at(M, threads, path=path, plan=plan)
+    if opts.get("steps_per_seg"):
+        # n equal Taylor steps per segment: the residual is inaccurate, but the Jacobian's structure and the block LU (and
+        # so the memory) are those of any plan, and its time is the per-step cost times the number of steps (with one
+        # step per segment the Taylor values overflow at M = 384: a non-finite pivot)
+        nodes, n = m["nodes"], int(opts["steps_per_seg"])
+        s.set_segs([[nodes[b - 1] + (nodes[b] - nodes[b - 1]) * k / n for k in range(n + 1)] for b in range(1, len(nodes))])
     out = dict(M=M, N=s.size, threads=threads, state=m["source"], plan=list(plan),
                steps=sum(len(g) - 1 for g in s.get_segs()), residual=[], newton_mixed=[], jac=[], factor=[])
     for _ in range(reps):
@@ -465,10 +478,61 @@ def profile(opts):
     return 0
 
 
+# ------------------------------------------------------------------ scaled series
+SCALED_STATES = {192: "lowDhm_x0.000625-0.95_D3.1500_M192.npz", 256: "lowDhm_x0.000625-0.95_D3.1500_M256.npz"}
+
+
+def scaled_hashes(M, threads, jac_mutate=0):
+    """hashes of the D = 3.15 state's outputs at M (its own kc 100, ks 250 and plan): the centre and horizon series in x
+    (Solver.series, unscaled), the residual, and one newton_mixed step in block storage (step, residual, pivots)"""
+    zh, zl, m = load(os.path.join(HERE, "data", "lowD_states", SCALED_STATES[M]))
+    s = make_solver(m["D"], M, nodes=m["nodes"], kt=m["kt"], kc=m["kc"], ks=m["ks"], threads=threads)
+    s.set_segs(m["segs"])
+    out = {}
+    for which, name in ((0, "centre"), (1, "horizon")):
+        h, l = s.series(zh, zl, which)
+        out[name + "_hi"], out[name + "_lo"] = sha(h), sha(l)
+        out[name + "_finite"] = bool(np.isfinite(np.asarray(h)).all())
+    fh, fl = s.residual(zh, zl)
+    out["residual_hi"], out["residual_lo"] = sha(fh), sha(fl)
+    dh, dl, Fh, Fl, p0, p1 = s.newton_mixed(zh, zl, block=True, jac_mutate=jac_mutate)
+    out["step_hi"], out["step_lo"], out["piv"] = sha(dh), sha(dl), sha(np.array([p0, p1]))
+    return out
+
+
+def scaled(opts):
+    """bit-identity of the power-of-two scaled series (notes/HIGH_M.md 9.5) at D = 3.15, M = 192 and 256, kc 100:
+    --save=F with a build before the scaling, --compare=F with the scaled build; the control (Ctx::mutate 6, the scale
+    wrong at one order in the f64 Jacobian's centre series) must change the Newton step."""
+    threads = int(opts.get("threads", 2))
+    Ms = [int(v) for v in str(opts.get("Ms", "192,256")).split(",")]
+    if "save" in opts:
+        allh = {str(M): scaled_hashes(M, threads) for M in Ms}
+        json.dump(allh, open(opts["save"], "w"), indent=1)
+        print(f"saved {sum(len(v) for v in allh.values())} hashes to {opts['save']}")
+        return 0
+    want = json.load(open(opts["compare"]))
+    bad = 0
+    for M in Ms:
+        got = scaled_hashes(M, threads)
+        for k, v in got.items():
+            same = want[str(M)].get(k) == v
+            bad += not same
+            print(f"  M = {M} {k:16s} {'bit-identical' if same else 'DIFFERS'}", flush=True)
+    Mc = Ms[0]
+    ctl = scaled_hashes(Mc, threads, jac_mutate=6)
+    fired = ctl["step_hi"] != want[str(Mc)]["step_hi"]
+    print(f"control (scale wrong at order 7, M = {Mc}): Newton step {'differs: fires' if fired else 'unchanged: DOES NOT FIRE'}")
+    ok = bad == 0 and fired
+    print("PASS" if ok else "FAIL")
+    return 0 if ok else 1
+
+
 def main():
     pos, opts = opts_of(sys.argv[1:])
     cmd = pos[0] if pos else "block"
-    return {"ref": ref, "block": block, "controls": controls, "converge": converge, "lift": lift, "profile": profile}[cmd](opts)
+    return {"ref": ref, "block": block, "controls": controls, "converge": converge, "lift": lift, "profile": profile,
+            "scaled": scaled}[cmd](opts)
 
 
 if __name__ == "__main__":

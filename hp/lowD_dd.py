@@ -108,12 +108,19 @@ def reintegrate(s, zh, zl, nodes, M, h=0.002):
 
 
 def tails(s, zh, zl, nodes, M):
+    """max_k |c_n(k)| x^n over the last 3 orders n of the centre (x = first node) and horizon (x = 1 - last node)
+    series; from the scaled coefficients c_n sigma^n where the kernel has them (no overflow; notes/HIGH_M.md 9.5)"""
     out = []
     for which, x in ((0, nodes[0]), (1, 1 - nodes[-1])):
-        h, l = s.series(zh, zl, which)
+        try:
+            h, l = s.series(zh, zl, which, True)
+            sig = s.series_scale(which)
+        except TypeError:           # a kernel before the scaled series
+            h, l = s.series(zh, zl, which)
+            sig = 1.0
         c = np.abs((h + l).reshape(-1, 4, M)).max(axis=(1, 2))
         k = np.arange(len(c))
-        out.append(float((c * x ** k)[-3:].max()))
+        out.append(float((c * (x / sig) ** k)[-3:].max()))
     return out
 
 

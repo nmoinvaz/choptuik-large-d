@@ -1,0 +1,34 @@
+== M 256 14:24:54
+{"M": 256, "N": 16385, "threads": 2, "state": "highm15_D3.7000_M256.npz", "plan": [0.0001, 1.0], "steps": 14, "residual": [3.97], "newton_mixed": [115.83], "jac": [103.29], "factor": [5.89], "jac_no_dtau": [61.2], "lu_mb": 307.5, "load": 6.4, "peak_rss_mb": 976.7}
+exit 0 14:28:15
+== M 384 14:28:15
+Traceback (most recent call last):
+  File "/home/claude/dss/agentHM/wt/hp/highm_check.py", line 481, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/home/claude/dss/agentHM/wt/hp/highm_check.py", line 477, in main
+    return {"ref": ref, "block": block, "controls": controls, "converge": converge, "lift": lift, "profile": profile}[cmd](opts)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/home/claude/dss/agentHM/wt/hp/highm_check.py", line 456, in profile
+    t = time.time(); s.newton_mixed(zh, zl, block=True); out["newton_mixed"].append(round(time.time() - t, 2))
+                     ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+ValueError: singular or non-finite pivot at column 1 (0)
+exit 1 14:37:57
+== M 512 14:37:57
+exit 143 14:38:59
+PROFILE_ONESTEP_DONE
+== switched to 8 equal steps per segment (one step per segment overflows at M = 384) 14:38:59
+== M 512 14:38:59
+Traceback (most recent call last):
+  File "/home/claude/dss/agentHM/wt/hp/highm_check.py", line 482, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/home/claude/dss/agentHM/wt/hp/highm_check.py", line 478, in main
+    return {"ref": ref, "block": block, "controls": controls, "converge": converge, "lift": lift, "profile": profile}[cmd](opts)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/home/claude/dss/agentHM/wt/hp/highm_check.py", line 457, in profile
+    t = time.time(); s.newton_mixed(zh, zl, block=True); out["newton_mixed"].append(round(time.time() - t, 2))
+                     ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+ValueError: singular or non-finite pivot at column 1026 (NaN)
+exit 1 14:54:53
+PROFILE_ONESTEP_DONE

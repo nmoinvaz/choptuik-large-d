@@ -36,7 +36,11 @@ trait Api: Send + Sync {
     fn set_segs(&mut self, segs: Vec<Vec<f64>>) -> Result<(), String>;
     fn segs(&self) -> Vec<Vec<f64>>;
     fn integrate(&self, zh: &[f64], zl: &[f64], sh: &[f64], sl: &[f64], xs: &[f64]) -> V;
-    fn series(&self, zh: &[f64], zl: &[f64], which: u8) -> Result<V, String>;
+    /// series coefficients (orders, 4, M); scaled: in the scaled variable of model::series_scale (c_k sigma^k), else
+    /// in x (u) as before the scaling (exact: multiplied by 1/sigma k times; it may overflow where the scaled ones do not)
+    fn series(&self, zh: &[f64], zl: &[f64], which: u8, scaled: bool) -> Result<V, String>;
+    /// sigma of the centre (which = 0) or horizon (1) series
+    fn series_scale(&self, which: u8) -> f64;
     /// Mode matrix M(lam): the Jacobian of the residual for perturbations ~ exp(lam tau) (every tau-derivative of a
     /// perturbation gains + lam), Delta held fixed: the leading (L-1) x (L-1) block (no Delta column, no phase row).
     /// Column-major with leading dimension ld_for(L-1): (hi, lo, ld).
@@ -135,7 +139,14 @@ impl<const B: usize> Api for Ctx<B> {
         store_state(&model::taylor_path(self, &s, xs, omega, &mut w))
     }
     /// which = 0: centre series coefficients (kc+1, 4, M); 1: horizon series (ks+1, 4, M)
-    fn series(&self, zh: &[f64], zl: &[f64], which: u8) -> Result<V, String> {
+    fn series_scale(&self, which: u8) -> f64 {
+        if which == 0 {
+            model::series_scale(self.nodes[0])
+        } else {
+            model::series_scale(self.u0().hi)
+        }
+    }
+    fn series(&self, zh: &[f64], zl: &[f64], which: u8, scaled: bool) -> Result<V, String> {
         let delta = DD { hi: zh[zh.len() - 1], lo: zl[zl.len() - 1] };
         let omega = DV::splat(DD::TWO_PI / delta);
         let s = if which == 0 {
@@ -146,12 +157,19 @@ impl<const B: usize> Api for Ctx<B> {
         };
         let m = 8 * B;
         let nk = s[0].len();
+        let isig = 1.0 / self.series_scale(which);
         let mut h = vec![0.0; nk * 4 * m];
         let mut l = vec![0.0; nk * 4 * m];
         for k in 0..nk {
             for q in 0..4 {
                 let o = (k * 4 + q) * m;
-                s[q][k].val().store(&mut h[o..o + m], &mut l[o..o + m]);
+                let mut v = s[q][k].val();
+                if !scaled {
+                    for _ in 0..k {
+                        v = v.mulf(isig);
+                    }
+                }
+                v.store(&mut h[o..o + m], &mut l[o..o + m]);
             }
         }
         Ok((h, l))
@@ -891,18 +909,28 @@ impl Solver {
         Ok((arr(py, oh), arr(py, ol)))
     }
 
-    /// Series coefficients, flattened (orders, 4, M): which = 0 centre, 1 horizon.
+    /// Series coefficients, flattened (orders, 4, M): which = 0 centre, 1 horizon; scaled: the coefficients of the
+    /// scaled variable x / sigma (u / sigma), c_k sigma^k, sigma = series_scale(which), as the kernel computes them;
+    /// otherwise those of x (u), which overflow to inf where c_k is beyond the f64 range.
+    #[pyo3(signature = (zh, zl, which, scaled=false))]
     fn series<'py>(
         &self,
         py: Python<'py>,
         zh: PyReadonlyArray1<'py, f64>,
         zl: PyReadonlyArray1<'py, f64>,
         which: u8,
+        scaled: bool,
     ) -> PyResult<(Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<f64>>)> {
         let (h, l) = (slice(&zh, "zh")?, slice(&zl, "zl")?);
         let (api, pool) = (&self.api, &self.pool);
-        let (oh, ol) = py.detach(|| pool.install(|| api.series(h, l, which))).map_err(PyValueError::new_err)?;
+        let (oh, ol) = py.detach(|| pool.install(|| api.series(h, l, which, scaled))).map_err(PyValueError::new_err)?;
         Ok((arr(py, oh), arr(py, ol)))
+    }
+
+    /// The power of two sigma by which the centre (which = 0) or horizon (1) series variable is scaled
+    /// (model::series_scale of the first node, or of u0 = 1 - the last node).
+    fn series_scale(&self, which: u8) -> f64 {
+        self.api.series_scale(which)
     }
 }
 

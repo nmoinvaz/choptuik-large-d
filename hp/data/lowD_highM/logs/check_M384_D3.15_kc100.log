@@ -1,0 +1,10 @@
+{"M": 384, "D": 3.15, "start": "lowDhm_x0.000625-0.95_D3.1500_M256.npz", "nodes": 18, "N": 29185, "steps": 1453, "F": 7.030442361904416e-08, "s_make": 20.2, "s_plan": 46.6, "s_residual": 31.2, "tail_c": 1.589969205229395e-22, "tail_h": 2.385282816474029e-81, "peak_rss_mb_residual": 637.5, "peak_rss_mb": 637.5, "load": 4.75}
+Traceback (most recent call last):
+  File "/home/claude/dss/agentHM/wt/hp/highm_check512.py", line 80, in <module>
+    main()
+    ~~~~^^
+  File "/home/claude/dss/agentHM/wt/hp/highm_check512.py", line 63, in main
+    dh, dl, _, _, p0, p1 = s.newton_mixed(z, 0 * z, block=True)
+                           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+ValueError: singular or non-finite pivot at column 0 (inf)
+exit 1
