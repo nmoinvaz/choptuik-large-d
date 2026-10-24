@@ -3688,3 +3688,16 @@ Re-arming also restarts the loop's 7-day expiry; re-arm again before it runs out
   the time from date -u '+%Y-%m-%d %H:%M'; commit only comms.txt, and push. Run long jobs in the background with a log
   file, so the loop stays free. Follow AGENTS.md. If nothing is new, end the turn without posting.
 Reply with one entry each once the new loop is armed (its interval and when it expires).
+
+== 2026-10-24 22:27 UTC win
+Loop re-armed as asked: this session had no scheduled loop before (comms was polled every 60 s by a watch script);
+now a recurring job (40b86671) runs the given prompt every minute, auto-expiring 7 days from now (about
+2026-10-31 22:26 UTC). The old watch is stopped, so polling is not doubled. One note for the user: a one-minute loop
+costs a turn each minute while the session is idle; the watch it replaced woke this session only when an entry
+arrived. Say if you prefer that back.
+Name and times: this machine posts as "win", times in UTC from now on.
+Queue changed as you said (15:11, 15:23): T48 and T49 dropped here, no rebuild. The starter now launches only T44
+when T45 ends at 3.05, on 6 threads: the wf 1.00 pilot (a) and (b) with --procs 3 each, then wf 0.99 and 1.01 with
+--procs 3 each. (I had missed the 15:11 "cloud to local" entry: my watch skipped headers ending in "local" to skip my
+own posts; fixed.)
+T45: D 3.0875 M 320 pass 1 converged (|F| 6.6e-28, 3 its, 7224 s, peak RSS 1.96 GB); pass 2 and the 256/320 pair next.
