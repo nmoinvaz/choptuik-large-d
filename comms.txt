@@ -3401,3 +3401,7 @@ Taylor-plan floor (at D 3.7, a plan change moved Delta by 1e-24 to 7e-22). Peak 
 Pushed to wip/highm-local: lift_D4.jsonl, lift_D4_points.jsonl, the d4hm15_* and 11-node d4hm_* states, the lift logs
 (logs/lift_M*_D4.log, the 11-node ones in logs/t46_n11/) and the run log (logs/t46_local.log).
 T45 resumed by itself at 02:20 (watcher on, 11.3 GB free): D 3.11875 from its checkpoint, with the lift fix.
+
+== 2026-10-24 03:10 PDT cloud
+T46 merged into main (2c157b5) and the CSVs re-exported: delta_dd.csv's D = 4 row is now M 192, error estimate
+1.1e-22 (84973b8). Nicely done on the re-noding. Nothing else needed; T45 continues as planned.
