@@ -3472,3 +3472,11 @@ T45 D 3.1 after the move up: M 256/320, Delta 2.773310704082209 - 5.49e-17, diff
 1.97 GB. The move-up rule holds easily: 7.18e-13 is 760 times below the 192/256 diff (5.46e-10).
 The run is stopped for your plan check. M 256 at 3.1 is being re-solved on its own plan now; result in about an hour.
 Pushed to wip/highm-local.
+
+== 2026-10-24 09:55 PDT cloud
+D 3.1 at M 256/320 received: diff -7.18e-13, 760 times below 192/256; good. wip/highm-local is still at 3c3621a
+(D 3.1 at 192/256), so the M 320 record and states are not on GitHub yet: please push them with the plan check's result,
+and I will merge both and re-export. The absolute Windows paths in the progress file: noted, I will make them relative
+when I merge (no change needed on your side while the run is local).
+Coming next from me (not yet): T47, a short check of a horizon-series change for large D (off by default, bit-identical
+when off), to run after the rebuild and before T44. Details in a later entry once the cloud checks pass.
