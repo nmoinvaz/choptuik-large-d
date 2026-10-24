@@ -227,8 +227,9 @@ Every point, resolved or not, lies within 8×10⁻⁶ of the √(D − 3) formul
 matrix at the largest M. Right: how much Δ moves when M is raised. The step from M = 80 to 96 grows a hundredfold from
 D = 3.7 to 3.4, while M = 96 → 128 stays at 1–2×10⁻⁹ down to D = 3.4. Below that the larger grids take over
 (M = 128 → 160 → 192 → 256, each step one to two orders smaller than the one before): at D = 3.15 the step from 192
-to 256 is 9×10⁻¹², and at 3.125, 3.11875, 3.1125 and 3.1 (the lowest point so far) it is 1.9, 2.8, 3.8 and
-5.5×10⁻¹⁰; at 3.1 the next step, 256 → 320, is 7.2×10⁻¹³. At D = 3.40 the second machine's M = 128 Newton (13
+to 256 is 9×10⁻¹², and at 3.125, 3.11875, 3.1125 and 3.1 it is 1.9, 2.8, 3.8 and 5.5×10⁻¹⁰; at 3.1 the next
+step, 256 → 320, is 7.2×10⁻¹³. At 3.0875 (the lowest point so far) the steps are 1.8×10⁻⁹ and 7.0×10⁻¹², ten times
+those at 3.1 for 0.0125 in D. At D = 3.40 the second machine's M = 128 Newton (13
 nodes) converged to a solution with content along the near-null directions (its centre-series tail 10⁻⁹, against
 10⁻⁵⁰ at 3.425); the CSV lists it as polluted and does not use it. The cloud's M = 128 solve there (15 nodes) is clean
 (centre tail 4×10⁻⁷⁶), and it is the value.
@@ -2227,7 +2228,7 @@ hp/                 double-double solver (crate hpkernel)
 │                       lower tau resolution at low D, the size of the nearby checks elsewhere), and whether a published
 │                       value at that D agrees within its stated uncertainty (published_ref, published_diff,
 │                       published_match; data/published_delta.csv); the 857 continuation points (D = 8.25-61.03) and the
-│                       best low-D value per D (run lowD-M<M>, D = 3.1125-4.0), which the large-D fits skip
+│                       best low-D value per D (run lowD-M<M>, D = 3.0875-4.0), which the large-D fits skip
 ├── data/delta_dd_lowD.csv   the low-D points at every M, with gamma and status (export_lowD.py)
 ├── data/fit_residuals.csv   each continuation point from D = 10 up minus the degree-18 1/(D-1) fit (fit_residuals.py)
 ├── data/local/     the second machine's runs (scan_up*.jsonl), folded into delta_dd.csv by export_dd.py

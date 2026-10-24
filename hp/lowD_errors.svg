@@ -31,6 +31,7 @@
 <text x="556.0" y="498.0" font-size="12" fill="#0b0b0b" text-anchor="middle" font-weight="normal">dimension D</text>
 <text x="30.1" y="284.0" font-size="12" fill="#0b0b0b" text-anchor="middle" transform="rotate(-90 30.1 284.0)">|change in Δ| (log scale)</text>
 <g opacity="0.35"><line x1="1050.0" y1="134.0" x2="1050.0" y2="190.0" stroke="#52514e" stroke-width="2"/><polygon points="1050.0,196.0 1046.0,187.0 1054.0,187.0" fill="#52514e"/><text x="1050.0" y="158.0" font-size="11" fill="#52514e" text-anchor="middle" transform="rotate(90.0 1050.0 165.0)">better</text></g>
+<g><circle cx="163.3" cy="214.8" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.0875, M = 320: Δ changed by 7.0e-12</title></g>
 <g><circle cx="175.2" cy="232.6" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.1, M = 320: Δ changed by 7.2e-13</title></g>
 <g><circle cx="187.1" cy="183.6" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.1125, M = 256: Δ changed by 3.8e-10</title></g>
 <g><circle cx="193.0" cy="186.0" r="5.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.11875, M = 256: Δ changed by 2.8e-10</title></g>
@@ -57,6 +58,6 @@
 <circle cx="746.4" cy="382.9" r="10" fill="none" stroke="#0b0b0b" stroke-width="1.5"/>
 <line x1="739.3" y1="375.8" x2="720.4" y2="356.9" stroke="#0b0b0b" stroke-width="1"/>
 <text x="716.4" y="360.9" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="bold">D = 3.7, M = 256: 3e-21</text>
-<text x="16.0" y="526.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">Δ: hp/data/delta_dd.csv (Delta_err of the dM rows) at choptuik-large-d 4bfa400  ·  runs on the local i7-1185G7 and in the cloud</text>
+<text x="16.0" y="526.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">Δ: hp/data/delta_dd.csv (Delta_err of the dM rows) at choptuik-large-d 1df0cbd  ·  runs on the local i7-1185G7 and in the cloud</text>
 <a href="https://github.com/nmoinvaz/choptuik-large-d"><text x="1064" y="526" font-size="10" fill="#52514e" text-anchor="end" text-decoration="underline">github.com/nmoinvaz/choptuik-large-d</text></a>
 </svg>
