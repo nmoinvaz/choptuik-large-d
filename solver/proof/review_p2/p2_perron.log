@@ -1,0 +1,16 @@
+Lemma LC Lipschitz matrix (b8m_lc_lip.json): n = 40; spectral radius (float) 0.705209; exact theta = max (Mv)_i/v_i = 0.705209 (row der/V/F); Collatz-Wielandt lower bound min (Mv)_i/v_i = 3.768e-28
+Lemma J Gamma (weighted norm): n = 4; spectral radius (float) 0.175930; exact theta = max (Mv)_i/v_i = 0.175930 (row b); Collatz-Wielandt lower bound min (Mv)_i/v_i = 1.759e-01
+Lemma J Gamma0 (a priori norm on (1, 1+d/2]): n = 4; spectral radius (float) 0.000000; exact theta = max (Mv)_i/v_i = 0.000018 (row V); Collatz-Wielandt lower bound min (Mv)_i/v_i = 1.746e-28
+  claim LC theta <= 0.7356: True
+  claim J theta <= 0.1760: True
+  claim J theta0 <= 5.84e-5: True
+all three contractions (< 1): True
+== --mutate=scale
+Lemma LC Lipschitz matrix (b8m_lc_lip.json): n = 40; spectral radius (float) 1.007442; exact theta = max (Mv)_i/v_i = 1.007442 (row der/V/F); Collatz-Wielandt lower bound min (Mv)_i/v_i = 5.382e-28
+Lemma J Gamma (weighted norm): n = 4; spectral radius (float) 0.251328; exact theta = max (Mv)_i/v_i = 0.251328 (row b); Collatz-Wielandt lower bound min (Mv)_i/v_i = 2.513e-01
+Lemma J Gamma0 (a priori norm on (1, 1+d/2]): n = 4; spectral radius (float) 0.000000; exact theta = max (Mv)_i/v_i = 0.000024 (row V); Collatz-Wielandt lower bound min (Mv)_i/v_i = 2.632e-28
+  claim LC theta <= 0.7356: False
+  claim J theta <= 0.1760: False
+  claim J theta0 <= 5.84e-5: True
+all three contractions (< 1): False   [MUTATION scale]
+MUTATION scale: the LC contraction must fail: caught
