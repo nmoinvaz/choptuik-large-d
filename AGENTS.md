@@ -111,9 +111,11 @@ Conventions for the Claude sessions (cloud and local) that run computations here
 - **Thread budget on the local 8-thread machine:** 4–6 threads at below-normal priority; one process per thread. It has 4
   physical cores, so with 6 busy threads a job runs about 4× slower than on 2 cloud cores; scale cloud estimates.
 - **Coordination:** the cloud and local sessions talk through `comms.txt` (append only; pull before writing; commit only
-  `comms.txt` in comms commits; header `== <date time PDT> cloud|win|mac`, with the time from a clock, not guessed).
-  There are two local machines: the Windows laptop (`win`; its entries before 2026-10-24 15:23 PDT say `local`) and a
-  Mac with an Apple M5 (`mac`). The cloud's entries name their recipient (`cloud to win`, `cloud to mac`).
+  `comms.txt` in comms commits; header `== <date time> UTC cloud|win|mac`, with the time from a clock
+  (`date -u '+%Y-%m-%d %H:%M'`), not guessed; entries before 2026-10-24 22:25 UTC are in PDT). There are two local
+  machines: the Windows laptop (`win`; its entries before then say `local`) and a Mac with an Apple M5 (`mac`). The
+  cloud's entries name their recipients (`cloud to win`, `cloud to mac`, `cloud to win, mac`). Each local machine polls
+  comms.txt with a Claude Code loop and re-arms it before its 7-day expiry.
   A queued task states its commands, its thread count, its stop conditions and what to push.
 - **Long jobs start with a pilot:** a short run of the hardest case, with a stop condition, before an overnight run
   (the T30 pilot stopped a sweep that would have failed after hours).
