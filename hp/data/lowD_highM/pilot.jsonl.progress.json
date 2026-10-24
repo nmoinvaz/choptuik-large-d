@@ -26,25 +26,25 @@
  "hist_w": [
   [
    3.25,
-   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.95_D3.2500_M192_rn.npz"
+   "data/lowD_states/lowDhm_x0.000625-0.95_D3.2500_M192_rn.npz"
   ],
   [
    3.2,
-   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.95_D3.2000_M192_rn.npz"
+   "data/lowD_states/lowDhm_x0.000625-0.95_D3.2000_M192_rn.npz"
   ],
   [
    3.175,
-   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.95_D3.1750_M192_rn.npz"
+   "data/lowD_states/lowDhm_x0.000625-0.95_D3.1750_M192_rn.npz"
   ],
   [
    3.15,
-   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.95_D3.1500_M192.npz"
+   "data/lowD_states/lowDhm_x0.000625-0.95_D3.1500_M192.npz"
   ]
  ],
  "hist_n": [
   [
    3.15,
-   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.95_D3.1500_M256.npz"
+   "data/lowD_states/lowDhm_x0.000625-0.95_D3.1500_M256.npz"
   ]
  ],
  "pairs": [
@@ -175,19 +175,19 @@
  "hist_c": [
   [
    3.25,
-   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.95_D3.2500_M160_rn.npz"
+   "data/lowD_states/lowDhm_x0.000625-0.95_D3.2500_M160_rn.npz"
   ],
   [
    3.2,
-   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.95_D3.2000_M160_rn.npz"
+   "data/lowD_states/lowDhm_x0.000625-0.95_D3.2000_M160_rn.npz"
   ],
   [
    3.175,
-   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.95_D3.1750_M160_rn.npz"
+   "data/lowD_states/lowDhm_x0.000625-0.95_D3.1750_M160_rn.npz"
   ],
   [
    3.15,
-   "/home/claude/dss/agentHM/wt/hp/data/lowD_states/lowDhm_x0.000625-0.95_D3.1500_M160.npz"
+   "data/lowD_states/lowDhm_x0.000625-0.95_D3.1500_M160.npz"
   ]
  ],
  "point_start": [

@@ -697,7 +697,7 @@ state's own plan, 550–1900 for a resampled start's):
 | 192 | 1.2 (measured) | 3.4 min on 327 steps, 7 on 723 | 0.7 GB |
 | 256 | 2.4 (measured) | 11 min on 564 steps, 20 on 972 | 0.8–1.1 GB |
 | 384 | 8 (M³ from 256) | 0.5 h on 450 steps, 1.3 h on 1160 | 1.4 GB on 15 nodes (measured), about 1.7 GB on 18 |
-| 512 | 19 (M³ from 256) | 1.5 h on 560 steps, 5 h on 1900 | about 3 GB (M512_RSS_NOTE) |
+| 512 | 19 (M³ from 256) | 1.5 h on 560 steps, 5 h on 1900 | about 3 GB (estimate from the parts above; not measured) |
 
 The projection to D = 3.01–3.02 above, 40–100 hours on these 2 cores, is 80–200 core-hours at this per-core speed
 (AVX-512, 2.x GHz cloud cores), a lower estimate, and needs about 3 GB for one process at M = 512 (one process at a
@@ -720,7 +720,8 @@ With kc = 60 / ks = 150 the M = 384 Newton step at the D = 3.15 state runs (it f
 after 10 minutes by the test's time limit, `logs/check_M384_D3.15_kc60.log`; the failure with 100 / 250: `check_M384_D3.15_kc100.log`). The horizon tail, which the
 coordinator asked to watch (radius 0.1–0.15 in u at 150 orders), is 4×10⁻⁵⁶ at u₀ = 0.05 there.
 
-The pilot switched at the point boundary after D = 3.125 (`--kc 60 --ks 150`, a re-solve of every resolution at
-D = 3.125 and the same nodes under the tag `..._kc60_ks150`), with `--tail_max 1e-33`: every pair records both tails
-of both resolutions and `tails_ok`, and a tail above 10⁻³³ moves a node (as before at 10⁻³⁰). The change of Δ from
-the switch at D = 3.125: DDELTA_SWITCH.
+The switch was prepared for the point boundary after D = 3.125 (`--kc 60 --ks 150`: a re-solve of every resolution
+at D = 3.125 and the same nodes under the tag `..._kc60_ks150`, with `--tail_max 1e-33`, so that every pair records both
+tails of both resolutions and `tails_ok`, and a tail above 10⁻³³ moves a node). It never ran: the pilot was stopped at
+17:30 PDT on 2026-10-23, at the user's request, while D = 3.125 was solving at M = 192 (converged at M = 160,
+Δ = 2.8759922399…), and the kernel fix of 9.5 replaces it.

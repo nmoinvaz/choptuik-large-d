@@ -166,7 +166,7 @@ impl<const B: usize> Api for Ctx<B> {
                 let mut v = s[q][k].val();
                 if !scaled {
                     for _ in 0..k {
-                        v = v.mulf(isig);
+                        v = v.mul_pwr2(isig);
                     }
                 }
                 v.store(&mut h[o..o + m], &mut l[o..o + m]);

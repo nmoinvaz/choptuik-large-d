@@ -16,7 +16,7 @@ pyo3 = { version = "0.30", features = ["extension-module"], optional = true }
 numpy = { version = "0.30", optional = true }
 rayon = "1.10"
 # double-double / quad-double arithmetic, dual lanes and LU (split out of this crate); pinned to a commit
-multidouble = { git = "https://github.com/nmoinvaz/multidouble", rev = "5fb516b4823679ab397f4fdf7989d18f4cb6789e" }
+multidouble = { git = "https://github.com/nmoinvaz/multidouble", rev = "6e93c58e87db1ff4c7ab2d6df7a4e375610f65ff" }
 
 [profile.release]
 opt-level = 3
