@@ -1,0 +1,16 @@
+  newton 0: |F| 3.75e-23 |dz| 2.58e-11 lam 1 dDelta +1.13e-18 Delta 1.805666067385000 piv 8.8e-15..2.1e+07  t 1.5s
+  newton 1: |F| 4.41e-23 |dz| 5.88e-11 lam 1 dDelta +8.87e-18 Delta 1.805666067385000 piv 8.8e-15..2.1e+07  t 2.9s
+  newton 2: |F| 6.91e-23 |dz| 4.23e-11 lam 1 dDelta -5.80e-18 Delta 1.805666067385000 piv 8.8e-15..2.1e+07  t 4.4s
+  newton 3: |F| 3.69e-23 |dz| 2.26e-11 lam 1 dDelta +3.11e-18 Delta 1.805666067385000 piv 8.8e-15..2.1e+07  t 5.9s
+  newton 4: |F| 5.22e-23 |dz| 4.12e-11 lam 1 dDelta +7.72e-18 Delta 1.805666067385000 piv 8.8e-15..2.1e+07  t 7.3s
+  newton 5: |F| 4.80e-23 |dz| 4.79e-11 lam 1 dDelta -8.90e-18 Delta 1.805666067385000 piv 8.8e-15..2.1e+07  t 8.7s
+  newton 6: |F| 4.59e-23 |dz| 7.72e-11 lam 1 dDelta -2.39e-18 Delta 1.805666067385000 piv 8.8e-15..2.1e+07  t 10.2s
+  newton 7: |F| 1.20e-22 |dz| 1.06e-10 lam 1 dDelta +1.86e-17 Delta 1.805666067385000 piv 8.8e-15..2.1e+07  t 11.7s
+  newton 8: |F| 2.25e-22 |dz| 1.44e-10 lam 1 dDelta -2.25e-17 Delta 1.805666067385000 piv 8.8e-15..2.1e+07  t 13.1s
+  newton 9: |F| 4.14e-22 |dz| 1.26e-10 lam 1 dDelta +2.23e-17 Delta 1.805666067385000 piv 8.8e-15..2.1e+07  t 14.6s
+  newton 10: |F| 3.17e-22 |dz| 1.44e-10 lam 1 dDelta -1.76e-17 Delta 1.805666067385000 piv 8.8e-15..2.1e+07  t 16.0s
+  newton 11: |F| 4.07e-22 |dz| 8.24e-11 lam 1 dDelta +2.79e-18 Delta 1.805666067385000 piv 8.8e-15..2.1e+07  t 17.5s
+  newton 0: |F| 1.38e-22 |dz| 1.96e-11 lam 1 dDelta -8.01e-19 Delta 1.805666067385000 piv 8.8e-15..2.1e+07  t 1.4s
+  newton 1: |F| 5.12e-23: no decrease along the Newton step, giving up
+{"label": "mac_D61.6263", "state": "pB_D61.6263.npz", "D": 61.626251, "M": 32, "kfreeze": 13, "kt": 36, "kc": 154, "ks": 100, "tol_step": 1e-32, "hmax": 0.05, "nodes": [0.3, 0.4, 0.5, 0.6, 0.7], "perturb": "", "corrector": "nols", "Delta": 1.805666067385, "Delta_lo": 7.701454730035861e-17, "F": 5.118342506537512e-23, "est": -1.988823847576053e-18, "its": 2, "steps": 11, "sens": [2.610590741485301e-08, 2.5003364300399852e-05, 83.64241914916632, 85805881.08753954, 156696896416358.78, 156696896416358.78], "seconds": 22.1}
+D 61.626251  Delta np.float64(1.805666067385) +7.701e-17  (saved np.float64(1.805666067385) +7.782e-17; diff +6.48e-18)  |F| 5.1e-23  est -2.0e-18  22s

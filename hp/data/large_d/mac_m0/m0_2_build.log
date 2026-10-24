@@ -1,0 +1,77 @@
+    Updating crates.io index
+ Downloading crates ...
+  Downloaded pyo3-ffi v0.30.1
+  Downloaded pyo3-macros v0.30.1
+  Downloaded pyo3-build-config v0.30.1
+  Downloaded numpy v0.30.0
+  Downloaded pyo3-macros-backend v0.30.1
+  Downloaded pyo3 v0.30.1
+  Downloaded multidouble v1.0.0
+🍹 Building a mixed python/rust project
+🐍 Found CPython 3.13 at /Users/nathan/Source/choptuik-large-d/.venv/bin/python
+🔗 Found pyo3 bindings
+📡 Using build options features from pyproject.toml
+💻 Using `MACOSX_DEPLOYMENT_TARGET=11.0` for aarch64-apple-darwin by default
+   Compiling target-lexicon v0.13.5
+   Compiling autocfg v1.5.1
+   Compiling proc-macro2 v1.0.107
+   Compiling crossbeam-utils v0.8.23
+   Compiling unicode-ident v1.0.27
+   Compiling quote v1.0.47
+   Compiling crossbeam-epoch v0.9.21
+   Compiling pyo3-macros-backend v0.30.1
+   Compiling libc v0.2.191
+   Compiling crossbeam-deque v0.8.8
+   Compiling heck v0.5.0
+   Compiling rayon-core v1.13.0
+   Compiling num-traits v0.2.19
+   Compiling matrixmultiply v0.3.11
+   Compiling rawpointer v0.2.1
+   Compiling once_cell v1.21.4
+   Compiling either v1.19.0
+   Compiling rustc-hash v2.1.3
+   Compiling pyo3-build-config v0.30.1
+   Compiling syn v3.0.9
+   Compiling pyo3-ffi v0.30.1
+   Compiling pyo3 v0.30.1
+   Compiling numpy v0.30.0
+   Compiling num-integer v0.1.47
+   Compiling num-complex v0.4.6
+   Compiling rayon v1.12.0
+   Compiling ndarray v0.17.2
+   Compiling multidouble v1.0.0
+   Compiling pyo3-macros v0.30.1
+   Compiling hpkernel v0.1.0 (/Users/nathan/Source/choptuik-mac/hp)
+    Finished `release` profile [optimized] target(s) in 23m 12s
+📦 Built wheel for CPython 3.13 to /Users/nathan/Source/choptuik-mac/hp/dist/hpkernel-0.1.0-cp313-cp313-macosx_11_0_arm64.whl
+Processing ./dist/hpkernel-0.1.0-cp313-cp313-macosx_11_0_arm64.whl
+Installing collected packages: hpkernel
+Successfully installed hpkernel-0.1.0
+Collecting multidouble @ git+https://github.com/nmoinvaz/multidouble@57ecf20eb0d2d2f78688d267f9565b2d264591d7#subdirectory=python
+  Cloning https://github.com/nmoinvaz/multidouble (to revision 57ecf20eb0d2d2f78688d267f9565b2d264591d7) to /private/var/folders/7t/cbzjknq94l52r9q6mhl9g2pm0000gn/T/pip-install-w7ykqrtp/multidouble_74e306bd55824a6fb83279f648869013
+  Running command git clone --filter=blob:none --quiet https://github.com/nmoinvaz/multidouble /private/var/folders/7t/cbzjknq94l52r9q6mhl9g2pm0000gn/T/pip-install-w7ykqrtp/multidouble_74e306bd55824a6fb83279f648869013
+  Running command git rev-parse -q --verify '57ecf20eb0d2d2f78688d267f9565b2d264591d7^{commit}'
+  57ecf20eb0d2d2f78688d267f9565b2d264591d7
+  Resolved https://github.com/nmoinvaz/multidouble to commit 57ecf20eb0d2d2f78688d267f9565b2d264591d7
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Requirement already satisfied: numpy>=1.21 in /Users/nathan/Source/choptuik-large-d/.venv/lib/python3.13/site-packages (from multidouble @ git+https://github.com/nmoinvaz/multidouble@57ecf20eb0d2d2f78688d267f9565b2d264591d7#subdirectory=python) (2.5.4)
+Building wheels for collected packages: multidouble
+  Building wheel for multidouble (pyproject.toml): started
+  Building wheel for multidouble (pyproject.toml): finished with status 'done'
+  Created wheel for multidouble: filename=multidouble-0.1.0-cp313-cp313-macosx_11_0_arm64.whl size=342869 sha256=dd2b534c5e39e6c93efcd38753c5aa46a92324a27303bbc05fe15eb070022427
+  Stored in directory: /Users/nathan/Library/Caches/pip/wheels/8d/9e/97/fa06545c2e5c7fcad033fe0c9935ae2ce00379c063e32b7ce8
+Successfully built multidouble
+Installing collected packages: multidouble
+Successfully installed multidouble-0.1.0
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import hpkernel, multidouble; print('hpkernel', hpkernel.isa(), 'multidouble', multidouble.isa())
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/nathan/Source/choptuik-large-d/.venv/lib/python3.13/site-packages/multidouble/__init__.py", line 19, in <module>
+    from ._multidouble import add, dd_op, dd_solve, div, isa, mul, sub
+ImportError: dlopen(/Users/nathan/Source/choptuik-large-d/.venv/lib/python3.13/site-packages/multidouble/_multidouble.cpython-313-darwin.so, 0x0002): tried: '/Users/nathan/Source/choptuik-large-d/.venv/lib/python3.13/site-packages/multidouble/_multidouble.cpython-313-darwin.so' (mis-aligned LINKEDIT string pool, fileOffset=0x000A0D8C), '/System/Volumes/Preboot/Cryptexes/OS/Users/nathan/Source/choptuik-large-d/.venv/lib/python3.13/site-packages/multidouble/_multidouble.cpython-313-darwin.so' (no such file), '/Users/nathan/Source/choptuik-large-d/.venv/lib/python3.13/site-packages/multidouble/_multidouble.cpython-313-darwin.so' (mis-aligned LINKEDIT string pool, fileOffset=0x000A0D8C)
