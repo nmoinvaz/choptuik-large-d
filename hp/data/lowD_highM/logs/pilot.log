@@ -936,3 +936,28 @@ ValueError: singular or non-finite pivot at column 308 (NaN)
 06:15:12   D 3.1 M 256: start 'lift of M_w' |F| 3.08e-05 (1278 steps)
 06:15:21 D 3.1 M 256: L 20481, steps 1278, start |F| 3.1e-05
   newton 0: |F| 3.08e-05 |dz| 7.60e-02 lam 1 dDelta -5.13e-10 Delta 2.773310704116634 piv 9.0e-05..1.7e+01  t 841.9s
+  newton 0: |F| 6.38e-10 |dz| 4.11e-07 lam 1 dDelta -3.37e-11 Delta 2.773310704082927 piv 9.0e-05..1.7e+01  t 871.3s
+  newton 0: |F| 9.22e-19 converged (last |dz| 9.7e-16) Delta 2.773310704082927; last step taken, |F| 3.64e-28
+06:58:25 D 3.1 M 256: Delta 2.7733107040829270 (-6.94e-17) |F| 3.6e-28 its 3 2591s dDelta/dF max 6.3e-01 tails 1e-87 5e-60 dDelta_est +3.4e-31
+06:58:40   D 3.1 M 256: start 'pass 1' |F| 3.64e-28 (474 steps)
+06:58:48 D 3.1 M 256: L 20481, steps 474, start |F| 3.6e-28
+  newton 0: |F| 3.64e-28 |dz| 3.21e-15 lam 0.125 dDelta +1.91e-31 Delta 2.773310704082927 piv 5.5e-10..8.6e+00  t 314.5s
+  newton 0: |F| 3.12e-28 |dz| 4.92e-15 lam 0.0625 dDelta +8.61e-32 Delta 2.773310704082927 piv 5.5e-10..8.6e+00  t 315.4s
+07:09:18 D 3.1 M 256: two steps with line-search factors 0.125, 0.0625 <= 0.125; giving up
+07:14:32 D 3.1 M 256: Delta 2.7733107040829270 (-6.94e-17) |F| 1.1e-28 its 2 950s dDelta/dF max 2.6e+01 tails 9e-69 5e-60 dDelta_est +3.0e-30
+07:14:41   D 3.1 M 256: the solution's own plan has 729 steps, more than the 474 used
+07:14:41 D 3.1: Delta(M 256) = 2.7733107040829270 (-6.94e-17), M 192 -> 256: -5.46e-10; pair
+07:14:41 difference projected to 1.7e-08 at D 3.0 (> 1e-08): moving up to M 256 / 320
+07:15:16   D 3.1 M 320: start 'lift' |F| 1.26e-06 (1492 steps)
+07:15:31 D 3.1 M 320: L 25601, steps 1492, start |F| 1.3e-06
+  newton 0: |F| 1.26e-06 |dz| 3.43e-03 lam 1 dDelta -6.04e-13 Delta 2.773310704082323 piv 8.9e-05..2.3e+01  t 1962.9s
+  newton 0: |F| 1.04e-12 |dz| 5.74e-10 lam 1 dDelta -1.14e-13 Delta 2.773310704082209 piv 8.9e-05..2.3e+01  t 2044.3s
+  newton 0: |F| 2.71e-21 converged (last |dz| 2.9e-19) Delta 2.773310704082209; last step taken, |F| 2.97e-28
+09:02:00 D 3.1 M 320: Delta 2.7733107040822089 (-5.49e-17) |F| 3.0e-28 its 3 6401s dDelta/dF max 5.0e-01 tails 1e-78 4e-55 dDelta_est -6.0e-31
+09:02:26   D 3.1 M 320: start 'pass 1' |F| 2.97e-28 (555 steps)
+09:02:38 D 3.1 M 320: L 25601, steps 555, start |F| 3.0e-28
+  newton 0: |F| 2.97e-28 |dz| 4.94e-16 lam 0.5 dDelta -1.68e-31 Delta 2.773310704082209 piv 1.3e-08..3.9e+01  t 776.8s
+  newton 0: |F| 2.35e-28 |dz| 2.50e-16 lam 1 dDelta +1.20e-30 Delta 2.773310704082209 piv 1.3e-08..3.9e+01  t 822.5s
+09:29:17 D 3.1 M 320: |F| 3.0e-28 -> 2.3e-28: below 1e-27 and no longer falling (the residual floor); stopping
+09:42:51 D 3.1 M 320: Delta 2.7733107040822089 (-5.49e-17) |F| 1.3e-28 its 2 2423s dDelta/dF max 1.5e+01 tails 8e-61 4e-55 dDelta_est -8.4e-31
+09:42:51 D 3.1: Delta(M 320) = 2.7733107040822089 (-5.49e-17), M 256 -> 320: -7.18e-13; moved up (difference projected to 1.7e-08 at D 3.0 (> 1e-08))
