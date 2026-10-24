@@ -3533,3 +3533,25 @@ script's own midpoint insertion, done by hand; backup of the old file kept), res
 helper's predictor got its own plan at once: 1530 steps, |F| 1.5. A failed solve from there would insert 3.0875 in
 the usual way. 23.5 h used (the hour stuck at 3.05 was not saved to the progress file).
 T48 noted: after T45's leg ends at 3.05 and the rebuild, before T44.
+
+== 2026-10-24 11:33 PDT cloud
+T48 (new, the user's request): the large-D continuation from D 61.63 to 70. Order: after T45's leg ends at 3.05 and
+the rebuild onto multidouble 1.0.0 (from main at this commit or later), before T44. Background: a cloud pilot
+(hp/data/large_d/pilot_cloud/) continued T43's base run from 60.63 to 61.63 with the same settings in 65 min on the
+loaded cloud machine: 36 points, steps 0.013-0.034, 20 failures, |dDelta_est| <= 1.8e-17, and the points match the
+1/(D-1) fit made on D <= 61.03 to 3e-16. Starting from closely spaced states (the scans' up23 at 61.02-61.03) failed:
+the steps shrank to 2e-4. So T48 starts from the pilot's last 8 states, hp/data/seeds/large_d/pB_D61.4548 .. 61.6263.
+From hp/, 6 threads, below normal priority:
+  python -u scan_hp.py data/large_d/up70.jsonl data/seeds/large_d/pB_D61.6263.npz 70.0 --history data/seeds/large_d/pB_D61.4548.npz,data/seeds/large_d/pB_D61.4775.npz,data/seeds/large_d/pB_D61.5116.npz,data/seeds/large_d/pB_D61.5244.npz,data/seeds/large_d/pB_D61.5436.npz,data/seeds/large_d/pB_D61.5723.npz,data/seeds/large_d/pB_D61.5939.npz --dD 0.0324 --dD0 0.0324 --maxdD 2.0 --kt 36 --kc 220 --kc_auto 30 --ks 100 --tol 1.45e-22 --tol_growth 1.45 --it_max 25 --lm 0 --w 16 --kfreeze 13 --corrector dnp --predictor lagrange_dd --grow_its 99 --grow 1.5 --fail_factor 0.5 --min_dD 1e-4 --max_points 3000 --max_hours 48 --max_span 9 --max_fail_row 6 --attempts data/large_d/up70_attempts.jsonl --tag up70 --threads 6
+  It resumes by being started again from its last state with its last 8 states as --history (same arguments, the
+  start and history replaced; tol as the run's last point records it).
+Stop and report if: 6 failed steps in a row; any |dDelta_est| above 1e-14; the horizon tail (the second "tails" number)
+above 1e-34 (then the remedy is --ks 130 from the last state); or |F| at accepted points rising faster than about 1.45
+per unit of D.
+When it reaches 70 (or stops), the checks, from hp/, each on the first state past 65 and on the last state:
+  python -u review/rv2_resolve.py STATE --M 48 --corrector dnp --threads 6 --out data/large_d/checks.jsonl --label M48_D<D>
+  python -u review/rv2_resolve.py STATE --kfreeze 15 --corrector nols --threads 6 --out data/large_d/checks.jsonl --label kf15_D<D>
+  (expected: M 48 within about 1e-17 of Delta; kfreeze 15 a shift of about 1e-15, the known cut, which we track in D)
+Report in comms at each integer D (points, failures, the step range, hours, the largest |dDelta_est|); push
+data/large_d/ (jsonl, attempts, logs, every state: 16 kB each) to wip/large-d-local every 2 hours or so. I run the
+extrapolation check (hp/large_d_extrap.py) here as the points arrive.
