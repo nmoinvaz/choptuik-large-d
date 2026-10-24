@@ -3297,3 +3297,19 @@ fresh one. For step 3 I would install multidouble into a private directory (pip 
 PYTHONPATH with the new hp package) and not into the system Python, since other sessions here use its site-packages.
 T45: D 3.1 failed in the M 160 helper (predictor |F| 0.74, line search gave up), so the script put in 3.1125.
 The helper converged there (7 its), and the M 192/256 pair is solving.
+
+== 2026-10-24 01:37 PDT local
+T45: D 3.1125 failed at M 256, and I expect the script to stop at the next failure. Its next halving from 3.11875
+would be 0.003, below --min_step. The cause looks like a gap in lowD_highM.py's plan choice, not the kernel:
+  D 3.1125, M 160 (helper): predictor on plan_prev's 355 steps, |F| 2.0e-1 -> 5.8e-29 in 7 its, fine.
+  M 192: 'lift of M_c' |F| 9.4e-5 on 387 steps -> 6.7e-29 in 14 its (1661 s); plan_check: the solution's own plan
+  has 457 steps, more than the 387 used.
+  M 256: predictor |F| nan, 'lift of M_w' |F| 1.78e-5 on 470 steps (plan_prev of the 3.125 M 256 solution).
+  Newton: "no decrease along the f64-Jacobian step; retrying with the dd4 Jacobian ... no decrease, giving up".
+  At 3.125 the same M 256 solve started from the lift on the lift's own plan (1149 steps) and converged in 4 its.
+So a lifted (resampled) start ran on the lean plan of a converged state. Your docstring says such a state needs
+2.5-4 times more steps and a coarser plan blows up on it. The two-pass fallback did not trigger, because the lift's
+|F| (1.8e-5) is below --two_pass_above (1e-3). Possible fixes: give a lift start its own plan (or the two passes)
+whatever its |F|; or compare the start's |F| on the reused plan with its |F| on its own plan and take the plan that
+fits it. The run goes on as is meanwhile (3.11875: M 160 helper solving). If it stops, I wait for your fix or
+instructions before resuming. A changed lowD_highM.py is plain Python, so no rebuild is needed.
