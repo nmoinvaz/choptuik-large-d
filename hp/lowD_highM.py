@@ -33,7 +33,12 @@ The two start states are converged at the same D and nodes, at the working resol
      re-solved) so that the predictors keep their cubic. The
      nodes also change when a series tail of the next point's M_n start (the M_w solution resampled to M_n) is above
      --lift_tail_max (1e-20): the centre tail of that start grows far faster than the solutions' as D falls (D 3.3:
-     4e-8; D 3.25: 1e-2, and Newton went astray from that start).
+     4e-8; D 3.25: 1e-2, and Newton went astray from that start). Every pair record has tails_ok: all four series
+     tails (centre and horizon, M_w and M_n) at most --tail_max (1e-33 from D 3.1 on); a pair without it is followed
+     by the re-noded one at the same D.
+  6. --kc / --ks: new series orders (kc 100 -> 60, ks 250 -> 150 after D 3.125: the f64 Jacobian's centre-series
+     tangents overflow the f64 range at kc 100 near D 3.15 for M >= 384); at the next start the last point is re-solved
+     at every resolution and the same nodes under a new tag (_kc60_ks150), and the pair records the change of Delta.
 The plans come from converged states or predictors through them: a state resampled to a larger M needs 3.5-4 times
 more Taylor steps (its new top harmonics are aliasing products that the tau-derivative amplifies), and a coarser plan
 blows up on it. A start whose residual on the given plan is not finite or above 1 gets its own plan instead.
@@ -125,6 +130,9 @@ def main():
                     "the centre series tail of the next point's M_n start (the M_w solution resampled) is above this")
     ap.add_argument("--near_factor", type=float, default=20.0, help="move up on the projected difference only when "
                     "the difference itself is above --diff_max / near_factor")
+    ap.add_argument("--kc", type=int, default=None, help="centre-series order (default: the start's or the run's); a "
+                    "change re-solves the last point at every resolution under a new tag")
+    ap.add_argument("--ks", type=int, default=None, help="horizon-series order, as --kc")
     ap.add_argument("--floor_ratio", type=float, default=0.5, help="a solve stops when |F| is below --accept and the last "
                     "step reduced it by less than this factor (the residual floor, which rises with M; 0: never)")
     ap.add_argument("--stop_lam", type=float, default=0.125, help="a solve gives up after two steps in a row with "
@@ -144,6 +152,11 @@ def main():
         raise SystemExit("the start states must be at the same D and nodes, at consecutive M of --Ms")
     nodes = list(mw["nodes"])
     kc, ks = mw["kc"], mw["ks"]
+
+    def make_tag(nodes_):
+        """the states' tag: the base, the node range, and the series orders when not the start's 100 / 250"""
+        base = a.tag.split("_x")[0]
+        return base + f"_x{nodes_[0]:g}-{nodes_[-1]:g}" + ("" if (kc, ks) == (100, 250) else f"_kc{kc}_ks{ks}")
     D0 = mw["D"]
     st = dict(t_used=0.0, Mw=mw["M"], Mn=mn["M"], nodes=nodes, tag=a.tag, hist_w=[[D0, a.start_w]],
               hist_n=[[D0, a.start_n]], pairs=[], targets=None, done=None, post=None, last_point_s=None, Mc=None,
@@ -156,6 +169,20 @@ def main():
         return
     st.setdefault("Mc", None)
     st.setdefault("hist_c", [])
+    kc, ks = st.setdefault("kc", kc), st.setdefault("ks", ks)
+    if (a.kc and a.kc != kc) or (a.ks and a.ks != ks):
+        # new series orders (the f64 Jacobian's centre-series tangents overflow at kc 100 near D 3.15, M >= 384): all
+        # resolutions re-solved at the last point and the same nodes, under a new tag, through the nodes stage below
+        if st.get("post"):
+            raise SystemExit("a point is pending (post stage); change the series orders at a point boundary")
+        old = (kc, ks)
+        kc, ks = a.kc or kc, a.ks or ks
+        st["kc"], st["ks"] = kc, ks
+        st["post"] = dict(D=st["hist_n"][-1][0], stage="nodes", t_point=st.get("last_point_s") or 0.0,
+                          new_nodes=list(st["nodes"]), old_nodes=list(st["nodes"]), orders_from=list(old))
+        st["tag"] = make_tag(st["nodes"])
+        log(f"series orders kc {old[0]} -> {kc}, ks {old[1]} -> {ks}: re-solving D {st['post']['D']} at every resolution "
+            f"under the tag {st['tag']}")
     t_start = time.time() - st["t_used"]
     if st["targets"] is None:
         n = int(round((D0 - a.D_end) / a.dD))
@@ -332,6 +359,8 @@ def main():
                    steps_own_w=rw.get("steps_own"), steps_own_n=rn.get("steps_own"), t_its_w=rw.get("t_its"),
                    t_its_n=rn.get("t_its"),
                    tail_c=rn.get("tail_c"), tail_h=rn.get("tail_h"), tail_c_w=rw.get("tail_c"), tail_h_w=rw.get("tail_h"),
+                   kc=kc, ks=ks, tails_ok=all(t is None or t <= a.tail_max for t in (rn.get("tail_c"), rn.get("tail_h"),
+                                                                                   rw.get("tail_c"), rw.get("tail_h"))),
                    peak_rss_mb_n=rn.get("peak_rss_mb"), nodes=st["nodes"], tag=st["tag"], decision=decision,
                    hours=round((time.time() - t_start) / 3600, 3))
         if extra:
@@ -425,7 +454,7 @@ def main():
                 if new != st["nodes"]:
                     post.update(new_nodes=new, old_nodes=st["nodes"])
                     st["nodes"] = new
-                    st["tag"] = st["tag"].split("_x")[0] + f"_x{new[0]:g}-{new[-1]:g}"
+                    st["tag"] = make_tag(new)
                     save_prog()
             if "new_nodes" in post:
                 old, new = post["old_nodes"], post["new_nodes"]
@@ -446,7 +475,8 @@ def main():
                                  else (False, None, None))
                 if not (okw and okn):
                     return f"re-noded solve failed at D {Dt}"
-                _, d2 = write_pair(Dt, rw2, rn2, f"re-noded {old} -> {new}")
+                _, d2 = write_pair(Dt, rw2, rn2, f"re-noded {old} -> {new}" if old != new else
+                                   f"re-solved at kc {kc}, ks {ks} (from kc {post['orders_from'][0]}, ks {post['orders_from'][1]})")
                 st["hist_w"], st["hist_n"] = [[Dt, pw2]], [[Dt, pn2]]
                 st["hist_c"] = []
                 if len(res) > 2:
