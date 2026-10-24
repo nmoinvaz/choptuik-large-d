@@ -1588,7 +1588,7 @@
 <line x1="728.7" y1="372.3" x2="749.5" y2="432.9" stroke="#0b0b0b" stroke-width="1"/>
 <text x="753.5" y="436.9" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="bold">Newton's correction grows ×1.60 per unit D</text>
 <text x="16.0" y="616.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">runs on the local i7-1185G7 and in the cloud</text>
-<text x="16.0" y="602.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">Δ and Newton corrections: hp/data/delta_dd.csv at choptuik-large-d 1df0cbd  ·  fit: fit_residuals.py  ·  cut: notes/NUMERICS_REVIEW.md F5</text>
+<text x="16.0" y="602.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">Δ and Newton corrections: hp/data/delta_dd.csv at choptuik-large-d 2ad3761  ·  fit: fit_residuals.py  ·  cut: notes/NUMERICS_REVIEW.md F5</text>
 <text x="16.0" y="586.0" font-size="10" fill="#c98500" text-anchor="start" font-weight="normal">⚠</text>
 <text x="30.0" y="586.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">the fit's cleaning drops 33 points, not shown · D 26.9–35.2 (run up6) were accepted at |F| up to 1.7e-11</text>
 <a href="https://github.com/nmoinvaz/choptuik-large-d"><text x="1064" y="616" font-size="10" fill="#52514e" text-anchor="end" text-decoration="underline">github.com/nmoinvaz/choptuik-large-d</text></a>
