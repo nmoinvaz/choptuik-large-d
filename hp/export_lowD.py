@@ -29,8 +29,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 RESOLVED = 1e-8
 # converged solutions that picked up content along the near-null directions (centre-series tail 1e-9 to 1e-10 where
 # clean neighbours have 1e-50; an M 96 solve from them does not converge); the local machine's report in comms.txt,
-# 2026-10-23 05:51 PDT. Kept as rows with status "polluted", never used as a value.
-POLLUTED = {(3.4, 128): "centre tail 1.2e-9", (3.3875, 128): "centre tail 2.8e-10; stepped from the polluted 3.40"}
+# 2026-10-23 05:51 PDT. Keyed by (D, M, source file): another run's solve at the same D and M can be clean (the cloud
+# pilot's D 3.4, M 128, 15 nodes: centre tail 4e-76). Kept as rows with status "polluted", never used as a value.
+POLLUTED = {(3.4, 128, "data/lowD_dd_local_t41.jsonl"): "centre tail 1.2e-9",
+            (3.3875, 128, "data/lowD_dd_local_t41.jsonl"): "centre tail 2.8e-10; stepped from the polluted 3.40"}
 
 
 def records(pattern):
@@ -44,7 +46,7 @@ def records(pattern):
 
 def build():
     """the rows of delta_dd_lowD.csv (dicts), sorted by D and M"""
-    best = {}
+    best, polluted = {}, {}
     for r in list(records("lowD_dd*.jsonl")) + list(records("lowD_highM/*points*.jsonl")):
         if r.get("converged") is False or r.get("Delta") is None or r.get("D", 99) >= 8.25:
             continue
@@ -56,15 +58,18 @@ def build():
         sens = r.get("sens_max", max(r["sens"]) if r.get("sens") else None)
         row = dict(D=key[0], M=key[1], Delta_hi=hi, Delta_lo=lo, F=r.get("F"), tail_c=r.get("tail_c"),
                    tail_h=r.get("tail_h"), sens_max=sens, dDelta_est=r.get("dDelta_est"), source=r["_src"])
-        row["status"] = "polluted: " + POLLUTED[key] if key in POLLUTED else "clean"
-        if key not in best or (row["F"] or 1) < (best[key]["F"] or 1):
-            best[key] = row
+        # a clean solve is used over a polluted one at the same (D, M) whatever their |F|; among equals, the smaller |F|
+        pol = POLLUTED.get(key + (r["_src"].replace(os.sep, "/"),))
+        row["status"] = "polluted: " + pol if pol else "clean"
+        store = polluted if pol else best
+        if key not in store or (row["F"] or 1) < (store[key]["F"] or 1):
+            store[key] = row
     gam = {(round(r["D"], 6), int(r["M"])): r["gamma"] for r in records("lowD_gamma*.jsonl") if r.get("gamma") is not None}
     rows = []
-    for D in sorted({k[0] for k in best}):
-        Ms = sorted(m for d, m in best if d == D and best[(d, m)]["status"] == "clean")
-        for key in sorted(k for k in best if k[0] == D and best[k]["status"] != "clean"):
-            rows.append(dict(best[key], change_from_lower_M=None, best=0, resolved=0, gamma=gam.get(key)))
+    for D in sorted({k[0] for k in best} | {k[0] for k in polluted}):
+        Ms = sorted(m for d, m in best if d == D)
+        for key in sorted(k for k in polluted if k[0] == D):
+            rows.append(dict(polluted[key], change_from_lower_M=None, best=0, resolved=0, gamma=gam.get(key)))
         for i, M in enumerate(Ms):
             row = dict(best[(D, M)])
             ch = None

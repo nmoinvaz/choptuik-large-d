@@ -225,20 +225,20 @@ continuation points, as run `lowD-M<M>`; `hp/plot_lowD_values.py` draws them; re
 largest M agree to 10⁻⁸ (or M = 80 alone at D ≥ 3.7, where M 80 → 96 is 1.2×10⁻⁹) and hollow where they do not yet.
 Every point, resolved or not, lies within 8×10⁻⁶ of the √(D − 3) formula below. Middle: γ, from the exact growth-mode
 matrix at the largest M. Right: how much Δ moves when M is raised. The step from M = 80 to 96 grows a hundredfold from
-D = 3.7 to 3.4, while M = 96 → 128 stays at 1–2×10⁻⁹ down to D = 3.425. Below that the larger grids take over
+D = 3.7 to 3.4, while M = 96 → 128 stays at 1–2×10⁻⁹ down to D = 3.4. Below that the larger grids take over
 (M = 128 → 160 → 192 → 256, each step one to two orders smaller than the one before): at D = 3.15 the step from 192
 to 256 is 9×10⁻¹², and at 3.125, 3.11875, 3.1125 and 3.1 (the lowest point so far) it is 1.9, 2.8, 3.8 and
-5.5×10⁻¹⁰; at 3.1 the next step, 256 → 320, is 7.2×10⁻¹³. At D = 3.40 the
-M = 128 Newton converged only to a solution with content along the near-null directions (its centre-series tail
-10⁻⁹, against 10⁻⁵⁰ at 3.425); the CSV lists it as polluted and it is not used.
+5.5×10⁻¹⁰; at 3.1 the next step, 256 → 320, is 7.2×10⁻¹³. At D = 3.40 the second machine's M = 128 Newton (13
+nodes) converged to a solution with content along the near-null directions (its centre-series tail 10⁻⁹, against
+10⁻⁵⁰ at 3.425); the CSV lists it as polluted and does not use it. The cloud's M = 128 solve there (15 nodes) is clean
+(centre tail 4×10⁻⁷⁶), and it is the value.
 
 ![Below D = 4: how much Delta moves when the tau resolution M goes up one step, at the largest M run at each D, on a log scale](hp/lowD_errors.svg)
 
 **The last resolution step at each D** (`hp/plot_errors.py`, from `Delta_err` in
 [`hp/data/delta_dd.csv`](hp/data/delta_dd.csv); rerun it after `hp/export_dd.py`). The right panel above on a log
 scale, one point per D: the step into the largest M run there. At D = 3.7 and 4 the grids were taken to M = 256 and
-192, far past what Δ needs, and the last step falls to 3×10⁻²¹ and 10⁻²². Below 3.7 it is 7×10⁻¹³ to 3×10⁻⁹,
-except at D = 3.4 (the triangle), whose M = 96 row is not resolved.
+192, far past what Δ needs, and the last step falls to 3×10⁻²¹ and 10⁻²². Below 3.7 it is 7×10⁻¹³ to 3×10⁻⁹.
 
 **A formula for 3 < D ≤ 4** (`hp/lowD_formula.py`, fitted to Ecker, Ecker, Grumiller & Jechtl's published values for
 3.046 ≤ D ≤ 4, which are not included here). The variable that works is s = √(D − 3):
