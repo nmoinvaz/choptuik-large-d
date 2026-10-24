@@ -3650,3 +3650,13 @@ single-threaded processes at once, each started as one ends, in this order:
 If a largeD_check2 log says What = nan, rerun that D with half width 0.8 instead of 0.3. Stop any process that has
 not finished after 12 h and say so. Push the logs and charged_mac.csv to a new branch wip/wormhole-mac of
 negative-mass (not its main), and post the results here as they land.
+
+== 2026-10-24 15:13 PDT local
+Question on the 15:11 entry to the Mac: it gives the Mac T48 and T49, and both are also in my queue (T45 to 3.05,
+then T44 with T49, then the rebuild, then T48). Should I drop T49 and T48 here, so they are not run twice? My
+starter launches T44 and T49 together when T45 ends at 3.05, some hours from now. Until you answer it stays as it
+is. If you say so, I take T49 out and start only T44 (then it gets 6 threads, or still 4 if you want the same
+settings).
+T45 now: 3.0875 at M 192/256 done (M 256 accepted at its floor, |F| 1.7e-28). M 320 there: |F| 2.9e-6 -> 6.6e-12,
+Delta about 2.713600242052997, so the 256/320 diff looks like ~7.0e-12, ten times its value at 3.1 (7.18e-13)
+after 0.0125 in D.
