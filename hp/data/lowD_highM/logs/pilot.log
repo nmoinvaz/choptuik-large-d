@@ -961,3 +961,71 @@ ValueError: singular or non-finite pivot at column 308 (NaN)
 09:29:17 D 3.1 M 320: |F| 3.0e-28 -> 2.3e-28: below 1e-27 and no longer falling (the residual floor); stopping
 09:42:51 D 3.1 M 320: Delta 2.7733107040822089 (-5.49e-17) |F| 1.3e-28 its 2 2423s dDelta/dF max 1.5e+01 tails 8e-61 4e-55 dDelta_est -8.4e-31
 09:42:51 D 3.1: Delta(M 320) = 2.7733107040822089 (-5.49e-17), M 256 -> 320: -7.18e-13; moved up (difference projected to 1.7e-08 at D 3.0 (> 1e-08))
+10:19:44 resuming: M 256/320, last D 3.1, 23.53 h used
+10:19:55 D 3.1: series tails of the M 256 solution resampled to M 320: 9.0e-35 (centre), 7.0e-60 (horizon)
+10:19:55 point 3.1 took 163.5 min of solves, 241.6 min of running time; 23.53 h used
+10:19:55 --- D 3.05 (from 3.1), M 256 / 320, nodes 0.000313..0.95
+10:20:05   D 3.05 M 192: start 'predictor' |F| nan (538 steps)
+11:19:27 resuming: M 256/320, last D 3.1, 23.53 h used
+11:19:27 --- D 3.075 (from 3.1), M 256 / 320, nodes 0.000313..0.95
+11:19:36   D 3.075 M 192: start 'predictor' |F| nan (538 steps)
+11:19:42   D 3.075 M 192: plan from start 'predictor' instead: 1530 steps, |F| 1.53e+00
+11:19:48 D 3.075 M 192: L 15361, steps 1530, start |F| 1.5e+00
+  newton 0: |F| 1.53e+00 |dz| 1.52e+03 lam 0.5 dDelta -2.13e-02 Delta 2.626391515884558 piv 1.0e-04..4.6e+01  t 360.8s
+  newton 0: |F| 6.64e-01 |dz| 2.90e+03 lam 0.0312 dDelta -6.53e-04 Delta 2.625738417630000 piv 1.1e-04..5.6e+01  t 472.3s
+  newton 0: |F| 6.47e-01 |dz| 1.60e+04 lam 0.00195 dDelta +5.58e-04 Delta 2.626295958713415 piv 1.1e-04..2.5e+03  t 493.9s
+11:41:55 D 3.075 M 192: two steps with line-search factors 0.03125, 0.00195312 <= 0.125; giving up
+11:42:00 D 3.075 M 192: NOT converged, |F| 6.5e-01 after 3 iterations (1337s); stopping
+11:42:00 D 3.075 failed at M 192; inserting D 3.0875
+11:42:00 --- D 3.0875 (from 3.1), M 256 / 320, nodes 0.000313..0.95
+11:42:09   D 3.0875 M 192: start 'predictor' |F| 2.81e-01 (538 steps)
+11:42:13 D 3.0875 M 192: L 15361, steps 538, start |F| 2.8e-01
+  newton 0: |F| 2.81e-01 |dz| 1.51e+01 lam 1 dDelta -1.49e-03 Delta 2.712250337771540 piv 1.3e-04..1.1e+01  t 162.9s
+  newton 0: |F| 4.25e-03 |dz| 1.50e+01 lam 1 dDelta +1.33e-03 Delta 2.713576788668831 piv 1.3e-04..2.3e+01  t 167.5s
+  newton 0: |F| 6.72e-04 |dz| 9.87e-01 lam 1 dDelta +2.29e-05 Delta 2.713599661949852 piv 1.3e-04..7.4e+00  t 165.7s
+  newton 0: |F| 1.69e-06 |dz| 5.84e-03 lam 1 dDelta +5.82e-07 Delta 2.713600243815224 piv 1.3e-04..2.1e+01  t 191.7s
+  newton 0: |F| 9.05e-11 |dz| 1.15e-07 lam 1 dDelta +1.99e-12 Delta 2.713600243817213 piv 1.3e-04..2.1e+01  t 192.0s
+  newton 0: |F| 4.78e-18 |dz| 3.30e-16 lam 1 dDelta -6.59e-22 Delta 2.713600243817213 piv 1.3e-04..2.1e+01  t 182.1s
+  newton 0: |F| 6.60e-29 converged (last |dz| 3.0e-26) Delta 2.713600243817213; last step taken, |F| 2.68e-29
+12:02:45 D 3.0875 M 192: Delta 2.7136002438172131 (-1.34e-16) |F| 2.7e-29 its 7 1235s dDelta/dF max 9.1e-01 tails 4e-86 1e-58 dDelta_est -5.5e-31
+12:03:03   D 3.0875 M 256: start 'predictor' |F| 2.87e-01 (833 steps)
+12:03:05   D 3.0875 M 256: start 'lift of M_c' |F| 6.00e-05 (833 steps)
+12:03:05   D 3.0875 M 256: best start 'lift of M_c' is a lift (|F| 6.0e-05 on the reused plan); two passes
+12:03:14   D 3.0875 M 256: start 'predictor' |F| 2.87e-01 on its own plan (1526 steps)
+12:03:24   D 3.0875 M 256: start 'lift of M_c' |F| 6.00e-05 on its own plan (1369 steps)
+12:03:33   D 3.0875 M 256: start 'lift of M_c' |F| 6.00e-05 (1369 steps)
+12:03:43 D 3.0875 M 256: L 20481, steps 1369, start |F| 6.0e-05
+  newton 0: |F| 6.00e-05 |dz| 1.47e-01 lam 1 dDelta -1.38e-09 Delta 2.713600242439315 piv 1.1e-04..1.1e+01  t 956.5s
+  newton 0: |F| 2.67e-09 |dz| 2.20e-06 lam 1 dDelta -3.79e-10 Delta 2.713600242060042 piv 1.1e-04..1.1e+01  t 1018.2s
+  newton 0: |F| 1.50e-17 converged (last |dz| 2.4e-14) Delta 2.713600242060042; last step taken, |F| 7.27e-28
+12:53:44 D 3.0875 M 256: Delta 2.7136002420600418 (-1.50e-16) |F| 7.3e-28 its 3 3009s dDelta/dF max 6.9e-01 tails 5e-82 4e-50 dDelta_est +9.4e-30
+12:54:01   D 3.0875 M 256: start 'pass 1' |F| 7.27e-28 (526 steps)
+12:54:08 D 3.0875 M 256: L 20481, steps 526, start |F| 7.3e-28
+  newton 0: |F| 7.27e-28 |dz| 4.35e-15 lam 1 dDelta +1.19e-29 Delta 2.713600242060042 piv 3.0e-10..9.7e+00  t 373.1s
+  newton 0: |F| 2.68e-28 |dz| 5.28e-15 lam 0.5 dDelta +8.08e-31 Delta 2.713600242060042 piv 3.0e-10..9.7e+00  t 388.9s
+  newton 0: |F| 4.03e-28 |dz| 5.66e-15 lam 0.5 dDelta +1.60e-30 Delta 2.713600242060042 piv 2.9e-10..9.7e+00  t 399.5s
+13:13:30 D 3.0875 M 256: |F| 2.7e-28 -> 4.0e-28: below 1e-27 and no longer falling (the residual floor); stopping
+13:20:13 D 3.0875 M 256: Delta 2.7136002420600418 (-1.50e-16) |F| 1.7e-28 its 3 1570s dDelta/dF max 2.2e+02 tails 9e-66 4e-50 dDelta_est +1.0e-29
+13:20:22   D 3.0875 M 256: the solution's own plan has 805 steps, more than the 526 used
+13:20:51   D 3.0875 M 320: start 'lift of M_w' |F| 2.94e-06 (949 steps)
+13:20:51   D 3.0875 M 320: best start 'lift of M_w' is a lift (|F| 2.9e-06 on the reused plan); two passes
+13:21:06   D 3.0875 M 320: start 'lift of M_w' |F| 2.94e-06 on its own plan (1627 steps)
+13:21:22   D 3.0875 M 320: start 'lift of M_w' |F| 2.94e-06 (1627 steps)
+13:21:38 D 3.0875 M 320: L 25601, steps 1627, start |F| 2.9e-06
+  newton 0: |F| 2.94e-06 |dz| 8.69e-03 lam 1 dDelta -5.99e-12 Delta 2.713600242054055 piv 8.5e-05..4.7e+01  t 2460.9s
+  newton 0: |F| 6.64e-12 |dz| 4.33e-09 lam 1 dDelta -1.06e-12 Delta 2.713600242052997 piv 8.5e-05..4.7e+01  t 2336.1s
+  newton 0: |F| 2.30e-20 converged (last |dz| 2.8e-18) Delta 2.713600242052997; last step taken, |F| 6.59e-28
+15:21:49 D 3.0875 M 320: Delta 2.7136002420529972 (+4.58e-17) |F| 6.6e-28 its 3 7224s dDelta/dF max 5.5e-01 tails 7e-74 9e-45 dDelta_est -1.4e-30
+15:22:15   D 3.0875 M 320: start 'pass 1' |F| 6.59e-28 (604 steps)
+15:22:27 D 3.0875 M 320: L 25601, steps 604, start |F| 6.6e-28
+  newton 0: |F| 6.59e-28 |dz| 1.66e-15 lam 0.5 dDelta +3.22e-30 Delta 2.713600242052997 piv 4.5e-09..8.9e+00  t 963.7s
+  newton 0: |F| 3.38e-28 |dz| 4.59e-16 lam 0.25 dDelta -1.18e-30 Delta 2.713600242052997 piv 4.5e-09..8.9e+00  t 967.5s
+15:54:38 D 3.0875 M 320: |F| 6.6e-28 -> 3.4e-28: below 1e-27 and no longer falling (the residual floor); stopping
+16:10:21 D 3.0875 M 320: Delta 2.7136002420529972 (+4.58e-17) |F| 1.5e-28 its 2 2884s dDelta/dF max 3.4e+01 tails 9e-56 9e-45 dDelta_est -5.2e-30
+16:10:37   D 3.0875 M 320: the solution's own plan has 928 steps, more than the 604 used
+16:10:37 D 3.0875: Delta(M 320) = 2.7136002420529972 (+4.58e-17), M 256 -> 320: -7.04e-12; pair
+16:10:49 D 3.0875: series tails of the M 256 solution resampled to M 320: 3.1e-30 (centre), 3.2e-50 (horizon)
+16:10:49 point 3.0875 took 265.9 min of solves, 268.8 min of running time; 28.39 h used
+16:10:49 --- D 3.075 (from 3.0875), M 256 / 320, nodes 0.000313..0.95
+16:10:58   D 3.075 M 192: start 'predictor' |F| 5.65e-01 (533 steps)
+16:11:03 D 3.075 M 192: L 15361, steps 533, start |F| 5.6e-01

@@ -1,5 +1,5 @@
 {
- "t_used": 84707.68093943596,
+ "t_used": 102189.57531476021,
  "Mw": 256,
  "Mn": 320,
  "nodes": [
@@ -44,12 +44,20 @@
   [
    3.1,
    "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.1000_M256.npz"
+  ],
+  [
+   3.0875,
+   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.0875_M256.npz"
   ]
  ],
  "hist_n": [
   [
    3.1,
    "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.1000_M320.npz"
+  ],
+  [
+   3.0875,
+   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.0875_M320.npz"
   ]
  ],
  "pairs": [
@@ -202,14 +210,21 @@
    -7.180776709485004e-13,
    256,
    320
+  ],
+  [
+   3.0875,
+   -7.044391352035964e-12,
+   256,
+   320
   ]
  ],
  "targets": [
+  3.075,
   3.05
  ],
  "done": null,
  "post": null,
- "last_point_s": 9811.1,
+ "last_point_s": 15953.0,
  "Mc": 192,
  "hist_c": [
   [
@@ -235,13 +250,17 @@
   [
    3.1,
    "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.1000_M192.npz"
+  ],
+  [
+   3.0875,
+   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.0875_M192.npz"
   ]
  ],
  "point_start": [
-  3.1,
-  70213.36827158928
+  3.0875,
+  86060.27974128723
  ],
- "last_point_wall": 14494.31266784668,
+ "last_point_wall": 16129.295573472977,
  "kc": 100,
  "ks": 250
 }
