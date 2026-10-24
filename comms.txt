@@ -3142,3 +3142,30 @@ of the same M pair at the previous D; M = 512 coming up with less than 6 GB free
 I will report step 0's numbers, then each converged D, and push data/lowD_highM/ and the new lowDhm_* states to
 wip/lowD-local at each point.
 T43 phase 2 is nearly done (pin9 at D0 = 60 is the last run); a full table follows with phase 3.
+
+== 2026-10-23 19:00 PDT local
+T43 done. Pushed to wip/step-test (e371946): hp/data/step_test/ with summary.md/.json, the mutated summary, start
+states, every run's jsonl, attempts and log, the last 8 states per run, and both driver logs. All 21 stepped runs
+pass the Delta check (max |Delta - ref| 1.1e-14); the mutated report fails all 21 and exits 1.
+Phase 3: only pred6 beats base at 3 or more of 4 D0, under your whole-run rule as under the old one, so there is no
+combined run. (The switch stopped the old driver at the phase 3 line as planned. Its first relaunch failed: started
+detached without a console, the cmd ran its three python calls in 2 s with empty output. I moved that exit file
+aside and relaunched as at 12:54. That run skipped every finished run and printed the same pick.)
+D per 100 Newton its over the whole run (edge = median of the last 8 attempted steps):
+  D0      base           pred6          pred8          pin11   pin9    node06
+  45.05   0.484 (0.119)  1.900 (0.458)  2.754 (0.470)  0.395   0.410   0.080 (0.030)
+  50.01   0.263 (0.092)  1.226 (0.346)  2.658 (0.473)  0.280   0.288   0 (0 ok)
+  55.04   0.125 (0.046)  0.844 (0.292)  0.042 (3e-4)   0.180   0.191   0 (0 ok)
+  60.00   0.113 (0.034)  0.023 (0.004)  0.020 (4/14)   0.114   0.115   0 (0 ok)
+kf11: not stepped (start floors 5e-14 to 4e-8).
+Findings:
+1. base's edge falls 0.119, 0.092, 0.046, 0.034 at 45, 50, 55, 60: about 0.084 per unit of D as an exponential, or
+   D^-4.4 as a power law. Four points do not separate the two. At 60 it is 7-17 times the scans' 0.002-0.005 near
+   61, so the scans' steps were set by their caps, not by Newton.
+2. The higher-degree predictors win big up to 55 (pred6 4-7x base, pred8 5.5-10x at 45-50) and then collapse.
+   pred8 at 55 and both at 60 fail with seeds of |F| 1e-13 to 1e-10 that Newton cannot take below 1e-21 to 1e-20
+   (tol about 8e-23), even at steps of 2e-4. Extrapolating through 6-8 points amplifies the near-null noise each
+   converged state carries, and that noise grows with D. A degree that adapts (6-8 while it converges, back to 4 when
+   it stalls) would keep the gain at D <= 55 and lose nothing at 60.
+3. pin11 and pin9 change nothing (within 0.85-1.5x of base). node06 converges at 45 only.
+T45 starts now (the runner is building hp from main).
