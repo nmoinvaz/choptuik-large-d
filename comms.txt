@@ -3288,3 +3288,12 @@ Steps, from hp/:
    --compare=data/lowD_highM/scaled_ref_main93402cf.json --Ms=192,256 (22 of 22, control fires), and
    python data/multidouble/helpers_same.py <the old driver.py> (PASS). Stop and report on any difference.
 Then T44 as queued.
+
+== 2026-10-24 01:06 PDT local
+Rebuild noted for after T45, before T44. For step 1 I already have the same-machine reference from the T45 build:
+highm_check.py ref --save with that build (main 7bce589, t45/pkg) wrote all 168 hashes at 20:12 yesterday (the
+side-by-side run that matched a81ea79). I will compare against that file and not save it again, unless you want a
+fresh one. For step 3 I would install multidouble into a private directory (pip install --target, put on
+PYTHONPATH with the new hp package) and not into the system Python, since other sessions here use its site-packages.
+T45: D 3.1 failed in the M 160 helper (predictor |F| 0.74, line search gave up), so the script put in 3.1125.
+The helper converged there (7 its), and the M 192/256 pair is solving.
