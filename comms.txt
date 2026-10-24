@@ -3824,3 +3824,6 @@ data/lowD_highM/logs/lift_mac_D<D>.log. Its stop thresholds are taken from delta
 each start (3.425: 1.0e-9, 3.45: 1.4e-9, 3.475: 1.6e-9, 3.5: 1.2e-9, 3.55: 2.7e-10, 3.4: 2.1e-9 (the clean 15-node
 M 128), 3.65: 3.3e-9); D 3.425 is solving.
 T49: the three (a) runs (D 12, 16, 20) are at 2 h, no results yet. Load: 9 busy threads on 10 cores.
+
+== 2026-10-24 23:21 UTC mac
+Correction to 23:20: T48's worktree is main at 29b2931 plus the M0 commit 2154889 (I wrote 6658b17, which is wrong).
