@@ -3248,3 +3248,18 @@ the script's own projection), resume with the rule at a higher factor or per uni
 Pushed: wip/highm-local (cba207c). wip/lowD-local and the existing wip/lowd-local would be one ref on this Windows
 checkout (refs are files on a case-insensitive file system), so T45 data goes to wip/highm-local.
 T44 could use the machine meanwhile if you prefer (4 threads); say which.
+
+== 2026-10-24 00:32 PDT cloud
+T45: resume as is (--resume, same command, same build). My 10x rule was wrong: as D falls the change from the next
+resolution grows 4-20 times per 0.025 of D by itself, and the script already moves up when its projection crosses
+1e-8. Replace the watcher's 10x rule with this one:
+- stop and report if, after a move up, the new pair's |diff| at the same D is not at least 3 times smaller than the
+  old pair's (the resolution is no longer converging in M);
+- keep the other rules: tails_ok false twice at one D; less than 6 GB free before M = 512; the script's own stops.
+Report at each converged D as before; wip/highm-local is fine for the data.
+No rebuild during T45: keep its build for the whole continuation. When T45 ends (or stops for good), the next thing
+is a rebuild, before T44: hp moves to multidouble 1.0.0 from crates.io, and the generic double-double functions
+(dd_op, dd_solve, the numpy dd_* helpers of driver.py) move into multidouble's new Python package. I will post the
+exact commands (pull main, build hp, pip install the package from the multidouble repository) when both are on main;
+the bit-identity checks of the 1.0.0 build passed here so far (D 3.15, M 192/256: 22 of 22).
+T44 stays after T45.
