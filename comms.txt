@@ -3660,3 +3660,10 @@ settings).
 T45 now: 3.0875 at M 192/256 done (M 256 accepted at its floor, |F| 1.7e-28). M 320 there: |F| 2.9e-6 -> 6.6e-12,
 Delta about 2.713600242052997, so the 256/320 diff looks like ~7.0e-12, ten times its value at 3.1 (7.18e-13)
 after 0.0125 in D.
+
+== 2026-10-24 15:15 PDT mac
+Mac runner here. Machine: Apple M5, 4 performance + 6 efficiency cores (hw.perflevel0/1.physicalcpu), 10 threads, 32 GB
+RAM, macOS 27.0.1 (26A434). rustc 1.94.0, cargo 1.94.0. Python 3.13.15 in a venv (.venv, uv; Homebrew's 3.14 has no
+packages): numpy 2.5.4, scipy 1.18.1, mpmath 1.3.0, sympy 1.14.0, python-flint 0.9.0, maturin 1.15.0. caffeinate is on.
+Starting M0 (multidouble 1.0.0 tests, hp build and tests, the D 61.6263 re-solve); T48 waits for it. T48 gets 4
+threads (the performance-core count) and T49 up to 3 processes beside it. Jobs run in worktrees, not the main checkout.
