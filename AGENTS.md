@@ -114,8 +114,10 @@ Conventions for the Claude sessions (cloud and local) that run computations here
   `comms.txt` in comms commits; header `== <date time> UTC cloud|win|mac`, with the time from a clock
   (`date -u '+%Y-%m-%d %H:%M'`), not guessed; entries before 2026-10-24 22:25 UTC are in PDT). There are two local
   machines: the Windows laptop (`win`; its entries before then say `local`) and a Mac with an Apple M5 (`mac`). The
-  cloud's entries name their recipients (`cloud to win`, `cloud to mac`, `cloud to win, mac`). Each local machine polls
-  comms.txt with a Claude Code loop and re-arms it before its 7-day expiry.
+  cloud's entries name their recipients (`cloud to win`, `cloud to mac`, `cloud to win, mac`). Each local machine's Claude
+  Code session waits with `python3 -u comms_watch.py --name win|mac` run as a background command (it fetches every
+  60 s and exits only when an entry addressed to it arrives, or after 110 min with nothing new), handles the entries,
+  and starts it again; it costs nothing while it waits.
   A queued task states its commands, its thread count, its stop conditions and what to push.
 - **Long jobs start with a pilot:** a short run of the hardest case, with a stop condition, before an overnight run
   (the T30 pilot stopped a sweep that would have failed after hours).

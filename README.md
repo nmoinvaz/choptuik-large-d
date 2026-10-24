@@ -2233,7 +2233,8 @@ hp/                 double-double solver (crate hpkernel)
 ├── data/local/     the second machine's runs (scan_up*.jsonl), folded into delta_dd.csv by export_dd.py
 └── data/seeds/     saved solver states to restart continuation from
 hp/largeD_*.py      large-D scaling of the solutions (profiles, F(theta), harmonic content, light-cone exponent)
-comms.txt           task log between the cloud and the second machine
+comms.txt           task log between the cloud and the local machines (win, mac)
+comms_watch.py      waits for comms entries addressed to one local machine (its session runs it in the background)
 AGENTS.md           conventions for the AI sessions that run computations here (which scripts to use, thread budget, comms)
 paper/physics/      the physics paper (main.tex, built as dss_physics.pdf with make)
 paper/math/         the mathematics paper (main.tex, built as dss_math.pdf with make)
