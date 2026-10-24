@@ -52,6 +52,8 @@ trait Api: Send + Sync {
     /// double-double resolution (model::HDD_DU_CUT)
     #[allow(clippy::type_complexity)]
     fn jvp(&mut self, zh: &[f64], zl: &[f64], vh: &[f64], vl: &[f64], mutate: u8, cut: bool) -> Result<(Vec<f64>, Vec<f64>, Vec<f64>, Vec<f64>), String>;
+    /// Ctx::horizon_alpha (model::HALPHA_*)
+    fn set_horizon_alpha(&mut self, mode: u8);
 }
 
 fn state_of<const B: usize>(sh: &[f64], sl: &[f64]) -> State<DV, B> {
@@ -209,6 +211,9 @@ impl<const B: usize> Api for Ctx<B> {
         self.f64_dd = 0;
         r
     }
+    fn set_horizon_alpha(&mut self, mode: u8) {
+        self.horizon_alpha = mode;
+    }
 }
 
 /// The stored LU of the last Newton step (or lu_factor): dense (DDLu, n x n) or in block storage (BlockLu).
@@ -313,6 +318,7 @@ macro_rules! make_ctx {
                 lam: DD::ZERO,
                 mutate: 0,
                 f64_dd: 0,
+                horizon_alpha: 0,
             }) as Box<dyn Api>, )*
             _ => return Err(PyValueError::new_err("M must be one of 8, 16, 32, 48, 64, 80, 96, 128, 160, 192, 256, 320, 384, 512")),
         }
@@ -397,6 +403,19 @@ impl Solver {
 
     fn get_segs(&self) -> Vec<Vec<f64>> {
         self.api.segs()
+    }
+
+    /// How the horizon series handles a = 1 + alpha (Ctx::horizon_alpha): 0 (the default) in a, as before; 1 carries
+    /// alpha = a - 1, so that a^2 - 1 and a - a^3 do not cancel (a lower residual floor at large D, where the mass mode
+    /// amplifies the series' rounding; the same solution); 2 the control: alpha carried, the cancelling forms kept
+    /// (bit for bit the results of 0). Drops the stored LU.
+    fn set_horizon_alpha(&mut self, mode: u8) -> PyResult<()> {
+        if mode > model::HALPHA_MUT {
+            return Err(PyValueError::new_err(format!("horizon_alpha must be 0, 1 or 2, not {mode}")));
+        }
+        self.lu = None;
+        self.api.set_horizon_alpha(mode);
+        Ok(())
     }
 
     fn set_segs(&mut self, segs: Vec<Vec<f64>>) -> PyResult<()> {

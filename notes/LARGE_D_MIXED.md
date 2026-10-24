@@ -532,3 +532,58 @@ LU's transpose solve, no extra step at convergence) and routing every variant th
 and `f64` makes exactly their calls. The new variants differ in two documented ways: at convergence they take the
 already-computed step if |F| stays below tol (as `newton_solve` does for `f64`), and with the correction loop the Δ
 correction is the refined step's Δ component. No Rust conflicted (wip/high-m changed no Rust after 382d515).
+
+## 10. The mass mode sets the large-D floor; the horizon series in α (`horizon_alpha`)
+
+A separate review agent (2026-10-24, asked whether the large-D runs could borrow a near-horizon reformulation) traced
+the rising residual floor, the size of the Jacobian's largest singular value and the f64 Jacobian's error at large D
+to one solution of the linearised equations.
+
+- **The mechanism.** The static perturbation with b − 1 ∝ x^−(n−1) (the mass mode: a change of the mass parameter)
+  solves the linearised field equations. Integrated inward from the horizon to the last node x_m, which is what the
+  horizon series does, it grows by G = x_m^−(n−1): 5×10⁵ at D = 40 and 7×10⁸ at D = 60 for x_m = 0.7. The series'
+  rounding errors excite it, so the horizon block's rows at x_m carry errors of about ε G, and its a_h entries are of
+  size G.
+- **The evidence** (`python3 bmode_check.py`, from the repository's data only; `--mutate`, G with half the exponent,
+  fails as it must):
+  - Newton's floor in the node test (`solver/beyond_lc/hp_node_test.jsonl`) is |F| = 1.75–2.78 ε_dd G (ε_dd = 2⁻¹⁰⁶)
+    over its converged runs at D = 40–60 and x_m = 0.6–0.7, while G spans 5×10⁵–2.7×10¹⁰;
+  - σ_max = 2.46–3.00 G at D = 16.8–60 (`hp/data/mixed_precision/largeD.json`);
+  - the f64 Jacobian's error, max|J₆₄ − J_hi| / max|J_hi|, is 1.16–2.19 ε₆₄ G over the same range: the base state's
+    rounding to f64 (a_h to 10⁻¹⁶), amplified by G;
+  - the continuation's accepted |F| grows 1.455 times per unit D over D = 36–60.1, against 1/0.7 = 1.43 for
+    x_m = 0.7 (a consistency check only: those |F| are tolerance-limited).
+- **Why Δ hardly notices.** The noise lies along the Jacobian's strongest direction (σ_max ≈ 2.5 G), so the Newton
+  correction it causes is of order ε_dd, and the linearised Δ correction (`dDelta_est` in `hp/data/delta_dd.csv`)
+  stays at 1×10⁻²³–1×10⁻¹⁷ over D = 40–60. The mode explains the floor and the f64 failures (§7.4), not an error in Δ.
+- **The first fix: α = a − 1 in the horizon series.** In a, a² − 1 (in the c equation) and a − a³ (in the a equation)
+  cancel down to about α_h = a_h − 1, a few 10⁻³ at large D, and lose that many digits of every term.
+  `Ctx::horizon_alpha = 1` (`Solver.set_horizon_alpha(1)`, `make_solver(horizon_alpha=1)`, `scan_hp.py
+  --horizon_alpha=1`) carries α and writes them as 2α + α² and −(2α + 3α² + α³); `horizon_lus` writes
+  c₁ = (n − 1)(1 − a_h²) as −(n − 1)(2α_h + α_h²). α_h = a_h − 1 is exact in double-double, so the unknowns and the
+  solution are the same; only the rounding in the series changes. Mode 2 is the control: α carried, the cancelling
+  forms kept, which reproduces mode 0 bit for bit. The agent's model of the a and c recursions alone (q² given) put
+  the reduction of the series' noise at 59× at D = 20 and 200–2000× at D = 40–100; the p and m solves' own rounding is
+  not in that model and may limit the real gain.
+- **Checks.** `cargo test --release --lib halpha_` (synthetic context): mode 2 gives the default's residual and both
+  Jacobians bit for bit, and mode 1 changes them by rounding only (residual 6×10⁻³² of its largest entry); a planted
+  error (3α² as 3.000001α²) fails it. `python3 alpha_floor.py` measures the floors at D = 40, 50 and 60 against pass
+  criteria written before its first run (5 Newton steps with the double-double Jacobian from the saved scan states).
+- **Results (cloud, AVX-512, 2026-10-24; private builds of main (11f14f4) and of this change, LTO off).**
+  - The default is unchanged: `highm_check.py ref` at M = 8–80 (120 outputs) and the D = 40, 50, 60 runs of mode 0 (|F|
+    history, final state, f64 Jacobian) are bit-identical to main's build, and mode 2 (the control) is bit-identical
+    to mode 0.
+  - The mechanism holds quantitatively: mode 0's floor is 1.69×10⁻²⁶, 6.27×10⁻²⁵ and 2.17×10⁻²³ at D = 40.02, 50.01 and
+    60.00, against 2.5 ε_dd G = 1.7×10⁻²⁶, 5.9×10⁻²⁵ and 2.1×10⁻²³.
+  - **The α form lowers the floor only 2.6–3.0 times** (to 6.1×10⁻²⁷, 2.1×10⁻²⁵ and 8.4×10⁻²⁴, about 1.0 ε_dd G),
+    not the 200–2000 times the agent's model predicted. The pre-written criterion (at least 30× at D ≥ 50, 3× at
+    D = 40) fails at all three (2.7×, 3.0×, 2.6×); `alpha_floor.py` exits 1. So the cancellation was a factor of about
+    2.5 in the floor, and the rest of the series' rounding, of order ε_dd in quantities of order one (the c and p, m
+    recursions, the periodic solves), is amplified by G just the same. Moving the floor further needs the mass mode
+    itself handled (anchored at x_m, or the horizon block in higher precision), not a rewriting of the series.
+  - Δ does not change beyond the floor's own noise: modes 0 and 1 differ by 8.9×10⁻²², 1.8×10⁻²⁰ and 1.1×10⁻¹⁷, while
+    the Δ components of the Newton steps at the floor are up to 1×10⁻²¹, 1×10⁻¹⁹ and 7×10⁻¹⁸ (mode 0).
+  - The f64 Jacobian's error falls by 1.4–1.9× (1.33×10⁻¹⁰ → 9.5×10⁻¹¹, 5.8×10⁻⁹ → 3.5×10⁻⁹, 2.1×10⁻⁷ → 1.1×10⁻⁷);
+    it is dominated by the f64 rounding of the base state, which α does not touch.
+  - The option stays (off by default, bit-identical when off): a 2.6–3× lower floor is worth about 3 units of D at the
+    floor's growth of 1.45 per unit D. Logs: `hp/data/alpha_floor/`.

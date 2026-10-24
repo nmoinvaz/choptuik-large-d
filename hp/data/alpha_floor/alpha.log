@@ -1,0 +1,20 @@
+D 40.0201 mode 0: |F| 2.0e-26 2.0e-26 2.0e-26 1.7e-26 1.7e-26 2.4e-26; floor 1.69e-26 (2.5 eps_dd G = 1.7e-26); Delta 1.8884516644906137 + 9.181e-17; Delta steps at the floor 6e-22 3e-23 1e-21 2e-22; J64 vs J_hi 1.33e-10; 20.7 s
+D 40.0201 mode 1: |F| 2.0e-26 6.7e-27 6.6e-27 6.1e-27 6.3e-27 6.4e-27; floor 6.13e-27 (2.5 eps_dd G = 1.7e-26); Delta 1.8884516644906137 + 9.181e-17; Delta steps at the floor 8e-22 6e-24 5e-22 1e-22; J64 vs J_hi 9.49e-11; 20.3 s
+D 40.0201 mode 2: |F| 2.0e-26 2.0e-26 2.0e-26 1.7e-26 1.7e-26 2.4e-26; floor 1.69e-26 (2.5 eps_dd G = 1.7e-26); Delta 1.8884516644906137 + 9.181e-17; Delta steps at the floor 6e-22 3e-23 1e-21 2e-22; J64 vs J_hi 1.33e-10; 21.3 s
+  floor gain 3x (need >= 3x)
+  Delta(1) - Delta(0) = 8.9e-22 (limit 9.8e-21)
+D 50.0075 mode 0: |F| 9.7e-25 6.6e-25 6.3e-25 7.7e-25 1.4e-24 1.1e-24; floor 6.27e-25 (2.5 eps_dd G = 5.9e-25); Delta 1.8416311332022643 + 9.385e-17; Delta steps at the floor 5e-20 1e-19 7e-20 9e-20; J64 vs J_hi 5.76e-09; 21.6 s
+D 50.0075 mode 1: |F| 7.4e-25 2.3e-25 2.3e-25 2.2e-25 2.3e-25 2.1e-25; floor 2.08e-25 (2.5 eps_dd G = 5.9e-25); Delta 1.8416311332022643 + 9.383e-17; Delta steps at the floor 3e-20 1e-19 2e-20 1e-19; J64 vs J_hi 3.46e-09; 21.4 s
+D 50.0075 mode 2: |F| 9.7e-25 6.6e-25 6.3e-25 7.7e-25 1.4e-24 1.1e-24; floor 6.27e-25 (2.5 eps_dd G = 5.9e-25); Delta 1.8416311332022643 + 9.385e-17; Delta steps at the floor 5e-20 1e-19 7e-20 9e-20; J64 vs J_hi 5.76e-09; 21.2 s
+  floor gain 3x (need >= 30x)
+  Delta(1) - Delta(0) = 1.8e-20 (limit 1.3e-18)
+D 60.0020 mode 0: |F| 2.3e-23 2.2e-23 2.7e-23 2.6e-23 2.7e-23 3.6e-23; floor 2.17e-23 (2.5 eps_dd G = 2.1e-23); Delta 1.809884258001715 + -1.009e-16; Delta steps at the floor 4e-18 6e-18 3e-18 7e-18; J64 vs J_hi 2.07e-07; 20.6 s
+D 60.0020 mode 1: |F| 1.9e-23 3.3e-23 2.3e-23 8.7e-23 8.4e-24 7.7e-23; floor 8.35e-24 (2.5 eps_dd G = 2.1e-23); Delta 1.8098842580017147 + 1.105e-16; Delta steps at the floor 7e-20 1e-17 2e-18 6e-18; J64 vs J_hi 1.09e-07; 21.9 s
+D 60.0020 mode 2: |F| 2.3e-23 2.2e-23 2.7e-23 2.6e-23 2.7e-23 3.6e-23; floor 2.17e-23 (2.5 eps_dd G = 2.1e-23); Delta 1.809884258001715 + -1.009e-16; Delta steps at the floor 4e-18 6e-18 3e-18 7e-18; J64 vs J_hi 2.07e-07; 21.3 s
+  floor gain 3x (need >= 30x)
+  Delta(1) - Delta(0) = 1.1e-17 (limit 6.6e-17)
+FAIL:
+  D 40.020065: floor gain 2.7x < 3x
+  D 50.007491: floor gain 3.0x < 30x
+  D 60.001952: floor gain 2.6x < 30x
+exit 1

@@ -78,9 +78,11 @@ def plow_odd(M, kf, dps=40):
     return _PLOW[key]
 
 
-def make_solver(D, M, nodes=None, kt=36, kc=40, ks=120, segs=None, threads=0, kfreeze=None, match_node=None):
+def make_solver(D, M, nodes=None, kt=36, kc=40, ks=120, segs=None, threads=0, kfreeze=None, match_node=None,
+                horizon_alpha=0):
     """kfreeze: pin the p1 harmonics k > kfreeze to zero and drop the matching of p's harmonics k > kfreeze at the
-    horizon block (see model.rs Ctx::freeze)."""
+    horizon block (see model.rs Ctx::freeze). horizon_alpha: Solver.set_horizon_alpha (0, the default, as before; 1
+    the horizon series in alpha = a - 1; 2 its control)."""
     nodes = list(NODES_OLD if nodes is None else nodes)
     with mp.workdps(40):
         nh, nl = dd_from_mp([mp.mpf(D) - 2])
@@ -89,7 +91,10 @@ def make_solver(D, M, nodes=None, kt=36, kc=40, ks=120, segs=None, threads=0, kf
     a = b = None
     if kfreeze:
         a, b = plow_odd(M, kfreeze)
-    return Solver(M, float(nh[0]), float(nl[0]), dh, dl, ph, pl, nodes, segs or [], kt, kc, ks, threads, a, b, match_node)
+    s = Solver(M, float(nh[0]), float(nl[0]), dh, dl, ph, pl, nodes, segs or [], kt, kc, ks, threads, a, b, match_node)
+    if horizon_alpha:
+        s.set_horizon_alpha(horizon_alpha)
+    return s
 
 
 # ------------------------------------------------------------------ seeds
