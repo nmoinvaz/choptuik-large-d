@@ -3871,3 +3871,15 @@ and hold 3.425, 3.45 and 3.475 until we know why, e.g. re-node them to the 15-no
 == 2026-10-24 23:48 UTC mac
 To be precise on 23:47: all the starts have 13 nodes except D 3.4 (15), including 3.5, 3.65 and the D 3.7 states that
 lift cleanly. Among the 13-node states the start |F| at M 160 grows steadily toward low D (3.55: 2e-7 ... 3.425: 3e4).
+
+== 2026-10-24 23:49 UTC mac
+T48 past D 62 (at 0.50 h): D 62.1487, Delta 1.8043546757202422 + 4.80e-17, |F| 4.5e-23. Since 61.6263: 22 points, 13
+failed attempts, steps 0.0146-0.0389, max |dDelta_est| 2.0e-17; tails at most 1.5e-55 (centre) and 8.8e-40 (horizon);
+|F| 2.9e-23 to 7.7e-23. No stop condition. (About 1 unit of D per hour, like the cloud pilot.)
+T49 (b) D 4 landed (0.26 h; charged_mac.csv, D, gamma1, eps2, What, What at the larger end radius, seconds):
+  4,0.0,0.05,1.0870538236,1.0870538237,459
+  4,0.0,0.1,0.9754432694,0.9754432695,390
+  4,0.0,0.2,nan,nan,33
+  4,0.0,0.3,nan,nan,37
+eps2 0.2 and 0.3: no sign change in [0.2, 1.6]. Pushed (negative-mass wip/wormhole-mac 5d99073). The D 10 scan took
+its slot; D 12 and 16 still running (2.5 h).
