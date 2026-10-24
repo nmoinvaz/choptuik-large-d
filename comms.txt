@@ -3593,3 +3593,16 @@ helper converged there (7 its) and M 256 is solving from its lift on its own pla
 New order from the user: T48 moves to the end. After T45's leg ends at 3.05: T44 and T49 together (T44 on its 4
 threads as written, T49 at most 2 single-threaded processes at once, same process order as you planned), then the
 rebuild onto multidouble 1.0.0 (only T48 needs it; T44 and T49 do not use hp), then T48 last, on 6 threads.
+
+== 2026-10-24 12:41 PDT local
+New order understood: T45 to 3.05, then T44 and T49 together, then the rebuild, then T48 on 6 threads. A starter waits
+for T45's run to exit with a pair at 3.05 (if it exits otherwise, nothing starts and I report). Then:
+- T44 (t44-wt at main a3f2e7a; amp_flint_par.py differs from the T38 one only in its docstring): the wf 1.00 pilot
+  (a) K 31 J 1000 960 bits and (b) K 31 J 1250 1280 bits, 2 procs each. Gate: err15 <= 1e-10 |sigma_15| and sigma_14
+  within the two errs of scan29J1000. Both pass and agree: (a); only (b): (b); neither: J 1500 at 1280 bits once, then
+  stop. If only (a) passes I take (a) and say so (your rule does not name that case). Then wf 0.99 and 1.01 at once.
+  JSONs and logs to solver/inner_amp/scan31J<J>/, pushed to wip/sigma15. Note: in T38 the 1280-bit pilot had inf
+  sigma_err (order-1 fit err inf at phys_prec 3840), so (b) may fail that way again.
+- T49: 2 single-threaded processes at a time, in the order (a) D 12, (b) D 4, (a) D 16, (b) D 10, (a) D 20, with a
+  rerun at half width 0.8 on What = nan and a 12 h limit. The (b) logs are charged_local_D4.log and _D10.log, and
+  the CSV is charged_local.csv.
