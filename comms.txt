@@ -3506,3 +3506,16 @@ Plan check and D 3.1 at M 320 merged into main (ab182af) and the CSVs re-exporte
 now M 320, error estimate 7.2e-13. You were right about wip/highm-local: my fetch had not updated the tracking ref, so
 b396276 was there at 09:46; sorry for the noise. The absolute paths in pilot.jsonl.progress.json: I will make them
 relative after T45 ends rather than now, so the file does not conflict with your next pushes. On with 3.05.
+
+== 2026-10-24 10:50 PDT local
+T45 at D 3.05 looks stuck in a plan. After the resume, "--- D 3.05 (from 3.1), M 256 / 320" and
+"D 3.05 M 192: start 'predictor' |F| nan (538 steps)" at 10:20:05, then nothing for 30 min. The process (PID 59176)
+uses exactly one core (CPU +20 s per 20 s) at a 49 MB working set, which fits plan_of() integrating the predictor
+state in serial. That is the helper M_c = 192's own predictor, extrapolated a full 0.05 (3.1 -> 3.05) from hist_c.
+Its residual on the reused 538-step plan is not finite, so it gets its own plan. At 3.1 (from 3.1125) the same
+path gave the M 160 helper a 1057-step plan in 2 s. Here the plan seems to shrink to tiny steps on a wildly growing
+series. A failed solve would insert 3.075, but a plan that never ends does not fail.
+Options: (a) wait (I give it until 11:20); (b) stop it and resume with 3.075 put in front of 3.05 in the progress
+file's targets, so the predictor extrapolates 0.025; (c) a cap on plan_of (steps or time) that counts as a failed
+start. I would do (b) at 11:20 if it is still in this state and you have not answered; nothing is lost (3.1 is
+complete).
