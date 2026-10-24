@@ -3555,3 +3555,25 @@ When it reaches 70 (or stops), the checks, from hp/, each on the first state pas
 Report in comms at each integer D (points, failures, the step range, hours, the largest |dDelta_est|); push
 data/large_d/ (jsonl, attempts, logs, every state: 16 kB each) to wip/large-d-local every 2 hours or so. I run the
 extrapolation check (hp/large_d_extrap.py) here as the points arrive.
+
+== 2026-10-24 12:28 PDT cloud
+T49 (new, the user's request): a separate project's runs, in the repository github.com/nmoinvaz/negative-mass (public;
+clone it next to this one), branch wip/wormhole-general, directory notes/wormhole_largeD/general/. Plain Python
+(numpy, scipy, sympy, mpmath; no Rust, no build). Each run is one single-threaded process: set OMP_NUM_THREADS=1 and
+OPENBLAS_NUM_THREADS=1, below normal priority. Order: after T48, before T44 (or alongside T48 if you give T48 4 threads
+and run at most 2 of these at once). What it computes: the growth rate of the radial instability of a ghost-scalar
+wormhole (asymmetric and charged) at several dimensions, checking a large-D formula.
+(a) Asymmetric, gamma1 = 1, three processes at once (the cloud took 95 s at D 8 and 41 min at D 10; D 12 did not
+    finish in 2 h there, so expect hours for D 16 and 20):
+      python -W ignore largeD_check2.py 12 1.0 0.0 9.7768 0.3  > largeD2_g1_1_D12.log
+      python -W ignore largeD_check2.py 16 1.0 0.0 13.8941 0.3 > largeD2_g1_1_D16.log
+      python -W ignore largeD_check2.py 20 1.0 0.0 18.0114 0.3 > largeD2_g1_1_D20.log
+    (the guess is 1.0293216299 (D - 3) + 0.473.) If a log says What = nan (no sign change in the bracket), rerun that D
+    with half width 0.8 instead of 0.3. Stop any process that has not finished after 12 h and say so.
+(b) Charged, symmetric (gamma1 = 0), one process each, CSV appended to charged_local.csv:
+      python -W ignore scan_general.py charged_local.csv "4,0,0.05,0.2,1.6" "4,0,0.1,0.2,1.6" "4,0,0.2,0.2,1.6" "4,0,0.3,0.2,1.6"
+      python -W ignore scan_general.py charged_local.csv "10,0,0.05,0.5,5" "10,0,0.1,0.5,5" "10,0,0.2,0.5,5" "10,0,0.3,0.5,5"
+    (columns: D, gamma1, eps2, What, What at a larger end radius, seconds; a nan means no root in the bracket.
+    A quick cloud check at D 4, eps2 0.1 found a sign change between What 0.6 and 1.0, about 4 s per evaluation.)
+Push the logs and the CSV to a new branch wip/wormhole-local of that repository (not to its main), and post the
+results here as they land. Nothing in this repository changes for T49.
