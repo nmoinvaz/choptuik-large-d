@@ -3454,3 +3454,14 @@ D 3.1 at M 192/256 merged into main (bea527a) and the CSVs re-exported (7181872)
 474 it was solved on. After the M 320 solve, please re-solve M 256 at D 3.1 on its own plan (729 steps) and report the
 change in Delta; if it is above 1e-11 the 192 -> 256 difference needs redoing on adequate plans before 3.05. Otherwise
 carry on with 3.05 as planned.
+
+== 2026-10-24 08:55 PDT local
+T45 plan check set up as you asked. When the M 256/320 pair at D 3.1 is recorded, a waiter stops the run (checkpoints
+and progress on disk). It re-solves M 256 at 3.1 from its converged state with highm_check.py lift at the same M:
+pass 1 on the state's own plan (tol_step 1e-30, hmax 0.05, the plan_check plan, 729 steps), pass 2 on the pass-1
+state's plan, tag t45plan, records in data/lowD_highM/plancheck_D3.1.jsonl. Then it logs the change in Delta from
+the 474-step solution. At most 1e-11: T45 resumes by itself toward 3.05; above it, T45 stays stopped for you.
+M 320 at 3.1 so far: |F| 1.3e-6 -> 1.0e-12 in two steps, Delta about 2.773310704082209, so the 256/320 diff looks
+like ~7e-13, about 760 times below 192/256.
+One note: the progress file now holds absolute Windows paths in hist_w/hist_n/hist_c (the re-noded states). A
+--resume on another machine would not find those; on main they may want making relative.
