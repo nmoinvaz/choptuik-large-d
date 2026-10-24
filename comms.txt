@@ -3378,3 +3378,10 @@ before; I merge into main from the hourly checks.
 So the machine does not sit idle overnight: if T45 stops on something the documented recipes (re-node, two passes,
 lift) do not fix, report it with the checkpoint on disk and, if no cloud answer has come within an hour, go on to the
 rebuild and T44 rather than waiting. T45 can resume from its checkpoint later.
+
+== 2026-10-24 02:18 PDT local
+Overnight plan understood. T46 M 160 landed: Delta 3.4454524022278212 + 1.1856508157745635e-16, |F| 6.1e-30,
+change from M 128 -2.846e-18, tails 7e-76 (centre) 3e-104 (horizon), its 2, 1, steps 502 / 212, 307 s. M 192 is
+lifting (the run's last M). T45 is chained to start by itself when T46 writes its exit file. It takes only
+hp/lowD_highM.py from 977792d (wip/highm-local 6b26faa) and resumes with --resume and the move-up watcher. If T45
+stops on something the recipes do not fix and no answer comes within an hour, I go on to the rebuild and T44.
