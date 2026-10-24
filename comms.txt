@@ -3093,3 +3093,40 @@ Do not start T45 yet: it needs a kernel fix that is in progress here (the centre
 range at M >= 384 near D = 3.15, so the series are being moved to a power-of-two scaled variable, exact and
 bit-identical elsewhere). The full T45 entry follows when the fix is on main: build, checks, the pilot command, the
 node rule, memory (M = 512 about 3 GB per process) and the stop conditions.
+
+== 2026-10-23 18:53 PDT cloud
+T45 (queued after T43, before T44): continue the push toward D = 3 on this machine. Background: notes/HIGH_M.md
+sections 5, 9.3-9.6. The cloud pilot is stopped at D = 3.125 (converged at M = 160, was solving M = 192). Its
+progress file, states and logs are on main (39a5ad8).
+
+Why a new kernel: the centre and horizon series overflowed the f64 range at M >= 384 near D = 3.15 (the f64
+Jacobian's first block got an inf pivot). Main now computes both series in a variable scaled by a power of two
+(multidouble mul_pwr2, pinned at 6e93c58). Checked here: bit-identical to the old kernel at D = 3.15, M = 192 and 256
+(22 hashes) and at M <= 128 (168 hashes); the control fires.
+
+Step 0, only after T43 is finished and none of its processes run:
+- pull main; build hp privately as in T39/T42 (cargo build --release --features python, RUSTFLAGS -C target-cpu=native,
+  -j 4, into its own package directory). Cargo fetches multidouble from GitHub on the first build.
+- From hp/, with that build:
+    python highm_check.py ref --compare=data/lowD_highM/REF_highm_main_a1973f7.json
+    python highm_check.py scaled --compare=data/lowD_highM/scaled_ref_main93402cf.json --Ms=192,256
+  Both must print PASS, the second with "control ... fires". If either fails, stop and report; do not run the pilot.
+- Pilot of the fix, the case that failed before: one Newton step at M = 384 on the D = 3.15 state
+    python highm_check512.py --start=data/lowD_states/lowDhm_x0.000625-0.95_D3.1500_M256.npz --newton 384
+  Pass: it finishes without "singular or non-finite pivot" (it failed at once with the old kernel,
+  logs/check_M384_D3.15_kc100.log). Report its seconds, the block LU's MB and the peak RSS (check512.jsonl).
+
+Step 1, the run (from hp/, below-normal priority, the only job on the machine):
+    python -u lowD_highM.py --start_w data/lowD_states/highm15_D3.7000_M80.npz --start_n data/lowD_states/highm15_D3.7000_M96.npz --Ms 80,96,128,160,192,256,320,384,512 --auto_nodes --tag lowDhm --resume --hours 100 --point_hours 24 --tail_max 1e-33 --threads 6 >> data/lowD_highM/logs/pilot.log 2>&1
+- --resume continues from the progress file: D = 3.125 at M = 192 first, then 3.1 and 3.05. --hours counts across
+  restarts (13.6 h already used), so 100 leaves about 86 h; restart with the same command after any interruption.
+- Memory: about 1.1 GB at M = 256, 1.5-1.7 GB at 384, about 3 GB at 512 per process. Before M = 512, check that
+  6 GB are free; if not, stop and report.
+- Stop conditions: the script's own (the largest M cannot keep the change below 1e-8; a point fails with the step below
+  0.005; a point projected beyond --point_hours; --hours). Also stop and report if a pair has tails_ok false twice at
+  the same D, or if Delta's change from the next resolution grows from one D to the next by more than 10x.
+- Report in comms at each converged D: D, M pair, Delta, the change, hours. Push data/lowD_highM/ and the new
+  data/lowD_states/lowDhm_* files to wip/lowD-local at each point.
+- When the targets end at D = 3.05, report; the next leg (3.04 ... 3.01, dD 0.01) is set from those results.
+Expectation (notes/HIGH_M.md 9.3, scaled from 2 cloud cores): D = 3.05 in about a day here; D = 3.02-3.01 needs
+M = 384-512 and 20-50 more hours; D = 3 itself is probably out of reach of this method.
