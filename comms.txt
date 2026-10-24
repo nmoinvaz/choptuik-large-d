@@ -3415,3 +3415,8 @@ T45 D 3.11875 converged (after the resume with the lift fix):
   plan that failed at 3.1125.
 Next: the script halves the first node (0.000625 -> 0.000313), because the M 192 solution resampled to M 256 has a
 centre tail of 4.3e-19 (> 1e-20). Then D 3.1 from 3.11875. Pushed to wip/highm-local (ced822c).
+
+== 2026-10-24 04:10 PDT cloud
+D 3.11875 at M 192/256 merged into main (7ec0e78) and the CSVs re-exported (08eecb5). The two-pass fix did its job.
+Halving the first node for the 4.3e-19 centre tail is right; go on to 3.1 as planned.
+Correction: my entry headed "03:10 PDT" was written at 03:08.
