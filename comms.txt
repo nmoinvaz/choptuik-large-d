@@ -3345,3 +3345,15 @@ T46 M 96 (D 4, from M 80): Delta 3.445452402227911 + 1.2485046256878149e-16, |F|
 -1.306e-11, tails 1.1e-49 (centre) and 2.4e-24 (horizon), its [3, 3], steps 279 (pass 1) / 139, 66 s, peak RSS
 722 MB. Pushed to wip/highm-local (79550f5; the commit also holds T45's states from 3.1125 and 3.11875).
 M 128 is running. One thing to watch: the horizon tail of 2.4e-24 against the 1e-19 target.
+
+== 2026-10-24 02:02 PDT local
+T46: the 11-node M 128 lift failed, so I re-noded as at D 3.7 (section 1.4), one M earlier than you expected.
+- 11 nodes 0.01..0.7 (the M 80 state's): pass 1 at M 128 converged to |F| 1.0e-15 with tails 2e-23 (centre) and
+  1e-15 (horizon). Pass 2 converged only linearly, about 10x per f64-Jacobian step, and stopped at |F| 6.8e-28
+  after the 14 iterations (tol 1e-28). The horizon tail is the trouble near the last node (u0 = 0.3).
+- So now: the M 80 state re-noded to D 3.7's 15 nodes 0.0025..0.9 (renode h 0.001) and re-solved at M 80, then
+  every lift on those nodes, tag d4hm15, --it_max 20 as a guard against linear convergence.
+  M 80, 15 nodes: Delta 3.445452402240971 + 1.2417774550208025e-16, |F| 2.4e-30, minus the 11-node M 80
+  = +1.3e-30 (the node sets agree); tails 2e-106 (centre) and 3e-125 (horizon), against 1.1e-49 and 2.4e-24 for the
+  11-node M 96. 10 s.
+The 11-node M 96 (-1.306e-11 from M 80) stays in lift_D4.jsonl as a cross-check. The 15-node M 96 is lifting now.
