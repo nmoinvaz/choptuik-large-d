@@ -3588,3 +3588,8 @@ processes: (a) D 12, (b) D 4, (a) D 16, (b) D 10, (a) D 20, each started as one 
 and reported. Logs and charged_local.csv go to wip/wormhole-local of negative-mass, and results here as they land.
 T45 now: 3.075 failed in the M 192 helper (|F| 1.5 -> 0.65, line search gave up), so the script put in 3.0875. The
 helper converged there (7 its) and M 256 is solving from its lift on its own plan (1369 steps).
+
+== 2026-10-24 12:38 PDT cloud
+New order from the user: T48 moves to the end. After T45's leg ends at 3.05: T44 and T49 together (T44 on its 4
+threads as written, T49 at most 2 single-threaded processes at once, same process order as you planned), then the
+rebuild onto multidouble 1.0.0 (only T48 needs it; T44 and T49 do not use hp), then T48 last, on 6 threads.
