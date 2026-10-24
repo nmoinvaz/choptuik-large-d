@@ -725,3 +725,66 @@ ValueError: singular or non-finite pivot at column 308 (NaN)
 23:29:36 --- D 3.1 (from 3.125), M 192 / 256, nodes 0.000625..0.95
 23:29:42   D 3.1 M 160: start 'predictor' |F| nan (355 steps)
 23:29:45   D 3.1 M 160: plan from start 'predictor' instead: 1057 steps, |F| 7.36e-01
+00:33:54 resuming: M 192/256, last D 3.125, 15.14 h used
+00:33:54 --- D 3.1 (from 3.125), M 192 / 256, nodes 0.000625..0.95
+00:34:01   D 3.1 M 160: start 'predictor' |F| nan (355 steps)
+00:34:03   D 3.1 M 160: plan from start 'predictor' instead: 1057 steps, |F| 7.36e-01
+00:34:07 D 3.1 M 160: L 12161, steps 1057, start |F| 7.4e-01
+  newton 0: |F| 7.36e-01 |dz| 3.83e+02 lam 1 dDelta -3.29e-02 Delta 2.741667872310370 piv 1.8e-04..1.7e+01  t 145.7s
+  newton 0: |F| 2.16e-01 |dz| 6.87e+02 lam 0.5 dDelta -1.24e-02 Delta 2.729245080349475 piv 1.7e-04..1.9e+01  t 152.3s
+  newton 0: |F| 2.33e-01 |dz| 3.97e+02 lam 0.00781 dDelta +2.32e-04 Delta 2.729476722539091 piv 1.9e-04..1.4e+01  t 159.8s
+  newton 0: |F| 2.32e-01 |dz| 3.70e+02 lam 0.0312 dDelta +9.89e-04 Delta 2.730465803547038 piv 1.8e-04..7.2e+00  t 160.9s
+00:44:26 D 3.1 M 160: two steps with line-search factors 0.0078125, 0.03125 <= 0.125; giving up
+00:44:27 D 3.1 M 160: NOT converged, |F| 2.2e-01 after 4 iterations (624s); stopping
+00:44:27 D 3.1 failed at M 160; inserting D 3.1125
+00:44:27 --- D 3.1125 (from 3.125), M 192 / 256, nodes 0.000625..0.95
+00:44:34   D 3.1125 M 160: start 'predictor' |F| 1.99e-01 (355 steps)
+00:44:36 D 3.1125 M 160: L 12161, steps 355, start |F| 2.0e-01
+  newton 0: |F| 1.99e-01 |dz| 1.69e+01 lam 1 dDelta -2.38e-03 Delta 2.825092606760717 piv 2.1e-04..1.0e+01  t 56.9s
+  newton 0: |F| 3.70e-03 |dz| 1.84e+01 lam 1 dDelta +2.03e-03 Delta 2.827122218643380 piv 2.1e-04..4.2e+01  t 60.5s
+  newton 0: |F| 5.68e-04 |dz| 7.37e-01 lam 1 dDelta +2.39e-05 Delta 2.827146145742212 piv 2.1e-04..8.1e+00  t 62.2s
+  newton 0: |F| 1.09e-06 |dz| 3.55e-03 lam 1 dDelta +5.29e-07 Delta 2.827146674773072 piv 2.1e-04..7.9e+00  t 64.5s
+  newton 0: |F| 1.37e-11 |dz| 1.34e-08 lam 1 dDelta +1.70e-12 Delta 2.827146674774773 piv 2.1e-04..1.0e+01  t 63.5s
+  newton 0: |F| 1.36e-18 |dz| 1.15e-15 lam 1 dDelta +1.24e-22 Delta 2.827146674774773 piv 2.1e-04..1.0e+01  t 63.0s
+  newton 0: |F| 5.79e-29 converged (last |dz| 4.0e-24) Delta 2.827146674774773
+00:51:51 D 3.1125 M 160: Delta 2.8271466747747729 (+1.06e-16) |F| 5.8e-29 its 7 437s dDelta/dF max 9.2e-01 tails 3e-68 1e-81 dDelta_est -1.7e-31
+00:52:00   D 3.1125 M 192: start 'predictor' |F| 1.98e-01 (387 steps)
+00:52:01   D 3.1125 M 192: start 'lift of M_c' |F| 9.43e-05 (387 steps)
+00:52:05 D 3.1125 M 192: L 14593, steps 387, start |F| 9.4e-05
+  newton 0: |F| 9.43e-05 |dz| 1.83e-01 lam 1 dDelta -5.56e-09 Delta 2.827146669211273 piv 3.5e-09..9.8e+00  t 111.3s
+  newton 0: |F| 4.63e-05 |dz| 7.75e-03 lam 0.5 dDelta +1.63e-08 Delta 2.827146685482175 piv 1.1e-10..6.6e+00  t 112.8s
+  newton 0: |F| 3.93e-05 |dz| 3.51e-03 lam 1 dDelta -1.01e-08 Delta 2.827146675393070 piv 3.1e-10..7.6e+00  t 110.7s
+  newton 0: |F| 1.03e-05 |dz| 1.43e-04 lam 1 dDelta -7.48e-09 Delta 2.827146667912445 piv 1.7e-08..9.4e+00  t 112.1s
+  newton 0: |F| 6.17e-10 |dz| 3.72e-05 lam 0.5 dDelta -1.07e-12 Delta 2.827146667911372 piv 2.0e-08..9.4e+00  t 112.9s
+  newton 0: |F| 5.09e-10 |dz| 1.86e-05 lam 1 dDelta -3.62e-13 Delta 2.827146667911011 piv 4.0e-08..9.4e+00  t 118.5s
+  newton 0: |F| 4.03e-10 |dz| 7.63e-08 lam 1 dDelta +2.40e-13 Delta 2.827146667911250 piv 4.5e-07..9.4e+00  t 116.3s
+  newton 0: |F| 3.36e-15 |dz| 5.41e-10 lam 1 dDelta -2.07e-18 Delta 2.827146667911250 piv 4.5e-07..9.4e+00  t 123.4s
+  newton 0: |F| 1.81e-19 |dz| 9.07e-13 lam 1 dDelta -1.56e-22 Delta 2.827146667911250 piv 4.5e-07..9.4e+00  t 124.1s
+  newton 0: |F| 1.14e-24 |dz| 1.89e-15 lam 1 dDelta +4.21e-28 Delta 2.827146667911250 piv 4.6e-07..9.4e+00  t 124.6s
+  newton 0: |F| 2.76e-27 |dz| 1.31e-17 lam 1 dDelta +8.01e-31 Delta 2.827146667911250 piv 4.6e-07..9.4e+00  t 121.8s
+  newton 0: |F| 4.10e-28 |dz| 8.58e-19 lam 1 dDelta -9.67e-31 Delta 2.827146667911250 piv 4.6e-07..9.4e+00  t 121.9s
+  newton 0: |F| 1.80e-28 |dz| 1.11e-17 lam 1 dDelta +1.57e-30 Delta 2.827146667911250 piv 4.6e-07..9.4e+00  t 124.1s
+  newton 0: |F| 6.71e-29 converged (last |dz| 1.4e-18) Delta 2.827146667911250
+01:19:43 D 3.1125 M 192: Delta 2.8271466679112502 (+1.89e-16) |F| 6.7e-29 its 14 1661s dDelta/dF max 7.7e-01 tails 4e-59 5e-76 dDelta_est -9.1e-31
+01:19:48   D 3.1125 M 192: the solution's own plan has 457 steps, more than the 387 used
+01:20:04   D 3.1125 M 256: start 'predictor' |F| nan (470 steps)
+01:20:05   D 3.1125 M 256: start 'lift of M_w' |F| 1.78e-05 (470 steps)
+01:20:13 D 3.1125 M 256: L 19457, steps 470, start |F| 1.8e-05
+  newton 0: |F| 1.78e-05: no decrease along the f64-Jacobian step; retrying with the dd4 Jacobian (M > 128: no exact dense Jacobian)
+  newton 0: |F| 1.78e-05: no decrease along the Newton step, giving up
+01:35:22 D 3.1125 M 256: NOT converged, |F| 1.8e-05 after 1 iterations (917s); stopping
+01:35:22 D 3.1125 failed at M 256; inserting D 3.11875
+01:35:22 --- D 3.11875 (from 3.125), M 192 / 256, nodes 0.000625..0.95
+01:35:28   D 3.11875 M 160: start 'predictor' |F| 6.70e-02 (355 steps)
+01:35:31 D 3.11875 M 160: L 12161, steps 355, start |F| 6.7e-02
+  newton 0: |F| 6.70e-02 |dz| 1.16e+00 lam 1 dDelta -3.62e-04 Delta 2.851895493590249 piv 2.0e-04..3.3e+01  t 71.0s
+  newton 0: |F| 5.12e-04 |dz| 1.37e+00 lam 1 dDelta +2.51e-04 Delta 2.852146139932127 piv 2.0e-04..2.1e+01  t 72.3s
+  newton 0: |F| 7.66e-06 |dz| 7.32e-03 lam 1 dDelta +3.66e-07 Delta 2.852146506297884 piv 2.0e-04..4.1e+01  t 70.3s
+  newton 0: |F| 2.41e-10 |dz| 6.48e-07 lam 1 dDelta +9.83e-11 Delta 2.852146506396163 piv 2.0e-04..4.1e+01  t 70.5s
+  newton 0: |F| 6.32e-19 |dz| 7.40e-14 lam 1 dDelta +8.01e-20 Delta 2.852146506396163 piv 2.0e-04..4.1e+01  t 69.2s
+  newton 0: |F| 5.97e-28 |dz| 8.87e-23 lam 1 dDelta +1.73e-29 Delta 2.852146506396163 piv 2.0e-04..4.1e+01  t 69.4s
+  newton 0: |F| 3.80e-29 converged (last |dz| 3.3e-24) Delta 2.852146506396163; last step taken, |F| 7.85e-29
+01:43:46 D 3.11875 M 160: Delta 2.8521465063961626 (-4.61e-17) |F| 7.9e-29 its 7 497s dDelta/dF max 8.8e-01 tails 1e-71 2e-85 dDelta_est +7.3e-33
+01:43:55   D 3.11875 M 192: start 'predictor' |F| 7.00e-02 (387 steps)
+01:43:55   D 3.11875 M 192: start 'lift of M_c' |F| 6.97e-05 (387 steps)
+01:43:59 D 3.11875 M 192: L 14593, steps 387, start |F| 7.0e-05
