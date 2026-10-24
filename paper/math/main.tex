@@ -130,7 +130,7 @@ unstable mode and continuity in $1/n$, the critical exponent tends to $1/2$ (Cor
 The two contraction arguments among them, the global continuation and the inner--outer matching, are proved for each
 fixed $M$ and carried out with computer-assisted constants for $M = 1$ and $n \ge e^{73.89}$. For $M = 1$ the theorem is
 certified, assuming Braaksma's theorem, for $n \ge e^{89.75}$, with the light cone handled in the exact light-cone gauge
-(Section~\ref{sec:B1status}); the certificate code has not been reviewed independently.
+(Section~\ref{sec:B1status}); a first independent review confirms it with corrections that change no constant.
 \item For the one-harmonic truncation, the selection condition has exactly one zero in an explicit box of half-width
 $10^{-9}$, and it is simple (Theorem~\ref{thm:A}). The proof is computer-assisted, assumes only Braaksma's summability
 theorem, and follows Baldom\'a, Capi\'nski, Guardia and Seara~\cite{BaldomaCapinskiGuardiaSeara2023}.
@@ -158,7 +158,7 @@ Proposition~\ref{prop:4} & late orders of the leading-order series; $C(n,s)$ as 
 Conjecture~\ref{conj} & selection at $D = \infty$ by the inner multipliers & conjecture, with argument \\
 Proposition~\ref{prop:5} & exact $\lambda = 2$ mode of the inner problem & proved; part (i) checked symbolically \\
 Corollary~\ref{cor:gamma} & $\gamma_\infty = 1/2$ & conditional on Conjecture~\ref{conj} and two hypotheses \\
-Theorem~\ref{thm:B} & selection for the $M$-harmonic model & conditional on the lemmas of Table~\ref{tab:Bstatus}; for $M = 1$ certified, assuming Braaksma's theorem, $n \ge e^{89.75}$ (Section~\ref{sec:B1status}); not independently reviewed \\
+Theorem~\ref{thm:B} & selection for the $M$-harmonic model & conditional on the lemmas of Table~\ref{tab:Bstatus}; for $M = 1$ certified, assuming Braaksma's theorem, $n \ge e^{89.75}$ (Section~\ref{sec:B1status}); reviewed in part \\
 Lemmas B1, B5.1, B6$'$, B8.1, B8.2; B2, B5.0 & ingredients of Theorem~\ref{thm:B} & proved; B2 and B5.0 checked symbolically \\
 Theorem~\ref{thm:A} & one simple zero of the $M = 1$ selection condition & certified (computer-assisted), assuming Braaksma's theorem \\
 Section~\ref{sec:A3} & one simple zero of the $M = 3$ selection condition & certified (computer-assisted), assuming Braaksma's theorem; not independently reviewed \\
@@ -1313,8 +1313,11 @@ gauge offset $|c(0) - c^K(0)|_1 \le 3.59\times10^{6}\,n^{-5}$, inside the range 
 half the fast exponent.
 \end{itemize}
 Lemma~B6 and the factor $\kappa_{n,\mu}$ are not needed in this form. Every certificate is in ball arithmetic and has a mutation control that makes it
-fail. None of the certificate code has been reviewed independently, and the threshold $n_0$ is far beyond any dimension a
-numerical solver reaches, so the theorem does not by itself identify the computed branch.
+fail. A first independent review (\repo{proof/P2\_review.md}) finds that the theorem stands as stated, with seven
+corrections that change no constant or threshold (three of them to what the class of Lemma~B8's continuation up to the
+light cone must contain); its second implementations of that continuation's closure and of the jump lemma's secant bounds
+are not complete. The threshold $n_0$ is far beyond any dimension a numerical solver reaches, so the theorem does not by
+itself identify the computed branch.
 
 \subsection{Gap (b): the harmonic tail}
 \label{sec:tail}

@@ -1897,9 +1897,10 @@ Jacobian and an unexplained drift of the gauge mode's root).
   gauge, that is analytic across the light cone, and |p_n − p*| ≤ e^{67.84}/n ([proof/B_chain.md](proof/B_chain.md)
   §15). The last links were the light cone itself: the continuation carried up to x = 1 in the exact light-cone gauge
   (Lemma LC, a contraction) and a proof that the outer jump vanishes with its label (Lemma J). "The" solution is unique
-  within a neighbourhood of the formal series. None of the certificate code has been reviewed independently yet
-  ([notes/PROOF_QUEUE.md](notes/PROOF_QUEUE.md), P2), and the threshold is far beyond any D a solver reaches, so it
-  does not yet identify the computed branch (P7). The canonical status, link by link, is C_selection.md §13.
+  within a neighbourhood of the formal series. A first independent review ([proof/P2_review.md](proof/P2_review.md))
+  finds that it stands as stated, with seven corrections that change no constant or threshold; its second
+  implementations of Lemma LC's closure and of Lemma J's secant bounds are not done. The threshold is far beyond any D
+  a solver reaches, so the theorem does not yet identify the computed branch ([notes/PROOF_QUEUE.md](notes/PROOF_QUEUE.md), P7). The canonical status, link by link, is C_selection.md §13.
 - **The critical exponent, and why γ∞ = 1/2: [Proposition 5](#proposition-5-the-unstable-mode-at-infinite-d-is-exact).**
   λ = 1/γ is also selected beyond all orders; in the inner problem λ = 0, 1 and 2 are exact, from symmetries, and the
   λ = 2 mode, from the r²-shift of the inner heat equation, explains γ∞ = 1/2. The 1/n coefficient 3.0324 is reproduced to
