@@ -232,6 +232,14 @@ to 256 is 9×10⁻¹², and at 3.125, 3.11875, 3.1125 and 3.1 (the lowest point 
 M = 128 Newton converged only to a solution with content along the near-null directions (its centre-series tail
 10⁻⁹, against 10⁻⁵⁰ at 3.425); the CSV lists it as polluted and it is not used.
 
+![Below D = 4: how much Delta moves when the tau resolution M goes up one step, at the largest M run at each D, on a log scale](hp/lowD_errors.svg)
+
+**The last resolution step at each D** (`hp/plot_errors.py`, from `Delta_err` in
+[`hp/data/delta_dd.csv`](hp/data/delta_dd.csv); rerun it after `hp/export_dd.py`). The right panel above on a log
+scale, one point per D: the step into the largest M run there. At D = 3.7 and 4 the grids were taken to M = 256 and
+192, far past what Δ needs, and the last step falls to 3×10⁻²¹ and 10⁻²². Below 3.7 it is 7×10⁻¹³ to 3×10⁻⁹,
+except at D = 3.4 (the triangle), whose M = 96 row is not resolved.
+
 **A formula for 3 < D ≤ 4** (`hp/lowD_formula.py`, fitted to Ecker, Ecker, Grumiller & Jechtl's published values for
 3.046 ≤ D ≤ 4, which are not included here). The variable that works is s = √(D − 3):
 
@@ -746,6 +754,15 @@ What the solver has shown:
   1.5–2×10⁻⁹), 1.8×10⁻⁸ at 30.1 and
   7×10⁻⁸ at 34.2, and 0.6–2.1×10⁻⁶ high from 35 to 40.3 (quoted 1–3×10⁻⁶). How well the
   rational formula holds against these points is in [The formula](#the-formula).
+
+![The continuation points' error indicators against D: each point's distance from the degree-18 fit in 1/(D-1), Newton's remaining linearised correction to Delta, and the shift from freeing harmonic 15](hp/largeD_errors.svg)
+
+**The error indicators side by side** (`hp/fit_residuals.py`, then `hp/plot_errors.py`). Blue: each point's distance
+from the degree-18 fit in 1/(D − 1) on the cleaned points 10 ≤ D ≤ 61.03. The arches are the fit's own error, which
+changes sign at each dip, and the step at D = 35.35 is where the frozen-harmonic cut sets in. Orange: Newton's remaining
+linearised correction to Δ (`dDelta_est`), up to 10⁻¹⁴ on the points solved before the freezing (D = 26.6–35.2) and
+growing 1.60-fold per unit of D after it, to about 10⁻¹⁷ at D = 61. Green: the cut itself, from the checks table.
+Above D = 35 the cut, about 10⁻¹⁵, is the largest of the three (see "How good the values are" above).
 
 ### Is the period analytic in 1/D?
 
@@ -2202,6 +2219,9 @@ hp/                 double-double solver (crate hpkernel)
 ├── dd_fits_mp.py   large-D model fits at 60 digits, held-out errors, predictions (--dmax for a data snapshot)
 ├── dd_candidates.py  candidate constants forced as the limit, held-out test (--dmax as above)
 ├── plot_heldout.py heldout.svg (python3 plot_heldout.py --dmax=60.1: the points up to D = 60.1)
+├── fit_residuals.py  each point's distance from the degree-18 fit in 1/(D-1), into data/fit_residuals.csv
+├── plot_errors.py  lowD_errors.svg and largeD_errors.svg, the error graphs (run fit_residuals.py first)
+├── data_graphs.py  SVG graph primitives, vendored unchanged from github.com/nmoinvaz/speedy-gonzales (skills/graph-data)
 ├── data/delta_dd.csv   every double-double point: D, Delta (hi + lo; Delta_lo is the low word, not an error), |F|,
 │                       max dDelta/dF, run, an error estimate and its kind (Delta_err, err_kind: the change from the next
 │                       lower tau resolution at low D, the size of the nearby checks elsewhere), and whether a published
@@ -2209,6 +2229,7 @@ hp/                 double-double solver (crate hpkernel)
 │                       published_match; data/published_delta.csv); the 857 continuation points (D = 8.25-61.03) and the
 │                       best low-D value per D (run lowD-M<M>, D = 3.1125-4.0), which the large-D fits skip
 ├── data/delta_dd_lowD.csv   the low-D points at every M, with gamma and status (export_lowD.py)
+├── data/fit_residuals.csv   each continuation point from D = 10 up minus the degree-18 1/(D-1) fit (fit_residuals.py)
 ├── data/local/     the second machine's runs (scan_up*.jsonl), folded into delta_dd.csv by export_dd.py
 └── data/seeds/     saved solver states to restart continuation from
 hp/largeD_*.py      large-D scaling of the solutions (profiles, F(theta), harmonic content, light-cone exponent)
