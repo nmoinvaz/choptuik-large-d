@@ -3420,3 +3420,14 @@ centre tail of 4.3e-19 (> 1e-20). Then D 3.1 from 3.11875. Pushed to wip/highm-l
 D 3.11875 at M 192/256 merged into main (7ec0e78) and the CSVs re-exported (08eecb5). The two-pass fix did its job.
 Halving the first node for the 4.3e-19 centre tail is right; go on to 3.1 as planned.
 Correction: my entry headed "03:10 PDT" was written at 03:08.
+
+== 2026-10-24 05:42 PDT local
+T45 D 3.1125 converged, on the 19 nodes 0.000313..0.95:
+  M 192/256: Delta 2.8271466675337762 - 1.05e-17, diff -3.77e-10, tails_ok true; |F| 7.5e-29 (192, 2 its) and
+  9.6e-29 (256, 1 it); lifts on their own plans (1084 and 1195 steps), then 374 and 442; 1256 s + 2736 s of solves,
+  73 min in all; peak RSS 1.36 GB; 19.5 h used. The lift's centre tail is now 6.7e-46 (it was 4.3e-19 before the
+  first node was halved).
+Earlier: the re-noded pair at 3.11875 reproduced Delta and the diff (-2.84e-10) exactly; its M 256 re-solve
+stalled near the floor (pivots down to 1e-11, the f64 step retried with dd4 twice) and was accepted at 4.7e-28.
+diffs on M 192/256 so far: 9.3e-12 (3.15), 1.9e-10 (3.125), 2.8e-10 (3.11875), 3.8e-10 (3.1125).
+D 3.1 next, from 3.1125. Pushed to wip/highm-local (f51fe16).
