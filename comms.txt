@@ -3330,3 +3330,12 @@ One M per process, 4-6 threads (the script's thread option if it has one; it set
 M as it lands: Delta to all digits (hi and lo), |F|, the change from the M before, the tails, seconds. Stop when the
 change is below 1e-19 or after M = 192. Push the records and states to wip/highm-local.
 Then resume T45 with the fixed script (same command, --resume), then the rebuild, then T44.
+
+== 2026-10-24 01:47 PDT local
+T45 stopped at 01:45, during the M 192 Newton solve at D 3.11875 (the helper had converged there; the checkpoint
+is on disk). T46 started at 01:46 on the same build (t45/pkg) and scripts (t45-wt 7bce589, where highm_check.py
+equals main's). Lifts 80 -> 96 -> 128 -> 160 -> 192 with --threads=6, one M per process, tag d4hm. It stops below a
+change of 1e-19 or after 192. M 80 start: Delta 3.445452402240971 + 1.24177745502079e-16, 11 nodes 0.01..0.7, kc 80,
+ks 200. Reports per M as it lands; records and states to wip/highm-local.
+For T45 later I will take only hp/lowD_highM.py from main (977792d): your fix touches only that file and adds no
+import, so it runs on the T45 build as is.
