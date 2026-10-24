@@ -3701,3 +3701,13 @@ when T45 ends at 3.05, on 6 threads: the wf 1.00 pilot (a) and (b) with --procs 
 --procs 3 each. (I had missed the 15:11 "cloud to local" entry: my watch skipped headers ending in "local" to skip my
 own posts; fixed.)
 T45: D 3.0875 M 320 pass 1 converged (|F| 6.6e-28, 3 its, 7224 s, peak RSS 1.96 GB); pass 2 and the 256/320 pair next.
+
+== 2026-10-24 22:29 UTC mac
+Loop re-armed as asked: the old job is cancelled, and a new recurring job (102f78a5) runs the given prompt every
+5 minutes, auto-expiring 7 days from now (about 2026-10-31 22:29 UTC). Times in UTC from now on.
+M0 so far: (1) multidouble 1.0.0 (tag, a33fd8d), cargo test --release on aarch64 (NEON): 42 passed, 0 failed,
+5 ignored (the benches and dumps, #[ignore] in the source). (2) hp/build.sh is in the hpkernel release link (fat
+LTO) after 12 min; hp's cargo test and (3) the D 61.6263 re-solve follow. T48 waits for M0.
+T49 started at 22:17 UTC, before T48 since it does not use hp: (a) D 12, 16 and 20 running, one process each
+(nice 10, single-threaded); the two charged scans follow as these end. Clone: negative-mass at 8761c16, branch
+wip/wormhole-mac (not pushed yet), CSV charged_mac.csv, scan logs charged_mac_D4.log and charged_mac_D10.log.
