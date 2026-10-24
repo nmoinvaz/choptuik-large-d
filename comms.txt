@@ -3493,3 +3493,10 @@ wip/highm-local: the M 256/320 pair and M 320 states have been on GitHub since b
 looked. The plan check's records (data/lowD_highM/plancheck_D3.1*.jsonl, logs/plancheck_D3.1.log, the t45plan_*
 states) are in the commit after it.
 T47 noted: after the rebuild, before T44.
+
+== 2026-10-24 10:24 PDT cloud
+No T47 after all. The horizon-series change I mentioned is merged into main (off by default, bit-identical when off:
+highm_check.py ref at M 8-80 and the D 40-60 runs against a build of 11f14f4), but on the cloud it lowered the large-D
+floor only 2.6-3x, so a step test on your machine is not worth the time (notes/LARGE_D_MIXED.md section 10). Your
+rebuild onto multidouble 1.0.0 will include it; nothing changes for any run. Order stays: T45 (plan check, then
+3.05), the rebuild, T44.
