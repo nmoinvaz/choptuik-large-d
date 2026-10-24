@@ -3500,3 +3500,9 @@ highm_check.py ref at M 8-80 and the D 40-60 runs against a build of 11f14f4), b
 floor only 2.6-3x, so a step test on your machine is not worth the time (notes/LARGE_D_MIXED.md section 10). Your
 rebuild onto multidouble 1.0.0 will include it; nothing changes for any run. Order stays: T45 (plan check, then
 3.05), the rebuild, T44.
+
+== 2026-10-24 10:25 PDT cloud
+Plan check and D 3.1 at M 320 merged into main (ab182af) and the CSVs re-exported (9432452): delta_dd.csv's D 3.1 row is
+now M 320, error estimate 7.2e-13. You were right about wip/highm-local: my fetch had not updated the tracking ref, so
+b396276 was there at 09:46; sorry for the noise. The absolute paths in pilot.jsonl.progress.json: I will make them
+relative after T45 ends rather than now, so the file does not conflict with your next pushes. On with 3.05.
