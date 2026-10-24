@@ -568,4 +568,22 @@ to one solution of the linearised equations.
 - **Checks.** `cargo test --release --lib halpha_` (synthetic context): mode 2 gives the default's residual and both
   Jacobians bit for bit, and mode 1 changes them by rounding only (residual 6×10⁻³² of its largest entry); a planted
   error (3α² as 3.000001α²) fails it. `python3 alpha_floor.py` measures the floors at D = 40, 50 and 60 against pass
-  criteria written before its first run. Results: see below.
+  criteria written before its first run (5 Newton steps with the double-double Jacobian from the saved scan states).
+- **Results (cloud, AVX-512, 2026-10-24; private builds of main (11f14f4) and of this change, LTO off).**
+  - The default is unchanged: `highm_check.py ref` at M = 8–80 (120 outputs) and the D = 40, 50, 60 runs of mode 0 (|F|
+    history, final state, f64 Jacobian) are bit-identical to main's build, and mode 2 (the control) is bit-identical
+    to mode 0.
+  - The mechanism holds quantitatively: mode 0's floor is 1.69×10⁻²⁶, 6.27×10⁻²⁵ and 2.17×10⁻²³ at D = 40.02, 50.01 and
+    60.00, against 2.5 ε_dd G = 1.7×10⁻²⁶, 5.9×10⁻²⁵ and 2.1×10⁻²³.
+  - **The α form lowers the floor only 2.6–3.0 times** (to 6.1×10⁻²⁷, 2.1×10⁻²⁵ and 8.4×10⁻²⁴, about 1.0 ε_dd G),
+    not the 200–2000 times the agent's model predicted. The pre-written criterion (at least 30× at D ≥ 50, 3× at
+    D = 40) fails at all three (2.7×, 3.0×, 2.6×); `alpha_floor.py` exits 1. So the cancellation was a factor of about
+    2.5 in the floor, and the rest of the series' rounding, of order ε_dd in quantities of order one (the c and p, m
+    recursions, the periodic solves), is amplified by G just the same. Moving the floor further needs the mass mode
+    itself handled (anchored at x_m, or the horizon block in higher precision), not a rewriting of the series.
+  - Δ does not change beyond the floor's own noise: modes 0 and 1 differ by 8.9×10⁻²², 1.8×10⁻²⁰ and 1.1×10⁻¹⁷, while
+    the Δ components of the Newton steps at the floor are up to 1×10⁻²¹, 1×10⁻¹⁹ and 7×10⁻¹⁸ (mode 0).
+  - The f64 Jacobian's error falls by 1.4–1.9× (1.33×10⁻¹⁰ → 9.5×10⁻¹¹, 5.8×10⁻⁹ → 3.5×10⁻⁹, 2.1×10⁻⁷ → 1.1×10⁻⁷);
+    it is dominated by the f64 rounding of the base state, which α does not touch.
+  - The option stays (off by default, bit-identical when off): a 2.6–3× lower floor is worth about 3 units of D at the
+    floor's growth of 1.45 per unit D. Logs: `hp/data/alpha_floor/`.

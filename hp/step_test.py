@@ -20,6 +20,9 @@ four saved scan states (D = 45, 50, 55, 60) with these variants:
   kf11     harmonic 13 frozen at zero (kfreeze 11). At D = 40 and 45.3 it did not converge (|F| 2e-9 and 2e-14):
            harmonic 13 is not small there (2.1e-6 at 45.3; solver/notes.md). Start-state check; stepped only if its
            floor is within 100 times base's
+  alpha, alpha8   base, and pred8, with the horizon series in alpha = a - 1 (scan_hp.py --horizon_alpha 1;
+           notes/LARGE_D_MIXED.md section 10): the same solution with a lower residual floor; its start state is solved
+           with it, so the run's tol (5 x the start's floor) is lower too
 
 Phase 1, start states: each saved state is re-noded / re-frozen to the variant's layout and solved (deflated Newton,
 then plain Newton) to its floor. The floor, Delta and max|dDelta/dF| are recorded (start_states.jsonl); this also
@@ -80,6 +83,8 @@ VARIANTS = {
     "pin11": dict(last=0.7, kf=13, args=["--pin", "11"]),
     "pin9": dict(last=0.7, kf=13, args=["--pin", "9"]),
     "kf11": dict(last=0.7, kf=11, args=[]),
+    "alpha": dict(last=0.7, kf=13, ha=1, args=["--horizon_alpha", "1"]),
+    "alpha8": dict(last=0.7, kf=13, ha=1, args=["--horizon_alpha", "1", "--pred_n", "8"]),
 }
 REF_LOCAL_TOL, REF_FAR_TOL, REF_LOCAL_MAX = 1e-12, 1e-10, 61.0
 SEEDS = os.path.join(HERE, "data", "seeds", "step_test")
@@ -99,8 +104,8 @@ def layout(last):
     return [x for x in BASE_NODES if x < last - 1e-9] + [last]
 
 
-def start_name(D0, last, kf):
-    return f"start_D{D0:.4f}_x{last}_kf{kf}"
+def start_name(D0, last, kf, ha=0):
+    return f"start_D{D0:.4f}_x{last}_kf{kf}" + (f"_ha{ha}" if ha else "")
 
 
 def sensitivity(s, M):
@@ -125,9 +130,10 @@ def jsonl(path):
 
 
 # ----------------------------------------------------------------------------------------------- phase 1: start states
-def make_start(D0, last, kf, outdir, threads):
-    """the saved state at D0 in the variant's layout, solved to its floor; returns its record (cached)"""
-    name = start_name(D0, last, kf)
+def make_start(D0, last, kf, outdir, threads, ha=0):
+    """the saved state at D0 in the variant's layout, solved to its floor (with the horizon series in alpha when ha);
+    returns its record (cached)"""
+    name = start_name(D0, last, kf, ha)
     recs = [r for r in jsonl(os.path.join(outdir, "start_states.jsonl")) if r["name"] == name]
     if recs and os.path.exists(os.path.join(outdir, name + ".npz")):
         return recs[-1]
@@ -142,7 +148,7 @@ def make_start(D0, last, kf, outdir, threads):
         lo, lo2 = plow_odd(M, kf)
         zh[:M] = (lo + lo2) @ (zh[:M] + zl[:M])
         zl[:M] = 0.0
-    s = make_solver(D, M, nodes=nodes, kt=m["kt"], kc=KC, ks=KS[last], threads=threads, kfreeze=kf)
+    s = make_solver(D, M, nodes=nodes, kt=m["kt"], kc=KC, ks=KS[last], threads=threads, kfreeze=kf, horizon_alpha=ha)
     s.set_segs(s.plan(zh, zl, 1e-32, 0.05))
     F0 = dd_norm(*s.residual(zh, zl))
     zh1, zl1, h1 = deflated_newton(s, zh, zl, tol=1e-40, it_max=25, w=16, verbose=False)
@@ -151,7 +157,7 @@ def make_start(D0, last, kf, outdir, threads):
     s.newton(zh2, zl2)                     # the stored LU at the final iterate, for the sensitivity
     Fh, Fl = s.residual(zh2, zl2)
     F_final = dd_norm(Fh, Fl)
-    rec = dict(name=name, D=D, D0=D0, last=last, kfreeze=kf, nodes=nodes, M=M, kt=m["kt"], ks=KS[last], F_start=F0,
+    rec = dict(name=name, D=D, D0=D0, last=last, kfreeze=kf, horizon_alpha=ha, nodes=nodes, M=M, kt=m["kt"], ks=KS[last], F_start=F0,
                F_hist=Fs, floor=min(Fs[1:] + [F_final]), F_final=F_final, Delta=float(zh2[-1]), Delta_lo=float(zl2[-1]),
                Delta_saved=float(zh0[-1]) + float(zl0[-1]), dDelta_est=delta_correction(s, Fh, Fl),
                sens_max=sensitivity(s, M), tails=tails(s, zh2, zl2, nodes, M), its=len(h1) + len(h2),
@@ -392,16 +398,16 @@ def main():
     for D0 in D0s:
         for v in vs:
             spec = VARIANTS[v]
-            key = (D0, spec["last"], spec["kf"])
+            key = (D0, spec["last"], spec["kf"], spec.get("ha", 0))
             if key not in starts:
-                starts[key] = make_start(D0, spec["last"], spec["kf"], a.outdir, a.threads * a.parallel)
+                starts[key] = make_start(D0, spec["last"], spec["kf"], a.outdir, a.threads * a.parallel, spec.get("ha", 0))
     # phase 2
     jobs = []
     for D0 in D0s:
         for v in vs:
             spec = VARIANTS[v]
-            st = starts[(D0, spec["last"], spec["kf"])]
-            base_st = starts.get((D0, 0.7, 13))
+            st = starts[(D0, spec["last"], spec["kf"], spec.get("ha", 0))]
+            base_st = starts.get((D0, 0.7, 13, 0))
             if v == "kf11" and base_st is not None and st["floor"] > 100 * base_st["floor"]:
                 print(f"kf11 at D0 = {D0}: floor {st['floor']:.1e}, more than 100 x base's: not stepped", flush=True)
                 continue
