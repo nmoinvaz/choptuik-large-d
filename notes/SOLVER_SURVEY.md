@@ -98,6 +98,7 @@ Ordered by expected value for this project, with the evidence for each.
 4. **A real step controller for continuation.**
    - *What:* step size from the Newton contraction rate and the predictor's error (Deuflhard-style adaptive continuation) instead of fixed growth factors and a cap.
    - *Why:* the T43 pilot shows the scans' cap of 0.03 cost speed at D = 60 (edge about 0.04). Pseudo-arclength continuation is not needed (Δ(D) has no folds), but a step controller is.
+   - *T43's result* (notes/STEP_TEST.md): Newton's edge is 0.12 at D = 45 and 0.034 at D = 60; Lagrange predictors through 6–8 points are 4–10 times faster than the cubic up to D = 55 and fail at 60. The controller should also adapt the predictor's degree.
 5. **Certification in a sub-layout as a standard check.** `scan_hp.py --certify_nodes` (notes/BEYOND_LIGHT_CONE.md §5.1) lowers the first-order Δ bound 230–270 times at D = 60 for about 15 s a point. It belongs in the default large-D recipe.
 6. **A quad-double residual when the double-double floor binds.**
    - *What:* the floor rises about 1.4× per unit of D.

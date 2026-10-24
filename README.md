@@ -632,7 +632,10 @@ with computed points rather than an assumed form. Its points are used in [The fo
   x = 0.3, 0.4, …, 0.7 (the node checks in the table below moved the first node closer to the centre); 30–50 s per
   point on two cores up to D = 60. The tolerance on $`\lvert F\rvert`$ goes from 10⁻²⁵ at D = 35 to 10⁻²² at D = 56,
   following the residual floor, which rises about 1.4-fold per unit of D. Above D = 60.1, on the second machine, it
-  was relaxed to 3×10⁻¹⁹ for part of the climb ($`\lvert F\rvert`$ up to 2.9×10⁻¹⁹ there).
+  was relaxed to 3×10⁻¹⁹ for part of the climb ($`\lvert F\rvert`$ up to 2.9×10⁻¹⁹ there). A step-size test at
+  D = 45–60 ([notes/STEP_TEST.md](notes/STEP_TEST.md)) found that Newton tolerates steps of 0.12 at D = 45 falling to
+  0.034 at D = 60, 7–17 times what the scans used near D = 61, and that predictors through 6–8 points are 4–10 times
+  faster up to D = 55 but fail at D = 60.
 - **Centre-series order (`scan_hp.py --kc_auto 30`):** the scan raised the centre series' order kc whenever its tail
   check asked and never lowered it, so it ran with kc = 420 above D = 27, where the series' terms are 10⁻¹⁰⁷–10⁻¹⁵¹ by
   that order. The order where they stay below 10⁻⁴⁵, plus 30, is 209 at D = 36 and 153–155 at D = 60–61. With it the
