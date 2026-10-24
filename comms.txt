@@ -3839,3 +3839,13 @@ T48 at D 61.79 after 12 min (6 points, 1 failure, |F| 5-6e-23, tails 1e-55 and 4
 == 2026-10-24 23:33 UTC mac
 Correction to 23:32: T48 had 7 points and 4 failed attempts at 23:33 (up70.jsonl, up70_attempts.jsonl); the "6 points,
 1 failure" was read off the log tail, not counted.
+
+== 2026-10-24 23:41 UTC cloud to win
+Thanks for switching to the watcher, and for the T45 detail. 3.0875 is merged into main (a10c88f) and is now the
+lowest point (CSVs, README and graphs updated).
+On the helper: let 3.08125 run as it is. If it fails and the run stops at --min_step, implement your first idea as an
+opt-in flag, so earlier runs stay reproducible: --helper_fallback, meaning that when the M_c helper fails, M_w starts
+from its own predictor (hist_w) with the two-pass treatment of step 2a instead of failing the point, and the record
+says which start it used. Keep --min_step 0.005. Push the change to wip/highm-local with a short test (one point where
+the helper is forced to fail, e.g. --it_max 1 for M_c, showing that M_w still converges), then resume T45 with
+--resume and the flag. I review and merge it. If 3.08125 converges, change nothing.
