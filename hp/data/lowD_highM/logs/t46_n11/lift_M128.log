@@ -1,0 +1,22 @@
+D 4.0 M 128: L 6145, steps 313, start |F| 1.0e-07
+  newton 0: |F| 1.03e-07: no decrease along the f64-Jacobian step; retrying with the exact Jacobian
+  newton 0: |F| 1.03e-07 |dz| 9.85e-06 lam 1 dDelta -9.16e-14 Delta 3.445452402227819 piv 8.8e-04..8.0e+00  t 214.3s
+  newton 0: |F| 6.48e-15 converged (last |dz| 7.0e-12) Delta 3.445452402227822; last step taken, |F| 1.03e-15
+D 4.0 M 128: Delta 3.4454524022278217 (-6.18e-17) |F| 1.0e-15 its 2 250s dDelta/dF max 9.9e+00 tails 2e-23 1e-15 dDelta_est -2.5e-16
+D 4.0 M 128: L 6145, steps 283, start |F| 1.0e-15
+  newton 0: |F| 1.03e-15 |dz| 9.80e-12 lam 0.125 dDelta -2.99e-17 Delta 3.445452402227822 piv 8.8e-04..8.0e+00  t 30.6s
+  newton 0: |F| 8.54e-16 |dz| 4.48e-12 lam 0.5 dDelta -1.09e-16 Delta 3.445452402227822 piv 8.8e-04..8.0e+00  t 32.4s
+  newton 0: |F| 8.12e-16 |dz| 1.92e-12 lam 1 dDelta -1.27e-16 Delta 3.445452402227821 piv 8.8e-04..8.0e+00  t 32.1s
+  newton 0: |F| 9.62e-17 |dz| 3.07e-13 lam 1 dDelta +6.61e-18 Delta 3.445452402227821 piv 8.8e-04..8.0e+00  t 32.6s
+  newton 0: |F| 2.07e-18 |dz| 3.39e-14 lam 1 dDelta -9.11e-19 Delta 3.445452402227821 piv 8.8e-04..8.0e+00  t 32.7s
+  newton 0: |F| 4.13e-19 |dz| 2.61e-15 lam 1 dDelta -1.36e-19 Delta 3.445452402227821 piv 8.8e-04..8.0e+00  t 33.3s
+  newton 0: |F| 5.95e-20 |dz| 2.86e-16 lam 1 dDelta +5.37e-21 Delta 3.445452402227821 piv 8.8e-04..8.0e+00  t 33.2s
+  newton 0: |F| 9.37e-21 |dz| 4.33e-17 lam 1 dDelta -1.17e-21 Delta 3.445452402227821 piv 8.8e-04..8.0e+00  t 34.2s
+  newton 0: |F| 1.57e-21 |dz| 6.34e-18 lam 1 dDelta -2.08e-23 Delta 3.445452402227821 piv 8.8e-04..8.0e+00  t 33.0s
+  newton 0: |F| 1.11e-22 |dz| 4.20e-19 lam 1 dDelta +5.84e-23 Delta 3.445452402227821 piv 8.8e-04..8.0e+00  t 33.7s
+  newton 0: |F| 1.24e-23 |dz| 3.97e-20 lam 1 dDelta -2.59e-25 Delta 3.445452402227821 piv 8.8e-04..8.0e+00  t 34.1s
+  newton 0: |F| 1.68e-24 |dz| 4.42e-21 lam 1 dDelta +3.43e-25 Delta 3.445452402227821 piv 8.8e-04..8.0e+00  t 33.9s
+  newton 0: |F| 7.69e-26 |dz| 6.46e-22 lam 1 dDelta -4.37e-26 Delta 3.445452402227821 piv 8.8e-04..8.0e+00  t 34.5s
+  newton 0: |F| 9.30e-27 |dz| 5.10e-23 lam 1 dDelta -3.86e-29 Delta 3.445452402227821 piv 8.8e-04..8.0e+00  t 33.4s
+D 4.0 M 128: NOT converged, |F| 6.8e-28 after 14 iterations (466s); stopping
+D 4.0 M 128: NOT converged
