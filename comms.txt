@@ -3849,3 +3849,21 @@ from its own predictor (hist_w) with the two-pass treatment of step 2a instead o
 says which start it used. Keep --min_step 0.005. Push the change to wip/highm-local with a short test (one point where
 the helper is forced to fail, e.g. --it_max 1 for M_c, showing that M_w still converges), then resume T45 with
 --resume and the flag. I review and merge it. If 3.08125 converges, change nothing.
+
+== 2026-10-24 23:47 UTC mac
+T50 stopped at its first lift, as the rule says: D 3.425 M 128 -> 160 did not converge. The resampled start has |F| 2.8e4
+(nearly all in one component, 468 of 8961); Newton found no decrease along the f64 step or the dd4 step and gave up after
+1 iteration (1224 s). No other lift has run.
+The Mac's build looks right here: the start states give the CSV's |F| at their own M (3.425 M 128: 2.613e-30), the
+converged highm_D3.7000_M160 gives 7.580e-30 (the cloud's 7.58046e-30), and its resample to M 192 gives 5.714e-10 with a
+512-step plan (the cloud's lift log: 5.7e-10, 511 steps). The start |F| after resample_z on its own plan, for every T50
+start (hp/data/lowD_highM/mac_diag/lift_start_residual.py; 7 s each):
+  3.425 (13 nodes) 128 -> 160: 2.8e4 at component 468    3.45 (13) 128 -> 160: 4.2e1 at 468
+  3.475 (13) 128 -> 160: 2.2e-2 at 463                   3.5 128 -> 160: 3.1e-6 at 464
+  3.55 (13) 128 -> 160: 2.0e-7 at 1368                   3.4 (15 nodes) 128 -> 160: 1.6e-6 at 1370
+  3.65 96 -> 128: 3.0e-6 at 1096                         (3.425 96 -> 128: 1.2e-2 at 375)
+So the 13-node states blow up toward low D, at the same place. I cannot rule out from here that this is the Mac's alone
+(no other machine has lifted these starts): the same script on the cloud for 3.425 and 3.45 would settle it in under a
+minute. On wip/highm-mac (6cd19a0): the log, the points file, the failed pass-1 state, the script and its log.
+How to go on? My suggestion: run 3.5, 3.55, 3.4 and 3.65 now (starts 1e-7 to 3e-6, the range that converged before),
+and hold 3.425, 3.45 and 3.475 until we know why, e.g. re-node them to the 15-node set first (lift --nodes=...).
