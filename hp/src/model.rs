@@ -767,6 +767,46 @@ pub fn residual<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool)
     Ok((fh, fl))
 }
 
+/// The residual in plain f64, as a double-precision code would compute it: `Fu` lanes (values, constants and the
+/// inputs rounded to f64, every operation in f64; the horizon solves with the hi parts of the double-double LU
+/// factors, as in `jacobian_f64`), the mismatches formed in f64. For measuring what double precision does to the
+/// solution (hp/f64_delta.py); not used by any solver path.
+pub fn residual_f64<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool) -> Result<Vec<f64>, String> {
+    let l = ctx.len();
+    let m = Ctx::<B>::M;
+    assert_eq!(zh.len(), l);
+    let delta = delta_of(zh, zl);
+    let lus = horizon_lus(ctx, &ctx.fld(zh, zl, ctx.off_ah()), delta, par, DD::ZERO)?;
+    let z = Fl::<DV, B>::zero();
+    let one_block = |b: usize| -> State<Fu, B> {
+        let inp: Vec<Fl<Fu, B>> = ctx.block_inputs(b).iter().map(|&o| Fl::<Fu, B>::from_vt(&ctx.fld(zh, zl, o), &z)).collect();
+        block_state::<Fu, B>(ctx, b, &inp, Fu::from_vt(DV::splat(delta), DV::zero()), &lus, &lus)
+    };
+    let nb = ctx.k() + 1;
+    let states: Vec<State<Fu, B>> = if par { (0..nb).into_par_iter().map(one_block).collect() } else { (0..nb).map(one_block).collect() };
+    let mut f = vec![0.0; l];
+    let kb = ctx.k();
+    for (b, s) in states.iter().enumerate() {
+        let t = ctx.block_target(b);
+        for q in 0..4 {
+            // the state (f64 values) minus the target rounded to f64, in f64
+            let sv = s[q].val();
+            let tv = ctx.fld(zh, zl, t + q * m);
+            let dh: Vec<f64> = (0..m).map(|i| sv.get(i).hi - tv.get(i).hi).collect();
+            let mut d = Fl::<DV, B>::load(&dh, &vec![0.0; m]);
+            if let (true, 0, Some((lo, hi))) = (b == kb, q, &ctx.freeze) {
+                d = lo.apply(&d) + hi.apply(&ctx.fld(zh, zl, 0));
+            }
+            let o = b * 4 * m + q * m;
+            for i in 0..m {
+                f[o + i] = d.get(i).hi;
+            }
+        }
+    }
+    f[l - 1] = phase_row(ctx, &ctx.fld(zh, zl, 0)).hi;
+    Ok(f)
+}
+
 /// Exact Jacobian dF/dz by forward-mode duals, column-major with leading dimension ld_for(L): (hi, lo, ld).
 pub fn jacobian<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool) -> Result<(Vec<f64>, Vec<f64>, usize), String> {
     jacobian_lanes::<Du, B>(ctx, zh, zl, par)

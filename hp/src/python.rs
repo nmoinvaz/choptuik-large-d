@@ -29,6 +29,8 @@ trait Api: Send + Sync {
     fn len(&self) -> usize;
     fn m(&self) -> usize;
     fn residual(&self, zh: &[f64], zl: &[f64]) -> Result<V, String>;
+    /// the residual in plain f64 (model::residual_f64)
+    fn residual_f64(&self, zh: &[f64], zl: &[f64]) -> Result<Vec<f64>, String>;
     fn jacobian(&self, zh: &[f64], zl: &[f64]) -> Result<(Vec<f64>, Vec<f64>, usize), String>;
     /// f64 Jacobian, column-major: (J, ld); `F64Jac` the lanes; mutate: Ctx::mutate for this call (0 = none)
     fn jacobian_f64(&mut self, zh: &[f64], zl: &[f64], mutate: u8, how: F64Jac) -> Result<(Vec<f64>, usize), String>;
@@ -80,6 +82,9 @@ impl<const B: usize> Api for Ctx<B> {
     }
     fn residual(&self, zh: &[f64], zl: &[f64]) -> Result<V, String> {
         model::residual(self, zh, zl, true)
+    }
+    fn residual_f64(&self, zh: &[f64], zl: &[f64]) -> Result<Vec<f64>, String> {
+        model::residual_f64(self, zh, zl, true)
     }
     fn jacobian(&self, zh: &[f64], zl: &[f64]) -> Result<(Vec<f64>, Vec<f64>, usize), String> {
         model::jacobian(self, zh, zl, true)
@@ -436,6 +441,24 @@ impl Solver {
         let (api, pool) = (&self.api, &self.pool);
         let (fh, fl) = py.detach(|| pool.install(|| api.residual(h, l))).map_err(PyValueError::new_err)?;
         Ok((arr(py, fh), arr(py, fl)))
+    }
+
+    /// The residual computed in plain double precision, as a double-precision code would (model::residual_f64): every
+    /// operation in f64, the inputs rounded to f64. For measuring what double precision does to Delta
+    /// (hp/f64_delta.py); the solvers never use it.
+    fn residual_f64<'py>(
+        &self,
+        py: Python<'py>,
+        zh: PyReadonlyArray1<'py, f64>,
+        zl: PyReadonlyArray1<'py, f64>,
+    ) -> PyResult<Bound<'py, PyArray1<f64>>> {
+        let (h, l) = (slice(&zh, "zh")?, slice(&zl, "zl")?);
+        if h.len() != self.api.len() || l.len() != self.api.len() {
+            return Err(PyValueError::new_err(format!("z must have length {}", self.api.len())));
+        }
+        let (api, pool) = (&self.api, &self.pool);
+        let f = py.detach(|| pool.install(|| api.residual_f64(h, l))).map_err(PyValueError::new_err)?;
+        Ok(arr(py, f))
     }
 
     /// Full Jacobian as two (L, L) arrays (row index = residual, column = unknown).
