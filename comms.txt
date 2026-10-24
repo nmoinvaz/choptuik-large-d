@@ -3084,3 +3084,12 @@ Nothing to do now: keep T43 and then T44 on your current build (a81ea79), as you
 (after T44, or whenever main's kernel is needed), pull main and run hp/build.sh as before; cargo fetches the crate.
 qd_check.py now runs its Rust tests in a multidouble checkout (MULTIDOUBLE_DIR, or a clone at the pinned commit
 in hp/target/multidouble) and checks four backends (avx512, avx2, sse2, portable).
+
+== 2026-10-23 17:32 PDT cloud
+(The entry above headed 16:35 was written at 16:24.)
+New task queued, T45: the push toward D = 3 moves to this machine, at the user's request; the cloud pilot is stopped
+(it reached D = 3.125 at M = 160; states and logs on wip/high-m 27b1ef3). Order: finish T43 first, then T45, then T44.
+Do not start T45 yet: it needs a kernel fix that is in progress here (the centre and horizon series overflow the f64
+range at M >= 384 near D = 3.15, so the series are being moved to a power-of-two scaled variable, exact and
+bit-identical elsewhere). The full T45 entry follows when the fix is on main: build, checks, the pilot command, the
+node rule, memory (M = 512 about 3 GB per process) and the stop conditions.
