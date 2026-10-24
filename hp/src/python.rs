@@ -934,64 +934,8 @@ impl Solver {
     }
 }
 
-/// Dense double-double LU solve of a general (n, n) system (row-major hi / lo), for tests.
-#[pyfunction]
-fn dd_solve<'py>(
-    py: Python<'py>,
-    ah: PyReadonlyArray2<'py, f64>,
-    al: PyReadonlyArray2<'py, f64>,
-    bh: PyReadonlyArray1<'py, f64>,
-    bl: PyReadonlyArray1<'py, f64>,
-) -> PyResult<(Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<f64>>)> {
-    let ahs = ah.as_slice().map_err(|_| PyValueError::new_err("contiguous"))?;
-    let als = al.as_slice().map_err(|_| PyValueError::new_err("contiguous"))?;
-    let n = bh.len()?;
-    let ld = crate::linalg::ld_for(n);
-    let mut h = vec![0.0; ld * n];
-    let mut l = vec![0.0; ld * n];
-    for r in 0..n {
-        for c in 0..n {
-            h[c * ld + r] = ahs[r * n + c];
-            l[c * ld + r] = als[r * n + c];
-        }
-    }
-    let lu = DDLu::factor(n, ld, h, l, false).map_err(PyValueError::new_err)?;
-    let (b1, b2) = (slice(&bh, "bh")?, slice(&bl, "bl")?);
-    let mut b: Vec<DD> = b1.iter().zip(b2).map(|(&a, &c)| DD { hi: a, lo: c }).collect();
-    lu.solve(&mut b);
-    Ok((arr(py, b.iter().map(|v| v.hi).collect()), arr(py, b.iter().map(|v| v.lo).collect())))
-}
-
-/// Elementwise double-double ops on (hi, lo) arrays for tests: op 0 add, 1 mul, 2 div.
-#[pyfunction]
-fn dd_op<'py>(
-    py: Python<'py>,
-    op: u8,
-    ah: PyReadonlyArray1<'py, f64>,
-    al: PyReadonlyArray1<'py, f64>,
-    bh: PyReadonlyArray1<'py, f64>,
-    bl: PyReadonlyArray1<'py, f64>,
-) -> PyResult<(Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<f64>>)> {
-    let (a1, a2, b1, b2) = (slice(&ah, "ah")?, slice(&al, "al")?, slice(&bh, "bh")?, slice(&bl, "bl")?);
-    let n = a1.len();
-    if n % 8 != 0 {
-        return Err(PyValueError::new_err("length must be a multiple of 8"));
-    }
-    let mut oh = vec![0.0; n];
-    let mut ol = vec![0.0; n];
-    for i in (0..n).step_by(8) {
-        let a = DV::load(&a1[i..i + 8], &a2[i..i + 8]);
-        let b = DV::load(&b1[i..i + 8], &b2[i..i + 8]);
-        let r = match op {
-            0 => a + b,
-            1 => a * b,
-            _ => a / b,
-        };
-        r.store(&mut oh[i..i + 8], &mut ol[i..i + 8]);
-    }
-    Ok((arr(py, oh), arr(py, ol)))
-}
-
+/// the SIMD backend this kernel was compiled for (multidouble's compile-time backend; the generic double-double
+/// functions dd_op and dd_solve moved to multidouble's Python package)
 #[pyfunction]
 fn isa() -> &'static str {
     V8::ISA
@@ -1000,8 +944,6 @@ fn isa() -> &'static str {
 #[pymodule]
 fn _hpkernel(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Solver>()?;
-    m.add_function(wrap_pyfunction!(dd_solve, m)?)?;
-    m.add_function(wrap_pyfunction!(dd_op, m)?)?;
     m.add_function(wrap_pyfunction!(isa, m)?)?;
     let _ = <DV as crate::lane::BaseLane>::TANGENT;
     Ok(())

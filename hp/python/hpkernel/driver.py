@@ -13,7 +13,14 @@ import time
 import mpmath as mp
 import numpy as np
 
+from multidouble import dd_add, dd_axpy, dd_from_mp, dd_norm, dd_scale, two_sum  # noqa: F401
+from multidouble import two_prod as _two_prod  # noqa: F401
+
 from ._hpkernel import Solver
+
+# The double-double helpers above (numpy, elementwise) are multidouble's Python package (github.com/nmoinvaz/multidouble,
+# python/; hp/pyproject.toml pins it), the same float64 expressions as before; re-exported here under their old names
+# for the scripts that import them from this module.
 
 # The f64 solver's directory (for seed_from_f64): $DSS_SOLVER_DIR, else ../../../solver from this file when the package
 # runs from the source tree, else the cloud checkout.
@@ -24,35 +31,6 @@ NODES_OLD = [0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6, 0.7]
 # the kernel's dense n x n paths (jacobian, newton, lm_steps, mode_det, ...) stop at this M; above it only
 # Solver.newton_mixed runs, in block storage (python.rs DENSE_M_MAX, notes/HIGH_M.md)
 DENSE_M_MAX = 128
-
-
-# ------------------------------------------------------------------ double-double helpers (numpy, elementwise)
-def two_sum(a, b):
-    s = a + b
-    bb = s - a
-    return s, (a - (s - bb)) + (b - bb)
-
-
-def dd_add(ah, al, bh, bl):
-    s, e = two_sum(ah, bh)
-    t, f = two_sum(al, bl)
-    e = e + t
-    h = s + e
-    e = e - (h - s)
-    e = e + f
-    h2 = h + e
-    return h2, e - (h2 - h)
-
-
-def dd_from_mp(v):
-    v = list(v)
-    hi = np.array([float(x) for x in v])
-    lo = np.array([float(x - mp.mpf(h)) for x, h in zip(v, hi)])
-    return hi, lo
-
-
-def dd_norm(h, l):
-    return float(np.max(np.abs(h + l))) if len(h) else 0.0
 
 
 # ------------------------------------------------------------------ grid
@@ -180,35 +158,6 @@ HORIZON_DD = 4
 # defaults of the correction loop (gmres_refine): 3-6 products per step away from the floor, up to ~30 near it at
 # D >= 40, where 12 sent the deflated Newton to exact steps (dd_finish) too often (notes/LARGE_D_MIXED.md section 5)
 GMRES = dict(max_products=30, step_tol=1e-10, confirm=1)
-
-
-_SPLIT = 134217729.0  # 2^27 + 1
-
-
-def _two_prod(a, b):
-    """a b = p + e exactly (Dekker), elementwise"""
-    p = a * b
-    t = _SPLIT * a
-    ah = t - (t - a)
-    al = a - ah
-    t = _SPLIT * b
-    bh = t - (t - b)
-    bl = b - bh
-    return p, ((ah * bh - p) + ah * bl + al * bh) + al * bl
-
-
-def dd_scale(xh, xl, a):
-    """a (xh + xl) in double-double, a an f64 scalar"""
-    p, e = _two_prod(np.full_like(xh, a), xh)
-    e = e + a * xl
-    h = p + e
-    return h, e - (h - p)
-
-
-def dd_axpy(a, xh, xl, yh, yl):
-    """y + a x in double-double, a an f64 scalar"""
-    ph, pl = dd_scale(xh, xl, a)
-    return dd_add(yh, yl, ph, pl)
 
 
 def gmres_refine(s, zh, zl, bh, bl, max_products=30, step_tol=1e-10, confirm=1, cut=True, verbose=False, ref=None):

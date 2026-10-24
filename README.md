@@ -2156,12 +2156,13 @@ src/
 python/rustkernel/  Python wrapper, RustResidual
 tests/              bindings test
 hp/                 double-double solver (crate hpkernel)
-├── Cargo.toml      the arithmetic comes from the multidouble crate (github.com/nmoinvaz/multidouble), pinned to a
-│                   commit: double-double and quad-double, scalar and 8-lane SIMD (AVX-512 / AVX2 / SSE2 / NEON /
+├── Cargo.toml      the arithmetic comes from the multidouble crate (crates.io, version 1.0.0; on the compile-time
+│                   backend): double-double and quad-double, scalar and 8-lane SIMD (AVX-512 / AVX2 / SSE2 / NEON /
 │                   portable), dual lanes and the double-double LU; hp re-exports its modules (hpkernel::dd, ::dv, ...)
 ├── src/lane.rs     hp's Lane trait over multidouble's dual lanes: adds the D-matrix product of each lane type
 ├── src/model.rs    centre series, Taylor stepping, horizon series, residual, Jacobian (double-double and f64)
-├── python/hpkernel/driver.py   grid, seeds, Newton, deflated Newton, Levenberg-Marquardt, re-noding
+├── python/hpkernel/driver.py   grid, seeds, Newton, deflated Newton, Levenberg-Marquardt, re-noding (its numpy
+│                   double-double helpers come from multidouble's Python package, which build.sh installs)
 ├── src/field.rs    tau fields on the half grid, folded spectral derivative; the many-right-hand-side LU solves
 ├── src/lib.rs      crate root
 ├── src/python.rs   PyO3 bindings (Solver)

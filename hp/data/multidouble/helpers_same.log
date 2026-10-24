@@ -1,0 +1,27 @@
+# python3 hp/data/multidouble/helpers_same.py <driver.py of 649ec63> (the old helpers) against multidouble's package at 57ecf20
+emax    5 two_sum   bitwise equal
+emax    5 dd_add    bitwise equal
+emax    5 two_prod  bitwise equal
+emax    5 dd_scale  bitwise equal
+emax    5 dd_axpy   bitwise equal
+emax    5 dd_norm   bitwise equal
+emax  200 two_sum   bitwise equal
+emax  200 dd_add    bitwise equal
+emax  200 two_prod  bitwise equal
+emax  200 dd_scale  bitwise equal
+emax  200 dd_axpy   bitwise equal
+emax  200 dd_norm   bitwise equal
+emax  900 two_sum   bitwise equal
+emax  900 dd_add    bitwise equal
+emax  900 two_prod  bitwise equal
+emax  900 dd_scale  bitwise equal
+emax  900 dd_axpy   bitwise equal
+emax  900 dd_norm   bitwise equal
+emax  990 two_sum   bitwise equal
+emax  990 dd_add    bitwise equal
+emax  990 two_prod  bitwise equal
+emax  990 dd_scale  bitwise equal
+emax  990 dd_axpy   bitwise equal
+emax  990 dd_norm   bitwise equal
+control (low parts perturbed): caught
+PASS

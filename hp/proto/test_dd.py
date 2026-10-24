@@ -1,5 +1,6 @@
 import numpy as np, mpmath as mp
-import hpkernel as hk
+import hpkernel
+import multidouble as hk  # dd_op and dd_solve moved from hpkernel to multidouble's Python package
 mp.mp.dps = 50
 rng = np.random.default_rng(0)
 def split(v):
@@ -22,4 +23,4 @@ x = mp.lu_solve(A, bb)
 Ah, Al = split([A[i, j] for i in range(n) for j in range(n)])
 Bh, Bl = split(list(bb))
 xh, xl = hk.dd_solve(Ah.reshape(n, n), Al.reshape(n, n), Bh, Bl)
-print("dd_solve max err", float(max(abs(u - v) for u, v in zip(tomp(xh, xl), list(x)))), "isa", hk.isa())
+print("dd_solve max err", float(max(abs(u - v) for u, v in zip(tomp(xh, xl), list(x)))), "isa", hk.isa(), "hpkernel isa", hpkernel.isa())

@@ -1,0 +1,59 @@
+# highm_check.py converge --M=48 with the old driver helpers and with multidouble's (same 1.0.0 kernel build): identical apart from timings
+## old helpers
+ dense:
+  newton 0: |F| 1.16e-05 |dz| 1.55e-02 lam 0.5 dDelta -2.57e-06 Delta 3.465199876045193 piv 1.8e-03..1.0e+03  t 1.4s
+  newton 1: |F| 9.09e-06 |dz| 6.69e-03 lam 1 dDelta +9.07e-08 Delta 3.465199966752138 piv 1.8e-03..4.8e+02  t 2.6s
+  newton 2: |F| 2.62e-06 |dz| 1.34e-03 lam 1 dDelta +1.48e-06 Delta 3.465201444508494 piv 1.8e-03..3.5e+01  t 3.7s
+  newton 3: |F| 7.70e-09 |dz| 5.13e-07 lam 1 dDelta +2.56e-09 Delta 3.465201447069613 piv 1.8e-03..3.5e+01  t 5.1s
+  newton 4: |F| 1.56e-13 |dz| 6.66e-12 lam 1 dDelta +8.06e-15 Delta 3.465201447069621 piv 1.8e-03..3.5e+01  t 6.4s
+  newton 5: |F| 9.83e-23 |dz| 1.70e-18 lam 1 dDelta -5.34e-23 Delta 3.465201447069621 piv 1.8e-03..3.5e+01  t 7.7s
+  newton 6: |F| 2.45e-30 converged (last |dz| 1.9e-26) Delta 3.465201447069621; last step taken, |F| 1.11e-30
+ block:
+  newton 0: |F| 1.16e-05 |dz| 1.55e-02 lam 0.5 dDelta -2.57e-06 Delta 3.465199876045193 piv 1.8e-03..1.0e+03  t 1.0s
+  newton 1: |F| 9.09e-06 |dz| 6.69e-03 lam 1 dDelta +9.07e-08 Delta 3.465199966752137 piv 1.8e-03..4.8e+02  t 1.8s
+  newton 2: |F| 2.62e-06 |dz| 1.34e-03 lam 1 dDelta +1.48e-06 Delta 3.465201444508466 piv 1.8e-03..3.5e+01  t 2.8s
+  newton 3: |F| 7.70e-09 |dz| 5.13e-07 lam 1 dDelta +2.56e-09 Delta 3.465201447069613 piv 1.8e-03..3.5e+01  t 3.7s
+  newton 4: |F| 1.56e-13 |dz| 6.63e-12 lam 1 dDelta +8.06e-15 Delta 3.465201447069621 piv 1.8e-03..3.5e+01  t 4.8s
+  newton 5: |F| 3.69e-23 |dz| 1.34e-18 lam 1 dDelta -3.62e-22 Delta 3.465201447069621 piv 1.8e-03..3.5e+01  t 5.6s
+  newton 6: |F| 2.27e-30 converged (last |dz| 2.3e-26) Delta 3.465201447069621; last step taken, |F| 2.98e-30
+ control:
+  newton 0: |F| 9.58e-06 |dz| 1.27e-02 lam 0.5 dDelta -7.08e-07 Delta 3.465199738867546 piv 1.8e-03..8.9e+02  t 1.2s
+  newton 1: |F| 7.22e-06 |dz| 5.21e-03 lam 1 dDelta +8.54e-07 Delta 3.465200592764500 piv 1.8e-03..4.3e+02  t 2.5s
+  newton 2: |F| 2.38e-06 |dz| 1.31e-03 lam 1 dDelta +8.54e-07 Delta 3.465201447237088 piv 1.8e-03..3.5e+01  t 3.7s
+  newton 3: |F| 7.72e-09 |dz| 3.54e-07 lam 1 dDelta -1.67e-10 Delta 3.465201447069617 piv 1.8e-03..3.5e+01  t 4.9s
+  newton 4: |F| 6.95e-14 |dz| 4.04e-12 lam 1 dDelta +3.74e-15 Delta 3.465201447069621 piv 1.8e-03..3.5e+01  t 6.1s
+  newton 5: |F| 2.53e-23 |dz| 8.57e-19 lam 1 dDelta +5.53e-24 Delta 3.465201447069621 piv 1.8e-03..3.5e+01  t 7.1s
+  newton 6: |F| 2.06e-30 converged (last |dz| 8.3e-27) Delta 3.465201447069621; last step taken, |F| 9.06e-31
+  dense   : 7 Newton calls, |F| 1.1e-30, 8.9 s, Delta 3.4652014470696213 -6.187e-17
+  block   : 7 Newton calls, |F| 3.0e-30, 6.6 s, Delta 3.4652014470696213 -6.187e-17
+  control : 7 Newton calls, |F| 9.1e-31, 8.5 s, Delta 3.4652014470696213 -6.187e-17
+  block vs dense: Delta 3.8e-31, max|dz|/max|z| 9.1e-29; control (dense, two starts) 8.2e-32, 1.4e-28 -> PASS
+## multidouble's helpers
+ dense:
+  newton 0: |F| 1.16e-05 |dz| 1.55e-02 lam 0.5 dDelta -2.57e-06 Delta 3.465199876045193 piv 1.8e-03..1.0e+03  t 1.4s
+  newton 1: |F| 9.09e-06 |dz| 6.69e-03 lam 1 dDelta +9.07e-08 Delta 3.465199966752138 piv 1.8e-03..4.8e+02  t 2.6s
+  newton 2: |F| 2.62e-06 |dz| 1.34e-03 lam 1 dDelta +1.48e-06 Delta 3.465201444508494 piv 1.8e-03..3.5e+01  t 3.8s
+  newton 3: |F| 7.70e-09 |dz| 5.13e-07 lam 1 dDelta +2.56e-09 Delta 3.465201447069613 piv 1.8e-03..3.5e+01  t 5.0s
+  newton 4: |F| 1.56e-13 |dz| 6.66e-12 lam 1 dDelta +8.06e-15 Delta 3.465201447069621 piv 1.8e-03..3.5e+01  t 6.1s
+  newton 5: |F| 9.83e-23 |dz| 1.70e-18 lam 1 dDelta -5.34e-23 Delta 3.465201447069621 piv 1.8e-03..3.5e+01  t 7.2s
+  newton 6: |F| 2.45e-30 converged (last |dz| 1.9e-26) Delta 3.465201447069621; last step taken, |F| 1.11e-30
+ block:
+  newton 0: |F| 1.16e-05 |dz| 1.55e-02 lam 0.5 dDelta -2.57e-06 Delta 3.465199876045193 piv 1.8e-03..1.0e+03  t 1.0s
+  newton 1: |F| 9.09e-06 |dz| 6.69e-03 lam 1 dDelta +9.07e-08 Delta 3.465199966752137 piv 1.8e-03..4.8e+02  t 2.1s
+  newton 2: |F| 2.62e-06 |dz| 1.34e-03 lam 1 dDelta +1.48e-06 Delta 3.465201444508466 piv 1.8e-03..3.5e+01  t 2.9s
+  newton 3: |F| 7.70e-09 |dz| 5.13e-07 lam 1 dDelta +2.56e-09 Delta 3.465201447069613 piv 1.8e-03..3.5e+01  t 3.8s
+  newton 4: |F| 1.56e-13 |dz| 6.63e-12 lam 1 dDelta +8.06e-15 Delta 3.465201447069621 piv 1.8e-03..3.5e+01  t 4.7s
+  newton 5: |F| 3.69e-23 |dz| 1.34e-18 lam 1 dDelta -3.62e-22 Delta 3.465201447069621 piv 1.8e-03..3.5e+01  t 5.5s
+  newton 6: |F| 2.27e-30 converged (last |dz| 2.3e-26) Delta 3.465201447069621; last step taken, |F| 2.98e-30
+ control:
+  newton 0: |F| 9.58e-06 |dz| 1.27e-02 lam 0.5 dDelta -7.08e-07 Delta 3.465199738867546 piv 1.8e-03..8.9e+02  t 1.1s
+  newton 1: |F| 7.22e-06 |dz| 5.21e-03 lam 1 dDelta +8.54e-07 Delta 3.465200592764500 piv 1.8e-03..4.3e+02  t 2.2s
+  newton 2: |F| 2.38e-06 |dz| 1.31e-03 lam 1 dDelta +8.54e-07 Delta 3.465201447237088 piv 1.8e-03..3.5e+01  t 3.4s
+  newton 3: |F| 7.72e-09 |dz| 3.54e-07 lam 1 dDelta -1.67e-10 Delta 3.465201447069617 piv 1.8e-03..3.5e+01  t 4.5s
+  newton 4: |F| 6.95e-14 |dz| 4.04e-12 lam 1 dDelta +3.74e-15 Delta 3.465201447069621 piv 1.8e-03..3.5e+01  t 5.8s
+  newton 5: |F| 2.53e-23 |dz| 8.57e-19 lam 1 dDelta +5.53e-24 Delta 3.465201447069621 piv 1.8e-03..3.5e+01  t 7.0s
+  newton 6: |F| 2.06e-30 converged (last |dz| 8.3e-27) Delta 3.465201447069621; last step taken, |F| 9.06e-31
+  dense   : 7 Newton calls, |F| 1.1e-30, 8.5 s, Delta 3.4652014470696213 -6.187e-17
+  block   : 7 Newton calls, |F| 3.0e-30, 6.4 s, Delta 3.4652014470696213 -6.187e-17
+  control : 7 Newton calls, |F| 9.1e-31, 8.1 s, Delta 3.4652014470696213 -6.187e-17
+  block vs dense: Delta 3.8e-31, max|dz|/max|z| 9.1e-29; control (dense, two starts) 8.2e-32, 1.4e-28 -> PASS

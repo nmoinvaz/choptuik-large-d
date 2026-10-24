@@ -6,7 +6,8 @@ build-backend = "maturin"
 name = "hpkernel"
 version = "0.1.0"
 requires-python = ">=3.9"
-dependencies = ["numpy"]
+# multidouble: its Python package (the double-double helpers the driver uses), from the repository at a fixed commit
+dependencies = ["numpy", "multidouble @ git+https://github.com/nmoinvaz/multidouble@57ecf20eb0d2d2f78688d267f9565b2d264591d7#subdirectory=python"]
 
 [tool.maturin]
 python-source = "python"
