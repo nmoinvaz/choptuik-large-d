@@ -1,0 +1,137 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.27
+   Compiling quote v1.0.47
+   Compiling crossbeam-utils v0.8.23
+   Compiling crossbeam-epoch v0.9.21
+   Compiling serde_core v1.0.229
+   Compiling zerocopy v0.8.63
+   Compiling crossbeam-deque v0.8.8
+   Compiling shlex v2.0.1
+   Compiling zmij v1.0.23
+   Compiling autocfg v1.5.1
+   Compiling rayon-core v1.13.0
+   Compiling find-msvc-tools v0.1.15
+   Compiling either v1.19.0
+   Compiling serde v1.0.229
+   Compiling cc v1.10.0
+   Compiling num-traits v0.2.19
+   Compiling serde_json v1.0.154
+   Compiling cfg-if v1.0.5
+   Compiling libc v0.2.191
+   Compiling itoa v1.0.18
+   Compiling memchr v2.8.3
+   Compiling anstyle v1.0.14
+   Compiling clap_lex v1.1.1
+   Compiling regex-syntax v0.8.11
+   Compiling plotters-backend v0.3.7
+   Compiling ciborium-io v0.2.2
+   Compiling syn v2.0.119
+   Compiling syn v3.0.9
+   Compiling plotters-svg v0.3.7
+   Compiling clap_builder v4.6.7
+   Compiling itertools v0.13.0
+   Compiling cast v0.3.0
+   Compiling alloca v0.4.0
+   Compiling rayon v1.12.0
+   Compiling same-file v1.0.6
+   Compiling regex-automata v0.4.18
+   Compiling walkdir v2.5.0
+   Compiling criterion-plot v0.8.2
+   Compiling plotters v0.3.7
+   Compiling serde_derive v1.0.229
+   Compiling clap v4.6.7
+   Compiling page_size v0.6.0
+   Compiling anes v0.1.6
+   Compiling oorandom v11.1.5
+   Compiling regex v1.13.1
+   Compiling multidouble v1.0.0 (/Users/nathan/Source/multidouble-1.0.0)
+   Compiling zerocopy-derive v0.8.63
+   Compiling tinytemplate v1.2.1
+   Compiling half v2.7.1
+   Compiling ciborium-ll v0.2.2
+   Compiling ciborium v0.2.2
+   Compiling criterion v0.8.2
+    Finished `release` profile [optimized] target(s) in 47.93s
+     Running unittests src/lib.rs (target/release/deps/multidouble-743798578973878e)
+
+running 15 tests
+test linalg::bench::bench_lu ... ignored
+test qd_tests::bench_qd ... ignored
+test qd_tests::qd_diag_accumulator ... ignored
+test qd_tests::qd_diag_accurate_add ... ignored
+test qd_tests::qd_dump ... ignored
+test qd_tests::qd_constants ... ok
+test qd_tests::qd_ieee_add_regression ... ok
+test simd::tests::dispatch_runs_the_backends_it_names ... ok
+test linalg::tests::every_backend_gives_the_same_bits ... ok
+test linalg::tests::solve_many_is_bitwise_solve ... ok
+test linalg::tests::f64_lu_solves ... ok
+test linalg::tests::blocked_lu_matches_getf2 ... ok
+test qd_tests::qd_accumulator ... ok
+test qd_tests::qd_decimal_io ... ok
+test qd_tests::qd_accuracy ... ok
+
+test result: ok. 10 passed; 0 failed; 5 ignored; 0 measured; 0 filtered out; finished in 0.97s
+
+     Running tests/dd.rs (target/release/deps/dd-c76e5c2d6c5f1c94)
+
+running 6 tests
+test small_identities ... ok
+test controls_fire ... ok
+test div_within_bound ... ok
+test mul_within_bound ... ok
+test error_free_transformations_are_exact ... ok
+test add_and_sub_within_bounds ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/dual.rs (target/release/deps/dual-dfac10c709754a28)
+
+running 10 tests
+test control_wrong_derivative_is_caught ... ok
+test is_pwr2_accepts_normal_powers_of_two_only ... ok
+test controls_on_mul_pwr2_are_caught ... ok
+test fu_is_plain_f64_forward_mode ... ok
+test values_match_the_scalar_formula ... ok
+test dtn_gives_both_partials_in_one_pass ... ok
+test du_gives_exact_partial_derivatives ... ok
+test controls_on_bcast_are_caught ... ok
+test every_lane_method_on_every_lane_type ... ok
+test mul_pwr2_is_exact_on_every_lane_type ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/lanes.rs (target/release/deps/lanes-5ae83aa473bd6a4d)
+
+running 6 tests
+test backends_are_reported ... ok
+test div_model_matches_div_and_controls_are_caught ... ok
+test v8_matches_f64 ... ok
+test div_by_matches_div ... ok
+test dv_matches_dd ... ok
+test qv_matches_qd ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running tests/linalg.rs (target/release/deps/linalg-df53ab192b9ae542)
+
+running 7 tests
+test singular_matrix_is_reported ... ok
+test determinant_of_a_triangular_matrix ... ok
+test control_perturbed_factor_is_caught ... ok
+test gram_matrix_is_j_transpose_j ... ok
+test solve_many_is_bitwise_the_single_solves ... ok
+test f64_factorization_solves_to_f64_accuracy ... ok
+test solves_recover_the_solution ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+   Doc-tests multidouble
+
+running 3 tests
+test src/lib.rs - (line 28) ... ok
+test src/lib.rs - ReadmeDoctests (line 101) ... ok
+test src/lib.rs - ReadmeDoctests (line 134) ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.83s
+
