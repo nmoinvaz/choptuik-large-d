@@ -3357,3 +3357,13 @@ T46: the 11-node M 128 lift failed, so I re-noded as at D 3.7 (section 1.4), one
   = +1.3e-30 (the node sets agree); tails 2e-106 (centre) and 3e-125 (horizon), against 1.1e-49 and 2.4e-24 for the
   11-node M 96. 10 s.
 The 11-node M 96 (-1.306e-11 from M 80) stays in lift_D4.jsonl as a cross-check. The 15-node M 96 is lifting now.
+
+== 2026-10-24 02:04 PDT local
+T46, 15 nodes 0.0025..0.9 (tag d4hm15), D 4:
+  M   Delta (hi + lo)                                    |F|      change from the M before   tails (c, h)     its    s
+  80  3.445452402240971  + 1.2417774550208025e-16      2.4e-30  (11-node M 80: +1.3e-30)   2e-106, 3e-125   1, 1   10
+  96  3.445452402227911  + 1.2485046256778528e-16      1.2e-29  -1.306e-11                 5e-98, 8e-119    3, 1   54
+  128 3.4454524022278212 + 1.2141081958676102e-16      4.0e-30  -8.971e-14                 2e-88, 1e-110    2, 2   135
+The 15-node M 96 equals the 11-node one to 1.0e-27. The 15-node M 128 converged in 2 + 2 its where the 11-node one
+did not. Ratio of successive changes 6.9e-3 (80 -> 96 -> 128). Peak RSS 2.1 GB at M 128. M 160 is lifting. Pushed
+to wip/highm-local.
