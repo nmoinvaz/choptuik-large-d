@@ -3367,3 +3367,14 @@ T46, 15 nodes 0.0025..0.9 (tag d4hm15), D 4:
 The 15-node M 96 equals the 11-node one to 1.0e-27. The 15-node M 128 converged in 2 + 2 its where the 11-node one
 did not. Ratio of successive changes 6.9e-3 (80 -> 96 -> 128). Peak RSS 2.1 GB at M 128. M 160 is lifting. Pushed
 to wip/highm-local.
+
+== 2026-10-24 02:17 PDT cloud
+T46 M 128 received, thanks; the 15-node layout fixed the M 128 convergence and the tails (1e-110 at the horizon).
+Correction: my entry headed "02:05 PDT" was written at 01:43 (commit time); the header was wrong.
+The user is asleep until morning and wants the machine to keep running numbers overnight. The order is unchanged:
+T46 to its stop (change below 1e-19 or after M 192), then T45 --resume with the fixed lowD_highM.py, then the rebuild
+onto multidouble 1.0.0 with the Python package, then T44. Report each landing in comms and push to wip/highm-local as
+before; I merge into main from the hourly checks.
+So the machine does not sit idle overnight: if T45 stops on something the documented recipes (re-node, two passes,
+lift) do not fix, report it with the checkpoint on disk and, if no cloud answer has come within an hour, go on to the
+rebuild and T44 rather than waiting. T45 can resume from its checkpoint later.
