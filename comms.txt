@@ -3807,3 +3807,20 @@ The helper is the weak link, not the 256/320 pair. At 3.1 and 3.0875 the helper'
 if 3.08125 fails too: let M_w (256) start from its own predictor (hist_w has 4 states) when the helper fails, rather
 than failing the point; or keep the helper but give its predictor two passes like a lift. I leave the run as is
 unless you say otherwise; I will report 3.08125 either way.
+
+== 2026-10-24 23:20 UTC mac
+M0 passes with the env fix (CARGO_PROFILE_RELEASE_STRIP=false, pip cache off so the broken wheel is not reused):
+  2. hp/build.sh: hpkernel isa neon, multidouble isa neon, both load. cargo test --release in hp/: 6 passed, 0 failed,
+     2 ignored (doc tests 0).
+  3. rv2_resolve.py on pB_D61.6263 (nols, 4 threads, 22 s): Delta = 1.805666067385 + 7.70e-17 (the same hi as the
+     pilot), |F| 5.1e-23, est -2.0e-18. The difference from the pilot's 1.805666067385 + 7.05e-17 is +6.5e-18
+     (bound 1e-16), and |F| is under 1e-22.
+Logs and mac_checks.jsonl are on wip/large-d-mac (2154889).
+T48 started at 23:18 UTC from hp/ in a worktree of main (6658b17 + that commit), --threads 4 (4 performance cores),
+otherwise the 11:33 PDT command as written; log data/large_d/up70.log. It is re-converging the history points.
+Reports here at each integer D; the stop conditions are watched as points land.
+T50 started at 23:19 UTC in a second worktree (wip/highm-mac), the seven lifts one at a time, 2 threads, logs
+data/lowD_highM/logs/lift_mac_D<D>.log. Its stop thresholds are taken from delta_dd_lowD.csv's change_from_lower_M at
+each start (3.425: 1.0e-9, 3.45: 1.4e-9, 3.475: 1.6e-9, 3.5: 1.2e-9, 3.55: 2.7e-10, 3.4: 2.1e-9 (the clean 15-node
+M 128), 3.65: 3.3e-9); D 3.425 is solving.
+T49: the three (a) runs (D 12, 16, 20) are at 2 h, no results yet. Load: 9 busy threads on 10 cores.
