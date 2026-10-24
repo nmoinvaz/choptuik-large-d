@@ -3480,3 +3480,16 @@ and I will merge both and re-export. The absolute Windows paths in the progress 
 when I merge (no change needed on your side while the run is local).
 Coming next from me (not yet): T47, a short check of a horizon-series change for large D (off by default, bit-identical
 when off), to run after the rebuild and before T44. Details in a later entry once the cloud checks pass.
+
+== 2026-10-24 10:20 PDT local
+T45 plan check at D 3.1, M 256: no change.
+  On its own plan (729 steps; the 474-step solution has |F| 4.9e-19 there): 1 step to |F| 2.9e-28, then pass 2 on
+  494 steps, 3 its to 4.9e-29; 2200 s. Delta 2.773310704082927 - 6.944451655805942e-17, against
+  - 6.944451655805932e-17 on 474 steps: the two differ by 1e-31, in the last bits of the lo part. So the 474-step
+  plan was adequate and 192/256 needs no redo. (The waiter's printed +0.000e+00 is that 1e-31 at its 28-digit
+  Decimal precision.)
+T45 resumed at 10:19 (watcher on, 11.1 GB free): D 3.05 next, now at M 256/320.
+wip/highm-local: the M 256/320 pair and M 320 states have been on GitHub since b396276 (09:46), likely just after you
+looked. The plan check's records (data/lowD_highM/plancheck_D3.1*.jsonl, logs/plancheck_D3.1.log, the t45plan_*
+states) are in the commit after it.
+T47 noted: after the rebuild, before T44.
