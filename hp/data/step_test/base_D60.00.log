@@ -1,0 +1,41 @@
+(re-)converged start D=60.001952 M=32 nodes=[0.3, 0.4, 0.5, 0.6, 0.7]: Delta 1.8098842580017149 ok True (79s)
+history point D=59.865: ok True, Delta 1.8102500228650358
+history point D=59.882578: ok True, Delta 1.8102029859479660
+history point D=59.900156: ok True, Delta 1.8101559757078058
+history point D=59.922129: ok True, Delta 1.8100972490514837
+history point D=59.949595: ok True, Delta 1.8100238998997300
+history point D=59.963328: ok True, Delta 1.8099872496740668
+history point D=59.980494: ok True, Delta 1.8099414603654598
+D=60.0235 Delta=1.8098269833151450-1.01e-16 its 12 |F| 1.9e-23 115s piv 1.6e-05..1.5e+07 dDelta/dF max 8.9e+13 tails 1e-77 7e-41
+   kc 220 -> 154 (residual and Jacobian bitwise unchanged)
+D=60.0557 Delta=1.8097411455927424-7.08e-17 its 13 |F| 2.7e-23 81s piv 2.5e-05..1.6e+07 dDelta/dF max 9.1e+13 tails 2e-55 1e-40
+D=60.1041 Delta=1.8096125559255629+2.52e-18 its 17 |F| 2.9e-23 82s piv 9.9e-06..1.6e+07 dDelta/dF max 9.2e+13 tails 2e-55 1e-40
+D=60.176639: no convergence (|F| 6.4e-08); dD 0.0725625 -> 0.03628125
+D=60.1404 Delta=1.8095162455374567+1.11e-16 its 19 |F| 2.9e-23 74s piv 1.0e-05..1.6e+07 dDelta/dF max 9.3e+13 tails 2e-55 1e-40
+D=60.19478: no convergence (|F| 1.3e-08); dD 0.054421875 -> 0.0272109375
+D=60.1676 Delta=1.8094440857491436+6.10e-17 its 10 |F| 2.8e-23 93s piv 2.1e-05..1.6e+07 dDelta/dF max 9.4e+13 tails 2e-55 1e-40
+D=60.2084 Delta=1.8093359655845440+5.28e-18 its 22 |F| 4.5e-23 131s piv 1.3e-05..1.6e+07 dDelta/dF max 9.5e+13 tails 2e-55 1e-40
+D=60.26961: no convergence (|F| 2.4e-08); dD 0.061224609375 -> 0.0306123046875
+D=60.2390 Delta=1.8092549683890644+7.23e-17 its 13 |F| 2.9e-23 46s piv 1.9e-05..1.7e+07 dDelta/dF max 9.5e+13 tails 2e-55 1e-40
+D=60.284915: no convergence (|F| 2.0e-18); dD 0.04591845703125 -> 0.022959228515625
+D=60.2620 Delta=1.8091942726850800-3.07e-17 its 13 |F| 3.6e-23 53s piv 2.7e-05..1.7e+07 dDelta/dF max 9.6e+13 tails 2e-55 1e-40
+D=60.2964 Delta=1.8091033115715498+9.75e-18 its 14 |F| 3.2e-23 54s piv 2.3e-05..1.7e+07 dDelta/dF max 9.7e+13 tails 1e-55 2e-40
+D=60.348053: no convergence (|F| 4.9e-16); dD 0.051658264160156245 -> 0.025829132080078122
+D=60.3222 Delta=1.8090351572723280-5.52e-17 its 9 |F| 3.2e-23 42s piv 2.7e-05..1.7e+07 dDelta/dF max 9.9e+13 tails 1e-55 2e-40
+D=60.3610 Delta=1.8089330302089515-9.55e-17 its 16 |F| 2.0e-23 63s piv 1.8e-05..1.7e+07 dDelta/dF max 1.0e+14 tails 1e-55 1e-40
+D=60.419084: no convergence (|F| 1.6e-08); dD 0.05811554718017578 -> 0.02905777359008789
+D=60.3900 Delta=1.8088565180292682+1.09e-16 its 16 |F| 3.0e-23 63s piv 2.1e-05..1.8e+07 dDelta/dF max 1.0e+14 tails 1e-55 2e-40
+D=60.4336 Delta=1.8087418831033348-2.33e-17 its 18 |F| 2.7e-23 71s piv 1.5e-05..1.8e+07 dDelta/dF max 1.0e+14 tails 1e-55 1e-40
+D=60.498993: no convergence (|F| 4.4e-08); dD 0.06537999057769775 -> 0.032689995288848875
+D=60.4663 Delta=1.8086560123960005+7.23e-17 its 27 |F| 2.1e-23 108s piv 1.7e-05..1.8e+07 dDelta/dF max 1.1e+14 tails 1e-55 1e-40
+D=60.515338: no convergence (|F| 2.3e-12); dD 0.04903499293327331 -> 0.024517496466636656
+D=60.4908 Delta=1.8085916695483479+9.06e-17 its 14 |F| 1.8e-23 57s piv 2.2e-05..1.8e+07 dDelta/dF max 1.1e+14 tails 1e-55 9e-41
+D=60.5276 Delta=1.8084952484348049+6.96e-17 its 15 |F| 2.5e-23 61s piv 1.9e-05..1.8e+07 dDelta/dF max 1.1e+14 tails 1e-55 2e-40
+D=60.58276: no convergence (|F| 7.6e-11); dD 0.055164367049932474 -> 0.027582183524966237
+D=60.5552 Delta=1.8084230068894458-1.65e-17 its 15 |F| 3.5e-23 60s piv 2.1e-05..1.9e+07 dDelta/dF max 1.1e+14 tails 1e-55 2e-40
+D=60.596551: no convergence (|F| 8.6e-18); dD 0.04137327528744936 -> 0.02068663764372468
+D=60.5759 Delta=1.8083688661534290-1.10e-16 its 13 |F| 2.3e-23 53s piv 2.6e-05..1.9e+07 dDelta/dF max 1.1e+14 tails 1e-55 1e-40
+D=60.6069 Delta=1.8082877233423185-4.44e-17 its 14 |F| 2.6e-23 55s piv 2.3e-05..1.9e+07 dDelta/dF max 1.1e+14 tails 1e-55 2e-40
+D=60.65344: no convergence (|F| 4.0e-18); dD 0.04654493469838053 -> 0.023272467349190265
+D=60.6302 Delta=1.8082269202264440+1.01e-16 its 13 |F| 2.6e-23 53s piv 2.5e-05..1.9e+07 dDelta/dF max 1.1e+14 tails 1e-55 2e-40
+scan ended: max_points 20 (20 converged points, D = 60.630167)

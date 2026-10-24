@@ -1,0 +1,45 @@
+(re-)converged start D=45.050722 M=32 nodes=[0.3, 0.4, 0.5, 0.6]: Delta 1.8623794271957150 ok True (48s)
+history point D=44.308577: ok True, Delta 1.8658687187062890
+history point D=44.417716: ok True, Delta 1.8653485773955372
+history point D=44.526855: ok True, Delta 1.8648308807424294
+history point D=44.635994: ok True, Delta 1.8643156114730712
+history point D=44.745133: ok True, Delta 1.8638027524765881
+history point D=44.854272: ok True, Delta 1.8632922868032005
+history point D=44.963411: ok True, Delta 1.8627841976623254
+D=45.138022: no convergence (|F| 1.9e-02); dD 0.0873 -> 0.04365
+D=45.094372: no convergence (|F| 4.6e-03); dD 0.04365 -> 0.021825
+D=45.072547: no convergence (|F| 1.2e-03); dD 0.021825 -> 0.0109125
+D=45.061635: no convergence (|F| 1.2e-07); dD 0.0109125 -> 0.00545625
+D=45.056178: no convergence (|F| 1.6e-09); dD 0.00545625 -> 0.002728125
+D=45.0534 Delta=1.8623668045314545+1.49e-17 its 13 |F| 6.3e-23 45s piv 4.4e-02..3.8e+07 dDelta/dF max 4.8e+06 tails 7e-66 8e-51
+   kc 220 -> 178 (residual and Jacobian bitwise unchanged)
+D=45.0575 Delta=1.8623478732835748-4.39e-17 its 11 |F| 6.3e-23 29s piv 3.8e-03..3.9e+07 dDelta/dF max 4.8e+06 tails 3e-53 8e-51
+D=45.0637 Delta=1.8623194825941913-6.46e-17 its 9 |F| 1.0e-22 24s piv 1.1e-03..3.9e+07 dDelta/dF max 4.9e+06 tails 3e-53 8e-51
+D=45.0729 Delta=1.8622769104648185-5.30e-17 its 8 |F| 6.1e-23 24s piv 9.3e-04..3.9e+07 dDelta/dF max 4.9e+06 tails 3e-53 8e-51
+D=45.0867 Delta=1.8622130812267152+1.01e-16 its 10 |F| 9.3e-23 27s piv 2.9e-03..3.9e+07 dDelta/dF max 4.9e+06 tails 3e-53 8e-51
+D=45.1074 Delta=1.8621174053495364+4.03e-17 its 7 |F| 8.0e-23 28s piv 6.5e-03..4.0e+07 dDelta/dF max 4.9e+06 tails 3e-53 8e-51
+D=45.1385 Delta=1.8619740517731531+5.40e-17 its 12 |F| 6.1e-23 36s piv 2.6e-02..4.0e+07 dDelta/dF max 4.9e+06 tails 3e-53 9e-51
+D=45.185103: no convergence (|F| 3.9e-09); dD 0.0466125732421875 -> 0.02330628662109375
+D=45.1618 Delta=1.8618666619122799-2.91e-17 its 13 |F| 6.1e-23 31s piv 2.9e-02..4.1e+07 dDelta/dF max 4.9e+06 tails 3e-53 9e-51
+D=45.196755: no convergence (|F| 3.8e-10); dD 0.034959429931640626 -> 0.017479714965820313
+D=45.1793 Delta=1.8617861869526720-1.07e-16 its 8 |F| 7.9e-23 25s piv 2.4e-02..4.1e+07 dDelta/dF max 4.9e+06 tails 3e-53 9e-51
+D=45.2055 Delta=1.8616655864370930-2.95e-17 its 12 |F| 6.9e-23 32s piv 4.4e-02..4.1e+07 dDelta/dF max 4.9e+06 tails 3e-53 9e-51
+D=45.244825: no convergence (|F| 1.1e-10); dD 0.039329358673095706 -> 0.019664679336547853
+D=45.2252 Delta=1.8615752240714409-8.71e-17 its 11 |F| 6.2e-23 26s piv 2.6e-02..4.2e+07 dDelta/dF max 4.9e+06 tails 3e-53 9e-51
+D=45.254658: no convergence (|F| 2.8e-11); dD 0.02949701900482178 -> 0.01474850950241089
+D=45.2399 Delta=1.8615075005975199-4.17e-17 its 8 |F| 9.6e-23 28s piv 1.1e-02..4.2e+07 dDelta/dF max 4.9e+06 tails 2e-53 9e-51
+D=45.2620 Delta=1.8614059970565071+4.00e-17 its 10 |F| 5.1e-23 24s piv 2.0e-02..4.3e+07 dDelta/dF max 4.9e+06 tails 2e-53 1e-50
+D=45.2952 Delta=1.8612539223585058-8.03e-17 its 12 |F| 5.9e-23 28s piv 4.5e-02..4.3e+07 dDelta/dF max 4.9e+06 tails 2e-53 1e-50
+D=45.344993: no convergence (|F| 8.0e-06); dD 0.04977621957063676 -> 0.02488810978531838
+D=45.3201 Delta=1.8611400065212911+2.38e-17 its 13 |F| 1.1e-22 32s piv 4.5e-02..4.4e+07 dDelta/dF max 4.9e+06 tails 2e-53 1e-50
+D=45.3574 Delta=1.8609693576082298+2.60e-17 its 26 |F| 7.3e-23 62s piv 4.5e-02..4.5e+07 dDelta/dF max 5.0e+06 tails 2e-53 1e-50
+C:\Users\nathan\AppData\Local\Programs\Python\Python310\lib\site-packages\hpkernel\driver.py:163: RuntimeWarning: overflow encountered in square
+  return float(np.sqrt(np.sum((Fh + Fl) ** 2)))
+D=45.413435: no convergence (|F| 5.5e-04); dD 0.055998247016966346 -> 0.027999123508483173
+D=45.385436: no convergence (|F| 5.2e-10); dD 0.027999123508483173 -> 0.013999561754241586
+D=45.3714 Delta=1.8609054314315603-5.38e-19 its 11 |F| 8.6e-23 27s piv 2.3e-02..4.5e+07 dDelta/dF max 5.1e+06 tails 2e-53 1e-50
+D=45.3924 Delta=1.8608096176498139-2.28e-17 its 12 |F| 7.6e-23 27s piv 2.0e-02..4.5e+07 dDelta/dF max 5.1e+06 tails 2e-53 1e-50
+D=45.4239 Delta=1.8606660540352085+9.77e-18 its 21 |F| 7.0e-23 46s piv 4.5e-02..4.6e+07 dDelta/dF max 5.2e+06 tails 2e-53 1e-50
+D=45.471184: no convergence (|F| 4.0e-07); dD 0.04724852092056535 -> 0.023624260460282674
+D=45.4476 Delta=1.8605585077398430+2.82e-17 its 13 |F| 7.3e-23 31s piv 3.8e-02..4.7e+07 dDelta/dF max 5.3e+06 tails 2e-53 1e-50
+scan ended: max_points 20 (20 converged points, D = 45.447559)
