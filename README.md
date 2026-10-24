@@ -771,6 +771,22 @@ $`e^{-D/4}`$) to the degree-16 series does not degrade the prediction (1.2–3.2
 within the quoted bar (1.643893736 to 1.643893754), and the term's coefficient is not determined: $`D^{-1/2}`$ gets
 3×10⁻⁵ at degree 14 and 6×10⁻⁷ at degree 16 (`hp/dd_fits_mp.py 10 45 --clean --mixed --dmax=60.1`).
 
+An exponentially small term, c εᵖ e^(−a/ε) with ε = 1/(D − 1), is the first non-perturbative piece if Δ is a
+transseries in ε rather than a series (a = 1 for a one-instanton sector). It was added to the series at a = 0.5, 1, 1.5,
+2 and p = 0, 1, with the same fit range and held-out points (`cd hp && python3 transseries_fit.py --planted`; logs in
+[`hp/data/transseries/`](hp/data/transseries/)):
+
+- **Planted truth first.** On synthetic data at the same D (the degree-18 series fitted to every point, plus a planted
+  term and noise), a planted c = 1 at a = 1, p = 0 makes the series alone miss the held-out points by about 10⁻¹⁰,
+  against 5×10⁻¹² with the term. The fit recovers c to 4% at degree 14 and 11% at degree 18 at the points' own noise
+  (3×10⁻¹⁵). The 10% criterion written before the runs holds at noise 10⁻¹⁷ and is missed at degree 18 at 3×10⁻¹⁵
+  (`--noise=3e-15 --degs=16,18 --as=1 --ps=0`, which exits 1).
+- **The real points.** The term changes nothing. At degree 16 the held-out error is 2.0×10⁻¹² without it and
+  2.2×10⁻¹² with it (a = 1, p = 0). Its coefficient is −7×10⁻⁴ at degree 16 and 0.10 at degree 18, the scatter a
+  planted c = 0 also gives (0.065 at degree 18), and Δ∞ moves by at most 1.3×10⁻⁷ over every (a, p) at degrees 14–18.
+- **What it excludes.** A term that moved Δ∞ by 10⁻³ would need c of order 10³ at a = 1; a planted c = 100 already
+  leaves the series alone missing the held-out points by 9×10⁻⁹. The test does not cover a < 0.5 or factors of ln ε.
+
 Fitted on all the cleaned points, power series in 1/D of degree 16–20 and in 1/(D-2) of degree 18–20 (the ones that fit
 to the noise; 1/(D-2) at degree 16 leaves 4×10⁻¹³) fit the points from D = 10 to 61.03 to 4.3×10⁻¹⁵
 (8.6×10⁻¹⁵ for 1/D at degree 16, 1.5×10⁻¹⁴ for 1/(D-2) at degree 18) and give limits from 1.643893744 to 1.643893753 on
