@@ -2,13 +2,15 @@
 //! `BaseLane`) plus `dmat_apply`, the product with a constant tau-derivative matrix, which needs this crate's tau-field
 //! types. The lane types themselves (`DV`, `Du`, `F8`, `Fu`, `Fun<N>`, `Dtn<N>`, `QV`) come from multidouble.
 use crate::field::{DMat, Fl};
+use crate::dv::{DotAcc, DV};
+use crate::qv::QV;
+use crate::v8::V8;
 pub use multidouble::dual::Lane as BaseLane;
-pub use multidouble::dual::{Dtn, Du, Fu, Fun, F8};
-use multidouble::dv::{DotAcc, DV};
-use multidouble::qv::QV;
-use multidouble::v8::V8;
+pub use multidouble::native::{Dtn, Du, Fu, Fun, F8};
+use multidouble::simd::Native;
 
-pub trait Lane: BaseLane {
+/// multidouble's lanes on the compile-time backend (`Native`), with the tau-derivative product
+pub trait Lane: BaseLane<S = Native> {
     /// D f for a constant matrix D (field::DMat::apply). The default multiplies by the double-double columns; the
     /// f64 lanes use the matrix's f64 copy.
     #[inline(always)]
@@ -34,7 +36,7 @@ impl Lane for F8 {
                 }
             }
         }
-        Fl(acc.map(F8))
+        Fl(acc.map(multidouble::dual::F8))
     }
 }
 

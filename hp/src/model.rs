@@ -495,9 +495,9 @@ pub fn horizon_lus<const B: usize>(ctx: &Ctx<B>, a0: &Fl<DV, B>, delta: DD, par:
 /// f64 tangent k of a field (TAN_F64 lanes) as an f64 field
 #[inline(always)]
 fn tan_f8<T: Lane, const B: usize>(x: &Fl<T, B>, k: usize) -> Fl<F8, B> {
-    let mut r = [F8(crate::v8::V8::zero()); B];
+    let mut r = [multidouble::dual::F8(crate::v8::V8::zero()); B];
     for b in 0..B {
-        r[b] = F8(x.0[b].tan64(k));
+        r[b] = multidouble::dual::F8(x.0[b].tan64(k));
     }
     Fl(r)
 }
@@ -519,7 +519,7 @@ fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, lu: &DDLu, lu_t: &DDLu, kappa: 
         let fv8 = Fl::<F8, B>::from_vt(&fv, &z);
         let dfv = ctx.d.apply(&fv8);
         for k in 0..T::NT {
-            let od = F8(omega.tan64(k));
+            let od = multidouble::dual::F8(omega.tan64(k));
             let mut r = tan_f8(rhs, k) - dfv.mul_t(od);
             if ctx.mutate != 3 {
                 r = r - tan_f8(kappa, k) * fv8;

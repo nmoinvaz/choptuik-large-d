@@ -1,0 +1,9 @@
+# qd_check.py against multidouble 1.0.0 (tag, a33fd8d): mpmath n 400; the control --mutate=5 (must fail); backends sse2 and portable
+print: n 400, not correctly rounded: 0; differing from mpmath's nstr: 0
+all within the thresholds
+3365 FAILURES
+avx512    not run yet
+avx2      not run yet
+sse2      n 400  exit 0  isa reported sse2  digest eac0ade343747a1c  multidouble a33fd8da3c14  test result: ok. 5 passed; 0 failed; 4 ignored; 0 measured; 8 filtered out; finished in 0.16s
+portable  n 400  exit 0  isa reported portable  digest eac0ade343747a1c  multidouble a33fd8da3c14  test result: ok. 5 passed; 0 failed; 4 ignored; 0 measured; 8 filtered out; finished in 0.20s
+DIGESTS DIFFER OR MISSING

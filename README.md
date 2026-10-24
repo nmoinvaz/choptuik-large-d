@@ -591,8 +591,9 @@ with computed points rather than an assumed form. Its points are used in [The fo
   AVX2 registers, four SSE2 or NEON registers, or a portable array, chosen at compile time (`hp/build.sh` builds with
   `-C target-cpu=native`). Error-free two-sum and FMA two-product; sums of products accumulated Sum2-style[^16]. The
   arithmetic, the dual lanes and the double-double LU are the separate crate
-  [multidouble](https://github.com/nmoinvaz/multidouble), which `hp/Cargo.toml` pins to one commit; every backend gives
-  bitwise the same results, and the solver's outputs are unchanged bit for bit by the move.
+  [multidouble](https://github.com/nmoinvaz/multidouble) (version 1.0.0 from crates.io, its lane types on the
+  compile-time backend); every backend gives bitwise the same results, and the solver's outputs are unchanged bit for
+  bit by the move.
 - **No fixed-step error:** Taylor series in x (order 36, step points planned once per D so the truncation term is
   10⁻³²), centre and horizon series run until their tails are below 10⁻³³, and collocation in τ on the
   half period (p, m odd harmonics, a, c even harmonics in τ) with no spectral truncation of the products.

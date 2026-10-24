@@ -1,7 +1,7 @@
 # Mixed-precision Newton for the double-double solver (`hp/`)
 
 > The lane types, `v8.rs` and `linalg.rs` named below now live in the crate
-> [multidouble](https://github.com/nmoinvaz/multidouble) (pinned in `hp/Cargo.toml`). hp keeps its `Lane` trait in
+> [multidouble](https://github.com/nmoinvaz/multidouble) (crates.io, version in `hp/Cargo.toml`; the lane types on the compile-time backend, `multidouble::native`). hp keeps its `Lane` trait in
 > `hp/src/lane.rs` (the D-matrix products) and the many-right-hand-side solves in `hp/src/field.rs` (`FieldSolve`).
 
 A Newton step of the double-double DSS solver spent 96% of its time in the exact Jacobian (forward-mode duals over

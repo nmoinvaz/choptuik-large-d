@@ -1,0 +1,26 @@
+# multidouble 1.0.0 build (LTO off, 16 codegen units), highm_check.py scaled --compare=data/lowD_highM/scaled_ref_main93402cf.json --Ms=192,256
+  M = 192 centre_hi        bit-identical
+  M = 192 centre_lo        bit-identical
+  M = 192 centre_finite    bit-identical
+  M = 192 horizon_hi       bit-identical
+  M = 192 horizon_lo       bit-identical
+  M = 192 horizon_finite   bit-identical
+  M = 192 residual_hi      bit-identical
+  M = 192 residual_lo      bit-identical
+  M = 192 step_hi          bit-identical
+  M = 192 step_lo          bit-identical
+  M = 192 piv              bit-identical
+  M = 256 centre_hi        bit-identical
+  M = 256 centre_lo        bit-identical
+  M = 256 centre_finite    bit-identical
+  M = 256 horizon_hi       bit-identical
+  M = 256 horizon_lo       bit-identical
+  M = 256 horizon_finite   bit-identical
+  M = 256 residual_hi      bit-identical
+  M = 256 residual_lo      bit-identical
+  M = 256 step_hi          bit-identical
+  M = 256 step_lo          bit-identical
+  M = 256 piv              bit-identical
+control (scale wrong at order 7, M = 192): Newton step differs: fires
+PASS
+exit 0

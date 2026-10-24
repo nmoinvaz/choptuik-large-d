@@ -80,6 +80,7 @@ impl Neg for CDV {
 impl Lane for CDV {}
 
 impl BaseLane for CDV {
+    type S = multidouble::simd::Native;
     type Acc = DotAcc;
     const TANGENT: bool = false;
     fn zero() -> Self {

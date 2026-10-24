@@ -1,8 +1,8 @@
 # Quad-double arithmetic in the Rust kernel (`hp/`)
 
 > **Moved.** The arithmetic described here (`dd.rs`, `v8.rs`, `dv.rs`, `qd.rs`, `qv.rs`, `exact.rs`, `qd_tests.rs`, the
-> dual lanes and the LU) now lives in the separate crate [multidouble](https://github.com/nmoinvaz/multidouble), which
-> `hp/Cargo.toml` pins to one commit. Paths `hp/src/<file>` below are that crate's `src/<file>`; the feature `qd_mutate`
+> dual lanes and the LU) now lives in the separate crate [multidouble](https://github.com/nmoinvaz/multidouble) (crates.io), which
+> `hp/Cargo.toml` names by version. Paths `hp/src/<file>` below are that crate's `src/<file>`; the feature `qd_mutate`
 > is its feature `mutate`; `hp/qd_check.py` runs the Rust tests in a checkout of it. The logs below were made before the
 > move; the code is the same.
 

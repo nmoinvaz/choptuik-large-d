@@ -1,6 +1,7 @@
 //! Double-double DSS solver kernel.
 //!
-//! * `v8`: 8-lane f64 vector (AVX-512 zmm, 2 x AVX2 ymm, or portable), chosen at compile time.
+//! * `v8`: 8-lane f64 vector (AVX-512 zmm, 2 x AVX2 ymm, 4 x SSE2 or NEON, or portable), chosen at compile time
+//!   (multidouble's `native` backend).
 //! * `dd`: scalar double-double; `dv`: 8-lane double-double built on `v8`.
 //! * `lane`: the scalar abstraction the model is generic over: `DV` (values) and `Du` (value + one forward-mode
 //!   tangent, for exact Jacobian columns); for the mixed-precision Newton's f64 Jacobian `F8`, `Fu` (f64), `Fun<N>`
@@ -19,9 +20,27 @@ pub mod field;
 pub mod lane;
 pub mod model;
 
-// The arithmetic, the dual lanes and the dense LU live in the multidouble crate (github.com/nmoinvaz/multidouble),
-// split out of this one; re-exported under their old paths so the solver code reads as before.
-pub use multidouble::{dd, dv, exact, linalg, qd, qv, v8};
+// The arithmetic, the dual lanes and the dense LU live in the multidouble crate (crates.io; github.com/nmoinvaz/multidouble),
+// split out of this one; re-exported under their old paths so the solver code reads as before. Its lane types are
+// generic over the SIMD backend; the solver uses them on the backend the build's target features select
+// (multidouble::native, `-C target-cpu=native` in hp/build.sh), so V8, DV, QV and the dual lanes here are those aliases.
+pub use multidouble::{dd, exact, linalg, qd, simd};
+
+/// 8 f64 lanes on the compile-time backend (multidouble's `v8`, with `V8` and `M8` its `native` aliases)
+pub mod v8 {
+    pub use multidouble::native::{M8, V8};
+    pub use multidouble::v8::*;
+}
+/// 8-lane double-double on the compile-time backend
+pub mod dv {
+    pub use multidouble::dv::*;
+    pub use multidouble::native::{DotAcc, DV};
+}
+/// 8-lane quad-double on the compile-time backend
+pub mod qv {
+    pub use multidouble::native::{QDotAcc, QV};
+    pub use multidouble::qv::*;
+}
 
 #[cfg(test)]
 mod qd_residual;

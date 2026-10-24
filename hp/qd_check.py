@@ -4,9 +4,9 @@
     cd hp && python3 qd_check.py mpmath [--n=2000] [--seed=1] [--dump=DIR] [--mutate=ID]
     cd hp && python3 qd_check.py backends [--n=4000] [--only=avx512,avx2,sse2,portable] [--fresh] [--out=DIR]
 
-The arithmetic lives in the multidouble crate (https://github.com/nmoinvaz/multidouble), which hp/Cargo.toml pins to
-one commit. The Rust tests run in a checkout of that crate: MULTIDOUBLE_DIR if set (its commit is reported and must
-equal the pinned one unless --any_rev), otherwise a clone at the pinned commit in hp/target/multidouble.
+The arithmetic lives in the multidouble crate (crates.io; https://github.com/nmoinvaz/multidouble), whose release
+hp/Cargo.toml names. The Rust tests run in a checkout of that crate: MULTIDOUBLE_DIR if set (its commit is reported and
+must be the release's tag unless --any_rev), otherwise a clone at that tag in hp/target/multidouble.
 
 mpmath: the Rust test qd_dump (built for AVX-512 as in the backends check, into hp/target/qd_native) writes inputs and
   scalar results of every operation and input category, of the dot accumulator, and of decimal parsing and printing;
@@ -57,9 +57,15 @@ def opts():
     return dict((a[2:].split("=", 1) + [True])[:2] for a in sys.argv[2:] if a.startswith("--"))
 
 
-def pinned_rev():
-    m = re.search(r'multidouble\s*=\s*\{[^}]*rev\s*=\s*"([0-9a-f]+)"', open(os.path.join(HERE, "Cargo.toml")).read())
-    return m.group(1)
+def pinned_ref():
+    """the git ref of the multidouble that hp/Cargo.toml asks for: the release tag of `multidouble = "X.Y.Z"` (crates.io
+    releases are tagged X.Y.Z in the repository), or the commit of a git dependency's `rev`"""
+    toml = open(os.path.join(HERE, "Cargo.toml")).read()
+    m = re.search(r'^multidouble\s*=\s*"=?([0-9][0-9.]*)"', toml, re.M) or \
+        re.search(r'^multidouble\s*=\s*\{[^}]*version\s*=\s*"=?([0-9][0-9.]*)"', toml, re.M)
+    if m:
+        return m.group(1)
+    return re.search(r'multidouble\s*=\s*\{[^}]*rev\s*=\s*"([0-9a-f]+)"', toml).group(1)
 
 
 def git(args, cwd):
@@ -67,21 +73,23 @@ def git(args, cwd):
 
 
 def crate_dir(any_rev=False):
-    """A checkout of multidouble at the commit hp/Cargo.toml pins (or MULTIDOUBLE_DIR), and its commit."""
-    rev = pinned_rev()
+    """A checkout of multidouble at the release or commit hp/Cargo.toml asks for (or MULTIDOUBLE_DIR), and its commit."""
+    ref = pinned_ref()
     d = os.environ.get("MULTIDOUBLE_DIR")
     if not d:
         d = os.path.join(HERE, "target", "multidouble")
         if not os.path.isdir(os.path.join(d, ".git")):
             os.makedirs(os.path.dirname(d), exist_ok=True)
             git(["clone", "--quiet", "https://github.com/nmoinvaz/multidouble", d], HERE)
-        if git(["rev-parse", "HEAD"], d) != rev:
-            git(["fetch", "--quiet", "origin"], d)
-            git(["checkout", "--quiet", "--detach", rev], d)
+        git(["fetch", "--quiet", "--tags", "origin"], d)
+        git(["checkout", "--quiet", "--detach", ref], d)
+    else:
+        git(["fetch", "--quiet", "--tags", "origin"], d)
+    want = git(["rev-parse", ref + "^{commit}"], d)
     head = git(["rev-parse", "HEAD"], d)
     dirty = git(["status", "--porcelain", "--untracked-files=no"], d) != ""
-    if (head != rev or dirty) and not any_rev:
-        sys.exit(f"{d} is at {head[:12]}{' with local changes' if dirty else ''}, not the pinned {rev[:12]}; "
+    if (head != want or dirty) and not any_rev:
+        sys.exit(f"{d} is at {head[:12]}{' with local changes' if dirty else ''}, not {ref} ({want[:12]}); "
                  "pass --any_rev to test it anyway")
     return d, head + ("+dirty" if dirty else "")
 

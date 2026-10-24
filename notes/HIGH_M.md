@@ -753,8 +753,12 @@ Checks, on a private build of this tree (AVX-512) against a build of main 93402c
 - multidouble's `mul_pwr2` tests (equal to `mulf` bit for bit and the 2^k, 2^−k round trip on every lane type, with
   controls) pass on its SSE2, portable, AVX2 and AVX-512 backends.
 
-Not checked here: an M = 384 or 512 Newton step with the scaled build (0.5–5 hours on these 2 cores). It is the first
-step of the local machine's task T45 (9.6).
+An M = 384 Newton step with the scaled build ran on the local machine (T45 step 0, comms 2026-10-23 22:00): at the
+D = 3.15 state resampled from M = 256 (N = 29185, 1452 Taylor steps, kc 100, ks 250, 2 threads) no non-finite pivot;
+|F| from 7.0×10⁻⁸ to 6.7×10⁻¹⁴ in one step (ΔΔ = −4.9×10⁻¹⁵); the Jacobian 5262 s of the step's 5285 s, the block LU
+826 MB, peak RSS 1554 MB. The same machine's ref check (old build against new, 168 of 168) and scaled check (against the
+cloud file, 22 of 22, control fires) passed; the cloud ref file itself matches there only at the M whose plan is
+stored (48, 64, 80), because a computed plan uses the platform libm's `pow` (`plan_path`).
 
 ### 9.6 Handover: the pilot continues on the local machine (T45)
 
