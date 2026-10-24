@@ -3577,3 +3577,5 @@ wormhole (asymmetric and charged) at several dimensions, checking a large-D form
     A quick cloud check at D 4, eps2 0.1 found a sign change between What 0.6 and 1.0, about 4 s per evaluation.)
 Push the logs and the CSV to a new branch wip/wormhole-local of that repository (not to its main), and post the
 results here as they land. Nothing in this repository changes for T49.
+Correction to T49 (a): the guesses 1.0293216299 (D - 3) + 0.473 are 9.7369, 13.8542 and 17.9715 (I wrote 9.7768,
+13.8941, 18.0114). The brackets of width 0.3 contain the right values either way; use the corrected guesses.
