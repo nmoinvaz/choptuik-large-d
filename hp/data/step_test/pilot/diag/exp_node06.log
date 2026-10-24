@@ -1,0 +1,28 @@
+history 59.949595: ok True |F| 5.0e-17 -> 1.3e-19 in 8 its (18 s)
+history 59.963328: ok True |F| 5.2e-17 -> 1.7e-19 in 4 its (18 s)
+history 59.980494: ok True |F| 4.0e-17 -> 1.7e-19 in 8 its (16 s)
+start 60.001952: ok True |F| 1.1e-19 -> 1.1e-19 in 1 its
+base's solution at 60.023452 truncated to 0.3-0.6: |F| in the 0.6 system 1.2e-19
+
+== D 60.002624: seed |F| 1.28e-04
+-- plain Newton
+  newton 0: |F| 1.28e-04: no decrease along the Newton step, giving up
+-- deflated Newton, w 16 (3 s so far)
+  dn 0 [all]: |F| 1.28e-04 -> 5.17e-05 lam 1 Delta 1.809882465797607 t 2s
+  dn: phase 'all' stalled at |F| 5.2e-05; phase 'full'
+  dn 1 [full]: |F| 5.17e-05 -> 5.16e-05 lam 0.000488 Delta 1.809882465925040 t 4s
+  dn 2 [full]: |F| 5.16e-05 -> 5.16e-05 lam 0.000488 Delta 1.809882466064089 t 6s
+  dn 3 [full]: |F| 5.16e-05 -> 5.15e-05 lam 0.000488 Delta 1.809882466216080 t 9s
+  dn 4 [full]: |F| 5.15e-05 -> 5.15e-05 lam 0.000488 Delta 1.809882466381954 t 11s
+  dn 5 [full]: |F| 5.15e-05 -> 5.15e-05 lam 0.000488 Delta 1.809882466562298 t 13s
+  dn 6 [full]: |F| 5.15e-05 -> 5.14e-05 lam 0.000488 Delta 1.809882466757341 t 15s
+  dn 7 [full]: |F| 5.14e-05 -> 5.14e-05 lam 0.000488 Delta 1.809882466966934 t 17s
+
+== D 60.023452: seed |F| 1.72e-02
+seed - truncated base solution: max 4.6e-09, Delta -4.7e-14, centre/nodes 4.6e-09, horizon 4.7e-14
+-- plain Newton
+  newton 0: |F| 1.72e-02: no decrease along the Newton step, giving up
+-- deflated Newton, w 16 (2 s so far)
+  dn 0 [all]: |F| 1.72e-02 -> nan lam 0.000122 Delta 1.809826977464804 t 2s
+  dn 1 [full]: |F| 1.72e-02 -> nan lam 0.000122 Delta 1.809826924566923 t 4s
+done

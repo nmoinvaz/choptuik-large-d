@@ -1,0 +1,25 @@
+(re-)converged start D=45.050722 M=32 nodes=[0.3, 0.4, 0.5, 0.6, 0.7]: Delta 1.8623794271957130 ok True (25s)
+history point D=44.308577: ok True, Delta 1.8658687187062868
+history point D=44.417716: ok True, Delta 1.8653485773955349
+history point D=44.526855: ok True, Delta 1.8648308807424274
+history point D=44.635994: ok True, Delta 1.8643156114730692
+history point D=44.745133: ok True, Delta 1.8638027524765861
+history point D=44.854272: ok True, Delta 1.8632922868031985
+history point D=44.963411: ok True, Delta 1.8627841976623234
+D=45.1380 Delta=1.8619762093224010-4.12e-18 its 8 |F| 8.3e-26 27s piv 9.9e-07..6.1e+04 dDelta/dF max 1.4e+11 tails 6e-66 2e-46
+   kc 220 -> 178 (residual and Jacobian bitwise unchanged)
+D=45.2690 Delta=1.8613741795199272-4.24e-17 its 9 |F| 1.0e-25 18s piv 1.2e-06..6.4e+04 dDelta/dF max 1.5e+11 tails 2e-53 2e-46
+D=45.4654 Delta=1.8604773727688695+7.37e-17 its 9 |F| 1.3e-25 22s piv 1.8e-06..6.9e+04 dDelta/dF max 1.6e+11 tails 2e-53 3e-46
+D=45.7600 Delta=1.8591460119052188-3.81e-17 its 11 |F| 1.1e-25 28s piv 2.9e-05..7.6e+04 dDelta/dF max 2.0e+11 tails 1e-53 3e-46
+D=46.2020 Delta=1.8571795342354789-7.45e-17 its 12 |F| 1.5e-25 32s piv 6.3e-05..8.9e+04 dDelta/dF max 2.3e+11 tails 4e-54 4e-46
+D=46.8649 Delta=1.8542965953063093-7.13e-17 its 10 |F| 2.5e-25 30s piv 5.8e-05..1.1e+05 dDelta/dF max 3.3e+11 tails 1e-54 5e-46
+C:\Users\nathan\AppData\Local\Programs\Python\Python310\lib\site-packages\hpkernel\driver.py:163: RuntimeWarning: overflow encountered in square
+  return float(np.sqrt(np.sum((Fh + Fl) ** 2)))
+D=47.859327: no convergence (|F| 8.1e-06); dD 0.9944015625 -> 0.49720078125
+D=47.362126: no convergence (|F| 1.8e-12); dD 0.49720078125 -> 0.248600390625
+D=47.1135 Delta=1.8532355811338541-9.60e-17 its 13 |F| 1.5e-25 35s piv 3.6e-05..1.2e+05 dDelta/dF max 3.7e+11 tails 8e-55 6e-46
+D=47.4864 Delta=1.8516640630088446-7.82e-17 its 12 |F| 2.5e-25 31s piv 3.2e-05..1.4e+05 dDelta/dF max 4.3e+11 tails 4e-55 8e-46
+D=48.045777: no convergence (|F| 3.0e-10); dD 0.55935087890625 -> 0.279675439453125
+D=47.7661 Delta=1.8505008965867640-3.69e-17 its 14 |F| 2.7e-25 36s piv 6.0e-05..1.5e+05 dDelta/dF max 5.1e+11 tails 3e-55 9e-46
+D=48.1856 Delta=1.8487804720519212-8.72e-17 its 14 |F| 3.1e-25 34s piv 5.4e-05..1.8e+05 dDelta/dF max 6.2e+11 tails 1e-55 1e-45
+scan ended: max_span 3.0 (10 converged points, D = 48.185614)

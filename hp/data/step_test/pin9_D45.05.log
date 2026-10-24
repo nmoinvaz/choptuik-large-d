@@ -1,0 +1,60 @@
+(re-)converged start D=45.050722 M=32 nodes=[0.3, 0.4, 0.5, 0.6, 0.7]: Delta 1.8623794271957130 ok True (20s)
+history point D=44.308577: ok True, Delta 1.8658687187062868
+history point D=44.417716: ok True, Delta 1.8653485773955349
+history point D=44.526855: ok True, Delta 1.8648308807424274
+history point D=44.635994: ok True, Delta 1.8643156114730692
+history point D=44.745133: ok True, Delta 1.8638027524765861
+history point D=44.854272: ok True, Delta 1.8632922868031985
+history point D=44.963411: ok True, Delta 1.8627841976623234
+D=45.1380 Delta=1.8619762093223944-1.01e-16 its 12 |F| 1.0e-25 39s piv 7.6e-05..8.2e+04 dDelta/dF max 1.3e+10 tails 6e-66 2e-44 pin: |F_full| 1.3e-25 dDelta_pin +6.8e-15
+   kc stays 220: kc 178 changes the residual or the Jacobian
+D=45.2690 Delta=1.8613741795199183+5.98e-18 its 9 |F| 1.3e-25 38s piv 6.9e-05..8.5e+04 dDelta/dF max 1.4e+10 tails 5e-66 3e-44 pin: |F_full| 1.3e-25 dDelta_pin +8.8e-15
+   kc stays 220: kc 178 changes the residual or the Jacobian
+D=45.465397: no convergence (|F| 2.4e-10); dD 0.19642500000000002 -> 0.09821250000000001
+D=45.3672 Delta=1.8609248427229932+6.70e-17 its 12 |F| 7.8e-26 39s piv 7.1e-05..8.8e+04 dDelta/dF max 1.4e+10 tails 4e-66 2e-44 pin: |F_full| 7.8e-26 dDelta_pin +7.6e-15
+   kc stays 220: kc 178 changes the residual or the Jacobian
+D=45.5145 Delta=1.8602543279709134+2.88e-17 its 13 |F| 1.7e-25 45s piv 5.3e-05..9.3e+04 dDelta/dF max 1.4e+10 tails 3e-66 4e-44 pin: |F_full| 1.5e-25 dDelta_pin +9.8e-15
+   kc stays 220: kc 177 changes the residual or the Jacobian
+D=45.735482: no convergence (|F| 4.4e-07); dD 0.220978125 -> 0.1104890625
+D=45.6250 Delta=1.8597541692974042-6.46e-17 its 13 |F| 1.0e-25 43s piv 4.9e-05..9.7e+04 dDelta/dF max 1.5e+10 tails 2e-66 3e-44 pin: |F_full| 1.0e-25 dDelta_pin +8.6e-15
+   kc stays 220: kc 177 changes the residual or the Jacobian
+D=45.790727: no convergence (|F| 9.9e-14); dD 0.16573359375 -> 0.082866796875
+D=45.7079 Delta=1.8593805716667102+2.78e-17 its 14 |F| 1.2e-25 42s piv 7.7e-05..9.9e+04 dDelta/dF max 1.6e+10 tails 2e-66 3e-44 pin: |F_full| 1.2e-25 dDelta_pin +7.2e-15
+   kc stays 220: kc 177 changes the residual or the Jacobian
+D=45.8322 Delta=1.8588226080028429+9.32e-17 its 13 |F| 1.6e-25 40s piv 3.5e-05..1.0e+05 dDelta/dF max 1.7e+10 tails 1e-66 4e-44 pin: |F_full| 1.5e-25 dDelta_pin +9.2e-15
+   kc stays 220: kc 176 changes the residual or the Jacobian
+D=46.01861: no convergence (|F| 6.2e-10); dD 0.18645029296875 -> 0.093225146484375
+D=45.9254 Delta=1.8584060372256566-8.01e-17 its 8 |F| 1.2e-25 28s piv 4.9e-05..1.0e+05 dDelta/dF max 1.7e+10 tails 1e-66 4e-44 pin: |F_full| 1.2e-25 dDelta_pin +7.8e-15
+   kc stays 220: kc 176 changes the residual or the Jacobian
+D=46.0652 Delta=1.8577842127235791+9.88e-17 its 13 |F| 1.3e-25 44s piv 3.6e-06..1.1e+05 dDelta/dF max 1.8e+10 tails 9e-67 6e-44 pin: |F_full| 1.3e-25 dDelta_pin +1.0e-14
+   kc stays 220: kc 176 changes the residual or the Jacobian
+D=46.27498: no convergence (|F| 3.8e-07); dD 0.20975657958984376 -> 0.10487828979492188
+D=46.1701 Delta=1.8573202188946627-2.13e-17 its 9 |F| 1.5e-25 35s piv 2.9e-06..1.1e+05 dDelta/dF max 1.8e+10 tails 7e-67 5e-44 pin: |F_full| 1.5e-25 dDelta_pin +8.0e-15
+   kc stays 220: kc 176 changes the residual or the Jacobian
+D=46.327418: no convergence (|F| 6.2e-08); dD 0.15731743469238282 -> 0.07865871734619141
+D=46.2488 Delta=1.8569735467571993+2.22e-17 its 12 |F| 1.7e-25 42s piv 1.0e-04..1.2e+05 dDelta/dF max 1.8e+10 tails 6e-67 4e-44 pin: |F_full| 1.7e-25 dDelta_pin +6.3e-15
+   kc stays 220: kc 176 changes the residual or the Jacobian
+D=46.3667 Delta=1.8564556575748361+3.45e-17 its 12 |F| 1.8e-25 41s piv 2.3e-05..1.2e+05 dDelta/dF max 2.0e+10 tails 5e-67 5e-44 pin: |F_full| 1.8e-25 dDelta_pin +8.0e-15
+   kc stays 220: kc 176 changes the residual or the Jacobian
+D=46.54373: no convergence (|F| 1.3e-10); dD 0.1769821140289307 -> 0.08849105701446534
+D=46.4552 Delta=1.8560688978167552+1.09e-16 its 11 |F| 1.6e-25 41s piv 7.8e-05..1.2e+05 dDelta/dF max 2.0e+10 tails 4e-67 5e-44 pin: |F_full| 1.6e-25 dDelta_pin +6.8e-15
+   kc stays 220: kc 176 changes the residual or the Jacobian
+D=46.5880 Delta=1.8554914005563508-9.38e-17 its 13 |F| 1.7e-25 42s piv 5.5e-05..1.3e+05 dDelta/dF max 2.1e+10 tails 3e-67 7e-44 pin: |F_full| 1.6e-25 dDelta_pin +8.7e-15
+   kc stays 220: kc 175 changes the residual or the Jacobian
+D=46.787081: no convergence (|F| 2.9e-07); dD 0.19910487828254703 -> 0.09955243914127351
+D=46.6875 Delta=1.8550603496508331-1.04e-16 its 12 |F| 1.6e-25 43s piv 6.6e-05..1.3e+05 dDelta/dF max 2.2e+10 tails 3e-67 6e-44 pin: |F_full| 1.6e-25 dDelta_pin +6.9e-15
+   kc stays 220: kc 175 changes the residual or the Jacobian
+D=46.836857: no convergence (|F| 1.1e-13); dD 0.14932865871191026 -> 0.07466432935595513
+D=46.7622 Delta=1.8547382177883858-7.45e-17 its 9 |F| 2.0e-25 36s piv 1.1e-05..1.4e+05 dDelta/dF max 2.2e+10 tails 2e-67 5e-44 pin: |F_full| 2.0e-25 dDelta_pin +5.4e-15
+   kc stays 220: kc 175 changes the residual or the Jacobian
+D=46.8742 Delta=1.8542568674191631+5.42e-17 its 11 |F| 1.5e-25 35s piv 4.2e-05..1.4e+05 dDelta/dF max 2.3e+10 tails 2e-67 7e-44 pin: |F_full| 1.5e-25 dDelta_pin +7.0e-15
+   kc stays 220: kc 174 changes the residual or the Jacobian
+D=47.042183: no convergence (|F| 6.4e-10); dD 0.16799474105089904 -> 0.08399737052544952
+D=46.9582 Delta=1.8538973014029234-8.56e-17 its 13 |F| 1.1e-25 42s piv 3.6e-06..1.5e+05 dDelta/dF max 2.3e+10 tails 1e-67 6e-44 pin: |F_full| 1.1e-25 dDelta_pin +5.9e-15
+   kc stays 220: kc 174 changes the residual or the Jacobian
+D=47.0842 Delta=1.8533602600698686-9.77e-17 its 13 |F| 2.0e-25 47s piv 3.2e-05..1.5e+05 dDelta/dF max 2.5e+10 tails 1e-67 9e-44 pin: |F_full| 1.3e-25 dDelta_pin +7.6e-15
+   kc stays 220: kc 174 changes the residual or the Jacobian
+D=47.273175: no convergence (|F| 2.9e-07); dD 0.1889940836822614 -> 0.0944970418411307
+D=47.1787 Delta=1.8529592867435685+9.76e-17 its 14 |F| 2.3e-25 49s piv 1.5e-05..1.6e+05 dDelta/dF max 2.6e+10 tails 1e-67 7e-44 pin: |F_full| 2.0e-25 dDelta_pin +6.0e-15
+   kc stays 220: kc 174 changes the residual or the Jacobian
+scan ended: max_points 20 (20 converged points, D = 47.178678)

@@ -1,0 +1,15 @@
+(re-)converged start D=60.001952 M=32 nodes=[0.3, 0.4, 0.5, 0.6]: Delta 1.8098842580017152 ok True (44s)
+history point D=59.865: ok True, Delta 1.8102500228650360
+history point D=59.882578: ok True, Delta 1.8102029859479662
+history point D=59.900156: ok True, Delta 1.8101559757078061
+history point D=59.922129: ok True, Delta 1.8100972490514839
+history point D=59.949595: ok True, Delta 1.8100238998997302
+history point D=59.963328: ok True, Delta 1.8099872496740670
+history point D=59.980494: ok True, Delta 1.8099414603654600
+D=60.023452: no convergence (|F| 1.7e-02); dD 0.0215 -> 0.01075
+D=60.012702: no convergence (|F| 4.5e-03); dD 0.01075 -> 0.005375
+D=60.007327: no convergence (|F| 1.5e-03); dD 0.005375 -> 0.0026875
+D=60.00464: no convergence (|F| 5.8e-04); dD 0.0026875 -> 0.00134375
+D=60.003296: no convergence (|F| 2.1e-04); dD 0.00134375 -> 0.000671875
+D=60.002624: no convergence (|F| 5.1e-05); dD 0.000671875 -> 0.0003359375
+scan ended: 6 failed steps in a row (0 converged points, D = 60.001952)

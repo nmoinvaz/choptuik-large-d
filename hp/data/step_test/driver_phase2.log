@@ -1,0 +1,116 @@
+start start_D45.0507_x0.7_kf13: |F| 9.4e-26 -> floor 8.0e-26 in 3 its; Delta 1.8623794271957130 (saved state +0.0e+00 from it); max dDelta/dF 1.34e+11; tails 8e-66 2e-46 (8.9 s)
+start start_D45.0507_x0.6_kf13: |F| 6.1e-23 -> floor 6.1e-23 in 3 its; Delta 1.8623794271957130 (saved state +0.0e+00 from it); max dDelta/dF 4.84e+06; tails 8e-66 6e-51 (8.6 s)
+start start_D45.0507_x0.7_kf11: |F| 8.9e-08 -> floor 5.2e-14 in 31 its; Delta 1.8623794272043537 (saved state -8.6e-12 from it); max dDelta/dF 8.11e+10; tails 7e-70 8e-37 (62.0 s)
+start start_D50.0075_x0.7_kf13: |F| 9.7e-25 -> floor 4.7e-25 in 8 its; Delta 1.8416311332022643 (saved state +0.0e+00 from it); max dDelta/dF 1.49e+12; tails 4e-70 3e-45 (17.8 s)
+start start_D50.0075_x0.6_kf13: |F| 1.4e-21 -> floor 1.1e-21 in 4 its; Delta 1.8416311332022643 (saved state +0.0e+00 from it); max dDelta/dF 1.30e+07; tails 4e-70 7e-49 (10.0 s)
+start start_D50.0075_x0.7_kf11: |F| 7.3e-08 -> floor 1.0e-14 in 31 its; Delta 1.8416311331559949 (saved state +4.6e-11 from it); max dDelta/dF 1.03e+11; tails 2e-70 2e-35 (59.7 s)
+start start_D55.0351_x0.7_kf13: |F| 4.4e-24 -> floor 3.1e-24 in 3 its; Delta 1.8242712581939433 (saved state +0.0e+00 from it); max dDelta/dF 1.25e+13; tails 4e-74 7e-43 (7.8 s)
+start start_D55.0351_x0.6_kf13: |F| 1.4e-20 -> floor 1.0e-20 in 3 its; Delta 1.8242712581939433 (saved state +0.0e+00 from it); max dDelta/dF 2.79e+07; tails 4e-74 7e-46 (8.5 s)
+start start_D55.0351_x0.7_kf11: |F| 6.2e-08 -> floor 3.9e-08 in 31 its; Delta 1.8242711017427444 (saved state +1.6e-07 from it); max dDelta/dF 2.39e+07; tails 2e-66 4e-24 (61.6 s)
+start start_D60.0020_x0.7_kf13: |F| 2.3e-23 -> floor 1.6e-23 in 10 its; Delta 1.8098842580017149 (saved state +0.0e+00 from it); max dDelta/dF 8.87e+13; tails 1e-77 7e-41 (21.7 s)
+start start_D60.0020_x0.6_kf13: |F| 1.5e-19 -> floor 1.1e-19 in 3 its; Delta 1.8098842580017149 (saved state +0.0e+00 from it); max dDelta/dF 4.89e+07; tails 1e-77 5e-43 (9.0 s)
+start start_D60.0020_x0.7_kf11: |F| 5.3e-08 -> floor 3.1e-08 in 7 its; Delta 1.8098842648531221 (saved state -6.9e-09 from it); max dDelta/dF 4.25e+08; tails 5e-76 9e-23 (15.5 s)
+kf11 at D0 = 45.0507: floor 5.2e-14, more than 100 x base's: not stepped
+kf11 at D0 = 50.0075: floor 1.0e-14, more than 100 x base's: not stepped
+kf11 at D0 = 55.0351: floor 3.9e-08, more than 100 x base's: not stepped
+kf11 at D0 = 60.002: floor 3.1e-08, more than 100 x base's: not stepped
+12:59:36 start base_D45.05
+12:59:37 start node06_D45.05
+13:23:39 base_D45.05 exited 0: max_points 20
+13:23:39 start pred6_D45.05
+13:27:08 node06_D45.05 exited 0: max_points 20
+13:27:08 start pred8_D45.05
+13:33:56 pred6_D45.05 exited 0: max_span 3.0
+13:33:56 start pin11_D45.05
+13:35:08 pred8_D45.05 exited 0: max_span 3.0
+13:35:08 start pin9_D45.05
+14:08:36 pin9_D45.05 exited 0: max_points 20
+14:08:36 start base_D50.01
+14:10:40 pin11_D45.05 exited 0: max_points 20
+14:10:40 start node06_D50.01
+14:21:16 node06_D50.01 exited 0: 6 failed steps in a row
+14:21:16 start pred6_D50.01
+14:36:27 base_D50.01 exited 0: max_points 20
+14:36:27 start pred8_D50.01
+14:36:33 pred6_D50.01 exited 0: max_span 3.0
+14:36:33 start pin11_D50.01
+14:44:55 pred8_D50.01 exited 0: max_span 3.0
+14:44:55 start pin9_D50.01
+15:09:40 pin11_D50.01 exited 0: max_points 20
+15:09:40 start base_D55.04
+15:17:10 pin9_D50.01 exited 0: max_points 20
+15:17:10 start node06_D55.04
+15:22:27 node06_D55.04 exited 0: 6 failed steps in a row
+15:22:27 start pred6_D55.04
+15:39:39 base_D55.04 exited 0: max_points 20
+15:39:40 start pred8_D55.04
+15:42:28 pred6_D55.04 exited 0: max_span 3.0
+15:42:28 start pin11_D55.04
+16:11:48 pred8_D55.04 exited 0: max_points 20
+16:11:49 start pin9_D55.04
+16:39:23 pin11_D55.04 exited 0: max_points 20
+16:39:23 start base_D60.00
+17:14:20 pin9_D55.04 exited 0: max_hours 1.0
+17:14:21 start node06_D60.00
+17:24:33 node06_D60.00 exited 0: 6 failed steps in a row
+17:24:33 start pred6_D60.00
+17:30:58 base_D60.00 exited 0: max_points 20
+17:30:59 start pred8_D60.00
+17:52:21 pred8_D60.00 exited 0: 6 failed steps in a row
+17:52:22 start pin11_D60.00
+18:13:51 pred6_D60.00 exited 0: max_points 20
+18:13:52 start pin9_D60.00
+18:52:28 pin11_D60.00 exited 0: max_points 20
+18:58:08 pin9_D60.00 exited 0: max_points 20
+# Step-size test (hp/step_test.py)
+
+Reference: delta_dd.csv to D = 61.026449; Chebyshev fit rms 8.5e-15 (used above D = 61.0).
+
+## Start states
+
+| start | D | floor | max dDelta/dF | floor x sens | Delta - saved state | its |
+|---|---|---|---|---|---|---|
+| start_D45.0507_x0.7_kf13 | 45.0507 | 8.0e-26 | 1.3e+11 | 1.1e-14 | +0.0e+00 | 3 |
+| start_D45.0507_x0.6_kf13 | 45.0507 | 6.1e-23 | 4.8e+06 | 3.0e-16 | +0.0e+00 | 3 |
+| start_D45.0507_x0.7_kf11 | 45.0507 | 5.2e-14 | 8.1e+10 | 4.2e-03 | +8.6e-12 | 31 |
+| start_D50.0075_x0.7_kf13 | 50.0075 | 4.7e-25 | 1.5e+12 | 7.0e-13 | +0.0e+00 | 8 |
+| start_D50.0075_x0.6_kf13 | 50.0075 | 1.1e-21 | 1.3e+07 | 1.4e-14 | +0.0e+00 | 4 |
+| start_D50.0075_x0.7_kf11 | 50.0075 | 1.0e-14 | 1.0e+11 | 1.1e-03 | -4.6e-11 | 31 |
+| start_D55.0351_x0.7_kf13 | 55.0351 | 3.1e-24 | 1.3e+13 | 3.9e-11 | +0.0e+00 | 3 |
+| start_D55.0351_x0.6_kf13 | 55.0351 | 1.0e-20 | 2.8e+07 | 2.9e-13 | +0.0e+00 | 3 |
+| start_D55.0351_x0.7_kf11 | 55.0351 | 3.9e-08 | 2.4e+07 | 9.2e-01 | -1.6e-07 | 31 |
+| start_D60.0020_x0.7_kf13 | 60.0020 | 1.6e-23 | 8.9e+13 | 1.4e-09 | +0.0e+00 | 10 |
+| start_D60.0020_x0.6_kf13 | 60.0020 | 1.1e-19 | 4.9e+07 | 5.3e-12 | +0.0e+00 | 3 |
+| start_D60.0020_x0.7_kf11 | 60.0020 | 3.1e-08 | 4.3e+08 | 1.3e+01 | +6.9e-09 | 7 |
+
+## Runs
+
+| run | end | ok / failed | D covered | largest step | edge | Newton its | D per 100 its (steady) | D per hour (steady) | max abs dDelta_est | max abs(Delta - ref) | check |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| base_D45.05 | max_points 20 | 20 / 11 | 2.2895 | 0.1657 | 0.1190 | 473 | 0.4840 (0.4767) | 6.023 | 2.0e-20 | 1.6e-15 | pass |
+| node06_D45.05 | max_points 20 | 20 / 13 | 0.3968 | 0.0373 | 0.0297 | 498 | 0.0797 (0.0991) | 1.392 | 8.5e-25 | 4.2e-15 | pass |
+| pin11_D45.05 | max_points 20 | 20 / 11 | 2.2414 | 0.1657 | 0.1377 | 567 | 0.3953 (0.4104) | 4.078 | 1.1e-20 | 4.9e-15 | pass |
+| pin9_D45.05 | max_points 20 | 20 / 11 | 2.1280 | 0.1473 | 0.1190 | 519 | 0.4100 (0.3715) | 3.740 | 2.8e-21 | 1.1e-14 | pass |
+| pred6_D45.05 | max_span 3.0 | 10 / 3 | 3.1349 | 0.6629 | 0.4584 | 165 | 1.8999 (1.2459) | 17.053 | 2.2e-20 | 1.6e-15 | pass |
+| pred8_D45.05 | max_span 3.0 | 8 / 1 | 3.0572 | 0.7458 | 0.4696 | 111 | 2.7542 (0.0000) | 0.000 | 6.8e-20 | 1.6e-15 | pass |
+| base_D50.01 | max_points 20 | 20 / 11 | 1.4517 | 0.1112 | 0.0924 | 552 | 0.2630 (0.2730) | 3.610 | 2.9e-19 | 2.0e-15 | pass |
+| node06_D50.01 | 6 failed steps in a row | 0 / 6 | 0.0000 | 0.0000 | 0.0110 | 104 | 0.0000 (0.0000) | 0.000 | 0.0e+00 | nan | - |
+| pin11_D50.01 | max_points 20 | 20 / 11 | 1.4571 | 0.1056 | 0.0924 | 521 | 0.2797 (0.2586) | 2.739 | 1.3e-19 | 1.8e-15 | pass |
+| pin9_D50.01 | max_points 20 | 20 / 11 | 1.4840 | 0.1112 | 0.0799 | 515 | 0.2882 (0.2635) | 2.718 | 2.6e-19 | 4.7e-15 | pass |
+| pred6_D50.01 | max_span 3.0 | 13 / 5 | 3.2245 | 0.4450 | 0.3461 | 263 | 1.2260 (1.0034) | 13.221 | 4.5e-19 | 1.6e-15 | pass |
+| pred8_D50.01 | max_span 3.0 | 9 / 1 | 3.1368 | 0.7509 | 0.4728 | 118 | 2.6583 (5.3638) | 85.279 | 3.6e-19 | 1.6e-15 | pass |
+| base_D55.04 | max_points 20 | 20 / 12 | 0.8066 | 0.0740 | 0.0461 | 647 | 0.1247 (0.1214) | 1.738 | 2.1e-18 | 2.2e-15 | pass |
+| node06_D55.04 | 6 failed steps in a row | 0 / 6 | 0.0000 | 0.0000 | 0.0073 | 34 | 0.0000 (0.0000) | 0.000 | 0.0e+00 | nan | - |
+| pin11_D55.04 | max_points 20 | 20 / 11 | 0.9506 | 0.0658 | 0.0532 | 529 | 0.1797 (0.1627) | 0.911 | 5.4e-19 | 1.8e-15 | pass |
+| pin9_D55.04 | max_hours 1.0 | 15 / 9 | 0.7312 | 0.0658 | 0.0560 | 382 | 0.1914 (0.1664) | 0.697 | 4.4e-20 | 2.4e-15 | pass |
+| pred6_D55.04 | max_span 3.0 | 17 / 7 | 3.1807 | 0.3332 | 0.2915 | 377 | 0.8437 (0.9900) | 13.340 | 4.5e-18 | 2.2e-15 | pass |
+| pred8_D55.04 | max_points 20 | 20 / 19 | 0.2486 | 0.0439 | 0.0003 | 593 | 0.0419 (0.0080) | 0.098 | 3.5e-17 | 3.3e-15 | pass |
+| base_D60.00 | max_points 20 | 20 / 11 | 0.6282 | 0.0484 | 0.0339 | 555 | 0.1132 (0.1044) | 0.857 | 1.6e-17 | 4.0e-15 | pass |
+| node06_D60.00 | 6 failed steps in a row | 0 / 6 | 0.0000 | 0.0000 | 0.0040 | 35 | 0.0000 (0.0000) | 0.000 | 0.0e+00 | nan | - |
+| pin11_D60.00 | max_points 20 | 20 / 11 | 0.5822 | 0.0408 | 0.0339 | 510 | 0.1142 (0.1045) | 0.621 | 1.9e-18 | 2.4e-15 | pass |
+| pin9_D60.00 | max_points 20 | 20 / 11 | 0.5822 | 0.0408 | 0.0339 | 505 | 0.1153 (0.1081) | 0.960 | 2.2e-19 | 2.2e-15 | pass |
+| pred6_D60.00 | max_points 20 | 20 / 15 | 0.1337 | 0.0215 | 0.0043 | 578 | 0.0231 (0.0198) | 0.160 | 4.2e-16 | 1.8e-15 | pass |
+| pred8_D60.00 | 6 failed steps in a row | 4 / 10 | 0.0375 | 0.0161 | 0.0026 | 189 | 0.0198 (0.0000) | 0.000 | 8.0e-16 | 1.3e-15 | pass |
+
+options that beat base at 3+ of 4 D0: ['pred6']
+fewer than two winning options: no combined run

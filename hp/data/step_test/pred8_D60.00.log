@@ -1,0 +1,25 @@
+(re-)converged start D=60.001952 M=32 nodes=[0.3, 0.4, 0.5, 0.6, 0.7]: Delta 1.8098842580017149 ok True (43s)
+history point D=59.865: ok True, Delta 1.8102500228650358
+history point D=59.882578: ok True, Delta 1.8102029859479660
+history point D=59.900156: ok True, Delta 1.8101559757078058
+history point D=59.922129: ok True, Delta 1.8100972490514837
+history point D=59.949595: ok True, Delta 1.8100238998997300
+history point D=59.963328: ok True, Delta 1.8099872496740668
+history point D=59.980494: ok True, Delta 1.8099414603654598
+D=60.023452: no convergence (|F| 8.9e-23); dD 0.0215 -> 0.01075
+D=60.0127 Delta=1.8098556157011596-3.58e-17 its 8 |F| 1.4e-23 56s piv 1.3e-09..1.5e+07 dDelta/dF max 8.9e+13 tails 1e-77 5e-41
+   kc 220 -> 154 (residual and Jacobian bitwise unchanged)
+D=60.0288 Delta=1.8098126708384767+2.34e-17 its 4 |F| 7.3e-23 26s piv 3.0e-09..1.5e+07 dDelta/dF max 9.0e+13 tails 2e-55 1e-33
+   horizon series tail 1.2e-33: ks -> 127
+D=60.053014: no convergence (|F| 3.7e-20); dD 0.0241875 -> 0.01209375
+D=60.040921: no convergence (|F| 1.2e-20); dD 0.01209375 -> 0.006046875
+D=60.0349 Delta=1.8097965719298690-3.90e-17 its 15 |F| 1.8e-23 65s piv 2.0e-09..1.6e+07 dDelta/dF max 9.0e+13 tails 2e-55 3e-50
+D=60.043944: no convergence (|F| 2.7e-21); dD 0.0090703125 -> 0.00453515625
+D=60.0394 Delta=1.8097845004704223+2.99e-17 its 6 |F| 5.6e-23 27s piv 8.3e-10..1.6e+07 dDelta/dF max 9.0e+13 tails 2e-55 1e-45
+D=60.046212: no convergence (|F| 8.0e-21); dD 0.006802734375 -> 0.0034013671875
+D=60.04281: no convergence (|F| 3.7e-22); dD 0.0034013671875 -> 0.00170068359375
+D=60.04111: no convergence (|F| 1.4e-21); dD 0.00170068359375 -> 0.000850341796875
+D=60.040259: no convergence (|F| 9.9e-22); dD 0.000850341796875 -> 0.0004251708984375
+D=60.039834: no convergence (|F| 2.9e-21); dD 0.0004251708984375 -> 0.00021258544921875
+D=60.039622: no convergence (|F| 4.2e-21); dD 0.00021258544921875 -> 0.000106292724609375
+scan ended: 6 failed steps in a row (4 converged points, D = 60.039409)
