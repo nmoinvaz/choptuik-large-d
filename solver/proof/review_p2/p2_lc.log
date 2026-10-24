@@ -1,0 +1,54 @@
+atoms over the box: removed structural entries (Lemma F) tauD 8.35, tauv 49.4, taub 4.91, rho4 6.27
+kernel: sstar 0.187514, HF 14.0445, NF 117.475, KF 1.76297, gF 0.415043, gN0 0.935398, gNa 3.71747e-15, gNb 3.72862e-15, c1 2.55761, etaL 6.16576, NL 5.75828e+31
+closure at the certificate's h (b8m_lc_K4.log 'hyp'), this implementation's P(h):
+   V.N0 : h = 1.841763e+07, P(h) = 1.823507e+07 (ratio 0.9901); certificate's P(h) 1.823528e+07 (relative difference 1.1e-05)
+   V.Na : h = 1.843550e+07, P(h) = 1.825277e+07 (ratio 0.9901); certificate's P(h) 1.825297e+07 (relative difference 1.1e-05)
+   V.L  : h = 1.843164e+07, P(h) = 1.824894e+07 (ratio 0.9901); certificate's P(h) 1.824915e+07 (relative difference 1.1e-05)
+   V.Nb : h = 1.847983e+07, P(h) = 1.829665e+07 (ratio 0.9901); certificate's P(h) 1.829686e+07 (relative difference 1.1e-05)
+   V.F  : h = 3.410165e+07, P(h) = 3.353228e+07 (ratio 0.9833); certificate's P(h) 3.353249e+07 (relative difference 6.2e-06)
+   S.N0 : h = 3.840012e+03, P(h) = 3.775101e+03 (ratio 0.9831); certificate's P(h) 3.801992e+03 (relative difference 7.1e-03)
+   S.Na : h = 5.150587e+04, P(h) = 5.089315e+04 (ratio 0.9881); certificate's P(h) 5.099592e+04 (relative difference 2.0e-03)
+   S.L  : h = 2.058716e+03, P(h) = 2.037904e+03 (ratio 0.9899); certificate's P(h) 2.038332e+03 (relative difference 2.1e-04)
+   S.Nb : h = 1.697181e+05, P(h) = 1.681047e+05 (ratio 0.9905); certificate's P(h) 1.680377e+05 (relative difference 4.0e-04)
+   S.F  : h = 4.121057e+07, P(h) = 3.999083e+07 (ratio 0.9704); certificate's P(h) 4.000859e+07 (relative difference 4.4e-04)
+   b.N0 : h = 2.169132e+01, P(h) = 8.912680e+00 (ratio 0.4109); certificate's P(h) 2.147655e+01 (relative difference 5.9e-01)
+   b.Na : h = 3.744459e+04, P(h) = 3.694355e+04 (ratio 0.9866); certificate's P(h) 3.707385e+04 (relative difference 3.5e-03)
+   b.L  : h = 1.749796e+03, P(h) = 1.731790e+03 (ratio 0.9897); certificate's P(h) 1.732472e+03 (relative difference 3.9e-04)
+   b.Nb : h = 1.965499e+05, P(h) = 1.946444e+05 (ratio 0.9903); certificate's P(h) 1.946039e+05 (relative difference 2.1e-04)
+   b.F  : h = 4.124922e+06, P(h) = 4.081204e+06 (ratio 0.9894); certificate's P(h) 4.082248e+06 (relative difference 2.6e-04)
+   c.N0 : h = 3.623008e+06, P(h) = 3.587096e+06 (ratio 0.9901); certificate's P(h) 3.587137e+06 (relative difference 1.1e-05)
+   c.Na : h = 3.639627e+06, P(h) = 3.603546e+06 (ratio 0.9901); certificate's P(h) 3.603591e+06 (relative difference 1.2e-05)
+   c.L  : h = 6.372334e+01, P(h) = 6.308841e+01 (ratio 0.9900); certificate's P(h) 6.309242e+01 (relative difference 6.4e-05)
+   c.Nb : h = 3.665592e+06, P(h) = 3.629259e+06 (ratio 0.9901); certificate's P(h) 3.629299e+06 (relative difference 1.1e-05)
+   c.F  : h = 4.629081e+06, P(h) = 4.553557e+06 (ratio 0.9837); certificate's P(h) 4.553596e+06 (relative difference 8.5e-06)
+   Sp   : h = 5.968054e-07, P(h) = 5.903105e-07 (ratio 0.9891); certificate's P(h) 5.908964e-07 (relative difference 9.9e-04)
+diagnostics (this implementation vs b8m_lc_K4.log): d0 3.5863e+06 (3.5863e+06), r4 1.9007e+05 (1.9011e+05), Jarc 2.2138e-08 (2.216e-08), supGd 1.2536e+05 (1.2538e+05), GL 2037.9 (2038.3), NL 5.7583e+31 (5.7583e+31), loc_N0 1309 (1318.3), int_N0 2636.5 (2655.2), loc_Na 50893 (50996), int_Na 5.9552e+06 (5.9555e+06), loc_Nb 1.681e+05 (1.6804e+05), int_Nb 6.0955e+06 (6.0948e+06), loc_F 5.4915e+06 (5.4926e+06), int_F 8.3122e+07 (8.3162e+07)
+=> (A) closure P(h) < h: True (largest ratio 0.9905); (B) gauge offset d0 = 3.58626e+06 <= 1e7: True; (C) agreement with the certificate's P(h): True (largest |difference| outside beta.N0 7.07e-03)
+Lipschitz matrix (forward differentiation): spectral radius 0.70508; Perron-weight theta = 0.70508 (< 1: True) [30 s]; (D) True
+   der/V/Nb <- val/S/Nb: 1.0000e+00
+   der/V/Na <- val/S/Na: 1.0000e+00
+   der/V/N0 <- val/S/N0: 1.0000e+00
+   der/V/L <- val/S/L: 1.0000e+00
+   der/V/F <- val/S/F: 1.0000e+00
+   der/S/L <- val/b/Na: 9.4540e-01
+   val/V/N0 <- val/b/Na: 9.3169e-01
+   val/c/N0 <- val/b/Na: 9.3155e-01
+   val/V/L <- val/b/Na: 9.3099e-01
+   val/V/Na <- val/b/Na: 9.3079e-01
+   val/c/Na <- val/b/Na: 9.2858e-01
+   val/V/Nb <- val/b/Na: 9.2856e-01
+   val/c/Nb <- val/b/Na: 9.2201e-01
+   val/c/F <- val/b/Na: 7.3010e-01
+   der/c/F <- val/b/F: 5.9237e-01
+   der/c/Nb <- val/b/Nb: 5.7145e-01
+   val/V/F <- val/b/Na: 5.0319e-01
+   der/b/F <- val/V/F: 4.9912e-01
+   val/b/F <- val/V/F: 4.7258e-01
+   der/c/L <- val/b/L: 4.6222e-01
+   val/c/L <- val/b/L: 4.5762e-01
+   val/V/F <- val/S/F: 4.4862e-01
+   der/b/F <- val/c/F: 3.8672e-01
+   val/b/F <- val/c/F: 3.6737e-01
+   val/S/F <- val/b/F: 3.0463e-01
+[76 s]
+=> Lemma LC CONFIRMED by this implementation

@@ -1,0 +1,15 @@
+T1 reduction (original M = 1 equations -> B8's reduced system): worst residual 3.46e-80
+T2-T4 relative residuals: I1 8.27e-78, q 4.34e-81, I2 9.41e-77, I3 3.23e-79, I4 7.75e-80, G2 1.98e-81, qL 1.87e-81, Phi 1.34e-81
+=> ALL IDENTITIES HOLD (tolerance 1e-40)
+== --mutate=rho2
+T1 reduction (original M = 1 equations -> B8's reduced system): worst residual 3.46e-80
+T2-T4 relative residuals: I1 0.179, q 4.34e-81, I2 46.9, I3 0.0902, I4 7.75e-80, G2 1.98e-81, qL 2.66e-81, Phi 1.34e-81
+MUTATION rho2: failing identities ['I1', 'I2', 'I3']; expected ['I1', 'I2']: caught
+== --mutate=q
+T1 reduction (original M = 1 equations -> B8's reduced system): worst residual 3.46e-80
+T2-T4 relative residuals: I1 8.27e-78, q 0.145, I2 1.21e-76, I3 0.0071, I4 7.75e-80, G2 2.52e-81, qL 0.247, Phi 1.34e-81
+MUTATION q: failing identities ['q', 'I3', 'qL']; expected ['I3', 'q']: caught
+== --mutate=g3
+T1 reduction (original M = 1 equations -> B8's reduced system): worst residual 3.46e-80
+T2-T4 relative residuals: I1 8.27e-78, q 4.34e-81, I2 9.41e-77, I3 0.000148, I4 7.75e-80, G2 1.98e-81, qL 1.87e-81, Phi 1.34e-81
+MUTATION g3: failing identities ['I3']; expected ['I3']: caught

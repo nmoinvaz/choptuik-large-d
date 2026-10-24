@@ -1,0 +1,16 @@
+== --mutate=rho2
+=> (A) closure P(h) < h: True (largest ratio 0.9903); (B) gauge offset d0 = 3.58626e+06 <= 1e7: True; (C) agreement with the certificate's P(h): False (largest |difference| outside beta.N0 1.00e+00)
+Lipschitz matrix (forward differentiation): spectral radius 0.70506; Perron-weight theta = 0.70506 (< 1: True) [36 s]; (D) True
+MUTATION rho2: a check must FAIL: caught
+== --mutate=gF
+=> (A) closure P(h) < h: True (largest ratio 0.9905); (B) gauge offset d0 = 3.58626e+06 <= 1e7: True; (C) agreement with the certificate's P(h): False (largest |difference| outside beta.N0 4.32e-01)
+Lipschitz matrix (forward differentiation): spectral radius 0.54963; Perron-weight theta = 0.54963 (< 1: True) [37 s]; (D) False
+MUTATION gF: a check must FAIL: caught
+== --mutate=d0r4
+=> (A) closure P(h) < h: True (largest ratio 0.9905); (B) gauge offset d0 = 3.39620e+06 <= 1e7: True; (C) agreement with the certificate's P(h): False (largest |difference| outside beta.N0 5.30e-02)
+Lipschitz matrix (forward differentiation): spectral radius 0.70508; Perron-weight theta = 0.70508 (< 1: True) [38 s]; (D) True
+MUTATION d0r4: a check must FAIL: caught
+== --mutate=phid
+=> (A) closure P(h) < h: True (largest ratio 0.9905); (B) gauge offset d0 = 3.58626e+06 <= 1e7: True; (C) agreement with the certificate's P(h): False (largest |difference| outside beta.N0 1.89e-01)
+Lipschitz matrix (forward differentiation): spectral radius 0.63220; Perron-weight theta = 0.63220 (< 1: True) [38 s]; (D) False
+MUTATION phid: a check must FAIL: caught
