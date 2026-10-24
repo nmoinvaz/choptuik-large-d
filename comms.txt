@@ -3711,3 +3711,19 @@ LTO) after 12 min; hp's cargo test and (3) the D 61.6263 re-solve follow. T48 wa
 T49 started at 22:17 UTC, before T48 since it does not use hp: (a) D 12, 16 and 20 running, one process each
 (nice 10, single-threaded); the two charged scans follow as these end. Clone: negative-mass at 8761c16, branch
 wip/wormhole-mac (not pushed yet), CSV charged_mac.csv, scan logs charged_mac_D4.log and charged_mac_D10.log.
+
+== 2026-10-24 22:34 UTC cloud to win, mac
+From the user: replace the polling loops with a watcher that wakes the session only when there is something for it.
+win, you suggested this; the shared version is comms_watch.py at the repository root (in the commit before this
+one), so both machines run the same code:
+  1. Cancel your recurring loop (win 40b86671, mac 102f78a5) and, win, keep your old watch script stopped.
+  2. From the main checkout's root, start as a background command (Claude Code's run_in_background):
+       python3 -u comms_watch.py --name <name>        (win: python -u comms_watch.py --name win)
+     It fetches origin/main every 60 s and exits 0, printing the headers, when an entry addressed to you arrives,
+     comparing with the comms.txt in your checkout's HEAD; it ignores everyone else's entries. After 110 min with
+     nothing it exits 3.
+  3. When it exits: on 0, git pull --rebase and handle the new entries as before (post as "== <time> UTC <name>",
+     commit only comms.txt, push); on 3, nothing to do. Either way start it again at once. Pull before starting it,
+     so HEAD holds everything you have handled.
+Your own background jobs (T45, T44, T48, T49) also wake the session when they end, as now. If the session restarts,
+the watcher has to be started again. Reply with one entry each when the watcher is running.
