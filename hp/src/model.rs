@@ -51,7 +51,9 @@ pub struct Ctx<const B: usize> {
     pub lam: DD,
     /// Deliberate breakage of the f64 lanes only (`jacobian_f64`), for the control of the Jacobian-agreement check
     /// (hp/mixed_check.py --mutate): 0 none, 1 no tau derivative, 2 omega scaled by 1 + 1e-9, 3 the horizon solves'
-    /// kappa tangent term dropped. The double-double lanes never read it.
+    /// kappa tangent term dropped; 6 the centre series' scale wrong at one order (twice sigma for the order-7 terms
+    /// built from order 6), the control of the scaled series' bit-identity (hp/highm_check.py scaled). The
+    /// double-double lanes never read it.
     pub mutate: u8,
     /// Parts of the f64 Jacobian (TAN_F64 lanes) computed in double-double instead, rounded to f64; bit flags HDD_*
     /// (notes/LARGE_D_MIXED.md). 0, the default, changes nothing. The double-double lanes never read it.
@@ -274,12 +276,13 @@ pub fn centre_series<T: Lane, const B: usize>(ctx: &Ctx<B>, p1: &Fl<T, B>, c0: &
         cc[k] = cs_range(&cc, &a2, k, 0, k - 1).muls(n1 * recip_int(k));
         // in the scaled variable every term of the x^(k-1) equation carries sigma^k: those built from order k - 1
         // alone (the d/dtau and x p' terms) gain one factor sigma, the Cauchy sums of index sum k none
-        let dp = dtau(ctx, &pp[k - 1], omega).mulf(sig);
-        let dm = dtau(ctx, &mm[k - 1], omega).mulf(sig);
+        let sk = if T::TAN_F64 && ctx.mutate == 6 && k == 7 { 2.0 * sig } else { sig };
+        let dp = dtau(ctx, &pp[k - 1], omega).mulf(sk);
+        let dm = dtau(ctx, &mm[k - 1], omega).mulf(sk);
         let s1p = cs_w(&cc, &pp, k, 1, k - 1, |i| (k - i) as f64);
         let s1m = cs_w(&cc, &mm, k, 1, k - 1, |i| (k - i) as f64);
-        let xpx = pp[k - 1].mulf(kf - 1.0).mulf(sig) - s1p;
-        let xmx = mm[k - 1].mulf(kf - 1.0).mulf(sig) + s1m;
+        let xpx = pp[k - 1].mulf(kf - 1.0).mulf(sk) - s1p;
+        let xmx = mm[k - 1].mulf(kf - 1.0).mulf(sk) + s1m;
         let xcxp = cs_w(&cc, &pp, k, 1, k, |j| j as f64);
         let xcxm = cs_w(&cc, &mm, k, 1, k, |j| j as f64);
         let cp = cs(&cc, &pp, k);
