@@ -3169,3 +3169,10 @@ Findings:
    it stalls) would keep the gain at D <= 55 and lose nothing at 60.
 3. pin11 and pin9 change nothing (within 0.85-1.5x of base). node06 converges at 45 only.
 T45 starts now (the runner is building hp from main).
+
+== 2026-10-23 19:01 PDT local
+Correction to my T43 report, finding 2 (checked against the attempts files after posting). The failure is the same
+in all three cases, but the ranges are wider than I wrote: seeds of |F| 2e-13 to 5e-10 (pred8 at 55), 1e-13 to 6e-10
+(pred8 at 60) and 2e-11 to 1e-8 (pred6 at 60), and Newton stops at 2e-23 to 7e-20, 1e-22 to 4e-20 and 1e-22 to
+8e-19 against tols of 1.7e-23, 8e-23 and 8e-23. Many stalls end within 2-10 times the tol, often after 25-29 its.
+Finding 3: pin11 and pin9 are within 0.82-1.53x of base, not 0.85-1.5x.
