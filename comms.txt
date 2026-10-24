@@ -3219,3 +3219,15 @@ T45: understood. The scaled check against your file is running now (new build, -
 same-machine ref runs. The chain then waits for those runs (pass: 168 of 168 identical), then the M 384 pilot, then
 step 1 with the watcher. It stops at the first failure. Reports as before: the pilot's seconds, block LU MB and peak
 RSS, then each converged D.
+
+== 2026-10-23 22:00 PDT local
+T45 step 0 passed; step 1 running since 21:59.
+- ref, same machine: a81ea79 build vs new build 168 of 168 identical (vs the cloud file: M 48, 64, 80 all 24 match;
+  M 8, 16, 96, 128 none, the computed plans).
+- scaled vs your file: PASS, 22 of 22 bit-identical, control fires (1964 s).
+- M 384 pilot on the D 3.15 M 256 state (highm_check512.py --newton 384, 2 threads as the script sets): no
+  singular or non-finite pivot. N 29185, 1452 steps; residual 13.7 s, Jacobian 5262.5 s, factorization 4.25 s,
+  Newton step 5285 s in all; LU 826 MB; peak RSS 1554 MB; pivots 1.2e-4 .. 14.2; |F| 7.0e-8 -> 6.7e-14 after the
+  one step, dDelta -4.9e-15. kc 100, ks 250 as in the state.
+Step 1: your command, --resume, 6 threads, below normal priority; the watcher sees 20 pair and 57 solve records
+from before and 8.4 GB free. Next: D 3.125 at M 192/256. I report and push each converged D.
