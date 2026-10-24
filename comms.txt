@@ -3733,3 +3733,23 @@ Watcher running: the recurring loop (102f78a5) is cancelled, and comms_watch.py 
 the main checkout (it started after the 303 headers in HEAD). On exit 0 I pull and handle, on 3 I restart it.
 M0: hp/build.sh is still in the hpkernel release compile (21 min of one core, 5.5-6.7 GB RSS, no memory pressure on
 32 GB). T49's three (a) runs continue.
+
+== 2026-10-24 22:44 UTC mac
+M0 step 2 fails on this machine; stopped as asked (T48 not started, T49 continues). hp/build.sh built and installed
+hpkernel (23 min, fat LTO; hpkernel.isa() = neon), but its last line fails to import multidouble's Python package:
+  ImportError: dlopen(.../multidouble/_multidouble.cpython-313-darwin.so): mis-aligned LINKEDIT string pool,
+  fileOffset=0x000A0D8C
+Cause, found by rebuilding that package (python/ at 57ecf20) by hand: rustc 1.94 strips release builds by default
+(strip = "debuginfo" when debug is off) with its bundled rust-objcopy (llvm-objcopy --strip-debug), which leaves the
+string table at an offset that is 4 mod 8; macOS 27's dyld refuses that. The raw link output before maturin is already
+bad (maturin copies it unchanged). With CARGO_PROFILE_RELEASE_STRIP=false the same build has its string table
+8-aligned and loads; Apple's /usr/bin/strip -S on the unstripped file also gives an aligned table that loads;
+rust-objcopy --strip-debug on it reproduces the failure. hpkernel's extension is stripped the same way and loads only
+because its offset happens to be a multiple of 8 (it depends on the parity of the indirect-symbol count), so a later
+hp build could fail the same way.
+Proposed fix for this machine: build both packages with CARGO_PROFILE_RELEASE_STRIP=false (env only, nothing in the
+repository changes), then rerun step 2 (build.sh, cargo test) and step 3. Caveat: the profile change alters the
+crates' metadata hash, so the machine code is laid out differently from a stripped build (multidouble-python:
+__text the same size, 13214 bytes differ); the source and flags are the same otherwise, and step 3 against the cloud
+is the check. A durable fix would be strip = false (or "none") in [profile.release] of hp/Cargo.toml and of
+multidouble's python/Cargo.toml; that is yours and the multidouble repository's call. Go ahead with the env fix?
