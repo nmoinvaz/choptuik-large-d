@@ -40,7 +40,7 @@
 <g><circle cx="139.3" cy="217.1" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.25: Δ = 3.1931538137723 (M = 192, change from the next lower M 1.4e-11); formula 3.193146</title></g>
 <g><circle cx="151.5" cy="196.9" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.3: Δ = 3.2672125673882 (M = 160, change from the next lower M 1.9e-10); formula 3.267209</title></g>
 <g><circle cx="163.8" cy="181.6" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.35: Δ = 3.3234620707310 (M = 160, change from the next lower M 7.3e-11); formula 3.323465</title></g>
-<g><circle cx="176.0" cy="170.0" r="4.5" fill="#fcfcfb" stroke="#eda100" stroke-width="1.6"/><title>D = 3.4: Δ = 3.3662517901318 (M = 96, change from the next lower M 1.3e-07); formula 3.366258</title></g>
+<g><circle cx="176.0" cy="170.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.4: Δ = 3.3662517880573 (M = 128, change from the next lower M 2.1e-09); formula 3.366258</title></g>
 <g><circle cx="182.2" cy="165.3" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.425: Δ = 3.3835865503739 (M = 128, change from the next lower M 1.0e-09); formula 3.383593</title></g>
 <g><circle cx="188.3" cy="161.2" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.45: Δ = 3.3986246505412 (M = 128, change from the next lower M 1.4e-09); formula 3.398631</title></g>
 <g><circle cx="194.4" cy="157.6" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.475: Δ = 3.4116196409154 (M = 128, change from the next lower M 1.6e-09); formula 3.411624</title></g>
@@ -137,10 +137,11 @@
 <g><circle cx="856.4" cy="179.9" r="4" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.7: M 80 → 96 moves Δ by 1.24e-09</title></g>
 <g><circle cx="960.6" cy="220.6" r="4" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>D = 4.0: M 80 → 96 moves Δ by 1.31e-11</title></g>
 <text x="967.6" y="224.6" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">80→96</text>
-<path d="M700.1,144.9 L717.5,147.9 L734.8,154.6 L760.9,181.6 L769.6,178.5 L778.3,177.6 L786.9,180.0 L804.3,193.4 L821.7,216.3 L856.4,212.2 L960.6,265.2" fill="none" stroke="#e87ba4" stroke-width="1.4" stroke-opacity="0.6" stroke-linejoin="round"/>
+<path d="M700.1,144.9 L717.5,147.9 L734.8,154.6 L752.2,175.3 L760.9,181.6 L769.6,178.5 L778.3,177.6 L786.9,180.0 L804.3,193.4 L821.7,216.3 L856.4,212.2 L960.6,265.2" fill="none" stroke="#e87ba4" stroke-width="1.4" stroke-opacity="0.6" stroke-linejoin="round"/>
 <g><circle cx="700.1" cy="144.9" r="4" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.25: M 96 → 128 moves Δ by 6.16e-08</title></g>
 <g><circle cx="717.5" cy="147.9" r="4" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.3: M 96 → 128 moves Δ by 4.40e-08</title></g>
 <g><circle cx="734.8" cy="154.6" r="4" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.35: M 96 → 128 moves Δ by 2.09e-08</title></g>
+<g><circle cx="752.2" cy="175.3" r="4" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.4: M 96 → 128 moves Δ by 2.07e-09</title></g>
 <g><circle cx="760.9" cy="181.6" r="4" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.425: M 96 → 128 moves Δ by 1.02e-09</title></g>
 <g><circle cx="769.6" cy="178.5" r="4" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.45: M 96 → 128 moves Δ by 1.45e-09</title></g>
 <g><circle cx="778.3" cy="177.6" r="4" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>D = 3.475: M 96 → 128 moves Δ by 1.60e-09</title></g>
