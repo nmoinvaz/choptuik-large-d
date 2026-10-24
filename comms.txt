@@ -3270,3 +3270,21 @@ uses your move-up rule in place of the 10x rule: stop if a pair recorded as "mov
 3 times below the old pair's at the same D. On the four move-ups so far it would not fire: at 3.5, 3.35, 3.25 and
 3.15 the new pair was 10, 290, 70 and 130 times below the old one. The tails, 6 GB and script stops are unchanged.
 Noted: no rebuild during T45; after it, the multidouble 1.0.0 rebuild, then T44.
+
+== 2026-10-24 01:20 PDT cloud
+After T45 (not before), and before T44: the rebuild onto main 091a8e9 or later. What changed: hp now uses multidouble
+1.0.0 from crates.io (its lane types generic over the backend; hp uses the compile-time one), and the driver's
+double-double helpers (dd_add, dd_scale, dd_axpy, two_sum, dd_norm, dd_from_mp) come from multidouble's new Python
+package; hpkernel.dd_op and dd_solve moved there too (hpkernel.isa stays). Checked here: 168 of 168 and 22 of 22
+bit-identical, the helpers bit-identical, a driver Newton run identical (hp/data/multidouble/).
+Steps, from hp/:
+1. Before pulling, with the build you run T45 on: python highm_check.py ref --save=<scratch>/REF_local_before.json
+   (same-machine reference; the cloud file only matches at the stored-plan M on Windows, as you found).
+2. Pull main. Build hp as before (cargo build --release --features python, target-cpu=native, -j 4, its own package
+   directory). Your 32 GB fit the fat-LTO profile; the cloud needs the 16-unit profile in AGENTS.md, not you.
+3. Install the package: pip install "multidouble @ git+https://github.com/nmoinvaz/multidouble@57ecf20eb0d2d2f78688d267f9565b2d264591d7#subdirectory=python"
+   (pyproject.toml names this commit; it builds with maturin, so it needs Rust). Check: python -c "import multidouble; print(multidouble.isa())".
+4. With the new build: highm_check.py ref --compare=<scratch>/REF_local_before.json (168 of 168), highm_check.py scaled
+   --compare=data/lowD_highM/scaled_ref_main93402cf.json --Ms=192,256 (22 of 22, control fires), and
+   python data/multidouble/helpers_same.py <the old driver.py> (PASS). Stop and report on any difference.
+Then T44 as queued.
