@@ -226,7 +226,20 @@ impl Tail {
 // ---------------------------------------------------------------------------------------------------------------
 // centre series (regular centre), evaluated at nodes[0]
 // ---------------------------------------------------------------------------------------------------------------
+/// The power of two nearest to x (x > 0): the series below are computed in the scaled variable x / series_scale(x0)
+/// (u / series_scale(u0) at the horizon), so that their coefficients c_k sigma^k stay near the evaluation radius's
+/// scale instead of growing like r^-k, which overflows the f64 exponent range (and the f64 Jacobian's tangents first)
+/// when r is small and the order high (r ~ 1e-3 at 100 orders: 1e300). Scaling by a power of two is exact in binary
+/// floating point, so the values agree bit for bit with the unscaled recursion wherever that one neither overflows nor
+/// underflows (notes/HIGH_M.md 9.5).
+pub fn series_scale(x: f64) -> f64 {
+    2f64.powi(x.log2().round() as i32)
+}
+
+/// Centre-series coefficients of p, m, a, c in the scaled variable x / sigma, sigma = series_scale(nodes[0]): entry k
+/// is c_k sigma^k (multiply by sigma^-k for the coefficients in x).
 pub fn centre_series<T: Lane, const B: usize>(ctx: &Ctx<B>, p1: &Fl<T, B>, c0: &Fl<T, B>, omega: T) -> [Vec<Fl<T, B>>; 4] {
+    let sig = series_scale(ctx.nodes[0]);
     let n = ctx.n;
     let n1 = n - DD::ONE;
     let nh = n.mul_f(0.5);
@@ -240,11 +253,11 @@ pub fn centre_series<T: Lane, const B: usize>(ctx: &Ctx<B>, p1: &Fl<T, B>, c0: &
     let mut a2 = vec![z; kmax + 1];
     aa[0] = Fl::splat(DD::ONE);
     cc[0] = *c0;
-    pp[1] = *p1;
-    mm[1] = -*p1;
+    pp[1] = p1.mulf(sig);
+    mm[1] = -pp[1];
     a2[0] = aa[0] * aa[0];
     let invc = Fl::<T, B>::splat(DD::ONE) / cc[0];
-    let mut tail = Tail::new(ctx.nodes[0]);
+    let mut tail = Tail::new(ctx.nodes[0] / sig);
     let cut = Tail::active::<T, B>(ctx);
     if cut {
         tail.done_any(0, [&pp[0], &mm[0], &aa[0], &cc[0]]);
@@ -259,12 +272,14 @@ pub fn centre_series<T: Lane, const B: usize>(ctx: &Ctx<B>, p1: &Fl<T, B>, c0: &
         aa[k] = (s.mulf(0.5) - t3.muls(n1.mul_f(0.5))).muls(DD::ONE / (DD::from_f64(kf) + n1));
         a2[k] = cs(&aa, &aa, k);
         cc[k] = cs_range(&cc, &a2, k, 0, k - 1).muls(n1 * recip_int(k));
-        let dp = dtau(ctx, &pp[k - 1], omega);
-        let dm = dtau(ctx, &mm[k - 1], omega);
+        // in the scaled variable every term of the x^(k-1) equation carries sigma^k: those built from order k - 1
+        // alone (the d/dtau and x p' terms) gain one factor sigma, the Cauchy sums of index sum k none
+        let dp = dtau(ctx, &pp[k - 1], omega).mulf(sig);
+        let dm = dtau(ctx, &mm[k - 1], omega).mulf(sig);
         let s1p = cs_w(&cc, &pp, k, 1, k - 1, |i| (k - i) as f64);
         let s1m = cs_w(&cc, &mm, k, 1, k - 1, |i| (k - i) as f64);
-        let xpx = pp[k - 1].mulf(kf - 1.0) - s1p;
-        let xmx = mm[k - 1].mulf(kf - 1.0) + s1m;
+        let xpx = pp[k - 1].mulf(kf - 1.0).mulf(sig) - s1p;
+        let xmx = mm[k - 1].mulf(kf - 1.0).mulf(sig) + s1m;
         let xcxp = cs_w(&cc, &pp, k, 1, k, |j| j as f64);
         let xcxm = cs_w(&cc, &mm, k, 1, k, |j| j as f64);
         let cp = cs(&cc, &pp, k);
@@ -292,7 +307,7 @@ pub fn centre_series<T: Lane, const B: usize>(ctx: &Ctx<B>, p1: &Fl<T, B>, c0: &
 
 pub fn centre_state<T: Lane, const B: usize>(ctx: &Ctx<B>, p1: &Fl<T, B>, c0: &Fl<T, B>, omega: T) -> State<T, B> {
     let s = centre_series(ctx, p1, c0, omega);
-    let x = DD::from_f64(ctx.nodes[0]);
+    let x = DD::from_f64(ctx.nodes[0]).mul_f(1.0 / series_scale(ctx.nodes[0]));
     [horner(&s[0], x), horner(&s[1], x), horner(&s[2], x), horner(&s[3], x)]
 }
 
@@ -523,6 +538,8 @@ fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, lu: &DDLu, lu_t: &DDLu, kappa: 
     Fl::from_vt(&fv, &fd)
 }
 
+/// Horizon-series coefficients of p, m, a, c in the scaled variable u / sigma, sigma = series_scale(u0) (u = 1 - x):
+/// entry kk is c_kk sigma^kk, as for centre_series.
 pub fn horizon_series<T: Lane, const B: usize>(
     ctx: &Ctx<B>,
     m0: &Fl<T, B>,
@@ -531,6 +548,8 @@ pub fn horizon_series<T: Lane, const B: usize>(
     lus: &[DDLu],
     lus_t: &[DDLu],
 ) -> [Vec<Fl<T, B>>; 4] {
+    let sig = series_scale(ctx.u0().hi);
+    let isig = 1.0 / sig;
     let n1 = ctx.n - DD::ONE;
     let nh = ctx.n.mul_f(0.5);
     let ks = ctx.ks;
@@ -554,39 +573,45 @@ pub fn horizon_series<T: Lane, const B: usize>(
     mm[0] = *m0;
     a2[0] = aa[0] * aa[0];
     dm[0] = dtau(ctx, &mm[0], omega);
+    // the scaled coefficients (sigma^i times) of w = (1 - u) - c and z = c + (1 - u); `sone` is the u term's sigma
+    let sone = one.mulf(sig);
     let wfun = |c: &Vec<Fl<T, B>>, i: usize| -> Fl<T, B> {
         match i {
             0 => one - c[0],
-            1 => -c[1] - one,
+            1 => -c[1] - sone,
             _ => -c[i],
         }
     };
     let zfun = |c: &Vec<Fl<T, B>>, i: usize| -> Fl<T, B> {
         match i {
             0 => c[0] + one,
-            1 => c[1] - one,
+            1 => c[1] - sone,
             _ => c[i],
         }
     };
     ww[0] = wfun(&cc, 0);
     zc[0] = zfun(&cc, 0);
     let izc0 = one / zc[0];
-    let mut tail = Tail::new(ctx.u0().hi);
+    let mut tail = Tail::new(ctx.u0().hi * isig);
     let cut = Tail::active::<T, B>(ctx) && ctx.f64_dd & HDD_NOTAIL == 0;
     let mut last = ks;
+    // In the scaled variable each term of the order-kk equations carries sigma^kk: a coefficient of order kk + 1 made
+    // from order-kk terms gains sigma, a term of index sum kk - 1 gains sigma, one of index sum kk + 1 loses it.
     for kk in 0..=ks {
         let kf = kk as f64;
         let ik1 = recip_int(kk + 1);
         let t = cs(&cc, &a2, kk);
-        cc[kk + 1] = (cc[kk].mulf(kf) - (t - cc[kk]).muls(n1)).muls(ik1);
-        ww[kk + 1] = wfun(&cc, kk + 1) - wfun(&cc, kk);
-        vv[kk] = cc[kk + 1].mulf((kk + 1) as f64) - cc[kk].mulf(kf);
-        zc[kk + 1] = zfun(&cc, kk + 1) - zfun(&cc, kk);
+        cc[kk + 1] = (cc[kk].mulf(kf) - (t - cc[kk]).muls(n1)).muls(ik1).mulf(sig);
+        ww[kk + 1] = wfun(&cc, kk + 1) - wfun(&cc, kk).mulf(sig);
+        vv[kk] = cc[kk + 1].mulf((kk + 1) as f64).mulf(isig) - cc[kk].mulf(kf);
+        zc[kk + 1] = zfun(&cc, kk + 1) - zfun(&cc, kk).mulf(sig);
         pm[kk] = pp[kk] + mm[kk];
-        let wpu = cs_w(&pp, &ww, kk + 1, 0, kk, |i| i as f64);
-        let tau = if kk >= 1 { -dp[kk - 1] } else { z };
+        let wpu = cs_w(&pp, &ww, kk + 1, 0, kk, |i| i as f64).mulf(isig);
+        let tau = if kk >= 1 { -dp[kk - 1].mulf(sig) } else { z };
         let r = (((tau - wpu) + cs(&vv, &pp, kk)) + cs(&cc, &pp, kk)) - cs(&cc, &pm, kk).muls(nh);
-        let kappa = ((cc[1] + one).mulf(kf) + cc[1] + one).adds(-nh);
+        // kappa (and the LUs of horizon_lus) take the unscaled first-order coefficient
+        let c1 = cc[1].mulf(isig);
+        let kappa = ((c1 + one).mulf(kf) + c1 + one).adds(-nh);
         pp[kk] = psolve(ctx, &lus[kk], &lus_t[kk], &kappa, &(-r), omega);
         dp[kk] = dtau(ctx, &pp[kk], omega);
         q2[kk] = cs(&pp, &pp, kk) + cs(&mm, &mm, kk);
@@ -596,13 +621,13 @@ pub fn horizon_series<T: Lane, const B: usize>(
         }
         let a3 = cs(&aa, &a2, kk);
         let ag = cs(&aa, &q2, kk) + (aa[kk] - a3).muls(n1);
-        aa[kk + 1] = (aa[kk].mulf(kf) - ag.mulf(0.5)).muls(ik1);
+        aa[kk + 1] = (aa[kk].mulf(kf) - ag.mulf(0.5)).muls(ik1).mulf(sig);
         a2[kk + 1] = cs(&aa, &aa, kk + 1);
-        let tau = if kk >= 1 { dm[kk] - dm[kk - 1] } else { dm[kk] };
+        let tau = if kk >= 1 { dm[kk] - dm[kk - 1].mulf(sig) } else { dm[kk] };
         pm[kk] = pp[kk] + mm[kk];
-        let zmu = cs_w(&mm, &zc, kk + 1, 0, kk, |i| i as f64);
+        let zmu = cs_w(&mm, &zc, kk + 1, 0, kk, |i| i as f64).mulf(isig);
         let rest = (((tau - zmu) - cs(&vv, &mm, kk)) - cs(&cc, &mm, kk)) + cs(&cc, &pm, kk).muls(nh);
-        mm[kk + 1] = (rest * izc0).muls(ik1);
+        mm[kk + 1] = (rest * izc0).muls(ik1).mulf(sig);
         dm[kk + 1] = dtau(ctx, &mm[kk + 1], omega);
     }
     pp.truncate(last + 1);
@@ -614,7 +639,7 @@ pub fn horizon_series<T: Lane, const B: usize>(
 
 pub fn horizon_state<T: Lane, const B: usize>(ctx: &Ctx<B>, m0: &Fl<T, B>, a0: &Fl<T, B>, omega: T, lus: &[DDLu], lus_t: &[DDLu]) -> State<T, B> {
     let s = horizon_series(ctx, m0, a0, omega, lus, lus_t);
-    let u = ctx.u0();
+    let u = ctx.u0().mul_f(1.0 / series_scale(ctx.u0().hi));
     [horner(&s[0], u), horner(&s[1], u), horner(&s[2], u), horner(&s[3], u)]
 }
 
