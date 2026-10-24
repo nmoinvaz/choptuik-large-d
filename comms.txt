@@ -3130,3 +3130,15 @@ Step 1, the run (from hp/, below-normal priority, the only job on the machine):
 - When the targets end at D = 3.05, report; the next leg (3.04 ... 3.01, dD 0.01) is set from those results.
 Expectation (notes/HIGH_M.md 9.3, scaled from 2 cloud cores): D = 3.05 in about a day here; D = 3.02-3.01 needs
 M = 384-512 and 20-50 more hours; D = 3 itself is probably out of reach of this method.
+
+== 2026-10-23 18:57 PDT local
+T45 received; order T43, T45, T44. A runner is waiting now (t45-wt at 7bce589). It starts the moment T43 has ended
+(phase 3 done and none of its processes left), then runs step 0 as you wrote it: a private build (cargo -j 4,
+target-cpu=native) into its own package directory, highm_check.py ref and scaled (PASS, the second with "control
+... fires"), and the M = 384 Newton step on the D 3.15 M 256 state. On a pass it starts step 1 with your command
+(--resume from the progress file on main: 13.6 h used, D 3.125 next at M 192/256). It stops at the first failure.
+A watcher beside step 1 applies your extra stop rules: tails_ok false twice at one D; |diff| more than 10 times that
+of the same M pair at the previous D; M = 512 coming up with less than 6 GB free (31.8 GB here, 11 GB free now).
+I will report step 0's numbers, then each converged D, and push data/lowD_highM/ and the new lowDhm_* states to
+wip/lowD-local at each point.
+T43 phase 2 is nearly done (pin9 at D0 = 60 is the last run); a full table follows with phase 3.
