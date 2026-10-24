@@ -78,6 +78,15 @@ impl<T: Lane, const B: usize> Fl<T, B> {
         }
         Fl(r)
     }
+    /// times a power of two, every part exact (multidouble's Lane::mul_pwr2): bitwise `mulf(s)` for such s
+    #[inline(always)]
+    pub fn mul_pwr2(self, s: f64) -> Self {
+        let mut r = self.0;
+        for b in 0..B {
+            r[b] = self.0[b].mul_pwr2(s);
+        }
+        Fl(r)
+    }
     /// times a lane-constant scalar of the generic type (e.g. omega, which carries a tangent)
     #[inline(always)]
     pub fn mul_t(self, s: T) -> Self {

@@ -108,12 +108,19 @@ def reintegrate(s, zh, zl, nodes, M, h=0.002):
 
 
 def tails(s, zh, zl, nodes, M):
+    """max_k |c_n(k)| x^n over the last 3 orders n of the centre (x = first node) and horizon (x = 1 - last node)
+    series; from the scaled coefficients c_n sigma^n where the kernel has them (no overflow; notes/HIGH_M.md 9.5)"""
     out = []
     for which, x in ((0, nodes[0]), (1, 1 - nodes[-1])):
-        h, l = s.series(zh, zl, which)
+        try:
+            h, l = s.series(zh, zl, which, True)
+            sig = s.series_scale(which)
+        except TypeError:           # a kernel before the scaled series
+            h, l = s.series(zh, zl, which)
+            sig = 1.0
         c = np.abs((h + l).reshape(-1, 4, M)).max(axis=(1, 2))
         k = np.arange(len(c))
-        out.append(float((c * x ** k)[-3:].max()))
+        out.append(float((c * (x / sig) ** k)[-3:].max()))
     return out
 
 
@@ -141,12 +148,25 @@ def weakest(s, w, iters=10):
 
 
 def peak_rss_mb():
-    """the process's peak resident memory in MB (None where the resource module is missing, e.g. Windows)"""
+    """the process's peak resident memory in MB: the resource module on Unix; on Windows psutil's peak working set if
+    psutil is installed, else None"""
     try:
         import resource
     except ImportError:
-        return None
+        try:
+            import psutil
+            return round(psutil.Process().memory_info().peak_wset / 2**20, 1)
+        except (ImportError, AttributeError):
+            return None
     return round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024, 1)
+
+
+def load_avg():
+    """the 1-minute load average (None where the OS has none, e.g. Windows)"""
+    try:
+        return round(os.getloadavg()[0], 2)
+    except (AttributeError, OSError):
+        return None
 
 
 def solve_point(D, M, zh, zl, src, a, nodes, outdir, log, segs=None):

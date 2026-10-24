@@ -1,0 +1,28 @@
+Traceback (most recent call last):
+  File "/home/claude/dss/agentHM/wt/hp/highm_check512.py", line 66, in <module>
+    main()
+    ~~~~^^
+  File "/home/claude/dss/agentHM/wt/hp/highm_check512.py", line 53, in main
+    dh, dl, _, _, p0, p1 = s.newton_mixed(z, 0 * z, block=True)
+                           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+ValueError: singular or non-finite pivot at column 0 (0)
+{"M": 512, "D": 3.15, "start": "lowDhm_x0.000625-0.95_D3.1500_M256.npz", "nodes": 18, "N": 38913, "steps": 1897, "F": 7.375945824714336e-08, "s_make": 21.3, "s_plan": 63.9, "s_residual": 44.8, "tail_c": 2.4406694786339406e-20, "tail_h": 3.1922401068462203e-52, "peak_rss_mb_residual": 1093.5, "peak_rss_mb": 1093.5, "load": 3.94}
+{"M": 512, "D": 3.15, "start": "lowDhm_x0.000625-0.95_D3.1500_M256.npz", "nodes": 18, "N": 38913, "steps": 1897, "F": 7.375945824714336e-08, "s_make": 22.6, "s_plan": 67.2, "s_residual": 44.2, "tail_c": 2.4406694786339406e-20, "tail_h": 3.1922401068462203e-52, "peak_rss_mb_residual": 1090.8, "peak_rss_mb": 1090.8, "load": 3.98}
+Traceback (most recent call last):
+  File "/home/claude/dss/agentHM/wt/hp/highm_check512.py", line 76, in <module>
+    main()
+    ~~~~^^
+  File "/home/claude/dss/agentHM/wt/hp/highm_check512.py", line 63, in main
+    dh, dl, _, _, p0, p1 = s.newton_mixed(z, 0 * z, block=True)
+                           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+ValueError: singular or non-finite pivot at column 0 (0)
+== 16:49:50 own plan (1897 steps): thin2 gave a zero pivot at column 0 at M = 512 (at M = 192 thin2 works: logs/check_thin2_M192.log)
+{"M": 512, "D": 3.15, "start": "lowDhm_x0.000625-0.95_D3.1500_M256.npz", "nodes": 18, "N": 38913, "steps": 1897, "F": 7.375945824714336e-08, "s_make": 22.7, "s_plan": 64.9, "s_residual": 45.8, "tail_c": 2.4406694786339406e-20, "tail_h": 3.1922401068462203e-52, "peak_rss_mb_residual": 1089.0, "peak_rss_mb": 1089.0, "load": 4.19}
+Traceback (most recent call last):
+  File "/home/claude/dss/agentHM/wt/hp/highm_check512.py", line 80, in <module>
+    main()
+    ~~~~^^
+  File "/home/claude/dss/agentHM/wt/hp/highm_check512.py", line 63, in main
+    dh, dl, _, _, p0, p1 = s.newton_mixed(z, 0 * z, block=True)
+                           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+ValueError: singular or non-finite pivot at column 0 (0)

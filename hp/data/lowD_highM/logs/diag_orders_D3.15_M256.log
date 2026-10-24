@@ -1,0 +1,4 @@
+kc 100 ks 250: residual 4.15 s, |F| 1.24e-29, tails (centre, horizon) 5.3e-71 3.3e-92 (load 2.7)
+kc 80 ks 200: residual 3.96 s, |F| 1.24e-29, tails (centre, horizon) 2.6e-55 5.6e-74, residual bitwise identical (load 3.0)
+kc 60 ks 150: residual 3.75 s, |F| 1.24e-29, tails (centre, horizon) 8.7e-42 4.2e-56, residual bitwise identical (load 3.4)
+kc 50 ks 120: residual 3.41 s, |F| 1.24e-29, tails (centre, horizon) 3.6e-36 3.5e-44, residual bitwise identical (load 3.5)

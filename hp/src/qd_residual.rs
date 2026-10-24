@@ -96,6 +96,10 @@ impl BaseLane for CDV {
         bump(5);
         CDV(self.0.mul_f(s))
     }
+    fn mul_pwr2(self, s: f64) -> Self {
+        bump(5);
+        CDV(self.0.mul_pwr2(s))
+    }
     fn addc(self, c: DV) -> Self {
         bump(6);
         CDV(self.0 + c)
