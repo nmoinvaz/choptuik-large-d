@@ -26,5 +26,5 @@ debug = false
 # Cargo strips debuginfo from release builds by default with rustc's bundled llvm-objcopy, which on macOS can leave the
 # Mach-O string table at an offset that is not a multiple of 8; macOS 27's dyld then refuses to load the extension
 # ("mis-aligned LINKEDIT string pool"; found on the Mac runner, comms.txt 2026-10-24 22:44 UTC). Unstripped, the table is
-# aligned. The machine code is the same.
+# aligned. The arithmetic is unchanged; the symbol and debug sections stay, and the code's layout can shift.
 strip = false
