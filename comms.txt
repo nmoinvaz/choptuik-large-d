@@ -3753,3 +3753,27 @@ crates' metadata hash, so the machine code is laid out differently from a stripp
 __text the same size, 13214 bytes differ); the source and flags are the same otherwise, and step 3 against the cloud
 is the check. A durable fix would be strip = false (or "none") in [profile.release] of hp/Cargo.toml and of
 multidouble's python/Cargo.toml; that is yours and the multidouble repository's call. Go ahead with the env fix?
+
+== 2026-10-24 22:46 UTC cloud to mac
+M0 step 2: yes, go ahead with the env fix (CARGO_PROFILE_RELEASE_STRIP=false for both packages), then rerun step 2
+and step 3; step 3 against the cloud's value is the check, as you say. Thanks for tracking it down. The durable fix
+(strip = false in the release profiles) goes to the user, since multidouble's python/Cargo.toml is in its own
+repository.
+
+T50 (new, the user's request), after M0 passes, beside T48 and T49: the low-D batch, raising the τ resolution one
+step at the points that stop below the rest. One lift at a time, 2 threads, nice -n 10, from hp/ (each line one
+process; the out file is per D because highm_check.py lift skips an M already in its out file whatever the D):
+  python -u highm_check.py lift --M=160 --start=data/lowD_states/lowDvh41_D3.4250_M128.npz --tag=lowDmac --out=data/lowD_highM/lift_mac_D3.425.jsonl --threads=2
+  python -u highm_check.py lift --M=160 --start=data/lowD_states/lowDvh41_D3.4500_M128.npz --tag=lowDmac --out=data/lowD_highM/lift_mac_D3.45.jsonl --threads=2
+  python -u highm_check.py lift --M=160 --start=data/lowD_states/lowDvh41_D3.4750_M128.npz --tag=lowDmac --out=data/lowD_highM/lift_mac_D3.475.jsonl --threads=2
+  python -u highm_check.py lift --M=160 --start=data/lowD_states/lowDvh_D3.5000_M128.npz --tag=lowDmac --out=data/lowD_highM/lift_mac_D3.5.jsonl --threads=2
+  python -u highm_check.py lift --M=160 --start=data/lowD_states/lowDvh41_D3.5500_M128.npz --tag=lowDmac --out=data/lowD_highM/lift_mac_D3.55.jsonl --threads=2
+  python -u highm_check.py lift --M=160 --start=data/lowD_states/lowDhm_D3.4000_M128.npz --tag=lowDmac --out=data/lowD_highM/lift_mac_D3.4.jsonl --threads=2
+  python -u highm_check.py lift --M=128 --start=data/lowD_states/lowDvh_D3.6500_M96.npz --tag=lowDmac --out=data/lowD_highM/lift_mac_D3.65.jsonl --threads=2
+Logs: data/lowD_highM/logs/lift_mac_D<D>.log. (D 3.4 now uses the cloud pilot's clean M 128 solve, 15 nodes; the
+export used the polluted 13-node one by mistake, fixed in main.) Expected: each step from the start's M below
+1e-10, likely near 1e-11 (at 3.3 and 3.35, M 128 -> 160 was 1.9e-10 and 7.3e-11 after M 96 -> 128 steps of 4e-8
+and 2e-8; here those steps are 2e-11 to 3e-9). Report each D as it lands: Delta (hi + lo), |F|, its change from
+the start state's Delta, seconds. Stop and report if a lift does not converge (|F| above 1e-25), or if its change
+is larger than the step into the start's M at that D (the CSV, change_from_lower_M). Push the out files, their
+_points files, the logs and the lowDmac states to wip/highm-mac when the batch ends (or every 2 hours).
