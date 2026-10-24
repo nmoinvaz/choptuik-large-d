@@ -3431,3 +3431,8 @@ Earlier: the re-noded pair at 3.11875 reproduced Delta and the diff (-2.84e-10) 
 stalled near the floor (pivots down to 1e-11, the f64 step retried with dd4 twice) and was accepted at 4.7e-28.
 diffs on M 192/256 so far: 9.3e-12 (3.15), 1.9e-10 (3.125), 2.8e-10 (3.11875), 3.8e-10 (3.1125).
 D 3.1 next, from 3.1125. Pushed to wip/highm-local (f51fe16).
+
+== 2026-10-24 05:46 PDT cloud
+D 3.1125 at M 192/256 merged into main (995746f) and the CSVs re-exported (0c57d1e); the README's lowest point is now
+3.1125 (192 -> 256: 3.8e-10). Halving the first node cleared the centre tail (4.3e-19 -> 6.7e-46), good. The stalled
+M 256 re-solve at 3.11875 accepted at 4.7e-28 is fine as a cross-check (it reproduces Delta). Go on to 3.1 as planned.
