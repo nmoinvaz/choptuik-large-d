@@ -1,0 +1,27 @@
+# Published values of Delta at the dimensions of rows in delta_dd.csv, with the uncertainty the publication states.
+# MGG2003: J. M. Martin-Garcia and C. Gundlach, PRD 68, 024011 (2003), arXiv:gr-qc/0304070: Delta = 3.445452402(3) at D = 4.
+# EEGJ2026: F. Ecker, C. Ecker, D. Grumiller and T. Jechtl, arXiv:2602.10185, data file complete_data/DeltaList.dat of
+#   github.com/EckerChristian/CriticalSpacetimeCrystal (commit f002d0a); uncertainty 1e-6, the precision the paper quotes for
+#   its values at the maximum of Delta (Eq. (70)) and at D = 4, applied here to every row.
+D,Delta,uncertainty,ref
+4.0,3.445452402,3e-9,MGG2003
+3.15,2.961319642404431,1e-6,EEGJ2026
+3.175,3.033322949418039,1e-6,EEGJ2026
+3.2,3.094739902479072,1e-6,EEGJ2026
+3.25,3.193154171614816,1e-6,EEGJ2026
+3.3,3.267212633294251,1e-6,EEGJ2026
+3.35,3.323462085040376,1e-6,EEGJ2026
+3.4,3.366251791567017,1e-6,EEGJ2026
+3.45,3.398624651937266,1e-6,EEGJ2026
+3.5,3.422790934985493,1e-6,EEGJ2026
+3.55,3.440402350104208,1e-6,EEGJ2026
+3.6,3.452720982098932,1e-6,EEGJ2026
+3.65,3.460728649532728,1e-6,EEGJ2026
+3.7,3.465200504469459,1e-6,EEGJ2026
+3.72,3.466142336228941,1e-6,EEGJ2026
+3.74,3.466652819561603,1e-6,EEGJ2026
+3.75,3.46675615533853,1e-6,EEGJ2026
+3.76,3.466763156823134,1e-6,EEGJ2026
+3.78,3.466502087366576,1e-6,EEGJ2026
+3.8,3.465896117218149,1e-6,EEGJ2026
+4.0,3.445452681947484,1e-6,EEGJ2026

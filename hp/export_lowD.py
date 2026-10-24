@@ -67,11 +67,11 @@ def build():
             rows.append(dict(best[key], change_from_lower_M=None, best=0, resolved=0, gamma=gam.get(key)))
         for i, M in enumerate(Ms):
             row = dict(best[(D, M)])
-            v = row["Delta_hi"] + row["Delta_lo"]
             ch = None
             if i > 0:
+                # in double-double: the hi parts first (often equal at the largest M), then the lo parts
                 lower = best[(D, Ms[i - 1])]
-                ch = v - (lower["Delta_hi"] + lower["Delta_lo"])
+                ch = (row["Delta_hi"] - lower["Delta_hi"]) + (row["Delta_lo"] - lower["Delta_lo"])
             row["change_from_lower_M"] = ch
             row["best"] = int(M == Ms[-1])
             row["resolved"] = int(M == Ms[-1] and ((ch is not None and abs(ch) <= RESOLVED)

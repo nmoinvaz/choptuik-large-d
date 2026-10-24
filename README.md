@@ -2182,8 +2182,12 @@ hp/                 double-double solver (crate hpkernel)
 ├── dd_fits_mp.py   large-D model fits at 60 digits, held-out errors, predictions (--dmax for a data snapshot)
 ├── dd_candidates.py  candidate constants forced as the limit, held-out test (--dmax as above)
 ├── plot_heldout.py heldout.svg (python3 plot_heldout.py --dmax=60.1: the points up to D = 60.1)
-├── data/delta_dd.csv   every double-double point: D, Delta (hi + lo), |F|, max dDelta/dF, run; the 857 continuation points
-│                       (D = 8.25-61.03) and the best low-D value per D (run lowD-M<M>, D = 3.15-4.0), which the large-D fits skip
+├── data/delta_dd.csv   every double-double point: D, Delta (hi + lo; Delta_lo is the low word, not an error), |F|,
+│                       max dDelta/dF, run, an error estimate and its kind (Delta_err, err_kind: the change from the next
+│                       lower tau resolution at low D, the size of the nearby checks elsewhere), and whether a published
+│                       value at that D agrees within its stated uncertainty (published_ref, published_diff,
+│                       published_match; data/published_delta.csv); the 857 continuation points (D = 8.25-61.03) and the
+│                       best low-D value per D (run lowD-M<M>, D = 3.125-4.0), which the large-D fits skip
 ├── data/delta_dd_lowD.csv   the low-D points at every M, with gamma and status (export_lowD.py)
 ├── data/local/     the second machine's runs (scan_up*.jsonl), folded into delta_dd.csv by export_dd.py
 └── data/seeds/     saved solver states to restart continuation from
