@@ -468,7 +468,10 @@ From a literature search (October 2026); the references are listed at the end of
 
 - **D = 4.** Δ = 3.445452402(3) (Martín-García & Gundlach, PRD 68, 024011 (2003); see also Gundlach, PRD 55, 695
   (1997)) and γ = 0.373961 ± 10⁻⁶ (Ecker, Ecker, Grumiller & Jechtl 2026, who also give Δ = 3.445453). The formula's
-  3.4454524 and 0.3739610 agree to about 10⁻⁸ and 10⁻⁷.
+  3.4454524 and 0.3739610 agree to about 10⁻⁸ and 10⁻⁷. The double-double solver gives Δ = 3.4454524022278213499715
+  at M = 192 τ points on 15 shooting nodes; the changes from M = 80 to 96, 128, 160 and 192 are −1.3×10⁻¹¹, −9.0×10⁻¹⁴,
+  −2.8×10⁻¹⁸ and +1.1×10⁻²², and the last is the error estimate (an estimator, not a bound;
+  `hp/data/lowD_highM/lift_D4_points.jsonl`).
 - **The maximum below D = 4.** Ecker et al. 2026, Eq. (70): D = 3.755726 ± 10⁻⁶, Δ = 3.466772 ± 10⁻⁶. The double-double
   points here give D = 3.755725, Δ = 3.46677169 (agreement within their ±10⁻⁶).
 - **D = 5: a resolution effect in the published value.** Ecker et al. 2026 give Δ = 3.22176, γ = 0.41322, which are
