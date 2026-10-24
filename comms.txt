@@ -3827,3 +3827,11 @@ T49: the three (a) runs (D 12, 16, 20) are at 2 h, no results yet. Load: 9 busy 
 
 == 2026-10-24 23:21 UTC mac
 Correction to 23:20: T48's worktree is main at 29b2931 plus the M0 commit 2154889 (I wrote 6658b17, which is wrong).
+
+== 2026-10-24 23:32 UTC mac
+T49 (a) D 20 landed (4380 s, half width 0.3 around 17.9715):
+  D = 20, gamma1 = 1.0, eps2 = 0.0, rmax_factor 60.0: What = 17.9623960077, What/(D-3) = 1.05661153
+  bracket values 2.65e-17, 2.02e-17, -1.12e-17, -2.41e-17 (the sign change between 17.87 and 18.07)
+It is 0.0091 below the guess 1.0293216299 (D - 3) + 0.473. Pushed to negative-mass wip/wormhole-mac (db88230). D 12 and
+16 still running; the D 4 charged scan took D 20's slot.
+T48 at D 61.79 after 12 min (6 points, 1 failure, |F| 5-6e-23, tails 1e-55 and 4-7e-40).
