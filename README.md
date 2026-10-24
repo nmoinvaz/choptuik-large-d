@@ -227,7 +227,8 @@ Every point, resolved or not, lies within 8×10⁻⁶ of the √(D − 3) formul
 matrix at the largest M. Right: how much Δ moves when M is raised. The step from M = 80 to 96 grows a hundredfold from
 D = 3.7 to 3.4, while M = 96 → 128 stays at 1–2×10⁻⁹ down to D = 3.425. Below that the larger grids take over
 (M = 128 → 160 → 192 → 256, each step one to two orders smaller than the one before): at D = 3.15 the step from 192
-to 256 is 9×10⁻¹², at 3.125 1.9×10⁻¹⁰, and at 3.1125, the lowest point so far, 160 → 192 is 6.9×10⁻⁹. At D = 3.40 the
+to 256 is 9×10⁻¹², at 3.125 and 3.11875 1.9 and 2.8×10⁻¹⁰, and at 3.1125, the lowest point so far, 160 → 192 is
+6.9×10⁻⁹. At D = 3.40 the
 M = 128 Newton converged only to a solution with content along the near-null directions (its centre-series tail
 10⁻⁹, against 10⁻⁵⁰ at 3.425); the CSV lists it as polluted and it is not used.
 
