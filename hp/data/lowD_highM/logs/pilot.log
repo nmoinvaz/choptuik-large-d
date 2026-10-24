@@ -788,3 +788,33 @@ ValueError: singular or non-finite pivot at column 308 (NaN)
 01:43:55   D 3.11875 M 192: start 'predictor' |F| 7.00e-02 (387 steps)
 01:43:55   D 3.11875 M 192: start 'lift of M_c' |F| 6.97e-05 (387 steps)
 01:43:59 D 3.11875 M 192: L 14593, steps 387, start |F| 7.0e-05
+02:20:59 resuming: M 192/256, last D 3.125, 16.16 h used
+02:20:59 --- D 3.11875 (from 3.125), M 192 / 256, nodes 0.000625..0.95
+02:21:05   D 3.11875 M 160: start 'predictor' |F| 6.70e-02 (355 steps)
+02:21:05 D 3.11875 M 160: already converged (C:\Users\nathan\AppData\Local\Temp\claude\C--Users-nathan-Source-dss-residual-kernel\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\scratchpad\t45-wt\hp\data\lowD_states\lowDhm_x0.000625-0.95_D3.1187_M160.npz); skipped
+02:21:14   D 3.11875 M 192: start 'predictor' |F| 7.00e-02 (387 steps)
+02:21:15   D 3.11875 M 192: start 'lift of M_c' |F| 6.97e-05 (387 steps)
+02:21:15   D 3.11875 M 192: best start 'lift of M_c' is a lift (|F| 7.0e-05 on the reused plan); two passes
+02:21:18   D 3.11875 M 192: start 'predictor' |F| 7.00e-02 on its own plan (1020 steps)
+02:21:22   D 3.11875 M 192: start 'lift of M_c' |F| 6.97e-05 on its own plan (1049 steps)
+02:21:27   D 3.11875 M 192: start 'lift of M_c' |F| 6.97e-05 (1049 steps)
+02:21:32 D 3.11875 M 192: L 14593, steps 1049, start |F| 7.0e-05
+  newton 0: |F| 6.97e-05 |dz| 1.33e-01 lam 1 dDelta -3.29e-09 Delta 2.852146503102944 piv 1.6e-04..4.7e+01  t 318.1s
+  newton 0: |F| 2.91e-09 |dz| 3.17e-06 lam 1 dDelta +5.35e-11 Delta 2.852146503156409 piv 1.6e-04..4.7e+01  t 310.0s
+  newton 0: |F| 3.84e-17 converged (last |dz| 6.7e-14) Delta 2.852146503156409; last step taken, |F| 1.77e-28
+02:37:24 D 3.11875 M 192: Delta 2.8521465031564088 (-5.79e-17) |F| 1.8e-28 its 3 956s dDelta/dF max 7.3e-01 tails 6e-69 4e-80 dDelta_est +2.6e-32
+02:37:33   D 3.11875 M 192: start 'pass 1' |F| 1.77e-28 (358 steps)
+02:37:37 D 3.11875 M 192: L 14593, steps 358, start |F| 1.8e-28
+  newton 0: |F| 1.77e-28 |dz| 1.05e-21 lam 1 dDelta -5.70e-31 Delta 2.852146503156409 piv 1.6e-04..2.7e+01  t 108.6s
+  newton 0: |F| 3.62e-29 converged (last |dz| 1.6e-21) Delta 2.852146503156409; last step taken, |F| 6.12e-29
+02:41:17 D 3.11875 M 192: Delta 2.8521465031564088 (-5.79e-17) |F| 6.1e-29 its 2 223s dDelta/dF max 7.3e-01 tails 6e-69 4e-80 dDelta_est -1.3e-30
+02:41:21   D 3.11875 M 192: the solution's own plan has 399 steps, more than the 358 used
+02:41:37   D 3.11875 M 256: start 'predictor' |F| 9.84e-02 (470 steps)
+02:41:38   D 3.11875 M 256: start 'lift of M_w' |F| 1.40e-05 (470 steps)
+02:41:38   D 3.11875 M 256: best start 'lift of M_w' is a lift (|F| 1.4e-05 on the reused plan); two passes
+02:41:44   D 3.11875 M 256: start 'predictor' |F| 9.84e-02 on its own plan (1166 steps)
+02:41:52   D 3.11875 M 256: start 'lift of M_w' |F| 1.40e-05 on its own plan (1178 steps)
+02:42:01   D 3.11875 M 256: start 'lift of M_w' |F| 1.40e-05 (1178 steps)
+02:42:10 D 3.11875 M 256: L 19457, steps 1178, start |F| 1.4e-05
+  newton 0: |F| 1.40e-05 |dz| 3.04e-02 lam 1 dDelta -2.87e-10 Delta 2.852146502869605 piv 1.7e-04..1.2e+01  t 854.4s
+  newton 0: |F| 9.76e-11 |dz| 7.89e-08 lam 1 dDelta +2.96e-12 Delta 2.852146502872564 piv 1.7e-04..1.2e+01  t 843.7s
