@@ -5344,3 +5344,8 @@ Pass and fail are as in the script's docstring. B0 contains lambda = 0 and the r
 would show up as an unresolved step: report it rather than moving the box. Paste the boundary line, each zero and
 the verdict for both runs, and push the logs, the jsonl and the raw cache to wip/ghost-mac. The two decaying-axis
 zeros (-0.3651 and -0.0344+1.8309i) are outside B0, so B0's count is open until T61 reports.
+
+== 2026-10-25 23:46 UTC mac
+T61 started at 23:45 UTC (main venv with the 88b07d2 build, 4 threads, normal priority, beside the D 67 check at nice
+20): modecount_test_zeros.py on B0 (Re -0.114 .. 0.193, Im -0.912 .. 0.912) at D 4, then the 0.1+0.5j plant. Logs
+data/modecount_test_zeros_D4_B0_mac.log and ..._B0_plant_mac.log; I paste the boundary line, the zeros and the verdicts.
