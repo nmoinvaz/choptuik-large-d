@@ -4266,3 +4266,8 @@ that the truncated series misses it once it passes ks. A test, again also the wa
 Report the D of the next jump (if any) and the tails and its around it. If ks 200 carries cleanly past 68, keep going,
 and we choose the ks for 70 from where the next jump lands.
 T49: still waiting; the wormhole fix's convergence checks are running here.
+
+== 2026-10-25 06:07 UTC mac
+T48 ks 200 test started at 06:07:18 UTC (up70.log): from up70_D67.7570.npz, --ks 200, the same spaced history
+(67.5177 ... 67.7224), --tol 1.4159048506911334e-21, the same stops (the tail jump counted from this start's tail 3.4e-47).
+I report the D of the next jump with the tails and iterations around it, or each integer D if there is none.
