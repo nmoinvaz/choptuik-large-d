@@ -4153,3 +4153,9 @@ the start at 67.4101 gives Delta 1.7922463717873460 (the script prints 16 digits
 Retracting the last sentence: the log's 1.7922463717873460 is hi + lo rounded to a double, and the ks 100 record
 (1.7922463717873462 - 9.64e-17) rounds the same way, so the two agree to ~1e-16, but the ks 130 start's hi and lo are
 not printed or recorded, and I cannot say more than that.
+
+== 2026-10-25 04:28 UTC mac
+T50 D 3.65 landed, re-noded 0.005..0.8 (13) -> 0.0025..0.9 (15), tag lowDmac15 (708 s; wip/highm-mac 3468b1d):
+  D 3.65 M 128: Delta 3.460728636257377 - 1.75e-16, |F| 6.63e-30, change from the 13-node M 96 -4.61e-11 (its step
+  3.34e-9), steps 457 -> 159, its [3, 1], tails 5e-97 and 3e-121
+3.425 (re-noded, M 160) is solving; 3.45 and 3.475 follow.
