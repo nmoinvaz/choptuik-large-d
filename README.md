@@ -688,12 +688,14 @@ D = 61.63 at a median of 25 s), so this shows the effort, not a benchmark.
 
 ![How far apart in D our solved points are: the low-D grid down to D = 3.075, and the continuation's adaptive step from D = 8.25 to 67.79, by machine](hp/point_spacing.svg)
 
-**How far apart the points are** (`hp/plot_point_spacing.py`): the distance in D from each solved point to the next
-one below it. Below D = 4 the points sit on a grid we chose, mostly 0.05 apart and halved to 0.0125 and 0.00625 toward
-D = 3. From D = 8.25 up (there are no double-double points between 4 and 8.25) the spacing is the continuation's own
-adaptive step: about 0.25 below D = 15, 0.05–0.1 from 20 to 50, and then falling steadily, to a median of 0.03 at
-D = 55–60 and 0.016 at 65–70. At D ≈ 67.78 it falls to 0.001–0.005 before the steps fail (open rings: points after a
-horizon-tail jump). The smallest distances, down to 2×10⁻⁴ near D = 60–61, are where two runs overlap, not small steps.
+**How far apart the points are** (`hp/plot_point_spacing.py`). Below D = 4: the distance from each point to the next
+one below it, on a grid we chose, mostly 0.05 apart and halved to 0.0125 and 0.00625 toward D = 3. From D = 8.25 up
+(there are no double-double points between 4 and 8.25): each continuation run's own adaptive step, the distance from
+each point to the run's previous point, with runs that overlap kept apart. The step is about 0.25 below D = 15,
+0.05–0.1 from 20 to 50, and then falls steadily, to a median of 0.027 at D = 55–60 and 0.016 at 65–70. A run's step
+collapses where it got stuck: at D = 35.2 and 45.3 (two cloud runs that stopped there), at 60.96 (the stall that
+holding the near-free centre harmonics on their trend cured) and at 67.78, where T48 stopped (open rings: points after
+a horizon-tail jump).
 
 <details>
 <summary>Checks of the solver</summary>
