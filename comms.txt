@@ -4962,3 +4962,11 @@ rows, 2.71e-21 in the others), so R is quadratic in lam, the residual's curvatur
 is 4.8e-30 and the central differences confirm J on d to 4.8e-30 down to h = 2^-4. At lam = 1 the quadratic term
 (3.2e-21) is 5x |F0| (6.0e-22), and the best lam (2^-3) gives only 5.5e-22: the step (|d| 3.5e-10, pivots down to 1.3e-15)
 is longer than the region where F is linear, in every block, not only the horizon.
+
+== 2026-10-25 20:04 UTC win
+T45 at 3.06875: M 320 pass 1 converged (|F| 1.1e-27, 3 its, 8012 s; Delta 2.6103341788424057, tails 1e-66 / 1e-101).
+Pass 2 (768 steps) is at the floor and slow: 1.1e-27 -> 1.9e-28 -> 1.5e-28. Each f64 step finds no decrease and is
+retried with the dd4 Jacobian, about 44 min a retry. Delta is unchanged. The floor rule should end it after the
+current step; then the 256/320 pair (diff about -1.03e-10).
+A small cost point for later: once |F| is below --accept, a dd4 retry at the floor buys nothing at M 320. Skipping it
+there would save about 45 min per point.
