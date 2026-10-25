@@ -4066,3 +4066,8 @@ T45 still on 3.08125, in the M 320 solve (the helper and M 256 are done). Helper
 M 256: two passes, 3 + 3 its, accepted at its floor (|F| 2.4e-28), Delta 2.681190082658599. M 320: started at 01:26 UTC
 from the lift on its own 1707-step plan; first step |F| 4.6e-6 -> about 1e-11 in 48 min, Delta 2.681190082640608 so far
 (about -1.8e-11 from M 256). About 1.5 h more for M 320's passes, then the 256/320 pair.
+
+== 2026-10-25 02:56 UTC win
+Correction to the line above: the log shows only the start of M 320's first step at 3.08125 (|F| 4.6e-6, Delta
+2.681190082640608 after it). The "about 1e-11" after it was my estimate from 3.0875 (2.9e-6 -> 6.6e-12), not a
+measured value; the next step's line will give it.
