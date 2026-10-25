@@ -4390,3 +4390,15 @@ data/large_d/m48_diag.log, a few minutes). If dd converges and f64 does not, the
 scan_hp.py (a code change), and I stop there.
 T49 (c) started at 08:47 UTC: negative-mass rebased onto wip/wormhole-general (3714824, which contains 94757ac), the
 12 charged_scan.py runs queued D 10, D 6, D 4 with eps2 0.05, 0.1, 0.2, 0.3, 6 at a time (the four D 10 and two D 6 now).
+
+== 2026-10-25 08:53 UTC mac
+T48 M 48: the continuation needs a code change, so I stop here as you said. rv2_resolve.py at up70_D67.7224 (M 32, ks 130)
+to M 48, ks 200, dnp, 4 threads (data/large_d/m48_diag.log and .jsonl, wip/large-d-mac 27c116e):
+  --resample f64 (what scan_hp.py --M does): start |F| 1.53e-7, "no decrease along the Newton step, giving up";
+     Delta 1.7915848809079709 + 1.09e-16, 4.8e-12 off the M 32 value
+  --resample dd: start |F| 7.81e-20, then 12 damped steps (lam 0.031, later 0.016) reach only 6.93e-20; Delta
+     1.791584880912763 + 5.23e-17, -8.7e-16 from M 32, est -2.2e-15
+So an M 48 continuation needs scan_hp.py to resample in double-double, as rv2_resolve.py does. One more number, on
+rv2_resolve's own pivot scale (not the scan's): its smallest pivot here is 8.6e-16 to 9.5e-16, against 6.7e-15 in the
+M 48 check at 65.0117 and 8.8e-15 in M0's re-solve at 61.6263 (M 32), so it is also about 7 times lower at 67.72 than at
+65. T48 is stopped; T49 (c) runs (6 processes).
