@@ -20,12 +20,11 @@
 //! With E the copy of Delta into every delta_b and S the selection of the non-link rows, J = S J_aug E, so
 //! J^-1 = P J_aug^-1 S^T and J^-T = S J_aug^-T P^T for any P with P E = I; P reads Delta from delta_0.
 //!
-//! The panel factorization is LAPACK's blocked right-looking getrf (Anderson et al., LAPACK Users' Guide, 3rd ed.,
-//! SIAM 1999) restricted to the first np columns of a rectangular block, as `linalg::DDLu::factor_f64` does it for the
-//! square matrix.
-use crate::dd::{two_prod, two_sum, DD};
-use crate::linalg::ld_for;
-use crate::v8::V8;
+//! Each step's factorization is multidouble's `linalg::lu_rect_f64`: LAPACK's blocked right-looking getrf (Anderson et
+//! al., LAPACK Users' Guide, 3rd ed., SIAM 1999) restricted to the first np columns of a rectangular block, as
+//! `linalg::DDLu::factor_f64` does it for the square matrix; the solves round as its own solves do (`linalg::dd_axpy`).
+use crate::dd::DD;
+use crate::linalg::{dd_axpy, ld_for, lu_rect_f64};
 use rayon::prelude::*;
 
 /// A column group of the augmented system: a Delta copy first if `delta`, then z[zoff..zoff + zlen].
@@ -81,17 +80,6 @@ pub struct BlockLu {
 /// 2 the link rows replaced by delta_s = 0 (the copies are no longer tied to Delta).
 pub const MUT_PIVOT: u8 = 1;
 pub const MUT_LINK: u8 = 2;
-
-#[inline(always)]
-fn dd_axpy(a: DD, l: DD, nt: DD) -> DD {
-    let (p, pe) = two_prod(l.hi, nt.hi);
-    let pe = l.hi.mul_add(nt.lo, pe);
-    let pe = l.lo.mul_add(nt.hi, pe);
-    let (s, t) = two_sum(a.hi, p);
-    let e = a.lo + (t + pe);
-    let (h, lo) = two_sum(s, e);
-    DD { hi: h, lo }
-}
 
 #[inline(always)]
 fn f(x: f64) -> DD {
@@ -153,7 +141,7 @@ impl BlockLu {
             }
             let mut perm = vec![0usize; np];
             let t = std::time::Instant::now();
-            lu_rect(nr, ncol, np, ld, &mut w, &mut perm, par)?;
+            lu_rect_f64(nr, ncol, np, ld, &mut w, &mut perm, par)?;
             t_factor += t.elapsed().as_secs_f64();
             if mutate == MUT_PIVOT && s == ns / 2 {
                 let k = np / 2;
@@ -359,232 +347,6 @@ impl BlockLu {
             bh.chunks_mut(n).zip(bl.chunks_mut(n)).for_each(one);
         }
     }
-}
-
-// ---------------------------------------------------------------------------------------------------------------
-// rectangular blocked LU in f64: the first np columns pivoted, the rest updated (U12 and the Schur complement)
-// ---------------------------------------------------------------------------------------------------------------
-const NB: usize = 32;
-const CW: usize = 8;
-const NC: usize = 4;
-
-/// getf2 on the panel columns j0..j0+jb (slice pa holds just those columns, leading dimension ld): pivot search over
-/// rows k..n, swaps within the panel, scaling by the pivot's reciprocal, updates of the later panel columns on 8-row
-/// blocks with a nonzero multiplier (as linalg's panel_getf2_f64).
-fn panel_getf2(n: usize, ld: usize, j0: usize, jb: usize, pa: &mut [f64], perm: &mut [usize]) -> Result<(), String> {
-    let mut m = vec![0.0f64; ld];
-    let mut blocks: Vec<usize> = Vec::with_capacity(ld / 8);
-    for c in 0..jb {
-        let k = j0 + c;
-        let ck = c * ld;
-        let mut p = k;
-        let mut best = pa[ck + k].abs();
-        for i in k + 1..n {
-            let v = pa[ck + i].abs();
-            if v > best {
-                best = v;
-                p = i;
-            }
-        }
-        if best == 0.0 || !best.is_finite() {
-            return Err(format!("singular or non-finite pivot at column {k} ({best})"));
-        }
-        perm[k] = p;
-        if p != k {
-            for j in 0..jb {
-                pa.swap(j * ld + k, j * ld + p);
-            }
-        }
-        let inv = 1.0 / pa[ck + k];
-        for i in k + 1..n {
-            pa[ck + i] *= inv;
-        }
-        if k + 1 == n || c + 1 == jb {
-            continue;
-        }
-        let r0 = 8 * ((k + 1) / 8);
-        blocks.clear();
-        let mut i = r0;
-        while i < ld {
-            let mut nz = false;
-            for r in i..i + 8 {
-                m[r] = if r > k && r < n { pa[ck + r] } else { 0.0 };
-                nz |= m[r] != 0.0;
-            }
-            if nz {
-                blocks.push(i);
-            }
-            i += 8;
-        }
-        if blocks.is_empty() {
-            continue;
-        }
-        let (_, ra) = pa.split_at_mut((c + 1) * ld);
-        let w = jb - c - 1;
-        for ch in ra[..w * ld].chunks_mut(ld) {
-            if ch[k] == 0.0 {
-                continue;
-            }
-            let nt = V8::splat(-ch[k]);
-            for &i in &blocks {
-                V8::load(&m[i..i + 8]).fma(nt, V8::load(&ch[i..i + 8])).store(&mut ch[i..i + 8]);
-            }
-        }
-    }
-    Ok(())
-}
-
-#[inline(always)]
-fn tile<const R: usize, const W: usize>(ch: &mut [f64], cols: &[usize], nto: &[usize], nt: &[f64], rows: &[(usize, usize)], pk: &[f64], jb: usize) {
-    let mut acc = [[V8::zero(); W]; R];
-    for r in 0..R {
-        for q in 0..W {
-            let o = cols[q] + rows[r].0;
-            acc[r][q] = V8::load(&ch[o..o + 8]);
-        }
-    }
-    for c in 0..jb {
-        let mut l = [V8::zero(); R];
-        for r in 0..R {
-            let pb = rows[r].1 + c * 8;
-            l[r] = V8::load(&pk[pb..pb + 8]);
-        }
-        for q in 0..W {
-            let t = V8::splat(nt[nto[q] + c]);
-            for r in 0..R {
-                acc[r][q] = l[r].fma(t, acc[r][q]);
-            }
-        }
-    }
-    for r in 0..R {
-        for q in 0..W {
-            let o = cols[q] + rows[r].0;
-            acc[r][q].store(&mut ch[o..o + 8]);
-        }
-    }
-}
-
-fn gemm(jb: usize, ch: &mut [f64], cols: &[usize], nto: &[usize], nt: &[f64], rows: &[(usize, usize)], pk: &[f64]) {
-    const TR: usize = 4;
-    let mut j = 0;
-    while j < cols.len() {
-        let w = (cols.len() - j).min(NC);
-        let mut r = 0;
-        while r < rows.len() {
-            let h = (rows.len() - r).min(TR);
-            if w == NC && h == TR {
-                tile::<TR, NC>(ch, &cols[j..], &nto[j..], nt, &rows[r..], pk, jb);
-            } else {
-                for q in 0..w {
-                    for rr in 0..h {
-                        tile::<1, 1>(ch, &cols[j + q..], &nto[j + q..], nt, &rows[r + rr..], pk, jb);
-                    }
-                }
-            }
-            r += h;
-        }
-        j += w;
-    }
-}
-
-/// Partial-pivoting LU of the first np columns of the nr x ncol matrix a (column-major, leading dimension ld, rows
-/// nr..ld zero): afterwards rows 0..np of the first np columns hold U11 and the multipliers below them L, rows 0..np
-/// of the columns np.. hold U12 and rows np..nr of those columns the Schur complement. perm[k]: the row swapped with
-/// row k at step k. Panels of NB columns; the trailing update of each panel runs in parallel over chunks of CW columns.
-fn lu_rect(nr: usize, ncol: usize, np: usize, ld: usize, a: &mut [f64], perm: &mut [usize], par: bool) -> Result<(), String> {
-    assert!(ld % 8 == 0 && ld >= nr && np <= nr && np <= ncol && a.len() >= ld * ncol);
-    let mut j0 = 0;
-    while j0 < np {
-        let jb = NB.min(np - j0);
-        let je = j0 + jb;
-        let (left, rest) = a.split_at_mut(j0 * ld);
-        let (pan, right) = rest.split_at_mut(jb * ld);
-        panel_getf2(nr, ld, j0, jb, pan, perm)?;
-        let pv = &perm[j0..je];
-        for ch in left.chunks_mut(ld) {
-            for (c, &p) in pv.iter().enumerate() {
-                if p != j0 + c {
-                    ch.swap(j0 + c, p);
-                }
-            }
-        }
-        if je == ncol {
-            break;
-        }
-        let pan: &[f64] = pan;
-        // multipliers for the triangular solve on rows j0..je, and packed by 8-row blocks from the aligned row r0
-        // below je for the tiles (zero for rows < je, which the triangular solve handles, and for rows >= nr)
-        let mut tri = vec![0.0f64; jb * jb];
-        for c in 0..jb {
-            for i in j0 + c + 1..je {
-                tri[c * jb + i - j0] = pan[c * ld + i];
-            }
-        }
-        let r0 = 8 * (je / 8);
-        let nrb = (ld - r0) / 8;
-        let mut pk = vec![0.0f64; nrb * jb * 8];
-        let mut rows: Vec<(usize, usize)> = Vec::with_capacity(nrb);
-        for rb in 0..nrb {
-            let mut nz = false;
-            for c in 0..jb {
-                for r in 0..8 {
-                    let i = r0 + rb * 8 + r;
-                    if i >= je && i < nr {
-                        let x = pan[c * ld + i];
-                        pk[(rb * jb + c) * 8 + r] = x;
-                        nz |= x != 0.0;
-                    }
-                }
-            }
-            if nz {
-                rows.push((r0 + rb * 8, rb * jb * 8));
-            }
-        }
-        let task = |ch: &mut [f64]| {
-            let w = ch.len() / ld;
-            let mut nt = vec![0.0f64; w * jb];
-            let mut cols: Vec<usize> = Vec::with_capacity(w);
-            let mut nto: Vec<usize> = Vec::with_capacity(w);
-            for j in 0..w {
-                let h = &mut ch[j * ld..(j + 1) * ld];
-                for (c, &p) in pv.iter().enumerate() {
-                    if p != j0 + c {
-                        h.swap(j0 + c, p);
-                    }
-                }
-                if h[j0..je].iter().all(|&x| x == 0.0) {
-                    continue;
-                }
-                for c in 0..jb {
-                    let k = j0 + c;
-                    let t = -h[k];
-                    nt[j * jb + c] = t;
-                    if t == 0.0 {
-                        continue;
-                    }
-                    for i in k + 1..je {
-                        h[i] = tri[c * jb + i - j0].mul_add(t, h[i]);
-                    }
-                }
-                if nt[j * jb..(j + 1) * jb].iter().any(|&x| x != 0.0) {
-                    cols.push(j * ld);
-                    nto.push(j * jb);
-                }
-            }
-            if !rows.is_empty() {
-                gemm(jb, ch, &cols, &nto, &nt, &rows, &pk);
-            }
-        };
-        let ncr = ncol - je;
-        let r = &mut right[..ncr * ld];
-        if par && ncr * (ld - j0) > 16384 {
-            r.par_chunks_mut(CW * ld).for_each(task);
-        } else {
-            r.chunks_mut(CW * ld).for_each(task);
-        }
-        j0 = je;
-    }
-    Ok(())
 }
 
 #[cfg(test)]
