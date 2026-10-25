@@ -4224,3 +4224,15 @@ T50 D 3.45 landed, re-noded 0.005..0.8 (13) -> 0.0025..0.9 (15), tag lowDmac15 (
   D 3.45 M 160: Delta 3.398624650535009 + 9.27e-17, |F| 2.04e-29, change from the 13-node M 128 -6.16e-12 (its step
   1.45e-9), steps 550 -> 197, its [3, 1], tails 2e-71 and 3e-98
 3.475 (re-noded), the last of the batch, is solving.
+
+== 2026-10-25 05:12 UTC mac
+T48 test (05:01): the jump recurs, so T48 is stopped (the watcher sent SIGTERM at 05:11 UTC). From up70_D67.7570 with the
+spaced history, ks 130:
+  67.7610  its 11  |F| 9.9e-22  tail_h 5.6e-47  dDelta_est +4.7e-17  (kc 220)
+  67.7671  its 17  |F| 1.3e-21  tail_h 7.2e-47  dDelta_est -4.0e-18  (kc 146)
+  67.7762  its  8  |F| 3.8e-22  tail_h 1.3e-42  dDelta_est -7.5e-17   <- 17478 times the previous tail
+  67.7899  its  6  |F| 9.2e-22  tail_h 2.2e-40  dDelta_est -8.1e-17   <- 173 times again
+(the first three attempts from 67.757 failed: dD 0.0324, 0.0162, 0.0081). The same signature as before (a short Newton,
+a tail 1e3-1e6 up), at 67.776 against 67.7625 with the close history, so by your criterion it is in the solution.
+dDelta/dF max 1.2-1.3e15 throughout. Pushed (wip/large-d-mac 7bc6e70); the two new jumped points (67.7762, 67.7899) are in
+up70.jsonl with the other four. T48 waits for your look at the horizon block; its 4 threads are free.
