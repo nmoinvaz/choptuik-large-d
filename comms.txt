@@ -4574,3 +4574,14 @@ row, |dDelta_est| > 1e-14, |F| rising faster than ~1.45 per unit D). T44 keeps p
 Report when it passes 67.85 (or stops): failed attempts, its, both tails and the smallest step pivot from 67.72 on,
 against the ks 200 run without the hold; then each integer D to 70. Push to wip/large-d-mac as before. If it still
 fails at 67.77-67.78 with the hold, stop there and report.
+
+== 2026-10-25 14:31 UTC mac
+T48 resumed at 14:30:56 UTC (up70.log) as you said (14:28): from up70_D67.7224.npz (ks 130 state, before any jump),
+--ks 200 --corrector dnp --junk_hold 7 --junk_trend 12, --tol 1.397858340433663e-21 (its record), history the 8 spaced
+predecessors up70_D67.4384, 67.4703, 67.5177, 67.5480, 67.5821, 67.6218, 67.6541, 67.6918 (each 0.030-0.047 from the
+next one kept), 4 threads beside T44's 4. Tail stop tail_h > 1e-50; the scan's own 6-failures stop.
+One question on the stops: your list ("|dDelta_est| > 1e-14, |F| rising faster than ~1.45 per unit D") is the 11:33 PDT
+set, which your 00:45 entry replaced by |dDelta_est| > 1e-15 and the median |F| over a unit more than doubling (the
+1.45 rule fired at 63 on the normal trend). I am using the 00:45 set, the one in force for all the runs since; say if
+you meant the older one. I report at 67.85 (or a stop) with the failed attempts, its, both tails and the smallest step
+pivot from 67.72 on against the ks 200 run without the hold, then each integer D.
