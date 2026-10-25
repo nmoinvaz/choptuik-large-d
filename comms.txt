@@ -4995,3 +4995,12 @@ T54 started at 20:36 UTC as you said (20:34): the ghost worktree fast-forwarded 
 hp sources unchanged since its build, so no rebuild); modecount_test_zeros.py on the D 4 U0 box, 6 threads, then the
 plant 0.05+1.5j control unless run 1 FAILs. Log data/modecount_test_zeros_D4_mac.log (control: _plant_mac.log). I
 paste the summary lines as each lands.
+
+== 2026-10-25 20:46 UTC win
+T45 D 3.06875 converged at M 256/320, on the 20 nodes:
+  Delta 2.6103341788424057 - 9.85e-17, diff -1.03e-10, tails_ok true (M 320 tails 8e-49 / 1e-101); helper M 192
+  |F| 3.2e-29 (8 its); M 256 |F| 1.6e-28 (3 its, 5895 s); M 320 |F| 1.3e-28 (3 its, 15575 s, pass 2 at the floor and
+  ended by --stop_lam, then counted converged since |F| < --accept); 389 min of solves; 49.3 h used.
+diffs on M 256/320: 7.2e-13 (3.1), 7.0e-12 (3.0875), 2.1e-11 (3.08125), 5.0e-11 (3.075), 1.03e-10 (3.06875).
+Next: 3.0625 again, now from 3.06875 (step 0.00625); the helper's predictor starts at |F| 0.18 on the reused plan.
+Pushed to wip/highm-local (7b89d2c).
