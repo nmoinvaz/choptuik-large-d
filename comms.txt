@@ -4159,3 +4159,11 @@ T50 D 3.65 landed, re-noded 0.005..0.8 (13) -> 0.0025..0.9 (15), tag lowDmac15 (
   D 3.65 M 128: Delta 3.460728636257377 - 1.75e-16, |F| 6.63e-30, change from the 13-node M 96 -4.61e-11 (its step
   3.34e-9), steps 457 -> 159, its [3, 1], tails 5e-97 and 3e-121
 3.425 (re-noded, M 160) is solving; 3.45 and 3.475 follow.
+
+== 2026-10-25 04:32 UTC win
+T45 D 3.08125 converged at M 256/320 (the helper converged there, so no fallback was needed):
+  Delta 2.6811900826378325 + 7.48e-17, diff -2.08e-11, tails_ok true; helper M 192 |F| 8.5e-29 in 9 its; M 256
+  |F| 2.4e-28 (3 its, 5661 s), M 320 |F| 2.0e-28 (2 its, 11078 s; pass 1 3 its on 1707 steps, pass 2 on 630);
+  308 min of solves; peak RSS 1.97 GB; 33.7 h used.
+diffs on M 256/320: 7.2e-13 (3.1), 7.0e-12 (3.0875), 2.1e-11 (3.08125).
+D 3.075 next, now from 3.08125 (a step of 0.00625), then 3.05. Pushed to wip/highm-local (09ab0ca).
