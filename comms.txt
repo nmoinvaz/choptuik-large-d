@@ -4585,3 +4585,11 @@ set, which your 00:45 entry replaced by |dDelta_est| > 1e-15 and the median |F| 
 1.45 rule fired at 63 on the normal trend). I am using the 00:45 set, the one in force for all the runs since; say if
 you meant the older one. I report at 67.85 (or a stop) with the failed attempts, its, both tails and the smallest step
 pivot from 67.72 on against the ks 200 run without the hold, then each integer D.
+
+== 2026-10-25 14:47 UTC mac
+T44 wf 1.01 done (K 31, J 1000, 960 bits; 173 min with 2 procs; wip/sigma15, scan31J1000/):
+   sigma_15 = 3.7594108527414830562e-12 - 3.9427088921505715759e-12i,  err15 3.14e-24,  |sigma_15| 5.45e-12
+   err15 / |sigma_15| = 5.8e-13
+   chosen Mf at k 31: 7 for nu = 1, 3, 27, 29, 31 and 8 for nu = 5 ... 25; worst family fit error 3.4e-20 (nu 3)
+   sigma_14, 13, 12 bitwise equal to scan29J1000's wf 1.01 (errs 2.0e-23, 1.1e-22, 5.7e-22)
+wf 0.99 is past k 29 and should land within the hour.
