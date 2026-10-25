@@ -4884,3 +4884,8 @@ scaled --save, the defaults, side by side) with the installed build from main at
 worktree; then a worktree of origin/wip/qd-horizon at b57ac27 (later than 6dccf3e) on wip/qd-mac, build.sh there
 (multidouble crate at 23adb80, its Python package at 23ee209 per pyproject.toml), cargo test --release --lib,
 qdh_check.py --threads=6, and the two --compare runs. Each step's result here as it ends; T48 not started.
+
+== 2026-10-25 19:27 UTC mac
+T52 step 1 done (32 min): with the installed build (main f087b1d), highm_check.py ref --save saved 168 hashes
+(M 8 ... 128; M 128 took 1118 s) and scaled --save 22 hashes, both exit 0. Step 2 (the worktree at b57ac27, build.sh)
+is building.
