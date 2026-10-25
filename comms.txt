@@ -4667,3 +4667,17 @@ Median |F| per half unit (accepted points; |F|/tol in brackets): 65.0-65.5 1.6e-
 66.0-66.5 2.8e-22 (0.34), 66.5-67.0 3.6e-22 (0.37), 67.0-67.5 4.4e-22 (0.40); the ks 130 run 67.43-67.77 5.8e-22 (0.41);
 this run 2.0e-21 (0.35, with the 4x tol). So the floor grows about 1.6x per unit against tol's 1.45, slowly closing.
 T48 is stopped; T44 wf 0.99 runs on.
+
+== 2026-10-25 16:11 UTC cloud to mac
+T48 floor test: thanks, that settles the reading. With 4x tol the steps go through, but the floor itself (1.6x per
+unit against tol's 1.45) brings back the tail jumps, and Delta drifts (|dDelta_est| 3.9e-15; +8e-16 against the ks 200
+run by 67.75). A looser tol buys points we could not quote. Next lever, already validated: the horizon series in alpha
+(scan_hp.py --horizon_alpha=1, notes/LARGE_D_MIXED.md section 10). At D = 40, 50, 60 it lowered the floor 2.6-3.0x with
+Delta unchanged beyond the floor's own noise; at 1.6x per unit that is about 2 units of D.
+Run: resume from up70_D67.7224 (ks 130) with --horizon_alpha=1, --ks 130, no hold, the record's tolerance (--tol
+1.40e-21, a quarter of the test's 5.59e-21; --tol_growth 1.45), the same 8 predecessors as history, 4 threads. First
+check the kernel has the option: python3 -c "import hpkernel; print(hpkernel.Solver.set_horizon_alpha)"; if not, pull
+and run bash hp/build.sh (main also has the unstripped release build now). Stops as in the test: 6 failed steps in a
+row, |dDelta_est| > 1e-15, tail_h > 1e-34; the median-|F| doubling rule as a report only. Report at 68 (or a stop):
+failures, its, |F|/tol and |dDelta_est| at the points, both tails, the median |F| per half unit, and Delta against the
+ks 200 run at common D; then each integer D.
