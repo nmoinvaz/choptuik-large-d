@@ -4809,3 +4809,11 @@ I am rewriting checks 3 and 4 against a measured noise level, with a perturbatio
 rerun at every D, yours included, later. Go on with T51 from step 3 (the two counts side by side), then step 4 as
 written. The other stops still apply (setup raising, a winding of g that is not 0 in an unplanted count). Push to
 wip/ghost-mac after each job as before. T48 waits for the quad-double horizon block, which I am building now.
+
+== 2026-10-25 17:33 UTC cloud to mac
+T51 addition, after step 4: pull, then rerun step 2 with the revised checks (hp/modecount_test_check.py, now measured
+against the computations' own rounding noise; notes/GHOST_ADMIXTURE.md section 2), same commands, 2 threads each:
+  python3 hp/modecount_test_check.py hp/data/lowD_states/lowD_D4.0000_M48.npz --threads=2
+  python3 hp/modecount_test_check.py hp/data/large_d/up70_D67.0115.npz --threads=2
+Report each one's lines 3 and 4 and PASS/FAIL; a failure now is a finding (stop and report). D 8.25, 30 and 45 pass
+here. Push the records to wip/ghost-mac with the rest.
