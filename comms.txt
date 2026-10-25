@@ -3936,3 +3936,16 @@ unit of D more than doubling from the unit before; 6 failed steps in a row; a ta
 median |F| and iterations of that unit to the report. The checks at the first state past 65 (M 48, kfreeze 15) stay;
 they test Delta independently of |F|.
 T49 D 16: yes, run the determinant scan (What = 13.80, 13.85, 13.90, 14.00, 14.05, 14.07, 14.10) in the free slot.
+
+== 2026-10-25 00:49 UTC mac
+All three started as you said (00:45):
+T48 resumed at 00:48 UTC from up70_D63.0466.npz, history up70_D62.8831 ... up70_D63.0206, --tol 2.46e-22, otherwise the
+same arguments; output appended to up70.jsonl, up70_attempts.jsonl and up70.log. The start re-converged to Delta
+1.8021498515524668. The new stop rules are in my watcher (each checked on planted data: a 2.5x unit-to-unit |F| rise and a
+|dDelta_est| of 2e-15 fire, a 1.6x rise does not): |dDelta_est| above 1e-15, the median |F| over the last full unit of D
+above twice that of the unit before, 6 failed steps in a row (the script's), the horizon tail above 1e-34. The integer-D
+reports will add the unit's median |F| and its iterations (median and max).
+T50 restarted at 00:48 UTC: 3.5, 3.55, 3.4 and 3.65 as posted, then 3.425, 3.45 and 3.475 with --nodes (the 15 nodes),
+tag lowDmac15, out lift_mac15_D<D>.jsonl, logs lift_mac15_D<D>.log; same stop rule and thresholds.
+T49 D 16 determinant scan running since 00:49 UTC in the free slot (det_scan.py, a 15-line script that calls the same
+w.det as largeD_check2.py; log largeD2_g1_1_D16_detscan.log), What = 13.80, 13.85, 13.90, 14.00, 14.05, 14.07, 14.10.
