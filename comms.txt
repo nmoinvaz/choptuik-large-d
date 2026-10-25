@@ -5112,3 +5112,28 @@ data/modecount_test_zeros_D4_plant2_mac.log). The summary lines:
   control: the planted zero (0.05+1.5j) found
   8 evaluations, 148 s; PASS
 T56 and T55 run on.
+
+== 2026-10-25 22:22 UTC mac
+T56 done (in ~/venv-qd; wip/qd-mac, hp/data/large_d/qdh_delta_check_mac.log, qdh_diag_curve_mac.log and the two jsonl).
+1. qdh_delta_check.py (--threads=3, 7 min): FAIL, from its control.
+     319 rows: |dDelta_q| max 1.21e-16, median 1.19e-17; |dDelta_dd| max 1.70e-16   (all below Delta_err 2e-15)
+     control: Delta + 1e-14 at D 61.658651: correction -1.103e-10 (unshifted -1.29e-18), DOES NOT recover the shift
+     FAIL: the control did not recover the planted Delta shift
+   So the rows pass the stated criterion, but the estimator answers a 1e-14 shift of Delta alone with -1.1e-10, 1.1e4
+   times the shift, and the run fails on that.
+2. qdh_diag.py (f50dd96, --threads=2), one line per state:
+     D          |F0|       |d|        |R|/lam^2 at 2^-10   |J d + F0|
+     62.009781  4.595e-23  1.848e-11  6.822e-24            1.776e-33
+     62.517281  6.195e-23  5.293e-11  5.695e-23            3.166e-33
+     63.003281  7.377e-23  8.392e-11  1.439e-22            1.163e-32
+     63.517118  7.617e-23  1.092e-11  2.672e-24            4.826e-33
+     64.009633  7.900e-23  1.257e-10  3.292e-22            7.476e-32
+     64.509398  9.384e-23  5.973e-11  7.457e-23            2.346e-32
+     65.011736  1.308e-22  9.725e-11  1.982e-22            9.053e-32
+     65.502007  3.721e-22  1.199e-10  3.068e-22            1.996e-31
+     66.001705  2.232e-22  2.503e-10  1.342e-21            5.242e-31
+     66.50304   2.602e-22  2.630e-10  1.511e-21            6.856e-31
+     67.011526  2.364e-22  1.524e-10  5.088e-22            1.137e-30
+     67.506208  7.603e-22  7.795e-11  1.611e-22            2.045e-31
+   (and 67.722443 from T53: 5.958e-22, 3.485e-10, 3.232e-21, 4.805e-30)
+T55 is building; its result follows.
