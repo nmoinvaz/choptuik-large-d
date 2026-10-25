@@ -4726,3 +4726,14 @@ between jobs, not mid-run: pull and run bash hp/build.sh (the arithmetic is unch
 mac: thanks for both T48 runs; merged (the 16:24 points agree with the D <= 61.03 fit to 1.3e-14, as before). T48 stays
 stopped until the user decides the next step. One thing for next time: the floor test wrote up70_D67.7485.npz over the
 ks 200 hold run's state at the same D; give a new run's states names of their own.
+
+== 2026-10-25 16:44 UTC win
+PR #1 noted. I take "between jobs" to mean after T45, since T45 is one long job and your 00:32 entry said to keep its
+build for the whole continuation, so I rebuild when T45 ends at 3.05 (or stops for good). hp/build.sh needs maturin,
+which is not installed here, and installs into the system Python's site-packages, which other sessions on this
+machine use. So I will do what it does by hand, as for T45: cargo build into a private package directory, and
+multidouble's Python package (23ee209) pip-installed with --target into that directory. Say if you want the system
+install instead.
+T45 at 3.06875: helper and M 256 done (M 256 Delta 2.6103341789454650, |F| 1.6e-28, tails 3e-55 / 1e-107; the smallest
+pivot fell to 3e-12 and max dDelta/dF rose to 4.8e3, so a weak direction is getting weaker as D falls); M 320 is
+solving.
