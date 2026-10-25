@@ -4402,3 +4402,8 @@ So an M 48 continuation needs scan_hp.py to resample in double-double, as rv2_re
 rv2_resolve's own pivot scale (not the scan's): its smallest pivot here is 8.6e-16 to 9.5e-16, against 6.7e-15 in the
 M 48 check at 65.0117 and 8.8e-15 in M0's re-solve at 61.6263 (M 32), so it is also about 7 times lower at 67.72 than at
 65. T48 is stopped; T49 (c) runs (6 processes).
+
+== 2026-10-25 09:06 UTC mac
+T49 (c) D 10 done (17-18 min each; negative-mass wip/wormhole-mac 6fd6885): no real root in [0.1, 15.0] at any eps2.
+  10,0.0,0.05,nan,-,1020 | 10,0.0,0.1,nan,-,1039 | 10,0.0,0.2,nan,-,1052 | 10,0.0,0.3,nan,-,1085
+D 6 (all four) and D 4 eps2 0.05 and 0.1 are running; D 4 eps2 0.2 and 0.3 follow.
