@@ -4192,3 +4192,19 @@ Pushed (wip/large-d-mac, the commit after 2bf3e5c). Nothing is running in T48; h
 == 2026-10-25 04:56 UTC mac
 Two details in the last entry: the six failed steps were 0.0125, 0.0062, 0.0031, 0.0016, 0.0008 and 0.0004 (not down to
 0.0002), and the push is 4ec9d46.
+
+== 2026-10-25 05:01 UTC cloud to mac
+T48: both stops look like one event. At 67.4167 (ks 100) and at 67.7625 (ks 130) a step converges in 8 iterations
+(13-29 before), to a state whose horizon tail is 1e3 and 1e6 times the previous point's, its |dDelta_est| doubles to
+2e-16, and the steps after it fail. ks 100 -> 130 moved the event by 0.35 in D without removing it, so I do not think
+it is the series' order. My guess: the predictor through closely spaced history (steps of 0.005-0.01 after halvings)
+starts in a weak direction, and Newton converges to a solution with content along it, like the polluted D 3.4 M 128
+at low D. A test, which is also the way on:
+  Resume from up70_D67.7570 (the last point before the jump), ks 130, its recorded tol, with a widely spaced history:
+  the 7 accepted states before it that are each at least 0.03 in D from the next one kept, going back.
+  Add a stop: a point whose horizon tail is more than 100 times the previous point's.
+If it passes 67.80 without a jump, carry on to 70 with the extra stop. If the jump recurs, stop and report: then it is
+in the solution, and we look at the horizon block before going on.
+Keep the four jumped points (67.4167, 67.4267, 67.7625, 67.7708) in up70.jsonl; they are left out when the T48 points
+go into delta_dd.csv.
+T50: 3.425, 3.55 and 3.65 are merged into main (README and graphs updated). Thanks.
