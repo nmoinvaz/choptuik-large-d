@@ -230,8 +230,9 @@ D = 3.7 to 3.4, while M = 96 → 128 stays at 1–2×10⁻⁹ down to D = 3.4. B
 (M = 128 → 160 → 192 → 256, each step one to two orders smaller than the one before): at D = 3.15 the step from 192
 to 256 is 9×10⁻¹², and at 3.125, 3.11875, 3.1125 and 3.1 it is 1.9, 2.8, 3.8 and 5.5×10⁻¹⁰; at 3.1 the next
 step, 256 → 320, is 7.2×10⁻¹³. At 3.0875 the steps are 1.8×10⁻⁹ and 7.0×10⁻¹², ten times those at 3.1 for 0.0125
-in D, at 3.08125 4.3×10⁻⁹ and 2.1×10⁻¹¹, and at 3.075 (the lowest point so far) 1.0×10⁻⁸ and 5.0×10⁻¹¹. At 3.075
-the M = 320 horizon-series tail, 5×10⁻³³, was above the run's 10⁻³³ bound, so a node was added at 0.975, taken from
+in D, at 3.08125 4.3×10⁻⁹ and 2.1×10⁻¹¹, at 3.075 1.0×10⁻⁸ and 5.0×10⁻¹¹, and at 3.06875 (the lowest point so far)
+2.3×10⁻⁸ and 1.0×10⁻¹⁰. At 3.075 the M = 320 horizon-series tail, 5×10⁻³³, was above the run's 10⁻³³ bound,
+so a node was added at 0.975, taken from
 the horizon series (integrating out from 0.95 passed the series' nearest singularity and gave NaN); on the 20 nodes
 the tails are 3×10⁻⁵⁷ and 10⁻¹⁰⁷ and Δ moved by 2×10⁻³⁰. At D = 3.40 the second machine's M = 128 Newton (13
 nodes) converged to a solution with content along the near-null directions (its centre-series tail 10⁻⁹, against
@@ -687,7 +688,7 @@ ran there. Above D = 8.25 each accepted continuation point's Newton solve takes 
 graph. The machines differ (the cloud's 2 shared cores, the laptop's 4–6 threads, the Mac's 4 performance cores, from
 D = 61.63 at a median of 25 s), so this shows the effort, not a benchmark.
 
-![How far apart in D our solved points are: the low-D grid down to D = 3.075, and the continuation's adaptive step from D = 8.25 to 67.79, by machine](hp/point_spacing.svg)
+![How far apart in D our solved points are: the low-D grid down to D = 3.06875, and the continuation's adaptive step from D = 8.25 to 67.79, by machine](hp/point_spacing.svg)
 
 **How far apart the points are** (`hp/plot_point_spacing.py`). Below D = 4: the distance from each point to the next
 one below it, on a grid we chose, mostly 0.05 apart and halved to 0.0125 and 0.00625 toward D = 3. From D = 8.25 up
@@ -2262,7 +2263,7 @@ hp/                 double-double solver (crate hpkernel)
 │                       value at that D agrees within its stated uncertainty (published_ref, published_diff,
 │                       published_match; data/published_delta.csv); the continuation points (857 for D = 8.25-61.03, 342 from
 │                       the continuation toward 70 for 61.04-67.77, runs T48-pilotB and T48-up70) and the
-│                       best low-D value per D (run lowD-M<M>, D = 3.075-4.0), which the large-D fits skip
+│                       best low-D value per D (run lowD-M<M>, D = 3.06875-4.0), which the large-D fits skip
 ├── data/delta_dd_lowD.csv   the low-D points at every M, with gamma and status (export_lowD.py)
 ├── data/fit_residuals.csv   each continuation point from D = 10 up minus the degree-18 1/(D-1) fit (fit_residuals.py)
 ├── data/local/     the second machine's runs (scan_up*.jsonl), folded into delta_dd.csv by export_dd.py
