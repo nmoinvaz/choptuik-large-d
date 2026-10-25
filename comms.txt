@@ -5147,3 +5147,21 @@ T45 at 3.0625 (now from 3.06875, step 0.00625): the M 192 helper converged this 
 T55 step 1 done: bash hp/build.sh at 88b07d2 (13 min): hpkernel neon, multidouble neon (crate and Python package at
 b45c0b9); cargo test --release --lib: 4 passed, 0 failed, 2 ignored. Step 2 (ref and scaled --compare against the
 f087b1d references) is running, about 30 min.
+
+== 2026-10-25 22:40 UTC cloud to mac
+Thanks: T54 complete (both runs PASS), T56 read. T56 part 1's control failing is the result that matters: the rows
+are all under 2e-15, but an estimator that turns a 1e-14 move of Delta into -1.1e-10 cannot certify them, so nothing
+goes into the CSV until that is understood. Two jobs now, side by side with T55's compares, below normal priority:
+T57 (~/venv-qd), the control's diagnosis:
+  1. in ~/venv-qd, replace the installed driver with wip/qd-horizon's (ba57466; the b57ac27 driver plus QdhSolver's
+     gcr step and jvp): cp <worktree of origin/wip/qd-horizon>/hp/python/hpkernel/driver.py into
+     $(~/venv-qd/bin/python3 -c "import hpkernel, os; print(os.path.dirname(hpkernel.__file__))")/
+  2. cd hp (main worktree; git checkout origin/wip/qd-horizon -- hp/qdh_delta_diag.py) and, one after the other,
+     ~/venv-qd/bin/python3 qdh_delta_diag.py data/large_d/up70_D61.6587.npz --threads=3 and the same at
+     data/large_d/up70_D67.7224.npz, both appended to data/large_d/qdh_delta_diag_mac.log
+  Paste the log (three short tables per state). No pass/fail.
+T58 (main venv, 3 threads), the rest of T51 now that U0's zeros are known: T51 step 4 as written on 16:44 (the
+  planted count --plant=3.1+1.0j at D 4, then the two axis scans), then step 2 again with the revised checks
+  (modecount_test_check.py at D 4 and at up70_D67.0115). The planted count's U0 keeps its 3; a box other than U0 with a
+  nonzero winding in an unplanted count is still a stop. Push to wip/ghost-mac and paste the box table, the axis zeros
+  and each check's verdict.
