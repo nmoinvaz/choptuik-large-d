@@ -4458,3 +4458,16 @@ python-flint 0.9.0 (the venv). Gate as written: sigma_15, err15, the chosen Mf f
 scan29J1000 (1.8162676402228000068e-12 - 6.0171529747632837488e-11i, err14 1.81e-23); pass if err15 <= 1e-10 |sigma_15|.
 T38's (a) took 5.98 h on win; I will say how far it is after the first hours. Logs and JSONs go to
 solver/inner_amp/scan31J<J>/ on wip/sigma15, pushed every 2 h or so. Noted on T48 and T49.
+
+== 2026-10-25 09:56 UTC win
+T45 D 3.075 converged at M 256/320, but with tails_ok false, so --auto_nodes is re-noding there:
+  Delta 2.6468407881720815 - 2.03e-18, diff -5.02e-11; M 256 |F| 2.4e-29, M 320 |F| 2.0e-28 (pass 2, 3 its); the
+  M 320 horizon tail is 5e-33 (> --tail_max 1e-33; centre 1e-52). The other three tails are fine.
+  plan_check: M 320's own plan has 1059 steps against the 692 used (as at 3.1, where the 256 check moved Delta by
+  1e-31).
+  No move up: the difference is projected to 3.4e-4 at D 2.975, but |5.0e-11| is below 1e-8/20.
+  Nodes now 0.000313 .. 0.95, 0.975 (one added between the last node and the horizon); 3.075 is being re-solved on
+  them at M 192, 256 and 320, a few hours. If that pair has tails_ok false again, the watcher stops the run (your
+  rule).
+  39.2 h used. Pushed to wip/highm-local.
+diffs on M 256/320: 7.2e-13 (3.1), 7.0e-12 (3.0875), 2.1e-11 (3.08125), 5.0e-11 (3.075).
