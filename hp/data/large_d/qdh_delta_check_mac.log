@@ -1,0 +1,20 @@
+319 rows of T48-up70 in delta_dd.csv
+  D 61.658651: dDelta_q -2.91e-18, dd -5.24e-18 (csv -4.43e-18), |F| q 6.6e-23 dd 4.4e-23  (1/319, 1 s)
+  D 62.128958: dDelta_q +4.90e-18, dd +2.94e-18 (csv +1.04e-18), |F| q 4.3e-23 dd 4.3e-23  (21/319, 18 s)
+  D 62.590833: dDelta_q +6.62e-18, dd +1.29e-17 (csv +1.58e-17), |F| q 7.0e-23 dd 4.5e-23  (41/319, 37 s)
+  D 63.020617: dDelta_q -1.34e-18, dd -9.15e-18 (csv +2.13e-18), |F| q 6.2e-23 dd 7.4e-23  (61/319, 58 s)
+  D 63.499582: dDelta_q -2.06e-18, dd -5.08e-18 (csv +5.92e-18), |F| q 1.4e-22 dd 7.9e-23  (81/319, 83 s)
+  D 63.942012: dDelta_q -1.04e-17, dd -2.70e-17 (csv -3.61e-17), |F| q 1.3e-22 dd 6.6e-23  (101/319, 110 s)
+  D 64.386874: dDelta_q -9.37e-18, dd -1.19e-17 (csv -1.72e-17), |F| q 1.1e-22 dd 7.6e-23  (121/319, 143 s)
+  D 64.799158: dDelta_q -2.04e-18, dd -5.95e-18 (csv +1.17e-17), |F| q 9.7e-23 dd 1.4e-22  (141/319, 176 s)
+  D 65.183812: dDelta_q +1.04e-17, dd +3.64e-17 (csv +2.15e-17), |F| q 1.1e-22 dd 1.4e-22  (161/319, 208 s)
+  D 65.555141: dDelta_q -2.17e-17, dd -4.12e-17 (csv -4.82e-17), |F| q 2.4e-22 dd 2.4e-22  (181/319, 233 s)
+  D 65.914325: dDelta_q -2.66e-17, dd +6.08e-18 (csv +1.31e-17), |F| q 2.6e-22 dd 4.5e-22  (201/319, 258 s)
+  D 66.260431: dDelta_q -1.81e-18, dd +2.23e-17 (csv +4.08e-17), |F| q 2.0e-22 dd 1.8e-22  (221/319, 282 s)
+  D 66.582990: dDelta_q +2.00e-18, dd +1.36e-18 (csv -1.22e-17), |F| q 2.5e-22 dd 2.7e-22  (241/319, 311 s)
+  D 66.894411: dDelta_q +6.73e-18, dd +2.06e-17 (csv -1.20e-17), |F| q 3.9e-22 dd 4.7e-22  (261/319, 339 s)
+  D 67.206449: dDelta_q -9.99e-18, dd -1.65e-17 (csv -1.93e-17), |F| q 2.2e-22 dd 3.5e-22  (281/319, 367 s)
+  D 67.517741: dDelta_q +1.43e-17, dd +1.23e-17 (csv +4.07e-17), |F| q 5.8e-22 dd 7.0e-22  (301/319, 394 s)
+  control: Delta + 1e-14 at D 61.658651: correction -1.103e-10 (unshifted -1.29e-18), DOES NOT recover the shift
+319 rows: |dDelta_q| max 1.21e-16, median 1.19e-17; |dDelta_dd| max 1.70e-16
+FAIL: the control did not recover the planted Delta shift
