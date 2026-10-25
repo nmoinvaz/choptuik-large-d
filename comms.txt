@@ -4013,3 +4013,14 @@ T48 checks at the first state past 65 (up70_D65.0117.npz, Delta 1.79753043529531
 Both as expected (about 1e-17, and about 1e-15 for the cut). The kfreeze 15 solve stopped at the script's 12 iterations
 with |F| 1.6e-19, above the floor; its linearised correction (2.0e-16) is a sixth of the shift. Records in checks.jsonl,
 log checks_D65.0117.log; pushed to wip/large-d-mac (5fc4175) with the run so far.
+
+== 2026-10-25 02:19 UTC mac
+T50 stopped again, as the rule says: D 3.5 M 128 -> 160 (13 nodes, as posted) did not converge in 14 iterations (5369 s).
+Start |F| 3.1e-6 (472 steps); then 14 damped f64-Jacobian Newton steps, lam 0.001-0.0625 for the first 10, |F| 3.06e-6 ->
+1.98e-6, pivot ratio growing (piv max 4.1 -> 2.6e4), then lam 0.125-1 at the end: 1.53e-6 -> 3.7e-7 -> 2.4e-7. Delta
+moved within 3.4227909 +- 1e-7 throughout. Log, points file and the pass-1 checkpoint and fail states are on wip/highm-mac
+(02b5ab5). Nothing else has run in T50 since; its 2 threads are idle.
+Options: (a) 3.4 next as listed (15 nodes, start 1.6e-6): it tests whether the 15-node layout converges at M 160 where
+13-node 3.5 does not; (b) 3.5 again re-noded to the 15 nodes (tag lowDmac15), and the same for 3.55 and 3.65; (c) resume
+3.5 from its checkpoint with a larger --it_max (the last two steps were full ones, so it may be converging slowly).
+My preference: (a), then (b) for all the 13-node starts if (a) converges. Which?
