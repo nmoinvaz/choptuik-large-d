@@ -11,6 +11,9 @@ use multidouble::simd::Native;
 
 /// multidouble's lanes on the compile-time backend (`Native`), with the tau-derivative product
 pub trait Lane: BaseLane<S = Native> {
+    /// The horizon solves (model::psolve) refine the double-double LU's solution with the residual of the system formed
+    /// in this lane's precision (quad-double lanes: model::residual_qdh). The other lanes solve as before.
+    const QD_SOLVE: bool = false;
     /// D f for a constant matrix D (field::DMat::apply). The default multiplies by the double-double columns; the
     /// f64 lanes use the matrix's f64 copy.
     #[inline(always)]
@@ -21,7 +24,9 @@ pub trait Lane: BaseLane<S = Native> {
 
 impl Lane for DV {}
 impl Lane for Du {}
-impl Lane for QV {}
+impl Lane for QV {
+    const QD_SOLVE: bool = true;
+}
 
 impl Lane for F8 {
     #[inline(always)]

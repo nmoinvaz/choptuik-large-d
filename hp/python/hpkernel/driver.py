@@ -16,7 +16,7 @@ import numpy as np
 from multidouble import dd_add, dd_axpy, dd_from_mp, dd_norm, dd_scale, two_sum  # noqa: F401
 from multidouble import two_prod as _two_prod  # noqa: F401
 
-from ._hpkernel import Solver
+from ._hpkernel import Solver, qd_add_dd
 
 # The double-double helpers above (numpy, elementwise) are multidouble's Python package (github.com/nmoinvaz/multidouble,
 # python/; hp/pyproject.toml pins it), the same float64 expressions as before; re-exported here under their old names
@@ -136,6 +136,82 @@ def seed_from_f64(path, M, kc=23, nodes=None, kmax=None, kmax_all=None):
 
 
 # ------------------------------------------------------------------ Newton
+def zadd(s, zh, zl, dh, dl):
+    """The state z + dz: dd_add, or the solver's own update where it keeps more parts of the state than (zh, zl)
+    (QdhSolver). Every update of a state in the Newton loops below goes through here."""
+    f = getattr(s, "zadd", None)
+    return f(zh, zl, dh, dl) if f is not None else dd_add(zh, zl, dh, dl)
+
+
+class QdhSolver:
+    """A Solver whose residual has the horizon block in quad-double (Solver.residual_qdh, notes/QUAD_DOUBLE.md
+    section 11), for newton_solve and deflated_newton with jac="dd".
+
+    The driver keeps working with double-double states (zh, zl). The two further parts of a state are kept here,
+    keyed by the state's bits: zadd makes the state z + dz in quad-double (qd_add_dd), returns its double-double part
+    and remembers the rest, and residual, newton and chord look the parts up again (a state not made by zadd, such as
+    a predictor's or a loaded one, has them zero). The Jacobian and its LU are the double-double ones at (zh, zl): only
+    the residual, and so the step -J^-1 F, sees the extra parts. keep: how many states' parts are remembered (the most
+    recent). refine=False is the control (the horizon solves unrefined)."""
+
+    def __init__(self, s, keep=64, refine=True):
+        self.s = s
+        self.keep = keep
+        self.refine = refine
+        self._parts = {}
+
+    def __getattr__(self, name):
+        return getattr(self.s, name)
+
+    @staticmethod
+    def _key(zh, zl):
+        return np.ascontiguousarray(zh).tobytes() + np.ascontiguousarray(zl).tobytes()
+
+    def parts(self, zh, zl):
+        """the third and fourth parts of the state (zh, zl), zero if unknown"""
+        p = self._parts.get(self._key(zh, zl))
+        if p is None:
+            z = np.zeros(len(zh))
+            return z, z
+        return p
+
+    def zadd(self, zh, zl, dh, dl):
+        z2, z3 = self.parts(zh, zl)
+        c = np.ascontiguousarray
+        a, b, q2, q3 = (np.asarray(v) for v in qd_add_dd(c(zh), c(zl), c(z2), c(z3), c(np.asarray(dh, dtype=float)),
+                                                         c(np.asarray(dl, dtype=float))))
+        self._parts[self._key(a, b)] = (q2, q3)
+        while len(self._parts) > self.keep:
+            self._parts.pop(next(iter(self._parts)))
+        return a, b
+
+    def residual(self, zh, zl):
+        z2, z3 = self.parts(zh, zl)
+        c = np.ascontiguousarray
+        return self.s.residual_qdh(c(zh), c(zl), c(z2), c(z3), refine=self.refine)
+
+    def _step(self, Fh, Fl):
+        c = np.ascontiguousarray
+        return self.s.lu_solve(c(-np.asarray(Fh)), c(-np.asarray(Fl)))
+
+    def newton(self, zh, zl):
+        """the double-double Jacobian and LU at (zh, zl) (Solver.newton), the step from the quad-double-horizon F"""
+        _, _, _, _, pmin, pmax = self.s.newton(zh, zl)
+        Fh, Fl = self.residual(zh, zl)
+        dh, dl = self._step(Fh, Fl)
+        return dh, dl, Fh, Fl, pmin, pmax
+
+    def chord(self, zh, zl):
+        Fh, Fl = self.residual(zh, zl)
+        dh, dl = self._step(Fh, Fl)
+        return dh, dl, Fh, Fl
+
+    def _no(self, *a, **k):
+        raise NotImplementedError("QdhSolver: only the double-double Jacobian (jac='dd'); no LM, no products")
+
+    newton_mixed = lm_steps = jvp = _no
+
+
 def block_norms(s, Fh, Fl):
     M = s.m
     L = s.size
@@ -262,7 +338,7 @@ def exact_last_step(s, zh, zl, tol):
     and it leaves the exact LU stored for the sensitivities. Returns (zh, zl, record fields)."""
     dh, dl, Fh, Fl, pmin, pmax = s.newton(zh, zl)
     tr, tj, tf, ts = s.step_timing()
-    th, tl = dd_add(zh, zl, dh, dl)
+    th, tl = zadd(s, zh, zl, dh, dl)
     Th, Tl = s.residual(th, tl)
     n1 = dd_norm(Th, Tl)
     out = dict(exact_last=True, t_jac_last=tj, F_last=n1)
@@ -298,7 +374,7 @@ def newton_solve(s, zh, zl, tol=1e-28, it_max=12, chord=0, verbose=True, ls=True
         lam = 1.0
         accepted = not ls
         for h in range(max_halvings + 1):
-            th, tl = dd_add(zh, zl, dh * lam, dl * lam)
+            th, tl = zadd(s, zh, zl, dh * lam, dl * lam)
             if not ls:
                 break
             Th, Tl = s.residual(th, tl)
@@ -328,7 +404,7 @@ def newton_solve(s, zh, zl, tol=1e-28, it_max=12, chord=0, verbose=True, ls=True
             elif cur != "dd":
                 # Linear convergence leaves an error of about this step's size in the weakly determined (near-null)
                 # directions, which |F| does not see. The step is already computed: take it if |F| stays below tol.
-                th, tl = dd_add(zh, zl, dh, dl)
+                th, tl = zadd(s, zh, zl, dh, dl)
                 Th, Tl = s.residual(th, tl)
                 n1 = dd_norm(Th, Tl)
                 if n1 < tol:
@@ -376,7 +452,7 @@ def newton_solve(s, zh, zl, tol=1e-28, it_max=12, chord=0, verbose=True, ls=True
         if lam == 1.0:
             for c in range(chord):
                 ch, cl, Fh2, Fl2 = s.chord(zh, zl)
-                zh, zl = dd_add(zh, zl, ch, cl)
+                zh, zl = zadd(s, zh, zl, ch, cl)
                 if verbose:
                     print(f"    chord {c}: |F| {dd_norm(Fh2, Fl2):.2e} |dz| {dd_norm(ch, cl):.2e}", flush=True)
         if rec["dz"] * lam < 1e-31:
@@ -403,8 +479,21 @@ def resample_z(zh, M_old, M_new, K):
     return zn, np.zeros_like(zn)
 
 
-def save(path, zh, zl, meta):
-    np.savez(path, zh=zh, zl=zl, meta=json.dumps(meta))
+def save(path, zh, zl, meta, parts=None):
+    """parts: the state's third and fourth parts (QdhSolver.parts), saved as z2, z3 (load ignores them; load_parts)"""
+    if parts is None:
+        np.savez(path, zh=zh, zl=zl, meta=json.dumps(meta))
+    else:
+        np.savez(path, zh=zh, zl=zl, meta=json.dumps(meta), z2=parts[0], z3=parts[1])
+
+
+def load_parts(path):
+    """a saved state's third and fourth parts (zero for a double-double state)"""
+    d = np.load(path)
+    if "z2" in d:
+        return d["z2"], d["z3"]
+    z = np.zeros(len(d["zh"]))
+    return z, z
 
 
 def load(path):
@@ -509,7 +598,7 @@ def lm_solve(s, zh, zl, tol=1e-27, it_max=20, mus=(0.0, 1e-8, 1e-6, 1e-4, 1e-3, 
         n0 = rnorm(Fh, Fl)
         best = None
         for mu, (dh, dl) in zip(mus, steps):
-            th, tl = dd_add(zh, zl, np.asarray(dh), np.asarray(dl))
+            th, tl = zadd(s, zh, zl, np.asarray(dh), np.asarray(dl))
             Th, Tl = s.residual(th, tl)
             n1 = rnorm(Th, Tl)
             if np.isfinite(n1) and (best is None or n1 < best[0]):
@@ -642,7 +731,7 @@ def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_hal
                 rec.update(extra)
                 polish = f"; one exact step, |F| {extra['F_last']:.2e}"
             elif cur not in ("dd", "f64"):
-                th, tl = dd_add(zh, zl, dh, dl)
+                th, tl = zadd(s, zh, zl, dh, dl)
                 Th, Tl = s.residual(th, tl)
                 n1 = dd_norm(Th, Tl)
                 if n1 < tol:
@@ -681,7 +770,7 @@ def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_hal
             dh, dl = d, np.zeros_like(d)
         lam, accepted = 1.0, False
         for _ in range(max_halvings + 1):
-            th, tl = dd_add(zh, zl, dh * lam, dl * lam)
+            th, tl = zadd(s, zh, zl, dh * lam, dl * lam)
             Th, Tl = s.residual(th, tl)
             n1 = rnorm(Th, Tl)
             if np.isfinite(n1) and n1 <= (1 - 1e-4 * lam) * n0:

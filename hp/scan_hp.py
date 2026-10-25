@@ -17,7 +17,7 @@ import time
 os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
 import numpy as np  # noqa: E402
 
-from hpkernel.driver import deflated_newton, delta_correction, hermite, lm_solve, load, make_solver, newton_solve, plow_odd, predict, renode, resample_z, save, tangent
+from hpkernel.driver import QdhSolver, deflated_newton, delta_correction, hermite, lm_solve, load, make_solver, newton_solve, plow_odd, predict, renode, resample_z, save, tangent
 from pinning import PinnedSolver, band_coeffs, band_field, predict_dd, dd_add
 
 
@@ -121,6 +121,10 @@ def solve_at(D, zh, zl, a, nodes, M, it_max, pin=None):
     if pin is not None:
         hh, hl = band_field(pin[0], pin[1], M)
         s = PinnedSolver(s, M, hh, hl)
+    if a.qdh:
+        if pin is not None or a.jac != "dd" or a.lm:
+            raise SystemExit("--qdh needs --jac dd, --lm 0 and no --pin")
+        s = QdhSolver(s)
     t0 = time.time()
     jkw = {} if a.jac == "dd" else dict(jac=a.jac, gmres=gmres_opts(a), dd_last=a.dd_last)
     if a.corrector in ("dn", "dnp"):
@@ -180,6 +184,9 @@ def main():
     ap.add_argument("--horizon_alpha", type=int, default=0, choices=[0, 1, 2],
                     help="the horizon series in alpha = a - 1 (1; a lower residual floor at large D, the same solution; "
                     "notes/LARGE_D_MIXED.md section 10), 2 its control; 0 (default) as before")
+    ap.add_argument("--qdh", type=int, default=0, choices=[0, 1],
+                    help="1: the residual's horizon block in quad-double (driver.QdhSolver, notes/QUAD_DOUBLE.md section "
+                         "11): the double-double residual floor of large D removed; needs --jac dd, no --pin")
     ap.add_argument("--corrector", default="dn", choices=["dn", "dnp", "newton"],
                     help="dn: deflated Newton (default); dnp: deflated Newton, then plain Newton to the bottom")
     ap.add_argument("--polish_its", type=int, default=4, help="dnp: plain Newton steps after the deflated phase")
@@ -393,6 +400,9 @@ def main():
         if rec["dDelta_est"] is None:
             rec["dDelta_est"] = delta_correction(s, *s.residual(zh, zl))
         rec["polish"] = sum(1 for r in hist if r.get("polish"))
+        if a.qdh:
+            z2, z3 = s.parts(zh, zl)
+            rec.update(qdh=1, Delta_q2=float(z2[-1]))
         if a.jac != "dd":
             # sens_lu: the LU the sensitivities came from (the last step's: f64 for a mixed step, dd after dd_finish
             # switched); at D >= 50 an f64 LU's dDelta/dF is wrong by orders of magnitude (notes/LARGE_D_MIXED.md)
@@ -407,7 +417,8 @@ def main():
                   f"as |F| x max dDelta/dF)", flush=True)
         with open(a.out, "a") as f:
             f.write(json.dumps(rec) + "\n")
-        save(os.path.join(outdir, f"{a.tag}_D{D:.4f}.npz"), zh, zl, dict(D=D, M=M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks))
+        save(os.path.join(outdir, f"{a.tag}_D{D:.4f}.npz"), zh, zl, dict(D=D, M=M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks),
+             parts=s.parts(zh, zl) if a.qdh else None)
         print(f"D={D:.4f} Delta={zh[-1]:.16f}{zl[-1]:+.2e} its {len(hist)} |F| {hist[-1]['F']:.1e} {dt:.0f}s "
               f"piv {rec['piv'][0]:.1e}..{rec['piv'][1]:.1e} dDelta/dF max {max(sens):.1e} tails {tc:.0e} {th:.0e}"
               + (f" pin: |F_full| {pin_rec['F_full']:.1e} dDelta_pin {pin_rec['dDelta_pin']:+.1e}" if pin_rec else ""), flush=True)

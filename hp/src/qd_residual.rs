@@ -12,7 +12,7 @@ use crate::dd::DD;
 use crate::dv::{DotAcc, DV};
 use crate::field::{DMat, FieldSolve, Fl, State};
 use crate::lane::{BaseLane, Lane};
-use crate::model::{block_state, centre_state, horizon_lus, residual, taylor_path, Ctx, TWork};
+use crate::model::{block_state, centre_state, horizon_lus, residual, residual_qdh, taylor_path, Ctx, TWork, QD_MUT_NOREFINE, QD_MUT_REFINE4};
 use crate::qd::QD;
 use crate::qv::{QDotAcc, QV};
 use crate::v8::V8;
@@ -230,6 +230,86 @@ fn qv_lane_blocks_agree() {
     println!("QV vs DV, all blocks of the synthetic context: max relative difference {d:.2e}; with Delta x (1 + 1e-20): {dc:.2e}");
     assert!(d < 1e-26, "QV and DV differ by {d:e}");
     assert!(dc > 1e-26, "control: Delta moved by 1e-20 not seen ({dc:e})");
+}
+
+/// The horizon block's QV state from a four-part state (z2, z3 given), with ctx.mutate as set.
+fn horizon_qv<const B: usize>(ctx: &Ctx<B>, z: [&[f64]; 4]) -> crate::field::State<QV, B> {
+    let l = z[0].len();
+    let delta = DD { hi: z[0][l - 1], lo: z[1][l - 1] };
+    let lus = horizon_lus(ctx, &ctx.fld(z[0], z[1], ctx.off_ah()), delta, false, DD::ZERO).unwrap();
+    let kb = ctx.k();
+    let inq: Vec<Fl<QV, B>> = ctx
+        .block_inputs(kb)
+        .iter()
+        .map(|&o| {
+            let mut r = [QV::zero(); B];
+            for (b, rb) in r.iter_mut().enumerate() {
+                let i = o + 8 * b;
+                *rb = QV::load(&z[0][i..i + 8], &z[1][i..i + 8], &z[2][i..i + 8], &z[3][i..i + 8]);
+            }
+            Fl(r)
+        })
+        .collect();
+    let dq = QV::splat(QD::new(z[0][l - 1], z[1][l - 1], z[2][l - 1], z[3][l - 1]));
+    block_state::<QV, B>(ctx, kb, &inq, dq, &lus, &lus)
+}
+
+/// max over fields and points of |a - b| / max(1, |b|) for two QV states
+fn qv_diff<const B: usize>(a: &crate::field::State<QV, B>, b: &crate::field::State<QV, B>) -> f64 {
+    let mut worst = 0.0f64;
+    for q in 0..4 {
+        for j in 0..Ctx::<B>::M {
+            let (x, y) = (a[q].0[j / 8].lane(j % 8), b[q].0[j / 8].lane(j % 8));
+            worst = worst.max((x - y).to_f64().abs() / y.to_f64().abs().max(1.0));
+        }
+    }
+    worst
+}
+
+/// residual_qdh (the horizon block in quad-double) on the synthetic context:
+/// 1. at a double-double state (z2 = z3 = 0) every row outside the horizon block is bitwise `residual`'s, and the
+///    horizon rows agree with it to double-double accuracy (1e-26);
+/// 2. the refined horizon solves have converged: two steps (the default) against four agree to 1e-55; control: no
+///    refinement against four must differ by more than 1e-40 (the double-double LU alone is not quad-double);
+/// 3. the four parts are read: a_h moved by 1e-40 relative in z2 must move the horizon block's QV state by more
+///    than 1e-48 (and z2 = 0 gives it bit for bit again).
+#[test]
+fn residual_qdh_agrees() {
+    let (mut ctx, zh, zl) = synth();
+    let l = ctx.len();
+    let m = Ctx::<1>::M;
+    let zero = vec![0.0; l];
+    let (fh, fl) = residual(&ctx, &zh, &zl, false).unwrap();
+    let (qh, ql) = residual_qdh(&ctx, [&zh, &zl, &zero, &zero], false).unwrap();
+    let hb = ctx.k() * 4 * m;
+    let outside = (0..l).filter(|&i| i < hb || i == l - 1).all(|i| qh[i] == fh[i] && ql[i] == fl[i]);
+    let dh = (hb..l - 1).map(|i| ((qh[i] - fh[i]) + (ql[i] - fl[i])).abs()).fold(0.0, f64::max);
+    let fmax = (hb..l - 1).map(|i| fh[i].abs()).fold(0.0, f64::max);
+    println!("residual_qdh at z2 = z3 = 0: rows outside the horizon block bitwise residual's: {outside}; horizon rows differ by {dh:.2e} (max |F| there {fmax:.2e})");
+    assert!(outside, "residual_qdh changed rows outside the horizon block");
+    assert!(dh < 1e-26, "horizon rows differ by {dh:e}");
+    let z: [&[f64]; 4] = [&zh, &zl, &zero, &zero];
+    ctx.mutate = QD_MUT_REFINE4;
+    let r4 = horizon_qv(&ctx, z);
+    ctx.mutate = 0;
+    let r2 = horizon_qv(&ctx, z);
+    ctx.mutate = QD_MUT_NOREFINE;
+    let r0 = horizon_qv(&ctx, z);
+    ctx.mutate = 0;
+    let (d2, d0) = (qv_diff(&r2, &r4), qv_diff(&r0, &r4));
+    println!("horizon block, refinement: 2 steps against 4: {d2:.2e}; control, none against 4: {d0:.2e}");
+    assert!(d2 < 1e-55, "the refinement has not converged in two steps ({d2:e})");
+    assert!(d0 > 1e-40, "control: the unrefined solves agree with the refined ones ({d0:e})");
+    let mut z2 = zero.clone();
+    for i in ctx.off_ah()..ctx.off_ah() + m {
+        z2[i] = 1e-40 * zh[i];
+    }
+    let rp = horizon_qv(&ctx, [&zh, &zl, &z2, &zero]);
+    let dp = qv_diff(&rp, &r2);
+    let same = qv_diff(&horizon_qv(&ctx, z), &r2);
+    println!("a_h moved by 1e-40 in z2: the horizon state moves by {dp:.2e}; again with z2 = 0: {same:.1e}");
+    assert!(dp > 1e-48, "the third part of a_h was not read ({dp:e})");
+    assert!(same == 0.0, "not reproducible ({same:e})");
 }
 
 // -------------------------------------------------------------------------------------------------------------

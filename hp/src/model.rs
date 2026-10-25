@@ -19,6 +19,8 @@ use crate::field::{cs, cs_range, cs_w, horner, DMat, Fl, State};
 use crate::lane::{BaseLane, Dtn, Du, F8, Fu, Fun, Lane};
 use crate::field::FieldSolve;
 use crate::linalg::{ld_for, DDLu};
+use crate::qd::QD;
+use crate::qv::QV;
 use rayon::prelude::*;
 
 pub struct Ctx<const B: usize> {
@@ -53,7 +55,7 @@ pub struct Ctx<const B: usize> {
     /// (hp/mixed_check.py --mutate): 0 none, 1 no tau derivative, 2 omega scaled by 1 + 1e-9, 3 the horizon solves'
     /// kappa tangent term dropped; 6 the centre series' scale wrong at one order (twice sigma for the order-7 terms
     /// built from order 6), the control of the scaled series' bit-identity (hp/highm_check.py scaled). The
-    /// double-double lanes never read it.
+    /// double-double lanes never read it. The quad-double lanes (QV, residual_qdh) read QD_MUT_NOREFINE only.
     pub mutate: u8,
     /// Parts of the f64 Jacobian (TAN_F64 lanes) computed in double-double instead, rounded to f64; bit flags HDD_*
     /// (notes/LARGE_D_MIXED.md). 0, the default, changes nothing. The double-double lanes never read it.
@@ -68,6 +70,15 @@ pub struct Ctx<const B: usize> {
 /// `Ctx::f64_dd`: the horizon series' periodic solves (`psolve`) in double-double for the f64 lanes, value and
 /// tangents, with the full double-double LU factors instead of their hi parts
 pub const HDD_SOLVE: u8 = 1;
+/// `Ctx::mutate` for the quad-double lanes (residual_qdh's control): the horizon solves without their refinement, so
+/// only to the double-double LU's accuracy
+pub const QD_MUT_NOREFINE: u8 = 7;
+/// `Ctx::mutate` for the quad-double lanes: four refinement steps instead of QD_REFINE (the reference of the
+/// refinement's convergence test, qd_residual::residual_qdh_agrees)
+pub const QD_MUT_REFINE4: u8 = 8;
+/// refinement steps of a horizon solve in the QD_SOLVE lanes: the double-double LU solves to about eps_dd times the
+/// condition number (pivots 1e-3..1e2), so two steps reach quad-double
+const QD_REFINE: usize = 2;
 /// `Ctx::f64_dd`: no early end of the horizon series for f64 tangents (`Tail`); the series runs to ks
 pub const HDD_NOTAIL: u8 = 2;
 /// `Ctx::f64_dd`: the horizon block's column tasks (m_h, a_h, Delta) with `Du` lanes, i.e. the double-double
@@ -527,6 +538,24 @@ fn tan_f8<T: Lane, const B: usize>(x: &Fl<T, B>, k: usize) -> Fl<F8, B> {
 /// (omega D + diag kappa) f = r with the LU at the values; for tangents the derivative of the system:
 /// A_t f_d = r_d - omega_d D f_v - kappa_d f_v, with A_t = A + lam (lu_t; the same LU when lam = 0).
 fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, lu: &DDLu, lu_t: &DDLu, kappa: &Fl<T, B>, rhs: &Fl<T, B>, omega: T) -> Fl<T, B> {
+    if T::QD_SOLVE {
+        // the LU was factored at the double-double a_h and Delta; the refinement solves the lane's own system (omega
+        // and kappa from the quad-double a_h and Delta), its residual formed in the lane's precision (iterative
+        // refinement in the working precision of the residual: Wilkinson; Moler, J. ACM 14 (1967) 316,
+        // doi:10.1145/321386.321394)
+        let z = Fl::<DV, B>::zero();
+        let mut f = Fl::<T, B>::from_vt(&lu.solve_lanes(&rhs.val()), &z);
+        let steps = match ctx.mutate {
+            QD_MUT_NOREFINE => 0,
+            QD_MUT_REFINE4 => 4,
+            _ => QD_REFINE,
+        };
+        for _ in 0..steps {
+            let res = *rhs - (ctx.d.apply(&f).mul_t(omega) + *kappa * f);
+            f = f + Fl::<T, B>::from_vt(&lu.solve_lanes(&res.val()), &z);
+        }
+        return f;
+    }
     if T::VAL_F64 || T::TAN_F64 {
         // f64 values: the value solve in plain f64 with the hi parts of the double-double LU factors; f64 tangents:
         // each tangent's solve likewise. With HDD_SOLVE both in double-double (the f64 right-hand side solved exactly
@@ -760,6 +789,72 @@ pub fn residual<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool)
             let o = b * 4 * m + q * m;
             d.store(&mut fh[o..o + m], &mut fl[o..o + m]);
         }
+    }
+    let ph = phase_row(ctx, &ctx.fld(zh, zl, 0));
+    fh[l - 1] = ph.hi;
+    fl[l - 1] = ph.lo;
+    Ok((fh, fl))
+}
+
+/// A field from the four parts of a quad-double state (multidouble's QD: z0 + z1 + z2 + z3, renormalized)
+fn fld_qv<const B: usize>(z: [&[f64]; 4], off: usize) -> Fl<QV, B> {
+    let mut r = [QV::zero(); B];
+    for (b, rb) in r.iter_mut().enumerate() {
+        let o = off + 8 * b;
+        *rb = QV::load(&z[0][o..o + 8], &z[1][o..o + 8], &z[2][o..o + 8], &z[3][o..o + 8]);
+    }
+    Fl(r)
+}
+
+/// The residual with the horizon block in quad-double (notes/QUAD_DOUBLE.md, section 11). The state comes in four
+/// parts (z[0] + z[1] + z[2] + z[3], as multidouble's QD). The horizon block's inputs (m_h, a_h), Delta and its
+/// target (node K-1) are read in all four parts, and the block runs with QV lanes: the horizon series in quad-double,
+/// its periodic solves refined in quad-double (psolve with QD_SOLVE). The model's constants stay double-double, as
+/// in every other block, so the system is the same one. Every other block, the phase row and the freeze projection
+/// are `residual`'s, from (z[0], z[1]). The horizon rows are rounded to double-double after the subtraction.
+/// With z[2] = z[3] = 0 the rows outside the horizon block are bitwise `residual`'s.
+pub fn residual_qdh<const B: usize>(ctx: &Ctx<B>, z: [&[f64]; 4], par: bool) -> Result<(Vec<f64>, Vec<f64>), String> {
+    let l = ctx.len();
+    let m = Ctx::<B>::M;
+    for p in z {
+        assert_eq!(p.len(), l);
+    }
+    let (zh, zl) = (z[0], z[1]);
+    let delta = delta_of(zh, zl);
+    let lus = horizon_lus(ctx, &ctx.fld(zh, zl, ctx.off_ah()), delta, par, DD::ZERO)?;
+    let kb = ctx.k();
+    let one_block = |b: usize| -> State<DV, B> {
+        let inp: Vec<Fl<DV, B>> = ctx.block_inputs(b).iter().map(|&o| ctx.fld(zh, zl, o)).collect();
+        block_state::<DV, B>(ctx, b, &inp, DV::splat(delta), &lus, &lus)
+    };
+    let horizon = || -> State<QV, B> {
+        let inq: Vec<Fl<QV, B>> = ctx.block_inputs(kb).iter().map(|&o| fld_qv::<B>(z, o)).collect();
+        let dq = QV::splat(QD::new(z[0][l - 1], z[1][l - 1], z[2][l - 1], z[3][l - 1]));
+        block_state::<QV, B>(ctx, kb, &inq, dq, &lus, &lus)
+    };
+    let (states, hq): (Vec<State<DV, B>>, State<QV, B>) = if par {
+        rayon::join(|| (0..kb).into_par_iter().map(one_block).collect(), horizon)
+    } else {
+        ((0..kb).map(one_block).collect(), horizon())
+    };
+    let mut fh = vec![0.0; l];
+    let mut fl = vec![0.0; l];
+    let mut put = |b: usize, q: usize, mut d: Fl<DV, B>| {
+        if let (true, 0, Some((lo, hi))) = (b == kb, q, &ctx.freeze) {
+            d = lo.apply(&d) + hi.apply(&ctx.fld(zh, zl, 0));
+        }
+        let o = b * 4 * m + q * m;
+        d.store(&mut fh[o..o + m], &mut fl[o..o + m]);
+    };
+    for (b, s) in states.iter().enumerate() {
+        let t = ctx.block_target(b);
+        for q in 0..4 {
+            put(b, q, s[q] - ctx.fld(zh, zl, t + q * m));
+        }
+    }
+    let t = ctx.block_target(kb);
+    for q in 0..4 {
+        put(kb, q, (hq[q] - fld_qv::<B>(z, t + q * m)).val());
     }
     let ph = phase_row(ctx, &ctx.fld(zh, zl, 0));
     fh[l - 1] = ph.hi;
