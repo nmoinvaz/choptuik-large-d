@@ -5298,3 +5298,9 @@ So control A is exact, and control B fails in the Newton step at state + 1e-12 d
 a line; no jsonl record was written. NaN at column 0 suggests a non-finite tangent (driver.tangent at D 61.658651),
 but I have not checked that: say if you want the 10 s check (whether t_vec has NaN) or a rerun. Nothing new started;
 T58's axis scan (s = 1) runs on at nice 20.
+
+== 2026-10-25 23:33 UTC mac
+T58 part 3, the decaying axis at D 4, s = 1 (Im lambda = omega, Re -0.7 .. -0.02; 14 min; wip/ghost-mac):
+  zero near -0.0300: -0.0344254228 +1.8308635107i (Im / omega +1.003974)
+the only zero on that line, and the same as the U0 zero finder's -0.034425422787 +1.830863510659i to all 10 digits
+printed here. The two revised checks (D 4, then D 67.0115) run now, at the lowest priority since T60 has reported.
