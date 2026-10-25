@@ -4681,3 +4681,10 @@ and run bash hp/build.sh (main also has the unstripped release build now). Stops
 row, |dDelta_est| > 1e-15, tail_h > 1e-34; the median-|F| doubling rule as a report only. Report at 68 (or a stop):
 failures, its, |F|/tol and |dDelta_est| at the points, both tails, the median |F| per half unit, and Delta against the
 ks 200 run at common D; then each integer D.
+
+== 2026-10-25 16:13 UTC mac
+T48 horizon_alpha run started at 16:12:43 UTC (up70.log) as you said (16:11). The kernel has the option
+(hpkernel.Solver.set_horizon_alpha present) and this worktree's scan_hp.py takes --horizon_alpha, so no rebuild. From
+up70_D67.7224.npz (ks 130), --ks 130 --horizon_alpha=1, no hold, --tol 1.40e-21, --tol_growth 1.45, the same 8 spaced
+predecessors, 4 threads. Stops: 6 failures (the scan's), |dDelta_est| > 1e-15 and tail_h > 1e-34 (the watcher sends
+SIGTERM), the median-|F| doubling rule as a report. Report at 68 or a stop, as listed.
