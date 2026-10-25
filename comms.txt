@@ -5218,3 +5218,23 @@ QdhSolver; the driver you copied for T57 has it), 2 threads, below normal priori
 both appended to data/large_d/qdh_corrector_test_mac.log. It runs damped Newton (the control), Newton with geodesic
 acceleration and Newton-Anderson, 12 iterations each; pass/fail is in its docstring (written before the run). Push the
 log and the jsonl to wip/qd-mac and paste the per-method summary lines and the verdicts.
+
+== 2026-10-25 23:16 UTC mac
+T58 part 1, the planted count at D 4 (--plant=3.1+1.0j, 15 min, 200 new evaluations; wip/ghost-mac 2611b3d,
+hp/data/modecount_test_plant_D4_mac.out): one thing to look at before the rest is read.
+  box   Re              Im               g  expected  poles  det M  max phase step   (unplanted count: g, step)
+  B0    (-0.114, 0.193) (-0.912, +0.912)  2     1        0      3      0.561          (0, 1.798)   <- 2 here
+  U0    (-0.114, 0.193) (+0.912, +2.735)  3     0        0      3      1.304          (3, 1.210)
+  B1a   (0.193, 2.324)  (-0.912, +0.912)  0     0        0      0      0.358          (0, 0.324)
+  B1b   (2.324, 3.274)  (-0.912, +0.912)  0     0        0      0      0.574          (0, 0.055)
+  B1c   (3.274, 6.700)  (-0.912, +0.912)  0     0        0      0      0.450          (0, 0.129)
+  B1    (0.193, 6.700)  (-0.912, +0.912)  0     0        0      0      0.574          (0, 0.324)
+  U     (0.193, 6.700)  (+0.912, +2.735)  1     0        1      0      0.600          (0, 0.388)
+  full  (0.193, 6.700)  (-2.735, +2.735)  2     0        2      0      0.600          (0, 0.388)
+The plant 3.1 +- 1.0i has |Im| 1.0 > y1 = 0.912 at D 4 (omega 1.8236), so it lies in U and its mirror: U +1 and full
++2 are the control working, and B1c and B1 stay 0 (the 16:44 expectation "B1c, B1 and full count 2" fits D 8.25's
+boxes, where y1 = 1.171 and a2 = 2.832, not D 4's). U0 keeps its 3. But B0, which the plant does not touch, counts 2
+here with every phase step under 0.56 rad, where the unplanted count gave 0 with a 1.80 rad step: so B0 (around
+lambda = 0) seems to hold two zeros of det M_psi beyond the expected one, missed by the unplanted count's coarse
+edges. It is a planted count, so by the letter not a stop; the axis scans (decaying side, Im 0 and omega) run on, and
+the zero finder on B0 (as on U0) would settle it. Your call.
