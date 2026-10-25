@@ -72,10 +72,11 @@ def parse(argv):
     return args, opts
 
 
-def count(det_fn, info, poles, opts, log, tag, res_file):
+def count(det_fn, info, poles, opts, log, tag, res_file, expected=None, boxes_only=None):
     """The argument-principle count. det_fn(re, im) -> (ln|det|, arg det, pmin, pmax); info: D, M, omega, lam_g,
     lam_f (lam_phys, used only as an expected zero and for the geometry) and whatever else goes into the record;
-    poles: the candidate poles of det M (complex)."""
+    poles: the candidate poles of det M (complex). expected: the real parts of the expected zeros (default 0, lam_g,
+    lam_f; each with its copies + 2 i k omega); boxes_only: count only these boxes (and follow only their edges)."""
     h0 = float(opts.get("h0", 0.4))
     tol = float(opts.get("tol", math.pi / 4))
     hmin = float(opts.get("hmin", 1e-4))
@@ -112,8 +113,8 @@ def count(det_fn, info, poles, opts, log, tag, res_file):
     y1, y2 = 0.5 * omega, im2 * omega
     # expected zeros: lam = 0, lam_g and lam_phys, and their copies 2 i k omega of the folded layout
     kmax = int((y2 + 2 * omega) / omega) + 1
-    known = [complex(z, 2 * k * omega) for z in (0.0, lam_g, lam_f) for k in range(-kmax, kmax + 1)
-             if abs(2 * k * omega) < y2 + 2 * omega]
+    known = [complex(z, 2 * k * omega) for z in ((0.0, lam_g, lam_f) if expected is None else expected)
+             for k in range(-kmax, kmax + 1) if abs(2 * k * omega) < y2 + 2 * omega]
     pre = sorted(set(p.real for p in poles if abs(p.imag) < y2 + 0.5 * omega))
 
     def far(lo, hi, avoid):
@@ -204,37 +205,40 @@ def count(det_fn, info, poles, opts, log, tag, res_file):
             f"{e['min_lng']:.2f}..{e['max_lng']:.2f}, verified {nver} (mismatch {bad})")
         return e
 
-    E = {}
-    E["R1"] = edge(complex(aR, 0), complex(aR, y1), "Re=aR, Im 0->y1")
-    E["V2"] = edge(complex(a2, 0), complex(a2, y1), "Re=a2, Im 0->y1")
-    E["V1"] = edge(complex(a1, 0), complex(a1, y1), "Re=a1, Im 0->y1")
-    E["L1"] = edge(complex(aL, 0), complex(aL, y1), "Re=aL, Im 0->y1")
-    E["V0"] = edge(complex(aLL, 0), complex(aLL, y1), "Re=aLL, Im 0->y1")
-    E["H1"] = edge(complex(aR, y1), complex(a2, y1), "Im=y1, Re aR->a2")
-    E["H2"] = edge(complex(a2, y1), complex(a1, y1), "Im=y1, Re a2->a1")
-    E["H3"] = edge(complex(a1, y1), complex(aL, y1), "Im=y1, Re a1->aL")
-    E["H0"] = edge(complex(aL, y1), complex(aLL, y1), "Im=y1, Re aL->aLL")
-    E["R2"] = edge(complex(aR, y1), complex(aR, y2), "Re=aR, Im y1->y2")
-    E["L2"] = edge(complex(aL, y1), complex(aL, y2), "Re=aL, Im y1->y2")
-    E["V0b"] = edge(complex(aLL, y1), complex(aLL, y2), "Re=aLL, Im y1->y2")
-    E["T"] = edge(complex(aR, y2), complex(aL, y2), "Im=y2, Re aR->aL")
-    E["T0"] = edge(complex(aL, y2), complex(aLL, y2), "Im=y2, Re aL->aLL")
-
-    def ph(name):
-        return E[name]["dphi"]
-
-    # counter-clockwise upper half paths (symmetric boxes, / pi) and closed strips (/ 2 pi)
-    boxes = {
-        "B0": ((ph("L1") + ph("H0") - ph("V0")) / math.pi, (aLL, aL, -y1, y1), ["L1", "H0", "V0"]),
-        "U0": ((-ph("H0") + ph("L2") + ph("T0") - ph("V0b")) / (2 * math.pi), (aLL, aL, y1, y2), ["H0", "L2", "T0", "V0b"]),
-        "B1a": ((ph("V1") + ph("H3") - ph("L1")) / math.pi, (aL, a1, -y1, y1), ["V1", "H3", "L1"]),
-        "B1b": ((ph("V2") + ph("H2") - ph("V1")) / math.pi, (a1, a2, -y1, y1), ["V2", "H2", "V1"]),
-        "B1c": ((ph("R1") + ph("H1") - ph("V2")) / math.pi, (a2, aR, -y1, y1), ["R1", "H1", "V2"]),
-        "B1": ((ph("R1") + ph("H1") + ph("H2") + ph("H3") - ph("L1")) / math.pi, (aL, aR, -y1, y1), ["R1", "H1", "H2", "H3", "L1"]),
-        "U": ((ph("R2") + ph("T") - ph("L2") - ph("H1") - ph("H2") - ph("H3")) / (2 * math.pi), (aL, aR, y1, y2),
-              ["R2", "T", "L2", "H1", "H2", "H3"]),
-        "full": ((ph("R1") + ph("R2") + ph("T") - ph("L2") - ph("L1")) / math.pi, (aL, aR, -y2, y2), ["R1", "R2", "T", "L2", "L1"]),
+    specs = [("R1", complex(aR, 0), complex(aR, y1), "Re=aR, Im 0->y1"),
+             ("V2", complex(a2, 0), complex(a2, y1), "Re=a2, Im 0->y1"),
+             ("V1", complex(a1, 0), complex(a1, y1), "Re=a1, Im 0->y1"),
+             ("L1", complex(aL, 0), complex(aL, y1), "Re=aL, Im 0->y1"),
+             ("V0", complex(aLL, 0), complex(aLL, y1), "Re=aLL, Im 0->y1"),
+             ("H1", complex(aR, y1), complex(a2, y1), "Im=y1, Re aR->a2"),
+             ("H2", complex(a2, y1), complex(a1, y1), "Im=y1, Re a2->a1"),
+             ("H3", complex(a1, y1), complex(aL, y1), "Im=y1, Re a1->aL"),
+             ("H0", complex(aL, y1), complex(aLL, y1), "Im=y1, Re aL->aLL"),
+             ("R2", complex(aR, y1), complex(aR, y2), "Re=aR, Im y1->y2"),
+             ("L2", complex(aL, y1), complex(aL, y2), "Re=aL, Im y1->y2"),
+             ("V0b", complex(aLL, y1), complex(aLL, y2), "Re=aLL, Im y1->y2"),
+             ("T", complex(aR, y2), complex(aL, y2), "Im=y2, Re aR->aL"),
+             ("T0", complex(aL, y2), complex(aLL, y2), "Im=y2, Re aL->aLL")]
+    # counter-clockwise upper half paths (symmetric boxes, / pi) and closed strips (/ 2 pi): (edges with their signs,
+    # divisor, rectangle)
+    box_def = {
+        "B0": ({"L1": 1, "H0": 1, "V0": -1}, math.pi, (aLL, aL, -y1, y1)),
+        "U0": ({"H0": -1, "L2": 1, "T0": 1, "V0b": -1}, 2 * math.pi, (aLL, aL, y1, y2)),
+        "B1a": ({"V1": 1, "H3": 1, "L1": -1}, math.pi, (aL, a1, -y1, y1)),
+        "B1b": ({"V2": 1, "H2": 1, "V1": -1}, math.pi, (a1, a2, -y1, y1)),
+        "B1c": ({"R1": 1, "H1": 1, "V2": -1}, math.pi, (a2, aR, -y1, y1)),
+        "B1": ({"R1": 1, "H1": 1, "H2": 1, "H3": 1, "L1": -1}, math.pi, (aL, aR, -y1, y1)),
+        "U": ({"R2": 1, "T": 1, "L2": -1, "H1": -1, "H2": -1, "H3": -1}, 2 * math.pi, (aL, aR, y1, y2)),
+        "full": ({"R1": 1, "R2": 1, "T": 1, "L2": -1, "L1": -1}, math.pi, (aL, aR, -y2, y2)),
     }
+    sel = list(box_def) if boxes_only is None else list(boxes_only)
+    need = {e for b in sel for e in box_def[b][0]}
+    E = {}
+    for name, z0, z1, label in specs:
+        if name in need:
+            E[name] = edge(z0, z1, label)
+    boxes = {b: (sum(sg * E[e]["dphi"] for e, sg in box_def[b][0].items()) / box_def[b][1], box_def[b][2],
+                 list(box_def[b][0])) for b in sel}
 
     def dist(p, r0, r1, i0, i1):
         """distance from p to the boundary of the rectangle"""
