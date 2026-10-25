@@ -118,3 +118,20 @@ k 27: S_1^(27) = (-2.83605506882776e-8 + 5.13008623406313e-9j)  fit Mf 7 err 4.8
    k 29 nu 27: |S_gen/linS| 2.546e-28 fit Mf 8 err 1.3e-61 resid 1.1e-288 f (-1.270164842e-28 + 8.516053429e-30j)
    k 29 nu 29: |S_gen/linS| 1.139e-29 fit Mf 8 err 3.7e-72 resid 9.1e-290 f (5.57971614e-30 - 1.137042185e-30j)
 k 29: S_1^(29) = (-2.2951164168707e-9 - 1.61544786530707e-9j)  fit Mf 7 err 8.4e-22 resid 7.7e-208  sigma = (1.8162676402228e-12 - 6.01715297476328e-11j)  [6519s]
+   k 31 nu 3: |S_gen/linS| 1.970e-24 fit Mf 7 err 2.8e-20 resid 5.1e-214 f (9.243402219e-25 - 3.406572791e-25j)
+   k 31 nu 5: |S_gen/linS| 1.960e-24 fit Mf 8 err 1.3e-19 resid 6.2e-250 f (-8.733620787e-25 + 4.44611607e-25j)
+   k 31 nu 7: |S_gen/linS| 1.298e-24 fit Mf 8 err 7.8e-21 resid 9.3e-256 f (5.808974058e-25 - 2.891948938e-25j)
+   k 31 nu 9: |S_gen/linS| 7.278e-25 fit Mf 8 err 9.3e-22 resid 1.4e-261 f (-3.337669898e-25 + 1.449350873e-25j)
+   k 31 nu 11: |S_gen/linS| 3.662e-25 fit Mf 8 err 3.4e-23 resid 3.9e-265 f (1.735993647e-25 - 5.827714255e-26j)
+   k 31 nu 13: |S_gen/linS| 1.686e-25 fit Mf 8 err 5.5e-25 resid 5.8e-269 f (-8.252581046e-26 + 1.724417101e-26j)
+   k 31 nu 15: |S_gen/linS| 7.169e-26 fit Mf 8 err 9.9e-28 resid 8.0e-274 f (3.574918758e-26 - 2.602813468e-27j)
+   k 31 nu 17: |S_gen/linS| 2.775e-26 fit Mf 8 err 3.6e-31 resid 1.4e-276 f (-1.384209537e-26 - 9.337890885e-28j)
+   k 31 nu 19: |S_gen/linS| 9.831e-27 fit Mf 8 err 1.2e-34 resid 1.0e-278 f (4.804881245e-27 + 1.037184507e-27j)
+   k 31 nu 21: |S_gen/linS| 3.174e-27 fit Mf 8 err 3.1e-37 resid 6.0e-281 f (-1.509267437e-27 - 4.906300561e-28j)
+   k 31 nu 23: |S_gen/linS| 8.648e-28 fit Mf 8 err 3.9e-40 resid 5.5e-283 f (4.094206024e-28 + 1.39108404e-28j)
+   k 31 nu 25: |S_gen/linS| 1.800e-28 fit Mf 8 err 3.0e-44 resid 4.7e-285 f (-8.68822423e-29 - 2.347999986e-29j)
+   k 31 nu 27: |S_gen/linS| 2.613e-29 fit Mf 7 err 1.9e-50 resid 1.9e-263 f (1.290708381e-29 + 2.026701247e-30j)
+   k 31 nu 29: |S_gen/linS| 2.342e-30 fit Mf 7 err 7.4e-58 resid 2.7e-268 f (-1.170311399e-30 - 3.223074436e-32j)
+   k 31 nu 31: |S_gen/linS| 9.752e-32 fit Mf 7 err 3.2e-67 resid 4.3e-273 f (4.848114984e-32 - 5.184936873e-33j)
+k 31: S_1^(31) = (-4.41740793708247e-11 - 2.55286949368681e-10j)  fit Mf 7 err 1.3e-22 resid 6.1e-220  sigma = (4.04895788424976e-12 - 3.80600862441914e-12j)  [8483s]
+total 8522s with 2 process(es); products 1441.1s, fit setup 38.7s, fits 7035.5s
