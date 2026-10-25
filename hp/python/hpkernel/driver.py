@@ -6,6 +6,7 @@ Double-double vectors are (hi, lo) pairs of float64 arrays. Layout of z (M = hal
     from hpkernel.driver import make_solver, seed_from_f64, newton_solve
 """
 import json
+import math
 import os
 import sys
 import time
@@ -152,12 +153,20 @@ class QdhSolver:
     and remembers the rest, and residual, newton and chord look the parts up again (a state not made by zadd, such as
     a predictor's or a loaded one, has them zero). The Jacobian and its LU are the double-double ones at (zh, zl): only
     the residual, and so the step -J^-1 F, sees the extra parts. keep: how many states' parts are remembered (the most
-    recent). refine=False is the control (the horizon solves unrefined)."""
+    recent). refine=False is the control (the horizon solves unrefined).
+    gcr (None or a dict of gmres_refine options) with horizon (the horizon block's rows, a slice): the step then solves
+    J_q dz = -F by GCR (gmres_refine) with the double-double LU as its preconditioner, J_q's products by jvp below,
+    whose horizon rows are quad-double accurate; info of the last solve in last_gcr."""
 
-    def __init__(self, s, keep=64, refine=True):
+    def __init__(self, s, keep=64, refine=True, horizon=None, gcr=None):
+        if gcr is not None and horizon is None:
+            raise ValueError("QdhSolver: gcr needs the horizon block's rows")
         self.s = s
         self.keep = keep
         self.refine = refine
+        self.horizon = horizon
+        self.gcr = gcr
+        self.last_gcr = None
         self._parts = {}
 
     def __getattr__(self, name):
@@ -195,11 +204,41 @@ class QdhSolver:
         return self.s.lu_solve(c(-np.asarray(Fh)), c(-np.asarray(Fl)))
 
     def newton(self, zh, zl):
-        """the double-double Jacobian and LU at (zh, zl) (Solver.newton), the step from the quad-double-horizon F"""
+        """the double-double Jacobian and LU at (zh, zl) (Solver.newton), the step from the quad-double-horizon F:
+        -J^-1 F, or with gcr the GCR solve of J_q dz = -F preconditioned by that LU"""
         _, _, _, _, pmin, pmax = self.s.newton(zh, zl)
         Fh, Fl = self.residual(zh, zl)
-        dh, dl = self._step(Fh, Fl)
+        if self.gcr is None:
+            dh, dl = self._step(Fh, Fl)
+        else:
+            dh, dl, self.last_gcr = gmres_refine(self, zh, zl, -np.asarray(Fh), -np.asarray(Fl), **self.gcr)
         return dh, dl, Fh, Fl, pmin, pmax
+
+    def jvp(self, zh, zl, uh, ul, cut=True):
+        """J u at (zh, zl): the rows outside the horizon block from Solver.jvp (the double-double Jacobian's product,
+        accurate there), the horizon rows by the central difference (F(z + h u) - F(z - h u)) / 2h of residual_qdh at
+        the quad-double states z +- h u, h the power of two with h max|u| about 2^-66 max(1, max|z|): the differences'
+        rounding, about 1e-64 G / (h |u|), and their truncation error, about (h |u|)^2 times F's third derivative, are
+        both far below the double-double Jacobian's error there, about 1e-32 G. Returns (jh, jl, fh, fl) as
+        Solver.jvp."""
+        jh, jl, fh, fl = (np.asarray(v) for v in self.s.jvp(zh, zl, uh, ul, cut=cut))
+        um = float(np.abs(np.asarray(uh) + np.asarray(ul)).max())
+        if um == 0:
+            return jh, jl, fh, fl
+        zs = max(1.0, float(np.abs(np.asarray(zh)).max()))
+        h = 2.0 ** math.floor(math.log2(2.0 ** -66 * zs / um))
+        z2, z3 = self.parts(zh, zl)
+        c = np.ascontiguousarray
+        uh, ul = np.asarray(uh, dtype=float), np.asarray(ul, dtype=float)
+        F = []
+        for sg in (h, -h):
+            q = [c(np.asarray(v)) for v in qd_add_dd(c(zh), c(zl), c(z2), c(z3), c(sg * uh), c(sg * ul))]
+            F.append([np.asarray(v) for v in self.s.residual_qdh(*q, refine=self.refine)])
+        dh, dl = dd_add(F[0][0], F[0][1], -F[1][0], -F[1][1])
+        hb = self.horizon
+        jh, jl = jh.copy(), jl.copy()
+        jh[hb], jl[hb] = dh[hb] / (2 * h), dl[hb] / (2 * h)
+        return jh, jl, fh, fl
 
     def chord(self, zh, zl):
         Fh, Fl = self.residual(zh, zl)
@@ -207,9 +246,9 @@ class QdhSolver:
         return dh, dl, Fh, Fl
 
     def _no(self, *a, **k):
-        raise NotImplementedError("QdhSolver: only the double-double Jacobian (jac='dd'); no LM, no products")
+        raise NotImplementedError("QdhSolver: only the double-double Jacobian (jac='dd'); no LM, no mixed steps")
 
-    newton_mixed = lm_steps = jvp = _no
+    newton_mixed = lm_steps = _no
 
 
 def block_norms(s, Fh, Fl):

@@ -13,6 +13,8 @@ the double-double Jacobian J and the quad-double-horizon F0, then
 2. the derivative along d: (F(z + h d) - F(z - h d)) / (2 h) for h = 2^-k, k = 0..30 (central differences of the
    quad-double-horizon residual, the states in quad-double), against J d = -F0 (Solver.jvp, the double-double
    Jacobian's product, also printed): their difference is E d at the h where the differences plateau.
+3. the step refined by GCR whose products have quad-double horizon rows (QdhSolver with gcr; --products, default 12),
+   against d; then up to --its (default 4) full Newton steps with it, without a line search, while |F| decreases.
 """
 import json
 import os
@@ -78,6 +80,29 @@ def main():
         v = [float(np.abs(x).max()) for x in (e, e[hb], e[~hb])]
         rec["deriv"].append(dict(h=h, E=v[0], E_h=v[1], E_o=v[2]))
         print(f"    2^-{k:<2d} {v[0]:.3e}  horizon {v[1]:.3e}  others {v[2]:.3e}", flush=True)
+    # 3. the step refined by GCR with quad-double horizon products (QdhSolver gcr), then full Newton steps with it
+    qg = QdhSolver(s, horizon=slice(K * 4 * M, (K + 1) * 4 * M), gcr=dict(max_products=int(opts.get("products", 12)),
+                                                                          step_tol=1e-8, verbose=True))
+    gh, gl, _, _, _, _ = qg.newton(zh, zl)
+    gd = np.asarray(gh) + np.asarray(gl)
+    info = qg.last_gcr
+    print(f"  3. GCR step: {info['products']} products, changes {', '.join(f'{c:.1e}' for c in info['changes'])}; "
+          f"|dz_gcr| {np.abs(gd).max():.3e}, |dz_gcr - d| {np.abs(gd - d).max():.3e}, dDelta {gd[-1]:+.3e}", flush=True)
+    rec["gcr"] = dict(products=info["products"], changes=info["changes"], dz=float(np.abs(gd).max()),
+                      diff=float(np.abs(gd - d).max()), dDelta=float(gd[-1]), steps=[])
+    zc_h, zc_l = zh, zl
+    for it in range(int(opts.get("its", 4))):
+        gh, gl, Fh, Fl, _, _ = qg.newton(zc_h, zc_l)
+        n0 = float(np.abs(np.asarray(Fh) + np.asarray(Fl)).max())
+        th, tl = qg.zadd(zc_h, zc_l, np.asarray(gh), np.asarray(gl))
+        Th, Tl = qg.residual(th, tl)
+        n1 = float(np.abs(np.asarray(Th) + np.asarray(Tl)).max())
+        dz = float(np.abs(np.asarray(gh) + np.asarray(gl)).max())
+        rec["gcr"]["steps"].append(dict(F=n0, F_after=n1, dz=dz, products=qg.last_gcr["products"]))
+        print(f"    full step {it}: |F| {n0:.3e} -> {n1:.3e}, |dz| {dz:.3e}, {qg.last_gcr['products']} products", flush=True)
+        if not n1 < n0:
+            break
+        zc_h, zc_l = th, tl
     with open(out, "a") as fo:
         fo.write(json.dumps(rec) + "\n")
 
