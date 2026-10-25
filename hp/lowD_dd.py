@@ -148,8 +148,8 @@ def weakest(s, w, iters=10):
 
 
 def peak_rss_mb():
-    """the process's peak resident memory in MB: the resource module on Unix; on Windows psutil's peak working set if
-    psutil is installed, else None"""
+    """the process's peak resident memory in MB: the resource module on Unix (ru_maxrss is in kB on Linux and in bytes
+    on macOS); on Windows psutil's peak working set if psutil is installed, else None"""
     try:
         import resource
     except ImportError:
@@ -158,7 +158,7 @@ def peak_rss_mb():
             return round(psutil.Process().memory_info().peak_wset / 2**20, 1)
         except (ImportError, AttributeError):
             return None
-    return round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024, 1)
+    return round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / (2**20 if sys.platform == "darwin" else 1024), 1)
 
 
 def load_avg():

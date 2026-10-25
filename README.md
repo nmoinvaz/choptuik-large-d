@@ -232,7 +232,10 @@ step, 256 → 320, is 7.2×10⁻¹³. At 3.0875 (the lowest point so far) the st
 those at 3.1 for 0.0125 in D. At D = 3.40 the second machine's M = 128 Newton (13
 nodes) converged to a solution with content along the near-null directions (its centre-series tail 10⁻⁹, against
 10⁻⁵⁰ at 3.425); the CSV lists it as polluted and does not use it. The cloud's M = 128 solve there (15 nodes) is clean
-(centre tail 4×10⁻⁷⁶), and it is the value.
+(centre tail 4×10⁻⁷⁶). From it the Mac lifted D = 3.4 to M = 160, and D = 3.5 likewise: the step is 3.5×10⁻¹² and
+6.4×10⁻¹³, so both values now sit at M = 160. The second machine's 13-node states at 3.425–3.55 do not lift to M = 160
+as they are (resampled at 3.425 the start has |F| = 3×10⁴, and at 3.5 Newton stalls); re-noded to the 15 nodes first,
+they do (`hp/highm_check.py lift --nodes=...`).
 
 ![Below D = 4: how much Delta moves when the tau resolution M goes up one step, at the largest M run at each D, on a log scale](hp/lowD_errors.svg)
 
