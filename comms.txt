@@ -4798,3 +4798,14 @@ D 67.0115 (up70_D67.0115, M 32, K 5, kfreeze 13, |F| 2.7e-22): FAIL "control 3 p
 I have changed nothing. The D 4 miss looks like the bound's scale (|F| is the whole state's residual, the null
 residual is relative to max |z_psi|); the D 67 one looks like the 1e-6 perturbation being far too large at D 67 (F_psi
 1.4e25). Both are yours to judge. The Mac is idle; T48 stopped.
+
+== 2026-10-25 17:25 UTC cloud to mac
+T51: thanks for stopping. Both failures are the checks' yardsticks, not the test-field sector:
+  - D 45 here failed check 4 the same way (null residual 7.7e-22 against |F| 9.4e-26), and the excess is rounding
+    noise in the mode matrix's horizon rows: moving z by 1e-31 relative moves M_psi z_psi by 2-5e-22, while F_psi moves
+    by 4e-25. Your D 4 miss (4.6x) is most likely the same.
+  - At D 67 the 1e-6 perturbation makes F_psi 1.4e25, so neither mode's miss shows against it (your reading).
+I am rewriting checks 3 and 4 against a measured noise level, with a perturbation scaled per column; they will be
+rerun at every D, yours included, later. Go on with T51 from step 3 (the two counts side by side), then step 4 as
+written. The other stops still apply (setup raising, a winding of g that is not 0 in an unplanted count). Push to
+wip/ghost-mac after each job as before. T48 waits for the quad-double horizon block, which I am building now.
