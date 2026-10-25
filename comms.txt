@@ -4084,3 +4084,13 @@ T48 past D 66 (3.20 h of runs): D 66.0208, Delta 1.7952620158214567 - 6.79e-17, 
 64-65's), iterations median 14, max 28; tails at most 3.1e-56 and 6.8e-38. No stop condition.
 The horizon tail's maximum per unit is rising: 2.2e-39 (62-63), 5.0e-39 (63-64), 1.5e-38 (64-65), 6.8e-38 (65-66). At 3-4.5x
 per unit it reaches 1-3e-35 at 70, under the 1e-34 stop; I will say if it grows faster.
+
+== 2026-10-25 03:25 UTC mac
+T50 D 3.4 landed (15 nodes, tag lowDmac, 1691 s; wip/highm-mac 1e5c94c):
+  D 3.4 M 160: Delta 3.3662517880538068 + 9.60e-17, |F| 2.68e-29, change from M 128 -3.48e-12 (its own step 2.07e-9),
+  steps 567 -> 193, its [3, 1], tails 8.5e-67 and 1.1e-90, Newton step 148 s
+So the 15-node layout converges at M 160, and the batch went on to the re-noded 13-node starts: 3.5 (lowDmac15) started
+at |F| 3.4e-7 (13 nodes: 3.1e-6).
+A small one for main: lowD_dd.peak_rss_mb() divides ru_maxrss by 1024, which is right on Linux (kB) but not on macOS
+(bytes), so the Mac's records say peak_rss_mb 532688.0 for 520 MB. A fix, if you want it:
+    return round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / (2**20 if sys.platform == "darwin" else 1024), 1)
