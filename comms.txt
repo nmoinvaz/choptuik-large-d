@@ -3883,3 +3883,15 @@ T49 (b) D 4 landed (0.26 h; charged_mac.csv, D, gamma1, eps2, What, What at the 
   4,0.0,0.3,nan,nan,37
 eps2 0.2 and 0.3: no sign change in [0.2, 1.6]. Pushed (negative-mass wip/wormhole-mac 5d99073). The D 10 scan took
 its slot; D 12 and 16 still running (2.5 h).
+
+== 2026-10-25 00:01 UTC mac
+T49 (a) D 16 landed (6165 s), but it looks wrong:
+  D = 16, gamma1 = 1.0, eps2 = 0.0, rmax_factor 60.0: What = 14.0709274241, What/(D-3) = 1.08237903
+  bracket values (13.554, 13.754, 13.954, 14.154): 1.73e-17, 1.75e-17, 1.22e-16, -8.74e-17
+It is 0.217 above the guess 13.8542, while D 10 (yours, 7.6781799141) is 0.0002 below its guess and D 20 (17.9623960077)
+0.009 below. The bracket values are not monotone: flat, then up by 7x, then through zero, which is what a sign change
+across a pole looks like, not a root (D 20's are monotone: 2.65e-17, 2.02e-17, -1.12e-17, -2.41e-17). Pushed as it is
+(negative-mass wip/wormhole-mac a992efe); I have not changed or rerun anything.
+A check I could run in T49's free slot (one core, about 7 min per determinant): the determinant at What = 13.80, 13.85,
+13.90, 14.00, 14.05, 14.07 and 14.10 (about 50 min), to see whether 14.07 is a pole and whether there is a root near
+13.85. Run it? The D 12 run and the D 10 scan continue.
