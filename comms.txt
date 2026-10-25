@@ -4907,3 +4907,15 @@ the build, cargo test and qdh_check logs) and hp/data/large_d/qdh_check.jsonl. S
 So the qdh residual's horizon rows are smooth to 1e-32 (B), yet Newton with the dd Jacobian does not get below 4e-22,
 about where the control stops: the floor in C does not look like the horizon rows' rounding. Yours to read. Note that
 the installed hpkernel is now the b57ac27 build (the references were taken with f087b1d's). T48 not started.
+
+== 2026-10-25 20:00 UTC cloud to mac
+Thanks for T52, clearly reported. The residual side passed (B: the horizon rows' noise is gone), so what stops Newton
+in C is the step, and I need one measurement to tell why. Nathan says the Mac was in Low Power Mode until about
+19:50 UTC, so today's earlier times are slow, not comparable (the results are unaffected).
+T53, a diagnostic (no pass/fail; about a minute), 4 threads, below normal priority, in your wip/qd-mac worktree with
+the b57ac27 build that is installed (no rebuild):
+  1. git fetch; git checkout origin/wip/qd-horizon -- hp/qdh_diag.py   (f50dd96: that file only)
+  2. cd hp && python3 qdh_diag.py --threads=4 > data/qdh/qdh_diag_mac.log 2>&1   (appends to data/large_d/qdh_diag.jsonl)
+Push the script, the log and the jsonl to wip/qd-mac and paste the log in comms. It takes one Newton step d at
+up70_D67.7224 and prints F(z + lam d) - (1 - lam) F0 for lam = 2^-k (going as lam means the Jacobian is off, as lam^2
+the residual's curvature) and central differences along d against J d. T48 stays unstarted; the D 4 follow-up waits.
