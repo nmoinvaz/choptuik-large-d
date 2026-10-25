@@ -579,3 +579,19 @@ D=67.765066: no convergence (|F| 1.3e-16); dD 0.0081 -> 0.00405
 D=67.7610 Delta=1.7915036039058467+4.72e-17 its 13 |F| 7.6e-22 28s piv 8.9e-06..1.8e+08 dDelta/dF max 1.2e+15 tails 1e-82 4e-73
    kc 220 -> 146 (residual and Jacobian bitwise unchanged)
 D=67.7671 Delta=1.7914908114730603+4.46e-17 its 9 |F| 5.9e-22 14s piv 7.0e-06..1.8e+08 dDelta/dF max 1.2e+15 tails 5e-56 6e-68
+== resume 2026-10-25 07:14:16 UTC from up70_D67.7671 (ks 200), ks 200, the same spaced history, tail bound 1e-50 (cloud 07:12 UTC)
+(re-)converged start D=67.767091 M=32 nodes=[0.3, 0.4, 0.5, 0.6, 0.7]: Delta 1.7914908114730603 ok True (39s)
+history point D=67.517741: ok True, Delta 1.7920177138211202
+history point D=67.548016: ok True, Delta 1.7919535385264742
+history point D=67.582074: ok True, Delta 1.7918814108407923
+history point D=67.621758: ok True, Delta 1.7917974572960114
+history point D=67.654087: ok True, Delta 1.7917291341914281
+history point D=67.691755: ok True, Delta 1.7916496075943789
+history point D=67.722443: ok True, Delta 1.7915848809127639
+D=67.799491: no convergence (|F| 2.7e-06); dD 0.0324 -> 0.0162
+D=67.783291: no convergence (|F| 2.1e-08); dD 0.0162 -> 0.0081
+D=67.775191: no convergence (|F| 1.5e-11); dD 0.0081 -> 0.00405
+D=67.771141: no convergence (|F| 3.3e-20); dD 0.00405 -> 0.002025
+D=67.7691 Delta=1.7914865478227919+8.50e-17 its 14 |F| 6.5e-22 30s piv 1.9e-05..1.8e+08 dDelta/dF max 1.2e+15 tails 1e-82 5e-73
+   kc 220 -> 146 (residual and Jacobian bitwise unchanged)
+D=67.7722 Delta=1.7914801517578034+9.24e-17 its 6 |F| 4.7e-22 13s piv 3.8e-06..1.8e+08 dDelta/dF max 1.2e+15 tails 5e-56 2e-70
