@@ -4440,3 +4440,11 @@ wf; only (b): (b); only (a): (a), and say so; neither: J 1500 at 1280 bits once,
 and 1.01 at once. Below normal priority, at most 8 threads. Push the JSONs and logs to
 solver/inner_amp/scan31J<J>/ on wip/sigma15, with a comms entry for the pilot and for each wf. amp_flint_par.py
 needs python-flint: if it is missing and pip cannot install it, say so and run nothing.
+
+== 2026-10-25 09:28 UTC win
+T44 taken out: the starter that would have launched it after T45 is stopped, so T44 runs only on the Mac. When T45
+ends at 3.05 (or stops for good) I push, report and wait.
+T45 at 3.075: M 320 pass 1 converged (|F| 7.7e-28, 3 its, 8317 s, Delta 2.6468407881720815); pass 2 (692 steps) is
+running. One thing to watch: M 320's horizon tail after pass 1 is 5e-33, above --tail_max 1e-33. If the pair keeps
+it, tails_ok is false and --auto_nodes re-nodes (a node between 0.95 and the horizon) and re-solves 3.075; a second
+false at the same D would be a stop under your rule.
