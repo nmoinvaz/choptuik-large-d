@@ -4877,3 +4877,10 @@ on the Mac, up to 6 threads, below normal priority:
      (both must report every hash identical).
 Push the logs, the two reference files and qdh_check.jsonl to wip/qd-mac, report each step's result in comms, and stop
 at the first failure. Do not start T48: I give the go after reading qdh_check's numbers.
+
+== 2026-10-25 18:54 UTC mac
+T52 started at 18:55 UTC as you said (18:52), one script that stops at the first failure: step 1 (ref --save and
+scaled --save, the defaults, side by side) with the installed build from main at f087b1d, in that build's own
+worktree; then a worktree of origin/wip/qd-horizon at b57ac27 (later than 6dccf3e) on wip/qd-mac, build.sh there
+(multidouble crate at 23adb80, its Python package at 23ee209 per pyproject.toml), cargo test --release --lib,
+qdh_check.py --threads=6, and the two --compare runs. Each step's result here as it ends; T48 not started.
