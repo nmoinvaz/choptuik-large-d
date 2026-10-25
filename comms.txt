@@ -5165,3 +5165,37 @@ T58 (main venv, 3 threads), the rest of T51 now that U0's zeros are known: T51 s
   (modecount_test_check.py at D 4 and at up70_D67.0115). The planted count's U0 keeps its 3; a box other than U0 with a
   nonzero winding in an unplanted count is still a stop. Push to wip/ghost-mac and paste the box table, the axis zeros
   and each check's verdict.
+
+== 2026-10-25 22:44 UTC mac
+T57 (~/venv-qd with origin/wip/qd-horizon's ba57466 driver.py copied over b57ac27's, kept as a backup; 8 s; wip/qd-mac,
+hp/data/large_d/qdh_delta_diag_mac.log). Sections 1 and 2 ran at both states; section 3 stops at both with a
+driver/kernel mismatch (details after the log). The log, without the tracebacks:
+  D 61.658651: corrections at the state: dd -5.236e-18, qdh -2.908e-18
+  1. Delta moved by delta: (correction - its value at the state) / (-delta), dd and qdh residual
+     1e-16: dd -1.7309e+05   qdh -1.7451e+05
+     1e-15: dd -1.7558e+06   qdh -1.7526e+06
+     1e-14: dd -1.7551e+07   qdh -1.7554e+07
+     1e-13: dd -1.7553e+08   qdh -1.7553e+08
+     1e-12: dd -1.7553e+09   qdh -1.7553e+09
+  2. the Delta column: |J e_Delta| horizon 1.297e+05, others 1.368e-02; y.J e_Delta -7.680000e+02 (must be 1); |y| horizon 1.59e+14, others 1.59e+14
+     h 1e-14: |FD_q - J e_Delta| horizon 1.455e-11, others 9.920e-18; y.(FD_q - J e_Delta) +5.5250e+02 (horizon rows +5.5250e+02)
+     h 1e-12: |FD_q - J e_Delta| horizon 3.585e-08, others 1.735e-18; y.(FD_q - J e_Delta) -2.4933e+03 (horizon rows -2.4933e+03)
+     h 1e-10: |FD_q - J e_Delta| horizon 3.585e-04, others 1.735e-18; y.(FD_q - J e_Delta) -3.9192e+06 (horizon rows -3.9192e+06)
+  3. the step with quad-double-horizon products (QdhSolver gcr): its Delta component
+  D 67.722443: corrections at the state: dd -5.270e-17, qdh +3.725e-17
+  1. Delta moved by delta: (correction - its value at the state) / (-delta), dd and qdh residual
+     1e-16: dd -4.3462e+07   qdh -4.3414e+07
+     1e-15: dd -4.3504e+08   qdh -4.3502e+08
+     1e-14: dd -4.3488e+09   qdh -4.3488e+09
+     1e-13: dd -4.3488e+10   qdh -4.3487e+10
+     1e-12: dd -4.3487e+11   qdh -4.3487e+11
+  2. the Delta column: |J e_Delta| horizon 8.708e+05, others 1.202e-02; y.J e_Delta -1.300480e+05 (must be 1); |y| horizon 1.23e+15, others 1.23e+15
+     h 1e-14: |FD_q - J e_Delta| horizon 1.106e-09, others 1.533e-17; y.(FD_q - J e_Delta) +1.7279e+05 (horizon rows +1.7279e+05)
+     h 1e-12: |FD_q - J e_Delta| horizon 1.119e-05, others 1.735e-18; y.(FD_q - J e_Delta) +5.8312e+06 (horizon rows +5.8312e+06)
+     h 1e-10: |FD_q - J e_Delta| horizon 1.119e-01, others 1.735e-18; y.(FD_q - J e_Delta) +5.8458e+10 (horizon rows +5.8458e+10)
+  3. the step with quad-double-horizon products (QdhSolver gcr): its Delta component
+Section 3 at both: "ValueError: not enough values to unpack (expected 4, got 2)" in driver.py line 224, QdhSolver.jvp:
+  jh, jl, fh, fl = (np.asarray(v) for v in self.s.jvp(zh, zl, uh, ul, cut=cut)), called from gmres_refine line 313.
+The kernel's Solver.jvp returns two values in the installed b57ac27 build, and hp/src is unchanged from b57ac27 to
+ba57466 (only the driver changed, in 5272dae), so the gcr step needs a kernel that returns F as well; I have not
+changed anything. T58 (the planted count) and T55's compares run on.
