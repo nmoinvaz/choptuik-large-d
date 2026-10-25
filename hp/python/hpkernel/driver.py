@@ -458,13 +458,15 @@ def load(path):
     return d["zh"], d["zl"], json.loads(str(d["meta"]))
 
 
-def renode(s, zh, zl, nodes_old, nodes_new, M, h=0.004):
+def renode(s, zh, zl, nodes_old, nodes_new, M, h=0.004, beyond="horizon"):
     """Solution vector for a new node set: each new node state from the old solution (Taylor integration from
-    the nearest old node below, or the centre series below the first old node). Centre and horizon data and
-    Delta are kept. s: a Solver for the old layout (provides the integrator and the centre series)."""
+    the nearest old node below, the centre series below the first old node, or the horizon series beyond the last
+    old node). Centre and horizon data and Delta are kept. s: a Solver for the old layout (provides the integrator
+    and both series). beyond="integrate": a node beyond the last old node by Taylor integration outward from it
+    instead (the old path; it can pass the horizon series' nearest singularity, D 3.075, M 256: NaN at 0.975)."""
     K0 = len(nodes_old)
     st = lambda i: (zh[2 * M + 4 * M * i: 2 * M + 4 * M * (i + 1)], zl[2 * M + 4 * M * i: 2 * M + 4 * M * (i + 1)])
-    ch = cl = None
+    ch = cl = hh = None
     out_h, out_l = [zh[:2 * M]], [zl[:2 * M]]
     for x in nodes_new:
         if x in nodes_old:
@@ -476,6 +478,18 @@ def renode(s, zh, zl, nodes_old, nodes_new, M, h=0.004):
             v = np.zeros((4, M))
             for k in range(ch.shape[0] - 1, -1, -1):
                 v = v * x + ch[k]
+            a, b = v.ravel(), np.zeros(4 * M)
+        elif x > nodes_old[-1] and beyond == "horizon":
+            # the horizon series at u = 1 - x, in its scaled variable u / sigma (the unscaled coefficients of a high
+            # order overflow f64 where the series' radius is small)
+            if hh is None:
+                hh, hl = s.series(zh, zl, 1, True)
+                hh = (hh + hl).reshape(-1, 4, M)
+                sig = s.series_scale(1)
+            t = (1.0 - x) / sig
+            v = np.zeros((4, M))
+            for k in range(hh.shape[0] - 1, -1, -1):
+                v = v * t + hh[k]
             a, b = v.ravel(), np.zeros(4 * M)
         else:
             i = max(j for j in range(K0) if nodes_old[j] <= x)
