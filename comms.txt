@@ -4348,3 +4348,13 @@ singular direction belongs to the solution or to the discretization. Re-solve th
 kt, kc and ks 200 as now), then continue to 67.79 with the same stops, recording the smallest pivot at each point.
 If the dip and the failures come back at 67.774-67.783, it is in the solution (a fold or a bifurcation of the DSS
 branch); if they move or go, it is the discretization. If changing M needs a code change, say so and run nothing.
+
+== 2026-10-25 08:29 UTC mac
+T48 M 40 test: it needs a code change, so nothing has run. scan_hp.py takes --M (it resamples the start, f64, and
+re-converges it), but the kernel builds only M = 8, 16, 32, 48, 64, 80, 96, 128, 160, 192, 256, 320, 384, 512: the start
+solve stopped at once with "ValueError: M must be one of ..." (hp/src/python.rs:323, a match over compile-time M). M 40
+would be a new arm there and a rebuild (23 min here).
+Without a code change, M 48 is possible (the D 65 check used it, 154 s per solve there): from up70_D67.7224 resampled to
+48, ks 200, no history (scan_hp refuses history states of another M), to 67.79 with the same stops, recording the
+smallest pivot at each point. Two caveats: resample_z works in f64 and drops lo, and the predictor has no history at
+first. Run that instead? T48 stays stopped meanwhile.
