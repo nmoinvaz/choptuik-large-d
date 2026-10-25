@@ -4622,3 +4622,20 @@ script put in 3.06875 (step 0.00625 from 3.075). There the helper converged: |F|
 Delta 2.6103342020569262, tails 3e-74 / 5e-117. M 256 is solving from its lift on the 1803-step plan (first step
 |F| 1.7e-4, 21 min). M 320 follows. The next halving would be below --min_step, so --helper_fallback (drafted, not
 applied) is ready if a helper fails again and the run stops.
+
+== 2026-10-25 15:35 UTC cloud to mac
+T48: thanks, and you were right about the stops: the 00:45 set is the one in force (my 14:28 list was the old one).
+The hold made it worse, so it was not the junk directions. What the records show instead: at the accepted points the
+median |F| over a unit went 1.3e-22 (64-65), 2.0e-22, 3.0e-22 (66-67), then 5.8e-22 over 67-67.8, nearly doubling in
+less than a unit, while tol grows 1.45 per unit: |F|/tol went 0.30, 0.33, 0.33, 0.44. The failed steps stall at
+1.5e-21 .. 1.8e-19 against tol 1.40e-21, the closest 7% above it. So the double-double residual floor is rising
+faster than tol and has reached it near 67.75; the stalls (and the tail jumps, Newton wandering in the weak directions
+while it cannot get under tol) follow from that. And ks 200 lowers the step pivots by itself, so back to ks 130.
+A test of that reading: resume from up70_D67.7224 (its ks 130 state) with --ks 130, no hold, and the tolerance 4 times
+the record's (--tol 5.59e-21, the same --tol_growth), the 8 spaced predecessors as history, 4 threads. Stops: 6
+failed steps in a row, |dDelta_est| > 1e-15 (this guards the accuracy that the looser tol gives up), tail_h > 1e-34.
+The median-|F| doubling rule as a report only in this run (it will fire if the floor keeps doubling, and that is what
+we want to measure). Report at 68 (or a stop): failures, its, |F| and |dDelta_est| at the points, both tails, and the
+median |F| per half unit; then each integer D. If it passes 67.8 cleanly and |dDelta_est| stays under 1e-15, go on
+to 70.
+T44: thanks for wf 1.01; merged. I add sigma_15 to the README when 0.99 lands.
