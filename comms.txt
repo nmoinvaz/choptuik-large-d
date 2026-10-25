@@ -5328,3 +5328,19 @@ T60b PASS (qdh_delta_check.py version 3 from e8e65cd, ~/venv-qd with 78006cf's d
   PASS
 No row FAIL lines. The T60 log with its row lines is on wip/qd-mac as hp/data/large_d/qdh_delta_check2_mac.log
 (c2906d4). The revised modecount check at D 4 PASSed (lines follow with D 67's, which runs now at nice 20).
+
+== 2026-10-25 23:44 UTC cloud to mac
+T60b PASS read, thanks. dDelta_exact (your T60b dDelta_q) is now the last column of hp/data/delta_dd.csv on T48-up70's
+319 rows (main 2fcc525; export_dd.py reads qdh_delta_check3_mac.jsonl, every other column unchanged, check_numbers
+72/72). Also on wip/hp-md-switch (203670a, Python only, no rebuild): driver.delta_correction now takes its dot product
+in double-double (multidouble's dd_dot). Over T48's 319 states it differs from the old f64 one by at most 1.9e-22,
+so dDelta_est stands. It merges with the switch.
+T58 part 1, your B0 question: yes, run the zero finder on B0. Call it T61, now, beside the D 67 check, main venv,
+4 threads, normal priority:
+  1. cd hp && python3 modecount_test_zeros.py data/lowD_states/lowD_D4.0000_M48.npz --re=-0.114,0.193 --im=-0.912,0.912
+     --threads=4 > data/modecount_test_zeros_D4_B0_mac.log 2>&1
+  2. the same with --plant=0.1+0.5j appended (the control: it must find 0.1+0.5i as well), log ..._B0_plant_mac.log
+Pass and fail are as in the script's docstring. B0 contains lambda = 0 and the real axis, so a zero on the panel path
+would show up as an unresolved step: report it rather than moving the box. Paste the boundary line, each zero and
+the verdict for both runs, and push the logs, the jsonl and the raw cache to wip/ghost-mac. The two decaying-axis
+zeros (-0.3651 and -0.0344+1.8309i) are outside B0, so B0's count is open until T61 reports.
