@@ -219,12 +219,12 @@ class QdhSolver:
         accurate there), the horizon rows by the central difference (F(z + h u) - F(z - h u)) / 2h of residual_qdh at
         the quad-double states z +- h u, h the power of two with h max|u| about 2^-66 max(1, max|z|): the differences'
         rounding, about 1e-64 G / (h |u|), and their truncation error, about (h |u|)^2 times F's third derivative, are
-        both far below the double-double Jacobian's error there, about 1e-32 G. Returns (jh, jl, fh, fl) as
-        Solver.jvp."""
-        jh, jl, fh, fl = (np.asarray(v) for v in self.s.jvp(zh, zl, uh, ul, cut=cut))
+        both far below the double-double Jacobian's error there, about 1e-32 G. Returns (jh, jl)."""
+        out = self.s.jvp(zh, zl, uh, ul, cut=cut)      # (jh, jl) or (jh, jl, fh, fl), as the kernel has it
+        jh, jl = np.asarray(out[0]), np.asarray(out[1])
         um = float(np.abs(np.asarray(uh) + np.asarray(ul)).max())
         if um == 0:
-            return jh, jl, fh, fl
+            return jh, jl
         zs = max(1.0, float(np.abs(np.asarray(zh)).max()))
         h = 2.0 ** math.floor(math.log2(2.0 ** -66 * zs / um))
         z2, z3 = self.parts(zh, zl)
@@ -238,7 +238,7 @@ class QdhSolver:
         hb = self.horizon
         jh, jl = jh.copy(), jl.copy()
         jh[hb], jl[hb] = dh[hb] / (2 * h), dl[hb] / (2 * h)
-        return jh, jl, fh, fl
+        return jh, jl
 
     def chord(self, zh, zl):
         Fh, Fl = self.residual(zh, zl)
