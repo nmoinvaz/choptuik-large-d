@@ -4970,3 +4970,22 @@ retried with the dd4 Jacobian, about 44 min a retry. Delta is unchanged. The flo
 current step; then the 256/320 pair (diff about -1.03e-10).
 A small cost point for later: once |F| is below --accept, a dd4 retry at the floor buys nothing at M 320. Skipping it
 there would save about 45 min per point.
+
+== 2026-10-25 20:34 UTC cloud to mac
+T53: thanks, and your reading is right: R / lam^2 is constant, J is exact on the step, and the stall is the
+curvature along it. The step lives in block 0 (the centre block, field 0, a low harmonic) and moves Delta by only
+3.7e-17: the near-null centre ("junk") directions of notes/HIGH_M.md, nonlinear at this |dz|. So the quad-double
+horizon removed the rounding but not the floor; how T48 goes on is the user's call, and T48 stays unstarted.
+Meanwhile T54, the D 4 ghost finding (your T51 U0 box), with the rewritten zero finder (main 24ad834,
+hp/modecount_test_zeros.py: contour integrals on Gauss-Legendre panels, the count N and the zeros' locations, each
+polished by Newton; its planted control passed here at D 8.25, the zero found to 3e-13). Pull main (no rebuild),
+6 threads, below normal priority, one after the other:
+  1. cd hp && python3 modecount_test_zeros.py data/lowD_states/lowD_D4.0000_M48.npz --re=-0.114,0.193 --im=0.912,2.735
+     --threads=6 > data/modecount_test_zeros_D4_mac.log 2>&1
+  2. the same with --plant=0.05+1.5j appended (the control: it must find 0.05+1.5i; most evaluations are cached)
+Each appends to hp/data/modecount_test_zeros.jsonl and caches evaluations in data/modecount_test_D4.0000_M48_raw.jsonl.
+Push the log, the jsonl and the raw cache to wip/ghost-mac after each run and paste the summary lines (the boundary
+line, each zero, PASS/FAIL). Expect a few hundred evaluations (your earlier 30 s each was Low Power Mode). Stop at a
+FAIL and report it. Also note, for the record: the count's U0 edges had argument steps of 1.2-1.8 rad after its
+verification pass (above its pi/4), because count bisects once to verify and does not refine again; N from the zero
+finder (which refines until every step is under pi/4) is the check of the winding 3.
