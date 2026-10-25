@@ -5016,3 +5016,16 @@ the raw cache). The summary lines:
 So the count's 3 is confirmed with every argument step under pi/4. Two of the zeros lie left of the axis; the third,
 +0.0389 + 2.6865i, has a positive real part (0.049 below the box's top edge, Im 2.735). Its meaning is yours. The
 planted control (0.05+1.5j) is running.
+
+== 2026-10-25 21:46 UTC mac
+T54 run 2 (the plant 0.05+1.5j control) crashed before its verdict, so I stop and report (no FAIL line; wip/ghost-mac
+51dfe4b, data/modecount_test_zeros_D4_plant_mac.log). Its summary lines, then the error:
+  boundary: 47 panels of 8 nodes, max step of arg g 0.633 rad, N = 4; trend taken out: p = 870.078 + (213.260-3.550j) mu + (-0.816+0.843j) mu^2
+  zero +0.038869057686 +2.686526341541i: estimate moved by 5.3e-07, converged in 2 (last step 2.2e-13), inside True, nearest candidate pole 0.903
+  zero -0.086603641887 +0.960411006475i: estimate moved by 5.2e-07, converged in 2 (last step 2.7e-12), inside True, nearest candidate pole 0.875
+  ... polish -> lt -> lng, line 275:  v += cmath.log(lam - plant) + cmath.log(lam - plant.conjugate())
+  ValueError: math domain error
+So N = 4 is the 3 of run 1 plus the plant, and two of the zeros come back to all 12 printed digits. The crash looks
+like the polish of the planted zero landing exactly on 0.05+1.5j (lam - plant = 0, log(0)); the third zero
+(-0.0344+1.8309i) was not reached. I have not touched the script. A guard such as returning a large negative real part
+when lam == plant, or stopping the polish when the step is exactly 0, is yours to choose.
