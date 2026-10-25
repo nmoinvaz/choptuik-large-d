@@ -1,0 +1,74 @@
+D 67.722443: M 32, ks 130, kc 146; 12 iterations each
+    newton 0: |F| 5.958e-22 -> 5.491e-22, t 0.125, |step| 4.36e-11
+    newton 1: |F| 5.491e-22 -> 5.208e-22, t 0.125, |step| 4.60e-11
+    newton 2: |F| 5.208e-22 -> 4.743e-22, t 0.125, |step| 3.70e-11
+    newton 3: |F| 4.743e-22 -> 4.510e-22, t 0.125, |step| 3.81e-11
+    newton 4: |F| 4.510e-22 -> 4.390e-22, t 0.0625, |step| 2.59e-11
+    newton 5: |F| 4.390e-22 -> 4.239e-22, t 0.0625, |step| 2.51e-11
+    newton 6: |F| 4.239e-22 -> 3.527e-22, t 0.25, |step| 4.50e-11
+    newton 7: |F| 3.527e-22 -> 3.414e-22, t 0.25, |step| 5.39e-11
+    newton 8: |F| 3.414e-22 -> 3.067e-22, t 0.125, |step| 3.51e-11
+    newton 9: |F| 3.067e-22 -> 2.969e-22, t 0.0625, |step| 2.08e-11
+    newton 10: |F| 2.969e-22 -> 2.399e-22, t 0.25, |step| 5.08e-11
+    newton 11: |F| 2.399e-22 -> 2.091e-22, t 0.25, |step| 3.75e-11
+  newton: |F| 2.091e-22 after 12 iterations, Delta moved +8.35e-17
+    geodesic 0: |F| 5.958e-22 -> 5.670e-22, t 0.0625, |step| 3.50e-11, |a|/|v| 19.43
+    geodesic 1: |F| 5.670e-22 -> 5.234e-22, t 0.125, |step| 5.01e-11, |a|/|v| 15.08
+    geodesic 2: |F| 5.234e-22 -> 4.875e-22, t 0.125, |step| 7.23e-11, |a|/|v| 4.86
+    geodesic 3: |F| 4.875e-22 -> 4.591e-22, t 0.0625, |step| 2.02e-11, |a|/|v| 371.91
+    geodesic 4: |F| 4.591e-22 -> 4.338e-22, t 0.0625, |step| 1.86e-11, |a|/|v| 82.53
+    geodesic 5: |F| 4.338e-22 -> 4.143e-22, t 0.0625, |step| 2.36e-11, |a|/|v| 32.33
+    geodesic 6: |F| 4.143e-22 -> 3.596e-22, t 0.125, |step| 2.81e-11, |a|/|v| 23.67
+    geodesic 7: |F| 3.596e-22 -> 3.355e-22, t 0.0625, |step| 1.80e-11, |a|/|v| 44.11
+    geodesic 8: |F| 3.355e-22 -> 2.292e-22, t 0.5, |step| 7.45e-11, |a|/|v| 3.19
+    geodesic 9: |F| 2.292e-22 -> 2.180e-22, t 0.0625, |step| 1.57e-11, |a|/|v| 30.56
+    geodesic 10: |F| 2.180e-22 -> 2.033e-22, t 0.0625, |step| 2.66e-11, |a|/|v| 38.34
+    geodesic 11: |F| 2.033e-22 -> 1.872e-22, t 0.0625, |step| 9.91e-12, |a|/|v| 27.40
+  geodesic: |F| 1.872e-22 after 12 iterations, Delta moved +8.56e-17
+    anderson 0: |F| 5.958e-22 -> 5.491e-22, t 0.125, |step| 4.36e-11
+    anderson 1: |F| 5.491e-22 -> 5.415e-22, t 0.0625, |step| 1.92e-11, gamma +0.534
+    anderson 2: |F| 5.415e-22 -> 2.192e-22, t 1, |step| 8.44e-11, gamma -0.393
+    anderson 3: |F| 2.192e-22 -> 2.227e-22, t 0.125, |step| 1.30e-11, gamma +0.885
+    anderson 4: |F| 2.227e-22 -> 1.827e-22, t 0.25, |step| 4.28e-11, gamma +0.676
+    anderson 5: |F| 1.827e-22 -> 1.715e-22, t 0.125, |step| 2.48e-11, gamma +0.000
+    anderson 6: |F| 1.715e-22 -> 8.148e-23, t 0.5, |step| 4.47e-11, gamma -0.161
+    anderson 7: |F| 8.148e-23 -> 8.135e-23, t 0.03125, |step| 1.05e-11, gamma +0.000
+    anderson 8: |F| 8.135e-23 -> 5.313e-23, t 1, |step| 3.58e-11, gamma -0.321
+    anderson 9: |F| 5.313e-23 -> 5.306e-23, t 0.125, |step| 3.16e-11, gamma +0.000
+    anderson 10: |F| 5.306e-23 -> 4.843e-23, t 0.125, |step| 1.63e-11, gamma +0.000
+    anderson 11: |F| 4.843e-23 -> 4.825e-23, t 0.0078125, |step| 8.27e-13, gamma +0.846
+  anderson: |F| 4.825e-23 after 12 iterations, Delta moved +6.60e-17
+control stalls: True; geodesic passes: False; anderson passes: False (82 s)
+FAIL
+D 66.001705: M 32, ks 100, kc 150; 12 iterations each
+    newton 0: |F| 2.232e-22 -> 2.513e-22, t 0.25, |step| 6.26e-11
+    newton 1: |F| 2.513e-22 -> 2.366e-22, t 0.125, |step| 3.34e-11
+    newton 2: |F| 2.366e-22 -> 2.416e-22, t 0.5, |step| 7.59e-11
+    newton 3: |F| 2.416e-22 -> 6.031e-24, t 1, |step| 1.67e-11
+    newton 4: |F| 6.031e-24 -> 6.001e-24, t 0.03125, |step| 2.85e-12
+    newton 5: |F| 6.001e-24 -> 5.996e-24, t 0.0078125, |step| 1.38e-12
+    newton 6: |F| 5.996e-24 -> 4.743e-24, t 0.5, |step| 9.45e-12
+    newton 7: |F| 4.743e-24 -> 4.716e-24, t 0.015625, |step| 1.47e-12
+    newton 8: |F| 4.716e-24 -> 2.788e-24, t 1, |step| 1.13e-11
+    newton 9: |F| 2.788e-24 -> 2.722e-24, t 0.03125, |step| 2.70e-12
+    newton 10: |F| 2.722e-24 -> 2.703e-24, t 0.0078125, |step| 1.11e-12
+    newton 11: |F| 2.703e-24 -> 2.672e-24, t 0.015625, |step| 1.57e-12
+  newton: |F| 2.672e-24 after 12 iterations, Delta moved +5.79e-17
+    geodesic 0: |F| 2.232e-22 -> 2.285e-22, t 0.125, |step| 5.30e-11, |a|/|v| 16.25
+    geodesic 1: |F| 2.285e-22 -> 2.221e-22, t 0.5, |step| 4.72e-11, |a|/|v| 5.25
+    geodesic 2: |F| 2.221e-22 -> 1.584e-22, t 0.125, |step| 6.11e-11, |a|/|v| 17.45
+    geodesic 3: |F| 1.584e-22 -> 1.463e-22, t 0.125, |step| 2.27e-11, |a|/|v| 15.85
+    geodesic 4: |F| 1.463e-22 -> 1.385e-22, t 0.125, |step| 1.52e-11, |a|/|v| 13.86
+    geodesic 5: |F| 1.385e-22 -> 1.008e-22, t 0.125, |step| 3.94e-11, |a|/|v| 154.28
+    geodesic 6: |F| 1.008e-22 -> 9.565e-23, t 0.0625, |step| 8.21e-12, |a|/|v| 109.38
+    geodesic 7: |F| 9.565e-23 -> 8.844e-23, t 0.0625, |step| 1.49e-11, |a|/|v| 51.68
+    geodesic 8: |F| 8.844e-23 -> 9.555e-23, t 0.125, |step| 2.98e-11, |a|/|v| 43.42
+    geodesic 9: |F| 9.555e-23 -> 9.361e-23, t 0.125, |step| 3.55e-11, |a|/|v| 37.65
+    geodesic 10: |F| 9.361e-23 -> 7.996e-23, t 0.125, |step| 1.81e-11, |a|/|v| 18.36
+    geodesic 11: |F| 7.996e-23 -> 3.803e-23, t 0.25, |step| 4.23e-11, |a|/|v| 15.05
+  geodesic: |F| 3.803e-23 after 12 iterations, Delta moved +7.90e-17
+    anderson 0: |F| 2.232e-22 -> 2.513e-22, t 0.25, |step| 6.26e-11
+    anderson 1: |F| 2.513e-22 -> nan, t 0.00012207, |step| 4.71e-14, gamma +0.864
+  anderson: |F| 2.513e-22 after 2 iterations, Delta moved +7.50e-17
+control stalls: False; geodesic passes: False; anderson passes: False (55 s)
+FAIL (the control did not stall: the state tests nothing)
