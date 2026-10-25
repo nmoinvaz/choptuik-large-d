@@ -85,8 +85,8 @@ impl<const B: usize> Api for Ctx<B> {
         model::residual(self, zh, zl, true)
     }
     fn residual_qdh(&mut self, z: [&[f64]; 4], refine: bool) -> Result<V, String> {
-        // instantiated for M = 32, 48, 64 and 80 only: the quad-double horizon series for all fourteen sizes made the
-        // release build need more than the cloud machine's memory
+        // instantiated for M = 32 and 48 only (the large-D runs and their M = 48 checks): the quad-double horizon series
+        // for more sizes makes the release build need more than the cloud machine's 6.27 GB
         fn qdh<const C: usize>(ctx: &mut dyn std::any::Any, z: [&[f64]; 4], refine: bool) -> Option<Result<V, String>> {
             let c = ctx.downcast_mut::<Ctx<C>>()?;
             let keep = c.mutate;
@@ -98,9 +98,7 @@ impl<const B: usize> Api for Ctx<B> {
         let me: &mut dyn std::any::Any = self;
         qdh::<4>(me, z, refine)
             .or_else(|| qdh::<6>(me, z, refine))
-            .or_else(|| qdh::<8>(me, z, refine))
-            .or_else(|| qdh::<10>(me, z, refine))
-            .unwrap_or_else(|| Err(format!("residual_qdh is built for M = 32, 48, 64 and 80 only, not M = {}", 8 * B)))
+            .unwrap_or_else(|| Err(format!("residual_qdh is built for M = 32 and 48 only, not M = {}", 8 * B)))
     }
     fn jacobian(&self, zh: &[f64], zl: &[f64]) -> Result<(Vec<f64>, Vec<f64>, usize), String> {
         model::jacobian(self, zh, zl, true)
@@ -459,7 +457,7 @@ impl Solver {
         Ok((arr(py, fh), arr(py, fl)))
     }
 
-    /// The residual with the horizon block in quad-double (model::residual_qdh; M = 32, 48, 64 and 80): the state in four parts
+    /// The residual with the horizon block in quad-double (model::residual_qdh; M = 32 and 48): the state in four parts
     /// z0 + z1 + z2 + z3 (multidouble's QD; z2 = z3 = 0 for a double-double state), F as (hi, lo). refine=False is the
     /// control: the horizon solves left at the double-double LU's accuracy.
     #[pyo3(signature = (z0, z1, z2, z3, refine=true))]
