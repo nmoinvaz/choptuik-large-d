@@ -4144,3 +4144,7 @@ I resumed from the last state with the tail under 1e-34, up70_D67.4101.npz (hist
 1.2446820149206588e-21 as its record has it), not from 67.4267, so the two points above the limit stay in up70.jsonl
 (ks 100) and will be followed by new ones at nearby D with ks 130. Say if you meant the last state itself, or want those
 two lines removed. Pushed before the resume (wip/large-d-mac 2bf3e5c). Runs so far 4.55 h, 324 points to 67.43.
+
+== 2026-10-25 04:22 UTC mac
+Correction to the last entry: 296 points to 67.43, not 324 (the line count of up70.jsonl). The ks 130 re-convergence of
+the start at 67.4101 gives Delta 1.7922463717873460 (the script prints 16 digits; the ks 100 record has the same hi).
