@@ -64,8 +64,9 @@ Headline results:
 
 - **One formula for all D ≥ 4.** A rational function of 1/(D-2) gives Δ and γ within the precision of the
   computed points up to D = 30, and Δ to 6×10⁻⁸ up to D = 61 ([The formula](#the-formula), [Values](#values)).
-- **The large-D limit.** Δ is computed at 857 points from D = 8.25 to 61.03; the points fit smooth curves to about 4×10⁻¹⁵
-  (estimated error per point 10⁻¹⁶ to a few 10⁻¹⁵). The points support, but do not prove, that Δ is analytic in 1/D; then
+- **The large-D limit.** Δ is computed at 1199 points from D = 8.25 to 67.77. The 857 points up to D = 61.03 fit smooth
+  curves to about 4×10⁻¹⁵ (estimated error per point 10⁻¹⁶ to a few 10⁻¹⁵); the 342 above them, from the continuation
+  toward D = 70, are not used in the fits. The points support, but do not prove, that Δ is analytic in 1/D; then
   Δ∞ = 1.643893746 ± 1.5×10⁻⁸ (ω∞ = 2π/Δ∞ = 3.82213590 ± 4×10⁻⁸; the centre of 48 fit choices, lowered by the
   0.8×10⁻⁸ by which that centre overshoots known limits in synthetic data, with the spread of the fits as the bar), and γ∞ = 1/2 to about 5×10⁻⁷ (γ computed in double-double at 67 points, D = 8.25–61).
   γ∞ = 1/2 is explained, given the selection rule below and the uniqueness of the unstable mode: at D = ∞ an unstable
@@ -220,7 +221,7 @@ now runs to M = 384: a continuation in double-double reached D = 3.15, Δ = 2.96
 
 **All our values below D = 4** (`hp/export_lowD.py` writes every converged double-double record below D = 8.25 to
 [`hp/data/delta_dd_lowD.csv`](hp/data/delta_dd_lowD.csv), one row per D and τ resolution M with γ where computed, and
-`hp/export_dd.py` puts the best value per D into [`hp/data/delta_dd.csv`](hp/data/delta_dd.csv) next to the 857
+`hp/export_dd.py` puts the best value per D into [`hp/data/delta_dd.csv`](hp/data/delta_dd.csv) next to the
 continuation points, as run `lowD-M<M>`; `hp/plot_lowD_values.py` draws them; rerun all three as runs land). Left: Δ at the largest M at each D, filled where the two
 largest M agree to 10⁻⁸ (or M = 80 alone at D ≥ 3.7, where M 80 → 96 is 1.2×10⁻⁹) and hollow where they do not yet.
 Every point, resolved or not, lies within 8×10⁻⁶ of the √(D − 3) formula below. Middle: γ, from the exact growth-mode
@@ -2258,7 +2259,8 @@ hp/                 double-double solver (crate hpkernel)
 │                       max dDelta/dF, run, an error estimate and its kind (Delta_err, err_kind: the change from the next
 │                       lower tau resolution at low D, the size of the nearby checks elsewhere), and whether a published
 │                       value at that D agrees within its stated uncertainty (published_ref, published_diff,
-│                       published_match; data/published_delta.csv); the 857 continuation points (D = 8.25-61.03) and the
+│                       published_match; data/published_delta.csv); the continuation points (857 for D = 8.25-61.03, 342 from
+│                       the continuation toward 70 for 61.04-67.77, runs T48-pilotB and T48-up70) and the
 │                       best low-D value per D (run lowD-M<M>, D = 3.075-4.0), which the large-D fits skip
 ├── data/delta_dd_lowD.csv   the low-D points at every M, with gamma and status (export_lowD.py)
 ├── data/fit_residuals.csv   each continuation point from D = 10 up minus the degree-18 1/(D-1) fit (fit_residuals.py)

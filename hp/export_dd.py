@@ -20,6 +20,14 @@ residual |F|, the largest |dDelta/dF| (how far a residual error moves Delta), th
                         "yes" when the difference is within the uncertainty the publication states, "no" otherwise;
                         empty where no published value is known at this D
 A D that appears in several runs (to 1e-6) keeps the last run's value, as the fits do.
+
+Above the scans' last point (61.026449) come T48's points: the cloud pilot (data/large_d/pilot_cloud/pilotB.jsonl,
+run T48-pilotB, ks 100) and the Mac's continuation (data/large_d/up70.jsonl, run T48-up70, ks 100 to 67.43 and ks 130
+after). Left out of up70.jsonl, by rules written down here: the diagnostic runs near 67.75 (ks 200 with the junk hold;
+the floor test at four times the tolerance, tol > 2.5e-21; the horizon_alpha test, the file's last five records, which
+carry no field that marks them); points after a horizon-tail jump (tail_h more than 100 times the median of the 20
+neighbouring records of the same ks: 67.4167, 67.4267, 67.7625, 67.7708, 67.7762, 67.7899); and |dDelta_est| > 1e-15.
+The fits quoted in the README use D <= 61.03 and do not see these rows.
 """
 import glob
 import json
@@ -46,6 +54,31 @@ for r in export_lowD.build():
         rec = dict(D=r["D"], Delta=r["Delta_hi"], Delta_lo=r["Delta_lo"], F=r["F"], sens=[r["sens_max"] or float("nan")],
                    dDelta_est=r["dDelta_est"], err=r["change_from_lower_M"])
         rows[round(r["D"], 6)] = (rec, f"lowD-M{r['M']}" + ("" if r["resolved"] else "-unresolved"))
+# T48 above the scans' last point (see the docstring for the rules)
+LAST_SCAN = max(rows)
+T48_ALPHA_TEST = 5            # up70.jsonl's last records: the horizon_alpha test (2026-10-25 16:13-16:22 UTC, comms)
+
+
+def t48_records():
+    out = []
+    for f, run in (("pilot_cloud/pilotB.jsonl", "T48-pilotB"), ("up70.jsonl", "T48-up70")):
+        recs = [json.loads(line) for line in open(os.path.join(here, "data", "large_d", f)) if line.strip()]
+        if run == "T48-up70":
+            recs = recs[:-T48_ALPHA_TEST]
+        keep = [r for r in recs if r.get("ks") in (100, 130) and r["tol"] <= 2.5e-21
+                and abs(r.get("dDelta_est") or 0.0) <= 1e-15]
+        for i, r in enumerate(keep):
+            same = [q["tail_h"] for q in keep[max(0, i - 10):i + 11] if q is not r and q["ks"] == r["ks"]]
+            if same and r["tail_h"] > 100 * sorted(same)[len(same) // 2]:
+                continue                                  # a horizon-tail jump
+            if round(r["D"], 6) > LAST_SCAN + 1e-9:
+                out.append((r, run))
+    return out
+
+
+T48_ROWS = t48_records()
+for r, run in T48_ROWS:
+    rows[round(r["D"], 6)] = (r, run)
 # published values at these D (reference, value, the stated uncertainty)
 pub = {}
 for line in open(os.path.join(here, "data", "published_delta.csv")):
@@ -74,4 +107,5 @@ with open(out, "w") as fh:
             diff, match = format(dv, ".2e"), ("yes" if abs(dv) <= u else "no")
         fh.write(f"{r['D']!r},{r['Delta']!r},{r['Delta_lo']!r},{r['F']:.3e},{max(r['sens']):.3e},"
                  f"{'' if est is None else format(est, '.2e')},{run},{err},{kind},{ref},{diff},{match}\n")
-print(f"{len(rows)} points, D = {min(rows):.4f} .. {max(rows):.4f} -> {out}")
+print(f"{len(rows)} points, D = {min(rows):.4f} .. {max(rows):.4f} -> {out}; of them {len(T48_ROWS)} from T48 above "
+      f"{LAST_SCAN}")

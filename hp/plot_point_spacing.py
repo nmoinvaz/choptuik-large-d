@@ -47,7 +47,7 @@ def steps():
     out = []
     groups = collections.defaultdict(list)
     for r in csv.DictReader(open(os.path.join(HERE, "data", "delta_dd.csv"))):
-        if float(r["D"]) > 4.0001:
+        if float(r["D"]) > 4.0001 and not r["run"].startswith("T48-"):   # T48's rows: read from its own files below
             groups[r["run"]].append(round(float(r["D"]), 6))
     for run, Ds in groups.items():
         m = "win" if run.startswith("local-") else "cloud"

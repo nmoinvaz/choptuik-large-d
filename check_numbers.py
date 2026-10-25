@@ -45,10 +45,14 @@ def check(fn):
 def data_points():
     rows = [r for r in list(open(os.path.join(ROOT, "hp/data/delta_dd.csv")))[1:] if ",lowD" not in r]
     D = [float(r.split(",")[0]) for r in rows]
-    txt = [("README.md", "Δ is computed at 857 points from D = 8.25 to 61.03")]
-    return [("double-double points", len(D), 857, 1, txt),
+    txt = [("README.md", "Δ is computed at 1199 points from D = 8.25 to 67.77"),
+           ("README.md", "The 857 points up to D = 61.03 fit smooth")]
+    fit = [d for d in D if d <= 61.03]
+    return [("double-double points", len(D), 1199, 1, txt),
             ("lowest D", min(D), 8.25, 0.01, txt),
-            ("highest D", max(D), 61.03, 0.01, txt)]
+            ("highest D", max(D), 67.77, 0.01, txt),
+            ("points up to the fits' end", len(fit), 857, 1, txt),
+            ("the fits' end", max(fit), 61.03, 0.01, txt)]
 
 
 @check
