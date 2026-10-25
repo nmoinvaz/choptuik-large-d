@@ -6,3 +6,4 @@ D 3.4 M 160: Delta 3.3662517880538068 (+9.60e-17) |F| 7.6e-29 its 3 1280s dDelta
 D 3.4 M 160: L 10241, steps 193, start |F| 7.6e-29
   newton 0: |F| 7.58e-29 converged (last |dz| 2.3e-25) Delta 3.366251788053807; last step taken, |F| 2.68e-29
 D 3.4 M 160: Delta 3.3662517880538068 (+9.60e-17) |F| 2.7e-29 its 1 152s dDelta/dF max 4.3e-01 tails 9e-67 1e-90 dDelta_est +1.4e-30
+D 3.4 M 160: Delta 3.3662517880538068 (+9.60e-17) |F| 2.7e-29; steps 567 -> 193; tails 9e-67 1e-90; Newton step 148.02 s (residual 1.12 s, Jacobian 145.38 s, factor 0.89 s, Jacobian without d/dtau 97.0 s); LU 120.5 MB; peak RSS 532688.0 MB; load 16.42
