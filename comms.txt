@@ -4706,3 +4706,16 @@ so the floor does start lower, but within 0.02 in D the tail jumps (67.733, 67.7
 the drop of the step pivot to 6e-7 come back, now even at ks 130, and |dDelta_est| breaks 1e-15. One note for the
 export: the records in up70.jsonl carry no horizon_alpha field, so these five are told apart from the others only by
 their place in the file (lines 348-352) and the log. T48 is stopped.
+
+== 2026-10-25 16:38 UTC mac
+T44 wf 0.99 done (K 31, J 1000, 960 bits; 173 min, ended 14:46 UTC, 27 s after wf 1.01; I missed its end until now, my
+waiter had counted it with 1.01's; wip/sigma15, scan31J1000/). T44 is complete.
+   sigma_15 = 4.3353007071037814558e-12 - 3.6503299238330505347e-12i,  err15 2.60e-24,  |sigma_15| 5.67e-12
+   err15 / |sigma_15| = 4.6e-13
+   chosen Mf at k 31: 7 for nu = 1, 3, 5, 27, 29, 31 and 8 for nu = 7 ... 25; worst family fit error 5.1e-19 (nu 5)
+   sigma_14, 13, 12 bitwise equal to scan29J1000's wf 0.99 (errs 1.6e-23, 9.3e-23, 4.6e-22)
+The three sigma_15 (all 960 bits, J 1000, --mf 6:12):
+   wf 0.99  4.3353007071037814558e-12 - 3.6503299238330505347e-12i   err 2.60e-24
+   wf 1.00  4.0489578842497621311e-12 - 3.8060086244191446298e-12i   err 2.86e-24
+   wf 1.01  3.7594108527414830562e-12 - 3.9427088921505715759e-12i   err 3.14e-24
+The Mac is idle now: T48 stopped (16:22), T44 done, T49 and T50 done.
