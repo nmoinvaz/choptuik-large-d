@@ -1,0 +1,35 @@
+D 67.722443: M 32, K 5, L 769; |F0| 5.958e-22 (horizon 5.958e-22, others 3.026e-22); |d| 3.485e-10, d_Delta +3.725e-17; pivots 1.3e-15..1.8e+08
+  J d + F0 (Solver.jvp, the double-double Jacobian): 4.805e-30 (horizon 4.805e-30)
+  1. along the step: lam, |F(lam)|, |R|, |R| / lam, |R| / lam^2 (all rows; horizon rows; others)
+    2^-0  |F| 3.232e-21  |R| 3.232e-21  /lam 3.232e-21  /lam^2 3.232e-21   horizon 3.23e-21 (3.23e-21, 3.23e-21)  others 2.71e-21 (2.71e-21, 2.71e-21)
+    2^-1  |F| 1.081e-21  |R| 8.080e-22  /lam 1.616e-21  /lam^2 3.232e-21   horizon 8.08e-22 (1.62e-21, 3.23e-21)  others 6.79e-22 (1.36e-21, 2.71e-21)
+    2^-2  |F| 6.122e-22  |R| 2.020e-22  /lam 8.080e-22  /lam^2 3.232e-21   horizon 2.02e-22 (8.08e-22, 3.23e-21)  others 1.70e-22 (6.79e-22, 2.71e-21)
+    2^-3  |F| 5.491e-22  |R| 5.050e-23  /lam 4.040e-22  /lam^2 3.232e-21   horizon 5.05e-23 (4.04e-22, 3.23e-21)  others 4.24e-23 (3.39e-22, 2.71e-21)
+    2^-4  |F| 5.635e-22  |R| 1.262e-23  /lam 2.020e-22  /lam^2 3.232e-21   horizon 1.26e-23 (2.02e-22, 3.23e-21)  others 1.06e-23 (1.70e-22, 2.71e-21)
+    2^-5  |F| 5.784e-22  |R| 3.156e-24  /lam 1.010e-22  /lam^2 3.232e-21   horizon 3.16e-24 (1.01e-22, 3.23e-21)  others 2.65e-24 (8.48e-23, 2.71e-21)
+    2^-6  |F| 5.868e-22  |R| 7.890e-25  /lam 5.050e-23  /lam^2 3.232e-21   horizon 7.89e-25 (5.05e-23, 3.23e-21)  others 6.63e-25 (4.24e-23, 2.71e-21)
+    2^-7  |F| 5.912e-22  |R| 1.973e-25  /lam 2.525e-23  /lam^2 3.232e-21   horizon 1.97e-25 (2.52e-23, 3.23e-21)  others 1.66e-25 (2.12e-23, 2.71e-21)
+    2^-8  |F| 5.935e-22  |R| 4.931e-26  /lam 1.262e-23  /lam^2 3.232e-21   horizon 4.93e-26 (1.26e-23, 3.23e-21)  others 4.14e-26 (1.06e-23, 2.71e-21)
+    2^-9  |F| 5.947e-22  |R| 1.233e-26  /lam 6.312e-24  /lam^2 3.232e-21   horizon 1.23e-26 (6.31e-24, 3.23e-21)  others 1.04e-26 (5.30e-24, 2.71e-21)
+    2^-10 |F| 5.952e-22  |R| 3.082e-27  /lam 3.156e-24  /lam^2 3.232e-21   horizon 3.08e-27 (3.16e-24, 3.23e-21)  others 2.59e-27 (2.65e-24, 2.71e-21)
+    2^-11 |F| 5.955e-22  |R| 7.705e-28  /lam 1.578e-24  /lam^2 3.232e-21   horizon 7.71e-28 (1.58e-24, 3.23e-21)  others 6.47e-28 (1.33e-24, 2.71e-21)
+    2^-12 |F| 5.957e-22  |R| 1.926e-28  /lam 7.890e-25  /lam^2 3.232e-21   horizon 1.93e-28 (7.89e-25, 3.23e-21)  others 1.62e-28 (6.63e-25, 2.71e-21)
+    2^-13 |F| 5.957e-22  |R| 4.816e-29  /lam 3.945e-25  /lam^2 3.232e-21   horizon 4.82e-29 (3.95e-25, 3.23e-21)  others 4.04e-29 (3.31e-25, 2.71e-21)
+    2^-14 |F| 5.958e-22  |R| 1.204e-29  /lam 1.973e-25  /lam^2 3.232e-21   horizon 1.20e-29 (1.97e-25, 3.23e-21)  others 1.01e-29 (1.66e-25, 2.71e-21)
+  2. central differences along d: h, |(F(+h) - F(-h)) / 2h + F0| (all; horizon; others), the J error on d
+    2^-0  4.807e-30  horizon 4.807e-30  others 1.710e-31
+    2^-2  4.802e-30  horizon 4.802e-30  others 5.886e-31
+    2^-4  4.814e-30  horizon 4.814e-30  others 2.365e-30
+    2^-6  7.784e-30  horizon 4.836e-30  others 7.784e-30
+    2^-8  5.503e-29  horizon 5.002e-30  others 5.503e-29
+    2^-10 9.947e-29  horizon 8.900e-30  others 9.947e-29
+    2^-12 9.031e-28  horizon 2.425e-29  others 9.031e-28
+    2^-14 3.578e-27  horizon 1.757e-28  others 3.578e-27
+    2^-16 9.525e-27  horizon 6.084e-28  others 9.525e-27
+    2^-18 5.015e-26  horizon 3.230e-27  others 5.015e-26
+    2^-20 2.050e-25  horizon 7.472e-27  others 2.050e-25
+    2^-22 7.386e-25  horizon 2.908e-26  others 7.386e-25
+    2^-24 2.771e-24  horizon 1.115e-25  others 2.771e-24
+    2^-26 6.725e-24  horizon 3.102e-25  others 6.725e-24
+    2^-28 4.742e-23  horizon 2.895e-24  others 4.742e-23
+    2^-30 1.591e-22  horizon 9.926e-24  others 1.591e-22
