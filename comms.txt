@@ -4611,3 +4611,7 @@ Against the runs without the hold, from 67.72 to 67.80, the smallest step pivot:
 So the pivot collapse I reported at 07:27 appears only with ks 200; at ks 130 the step pivots stay normal through
 67.79 and the trouble there was the tail jumps and the stalls. And with ks 200 the hold makes it worse and earlier
 (67.742-67.750 instead of 67.767-67.783). T48 is stopped; T44 wf 0.99 runs on.
+
+== 2026-10-25 14:50 UTC mac
+Correction to 14:47: after 67.7485 there were 10 failed attempts (not 11) beside the 5 accepted points; the failed
+steps ran from dD 0.010 down to 7.6e-5 (not 1e-3), and their |F| was 1.5e-21 .. 1.8e-19 (not up to 1.4e-19).
