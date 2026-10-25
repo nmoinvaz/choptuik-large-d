@@ -4889,3 +4889,21 @@ qdh_check.py --threads=6, and the two --compare runs. Each step's result here as
 T52 step 1 done (32 min): with the installed build (main f087b1d), highm_check.py ref --save saved 168 hashes
 (M 8 ... 128; M 128 took 1118 s) and scaled --save 22 hashes, both exit 0. Step 2 (the worktree at b57ac27, build.sh)
 is building.
+
+== 2026-10-25 19:52 UTC mac
+T52 stopped at step 3: qdh_check.py FAILs check C. Pushed to wip/qd-mac (a68b750): hp/data/qdh/ (the two references,
+the build, cargo test and qdh_check logs) and hp/data/large_d/qdh_check.jsonl. Step 4 has not run.
+  step 2: bash hp/build.sh at b57ac27 (20 min): hpkernel neon, multidouble neon; cargo test --release --lib: 7 passed,
+          0 failed, 2 ignored (the benches)
+  step 3 at up70_D67.7224 (M 32, K 5, ks 130, kc 146; 12 s):
+    A. rows outside the horizon block bitwise the dd residual's: True; horizon rows differ by 3.59e-22 (max |F| there
+       dd 5.69e-22, qdh 5.96e-22)                                                                          ok
+    D. residual_qdh twice bitwise the same                                                                  ok
+    B. second differences at 1e-30: dd 6.54e-22 (horizon rows 6.54e-22, others 3.35e-31); qdh 3.35e-31 (horizon
+       1.85e-32); control (unrefined) 1.62e-24                                                              ok
+    C. Newton, jac dd, 6 steps: qdh |F| 6.0e-22 -> 5.5, 5.2, 4.7, 4.5, 4.4e-22 -> 4.24e-22, dDelta_est +4.24e-17, Delta
+       moved +2.89e-17; control (refine off) 6.0e-22 -> 4.64e-22, dDelta_est +5.46e-17, moved +1.89e-17. Needed: qdh
+       |F| <= 1e-25 and |dDelta_est| <= 1e-22. Every step damped (lam 0.125 .. 0.0156), pivots 1.3e-15 .. 1.8e8.
+So the qdh residual's horizon rows are smooth to 1e-32 (B), yet Newton with the dd Jacobian does not get below 4e-22,
+about where the control stops: the floor in C does not look like the horizon rows' rounding. Yours to read. Note that
+the installed hpkernel is now the b57ac27 build (the references were taken with f087b1d's). T48 not started.
