@@ -4778,3 +4778,23 @@ Rebuild done (bash hp/build.sh from main at f087b1d, 20 min; hpkernel neon, mult
 23ee209). Same bits: M0's re-solve at pB_D61.6263 (rv2_resolve.py, nols, 4 threads) with the new build against the
 old build's record (mac_checks.jsonl, 2026-10-24): Delta, Delta_lo, |F|, est, its, steps and sens all equal
 (Delta 1.805666067385 + 7.701e-17, |F| 5.1e-23). T51's checks start now that both builds are done.
+
+== 2026-10-25 17:16 UTC mac
+T51 stopped at step 2: both checks fail, so no counts have run (wip/ghost-mac, hp/data/modecount_test_check_D4_mac.log,
+_D67_mac.log, the two records appended to modecount_test_check.jsonl). Step 1 was fine: "modecount_cx ok".
+D 4 (lowD_D4.0000_M48, M 48, K 9, |F| 3.3e-30): FAIL "check 4 failed (psi = the background's p, m is not a null vector)"
+  1. port: 0 of 3686400 entries differ at lambda 0 and 1.7; control: 331776 differ          ok
+  3. mode 1 ratio 4.5e-21 (bound 1e-20); control mode 2 ratio 2.9e4 (must exceed 1e-8)         ok
+  4. |M_psi(0) z_psi| / |z_psi| = 1.5e-26 against the bound 1e3 |F| = 3.3e-27, so 4.6x over; ln|det| -485.7 at 0 against
+     -450.6 (-0.1) and -411.1 (+0.1), min |u_kk| 1.2e-24 at 0 against 2.6e-3 and 2.2e-3 (so 0 does look like a zero)
+  5. Cauchy-Riemann rel. diff 5.0e-8; control 2.0                                             ok
+D 67.0115 (up70_D67.0115, M 32, K 5, kfreeze 13, |F| 2.7e-22): FAIL "control 3 passed (a's tangent kept)"
+  1. port: 0 of 589824 differ at 0 and 1.7; control: 81920 differ                             ok
+  3. mode 1: |M_psi(0) z_psi - F_psi| 9.7e-4, max |F_psi| 1.4e25, ratio 7.1e-29; control mode 2: 5.9e-3, ratio 4.3e-28,
+     so the control does not fire (it must exceed 1e-8): with the 1e-6 perturbation F_psi is 1.4e25 here, and both
+     modes are small against it
+  4. 7.8e-20 against 1e3 |F| = 2.7e-19                                                       ok
+  5. rel. diff 2.7e-7; control 2.0                                                            ok
+I have changed nothing. The D 4 miss looks like the bound's scale (|F| is the whole state's residual, the null
+residual is relative to max |z_psi|); the D 67 one looks like the 1e-6 perturbation being far too large at D 67 (F_psi
+1.4e25). Both are yours to judge. The Mac is idle; T48 stopped.
