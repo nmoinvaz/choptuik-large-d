@@ -5142,3 +5142,8 @@ T55 is building; its result follows.
 T45 at 3.0625 (now from 3.06875, step 0.00625): the M 192 helper converged this time (|F| 0.18 -> 1.3e-28, 8 its,
 35 min; Delta 2.5714075205285827, tails 2e-68 / 3e-111). M 256 is in pass 1 from the helper's lift on its own
 1945-step plan: |F| 2.8e-4 -> 6.4e-8 after two steps (22 min each). M 320 follows (about 4 h).
+
+== 2026-10-25 22:30 UTC mac
+T55 step 1 done: bash hp/build.sh at 88b07d2 (13 min): hpkernel neon, multidouble neon (crate and Python package at
+b45c0b9); cargo test --release --lib: 4 passed, 0 failed, 2 ignored. Step 2 (ref and scaled --compare against the
+f087b1d references) is running, about 30 min.
