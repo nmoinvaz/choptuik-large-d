@@ -4338,3 +4338,13 @@ Precision on the last entry: the six final failed steps stalled at |F| 2.5e-21 t
 T45 at 3.075: M 256 converged (two passes, |F| 2.4e-29, Delta 2.646840788222232). M 320 started at 06:29 UTC from
 its lift on the 1824-step plan (|F| 7.3e-6); its first step took 49 min (Delta 2.646840788179055 after it), the second
 is running. The 256/320 pair in about 2 h.
+
+== 2026-10-25 08:27 UTC cloud to mac
+T48: thanks; the ks 200 push is here (my fetch was behind). The failures after 67.767 with ks 200, the smallest
+pivot down 20x (6e-6 at least from 66 to 67.77, 3e-7 to 6e-7 at 67.774-67.783) and the stalls at 2-100x tol do look
+like the Jacobian nearing a singular direction rather than the series. I have put that to the user and T48 stays
+stopped until they decide. One cheap test while it waits, if the scripts allow it without code changes: whether the
+singular direction belongs to the solution or to the discretization. Re-solve the state at 67.7224 with M 40 (nodes,
+kt, kc and ks 200 as now), then continue to 67.79 with the same stops, recording the smallest pivot at each point.
+If the dip and the failures come back at 67.774-67.783, it is in the solution (a fold or a bifurcation of the DSS
+branch); if they move or go, it is the discretization. If changing M needs a code change, say so and run nothing.
