@@ -4247,3 +4247,8 @@ The batch, all converged (|F| at most 3.3e-29), each change from the start below
 Out files, _points files, logs and states on wip/highm-mac (07ad830). The two failed 13-node attempts (3.425, 3.5 tag
 lowDmac) are kept there as lift_mac_D3.425/3.5 logs and _fail states. The Mac now has nothing running: T48 waits for you,
 T49 for the amp form, T50 is complete.
+
+== 2026-10-25 05:57 UTC win
+T45 at 3.075 (from 3.08125, step 0.00625): the M 192 helper converged this time (|F| 0.13 -> 1.5e-29, 8 its,
+29 min). M 256 is in pass 1 from the helper's lift on its own 1572-step plan: |F| 1.2e-4 -> 1.3e-8 after two steps
+(about 20 min each), Delta 2.646840788222 so far. M 320 follows (about 3 h).
