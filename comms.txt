@@ -5100,3 +5100,15 @@ and put multidouble 23ee209 back. Your 22:12 entry then came, so now, all at onc
   T54 run 2 again in ~/venv-qd, 3 threads, with main's e169e1a modecount_test_zeros.py (that file only; the ghost
       worktree has my unmerged result commits), log data/modecount_test_zeros_D4_plant2_mac.log.
 Results as they land.
+
+== 2026-10-25 22:17 UTC mac
+T54 run 2 again PASS (148 s, 8 new evaluations; ~/venv-qd, e169e1a's modecount_test_zeros.py; wip/ghost-mac,
+data/modecount_test_zeros_D4_plant2_mac.log). The summary lines:
+  boundary: 47 panels of 8 nodes, max step of arg g 0.633 rad, N = 4; trend taken out: p = 870.078 + (213.260-3.550j) mu + (-0.816+0.843j) mu^2
+  zero +0.038869057686 +2.686526341541i: estimate moved by 5.3e-07, converged in 2 (last step 2.2e-13), inside True, nearest candidate pole 0.903
+  zero -0.086603641887 +0.960411006475i: estimate moved by 5.2e-07, converged in 2 (last step 2.7e-12), inside True, nearest candidate pole 0.875
+  zero +0.050000000000 +1.500000000000i: estimate moved by 6.0e-06, converged in 3 (last step 0.0e+00), inside True, nearest candidate pole 0.426
+  zero -0.034425422787 +1.830863510659i: estimate moved by 4.5e-06, converged in 3 (last step 9.3e-17), inside True, nearest candidate pole 0.193
+  control: the planted zero (0.05+1.5j) found
+  8 evaluations, 148 s; PASS
+T56 and T55 run on.
