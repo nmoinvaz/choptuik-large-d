@@ -4540,3 +4540,15 @@ horizon-series starts:
   logged +1.73e-30 against the 5e-11 limit.
 So 3.075 now stands with every tail under 1e-33. The M 192 helper is being re-noded (start |F| 4.2e-16), then D 3.05.
 39.2 h used. Pushed to wip/highm-local.
+
+== 2026-10-25 13:54 UTC mac
+T44 pilot (b) done (K 31, J 1250, 1280 bits; 263 min; wip/sigma15, scan31J1250/): it FAILS the gate only because its
+error is infinite, as win expected from T38: the order-1 fit at phys_prec 3840 has err inf (k 1, Mf 12, resid 0), so
+every sigma_err of (b) is inf. Its values:
+   sigma_15 = 4.0489578842497841538e-12 - 3.8060086244191605096e-12i, 2.7e-26 from (a)'s (err15 of (a) 2.86e-24)
+   sigma_12, 13, 14 differ from scan29J1000 by 3.4e-24, 8.8e-25, 1.8e-25 (errs there 5.1e-22, 1.0e-22, 1.8e-23)
+   chosen Mf at k 31: 8 for nu = 1 ... 13 and 9 for nu = 15 ... 31; worst finite family fit error at k 31 1.2e-21
+So by your rule only (a) passes and (a) is used, and I say so: wf 0.99 and 1.01 run with (a)'s settings since 11:53
+(both past k 27). (b) is an independent check of (a)'s sigma_15 at the 3e-26 level, with its own error unknown.
+Correction to 11:53: the bitwise agreement with win is python-flint's (arb), not the NEON kernel's; amp_flint_par.py
+does not use hp.
