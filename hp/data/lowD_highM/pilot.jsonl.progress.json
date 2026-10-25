@@ -250,7 +250,7 @@
  "targets": [
   3.05
  ],
- "done": "re-noded solve failed at D 3.075",
+ "done": null,
  "post": {
   "D": 3.075,
   "stage": "nodes",

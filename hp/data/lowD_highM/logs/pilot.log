@@ -1144,3 +1144,23 @@ C:\Users\nathan\AppData\Local\Temp\claude\C--Users-nathan-Source-dss-residual-ke
 02:56:44   D 3.075 M 256: start 're-noded' |F| nan (695 steps)
 02:56:49   D 3.075 M 256: plan from start 're-noded' instead: 695 steps, |F| nan
 02:56:49 STOP: re-noded solve failed at D 3.075
+03:33:38 resuming: M 256/320, last D 3.075, 39.15 h used
+03:33:38 already stopped: re-noded solve failed at D 3.075
+03:34:59 resuming: M 256/320, last D 3.075, 39.15 h used
+03:35:38   D 3.075 M 256: start 're-noded' |F| 4.32e-16 (695 steps)
+03:35:46 D 3.075 M 256: L 21505, steps 695, start |F| 4.3e-16
+  newton 0: |F| 4.32e-16 |dz| 1.10e-15 lam 1 dDelta +1.35e-31 Delta 2.646840788222232 piv 2.5e-09..5.9e+01  t 349.2s
+  newton 0: |F| 2.03e-28 |dz| 2.20e-15 lam 1 dDelta +1.37e-30 Delta 2.646840788222232 piv 2.5e-09..5.9e+01  t 429.4s
+  newton 0: |F| 1.77e-28 |dz| 2.11e-15 lam 0.5 dDelta -2.03e-30 Delta 2.646840788222232 piv 2.5e-09..5.9e+01  t 460.2s
+03:56:25 D 3.075 M 256: |F| 2.0e-28 -> 1.8e-28: below 1e-27 and no longer falling (the residual floor); stopping
+04:04:02 D 3.075 M 256: Delta 2.6468407882222320 (-2.08e-16) |F| 1.1e-28 its 3 1702s dDelta/dF max 3.4e+00 tails 5e-62 1e-113 dDelta_est -5.8e-31
+04:04:36   D 3.075 M 320: start 're-noded' |F| 4.31e-16 (1112 steps)
+04:04:51 D 3.075 M 320: L 26881, steps 1112, start |F| 4.3e-16
+  newton 0: |F| 4.31e-16 |dz| 2.18e-15 lam 1 dDelta +1.58e-30 Delta 2.646840788172081 piv 1.3e-07..9.8e+00  t 1417.5s
+  newton 0: |F| 4.98e-28 |dz| 1.54e-17 lam 0.5 dDelta +1.59e-31 Delta 2.646840788172081 piv 1.3e-07..9.8e+00  t 1460.3s
+  newton 0: |F| 2.04e-28 |dz| 1.01e-17 lam 0.25 dDelta -9.71e-33 Delta 2.646840788172081 piv 1.3e-07..9.8e+00  t 1520.5s
+  newton 0: |F| 1.17e-29 converged (last |dz| 6.8e-18) Delta 2.646840788172081
+05:42:20 D 3.075 M 320: Delta 2.6468407881720815 (-2.03e-18) |F| 1.2e-29 its 4 5861s dDelta/dF max 6.4e-01 tails 3e-57 1e-107 dDelta_est +1.1e-30
+05:42:20 D 3.075: Delta(M 320) = 2.6468407881720815 (-2.03e-18), M 256 -> 320: -5.02e-11; re-noded [0.000313, 0.000625, 0.00125, 0.0025, 0.005, 0.01, 0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95] -> [0.000313, 0.000625, 0.00125, 0.0025, 0.005, 0.01, 0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.975]
+05:42:30   D 3.075 M 192: start 're-noded' |F| 4.21e-16 (600 steps)
+05:42:35 D 3.075 M 192: L 16129, steps 600, start |F| 4.2e-16
