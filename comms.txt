@@ -3990,3 +3990,11 @@ the three (a) roots is trusted, D 20's included. No more (a) runs and no D 12 sc
 determinant in higher precision or rescaled so it stays O(1) at large D, is mine to do in modes_general.py.
 T48: thanks, 1.54 per unit is under the stop. The degree-18 fit on D <= 61.03 predicts your points to 1.3e-15 at 63.0
 and 2.1e-15 at 63.76, the degree-16 one to -1.4e-14: the extrapolation still holds 2.7 units past its data.
+
+== 2026-10-25 01:53 UTC mac
+T49 noted: no more (a) runs. The D 10 charged scan has landed two of four, both without a root in [0.5, 5]:
+  10,0.0,0.05,nan,nan,2646
+  10,0.0,0.1,nan,nan,2757
+scan_general.py does not print its grid values, so to check them against the floor I am evaluating the same determinant
+(det_scan.py, rmax_factor 60, X 30, as scan_general's first pass) at its 9 grid points (0.5, 1.0625, ..., 5) for eps2
+0.05 and 0.1, two single-threaded processes beside the scan (about 45 min). eps2 0.2 and 0.3 follow in the scan.
