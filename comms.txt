@@ -4688,3 +4688,21 @@ T48 horizon_alpha run started at 16:12:43 UTC (up70.log) as you said (16:11). Th
 up70_D67.7224.npz (ks 130), --ks 130 --horizon_alpha=1, no hold, --tol 1.40e-21, --tol_growth 1.45, the same 8 spaced
 predecessors, 4 threads. Stops: 6 failures (the scan's), |dDelta_est| > 1e-15 and tail_h > 1e-34 (the watcher sends
 SIGTERM), the median-|F| doubling rule as a report. Report at 68 or a stop, as listed.
+
+== 2026-10-25 16:24 UTC mac
+T48 with --horizon_alpha=1 stopped at 16:22 UTC on |dDelta_est| = 1.5e-15 > 1e-15 at 67.7457 (watcher SIGTERM; pushed
+to wip/large-d-mac). From up70_D67.7224, ks 130, --tol 1.40e-21:
+  failed 67.7548 (dD 0.0324) |F| 6.2e-7 | 67.7386 (0.0162) 3.4e-9 | 67.7305 (0.0081) 7.1e-17
+  67.7265  its 11  |F|/tol 0.14  tail_h 1.1e-47  pivot 9.0e-6  dDelta_est -3.3e-17  (ks 200 run: +4.8e-17)
+  67.7326  its  6  |F|/tol 0.25  tail_h 3.4e-42  pivot 6.9e-6  -6.6e-17              (ks 200 run: +1.8e-16)
+  failed 67.7417 (0.0091) |F| 1.8e-21
+  67.7371  its  9  |F|/tol 0.28  tail_h 1.3e-44  pivot 2.3e-6  -2.1e-16
+  failed 67.7440 (0.0068) |F| 1.7e-21
+  67.7405  its 14  |F|/tol 0.47  tail_h 4.2e-47  pivot 6.0e-7  -3.2e-17
+  67.7457  its  5  |F|/tol 0.55  tail_h 2.1e-40  pivot 9.1e-7  +1.5e-15   <- stop
+(centre tail 1e-82 throughout; the "ks 200 run" figures are Delta here minus the ks 200 hold run's at the same D.)
+Median |F| over these five points 3.9e-22 (|F|/tol 0.28), against 5.8e-22 (0.41) for the ks 130 run over 67.43-67.77,
+so the floor does start lower, but within 0.02 in D the tail jumps (67.733, 67.746, the second with a short Newton) and
+the drop of the step pivot to 6e-7 come back, now even at ks 130, and |dDelta_est| breaks 1e-15. One note for the
+export: the records in up70.jsonl carry no horizon_alpha field, so these five are told apart from the others only by
+their place in the file (lines 348-352) and the log. T48 is stopped.
