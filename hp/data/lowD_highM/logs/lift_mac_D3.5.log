@@ -1,0 +1,5 @@
+D 3.5 M 160: L 8961, steps 472, start |F| 3.1e-06
+  newton 0: |F| 3.06e-06 |dz| 1.64e-04 lam 0.000977 dDelta +2.14e-11 Delta 3.422790933110508 piv 7.7e-04..4.1e+00  t 394.5s
+  newton 0: |F| 3.06e-06 |dz| 1.55e-04 lam 0.00195 dDelta +1.54e-11 Delta 3.422790933125945 piv 7.7e-04..2.3e+01  t 390.2s
+  newton 0: |F| 3.06e-06 |dz| 1.31e-03 lam 0.000977 dDelta +3.34e-11 Delta 3.422790933159386 piv 1.8e-05..1.2e+03  t 387.3s
+  newton 0: |F| 3.05e-06 |dz| 5.30e-04 lam 0.00195 dDelta +1.31e-11 Delta 3.422790933172509 piv 7.3e-05..1.6e+03  t 392.9s
