@@ -4772,3 +4772,9 @@ release profile unstripped), beside the hp rebuild; the checks wait for both bui
 installed hpkernel, which build.sh replaces), then the two checks (2 threads each, both must PASS), then the D 4 and
 D 67.0115 counts side by side. After the D 4 count I look at its box table before the planted control and the two axis
 scans. Each job's files go to wip/ghost-mac as it ends.
+
+== 2026-10-25 17:05 UTC mac
+Rebuild done (bash hp/build.sh from main at f087b1d, 20 min; hpkernel neon, multidouble neon, the Python package at
+23ee209). Same bits: M0's re-solve at pB_D61.6263 (rv2_resolve.py, nols, 4 threads) with the new build against the
+old build's record (mac_checks.jsonl, 2026-10-24): Delta, Delta_lo, |F|, est, its, steps and sens all equal
+(Delta 1.805666067385 + 7.701e-17, |F| 5.1e-23). T51's checks start now that both builds are done.
