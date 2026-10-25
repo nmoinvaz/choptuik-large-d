@@ -11,11 +11,11 @@
 3. The effective exponent c of tau_k ~ -c/(k x0^k) at w_inf, from two consecutive orders: it tends to 1, a simple zero,
    which is what makes the arg crossings the asymptotically correct estimator.
 
-The arg crossings (k = 4..14), the ratio estimates (k = 9..14) and the effective exponents (k = 6..14, at w_inf) are
-recomputed from inner_amp/scan29J1000/ (sigma_1..14 at w/w_inf = 0.99, 1.00, 1.01, the 960-bit files; quadratic
+The arg crossings (k = 4..15), the ratio estimates (k = 9..15) and the effective exponents (k = 6..15, at w_inf) are
+recomputed from inner_amp/scan31J1000/ (sigma_1..15 at w/w_inf = 0.99, 1.00, 1.01, the 960-bit files; quadratic
 interpolation); the k = 5..8 ratio estimates come from the wider scans (scan15phys/, scan17phys/), the Pade ranges from
-the zero.txt files of the K 15 ... K 25 scans (k <= 12) and notes/PLANTED_SELECTION.md sections 5.1 and 6.3
-(k = 13, 14), the factored-series values from solver/proof/entire_cert.py (k <= 12) and the same sections (k = 13, 14).
+the zero.txt files of the K 15 ... K 25 scans (k <= 12) and notes/PLANTED_SELECTION.md sections 5.1, 6.3 and 7.3
+(k = 13, 14, 15), the factored-series values from solver/proof/entire_cert.py (k <= 12) and the same sections.
 
     python3 plot_selection.py [-o selection.svg]
 """
@@ -38,20 +38,23 @@ mp.mp.dps = 50
 
 # from below: ratio tau_{k-1}/tau_k real (exponent free); k = 5..8 from the wide scans, 9..12 recomputed below
 RATIO_WIDE = {5: 0.9821, 6: 0.9803, 7: 0.9913, 8: 0.9946}
-# k = 14 (notes/PLANTED_SELECTION.md section 6.3): central Pade [3/10]-[9/4] and the factored series (production kbar)
+# k = 14, 15 (notes/PLANTED_SELECTION.md sections 6.3, 7.3): central Pade [3/10]-[9/4], [3/11]-[10/4] and the factored
+# series (production kbar)
 PADE14 = (0.99995, 1.00013)
 G14 = 1.000027
+PADE15 = (0.999984, 1.000063)
+G15 = 0.999999
 # Pade approximants of (ln S_1)' with k coefficients: range of the Im A_0 = 0 crossings over the consistent approximants
-# (k = 13, 14: the central ones, notes/PLANTED_SELECTION.md sections 5.1 and 6.3)
+# (k = 13, 14, 15: the central ones, notes/PLANTED_SELECTION.md sections 5.1, 6.3 and 7.3)
 PADE = {7: (0.981, 0.991), 8: (0.987, 0.998), 9: (0.992, 0.998), 10: (0.9995, 1.0007), 11: (0.9992, 1.0008),
-        12: (0.99987, 0.99991), 13: (0.99980, 0.99990), 14: PADE14}
-# factored series G = exp(-kbar A^2) S_1 truncated at order K (solver/proof/entire_cert.py; k = 13, 14: the same sections)
-ENTIRE = {9: 0.99767, 10: 1.00035, 11: 0.99987, 12: 0.99988, 13: 0.999995, 14: G14}
+        12: (0.99987, 0.99991), 13: (0.99980, 0.99990), 14: PADE14, 15: PADE15}
+# factored series G = exp(-kbar A^2) S_1 truncated at order K (solver/proof/entire_cert.py; k = 13-15: the same sections)
+ENTIRE = {9: 0.99767, 10: 1.00035, 11: 0.99987, 12: 0.99988, 13: 0.999995, 14: G14, 15: G15}
 # truncated route: zero of the M-harmonic selection (zero_M1.py, nested.py, hier.py --schur)
 TRUNC = {1: 0.776994, 3: 1.015603, 5: 0.999228, 7: 1.000022}  # M = 7: proof/B_tail_M7.md
 M7_PRED = (0.99997, 1.00017)          # proof/B_tail.md, reconcile.py
-SCAN = os.path.join(HERE, "inner_amp", "scan29J1000")
-SCAN_FILES = "*_p960.json"              # the directory also holds a 1280-bit pilot at w_inf (bitwise the same sigma_k)
+SCAN = os.path.join(HERE, "inner_amp", "scan31J1000")
+SCAN_FILES = "*_p960.json"
 
 
 def exponents(scandir, pattern="*.json", wf=1.0):
