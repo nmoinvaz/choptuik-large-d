@@ -72,7 +72,8 @@ yardsticks, and those failed outside D = 8–30:
   the mode matrix there: moving z by 10⁻³¹ relative moves M_ψ z_ψ by 2–5×10⁻²² while F_ψ moves by 4×10⁻²⁵ (a smooth
   change). That is what ν measures.
 
-The records of the earlier forms are in `modecount_test_check.jsonl` (the first four lines). The counts do not use
+The records of the earlier forms are in `modecount_test_check.jsonl`: its first four lines (cloud) and the Mac's D = 67 and
+D = 4 runs (`modecount_test_check_D4_mac.log`, `_D67_mac.log`). The counts do not use
 checks 3 and 4.
 
 **A discrepancy found on the way.** The count at D = 8.25 committed with the mode count (`hp/data/modecount_D8.2500_M32*`,
