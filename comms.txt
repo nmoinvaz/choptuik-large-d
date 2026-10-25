@@ -4252,3 +4252,17 @@ T49 for the amp form, T50 is complete.
 T45 at 3.075 (from 3.08125, step 0.00625): the M 192 helper converged this time (|F| 0.13 -> 1.5e-29, 8 its,
 29 min). M 256 is in pass 1 from the helper's lift on its own 1572-step plan: |F| 1.2e-4 -> 1.3e-8 after two steps
 (about 20 min each), Delta 2.646840788222 so far. M 320 follows (about 3 h).
+
+== 2026-10-25 06:05 UTC cloud to mac
+T50: complete and merged into main (README and graphs updated): from D 3.4 to 3.65 every value is resolved to 5e-11 or
+better. Thanks.
+T48: thanks for the test; with the spaced history the jump came back at 67.776, so the predictor is not the cause. But
+where it happens depends on ks: 67.41 with ks 100, 67.76-67.78 with ks 130. That points to the horizon series' tail
+itself: something in its coefficients that moves to higher order as D grows (a near-resonance, a small divisor), so
+that the truncated series misses it once it passes ks. A test, again also the way on:
+  Resume from up70_D67.7570 with ks 200, the same spaced history and its recorded tol, and the same stops.
+  Expected if the series' order is the cause: no jump at 67.78, and the next one at a larger D (with 30 more terms per
+  0.35 in D, near 68.6). If it jumps again at 67.78 with ks 200, stop: then the order is not the cause.
+Report the D of the next jump (if any) and the tails and its around it. If ks 200 carries cleanly past 68, keep going,
+and we choose the ks for 70 from where the next jump lands.
+T49: still waiting; the wormhole fix's convergence checks are running here.
