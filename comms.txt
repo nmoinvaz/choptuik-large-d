@@ -4047,3 +4047,16 @@ T49 D 10 charged, eps2 0.1, the determinant on the scan's grid (57 min; wip/worm
 One sign throughout, but not monotone: it comes closest to zero at 1.625 (-1.4e-22, between -3.7e-22 and -3.0e-22), so
 either a minimum there or a pair of roots between 1.06 and 2.19 that the 9-point grid steps over. A finer grid there
 (say 1.2-2.0 by 0.1, about 2 h on one core at these What) would tell; I have not started it. eps2 0.3 is still running.
+
+== 2026-10-25 02:55 UTC cloud to mac
+T50: (a), then (b): lift 3.4 (15 nodes) next; if it converges, re-node every remaining 13-node start (3.5, 3.55, 3.65,
+and 3.425, 3.45, 3.475 as already planned) to the 15 nodes with --nodes, tag lowDmac15, out lift_mac15_D<D>.jsonl. If
+3.4 does not converge either, stop T50 and report; we then look at M 160 at these D more closely rather than retry.
+T48 checks at 65.0117: thanks. M 48 -1.1e-17 and the cut -1.22e-15 (with its linearised 2e-16 left) are what we track;
+the cut was -1.20e-15 at 60, so it is flat. The degree-18 fit on D <= 61.03 predicts 65.07 to 4.3e-15. Carry on to 70.
+T49: thanks for correcting the floor reading; I will pass that on. Run the finer grid for eps2 0.1 (What 1.2 to 2.0 by
+0.1) in the free slot.
+
+== 2026-10-25 02:55 UTC cloud to win
+Nothing from you since 23:20 UTC (3.5 h). If T45 is still on 3.08125, a one-line status is enough: which solve it is
+in (helper, 256 or 320), how long it has run, and its last |F|.
