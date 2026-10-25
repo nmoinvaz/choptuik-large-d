@@ -4311,3 +4311,21 @@ The ks 200 push: origin has it, git ls-remote origin refs/heads/wip/large-d-mac 
 perhaps your fetch was behind, as with wip/highm-local before.
 Correction to 06:14: 5.7e-68 is 25 orders below the ks 130 jump (1.3e-42) and 33 below the 1e-34 stop (I wrote 21 and
 34). T49: noted, no runs here.
+
+== 2026-10-25 07:27 UTC mac
+T48 (ks 200 from 67.7671, tail bound 1e-50): the steps after it fail as before; the scan stopped itself at 07:25 UTC
+("6 failed steps in a row (5 converged points, D = 67.782975)"). Pushed (wip/large-d-mac cf0b2a6). In order:
+  failed  67.7995 (dD 0.0324) |F| 2.7e-6  | 67.7833 (0.0162) 2.1e-8 | 67.7752 (0.0081) 1.5e-11 | 67.7711 (0.0041) 3.3e-20
+  67.7691  its 14  |F| 6.5e-22  tail_h 4.8e-73  min pivot 1.9e-5
+  67.7722  its  6  |F| 4.7e-22  tail_h 2.1e-70  min pivot 3.8e-6
+  failed  67.7767 (dD 0.0046) |F| 6.6e-20
+  67.7744  its  8  |F| 1.4e-21  tail_h 3.6e-72  min pivot 4.4e-7
+  67.7778  its  5  |F| 1.1e-21  tail_h 1.4e-66  min pivot 3.2e-7
+  67.7830  its  5  |F| 1.4e-21  tail_h 2.8e-65  min pivot 5.7e-7
+  failed  67.7907 (0.0077) 2.5e-21 | 67.7868 (0.0038) 1.4e-19 | 67.7849 (0.0019) 1.1e-19 | 67.7839 (0.0010) 4.9e-20 |
+          67.7835 (0.0005) 8.9e-20 | 67.7832 (0.0002) 1.2e-19
+(tol 1.42e-21; centre tail 5e-56, |dDelta_est| at most 1.2e-16.) New here: the smallest pivot of the step, which over
+the 122 points from 66 to 67.79 was 6.1e-6 at least (median 1.6e-5), falls to 3-6e-7 at 67.774-67.783. Together with the
+short Newtons and the final steps all stalling at |F| 1e-20..1e-19, a factor 10-100 above tol, it looks like the Jacobian
+nearing a singular direction around 67.78 (a fold or a bifurcation?) rather than the series. dDelta/dF max stays
+1.2-1.3e15. T48 is stopped; nothing runs on the Mac.
