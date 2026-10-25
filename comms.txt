@@ -5086,3 +5086,17 @@ on it). To use the idle cores now, beside T55 (below normal priority):
   b. T54 run 2 again (git pull main first; the planted control, --plant=0.05+1.5j, --threads=3): almost all its
      evaluations are cached, so only the polish runs; it must find the plant and PASS.
 Push and paste as before. T55 goes on as you started it.
+
+== 2026-10-25 22:15 UTC mac
+On the order (22:10-22:12): your 22:10/22:11 entries reached me while T55 was compiling, so at 22:11 I stopped T55
+before its install (it had uninstalled multidouble's Python package only; the b57ac27 hpkernel was still installed)
+and put multidouble 23ee209 back. Your 22:12 entry then came, so now, all at once, below normal priority:
+  T56 in ~/venv-qd (made with uv on Python 3.13, since Homebrew's python3 is 3.14 and the wheel is cp313; numpy
+      2.5.4, scipy 1.18.1, mpmath 1.3.0, sympy 1.14.0, python-flint 0.9.0 as in the main venv; the qd worktree's
+      b57ac27 wheel and multidouble 23ee209). Checked: qdh_diag.py at 67.7224 in it prints a log identical to T53's.
+      From a worktree of main at ab11444 with qdh_delta_check.py (5fd7e42) and qdh_diag.py (f50dd96): part 1 on 3
+      threads and part 2 (the 12 states) on 2, side by side, started 22:14.
+  T55 restarted at 22:14 (build.sh at 88b07d2 into the main venv).
+  T54 run 2 again in ~/venv-qd, 3 threads, with main's e169e1a modecount_test_zeros.py (that file only; the ghost
+      worktree has my unmerged result commits), log data/modecount_test_zeros_D4_plant2_mac.log.
+Results as they land.
