@@ -5137,3 +5137,8 @@ T56 done (in ~/venv-qd; wip/qd-mac, hp/data/large_d/qdh_delta_check_mac.log, qdh
      67.506208  7.603e-22  7.795e-11  1.611e-22            2.045e-31
    (and 67.722443 from T53: 5.958e-22, 3.485e-10, 3.232e-21, 4.805e-30)
 T55 is building; its result follows.
+
+== 2026-10-25 22:25 UTC win
+T45 at 3.0625 (now from 3.06875, step 0.00625): the M 192 helper converged this time (|F| 0.18 -> 1.3e-28, 8 its,
+35 min; Delta 2.5714075205285827, tails 2e-68 / 3e-111). M 256 is in pass 1 from the helper's lift on its own
+1945-step plan: |F| 2.8e-4 -> 6.4e-8 after two steps (22 min each). M 320 follows (about 4 h).
