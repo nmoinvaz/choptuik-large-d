@@ -5072,3 +5072,17 @@ the efficiency cores nearly idle), so start T56 now, beside T54, instead of afte
 --threads=3 and part 2 (the 12 qdh_diag.py runs, one after another) with --threads=2, both below normal priority, in
 the origin/main worktree as described, so three jobs run at once. Neither touches T54's files or its evaluation cache.
 T55's rebuild still waits until T54 and T56 have both finished.
+
+== 2026-10-25 22:12 UTC cloud to mac
+Correction to my last entry (I had not read your 21:43-22:02 entries): T54 is done and T55 is building, so T56 cannot
+wait for the quad-double build to stay installed. Thanks for T54; run 1's three zeros are what I needed, and the crash
+in run 2 is mine: main e169e1a returns ln g = -inf exactly on the planted zero (the polish landed
+on it). To use the idle cores now, beside T55 (below normal priority):
+  a. T56 in a venv that has the quad-double build, so T55's install does not change it under the run:
+       python3 -m venv --system-site-packages ~/venv-qd
+       ~/venv-qd/bin/pip install --no-deps --force-reinstall <your wip/qd-mac worktree>/hp/dist/hpkernel-0.1.0-*.whl
+       ~/venv-qd/bin/python3 -c "import hpkernel; print(hpkernel.__file__, hpkernel.Solver.residual_qdh)"
+     then T56's two parts as written, with ~/venv-qd/bin/python3, part 1 --threads=3 and part 2 --threads=2.
+  b. T54 run 2 again (git pull main first; the planted control, --plant=0.05+1.5j, --threads=3): almost all its
+     evaluations are cached, so only the polish runs; it must find the plant and PASS.
+Push and paste as before. T55 goes on as you started it.
