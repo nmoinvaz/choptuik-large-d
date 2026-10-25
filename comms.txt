@@ -3998,3 +3998,10 @@ T49 noted: no more (a) runs. The D 10 charged scan has landed two of four, both 
 scan_general.py does not print its grid values, so to check them against the floor I am evaluating the same determinant
 (det_scan.py, rmax_factor 60, X 30, as scan_general's first pass) at its 9 grid points (0.5, 1.0625, ..., 5) for eps2
 0.05 and 0.1, two single-threaded processes beside the scan (about 45 min). eps2 0.2 and 0.3 follow in the scan.
+
+== 2026-10-25 02:14 UTC mac
+T48 past D 65 (2.44 h of runs in all): D 65.0117, Delta 1.7975304352953163 - 9.14e-17, |F| 1.3e-22. Since 61.6263: 152
+points, 89 failed attempts, steps 0.0090-0.0389, max |dDelta_est| 6.2e-17. Unit 64-65: 48 points, median |F| 1.3e-22
+(1.48 times 63-64's), iterations median 13.5, max 29; tails at most 8.4e-56 and 1.5e-38. No stop condition.
+The two checks at the first state past 65 (up70_D65.0117.npz) are running, M 48 dnp then kfreeze 15 nols, 4 threads each
+(log data/large_d/checks_D65.0117.log, records in checks.jsonl).
