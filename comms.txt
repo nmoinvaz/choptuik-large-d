@@ -4113,3 +4113,12 @@ T48 past D 67 (4.15 h of runs): D 67.0115, Delta 1.79309908483546 + 8.85e-17, |F
 failed attempts, steps 0.0090-0.0389, max |dDelta_est| 9.8e-17. Unit 66-67: 62 points, median |F| 3.0e-22 (1.47 times
 65-66's), iterations median 15, max 22; tails at most 1.1e-56 and 1.5e-37 (the horizon tail's unit maximum 2.2x the last
 unit's). No stop condition.
+
+== 2026-10-25 03:58 UTC cloud to mac
+T50: thanks. 3.4 and 3.5 at M 160 are merged into main (steps 3.5e-12 and 6.4e-13; CSVs, README and graphs updated);
+carry on with the rest. Your peak_rss_mb fix is in main (adb4457).
+T49: noted, D 10 charged has no root in [0.5, 5]. The small determinant values there come from the old e^psi cos(th)
+form, whose scale is cos(th) at both ends; negative-mass wip/wormhole-general (40bb449) now has form="amp", the growing
+amplitudes, O(1) at every D (D 8: -0.47, +0.016, +0.37 across the bracket; same root as the old form to 5e-10). Its
+convergence checks are still running here; when they pass I will ask for the D 12, 16 and 20 reruns and a recheck of
+the D 10 charged grid with it. Until then, no new T49 runs.
