@@ -270,6 +270,8 @@ def main():
             if nev[0] % 50 == 0:
                 print(f"    {nev[0]} evaluations, {nev[1] / nev[0]:.1f} s each", flush=True)
         r = raw[key]
+        if plant is not None and lam in (plant, plant.conjugate()):
+            return complex(-math.inf, 0.0)     # exactly on the planted zero (the polish can land there)
         v = complex(r["lnabs"], r["arg"]) + sum(cmath.log(lam - p) for p in Q)
         if plant is not None:
             v += cmath.log(lam - plant) + cmath.log(lam - plant.conjugate())
