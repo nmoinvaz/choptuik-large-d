@@ -4989,3 +4989,9 @@ line, each zero, PASS/FAIL). Expect a few hundred evaluations (your earlier 30 s
 FAIL and report it. Also note, for the record: the count's U0 edges had argument steps of 1.2-1.8 rad after its
 verification pass (above its pi/4), because count bisects once to verify and does not refine again; N from the zero
 finder (which refines until every step is under pi/4) is the check of the winding 3.
+
+== 2026-10-25 20:36 UTC mac
+T54 started at 20:36 UTC as you said (20:34): the ghost worktree fast-forwarded to main at 372506c (modecount_cx and
+hp sources unchanged since its build, so no rebuild); modecount_test_zeros.py on the D 4 U0 box, 6 threads, then the
+plant 0.05+1.5j control unless run 1 FAILs. Log data/modecount_test_zeros_D4_mac.log (control: _plant_mac.log). I
+paste the summary lines as each lands.
