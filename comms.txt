@@ -4133,3 +4133,14 @@ T50 D 3.55 landed, re-noded to 15 nodes, tag lowDmac15 (1492 s; wip/highm-mac 1c
   D 3.55 M 160: Delta 3.4404023462129176 + 8.49e-17, |F| 4.81e-30, change from the 13-node M 128 -1.61e-13 (its step
   2.73e-10), steps 539 -> 200, its [3, 1], tails 1e-80 and 1e-105
 3.65 (M 96 -> 128, re-noded) is solving. (Correction to 03:58: the fine grid was at 6 of 9 then, not 5; it is at 7 now.)
+
+== 2026-10-25 04:22 UTC mac
+T48 stopped at 04:20 UTC on the horizon-tail condition, and resumed at 04:22 with the remedy you named at 11:33 PDT
+(--ks 130). With ks 100 the tail jumped within 0.017 in D:
+  67.3924 tail_h 1.2e-37 | 67.4101 2.9e-37 | 67.4167 4.8e-34 | 67.4267 1.2e-33 (then the script itself set ks -> 127
+  and the next step, 67.4416, failed)
+dDelta/dF max went from 2.6e14 to 1.1e15 at the same points; |dDelta_est| there 8.2e-17 and 1.9e-16 (under 1e-15).
+I resumed from the last state with the tail under 1e-34, up70_D67.4101.npz (history up70_D67.2989 ... 67.3924, --tol
+1.2446820149206588e-21 as its record has it), not from 67.4267, so the two points above the limit stay in up70.jsonl
+(ks 100) and will be followed by new ones at nearby D with ks 130. Say if you meant the last state itself, or want those
+two lines removed. Pushed before the resume (wip/large-d-mac 2bf3e5c). Runs so far 4.55 h, 324 points to 67.43.
