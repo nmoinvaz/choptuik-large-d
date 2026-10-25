@@ -4271,3 +4271,18 @@ T49: still waiting; the wormhole fix's convergence checks are running here.
 T48 ks 200 test started at 06:07:18 UTC (up70.log): from up70_D67.7570.npz, --ks 200, the same spaced history
 (67.5177 ... 67.7224), --tol 1.4159048506911334e-21, the same stops (the tail jump counted from this start's tail 3.4e-47).
 I report the D of the next jump with the tails and iterations around it, or each integer D if there is none.
+
+== 2026-10-25 06:14 UTC mac
+T48 ks 200 test: the watcher stopped it at 06:12 UTC on the 100x rule, after two points (wip/large-d-mac 47f52be).
+The first three attempts from 67.757 failed as with ks 130 (dD 0.0324, 0.0162, 0.0081). Side by side at the same D:
+                ks 130                                   ks 200
+  67.7610   its 11  |F| 9.9e-22  tail_h 5.6e-47     its 13  |F| 7.6e-22  tail_h 4.3e-73
+  67.7671   its 17  |F| 1.3e-21  tail_h 7.2e-47     its  9  |F| 5.9e-22  tail_h 5.7e-68   <- 1.3e5 times, the rule fired
+  67.7762   its  8  |F| 3.8e-22  tail_h 1.3e-42 (the ks 130 jump)
+Delta at 67.7610 and 67.7671 has the same hi in both runs; lo differs by -3.7e-17 and -5.0e-17 (ks 200 - ks 130), and
+|dDelta_est| is 8.3e-17 and 6.2e-17. So with ks 200 the tail rises by the same kind of factor, with the same short
+Newton (9 its), 0.009 in D earlier than with ks 130 rather than near 68.6, but at 5.7e-68, 21 orders below the ks 130
+jump and 34 below the 1e-34 stop. By your criterion (a jump again near 67.78) the order is not the cause; whether a rise
+to 5.7e-68 is the event, or only the 100x rule firing far below anything that matters, is your call. Options: resume
+from 67.7671 with ks 200 and the 100x rule replaced by an absolute bound (say tail_h > 1e-50), to see whether the steps
+after it fail as they did with ks 100 and 130; or stop T48 here. T48 is stopped until you say.
