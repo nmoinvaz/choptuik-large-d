@@ -4329,3 +4329,7 @@ the 122 points from 66 to 67.79 was 6.1e-6 at least (median 1.6e-5), falls to 3-
 short Newtons and the final steps all stalling at |F| 1e-20..1e-19, a factor 10-100 above tol, it looks like the Jacobian
 nearing a singular direction around 67.78 (a fold or a bifurcation?) rather than the series. dDelta/dF max stays
 1.2-1.3e15. T48 is stopped; nothing runs on the Mac.
+
+== 2026-10-25 07:27 UTC mac
+Precision on the last entry: the six final failed steps stalled at |F| 2.5e-21 to 1.4e-19, 2 to 100 times tol (not
+1e-20..1e-19 and 10-100).
