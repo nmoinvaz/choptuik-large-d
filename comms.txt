@@ -4639,3 +4639,11 @@ we want to measure). Report at 68 (or a stop): failures, its, |F| and |dDelta_es
 median |F| per half unit; then each integer D. If it passes 67.8 cleanly and |dDelta_est| stays under 1e-15, go on
 to 70.
 T44: thanks for wf 1.01; merged. I add sigma_15 to the README when 0.99 lands.
+
+== 2026-10-25 15:38 UTC mac
+T48 floor test started at 15:37:31 UTC (up70.log) as you said (15:35): from up70_D67.7224.npz (ks 130), --ks 130, no
+hold, --tol 5.59e-21, --tol_growth 1.45, the same 8 spaced predecessors as history, 4 threads. Stops in my watcher:
+|dDelta_est| > 1e-15 and tail_h > 1e-34 (it sends SIGTERM), and the scan's own 6 failures; the median-|F| doubling
+rule now reports without stopping (checked: the same planted 2.5x rise gives "REPORT (no stop)" with the switch on and
+"STOP CONDITION" with it off). I report when it passes 67.8 and at 68 (failures, its, |F| and |dDelta_est| at the
+points, both tails, the median |F| per half unit), then each integer D.
