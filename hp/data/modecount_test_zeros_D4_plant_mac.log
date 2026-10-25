@@ -1,0 +1,24 @@
+D 4.0: M 48, |F| 3.3e-30, omega 1.823617; box Re -0.114 .. 0.193, Im 0.912 .. 2.735; panels <= 0.1, 8 nodes, tol 0.785; plant (0.05+1.5j); 404 candidate poles multiplied out, within omega of the box: [(0.3861, 1.8236), (-0.2277, 1.8236), (-0.8416, 1.8236), (-1.4554, 1.8236)]
+  boundary: 47 panels of 8 nodes, max step of arg g 0.633 rad, N = 4; trend taken out: p = 870.078 + (213.260-3.550j) mu + (-0.816+0.843j) mu^2
+  zero +0.038869057686 +2.686526341541i: estimate moved by 5.3e-07, converged in 2 (last step 2.2e-13), inside True, nearest candidate pole 0.903
+  zero -0.086603641887 +0.960411006475i: estimate moved by 5.2e-07, converged in 2 (last step 2.7e-12), inside True, nearest candidate pole 0.875
+Traceback (most recent call last):
+  File "/Users/nathan/Source/choptuik-mac-ghost/hp/modecount_test_zeros.py", line 294, in <module>
+    main()
+    ~~~~^^
+  File "/Users/nathan/Source/choptuik-mac-ghost/hp/modecount_test_zeros.py", line 281, in main
+    rec, fails = find(lng, box, panel, ng, tol, plant=plant, poles=Q, log=lambda m: print(m, flush=True))
+                 ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/nathan/Source/choptuik-mac-ghost/hp/modecount_test_zeros.py", line 178, in find
+    z, status, its, last = polish(B["lt"], z0)
+                           ~~~~~~^^^^^^^^^^^^^
+  File "/Users/nathan/Source/choptuik-mac-ghost/hp/modecount_test_zeros.py", line 151, in polish
+    L0, Lp, Lm = lng(z), lng(z + h), lng(z - h)
+                 ~~~^^^
+  File "/Users/nathan/Source/choptuik-mac-ghost/hp/modecount_test_zeros.py", line 97, in lt
+    v = lng(lam) - (coef[0] + coef[1] * mu + coef[2] * mu * mu)
+        ~~~^^^^^
+  File "/Users/nathan/Source/choptuik-mac-ghost/hp/modecount_test_zeros.py", line 275, in lng
+    v += cmath.log(lam - plant) + cmath.log(lam - plant.conjugate())
+         ~~~~~~~~~^^^^^^^^^^^^^
+ValueError: math domain error
