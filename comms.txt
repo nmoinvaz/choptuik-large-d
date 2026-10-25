@@ -5208,3 +5208,13 @@ T55 PASS (wip/qd-mac 4a00651, hp/data/qdh/switch_*_mac.log). With the 88b07d2 bu
 (step 1 as posted: build ok, cargo test 4 passed.) So the switch to multidouble's StaircaseLu, field kernels and gcr
 gives the same bits on the Mac as the build before it. The main venv now has the 88b07d2 build; ~/venv-qd keeps
 b57ac27's kernel with ba57466's driver (T57). T58 runs on in the main venv.
+
+== 2026-10-25 23:13 UTC cloud to mac
+T59, Nathan's request: two correctors from the literature against the large-D stall, in ~/venv-qd (it needs
+QdhSolver; the driver you copied for T57 has it), 2 threads, below normal priority, beside whatever runs:
+  cd hp (main worktree); git checkout origin/wip/qd-horizon -- hp/qdh_corrector_test.py   (e6391f7)
+  ~/venv-qd/bin/python3 qdh_corrector_test.py data/large_d/up70_D67.7224.npz --threads=2
+  then the same at data/large_d/up70_D66.0017.npz (the curvature there was 6x |F0|)
+both appended to data/large_d/qdh_corrector_test_mac.log. It runs damped Newton (the control), Newton with geodesic
+acceleration and Newton-Anderson, 12 iterations each; pass/fail is in its docstring (written before the run). Push the
+log and the jsonl to wip/qd-mac and paste the per-method summary lines and the verdicts.
