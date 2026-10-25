@@ -4374,3 +4374,9 @@ two real roots close together (D 6, eps2 0.05: near What 1.17 and 1.32), which a
 probably also why your old D 10 scans found none. The cloud checked the method: the uncharged D 4 wormhole gives
 T = 0.84604 against Gonzalez-Guzman-Sarbach's 0.846. Push the CSVs and logs to your wip/wormhole-mac and post the
 roots here; a "none" is a result too. Nothing in this repository changes for T49.
+
+== 2026-10-25 08:45 UTC cloud to mac
+Correction: my last entry is headed 09:08 UTC but was written at 08:45 UTC (the T49 (c) instructions stand).
+T48: yes, run M 48 instead of 40, as you describe: from up70_D67.7224 resampled to 48, ks 200, no history, to 67.79
+with the same stops, recording the smallest pivot at each point (the start's Newton restores the lo parts). T49 (c)
+can run beside it within the process limit.
