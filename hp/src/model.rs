@@ -827,10 +827,13 @@ pub fn residual_qdh<const B: usize>(ctx: &Ctx<B>, z: [&[f64]; 4], par: bool) -> 
         let inp: Vec<Fl<DV, B>> = ctx.block_inputs(b).iter().map(|&o| ctx.fld(zh, zl, o)).collect();
         block_state::<DV, B>(ctx, b, &inp, DV::splat(delta), &lus, &lus)
     };
+    // block_state's horizon branch, called directly so that only the horizon series is instantiated with QV lanes
+    // (block_state would instantiate the centre series and the Taylor stepping too, for every B)
     let horizon = || -> State<QV, B> {
         let inq: Vec<Fl<QV, B>> = ctx.block_inputs(kb).iter().map(|&o| fld_qv::<B>(z, o)).collect();
         let dq = QV::splat(QD::new(z[0][l - 1], z[1][l - 1], z[2][l - 1], z[3][l - 1]));
-        block_state::<QV, B>(ctx, kb, &inq, dq, &lus, &lus)
+        let omega = <QV as BaseLane>::splat(DD::TWO_PI) / dq;
+        horizon_state(ctx, &inq[0], &inq[1], omega, &lus, &lus)
     };
     let (states, hq): (Vec<State<DV, B>>, State<QV, B>) = if par {
         rayon::join(|| (0..kb).into_par_iter().map(one_block).collect(), horizon)
