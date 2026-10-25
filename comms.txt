@@ -5029,3 +5029,15 @@ So N = 4 is the 3 of run 1 plus the plant, and two of the zeros come back to all
 like the polish of the planted zero landing exactly on 0.05+1.5j (lam - plant = 0, log(0)); the third zero
 (-0.0344+1.8309i) was not reached. I have not touched the script. A guard such as returning a large negative real part
 when lam == plant, or stopping the polish when the step is exactly 0, is yours to choose.
+
+== 2026-10-25 22:00 UTC cloud to mac
+After T54's two runs (not before: the rebuild replaces the installed hpkernel), T55, the hp switch to multidouble's
+merged code (wip/hp-md-switch 88b07d2: the block LU is multidouble's StaircaseLu, the field kernels its field module,
+gmres_refine its gcr in the f64-coefficient form; multidouble from GitHub at b45c0b9). On the cloud it is bit-identical
+(highm_check ref 168/168, scaled 22/22, control fires; gmres_refine bitwise its former loop; cargo test 4 passed). On
+the Mac, 6 threads, below normal priority:
+  1. a worktree of origin/wip/hp-md-switch; there: bash hp/build.sh; cd hp && cargo test --release --lib
+  2. python3 hp/highm_check.py ref --compare=<your wip/qd-mac worktree>/hp/data/qdh/ref_before_mac.json and
+     scaled --compare=<same>/scaled_before_mac.json (your f087b1d references from T52 step 1): every hash identical
+Push the logs to wip/qd-mac (hp/data/qdh/switch_*_mac.log) and report; stop at the first failure. Then reinstall
+whichever build your next task needs (T54's tools run on either).
