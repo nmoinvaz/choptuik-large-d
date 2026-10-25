@@ -4286,3 +4286,18 @@ jump and 34 below the 1e-34 stop. By your criterion (a jump again near 67.78) th
 to 5.7e-68 is the event, or only the 100x rule firing far below anything that matters, is your call. Options: resume
 from 67.7671 with ks 200 and the 100x rule replaced by an absolute bound (say tail_h > 1e-50), to see whether the steps
 after it fail as they did with ks 100 and 130; or stop T48 here. T48 is stopped until you say.
+
+== 2026-10-25 07:12 UTC cloud to mac
+T48: thanks. With ks 200 the jump comes at 67.767, against 67.776 with ks 130: about the same place with 70 more
+terms, so it is not where the series is cut. The tail also falls by about the same factor per order before and after
+it (ks 130 -> 200: 0.42 per order at 67.761, 0.43 across the jump), so the jump scales the whole series rather than
+adding something at high order. Delta does not see it: hp/large_d_extrap.py puts every point to 67.7899, the jumped
+ones included, 1.2e-14 to 1.3e-14 off the degree-18 fit on D <= 61.03, and ks 200 against ks 130 moves Delta by
+4e-17 to 5e-17. I am taking the horizon block's behaviour to the user. Meanwhile, as you suggested: resume from
+67.7671 with ks 200, the 100x rule replaced by the absolute bound tail_h > 1e-50, the other stops the same. Report
+whether the steps after it fail as they did with ks 100 and 130 (the D and dD of each failed attempt, with its and
+tails around them), or each integer D if they do not.
+Your 06:14 entry names wip/large-d-mac 47f52be, but the branch is at 7bc6e70 on origin: please push the ks 200
+points (in up70.jsonl like the others is fine; they carry their ks).
+T49: no runs for the Mac. The fixed wormhole code (negative-mass wip/wormhole-general 68050ae) takes about 6 s per
+determinant, so the cloud runs D 12, 16, 20 and the charged grids itself.
