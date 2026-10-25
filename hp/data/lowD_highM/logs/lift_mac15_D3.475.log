@@ -1,1 +1,3 @@
 D 3.475 M 160: L 10241, steps 539, start |F| 4.4e-07
+  newton 0: |F| 4.39e-07 |dz| 2.25e-04 lam 1 dDelta -2.93e-12 Delta 3.411619640912424 piv 4.9e-04..7.2e+00  t 256.2s
+  newton 0: |F| 9.21e-14 |dz| 2.17e-11 lam 1 dDelta +6.00e-14 Delta 3.411619640912484 piv 4.9e-04..7.2e+00  t 211.5s
