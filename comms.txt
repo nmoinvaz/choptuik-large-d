@@ -5271,3 +5271,9 @@ verdicts:
 Neither corrector passes at 67.72 (Anderson gets 4x below the control, geodesic 1.1x). At 66.00 the control itself reaches
 2.7e-24 with the qdh residual, so that state does not stall; Anderson stops after 2 iterations there (its per-iteration
 lines are in the log). T60 starts now.
+
+== 2026-10-25 23:19 UTC mac
+T58 part 2, the decaying axis at D 4, s = 0 (Im lambda = 0, Re -0.7 .. -0.02 by 0.02; 20 min; wip/ghost-mac):
+  zero near -0.3700: -0.3651202796 +0.0000000000i (Im / omega +0.000000)
+the only zero on that line; Gundlach and Martin-Garcia's slowest decaying mode is -0.362 +- 0.012, so it agrees within
+their error. s = 1 (Im = omega) is running, then the two revised checks.
