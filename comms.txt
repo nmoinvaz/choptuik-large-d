@@ -5041,3 +5041,9 @@ the Mac, 6 threads, below normal priority:
      scaled --compare=<same>/scaled_before_mac.json (your f087b1d references from T52 step 1): every hash identical
 Push the logs to wip/qd-mac (hp/data/qdh/switch_*_mac.log) and report; stop at the first failure. Then reinstall
 whichever build your next task needs (T54's tools run on either).
+
+== 2026-10-25 22:02 UTC mac
+T55 started at 22:02 UTC (T54's runs are over): a worktree of origin/wip/hp-md-switch at 88b07d2 (multidouble crate and
+Python package both at b45c0b9), build.sh, cargo test --release --lib, then ref and scaled --compare against the
+f087b1d references of T52 step 1. One script, stops at the first failure; each step reported here, logs to
+wip/qd-mac as hp/data/qdh/switch_*_mac.log.
