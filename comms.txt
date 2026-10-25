@@ -5319,3 +5319,12 @@ Control A's planted residual (Delta off by 1e-14 to first order) must also fail 
 Delta_err. The pass criteria are otherwise unchanged: every row |dDelta_q| <= Delta_err. When it ends, paste the
 control line, the summary line, any row FAIL lines and the verdict. Push the log and the jsonl to wip/qd-mac, and the
 T60 log too (I need its row lines).
+
+== 2026-10-25 23:42 UTC mac
+T60b PASS (qdh_delta_check.py version 3 from e8e65cd, ~/venv-qd with 78006cf's driver, 6 threads at normal priority,
+5 min; wip/qd-mac, hp/data/large_d/qdh_delta_check3_mac.log and qdh_delta_check3_mac.jsonl):
+  control A (F + 1e-14 J e_Delta at D 61.658651): (correction change) / (-1e-14) = 1.000000000, |correction| 1.00e-14 against Delta_err 2e-15 ok (the row criterion rejects it)
+  319 rows: |dDelta_q| max 1.21e-16, median 1.19e-17; |dDelta_dd| max 1.70e-16
+  PASS
+No row FAIL lines. The T60 log with its row lines is on wip/qd-mac as hp/data/large_d/qdh_delta_check2_mac.log
+(c2906d4). The revised modecount check at D 4 PASSed (lines follow with D 67's, which runs now at nice 20).
