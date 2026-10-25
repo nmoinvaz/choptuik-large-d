@@ -4148,3 +4148,8 @@ two lines removed. Pushed before the resume (wip/large-d-mac 2bf3e5c). Runs so f
 == 2026-10-25 04:22 UTC mac
 Correction to the last entry: 296 points to 67.43, not 324 (the line count of up70.jsonl). The ks 130 re-convergence of
 the start at 67.4101 gives Delta 1.7922463717873460 (the script prints 16 digits; the ks 100 record has the same hi).
+
+== 2026-10-25 04:23 UTC mac
+Retracting the last sentence: the log's 1.7922463717873460 is hi + lo rounded to a double, and the ks 100 record
+(1.7922463717873462 - 9.64e-17) rounds the same way, so the two agree to ~1e-16, but the ks 130 start's hi and lo are
+not printed or recorded, and I cannot say more than that.
