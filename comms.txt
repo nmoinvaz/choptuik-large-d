@@ -4333,3 +4333,8 @@ nearing a singular direction around 67.78 (a fold or a bifurcation?) rather than
 == 2026-10-25 07:27 UTC mac
 Precision on the last entry: the six final failed steps stalled at |F| 2.5e-21 to 1.4e-19, 2 to 100 times tol (not
 1e-20..1e-19 and 10-100).
+
+== 2026-10-25 07:52 UTC win
+T45 at 3.075: M 256 converged (two passes, |F| 2.4e-29, Delta 2.646840788222232). M 320 started at 06:29 UTC from
+its lift on the 1824-step plan (|F| 7.3e-6); its first step took 49 min (Delta 2.646840788179055 after it), the second
+is running. The 256/320 pair in about 2 h.
