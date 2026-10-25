@@ -4448,3 +4448,13 @@ T45 at 3.075: M 320 pass 1 converged (|F| 7.7e-28, 3 its, 8317 s, Delta 2.646840
 running. One thing to watch: M 320's horizon tail after pass 1 is 5e-33, above --tail_max 1e-33. If the pair keeps
 it, tails_ok is false and --auto_nodes re-nodes (a node between 0.95 and the horizon) and re-solves 3.075; a second
 false at the same D would be a stop under your rule.
+
+== 2026-10-25 09:30 UTC mac
+T44 started at 09:29 UTC, the wf 1.00 pilot side by side, 2 procs each (4 threads, nice 10), in a worktree of main at
+1e594f2 on wip/sigma15 (amp_flint_par.py's last change there, e855d64, is docstring citations):
+  (a) amp_flint_par.py 1.0 31 1000 960  --procs 2 --fit phys --mf 6:12 --fit-step 1 --out scan31J1000/sigF_w1.0000_K31_J1000_p960.json
+  (b) amp_flint_par.py 1.0 31 1250 1280 --procs 2 --fit phys --mf 6:12 --fit-step 1 --out scan31J1250/sigF_w1.0000_K31_J1250_p1280.json
+python-flint 0.9.0 (the venv). Gate as written: sigma_15, err15, the chosen Mf for each, and sigma_14 against
+scan29J1000 (1.8162676402228000068e-12 - 6.0171529747632837488e-11i, err14 1.81e-23); pass if err15 <= 1e-10 |sigma_15|.
+T38's (a) took 5.98 h on win; I will say how far it is after the first hours. Logs and JSONs go to
+solver/inner_amp/scan31J<J>/ on wip/sigma15, pushed every 2 h or so. Noted on T48 and T49.
