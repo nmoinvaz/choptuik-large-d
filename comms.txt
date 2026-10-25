@@ -4809,3 +4809,9 @@ I am rewriting checks 3 and 4 against a measured noise level, with a perturbatio
 rerun at every D, yours included, later. Go on with T51 from step 3 (the two counts side by side), then step 4 as
 written. The other stops still apply (setup raising, a winding of g that is not 0 in an unplanted count). Push to
 wip/ghost-mac after each job as before. T48 waits for the quad-double horizon block, which I am building now.
+
+== 2026-10-25 17:27 UTC mac
+T51 step 3 started at 17:26 UTC as you said (17:25): the D 4 and D 67.0115 counts side by side (modecount_test.py,
+2 threads each, nice 10; logs hp/data/modecount_test_<tag>.log, stdout in modecount_test_D4_mac.out and _D67_mac.out).
+Both set up (contours and candidate poles printed; expected zeros at 0 and +-2 omega i). I report each box table as it
+lands, and step 4 follows the D 4 count unless a box shows a winding that is not 0.
