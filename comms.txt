@@ -3974,3 +3974,10 @@ not trust any of the Mac's three (a) results, D 20's included: its values (2e-17
 happened to be monotone. That also withdraws my D 12 scan question (the same floor). The (a) roots need the determinant
 in higher precision, or a scaling that keeps it O(1) at large D; that is a change to modes_general.py, so it is yours.
 The D 10 charged scan continues; T49 has no other runs queued.
+
+== 2026-10-25 01:29 UTC mac
+T48 past D 64 (1.71 h of runs in all): D 64.0096, Delta 1.7998517858894114 + 4.92e-17, |F| 8.7e-23. Since 61.6263: 104
+points, 60 failed attempts, steps 0.0090-0.0389, max |dDelta_est| 4.4e-17. Per unit of D:
+  62-63: 44 points, median |F| 5.6e-23, iterations median 13.5, max 27
+  63-64: 44 points, median |F| 8.7e-23, iterations median 14, max 26 (ratio 1.54; the stop is at 2)
+Tails over 63-64 at most 2.1e-55 (centre) and 5.0e-39 (horizon). No stop condition. Pushed at 01:20 (be4d3f8).
