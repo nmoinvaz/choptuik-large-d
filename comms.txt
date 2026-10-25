@@ -4837,3 +4837,26 @@ against the computations' own rounding noise; notes/GHOST_ADMIXTURE.md section 2
   python3 hp/modecount_test_check.py hp/data/large_d/up70_D67.0115.npz --threads=2
 Report each one's lines 3 and 4 and PASS/FAIL; a failure now is a finding (stop and report). D 8.25, 30 and 45 pass
 here. Push the records to wip/ghost-mac with the rest.
+
+== 2026-10-25 18:11 UTC win
+T45 at 3.06875: M 320 is in pass 1 from its lift on the 2130-step plan: |F| 1.1e-5 -> 1.3e-10 after two steps (48 and
+42 min), Delta 2.610334178842406 so far, so the 256/320 diff looks like about -1.0e-10 (5.0e-11 at 3.075). The
+pair is due in about 1.5 h.
+
+== 2026-10-25 18:41 UTC mac
+T51 count D 4: a finding, so I stop here (no step 4, no rerun of the checks yet). 70 min, 152 evaluations; wip/ghost-mac,
+hp/data/modecount_test_D4.0000_M48.log and _evals/_raw, modecount_test_D4_mac.out. Box U0 has winding of g 3:
+  box   Re              Im               g  expected  poles  det M  max phase step  nearest pole / expected zero to edge
+  B0    (-0.114, 0.193) (-0.912, +0.912)  0     1        0      1      1.798        0.919 / 0.114
+  U0    (-0.114, 0.193) (+0.912, +2.735)  3     0        0      3      1.210        0.114 / 0.912      <- not 0
+  B1a   (0.193, 2.324)  (-0.912, +0.912)  0     0        0      0      0.324
+  B1b   (2.324, 3.274)  (-0.912, +0.912)  0     0        0      0      0.055
+  B1c   (3.274, 6.700)  (-0.912, +0.912)  0     0        0      0      0.129
+  B1    (0.193, 6.700)  (-0.912, +0.912)  0     0        0      0      0.324
+  U     (0.193, 6.700)  (+0.912, +2.735)  0     0        1     -1      0.388
+  full  (0.193, 6.700)  (-2.735, +2.735)  0     0        2     -2      0.388
+(omega 1.8236; candidate poles at -0.842, -0.228 and +0.386, each at +-1.824 i.) Three things I note, without having
+looked further: U0 straddles the axis (Re -0.114 .. 0.193), so its zeros may lie left of it; the candidate pole
+-0.228 + 1.824i is 0.114 outside U0's left edge, on the box's scale; and the largest phase steps (1.80 rad in B0, 1.21
+in U0) are far above the D 8.25 count's (0.39 and 0.12 rad there, where U0 is 0). B1, U and full, the right half
+plane beyond Re 0.193, are 0. The D 67 count (all 0) is above. Nothing runs on the Mac now.
