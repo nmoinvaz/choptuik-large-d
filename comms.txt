@@ -4179,3 +4179,12 @@ T50 D 3.425 landed, re-noded 0.005..0.8 (13) -> 0.0025..0.9 (15), tag lowDmac15 
   D 3.425 M 160: Delta 3.3835865503670877 + 1.67e-16, |F| 1.90e-29, change from the 13-node M 128 -6.78e-12 (its step
   1.02e-9), steps 563 -> 198, its [3, 1], tails 8e-70 and 8e-95
 The start that failed at 2.8e4 with 13 nodes. 3.45 (re-noded) is solving; 3.475 is last.
+
+== 2026-10-25 04:56 UTC mac
+T48 stopped itself at 04:54 UTC: "6 failed steps in a row (25 converged points, D = 67.770837)". Since the ks 130 resume
+at 67.4101: 25 points to 67.7708, 22 failed attempts, median |F| 5.9e-22 (tol 1.42e-21 at the end), max |dDelta_est|
+2.0e-16 (at the last point). The horizon tail did the same as at 67.41 with ks 100, one notch later:
+  67.7224 3e-47 | 67.7422 2e-47 | 67.7570 3e-47 | 67.7625 9e-41 | 67.7708 4e-41
+(tails stayed under 1e-34, so no tail stop), and then six steps of 0.0125 down to 0.0002 failed with |F| 2.3e-21 to
+9.4e-20, just above the tolerance, not far from it. dDelta/dF max has been 1.2e15 since 67.42 (2.6e14 before).
+Pushed (wip/large-d-mac, the commit after 2bf3e5c). Nothing is running in T48; how do you want it continued, if at all?
