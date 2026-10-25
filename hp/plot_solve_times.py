@@ -7,8 +7,8 @@ github.com/nmoinvaz/speedy-gonzales (skills/graph-data). Prints the plotted numb
 
 Data: data/solve_times.csv, written by --export from the solve records: data/lowD_dd*.jsonl and
 data/lowD_highM/*points*.jsonl (low D; a solve copied into several files counts once), the cloud runs' scan_up*.jsonl
-(SCAN_DIR, default /home/claude/dss/hp_scan, as for export_dd.py), data/local/scan_up*.jsonl (the Windows machine) and
-data/large_d/pilot_cloud/pilotB.jsonl.
+(SCAN_DIR, default /home/claude/dss/hp_scan, as for export_dd.py), data/local/scan_up*.jsonl (the Windows machine),
+data/large_d/pilot_cloud/pilotB.jsonl and data/large_d/up70*.jsonl (the Mac).
 
     cd hp && python3 plot_solve_times.py [--export [SCAN_DIR]]
 """
@@ -26,7 +26,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 CSV = os.path.join(HERE, "data", "solve_times.csv")
 REPO = "https://github.com/nmoinvaz/choptuik-large-d"
 WIDTH, X, W = 1080, 80, 952
-MACHINE = {"cloud": "cloud (2 shared cores)", "win": "Windows i7-1185G7"}
+MACHINE = {"cloud": "cloud (2 shared cores)", "win": "Windows i7-1185G7", "mac": "Mac, Apple M5 (4 threads)"}
 # where the continuation runs' settings changed (README, "The double-double solver"): run, label, callout offsets
 CHANGES = (("up2", "M 48 → 32 τ modes, 10 → 8 nodes", 26, 40),
            ("up3", "centre series 80 → 260+ terms, 5 nodes", 26, -40),
@@ -79,6 +79,8 @@ def export(scan):
     runs = [("cloud", f) for f in sorted(glob.glob(os.path.join(scan, "scan_up*.jsonl")))]
     runs += [("win", f) for f in sorted(glob.glob(os.path.join(HERE, "data", "local", "scan_up*.jsonl")))]
     runs += [("cloud", os.path.join(HERE, "data", "large_d", "pilot_cloud", "pilotB.jsonl"))]
+    runs += [("mac", f) for f in sorted(glob.glob(os.path.join(HERE, "data", "large_d", "up70*.jsonl")))
+             if not f.endswith("_attempts.jsonl")]
     if not runs[0][1].startswith(scan):
         sys.exit(f"no scan_up*.jsonl in {scan}: the cloud runs' records are needed for --export")
     for machine, f in runs:
@@ -137,8 +139,8 @@ def plot():
             dx=30, dy=-22)
 
     y2 = y + h + 92
-    cc, cw = SERIES[2], SERIES[3]
-    legend(svg, WIDTH - 16, y2, [(MACHINE["cloud"], cc), (MACHINE["win"], cw)])
+    color = {"cloud": SERIES[2], "win": SERIES[3], "mac": SERIES[4]}
+    legend(svg, WIDTH - 16, y2, [(MACHINE[m], color[m]) for m in ("cloud", "win", "mac") if any(p[0] == m for p in large)])
     dmin, dmax = min(p[2] for p in large), max(p[2] for p in large)
     yb = caption(svg, X, y2, f"{dmin:g} ≤ D ≤ {dmax:.1f}: seconds per continuation point",
                  "The Newton solve of each accepted point; failed steps are not counted. Hover a point for its run, "
@@ -152,7 +154,7 @@ def plot():
     # Hundreds of points: small dots, each with its hover title, instead of 11px ringed markers
     for m, run, D, s, its in large:
         tip = esc(f"D = {D:.4f}: {s:.1f} s, {its} iterations ({MACHINE[m]}, run {run})")
-        svg.add(f'<circle cx="{xm2(D):.1f}" cy="{ym2(s):.1f}" r="2.4" fill="{cc if m == "cloud" else cw}">'
+        svg.add(f'<circle cx="{xm2(D):.1f}" cy="{ym2(s):.1f}" r="2.4" fill="{color[m]}">'
                 f'<title>{tip}</title></circle>')
     for run, label, dx, dy in CHANGES:
         p = min((p for p in large if p[1] == run), key=lambda p: p[2])
@@ -166,8 +168,8 @@ def plot():
         print(f"  D {k:2d}-{k + 5:2d}: {v[len(v) // 2]:6.1f} s over {len(v):3d} points (max {v[-1]:.0f})")
     print(f"  all: {len(large)} points, {sum(secs) / 3600:.1f} h of solves")
     height = footnote(svg, ["hp/data/solve_times.csv (plot_solve_times.py --export)"], "wall-clock seconds of each solve",
-                      ["machines and thread counts differ (cloud 2 shared cores; Windows 4-6 threads), and the solver "
-                       "settings changed between runs"], yb + h2 + 46, repo_url=REPO)
+                      ["machines and thread counts differ (cloud 2 shared cores; Windows 4-6 threads; Mac 4 threads), "
+                       "and the solver settings changed between runs"], yb + h2 + 46, repo_url=REPO)
     with open(os.path.join(HERE, "solve_times.svg"), "w") as fh:
         fh.write(svg.finish(height))
 

@@ -674,10 +674,10 @@ than double-double at D = 40–60. Every converged run gives the same Δ to 1.1�
 `--export` writes from the solve records). Below D = 4 a point costs hours: about 77 in all, counting every
 resolution, both passes of each lift and the failed and check solves. The solve that gives the value is mostly under
 an hour above D = 3.2 and 2.5–2.8 h at M = 320 at D = 3.1 and 3.0875; D = 3.7 took 16 h because the resolution study
-ran there. Above D = 8.25 each accepted continuation point's Newton solve takes 6–130 s, 8.1 h for all 893 points
+ran there. Above D = 8.25 each accepted continuation point's Newton solve takes 6–130 s, 8.5 h for all 955 points
 (failed steps are not recorded). The cost hardly grows with D; its steps come from the runs' settings, marked on the
-graph. The machines differ (the cloud's 2 shared cores, the laptop's 4–6 threads), so this shows the effort, not a
-benchmark.
+graph. The machines differ (the cloud's 2 shared cores, the laptop's 4–6 threads, the Mac's 4 performance cores, from
+D = 61.63 at a median of 23 s), so this shows the effort, not a benchmark.
 
 <details>
 <summary>Checks of the solver</summary>
