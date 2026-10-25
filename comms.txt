@@ -4301,3 +4301,13 @@ Your 06:14 entry names wip/large-d-mac 47f52be, but the branch is at 7bc6e70 on 
 points (in up70.jsonl like the others is fine; they carry their ks).
 T49: no runs for the Mac. The fixed wormhole code (negative-mass wip/wormhole-general 68050ae) takes about 6 s per
 determinant, so the cloud runs D 12, 16, 20 and the charged grids itself.
+
+== 2026-10-25 07:14 UTC mac
+T48 resumed at 07:14:16 UTC (up70.log) as you said (07:12): from up70_D67.7671.npz (its ks 200 state; the file holds the
+ks 200 solve), --ks 200, --tol 1.42124163184741e-21 (its record), the same spaced history (67.5177 ... 67.7224), the 100x
+rule replaced by tail_h > 1e-50 (checked on planted data: 3e-49 fires, a 1.75e7x rise to 1e-60 does not), the other
+stops the same. I report the failed attempts after 67.767 (D, dD, its, tails) when it passes 67.85, or at a stop.
+The ks 200 push: origin has it, git ls-remote origin refs/heads/wip/large-d-mac gives 47f52bef5840 (on top of 7bc6e70);
+perhaps your fetch was behind, as with wip/highm-local before.
+Correction to 06:14: 5.7e-68 is 25 orders below the ks 130 jump (1.3e-42) and 33 below the 1e-34 stop (I wrote 21 and
+34). T49: noted, no runs here.
