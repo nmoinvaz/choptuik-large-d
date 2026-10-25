@@ -230,8 +230,9 @@ D = 3.7 to 3.4, while M = 96 → 128 stays at 1–2×10⁻⁹ down to D = 3.4. B
 to 256 is 9×10⁻¹², and at 3.125, 3.11875, 3.1125 and 3.1 it is 1.9, 2.8, 3.8 and 5.5×10⁻¹⁰; at 3.1 the next
 step, 256 → 320, is 7.2×10⁻¹³. At 3.0875 the steps are 1.8×10⁻⁹ and 7.0×10⁻¹², ten times those at 3.1 for 0.0125
 in D, at 3.08125 4.3×10⁻⁹ and 2.1×10⁻¹¹, and at 3.075 (the lowest point so far) 1.0×10⁻⁸ and 5.0×10⁻¹¹. At 3.075
-the M = 320 horizon-series tail, 5×10⁻³³, is above the run's 10⁻³³ bound; the re-noding that the bound calls for
-failed (|F| = NaN on the new last segment), so the run stopped there. At D = 3.40 the second machine's M = 128 Newton (13
+the M = 320 horizon-series tail, 5×10⁻³³, was above the run's 10⁻³³ bound, so a node was added at 0.975, taken from
+the horizon series (integrating out from 0.95 passed the series' nearest singularity and gave NaN); on the 20 nodes
+the tails are 3×10⁻⁵⁷ and 10⁻¹⁰⁷ and Δ moved by 2×10⁻³⁰. At D = 3.40 the second machine's M = 128 Newton (13
 nodes) converged to a solution with content along the near-null directions (its centre-series tail 10⁻⁹, against
 10⁻⁵⁰ at 3.425); the CSV lists it as polluted and does not use it. The cloud's M = 128 solve there (15 nodes) is clean
 (centre tail 4×10⁻⁷⁶). From it the Mac lifted D = 3.4 to M = 160. The second machine's 13-node states at 3.425–3.65 do
