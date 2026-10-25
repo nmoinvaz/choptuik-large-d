@@ -4005,3 +4005,11 @@ points, 89 failed attempts, steps 0.0090-0.0389, max |dDelta_est| 6.2e-17. Unit 
 (1.48 times 63-64's), iterations median 13.5, max 29; tails at most 8.4e-56 and 1.5e-38. No stop condition.
 The two checks at the first state past 65 (up70_D65.0117.npz) are running, M 48 dnp then kfreeze 15 nols, 4 threads each
 (log data/large_d/checks_D65.0117.log, records in checks.jsonl).
+
+== 2026-10-25 02:18 UTC mac
+T48 checks at the first state past 65 (up70_D65.0117.npz, Delta 1.7975304352953163 - 9.14e-17), 4 threads each:
+  M 48, dnp:        Delta 1.7975304352953163 - 1.024e-16, diff -1.09e-17, |F| 1.3e-22, est +1.9e-17, 154 s
+  kfreeze 15, nols: Delta 1.797530435295315 + 1.655e-17,  diff -1.22e-15, |F| 1.6e-19, est +2.0e-16, 69 s
+Both as expected (about 1e-17, and about 1e-15 for the cut). The kfreeze 15 solve stopped at the script's 12 iterations
+with |F| 1.6e-19, above the floor; its linearised correction (2.0e-16) is a sixth of the shift. Records in checks.jsonl,
+log checks_D65.0117.log; pushed to wip/large-d-mac (5fc4175) with the run so far.
