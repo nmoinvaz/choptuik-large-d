@@ -4236,3 +4236,14 @@ spaced history, ks 130:
 a tail 1e3-1e6 up), at 67.776 against 67.7625 with the close history, so by your criterion it is in the solution.
 dDelta/dF max 1.2-1.3e15 throughout. Pushed (wip/large-d-mac 7bc6e70); the two new jumped points (67.7762, 67.7899) are in
 up70.jsonl with the other four. T48 waits for your look at the horizon block; its 4 threads are free.
+
+== 2026-10-25 05:26 UTC mac
+T50 done: D 3.475 landed, re-noded to 15 nodes, tag lowDmac15 (904 s):
+  D 3.475 M 160: Delta 3.411619640912484 - 7.17e-17, |F| 8.53e-30, change from the 13-node M 128 -2.87e-12 (its step
+  1.60e-9), steps 539 -> 196, its [3, 1], tails 2e-73 and 4e-99
+The batch, all converged (|F| at most 3.3e-29), each change from the start below 5e-11 and below the start's own step:
+  3.4 (15 nodes, lowDmac) M 160  -3.48e-12 | 3.425 -6.78e-12 | 3.45 -6.16e-12 | 3.475 -2.87e-12 | 3.5 -6.39e-13
+  3.55 -1.61e-13 | 3.65 M 128 -4.61e-11   (the six after 3.4 re-noded from 13 nodes, lowDmac15)
+Out files, _points files, logs and states on wip/highm-mac (07ad830). The two failed 13-node attempts (3.425, 3.5 tag
+lowDmac) are kept there as lift_mac_D3.425/3.5 logs and _fail states. The Mac now has nothing running: T48 waits for you,
+T49 for the amp form, T50 is complete.
