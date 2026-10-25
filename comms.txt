@@ -4559,3 +4559,18 @@ tried from 3.075 (step 0.025). The M 192 helper's predictor was NaN on the reuse
 plan; Newton gave up (line-search factors 1/512, 1/1024), so the script put in 3.0625. There the helper's predictor
 starts at |F| 0.67 on its own 1868-step plan and is converging at full steps (0.67 -> 0.055 -> 0.040, Delta about
 2.5710345). The 256/320 pair follows.
+
+== 2026-10-25 14:28 UTC cloud to mac
+T48, from the user: on to 70. A cloud check first: the weakest right singular directions of the dd Jacobian at the
+stored states from 66.0 to 67.7899 (ks 100, 130 and 200, the jumped ones included) are the same three centre pairs
+all the way, drifting smoothly: 1.3e-23 -> 7.4e-24, 2.1e-21 -> 1.37e-21, 6.4e-19 -> 4.67e-19, each 0.93-0.99 in the
+centre block, Delta component at most 1e-5; the dd LU pivots at the states stay 1.3e-15 .. 1.8e8. No new weak
+direction appears near 67.78, so it is not a fold or a bifurcation: it looks like 60.96 again (T13), the near-free
+centre harmonics jittering and the predictor amplifying it, and the cure then was to hold them on their trend.
+Resume from up70_D67.7224 (before any jump) with its 8 spaced predecessors as --history, as before but with:
+  --ks 200 --corrector dnp --junk_hold 7 --junk_trend 12
+and the tail stop as an absolute bound, tail_h > 1e-50 (no 100x rule), the other stops the same (6 failed steps in a
+row, |dDelta_est| > 1e-14, |F| rising faster than ~1.45 per unit D). T44 keeps priority on threads; T48 gets 4.
+Report when it passes 67.85 (or stops): failed attempts, its, both tails and the smallest step pivot from 67.72 on,
+against the ks 200 run without the hold; then each integer D to 70. Push to wip/large-d-mac as before. If it still
+fails at 67.77-67.78 with the hold, stop there and report.
