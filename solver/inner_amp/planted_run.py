@@ -88,7 +88,7 @@ def run_plant(name, family, nodes, truth, scratch, labels=None, prod_labels=None
     with open(OUT, "a") as f:
         f.write(json.dumps(rec, default=jdefault) + "\n")
     DONE.add(name)
-    e = est[min(12, max(est))]
+    e = est[min(est, key=lambda K: abs(K - 12))]      # the order nearest 12 (K = 12 when it was run)
     print(f"{name:40s} truth {truth}  arg12 {fmt(e['arg'].get(12))} ratio12 {fmt(e['ratio'].get(12))} "
           f"pade {fmt(e['pade_central_mid'])} G12 {fmt(e.get('G'))}  ({rec['seconds']} s)", flush=True)
 

@@ -70,6 +70,11 @@ solves. Records: `hp/data/modecount_test_results.jsonl`; logs `hp/data/modecount
 | D | M | region | windings of g (B0, U0, B1a, B1b, B1c, B1, U, full) | zeros of det M_ψ | evaluations |
 |---|---|---|---|---|---|
 | 8.25 | 32 | −0.08 < Re λ < 6.70, \|Im λ\| < 3.51 (1.5ω) | 0, 0, 0, 0, 0, 0, 0, 0 | λ = 0 only | 87 (2.5 s each) |
+| 16.76 | 32 | −0.06 < Re λ < 6.26, \|Im λ\| < 4.30 | 0, 0, 0, 0, 0, 0, 0, 0 | λ = 0 only | 92 |
+| 30.07 | 32 | −0.15 < Re λ < 6.18, \|Im λ\| < 4.80 | 0, 0, 0, 0, 0, 0, 0, 0 | λ = 0 only | 94 |
 
-**Planted controls** on the same det M_ψ (`--plant`, the evaluations shared): a pair planted at 3.1 ± 1.0i is counted
-in B1c, B1 and full (2 each, 0 elsewhere).
+On the real axis det M_ψ keeps one sign from aL to aR at every D (no real growth rate in the symmetric sector), and
+the strips U count none in the other sector.
+
+**Planted controls** on the same det M_ψ (`--plant`, the evaluations shared), D = 8.25: a pair planted at 3.1 ± 1.0i
+is counted in B1c, B1 and full (2 each, 0 elsewhere); a pair at 1.0 ± 3.0i in U (1, its upper member) and full (2).
