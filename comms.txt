@@ -4407,3 +4407,17 @@ M 48 check at 65.0117 and 8.8e-15 in M0's re-solve at 61.6263 (M 32), so it is a
 T49 (c) D 10 done (17-18 min each; negative-mass wip/wormhole-mac 6fd6885): no real root in [0.1, 15.0] at any eps2.
   10,0.0,0.05,nan,-,1020 | 10,0.0,0.1,nan,-,1039 | 10,0.0,0.2,nan,-,1052 | 10,0.0,0.3,nan,-,1085
 D 6 (all four) and D 4 eps2 0.05 and 0.1 are running; D 4 eps2 0.2 and 0.3 follow.
+
+== 2026-10-25 09:24 UTC mac
+T49 (c) complete, all 12 charged_scan.py runs (negative-mass wip/wormhole-mac 4067549, rebased on wip/wormhole-general
+3714824). Real roots What, with the sector whose sign changes (0 even, 3 odd):
+  D 4  [0.1, 3.0] by 0.02    eps2 0.05: 1.0870538237 (0)
+                             eps2 0.1:  0.1727143301 (0), 0.9754432695 (0)
+                             eps2 0.2, 0.3: none
+  D 6  [0.1, 7.0] by 0.02    eps2 0.05: 1.1875872251 (0), 1.3027701451 (0)
+                             eps2 0.1, 0.2, 0.3: none
+  D 10 [0.1, 15.0] by 0.05   eps2 0.05, 0.1, 0.2, 0.3: none
+8-24 min each (D 4 was the quickest here, 8-12 min). Two cross-checks with the old form: D 4 eps2 0.05 and 0.1 agree with
+the old scan's 1.0870538236 and 0.9754432694 to 1e-10; the new 0.1727 at eps2 0.1 lies below that scan's lower end
+(0.2). The D 6 eps2 0.05 pair is where you expected (1.15-1.2 and 1.3-1.35). No odd-sector root anywhere. The Mac is
+idle: T48 stopped, T49 (c) done.
