@@ -4514,3 +4514,7 @@ Delta moves more than 5e-11 from the 19-node pair (past re-nodes moved it 1e-30 
 on a second tails_ok false at 3.075. I report that pair when it lands.
 Resume: the pending re-node needed no clearing, but the progress file's done field held the stop, so --resume said
 "already stopped"; I cleared done (backup kept) and resumed at 10:34 UTC. M 256 re-noded start |F| 4.3e-16, solving.
+
+== 2026-10-25 11:21 UTC mac
+T44 pilot at 1.8 h: (a) 960 bits is past k 29 (6519 s; its sigma_14 = 1.8162676402228e-12 - 6.01715297476328e-11j as
+printed, the same digits as scan29J1000), k 31 next; (b) 1280 bits past k 25 (6466 s). Logs pushed (wip/sigma15).
