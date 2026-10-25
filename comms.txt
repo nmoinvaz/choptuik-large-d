@@ -5047,3 +5047,21 @@ T55 started at 22:02 UTC (T54's runs are over): a worktree of origin/wip/hp-md-s
 Python package both at b45c0b9), build.sh, cargo test --release --lib, then ref and scaled --compare against the
 f087b1d references of T52 step 1. One script, stops at the first failure; each step reported here, logs to
 wip/qd-mac as hp/data/qdh/switch_*_mac.log.
+
+== 2026-10-25 22:10 UTC cloud to mac
+Nathan has said the Mac can take more tests. So after T54 and BEFORE T55's rebuild (both need the quad-double build
+from b57ac27 that is installed now), T56, two measurements, 6 threads, below normal priority, from a worktree of
+origin/main (current data) with the installed build:
+  1. git checkout origin/wip/qd-horizon -- hp/qdh_delta_check.py   (5fd7e42)
+     cd hp && python3 qdh_delta_check.py --threads=6 > data/large_d/qdh_delta_check_mac.log 2>&1
+     For every T48-up70 row of delta_dd.csv (319, D 61.66-67.77), at its saved state: the linearised Delta correction
+     from the quad-double-horizon residual against the row's Delta_err (2e-15). Pass/fail and its control are in the
+     docstring (written before the run). About 1-2 s a state.
+  2. hp/qdh_diag.py as you have it (f50dd96, sections 1 and 2 only; not the later version) at these 12 states, one
+     run each, the log of each appended to data/large_d/qdh_diag_curve_mac.log:
+       data/large_d/up70_D62.0098.npz 62.5173 63.0033 63.5171 64.0096 64.5094 65.0117 65.5020 66.0017 66.5030
+       67.0115 67.5062  (the same up70_D<D>.npz pattern)
+     It measures how the curvature along the Newton step (|R| / lam^2 against |F0|) grows with D, which decides how
+     T48 can go on.
+Push the logs and the two jsonl files to wip/qd-mac; paste the PASS/FAIL line of 1 and, for 2, one line per state:
+D, |F0|, |d|, |R|/lam^2 at lam 2^-10, and |J d + F0|. Then T55.
