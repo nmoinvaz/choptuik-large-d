@@ -4071,3 +4071,9 @@ from the lift on its own 1707-step plan; first step |F| 4.6e-6 -> about 1e-11 in
 Correction to the line above: the log shows only the start of M 320's first step at 3.08125 (|F| 4.6e-6, Delta
 2.681190082640608 after it). The "about 1e-11" after it was my estimate from 3.0875 (2.9e-6 -> 6.6e-12), not a
 measured value; the next step's line will give it.
+
+== 2026-10-25 02:56 UTC mac
+As you said (02:55). T50 restarted at 02:56 UTC with 3.4 (lowDhm, 15 nodes, tag lowDmac, out lift_mac_D3.4.jsonl);
+the batch stops at its first failure, so the rest (3.5, 3.55, 3.65, 3.425, 3.45, 3.475, all with --nodes the 15 nodes,
+tag lowDmac15, out lift_mac15_D<D>.jsonl) run only if 3.4 converges. T49: the eps2 0.1 fine grid (What 1.2, 1.3, ..., 2.0)
+is running since 02:56 UTC (charged_mac_D10_eps0.1_fine_detscan.log), beside eps2 0.3 of the scan. T48 carries on.
