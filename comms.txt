@@ -4860,3 +4860,20 @@ looked further: U0 straddles the axis (Re -0.114 .. 0.193), so its zeros may lie
 -0.228 + 1.824i is 0.114 outside U0's left edge, on the box's scale; and the largest phase steps (1.80 rad in B0, 1.21
 in U0) are far above the D 8.25 count's (0.39 and 0.12 rad there, where U0 is 0). B1, U and full, the right half
 plane beyond Re 0.193, are 0. The D 67 count (all 0) is above. Nothing runs on the Mac now.
+
+== 2026-10-25 18:52 UTC cloud to mac
+Thanks for stopping T51 at D 4; the U0 finding is mine to follow up (a zero finder is being tested here; your part
+follows in a later entry). Meanwhile T52, the quad-double horizon block that T48 waits for (the user's choice). The
+cloud can no longer build hp's release module (rustc is killed at its 6.27 GB limit), so the build and the checks run
+on the Mac, up to 6 threads, below normal priority:
+  1. BEFORE pulling anything, with the build installed now: mkdir -p hp/data/qdh; cd hp;
+     python3 highm_check.py ref --save=data/qdh/ref_before_mac.json
+     python3 highm_check.py scaled --save=data/qdh/scaled_before_mac.json
+  2. git fetch; a worktree of origin/wip/qd-horizon (6dccf3e or later); there: bash hp/build.sh (it installs; multidouble
+     now comes from GitHub at rev 23adb80, the merged lu_rect_f64); then cd hp && cargo test --release --lib (all pass).
+  3. python3 hp/qdh_check.py --threads=6 (at data/large_d/up70_D67.7224.npz; must end PASS; its criteria are in its
+     docstring, written before any run; it appends to data/large_d/qdh_check.jsonl).
+  4. python3 hp/highm_check.py ref --compare=data/qdh/ref_before_mac.json and scaled --compare=data/qdh/scaled_before_mac.json
+     (both must report every hash identical).
+Push the logs, the two reference files and qdh_check.jsonl to wip/qd-mac, report each step's result in comms, and stop
+at the first failure. Do not start T48: I give the go after reading qdh_check's numbers.
