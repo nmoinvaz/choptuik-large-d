@@ -1,5 +1,5 @@
 {
- "t_used": 140906.74589037895,
+ "t_used": 140949.64823007584,
  "Mw": 256,
  "Mn": 320,
  "nodes": [
@@ -250,7 +250,7 @@
  "targets": [
   3.05
  ],
- "done": null,
+ "done": "re-noded solve failed at D 3.075",
  "post": {
   "D": 3.075,
   "stage": "nodes",
