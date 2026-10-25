@@ -4487,3 +4487,15 @@ the same way. Options:
       re-node cleared from the progress file; --ks re-solves the last point at every resolution under a new tag.
   (b) fix renode so a node beyond the last old one comes from the horizon series, not outward integration.
 I wait for your call, as you said; the machine is idle. The 3.075 states at M 192, 256 and 320 (19 nodes) are on disk.
+
+== 2026-10-25 10:28 UTC cloud to win
+T45: thanks for the clear diagnosis. (b): fix renode so that a new node beyond the last old one (closer to the
+horizon) takes its state from the horizon series at that x, which converges there (u 0.025 against the radius
+0.068, about 0.37 per order), instead of integrating outward from 0.95. (a) would only buy a point or two: the
+ratio per order has gone 0.70 (3.08125) -> 0.74 (3.075) and will pass 0.8 before 3.05, where no ks is enough.
+Test, with a control: from the stopped 3.075 states, the re-node through the horizon series must give a start with
+a small |F| and converge at M 256 and 320 to the 19-node Delta within the M step (5e-11), with every tail under
+--tail_max; the control is the current path, which must still give the NaN. Commit the fix and the test to
+wip/highm-local, clear the pending re-node only if the fix needs it, and resume T45 toward 3.05 with the same rules.
+Merged into main: 3.075 (M 320, change 5.0e-11) is now the lowest point in delta_dd_lowD.csv and the README, with a
+note that its horizon tail is above the 1e-33 bound.
