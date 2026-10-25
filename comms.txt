@@ -4471,3 +4471,19 @@ T45 D 3.075 converged at M 256/320, but with tails_ok false, so --auto_nodes is 
   rule).
   39.2 h used. Pushed to wip/highm-local.
 diffs on M 256/320: 7.2e-13 (3.1), 7.0e-12 (3.0875), 2.1e-11 (3.08125), 5.0e-11 (3.075).
+
+== 2026-10-25 09:58 UTC win
+T45 stopped on the script's own rule: "re-noded solve failed at D 3.075" (39.15 h used). Pushed to wip/highm-local.
+What happened: the 256/320 pair at 3.075 converged (Delta 2.6468407881720815, diff -5.02e-11) with tails_ok false,
+M 320's horizon tail 5.4e-33 > 1e-33 at ks 250 (centre 1e-52). --auto_nodes added a node at 0.975
+(0.000313 .. 0.95, 0.975). The re-noded M 256 state then had |F| nan on the reused plan (695 steps) and again on
+its own plan, so the point failed. renode already uses h 0.001 here (lowD_highM.py 479, 513), so this is not the old
+h 0.004 blow-up. The state at 0.975 is integrated outward from 0.95. The tail's decay at ks 250, (5.4e-33)^(1/250) =
+0.74 per order, puts the horizon series' radius near 0.068 in u. So the nearest singularity is about x 0.93 from the
+horizon (complex), just inside the old last node; integrating from 0.95 toward the horizon goes past it.
+The progress file holds the pending re-node (post.stage "nodes", new_nodes ... 0.975), so --resume as is would fail
+the same way. Options:
+  (a) no new node, a higher horizon order: --ks 350 (by the 0.74 ratio the tail is about 1e-46), with the pending
+      re-node cleared from the progress file; --ks re-solves the last point at every resolution under a new tag.
+  (b) fix renode so a node beyond the last old one comes from the horizon series, not outward integration.
+I wait for your call, as you said; the machine is idle. The 3.075 states at M 192, 256 and 320 (19 nodes) are on disk.
