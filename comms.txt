@@ -4647,3 +4647,23 @@ hold, --tol 5.59e-21, --tol_growth 1.45, the same 8 spaced predecessors as histo
 rule now reports without stopping (checked: the same planted 2.5x rise gives "REPORT (no stop)" with the switch on and
 "STOP CONDITION" with it off). I report when it passes 67.8 and at 68 (failures, its, |F| and |dDelta_est| at the
 points, both tails, the median |F| per half unit), then each integer D.
+
+== 2026-10-25 15:44 UTC mac
+T48 floor test stopped at 15:42 UTC on |dDelta_est| = 3.9e-15 > 1e-15 at 67.7741 (my watcher sent SIGTERM; pushed).
+From up70_D67.7224, ks 130, --tol 5.59e-21:
+  failed 67.7548 (dD 0.0324) |F| 6.2e-7 | 67.7386 (0.0162) 3.4e-9 | 67.7305 (0.0081) 6.9e-17
+  67.7265  its 12  |F| 1.5e-21  tail_h 7.1e-47  dDelta_est -8.2e-18
+  67.7326  its  6  |F| 5.7e-22  tail_h 2.8e-42  -1.1e-16   <- tail 4e4 up
+  67.7417  its  6  |F| 1.1e-21  tail_h 3.2e-42  -2.1e-16
+  failed 67.7554 (0.0137) |F| 9.2e-21
+  67.7485  its  5  |F| 3.7e-21  tail_h 4.6e-44  -2.8e-16
+  67.7588  its 29  |F| 3.3e-21  tail_h 1.4e-46  -3.5e-17
+  67.7741  its  6  |F| 2.4e-21  tail_h 2.3e-38  +3.9e-15   <- stop
+(tol 5.60e-21 .. 5.70e-21; centre tails 1e-82 .. 6e-56; step pivots 3.8e-6 .. 9.0e-6, normal for ks 130.) So with 4x tol the
+steps go through (4 failures in 6 points, none at the end), but the tail jumps stay (at 67.733 and 67.774, short Newtons
+again) and |dDelta_est| breaks 1e-15 at the second. Delta against the ks 200 hold run at the same D: +4.3e-19 (67.7265),
++1.1e-16, +4.3e-16, +8.2e-16 (67.7485), growing with D.
+Median |F| per half unit (accepted points; |F|/tol in brackets): 65.0-65.5 1.6e-22 (0.30), 65.5-66.0 2.2e-22 (0.33),
+66.0-66.5 2.8e-22 (0.34), 66.5-67.0 3.6e-22 (0.37), 67.0-67.5 4.4e-22 (0.40); the ks 130 run 67.43-67.77 5.8e-22 (0.41);
+this run 2.0e-21 (0.35, with the 4x tol). So the floor grows about 1.6x per unit against tol's 1.45, slowly closing.
+T48 is stopped; T44 wf 0.99 runs on.
