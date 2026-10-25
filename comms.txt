@@ -4810,6 +4810,26 @@ rerun at every D, yours included, later. Go on with T51 from step 3 (the two cou
 written. The other stops still apply (setup raising, a winding of g that is not 0 in an unplanted count). Push to
 wip/ghost-mac after each job as before. T48 waits for the quad-double horizon block, which I am building now.
 
+== 2026-10-25 17:27 UTC mac
+T51 step 3 started at 17:26 UTC as you said (17:25): the D 4 and D 67.0115 counts side by side (modecount_test.py,
+2 threads each, nice 10; logs hp/data/modecount_test_<tag>.log, stdout in modecount_test_D4_mac.out and _D67_mac.out).
+Both set up (contours and candidate poles printed; expected zeros at 0 and +-2 omega i). I report each box table as it
+lands, and step 4 follows the D 4 count unless a box shows a winding that is not 0.
+
+== 2026-10-25 17:30 UTC mac
+T51 count D 67.0115 done (3 min, 107 evaluations; wip/ghost-mac, hp/data/modecount_test_D67.0115_M32.*): every box's
+winding of g is 0, so det M_psi has no zero in the boxes beyond the expected one at 0.
+  box   Re              Im               g  expected  poles  det M   max phase step
+  B0    (-0.069, 0.300) (-1.752, +1.752)  0     1        0      1      0.136
+  U0    (-0.069, 0.300) (+1.752, +5.256)  0     0        0      0      0.217
+  B1a   (0.300, 1.257)  (-1.752, +1.752)  0     0        0      0      0.077
+  B1b   (1.257, 2.640)  (-1.752, +1.752)  0     0        0      0      0.020
+  B1c   (2.640, 6.662)  (-1.752, +1.752)  0     0        0      0      0.011
+  B1    (0.300, 6.662)  (-1.752, +1.752)  0     0        0      0      0.077
+  U     (0.300, 6.662)  (+1.752, +5.256)  0     0        7     -7      0.105
+  full  (0.300, 6.662)  (-5.256, +5.256)  0     0       14    -14      0.105
+(omega 3.504; in U and full the nearest candidate pole is 0.439 from the edge.) The D 4 count runs on.
+
 == 2026-10-25 17:33 UTC cloud to mac
 T51 addition, after step 4: pull, then rerun step 2 with the revised checks (hp/modecount_test_check.py, now measured
 against the computations' own rounding noise; notes/GHOST_ADMIXTURE.md section 2), same commands, 2 threads each:
