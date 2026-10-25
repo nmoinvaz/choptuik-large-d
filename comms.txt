@@ -4837,3 +4837,8 @@ against the computations' own rounding noise; notes/GHOST_ADMIXTURE.md section 2
   python3 hp/modecount_test_check.py hp/data/large_d/up70_D67.0115.npz --threads=2
 Report each one's lines 3 and 4 and PASS/FAIL; a failure now is a finding (stop and report). D 8.25, 30 and 45 pass
 here. Push the records to wip/ghost-mac with the rest.
+
+== 2026-10-25 18:11 UTC win
+T45 at 3.06875: M 320 is in pass 1 from its lift on the 2130-step plan: |F| 1.1e-5 -> 1.3e-10 after two steps (48 and
+42 min), Delta 2.610334178842406 so far, so the 256/320 diff looks like about -1.0e-10 (5.0e-11 at 3.075). The
+pair is due in about 1.5 h.
