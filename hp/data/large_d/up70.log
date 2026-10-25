@@ -595,3 +595,14 @@ D=67.771141: no convergence (|F| 3.3e-20); dD 0.00405 -> 0.002025
 D=67.7691 Delta=1.7914865478227919+8.50e-17 its 14 |F| 6.5e-22 30s piv 1.9e-05..1.8e+08 dDelta/dF max 1.2e+15 tails 1e-82 5e-73
    kc 220 -> 146 (residual and Jacobian bitwise unchanged)
 D=67.7722 Delta=1.7914801517578034+9.24e-17 its 6 |F| 4.7e-22 13s piv 3.8e-06..1.8e+08 dDelta/dF max 1.2e+15 tails 5e-56 2e-70
+D=67.77671: no convergence (|F| 6.6e-20); dD 0.0045562499999999995 -> 0.0022781249999999998
+D=67.7744 Delta=1.7914753561263546-1.04e-16 its 8 |F| 1.4e-21 15s piv 4.4e-07..1.8e+08 dDelta/dF max 1.3e+15 tails 5e-56 4e-72
+D=67.7778 Delta=1.7914681632650231+1.75e-17 its 5 |F| 1.1e-21 12s piv 3.2e-07..1.8e+08 dDelta/dF max 1.2e+15 tails 5e-56 1e-66
+D=67.7830 Delta=1.7914573742386612-5.21e-17 its 5 |F| 1.4e-21 10s piv 5.7e-07..1.8e+08 dDelta/dF max 1.2e+15 tails 5e-56 3e-65
+D=67.790664: no convergence (|F| 2.5e-21); dD 0.007688671874999999 -> 0.0038443359374999994
+D=67.786819: no convergence (|F| 1.4e-19); dD 0.0038443359374999994 -> 0.0019221679687499997
+D=67.784897: no convergence (|F| 1.1e-19); dD 0.0019221679687499997 -> 0.0009610839843749999
+D=67.783936: no convergence (|F| 4.9e-20); dD 0.0009610839843749999 -> 0.00048054199218749993
+D=67.783456: no convergence (|F| 8.9e-20); dD 0.00048054199218749993 -> 0.00024027099609374997
+D=67.783215: no convergence (|F| 1.2e-19); dD 0.00024027099609374997 -> 0.00012013549804687498
+scan ended: 6 failed steps in a row (5 converged points, D = 67.782975)
