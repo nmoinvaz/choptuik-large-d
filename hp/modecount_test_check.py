@@ -15,7 +15,8 @@ test-field sector (notes/GHOST_ADMIXTURE.md), on one saved state, before any cou
    Checked at the state with every unknown but Delta perturbed by 1e-6 (random; at 1e-4 the Taylor steps planned for
    the state can reach a singular point of the perturbed fields and return NaN): max |difference| / max |F_psi| below
    1e-20. Control: mode 2 (a's tangent kept, the coupling p -> a -> p put back) must miss by more than 1e-8.
-4. Test field at the state itself: |M_psi(0) z_psi| / |z_psi| is the residual's size (lambda = 0 is a zero); ln|det|
+4. Test field at the state itself: |M_psi(0) z_psi| / |z_psi| is the residual's size, or the product's rounding,
+   eps_dd max_i sum_j |M_ij||z_j|, where that is larger (lambda = 0 is a zero; within 1e3 of the larger); ln|det|
    and min |u_kk| at lambda = 0 against lambda = +-0.1.
 5. Analyticity of det M_psi (Cauchy-Riemann at lambda = 1.3, step 1e-5): the difference quotients of ln det along h
    and along i h agree to 1e-4 relative. Control: the same with det M_psi(conj lambda) along i h (anti-analytic) must
@@ -102,7 +103,9 @@ def main():
             f"{np.abs(fh[rows_]).max():.1e}: ratio {ratio:.1e}")
     if not ident[1]["ratio"] <= 1e-20:
         bad.append("check 3 failed")
-    if not ident[2]["ratio"] > 1e-8:
+    # the control is judged against the check's own level: |F_psi| grows like the mass mode's amplification at large D,
+    # so a fixed fraction of it is no yardstick (at D = 45 the control's miss is 1e-2, the check's 7e-17)
+    if not ident[2]["ratio"] > 1e3 * max(ident[1]["ratio"], 1e-22):
         bad.append("control 3 passed (a's tangent kept)")
     rec["identity"] = ident
 
@@ -110,12 +113,15 @@ def main():
     vh, vl = np.ascontiguousarray(np.asarray(zh)[cols_]), np.ascontiguousarray(np.asarray(zl)[cols_])
     reh, rel, _, _ = (np.asarray(a) for a in st.c.test_matvec(zh, zl, vh, vl, 0.0, 0.0, 1))
     nullity = float(np.abs(reh + rel).max() / np.abs(vh).max())
+    # the rounding scale of that product: eps_dd max_i sum_j |M_ij| |z_j| (large where the mass mode amplifies)
+    mh, _, _, _ = (np.asarray(a) for a in st.c.test_matrix(zh, zl, 0.0, 0.0))
+    scale = float((np.abs(mh) @ np.abs(vh)).max() / np.abs(vh).max()) * 2.0 ** -104
     dets = {lam: st.c.test_det(zh, zl, lam, 0.0) for lam in (-0.1, 0.0, 0.1)}
-    rec["zero"] = dict(null_residual=nullity, dets={str(k): v for k, v in dets.items()})
-    log(f"  4. |M_psi(0) z_psi| / |z_psi| = {nullity:.1e} (|F| {st.F:.1e}); " + ", ".join(
+    rec["zero"] = dict(null_residual=nullity, rounding_scale=scale, dets={str(k): v for k, v in dets.items()})
+    log(f"  4. |M_psi(0) z_psi| / |z_psi| = {nullity:.1e} (|F| {st.F:.1e}, rounding scale {scale:.1e}); " + ", ".join(
         f"lambda {k:+.1f}: ln|det| {v[0]:.3f}, sign {'+' if abs(v[1]) < 1 else '-'}, min |u_kk| {v[2]:.1e}"
         for k, v in dets.items()))
-    if nullity > 1e3 * max(st.F, 1e-30):
+    if nullity > 1e3 * max(st.F, scale, 1e-30):
         bad.append("check 4 failed (psi = the background's p, m is not a null vector)")
 
     # 5. Cauchy-Riemann
