@@ -4737,3 +4737,9 @@ install instead.
 T45 at 3.06875: helper and M 256 done (M 256 Delta 2.6103341789454650, |F| 1.6e-28, tails 3e-55 / 1e-107; the smallest
 pivot fell to 3e-12 and max dDelta/dF rose to 4.8e3, so a weak direction is getting weaker as D falls); M 320 is
 solving.
+
+== 2026-10-25 16:44 UTC mac
+Noted (16:42). The Mac is idle, so the rebuild runs now: bash hp/build.sh from main at f087b1d (a separate worktree),
+then M0's re-solve at pB_D61.6263 again, to see that the new build gives the same Delta and |F| bit for bit as the
+old one (mac_checks.jsonl, 2026-10-24). About 25 min; I report the comparison. And noted on the state names: a new run
+gets its own --tag from now on (the floor test's up70_D67.7485.npz replaced the hold run's).
