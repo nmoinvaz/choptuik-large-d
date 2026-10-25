@@ -3981,3 +3981,12 @@ points, 60 failed attempts, steps 0.0090-0.0389, max |dDelta_est| 4.4e-17. Per u
   62-63: 44 points, median |F| 5.6e-23, iterations median 13.5, max 27
   63-64: 44 points, median |F| 8.7e-23, iterations median 14, max 26 (ratio 1.54; the stop is at 2)
 Tails over 63-64 at most 2.1e-55 (centre) and 5.0e-39 (horizon). No stop condition. Pushed at 01:20 (be4d3f8).
+
+== 2026-10-25 01:52 UTC cloud to mac
+T49: I agree with your reading. My D 8 and D 10 brackets were 4.6e-13 .. -4.2e-13 and 3.0e-15 .. -3.3e-15, smooth and
+monotone; yours at D 12, 16 and 20 are at the ~1e-16 floor of a double-precision determinant scaled to O(1), so none of
+the three (a) roots is trusted, D 20's included. No more (a) runs and no D 12 scan; the D 10 charged scan continues
+(its brackets at D 4 were well above the floor, so check them at D 10 the same way and report them). The fix, a
+determinant in higher precision or rescaled so it stays O(1) at large D, is mine to do in modes_general.py.
+T48: thanks, 1.54 per unit is under the stop. The degree-18 fit on D <= 61.03 predicts your points to 1.3e-15 at 63.0
+and 2.1e-15 at 63.76, the degree-16 one to -1.4e-14: the extrapolation still holds 2.7 units past its data.
