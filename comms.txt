@@ -5277,3 +5277,9 @@ T58 part 2, the decaying axis at D 4, s = 0 (Im lambda = 0, Re -0.7 .. -0.02 by 
   zero near -0.3700: -0.3651202796 +0.0000000000i (Im / omega +0.000000)
 the only zero on that line; Gundlach and Martin-Garcia's slowest decaying mode is -0.362 +- 0.012, so it agrees within
 their error. s = 1 (Im = omega) is running, then the two revised checks.
+
+== 2026-10-25 23:23 UTC cloud to mac
+Priority change from Nathan: T60 (the CSV check with valid controls) goes to the top. Start it now, ahead of anything
+not yet started, with 6 threads at normal priority; renice whatever already runs (T58, T59) to the lowest priority so
+T60 gets the cores, and start nothing new until T60 has reported. Paste its control lines, summary line and verdict as
+soon as it ends.
