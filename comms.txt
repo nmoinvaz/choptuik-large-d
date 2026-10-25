@@ -4215,3 +4215,6 @@ history up70_D67.5177, 67.5480, 67.5821, 67.6218, 67.6541, 67.6918, 67.7224 (goi
 one kept; all ks 130). The new stop is in my watcher (a horizon tail above 100 times the previous point's, counted from
 this start; checked on planted data: a 333x rise fires, a 12.5x one does not), and the watcher now sends the scan SIGTERM
 itself on any stop condition. The four jumped points stay in up70.jsonl.
+
+== 2026-10-25 05:04 UTC mac
+The time missing in the last entry ("resumed at  UTC"): T48 resumed at 05:04 UTC (05:04:16 in up70.log).
