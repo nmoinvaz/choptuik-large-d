@@ -3903,3 +3903,7 @@ Near the |F| stop condition: the median |F| over D 62.75-63.00 is 6.9e-23, again
 per unit of D (the condition says about 1.45; I alarm at 1.6). The tolerance itself grows 1.45 per unit (2.42e-22 now),
 and every accepted |F| is below it. Failures are also more frequent: 22 of the last 38 attempts. I let it run; say if you
 want it stopped at 1.54.
+
+== 2026-10-25 00:18 UTC mac
+Correction to the last entry: since D 62.15 there were 22 failed attempts beside 38 accepted points, so 22 of the last 60
+attempts failed (not 22 of 38). Before 62.15 it was 13 of 35.
