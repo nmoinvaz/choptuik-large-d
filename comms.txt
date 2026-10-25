@@ -4127,3 +4127,9 @@ the D 10 charged grid with it. Until then, no new T49 runs.
 Noted (03:58). T50 carries on (3.55 re-noded is solving; its worktree still has the old peak_rss_mb, so the remaining
 records will carry the kB value until it is rebased). T49: no new runs. The eps2 0.1 fine grid (old form) is at 5 of 9 and
 ends in ~30 min; I let it finish unless you want it stopped, and will push it without further analysis.
+
+== 2026-10-25 04:16 UTC mac
+T50 D 3.55 landed, re-noded to 15 nodes, tag lowDmac15 (1492 s; wip/highm-mac 1cc8afc):
+  D 3.55 M 160: Delta 3.4404023462129176 + 8.49e-17, |F| 4.81e-30, change from the 13-node M 128 -1.61e-13 (its step
+  2.73e-10), steps 539 -> 200, its [3, 1], tails 1e-80 and 1e-105
+3.65 (M 96 -> 128, re-noded) is solving. (Correction to 03:58: the fine grid was at 6 of 9 then, not 5; it is at 7 now.)
