@@ -686,6 +686,15 @@ ran there. Above D = 8.25 each accepted continuation point's Newton solve takes 
 graph. The machines differ (the cloud's 2 shared cores, the laptop's 4–6 threads, the Mac's 4 performance cores, from
 D = 61.63 at a median of 25 s), so this shows the effort, not a benchmark.
 
+![How far apart in D our solved points are: the low-D grid down to D = 3.075, and the continuation's adaptive step from D = 8.25 to 67.79, by machine](hp/point_spacing.svg)
+
+**How far apart the points are** (`hp/plot_point_spacing.py`): the distance in D from each solved point to the next
+one below it. Below D = 4 the points sit on a grid we chose, mostly 0.05 apart and halved to 0.0125 and 0.00625 toward
+D = 3. From D = 8.25 up (there are no double-double points between 4 and 8.25) the spacing is the continuation's own
+adaptive step: about 0.25 below D = 15, 0.05–0.1 from 20 to 50, and then falling steadily, to a median of 0.03 at
+D = 55–60 and 0.016 at 65–70. At D ≈ 67.78 it falls to 0.001–0.005 before the steps fail (open rings: points after a
+horizon-tail jump). The smallest distances, down to 2×10⁻⁴ near D = 60–61, are where two runs overlap, not small steps.
+
 <details>
 <summary>Checks of the solver</summary>
 
@@ -2231,6 +2240,7 @@ hp/                 double-double solver (crate hpkernel)
 ├── mixed_largeD*.py  the mixed-precision step at large D: where it fails (horizon block), the correction-loop prototype
 ├── bench_variants.py, plot_bench_variants.py  the Newton variants timed against D, and bench_variants.svg
 ├── plot_solve_times.py  solve_times.svg, how long each D took (--export writes data/solve_times.csv from the solve records)
+├── plot_point_spacing.py  point_spacing.svg, the distance in D between our solved points
 ├── src/block.rs    block storage and staircase LU for the f64 Jacobian above M = 128
 ├── highm_check.py, lowD_highM.py  checks of the larger tau grids, and the continuation toward D = 3 on them
 ├── step_test.py    the largest step in D that Newton tolerates at D = 45-60, for several solver variants (local task T43)
