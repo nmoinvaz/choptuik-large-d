@@ -13,7 +13,7 @@ import time
 import mpmath as mp
 import numpy as np
 
-from multidouble import dd_add, dd_axpy, dd_from_mp, dd_norm, dd_scale, gcr, two_sum  # noqa: F401
+from multidouble import dd_add, dd_axpy, dd_dot, dd_from_mp, dd_norm, dd_scale, gcr, two_sum  # noqa: F401
 from multidouble import two_prod as _two_prod  # noqa: F401
 
 from ._hpkernel import Solver
@@ -529,12 +529,18 @@ def junk_subspace(s, w, delta_max=1e-9, iters=8):
 
 
 def delta_correction(s, Fh, Fl):
-    """Linearised Delta correction -y.F, y = J^-T e_Delta, with the LU stored by the last s.newton call."""
+    """Linearised Delta correction -y.F, y = J^-T e_Delta, with the LU stored by the last s.newton call. The dot
+    product is multidouble's dd_dot (double-double, to about 2^-104 of sum |y_i F_i|), the result rounded to f64.
+    Until 2026-10-25 it was an f64 dot product of the rounded vectors, whose error grows with sum |y_i F_i| (|y| reaches
+    1e15 at large D); for a residual that cancels in y.F (a planted one, far from convergence) it lost the result (comms
+    2026-10-25, T57). At T48's 319 saved states the two differ by at most 1.9e-22 (2e-4 of the correction;
+    delta_correction_check.py)."""
     L = s.size
     e = np.zeros(L)
     e[-1] = 1.0
     yh, yl = s.lu_solve_t(e, np.zeros(L))
-    return float(-(np.asarray(yh) + np.asarray(yl)) @ (np.asarray(Fh) + np.asarray(Fl)))
+    hi, _ = dd_dot(np.asarray(yh), np.asarray(yl), np.asarray(Fh), np.asarray(Fl))
+    return float(-hi)
 
 
 def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_halvings=12, junk_only=False,
