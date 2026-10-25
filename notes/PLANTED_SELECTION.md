@@ -883,3 +883,56 @@ A ring of fifteen or more zeros remains possible: the re-glued completions of se
   table and the σ₁₃ paragraph). Suggested wording: "at fourteen orders, ω*/ω∞ = 0.99992–1.00005 (Δ∞ = 1.6439 ± 0.0001,
   an estimator range over two orders), which contains the finite-D value; σ₁₄ rejected every ring of zeros constructed
   from thirteen coefficients, and σ₁₅ tests the next."
+
+## 7. Follow-up: σ₁₅ (post-freeze)
+
+Input: `solver/inner_amp/scan31J1000/`, σ₀…σ₁₅ at wf = 0.99, 1.00, 1.01 (K 31, J 1000, 960 bits; T44 on the Mac), and
+pilot (b) at wf 1.00 (`scan31J1250/`: K 31, J 1250, 1280 bits; its sigma_err is inf at every k, as for T38's pilot, so it
+checks (a)'s value only). Script: `solver/inner_amp/planted_k15.py`; records in `planted_results_k15.jsonl`, checks in
+`planted_checks_k15.json`.
+
+### 7.0 Procedure, fixed before any K = 15 estimate was computed
+
+This subsection was written and committed before any estimator ran at K = 15, on any input. Already known at that
+point: the σ₁₅ values and errors at the three nodes and pilot (b)'s σ₁₅ at wf 1.00 (comms, 2026-10-25). The procedure is
+section 6.0's one order up, with three changes that section 6's findings call for, stated here before the data: the
+ring test also covers the Borel–Padé sums of σ₀…σ₁₄ that carry rings ([3/11], [4/10]); the calibration adds a family
+that follows the real coefficients (section 6.8); and G enters the combination only through its spread over the local
+minima of its objective (section 6.8), not as a calibrated estimator.
+
+1. **σ₁₅ is converged** if, at every node: (a) err15 ≤ 10⁻¹⁰ |σ₁₅|; (b) σ₀…σ₁₄ are bitwise the `scan29J1000` 960-bit
+   values; (c) pilot (b)'s σ₁₅ equals (a)'s within (a)'s err15, and its σ₁₂…σ₁₄ equal `scan29J1000`'s within their errors;
+   (d) σ₁₅ continues the ratio law: the second difference of σ_k/σ_{k+1} at k = 13 is at most 0.05. Each check gets a
+   mutation that must make it fire.
+2. **The pipeline on plants first.** N1 must be recovered by arg, ratio, Padé and G to 10⁻⁶ at K = 15 and N2 must give no
+   number. The 28 arc plants, C-EXP and the 13 REFIT plants are regenerated and run at K = 13, 14, 15; their K = 13 and 14
+   estimates must equal the stored K = 14 records (`planted_results_k14.jsonl`) to 10⁻⁹, or the work stops. Control that
+   must fail: N1 graded against ω_t + 0.002.
+3. **Real data at K = 15** (record "N0 scan31J1000"): its K = 13 and 14 estimates must equal those of "N0 scan29J1000".
+   Mutation controls: σ₁₅ → −σ₁₅ at wf 1.00 must fire a detector; σ₁₅ × (1 + 10⁻³) is reported.
+4. **Ring test.** Every K = 14 completion of section 6.6 is regenerated and its zero must reproduce the stored
+   "K14 recomplete" value to 10⁻⁹: C14-W1–3 (ratio-law tails), C14-ARC (four shapes at their best-fit ω_t) and the
+   Borel–Padé sums C14-BP [m/(14 − m)], m = 3…7. For each: its σ₁₅ and τ₁₅ against the measured ones, and the harness at
+   K = 15. It survives if no detector fires on it at K = 15 that does not fire on the real data (the section 5.3 rule).
+   Benchmark: the simple-zero law from τ₁₃, τ₁₄. A completion that carries a ring (zeros in |x| < 12 besides x₀) and
+   survives is a finding, reported as such.
+5. **Calibration** at K = 15, as section 6.5: the error of arg, ratio, Padé mid and G on (i) the 28 arc plants, (ii)
+   C-EXP, (iii) REFIT with fit residual ≤ 10⁻⁴, and (iv) new, the BP family: the ring-free Borel–Padé sums that pass the
+   type rule, C13-BP [5/8], [6/7] and C14-BP [5/9], [6/8] (their σ₀…σ₁₃ or σ₀…σ₁₄ are the real ones), each with its own
+   zero as truth. For each family, the zero each estimator's error range implies for the real K = 15 estimate.
+6. **Next generation and ring-free completions,** glued at σ₁₅ (tail from k = 16): ratio-law windows k = 6–14, 8–14,
+   9–14; best-fit arc tails, four shapes, ω_t grid 0.9990–1.0010; the Borel–Padé sums [m/(15 − m)], m = 3…7. Frozen type
+   rule: every pole has |t| < 2 at all three nodes. Zeros counted at wf = 1.00 in |x| < 7.3, 12 and 16.
+7. **Combination.** The K = 15 estimator range is the hull of: the calibrated arg range over the 28 arc plants; the
+   calibrated arg range over the BP family; and the zeros of the ring-free completions of item 6 that pass the type
+   rule (no zeros besides x₀ in |x| < 12). G is reported with its spread over the minima of its objective within a
+   factor 5 of the best (section 6.8) and is not part of the hull. The headline is the union of the K = 14 range
+   (0.99998–1.00005) and the K = 15 range if they overlap; if they are disjoint, both are reported and the reason is
+   diagnosed before any headline is written. The range is an estimator range, not a bound.
+8. **The order-15 projection.** The model est_k = ω* + c r^k through k = 13 and 14, for ω* = 1 and for 0.99998, 0.99995
+   (the lower part of the K = 14 range), against the real arg₁₅; decisive only if the other prediction is farther from
+   arg₁₅ than three times the model's own error (its largest miss over k = 12–14 on the real data, and over the 28 arc
+   plants at k = 15 given their true ω_t), as in section 6.0.
+
+The stages are `converge`, `plants`, `real`, `ring`, `calib`, `recomplete`, `project`, each run as
+`nice -n 10 python3 planted_k15.py STAGE` from `solver/inner_amp/`.
