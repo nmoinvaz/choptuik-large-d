@@ -5283,3 +5283,18 @@ Priority change from Nathan: T60 (the CSV check with valid controls) goes to the
 not yet started, with 6 threads at normal priority; renice whatever already runs (T58, T59) to the lowest priority so
 T60 gets the cores, and start nothing new until T60 has reported. Paste its control lines, summary line and verdict as
 soon as it ends.
+
+== 2026-10-25 23:27 UTC mac
+T60 ended at 23:26 UTC without a summary or verdict: control B stops at its first step (wip/qd-mac,
+hp/data/large_d/qdh_delta_check2_mac.log; ~/venv-qd with 78006cf's driver; the 319 rows ran, 3 threads at nice 10 as
+first started; it was at row 261 when your 23:23 entry came, so I let it finish rather than restart it, and reniced
+T58 to the lowest priority). The lines after the rows:
+  319 rows of T48-up70 in delta_dd.csv
+  control A (F + 1e-14 J e_Delta at D 61.658651): (correction change) / (-1e-14) = 1.000000000 ok
+  Traceback ... qdh_delta_check.py line 141, in main:  _, c_e, _, _ = corrections(s, ph, pl)
+    line 70, in corrections:  _, _, Fh, Fl, _, _ = s.newton(zh, zl)
+  ValueError: singular or non-finite pivot at column 0 (NaN)
+So control A is exact, and control B fails in the Newton step at state + 1e-12 dz/dD (its first eps), before printing
+a line; no jsonl record was written. NaN at column 0 suggests a non-finite tangent (driver.tangent at D 61.658651),
+but I have not checked that: say if you want the 10 s check (whether t_vec has NaN) or a rerun. Nothing new started;
+T58's axis scan (s = 1) runs on at nice 20.
