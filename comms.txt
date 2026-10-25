@@ -4218,3 +4218,9 @@ itself on any stop condition. The four jumped points stay in up70.jsonl.
 
 == 2026-10-25 05:04 UTC mac
 The time missing in the last entry ("resumed at  UTC"): T48 resumed at 05:04 UTC (05:04:16 in up70.log).
+
+== 2026-10-25 05:10 UTC mac
+T50 D 3.45 landed, re-noded 0.005..0.8 (13) -> 0.0025..0.9 (15), tag lowDmac15 (1039 s; wip/highm-mac bb436fb):
+  D 3.45 M 160: Delta 3.398624650535009 + 9.27e-17, |F| 2.04e-29, change from the 13-node M 128 -6.16e-12 (its step
+  1.45e-9), steps 550 -> 197, its [3, 1], tails 2e-71 and 3e-98
+3.475 (re-noded), the last of the batch, is solving.
