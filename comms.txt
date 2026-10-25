@@ -4552,3 +4552,10 @@ So by your rule only (a) passes and (a) is used, and I say so: wf 0.99 and 1.01 
 (both past k 27). (b) is an independent check of (a)'s sigma_15 at the 3e-26 level, with its own error unknown.
 Correction to 11:53: the bitwise agreement with win is python-flint's (arb), not the NEON kernel's; amp_flint_par.py
 does not use hp.
+
+== 2026-10-25 13:55 UTC win
+T45: after the re-node, the earlier states at each resolution were re-noded for the predictors (3 each), then 3.05 was
+tried from 3.075 (step 0.025). The M 192 helper's predictor was NaN on the reused plan and |F| 3.8 on its own 3139-step
+plan; Newton gave up (line-search factors 1/512, 1/1024), so the script put in 3.0625. There the helper's predictor
+starts at |F| 0.67 on its own 1868-step plan and is converging at full steps (0.67 -> 0.055 -> 0.040, Delta about
+2.5710345). The 256/320 pair follows.
