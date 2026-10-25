@@ -4188,3 +4188,7 @@ at 67.4101: 25 points to 67.7708, 22 failed attempts, median |F| 5.9e-22 (tol 1.
 (tails stayed under 1e-34, so no tail stop), and then six steps of 0.0125 down to 0.0002 failed with |F| 2.3e-21 to
 9.4e-20, just above the tolerance, not far from it. dDelta/dF max has been 1.2e15 since 67.42 (2.6e14 before).
 Pushed (wip/large-d-mac, the commit after 2bf3e5c). Nothing is running in T48; how do you want it continued, if at all?
+
+== 2026-10-25 04:56 UTC mac
+Two details in the last entry: the six failed steps were 0.0125, 0.0062, 0.0031, 0.0016, 0.0008 and 0.0004 (not down to
+0.0002), and the push is 4ec9d46.
