@@ -1,0 +1,24 @@
+   Compiling crossbeam-utils v0.8.23
+   Compiling crossbeam-epoch v0.9.21
+   Compiling crossbeam-deque v0.8.8
+   Compiling rayon-core v1.13.0
+   Compiling either v1.19.0
+   Compiling rayon v1.12.0
+   Compiling multidouble v1.1.0 (https://github.com/nmoinvaz/multidouble?rev=23adb805066cabc426135fb94dde967744fcf8dc#23adb805)
+   Compiling hpkernel v0.1.0 (/Users/nathan/Source/choptuik-mac-qd/hp)
+    Finished `release` profile [optimized] target(s) in 4m 20s
+     Running unittests src/lib.rs (target/release/deps/_hpkernel-7d3948bc4fb6d6d3)
+
+running 9 tests
+test model::bench::bench_jac ... ignored
+test qd_residual::bench_qd_residual ... ignored
+test qd_residual::residual_qdh_agrees ... ok
+test block::tests::block_solve_many_is_solve ... ok
+test qd_residual::qv_lane_blocks_agree ... ok
+test jvp_tests::jvp_matches_dd_jacobian ... ok
+test jvp_tests::halpha_control_bitwise_on_rounding_only ... ok
+test block::tests::block_lu_matches_dense ... ok
+test jvp_tests::hdd_block_rows_are_dd ... ok
+
+test result: ok. 7 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 0.14s
+

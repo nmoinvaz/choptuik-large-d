@@ -1,0 +1,19 @@
+D 67.722443: M 32, K 5, ks 130, kc 146; L 769
+  A. rows outside the horizon block bitwise the double-double residual's: True; horizon rows differ by 3.59e-22 (max |F| there: dd 5.69e-22, qdh 5.96e-22); residual 0.00 s (dd), 0.04 s (qdh)
+  D. residual_qdh twice: bitwise the same: True
+  B. second differences at 1e-30: double-double 6.54e-22 (horizon rows 6.54e-22, others 3.35e-31); qdh 3.35e-31 (1.85e-32, 3.35e-31); control, unrefined 1.62e-24 (1.62e-24)
+  newton 0: |F| 5.96e-22 |dz| 3.48e-10 lam 0.125 dDelta +4.66e-18 Delta 1.791584880912764 piv 1.3e-15..1.8e+08  t 0.8s
+  newton 1: |F| 5.49e-22 |dz| 3.68e-10 lam 0.125 dDelta +9.87e-18 Delta 1.791584880912764 piv 1.3e-15..1.8e+08  t 1.6s
+  newton 2: |F| 5.21e-22 |dz| 2.96e-10 lam 0.125 dDelta +3.22e-18 Delta 1.791584880912764 piv 1.3e-15..1.8e+08  t 2.4s
+  newton 3: |F| 4.74e-22 |dz| 3.05e-10 lam 0.125 dDelta +4.99e-18 Delta 1.791584880912764 piv 1.3e-15..1.8e+08  t 3.2s
+  newton 4: |F| 4.51e-22 |dz| 4.14e-10 lam 0.0625 dDelta +5.23e-18 Delta 1.791584880912764 piv 1.3e-15..1.8e+08  t 4.0s
+  newton 5: |F| 4.39e-22 |dz| 4.02e-10 lam 0.0625 dDelta +9.25e-19 Delta 1.791584880912764 piv 1.3e-15..1.8e+08  t 4.9s
+  C. qdh: |F| 4.24e-22 after 6 steps (6.0e-22, 5.5e-22, 5.2e-22, 4.7e-22, 4.5e-22, 4.4e-22); dDelta_est +4.24e-17; Delta moved by +2.89e-17 (5.5 s)
+  newton 0: |F| 5.96e-22 |dz| 4.28e-10 lam 0.125 dDelta -3.80e-18 Delta 1.791584880912764 piv 1.3e-15..1.8e+08  t 0.8s
+  newton 1: |F| 5.68e-22 |dz| 3.12e-10 lam 0.125 dDelta +8.41e-18 Delta 1.791584880912764 piv 1.3e-15..1.8e+08  t 1.6s
+  newton 2: |F| 5.15e-22 |dz| 4.34e-10 lam 0.0625 dDelta +4.96e-18 Delta 1.791584880912764 piv 1.3e-15..1.8e+08  t 2.4s
+  newton 3: |F| 4.93e-22 |dz| 5.32e-10 lam 0.0625 dDelta +1.20e-19 Delta 1.791584880912764 piv 1.3e-15..1.8e+08  t 3.2s
+  newton 4: |F| 4.87e-22 |dz| 8.59e-10 lam 0.0156 dDelta +2.93e-18 Delta 1.791584880912764 piv 1.3e-15..1.8e+08  t 4.1s
+  newton 5: |F| 4.80e-22 |dz| 3.86e-10 lam 0.125 dDelta +6.25e-18 Delta 1.791584880912764 piv 1.3e-15..1.8e+08  t 4.9s
+  C. ctl: |F| 4.64e-22 after 6 steps (6.0e-22, 5.7e-22, 5.1e-22, 4.9e-22, 4.9e-22, 4.8e-22); dDelta_est +5.46e-17; Delta moved by +1.89e-17 (5.5 s)
+FAIL: check C failed
