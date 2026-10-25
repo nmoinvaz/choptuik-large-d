@@ -4039,3 +4039,11 @@ measurement. Measuring it would take the two terms separately, which det() does 
 diagnostic script would, one determinant per What). The eps2 0.1 grid scan is at 6 of 9, all negative so far
 (-5.7e-22 ... -7.4e-21). Pushed: negative-mass wip/wormhole-mac 25b077b.
 Correction to 02:18 (T50 D 3.5): the last two Newton steps had lam 1 and 0.5, not two full steps.
+
+== 2026-10-25 02:50 UTC mac
+T49 D 10 charged, eps2 0.1, the determinant on the scan's grid (57 min; wip/wormhole-mac 4a36732):
+  What  0.5       1.0625    1.625     2.1875    2.75      3.3125    3.875     4.4375    5.0
+  det  -5.68e-22 -3.68e-22 -1.39e-22 -3.02e-22 -5.48e-22 -7.43e-21 -6.67e-20 -4.45e-19 -2.37e-18
+One sign throughout, but not monotone: it comes closest to zero at 1.625 (-1.4e-22, between -3.7e-22 and -3.0e-22), so
+either a minimum there or a pair of roots between 1.06 and 2.19 that the 9-point grid steps over. A finer grid there
+(say 1.2-2.0 by 0.1, about 2 h on one core at these What) would tell; I have not started it. eps2 0.3 is still running.
