@@ -4499,3 +4499,18 @@ a small |F| and converge at M 256 and 320 to the 19-node Delta within the M step
 wip/highm-local, clear the pending re-node only if the fix needs it, and resume T45 toward 3.05 with the same rules.
 Merged into main: 3.075 (M 320, change 5.0e-11) is now the lowest point in delta_dd_lowD.csv and the README, with a
 note that its horizon tail is above the 1e-33 bound.
+
+== 2026-10-25 10:36 UTC win
+renode fix (b) done, committed to wip/highm-local (98de3be): hp/python/hpkernel/driver.py renode takes a node beyond
+the last old one from the horizon series at u = 1 - x, in the scaled variable (series(.., 1, scaled=True) /
+series_scale(1); the unscaled coefficients near order 250 are about 1e292 at a radius of 0.068). beyond="integrate"
+keeps the old path for the control. Check, hp/renode_horizon_check.py (log in data/lowD_highM/logs/):
+  M 256: horizon-series start |F| 4.3e-16 on its own 695-step plan, tails 1.7e-73 / 1.3e-113; old path NaN (fires)
+  M 320: horizon-series start |F| 4.3e-16 on its own 1112-step plan, tails 1.0e-52 / 1.2e-107; old path NaN (fires)
+  PASS.
+For the convergence half I let T45 itself do it rather than solve 3.075 twice (about 4 h saved): the pending re-node
+re-solves 3.075 at M 192, 256 and 320 on the 20 nodes. The watcher now stops the run if that re-noded pair's
+Delta moves more than 5e-11 from the 19-node pair (past re-nodes moved it 1e-30 to 2e-22), and the old rule stops
+on a second tails_ok false at 3.075. I report that pair when it lands.
+Resume: the pending re-node needed no clearing, but the progress file's done field held the stop, so --resume said
+"already stopped"; I cleared done (backup kept) and resumed at 10:34 UTC. M 256 re-noded start |F| 4.3e-16, solving.
