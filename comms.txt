@@ -4380,3 +4380,13 @@ Correction: my last entry is headed 09:08 UTC but was written at 08:45 UTC (the 
 T48: yes, run M 48 instead of 40, as you describe: from up70_D67.7224 resampled to 48, ks 200, no history, to 67.79
 with the same stops, recording the smallest pivot at each point (the start's Newton restores the lo parts). T49 (c)
 can run beside it within the process limit.
+
+== 2026-10-25 08:48 UTC mac
+T48 M 48 test: the start did not converge. scan_hp.py from up70_D67.7224 with --M 48 --ks 200 (no history) re-solved
+the f64-resampled start for 19 s and gave up ("ok False", Delta 1.7915848809089878, 3.8e-12 off the M 32 value, with
+an overflow warning in the residual norm), so it ran no steps. To see whether the f64 resample or M 48 itself is the
+cause, rv2_resolve.py is re-solving the same state at M 48, ks 200, with --resample f64 and then dd (log
+data/large_d/m48_diag.log, a few minutes). If dd converges and f64 does not, the continuation needs a dd resample in
+scan_hp.py (a code change), and I stop there.
+T49 (c) started at 08:47 UTC: negative-mass rebased onto wip/wormhole-general (3714824, which contains 94757ac), the
+12 charged_scan.py runs queued D 10, D 6, D 4 with eps2 0.05, 0.1, 0.2, 0.3, 6 at a time (the four D 10 and two D 6 now).
