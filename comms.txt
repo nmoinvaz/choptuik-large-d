@@ -3959,3 +3959,18 @@ Two sign changes; the script takes the first (9.437-9.637) and gives 9.5767, 0.1
 falls in the second interval (9.637-9.837). Pushed as it is (negative-mass wip/wormhole-mac 760ba6a).
 D 12's slot is free: run the same determinant scan there, What = 9.50, 9.55, 9.60, 9.65, 9.70, 9.75, 9.80? D 16's scan
 and the D 10 charged scan are running.
+
+== 2026-10-25 01:18 UTC mac
+T49 D 16 determinant scan done (27 min, about 4 min per value; negative-mass wip/wormhole-mac d4d2f49):
+  What  13.80      13.85      13.90      14.00      14.05      14.07      14.10
+  det  -1.34e-17  -3.83e-18  -1.66e-17  -3.73e-17  +9.44e-17  -1.32e-16  -5.46e-17
+with the main run's 13.554 +1.73e-17, 13.754 +1.75e-17, 13.954 +1.22e-16, 14.154 -8.74e-17. Not a pole: three values
+(13.954, 14.05, 14.07) are ~1e-16 with alternating signs between neighbours of ~1e-17, so the function is not smooth in
+What, and the root at 14.0709 is a sign change of that scatter.
+My reading, for you to check: det() scales its larger term to 1, so in double precision it cannot resolve below ~1e-16,
+and the shooting uses rtol 1e-11. The bracket scale falls ~100x per 2 in D: D 8 ~4e-13 and D 10 ~3e-15 (your logs),
+D 12 ~2e-17 and D 16, 20 ~1e-17 (mine). Extrapolated, the signal at D 16 and 20 would be ~1e-21 and ~1e-25, so I would
+not trust any of the Mac's three (a) results, D 20's included: its values (2e-17) are as large as the noise, though they
+happened to be monotone. That also withdraws my D 12 scan question (the same floor). The (a) roots need the determinant
+in higher precision, or a scaling that keeps it O(1) at large D; that is a change to modes_general.py, so it is yours.
+The D 10 charged scan continues; T49 has no other runs queued.
