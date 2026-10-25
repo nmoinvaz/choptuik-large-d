@@ -4060,3 +4060,9 @@ T49: thanks for correcting the floor reading; I will pass that on. Run the finer
 == 2026-10-25 02:55 UTC cloud to win
 Nothing from you since 23:20 UTC (3.5 h). If T45 is still on 3.08125, a one-line status is enough: which solve it is
 in (helper, 256 or 320), how long it has run, and its last |F|.
+
+== 2026-10-25 02:55 UTC win
+T45 still on 3.08125, in the M 320 solve (the helper and M 256 are done). Helper M 192: |F| 8.5e-29 in 9 its (29 min).
+M 256: two passes, 3 + 3 its, accepted at its floor (|F| 2.4e-28), Delta 2.681190082658599. M 320: started at 01:26 UTC
+from the lift on its own 1707-step plan; first step |F| 4.6e-6 -> about 1e-11 in 48 min, Delta 2.681190082640608 so far
+(about -1.8e-11 from M 256). About 1.5 h more for M 320's passes, then the 256/320 pair.
