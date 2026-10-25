@@ -1,5 +1,5 @@
 {
- "t_used": 140949.64823007584,
+ "t_used": 177573.62266731262,
  "Mw": 256,
  "Mn": 320,
  "nodes": [
@@ -27,54 +27,46 @@
  "tag": "lowDhm_x0.000313-0.975",
  "hist_w": [
   [
-   3.15,
-   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.1500_M256_rn.npz"
-  ],
-  [
-   3.125,
-   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.1250_M256_rn.npz"
-  ],
-  [
-   3.11875,
-   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.1187_M256.npz"
-  ],
-  [
-   3.1125,
-   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.1125_M256.npz"
-  ],
-  [
    3.1,
-   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.1000_M256.npz"
+   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.975_D3.1000_M256_rn.npz"
   ],
   [
    3.0875,
-   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.0875_M256.npz"
+   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.975_D3.0875_M256_rn.npz"
   ],
   [
    3.08125,
-   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.0812_M256.npz"
+   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.975_D3.0812_M256_rn.npz"
   ],
   [
    3.075,
-   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.0750_M256.npz"
+   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.975_D3.0750_M256.npz"
+  ],
+  [
+   3.06875,
+   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.975_D3.0688_M256.npz"
   ]
  ],
  "hist_n": [
   [
    3.1,
-   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.1000_M320.npz"
+   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.975_D3.1000_M320_rn.npz"
   ],
   [
    3.0875,
-   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.0875_M320.npz"
+   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.975_D3.0875_M320_rn.npz"
   ],
   [
    3.08125,
-   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.0812_M320.npz"
+   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.975_D3.0812_M320_rn.npz"
   ],
   [
    3.075,
-   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.0750_M320.npz"
+   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.975_D3.0750_M320.npz"
+  ],
+  [
+   3.06875,
+   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.975_D3.0688_M320.npz"
   ]
  ],
  "pairs": [
@@ -245,149 +237,55 @@
    -5.015034475179331e-11,
    256,
    320
-  ]
- ],
- "targets": [
-  3.05
- ],
- "done": null,
- "post": {
-  "D": 3.075,
-  "stage": "nodes",
-  "t_point": 19268.199999999997,
-  "new_nodes": [
-   0.000313,
-   0.000625,
-   0.00125,
-   0.0025,
-   0.005,
-   0.01,
-   0.02,
-   0.05,
-   0.1,
-   0.16,
-   0.23,
-   0.3,
-   0.4,
-   0.5,
-   0.6,
-   0.7,
-   0.8,
-   0.9,
-   0.95,
-   0.975
-  ],
-  "old_nodes": [
-   0.000313,
-   0.000625,
-   0.00125,
-   0.0025,
-   0.005,
-   0.01,
-   0.02,
-   0.05,
-   0.1,
-   0.16,
-   0.23,
-   0.3,
-   0.4,
-   0.5,
-   0.6,
-   0.7,
-   0.8,
-   0.9,
-   0.95
-  ],
-  "old_hist": {
-   "hist_c": [
-    [
-     3.1,
-     "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.1000_M192.npz"
-    ],
-    [
-     3.0875,
-     "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.0875_M192.npz"
-    ],
-    [
-     3.08125,
-     "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.0812_M192.npz"
-    ]
-   ],
-   "hist_w": [
-    [
-     3.1,
-     "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.1000_M256.npz"
-    ],
-    [
-     3.0875,
-     "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.0875_M256.npz"
-    ],
-    [
-     3.08125,
-     "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.0812_M256.npz"
-    ]
-   ],
-   "hist_n": [
-    [
-     3.1,
-     "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.1000_M320.npz"
-    ],
-    [
-     3.0875,
-     "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.0875_M320.npz"
-    ],
-    [
-     3.08125,
-     "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.0812_M320.npz"
-    ]
-   ]
-  }
- },
- "last_point_s": 18488.2,
- "Mc": 192,
- "hist_c": [
-  [
-   3.175,
-   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.1750_M192_rn.npz"
-  ],
-  [
-   3.15,
-   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.1500_M192_rn.npz"
-  ],
-  [
-   3.125,
-   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.1250_M192_rn.npz"
-  ],
-  [
-   3.11875,
-   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.1187_M192.npz"
-  ],
-  [
-   3.1125,
-   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.1125_M192.npz"
-  ],
-  [
-   3.1,
-   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.1000_M192.npz"
-  ],
-  [
-   3.0875,
-   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.0875_M192.npz"
-  ],
-  [
-   3.08125,
-   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.0812_M192.npz"
   ],
   [
    3.075,
-   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.95_D3.0750_M192.npz"
+   -5.015034475179331e-11,
+   256,
+   320
+  ],
+  [
+   3.06875,
+   -1.0305947106861887e-10,
+   256,
+   320
+  ]
+ ],
+ "targets": [
+  3.0625,
+  3.05
+ ],
+ "done": null,
+ "post": null,
+ "last_point_s": 23337.1,
+ "Mc": 192,
+ "hist_c": [
+  [
+   3.1,
+   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.975_D3.1000_M192_rn.npz"
+  ],
+  [
+   3.0875,
+   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.975_D3.0875_M192_rn.npz"
+  ],
+  [
+   3.08125,
+   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.975_D3.0812_M192_rn.npz"
+  ],
+  [
+   3.075,
+   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.975_D3.0750_M192.npz"
+  ],
+  [
+   3.06875,
+   "C:\\Users\\nathan\\AppData\\Local\\Temp\\claude\\C--Users-nathan-Source-dss-residual-kernel\\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\\scratchpad\\t45-wt\\hp\\data\\lowD_states\\lowDhm_x0.000313-0.975_D3.0688_M192.npz"
   ]
  ],
  "point_start": [
-  3.075,
-  121418.75529694557
+  3.06875,
+  154002.1611378193
  ],
- "last_point_wall": 18695.3911113739,
+ "last_point_wall": 23571.461529493332,
  "kc": 100,
  "ks": 250
 }
