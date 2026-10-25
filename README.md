@@ -715,6 +715,7 @@ a horizon-tail jump).
 | harmonics frozen above 13 / above 15, D = 40, 50, 60 | Δ differs by +1.5, −1.1, −1.2×10⁻¹⁵ |
 | second machine (Windows, i7-1185G7, own build), D = 59.84–60.09 | 7.2×10⁻¹⁸ rms from the cloud points' interpolant (`hp/review/rv2_noise.py`) |
 | the 94 points above D = 60.1 (32 of them at 60.95–61.026: 25 from the second machine, 7 from the cloud) against the 1/D fit on D ≤ 60.1 (degree 18) | agree to 2.6×10⁻¹⁵ |
+| Newton's remaining correction to Δ with the horizon rows' residual in quad-double, the 319 points of run T48-up70 (D = 61.66–67.77; `dDelta_exact` in the CSV; control: a residual planted to move Δ by 10⁻¹⁴ is recovered to 4×10⁻¹³ relative and rejected) | at most 1.2×10⁻¹⁶, median 1.2×10⁻¹⁷, under the stated 2×10⁻¹⁵ |
 
 </details>
 
@@ -2263,7 +2264,8 @@ hp/                 double-double solver (crate hpkernel)
 │                       value at that D agrees within its stated uncertainty (published_ref, published_diff,
 │                       published_match; data/published_delta.csv); the continuation points (857 for D = 8.25-61.03, 342 from
 │                       the continuation toward 70 for 61.04-67.77, runs T48-pilotB and T48-up70) and the
-│                       best low-D value per D (run lowD-M<M>, D = 3.06875-4.0), which the large-D fits skip
+│                       best low-D value per D (run lowD-M<M>, D = 3.06875-4.0), which the large-D fits skip;
+│                       dDelta_exact on T48-up70's rows (the remaining correction with a quad-double horizon residual)
 ├── data/delta_dd_lowD.csv   the low-D points at every M, with gamma and status (export_lowD.py)
 ├── data/fit_residuals.csv   each continuation point from D = 10 up minus the degree-18 1/(D-1) fit (fit_residuals.py)
 ├── data/local/     the second machine's runs (scan_up*.jsonl), folded into delta_dd.csv by export_dd.py

@@ -19,6 +19,11 @@ residual |F|, the largest |dDelta/dF| (how far a residual error moves Delta), th
                         a published value at this D (data/published_delta.csv: reference key, Delta - published), and
                         "yes" when the difference is within the uncertainty the publication states, "no" otherwise;
                         empty where no published value is known at this D
+  dDelta_exact          T48-up70 rows only: the linearised Delta correction as dDelta_est, but from the residual with
+                        the horizon block in quad-double, which removes the horizon rows' rounding that |dDelta/dF|
+                        (up to 1e15 there) amplifies; the dot product in double-double (qdh_delta_check.py version 3 on
+                        branch wip/qd-horizon, run on the Mac as T60b: data/large_d/qdh_delta_check3_mac.jsonl, every
+                        |dDelta_exact| <= Delta_err, its control passing); empty elsewhere
 A D that appears in several runs (to 1e-6) keeps the last run's value, as the fits do.
 
 Above the scans' last point (61.026449) come T48's points: the cloud pilot (data/large_d/pilot_cloud/pilotB.jsonl,
@@ -86,12 +91,15 @@ for line in open(os.path.join(here, "data", "published_delta.csv")):
         continue
     d, v, u, ref = line.strip().split(",")
     pub.setdefault(round(float(d), 6), []).append((ref, float(v), float(u)))
+# dDelta_exact for T48-up70 (T60b, comms 2026-10-25 23:42 UTC)
+EXACT = {round(r["D"], 6): r["dDelta_q"] for r in json.loads(open(os.path.join(
+    here, "data", "large_d", "qdh_delta_check3_mac.jsonl")).read().splitlines()[-1])["rows"]}
 CHECK_BELOW_35, CHECK_FROM_35 = 1e-16, 2e-15   # README "Accuracy": tau resolution (D = 7-17, 40) and freezing (40-60)
 out = os.path.join(here, "data", "delta_dd.csv")
 os.makedirs(os.path.dirname(out), exist_ok=True)
 with open(out, "w") as fh:
     fh.write("D,Delta_hi,Delta_lo,F,max_dDelta_dF,dDelta_est,run,Delta_err,err_kind,published_ref,published_diff,"
-             "published_match\n")
+             "published_match,dDelta_exact\n")
     for d in sorted(rows):
         r, run = rows[d]
         est = r.get("dDelta_est")
@@ -105,7 +113,8 @@ with open(out, "w") as fh:
             ref, v, u = min(pub[d], key=lambda t: t[2])
             dv = (r["Delta"] - v) + r["Delta_lo"]
             diff, match = format(dv, ".2e"), ("yes" if abs(dv) <= u else "no")
+        exact = format(EXACT[d], ".2e") if run == "T48-up70" else ""
         fh.write(f"{r['D']!r},{r['Delta']!r},{r['Delta_lo']!r},{r['F']:.3e},{max(r['sens']):.3e},"
-                 f"{'' if est is None else format(est, '.2e')},{run},{err},{kind},{ref},{diff},{match}\n")
+                 f"{'' if est is None else format(est, '.2e')},{run},{err},{kind},{ref},{diff},{match},{exact}\n")
 print(f"{len(rows)} points, D = {min(rows):.4f} .. {max(rows):.4f} -> {out}; of them {len(T48_ROWS)} from T48 above "
       f"{LAST_SCAN}")
