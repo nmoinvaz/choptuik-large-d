@@ -12,12 +12,17 @@ test-field sector (notes/GHOST_ADMIXTURE.md), on one saved state, before any cou
    modecount_wind.py before the port): ln|det| and arg det at two cached complex lambda.
 3. Test field, the identity M_psi(0; z) z_psi = F_psi(z): the p, m equations are linear in p, m with a, c held, so at
    lambda = 0 the test field's matrix applied to the state's own p, m gives the p, m rows of the residual, for any z.
-   Checked at the state with every unknown but Delta perturbed by 1e-6 (random; at 1e-4 the Taylor steps planned for
-   the state can reach a singular point of the perturbed fields and return NaN): max |difference| / max |F_psi| below
-   1e-20. Control: mode 2 (a's tangent kept, the coupling p -> a -> p put back) must miss by more than 1e-8.
-4. Test field at the state itself: |M_psi(0) z_psi| / |z_psi| is the residual's size, or the product's rounding,
-   eps_dd max_i sum_j |M_ij||z_j|, where that is larger (lambda = 0 is a zero; within 1e3 of the larger); ln|det|
-   and min |u_kk| at lambda = 0 against lambda = +-0.1.
+   Checked at a perturbed state: unknown j (all but Delta) moved by 1e-8 xi_j / max_i |J_ij| (xi standard normal, J
+   the mode matrix at lambda = 0), so that every row of F moves by about 1e-8 whatever the horizon amplifies.
+   Pass: max |M_psi z_psi - F_psi| <= 10 nu, where nu = max(the noise of M_psi z_psi - F_psi, eps_dd max |F_psi|) and
+   the noise is that difference's largest change when z moves by 1e-31 relative (two random moves): in exact
+   arithmetic it does not change, so its change is the two computations' rounding.
+   Control: mode 2 (a's tangent kept, the coupling p -> a -> p put back) must miss by more than 1e3 times the bound.
+4. Test field at the state itself (lambda = 0 is a zero): max |M_psi(0) z_psi| <= 10 max(nu_0, max |F_psi|), nu_0 the
+   noise of check 3 measured at the state. Control: (p, -m) in place of (p, m) must give more than 1e3 times the
+   bound. Logged with it: ln|det| and min |u_kk| at lambda = 0 against lambda = +-0.1.
+   (Checks 3 and 4 were changed to these yardsticks after D = 45, 4 and 67 failed the earlier ones; see
+   notes/GHOST_ADMIXTURE.md.)
 5. Analyticity of det M_psi (Cauchy-Riemann at lambda = 1.3, step 1e-5): the difference quotients of ln det along h
    and along i h agree to 1e-4 relative. Control: the same with det M_psi(conj lambda) along i h (anti-analytic) must
    disagree by more than 0.5.
@@ -33,6 +38,7 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from modecount_common import setup, timer  # noqa: E402
+from multidouble import dd_add  # noqa: E402
 
 
 def main():
@@ -56,6 +62,8 @@ def main():
         ndiff = int(np.sum((rh != mh) | (rl != ml)))
         dmax = float(np.abs((rh - mh) + (rl - ml)).max())
         imx = float(np.abs(ih).max() + np.abs(il).max())
+        if lam == 0.0:
+            jac0 = mh + ml
         rows.append(dict(lam=str(lam), entries=int(mh.size), differing=ndiff, max_abs_diff=dmax, max_imag=imx, sec=t()))
         log(f"  1. lambda {lam}: {ndiff} of {mh.size} entries differ from hpkernel's (max {dmax:.1e}); max |Im| {imx:.1e}")
         if lam == "ctl":
@@ -82,47 +90,76 @@ def main():
 
     # 3. the identity at lambda = 0, at a perturbed state
     rows_, cols_ = (np.asarray(v) for v in st.c.psi_index())
+    eps_dd = 2.0 ** -104
+
+    def ident_diff(zh_, zl_, mode, vsign=None):
+        """M_psi(0; z) z_psi - F_psi(z), and F_psi (z_psi's m part times vsign if given)"""
+        zh_, zl_ = np.ascontiguousarray(zh_), np.ascontiguousarray(zl_)
+        vh, vl = np.ascontiguousarray(zh_[cols_]), np.ascontiguousarray(zl_[cols_])
+        if vsign is not None:
+            vh, vl = np.ascontiguousarray(vh * vsign), np.ascontiguousarray(vl * vsign)
+        reh, rel, imh, _ = (np.asarray(a) for a in st.c.test_matvec(zh_, zl_, vh, vl, 0.0, 0.0, mode))
+        fh, fl = (np.asarray(a) for a in st.s.residual(zh_, zl_))
+        return (reh - fh[rows_]) + (rel - fl[rows_]), fh[rows_] + fl[rows_], reh + rel, float(np.abs(imh).max())
+
+    def noise(zh_, zl_):
+        """largest change of M_psi z_psi - F_psi under two random moves of z by 1e-31 relative (Delta kept)"""
+        d0 = ident_diff(zh_, zl_, 1)[0]
+        g = np.random.default_rng(11)
+        out = 0.0
+        for _ in range(2):
+            mv = 1e-31 * np.abs(zh_) * g.standard_normal(len(zh_))
+            mv[-1] = 0.0
+            th, tl = dd_add(np.asarray(zh_), np.asarray(zl_), mv, np.zeros_like(mv))
+            out = max(out, float(np.abs(ident_diff(th, tl, 1)[0] - d0).max()))
+        return out
+
+    colmax = np.abs(jac0).max(axis=0)
     rng = np.random.default_rng(3)
-    z = np.asarray(zh) + np.asarray(zl)
-    pert = 1e-6 * rng.standard_normal(len(z))
-    pert[-1] = 0.0
-    zph = np.ascontiguousarray(np.asarray(zh) + pert)
-    zpl = np.ascontiguousarray(np.asarray(zl))
-    fh, fl = (np.asarray(a) for a in st.s.residual(zph, zpl))
-    if not np.all(np.isfinite(fh)):
-        bad.append("check 3: the residual at the perturbed state is not finite")
+    pert = np.zeros(len(zh))
+    nz = colmax > 0
+    pert[:len(colmax)][nz] = 1e-8 * rng.standard_normal(int(nz.sum())) / colmax[nz]
+    zph, zpl = (np.ascontiguousarray(a) for a in dd_add(np.asarray(zh), np.asarray(zl), pert, np.zeros_like(pert)))
     ident = {}
-    for mode in (1, 2):
-        vh, vl = np.ascontiguousarray(zph[cols_]), np.ascontiguousarray(zpl[cols_])
-        reh, rel, imh, iml = (np.asarray(a) for a in st.c.test_matvec(zph, zpl, vh, vl, 0.0, 0.0, mode))
-        d = (reh - fh[rows_]) + (rel - fl[rows_])
-        ratio = float(np.abs(d).max() / np.abs(fh[rows_]).max())
-        ident[mode] = dict(max_F_psi=float(np.abs(fh[rows_]).max()), max_diff=float(np.abs(d).max()), ratio=ratio,
-                           max_imag=float(np.abs(imh).max()))
+    d1, fpsi, _, im1 = ident_diff(zph, zpl, 1)
+    d2, _, _, im2 = ident_diff(zph, zpl, 2)
+    if not np.all(np.isfinite(fpsi)):
+        bad.append("check 3: the residual at the perturbed state is not finite")
+    nu_p = max(noise(zph, zpl), eps_dd * float(np.abs(fpsi).max()))
+    bound3 = 10 * nu_p
+    for mode, d, im in ((1, d1, im1), (2, d2, im2)):
+        ident[mode] = dict(max_F_psi=float(np.abs(fpsi).max()), max_diff=float(np.abs(d).max()), max_imag=im)
         log(f"  3. mode {mode}: max |M_psi(0) z_psi - F_psi| = {np.abs(d).max():.1e}, max |F_psi| "
-            f"{np.abs(fh[rows_]).max():.1e}: ratio {ratio:.1e}")
-    if not ident[1]["ratio"] <= 1e-20:
+            f"{np.abs(fpsi).max():.1e}, noise {nu_p:.1e}, bound {bound3:.1e}")
+    rec["identity"] = dict(ident, noise=nu_p, bound=bound3, pert_scale=1e-8)
+    if not ident[1]["max_diff"] <= bound3:
         bad.append("check 3 failed")
-    # the control is judged against the check's own level: |F_psi| grows like the mass mode's amplification at large D,
-    # so a fixed fraction of it is no yardstick (at D = 45 the control's miss is 1e-2, the check's 7e-17)
-    if not ident[2]["ratio"] > 1e3 * max(ident[1]["ratio"], 1e-22):
+    if not ident[2]["max_diff"] > 1e3 * bound3:
         bad.append("control 3 passed (a's tangent kept)")
-    rec["identity"] = ident
 
     # 4. lambda = 0 at the state
-    vh, vl = np.ascontiguousarray(np.asarray(zh)[cols_]), np.ascontiguousarray(np.asarray(zl)[cols_])
-    reh, rel, _, _ = (np.asarray(a) for a in st.c.test_matvec(zh, zl, vh, vl, 0.0, 0.0, 1))
-    nullity = float(np.abs(reh + rel).max() / np.abs(vh).max())
-    # the rounding scale of that product: eps_dd max_i sum_j |M_ij| |z_j| (large where the mass mode amplifies)
-    mh, _, _, _ = (np.asarray(a) for a in st.c.test_matrix(zh, zl, 0.0, 0.0))
-    scale = float((np.abs(mh) @ np.abs(vh)).max() / np.abs(vh).max()) * 2.0 ** -104
+    d0, f0, mz, _ = ident_diff(zh, zl, 1)
+    nu_0 = max(noise(zh, zl), eps_dd * float(np.abs(f0).max()))
+    null = float(np.abs(mz).max())
+    bound4 = 10 * max(nu_0, float(np.abs(f0).max()))
+    m = st.M
+    # z_psi in psi_index order: p1 (M), each node's p and m (M each), m_h (M); the control flips every m
+    sgn = np.ones(len(cols_))
+    for i_ in range(st.K):
+        sgn[m + 2 * m * i_ + m:m + 2 * m * (i_ + 1)] = -1.0
+    sgn[-m:] = -1.0
+    ctl = float(np.abs(ident_diff(zh, zl, 1, vsign=sgn)[2]).max())
     dets = {lam: st.c.test_det(zh, zl, lam, 0.0) for lam in (-0.1, 0.0, 0.1)}
-    rec["zero"] = dict(null_residual=nullity, rounding_scale=scale, dets={str(k): v for k, v in dets.items()})
-    log(f"  4. |M_psi(0) z_psi| / |z_psi| = {nullity:.1e} (|F| {st.F:.1e}, rounding scale {scale:.1e}); " + ", ".join(
-        f"lambda {k:+.1f}: ln|det| {v[0]:.3f}, sign {'+' if abs(v[1]) < 1 else '-'}, min |u_kk| {v[2]:.1e}"
-        for k, v in dets.items()))
-    if nullity > 1e3 * max(st.F, scale, 1e-30):
+    rec["zero"] = dict(null_residual=null, F_psi=float(np.abs(f0).max()), noise=nu_0, bound=bound4,
+                       control=ctl, dets={str(k): v for k, v in dets.items()})
+    log(f"  4. max |M_psi(0) z_psi| = {null:.1e} (max |F_psi| {np.abs(f0).max():.1e}, noise {nu_0:.1e}, bound "
+        f"{bound4:.1e}); control (p, -m): {ctl:.1e}; " + ", ".join(
+            f"lambda {k:+.1f}: ln|det| {v[0]:.3f}, sign {'+' if abs(v[1]) < 1 else '-'}, min |u_kk| {v[2]:.1e}"
+            for k, v in dets.items()))
+    if null > bound4:
         bad.append("check 4 failed (psi = the background's p, m is not a null vector)")
+    if not ctl > 1e3 * bound4:
+        bad.append("control 4 passed ((p, -m) taken for a null vector)")
 
     # 5. Cauchy-Riemann
     lam, h = 1.3, 1e-5

@@ -44,36 +44,36 @@ A + λ for the real and imaginary parts separately, so the real-λ matrix is hpk
 | 1 | full mode matrix (test field off) at λ = 0 and 1.7 against hpkernel's, entry by entry | 0 of 1,982,464 entries differ | 0 of 589,824 | 0 of 589,824 |
 | | control: λ one double above 1.7 | 163,840 differ | 81,920 differ | 81,920 differ |
 | 2 | complex λ against the cached evaluations of the count in MODE_COUNT.md (old crate) | (see below) | exact (difference 0.0) at 6.182 + 0.40i, 6.182 + 0.80i | (no cached values) |
-| 3 | identity M_ψ(0; z) z_ψ = F_ψ(z) at a state perturbed by 10⁻⁶ | 1.0×10⁻²² of \|F_ψ\| | 2.4×10⁻²³ | 8.5×10⁻²⁵ |
-| | control: a's tangent kept (mode 2) | 1.6×10⁴ | 1.6 | 1.3×10⁻¹⁰ (see below) |
-| 4 | \|M_ψ(0) z_ψ\| / \|z_ψ\| at the solution (λ = 0 is a zero) | 4.9×10⁻²⁸ (\|F\| 8.6×10⁻²⁸) | 9.7×10⁻²⁵ (\|F\| 6.0×10⁻²⁵) | **7.7×10⁻²² (\|F\| 9.4×10⁻²⁶): fails** |
+| 3 | identity M_ψ(0; z) z_ψ = F_ψ(z) at a perturbed state (every row of F moved by about 10⁻⁸): max \|M_ψ z_ψ − F_ψ\|, and the bound 10ν | 5.2×10⁻²⁸ (7.5×10⁻²⁷) | 8.1×10⁻²⁶ (2.2×10⁻²⁴) | 3.5×10⁻²² (4.5×10⁻²¹) |
+| | control: a's tangent kept (mode 2), must exceed 10³ × the bound | 0.13 | 0.021 | 0.011 |
+| 4 | max \|M_ψ(0) z_ψ\| at the solution (λ = 0 is a zero), and the bound 10 max(ν₀, \|F_ψ\|) | 8.5×10⁻²⁸ (8.4×10⁻²⁷) | 5.3×10⁻²⁵ (5.3×10⁻²⁴) | 3.3×10⁻²² (3.9×10⁻²¹) |
+| | control: (p, −m) in place of (p, m), must exceed 10³ × the bound | 1.2 | 0.67 | 0.54 |
+| | smallest pivot of M_ψ at λ = 0, and at λ = ∓0.1 | 1.7×10⁻²⁶; 1.7×10⁻⁴, 3.5×10⁻⁴ | 2.7×10⁻²⁸; 7.4×10⁻¹¹, 1.2×10⁻¹⁰ | 9.1×10⁻²⁶; 4.5×10⁻¹³, 5.6×10⁻¹³ |
 | 5 | Cauchy–Riemann on ln det M_ψ at λ = 1.3 | 2.1×10⁻⁷ | 2.0×10⁻⁷ | 2.8×10⁻⁷ |
 | | control: det M_ψ(λ̄) (anti-analytic) | 2.0 | 2.0 | 2.0 |
 
 Check 3 is the strongest: the p, m equations are homogeneous of degree one in (p, m) with a, c fixed, so the test
-field's λ = 0 matrix applied to the state's own p, m gives the p, m rows of the residual, at any state. It holds to
-double-double rounding, and fails at O(1) when a's tangent is not removed.
+field's λ = 0 matrix applied to the state's own p, m gives the p, m rows of the residual, at any state. It holds to the
+rounding of the two computations, and misses by 0.01–0.1 when a's tangent is not removed.
 
-**Check 4 fails at D = 45, and control 3 needed a new threshold there.** Two discrepancies, reported here and not
-resolved:
+**The yardstick ν, and why the checks changed.** In exact arithmetic M_ψ z_ψ − F_ψ is zero at every z, so its change
+under a move of z by 10⁻³¹ (relative, two random moves, Δ kept) is the rounding of the two computations: that change
+is ν (at least ε_dd max |F_ψ|). Checks 3 and 4 pass when they are within 10ν. They were first written with fixed
+yardsticks, and those failed outside D = 8–30:
 
-- *Control 3.* Its threshold was a fixed 10⁻⁸ of |F_ψ|. At D = 45 the perturbed state's |F_ψ| is 8.1×10⁷ (the
-  horizon block amplifies the 10⁻⁶ perturbation), so the control's miss, 0.011, is 1.3×10⁻¹⁰ of it: under that
-  threshold the control did not fire. After that run the threshold was changed to 10³ times the check's own ratio
-  (8.5×10⁻²⁵ at D = 45); the control's ratio is 14 orders of magnitude above the check's. The first D = 45 record in
-  `modecount_test_check.jsonl` is the run under the old threshold.
-- *Check 4.* |M_ψ(0) z_ψ| / |z_ψ| is 7.7×10⁻²² at D = 45, against |F| = 9.4×10⁻²⁶; it fails both the original
-  criterion (within 10³ of |F|) and the one added after the first D = 45 run (within 10³ of the product's rounding,
-  ε_dd max_i Σ_j |M_ij||z_j| = 3.8×10⁻³⁰). The excess sits only in the horizon block's ψ rows: there
-  max |M_ψ z_ψ| = 3.3×10⁻²², while the other five blocks give at most 3×10⁻²⁸, and the horizon block's ψ entries are
-  at most 18 (row sums at most 33). So it is not the rounding of the product. The residual's own horizon rows at the
-  same state are 9.4×10⁻²⁶, and moving a_h by 10⁻³¹ moves them by 1.5×10⁻²⁴. The suspected cause is the horizon
-  series' amplification (x_m^−(n−1) = 3.3×10⁶ at D = 45 against 1.6×10⁴ at D = 30, with x_m = 0.7) acting on the mode
-  matrix's tangent computation, the mechanism behind the double-double floor of the continuation at large D. It is not
-  shown: the null residual grew 800 times from D = 30 to 45, the amplification 210 times.
+- Check 3 perturbed every unknown by 10⁻⁶ and compared with |F_ψ|; its control had to miss by 10⁻⁸ of |F_ψ|. At
+  D = 45 the horizon block amplifies that perturbation to |F_ψ| = 8.1×10⁷, and the control's miss (0.011) was only
+  1.3×10⁻¹⁰ of it; at D = 67 (the Mac) |F_ψ| was 1.4×10²⁵ and neither mode's miss showed. Each unknown is now moved by
+  10⁻⁸ divided by its column's largest entry in the mode matrix, so that every row of F moves by about 10⁻⁸.
+- Check 4 compared |M_ψ(0) z_ψ| / |z_ψ| with 10³ |F|. It failed at D = 45 (7.7×10⁻²² against |F| = 9.4×10⁻²⁶) and
+  at D = 4 (the Mac: 1.5×10⁻²⁶ against 3.3×10⁻³⁰). A second form after the first D = 45 run, with the product's
+  rounding ε_dd max_i Σ_j |M_ij||z_j| (3.8×10⁻³⁰ at D = 45), failed too. At D = 45 the excess sits only in the horizon
+  block's ψ rows (3.3×10⁻²², the other blocks at most 3×10⁻²⁸), whose entries are at most 18. It is rounding noise of
+  the mode matrix there: moving z by 10⁻³¹ relative moves M_ψ z_ψ by 2–5×10⁻²² while F_ψ moves by 4×10⁻²⁵ (a smooth
+  change). That is what ν measures.
 
-λ = 0 is still a zero by the determinant: the smallest pivot is 9.1×10⁻²⁶ at λ = 0 against 4.5×10⁻¹³ and 5.6×10⁻¹³ at
-λ = ∓0.1, and det M_ψ changes sign between them. The count below does not use check 4.
+The records of the earlier forms are in `modecount_test_check.jsonl` (the first four lines). The counts do not use
+checks 3 and 4.
 
 **A discrepancy found on the way.** The count at D = 8.25 committed with the mode count (`hp/data/modecount_D8.2500_M32*`,
 not used in MODE_COUNT.md's results) does not reproduce: its cached determinants differ from the current kernel's by
