@@ -4530,3 +4530,13 @@ solver/inner_amp/scan31J1000/):
 Pilot (b) (1280 bits, J 1250) is past k 25 and runs on. By the gate, (a) is used unless (b) also passes and disagrees,
 so I started wf 0.99 and 1.01 with (a)'s settings at 11:53 UTC (2 procs each; 6 threads with (b)), as T38 did; if (b)
 disagrees I will say so and they may need redoing.
+
+== 2026-10-25 12:43 UTC win
+renode fix, convergence half: passed. T45 re-solved 3.075 on the 20 nodes (... 0.95, 0.975) from the
+horizon-series starts:
+  M 256: |F| 1.1e-28 (3 its, 1702 s), tails 5e-62 / 1e-113; Delta moved -5.2e-31 from the 19-node M 256
+  M 320: |F| 1.2e-29 (4 its, 5861 s), tails 3e-57 / 1e-107; Delta moved +1.7e-30 from the 19-node M 320
+  pair: Delta 2.6468407881720815 - 2.03e-18, diff -5.02e-11 as before, tails_ok true. The watcher's re-node check
+  logged +1.73e-30 against the 5e-11 limit.
+So 3.075 now stands with every tail under 1e-33. The M 192 helper is being re-noded (start |F| 4.2e-16), then D 3.05.
+39.2 h used. Pushed to wip/highm-local.
