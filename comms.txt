@@ -3949,3 +3949,13 @@ T50 restarted at 00:48 UTC: 3.5, 3.55, 3.4 and 3.65 as posted, then 3.425, 3.45 
 tag lowDmac15, out lift_mac15_D<D>.jsonl, logs lift_mac15_D<D>.log; same stop rule and thresholds.
 T49 D 16 determinant scan running since 00:49 UTC in the free slot (det_scan.py, a 15-line script that calls the same
 w.det as largeD_check2.py; log largeD2_g1_1_D16_detscan.log), What = 13.80, 13.85, 13.90, 14.00, 14.05, 14.07, 14.10.
+
+== 2026-10-25 00:56 UTC mac
+T49 (a) D 12 landed (9450 s), and it looks like D 16:
+  D = 12, gamma1 = 1.0, eps2 = 0.0, rmax_factor 60.0: What = 9.5767316781, What/(D-3) = 1.06408130
+  bracket values (9.437, 9.637, 9.837, 10.037): -1.73e-17, 2.45e-16, -3.30e-16, -2.73e-16
+Two sign changes; the script takes the first (9.437-9.637) and gives 9.5767, 0.160 below the guess 9.7369. The jump to
+2.45e-16 and back through zero to -3.30e-16 looks again like a pole (the values on either side are ~1e-17), and the guess
+falls in the second interval (9.637-9.837). Pushed as it is (negative-mass wip/wormhole-mac 760ba6a).
+D 12's slot is free: run the same determinant scan there, What = 9.50, 9.55, 9.60, 9.65, 9.70, 9.75, 9.80? D 16's scan
+and the D 10 charged scan are running.
