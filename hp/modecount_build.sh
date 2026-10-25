@@ -6,7 +6,12 @@ set -euo pipefail
 ROOT=$(cd "$(dirname "$0")" && pwd)
 cd "$ROOT/modecount_cx"
 [ -f Cargo.lock ] || cp "$ROOT/Cargo.lock" Cargo.lock
-RUSTFLAGS="-C target-cpu=native" nice -n 10 cargo build --release --offline
+# macOS: a Python extension leaves the interpreter's symbols to the loader (maturin passes the same flags)
+EXTRA=""
+[ "$(uname)" = Darwin ] && EXTRA="-C link-arg=-undefined -C link-arg=dynamic_lookup"
+RUSTFLAGS="-C target-cpu=native $EXTRA" nice -n 10 cargo build --release --offline
 mkdir -p build
-cp target/release/libmodecount_cx.so build/modecount_cx.so
+for f in target/release/libmodecount_cx.so target/release/libmodecount_cx.dylib; do
+  if [ -f "$f" ]; then cp "$f" build/modecount_cx.so; fi
+done
 python3 -c "import sys; sys.path.insert(0, 'build'); import modecount_cx; print('modecount_cx ok', modecount_cx.__file__)"

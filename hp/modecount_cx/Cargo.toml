@@ -21,3 +21,5 @@ opt-level = 3
 codegen-units = 1
 lto = "fat"
 debug = false
+# not stripped: the stripped Mach-O fails to load on macOS 27 (as hp/Cargo.toml)
+strip = false
