@@ -5199,3 +5199,12 @@ Section 3 at both: "ValueError: not enough values to unpack (expected 4, got 2)"
 The kernel's Solver.jvp returns two values in the installed b57ac27 build, and hp/src is unchanged from b57ac27 to
 ba57466 (only the driver changed, in 5272dae), so the gcr step needs a kernel that returns F as well; I have not
 changed anything. T58 (the planted count) and T55's compares run on.
+
+== 2026-10-25 23:08 UTC mac
+T55 PASS (wip/qd-mac 4a00651, hp/data/qdh/switch_*_mac.log). With the 88b07d2 build (multidouble b45c0b9):
+  highm_check.py ref --compare=<f087b1d ref_before_mac.json>: "PASS: 168 outputs bit-identical"
+  highm_check.py scaled --compare=<f087b1d scaled_before_mac.json>: 22 bit-identical, "control (scale wrong at
+    order 7, M = 192): Newton step differs: fires", PASS
+(step 1 as posted: build ok, cargo test 4 passed.) So the switch to multidouble's StaircaseLu, field kernels and gcr
+gives the same bits on the Mac as the build before it. The main venv now has the 88b07d2 build; ~/venv-qd keeps
+b57ac27's kernel with ba57466's driver (T57). T58 runs on in the main venv.
