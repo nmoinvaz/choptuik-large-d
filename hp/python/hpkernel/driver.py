@@ -13,7 +13,7 @@ import time
 import mpmath as mp
 import numpy as np
 
-from multidouble import dd_add, dd_axpy, dd_from_mp, dd_norm, dd_scale, two_sum  # noqa: F401
+from multidouble import dd_add, dd_axpy, dd_from_mp, dd_norm, dd_scale, gcr, two_sum  # noqa: F401
 from multidouble import two_prod as _two_prod  # noqa: F401
 
 from ._hpkernel import Solver
@@ -180,53 +180,10 @@ def gmres_refine(s, zh, zl, bh, bl, max_products=30, step_tol=1e-10, confirm=1, 
     |c u| <= step_tol |x|, or after max_products products. The first iteration's u is M^-1 b, the plain mixed step.
     ref (optional, a double-double vector): the exact solution, for the checks: info["errors"] gets |x - ref| / |ref|
     after each iteration.
-    Returns (xh, xl, info): info = dict(products, changes, converged, t_prod, t_solve, errors)."""
-    n = s.size
-    xh, xl = np.zeros(n), np.zeros(n)
-    rh, rl = np.asarray(bh, dtype=float).copy(), np.asarray(bl, dtype=float).copy()
-    U, W, W64 = [], [], []
-    info = dict(products=0, changes=[], converged=False, t_prod=0.0, t_solve=0.0)
-    if ref is not None:
-        info["errors"] = []
-        refv = np.asarray(ref[0]) + np.asarray(ref[1])
-    run = 0
-    while info["products"] < max_products:
-        t = time.time()
-        uh, ul = (np.asarray(a) for a in s.lu_solve(np.ascontiguousarray(rh), np.ascontiguousarray(rl)))
-        info["t_solve"] += time.time() - t
-        t = time.time()
-        wh, wl = (np.asarray(a) for a in s.jvp(zh, zl, uh, ul, cut=cut)[:2])
-        info["t_prod"] += time.time() - t
-        info["products"] += 1
-        for _ in range(2):
-            for (Uh, Ul), (Wh, Wl), w64 in zip(U, W, W64):
-                beta = float(w64 @ (wh + wl))
-                wh, wl = dd_axpy(-beta, Wh, Wl, wh, wl)
-                uh, ul = dd_axpy(-beta, Uh, Ul, uh, ul)
-        nw = float(np.linalg.norm(wh + wl))
-        if not nw > 0:
-            break
-        wh, wl = dd_scale(wh, wl, 1.0 / nw)
-        uh, ul = dd_scale(uh, ul, 1.0 / nw)
-        w64 = wh + wl
-        c = float(w64 @ (rh + rl))
-        xh, xl = dd_axpy(c, uh, ul, xh, xl)
-        rh, rl = dd_axpy(-c, wh, wl, rh, rl)
-        U.append((uh, ul))
-        W.append((wh, wl))
-        W64.append(w64)
-        ch = abs(c) * float(np.linalg.norm(uh + ul)) / max(float(np.linalg.norm(xh + xl)), 1e-300)
-        info["changes"].append(ch)
-        if ref is not None:
-            info["errors"].append(float(np.linalg.norm((xh - ref[0]) + (xl - ref[1])) / np.linalg.norm(refv)))
-        if verbose:
-            print(f"    gcr {len(U)}: change {ch:.1e}" + (f", error {info['errors'][-1]:.1e}" if ref is not None else ""),
-                  flush=True)
-        run = run + 1 if (len(U) > 1 and ch <= step_tol) else 0
-        if run >= confirm:
-            info["converged"] = True
-            break
-    return xh, xl, info
+    Returns (xh, xl, info): info = dict(products, changes, converged, t_prod, t_solve, errors).
+    The loop is multidouble's gcr with coef="f64" (this function's own loop, moved there; bitwise the same)."""
+    return gcr(lambda uh, ul: s.jvp(zh, zl, uh, ul, cut=cut)[:2], s.lu_solve, bh, bl, max_products=max_products,
+               step_tol=step_tol, confirm=confirm, ref=ref, verbose=verbose, coef="f64")
 
 
 def newton_step(s, zh, zl, jac="dd", mixed=None, gmres=None, verbose=False):
