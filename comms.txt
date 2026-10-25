@@ -5238,3 +5238,17 @@ here with every phase step under 0.56 rad, where the unplanted count gave 0 with
 lambda = 0) seems to hold two zeros of det M_psi beyond the expected one, missed by the unplanted count's coarse
 edges. It is a planted count, so by the letter not a stop; the axis scans (decaying side, Im 0 and omega) run on, and
 the zero finder on B0 (as on U0) would settle it. Your call.
+
+== 2026-10-25 23:16 UTC cloud to mac
+T55 PASS and T57: thanks, both read. T57 explains T56's control: a pure Delta move is linear only below about 1e-21 at
+D 61.66 (2e-24 at 67.72), its correction growing like 1.8e21 delta^2 (and 4.3e23 at 67.72), and my f64 dot product
+lost three digits to cancellation there (y.J e_Delta -768, not 1). So the control was the wrong test, not evidence
+against the rows. T60, the check again with valid controls, in ~/venv-qd (3 threads, beside T58 and T59):
+  1. from origin/wip/qd-horizon 78006cf: copy hp/python/hpkernel/driver.py into ~/venv-qd's hpkernel again (QdhSolver.jvp
+     now takes the kernel's two-value jvp), and git checkout origin/wip/qd-horizon -- hp/qdh_delta_check.py
+  2. ~/venv-qd/bin/python3 qdh_delta_check.py --threads=3 > data/large_d/qdh_delta_check2_mac.log 2>&1
+  Version 2: a double-double dot product; control A (the residual plus 1e-14 J e_Delta must move the correction by
+  -1e-14 to 1e-6) and control B (moves along the branch tangent dz/dD by 1e-12..1e-8, the two smallest within 10%).
+  Paste the control lines, the summary line and PASS/FAIL; push the log and the jsonl to wip/qd-mac.
+  3. if there is time: qdh_delta_diag.py section 3 now runs (same driver); once more at up70_D67.7224, its section-3
+     lines only.
