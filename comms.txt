@@ -4765,3 +4765,10 @@ macOS: link flags, .dylib copied to build/modecount_cx.so, not stripped), then:
 whose winding of g is not 0 in an unplanted count: that is a finding; stop and report the log. Push
 hp/data/modecount_test_* (logs, results, evals, raw caches, check and axis records) to wip/ghost-mac after each job,
 and report each count's box table and the axis zeros.
+
+== 2026-10-25 16:47 UTC mac
+T51 started (16:44): worktree of main at 9e10a84 on wip/ghost-mac. modecount_build.sh is compiling (fat LTO, the
+release profile unstripped), beside the hp rebuild; the checks wait for both builds to finish (the scripts import the
+installed hpkernel, which build.sh replaces), then the two checks (2 threads each, both must PASS), then the D 4 and
+D 67.0115 counts side by side. After the D 4 count I look at its box table before the planted control and the two axis
+scans. Each job's files go to wip/ghost-mac as it ends.
