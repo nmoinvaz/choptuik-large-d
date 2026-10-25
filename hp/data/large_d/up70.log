@@ -641,3 +641,49 @@ D=67.749914: no convergence (|F| 2.1e-21); dD 0.00020272865295410157 -> 0.000101
 D=67.7498 Delta=1.7915272025637576-8.72e-17 its 4 |F| 7.6e-22 8s piv 5.8e-10..1.8e+08 dDelta/dF max 1.2e+15 tails 6e-56 1e-70
 D=67.749964: no convergence (|F| 1.8e-19); dD 0.00015204648971557617 -> 7.602324485778808e-05
 step too small
+== resume 2026-10-25 15:37:31 UTC from up70_D67.7224, ks 130, no hold, --tol 5.59e-21 (4x), 8 spaced history states (cloud 15:35 UTC)
+(re-)converged start D=67.722443 M=32 nodes=[0.3, 0.4, 0.5, 0.6, 0.7]: Delta 1.7915848809127639 ok True (14s)
+history point D=67.438434: ok True, Delta 1.7921860892105772
+history point D=67.470328: ok True, Delta 1.7921183294669507
+history point D=67.517741: ok True, Delta 1.7920177138211202
+history point D=67.548016: ok True, Delta 1.7919535385264742
+history point D=67.582074: ok True, Delta 1.7918814108407923
+history point D=67.621758: ok True, Delta 1.7917974572960111
+history point D=67.654087: ok True, Delta 1.7917291341914281
+history point D=67.691755: ok True, Delta 1.7916496075943789
+D=67.754843: no convergence (|F| 6.2e-07); dD 0.0324 -> 0.0162
+D=67.738643: no convergence (|F| 3.4e-09); dD 0.0162 -> 0.0081
+D=67.730543: no convergence (|F| 6.9e-17); dD 0.0081 -> 0.00405
+D=67.7265 Delta=1.7915763429585345+3.80e-17 its 12 |F| 1.5e-21 23s piv 9.0e-06..1.8e+08 dDelta/dF max 1.2e+15 tails 1e-82 7e-47
+   kc 220 -> 146 (residual and Jacobian bitwise unchanged)
+D=67.7326 Delta=1.7915635378827439-2.33e-17 its 6 |F| 5.7e-22 9s piv 6.9e-06..1.8e+08 dDelta/dF max 1.2e+15 tails 5e-56 3e-42
+D=67.7417 Delta=1.7915443333893519+1.91e-17 its 6 |F| 1.1e-21 12s piv 5.9e-06..1.8e+08 dDelta/dF max 1.2e+15 tails 5e-56 3e-42
+D=67.75535: no convergence (|F| 9.2e-21); dD 0.013668749999999999 -> 0.006834374999999999
+D=67.7485 Delta=1.7915299348855471-9.17e-17 its 5 |F| 3.7e-21 12s piv 3.8e-06..1.8e+08 dDelta/dF max 1.3e+15 tails 5e-56 5e-44
+D=67.7588 Delta=1.7915083403020595-5.01e-17 its 29 |F| 3.3e-21 37s piv 6.2e-06..1.8e+08 dDelta/dF max 1.3e+15 tails 5e-56 1e-46
+D=67.7741 Delta=1.7914759624049068-5.45e-17 its 6 |F| 2.4e-21 10s piv 8.8e-06..1.8e+08 dDelta/dF max 1.3e+15 tails 6e-56 2e-38
+== resume 2026-10-25 16:12:43 UTC from up70_D67.7224, ks 130, --horizon_alpha=1, --tol 1.40e-21, 8 spaced history states (cloud 16:11 UTC)
+(re-)converged start D=67.722443 M=32 nodes=[0.3, 0.4, 0.5, 0.6, 0.7]: Delta 1.7915848809127641 ok True (27s)
+history point D=67.438434: ok True, Delta 1.7921860892105772
+history point D=67.470328: ok True, Delta 1.7921183294669507
+history point D=67.517741: ok True, Delta 1.7920177138211202
+history point D=67.548016: ok True, Delta 1.7919535385264742
+history point D=67.582074: ok True, Delta 1.7918814108407923
+history point D=67.621758: ok True, Delta 1.7917974572960111
+history point D=67.654087: ok True, Delta 1.7917291341914281
+history point D=67.691755: ok True, Delta 1.7916496075943791
+D=67.754843: no convergence (|F| 6.2e-07); dD 0.0324 -> 0.0162
+D=67.738643: no convergence (|F| 3.4e-09); dD 0.0162 -> 0.0081
+D=67.730543: no convergence (|F| 7.1e-17); dD 0.0081 -> 0.00405
+D=67.7265 Delta=1.7915763429585345+8.54e-17 its 11 |F| 1.9e-22 33s piv 9.0e-06..1.8e+08 dDelta/dF max 1.2e+15 tails 1e-82 1e-47
+   kc stays 220: kc 146 changes the residual or the Jacobian
+D=67.7326 Delta=1.7915635378827439+4.60e-17 its 6 |F| 3.6e-22 24s piv 6.9e-06..1.8e+08 dDelta/dF max 1.2e+15 tails 1e-82 3e-42
+   kc stays 220: kc 146 changes the residual or the Jacobian
+D=67.741681: no convergence (|F| 1.8e-21); dD 0.009112499999999999 -> 0.0045562499999999995
+D=67.7371 Delta=1.7915539360636850+2.46e-17 its 9 |F| 3.9e-22 22s piv 2.3e-06..1.8e+08 dDelta/dF max 1.2e+15 tails 1e-82 1e-44
+   kc stays 220: kc 146 changes the residual or the Jacobian
+D=67.743958: no convergence (|F| 1.7e-21); dD 0.006834374999999999 -> 0.0034171874999999997
+D=67.7405 Delta=1.7915467355209138-1.67e-17 its 14 |F| 6.7e-22 33s piv 6.0e-07..1.8e+08 dDelta/dF max 1.2e+15 tails 1e-82 4e-47
+   kc stays 220: kc 146 changes the residual or the Jacobian
+D=67.7457 Delta=1.7915359349733844-1.03e-16 its 5 |F| 7.7e-22 20s piv 9.1e-07..1.8e+08 dDelta/dF max 1.2e+15 tails 1e-82 2e-40
+   kc stays 220: kc 146 changes the residual or the Jacobian
