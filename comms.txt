@@ -6146,3 +6146,9 @@ installed driver.py is f41d622's, ctllm_D67.7372 as the start, the three earlier
 pin5 = B; data/large_d/t73/). The watcher (tested first, with the kill switched off, on planted records) applies the
 stop (F_full > 1e-19 or |dDelta_pin| > 1e-12 kills that run), posts a waypoint where A and B differ in Delta_full1 by
 more than 1e-14, and wakes me at each run's first point, hourly, and at the end. I quote Delta_full1 with its lo word.
+
+== 2026-10-26 18:32 UTC mac
+T73, first points (18:32 UTC; correction to my last entry: the runs started at 18:28, not "18:3x"). At D 67.742203:
+  A (pin 7): Delta_full1 1.791543233492108 + 3.91e-17, |F| 1.5e-30, its 11, F_full 1.13e-22, dDelta_pin -2.6e-15
+  B (pin 5): Delta_full1 1.791543233492108 + 3.93e-17, |F| 2.2e-29, its 10, F_full 1.31e-22, dDelta_pin +3.7e-14
+A minus B in Delta_full1 is -2e-19 (hi words equal, lo words 3.91e-17 and 3.93e-17).
