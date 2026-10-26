@@ -1,0 +1,40 @@
+    Updating crates.io index
+ Downloading crates ...
+  Downloaded multidouble v1.4.0
+🍹 Building a mixed python/rust project
+🐍 Found CPython 3.13 at /Users/nathan/venv-md140/bin/python
+🔗 Found pyo3 bindings
+📡 Using build options features from pyproject.toml
+💻 Using `MACOSX_DEPLOYMENT_TARGET=11.0` for aarch64-apple-darwin by default
+   Compiling pyo3-ffi v0.30.1
+   Compiling multidouble v1.4.0
+   Compiling pyo3 v0.30.1
+   Compiling numpy v0.30.0
+   Compiling hpkernel v0.1.0 (/Users/nathan/Source/choptuik-mac-switch/hp)
+    Finished `release` profile [optimized] target(s) in 19m 47s
+📦 Built wheel for CPython 3.13 to /Users/nathan/Source/choptuik-mac-switch/hp/dist/hpkernel-0.1.0-cp313-cp313-macosx_11_0_arm64.whl
+Processing ./dist/hpkernel-0.1.0-cp313-cp313-macosx_11_0_arm64.whl
+Installing collected packages: hpkernel
+Successfully installed hpkernel-0.1.0
+Collecting multidouble @ git+https://github.com/nmoinvaz/multidouble@94840c198a89f3e4bbacf12bab19008e923a4182#subdirectory=python
+  Cloning https://github.com/nmoinvaz/multidouble (to revision 94840c198a89f3e4bbacf12bab19008e923a4182) to /private/var/folders/7t/cbzjknq94l52r9q6mhl9g2pm0000gn/T/pip-install-_udc7zon/multidouble_2c96ebeeae174947915da1647868ad32
+  Running command git clone --filter=blob:none --quiet https://github.com/nmoinvaz/multidouble /private/var/folders/7t/cbzjknq94l52r9q6mhl9g2pm0000gn/T/pip-install-_udc7zon/multidouble_2c96ebeeae174947915da1647868ad32
+  Running command git rev-parse -q --verify '94840c198a89f3e4bbacf12bab19008e923a4182^{commit}'
+  94840c198a89f3e4bbacf12bab19008e923a4182
+  Resolved https://github.com/nmoinvaz/multidouble to commit 94840c198a89f3e4bbacf12bab19008e923a4182
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Requirement already satisfied: numpy>=1.21 in /Users/nathan/venv-md140/lib/python3.13/site-packages (from multidouble @ git+https://github.com/nmoinvaz/multidouble@94840c198a89f3e4bbacf12bab19008e923a4182#subdirectory=python) (2.5.4)
+Building wheels for collected packages: multidouble
+  Building wheel for multidouble (pyproject.toml): started
+  Building wheel for multidouble (pyproject.toml): finished with status 'done'
+  Created wheel for multidouble: filename=multidouble-0.1.0-cp313-cp313-macosx_11_0_arm64.whl size=373321 sha256=6d9c339cb50a353f1496de7d1f38d68200db38cd3ecabd18af00f4214625df29
+  Stored in directory: /private/var/folders/7t/cbzjknq94l52r9q6mhl9g2pm0000gn/T/pip-ephem-wheel-cache-yc2svdys/wheels/16/ed/5c/c836157f91357f1a75b48df6dff0413b9a0cb67f57ccc9e9b3
+Successfully built multidouble
+Installing collected packages: multidouble
+Successfully installed multidouble-0.1.0
+hpkernel neon multidouble neon
