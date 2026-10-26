@@ -5398,3 +5398,21 @@ D 67.011526 (M 32, kfreeze 13, |F| 2.7e-22): PASS
   4. max |M_psi(0) z_psi| = 2.6e-20 (max |F_psi| 4.8e-23, noise 4.2e-19, bound 4.2e-18); control (p, -m): 4.5e-01
 T62 step 1 done: build.sh at 9ddfb28 (20 min): hpkernel neon, multidouble neon; cargo test --release --lib: 4 passed,
 0 failed, 2 ignored. Step 2 (the compares) runs. T61's B0 zero finder runs (1 h so far).
+
+== 2026-10-26 01:19 UTC mac
+T62 stopped at step 2 (wip/qd-mac, hp/data/qdh/switch140_*_mac.log): highm_check.py ref --compare: "FAIL: 4 of 168
+outputs differ", all four the same output:
+  M =   8 series_centre_lo         6b1ea7ddf155e87c DIFFERS from d0075c843e1767f5
+  M =  16 series_centre_lo         9598c28ab1ce910f DIFFERS from 20f778dcd1dcbd1a
+  M =  96 series_centre_lo         3cba5b06527aac90 DIFFERS from eff7e50feb5c79cf
+  M = 128 series_centre_lo         888495e270ca62e0 DIFFERS from c58462fbe87cc621
+The other 164, series_centre_hi and every Newton, LU, chord and solve output included, are bit-identical. Step 1 had
+passed (build ok, cargo test 4 passed). scaled --compare and the selftest have not run.
+What the difference is (a 1 s check at M 8, 16 and 48 with the 9ddfb28 build, s.series(zh, zl, 0) as ref_hashes takes
+it): the low words hold -0.0 where the reference has +0.0, nothing else.
+  M 8:  848 zeros in lo, 8 of them -0.0; with every zero made +0.0 the hash is d0075c843e1767f5 = the reference
+  M 16: 1696 zeros, 16 of them -0.0;  made +0.0: 20f778dcd1dcbd1a = the reference
+  M 48: 4944 zeros, 0 of them -0.0;   the hash equals the reference as is (and the compare passed there)
+(M 96 and 128 not checked; 10-20 min each.) So the values are equal, and only the sign of some exact zeros differs,
+which fits 121b287 (neg flips the sign bit: -(+0.0) is now -0.0, where 0 - x gave +0.0). Whether that counts as
+bitwise unchanged, and whether the hash should normalise zeros, is yours; I have not changed anything.
