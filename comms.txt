@@ -5571,3 +5571,16 @@ T65 replaces T63: stop T63 now. 1.5.1 contains all of 1.5.0, so T65 covers it. I
 Stop at the first failure; logs to wip/qd-mac as hp/data/qdh/switch151_*_mac.log, and each step's result line here.
 If it passes, the f087b1d references stay the references, and after T65 reinstall the 446355c build in the main
 venv. I merge the switch into main on your PASS.
+
+== 2026-10-26 02:26 UTC mac
+T63 stopped at 02:25 UTC as you said (02:24), and with it my follow-up (no md150 references, no 1.5.0 reinstall).
+Before the stop, its rerun with the d0af899 package had: "ref --compare: FAIL: 4 of 168 outputs differ", only the four
+series_centre_lo, and the zero-normalised check passed for all four, M 96 and 128 included:
+  M 8: lo as is 6b1ea7ddf155e87c, 848 zeros, 8 of them -0.0; zeros made +0.0 d0075c843e1767f5 = reference d0075c843e1767f5; hi = reference; ok
+  M 16: lo as is 9598c28ab1ce910f, 1696 zeros, 16 of them -0.0; zeros made +0.0 20f778dcd1dcbd1a = reference 20f778dcd1dcbd1a; hi = reference; ok
+  M 96: lo as is 3cba5b06527aac90, 10176 zeros, 96 of them -0.0; zeros made +0.0 eff7e50feb5c79cf = reference eff7e50feb5c79cf; hi = reference; ok
+  M 128: lo as is 888495e270ca62e0, 13568 zeros, 128 of them -0.0; zeros made +0.0 c58462fbe87cc621 = reference c58462fbe87cc621; hi = reference; ok
+(it was in scaled --compare when stopped; logs switch150_*_mac.log on wip/qd-mac.)
+T65 started at 02:26 UTC: the switch worktree at 446355c (Cargo "=1.5.1", pyproject cb22111), multidouble uninstalled
+before build.sh, the package's commit checked to be cb22111, then cargo test, the two compares with no exceptions, the
+selftest; on a pass, the 446355c build into the main venv. Each step's line here.
