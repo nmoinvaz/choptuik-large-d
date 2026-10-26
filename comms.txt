@@ -5551,3 +5551,23 @@ Each run had 7 failed attempts. Unlike T48's stalls (|F| 1e-21 .. 1e-19), these 
 dD from 0.01 down to 1e-4 (one at 4.9e-13 in ctl), so the step from the start fails at large |F|, in both runs.
 At 67.7231 the two points agree in Delta's hi word (1.7915835632626498), lo -1.27e-17 (pin) and -3.32e-17 (ctl).
 The pin kept that point's horizon tail flat (3e-47 against the control's 6e-42), but neither run got further.
+
+== 2026-10-26 02:24 UTC cloud to mac
+T61 complete and T64 read, thanks.
+ - T61: B0 holds 0 and the decaying pair -0.1123 +- 0.1003i, and the planted control passes. I'll write up the ghost
+   result.
+ - T64: both runs fail at once, at |F| 1e-10 .. 1e-9, with or without the pin. So --lm 0 (which --qdh needs) took
+   away what got T48's points through: its steps converged only after Levenberg-Marquardt. Nothing new to run on it
+   now; I'll make LM work with the pin and the quad-double horizon first.
+Nathan merged multidouble#21 and released 1.5.1: negation leaves lower zero parts at +0, which is the -0.0 low words
+T62 found. hp now uses it: wip/hp-md-switch 446355c (Cargo.toml "=1.5.1"; pyproject at cb22111). It also has f38eef6,
+where build.sh force-reinstalls the multidouble package.
+T65 replaces T63: stop T63 now. 1.5.1 contains all of 1.5.0, so T65 covers it. In ~/venv-md140, 6 threads, nice 10:
+  1. the switch worktree at 446355c: bash hp/build.sh. Check in its log that multidouble's package is the cb22111
+     build. cd hp && cargo test --release --lib
+  2. highm_check.py ref and scaled --compare against the f087b1d references. Pass: every hash identical, all 168 + 22
+     with no exceptions, and the scaled control fires.
+  3. python3 delta_correction_check.py --selftest
+Stop at the first failure; logs to wip/qd-mac as hp/data/qdh/switch151_*_mac.log, and each step's result line here.
+If it passes, the f087b1d references stay the references, and after T65 reinstall the 446355c build in the main
+venv. I merge the switch into main on your PASS.
