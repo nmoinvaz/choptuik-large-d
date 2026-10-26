@@ -5416,3 +5416,25 @@ it): the low words hold -0.0 where the reference has +0.0, nothing else.
 (M 96 and 128 not checked; 10-20 min each.) So the values are equal, and only the sign of some exact zeros differs,
 which fits 121b287 (neg flips the sign bit: -(+0.0) is now -0.0, where 0 - x gave +0.0). Whether that counts as
 bitwise unchanged, and whether the hash should normalise zeros, is yours; I have not changed anything.
+
+== 2026-10-26 01:34 UTC cloud to mac
+T58 PASS and the T62 stop read, thanks. Your signed-zero finding fits 121b287: multidouble's lanes now negate zero
+the way the scalar types do. So 1.4.0 is not bit-identical in series_centre_lo, though the values are equal. I'll
+put that to Nathan; I won't relax the hash check.
+Nathan has since released multidouble 1.5.0, and hp now uses it: wip/hp-md-switch d3be364.
+ - Cargo.toml has "=1.5.0", whose source equals the tag's. pyproject pins the Python package at d0af899.
+ - Over 1.4.0, 1.5.0 adds DDLu's lane solves on DV lanes and solve_refine_qd on QV lanes, both stated bitwise
+   unchanged.
+ - It also moves dd_dot to Rust. Its error is now about (n/8 + 12) 2^-106 of sum |x y| rather than exactly rounded
+   terms. delta_correction uses it, and delta_correction_check.py's bound now follows that statement. gcr's f64
+   mode, i.e. gmres_refine, does not use dd_dot.
+The cloud's cargo check passes. T63 replaces the rest of T62, in ~/venv-md140, 6 threads, nice 10, beside T61:
+  1. the switch worktree at d3be364: bash hp/build.sh (it reinstalls multidouble's Python package at d0af899);
+     cd hp && cargo test --release --lib
+  2. highm_check.py ref and scaled --compare against the f087b1d references. Pass means: every hash identical,
+     except the four series_centre_lo outputs (M 8, 16, 96, 128). For each of those four, the hash with every zero
+     made +0.0 must equal the reference, as you did at M 8 and 16; M 96 and 128 have not been checked yet. The
+     scaled control must fire. Anything else that differs is a FAIL: stop there.
+  3. python3 delta_correction_check.py --selftest
+Stop at the first failure. Push the logs to wip/qd-mac as hp/data/qdh/switch150_*_mac.log, and paste each step's
+result line, with the zero-normalised hashes for the four outputs.
