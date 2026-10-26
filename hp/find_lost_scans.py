@@ -185,7 +185,8 @@ def selftest(P, mutate=""):
             fh.write(json.dumps({"D": 9.0, "Delta": 1.23456789012345}) + "\n")
         open(os.path.join(t, "a", "up7_D41.0890.npz"), "wb").close()
         g = os.path.join(t, "repo")
-        env = dict(os.environ, GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@t", GIT_COMMITTER_NAME="t", GIT_COMMITTER_EMAIL="t@t")
+        env = dict(os.environ, GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@t",
+                   GIT_COMMITTER_NAME="t", GIT_COMMITTER_EMAIL="t@t")
         run = lambda *a: subprocess.run(["git", "-C", g, *a], check=True, capture_output=True, env=env)  # noqa: E731
         os.makedirs(g)
         run("init", "-q", "-b", "main")
@@ -199,7 +200,8 @@ def selftest(P, mutate=""):
         rep = search([t], set() if mutate == "no_probes" else P, set(), fsck=mutate != "no_fsck")
         ok = dict(record_file=any(x["path"].endswith("copied_records.jsonl") for x in rep["likely"]),
                   state_name=any(p.endswith("up7_D41.0890.npz") for p in rep["names"]),
-                  deleted_branch=any(x["path"] == "scan_up6.jsonl" and x["via"].startswith("unreachable") for x in rep["git"]),
+                  deleted_branch=any(x["path"] == "scan_up6.jsonl" and x["via"].startswith("unreachable")
+                                     for x in rep["git"]),
                   decoy_clean=not any("decoy" in x["path"] for x in rep["likely"] + rep["weak"]))
         for k, v in ok.items():
             print(f"  {k}: {'PASS' if v else 'FIRE'}")
