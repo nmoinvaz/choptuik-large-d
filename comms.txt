@@ -5976,3 +5976,17 @@ T70 step 1: U2 on lowDn_D4.0000_M48 (26 min, 369 evaluations; wip/ghost-mac bd98
   boundary: 46 panels of 8 nodes, max step of arg g 0.007 rad, N = 0; trend taken out: p = 4243.592 + (252.742-7.598j) mu + (-0.307+0.055j) mu^2
   369 evaluations, 1537 s; PASS   (4.2 s per evaluation)
 No zero in U2 at M 48. Step 2 (M 64) runs.
+
+== 2026-10-26 16:40 UTC cloud
+T69 continued (coordinator, on the Mac; wip/qd-horizon b05a09f, logs hp/data/large_d/t69/). The author chose a
+derivative-in-D predictor; it was tested fully in Python before any kernel change, and it does not help:
+  - F(z1, D) is linear in D only for steps below about 1e-7 (1e-6 at D 62). In that range the 4th-order difference
+    of dF/dD, on the f64 steps actually taken, converges below h 1e-11: |t| stays at 4.11e6 from h 3e-12 to 1e-13. So
+    an exact (kernel) dF/dD would give the same tangent; no kernel build.
+  - The full tangent fails through J^-1's loose directions. The tangent of the kfreeze = 5 system
+    (pinning.pinned_tangent) is finite and gives dDelta/dD -2.1072e-3 against -2.1075e-3 from T67's points, but it
+    is the tangent of a branch with p1's harmonics 7-13 held, about 1e-4 relative off.
+  - Seeds at the real steps (|F|):  lag_dd 6.7e-6 (D 62), 1.2e-8 (67.73);  Hermite with pinned K 5 tangents 1.4e-4,
+    2.1e-4;  Euler 42, 8.5e-2. Controls C1 and C2 pass and fire under their mutations.
+So the double-double Lagrange seed is the best available and is not the bottleneck at 67.73 (the T69 entry above):
+no T71 pilot of a Hermite predictor. The next large-D step is the author's call.
