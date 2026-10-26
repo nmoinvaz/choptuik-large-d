@@ -1,4 +1,4 @@
-(re-)converged start D=67.722443 M=32 nodes=[0.3, 0.4, 0.5, 0.6, 0.7]: Delta 1.7915848809127641 ok True (25s)
+(re-)converged start D=67.722443 M=32 nodes=[0.3, 0.4, 0.5, 0.6, 0.7]: Delta 1.7915848809127641 ok True (28s)
 history point D=67.438434: ok True, Delta 1.7921860892105772
 history point D=67.470328: ok True, Delta 1.7921183294669507
 history point D=67.517741: ok True, Delta 1.7920177138211202
@@ -8,19 +8,23 @@ history point D=67.621758: ok True, Delta 1.7917974572960111
 history point D=67.654087: ok True, Delta 1.7917291341914281
 history point D=67.691755: ok True, Delta 1.7916496075943791
    D=67.732443: Newton stopped at |F| 1.0e-09; Levenberg-Marquardt from the predictor
-Traceback (most recent call last):
-  File "/Users/nathan/Source/choptuik-mac-qd2/hp/scan_hp.py", line 494, in <module>
-    main()
-    ~~~~^^
-  File "/Users/nathan/Source/choptuik-mac-qd2/hp/scan_hp.py", line 375, in main
-    s, zh2, zl2, hist, ok, dt = solve_at(Dn, zp, zpl, a, nodes, M, a.it_max, pin=pin)
-                                ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/nathan/Source/choptuik-mac-qd2/hp/scan_hp.py", line 156, in solve_at
-    zh2, zl2, h2 = lm_solve(s, zh, zl, tol=a.tol, it_max=a.lm, verbose=a.verbose, newton_after=1e-22)
-                   ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/nathan/venv-qd/lib/python3.13/site-packages/hpkernel/driver.py", line 644, in lm_solve
-    steps, Fh, Fl = s.lm_steps(zh, zl, list(mus))
-                    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
-  File "/Users/nathan/venv-qd/lib/python3.13/site-packages/hpkernel/driver.py", line 257, in _no
-    raise NotImplementedError("QdhSolver: only the double-double Jacobian (jac='dd'); no LM, no mixed steps")
-NotImplementedError: QdhSolver: only the double-double Jacobian (jac='dd'); no LM, no mixed steps
+D=67.732443: no convergence (|F| 2.9e-20); dD 0.01 -> 0.005
+   D=67.727443: Newton stopped at |F| 4.9e-13; Levenberg-Marquardt from the predictor
+D=67.7274 Delta=1.7915743403718325+2.19e-17 its 50 |F| 3.2e-23 252s piv 6.2e-06..1.8e+08 dDelta/dF max 1.2e+15 tails 6e-56 2e-39
+   D=67.731443: Newton stopped at |F| 1.4e-11; Levenberg-Marquardt from the predictor
+D=67.7314 Delta=1.7915659090251013+1.37e-17 its 46 |F| 3.1e-22 198s piv 8.4e-06..1.8e+08 dDelta/dF max 1.2e+15 tails 7e-56 2e-38
+   D=67.734643: Newton stopped at |F| 1.4e-10; Levenberg-Marquardt from the predictor
+D=67.7346 Delta=1.7915591646426148+1.08e-16 its 19 |F| 5.0e-22 105s piv 3.9e-06..1.8e+08 dDelta/dF max 1.2e+15 tails 7e-56 3e-38
+   D=67.737203: Newton stopped at |F| 8.8e-11; Levenberg-Marquardt from the predictor
+D=67.7372 Delta=1.7915537695812753+4.85e-17 its 45 |F| 1.3e-21 194s piv 7.9e-07..1.8e+08 dDelta/dF max 1.2e+15 tails 8e-56 6e-38
+   D=67.739251: Newton stopped at |F| 3.0e-10; Levenberg-Marquardt from the predictor
+D=67.739251: no convergence (|F| 7.0e-13); dD 0.0020480000000000003 -> 0.0010240000000000002
+   D=67.738227: Newton stopped at |F| 5.3e-11; Levenberg-Marquardt from the predictor
+D=67.738227: no convergence (|F| 1.7e-17); dD 0.0010240000000000002 -> 0.0005120000000000001
+   D=67.737715: Newton stopped at |F| 2.3e-11; Levenberg-Marquardt from the predictor
+D=67.737715: no convergence (|F| 7.5e-20); dD 0.0005120000000000001 -> 0.00025600000000000004
+   D=67.737459: Newton stopped at |F| 1.1e-11; Levenberg-Marquardt from the predictor
+D=67.737459: no convergence (|F| 8.6e-20); dD 0.00025600000000000004 -> 0.00012800000000000002
+   D=67.737331: Newton stopped at |F| 2.1e-11; Levenberg-Marquardt from the predictor
+D=67.737331: no convergence (|F| 1.3e-19); dD 0.00012800000000000002 -> 6.400000000000001e-05
+step too small
