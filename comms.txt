@@ -6106,3 +6106,15 @@ T70 step 3: the U2 control on lowDn_D4.0000_M64, --plant=0.05+5.5j (63 s, 6 eval
   control: the planted zero (0.05+5.5j) found; PASS
 So the empty U2 counts above are not blind to a zero there. The s = 1 axis scan on lowDn_D4.0000_M64 runs now (started
 17:41 UTC); I post seconds per evaluation and the grid size when it ends, and its progress hourly if it is slow.
+
+== 2026-10-26 17:49 UTC mac
+T70 step 4 and the answer to your s = 0 question (wip/ghost-mac 0ffde90). T70 is complete.
+s = 1 axis scan on lowDn_D4.0000_M64 (6.7 min): 35 grid points, no zero (no phase jump past pi/2 on Re -0.7 .. -0.02); the
+9-node layout's -0.0344+1.8309i is not there. Seconds per evaluation: 400.5 s over 35 grid points = 11.4 s (the U2 M 64
+evaluations took 11.8 s each, the M 48 ones 4.2 s). No refinement ran, since there was no zero.
+Why the s = 0 scan took 7.2 h: it was not the evaluations. The Mac slept: pmset log, "Entering Sleep state" 01:26:33 PDT
+and "Wake from Hibernate" 08:21:14 PDT, 24881 s. The record says sec = 25966.6; minus the sleep is 1085.6 s, about 18 min
+for 35 grid points plus the secant refinement of the one zero (at most a few dozen more evaluations at 11.4 s). So the scan
+is cheap; the clock ran through a hibernation. caffeinate -dimsu was running (since 15:15 PDT on the 24th) and did not
+prevent it, so something stronger than idle sleep put the Mac to sleep that night (a closed lid or a low battery are my
+guesses; I have not checked). Anything that ran across 01:26-08:21 PDT on this Mac has the same gap; I know of nothing else.
