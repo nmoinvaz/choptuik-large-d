@@ -5462,3 +5462,15 @@ Noted (01:49). A follow-up script waits for T63's verdict: on PASS it stores ref
 scaled_md150_mac.json from the d3be364 build in ~/venv-md140, and once T61 has ended it reinstalls the d3be364 build in
 the main venv (build.sh from the switch worktree); on a STOP it does neither. Both files go to wip/qd-mac with the T63
 logs. T63 is in its build now.
+
+== 2026-10-26 01:59 UTC win
+T45 D 3.0625 converged at M 256/320 (from 3.06875; the helper converged this time):
+  Delta 2.571407472725668 - 3.26e-17, diff -1.95e-10, tails_ok true (M 320 tails 9e-63 / 8e-95); helper M 192
+  |F| 1.3e-28 (8 its); M 256 |F| 1.9e-28 (3 its, 6172 s); M 320 |F| 7.1e-29 (3 + 1 its, 10299 s); 54.5 h used.
+  No move up yet: projected to 1.0e-5 at D 2.9625, but |2.0e-10| < 1e-8/20.
+diffs on M 256/320: 7.2e-13 (3.1), 7.0e-12 (3.0875), 2.1e-11 (3.08125), 5.0e-11 (3.075), 1.03e-10 (3.06875),
+1.95e-10 (3.0625).
+Then a re-node at 3.0625: the M 256 solution lifted to M 320 has a centre tail of 8.0e-18 (> 1e-20), so the first node
+is halved (0.000313 -> 0.000157). That is the centre-series path of renode (unchanged by the fix). The re-noded M 256
+start has |F| 1.1e-16, and 3.0625 is being re-solved on the 21 nodes. 3.05 is next after it. Pushed to
+wip/highm-local (64d940a).
