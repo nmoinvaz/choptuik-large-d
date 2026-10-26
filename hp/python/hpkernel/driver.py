@@ -709,7 +709,8 @@ def delta_correction(s, Fh, Fl):
 
 
 def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_halvings=12, junk_only=False,
-                    delta_max=1e-9, delta_tol=1e-14, jac="dd", mixed=None, gmres=None, dd_finish=True, dd_last=False):
+                    delta_max=1e-9, delta_tol=1e-14, jac="dd", mixed=None, gmres=None, dd_finish=True, dd_last=False,
+                    accept_stall=None):
     """Newton in phases, all with backtracking on |F|_2:
     1. 'all': the step J^-1(-F) with its component in the w weakest right singular directions removed, so the
        well-determined part converges without its second-order error leaking into them;
@@ -734,7 +735,11 @@ def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_hal
     dd_last (f64h, f64g, f64hg; default off): once |F| < tol, one exact step instead of taking the mixed step
     (exact_last_step): at D ~ 60 the mixed iterations stop just below tol with a residual along the weakest directions,
     which leaves Delta off by 1e-16..1e-15 where the exact Newton's is 1e-18 (notes/LARGE_D_MIXED.md section 4); the
-    exact step costs one double-double Jacobian per solve and also leaves the exact LU for the sensitivities."""
+    exact step costs one double-double Jacobian per solve and also leaves the exact LU for the sensitivities.
+    accept_stall (F_max, dDelta_max), default None: when the phases end without |F| < tol, the point is still accepted
+    if |F| <= F_max and the linearised Delta correction there (delta_correction with the LU at the final point) is at
+    most dDelta_max: the stall is in directions Delta does not feel (the quad-double-horizon pilot, comms 2026-10-26).
+    """
     if jac not in JACS:
         raise ValueError(f"jac must be one of {JACS}, not {jac!r}")
     hist = []
@@ -846,4 +851,15 @@ def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_hal
             continue
         zh, zl = th, tl
         n_prev = n0
+    done = bool(hist) and (hist[-1]["F"] < tol or (hist[-1].get("accepted") is True and "dDelta_est" in hist[-1]))
+    if accept_stall is not None and jac == "dd" and not done:
+        _, _, Fh, Fl, pmin, pmax = s.newton(zh, zl)
+        nF = dd_norm(Fh, Fl)
+        dd = delta_correction(s, Fh, Fl)
+        ok = nF < tol or (nF <= accept_stall[0] and abs(dd) <= accept_stall[1])
+        hist.append(dict(it=len(hist), F=nF, Delta=float(zh[-1]), piv=(pmin, pmax), mode="stall", dDelta_est=dd,
+                         accepted=ok, accept_stall=True, t=round(time.time() - t0, 1)))
+        if verbose:
+            print(f"  dn: stopped at |F| {nF:.2e}; Delta correction {dd:+.1e} -> "
+                  f"{'accepted (accept_stall)' if ok else 'not accepted'}", flush=True)
     return zh, zl, hist

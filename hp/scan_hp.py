@@ -112,24 +112,33 @@ def step_split(hist):
     return out
 
 
+def accept_stall(a):
+    """--accept_stall F_MAX,DDELTA_MAX as a pair, or None"""
+    if not a.accept_stall:
+        return None
+    f, d = (float(v) for v in a.accept_stall.split(","))
+    return f, d
+
+
 def solve_at(D, zh, zl, a, nodes, M, it_max, pin=None):
     """pin: None, or (coeffs, ks) - p1's harmonics ks (all in (a.pin, a.kfreeze]) held at the given cos/sin
     coefficients (PinnedSolver), the rest solved"""
     s = make_solver(D, M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks, threads=a.threads,
                     kfreeze=a.pin if pin is not None else a.kfreeze, horizon_alpha=a.horizon_alpha)
     s.set_segs(s.plan(zh, zl, a.tol_step, a.hmax))
+    if a.qdh:
+        if a.jac != "dd" or a.lm:
+            raise SystemExit("--qdh needs --jac dd and --lm 0")
+        s = QdhSolver(s)
     if pin is not None:
+        # outside QdhSolver: the pin is an offset on the residual, whichever precision the horizon block has
         hh, hl = band_field(pin[0], pin[1], M)
         s = PinnedSolver(s, M, hh, hl)
-    if a.qdh:
-        if pin is not None or a.jac != "dd" or a.lm:
-            raise SystemExit("--qdh needs --jac dd, --lm 0 and no --pin")
-        s = QdhSolver(s)
     t0 = time.time()
     jkw = {} if a.jac == "dd" else dict(jac=a.jac, gmres=gmres_opts(a), dd_last=a.dd_last)
     if a.corrector in ("dn", "dnp"):
         zh2, zl2, hist = deflated_newton(s, zh, zl, tol=a.tol, it_max=it_max, w=a.w, verbose=a.verbose,
-                                         junk_only=a.junk_only, delta_tol=a.delta_tol, **jkw)
+                                         junk_only=a.junk_only, delta_tol=a.delta_tol, accept_stall=accept_stall(a), **jkw)
     else:
         zh2, zl2, hist = newton_solve(s, zh, zl, tol=a.tol, it_max=it_max, verbose=a.verbose, **jkw)
     if a.corrector == "dnp" and hist and hist[-1]["F"] < a.polish_from:
@@ -139,7 +148,9 @@ def solve_at(D, zh, zl, a, nodes, M, it_max, pin=None):
         if h3 and h3[-1]["F"] < hist[-1]["F"]:
             zh2, zl2 = zh3, zl3
             hist = hist + [dict(r, polish=True) for r in h3]
-    ok = bool(hist) and (hist[-1]["F"] < a.tol or bool(hist[-1].get("accepted")))
+    # accepted at a stall (--accept_stall), possibly polished below that point's |F| afterwards
+    stall_ok = any(r.get("accept_stall") and r.get("accepted") for r in hist)
+    ok = bool(hist) and (hist[-1]["F"] < a.tol or bool(hist[-1].get("accepted")) or stall_ok)
     if not ok and a.lm and pin is None:      # (lm_steps knows nothing of the pin offset)
         print(f"   D={D}: Newton stopped at |F| {hist[-1]['F']:.1e}; Levenberg-Marquardt from the predictor", flush=True)
         zh2, zl2, h2 = lm_solve(s, zh, zl, tol=a.tol, it_max=a.lm, verbose=a.verbose, newton_after=1e-22)
@@ -184,9 +195,12 @@ def main():
     ap.add_argument("--horizon_alpha", type=int, default=0, choices=[0, 1, 2],
                     help="the horizon series in alpha = a - 1 (1; a lower residual floor at large D, the same solution; "
                     "notes/LARGE_D_MIXED.md section 10), 2 its control; 0 (default) as before")
+    ap.add_argument("--accept_stall", default="", help="F_MAX,DDELTA_MAX: accept a point whose deflated Newton ends "
+                    "above --tol if |F| <= F_MAX and its linearised Delta correction is at most DDELTA_MAX in size "
+                    "(driver.deflated_newton accept_stall)")
     ap.add_argument("--qdh", type=int, default=0, choices=[0, 1],
                     help="1: the residual's horizon block in quad-double (driver.QdhSolver, notes/QUAD_DOUBLE.md section "
-                         "11): the double-double residual floor of large D removed; needs --jac dd, no --pin")
+                         "11): the double-double residual floor of large D removed; needs --jac dd and --lm 0")
     ap.add_argument("--corrector", default="dn", choices=["dn", "dnp", "newton"],
                     help="dn: deflated Newton (default); dnp: deflated Newton, then plain Newton to the bottom")
     ap.add_argument("--polish_its", type=int, default=4, help="dnp: plain Newton steps after the deflated phase")
@@ -385,6 +399,8 @@ def main():
             # correction measure what the pin costs; the stepped point's band is the measurement for the trend
             sf = make_solver(D, M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks, threads=a.threads, kfreeze=a.kfreeze)
             sf.set_segs(s.get_segs())
+            if a.qdh:
+                sf = QdhSolver(sf)
             fdh, fdl, fFh, fFl, _, _ = sf.newton(zh, zl)
             zmh, zml = dd_add(zh, zl, np.asarray(fdh), np.asarray(fdl))
             pin_meas.append((D, np.ravel(band_coeffs(zmh[:M], zml[:M], M, pin_ks))))
