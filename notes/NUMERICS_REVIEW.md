@@ -476,7 +476,10 @@ the error against the true solution it is low by ten from D = 35.35 on, where th
 ## 3. The data pipeline
 
 `rv2_data.py` rebuilds the merge from the runs' JSON files (cloud runs in `/home/claude/dss/hp_scan` in name order,
-then `hp/data/local`), written from `export_dd.py`'s docstring, and compares (R4):
+then `hp/data/local`), written from `export_dd.py`'s docstring, and compares (R4). The cloud runs' files were never
+pushed and have been missing since the cloud session ended on 2026-10-26, so R4 and `rv2_restarts.py` (R3) cannot be
+rerun; `rv2_data.log` and `rv2_restarts.log` are their last output, and the rows that remain are
+`hp/data/large_d/cloud_scan_rows.csv`.
 
 - **A.** 857 CSV rows = 857 distinct D in the runs, every (D, hi, lo, run) identical. **OK.**
 - **B.** Every D equals round(D, 6) (so `dd_fits_mp`'s keys are the floats the solver ran at, and n = D − 2 is exact);
@@ -612,8 +615,8 @@ From the repository root, with hpkernel built (`hp/build.sh`) and python-flint 0
 |---|---|---|
 | R1 | `python3 hp/review/rv2_residual.py hp/data/states/up13_D60.0020.npz` (`--perturb 1e-6`, `--break=delta`, `--break=eq`) | 7 min |
 | R2 | `hp/review/rv2_batch.sh hp/data/states/up13_D60.0020.npz OUT.jsonl full`, then `rv2_batch2.sh`, `rv2_batch3.sh` (each line one `rv2_resolve.py` or `rv2_residual.py` call; `rv2_m48start.py`) | 3–4 h |
-| R3 | `python3 hp/review/rv2_noise.py`; `python3 hp/review/rv2_restarts.py` | 10 s |
-| R4 | `python3 hp/review/rv2_data.py [/home/claude/dss/hp_scan] [--break=merge\|round\|lo]`; `rv2_runs.py` | 2 s |
+| R3 | `python3 hp/review/rv2_noise.py`; `python3 hp/review/rv2_restarts.py CLOUD_SCAN_DIR` (the cloud runs' logs, missing since 2026-10-26) | 10 s |
+| R4 | `python3 hp/review/rv2_data.py CLOUD_SCAN_DIR [--break=merge\|round\|lo]`; `rv2_runs.py CLOUD_SCAN_DIR` (the cloud runs' records, missing since 2026-10-26) | 2 s |
 | R5 | `python3 hp/review/rv2_fits.py selftest\|budget\|influence\|rules\|variants\|clean [--decimal] [--detail=K] [--kfcut=D:v,…]` | 20 s – 2 min each |
 | R6 | `python3 hp/review/rv2_planted.py` | 1 min |
 | misc | `python3 hp/review/rv2_misc.py` (loader error, cleaning sets, the D = 10.75 point, tails' leave-one-out, sign counts, 2π) | 2 min |
