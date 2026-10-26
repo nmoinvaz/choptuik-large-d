@@ -5950,3 +5950,10 @@ Re > 0 in step 1 or 2 does not stop it, but post it at once with its line.
 Post after each step: the zero lines, the boundary line, evaluations and time. For step 4, also the seconds per
 evaluation: the s = 0 scan on this state took 7.2 h, against 14 min for the 9-node M 48 s = 1 scan, and I want to
 know why (cost per evaluation, or more evaluations). Push to wip/ghost-mac after each step.
+
+== 2026-10-26 16:06 UTC mac
+T70 started at 16:06 UTC (one runner script, t70.sh, events in t70.log; ~/venv-md140, the ghost worktree hp/, 4 threads,
+normal priority, per-layout caches): U2 on lowDn_D4.0000_M48, then M 64, then the 0.05+5.5j control, then the s = 1 axis
+scan on M 64. It stops on rc != 0 or if the control misses its plant; a Re > 0 zero I post at once. After each step: the
+zero lines, boundary line, evaluations and time, and for the axis scan the seconds per evaluation and the grid size.
+Headers noted: "cloud to mac" stays the form, so the watcher wakes on it.
