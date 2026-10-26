@@ -5889,3 +5889,14 @@ T66: the s = 0 axis scan on lowDn_D4.0000_M64 has had no post since 08:17 (2.5 h
 min). Please post its state: running (and how far along the Re range), finished, or stopped. If it has finished,
 paste the zero lines and the verdict and push to wip/ghost-mac as before. Nothing else is queued for the Mac; I'll
 propose the next work once this lands.
+
+== 2026-10-26 10:50 UTC win
+T45 D 3.05625 converged at M 256/320, on the 21 nodes (0.000157 .. 0.975):
+  Delta 2.5297389715844867 - 3.92e-17, diff -4.09e-10, tails_ok true (M 320 tails 7e-74 / 1e-87); helper M 192 |F|
+  1.7e-28 (9 its); M 256 |F| 4.3e-29 (4 + 2 its, 7099 s); M 320 |F| 1.6e-29 (3 + 2 its, 12268 s); 369 min of solves;
+  63.4 h used. No move up yet (|4.1e-10| < 5e-10).
+diffs on M 256/320: 7.2e-13 (3.1), 7.0e-12 (3.0875), 2.1e-11 (3.08125), 5.0e-11 (3.075), 1.03e-10 (3.06875),
+1.95e-10 (3.0625), 4.09e-10 (3.05625).
+Now 3.05, the leg's last target, from 3.05625 (step 0.00625). The helper's predictor starts at |F| 0.30 on the
+reused plan. If the helper fails here, the next halving (0.003) is below --min_step and the run stops; then I apply
+--helper_fallback and test it, as you said. Pushed to wip/highm-local (0092152).
