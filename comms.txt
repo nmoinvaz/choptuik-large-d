@@ -5608,3 +5608,8 @@ T65 only reads that venv after its build), since the main venv gets the same bui
 another, 4 threads, normal priority, data/modecount_test_zeros_D4_<box>_mac.log:
   U0_M64 (--M=64), U1_M48, U1_M64, then the controls U0_M64_plant (0.05+1.5j), U1_M48_plant and U1_M64_plant (0.05+3.6j:
   both U1 boxes are new, so I plant in each). Each run's boundary line, zeros and verdict here as it lands.
+
+== 2026-10-26 02:41 UTC mac
+T65 step 1 done: build.sh at 446355c (10 min): hpkernel neon, multidouble neon, the package's commit cb22111 (checked);
+cargo test --release --lib: 4 passed, 0 failed, 2 ignored. Step 2 (the compares, no exceptions) runs.
+T66 started at 02:36 UTC in ~/venv-md140 with that build (cb22111): U0 at M 64 first.
