@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "/Users/nathan/Source/choptuik-mac-ghost/hp/modecount_test_zeros.py", line 296, in <module>
+    main()
+    ~~~~^^
+  File "/Users/nathan/Source/choptuik-mac-ghost/hp/modecount_test_zeros.py", line 239, in main
+    st = setup(args[0], M=int(opts["M"]) if "M" in opts else None, threads=int(opts.get("threads", 1)), log=print)
+  File "/Users/nathan/Source/choptuik-mac-ghost/hp/modecount_common.py", line 78, in setup
+    s, c = build_pair(meta, zh, zl, M, kf, threads)
+           ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/nathan/Source/choptuik-mac-ghost/hp/modecount_common.py", line 45, in build_pair
+    c = modecount_cx.CSolver(M, float(nh[0]), float(nl[0]), dh, dl, ph, pl, list(meta["nodes"]), s.get_segs(),
+                             meta.get("kt", 36), meta.get("kc", 420), meta.get("ks", 100), threads, a, b, None)
+ValueError: M must be one of 16, 32, 48, 64
