@@ -1,0 +1,12 @@
+   D=67.737203: Newton stopped at |F| 3.9e-19; Levenberg-Marquardt from the predictor
+(re-)converged start D=67.737203 M=32 nodes=[0.3, 0.4, 0.5, 0.6, 0.7]: Delta 1.7915537695812753 ok True (154s)
+history point D=67.727443: ok True, Delta 1.7915743403718341
+   D=67.731443: Newton stopped at |F| 1.2e-19; Levenberg-Marquardt from the predictor
+history point D=67.731443: ok True, Delta 1.7915659090251013
+   D=67.734643: Newton stopped at |F| 1.9e-19; Levenberg-Marquardt from the predictor
+history point D=67.734643: ok True, Delta 1.7915591646426148
+D=67.7422 Delta=1.7915432334920711-8.17e-17 its 10 |F| 2.2e-29 26s piv 9.4e-07..1.8e+08 dDelta/dF max 5.7e+08 tails 1e-55 6e-43 pin: |F_full| 1.3e-22 dDelta_pin +3.7e-14
+D=67.7485 Delta=1.7915300655001141-7.53e-17 its 11 |F| 4.6e-29 30s piv 4.0e-08..1.8e+08 dDelta/dF max 5.7e+08 tails 3e-55 2e-42 pin: |F_full| 1.3e-22 dDelta_pin +1.2e-13
+D=67.7500 Delta=1.7915268065222991+1.00e-16 its 9 |F| 3.7e-29 22s piv 2.8e-07..1.8e+08 dDelta/dF max 5.7e+08 tails 5e-55 3e-42 pin: |F_full| 1.3e-22 dDelta_pin +1.5e-13
+D=67.7598 Delta=1.7915062363690017+1.05e-16 its 11 |F| 5.3e-29 37s piv 4.6e-06..1.8e+08 dDelta/dF max 5.7e+08 tails 7e-54 9e-42 pin: |F_full| 1.3e-22 dDelta_pin +4.6e-13
+D=67.7720 Delta=1.7914805328100369-4.55e-17 its 12 |F| 1.8e-29 34s piv 1.2e-05..1.8e+08 dDelta/dF max 5.7e+08 tails 3e-52 3e-41 pin: |F_full| 1.1e-22 dDelta_pin +1.2e-12
