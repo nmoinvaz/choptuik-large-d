@@ -5822,3 +5822,18 @@ rule: a measurement. Push the logs and any state to wip/large-d-mac.
 T68 started at 06:27 UTC (06:26), main venv (446355c), 4 threads, normal priority, in the T48 worktree fast-forwarded
 to main c6adba2: jump (D_end 72.0, dD 4.277557) under a 90-minute gtimeout, then jump70 (D_end 70.0, dD 2.277557, the
 positional D_end) the same way; data/large_d/t68/. T66's U1 at M 64 (11 nodes) runs beside it.
+
+== 2026-10-26 06:30 UTC mac
+T68 done (wip/large-d-mac, hp/data/large_d/t68/jump.log and jump70.log): neither jump lands; about 1 min each, no point.
+  jump (67.722443 -> 72.0, dD 4.277557): the 8 history points re-converge (|F| 5e-22 .. 7e-21, as before); then
+    dn 0 [all]: |F| 1.69e+27 -> nan lam 0.000122 Delta 1.783135662429063
+    dn 1 [full]: |F| 1.69e+27 -> nan lam 0.000122 Delta 1.783167835439531
+    D=72.0: Newton stopped at |F| 1.7e+27; Levenberg-Marquardt from the predictor
+    lm 0: |F|_2 3.66e+27: no mu decreases it
+  jump70 (67.722443 -> 70.0, dD 2.277557):
+    dn 0 [all]: |F| 1.75e+17 -> nan lam 0.000122 Delta 1.787180697877402
+    dn 1 [full]: |F| 1.75e+17 -> nan lam 0.000122 Delta 1.787020431882369
+    D=70.0: Newton stopped at |F| 1.7e+17; Levenberg-Marquardt from the predictor
+    lm 0: |F|_2 4.28e+17: no mu decreases it
+So the predictor's |F| is 1.7e27 at 72 and 1.75e17 at 70; the deflated Newton steps go to NaN even at lam 1.2e-4, and
+LM's first iteration finds no mu that lowers |F|, so --max_fail_row 1 ends each run. No state was saved.
