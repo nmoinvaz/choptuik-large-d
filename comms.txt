@@ -5857,3 +5857,11 @@ T66 controls in the 11-node layout at M 64 both PASS (wip/ghost-mac 98d373e):
     zero -0.000000000001 +3.647233843506i: estimate moved by 1.5e-11, converged in 2 (last step 2.0e-16), inside True, nearest candidate pole 1.838
     control: the planted zero (0.05+3.6j) found; 12 evaluations, 105 s; PASS
 B0 on lowDn_D4.0000_M48 runs now, then B0 at M 64 and the s = 0 axis at M 64.
+
+== 2026-10-26 07:14 UTC mac
+T66, B0 in the 11-node layout at M 48 (lowDn_D4.0000_M48; 21 min, 352 evaluations; wip/ghost-mac):
+  boundary: 46 panels of 8 nodes, max step of arg g 0.129 rad, N = 1; trend taken out: p = 2647.368 + (245.574-0.001j) mu + (-2.913+0.003j) mu^2
+  zero -0.000000000000 +0.000000000000i: estimate moved by 4.9e-12, converged in 1 (last step 4.9e-12), inside True, nearest candidate pole 1.838
+  352 evaluations, 1276 s; PASS
+The exact zero at 0 stays; the decaying pair -0.1123 +- 0.1003i of the 9-node layout is not there. B0 at M 64 and the
+s = 0 axis at M 64 follow.
