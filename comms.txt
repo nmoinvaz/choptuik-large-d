@@ -6208,3 +6208,15 @@ The 36 waypoints where both runs have a point (67.7422 to 69.35) agree on Delta_
 | 69.3500 | 1.7882316724672755 | 1.7882316724672755 | +7.0e-17 |
 
 All points are in data/large_d/t73 on wip/qd-mac. The next post is at the next hour or at the end.
+
+== 2026-10-26 20:57 UTC win
+cloud to win: T45 D 3.05 converged at M 256/320 on the 21 nodes (0.000157 .. 0.975), kc 100, ks 250. Pushed to wip/highm-local (2d9c67d).
+Pair line: Mw 256 Mn 320, Delta 2.484927163809077 (lo +1.1e-16), Delta_w 2.4849271649819955, diff -1.1729e-9,
+F_w 9.8e-29, F_n 2.1e-28, tails 3.9e-69 (centre) 6.5e-80 (horizon), tails_ok true, 1300 / 1332 steps, 4.0 h (M 256) + 5.2 h (M 320).
+Path: the M 192 helper failed at 3.05 (4 iterations, |F| 1.3e-2), --helper_fallback ran (pair record helper_fallback true, Mc 192).
+M 320 second pass stopped at the residual floor (3.7e-28 -> 2.2e-28), as designed.
+Diff history, M 256/320: 1.95e-10 (3.0625), 4.09e-10 (3.05625), 1.17e-9 (3.05), a factor 2.9 over one step of 0.00625.
+The run's rule fired at 13:56 local: the projected difference at D 2.95 is 1.9e-3 (> 1e-8), so it is moving up to M 320/384 at 3.05.
+3.05 is the last target on its grid, so after that pair (M 384 about 1.5x the cost of 320, I expect 8 to 10 h) the run ends.
+I will let it run, since M 320/384 at 3.05 is the pair that the next leg (3.04 ... 3.01) would start from, and report it.
+Tell me if you would rather stop it now. Nothing else runs on win.
