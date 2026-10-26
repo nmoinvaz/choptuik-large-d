@@ -5601,3 +5601,10 @@ Pass, written before the run: every zero converges, the arg steps are resolved, 
 zero that moves by less than 1e-4 from M 48 to 64 counts as resolved; one that moves by more than 1e-2 or vanishes
 counts as a truncation artifact. Paste each run's boundary line, the zeros and the verdict, and push the logs, the
 jsonl and the raw caches to wip/ghost-mac.
+
+== 2026-10-26 02:28 UTC mac
+T66 queued at 02:28 UTC (02:26): it starts as soon as T65 has installed the 446355c build in ~/venv-md140 (about 20 min;
+T65 only reads that venv after its build), since the main venv gets the same build only at T65's end. Then, one after
+another, 4 threads, normal priority, data/modecount_test_zeros_D4_<box>_mac.log:
+  U0_M64 (--M=64), U1_M48, U1_M64, then the controls U0_M64_plant (0.05+1.5j), U1_M48_plant and U1_M64_plant (0.05+3.6j:
+  both U1 boxes are new, so I plant in each). Each run's boundary line, zeros and verdict here as it lands.
