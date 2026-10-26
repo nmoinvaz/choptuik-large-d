@@ -13,9 +13,10 @@ against the exact -y.F (fractions.Fraction of the double-double inputs), L = 140
   a. no cancellation (every y_i F_i > 0);
   b. cancellation: y_{2k+1} = y_{2k} times 0.5 .. 2 and F_{2k+1} = -y_{2k} F_{2k} / y_{2k+1} (rounded), so that y.F
      is about 2^-53 of sum |y_i F_i|.
-  Pass in both: |c - exact| <= 2^-52 |exact| + 2^-100 sum |y_i F_i| (the result's rounding to f64 and the
-  double-double dot product's error). Controls, each of which must fail that bound: the f64 dot product used before
-  (f64_correction) in case b, and the exact value times (1 + 2^-49) in case a. Exit 1 otherwise.
+  Pass in both: |c - exact| <= 2^-52 |exact| + (L / 8 + 13) 2^-106 sum |y_i F_i| (the result's rounding to f64 and
+  the bound multidouble states for dd_dot, (n / 8 + 12) 2^-106, one unit more for the lo parts' own rounding).
+  Controls, each of which must fail that bound: the f64 dot product used before (f64_correction) in case b, and the
+  exact value times (1 + 2^-49) in case a. Exit 1 otherwise.
 States (a measurement, no pass/fail): at each saved state (default: those of the run's rows in --csv, every
 --every-th; the solver as qdh_delta_check.py's: the state's kt, kc, ks, kfreeze 13, the Taylor plan at tol_step 1e-32
 and hmax 0.05), F and the LU from Solver.newton at the state; delta_correction, the f64 dot product, their difference,
@@ -69,9 +70,10 @@ def exact(yh, yl, Fh, Fl):
     return -tot, mag
 
 
-def within(c, ex, mag):
+def within(c, ex, mag, n):
+    """|c - exact| within the bound for a dot product of length n"""
     err = abs(Fraction(c) - ex)
-    return err <= Fraction(2 * U) * abs(ex) + Fraction(2.0 ** -100) * mag, float(err)
+    return err <= Fraction(2 * U) * abs(ex) + Fraction(n / 8 + 13) * Fraction(2.0 ** -106) * mag, float(err)
 
 
 def planted(case, L=1409, seed=1):
@@ -98,8 +100,8 @@ def selftest():
         s = Planted(yh, yl)
         ex, mag = exact(yh, yl, Fh, Fl)
         c, c64 = delta_correction(s, Fh, Fl), f64_correction(s, Fh, Fl)
-        ok, err = within(c, ex, mag)
-        ok64, err64 = within(c64, ex, mag)
+        ok, err = within(c, ex, mag, len(yh))
+        ok64, err64 = within(c64, ex, mag, len(yh))
         print(f"case {case}: exact {float(ex):+.6e}, sum |y_i F_i| {float(mag):.3e}; delta_correction error {err:.1e} "
               f"{'ok' if ok else 'WRONG'}; f64 dot product {c64:+.6e}, error {err64:.1e} "
               f"({'within' if ok64 else 'outside'} the bound)", flush=True)
@@ -109,7 +111,7 @@ def selftest():
             bad.append("control: the f64 dot product passed case b (the case does not test the cancellation)")
         if case == "a":
             nudged = float(ex) * (1 + 2.0 ** -49)
-            okn, errn = within(nudged, ex, mag)
+            okn, errn = within(nudged, ex, mag, len(yh))
             print(f"  control: exact (1 + 2^-49), error {errn:.1e}: {'passed (WRONG)' if okn else 'rejected, ok'}")
             if okn:
                 bad.append("control: the nudged value passed case a")

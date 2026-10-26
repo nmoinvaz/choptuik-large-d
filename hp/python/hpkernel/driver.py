@@ -530,7 +530,8 @@ def junk_subspace(s, w, delta_max=1e-9, iters=8):
 
 def delta_correction(s, Fh, Fl):
     """Linearised Delta correction -y.F, y = J^-T e_Delta, with the LU stored by the last s.newton call. The dot
-    product is multidouble's dd_dot (double-double, to about 2^-104 of sum |y_i F_i|), the result rounded to f64.
+    product is multidouble's dd_dot (double-double, to about (L / 8 + 12) 2^-106 of sum |y_i F_i|), the result
+    rounded to f64.
     Until 2026-10-25 it was an f64 dot product of the rounded vectors, whose error grows with sum |y_i F_i| (|y| reaches
     1e15 at large D); for a residual that cancels in y.F (a planted one, far from convergence) it lost the result (comms
     2026-10-25, T57). At T48's 319 saved states the two differ by at most 1.9e-22 (2e-4 of the correction;
