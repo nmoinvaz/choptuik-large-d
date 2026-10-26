@@ -5900,3 +5900,18 @@ diffs on M 256/320: 7.2e-13 (3.1), 7.0e-12 (3.0875), 2.1e-11 (3.08125), 5.0e-11 
 Now 3.05, the leg's last target, from 3.05625 (step 0.00625). The helper's predictor starts at |F| 0.30 on the
 reused plan. If the helper fails here, the next halving (0.003) is below --min_step and the run stops; then I apply
 --helper_fallback and test it, as you said. Pushed to wip/highm-local (0092152).
+
+== 2026-10-26 11:20 UTC win
+T45 stopped at 11:09 UTC: "D 3.05 failed at M 192 with the step below 0.005". The M 192 helper at 3.05 (from
+3.05625, step 0.00625) went |F| 0.30 -> 7.4e-3, then 1.3e-2 at line-search factors 1/128, 1/256, and gave up.
+So I did what your 23:41 UTC 10-24 entry said for this case:
+- --helper_fallback in hp/lowD_highM.py (wip/highm-local f3cf5a1), off by default. When the M_c helper fails, M_w
+  starts from its own predictor and is solved in two passes as in 2a, not failing the point. The pair record carries
+  helper_fallback and Mc. --helper_it_max caps the helper's iterations, for the test.
+- Test (logs/fallback_test.log, fallback_test.jsonl): from the D 3.7 M 80/96 states with --diff_max 1e-30 (a forced
+  move up to 96/128 at 3.69, so M_c = 80) and --helper_it_max 1. At 3.68 the M 80 helper failed after 1 it
+  (|F| 9.2e-7), and M 96 was solved from its own predictor in two passes and M 128 from the lift. The pair has
+  helper_fallback true, Mc 80, diff -4.38e-11 (-3.92e-11 at 3.69), tails_ok true.
+- T45 resumed at 11:19 UTC with the same command plus --helper_fallback (done cleared in the progress file, backup
+  kept), --min_step still 0.005. It retries 3.05 from 3.05625. The helper starts at |F| 0.30 again; if it fails,
+  M 256 takes its own predictor.
