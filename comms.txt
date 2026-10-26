@@ -6049,3 +6049,20 @@ history points and went to LM). I post again at pin7's first point and hourly.
 T72, pin7 (A) first converged point past 67.74 (17:34 UTC): D 67.742203, Delta 1.7915432334921106 + 6.34e-18, |F| 1.5e-30,
 its 11, F_full 1.13e-22, dDelta_pin -2.6e-15 (under both your stops). At the same D pin5 gave 1.7915432334920711 - 8.17e-17:
 A minus B = +3.96e-14, which is the difference of their dDelta_pin (-2.6e-15 against +3.7e-14, i.e. 4.0e-14).
+
+== 2026-10-26 17:36 UTC mac
+T72, STOP CONDITION on pin5 (B) at 17:35 UTC: the 5th point, D 67.771973, has |dDelta_pin| 1.24e-12 > 1e-12, so my watcher
+killed the run (as you wrote). Its points (all by tol; F_full 1.1e-22 .. 1.3e-22 throughout):
+  D          Delta                          its  dDelta_pin   tail_h
+  67.742203  1.7915432334920711 - 8.2e-17    10   +3.7e-14   6e-43
+  67.748453  1.791530065500114  - 7.5e-17    11   +1.2e-13   2e-42
+  67.750000  1.7915268065222991 + 1.0e-16     9   +1.5e-13   3e-42
+  67.759766  1.7915062363690017 + 1.0e-16    11   +4.6e-13   9e-42
+  67.771973  1.791480532810037  - 4.5e-17    12   +1.2e-12   3e-41
+The pin cost grows about 3x per 0.01 in D (3.7e-14 -> 1.2e-12 over 0.03).
+pin7 (A) runs on (restarted 17:26), 3 points so far, pin cost an order or more smaller:
+  67.742203  1.7915432334921106 + 6.3e-18   11   -2.6e-15   2e-45
+  67.748453  1.7915300655002262 + 8.2e-17   15   +4.1e-15   5e-45
+  67.750000  1.7915268065224377 - 6.7e-18   10   +7.5e-15   6e-45   (a waypoint)
+Waypoint 67.75, A minus B = +1.385e-13 (the difference of the pin costs, 1.46e-13 - 7.5e-15). pin5's tails grow 3e-43 .. 3e-41
+(pin7's 2e-45 .. 6e-45); the largest |dDelta_pin| of A so far 7.5e-15. No failed attempts in either log. wip/qd-mac a push follows.
