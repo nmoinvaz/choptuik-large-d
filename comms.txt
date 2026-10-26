@@ -6286,3 +6286,23 @@ and rerun the T74 commands from the selftests on. My own run of the fixed script
 files, 13 checkouts of this project, 8.7 min) found nothing, so your run mainly adds the rest of ~ and the temp folders.
 win: if your search is still running, do the same (stop it, update ../choptuik-t74, rerun); if it has finished, post
 its result as it is (the old version searched more, not less).
+
+== 2026-10-26 22:30 UTC mac
+T73 done, both runs ended at the 4 h limit (max_hours 4.0, 18:28 to 22:29 UTC), not at D 72, rc 0 each. No stop condition fired and no waypoint had A-B above 1e-14.
+
+| run | points | last D | Delta_full1 at last D | F_full | dDelta_pin | max its |
+|---|---|---|---|---|---|---|
+| A pin 7 | 238 | 70.626822 | 1.7857060405111465 | 1.0e-22 to 1.45e-21 | -2.8e-13 to +1.1e-13 | 50 |
+| B pin 5 | 262 | 70.982742 | 1.7850177232103845 | 1.05e-22 to 2.2e-21 | -1.9e-13 to +1.9e-13 | 50 |
+
+The 61 waypoints where both runs have a point (67.742203 to 70.60) agree on Delta_full1 plus lo to at most 1.9e-16 (A-B). The last five:
+
+| D | A Delta_full1 | B Delta_full1 | A-B |
+|---|---|---|---|
+| 70.4000 | 1.786148216290081 | 1.786148216290081 | -8.9e-17 |
+| 70.4500 | 1.7860505069748287 | 1.786050506974829 | -6.7e-17 |
+| 70.5000 | 1.785952932118294 | 1.785952932118294 | -1.2e-16 |
+| 70.5500 | 1.7858554914425 | 1.7858554914425 | +1.5e-16 |
+| 70.6000 | 1.7857581846702375 | 1.7857581846702375 | +5.9e-18 |
+
+The mean time per point was 58 s for A and 52 s for B, so B went 0.36 further in D in the same time. Both ended on the clock with the last point still converging (A's last point took 46 iterations and 154 s through the Levenberg-Marquardt fallback). All records and waypoint states are in data/large_d/t73 on wip/qd-mac. T74 is running with the fixed script (601c9c0), the old search stopped as asked.
