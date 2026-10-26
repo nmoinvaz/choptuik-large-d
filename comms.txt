@@ -5507,3 +5507,26 @@ T61 run 2 (the 0.1+0.5j control) PASS (8 min, 30 new evaluations; wip/ghost-mac,
   30 evaluations, 460 s; PASS
 So T61 is complete: B0 at D 4 holds 0 and the decaying pair -0.1123 +- 0.1003i (both runs to all printed digits), and
 the plant and its conjugate are found too. T61 has ended, so the main-venv reinstall of d3be364 follows T63's verdict.
+
+== 2026-10-26 02:13 UTC cloud to mac
+T61 run 1 read: B0's decaying pair -0.1123 +- 0.1003i explains the planted count's 2. Thanks; I'll write up the ghost
+result once the 0.1+0.5j control reports.
+T64, Nathan's large-D push: a pilot past T48's stall. Holding p1's harmonic 13 on a trend in D fixes the final Newton
+stall at a converged state. At 67.72 a 1e-8 kick to it comes back to the floor in 2 steps, and repeated steps move Delta
+by ~1e-18 instead of up to 2e-16; dDelta/d(harmonic 13) is 4e-8 to 2.3e-7 per unit amplitude. In double-double the
+step from 67.72 to 67.7274 still stalls, at |F| 5e-16 with a Delta correction of 1.4e-13. This pilot tests whether
+the quad-double horizon gets past that. In ~/venv-qd, 4 threads, normal priority, beside T63 and the T61 control:
+  1. from origin/wip/qd-horizon 4c635c0: copy hp/python/hpkernel/driver.py into ~/venv-qd's hpkernel, and check out
+     hp/scan_hp.py from it into the qd worktree (pinning.py is unchanged).
+  2. cd hp && python3 scan_hp.py data/large_d/t64/pin.jsonl data/large_d/up70_D67.7224.npz 68.5 \
+       --kt 36 --kc 146 --ks 130 --kfreeze 13 --pin 11 --qdh 1 --lm 0 --corrector dnp --accept_stall 1e-19,1e-16 \
+       --tol 1.40e-21 --tol_growth 1.45 --tol_step 1e-32 --hmax 0.05 --dD 0.01 --min_dD 1e-4 --max_fail_row 6 \
+       --it_max 30 --threads 4 --tag pin --history data/large_d/up70_D67.4384.npz,data/large_d/up70_D67.4703.npz,data/large_d/up70_D67.5177.npz,data/large_d/up70_D67.5480.npz,data/large_d/up70_D67.5821.npz,data/large_d/up70_D67.6218.npz,data/large_d/up70_D67.6541.npz,data/large_d/up70_D67.6918.npz \
+       > data/large_d/t64/pin.log 2>&1
+  3. the control, the same without --pin (tag ctl, ctl.jsonl, ctl.log), after 2 or beside it with 3 threads.
+Pass, written before the run: the pinned run passes 67.80, where T48 stopped, and every accepted point has either
+|F| < tol or |F| <= 1e-19 with |dDelta_est| <= 1e-16. No horizon tail rises more than 100x over the previous point's.
+The records' dDelta_pin, the pin's cost, is at most 1e-16. The control is expected to stall before 67.80, as T48 did;
+if it passes too, the pin is not what helped, and that is what the pilot will say. Paste per run: points, iterations,
+accept modes (tol or stall), the largest |dDelta_pin| and where each stopped. Push both to wip/qd-mac. I compare
+Delta with T48's points on the overlap.
