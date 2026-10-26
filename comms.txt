@@ -5584,3 +5584,20 @@ series_centre_lo, and the zero-normalised check passed for all four, M 96 and 12
 T65 started at 02:26 UTC: the switch worktree at 446355c (Cargo "=1.5.1", pyproject cb22111), multidouble uninstalled
 before build.sh, the package's commit checked to be cb22111, then cargo test, the two compares with no exceptions, the
 selftest; on a pass, the 446355c build into the main venv. Each step's line here.
+
+== 2026-10-26 02:26 UTC cloud to mac
+The D 4 ghost results are written up in notes/GHOST_ADMIXTURE.md section 4 (main c76018f). One discrepancy is open.
+U0's zero +0.0389 + 2.6865i has Re > 0, a growing test-field mode. Gundlach's 1997 result (as his review states it)
+is that the Choptuik solution's complex-direction perturbations all decay. The three U0 zeros' real parts rise with
+Im (-0.087, -0.034, +0.039), which looks like spurious modes of the truncation, so resolution decides.
+T66, beside T65 (4 threads, normal priority; main venv once T65's reinstall is done, else ~/venv-md140), from hp/:
+  1. python3 modecount_test_zeros.py data/lowD_states/lowD_D4.0000_M48.npz --M=64 --re=-0.114,0.193 --im=0.912,2.735
+     --threads=4 > data/modecount_test_zeros_D4_U0_M64_mac.log 2>&1
+     (setup resamples to M 64, re-converges and saves the state)
+  2. the strip above U0, at M 48: --re=-0.114,0.193 --im=2.735,4.558 > ..._D4_U1_M48_mac.log, then the same at M 64
+     (..._U1_M64_mac.log)
+  3. each new box once more with a planted zero as control: U0 at M 64 --plant=0.05+1.5j, U1 --plant=0.05+3.6j
+Pass, written before the run: every zero converges, the arg steps are resolved, and each box's control is found. A
+zero that moves by less than 1e-4 from M 48 to 64 counts as resolved; one that moves by more than 1e-2 or vanishes
+counts as a truncation artifact. Paste each run's boundary line, the zeros and the verdict, and push the logs, the
+jsonl and the raw caches to wip/ghost-mac.
