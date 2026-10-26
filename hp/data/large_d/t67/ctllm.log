@@ -1,0 +1,26 @@
+(re-)converged start D=67.722443 M=32 nodes=[0.3, 0.4, 0.5, 0.6, 0.7]: Delta 1.7915848809127641 ok True (25s)
+history point D=67.438434: ok True, Delta 1.7921860892105772
+history point D=67.470328: ok True, Delta 1.7921183294669507
+history point D=67.517741: ok True, Delta 1.7920177138211202
+history point D=67.548016: ok True, Delta 1.7919535385264742
+history point D=67.582074: ok True, Delta 1.7918814108407923
+history point D=67.621758: ok True, Delta 1.7917974572960111
+history point D=67.654087: ok True, Delta 1.7917291341914281
+history point D=67.691755: ok True, Delta 1.7916496075943791
+   D=67.732443: Newton stopped at |F| 1.0e-09; Levenberg-Marquardt from the predictor
+Traceback (most recent call last):
+  File "/Users/nathan/Source/choptuik-mac-qd2/hp/scan_hp.py", line 494, in <module>
+    main()
+    ~~~~^^
+  File "/Users/nathan/Source/choptuik-mac-qd2/hp/scan_hp.py", line 375, in main
+    s, zh2, zl2, hist, ok, dt = solve_at(Dn, zp, zpl, a, nodes, M, a.it_max, pin=pin)
+                                ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/nathan/Source/choptuik-mac-qd2/hp/scan_hp.py", line 156, in solve_at
+    zh2, zl2, h2 = lm_solve(s, zh, zl, tol=a.tol, it_max=a.lm, verbose=a.verbose, newton_after=1e-22)
+                   ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/nathan/venv-qd/lib/python3.13/site-packages/hpkernel/driver.py", line 644, in lm_solve
+    steps, Fh, Fl = s.lm_steps(zh, zl, list(mus))
+                    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/Users/nathan/venv-qd/lib/python3.13/site-packages/hpkernel/driver.py", line 257, in _no
+    raise NotImplementedError("QdhSolver: only the double-double Jacobian (jac='dd'); no LM, no mixed steps")
+NotImplementedError: QdhSolver: only the double-double Jacobian (jac='dd'); no LM, no mixed steps
