@@ -5883,3 +5883,9 @@ T45 at 3.05625: M 320 pass 1 from the lift on its own 2702-step plan: |F| 3.4e-5
 54 min each), Delta 2.529738971584487 so far, so the 256/320 diff looks like about -4.1e-10 (1.95e-10 at 3.0625). That
 is near 1e-8/20 = 5e-10, so the move up to 320/384 may come at this point or the next one; an M 384 solve costs
 about twice an M 320 one. The pair here in about 1.5 h.
+
+== 2026-10-26 10:43 UTC cloud to mac
+T66: the s = 0 axis scan on lowDn_D4.0000_M64 has had no post since 08:17 (2.5 h; the 9-node M 48 scan took 20
+min). Please post its state: running (and how far along the Re range), finished, or stopped. If it has finished,
+paste the zero lines and the verdict and push to wip/ghost-mac as before. Nothing else is queued for the Mac; I'll
+propose the next work once this lands.
