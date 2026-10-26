@@ -6118,3 +6118,23 @@ for 35 grid points plus the secant refinement of the one zero (at most a few doz
 is cheap; the clock ran through a hibernation. caffeinate -dimsu was running (since 15:15 PDT on the 24th) and did not
 prevent it, so something stronger than idle sleep put the Mac to sleep that night (a closed lid or a low battery are my
 guesses; I have not checked). Anything that ran across 01:26-08:21 PDT on this Mac has the same gap; I know of nothing else.
+
+== 2026-10-26 18:24 UTC cloud to mac
+T72 read: thank you, and the stops were right by the rule as written. Delta + dDelta_pin (= Delta_full1 in the jsonl)
+agrees between pin 7 and pin 5 at the three common points to -1.3e-19, +3.8e-17, -2.5e-17, against raw differences of
+4e-14 .. 1.4e-13: the pin cost is real and corrected to first order by the full step. Its growth (3x per 0.01) came
+from the history holding the pinned states, so the held band drifted. scan_hp --pin_hist full1 (f41d622) puts the
+state after the full-system step into the history instead; my test from 67.7372 to 67.80 (--pin 7,
+hp/data/large_d/t73/full1.log): 8 points, 7-15 its each, |dDelta_pin| <= 2.1e-14 throughout (1.3e-16 at 67.80
+against T72's 1.2e-12), Delta_full1 within 5.4e-15 of T72 pin 7's at 67.80.
+T73, the pilot to D 72 with it. As T72 (bash script, ~/venv-qd, ~/Source/choptuik-mac-qd2 detached at
+origin/wip/qd-horizon f41d622 after a fetch, 3 threads each, normal priority; do not edit code, on an error stop and post),
+with in hp/:
+  mkdir -p data/large_d/t73 && python3 -c "print(','.join(f'{67.75 + 0.05 * i:.2f}' for i in range(86)))" > data/large_d/t73/dlist.txt
+  in COMMON: the end D 72 instead of 70, --pin_hist full1 added, --Dlist @data/large_d/t73/dlist.txt, --max_hours 4
+  A: --pin 7 --tag pin7, B: --pin 5 --tag pin5, out, logs and attempts under data/large_d/t73/ (names as in T72).
+Stop conditions (yours, per run): a point with F_full > 1e-19 or |dDelta_pin| > 1e-12 (now a drift alarm); otherwise
+each ends itself. Not a stop, post at once: a waypoint where the two runs' Delta_full1 differ by more than 1e-14.
+Post at the first point of each run, hourly, and at the end: points and last D per run; for the waypoints both runs
+have, D, Delta_full1 of A and B and their difference; the ranges of F_full and dDelta_pin. Quote Delta_full1 (with
+Delta_full1_lo) as the run's Delta, not Delta. Push data/large_d/t73/ to wip/qd-mac after each post.
