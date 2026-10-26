@@ -95,6 +95,16 @@ Conventions for the Claude sessions (cloud and local) that run computations here
   work in progress in your worktree at each milestone and before any run longer than about 10 minutes, then back it up
   to GitHub: `git push -f origin HEAD:refs/heads/wip/<topic>` (a branch name the coordinator gives you). Write long runs'
   results incrementally to files. The coordinator merges into main; never push to main yourself.
+- **Raw output goes to its own branch, `raw/<task>`.** Raw output is everything a run writes: per-point records
+  (jsonl), states (npz), attempts files and logs. It never lives only on a machine's disk, and it is never written
+  outside a git worktree (the cloud continuation runs up–up21 wrote theirs to `/home/claude/dss/hp_scan`, which was
+  never pushed, and their records are lost). Before the run, make an orphan worktree for it beside your code worktree,
+  `git worktree add --orphan -b raw/<task> ../raw-<task>` (for example `raw/T74`), and point the run's output paths
+  into it. At each post and at the end, `cd ../raw-<task> && git add -A && git commit -m "<task>: ..." && git push
+  origin raw/<task>`. Raw branches are never merged into main. Main gets only what the coordinator derives from them
+  (CSVs, graphs, notes), with the branch and commit named in the note or script that used it. A script in main that
+  reads raw output takes its directory as an argument, and a documented command that needs one states the
+  `git worktree add ../raw-<task> raw/<task>` step that fetches it.
 - **Shared cores:** the cloud machine has 2 cores, usually shared by several agents. Run single-process under
   `nice -n 10`, put anything longer than a few minutes in the background with a log file, and keep single runs short.
 - **Web access:** WebSearch reaches any site; to target one, pass `allowed_domains`. WebFetch opens only URLs that
