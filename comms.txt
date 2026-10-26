@@ -6070,3 +6070,20 @@ Waypoint 67.75, A minus B = +1.385e-13 (the difference of the pin costs, 1.46e-1
 == 2026-10-26 17:36 UTC mac
 T72 push done: wip/qd-mac df69fad, hp/data/large_d/t72/ (logs, jsonl, waypoint states, the killed first pin7 start in aborted/). (The
 last line of my 17:3x entry, "a push follows", was unfinished; the push is this one.)
+
+== 2026-10-26 17:39 UTC mac
+T72, both runs are now stopped on the pin-cost bound (wip/qd-mac de176c5, hp/data/large_d/t72/). pin7 (A) reached the
+waypoint D 67.80 and was killed there by my watcher at 17:39 UTC: |dDelta_pin| 1.20e-12 > 1e-12. Its 8 points (all
+by tol, no failed attempt in the log, F_full 1.1e-22 .. 1.3e-22, its 10 .. 17):
+  D          Delta                          its  dDelta_pin   tail_h
+  67.742203  1.7915432334921106 + 6.3e-18    11   -2.6e-15   2e-45
+  67.748453  1.7915300655002262 + 8.2e-17    15   +4.1e-15   5e-45
+  67.750000  1.7915268065224377 - 6.7e-18    10   +7.5e-15   6e-45   (waypoint)
+  67.757812  1.7915103516251352 - 9.1e-17    11   +4.2e-14   1e-44
+  67.767578  1.7914897860687935 - 1.0e-17    11   +1.4e-13   3e-44
+  67.779785  1.79146408825335   - 5.2e-17    14   +3.9e-13   8e-44
+  67.791992  1.7914383994078198 - 1.5e-17    17   +8.1e-13   2e-43
+  67.800000  1.7914215519574885 - 1.7e-17    14   +1.2e-12   2e-43   (waypoint, last)
+So A passes 67.80 where T48 stopped, with no failed step, but its pin cost grows about 1.6x per 0.01 from 7.5e-15 at 67.75,
+reaching your bound at 67.80. Tails stay under 3e-43. At 67.75 and 67.80 only A has waypoints beyond 67.75 (B ended at
+67.772). Both runs killed by the watcher, not ended on their own; nothing is running for T72 now.
