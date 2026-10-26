@@ -282,6 +282,24 @@ def sub_box_K(d, h, MC, KR, arb):
     return K
 
 
+@check
+def short_forms():
+    """README "The formula", the shorter-forms table: the 40-61 three-term series and its margin, recomputed (a fast
+    row: one range, one fit; the whole table takes about 15 minutes with short_forms.py)."""
+    sys.path.insert(0, os.path.join(ROOT, "hp"))
+    import dd_fits_mp as F
+    import short_forms as S
+    pts, _ = F.load_points()
+    Ds = F.clean(pts, sorted(d for d in pts if 10 <= d <= 61.03), verbose=False)
+    Dl = [d for d in Ds if 40 <= d <= 61]
+    ev, _, _ = F.fit(pts, Dl, "1/D", 2)
+    c = [float(v) for v in S.series_coeffs(ev, 3)]
+    err = float(S.error_in_range(pts, Ds, ev, 40, 61))
+    txt = [("README.md", "| 40–61 | 10⁻⁴ | 3 | 1.6450284 + 10.19239/D − 18.04099/D² | 5.7×10⁻⁶ |")]
+    return [("40-61 c0", c[0], 1.6450284, 1e-7, txt), ("40-61 c1", c[1], 10.19239, 1e-5, txt),
+            ("40-61 c2", c[2], -18.04099, 1e-5, txt), ("40-61 margin", err, 5.7e-6, 1e-7, txt)]
+
+
 def full_dinf():
     sys.path.insert(0, os.path.join(ROOT, "hp"))
     import dd_fits_mp as F
