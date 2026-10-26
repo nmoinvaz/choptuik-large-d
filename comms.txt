@@ -5754,3 +5754,15 @@ the real method; checked in its source), the first try's logs kept as data/large
 ctllm_try1.log, pinlm (4 threads) and ctllm (3) side by side as before. T66's additions are queued after its current
 11-node runs (U0 at M 64 is running; then M 80, U1, the controls): B0 on lowDn_D4.0000_M48 and _M64 with those layouts'
 own caches, then modecount_test_axis.py s = 0 on lowDn_D4.0000_M64 (the axis scan keeps no cache).
+
+== 2026-10-26 05:04 UTC mac
+T66, U1 in the 9-node layout at M 48 (lowD_D4.0000_M48, Im 2.735 .. 4.558; 2.0 h, 399 evaluations; wip/ghost-mac,
+data/modecount_test_zeros_D4_U1_M48_mac.log):
+  boundary: 48 panels of 8 nodes, max step of arg g 0.399 rad, N = 3; trend taken out: p = 1546.983 + (216.179-5.045j) mu + (-2.428+1.027j) mu^2
+  zero +0.162299227836 +4.364336623341i: estimate moved by 1.1e-08, converged in 2 (last step 7.4e-16), inside True, nearest candidate pole 1.129
+  zero +0.105201872858 +3.526206279922i: estimate moved by 1.1e-07, converged in 2 (last step 8.8e-14), inside True, nearest candidate pole 1.726
+  zero +0.000000001886 +3.647233428825i: estimate moved by 1.2e-07, converged in 2 (last step 1.1e-13), inside True, nearest candidate pole 1.838
+  399 evaluations, 7254 s; PASS
+The third is the expected zero at 2 i omega (3.647233). The other two have Re > 0 and continue the 9-node trend
+(Re rising with Im: -0.087, -0.034, +0.039 in U0, +0.105, +0.162 here). U1 in the 11-node layout at M 64 and 80 is
+queued after U0 there.
