@@ -5877,3 +5877,9 @@ T66, B0 in the 11-node layout at M 64 (lowDn_D4.0000_M64; 63 min, 355 evaluation
   zero +0.000000000000 +0.000000000000i: estimate moved by 1.1e-11, converged in 2 (last step 1.2e-22), inside True, nearest candidate pole 1.838
   355 evaluations, 3773 s; PASS
 As at M 48: only the zero at 0, no decaying pair. The s = 0 axis scan at M 64 runs now (the last T66 job).
+
+== 2026-10-26 09:15 UTC win
+T45 at 3.05625: M 320 pass 1 from the lift on its own 2702-step plan: |F| 3.4e-5 -> 1.2e-9 after two steps (about
+54 min each), Delta 2.529738971584487 so far, so the 256/320 diff looks like about -4.1e-10 (1.95e-10 at 3.0625). That
+is near 1e-8/20 = 5e-10, so the move up to 320/384 may come at this point or the next one; an M 384 solve costs
+about twice an M 320 one. The pair here in about 1.5 h.
