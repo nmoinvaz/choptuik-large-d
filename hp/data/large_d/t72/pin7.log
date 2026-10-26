@@ -8,3 +8,8 @@ history point D=67.734643: ok True, Delta 1.7915591646426148
 D=67.7422 Delta=1.7915432334921106+6.34e-18 its 11 |F| 1.5e-30 36s piv 7.8e-07..1.8e+08 dDelta/dF max 6.8e+10 tails 1e-55 2e-45 pin: |F_full| 1.1e-22 dDelta_pin -2.6e-15
 D=67.7485 Delta=1.7915300655002262+8.19e-17 its 15 |F| 5.0e-31 42s piv 5.2e-06..1.8e+08 dDelta/dF max 6.8e+10 tails 3e-55 5e-45 pin: |F_full| 1.3e-22 dDelta_pin +4.1e-15
 D=67.7500 Delta=1.7915268065224377-6.73e-18 its 10 |F| 5.9e-31 26s piv 2.3e-07..1.8e+08 dDelta/dF max 6.8e+10 tails 5e-55 6e-45 pin: |F_full| 1.2e-22 dDelta_pin +7.5e-15
+D=67.7578 Delta=1.7915103516251352-9.08e-17 its 11 |F| 4.8e-31 26s piv 2.1e-06..1.8e+08 dDelta/dF max 6.8e+10 tails 4e-54 1e-44 pin: |F_full| 1.3e-22 dDelta_pin +4.2e-14
+D=67.7676 Delta=1.7914897860687935-9.97e-18 its 11 |F| 8.4e-31 30s piv 6.0e-06..1.8e+08 dDelta/dF max 6.8e+10 tails 7e-53 3e-44 pin: |F_full| 1.2e-22 dDelta_pin +1.4e-13
+D=67.7798 Delta=1.7914640882533499-5.17e-17 its 14 |F| 4.7e-31 32s piv 9.2e-06..1.8e+08 dDelta/dF max 6.8e+10 tails 3e-51 8e-44 pin: |F_full| 1.3e-22 dDelta_pin +3.9e-13
+D=67.7920 Delta=1.7914383994078198-1.47e-17 its 17 |F| 1.0e-30 38s piv 1.0e-05..1.8e+08 dDelta/dF max 6.8e+10 tails 1e-49 2e-43 pin: |F_full| 1.3e-22 dDelta_pin +8.1e-13
+D=67.8000 Delta=1.7914215519574885-1.75e-17 its 14 |F| 4.9e-31 30s piv 8.9e-06..1.8e+08 dDelta/dF max 6.8e+10 tails 1e-48 2e-43 pin: |F_full| 1.3e-22 dDelta_pin +1.2e-12
