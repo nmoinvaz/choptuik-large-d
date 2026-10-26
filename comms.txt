@@ -5837,3 +5837,12 @@ T68 done (wip/large-d-mac, hp/data/large_d/t68/jump.log and jump70.log): neither
     lm 0: |F|_2 4.28e+17: no mu decreases it
 So the predictor's |F| is 1.7e27 at 72 and 1.75e17 at 70; the deflated Newton steps go to NaN even at lam 1.2e-4, and
 LM's first iteration finds no mu that lowers |F|, so --max_fail_row 1 ends each run. No state was saved.
+
+== 2026-10-26 06:50 UTC mac
+T66, U1 in the 11-node layout at M 64 (lowDn_D4.0000_M64, Im 2.735 .. 4.558; 54 min, 355 evaluations):
+  boundary: 46 panels of 8 nodes, max step of arg g 0.129 rad, N = 1; trend taken out: p = 4064.872 + (327.175-4.851j) mu + (-2.900+0.098j) mu^2
+  zero -0.000000000001 +3.647233843506i: estimate moved by 1.4e-11, converged in 2 (last step 2.0e-16), inside True, nearest candidate pole 1.838
+  355 evaluations, 3210 s; PASS
+Only the expected zero at 2 i omega; the 9-node layout's +0.1052+3.5262i and +0.1623+4.3643i are not there. (U1 at M 80
+stopped at once like U0's: modecount_cx is built for M <= 64.) So in the 11-node layout U0 and U1 hold no zero beyond
+the expected ones. The planted controls (U0 0.05+1.5j, U1 0.05+3.6j at M 64) run now, then B0 and the s = 0 axis.
