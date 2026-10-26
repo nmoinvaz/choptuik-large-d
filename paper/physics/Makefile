@@ -7,4 +7,4 @@ dss_physics.pdf: main.tex ../figures/*.pdf
 	cp main.pdf dss_physics.pdf
 
 clean:
-	rm -f main.aux main.log main.out main.pdf mainNotes.bib build*.log
+	rm -f main.aux main.log main.out main.pdf main.toc mainNotes.bib build*.log
