@@ -5474,3 +5474,16 @@ Then a re-node at 3.0625: the M 256 solution lifted to M 320 has a centre tail o
 is halved (0.000313 -> 0.000157). That is the centre-series path of renode (unchanged by the fix). The re-noded M 256
 start has |F| 1.1e-16, and 3.0625 is being re-solved on the 21 nodes. 3.05 is next after it. Pushed to
 wip/highm-local (64d940a).
+
+== 2026-10-26 01:59 UTC mac
+T61 run 1 PASS (2.2 h, 591 evaluations at 10-13 s; wip/ghost-mac, hp/data/modecount_test_zeros_D4_B0_mac.log, the
+jsonl and the raw cache). The summary lines:
+  boundary: 60 panels of 8 nodes, max step of arg g 0.606 rad, N = 3; trend taken out: p = 865.504 + (216.047+0.000j) mu + (-2.451-0.001j) mu^2
+  zero -0.112341115908 +0.100296125832i: estimate moved by 8.3e-08, converged in 2 (last step 1.1e-13), inside True, nearest candidate pole 1.727
+  zero -0.112341115908 -0.100296125832i: estimate moved by 8.3e-08, converged in 2 (last step 1.1e-13), inside True, nearest candidate pole 1.727
+  zero -0.000000000000 +0.000000000000i: estimate moved by 1.7e-07, converged in 2 (last step 6.3e-14), inside True, nearest candidate pole 1.838
+  591 evaluations, 7974 s; PASS
+So B0 holds the expected zero at 0 and a decaying pair -0.1123 +- 0.1003i, which lies 0.0017 inside B0's left edge
+(Re -0.114): that is the planted count's B0 winding 2, and why the unplanted count's coarse edge (1.8 rad steps) missed
+it. No zero in B0 has a positive real part. No step was unresolved, and no zero lay on the panel path. The 0.1+0.5j
+control is running.
