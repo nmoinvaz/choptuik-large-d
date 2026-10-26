@@ -1251,3 +1251,66 @@ C:\Users\nathan\AppData\Local\Temp\claude\C--Users-nathan-Source-dss-residual-ke
 13:45:23 --- D 3.0625 (from 3.06875), M 256 / 320, nodes 0.000313..0.975
 13:45:34   D 3.0625 M 192: start 'predictor' |F| 1.80e-01 (772 steps)
 13:45:39 D 3.0625 M 192: L 16129, steps 772, start |F| 1.8e-01
+  newton 0: |F| 1.80e-01 |dz| 1.62e+01 lam 1 dDelta -9.33e-05 Delta 2.571358789798455 piv 1.0e-04..4.0e+01  t 217.6s
+  newton 0: |F| 2.32e-03 |dz| 1.59e+01 lam 1 dDelta +3.95e-05 Delta 2.571398261493169 piv 1.0e-04..1.1e+01  t 223.6s
+  newton 0: |F| 1.33e-04 |dz| 1.41e-01 lam 1 dDelta +9.25e-06 Delta 2.571407511081676 piv 1.0e-04..3.4e+01  t 236.1s
+  newton 0: |F| 7.05e-08 |dz| 1.49e-04 lam 1 dDelta +9.45e-09 Delta 2.571407520528581 piv 1.0e-04..3.1e+01  t 242.3s
+  newton 0: |F| 1.01e-13 |dz| 1.07e-10 lam 1 dDelta +1.31e-15 Delta 2.571407520528583 piv 1.0e-04..3.1e+01  t 236.6s
+  newton 0: |F| 1.71e-25 |dz| 7.00e-21 lam 1 dDelta -1.44e-26 Delta 2.571407520528583 piv 1.0e-04..3.1e+01  t 238.8s
+  newton 0: |F| 2.61e-28 |dz| 7.96e-26 lam 1 dDelta -3.90e-31 Delta 2.571407520528583 piv 1.0e-04..3.1e+01  t 230.7s
+  newton 0: |F| 2.01e-28 |dz| 7.35e-26 lam 1 dDelta +2.34e-31 Delta 2.571407520528583 piv 1.0e-04..3.1e+01  t 219.7s
+14:16:24 D 3.0625 M 192: |F| 2.6e-28 -> 2.0e-28: below 1e-27 and no longer falling (the residual floor); stopping
+14:20:07 D 3.0625 M 192: Delta 2.5714075205285827 (+7.36e-17) |F| 1.3e-28 its 8 2072s dDelta/dF max 1.3e+00 tails 2e-68 3e-111 dDelta_est +1.1e-31
+14:20:29   D 3.0625 M 256: start 'predictor' |F| 1.82e-01 (1264 steps)
+14:20:33   D 3.0625 M 256: start 'lift of M_c' |F| 2.83e-04 (1264 steps)
+14:20:33   D 3.0625 M 256: best start 'lift of M_c' is a lift (|F| 2.8e-04 on the reused plan); two passes
+14:20:48   D 3.0625 M 256: start 'predictor' |F| 1.82e-01 on its own plan (2196 steps)
+14:21:03   D 3.0625 M 256: start 'lift of M_c' |F| 2.83e-04 on its own plan (1945 steps)
+14:21:14   D 3.0625 M 256: start 'lift of M_c' |F| 2.83e-04 (1945 steps)
+14:21:25 D 3.0625 M 256: L 21505, steps 1945, start |F| 2.8e-04
+  newton 0: |F| 2.83e-04 |dz| 7.45e-01 lam 1 dDelta -3.80e-08 Delta 2.571407482539831 piv 9.0e-05..4.7e+01  t 1306.2s
+  newton 0: |F| 6.37e-08 |dz| 4.37e-05 lam 1 dDelta -9.62e-09 Delta 2.571407472920961 piv 9.0e-05..4.7e+01  t 1352.1s
+  newton 0: |F| 6.61e-15 converged (last |dz| 3.4e-11) Delta 2.571407472920961; last step taken, |F| 8.11e-26
+15:27:11 D 3.0625 M 256: Delta 2.5714074729209613 (+1.71e-16) |F| 8.1e-26 its 3 3955s dDelta/dF max 9.9e-01 tails 5e-65 2e-101 dDelta_est +5.9e-28
+15:27:32   D 3.0625 M 256: start 'pass 1' |F| 8.11e-26 (844 steps)
+15:27:41 D 3.0625 M 256: L 21505, steps 844, start |F| 8.1e-26
+  newton 0: |F| 8.11e-26 |dz| 3.81e-15 lam 1 dDelta +5.82e-28 Delta 2.571407472920961 piv 5.6e-11..4.7e+01  t 561.7s
+  newton 0: |F| 3.46e-28 |dz| 2.45e-15 lam 0.5 dDelta +1.10e-29 Delta 2.571407472920961 piv 5.6e-11..4.7e+01  t 557.5s
+  newton 0: |F| 2.17e-28 |dz| 2.61e-15 lam 1 dDelta -1.64e-29 Delta 2.571407472920961 piv 5.6e-11..4.7e+01  t 543.5s
+15:55:24 D 3.0625 M 256: |F| 3.5e-28 -> 2.2e-28: below 1e-27 and no longer falling (the residual floor); stopping
+16:04:18 D 3.0625 M 256: Delta 2.5714074729209613 (+1.71e-16) |F| 1.9e-28 its 3 2204s dDelta/dF max 4.8e+02 tails 4e-54 2e-101 dDelta_est +6.9e-29
+16:04:30   D 3.0625 M 256: the solution's own plan has 1144 steps, more than the 844 used
+16:05:06   D 3.0625 M 320: start 'predictor' |F| 1.82e-01 (1378 steps)
+16:05:11   D 3.0625 M 320: start 'lift of M_w' |F| 1.93e-05 (1378 steps)
+16:05:11   D 3.0625 M 320: best start 'lift of M_w' is a lift (|F| 1.9e-05 on the reused plan); two passes
+16:05:38   D 3.0625 M 320: start 'predictor' |F| 1.82e-01 on its own plan (2515 steps)
+16:06:05   D 3.0625 M 320: start 'lift of M_w' |F| 1.93e-05 on its own plan (2360 steps)
+16:06:25   D 3.0625 M 320: start 'lift of M_w' |F| 1.93e-05 (2360 steps)
+16:06:45 D 3.0625 M 320: L 26881, steps 2360, start |F| 1.9e-05
+  newton 0: |F| 1.93e-05 |dz| 6.55e-02 lam 1 dDelta -1.31e-10 Delta 2.571407472790064 piv 8.3e-05..1.6e+01  t 2971.2s
+  newton 0: |F| 3.76e-10 |dz| 1.44e-07 lam 1 dDelta -6.44e-11 Delta 2.571407472725668 piv 8.3e-05..1.6e+01  t 2937.1s
+  newton 0: |F| 3.10e-19 converged (last |dz| 1.2e-15) Delta 2.571407472725668; last step taken, |F| 7.05e-29
+18:39:56 D 3.0625 M 320: Delta 2.5714074727256682 (-3.26e-17) |F| 7.1e-29 its 3 9208s dDelta/dF max 7.9e-01 tails 9e-63 8e-95 dDelta_est +3.2e-31
+18:40:25   D 3.0625 M 320: start 'pass 1' |F| 7.05e-29 (861 steps)
+18:40:40 D 3.0625 M 320: L 26881, steps 861, start |F| 7.1e-29
+  newton 0: |F| 7.05e-29 converged (last |dz| 5.2e-16) Delta 2.571407472725668
+18:58:17 D 3.0625 M 320: Delta 2.5714074727256682 (-3.26e-17) |F| 7.1e-29 its 1 1068s dDelta/dF max 1.2e+01 tails 9e-63 8e-95 dDelta_est -1.5e-30
+18:58:33 D 3.0625: Delta(M 320) = 2.5714074727256682 (-3.26e-17), M 256 -> 320: -1.95e-10; pair
+18:58:33 D 3.0625: difference projected to 1.0e-05 at D 2.9625, but |-2.0e-10| is still below 1e-08 / 20: no move up
+18:58:45 D 3.0625: series tails of the M 256 solution resampled to M 320: 8.0e-18 (centre), 1.7e-101 (horizon)
+18:58:45 D 3.0625: the centre tail is above 1e-20: first node 0.000313 -> 0.000157
+18:59:29   D 3.0625 M 256: start 're-noded' |F| 1.11e-16 (1146 steps)
+18:59:39 D 3.0625 M 256: L 22529, steps 1146, start |F| 1.1e-16
+  newton 0: |F| 1.11e-16 |dz| 1.97e-15 lam 1 dDelta +1.14e-29 Delta 2.571407472920961 piv 5.8e-05..4.5e+01  t 733.8s
+  newton 0: |F| 1.94e-28 |dz| 6.54e-25 lam 1 dDelta +1.65e-30 Delta 2.571407472920961 piv 5.8e-05..4.5e+01  t 762.7s
+  newton 0: |F| 7.20e-29 converged (last |dz| 1.0e-24) Delta 2.571407472920961; last step taken, |F| 3.41e-29
+19:37:17 D 3.0625 M 256: Delta 2.5714074729209613 (+1.71e-16) |F| 3.4e-29 its 3 2266s dDelta/dF max 9.9e-01 tails 2e-94 2e-101 dDelta_est -6.0e-32
+19:37:49   D 3.0625 M 320: start 're-noded' |F| 1.11e-16 (863 steps)
+19:38:04 D 3.0625 M 320: L 28161, steps 863, start |F| 1.1e-16
+  newton 0: |F| 1.11e-16 |dz| 5.18e-16 lam 1 dDelta -1.34e-30 Delta 2.571407472725668 piv 9.9e-10..7.0e+01  t 1092.2s
+  newton 0: |F| 2.72e-28 |dz| 4.10e-16 lam 0.0625 dDelta +2.28e-32 Delta 2.571407472725668 piv 9.9e-10..7.0e+01  t 1153.0s
+  newton 0: |F| 8.46e-29 converged (last |dz| 2.0e-16) Delta 2.571407472725668; last step taken, |F| 6.74e-29
+20:34:34 D 3.0625 M 320: Delta 2.5714074727256682 (-3.26e-17) |F| 6.7e-29 its 3 3403s dDelta/dF max 1.7e+01 tails 1e-76 8e-95 dDelta_est +3.0e-30
+20:34:35 D 3.0625: Delta(M 320) = 2.5714074727256682 (-3.26e-17), M 256 -> 320: -1.95e-10; re-noded [0.000313, 0.000625, 0.00125, 0.0025, 0.005, 0.01, 0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.975] -> [0.000157, 0.000313, 0.000625, 0.00125, 0.0025, 0.005, 0.01, 0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.975]
+20:34:46   D 3.0625 M 192: start 're-noded' |F| 1.11e-16 (772 steps)
+20:34:51 D 3.0625 M 192: L 16897, steps 772, start |F| 1.1e-16
