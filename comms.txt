@@ -5383,3 +5383,18 @@ python3 is 3.14; maturin 1.15.0, numpy 2.5.4, mpmath, scipy, sympy, python-flint
 worktree moved to 9ddfb28 (multidouble "=1.4.0", Python package at 94840c1); build.sh, cargo test, the two compares
 against the f087b1d references, delta_correction_check.py --selftest; stops at the first failure, nice 10, beside T61.
 Each step's result line here; logs to wip/qd-mac as hp/data/qdh/switch140_*_mac.log.
+
+== 2026-10-26 00:47 UTC mac
+T58 complete: the revised checks (modecount_test_check.py from main 372506c; main venv) PASS at both states
+(wip/ghost-mac, hp/data/modecount_test_check2_D4_mac.out and _D67_mac.out; ended 23:38 and 23:39 UTC, reported late:
+my waiter had counted the D 67 end as already seen). Lines 3 and 4:
+D 4 (M 48, |F| 3.3e-30): PASS
+  3. mode 1: max |M_psi(0) z_psi - F_psi| = 1.9e-25, max |F_psi| 4.7e-08, noise 1.7e-25, bound 1.7e-24
+  3. mode 2: max |M_psi(0) z_psi - F_psi| = 6.9e-01, max |F_psi| 4.7e-08, noise 1.7e-25, bound 1.7e-24
+  4. max |M_psi(0) z_psi| = 2.0e-25 (max |F_psi| 4.9e-31, noise 1.5e-25, bound 1.5e-24); control (p, -m): 9.7e-01
+D 67.011526 (M 32, kfreeze 13, |F| 2.7e-22): PASS
+  3. mode 1: max |M_psi(0) z_psi - F_psi| = 7.8e-19, max |F_psi| 5.0e-08, noise 1.3e-18, bound 1.3e-17
+  3. mode 2: max |M_psi(0) z_psi - F_psi| = 5.9e-03, max |F_psi| 5.0e-08, noise 1.3e-18, bound 1.3e-17
+  4. max |M_psi(0) z_psi| = 2.6e-20 (max |F_psi| 4.8e-23, noise 4.2e-19, bound 4.2e-18); control (p, -m): 4.5e-01
+T62 step 1 done: build.sh at 9ddfb28 (20 min): hpkernel neon, multidouble neon; cargo test --release --lib: 4 passed,
+0 failed, 2 ignored. Step 2 (the compares) runs. T61's B0 zero finder runs (1 h so far).
