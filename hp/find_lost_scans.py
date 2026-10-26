@@ -2,7 +2,7 @@
 """Search a machine for the cloud continuation runs' raw output (runs up, up2-up13, up18, up20, up21; D 8.25-61.03),
 written to /home/claude/dss/hp_scan and never pushed: records scan_up<N>.jsonl and states up<N>_D<D>.npz.
 
-    python3 hp/find_lost_scans.py --selftest [--mutate=no_probes|no_fsck]
+    python3 hp/find_lost_scans.py --selftest [--mutate=no_probes|no_fsck|no_skip]
     python3 hp/find_lost_scans.py OUT.json [--roots DIR ...] [--collect DIR]
 
 Probes: the 757 rows of hp/data/delta_dd.csv whose run is a cloud run; their Delta to 11 decimals.
@@ -20,9 +20,11 @@ and (macOS) Library are skipped (the Trash is searched), except Claude's temp fo
 DIR/manifest.json naming each one's source.
 
 Control (--selftest): a planted tree with a cloud-run record file, a state name, a git repository whose branch holding
-scan_up6.jsonl was deleted, and a decoy with no probe; all three must be found and the decoy not. Exit 1 on failure.
+scan_up6.jsonl was deleted and whose main branch tracks a file with probes, and a decoy with no probe; the first
+three must be found, and neither the tracked file nor the decoy. Exit 1 on failure.
 --mutate=no_probes empties the probe set (record_file must fire), no_fsck skips the unreachable commits
-(deleted_branch must fire).
+(deleted_branch must fire), no_skip searches tracked files too (tracked_skipped must fire: a committed file with
+probes is planted in the repository).
 """
 import argparse
 import csv
@@ -119,7 +121,12 @@ def first_commits(repo):
     return set(git(repo, "rev-list", "--max-parents=0", "HEAD").split())
 
 
-def search(roots, P, committed, fsck=True, project=()):
+def key(path):
+    """a path as a set key: git's forward slashes and the walk's separators agree (Windows)"""
+    return os.path.normcase(os.path.normpath(path))
+
+
+def search(roots, P, committed, fsck=True, project=(), skip_tracked=True):
     rep = dict(roots=roots, names=[], committed_states=0, dirs=[], likely=[], weak=[], git=[], repos=0, files=0,
                other_repos=0)
     stores, tracked = set(), set()
@@ -132,9 +139,10 @@ def search(roots, P, committed, fsck=True, project=()):
                 rep["other_repos"] += 1          # another project: its files are searched, its history is not
                 continue
             rep["repos"] += 1
-            tracked.update(os.path.join(p, f) for f in git(p, "ls-files", "-z").split("\0") if f)
+            if skip_tracked:
+                tracked.update(key(os.path.join(p, f)) for f in git(p, "ls-files", "-z").split("\0") if f)
             rep["git"] += scan_git(p, stores, fsck)
-        elif p not in tracked:
+        elif key(p) not in tracked:
             rep["files"] += 1
             b = os.path.basename(p)
             if cloud_name(b):
@@ -200,20 +208,22 @@ def selftest(P, mutate=""):
         run = lambda *a: subprocess.run(["git", "-C", g, *a], check=True, capture_output=True, env=env)  # noqa: E731
         os.makedirs(g)
         run("init", "-q", "-b", "main")
-        open(os.path.join(g, "x"), "w").close()
-        run("add", "x"), run("commit", "-qm", "x")
+        with open(os.path.join(g, "tracked_records.jsonl"), "w") as fh:
+            fh.writelines(json.dumps({"D": 20.0 + i, "Delta": float(v + "37")}) + "\n" for i, v in enumerate(some))
+        run("add", "tracked_records.jsonl"), run("commit", "-qm", "x")
         run("checkout", "-qb", "gone")
         open(os.path.join(g, "scan_up6.jsonl"), "w").write("{}\n")
         run("add", "scan_up6.jsonl"), run("commit", "-qm", "s")
         run("checkout", "-q", "main"), run("branch", "-qD", "gone")
         run("reflog", "expire", "--expire=now", "--all")
         rep = search([t], set() if mutate == "no_probes" else P, set(), fsck=mutate != "no_fsck",
-                     project=first_commits(g))
+                     project=first_commits(g), skip_tracked=mutate != "no_skip")
         ok = dict(record_file=any(x["path"].endswith("copied_records.jsonl") for x in rep["likely"]),
                   state_name=any(p.endswith("up7_D41.0890.npz") for p in rep["names"]),
                   deleted_branch=any(x["path"] == "scan_up6.jsonl" and x["via"].startswith("unreachable")
                                      for x in rep["git"]),
-                  decoy_clean=not any("decoy" in x["path"] for x in rep["likely"] + rep["weak"]))
+                  decoy_clean=not any("decoy" in x["path"] for x in rep["likely"] + rep["weak"]),
+                  tracked_skipped=not any("tracked_records" in x["path"] for x in rep["likely"] + rep["weak"]))
         for k, v in ok.items():
             print(f"  {k}: {'PASS' if v else 'FIRE'}")
         return all(ok.values())
@@ -227,7 +237,7 @@ def main():
     ap.add_argument("--roots", nargs="*", default=[os.path.expanduser("~"), tempfile.gettempdir()])
     ap.add_argument("--collect", default="")
     ap.add_argument("--selftest", action="store_true")
-    ap.add_argument("--mutate", default="", choices=["", "no_probes", "no_fsck"])
+    ap.add_argument("--mutate", default="", choices=["", "no_probes", "no_fsck", "no_skip"])
     a = ap.parse_args()
     P, n = probes(os.path.join(HERE, "data", "delta_dd.csv"))
     print(f"{n} cloud-run rows, {len(P)} probes")
