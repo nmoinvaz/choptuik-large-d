@@ -98,13 +98,18 @@ Conventions for the Claude sessions (cloud and local) that run computations here
 - **Raw output goes to its own branch, `raw/<task>`.** Raw output is everything a run writes: per-point records
   (jsonl), states (npz), attempts files and logs. It never lives only on a machine's disk, and it is never written
   outside a git worktree (the cloud continuation runs up–up21 wrote theirs to `/home/claude/dss/hp_scan`, which was
-  never pushed, and their records are lost). Before the run, make an orphan worktree for it beside your code worktree,
-  `git worktree add --orphan -b raw/<task> ../raw-<task>` (for example `raw/T74`), and point the run's output paths
-  into it. At each post and at the end, `cd ../raw-<task> && git add -A && git commit -m "<task>: ..." && git push
-  origin raw/<task>`. Raw branches are never merged into main. Main gets only what the coordinator derives from them
-  (CSVs, graphs, notes), with the branch and commit named in the note or script that used it. A script in main that
-  reads raw output takes its directory as an argument, and a documented command that needs one states the
+  never pushed, and their records are missing). Before the run, make an orphan worktree for it beside your code
+  worktree, `git worktree add --orphan -b raw/<task> ../raw-<task>` (for example `raw/T74`), and point the run's output
+  paths into it. At each post and at the end, `cd ../raw-<task> && git add -A && git commit -m "<task>: ..." && git
+  push origin raw/<task>`. Raw branches are never merged into main. Main gets only what the coordinator derives from
+  them (CSVs, graphs, notes), with the branch and commit named in the note or script that used it. A script in main
+  that reads raw output takes its directory as an argument, and a documented command that needs one states the
   `git worktree add ../raw-<task> raw/<task>` step that fetches it.
+  The long-running writers (`hp/scan_hp.py`, `hp/lowD_highM.py` with `--states`, `hp/gamma_batch.py`,
+  `hp/modecount_test_zeros.py`, `hp/modecount_test_axis.py`, `solver/inner_amp/amp_flint_par.py`, `scan_omega.py`)
+  refuse an output path outside a `raw/` worktree (`hp/raw_out.py`; `--allow_unraw` for tests and scratch only). The
+  coordinator checks each post that reports a run with `python3 raw_check.py raw/<task> PATTERN ...`, which fails
+  when the branch or a named file is not on GitHub.
 - **Shared cores:** the cloud machine has 2 cores, usually shared by several agents. Run single-process under
   `nice -n 10`, put anything longer than a few minutes in the background with a log file, and keep single runs short.
 - **Web access:** WebSearch reaches any site; to target one, pass `allowed_domains`. WebFetch opens only URLs that

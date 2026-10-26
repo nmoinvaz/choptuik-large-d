@@ -60,7 +60,8 @@ recorded twice).
 Records: one per solve in --points (lowD_dd.solve_point's record: Delta hi/lo, |F|, iterations, seconds per
 iteration, steps, tails, sensitivities, harmonics, peak RSS), one per point and resolution pair in --out (D, M_w,
 M_n, both Deltas, the difference, |F|, iterations, seconds, tails, the decision). States:
-hp/data/lowD_states/<tag>_D<D>_M<M>.npz.
+<--states>/<tag>_D<D>_M<M>.npz (default hp/data/lowD_states). --out, --points and --states must be in a raw/<task>
+worktree (raw_out.py; --allow_unraw writes anyway).
 """
 import argparse
 import json
@@ -76,6 +77,7 @@ import numpy as np  # noqa: E402
 
 import lowD_dd  # noqa: E402
 from hpkernel.driver import load, make_solver, predict, renode, resample_z, save  # noqa: E402
+from raw_out import FLAG, HELP, require_raw  # noqa: E402
 
 STATES = os.path.join(HERE, "data", "lowD_states")
 
@@ -105,6 +107,7 @@ def projected_diff(pairs, D_next2):
 
 
 def main():
+    global STATES
     ap = argparse.ArgumentParser()
     ap.add_argument("--start_w", required=True)
     ap.add_argument("--start_n", required=True)
@@ -120,6 +123,8 @@ def main():
     ap.add_argument("--tag", default="lowDhm")
     ap.add_argument("--out", default=os.path.join(HERE, "data", "lowD_highM", "pilot.jsonl"))
     ap.add_argument("--points", default=os.path.join(HERE, "data", "lowD_highM", "pilot_points.jsonl"))
+    ap.add_argument("--states", default=STATES, help="directory of the solved states (and of earlier ones a resume "
+                    "looks for)")
     ap.add_argument("--threads", type=int, default=2)
     ap.add_argument("--tol", type=float, default=1e-28)
     ap.add_argument("--accept", type=float, default=1e-27)
@@ -147,7 +152,10 @@ def main():
                     "predictor in two passes instead of failing the point (off: the point fails and the step is halved)")
     ap.add_argument("--helper_it_max", type=int, default=None, help="Newton iterations of the M_c helper (default "
                     "--it_max; a test of --helper_fallback forces the helper to fail with 1)")
+    ap.add_argument(FLAG, action="store_true", help=HELP)
     a = ap.parse_args()
+    STATES = a.states
+    require_raw(a.out, a.points, os.path.join(STATES, "x"), allow=a.allow_unraw)
     os.makedirs(os.path.dirname(a.out), exist_ok=True)
     log = lambda m: print(time.strftime("%H:%M:%S ") + m, flush=True)  # noqa: E731
     Ms = [int(v) for v in a.Ms.split(",")]

@@ -21,6 +21,8 @@ import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor
 
+from raw_out import require_raw
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -28,6 +30,7 @@ def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     opts = dict(a[2:].split("=", 1) for a in sys.argv[1:] if a.startswith("--") and "=" in a)
     out = os.path.abspath(args[0])
+    require_raw(out)                    # --allow_unraw writes anyway
     procs = int(opts.get("procs", 4))
     states = args[1:] or (sorted(glob.glob(os.path.join(HERE, "data", "states", "*.npz")))
                           + sorted(glob.glob(os.path.join(HERE, "data", "seeds", "*.npz")))

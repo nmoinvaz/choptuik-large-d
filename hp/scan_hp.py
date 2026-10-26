@@ -6,7 +6,8 @@
 
 START.npz: a converged solution (hpkernel.driver.save format: zh, zl, meta with D, M, nodes). Every converged point
 is appended to OUT.jsonl and saved as <tag>_D<D>.npz next to OUT. A --nodes / --M different from the start file's
-re-nodes / resamples the start solution first (and re-converges it at its own D).
+re-nodes / resamples the start solution first (and re-converges it at its own D). OUT and --attempts must be in a
+raw/<task> worktree (raw_out.py; --allow_unraw writes anyway).
 """
 import argparse
 import json
@@ -19,6 +20,7 @@ import numpy as np  # noqa: E402
 
 from hpkernel.driver import deflated_newton, delta_correction, hermite, lm_solve, load, make_solver, newton_solve, plow_odd, predict, renode, resample_z, save, tangent
 from pinning import PinnedSolver, band_coeffs, band_field, predict_dd, dd_add
+from raw_out import FLAG, HELP, require_raw
 
 
 def tails(s, zh, zl, nodes, M):
@@ -233,7 +235,9 @@ def main():
                     "dDelta/dF, with no Newton step (Newton does not converge at 0.6 matching at D ~ 60, but the 0.7 "
                     "solution sits at the 0.6 floor; comms 2026-10-23 12:43 local). Recorded as 'cert'")
     ap.add_argument("--certify_ks", type=int, default=160, help="--certify_nodes: horizon series order there")
+    ap.add_argument(FLAG, action="store_true", help=HELP)
     a = ap.parse_args()
+    require_raw(a.out, a.attempts or None, allow=a.allow_unraw)       # the states go next to OUT
     T_start = time.time()
     zh, zl, meta = load(a.start)
     D, M0, nodes0 = meta["D"], meta["M"], list(meta["nodes"])

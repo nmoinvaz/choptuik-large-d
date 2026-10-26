@@ -246,19 +246,22 @@ def main():
         sys.exit(selftest())
     from modecount_common import setup, horizon_poles
     from modecount_wind import parse
+    from raw_out import require_raw
     args, opts = parse(sys.argv[1:])
+    out = opts.get("out", os.path.join(HERE, "data", "modecount_test_zeros.jsonl"))
+    require_raw(out)                    # --allow_unraw writes anyway
     st = setup(args[0], M=int(opts["M"]) if "M" in opts else None, threads=int(opts.get("threads", 1)), log=print)
     r0, r1 = (float(v) for v in opts["re"].split(","))
     i0, i1 = (float(v) for v in opts["im"].split(","))
     box = (r0, r1, i0, i1)
     panel, ng, tol = float(opts.get("panel", 0.1)), int(opts.get("gl", 8)), float(opts.get("tol", math.pi / 4))
     plant = complex(opts["plant"].replace(" ", "")) if "plant" in opts else None
-    out = opts.get("out", os.path.join(HERE, "data", "modecount_test_zeros.jsonl"))
     ymax = max(abs(i0), abs(i1))
     Q = [p for _, p in horizon_poles(st) if abs(p.imag) < ymax + 3 * st.omega]
     near = [p for p in Q if r0 - st.omega < p.real < r1 + st.omega and i0 - st.omega < p.imag < i1 + st.omega]
     lay = layout_key(st)
     cache_path = opts.get("cache", os.path.join(HERE, "data", f"modecount_test_D{st.D:.4f}_M{st.M}_{lay}_raw.jsonl"))
+    require_raw(cache_path)
     raw = {}
     if os.path.exists(cache_path):
         for line in open(cache_path):
