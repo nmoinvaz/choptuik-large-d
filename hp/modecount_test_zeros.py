@@ -33,8 +33,11 @@ box (one 0.02 from an edge) and one outside 0.02 from it: the three must be foun
 Controls: with one panel per edge, 3 nodes and no halving the check must fail, and so must it with every estimate
 moved by 2e-3 (the polished zeros then lie 2e-3 from their estimates).
 
-Evaluations of det M_psi are cached in hp/data/modecount_test_D<D>_M<M>_raw.jsonl (modecount_test.py's file; --cache
-for another), shared between plain and planted runs.
+Evaluations of det M_psi are cached in hp/data/modecount_test_D<D>_M<M>_<layout>_raw.jsonl (--cache for another),
+shared between plain and planted runs; <layout> names the node count, kc, ks and kfreeze and a hash of the nodes, and
+every record carries it, so a state in another layout at the same D and M never reuses these evaluations (the Mac
+found the old name, keyed by D and M only, would have done so in T66, comms 2026-10-26 03:45 UTC). The files written
+before that are hp/data/modecount_test_D<D>_M<M>_raw.jsonl, in the layout of their run's log: pass them with --cache.
 
 Newton from a grid of starts, this script's first version, does not work here: (ln g)' has a smooth background of
 about 1e2 from the zeros and poles away from the box, so Newton's steps stay near 1e-2 and walk off unless a start is
@@ -52,6 +55,14 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
+
+
+def layout_key(st):
+    """the state's discretisation as a short tag: node count, kc, ks, kfreeze and a hash of the node positions"""
+    import hashlib
+    nodes = ",".join(f"{x:.10g}" for x in st.meta["nodes"])
+    h = hashlib.sha1(nodes.encode()).hexdigest()[:8]
+    return f"K{st.K}kc{st.meta.get('kc')}ks{st.ks}kf{st.kf or 0}n{h}"
 
 def wrap(x):
     return math.remainder(x, 2 * math.pi)
@@ -246,11 +257,14 @@ def main():
     ymax = max(abs(i0), abs(i1))
     Q = [p for _, p in horizon_poles(st) if abs(p.imag) < ymax + 3 * st.omega]
     near = [p for p in Q if r0 - st.omega < p.real < r1 + st.omega and i0 - st.omega < p.imag < i1 + st.omega]
-    cache_path = opts.get("cache", os.path.join(HERE, "data", f"modecount_test_D{st.D:.4f}_M{st.M}_raw.jsonl"))
+    lay = layout_key(st)
+    cache_path = opts.get("cache", os.path.join(HERE, "data", f"modecount_test_D{st.D:.4f}_M{st.M}_{lay}_raw.jsonl"))
     raw = {}
     if os.path.exists(cache_path):
         for line in open(cache_path):
             r = json.loads(line)
+            if r.get("layout", lay) != lay:
+                raise SystemExit(f"{cache_path} holds evaluations of layout {r['layout']}, not this state's {lay}")
             raw[(r["re"], r["im"])] = r
     rf = open(cache_path, "a")
     nev = [0, 0.0]
@@ -261,7 +275,8 @@ def main():
         if key not in raw:
             t = time.time()
             la, arg, pmin, pmax = st.c.test_det(st.zh, st.zl, key[0], key[1])
-            r = dict(re=key[0], im=key[1], lnabs=la, arg=arg, pmin=pmin, pmax=pmax, sec=round(time.time() - t, 2))
+            r = dict(re=key[0], im=key[1], lnabs=la, arg=arg, pmin=pmin, pmax=pmax, sec=round(time.time() - t, 2),
+                     layout=lay)
             raw[key] = r
             rf.write(json.dumps(r) + "\n")
             rf.flush()
