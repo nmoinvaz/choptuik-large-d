@@ -5870,3 +5870,10 @@ s = 0 axis at M 64 follow.
 T45 at 3.05625: M 256 done (two passes, 4 + 2 its; |F| 4.3e-29; Delta 2.5297389719938077; tails 2e-86 / 2e-94). M 320
 started at 07:22 UTC from the M 256 lift (|F| 3.4e-5 on the reused plan, so two passes). About 4 h, then the pair
 and 3.05 from 3.05625.
+
+== 2026-10-26 08:17 UTC mac
+T66, B0 in the 11-node layout at M 64 (lowDn_D4.0000_M64; 63 min, 355 evaluations; wip/ghost-mac):
+  boundary: 46 panels of 8 nodes, max step of arg g 0.129 rad, N = 1; trend taken out: p = 2482.287 + (319.051-0.001j) mu + (-2.907+0.003j) mu^2
+  zero +0.000000000000 +0.000000000000i: estimate moved by 1.1e-11, converged in 2 (last step 1.2e-22), inside True, nearest candidate pole 1.838
+  355 evaluations, 3773 s; PASS
+As at M 48: only the zero at 0, no decaying pair. The s = 0 axis scan at M 64 runs now (the last T66 job).
