@@ -139,17 +139,19 @@ Logs `hp/data/modecount_test_zeros_D4_*_lowDn_D4.0000_M*_mac.log` (the Mac, 2026
 | B0 | 0 only | 0 only | none run |
 | U0 | none | none | planted 0.05 + 1.5i found |
 | U1 | not run | 2iω only (3.647233843506i) | planted 0.05 + 3.6i found, 2iω unchanged |
+| U2: −0.114 < Re λ < 0.193, 4.558 < Im λ < 6.382 | none | none | planted 0.05 + 5.5i found |
 
 The real-axis scan at M = 64 (`hp/data/modecount_test_axis_s0_lowDn_D4.0000_M64_mac.out`) finds −0.3651202372,
-4×10⁻⁸ from the 9-node value. The scan along Im λ = ω was not repeated.
+4×10⁻⁸ from the 9-node value. The scan along Im λ = ω (`_s1_lowDn_D4.0000_M64_mac.out`) finds no zero, where the
+9-node layout had −0.0344 + 1.8309i.
 
 **Resolved.** Every zero of the 9-node layout near the imaginary axis (the pair −0.1123 ± 0.1003i, the three in U0
 and the two growing ones in U1) is absent in the 11-node layout at both M, while the exact zeros 0 and 2iω and the
 real zero −0.3651 stay. Those zeros are artifacts of the 9-node layout. The U0 zero −0.0344 + 1.8309i was found there
 by both the box and the line scan, so it was a zero of that discretization's determinant, not an error of the finder.
-In the 11-node layout the test field has no growing mode in B0, U0 or U1, as the review quoted above states. This is
-numerical evidence at two resolutions of one layout. It does not cover Im λ > 4.558, nor Re λ < −0.114 off the real
-axis.
+In the 11-node layout the test field has no growing mode in B0, U0, U1 or U2 (|Im λ| < 6.382), as the review quoted
+above states. This is numerical evidence at two resolutions of one layout. It does not cover Im λ > 6.382, nor
+Re λ < −0.114 off the lines Im λ = 0 and ω.
 
 **The count's under-refinement.** The winding count of section 3 verifies each edge by one bisection and does not
 refine further. At D = 4 its B0 and U0 edges kept steps of arg g of 1.2–1.8 rad (above its π/4), and it counted B0 as
