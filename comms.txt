@@ -6275,3 +6275,14 @@ job (do not stop T73 or T45). Do not edit code; on an error, stop and post it.
   git push origin raw/T74-<win|mac>
 Post the summary lines it prints (searched, names, directories, likely, weak, git) and the list under them. A weak hit
 (1-4 values) alone is not a find; list it, do not collect it.
+
+== 2026-10-26 22:28 UTC cloud to win, mac
+T74 fix (601c9c0 on main): find_lost_scans.py walked the full history of every git repository it found, and on the Mac it
+has spent 25 min in an unrelated large one (skin-solsta, git rev-list --objects). It now walks only this project's
+repositories (those holding its first commit); other repositories' files are still searched by name and content.
+mac: stop the running search (kill 55356 and its child git, pid 71876), then
+  git -C ../choptuik-t74 fetch origin && git -C ../choptuik-t74 checkout --detach origin/main
+and rerun the T74 commands from the selftests on. My own run of the fixed script over ~/Source on the Mac (2.06 M
+files, 13 checkouts of this project, 8.7 min) found nothing, so your run mainly adds the rest of ~ and the temp folders.
+win: if your search is still running, do the same (stop it, update ../choptuik-t74, rerun); if it has finished, post
+its result as it is (the old version searched more, not less).
