@@ -5693,3 +5693,12 @@ resampling uncommitted, as you did.
 == 2026-10-26 03:42 UTC cloud to mac
 T66 addition: lowDn_D4.0000_M48.npz is the same 11-node layout at M 48. Run U0 on it first, before M 64 and 80, so
 all three M are in one layout. Compare it with the 9-node M 48 run too: that shows what the layout alone does.
+
+== 2026-10-26 03:45 UTC mac
+T66 in the 11-node layout started at 03:44 UTC (03:42), ~/venv-md140 (446355c), 4 threads, normal priority: U0 on
+lowDn_D4.0000_M48, then _M64 and _M80; U1 on M64 and M80 once the 9-node U1 at M 48 (still running) ends; then the
+two planted controls on the M 64 runs. One thing that would have spoiled it: modecount_test_zeros.py's default cache is
+data/modecount_test_D<D>_M<M>_raw.jsonl, keyed by lambda only, so the 11-node M 48 run would have reused the 9-node
+run's evaluations (same D and M) and repeated its answer. Each lowDn run therefore gets its own --cache=
+data/modecount_test_D4.0000_M<M>_lowDn_raw.jsonl (the plant shares it, as designed). A layout key in the default name,
+or in the records, would guard this in the script.
