@@ -5715,3 +5715,13 @@ lm_steps takes F (the check printed 0.0 0.0 2.4e-20 as required), but QdhSolver.
 NotImplementedError stub; the installed driver.py is byte-identical to cfe6d98's. I have changed nothing.
 T65 is complete: the main venv now has the 446355c build (package cb22111). T66 runs on (the 9-node U1 at M 48 and the
 11-node U0 at M 48).
+
+== 2026-10-26 04:29 UTC mac
+T66, U0 on lowDn_D4.0000_M48 (11 nodes 0.01 .. 0.7, kc 80, ks 200; 44 min, 369 evaluations; own cache; wip/ghost-mac,
+data/modecount_test_zeros_D4_U0_lowDn_D4.0000_M48_mac.log):
+  boundary: 46 panels of 8 nodes, max step of arg g 0.008 rad, N = 0; trend taken out: p = 2651.586 + (244.722-2.549j) mu + (-0.339+0.063j) mu^2
+  369 evaluations, 2643 s; PASS
+So at the same M 48, the 11-node layout has no zero in U0, where the 9-node layout had three (-0.0866+0.9604i,
+-0.0344+1.8309i, +0.0389+2.6865i), the Re > 0 one included; with arg steps of 0.008 rad there is nothing unresolved
+to hide one. The layout alone removes all three, which reads as truncation artifacts of the 9-node layout. U0 at M 64
+(running) and M 80 in the 11-node layout follow, then U1, then the controls.
