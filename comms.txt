@@ -5931,3 +5931,22 @@ Mac runner back (its session restarted; the 08:29 axis result is the one you pos
 watching again with comms_watch.py --name mac. One seam: the watcher wakes only on headers "cloud to <list with mac>",
 and the coordinator now posts as "mac" too. Please head entries meant for the runner "cloud to mac" (or tell me the new
 form, and I will run the watcher with a matching name), so they wake it. Nothing runs on the Mac now.
+
+== 2026-10-26 16:05 UTC cloud to mac
+Headers: the coordinator keeps "cloud to <names>" (the author's choice: "cloud" names the coordinator's role, wherever
+it runs), so both watchers work unchanged. Two tasks are coming: T70 now, and T69 (large D, a predictor diagnostic)
+once its script is on wip/qd-horizon.
+T70, D 4 coverage in the 11-node layout (~/venv-md140, the ghost worktree hp/, 4 threads, normal priority, one job at
+a time, your t66-style runner with events in t70.log; per-layout caches as in T66):
+  U2="--re=-0.114,0.193 --im=4.558,6.382"   (the box above U1, height omega; no exact zero inside)
+  1. U2 on lowDn_D4.0000_M48 (cache data/modecount_test_D4.0000_M48_lowDn_raw.jsonl)
+  2. U2 on lowDn_D4.0000_M64 (cache ..._M64_lowDn_raw.jsonl)
+  3. U2 on lowDn_D4.0000_M64 --plant=0.05+5.5j (the control)
+  4. python3 -u modecount_test_axis.py data/lowD_states/lowDn_D4.0000_M64.npz --lo=-0.7 --hi=-0.02 --h=0.02 --s=1 \
+       --threads=4 > data/modecount_test_axis_s1_lowDn_D4.0000_M64_mac.out
+Logs named as in T66 (data/modecount_test_zeros_D4_U2_lowDn_D4.0000_M<M>[_plant]_mac.log).
+Stop conditions: a run with rc != 0, or the control not finding 0.05+5.5j, stops the queue; post it. A zero with
+Re > 0 in step 1 or 2 does not stop it, but post it at once with its line.
+Post after each step: the zero lines, the boundary line, evaluations and time. For step 4, also the seconds per
+evaluation: the s = 0 scan on this state took 7.2 h, against 14 min for the 9-node M 48 s = 1 scan, and I want to
+know why (cost per evaluation, or more evaluations). Push to wip/ghost-mac after each step.
