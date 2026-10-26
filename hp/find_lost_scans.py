@@ -11,8 +11,9 @@ Probes: the 757 rows of hp/data/delta_dd.csv whose run is a cloud run; their Del
 2. Contents: text files (.jsonl .json .log .txt .csv .md .output .out, under 2 GB) under each root with a probe Delta;
    a file with at least 5 distinct probes is "likely". Copies of delta_dd.csv and files tracked in a repository found
    under the roots (already in git) are skipped; untracked files in a checkout are searched.
-3. Git: every repository under the roots (one per object store), its refs, reflogs and unreachable commits, for paths
-   named as in 1, leaving out objects that a remote-tracking branch holds (already on GitHub).
+3. Git: every repository of this project under the roots (one that holds this repository's first commit; one per
+   object store), its refs, reflogs and unreachable commits, for paths named as in 1, leaving out objects that a
+   remote-tracking branch holds (already on GitHub). Other projects' repositories get only the file search.
 Default roots: the home directory and the temp directory; .git, node_modules, .cargo, .rustup, target, site-packages
 and (macOS) Library are skipped (the Trash is searched), except Claude's temp folders, which the temp root covers.
 --collect DIR copies every file of 1 and every likely file of 2 into DIR (git blobs by `git cat-file`), with
@@ -114,13 +115,22 @@ def scan_git(repo, stores, fsck=True):
     return out
 
 
-def search(roots, P, committed, fsck=True):
-    rep = dict(roots=roots, names=[], committed_states=0, dirs=[], likely=[], weak=[], git=[], repos=0, files=0)
+def first_commits(repo):
+    return set(git(repo, "rev-list", "--max-parents=0", "HEAD").split())
+
+
+def search(roots, P, committed, fsck=True, project=()):
+    rep = dict(roots=roots, names=[], committed_states=0, dirs=[], likely=[], weak=[], git=[], repos=0, files=0,
+               other_repos=0)
     stores, tracked = set(), set()
     for kind, p in walk(roots):
         if kind == "dir":
             rep["dirs"].append(p)
         elif kind == "repo":
+            if not any(subprocess.run(["git", "-C", p, "cat-file", "-e", c], capture_output=True).returncode == 0
+                       for c in project):
+                rep["other_repos"] += 1          # another project: its files are searched, its history is not
+                continue
             rep["repos"] += 1
             tracked.update(os.path.join(p, f) for f in git(p, "ls-files", "-z").split("\0") if f)
             rep["git"] += scan_git(p, stores, fsck)
@@ -197,7 +207,8 @@ def selftest(P, mutate=""):
         run("add", "scan_up6.jsonl"), run("commit", "-qm", "s")
         run("checkout", "-q", "main"), run("branch", "-qD", "gone")
         run("reflog", "expire", "--expire=now", "--all")
-        rep = search([t], set() if mutate == "no_probes" else P, set(), fsck=mutate != "no_fsck")
+        rep = search([t], set() if mutate == "no_probes" else P, set(), fsck=mutate != "no_fsck",
+                     project=first_commits(g))
         ok = dict(record_file=any(x["path"].endswith("copied_records.jsonl") for x in rep["likely"]),
                   state_name=any(p.endswith("up7_D41.0890.npz") for p in rep["names"]),
                   deleted_branch=any(x["path"] == "scan_up6.jsonl" and x["via"].startswith("unreachable")
@@ -226,12 +237,13 @@ def main():
         sys.exit(0 if ok else 1)
     if not a.out:
         ap.error("OUT.json is required without --selftest")
-    rep = search(a.roots, P, committed_names())
+    rep = search(a.roots, P, committed_names(), project=first_commits(HERE))
     if a.collect:
         rep["collected"] = collect(rep, a.collect)
     with open(a.out, "w") as fh:
         json.dump(rep, fh, indent=1)
-    print(f"searched {rep['files']} files and {rep['repos']} repositories under {', '.join(a.roots)}")
+    print(f"searched {rep['files']} files and {rep['repos']} repositories of this project under {', '.join(a.roots)} "
+          f"({rep['other_repos']} other repositories: files only)")
     print(f"  cloud-run file names: {len(rep['names'])} (states already in git: {rep['committed_states']})")
     print(f"  hp_scan directories: {len(rep['dirs'])}")
     print(f"  files with a cloud-run Delta: likely (>= 5 probes) {len(rep['likely'])}, weak {len(rep['weak'])}")
