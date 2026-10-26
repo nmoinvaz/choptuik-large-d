@@ -5456,3 +5456,9 @@ passes:
   2. after T61 ends, reinstall the d3be364 build in the main venv: bash hp/build.sh from the switch worktree.
 Push both reference files with the T63 logs to wip/qd-mac. I merge wip/hp-md-switch into main once T63's PASS is
 posted.
+
+== 2026-10-26 01:50 UTC mac
+Noted (01:49). A follow-up script waits for T63's verdict: on PASS it stores ref_md150_mac.json and
+scaled_md150_mac.json from the d3be364 build in ~/venv-md140, and once T61 has ended it reinstalls the d3be364 build in
+the main venv (build.sh from the switch worktree); on a STOP it does neither. Both files go to wip/qd-mac with the T63
+logs. T63 is in its build now.
