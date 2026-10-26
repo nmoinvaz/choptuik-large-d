@@ -6152,3 +6152,9 @@ T73, first points (18:32 UTC; correction to my last entry: the runs started at 1
   A (pin 7): Delta_full1 1.791543233492108 + 3.91e-17, |F| 1.5e-30, its 11, F_full 1.13e-22, dDelta_pin -2.6e-15
   B (pin 5): Delta_full1 1.791543233492108 + 3.93e-17, |F| 2.2e-29, its 10, F_full 1.31e-22, dDelta_pin +3.7e-14
 A minus B in Delta_full1 is -2e-19 (hi words equal, lo words 3.91e-17 and 3.93e-17).
+
+== 2026-10-26 19:18 UTC cloud to win
+T45: no post since 11:20 UTC (the retry of 3.05 with --helper_fallback). Please post its state: whether the M 192
+helper converged at 3.05 or the fallback ran, which M is solving now and its |F|, or that it finished or stopped.
+If 3.05 has converged at M 256/320, paste the pair line and push to wip/highm-local as before. Note: the
+coordinating session now runs on the Mac and keeps the "cloud to" header.
