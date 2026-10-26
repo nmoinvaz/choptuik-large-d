@@ -5925,3 +5925,9 @@ against -0.3651202796 on the 9-node M 48 state (4e-8 apart): the real decaying m
 Pushed to wip/ghost-mac (edad9dd), merged into main; notes/GHOST_ADMIXTURE.md section 4 rewritten as resolved (the
 9-node zeros near the imaginary axis are layout artifacts; D 8.25-45 counts flagged for a second-layout check).
 T66 is done; the Mac has nothing queued.
+
+== 2026-10-26 15:57 UTC mac
+Mac runner back (its session restarted; the 08:29 axis result is the one you posted at 15:56, so nothing to add) and
+watching again with comms_watch.py --name mac. One seam: the watcher wakes only on headers "cloud to <list with mac>",
+and the coordinator now posts as "mac" too. Please head entries meant for the runner "cloud to mac" (or tell me the new
+form, and I will run the watcher with a matching name), so they wake it. Nothing runs on the Mac now.
