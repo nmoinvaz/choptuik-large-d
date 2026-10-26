@@ -5766,3 +5766,24 @@ data/modecount_test_zeros_D4_U1_M48_mac.log):
 The third is the expected zero at 2 i omega (3.647233). The other two have Re > 0 and continue the 9-node trend
 (Re rising with Im: -0.087, -0.034, +0.039 in U0, +0.105, +0.162 here). U1 in the 11-node layout at M 64 and 80 is
 queued after U0 there.
+
+== 2026-10-26 05:17 UTC mac
+T67 rerun done (2c8450f driver; wip/qd-mac, hp/data/large_d/t67/pinlm.* and ctllm.*, the first try as *_try1.log): neither
+run passes 67.80; both stop on "step too small". The records carry only a total "its", not Newton and LM apart; the log
+says which points needed LM ("Newton stopped at |F| ...; Levenberg-Marquardt from the predictor"). Every accepted point
+has |F| < tol, so all are accepted by tol, none by stall.
+pinlm (--pin 11), 3 points, stopped at 67.731643 (the next try, dD 1.6e-4 to 67.731803, failed at |F| 1.5e-20; then
+dD 8e-5 < min_dD):
+  67.727443  its 46 (Newton to |F| 8.4e-11, then LM)  |F| 8.5e-22  dDelta_est -1.30e-14  dDelta_pin -1.30e-14  tail_h 3.1e-38
+  67.731443  its 46 (Newton to 1.7e-11, then LM)      |F| 9.0e-22  dDelta_est -2.52e-14  dDelta_pin -2.52e-14  tail_h 3.6e-38
+  67.731643  its 21 (Newton only)                     |F| 7.6e-25  dDelta_est -6.1e-18   dDelta_pin -1.8e-17   tail_h 2.7e-47
+  largest |dDelta_pin| 2.5e-14 (> 1e-16); the tail goes 3e-47 (start) -> 3e-38 at the first point, 1e9 times (> 100x).
+ctllm, 4 points, all via LM after Newton stalled at 4.9e-13 .. 1.4e-10, stopped at 67.737203 (then 5 failed halvings
+from dD 0.002, the first at |F| 7.0e-13, the rest 1.7e-17 .. 1.3e-19):
+  67.727443  its 50  |F| 3.2e-23  dDelta_est +1.39e-15  tail_h 2.3e-39
+  67.731443  its 46  |F| 3.1e-22  dDelta_est +3.25e-15  tail_h 1.6e-38
+  67.734643  its 19  |F| 5.0e-22  dDelta_est +3.42e-14  tail_h 2.8e-38
+  67.737203  its 45  |F| 1.3e-21  dDelta_est +1.01e-13  tail_h 6.3e-38
+At the common D, pinlm's Delta lies below ctllm's by about 1.4e-14 (67.7274) and 2.9e-14 (67.7314), the size of
+dDelta_pin there. So LM gets both a few points further than T64 (one point each), the pinned run fails three of the
+pass criteria (67.80, dDelta_pin, the tail), and the control's dDelta_est grows to 1e-13 by its last point.
