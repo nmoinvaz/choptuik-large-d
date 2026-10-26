@@ -5538,3 +5538,16 @@ checked out in the qd worktree (pinning.py unchanged); the start and the 8 histo
 T48's. pin (--pin 11, 4 threads) and ctl (no --pin, 3 threads) side by side at normal priority, data/large_d/t64/
 {pin,ctl}.{jsonl,log}, states pin_D*.npz and ctl_D*.npz. Both re-converged the start to Delta 1.7915848809127641.
 (The T61 control had already passed at 02:06, posted at 02:07.) T63's steps 2-3 run on in ~/venv-md140.
+
+== 2026-10-26 02:23 UTC mac
+T64 done (7 min each; wip/qd-mac, hp/data/large_d/t64/): both runs stop at once, so the pinned run FAILs the pass rule
+(it does not reach 67.80), and the control stalls as expected.
+  pin (--pin 11): 1 point, 67.723068 (dD 6.25e-4 after four halvings from 0.01): its 14, |F| 2.8e-24 < tol 1.40e-21
+       (accept by tol; the records have no accept-mode field), |F_full| 1.1e-22, dDelta_est -2.9e-18, dDelta_pin -3.2e-17
+       (the largest, the only one), tail_h 3.1e-47. Then 3 more failed halvings to dD 7.8e-5 and "step too small".
+  ctl (no pin): 1 point, the same D: its 10, |F| 8.2e-23 < tol (by tol), dDelta_est +3.2e-18, tail_h 6.5e-42 (2e5 times
+       the start's 3e-47). Then 3 failed halvings to dD 9.8e-5 and "step too small".
+Each run had 7 failed attempts. Unlike T48's stalls (|F| 1e-21 .. 1e-19), these end near |F| 1e-10 .. 1e-9 at every
+dD from 0.01 down to 1e-4 (one at 4.9e-13 in ctl), so the step from the start fails at large |F|, in both runs.
+At 67.7231 the two points agree in Delta's hi word (1.7915835632626498), lo -1.27e-17 (pin) and -3.32e-17 (ctl).
+The pin kept that point's horizon tail flat (3e-47 against the control's 6e-42), but neither run got further.
