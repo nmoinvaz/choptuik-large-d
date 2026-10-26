@@ -1,0 +1,4 @@
+case a: exact -1.996019e-06, sum |y_i F_i| 1.996e-06; delta_correction error 1.3e-22 ok; f64 dot product -1.996019e-06, error 2.9e-22 (within the bound)
+  control: exact (1 + 2^-49), error 3.5e-21: rejected, ok
+case b: exact -8.527977e-24, sum |y_i F_i| 1.805e-06; delta_correction error 2.3e-38 ok; f64 dot product +0.000000e+00, error 8.5e-24 (outside the bound)
+selftest ok

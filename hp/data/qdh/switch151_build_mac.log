@@ -1,0 +1,43 @@
+Found existing installation: multidouble 0.1.0
+Uninstalling multidouble-0.1.0:
+  Successfully uninstalled multidouble-0.1.0
+    Updating crates.io index
+ Downloading crates ...
+  Downloaded multidouble v1.5.1
+🍹 Building a mixed python/rust project
+🐍 Found CPython 3.13 at /Users/nathan/venv-md140/bin/python
+🔗 Found pyo3 bindings
+📡 Using build options features from pyproject.toml
+💻 Using `MACOSX_DEPLOYMENT_TARGET=11.0` for aarch64-apple-darwin by default
+   Compiling multidouble v1.5.1
+   Compiling hpkernel v0.1.0 (/Users/nathan/Source/choptuik-mac-switch/hp)
+    Finished `release` profile [optimized] target(s) in 9m 14s
+📦 Built wheel for CPython 3.13 to /Users/nathan/Source/choptuik-mac-switch/hp/dist/hpkernel-0.1.0-cp313-cp313-macosx_11_0_arm64.whl
+Processing ./dist/hpkernel-0.1.0-cp313-cp313-macosx_11_0_arm64.whl
+Installing collected packages: hpkernel
+  Attempting uninstall: hpkernel
+    Found existing installation: hpkernel 0.1.0
+    Uninstalling hpkernel-0.1.0:
+      Successfully uninstalled hpkernel-0.1.0
+Successfully installed hpkernel-0.1.0
+Collecting multidouble @ git+https://github.com/nmoinvaz/multidouble@cb221113d1cf4aac62564f6ab1d69f3de19297ae#subdirectory=python
+  Cloning https://github.com/nmoinvaz/multidouble (to revision cb221113d1cf4aac62564f6ab1d69f3de19297ae) to /private/var/folders/7t/cbzjknq94l52r9q6mhl9g2pm0000gn/T/pip-install-868dta7v/multidouble_3f349c914c2a420b8b2afac6d36b3837
+  Running command git clone --filter=blob:none --quiet https://github.com/nmoinvaz/multidouble /private/var/folders/7t/cbzjknq94l52r9q6mhl9g2pm0000gn/T/pip-install-868dta7v/multidouble_3f349c914c2a420b8b2afac6d36b3837
+  Running command git rev-parse -q --verify 'cb221113d1cf4aac62564f6ab1d69f3de19297ae^{commit}'
+  cb221113d1cf4aac62564f6ab1d69f3de19297ae
+  Resolved https://github.com/nmoinvaz/multidouble to commit cb221113d1cf4aac62564f6ab1d69f3de19297ae
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: multidouble
+  Building wheel for multidouble (pyproject.toml): started
+  Building wheel for multidouble (pyproject.toml): finished with status 'done'
+  Created wheel for multidouble: filename=multidouble-0.1.0-cp313-cp313-macosx_11_0_arm64.whl size=378630 sha256=5f4a43779c0f7d339d273ddd36bc67a1f5859490bdbdc6445469a092a8fe7d62
+  Stored in directory: /private/var/folders/7t/cbzjknq94l52r9q6mhl9g2pm0000gn/T/pip-ephem-wheel-cache-ec78yv7l/wheels/b2/5f/b1/a51d09b27aba1fb0e10a4e4609f1c44c56403c59dc5179746a
+Successfully built multidouble
+Installing collected packages: multidouble
+Successfully installed multidouble-0.1.0
+hpkernel neon multidouble neon

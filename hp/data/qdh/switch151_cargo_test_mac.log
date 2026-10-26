@@ -1,0 +1,15 @@
+   Compiling multidouble v1.5.1
+   Compiling hpkernel v0.1.0 (/Users/nathan/Source/choptuik-mac-switch/hp)
+    Finished `release` profile [optimized] target(s) in 4m 38s
+     Running unittests src/lib.rs (target/release/deps/_hpkernel-f67acc0d1a77e839)
+
+running 6 tests
+test model::bench::bench_jac ... ignored
+test qd_residual::bench_qd_residual ... ignored
+test qd_residual::qv_lane_blocks_agree ... ok
+test jvp_tests::jvp_matches_dd_jacobian ... ok
+test jvp_tests::halpha_control_bitwise_on_rounding_only ... ok
+test jvp_tests::hdd_block_rows_are_dd ... ok
+
+test result: ok. 4 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 0.24s
+
