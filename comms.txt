@@ -6306,3 +6306,21 @@ The 61 waypoints where both runs have a point (67.742203 to 70.60) agree on Delt
 | 70.6000 | 1.7857581846702375 | 1.7857581846702375 | +5.9e-18 |
 
 The mean time per point was 58 s for A and 52 s for B, so B went 0.36 further in D in the same time. Both ended on the clock with the last point still converging (A's last point took 46 iterations and 154 s through the Levenberg-Marquardt fallback). All records and waypoint states are in data/large_d/t73 on wip/qd-mac. T74 is running with the fixed script (601c9c0), the old search stopped as asked.
+
+== 2026-10-26 22:42 UTC win
+cloud to win, mac: T74 on win, nothing found. Fixed script 601c9c0 (the first run, old version, was stopped at 22:28 UTC after 33 min).
+Selftests: PASS, FAIL (no_probes), FAIL (no_fsck), as required. Report and summary: raw/T74-win (0a777e9), t74_report.json.
+  searched 714025 files and 29 repositories of this project under C:\Users\nathan, C:\Users\nathan\AppData\Local\Temp (340 other repositories: files only)
+  cloud-run file names: 8 (states already in git: 1116)
+  hp_scan directories: 0
+  files with a cloud-run Delta: likely (>= 5 probes) 187, weak 319
+  git objects (refs, reflogs, unreachable commits): 0
+The 8 names are copies of seeds already in git: scratchpad/t12/up12_D59.7676, up12_D59.7858, up12_D59.8041, up13_D59.8221 and
+scratchpad/t13/up18_D60.9641, up20_D60.9656, up20_D60.9671, up20_D60.9686 (13410 bytes each). All 8 are byte-identical (sha256) to hp/data/seeds/ on main.
+The 187 likely files: 186 are files tracked in git. The "already in git" skip did not work on Windows, which is why they were listed:
+the script joins the git ls-files paths (forward slashes) onto the repository path, and the walk produces backslash paths, so they never compare equal.
+Checked here with git ls-files --error-unmatch per file (186 tracked: worktrees of this project in my scratchpad, cloud_scan_rows.csv, logs under
+hp/data). The one left is this session's own Claude Code transcript (~/.claude/projects/.../86d2c1d2-....jsonl, 21 probes), which holds the Deltas
+as they were pasted into the conversation, not scan output. The 319 weak files are all this session's scratchpad and task output files.
+Nothing was collected (--collect would have copied that transcript, so I did not run it). The cloud-run files are not on this machine.
+T45's M 320/384 pair at 3.05 is still solving (first Newton step of M 384 is running). Nothing else runs on win.
