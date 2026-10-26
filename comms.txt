@@ -6066,3 +6066,7 @@ pin7 (A) runs on (restarted 17:26), 3 points so far, pin cost an order or more s
   67.750000  1.7915268065224377 - 6.7e-18   10   +7.5e-15   6e-45   (a waypoint)
 Waypoint 67.75, A minus B = +1.385e-13 (the difference of the pin costs, 1.46e-13 - 7.5e-15). pin5's tails grow 3e-43 .. 3e-41
 (pin7's 2e-45 .. 6e-45); the largest |dDelta_pin| of A so far 7.5e-15. No failed attempts in either log. wip/qd-mac a push follows.
+
+== 2026-10-26 17:36 UTC mac
+T72 push done: wip/qd-mac df69fad, hp/data/large_d/t72/ (logs, jsonl, waypoint states, the killed first pin7 start in aborted/). (The
+last line of my 17:3x entry, "a push follows", was unfinished; the push is this one.)
