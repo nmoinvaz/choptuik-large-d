@@ -3,7 +3,7 @@
 corrector step.
 
     python3 predictor_diag.py OUT.jsonl S1.npz,...,Sn.npz [--truth T1.npz,...] [--dDs 1e-4,3e-4,1e-3,3e-3,1e-2]
-        [--kt 36 --kc 146 --ks 130 --kfreeze 13 --tol_step 1e-32 --hmax 0.05] [--hold 7] [--fd_h 1e-3,1e-4]
+        [--kt 36 --kc 146 --ks 130 --kfreeze 13 --tol_step 1e-32 --hmax 0.05] [--hold 7] [--fd_h 1e-11,1e-12] [--pin_tangent 11,7]
         [--threads N] [--save_seeds DIR] [--require_controls] [--mutate=tangent_sign|seed_offset]
 
 S1..Sn: converged states in one layout, oldest first; Sn is the base point D1. --truth: converged states at later D
@@ -17,10 +17,12 @@ Seeds (all formed as increments from the base state z1, so no f64 rounding of z 
   lag_dd_hold    lag_dd with p1's odd harmonics above --hold kept at z1's values
   euler_fd7      z1 + dD t, t = driver.tangent (dF/dD by a central difference, h = 1e-7, f64; scan_hp --predictor
                  hermite's tangent)
-  euler_h<h>     z1 + dD t, dF/dD by the 4th-order central difference with step h of the quad-double-horizon
+  euler_h<h>     z1 + dD t, dF/dD by the 4th-order difference on the f64 steps D1 + kh (k = ±1, ±2) of the quad-double-horizon
                  residual, summed in double-double, t = -J^-1 dF/dD with the double-double LU at z1
   euler_h<h>_hold  the same with p1's odd harmonics above --hold kept at z1's values
-  neg_h<h>       z1 - dD t (control C2, first --fd_h)
+  euler_pin<K>   z1 + dD t, t the tangent of the kfreeze = K system (--pin_tangent; dF/dD as euler_h at --pin_h):
+                 p1's harmonics above K stay at z1's values and out of the solve
+  neg_<t>        z1 - dD t (control C2; t the pinned tangent of the smallest K, else the first --fd_h one)
   truth_inc      at a --truth step, z1 + (z_true - z1) with the increment in double-double (control C1)
 
 Controls (F(z1, D) is far from linear in D here: const's |F| grows like dD^6-8 at D = 62-68, so neither control
@@ -28,11 +30,11 @@ assumes linearity):
   C1  the harness, at each --truth step: the truth state's residual and truth_inc's are within 1e3 of the floor (the
       step's D and plan are right, and seeds reach the residual unchanged), and lag_dd's |F| is below 1e-3 of
       const's (the seeds are formed from the history)
-  C2  the tangent, at the smallest step with const |F| above 1e3 times the floor: |F(neg)| / |F(const)| is 1.5-2.5
-      (z1 - dD t twice as far off as z1); not testable when the tangent seeds are not finite
+  C2  the tangent, at its own step --c2_dD (default 1e-9, where F(z1, D) is still linear in D: at 1e-6 it is 20 times
+      its linear part at D = 67.7): |F(neg)| / |F(const)| is 1.5-2.5 (z1 - dD t twice as far off as z1)
 --mutate=seed_offset adds 1e-9 |z1| to every seed and --mutate=wrong_D evaluates every step at D1 + 2 dD (C1 must fire
 for both); --mutate=tangent_sign flips t (C2 must fire where it is testable).
-With --require_controls the exit code is 1 when C1 fails or cannot be tested; C2 is reported only.
+With --require_controls the exit code is 1 when C1 or C2 fails or C1 cannot be tested.
 """
 import argparse
 import json
@@ -70,7 +72,10 @@ def main():
     ap.add_argument("--tol_step", type=float, default=1e-32)
     ap.add_argument("--hmax", type=float, default=0.05)
     ap.add_argument("--hold", type=int, default=7)
-    ap.add_argument("--fd_h", default="1e-3,1e-4")
+    ap.add_argument("--fd_h", default="1e-11,1e-12")
+    ap.add_argument("--pin_tangent", default="", help="comma list of K: also the tangent of the kfreeze = K system")
+    ap.add_argument("--pin_h", type=float, default=1e-12, help="--pin_tangent: the difference step")
+    ap.add_argument("--c2_dD", type=float, default=1e-9, help="control C2's step")
     ap.add_argument("--threads", type=int, default=0)
     ap.add_argument("--save_seeds", default="")
     ap.add_argument("--require_controls", action="store_true")
@@ -105,30 +110,55 @@ def main():
     print(f"base D={D1} M={M} nodes={nodes} kfreeze={a.kfreeze}: |F| {floor:.2e} {['%.1e' % v for v in blocks(F1, M)]}"
           f" ({time.time() - t_start:.0f}s)", flush=True)
 
-    def q_at(D):
-        s = make_solver(D, M, **kw)
+    def q_at(D, kf=a.kfreeze):
+        s = make_solver(D, M, **dict(kw, kfreeze=kf))
         s.set_segs(segs)
         q = QdhSolver(s)
         q._parts[q._key(z1h, z1l)] = (z2, z3)
         return q
+
+    def dfdd(h, kf=a.kfreeze):
+        """dF/dD at z1 (double-double) of the kfreeze = kf residual, by the 4th-order difference on the steps actually
+        taken: D1 + k h rounds to f64 (spacing 1.4e-14 near D = 68), so the weights are those of the derivative at 0
+        of the quartic through the five points"""
+        ks_ = (-2, -1, 1, 2)
+        hk = np.array([(D1 + k * h) - D1 for k in ks_])
+        V = np.vander(np.r_[hk, 0.0], 5, increasing=True)
+        w = np.linalg.solve(V.T, np.r_[0.0, 1.0, 0.0, 0.0, 0.0])
+        F0h, F0l = (np.asarray(v) for v in q_at(D1, kf).residual(z1h, z1l))
+        dh, dl = np.zeros(L), np.zeros(L)
+        for wk, k in zip(w[:4], ks_):
+            r = q_at(D1 + k * h, kf).residual(z1h, z1l)
+            # F(D1 + h_k) - F(D1) in double-double first (nearly equal values), then the weight
+            eh, el = dd_add(np.asarray(r[0]), np.asarray(r[1]), -F0h, -F0l)
+            eh, el = dd_scale(np.asarray(eh), np.asarray(el), wk)
+            dh, dl = (np.asarray(v) for v in dd_add(dh, dl, eh, el))
+        return dh, dl
 
     # tangents
     tans = {}
     t0 = time.time()
     tans["fd7"] = tangent(lambda D: make_solver(D, M, **kw), s1, D1, z1h, z1l, h=1e-7)
     for hs in [v for v in a.fd_h.split(",") if v]:
-        h = float(hs)
-        Fk = {k: q_at(D1 + k * h).residual(z1h, z1l) for k in (-2, -1, 1, 2)}
-        nh, nl = dd_add(np.asarray(Fk[-2][0]), np.asarray(Fk[-2][1]), -np.asarray(Fk[2][0]), -np.asarray(Fk[2][1]))
-        ph, pl = dd_add(np.asarray(Fk[1][0]), np.asarray(Fk[1][1]), -np.asarray(Fk[-1][0]), -np.asarray(Fk[-1][1]))
-        ph, pl = dd_scale(ph, pl, 8.0)
-        dh, dl = dd_add(ph, pl, nh, nl)
-        dh, dl = dd_scale(dh, dl, 1.0 / (12.0 * h))
-        th, tl = s1.lu_solve(-np.asarray(dh), -np.asarray(dl))
+        dh, dl = dfdd(float(hs))
+        th, tl = s1.lu_solve(-dh, -dl)
         tans[f"h{hs}"] = np.asarray(th) + np.asarray(tl)
+    for K in [int(v) for v in a.pin_tangent.split(",") if v]:
+        # the tangent of the kfreeze = K system: p1's harmonics above K drop out of the unknowns (their rows are
+        # P_high p1, independent of D), so t keeps them at z1's values and the solve never sees their near-null
+        # directions
+        sK = make_solver(D1, M, **dict(kw, kfreeze=K))
+        sK.set_segs(segs)
+        sK.newton(z1h, z1l)
+        dh, dl = dfdd(a.pin_h, K)
+        th, tl = sK.lu_solve(-dh, -dl)
+        tans[f"pin{K}"] = np.asarray(th) + np.asarray(tl)
     if a.mutate == "tangent_sign":
         tans = {k: -v for k, v in tans.items()}
     names = list(tans)
+    # C2's tangent: the pinned one with the smallest K if any (the unpinned ones are not finite at large D)
+    pins = sorted((int(k[3:]), k) for k in names if k.startswith("pin"))
+    tneg = pins[0][1] if pins else (names[1] if len(names) > 1 else names[0])
     lo, lo2 = plow_odd(M, a.hold)
     P = np.asarray(lo) + np.asarray(lo2)
     for k in names:
@@ -162,9 +192,9 @@ def main():
             incs["lag_dd_hold"] = hold(ld)
         for k in names:
             incs[f"euler_{k}"] = dD * tans[k]
-            if k != "fd7":
+            if k != "fd7" and not k.startswith("pin"):
                 incs[f"euler_{k}_hold"] = hold(dD * tans[k])
-        incs[f"neg_{names[1] if len(names) > 1 else names[0]}"] = -dD * tans[names[1] if len(names) > 1 else names[0]]
+        incs[f"neg_{tneg}"] = -dD * tans[tneg]
         if tr is not None:
             incs["truth_inc"] = tuple(np.asarray(v) for v in dd_add(tr[0], tr[1], -z1h, -z1l))
         out = {}
@@ -237,16 +267,17 @@ def main():
               f"{'PASS' if ok_r else 'FIRE'}", flush=True)
     if not tr_rows:
         print("C1: not testable (no --truth)", flush=True)
-    use = [r for r in recs if r["seeds"]["const"]["F"] > 1e3 * floor]
-    if use and np.isfinite(use[0]["seeds"][neg]["F"]):
-        r = use[0]
-        ratio = r["seeds"][neg]["F"] / r["seeds"]["const"]["F"]
-        c2 = 1.5 <= ratio <= 2.5
-        print(f"C2 (|F({neg})| / |F(const)| at dD {r['dD']:.3e}): {ratio:.3f}: {'PASS' if c2 else 'FIRE'}", flush=True)
-    else:
-        print(f"C2: not testable (the tangent seeds are not finite)", flush=True)
+    Dc = D1 + a.c2_dD
+    qc = q_at(Dc)
+    fc = float(np.abs(as_f(qc.residual(z1h, z1l))).max())
+    nh_, nl_ = (np.asarray(v) for v in dd_add(z1h, z1l, -(Dc - D1) * tans[tneg], np.zeros(L)))
+    fn = float(np.abs(as_f(qc.residual(nh_, nl_))).max())
+    ratio = fn / fc
+    c2 = bool(np.isfinite(ratio)) and 1.5 <= ratio <= 2.5
+    print(f"C2 (|F({neg})| / |F(const)| at dD {Dc - D1:.1e}, const |F| {fc:.1e}): {ratio:.3f}: "
+          f"{'PASS' if c2 else 'FIRE'}", flush=True)
     print(f"done in {time.time() - t_start:.0f}s", flush=True)
-    if a.require_controls and not c1:
+    if a.require_controls and not (c1 and c2):
         raise SystemExit(1)
 
 

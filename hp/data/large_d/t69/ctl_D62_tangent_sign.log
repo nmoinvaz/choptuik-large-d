@@ -1,0 +1,129 @@
+base D=62.009781 M=32 nodes=[0.3, 0.4, 0.5, 0.6, 0.7] kfreeze=13: |F| 4.60e-23 ['3.3e-23', '9.1e-25', '6.7e-26', '2.8e-27', '1.1e-28', '4.6e-23', '7.1e-33'] (1s)
+tangent fd7: |t| 1.523e+19: p1 low 6.544e+15, p1 held 1.523e+19, rest 8.416e+17, dDelta/dD +4.4812120560e+11
+tangent h1e-11: |t| 5.706e+03: p1 low 8.968e-01, p1 held 5.707e+03, rest 2.978e+02, dDelta/dD +1.3478240259e-03
+tangent h1e-12: |t| 5.691e+03: p1 low 8.921e-01, p1 held 5.692e+03, rest 2.971e+02, dDelta/dD +1.3480671025e-03
+tangent pin11: |t| 7.325e+01: p1 low 1.869e-01, p1 held 7.336e+01, rest 5.908e+00, dDelta/dD +2.3766228756e-03
+tangent pin9: |t| 2.229e-01: p1 low 2.391e-02, p1 held 2.020e-01, rest 2.850e-02, dDelta/dD +2.4966082888e-03
+tangent pin7: |t| 3.319e-03: p1 low 3.319e-03, p1 held 8.674e-19, rest 2.017e-03, dDelta/dD +2.5005699285e-03
+tangent pin5: |t| 3.297e-03: p1 low 3.297e-03, p1 held 4.337e-19, rest 2.017e-03, dDelta/dD +2.5005551438e-03
+tangent pin3: |t| 3.242e-03: p1 low 3.242e-03, p1 held 4.337e-19, rest 2.015e-03, dDelta/dD +2.5000589837e-03
+tangent h1e-11 - h1e-12: max 1.497e+01 (p1 1.497e+01, Delta 2.431e-07)
+tangents: 10s
+D=62.009881 (dD 1.000e-04), 1s
+  const              |F| 2.10e+06  horizon 2.1e+06  inner 3.6e-08
+  lag                |F| 6.12e-07  horizon 6.1e-07  inner 6.4e-16
+  lag_dd             |F| 9.77e-09  horizon 9.8e-09  inner 5.1e-17
+  lag_dd_hold        |F| 9.77e-09  horizon 9.8e-09  inner 2.5e-11
+  euler_fd7          |F| nan  horizon nan  inner nan
+  euler_h1e-11       |F| 8.34e+07  horizon 8.3e+07  inner 1.2e+01
+  euler_h1e-11_hold  |F| 8.34e+07  horizon 8.3e+07  inner 3.0e-02
+  euler_h1e-12       |F| 8.34e+07  horizon 8.3e+07  inner 1.1e+01
+  euler_h1e-12_hold  |F| 8.34e+07  horizon 8.3e+07  inner 3.0e-02
+  euler_pin11        |F| 8.35e+07  horizon 8.3e+07  inner 1.4e-06
+  euler_pin9         |F| 8.35e+07  horizon 8.3e+07  inner 7.2e-08
+  euler_pin7         |F| 8.35e+07  horizon 8.3e+07  inner 7.2e-08
+  euler_pin5         |F| 8.35e+07  horizon 8.3e+07  inner 7.2e-08
+  euler_pin3         |F| 8.35e+07  horizon 8.3e+07  inner 7.2e-08
+  neg_pin3           |F| 2.35e-05  horizon 2.3e-05  inner 8.3e-14
+D=62.010081 (dD 3.000e-04), 1s
+  const              |F| 7.71e+08  horizon 7.7e+08  inner 1.1e-07
+  lag                |F| 1.07e-06  horizon 1.1e-06  inner 8.4e-16
+  lag_dd             |F| 2.97e-08  horizon 3.0e-08  inner 1.5e-16
+  lag_dd_hold        |F| 2.97e-08  horizon 3.0e-08  inner 7.6e-11
+  euler_fd7          |F| nan  horizon nan  inner nan
+  euler_h1e-11       |F| 1.87e+23  horizon 3.9e+10  inner 1.9e+23
+  euler_h1e-11_hold  |F| 3.94e+10  horizon 3.9e+10  inner 8.9e-02
+  euler_h1e-12       |F| 1.72e+23  horizon 3.9e+10  inner 1.7e+23
+  euler_h1e-12_hold  |F| 3.94e+10  horizon 3.9e+10  inner 8.9e-02
+  euler_pin11        |F| 3.94e+10  horizon 3.9e+10  inner 1.3e-05
+  euler_pin9         |F| 3.94e+10  horizon 3.9e+10  inner 2.2e-07
+  euler_pin7         |F| 3.94e+10  horizon 3.9e+10  inner 2.2e-07
+  euler_pin5         |F| 3.94e+10  horizon 3.9e+10  inner 2.2e-07
+  euler_pin3         |F| 3.94e+10  horizon 3.9e+10  inner 2.2e-07
+  neg_pin3           |F| 2.11e-04  horizon 2.1e-04  inner 7.5e-13
+D=62.010781 (dD 1.000e-03), 1s
+  const              |F| 7.81e+11  horizon 7.8e+11  inner 3.6e-07
+  lag                |F| 1.04e-06  horizon 1.0e-06  inner 1.0e-15
+  lag_dd             |F| 1.04e-07  horizon 1.0e-07  inner 5.4e-16
+  lag_dd_hold        |F| 1.04e-07  horizon 1.0e-07  inner 2.5e-10
+  euler_fd7          |F| nan  horizon nan  inner nan
+  euler_h1e-11       |F| nan  horizon 4.9e+13  inner 4.1e+68
+  euler_h1e-11_hold  |F| nan  horizon 4.9e+13  inner 3.0e-01
+  euler_h1e-12       |F| nan  horizon 4.9e+13  inner 3.5e+68
+  euler_h1e-12_hold  |F| nan  horizon 4.9e+13  inner 3.0e-01
+  euler_pin11        |F| 4.87e+13  horizon 4.9e+13  inner 1.4e-04
+  euler_pin9         |F| 4.87e+13  horizon 4.9e+13  inner 7.2e-07
+  euler_pin7         |F| 4.87e+13  horizon 4.9e+13  inner 7.2e-07
+  euler_pin5         |F| 4.87e+13  horizon 4.9e+13  inner 7.2e-07
+  euler_pin3         |F| 4.87e+13  horizon 4.9e+13  inner 7.2e-07
+  neg_pin3           |F| 2.35e-03  horizon 2.3e-03  inner 8.3e-12
+D=62.012781 (dD 3.000e-03), 1s
+  const              |F| 5.35e+14  horizon 5.4e+14  inner 1.1e-06
+  lag                |F| 8.35e-07  horizon 8.3e-07  inner 1.9e-15
+  lag_dd             |F| 3.58e-07  horizon 3.6e-07  inner 1.9e-15
+  lag_dd_hold        |F| 3.58e-07  horizon 3.6e-07  inner 7.6e-10
+  euler_fd7          |F| nan  horizon nan  inner nan
+  euler_h1e-11       |F| nan  horizon 4.7e+16  inner 2.2e+130
+  euler_h1e-11_hold  |F| nan  horizon 4.7e+16  inner 7.3e+09
+  euler_h1e-12       |F| nan  horizon 4.7e+16  inner 1.7e+130
+  euler_h1e-12_hold  |F| nan  horizon 4.7e+16  inner 6.0e+09
+  euler_pin11        |F| 4.75e+16  horizon 4.7e+16  inner 1.3e-03
+  euler_pin9         |F| 4.75e+16  horizon 4.7e+16  inner 2.2e-06
+  euler_pin7         |F| 4.75e+16  horizon 4.7e+16  inner 2.2e-06
+  euler_pin5         |F| 4.75e+16  horizon 4.7e+16  inner 2.2e-06
+  euler_pin3         |F| 4.75e+16  horizon 4.7e+16  inner 2.2e-06
+  neg_pin3           |F| 2.11e-02  horizon 2.1e-02  inner 7.5e-11
+D=62.019781 (dD 1.000e-02), 1s
+  const              |F| 3.97e+18  horizon 4.0e+18  inner 3.6e-06
+  lag                |F| 3.72e-06  horizon 3.7e-06  inner 9.5e-15
+  lag_dd             |F| 1.84e-06  horizon 1.8e-06  inner 9.5e-15
+  lag_dd_hold        |F| 1.84e-06  horizon 1.8e-06  inner 2.5e-09
+  euler_fd7          |F| nan  horizon nan  inner nan
+  euler_h1e-11       |F| nan  horizon 1.6e+21  inner 1.4e+204
+  euler_h1e-11_hold  |F| nan  horizon 1.6e+21  inner 5.8e+116
+  euler_h1e-12       |F| nan  horizon 1.6e+21  inner 1.1e+204
+  euler_h1e-12_hold  |F| nan  horizon 1.6e+21  inner 3.6e+114
+  euler_pin11        |F| 1.65e+21  horizon 1.7e+21  inner 2.7e+02
+  euler_pin9         |F| 1.66e+21  horizon 1.7e+21  inner 7.2e-06
+  euler_pin7         |F| 1.66e+21  horizon 1.7e+21  inner 7.2e-06
+  euler_pin5         |F| 1.66e+21  horizon 1.7e+21  inner 7.2e-06
+  euler_pin3         |F| 1.66e+21  horizon 1.7e+21  inner 7.2e-06
+  neg_pin3           |F| 2.36e-01  horizon 2.4e-01  inner 8.3e-10
+D=62.030564 (dD 2.078e-02), truth |F| 3.7e-23, 1s
+  const              |F| 2.35e+21  horizon 2.4e+21  inner 7.4e-06  dist p1_low 6.8e-05 p1_held 3.8e-08 rest 4.2e-05 Delta +5.2e-05
+  lag                |F| 1.17e-05  horizon 1.2e-05  inner 3.4e-14  dist p1_low 1.2e-13 p1_held 3.8e-10 rest 1.9e-11 Delta -5.9e-14
+  lag_dd             |F| 6.66e-06  horizon 6.7e-06  inner 3.4e-14  dist p1_low 1.2e-13 p1_held 3.8e-10 rest 1.9e-11 Delta -5.9e-14
+  lag_dd_hold        |F| 6.66e-06  horizon 6.7e-06  inner 5.3e-09  dist p1_low 1.2e-13 p1_held 3.8e-08 rest 1.9e-11 Delta -5.9e-14
+  euler_fd7          |F| nan  horizon nan  inner nan  dist p1_low 1.4e+14 p1_held 3.2e+17 rest 1.7e+16 Delta +9.3e+09
+  euler_h1e-11       |F| nan  horizon 1.0e+24  inner 5.4e+251  dist p1_low 1.9e-02 p1_held 1.2e+02 rest 6.2e+00 Delta +8.0e-05
+  euler_h1e-11_hold  |F| nan  horizon 1.0e+24  inner 2.2e+90  dist p1_low 1.9e-02 p1_held 3.8e-08 rest 6.2e+00 Delta +8.0e-05
+  euler_h1e-12       |F| nan  horizon 1.0e+24  inner 3.6e+251  dist p1_low 1.9e-02 p1_held 1.2e+02 rest 6.2e+00 Delta +8.0e-05
+  euler_h1e-12_hold  |F| nan  horizon 1.0e+24  inner 1.4e+86  dist p1_low 1.9e-02 p1_held 3.8e-08 rest 6.2e+00 Delta +8.0e-05
+  euler_pin11        |F| 1.08e+24  horizon 1.1e+24  inner 4.4e+19  dist p1_low 3.9e-03 p1_held 1.5e+00 rest 1.2e-01 Delta +1.0e-04
+  euler_pin9         |F| 1.09e+24  horizon 1.1e+24  inner 1.5e-05  dist p1_low 5.6e-04 p1_held 4.2e-03 rest 6.1e-04 Delta +1.0e-04
+  euler_pin7         |F| 1.09e+24  horizon 1.1e+24  inner 1.5e-05  dist p1_low 1.4e-04 p1_held 3.8e-08 rest 8.4e-05 Delta +1.0e-04
+  euler_pin5         |F| 1.09e+24  horizon 1.1e+24  inner 1.5e-05  dist p1_low 1.4e-04 p1_held 3.8e-08 rest 8.4e-05 Delta +1.0e-04
+  euler_pin3         |F| 1.09e+24  horizon 1.1e+24  inner 1.5e-05  dist p1_low 1.4e-04 p1_held 3.8e-08 rest 8.4e-05 Delta +1.0e-04
+  neg_pin3           |F| 4.24e+01  horizon 4.2e+01  inner 3.6e-09  dist p1_low 1.5e-06 p1_held 3.8e-08 rest 3.7e-07 Delta -6.7e-09
+  truth_inc          |F| 3.20e-23  horizon 3.2e-23  inner 7.7e-24  dist p1_low 8.6e-34 p1_held 2.2e-33 rest 1.2e-32 Delta +0.0e+00
+D=62.061738 (dD 5.196e-02), truth |F| 7.7e-23, 1s
+  const              |F| 8.28e+24  horizon 8.3e+24  inner 1.9e-05  dist p1_low 1.7e-04 p1_held 9.4e-08 rest 1.0e-04 Delta +1.3e-04
+  lag                |F| 5.31e-05  horizon 5.3e-05  inner 2.8e-13  dist p1_low 8.2e-13 p1_held 2.0e-09 rest 9.6e-11 Delta -4.7e-13
+  lag_dd             |F| 5.43e-05  horizon 5.4e-05  inner 2.8e-13  dist p1_low 8.2e-13 p1_held 2.0e-09 rest 9.6e-11 Delta -4.8e-13
+  lag_dd_hold        |F| 5.43e-05  horizon 5.4e-05  inner 1.3e-08  dist p1_low 8.2e-13 p1_held 9.4e-08 rest 9.6e-11 Delta -4.8e-13
+  euler_fd7          |F| nan  horizon nan  inner nan  dist p1_low 3.4e+14 p1_held 7.9e+17 rest 4.4e+16 Delta +2.3e+10
+  euler_h1e-11       |F| nan  horizon 3.3e+27  inner nan  dist p1_low 4.7e-02 p1_held 3.0e+02 rest 1.5e+01 Delta +2.0e-04
+  euler_h1e-11_hold  |F| nan  horizon 3.3e+27  inner 7.4e+222  dist p1_low 4.7e-02 p1_held 9.4e-08 rest 1.5e+01 Delta +2.0e-04
+  euler_h1e-12       |F| nan  horizon 3.3e+27  inner nan  dist p1_low 4.6e-02 p1_held 3.0e+02 rest 1.5e+01 Delta +2.0e-04
+  euler_h1e-12_hold  |F| nan  horizon 3.3e+27  inner 1.0e+195  dist p1_low 4.6e-02 p1_held 9.4e-08 rest 1.5e+01 Delta +2.0e-04
+  euler_pin11        |F| nan  horizon 3.6e+27  inner 2.4e+192  dist p1_low 9.9e-03 p1_held 3.8e+00 rest 3.1e-01 Delta +2.5e-04
+  euler_pin9         |F| 3.61e+27  horizon 3.6e+27  inner 3.7e-05  dist p1_low 1.4e-03 p1_held 1.0e-02 rest 1.5e-03 Delta +2.6e-04
+  euler_pin7         |F| 3.61e+27  horizon 3.6e+27  inner 3.7e-05  dist p1_low 3.4e-04 p1_held 9.4e-08 rest 2.1e-04 Delta +2.6e-04
+  euler_pin5         |F| 3.61e+27  horizon 3.6e+27  inner 3.7e-05  dist p1_low 3.4e-04 p1_held 9.4e-08 rest 2.1e-04 Delta +2.6e-04
+  euler_pin3         |F| 3.61e+27  horizon 3.6e+27  inner 3.7e-05  dist p1_low 3.4e-04 p1_held 9.4e-08 rest 2.1e-04 Delta +2.6e-04
+  neg_pin3           |F| 5.02e+05  horizon 5.0e+05  inner 2.2e-08  dist p1_low 3.7e-06 p1_held 9.4e-08 rest 9.2e-07 Delta -8.0e-08
+  truth_inc          |F| 7.72e-23  horizon 4.7e-23  inner 7.7e-23  dist p1_low 7.7e-34 p1_held 2.3e-33 rest 1.2e-32 Delta +0.0e+00
+C1 at D=62.030564: truth |F| 3.7e-23, truth_inc 3.2e-23 (floor 4.6e-23), lag_dd / const 2.8e-27: PASS
+C1 at D=62.061738: truth |F| 7.7e-23, truth_inc 7.7e-23 (floor 4.6e-23), lag_dd / const 6.6e-30: PASS
+C2 (|F(neg_pin3)| / |F(const)| at dD 1.0e-09, const |F| 7.1e-05): 0.000: FIRE
+done in 18s
