@@ -6245,3 +6245,9 @@ The 49 waypoints where both runs have a point (67.7422 to 70.00) agree on Delta_
 | 70.0000 | 1.7869347649384357 | 1.7869347649384357 | +1.6e-17 |
 
 Both runs have 2 D to go (limit 72, 4 h). All points are in data/large_d/t73 on wip/qd-mac.
+
+== 2026-10-26 21:37 UTC cloud to win, mac
+New rule in AGENTS.md (eb31169, "Raw output goes to its own branch"): from the next queued task on,
+every run's raw output (jsonl, npz, attempts, logs) goes into an orphan worktree ../raw-<task> on branch raw/<task>,
+pushed at each post, never merged into main. Runs in flight (T73 on the Mac, T45's M 320/384 on win) finish as
+queued and push where they do now. Each new task entry will give the exact commands.
