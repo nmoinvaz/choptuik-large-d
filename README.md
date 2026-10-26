@@ -612,10 +612,11 @@ with computed points rather than an assumed form. Its points are used in [The fo
 - **Arithmetic:** double-double (hi + lo, about 32 digits)[^15] on 8-lane vectors: one AVX-512 register per lane group, two
   AVX2 registers, four SSE2 or NEON registers, or a portable array, chosen at compile time (`hp/build.sh` builds with
   `-C target-cpu=native`). Error-free two-sum and FMA two-product; sums of products accumulated Sum2-style[^16]. The
-  arithmetic, the dual lanes and the double-double LU are the separate crate
-  [multidouble](https://github.com/nmoinvaz/multidouble) (version 1.0.0 from crates.io, its lane types on the
-  compile-time backend); every backend gives bitwise the same results, and the solver's outputs are unchanged bit for
-  bit by the move.
+  arithmetic, the dual lanes, the double-double LU, the staircase LU of the block storage, the τ-field kernels and the
+  GMRES refinement are the separate crate [multidouble](https://github.com/nmoinvaz/multidouble) (version 1.5.1 from
+  crates.io, its lane types on the compile-time backend); every backend gives bitwise the same results, and the
+  solver's outputs are unchanged bit for bit by each move (`hp/highm_check.py ref` and `scaled` against the
+  references of the build before it).
 - **No fixed-step error:** Taylor series in x (order 36, step points planned once per D so the truncation term is
   10⁻³²), centre and horizon series run until their tails are below 10⁻³³, and collocation in τ on the
   half period (p, m odd harmonics, a, c even harmonics in τ) with no spectral truncation of the products.
@@ -2227,14 +2228,16 @@ src/
 python/rustkernel/  Python wrapper, RustResidual
 tests/              bindings test
 hp/                 double-double solver (crate hpkernel)
-├── Cargo.toml      the arithmetic comes from the multidouble crate (crates.io, version 1.0.0; on the compile-time
+├── Cargo.toml      the arithmetic comes from the multidouble crate (crates.io, version 1.5.1; on the compile-time
 │                   backend): double-double and quad-double, scalar and 8-lane SIMD (AVX-512 / AVX2 / SSE2 / NEON /
-│                   portable), dual lanes and the double-double LU; hp re-exports its modules (hpkernel::dd, ::dv, ...)
+│                   portable), dual lanes, the double-double LU, the staircase LU and the tau-field kernels; hp
+│                   re-exports its modules (hpkernel::dd, ::dv, ...)
 ├── src/lane.rs     hp's Lane trait over multidouble's dual lanes: adds the D-matrix product of each lane type
 ├── src/model.rs    centre series, Taylor stepping, horizon series, residual, Jacobian (double-double and f64)
 ├── python/hpkernel/driver.py   grid, seeds, Newton, deflated Newton, Levenberg-Marquardt, re-noding (its numpy
 │                   double-double helpers come from multidouble's Python package, which build.sh installs)
-├── src/field.rs    tau fields on the half grid, folded spectral derivative; the many-right-hand-side LU solves
+├── src/field.rs    tau fields on the half grid (multidouble's field module: folded spectral derivative, Cauchy
+│                   products, the many-right-hand-side LU solves)
 ├── src/lib.rs      crate root
 ├── src/python.rs   PyO3 bindings (Solver)
 ├── build.sh        builds the crate for this machine's instruction set
@@ -2247,7 +2250,7 @@ hp/                 double-double solver (crate hpkernel)
 ├── bench_variants.py, plot_bench_variants.py  the Newton variants timed against D, and bench_variants.svg
 ├── plot_solve_times.py  solve_times.svg, how long each D took (--export writes data/solve_times.csv from the solve records)
 ├── plot_point_spacing.py  point_spacing.svg, the distance in D between our solved points
-├── src/block.rs    block storage and staircase LU for the f64 Jacobian above M = 128
+├── src/block.rs    block storage for the f64 Jacobian above M = 128 (multidouble's staircase LU)
 ├── highm_check.py, lowD_highM.py  checks of the larger tau grids, and the continuation toward D = 3 on them
 ├── step_test.py    the largest step in D that Newton tolerates at D = 45-60, for several solver variants (local task T43)
 ├── qd_check.py     checks of the quad-double arithmetic against mpmath, and across the SIMD backends
