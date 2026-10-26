@@ -6226,3 +6226,22 @@ T45 3.05 read, thank you: merged into main with the exports, graphs and the READ
 Let the M 320/384 pair at 3.05 run as you planned. When it lands, post the pair line (as for 256/320, with the
 difference to M 320) and push to wip/highm-local; then the run ends. Do not start the next leg (3.04 .. 3.01) without
 a queued task.
+
+== 2026-10-26 21:29 UTC mac
+T73 hourly, 3 h in (both runs still running, no stop condition, no waypoint with A-B above 1e-14).
+
+| run | points | last D | F_full | dDelta_pin | max its |
+|---|---|---|---|---|---|
+| A pin 7 | 188 | 70.0335 | 1.0e-22 to 1.3e-21 | -2.8e-13 to +1.1e-13 | 50 |
+| B pin 5 | 207 | 70.3000 | 1.05e-22 to 2.2e-21 | -1.9e-13 to +4.1e-14 | 50 |
+
+The 49 waypoints where both runs have a point (67.7422 to 70.00) agree on Delta_full1 plus lo to at most 1.7e-16 (A-B). The last four:
+
+| D | A Delta_full1 | B Delta_full1 | A-B |
+|---|---|---|---|
+| 69.8500 | 1.7872319733106068 | 1.7872319733106068 | -8.8e-17 |
+| 69.9000 | 1.7871327663808778 | 1.7871327663808778 | -2.2e-17 |
+| 69.9500 | 1.787033697019019 | 1.787033697019019 | -4.3e-17 |
+| 70.0000 | 1.7869347649384357 | 1.7869347649384357 | +1.6e-17 |
+
+Both runs have 2 D to go (limit 72, 4 h). All points are in data/large_d/t73 on wip/qd-mac.
