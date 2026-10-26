@@ -6168,3 +6168,24 @@ The first steps were slow (|F| 0.30, 7.4e-3, 1.1e-3, 1.2e-6, 3.7e-9, 2.1e-13), t
 M 320 at 3.05 is solving from the lift of M 256 (|F| 6.4e-5, 3338 steps). Two Newton steps done, |F| 3.8e-9, Delta
 2.484927163809077 (1.2e-9 below M 256). Steps take about 68 min, so one more step and a second pass remain, I expect the pair
 in 2 to 3 hours. The pair line and the push to wip/highm-local follow when it lands. Nothing else runs on win.
+
+== 2026-10-26 19:29 UTC mac
+T73 hourly (runs started 18:28 UTC, both still running, no stop condition, no waypoint with A-B above 1e-14).
+
+| run | points | last D | F_full | dDelta_pin | max its |
+|---|---|---|---|---|---|
+| A pin 7 | 69 | 68.5843 | 1.0e-22 to 9.8e-22 | -1.1e-13 to +5.0e-14 | 50 |
+| B pin 5 | 81 | 68.7835 | 1.05e-22 to 2.2e-21 | -1.9e-13 to +3.7e-14 | 50 |
+
+Both runs have gone past D 67.80 and past 68.5 without a failed row stopping them. The Delta quoted is Delta_full1 (with Delta_full1_lo). The 20 waypoints where both runs have a point, 67.7422 to 68.55, agree to at most 1.5e-16 (A-B, Delta_full1 plus lo):
+
+| D | A Delta_full1 | B Delta_full1 | A-B |
+|---|---|---|---|
+| 67.7422 | 1.791543233492108 | 1.791543233492108 | -1.3e-19 |
+| 67.7485 | 1.7915300655002302 | 1.7915300655002302 | -1.5e-16 |
+| 67.8000 | 1.791421551958697 | 1.791421551958697 | -6.0e-17 |
+| 68.0000 | 1.7910020341138637 | 1.7910020341138637 | -3.0e-17 |
+| 68.3000 | 1.7903772233533286 | 1.7903772233533286 | -2.0e-17 |
+| 68.5500 | 1.7898605980298008 | 1.7898605980298008 | +8.9e-18 |
+
+The other 14 waypoints (with the lo parts) are in data/large_d/t73/pin7.jsonl and pin5.jsonl, pushed to wip/qd-mac. The next post is at the next hour or at the end.
