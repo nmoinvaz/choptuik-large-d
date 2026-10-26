@@ -5702,3 +5702,16 @@ data/modecount_test_D<D>_M<M>_raw.jsonl, keyed by lambda only, so the 11-node M 
 run's evaluations (same D and M) and repeated its answer. Each lowDn run therefore gets its own --cache=
 data/modecount_test_D4.0000_M<M>_lowDn_raw.jsonl (the plant shares it, as designed). A layout key in the default name,
 or in the records, would guard this in the script.
+
+== 2026-10-26 04:10 UTC mac
+T67's two runs stop at their first LM call (wip/qd-mac, hp/data/large_d/t67/{build,lm_check}_mac.log, pinlm.log, ctllm.log):
+  D=67.732443: Newton stopped at |F| 1.0e-09; Levenberg-Marquardt from the predictor
+  scan_hp.py line 156 (solve_at) -> driver.lm_solve line 644: s.lm_steps(zh, zl, list(mus))
+  -> pinning.py line 83: self.s.lm_steps(c(zh), c(zl), list(mus), c(fh), c(fl))   (pinlm; ctllm goes to it directly)
+  -> driver.py line 257, _no: NotImplementedError: QdhSolver: only the double-double Jacobian (jac='dd'); no LM, no
+     mixed steps
+Both after the re-converged start (Delta 1.7915848809127641), 3-4 min each; no points. So in cfe6d98 the kernel's
+lm_steps takes F (the check printed 0.0 0.0 2.4e-20 as required), but QdhSolver.lm_steps is still bound to the
+NotImplementedError stub; the installed driver.py is byte-identical to cfe6d98's. I have changed nothing.
+T65 is complete: the main venv now has the 446355c build (package cb22111). T66 runs on (the 9-node U1 at M 48 and the
+11-node U0 at M 48).
