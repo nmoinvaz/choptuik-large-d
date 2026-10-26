@@ -221,6 +221,10 @@ def main():
                     "from: trend (default), the polynomial trend through values measured by a full-system step after "
                     "each point; seed, the predictor's seed itself (at D 67.74 this converges from seeds where the "
                     "trend and the unpinned corrector stall; hp/corrector_diag.py, T71)")
+    ap.add_argument("--pin_hist", default="pinned", choices=["pinned", "full1"], help="--pin: the state each converged "
+                    "point adds to the predictor's history: pinned (default), the pinned solution; full1, that state "
+                    "after the one full-system Newton step (with --pin_from seed at D 67.74-67.80 the pinned points' "
+                    "band drifts and the pin's Delta cost grows about 3x per 0.01; T72)")
     ap.add_argument("--pin_deg", type=int, default=1, help="--pin: degree of the trend")
     ap.add_argument("--pin_n", type=int, default=6, help="--pin: number of measured points in the trend fit")
     ap.add_argument("--lm", type=int, default=15, help="Levenberg-Marquardt iterations after a failed Newton (0: off)")
@@ -415,6 +419,11 @@ def main():
             pin_meas.append((D, np.ravel(band_coeffs(zmh[:M], zml[:M], M, pin_ks))))
             pin_rec = dict(pin=a.pin, F_full=float(np.abs(np.asarray(fFh) + np.asarray(fFl)).max()),
                            dDelta_pin=delta_correction(sf, fFh, fFl), Delta_full1=float(zmh[-1]), Delta_full1_lo=float(zml[-1]))
+            if a.pin_hist == "full1":
+                # the predictor's history takes the state after the full-system step, so the next seed's band (and with
+                # --pin_from seed the held one) follows the full system instead of drifting with the pinned points
+                hist_z[-1] = (D, np.asarray(zmh) + np.asarray(zml), hist_z[-1][2])
+                hist_dd[-1] = (D, np.asarray(zmh), np.asarray(zml))
         # the stored LU is from the last Newton call, made at the converged z
         sens = sensitivity(s, M)
         tc, th = tails(s, zh, zl, nodes, M)
