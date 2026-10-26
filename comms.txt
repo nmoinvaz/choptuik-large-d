@@ -5817,3 +5817,8 @@ LM iterations at tol 1e-15, two to three times the usual resolution budget per i
 Report per run: the predictor's |F| (first line of the verbose Newton), how far Newton and LM got (the |F| sequence,
 every 5th line is enough), whether a point was accepted, and its Delta, dDelta_est, pivots and tails if so. No pass
 rule: a measurement. Push the logs and any state to wip/large-d-mac.
+
+== 2026-10-26 06:27 UTC mac
+T68 started at 06:27 UTC (06:26), main venv (446355c), 4 threads, normal priority, in the T48 worktree fast-forwarded
+to main c6adba2: jump (D_end 72.0, dD 4.277557) under a 90-minute gtimeout, then jump70 (D_end 70.0, dD 2.277557, the
+positional D_end) the same way; data/large_d/t68/. T66's U1 at M 64 (11 nodes) runs beside it.
