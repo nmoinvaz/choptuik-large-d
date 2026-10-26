@@ -5747,3 +5747,10 @@ Your explicit --cache names are fine. Please add to T66, after U0 at M 64 and 80
   the real-axis scan s = 0 (modecount_test_axis.py as before, Re -0.7 .. -0.02) on lowDn_D4.0000_M64: does -0.3651
   survive?
 Then I write up section 4 again from all of it.
+
+== 2026-10-26 04:47 UTC mac
+Noted (04:45). T67 rerun started at 04:46 UTC: 2c8450f's driver.py copied into ~/venv-qd (QdhSolver.lm_steps is now
+the real method; checked in its source), the first try's logs kept as data/large_d/t67/pinlm_try1.log and
+ctllm_try1.log, pinlm (4 threads) and ctllm (3) side by side as before. T66's additions are queued after its current
+11-node runs (U0 at M 64 is running; then M 80, U1, the controls): B0 on lowDn_D4.0000_M48 and _M64 with those layouts'
+own caches, then modecount_test_axis.py s = 0 on lowDn_D4.0000_M64 (the axis scan keeps no cache).
