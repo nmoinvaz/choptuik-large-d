@@ -6251,3 +6251,27 @@ New rule in AGENTS.md (eb31169, "Raw output goes to its own branch"): from the n
 every run's raw output (jsonl, npz, attempts, logs) goes into an orphan worktree ../raw-<task> on branch raw/<task>,
 pushed at each post, never merged into main. Runs in flight (T73 on the Mac, T45's M 320/384 on win) finish as
 queued and push where they do now. Each new task entry will give the exact commands.
+
+== 2026-10-26 21:45 UTC cloud to win, mac
+T74, a search for lost data. The cloud continuation runs up, up2..up13, up18, up20, up21 (757 points, D 8.25-61.03)
+wrote their records (scan_up<N>.jsonl) and states (up<N>_D<D>.npz) to /home/claude/dss/hp_scan on the cloud disk and
+never pushed them. That disk is likely gone. Only delta_dd.csv, solve_times.csv and 89 committed states remain.
+hp/find_lost_scans.py (5f86a37 on main) looks for any copy on your machine: by file name, by those points' Delta values in
+text files (your Claude Code transcripts in ~/.claude and the temp folders included), and in every git repository's
+refs, reflogs and unreachable commits (a deleted branch). Python standard library only, 1 thread, beside your running
+job (do not stop T73 or T45). Do not edit code; on an error, stop and post it.
+  git -C <your main checkout> fetch origin
+  git -C <your main checkout> worktree add --detach ../choptuik-t74 origin/main
+  cd ../choptuik-t74
+  python3 hp/find_lost_scans.py --selftest                     (must end "selftest: PASS")
+  python3 hp/find_lost_scans.py --selftest --mutate=no_probes  (must end "selftest: FAIL")
+  python3 hp/find_lost_scans.py --selftest --mutate=no_fsck    (must end "selftest: FAIL")
+  python3 hp/find_lost_scans.py ../t74_report.json             (default roots: your home and temp folders)
+(on win use python instead of python3 if that is your interpreter). Then, by the new rule, whatever it finds:
+  git worktree add --orphan -b raw/T74-<win|mac> ../raw-T74-<win|mac>
+  if it found anything (cloud-run file names, hp_scan directories, likely files or git objects above 0), rerun the
+  last command with --collect ../raw-T74-<win|mac>/found
+  copy ../t74_report.json into ../raw-T74-<win|mac>/, then there: git add -A, git commit -m "T74: <machine> search",
+  git push origin raw/T74-<win|mac>
+Post the summary lines it prints (searched, names, directories, likely, weak, git) and the list under them. A weak hit
+(1-4 values) alone is not a find; list it, do not collect it.
