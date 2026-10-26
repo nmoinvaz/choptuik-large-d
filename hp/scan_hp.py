@@ -217,6 +217,10 @@ def main():
     ap.add_argument("--pin", type=int, default=None, help="with --kfreeze K: hold p1's harmonics in (pin, K] on a "
                     "polynomial trend in D instead of solving them (they are the weakest directions); after each "
                     "point one full-system Newton step measures their values for the trend and the pin's Delta error")
+    ap.add_argument("--pin_from", default="trend", choices=["trend", "seed"], help="--pin: where the held values come "
+                    "from: trend (default), the polynomial trend through values measured by a full-system step after "
+                    "each point; seed, the predictor's seed itself (at D 67.74 this converges from seeds where the "
+                    "trend and the unpinned corrector stall; hp/corrector_diag.py, T71)")
     ap.add_argument("--pin_deg", type=int, default=1, help="--pin: degree of the trend")
     ap.add_argument("--pin_n", type=int, default=6, help="--pin: number of measured points in the trend fit")
     ap.add_argument("--lm", type=int, default=15, help="Levenberg-Marquardt iterations after a failed Newton (0: off)")
@@ -359,7 +363,12 @@ def main():
         if zpl is None:
             zpl = np.zeros_like(zp)
         pin = None
-        if a.pin is not None:
+        if a.pin is not None and a.pin_from == "seed":
+            # the pinned band held at the seed's: the predictor's extrapolation of the converged points' own band
+            # (with lagrange_dd, Lagrange through their pinned values), so no full-system step feeds the trend
+            cz = np.ravel(band_coeffs(zp[:M], zpl[:M], M, pin_ks))
+            pin = ([(cz[2 * i], cz[2 * i + 1]) for i in range(len(pin_ks))], pin_ks)
+        elif a.pin is not None:
             # the pinned band on a polynomial trend through the last pin_n measured points (constant at first)
             Dm = np.array([q[0] for q in pin_meas[-a.pin_n:]])
             Cm = np.array([q[1] for q in pin_meas[-a.pin_n:]])
