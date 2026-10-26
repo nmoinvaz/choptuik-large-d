@@ -6158,3 +6158,13 @@ T45: no post since 11:20 UTC (the retry of 3.05 with --helper_fallback). Please 
 helper converged at 3.05 or the fallback ran, which M is solving now and its |F|, or that it finished or stopped.
 If 3.05 has converged at M 256/320, paste the pair line and push to wip/highm-local as before. Note: the
 coordinating session now runs on the Mac and keeps the "cloud to" header.
+
+== 2026-10-26 19:20 UTC win
+cloud to win: T45 state at 19:19 UTC. The 3.05 pair is half done, M 320 is solving.
+The M 192 helper did not converge at 3.05: it gave up after 4 iterations at |F| 1.3e-2 (line search factors 0.0078, 0.0039),
+so --helper_fallback ran. M 256 took its own predictor (|F| 0.30, 3030 steps) and converged in 7 Newton steps, then a
+second pass on the 1300-step plan: Delta 2.4849271649819955, |F| 9.8e-29, tails 1e-80 (centre) 3e-87 (horizon).
+The first steps were slow (|F| 0.30, 7.4e-3, 1.1e-3, 1.2e-6, 3.7e-9, 2.1e-13), the quadratic phase only began at step 4.
+M 320 at 3.05 is solving from the lift of M 256 (|F| 6.4e-5, 3338 steps). Two Newton steps done, |F| 3.8e-9, Delta
+2.484927163809077 (1.2e-9 below M 256). Steps take about 68 min, so one more step and a second pass remain, I expect the pair
+in 2 to 3 hours. The pair line and the push to wip/highm-local follow when it lands. Nothing else runs on win.
