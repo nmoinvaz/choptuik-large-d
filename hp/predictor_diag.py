@@ -20,8 +20,10 @@ Seeds (all formed as increments from the base state z1, so no f64 rounding of z 
   euler_h<h>     z1 + dD t, dF/dD by the 4th-order difference on the f64 steps D1 + kh (k = ±1, ±2) of the quad-double-horizon
                  residual, summed in double-double, t = -J^-1 dF/dD with the double-double LU at z1
   euler_h<h>_hold  the same with p1's odd harmonics above --hold kept at z1's values
-  euler_pin<K>   z1 + dD t, t the tangent of the kfreeze = K system (--pin_tangent; dF/dD as euler_h at --pin_h):
-                 p1's harmonics above K stay at z1's values and out of the solve
+  euler_pin<K>   z1 + dD t, t the tangent of the kfreeze = K system (--pin_tangent; pinning.pinned_tangent at
+                 --pin_h): p1's harmonics above K stay at z1's values and out of the solve
+  hermite_pin<K> the cubic Hermite through the last two points with their pinned tangents (pinning.hermite_dd;
+                 scan_hp --predictor hermite_pin); _hold: p1's harmonics above K kept at z1's; _lag: those from lag_dd
   neg_<t>        z1 - dD t (control C2; t the pinned tangent of the smallest K, else the first --fd_h one)
   truth_inc      at a --truth step, z1 + (z_true - z1) with the increment in double-double (control C1)
 
@@ -45,7 +47,7 @@ os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
 import numpy as np  # noqa: E402
 
 from hpkernel.driver import QdhSolver, load, load_parts, make_solver, plow_odd, predict, tangent  # noqa: E402
-from pinning import dd_add, predict_dd  # noqa: E402
+from pinning import dd_add, hermite_dd, pinned_tangent, predict_dd  # noqa: E402
 from multidouble import dd_scale  # noqa: E402
 
 
@@ -143,16 +145,16 @@ def main():
         dh, dl = dfdd(float(hs))
         th, tl = s1.lu_solve(-dh, -dl)
         tans[f"h{hs}"] = np.asarray(th) + np.asarray(tl)
-    for K in [int(v) for v in a.pin_tangent.split(",") if v]:
-        # the tangent of the kfreeze = K system: p1's harmonics above K drop out of the unknowns (their rows are
-        # P_high p1, independent of D), so t keeps them at z1's values and the solve never sees their near-null
-        # directions
-        sK = make_solver(D1, M, **dict(kw, kfreeze=K))
-        sK.set_segs(segs)
-        sK.newton(z1h, z1l)
-        dh, dl = dfdd(a.pin_h, K)
-        th, tl = sK.lu_solve(-dh, -dl)
-        tans[f"pin{K}"] = np.asarray(th) + np.asarray(tl)
+    # the tangents of the kfreeze = K systems (pinning.pinned_tangent, as scan_hp --predictor hermite_pin), at the base
+    # and at the point before it (for the Hermite seeds)
+    make = lambda D, kf: make_solver(D, M, **dict(kw, kfreeze=kf))     # noqa: E731
+    Ks = [int(v) for v in a.pin_tangent.split(",") if v]
+    tans_prev = {}
+    for K in Ks:
+        tans[f"pin{K}"] = pinned_tangent(make, D1, z1h, z1l, K, a.pin_h, a.tol_step, a.hmax, parts=(z2, z3))
+        if len(pts) > 1:
+            tans_prev[K] = pinned_tangent(make, pts[-2][0], pts[-2][1], pts[-2][2], K, a.pin_h, a.tol_step, a.hmax,
+                                          parts=load_parts(paths[-2]))
     if a.mutate == "tangent_sign":
         tans = {k: -v for k, v in tans.items()}
     names = list(tans)
@@ -190,6 +192,19 @@ def main():
             ld = (np.asarray(lh) - z1h) + (np.asarray(ll) - z1l)
             incs["lag_dd"] = ld
             incs["lag_dd_hold"] = hold(ld)
+        for K, tp in tans_prev.items():
+            hh_, hl_ = hermite_dd(pts[-2][0], pts[-2][1], pts[-2][2], tp, D1, z1h, z1l, tans[f"pin{K}"], Dn)
+            hi = (np.asarray(hh_) - z1h) + (np.asarray(hl_) - z1l)
+            incs[f"hermite_pin{K}"] = hi
+            # p1's harmonics above K (zero slope at both points): kept at z1's, or from lag_dd's increment
+            PK = sum(np.asarray(v) for v in plow_odd(M, K))
+            hold_ = hi.copy()
+            hold_[:M] = PK @ hi[:M]
+            incs[f"hermite_pin{K}_hold"] = hold_
+            if "lag_dd" in incs:
+                lagb = hold_.copy()
+                lagb[:M] += incs["lag_dd"][:M] - PK @ incs["lag_dd"][:M]
+                incs[f"hermite_pin{K}_lag"] = lagb
         for k in names:
             incs[f"euler_{k}"] = dD * tans[k]
             if k != "fd7" and not k.startswith("pin"):
