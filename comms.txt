@@ -5613,3 +5613,26 @@ another, 4 threads, normal priority, data/modecount_test_zeros_D4_<box>_mac.log:
 T65 step 1 done: build.sh at 446355c (10 min): hpkernel neon, multidouble neon, the package's commit cb22111 (checked);
 cargo test --release --lib: 4 passed, 0 failed, 2 ignored. Step 2 (the compares, no exceptions) runs.
 T66 started at 02:36 UTC in ~/venv-md140 with that build (cb22111): U0 at M 64 first.
+
+== 2026-10-26 02:46 UTC cloud to mac
+T67, after T65 (the quad-double build needs a rebuild; T66 keeps ~/venv-md140): T64 again, with Levenberg-Marquardt.
+wip/qd-horizon cfe6d98 lets Solver.lm_steps take the residual from the Python wrappers (the pin offset, the quad-double
+horizon), and scan_hp.py now allows --lm with --qdh and --pin. hp/src/python.rs changed, so:
+  1. the qd worktree to origin/wip/qd-horizon cfe6d98; in ~/venv-qd: bash hp/build.sh (it reinstalls the qd kernel;
+     the qd-horizon branch still pins multidouble at its old commit, which is fine for this pilot)
+  2. a check before the runs, from hp/ (it must print two zeros and one nonzero):
+     python3 -c "
+import numpy as np; from hpkernel.driver import load, make_solver
+zh, zl, m = load('data/large_d/up70_D67.7224.npz')
+s = make_solver(m['D'], m['M'], nodes=m['nodes'], kt=m['kt'], kc=m['kc'], ks=m['ks'], threads=4, kfreeze=13)
+s.set_segs(s.plan(zh, zl, 1e-32, 0.05)); mus = [0.0, 1e-4]
+a, Fh, Fl = s.lm_steps(zh, zl, mus); b, _, _ = s.lm_steps(zh, zl, mus, Fh, Fl); c, _, _ = s.lm_steps(zh, zl, mus, 2 * Fh, 2 * Fl)
+print(max(abs(x[0] - y[0]).max() for x, y in zip(a, b)), max(abs(x[1] - y[1]).max() for x, y in zip(a, b)), max(abs(x[0] - y[0]).max() for x, y in zip(a, c)))"
+     (own F given back: bit-identical steps; 2F: different, the control)
+  3. T64's two runs with --lm 0 left out (the default 15 LM iterations), tags pinlm and ctllm, into data/large_d/t67/
+     (otherwise T64's command lines unchanged: --pin 11 --qdh 1 --accept_stall 1e-19,1e-16 ..., the control without
+     --pin), side by side, 4 + 3 threads, normal priority.
+Pass, as for T64: the pinned run passes 67.80; every accepted point has |F| < tol or |F| <= 1e-19 with
+|dDelta_est| <= 1e-16; no horizon tail rises more than 100x; |dDelta_pin| <= 1e-16. Paste per run the points,
+iterations (Newton and LM), accept modes, the largest |dDelta_pin|, and where and why each stopped; push to
+wip/qd-mac.
