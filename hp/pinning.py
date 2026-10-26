@@ -74,6 +74,14 @@ class PinnedSolver:
         Fh, Fl = self._sub(Fh, Fl)
         return dh, dl, Fh, Fl, pmin, pmax
 
+    def lm_steps(self, zh, zl, mus, fh=None, fl=None):
+        """Levenberg-Marquardt steps for F - c (the Jacobian is unchanged): the wrapped solver's lm_steps with that
+        residual (needs a kernel whose lm_steps takes fh, fl)"""
+        if fh is None:
+            fh, fl = self.residual(zh, zl)
+        c = np.ascontiguousarray
+        return self.s.lm_steps(c(zh), c(zl), list(mus), c(np.asarray(fh)), c(np.asarray(fl)))
+
     def chord(self, zh, zl):
         dh, dl, Fh, Fl = self.s.chord(zh, zl)
         dh, dl = self._corr(dh, dl)

@@ -203,6 +203,14 @@ class QdhSolver:
         c = np.ascontiguousarray
         return self.s.lu_solve(c(-np.asarray(Fh)), c(-np.asarray(Fl)))
 
+    def lm_steps(self, zh, zl, mus, fh=None, fl=None):
+        """Levenberg-Marquardt steps (Solver.lm_steps: the double-double Jacobian) for the quad-double-horizon F, or
+        for the F given (a wrapper's)"""
+        if fh is None:
+            fh, fl = self.residual(zh, zl)
+        c = np.ascontiguousarray
+        return self.s.lm_steps(c(zh), c(zl), list(mus), c(np.asarray(fh)), c(np.asarray(fl)))
+
     def newton(self, zh, zl):
         """the double-double Jacobian and LU at (zh, zl) (Solver.newton), the step from the quad-double-horizon F:
         -J^-1 F, or with gcr the GCR solve of J_q dz = -F preconditioned by that LU"""

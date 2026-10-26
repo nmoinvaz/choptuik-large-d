@@ -851,22 +851,40 @@ impl Solver {
 
     /// Levenberg-Marquardt steps: J at z, G = J^T J, g = -J^T F; for each mu, dz = (G + mu^2 diag(G))^-1 g.
     /// Returns ([(dz_hi, dz_lo) per mu], F_hi, F_lo). Also stores the plain LU of J (for chord / transpose solves).
+    /// fh, fl: the residual F to use instead of this solver's own (the Python wrappers' residuals: a pin offset, the
+    /// quad-double horizon block); J is always this solver's.
     #[allow(clippy::type_complexity)]
+    #[pyo3(signature = (zh, zl, mus, fh=None, fl=None))]
     fn lm_steps<'py>(
         &mut self,
         py: Python<'py>,
         zh: PyReadonlyArray1<'py, f64>,
         zl: PyReadonlyArray1<'py, f64>,
         mus: Vec<f64>,
+        fh: Option<PyReadonlyArray1<'py, f64>>,
+        fl: Option<PyReadonlyArray1<'py, f64>>,
     ) -> PyResult<(Vec<(Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<f64>>)>, Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<f64>>)> {
         self.dense_ok("lm_steps")?;
         let (h, l) = (slice(&zh, "zh")?, slice(&zl, "zl")?);
+        let given: Option<(Vec<f64>, Vec<f64>)> = match (&fh, &fl) {
+            (Some(a), Some(b)) => Some((slice(a, "fh")?.to_vec(), slice(b, "fl")?.to_vec())),
+            (None, None) => None,
+            _ => return Err(PyValueError::new_err("lm_steps: give both fh and fl, or neither")),
+        };
         let (api, pool) = (&self.api, &self.pool);
         let n = api.len();
+        if let Some((a, b)) = &given {
+            if a.len() != n || b.len() != n {
+                return Err(PyValueError::new_err(format!("lm_steps: fh and fl must have length {n}")));
+            }
+        }
         let res = py
             .detach(|| {
                 pool.install(|| -> Result<_, String> {
-                    let (fh, fl) = api.residual(h, l)?;
+                    let (fh, fl) = match given {
+                        Some(f) => f,
+                        None => api.residual(h, l)?,
+                    };
                     let (jh, jl, ld) = api.jacobian(h, l)?;
                     let nfh: Vec<f64> = fh.iter().map(|v| -v).collect();
                     let nfl: Vec<f64> = fl.iter().map(|v| -v).collect();

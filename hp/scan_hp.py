@@ -127,8 +127,8 @@ def solve_at(D, zh, zl, a, nodes, M, it_max, pin=None):
                     kfreeze=a.pin if pin is not None else a.kfreeze, horizon_alpha=a.horizon_alpha)
     s.set_segs(s.plan(zh, zl, a.tol_step, a.hmax))
     if a.qdh:
-        if a.jac != "dd" or a.lm:
-            raise SystemExit("--qdh needs --jac dd and --lm 0")
+        if a.jac != "dd":
+            raise SystemExit("--qdh needs --jac dd")
         s = QdhSolver(s)
     if pin is not None:
         # outside QdhSolver: the pin is an offset on the residual, whichever precision the horizon block has
@@ -151,7 +151,7 @@ def solve_at(D, zh, zl, a, nodes, M, it_max, pin=None):
     # accepted at a stall (--accept_stall), possibly polished below that point's |F| afterwards
     stall_ok = any(r.get("accept_stall") and r.get("accepted") for r in hist)
     ok = bool(hist) and (hist[-1]["F"] < a.tol or bool(hist[-1].get("accepted")) or stall_ok)
-    if not ok and a.lm and pin is None:      # (lm_steps knows nothing of the pin offset)
+    if not ok and a.lm:      # (the wrappers pass their residual, pin offset and quad-double horizon, to lm_steps)
         print(f"   D={D}: Newton stopped at |F| {hist[-1]['F']:.1e}; Levenberg-Marquardt from the predictor", flush=True)
         zh2, zl2, h2 = lm_solve(s, zh, zl, tol=a.tol, it_max=a.lm, verbose=a.verbose, newton_after=1e-22)
         hist = hist + h2
@@ -200,7 +200,7 @@ def main():
                     "(driver.deflated_newton accept_stall)")
     ap.add_argument("--qdh", type=int, default=0, choices=[0, 1],
                     help="1: the residual's horizon block in quad-double (driver.QdhSolver, notes/QUAD_DOUBLE.md section "
-                         "11): the double-double residual floor of large D removed; needs --jac dd and --lm 0")
+                         "11): the double-double residual floor of large D removed; needs --jac dd")
     ap.add_argument("--corrector", default="dn", choices=["dn", "dnp", "newton"],
                     help="dn: deflated Newton (default); dnp: deflated Newton, then plain Newton to the bottom")
     ap.add_argument("--polish_its", type=int, default=4, help="dnp: plain Newton steps after the deflated phase")
