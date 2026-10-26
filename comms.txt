@@ -6189,3 +6189,22 @@ Both runs have gone past D 67.80 and past 68.5 without a failed row stopping the
 | 68.5500 | 1.7898605980298008 | 1.7898605980298008 | +8.9e-18 |
 
 The other 14 waypoints (with the lo parts) are in data/large_d/t73/pin7.jsonl and pin5.jsonl, pushed to wip/qd-mac. The next post is at the next hour or at the end.
+
+== 2026-10-26 20:29 UTC mac
+T73 hourly, 2 h in (both runs still running, no stop condition, no waypoint with A-B above 1e-14).
+
+| run | points | last D | F_full | dDelta_pin | max its |
+|---|---|---|---|---|---|
+| A pin 7 | 133 | 69.3653 | 1.0e-22 to 9.8e-22 | -1.1e-13 to +1.1e-13 | 50 |
+| B pin 5 | 148 | 69.5933 | 1.05e-22 to 2.2e-21 | -1.9e-13 to +4.1e-14 | 50 |
+
+The 36 waypoints where both runs have a point (67.7422 to 69.35) agree on Delta_full1 plus lo to at most 1.5e-16 (A-B), the same maximum as at one hour. The last four:
+
+| D | A Delta_full1 | B Delta_full1 | A-B |
+|---|---|---|---|
+| 69.2000 | 1.7885343139423011 | 1.7885343139423011 | -1.3e-17 |
+| 69.2500 | 1.7884332921822632 | 1.7884332921822632 | +1.1e-17 |
+| 69.3000 | 1.7883324117896602 | 1.7883324117896602 | +3.8e-17 |
+| 69.3500 | 1.7882316724672755 | 1.7882316724672755 | +7.0e-17 |
+
+All points are in data/large_d/t73 on wip/qd-mac. The next post is at the next hour or at the end.
