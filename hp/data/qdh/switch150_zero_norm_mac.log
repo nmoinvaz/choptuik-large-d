@@ -1,0 +1,5 @@
+M 8: lo as is 6b1ea7ddf155e87c, 848 zeros, 8 of them -0.0; zeros made +0.0 d0075c843e1767f5 = reference d0075c843e1767f5; hi = reference; ok
+M 16: lo as is 9598c28ab1ce910f, 1696 zeros, 16 of them -0.0; zeros made +0.0 20f778dcd1dcbd1a = reference 20f778dcd1dcbd1a; hi = reference; ok
+M 96: lo as is 3cba5b06527aac90, 10176 zeros, 96 of them -0.0; zeros made +0.0 eff7e50feb5c79cf = reference eff7e50feb5c79cf; hi = reference; ok
+M 128: lo as is 888495e270ca62e0, 13568 zeros, 128 of them -0.0; zeros made +0.0 c58462fbe87cc621 = reference c58462fbe87cc621; hi = reference; ok
+PASS
