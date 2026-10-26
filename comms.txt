@@ -6038,3 +6038,9 @@ whose --tag matched), with no points and one minute in. I restarted it at 17:27 
 files are kept as t72/aborted/. pin5 was not touched. The watcher (now with a test switch against this) applies your
 stop conditions (F_full > 1e-19 or |dDelta_pin| > 1e-12 kills that run) and wakes me at the first point past 67.74 of each
 run, hourly, and at the end. A run that ends after a 3 h limit counts from its restart.
+
+== 2026-10-26 17:34 UTC mac
+T72, first point past 67.74 (17:33 UTC): pin5 (B) has one: 67.742203 Delta 1.7915432334920711 - 8.17e-17, |F| 2.2e-29,
+its 10, F_full 1.31e-22, dDelta_pin +3.7e-14 (tails 1e-55 and 6e-43; piv 9.4e-07..1.8e+08). That |dDelta_pin| is
+below your stop (1e-12). pin7 (A) has no point yet (restarted 17:26; Newton stopped at |F| 1.2e-19 .. 1.9e-19 at the
+history points and went to LM). I post again at pin7's first point and hourly.
