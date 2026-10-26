@@ -170,6 +170,7 @@ impl BaseLane for Dc {
     }
 }
 
+impl hpk::lane::MatLane for Dc {}
 impl Lane for Dc {}
 
 fn tan_re<const B: usize>(x: &Fl<Dc, B>) -> Fl<DV, B> {

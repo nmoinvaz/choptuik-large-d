@@ -1101,11 +1101,11 @@ pub fn jacobian_block<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f
     let l = ctx.len();
     let delta = delta_of(zh, zl);
     let lus = horizon_lus(ctx, &ctx.fld(zh, zl, ctx.off_ah()), delta, par, DD::ZERO)?;
-    let mut groups = vec![Group { delta: false, zoff: 0, zlen: 2 * m }];
+    let mut groups = vec![Group { param: false, zoff: 0, zlen: 2 * m }];
     for t in 0..k {
-        groups.push(Group { delta: true, zoff: ctx.off_node(t), zlen: 4 * m });
+        groups.push(Group { param: true, zoff: ctx.off_node(t), zlen: 4 * m });
     }
-    groups.push(Group { delta: true, zoff: ctx.off_mh(), zlen: 2 * m });
+    groups.push(Group { param: true, zoff: ctx.off_mh(), zlen: 2 * m });
     let rblocks: Vec<(usize, usize)> = (0..=k).map(|b| (b * 4 * m, 4 * m)).collect();
     let tasks = jac_tasks(ctx);
     let gs = groups.clone();
@@ -1117,9 +1117,9 @@ pub fn jacobian_block<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f
             if zi == l - 1 {
                 Ok(np)
             } else if zi >= p.zoff && zi < p.zoff + p.zlen {
-                Ok(p.delta as usize + zi - p.zoff)
+                Ok(p.param as usize + zi - p.zoff)
             } else if zi >= q.zoff && zi < q.zoff + q.zlen {
-                Ok(np + q.delta as usize + zi - q.zoff)
+                Ok(np + q.param as usize + zi - q.zoff)
             } else {
                 Err(format!("block {b}: unknown {zi} outside its two groups"))
             }
@@ -1158,7 +1158,7 @@ pub fn jacobian_block<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f
         }
         Ok(())
     };
-    BlockLu::factor(l, groups, &rblocks, l - 1, l - 1, fill, par, mutate)
+    BlockLu::factor_control(l, groups, &rblocks, l - 1, l - 1, fill, par, crate::block::control(mutate))
 }
 
 /// A solver context read from a file written by hp/dump_ctx.py (Rust benches and data-driven tests).
