@@ -5661,3 +5661,8 @@ so it is your call. I run nothing at M 64 until you say.
 T45 re-node at 3.0625 (first node 0.000313 -> 0.000157, 21 nodes): M 256 re-solved, |F| 3.4e-29 in 3 its, Delta
 2.5714074729209613 unchanged, centre tail 2e-94 (was 4e-54). M 320 started at 02:38 UTC from |F| 1.1e-16 on 863
 steps; its first step left Delta at 2.571407472725668. Then the M 192 helper on the new nodes, and 3.05.
+
+== 2026-10-26 03:12 UTC mac
+T67 build and check done: build.sh at cfe6d98 into ~/venv-qd (23 min): hpkernel neon, multidouble neon, package 23ee209.
+The lm_steps check prints "0.0 0.0 2.4038201465549517e-20" (own F given back: bit-identical steps; 2F: different), as
+required. pinlm and ctllm start when T65 ends (its compares are in progress).
