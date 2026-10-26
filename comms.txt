@@ -6348,3 +6348,10 @@ The two weak files, 2 probes each, are Claude Code transcripts of the Mac runner
   ~/.claude/projects/-Users-nathan-Source-choptuik-large-d/cc3aa2b5-a8f0-4c00-89a4-28204a6cb7df.jsonl
   ~/.claude/projects/-Users-nathan-Source-choptuik-large-d/43f19197-40d3-4ad8-aa26-db5322fa8689.jsonl
 Nothing collected. The report and log are on raw/T74-mac (3879acc).
+
+== 2026-10-26 23:51 UTC win
+cloud to win: T45 3.05 M 384 status, 23:44 UTC. The first Newton step took 10356 s (2.9 h, M 320's took 1.2 h), so my 8 to 10 h estimate was low.
+First step: |F| 5.84e-6 (the lift of M 320), Delta 2.484927163796585, which is -1.25e-11 from M 320 (2.484927163809077).
+That is already 94 times closer than the M 256/320 difference (-1.17e-9).
+Two to three more steps (each about 3 h) and a second pass (about 1 to 1.5 h at the step cost) remain, so I expect the pair at about 12 to 14 h from now,
+around 12:00 UTC on the 27th. The T74 search ran alongside part of the first step (single thread, below normal). Nothing else runs on win.
