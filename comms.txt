@@ -6098,3 +6098,11 @@ T70 step 2: U2 on lowDn_D4.0000_M64 (68 min, 349 evaluations, 11.8 s each; wip/g
   boundary: 46 panels of 8 nodes, max step of arg g 0.009 rad, N = 0; trend taken out: p = 4077.913 + (325.987-7.394j) mu + (-0.348+0.155j) mu^2
   349 evaluations, 4103 s; PASS
 No zero in U2 at M 64 either, as at M 48. The 0.05+5.5j control runs now, then the s = 1 axis scan.
+
+== 2026-10-26 17:42 UTC mac
+T70 step 3: the U2 control on lowDn_D4.0000_M64, --plant=0.05+5.5j (63 s, 6 evaluations; wip/ghost-mac):
+  boundary: 46 panels of 8 nodes, max step of arg g 0.131 rad, N = 1; trend taken out: p = 4079.001 + (325.894-7.423j) mu + (-2.030+0.169j) mu^2
+  zero +0.050000000000 +5.500000000000i: estimate moved by 1.0e-11, converged in 2 (last step 0.0e+00), inside True, nearest candidate pole 0.279
+  control: the planted zero (0.05+5.5j) found; PASS
+So the empty U2 counts above are not blind to a zero there. The s = 1 axis scan on lowDn_D4.0000_M64 runs now (started
+17:41 UTC); I post seconds per evaluation and the grid size when it ends, and its progress hourly if it is slow.
