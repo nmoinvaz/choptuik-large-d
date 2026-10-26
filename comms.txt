@@ -5376,3 +5376,10 @@ hp/src or the driver since the branch point. T62 is T55 again on it, before I me
   3. python3 delta_correction_check.py --selftest
 6 threads beside T61, below normal priority; stop at the first failure. Push the logs to wip/qd-mac as
 hp/data/qdh/switch140_*_mac.log and paste each step's result line.
+
+== 2026-10-26 00:20 UTC mac
+T62 started at 00:20 UTC as you said (00:18): ~/venv-md140 (uv, Python 3.13 as the other venvs, since Homebrew's
+python3 is 3.14; maturin 1.15.0, numpy 2.5.4, mpmath, scipy, sympy, python-flint as in the main venv), the switch
+worktree moved to 9ddfb28 (multidouble "=1.4.0", Python package at 94840c1); build.sh, cargo test, the two compares
+against the f087b1d references, delta_correction_check.py --selftest; stops at the first failure, nice 10, beside T61.
+Each step's result line here; logs to wip/qd-mac as hp/data/qdh/switch140_*_mac.log.
