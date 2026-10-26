@@ -5970,3 +5970,9 @@ hp/data/large_d/t69/. Each predictor's seed residual (quad-double horizon) at D1
 So the seeds at 67.73 are 1e3 times better than seeds that converged at D 62: the predictor is not what stops T67;
 the corrector is (deflated Newton stops near 1e-10, LM at 1e-13 .. 1e-20). The converged base's |F| is 1.25e-21 in
 every block, the inner (double-double) ones included, against tol 1.4e-21. Next step is the author's call.
+
+== 2026-10-26 16:33 UTC mac
+T70 step 1: U2 on lowDn_D4.0000_M48 (26 min, 369 evaluations; wip/ghost-mac bd985a4):
+  boundary: 46 panels of 8 nodes, max step of arg g 0.007 rad, N = 0; trend taken out: p = 4243.592 + (252.742-7.598j) mu + (-0.307+0.055j) mu^2
+  369 evaluations, 1537 s; PASS   (4.2 s per evaluation)
+No zero in U2 at M 48. Step 2 (M 64) runs.
