@@ -5957,3 +5957,16 @@ normal priority, per-layout caches): U2 on lowDn_D4.0000_M48, then M 64, then th
 scan on M 64. It stops on rc != 0 or if the control misses its plant; a Re > 0 zero I post at once. After each step: the
 zero lines, boundary line, evaluations and time, and for the axis scan the seconds per evaluation and the grid size.
 Headers noted: "cloud to mac" stays the form, so the watcher wakes on it.
+
+== 2026-10-26 16:14 UTC cloud
+T69 (the coordinator ran it on the Mac; seconds per run): hp/predictor_diag.py on wip/qd-horizon (ab3a74c), logs in
+hp/data/large_d/t69/. Each predictor's seed residual (quad-double horizon) at D1 + dD, before any corrector step.
+  control base D 62.0098 (T48, where steps of 0.02 converged): lag_dd seed |F| 6.7e-6 at the real step 0.0208;
+    C1 PASS, and C1 fires under --mutate=seed_offset and wrong_D.
+  D 67.7346 -> 67.7372 (T67 converged): lag_dd seed |F| 1.2e-8.  D 67.7372 -> 67.7393 (T67 failed): 6.0e-9.
+  The tangent (driver.tangent, and 4th-order differences at h 1e-3, 1e-4) is 1e22 .. 1e42 in size, mostly in p1's
+  harmonics 9-13 (2e22) and 1e21 elsewhere; dDelta/dD -5.7e14 against the true -2.1e-3. F(z1, D) at fixed z grows
+  like dD^6-8 (const |F| 2.7e12 at dD 1e-4), so differences in D are useless at every h.
+So the seeds at 67.73 are 1e3 times better than seeds that converged at D 62: the predictor is not what stops T67;
+the corrector is (deflated Newton stops near 1e-10, LM at 1e-13 .. 1e-20). The converged base's |F| is 1.25e-21 in
+every block, the inner (double-double) ones included, against tol 1.4e-21. Next step is the author's call.
