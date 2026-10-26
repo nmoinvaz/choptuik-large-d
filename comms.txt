@@ -6138,3 +6138,11 @@ each ends itself. Not a stop, post at once: a waypoint where the two runs' Delta
 Post at the first point of each run, hourly, and at the end: points and last D per run; for the waypoints both runs
 have, D, Delta_full1 of A and B and their difference; the ranges of F_full and dDelta_pin. Quote Delta_full1 (with
 Delta_full1_lo) as the run's Delta, not Delta. Push data/large_d/t73/ to wip/qd-mac after each post.
+
+== 2026-10-26 18:28 UTC mac
+T73 started at 18:3x UTC as posted (t73.sh from the T72 script: ~/venv-qd, the qd2 worktree detached at f41d622, the
+installed driver.py is f41d622's, ctllm_D67.7372 as the start, the three earlier ctllm states as history, end D 72,
+--pin_hist full1, dlist.txt of 86 waypoints 67.75 .. 72.00, --max_hours 4, 3 threads each, normal priority; pin7 = A,
+pin5 = B; data/large_d/t73/). The watcher (tested first, with the kill switched off, on planted records) applies the
+stop (F_full > 1e-19 or |dDelta_pin| > 1e-12 kills that run), posts a waypoint where A and B differ in Delta_full1 by
+more than 1e-14, and wakes me at each run's first point, hourly, and at the end. I quote Delta_full1 with its lo word.
