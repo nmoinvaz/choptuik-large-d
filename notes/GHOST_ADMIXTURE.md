@@ -102,7 +102,7 @@ the strips U count none in the other sector.
 **Planted controls** on the same det M_ψ (`--plant`, the evaluations shared), D = 8.25: a pair planted at 3.1 ± 1.0i
 is counted in B1c, B1 and full (2 each, 0 elsewhere); a pair at 1.0 ± 3.0i in U (1, its upper member) and full (2).
 
-## 4. D = 4: the zeros located (M = 48)
+## 4. D = 4: the zeros located in two layouts
 
 At D = 4 the count found zeros where D = 8.25–45 have none. They were located with `hp/modecount_test_zeros.py`
 (Delves–Lyness power sums on Gauss–Legendre panels refined until every step of arg g is below π/4, Newton on g to
@@ -114,6 +114,7 @@ polish; its `--selftest` and a planted zero per box as controls), on the state `
 |---|---|---|
 | B0: −0.114 < Re λ < 0.193, \|Im λ\| < 0.912 | 0 (the exact zero), −0.112341115908 ± 0.100296125832i | planted 0.1 ± 0.5i found, the others unchanged |
 | U0: −0.114 < Re λ < 0.193, 0.912 < Im λ < 2.735 | −0.0866036 + 0.9604110i, −0.0344254 + 1.8308635i, **+0.0388691 + 2.6865263i** | planted 0.05 + 1.5i found, the others unchanged |
+| U1: −0.114 < Re λ < 0.193, 2.735 < Im λ < 4.558 | 2iω (3.6472334i), **+0.1052019 + 3.5262063i**, **+0.1622992 + 4.3643366i** | none run |
 
 Two scans of g along lines (`hp/modecount_test_axis.py`, `hp/data/modecount_test_axis_s{0,1}_D4_mac.out`), with
 Re λ from −0.7 to −0.02, find one zero each: −0.3651202796 on the real axis, and −0.0344254228 + 1.8308635107i on
@@ -121,19 +122,39 @@ Im λ = ω, the U0 zero (Im λ / ω = 1.00397). Gundlach and Martín-García's s
 within their error of the first. The revised checks of section 2 pass at D = 4
 (`hp/data/modecount_test_check2_D4_mac.out`) and at D = 67.0115 (`_D67_mac.out`).
 
-**A discrepancy, open.** The U0 zero at +0.0389 + 2.6865i has Re λ > 0: a growing mode of the test field, which in
-the two-field model would be a second unstable mode of the critical solution. That disagrees with Gundlach (1997,
-Phys. Rev. D 55, 695, arXiv:gr-qc/9604019), whose review (arXiv:gr-qc/9712084) states that of the Choptuik solution's
-perturbations as a free complex scalar field "only one of them, purely real, has Re λ > 0" (the 1997 paper's body has
-not been read here, only its abstract and the review). The three U0 zeros' real parts rise with Im λ (−0.087, −0.034,
-+0.039 at Im λ = 0.96, 1.83, 2.69, about 0.06 per 0.86), which is how spurious modes of a truncated discretization
-often line up, and the box stops at Im λ = 2.735. Not yet done: the same boxes at M = 64 (a physical zero stays put,
-a spurious one moves), and the strip above Im λ = 2.735. Until then this is numerical evidence at one resolution,
-not a result.
+**Was a discrepancy.** The zeros with Re λ > 0 (+0.0389 + 2.6865i in U0, two more in U1) would be growing modes of
+the test field, so in the two-field model extra unstable modes of the critical solution. That disagrees with Gundlach
+(1997, Phys. Rev. D 55, 695, arXiv:gr-qc/9604019), whose review (arXiv:gr-qc/9712084) states that of the Choptuik
+solution's perturbations as a free complex scalar field "only one of them, purely real, has Re λ > 0" (the 1997
+paper's body has not been read here, only its abstract and the review). The U0 zeros' real parts rise with Im λ
+(−0.087, −0.034, +0.039 at Im λ = 0.96, 1.83, 2.69), as spurious modes of a truncated discretization often do.
+
+**The second layout.** The 9-node state does not converge at M = 64 (|F| stalls at 6.8×10⁻⁴,
+`hp/data/modecount_test_zeros_D4_U0_M64_mac.log`), so the boxes were repeated on states with 11 nodes, 0.01 … 0.7
+(kc 80, ks 200): `lowDn_D4.0000_M48` (|F| = 3.8×10⁻³¹) and `lowDn_D4.0000_M64` (|F| = 9.1×10⁻³⁰), ω = 1.8236169.
+Logs `hp/data/modecount_test_zeros_D4_*_lowDn_D4.0000_M*_mac.log` (the Mac, 2026-10-25/26).
+
+| box | zeros, M = 48 | zeros, M = 64 | control (M = 64) |
+|---|---|---|---|
+| B0 | 0 only | 0 only | none run |
+| U0 | none | none | planted 0.05 + 1.5i found |
+| U1 | not run | 2iω only (3.647233843506i) | planted 0.05 + 3.6i found, 2iω unchanged |
+
+The real-axis scan at M = 64 (`hp/data/modecount_test_axis_s0_lowDn_D4.0000_M64_mac.out`) finds −0.3651202372,
+4×10⁻⁸ from the 9-node value. The scan along Im λ = ω was not repeated.
+
+**Resolved.** Every zero of the 9-node layout near the imaginary axis (the pair −0.1123 ± 0.1003i, the three in U0
+and the two growing ones in U1) is absent in the 11-node layout at both M, while the exact zeros 0 and 2iω and the
+real zero −0.3651 stay. Those zeros are artifacts of the 9-node layout. The U0 zero −0.0344 + 1.8309i was found there
+by both the box and the line scan, so it was a zero of that discretization's determinant, not an error of the finder.
+In the 11-node layout the test field has no growing mode in B0, U0 or U1, as the review quoted above states. This is
+numerical evidence at two resolutions of one layout. It does not cover Im λ > 4.558, nor Re λ < −0.114 off the real
+axis.
 
 **The count's under-refinement.** The winding count of section 3 verifies each edge by one bisection and does not
 refine further. At D = 4 its B0 and U0 edges kept steps of arg g of 1.2–1.8 rad (above its π/4), and it counted B0 as
 holding only the exact zero, missing the pair at −0.1123 ± 0.1003i, which lies 0.0017 inside B0's left edge. The
 planted count, which sampled the same edges more finely, counted it. The counts at D = 8.25–45 in section 3 were made
 the same way, so their zeros near the boxes' edges are not certain either; the zero finder above refines until every
-step is below π/4.
+step is below π/4. Those counts also used one layout each, and after D = 4 each deserves a second-layout check before
+it is quoted.
