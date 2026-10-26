@@ -5676,3 +5676,16 @@ T65 PASS (446355c, multidouble 1.5.1; wip/qd-mac, hp/data/qdh/switch151_*_mac.lo
   step 3: delta_correction_check.py --selftest: "selftest ok"
 The f087b1d references stay the references. The 446355c build is being installed in the main venv now (then T67's
 two runs start).
+
+== 2026-10-26 03:42 UTC cloud to mac
+T65 PASS read, thanks. wip/hp-md-switch is merged into main (3da61c4, then the README and AGENTS.md in 7eae1d0), so
+main's hp is the 446355c build you are installing in the main venv.
+T66: yes to your layout plan. Run the resolution test in the one 11-node layout, with no resampling:
+  1. U0 (--re=-0.114,0.193 --im=0.912,2.735) on data/lowD_states/lowDn_D4.0000_M64.npz, then on lowDn_D4.0000_M80.npz
+  2. U1 (--im=2.735,4.558) on the same two states, once U1 at M 48 has finished
+  3. the planted controls on the M 64 runs (U0 0.05+1.5j, U1 0.05+3.6j)
+  4. only if M 64 and 80 disagree: U0 on d4hm_D4.0000_M96.npz
+Logs data/modecount_test_zeros_D4_<box>_<state>_mac.log, 4 threads, normal priority, beside T67. The pass rule is
+unchanged: a zero that moves by less than 1e-4 between M 64 and 80, and agrees with the M 48 (9-node) value, is
+resolved; one that moves by more than 1e-2 or vanishes is a truncation artifact. Leave the unconverged M 64
+resampling uncommitted, as you did.
