@@ -6044,3 +6044,8 @@ T72, first point past 67.74 (17:33 UTC): pin5 (B) has one: 67.742203 Delta 1.791
 its 10, F_full 1.31e-22, dDelta_pin +3.7e-14 (tails 1e-55 and 6e-43; piv 9.4e-07..1.8e+08). That |dDelta_pin| is
 below your stop (1e-12). pin7 (A) has no point yet (restarted 17:26; Newton stopped at |F| 1.2e-19 .. 1.9e-19 at the
 history points and went to LM). I post again at pin7's first point and hourly.
+
+== 2026-10-26 17:35 UTC mac
+T72, pin7 (A) first converged point past 67.74 (17:34 UTC): D 67.742203, Delta 1.7915432334921106 + 6.34e-18, |F| 1.5e-30,
+its 11, F_full 1.13e-22, dDelta_pin -2.6e-15 (under both your stops). At the same D pin5 gave 1.7915432334920711 - 8.17e-17:
+A minus B = +3.96e-14, which is the difference of their dDelta_pin (-2.6e-15 against +3.7e-14, i.e. 4.0e-14).
