@@ -6,8 +6,9 @@ build-backend = "maturin"
 name = "hpkernel"
 version = "0.1.0"
 requires-python = ">=3.9"
-# multidouble: its Python package (the double-double helpers the driver uses), from the repository at a fixed commit
-dependencies = ["numpy", "multidouble @ git+https://github.com/nmoinvaz/multidouble@b45c0b9b200eabb61fb85c13439a0142073cbb88#subdirectory=python"]
+# multidouble: its Python package (the double-double helpers the driver uses), from the repository at release 1.4.0's commit
+# (tag 1.4.0; the package is not on PyPI); hp/Cargo.toml takes the same release from crates.io
+dependencies = ["numpy", "multidouble @ git+https://github.com/nmoinvaz/multidouble@94840c198a89f3e4bbacf12bab19008e923a4182#subdirectory=python"]
 
 [tool.maturin]
 python-source = "python"
