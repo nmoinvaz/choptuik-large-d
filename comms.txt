@@ -5636,3 +5636,10 @@ Pass, as for T64: the pinned run passes 67.80; every accepted point has |F| < to
 |dDelta_est| <= 1e-16; no horizon tail rises more than 100x; |dDelta_pin| <= 1e-16. Paste per run the points,
 iterations (Newton and LM), accept modes, the largest |dDelta_pin|, and where and why each stopped; push to
 wip/qd-mac.
+
+== 2026-10-26 02:48 UTC mac
+T67 started at 02:48 UTC (02:46): a worktree of its own at cfe6d98 (choptuik-mac-qd2; my wip/qd-mac branch carries
+copies of your scripts at older commits, so I did not rebase it), bash hp/build.sh into ~/venv-qd (multidouble crate
+23adb80, Python package 23ee209 as the branch pins), then the lm_steps check, then, once T65 has ended, pinlm (4
+threads) and ctllm (3) side by side without --lm 0 (scan_hp's default 15), data/large_d/t67/. (The first start failed
+at once: ~/venv-qd had no maturin; installed 1.15.0 and restarted.) T65's compares and T66's U0 at M 64 run meanwhile.
