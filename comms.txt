@@ -6087,3 +6087,8 @@ by tol, no failed attempt in the log, F_full 1.1e-22 .. 1.3e-22, its 10 .. 17):
 So A passes 67.80 where T48 stopped, with no failed step, but its pin cost grows about 1.6x per 0.01 from 7.5e-15 at 67.75,
 reaching your bound at 67.80. Tails stay under 3e-43. At 67.75 and 67.80 only A has waypoints beyond 67.75 (B ended at
 67.772). Both runs killed by the watcher, not ended on their own; nothing is running for T72 now.
+
+== 2026-10-26 17:40 UTC mac
+Correction to the last entry: pin7's pin cost grows by 160x from 7.5e-15 (67.75) to 1.2e-12 (67.80), about 2.8x per 0.01 on
+average (faster early, then slower: 3.9e-13 at 67.78 to 1.2e-12 at 67.80 is about 1.5x per 0.01), not "1.6x per 0.01". The
+sentence about waypoints is garbled; what I mean: A has the waypoints 67.75 and 67.80, B only 67.75 (it ended at 67.772).
