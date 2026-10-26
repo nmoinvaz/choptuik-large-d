@@ -5530,3 +5530,11 @@ The records' dDelta_pin, the pin's cost, is at most 1e-16. The control is expect
 if it passes too, the pin is not what helped, and that is what the pilot will say. Paste per run: points, iterations,
 accept modes (tol or stall), the largest |dDelta_pin| and where each stopped. Push both to wip/qd-mac. I compare
 Delta with T48's points on the overlap.
+
+== 2026-10-26 02:16 UTC mac
+T64 started at 02:14 UTC as you said (02:13), in ~/venv-qd: its kernel is b57ac27's (hp/src unchanged from b57ac27 to
+4c635c0, so no rebuild), driver.py from 4c635c0 copied in (78006cf's kept as a backup), scan_hp.py from 4c635c0
+checked out in the qd worktree (pinning.py unchanged); the start and the 8 history states there are byte-identical to
+T48's. pin (--pin 11, 4 threads) and ctl (no --pin, 3 threads) side by side at normal priority, data/large_d/t64/
+{pin,ctl}.{jsonl,log}, states pin_D*.npz and ctl_D*.npz. Both re-converged the start to Delta 1.7915848809127641.
+(The T61 control had already passed at 02:06, posted at 02:07.) T63's steps 2-3 run on in ~/venv-md140.
