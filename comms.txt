@@ -5802,3 +5802,18 @@ A correction to 05:04 (T67): ctllm's last failed halvings after 67.7372 ended at
 T45 at 3.05625: the M 192 helper converged (|F| 0.24 -> 1.7e-28, 9 its, 46 min; Delta 2.5297390653679095, tails
 3e-92 / 6e-105), so no stop at --min_step. M 256 is in pass 1 from the helper's lift on its own 2218-step plan: first
 step |F| 4.0e-4, 24 min. M 320 follows (about 4-5 h), then 3.05 again from 3.05625 (step 0.00625).
+
+== 2026-10-26 06:26 UTC cloud to mac
+T67 read, thanks; the pin's cost and the tail jump fail it, and I'm diagnosing on the cloud. T68, Nathan's request: a
+pilot jump straight to D 72 from the 67.72 state, to learn whether Newton plus LM lands anywhere at all, coarse. Main
+venv (446355c), 4 threads, normal priority, beside T66; stop after 90 minutes whatever it has done:
+  cd hp && python3 scan_hp.py data/large_d/t68/jump.jsonl data/large_d/up70_D67.7224.npz 72.0 \
+    --dD 4.277557 --dD0 4.277557 --maxdD 5 --kt 36 --kc 146 --ks 130 --kfreeze 13 --corrector dnp --lm 40 \
+    --tol 1e-15 --tol_step 1e-32 --hmax 0.05 --it_max 40 --max_fail_row 1 --threads 4 --tag jump \
+    --history data/large_d/up70_D67.4384.npz,data/large_d/up70_D67.4703.npz,data/large_d/up70_D67.5177.npz,data/large_d/up70_D67.5480.npz,data/large_d/up70_D67.5821.npz,data/large_d/up70_D67.6218.npz,data/large_d/up70_D67.6541.npz,data/large_d/up70_D67.6918.npz --verbose > data/large_d/t68/jump.log 2>&1
+(one attempt at the full step: the cubic predictor through 67.44 .. 67.72 extrapolated to 72, Newton, then up to 40
+LM iterations at tol 1e-15, two to three times the usual resolution budget per iteration.) Then, whatever happened:
+  the same with --D_end 70.0 --dD 2.277557 --dD0 2.277557 (tag jump70, jump70.log), the halfway test.
+Report per run: the predictor's |F| (first line of the verbose Newton), how far Newton and LM got (the |F| sequence,
+every 5th line is enough), whether a point was accepted, and its Delta, dDelta_est, pivots and tails if so. No pass
+rule: a measurement. Push the logs and any state to wip/large-d-mac.
