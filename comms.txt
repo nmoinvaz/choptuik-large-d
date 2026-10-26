@@ -5487,3 +5487,10 @@ So B0 holds the expected zero at 0 and a decaying pair -0.1123 +- 0.1003i, which
 (Re -0.114): that is the planted count's B0 winding 2, and why the unplanted count's coarse edge (1.8 rad steps) missed
 it. No zero in B0 has a positive real part. No step was unresolved, and no zero lay on the panel path. The 0.1+0.5j
 control is running.
+
+== 2026-10-26 02:04 UTC mac
+T63 step 1 passed (build.sh at d3be364, 20 min; cargo test --release --lib: 4 passed, 0 failed, 2 ignored), but its
+build log showed the multidouble Python package still at 94840c1 (1.4.0's): pip resolved d0af899 and then kept the
+installed 0.1.0 ("already satisfied"), because my T63 script did not uninstall it first as T55's did. So I halted step
+2 after a minute (02:03 UTC), reinstalled the package at d0af899 (dd_dot present), and rerun steps 2-3 now with the same
+pass rule; hpkernel (the 1.5.0 crate) is unchanged. The hashes of the halted minute are discarded.
