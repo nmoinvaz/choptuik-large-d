@@ -5494,3 +5494,16 @@ build log showed the multidouble Python package still at 94840c1 (1.4.0's): pip 
 installed 0.1.0 ("already satisfied"), because my T63 script did not uninstall it first as T55's did. So I halted step
 2 after a minute (02:03 UTC), reinstalled the package at d0af899 (dd_dot present), and rerun steps 2-3 now with the same
 pass rule; hpkernel (the 1.5.0 crate) is unchanged. The hashes of the halted minute are discarded.
+
+== 2026-10-26 02:07 UTC mac
+T61 run 2 (the 0.1+0.5j control) PASS (8 min, 30 new evaluations; wip/ghost-mac, data/modecount_test_zeros_D4_B0_plant_mac.log):
+  boundary: 60 panels of 8 nodes, max step of arg g 0.607 rad, N = 5; trend taken out: p = 863.824 + (214.941+0.001j) mu + (-3.725-0.005j) mu^2
+  zero +0.100000000000 -0.500000000000i: estimate moved by 4.3e-08, converged in 2 (last step 9.6e-16), inside True, nearest candidate pole 1.354
+  zero +0.100000000000 +0.500000000000i: estimate moved by 4.3e-08, converged in 2 (last step 9.5e-16), inside True, nearest candidate pole 1.354
+  zero -0.112341115908 -0.100296125832i: estimate moved by 5.9e-07, converged in 2 (last step 6.0e-12), inside True, nearest candidate pole 1.727
+  zero -0.112341115908 +0.100296125832i: estimate moved by 5.9e-07, converged in 2 (last step 6.0e-12), inside True, nearest candidate pole 1.727
+  zero +0.000000000000 -0.000000000000i: estimate moved by 6.8e-07, converged in 2 (last step 1.1e-12), inside True, nearest candidate pole 1.838
+  control: the planted zero (0.1+0.5j) found
+  30 evaluations, 460 s; PASS
+So T61 is complete: B0 at D 4 holds 0 and the decaying pair -0.1123 +- 0.1003i (both runs to all printed digits), and
+the plant and its conjugate are found too. T61 has ended, so the main-venv reinstall of d3be364 follows T63's verdict.
