@@ -1389,3 +1389,14 @@ C:\Users\nathan\AppData\Local\Temp\claude\C--Users-nathan-Source-dss-residual-ke
 03:49:27 --- D 3.05 (from 3.05625), M 256 / 320, nodes 0.000157..0.975
 03:49:40   D 3.05 M 192: start 'predictor' |F| 2.99e-01 (1044 steps)
 03:49:45 D 3.05 M 192: L 16897, steps 1044, start |F| 3.0e-01
+  newton 0: |F| 2.99e-01 |dz| 2.08e+01 lam 1 dDelta -9.32e-04 Delta 2.484075237756629 piv 6.5e-05..3.3e+01  t 273.2s
+  newton 0: |F| 7.35e-03 |dz| 2.14e+01 lam 0.5 dDelta +4.19e-04 Delta 2.484494401444750 piv 6.5e-05..8.7e+00  t 307.6s
+  newton 0: |F| 1.31e-02 |dz| 9.02e+01 lam 0.00781 dDelta +3.21e-06 Delta 2.484497610133238 piv 6.5e-05..4.7e+01  t 301.0s
+  newton 0: |F| 1.32e-02 |dz| 1.26e+02 lam 0.00391 dDelta +1.63e-06 Delta 2.484499239305629 piv 6.5e-05..3.8e+01  t 319.3s
+04:09:47 D 3.05 M 192: two steps with line-search factors 0.0078125, 0.00390625 <= 0.125; giving up
+04:09:51 D 3.05 M 192: NOT converged, |F| 1.3e-02 after 4 iterations (1211s); stopping
+04:09:51 STOP: D 3.05 failed at M 192 with the step below 0.005
+04:19:04 resuming: M 256/320, last D 3.05625, 63.73 h used
+04:19:04 --- D 3.05 (from 3.05625), M 256 / 320, nodes 0.000157..0.975
+04:19:17   D 3.05 M 192: start 'predictor' |F| 2.99e-01 (1044 steps)
+04:19:23 D 3.05 M 192: L 16897, steps 1044, start |F| 3.0e-01
