@@ -305,3 +305,83 @@ D=70.2827 Delta=1.7863778892629276-6.15e-17 its 46 |F| 7.0e-23 115s piv 2.3e-05.
 D=70.2973 Delta=1.7863493458965056-8.50e-17 its 46 |F| 4.1e-23 117s piv 2.3e-05..4.4e+08 dDelta/dF max 6.7e+08 tails 5e-57 3e-38 pin: |F_full| 3.2e-22 dDelta_pin +3.9e-15
 D=70.3000 Delta=1.7863440394124963-6.96e-17 its 10 |F| 1.2e-28 18s piv 2.2e-05..4.4e+08 dDelta/dF max 6.7e+08 tails 5e-57 4e-46 pin: |F_full| 3.2e-22 dDelta_pin +1.3e-16
 D=70.3146 Delta=1.7863155096381815+4.94e-17 its 12 |F| 8.7e-29 22s piv 2.4e-05..4.4e+08 dDelta/dF max 6.7e+08 tails 5e-57 4e-46 pin: |F_full| 3.3e-22 dDelta_pin -1.7e-15
+   D=70.332742: Newton stopped at |F| 3.5e-10; Levenberg-Marquardt from the predictor
+D=70.3327 Delta=1.7862798635257338-5.48e-17 its 46 |F| 5.1e-23 116s piv 2.3e-05..4.4e+08 dDelta/dF max 6.8e+08 tails 5e-57 4e-38 pin: |F_full| 3.2e-22 dDelta_pin -4.3e-15
+   D=70.347294: Newton stopped at |F| 4.0e-10; Levenberg-Marquardt from the predictor
+D=70.3473 Delta=1.7862513595117029-2.92e-18 its 36 |F| 1.5e-23 89s piv 2.3e-05..4.4e+08 dDelta/dF max 6.8e+08 tails 5e-57 5e-39 pin: |F_full| 2.5e-22 dDelta_pin +1.3e-16
+D=70.3500 Delta=1.7862460603427972+1.03e-16 its 10 |F| 9.6e-29 17s piv 2.2e-05..4.4e+08 dDelta/dF max 6.8e+08 tails 5e-57 3e-46 pin: |F_full| 3.3e-22 dDelta_pin -3.6e-17
+D=70.3646 Delta=1.7862175698927061+3.75e-17 its 12 |F| 6.8e-29 20s piv 2.4e-05..4.5e+08 dDelta/dF max 6.8e+08 tails 5e-57 2e-46 pin: |F_full| 2.8e-22 dDelta_pin +3.7e-16
+   D=70.382742: Newton stopped at |F| 3.6e-10; Levenberg-Marquardt from the predictor
+D=70.3827 Delta=1.7861819729022137+1.35e-17 its 46 |F| 2.4e-22 149s piv 2.3e-05..4.5e+08 dDelta/dF max 6.9e+08 tails 4e-57 2e-37 pin: |F_full| 2.7e-22 dDelta_pin -3.4e-14
+   D=70.397294: Newton stopped at |F| 4.1e-10; Levenberg-Marquardt from the predictor
+D=70.3973 Delta=1.7861535081590372+4.85e-18 its 46 |F| 6.2e-23 122s piv 2.3e-05..4.5e+08 dDelta/dF max 6.9e+08 tails 5e-57 5e-38 pin: |F_full| 3.4e-22 dDelta_pin -8.1e-15
+D=70.4000 Delta=1.7861482162900810+4.35e-17 its 10 |F| 7.8e-29 18s piv 2.3e-05..4.5e+08 dDelta/dF max 6.9e+08 tails 5e-57 3e-46 pin: |F_full| 3.3e-22 dDelta_pin +6.3e-17
+D=70.4146 Delta=1.7861197650827860+1.29e-17 its 12 |F| 5.6e-29 22s piv 2.5e-05..4.5e+08 dDelta/dF max 6.9e+08 tails 4e-57 6e-46 pin: |F_full| 3.3e-22 dDelta_pin -1.2e-15
+   D=70.432742: Newton stopped at |F| 3.7e-10; Levenberg-Marquardt from the predictor
+D=70.4327 Delta=1.7860842171124842-2.42e-17 its 46 |F| 1.3e-22 119s piv 2.3e-05..4.6e+08 dDelta/dF max 6.9e+08 tails 5e-57 7e-38 pin: |F_full| 3.1e-22 dDelta_pin +1.2e-15
+   D=70.447294: Newton stopped at |F| 4.2e-10; Levenberg-Marquardt from the predictor
+D=70.4473 Delta=1.7860557915587343+9.14e-17 its 46 |F| 1.1e-21 115s piv 2.3e-05..4.6e+08 dDelta/dF max 6.9e+08 tails 4e-57 1e-36 pin: |F_full| 1.4e-21 dDelta_pin +1.9e-13
+D=70.4500 Delta=1.7860505069748287+2.27e-17 its 10 |F| 1.6e-28 17s piv 2.3e-05..4.6e+08 dDelta/dF max 6.9e+08 tails 4e-57 3e-46 pin: |F_full| 3.4e-22 dDelta_pin +1.0e-16
+D=70.4646 Delta=1.7860220949291221+1.11e-16 its 12 |F| 8.4e-29 22s piv 3.2e-05..4.6e+08 dDelta/dF max 6.9e+08 tails 4e-57 5e-46 pin: |F_full| 3.4e-22 dDelta_pin -1.2e-15
+   D=70.482742: Newton stopped at |F| 3.8e-10; Levenberg-Marquardt from the predictor
+D=70.4827 Delta=1.7859865958776455+3.00e-17 its 46 |F| 9.3e-23 116s piv 2.3e-05..4.6e+08 dDelta/dF max 6.9e+08 tails 5e-57 9e-38 pin: |F_full| 3.1e-22 dDelta_pin -1.2e-14
+   D=70.497294: Newton stopped at |F| 4.3e-10; Levenberg-Marquardt from the predictor
+D=70.4973 Delta=1.7859582094325874-1.50e-18 its 41 |F| 2.5e-22 110s piv 2.2e-05..4.7e+08 dDelta/dF max 6.9e+08 tails 4e-57 2e-37 pin: |F_full| 3.1e-22 dDelta_pin +2.1e-14
+D=70.5000 Delta=1.7859529321182939+1.06e-16 its 10 |F| 1.6e-28 19s piv 2.3e-05..4.7e+08 dDelta/dF max 6.9e+08 tails 4e-57 3e-46 pin: |F_full| 3.2e-22 dDelta_pin +1.9e-16
+D=70.5146 Delta=1.7859245591531963+3.81e-17 its 12 |F| 5.8e-29 25s piv 3.2e-05..4.7e+08 dDelta/dF max 6.9e+08 tails 4e-57 9e-46 pin: |F_full| 3.3e-22 dDelta_pin -3.1e-15
+   D=70.532742: Newton stopped at |F| 3.9e-10; Levenberg-Marquardt from the predictor
+D=70.5327 Delta=1.7858891089193807-2.77e-18 its 46 |F| 7.0e-23 144s piv 2.2e-05..4.7e+08 dDelta/dF max 6.9e+08 tails 4e-57 6e-38 pin: |F_full| 3.5e-22 dDelta_pin +8.6e-16
+   D=70.547294: Newton stopped at |F| 4.4e-10; Levenberg-Marquardt from the predictor
+D=70.5473 Delta=1.7858607615020505+1.09e-16 its 37 |F| 1.3e-22 112s piv 2.2e-05..4.8e+08 dDelta/dF max 6.9e+08 tails 4e-57 1e-37 pin: |F_full| 3.5e-22 dDelta_pin +4.2e-15
+D=70.5500 Delta=1.7858554914425002+1.14e-17 its 10 |F| 1.0e-28 21s piv 2.4e-05..4.8e+08 dDelta/dF max 6.9e+08 tails 4e-57 4e-46 pin: |F_full| 3.3e-22 dDelta_pin -3.2e-16
+D=70.5646 Delta=1.7858271574772440+1.70e-17 its 12 |F| 1.0e-28 26s piv 3.3e-05..4.8e+08 dDelta/dF max 6.9e+08 tails 4e-57 7e-46 pin: |F_full| 3.3e-22 dDelta_pin +4.1e-15
+   D=70.582742: Newton stopped at |F| 4.0e-10; Levenberg-Marquardt from the predictor
+D=70.5827 Delta=1.7857917559602878-5.70e-17 its 46 |F| 1.3e-22 133s piv 2.2e-05..4.8e+08 dDelta/dF max 6.9e+08 tails 4e-57 1e-37 pin: |F_full| 3.3e-22 dDelta_pin -3.1e-14
+   D=70.597294: Newton stopped at |F| 4.5e-10; Levenberg-Marquardt from the predictor
+D=70.5973 Delta=1.7857634474900193+5.29e-17 its 27 |F| 1.0e-22 73s piv 2.2e-05..4.8e+08 dDelta/dF max 6.9e+08 tails 4e-57 7e-38 pin: |F_full| 3.5e-22 dDelta_pin -3.7e-15
+D=70.6000 Delta=1.7857581846702373+3.07e-17 its 10 |F| 1.1e-28 18s piv 2.4e-05..4.8e+08 dDelta/dF max 6.9e+08 tails 4e-57 3e-46 pin: |F_full| 3.6e-22 dDelta_pin +2.1e-16
+D=70.6146 Delta=1.7857298896243012-7.23e-17 its 12 |F| 6.2e-29 24s piv 3.3e-05..4.9e+08 dDelta/dF max 6.8e+08 tails 4e-57 5e-46 pin: |F_full| 3.5e-22 dDelta_pin -1.8e-15
+   D=70.632742: Newton stopped at |F| 4.1e-10; Levenberg-Marquardt from the predictor
+D=70.6327 Delta=1.7856945367235078+6.06e-17 its 46 |F| 3.0e-22 128s piv 2.2e-05..4.9e+08 dDelta/dF max 6.8e+08 tails 4e-57 3e-37 pin: |F_full| 3.8e-22 dDelta_pin +4.2e-14
+   D=70.647294: Newton stopped at |F| 4.7e-10; Levenberg-Marquardt from the predictor
+D=70.6473 Delta=1.7856662671199957+6.10e-17 its 23 |F| 7.1e-23 62s piv 2.2e-05..4.9e+08 dDelta/dF max 6.8e+08 tails 4e-57 8e-38 pin: |F_full| 3.4e-22 dDelta_pin +9.9e-15
+D=70.6500 Delta=1.7856610115250622+5.58e-17 its 10 |F| 8.3e-29 19s piv 2.5e-05..4.9e+08 dDelta/dF max 6.8e+08 tails 4e-57 8e-46 pin: |F_full| 3.7e-22 dDelta_pin -3.5e-17
+D=70.6646 Delta=1.7856327553181233+9.11e-17 its 12 |F| 9.4e-29 22s piv 3.4e-05..5.0e+08 dDelta/dF max 6.8e+08 tails 3e-57 5e-46 pin: |F_full| 2.9e-22 dDelta_pin +1.4e-15
+   D=70.682742: Newton stopped at |F| 4.2e-10; Levenberg-Marquardt from the predictor
+D=70.6827 Delta=1.7855974509332708-9.63e-17 its 46 |F| 2.9e-22 121s piv 2.2e-05..5.0e+08 dDelta/dF max 6.8e+08 tails 4e-57 3e-37 pin: |F_full| 3.8e-22 dDelta_pin +4.6e-14
+   D=70.697294: Newton stopped at |F| 4.8e-10; Levenberg-Marquardt from the predictor
+D=70.6973 Delta=1.7855692201162938+5.77e-18 its 19 |F| 1.5e-22 49s piv 2.2e-05..5.0e+08 dDelta/dF max 6.8e+08 tails 3e-57 1e-37 pin: |F_full| 3.3e-22 dDelta_pin +6.6e-15
+D=70.7000 Delta=1.7855639717312917-2.57e-17 its 10 |F| 7.2e-29 19s piv 2.6e-05..5.0e+08 dDelta/dF max 6.8e+08 tails 4e-57 5e-46 pin: |F_full| 3.7e-22 dDelta_pin -7.6e-17
+D=70.7146 Delta=1.7855357542832622+1.01e-16 its 12 |F| 8.6e-29 24s piv 3.5e-05..5.0e+08 dDelta/dF max 6.9e+08 tails 3e-57 7e-46 pin: |F_full| 3.7e-22 dDelta_pin +5.2e-16
+   D=70.732742: Newton stopped at |F| 4.3e-10; Levenberg-Marquardt from the predictor
+D=70.7327 Delta=1.7855004983144367+1.34e-17 its 45 |F| 3.7e-22 133s piv 2.2e-05..5.1e+08 dDelta/dF max 6.9e+08 tails 4e-57 5e-37 pin: |F_full| 5.0e-22 dDelta_pin -6.5e-14
+   D=70.747294: Newton stopped at |F| 4.9e-10; Levenberg-Marquardt from the predictor
+D=70.7473 Delta=1.7854723062039097-3.31e-17 its 19 |F| 1.6e-22 68s piv 2.1e-05..5.1e+08 dDelta/dF max 6.9e+08 tails 3e-57 2e-37 pin: |F_full| 3.1e-22 dDelta_pin +2.6e-14
+D=70.7500 Delta=1.7854670650140021+5.67e-17 its 10 |F| 8.5e-29 21s piv 2.7e-05..5.1e+08 dDelta/dF max 6.9e+08 tails 3e-57 6e-46 pin: |F_full| 3.8e-22 dDelta_pin +1.4e-16
+D=70.7646 Delta=1.7854388862450126+6.67e-17 its 12 |F| 8.2e-29 25s piv 3.6e-05..5.1e+08 dDelta/dF max 6.9e+08 tails 4e-57 7e-46 pin: |F_full| 3.9e-22 dDelta_pin -1.8e-15
+   D=70.782742: Newton stopped at |F| 4.4e-10; Levenberg-Marquardt from the predictor
+D=70.7827 Delta=1.7854036785922918+3.00e-17 its 32 |F| 8.2e-23 119s piv 2.2e-05..5.2e+08 dDelta/dF max 6.9e+08 tails 3e-57 6e-38 pin: |F_full| 3.8e-22 dDelta_pin -4.8e-15
+   D=70.797294: Newton stopped at |F| 5.0e-10; Levenberg-Marquardt from the predictor
+D=70.7973 Delta=1.7853755251087524+9.67e-17 its 19 |F| 3.5e-22 75s piv 2.1e-05..5.2e+08 dDelta/dF max 7.0e+08 tails 3e-57 4e-37 pin: |F_full| 4.4e-22 dDelta_pin -4.7e-14
+D=70.8000 Delta=1.7853702910990279+1.06e-17 its 10 |F| 1.5e-28 25s piv 2.8e-05..5.2e+08 dDelta/dF max 7.0e+08 tails 3e-57 5e-46 pin: |F_full| 3.9e-22 dDelta_pin -1.1e-16
+D=70.8146 Delta=1.7853421509294212+7.19e-17 its 12 |F| 8.8e-29 34s piv 3.7e-05..5.2e+08 dDelta/dF max 7.0e+08 tails 3e-57 7e-46 pin: |F_full| 3.7e-22 dDelta_pin +7.6e-16
+   D=70.832742: Newton stopped at |F| 4.5e-10; Levenberg-Marquardt from the predictor
+D=70.8327 Delta=1.7853069914933963-1.07e-16 its 30 |F| 9.5e-23 111s piv 2.3e-05..5.3e+08 dDelta/dF max 7.0e+08 tails 3e-57 1e-37 pin: |F_full| 3.9e-22 dDelta_pin -4.8e-15
+   D=70.847294: Newton stopped at |F| 5.2e-10; Levenberg-Marquardt from the predictor
+D=70.8473 Delta=1.7852788765571697+5.88e-17 its 19 |F| 1.5e-22 57s piv 2.1e-05..5.3e+08 dDelta/dF max 7.0e+08 tails 3e-57 1e-37 pin: |F_full| 3.6e-22 dDelta_pin -1.5e-14
+D=70.8500 Delta=1.7852736497129560+3.93e-17 its 10 |F| 1.2e-28 22s piv 3.0e-05..5.3e+08 dDelta/dF max 7.0e+08 tails 3e-57 7e-46 pin: |F_full| 3.5e-22 dDelta_pin +7.0e-17
+D=70.8646 Delta=1.7852455480633040-4.73e-17 its 21 |F| 9.6e-29 44s piv 3.8e-05..5.3e+08 dDelta/dF max 7.0e+08 tails 3e-57 6e-46 pin: |F_full| 4.0e-22 dDelta_pin -3.0e-16
+D=70.8762 Delta=1.7852230740329438-4.70e-17 its 12 |F| 8.5e-29 27s piv 3.8e-05..5.3e+08 dDelta/dF max 7.0e+08 tails 3e-57 5e-46 pin: |F_full| 4.0e-22 dDelta_pin -7.4e-17
+   D=70.890746: Newton stopped at |F| 1.9e-10; Levenberg-Marquardt from the predictor
+D=70.8907 Delta=1.7851949925315129+5.54e-17 its 46 |F| 1.3e-22 162s piv 3.4e-05..5.4e+08 dDelta/dF max 7.0e+08 tails 3e-57 9e-38 pin: |F_full| 3.9e-22 dDelta_pin -2.2e-14
+D=70.9000 Delta=1.7851771405831267-9.15e-17 its 13 |F| 9.2e-29 32s piv 3.8e-05..5.4e+08 dDelta/dF max 7.0e+08 tails 3e-57 6e-46 pin: |F_full| 3.5e-22 dDelta_pin -2.4e-16
+D=70.9116 Delta=1.7851546883506471-5.39e-17 its 23 |F| 1.3e-28 55s piv 4.2e-05..5.4e+08 dDelta/dF max 6.9e+08 tails 3e-57 7e-46 pin: |F_full| 4.0e-22 dDelta_pin +1.5e-16
+D=70.9210 Delta=1.7851367328709435-7.37e-19 its 10 |F| 9.6e-29 25s piv 4.1e-05..5.4e+08 dDelta/dF max 6.9e+08 tails 3e-57 4e-46 pin: |F_full| 4.0e-22 dDelta_pin -5.0e-17
+D=70.9326 Delta=1.7851142935092845-1.98e-17 its 12 |F| 1.2e-28 31s piv 4.3e-05..5.4e+08 dDelta/dF max 6.9e+08 tails 3e-57 8e-46 pin: |F_full| 3.9e-22 dDelta_pin -1.7e-18
+   D=70.947149: Newton stopped at |F| 1.7e-10; Levenberg-Marquardt from the predictor
+D=70.9471 Delta=1.7850862553188676+1.49e-17 its 46 |F| 1.0e-22 163s piv 4.1e-05..5.5e+08 dDelta/dF max 6.9e+08 tails 3e-57 1e-37 pin: |F_full| 3.9e-22 dDelta_pin +6.6e-15
+D=70.9500 Delta=1.7850807634376269+9.23e-17 its 10 |F| 1.3e-28 25s piv 2.8e-05..5.5e+08 dDelta/dF max 6.9e+08 tails 3e-57 8e-46 pin: |F_full| 4.0e-22 dDelta_pin +1.5e-17
+D=70.9646 Delta=1.7850527385904553-4.47e-17 its 12 |F| 2.8e-28 29s piv 4.6e-05..5.5e+08 dDelta/dF max 6.9e+08 tails 3e-57 1e-45 pin: |F_full| 3.9e-22 dDelta_pin +2.2e-16
+   D=70.982742: Newton stopped at |F| 5.0e-10; Levenberg-Marquardt from the predictor
+D=70.9827 Delta=1.7850177232103799-1.06e-16 its 19 |F| 1.4e-22 77s piv 2.3e-05..5.5e+08 dDelta/dF max 6.9e+08 tails 3e-57 1e-37 pin: |F_full| 3.9e-22 dDelta_pin +4.9e-15
+scan ended: max_hours 4.0 (262 converged points, D = 70.982742)
