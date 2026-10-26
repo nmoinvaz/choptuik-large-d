@@ -101,3 +101,39 @@ the strips U count none in the other sector.
 
 **Planted controls** on the same det M_ψ (`--plant`, the evaluations shared), D = 8.25: a pair planted at 3.1 ± 1.0i
 is counted in B1c, B1 and full (2 each, 0 elsewhere); a pair at 1.0 ± 3.0i in U (1, its upper member) and full (2).
+
+## 4. D = 4: the zeros located (M = 48)
+
+At D = 4 the count found zeros where D = 8.25–45 have none. They were located with `hp/modecount_test_zeros.py`
+(Delves–Lyness power sums on Gauss–Legendre panels refined until every step of arg g is below π/4, Newton on g to
+polish; its `--selftest` and a planted zero per box as controls), on the state `lowD_D4.0000_M48` (K = 9 nodes,
+|F| = 3.3×10⁻³⁰, ω = 1.823617). Records: `hp/data/modecount_test_zeros.jsonl`; logs
+`hp/data/modecount_test_zeros_D4_*_mac.log` (the Mac, 2026-10-25/26).
+
+| box | zeros of det M_ψ | control |
+|---|---|---|
+| B0: −0.114 < Re λ < 0.193, \|Im λ\| < 0.912 | 0 (the exact zero), −0.112341115908 ± 0.100296125832i | planted 0.1 ± 0.5i found, the others unchanged |
+| U0: −0.114 < Re λ < 0.193, 0.912 < Im λ < 2.735 | −0.0866036 + 0.9604110i, −0.0344254 + 1.8308635i, **+0.0388691 + 2.6865263i** | planted 0.05 + 1.5i found, the others unchanged |
+
+Two scans of g along lines (`hp/modecount_test_axis.py`, `hp/data/modecount_test_axis_s{0,1}_D4_mac.out`), with
+Re λ from −0.7 to −0.02, find one zero each: −0.3651202796 on the real axis, and −0.0344254228 + 1.8308635107i on
+Im λ = ω, the U0 zero (Im λ / ω = 1.00397). Gundlach and Martín-García's slowest decaying mode, −0.362 ± 0.012, is
+within their error of the first. The revised checks of section 2 pass at D = 4
+(`hp/data/modecount_test_check2_D4_mac.out`) and at D = 67.0115 (`_D67_mac.out`).
+
+**A discrepancy, open.** The U0 zero at +0.0389 + 2.6865i has Re λ > 0: a growing mode of the test field, which in
+the two-field model would be a second unstable mode of the critical solution. That disagrees with Gundlach (1997,
+Phys. Rev. D 55, 695, arXiv:gr-qc/9604019), whose review (arXiv:gr-qc/9712084) states that of the Choptuik solution's
+perturbations as a free complex scalar field "only one of them, purely real, has Re λ > 0" (the 1997 paper's body has
+not been read here, only its abstract and the review). The three U0 zeros' real parts rise with Im λ (−0.087, −0.034,
++0.039 at Im λ = 0.96, 1.83, 2.69, about 0.06 per 0.86), which is how spurious modes of a truncated discretization
+often line up, and the box stops at Im λ = 2.735. Not yet done: the same boxes at M = 64 (a physical zero stays put,
+a spurious one moves), and the strip above Im λ = 2.735. Until then this is numerical evidence at one resolution,
+not a result.
+
+**The count's under-refinement.** The winding count of section 3 verifies each edge by one bisection and does not
+refine further. At D = 4 its B0 and U0 edges kept steps of arg g of 1.2–1.8 rad (above its π/4), and it counted B0 as
+holding only the exact zero, missing the pair at −0.1123 ± 0.1003i, which lies 0.0017 inside B0's left edge. The
+planted count, which sampled the same edges more finely, counted it. The counts at D = 8.25–45 in section 3 were made
+the same way, so their zeros near the boxes' edges are not certain either; the zero finder above refines until every
+step is below π/4.
