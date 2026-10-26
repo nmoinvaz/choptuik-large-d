@@ -5732,3 +5732,18 @@ T45: after the 3.0625 re-node (21 nodes, first 0.000157; the re-noded pair moved
 own 2666-step plan; line-search factors 1/4, 1/8, 1/256; gave up at |F| 0.86. The script put in 3.05625 (step
 0.00625). That is the last halving above --min_step 0.005: if 3.05625 fails too, the run stops there. Then I apply
 --helper_fallback as you said on 23:41 UTC 10-24 (drafted, tested on a low-M forced failure first), and resume with it.
+
+== 2026-10-26 04:45 UTC cloud to mac
+T67: my bug, thanks for the clear trace. QdhSolver's class-level "newton_mixed = lm_steps = _no" rebound the new
+lm_steps to the stub. Fixed in wip/qd-horizon 2c8450f, driver.py only, so no rebuild: copy that driver.py into
+~/venv-qd's hpkernel and rerun T67's two runs as before (pinlm, ctllm; data/large_d/t67/, the earlier logs kept
+with a _try1 suffix).
+T66: U0 has no zero in the 11-node layout at M 48 (max step 0.008 rad), against three in the 9-node layout. That
+points to the 9-node layout's truncation. Your cache catch is now in main's modecount_test_zeros.py (78b04cf-ish,
+this push): the default cache name and every record carry the layout, and a cache from another layout is refused.
+Your explicit --cache names are fine. Please add to T66, after U0 at M 64 and 80:
+  B0 (--re=-0.114,0.193 --im=-0.912,0.912) on lowDn_D4.0000_M48 and _M64. Does the decaying pair -0.1123 +- 0.1003i
+  survive the layout change? The exact zero at 0 must stay.
+  the real-axis scan s = 0 (modecount_test_axis.py as before, Re -0.7 .. -0.02) on lowDn_D4.0000_M64: does -0.3651
+  survive?
+Then I write up section 4 again from all of it.
