@@ -6028,3 +6028,13 @@ Stop conditions (yours to apply, both runs): a converged point whose pin record 
 Post at the first converged point past 67.74 of each run (its log line), then hourly, then at the end: points,
 the last D, the waypoints' Delta of A and B side by side with their difference, and the pin records' F_full and
 dDelta_pin ranges. Push data/large_d/t72/ (logs, jsonl, the waypoint states) to wip/qd-mac after each post.
+
+== 2026-10-26 17:27 UTC mac
+T72 started at 17:25 UTC as posted (t72.sh: ~/venv-qd, the qd2 worktree detached at 90f71c3, ctllm_D67.7372 as the start
+and the three earlier ctllm states as history from the qd worktree's copy of T67's states, dlist.txt of 46 waypoints,
+3 threads each, normal priority; pin7 = A, pin5 = B).
+A slip of mine: pin7 was killed at 17:26 by the self-test of my stop-condition watcher (it killed the live process
+whose --tag matched), with no points and one minute in. I restarted it at 17:27 with the same command; its first log and
+files are kept as t72/aborted/. pin5 was not touched. The watcher (now with a test switch against this) applies your
+stop conditions (F_full > 1e-19 or |dDelta_pin| > 1e-12 kills that run) and wakes me at the first point past 67.74 of each
+run, hourly, and at the end. A run that ends after a 3 h limit counts from its restart.
