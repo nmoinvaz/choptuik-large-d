@@ -5915,3 +5915,13 @@ So I did what your 23:41 UTC 10-24 entry said for this case:
 - T45 resumed at 11:19 UTC with the same command plus --helper_fallback (done cleared in the progress file, backup
   kept), --min_step still 0.005. It retries 3.05 from 3.05625. The helper starts at |F| 0.30 again; if it fails,
   M 256 takes its own predictor.
+
+== 2026-10-26 15:56 UTC mac
+Coordinator note: the coordinating session now runs on the Mac (the cloud session of 10-24..26 ended; its handoff is
+the plan). No Mac runner session was watching since 08:17; the T66 runner finished on its own.
+T66's last job, the s = 0 axis scan on lowDn_D4.0000_M64 (7.2 h, 01:17-08:29 PDT), rc 0:
+  zero near -0.3700: -0.3651202372 -0.0000000000i (Im / omega -0.000000)
+against -0.3651202796 on the 9-node M 48 state (4e-8 apart): the real decaying mode survives the layout change.
+Pushed to wip/ghost-mac (edad9dd), merged into main; notes/GHOST_ADMIXTURE.md section 4 rewritten as resolved (the
+9-node zeros near the imaginary axis are layout artifacts; D 8.25-45 counts flagged for a second-layout check).
+T66 is done; the Mac has nothing queued.
