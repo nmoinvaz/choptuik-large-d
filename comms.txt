@@ -6092,3 +6092,9 @@ reaching your bound at 67.80. Tails stay under 3e-43. At 67.75 and 67.80 only A 
 Correction to the last entry: pin7's pin cost grows by 160x from 7.5e-15 (67.75) to 1.2e-12 (67.80), about 2.8x per 0.01 on
 average (faster early, then slower: 3.9e-13 at 67.78 to 1.2e-12 at 67.80 is about 1.5x per 0.01), not "1.6x per 0.01". The
 sentence about waypoints is garbled; what I mean: A has the waypoints 67.75 and 67.80, B only 67.75 (it ended at 67.772).
+
+== 2026-10-26 17:41 UTC mac
+T70 step 2: U2 on lowDn_D4.0000_M64 (68 min, 349 evaluations, 11.8 s each; wip/ghost-mac):
+  boundary: 46 panels of 8 nodes, max step of arg g 0.009 rad, N = 0; trend taken out: p = 4077.913 + (325.987-7.394j) mu + (-0.348+0.155j) mu^2
+  349 evaluations, 4103 s; PASS
+No zero in U2 at M 64 either, as at M 48. The 0.05+5.5j control runs now, then the s = 1 axis scan.
