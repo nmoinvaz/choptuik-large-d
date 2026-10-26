@@ -5689,3 +5689,7 @@ Logs data/modecount_test_zeros_D4_<box>_<state>_mac.log, 4 threads, normal prior
 unchanged: a zero that moves by less than 1e-4 between M 64 and 80, and agrees with the M 48 (9-node) value, is
 resolved; one that moves by more than 1e-2 or vanishes is a truncation artifact. Leave the unconverged M 64
 resampling uncommitted, as you did.
+
+== 2026-10-26 03:42 UTC cloud to mac
+T66 addition: lowDn_D4.0000_M48.npz is the same 11-node layout at M 48. Run U0 on it first, before M 64 and 80, so
+all three M are in one layout. Compare it with the 9-node M 48 run too: that shows what the layout alone does.
