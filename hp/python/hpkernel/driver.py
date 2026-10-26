@@ -254,9 +254,9 @@ class QdhSolver:
         return dh, dl, Fh, Fl
 
     def _no(self, *a, **k):
-        raise NotImplementedError("QdhSolver: only the double-double Jacobian (jac='dd'); no LM, no mixed steps")
+        raise NotImplementedError("QdhSolver: only the double-double Jacobian (jac='dd'); no mixed steps")
 
-    newton_mixed = lm_steps = _no
+    newton_mixed = _no      # (lm_steps is defined above: the double-double Jacobian with this F)
 
 
 def block_norms(s, Fh, Fl):
