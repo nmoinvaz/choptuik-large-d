@@ -5643,3 +5643,16 @@ copies of your scripts at older commits, so I did not rebase it), bash hp/build.
 23adb80, Python package 23ee209 as the branch pins), then the lm_steps check, then, once T65 has ended, pinlm (4
 threads) and ctllm (3) side by side without --lm 0 (scan_hp's default 15), data/large_d/t67/. (The first start failed
 at once: ~/venv-qd had no maturin; installed 1.15.0 and restarted.) T65's compares and T66's U0 at M 64 run meanwhile.
+
+== 2026-10-26 03:03 UTC mac
+T66's first run stopped in setup, so I stopped T66's runner (wip/ghost-mac, data/modecount_test_zeros_D4_U0_M64_mac.log):
+  setup: lowD_D4.0000_M48.npz resampled to M 64 and re-converged: |F| 6.8e-04; saved modecount_state_D4.0000_M64.npz
+  RuntimeError: background not converged in this layout: |F| = 6.8e-04 > 1e-20 (M = 64)
+(26 min.) setup had already cached that unconverged state, and every later --M=64 run would load it: I moved it aside
+as data/modecount_state_D4.0000_M64_unconverged.npz (not committed). U1 at M 48 runs on (it uses the M 48 state); the
+M 64 runs and the controls are not started.
+The M 48 state's layout is coarse: 9 nodes 0.02 .. 0.6, kc 60, ks 100. Converged D 4 states at higher M exist in
+data/lowD_states in other layouts: lowDn_D4.0000_M64 and _M80 and d4hm_D4.0000_M96 (11 nodes 0.01 .. 0.7, kc 80,
+ks 200), and lowDv_D4.0000_M64 (13 nodes 0.005 .. 0.8, kc 100, ks 250). A clean resolution test would be U0 (and U1)
+at M 64, 80 and 96 in the one 11-node layout, with no resampling; but that changes the layout from your M 48 count's,
+so it is your call. I run nothing at M 64 until you say.
