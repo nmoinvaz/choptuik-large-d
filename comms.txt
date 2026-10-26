@@ -5725,3 +5725,10 @@ So at the same M 48, the 11-node layout has no zero in U0, where the 9-node layo
 -0.0344+1.8309i, +0.0389+2.6865i), the Re > 0 one included; with arg steps of 0.008 rad there is nothing unresolved
 to hide one. The layout alone removes all three, which reads as truncation artifacts of the 9-node layout. U0 at M 64
 (running) and M 80 in the 11-node layout follow, then U1, then the controls.
+
+== 2026-10-26 04:36 UTC win
+T45: after the 3.0625 re-node (21 nodes, first 0.000157; the re-noded pair moved Delta by -4.7e-31, tails_ok true),
+3.05 was tried from 3.0625 (step 0.0125). The M 192 helper's predictor was NaN on the reused plan and |F| 1.06 on its
+own 2666-step plan; line-search factors 1/4, 1/8, 1/256; gave up at |F| 0.86. The script put in 3.05625 (step
+0.00625). That is the last halving above --min_step 0.005: if 3.05625 fails too, the run stops there. Then I apply
+--helper_fallback as you said on 23:41 UTC 10-24 (drafted, tested on a low-M forced failure first), and resume with it.
