@@ -5990,3 +5990,41 @@ derivative-in-D predictor; it was tested fully in Python before any kernel chang
     2.1e-4;  Euler 42, 8.5e-2. Controls C1 and C2 pass and fire under their mutations.
 So the double-double Lagrange seed is the best available and is not the bottleneck at 67.73 (the T69 entry above):
 no T71 pilot of a Hermite predictor. The next large-D step is the author's call.
+
+== 2026-10-26 17:23 UTC cloud
+T71 (coordinator, on the Mac; hp/corrector_diag.py, wip/qd-horizon 4589773, logs hp/data/large_d/t71/): why T67's
+steps fail at 67.74. At the converged 67.7372 state the inner blocks' rounding is 2e-31 (remainder of F(z+d) - F(z)
+- J d, flat in r = 1e-32 .. 1e-28; control L passes and fires under --mutate=jvp_scale), while the accepted states sit
+at 1e-21: no arithmetic floor at the tolerance. From T67's failed seed (67.7372 -> 67.739251, lag_dd |F| 6.0e-9) the
+deflated Newton reaches 3.4e-16 in one step, then crawls at lam 1/8 to 1.8e-18: the stall is along the loose
+directions. With p1's harmonics above K held at the seed's values (PinnedSolver), it converges:
+  K 11: 27 its, full-system |F| 1.3e-22, Delta 1.7915494538169201, one full step moves Delta by +8.4e-15
+  K  9: 16 its,                 1.9e-22,       1.7915494538169168,                             +1.2e-14
+  K  7:  7 its,                 1.2e-22,       1.7915494538169314,                             -2.8e-15
+  K  5:  5 its,                 1.2e-22,       1.7915494538169108,                             +1.8e-14
+(tol 1.41e-21). The spread of Delta over K, 2e-14, is a spread over pin choices, not a bound. T67's pin held
+harmonic 13 on a trend of values measured after full-system steps, which carry the loose directions' jitter.
+scan_hp --pin_from seed (90f71c3): smoke test from 67.7372, --pin 7: 67.7393 in 10 its (|F| 5.9e-31 pinned, 1.3e-22
+full, dDelta_pin -2.8e-15) and 67.7418 in 14 its. T72 below is the pilot.
+
+== 2026-10-26 17:23 UTC cloud to mac
+T72, the large-D pilot with the loose harmonics held at the seed's values (scan_hp --pin K --pin_from seed, new on
+wip/qd-horizon 90f71c3; the T71 diagnosis is in the entry above). Python only: ~/venv-qd as for T67 (no rebuild;
+the change is in hp/scan_hp.py and hp/pinning.py). Do not edit code; on an error, stop and post it.
+In ~/Source/choptuik-mac-qd2: git fetch origin && git checkout --detach origin/wip/qd-horizon, then in hp/:
+  Q=/Users/nathan/Source/choptuik-mac-qd/hp/data/large_d/t67
+  H=$Q/ctllm_D67.7274.npz,$Q/ctllm_D67.7314.npz,$Q/ctllm_D67.7346.npz
+  mkdir -p data/large_d/t72 && python3 -c "print(','.join(f'{67.75 + 0.05 * i:.2f}' for i in range(46)))" > data/large_d/t72/dlist.txt
+  COMMON="$Q/ctllm_D67.7372.npz 70 --kt 36 --kc 146 --ks 130 --kfreeze 13 --qdh 1 --corrector dnp \
+    --accept_stall 1e-19,1e-16 --tol 1.40e-21 --tol_growth 1.45 --tol_step 1e-32 --hmax 0.05 --dD 0.005 \
+    --min_dD 1e-4 --max_fail_row 4 --it_max 30 --history $H --predictor lagrange_dd --pin_from seed \
+    --Dlist @data/large_d/t72/dlist.txt --max_hours 3 --threads 3"
+  A: python3 -u scan_hp.py data/large_d/t72/pin7.jsonl $COMMON --pin 7 --tag pin7 --attempts data/large_d/t72/pin7_attempts.jsonl > data/large_d/t72/pin7.log 2>&1
+  B: python3 -u scan_hp.py data/large_d/t72/pin5.jsonl $COMMON --pin 5 --tag pin5 --attempts data/large_d/t72/pin5_attempts.jsonl > data/large_d/t72/pin5.log 2>&1
+A and B side by side, 3 threads each, normal priority, beside T70 (4 threads). Run them from a bash script as
+t67b.sh does: zsh does not split $COMMON into words.
+Stop conditions (yours to apply, both runs): a converged point whose pin record has F_full > 1e-19 or
+|dDelta_pin| > 1e-12; otherwise each run ends itself (4 failed steps in a row, 3 h, or D 70).
+Post at the first converged point past 67.74 of each run (its log line), then hourly, then at the end: points,
+the last D, the waypoints' Delta of A and B side by side with their difference, and the pin records' F_full and
+dDelta_pin ranges. Push data/large_d/t72/ (logs, jsonl, the waypoint states) to wip/qd-mac after each post.
