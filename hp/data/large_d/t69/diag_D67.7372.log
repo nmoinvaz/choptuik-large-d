@@ -1,0 +1,64 @@
+base D=67.737203 M=32 nodes=[0.3, 0.4, 0.5, 0.6, 0.7] kfreeze=13: |F| 1.25e-21 ['9.7e-22', '7.9e-22', '6.8e-22', '6.0e-22', '1.3e-21', '1.3e-21', '4.5e-22'] (1s)
+tangent fd7: |t| 2.098e+22: p1 low 4.431e+18, p1 held 2.098e+22, rest 1.237e+21, dDelta/dD -5.7082649745e+14
+tangent h1e-3: |t| 5.678e+42: p1 low 1.907e+39, p1 held 5.679e+42, rest 3.779e+41, dDelta/dD -3.1807051362e+36
+tangent h1e-4: |t| 2.125e+36: p1 low 9.508e+31, p1 held 2.125e+36, rest 1.275e+35, dDelta/dD +1.9743505961e+29
+tangent h1e-3 - h1e-4: max 5.678e+42 (p1 5.678e+42, Delta 3.181e+36)
+tangents: 1s
+D=67.737303 (dD 1.000e-04), 1s
+  const              |F| 2.71e+12  horizon 2.7e+12  inner 2.9e-08
+  lag                |F| 6.41e-06  horizon 6.4e-06  inner 8.9e-16
+  lag_dd             |F| 1.05e-10  horizon 1.1e-10  inner 8.9e-16
+  lag_dd_hold        |F| 1.05e-10  horizon 1.1e-10  inner 5.4e-11
+  euler_fd7          |F| nan  horizon nan  inner nan
+  euler_h1e-3        |F| nan  horizon nan  inner nan
+  euler_h1e-3_hold   |F| nan  horizon nan  inner nan
+  euler_h1e-4        |F| nan  horizon nan  inner nan
+  euler_h1e-4_hold   |F| nan  horizon nan  inner nan
+  neg_h1e-3          |F| nan  horizon nan  inner nan
+D=67.737503 (dD 3.000e-04), 1s
+  const              |F| 5.08e+15  horizon 5.1e+15  inner 8.6e-08
+  lag                |F| 8.35e-06  horizon 8.4e-06  inner 3.0e-15
+  lag_dd             |F| 3.58e-10  horizon 3.6e-10  inner 3.0e-15
+  lag_dd_hold        |F| 3.58e-10  horizon 3.6e-10  inner 1.6e-10
+  euler_fd7          |F| nan  horizon nan  inner nan
+  euler_h1e-3        |F| nan  horizon nan  inner nan
+  euler_h1e-3_hold   |F| nan  horizon nan  inner nan
+  euler_h1e-4        |F| nan  horizon nan  inner nan
+  euler_h1e-4_hold   |F| nan  horizon nan  inner nan
+  neg_h1e-3          |F| nan  horizon nan  inner nan
+D=67.738203 (dD 1.000e-03), 1s
+  const              |F| 2.78e+19  horizon 2.8e+19  inner 2.9e-07
+  lag                |F| 8.30e-06  horizon 8.3e-06  inner 1.5e-14
+  lag_dd             |F| 1.77e-09  horizon 1.8e-09  inner 1.5e-14
+  lag_dd_hold        |F| 1.77e-09  horizon 1.8e-09  inner 5.7e-10
+  euler_fd7          |F| nan  horizon nan  inner nan
+  euler_h1e-3        |F| nan  horizon nan  inner nan
+  euler_h1e-3_hold   |F| nan  horizon nan  inner nan
+  euler_h1e-4        |F| nan  horizon nan  inner nan
+  euler_h1e-4_hold   |F| nan  horizon nan  inner nan
+  neg_h1e-3          |F| nan  horizon nan  inner nan
+D=67.739251 (dD 2.048e-03), 1s
+  const              |F| 6.97e+21  horizon 7.0e+21  inner 5.9e-07
+  lag                |F| 2.24e-05  horizon 2.2e-05  inner 5.1e-14
+  lag_dd             |F| 5.96e-09  horizon 6.0e-09  inner 5.1e-14
+  lag_dd_hold        |F| 5.96e-09  horizon 6.0e-09  inner 1.3e-09
+  euler_fd7          |F| nan  horizon nan  inner nan
+  euler_h1e-3        |F| nan  horizon nan  inner nan
+  euler_h1e-3_hold   |F| nan  horizon nan  inner nan
+  euler_h1e-4        |F| nan  horizon nan  inner nan
+  euler_h1e-4_hold   |F| nan  horizon nan  inner nan
+  neg_h1e-3          |F| nan  horizon nan  inner nan
+D=67.747203 (dD 1.000e-02), 1s
+  const              |F| 5.76e+28  horizon 5.8e+28  inner 2.9e-06
+  lag                |F| 4.32e-04  horizon 4.3e-04  inner 2.3e-12
+  lag_dd             |F| 2.69e-07  horizon 2.7e-07  inner 2.3e-12
+  lag_dd_hold        |F| 2.69e-07  horizon 2.7e-07  inner 1.2e-08
+  euler_fd7          |F| nan  horizon nan  inner nan
+  euler_h1e-3        |F| nan  horizon nan  inner nan
+  euler_h1e-3_hold   |F| nan  horizon nan  inner nan
+  euler_h1e-4        |F| nan  horizon nan  inner nan
+  euler_h1e-4_hold   |F| nan  horizon nan  inner nan
+  neg_h1e-3          |F| nan  horizon nan  inner nan
+C1: not testable (no --truth)
+C2: not testable (the tangent seeds are not finite)
+done in 6s
