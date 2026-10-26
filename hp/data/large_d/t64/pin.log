@@ -1,0 +1,18 @@
+(re-)converged start D=67.722443 M=32 nodes=[0.3, 0.4, 0.5, 0.6, 0.7]: Delta 1.7915848809127641 ok True (15s)
+history point D=67.438434: ok True, Delta 1.7921860892105772
+history point D=67.470328: ok True, Delta 1.7921183294669507
+history point D=67.517741: ok True, Delta 1.7920177138211202
+history point D=67.548016: ok True, Delta 1.7919535385264742
+history point D=67.582074: ok True, Delta 1.7918814108407923
+history point D=67.621758: ok True, Delta 1.7917974572960111
+history point D=67.654087: ok True, Delta 1.7917291341914281
+history point D=67.691755: ok True, Delta 1.7916496075943791
+D=67.732443: no convergence (|F| 1.0e-09); dD 0.01 -> 0.005
+D=67.727443: no convergence (|F| 8.4e-11); dD 0.005 -> 0.0025
+D=67.724943: no convergence (|F| 1.3e-10); dD 0.0025 -> 0.00125
+D=67.723693: no convergence (|F| 1.2e-10); dD 0.00125 -> 0.000625
+D=67.7231 Delta=1.7915835632626498-1.27e-17 its 14 |F| 2.8e-24 26s piv 1.0e-05..1.8e+08 dDelta/dF max 9.3e+13 tails 6e-56 3e-47 pin: |F_full| 1.1e-22 dDelta_pin -3.2e-17
+D=67.723693: no convergence (|F| 5.7e-11); dD 0.000625 -> 0.0003125
+D=67.723381: no convergence (|F| 7.0e-11); dD 0.0003125 -> 0.00015625
+D=67.723224: no convergence (|F| 1.9e-10); dD 0.00015625 -> 7.8125e-05
+step too small
