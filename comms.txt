@@ -5865,3 +5865,8 @@ T66, B0 in the 11-node layout at M 48 (lowDn_D4.0000_M48; 21 min, 352 evaluation
   352 evaluations, 1276 s; PASS
 The exact zero at 0 stays; the decaying pair -0.1123 +- 0.1003i of the 9-node layout is not there. B0 at M 64 and the
 s = 0 axis at M 64 follow.
+
+== 2026-10-26 07:38 UTC win
+T45 at 3.05625: M 256 done (two passes, 4 + 2 its; |F| 4.3e-29; Delta 2.5297389719938077; tails 2e-86 / 2e-94). M 320
+started at 07:22 UTC from the M 256 lift (|F| 3.4e-5 on the reused plan, so two passes). About 4 h, then the pair
+and 3.05 from 3.05625.
