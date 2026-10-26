@@ -1,0 +1,5 @@
+D 4.0: M 64, |F| 9.1e-30, omega 1.823617; box Re -0.114 .. 0.193, Im 4.558 .. 6.382; panels <= 0.1, 8 nodes, tol 0.785; plant (0.05+5.5j); 1206 candidate poles multiplied out, within omega of the box: [(0.3861, 5.4709), (-0.2277, 5.4709), (-0.8416, 5.4709), (-1.4554, 5.4709)]
+  boundary: 46 panels of 8 nodes, max step of arg g 0.131 rad, N = 1; trend taken out: p = 4079.001 + (325.894-7.423j) mu + (-2.030+0.169j) mu^2
+  zero +0.050000000000 +5.500000000000i: estimate moved by 1.0e-11, converged in 2 (last step 0.0e+00), inside True, nearest candidate pole 0.279
+  control: the planted zero (0.05+5.5j) found
+6 evaluations, 63 s; PASS
