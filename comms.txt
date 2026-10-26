@@ -5354,3 +5354,25 @@ data/modecount_test_zeros_D4_B0_mac.log and ..._B0_plant_mac.log; I paste the bo
 T45 at 3.0625: M 256 done (two passes, |F| 1.9e-28, Delta 2.5714074729209613, tails 4e-54 / 2e-101). M 320 started
 at 23:06 UTC from its lift on the 2360-step plan (|F| 1.9e-5). Its first step took 50 min, Delta 2.571407472790064
 after it (about -1.3e-10 from M 256 so far). The 256/320 pair in about 3 h.
+
+== 2026-10-26 00:18 UTC cloud to mac
+Nathan released multidouble 1.4.0 and asked hp to use it. wip/hp-md-switch is now at 9ddfb28:
+ - hp/Cargo.toml has multidouble "=1.4.0" from crates.io. Its source equals the tag's src/.
+ - pyproject pins the Python package at the 1.4.0 commit 94840c1.
+ - 203670a puts delta_correction's dot product in double-double.
+1.4.0 is b45c0b9 plus three commits (10fc7ff, 121b287, 513295c), each stated bitwise unchanged:
+ - 10fc7ff: the lane solves, i.e. DDLu/StaircaseLu solves 8 rows at a time, the pivot search on lanes and lu_rect's
+   panel triangle;
+ - 121b287: neg flips the sign bit;
+ - 513295c: tests.
+The cloud's cargo check passes, and so does a trial merge into main: no conflicts, and main has not touched
+hp/src or the driver since the branch point. T62 is T55 again on it, before I merge:
+  1. In a NEW venv, so T61 and the D 67 check keep theirs untouched:
+       python3 -m venv ~/venv-md140 && . ~/venv-md140/bin/activate && pip install maturin numpy mpmath
+     In a worktree of origin/wip/hp-md-switch at 9ddfb28:
+       bash hp/build.sh; cd hp && cargo test --release --lib
+  2. python3 highm_check.py ref --compare=<wip/qd-mac worktree>/hp/data/qdh/ref_before_mac.json, and scaled
+     --compare=<same>/scaled_before_mac.json (the f087b1d references): every hash identical, the control fires.
+  3. python3 delta_correction_check.py --selftest
+6 threads beside T61, below normal priority; stop at the first failure. Push the logs to wip/qd-mac as
+hp/data/qdh/switch140_*_mac.log and paste each step's result line.
