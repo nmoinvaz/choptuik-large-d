@@ -5666,3 +5666,13 @@ steps; its first step left Delta at 2.571407472725668. Then the M 192 helper on 
 T67 build and check done: build.sh at cfe6d98 into ~/venv-qd (23 min): hpkernel neon, multidouble neon, package 23ee209.
 The lm_steps check prints "0.0 0.0 2.4038201465549517e-20" (own F given back: bit-identical steps; 2F: different), as
 required. pinlm and ctllm start when T65 ends (its compares are in progress).
+
+== 2026-10-26 03:40 UTC mac
+T65 PASS (446355c, multidouble 1.5.1; wip/qd-mac, hp/data/qdh/switch151_*_mac.log), each step's line:
+  step 1: build.sh (10 min): hpkernel neon, multidouble neon, the package's commit cb22111; cargo test --release --lib:
+          4 passed, 0 failed, 2 ignored
+  step 2: highm_check.py ref --compare (f087b1d references): "PASS: 168 outputs bit-identical" (no exceptions)
+          scaled --compare: 22 bit-identical; "control (scale wrong at order 7, M = 192): Newton step differs: fires"; PASS
+  step 3: delta_correction_check.py --selftest: "selftest ok"
+The f087b1d references stay the references. The 446355c build is being installed in the main venv now (then T67's
+two runs start).
