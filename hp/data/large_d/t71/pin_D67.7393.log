@@ -1,0 +1,24 @@
+floor at D=67.737203: |F| per block 9.7e-22 7.9e-22 6.8e-22 6.0e-22 1.3e-21 1.3e-21 4.5e-22
+  r 1e-32: |J delta| 2.0e-32 4.0e-32 3.9e-32 3.9e-32 4.0e-32 2.2e-22 3.9e-34
+          remainder 1.6e-32 2.0e-31 2.0e-31 1.5e-31 1.9e-31 4.3e-33 8.9e-33
+  r 1e-31: |J delta| 2.0e-31 4.0e-31 3.9e-31 3.9e-31 4.0e-31 2.2e-21 3.9e-33
+          remainder 1.7e-32 1.8e-31 1.3e-31 7.9e-32 1.0e-31 1.4e-32 3.0e-32
+  r 1e-30: |J delta| 2.0e-30 4.0e-30 3.9e-30 3.9e-30 4.0e-30 2.2e-20 3.9e-32
+          remainder 1.4e-32 2.3e-31 4.2e-31 9.9e-32 1.1e-31 1.1e-32 2.4e-32
+  r 1e-29: |J delta| 2.0e-29 4.0e-29 3.9e-29 3.9e-29 4.0e-29 2.2e-19 3.9e-31
+          remainder 2.0e-32 1.9e-31 2.1e-31 1.8e-31 1.5e-31 1.5e-32 4.2e-32
+  r 1e-28: |J delta| 2.0e-28 4.0e-28 3.9e-28 3.9e-28 4.0e-28 2.2e-18 3.9e-30
+          remainder 1.4e-32 2.0e-31 3.1e-31 1.7e-31 2.2e-31 9.4e-33 4.2e-33
+L (remainder below 1e-2 of |J delta| at r 1e-28): PASS
+trace D 67.737203 -> 67.739251 (dD 2.048e-03): seed |F| 5.96e-09, blocks 5.1e-14 1.5e-14 5.6e-15 1.6e-15 3.9e-16 6.0e-09 7.8e-21
+  it 0: |F| 5.96e-09 [5.1e-14 1.5e-14 5.6e-15 1.6e-15 3.9e-16 6.0e-09 7.8e-21]  dz p1<=7 3.5e-07 p1>7 5.8e-05 rest 4.0e-06 Delta +3.8e-10  lam 0.125  Delta 1.7915494538167356
+  end: |F| 5.28e-09 [1.3e-12 6.8e-14 8.3e-15 1.3e-15 3.4e-16 5.3e-09 6.8e-21]
+pin 11 (p1 harmonics 13..13 held at the seed's), deflated Newton, tol 1.41e-21:
+  27 its, pinned |F| 1.69e-24, Delta 1.7915494538169201; full system: |F| per block 1.6e-26 1.4e-27 2.6e-28 3.0e-29 2.6e-30 1.3e-22 3.5e-32, one full step moves Delta by +8.40e-15 (45s)
+pin 9 (p1 harmonics 11..13 held at the seed's), deflated Newton, tol 1.41e-21:
+  16 its, pinned |F| 1.60e-22, Delta 1.7915494538169168; full system: |F| per block 1.3e-26 2.4e-27 8.4e-28 2.0e-28 3.9e-29 1.9e-22 1.5e-32, one full step moves Delta by +1.19e-14 (30s)
+pin 7 (p1 harmonics 9..13 held at the seed's), deflated Newton, tol 1.41e-21:
+  7 its, pinned |F| 5.76e-25, Delta 1.7915494538169314; full system: |F| per block 6.0e-31 4.3e-31 2.7e-31 2.6e-31 4.2e-31 1.2e-22 1.6e-31, one full step moves Delta by -2.78e-15 (13s)
+pin 5 (p1 harmonics 7..13 held at the seed's), deflated Newton, tol 1.41e-21:
+  5 its, pinned |F| 1.82e-24, Delta 1.7915494538169108; full system: |F| per block 4.7e-29 3.4e-30 2.1e-30 2.1e-30 4.2e-29 1.2e-22 1.4e-29, one full step moves Delta by +1.78e-14 (9s)
+done in 101s
