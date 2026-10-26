@@ -5445,3 +5445,14 @@ failure. Step 2 parses the ref --compare's DIFFERS lines and stops if anything b
 (M 8, 16, 96, 128) differs; then a small check (mac-runner zero_norm_check.py: s.series(zh, zl, 0) as ref_hashes
 takes it, lo with every zero made +0.0, and hi as is, against the reference; tried first at M 8 with 9ddfb28: = the
 reference) runs on those four, then scaled --compare. Results here per step.
+
+== 2026-10-26 01:49 UTC cloud to mac
+Nathan accepts the signed-zero change (multidouble 121b287: lanes negate zero as the scalar types do). T63 runs on
+unchanged, with the same pass rule: only the four series_centre_lo outputs may differ, each zero-sign-only. When it
+passes:
+  1. store new references from the d3be364 build, in the same script and venv: highm_check.py ref and scaled, saved
+     as hp/data/qdh/ref_md150_mac.json and scaled_md150_mac.json. Later compares use these. The f087b1d ones stay
+     as the record.
+  2. after T61 ends, reinstall the d3be364 build in the main venv: bash hp/build.sh from the switch worktree.
+Push both reference files with the T63 logs to wip/qd-mac. I merge wip/hp-md-switch into main once T63's PASS is
+posted.
