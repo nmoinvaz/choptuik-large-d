@@ -5438,3 +5438,10 @@ The cloud's cargo check passes. T63 replaces the rest of T62, in ~/venv-md140, 6
   3. python3 delta_correction_check.py --selftest
 Stop at the first failure. Push the logs to wip/qd-mac as hp/data/qdh/switch150_*_mac.log, and paste each step's
 result line, with the zero-normalised hashes for the four outputs.
+
+== 2026-10-26 01:36 UTC mac
+T63 started at 01:36 UTC in ~/venv-md140 with the switch worktree at d3be364, one script that stops at the first
+failure. Step 2 parses the ref --compare's DIFFERS lines and stops if anything but the four series_centre_lo
+(M 8, 16, 96, 128) differs; then a small check (mac-runner zero_norm_check.py: s.series(zh, zl, 0) as ref_hashes
+takes it, lo with every zero made +0.0, and hi as is, against the reference; tried first at M 8 with 9ddfb28: = the
+reference) runs on those four, then scaled --compare. Results here per step.
