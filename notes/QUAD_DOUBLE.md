@@ -775,3 +775,11 @@ below about sigma^2 / c = 1e-29 here, and the best start any double-double run c
 That is also what the double-double floor of T73-T80, rising 1.45-fold per unit of D, was: not roundoff but the edge
 of the basin. Precision, deflation and the pin do not move that edge; only a discretisation with a smaller c (the
 horizon block) or a larger sigma (the junk) does.
+
+**The inward match** (the kernel's `match_node`: segments beyond it integrate inward from the horizon side; used
+before only at D = 3.7). T84-mac/qd_inward.py: the frontier state re-noded into 0.3..0.7 plus 0.85 and 0.95, matched
+at 0.7, the series summed at u = 0.05. Before any step the two inward segments' residuals are 0.5 and 11 (the node
+states are the old series' values, f64-rounded by renode, and the inward integration amplifies that by about 1e17
+over 0.1 in x), they respond to dD = 1e-8 by rising to 34 and 47, and the Newton step is 2.6e4 with no trial accepted.
+Integrating away from the horizon brings back the growing mode the series suppresses, about 1e9 per unit of D at
+D = 73, so the two-radius form of the horizon treatment is out at large D as well.
