@@ -82,11 +82,12 @@ Headline results:
   predict the shape of the echo, F₃/F₁ = 0.055 against 0.055 extrapolated from the data, and with three harmonics
   the full set of conditions gives Δ = 1.619, 1.5% below Δ∞, and with five harmonics Δ = 1.64516, 0.077% above (one
   harmonic: 29% above): the offset alternates in sign and shrinks fifteen- to twentyfold per harmonic pair. Without truncation, an
-  amplitude expansion to fifteen orders puts the selected ω at 0.999975–1.00005 ω∞ (Δ∞ = 1.64387 ± 0.00006, an
-  estimator range over two orders, tested on planted functions), at amplitude 2.720 (measured: 2.70–2.72), provided the
-  selection function has no zeros closer to the origin than the selected one; the fourteenth and fifteenth coefficients
-  rejected every such alternative built so far. One alternative with further zeros just beyond the selected one
-  survives, and it puts the zero inside the range. The finite-D solutions give 1.643893746, inside that range. The rule itself is not yet proved ([Large D](#large-d-what-the-1d-expansion-can-and-cannot-see)).
+  amplitude expansion to sixteen orders puts the selected ω at 0.999975–1.00005 ω∞ (Δ∞ = 1.64387 ± 0.00006, an
+  estimator range over three orders, tested on planted functions; the sixteenth order alone gives 0.999980–1.000014),
+  at amplitude 2.720 (measured: 2.70–2.72), provided the selection function has no zeros closer to the origin than the
+  selected one; the fourteenth to sixteenth coefficients rejected every such alternative built so far. Alternatives
+  with further zeros just beyond the selected one survive one coefficient each, and they put the zero inside the
+  range. The finite-D solutions give 1.643893746, inside that range. The rule itself is not yet proved ([Large D](#large-d-what-the-1d-expansion-can-and-cannot-see)).
 - **Relation to published work.** Agreement with the accepted values at D = 4 and at the maximum of Δ near D = 3.756;
   a 6×10⁻⁵ difference at D = 5 that the published higher-resolution data trace to resolution; and the published
   conjecture Δ → 0 as D → ∞ is not
@@ -1723,7 +1724,7 @@ C(n,s) \approx -\,i\,\frac{\sqrt{2\pi}}{\Gamma(1+s)}\,(n+1)^{s+1/2}\,e^{-i\pi\La
 Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = -1-s`$.
 
 <details>
-<summary>The amplitude expansion in detail: every harmonic exact, the shape, the harmonic-1 condition and where its zero is real, the planted test, fifteen orders</summary>
+<summary>The amplitude expansion in detail: every harmonic exact, the shape, the harmonic-1 condition and where its zero is real, the planted test, sixteen orders</summary>
 
 - *Every harmonic exact.* Put $`F = A\sin\theta + \sum_{\nu\ge3} f_\nu(A)\,e^{i\nu\theta}`$ (+ c.c.). Harmonic μ first appears at
   order $`A^{\lvert\mu\rvert}`$, so keeping $`\lvert\mu\rvert \le K`$ at each order in A is exact: no truncation error, unlike fixed M
@@ -1818,11 +1819,19 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   just beyond x₀ (between |x| ≈ 7.4 and 12), which predicted σ₁₅ to 4×10⁻⁷; its zero, 0.999991, is that of the ring-free
   sums of σ₀…σ₁₄ to 2×10⁻⁶. The ring-free Borel–Padé sums of σ₀…σ₁₅ put the zero at 0.999999 and 1.000002. Calibrated on
   planted functions, the arg crossing alone puts the zero at 0.99992–0.99999 at thirteen orders, 0.99995–1.00005 at
-  fourteen and 0.999975–1.000018 at fifteen ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md) §5–7). Taken
-  together over the last two orders, **ω*/ω∞ = 0.999975–1.00005, Δ∞ = 1.64387 ± 0.00006 (1.64381–1.64393) from the D = ∞
-  inner equations alone**. This is an estimator range over two orders, the planted functions and the ring-free
-  completions, not a bound, and it uses no input from the finite-D solutions. Their value, 1.643893746, lies inside it.
-  The range assumes no zeros of S₁ nearer than x₀; every ring that put zeros there was rejected. The rule itself is
+  fourteen and 0.999975–1.000018 at fifteen ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md) §5–7).
+- *Sixteen orders.* σ₁₆ converges at 960 bits with J = 1000 (`scan33J1000/`; 9×10⁻¹³ relative, and a 1280-bit run
+  agrees with it to 3×10⁻²⁶). The arg crossing falls to 1.000010, the factored series gives 1.000005 and the central
+  Padé approximants 0.999992–1.000009. The ring that survived σ₁₅ mispredicts σ₁₆ by 4×10⁻⁶ and is rejected; two
+  Borel–Padé sums of σ₀…σ₁₅ with zeros between |x| ≈ 7.4 and 12 predict σ₁₆ to 5×10⁻⁷ and survive in turn, both with
+  their zero at 0.999992. The ring-free sums of σ₀…σ₁₆ put the zero at 1.0000005–1.0000007. Calibrated on the planted
+  functions, the arg crossing puts it at 0.999982–1.000014, and the sixteen-order estimator range (arc plants, the
+  Borel–Padé family, the ring-free sums) is 0.999980–1.000014 ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md)
+  §8). Taken together over the last three orders, **ω*/ω∞ = 0.999975–1.00005, Δ∞ = 1.64387 ± 0.00006 (1.64381–1.64393)
+  from the D = ∞ inner equations alone**. This is an estimator range over three orders, the planted functions and the
+  ring-free completions, not a bound, and it uses no input from the finite-D solutions. Their value, 1.643893746, lies
+  inside it. The range assumes no zeros of S₁ nearer than x₀; every ring that put zeros there was rejected, while a
+  ring just beyond x₀ fitted to all the known coefficients survives one coefficient at a time. The rule itself is
   still a conjecture (hypotheses H1–H2, gaps (a)–(c)). Tightening the number needs more orders, approximants that model
   the competing singularity explicitly (differential or algebraic approximants), or M = 7, which evaluates the
   multiplier at real amplitude with no series to resum (done: 1.000022).

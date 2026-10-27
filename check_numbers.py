@@ -18,7 +18,8 @@ import sys
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DOCS = {name: open(os.path.join(ROOT, name), encoding="utf-8").read()
-        for name in ("README.md", "paper/physics/main.tex", "paper/math/main.tex", "proof/A_certify.md", "GAMMA.md")}
+        for name in ("README.md", "paper/physics/main.tex", "paper/math/main.tex", "proof/A_certify.md", "GAMMA.md",
+                     "notes/PLANTED_SELECTION.md")}
 
 
 def quoted_in(doc, text):
@@ -238,11 +239,13 @@ def omega_quotes():
 
 @check
 def selection_range():
-    """The selection rule's estimator range from the D = infinity inner problem (notes/PLANTED_SELECTION.md section 7.8,
-    the headline of solver/inner_amp/planted_checks_k15.json), and the Delta_inf range it gives with the finite-D
-    value 1.643893746 (dinf_quotes): Delta = 1.643893746 / (omega* / omega_inf)."""
-    c = json.load(open(os.path.join(ROOT, "solver/inner_amp/planted_checks_k15.json")))["K15 combine"]
+    """The selection rule's estimator range from the D = infinity inner problem (notes/PLANTED_SELECTION.md section 8.8,
+    the headline of solver/inner_amp/planted_checks_k16.json, the union of the K = 15 headline and the K = 16 range),
+    the K = 16 range alone, and the Delta_inf range the headline gives with the finite-D value 1.643893746
+    (dinf_quotes): Delta = 1.643893746 / (omega* / omega_inf)."""
+    c = json.load(open(os.path.join(ROOT, "solver/inner_amp/planted_checks_k16.json")))["K16 combine"]
     lo, hi = c["headline"]
+    lo16, hi16 = c["range16"]
     dlo, dhi = DINF / hi, DINF / lo
     txt = [("README.md", "ω*/ω∞ = 0.999975–1.00005, Δ∞ = 1.64387 ± 0.00006 (1.64381–1.64393)"),
            ("README.md", "puts the selected ω at 0.999975–1.00005 ω∞ (Δ∞ = 1.64387 ± 0.00006"),
@@ -250,8 +253,14 @@ def selection_range():
            ("paper/math/main.tex", "$\\omega^*/\\winf = 0.999975$--$1.00005$"),
            ("paper/physics/main.tex", "$\\omega/\\omega_\\infty = 0.999975$--$1.00005$"),
            ("paper/physics/main.tex", "\\Dinf = 1.64387 \\pm 0.00006")]
+    t16 = [("README.md", "the sixteenth order alone gives 0.999980–1.000014"),
+           ("README.md", "the ring-free sums) is 0.999980–1.000014"),
+           ("notes/PLANTED_SELECTION.md", "**The hull is 0.999980–1.000014.**"),
+           ("paper/math/main.tex", "the sixteen-order estimator range is $0.999980$--$1.000014$")]
     return [("selection range, lower end", lo, 0.999975, 1e-6, txt),
             ("selection range, upper end", hi, 1.00005, 1e-5, txt),
+            ("K = 16 range, lower end", lo16, 0.999980, 1e-6, t16),
+            ("K = 16 range, upper end", hi16, 1.000014, 1e-6, t16),
             ("Delta_inf range, lower end", dlo, 1.64381, 1e-5, txt),
             ("Delta_inf range, upper end", dhi, 1.64393, 1e-5, txt),
             ("Delta_inf range, centre", (dlo + dhi) / 2, 1.64387, 1e-5, txt),
