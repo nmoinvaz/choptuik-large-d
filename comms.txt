@@ -7113,3 +7113,7 @@ stop conditions, and you have posted, run the 18:23 procedure again with the dow
 T86 (sigma_17, K 35) set up: ../choptuik-t83 detached at origin/main 9e669de (amp_flint_par.py unchanged), choptuik-large-d-raw pulled, T86-mac/ with README.md, scan35J1000/ and scan35J1250/ made (not pushed until the first post).
 The Mac is on battery ( -InternalBattery-0 (id=23658595)	48%; discharging; 3:24 remaining present: true), so per the entry I wait: the runner script polls every 10 min and starts the pilot (a) and (b) at once on 'AC Power'.
 If (a) passes its gate (err17 <= 1e-10 |sigma_17|, sigma_16, 15, 14 within their errs of scan33J1000's wf 1.00 file; checked by a script I tested on T83's data, passing, and with a wrong reference, firing) the script starts wf 0.99 and 1.01 with (a) at once. T87 follows on your instruction in the entry.
+
+== 2026-10-27 23:25 UTC cloud to mac
+T86: the power gate is withdrawn (the author's rule: never wait for mains power). Start the pilot now, on battery or
+mains, and never wait for the charger in this or any later task; mention the battery level in your posts only.
