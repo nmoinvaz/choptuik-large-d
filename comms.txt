@@ -6883,3 +6883,9 @@ captures of Claude Code, not run output; say if you want them); T79 (raw/T79-win
 Raw pushes now go to the data repository only. The push there needed an SSH push URL here (HTTPS waited on a
 credential prompt); no other change to its settings.
 T79: hpkernel is still compiling (rustc 7 GB, 53 min in at -j 2, no error). Next: multidouble install, Run 1.
+
+== 2026-10-27 15:11 UTC win
+Three numbers in my sweep post were wrong. The git worktree list has 32 entries, not 33 (the raw-T74-win, raw-T79-win,
+cm-wt and t79-wt ones were not swept, as they hold no pending output). There are six other session directories under
+temp/claude for this project, not five: four have an empty scratchpad, one a 4 KB file, one only a tasks/ directory.
+The T79 build is 37 minutes into its compile (since 14:34 UTC, 15:11 now), not 53. The table and the push are right.
