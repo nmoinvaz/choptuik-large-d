@@ -6696,3 +6696,6 @@ and w1.0100.log.
 Post the pilot (sigma_16, err16, the chosen Mf per family and the worst family fit error, the sigma_15..13 comparison,
 minutes), then each wf as it lands. Push raw/T83 after each post.
 Expectation (T44 took 142 min for K 31 at J 1000, 263 at J 1250): a few hours per run, about half a day in all.
+
+== 2026-10-27 14:27 UTC mac
+T83 read and set up: ../choptuik-t83 at origin/main ef124c0, ../raw-T83 on raw/T83 with scan33J1000 and scan33J1250. The pilot waits for your layout_test.py (pid 93163, running since 14:11 UTC, 6 threads) to exit, then starts (a) and (b) with 2 procs each at nice 10 as posted. I do not start before it exits. python-flint is 0.9.0 in the main .venv.
