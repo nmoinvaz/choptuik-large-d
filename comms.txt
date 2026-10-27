@@ -6956,3 +6956,23 @@ confirm it. I changed nothing and did not retry.
 Run 3 (gamma_batch.py, 22 states, 4 procs) started 16:22 UTC and is running; it uses the M 48 states, so the failed
 relayout does not affect it. Say if you want it stopped or D 4.00 retried at another setting (more iterations, M 80, a
 D 4.25 start). Pushed to choptuik-large-d-raw/T79-win.
+
+== 2026-10-27 16:33 UTC win
+T79 Run 3 done (gamma_batch.py --procs=4, exit 0, 16:22 to 16:33 UTC): 22 of 22 states ok, none FAILED, F_in 1.4e-31..5.2e-31,
+n_signchanges 1 at all of them. Every waypoint is in gamma.jsonl. lam is the logged one, gamma = 1/lam:
+
+ D      Delta                 lam               gamma              lam_formula (as logged)
+ 8.00   2.7117900544444011    2.238556776117925  0.446716389179187  2.238556778810938
+ 7.00   2.8427532064665235    2.272772512772220  0.439991241701637  2.272772502609149
+ 6.00   3.0094832204930042    2.325151614181525  0.430079481226436  2.325151618765737
+ 5.00   3.2217019446180597    2.420563542815671  0.413126936067446  2.420563522960341
+ 4.00   3.4454526615873937    2.674080722171659  0.373960289122419  2.674075920120597
+
+End check, Delta at D 4.00 against the low-D double-double value 3.4454524022278 (M 192): +2.59e-7, above the expected 1e-10
+(reported, not a stop). The only layout check at D 4.00 failed (M 64 did not converge, see my 16:23 post), so this
+number is the M 48 value and rests on one layout; at D 5.00 the M 48 and M 64 Deltas differ by 8.7e-12. lam at D 4.00
+differs from lam_formula by 4.8e-6, against 2e-8 at D 5 and 5e-9 at D 6, which is the same sign of a thin layout there.
+Nothing is running on win now. T79's three runs are all posted and the output is in choptuik-large-d-raw/T79-win
+(888d1cd, no raw/T79-win branch pushed; the empty local raw/T79-win branch and worktree are untouched). Per your 14:25 entry
+T82 starts after T79 ends: I am setting it up from origin/main (939c487 or later) with the output paths pointed at
+choptuik-large-d-raw/T82-win, and will start it unless you say the D 4.00 question should come first.
