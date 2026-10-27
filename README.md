@@ -783,6 +783,17 @@ residual was at most 1.4×10⁻⁵ (62) or 2.2×10⁻⁵ (64) converged and ever
 precision limit: past D ≈ 60 double-double cannot resolve the weakest direction at all (below, "Why the solver
 stalls").
 
+![Where double-double runs out: u times kappa against D for the full system, crossing 1 near D = 60 at the stalls, and for the pinned systems 8 to 11 orders lower; below, the residual each state reached following the rounding floor u sigma_max |z|](hp/stall_kappa.svg)
+
+**Where double-double runs out** (`hp/plot_stall_kappa.py`, from the stall detector's runs on the `raw/T76` branch:
+run `git worktree add ../raw-T76 raw/T76` first). Top: u·κ, double-double's unit roundoff times the Jacobian's
+condition number, at converged states. The full system's rises like n^38.9 and crosses 1 at D = 59.9, just before the
+stall at 60.96; at 67.74, where T48 stopped, it is 168. The pinned systems the runs solve sit 8 to 11 orders lower
+(1.0×10⁻⁸ for harmonics 7–13 held at D = 71, 1.5×10⁻⁵ for 9–13), which is why they still converge; the single
+full-system step that corrects for the pin is still taken at the full system's u·κ. Bottom: the residual each saved
+full-system state reached against u·σ_max·|z|, scaled by their median ratio 0.045, the rounding floor of evaluating F
+at a double-double state.
+
 <details>
 <summary>Checks of the solver</summary>
 
@@ -889,6 +900,15 @@ What the solver has shown:
   1.5–2×10⁻⁹), 1.8×10⁻⁸ at 30.1 and
   7×10⁻⁸ at 34.2, and 0.6–2.1×10⁻⁶ high from 35 to 40.3 (quoted 1–3×10⁻⁶). How well the
   rational formula holds against these points is in [The formula](#the-formula).
+
+![The past light cone of the singularity with the solver's node rays, beside the size of the fast mode exp(-n Phi(x)) along x for D = 20, 40 and 60, equal to 1 at x = 1/sqrt 2 for every D](hp/light_cone.svg)
+
+**The light cone and the fast mode** (`hp/plot_light_cone.py`; exact formulas, no data). Left: the singularity at
+r = 0, t = t*, its past light cone x = r/(t* − t) = 1, and the rays of the solver's nodes x = 0.3 … 0.7. Right: the
+fast mode e^(−nΦ(x)) that carries the selection ("How fast the selection weakens" above) has size exactly 1 at
+x = 1/√2 for every D, is huge deeper inside and exponentially small near the light cone. The solver matches at
+x = 0.7, where the mode is 10^0.16 at D = 20 and 10^0.50 at D = 60, so its condition sits where the effect is of
+order one.
 
 ![The continuation points' error indicators against D: each point's distance from the degree-18 fit in 1/(D-1), Newton's remaining linearised correction to Delta, and the shift from freeing harmonic 15](hp/largeD_errors.svg)
 
@@ -2400,6 +2420,8 @@ hp/                 double-double solver (crate hpkernel)
 ├── plot_solve_times.py  solve_times.svg, how long each D took (--export writes data/solve_times.csv from the solve records)
 ├── plot_point_spacing.py  point_spacing.svg, the distance in D between our solved points
 ├── plot_newton_stall.py   newton_stall.svg, why the steps collapse (a model of one Newton step; reads raw/T73)
+├── plot_stall_kappa.py    stall_kappa.svg, u*kappa against D and the residual floor (reads raw/T76)
+├── plot_light_cone.py     light_cone.svg, the past light cone and the fast mode's size inside it
 ├── stall_margin.py   the stall detector: weakest directions, sigma_max and u*kappa at a state or a rebuilt seed
 ├── stall_summary.py  its results from the raw/T76 branch (the power laws, the floor, the pinned systems)
 ├── src/block.rs    block storage for the f64 Jacobian above M = 128 (multidouble's staircase LU)
