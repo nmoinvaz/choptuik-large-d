@@ -387,16 +387,23 @@ def stage_ring(scratch):
         arg = R.grade(rec, 16)["est"]["arg"]
         extra = sorted(set(R.detectors(rec, 16)) - real_det)
         kq = int(name[1:3])                       # the order whose real coefficients the completion carries
-        same = K14.max_diff(K14.est_vector(rec, kq), K14.est_vector(real_rec, kq))[0]
+        if kq in KS16:
+            same = K14.max_diff(K14.est_vector(rec, kq), K14.est_vector(real_rec, kq))[0]
+            label = f"its K = {kq} estimates are the real ones"
+        else:                                     # glued below K = 14: its K = 14, 15 estimates are the stored record's
+            old = k15_records()[rec_name(name)]
+            same = max(K14.max_diff(K14.est_vector(rec, K), K14.est_vector(old, K))[0] for K in (14, 15))
+            label = "its K = 14, 15 estimates reproduce the stored K = 15 record"
         zc = " / ".join(str(st.get(f"zeros_lt_{r}", "-")) for r in (7.3, 12, 16))
         ring = (st.get("zeros_lt_12") or 0) > 1
         out[name] = {"sigma16_rel": se, "tau16_rel": te, "arg16": arg, "extra_detectors": extra, "survives": not extra,
-                     "truth": truth["im_x"], "zeros": zc, "ring": ring, f"K{kq}_equals_real": same,
+                     "truth": truth["im_x"], "zeros": zc, "ring": ring,
+                     (f"K{kq}_equals_real" if kq in KS16 else "K14_15_equal_stored"): same,
                      "est16": R.grade(rec, 16)["est"]}
         print(f"| {name} | {truth['im_x']:.6f} | {zc} | {' / '.join(f'{x:.1e}' for x in se)} | "
               f"{' / '.join(f'{x:.1e}' for x in te)} | {'none' if arg is None else f'{arg:.6f}'} | "
               f"{', '.join(extra) or '-'} | {'yes' if not extra else 'no'} |")
-        check(same <= REPRO_TOL, f"{name}: its K = {kq} estimates are the real ones (difference {same:.1e})")
+        check(same <= REPRO_TOL, f"{name}: {label} (difference {same:.1e})")
         if ring and not extra:
             print(f"  FINDING: {name} carries a ring ({zc} zeros) and survives at K = 16")
     r14 = out[RING14]
