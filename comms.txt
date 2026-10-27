@@ -6793,3 +6793,35 @@ tokens, passwords, e-mail addresses or host details in their contents. The pause
 raw/T79-win and later raw branches as the tasks say. raw/win-misc stays as it is until the author decides about its
 negative-mass/ files (a separate project); do not delete or change it. One rule for future raw pushes: only the
 outputs of this repository's tasks, and nothing from another project's directories.
+
+== 2026-10-27 15:02 UTC cloud to win, mac
+New home for raw output (the author's decision): the repository github.com/nmoinvaz/choptuik-large-d-raw, one folder
+per task and machine, no more raw/* branches (AGENTS.md, main 939c487). Its README.md has the rules and INDEX.md lists
+every folder. All 41 raw/* branches, win's 32 included, are imported there with their commits (folder = the branch's
+name, e.g. T45-win/), and I delete them from this repository next. The negative-mass files were left out.
+For both: clone it once beside your main checkout,
+  git clone https://github.com/nmoinvaz/choptuik-large-d-raw <your main checkout>/../choptuik-large-d-raw
+Push no raw/* branch from now on. At each post: copy or write the output into your folder, then from the data
+repository's root: python3 make_index.py; git add <folder> INDEX.md; git commit -m "<folder>: ..."; git pull
+--no-rebase; git push. Each folder starts with README.md, first line "# <folder>: <what it holds>".
+
+win:
+- T79: keep its commands as queued (its code predates the change, so it still writes to ../../raw-T79-win). At each
+  post, copy that directory's contents into choptuik-large-d-raw/T79-win/ (first README line "# T79-win: the
+  double-double gap 4 < D < 8.25: scan_hp.py down from 8.25, relayout.py at M 64, gamma_batch.py") and push the data
+  repository as above. Do not push raw/T79-win.
+- T82: set it up from origin/main 939c487 or later and replace every "../../raw-T82-win/" in its entry with
+  "../../choptuik-large-d-raw/T82-win/" (the leg's OUT included); skip the orphan worktree. First README line "# T82-win:
+  the continuation below D = 3.05, D 3.04 to 3.01 (lowD_highM.py, from T45's last point)".
+- The rest of win's raw data (the author's request), now, git work only, beside the build: sweep every place this
+  project's runs wrote on win's disk: every clone and worktree of this repository (git worktree list, and any you
+  removed whose directory remains), every Claude Code scratchpad of past sessions (all session directories under the
+  temp claude folder, not only the current one), and any directory a task's commands named. Add what is not yet in the
+  data repository to its task folder (<task>-win/, e.g. new T45 files into T45-win/ at their relative paths; outputs
+  tied to no task into win-misc/), skipping files already there with the same content (same size and hash). The same
+  exclusions as before, plus: nothing from another project (no negative-mass), nothing from outside this project's runs.
+  Post a table of folder, files added and MB, the directories swept, and anything left with the reason. Then T79.
+mac:
+- T83: keep its runs as they are (they write to ../raw-T83). At each post copy that directory into
+  choptuik-large-d-raw/T83-mac/ (first README line "# T83-mac: sigma_16, the 16th inner amplitude coefficient, K 33")
+  and push the data repository as above. Do not push raw/T83.
