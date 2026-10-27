@@ -857,7 +857,26 @@ exactly, and their difference, a spread between two systems, not a bound; T75's 
 
 The pins' disagreement, which is the pin's cost, falls from 2e-16 in double-double to 1e-17..5e-17 here, and to
 1e-32 at 71.5 where both full steps are small. The full quad-double solutions of 12.1 at 72.8 and 73.0,
-1.7816051756032901527 and 1.7812396819309262040, lie between or within 2e-17 of the pairs. At the frontier the two pins' quad-double values differ by 7e-16 and the double-double one lies 1e-15 from them: the
+1.7816051756032901527 and 1.7812396819309262040, lie between or within 2e-17 of the pairs.
+
+**The full system from the polished states** (qd_fullleg.py: the full system, kfreeze 13, converged in quad-double
+from T73's and T75's pin 7 and pin 5 states as two independent starts, each with its own Taylor plan; the basin
+table above said inside to about 71):
+
+| D | from the pin 7 state | from the pin 5 state | difference |
+|---|---|---|---|
+| 68.5 | 1.78996363061599162 - 1.016822e-16 - 5.7e-33 | the same to the parts shown, - 5.1e-33 | 6e-34 |
+| 69.5 | 1.78793029796176284 + 7.083175e-17 + 3.6e-33 | the same, - 2.8e-33 | 6e-33 |
+| 70.5 | 1.78595293211829387 + 1.087438e-16 + 2.8e-33 | the same, - 6.9e-34 | 3e-33 |
+| 71.0 | 1.78498451800529279 - 4.310301e-17 | stalls at 2e-19 | |
+| 71.5 | 1.78402924877823188 - 6.717132e-17 | stalls at 1.4e-20 | |
+| 72.0, 72.4 | stalls at 3e-19, 6e-20 | stalls | |
+
+So the full system's Delta is known to about 1e-32 at D 68.5, 69.5 and 70.5 (two starts, two plans), sixteen digits
+past the double-double data's 2e-15 check error, and to the single converged solution at 71.0 and 71.5, where the
+corrected pinned pairs above lie within 1e-17 (71.0) and 2e-17 (71.5) of it: that is the linearised correction's
+own error, and the pins' agreement to 1e-32 at 71.5 was a coincidence of the two pins. From 72 on no start of
+double-double quality reaches the full basin, as the table of basins said. At the frontier the two pins' quad-double values differ by 7e-16 and the double-double one lies 1e-15 from them: the
 digits there are set by the pin's cost (the full step's |dz| is 7.9e-6 against 1.6e-9 at 72.4), not by the
 arithmetic. So the quad-double solver adds digits where the pin is cheap, up to about 72.5 in this layout, and past
 that the full system's junk, not precision, bounds Delta.
