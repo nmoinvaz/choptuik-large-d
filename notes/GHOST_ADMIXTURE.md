@@ -102,6 +102,24 @@ the strips U count none in the other sector.
 **Planted controls** on the same det M_ψ (`--plant`, the evaluations shared), D = 8.25: a pair planted at 3.1 ± 1.0i
 is counted in B1c, B1 and full (2 each, 0 elsewhere); a pair at 1.0 ± 3.0i in U (1, its upper member) and full (2).
 
+**Recounted with refined edges, and in a second layout** (T78, the Mac, 2026-10-27; `raw/T78` bdc6627). The count
+now refines each edge until a verification pass adds nothing new (`hp/modecount_wind.py`, main 5c76ade); at D = 4 it
+finds the pair −0.1123 ± 0.1003i in B0 that the single pass missed, and `--mutate=one_verify` restores the miss
+(`raw/T77`). Each state was recounted in its own layout and moved to a second node layout by `hp/relayout.py`
+(4eff588), which reproduced Δ to the last digit:
+
+| D | first layout | second layout | windings of g, both layouts | largest step (first, second) | relayout \|F\| |
+|---|---|---|---|---|---|
+| 8.25 | 10 nodes, 0.02 … 0.7 | 6 nodes, 0.1, 0.2, 0.3, 0.4, 0.55, 0.7 | 0 in every box | 0.39, 0.37 rad | 9.0×10⁻²⁸ |
+| 16.76 | 8 nodes, 0.1 … 0.7 | 6 nodes, 0.05, 0.15, 0.3, 0.45, 0.6, 0.7 | 0 in every box | 0.22, 0.22 rad | 1.1×10⁻²⁸ |
+| 30.07 | 5 nodes, 0.3 … 0.7 | 7 nodes, 0.1 … 0.7 | 0 in every box | 0.23, 0.23 rad | 4.6×10⁻²³ (its 10⁻²⁴ not reached) |
+| 45.05 | 5 nodes, 0.3 … 0.7 | 7 nodes, 0.15 … 0.7 | 0 in every box | 0.20, 0.20 rad | 1.1×10⁻²⁵ |
+
+Every edge is resolved (every step below π/4, no verification mismatch), and B0 holds only λ = 0 at every D. The
+candidate poles inside U and full, and one inside U0 at D = 30.07, make det M's own winding negative there; g's is 0.
+A pair planted 0.002 inside B0's left edge at D = 8.25 (−0.0785 ± 0.3i) is counted by the refined count (B0: 3)
+and also by the single pass (3), so that plant does not separate the two; the pair at D = 4 does.
+
 ## 4. D = 4: the zeros located in two layouts
 
 At D = 4 the count found zeros where D = 8.25–45 have none. They were located with `hp/modecount_test_zeros.py`
@@ -159,4 +177,4 @@ holding only the exact zero, missing the pair at −0.1123 ± 0.1003i, which lie
 planted count, which sampled the same edges more finely, counted it. The counts at D = 8.25–45 in section 3 were made
 the same way, so their zeros near the boxes' edges are not certain either; the zero finder above refines until every
 step is below π/4. Those counts also used one layout each, and after D = 4 each deserves a second-layout check before
-it is quoted.
+it is quoted. *(Done, 2026-10-27: the recount in section 3.)*

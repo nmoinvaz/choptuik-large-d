@@ -448,6 +448,17 @@ The phenomenon is the same at every D ≥ 4: the same echoing structure and a sm
 as in four dimensions (assumed here: only that mode's growth rate is computed, not the full spectrum). Only the numbers
 change.
 
+**A second scalar field adds no unstable mode** ([notes/GHOST_ADMIXTURE.md](notes/GHOST_ADMIXTURE.md)). Add a second
+massless scalar ψ that vanishes in the critical solution, either a ghost or an ordinary field: at linear order its
+perturbations do not act back on the metric, and they obey the wave equation on the critical spacetime, the same for
+either sign. A growth rate with Re λ > 0 would be a second unstable mode of the critical solution. An argument-principle
+count of the test field's growth rates (`hp/modecount_test.py`, edges refined until their verification adds nothing)
+finds only the exact zero λ = 0, the rotation of the background's own field into ψ. That holds at D = 8.25, 16.76, 30.07
+and 45.05 for −0.15 < Re λ < 6.2–6.7 and |Im λ| < 1.5ω, in two node layouts each, and at D = 4 near the imaginary
+axis (−0.114 < Re λ < 0.193, |Im λ| < 6.38) in the second of two layouts (numerical evidence). The first layout at
+D = 4 showed zeros with Re λ > 0 that the second does not, artifacts of that discretization; the real decaying mode at
+λ = −0.3651 is in both.
+
 ![The echo across dimensions: the field's slope at the centre over the same stretch of logarithmic time for D = 4, 10, 20 and 60](solver/echo.svg)
 
 **The echo itself.** The figure shows the field's slope at the centre, F(τ) = √(D−2)·∂p/∂x at r = 0, over the same stretch of
