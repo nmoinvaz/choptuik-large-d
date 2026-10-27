@@ -728,8 +728,12 @@ with computed points rather than an assumed form. Its points are used in [The fo
   quad-double residual would cost about 7 times the double-double one at the same orders
   ([notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md); `hp/qd_check.py`, which runs the tests in a multidouble checkout).
   A fully quad-double Newton (`hp/src/qsolve.rs`, on multidouble's quad-double dual numbers and LU) converges the
-  large-D states at D = 72.8 and 73.0, where the double-double Newton stalls, but does not yet continue past D = 73
-  (notes/QUAD_DOUBLE.md, section 12).
+  full system from the double-double states up to D ≈ 71.5 and the pinned system to 73.3: Δ(68.5) =
+  1.7899636306159916 − 1.016822×10⁻¹⁶, Δ(69.5) = 1.7879302979617628 + 7.083175×10⁻¹⁷ and Δ(70.5) = 1.7859529321182939 +
+  1.087438×10⁻¹⁶, each reproduced by a second start with its own Taylor plan to 10⁻³² ([`hp/data/delta_qd.csv`](hp/data/delta_qd.csv),
+  `hp/export_qd.py`), sixteen digits past the double-double data. It does not step past D ≈ 73 in this discretisation:
+  Newton's basin there shrinks below any start the double-double runs can give, because the horizon series' sensitivity
+  near its radius grows with D (notes/QUAD_DOUBLE.md, sections 12.3–12.4).
 - **Continuation in D:** prediction by the cubic through the last four converged points (a tangent from the
   Jacobian is wrong in the weak directions, below), Newton with the weakest directions deflated, and from D = 35 on
   the centre data's τ-harmonics above 13 frozen (below). 32 collocation points in τ, nodes at
@@ -2449,6 +2453,7 @@ hp/                 double-double solver (crate hpkernel)
 ├── scan_qd.py, qd_planted.py  continuation in D with the quad-double Newton, and its planted-root check
 ├── export_dd.py    collects the runs' points into data/delta_dd.csv
 ├── t79_rows.py     T79's points (D 4-8.25, folder T79-win of the raw-data repository) into the low-D exporter's inputs
+├── export_qd.py    the quad-double values of Delta at D 68.5-73 (folders T84-mac and T81 of the raw-data repository) into data/delta_qd.csv
 ├── dd_fits_mp.py   large-D model fits at 60 digits, held-out errors, predictions (--dmax for a data snapshot)
 ├── short_forms.py  the shortest 1/D series per range of D with its error margin (README "The formula"; --selftest)
 ├── dd_candidates.py  candidate constants forced as the limit, held-out test (--dmax as above)

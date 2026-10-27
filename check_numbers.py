@@ -102,6 +102,21 @@ def t79_values():
 
 
 @check
+def qd_values():
+    """README, the quad-double Newton: Delta at D = 68.5, 69.5, 70.5 (hp/data/delta_qd.csv, hp/export_qd.py) to the
+    double-double digits quoted, and their two-start spreads at most 1e-32"""
+    rows = {float(c[0]): c for c in (r.rstrip("\n").split(",") for r in open(os.path.join(ROOT, "hp/data/delta_qd.csv"))) if c[0][:1].isdigit()}
+    txt = [("README.md", "Δ(68.5) =\n  1.7899636306159916 − 1.016822×10⁻¹⁶, Δ(69.5) = 1.7879302979617628 + 7.083175×10⁻¹⁷ and Δ(70.5) = 1.7859529321182939 +\n  1.087438×10⁻¹⁶"),
+           ("README.md", "to 10⁻³²")]
+    out = []
+    for D, hi, lo in ((68.5, 1.7899636306159916, -1.016822e-16), (69.5, 1.7879302979617628, 7.083175e-17), (70.5, 1.7859529321182939, 1.087438e-16)):
+        c = rows[D]
+        out += [(f"Delta({D}) hi", float(c[1]), hi, 4e-16, txt), (f"Delta({D}) lo", float(c[2]), lo, 1e-22, txt)]
+    out.append(("largest two-start spread at 68.5-70.5, log10", math.log10(max(float(rows[D][6]) for D in (68.5, 69.5, 70.5))), -32, 1, txt))
+    return out
+
+
+@check
 def lowD_305():
     """README "Below D = 4": the lowest low-D point, D = 3.05 at M = 384 (T45), and its step from M = 320
     (hp/data/delta_dd_lowD.csv, hp/export_lowD.py)"""
