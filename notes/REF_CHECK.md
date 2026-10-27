@@ -232,3 +232,11 @@ Checked by the coordinating session; pages opened in this session.
 |---|---|---|
 | Higham, *Accuracy and Stability of Numerical Algorithms*, 2nd ed., SIAM (2002) | the author's BibTeX page, nhigham.com/accuracy-and-stability-of-numerical-algorithms-bib-entry (author, title, publisher, address, edition "Second", 2002, xxx+680 pages, ISBN 0-89871-521-0; no DOI given there) | OK (bibliographic); cited for the standard statement that a backward-stable solve's relative error is about u κ, not for a numbered theorem |
 | Dembo, Eisenstat, Steihaug, *Inexact Newton methods*, SIAM J. Numer. Anal. 19, 400–408 (1982), doi:10.1137/0719025 | the reference list of Cătinaş, J. Numer. Anal. Approx. Theory 29 (2) (2000), ictp.acad.ro/jnaat/journal/article/view/662 (authors, title, journal, volume, year, pages, DOI); the DOI resolves (302) to epubs.siam.org/doi/10.1137/0719025, whose page refused the fetch (403) | PARTIAL: citing record and DOI resolution, publisher page not read; the claim (local convergence when the forcing terms stay uniformly below 1) from search summaries of the abstract, not from a page opened |
+
+## Addendum (2026-10-27): references of the quad-double solver (hp/python/hpkernel/driver.py newton_qd, multidouble QDLu)
+
+Checked by the coordinating session.
+
+| Entry | Checked against | Verdict |
+|---|---|---|
+| Deuflhard, *A modified Newton method for the solution of ill-conditioned systems of nonlinear equations with application to multiple shooting*, Numer. Math. 22, 289–315 (1974), doi:10.1007/BF01406969 | search records of the ZIB repository (opus4.kobv.de, docId 2037: volume 22, pages 289–315, 1974) and Springer (link.springer.com/doi/10.1007/BF01406969); some citing lists print the pages as "398–315", a typo | PARTIAL: bibliographic details from the records, the content (the damped Newton method for nearly singular Jacobians in multiple shooting) from the abstract only; cited for the natural monotonicity test, which newton_qd does not use |

@@ -581,3 +581,67 @@ double-double LU) and `hp/full_step_check.py`. At D = 72.80 one such step with 6
 3. The driver: a quad-double Newton (deflated as `deflated_newton`) and `scan_hp --solver qd`; the stall detector's
    u·κ with u = 2⁻²⁰⁸ to check that the weakest direction is resolved (u·κ ≪ 1).
 4. A pilot from T75's last states, then the run toward D = 100 on `raw/<task>`.
+
+### 12.1 Built (2026-10-27, feat/qd-solver; raw/T81)
+
+The arithmetic is multidouble 1.7.0 (PRs #23 and #24): `Qu`, a quad-double value and tangent, and `QDLu`, a dense
+quad-double LU with partial pivoting. In hp, `qsolve.rs` holds the residual with every block in quad-double (the
+horizon solves refined to quad-double, value and tangent together), its exact Jacobian by `Qu` lanes and the Newton
+step, for M = 32 and 48. `driver.newton_qd` is Newton on it, `scan_qd.py` the continuation in D, and `qd_planted.py`
+the planted-root check.
+
+**Precision tests.** The kernel tests (`cargo test --release --lib qsolve_`) run on the synthetic context.
+
+| check | result | control |
+|---|---|---|
+| quad-double residual and Jacobian against the double-double ones | 5.5e-32, 5.9e-31 | |
+| Jacobian against central differences (h = 2^-70) of the quad-double residual | 1.5e-41 | horizon solves unrefined: 6.6e-4 |
+| two refinement steps against four | 3.3e-63 | |
+| planted root from 1e-6 | 1e-6, 6e-8, 1e-14, 4e-28, 3e-55, 4e-62 | |
+| a change of 2^-180 seen (J d to 1.6e-11) and undone (8.9e-8 of it left) | pass | state read in double-double: 1.0, 1.0 |
+
+`qd_planted.py` at T75's D = 72.8 state (full system, kfreeze 13) solves G(z) = F(z) - F(z*), whose root is the state.
+The pass criterion is at eps = 1e-40.
+
+| start eps | quad-double max \|z - z*\| | \|Delta - Delta*\| | control (state in dd) | double-double \|Delta - Delta*\| |
+|---|---|---|---|---|
+| 1e-40 | 8.0e-42 | 1.0e-48 | 3.0e-27 | 2.2e-16 |
+| 1e-36 | 2.1e-42 | 1.0e-49 | 3.0e-27 | 6.2e-16 |
+| 1e-32 | 1.3e-41 | 2.4e-48 | 4.6e-27 | 1.2e-16 |
+| 1e-28 | 3.8e-42 | 7.1e-49 | 5.5e-27 | 5.1e-17 |
+
+Started at the root, the double-double Newton drifts to Delta errors near 1e-16. This is the 1e-16 A-B spread of
+T75 at D = 71, so that spread is the double-double limit.
+
+**Newton's basin.** A first run from eps = 1e-24 failed the criterion. Every solver, double-double included, took the
+same first step to 2.3e-11. The cause is the nonlinearity, not precision. Newton's quadratic constant is
+K = 2.3e-11 / (1e-24)^2, about 2e37, so the radius of quadratic convergence is near 4e-38. That is below
+double-double's resolution of the state (about 1e-31 of its entries). A double-double iteration cannot enter it, which
+is the large-D stall. A quad-double one can.
+
+**The deciding experiment of section 12 was flawed.** `full_step_check.py` loaded only the state's first two parts, so
+it started from the double-double truncation. Its quad-double residual was 6.4e-22. The state itself, with all four
+parts, has a full-system residual of 1.6e-29.
+
+**Step acceptance.** From that state the full-system Newton step has |dz| = 4.5e-9, mostly p1's harmonics 13, 11
+and 9. Along it |F(z + lam dz)| = (1 - lam) 1.6e-29 + 5.2e-18 lam^2 exactly, so a decrease of max |F| accepts no step.
+Deuflhard's natural monotonicity test with the old Jacobian rejects the full step too (ratio 748). The weak direction
+turns between iterates. Full steps converge in four: 1.6e-29, 5.2e-18, 1.3e-31, 8.9e-32, 2.3e-53. `newton_qd`
+therefore accepts a trial when the next correction, with its own Jacobian, is smaller.
+
+**Convergence of T75's states in quad-double (full system).**
+
+| state | result | Delta |
+|---|---|---|
+| pin 7, D = 72.8 | 2.3e-53 in 5 steps | 1.7816051756032902 - 4.7345207382657e-17 |
+| pin 5, D = 72.8 | stalled at 8.2e-18 | (1.7816051756032902 - 4.7300989e-17) |
+| pin 5, D = 73.0 | 2.5e-53 in 7 steps | 1.7812396819309262 + 3.9940754733380e-18 |
+| pin 7, D = 73.0 | stalled at 7.8e-19 | (1.7812396819309262 + 3.993650e-18) |
+
+The stalled runs halve |F| and |dz| at lam = 1/2 each step while the smallest pivot falls. That is Newton's
+behaviour at a nearly double root: along the weak direction the residual is close to a perfect square. The converged
+solutions have the smallest pivots, 2.3e-16 and 2.9e-16 against 1e-9 for the largest.
+
+**Taylor plan.** The plan (Solver.plan, tol_step 1e-32) is computed from the state. Replanning at the converged
+D = 72.8 state moved Delta by 9.1e-28, so with that tolerance Delta is defined to about 1e-27. `scan_qd.py` keeps a
+plan until D moves --replan (0.5).

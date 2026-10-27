@@ -732,44 +732,71 @@ def qmax(F):
     return float(np.abs(np.asarray(F[0]) + np.asarray(F[1])).max())
 
 
-def newton_qd(s, z, tol=1e-48, it_max=12, max_halvings=12, verbose=True, mutate=0):
+def newton_qd(s, z, tol=1e-50, it_max=12, max_halvings=8, verbose=True, mutate=0):
     """Newton in quad-double (Solver.newton_q: the exact Jacobian in quad-double, its quad-double LU) from the
-    four-part state z, with backtracking on max |F|: the step dz is taken with the largest lam = 2^-h, h <= max_halvings,
-    that lowers max |F|. Stops when max |F| <= tol (converged), when no lam lowers it (stalled: the floor, the
-    residual's quad-double rounding, or outside the basin), or after it_max steps. mutate: Ctx::mutate for every call
-    (the controls; 0 none). Returns (z, hist, converged); hist one record per step (F, |dz|, lam, pivots, times)."""
-    F = s.residual_q(*z, mutate=mutate)
-    nf = qmax(F)
+    four-part state z. A trial z + lam dz (lam = 1, 1/2, ..., 2^-max_halvings) is accepted when the Newton correction
+    there, with its own Jacobian, is smaller than dz (max norms), or when its max |F| <= tol. At large D a full step
+    raises max |F| by orders of magnitude (its quadratic term, in the strong directions, which the next step removes)
+    while the Jacobian's weak direction turns between iterates, so neither a decrease of max |F| nor the natural
+    monotonicity test with the old Jacobian (Deuflhard, Numer. Math. 22 (1974) 289, doi:10.1007/BF01406969)
+    accepts it; the next correction
+    with the new Jacobian does (notes/QUAD_DOUBLE.md, section 12). Stops when max |F| <= tol (converged), when no
+    trial is accepted (stalled), or after it_max steps. A trial whose Jacobian is not finite or singular is rejected. mutate: Ctx::mutate for every call (the controls; 0 none).
+    Returns (z, hist, converged); hist has one record per step (F, |dz|, lam, pivots, times)."""
+    st = s.newton_q(*z, mutate=mutate)
     hist = []
     for it in range(it_max + 1):
+        d, nf = st[:4], qmax(st[4:6])
+        nd = float(np.abs(d[0]).max())
         if nf <= tol:
             if verbose:
-                print(f"  qn {it}: |F| {nf:.2e} converged, Delta {z[0][-1]:.16f} {z[1][-1]:+.3e}", flush=True)
-            hist.append(dict(it=it, F=nf))
+                print(f"  qn {it}: |F| {nf:.2e} converged, Delta {z[0][-1]:.17f} {z[1][-1]:+.4e}", flush=True)
+            hist.append(dict(it=it, F=nf, dz=nd))
             return z, hist, True
         if it == it_max:
             break
         t0 = time.time()
-        d0, d1, d2, d3, _, _, pmin, pmax = s.newton_q(*z, mutate=mutate)
-        rec = dict(it=it, F=nf, dz=float(np.abs(d0).max()), dDelta=float(d0[-1] + d1[-1]), piv=[pmin, pmax],
-                   t=[round(v, 3) for v in s.step_timing()])
+        rec = dict(it=it, F=nf, dz=nd, dDelta=float(d[0][-1] + d[1][-1]), piv=[st[6], st[7]])
         lam = 1.0
         for _ in range(max_halvings + 1):
-            zt = qd_axpy(lam, d0, d1, d2, d3, *z)
-            Ft = s.residual_q(*zt, mutate=mutate)
-            if qmax(Ft) < nf:
+            zt = qd_axpy(lam, *d, *z)
+            try:
+                stt = s.newton_q(*zt, mutate=mutate)
+                good = np.isfinite(stt[0]).all() and np.isfinite(stt[4]).all()
+            except ValueError:          # a non-finite or singular Jacobian at the trial point
+                good = False
+            if good and (float(np.abs(stt[0]).max()) < nd or qmax(stt[4:6]) <= tol):
                 break
             lam *= 0.5
         else:
             rec.update(lam=0.0, seconds=round(time.time() - t0, 2))
             hist.append(rec)
             if verbose:
-                print(f"  qn {it}: |F| {nf:.2e}: no decrease along the step (|dz| {rec['dz']:.1e}), stopping", flush=True)
+                print(f"  qn {it}: |F| {nf:.2e}, |dz| {nd:.1e}: no trial step accepted, stopping", flush=True)
             return z, hist, False
-        z, F, nf_old, nf = zt, Ft, nf, qmax(Ft)
-        rec.update(lam=lam, F_new=nf, seconds=round(time.time() - t0, 2))
+        z, st = zt, stt
+        rec.update(lam=lam, F_new=qmax(st[4:6]), dz_new=float(np.abs(st[0]).max()), seconds=round(time.time() - t0, 2),
+                   t=[round(v, 3) for v in s.step_timing()])
         hist.append(rec)
         if verbose:
-            print(f"  qn {it}: |F| {nf_old:.2e} -> {nf:.2e}, |dz| {rec['dz']:.1e}, lam {lam:g}, dDelta {rec['dDelta']:+.2e}, "
-                  f"piv {pmin:.1e}..{pmax:.1e}, {rec['seconds']} s", flush=True)
+            print(f"  qn {it}: |F| {nf:.2e} -> {rec['F_new']:.2e}, |dz| {nd:.1e} -> {rec['dz_new']:.1e}, lam {lam:g}, "
+                  f"dDelta {rec['dDelta']:+.2e}, piv {st[6]:.1e}..{st[7]:.1e}, {rec['seconds']} s", flush=True)
     return z, hist, False
+
+
+def tangent_q(s, s_of_D, D, z, h=1e-10):
+    """dz/dD = -J^-1 dF/dD at a converged four-part state z: dF/dD by the central difference of Solver.residual_q at
+    the f64 values D +- h with s's Taylor steps (s_of_D(D) a solver at D), divided by their exact difference, and J^-1
+    by Solver.qlu_solve with the LU of a Solver.newton_q at z (made here). For a predictor: the difference's truncation
+    (h^2 times the third D-derivative) and the f64 rounding of the division (1e-16 relative) are both far below the
+    predictor's own error."""
+    Dp, Dm = D + h, D - h
+    fs = []
+    for Dx in (Dp, Dm):
+        sx = s_of_D(Dx)
+        sx.set_segs(s.get_segs())
+        fs.append(sx.residual_q(*z))
+    g = tuple(np.ascontiguousarray(v / (Dp - Dm)) for v in qd_axpy(-1.0, *fs[1], *fs[0]))
+    s.newton_q(*z)
+    t = s.qlu_solve(*g)
+    return tuple(np.ascontiguousarray(-np.asarray(v)) for v in t)
