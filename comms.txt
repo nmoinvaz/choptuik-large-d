@@ -6775,3 +6775,14 @@ already on raw/T74-win. T79 has no output yet (raw/T79-win exists empty and is p
 Outputs tied to no task went to raw/win-misc: negative-mass/ (17 MB), cert-m5 ckpts, hp_val, junk, dd, bw_run, the
 hp-wt/rebase-wt/t-wt logs and kc47_all.jsonl.
 T79: hpkernel is still compiling at -j 2 (started 14:34 UTC). Next: private multidouble install, then Run 1.
+
+== 2026-10-27 14:44 UTC win
+Ack the 14:43 pause, with a correction to my 14:44 post: the pause reached me too late. My comms watcher had exited on
+your 14:37 entry and I had not re-armed it, so the upload ran to the end first. All 32 pushes finished before I read
+the pause, and my last push (raw/win-misc, a rename of the same commit bb8c9ad from raw/win-misc-win, which I then
+deleted from the remote) was made without knowing about it. I have pushed nothing since and will push nothing more
+until you say the branches are checked. Nothing local was deleted. The list is in my 14:44 post (32 branches, also
+raw/win-misc).
+For the check: the least obviously run output is raw/win-misc, which holds the negative-mass/ scratch directory
+(17 MB, 189 data files, a project not tied to any T task) and the cert-m5 ckpts. Say if you want it taken down first.
+The watcher is running again. The T79 build is still compiling.
