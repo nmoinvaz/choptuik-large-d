@@ -259,7 +259,12 @@ continuation points, as run `lowD-M<M>`; `hp/plot_lowD_values.py` draws them; re
 largest M agree to 10⁻⁸ (or M = 80 alone at D ≥ 3.7, where M 80 → 96 is 1.2×10⁻⁹) and hollow where they do not yet.
 Every point, resolved or not, lies within 8×10⁻⁶ of the √(D − 3) formula below. Middle: γ, from the exact growth-mode
 matrix at the largest M. Right: how much Δ moves when M is raised. The step from M = 80 to 96 grows a hundredfold from
-D = 3.7 to 3.4, while M = 96 → 128 stays at 1–2×10⁻⁹ down to D = 3.4. Below that the larger grids take over
+D = 3.7 to 3.4, while M = 96 → 128 stays at 1–2×10⁻⁹ down to D = 3.4.
+
+<details>
+<summary>Below D = 3.4: the resolution step at each D, and the node changes on the way</summary>
+
+Below that the larger grids take over
 (M = 128 → 160 → 192 → 256, each step one to two orders smaller than the one before): at D = 3.15 the step from 192
 to 256 is 9×10⁻¹², and at 3.125, 3.11875, 3.1125 and 3.1 it is 1.9, 2.8, 3.8 and 5.5×10⁻¹⁰; at 3.1 the next
 step, 256 → 320, is 7.2×10⁻¹³. At 3.0875 the steps are 1.8×10⁻⁹ and 7.0×10⁻¹², ten times those at 3.1 for 0.0125
@@ -280,6 +285,8 @@ not lift as they are (resampled at 3.425 the start has |F| = 3×10⁴, and at 3.
 first (`hp/highm_check.py lift --nodes=...`), they do. The steps of these lifts, M = 128 → 160, are 3.5×10⁻¹² (3.4),
 6.8×10⁻¹² (3.425), 6.2×10⁻¹² (3.45), 2.9×10⁻¹² (3.475), 6.4×10⁻¹³ (3.5) and 1.6×10⁻¹³ (3.55), and M = 96 → 128 at 3.65
 is 4.6×10⁻¹¹: from D = 3.4 to 3.65 every value is now resolved to 5×10⁻¹¹ or better.
+
+</details>
 
 ![Below D = 4: how much Delta moves when the tau resolution M goes up one step, at the largest M run at each D, on a log scale](hp/lowD_errors.svg)
 
@@ -523,6 +530,9 @@ the error bar would still show), nor in one about 27 times wider (1.643890–1.6
 
 From a literature search (October 2026); the references are listed at the end of the [Large D](#references) section.
 
+<details>
+<summary>Point by point: D = 4, the maximum below 4, D = 5, below 4, large D, earlier formulas, the large-D theory</summary>
+
 - **D = 4.** Δ = 3.445452402(3) (Martín-García & Gundlach, PRD 68, 024011 (2003); see also Gundlach, PRD 55, 695
   (1997)) and γ = 0.373961 ± 10⁻⁶ (Ecker, Ecker, Grumiller & Jechtl 2026, who also give Δ = 3.445453). The formula's
   3.4454524 and 0.3739610 agree to about 10⁻⁸ and 10⁻⁷. The double-double solver gives Δ = 3.4454524022278213499715
@@ -572,6 +582,8 @@ From a literature search (October 2026); the references are listed at the end of
   late-order (Dingle) analysis. The inner equations are, up to a change of variables, Rozali and Way's leading-order
   large-D system (2018), whose heat-equation character they noted; Proposition 5 is the discretely self-similar
   counterpart of their estimate γ = 1/2. Ecker, Ecker & Grumiller's next-to-leading-order condition is discussed next.
+
+</details>
 
 #### Relation to Ecker, Ecker & Grumiller
 
@@ -647,6 +659,9 @@ with computed points rather than an assumed form. Its points are used in [The fo
 Δ∞), [Values](#values), the [candidate test](#closed-forms-tested-and-excluded), the
 [analyticity tests](#is-the-period-analytic-in-1d) and the large-D scaling ([How the solution scales with D](#how-the-solution-scales-with-d)).
 
+<details>
+<summary>How the solver works: arithmetic, step control, Jacobian, Newton variants, τ grids, quad-double, continuation, centre-series order</summary>
+
 - **Arithmetic:** double-double (hi + lo, about 32 digits)[^15] on 8-lane vectors: one AVX-512 register per lane group, two
   AVX2 registers, four SSE2 or NEON registers, or a portable array, chosen at compile time (`hp/build.sh` builds with
   `-C target-cpu=native`). Error-free two-sum and FMA two-product; sums of products accumulated Sum2-style[^16]. The
@@ -706,6 +721,8 @@ with computed points rather than an assumed form. Its points are used in [The fo
   steps at D = 59.84–59.88 with the scan's own arguments gave bitwise the same points 2.85–2.9 times faster
   (`hp/data/kc_check_scan/`). `--kc_auto` lowers kc after a converged point only when the residual and the Jacobian
   there are bitwise unchanged; the default keeps kc as given.
+
+</details>
 
 ![The Newton variants of the double-double solver against D: seconds per solve and speedup over the double-double Jacobian, with the failures marked](hp/bench_variants.svg)
 
@@ -1499,6 +1516,9 @@ of order $`\sqrt n`$ are $`x^2\partial_x{y}`$, $`\omega x\,\partial_\theta{y}`$ 
 $`x^2\partial_x(p+m)`$, $`x c\,\partial_x{y}`$, $`\omega x\,\partial_\theta(p+m)`$ and $`(G - c)\,y`$ with G = cη; the b equation becomes
 algebraic, η = p² + m².)
 
+<details>
+<summary>Its properties: it resums the outer expansion, Kummer's equation and its Stokes constant without gravity, the selection rule as an inner problem, the inner series with gravity</summary>
+
 - **It resums the outer expansion.** Its formal solution regular at ξ = 0, $`y = \sum_j d_j\xi^{2j+1}`$,
   $`\sigma = \sum_j s_j\xi^{2j+2}`$, $`c = \sum_j g_j\xi^{2j}`$ with d₀ = 2F, g₀ = 1, has g₁ = F², s₀ = 2(F + ω F'),
   d₁ = ω²F'' + 3ω F' + 2F - 2F³: the top-degree coefficients of G₁, S₁, D₁ of Proposition 1. `solver/largeD_inner.py`
@@ -1534,6 +1554,8 @@ algebraic, η = p² + m².)
   larger), and a heuristic estimate of the gravity mixing at $`\mathrm{Im}\,\theta \approx \pi\omega/2`$ suggests that truncation would
   need M of order 10⁴, which favours the untruncated amplitude expansion below.
 
+</details>
+
 The large-n form of the light-cone coefficient, from the matching in the second bullet (Λ = n/2 - 1 - s is the
 light-cone exponent of Proposition 2):
 
@@ -1551,6 +1573,9 @@ and a phase.
 code: *lateral solutions* (`solver/inner_stokes/`: the inner equations integrated from just above and just
 below the Stokes line and differenced) and *Borel–Darboux* (`solver/inner_borel/`, ball arithmetic with python-flint: the
 late orders of the inner series fitted with the predicted fast-mode exponents).
+
+<details>
+<summary>The computation with gravity in detail: checks without gravity, the fast mode, harmonic truncation, one to five harmonics</summary>
 
 - *Both checked without gravity.* Lateral: the jump divided by $`2\pi i\,2^{-s-1/2}/(\Gamma(\alpha)\Gamma(\beta))`$ times the linear fast solution is
   1.000000000002 - 7×10⁻¹²i, the same at two matching radii (`solver/inner_stokes/lateral_np.py check`). Darboux:
@@ -1624,6 +1649,8 @@ late orders of the inner series fitted with the predicted fast-mode exponents).
   ratio, −0.049 per pair, is the profile decay of the added pair (0.057) times a coupling of 0.85. The geometric limit
   is ω/ω∞ = 0.999985, and the part above M = 7 is about 4×10⁻⁵ in ω.
 
+</details>
+
 **Without truncation: the amplitude expansion** (`solver/inner_amp/`).
 
 *The inner problem is a Weber (parabolic-cylinder) problem* (derived). With t = 1/ξ and the characteristic coordinate
@@ -1643,6 +1670,9 @@ C(n,s) \approx -\,i\,\frac{\sqrt{2\pi}}{\Gamma(1+s)}\,(n+1)^{s+1/2}\,e^{-i\pi\La
 ```
 
 Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = -1-s`$.
+
+<details>
+<summary>The amplitude expansion in detail: every harmonic exact, the shape, the harmonic-1 condition and where its zero is real, the planted test, fifteen orders</summary>
 
 - *Every harmonic exact.* Put $`F = A\sin\theta + \sum_{\nu\ge3} f_\nu(A)\,e^{i\nu\theta}`$ (+ c.c.). Harmonic μ first appears at
   order $`A^{\lvert\mu\rvert}`$, so keeping $`\lvert\mu\rvert \le K`$ at each order in A is exact: no truncation error, unlike fixed M
@@ -1748,6 +1778,8 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
 - *Shape.* The shape predictions at A = 2.72 are F₃/F₁ = 0.0551, F₅/F₁ = 0.00314 (data: above), and the D = ∞
   relation evaluated at each D's own amplitude and ω tracks the measured F₃/F₁ at D = 20–60 to within 0.004–0.006
   (0.126, 0.099, 0.087, 0.080, 0.075 against 0.130, 0.105, 0.093, 0.085, 0.080; `harm_pred.py`, heuristic).
+
+</details>
 
 ![The selection rule evaluated from the D = infinity inner problem alone: the order-by-order bracket on omega, the truncation sequence and the effective exponent](solver/selection.svg)
 
@@ -2158,6 +2190,9 @@ called from Python through PyO3 as a drop-in for `S.residual`, the Python refere
 
 ### Backends
 
+<details>
+<summary>Which backend runs where</summary>
+
 The build targets the architecture's baseline, so one wheel runs on any CPU of that architecture. The instruction set is detected at runtime, and each residual block runs inside a `#[target_feature]` entry point for it.
 
 | Backend | Kernels | Instruction set | f64 lanes |
@@ -2181,7 +2216,12 @@ backend="simd" (default)
 
 `available_backends()` lists what this CPU can run, and `auto:avx2` style names pick plain loops for a given instruction set. Setting `RUSTKERNEL_ISA=avx2` (or `baseline`) caps the instruction set for the whole process, which turns AVX-512 off without a rebuild.
 
+</details>
+
 ### Use
+
+<details>
+<summary>Calling the kernel from Python</summary>
 
 ```python
 from spec_long import make_long
@@ -2206,7 +2246,12 @@ carried towards the centre instead of the centre data towards the horizon. The u
 are the same; only the conditioning of the matching rows changes. The default (`None`) is the last node,
 identical to the Python reference.
 
+</details>
+
 ### Double-double residual
+
+<details>
+<summary>The double-double residual</summary>
 
 Above D ≈ 26 the f64 residual can no longer pin Δ ([The double-double solver](#the-double-double-solver-hp)).
 `residual_dd` evaluates the same residual in double-double arithmetic
@@ -2215,7 +2260,12 @@ residual's rounding noise (the maximum over the residual's entries) drops from 1
 the cost of the SIMD f64 residual in that measurement (15 ms per double-double evaluation; a different configuration
 from the Performance table's synthetic one).
 
+</details>
+
 ### Exact Jacobian and growth-mode matrix
+
+<details>
+<summary>How the Jacobian and the growth-mode matrix are computed</summary>
 
 `jacobian` and `mode_matrix` differentiate the residual in forward mode with a dual-number scalar[^17]
 (`scalar::Dual`): one evaluation of block b per unknown that block depends on, run on rayon threads.
@@ -2242,8 +2292,13 @@ with brentq; above D = 35 it drops the weak directions with the kfreeze-13 cut, 
 10⁻⁹ at D = 60. `hp/gamma_batch.py` runs every saved state on N processes (resumable), and `hp/gamma_compare.py` (given both
 `gamma_dd.jsonl` files as arguments) compares with the f64 values and the formula.
 
+</details>
+
 
 ### Build and test
+
+<details>
+<summary>Dependencies, build and test commands</summary>
 
 Python side: numpy, scipy, mpmath, sympy and python-flint (`pip install python-flint`; needed by `check_numbers.py`,
 `solver/proof/`, `solver/inner_amp/` and `solver/inner_borel/`).
@@ -2256,7 +2311,12 @@ python tests/test_bindings.py     # bindings test, after pip install .
 hp/build.sh                       # double-double solver, built for this machine's instruction set
 ```
 
+</details>
+
 ### Performance
+
+<details>
+<summary>Timings of the residual</summary>
 
 One residual of a synthetic production-sized configuration (`tests/test_bindings.py --time`), single thread, on an i7-1185G7.
 
@@ -2282,7 +2342,12 @@ Jacobian goes from 7.5 to 0.72 s at M = 48 and from 31 to 3.3 s at M = 80 on two
 ([notes/MIXED_PRECISION.md](notes/MIXED_PRECISION.md), `hp/profile_newton.py --mixed --solve`). Continuation in D stays sequential, since each step starts from the previous solution inside Newton's
 basin; past D = 61 it costs about 22 hours per unit of D.
 
+</details>
+
 ### Layout
+
+<details>
+<summary>The repository's files, folder by folder</summary>
 
 ```
 src/
@@ -2444,7 +2509,12 @@ solver/largeD_linear_truncation.py  optimally truncated series against the exact
 solver/largeD_late_structure.py  where the nonlinear late-order growth lives (x, harmonic, amplitude)
 ```
 
+</details>
+
 ### Limits
+
+<details>
+<summary>What the kernel does not do</summary>
 
 - The Python solver, scans and fits live in `solver/` (see `solver/README.md`).
 - `jacobian` and `mode_matrix` use plain loops (no explicit SIMD) and the parity-folded layout's
@@ -2455,6 +2525,8 @@ solver/largeD_late_structure.py  where the nonlinear late-order growth lives (x,
   `Ctx<96>`; nh = N/2 with N = 4⌈(3kc + 2)/4⌉), so kc ≤ 63; kc 49–63 run padded to 96 lanes. Larger kc needs another
   size (for example `Ctx<128>` with `MAXV = 16` in `src/avx512.rs`). Adding the 96-lane size left the 40- and
   72-lane results bitwise identical (residuals on all backends and thread counts, and the exact Jacobian).
+
+</details>
 
 [^1]: M. W. Choptuik, PRL 70, 9 (1993).
 [^2]: T. Koike, T. Hara and S. Adachi, PRL 74, 5170 (1995), [gr-qc/9503007](https://arxiv.org/abs/gr-qc/9503007).
