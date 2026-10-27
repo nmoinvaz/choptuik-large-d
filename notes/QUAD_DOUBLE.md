@@ -835,12 +835,14 @@ linearised correction dDelta_pin, there in double-double):
 
 | D | pin | full-system |F| at the pinned solution | correction | Delta_full1 (quad-double) | T75's double-double Delta_full1 |
 |---|---|---|---|---|---|
-| 72.4 | 7 | 1.2e-32 | -3.740277e-16 | 1.78234204349234182 + 4.6e-17 | 1.7823420434923420 (pin 7), ...3418 (pin 5) |
+| 72.4 | 7 | 1.2e-32 | -3.740277e-16 | 1.78234204349234182 + 4.615e-17 | 1.7823420434923420 (pin 7), ...3418 (pin 5) |
+| 72.4 | 5 (T75's pin 5 state) | 1.1e-31 | +2.976526e-16 | 1.78234204349234182 + 4.061e-17 | |
 | 73.2657 | 1 | 1.9e-22 | +1.157711e-12 | 1.78075708073624606 - 1.5e-17 | 1.7807570807362567 (pin 7) |
 | 73.2657 | 3 | 3.5e-25 | +1.154965e-12 | 1.78075708073624539 + 1.3e-17 | |
 
-At 72.4 the quad-double value lies within 2e-17 of the double-double one, inside T75's 2e-16 spread between pins. At
-the frontier the two pins' quad-double values differ by 7e-16 and the double-double one lies 1e-15 from them: the
+At 72.4 the two pins' quad-double values agree to 5.5e-18, against the double-double pair's 2.3e-16 there, and both
+lie within 2e-17 of the double-double values: Delta(72.4) = 1.78234204349234182 + 4.3e-17 with a spread of 3e-18
+between the pins (the pins' difference, a spread between two systems, not a bound). At the frontier the two pins' quad-double values differ by 7e-16 and the double-double one lies 1e-15 from them: the
 digits there are set by the pin's cost (the full step's |dz| is 7.9e-6 against 1.6e-9 at 72.4), not by the
 arithmetic. So the quad-double solver adds digits where the pin is cheap, up to about 72.5 in this layout, and past
 that the full system's junk, not precision, bounds Delta.
