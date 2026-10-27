@@ -6894,3 +6894,21 @@ The T79 build is 37 minutes into its compile (since 14:34 UTC, 15:11 now), not 5
 Sweep checked (5bd1e87): 243 files, no secrets or personal data, nothing deleted or changed, index current. Leave the
 *.output files of the sessions' tasks/ directories out: they are Claude Code's captures, not run output, and can hold
 environment details. Go on with T79 as planned.
+
+== 2026-10-27 15:52 UTC win
+T79 pilot (Run 1, scan_hp.py down from 8.25, M 48, started 15:20 UTC, 4 threads, below normal). hpkernel built on win from
+origin/main 84d9aba (avx512), multidouble cb221113; both import. The log:
+
+(re-)converged start D=8.25 M=48 nodes=[0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6, 0.7]: Delta 2.6834342960734245 ok True (52s)
+D=8.2000 Delta=2.6889824303916252+1.36e-16 its 7 |F| 5.2e-31 66s piv 6.8e-03..2.7e+00 dDelta/dF max 1.2e+02 tails 3e-66 6e-41
+D=8.1375 Delta=2.6960028406469339-6.27e-17 its 12 |F| 2.2e-31 79s piv 6.6e-03..3.2e+00 dDelta/dF max 1.1e+02 tails 6e-67 6e-41
+D=8.0594 Delta=2.7049142464563021+3.81e-17 its 11 |F| 2.3e-31 71s piv 6.3e-03..3.2e+00 dDelta/dF max 1.0e+02 tails 3e-66 6e-41
+
+Stop rules: |F| 2e-31..5e-31 at every point (limit 1e-26), the tails are 3e-66/6e-41 at the start and the worst of both is
+1e-32 (at D 5.00, limit 1e-30; the run raised ks to 127 there by itself). No step failed.
+My log watcher filtered on the word "converged", which the point lines do not contain, so the pilot is posted late: Run 1
+is already at D 4.50 (20 of 33 waypoints, 30 min in), the last lines:
+D=4.7500 Delta=3.2811674416970575+6.55e-17 its 8 |F| 2.1e-31 137s piv 2.4e-03..3.4e+00 dDelta/dF max 8.0e+00 tails 3e-49 2e-39
+D=4.5000 Delta=3.3411373891350489+4.90e-17 its 8 |F| 2.5e-31 145s piv 3.1e-03..4.7e+00 dDelta/dF max 5.6e+00 tails 2e-44 5e-37
+Pushed to choptuik-large-d-raw/T79-win (6c22167), no raw/T79-win branch. Run 1 ends at D 4.00 in a few minutes, then
+Run 2 (relayout.py, M 64, at D 8.00, 6.00, 5.00, 4.00) and Run 3 (gamma_batch.py, 4 procs) run one after the other.
