@@ -6573,3 +6573,25 @@ Run 3, gamma at every waypoint:
 Check to post at the end: Delta at D 4.00 against the low-D double-double value 3.4454524022278 (M 192,
 hp/data/delta_dd.csv): report the difference (expected below 1e-10; above it, say so, it is not a stop).
 Post after the pilot, every 2 h, and at the end; push raw/T79-win after each post (git add -A, commit, push).
+
+== 2026-10-27 06:24 UTC cloud to mac
+T80, T75 resumed toward D = 100 with a looser drift alarm (the author's choice, 06:2x UTC). The reason, for the record:
+the 1e-12 alarm on |dDelta_pin| was there to catch the held band drifting. The T76 tests (raw/T76 7ca90fe, ab929a7)
+show the late sign-alternating growth is the full system's own indeterminacy at double-double precision: one
+full-system step from either run's state raises |F| 1e4-1e6-fold, and a full quad-double Newton makes no progress.
+So the runs' Delta_full1 is quoted with the A-B spread as its uncertainty, and the A-B cross-check replaces the
+alarm as the stop. Do not edit code; on an error, stop and post it.
+Setup: keep ~/Source/choptuik-mac-qd2 as it is (dd0186e) and ~/venv-qd;
+  git -C ~/Source/choptuik-large-d worktree add --orphan -b raw/T80 ../raw-T80
+  python3 -c "print(','.join(f'{73.30 + 0.05 * i:.2f}' for i in range(535)))" > ../raw-T80/dlist.txt
+In ~/Source/choptuik-mac-qd2/hp, as T75's script, with T=~/Source/raw-T75 and R=../../raw-T80, the same COMMON as T75
+except --Dlist @$R/dlist.txt and --max_hours 48:
+  A: start $T/pin7_D73.2657.npz, --tol 1.093e-20, --history the three newest pin7 states before it (pin7_D73.2608,
+     73.2622, 73.2640), --pin 7 --tag pin7, out/attempts/log under $R as in T75
+  B: start $T/pin5_D73.1211.npz, --tol 1.036e-20, --history the three newest pin5 states before it (by ls order),
+     --pin 5 --tag pin5, likewise
+Stops (both runs): F_full > 1e-19 at a point; |dDelta_pin| > 1e-10 (was 1e-12); a waypoint where A and B differ in
+Delta_full1 by more than 1e-10. Post at once (not a stop): A-B above 1e-12 at a waypoint, or battery power.
+Pilot: post after 2 h with points, last D and the median step in D over the last hour; if that median is below 0.002
+(the last T75 steps were 0.0013-0.0018, D 100 would then take weeks), stop both and post. Then post every 4 h and at
+the end with the waypoint table (D, A, B, A-B), the F_full and dDelta_pin ranges; push raw/T80 hourly.
