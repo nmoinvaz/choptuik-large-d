@@ -908,3 +908,33 @@ D about 50 for dD 1e-4, 63 for 1e-6 (the double-double stalls at 61 and 67.8) an
 of D, about 78 for 1e-8, the predictor error of T75's steps. Each decade of predictor accuracy buys about 15 in D,
 so the series' wall moves and is not the binding constraint at 73; the basin above is, and its c is the series'
 sensitivity near its radius. A horizon discretisation without a radius (collocation in u) removes both.
+
+### 12.5 What the quad-double digits can test now (2026-10-27, hp/qd_remainder.py)
+
+The seven quad-double values (hp/data/delta_qd.csv: D 68.5, 69.5, 70.5 to 1e-32 by two starts, 71, 71.5, 72.8, 73 by
+one) against the 1/D and 1/n series fitted on the double-double points (dd_fits_mp, 60 digits), evaluated at 25
+digits:
+
+| fit on | series | quad-double minus series at D 68.5 | at 71 | at 73 |
+|---|---|---|---|---|
+| D <= 67.77 | 1/D, degree 18 | +2.7e-16 | +1.1e-15 | +2.2e-15 |
+| | 1/D, degree 20 | -4.3e-16 | -2.7e-15 | -7.0e-15 |
+| | 1/n, degree 20 | -2.1e-16 | -1.4e-15 | -3.9e-15 |
+| | 1/D and 1/n, degree 16; 1/n, 18 | -4e-15 to -2e-13 | | -4e-14 to -1.6e-12 |
+| D <= 60 | 1/D, degree 20 | +1.5e-14 | +2.6e-14 | +3.7e-14 |
+| | 1/n, degree 20 | +2.6e-14 | +5.0e-14 | +7.7e-14 |
+
+So the series extrapolated from the double-double data reproduce the quad-double points to 1e-15 (the best three
+series, from D <= 67.77) and the residuals grow smoothly with D with signs that differ between series: the
+truncated series' own extrapolation error, as the fits on D <= 60 confirm (their held-out error at 67.8 is 2.5e-14,
+notes above). The points' remaining seventeen digits cannot be tested against anything we have: the series'
+coefficients from the fits are good to about 1e-15 at these D, and a non-perturbative term c e^(-a (D - 1)) is seen
+only above that. The bounds those residuals give, with the best three series' spread (1e-15 at 68.5): |c| < 2e-8 for
+a = 1/4, |c| < 0.5 for a = 1/2, |c| < 2e14 for a = 1; with every series in the table, 4e-6, 90 and 4e16. The
+transseries test of transseries_fit.py on the double-double data alone found no term the data need, which is the
+same statement at the double-double level.
+
+To use the digits, the series' coefficients would have to come from the large-D theory rather than from fits: an
+exact 1/D expansion of Delta to the order where its terms fall below 1e-30 at D 70, which is where the exponentially
+small part would then sit. That is a theory project (the inner problem's expansion in the papers' notation), not
+more numerics, and the quad-double points are its test when it exists.

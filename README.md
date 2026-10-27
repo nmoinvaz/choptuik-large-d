@@ -2454,6 +2454,7 @@ hp/                 double-double solver (crate hpkernel)
 ├── export_dd.py    collects the runs' points into data/delta_dd.csv
 ├── t79_rows.py     T79's points (D 4-8.25, folder T79-win of the raw-data repository) into the low-D exporter's inputs
 ├── export_qd.py    the quad-double values of Delta at D 68.5-73 (folders T84-mac and T81 of the raw-data repository) into data/delta_qd.csv
+├── qd_remainder.py  the quad-double points against the 1/D series fitted on the double-double data, and the bound on an e^(-aD) term
 ├── dd_fits_mp.py   large-D model fits at 60 digits, held-out errors, predictions (--dmax for a data snapshot)
 ├── short_forms.py  the shortest 1/D series per range of D with its error margin (README "The formula"; --selftest)
 ├── dd_candidates.py  candidate constants forced as the limit, held-out test (--dmax as above)
