@@ -65,13 +65,20 @@ def formula_dd():
     try:
         import formula_all
         rows = [r.split(",") for r in list(open(os.path.join(ROOT, "hp/data/delta_dd.csv")))[1:]]
-        err = max(abs(formula_all.delta(float(c[0])) - (float(c[1]) + float(c[2]))) for c in rows if float(c[0]) > 30.2)
+        miss = lambda lo, hi: max(abs(formula_all.delta(float(c[0])) - (float(c[1]) + float(c[2]))) for c in rows  # noqa: E731
+                                  if lo <= float(c[0]) <= hi and ",lowD" not in ",".join(c))
+        err = miss(30.2001, 99.0)
+        bands = (miss(8.25, 21.0), miss(21.0, 30.0), miss(30.0, 61.03))
     finally:
         os.chdir(cwd)
     txt = [("README.md", "and Δ to 9.6×10⁻⁸ up to D = 67.77"),
            ("README.md", "above D = 30.2 it matches them to 9.6×10⁻⁸"),
            ("README.md", "| 30.2 – 67.77, never seen by the fit | ≤ 9.6×10⁻⁸ |")]
-    return [("formula against the double-double points, D 30.2-67.77", err, 9.6e-8, 1e-9, txt)]
+    t2 = [("README.md", "3.0×10⁻⁹ or better on 8.25 ≤ D ≤ 21, 8.0×10⁻⁹ up to D = 30, and 9.6×10⁻⁸ from there to")]
+    return [("formula against the double-double points, D 30.2-67.77", err, 9.6e-8, 1e-9, txt),
+            ("formula against the double-double points, D 8.25-21", bands[0], 3.0e-9, 1e-10, t2),
+            ("formula against the double-double points, D 21-30", bands[1], 8.0e-9, 1e-10, t2),
+            ("formula against the double-double points, D 30-61.03", bands[2], 9.6e-8, 1e-9, t2)]
 
 
 @check

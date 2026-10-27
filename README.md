@@ -189,13 +189,16 @@ ten times tighter), they reproduce each point within its own precision:
 | 20 – 30 | ≤ 1×10⁻⁸ | ≤ 3×10⁻⁸ | ≤ 2.3×10⁻⁹ | ~ 10⁻⁷ (assigned 10⁻⁹, but the fits' $`\chi^2/\mathrm{dof}`$ is about 7000 against it) |
 | 30.2 – 67.77, never seen by the fit | ≤ 9.6×10⁻⁸ | ≤ 10⁻¹⁴ (double-double) | ≤ 5×10⁻⁷ up to D = 35.8 | |
 
-**Shorter forms for one range of D** (`cd hp && python3 short_forms.py`; `--selftest` runs it on a planted analytic
-function with controls). On a narrower range a plain series Δ ≈ c₀ + c₁/D + c₂/D² + … with fewer terms does as well
+<details>
+<summary>Shorter forms for one range of D: plain series in 1/D with fewer terms, per range</summary>
+
+On a narrower range a plain series Δ ≈ c₀ + c₁/D + c₂/D² + … with fewer terms does as well
 as the rational formula. The table gives, per range, the fewest terms that reach each accuracy, the coefficients, and
 the error margin. Up to D = 61 the margin is the largest miss over the computed points in the range (an interpolation
 error, since the series is fitted on those points). Above D = 61 there are no computed points: the series is fitted on
 the points from half the range's lower end up, and the margin is the spread of its values across fits that differ in
-the lower cut and in one extra term, plus the fit's own residual. That is a fit spread, not a bound; it assumes Δ is
+the lower cut and in one extra term, plus the fit's own residual (`cd hp && python3 short_forms.py`; `--selftest` runs
+it on a planted analytic function with controls). That is a fit spread, not a bound; it assumes Δ is
 analytic in 1/D ([Is the period analytic in 1/D?](#is-the-period-analytic-in-1d)), and `--selftest` shows it widens
 a hundredfold when a non-analytic term is present. Coefficients are given to two digits past the margin.
 
@@ -221,8 +224,10 @@ Above D = 61 the series need more terms than below it, not fewer, because each f
 uncertainty grows with the distance from the last computed point; the coefficients of the longer forms are not
 physical constants (they are correlated, and shift with the range), only the function is.
 
+</details>
+
 An independent double-double computation ([below](#the-double-double-solver-hp)) agrees with the formula to
-2.7×10⁻⁹ or better on 8.25 ≤ D ≤ 21, 7.5×10⁻⁹ up to D = 30, and 5.8×10⁻⁸ from there to
+3.0×10⁻⁹ or better on 8.25 ≤ D ≤ 21, 8.0×10⁻⁹ up to D = 30, and 9.6×10⁻⁸ from there to
 D = 61, which the fit never saw. It also shows that the f64 points at D ≈ 8–10 (23 Fourier modes in time)
 sit up to 4×10⁻¹⁰ above the true values (from 1.3×10⁻¹¹ to 3.7×10⁻¹⁰ on 8.25–9.9; within
 3×10⁻¹¹ on 10–15.2 and about 6×10⁻¹¹ on 15.6–21), so their quoted 3×10⁻¹¹ was optimistic
