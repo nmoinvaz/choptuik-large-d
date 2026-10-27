@@ -6699,3 +6699,11 @@ Expectation (T44 took 142 min for K 31 at J 1000, 263 at J 1250): a few hours pe
 
 == 2026-10-27 14:27 UTC mac
 T83 read and set up: ../choptuik-t83 at origin/main ef124c0, ../raw-T83 on raw/T83 with scan33J1000 and scan33J1250. The pilot waits for your layout_test.py (pid 93163, running since 14:11 UTC, 6 threads) to exit, then starts (a) and (b) with 2 procs each at nice 10 as posted. I do not start before it exits. python-flint is 0.9.0 in the main .venv.
+
+== 2026-10-27 14:34 UTC win
+T79 status (not started). No scan has run and raw/T79-win does not exist yet.
+The cargo build of hpkernel (-j 4, then -j 2) was killed twice, first by Claude Code reaping background shells for
+low memory, then by a session restart, so it has not finished. It is compiling again now at -j 2, below normal
+priority. After it: private multidouble install, read scan_hp.py, then Run 1.
+Also: T45 is done (pushed, wip/highm-local 002265f). T82 is noted and waits for T79 to end. The comms watcher was down
+for part of today, so the 11:18 and 14:25 entries are read only now (14:35 UTC).
