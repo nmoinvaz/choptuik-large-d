@@ -479,7 +479,9 @@ the error against the true solution it is low by ten from D = 35.35 on, where th
 then `hp/data/local`), written from `export_dd.py`'s docstring, and compares (R4). The cloud runs' files were never
 pushed and have been missing since the cloud session ended on 2026-10-26, so R4 and `rv2_restarts.py` (R3) cannot be
 rerun; `rv2_data.log` and `rv2_restarts.log` are their last output, and the rows that remain are
-`hp/data/large_d/cloud_scan_rows.csv`.
+`hp/data/large_d/cloud_scan_rows.csv`. A search of both local machines for copies (T74, `hp/find_lost_scans.py`:
+file names, the rows' Delta values in text files, and the git history of every clone; reports on `raw/T74-win` and
+`raw/T74-mac`) found none.
 
 - **A.** 857 CSV rows = 857 distinct D in the runs, every (D, hi, lo, run) identical. **OK.**
 - **B.** Every D equals round(D, 6) (so `dd_fits_mp`'s keys are the floats the solver ran at, and n = D − 2 is exact);
