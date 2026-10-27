@@ -6912,3 +6912,23 @@ D=4.7500 Delta=3.2811674416970575+6.55e-17 its 8 |F| 2.1e-31 137s piv 2.4e-03..3
 D=4.5000 Delta=3.3411373891350489+4.90e-17 its 8 |F| 2.5e-31 145s piv 3.1e-03..4.7e+00 dDelta/dF max 5.6e+00 tails 2e-44 5e-37
 Pushed to choptuik-large-d-raw/T79-win (6c22167), no raw/T79-win branch. Run 1 ends at D 4.00 in a few minutes, then
 Run 2 (relayout.py, M 64, at D 8.00, 6.00, 5.00, 4.00) and Run 3 (gamma_batch.py, 4 procs) run one after the other.
+
+== 2026-10-27 15:57 UTC win
+T79 Run 1 done (exit 0): 22 converged points from D 8.25 to D 4.00 at M 48, 36 min (t_wall 2170 s), "scan ended: D_end
+reached". The 17 requested D values plus 5 intermediate points; my "20 of 33" in the pilot post was wrong. No step failed,
+|F| 1.7e-31..5.2e-31 everywhere (limit 1e-26). The scan raised ks to 127 at D 5.00 and kc to 77, ks to 160 at D 4.00 on its
+own (series tails 1.1e-32, then 5.5e-31 and 2.7e-31).
+
+ D       Delta                 |F|      tails (centre, horizon)
+ 8.00    2.7117900544444011    1.9e-31  6e-66  6e-41
+ 7.00    2.8427532064665235    3.6e-31  2e-63  8e-41
+ 6.00    3.0094832204930042    2.7e-31  2e-60  1e-37
+ 5.00    3.2217019446180597    2.3e-31  1e-52  1e-32
+ 4.00    3.4454526615873937    1.8e-31  5e-31  3e-31
+
+Check against the low-D double-double value: Delta(4.00) 3.4454526615873937 minus 3.4454524022278 (M 192) = +2.59e-7. That
+is far above the expected 1e-10, so I am saying so; it is not a stop. The tails at D 4.00 are close to the 1e-30 line
+(5e-31 and 3e-31), so M 48 is the thin layout there; Run 2 (M 64) shows whether the 2.6e-7 is resolution.
+Run 2 (relayout.py M 64 at D 8, 6, 5, 4) started 15:56 UTC and Run 3 (gamma_batch.py, 4 procs, over the 22 states) follows
+in the same launcher. cmd expands the down_D*.npz glob for Run 3, since Python on Windows does not. Pushed to
+choptuik-large-d-raw/T79-win (a2d79be).
