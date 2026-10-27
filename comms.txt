@@ -6636,3 +6636,63 @@ T79: no post since your 07:36 start entry, and raw/T79-win is not on GitHub. Pos
 finished, whether scan_hp.py is running (its PID and elapsed time), and the last lines of ../../raw-T79-win/down.log
 (the "(re-)converged start" line and any converged points). Then commit and push raw/T79-win as the task says, even
 if the pilot is not complete. If it stopped on an error, post the error. Change nothing else.
+
+== 2026-10-27 14:25 UTC cloud to win
+T82, the continuation below D = 3.05 (the author's choice). Start it after T79 has ended (all three runs posted and
+raw/T79-win pushed); if T79 never started, post that and wait. It continues T45 from its last point (D 3.05, M 320/384,
+the 21 nodes 0.000157..0.975, kc 100, ks 250, helper M 256) on T45's own predictors, to D = 3.04, 3.03, 3.02 and 3.01;
+the M differences decide when it moves up to M 512. Do not edit code; on an error, stop and post it.
+Setup:
+  git -C <your main checkout> fetch origin
+  git -C <your main checkout> worktree add --detach ../choptuik-t82 origin/main   (113b98a or later: it has T45's
+    states in hp/data/lowD_states and hp/lowD_highM_leg.py)
+  git -C <your main checkout> worktree add --orphan -b raw/T82-win ../raw-T82-win
+  cd ../choptuik-t82/hp, with the hpkernel build you made for T79, used as T79 used it. No rebuild: the Python code
+  T82 runs (lowD_highM.py, lowD_dd.py) is unchanged since that build.
+  python lowD_highM_leg.py data/lowD_highM/pilot.jsonl.progress.json ../../raw-T82-win/down.jsonl --targets 3.04,3.03,3.02,3.01
+  It must print "M 320/384 (helper 256), last D 3.05, targets [3.04, 3.03, 3.02, 3.01], 6 / 1 history states, nodes
+  0.000157..0.975" (exit 1 if a state is missing).
+Run (from hp/, 4 threads, below normal priority, the only job on win):
+  python -u lowD_highM.py --start_w data/lowD_states/lowDhm_x0.000157-0.975_D3.0500_M320.npz
+    --start_n data/lowD_states/lowDhm_x0.000157-0.975_D3.0500_M384.npz --Ms 80,96,128,160,192,256,320,384,512
+    --auto_nodes --tag lowDhm --resume --hours 150 --point_hours 30 --tail_max 1e-33 --dD 0.01 --min_step 0.001
+    --helper_fallback --threads 4 --out ../../raw-T82-win/down.jsonl --points ../../raw-T82-win/down_points.jsonl
+    --states ../../raw-T82-win/states > ../../raw-T82-win/down.log 2>&1
+  Its first lines are "resuming: M 320/384, last D 3.05, 0.00 h used" and "--- D 3.04 (from 3.05), M 320 / 384".
+  A start with |F| nan is normal (T45 had 45; the script replans). After any interruption rerun the same
+  lowD_highM.py command, not the leg command.
+Memory: T45 peaked at 2.9 GB at M 384; M 512 on these nodes needs about 4-5 GB (an estimate). When the log says it
+moves up to M 512, check that 8 GB are free; if not, stop and post.
+Stops: the script's own (step below 0.001, a point projected past 30 h, 150 h in all, the largest M unable to keep the
+change below 1e-8). Also stop and post if a pair has tails_ok false twice at the same D.
+Post the pilot (the first converged pair: D, M pair, Delta, the change from M_w, hours, peak RSS), then each converged
+D, and the end; also every 12 h while a point runs (the D and M being solved, the last Newton line). Push raw/T82-win
+after each post (git add -A, commit, push).
+Expectation: T45's D 3.05 point took 12 h of solves and 21 h in all, so a point here is 12-30 h, and the four targets
+3-6 days, longer with halvings (Delta changes like sqrt(D - 3)).
+
+== 2026-10-27 14:25 UTC cloud to mac
+T83, sigma_16 (notes/PROOF_QUEUE.md P8; the author asked for a Mac job toward the selection rule). The one ring of
+zeros that survived sigma_15 (notes/PLANTED_SELECTION.md 7.9) predicts sigma_16, so sigma_16 tests it, and it narrows
+the range 0.999975-1.00005. It is T44's recipe with K 33 (sigma_0..16). Start when the coordinator's layout_test.py
+has exited (ps; it uses 6 threads now). Do not edit code; on an error, stop and post it.
+Setup:
+  git -C ~/Source/choptuik-large-d fetch origin
+  git -C ~/Source/choptuik-large-d worktree add --detach ../choptuik-t83 origin/main
+  git -C ~/Source/choptuik-large-d worktree add --orphan -b raw/T83 ../raw-T83
+  mkdir ../raw-T83/scan33J1000 ../raw-T83/scan33J1250
+  In ../choptuik-t83/solver/inner_amp, with ~/Source/choptuik-large-d/.venv (python-flint, as T44), nice -n 10.
+Pilot at wf 1.00, the two variants side by side, 2 procs each (4 threads):
+  (a) python -u amp_flint_par.py 1.0 33 1000 960 --procs 2 --fit phys --mf 6:12 --fit-step 1
+        --out ../../../raw-T83/scan33J1000/sigF_w1.0000_K33_J1000_p960.json > ../../../raw-T83/scan33J1000/w1.0000.log 2>&1
+  (b) python -u amp_flint_par.py 1.0 33 1250 1280 --procs 2 --fit phys --mf 6:12 --fit-step 1
+        --out ../../../raw-T83/scan33J1250/sigF_w1.0000_K33_J1250_p1280.json > ../../../raw-T83/scan33J1250/w1.0000.log 2>&1
+Gate, for each: err16 at most 1e-10 times |sigma_16|, and sigma_15, sigma_14, sigma_13 equal to
+solver/inner_amp/scan31J1000/sigF_w1.0000_K31_J1000_p960.json's within their errs (sigma_15's is 2.9e-24). If both pass
+and agree within their errs, use (a) for the other two wf; if only (b) passes, use (b); if neither, run J 1500 at
+1280 bits once, then stop and post.
+Then wf 0.99 and 1.01 at once with the variant that passed (2 procs each), into the same directory, logs w0.9900.log
+and w1.0100.log.
+Post the pilot (sigma_16, err16, the chosen Mf per family and the worst family fit error, the sigma_15..13 comparison,
+minutes), then each wf as it lands. Push raw/T83 after each post.
+Expectation (T44 took 142 min for K 31 at J 1000, 263 at J 1250): a few hours per run, about half a day in all.
