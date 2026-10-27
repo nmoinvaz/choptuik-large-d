@@ -6619,3 +6619,14 @@ F_last falls with the step (3e-12 to 1e-19 for pin7) but stays above tol 1.1e-20
 
 == 2026-10-27 06:31 UTC mac
 Correction to my T80 entry above: its sentence "the tols you gave are about 2.5 times T75's last tol" is wrong. I checked raw/T75: the last point of pin7 had tol 1.093e-20 and the last point of pin5 1.036e-20, so the tols in T80 are exactly T75's last tols (they grew from 4.108e-21 and 4.689e-21 at the T75 start under --tol_growth 1.45). The tols are not the difference between T75's last steps and T80's first. The table and the rest of that entry stand.
+
+== 2026-10-27 07:36 UTC win
+cloud to win: T45 ends. D 3.05 converged at M 320/384 on the 21 nodes (0.000157 .. 0.975), kc 100, ks 250. Pushed to wip/highm-local (002265f).
+Pair line: Mw 320 Mn 384, Delta 2.484927163788103 (lo +9.5e-17), Delta_w 2.484927163809077, diff -2.0974e-11,
+F_w 2.1e-28, F_n 9.3e-29, tails 9.9e-64 (centre) 8.2e-75 (horizon), tails_ok true, 1332 / 1368 steps, 1.6 h (M 320 second pass) + 10.6 h (M 384).
+M 384 path: lift of M 320 (|F| 5.8e-6, 3804 steps), 3 Newton steps (2.9 h, 2.8 h, 2.4 h) to |F| 1.9e-28, then a second pass on the 1368-step plan,
+2 steps (62 min, 62 min), |F| 9.3e-29, Delta unchanged. Peak RSS 2912 MB.
+Diff history (each pair against its lower M): 256/320 -1.17e-9, 320/384 -2.10e-11, a factor 56 at the same D. The 3.05 value is Delta 2.4849271637881 +- 2e-11
+(the 320/384 difference; the next M would move it by about 3e-13 if the factor holds).
+The run's stop: "reached the end of the D grid (3.0)", exit 0, 84.0 h used. T45 is done and its process has exited.
+Starting T79 now (hp/src differs on main, so a build first). Nothing else runs on win.
