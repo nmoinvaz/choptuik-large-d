@@ -555,3 +555,29 @@ In the Layout block under `hp/`:
 ├── src/qd.rs, qv.rs  quad-double: scalar and 8-lane (not used by the solver yet)
 ├── qd_check.py     checks of the quad-double arithmetic against mpmath, and across the SIMD backends
 ```
+
+## 12. Plan: a fully quad-double solver past D ≈ 73 (2026-10-27, the author's choice)
+
+**Why.** The pinned double-double continuation (T72–T80, `raw/T73`, `raw/T75`, `raw/T80`) ends near D = 73.3: steps of
+6×10⁻⁴ in D stall at |F| ≈ 10⁻¹⁹ against a tolerance of 1.1×10⁻²⁰, and the two pin choices' corrected Δ drift apart
+(10⁻¹⁶ at D = 71, 8.6×10⁻¹⁵ at 73.1). The full system's u·κ is 10³ there (README, "Why the solver stalls"): the
+double-double Jacobian's rounding, u·σ_max ≈ 10⁻²¹, exceeds its weakest singular value, 3×10⁻²⁴, so no double-double
+Jacobian or LU resolves that direction. Done on `wip/qd-horizon` (be10434, 37468e6): `residual_qd`, the residual with
+every block in quad-double (kernel test `residual_qd_agrees`), `QdSolver` (Newton–GCR on it, preconditioned by the
+double-double LU) and `hp/full_step_check.py`. At D = 72.80 one such step with 60 GCR products (not converged) raised
+|F| from 6×10⁻²² to 10⁻¹⁷, and Newton with line search made no progress (`raw/T76` 7ca90fe, ab929a7).
+
+**First, the deciding experiment.** The same step with GCR converged (up to 300 products):
+- if it lowers |F|, the linear solve was the limit: Newton–GCR on `residual_qd` is the solver, no quad-double Jacobian;
+- if it still raises |F|, the pinned state lies outside Newton's basin along the weak directions (basin 2σ²/c), and
+  the solver must release the pinned harmonics one at a time in quad-double (pin 13 → 11 → 9 → 7 → none), each
+  release solved from the last.
+
+**Then, if a quad-double Jacobian is needed** (in this order; arithmetic in multidouble first, per AGENTS.md):
+1. multidouble: a forward-mode dual over quad-double lanes (as `dual::Du` over double-double) and a quad-double dense
+   LU with solve and transpose solve (as `linalg`'s double-double LU); tests and mutation controls; a release.
+2. hp: `jacobian_lanes::<QDu, B>` for M = 32 and 48, a binding, and the Newton step on it; the bit-identity checks
+   (`highm_check.py ref` and `scaled`) for the unchanged paths.
+3. The driver: a quad-double Newton (deflated as `deflated_newton`) and `scan_hp --solver qd`; the stall detector's
+   u·κ with u = 2⁻²⁰⁸ to check that the weakest direction is resolved (u·κ ≪ 1).
+4. A pilot from T75's last states, then the run toward D = 100 on `raw/<task>`.
