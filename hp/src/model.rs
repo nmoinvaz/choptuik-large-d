@@ -543,18 +543,14 @@ fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, lu: &DDLu, lu_t: &DDLu, kappa: 
         // and kappa from the quad-double a_h and Delta), its residual formed in the lane's precision (iterative
         // refinement in the working precision of the residual: Wilkinson; Moler, J. ACM 14 (1967) 316,
         // doi:10.1145/321386.321394)
-        let z = Fl::<DV, B>::zero();
-        let mut f = Fl::<T, B>::from_vt(&lu.solve_lanes(&rhs.val()), &z);
+        // (multidouble's FieldSolve::solve_lanes_refine: the double-double solve, then each step adds the solve of
+        // this residual)
         let steps = match ctx.mutate {
             QD_MUT_NOREFINE => 0,
             QD_MUT_REFINE4 => 4,
             _ => QD_REFINE,
         };
-        for _ in 0..steps {
-            let res = *rhs - (ctx.d.apply(&f).mul_t(omega) + *kappa * f);
-            f = f + Fl::<T, B>::from_vt(&lu.solve_lanes(&res.val()), &z);
-        }
-        return f;
+        return lu.solve_lanes_refine(rhs, steps, |f| *rhs - (ctx.d.apply(f).mul_t(omega) + *kappa * *f));
     }
     if T::VAL_F64 || T::TAN_F64 {
         // f64 values: the value solve in plain f64 with the hi parts of the double-double LU factors; f64 tangents:
@@ -796,14 +792,10 @@ pub fn residual<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool)
     Ok((fh, fl))
 }
 
-/// A field from the four parts of a quad-double state (multidouble's QD: z0 + z1 + z2 + z3, renormalized)
+/// A field from the four parts of a quad-double state at offset off (multidouble's QD: z0 + z1 + z2 + z3, the parts
+/// as they are; field::Fl::load_parts)
 fn fld_qv<const B: usize>(z: [&[f64]; 4], off: usize) -> Fl<QV, B> {
-    let mut r = [QV::zero(); B];
-    for (b, rb) in r.iter_mut().enumerate() {
-        let o = off + 8 * b;
-        *rb = QV::load(&z[0][o..o + 8], &z[1][o..o + 8], &z[2][o..o + 8], &z[3][o..o + 8]);
-    }
-    Fl(r)
+    Fl::<QV, B>::load_parts(&z[0][off..], &z[1][off..], &z[2][off..], &z[3][off..])
 }
 
 /// The residual with the horizon block in quad-double (notes/QUAD_DOUBLE.md, section 11). The state comes in four

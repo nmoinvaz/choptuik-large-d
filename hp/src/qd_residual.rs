@@ -136,14 +136,7 @@ fn horizon_qv<const B: usize>(ctx: &Ctx<B>, z: [&[f64]; 4]) -> crate::field::Sta
     let inq: Vec<Fl<QV, B>> = ctx
         .block_inputs(kb)
         .iter()
-        .map(|&o| {
-            let mut r = [QV::zero(); B];
-            for (b, rb) in r.iter_mut().enumerate() {
-                let i = o + 8 * b;
-                *rb = QV::load(&z[0][i..i + 8], &z[1][i..i + 8], &z[2][i..i + 8], &z[3][i..i + 8]);
-            }
-            Fl(r)
-        })
+        .map(|&o| Fl::<QV, B>::load_parts(&z[0][o..], &z[1][o..], &z[2][o..], &z[3][o..]))
         .collect();
     let dq = QV::splat(QD::new(z[0][l - 1], z[1][l - 1], z[2][l - 1], z[3][l - 1]));
     block_state::<QV, B>(ctx, kb, &inq, dq, &lus, &lus)
@@ -215,14 +208,7 @@ fn block_qv<const B: usize>(ctx: &Ctx<B>, z: [&[f64]; 4], b: usize) -> crate::fi
     let inq: Vec<Fl<QV, B>> = ctx
         .block_inputs(b)
         .iter()
-        .map(|&o| {
-            let mut r = [QV::zero(); B];
-            for (k, rk) in r.iter_mut().enumerate() {
-                let i = o + 8 * k;
-                *rk = QV::load(&z[0][i..i + 8], &z[1][i..i + 8], &z[2][i..i + 8], &z[3][i..i + 8]);
-            }
-            Fl(r)
-        })
+        .map(|&o| Fl::<QV, B>::load_parts(&z[0][o..], &z[1][o..], &z[2][o..], &z[3][o..]))
         .collect();
     let dq = QV::splat(QD::new(z[0][l - 1], z[1][l - 1], z[2][l - 1], z[3][l - 1]));
     block_state::<QV, B>(ctx, b, &inq, dq, &lus, &lus)

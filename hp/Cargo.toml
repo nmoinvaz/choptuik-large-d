@@ -16,7 +16,9 @@ pyo3 = { version = "0.30", features = ["extension-module"], optional = true }
 numpy = { version = "0.30", optional = true }
 rayon = "1.10"
 # double-double / quad-double arithmetic, dual lanes and LU (split out of this crate; crates.io)
-multidouble = "=1.5.1"  # StaircaseLu, field, gcr (PRs #14-#16) and the lane solves after them; hp/pyproject.toml pins the same release
+# multidouble's PR #22 (FieldSolve::solve_lanes_refine, Fl<QV, B>::load_parts) until it is released; then "=1.6.0", the
+# same code. hp/pyproject.toml's Python package (release 1.5.1's commit) already has qd_add_dd.
+multidouble = { git = "https://github.com/nmoinvaz/multidouble", rev = "902506fa7380a3d115d8debfcaa559d35b56040c" }
 
 [profile.release]
 opt-level = 3

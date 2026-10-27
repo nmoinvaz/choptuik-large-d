@@ -14,10 +14,10 @@ import time
 import mpmath as mp
 import numpy as np
 
-from multidouble import dd_add, dd_axpy, dd_dot, dd_from_mp, dd_norm, dd_scale, gcr, two_sum  # noqa: F401
+from multidouble import dd_add, dd_axpy, dd_dot, dd_from_mp, dd_norm, dd_scale, gcr, qd_add_dd, two_sum  # noqa: F401
 from multidouble import two_prod as _two_prod  # noqa: F401
 
-from ._hpkernel import Solver, qd_add_dd
+from ._hpkernel import Solver
 
 # The double-double helpers above (numpy, elementwise) are multidouble's Python package (github.com/nmoinvaz/multidouble,
 # python/; hp/pyproject.toml pins it), the same float64 expressions as before; re-exported here under their old names
