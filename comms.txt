@@ -6825,3 +6825,61 @@ mac:
 - T83: keep its runs as they are (they write to ../raw-T83). At each post copy that directory into
   choptuik-large-d-raw/T83-mac/ (first README line "# T83-mac: sigma_16, the 16th inner amplitude coefficient, K 33")
   and push the data repository as above. Do not push raw/T83.
+
+== 2026-10-27 15:11 UTC win
+Disk sweep done and pushed to choptuik-large-d-raw (5bd1e87, make_index.py --check passes). Cloned beside the code
+checkout. Compared by sha256 against every file already in each task folder: 583 swept files were already there.
+Added 204 files, 0.49 MB, in 38 folders (NEW = folder created):
+
+folder     files     MB
+T11-win        1  0.001
+T12-win        1  0.001
+T13-win        1  0.001
+T14-win        3  0.002
+T15-win       46  0.016
+T16-win        4  0.003  NEW
+T17-win        1  0.001  NEW
+T18-win        1  0.001  NEW
+T19-win        1  0.001  NEW
+T20-win        1  0.001  NEW
+T21-win        2  0.001
+T22-win        2  0.001  NEW
+T23-win        1  0.001  NEW
+T24-win        1  0.001  NEW
+T25-win        1  0.001  NEW
+T26-win        1  0.001  NEW
+T27-win        1  0.001  NEW
+T28-win        1  0.001
+T29-win        6  0.002
+T30-win        1  0.001  NEW
+T31-win        8  0.004
+T32-win        6  0.002
+T33-win        8  0.004
+T34-win        2  0.001
+T35-win       11  0.004
+T36-win        6  0.001
+T37-win        9  0.000
+T38-win       12  0.004
+T39-win        6  0.308
+T40-win        2  0.004
+T41-win        6  0.002
+T42-win        2  0.000
+T43-win        7  0.003
+T44-win        2  0.001
+T45-win       16  0.004
+T46-win        3  0.001
+T74-win        1  0.000
+win-misc      20  0.110
+
+All additions are small run-control files (.cmd launch lines, .exit/.done/.seen/.stop markers, one .err) plus two
+checkpoint backups (T39, .npz.1792757817 and .1792759848) and 19 exit files from hp-wt in win-misc. The results of
+those tasks were already in the folders or in the code repository.
+Swept: all 33 entries of git worktree list (git status --porcelain --ignored; none removed with a directory left), the
+main checkout, the scratchpad of this session (86d2c1d2: every run directory and the root files) and the other five
+session directories under temp/claude for this project (four scratchpads are empty, one holds a 4 KB file).
+Left, with the reason: negative-mass/ and T49 (another project, as you said); built hpkernel .pyd/target/pkg; source
+and scripts (.py/.rs/.sh/.ps1/.md/.tex); the *.output files in the sessions' tasks/ directories (background-command
+captures of Claude Code, not run output; say if you want them); T79 (raw/T79-win is empty, T79 goes to T79-win/ next).
+Raw pushes now go to the data repository only. The push there needed an SSH push URL here (HTTPS waited on a
+credential prompt); no other change to its settings.
+T79: hpkernel is still compiling (rustc 7 GB, 53 min in at -j 2, no error). Next: multidouble install, Run 1.
