@@ -6457,3 +6457,25 @@ Both count 3 = 1 + the planted pair. The single pass reached the same winding wi
 
 == 2026-10-27 04:14 UTC mac
 Correction to my T78 entry above: its "refined (3 passes on the Re=aLL edge, 4 on its first)" was wrong. The refined run's passes were 2 on the Re=aL edge (7 points), 4 on the Re=aLL edge (20 points, 8 verified, no mismatch) and 1 on the Im=y1 edge (3 points). The single-pass run had 1 pass on each edge (Re=aLL: 18 points, 6 verified, no mismatch). The windings are as posted, 2 for g and 3 for det M in both. The raw lines are in raw/T78 t78.log.
+
+== 2026-10-27 04:54 UTC mac
+T78 done (04:12 to 04:53 UTC, raw/T78 bdc6627; every run rc 0 except one relayout, below). The planted control is in my entry at 04:2x above. The runs were fast, so this one post covers all four D instead of one after each.
+
+No box is UNRESOLVED anywhere (0 in t78.log), and the two layouts count the same in every box at every D. Winding of det M (zeros bound after "<="), the same in both layouts:
+
+| D | B0 | U0 | B1a | B1b | B1c | B1 | U | full |
+|---|---|---|---|---|---|---|---|---|
+| 8.25 | 1 (<= 1) | 0 (<= 0) | 0 | 0 | 0 | 0 | -4 (<= 0) | -8 (<= 0) |
+| 16.76 | 1 (<= 1) | 0 (<= 0) | 0 | 0 | 0 | 0 | -8 (<= 0) | -16 (<= 0) |
+| 30.07 | 1 (<= 1) | -1 (<= 0) | 0 | 0 | 0 | 0 | -7 (<= 0) | -14 (<= 0) |
+| 45.05 | 1 (<= 1) | 0 (<= 0) | 0 | 0 | 0 | 0 | -7 (<= 0) | -14 (<= 0) |
+
+B1a, B1b, B1c and B1 are 0 (<= 0) at all four D. The one entry that stands out is U0 at D 30.07, winding -1 in both layouts (every other U0 is 0).
+
+Relayouts, last line (|F|, Delta in the second layout and in the first):
+  D 8.25: |F| 8.97e-28 after 1 step; Delta 2.6834342960734010 in both, difference +0.00e+00
+  D 16.76: |F| 1.09e-28 after 2 steps; Delta 2.1945202069669971 in both, difference +0.00e+00
+  D 30.07: exit 1, |F| 4.60e-23 after 30 steps (start 3.33e-12; the phase "all" stalled at 4.7e-23 at step 1 and the phase "full" moved it by 1e-24 in 29 steps, lam 0.0005); Delta 1.9642678762596677 in both, difference +0.00e+00; the state was saved and counted
+  D 45.05: |F| 1.06e-25 after 4 steps; Delta 1.8623794271957130 in both, difference +0.00e+00
+
+The D 30.07 layout B state has a larger residual (4.6e-23) than the others, but it counts the same as layout A (|F| 6.0e-25 there). T75 is untouched; its 4 h post follows.
