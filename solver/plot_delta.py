@@ -35,6 +35,7 @@ INK = "#0b0b0b"
 INK_SOFT = "#52514e"
 GRID = "#e7e6e2"
 BAND = "#efeeea"
+BAND2 = "#f5f4f0"      # the alternate tint of the precision bands
 # Categorical slots in fixed order, never cycled; the last slot is the neutral one.
 SERIES = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100",
           "#e87ba4", "#008300", "#4a3aa7", "#e34948", "#a6339a", "#7a7668"]
@@ -47,6 +48,7 @@ DARK = {
     INK_SOFT: "#a8a49d",
     GRID: "#343230",
     BAND: "#2a2927",
+    BAND2: "#232221",
     "#eb6834": "#dd5c26",
     "#7a7668": "#948e82",
 }
@@ -59,7 +61,10 @@ DD_CSV = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "hp", "d
 
 
 DD_MAX = math.inf     # --dd_max: the largest D of the double-double points drawn
-PINNED = (("T73", "t73/pin7.jsonl"), ("T73", "t73/pin5.jsonl"), ("T75", "pin7.jsonl"), ("T75", "pin5.jsonl"))
+PINNED = (("T73", "t73/pin7.jsonl"), ("T73", "t73/pin5.jsonl"), ("T75", "pin7.jsonl"), ("T75", "pin5.jsonl"),
+          ("T85-mac", "x80.jsonl"), ("T85-mac", "x85.jsonl"))
+PAIRS = ((("T73/t73/pin7.jsonl", "T75/pin7.jsonl"), ("T73/t73/pin5.jsonl", "T75/pin5.jsonl"), "pinned runs, pin 7 against pin 5"),
+         (("T85-mac/x80.jsonl",), ("T85-mac/x85.jsonl",), "pinned runs, last node 0.8 against 0.85"))
 
 
 def dd_points(Dmin, every=0.5):
@@ -93,7 +98,7 @@ def pinned_points(raw, Dmin, every=0.5):
         path = os.path.join(raw, folder, f)
         if not os.path.exists(path):
             raise SystemExit(f"--raw: {path} missing (a clone of github.com/nmoinvaz/choptuik-large-d-raw?)")
-        pin = "pin 7" if "pin7" in f else "pin 5"
+        pin = os.path.basename(f)[:-6]
         for line in open(path):
             if line.strip():
                 r = json.loads(line)
@@ -108,6 +113,62 @@ def pinned_points(raw, Dmin, every=0.5):
     if pts and out[-1] != pts[-1]:
         out.append(pts[-1])         # the frontier, whatever the thinning
     return out
+
+
+def sci(v):
+    """4e-10 as 4×10⁻¹⁰"""
+    m, e = f"{v:.0e}".split("e")
+    sup = str.maketrans("0123456789-", "⁰¹²³⁴⁵⁶⁷⁸⁹⁻")
+    return f"{m}×10{str(int(e)).translate(sup)}"
+
+
+def full1_of(raw, files):
+    """{D: Delta_full1} of pinned-run records (the pinned Delta plus the linearised full-system correction)"""
+    out = {}
+    for f in files:
+        for line in open(os.path.join(raw, f)):
+            if line.strip():
+                r = json.loads(line)
+                if "Delta_full1" in r:
+                    out[round(r["D"], 4)] = r["Delta_full1"] + r.get("Delta_full1_lo", 0.0)
+    return out
+
+
+def error_series(raw, lowd):
+    """[(D0, D1, [(D, error)], source, kind)] per range of D: the error of Delta at each point, from its data file. The low-D
+    double-double points: their change from the next lower M (hp/data/delta_dd.csv, the lowD rows); 4 to 8.25, f64
+    only: the spread over the setups (data_all.low_d); the continuation: its nearby checks (delta_dd.csv); with --raw,
+    each pair of pinned runs (PAIRS): the largest difference of Delta_full1 at their shared waypoints. Estimators and
+    spreads, none a bound."""
+    rows = [l.rstrip("\n").split(",") for l in list(open(DD_CSV))[1:]]
+    low = sorted((float(c[0]), abs(float(c[7]))) for c in rows if c[6].startswith("lowD") and c[7])
+    cont = sorted((float(c[0]), abs(float(c[7]))) for c in rows if not c[6].startswith("lowD") and c[7])
+    f64 = sorted((d, lowd[d][1]) for d in lowd if 4.0 <= d < cont[0][0])
+    out = [(low[0][0], 4.0, low, "double-double, M up to 384", "the change from the next lower M"),
+           (4.0, cont[0][0], f64, "f64, kc 39 and 47 with Richardson", "the spread over the setups"),
+           (cont[0][0], cont[-1][0], cont, "double-double continuation", "the nearby checks")]
+    if raw:
+        for fa, fb, name in PAIRS:
+            A, B = full1_of(raw, fa), full1_of(raw, fb)
+            shared = sorted(set(A) & set(B))
+            if shared:
+                out.append((out[-1][1], max(max(A), max(B)), [(d, abs(A[d] - B[d])) for d in shared], name,
+                            f"the two runs' difference at {len(shared)} shared waypoints"))
+    return out
+
+
+def precision_bands(raw, lowd):
+    """[(D0, D1, median, (largest, its D), source, kind)]: error_series summarized per range. A median of 0 (two
+    runs agreeing to the last stored digit at most waypoints) is reported as the smallest nonzero difference, negated:
+    the estimator's resolution, to be shown as an upper limit."""
+    bands = []
+    for D0, D1, pts, name, kind in error_series(raw, lowd):
+        e = sorted(err for _, err in pts)
+        med = e[len(e) // 2]
+        if med == 0:
+            med = -min(v for v in e if v > 0)
+        bands.append((D0, D1, med, max((err, d) for d, err in pts), name, kind))
+    return bands
 
 
 def esc(s):
@@ -289,6 +350,9 @@ def main():
     pin = pinned_points(args.raw, dd_max) if args.raw and not P else []
     pin_err = max((abs(fR(d) - v) for d, v, _ in pinned_points(args.raw, dd_max, every=0.0)), default=0.0) if pin else 0.0
     pin_max = max((d for d, _, _ in pin), default=dd_max)
+    if pin:
+        old = [(d, v) for d, v, run in pinned_points(args.raw, dd_max, every=0.0) if run.startswith(("T73", "T75"))]
+        print(f"  T73 and T75 (the 0.7 layout) against the formula: {max(abs(fR(d) - v) for d, v in old):.1e}")
     Dtop = math.ceil(max(dd_max, pin_max) + 0.5) if len(ddp) else 60
     print(f"double-double: {len(dd_all)} points {FIT_MAX}-{dd_max:.2f}, formula within {dd_err:.1e}; {len(low_dd)} below "
           f"D = 4" + (f"; pinned runs to {pin_max:.2f}, formula within {pin_err:.1e}" if pin else ""))
@@ -312,7 +376,7 @@ def main():
         width, height, tdy = 620, 676, 16
         boxA, boxB, boxC = (56, 56, 548, 250), (56, 388, 245, 240), (361, 388, 245, 240)
     else:
-        width, height, tdy = 1080, 560 + 280 + 80, 40
+        width, height, tdy = 1140, 560 + 280 + 80, 40        # 60 px at the right for the error axis
         boxA, boxB, boxC = (78, 140, 984, 300), (78, 560, 452, 280), (610, 560, 452, 280)
     svg = Svg(width)
     if not P:
@@ -323,13 +387,52 @@ def main():
         svg.text(16, 66, f"and the double-double points (green) up to D = {dd_max:.0f} to {dd_err:.0e}"
                          + (f", the pinned runs (amber) to D = {pin_max:.1f} to {pin_err:.0e}" if pin else "")
                          + f".  Δ∞ = {DINF_DD:.9f} from the double-double points, γ∞ = 1/2", size=12)
+        svg.text(16, 84, "Shading (top): how well Δ is known in each range, the median error from the next resolution, nearby checks or "
+                         "two runs; grey trace: the error per point, right axis", size=12)
 
     # Panel A: Delta against D, full width
     A = Panel(svg, *boxA, (3, Dtop), (1.4, 3.6),
               f"Δ levels off at Δ∞ ≈ {DINF_DD:.4f} instead of falling to zero",
               "spacetime dimension D", "echo period Δ")
-    if len(Dh):
-        A.band(FIT_MAX, Dh.max() + 0.3, "held out")
+    if P:
+        if len(Dh):
+            A.band(FIT_MAX, Dh.max() + 0.3, "held out")
+    else:
+        # the README's graph: how well Delta is known in each range, as alternating background blocks. The labels
+        # sit at the top of the panel in two rows, laid out left to right (a narrow band's label moves right of it,
+        # with a tick back to the band)
+        xend = [A.px + 26, A.px + 26]          # the low-D points fill the top-left corner
+        bands = precision_bands(args.raw, lowd)
+        for i, (D0, D1, med, (big, bigD), name, kind) in enumerate(bands):     # the blocks first, the labels after
+            a, b = A.sx(max(D0, A.xr[0])), A.sx(min(D1, A.xr[1]))
+            svg.add(f'<rect x="{a:.1f}" y="{A.py:.1f}" width="{b - a:.1f}" height="{A.ph:.1f}" fill="{BAND if i % 2 == 0 else BAND2}">'
+                    f'<title>{esc(f"D = {D0:g} to {D1:g}: Δ known to {abs(med):.1e} (" + ("the median" if med > 0 else "below the estimator's resolution: the median difference is 0") + f"; the largest error is {big:.1e}, at D = {bigD:g}). {name}; {kind}")}</title></rect>')
+        for i, (D0, D1, med, (big, bigD), name, kind) in enumerate(bands):
+            a, b = A.sx(max(D0, A.xr[0])), A.sx(min(D1, A.xr[1]))
+            label = ("Δ to " if med > 0 else "Δ to <") + sci(abs(med))
+            half = 3.3 * len(label)
+            row = i % 2
+            y = A.py + 14 + 14 * row
+            x = min(max((a + b) / 2, xend[row] + 8 + half), A.px + A.pw - half)
+            if x - half > b + 2:
+                svg.line((a + b) / 2, y - 3.5, x - half - 3, y - 3.5, INK_SOFT, width=1)
+            svg.text(x, y, label, size=10, anchor="middle")
+            xend[row] = x + half
+            print(f"  band D {D0:g}-{D1:g}: Delta to {med:.1e} (median, negative: below the resolution; largest {big:.1e} at D {bigD:g}; {name})")
+        # the error of Delta at every point, as a faint trace on a log axis at the right (zero differences are drawn
+        # at the axis bottom: below the estimator's resolution)
+        lo_e, hi_e = -22.0, -4.0
+        ey = lambda e: A.py + A.ph - (max(math.log10(e) if e > 0 else lo_e, lo_e) - lo_e) / (hi_e - lo_e) * A.ph  # noqa: E731
+        sup = str.maketrans("0123456789-", "⁰¹²³⁴⁵⁶⁷⁸⁹⁻")
+        for k in range(int(lo_e), int(hi_e) + 1, 3):
+            svg.text(A.px + A.pw + 6, ey(10.0 ** k) + 4, "10" + str(k).translate(sup), size=9, fill=INK_SOFT)
+        svg.add(f'<text x="{A.px + A.pw + 44:.1f}" y="{A.py + A.ph / 2:.1f}" font-size="10" fill="{INK_SOFT}" text-anchor="middle" '
+                f'transform="rotate(-90 {A.px + A.pw + 44:.1f} {A.py + A.ph / 2:.1f})">error of Δ (log, right)</text>')
+        for D0, D1, pts, name, kind in error_series(args.raw, lowd):
+            floor = min((e for _, e in pts if e > 0), default=10.0 ** lo_e)      # a zero difference: below the resolution
+            path = " ".join(f"{'M' if j == 0 else 'L'}{A.sx(d):.1f},{ey(max(e, floor)):.1f}" for j, (d, e) in enumerate(pts))
+            svg.add(f'<path d="{path}" fill="none" stroke="{NEUTRAL}" stroke-width="1" opacity="0.7">'
+                    f'<title>{esc(f"error of Δ, D {D0:g}-{D1:g}: {name}, {kind}")}</title></path>')
     svg.line(A.sx(3), A.sy(DINF_DD), A.sx(Dtop), A.sy(DINF_DD), SERIES[1], width=1, opacity=0.6)
     svg.line(A.sx(3), A.sy(zeta2), A.sx(Dtop), A.sy(zeta2), NEUTRAL, width=1, dash="2 3")
     DD = np.linspace(4, Dtop, 500)
@@ -351,13 +454,12 @@ def main():
     svg.text(xa, A.sy(DINF_DD) + 16, f"Δ∞ = {DINF_DD:.9f}  (double-double; formula limit {dinf:.6f})",
              size=11, fill=INK)
     svg.text(xa, A.sy(zeta2) - 8, f"π²/6 = {zeta2:.4f}", size=10)
-    A.key("dot", SERIES[0], "in the fit" if P else "computed, in the fit")
-    A.key("hollow", SERIES[0], "held out" if P else "computed, held out")
-    A.key("diamond", SERIES[2], "double-double" if P else "double-double, held out")
+    A.key("dot", SERIES[0], "in the fit")
+    A.key("hollow", SERIES[0], "held out")
+    A.key("diamond", SERIES[2], "double-double")
     if pin:
-        A.key("diamond", SERIES[3], "double-double, pinned runs")
-    A.key("line", SERIES[1], "rational formula, D ≥ 4" if P else f"rational formula, D ≥ 4, extended to D = {Dtop}",
-          dash="6 4")
+        A.key("diamond", SERIES[3], "pinned runs")
+    A.key("line", SERIES[1], "rational formula, D ≥ 4" if P else f"rational formula, D ≥ 4, to D = {Dtop}", dash="6 4")
     A.key("line", NEUTRAL, "π²/6" if P else "π²/6 for reference", dash="2 3")
 
     # Panel B: Delta against 1/(D-2), D = infinity at the left edge

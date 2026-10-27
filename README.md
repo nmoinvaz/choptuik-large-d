@@ -143,8 +143,12 @@ The dashed curves are one rational formula in 1/(D−2) for every D ≥ 4 (below
 directions resolved and enough Fourier modes in time at low D;
 hollow points are held out of the fit. The green diamonds are double-double points from D = 3.05 to 67.77 (below D = 4
 the formula does not apply); above D = 30.2 it matches them to 9.6×10⁻⁸. The amber diamonds are the pinned
-double-double runs T73 and T75 from D = 67.74 to 73.27 (Δ after one full-system Newton step), which it matches to
-7.4×10⁻⁸. As D → ∞, γ → 1/2 (imposed in the γ fit) and Δ → Δ∞ = 1.643893746 ± 0.000000015 if Δ is analytic in 1/D
+double-double runs: T73 and T75 from D = 67.74 to 73.27 (Δ after one full-system Newton step), which it matches to
+7.4×10⁻⁸, and T85 past 73.27 in a layout with the last node moved toward the horizon, where Δ is known only to about
+10⁻⁶ ([notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), section 12.3). The shaded ranges say how well Δ is known in
+each (the median of the range's error estimate: the change from the next resolution, the nearby checks, or the
+difference between two runs; hover for the largest), and the grey trace is that error at every point, on the log
+axis at the right. As D → ∞, γ → 1/2 (imposed in the γ fit) and Δ → Δ∞ = 1.643893746 ± 0.000000015 if Δ is analytic in 1/D
 (from the double-double points; both limits are discussed [below](#the-formula)). Details are in
 [`solver/CONTEXT.md`](solver/CONTEXT.md). Regenerate with `cd solver/data && python3 ../plot_delta.py --raw
 ../../../choptuik-large-d-raw` (the pinned runs are in the [raw data](#raw-data)).
