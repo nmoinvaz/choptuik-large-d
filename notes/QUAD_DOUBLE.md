@@ -645,3 +645,29 @@ solutions have the smallest pivots, 2.3e-16 and 2.9e-16 against 1e-9 for the lar
 **Taylor plan.** The plan (Solver.plan, tol_step 1e-32) is computed from the state. Replanning at the converged
 D = 72.8 state moved Delta by 9.1e-28, so with that tolerance Delta is defined to about 1e-27. `scan_qd.py` keeps a
 plan until D moves --replan (0.5).
+
+### 12.2 What stops the continuation past D = 73: the horizon block (2026-10-27, raw/T81)
+
+The quad-double solutions at D = 72.8 and 73.0 lie on one smooth branch. p1's harmonics 9, 11 and 13 are -1.707234e-6,
+2.659647e-7 and -4.136447e-8 at D = 72.8, and -1.700991e-6, 2.646266e-7 and -4.109847e-8 at D = 73.0, with a geometric
+ratio of 6.4. Continuing it fails at once. Every block but the horizon block responds to D linearly, about 4e-5 per
+unit of D at the D = 72.8 state; the horizon block's residual explodes, and more horizon orders make it worse.
+
+| horizon orders ks | horizon block at D + 1e-6 | at D + 1e-4 |
+|---|---|---|
+| 130 | 9.6e3 | 3.8e15 |
+| 160 | 1.5e5 | 2.6e19 |
+| 200 | 4.8e6 | 2.9e24 |
+
+At the solution the horizon series converges cleanly (terms 1e-45 at order 130, 2e-70 at order 200). Off it they grow
+about 1.34-fold per order. That suggests a radius near 0.22 for generic horizon data at D = 73, against the matching
+distance u0 = 0.3; the solution's own radius is 0.75 at D = 60 (BEYOND_LIGHT_CONE section 2.3). Even linear
+interpolation between the two solutions, at D = 72.9, leaves the horizon block at 4.6e18 with every other block near
+1e-8. This one structure gives the quadratic constant of about 2e37 (12.1), the response of the residual to D like
+dD^6.7, and the nearly double roots where Newton halves. A finite-difference tangent in D is meaningless here: it
+scales like h^2, its truncation error. These are measurements; the mechanism (a radius for generic data below u0, or a
+nearly singular horizon solve amplifying the deviation) is not established.
+
+The candidate remedy is to match closer to the horizon, with the last node at x = 0.75 or 0.8 (u0 = 0.25 or 0.2), so
+that the series converges for data near the solution. That changes the discrete system, so Delta must agree between
+layouts to the quoted precision before it is used.
