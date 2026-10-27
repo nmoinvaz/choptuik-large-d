@@ -646,6 +646,11 @@ solutions have the smallest pivots, 2.3e-16 and 2.9e-16 against 1e-9 for the lar
 D = 72.8 state moved Delta by 9.1e-28, so with that tolerance Delta is defined to about 1e-27. `scan_qd.py` keeps a
 plan until D moves --replan (0.5).
 
+**Bit-identity of the bump from multidouble 1.5.1 to 1.7.0.** `highm_check.py ref` and `scaled` were saved with a
+build of main (6014cb1, 1.5.1) and compared with a build of this branch (086a95e, 1.7.0), on the Mac. All 168 `ref`
+outputs (M = 8 to 128) and all 22 `scaled` outputs (M = 192 and 256) are bit-identical, and the `scaled` control
+(the scale wrong at order 7) fires. The logs and hashes are on raw/T81 (fd8e038).
+
 ### 12.2 What stops the continuation past D = 73: the horizon block (2026-10-27, raw/T81)
 
 The quad-double solutions at D = 72.8 and 73.0 lie on one smooth branch. p1's harmonics 9, 11 and 13 are -1.707234e-6,
