@@ -223,3 +223,12 @@ Canalis-Durand 1993, Ramis–Sibuya 1994 and Sokal 1980, in `paper/math/main.tex
 | Sibuya, *Gevrey property of formal solutions in a parameter* (1990) | not found | UNVERIFIABLE |
 
 Also corrected in proof/C_selection.md: the title of Costin, Duke Math. J. 93 (1998), to the one verified in §3 above.
+
+## Addendum (2026-10-27): references for the README's "Why the solver stalls"
+
+Checked by the coordinating session; pages opened in this session.
+
+| Entry | Checked against | Verdict |
+|---|---|---|
+| Higham, *Accuracy and Stability of Numerical Algorithms*, 2nd ed., SIAM (2002) | the author's BibTeX page, nhigham.com/accuracy-and-stability-of-numerical-algorithms-bib-entry (author, title, publisher, address, edition "Second", 2002, xxx+680 pages, ISBN 0-89871-521-0; no DOI given there) | OK (bibliographic); cited for the standard statement that a backward-stable solve's relative error is about u κ, not for a numbered theorem |
+| Dembo, Eisenstat, Steihaug, *Inexact Newton methods*, SIAM J. Numer. Anal. 19, 400–408 (1982), doi:10.1137/0719025 | the reference list of Cătinaş, J. Numer. Anal. Approx. Theory 29 (2) (2000), ictp.acad.ro/jnaat/journal/article/view/662 (authors, title, journal, volume, year, pages, DOI); the DOI resolves (302) to epubs.siam.org/doi/10.1137/0719025, whose page refused the fetch (403) | PARTIAL: citing record and DOI resolution, publisher page not read; the claim (local convergence when the forcing terms stay uniformly below 1) from search summaries of the abstract, not from a page opened |

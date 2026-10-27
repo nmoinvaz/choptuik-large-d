@@ -749,7 +749,11 @@ and line search ends at the curve's lowest point, 0.8 F₀: the stall. The weak 
 so that bound shrinks, and a shorter step in D hands Newton a smaller starting residual; that is why a run's step
 dives before it stops. Bottom, the data: each run's step in D is smallest at the stalls, 0.00235 at D = 35.20, 0.00086
 at 60.96 and 0.00010 at 67.75. Above D = 70 the median step is back to 0.0146 in T73, which holds the weakest
-harmonics at the predictor's values and corrects Δ for that with one Newton step of the full system.
+harmonics at the predictor's values and corrects Δ for that with one Newton step of the full system. At D = 62–64,
+where T48's seeds can be rebuilt from its saved states (`hp/stall_margin.py --attempts`), every step whose seed
+residual was at most 1.4×10⁻⁵ (62) or 2.2×10⁻⁵ (64) converged and every larger one failed. Behind the basin is a
+precision limit: past D ≈ 60 double-double cannot resolve the weakest direction at all (below, "Why the solver
+stalls").
 
 <details>
 <summary>Checks of the solver</summary>
@@ -825,8 +829,26 @@ What the solver has shown:
   $`e^{-n\Phi}`$ with $`\Phi = \ln x - \tfrac12\ln(1 - x^2)`$, has modulus 1 on $`\mathrm{Re}\,x^2 = \tfrac12`$, which crosses
   the real axis at x = 1/√2. The solver matches at 0.7, where it is of order one, and moving the last node changes
   $`\max\lvert\partial\Delta/\partial F\rvert`$ by $`e^{n[\Phi(x_m) - \Phi(0.7)]}`$, over 13 orders of magnitude with no
-  fitted parameter (`solver/beyond_lc/hp_node_test.py`). What grows is the high-harmonic ladder below; the residual
-  floor's 1.4-fold rise per unit of D is not explained ([notes/BEYOND_LIGHT_CONE.md](notes/BEYOND_LIGHT_CONE.md)).
+  fitted parameter (`solver/beyond_lc/hp_node_test.py`). What grows is the high-harmonic ladder below
+  ([notes/BEYOND_LIGHT_CONE.md](notes/BEYOND_LIGHT_CONE.md)); the residual floor's 1.4-fold rise per unit of D is
+  the growth of the Jacobian's largest singular value (next item).
+- **Why the solver stalls: double-double runs out of precision.** `hp/stall_margin.py` measures the Jacobian J at a
+  solved point: its weakest singular directions, its largest singular value σ_max (from the dense double-double
+  Jacobian) and the condition number κ = σ_max/σ_min. Its runs are on the `raw/T76` branch and `hp/stall_summary.py`
+  prints the numbers below; its controls are two planted problems with known answers and two mutations. From
+  D = 40 to 67.74, with n = D − 2, the weakest direction is always p1's harmonic 13, the highest the solver keeps;
+  σ_min falls like n^−20.8 (to 4% at 9 points) and σ_max grows like n^18.1. Since ∂Δ/∂F is a row of J⁻¹,
+  σ_min ≤ 1/max|∂Δ/∂F| (proved), and in fact σ_min·max|∂Δ/∂F| stays between 6.5 and 9.5×10⁻⁹, so the sensitivity
+  in the CSV tracks the weakest direction. The product u·κ, with u = 2⁻¹⁰⁴ double-double's unit roundoff, grows
+  like n^38.9 and reaches 1 at D = 59.9 (numerical evidence): it is 1.7 at the stall at 60.96 and 170 at 67.74,
+  where T48 stopped. A backward-stable solve's error relative to the solution is about u·κ[^21], so beyond D ≈ 60 a
+  double-double Newton step's error along the weakest direction can be as large as the step, and the convergence
+  theorem for inexact Newton methods, which needs each solve's relative residual to stay uniformly below 1[^22], no
+  longer applies. Every remedy so far takes those directions out of the solve: holding them on their trend,
+  deflating them, and T73's pin, which lowers u·κ at D = 71 from 1.4×10³ to 1.5×10⁻⁵ (harmonics 9–13 held) and
+  1.0×10⁻⁸ (7–13 held). The residual the runs reach is 0.04–0.05 × u·σ_max·|z| (|z| ≈ 19.5) at every state from
+  D 40 to 64 (0.11 and 0.2 at 66.0 and 67.5), the rounding floor of evaluating F at a double-double z; σ_max grows
+  1.36 times per unit of D at D = 60.
 - **How good the values are.** The points themselves fit smooth curves to about 4×10⁻¹⁵ (degree 18–20) all the way to
   D = 60.1, not 10⁻²⁰. Points between
   D = 27 and 35.2, solved before the freezing, carry up to 10⁻¹⁴ from the weak directions; about 25 of them sit
@@ -2302,6 +2324,8 @@ hp/                 double-double solver (crate hpkernel)
 ├── plot_solve_times.py  solve_times.svg, how long each D took (--export writes data/solve_times.csv from the solve records)
 ├── plot_point_spacing.py  point_spacing.svg, the distance in D between our solved points
 ├── plot_newton_stall.py   newton_stall.svg, why the steps collapse (a model of one Newton step; reads raw/T73)
+├── stall_margin.py   the stall detector: weakest directions, sigma_max and u*kappa at a state or a rebuilt seed
+├── stall_summary.py  its results from the raw/T76 branch (the power laws, the floor, the pinned systems)
 ├── src/block.rs    block storage for the f64 Jacobian above M = 128 (multidouble's staircase LU)
 ├── highm_check.py, lowD_highM.py  checks of the larger tau grids, and the continuation toward D = 3 on them
 ├── step_test.py    the largest step in D that Newton tolerates at D = 45-60, for several solver variants (local task T43)
@@ -2462,3 +2486,5 @@ solver/largeD_late_structure.py  where the nonlinear late-order growth lives (x,
 [^18]: D. D. Morrison, J. D. Riley and J. F. Zancanaro, Commun. ACM 5, 613 (1962), doi:10.1145/355580.369128.
 [^19]: E. Anderson et al., *LAPACK Users' Guide*, 3rd ed., SIAM (1999) (the getf2 and blocked getrf factorizations).
 [^20]: Y. Hida, X. S. Li, D. H. Bailey, *Algorithms for quad-double precision floating point arithmetic*, Proc. 15th IEEE Symposium on Computer Arithmetic (ARITH-15), 155–162 (2001).
+[^21]: N. J. Higham, *Accuracy and Stability of Numerical Algorithms*, 2nd ed., SIAM (2002).
+[^22]: R. S. Dembo, S. C. Eisenstat and T. Steihaug, *Inexact Newton methods*, SIAM J. Numer. Anal. 19, 400–408 (1982), doi:10.1137/0719025 *(partly verified: notes/REF_CHECK.md)*.
