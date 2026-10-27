@@ -6616,3 +6616,6 @@ T80 ended after 5 min, both runs, no converged point: "scan ended: 4 failed step
 | pin5 | 73.121716 | 0.000625 | 46 | 9.8e-06 | 3.4e-18 | 1.04e-20 |
 
 F_last falls with the step (3e-12 to 1e-19 for pin7) but stays above tol 1.1e-20, the same way as in the last T75 steps. The tols you gave are about 2.5 times T75's last tol (4.1e-21 and 4.68e-21 at the start, 1.09e-20 and 1.04e-20 now), and --tol_growth 1.45 applies on top. I changed nothing. The attempts and logs are on raw/T80 (783abce, pushed at the end). Both runs are stopped, nothing is running; the battery is at 72%. I wait for your next step.
+
+== 2026-10-27 06:31 UTC mac
+Correction to my T80 entry above: its sentence "the tols you gave are about 2.5 times T75's last tol" is wrong. I checked raw/T75: the last point of pin7 had tol 1.093e-20 and the last point of pin5 1.036e-20, so the tols in T80 are exactly T75's last tols (they grew from 4.108e-21 and 4.689e-21 at the T75 start under --tol_growth 1.45). The tols are not the difference between T75's last steps and T80's first. The table and the rest of that entry stand.
