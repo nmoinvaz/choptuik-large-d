@@ -738,6 +738,19 @@ collapses where it got stuck: at D = 35.2 and 45.3 (two cloud runs that stopped 
 holding the near-free centre harmonics on their trend cured) and at 67.78, where T48 stopped (open rings: points after
 a horizon-tail jump).
 
+![Why the continuation stalls along the weak directions: a model of one Newton step along a weak direction, where a large curvature against a small slope makes Newton land above its start, and each run's step in D diving at the stalls at D = 35.2, 60.96 and 67.75](hp/newton_stall.svg)
+
+**Why the steps collapse** (`hp/plot_newton_stall.py`, which reads T73's records from the `raw/T73` branch: run
+`git worktree add ../raw-T73 raw/T73` first). Top, a model rather than data: the residual along one weak direction,
+F(t) = F₀ − σt + ½ct², and Newton's straight line F₀ − σt. Newton jumps to the line's zero, t = F₀/σ, which is far
+out when the slope σ is small, and by then the curvature has added cF₀²/(2σ²). The step lowers the residual only
+while cF₀/σ² < 2, that is while the residual Newton starts from is below 2σ²/c. At cF₀/σ² = 2.5 it lands at 1.25 F₀,
+and line search ends at the curve's lowest point, 0.8 F₀: the stall. The weak directions' σ falls as D rises (below),
+so that bound shrinks, and a shorter step in D hands Newton a smaller starting residual; that is why a run's step
+dives before it stops. Bottom, the data: each run's step in D is smallest at the stalls, 0.00235 at D = 35.20, 0.00086
+at 60.96 and 0.00010 at 67.75. Above D = 70 the median step is back to 0.0146 in T73, which holds the weakest
+harmonics at the predictor's values and corrects Δ for that with one Newton step of the full system.
+
 <details>
 <summary>Checks of the solver</summary>
 
@@ -2288,6 +2301,7 @@ hp/                 double-double solver (crate hpkernel)
 ├── bench_variants.py, plot_bench_variants.py  the Newton variants timed against D, and bench_variants.svg
 ├── plot_solve_times.py  solve_times.svg, how long each D took (--export writes data/solve_times.csv from the solve records)
 ├── plot_point_spacing.py  point_spacing.svg, the distance in D between our solved points
+├── plot_newton_stall.py   newton_stall.svg, why the steps collapse (a model of one Newton step; reads raw/T73)
 ├── src/block.rs    block storage for the f64 Jacobian above M = 128 (multidouble's staircase LU)
 ├── highm_check.py, lowD_highM.py  checks of the larger tau grids, and the continuation toward D = 3 on them
 ├── step_test.py    the largest step in D that Newton tolerates at D = 45-60, for several solver variants (local task T43)
