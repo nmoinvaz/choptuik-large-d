@@ -6399,3 +6399,48 @@ T75 started 01:05 UTC (18:05 PDT), from the Mac, scan_hp at wip/qd-horizon dd018
 | B pin 5 | 70.987742 | 1.785008101362939 - 1.80e-17 | -1.6e-15 | 3.4e-22 | 11 |
 
 The watcher kills a run on F_full above 1e-19 or |dDelta_pin| above 1e-12, and posts at once for a waypoint with A-B above 1e-14 or battery power. Next post in 4 h.
+
+== 2026-10-27 04:11 UTC cloud to mac
+T78, the ghost admixture's second layout (the author's go; notes/GHOST_ADMIXTURE.md sections 3-4). The count of
+hp/modecount_wind.py now refines each edge until its verification adds nothing new (main 5c76ade; at D 4 it finds the
+pair at -0.1123 +- 0.1003i in B0 that the single pass missed, raw/T77), and hp/relayout.py (4eff588) moves a state to
+another node layout. T78 recounts D 8.25, 16.76, 30.07 and 45.05 in their own layouts with the refined edges, moves
+each to a second layout, counts it there, and first runs a zero planted 0.002 inside B0's edge at D 8.25. Python only,
+2 threads at nice 10 beside T75 (do not touch T75). Do not edit code; on an error, stop and post it.
+Setup:
+  git -C ~/Source/choptuik-large-d fetch origin
+  git -C ~/Source/choptuik-large-d worktree add --detach ../choptuik-t78 origin/main
+  mkdir -p ~/Source/choptuik-t78/hp/modecount_cx/build
+  cp ~/Source/choptuik-mac-ghost/hp/modecount_cx/build/modecount_cx.so ~/Source/choptuik-t78/hp/modecount_cx/build/
+  git -C ~/Source/choptuik-large-d worktree add --orphan -b raw/T78 ../raw-T78
+Save this as ~/Source/mac-runner/t78.sh and run it with bash in the background, output to ~/Source/raw-T78/t78.log:
+  #!/bin/bash
+  set -u
+  PY=/Users/nathan/Source/choptuik-large-d/.venv/bin/python
+  R=/Users/nathan/Source/raw-T78
+  cd /Users/nathan/Source/choptuik-t78/hp
+  run() { echo "=== $(date -u '+%H:%M') $*"; nice -n 10 $PY -u "$@"; echo "rc $?"; }
+  push() { git -C $R add -A && git -C $R commit -qm "T78: $1" && git -C $R push -q origin raw/T78; }
+  for t in D8.2500_M32 D16.7600_M32 D30.0688_M32 D45.0507_M32; do
+    cp data/modecount_test_${t}_raw.jsonl data/modecount_test_${t}_evals.jsonl $R/
+  done
+  S8=data/modecount_state_D8.2500_M32.npz
+  run modecount_test.py $S8 --data=$R --threads=2 --boxes=B0 --aLL=-0.0805 --aL=0.2483 --plant=-0.0785+0.3j
+  run modecount_test.py $S8 --data=$R --threads=2 --boxes=B0 --aLL=-0.0805 --aL=0.2483 --plant=-0.0785+0.3j --mutate=one_verify
+  push "the planted control at D 8.25"
+  A=(data/modecount_state_D8.2500_M32.npz data/states/up2_D16.7600.npz data/states/up6_D30.0688.npz data/states/up7_D45.0507.npz)
+  TAG=(D8.2500_M32 D16.7600_M32 D30.0688_M32 D45.0507_M32)
+  NODES=(0.1,0.2,0.3,0.4,0.55,0.7 0.05,0.15,0.3,0.45,0.6,0.7 0.1,0.2,0.3,0.4,0.5,0.6,0.7 0.15,0.25,0.35,0.45,0.55,0.62,0.7)
+  for i in 0 1 2 3; do
+    run modecount_test.py ${A[$i]} --data=$R --threads=2
+    run relayout.py ${A[$i]} $R/layoutB_${TAG[$i]}.npz --nodes ${NODES[$i]} --threads 2
+    run modecount_test.py $R/layoutB_${TAG[$i]}.npz --data=$R --threads=2 --tag=${TAG[$i]}_B
+    push "${TAG[$i]}, both layouts"
+  done
+  echo "T78 done $(date -u '+%H:%M')"
+Not stops, but report: a box marked UNRESOLVED (its count is not a count), a relayout that exits 1, or the two layouts
+counting different zeros in any box.
+Post when the planted control is done, after each D, and at the end: for each count the "box ..." lines (B0, U0, B1a,
+B1b, B1c, B1, U, full: the winding of det M, the zeros bound, and UNRESOLVED where printed); for each relayout its last
+line (|F|, Delta in both layouts); for the two planted runs B0's line (the refined one must count 3 = 1 + the planted
+pair; the single-pass one is the control's comparison, whatever it gives).
