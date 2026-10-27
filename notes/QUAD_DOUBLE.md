@@ -840,9 +840,24 @@ linearised correction dDelta_pin, there in double-double):
 | 73.2657 | 1 | 1.9e-22 | +1.157711e-12 | 1.78075708073624606 - 1.5e-17 | 1.7807570807362567 (pin 7) |
 | 73.2657 | 3 | 3.5e-25 | +1.154965e-12 | 1.78075708073624539 + 1.3e-17 | |
 
-At 72.4 the two pins' quad-double values agree to 5.5e-18, against the double-double pair's 2.3e-16 there, and both
-lie within 2e-17 of the double-double values: Delta(72.4) = 1.78234204349234182 + 4.3e-17 with a spread of 3e-18
-between the pins (the pins' difference, a spread between two systems, not a bound). At the frontier the two pins' quad-double values differ by 7e-16 and the double-double one lies 1e-15 from them: the
+**The quad-double leg** (qd_leg.sh: T75's pin 7 and pin 5 states at the shared waypoints, each converged with its own
+pin to 1e-53 in 3-5 steps, then corrected to the full system; the two pins' full-system Delta, both parts summed
+exactly, and their difference, a spread between two systems, not a bound; T75's double-double pairs differ by
+2e-16 typically and 8e-15 at 73.1):
+
+| D | Delta_full (pin 7) | Delta_full (pin 5) | pin 7 - pin 5 | the full step's |dz| (7, 5) |
+|---|---|---|---|---|
+| 71.0 | 1.7849845180052927569 | 1.7849845180052927026 | +5.4e-17 | 2e-10, 9e-9 |
+| 71.5 | 1.7840292487782318328 | 1.7840292487782318328 | -1e-32 | 3e-10, 7e-10 |
+| 72.0 | 1.7830868580304841321 | 1.7830868580304841542 | -2.2e-17 | 4e-9, 4e-9 |
+| 72.4 | 1.7823420434923419721 | 1.7823420434923419383 | +3.4e-17 | 2e-9, 2e-9 |
+| 72.8 | 1.7816051756032901967 | 1.7816051756032901536 | +4.3e-17 | 5e-9, 8e-8 |
+| 73.0 | 1.7812396819309261819 | 1.7812396819309262050 | -2.3e-17 | 7e-9, 1e-7 |
+| 73.1 | 1.7810576633135505371 | 1.7810576633135505477 | -1.1e-17 | 6e-8, 9e-7 |
+
+The pins' disagreement, which is the pin's cost, falls from 2e-16 in double-double to 1e-17..5e-17 here, and to
+1e-32 at 71.5 where both full steps are small. The full quad-double solutions of 12.1 at 72.8 and 73.0,
+1.7816051756032901527 and 1.7812396819309262040, lie between or within 2e-17 of the pairs. At the frontier the two pins' quad-double values differ by 7e-16 and the double-double one lies 1e-15 from them: the
 digits there are set by the pin's cost (the full step's |dz| is 7.9e-6 against 1.6e-9 at 72.4), not by the
 arithmetic. So the quad-double solver adds digits where the pin is cheap, up to about 72.5 in this layout, and past
 that the full system's junk, not precision, bounds Delta.
