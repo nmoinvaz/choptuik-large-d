@@ -12,7 +12,7 @@ use crate::dd::DD;
 use crate::dv::{DotAcc, DV};
 use crate::field::{DMat, FieldSolve, Fl, State};
 use crate::lane::{BaseLane, Lane};
-use crate::model::{block_state, centre_state, horizon_lus, residual, residual_qdh, taylor_path, Ctx, TWork, QD_MUT_NOREFINE, QD_MUT_REFINE4};
+use crate::model::{block_state, centre_state, horizon_lus, residual, residual_qd, residual_qdh, taylor_path, Ctx, TWork, QD_MUT_NOREFINE, QD_MUT_REFINE4};
 use crate::qd::QD;
 use crate::qv::{QDotAcc, QV};
 use crate::v8::V8;
@@ -310,6 +310,68 @@ fn residual_qdh_agrees() {
     println!("a_h moved by 1e-40 in z2: the horizon state moves by {dp:.2e}; again with z2 = 0: {same:.1e}");
     assert!(dp > 1e-48, "the third part of a_h was not read ({dp:e})");
     assert!(same == 0.0, "not reproducible ({same:e})");
+}
+
+/// Block b's QV state from a four-part state (as horizon_qv, for any block)
+fn block_qv<const B: usize>(ctx: &Ctx<B>, z: [&[f64]; 4], b: usize) -> crate::field::State<QV, B> {
+    let l = z[0].len();
+    let delta = DD { hi: z[0][l - 1], lo: z[1][l - 1] };
+    let lus = horizon_lus(ctx, &ctx.fld(z[0], z[1], ctx.off_ah()), delta, false, DD::ZERO).unwrap();
+    let inq: Vec<Fl<QV, B>> = ctx
+        .block_inputs(b)
+        .iter()
+        .map(|&o| {
+            let mut r = [QV::zero(); B];
+            for (k, rk) in r.iter_mut().enumerate() {
+                let i = o + 8 * k;
+                *rk = QV::load(&z[0][i..i + 8], &z[1][i..i + 8], &z[2][i..i + 8], &z[3][i..i + 8]);
+            }
+            Fl(r)
+        })
+        .collect();
+    let dq = QV::splat(QD::new(z[0][l - 1], z[1][l - 1], z[2][l - 1], z[3][l - 1]));
+    block_state::<QV, B>(ctx, b, &inq, dq, &lus, &lus)
+}
+
+/// residual_qd (every block in quad-double) on the synthetic context:
+/// 1. at a double-double state (z2 = z3 = 0) every row agrees with `residual`'s to double-double accuracy (1e-26), the
+///    horizon rows and the phase row bitwise with residual_qdh's; control: some row outside the horizon block differs
+///    from `residual`'s in its last bits (the quad-double path ran there);
+/// 2. the four parts are read in the centre block and in a Taylor block: their inputs moved by 1e-40 relative in z2
+///    must move the block's QV state by more than 1e-48, and z2 = 0 gives it bit for bit again.
+#[test]
+fn residual_qd_agrees() {
+    let (ctx, zh, zl) = synth();
+    let l = ctx.len();
+    let m = Ctx::<1>::M;
+    let zero = vec![0.0; l];
+    let (fh, fl) = residual(&ctx, &zh, &zl, false).unwrap();
+    let (hh, hl) = residual_qdh(&ctx, [&zh, &zl, &zero, &zero], false).unwrap();
+    let (qh, ql) = residual_qd(&ctx, [&zh, &zl, &zero, &zero], false).unwrap();
+    let hb = ctx.k() * 4 * m;
+    let d = (0..l).map(|i| ((qh[i] - fh[i]) + (ql[i] - fl[i])).abs()).fold(0.0, f64::max);
+    let same_h = (hb..l).all(|i| qh[i] == hh[i] && ql[i] == hl[i]);
+    let changed = (0..hb).filter(|&i| qh[i] != fh[i] || ql[i] != fl[i]).count();
+    println!("residual_qd at z2 = z3 = 0: max difference from residual {d:.2e}; horizon and phase rows bitwise residual_qdh's: \
+              {same_h}; rows outside the horizon block that differ from residual's in their last bits: {changed} of {hb}");
+    assert!(d < 1e-26, "residual_qd differs from residual by {d:e}");
+    assert!(same_h, "residual_qd's horizon rows are not residual_qdh's");
+    assert!(changed > 0, "control: no row outside the horizon block took the quad-double path");
+    for b in [0, 1] {
+        let z: [&[f64]; 4] = [&zh, &zl, &zero, &zero];
+        let r0 = block_qv(&ctx, z, b);
+        let mut z2 = zero.clone();
+        for &o in ctx.block_inputs(b).iter() {
+            for i in o..o + m {
+                z2[i] = 1e-40 * zh[i];
+            }
+        }
+        let dp = qv_diff(&block_qv(&ctx, [&zh, &zl, &z2, &zero], b), &r0);
+        let again = qv_diff(&block_qv(&ctx, z, b), &r0);
+        println!("block {b}: inputs moved by 1e-40 in z2 move its state by {dp:.2e}; again with z2 = 0: {again:.1e}");
+        assert!(dp > 1e-48, "block {b}: the third part of its inputs was not read ({dp:e})");
+        assert!(again == 0.0, "block {b}: not reproducible ({again:e})");
+    }
 }
 
 // -------------------------------------------------------------------------------------------------------------

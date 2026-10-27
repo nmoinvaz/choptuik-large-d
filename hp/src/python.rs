@@ -32,6 +32,8 @@ trait Api: Send + Sync {
     /// model::residual_qdh (the horizon block in quad-double, the state in four parts); refine false: the control,
     /// the horizon solves unrefined (model::QD_MUT_NOREFINE)
     fn residual_qdh(&mut self, z: [&[f64]; 4], refine: bool) -> Result<V, String>;
+    /// model::residual_qd (every block in quad-double, the state in four parts); refine false as residual_qdh's
+    fn residual_qd(&mut self, z: [&[f64]; 4], refine: bool) -> Result<V, String>;
     fn jacobian(&self, zh: &[f64], zl: &[f64]) -> Result<(Vec<f64>, Vec<f64>, usize), String>;
     /// f64 Jacobian, column-major: (J, ld); `F64Jac` the lanes; mutate: Ctx::mutate for this call (0 = none)
     fn jacobian_f64(&mut self, zh: &[f64], zl: &[f64], mutate: u8, how: F64Jac) -> Result<(Vec<f64>, usize), String>;
@@ -99,6 +101,21 @@ impl<const B: usize> Api for Ctx<B> {
         qdh::<4>(me, z, refine)
             .or_else(|| qdh::<6>(me, z, refine))
             .unwrap_or_else(|| Err(format!("residual_qdh is built for M = 32 and 48 only, not M = {}", 8 * B)))
+    }
+    fn residual_qd(&mut self, z: [&[f64]; 4], refine: bool) -> Result<V, String> {
+        // instantiated for M = 32 and 48 only, as residual_qdh (every block's QV lanes, for each size)
+        fn qd<const C: usize>(ctx: &mut dyn std::any::Any, z: [&[f64]; 4], refine: bool) -> Option<Result<V, String>> {
+            let c = ctx.downcast_mut::<Ctx<C>>()?;
+            let keep = c.mutate;
+            c.mutate = if refine { 0 } else { model::QD_MUT_NOREFINE };
+            let r = model::residual_qd(c, z, true);
+            c.mutate = keep;
+            Some(r)
+        }
+        let me: &mut dyn std::any::Any = self;
+        qd::<4>(me, z, refine)
+            .or_else(|| qd::<6>(me, z, refine))
+            .unwrap_or_else(|| Err(format!("residual_qd is built for M = 32 and 48 only, not M = {}", 8 * B)))
     }
     fn jacobian(&self, zh: &[f64], zl: &[f64]) -> Result<(Vec<f64>, Vec<f64>, usize), String> {
         model::jacobian(self, zh, zl, true)
@@ -477,6 +494,28 @@ impl Solver {
         }
         let (api, pool) = (&mut self.api, &self.pool);
         let (fh, fl) = py.detach(|| pool.install(|| api.residual_qdh(z, refine))).map_err(PyValueError::new_err)?;
+        Ok((arr(py, fh), arr(py, fl)))
+    }
+
+    /// The residual with every block in quad-double (model::residual_qd; M = 32 and 48): the state in four parts as
+    /// residual_qdh's, F as (hi, lo), each row rounded to double-double after its subtraction.
+    #[pyo3(signature = (z0, z1, z2, z3, refine=true))]
+    #[allow(clippy::too_many_arguments)]
+    fn residual_qd<'py>(
+        &mut self,
+        py: Python<'py>,
+        z0: PyReadonlyArray1<'py, f64>,
+        z1: PyReadonlyArray1<'py, f64>,
+        z2: PyReadonlyArray1<'py, f64>,
+        z3: PyReadonlyArray1<'py, f64>,
+        refine: bool,
+    ) -> PyResult<(Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<f64>>)> {
+        let z = [slice(&z0, "z0")?, slice(&z1, "z1")?, slice(&z2, "z2")?, slice(&z3, "z3")?];
+        if z.iter().any(|p| p.len() != self.api.len()) {
+            return Err(PyValueError::new_err(format!("z0..z3 must have length {}", self.api.len())));
+        }
+        let (api, pool) = (&mut self.api, &self.pool);
+        let (fh, fl) = py.detach(|| pool.install(|| api.residual_qd(z, refine))).map_err(PyValueError::new_err)?;
         Ok((arr(py, fh), arr(py, fl)))
     }
 

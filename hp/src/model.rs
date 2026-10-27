@@ -865,6 +865,48 @@ pub fn residual_qdh<const B: usize>(ctx: &Ctx<B>, z: [&[f64]; 4], par: bool) -> 
     Ok((fh, fl))
 }
 
+/// The residual with every block in quad-double: as residual_qdh, with the centre series and the Taylor stepping run
+/// with QV lanes too, so every block reads its inputs, Delta and its target in all four parts and its rows are rounded
+/// to double-double only after the subtraction. The horizon LUs, the phase row and the freeze projection stay
+/// residual_qdh's. Near the double-double floor at large D the Jacobian's smallest singular value lies below the
+/// double-double residual's rounding (u sigma_max), so only these rows resolve the weakest direction (README, "Why the
+/// solver stalls").
+pub fn residual_qd<const B: usize>(ctx: &Ctx<B>, z: [&[f64]; 4], par: bool) -> Result<(Vec<f64>, Vec<f64>), String> {
+    let l = ctx.len();
+    let m = Ctx::<B>::M;
+    for p in z {
+        assert_eq!(p.len(), l);
+    }
+    let (zh, zl) = (z[0], z[1]);
+    let delta = delta_of(zh, zl);
+    let lus = horizon_lus(ctx, &ctx.fld(zh, zl, ctx.off_ah()), delta, par, DD::ZERO)?;
+    let dq = QV::splat(QD::new(z[0][l - 1], z[1][l - 1], z[2][l - 1], z[3][l - 1]));
+    let one_block = |b: usize| -> State<QV, B> {
+        let inq: Vec<Fl<QV, B>> = ctx.block_inputs(b).iter().map(|&o| fld_qv::<B>(z, o)).collect();
+        block_state::<QV, B>(ctx, b, &inq, dq, &lus, &lus)
+    };
+    let nb = ctx.k() + 1;
+    let states: Vec<State<QV, B>> = if par { (0..nb).into_par_iter().map(one_block).collect() } else { (0..nb).map(one_block).collect() };
+    let mut fh = vec![0.0; l];
+    let mut fl = vec![0.0; l];
+    let kb = ctx.k();
+    for (b, s) in states.iter().enumerate() {
+        let t = ctx.block_target(b);
+        for q in 0..4 {
+            let mut d = (s[q] - fld_qv::<B>(z, t + q * m)).val();
+            if let (true, 0, Some((lo, hi))) = (b == kb, q, &ctx.freeze) {
+                d = lo.apply(&d) + hi.apply(&ctx.fld(zh, zl, 0));
+            }
+            let o = b * 4 * m + q * m;
+            d.store(&mut fh[o..o + m], &mut fl[o..o + m]);
+        }
+    }
+    let ph = phase_row(ctx, &ctx.fld(zh, zl, 0));
+    fh[l - 1] = ph.hi;
+    fl[l - 1] = ph.lo;
+    Ok((fh, fl))
+}
+
 /// Exact Jacobian dF/dz by forward-mode duals, column-major with leading dimension ld_for(L): (hi, lo, ld).
 pub fn jacobian<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool) -> Result<(Vec<f64>, Vec<f64>, usize), String> {
     jacobian_lanes::<Du, B>(ctx, zh, zl, par)

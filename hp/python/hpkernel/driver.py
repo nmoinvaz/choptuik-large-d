@@ -194,10 +194,14 @@ class QdhSolver:
             self._parts.pop(next(iter(self._parts)))
         return a, b
 
+    def _resq(self, q):
+        """the residual of a four-part state q (QdSolver: every block in quad-double)"""
+        return self.s.residual_qdh(*q, refine=self.refine)
+
     def residual(self, zh, zl):
         z2, z3 = self.parts(zh, zl)
         c = np.ascontiguousarray
-        return self.s.residual_qdh(c(zh), c(zl), c(z2), c(z3), refine=self.refine)
+        return self._resq((c(zh), c(zl), c(z2), c(z3)))
 
     def _step(self, Fh, Fl):
         c = np.ascontiguousarray
@@ -241,7 +245,7 @@ class QdhSolver:
         F = []
         for sg in (h, -h):
             q = [c(np.asarray(v)) for v in qd_add_dd(c(zh), c(zl), c(z2), c(z3), c(sg * uh), c(sg * ul))]
-            F.append([np.asarray(v) for v in self.s.residual_qdh(*q, refine=self.refine)])
+            F.append([np.asarray(v) for v in self._resq(q)])
         dh, dl = dd_add(F[0][0], F[0][1], -F[1][0], -F[1][1])
         hb = self.horizon
         jh, jl = jh.copy(), jl.copy()
@@ -257,6 +261,21 @@ class QdhSolver:
         raise NotImplementedError("QdhSolver: only the double-double Jacobian (jac='dd'); no mixed steps")
 
     newton_mixed = _no      # (lm_steps is defined above: the double-double Jacobian with this F)
+
+
+class QdSolver(QdhSolver):
+    """A Solver whose residual is quad-double in every block (Solver.residual_qd): as QdhSolver otherwise. With gcr
+    (gmres_refine options) the step solves J_q dz = -F by GCR preconditioned by the double-double LU, J_q's products by
+    the central difference of residual_qd in every row but the phase row (linear, exact in double-double). Near the
+    double-double floor at large D the Jacobian's weakest singular value lies below the double-double residual's
+    rounding (u sigma_max), so the double-double LU alone cannot resolve that direction; these products can (README,
+    "Why the solver stalls")."""
+
+    def __init__(self, s, keep=64, refine=True, gcr=None):
+        super().__init__(s, keep=keep, refine=refine, horizon=slice(0, s.size - 1) if gcr is not None else None, gcr=gcr)
+
+    def _resq(self, q):
+        return self.s.residual_qd(*q, refine=self.refine)
 
 
 def block_norms(s, Fh, Fl):
