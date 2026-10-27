@@ -16,7 +16,7 @@ import numpy as np
 from multidouble import dd_add, dd_axpy, dd_dot, dd_from_mp, dd_norm, dd_scale, gcr, two_sum  # noqa: F401
 from multidouble import two_prod as _two_prod  # noqa: F401
 
-from ._hpkernel import Solver
+from ._hpkernel import Solver, qd_axpy
 
 # The double-double helpers above (numpy, elementwise) are multidouble's Python package (github.com/nmoinvaz/multidouble,
 # python/; hp/pyproject.toml pins it), the same float64 expressions as before; re-exported here under their old names
@@ -683,3 +683,93 @@ def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_hal
         zh, zl = th, tl
         n_prev = n0
     return zh, zl, hist
+
+# ------------------------------------------------------------------ the quad-double solver (notes/QUAD_DOUBLE.md 12)
+# A quad-double state is a 4-tuple of float64 arrays (z0, z1, z2, z3), its value z0 + z1 + z2 + z3 (multidouble's QD).
+# Solver.residual_q, jacobian_q and newton_q compute in quad-double (hp/src/qsolve.rs; M = 32 and 48 only).
+def qparts(zh, zl, z2=None, z3=None):
+    """a four-part state from (hi, lo) and optional lower parts (zero if absent), each array contiguous float64"""
+    c = lambda v: np.ascontiguousarray(np.asarray(v, dtype=float))
+    z = np.zeros(len(zh))
+    return (c(zh), c(zl), c(z if z2 is None else z2), c(z if z3 is None else z3))
+
+
+def save_q(path, z, meta):
+    """save a four-part state: save()'s format with the lower parts as z2, z3 (load() reads its first two)"""
+    np.savez(path, zh=z[0], zl=z[1], z2=z[2], z3=z[3], meta=json.dumps(meta))
+
+
+def load_q(path):
+    """(z, meta) with z four parts; a state saved by save() has zero lower parts"""
+    d = np.load(path)
+    return qparts(d["zh"], d["zl"], d["z2"] if "z2" in d else None, d["z3"] if "z3" in d else None), json.loads(str(d["meta"]))
+
+
+def qd_combine(ws, zs):
+    """sum_i w_i z_i in quad-double (w_i f64, z_i four-part states): the Lagrange predictor of four-part states"""
+    acc = qparts(np.zeros(len(zs[0][0])), np.zeros(len(zs[0][0])))
+    for w, z in zip(ws, zs):
+        acc = qd_axpy(float(w), *z, *acc)
+    return acc
+
+
+def predict_q(hist, D, n=4):
+    """Lagrange extrapolation to D through the last n (D_i, z_i) pairs of four-part states, in quad-double"""
+    pts = hist[-n:]
+    Ds = [p[0] for p in pts]
+    ws = []
+    for i, Di in enumerate(Ds):
+        w = 1.0
+        for j, Dj in enumerate(Ds):
+            if j != i:
+                w *= (D - Dj) / (Di - Dj)
+        ws.append(w)
+    return qd_combine(ws, [p[1] for p in pts])
+
+
+def qmax(F):
+    """max |F| of a quad-double residual (four parts, or (hi, lo)), to f64 accuracy"""
+    return float(np.abs(np.asarray(F[0]) + np.asarray(F[1])).max())
+
+
+def newton_qd(s, z, tol=1e-48, it_max=12, max_halvings=12, verbose=True, mutate=0):
+    """Newton in quad-double (Solver.newton_q: the exact Jacobian in quad-double, its quad-double LU) from the
+    four-part state z, with backtracking on max |F|: the step dz is taken with the largest lam = 2^-h, h <= max_halvings,
+    that lowers max |F|. Stops when max |F| <= tol (converged), when no lam lowers it (stalled: the floor, the
+    residual's quad-double rounding, or outside the basin), or after it_max steps. mutate: Ctx::mutate for every call
+    (the controls; 0 none). Returns (z, hist, converged); hist one record per step (F, |dz|, lam, pivots, times)."""
+    F = s.residual_q(*z, mutate=mutate)
+    nf = qmax(F)
+    hist = []
+    for it in range(it_max + 1):
+        if nf <= tol:
+            if verbose:
+                print(f"  qn {it}: |F| {nf:.2e} converged, Delta {z[0][-1]:.16f} {z[1][-1]:+.3e}", flush=True)
+            hist.append(dict(it=it, F=nf))
+            return z, hist, True
+        if it == it_max:
+            break
+        t0 = time.time()
+        d0, d1, d2, d3, _, _, pmin, pmax = s.newton_q(*z, mutate=mutate)
+        rec = dict(it=it, F=nf, dz=float(np.abs(d0).max()), dDelta=float(d0[-1] + d1[-1]), piv=[pmin, pmax],
+                   t=[round(v, 3) for v in s.step_timing()])
+        lam = 1.0
+        for _ in range(max_halvings + 1):
+            zt = qd_axpy(lam, d0, d1, d2, d3, *z)
+            Ft = s.residual_q(*zt, mutate=mutate)
+            if qmax(Ft) < nf:
+                break
+            lam *= 0.5
+        else:
+            rec.update(lam=0.0, seconds=round(time.time() - t0, 2))
+            hist.append(rec)
+            if verbose:
+                print(f"  qn {it}: |F| {nf:.2e}: no decrease along the step (|dz| {rec['dz']:.1e}), stopping", flush=True)
+            return z, hist, False
+        z, F, nf_old, nf = zt, Ft, nf, qmax(Ft)
+        rec.update(lam=lam, F_new=nf, seconds=round(time.time() - t0, 2))
+        hist.append(rec)
+        if verbose:
+            print(f"  qn {it}: |F| {nf_old:.2e} -> {nf:.2e}, |dz| {rec['dz']:.1e}, lam {lam:g}, dDelta {rec['dDelta']:+.2e}, "
+                  f"piv {pmin:.1e}..{pmax:.1e}, {rec['seconds']} s", flush=True)
+    return z, hist, False
