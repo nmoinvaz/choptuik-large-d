@@ -2567,6 +2567,23 @@ solver/largeD_late_structure.py  where the nonlinear late-order growth lives (x,
 
 </details>
 
+## Raw data
+
+The raw output of the runs (solver states, per-point records, attempts files, checkpoints and logs) is in a separate
+repository, [choptuik-large-d-raw](https://github.com/nmoinvaz/choptuik-large-d-raw), one folder per task and
+machine. Its [INDEX.md](https://github.com/nmoinvaz/choptuik-large-d-raw/blob/main/INDEX.md) says what each folder
+holds and which task produced it. This repository keeps the code and what is derived from the runs (CSVs, graphs,
+notes), plus the raw files that its scripts and checks read in place. A note or script that cites "raw/T76 7ca90fe"
+means folder `T76/` at that commit of the raw-data repository. Commands that need raw data clone it beside this
+repository:
+
+```
+git clone https://github.com/nmoinvaz/choptuik-large-d-raw ../choptuik-large-d-raw
+```
+
+Files that were moved out of this repository are listed with their new paths in its
+[MOVED_FROM_MAIN.md](https://github.com/nmoinvaz/choptuik-large-d-raw/blob/main/MOVED_FROM_MAIN.md).
+
 [^1]: M. W. Choptuik, PRL 70, 9 (1993).
 [^2]: T. Koike, T. Hara and S. Adachi, PRL 74, 5170 (1995), [gr-qc/9503007](https://arxiv.org/abs/gr-qc/9503007).
 [^3]: C. Gundlach, PRD 55, 695 (1997), [gr-qc/9604019](https://arxiv.org/abs/gr-qc/9604019); J. M. Martín-García and
