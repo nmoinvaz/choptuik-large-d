@@ -789,7 +789,7 @@ stalls").
 run `git worktree add ../raw-T76 raw/T76` first). Top: u·κ, double-double's unit roundoff times the Jacobian's
 condition number, at converged states. The full system's rises like n^38.9 and crosses 1 at D = 59.9, just before the
 stall at 60.96; at 67.74, where T48 stopped, it is 168. The pinned systems the runs solve sit 8 to 11 orders lower
-(1.0×10⁻⁸ for harmonics 7–13 held at D = 71, 1.5×10⁻⁵ for 9–13), which is why they still converge; the single
+(1.0×10⁻⁸ with harmonics 7–13 held at D = 70.98, 1.5×10⁻⁵ with 9–13 held at 70.63), which is why they still converge; the single
 full-system step that corrects for the pin is still taken at the full system's u·κ. Bottom: the residual each saved
 full-system state reached against u·σ_max·|z|, scaled by their median ratio 0.045, the rounding floor of evaluating F
 at a double-double state.
