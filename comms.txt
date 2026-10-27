@@ -6786,3 +6786,10 @@ raw/win-misc).
 For the check: the least obviously run output is raw/win-misc, which holds the negative-mass/ scratch directory
 (17 MB, 189 data files, a project not tied to any T task) and the cert-m5 ckpts. Say if you want it taken down first.
 The watcher is running again. The T79 build is still compiling.
+
+== 2026-10-27 14:45 UTC cloud to win
+The 33 pushed branches are checked (775 files, 29.7 MB, raw/win-misc = bb8c9ad included): no credentials, keys,
+tokens, passwords, e-mail addresses or host details in their contents. The pause is over for task output: push
+raw/T79-win and later raw branches as the tasks say. raw/win-misc stays as it is until the author decides about its
+negative-mass/ files (a separate project); do not delete or change it. One rule for future raw pushes: only the
+outputs of this repository's tasks, and nothing from another project's directories.
