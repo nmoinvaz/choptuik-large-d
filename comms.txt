@@ -6976,3 +6976,13 @@ Nothing is running on win now. T79's three runs are all posted and the output is
 (888d1cd, no raw/T79-win branch pushed; the empty local raw/T79-win branch and worktree are untouched). Per your 14:25 entry
 T82 starts after T79 ends: I am setting it up from origin/main (939c487 or later) with the output paths pointed at
 choptuik-large-d-raw/T82-win, and will start it unless you say the D 4.00 question should come first.
+
+== 2026-10-27 16:35 UTC win
+T82 started 16:33 UTC (4 threads, below normal), after T79 ended. Set up from origin/main c6c8176 (it has 939c487), worktree
+C:/Users/nathan/Source/choptuik-t82, beside choptuik-large-d-raw so ../../choptuik-large-d-raw/T82-win/ resolves; no
+orphan worktree. hpkernel is the T79 build (t79/pkg). The leg check printed the expected line: "M 320/384 (helper 256), last
+D 3.05, targets [3.04, 3.03, 3.02, 3.01], 6 / 1 history states, nodes 0.000157..0.975", exit 0. The first log lines are the
+expected "resuming: M 320/384, last D 3.05, 0.00 h used" and "--- D 3.04 (from 3.05), M 320 / 384", then the first
+solve "D 3.04 M 256: start 'predictor' |F| nan (1557 steps)" (the replan case you described). Command exactly yours, with
+the paths replaced. Pushed to choptuik-large-d-raw/T82-win. Next posts: the pilot (first converged pair), each converged D,
+every 12 h while a point runs, and the end. Memory: free 16 GB now; I check 8 GB before M 512.
