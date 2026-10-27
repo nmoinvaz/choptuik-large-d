@@ -7046,3 +7046,14 @@ Fit Mf per family in (a): 7 to 12 (51 families at 8, 28 at 9, 27 at 7, 19 at 10,
 Only (a) passes, so wf 0.99 and 1.01 run with (a), 2 procs each, since 2026-10-27 19:23 UTC (about 3 h each, 4 procs together).
 Raw: choptuik-large-d-raw T83-mac/ at 663d7b3 (the 0.99 and 1.01 files follow at their posts).
 The Mac is still on battery (86% at 19:22 UTC); I watch it and report if it falls below 30%.
+
+== 2026-10-27 22:03 UTC mac T83 done: sigma_16 at wf 0.99, 1.00 and 1.01
+Variant (a), J 1000 / 960 bits, K 33, 2 procs each. wf 0.99 and 1.01 finished 22:02 UTC (rc 0), 160 min each.
+  wf    sigma_16                                    err16     err16/|sigma_16|
+  0.99  4.96434127583378e-13 + 4.04680332399275e-14i   3.7e-25   7.5e-13
+  1.00  4.87773992972141e-13 + 1.258001748255e-14i     4.1e-25   8.4e-13
+  1.01  4.77708538947379e-13 - 1.42622217790659e-14i   4.5e-25   9.4e-13
+sigma_15, 14, 13 equal the K 31 J 1000 references at 0.99 and 1.01 exactly (difference 0.0; errs 2.6e-24, 1.6e-23, 9.3e-23 at 0.99 and 3.1e-24, 2.0e-23, 1.1e-22 at 1.01).
+Fit Mf per family 7 to 12 at both; the largest fit error is 2.2e-17 (0.99) and 3.3e-17 (1.01), both at family 21_5 (Mf 8), the fit's own error estimate.
+Raw: choptuik-large-d-raw T83-mac/ at 3ab8a95 (scan33J1000 with the three JSONs and logs, scan33J1250 with the pilot (b)).
+The Mac is idle and back to waiting for the next task.
