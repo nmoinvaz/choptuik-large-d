@@ -6479,3 +6479,30 @@ Relayouts, last line (|F|, Delta in the second layout and in the first):
   D 45.05: |F| 1.06e-25 after 4 steps; Delta 1.8623794271957130 in both, difference +0.00e+00
 
 The D 30.07 layout B state has a larger residual (4.6e-23) than the others, but it counts the same as layout A (|F| 6.0e-25 there). T75 is untouched; its 4 h post follows.
+
+== 2026-10-27 05:00 UTC mac
+T75, POWER: pmset -g batt shows battery power since about 04:58 UTC ("No adapter attached", 100%, discharging, no estimate). The cable has come out or is loose; I cannot reach it from here. Both runs are still going under caffeinate -is (sleep prevented), nothing stopped. At 100% the battery should hold for hours under this load, but please ask Nathan to check the charger.
+
+T75 4 h report at 3 h 55 min (01:05 start), raw/T75 pushed hourly (2a24221 at 04:05):
+
+| run | points | last D | F_full | dDelta_pin | s/point | max its | LM fallbacks |
+|---|---|---|---|---|---|---|---|
+| A pin 7 | 231 | 72.810842 | 1.9e-22 to 7.9e-22 | -9.0e-14 to +5.0e-14 | 55 | 50 | 89 |
+| B pin 5 | 239 | 73.082626 | 3.1e-22 to 8.8e-22 | -6.9e-13 to +6.4e-13 | 48 | 50 | 87 |
+
+B's dDelta_pin is growing, not a stop yet (the stop is above 1e-12): the last four points (D 73.0747 to 73.0826) have +2.5e-14, +3.4e-13, -6.9e-13, +6.4e-13 with F_full about 8.3e-22 and 13 to 23 iterations. The watcher kills B if one exceeds 1e-12. The mean seconds per point are over the whole run so far, which is the last 4 h. The runs advance about 0.5 in D per hour, so D 100 needs about 52 h, past the 48 h limit.
+
+The 93 points at the same D in both runs (71.0 to 72.80) agree on Delta_full1 plus lo to at most 1.1e-15 (A-B), none above 1e-14. A first and last three:
+
+| D | A Delta_full1 | B Delta_full1 | A-B |
+|---|---|---|---|
+| 71.0000 | 1.7849845180052928 | 1.7849845180052928 | -7.2e-17 |
+| 71.0098 | 1.784965734699866 | 1.784965734699866 | +1.2e-16 |
+| 71.0220 | 1.7849422635779137 | 1.7849422635779137 | -8.5e-17 |
+| 72.7000 | 1.7817886545563821 | 1.7817886545563824 | -2.0e-16 |
+| 72.7500 | 1.781696853866115 | 1.7816968538661162 | -9.7e-16 |
+| 72.8000 | 1.7816051756032902 | 1.7816051756032891 | +1.1e-15 |
+
+The difference grows slowly with D (1e-16 near 71, 1e-15 near 72.8). A's waypoints 70.65 to 70.95 against T73 B (Delta_full1 plus lo, A-T73B): 70.65 +8.2e-17, 70.70 +8.7e-17, 70.75 -3.5e-17, 70.80 +1.5e-17, 70.85 +3.0e-17, 70.90 +4.5e-17, 70.95 +2.0e-16.
+
+Correction: in my T78 entry at 04:54 I wrote "my entry at 04:2x above", the planted-control entry is the one at 04:13 (and its correction at 04:14).
