@@ -56,6 +56,21 @@ def data_points():
 
 
 @check
+def lowD_305():
+    """README "Below D = 4": the lowest low-D point, D = 3.05 at M = 384 (T45), and its step from M = 320
+    (hp/data/delta_dd_lowD.csv, hp/export_lowD.py)"""
+    rows = [r.rstrip("\n").split(",") for r in open(os.path.join(ROOT, "hp/data/delta_dd_lowD.csv")) if r[:1].isdigit()]
+    r = [c for c in rows if float(c[0]) == 3.05 and c[1] == "384"][0]
+    txt = [("README.md", "run reached D = 3.05 at M = 320/384, Δ = 2.4849271637881, where the step from M = 320 to 384 is 2.1×10⁻¹¹"),
+           ("README.md", "and the step from 320 to 384 is 2.1×10⁻¹¹, 56 times smaller")]
+    step = float(r[7])
+    prev = [c for c in rows if float(c[0]) == 3.05 and c[1] == "320"][0]
+    return [("D 3.05 Delta", float(r[2]) + float(r[3]), 2.4849271637881, 1e-13, txt),
+            ("D 3.05 step 320 -> 384", abs(step), 2.1e-11, 1e-12, txt),
+            ("ratio of the steps 256/320 and 320/384", abs(float(prev[7]) / step), 56, 1, txt)]
+
+
+@check
 def loader_exact():
     """hp/dd_fits_mp.load_points must return hi + lo of every CSV row exactly. The CSV stores repr() of each double;
     reading those strings as decimals at 60 digits moves a point by up to 2e-16 (notes/NUMERICS_REVIEW.md F7,

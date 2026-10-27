@@ -776,3 +776,10 @@ the cloud pilot was stopped. Where it stands:
 
 The commands, thread budget and stop conditions are in comms.txt (T45).
 
+
+**T45's end (comms 2026-10-27 07:36 UTC win; wip/highm-local 002265f, merged).** D = 3.05 converged at M = 320 and 384 on
+the 21 nodes 0.000157 … 0.975 (kc 100, ks 250): Δ(384) = 2.484927163788103 (lo +9.5×10⁻¹⁷), |F| 9.3×10⁻²⁹, tails
+9.9×10⁻⁶⁴ (centre) and 8.2×10⁻⁷⁵ (horizon). The step from M = 320 to 384 is −2.10×10⁻¹¹, 56 times smaller than the
+step from 256 to 320 (−1.17×10⁻⁹); that step is the quoted ± of Δ at D = 3.05, a resolution step, not a bound. The
+M = 384 point took 10.6 h (a lift, three Newton steps of 2.4–2.9 h, a second pass of two 62-minute steps) at a peak
+RSS of 2.9 GB. That is the end of T45's grid.
