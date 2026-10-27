@@ -707,13 +707,16 @@ with computed points rather than an assumed form. Its points are used in [The fo
   bit. The exact double-double Jacobian, the Levenberg–Marquardt fallback and γ stay at M ≤ 128. At D = 3.7, Δ
   changes by −3.4×10⁻¹¹, −3.2×10⁻¹⁵, −1.6×10⁻¹⁸ and −3.2×10⁻²¹ in the steps from M = 96 to 128, 160, 192 and 256
   ([notes/HIGH_M.md](notes/HIGH_M.md)).
-- **Quad-double arithmetic (not yet used by the solver):** the `qd` and `qv` modules add quad-double numbers
+- **Quad-double arithmetic:** the `qd` and `qv` modules add quad-double numbers
   (four f64, about 64 digits), scalar and 8-lane SIMD, with bitwise the same results on AVX-512, AVX2 and portable
   builds. They use the QD library's algorithms[^20], with two repairs found by the tests: the accurate add's last
   part, and the square root near the ends of the exponent range. Against exact arithmetic they err by at most
   2.1×2⁻²⁰⁹ (63 digits). They cost 8–29 times double-double per operation and 14–17 times in sums of products. A
   quad-double residual would cost about 7 times the double-double one at the same orders
   ([notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md); `hp/qd_check.py`, which runs the tests in a multidouble checkout).
+  A fully quad-double Newton (`hp/src/qsolve.rs`, on multidouble's quad-double dual numbers and LU) converges the
+  large-D states at D = 72.8 and 73.0, where the double-double Newton stalls, but does not yet continue past D = 73
+  (notes/QUAD_DOUBLE.md, section 12).
 - **Continuation in D:** prediction by the cubic through the last four converged points (a tangent from the
   Jacobian is wrong in the weak directions, below), Newton with the weakest directions deflated, and from D = 35 on
   the centre data's τ-harmonics above 13 frozen (below). 32 collocation points in τ, nodes at
@@ -2428,6 +2431,8 @@ hp/                 double-double solver (crate hpkernel)
 ├── highm_check.py, lowD_highM.py  checks of the larger tau grids, and the continuation toward D = 3 on them
 ├── step_test.py    the largest step in D that Newton tolerates at D = 45-60, for several solver variants (local task T43)
 ├── qd_check.py     checks of the quad-double arithmetic against mpmath, and across the SIMD backends
+├── src/qsolve.rs   the residual, its exact Jacobian and the Newton step in quad-double (M = 32, 48)
+├── scan_qd.py, qd_planted.py  continuation in D with the quad-double Newton, and its planted-root check
 ├── export_dd.py    collects the runs' points into data/delta_dd.csv
 ├── dd_fits_mp.py   large-D model fits at 60 digits, held-out errors, predictions (--dmax for a data snapshot)
 ├── short_forms.py  the shortest 1/D series per range of D with its error margin (README "The formula"; --selftest)
