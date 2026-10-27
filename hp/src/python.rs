@@ -4,7 +4,9 @@ use crate::block::BlockLu;
 use crate::dd::DD;
 use crate::dv::DV;
 use crate::field::{DMat, Fl, State};
-use crate::linalg::DDLu;
+use crate::linalg::{DDLu, QDLu};
+use crate::qd::QD;
+use crate::qsolve;
 use crate::model::{self, Ctx, TWork};
 use crate::v8::V8;
 use numpy::ndarray::Array2;
@@ -54,6 +56,36 @@ trait Api: Send + Sync {
     fn jvp(&mut self, zh: &[f64], zl: &[f64], vh: &[f64], vl: &[f64], mutate: u8, cut: bool) -> Result<(Vec<f64>, Vec<f64>, Vec<f64>, Vec<f64>), String>;
     /// Ctx::horizon_alpha (model::HALPHA_*)
     fn set_horizon_alpha(&mut self, mode: u8);
+    /// qsolve::residual_parts at the four-part state z, F in four parts; mutate: Ctx::mutate for this call
+    fn residual_q(&mut self, z: [&[f64]; 4], mutate: u8) -> Result<Q4, String>;
+    /// qsolve::jacobian_q: (four parts, ld)
+    fn jacobian_q(&mut self, z: [&[f64]; 4], mutate: u8) -> Result<(Q4, usize), String>;
+    /// qsolve::newton_q
+    fn newton_q(&mut self, z: [&[f64]; 4], mutate: u8) -> Result<qsolve::QStep, String>;
+}
+
+/// a quad-double vector as its four parts' arrays
+type Q4 = [Vec<f64>; 4];
+
+/// f on the context as Ctx<4> or Ctx<6> (M = 32 or 48), with Ctx::mutate set for the call: the quad-double lanes are
+/// instantiated for these sizes only (the release build's memory)
+macro_rules! qd_sizes {
+    ($me:expr, $mutate:expr, |$c:ident| $body:expr) => {{
+        let me: &mut dyn std::any::Any = $me;
+        if let Some($c) = me.downcast_mut::<Ctx<4>>() {
+            $c.mutate = $mutate;
+            let r = $body;
+            $c.mutate = 0;
+            r
+        } else if let Some($c) = me.downcast_mut::<Ctx<6>>() {
+            $c.mutate = $mutate;
+            let r = $body;
+            $c.mutate = 0;
+            r
+        } else {
+            Err("the quad-double solver is built for M = 32 and 48 only".to_string())
+        }
+    }};
 }
 
 fn state_of<const B: usize>(sh: &[f64], sl: &[f64]) -> State<DV, B> {
@@ -214,6 +246,15 @@ impl<const B: usize> Api for Ctx<B> {
     fn set_horizon_alpha(&mut self, mode: u8) {
         self.horizon_alpha = mode;
     }
+    fn residual_q(&mut self, z: [&[f64]; 4], mutate: u8) -> Result<Q4, String> {
+        qd_sizes!(self, mutate, |c| qsolve::residual_parts(c, z, true).map(|f| std::array::from_fn(|q| f.iter().map(|v| v.x[q]).collect())))
+    }
+    fn jacobian_q(&mut self, z: [&[f64]; 4], mutate: u8) -> Result<(Q4, usize), String> {
+        qd_sizes!(self, mutate, |c| qsolve::jacobian_q(c, z, true))
+    }
+    fn newton_q(&mut self, z: [&[f64]; 4], mutate: u8) -> Result<qsolve::QStep, String> {
+        qd_sizes!(self, mutate, |c| qsolve::newton_q(c, z, true))
+    }
 }
 
 /// The stored LU of the last Newton step (or lu_factor): dense (DDLu, n x n) or in block storage (BlockLu).
@@ -262,11 +303,32 @@ fn arr<'py>(py: Python<'py>, v: Vec<f64>) -> Bound<'py, PyArray1<f64>> {
     v.into_pyarray(py)
 }
 
+type A1<'py> = Bound<'py, PyArray1<f64>>;
+
+/// four parts' arrays as slices, each of length n
+fn parts4<'a>(z: [&'a PyReadonlyArray1<f64>; 4], n: usize) -> PyResult<[&'a [f64]; 4]> {
+    let mut out: [&[f64]; 4] = [&[], &[], &[], &[]];
+    for (q, a) in z.iter().enumerate() {
+        out[q] = slice(a, "z")?;
+        if out[q].len() != n {
+            return Err(PyValueError::new_err(format!("each part must have length {n}")));
+        }
+    }
+    Ok(out)
+}
+
+fn arr4<'py>(py: Python<'py>, v: Q4) -> (A1<'py>, A1<'py>, A1<'py>, A1<'py>) {
+    let [a, b, c, d] = v;
+    (arr(py, a), arr(py, b), arr(py, c), arr(py, d))
+}
+
 #[pyclass]
 struct Solver {
     api: Box<dyn Api>,
     pool: Arc<rayon::ThreadPool>,
     lu: Option<Lu>,
+    /// the quad-double LU of the last newton_q (qlu_solve)
+    qlu: Option<QDLu>,
     /// seconds of the last newton / newton_mixed call: residual, Jacobian, factorization, solve (step_timing)
     last_t: [f64; 4],
 }
@@ -388,7 +450,7 @@ impl Solver {
         // a large stack for the workers: the field arrays live on the stack and grow with M (a state of Dtn<8> lanes
         // at M = 384 is 120 kB); the pages are only touched as needed
         let pool = Arc::new(rayon::ThreadPoolBuilder::new().num_threads(t).stack_size(256 << 20).build().unwrap());
-        Ok(Solver { api, pool, lu: None, last_t: [0.0; 4] })
+        Ok(Solver { api, pool, lu: None, qlu: None, last_t: [0.0; 4] })
     }
 
     #[getter]
@@ -414,12 +476,14 @@ impl Solver {
             return Err(PyValueError::new_err(format!("horizon_alpha must be 0, 1 or 2, not {mode}")));
         }
         self.lu = None;
+        self.qlu = None;
         self.api.set_horizon_alpha(mode);
         Ok(())
     }
 
     fn set_segs(&mut self, segs: Vec<Vec<f64>>) -> PyResult<()> {
         self.lu = None;
+        self.qlu = None;
         self.api.set_segs(segs).map_err(PyValueError::new_err)
     }
 
@@ -645,6 +709,89 @@ impl Solver {
             out.push(arr(py, fl));
         }
         Ok(out)
+    }
+
+    /// The residual with every block in quad-double (qsolve::residual_parts) at the state z0 + z1 + z2 + z3: F in four
+    /// parts. mutate: Ctx::mutate for this call (model::QD_MUT_NOREFINE, QD_MUT_REFINE4, qsolve::QD_MUT_STATE_DD;
+    /// 0 none). M = 32 and 48 only.
+    #[pyo3(signature = (z0, z1, z2, z3, mutate=0))]
+    #[allow(clippy::too_many_arguments)]
+    fn residual_q<'py>(
+        &mut self,
+        py: Python<'py>,
+        z0: PyReadonlyArray1<'py, f64>,
+        z1: PyReadonlyArray1<'py, f64>,
+        z2: PyReadonlyArray1<'py, f64>,
+        z3: PyReadonlyArray1<'py, f64>,
+        mutate: u8,
+    ) -> PyResult<(A1<'py>, A1<'py>, A1<'py>, A1<'py>)> {
+        let z = parts4([&z0, &z1, &z2, &z3], self.api.len())?;
+        let (api, pool) = (&mut self.api, &self.pool);
+        let f = py.detach(|| pool.install(|| api.residual_q(z, mutate))).map_err(PyValueError::new_err)?;
+        Ok(arr4(py, f))
+    }
+
+    /// The exact Jacobian in quad-double (qsolve::jacobian_q) as four (L, L) arrays, its parts (row = residual,
+    /// column = unknown). M = 32 and 48 only.
+    #[pyo3(signature = (z0, z1, z2, z3, mutate=0))]
+    #[allow(clippy::too_many_arguments, clippy::type_complexity)]
+    fn jacobian_q<'py>(
+        &mut self,
+        py: Python<'py>,
+        z0: PyReadonlyArray1<'py, f64>,
+        z1: PyReadonlyArray1<'py, f64>,
+        z2: PyReadonlyArray1<'py, f64>,
+        z3: PyReadonlyArray1<'py, f64>,
+        mutate: u8,
+    ) -> PyResult<Vec<Bound<'py, PyArray2<f64>>>> {
+        let n = self.api.len();
+        let z = parts4([&z0, &z1, &z2, &z3], n)?;
+        let (api, pool) = (&mut self.api, &self.pool);
+        let (c, ld) = py.detach(|| pool.install(|| api.jacobian_q(z, mutate))).map_err(PyValueError::new_err)?;
+        Ok(c.iter().map(|p| Array2::from_shape_fn((n, n), |(i, j)| p[j * ld + i]).into_pyarray(py)).collect())
+    }
+
+    /// One Newton step in quad-double (qsolve::newton_q) at z0 + z1 + z2 + z3: returns (dz0, dz1, dz2, dz3, F hi,
+    /// F lo, min |u_kk|, max |u_kk|), dz = -J^-1 F in four parts. The quad-double LU is kept for qlu_solve; the
+    /// times are step_timing's. M = 32 and 48 only.
+    #[pyo3(signature = (z0, z1, z2, z3, mutate=0))]
+    #[allow(clippy::too_many_arguments, clippy::type_complexity)]
+    fn newton_q<'py>(
+        &mut self,
+        py: Python<'py>,
+        z0: PyReadonlyArray1<'py, f64>,
+        z1: PyReadonlyArray1<'py, f64>,
+        z2: PyReadonlyArray1<'py, f64>,
+        z3: PyReadonlyArray1<'py, f64>,
+        mutate: u8,
+    ) -> PyResult<(A1<'py>, A1<'py>, A1<'py>, A1<'py>, A1<'py>, A1<'py>, f64, f64)> {
+        let z = parts4([&z0, &z1, &z2, &z3], self.api.len())?;
+        let (api, pool) = (&mut self.api, &self.pool);
+        let st = py.detach(|| pool.install(|| api.newton_q(z, mutate))).map_err(PyValueError::new_err)?;
+        self.last_t = st.t;
+        let (pmin, pmax) = st.lu.pivot_range();
+        self.qlu = Some(st.lu);
+        let (a, b, c, d) = arr4(py, st.dz);
+        Ok((a, b, c, d, arr(py, st.fh), arr(py, st.fl), pmin, pmax))
+    }
+
+    /// x with J x = b (J^T x = b with transpose) by the quad-double LU of the last newton_q; b and x in four parts
+    #[pyo3(signature = (b0, b1, b2, b3, transpose=false))]
+    #[allow(clippy::type_complexity)]
+    fn qlu_solve<'py>(
+        &self,
+        py: Python<'py>,
+        b0: PyReadonlyArray1<'py, f64>,
+        b1: PyReadonlyArray1<'py, f64>,
+        b2: PyReadonlyArray1<'py, f64>,
+        b3: PyReadonlyArray1<'py, f64>,
+        transpose: bool,
+    ) -> PyResult<(A1<'py>, A1<'py>, A1<'py>, A1<'py>)> {
+        let lu = self.qlu.as_ref().ok_or_else(|| PyValueError::new_err("no quad-double LU (call newton_q first)"))?;
+        let b = parts4([&b0, &b1, &b2, &b3], lu.n)?;
+        let mut x: Vec<QD> = (0..lu.n).map(|i| QD::new(b[0][i], b[1][i], b[2][i], b[3][i])).collect();
+        py.detach(|| if transpose { lu.solve_t(&mut x) } else { lu.solve(&mut x) });
+        Ok(arr4(py, std::array::from_fn(|q| x.iter().map(|v| v.x[q]).collect())))
     }
 
     /// Mode matrix M(lam) (Delta fixed, no phase row) as two (L-1, L-1) arrays.
@@ -960,10 +1107,32 @@ fn isa() -> &'static str {
     V8::ISA
 }
 
+/// y + a x elementwise in quad-double (qsolve::qd_axpy), each vector in four parts: (y0, y1, y2, y3)
+#[pyfunction]
+#[allow(clippy::too_many_arguments, clippy::type_complexity)]
+fn qd_axpy<'py>(
+    py: Python<'py>,
+    a: f64,
+    x0: PyReadonlyArray1<'py, f64>,
+    x1: PyReadonlyArray1<'py, f64>,
+    x2: PyReadonlyArray1<'py, f64>,
+    x3: PyReadonlyArray1<'py, f64>,
+    y0: PyReadonlyArray1<'py, f64>,
+    y1: PyReadonlyArray1<'py, f64>,
+    y2: PyReadonlyArray1<'py, f64>,
+    y3: PyReadonlyArray1<'py, f64>,
+) -> PyResult<(A1<'py>, A1<'py>, A1<'py>, A1<'py>)> {
+    let n = slice(&y0, "y0")?.len();
+    let x = parts4([&x0, &x1, &x2, &x3], n)?;
+    let y = parts4([&y0, &y1, &y2, &y3], n)?;
+    Ok(arr4(py, qsolve::qd_axpy(a, x, y)))
+}
+
 #[pymodule]
 fn _hpkernel(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Solver>()?;
     m.add_function(wrap_pyfunction!(isa, m)?)?;
+    m.add_function(wrap_pyfunction!(qd_axpy, m)?)?;
     let _ = <DV as crate::lane::BaseLane>::TANGENT;
     Ok(())
 }
