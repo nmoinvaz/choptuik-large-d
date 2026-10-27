@@ -815,6 +815,21 @@ pinned system past D 70. From the frontier state (3.5e-23, outside) it fails, an
 So the recipe that works is the double-double deflated Newton and its polish to the floor, then quad-double from the
 floor, and its reach is where the double-double floor still falls inside the basin.
 
+**The pin ladder at the frontier** (qd_pinned.py with the pin at 1, 3, 5, 7: p1's harmonics above the pin held at
+the double-double solution's values, the band subtracted as PinnedSolver does, the solver built with kfreeze = pin):
+
+| pin (harmonics held) | result | Delta |
+|---|---|---|
+| 1 (3-13) | converged, 2.3e-53 in 3 steps | 1.78075708073508832 - 1.539722e-17 + 2.7e-34 |
+| 3 (5-13) | converged, 3.4e-53 in 5 steps | 1.78075708073509054 + 1.341929e-17 - 6.1e-35 |
+| 5 (7-13) | stalls at 3.9e-18 after one step | |
+| 7 (9-13) | stalls at 7.4e-18 after one step | |
+
+At D 73.27 the quad-double Newton converges once harmonics 5 and up are held, and not with 5 or 7 free: those two
+are junk there as well (their directions' sigma against c). The two converged Delta differ by 3e-17, the cost of
+holding harmonic 3 at its double-double value; the full-system correction from the pinned solution, in
+quad-double, is the next quantity (qd_fullcorr.py).
+
 Freezing p1's harmonics 3-13 or 9-13 as bare band fields (qd_freezeh.py) does not deflate: the first projected step
 of 5e-7 leaves a residual of 5e-7, identical for both sets, because a bare harmonic is not a weak direction of J
 (the junk directions mix p1 with the other centre field, qd_weak.py's masses), so the projection breaks the step
