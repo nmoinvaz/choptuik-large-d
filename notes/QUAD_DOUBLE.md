@@ -783,3 +783,62 @@ states are the old series' values, f64-rounded by renode, and the inward integra
 over 0.1 in x), they respond to dD = 1e-8 by rising to 34 and 47, and the Newton step is 2.6e4 with no trial accepted.
 Integrating away from the horizon brings back the growing mode the series suppresses, about 1e9 per unit of D at
 D = 73, so the two-radius form of the horizon treatment is out at large D as well.
+
+### 12.4 Newton's basin and the horizon series' radius against D (2026-10-27 evening, T84-mac/qd_basin.py, horizon_radius.py)
+
+**The basin.** At the saved pinned states of T73 and T75 (the 0.7 layout), for the pinned system (kfreeze 7 with the
+band, `PinnedQ`) and the full system (kfreeze 13) in quad-double: the LU's smallest pivot sigma, the Newton step
+|dz|, the residual after the full step and c = |F(z + dz)| / |dz|^2, and the basin sigma^2 / c that |F| must be inside
+for Newton to converge quadratically (the double-double polish of a converged point leaves |F| at the floor column).
+
+| D | system | sigma | c | basin sigma^2/c | the state's |F| | inside |
+|---|---|---|---|---|---|---|
+| 67.74 | pinned | 1.6e-11 | 4e4 | 6e-27 | 1.3e-30 | yes |
+| 70.5 | pinned | 1.2e-11 | 1.4e5 | 1e-27 | 2.6e-30 | yes |
+| 72.4 | pinned | 1.3e-11 | 4e5 | 4e-28 | 3.1e-30 | yes |
+| 73.27 | pinned | 9.2e-12 | 4e6 | 2e-29 | 3.5e-23 (the frontier, never polished) | no |
+| 67.74 | full | 1.3e-15 | 0.07 | 2e-29 | 9e-28 | no |
+| 68.5 | full | 8.6e-16 | 0.03 | 2e-29 | 6e-31 | yes |
+| 70.5 | full | 8.4e-16 | 0.08 | 9e-30 | 3e-30 | yes |
+| 71.5 | full | 3.8e-16 | 0.14 | 1e-30 | 1.4e-30 | marginal |
+| 72.4 | full | 4.9e-16 | 0.19 | 1.3e-30 | 3e-30 | no |
+| 73.0 | full | 2.9e-16 | 0.28 | 3e-31 | 1e-29 | no |
+| 73.27 | full | 2.3e-16 | 0.31 | 1.7e-31 | 3.5e-23 | no |
+
+The full system's basin halves every 0.8 in D (sigma falls 0.73-fold and c grows 1.3-fold per unit) and the
+states' floors cross it near D 71: the quad-double Newton converged the 72.8 and 73.0 states from two starts of
+four (12.1), and fails at the frontier. The pinned system's basin is 2-3 orders wider and its polished states sit
+inside it: from the 72.4 state the pinned quad-double Newton (`PinnedQ`, qd_pinned.py) converges in two full steps,
+3.1e-30, 5.9e-33, 3.4e-53, Delta 1.78234204349234227 + 4.615237e-17 + 2.3e-34, the first quad-double solution of the
+pinned system past D 70. From the frontier state (3.5e-23, outside) it fails, and a backtracking line search on
+|F|_2 (newton_qd ls="F") creeps by 1e-4 of |F| per step, as the quadratic model predicts (lam about F0 / (c |dz|^2)).
+So the recipe that works is the double-double deflated Newton and its polish to the floor, then quad-double from the
+floor, and its reach is where the double-double floor still falls inside the basin.
+
+Freezing p1's harmonics 3-13 or 9-13 as bare band fields (qd_freezeh.py) does not deflate: the first projected step
+of 5e-7 leaves a residual of 5e-7, identical for both sets, because a bare harmonic is not a weak direction of J
+(the junk directions mix p1 with the other centre field, qd_weak.py's masses), so the projection breaks the step
+instead of removing its weak part. The kernel's pin removes those unknowns and their rows, which is the reduction
+done right.
+
+**The horizon series' radius** (horizon_radius.py: the growth of the terms |c_k| u0^k over the last 40 orders,
+R = u0 / growth, at the state held while D is moved by dD, i.e. for data about 4e-5 dD off the solution; a
+different estimator from BEYOND_LIGHT_CONE 2.3's root test, which gives larger on-solution radii):
+
+| D | R on the solution | R at dD 1e-8 | 1e-6 | 1e-4 | 1e-2 |
+|---|---|---|---|---|---|
+| 40.02 | 0.73 | 0.50 | 0.43 | 0.36 | 0.26 |
+| 45.05 | 0.70 | 0.46 | 0.40 | 0.33 | 0.24 |
+| 50.01 | 0.68 | 0.43 | 0.37 | 0.30 | 0.22 |
+| 55.04 | 0.62 | 0.40 | 0.34 | 0.28 | 0.21 |
+| 60.00 | 0.59 | 0.38 | 0.32 | 0.26 | 0.19 |
+| 67.74 | 0.61 | 0.34 | 0.29 | 0.24 | 0.18 |
+| 70.5 | 0.62 | 0.33 | 0.28 | 0.23 | 0.17 |
+| 72.4 | 0.62 | 0.32 | 0.27 | 0.22 | 0.17 |
+| 73.27 | 0.56 | 0.32 | 0.27 | 0.22 | 0.17 |
+
+The matching node is at u0 = 0.30. For data a given distance off the solution the radius falls through u0 at
+D about 50 for dD 1e-4, 63 for 1e-6 (the double-double stalls at 61 and 67.8) and, extrapolating the 0.004 per unit
+of D, about 78 for 1e-8, the predictor error of T75's steps. Each decade of predictor accuracy buys about 15 in D,
+so the series' wall moves and is not the binding constraint at 73; the basin above is, and its c is the series'
+sensitivity near its radius. A horizon discretisation without a radius (collocation in u) removes both.
