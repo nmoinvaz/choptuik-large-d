@@ -676,3 +676,102 @@ nearly singular horizon solve amplifying the deviation) is not established.
 The candidate remedy is to match closer to the horizon, with the last node at x = 0.75 or 0.8 (u0 = 0.25 or 0.2), so
 that the series converges for data near the solution. That changes the discrete system, so Delta must agree between
 layouts to the quoted precision before it is used.
+
+### 12.3 Past D = 73: the layout, single jumps, and the price (2026-10-27; folders T81, T84 and T85 of the raw-data repository)
+
+**The quad-double Newton at T75's frontier (old layout, last node 0.7).** T75's states at D 73.10 (both runs),
+73.2657 (pin 7) and 73.1211 (pin 5) all stall the way the stalled 72.8 and 73.0 runs did: |F| and the correction
+halve at lam = 1/2 each step while the smallest pivot falls, to 7e-18, 5e-16, 7e-17 and 1e-16 (T81, frontier.log).
+Precision does not step past 73 in this layout.
+
+**One node added beyond 0.7** (T81, layout_test.py: the D 73.0 quad-double solution re-noded, newton_qd at D 73.0,
+then the blocks' response to D with the state held, then Newton at D + dD).
+
+| last node | newton_qd at D 73 | Delta - the 0.7 layout's | horizon block at dD 1e-4 | at dD 1e-2 |
+|---|---|---|---|---|
+| 0.7 | converged (12.1) | | 3.8e15 | |
+| 0.75 | 1.5e-55 in 5 steps | +4.3e-17 | 6.0e5 | 8.6e21 |
+| 0.8 | stalls at 4.5e-18 (lam 1/2 halving) | +1.3e-13 | 1.9e-2 | 4.3e9 |
+| 0.85 | stops at 7.0e-14 (the first step moves Delta 1.3e-9) | +9.7e-9 | 2.8e-4 | 2.8e-2 |
+| 0.9 | wanders (|F| 2.6e-3 after 7 steps; stopped) | | | |
+
+At 0.85 (u0 = 0.15) the horizon block is linear in dD out to 1e-2, with ks 130 and 200 alike, as the radius
+estimate of 12.2 predicts; at 0.75 it is not. But past 0.75 the Newton no longer converges: its first step leaves
+along one direction with Delta content, which is nearly singular in these layouts (below). Newton at D + 1e-3 fails
+from every layout.
+
+**The pinned double-double continuation in the new layouts** (T84, scan_hp of wip/qd-horizon dd0186e with the pin of
+T73-T80, steps of 0.005 from T75's frontier): it converges points at 73.27-73.28 in both layouts, but the full
+system's sensitivity dDelta/dF there is 1e22-1e25 (T75: 1.3e11) and the linearised full-system correction
+dDelta_pin is 2e-8 to 1.6e-7 (T75: 1e-12); a third 0.85 point at 73.2832 lies 5e-3 off. Delta is undetermined at
+double-double precision in these layouts. The pilot was stopped (its criterion was |dDelta_pin| <= 1e-10).
+
+**Single jumps with the state held** (T84, jump_resid.py: the full-system residual at D + dD, the converged state
+unchanged):
+
+| dD | last node 0.7 | last node 0.85 |
+|---|---|---|
+| 0.05 | 2e39 | 14 |
+| 0.2 | 4e47 | 1e9 |
+| 1 | 1e59 | 2e20 |
+| 5 | 1e76 | 1e37 |
+
+The horizon series' radius shrinks with the deviation from the solution: at 0.85 the block is linear for deviations
+of about 1e-6 (dD 1e-2 at the state's 4e-5 per unit of D) and exponential beyond. No jump lands from the state held,
+in either layout, and T68's jumps of 2.3 and 4.3 from D 67.72 (|F| 1.7e17 and 1.7e27) were the same thing.
+
+**Single jumps with a predictor through wide-spaced points** (T84, run_jump.sh): the pinned scan in the 0.85 layout
+from the frontier 73.2657, the cubic predictor through T75's waypoints 70.65, 71.5 and 72.4 and the frontier (spacing
+0.87), one step of 0.5, 1, 2 or 5. All four converge. Delta_full1 is the pinned Delta plus the linearised
+full-system correction (T75's quantity); the rational formula's value is a plausibility check, not a reference
+(T75's own Delta_full1 lies 5.0e-8 to 6.2e-8 above it).
+
+| jump | D | \|F\| | steps | pinned Delta - formula | Delta_full1 - formula |
+|---|---|---|---|---|---|
+| 0.5 | 73.7657 | 1.3e-27 | 39 | +1.1e-6 | -6.6e-7 |
+| 1 | 74.2657 | 5.8e-21 | 6 | -6.6e-8 | -1.0e-6 |
+| 2 | 75.2657 | 3.1e-28 | 13 | +2.1e-5 | -9e-9 |
+| 5 | 78.2657 | 1.6e-27 | 10 | +4.3e-4 | +4.8e-7 |
+
+So the steps land on the branch when the predictor's error is below the horizon series' tolerance, which the new
+layout raises from about 1e-13 (0.7) to about 1e-7 (0.85), and the predictor through points 0.87 apart stays below
+it over a step of 5. In the 0.8 layout the pilot's three points have Delta_full1 - formula = +4.9e-8, +4.9e-8,
++4.7e-8, on T75's trend, so that layout may hold Delta better. T85 runs both layouts to D = 200 in steps of 1 on
+shared waypoints; their difference per waypoint is the uncertainty of Delta_full1 there.
+
+**The price, and the quad-double solver's part.** Both new layouts make one direction of the full system nearly
+singular (the sensitivities above). Double-double leaves Delta there at 1e-6 to 1e-8. Quad-double, with residuals of
+1e-50, can resolve a direction of singular value 1e-20 to about 1e-30 in Delta, but the plain quad-double Newton
+leaves along it (the 0.85 row of the layout table). `driver.newton_qd` therefore now has the double-double solver's
+deflation (`w > 0`: the step and the corrections it is judged by are projected off the w weakest right singular
+directions of the quad-double Jacobian, `weak_subspace_q`, then plain Newton finishes; `junk=True`: only the weak
+directions without Delta content are frozen, `junk_subspace_q`, for the whole iteration). Its tests on T84's states,
+with the undeflated Newton as the control, are in T84-mac/qd_deflated*.
+
+**What the quad-double Newton found at D 73.27 (T84-mac, qd_*.py; 2026-10-27 evening).** Every variant stalls, on
+every system and layout tried:
+
+| system, layout | start |F| | ends at | behaviour |
+|---|---|---|---|
+| full (kfreeze 13), last node 0.85: deflated, junk frozen, plain | 1.5e-23 | 4.7e-14, 1.8e-14, 3.2e-17 | step halving at lam 1/2 |
+| full, last node 0.8: deflated, plain | 6.9e-26 | 4.6e-16, 8.1e-17 | the same |
+| harmonics above 7 zeroed (kfreeze 7), 0.7 and 0.8 | 6e-6, 3e-5 | 3e-6, 1.9e-11 | lam 1/32; halving |
+| the pinned system of T73-T85 (`PinnedQ`, T84-mac/qd_pinned.py), 0.7 and 0.8 | 3.5e-23, 6.9e-26 | 7.4e-18, 4.6e-17 | the first step raises |F| by 5-10 orders |
+
+The arithmetic is not at fault: at the 0.8 state the quad-double LU's plain and transposed solves and the Newton
+step satisfy their equations to the quad-double roundoff of |J| |x| (python-flint at 320 bits, qd_luexact.py:
+relative residuals 9e-36, 2e-29, 2e-33 with |x| 1.5e29 for a unit right-hand side), and the Jacobian matches finite
+differences (qd_jvcheck.py). That |J^-1 b| is 1e29 says the full system's smallest singular value is about 1e-29
+there. Inverse iteration on the LU (qd_weak.py) finds twelve directions with sigma 1e-29 to 1e-24, p1's harmonics 13,
+11, 9, 7, 5, 3 (cos/sin pairs), with Delta content 1e-5 to 1e-2: in the layouts with the last node at 0.8-0.85
+the junk extends down to harmonic 3 (in the 0.7 layout it was 9-13). Two further directions with Delta content
+0.6-0.8 at sigma 2e-22 and 5e-22 were f64 Rayleigh-Ritz noise on matrices with entries 1e58 (|J v| = 1.4 along one,
+equal to the finite difference, qd_scan1d.py and qd_jvcheck.py) and are withdrawn.
+
+Why no variant converges: the pinned system's step of 1.3e-12 from |F| 3.5e-23 lands at |F| 7.4e-18, so the
+residual's second-order term is about 1e7 |dz|^2 (the horizon block's exponential sensitivity, 12.2), while the
+pinned Jacobian's smallest pivot in quad-double is 9e-12. Newton converges only where c |J^-1 F|^2 < |F|, i.e. |F|
+below about sigma^2 / c = 1e-29 here, and the best start any double-double run can give is its floor, 1e-21 to 1e-26.
+That is also what the double-double floor of T73-T80, rising 1.45-fold per unit of D, was: not roundoff but the edge
+of the basin. Precision, deflation and the pin do not move that edge; only a discretisation with a smaller c (the
+horizon block) or a larger sigma (the junk) does.

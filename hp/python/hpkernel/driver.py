@@ -732,7 +732,48 @@ def qmax(F):
     return float(np.abs(np.asarray(F[0]) + np.asarray(F[1])).max())
 
 
-def newton_qd(s, z, tol=1e-50, it_max=12, max_halvings=8, verbose=True, mutate=0):
+def weak_subspace_q(s, w, iters=8, seed=0):
+    """Orthonormal basis (L, w) of the w weakest right singular directions of the quad-double Jacobian whose LU the
+    last Solver.newton_q stored: inverse subspace iteration on (J^T J)^-1, the solves in quad-double (qlu_solve, the
+    transpose first), the directions in f64 (as weak_subspace for the double-double LU)."""
+    L = s.size
+    V = np.linalg.qr(np.random.default_rng(seed).standard_normal((L, w)))[0]
+    zero = np.zeros(L)
+    for _ in range(iters):
+        W = np.empty_like(V)
+        for j in range(w):
+            y = s.qlu_solve(np.ascontiguousarray(V[:, j]), zero, zero, zero, transpose=True)
+            x = s.qlu_solve(*(np.ascontiguousarray(np.asarray(p)) for p in y))
+            W[:, j] = np.asarray(x[0]) + np.asarray(x[1])
+        V = np.linalg.qr(W)[0]
+    return V
+
+
+def junk_subspace_q(s, w, delta_max=1e-2, iters=8):
+    """Rayleigh-Ritz on the w weakest right singular directions of the quad-double Jacobian (weak_subspace_q): the
+    directions whose Delta component is below delta_max ("junk": p1's high harmonics, which the equations fix only to
+    tol / sigma), orthonormal, with their singular values and those of the weak directions kept out (as junk_subspace
+    for the double-double LU)."""
+    L = s.size
+    V = weak_subspace_q(s, w, iters=iters)
+    zero = np.zeros(L)
+    W = np.empty_like(V)
+    for j in range(V.shape[1]):
+        y = s.qlu_solve(np.ascontiguousarray(V[:, j]), zero, zero, zero, transpose=True)
+        x = s.qlu_solve(*(np.ascontiguousarray(np.asarray(p)) for p in y))
+        W[:, j] = np.asarray(x[0]) + np.asarray(x[1])
+    H = V.T @ W
+    ev, U = np.linalg.eigh((H + H.T) / 2)
+    X = V @ U
+    X /= np.linalg.norm(X, axis=0)
+    sig = 1 / np.sqrt(np.maximum(ev, 1e-300))
+    weak = ev > 0                                  # the rest of the w are not weak (Rayleigh-Ritz leftovers)
+    keep = weak & (np.abs(X[-1, :]) < delta_max)
+    return (np.linalg.qr(X[:, keep])[0] if keep.any() else np.zeros((L, 0))), sig[keep], sig[weak & ~keep]
+
+
+def newton_qd(s, z, tol=1e-50, it_max=12, max_halvings=8, verbose=True, mutate=0, w=0, junk=False, delta_max=1e-2,
+              tol_dz=1e-45):
     """Newton in quad-double (Solver.newton_q: the exact Jacobian in quad-double, its quad-double LU) from the
     four-part state z. A trial z + lam dz (lam = 1, 1/2, ..., 2^-max_halvings) is accepted when the Newton correction
     there, with its own Jacobian, is smaller than dz (max norms), or when its max |F| <= tol. At large D a full step
@@ -742,21 +783,59 @@ def newton_qd(s, z, tol=1e-50, it_max=12, max_halvings=8, verbose=True, mutate=0
     accepts it; the next correction
     with the new Jacobian does (notes/QUAD_DOUBLE.md, section 12). Stops when max |F| <= tol (converged), when no
     trial is accepted (stalled), or after it_max steps. A trial whose Jacobian is not finite or singular is rejected. mutate: Ctx::mutate for every call (the controls; 0 none).
-    Returns (z, hist, converged); hist has one record per step (F, |dz|, lam, pivots, times)."""
+    w > 0: deflated first, as deflated_newton's phase 'all': the step and the corrections it is judged by have their
+    components along the w weakest right singular directions (weak_subspace_q, from the first Jacobian) removed, so
+    the well-determined part converges without the nearly singular directions throwing the iterate (the layouts with
+    the last node at 0.8-0.85, notes/QUAD_DOUBLE.md 12.3); when that phase stalls, or |F| stops falling by a factor
+    0.3 per step, plain Newton ('full') finishes from where it got.
+    junk (with w > 0): as deflated_newton's junk_only: only the weak directions without Delta content (|Delta
+    component| < delta_max, junk_subspace_q) are removed, for the whole iteration, so the weak directions that carry
+    Delta are solved while p1's near-null harmonics stay where the start put them; it ends converged when max |F| <=
+    tol or the projected correction is below tol_dz (the residual left is the junk's).
+    Returns (z, hist, converged); hist has one record per step (F, |dz|, lam, pivots, times, mode)."""
     st = s.newton_q(*z, mutate=mutate)
     hist = []
+    L = len(z[0])
+    zero = np.zeros(L)
+    mode, V, n_prev = (("sel" if junk else "all") if w else "full"), None, None
+
+    def proj(d):
+        """the four-part step with its components along V removed"""
+        if V is None:
+            return d
+        c = V @ (V.T @ (np.asarray(d[0]) + np.asarray(d[1]) + np.asarray(d[2]) + np.asarray(d[3])))
+        return qd_axpy(-1.0, np.ascontiguousarray(c), zero, zero, zero, *d)
+
     for it in range(it_max + 1):
-        d, nf = st[:4], qmax(st[4:6])
-        nd = float(np.abs(d[0]).max())
+        nf = qmax(st[4:6])
         if nf <= tol:
             if verbose:
                 print(f"  qn {it}: |F| {nf:.2e} converged, Delta {z[0][-1]:.17f} {z[1][-1]:+.4e}", flush=True)
-            hist.append(dict(it=it, F=nf, dz=nd))
+            hist.append(dict(it=it, F=nf, dz=float(np.abs(st[0]).max()), mode=mode))
             return z, hist, True
         if it == it_max:
             break
+        if mode == "all" and n_prev is not None and nf > 0.3 * n_prev:
+            mode, V = "full", None
+            if verbose:
+                print(f"  qn: phase 'all' stalled at |F| {nf:.1e}; phase 'full'", flush=True)
+        if mode == "all" and V is None:
+            V = weak_subspace_q(s, w)
+        if mode == "sel" and V is None:
+            V, sk, sd = junk_subspace_q(s, w, delta_max)
+            if verbose:
+                print(f"  qn: {V.shape[1]} junk directions frozen (sigma {sk.min() if len(sk) else 0:.0e}..{sk.max() if len(sk) else 0:.0e}), "
+                      f"{len(sd)} weak ones with Delta content solved (sigma {sd.min() if len(sd) else 0:.0e}..{sd.max() if len(sd) else 0:.0e})", flush=True)
+        d = proj(st[:4])
+        nd = float(np.abs(d[0]).max())
+        if mode == "sel" and nd < tol_dz:
+            if verbose:
+                print(f"  qn {it}: projected correction {nd:.1e} below {tol_dz:.0e} with the junk frozen: converged at |F| {nf:.2e}, "
+                      f"Delta {z[0][-1]:.17f} {z[1][-1]:+.4e}", flush=True)
+            hist.append(dict(it=it, F=nf, dz=nd, mode=mode, junk_floor=True))
+            return z, hist, True
         t0 = time.time()
-        rec = dict(it=it, F=nf, dz=nd, dDelta=float(d[0][-1] + d[1][-1]), piv=[st[6], st[7]])
+        rec = dict(it=it, F=nf, dz=nd, dDelta=float(d[0][-1] + d[1][-1]), piv=[st[6], st[7]], mode=mode)
         lam = 1.0
         for _ in range(max_halvings + 1):
             zt = qd_axpy(lam, *d, *z)
@@ -765,22 +844,27 @@ def newton_qd(s, z, tol=1e-50, it_max=12, max_halvings=8, verbose=True, mutate=0
                 good = np.isfinite(stt[0]).all() and np.isfinite(stt[4]).all()
             except ValueError:          # a non-finite or singular Jacobian at the trial point
                 good = False
-            if good and (float(np.abs(stt[0]).max()) < nd or qmax(stt[4:6]) <= tol):
+            if good and (float(np.abs(proj(stt[:4])[0]).max()) < nd or qmax(stt[4:6]) <= tol):
                 break
             lam *= 0.5
         else:
             rec.update(lam=0.0, seconds=round(time.time() - t0, 2))
             hist.append(rec)
+            if mode == "all":
+                mode, V, n_prev = "full", None, None
+                if verbose:
+                    print(f"  qn {it}: |F| {nf:.2e}, |dz| {nd:.1e}: no deflated step accepted; phase 'full'", flush=True)
+                continue
             if verbose:
                 print(f"  qn {it}: |F| {nf:.2e}, |dz| {nd:.1e}: no trial step accepted, stopping", flush=True)
             return z, hist, False
-        z, st = zt, stt
+        z, st, n_prev = zt, stt, nf
         rec.update(lam=lam, F_new=qmax(st[4:6]), dz_new=float(np.abs(st[0]).max()), seconds=round(time.time() - t0, 2),
                    t=[round(v, 3) for v in s.step_timing()])
         hist.append(rec)
         if verbose:
-            print(f"  qn {it}: |F| {nf:.2e} -> {rec['F_new']:.2e}, |dz| {nd:.1e} -> {rec['dz_new']:.1e}, lam {lam:g}, "
-                  f"dDelta {rec['dDelta']:+.2e}, piv {st[6]:.1e}..{st[7]:.1e}, {rec['seconds']} s", flush=True)
+            print(f"  qn {it} [{mode}]: |F| {nf:.2e} -> {rec['F_new']:.2e}, |dz| {nd:.1e} -> {rec['dz_new']:.1e}, "
+                  f"lam {lam:g}, dDelta {rec['dDelta']:+.2e}, piv {st[6]:.1e}..{st[7]:.1e}, {rec['seconds']} s", flush=True)
     return z, hist, False
 
 
