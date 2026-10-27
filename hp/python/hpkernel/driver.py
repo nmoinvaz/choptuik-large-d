@@ -773,7 +773,7 @@ def junk_subspace_q(s, w, delta_max=1e-2, iters=8):
 
 
 def newton_qd(s, z, tol=1e-50, it_max=12, max_halvings=8, verbose=True, mutate=0, w=0, junk=False, delta_max=1e-2,
-              tol_dz=1e-45):
+              tol_dz=1e-45, ls="dz", V=None):
     """Newton in quad-double (Solver.newton_q: the exact Jacobian in quad-double, its quad-double LU) from the
     four-part state z. A trial z + lam dz (lam = 1, 1/2, ..., 2^-max_halvings) is accepted when the Newton correction
     there, with its own Jacobian, is smaller than dz (max norms), or when its max |F| <= tol. At large D a full step
@@ -792,12 +792,19 @@ def newton_qd(s, z, tol=1e-50, it_max=12, max_halvings=8, verbose=True, mutate=0
     component| < delta_max, junk_subspace_q) are removed, for the whole iteration, so the weak directions that carry
     Delta are solved while p1's near-null harmonics stay where the start put them; it ends converged when max |F| <=
     tol or the projected correction is below tol_dz (the residual left is the junk's).
+    V: an orthonormal (L, k) basis of directions to freeze for the whole iteration (as junk, computed by the caller: p1's
+    harmonics as band fields, say), instead of junk_subspace_q.
+    ls: how a trial is accepted. "dz" (default): the next correction, with its own Jacobian, is smaller than dz (above).
+    "F": backtracking on the residual's 2-norm as the double-double solver's newton_solve does, |F(z + lam dz)|_2 <=
+    (1 - 1e-4 lam) |F(z)|_2, which creeps where the quadratic model fails (the pinned system near D 73, 12.3) but
+    costs only a residual per trial; the Jacobian at the accepted point is then computed once.
     Returns (z, hist, converged); hist has one record per step (F, |dz|, lam, pivots, times, mode)."""
     st = s.newton_q(*z, mutate=mutate)
     hist = []
     L = len(z[0])
     zero = np.zeros(L)
-    mode, V, n_prev = (("sel" if junk else "all") if w else "full"), None, None
+    given = V
+    mode, V, n_prev = ("sel" if given is not None else ("sel" if junk else "all") if w else "full"), given, None
 
     def proj(d):
         """the four-part step with its components along V removed"""
@@ -837,8 +844,21 @@ def newton_qd(s, z, tol=1e-50, it_max=12, max_halvings=8, verbose=True, mutate=0
         t0 = time.time()
         rec = dict(it=it, F=nf, dz=nd, dDelta=float(d[0][-1] + d[1][-1]), piv=[st[6], st[7]], mode=mode)
         lam = 1.0
+        n2 = float(np.linalg.norm(np.asarray(st[4]) + np.asarray(st[5])))
         for _ in range(max_halvings + 1):
             zt = qd_axpy(lam, *d, *z)
+            if ls == "F":
+                Ft = s.residual_q(*zt)
+                nt = float(np.linalg.norm(np.asarray(Ft[0]) + np.asarray(Ft[1])))
+                if np.isfinite(nt) and nt <= (1 - 1e-4 * lam) * n2:
+                    try:
+                        stt = s.newton_q(*zt, mutate=mutate)
+                        if np.isfinite(stt[0]).all() and np.isfinite(stt[4]).all():
+                            break
+                    except ValueError:
+                        pass
+                lam *= 0.5
+                continue
             try:
                 stt = s.newton_q(*zt, mutate=mutate)
                 good = np.isfinite(stt[0]).all() and np.isfinite(stt[4]).all()
