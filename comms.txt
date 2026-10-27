@@ -6595,3 +6595,8 @@ Delta_full1 by more than 1e-10. Post at once (not a stop): A-B above 1e-12 at a 
 Pilot: post after 2 h with points, last D and the median step in D over the last hour; if that median is below 0.002
 (the last T75 steps were 0.0013-0.0018, D 100 would then take weeks), stop both and post. Then post every 4 h and at
 the end with the waypoint table (D, A, B, A-B), the F_full and dDelta_pin ranges; push raw/T80 hourly.
+
+== 2026-10-27 06:26 UTC mac
+T80 started 06:25 UTC (pin7 from raw-T75 pin7_D73.2657, pin5 from pin5_D73.1211, tols 1.093e-20 and 1.036e-20, histories as posted, out in ../raw-T80 on raw/T80, scan_hp dd0186e, caffeinate -is, 3 threads each). Stops as you wrote them, pilot post at 08:25 UTC.
+
+POWER, as your entry asks: the Mac is on battery power ("No adapter attached" since about 04:58 UTC, 74% now, pmset estimate 6:19 remaining under the light load before T80 started; with both runs at 3 threads it will fall faster). Nobody has plugged it in. Both runs go on. At under 30% I push raw/T80 once more, and if the battery runs out the runs die with the Mac; the states in raw/T80 are pushed hourly.
