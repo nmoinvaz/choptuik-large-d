@@ -6526,3 +6526,25 @@ B's last ten points (D, dDelta_pin, F_full, its):
   73.121091  -1.67e-12  7.0e-22  15
 
 The dDelta_pin of B has alternated in sign with a growing size for about 20 points (below 1e-13 up to D 73.0, 3e-13 to 6e-13 from 73.105). A's dDelta_pin is still small (last six +-1e-15 to 4e-15). B has 257 points, the last state is raw/T75 pin5_D73.1211.npz, pushed to raw/T75. A (pin 7) keeps running (249 points, D 72.95). I did not restart B, and B is not resumed unless you say so. Battery: still on battery, 100%, 4:08 remaining.
+
+== 2026-10-27 05:48 UTC mac
+T75 ended for both runs. A (pin 7) also hit the stop condition: at D 73.265722 |dDelta_pin| +1.17e-12 (above 1e-12), killed by my watcher at 05:48 UTC (rc 143). The point converged (41 its, F_full 8.4e-22). B (pin 5) was stopped at 05:11 UTC at D 73.121091 (-1.67e-12, my entry at 05:13). Both runs are stopped by me, not by themselves, 4 h 43 min (A) and 4 h 6 min (B) after the 01:05 start. T75 is not running. raw/T75 is pushed with everything (8 states per run at the end are in pin7_D*.npz and pin5_D*.npz).
+
+| run | points | last D | F_full | dDelta_pin | s/point | LM fallbacks | stopped by |
+|---|---|---|---|---|---|---|---|
+| A pin 7 | 305 | 73.265722 | 1.9e-22 to 9.3e-22 | -9.8e-13 to +1.2e-12 | 48 | 106 | dDelta_pin +1.17e-12 |
+| B pin 5 | 257 | 73.121091 | 3.1e-22 to 8.9e-22 | -1.7e-12 to +6.4e-13 | 47 | 90 | dDelta_pin -1.67e-12 |
+
+Both runs show the same pattern before the stop: dDelta_pin alternates in sign and its size roughly doubles every few points. A's last ten points (D 73.248 to 73.2657): +3.0e-13, -2.0e-13, +3.2e-13, -2.9e-13, -2.5e-14, +2.5e-13, -4.1e-13, +5.9e-13, -9.8e-13, +1.2e-12. It started at about D 73.0 for B and about D 73.2 for A, and F_full stayed below 1e-21 throughout, so the F_full stop never came close.
+
+A and B at the same D (99 points, 71.0 to 73.1) agree on Delta_full1 plus lo to at most 8.6e-15 (A-B), no waypoint above the 1e-14 limit, but the difference now grows with D: +8.2e-17 near 70.65, +2.8e-15 at 73.00, -5.4e-15 at 73.05, -8.6e-15 at 73.10 (A 1.7810576633135509, B 1.7810576633135593). The last three:
+
+| D | A Delta_full1 | B Delta_full1 | A-B |
+|---|---|---|---|
+| 73.0000 | 1.7812396819309262 | 1.7812396819309233 | +2.8e-15 |
+| 73.0500 | 1.7811486121394156 | 1.781148612139421 | -5.4e-15 |
+| 73.1000 | 1.7810576633135509 | 1.7810576633135593 | -8.6e-15 |
+
+A's waypoints 70.65 to 70.95 against T73 B: all within 2.0e-16 (as in my 05:00 entry). Correction: in my 05:13 entry the sentence "Delta_full1 is not 1e-14-off from A (A has no point there...)" has no meaning, A had no point at D 73.121 and no comparison was made there.
+
+Battery: 85%, 3:24 remaining, still on battery. With T75 over the load is low. The next step is yours.
