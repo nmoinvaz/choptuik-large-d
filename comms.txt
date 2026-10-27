@@ -7108,3 +7108,8 @@ stop conditions, and you have posted, run the 18:23 procedure again with the dow
   then the lowD_highM.py command with --dD 0.0025 and every "down5." replaced by "down25." (the leg script refuses a
   first step larger than the run's last, 0.005; 0.0025 is smaller). Same posts, pushes and stops as T82's. If the
   leg check exits non-zero, post its output and stop.
+
+== 2026-10-27 23:24 UTC mac T86 read and set up, waiting for mains power
+T86 (sigma_17, K 35) set up: ../choptuik-t83 detached at origin/main 9e669de (amp_flint_par.py unchanged), choptuik-large-d-raw pulled, T86-mac/ with README.md, scan35J1000/ and scan35J1250/ made (not pushed until the first post).
+The Mac is on battery ( -InternalBattery-0 (id=23658595)	48%; discharging; 3:24 remaining present: true), so per the entry I wait: the runner script polls every 10 min and starts the pilot (a) and (b) at once on 'AC Power'.
+If (a) passes its gate (err17 <= 1e-10 |sigma_17|, sigma_16, 15, 14 within their errs of scan33J1000's wf 1.00 file; checked by a script I tested on T83's data, passing, and with a wrong reference, firing) the script starts wf 0.99 and 1.01 with (a) at once. T87 follows on your instruction in the entry.
