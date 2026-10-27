@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 """Collect the double-double points from the continuation runs into hp/data/delta_dd.csv.
 
-    python3 export_dd.py [scan_dir]        (default /home/claude/dss/hp_scan, files scan_up*.jsonl)
+    python3 export_dd.py [scan_dir] [--allow_drop]
+
+scan_dir: the cloud runs' scan_up*.jsonl. Those records stayed on the cloud disk (/home/claude/dss/hp_scan) and are
+missing since 2026-10-26. Without scan_dir their rows come from data/large_d/cloud_scan_rows.csv, the D, Delta,
+|F|, largest |dDelta/dF| and dDelta_est that delta_dd.csv held for them, which reproduce those rows exactly. The
+script exits non-zero without writing when the new CSV would lose a D that the current one has (--allow_drop
+writes anyway).
 
 Runs from the local machine, pushed to hp/data/local/scan_up*.jsonl, are read after the cloud runs (run name prefixed
 "local-"); where both have a point at the same D the local one is kept. Below D = 8.25 the CSV also holds the low-D
@@ -19,6 +25,11 @@ residual |F|, the largest |dDelta/dF| (how far a residual error moves Delta), th
                         a published value at this D (data/published_delta.csv: reference key, Delta - published), and
                         "yes" when the difference is within the uncertainty the publication states, "no" otherwise;
                         empty where no published value is known at this D
+  dDelta_exact          T48-up70 rows only: the linearised Delta correction as dDelta_est, but from the residual with
+                        the horizon block in quad-double, which removes the horizon rows' rounding that |dDelta/dF|
+                        (up to 1e15 there) amplifies; the dot product in double-double (qdh_delta_check.py version 3 on
+                        branch wip/qd-horizon, run on the Mac as T60b: data/large_d/qdh_delta_check3_mac.jsonl, every
+                        |dDelta_exact| <= Delta_err, its control passing); empty elsewhere
 A D that appears in several runs (to 1e-6) keeps the last run's value, as the fits do.
 
 Above the scans' last point (61.026449) come T48's points: the cloud pilot (data/large_d/pilot_cloud/pilotB.jsonl,
@@ -29,15 +40,25 @@ carry no field that marks them); points after a horizon-tail jump (tail_h more t
 neighbouring records of the same ks: 67.4167, 67.4267, 67.7625, 67.7708, 67.7762, 67.7899); and |dDelta_est| > 1e-15.
 The fits quoted in the README use D <= 61.03 and do not see these rows.
 """
+import csv
 import glob
 import json
 import os
 import sys
 
-scan = sys.argv[1] if len(sys.argv) > 1 else "/home/claude/dss/hp_scan"
+args = [v for v in sys.argv[1:] if v != "--allow_drop"]
+scan = args[0] if args else None
 rows = {}
 here = os.path.dirname(os.path.abspath(__file__))
-files = [(f, "") for f in sorted(glob.glob(os.path.join(scan, "scan_up*.jsonl")))]
+files = [(f, "") for f in sorted(glob.glob(os.path.join(scan, "scan_up*.jsonl")))] if scan else []
+if scan and not files:
+    sys.exit(f"export_dd: no scan_up*.jsonl in {scan}")
+if not files:
+    for r in csv.DictReader(ln for ln in open(os.path.join(here, "data", "large_d", "cloud_scan_rows.csv"))
+                            if not ln.startswith("#")):
+        rows[round(float(r["D"]), 6)] = (dict(D=float(r["D"]), Delta=float(r["Delta_hi"]), Delta_lo=float(r["Delta_lo"]),
+                                           F=float(r["F"]), sens=[float(r["max_dDelta_dF"])],
+                                           dDelta_est=float(r["dDelta_est"]) if r["dDelta_est"] else None), r["run"])
 files += [(f, "local-") for f in sorted(glob.glob(os.path.join(here, "data", "local", "scan_up*.jsonl")))]
 for f, prefix in files:
     run = prefix + os.path.basename(f)[5:-6]
@@ -86,12 +107,21 @@ for line in open(os.path.join(here, "data", "published_delta.csv")):
         continue
     d, v, u, ref = line.strip().split(",")
     pub.setdefault(round(float(d), 6), []).append((ref, float(v), float(u)))
+# dDelta_exact for T48-up70 (T60b, comms 2026-10-25 23:42 UTC)
+EXACT = {round(r["D"], 6): r["dDelta_q"] for r in json.loads(open(os.path.join(
+    here, "data", "large_d", "qdh_delta_check3_mac.jsonl")).read().splitlines()[-1])["rows"]}
 CHECK_BELOW_35, CHECK_FROM_35 = 1e-16, 2e-15   # README "Accuracy": tau resolution (D = 7-17, 40) and freezing (40-60)
 out = os.path.join(here, "data", "delta_dd.csv")
 os.makedirs(os.path.dirname(out), exist_ok=True)
+# never lose a row silently: every D of the current CSV must have an input
+old = {round(float(ln.split(",")[0]), 6) for ln in open(out).readlines()[1:]} if os.path.exists(out) else set()
+lost = sorted(old - set(rows))
+if lost and "--allow_drop" not in sys.argv:
+    sys.exit(f"export_dd: {len(lost)} rows of {out} have no input (D = {lost[0]} .. {lost[-1]}); not written "
+             "(--allow_drop writes anyway)")
 with open(out, "w") as fh:
     fh.write("D,Delta_hi,Delta_lo,F,max_dDelta_dF,dDelta_est,run,Delta_err,err_kind,published_ref,published_diff,"
-             "published_match\n")
+             "published_match,dDelta_exact\n")
     for d in sorted(rows):
         r, run = rows[d]
         est = r.get("dDelta_est")
@@ -105,7 +135,8 @@ with open(out, "w") as fh:
             ref, v, u = min(pub[d], key=lambda t: t[2])
             dv = (r["Delta"] - v) + r["Delta_lo"]
             diff, match = format(dv, ".2e"), ("yes" if abs(dv) <= u else "no")
+        exact = format(EXACT[d], ".2e") if run == "T48-up70" else ""
         fh.write(f"{r['D']!r},{r['Delta']!r},{r['Delta_lo']!r},{r['F']:.3e},{max(r['sens']):.3e},"
-                 f"{'' if est is None else format(est, '.2e')},{run},{err},{kind},{ref},{diff},{match}\n")
+                 f"{'' if est is None else format(est, '.2e')},{run},{err},{kind},{ref},{diff},{match},{exact}\n")
 print(f"{len(rows)} points, D = {min(rows):.4f} .. {max(rows):.4f} -> {out}; of them {len(T48_ROWS)} from T48 above "
       f"{LAST_SCAN}")

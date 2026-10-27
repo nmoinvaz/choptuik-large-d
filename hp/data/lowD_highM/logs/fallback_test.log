@@ -1,0 +1,79 @@
+04:10:31 --- D 3.69 (from 3.7), M 80 / 96, nodes 0.0025..0.9
+04:10:32   D 3.69 M 80: start 'predictor' |F| 7.38e-03 (105 steps)
+04:10:32   D 3.69 M 80: best start |F| 7.4e-03 > 1e-03 on the reused plan; two passes
+04:10:32   D 3.69 M 80: start 'predictor' |F| 7.38e-03 on its own plan (291 steps)
+04:10:33   D 3.69 M 80: start 'predictor' |F| 7.38e-03 (291 steps)
+04:10:34 D 3.69 M 80: L 5121, steps 291, start |F| 7.4e-03
+  newton 0: |F| 7.38e-03 |dz| 5.12e-01 lam 1 dDelta -1.16e-03 Delta 3.464044285063610 piv 9.3e-04..5.4e+00  t 5.6s
+  newton 0: |F| 3.18e-04 |dz| 5.61e-02 lam 1 dDelta +5.13e-04 Delta 3.464557055189682 piv 9.4e-04..5.2e+00  t 5.8s
+  newton 0: |F| 5.67e-07 |dz| 1.52e-04 lam 1 dDelta +2.72e-07 Delta 3.464557327228929 piv 9.4e-04..5.4e+00  t 5.5s
+  newton 0: |F| 3.40e-12 |dz| 1.20e-09 lam 1 dDelta +9.22e-13 Delta 3.464557327229852 piv 9.4e-04..5.4e+00  t 5.3s
+  newton 0: |F| 5.47e-23 converged (last |dz| 2.0e-20) Delta 3.464557327229852; last step taken, |F| 6.13e-30
+04:11:04 D 3.69 M 80: Delta 3.4645573272298518 (+8.36e-17) |F| 6.1e-30 its 5 30s dDelta/dF max 2.2e+00 tails 3e-114 1e-144 dDelta_est -3.5e-30
+04:11:06   D 3.69 M 80: start 'pass 1' |F| 6.13e-30 (102 steps)
+04:11:06 D 3.69 M 80: L 5121, steps 102, start |F| 6.1e-30
+  newton 0: |F| 6.13e-30 converged (last |dz| 4.2e-26) Delta 3.464557327229852; last step taken, |F| 1.25e-29
+04:11:09 D 3.69 M 80: Delta 3.4645573272298518 (+8.36e-17) |F| 1.2e-29 its 1 3s dDelta/dF max 2.2e+00 tails 3e-114 1e-144 dDelta_est +2.1e-31
+04:11:12   D 3.69 M 96: start 'lift of M_w' |F| 1.24e-05 (129 steps)
+04:11:12   D 3.69 M 96: best start 'lift of M_w' is a lift (|F| 1.2e-05 on the reused plan); two passes
+04:11:12   D 3.69 M 96: start 'lift of M_w' |F| 1.24e-05 on its own plan (397 steps)
+04:11:14   D 3.69 M 96: start 'lift of M_w' |F| 1.24e-05 (397 steps)
+04:11:15 D 3.69 M 96: L 6145, steps 397, start |F| 1.2e-05
+  newton 0: |F| 1.24e-05 |dz| 1.91e-03 lam 1 dDelta -1.65e-09 Delta 3.464557325578515 piv 9.3e-04..1.3e+01  t 13.2s
+  newton 0: |F| 8.88e-11 |dz| 1.28e-08 lam 1 dDelta +4.99e-11 Delta 3.464557325628374 piv 9.3e-04..1.3e+01  t 14.4s
+  newton 0: |F| 3.57e-20 converged (last |dz| 5.4e-18) Delta 3.464557325628374; last step taken, |F| 5.40e-30
+04:11:59 D 3.69 M 96: Delta 3.4645573256283742 (-2.08e-16) |F| 5.4e-30 its 3 44s dDelta/dF max 1.9e+00 tails 9e-110 1e-135 dDelta_est -4.3e-30
+04:12:01   D 3.69 M 96: start 'pass 1' |F| 5.40e-30 (122 steps)
+04:12:02 D 3.69 M 96: L 6145, steps 122, start |F| 5.4e-30
+  newton 0: |F| 5.40e-30 converged (last |dz| 1.2e-25) Delta 3.464557325628374; last step taken, |F| 1.28e-30
+04:12:07 D 3.69 M 96: Delta 3.4645573256283742 (-2.08e-16) |F| 1.3e-30 its 1 6s dDelta/dF max 1.9e+00 tails 9e-111 1e-135 dDelta_est -2.7e-30
+04:12:08 D 3.69: Delta(M 96) = 3.4645573256283742 (-2.08e-16), M 80 -> 96: -1.60e-09; pair
+04:12:08 |M 80 -> 96 difference| 1.6e-09 > 1e-30: moving up to M 96 / 128
+04:12:13   D 3.69 M 128: start 'lift' |F| 1.90e-06 (453 steps)
+04:12:14 D 3.69 M 128: L 8193, steps 453, start |F| 1.9e-06
+  newton 0: |F| 1.90e-06 |dz| 3.43e-04 lam 1 dDelta -3.99e-11 Delta 3.464557325588484 piv 5.4e-04..5.3e+00  t 35.6s
+  newton 0: |F| 8.32e-13 |dz| 1.75e-10 lam 1 dDelta +6.99e-13 Delta 3.464557325589182 piv 5.4e-04..5.3e+00  t 37.8s
+  newton 0: |F| 3.53e-24 converged (last |dz| 1.3e-20) Delta 3.464557325589182; last step taken, |F| 6.97e-30
+04:14:09 D 3.69 M 128: Delta 3.4645573255891824 (-8.39e-17) |F| 7.0e-30 its 3 114s dDelta/dF max 1.4e+00 tails 4e-98 6e-123 dDelta_est +1.5e-30
+04:14:12   D 3.69 M 128: start 'pass 1' |F| 6.97e-30 (161 steps)
+04:14:14 D 3.69 M 128: L 8193, steps 161, start |F| 7.0e-30
+  newton 0: |F| 6.97e-30 converged (last |dz| 1.1e-24) Delta 3.464557325589182; last step taken, |F| 1.04e-29
+04:14:29 D 3.69 M 128: Delta 3.4645573255891824 (-8.39e-17) |F| 1.0e-29 its 1 15s dDelta/dF max 1.4e+00 tails 4e-99 6e-123 dDelta_est +2.4e-30
+04:14:29 D 3.69: Delta(M 128) = 3.4645573255891824 (-8.39e-17), M 96 -> 128: -3.92e-11; moved up (|M 80 -> 96 difference| 1.6e-09 > 1e-30)
+04:14:31 D 3.69: series tails of the M 96 solution resampled to M 128: 6.0e-56 (centre), 8.9e-136 (horizon)
+04:14:31 point 3.69 took 2.3 min of solves, 4.0 min of running time; 0.07 h used
+04:14:31 --- D 3.68 (from 3.69), M 96 / 128, nodes 0.0025..0.9
+04:14:32   D 3.68 M 80: start 'predictor' |F| 9.97e-04 (111 steps)
+04:14:33 D 3.68 M 80: L 5121, steps 111, start |F| 1.0e-03
+  newton 0: |F| 9.97e-04 |dz| 2.54e-02 lam 1 dDelta -1.19e-04 Delta 3.463794891716472 piv 9.4e-04..7.8e+00  t 2.7s
+04:14:36 D 3.68 M 80: NOT converged, |F| 9.2e-07 after 1 iterations (4s); stopping
+04:14:36 D 3.68: the M 80 helper failed; M 96 from its own predictor in two passes (--helper_fallback)
+04:14:38   D 3.68 M 96: start 'predictor' |F| 9.99e-04 (129 steps)
+04:14:38   D 3.68 M 96: after a failed helper (--helper_fallback); two passes
+04:14:38   D 3.68 M 96: start 'predictor' |F| 9.99e-04 on its own plan (330 steps)
+04:14:39   D 3.68 M 96: start 'predictor' |F| 9.99e-04 (330 steps)
+04:14:40 D 3.68 M 96: L 6145, steps 330, start |F| 1.0e-03
+  newton 0: |F| 9.99e-04 |dz| 2.62e-02 lam 1 dDelta -1.19e-04 Delta 3.463794889708695 piv 9.5e-04..9.5e+00  t 11.5s
+  newton 0: |F| 9.15e-07 |dz| 2.09e-04 lam 1 dDelta -1.51e-06 Delta 3.463793381974083 piv 9.5e-04..6.4e+00  t 11.5s
+  newton 0: |F| 3.49e-12 |dz| 4.94e-10 lam 1 dDelta +3.66e-12 Delta 3.463793381977742 piv 9.5e-04..6.4e+00  t 13.2s
+  newton 0: |F| 2.98e-23 converged (last |dz| 2.0e-20) Delta 3.463793381977742; last step taken, |F| 1.04e-30
+04:15:29 D 3.68 M 96: Delta 3.4637933819777422 (+1.99e-16) |F| 1.0e-30 its 4 50s dDelta/dF max 1.8e+00 tails 5e-110 5e-135 dDelta_est -5.1e-30
+04:15:32   D 3.68 M 96: start 'pass 1' |F| 1.20e-30 (119 steps)
+04:15:32 D 3.68 M 96: L 6145, steps 119, start |F| 1.2e-30
+  newton 0: |F| 1.20e-30 converged (last |dz| 1.7e-25) Delta 3.463793381977742; last step taken, |F| 1.12e-29
+04:15:38 D 3.68 M 96: Delta 3.4637933819777422 (+1.99e-16) |F| 1.1e-29 its 1 5s dDelta/dF max 1.8e+00 tails 7e-111 5e-135 dDelta_est +1.1e-29
+04:15:42   D 3.68 M 128: start 'lift of M_w' |F| 2.15e-06 (181 steps)
+04:15:42   D 3.68 M 128: best start 'lift of M_w' is a lift (|F| 2.1e-06 on the reused plan); two passes
+04:15:43   D 3.68 M 128: start 'lift of M_w' |F| 2.15e-06 on its own plan (453 steps)
+04:15:45   D 3.68 M 128: start 'lift of M_w' |F| 2.15e-06 (453 steps)
+04:15:47 D 3.68 M 128: L 8193, steps 453, start |F| 2.1e-06
+  newton 0: |F| 2.15e-06 |dz| 3.99e-04 lam 1 dDelta -4.47e-11 Delta 3.463793381933066 piv 5.6e-04..5.8e+00  t 35.5s
+  newton 0: |F| 7.31e-13 |dz| 2.19e-10 lam 1 dDelta +8.54e-13 Delta 3.463793381933920 piv 5.6e-04..5.8e+00  t 37.9s
+  newton 0: |F| 3.56e-24 converged (last |dz| 1.2e-20) Delta 3.463793381933920; last step taken, |F| 4.79e-29
+04:17:43 D 3.68 M 128: Delta 3.4637933819339204 (+1.16e-16) |F| 4.8e-29 its 3 116s dDelta/dF max 1.4e+00 tails 3e-98 1e-122 dDelta_est +1.2e-30
+04:17:46   D 3.68 M 128: start 'pass 1' |F| 4.79e-29 (158 steps)
+04:17:48 D 3.68 M 128: L 8193, steps 158, start |F| 4.8e-29
+  newton 0: |F| 4.79e-29 converged (last |dz| 2.6e-25) Delta 3.463793381933920; last step taken, |F| 4.25e-29
+04:18:03 D 3.68 M 128: Delta 3.4637933819339204 (+1.16e-16) |F| 4.2e-29 its 1 15s dDelta/dF max 1.4e+00 tails 3e-99 1e-122 dDelta_est -7.4e-31
+04:18:05 D 3.68: Delta(M 128) = 3.4637933819339204 (+1.16e-16), M 96 -> 128: -4.38e-11; pair
+04:18:05 STOP: the largest M built (128) cannot keep the difference below 1e-30 at D 3.68 (M 96 -> 128: -4.38e-11)

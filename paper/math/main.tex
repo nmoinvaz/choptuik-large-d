@@ -73,11 +73,14 @@ computer-assisted argument, assuming Braaksma's summability theorem, that the se
 has exactly one zero in an explicit box, and that it is simple. For that model the selection theorem itself is then
 certified, assuming Braaksma's theorem: for $n \ge e^{89.75}$ exactly one parameter in the box gives a solution analytic
 across the light cone, within $e^{67.84}/n$ of the zero. Evaluated numerically
-without truncation, the conjectured rule gives $\Dinf = 1.6439 \pm 0.0001$ if the selection function has no other nearby
-zeros. The work was done by an AI model (Claude, Anthropic) under the author's direction and has not been reviewed by a human expert.
+without truncation, the conjectured rule gives $\Dinf = 1.64387 \pm 0.00006$ if the selection function has no zeros
+closer to the origin than the selected one. The work was done by an AI model (Claude, Anthropic) under the author's direction and has not been reviewed by a human expert.
 \end{abstract}
 
 \maketitle
+
+\setcounter{tocdepth}{2}
+\tableofcontents
 
 % =====================================================================================================
 \section{Introduction}
@@ -164,7 +167,7 @@ Theorem~\ref{thm:A} & one simple zero of the $M = 1$ selection condition & certi
 Section~\ref{sec:A3} & one simple zero of the $M = 3$ selection condition & certified (computer-assisted), assuming Braaksma's theorem; not independently reviewed \\
 Lemma~\ref{lem:sigma1} & enclosure of the first amplitude coefficient $\sigma_1$ & certified (computer-assisted,\newline
 \repo{exact\_sigma.py}); not independently reviewed \\
-Section~\ref{sec:evidence} & $\omega^*/\winf = 0.99992$--$1.00005$ at fourteen orders (no other zeros of $S_1$ near $x_0$ assumed) & numerical evidence \\
+Section~\ref{sec:evidence} & $\omega^*/\winf = 0.999975$--$1.00005$ at fourteen and fifteen orders (no zeros of $S_1$ nearer the origin than $x_0$ assumed) & numerical evidence \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -2100,7 +2103,7 @@ order $k$ & $\arg\tau_k = \pi$ (from above) & $\tau_{k-1}/\tau_k$ real (from bel
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=0.72\linewidth]{../figures/selection.pdf}
+\includegraphics[width=\linewidth]{../figures/selection.pdf}
 \caption{The selection rule evaluated from the $D = \infty$ inner problem alone. Top: where the harmonic-1 multiplier has a real
 zero, order by order in the amplitude expansion; simple-zero estimates ($\arg\tau_k = \pi$) from above, floating-exponent estimates
 from below, Pad\'e ranges and the factored series inside the shaded bracket, which narrows onto $\winf$ from the finite-$D$
@@ -2133,22 +2136,30 @@ $\sigma_0,\dots,\sigma_{13}$ mispredicts the fourteenth coefficient of $\ln S_1$
 Borel--Pad\'e sums of $\sigma_0,\dots,\sigma_{13}$ predicted $\sigma_{14}$ to $1$--$6\times10^{-7}$; those of
 $\sigma_0,\dots,\sigma_{14}$ put the zero at $0.99998$--$0.99999$. Calibrated on the plants at fourteen orders, the
 crossing and factored estimates put it at $1.00004$--$1.00005$: the calibrated value moved by more than either range's
-width, because the planted functions do not follow the real coefficients from one order to the next. Taken over both
-orders, and read as a value of the echo period,
+width, because the planted functions do not follow the real coefficients from one order to the next.
+
+With $\sigma_{15}$ converged (relative error $5\times10^{-13}$; a 1280-bit run agrees to $3\times10^{-26}$), the crossing
+falls to $1.000019$. The ring completions of $\sigma_0,\dots,\sigma_{14}$ built from ratio-law and arc tails mispredict
+the fifteenth coefficient of $\ln S_1$ by $40$--$390\%$. One completion with a ring survives: the $[4/10]$ Borel--Pad\'e
+sum of $\sigma_0,\dots,\sigma_{14}$, whose three further zeros lie just beyond $x_0$, between $|x| \approx 7.4$ and $12$.
+It predicts $\sigma_{15}$ to $4\times10^{-7}$, and its zero, $0.999991$, is within $2\times10^{-6}$ of the ring-free
+sums'. The ring-free Borel--Pad\'e sums of $\sigma_0,\dots,\sigma_{15}$ put the zero at $0.999999$ and $1.000002$, and the
+crossing calibrated on the plants at fifteen orders at $0.999975$--$1.000018$. Taken over the last two orders, and read
+as a value of the echo period,
 \[
-\Dinf = 1.6439 \pm 0.0001 \qquad (1.64381\text{--}1.64403)
+\Dinf = 1.64387 \pm 0.00006 \qquad (1.64381\text{--}1.64393)
 \]
 from the $D = \infty$ inner equations alone, with no input from the finite-$D$ solutions, against $1.643893746$ from
-them~\cite{companion}, which lies inside the range. The range holds only if $S_1$ has no zeros besides $x_0$ within
-$|x| \approx 12$; a ring of fifteen or more zeros is still possible, and $\sigma_{15}$ is its test.
+them~\cite{companion}, which lies inside the range. The range holds only if $S_1$ has no zeros closer to the origin
+than $x_0$; every ring with such zeros constructed so far has been rejected.
 
 \subsection{What the evidence does not show}
-The $\pm0.0001$ above is the range of calibrated estimators, not an error bound, and it rests on the assumption about the
+The $\pm0.00006$ above is the range of calibrated estimators, not an error bound, and it rests on the assumption about the
 other zeros of $S_1$.
-The coefficients $\sigma_k$ come from late-order fits; two fit windows agree to about $10^{-19}$ for $\sigma_1$--$\sigma_{12}$ ($\sigma_{13}$ to $2\times10^{-13}$ relative; $\sigma_{14}$ was fitted with one window, to a plateau step of $3\times10^{-13}$ relative), and the
+The coefficients $\sigma_k$ come from late-order fits; two fit windows agree to about $10^{-19}$ for $\sigma_1$--$\sigma_{12}$ ($\sigma_{13}$ to $2\times10^{-13}$ relative; $\sigma_{14}$ and $\sigma_{15}$ were fitted with one window, to plateau steps of $3\times10^{-13}$ and $5\times10^{-13}$ relative), and the
 estimates need them to about $10^{-10}$, but only $\sigma_1$ is enclosed rigorously (Lemma~\ref{lem:sigma1}). At the zero the series \eqref{eq:sigmak} is far from summed, and every
 estimator (crossings, ratios, Pad\'e approximants, the factored series) is a resummation whose convergence is observed, not
-proved; the arc-shaped Borel singularity of Section~\ref{sec:entire} is a known source of slow convergence. Settling the other zeros needs more orders, starting with $\sigma_{14}$. Finally, agreement of the numbers is evidence that the selection rule is the right one, not a proof
+proved; the arc-shaped Borel singularity of Section~\ref{sec:entire} is a known source of slow convergence. Settling the other zeros needs more orders, starting with $\sigma_{16}$. Finally, agreement of the numbers is evidence that the selection rule is the right one, not a proof
 of Conjecture~\ref{conj}.
 
 \subsection{Other matter}

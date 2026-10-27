@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """Review RV2: audit of hp/data/delta_dd.csv against the run files it is built from.
 
-    python3 hp/review/rv2_data.py [CLOUD_SCAN_DIR] [--break=KIND]     (default /home/claude/dss/hp_scan)
+    python3 hp/review/rv2_data.py CLOUD_SCAN_DIR [--break=KIND]
+
+CLOUD_SCAN_DIR held the cloud runs' scan_up*.jsonl (/home/claude/dss/hp_scan); it is missing since 2026-10-26, and the
+last run's output is rv2_data.log.
 
 Independent of export_dd.py (written from its docstring, not its code). Checks:
   A  the CSV is exactly the merge "cloud runs in run order, then local runs, the last record per D (to 1e-6) wins";
@@ -25,7 +28,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 HP = os.path.dirname(HERE)
 args = [a for a in sys.argv[1:] if not a.startswith("--")]
 brk = next((a[8:] for a in sys.argv[1:] if a.startswith("--break=")), None)
-scan = args[0] if args else "/home/claude/dss/hp_scan"
+scan = args[0] if args else None
+if not scan or not glob.glob(os.path.join(scan, "scan_up*.jsonl")):
+    sys.exit("rv2_data: no scan_up*.jsonl in CLOUD_SCAN_DIR; the cloud runs' records have been missing since the cloud "
+             "session ended (2026-10-26), so this audit cannot be rerun without them (notes/NUMERICS_REVIEW.md)")
 
 
 def runs():

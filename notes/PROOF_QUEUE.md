@@ -11,7 +11,7 @@ comms.txt. The coordinator keeps this file current: when an item starts, finishe
 | P1L | The light cone: gaps (a)–(c) of Theorem B(1) | P1 found that the remaining links rest on three open problems at x = 1: (a) control of the nonlinear solution in the half-discs near the light cone, (b) the exact light-cone gauge c(1) = 1, (c) a proof that the outer jump is fast-type; without them Theorem B(1) is conditional | the P1 agent | **done** (2026-10-23, merged 7d25496): Lemma LC (B8 into the light-cone half-disc in the exact gauge c(1) = 1, a contraction, θ = 0.7355, gauge offset ≤ 3.59×10⁶n⁻⁵) gives (a) and (b); Lemma J (θ = 0.176) gives (c); proof/B_chain.md §§13–15 |
 | P2 | Independent review and second implementations of the certificate code | no certificate of B5, B8 or (H8) has been reviewed, nor P1's lemma L, B5(2), Lemma P, B7, Lemma LC and Lemma J (B_chain.md §10 lists the code and the hand arguments); lemma 6b₁'s disc covering has not been re-implemented; at M = 3 the majorant code of lemmas S and 6b₀ and the 6b₁ discs are not reviewed | cloud agent that has not seen P1 | **stopped by the user** (2026-10-23 17:28) after a first full draft, merged: Theorem B(1) stands as stated, with corrections F1–F7 that change no quoted constant or threshold (proof/P2_review.md §6; not yet applied to the notes and code); not done: second implementations of Lemma LC's closure bound algebra and of Lemma J's secant coefficients, and the older B5(1)/(H8) code and the M = 3 items |
 | P3 | Theorem A(M = 5) | the five-harmonic zero, the first truncation close to the real answer (0.999228); the point certificate fails with first-order enclosures | cloud agent | queued |
-| P4 | σ₁₅ at ω/ω∞ = 0.99, 1.00, 1.01 | numerical evidence: tests the ring of fifteen zeros that σ₁₄ left open, and narrows the estimator range | local machine (T44, after T43) | queued |
+| P4 | σ₁₅ at ω/ω∞ = 0.99, 1.00, 1.01 | numerical evidence: tests the ring of fifteen zeros that σ₁₄ left open, and narrows the estimator range | local machine (T44, after T43) | **done** (2026-10-25): σ₁₅ converged to 5×10⁻¹³ (T44, the Mac); the K = 15 analysis (notes/PLANTED_SELECTION.md §7) rejects every ring with zeros nearer than x₀, one ring with zeros just beyond x₀ survives (its zero inside the range), and the headline over K = 14, 15 is ω*/ω∞ = 0.999975–1.00005 (Δ∞ = 1.64387 ± 0.00006) |
 | P5 | A rigorous type bound for S₁ (the entire-function route) | turns the amplitude series into a conditional Theorem A(∞): the zero certified assuming an explicit type bound ([proof/D_entire.md](../proof/D_entire.md)) | cloud agent | queued |
 | P6 | Uniformity in the number of harmonics (gap (b)) | the step that needs a new idea: the Stokes weights e^{π\|ν\|ω/2} grow faster than the harmonics decay ([proof/B_tail.md](../proof/B_tail.md)) | cloud agent: a scoping note first | queued |
 | P7 | Corollary C: the computed branch is the branch of the theorem | needs a certified finite-D solution and a threshold n₀ that a computable D can reach (Theorem B(1)'s threshold is n ≥ e^{89.75}, far beyond any D a solver reaches) | cloud agent: a scoping note first | queued |
@@ -97,6 +97,9 @@ already generalized to M harmonics.
 The T38 recipe with K 31 (σ₀…σ₁₅): a pilot at wf 1.00 with J 1000 and J 1250 side by side, the gate err15 ≤ 10⁻¹⁰
 |σ₁₅| and σ₁₄ unchanged within its error, then wf 0.99 and 1.01. Then the K = 15 analysis of
 notes/PLANTED_SELECTION.md §6 (its procedure is fixed in §6.0 and reruns with K = 15).
+
+Done: the procedure, with the three changes §6's findings called for, was fixed in §7.0 before any K = 15 estimate, and
+the results are §7.1–7.9.
 
 ## P5, P6, P7: scoping notes first
 

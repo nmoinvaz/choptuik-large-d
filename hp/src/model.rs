@@ -543,18 +543,14 @@ fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, lu: &DDLu, lu_t: &DDLu, kappa: 
         // and kappa from the quad-double a_h and Delta), its residual formed in the lane's precision (iterative
         // refinement in the working precision of the residual: Wilkinson; Moler, J. ACM 14 (1967) 316,
         // doi:10.1145/321386.321394)
-        let z = Fl::<DV, B>::zero();
-        let mut f = Fl::<T, B>::from_vt(&lu.solve_lanes(&rhs.val()), &z);
+        // (multidouble's FieldSolve::solve_lanes_refine: the double-double solve, then each step adds the solve of
+        // this residual)
         let steps = match ctx.mutate {
             QD_MUT_NOREFINE => 0,
             QD_MUT_REFINE4 => 4,
             _ => QD_REFINE,
         };
-        for _ in 0..steps {
-            let res = *rhs - (ctx.d.apply(&f).mul_t(omega) + *kappa * f);
-            f = f + Fl::<T, B>::from_vt(&lu.solve_lanes(&res.val()), &z);
-        }
-        return f;
+        return lu.solve_lanes_refine(rhs, steps, |f| *rhs - (ctx.d.apply(f).mul_t(omega) + *kappa * *f));
     }
     if T::VAL_F64 || T::TAN_F64 {
         // f64 values: the value solve in plain f64 with the hi parts of the double-double LU factors; f64 tangents:
@@ -796,14 +792,10 @@ pub fn residual<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool)
     Ok((fh, fl))
 }
 
-/// A field from the four parts of a quad-double state (multidouble's QD: z0 + z1 + z2 + z3, renormalized)
+/// A field from the four parts of a quad-double state at offset off (multidouble's QD: z0 + z1 + z2 + z3, the parts
+/// as they are; field::Fl::load_parts)
 fn fld_qv<const B: usize>(z: [&[f64]; 4], off: usize) -> Fl<QV, B> {
-    let mut r = [QV::zero(); B];
-    for (b, rb) in r.iter_mut().enumerate() {
-        let o = off + 8 * b;
-        *rb = QV::load(&z[0][o..o + 8], &z[1][o..o + 8], &z[2][o..o + 8], &z[3][o..o + 8]);
-    }
-    Fl(r)
+    Fl::<QV, B>::load_parts(&z[0][off..], &z[1][off..], &z[2][off..], &z[3][off..])
 }
 
 /// The residual with the horizon block in quad-double (notes/QUAD_DOUBLE.md, section 11). The state comes in four
@@ -858,6 +850,48 @@ pub fn residual_qdh<const B: usize>(ctx: &Ctx<B>, z: [&[f64]; 4], par: bool) -> 
     let t = ctx.block_target(kb);
     for q in 0..4 {
         put(kb, q, (hq[q] - fld_qv::<B>(z, t + q * m)).val());
+    }
+    let ph = phase_row(ctx, &ctx.fld(zh, zl, 0));
+    fh[l - 1] = ph.hi;
+    fl[l - 1] = ph.lo;
+    Ok((fh, fl))
+}
+
+/// The residual with every block in quad-double: as residual_qdh, with the centre series and the Taylor stepping run
+/// with QV lanes too, so every block reads its inputs, Delta and its target in all four parts and its rows are rounded
+/// to double-double only after the subtraction. The horizon LUs, the phase row and the freeze projection stay
+/// residual_qdh's. Near the double-double floor at large D the Jacobian's smallest singular value lies below the
+/// double-double residual's rounding (u sigma_max), so only these rows resolve the weakest direction (README, "Why the
+/// solver stalls").
+pub fn residual_qd<const B: usize>(ctx: &Ctx<B>, z: [&[f64]; 4], par: bool) -> Result<(Vec<f64>, Vec<f64>), String> {
+    let l = ctx.len();
+    let m = Ctx::<B>::M;
+    for p in z {
+        assert_eq!(p.len(), l);
+    }
+    let (zh, zl) = (z[0], z[1]);
+    let delta = delta_of(zh, zl);
+    let lus = horizon_lus(ctx, &ctx.fld(zh, zl, ctx.off_ah()), delta, par, DD::ZERO)?;
+    let dq = QV::splat(QD::new(z[0][l - 1], z[1][l - 1], z[2][l - 1], z[3][l - 1]));
+    let one_block = |b: usize| -> State<QV, B> {
+        let inq: Vec<Fl<QV, B>> = ctx.block_inputs(b).iter().map(|&o| fld_qv::<B>(z, o)).collect();
+        block_state::<QV, B>(ctx, b, &inq, dq, &lus, &lus)
+    };
+    let nb = ctx.k() + 1;
+    let states: Vec<State<QV, B>> = if par { (0..nb).into_par_iter().map(one_block).collect() } else { (0..nb).map(one_block).collect() };
+    let mut fh = vec![0.0; l];
+    let mut fl = vec![0.0; l];
+    let kb = ctx.k();
+    for (b, s) in states.iter().enumerate() {
+        let t = ctx.block_target(b);
+        for q in 0..4 {
+            let mut d = (s[q] - fld_qv::<B>(z, t + q * m)).val();
+            if let (true, 0, Some((lo, hi))) = (b == kb, q, &ctx.freeze) {
+                d = lo.apply(&d) + hi.apply(&ctx.fld(zh, zl, 0));
+            }
+            let o = b * 4 * m + q * m;
+            d.store(&mut fh[o..o + m], &mut fl[o..o + m]);
+        }
     }
     let ph = phase_row(ctx, &ctx.fld(zh, zl, 0));
     fh[l - 1] = ph.hi;
@@ -1199,11 +1233,11 @@ pub fn jacobian_block<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f
     let l = ctx.len();
     let delta = delta_of(zh, zl);
     let lus = horizon_lus(ctx, &ctx.fld(zh, zl, ctx.off_ah()), delta, par, DD::ZERO)?;
-    let mut groups = vec![Group { delta: false, zoff: 0, zlen: 2 * m }];
+    let mut groups = vec![Group { param: false, zoff: 0, zlen: 2 * m }];
     for t in 0..k {
-        groups.push(Group { delta: true, zoff: ctx.off_node(t), zlen: 4 * m });
+        groups.push(Group { param: true, zoff: ctx.off_node(t), zlen: 4 * m });
     }
-    groups.push(Group { delta: true, zoff: ctx.off_mh(), zlen: 2 * m });
+    groups.push(Group { param: true, zoff: ctx.off_mh(), zlen: 2 * m });
     let rblocks: Vec<(usize, usize)> = (0..=k).map(|b| (b * 4 * m, 4 * m)).collect();
     let tasks = jac_tasks(ctx);
     let gs = groups.clone();
@@ -1215,9 +1249,9 @@ pub fn jacobian_block<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f
             if zi == l - 1 {
                 Ok(np)
             } else if zi >= p.zoff && zi < p.zoff + p.zlen {
-                Ok(p.delta as usize + zi - p.zoff)
+                Ok(p.param as usize + zi - p.zoff)
             } else if zi >= q.zoff && zi < q.zoff + q.zlen {
-                Ok(np + q.delta as usize + zi - q.zoff)
+                Ok(np + q.param as usize + zi - q.zoff)
             } else {
                 Err(format!("block {b}: unknown {zi} outside its two groups"))
             }
@@ -1256,7 +1290,7 @@ pub fn jacobian_block<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f
         }
         Ok(())
     };
-    BlockLu::factor(l, groups, &rblocks, l - 1, l - 1, fill, par, mutate)
+    BlockLu::factor_control(l, groups, &rblocks, l - 1, l - 1, fill, par, crate::block::control(mutate))
 }
 
 /// A solver context read from a file written by hp/dump_ctx.py (Rust benches and data-driven tests).

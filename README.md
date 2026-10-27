@@ -82,11 +82,11 @@ Headline results:
   predict the shape of the echo, F₃/F₁ = 0.055 against 0.055 extrapolated from the data, and with three harmonics
   the full set of conditions gives Δ = 1.619, 1.5% below Δ∞, and with five harmonics Δ = 1.64516, 0.077% above (one
   harmonic: 29% above): the offset alternates in sign and shrinks fifteen- to twentyfold per harmonic pair. Without truncation, an
-  amplitude expansion to fourteen orders puts the selected ω at 0.99992–1.00005 ω∞ (Δ∞ = 1.6439 ± 0.0001, an
+  amplitude expansion to fifteen orders puts the selected ω at 0.999975–1.00005 ω∞ (Δ∞ = 1.64387 ± 0.00006, an
   estimator range over two orders, tested on planted functions), at amplitude 2.720 (measured: 2.70–2.72), provided the
-  selection function has no further zeros within |x| ≈ 12; the thirteenth and fourteenth coefficients rejected every
-  such alternative built so far, but a larger ring of zeros is still possible. The finite-D solutions give 1.643893746,
-  inside that range. The rule itself is not yet proved ([Large D](#large-d-what-the-1d-expansion-can-and-cannot-see)).
+  selection function has no zeros closer to the origin than the selected one; the fourteenth and fifteenth coefficients
+  rejected every such alternative built so far. One alternative with further zeros just beyond the selected one
+  survives, and it puts the zero inside the range. The finite-D solutions give 1.643893746, inside that range. The rule itself is not yet proved ([Large D](#large-d-what-the-1d-expansion-can-and-cannot-see)).
 - **Relation to published work.** Agreement with the accepted values at D = 4 and at the maximum of Δ near D = 3.756;
   a 6×10⁻⁵ difference at D = 5 that the published higher-resolution data trace to resolution; and the published
   conjecture Δ → 0 as D → ∞ is not
@@ -186,6 +186,38 @@ ten times tighter), they reproduce each point within its own precision:
 | 20 – 30 | ≤ 1×10⁻⁸ | ≤ 3×10⁻⁸ | ≤ 2.3×10⁻⁹ | ~ 10⁻⁷ (assigned 10⁻⁹, but the fits' $`\chi^2/\mathrm{dof}`$ is about 7000 against it) |
 | 30.2 – 61, never seen by the fit | ≤ 6×10⁻⁸ | ≤ 10⁻¹⁴ (double-double) | ≤ 5×10⁻⁷ up to D = 35.8 | |
 
+**Shorter forms for one range of D** (`cd hp && python3 short_forms.py`; `--selftest` runs it on a planted analytic
+function with controls). On a narrower range a plain series Δ ≈ c₀ + c₁/D + c₂/D² + … with fewer terms does as well
+as the rational formula. The table gives, per range, the fewest terms that reach each accuracy, the coefficients, and
+the error margin. Up to D = 61 the margin is the largest miss over the computed points in the range (an interpolation
+error, since the series is fitted on those points). Above D = 61 there are no computed points: the series is fitted on
+the points from half the range's lower end up, and the margin is the spread of its values across fits that differ in
+the lower cut and in one extra term, plus the fit's own residual. That is a fit spread, not a bound; it assumes Δ is
+analytic in 1/D ([Is the period analytic in 1/D?](#is-the-period-analytic-in-1d)), and `--selftest` shows it widens
+a hundredfold when a non-analytic term is present. Coefficients are given to two digits past the margin.
+
+| D | accuracy | terms | Δ ≈ | error margin |
+|---|---|---|---|---|
+| 10–20 | 10⁻⁴ | 4 | 1.651778 + 9.85735/D − 14.4024/D² + 27.6111/D³ | 2.0×10⁻⁵ |
+| | 10⁻⁶ | 5 | 1.64636229 + 10.169508/D − 21.027033/D² + 88.933312/D³ − 208.97821/D⁴ | 6.3×10⁻⁷ |
+| | 10⁻⁸ | 7 | 1.6443656219 + 10.3223902/D − 25.77585357/D² + 165.2685938/D³ − 875.4410611/D⁴ + 2973.759667/D⁵ − 5229.273842/D⁶ | 3.9×10⁻⁹ |
+| 20–40 | 10⁻⁴ | 3 | 1.648396 + 9.94459/D − 13.442/D² | 5.7×10⁻⁵ |
+| | 10⁻⁶ | 5 | 1.64418027 + 10.331218/D − 25.622295/D² + 148.39562/D³ − 504.78463/D⁴ | 1.4×10⁻⁷ |
+| | 10⁻⁸ | 6 | 1.6439764681 + 10.36020445/D − 27.24883172/D² + 193.4099753/D³ − 1119.311266/D⁴ + 3311.999159/D⁵ | 6.7×10⁻⁹ |
+| 40–61 | 10⁻⁴ | 3 | 1.6450284 + 10.19239/D − 18.04099/D² | 5.7×10⁻⁶ |
+| | 10⁻⁶ | 4 | 1.644077767 + 10.3363896/D − 25.2423218/D² + 118.863223/D³ | 9.2×10⁻⁸ |
+| | 10⁻⁸ | 5 | 1.6439252935 + 10.3670057/D − 27.53181976/D² + 194.4269583/D³ − 928.7010788/D⁴ | 1.8×10⁻⁹ |
+| 70–100 (fit spread) | 10⁻⁴ | 4 | 1.644121 + 10.3299/D − 24.9162/D² + 113.486/D³ | 8.6×10⁻⁵ |
+| | 10⁻⁶ | 7 | 1.64389549 + 10.37469/D − 28.330517/D² + 236.72558/D³ − 2104.6691/D⁴ + 15445.597/D⁵ − 63511.93/D⁶ | 2.8×10⁻⁷ |
+| | 10⁻⁸ | 9 | 1.6438938283 + 10.37524957/D − 28.41118719/D² + 243.2171123/D³ − 2421.974291/D⁴ + 25011.26095/D⁵ − 234683.1799/D⁶ + 1615767.159/D⁷ − 5754580.832/D⁸ | 8.0×10⁻⁹ |
+| 100–200 (fit spread) | 10⁻⁴ | 5 | 1.643914 + 10.3694/D − 27.7262/D² + 201.332/D³ − 1020.47/D⁴ | 4.4×10⁻⁵ |
+| | 10⁻⁶ | 8 | 1.64389387 + 10.37523/D − 28.407016/D² + 242.7195/D³ − 2385.3469/D⁴ + 23303.804/D⁵ − 185367.37/D⁶ + 807821.97/D⁷ | 4.3×10⁻⁷ |
+| | 10⁻⁸ | | not reached with 12 terms | |
+
+Above D = 61 the series need more terms than below it, not fewer, because each fit is an extrapolation whose
+uncertainty grows with the distance from the last computed point; the coefficients of the longer forms are not
+physical constants (they are correlated, and shift with the range), only the function is.
+
 An independent double-double computation ([below](#the-double-double-solver-hp)) agrees with the formula to
 2.7×10⁻⁹ or better on 8.25 ≤ D ≤ 21, 7.5×10⁻⁹ up to D = 30, and 5.8×10⁻⁸ from there to
 D = 61, which the fit never saw. It also shows that the f64 points at D ≈ 8–10 (23 Fourier modes in time)
@@ -215,7 +247,8 @@ maximum. Middle: the f64 points sit 1.5–3.5×10⁻⁶ high there. Right: the �
 estimate over four model variants, not a bound) pass 128 near D = 3.4 and run into the hundreds near D = 3. The kernel
 now runs to M = 384: a continuation in double-double reached D = 3.15, Δ = 2.96131964246 (the change from M = 192 to
 256 is 9×10⁻¹²), where M = 160 already gives Δ to 10⁻⁸. Calibrated on it, the model puts D = 3.05 at M = 256–384 and
-9–25 more hours on two cores; that run is under way ([notes/HIGH_M.md](notes/HIGH_M.md)).
+9–25 more hours on two cores; that run has reached D = 3.05 at M = 256/320 and is checking it at M = 384
+([notes/HIGH_M.md](notes/HIGH_M.md)).
 
 ![Below D = 4: every double-double value of Delta and gamma so far against the sqrt(D - 3) formula, and how much Delta moves when the tau resolution is raised](hp/lowD_values.svg)
 
@@ -226,12 +259,23 @@ continuation points, as run `lowD-M<M>`; `hp/plot_lowD_values.py` draws them; re
 largest M agree to 10⁻⁸ (or M = 80 alone at D ≥ 3.7, where M 80 → 96 is 1.2×10⁻⁹) and hollow where they do not yet.
 Every point, resolved or not, lies within 8×10⁻⁶ of the √(D − 3) formula below. Middle: γ, from the exact growth-mode
 matrix at the largest M. Right: how much Δ moves when M is raised. The step from M = 80 to 96 grows a hundredfold from
-D = 3.7 to 3.4, while M = 96 → 128 stays at 1–2×10⁻⁹ down to D = 3.4. Below that the larger grids take over
+D = 3.7 to 3.4, while M = 96 → 128 stays at 1–2×10⁻⁹ down to D = 3.4.
+
+<details>
+<summary>Below D = 3.4: the resolution step at each D, and the node changes on the way</summary>
+
+Below that the larger grids take over
 (M = 128 → 160 → 192 → 256, each step one to two orders smaller than the one before): at D = 3.15 the step from 192
 to 256 is 9×10⁻¹², and at 3.125, 3.11875, 3.1125 and 3.1 it is 1.9, 2.8, 3.8 and 5.5×10⁻¹⁰; at 3.1 the next
 step, 256 → 320, is 7.2×10⁻¹³. At 3.0875 the steps are 1.8×10⁻⁹ and 7.0×10⁻¹², ten times those at 3.1 for 0.0125
-in D, at 3.08125 4.3×10⁻⁹ and 2.1×10⁻¹¹, and at 3.075 (the lowest point so far) 1.0×10⁻⁸ and 5.0×10⁻¹¹. At 3.075
-the M = 320 horizon-series tail, 5×10⁻³³, was above the run's 10⁻³³ bound, so a node was added at 0.975, taken from
+in D, at 3.08125 4.3×10⁻⁹ and 2.1×10⁻¹¹, at 3.075 1.0×10⁻⁸ and 5.0×10⁻¹¹, at 3.06875 2.3×10⁻⁸ and 1.0×10⁻¹⁰,
+at 3.0625 4.8×10⁻⁸ and 2.0×10⁻¹⁰, and at 3.05625 9.3×10⁻⁸ and 4.1×10⁻¹⁰, each about twice the one before. At 3.05
+(the lowest point so far) M = 192 did not converge, and the step from 256 to 320 is 1.2×10⁻⁹, 2.9 times the one at
+3.05625. At 3.0625 the M = 256
+solution lifted to M = 320 had a centre-series tail of 8×10⁻¹⁸, above the run's 10⁻²⁰, so the first node was halved
+(0.000313 to 0.000157, 21 nodes); there the M = 256 tail fell from 4×10⁻⁵⁴ to 2×10⁻⁹⁴ and the pair moved Δ by
+5×10⁻³¹. At 3.075 the M = 320 horizon-series tail, 5×10⁻³³, was above the run's 10⁻³³ bound,
+so a node was added at 0.975, taken from
 the horizon series (integrating out from 0.95 passed the series' nearest singularity and gave NaN); on the 20 nodes
 the tails are 3×10⁻⁵⁷ and 10⁻¹⁰⁷ and Δ moved by 2×10⁻³⁰. At D = 3.40 the second machine's M = 128 Newton (13
 nodes) converged to a solution with content along the near-null directions (its centre-series tail 10⁻⁹, against
@@ -241,6 +285,8 @@ not lift as they are (resampled at 3.425 the start has |F| = 3×10⁴, and at 3.
 first (`hp/highm_check.py lift --nodes=...`), they do. The steps of these lifts, M = 128 → 160, are 3.5×10⁻¹² (3.4),
 6.8×10⁻¹² (3.425), 6.2×10⁻¹² (3.45), 2.9×10⁻¹² (3.475), 6.4×10⁻¹³ (3.5) and 1.6×10⁻¹³ (3.55), and M = 96 → 128 at 3.65
 is 4.6×10⁻¹¹: from D = 3.4 to 3.65 every value is now resolved to 5×10⁻¹¹ or better.
+
+</details>
 
 ![Below D = 4: how much Delta moves when the tau resolution M goes up one step, at the largest M run at each D, on a log scale](hp/lowD_errors.svg)
 
@@ -402,6 +448,17 @@ The phenomenon is the same at every D ≥ 4: the same echoing structure and a sm
 as in four dimensions (assumed here: only that mode's growth rate is computed, not the full spectrum). Only the numbers
 change.
 
+**A second scalar field adds no unstable mode** ([notes/GHOST_ADMIXTURE.md](notes/GHOST_ADMIXTURE.md)). Add a second
+massless scalar ψ that vanishes in the critical solution, either a ghost or an ordinary field: at linear order its
+perturbations do not act back on the metric, and they obey the wave equation on the critical spacetime, the same for
+either sign. A growth rate with Re λ > 0 would be a second unstable mode of the critical solution. An argument-principle
+count of the test field's growth rates (`hp/modecount_test.py`, edges refined until their verification adds nothing)
+finds only the exact zero λ = 0, the rotation of the background's own field into ψ. That holds at D = 8.25, 16.76, 30.07
+and 45.05 for −0.15 < Re λ < 6.2–6.7 and |Im λ| < 1.5ω, in two node layouts each, and at D = 4 near the imaginary
+axis (−0.114 < Re λ < 0.193, |Im λ| < 6.38) in the second of two layouts (numerical evidence). The first layout at
+D = 4 showed zeros with Re λ > 0 that the second does not, artifacts of that discretization; the real decaying mode at
+λ = −0.3651 is in both.
+
 ![The echo across dimensions: the field's slope at the centre over the same stretch of logarithmic time for D = 4, 10, 20 and 60](solver/echo.svg)
 
 **The echo itself.** The figure shows the field's slope at the centre, F(τ) = √(D−2)·∂p/∂x at r = 0, over the same stretch of
@@ -484,6 +541,9 @@ the error bar would still show), nor in one about 27 times wider (1.643890–1.6
 
 From a literature search (October 2026); the references are listed at the end of the [Large D](#references) section.
 
+<details>
+<summary>Point by point: D = 4, the maximum below 4, D = 5, below 4, large D, earlier formulas, the large-D theory</summary>
+
 - **D = 4.** Δ = 3.445452402(3) (Martín-García & Gundlach, PRD 68, 024011 (2003); see also Gundlach, PRD 55, 695
   (1997)) and γ = 0.373961 ± 10⁻⁶ (Ecker, Ecker, Grumiller & Jechtl 2026, who also give Δ = 3.445453). The formula's
   3.4454524 and 0.3739610 agree to about 10⁻⁸ and 10⁻⁷. The double-double solver gives Δ = 3.4454524022278213499715
@@ -533,6 +593,8 @@ From a literature search (October 2026); the references are listed at the end of
   late-order (Dingle) analysis. The inner equations are, up to a change of variables, Rozali and Way's leading-order
   large-D system (2018), whose heat-equation character they noted; Proposition 5 is the discretely self-similar
   counterpart of their estimate γ = 1/2. Ecker, Ecker & Grumiller's next-to-leading-order condition is discussed next.
+
+</details>
 
 #### Relation to Ecker, Ecker & Grumiller
 
@@ -608,13 +670,17 @@ with computed points rather than an assumed form. Its points are used in [The fo
 Δ∞), [Values](#values), the [candidate test](#closed-forms-tested-and-excluded), the
 [analyticity tests](#is-the-period-analytic-in-1d) and the large-D scaling ([How the solution scales with D](#how-the-solution-scales-with-d)).
 
+<details>
+<summary>How the solver works: arithmetic, step control, Jacobian, Newton variants, τ grids, quad-double, continuation, centre-series order</summary>
+
 - **Arithmetic:** double-double (hi + lo, about 32 digits)[^15] on 8-lane vectors: one AVX-512 register per lane group, two
   AVX2 registers, four SSE2 or NEON registers, or a portable array, chosen at compile time (`hp/build.sh` builds with
   `-C target-cpu=native`). Error-free two-sum and FMA two-product; sums of products accumulated Sum2-style[^16]. The
-  arithmetic, the dual lanes and the double-double LU are the separate crate
-  [multidouble](https://github.com/nmoinvaz/multidouble) (version 1.0.0 from crates.io, its lane types on the
-  compile-time backend); every backend gives bitwise the same results, and the solver's outputs are unchanged bit for
-  bit by the move.
+  arithmetic, the dual lanes, the double-double LU, the staircase LU of the block storage, the τ-field kernels and the
+  GMRES refinement are the separate crate [multidouble](https://github.com/nmoinvaz/multidouble) (version 1.5.1 from
+  crates.io, its lane types on the compile-time backend); every backend gives bitwise the same results, and the
+  solver's outputs are unchanged bit for bit by each move (`hp/highm_check.py ref` and `scaled` against the
+  references of the build before it).
 - **No fixed-step error:** Taylor series in x (order 36, step points planned once per D so the truncation term is
   10⁻³²), centre and horizon series run until their tails are below 10⁻³³, and collocation in τ on the
   half period (p, m odd harmonics, a, c even harmonics in τ) with no spectral truncation of the products.
@@ -667,6 +733,8 @@ with computed points rather than an assumed form. Its points are used in [The fo
   (`hp/data/kc_check_scan/`). `--kc_auto` lowers kc after a converged point only when the residual and the Jacobian
   there are bitwise unchanged; the default keeps kc as given.
 
+</details>
+
 ![The Newton variants of the double-double solver against D: seconds per solve and speedup over the double-double Jacobian, with the failures marked](hp/bench_variants.svg)
 
 **The Newton variants against D** (`hp/plot_bench_variants.py`; data from `hp/bench_variants.py --repeat=3 --threads=4`
@@ -687,7 +755,7 @@ ran there. Above D = 8.25 each accepted continuation point's Newton solve takes 
 graph. The machines differ (the cloud's 2 shared cores, the laptop's 4–6 threads, the Mac's 4 performance cores, from
 D = 61.63 at a median of 25 s), so this shows the effort, not a benchmark.
 
-![How far apart in D our solved points are: the low-D grid down to D = 3.075, and the continuation's adaptive step from D = 8.25 to 67.79, by machine](hp/point_spacing.svg)
+![How far apart in D our solved points are: the low-D grid down to D = 3.05, and the continuation's adaptive step from D = 8.25 to 67.79, by machine](hp/point_spacing.svg)
 
 **How far apart the points are** (`hp/plot_point_spacing.py`). Below D = 4: the distance from each point to the next
 one below it, on a grid we chose, mostly 0.05 apart and halved to 0.0125 and 0.00625 toward D = 3. From D = 8.25 up
@@ -697,6 +765,34 @@ each point to the run's previous point, with runs that overlap kept apart. The s
 collapses where it got stuck: at D = 35.2 and 45.3 (two cloud runs that stopped there), at 60.96 (the stall that
 holding the near-free centre harmonics on their trend cured) and at 67.78, where T48 stopped (open rings: points after
 a horizon-tail jump).
+
+![Why the continuation stalls along the weak directions: a model of one Newton step along a weak direction, where a large curvature against a small slope makes Newton land above its start, and each run's step in D diving at the stalls at D = 35.2, 60.96 and 67.75](hp/newton_stall.svg)
+
+**Why the steps collapse** (`hp/plot_newton_stall.py`, which reads T73's records from the `raw/T73` branch: run
+`git worktree add ../raw-T73 raw/T73` first). Top, a model rather than data: the residual along one weak direction,
+F(t) = F₀ − σt + ½ct², and Newton's straight line F₀ − σt. Newton jumps to the line's zero, t = F₀/σ, which is far
+out when the slope σ is small, and by then the curvature has added cF₀²/(2σ²). The step lowers the residual only
+while cF₀/σ² < 2, that is while the residual Newton starts from is below 2σ²/c. At cF₀/σ² = 2.5 it lands at 1.25 F₀,
+and line search ends at the curve's lowest point, 0.8 F₀: the stall. The weak directions' σ falls as D rises (below),
+so that bound shrinks, and a shorter step in D hands Newton a smaller starting residual; that is why a run's step
+dives before it stops. Bottom, the data: each run's step in D is smallest at the stalls, 0.00235 at D = 35.20, 0.00086
+at 60.96 and 0.00010 at 67.75. Above D = 70 the median step is back to 0.0146 in T73, which holds the weakest
+harmonics at the predictor's values and corrects Δ for that with one Newton step of the full system. At D = 62–64,
+where T48's seeds can be rebuilt from its saved states (`hp/stall_margin.py --attempts`), every step whose seed
+residual was at most 1.4×10⁻⁵ (62) or 2.2×10⁻⁵ (64) converged and every larger one failed. Behind the basin is a
+precision limit: past D ≈ 60 double-double cannot resolve the weakest direction at all (below, "Why the solver
+stalls").
+
+![Where double-double runs out: u times kappa against D for the full system, crossing 1 near D = 60 at the stalls, and for the pinned systems 8 to 11 orders lower; below, the residual each state reached following the rounding floor u sigma_max |z|](hp/stall_kappa.svg)
+
+**Where double-double runs out** (`hp/plot_stall_kappa.py`, from the stall detector's runs on the `raw/T76` branch:
+run `git worktree add ../raw-T76 raw/T76` first). Top: u·κ, double-double's unit roundoff times the Jacobian's
+condition number, at converged states. The full system's rises like n^38.9 and crosses 1 at D = 59.9, just before the
+stall at 60.96; at 67.74, where T48 stopped, it is 168. The pinned systems the runs solve sit 8 to 11 orders lower
+(1.0×10⁻⁸ with harmonics 7–13 held at D = 70.98, 1.5×10⁻⁵ with 9–13 held at 70.63), which is why they still converge; the single
+full-system step that corrects for the pin is still taken at the full system's u·κ. Bottom: the residual each saved
+full-system state reached against u·σ_max·|z|, scaled by their median ratio 0.045, the rounding floor of evaluating F
+at a double-double state.
 
 <details>
 <summary>Checks of the solver</summary>
@@ -714,6 +810,7 @@ a horizon-tail jump).
 | harmonics frozen above 13 / above 15, D = 40, 50, 60 | Δ differs by +1.5, −1.1, −1.2×10⁻¹⁵ |
 | second machine (Windows, i7-1185G7, own build), D = 59.84–60.09 | 7.2×10⁻¹⁸ rms from the cloud points' interpolant (`hp/review/rv2_noise.py`) |
 | the 94 points above D = 60.1 (32 of them at 60.95–61.026: 25 from the second machine, 7 from the cloud) against the 1/D fit on D ≤ 60.1 (degree 18) | agree to 2.6×10⁻¹⁵ |
+| Newton's remaining correction to Δ with the horizon rows' residual in quad-double, the 319 points of run T48-up70 (D = 61.66–67.77; `dDelta_exact` in the CSV; control: a residual planted to move Δ by 10⁻¹⁴ is recovered to 4×10⁻¹³ relative and rejected) | at most 1.2×10⁻¹⁶, median 1.2×10⁻¹⁷, under the stated 2×10⁻¹⁵ |
 
 </details>
 
@@ -771,8 +868,26 @@ What the solver has shown:
   $`e^{-n\Phi}`$ with $`\Phi = \ln x - \tfrac12\ln(1 - x^2)`$, has modulus 1 on $`\mathrm{Re}\,x^2 = \tfrac12`$, which crosses
   the real axis at x = 1/√2. The solver matches at 0.7, where it is of order one, and moving the last node changes
   $`\max\lvert\partial\Delta/\partial F\rvert`$ by $`e^{n[\Phi(x_m) - \Phi(0.7)]}`$, over 13 orders of magnitude with no
-  fitted parameter (`solver/beyond_lc/hp_node_test.py`). What grows is the high-harmonic ladder below; the residual
-  floor's 1.4-fold rise per unit of D is not explained ([notes/BEYOND_LIGHT_CONE.md](notes/BEYOND_LIGHT_CONE.md)).
+  fitted parameter (`solver/beyond_lc/hp_node_test.py`). What grows is the high-harmonic ladder below
+  ([notes/BEYOND_LIGHT_CONE.md](notes/BEYOND_LIGHT_CONE.md)); the residual floor's 1.4-fold rise per unit of D is
+  the growth of the Jacobian's largest singular value (next item).
+- **Why the solver stalls: double-double runs out of precision.** `hp/stall_margin.py` measures the Jacobian J at a
+  solved point: its weakest singular directions, its largest singular value σ_max (from the dense double-double
+  Jacobian) and the condition number κ = σ_max/σ_min. Its runs are on the `raw/T76` branch and `hp/stall_summary.py`
+  prints the numbers below; its controls are two planted problems with known answers and two mutations. From
+  D = 40 to 67.74, with n = D − 2, the weakest direction is always p1's harmonic 13, the highest the solver keeps;
+  σ_min falls like n^−20.8 (to 4% at 9 points) and σ_max grows like n^18.1. Since ∂Δ/∂F is a row of J⁻¹,
+  σ_min ≤ 1/max|∂Δ/∂F| (proved), and in fact σ_min·max|∂Δ/∂F| stays between 6.5 and 9.5×10⁻⁹, so the sensitivity
+  in the CSV tracks the weakest direction. The product u·κ, with u = 2⁻¹⁰⁴ double-double's unit roundoff, grows
+  like n^38.9 and reaches 1 at D = 59.9 (numerical evidence): it is 1.7 at the stall at 60.96 and 170 at 67.74,
+  where T48 stopped. A backward-stable solve's error relative to the solution is about u·κ[^21], so beyond D ≈ 60 a
+  double-double Newton step's error along the weakest direction can be as large as the step, and the convergence
+  theorem for inexact Newton methods, which needs each solve's relative residual to stay uniformly below 1[^22], no
+  longer applies. Every remedy so far takes those directions out of the solve: holding them on their trend,
+  deflating them, and T73's pin, which lowers u·κ at D = 71 from 1.4×10³ to 1.5×10⁻⁵ (harmonics 9–13 held) and
+  1.0×10⁻⁸ (7–13 held). The residual the runs reach is 0.04–0.05 × u·σ_max·|z| (|z| ≈ 19.5) at every state from
+  D 40 to 64 (0.11 and 0.2 at 66.0 and 67.5), the rounding floor of evaluating F at a double-double z; σ_max grows
+  1.36 times per unit of D at D = 60.
 - **How good the values are.** The points themselves fit smooth curves to about 4×10⁻¹⁵ (degree 18–20) all the way to
   D = 60.1, not 10⁻²⁰. Points between
   D = 27 and 35.2, solved before the freezing, carry up to 10⁻¹⁴ from the weak directions; about 25 of them sit
@@ -785,6 +900,15 @@ What the solver has shown:
   1.5–2×10⁻⁹), 1.8×10⁻⁸ at 30.1 and
   7×10⁻⁸ at 34.2, and 0.6–2.1×10⁻⁶ high from 35 to 40.3 (quoted 1–3×10⁻⁶). How well the
   rational formula holds against these points is in [The formula](#the-formula).
+
+![The past light cone of the singularity with the solver's node rays, beside the size of the fast mode exp(-n Phi(x)) along x for D = 20, 40 and 60, equal to 1 at x = 1/sqrt 2 for every D](hp/light_cone.svg)
+
+**The light cone and the fast mode** (`hp/plot_light_cone.py`; exact formulas, no data). Left: the singularity at
+r = 0, t = t*, its past light cone x = r/(t* − t) = 1, and the rays of the solver's nodes x = 0.3 … 0.7. Right: the
+fast mode e^(−nΦ(x)) that carries the selection ("How fast the selection weakens" above) has size exactly 1 at
+x = 1/√2 for every D, is huge deeper inside and exponentially small near the light cone. The solver matches at
+x = 0.7, where the mode is 10^0.16 at D = 20 and 10^0.50 at D = 60, so its condition sits where the effect is of
+order one.
 
 ![The continuation points' error indicators against D: each point's distance from the degree-18 fit in 1/(D-1), Newton's remaining linearised correction to Delta, and the shift from freeing harmonic 15](hp/largeD_errors.svg)
 
@@ -1423,6 +1547,9 @@ of order $`\sqrt n`$ are $`x^2\partial_x{y}`$, $`\omega x\,\partial_\theta{y}`$ 
 $`x^2\partial_x(p+m)`$, $`x c\,\partial_x{y}`$, $`\omega x\,\partial_\theta(p+m)`$ and $`(G - c)\,y`$ with G = cη; the b equation becomes
 algebraic, η = p² + m².)
 
+<details>
+<summary>Its properties: it resums the outer expansion, Kummer's equation and its Stokes constant without gravity, the selection rule as an inner problem, the inner series with gravity</summary>
+
 - **It resums the outer expansion.** Its formal solution regular at ξ = 0, $`y = \sum_j d_j\xi^{2j+1}`$,
   $`\sigma = \sum_j s_j\xi^{2j+2}`$, $`c = \sum_j g_j\xi^{2j}`$ with d₀ = 2F, g₀ = 1, has g₁ = F², s₀ = 2(F + ω F'),
   d₁ = ω²F'' + 3ω F' + 2F - 2F³: the top-degree coefficients of G₁, S₁, D₁ of Proposition 1. `solver/largeD_inner.py`
@@ -1458,6 +1585,8 @@ algebraic, η = p² + m².)
   larger), and a heuristic estimate of the gravity mixing at $`\mathrm{Im}\,\theta \approx \pi\omega/2`$ suggests that truncation would
   need M of order 10⁴, which favours the untruncated amplitude expansion below.
 
+</details>
+
 The large-n form of the light-cone coefficient, from the matching in the second bullet (Λ = n/2 - 1 - s is the
 light-cone exponent of Proposition 2):
 
@@ -1475,6 +1604,9 @@ and a phase.
 code: *lateral solutions* (`solver/inner_stokes/`: the inner equations integrated from just above and just
 below the Stokes line and differenced) and *Borel–Darboux* (`solver/inner_borel/`, ball arithmetic with python-flint: the
 late orders of the inner series fitted with the predicted fast-mode exponents).
+
+<details>
+<summary>The computation with gravity in detail: checks without gravity, the fast mode, harmonic truncation, one to five harmonics</summary>
 
 - *Both checked without gravity.* Lateral: the jump divided by $`2\pi i\,2^{-s-1/2}/(\Gamma(\alpha)\Gamma(\beta))`$ times the linear fast solution is
   1.000000000002 - 7×10⁻¹²i, the same at two matching radii (`solver/inner_stokes/lateral_np.py check`). Darboux:
@@ -1548,6 +1680,8 @@ late orders of the inner series fitted with the predicted fast-mode exponents).
   ratio, −0.049 per pair, is the profile decay of the added pair (0.057) times a coupling of 0.85. The geometric limit
   is ω/ω∞ = 0.999985, and the part above M = 7 is about 4×10⁻⁵ in ω.
 
+</details>
+
 **Without truncation: the amplitude expansion** (`solver/inner_amp/`).
 
 *The inner problem is a Weber (parabolic-cylinder) problem* (derived). With t = 1/ξ and the characteristic coordinate
@@ -1567,6 +1701,9 @@ C(n,s) \approx -\,i\,\frac{\sqrt{2\pi}}{\Gamma(1+s)}\,(n+1)^{s+1/2}\,e^{-i\pi\La
 ```
 
 Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = -1-s`$.
+
+<details>
+<summary>The amplitude expansion in detail: every harmonic exact, the shape, the harmonic-1 condition and where its zero is real, the planted test, fifteen orders</summary>
 
 - *Every harmonic exact.* Put $`F = A\sin\theta + \sum_{\nu\ge3} f_\nu(A)\,e^{i\nu\theta}`$ (+ c.c.). Harmonic μ first appears at
   order $`A^{\lvert\mu\rvert}`$, so keeping $`\lvert\mu\rvert \le K`$ at each order in A is exact: no truncation error, unlike fixed M
@@ -1606,8 +1743,8 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   $`(\ln S_1)'`$ put the zero at A₀ = 2.728–2.756 with Im A₀ = −0.013 to −0.027 (residues 1.05–1.22, ideally 1), and the
   ratio estimates from τ₅/τ₆ and τ₆/τ₇ give 2.744 − 0.026i and 2.748 − 0.013i. The D = ∞ amplitude measured from the
   solutions is 2.70–2.72, so the zero lies within about 1% of it.
-- *Across ω: where the zero is exactly real.* Two families of estimates approach from opposite sides (σ₁–σ₁₄ at ω/ω∞ =
-  0.99, 1.00, 1.01, K = 29, J = 1000, `scan29J1000/`; σ₁–σ₁₂ at the same ω, K = 25, `scan25phys/`; σ₁–σ₁₁ at the same ω, K = 23, `scan23phys/`; σ₁–σ₁₀ at the same ω, K = 21, `scan21phys/`; σ₁–σ₉ at the same ω, K = 19, `scan19phys/`; σ₁–σ₈ at five ω, 0.98–1.02, `scan17phys/`; σ₁–σ₇ at seven ω, 0.97–1.03,
+- *Across ω: where the zero is exactly real.* Two families of estimates approach from opposite sides (σ₁–σ₁₅ at ω/ω∞ =
+  0.99, 1.00, 1.01, K = 31, J = 1000, `scan31J1000/`; σ₁–σ₁₄ at the same ω, K = 29, `scan29J1000/`; σ₁–σ₁₂ at the same ω, K = 25, `scan25phys/`; σ₁–σ₁₁ at the same ω, K = 23, `scan23phys/`; σ₁–σ₁₀ at the same ω, K = 21, `scan21phys/`; σ₁–σ₉ at the same ω, K = 19, `scan19phys/`; σ₁–σ₈ at five ω, 0.98–1.02, `scan17phys/`; σ₁–σ₇ at seven ω, 0.97–1.03,
   `scan15phys/`; earlier coarser scans agree to 10⁻⁴):
 
 | Order k | arg τₖ = π crossing (from above) | ratio τₖ₋₁/τₖ real (from below) | effective exponent c at ω∞ |
@@ -1622,14 +1759,15 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
 | 12 | 1.00011 | 0.99915 | 1.013 − 0.012i |
 | 13 | 1.00005 | 0.99928 | 1.004 − 0.010i |
 | 14 | 1.00003 | 0.99977 | 1.000 − 0.004i |
+| 15 | 1.00002 | 0.99992 | 1.002 − 0.002i |
 
   The arg = π criterion assumes x₀ is a simple zero, $`\tau_k \to -1/(k\,x_0^k)`$; the coefficients behave as
   $`-c/(k\,x_0^k)`$ with an effective exponent c (last column, from two consecutive orders) that falls toward 1 as
-  orders are added (1.177, 1.077, 1.052, 1.021, 1.017, 1.013, 1.004, 1.000), so x₀ is a simple zero and the departure of c from 1 is contamination
+  orders are added (1.177, 1.077, 1.052, 1.021, 1.017, 1.013, 1.004, 1.000, 1.002), so x₀ is a simple zero and the departure of c from 1 is contamination
   by singularities beyond it. That makes the crossings from above the asymptotically correct estimator. Their distance
-  shrinks by a factor of about 0.4–0.6 per order (to 1.000026 at k = 14, still falling), and Aitken's extrapolations
+  shrinks by a factor of about 0.4–0.7 per order (to 1.000019 at k = 15, still falling), and Aitken's extrapolations
   of consecutive triples scatter around 1 (0.99956 to 1.00066). The ratio estimates, which let c float, come up from
-  below, dip at k = 12 and rise again (0.9978, 0.99919, 0.99915, 0.99928, 0.99977 at k = 10–14). Padé approximants of $`(\ln S_1)'`$ put Im A₀ = 0 at ω/ω∞ = 0.981–0.991 with
+  below, dip at k = 12 and rise again (0.9978, 0.99919, 0.99915, 0.99928, 0.99977, 0.99992 at k = 10–15). Padé approximants of $`(\ln S_1)'`$ put Im A₀ = 0 at ω/ω∞ = 0.981–0.991 with
   seven coefficients, 0.987–0.998 with eight, 0.992–0.998 with nine, and with ten they straddle ω∞: 0.9949–1.0034, the
   mutually consistent [2/7], [6/3] and [4/5] at 0.9995, 1.0000 and 1.0007; with eleven, all nine approximants cross
   between 0.9975 and 1.0008, eight of them within 0.9992–1.0008 (mean 0.9999); with twelve, the five central
@@ -1650,35 +1788,38 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   on the plants, it put the zero at 0.99992–1.00019, provided S₁ has no zeros besides x₀ within |x| ≈ 9; twelve
   coefficients could not exclude those, and functions with exactly the real σ₀…σ₁₂ have their zero anywhere in
   0.996–1.002, the far cases hiding a ring of zeros. The estimates also need every σₖ to about 10⁻¹⁰.
-- *Fourteen orders.* σ₁₃ and σ₁₄ converge at 960 bits with the late-order window J = 1000
-  (`solver/inner_amp/scan29J1000/`; σ₁₄ to 3×10⁻¹³ relative, and a 1280-bit run agrees in every printed digit; at
-  J = 750 σ₁₃ did not converge, `scan27phys/`). The arg crossings keep falling (1.000299, 1.000197, 1.000109,
-  1.000046, 1.000026 at k = 10–14), and the effective exponent reaches 1.000. At k = 13 and 14 the factored series
-  gives 0.999995 and 1.000027, and the central Padé approximants give 0.99980–0.99990 and 0.99995–1.00013. Every ring
-  of zeros constructed to fit the known coefficients mispredicted the next coefficient of ln S₁: by 10%–300% at
-  k = 13 and by 35%–390% at k = 14. The ring-free Borel–Padé sums of σ₀…σ₁₃ predicted σ₁₄ to 1–6×10⁻⁷. Their
-  zeros, and those of the ring-free sums of σ₀…σ₁₄, lie at 0.99996–0.99999. Calibrated on planted functions, arg
-  and G put the zero at 0.99992–0.99996 at thirteen orders but at 1.00004–1.00005 at fourteen. That shift is larger
-  than either range, because the planted functions do not follow the real coefficients from one order to the next
-  ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md) §6). Taken together, **ω*/ω∞ = 0.99992–1.00005,
-  Δ∞ = 1.6439 ± 0.0001 (1.64381–1.64403) from the D = ∞ inner equations alone**. This is an estimator range over two
-  orders, five plant shapes and four completions, not a bound, and it uses no input from the finite-D solutions.
-  Their value, 1.643893746, lies inside it. The range assumes no zeros besides x₀ within |x| ≈ 12. A ring of fifteen
-  or more zeros is still possible, and σ₁₅ is its test. The rule itself is still a conjecture (hypotheses H1–H2,
-  gaps (a)–(c)). Tightening the number needs more orders, approximants that model the competing singularity
-  explicitly (differential or algebraic approximants), or M = 7, which evaluates the multiplier at real amplitude
-  with no series to resum (done: 1.000022).
+- *Fifteen orders.* σ₁₃–σ₁₅ converge at 960 bits with the late-order window J = 1000 (`solver/inner_amp/scan29J1000/`,
+  `scan31J1000/`; σ₁₅ to 5×10⁻¹³ relative, and a 1280-bit run agrees with it to 3×10⁻²⁶; at J = 750 σ₁₃ did not
+  converge, `scan27phys/`). The arg crossings keep falling (1.000299, 1.000197, 1.000109, 1.000046, 1.000026, 1.000019
+  at k = 10–15), and the effective exponent stays at 1.00. At k = 13, 14 and 15 the factored series gives 0.999995,
+  1.000027 and 0.999999, and the central Padé approximants 0.99980–0.99990, 0.99995–1.00013 and 0.99998–1.00006. Rings
+  of zeros constructed to fit the known coefficients mispredicted the next coefficient of ln S₁ by 10%–300% at k = 13,
+  by 35%–390% at k = 14 and by 40%–390% at k = 15. One ring survived σ₁₅: a Borel–Padé sum of σ₀…σ₁₄ with three zeros
+  just beyond x₀ (between |x| ≈ 7.4 and 12), which predicted σ₁₅ to 4×10⁻⁷; its zero, 0.999991, is that of the ring-free
+  sums of σ₀…σ₁₄ to 2×10⁻⁶. The ring-free Borel–Padé sums of σ₀…σ₁₅ put the zero at 0.999999 and 1.000002. Calibrated on
+  planted functions, the arg crossing alone puts the zero at 0.99992–0.99999 at thirteen orders, 0.99995–1.00005 at
+  fourteen and 0.999975–1.000018 at fifteen ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md) §5–7). Taken
+  together over the last two orders, **ω*/ω∞ = 0.999975–1.00005, Δ∞ = 1.64387 ± 0.00006 (1.64381–1.64393) from the D = ∞
+  inner equations alone**. This is an estimator range over two orders, the planted functions and the ring-free
+  completions, not a bound, and it uses no input from the finite-D solutions. Their value, 1.643893746, lies inside it.
+  The range assumes no zeros of S₁ nearer than x₀; every ring that put zeros there was rejected. The rule itself is
+  still a conjecture (hypotheses H1–H2, gaps (a)–(c)). Tightening the number needs more orders, approximants that model
+  the competing singularity explicitly (differential or algebraic approximants), or M = 7, which evaluates the
+  multiplier at real amplitude with no series to resum (done: 1.000022).
 - *Shape.* The shape predictions at A = 2.72 are F₃/F₁ = 0.0551, F₅/F₁ = 0.00314 (data: above), and the D = ∞
   relation evaluated at each D's own amplitude and ω tracks the measured F₃/F₁ at D = 20–60 to within 0.004–0.006
   (0.126, 0.099, 0.087, 0.080, 0.075 against 0.130, 0.105, 0.093, 0.085, 0.080; `harm_pred.py`, heuristic).
+
+</details>
 
 ![The selection rule evaluated from the D = infinity inner problem alone: the order-by-order bracket on omega, the truncation sequence and the effective exponent](solver/selection.svg)
 
 **The selection rule from the inner problem alone** (`solver/plot_selection.py`). Top: where the harmonic-1 multiplier
 has a real zero, order by order in the amplitude expansion. The simple-zero estimates (arg τ_k = π) come down from above,
 the floating-exponent estimates come up from below, and the shaded bracket between them narrows onto the line at 1, which
-is ω∞ from the finite-D solutions; the Padé approximants (ranges) and the factored series land inside it through k = 13
-and reach just above its top edge at k = 14. Bottom left:
+is ω∞ from the finite-D solutions; the Padé approximants (ranges) and the factored series land inside it through k = 13;
+at k = 14 and 15 the Padé ranges reach just above its top edge, and at k = 15 the factored series lies inside it.
+Bottom left:
 keeping M harmonics, the error alternates in sign and shrinks fifteen- to twentyfold per pair; M = 7 lands inside the
 range predicted from M ≤ 5 (dashed).
 Bottom right: the effective exponent of the zero tends to 1, a simple zero, which is why the estimates from above are the
@@ -1686,14 +1827,13 @@ asymptotically correct ones.
 
 ![The selection rule's estimates as distance from the finite-D answer on a log scale, with the calibrated band and the order-14 projections](solver/selection_zoom.svg)
 
-**The same estimates as distance from the finite-D answer** (`solver/plot_selection_zoom.py`, with σ₁₄). On a log
-scale steady convergence is a straight line: from above, the estimates fall by about ×0.53 per order from k = 4 to
-14. The shaded band is where the K = 13 calibration put the zero, 2–8×10⁻⁵ below 1. The hollow marks at k = 14 are
-what a simple geometric model through k = 12 and 13 (not a calibrated estimator) predicted before σ₁₄ was known:
-1.9×10⁻⁵ above 1 if the zero is exactly at 1, and 0.4–1.4×10⁻⁵ if it is in the band. The measured crossing is
-2.6×10⁻⁵ above 1, nearer the first. The dashed trend of k = 4–13 extrapolated to 2.57×10⁻⁵. The same model had missed
-k = 13 by 1.4×10⁻⁵, so this favours a zero at 1 without excluding the band. At fourteen orders the calibrated range
-moved up and now contains 1 ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md) §6).
+**The same estimates as distance from the finite-D answer** (`solver/plot_selection_zoom.py`, with σ₁₅). On a log
+scale steady convergence is a straight line: from above, the estimates fall by about ×0.54 per order from k = 4 to
+15. The shaded band is the lower part of the earlier range, a zero 2–5×10⁻⁵ below 1. The hollow marks at k = 15 are what
+a simple geometric model through k = 13 and 14 (not a calibrated estimator) predicted: 1.5×10⁻⁵ above 1 if the zero
+is exactly at 1, and 1.0–1.2×10⁻⁵ if it is in the band. The measured crossing is 1.9×10⁻⁵ above 1, nearer the first,
+but the model's own error is 2×10⁻⁵, so this does not decide between them
+([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md) §7.7).
 
 ![The echo's harmonic spectrum: amplitude of each odd harmonic for D = 4 to 60 with the D = infinity prediction, and the decay rate per harmonic against 1/(D-2)](solver/spectrum.svg)
 
@@ -2081,6 +2221,9 @@ called from Python through PyO3 as a drop-in for `S.residual`, the Python refere
 
 ### Backends
 
+<details>
+<summary>Which backend runs where</summary>
+
 The build targets the architecture's baseline, so one wheel runs on any CPU of that architecture. The instruction set is detected at runtime, and each residual block runs inside a `#[target_feature]` entry point for it.
 
 | Backend | Kernels | Instruction set | f64 lanes |
@@ -2104,7 +2247,12 @@ backend="simd" (default)
 
 `available_backends()` lists what this CPU can run, and `auto:avx2` style names pick plain loops for a given instruction set. Setting `RUSTKERNEL_ISA=avx2` (or `baseline`) caps the instruction set for the whole process, which turns AVX-512 off without a rebuild.
 
+</details>
+
 ### Use
+
+<details>
+<summary>Calling the kernel from Python</summary>
 
 ```python
 from spec_long import make_long
@@ -2129,7 +2277,12 @@ carried towards the centre instead of the centre data towards the horizon. The u
 are the same; only the conditioning of the matching rows changes. The default (`None`) is the last node,
 identical to the Python reference.
 
+</details>
+
 ### Double-double residual
+
+<details>
+<summary>The double-double residual</summary>
 
 Above D ≈ 26 the f64 residual can no longer pin Δ ([The double-double solver](#the-double-double-solver-hp)).
 `residual_dd` evaluates the same residual in double-double arithmetic
@@ -2138,7 +2291,12 @@ residual's rounding noise (the maximum over the residual's entries) drops from 1
 the cost of the SIMD f64 residual in that measurement (15 ms per double-double evaluation; a different configuration
 from the Performance table's synthetic one).
 
+</details>
+
 ### Exact Jacobian and growth-mode matrix
+
+<details>
+<summary>How the Jacobian and the growth-mode matrix are computed</summary>
 
 `jacobian` and `mode_matrix` differentiate the residual in forward mode with a dual-number scalar[^17]
 (`scalar::Dual`): one evaluation of block b per unknown that block depends on, run on rayon threads.
@@ -2165,8 +2323,13 @@ with brentq; above D = 35 it drops the weak directions with the kfreeze-13 cut, 
 10⁻⁹ at D = 60. `hp/gamma_batch.py` runs every saved state on N processes (resumable), and `hp/gamma_compare.py` (given both
 `gamma_dd.jsonl` files as arguments) compares with the f64 values and the formula.
 
+</details>
+
 
 ### Build and test
+
+<details>
+<summary>Dependencies, build and test commands</summary>
 
 Python side: numpy, scipy, mpmath, sympy and python-flint (`pip install python-flint`; needed by `check_numbers.py`,
 `solver/proof/`, `solver/inner_amp/` and `solver/inner_borel/`).
@@ -2179,7 +2342,12 @@ python tests/test_bindings.py     # bindings test, after pip install .
 hp/build.sh                       # double-double solver, built for this machine's instruction set
 ```
 
+</details>
+
 ### Performance
+
+<details>
+<summary>Timings of the residual</summary>
 
 One residual of a synthetic production-sized configuration (`tests/test_bindings.py --time`), single thread, on an i7-1185G7.
 
@@ -2205,7 +2373,12 @@ Jacobian goes from 7.5 to 0.72 s at M = 48 and from 31 to 3.3 s at M = 80 on two
 ([notes/MIXED_PRECISION.md](notes/MIXED_PRECISION.md), `hp/profile_newton.py --mixed --solve`). Continuation in D stays sequential, since each step starts from the previous solution inside Newton's
 basin; past D = 61 it costs about 22 hours per unit of D.
 
+</details>
+
 ### Layout
+
+<details>
+<summary>The repository's files, folder by folder</summary>
 
 ```
 src/
@@ -2224,14 +2397,16 @@ src/
 python/rustkernel/  Python wrapper, RustResidual
 tests/              bindings test
 hp/                 double-double solver (crate hpkernel)
-├── Cargo.toml      the arithmetic comes from the multidouble crate (crates.io, version 1.0.0; on the compile-time
+├── Cargo.toml      the arithmetic comes from the multidouble crate (crates.io, version 1.5.1; on the compile-time
 │                   backend): double-double and quad-double, scalar and 8-lane SIMD (AVX-512 / AVX2 / SSE2 / NEON /
-│                   portable), dual lanes and the double-double LU; hp re-exports its modules (hpkernel::dd, ::dv, ...)
+│                   portable), dual lanes, the double-double LU, the staircase LU and the tau-field kernels; hp
+│                   re-exports its modules (hpkernel::dd, ::dv, ...)
 ├── src/lane.rs     hp's Lane trait over multidouble's dual lanes: adds the D-matrix product of each lane type
 ├── src/model.rs    centre series, Taylor stepping, horizon series, residual, Jacobian (double-double and f64)
 ├── python/hpkernel/driver.py   grid, seeds, Newton, deflated Newton, Levenberg-Marquardt, re-noding (its numpy
 │                   double-double helpers come from multidouble's Python package, which build.sh installs)
-├── src/field.rs    tau fields on the half grid, folded spectral derivative; the many-right-hand-side LU solves
+├── src/field.rs    tau fields on the half grid (multidouble's field module: folded spectral derivative, Cauchy
+│                   products, the many-right-hand-side LU solves)
 ├── src/lib.rs      crate root
 ├── src/python.rs   PyO3 bindings (Solver)
 ├── build.sh        builds the crate for this machine's instruction set
@@ -2244,12 +2419,18 @@ hp/                 double-double solver (crate hpkernel)
 ├── bench_variants.py, plot_bench_variants.py  the Newton variants timed against D, and bench_variants.svg
 ├── plot_solve_times.py  solve_times.svg, how long each D took (--export writes data/solve_times.csv from the solve records)
 ├── plot_point_spacing.py  point_spacing.svg, the distance in D between our solved points
-├── src/block.rs    block storage and staircase LU for the f64 Jacobian above M = 128
+├── plot_newton_stall.py   newton_stall.svg, why the steps collapse (a model of one Newton step; reads raw/T73)
+├── plot_stall_kappa.py    stall_kappa.svg, u*kappa against D and the residual floor (reads raw/T76)
+├── plot_light_cone.py     light_cone.svg, the past light cone and the fast mode's size inside it
+├── stall_margin.py   the stall detector: weakest directions, sigma_max and u*kappa at a state or a rebuilt seed
+├── stall_summary.py  its results from the raw/T76 branch (the power laws, the floor, the pinned systems)
+├── src/block.rs    block storage for the f64 Jacobian above M = 128 (multidouble's staircase LU)
 ├── highm_check.py, lowD_highM.py  checks of the larger tau grids, and the continuation toward D = 3 on them
 ├── step_test.py    the largest step in D that Newton tolerates at D = 45-60, for several solver variants (local task T43)
 ├── qd_check.py     checks of the quad-double arithmetic against mpmath, and across the SIMD backends
 ├── export_dd.py    collects the runs' points into data/delta_dd.csv
 ├── dd_fits_mp.py   large-D model fits at 60 digits, held-out errors, predictions (--dmax for a data snapshot)
+├── short_forms.py  the shortest 1/D series per range of D with its error margin (README "The formula"; --selftest)
 ├── dd_candidates.py  candidate constants forced as the limit, held-out test (--dmax as above)
 ├── plot_heldout.py heldout.svg (python3 plot_heldout.py --dmax=60.1: the points up to D = 60.1)
 ├── fit_residuals.py  each point's distance from the degree-18 fit in 1/(D-1), into data/fit_residuals.csv
@@ -2261,7 +2442,8 @@ hp/                 double-double solver (crate hpkernel)
 │                       value at that D agrees within its stated uncertainty (published_ref, published_diff,
 │                       published_match; data/published_delta.csv); the continuation points (857 for D = 8.25-61.03, 342 from
 │                       the continuation toward 70 for 61.04-67.77, runs T48-pilotB and T48-up70) and the
-│                       best low-D value per D (run lowD-M<M>, D = 3.075-4.0), which the large-D fits skip
+│                       best low-D value per D (run lowD-M<M>, D = 3.05-4.0), which the large-D fits skip;
+│                       dDelta_exact on T48-up70's rows (the remaining correction with a quad-double horizon residual)
 ├── data/delta_dd_lowD.csv   the low-D points at every M, with gamma and status (export_lowD.py)
 ├── data/fit_residuals.csv   each continuation point from D = 10 up minus the degree-18 1/(D-1) fit (fit_residuals.py)
 ├── data/local/     the second machine's runs (scan_up*.jsonl), folded into delta_dd.csv by export_dd.py
@@ -2360,7 +2542,12 @@ solver/largeD_linear_truncation.py  optimally truncated series against the exact
 solver/largeD_late_structure.py  where the nonlinear late-order growth lives (x, harmonic, amplitude)
 ```
 
+</details>
+
 ### Limits
+
+<details>
+<summary>What the kernel does not do</summary>
 
 - The Python solver, scans and fits live in `solver/` (see `solver/README.md`).
 - `jacobian` and `mode_matrix` use plain loops (no explicit SIMD) and the parity-folded layout's
@@ -2371,6 +2558,8 @@ solver/largeD_late_structure.py  where the nonlinear late-order growth lives (x,
   `Ctx<96>`; nh = N/2 with N = 4⌈(3kc + 2)/4⌉), so kc ≤ 63; kc 49–63 run padded to 96 lanes. Larger kc needs another
   size (for example `Ctx<128>` with `MAXV = 16` in `src/avx512.rs`). Adding the 96-lane size left the 40- and
   72-lane results bitwise identical (residuals on all backends and thread counts, and the exact Jacobian).
+
+</details>
 
 [^1]: M. W. Choptuik, PRL 70, 9 (1993).
 [^2]: T. Koike, T. Hara and S. Adachi, PRL 74, 5170 (1995), [gr-qc/9503007](https://arxiv.org/abs/gr-qc/9503007).
@@ -2402,3 +2591,5 @@ solver/largeD_late_structure.py  where the nonlinear late-order growth lives (x,
 [^18]: D. D. Morrison, J. D. Riley and J. F. Zancanaro, Commun. ACM 5, 613 (1962), doi:10.1145/355580.369128.
 [^19]: E. Anderson et al., *LAPACK Users' Guide*, 3rd ed., SIAM (1999) (the getf2 and blocked getrf factorizations).
 [^20]: Y. Hida, X. S. Li, D. H. Bailey, *Algorithms for quad-double precision floating point arithmetic*, Proc. 15th IEEE Symposium on Computer Arithmetic (ARITH-15), 155–162 (2001).
+[^21]: N. J. Higham, *Accuracy and Stability of Numerical Algorithms*, 2nd ed., SIAM (2002).
+[^22]: R. S. Dembo, S. C. Eisenstat and T. Steihaug, *Inexact Newton methods*, SIAM J. Numer. Anal. 19, 400–408 (1982), doi:10.1137/0719025 *(partly verified: notes/REF_CHECK.md)*.

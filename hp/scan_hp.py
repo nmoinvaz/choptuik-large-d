@@ -6,7 +6,8 @@
 
 START.npz: a converged solution (hpkernel.driver.save format: zh, zl, meta with D, M, nodes). Every converged point
 is appended to OUT.jsonl and saved as <tag>_D<D>.npz next to OUT. A --nodes / --M different from the start file's
-re-nodes / resamples the start solution first (and re-converges it at its own D).
+re-nodes / resamples the start solution first (and re-converges it at its own D). OUT and --attempts must be in a
+raw/<task> worktree (raw_out.py; --allow_unraw writes anyway).
 """
 import argparse
 import json
@@ -19,6 +20,7 @@ import numpy as np  # noqa: E402
 
 from hpkernel.driver import QdhSolver, deflated_newton, delta_correction, hermite, lm_solve, load, make_solver, newton_solve, plow_odd, predict, renode, resample_z, save, tangent
 from pinning import PinnedSolver, band_coeffs, band_field, predict_dd, dd_add
+from raw_out import FLAG, HELP, require_raw
 
 
 def tails(s, zh, zl, nodes, M):
@@ -127,8 +129,8 @@ def solve_at(D, zh, zl, a, nodes, M, it_max, pin=None):
                     kfreeze=a.pin if pin is not None else a.kfreeze, horizon_alpha=a.horizon_alpha)
     s.set_segs(s.plan(zh, zl, a.tol_step, a.hmax))
     if a.qdh:
-        if a.jac != "dd" or a.lm:
-            raise SystemExit("--qdh needs --jac dd and --lm 0")
+        if a.jac != "dd":
+            raise SystemExit("--qdh needs --jac dd")
         s = QdhSolver(s)
     if pin is not None:
         # outside QdhSolver: the pin is an offset on the residual, whichever precision the horizon block has
@@ -151,7 +153,7 @@ def solve_at(D, zh, zl, a, nodes, M, it_max, pin=None):
     # accepted at a stall (--accept_stall), possibly polished below that point's |F| afterwards
     stall_ok = any(r.get("accept_stall") and r.get("accepted") for r in hist)
     ok = bool(hist) and (hist[-1]["F"] < a.tol or bool(hist[-1].get("accepted")) or stall_ok)
-    if not ok and a.lm and pin is None:      # (lm_steps knows nothing of the pin offset)
+    if not ok and a.lm:      # (the wrappers pass their residual, pin offset and quad-double horizon, to lm_steps)
         print(f"   D={D}: Newton stopped at |F| {hist[-1]['F']:.1e}; Levenberg-Marquardt from the predictor", flush=True)
         zh2, zl2, h2 = lm_solve(s, zh, zl, tol=a.tol, it_max=a.lm, verbose=a.verbose, newton_after=1e-22)
         hist = hist + h2
@@ -200,7 +202,7 @@ def main():
                     "(driver.deflated_newton accept_stall)")
     ap.add_argument("--qdh", type=int, default=0, choices=[0, 1],
                     help="1: the residual's horizon block in quad-double (driver.QdhSolver, notes/QUAD_DOUBLE.md section "
-                         "11): the double-double residual floor of large D removed; needs --jac dd and --lm 0")
+                         "11): the double-double residual floor of large D removed; needs --jac dd")
     ap.add_argument("--corrector", default="dn", choices=["dn", "dnp", "newton"],
                     help="dn: deflated Newton (default); dnp: deflated Newton, then plain Newton to the bottom")
     ap.add_argument("--polish_its", type=int, default=4, help="dnp: plain Newton steps after the deflated phase")
@@ -217,6 +219,14 @@ def main():
     ap.add_argument("--pin", type=int, default=None, help="with --kfreeze K: hold p1's harmonics in (pin, K] on a "
                     "polynomial trend in D instead of solving them (they are the weakest directions); after each "
                     "point one full-system Newton step measures their values for the trend and the pin's Delta error")
+    ap.add_argument("--pin_from", default="trend", choices=["trend", "seed"], help="--pin: where the held values come "
+                    "from: trend (default), the polynomial trend through values measured by a full-system step after "
+                    "each point; seed, the predictor's seed itself (at D 67.74 this converges from seeds where the "
+                    "trend and the unpinned corrector stall; hp/corrector_diag.py, T71)")
+    ap.add_argument("--pin_hist", default="pinned", choices=["pinned", "full1"], help="--pin: the state each converged "
+                    "point adds to the predictor's history: pinned (default), the pinned solution; full1, that state "
+                    "after the one full-system Newton step (with --pin_from seed at D 67.74-67.80 the pinned points' "
+                    "band drifts and the pin's Delta cost grows about 3x per 0.01; T72)")
     ap.add_argument("--pin_deg", type=int, default=1, help="--pin: degree of the trend")
     ap.add_argument("--pin_n", type=int, default=6, help="--pin: number of measured points in the trend fit")
     ap.add_argument("--lm", type=int, default=15, help="Levenberg-Marquardt iterations after a failed Newton (0: off)")
@@ -254,7 +264,9 @@ def main():
                     "dDelta/dF, with no Newton step (Newton does not converge at 0.6 matching at D ~ 60, but the 0.7 "
                     "solution sits at the 0.6 floor; comms 2026-10-23 12:43 local). Recorded as 'cert'")
     ap.add_argument("--certify_ks", type=int, default=160, help="--certify_nodes: horizon series order there")
+    ap.add_argument(FLAG, action="store_true", help=HELP)
     a = ap.parse_args()
+    require_raw(a.out, a.attempts or None, allow=a.allow_unraw)       # the states go next to OUT
     T_start = time.time()
     zh, zl, meta = load(a.start)
     D, M0, nodes0 = meta["D"], meta["M"], list(meta["nodes"])
@@ -359,7 +371,12 @@ def main():
         if zpl is None:
             zpl = np.zeros_like(zp)
         pin = None
-        if a.pin is not None:
+        if a.pin is not None and a.pin_from == "seed":
+            # the pinned band held at the seed's: the predictor's extrapolation of the converged points' own band
+            # (with lagrange_dd, Lagrange through their pinned values), so no full-system step feeds the trend
+            cz = np.ravel(band_coeffs(zp[:M], zpl[:M], M, pin_ks))
+            pin = ([(cz[2 * i], cz[2 * i + 1]) for i in range(len(pin_ks))], pin_ks)
+        elif a.pin is not None:
             # the pinned band on a polynomial trend through the last pin_n measured points (constant at first)
             Dm = np.array([q[0] for q in pin_meas[-a.pin_n:]])
             Cm = np.array([q[1] for q in pin_meas[-a.pin_n:]])
@@ -406,6 +423,11 @@ def main():
             pin_meas.append((D, np.ravel(band_coeffs(zmh[:M], zml[:M], M, pin_ks))))
             pin_rec = dict(pin=a.pin, F_full=float(np.abs(np.asarray(fFh) + np.asarray(fFl)).max()),
                            dDelta_pin=delta_correction(sf, fFh, fFl), Delta_full1=float(zmh[-1]), Delta_full1_lo=float(zml[-1]))
+            if a.pin_hist == "full1":
+                # the predictor's history takes the state after the full-system step, so the next seed's band (and with
+                # --pin_from seed the held one) follows the full system instead of drifting with the pinned points
+                hist_z[-1] = (D, np.asarray(zmh) + np.asarray(zml), hist_z[-1][2])
+                hist_dd[-1] = (D, np.asarray(zmh), np.asarray(zml))
         # the stored LU is from the last Newton call, made at the converged z
         sens = sensitivity(s, M)
         tc, th = tails(s, zh, zl, nodes, M)

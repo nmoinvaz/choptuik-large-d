@@ -32,6 +32,8 @@ trait Api: Send + Sync {
     /// model::residual_qdh (the horizon block in quad-double, the state in four parts); refine false: the control,
     /// the horizon solves unrefined (model::QD_MUT_NOREFINE)
     fn residual_qdh(&mut self, z: [&[f64]; 4], refine: bool) -> Result<V, String>;
+    /// model::residual_qd (every block in quad-double, the state in four parts); refine false as residual_qdh's
+    fn residual_qd(&mut self, z: [&[f64]; 4], refine: bool) -> Result<V, String>;
     fn jacobian(&self, zh: &[f64], zl: &[f64]) -> Result<(Vec<f64>, Vec<f64>, usize), String>;
     /// f64 Jacobian, column-major: (J, ld); `F64Jac` the lanes; mutate: Ctx::mutate for this call (0 = none)
     fn jacobian_f64(&mut self, zh: &[f64], zl: &[f64], mutate: u8, how: F64Jac) -> Result<(Vec<f64>, usize), String>;
@@ -99,6 +101,21 @@ impl<const B: usize> Api for Ctx<B> {
         qdh::<4>(me, z, refine)
             .or_else(|| qdh::<6>(me, z, refine))
             .unwrap_or_else(|| Err(format!("residual_qdh is built for M = 32 and 48 only, not M = {}", 8 * B)))
+    }
+    fn residual_qd(&mut self, z: [&[f64]; 4], refine: bool) -> Result<V, String> {
+        // instantiated for M = 32 and 48 only, as residual_qdh (every block's QV lanes, for each size)
+        fn qd<const C: usize>(ctx: &mut dyn std::any::Any, z: [&[f64]; 4], refine: bool) -> Option<Result<V, String>> {
+            let c = ctx.downcast_mut::<Ctx<C>>()?;
+            let keep = c.mutate;
+            c.mutate = if refine { 0 } else { model::QD_MUT_NOREFINE };
+            let r = model::residual_qd(c, z, true);
+            c.mutate = keep;
+            Some(r)
+        }
+        let me: &mut dyn std::any::Any = self;
+        qd::<4>(me, z, refine)
+            .or_else(|| qd::<6>(me, z, refine))
+            .unwrap_or_else(|| Err(format!("residual_qd is built for M = 32 and 48 only, not M = {}", 8 * B)))
     }
     fn jacobian(&self, zh: &[f64], zl: &[f64]) -> Result<(Vec<f64>, Vec<f64>, usize), String> {
         model::jacobian(self, zh, zl, true)
@@ -480,6 +497,28 @@ impl Solver {
         Ok((arr(py, fh), arr(py, fl)))
     }
 
+    /// The residual with every block in quad-double (model::residual_qd; M = 32 and 48): the state in four parts as
+    /// residual_qdh's, F as (hi, lo), each row rounded to double-double after its subtraction.
+    #[pyo3(signature = (z0, z1, z2, z3, refine=true))]
+    #[allow(clippy::too_many_arguments)]
+    fn residual_qd<'py>(
+        &mut self,
+        py: Python<'py>,
+        z0: PyReadonlyArray1<'py, f64>,
+        z1: PyReadonlyArray1<'py, f64>,
+        z2: PyReadonlyArray1<'py, f64>,
+        z3: PyReadonlyArray1<'py, f64>,
+        refine: bool,
+    ) -> PyResult<(Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<f64>>)> {
+        let z = [slice(&z0, "z0")?, slice(&z1, "z1")?, slice(&z2, "z2")?, slice(&z3, "z3")?];
+        if z.iter().any(|p| p.len() != self.api.len()) {
+            return Err(PyValueError::new_err(format!("z0..z3 must have length {}", self.api.len())));
+        }
+        let (api, pool) = (&mut self.api, &self.pool);
+        let (fh, fl) = py.detach(|| pool.install(|| api.residual_qd(z, refine))).map_err(PyValueError::new_err)?;
+        Ok((arr(py, fh), arr(py, fl)))
+    }
+
     /// Full Jacobian as two (L, L) arrays (row index = residual, column = unknown).
     fn jacobian<'py>(
         &self,
@@ -851,22 +890,40 @@ impl Solver {
 
     /// Levenberg-Marquardt steps: J at z, G = J^T J, g = -J^T F; for each mu, dz = (G + mu^2 diag(G))^-1 g.
     /// Returns ([(dz_hi, dz_lo) per mu], F_hi, F_lo). Also stores the plain LU of J (for chord / transpose solves).
+    /// fh, fl: the residual F to use instead of this solver's own (the Python wrappers' residuals: a pin offset, the
+    /// quad-double horizon block); J is always this solver's.
     #[allow(clippy::type_complexity)]
+    #[pyo3(signature = (zh, zl, mus, fh=None, fl=None))]
     fn lm_steps<'py>(
         &mut self,
         py: Python<'py>,
         zh: PyReadonlyArray1<'py, f64>,
         zl: PyReadonlyArray1<'py, f64>,
         mus: Vec<f64>,
+        fh: Option<PyReadonlyArray1<'py, f64>>,
+        fl: Option<PyReadonlyArray1<'py, f64>>,
     ) -> PyResult<(Vec<(Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<f64>>)>, Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<f64>>)> {
         self.dense_ok("lm_steps")?;
         let (h, l) = (slice(&zh, "zh")?, slice(&zl, "zl")?);
+        let given: Option<(Vec<f64>, Vec<f64>)> = match (&fh, &fl) {
+            (Some(a), Some(b)) => Some((slice(a, "fh")?.to_vec(), slice(b, "fl")?.to_vec())),
+            (None, None) => None,
+            _ => return Err(PyValueError::new_err("lm_steps: give both fh and fl, or neither")),
+        };
         let (api, pool) = (&self.api, &self.pool);
         let n = api.len();
+        if let Some((a, b)) = &given {
+            if a.len() != n || b.len() != n {
+                return Err(PyValueError::new_err(format!("lm_steps: fh and fl must have length {n}")));
+            }
+        }
         let res = py
             .detach(|| {
                 pool.install(|| -> Result<_, String> {
-                    let (fh, fl) = api.residual(h, l)?;
+                    let (fh, fl) = match given {
+                        Some(f) => f,
+                        None => api.residual(h, l)?,
+                    };
                     let (jh, jl, ld) = api.jacobian(h, l)?;
                     let nfh: Vec<f64> = fh.iter().map(|v| -v).collect();
                     let nfl: Vec<f64> = fl.iter().map(|v| -v).collect();
@@ -1002,41 +1059,10 @@ fn isa() -> &'static str {
     V8::ISA
 }
 
-/// (z0 + z1 + z2 + z3) + (dh + dl) entrywise in quad-double (multidouble's QD::add_dd), renormalized: the update of a
-/// four-part state by a double-double step. Returns the four parts.
-#[pyfunction]
-#[allow(clippy::type_complexity)]
-fn qd_add_dd<'py>(
-    py: Python<'py>,
-    z0: PyReadonlyArray1<'py, f64>,
-    z1: PyReadonlyArray1<'py, f64>,
-    z2: PyReadonlyArray1<'py, f64>,
-    z3: PyReadonlyArray1<'py, f64>,
-    dh: PyReadonlyArray1<'py, f64>,
-    dl: PyReadonlyArray1<'py, f64>,
-) -> PyResult<(Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<f64>>, Bound<'py, PyArray1<f64>>)> {
-    let z = [slice(&z0, "z0")?, slice(&z1, "z1")?, slice(&z2, "z2")?, slice(&z3, "z3")?];
-    let (h, l) = (slice(&dh, "dh")?, slice(&dl, "dl")?);
-    let n = h.len();
-    if l.len() != n || z.iter().any(|p| p.len() != n) {
-        return Err(PyValueError::new_err("qd_add_dd: all arrays must have the same length"));
-    }
-    let mut out = [vec![0.0; n], vec![0.0; n], vec![0.0; n], vec![0.0; n]];
-    for i in 0..n {
-        let r = crate::qd::QD::new(z[0][i], z[1][i], z[2][i], z[3][i]).add_dd(DD { hi: h[i], lo: l[i] });
-        for (o, v) in out.iter_mut().zip(r.x) {
-            o[i] = v;
-        }
-    }
-    let [a, b, c, d] = out;
-    Ok((arr(py, a), arr(py, b), arr(py, c), arr(py, d)))
-}
-
 #[pymodule]
 fn _hpkernel(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Solver>()?;
     m.add_function(wrap_pyfunction!(isa, m)?)?;
-    m.add_function(wrap_pyfunction!(qd_add_dd, m)?)?;
     let _ = <DV as crate::lane::BaseLane>::TANGENT;
     Ok(())
 }

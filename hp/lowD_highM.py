@@ -44,7 +44,9 @@ The plans come from converged states or predictors through them: a state resampl
 more Taylor steps (its new top harmonics are aliasing products that the tau-derivative amplifies), and a coarser plan
 blows up on it. A start whose residual on the given plan is not finite or above 1 gets its own plan instead.
 A failed solve (the helper's included) inserts the midpoint between the last converged D and the target (halving the
-step); a solve gives up after two steps in a row with line-search factors <= --stop_lam (1/8: Newton wandering in the
+step); with --helper_fallback a failed helper does not fail the point: M_w then starts from its own predictor and is
+solved in two passes as in 2a, and the pair record says so (helper_fallback); a solve gives up after two steps in a
+row with line-search factors <= --stop_lam (1/8: Newton wandering in the
 weak directions from a predictor too far off, as at D 3.15 from |F| 0.7), and stops at the residual floor (|F| below
 --accept and falling by less than --floor_ratio in a step).
 Stop rules (each recorded with its reason): the largest M in --Ms cannot keep the difference below --diff_max; a
@@ -58,7 +60,8 @@ recorded twice).
 Records: one per solve in --points (lowD_dd.solve_point's record: Delta hi/lo, |F|, iterations, seconds per
 iteration, steps, tails, sensitivities, harmonics, peak RSS), one per point and resolution pair in --out (D, M_w,
 M_n, both Deltas, the difference, |F|, iterations, seconds, tails, the decision). States:
-hp/data/lowD_states/<tag>_D<D>_M<M>.npz.
+<--states>/<tag>_D<D>_M<M>.npz (default hp/data/lowD_states). --out, --points and --states must be in a raw/<task>
+worktree (raw_out.py; --allow_unraw writes anyway).
 """
 import argparse
 import json
@@ -74,6 +77,7 @@ import numpy as np  # noqa: E402
 
 import lowD_dd  # noqa: E402
 from hpkernel.driver import load, make_solver, predict, renode, resample_z, save  # noqa: E402
+from raw_out import FLAG, HELP, require_raw  # noqa: E402
 
 STATES = os.path.join(HERE, "data", "lowD_states")
 
@@ -103,6 +107,7 @@ def projected_diff(pairs, D_next2):
 
 
 def main():
+    global STATES
     ap = argparse.ArgumentParser()
     ap.add_argument("--start_w", required=True)
     ap.add_argument("--start_n", required=True)
@@ -118,6 +123,8 @@ def main():
     ap.add_argument("--tag", default="lowDhm")
     ap.add_argument("--out", default=os.path.join(HERE, "data", "lowD_highM", "pilot.jsonl"))
     ap.add_argument("--points", default=os.path.join(HERE, "data", "lowD_highM", "pilot_points.jsonl"))
+    ap.add_argument("--states", default=STATES, help="directory of the solved states (and of earlier ones a resume "
+                    "looks for)")
     ap.add_argument("--threads", type=int, default=2)
     ap.add_argument("--tol", type=float, default=1e-28)
     ap.add_argument("--accept", type=float, default=1e-27)
@@ -141,7 +148,14 @@ def main():
     ap.add_argument("--two_pass_above", type=float, default=1e-3, help="solve M_w or M_n in two passes when its best "
                     "start's |F| on the reused plan is above this (0: never)")
     ap.add_argument("--resume", action="store_true")
+    ap.add_argument("--helper_fallback", action="store_true", help="when the M_c helper fails, solve M_w from its own "
+                    "predictor in two passes instead of failing the point (off: the point fails and the step is halved)")
+    ap.add_argument("--helper_it_max", type=int, default=None, help="Newton iterations of the M_c helper (default "
+                    "--it_max; a test of --helper_fallback forces the helper to fail with 1)")
+    ap.add_argument(FLAG, action="store_true", help=HELP)
     a = ap.parse_args()
+    STATES = a.states
+    require_raw(a.out, a.points, os.path.join(STATES, "x"), allow=a.allow_unraw)
     os.makedirs(os.path.dirname(a.out), exist_ok=True)
     log = lambda m: print(time.strftime("%H:%M:%S ") + m, flush=True)  # noqa: E731
     Ms = [int(v) for v in a.Ms.split(",")]
@@ -189,9 +203,9 @@ def main():
         n = int(round((D0 - a.D_end) / a.dD))
         st["targets"] = [round(D0 - a.dD * (i + 1), 6) for i in range(n) if D0 - a.dD * (i + 1) > a.D_end + 1e-9]
 
-    def ns(M, tag=None, tol=None):
+    def ns(M, tag=None, tol=None, it_max=None):
         return argparse.Namespace(out=a.points, tag=tag or st["tag"], resume=True, kt=a.kt, kcs=kc, ks=ks, tol_step=a.tol_step,
-                                  hmax=a.hmax, solver="newton", it_max=a.it_max, tol=tol or a.tol, accept=tol or a.accept,
+                                  hmax=a.hmax, solver="newton", it_max=it_max or a.it_max, tol=tol or a.tol, accept=tol or a.accept,
                                   lm=0, jac="f64", threads=a.threads, svd=0, dn_its=2, w=24, stop_lam=a.stop_lam,
                                   floor_ratio=a.floor_ratio)
 
@@ -243,13 +257,14 @@ def main():
             log(f"  D {D} M {M}: the solution's own plan has {need} steps, more than the {have} used")
         return need
 
-    def solve(D, M, starts, segs, tag=None, tol=None, two_pass=False):
+    def solve(D, M, starts, segs, tag=None, tol=None, two_pass=False, it_max=None, force_two=False):
         """solve at (D, M) on the plan segs from the start with the smallest |F| among starts [(label, z)];
         returns (ok, record, path). The plan comes from a converged state or a predictor through converged states: a
         state resampled to a larger M needs 3.5-4 times more steps (its new top harmonics are aliasing products that
         the tau-derivative amplifies), which costs time, not accuracy. two_pass: if the best start's |F| on segs is
         above --two_pass_above, solve in two passes as in a move up (pass 1 from the start that is best on its own
-        plan, to 1e-14; pass 2 on the plan of the pass-1 state)."""
+        plan, to 1e-14; pass 2 on the plan of the pass-1 state). force_two: two passes whatever the starts' |F|
+        (--helper_fallback). it_max: Newton iterations (default --it_max)."""
         s = make_solver(D, M, nodes=st["nodes"], kt=a.kt, kc=kc, ks=ks, threads=a.threads)
         s.set_segs(segs)
         best = None
@@ -275,14 +290,15 @@ def main():
         # the 3.125 solution, and Newton found no decrease; at 3.125 the same lift converged in 4 iterations on its own
         # 1149-step plan; the local machine's diagnosis, comms 2026-10-24 01:37)
         lifted_best = best[1].startswith("lift")
-        if (two_pass and ((a.two_pass_above and best[0] > a.two_pass_above) or lifted_best)
+        if (two_pass and ((a.two_pass_above and best[0] > a.two_pass_above) or lifted_best or force_two)
                 and not os.path.exists(os.path.join(STATES, f"{st['tag']}_D{D:.4f}_M{M}.npz"))):
             # the reused plan does not fit the starts: a lifted or predicted state is not regular at the sonic line, so
             # on a lean plan its |F| is mostly Taylor error, and Newton's correction of it lies in the weak directions
             # (at D 3.25, M 160 the lifted M 128 solution had |F| 3.5e-3 on the reused 257-step plan, and Newton went
             # astray: line-search factors 1/4, 1/128, 1/16). Each start on its own plan instead, then two passes.
             why = (f"best start |F| {best[0]:.1e} > {a.two_pass_above:.0e} on the reused plan" if best[0] > a.two_pass_above
-                   else f"best start '{best[1]}' is a lift (|F| {best[0]:.1e} on the reused plan)")
+                   else f"best start '{best[1]}' is a lift (|F| {best[0]:.1e} on the reused plan)" if lifted_best
+                   else "after a failed helper (--helper_fallback)")
             log(f"  D {D} M {M}: {why}; two passes")
             own = []
             for lab, z in starts:
@@ -309,7 +325,7 @@ def main():
             return ok2, r2, p2
         t = time.time()
         try:
-            ok, zh, zl = lowD_dd.solve_point(D, M, best[2][0], best[2][1], f"pilot: {best[1]}", ns(M, tag, tol),
+            ok, zh, zl = lowD_dd.solve_point(D, M, best[2][0], best[2][1], f"pilot: {best[1]}", ns(M, tag, tol, it_max),
                                              st["nodes"], STATES, log, segs=segs)
         except ValueError as e:
             # a non-finite Jacobian (the LU refuses it): Newton went astray far enough for the Taylor steps to overflow
@@ -559,19 +575,23 @@ def main():
         # in 3-5 calls
         rc = path_c = None
         ok_c = True
+        fallback = False
         if Mc and st["hist_c"]:
             zpc = predict([(d, zof(p)) for d, p in st["hist_c"][-4:]], Dt)
-            ok_c, rc, path_c = solve(Dt, Mc, [("predictor", zpc)], plan_prev(st["hist_c"], Mc))
+            ok_c, rc, path_c = solve(Dt, Mc, [("predictor", zpc)], plan_prev(st["hist_c"], Mc), it_max=a.helper_it_max)
             if not ok_c:
-                # its predictor was too far off (D 3.15: |F| 0.7, Newton astray); M_w's is no better, so the point
-                # fails and the step is halved
+                # its predictor was too far off (D 3.15: |F| 0.7, Newton astray): the point fails and the step is
+                # halved, or with --helper_fallback M_w is solved from its own predictor in two passes
                 rc = path_c = None
+                if a.helper_fallback:
+                    log(f"D {Dt}: the M {Mc} helper failed; M {Mw} from its own predictor in two passes (--helper_fallback)")
+                    ok_c = fallback = True
         ok_w = ok_n = False
         if ok_c:
             zpw = predict([(d, zof(p)) for d, p in st["hist_w"][-4:]], Dt)
             segs_w = plan_prev(st["hist_w"], Mw)
             starts_w = [("predictor", zpw)] + ([("lift of M_c", lifted(path_c, Mw))] if path_c else [])
-            ok_w, rw, path_w = solve(Dt, Mw, starts_w, segs_w, two_pass=True)
+            ok_w, rw, path_w = solve(Dt, Mw, starts_w, segs_w, two_pass=True, force_two=fallback)
         if ok_w:
             rw["steps_own"] = plan_check(Dt, Mw, path_w, load(path_w)[2]["segs"])
             zpn = predict([(d, zof(p)) for d, p in st["hist_n"][-4:]], Dt)
@@ -591,7 +611,7 @@ def main():
             st["targets"].insert(0, Dm)
             save_prog()
             continue
-        extra = None
+        extra = dict(helper_fallback=True, Mc=Mc) if fallback else None
         if rc:
             extra = dict(Mc=Mc, Delta_c=rc["Delta"], Delta_c_lo=rc["Delta_lo"], F_c=rc["F"], its_c=rc["its"],
                          seconds_c=rc["seconds"], diff_c=(rw["Delta"] - rc["Delta"]) + (rw["Delta_lo"] - rc["Delta_lo"]))

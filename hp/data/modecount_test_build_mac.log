@@ -1,0 +1,33 @@
+   Compiling target-lexicon v0.13.5
+   Compiling autocfg v1.5.1
+   Compiling crossbeam-utils v0.8.23
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.27
+   Compiling crossbeam-epoch v0.9.21
+   Compiling quote v1.0.47
+   Compiling crossbeam-deque v0.8.8
+   Compiling pyo3-macros-backend v0.30.1
+   Compiling libc v0.2.191
+   Compiling rayon-core v1.13.0
+   Compiling heck v0.5.0
+   Compiling either v1.19.0
+   Compiling rawpointer v0.2.1
+   Compiling once_cell v1.21.4
+   Compiling rustc-hash v2.1.3
+   Compiling num-traits v0.2.19
+   Compiling matrixmultiply v0.3.11
+   Compiling pyo3-build-config v0.30.1
+   Compiling syn v3.0.9
+   Compiling pyo3-ffi v0.30.1
+   Compiling pyo3 v0.30.1
+   Compiling numpy v0.30.0
+   Compiling num-complex v0.4.6
+   Compiling num-integer v0.1.47
+   Compiling rayon v1.12.0
+   Compiling ndarray v0.17.2
+   Compiling multidouble v1.0.0
+   Compiling pyo3-macros v0.30.1
+   Compiling hpkernel v0.1.0 (/Users/nathan/Source/choptuik-mac-ghost/hp)
+   Compiling modecount_cx v0.1.0 (/Users/nathan/Source/choptuik-mac-ghost/hp/modecount_cx)
+    Finished `release` profile [optimized] target(s) in 1m 18s
+modecount_cx ok /Users/nathan/Source/choptuik-mac-ghost/hp/modecount_cx/build/modecount_cx.so

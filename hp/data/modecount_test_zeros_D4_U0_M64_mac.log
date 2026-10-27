@@ -1,0 +1,12 @@
+  |F| 4.2e-01 in this layout: Newton
+  |F| 1.0e-01 after Newton: Levenberg-Marquardt
+  |F| 6.8e-04; saved modecount_state_D4.0000_M64.npz
+Traceback (most recent call last):
+  File "/Users/nathan/Source/choptuik-mac-ghost/hp/modecount_test_zeros.py", line 296, in <module>
+    main()
+    ~~~~^^
+  File "/Users/nathan/Source/choptuik-mac-ghost/hp/modecount_test_zeros.py", line 239, in main
+    st = setup(args[0], M=int(opts["M"]) if "M" in opts else None, threads=int(opts.get("threads", 1)), log=print)
+  File "/Users/nathan/Source/choptuik-mac-ghost/hp/modecount_common.py", line 95, in setup
+    raise RuntimeError(f"background not converged in this layout: |F| = {F:.1e} > {fmax:.0e} (M = {M})")
+RuntimeError: background not converged in this layout: |F| = 6.8e-04 > 1e-20 (M = 64)

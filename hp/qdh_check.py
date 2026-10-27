@@ -30,7 +30,7 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from hpkernel import qd_add_dd  # noqa: E402
+from multidouble import qd_add_dd  # noqa: E402
 from hpkernel.driver import QdhSolver, dd_norm, delta_correction, load, make_solver, newton_solve  # noqa: E402
 
 

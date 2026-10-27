@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Review RV2: one line per continuation run (settings, D range, residuals, tails, dDelta_est).
 
-    python3 hp/review/rv2_runs.py [CLOUD_SCAN_DIR]       (default /home/claude/dss/hp_scan)
+    python3 hp/review/rv2_runs.py CLOUD_SCAN_DIR
+
+CLOUD_SCAN_DIR held the cloud runs' scan_up*.jsonl (/home/claude/dss/hp_scan); it is missing since 2026-10-26.
 """
 import glob
 import json
@@ -10,7 +12,10 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HP = os.path.dirname(HERE)
-scan = sys.argv[1] if len(sys.argv) > 1 else "/home/claude/dss/hp_scan"
+scan = sys.argv[1] if len(sys.argv) > 1 else None
+if not scan or not glob.glob(os.path.join(scan, "scan_up*.jsonl")):
+    sys.exit("rv2_runs: no scan_up*.jsonl in CLOUD_SCAN_DIR; the cloud runs' records have been missing since the cloud "
+             "session ended (2026-10-26), so this audit cannot be rerun without them (notes/NUMERICS_REVIEW.md)")
 files = sorted(glob.glob(os.path.join(scan, "scan_up*.jsonl")), key=lambda f: (len(f), f))
 files += sorted(glob.glob(os.path.join(HP, "data", "local", "scan_up*.jsonl")))
 for f in files:

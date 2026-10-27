@@ -47,7 +47,10 @@ condition. There is no $`e^{n/2}`$ to remove. Three independent checks support t
   n ~ (13ω)² ≈ 2500.
 
 Separately, the residual floor at x_m = 0.7 rises 1.46-fold per unit of D. The node test shows that this does not come
-from the fast mode: at x_m ≥ 0.7 the floor hardly depends on x_m. Its source is not identified here.
+from the fast mode: at x_m ≥ 0.7 the floor hardly depends on x_m. Its source is not identified here. *(Identified
+since, 2026-10-27: it is the rounding floor of evaluating F at a double-double state, about u·σ_max with u = 2⁻¹⁰⁴
+and σ_max the Jacobian's largest singular value, which grows 1.36 times per unit of D at D = 60; README, "Why the
+solver stalls"; `hp/stall_summary.py` on the `raw/T76` branch; graph `hp/stall_kappa.svg`.)*
 
 **Why the complex path does not pay for the full problem** (§7). Moving the condition to the Stokes line beyond the
 light cone makes each harmonic's selection signal independent of n. But it replaces the n-dependent ladder with the
@@ -75,6 +78,9 @@ sensitivity) and a floor that grows 1.46-fold per unit of D. The extrapolations 
   floor × sensitivity would be about 10⁻²⁹ at D = 100 and 10⁻⁹ at D = 200. The linearised estimate is usually far
   smaller: at D = 60 it is 3×10⁻¹⁸ against a worst case of 1.6×10⁻⁹.
 - Newton's reach in the continuation, the steps shrinking by 12% per unit of D, is a separate limit not studied here.
+  *(Measured since, 2026-10-27: the reach ends where u·κ, double-double's precision times the Jacobian's condition
+  number, reaches 1, at D = 59.9 for the full system; past it the weakest direction cannot be resolved, and holding
+  the weakest harmonics brings u·κ back to 10⁻⁵–10⁻⁸; same sources.)*
 
 No effort estimate is given for a beyond-light-cone solver: the toy did not pass, and the work stopped there as the task
 required. Two cheap measurements on the full equations were added to say why: the node test of §5 and the series radii of

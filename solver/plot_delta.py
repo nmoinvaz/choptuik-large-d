@@ -8,6 +8,7 @@ out of every fit, so the graph shows how well the formula predicts them.
 
 Usage (from solver/data, where the scan files live):
     python3 ../plot_delta.py [-o ../delta.svg]
+    python3 ../plot_delta.py --print     # the paper's layout, ../delta_print.svg
 
 The SVG is written by hand in the style of zlib-ng/codecbench's graph scripts: fixed categorical colors,
 a light surface with a prefers-color-scheme dark override, 2px lines, ringed markers with hover tooltips.
@@ -53,13 +54,17 @@ DINF_DD = 1.643893746  # the quoted value: centre of the 48-fit range less the p
 DD_CSV = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "hp", "data", "delta_dd.csv")
 
 
+DD_MAX = math.inf     # --dd_max: the largest D of the double-double points drawn
+
+
 def dd_points(Dmin, every=0.5):
-    """Double-double points above Dmin from hp/data/delta_dd.csv, thinned to about one per `every` in D."""
+    """Double-double points above Dmin (and up to DD_MAX) from hp/data/delta_dd.csv, thinned to about one per
+    `every` in D."""
     out, last = [], -1e9
     for line in list(open(DD_CSV))[1:]:
         c = line.split(",")
         d = float(c[0])
-        if d > Dmin and d - last >= every:
+        if Dmin < d <= DD_MAX and d - last >= every:
             out.append((d, float(c[1]) + float(c[2])))
             last = d
     return np.array(out)
@@ -140,10 +145,10 @@ def nice_ticks(lo, hi, n=6):
 class Panel:
     """A plot area with linear axes, grid, tick labels, a title and a legend key line."""
 
-    def __init__(self, svg, px, py, pw, ph, xr, yr, title, xlabel, ylabel, xfmt="{:g}", yfmt="{:g}"):
+    def __init__(self, svg, px, py, pw, ph, xr, yr, title, xlabel, ylabel, xfmt="{:g}", yfmt="{:g}", tdy=40):
         self.svg, self.px, self.py, self.pw, self.ph = svg, px, py, pw, ph
         self.xr, self.yr = xr, yr
-        svg.text(px, py - 40, title, size=12, fill=INK)
+        svg.text(px, py - tdy, title, size=12, fill=INK)
         for v in nice_ticks(*yr):
             y = self.sy(v)
             svg.line(px, y, px + pw, y, GRID)
@@ -203,9 +208,16 @@ def series_fit(x, y, w, m, c0=None):
 
 
 def main():
+    global DD_MAX
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("-o", "--output", default="../delta.svg")
+    ap.add_argument("-o", "--output")
+    ap.add_argument("--print", action="store_true", help="the paper layout, 620 px wide (default -o ../delta_print.svg)")
+    ap.add_argument("--dd_max", type=float, default=math.inf, help="draw double-double points up to this D only (the "
+                    "papers: 61.03, where their data end)")
     args = ap.parse_args()
+    DD_MAX = args.dd_max
+    P = args.print
+    args.output = args.output or ("../delta_print.svg" if P else "../delta.svg")
 
     # Points: the step-converged set (x_K 0.6 RK x2 + Richardson to D = 30.2, x_K 0.7 RK x4 above, junk-solved above
     # 17.2) from final_fit.step_converged; below D = 8 the older single-setup values. Points above FIT_MAX are held
@@ -247,17 +259,25 @@ def main():
     fitG = "γ = 1/2 " + " ".join(f"{c:+.4g}/D^{k}" for k, c in enumerate(cG[:5]) if k) + " … (degree 10, fit 10 ≤ D ≤ %g)" % FIT_MAX
     zeta2 = np.pi ** 2 / 6
 
-    width = 1080
+    # Layout: panel boxes (px, py, pw, ph). --print is the paper's: 620 px at 468 pt, no title or footnote (the caption
+    # carries them), and B and C share A's key.
+    if P:
+        width, height, tdy = 620, 676, 16
+        boxA, boxB, boxC = (56, 56, 548, 250), (56, 388, 245, 240), (361, 388, 245, 240)
+    else:
+        width, height, tdy = 1080, 560 + 280 + 80, 40
+        boxA, boxB, boxC = (78, 140, 984, 300), (78, 560, 452, 280), (610, 560, 452, 280)
     svg = Svg(width)
-    svg.text(16, 28, "Choptuik echo period Δ(D) and critical exponent γ(D) of massless scalar collapse", size=15, fill=INK, weight="bold")
-    svg.text(16, 48, f"One rational formula in 1/(D−2) for all D ≥ 4, fitted on the computed points 4 ≤ D ≤ {FIT_MAX:g}; "
-                     + (f"the {len(Dh)} hollow points above are held out and match it to {hold_err:.0e}," if len(Dh) else ""),
-             size=12)
-    svg.text(16, 66, f"and the double-double points (green) up to D = {dd_max:.0f} to {dd_err:.0e}.  "
-                     f"Δ∞ = {DINF_DD:.9f} from the double-double points, γ∞ = 1/2", size=12)
+    if not P:
+        svg.text(16, 28, "Choptuik echo period Δ(D) and critical exponent γ(D) of massless scalar collapse", size=15, fill=INK, weight="bold")
+        svg.text(16, 48, f"One rational formula in 1/(D−2) for all D ≥ 4, fitted on the computed points 4 ≤ D ≤ {FIT_MAX:g}; "
+                         + (f"the {len(Dh)} hollow points above are held out and match it to {hold_err:.0e}," if len(Dh) else ""),
+                 size=12)
+        svg.text(16, 66, f"and the double-double points (green) up to D = {dd_max:.0f} to {dd_err:.0e}.  "
+                         f"Δ∞ = {DINF_DD:.9f} from the double-double points, γ∞ = 1/2", size=12)
 
     # Panel A: Delta against D, full width
-    A = Panel(svg, 78, 140, 984, 300, (3, Dtop), (1.4, 3.6),
+    A = Panel(svg, *boxA, (3, Dtop), (1.4, 3.6),
               f"Δ levels off at Δ∞ ≈ {DINF_DD:.4f} instead of falling to zero",
               "spacetime dimension D", "echo period Δ")
     if len(Dh):
@@ -273,19 +293,21 @@ def main():
     for d, v in ddp:
         marker(svg, A.sx(d), A.sy(v), SERIES[2], f"D = {d:.4f}, Δ = {v:.13f} (double-double, never in the fit; "
                                                   f"formula {fR(d) - v:+.1e})", shape="diamond", r=3.2)
-    svg.text(A.sx(44), A.sy(DINF_DD) + 16, f"Δ∞ = {DINF_DD:.9f}  (double-double; formula limit {dinf:.6f})",
+    xa = A.sx(5) if P else A.sx(44)                 # print: left, clear of the band and the diamonds
+    svg.text(xa, A.sy(DINF_DD) + 16, f"Δ∞ = {DINF_DD:.9f}  (double-double; formula limit {dinf:.6f})",
              size=11, fill=INK)
-    svg.text(A.sx(44), A.sy(zeta2) - 8, f"π²/6 = {zeta2:.4f}", size=10)
-    A.key("dot", SERIES[0], "computed, in the fit")
-    A.key("hollow", SERIES[0], "computed, held out")
-    A.key("diamond", SERIES[2], "double-double, held out")
-    A.key("line", SERIES[1], f"rational formula, D ≥ 4, extended to D = {Dtop}", dash="6 4")
-    A.key("line", NEUTRAL, "π²/6 for reference", dash="2 3")
+    svg.text(xa, A.sy(zeta2) - 8, f"π²/6 = {zeta2:.4f}", size=10)
+    A.key("dot", SERIES[0], "in the fit" if P else "computed, in the fit")
+    A.key("hollow", SERIES[0], "held out" if P else "computed, held out")
+    A.key("diamond", SERIES[2], "double-double" if P else "double-double, held out")
+    A.key("line", SERIES[1], "rational formula, D ≥ 4" if P else f"rational formula, D ≥ 4, extended to D = {Dtop}",
+          dash="6 4")
+    A.key("line", NEUTRAL, "π²/6" if P else "π²/6 for reference", dash="2 3")
 
     # Panel B: Delta against 1/(D-2), D = infinity at the left edge
-    B = Panel(svg, 78, 560, 452, 280, (0, 0.3), (1.4, 3.6),
+    B = Panel(svg, *boxB, (0, 0.3), (1.4, 3.6),
               "Against 1/D, Δ runs into a finite intercept",
-              "1/D   (D = ∞ at the left edge)", "echo period Δ", xfmt="{:.2f}")
+              "1/D   (D = ∞ at the left edge)", "echo period Δ", xfmt="{:.2f}", tdy=tdy)
     X = np.linspace(1e-6, 1 / 4, 400)
     B.curve(X, fR(1 / X), SERIES[1], dash="6 4", title="rational formula in 1/(D-2)")
     for d, v in zip(Dfit, yfit):
@@ -299,15 +321,16 @@ def main():
     svg.text(B.sx(0) + 12, B.sy(DINF_DD) + 18, f"D = ∞:  Δ∞ = {DINF_DD:.6f}", size=11, fill=INK)
     for d in (4, 6, 10, 20):
         svg.text(B.sx(1 / d) + 6, B.sy(np.interp(1 / d, (1 / Dfit)[::-1], yfit[::-1])) + 16, f"D={d}", size=10)
-    B.key("dot", SERIES[0], "in the fit")
-    B.key("hollow", SERIES[0], "held out")
-    B.key("diamond", SERIES[2], "double-double")
-    B.key("line", SERIES[1], "formula, D ≥ 4", dash="6 4")
+    if not P:
+        B.key("dot", SERIES[0], "in the fit")
+        B.key("hollow", SERIES[0], "held out")
+        B.key("diamond", SERIES[2], "double-double")
+        B.key("line", SERIES[1], "formula, D ≥ 4", dash="6 4")
 
     # Panel C: gamma against 1/(D-2)
-    C = Panel(svg, 610, 560, 452, 280, (0, 0.3), (0.36, 0.52),
+    C = Panel(svg, *boxC, (0, 0.3), (0.36, 0.52),
               "γ runs into 1/2 as D → ∞",
-              "1/D   (D = ∞ at the left edge)", "critical exponent γ", xfmt="{:.2f}", yfmt="{:.2f}")
+              "1/D   (D = ∞ at the left edge)", "critical exponent γ", xfmt="{:.2f}", yfmt="{:.2f}", tdy=tdy)
     C.curve([0, 0.3], [0.5, 0.5], NEUTRAL, dash="2 3", width=1.5, title="1/2")
     C.curve(X, gR(1 / X), SERIES[1], dash="6 4", title="rational formula in 1/(D-2), gamma_inf = 1/2")
     for d, v in zip(Dg, g):
@@ -316,20 +339,22 @@ def main():
     for d, v in zip(Dgh, ggh):
         marker(svg, C.sx(1 / d), C.sy(v), SERIES[0], f"D = {d:.4f}, γ = {v:.10f} (held out; formula {gR(d) - v:+.1e})", hollow=True, r=3.8)
     marker(svg, C.sx(0), C.sy(0.5), SERIES[1], "D = ∞: γ = 1/2", shape="diamond")
-    svg.text(C.sx(0) + 12, C.sy(0.5) + 18, "D = ∞:  γ = 1/2", size=11, fill=INK)
+    svg.text(C.sx(0) + 12, C.sy(0.5) + (-8 if P else 18), "D = ∞:  γ = 1/2", size=11, fill=INK)
     for d in (4, 6, 10):
         if Dg.min() <= d:
-            svg.text(C.sx(1 / d) + 6, C.sy(np.interp(1 / d, (1 / Dg)[::-1], g[::-1])) + 16, f"D={d}", size=10)
-    C.key("dot", SERIES[0], "in the fit")
-    C.key("hollow", SERIES[0], "held out")
-    C.key("line", SERIES[1], "formula with γ∞ = 1/2, D ≥ 4", dash="6 4")
+            # print: below left of the point, off the falling curve
+            svg.text(C.sx(1 / d) + (-8 if P else 6), C.sy(np.interp(1 / d, (1 / Dg)[::-1], g[::-1])) + 16, f"D={d}",
+                     size=10, anchor="end" if P else "start")
+    if not P:
+        C.key("dot", SERIES[0], "in the fit")
+        C.key("hollow", SERIES[0], "held out")
+        C.key("line", SERIES[1], "formula with γ∞ = 1/2, D ≥ 4", dash="6 4")
 
-    # Footnote and repository link
-    height = 560 + 280 + 80
-    svg.text(16, height - 12, "Spectral multiple shooting with nonlinear elimination (solver/CONTEXT.md); "
-                              "hover a point for its value, a curve for its coefficients", size=10)
-    svg.add(f'<a href="{REPO_URL}"><text x="{width - 16}" y="{height - 12}" font-size="10" fill="{INK_SOFT}" '
-            f'text-anchor="end" text-decoration="underline">{esc(REPO_URL.removeprefix("https://"))}</text></a>')
+        # Footnote and repository link
+        svg.text(16, height - 12, "Spectral multiple shooting with nonlinear elimination (solver/CONTEXT.md); "
+                                  "hover a point for its value, a curve for its coefficients", size=10)
+        svg.add(f'<a href="{REPO_URL}"><text x="{width - 16}" y="{height - 12}" font-size="10" fill="{INK_SOFT}" '
+                f'text-anchor="end" text-decoration="underline">{esc(REPO_URL.removeprefix("https://"))}</text></a>')
     with open(args.output, "w") as f:
         f.write(svg.finish(height))
     print(f"wrote {args.output}: {len(Dfit)} fitted + {len(Dh)} held-out points (max formula error {hold_err:.1e})")

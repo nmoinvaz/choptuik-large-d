@@ -1,4 +1,4 @@
-"""(Used by scan_hp.py --pin and --predictor lagrange_dd.)
+"""(Used by scan_hp.py --pin and --predictor lagrange_dd / hermite_pin, and by predictor_diag.py.)
 Pin-to-trend for the weak p1 harmonics: a residual offset on the Rust solver.
 
 With make_solver(..., kfreeze=kpin) the horizon block's p rows are  P_low(kpin)(state_p - target_p) + P_high(kpin) p1,
@@ -11,7 +11,8 @@ h must be band-limited to double-double precision (any component outside the ban
 unknowns and is amplified by the remaining weak directions), so it is built from its Fourier coefficients in mpmath."""
 import mpmath as mp
 import numpy as np
-from hpkernel.driver import dd_add, dd_from_mp   # noqa: F401 (dd_add re-exported for scan_hp)
+from hpkernel.driver import QdhSolver, dd_add, dd_from_mp   # noqa: F401 (dd_add re-exported for scan_hp)
+from multidouble import dd_scale
 
 
 def band_coeffs(f_hi, f_lo, M, ks, dps=40):
@@ -74,6 +75,14 @@ class PinnedSolver:
         Fh, Fl = self._sub(Fh, Fl)
         return dh, dl, Fh, Fl, pmin, pmax
 
+    def lm_steps(self, zh, zl, mus, fh=None, fl=None):
+        """Levenberg-Marquardt steps for F - c (the Jacobian is unchanged): the wrapped solver's lm_steps with that
+        residual (needs a kernel whose lm_steps takes fh, fl)"""
+        if fh is None:
+            fh, fl = self.residual(zh, zl)
+        c = np.ascontiguousarray
+        return self.s.lm_steps(c(zh), c(zl), list(mus), c(np.asarray(fh)), c(np.asarray(fl)))
+
     def chord(self, zh, zl):
         dh, dl, Fh, Fl = self.s.chord(zh, zl)
         dh, dl = self._corr(dh, dl)
@@ -96,3 +105,55 @@ def predict_dd(hist, D, n=4):
                 w *= (D - Dj) / (Di - Dj)
         inc = inc + w * ((zhi - zh0) + (zli - zl0))
     return dd_add(zh0, zl0, inc, np.zeros_like(inc))
+
+
+def pinned_tangent(make, D, zh, zl, K, h=1e-12, tol_step=1e-32, hmax=0.05, qdh=True, parts=None, segs=None):
+    """dz/dD at a converged point (zh, zl) of the kfreeze = K system: t = -J_K^-1 dF_K/dD, J_K's double-double LU at
+    the point. p1's harmonics above K are out of the unknowns (their rows are P_high p1, independent of D), so t is
+    zero there and the solve never meets their near-null directions; with all of them in (K = 13 at D = 67.7) t is
+    1e6-1e22 instead of 3e-3 (notes in hp/data/large_d/t69/). dF_K/dD is the 4th-order difference on the f64 steps
+    D + k h (k = -2, -1, 1, 2) actually taken (spacing 1.4e-14 near D = 68; at D = 67.7 it converges for h below
+    1e-11, and F is linear in D only for steps below about 1e-7), each F(D + h_k) - F(D) formed in double-double.
+    make(D, kfreeze): a solver as the scan builds it; qdh: the residual with the quad-double horizon (QdhSolver),
+    parts: the state's third and fourth parts for it; segs: the step plan (default: planned from the state)."""
+    s = make(D, K)
+    if segs is None:
+        segs = s.plan(zh, zl, tol_step, hmax)
+    s.set_segs(segs)
+    s.newton(zh, zl)                       # the Jacobian and LU at the point; the step is not taken
+
+    def res(Dk):
+        sk = make(Dk, K)
+        sk.set_segs(segs)
+        if qdh:
+            sk = QdhSolver(sk)
+            if parts is not None:
+                sk._parts[sk._key(zh, zl)] = parts
+        r = sk.residual(zh, zl)
+        return np.asarray(r[0]), np.asarray(r[1])
+
+    ks = (-2, -1, 1, 2)
+    hk = np.array([(D + k * h) - D for k in ks])
+    V = np.vander(np.r_[hk, 0.0], 5, increasing=True)
+    w = np.linalg.solve(V.T, np.r_[0.0, 1.0, 0.0, 0.0, 0.0])      # d/dD at 0 of the quartic through the 5 points
+    F0h, F0l = res(D)
+    dh, dl = np.zeros(len(zh)), np.zeros(len(zh))
+    for wk, k in zip(w[:4], ks):
+        eh, el = dd_add(*res(D + k * h), -F0h, -F0l)
+        eh, el = dd_scale(np.asarray(eh), np.asarray(el), wk)
+        dh, dl = (np.asarray(v) for v in dd_add(dh, dl, eh, el))
+    th, tl = s.lu_solve(-dh, -dl)
+    return np.asarray(th) + np.asarray(tl)
+
+
+def hermite_dd(D0, z0h, z0l, t0, D1, z1h, z1l, t1, D):
+    """the cubic Hermite through (D0, z0, t0) and (D1, z1, t1) at D, in double-double: as z1 plus an increment,
+    z1 + h00 (z0 - z1) + h (h10 t0 + h11 t1) (h00 + h01 = 1), with z0 - z1 formed from hi and lo separately, so no
+    f64 rounding of z enters (pinning.predict_dd). Returns (zh, zl)."""
+    h = D1 - D0
+    u = (D - D0) / h
+    h00 = 2 * u ** 3 - 3 * u ** 2 + 1
+    h10 = u ** 3 - 2 * u ** 2 + u
+    h11 = u ** 3 - u ** 2
+    inc = h00 * ((z0h - z1h) + (z0l - z1l)) + h * (h10 * t0 + h11 * t1)
+    return dd_add(z1h, z1l, inc, np.zeros_like(inc))

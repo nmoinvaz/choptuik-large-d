@@ -11,132 +11,27 @@
 use crate::dd::DD;
 use crate::dv::{DotAcc, DV};
 use crate::field::{DMat, FieldSolve, Fl, State};
-use crate::lane::{BaseLane, Lane};
-use crate::model::{block_state, centre_state, horizon_lus, residual, residual_qdh, taylor_path, Ctx, TWork, QD_MUT_NOREFINE, QD_MUT_REFINE4};
+use crate::lane::Lane;
+use multidouble::dual::{take_counts, Counted, COUNTED_OPS};
+use crate::model::{
+    block_state, centre_state, horizon_lus, residual, residual_qd, residual_qdh, taylor_path, Ctx, TWork, QD_MUT_NOREFINE,
+    QD_MUT_REFINE4,
+};
 use crate::qd::QD;
 use crate::qv::{QDotAcc, QV};
 use crate::v8::V8;
-use std::cell::RefCell;
 use std::f64::consts::PI;
-use std::ops::{Add, Div, Mul, Neg, Sub};
 use std::time::Instant;
 
 // -------------------------------------------------------------------------------------------------------------
-// a counting double-double lane
+// the counting double-double lane: multidouble's dual::Counted<DV> (every lane operation counted by kind)
 // -------------------------------------------------------------------------------------------------------------
 
-const NC: usize = 11;
-const CNAMES: [&str; NC] = ["add/sub", "mul", "div", "neg", "x const", "x f64", "+ const", "acc a b", "acc a c", "acc a", "finish"];
-thread_local!(static CNT: RefCell<[u64; NC]> = const { RefCell::new([0; NC]) });
-
-fn bump(i: usize) {
-    CNT.with(|c| c.borrow_mut()[i] += 1);
-}
-
-fn take_counts() -> [u64; NC] {
-    CNT.with(|c| std::mem::replace(&mut *c.borrow_mut(), [0; NC]))
-}
-
-/// DV with every lane operation counted (one count per 8-lane operation)
-#[derive(Clone, Copy, Debug)]
-struct CDV(DV);
-
-impl Add for CDV {
-    type Output = CDV;
-    fn add(self, o: CDV) -> CDV {
-        bump(0);
-        CDV(self.0 + o.0)
-    }
-}
-impl Sub for CDV {
-    type Output = CDV;
-    fn sub(self, o: CDV) -> CDV {
-        bump(0);
-        CDV(self.0 - o.0)
-    }
-}
-impl Mul for CDV {
-    type Output = CDV;
-    fn mul(self, o: CDV) -> CDV {
-        bump(1);
-        CDV(self.0 * o.0)
-    }
-}
-impl Div for CDV {
-    type Output = CDV;
-    fn div(self, o: CDV) -> CDV {
-        bump(2);
-        CDV(self.0 / o.0)
-    }
-}
-impl Neg for CDV {
-    type Output = CDV;
-    fn neg(self) -> CDV {
-        bump(3);
-        CDV(-self.0)
-    }
-}
+const NC: usize = COUNTED_OPS.len();
+const CNAMES: [&str; NC] = COUNTED_OPS;
+type CDV = Counted<DV>;
 
 impl Lane for CDV {}
-
-impl BaseLane for CDV {
-    type S = multidouble::simd::Native;
-    type Acc = DotAcc;
-    const TANGENT: bool = false;
-    fn zero() -> Self {
-        CDV(DV::zero())
-    }
-    fn cst(c: DV) -> Self {
-        CDV(c)
-    }
-    fn mulc(self, c: DV) -> Self {
-        bump(4);
-        CDV(self.0 * c)
-    }
-    fn mulf(self, s: f64) -> Self {
-        bump(5);
-        CDV(self.0.mul_f(s))
-    }
-    fn mul_pwr2(self, s: f64) -> Self {
-        bump(5);
-        CDV(self.0.mul_pwr2(s))
-    }
-    fn addc(self, c: DV) -> Self {
-        bump(6);
-        CDV(self.0 + c)
-    }
-    fn bcast(self, j: usize) -> Self {
-        CDV(self.0.bcast(j))
-    }
-    fn val(self) -> DV {
-        self.0
-    }
-    fn tan(self) -> DV {
-        DV::zero()
-    }
-    fn from_vt(v: DV, _t: DV) -> Self {
-        CDV(v)
-    }
-    fn acc0() -> DotAcc {
-        DotAcc::zero()
-    }
-    fn acc(a: DotAcc, x: Self, y: Self) -> DotAcc {
-        bump(7);
-        a.add_prod(x.0, y.0)
-    }
-    fn accc(a: DotAcc, x: Self, c: DV) -> DotAcc {
-        bump(8);
-        a.add_prod(x.0, c)
-    }
-    fn acc1(a: DotAcc, x: Self) -> DotAcc {
-        bump(9);
-        a.add(x.0)
-    }
-    fn fin(a: DotAcc) -> Self {
-        bump(10);
-        CDV(a.finish())
-    }
-}
 
 // -------------------------------------------------------------------------------------------------------------
 // a small synthetic context (M = 8)
@@ -241,14 +136,7 @@ fn horizon_qv<const B: usize>(ctx: &Ctx<B>, z: [&[f64]; 4]) -> crate::field::Sta
     let inq: Vec<Fl<QV, B>> = ctx
         .block_inputs(kb)
         .iter()
-        .map(|&o| {
-            let mut r = [QV::zero(); B];
-            for (b, rb) in r.iter_mut().enumerate() {
-                let i = o + 8 * b;
-                *rb = QV::load(&z[0][i..i + 8], &z[1][i..i + 8], &z[2][i..i + 8], &z[3][i..i + 8]);
-            }
-            Fl(r)
-        })
+        .map(|&o| Fl::<QV, B>::load_parts(&z[0][o..], &z[1][o..], &z[2][o..], &z[3][o..]))
         .collect();
     let dq = QV::splat(QD::new(z[0][l - 1], z[1][l - 1], z[2][l - 1], z[3][l - 1]));
     block_state::<QV, B>(ctx, kb, &inq, dq, &lus, &lus)
@@ -310,6 +198,61 @@ fn residual_qdh_agrees() {
     println!("a_h moved by 1e-40 in z2: the horizon state moves by {dp:.2e}; again with z2 = 0: {same:.1e}");
     assert!(dp > 1e-48, "the third part of a_h was not read ({dp:e})");
     assert!(same == 0.0, "not reproducible ({same:e})");
+}
+
+/// Block b's QV state from a four-part state (as horizon_qv, for any block)
+fn block_qv<const B: usize>(ctx: &Ctx<B>, z: [&[f64]; 4], b: usize) -> crate::field::State<QV, B> {
+    let l = z[0].len();
+    let delta = DD { hi: z[0][l - 1], lo: z[1][l - 1] };
+    let lus = horizon_lus(ctx, &ctx.fld(z[0], z[1], ctx.off_ah()), delta, false, DD::ZERO).unwrap();
+    let inq: Vec<Fl<QV, B>> = ctx
+        .block_inputs(b)
+        .iter()
+        .map(|&o| Fl::<QV, B>::load_parts(&z[0][o..], &z[1][o..], &z[2][o..], &z[3][o..]))
+        .collect();
+    let dq = QV::splat(QD::new(z[0][l - 1], z[1][l - 1], z[2][l - 1], z[3][l - 1]));
+    block_state::<QV, B>(ctx, b, &inq, dq, &lus, &lus)
+}
+
+/// residual_qd (every block in quad-double) on the synthetic context:
+/// 1. at a double-double state (z2 = z3 = 0) every row agrees with `residual`'s to double-double accuracy (1e-26), the
+///    horizon rows and the phase row bitwise with residual_qdh's; control: some row outside the horizon block differs
+///    from `residual`'s in its last bits (the quad-double path ran there);
+/// 2. the four parts are read in the centre block and in a Taylor block: their inputs moved by 1e-40 relative in z2
+///    must move the block's QV state by more than 1e-48, and z2 = 0 gives it bit for bit again.
+#[test]
+fn residual_qd_agrees() {
+    let (ctx, zh, zl) = synth();
+    let l = ctx.len();
+    let m = Ctx::<1>::M;
+    let zero = vec![0.0; l];
+    let (fh, fl) = residual(&ctx, &zh, &zl, false).unwrap();
+    let (hh, hl) = residual_qdh(&ctx, [&zh, &zl, &zero, &zero], false).unwrap();
+    let (qh, ql) = residual_qd(&ctx, [&zh, &zl, &zero, &zero], false).unwrap();
+    let hb = ctx.k() * 4 * m;
+    let d = (0..l).map(|i| ((qh[i] - fh[i]) + (ql[i] - fl[i])).abs()).fold(0.0, f64::max);
+    let same_h = (hb..l).all(|i| qh[i] == hh[i] && ql[i] == hl[i]);
+    let changed = (0..hb).filter(|&i| qh[i] != fh[i] || ql[i] != fl[i]).count();
+    println!("residual_qd at z2 = z3 = 0: max difference from residual {d:.2e}; horizon and phase rows bitwise residual_qdh's: \
+              {same_h}; rows outside the horizon block that differ from residual's in their last bits: {changed} of {hb}");
+    assert!(d < 1e-26, "residual_qd differs from residual by {d:e}");
+    assert!(same_h, "residual_qd's horizon rows are not residual_qdh's");
+    assert!(changed > 0, "control: no row outside the horizon block took the quad-double path");
+    for b in [0, 1] {
+        let z: [&[f64]; 4] = [&zh, &zl, &zero, &zero];
+        let r0 = block_qv(&ctx, z, b);
+        let mut z2 = zero.clone();
+        for &o in ctx.block_inputs(b).iter() {
+            for i in o..o + m {
+                z2[i] = 1e-40 * zh[i];
+            }
+        }
+        let dp = qv_diff(&block_qv(&ctx, [&zh, &zl, &z2, &zero], b), &r0);
+        let again = qv_diff(&block_qv(&ctx, z, b), &r0);
+        println!("block {b}: inputs moved by 1e-40 in z2 move its state by {dp:.2e}; again with z2 = 0: {again:.1e}");
+        assert!(dp > 1e-48, "block {b}: the third part of its inputs was not read ({dp:e})");
+        assert!(again == 0.0, "block {b}: not reproducible ({again:e})");
+    }
 }
 
 // -------------------------------------------------------------------------------------------------------------
@@ -453,7 +396,7 @@ fn run_residual<const B: usize>(v: &[f64]) {
         });
         let inc: Vec<Fl<CDV, B>> = inp.iter().map(Fl::cst).collect();
         take_counts();
-        std::hint::black_box(block_state::<CDV, B>(&ctx, b, &inc, CDV(DV::splat(delta)), &lus, &lus));
+        std::hint::black_box(block_state::<CDV, B>(&ctx, b, &inc, Counted(DV::splat(delta)), &lus, &lus));
         let c = take_counts();
         let solves = if b == ctx.k() { ctx.ks + 1 } else { 0 };
         // model: counts x per-operation cost, plus the double-double solves (their cost measured above)

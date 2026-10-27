@@ -6,6 +6,7 @@ Double-double vectors are (hi, lo) pairs of float64 arrays. Layout of z (M = hal
     from hpkernel.driver import make_solver, seed_from_f64, newton_solve
 """
 import json
+import math
 import os
 import sys
 import time
@@ -13,10 +14,10 @@ import time
 import mpmath as mp
 import numpy as np
 
-from multidouble import dd_add, dd_axpy, dd_from_mp, dd_norm, dd_scale, two_sum  # noqa: F401
+from multidouble import dd_add, dd_axpy, dd_dot, dd_from_mp, dd_norm, dd_scale, gcr, qd_add_dd, two_sum  # noqa: F401
 from multidouble import two_prod as _two_prod  # noqa: F401
 
-from ._hpkernel import Solver, qd_add_dd
+from ._hpkernel import Solver
 
 # The double-double helpers above (numpy, elementwise) are multidouble's Python package (github.com/nmoinvaz/multidouble,
 # python/; hp/pyproject.toml pins it), the same float64 expressions as before; re-exported here under their old names
@@ -152,12 +153,20 @@ class QdhSolver:
     and remembers the rest, and residual, newton and chord look the parts up again (a state not made by zadd, such as
     a predictor's or a loaded one, has them zero). The Jacobian and its LU are the double-double ones at (zh, zl): only
     the residual, and so the step -J^-1 F, sees the extra parts. keep: how many states' parts are remembered (the most
-    recent). refine=False is the control (the horizon solves unrefined)."""
+    recent). refine=False is the control (the horizon solves unrefined).
+    gcr (None or a dict of gmres_refine options) with horizon (the horizon block's rows, a slice): the step then solves
+    J_q dz = -F by GCR (gmres_refine) with the double-double LU as its preconditioner, J_q's products by jvp below,
+    whose horizon rows are quad-double accurate; info of the last solve in last_gcr."""
 
-    def __init__(self, s, keep=64, refine=True):
+    def __init__(self, s, keep=64, refine=True, horizon=None, gcr=None):
+        if gcr is not None and horizon is None:
+            raise ValueError("QdhSolver: gcr needs the horizon block's rows")
         self.s = s
         self.keep = keep
         self.refine = refine
+        self.horizon = horizon
+        self.gcr = gcr
+        self.last_gcr = None
         self._parts = {}
 
     def __getattr__(self, name):
@@ -185,21 +194,63 @@ class QdhSolver:
             self._parts.pop(next(iter(self._parts)))
         return a, b
 
+    def _resq(self, q):
+        """the residual of a four-part state q (QdSolver: every block in quad-double)"""
+        return self.s.residual_qdh(*q, refine=self.refine)
+
     def residual(self, zh, zl):
         z2, z3 = self.parts(zh, zl)
         c = np.ascontiguousarray
-        return self.s.residual_qdh(c(zh), c(zl), c(z2), c(z3), refine=self.refine)
+        return self._resq((c(zh), c(zl), c(z2), c(z3)))
 
     def _step(self, Fh, Fl):
         c = np.ascontiguousarray
         return self.s.lu_solve(c(-np.asarray(Fh)), c(-np.asarray(Fl)))
 
+    def lm_steps(self, zh, zl, mus, fh=None, fl=None):
+        """Levenberg-Marquardt steps (Solver.lm_steps: the double-double Jacobian) for the quad-double-horizon F, or
+        for the F given (a wrapper's)"""
+        if fh is None:
+            fh, fl = self.residual(zh, zl)
+        c = np.ascontiguousarray
+        return self.s.lm_steps(c(zh), c(zl), list(mus), c(np.asarray(fh)), c(np.asarray(fl)))
+
     def newton(self, zh, zl):
-        """the double-double Jacobian and LU at (zh, zl) (Solver.newton), the step from the quad-double-horizon F"""
+        """the double-double Jacobian and LU at (zh, zl) (Solver.newton), the step from the quad-double-horizon F:
+        -J^-1 F, or with gcr the GCR solve of J_q dz = -F preconditioned by that LU"""
         _, _, _, _, pmin, pmax = self.s.newton(zh, zl)
         Fh, Fl = self.residual(zh, zl)
-        dh, dl = self._step(Fh, Fl)
+        if self.gcr is None:
+            dh, dl = self._step(Fh, Fl)
+        else:
+            dh, dl, self.last_gcr = gmres_refine(self, zh, zl, -np.asarray(Fh), -np.asarray(Fl), **self.gcr)
         return dh, dl, Fh, Fl, pmin, pmax
+
+    def jvp(self, zh, zl, uh, ul, cut=True):
+        """J u at (zh, zl): the rows outside the horizon block from Solver.jvp (the double-double Jacobian's product,
+        accurate there), the horizon rows by the central difference (F(z + h u) - F(z - h u)) / 2h of residual_qdh at
+        the quad-double states z +- h u, h the power of two with h max|u| about 2^-66 max(1, max|z|): the differences'
+        rounding, about 1e-64 G / (h |u|), and their truncation error, about (h |u|)^2 times F's third derivative, are
+        both far below the double-double Jacobian's error there, about 1e-32 G. Returns (jh, jl)."""
+        out = self.s.jvp(zh, zl, uh, ul, cut=cut)      # (jh, jl) or (jh, jl, fh, fl), as the kernel has it
+        jh, jl = np.asarray(out[0]), np.asarray(out[1])
+        um = float(np.abs(np.asarray(uh) + np.asarray(ul)).max())
+        if um == 0:
+            return jh, jl
+        zs = max(1.0, float(np.abs(np.asarray(zh)).max()))
+        h = 2.0 ** math.floor(math.log2(2.0 ** -66 * zs / um))
+        z2, z3 = self.parts(zh, zl)
+        c = np.ascontiguousarray
+        uh, ul = np.asarray(uh, dtype=float), np.asarray(ul, dtype=float)
+        F = []
+        for sg in (h, -h):
+            q = [c(np.asarray(v)) for v in qd_add_dd(c(zh), c(zl), c(z2), c(z3), c(sg * uh), c(sg * ul))]
+            F.append([np.asarray(v) for v in self._resq(q)])
+        dh, dl = dd_add(F[0][0], F[0][1], -F[1][0], -F[1][1])
+        hb = self.horizon
+        jh, jl = jh.copy(), jl.copy()
+        jh[hb], jl[hb] = dh[hb] / (2 * h), dl[hb] / (2 * h)
+        return jh, jl
 
     def chord(self, zh, zl):
         Fh, Fl = self.residual(zh, zl)
@@ -207,9 +258,24 @@ class QdhSolver:
         return dh, dl, Fh, Fl
 
     def _no(self, *a, **k):
-        raise NotImplementedError("QdhSolver: only the double-double Jacobian (jac='dd'); no LM, no products")
+        raise NotImplementedError("QdhSolver: only the double-double Jacobian (jac='dd'); no mixed steps")
 
-    newton_mixed = lm_steps = jvp = _no
+    newton_mixed = _no      # (lm_steps is defined above: the double-double Jacobian with this F)
+
+
+class QdSolver(QdhSolver):
+    """A Solver whose residual is quad-double in every block (Solver.residual_qd): as QdhSolver otherwise. With gcr
+    (gmres_refine options) the step solves J_q dz = -F by GCR preconditioned by the double-double LU, J_q's products by
+    the central difference of residual_qd in every row but the phase row (linear, exact in double-double). Near the
+    double-double floor at large D the Jacobian's weakest singular value lies below the double-double residual's
+    rounding (u sigma_max), so the double-double LU alone cannot resolve that direction; these products can (README,
+    "Why the solver stalls")."""
+
+    def __init__(self, s, keep=64, refine=True, gcr=None):
+        super().__init__(s, keep=keep, refine=refine, horizon=slice(0, s.size - 1) if gcr is not None else None, gcr=gcr)
+
+    def _resq(self, q):
+        return self.s.residual_qd(*q, refine=self.refine)
 
 
 def block_norms(s, Fh, Fl):
@@ -256,53 +322,10 @@ def gmres_refine(s, zh, zl, bh, bl, max_products=30, step_tol=1e-10, confirm=1, 
     |c u| <= step_tol |x|, or after max_products products. The first iteration's u is M^-1 b, the plain mixed step.
     ref (optional, a double-double vector): the exact solution, for the checks: info["errors"] gets |x - ref| / |ref|
     after each iteration.
-    Returns (xh, xl, info): info = dict(products, changes, converged, t_prod, t_solve, errors)."""
-    n = s.size
-    xh, xl = np.zeros(n), np.zeros(n)
-    rh, rl = np.asarray(bh, dtype=float).copy(), np.asarray(bl, dtype=float).copy()
-    U, W, W64 = [], [], []
-    info = dict(products=0, changes=[], converged=False, t_prod=0.0, t_solve=0.0)
-    if ref is not None:
-        info["errors"] = []
-        refv = np.asarray(ref[0]) + np.asarray(ref[1])
-    run = 0
-    while info["products"] < max_products:
-        t = time.time()
-        uh, ul = (np.asarray(a) for a in s.lu_solve(np.ascontiguousarray(rh), np.ascontiguousarray(rl)))
-        info["t_solve"] += time.time() - t
-        t = time.time()
-        wh, wl = (np.asarray(a) for a in s.jvp(zh, zl, uh, ul, cut=cut)[:2])
-        info["t_prod"] += time.time() - t
-        info["products"] += 1
-        for _ in range(2):
-            for (Uh, Ul), (Wh, Wl), w64 in zip(U, W, W64):
-                beta = float(w64 @ (wh + wl))
-                wh, wl = dd_axpy(-beta, Wh, Wl, wh, wl)
-                uh, ul = dd_axpy(-beta, Uh, Ul, uh, ul)
-        nw = float(np.linalg.norm(wh + wl))
-        if not nw > 0:
-            break
-        wh, wl = dd_scale(wh, wl, 1.0 / nw)
-        uh, ul = dd_scale(uh, ul, 1.0 / nw)
-        w64 = wh + wl
-        c = float(w64 @ (rh + rl))
-        xh, xl = dd_axpy(c, uh, ul, xh, xl)
-        rh, rl = dd_axpy(-c, wh, wl, rh, rl)
-        U.append((uh, ul))
-        W.append((wh, wl))
-        W64.append(w64)
-        ch = abs(c) * float(np.linalg.norm(uh + ul)) / max(float(np.linalg.norm(xh + xl)), 1e-300)
-        info["changes"].append(ch)
-        if ref is not None:
-            info["errors"].append(float(np.linalg.norm((xh - ref[0]) + (xl - ref[1])) / np.linalg.norm(refv)))
-        if verbose:
-            print(f"    gcr {len(U)}: change {ch:.1e}" + (f", error {info['errors'][-1]:.1e}" if ref is not None else ""),
-                  flush=True)
-        run = run + 1 if (len(U) > 1 and ch <= step_tol) else 0
-        if run >= confirm:
-            info["converged"] = True
-            break
-    return xh, xl, info
+    Returns (xh, xl, info): info = dict(products, changes, converged, t_prod, t_solve, errors).
+    The loop is multidouble's gcr with coef="f64" (this function's own loop, moved there; bitwise the same)."""
+    return gcr(lambda uh, ul: s.jvp(zh, zl, uh, ul, cut=cut)[:2], s.lu_solve, bh, bl, max_products=max_products,
+               step_tol=step_tol, confirm=confirm, ref=ref, verbose=verbose, coef="f64")
 
 
 def newton_step(s, zh, zl, jac="dd", mixed=None, gmres=None, verbose=False):
@@ -661,16 +684,24 @@ def junk_subspace(s, w, delta_max=1e-9, iters=8):
 
 
 def delta_correction(s, Fh, Fl):
-    """Linearised Delta correction -y.F, y = J^-T e_Delta, with the LU stored by the last s.newton call."""
+    """Linearised Delta correction -y.F, y = J^-T e_Delta, with the LU stored by the last s.newton call. The dot
+    product is multidouble's dd_dot (double-double, to about (L / 8 + 12) 2^-106 of sum |y_i F_i|), the result
+    rounded to f64.
+    Until 2026-10-25 it was an f64 dot product of the rounded vectors, whose error grows with sum |y_i F_i| (|y| reaches
+    1e15 at large D); for a residual that cancels in y.F (a planted one, far from convergence) it lost the result (comms
+    2026-10-25, T57). At T48's 319 saved states the two differ by at most 1.9e-22 (2e-4 of the correction;
+    delta_correction_check.py)."""
     L = s.size
     e = np.zeros(L)
     e[-1] = 1.0
     yh, yl = s.lu_solve_t(e, np.zeros(L))
-    return float(-(np.asarray(yh) + np.asarray(yl)) @ (np.asarray(Fh) + np.asarray(Fl)))
+    hi, _ = dd_dot(np.asarray(yh), np.asarray(yl), np.asarray(Fh), np.asarray(Fl))
+    return float(-hi)
 
 
 def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_halvings=12, junk_only=False,
-                    delta_max=1e-9, delta_tol=1e-14, jac="dd", mixed=None, gmres=None, dd_finish=True, dd_last=False):
+                    delta_max=1e-9, delta_tol=1e-14, jac="dd", mixed=None, gmres=None, dd_finish=True, dd_last=False,
+                    accept_stall=None):
     """Newton in phases, all with backtracking on |F|_2:
     1. 'all': the step J^-1(-F) with its component in the w weakest right singular directions removed, so the
        well-determined part converges without its second-order error leaking into them;
@@ -695,7 +726,11 @@ def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_hal
     dd_last (f64h, f64g, f64hg; default off): once |F| < tol, one exact step instead of taking the mixed step
     (exact_last_step): at D ~ 60 the mixed iterations stop just below tol with a residual along the weakest directions,
     which leaves Delta off by 1e-16..1e-15 where the exact Newton's is 1e-18 (notes/LARGE_D_MIXED.md section 4); the
-    exact step costs one double-double Jacobian per solve and also leaves the exact LU for the sensitivities."""
+    exact step costs one double-double Jacobian per solve and also leaves the exact LU for the sensitivities.
+    accept_stall (F_max, dDelta_max), default None: when the phases end without |F| < tol, the point is still accepted
+    if |F| <= F_max and the linearised Delta correction there (delta_correction with the LU at the final point) is at
+    most dDelta_max: the stall is in directions Delta does not feel (the quad-double-horizon pilot, comms 2026-10-26).
+    """
     if jac not in JACS:
         raise ValueError(f"jac must be one of {JACS}, not {jac!r}")
     hist = []
@@ -807,4 +842,15 @@ def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_hal
             continue
         zh, zl = th, tl
         n_prev = n0
+    done = bool(hist) and (hist[-1]["F"] < tol or (hist[-1].get("accepted") is True and "dDelta_est" in hist[-1]))
+    if accept_stall is not None and jac == "dd" and not done:
+        _, _, Fh, Fl, pmin, pmax = s.newton(zh, zl)
+        nF = dd_norm(Fh, Fl)
+        dd = delta_correction(s, Fh, Fl)
+        ok = nF < tol or (nF <= accept_stall[0] and abs(dd) <= accept_stall[1])
+        hist.append(dict(it=len(hist), F=nF, Delta=float(zh[-1]), piv=(pmin, pmax), mode="stall", dDelta_est=dd,
+                         accepted=ok, accept_stall=True, t=round(time.time() - t0, 1)))
+        if verbose:
+            print(f"  dn: stopped at |F| {nF:.2e}; Delta correction {dd:+.1e} -> "
+                  f"{'accepted (accept_stall)' if ok else 'not accepted'}", flush=True)
     return zh, zl, hist

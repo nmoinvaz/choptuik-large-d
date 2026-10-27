@@ -13,8 +13,8 @@
 //!   exact dyadic and decimal arithmetic for their decimal input/output and their tests. Not used by the solver yet
 //!   (notes/QUAD_DOUBLE.md).
 //!
-//! `v8`, `dd`, `dv`, `qd`, `qv`, `exact` and `linalg`, and the lane types, are the multidouble crate's; this crate adds
-//! the tau fields, the model, the block LU, the `lane::Lane` extension (`dmat_apply`) and `field::FieldSolve`.
+//! `v8`, `dd`, `dv`, `qd`, `qv`, `exact` and `linalg`, the lane types, the field arithmetic (`field`) and the staircase
+//! LU (`block`) are the multidouble crate's; this crate adds the model and the layout of its Newton system.
 pub mod block;
 pub mod field;
 pub mod lane;

@@ -18,7 +18,7 @@ Conventions for the Claude sessions (cloud and local) that run computations here
   the thread budget with several jobs rather than one job with more processes. For M ≥ 7 add `--schur` (without it one
   ulp of B₇ is a 0.3–3% floor on ω); `--verbose=2` prints every level's solves. Killing a hier.py main process leaves its
   spawn workers running: on Windows kill the tree, `taskkill /T /F /PID <pid>`.
-- **Double-double solver (`hp/`):** rebuild with `hp/build.sh` after pulling changes to `hp/src` or `hp/Cargo.toml`. Its arithmetic is the crate multidouble (crates.io, version in `hp/Cargo.toml`; source github.com/nmoinvaz/multidouble, release tags X.Y.Z): cargo fetches it on the first build (needs access to crates.io). A change to the arithmetic goes into that repository and a release first, then the version here is bumped, and the bit-identity checks are rerun (`highm_check.py ref` and `scaled`, against a build of the previous version on the same machine). hp's Python driver takes its double-double helpers (`dd_add`, `dd_scale`, `dd_axpy`, ...) from multidouble's Python package, which `hp/build.sh` installs from the repository at the commit `hp/pyproject.toml` names (it builds with maturin, so it needs Rust and access to GitHub); `hpkernel.dd_op` and `dd_solve` are now that package's. Memory: with multidouble 1.0.0 the release build of hp (fat LTO, one codegen unit) needs more than the cloud machine's 6.27 GB, so on the cloud build with `CARGO_PROFILE_RELEASE_LTO=false CARGO_PROFILE_RELEASE_CODEGEN_UNITS=16` (5.7 GB peak; the same results bit for bit; Newton steps and Jacobians as fast, the residual about 13% slower). γ(D) comes from
+- **Double-double solver (`hp/`):** rebuild with `hp/build.sh` after pulling changes to `hp/src` or `hp/Cargo.toml`. Its arithmetic is the crate multidouble (crates.io, version in `hp/Cargo.toml`; source github.com/nmoinvaz/multidouble, release tags X.Y.Z): cargo fetches it on the first build (needs access to crates.io). A change to the arithmetic goes into that repository and a release first, then the version here is bumped, and the bit-identity checks are rerun (`highm_check.py ref` and `scaled`, against a build of the previous version on the same machine). hp's Python driver takes its double-double helpers (`dd_add`, `dd_scale`, `dd_axpy`, ...) from multidouble's Python package, which `hp/build.sh` installs from the repository at the commit `hp/pyproject.toml` names (it builds with maturin, so it needs Rust and access to GitHub); `hpkernel.dd_op` and `dd_solve` are now that package's. Memory: the release build of hp (fat LTO, one codegen unit) needs more than the cloud machine's 6.27 GB, and with `CARGO_PROFILE_RELEASE_LTO=false CARGO_PROFILE_RELEASE_CODEGEN_UNITS=16` it peaked at 6.09 GB on 2026-10-25 (5.7 GB with multidouble 1.0.0), so Nathan's rule: build hp's release module only on the local machines (the Mac or Windows), never on the cloud; `cargo check` and multidouble's own tests are fine there, and for a pull request the CI is the build check. γ(D) comes from
   `hp/gamma_dd.py` / `hp/gamma_batch.py --procs N`. Its root search is local (around the formula's value): to count
   unstable modes, use a winding count of det M(λ) (notes/MODE_COUNT.md, if present).
 - **Other matter models:** the ℓ-multiplet solver is `solver/matter/dss_ell.py` (a copy-and-adapt of `solver/dss.py`;
@@ -95,6 +95,21 @@ Conventions for the Claude sessions (cloud and local) that run computations here
   work in progress in your worktree at each milestone and before any run longer than about 10 minutes, then back it up
   to GitHub: `git push -f origin HEAD:refs/heads/wip/<topic>` (a branch name the coordinator gives you). Write long runs'
   results incrementally to files. The coordinator merges into main; never push to main yourself.
+- **Raw output goes to its own branch, `raw/<task>`.** Raw output is everything a run writes: per-point records
+  (jsonl), states (npz), attempts files and logs. It never lives only on a machine's disk, and it is never written
+  outside a git worktree (the cloud continuation runs up–up21 wrote theirs to `/home/claude/dss/hp_scan`, which was
+  never pushed, and their records are missing). Before the run, make an orphan worktree for it beside your code
+  worktree, `git worktree add --orphan -b raw/<task> ../raw-<task>` (for example `raw/T74`), and point the run's output
+  paths into it. At each post and at the end, `cd ../raw-<task> && git add -A && git commit -m "<task>: ..." && git
+  push origin raw/<task>`. Raw branches are never merged into main. Main gets only what the coordinator derives from
+  them (CSVs, graphs, notes), with the branch and commit named in the note or script that used it. A script in main
+  that reads raw output takes its directory as an argument, and a documented command that needs one states the
+  `git worktree add ../raw-<task> raw/<task>` step that fetches it.
+  The long-running writers (`hp/scan_hp.py`, `hp/lowD_highM.py` with `--states`, `hp/gamma_batch.py`,
+  `hp/modecount_test_zeros.py`, `hp/modecount_test_axis.py`, `solver/inner_amp/amp_flint_par.py`, `scan_omega.py`)
+  refuse an output path outside a `raw/` worktree (`hp/raw_out.py`; `--allow_unraw` for tests and scratch only). The
+  coordinator checks each post that reports a run with `python3 raw_check.py raw/<task> PATTERN ...`, which fails
+  when the branch or a named file is not on GitHub.
 - **Shared cores:** the cloud machine has 2 cores, usually shared by several agents. Run single-process under
   `nice -n 10`, put anything longer than a few minutes in the background with a log file, and keep single runs short.
 - **Web access:** WebSearch reaches any site; to target one, pass `allowed_domains`. WebFetch opens only URLs that
