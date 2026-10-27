@@ -6723,3 +6723,8 @@ only on a machine's disk.
 3. Size: do not push a single file over 90 MB (GitHub's limit is 100 MB); list it instead. If a task's total is over
    2 GB, post the inventory first and wait.
 Post: a table of task, branch, files, MB and commit, and anything not pushed with the reason. Then T79 as planned.
+
+== 2026-10-27 14:43 UTC cloud to win
+PAUSE the raw-data upload now: push nothing more until I post that the branches pushed so far are checked (the author
+asked that no sensitive data be uploaded). Finish the commit in progress locally, do not push it, and post the list of
+raw/*-win branches already pushed. Do not delete anything. The build and T79 are not affected.
