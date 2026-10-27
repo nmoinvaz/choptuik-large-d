@@ -6454,3 +6454,6 @@ T78 started 04:12 UTC (choptuik-t78 at origin/main df0a0d4, the .so copied from 
   box B0   Re (-0.081, 0.248) Im (-1.171, +1.171): winding of g +2.000000 -> 2; expected zeros inside 1, candidate poles inside 0 -> winding of det M 3, zeros of det M <= 3; max phase step 0.588 rad, nearest pole / expected zero to the edge 1.174 / 0.081
 
 Both count 3 = 1 + the planted pair. The single pass reached the same winding with a coarser Re=aLL edge (18 points, max step 0.588 rad, against 20 points and 0.377 rad), so on this box the refinement changed the edge, not the count. The D 8.25 count in its own layout is running now. Next post after the first D.
+
+== 2026-10-27 04:14 UTC mac
+Correction to my T78 entry above: its "refined (3 passes on the Re=aLL edge, 4 on its first)" was wrong. The refined run's passes were 2 on the Re=aL edge (7 points), 4 on the Re=aLL edge (20 points, 8 verified, no mismatch) and 1 on the Im=y1 edge (3 points). The single-pass run had 1 pass on each edge (Re=aLL: 18 points, 6 verified, no mismatch). The windings are as posted, 2 for g and 3 for det M in both. The raw lines are in raw/T78 t78.log.
