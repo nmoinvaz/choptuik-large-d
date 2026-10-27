@@ -12,7 +12,7 @@ from the prediction (Solver.plan, as scan_hp.py does), and runs driver.newton_qd
 --tol, or when Newton stalls (no decrease along its step: the quad-double floor) with max |F| <= --tol_accept. A
 converged point is appended to OUT and saved as <tag>_D<D>.npz (save_q) next to OUT, and dD grows by --grow up to
 --dD_max; a failure halves dD, and below --dD_min the scan stops. Every attempt goes to OUT's _attempts.jsonl. OUT
-must be in a raw/<task> worktree (raw_out.py; --allow_unraw writes anyway).
+must be in a raw-data folder (raw_out.py; --allow_unraw writes anyway).
 """
 import argparse
 import json

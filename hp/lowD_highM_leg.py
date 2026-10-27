@@ -7,7 +7,7 @@ series orders carry over, so the leg continues the run's predictors and its move
     python3 lowD_highM_leg.py PROGRESS.json OUT.jsonl --targets 3.04,3.03,3.02,3.01 [--states data/lowD_states]
 
 then lowD_highM.py with --out OUT.jsonl --resume and the run's other arguments. Exit 1 if a history state is missing
-or OUT.progress.json exists. OUT must be in a raw/<task> worktree (raw_out.py; --allow_unraw writes anyway).
+or OUT.progress.json exists. OUT must be in a raw-data folder (raw_out.py; --allow_unraw writes anyway).
 """
 import argparse
 import json

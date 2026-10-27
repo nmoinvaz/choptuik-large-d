@@ -17,7 +17,7 @@ z must count two more zeros (one for a real z). Evaluations of det M_psi are cac
 hp/data/modecount_test_<tag>_raw.jsonl and shared between plain and planted runs.
 
 Records go to <data>/modecount_test_results.jsonl and the log to <data>/modecount_test_<tag>.log, --data (default
-hp/data) in a raw/<task> worktree (raw_out.py; --allow_unraw writes anyway).
+hp/data) in a raw-data folder (raw_out.py; --allow_unraw writes anyway).
 """
 import cmath
 import json

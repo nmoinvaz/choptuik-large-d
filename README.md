@@ -771,8 +771,8 @@ a horizon-tail jump).
 
 ![Why the continuation stalls along the weak directions: a model of one Newton step along a weak direction, where a large curvature against a small slope makes Newton land above its start, and each run's step in D diving at the stalls at D = 35.2, 60.96 and 67.75](hp/newton_stall.svg)
 
-**Why the steps collapse** (`hp/plot_newton_stall.py`, which reads T73's records from the `raw/T73` branch: run
-`git worktree add ../raw-T73 raw/T73` first). Top, a model rather than data: the residual along one weak direction,
+**Why the steps collapse** (`hp/plot_newton_stall.py`, which reads T73's records from folder `T73` of the [raw-data repository](https://github.com/nmoinvaz/choptuik-large-d-raw): run
+`git clone https://github.com/nmoinvaz/choptuik-large-d-raw ../choptuik-large-d-raw` first). Top, a model rather than data: the residual along one weak direction,
 F(t) = F₀ − σt + ½ct², and Newton's straight line F₀ − σt. Newton jumps to the line's zero, t = F₀/σ, which is far
 out when the slope σ is small, and by then the curvature has added cF₀²/(2σ²). The step lowers the residual only
 while cF₀/σ² < 2, that is while the residual Newton starts from is below 2σ²/c. At cF₀/σ² = 2.5 it lands at 1.25 F₀,
@@ -788,8 +788,8 @@ stalls").
 
 ![Where double-double runs out: u times kappa against D for the full system, crossing 1 near D = 60 at the stalls, and for the pinned systems 8 to 11 orders lower; below, the residual each state reached following the rounding floor u sigma_max |z|](hp/stall_kappa.svg)
 
-**Where double-double runs out** (`hp/plot_stall_kappa.py`, from the stall detector's runs on the `raw/T76` branch:
-run `git worktree add ../raw-T76 raw/T76` first). Top: u·κ, double-double's unit roundoff times the Jacobian's
+**Where double-double runs out** (`hp/plot_stall_kappa.py`, from the stall detector's runs in folder `T76` of the raw-data repository:
+run `git clone https://github.com/nmoinvaz/choptuik-large-d-raw ../choptuik-large-d-raw` first). Top: u·κ, double-double's unit roundoff times the Jacobian's
 condition number, at converged states. The full system's rises like n^38.9 and crosses 1 at D = 59.9, just before the
 stall at 60.96; at 67.74, where T48 stopped, it is 168. The pinned systems the runs solve sit 8 to 11 orders lower
 (1.0×10⁻⁸ with harmonics 7–13 held at D = 70.98, 1.5×10⁻⁵ with 9–13 held at 70.63), which is why they still converge; the single
@@ -876,7 +876,7 @@ What the solver has shown:
   the growth of the Jacobian's largest singular value (next item).
 - **Why the solver stalls: double-double runs out of precision.** `hp/stall_margin.py` measures the Jacobian J at a
   solved point: its weakest singular directions, its largest singular value σ_max (from the dense double-double
-  Jacobian) and the condition number κ = σ_max/σ_min. Its runs are on the `raw/T76` branch and `hp/stall_summary.py`
+  Jacobian) and the condition number κ = σ_max/σ_min. Its runs are in folder `T76` of the raw-data repository and `hp/stall_summary.py`
   prints the numbers below; its controls are two planted problems with known answers and two mutations. From
   D = 40 to 67.74, with n = D − 2, the weakest direction is always p1's harmonic 13, the highest the solver keeps;
   σ_min falls like n^−20.8 (to 4% at 9 points) and σ_max grows like n^18.1. Since ∂Δ/∂F is a row of J⁻¹,
@@ -2422,11 +2422,11 @@ hp/                 double-double solver (crate hpkernel)
 ├── bench_variants.py, plot_bench_variants.py  the Newton variants timed against D, and bench_variants.svg
 ├── plot_solve_times.py  solve_times.svg, how long each D took (--export writes data/solve_times.csv from the solve records)
 ├── plot_point_spacing.py  point_spacing.svg, the distance in D between our solved points
-├── plot_newton_stall.py   newton_stall.svg, why the steps collapse (a model of one Newton step; reads raw/T73)
-├── plot_stall_kappa.py    stall_kappa.svg, u*kappa against D and the residual floor (reads raw/T76)
+├── plot_newton_stall.py   newton_stall.svg, why the steps collapse (a model of one Newton step; reads the raw-data folder T73)
+├── plot_stall_kappa.py    stall_kappa.svg, u*kappa against D and the residual floor (reads the raw-data folder T76)
 ├── plot_light_cone.py     light_cone.svg, the past light cone and the fast mode's size inside it
 ├── stall_margin.py   the stall detector: weakest directions, sigma_max and u*kappa at a state or a rebuilt seed
-├── stall_summary.py  its results from the raw/T76 branch (the power laws, the floor, the pinned systems)
+├── stall_summary.py  its results from the raw-data folder T76 (the power laws, the floor, the pinned systems)
 ├── src/block.rs    block storage for the f64 Jacobian above M = 128 (multidouble's staircase LU)
 ├── highm_check.py, lowD_highM.py  checks of the larger tau grids, and the continuation toward D = 3 on them
 ├── lowD_highM_leg.py  a new leg of a finished lowD_highM.py run (its progress file, new targets)

@@ -7,12 +7,12 @@ curvature has added c F0^2 / (2 sigma^2) there, so the step reduces the residual
 (the basin, F0 < 2 sigma^2 / c). Two cases with the same start and slope: k = 0.3 (Newton converges) and k = 2.5
 (it lands above its start, and line search ends at the curve's lowest point, 1 - 1 / (2 k), above zero).
 Bottom, data: each continuation run's step in D (as plot_point_spacing.py, which supplies the steps up to T48) and
-T73's two runs (pin 7 and pin 5, from the raw/T73 branch), with the stalls at 35.2, 60.96 and 67.78 marked.
+T73's two runs (pin 7 and pin 5, folder T73 of the raw-data repository), with the stalls at 35.2, 60.96 and 67.78 marked.
 Standard library only; the primitives are data_graphs.py, vendored unchanged from github.com/nmoinvaz/speedy-gonzales
 (skills/graph-data). Prints the plotted numbers.
 
-    git worktree add ../raw-T73 raw/T73          (from the repository root, once)
-    cd hp && python3 plot_newton_stall.py ../../raw-T73
+    git clone https://github.com/nmoinvaz/choptuik-large-d-raw ../choptuik-large-d-raw   (beside the repository, once)
+    cd hp && python3 plot_newton_stall.py ../../choptuik-large-d-raw/T73
 """
 import json
 import os
@@ -51,7 +51,7 @@ def main():
     if len(sys.argv) < 2 or not os.path.isfile(os.path.join(sys.argv[1], "t73", "pin5.jsonl")):
         sys.exit(__doc__)
     raw = sys.argv[1]
-    raw_rev = subprocess.run(["git", "-C", raw, "rev-parse", "--short", "HEAD"], capture_output=True,
+    raw_rev = subprocess.run(["git", "-C", raw, "log", "-1", "--format=%h", "--", ".", ":(exclude)README.md"], capture_output=True,
                              text=True).stdout.strip() or "?"
 
     svg = Svg(WIDTH)

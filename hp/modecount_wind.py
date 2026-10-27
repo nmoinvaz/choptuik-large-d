@@ -53,7 +53,7 @@ inside, notes/GHOST_ADMIXTURE.md). An edge is resolved when every step is at mos
 spacing floor hmin, default 1e-4, can stop it short); a box is resolved when all its edges are, and an unresolved box's
 count is not a count. --mutate=one_verify restores the single verification pass (the control). Every evaluation is
 appended to <data>/modecount_<tag>_evals.jsonl and reused on restart; --data (default hp/data) holds the cache, the log
-and the record, and must be in a raw/<task> worktree (raw_out.py; --allow_unraw writes anyway).
+and the record, and must be in a raw-data folder (raw_out.py; --allow_unraw writes anyway).
 """
 import json
 import math

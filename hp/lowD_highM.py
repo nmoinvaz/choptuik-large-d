@@ -60,8 +60,8 @@ recorded twice).
 Records: one per solve in --points (lowD_dd.solve_point's record: Delta hi/lo, |F|, iterations, seconds per
 iteration, steps, tails, sensitivities, harmonics, peak RSS), one per point and resolution pair in --out (D, M_w,
 M_n, both Deltas, the difference, |F|, iterations, seconds, tails, the decision). States:
-<--states>/<tag>_D<D>_M<M>.npz (default hp/data/lowD_states). --out, --points and --states must be in a raw/<task>
-worktree (raw_out.py; --allow_unraw writes anyway).
+<--states>/<tag>_D<D>_M<M>.npz (default hp/data/lowD_states). --out, --points and --states must be in a raw-data
+folder (raw_out.py; --allow_unraw writes anyway).
 """
 import argparse
 import json

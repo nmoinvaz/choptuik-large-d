@@ -1,20 +1,24 @@
 #!/usr/bin/env python3
-"""Raw run output goes to a raw/<task> worktree (AGENTS.md, "Raw output goes to its own branch"). A long-running writer
-calls require_raw on its output paths before its first write; it exits unless each path's directory is in a git
-worktree whose branch is raw/<anything>. --allow_unraw on the writer's command line writes anyway (tests, scratch).
+"""Raw run output goes to a task folder of the raw-data repository, github.com/nmoinvaz/choptuik-large-d-raw (AGENTS.md,
+"Raw output goes to the raw-data repository"). A long-running writer calls require_raw on its output paths before its
+first write; it exits unless each path is inside a folder of a checkout of that repository (a git repository whose
+root holds the file RAW_DATA_REPO), not at its root. --allow_unraw on the writer's command line writes anyway (tests,
+scratch).
 
     python3 hp/raw_out.py --selftest [--mutate=accept_any]
 
-Control (--selftest): in a planted repository, a path on branch raw/T0 passes, one on main and one outside any
-repository are refused, and the refused ones pass with allow. --mutate=accept_any makes the check accept every
-path; the selftest must then fail. Exit 1 on failure.
+Control (--selftest): in a planted data repository a path in a task folder passes, while one at its root, one in an
+ordinary repository and one outside any repository are refused, and the refused ones pass with allow.
+--mutate=accept_any makes the check accept every path; the selftest must then fail. Exit 1 on failure.
 """
 import os
 import subprocess
 import sys
 
 FLAG = "--allow_unraw"
-HELP = "write output outside a raw/<task> worktree (tests and scratch only; AGENTS.md)"
+HELP = "write output outside the raw-data repository's task folders (tests and scratch only; AGENTS.md)"
+MARKER = "RAW_DATA_REPO"
+DATA_URL = "https://github.com/nmoinvaz/choptuik-large-d-raw"
 
 
 def pop_allow(argv):
@@ -25,25 +29,35 @@ def pop_allow(argv):
     return found
 
 
-def branch_of(path):
+def data_folder(path):
+    """the task folder of the raw-data checkout that holds path ('' at the checkout's root), or None outside one"""
     d = os.path.dirname(os.path.abspath(path))
     os.makedirs(d, exist_ok=True)
-    r = subprocess.run(["git", "-C", d, "symbolic-ref", "--short", "-q", "HEAD"], capture_output=True, text=True)
-    return r.stdout.strip() if r.returncode == 0 else ""
+    r = subprocess.run(["git", "-C", d, "rev-parse", "--show-toplevel"], capture_output=True, text=True)
+    if r.returncode != 0:
+        return None
+    root = os.path.realpath(r.stdout.strip())
+    if not os.path.isfile(os.path.join(root, MARKER)):
+        return None
+    # both sides resolved: git reports the root through symlinks (macOS /var -> /private/var)
+    parts = os.path.relpath(os.path.realpath(path), root).split(os.sep)
+    if parts[0] == os.pardir:
+        return None
+    return parts[0] if len(parts) > 1 else ""
 
 
 def require_raw(*paths, allow=None, _accept_any=False):
-    """exit unless every path is in a worktree on a raw/ branch; allow defaults to --allow_unraw in sys.argv"""
+    """exit unless every path is in a task folder of the raw-data repository; allow defaults to --allow_unraw in
+    sys.argv"""
     if allow is None:
         allow = FLAG in sys.argv
     for p in paths:
         if p is None:
             continue
-        b = branch_of(p)
-        if not (_accept_any or b.startswith("raw/") or allow):
-            raise SystemExit(f"{p}: not in a raw/<task> worktree (branch {b or 'none'}). Raw output goes to its own "
-                             f"branch (AGENTS.md): git worktree add --orphan -b raw/<task> ../raw-<task>, and write "
-                             f"there; {FLAG} writes it anyway")
+        if not (_accept_any or data_folder(p) or allow):
+            raise SystemExit(f"{p}: not in a task folder of the raw-data repository. Raw output goes there (AGENTS.md): "
+                             f"git clone {DATA_URL} ../choptuik-large-d-raw, and write into "
+                             f"../choptuik-large-d-raw/<task>-<machine>/; {FLAG} writes it anyway")
 
 
 def selftest(mutate=""):
@@ -53,13 +67,14 @@ def selftest(mutate=""):
     env = dict(os.environ, GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@t",
                GIT_COMMITTER_NAME="t", GIT_COMMITTER_EMAIL="t@t")
     try:
-        g, w, outside = os.path.join(t, "code"), os.path.join(t, "raw-T0"), os.path.join(t, "plain", "x.jsonl")
-        os.makedirs(g)
-        run = lambda *a: subprocess.run(["git", "-C", g, *a], check=True, capture_output=True, env=env)  # noqa: E731
-        run("init", "-q", "-b", "main")
-        open(os.path.join(g, "f"), "w").close()
-        run("add", "f"), run("commit", "-qm", "f")
-        run("worktree", "add", "-q", "--orphan", "-b", "raw/T0", w)
+        data, code, outside = (os.path.join(t, x) for x in ("raw", "code", os.path.join("plain", "x.jsonl")))
+        for g, files in ((data, [MARKER]), (code, ["f"])):
+            os.makedirs(g)
+            run = lambda *a: subprocess.run(["git", "-C", g, *a], check=True, capture_output=True, env=env)  # noqa: E731
+            run("init", "-q", "-b", "main")
+            for f in files:
+                open(os.path.join(g, f), "w").close()
+            run("add", *files), run("commit", "-qm", "f")
 
         def refused(p, allow=False):
             try:
@@ -67,10 +82,11 @@ def selftest(mutate=""):
                 return False
             except SystemExit:
                 return True
-        ok = dict(raw_passes=not refused(os.path.join(w, "sub", "a.jsonl")),
-                  main_refused=refused(os.path.join(g, "data", "a.jsonl")),
+        ok = dict(folder_passes=not refused(os.path.join(data, "T0-mac", "sub", "a.jsonl")),
+                  root_refused=refused(os.path.join(data, "a.jsonl")),
+                  code_refused=refused(os.path.join(code, "data", "a.jsonl")),
                   outside_refused=refused(outside),
-                  allow_passes=not refused(outside, allow=True) and not refused(os.path.join(g, "a.jsonl"), allow=True))
+                  allow_passes=not refused(outside, allow=True) and not refused(os.path.join(code, "a.jsonl"), allow=True))
         for k, v in ok.items():
             print(f"  {k}: {'PASS' if v else 'FIRE'}")
         return all(ok.values())

@@ -7,7 +7,7 @@
 START.npz: a converged solution (hpkernel.driver.save format: zh, zl, meta with D, M, nodes). Every converged point
 is appended to OUT.jsonl and saved as <tag>_D<D>.npz next to OUT. A --nodes / --M different from the start file's
 re-nodes / resamples the start solution first (and re-converges it at its own D). OUT and --attempts must be in a
-raw/<task> worktree (raw_out.py; --allow_unraw writes anyway).
+raw-data folder (raw_out.py; --allow_unraw writes anyway).
 """
 import argparse
 import json

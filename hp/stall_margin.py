@@ -30,7 +30,7 @@ At a converged point the floor is the quantity; at a step's seed (a predictor's 
 STATE.npz: driver.save files (zh, zl, meta with D, M, nodes and the run's kt, kc, ks, which the solver is built
 with). --kfreeze: default 13 from D 35.35 on (as the runs), none below. --pin K: the system T73's runs solve, p1's
 harmonics in (K, kfreeze] held at the state's own values (pinning.PinnedSolver) on a kfreeze = K solver. OUT must be
-in a raw/<task> worktree (raw_out.py). Each state gives one record in OUT and one line on stdout.
+in a raw-data folder (raw_out.py). Each state gives one record in OUT and one line on stdout.
 --attempts: a scan's attempted steps (scan_hp --attempts) in D_from LO..HI, every Nth (all failed ones near
 the end are wanted, so N = 1 there): the step's seed rebuilt as scan_hp --predictor lagrange_dd (default, T48's)
 or lagrange does it, through the 4 saved states <tag>_D<D>.npz up to D_from, and the margins at that

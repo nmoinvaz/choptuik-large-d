@@ -86,7 +86,7 @@ def main(argv):
     lo, hi, n, K, J, procs = float(argv[1]), float(argv[2]), int(argv[3]), int(argv[4]), int(argv[5]), int(argv[6])
     outdir = argv[7] if len(argv) > 7 else f"scan_K{K}_J{J}"
     prec = int(argv[8]) if len(argv) > 8 else 320
-    require_raw(os.path.join(outdir, "x"), allow=allow)     # raw/<task> worktree, or --allow_unraw
+    require_raw(os.path.join(outdir, "x"), allow=allow)     # a raw-data folder, or --allow_unraw
     os.makedirs(outdir, exist_ok=True)
     wfs = [lo + (hi - lo) * i / max(1, n - 1) for i in range(n)]
     jobs = [(wf, K, J, outdir, prec, inner, serial, fitkw) for wf in wfs]

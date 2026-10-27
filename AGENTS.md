@@ -95,21 +95,29 @@ Conventions for the Claude sessions (cloud and local) that run computations here
   work in progress in your worktree at each milestone and before any run longer than about 10 minutes, then back it up
   to GitHub: `git push -f origin HEAD:refs/heads/wip/<topic>` (a branch name the coordinator gives you). Write long runs'
   results incrementally to files. The coordinator merges into main; never push to main yourself.
-- **Raw output goes to its own branch, `raw/<task>`.** Raw output is everything a run writes: per-point records
-  (jsonl), states (npz), attempts files and logs. It never lives only on a machine's disk, and it is never written
-  outside a git worktree (the cloud continuation runs up–up21 wrote theirs to `/home/claude/dss/hp_scan`, which was
-  never pushed, and their records are missing). Before the run, make an orphan worktree for it beside your code
-  worktree, `git worktree add --orphan -b raw/<task> ../raw-<task>` (for example `raw/T74`), and point the run's output
-  paths into it. At each post and at the end, `cd ../raw-<task> && git add -A && git commit -m "<task>: ..." && git
-  push origin raw/<task>`. Raw branches are never merged into main. Main gets only what the coordinator derives from
-  them (CSVs, graphs, notes), with the branch and commit named in the note or script that used it. A script in main
-  that reads raw output takes its directory as an argument, and a documented command that needs one states the
-  `git worktree add ../raw-<task> raw/<task>` step that fetches it.
+- **Raw output goes to the raw-data repository,
+  [choptuik-large-d-raw](https://github.com/nmoinvaz/choptuik-large-d-raw), one folder per task and machine.** Raw
+  output is everything a run writes: per-point records (jsonl), states (npz), attempts files, checkpoints and logs. It
+  never lives only on a machine's disk, and it is never written outside that repository (the cloud continuation runs
+  up–up21 wrote theirs to `/home/claude/dss/hp_scan`, which was never pushed, and their records are missing). Clone it
+  once beside your checkout, `git clone https://github.com/nmoinvaz/choptuik-large-d-raw ../choptuik-large-d-raw`.
+  Before the run, make the folder `<task>-<machine>/` (for example `T82-win/`) with a `README.md` whose first line is
+  `# <folder>: <what it holds>`, then the machine and the comms entry, and point the run's output paths into the
+  folder. At each post and at the end, from that repository's root: `python3 make_index.py && git add <folder> INDEX.md
+  && git commit -m "<folder>: ..." && git pull --no-rebase && git push`. Only this project's task output goes there:
+  nothing from another project's directories, no credentials or personal files, no file over 90 MB; add to your own
+  folder only, and never force-push. Raw output is never committed to this repository. Main gets only what the
+  coordinator derives from it (CSVs, graphs, notes), with the folder and commit named in the note or script that used
+  it. A script in main that reads raw output takes its directory as an argument, and a documented command that needs
+  one states the clone step. The old `raw/<name>` branches were moved into folders of the same name on 2026-10-27 with
+  their commits, so a citation "raw/T76 7ca90fe" means folder `T76/`, at commit `7ca90fe` of the raw-data repository;
+  its INDEX.md lists every folder.
   The long-running writers (`hp/scan_hp.py`, `hp/lowD_highM.py` with `--states`, `hp/gamma_batch.py`,
-  `hp/modecount_test_zeros.py`, `hp/modecount_test_axis.py`, `solver/inner_amp/amp_flint_par.py`, `scan_omega.py`)
-  refuse an output path outside a `raw/` worktree (`hp/raw_out.py`; `--allow_unraw` for tests and scratch only). The
-  coordinator checks each post that reports a run with `python3 raw_check.py raw/<task> PATTERN ...`, which fails
-  when the branch or a named file is not on GitHub.
+  `hp/modecount_test_zeros.py`, `hp/modecount_test_axis.py`, `hp/relayout.py`, `hp/scan_qd.py`, `hp/qd_planted.py`,
+  `hp/lowD_highM_leg.py`, `solver/inner_amp/amp_flint_par.py`, `scan_omega.py`) refuse an output path outside a task
+  folder of that repository (`hp/raw_out.py`; `--allow_unraw` for tests and scratch only). The coordinator checks each
+  post that reports a run with `python3 raw_check.py <folder> PATTERN ...`, which fails when the folder or a named file
+  is not on GitHub.
 - **Shared cores:** the cloud machine has 2 cores, usually shared by several agents. Run single-process under
   `nice -n 10`, put anything longer than a few minutes in the background with a log file, and keep single runs short.
 - **Web access:** WebSearch reaches any site; to target one, pass `allowed_domains`. WebFetch opens only URLs that

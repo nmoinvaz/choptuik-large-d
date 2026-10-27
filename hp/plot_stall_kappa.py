@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """stall_kappa.svg: where double-double runs out (README, "Why the solver stalls"), from the stall detector's runs on the
-raw/T76 branch (hp/stall_margin.py).
+folder T76 of the raw-data repository (hp/stall_margin.py).
 
 Top: u·κ, double-double's unit roundoff u = 2^-104 times the Jacobian's condition number σ_max/σ_min, at converged
 states: the full system (kfreeze 13) at D 40-67.74 (saved states) and at 70.98, with its power-law fit in n = D - 2,
@@ -9,8 +9,8 @@ and the pinned systems the runs solve (T73, T75: p1's harmonics above 9, 7 or 5 
 evaluating F at a double-double state, scaled by their median ratio. Standard library and numpy; the primitives are
 data_graphs.py, vendored unchanged from github.com/nmoinvaz/speedy-gonzales (skills/graph-data). Prints the numbers.
 
-    git worktree add ../raw-T76 raw/T76          (from the repository root, once)
-    cd hp && python3 plot_stall_kappa.py ../../raw-T76
+    git clone https://github.com/nmoinvaz/choptuik-large-d-raw ../choptuik-large-d-raw   (beside the repository, once)
+    cd hp && python3 plot_stall_kappa.py ../../choptuik-large-d-raw/T76
 """
 import json
 import math
@@ -56,7 +56,7 @@ def main():
     if len(sys.argv) < 2 or not os.path.isfile(os.path.join(sys.argv[1], "kappa_states.jsonl")):
         sys.exit(__doc__)
     raw = sys.argv[1]
-    rev = subprocess.run(["git", "-C", raw, "rev-parse", "--short", "HEAD"], capture_output=True, text=True).stdout.strip()
+    rev = subprocess.run(["git", "-C", raw, "log", "-1", "--format=%h", "--", ".", ":(exclude)README.md"], capture_output=True, text=True).stdout.strip()
     recs = [r for f in ("kappa_states.jsonl", "smoke_kappa.jsonl", "kappa_pinned.jsonl", "t75_watch.jsonl")
             for r in jl(os.path.join(raw, f))]
     pts = {}

@@ -15,7 +15,7 @@ lands 2.3e-11 away (notes/QUAD_DOUBLE.md, 12.1).
     python3 qd_planted.py OUT.jsonl STATE.npz [--kfreeze 13] [--eps 1e-40,1e-36,1e-32,1e-28] [--eps_pass 1e-40]
         [--steps 5] [--threads N]
 
-OUT must be in a raw/<task> worktree (raw_out.py; --allow_unraw writes anyway).
+OUT must be in a raw-data folder (raw_out.py; --allow_unraw writes anyway).
 """
 import argparse
 import json

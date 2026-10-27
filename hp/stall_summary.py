@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""The stall detector's results (stall_margin.py runs on the raw/T76 branch): the weakest direction's sigma against
+"""The stall detector's results (stall_margin.py runs, folder T76 of the raw-data repository): the weakest direction's sigma against
 the recorded max|dDelta/dF|, sigma_max, u kappa and the residual floor u sigma_max |z| at the converged states, power
 laws in n = D - 2 (least squares in ln, the largest ln residual quoted), and T48's attempts by outcome.
 
-    git worktree add ../raw-T76 raw/T76          (from the repository root, once)
-    cd hp && python3 stall_summary.py ../../raw-T76
+    git clone https://github.com/nmoinvaz/choptuik-large-d-raw ../choptuik-large-d-raw   (beside the repository, once)
+    cd hp && python3 stall_summary.py ../../choptuik-large-d-raw/T76
 """
 import csv
 import json

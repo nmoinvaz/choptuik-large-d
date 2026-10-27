@@ -665,7 +665,7 @@ def main(argv):
     wf, K, J = float(argv[1]), int(argv[2]), int(argv[3])
     prec = int(argv[4]) if len(argv) > 4 else 320
     out = out or f"sigF_w{wf:.4f}_K{K}_J{J}.json"
-    require_raw(out, allow=allow)       # raw/<task> worktree, or --allow_unraw
+    require_raw(out, allow=allow)       # a raw-data folder, or --allow_unraw
     t0 = time.time()
     kw = {}
     if fit != "legacy":

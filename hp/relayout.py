@@ -9,7 +9,7 @@ layout, and saved (driver.save) with that layout in its meta.
 
 kt, kc and ks default to IN's (its meta); --kfreeze defaults to 13 from D 35.35 on, none below (as the runs). Prints
 |F| before and after and Delta in both layouts; a second layout that converges should reproduce Delta to the runs'
-accuracy. Exit 1 if |F| stays above --tol. OUT must be in a raw/<task> worktree (raw_out.py; --allow_unraw writes
+accuracy. Exit 1 if |F| stays above --tol. OUT must be in a raw-data folder (raw_out.py; --allow_unraw writes
 anyway).
 """
 import argparse
