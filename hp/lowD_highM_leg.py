@@ -7,7 +7,7 @@ series orders carry over, so the leg continues the run's predictors and its move
     python3 lowD_highM_leg.py PROGRESS.json OUT.jsonl --targets 3.04,3.03,3.02,3.01 [--states data/lowD_states]
 
 then lowD_highM.py with --out OUT.jsonl --resume and the run's other arguments. Exit 1 if a history state is missing
-or OUT.progress.json exists. OUT must be in a raw-data folder (raw_out.py; --allow_unraw writes anyway).
+or OUT.progress.json exists, or the first step exceeds the run's last (--allow_bigger_step accepts it). OUT must be in a raw-data folder (raw_out.py; --allow_unraw writes anyway).
 """
 import argparse
 import json
@@ -25,6 +25,7 @@ def main():
     ap.add_argument("out")
     ap.add_argument("--targets", required=True)
     ap.add_argument("--states", default=os.path.join(HERE, "data", "lowD_states"))
+    ap.add_argument("--allow_bigger_step", action="store_true", help="accept a first step larger than the run's last")
     ap.add_argument(FLAG, action="store_true", help=HELP)
     a = ap.parse_args()
     prog = a.out + ".progress.json"
@@ -54,6 +55,13 @@ def main():
     last = st["hist_n"][-1][0]
     if targets[0] >= last:
         raise SystemExit(f"the targets must lie below the last point, D = {last}")
+    # the first step must not exceed the run's last one: the cubic predictor through the helper's history lands too
+    # far off otherwise, and the kernel's plan() from that start never returns (T82, 2026-10-27: a step of 0.01 after
+    # T45's 0.00625 hung for hours; 0.005 planned in a minute)
+    Ds = sorted({D for D, _ in st["hist_w"]} | {D for D, _ in st.get("hist_c", [])}, reverse=True)
+    if len(Ds) > 1 and last - targets[0] > 1.05 * (Ds[0] - Ds[1]) and not a.allow_bigger_step:
+        raise SystemExit(f"the first step {last - targets[0]:.5f} exceeds the run's last step {Ds[0] - Ds[1]:.5f}; "
+                         f"use targets {last - (Ds[0] - Ds[1]):.5f}, ... or --allow_bigger_step")
     # the finished run's stop and hours, for the record; post and the current point's start do not carry over
     st["leg_from"] = dict(progress=os.path.abspath(a.progress), done=st["done"], t_used=st["t_used"])
     st.update(done=None, targets=targets, t_used=0.0, post=None, point_start=None)
