@@ -6355,3 +6355,37 @@ First step: |F| 5.84e-6 (the lift of M 320), Delta 2.484927163796585, which is -
 That is already 94 times closer than the M 256/320 difference (-1.17e-9).
 Two to three more steps (each about 3 h) and a second pass (about 1 to 1.5 h at the step cost) remain, so I expect the pair at about 12 to 14 h from now,
 around 12:00 UTC on the 27th. The T74 search ran alongside part of the first step (single thread, below normal). Nothing else runs on win.
+
+== 2026-10-27 01:04 UTC cloud to mac
+T74 read, thank you; both machines found nothing, recorded in notes/NUMERICS_REVIEW.md.
+T75, the long run to D = 100 (the author's choice). Both T73 runs continue from their last states with T73's settings,
+to D 100 or 48 h. By the new rule the output goes into an orphan worktree on raw/T75; scan_hp on wip/qd-horizon
+dd0186e refuses any other output path (never pass --allow_unraw). Python only, ~/venv-qd, no rebuild (dd0186e only
+changes hp/scan_hp.py and adds hp/raw_out.py over f41d622). Do not edit code; on an error, stop and post it.
+My pilot of this resume (pin 5 from 70.982742, 3 points to 71.0018) converged: 10-11 its, F_full 3.4-4.2e-22,
+|dDelta_pin| <= 2.9e-15.
+The Mac must stay on AC power (last night it went to Low Power Sleep at 1% battery). Run each scan under caffeinate -is.
+Setup:
+  cd ~/Source/choptuik-mac-qd2 && git fetch origin && git checkout --detach origin/wip/qd-horizon
+      (dd0186e; the untracked data/large_d/t67, t72, t73 stay in place)
+  git worktree add --orphan -b raw/T75 ../raw-T75
+  python3 -c "print(','.join(f'{70.65 + 0.05 * i:.2f}' for i in range(588)))" > ../raw-T75/dlist.txt
+Then in ~/Source/choptuik-mac-qd2/hp, as a bash script (as T73), with T=data/large_d/t73 and R=../../raw-T75:
+  COMMON="100 --kt 36 --kc 146 --ks 130 --kfreeze 13 --qdh 1 --corrector dnp --accept_stall 1e-19,1e-16 \
+    --tol_growth 1.45 --tol_step 1e-32 --hmax 0.05 --dD 0.005 --min_dD 1e-4 --max_fail_row 4 --it_max 30 \
+    --predictor lagrange_dd --pin_from seed --pin_hist full1 --Dlist @$R/dlist.txt --max_hours 48 --threads 3"
+  A: caffeinate -is python3 -u scan_hp.py $R/pin7.jsonl $T/pin7_D70.6268.npz $COMMON --tol 4.10e-21 \
+       --history $T/pin7_D70.5917.npz,$T/pin7_D70.6000.npz,$T/pin7_D70.6119.npz --pin 7 --tag pin7 \
+       --attempts $R/pin7_attempts.jsonl > $R/pin7.log 2>&1
+  B: caffeinate -is python3 -u scan_hp.py $R/pin5.jsonl $T/pin5_D70.9827.npz $COMMON --tol 4.68e-21 \
+       --history $T/pin5_D70.9471.npz,$T/pin5_D70.9500.npz,$T/pin5_D70.9646.npz --pin 5 --tag pin5 \
+       --attempts $R/pin5_attempts.jsonl > $R/pin5.log 2>&1
+A and B side by side, 3 threads each, normal priority. (The --tol values are T73's tolerances at the two start points.)
+Stop conditions (yours, per run), as T73: a point with F_full > 1e-19 or |dDelta_pin| > 1e-12. Not a stop, post at once:
+a waypoint where A's and B's Delta_full1 differ by more than 1e-14, or pmset -g batt showing battery power. Otherwise
+each run ends itself (4 failed steps in a row, 48 h, or D 100).
+Every hour: cd ../raw-T75 && git add -A && git commit -m "T75: <time>" && git push origin raw/T75 (no post needed).
+Post at the first point of each run, then every 4 h, and at the end: points and last D per run; for the waypoints
+both runs have, D, Delta_full1 (with lo) of A and B and their difference, and for A's waypoints 70.65-70.95 the
+difference to T73 B's Delta_full1 there (data/large_d/t73/pin5.jsonl); the ranges of F_full and dDelta_pin; the mean
+seconds per point over the last 4 h; the number of Levenberg-Marquardt fallbacks.
