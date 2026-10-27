@@ -7057,3 +7057,54 @@ sigma_15, 14, 13 equal the K 31 J 1000 references at 0.99 and 1.01 exactly (diff
 Fit Mf per family 7 to 12 at both; the largest fit error is 2.2e-17 (0.99) and 3.3e-17 (1.01), both at family 21_5 (Mf 8), the fit's own error estimate.
 Raw: choptuik-large-d-raw T83-mac/ at 3ab8a95 (scan33J1000 with the three JSONs and logs, scan33J1250 with the pilot (b)).
 The Mac is idle and back to waiting for the next task.
+
+== 2026-10-27 23:23 UTC cloud to mac
+T86, sigma_17 (K 35): T83's continuation. sigma_16 rejected the ring that survived sigma_15, and two rings built from
+sigma_0..15 survived it (notes/PLANTED_SELECTION.md 8.4, 8.9); sigma_17 tests those two and adds a K = 17 range. T83's
+recipe with K 35 (sigma_0..17). Do not edit code; on an error, stop and post it.
+Power: start only on mains power (pmset -g batt says 'AC Power'). On battery, post that you wait, then poll every
+10 min until it is on mains.
+Setup:
+  git -C ~/Source/choptuik-large-d fetch origin && git -C ~/Source/choptuik-t83 checkout --detach origin/main
+    (f517856 or later; amp_flint_par.py is unchanged since T83, so the T83 worktree is reused)
+  git -C ~/Source/choptuik-large-d-raw pull --no-rebase
+  mkdir -p ~/Source/choptuik-large-d-raw/T86-mac/scan35J1000 ~/Source/choptuik-large-d-raw/T86-mac/scan35J1250
+  Write T86-mac/README.md as for T83-mac: first line "# T86-mac: sigma_17 at wf 0.99, 1.00, 1.01, K 35, J 1000 / 960
+  bits; pilot (b) at J 1250 / 1280 bits", then the machine and this entry.
+  In ~/Source/choptuik-t83/solver/inner_amp, with ~/Source/choptuik-large-d/.venv, nice -n 10.
+Pilot at wf 1.00, both variants side by side, 2 procs each:
+  (a) python -u amp_flint_par.py 1.0 35 1000 960 --procs 2 --fit phys --mf 6:12 --fit-step 1
+        --out ~/Source/choptuik-large-d-raw/T86-mac/scan35J1000/sigF_w1.0000_K35_J1000_p960.json
+        > ~/Source/choptuik-large-d-raw/T86-mac/scan35J1000/w1.0000.log 2>&1
+  (b) python -u amp_flint_par.py 1.0 35 1250 1280 --procs 2 --fit phys --mf 6:12 --fit-step 1
+        --out ~/Source/choptuik-large-d-raw/T86-mac/scan35J1250/sigF_w1.0000_K35_J1250_p1280.json
+        > ~/Source/choptuik-large-d-raw/T86-mac/scan35J1250/w1.0000.log 2>&1
+Gate for (a): err17 at most 1e-10 times |sigma_17|, and sigma_16, sigma_15, sigma_14 equal to
+solver/inner_amp/scan33J1000/sigF_w1.0000_K33_J1000_p960.json's within their errs (sigma_16's is 4.1e-25). (b)'s own
+err is inf (T83's artifact), so its gate is agreement with (a): sigma_17 within (a)'s err17, sigma_14..16 within
+their errs.
+As soon as (a) passes its gate, start wf 0.99 and 1.01 with (a), 2 procs each, into scan35J1000 (logs w0.9900.log
+and w1.0100.log) while (b) finishes: 6 procs in all, the budget's top, so start nothing else. If (a) fails and (b)
+passes, run the nodes with (b)'s settings into scan35J1250; if neither passes, run J 1500 at 1280 bits once at
+wf 1.00, then stop and post.
+Post (a) when it lands (sigma_17, err17, the Mf per family and the worst family fit error, the sigma_16..14
+comparison, minutes), then (b), then each wf. At each post, from ~/Source/choptuik-large-d-raw:
+python3 make_index.py && git add T86-mac INDEX.md && git commit -m "T86-mac: ..." && git pull --no-rebase && git push
+(the coordinator commits in that clone too; add only your folder and INDEX.md).
+Expectation (T83 at K 33: 174 min for (a), 290 for (b), 160 per node; the last two fit orders cost 30 and 45 min and
+each further order about 1.5 times the one before): about 5 h for (a), 8-9 h for (b), 5 h for the nodes, a day in all.
+Then T87 = sigma_18 (K 37), the same recipe one order up, without waiting for a new entry: folders T87-mac/scan37J1000
+and scan37J1250, K 37 in the commands and file names, the gate against T86's wf 1.00 file (sigma_17..15 within their
+errs). Expect about twice T86's times.
+Standing rule from the author: a runner never sits idle. When a task ends and no entry is waiting, start the
+follow-on its task names; if none is named, post that at once and keep the watcher running.
+
+== 2026-10-27 23:23 UTC cloud to win
+Standing rule from the author: a runner never sits idle. When a task ends and no entry is waiting, start the
+follow-on its task names; if none is named, post that at once and keep the watcher running.
+T82's follow-on, leg 2 toward D 3.005: when T82's last target (3.01) has converged, or the run has stopped on its
+stop conditions, and you have posted, run the 18:23 procedure again with the down5 run as the source:
+  python lowD_highM_leg.py ../../choptuik-large-d-raw/T82-win/down5.jsonl.progress.json ../../choptuik-large-d-raw/T82-win/down25.jsonl --targets 3.0075,3.005
+  then the lowD_highM.py command with --dD 0.0025 and every "down5." replaced by "down25." (the leg script refuses a
+  first step larger than the run's last, 0.005; 0.0025 is smaller). Same posts, pushes and stops as T82's. If the
+  leg check exits non-zero, post its output and stop.
