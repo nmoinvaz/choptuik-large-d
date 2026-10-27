@@ -1074,3 +1074,51 @@ k = 15), so the projection is not decisive. The log-linear trend of arg_k − 1 
 - One finding against the earlier picture: a ring whose extra zeros lie at 7.3 < |x| < 12 (C14-BP [4/10]) survives
   σ₁₅. The rings of the earlier generations (the ratio-law and arc tails, with zeros in |x| < 7.3) are all rejected.
 
+
+## 8. Follow-up: σ₁₆ (post-freeze)
+
+### 8.0 Procedure, fixed before any K = 16 estimate was computed
+
+Written and committed before any estimator ran at K = 16, on any input. Already known at this point (comms, 2026-10-27
+18:45 UTC, the Mac's T83 pilot): σ₁₆ at wf 1.00 from pilot (a), 4.87773992972141×10⁻¹³ + 1.258001748255×10⁻¹⁴ i, err16
+4.1×10⁻²⁵ (8.4×10⁻¹³ relative), with σ₁₃…σ₁₅ equal to `scan31J1000`'s to the digit; pilot (b) at order 31 of 33. The
+procedure is section 7.0's one order up, with the changes section 7's findings call for, stated here before the data:
+
+1. **σ₁₆ is converged** if, at every node: (a) err16 ≤ 10⁻¹⁰ |σ₁₆|; (b) σ₀…σ₁₅ are bitwise the `scan31J1000` 960-bit
+   values; (c) pilot (b)'s σ₁₆ equals (a)'s within (a)'s err16, and its σ₁₃…σ₁₅ equal `scan31J1000`'s within their errors;
+   (d) the second difference of σ_k/σ_{k+1} at k = 14 is at most 0.05. Each check gets a mutation that must make it
+   fire (`--mutate=err|low|pilot|ratiolaw`).
+2. **The pipeline on plants first.** N1 recovered by arg, ratio, Padé and G to 10⁻⁶ at K = 16, N2 giving no number;
+   the 28 arc plants, C-EXP and the 13 REFIT plants regenerated and run at K = 14, 15, 16, their K = 14 and 15 estimates
+   equal to the stored K = 15 records (`planted_results_k15.jsonl`) to 10⁻⁹, or the work stops. Control: N1 graded
+   against ω_t + 0.002 must fail.
+3. **Real data at K = 16** (record "N0 scan33J1000"): its K = 14 and 15 estimates must equal those of "N0 scan31J1000".
+   Mutation controls: σ₁₆ → −σ₁₆ at wf 1.00 must fire a detector; σ₁₆ × (1 + 10⁻³) is reported.
+4. **Ring test.** Every K = 15 completion of section 7.6 is regenerated and its zero must reproduce the stored
+   "K15 recomplete" value to 10⁻⁹: C15-W1–3, C15-ARC (four shapes at their stored best ω_t) and C15-BP [m/(15 − m)],
+   m = 3…7. In addition, the one ring that survived σ₁₅ (section 7.9), C14-BP [4/10], is regenerated and tested
+   again: its σ₁₆ and τ₁₆ against the measured ones and the harness at K = 16. For each completion: survives if no
+   detector fires on it at K = 16 that does not fire on the real data (the section 5.3 rule). Benchmark: the
+   simple-zero law from τ₁₄, τ₁₅. A ring that survives σ₁₆ as well is a finding, reported as such; C14-BP [4/10]
+   rejected by σ₁₆ closes section 7.9's open item.
+5. **Calibration** at K = 16, as section 7.5: the error of arg, ratio, Padé mid and G on (i) the 28 arc plants, (ii)
+   C-EXP, (iii) REFIT with fit residual ≤ 10⁻⁴, and (iv) the BP family, now six sums (C13-BP [5/8], [6/7]; C14-BP
+   [5/9], [6/8]; C15-BP [6/9], [7/8], the ring-free sums passing the type rule), each with its own zero as truth. The
+   calibration at K = 15 from the new records must reproduce section 7.8's arc range 0.999975–1.000018 to 6×10⁻⁷.
+6. **Next generation and ring-free completions,** glued at σ₁₆ (tail from k = 17): ratio-law windows k = 6–15, 8–15,
+   9–15; best-fit arc tails, four shapes, ω_t grid 0.9990–1.0010; the Borel–Padé sums [m/(16 − m)], m = 3…8. Frozen
+   type rule: every pole has |t| < 2 at all three nodes. Zeros counted at wf = 1.00 in |x| < 7.3, 12 and 16.
+7. **Combination.** The K = 16 estimator range is the hull of: the calibrated arg range over the 28 arc plants; the
+   calibrated arg range over the BP family; and the zeros of the ring-free completions of item 6 that pass the type
+   rule (no zeros besides x₀ in |x| < 12). G is reported with its spread over the minima of its objective within a
+   factor 5 of the best and is not part of the hull. The headline is the union of the K = 15 headline
+   (0.999975–1.000050) and the K = 16 range if they overlap; if disjoint, both are reported and the reason diagnosed
+   before any headline is written. The range is an estimator range, not a bound.
+8. **The order-16 projection.** est_k = ω* + c r^k through k = 14 and 15, for ω* = 1, 0.99998 and 0.999975 (the lower
+   end of the K = 15 range), against the real arg₁₆; decisive only if the other prediction is farther from arg₁₆ than
+   three times the model's own error (its largest miss over k = 13–15 on the real data, and over the 28 arc plants
+   at k = 16 given their true ω_t).
+
+The stages are `converge`, `plants`, `real`, `ring`, `calib`, `recomplete`, `project`, `combine`, each run as
+`nice -n 10 python3 planted_k16.py STAGE` from `solver/inner_amp/`, with the σ₁₆ JSONs copied from the raw-data
+repository's T83-mac into `scan33J1000/` and `scan33J1250/` as the earlier orders' were.
