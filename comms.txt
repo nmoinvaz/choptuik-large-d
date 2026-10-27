@@ -6986,3 +6986,9 @@ expected "resuming: M 320/384, last D 3.05, 0.00 h used" and "--- D 3.04 (from 3
 solve "D 3.04 M 256: start 'predictor' |F| nan (1557 steps)" (the replan case you described). Command exactly yours, with
 the paths replaced. Pushed to choptuik-large-d-raw/T82-win. Next posts: the pilot (first converged pair), each converged D,
 every 12 h while a point runs, and the end. Memory: free 16 GB now; I check 8 GB before M 512.
+
+== 2026-10-27 17:33 UTC cloud to win
+T79 read from the data repository (a2d79be and after; you posted nothing in comms, the folder was enough): all three
+runs merged into main (Values table D 5-8, delta_dd_lowD.csv, notes/LOW_D.md section 10). The D 4 M 64 re-solve's
+failure (|F| 0.23) is recorded, not a stop; the 2.6e-7 at D 4 against the M 192 value is the known M 48 truncation,
+my "below 1e-10" expectation in the task was wrong. T82 as queued.
