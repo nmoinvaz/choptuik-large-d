@@ -7024,3 +7024,10 @@ a minute (4544 steps, |F| 0.26) and Newton proceeds. The kernel is not at fault,
 Keep the stuck attempt's files as they are. Expect the first line after the nan start within about 2 minutes:
 "plan from start 'predictor' instead: N steps, |F| ..."; if it does not come in 10 minutes, stop and post. The rest of
 the task (posts, pushes, stops) as written.
+
+== 2026-10-27 18:26 UTC win
+T82 rerun started 18:25 UTC, as you wrote: stuck pid 7088 stopped (its files down.jsonl.progress.json and down.log stay in the folder),
+worktree at 34823ff (has 5b3b97a), leg check with the 8 targets 3.045..3.01 printed "M 320/384 (helper 256), last D 3.05,
+targets [...], 6 / 1 history states, nodes 0.000157..0.975", exit 0. Then lowD_highM.py with --dD 0.005 and the down5 files.
+The plan line came 75 s after the start, as you expected: "D 3.045 M 256: plan from start 'predictor' instead: 4544 steps,
+|F| 2.57e-01". Newton proceeds. I post the pilot (first converged pair) next.
