@@ -82,6 +82,26 @@ def formula_dd():
 
 
 @check
+def t79_values():
+    """README "Values": Delta and gamma at D = 5, 6, 7, 8 from T79 (hp/data/delta_dd_lowD.csv: Delta at the best M,
+    gamma at M = 48), and the M 48 -> 64 changes the text quotes"""
+    rows = [r.rstrip("\n").split(",") for r in open(os.path.join(ROOT, "hp/data/delta_dd_lowD.csv")) if r[:1].isdigit()]
+    best = {float(c[0]): c for c in rows if c[8] == "1"}
+    gam = {float(c[0]): float(c[10]) for c in rows if c[1] == "48" and c[10]}
+    delta = lambda D: float(best[D][2]) + float(best[D][3])  # noqa: E731
+    txt = [("README.md", "| 5 | 3.2217019446 | 0.413126936 |"), ("README.md", "| 6 | 3.009483220493 | 0.430079481 |"),
+           ("README.md", "| 7 | 2.84275320647 | 0.439991242 |"), ("README.md", "| 8 | 2.71179005444440 | 0.446716389 |"),
+           ("README.md", "change from M = 48 to 64 is 8.7×10⁻¹² at D = 5, 3×10⁻¹⁴ at 6 and 10⁻²⁰ at 8")]
+    return [("Delta(5)", delta(5.0), 3.2217019446, 1e-10, txt), ("Delta(6)", delta(6.0), 3.009483220493, 1e-12, txt),
+            ("Delta(7)", delta(7.0), 2.84275320647, 1e-11, txt), ("Delta(8)", delta(8.0), 2.71179005444440, 1e-14, txt),
+            ("gamma(5)", gam[5.0], 0.413126936, 1e-9, txt), ("gamma(6)", gam[6.0], 0.430079481, 1e-9, txt),
+            ("gamma(7)", gam[7.0], 0.439991242, 1e-9, txt), ("gamma(8)", gam[8.0], 0.446716389, 1e-9, txt),
+            ("M 48 -> 64 at D 5", abs(float(best[5.0][7])), 8.7e-12, 1e-13, txt),
+            ("M 48 -> 64 at D 6", abs(float(best[6.0][7])), 3e-14, 1e-14, txt),
+            ("M 48 -> 64 at D 8", math.log10(abs(float(best[8.0][7]))), -20, 1, txt)]
+
+
+@check
 def lowD_305():
     """README "Below D = 4": the lowest low-D point, D = 3.05 at M = 384 (T45), and its step from M = 320
     (hp/data/delta_dd_lowD.csv, hp/export_lowD.py)"""

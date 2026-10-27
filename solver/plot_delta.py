@@ -136,16 +136,14 @@ def full1_of(raw, files):
 
 def error_series(raw, lowd):
     """[(D0, D1, [(D, error)], source, kind)] per range of D: the error of Delta at each point, from its data file. The low-D
-    double-double points: their change from the next lower M (hp/data/delta_dd.csv, the lowD rows); 4 to 8.25, f64
-    only: the spread over the setups (data_all.low_d); the continuation: its nearby checks (delta_dd.csv); with --raw,
+    double-double points (D 3.05 to 8.2): their change from the next lower M (hp/data/delta_dd.csv, the lowD rows,
+    where they have one); the continuation: its nearby checks (delta_dd.csv); with --raw,
     each pair of pinned runs (PAIRS): the largest difference of Delta_full1 at their shared waypoints. Estimators and
     spreads, none a bound."""
     rows = [l.rstrip("\n").split(",") for l in list(open(DD_CSV))[1:]]
     low = sorted((float(c[0]), abs(float(c[7]))) for c in rows if c[6].startswith("lowD") and c[7])
     cont = sorted((float(c[0]), abs(float(c[7]))) for c in rows if not c[6].startswith("lowD") and c[7])
-    f64 = sorted((d, lowd[d][1]) for d in lowd if 4.0 <= d < cont[0][0])
-    out = [(low[0][0], 4.0, low, "double-double, M up to 384", "the change from the next lower M"),
-           (4.0, cont[0][0], f64, "f64, kc 39 and 47 with Richardson", "the spread over the setups"),
+    out = [(low[0][0], cont[0][0], low, "double-double, M 48-384 (T79 above D = 4)", "the change from the next lower M"),
            (cont[0][0], cont[-1][0], cont, "double-double continuation", "the nearby checks")]
     if raw:
         for fa, fb, name in PAIRS:

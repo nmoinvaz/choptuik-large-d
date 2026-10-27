@@ -409,10 +409,10 @@ limits the series to $`D \gtrsim 10`$ and forbids cutting it short (five terms a
 | D | Δ | γ |
 |---|---|---|
 | 4 | 3.445452402 | 0.37396072 |
-| 5 | 3.2217019 | 0.4131269 |
-| 6 | 3.0094832 | 0.4300795 |
-| 7 | 2.8427532 | 0.4399912 |
-| 8 | 2.711790054444 | 0.4467164 |
+| 5 | 3.2217019446 | 0.413126936 |
+| 6 | 3.009483220493 | 0.430079481 |
+| 7 | 2.84275320647 | 0.439991242 |
+| 8 | 2.71179005444440 | 0.446716389 |
 | 10 | 2.521078919562 | 0.4555879375 |
 | 12 | 2.389188553641 | 0.4614055891 |
 | 15 | 2.253098407194 | 0.4673655689 |
@@ -427,9 +427,10 @@ limits the series to $`D \gtrsim 10`$ and forbids cutting it short (five terms a
 | ∞ | 1.643893746 ± 0.000000015 | 1/2 (free fits: to about 5×10⁻⁷) |
 
 Δ for D = 10–60 is double-double, interpolated to 10⁻¹⁴ from [`hp/data/delta_dd.csv`](hp/data/delta_dd.csv)
-where D is not itself a computed point; Δ(8) is the solver's separate check run at D = 8 (Newton to
-$`\lvert F\rvert = 5\times10^{-31}`$, checks table below), which is not in the data file. Δ for D = 5–7 and γ for D = 5–8 are
-from the f64 solver, within the precision of its points; D = 4 is from the low-D double-double runs (M = 80,
+where D is not itself a computed point. Δ and γ for D = 5–8 are double-double, from the run T79 (M = 48, 22
+points from D = 8.25 down to 4 in steps of 0.25, [`hp/data/delta_dd_lowD.csv`](hp/data/delta_dd_lowD.csv); the
+change from M = 48 to 64 is 8.7×10⁻¹² at D = 5, 3×10⁻¹⁴ at 6 and 10⁻²⁰ at 8, and Δ(7), checked at M = 48 only, is
+quoted to 10⁻¹¹; γ is quoted to 10⁻⁹, its M = 48 value). D = 4 is from the low-D double-double runs (M = 192,
 [notes/LOW_D.md](notes/LOW_D.md)). γ for D = 10–60 is double-double, a computed point at D = 10, 12 and 15 and
 interpolated elsewhere, given to the digits the interpolation supports; γ(70), γ(100) and γ(1000) extrapolate the
 double-double λ = 1/γ with λ∞ = 2 fixed, to within 1.3×10⁻⁶ over fit choices (`cd hp && python3 values_table.py`).
@@ -2447,6 +2448,7 @@ hp/                 double-double solver (crate hpkernel)
 ├── src/qsolve.rs   the residual, its exact Jacobian and the Newton step in quad-double (M = 32, 48)
 ├── scan_qd.py, qd_planted.py  continuation in D with the quad-double Newton, and its planted-root check
 ├── export_dd.py    collects the runs' points into data/delta_dd.csv
+├── t79_rows.py     T79's points (D 4-8.25, folder T79-win of the raw-data repository) into the low-D exporter's inputs
 ├── dd_fits_mp.py   large-D model fits at 60 digits, held-out errors, predictions (--dmax for a data snapshot)
 ├── short_forms.py  the shortest 1/D series per range of D with its error margin (README "The formula"; --selftest)
 ├── dd_candidates.py  candidate constants forced as the limit, held-out test (--dmax as above)

@@ -282,3 +282,27 @@ solver/lowD_n1_check.py. Data: hp/data/lowD_dd.jsonl, hp/data/lowD_gamma.jsonl, 
 hp/data/lowD_states/, hp/data/lowD_logs/, solver/data/lowD_*.jsonl, solver/data/lowD_*.log, solver/data/lowD_f64_*.npy.
 The f64 kc 55 / 63 runs used a rustkernel built from this tree (cf79fba) into a private directory, bitwise equal to the
 installed one at kc 47.
+
+## 10. The gap 4 < D < 8.25 in double-double (T79, win, 2026-10-27; folder T79-win of the raw-data repository)
+
+Until T79 the README's Δ for D = 5–7 and γ for D = 5–8 came from the f64 solver. T79 ran `scan_hp.py` down from the
+D = 8.25 state at M = 48 (kt 36, kc 60, ks 100, corrector dnp, tol 1e-27) to D = 4 in steps of 0.25 (22 points, every
+|F| 2–5×10⁻³¹, 65–170 s each), then `relayout.py` at M = 64 at D = 8, 6, 5 and 4, and `gamma_batch.py` at every
+point. `hp/t79_rows.py` puts the records into the low-D exporter's inputs (`data/lowD_dd_t79.jsonl`,
+`data/lowD_gamma_t79.jsonl`); `hp/data/delta_dd_lowD.csv` and `delta_dd.csv` hold the rows (run names lowD-M48,
+lowD-M64; the M 48 points without an M 64 check are "unresolved" there, converged but not checked in M).
+
+| D | Δ (M 48) | Δ(M 64) − Δ(M 48) | γ (M 48) |
+|---|---|---|---|
+| 8 | 2.711790054444401 | 9.5×10⁻²¹ | 0.446716389 |
+| 7 | 2.842753206466524 | (not run) | 0.439991242 |
+| 6 | 3.009483220493004 | −3.0×10⁻¹⁴ | 0.430079481 |
+| 5 | 3.221701944618060 | +8.7×10⁻¹² | 0.413126936 |
+| 4 | 3.445452661587394 | −2.6×10⁻⁷ (the earlier M 64 point; T79's M 64 re-solve at D = 4 did not converge, \|F\| 0.23 after 30 steps) | 0.373960289 |
+
+The M 48 value at D = 4 reproduces the earlier low-D run's M 48 value to every digit. The M 48 truncation falls from
+2.6×10⁻⁷ at D = 4 to 10⁻²⁰ at D = 8, so the points at D ≥ 5 are quoted to the M 64 check (10⁻¹¹ at D = 5, and Δ(7),
+unchecked, to 10⁻¹¹ by its neighbours); γ to 10⁻⁹ (its M 48 value; at D = 4 the M 48 → 64 change in γ is 4×10⁻⁷, at
+D ≥ 5 it was not measured). The growth-rate roots agree with the f64 formula's λ to 10⁻⁸–10⁻⁶. Not a stop, for the
+record: the task's note expected the D = 4 value within 10⁻¹⁰ of the M 192 one; 2.6×10⁻⁷ is the known M 48 truncation
+there, so the expectation was wrong, not the run.
