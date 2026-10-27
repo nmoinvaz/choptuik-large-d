@@ -53,7 +53,8 @@ pub struct Ctx<const B: usize> {
     /// (hp/mixed_check.py --mutate): 0 none, 1 no tau derivative, 2 omega scaled by 1 + 1e-9, 3 the horizon solves'
     /// kappa tangent term dropped; 6 the centre series' scale wrong at one order (twice sigma for the order-7 terms
     /// built from order 6), the control of the scaled series' bit-identity (hp/highm_check.py scaled). The
-    /// double-double lanes never read it.
+    /// double-double lanes never read it. The quad-double lanes read QD_MUT_NOREFINE and QD_MUT_REFINE4 only (and `qsolve`
+    /// QD_MUT_STATE_DD).
     pub mutate: u8,
     /// Parts of the f64 Jacobian (TAN_F64 lanes) computed in double-double instead, rounded to f64; bit flags HDD_*
     /// (notes/LARGE_D_MIXED.md). 0, the default, changes nothing. The double-double lanes never read it.
@@ -68,6 +69,15 @@ pub struct Ctx<const B: usize> {
 /// `Ctx::f64_dd`: the horizon series' periodic solves (`psolve`) in double-double for the f64 lanes, value and
 /// tangents, with the full double-double LU factors instead of their hi parts
 pub const HDD_SOLVE: u8 = 1;
+/// `Ctx::mutate` for the quad-double lanes (the control of qsolve's checks): the horizon solves without their
+/// refinement, so only to the double-double LU's accuracy
+pub const QD_MUT_NOREFINE: u8 = 7;
+/// `Ctx::mutate` for the quad-double lanes: four refinement steps, the reference of the refinement's convergence check
+pub const QD_MUT_REFINE4: u8 = 8;
+/// refinement steps of a horizon solve in the QD_SOLVE lanes: the double-double LU solves to about eps_dd times the
+/// condition number (pivots 1e-3..1e2), so two steps reach quad-double; a tangent lane takes one more, as its first
+/// solve ignores the derivative of the system
+const QD_REFINE: usize = 2;
 /// `Ctx::f64_dd`: no early end of the horizon series for f64 tangents (`Tail`); the series runs to ks
 pub const HDD_NOTAIL: u8 = 2;
 /// `Ctx::f64_dd`: the horizon block's column tasks (m_h, a_h, Delta) with `Du` lanes, i.e. the double-double
@@ -527,6 +537,25 @@ fn tan_f8<T: Lane, const B: usize>(x: &Fl<T, B>, k: usize) -> Fl<F8, B> {
 /// (omega D + diag kappa) f = r with the LU at the values; for tangents the derivative of the system:
 /// A_t f_d = r_d - omega_d D f_v - kappa_d f_v, with A_t = A + lam (lu_t; the same LU when lam = 0).
 fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, lu: &DDLu, lu_t: &DDLu, kappa: &Fl<T, B>, rhs: &Fl<T, B>, omega: T) -> Fl<T, B> {
+    if T::QD_SOLVE {
+        // the LU was factored at the double-double a_h and Delta; the refinement solves the lane's own system (omega
+        // and kappa from the quad-double a_h and Delta), its residual formed in the lane's precision (iterative
+        // refinement with the residual in higher precision: Moler, J. ACM 14 (1967) 316, doi:10.1145/321386.321394).
+        // A tangent lane's residual is that of the differentiated system, so value and tangent refine together.
+        let z = Fl::<DV, B>::zero();
+        let tsolve = |r: &Fl<T, B>| if T::TANGENT { lu_t.solve_lanes(&r.tan()) } else { z };
+        let mut f = Fl::<T, B>::from_vt(&lu.solve_lanes(&rhs.val()), &tsolve(rhs));
+        let steps = match ctx.mutate {
+            QD_MUT_NOREFINE => 0,
+            QD_MUT_REFINE4 => 4,
+            _ => QD_REFINE + T::TANGENT as usize,
+        };
+        for _ in 0..steps {
+            let res = *rhs - (ctx.d.apply(&f).mul_t(omega) + *kappa * f);
+            f = f + Fl::<T, B>::from_vt(&lu.solve_lanes(&res.val()), &tsolve(&res));
+        }
+        return f;
+    }
     if T::VAL_F64 || T::TAN_F64 {
         // f64 values: the value solve in plain f64 with the hi parts of the double-double LU factors; f64 tangents:
         // each tangent's solve likewise. With HDD_SOLVE both in double-double (the f64 right-hand side solved exactly
@@ -721,7 +750,7 @@ pub fn block_state<T: Lane, const B: usize>(ctx: &Ctx<B>, b: usize, inp: &[Fl<T,
     }
 }
 
-fn delta_of(zh: &[f64], zl: &[f64]) -> DD {
+pub(crate) fn delta_of(zh: &[f64], zl: &[f64]) -> DD {
     let l = zh.len();
     DD { hi: zh[l - 1], lo: zl[l - 1] }
 }

@@ -73,9 +73,9 @@ dependencies = [
 
 [[package]]
 name = "multidouble"
-version = "1.5.1"
+version = "1.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7095bfba916db6e943984267c02bdad33e490eef7b26a7e6ef245584ab1d6331"
+checksum = "b2b88877cd89d1f14b52a30aace8bfb9db983a70d2c296450cb51c668bf93906"
 dependencies = [
  "rayon",
 ]
