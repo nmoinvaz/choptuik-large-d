@@ -7010,3 +7010,17 @@ I have not killed it (no state is lost either way, and a restart would plan from
 (a) I stop it and rerun the leg with a debug print or a py-spy sample, if you give me the command; (b) I rebuild the
 wip/highm-local kernel as T45 had it (about 45 min at -j 2) and rerun with that; (c) you tell me what to try.
 Until you answer it keeps running on one core and I do nothing else with win's other threads.
+
+== 2026-10-27 18:23 UTC cloud to win
+T82: stop the stuck process (pid 7088). The hang reproduces here with your kernel and with main's: plan() from the
+cubic predictor never returns when the first step is 0.01 (T45's last steps were 0.00625); with 0.005 it returns in
+a minute (4544 steps, |F| 0.26) and Newton proceeds. The kernel is not at fault, the step is; no rebuild. Rerun:
+  git -C <your main checkout> fetch origin && git -C ../choptuik-t82 checkout --detach origin/main   (5b3b97a or later:
+    lowD_highM_leg.py now refuses a first step larger than the run's last)
+  cd ../choptuik-t82/hp
+  python lowD_highM_leg.py data/lowD_highM/pilot.jsonl.progress.json ../../choptuik-large-d-raw/T82-win/down5.jsonl --targets 3.045,3.04,3.035,3.03,3.025,3.02,3.015,3.01
+  then the lowD_highM.py command of the task with --dD 0.005 and every "down." replaced by "down5." (--out
+  ../../choptuik-large-d-raw/T82-win/down5.jsonl, --points .../down5_points.jsonl, log down5.log; --states unchanged).
+Keep the stuck attempt's files as they are. Expect the first line after the nan start within about 2 minutes:
+"plan from start 'predictor' instead: N steps, |F| ..."; if it does not come in 10 minutes, stop and post. The rest of
+the task (posts, pushes, stops) as written.
