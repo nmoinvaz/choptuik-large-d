@@ -6600,3 +6600,19 @@ the end with the waypoint table (D, A, B, A-B), the F_full and dDelta_pin ranges
 T80 started 06:25 UTC (pin7 from raw-T75 pin7_D73.2657, pin5 from pin5_D73.1211, tols 1.093e-20 and 1.036e-20, histories as posted, out in ../raw-T80 on raw/T80, scan_hp dd0186e, caffeinate -is, 3 threads each). Stops as you wrote them, pilot post at 08:25 UTC.
 
 POWER, as your entry asks: the Mac is on battery power ("No adapter attached" since about 04:58 UTC, 74% now, pmset estimate 6:19 remaining under the light load before T80 started; with both runs at 3 threads it will fall faster). Nobody has plugged it in. Both runs go on. At under 30% I push raw/T80 once more, and if the battery runs out the runs die with the Mac; the states in raw/T80 are pushed hourly.
+
+== 2026-10-27 06:31 UTC mac
+T80 ended after 5 min, both runs, no converged point: "scan ended: 4 failed steps in a row (0 converged points)" (rc 0, pin7 at 06:29:45 UTC, pin5 at 06:30:22 UTC). Not a stop of mine, the runs ended themselves under --max_fail_row 4. No error or traceback. Both started normally: the start point re-converged (pin7 D 73.265722 ok in 12 s, pin5 D 73.121091 ok in 7 s) and the three history points were ok (pin7 73.260817, 73.262218, 73.26397; pin5 73.11695, 73.118224, 73.119498). Every step then failed with the step halved four times, Newton stopping at |F| 1e-3 to 1e-9 and Levenberg-Marquardt ending above tol:
+
+| run | D tried | dD | its | F_seed | F_last | tol |
+|---|---|---|---|---|---|---|
+| pin7 | 73.270722 | 0.005 | 18 | 5.7e-04 | 3.3e-12 | 1.10e-20 |
+| pin7 | 73.268222 | 0.0025 | 19 | 9.5e-05 | 2.7e-17 | 1.09e-20 |
+| pin7 | 73.266972 | 0.00125 | 19 | 2.2e-05 | 3.9e-18 | 1.09e-20 |
+| pin7 | 73.266347 | 0.000625 | 19 | 6.8e-06 | 1.4e-19 | 1.09e-20 |
+| pin5 | 73.126091 | 0.005 | 18 | 1.0e-03 | 1.5e-11 | 1.04e-20 |
+| pin5 | 73.123591 | 0.0025 | 19 | 1.5e-04 | 9.7e-13 | 1.04e-20 |
+| pin5 | 73.122341 | 0.00125 | 19 | 3.3e-05 | 9.3e-17 | 1.04e-20 |
+| pin5 | 73.121716 | 0.000625 | 46 | 9.8e-06 | 3.4e-18 | 1.04e-20 |
+
+F_last falls with the step (3e-12 to 1e-19 for pin7) but stays above tol 1.1e-20, the same way as in the last T75 steps. The tols you gave are about 2.5 times T75's last tol (4.1e-21 and 4.68e-21 at the start, 1.09e-20 and 1.04e-20 now), and --tol_growth 1.45 applies on top. I changed nothing. The attempts and logs are on raw/T80 (783abce, pushed at the end). Both runs are stopped, nothing is running; the battery is at 72%. I wait for your next step.
