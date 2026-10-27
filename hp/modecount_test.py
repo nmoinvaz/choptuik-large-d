@@ -16,7 +16,8 @@ half the edges: B0 around lambda = 0, full = (aL, aR) x (-y2, y2), both sectors)
 z must count two more zeros (one for a real z). Evaluations of det M_psi are cached in
 hp/data/modecount_test_<tag>_raw.jsonl and shared between plain and planted runs.
 
-Records go to hp/data/modecount_test_results.jsonl and the log to hp/data/modecount_test_<tag>.log.
+Records go to <data>/modecount_test_results.jsonl and the log to <data>/modecount_test_<tag>.log, --data (default
+hp/data) in a raw/<task> worktree (raw_out.py; --allow_unraw writes anyway).
 """
 import cmath
 import json
@@ -35,7 +36,10 @@ def main():
     args, opts = parse(sys.argv[1:])
     path = args[0]
     threads = int(opts.get("threads", 1))
-    res_file = opts.get("res", os.path.join(DATA, "modecount_test_results.jsonl"))
+    data = opts.get("data", DATA)
+    res_file = opts.get("res", os.path.join(data, "modecount_test_results.jsonl"))
+    from raw_out import require_raw
+    require_raw(res_file)
     logs = []
 
     def log(m):
@@ -49,7 +53,7 @@ def main():
     tag = opts.get("tag", f"D{D:.4f}_M{M}")
     plant = complex(opts["plant"].replace(" ", "")) if "plant" in opts else None
     run = tag + (f"_plant{plant.real:g}{plant.imag:+g}j" if plant is not None else "")
-    logf = open(os.path.join(DATA, f"modecount_test_{tag}.log"), "a")
+    logf = open(os.path.join(data, f"modecount_test_{tag}.log"), "a")
     for m in logs:
         logf.write(m + "\n")
 
@@ -58,7 +62,7 @@ def main():
         logf.write(m + "\n")
         logf.flush()
 
-    raw_path = os.path.join(DATA, f"modecount_test_{tag}_raw.jsonl")
+    raw_path = os.path.join(data, f"modecount_test_{tag}_raw.jsonl")
     raw = {}
     if os.path.exists(raw_path):
         for line in open(raw_path):

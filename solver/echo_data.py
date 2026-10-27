@@ -5,7 +5,7 @@ amplitude of harmonic k), and the echo period Delta.
 
 D = 4 comes from the f64 solver's state solver/data/neB_kc39_D4.0000.npy (39 harmonics; the first block of the state
 is the centre slope p1 as spectral coefficients, the last entry is Delta). The other dimensions come from the
-double-double runs' saved states (/home/claude/dss/hp_scan/up*_D*.npz, not in the repo), read through
+double-double runs' saved states (hp/data/states/up*_D*.npz, through hp/states.py), read through
 hp/largeD_profiles.py; their x^1 centre coefficient is p1 on the half period grid (32 points, harmonics up to 31;
 from D = 35 on the runs pin harmonics above 13 to zero).
 
@@ -19,7 +19,7 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "hp"))
-from states import H   # hp/data/states (in the repo), else the runs' directory; see hp/states.py
+from states import H   # hp/data/states (in the repo); see hp/states.py
 OUT = os.path.join(HERE, "data", "echo_spectrum.npz")
 KMAX = 39
 

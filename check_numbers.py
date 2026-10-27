@@ -161,6 +161,28 @@ def omega_quotes():
 
 
 @check
+def selection_range():
+    """The selection rule's estimator range from the D = infinity inner problem (notes/PLANTED_SELECTION.md section 7.8,
+    the headline of solver/inner_amp/planted_checks_k15.json), and the Delta_inf range it gives with the finite-D
+    value 1.643893746 (dinf_quotes): Delta = 1.643893746 / (omega* / omega_inf)."""
+    c = json.load(open(os.path.join(ROOT, "solver/inner_amp/planted_checks_k15.json")))["K15 combine"]
+    lo, hi = c["headline"]
+    dlo, dhi = DINF / hi, DINF / lo
+    txt = [("README.md", "ω*/ω∞ = 0.999975–1.00005, Δ∞ = 1.64387 ± 0.00006 (1.64381–1.64393)"),
+           ("README.md", "puts the selected ω at 0.999975–1.00005 ω∞ (Δ∞ = 1.64387 ± 0.00006"),
+           ("paper/math/main.tex", "\\Dinf = 1.64387 \\pm 0.00006 \\qquad (1.64381\\text{--}1.64393)"),
+           ("paper/math/main.tex", "$\\omega^*/\\winf = 0.999975$--$1.00005$"),
+           ("paper/physics/main.tex", "$\\omega/\\omega_\\infty = 0.999975$--$1.00005$"),
+           ("paper/physics/main.tex", "\\Dinf = 1.64387 \\pm 0.00006")]
+    return [("selection range, lower end", lo, 0.999975, 1e-6, txt),
+            ("selection range, upper end", hi, 1.00005, 1e-5, txt),
+            ("Delta_inf range, lower end", dlo, 1.64381, 1e-5, txt),
+            ("Delta_inf range, upper end", dhi, 1.64393, 1e-5, txt),
+            ("Delta_inf range, centre", (dlo + dhi) / 2, 1.64387, 1e-5, txt),
+            ("Delta_inf range, half-width", (dhi - dlo) / 2, 0.00006, 1e-5, txt)]
+
+
+@check
 def first_order():
     """The 1/n coefficients from the O(1/n) inner problem (notes/FIRST_ORDER.md): omega_1, Delta_1 = -2 pi omega_1 /
     omega*^2 and lambda_1 in the M-harmonic truncations (M = 5: the mean of the three runs), and the fitted values."""
@@ -258,6 +280,24 @@ def sub_box_K(d, h, MC, KR, arb):
     ok, K, _ = KR.krawczyk(xhat, g_hat, JX, [arb(h), arb(h)])
     assert ok, "the sub-box test must pass"
     return K
+
+
+@check
+def short_forms():
+    """README "The formula", the shorter-forms table: the 40-61 three-term series and its margin, recomputed (a fast
+    row: one range, one fit; the whole table takes about 15 minutes with short_forms.py)."""
+    sys.path.insert(0, os.path.join(ROOT, "hp"))
+    import dd_fits_mp as F
+    import short_forms as S
+    pts, _ = F.load_points()
+    Ds = F.clean(pts, sorted(d for d in pts if 10 <= d <= 61.03), verbose=False)
+    Dl = [d for d in Ds if 40 <= d <= 61]
+    ev, _, _ = F.fit(pts, Dl, "1/D", 2)
+    c = [float(v) for v in S.series_coeffs(ev, 3)]
+    err = float(S.error_in_range(pts, Ds, ev, 40, 61))
+    txt = [("README.md", "| 40–61 | 10⁻⁴ | 3 | 1.6450284 + 10.19239/D − 18.04099/D² | 5.7×10⁻⁶ |")]
+    return [("40-61 c0", c[0], 1.6450284, 1e-7, txt), ("40-61 c1", c[1], 10.19239, 1e-5, txt),
+            ("40-61 c2", c[2], -18.04099, 1e-5, txt), ("40-61 margin", err, 5.7e-6, 1e-7, txt)]
 
 
 def full_dinf():

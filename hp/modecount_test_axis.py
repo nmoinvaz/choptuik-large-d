@@ -26,13 +26,15 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from modecount_common import setup, horizon_poles  # noqa: E402
 from modecount_wind import parse  # noqa: E402
+from raw_out import require_raw  # noqa: E402
 
 
 def main():
     args, opts = parse(sys.argv[1:])
+    out = opts.get("out", os.path.join(HERE, "data", "modecount_test_axis.jsonl"))
+    require_raw(out)                    # --allow_unraw writes anyway
     st = setup(args[0], M=int(opts["M"]) if "M" in opts else None, threads=int(opts.get("threads", 1)), log=print)
     lo, hi, h, s = float(opts["lo"]), float(opts["hi"]), float(opts.get("h", 0.02)), float(opts.get("s", 0))
-    out = opts.get("out", os.path.join(HERE, "data", "modecount_test_axis.jsonl"))
     im = s * st.omega
     Q = [p for _, p in horizon_poles(st) if abs(p.imag - im) < 0.5 * st.omega and lo - 2 < p.real < hi + 2]
     print(f"D {st.D}: M {st.M}, |F| {st.F:.1e}, omega {st.omega:.6f}; line Im = {s} omega = {im:.6f}, Re {lo} .. {hi}; "

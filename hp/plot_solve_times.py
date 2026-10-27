@@ -7,7 +7,8 @@ github.com/nmoinvaz/speedy-gonzales (skills/graph-data). Prints the plotted numb
 
 Data: data/solve_times.csv, written by --export from the solve records: data/lowD_dd*.jsonl and
 data/lowD_highM/*points*.jsonl (low D; a solve copied into several files counts once), the cloud runs' scan_up*.jsonl
-(SCAN_DIR, default /home/claude/dss/hp_scan, as for export_dd.py), data/local/scan_up*.jsonl (the Windows machine),
+(SCAN_DIR; those records are missing since the cloud session ended on 2026-10-26, so without SCAN_DIR their rows are
+kept as data/solve_times.csv holds them), data/local/scan_up*.jsonl (the Windows machine),
 data/large_d/pilot_cloud/pilotB.jsonl and data/large_d/up70*.jsonl (the Mac).
 
     cd hp && python3 plot_solve_times.py [--export [SCAN_DIR]]
@@ -18,6 +19,7 @@ import glob
 import json
 import math
 import os
+import re
 import sys
 
 from data_graphs import INK, SERIES, Svg, axes, better_hint, callout, caption, esc, footnote, legend, marker
@@ -76,13 +78,17 @@ def export(scan):
             fin = sum(s for M, s, src, ok in rs if M == bm[0] and src == bm[1] and ok)
             rows.append(dict(kind="lowD_value", D=D, seconds=round(fin, 1), M=bm[0], solves="", its="", machine="",
                              run=bm[1]))
-    runs = [("cloud", f) for f in sorted(glob.glob(os.path.join(scan, "scan_up*.jsonl")))]
+    runs = [("cloud", f) for f in sorted(glob.glob(os.path.join(scan, "scan_up*.jsonl")))] if scan else []
+    if scan and not runs:
+        sys.exit(f"no scan_up*.jsonl in {scan}")
+    if not scan:
+        # the cloud runs' rows, as this CSV holds them (their records are missing)
+        rows += [r for r in csv.DictReader(open(CSV, newline=""))
+                 if r["machine"] == "cloud" and re.fullmatch(r"up\d*", r["run"])]
     runs += [("win", f) for f in sorted(glob.glob(os.path.join(HERE, "data", "local", "scan_up*.jsonl")))]
     runs += [("cloud", os.path.join(HERE, "data", "large_d", "pilot_cloud", "pilotB.jsonl"))]
     runs += [("mac", f) for f in sorted(glob.glob(os.path.join(HERE, "data", "large_d", "up70*.jsonl")))
              if not f.endswith("_attempts.jsonl")]
-    if not runs[0][1].startswith(scan):
-        sys.exit(f"no scan_up*.jsonl in {scan}: the cloud runs' records are needed for --export")
     for machine, f in runs:
         run = os.path.basename(f).replace("scan_", "").replace(".jsonl", "")
         for r in jl(f):
@@ -177,7 +183,7 @@ def plot():
 def main():
     if "--export" in sys.argv:
         i = sys.argv.index("--export")
-        export(sys.argv[i + 1] if len(sys.argv) > i + 1 else "/home/claude/dss/hp_scan")
+        export(sys.argv[i + 1] if len(sys.argv) > i + 1 and not sys.argv[i + 1].startswith("--") else None)
     plot()
 
 

@@ -4,7 +4,10 @@ Delta (hi part, 16 decimals) in its log. Where the start D is a point of an earl
 reproducibility check; where the run changed the layout (M, nodes, kfreeze), it measures the layout's effect.
 Resolution: the printed hi part, about 2e-16.
 
-    python3 hp/review/rv2_restarts.py [CLOUD_SCAN_DIR]
+    python3 hp/review/rv2_restarts.py CLOUD_SCAN_DIR
+
+CLOUD_SCAN_DIR held the cloud runs' scan_up*.log (/home/claude/dss/hp_scan); it is missing since 2026-10-26, and the
+last run's output is rv2_restarts.log.
 """
 import csv
 import glob
@@ -14,7 +17,10 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 HP = os.path.dirname(HERE)
-scan = sys.argv[1] if len(sys.argv) > 1 else "/home/claude/dss/hp_scan"
+scan = sys.argv[1] if len(sys.argv) > 1 else None
+if not scan or not glob.glob(os.path.join(scan, "scan_up*.log")):
+    sys.exit("rv2_restarts: no scan_up*.log in CLOUD_SCAN_DIR; the cloud runs' records have been missing since the cloud "
+             "session ended (2026-10-26), so this audit cannot be rerun without them (notes/NUMERICS_REVIEW.md)")
 rows = {round(float(r[0]), 6): (float(r[1]), float(r[2]), r[6]) for r in list(csv.reader(open(os.path.join(HP, "data", "delta_dd.csv"))))[1:]}
 pat_s = re.compile(r"\(re-\)converged start D=([0-9.]+) M=(\d+) nodes=(\[[^\]]*\]): Delta ([0-9.]+)")
 pat_h = re.compile(r"history point D=([0-9.]+): ok (\w+), Delta ([0-9.]+)")

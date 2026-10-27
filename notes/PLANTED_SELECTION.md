@@ -936,3 +936,141 @@ minima of its objective (section 6.8), not as a calibrated estimator.
 
 The stages are `converge`, `plants`, `real`, `ring`, `calib`, `recomplete`, `project`, each run as
 `nice -n 10 python3 planted_k15.py STAGE` from `solver/inner_amp/`.
+
+### 7.1 σ₁₅ is converged
+
+| wf | σ₁₅ | err15 (relative) | σ₀…σ₁₄ against `scan29J1000` | ratio law: \|Δ²\| at k = 13 |
+|---|---|---|---|---|
+| 0.99 | +4.3353007071037814558×10⁻¹² − 3.6503299238330505347×10⁻¹²i | 2.60×10⁻²⁴ (4.6×10⁻¹³) | bitwise equal, 15/15 | 0.0108 |
+| 1.00 | +4.0489578842497621311×10⁻¹² − 3.8060086244191446298×10⁻¹²i | 2.86×10⁻²⁴ (5.1×10⁻¹³) | bitwise equal, 15/15 | 0.0109 |
+| 1.01 | +3.7594108527414830562×10⁻¹² − 3.9427088921505715759×10⁻¹²i | 3.14×10⁻²⁴ (5.8×10⁻¹³) | bitwise equal, 15/15 | 0.0111 |
+
+- **All four criteria of section 7.0 pass,** and each one's mutation (`--mutate=err|low|pilot|ratiolaw`) makes it fire.
+  - err15 is 5×10⁻¹³ relative, against the 10⁻¹⁰ asked for.
+  - Pilot (b) at wf 1.00 equals (a)'s σ₁₅ to 2.7×10⁻²⁶ (err15 2.9×10⁻²⁴). Its σ₁₂, σ₁₃, σ₁₄ equal `scan29J1000`'s to
+    3.4×10⁻²⁴, 8.8×10⁻²⁵ and 1.8×10⁻²⁵, each 100–150 times below their errors.
+  - The second differences of σ_k/σ_{k+1} stay at 0.011 for k = 11–13 (0.002–0.048 over k = 7–13).
+- **What err15 is:** as err14 (section 6.1), the late-order fit's plateau step, an estimate of the fit-truncation
+  error, not a bound. The pilot tests arithmetic precision only; its own sigma_err is again inf at every k.
+- **Spread in wf.** σ₁₅ changes by 5.8% of itself between the nodes (5.5% and 5.7% for σ₁₃, σ₁₄). err15 is 10⁻¹¹ of
+  that change.
+
+### 7.2 The pipeline on plants first
+
+51 plants at K = 13, 14, 15, before the real data. All four checks pass:
+- the regenerated plants' K = 13 and 14 estimates equal the stored K = 14 records exactly (largest difference 0);
+- N1, 7/7: a lone simple zero recovered at K = 15 by arg, ratio, Padé and G to 3.5×10⁻⁷ at worst; graded against
+  ω_t + 0.002 it fails, as it must;
+- N2, 2/2: no estimator prints a number.
+
+### 7.3 The real estimates at K = 15
+
+The record "N0 scan31J1000" equals "N0 scan29J1000" at K = 13 and 14 to the last bit.
+
+| estimator | K = 15 | K = 14 | K = 13 |
+|---|---|---|---|
+| arg crossing | 1.000019 | 1.000026 | 1.000046 |
+| ratio | 0.999920 | 0.999769 | 0.999284 |
+| central Padé | [3/11]–[10/4]: 0.999984–1.000063 (mid 1.000024) | mid 1.000043 | mid 0.999847 |
+| G (production κ̄) | 0.999999 | 1.000027 | 0.999995 |
+| Aitken, k − 2 … k | 1.000015 | 1.000017 | 0.999886 |
+| effective exponent c at ω∞ | 1.002 − 0.002i | 1.000 − 0.004i | 1.004 − 0.010i |
+
+- **The arg crossings keep falling monotonically:** 1.000197, 1.000109, 1.000046, 1.000026, 1.000019 for k = 11–15.
+  The distance from 1 shrank by ×0.57 from k = 13 to 14 and by ×0.73 from 14 to 15.
+- **The simple-zero law predicts τ₁₅ from τ₁₃, τ₁₄ to 1.1–2.6×10⁻⁴,** better than it predicted τ₁₄ (4.9–6.3×10⁻⁴).
+- **Detectors:** D-ratio, D-bracket and D-ratiolaw, as at K = 14 (section 6.3 explains D-bracket); D-arg, D-padé and
+  D-G stay silent.
+- **The mutation controls fire.** σ₁₅ → −σ₁₅ at wf 1.00 fires D-G, D-arg and D-padé; σ₁₅ × (1 + 10⁻³) fires D-G and
+  D-padé. Each moves the estimates by about 10⁻².
+- **Numerical noise:** under noise of size sigma_err on every σ_k (20 seeds), arg₁₅ moves by at most 1.1×10⁻⁹.
+
+### 7.4 The ring test: what each K = 14 completion predicted for σ₁₅
+
+Every completion was regenerated first and reproduces its stored zero to the printed digits. The benchmark, the
+simple-zero law from τ₁₃, τ₁₄, misses τ₁₅ by 1.1–2.6×10⁻⁴.
+
+| completion (K = 14) | its zero | zeros in \|x\| < 7.3 / 12 / 16 | σ₁₅ rel. error | τ₁₅ rel. error | its arg₁₅ | detectors beyond the real data's | survives |
+|---|---|---|---|---|---|---|---|
+| C14-W1, W2, W3 (ratio law) | 0.99888–0.99934 | 7 / 14 / – | 3.5–4.7×10⁻³ | 2.9–3.9 | none | D-G, D-arg, D-padé | no |
+| C14-ARC, four shapes | 1.00010–1.00035 | 4–6 / 12–13 / – | 4.1–6.6×10⁻⁴ | 0.40–0.55 | 0.98–1.03 | D-G, D-padé (and D-arg for two) | no |
+| C14-BP [3/11] | 1.000056 | 0 / 8 / 12 | 9×10⁻⁶ | 7.6–8.5×10⁻³ | 0.999981 | D-G, D-padé | no |
+| **C14-BP [4/10]** | **0.999991** | **0 / 4 / 10** | 3.7–4.0×10⁻⁷ | 3.3–3.8×10⁻⁴ | 1.000002 | – | **yes** |
+| C14-BP [5/9] | 0.999983 | 0 / 1 / 8 | 3.4–4.3×10⁻⁷ | 3.3–3.7×10⁻⁴ | 1.000011 | D-G | no |
+| C14-BP [6/8], [7/7] | 0.999993 | 0 / 1 / 7 | 1.3–1.4×10⁻⁷ | 1.2×10⁻⁴ | 1.000021 | – | yes |
+| C13-BP [5/8] | 0.999957 | – / 1 / – | 3.7–6.2×10⁻⁶ | 5.9–9.7×10⁻⁴ | 0.999988 | – | yes |
+| C13-BP [6/7] | 0.999982 | – / 1 / – | 1.4–1.5×10⁻⁶ | 2.7–2.9×10⁻⁴ | 1.000007 | – | yes |
+
+- **Every ratio-law and arc ring is rejected.** They miss τ₁₅ by 40–390%, and fire D-G and D-padé.
+- **C14-BP [3/11] (8 zeros in |x| < 12) is rejected**, and so is the ring-free [5/9] (D-G).
+- **Finding: C14-BP [4/10] carries a ring and survives.** Besides x₀ (at |x| ≈ 7.4) it has three zeros in |x| < 12,
+  all between |x| = 7.3 and 12, none closer to the origin than x₀. It predicts σ₁₅ to 4×10⁻⁷ and τ₁₅ about as well as
+  the benchmark, and fires no detector the real data does not. So σ₀…σ₁₅ do not exclude every ring: a ring just
+  beyond x₀ is compatible with them. Here it does not move the estimate: its zero, 0.999991, is within 2×10⁻⁶ of the
+  ring-free [6/8] and [7/7] (0.999993), inside both the K = 14 range and the K = 15 range below.
+- The ring-free completions [6/8], [7/7] and the two K = 13 ones survive, as they did at K = 14.
+
+### 7.5 Calibration at K = 15
+
+The implied zero for the real K = 15 estimate is real − error over each family:
+
+| family | n | arg | ratio | Padé mid | G |
+|---|---|---|---|---|---|
+| the 28 arc plants | 28 | **0.999975–1.000018** | 0.999534–1.000332 | 0.999950–1.000039 | 0.999999–1.000003 |
+| C-EXP | 1 | 1.000023 | 0.999676 | 0.999810 | 0.999963 |
+| REFIT (fit residual ≤ 10⁻⁴) | 5 | 0.999978–1.000001 | 1.000232–1.000385 | 1.000001–1.000063 | 1.000000–1.000001 |
+| BP family (C13-BP [5/8], [6/7]; C14-BP [5/9], [6/8]) | 4 | **0.999989–0.999994** | 0.999967–1.000534 | 1.000078–1.000238 | 1.000010–1.000057 |
+
+- The K = 14 calibration rebuilt from the new records reproduces section 6.5 (arg 0.999952–1.000048, G
+  1.000039–1.000071).
+- **The arc plants' arg error shrank:** +0.01…+0.44×10⁻⁴ at K = 15, against −0.22…+0.74×10⁻⁴ at K = 14, and it no
+  longer changes sign across the family.
+- **G on the arc plants is now within 3×10⁻⁶,** but section 6.8 showed that G's production value depends on which
+  local minimum of its objective it picks; per section 7.0 it enters below only through that spread.
+- The plants' σ₁₅ deviate from the measured one by 10⁻³–3×10⁻² (C-EXP 8×10⁻⁵): they are calibration shapes, not
+  completions of the real data.
+
+### 7.6 The next generation and the ring-free completions at K = 15
+
+Glued at σ₁₅ (tails from k = 16); zeros counted at wf 1.00:
+
+| completion (K = 15) | its zero | zeros in \|x\| < 7.3 / 12 / 16 | type rule |
+|---|---|---|---|
+| C15-W1, W2, W3 (ratio law, windows 6–14, 8–14, 9–14) | 1.00018–1.00043 | 7 / 14–15 / – | – |
+| C15-ARC, four shapes (best ω_t 1.00035–1.00049, L2 floor 4–7×10⁻⁴) | 1.00004–1.00034 | 5 / 13 / – | – |
+| C15-BP [3/12] | 1.000014 | 0 / 9 / 13 | passes |
+| C15-BP [4/11] | 0.999992 | 0 / 4 / 11 | passes |
+| C15-BP [5/10] | 0.999992 | 0 / 2 / 10 | passes |
+| **C15-BP [6/9]** | **0.9999990** | **0 / 1 / 11** | passes |
+| **C15-BP [7/8]** | **1.0000018** | **0 / 1 / 5** | passes |
+
+The ring-free completions that pass the type rule are C15-BP [6/9] and [7/8], at 0.9999990 and 1.0000018. The
+ratio-law and arc tails carry rings again, as at K = 14.
+
+### 7.7 The order-15 projection
+
+The model est_k = ω* + c r^k through k = 13 and 14 predicts arg₁₅ − 1 = +1.49×10⁻⁵ for ω* = 1, +1.23×10⁻⁵ for 0.99998
+and +1.04×10⁻⁵ for 0.99995; the real value is +1.90×10⁻⁵. The zero at 1 is closer (4.1×10⁻⁶ against 6.7×10⁻⁶), but the
+model's own error is 2.1×10⁻⁵ (its largest miss over k = 12–14 on the real data; 1.9×10⁻⁵ over the arc plants at
+k = 15), so the projection is not decisive. The log-linear trend of arg_k − 1 over k = 4–15 falls ×0.535 per order.
+
+### 7.8 Combination
+
+- K = 15 estimator range (hull): the calibrated arg over the arc plants, 0.999975–1.000018; over the BP family,
+  0.999989–0.999994; the ring-free completions, 0.9999990 and 1.0000018. **The hull is 0.999975–1.000018.**
+- It overlaps the K = 14 range (0.99998–1.00005), so the headline is their union, **0.999975–1.000050**. As before it
+  is an estimator range, not a bound.
+- G, with its spread: production 0.999999 at K = 15 (1.000027 at K = 14); over the minima of its objective within a
+  factor 5 of the best, 0.999971–1.000301 (0.999762–1.000027 at K = 14); its global minimum 1.000067 (0.999886).
+
+### 7.9 Verdict at K = 15
+
+- σ₁₅ is converged to 5×10⁻¹³ relative and continues every trend of σ₀…σ₁₄.
+- The real estimates moved toward 1 again: arg 1.000019, G 0.999999, Padé mid 1.000024, Aitken 1.000015.
+- The calibrated range shrank from 0.999952–1.000048 (arc plants, arg, K = 14) to 0.999975–1.000018. The headline
+  union, 0.999975–1.000050, changes only at its lower end (0.99998 → 0.999975).
+- ω∞ = 1 lies inside every range, as at K = 13 and 14. The data still do not decide between 1 and a value a few 10⁻⁵
+  below it.
+- One finding against the earlier picture: a ring whose extra zeros lie at 7.3 < |x| < 12 (C14-BP [4/10]) survives
+  σ₁₅. The rings of the earlier generations (the ratio-law and arc tails, with zeros in |x| < 7.3) are all rejected.
+

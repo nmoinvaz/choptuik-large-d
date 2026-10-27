@@ -1,0 +1,60 @@
+  dn 0: |F| 4.84e-17 converged, Delta 1.791584880912764
+  newton 0: |F| 4.84e-17 |dz| 4.27e-10 lam 1 dDelta -4.20e-17 Delta 1.791584880912764 piv 1.3e-15..1.8e+08  t 1.2s
+  newton 1: |F| 4.74e-21 |dz| 6.59e-10 lam 0.25 dDelta +2.96e-17 Delta 1.791584880912764 piv 1.2e-15..1.8e+08  t 2.4s
+  newton 2: |F| 4.00e-21 |dz| 3.33e-10 lam 1 dDelta -1.18e-17 Delta 1.791584880912764 piv 1.2e-15..1.8e+08  t 3.6s
+  newton 3: |F| 2.75e-21 |dz| 9.16e-10 lam 0.125 dDelta +2.29e-17 Delta 1.791584880912764 piv 1.2e-15..1.8e+08  t 4.7s
+(re-)converged start D=67.722443 M=32 nodes=[0.3, 0.4, 0.5, 0.6, 0.7]: Delta 1.7915848809127639 ok True (6s)
+  dn 0: |F| 6.52e-17 converged, Delta 1.792186089210577
+  newton 0: |F| 6.52e-17 |dz| 2.53e-10 lam 1 dDelta -1.03e-17 Delta 1.792186089210577 piv 2.4e-15..1.6e+08  t 1.1s
+  newton 1: |F| 1.49e-21 |dz| 6.02e-10 lam 0.125 dDelta +6.73e-18 Delta 1.792186089210577 piv 2.3e-15..1.6e+08  t 2.2s
+  newton 2: |F| 1.58e-21 |dz| 1.77e-10 lam 1 dDelta +3.20e-17 Delta 1.792186089210577 piv 2.3e-15..1.6e+08  t 3.3s
+  newton 3: |F| 9.63e-22 |dz| 8.35e-10 lam 0.0312 dDelta -5.52e-18 Delta 1.792186089210577 piv 2.3e-15..1.6e+08  t 4.4s
+history point D=67.438434: ok True, Delta 1.7921860892105772
+  dn 0: |F| 2.64e-17 converged, Delta 1.792118329466951
+  newton 0: |F| 2.64e-17 |dz| 5.78e-10 lam 1 dDelta +2.30e-17 Delta 1.792118329466951 piv 2.4e-15..1.6e+08  t 1.1s
+  newton 1: |F| 7.38e-21 |dz| 3.97e-10 lam 1 dDelta -5.11e-17 Delta 1.792118329466950 piv 1.9e-15..1.6e+08  t 2.2s
+  newton 2: |F| 3.74e-21 |dz| 4.89e-10 lam 0.5 dDelta +2.98e-17 Delta 1.792118329466951 piv 2.2e-15..1.6e+08  t 3.3s
+  newton 3: |F| 2.37e-21 |dz| 4.15e-10 lam 0.5 dDelta +3.19e-17 Delta 1.792118329466951 piv 2.2e-15..1.6e+08  t 4.4s
+history point D=67.470328: ok True, Delta 1.7921183294669507
+  dn 0: |F| 4.41e-17 converged, Delta 1.792017713821120
+  newton 0: |F| 4.41e-17 |dz| 4.84e-10 lam 1 dDelta -2.69e-17 Delta 1.792017713821120 piv 2.4e-15..1.7e+08  t 1.1s
+  newton 1: |F| 5.11e-21 |dz| 2.36e-10 lam 1 dDelta +3.11e-17 Delta 1.792017713821120 piv 2.1e-15..1.7e+08  t 2.2s
+  newton 2: |F| 1.32e-21 |dz| 2.41e-10 lam 1 dDelta -5.02e-17 Delta 1.792017713821120 piv 2.4e-15..1.7e+08  t 3.3s
+  newton 3: |F| 1.27e-21 |dz| 2.34e-10 lam 1 dDelta +3.85e-18 Delta 1.792017713821120 piv 2.4e-15..1.7e+08  t 4.4s
+history point D=67.517741: ok True, Delta 1.7920177138211202
+  dn 0: |F| 3.72e-17 converged, Delta 1.791953538526474
+  newton 0: |F| 3.72e-17 |dz| 6.99e-10 lam 1 dDelta +1.43e-16 Delta 1.791953538526474 piv 1.9e-15..1.7e+08  t 1.1s
+  newton 1: |F| 1.07e-20 |dz| 6.47e-10 lam 1 dDelta -1.13e-16 Delta 1.791953538526474 piv 2.0e-15..1.7e+08  t 2.2s
+  newton 2: |F| 9.15e-21 |dz| 8.10e-10 lam 0.5 dDelta +7.81e-18 Delta 1.791953538526474 piv 2.0e-15..1.7e+08  t 3.3s
+  newton 3: |F| 7.09e-21 |dz| 4.23e-10 lam 1 dDelta -5.70e-17 Delta 1.791953538526474 piv 2.0e-15..1.7e+08  t 4.4s
+history point D=67.548016: ok True, Delta 1.7919535385264742
+  dn 0: |F| 1.15e-16 converged, Delta 1.791881410840792
+  newton 0: |F| 1.15e-16 |dz| 3.81e-10 lam 1 dDelta -7.19e-17 Delta 1.791881410840792 piv 1.9e-15..1.7e+08  t 1.0s
+  newton 1: |F| 3.27e-21 |dz| 2.48e-10 lam 1 dDelta +1.59e-17 Delta 1.791881410840792 piv 1.9e-15..1.7e+08  t 1.9s
+  newton 2: |F| 1.91e-21 |dz| 4.91e-10 lam 0.25 dDelta +2.98e-17 Delta 1.791881410840792 piv 1.9e-15..1.7e+08  t 3.0s
+  newton 3: |F| 1.52e-21 |dz| 6.42e-10 lam 0.125 dDelta -2.46e-18 Delta 1.791881410840792 piv 1.9e-15..1.7e+08  t 4.1s
+history point D=67.582074: ok True, Delta 1.7918814108407923
+  dn 0: |F| 1.15e-16 converged, Delta 1.791797457296011
+  newton 0: |F| 1.15e-16 |dz| 3.27e-10 lam 1 dDelta +2.46e-17 Delta 1.791797457296011 piv 1.7e-15..1.7e+08  t 1.1s
+  newton 1: |F| 2.65e-21 |dz| 4.47e-10 lam 0.5 dDelta +1.49e-17 Delta 1.791797457296011 piv 1.6e-15..1.7e+08  t 2.2s
+  newton 2: |F| 2.22e-21 |dz| 2.96e-10 lam 1 dDelta -2.45e-17 Delta 1.791797457296011 piv 1.7e-15..1.7e+08  t 3.3s
+  newton 3: |F| 2.31e-21 |dz| 2.92e-10 lam 1 dDelta -4.72e-17 Delta 1.791797457296011 piv 1.7e-15..1.7e+08  t 4.4s
+history point D=67.621758: ok True, Delta 1.7917974572960111
+  dn 0: |F| 5.18e-17 converged, Delta 1.791729134191428
+  newton 0: |F| 5.18e-17 |dz| 1.32e-10 lam 1 dDelta -3.21e-17 Delta 1.791729134191428 piv 1.6e-15..1.7e+08  t 1.1s
+  newton 1: |F| 6.61e-22 |dz| 1.68e-10 lam 0.5 dDelta +1.10e-17 Delta 1.791729134191428 piv 1.6e-15..1.7e+08  t 2.2s
+  newton 2: |F| 5.29e-22 |dz| 4.00e-10 lam 0.0625 dDelta -5.09e-18 Delta 1.791729134191428 piv 1.6e-15..1.7e+08  t 3.2s
+  newton 3: |F| 5.58e-22 |dz| 5.20e-10 lam 0.0312 dDelta +2.85e-18 Delta 1.791729134191428 piv 1.6e-15..1.7e+08  t 4.3s
+history point D=67.654087: ok True, Delta 1.7917291341914281
+  dn 0: |F| 5.16e-17 converged, Delta 1.791649607594379
+  newton 0: |F| 5.16e-17 |dz| 2.96e-10 lam 1 dDelta -5.50e-17 Delta 1.791649607594379 piv 1.6e-15..1.8e+08  t 1.1s
+  newton 1: |F| 2.17e-21 |dz| 3.12e-10 lam 0.5 dDelta +2.69e-17 Delta 1.791649607594379 piv 1.5e-15..1.8e+08  t 2.2s
+  newton 2: |F| 1.55e-21 |dz| 6.02e-10 lam 0.125 dDelta +8.49e-18 Delta 1.791649607594379 piv 1.5e-15..1.8e+08  t 3.3s
+  newton 3: |F| 1.33e-21 |dz| 1.62e-10 lam 1 dDelta -2.95e-17 Delta 1.791649607594379 piv 1.5e-15..1.8e+08  t 4.4s
+history point D=67.691755: ok True, Delta 1.7916496075943789
+  dn 0 [all]: |F| 1.75e+17 -> nan lam 0.000122 Delta 1.787180697877402 t 2s
+  dn 1 [full]: |F| 1.75e+17 -> nan lam 0.000122 Delta 1.787020431882369 t 4s
+   D=70.0: Newton stopped at |F| 1.7e+17; Levenberg-Marquardt from the predictor
+  lm 0: |F|_2 4.28e+17: no mu decreases it
+D=70.0: no convergence (|F| 1.7e+17); dD 2.277557 -> 1.1387785
+scan ended: 1 failed steps in a row (0 converged points, D = 67.722443)

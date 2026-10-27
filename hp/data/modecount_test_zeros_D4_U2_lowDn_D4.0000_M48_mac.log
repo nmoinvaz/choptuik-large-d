@@ -1,0 +1,10 @@
+D 4.0: M 48, |F| 3.8e-31, omega 1.823617; box Re -0.114 .. 0.193, Im 4.558 .. 6.382; panels <= 0.1, 8 nodes, tol 0.785; plant None; 1206 candidate poles multiplied out, within omega of the box: [(0.3861, 5.4709), (-0.2277, 5.4709), (-0.8416, 5.4709), (-1.4554, 5.4709)]
+    50 evaluations, 3.2 s each
+    100 evaluations, 3.5 s each
+    150 evaluations, 3.7 s each
+    200 evaluations, 3.9 s each
+    250 evaluations, 4.0 s each
+    300 evaluations, 4.1 s each
+    350 evaluations, 4.2 s each
+  boundary: 46 panels of 8 nodes, max step of arg g 0.007 rad, N = 0; trend taken out: p = 4243.592 + (252.742-7.598j) mu + (-0.307+0.055j) mu^2
+369 evaluations, 1537 s; PASS

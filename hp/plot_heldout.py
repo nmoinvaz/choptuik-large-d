@@ -7,6 +7,7 @@ Two panels: the models fitted on 10 <= D <= 37.5 and on 10 <= D <= 45 (cleaned p
 D^(-1/2) (degree 20), which are not. All four fit their range to the level of the points (shaded).
 
     python3 plot_heldout.py [-o heldout.svg]
+    python3 plot_heldout.py --dmax=60.1 --print     # the paper's layout, heldout_print.svg
 """
 import argparse
 import math
@@ -36,22 +37,30 @@ def sup(e):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("-o", "--output", default=os.path.join(HERE, "heldout.svg"))
+    ap.add_argument("-o", "--output")
     ap.add_argument("--dmax", type=float, default=None,
                     help="use only the points with D <= dmax (the committed figure: --dmax=60.1)")
+    ap.add_argument("--print", action="store_true", help="the paper layout, 620 px wide (default -o heldout_print.svg)")
     args = ap.parse_args()
+    P = args.print
+    args.output = args.output or os.path.join(HERE, "heldout_print.svg" if P else "heldout.svg")
     pts, _ = load_points()
     Ds = clean(pts, sorted(d for d in pts if d >= 10 and (args.dmax is None or d <= args.dmax)), verbose=False)
     Dmax = Ds[-1]
     X0, X1 = 35.0, math.ceil(Dmax)
 
-    W, px, pw, ph = 760, 80, 520, 230
+    # --print is the paper's layout: 620 px at 468 pt, no title or footnote (the caption carries them), a y title in
+    # place of the subtitle, the legend in one column. y is the top of the first panel's title row.
+    if P:
+        W, px, pw, ph, y, ncol = 620, 64, 418, 200, 8, 1
+    else:
+        W, px, pw, ph, y, ncol = 760, 80, 520, 230, 90, 2
     svg = Svg(W)
-    svg.text(px, 28, f"Predicting double-double points the fits never saw (computed up to D = {Dmax:.1f})",
-             size=14, fill=INK, weight="bold")
-    svg.text(px, 48, "|model − computed Δ| on every point above the fitted range; shaded: the level of the points",
-             size=11)
-    y = 90
+    if not P:
+        svg.text(px, 28, f"Predicting double-double points the fits never saw (computed up to D = {Dmax:.1f})",
+                 size=14, fill=INK, weight="bold")
+        svg.text(px, 48, "|model − computed Δ| on every point above the fitted range; shaded: the level of the points",
+                 size=11)
     for cut in CUTS:
         fitD = [d for d in Ds if d <= cut]
         hold = [d for d in Ds if d > cut]
@@ -74,6 +83,10 @@ def main():
         svg.text(sx(cut) + 5, py + 12, "fit range ends", size=10)
         svg.line(px, py + ph, px + pw, py + ph, INK_SOFT)
         svg.text(px + pw / 2, py + ph + 34, "D", size=11, anchor="middle")
+        if P:
+            svg.add(f'<text x="{px - 50:.1f}" y="{py + ph / 2:.1f}" font-size="11" fill="{INK_SOFT}" '
+                    f'text-anchor="middle" transform="rotate(-90 {px - 50:.1f} {py + ph / 2:.1f})">'
+                    f'|model − computed Δ|</text>')
         ends = []
         for model, deg, label, color in MODELS:
             ev, res, _ = fit(pts, fitD, model, deg)
@@ -92,12 +105,16 @@ def main():
         y = py + ph + 64
     # legend
     for i, (model, deg, label, color) in enumerate(MODELS):
-        lx, ly = px + (i % 2) * 330, y + (i // 2) * 18
+        lx, ly = px + (i % ncol) * 330, y + (i // ncol) * 18
         svg.line(lx, ly - 4, lx + 22, ly - 4, color, width=2)
         svg.text(lx + 28, ly, label + (" (analytic in 1/D)" if model in ("1/D", "1/n") else ""), size=11)
-    y += 40
-    svg.text(px, y, "Regenerate: python3 hp/plot_heldout.py", size=10)
-    open(args.output, "w").write(svg.finish(int(y + 16)))
+    if P:
+        H = y + 3 * 18 + 12
+    else:
+        y += 40
+        svg.text(px, y, "Regenerate: python3 hp/plot_heldout.py", size=10)
+        H = int(y + 16)
+    open(args.output, "w").write(svg.finish(H))
     print("wrote", args.output)
 
 

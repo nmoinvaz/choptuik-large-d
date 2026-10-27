@@ -7,6 +7,7 @@ Data: solver/data/echo_spectrum.npz (echo_data.py) and hp/data/fratios.npy (hp/l
 From D = 35 on the double-double runs pin harmonics above 13 to zero, so those lines stop at nu = 13.
 
     python3 plot_spectrum.py [-o spectrum.svg]
+    python3 plot_spectrum.py --print     # the paper's layout, spectrum_print.svg
 """
 import argparse
 import math
@@ -29,33 +30,43 @@ A_INF, F31, F51, QA2 = 2.72, 0.055, 0.0030, 0.0634   # amplitude expansion at om
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("-o", default=os.path.join(HERE, "spectrum.svg"))
+    ap.add_argument("-o")
+    ap.add_argument("--print", action="store_true", help="the paper layout, 620 px wide (default -o spectrum_print.svg)")
     args = ap.parse_args()
+    P = args.print
+    args.o = args.o or os.path.join(HERE, "spectrum_print.svg" if P else "spectrum.svg")
     PD.DARK.update(dict(zip(RAMP, RAMP_DARK)))
     d = np.load(os.path.join(HERE, "data", "echo_spectrum.npz"))
     Ds, Fs = d["D"], d["F"]
-    W = 900
+    # Layout: panel boxes, panel B's header x and the extra header height (print: a second key row). --print is the
+    # paper's: 620 px at 468 pt, no title (the caption carries it).
+    if P:
+        W, (px, py, pw, ph), (qx, qy, qw, qh), bx, hy = 620, (46, 64, 316, 290), (440, 64, 140, 290), 390, 18
+    else:
+        W, (px, py, pw, ph), (qx, qy, qw, qh), bx, hy = 900, (80, 120, 440, 330), (630, 120, 215, 330), 590, 0
     svg = Svg(W)
-    svg.text(40, 26, "The echo's harmonic spectrum", size=15, fill=INK, weight="bold")
-    svg.text(40, 46, "Each odd harmonic of the centre profile is smaller than the last by a factor that grows with D and "
-                     "levels off: at D = ∞ the", size=11)
-    svg.text(40, 62, "inner problem predicts a factor of about 1/16 per two harmonics, a finite decay rate of 1.38–1.45 "
-                     "per harmonic.", size=11)
+    if not P:
+        svg.text(40, 26, "The echo's harmonic spectrum", size=15, fill=INK, weight="bold")
+        svg.text(40, 46, "Each odd harmonic of the centre profile is smaller than the last by a factor that grows with D "
+                         "and levels off: at D = ∞ the", size=11)
+        svg.text(40, 62, "inner problem predicts a factor of about 1/16 per two harmonics, a finite decay rate of "
+                         "1.38–1.45 per harmonic.", size=11)
 
     # ---- panel A: |F_nu| vs nu, log y ----
-    px, py, pw, ph = 80, 120, 440, 330
     nmax = 21
     ylo, yhi = -8, 2     # log10
     sx = lambda nu: px + (nu - 1) / (nmax - 1) * pw
     sy = lambda v: py + ph - (math.log10(v) - ylo) / (yhi - ylo) * ph
-    svg.text(px, py - 30, "|F_ν|, amplitude of harmonic ν (log scale)", size=12, fill=INK)
-    kx = px
+    svg.text(px, py - 30 - hy, "|F_ν|, amplitude of harmonic ν (log scale)", size=12, fill=INK)
+    kx, ky = px, py - 12 - hy
     for j, Dt in enumerate(SHOW):
-        svg.line(kx, py - 16, kx + 16, py - 16, RAMP[j], width=2)
-        svg.text(kx + 20, py - 12, f"D = {Dt:g}", size=10)
+        svg.line(kx, ky - 4, kx + 16, ky - 4, RAMP[j], width=2)
+        svg.text(kx + 20, ky, f"D = {Dt:g}", size=10)
         kx += 20 + 5.6 * len(f"D = {Dt:g}") + 12
-    svg.line(kx, py - 16, kx + 16, py - 16, INK, width=1.5, dash="5 4")
-    svg.text(kx + 20, py - 12, "D = ∞, predicted", size=10)
+    if P:
+        kx, ky = px, py - 12
+    svg.line(kx, ky - 4, kx + 16, ky - 4, INK, width=1.5, dash="5 4")
+    svg.text(kx + 20, ky, "D = ∞, predicted", size=10)
     for e in range(ylo, yhi + 1):
         y = py + ph - (e - ylo) / (yhi - ylo) * ph
         svg.line(px, y, px + pw, y, GRID)
@@ -92,12 +103,12 @@ def main():
         svg.text(sx(nu_end) + 8, sy(abs(F[nu_end])) + 4, f"D = {round(D)}", size=10, fill=INK)
 
     # ---- panel B: decay rate per harmonic vs 1/n ----
-    qx, qy, qw, qh = 630, 120, 215, 330
     xr = (0.0, 0.1)
     yr = (0.5, 1.6)
     tx = lambda x: qx + (x - xr[0]) / (xr[1] - xr[0]) * qw
     ty = lambda v: qy + qh - (v - yr[0]) / (yr[1] - yr[0]) * qh
-    svg.text(qx - 40, qy - 30, "Decay rate per harmonic, ½ ln |F_ν / F_(ν+2)|", size=12, fill=INK)
+    svg.text(bx, qy - 30 - hy, "Decay rate, ½ ln |F_ν / F_(ν+2)|" if P else
+             "Decay rate per harmonic, ½ ln |F_ν / F_(ν+2)|", size=12, fill=INK)
     for v in np.arange(0.6, 1.61, 0.2):
         svg.line(qx, ty(v), qx + qw, ty(v), GRID)
         svg.text(qx - 8, ty(v) + 4, f"{v:.1f}", size=10, anchor="end")
@@ -129,7 +140,8 @@ def main():
         for a, b, Dv in zip(x, rate, Dd):
             marker(svg, tx(a), ty(b), col, f"D = {Dv:.2f}, nu = {nu}: rate {b:.4f}", r=3.2)
         svg.text(tx(x[0]) + 6, ty(rate[0]) + {1: 4, 5: -2, 9: 10}[nu], f"ν = {nu}", size=10, fill=INK)
-    svg.text(qx - 40, qy - 12, "dashed: extrapolation in 1/n from D ≥ 20", size=10)
+    svg.text(bx, qy - 12 - hy, "dashed: extrapolated from D ≥ 20" if P else
+             "dashed: extrapolation in 1/n from D ≥ 20", size=10)
     open(args.o, "w").write(svg.finish(qy + qh + 52))
     print("wrote", args.o)
 

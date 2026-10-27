@@ -658,8 +658,14 @@ def main(argv):
     fit_step = _opt(argv, "--fit-step", 1, int)
     phys_prec = _opt(argv, "--phys-prec", None, int)
     out = _opt(argv, "--out", None)
+    import os
+    sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "hp"))
+    from raw_out import pop_allow, require_raw
+    allow = pop_allow(argv)
     wf, K, J = float(argv[1]), int(argv[2]), int(argv[3])
     prec = int(argv[4]) if len(argv) > 4 else 320
+    out = out or f"sigF_w{wf:.4f}_K{K}_J{J}.json"
+    require_raw(out, allow=allow)       # raw/<task> worktree, or --allow_unraw
     t0 = time.time()
     kw = {}
     if fit != "legacy":

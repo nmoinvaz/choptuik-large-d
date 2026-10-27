@@ -1,4 +1,5 @@
-# Build the physics paper: needs pdflatex with revtex4-2 (texlive-publishers). The figures are shared with the other
+# Build the physics paper: needs pdflatex with revtex4-2 (texlive-publishers), or with tectonic (it fetches revtex4-2):
+# tectonic -X compile main.tex && cp main.pdf dss_physics.pdf. The figures are shared with the other
 # papers in ../figures/ (PDF conversions of the repo's SVG figures; see ../Makefile).
 dss_physics.pdf: main.tex ../figures/*.pdf
 	pdflatex -interaction=nonstopmode main.tex
@@ -7,4 +8,4 @@ dss_physics.pdf: main.tex ../figures/*.pdf
 	cp main.pdf dss_physics.pdf
 
 clean:
-	rm -f main.aux main.log main.out main.pdf mainNotes.bib build*.log
+	rm -f main.aux main.log main.out main.pdf main.toc mainNotes.bib build*.log

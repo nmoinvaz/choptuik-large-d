@@ -1,90 +1,94 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="900" height="476" viewBox="0 0 900 476" font-family="system-ui, sans-serif">
 <style>@media (prefers-color-scheme: dark){[fill="#fcfcfb"]{fill:#201f1d}[stroke="#fcfcfb"]{stroke:#201f1d}[fill="#0b0b0b"]{fill:#e8e6e3}[stroke="#0b0b0b"]{stroke:#e8e6e3}[fill="#52514e"]{fill:#a8a49d}[stroke="#52514e"]{stroke:#a8a49d}[fill="#e7e6e2"]{fill:#343230}[stroke="#e7e6e2"]{stroke:#343230}[fill="#efeeea"]{fill:#2a2927}[stroke="#efeeea"]{stroke:#2a2927}[fill="#eb6834"]{fill:#dd5c26}[stroke="#eb6834"]{stroke:#dd5c26}[fill="#7a7668"]{fill:#948e82}[stroke="#7a7668"]{stroke:#948e82}}</style>
 <rect width="900" height="476" fill="#fcfcfb"/>
-<text x="78.0" y="26.0" font-size="15" fill="#0b0b0b" text-anchor="start" font-weight="bold">The selection rule: distance from the finite-D answer, and what order 14 showed</text>
+<text x="78.0" y="26.0" font-size="15" fill="#0b0b0b" text-anchor="start" font-weight="bold">The selection rule: distance from the finite-D answer, and what order 15 showed</text>
 <text x="78.0" y="46.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">|estimate − 1| on a log scale, where steady convergence is a straight line; hover a mark for its value</text>
-<text x="78.0" y="80.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">From above (blue) the estimates fall about ×0.53 per order; the shaded band is where the K = 13 calibration put the zero</text>
-<line x1="78.0" y1="420.0" x2="868.0" y2="420.0" stroke="#e7e6e2" stroke-width="1"/>
-<text x="70.0" y="424.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">10⁻⁶</text>
-<line x1="78.0" y1="356.2" x2="868.0" y2="356.2" stroke="#e7e6e2" stroke-width="1"/>
-<text x="70.0" y="360.2" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">10⁻⁵</text>
-<line x1="78.0" y1="292.3" x2="868.0" y2="292.3" stroke="#e7e6e2" stroke-width="1"/>
-<text x="70.0" y="296.3" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">10⁻⁴</text>
-<line x1="78.0" y1="228.5" x2="868.0" y2="228.5" stroke="#e7e6e2" stroke-width="1"/>
-<text x="70.0" y="232.5" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">10⁻³</text>
-<line x1="78.0" y1="164.7" x2="868.0" y2="164.7" stroke="#e7e6e2" stroke-width="1"/>
-<text x="70.0" y="168.7" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">10⁻²</text>
-<line x1="111.8" y1="120.0" x2="111.8" y2="420.0" stroke="#e7e6e2" stroke-width="1"/>
-<text x="111.8" y="436.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">4</text>
-<line x1="179.3" y1="120.0" x2="179.3" y2="420.0" stroke="#e7e6e2" stroke-width="1"/>
-<text x="179.3" y="436.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">5</text>
-<line x1="246.8" y1="120.0" x2="246.8" y2="420.0" stroke="#e7e6e2" stroke-width="1"/>
-<text x="246.8" y="436.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">6</text>
-<line x1="314.3" y1="120.0" x2="314.3" y2="420.0" stroke="#e7e6e2" stroke-width="1"/>
-<text x="314.3" y="436.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">7</text>
-<line x1="381.8" y1="120.0" x2="381.8" y2="420.0" stroke="#e7e6e2" stroke-width="1"/>
-<text x="381.8" y="436.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">8</text>
-<line x1="449.4" y1="120.0" x2="449.4" y2="420.0" stroke="#e7e6e2" stroke-width="1"/>
-<text x="449.4" y="436.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">9</text>
-<line x1="516.9" y1="120.0" x2="516.9" y2="420.0" stroke="#e7e6e2" stroke-width="1"/>
-<text x="516.9" y="436.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">10</text>
-<line x1="584.4" y1="120.0" x2="584.4" y2="420.0" stroke="#e7e6e2" stroke-width="1"/>
-<text x="584.4" y="436.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">11</text>
-<line x1="651.9" y1="120.0" x2="651.9" y2="420.0" stroke="#e7e6e2" stroke-width="1"/>
-<text x="651.9" y="436.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">12</text>
-<line x1="719.5" y1="120.0" x2="719.5" y2="420.0" stroke="#e7e6e2" stroke-width="1"/>
-<text x="719.5" y="436.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">13</text>
-<line x1="787.0" y1="120.0" x2="787.0" y2="420.0" stroke="#e7e6e2" stroke-width="1"/>
-<text x="787.0" y="436.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">14</text>
+<text x="78.0" y="80.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">From above (blue) the estimates fall about ×0.54 per order; the shaded band: a zero 2–5×10⁻⁵ below 1</text>
+<line x1="78.0" y1="402.0" x2="868.0" y2="402.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="70.0" y="406.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">10⁻⁶</text>
+<line x1="78.0" y1="342.0" x2="868.0" y2="342.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="70.0" y="346.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">10⁻⁵</text>
+<line x1="78.0" y1="282.0" x2="868.0" y2="282.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="70.0" y="286.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">10⁻⁴</text>
+<line x1="78.0" y1="222.0" x2="868.0" y2="222.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="70.0" y="226.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">10⁻³</text>
+<line x1="78.0" y1="162.0" x2="868.0" y2="162.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="70.0" y="166.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">10⁻²</text>
+<line x1="107.9" y1="120.0" x2="107.9" y2="420.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="107.9" y="436.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">4</text>
+<line x1="167.8" y1="120.0" x2="167.8" y2="420.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="167.8" y="436.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">5</text>
+<line x1="227.6" y1="120.0" x2="227.6" y2="420.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="227.6" y="436.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">6</text>
+<line x1="287.5" y1="120.0" x2="287.5" y2="420.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="287.5" y="436.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">7</text>
+<line x1="347.3" y1="120.0" x2="347.3" y2="420.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="347.3" y="436.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">8</text>
+<line x1="407.2" y1="120.0" x2="407.2" y2="420.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="407.2" y="436.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">9</text>
+<line x1="467.0" y1="120.0" x2="467.0" y2="420.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="467.0" y="436.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">10</text>
+<line x1="526.9" y1="120.0" x2="526.9" y2="420.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="526.9" y="436.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">11</text>
+<line x1="586.7" y1="120.0" x2="586.7" y2="420.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="586.7" y="436.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">12</text>
+<line x1="646.6" y1="120.0" x2="646.6" y2="420.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="646.6" y="436.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">13</text>
+<line x1="706.4" y1="120.0" x2="706.4" y2="420.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="706.4" y="436.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">14</text>
+<line x1="766.3" y1="120.0" x2="766.3" y2="420.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="766.3" y="436.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">15</text>
 <line x1="78.0" y1="420.0" x2="868.0" y2="420.0" stroke="#52514e" stroke-width="1"/>
 <text x="473.0" y="454.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal">order k of the amplitude expansion</text>
 <text x="30.0" y="270.0" font-size="11" fill="#52514e" text-anchor="middle" transform="rotate(-90 30.0 270.0)">|ω*/ω∞ − 1|</text>
-<rect x="78.0" y="298.5" width="790.0" height="38.4" fill="#eb6834" opacity="0.13"><title>calibrated zero at K = 13: ω*/ω∞ = 0.99992–0.99998</title></rect>
-<text x="88.1" y="321.7" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">zero as calibrated at K = 13: 2–8×10⁻⁵ below 1</text>
-<path d="M111.8,153.0 L841.0,344.0" fill="none" stroke="#52514e" stroke-width="1.2" stroke-opacity="0.85" stroke-linejoin="round" stroke-dasharray="6 4"/>
-<text x="125.3" y="261.9" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">dashed: trend of k = 4–14, ×0.53 per order</text>
-<path d="M187.4,148.5 L254.9,145.9 L322.4,168.5 L389.9,181.8 L457.5,191.0 L525.0,206.9 L592.5,234.2 L660.0,233.1 L727.6,237.8 L795.1,269.1" fill="none" stroke="#eb6834" stroke-width="1.5" stroke-opacity="0.85" stroke-linejoin="round"/>
-<g><circle cx="187.4" cy="148.5" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 5: from below, ω/ω∞ = 0.982100</title></g>
-<g><circle cx="254.9" cy="145.9" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 6: from below, ω/ω∞ = 0.980300</title></g>
-<g><circle cx="322.4" cy="168.5" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 7: from below, ω/ω∞ = 0.991300</title></g>
-<g><circle cx="389.9" cy="181.8" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 8: from below, ω/ω∞ = 0.994600</title></g>
-<g><circle cx="457.5" cy="191.0" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 9: from below, ω/ω∞ = 0.996136</title></g>
-<g><circle cx="525.0" cy="206.9" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 10: from below, ω/ω∞ = 0.997819</title></g>
-<g><circle cx="592.5" cy="234.2" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 11: from below, ω/ω∞ = 0.999186</title></g>
-<g><circle cx="660.0" cy="233.1" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 12: from below, ω/ω∞ = 0.999152</title></g>
-<g><circle cx="727.6" cy="237.8" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 13: from below, ω/ω∞ = 0.999284</title></g>
-<g><circle cx="795.1" cy="269.1" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 14: from below, ω/ω∞ = 0.999769</title></g>
-<g><rect x="437.8" y="201.6" width="7.0" height="7.0" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>k = 9: factored series, ω/ω∞ = 0.99767</title></g>
-<g><rect x="505.3" y="254.1" width="7.0" height="7.0" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>k = 10: factored series, ω/ω∞ = 1.00035</title></g>
-<g><rect x="572.8" y="281.6" width="7.0" height="7.0" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>k = 11: factored series, ω/ω∞ = 0.99987</title></g>
-<g><rect x="640.3" y="283.8" width="7.0" height="7.0" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>k = 12: factored series, ω/ω∞ = 0.99988</title></g>
-<g><rect x="707.9" y="371.9" width="7.0" height="7.0" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>k = 13: factored series, ω/ω∞ = 0.999995</title></g>
-<g><rect x="775.4" y="325.1" width="7.0" height="7.0" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>k = 14: factored series, ω/ω∞ = 1.000027</title></g>
-<path d="M111.8,149.0 L179.3,169.8 L246.8,190.4 L314.3,208.3 L381.8,225.1 L449.4,244.1 L516.9,261.9 L584.4,273.5 L651.9,290.0 L719.5,314.0 L787.0,329.6" fill="none" stroke="#2a78d6" stroke-width="2" stroke-opacity="0.85" stroke-linejoin="round"/>
-<g><circle cx="111.8" cy="149.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 4: from above, ω/ω∞ = 1.0175954</title></g>
-<g><circle cx="179.3" cy="169.8" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 5: from above, ω/ω∞ = 1.0083196</title></g>
-<g><circle cx="246.8" cy="190.4" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 6: from above, ω/ω∞ = 1.0039527</title></g>
-<g><circle cx="314.3" cy="208.3" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 7: from above, ω/ω∞ = 1.0020759</title></g>
-<g><circle cx="381.8" cy="225.1" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 8: from above, ω/ω∞ = 1.0011297</title></g>
-<g><circle cx="449.4" cy="244.1" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 9: from above, ω/ω∞ = 1.0005704</title></g>
-<g><circle cx="516.9" cy="261.9" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 10: from above, ω/ω∞ = 1.0002993</title></g>
-<g><circle cx="584.4" cy="273.5" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 11: from above, ω/ω∞ = 1.0001971</title></g>
-<g><circle cx="651.9" cy="290.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 12: from above, ω/ω∞ = 1.0001089</title></g>
-<g><circle cx="719.5" cy="314.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 13: from above, ω/ω∞ = 1.0000458</title></g>
-<g><circle cx="787.0" cy="329.6" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 14: from above, ω/ω∞ = 1.0000261</title></g>
-<g><circle cx="810.6" cy="338.0" r="4.5" fill="#fcfcfb" stroke="#0b0b0b" stroke-width="1.6"/><title>k = 14 predicted from k = 12, 13 if the zero is at 1.0: 1.0000192 (r = 0.42 per order)</title></g>
-<g><circle cx="810.6" cy="347.7" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 14 predicted from k = 12, 13 if the zero is at 0.99998: 1.0000136 (r = 0.51 per order)</title></g>
-<g><circle cx="810.6" cy="363.3" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 14 predicted from k = 12, 13 if the zero is at 0.99995: 1.0000077 (r = 0.60 per order)</title></g>
-<g><circle cx="810.6" cy="383.4" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 14 predicted from k = 12, 13 if the zero is at 0.99992: 1.0000038 (r = 0.67 per order)</title></g>
-<text x="820.6" y="342.0" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">zero at 1</text>
-<text x="820.6" y="387.4" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">zero in the band</text>
-<text x="773.0" y="349.6" font-size="10" fill="#0b0b0b" text-anchor="end" font-weight="normal">measured at k = 14: 2.6×10⁻⁵</text>
+<rect x="78.0" y="300.1" width="790.0" height="23.9" fill="#eb6834" opacity="0.13"><title>the lower part of the earlier range: ω*/ω∞ = 0.99995–0.99998</title></rect>
+<text x="87.0" y="315.7" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">zero 2–5×10⁻⁵ below 1 (the lower part of the earlier range)</text>
+<path d="M107.9,152.1 L814.1,344.4" fill="none" stroke="#52514e" stroke-width="1.2" stroke-opacity="0.85" stroke-linejoin="round" stroke-dasharray="6 4"/>
+<text x="119.9" y="253.4" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">dashed: trend of k = 4–15, ×0.54 per order</text>
+<path d="M175.0,146.8 L234.8,144.3 L294.7,165.6 L354.5,178.1 L414.3,186.8 L474.2,201.7 L534.0,227.4 L593.9,226.3 L653.7,230.7 L713.6,260.1 L773.4,287.7" fill="none" stroke="#eb6834" stroke-width="1.5" stroke-opacity="0.85" stroke-linejoin="round"/>
+<g><circle cx="175.0" cy="146.8" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 5: from below, ω/ω∞ = 0.982100</title></g>
+<g><circle cx="234.8" cy="144.3" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 6: from below, ω/ω∞ = 0.980300</title></g>
+<g><circle cx="294.7" cy="165.6" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 7: from below, ω/ω∞ = 0.991300</title></g>
+<g><circle cx="354.5" cy="178.1" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 8: from below, ω/ω∞ = 0.994600</title></g>
+<g><circle cx="414.3" cy="186.8" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 9: from below, ω/ω∞ = 0.996136</title></g>
+<g><circle cx="474.2" cy="201.7" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 10: from below, ω/ω∞ = 0.997819</title></g>
+<g><circle cx="534.0" cy="227.4" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 11: from below, ω/ω∞ = 0.999186</title></g>
+<g><circle cx="593.9" cy="226.3" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 12: from below, ω/ω∞ = 0.999152</title></g>
+<g><circle cx="653.7" cy="230.7" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 13: from below, ω/ω∞ = 0.999284</title></g>
+<g><circle cx="713.6" cy="260.1" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 14: from below, ω/ω∞ = 0.999769</title></g>
+<g><circle cx="773.4" cy="287.7" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 15: from below, ω/ω∞ = 0.999920</title></g>
+<g><rect x="396.5" y="196.5" width="7.0" height="7.0" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>k = 9: factored series, ω/ω∞ = 0.99767</title></g>
+<g><rect x="456.3" y="245.9" width="7.0" height="7.0" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>k = 10: factored series, ω/ω∞ = 1.00035</title></g>
+<g><rect x="516.2" y="271.7" width="7.0" height="7.0" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>k = 11: factored series, ω/ω∞ = 0.99987</title></g>
+<g><rect x="576.0" y="273.7" width="7.0" height="7.0" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>k = 12: factored series, ω/ω∞ = 0.99988</title></g>
+<g><rect x="635.9" y="356.6" width="7.0" height="7.0" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>k = 13: factored series, ω/ω∞ = 0.999995</title></g>
+<g><rect x="695.7" y="312.6" width="7.0" height="7.0" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>k = 14: factored series, ω/ω∞ = 1.000027</title></g>
+<g><rect x="755.6" y="398.5" width="7.0" height="7.0" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>k = 15: factored series, ω/ω∞ = 0.999999</title></g>
+<path d="M107.9,147.3 L167.8,166.8 L227.6,186.2 L287.5,203.0 L347.3,218.8 L407.2,236.6 L467.0,253.4 L526.9,264.3 L586.7,279.8 L646.6,302.4 L706.4,317.0 L766.3,325.3" fill="none" stroke="#2a78d6" stroke-width="2" stroke-opacity="0.85" stroke-linejoin="round"/>
+<g><circle cx="107.9" cy="147.3" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 4: from above, ω/ω∞ = 1.0175954</title></g>
+<g><circle cx="167.8" cy="166.8" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 5: from above, ω/ω∞ = 1.0083196</title></g>
+<g><circle cx="227.6" cy="186.2" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 6: from above, ω/ω∞ = 1.0039527</title></g>
+<g><circle cx="287.5" cy="203.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 7: from above, ω/ω∞ = 1.0020759</title></g>
+<g><circle cx="347.3" cy="218.8" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 8: from above, ω/ω∞ = 1.0011297</title></g>
+<g><circle cx="407.2" cy="236.6" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 9: from above, ω/ω∞ = 1.0005704</title></g>
+<g><circle cx="467.0" cy="253.4" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 10: from above, ω/ω∞ = 1.0002993</title></g>
+<g><circle cx="526.9" cy="264.3" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 11: from above, ω/ω∞ = 1.0001971</title></g>
+<g><circle cx="586.7" cy="279.8" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 12: from above, ω/ω∞ = 1.0001089</title></g>
+<g><circle cx="646.6" cy="302.4" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 13: from above, ω/ω∞ = 1.0000458</title></g>
+<g><circle cx="706.4" cy="317.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 14: from above, ω/ω∞ = 1.0000261</title></g>
+<g><circle cx="766.3" cy="325.3" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 15: from above, ω/ω∞ = 1.0000190</title></g>
+<g><circle cx="787.2" cy="331.7" r="4.5" fill="#fcfcfb" stroke="#0b0b0b" stroke-width="1.6"/><title>k = 15 predicted from k = 13, 14 if the zero is at 1.0: 1.0000149 (r = 0.57 per order)</title></g>
+<g><circle cx="787.2" cy="336.7" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 15 predicted from k = 13, 14 if the zero is at 0.99998: 1.0000123 (r = 0.70 per order)</title></g>
+<g><circle cx="787.2" cy="340.9" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 15 predicted from k = 13, 14 if the zero is at 0.99995: 1.0000104 (r = 0.79 per order)</title></g>
+<text x="797.2" y="327.7" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">zero at 1</text>
+<text x="797.2" y="352.9" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">zero in the band</text>
+<text x="752.3" y="345.3" font-size="10" fill="#0b0b0b" text-anchor="end" font-weight="normal">measured at k = 15: 1.9×10⁻⁵</text>
 <g><circle cx="84.0" cy="96.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>from above</title></g>
 <text x="94.0" y="100.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">from above (simple zero)</text>
 <g><circle cx="261.6" cy="96.0" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>from below</title></g>
 <text x="271.6" y="100.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">from below (exponent free)</text>
 <g><rect x="447.0" y="92.0" width="8.0" height="8.0" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>factored series</title></g>
 <text x="461.0" y="100.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">factored series</text>
-<g><circle cx="575.5" cy="96.0" r="4.5" fill="#fcfcfb" stroke="#52514e" stroke-width="1.6"/><title>k = 14 projections</title></g>
-<text x="585.5" y="100.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">k = 14, predicted from 12, 13</text>
+<g><circle cx="575.5" cy="96.0" r="4.5" fill="#fcfcfb" stroke="#52514e" stroke-width="1.6"/><title>k = 15 projections</title></g>
+<text x="585.5" y="100.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">k = 15, predicted from 13, 14</text>
 </svg>

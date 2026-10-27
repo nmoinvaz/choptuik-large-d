@@ -9,6 +9,7 @@
    (hp/data/local/gamma_compare.txt); it falls about 3.5-fold per added power, toward 0.
 
     python3 plot_gamma.py [-o gamma.svg]
+    python3 plot_gamma.py --print        # the paper's layout, gamma_print.svg
 """
 import argparse
 import json
@@ -49,8 +50,11 @@ def free_fits():
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("-o", default=os.path.join(HERE, "gamma.svg"))
+    ap.add_argument("-o")
+    ap.add_argument("--print", action="store_true", help="the paper layout, 620 px wide (default -o gamma_print.svg)")
     args = ap.parse_args()
+    P = args.print
+    args.o = args.o or os.path.join(HERE, "gamma_print.svg" if P else "gamma.svg")
     D, lam = load()
     n = D - 2
     sel = D >= 16
@@ -59,12 +63,17 @@ def main():
     fit = lambda x: 2 + sum(ci * x ** (i + 1) for i, ci in enumerate(c))
     c0 = SERIES[0]
 
-    W = 900
+    # Layout: panel boxes (px, py, pw, ph). --print is the paper's: 620 px at 468 pt, no title (the caption carries it).
+    if P:
+        W, H, boxp, boxq = 620, 356, (60, 56, 320, 250), (450, 56, 120, 250)
+    else:
+        W, H, boxp, boxq = 900, 120 + 300 + 70, (78, 120, 470, 300), (640, 120, 230, 300)
     svg = Svg(W)
-    svg.text(78, 26, "Why the critical exponent tends to 1/2", size=15, fill=INK, weight="bold")
-    svg.text(78, 46, "Growth rate λ = 1/γ of the unstable mode; hover a mark for its value", size=11)
+    if not P:
+        svg.text(78, 26, "Why the critical exponent tends to 1/2", size=15, fill=INK, weight="bold")
+        svg.text(78, 46, "Growth rate λ = 1/γ of the unstable mode; hover a mark for its value", size=11)
 
-    p = Axes(svg, 78, 120, 470, 300, (0, 0.165), (1.96, 2.24),
+    p = Axes(svg, *boxp, (0, 0.165), (1.96, 2.24),
              [(x, f"{x:g}") for x in (0, 0.04, 0.08, 0.12, 0.16)], [(v, f"{v:.2f}") for v in (2.0, 2.05, 2.1, 2.15, 2.2)],
              f"λ against 1/n: {len(D)} double-double points, D = {D.min():g}–{D.max():.0f}", "1/n = 1/(D − 2)", "λ = 1/γ")
     xs = np.linspace(0, 0.162, 200)
@@ -77,13 +86,17 @@ def main():
     marker(svg, p.sx(0), p.sy(2), SERIES[1], "D = infinity: lambda = 2 exactly (r^2-shift symmetry)", shape="diamond", r=4.5)
     svg.text(p.sx(0.004), p.sy(2) + 18, "D = ∞: λ = 2 exactly, from the r²-shift", size=10, fill=INK)
     svg.text(p.sx(0.004), p.sy(2) + 31, "symmetry of the inner heat equation", size=10, fill=INK)
-    svg.text(p.sx(0.05) - 8, p.sy(2 + c[0] * 0.05), f"leading term 2 + {c[0]:.4f}/n", size=10, fill=INK, anchor="end")
+    if P:                                       # two lines, left of the dashed line
+        svg.text(p.sx(0.06) - 8, p.sy(2 + c[0] * 0.06) - 7, "leading term", size=10, fill=INK, anchor="end")
+        svg.text(p.sx(0.06) - 8, p.sy(2 + c[0] * 0.06) + 6, f"2 + {c[0]:.4f}/n", size=10, fill=INK, anchor="end")
+    else:
+        svg.text(p.sx(0.05) - 8, p.sy(2 + c[0] * 0.05), f"leading term 2 + {c[0]:.4f}/n", size=10, fill=INK, anchor="end")
     p.key(lambda x, y: marker(svg, x, y, c0, "data", r=3.2), "computed λ")
     p.key(lambda x, y: svg.line(x - 6, y, x + 10, y, c0, width=2), "fit, λ∞ = 2 fixed")
     p.key(lambda x, y: marker(svg, x, y, SERIES[1], "symmetry", shape="diamond", r=3.5), "symmetry value")
 
     ff = free_fits()
-    q = Axes(svg, 640, 120, 230, 300, (3.5, 8.5), (-6.5, -2.8), [(k, str(k)) for k in range(4, 9)],
+    q = Axes(svg, *boxq, (3.5, 8.5), (-6.5, -2.8), [(k, str(k)) for k in range(4, 9)],
              [(10.0 ** e, f"10{'⁻' + '⁰¹²³⁴⁵⁶⁷'[-e]}") for e in (-6, -5, -4, -3)],
              "λ∞ left free", "powers of 1/n in the fit", "fitted λ∞ − 2", ylog=True)
     for i, (dmin, rows) in enumerate(sorted(ff.items())[1:]):
@@ -94,8 +107,11 @@ def main():
             marker(svg, x, y, col, f"D >= {dmin}, {k} powers: lambda_inf - 2 = {v:.2e} +- {e:.1e}")
         k, v, _ = rows[-1]
         svg.text(q.sx(k) + 8, q.sy(v) + 4, f"D ≥ {dmin}", size=10, fill=INK)
-    svg.text(q.px, q.py + q.ph + 52, "each added power divides it by about 3.5", size=10)
-    H = 120 + 300 + 70
+    if P:                                       # top right, above the lines
+        svg.text(q.px + q.pw - 4, q.py + 14, "each added power", size=10, anchor="end")
+        svg.text(q.px + q.pw - 4, q.py + 27, "divides it by ≈ 3.5", size=10, anchor="end")
+    else:
+        svg.text(q.px, q.py + q.ph + 52, "each added power divides it by about 3.5", size=10)
     open(args.o, "w").write(svg.finish(H))
     print("wrote", args.o, "coefficients with lambda_inf = 2:", np.round(c, 4))
 

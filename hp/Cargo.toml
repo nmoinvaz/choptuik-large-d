@@ -16,7 +16,7 @@ pyo3 = { version = "0.30", features = ["extension-module"], optional = true }
 numpy = { version = "0.30", optional = true }
 rayon = "1.10"
 # double-double / quad-double arithmetic, dual lanes and LU (split out of this crate; crates.io)
-multidouble = { git = "https://github.com/nmoinvaz/multidouble", rev = "23adb805066cabc426135fb94dde967744fcf8dc" }  # main with lu_rect_f64 (PR #10); "1.1.0" once released, the same code
+multidouble = "=1.5.1"  # StaircaseLu, field, gcr (PRs #14-#16) and the lane solves after them; hp/pyproject.toml pins the same release
 
 [profile.release]
 opt-level = 3

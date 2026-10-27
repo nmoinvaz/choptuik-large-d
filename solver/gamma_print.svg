@@ -1,0 +1,153 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="620" height="356" viewBox="0 0 620 356" font-family="system-ui, sans-serif">
+<style>@media (prefers-color-scheme: dark){[fill="#fcfcfb"]{fill:#201f1d}[stroke="#fcfcfb"]{stroke:#201f1d}[fill="#0b0b0b"]{fill:#e8e6e3}[stroke="#0b0b0b"]{stroke:#e8e6e3}[fill="#52514e"]{fill:#a8a49d}[stroke="#52514e"]{stroke:#a8a49d}[fill="#e7e6e2"]{fill:#343230}[stroke="#e7e6e2"]{stroke:#343230}[fill="#efeeea"]{fill:#2a2927}[stroke="#efeeea"]{stroke:#2a2927}[fill="#eb6834"]{fill:#dd5c26}[stroke="#eb6834"]{stroke:#dd5c26}[fill="#7a7668"]{fill:#948e82}[stroke="#7a7668"]{stroke:#948e82}}</style>
+<rect width="620" height="356" fill="#fcfcfb"/>
+<text x="60.0" y="16.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">λ against 1/n: 67 double-double points, D = 8.25–61</text>
+<line x1="60.0" y1="270.3" x2="380.0" y2="270.3" stroke="#e7e6e2" stroke-width="1"/>
+<text x="52.0" y="274.3" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">2.00</text>
+<line x1="60.0" y1="225.6" x2="380.0" y2="225.6" stroke="#e7e6e2" stroke-width="1"/>
+<text x="52.0" y="229.6" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">2.05</text>
+<line x1="60.0" y1="181.0" x2="380.0" y2="181.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="52.0" y="185.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">2.10</text>
+<line x1="60.0" y1="136.4" x2="380.0" y2="136.4" stroke="#e7e6e2" stroke-width="1"/>
+<text x="52.0" y="140.4" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">2.15</text>
+<line x1="60.0" y1="91.7" x2="380.0" y2="91.7" stroke="#e7e6e2" stroke-width="1"/>
+<text x="52.0" y="95.7" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">2.20</text>
+<line x1="60.0" y1="56.0" x2="60.0" y2="306.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="60.0" y="322.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0</text>
+<line x1="137.6" y1="56.0" x2="137.6" y2="306.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="137.6" y="322.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.04</text>
+<line x1="215.2" y1="56.0" x2="215.2" y2="306.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="215.2" y="322.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.08</text>
+<line x1="292.7" y1="56.0" x2="292.7" y2="306.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="292.7" y="322.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.12</text>
+<line x1="370.3" y1="56.0" x2="370.3" y2="306.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="370.3" y="322.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">0.16</text>
+<line x1="60.0" y1="306.0" x2="380.0" y2="306.0" stroke="#52514e" stroke-width="1"/>
+<text x="220.0" y="340.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal">1/n = 1/(D − 2)</text>
+<text x="12.0" y="181.0" font-size="11" fill="#52514e" text-anchor="middle" transform="rotate(-90 12.0 181.0)">λ = 1/γ</text>
+<g><path d="M60.0,270.3 L61.6,268.1 L63.2,265.9 L64.7,263.7 L66.3,261.5 L67.9,259.3 L69.5,257.1 L71.1,254.9 L72.6,252.7 L74.2,250.5 L75.8,248.3 L77.4,246.0 L78.9,243.8 L80.5,241.6 L82.1,239.4 L83.7,237.2 L85.3,235.0 L86.8,232.8 L88.4,230.6 L90.0,228.4 L91.6,226.2 L93.2,224.0 L94.7,221.8 L96.3,219.6 L97.9,217.4 L99.5,215.2 L101.0,213.0 L102.6,210.8 L104.2,208.6 L105.8,206.4 L107.4,204.2 L108.9,202.0 L110.5,199.8 L112.1,197.6 L113.7,195.4 L115.3,193.2 L116.8,191.0 L118.4,188.8 L120.0,186.6 L121.6,184.4 L123.2,182.2 L124.7,179.9 L126.3,177.7 L127.9,175.5 L129.5,173.3 L131.0,171.1 L132.6,168.9 L134.2,166.7 L135.8,164.5 L137.4,162.3 L138.9,160.1 L140.5,157.9 L142.1,155.7 L143.7,153.5 L145.3,151.3 L146.8,149.1 L148.4,146.9 L150.0,144.7 L151.6,142.5 L153.1,140.3 L154.7,138.1 L156.3,135.9 L157.9,133.7 L159.5,131.5 L161.0,129.3 L162.6,127.1 L164.2,124.9 L165.8,122.7 L167.4,120.5 L168.9,118.3 L170.5,116.0 L172.1,113.8 L173.7,111.6 L175.3,109.4 L176.8,107.2 L178.4,105.0 L180.0,102.8 L181.6,100.6 L183.1,98.4 L184.7,96.2 L186.3,94.0 L187.9,91.8 L189.5,89.6 L191.0,87.4 L192.6,85.2 L194.2,83.0 L195.8,80.8 L197.4,78.6 L198.9,76.4 L200.5,74.2 L202.1,72.0 L203.7,69.8 L205.2,67.6 L206.8,65.4 L208.4,63.2 L210.0,61.0 L211.6,58.8 L213.1,56.6" fill="none" stroke="#52514e" stroke-width="1.3" stroke-opacity="0.85" stroke-linejoin="round" stroke-dasharray="5 4"/><title>leading term 2 + 3.0314/n</title></g>
+<g><path d="M60.0,270.3 L61.6,268.1 L63.2,266.0 L64.7,263.9 L66.3,261.8 L67.9,259.7 L69.5,257.7 L71.1,255.8 L72.6,253.8 L74.2,251.9 L75.8,250.1 L77.4,248.2 L78.9,246.4 L80.5,244.6 L82.1,242.8 L83.7,241.1 L85.3,239.4 L86.8,237.7 L88.4,236.0 L90.0,234.3 L91.6,232.7 L93.2,231.1 L94.7,229.5 L96.3,228.0 L97.9,226.4 L99.5,224.9 L101.0,223.4 L102.6,221.9 L104.2,220.4 L105.8,218.9 L107.4,217.5 L108.9,216.1 L110.5,214.7 L112.1,213.3 L113.7,211.9 L115.3,210.5 L116.8,209.2 L118.4,207.8 L120.0,206.5 L121.6,205.2 L123.2,203.9 L124.7,202.6 L126.3,201.3 L127.9,200.0 L129.5,198.8 L131.0,197.5 L132.6,196.3 L134.2,195.1 L135.8,193.9 L137.4,192.7 L138.9,191.5 L140.5,190.3 L142.1,189.1 L143.7,188.0 L145.3,186.8 L146.8,185.6 L148.4,184.5 L150.0,183.4 L151.6,182.3 L153.1,181.1 L154.7,180.0 L156.3,178.9 L157.9,177.8 L159.5,176.8 L161.0,175.7 L162.6,174.6 L164.2,173.5 L165.8,172.5 L167.4,171.4 L168.9,170.4 L170.5,169.4 L172.1,168.3 L173.7,167.3 L175.3,166.3 L176.8,165.3 L178.4,164.3 L180.0,163.3 L181.6,162.3 L183.1,161.3 L184.7,160.3 L186.3,159.3 L187.9,158.3 L189.5,157.4 L191.0,156.4 L192.6,155.4 L194.2,154.5 L195.8,153.5 L197.4,152.6" fill="none" stroke="#2a78d6" stroke-width="2" stroke-opacity="0.85" stroke-linejoin="round"/><title>fit with lambda_inf = 2 fixed (D &gt;= 16, 9 powers of 1/n)</title></g>
+<g><circle cx="370.3" cy="63.4" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 8.25: lambda = 2.231691725758, gamma = 0.448090562177</title></g>
+<g><circle cx="337.1" cy="79.3" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 9: lambda = 2.213892185637, gamma = 0.451693179319</title></g>
+<g><circle cx="302.4" cy="96.2" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 10: lambda = 2.194965927937, gamma = 0.455587937504</title></g>
+<g><circle cx="275.5" cy="109.7" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 11: lambda = 2.179808960180, gamma = 0.458755798452</title></g>
+<g><circle cx="253.9" cy="120.9" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 12: lambda = 2.167290608387, gamma = 0.461405589140</title></g>
+<g><circle cx="236.3" cy="130.4" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 13: lambda = 2.156709219884, gamma = 0.463669367562</title></g>
+<g><circle cx="221.6" cy="138.5" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 14: lambda = 2.147602814096, gamma = 0.465635448714</title></g>
+<g><circle cx="209.2" cy="145.6" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 15: lambda = 2.139652696878, gamma = 0.467365568935</title></g>
+<g><circle cx="191.4" cy="156.2" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 16.76: lambda = 2.127809048219, gamma = 0.469966983568</title></g>
+<g><circle cx="189.1" cy="157.6" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 17.018: lambda = 2.126261103891, gamma = 0.470309125333</title></g>
+<g><circle cx="179.9" cy="163.3" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 18.1752: lambda = 2.119807339449, gamma = 0.471740983905</title></g>
+<g><circle cx="174.0" cy="167.1" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 19.0192: lambda = 2.115544600917, gamma = 0.472691523292</title></g>
+<g><circle cx="167.5" cy="171.4" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 20.0437: lambda = 2.110799829638, gamma = 0.473754065146</title></g>
+<g><circle cx="161.9" cy="175.1" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 21.0297: lambda = 2.106619366506, gamma = 0.474694202427</title></g>
+<g><circle cx="155.5" cy="179.5" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 22.3032: lambda = 2.101701534275, gamma = 0.475804953126</title></g>
+<g><circle cx="152.2" cy="181.8" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 23.0433: lambda = 2.099062546983, gamma = 0.476403145508</title></g>
+<g><circle cx="147.8" cy="184.9" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 24.0797: lambda = 2.095604717299, gamma = 0.477189229317</title></g>
+<g><circle cx="144.0" cy="187.7" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 25.0797: lambda = 2.092504573259, gamma = 0.477896207626</title></g>
+<g><circle cx="140.5" cy="190.3" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 26.0797: lambda = 2.089611249778, gamma = 0.478557913634</title></g>
+<g><circle cx="137.4" cy="192.6" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 27.0422: lambda = 2.087002116365, gamma = 0.479156198338</title></g>
+<g><circle cx="134.4" cy="194.9" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 28.0595: lambda = 2.084413056755, gamma = 0.479751360585</title></g>
+<g><circle cx="131.7" cy="197.0" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 29.0518: lambda = 2.082039464487, gamma = 0.480298292639</title></g>
+<g><circle cx="129.1" cy="199.1" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 30.0688: lambda = 2.079747703853, gamma = 0.480827553336</title></g>
+<g><circle cx="126.8" cy="200.9" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 31.034: lambda = 2.077693296881, gamma = 0.481302991881</title></g>
+<g><circle cx="124.6" cy="202.7" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 32.0213: lambda = 2.075702979375, gamma = 0.481764496142</title></g>
+<g><circle cx="122.5" cy="204.4" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 33.0327: lambda = 2.073771210117, gamma = 0.482213271706</title></g>
+<g><circle cx="120.5" cy="206.1" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 34.0521: lambda = 2.071925110491, gamma = 0.482642927071</title></g>
+<g><circle cx="118.7" cy="207.6" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 35.0248: lambda = 2.070250875966, gamma = 0.483033245685</title></g>
+<g><circle cx="116.9" cy="209.1" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 36.0732: lambda = 2.068534081013, gamma = 0.483434142651</title></g>
+<g><circle cx="115.3" cy="210.5" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 37.0829: lambda = 2.066960755327, gamma = 0.483802122233</title></g>
+<g><circle cx="113.8" cy="211.7" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 38.0204: lambda = 2.065565165948, gamma = 0.484129000859</title></g>
+<g><circle cx="112.4" cy="213.0" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 39.0019: lambda = 2.064166919916, gamma = 0.484456945003</title></g>
+<g><circle cx="111.0" cy="214.2" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 40.0201: lambda = 2.062779672620, gamma = 0.484782748867</title></g>
+<g><circle cx="109.6" cy="215.5" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 41.089: lambda = 2.061388099506, gamma = 0.485110009241</title></g>
+<g><circle cx="108.4" cy="216.5" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 42.0439: lambda = 2.060197304347, gamma = 0.485390403089</title></g>
+<g><circle cx="107.1" cy="217.7" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 43.1353: lambda = 2.058893054748, gamma = 0.485697883964</title></g>
+<g><circle cx="106.1" cy="218.7" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 44.0903: lambda = 2.057798373580, gamma = 0.485956259291</title></g>
+<g><circle cx="105.0" cy="219.6" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 45.0507: lambda = 2.056738610147, gamma = 0.486206655073</title></g>
+<g><circle cx="104.1" cy="220.5" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 46.0011: lambda = 2.055728255924, gamma = 0.486445617079</title></g>
+<g><circle cx="103.1" cy="221.4" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 47.0082: lambda = 2.054696970974, gamma = 0.486689771838</title></g>
+<g><circle cx="102.1" cy="222.3" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 48.0153: lambda = 2.053703884726, gamma = 0.486925114880</title></g>
+<g><circle cx="101.2" cy="223.2" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 49.0224: lambda = 2.052746872759, gamma = 0.487152124439</title></g>
+<g><circle cx="100.4" cy="224.0" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 50.0075: lambda = 2.051843756433, gamma = 0.487366543805</title></g>
+<g><circle cx="99.6" cy="224.8" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 51.027: lambda = 2.050941626832, gamma = 0.487580917427</title></g>
+<g><circle cx="98.8" cy="225.6" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 52.0414: lambda = 2.050075192515, gamma = 0.487786986375</title></g>
+<g><circle cx="97.4" cy="226.8" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 53.7914: lambda = 2.048648769710, gamma = 0.488126620232</title></g>
+<g><circle cx="97.3" cy="227.0" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 54.0414: lambda = 2.048451702933, gamma = 0.488173579376</title></g>
+<g><circle cx="96.6" cy="227.7" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 55.0351: lambda = 2.047684127712, gamma = 0.488356571439</title></g>
+<g><circle cx="95.9" cy="228.4" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 56.0117: lambda = 2.046953490259, gamma = 0.488530884927</title></g>
+<g><circle cx="95.2" cy="229.0" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 57.0333: lambda = 2.046213094964, gamma = 0.488707653402</title></g>
+<g><circle cx="94.6" cy="229.6" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 58.006: lambda = 2.045529761478, gamma = 0.488870911992</title></g>
+<g><circle cx="94.0" cy="230.3" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 59.025: lambda = 2.044835518541, gamma = 0.489036888754</title></g>
+<g><circle cx="93.6" cy="230.7" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 59.7676: lambda = 2.044342982671, gamma = 0.489154710573</title></g>
+<g><circle cx="93.6" cy="230.7" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 59.7858: lambda = 2.044331001598, gamma = 0.489157577329</title></g>
+<g><circle cx="93.6" cy="230.7" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 59.8041: lambda = 2.044319027078, gamma = 0.489160442551</title></g>
+<g><circle cx="93.5" cy="230.7" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 59.8221: lambda = 2.044307236570, gamma = 0.489163263775</title></g>
+<g><circle cx="93.4" cy="230.8" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 60.002: lambda = 2.044189782137, gamma = 0.489191369969</title></g>
+<g><circle cx="92.9" cy="231.4" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 60.9609: lambda = 2.043573970668, gamma = 0.489338783109</title></g>
+<g><circle cx="92.9" cy="231.4" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 60.9618: lambda = 2.043573427478, gamma = 0.489338913177</title></g>
+<g><circle cx="92.9" cy="231.4" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 60.9641: lambda = 2.043571934723, gamma = 0.489339270622</title></g>
+<g><circle cx="92.9" cy="231.4" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 60.9656: lambda = 2.043570985188, gamma = 0.489339497991</title></g>
+<g><circle cx="92.9" cy="231.4" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 60.9671: lambda = 2.043570035694, gamma = 0.489339725350</title></g>
+<g><circle cx="92.9" cy="231.4" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 60.9686: lambda = 2.043569086242, gamma = 0.489339952700</title></g>
+<g><circle cx="92.9" cy="231.4" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 61.0211: lambda = 2.043535896327, gamma = 0.489347900273</title></g>
+<g><circle cx="92.9" cy="231.4" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 61.0225: lambda = 2.043535013471, gamma = 0.489348111683</title></g>
+<g><circle cx="92.9" cy="231.4" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 61.0243: lambda = 2.043533910110, gamma = 0.489348375896</title></g>
+<g><circle cx="92.9" cy="231.4" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>D = 61.0264: lambda = 2.043532530673, gamma = 0.489348706218</title></g>
+<g><polygon points="60.0,264.3 66.0,270.3 60.0,276.3 54.0,270.3" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = infinity: lambda = 2 exactly (r^2-shift symmetry)</title></g>
+<text x="67.8" y="288.3" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">D = ∞: λ = 2 exactly, from the r²-shift</text>
+<text x="67.8" y="301.3" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">symmetry of the inner heat equation</text>
+<text x="168.4" y="100.9" font-size="10" fill="#0b0b0b" text-anchor="end" font-weight="normal">leading term</text>
+<text x="168.4" y="113.9" font-size="10" fill="#0b0b0b" text-anchor="end" font-weight="normal">2 + 3.0314/n</text>
+<g><circle cx="66.0" cy="32.0" r="3.2" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>data</title></g>
+<text x="76.0" y="36.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">computed λ</text>
+<line x1="155.0" y1="32.0" x2="171.0" y2="32.0" stroke="#2a78d6" stroke-width="2"/>
+<text x="171.0" y="36.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">fit, λ∞ = 2 fixed</text>
+<g><polygon points="297.3,27.0 302.3,32.0 297.3,37.0 292.3,32.0" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>symmetry</title></g>
+<text x="307.3" y="36.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">symmetry value</text>
+<text x="450.0" y="16.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">λ∞ left free</text>
+<line x1="450.0" y1="272.2" x2="570.0" y2="272.2" stroke="#e7e6e2" stroke-width="1"/>
+<text x="442.0" y="276.2" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">10⁻⁶</text>
+<line x1="450.0" y1="204.6" x2="570.0" y2="204.6" stroke="#e7e6e2" stroke-width="1"/>
+<text x="442.0" y="208.6" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">10⁻⁵</text>
+<line x1="450.0" y1="137.1" x2="570.0" y2="137.1" stroke="#e7e6e2" stroke-width="1"/>
+<text x="442.0" y="141.1" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">10⁻⁴</text>
+<line x1="450.0" y1="69.5" x2="570.0" y2="69.5" stroke="#e7e6e2" stroke-width="1"/>
+<text x="442.0" y="73.5" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">10⁻³</text>
+<line x1="462.0" y1="56.0" x2="462.0" y2="306.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="462.0" y="322.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">4</text>
+<line x1="486.0" y1="56.0" x2="486.0" y2="306.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="486.0" y="322.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">5</text>
+<line x1="510.0" y1="56.0" x2="510.0" y2="306.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="510.0" y="322.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">6</text>
+<line x1="534.0" y1="56.0" x2="534.0" y2="306.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="534.0" y="322.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">7</text>
+<line x1="558.0" y1="56.0" x2="558.0" y2="306.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="558.0" y="322.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">8</text>
+<line x1="450.0" y1="306.0" x2="570.0" y2="306.0" stroke="#52514e" stroke-width="1"/>
+<text x="510.0" y="340.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal">powers of 1/n in the fit</text>
+<text x="402.0" y="181.0" font-size="11" fill="#52514e" text-anchor="middle" transform="rotate(-90 402.0 181.0)">fitted λ∞ − 2</text>
+<path d="M462.0,87.2 L486.0,119.2 L510.0,151.0 L534.0,182.9 L558.0,215.0" fill="none" stroke="#1baf7a" stroke-width="2" stroke-opacity="0.85" stroke-linejoin="round"/>
+<g><circle cx="462.0" cy="87.2" r="4.5" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>D &gt;= 20, 4 powers: lambda_inf - 2 = 5.48e-04 +- 1.8e-05</title></g>
+<g><circle cx="486.0" cy="119.2" r="4.5" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>D &gt;= 20, 5 powers: lambda_inf - 2 = 1.84e-04 +- 6.2e-06</title></g>
+<g><circle cx="510.0" cy="151.0" r="4.5" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>D &gt;= 20, 6 powers: lambda_inf - 2 = 6.23e-05 +- 2.1e-06</title></g>
+<g><circle cx="534.0" cy="182.9" r="4.5" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>D &gt;= 20, 7 powers: lambda_inf - 2 = 2.10e-05 +- 7.3e-07</title></g>
+<g><circle cx="558.0" cy="215.0" r="4.5" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>D &gt;= 20, 8 powers: lambda_inf - 2 = 7.02e-06 +- 2.4e-07</title></g>
+<text x="566.0" y="219.0" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">D ≥ 20</text>
+<path d="M462.0,98.1 L486.0,132.2 L510.0,166.6 L534.0,200.8 L558.0,234.8" fill="none" stroke="#eda100" stroke-width="2" stroke-opacity="0.85" stroke-linejoin="round"/>
+<g><circle cx="462.0" cy="98.1" r="4.5" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>D &gt;= 24, 4 powers: lambda_inf - 2 = 3.78e-04 +- 1.1e-05</title></g>
+<g><circle cx="486.0" cy="132.2" r="4.5" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>D &gt;= 24, 5 powers: lambda_inf - 2 = 1.18e-04 +- 3.6e-06</title></g>
+<g><circle cx="510.0" cy="166.6" r="4.5" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>D &gt;= 24, 6 powers: lambda_inf - 2 = 3.66e-05 +- 1.2e-06</title></g>
+<g><circle cx="534.0" cy="200.8" r="4.5" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>D &gt;= 24, 7 powers: lambda_inf - 2 = 1.14e-05 +- 3.6e-07</title></g>
+<g><circle cx="558.0" cy="234.8" r="4.5" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>D &gt;= 24, 8 powers: lambda_inf - 2 = 3.58e-06 +- 3.2e-07</title></g>
+<text x="566.0" y="238.8" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">D ≥ 24</text>
+<path d="M462.0,111.5 L486.0,148.7 L510.0,185.7 L534.0,222.4 L558.0,259.0" fill="none" stroke="#e87ba4" stroke-width="2" stroke-opacity="0.85" stroke-linejoin="round"/>
+<g><circle cx="462.0" cy="111.5" r="4.5" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>D &gt;= 30, 4 powers: lambda_inf - 2 = 2.39e-04 +- 6.4e-06</title></g>
+<g><circle cx="486.0" cy="148.7" r="4.5" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>D &gt;= 30, 5 powers: lambda_inf - 2 = 6.73e-05 +- 1.8e-06</title></g>
+<g><circle cx="510.0" cy="185.7" r="4.5" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>D &gt;= 30, 6 powers: lambda_inf - 2 = 1.91e-05 +- 5.2e-07</title></g>
+<g><circle cx="534.0" cy="222.4" r="4.5" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>D &gt;= 30, 7 powers: lambda_inf - 2 = 5.47e-06 +- 5.5e-07</title></g>
+<g><circle cx="558.0" cy="259.0" r="4.5" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>D &gt;= 30, 8 powers: lambda_inf - 2 = 1.57e-06 +- 2.2e-06</title></g>
+<text x="566.0" y="263.0" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">D ≥ 30</text>
+<text x="566.0" y="70.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">each added power</text>
+<text x="566.0" y="83.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">divides it by ≈ 3.5</text>
+</svg>

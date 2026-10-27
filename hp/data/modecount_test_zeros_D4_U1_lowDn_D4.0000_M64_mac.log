@@ -1,0 +1,11 @@
+D 4.0: M 64, |F| 9.1e-30, omega 1.823617; box Re -0.114 .. 0.193, Im 2.735 .. 4.558; panels <= 0.1, 8 nodes, tol 0.785; plant None; 1206 candidate poles multiplied out, within omega of the box: [(0.3861, 1.8236), (0.3861, 5.4709), (-0.2277, 1.8236), (-0.2277, 5.4709), (-0.8416, 1.8236), (-0.8416, 5.4709), (-1.4554, 1.8236), (-1.4554, 5.4709)]
+    50 evaluations, 11.1 s each
+    100 evaluations, 9.8 s each
+    150 evaluations, 9.4 s each
+    200 evaluations, 9.2 s each
+    250 evaluations, 9.2 s each
+    300 evaluations, 9.1 s each
+  boundary: 46 panels of 8 nodes, max step of arg g 0.129 rad, N = 1; trend taken out: p = 4064.872 + (327.175-4.851j) mu + (-2.900+0.098j) mu^2
+    350 evaluations, 9.0 s each
+  zero -0.000000000001 +3.647233843506i: estimate moved by 1.4e-11, converged in 2 (last step 2.0e-16), inside True, nearest candidate pole 1.838
+355 evaluations, 3210 s; PASS

@@ -49,6 +49,8 @@ by an AI model (Claude, Anthropic) under the author's direction and has not been
 
 \maketitle
 
+\tableofcontents
+
 \section{Introduction}
 \label{sec:intro}
 
@@ -107,7 +109,7 @@ that the branch we follow remains the critical solution, with a single unstable 
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.66\linewidth]{../figures/echo.pdf}
+\includegraphics[width=\linewidth]{../figures/echo.pdf}
 \caption{The echo across dimensions: the centre slope of the field,
 $F(\tau) = \sqrt{D-2}\,\partial_x p$ at $r = 0$, over the same stretch of logarithmic time $\tau$ for $D = 4$, 10, 20
 and 60, each scaled to its peak (dashed: its first harmonic). At $D = 4$ the profile is close to a square wave and
@@ -261,7 +263,7 @@ $D$ & $\Delta$ & $\gamma$ & $D$ & $\Delta$ & $\gamma$ \\ \hline
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.66\linewidth]{../figures/delta.pdf}
+\includegraphics[width=\linewidth]{../figures/delta.pdf}
 \caption{$\Delta(D)$ and $\gamma(D)$ with the rational formula~\eqref{eq:formula} (dashed), fitted on
 $4 \le D \le 30.2$; hollow points are held out, and green diamonds are double-double points up to $D = 61$.}
 \label{fig:delta}
@@ -338,7 +340,7 @@ $D^{-1/2}$, degree 20 & $3.9\times10^{-15}$ & $1.4\times10^{-10}$ & $5.3\times10
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.56\linewidth]{../figures/heldout.pdf}
+\includegraphics[width=\linewidth]{../figures/heldout.pdf}
 \caption{$|\text{model} - \text{computed}\ \Delta|$ on every double-double point above the fitted range, for fits on
 $10 \le D \le 37.5$ (top) and $10 \le D \le 45$ (bottom); shaded: the level of the points.}
 \label{fig:heldout}
@@ -436,7 +438,7 @@ Sec.~\ref{sec:r2shift}.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.78\linewidth]{../figures/gamma.pdf}
+\includegraphics[width=\linewidth]{../figures/gamma.pdf}
 \caption{Left: $\lambda = 1/\gamma$ against $1/(D-2)$ for 67 double-double points, with a fit fixing $\lambda_\infty = 2$ (solid,
 over its range $D \ge 16$) and its leading term $2 + 3.03/n$ (dashed); at $D = \infty$, $\lambda = 2$ is an exact growth
 rate of the inner problem, from the $r^2$-shift symmetry of the inner heat equation (Sec.~\ref{sec:r2shift}). Right: with $\lambda_\infty$ left free, the
@@ -610,15 +612,16 @@ gives the shape of the echo and its period. With the higher-harmonic multipliers
 $\omega = \omega_\infty$, the profile has $|F_3/F_1| = 0.0551$ and $|F_5/F_1| = 0.00314$, against $0.0549$--$0.0552$ and
 $0.0032$--$0.0034$ extrapolated from the solutions (Table~\ref{tab:scaling}); and the harmonic-1
 multiplier has a real zero at amplitude $A_0 = 2.720$ at twelve orders (the solutions extrapolate to 2.70--2.72) and,
-at thirteen and fourteen orders, at $\omega/\omega_\infty = 0.99992$--$1.00005$, that is
+at fourteen and fifteen orders, at $\omega/\omega_\infty = 0.999975$--$1.00005$, that is
 \begin{equation}
-\Dinf = 1.6439 \pm 0.0001
+\Dinf = 1.64387 \pm 0.00006
 \end{equation}
 from the $D = \infty$ inner equations alone, against $1.643893746$ from the finite-$D$ solutions, which lies inside
-the range. The $\pm0.0001$ is the range of estimators calibrated on planted functions of the same class and of the
+the range. The $\pm0.00006$ is the range of estimators calibrated on planted functions of the same class and of the
 ring-free completions of the series, over the two orders, not an error bound, and it assumes the selection function
-has no other zeros near the selected one. The thirteenth and fourteenth coefficients rejected every alternative with
-such zeros constructed so far, but cannot exclude a larger ring~\cite{math}. The leading-order ratio of successive tuned harmonics, $|q|A^2 \approx 0.063$,
+has no zeros closer to the origin than the selected one. The fourteenth and fifteenth coefficients rejected every
+alternative with such zeros constructed so far; the one surviving alternative, with zeros just beyond the selected one,
+puts the zero inside the range~\cite{math}. The leading-order ratio of successive tuned harmonics, $|q|A^2 \approx 0.063$,
 is the same for every harmonic, and summed in the amplitude the tuned profile decays by about $0.057$ per pair of
 harmonics, a rate of $1.43$ per harmonic, within the predicted $D = \infty$ band of Fig.~\ref{fig:spectrum}. The
 $D = \infty$ echo profile is then not an entire function of $\theta$: it has singularities at a finite distance,
@@ -635,7 +638,7 @@ The matter models of Sec.~\ref{sec:matter} give two further, truncation-free tes
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.72\linewidth]{../figures/spectrum.pdf}
+\includegraphics[width=\linewidth]{../figures/spectrum.pdf}
 \caption{Left: amplitude $|F_\nu|$ of each odd harmonic of the echo profile for $D = 4$--$60$ and the $D = \infty$
 prediction of the inner problem (dashed; beyond $\nu = 5$ the leading-order ratio, conjectured). Right: the decay rate
 per harmonic, $\frac12\ln|F_\nu/F_{\nu+2}|$, against $1/(D-2)$, with extrapolations from $D \ge 20$ and the predicted

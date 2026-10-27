@@ -46,8 +46,14 @@ Boxes:  B0 (aLL, aL) x (-y1, y1)   expected zeros: lam = 0
 
 Sampling: each edge starts on a grid of spacing h0 and every interval is bisected until the phase change of g across it
 is at most tol (default pi/4); then every interval whose phase change exceeds tol/2 is bisected once more and the two
-halves are checked to add up to the whole (a hidden 2 pi turn would show as a mismatch). Every evaluation is appended
-to hp/data/modecount_<tag>_evals.jsonl and reused on restart.
+halves are checked to add up to the whole (a hidden 2 pi turn would show as a mismatch). A half above tol sends the
+edge back to the bisection, and the two steps repeat until a verification adds nothing new (a zero just inside an
+edge shows only in those halves: at D = 4 a single verification pass left steps of 1.8 rad and missed a pair 0.0017
+inside, notes/GHOST_ADMIXTURE.md). An edge is resolved when every step is at most tol and no halves mismatched (the
+spacing floor hmin, default 1e-4, can stop it short); a box is resolved when all its edges are, and an unresolved box's
+count is not a count. --mutate=one_verify restores the single verification pass (the control). Every evaluation is
+appended to <data>/modecount_<tag>_evals.jsonl and reused on restart; --data (default hp/data) holds the cache, the log
+and the record, and must be in a raw/<task> worktree (raw_out.py; --allow_unraw writes anyway).
 """
 import json
 import math
@@ -82,7 +88,7 @@ def count(det_fn, info, poles, opts, log, tag, res_file, expected=None, boxes_on
     hmin = float(opts.get("hmin", 1e-4))
     im2 = float(opts.get("Im2", 1.5))
     omega, lam_g, lam_f = info["omega"], info["lam_g"], info["lam_f"]
-    cache_path = os.path.join(DATA, f"modecount_{opts.get('cache', tag)}_evals.jsonl")
+    cache_path = os.path.join(opts.get("data", DATA), f"modecount_{opts.get('cache', tag)}_evals.jsonl")
     cache = {}
     if os.path.exists(cache_path):
         for line in open(cache_path):
@@ -167,28 +173,36 @@ def count(det_fn, info, poles, opts, log, tag, res_file, expected=None, boxes_on
         L = abs(z1 - z0)
         n = max(2, int(math.ceil(L / h0)))
         vals = {i / n: g(z0 + (i / n) * (z1 - z0)) for i in range(n + 1)}
-        changed = True
-        while changed:
-            changed = False
+        checked, bad, nver, passes = set(), 0, 0, 0
+        while True:
+            changed = True
+            while changed:
+                changed = False
+                ts = sorted(vals)
+                for a, b in zip(ts[:-1], ts[1:]):
+                    if (b - a) * L < hmin:
+                        continue
+                    if abs(wrap(vals[b][1] - vals[a][1])) > tol:
+                        m = 0.5 * (a + b)
+                        vals[m] = g(z0 + m * (z1 - z0))
+                        changed = True
+            # verification: bisect every unchecked interval with |dphi| > tol / 2 once more; the halves must add up
+            # to the whole, and a half above tol goes back to the bisection above
             ts = sorted(vals)
+            added = False
+            passes += 1
             for a, b in zip(ts[:-1], ts[1:]):
-                if (b - a) * L < hmin:
-                    continue
-                if abs(wrap(vals[b][1] - vals[a][1])) > tol:
+                dphi = wrap(vals[b][1] - vals[a][1])
+                if abs(dphi) > tol / 2 and (b - a) * L >= hmin and (a, b) not in checked:
+                    checked.add((a, b))
                     m = 0.5 * (a + b)
                     vals[m] = g(z0 + m * (z1 - z0))
-                    changed = True
-        # verification: bisect every interval with |dphi| > tol / 2 once more; the halves must add up to the whole
-        ts = sorted(vals)
-        bad = nver = 0
-        for a, b in zip(ts[:-1], ts[1:]):
-            dphi = wrap(vals[b][1] - vals[a][1])
-            if abs(dphi) > tol / 2 and (b - a) * L >= hmin:
-                m = 0.5 * (a + b)
-                vals[m] = g(z0 + m * (z1 - z0))
-                nver += 1
-                if abs(wrap(vals[m][1] - vals[a][1]) + wrap(vals[b][1] - vals[m][1]) - dphi) > 1e-6:
-                    bad += 1
+                    nver += 1
+                    added = True
+                    if abs(wrap(vals[m][1] - vals[a][1]) + wrap(vals[b][1] - vals[m][1]) - dphi) > 1e-6:
+                        bad += 1
+            if not added or opts.get("mutate") == "one_verify":
+                break
         ts = sorted(vals)
         steps = [wrap(vals[b][1] - vals[a][1]) for a, b in zip(ts[:-1], ts[1:])]
         raw = [wrap(vals[b][3] - vals[a][3]) for a, b in zip(ts[:-1], ts[1:])]
@@ -197,12 +211,14 @@ def count(det_fn, info, poles, opts, log, tag, res_file, expected=None, boxes_on
                  max_hspace=max(b - a for a, b in zip(ts[:-1], ts[1:])) * L,
                  min_hspace=min(b - a for a, b in zip(ts[:-1], ts[1:])) * L,
                  min_lng=min(v[0] for v in vals.values()), max_lng=max(v[0] for v in vals.values()),
-                 min_lndet=min(v[2] for v in vals.values()), verified=nver, verify_mismatch=bad,
+                 min_lndet=min(v[2] for v in vals.values()), verified=nver, verify_mismatch=bad, passes=passes,
+                 resolved=max(abs(s) for s in steps) <= tol and bad == 0,
                  samples=[[round(t, 10), round(vals[t][0], 6), round(vals[t][1], 6), round(vals[t][2], 6),
                            round(vals[t][3], 6)] for t in ts])
         log(f"  edge {name}: {len(ts)} points, phase change of g {e['dphi']:+.6f}, max step {e['max_step']:.3f} rad "
             f"(det M itself: {e['max_raw_step']:.3f}), spacing {e['min_hspace']:.2e}..{e['max_hspace']:.2e}, ln|g| "
-            f"{e['min_lng']:.2f}..{e['max_lng']:.2f}, verified {nver} (mismatch {bad})")
+            f"{e['min_lng']:.2f}..{e['max_lng']:.2f}, verified {nver} (mismatch {bad}) in {passes} passes"
+            + ("" if e["resolved"] else "  UNRESOLVED"))
         return e
 
     specs = [("R1", complex(aR, 0), complex(aR, y1), "Re=aR, Im 0->y1"),
@@ -262,11 +278,11 @@ def count(det_fn, info, poles, opts, log, tag, res_file, expected=None, boxes_on
                       max_step=max(e["max_step"] for e in ed), max_raw_step=max(e["max_raw_step"] for e in ed),
                       max_hspace=max(e["max_hspace"] for e in ed), min_lng=min(e["min_lng"] for e in ed),
                       min_lndet=min(e["min_lndet"] for e in ed), points=sum(e["points"] for e in ed),
-                      verify_mismatch=sum(e["verify_mismatch"] for e in ed))
+                      verify_mismatch=sum(e["verify_mismatch"] for e in ed), resolved=all(e["resolved"] for e in ed))
         log(f"  box {b:4s} Re ({r0:.3f}, {r1:.3f}) Im ({i0:+.3f}, {i1:+.3f}): winding of g {w:+.6f} -> {wi}; expected zeros "
             f"inside {len(kin)}, candidate poles inside {len(pin)} -> winding of det M {wi + len(kin) - len(pin)}, zeros of "
             f"det M <= {wi + len(kin)}; max phase step {out[b]['max_step']:.3f} rad, nearest pole / expected zero to the "
-            f"edge {dmin:.3f} / {dz:.3f}")
+            f"edge {dmin:.3f} / {dz:.3f}" + ("" if out[b]["resolved"] else "; UNRESOLVED: not a count"))
     rec = dict(info, tag=tag, aLL=aLL, aL=aL, a1=a1, a2=a2, aR=aR, y1=y1, y2=y2, h0=h0, tol=tol, trend=list(pc),
                expected_zeros=[[z.real, z.imag] for z in K], n_candidate_poles_factored=len(Q),
                real_axis=[[x, la, s] for x, la, s in real], real_sign_changes=sign_changes,
@@ -284,7 +300,8 @@ def main():
     args, opts = parse(sys.argv[1:])
     path = args[0]
     threads = int(opts.get("threads", 1))
-    res_file = opts.get("res", os.path.join(DATA, "modecount_results.jsonl"))
+    data = opts.get("data", DATA)
+    res_file = opts.get("res", os.path.join(data, "modecount_results.jsonl"))
     logs = []
 
     def log(m):
@@ -296,7 +313,10 @@ def main():
                fmax=float(opts.get("fmax", 1e-20)))
     D, M = st.D, st.M
     tag = opts.get("tag", f"D{D:.4f}_M{M}")
-    logf = open(os.path.join(DATA, f"modecount_{tag}.log"), "a")
+    logf = os.path.join(data, f"modecount_{tag}.log")
+    from raw_out import require_raw
+    require_raw(logf, res_file)
+    logf = open(logf, "a")
     for m in logs:
         logf.write(m + "\n")
 

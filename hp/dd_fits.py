@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 """Large-D model fits on the double-double values only.
 
-    python3 dd_fits.py [Dmin] [Dmax_fit]        (scan jsonl files from /home/claude/dss/hp_scan)
+    python3 dd_fits.py [Dmin] [Dmax_fit]
+
+Data: the cloud runs' rows, data/large_d/cloud_scan_rows.csv (their scan_up*.jsonl have been missing since the cloud
+session ended on 2026-10-26; the rows are what delta_dd.csv held, without the D where a Windows run superseded a
+cloud point).
 """
-import glob
-import json
+import csv
+import os
 import sys
 
 import numpy as np
@@ -13,10 +17,10 @@ from numpy.polynomial import polynomial as P
 Dmin = float(sys.argv[1]) if len(sys.argv) > 1 else 10.0
 Dfit = float(sys.argv[2]) if len(sys.argv) > 2 else 1e9
 pts = {}
-for f in sorted(glob.glob("/home/claude/dss/hp_scan/scan_up*.jsonl")):
-    for l in open(f):
-        r = json.loads(l)
-        pts[round(r["D"], 6)] = r["Delta"] + r["Delta_lo"]
+here = os.path.dirname(os.path.abspath(__file__))
+for r in csv.DictReader(ln for ln in open(os.path.join(here, "data", "large_d", "cloud_scan_rows.csv"))
+                        if not ln.startswith("#")):
+    pts[round(float(r["D"]), 6)] = float(r["Delta_hi"]) + float(r["Delta_lo"])
 D = np.array(sorted(pts))
 y = np.array([pts[d] for d in D])
 m = (D >= Dmin)

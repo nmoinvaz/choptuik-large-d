@@ -11,132 +11,27 @@
 use crate::dd::DD;
 use crate::dv::{DotAcc, DV};
 use crate::field::{DMat, FieldSolve, Fl, State};
-use crate::lane::{BaseLane, Lane};
-use crate::model::{block_state, centre_state, horizon_lus, residual, residual_qd, residual_qdh, taylor_path, Ctx, TWork, QD_MUT_NOREFINE, QD_MUT_REFINE4};
+use crate::lane::Lane;
+use multidouble::dual::{take_counts, Counted, COUNTED_OPS};
+use crate::model::{
+    block_state, centre_state, horizon_lus, residual, residual_qd, residual_qdh, taylor_path, Ctx, TWork, QD_MUT_NOREFINE,
+    QD_MUT_REFINE4,
+};
 use crate::qd::QD;
 use crate::qv::{QDotAcc, QV};
 use crate::v8::V8;
-use std::cell::RefCell;
 use std::f64::consts::PI;
-use std::ops::{Add, Div, Mul, Neg, Sub};
 use std::time::Instant;
 
 // -------------------------------------------------------------------------------------------------------------
-// a counting double-double lane
+// the counting double-double lane: multidouble's dual::Counted<DV> (every lane operation counted by kind)
 // -------------------------------------------------------------------------------------------------------------
 
-const NC: usize = 11;
-const CNAMES: [&str; NC] = ["add/sub", "mul", "div", "neg", "x const", "x f64", "+ const", "acc a b", "acc a c", "acc a", "finish"];
-thread_local!(static CNT: RefCell<[u64; NC]> = const { RefCell::new([0; NC]) });
-
-fn bump(i: usize) {
-    CNT.with(|c| c.borrow_mut()[i] += 1);
-}
-
-fn take_counts() -> [u64; NC] {
-    CNT.with(|c| std::mem::replace(&mut *c.borrow_mut(), [0; NC]))
-}
-
-/// DV with every lane operation counted (one count per 8-lane operation)
-#[derive(Clone, Copy, Debug)]
-struct CDV(DV);
-
-impl Add for CDV {
-    type Output = CDV;
-    fn add(self, o: CDV) -> CDV {
-        bump(0);
-        CDV(self.0 + o.0)
-    }
-}
-impl Sub for CDV {
-    type Output = CDV;
-    fn sub(self, o: CDV) -> CDV {
-        bump(0);
-        CDV(self.0 - o.0)
-    }
-}
-impl Mul for CDV {
-    type Output = CDV;
-    fn mul(self, o: CDV) -> CDV {
-        bump(1);
-        CDV(self.0 * o.0)
-    }
-}
-impl Div for CDV {
-    type Output = CDV;
-    fn div(self, o: CDV) -> CDV {
-        bump(2);
-        CDV(self.0 / o.0)
-    }
-}
-impl Neg for CDV {
-    type Output = CDV;
-    fn neg(self) -> CDV {
-        bump(3);
-        CDV(-self.0)
-    }
-}
+const NC: usize = COUNTED_OPS.len();
+const CNAMES: [&str; NC] = COUNTED_OPS;
+type CDV = Counted<DV>;
 
 impl Lane for CDV {}
-
-impl BaseLane for CDV {
-    type S = multidouble::simd::Native;
-    type Acc = DotAcc;
-    const TANGENT: bool = false;
-    fn zero() -> Self {
-        CDV(DV::zero())
-    }
-    fn cst(c: DV) -> Self {
-        CDV(c)
-    }
-    fn mulc(self, c: DV) -> Self {
-        bump(4);
-        CDV(self.0 * c)
-    }
-    fn mulf(self, s: f64) -> Self {
-        bump(5);
-        CDV(self.0.mul_f(s))
-    }
-    fn mul_pwr2(self, s: f64) -> Self {
-        bump(5);
-        CDV(self.0.mul_pwr2(s))
-    }
-    fn addc(self, c: DV) -> Self {
-        bump(6);
-        CDV(self.0 + c)
-    }
-    fn bcast(self, j: usize) -> Self {
-        CDV(self.0.bcast(j))
-    }
-    fn val(self) -> DV {
-        self.0
-    }
-    fn tan(self) -> DV {
-        DV::zero()
-    }
-    fn from_vt(v: DV, _t: DV) -> Self {
-        CDV(v)
-    }
-    fn acc0() -> DotAcc {
-        DotAcc::zero()
-    }
-    fn acc(a: DotAcc, x: Self, y: Self) -> DotAcc {
-        bump(7);
-        a.add_prod(x.0, y.0)
-    }
-    fn accc(a: DotAcc, x: Self, c: DV) -> DotAcc {
-        bump(8);
-        a.add_prod(x.0, c)
-    }
-    fn acc1(a: DotAcc, x: Self) -> DotAcc {
-        bump(9);
-        a.add(x.0)
-    }
-    fn fin(a: DotAcc) -> Self {
-        bump(10);
-        CDV(a.finish())
-    }
-}
 
 // -------------------------------------------------------------------------------------------------------------
 // a small synthetic context (M = 8)
@@ -515,7 +410,7 @@ fn run_residual<const B: usize>(v: &[f64]) {
         });
         let inc: Vec<Fl<CDV, B>> = inp.iter().map(Fl::cst).collect();
         take_counts();
-        std::hint::black_box(block_state::<CDV, B>(&ctx, b, &inc, CDV(DV::splat(delta)), &lus, &lus));
+        std::hint::black_box(block_state::<CDV, B>(&ctx, b, &inc, Counted(DV::splat(delta)), &lus, &lus));
         let c = take_counts();
         let solves = if b == ctx.k() { ctx.ks + 1 } else { 0 };
         // model: counts x per-operation cost, plus the double-double solves (their cost measured above)
