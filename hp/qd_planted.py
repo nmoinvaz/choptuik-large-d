@@ -9,8 +9,10 @@ Pass criteria, fixed before the run: for eps = --eps_pass the quad-double Newton
 1e-33 and max |z - z*| below 1e-25 (the error bound cond(J) 2^-209 |z| is about 1e-27 at D = 73, where u kappa is
 1e3 in double-double; Delta weighs the weakest direction by about 1e-8). Control: the same run with the state read
 in its double-double part (qsolve::QD_MUT_STATE_DD) must fail them. Exits 1 if a criterion or the control fails.
+The default starts lie inside Newton's basin at D = 72.8 (radius about 4e-38): from 1e-24 every solver's first step
+lands 2.3e-11 away (notes/QUAD_DOUBLE.md, 12.1).
 
-    python3 qd_planted.py OUT.jsonl STATE.npz [--kfreeze 13] [--eps 1e-30,1e-24,1e-18,1e-12] [--eps_pass 1e-24]
+    python3 qd_planted.py OUT.jsonl STATE.npz [--kfreeze 13] [--eps 1e-40,1e-36,1e-32,1e-28] [--eps_pass 1e-40]
         [--steps 5] [--threads N]
 
 OUT must be in a raw/<task> worktree (raw_out.py; --allow_unraw writes anyway).
@@ -68,8 +70,8 @@ def main():
     ap.add_argument("out")
     ap.add_argument("state")
     ap.add_argument("--kfreeze", type=int, default=13)
-    ap.add_argument("--eps", default="1e-30,1e-24,1e-18,1e-12")
-    ap.add_argument("--eps_pass", type=float, default=1e-24)
+    ap.add_argument("--eps", default="1e-40,1e-36,1e-32,1e-28")
+    ap.add_argument("--eps_pass", type=float, default=1e-40)
     ap.add_argument("--steps", type=int, default=5)
     ap.add_argument("--tol_step", type=float, default=1e-32)
     ap.add_argument("--hmax", type=float, default=0.05)
