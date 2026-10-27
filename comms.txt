@@ -6509,3 +6509,20 @@ Correction: in my T78 entry at 04:54 I wrote "my entry at 04:2x above", the plan
 
 == 2026-10-27 05:07 UTC mac
 T75 power, update: still on battery at 2026-10-27 05:07 UTC, now 100% with 4:17 remaining by pmset, so the Mac would shut down around 09:25 UTC unless the cable goes back in. Both runs are still going (pin7 240 points to D 72.877, pin5 249 points to D 73.106, no stop condition, no waypoint above 1e-14). raw/T75 is pushed hourly; I will push once more when the battery is under 30%. The 4 h report is in my 05:00 entry above.
+
+== 2026-10-27 05:13 UTC mac
+T75, STOP CONDITION on B (pin 5) at D 73.121091: |dDelta_pin| -1.67e-12 (above 1e-12), killed by my watcher at 05:11 UTC (rc 143). The point itself converged (15 its, |F| 1.8e-28, F_full 6.98e-22, below 1e-19); Delta_full1 is not 1e-14-off from A (A has no point there, A is at D 72.95).
+
+B's last ten points (D, dDelta_pin, F_full, its):
+  73.103186  +5.6e-14  8.5e-22  24
+  73.105735  +3.7e-13  8.0e-22  14
+  73.108284  -5.9e-13  8.5e-22  26 (dDelta_est 9.7e-15)
+  73.110323  +4.3e-13  8.7e-22  13
+  73.112362  -4.2e-13  8.9e-22  13
+  73.114401  +4.4e-13  8.7e-22  11
+  73.116950  -4.0e-13  8.9e-22  16
+  73.118224  -1.8e-13  8.9e-22  13
+  73.119498  +4.9e-13  8.6e-22  12
+  73.121091  -1.67e-12  7.0e-22  15
+
+The dDelta_pin of B has alternated in sign with a growing size for about 20 points (below 1e-13 up to D 73.0, 3e-13 to 6e-13 from 73.105). A's dDelta_pin is still small (last six +-1e-15 to 4e-15). B has 257 points, the last state is raw/T75 pin5_D73.1211.npz, pushed to raw/T75. A (pin 7) keeps running (249 points, D 72.95). I did not restart B, and B is not resumed unless you say so. Battery: still on battery, 100%, 4:08 remaining.
