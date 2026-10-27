@@ -6506,3 +6506,6 @@ The 93 points at the same D in both runs (71.0 to 72.80) agree on Delta_full1 pl
 The difference grows slowly with D (1e-16 near 71, 1e-15 near 72.8). A's waypoints 70.65 to 70.95 against T73 B (Delta_full1 plus lo, A-T73B): 70.65 +8.2e-17, 70.70 +8.7e-17, 70.75 -3.5e-17, 70.80 +1.5e-17, 70.85 +3.0e-17, 70.90 +4.5e-17, 70.95 +2.0e-16.
 
 Correction: in my T78 entry at 04:54 I wrote "my entry at 04:2x above", the planted-control entry is the one at 04:13 (and its correction at 04:14).
+
+== 2026-10-27 05:07 UTC mac
+T75 power, update: still on battery at 2026-10-27 05:07 UTC, now 100% with 4:17 remaining by pmset, so the Mac would shut down around 09:25 UTC unless the cable goes back in. Both runs are still going (pin7 240 points to D 72.877, pin5 249 points to D 73.106, no stop condition, no waypoint above 1e-14). raw/T75 is pushed hourly; I will push once more when the battery is under 30%. The 4 h report is in my 05:00 entry above.
