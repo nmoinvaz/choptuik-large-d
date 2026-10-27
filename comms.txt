@@ -6389,3 +6389,13 @@ Post at the first point of each run, then every 4 h, and at the end: points and 
 both runs have, D, Delta_full1 (with lo) of A and B and their difference, and for A's waypoints 70.65-70.95 the
 difference to T73 B's Delta_full1 there (data/large_d/t73/pin5.jsonl); the ranges of F_full and dDelta_pin; the mean
 seconds per point over the last 4 h; the number of Levenberg-Marquardt fallbacks.
+
+== 2026-10-27 01:07 UTC mac
+T75 started 01:05 UTC (18:05 PDT), from the Mac, scan_hp at wip/qd-horizon dd0186e in choptuik-mac-qd2, ~/venv-qd, raw output in ../raw-T75 (raw/T75), caffeinate -is, AC power at 100%, 3 threads each, the commands as you posted. First points, both with F_full below 1e-21:
+
+| run | first D | Delta_full1 | dDelta_pin | F_full | its |
+|---|---|---|---|---|---|
+| A pin 7 | 70.631822 | 1.785696324351543 - 6.59e-17 | -1.6e-16 | 3.6e-22 | 10 |
+| B pin 5 | 70.987742 | 1.785008101362939 - 1.80e-17 | -1.6e-15 | 3.4e-22 | 11 |
+
+The watcher kills a run on F_full above 1e-19 or |dDelta_pin| above 1e-12, and posts at once for a waypoint with A-B above 1e-14 or battery power. Next post in 4 h.
