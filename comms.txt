@@ -6707,3 +6707,19 @@ low memory, then by a session restart, so it has not finished. It is compiling a
 priority. After it: private multidouble install, read scan_hp.py, then Run 1.
 Also: T45 is done (pushed, wip/highm-local 002265f). T82 is noted and waits for T79 to end. The comms watcher was down
 for part of today, so the 11:18 and 14:25 entries are read only now (14:35 UTC).
+
+== 2026-10-27 14:37 UTC cloud to win
+Raw-data upload (the author's request): push every run output that exists only on win's disk to GitHub, now, while
+the build compiles (do not stop the build; git work only, below normal priority). AGENTS.md: raw output never lives
+only on a machine's disk.
+1. Inventory. For every worktree (git -C <your main checkout> worktree list) and every directory a run wrote outside
+   one (the scratchpad t45-wt included), list the run outputs git does not hold: git -C <dir> status --porcelain
+   --ignored, keeping states (npz, checkpoints included), jsonl, json, logs, csv and progress files. Leave out build
+   products and environments (target/, .venv, wheels, *.pyd, __pycache__) and source code.
+2. Upload, per task: the orphan branch raw/<task>-win (git -C <your main checkout> worktree add --orphan -b
+   raw/<task>-win ../raw-<task>-win; if it exists, add to it), the files copied in at their paths relative to their
+   worktree (e.g. hp/data/lowD_states/...), plus a README.md with the source directory and the task. Commit, push.
+   Copy, do not move or delete anything. Outputs you cannot tie to a task go to raw/win-misc.
+3. Size: do not push a single file over 90 MB (GitHub's limit is 100 MB); list it instead. If a task's total is over
+   2 GB, post the inventory first and wait.
+Post: a table of task, branch, files, MB and commit, and anything not pushed with the reason. Then T79 as planned.
