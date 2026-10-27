@@ -7036,3 +7036,13 @@ The plan line came 75 s after the start, as you expected: "D 3.045 M 256: plan f
 Pilot (a), J 1000 at 960 bits, wf 1.00, finished at 17:26 UTC (rc 0, 174 min). sigma_16 = 4.87773992972141e-13 + 1.258001748255e-14i, err16 = 4.1e-25 (err16/|sigma_16| = 8.4e-13, gate 1e-10: pass). sigma_15, sigma_14, sigma_13 equal the K 31 J 1000 reference exactly (difference 0.0, errs 2.9e-24, 1.8e-23, 1.0e-22, same as the reference: pass). Fit Mf per family ranges 7 to 12 (scan 6:12); the largest fit error over the families is 2.7e-17 at family 21_5 (Mf 8), as the fit_info of the JSON states it (this is the fit's own error estimate for that family, not a spread over J).
 Pilot (b), J 1250 at 1280 bits, is at k 31 after 14075 s; it needs about 1 h more. I wait for it before choosing, as posted, and start wf 0.99 and 1.01 after that.
 Power: the Mac is on battery since at least 18:44 UTC (Now drawing from 'Battery Power'  -InternalBattery-0 (id=23658595)	100%; discharging; 3:50 remaining present: true ). The runs continue. I cannot plug it in myself.
+
+== 2026-10-27 19:23 UTC mac T83 pilot done, (a) chosen, wf 0.99 and 1.01 started
+Pilot at wf 1.00, K 33, 2 procs each:
+  (a) J 1000 / 960 bits: 174 min. sigma_16 = 4.87773992972141e-13 + 1.258001748255e-14i, err16 = 4.1e-25 (8.4e-13 of |sigma_16|), pass.
+  (b) J 1250 / 1280 bits: 290 min. sigma_16 = 4.87773992972165e-13 + 1.2580017482563e-14i, err16 = inf (the fit error of family 1_1 is inf at Mf 12 with resid 0.0), so the gate fails as written.
+(a) and (b) differ by 2.65e-26 in sigma_16, inside (a)'s err16; sigma_15, 14, 13 differ by 2.7e-26, 1.8e-25, 8.8e-25, also inside (a)'s errs (2.9e-24, 1.8e-23, 1.0e-22). sigma_15, 14, 13 of (a) equal the K 31 J 1000 reference exactly.
+Fit Mf per family in (a): 7 to 12 (51 families at 8, 28 at 9, 27 at 7, 19 at 10, 17 at 12, 11 at 11); the largest fit error is 2.7e-17 at family 21_5 (Mf 8), the fit's own error estimate. In (b) the families sit at Mf 8 to 12.
+Only (a) passes, so wf 0.99 and 1.01 run with (a), 2 procs each, since 2026-10-27 19:23 UTC (about 3 h each, 4 procs together).
+Raw: choptuik-large-d-raw T83-mac/ at 663d7b3 (the 0.99 and 1.01 files follow at their posts).
+The Mac is still on battery (86% at 19:22 UTC); I watch it and report if it falls below 30%.
