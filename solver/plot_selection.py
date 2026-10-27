@@ -18,6 +18,7 @@ the zero.txt files of the K 15 ... K 25 scans (k <= 12) and notes/PLANTED_SELECT
 (k = 13, 14, 15), the factored-series values from solver/proof/entire_cert.py (k <= 12) and the same sections.
 
     python3 plot_selection.py [-o selection.svg]
+    python3 plot_selection.py --print    # the paper's layout, selection_print.svg
 """
 import argparse
 import glob
@@ -91,9 +92,9 @@ def crossings(scandir, pattern="*.json"):
 class Axes:
     """Plot area with explicit ticks (linear or log10 in y)."""
 
-    def __init__(self, svg, px, py, pw, ph, xr, yr, xticks, yticks, title, xlabel, ylabel, ylog=False):
+    def __init__(self, svg, px, py, pw, ph, xr, yr, xticks, yticks, title, xlabel, ylabel, ylog=False, tdy=40):
         self.svg, self.px, self.py, self.pw, self.ph, self.xr, self.yr, self.ylog = svg, px, py, pw, ph, xr, yr, ylog
-        svg.text(px, py - 40, title, size=12, fill=INK)
+        svg.text(px, py - tdy, title, size=12, fill=INK)
         for v, lab in yticks:
             y = self.sy(v)
             svg.line(px, y, px + pw, y, GRID)
@@ -106,7 +107,7 @@ class Axes:
         svg.text(px + pw / 2, py + ph + 34, xlabel, size=11, anchor="middle")
         svg.add(f'<text x="{px - 48:.1f}" y="{py + ph / 2:.1f}" font-size="11" fill="{INK_SOFT}" text-anchor="middle" '
                 f'transform="rotate(-90 {px - 48:.1f} {py + ph / 2:.1f})">{esc(ylabel)}</text>')
-        self.kx = px
+        self.kx, self.ky = px, py - 20
 
     def sx(self, v):
         return self.px + (v - self.xr[0]) / (self.xr[1] - self.xr[0]) * self.pw
@@ -117,7 +118,7 @@ class Axes:
         return self.py + self.ph - (v - self.yr[0]) / (self.yr[1] - self.yr[0]) * self.ph
 
     def key(self, draw, label):
-        y = self.py - 20
+        y = self.ky
         draw(self.kx + 6, y - 4)
         self.svg.text(self.kx + 16, y, label, size=10)
         self.kx += 16 + 5.9 * len(label) + 20
@@ -130,8 +131,11 @@ def square(svg, x, y, color, title, r=4.5):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("-o", default=os.path.join(HERE, "selection.svg"))
+    ap.add_argument("-o")
+    ap.add_argument("--print", action="store_true", help="the paper layout, 480 px wide (default -o selection_print.svg)")
     args = ap.parse_args()
+    P = args.print
+    args.o = args.o or os.path.join(HERE, "selection_print.svg" if P else "selection.svg")
     above, below9 = crossings(SCAN, SCAN_FILES)
     below = {**RATIO_WIDE, **below9}
     expo = {k: c.real for k, c in exponents(SCAN, SCAN_FILES).items()}
@@ -139,23 +143,31 @@ def main():
     cA, cB, cP, cE = SERIES[0], SERIES[1], SERIES[2], SERIES[3]
     cT = SERIES[4]
 
-    W = 900
+    # Layout: panel boxes (px, py, pw, ph). --print is the math paper's: 480 px at 360 pt, no title (the caption
+    # carries it), panel 1's key in two rows, shorter titles on the lower panels.
+    if P:
+        W, H, tdy = 480, 580, 14
+        box1, box2, box3 = (60, 74, 406, 210), (60, 364, 150, 170), (274, 364, 194, 170)
+    else:
+        W, H, tdy = 900, 470 + 190 + 52, 40
+        box1, box2, box3 = (78, 120, 790, 260), (78, 470, 340, 190), (528, 470, 340, 190)
     svg = Svg(W)
-    svg.text(78, 26, "The selection rule, evaluated from the D = ∞ inner problem alone", size=15, fill=INK, weight="bold")
-    svg.text(78, 46, "Where the harmonic-1 Stokes multiplier has a real zero, against ω∞ from the finite-D solutions "
-             "(the line at 1); hover a mark for its value", size=11)
+    if not P:
+        svg.text(78, 26, "The selection rule, evaluated from the D = ∞ inner problem alone", size=15, fill=INK, weight="bold")
+        svg.text(78, 46, "Where the harmonic-1 Stokes multiplier has a real zero, against ω∞ from the finite-D solutions "
+                 "(the line at 1); hover a mark for its value", size=11)
 
     # panel 1
-    p = Axes(svg, 78, 120, 790, 260, (3.5, kmax + 0.6), (0.976, 1.022),
+    p = Axes(svg, *box1, (3.5, kmax + 0.6), (0.976, 1.022),
              [(k, str(k)) for k in range(4, kmax + 1)], [(v / 100, f"{v / 100:.2f}") for v in range(98, 103)],
              "Order by order: two estimates close in from opposite sides", "order k of the amplitude expansion in A²",
-             "ω*/ω∞")
+             "ω*/ω∞", tdy=58 if P else 40)
     ks = sorted(set(above) & set(below))
     poly = [(p.sx(k), p.sy(above[k])) for k in ks] + [(p.sx(k), p.sy(below[k])) for k in reversed(ks)]
     svg.add('<polygon points="' + " ".join(f"{x:.1f},{y:.1f}" for x, y in poly) + f'" fill="{BAND}"/>')
     y1 = p.sy(1.0)
     svg.line(p.px, y1, p.px + p.pw, y1, INK_SOFT, width=1.2, dash="6 4")
-    svg.text(p.sx(3.6), y1 + 14, "ω∞ from the finite-D solutions (D ≤ 61)", size=10)
+    svg.text(p.sx(3.6), y1 + 14, "ω∞ from finite-D solutions" if P else "ω∞ from the finite-D solutions (D ≤ 61)", size=10)
     for k, (lo, hi) in PADE.items():
         x = p.sx(k + 0.12)
         svg.line(x, p.sy(lo), x, p.sy(hi), cP, width=2.5)
@@ -177,32 +189,41 @@ def main():
              anchor="end")
     svg.text(p.sx(6.2), p.sy(1.016), "from above: simple-zero estimate (arg τ_k = π)", size=10, fill=INK)
     svg.text(p.sx(6.2), p.sy(0.979), "from below: exponent left free (ratio of τ_k−1, τ_k)", size=10, fill=INK)
+    if P:                                       # two key rows
+        p.ky = p.py - 38
     p.key(lambda x, y: marker(svg, x, y, cA, "from above"), "from above (simple zero)")
     p.key(lambda x, y: marker(svg, x, y, cB, "from below", hollow=True), "from below (exponent free)")
+    if P:
+        p.kx, p.ky = p.px, p.py - 20
     p.key(lambda x, y: marker(svg, x, y, cP, "Padé", shape="diamond", r=3.2), "Padé approximants (range)")
     p.key(lambda x, y: square(svg, x, y, cE, "factored series", r=4), "factored series e^(−κA²)S₁")
 
     # panel 2: truncation sequence
-    yt = 470
-    q = Axes(svg, 78, yt, 340, 190, (0, 8), (-5, 0), [(m, f"M = {m}") for m in (1, 3, 5, 7)],
+    q = Axes(svg, *box2, (0, 8), (-5, 0), [(m, f"M = {m}") for m in (1, 3, 5, 7)],
              [(10.0 ** e, f"10{'⁻' + '⁰¹²³⁴⁵'[-e] if e else '⁰'}") for e in range(-5, 1)],
-             "Keeping M harmonics: the error alternates and shrinks", "harmonics kept", "|ω*/ω∞ − 1|", ylog=True)
+             "Keeping M harmonics" if P else "Keeping M harmonics: the error alternates and shrinks", "harmonics kept",
+             "|ω*/ω∞ − 1|", ylog=True, tdy=tdy)
     pts = [(q.sx(m), q.sy(abs(v - 1))) for m, v in TRUNC.items()]
     svg.path(pts, cT, width=2)
     for (m, v), (x, y) in zip(TRUNC.items(), pts):
         marker(svg, x, y, cT, f"M = {m}: ω/ω∞ = {v} ({(v - 1) * 100:+.3f}%)")
-        svg.text(x + 9, y - 6, f"{(v - 1) * 100:+.3g}%".replace("-", "−"), size=10, fill=INK)
+        dx, dy, anchor = (-9, 4, "end") if P and m == 7 else (9, -6, "start")     # print: M = 7 left, clear of panel 3
+        svg.text(x + dx, y + dy, f"{(v - 1) * 100:+.3g}%".replace("-", "−"), size=10, fill=INK, anchor=anchor)
     lo, hi = M7_PRED
     x7 = q.sx(7)
     ylo = 1e-5 if lo < 1 < hi else max(min(abs(lo - 1), abs(hi - 1)), 1e-5)  # a range that contains 1 reaches the floor
     svg.line(x7, q.sy(ylo), x7, q.sy(max(abs(lo - 1), abs(hi - 1))), cT, width=2, dash="3 3")
     marker(svg, x7, q.sy(abs(hi - 1)), cT, f"M = 7 predicted from M ≤ 5: {lo}–{hi}", hollow=True)
-    svg.text(x7 - 9, q.sy(abs(hi - 1)) + 4, "predicted", size=10, fill=INK, anchor="end")
+    if P:                                       # above the marker, off the line from M = 5
+        svg.text(x7, q.sy(abs(hi - 1)) - 9, "predicted", size=10, fill=INK, anchor="middle")
+    else:
+        svg.text(x7 - 9, q.sy(abs(hi - 1)) + 4, "predicted", size=10, fill=INK, anchor="end")
 
     # panel 3: effective exponent
-    r3 = Axes(svg, 528, yt, 340, 190, (5.5, kmax + 0.5), (0.95, 1.2), [(k, str(k)) for k in range(6, kmax + 1)],
+    r3 = Axes(svg, *box3, (5.5, kmax + 0.5), (0.95, 1.2), [(k, str(k)) for k in range(6, kmax + 1)],
               [(v / 100, f"{v / 100:.2f}") for v in range(95, 121, 5)],
-              "Is the zero simple? The effective exponent tends to 1", "last order used, k", "effective exponent, Re c")
+              "Effective exponent tends to 1" if P else "Is the zero simple? The effective exponent tends to 1",
+              "last order used, k", "effective exponent, Re c", tdy=tdy)
     svg.line(r3.px, r3.sy(1.0), r3.px + r3.pw, r3.sy(1.0), INK_SOFT, width=1.2, dash="6 4")
     svg.text(r3.px + r3.pw - 4, r3.sy(1.0) + 14, "simple zero: c = 1", size=10, anchor="end")
     pts = [(r3.sx(k), r3.sy(v)) for k, v in expo.items()]
@@ -210,7 +231,6 @@ def main():
     for (k, v), (x, y) in zip(expo.items(), pts):
         marker(svg, x, y, cA, f"orders {k - 1}–{k}: Re c = {v:.3f}")
 
-    H = yt + 190 + 52
     open(args.o, "w").write(svg.finish(H))
     print("wrote", args.o, {k: round(v, 6) for k, v in above.items()}, {k: round(v, 5) for k, v in below.items()})
     print("effective exponent c at w_inf:",

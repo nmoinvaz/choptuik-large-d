@@ -1,0 +1,193 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="580" viewBox="0 0 480 580" font-family="system-ui, sans-serif">
+<style>@media (prefers-color-scheme: dark){[fill="#fcfcfb"]{fill:#201f1d}[stroke="#fcfcfb"]{stroke:#201f1d}[fill="#0b0b0b"]{fill:#e8e6e3}[stroke="#0b0b0b"]{stroke:#e8e6e3}[fill="#52514e"]{fill:#a8a49d}[stroke="#52514e"]{stroke:#a8a49d}[fill="#e7e6e2"]{fill:#343230}[stroke="#e7e6e2"]{stroke:#343230}[fill="#efeeea"]{fill:#2a2927}[stroke="#efeeea"]{stroke:#2a2927}[fill="#eb6834"]{fill:#dd5c26}[stroke="#eb6834"]{stroke:#dd5c26}[fill="#7a7668"]{fill:#948e82}[stroke="#7a7668"]{stroke:#948e82}}</style>
+<rect width="480" height="580" fill="#fcfcfb"/>
+<text x="60.0" y="16.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">Order by order: two estimates close in from opposite sides</text>
+<line x1="60.0" y1="265.7" x2="466.0" y2="265.7" stroke="#e7e6e2" stroke-width="1"/>
+<text x="52.0" y="269.7" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">0.98</text>
+<line x1="60.0" y1="220.1" x2="466.0" y2="220.1" stroke="#e7e6e2" stroke-width="1"/>
+<text x="52.0" y="224.1" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">0.99</text>
+<line x1="60.0" y1="174.4" x2="466.0" y2="174.4" stroke="#e7e6e2" stroke-width="1"/>
+<text x="52.0" y="178.4" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">1.00</text>
+<line x1="60.0" y1="128.8" x2="466.0" y2="128.8" stroke="#e7e6e2" stroke-width="1"/>
+<text x="52.0" y="132.8" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">1.01</text>
+<line x1="60.0" y1="83.1" x2="466.0" y2="83.1" stroke="#e7e6e2" stroke-width="1"/>
+<text x="52.0" y="87.1" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">1.02</text>
+<line x1="76.8" y1="74.0" x2="76.8" y2="284.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="76.8" y="300.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">4</text>
+<line x1="110.3" y1="74.0" x2="110.3" y2="284.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="110.3" y="300.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">5</text>
+<line x1="143.9" y1="74.0" x2="143.9" y2="284.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="143.9" y="300.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">6</text>
+<line x1="177.4" y1="74.0" x2="177.4" y2="284.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="177.4" y="300.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">7</text>
+<line x1="211.0" y1="74.0" x2="211.0" y2="284.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="211.0" y="300.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">8</text>
+<line x1="244.5" y1="74.0" x2="244.5" y2="284.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="244.5" y="300.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">9</text>
+<line x1="278.1" y1="74.0" x2="278.1" y2="284.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="278.1" y="300.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">10</text>
+<line x1="311.7" y1="74.0" x2="311.7" y2="284.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="311.7" y="300.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">11</text>
+<line x1="345.2" y1="74.0" x2="345.2" y2="284.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="345.2" y="300.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">12</text>
+<line x1="378.8" y1="74.0" x2="378.8" y2="284.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="378.8" y="300.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">13</text>
+<line x1="412.3" y1="74.0" x2="412.3" y2="284.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="412.3" y="300.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">14</text>
+<line x1="445.9" y1="74.0" x2="445.9" y2="284.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="445.9" y="300.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">15</text>
+<line x1="60.0" y1="284.0" x2="466.0" y2="284.0" stroke="#52514e" stroke-width="1"/>
+<text x="263.0" y="318.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal">order k of the amplitude expansion in A²</text>
+<text x="12.0" y="179.0" font-size="11" fill="#52514e" text-anchor="middle" transform="rotate(-90 12.0 179.0)">ω*/ω∞</text>
+<polygon points="110.3,136.5 143.9,156.4 177.4,165.0 211.0,169.3 244.5,171.8 278.1,173.1 311.7,173.5 345.2,173.9 378.8,174.2 412.3,174.3 445.9,174.3 445.9,174.8 412.3,175.5 378.8,177.7 345.2,178.3 311.7,178.1 278.1,184.4 244.5,192.1 211.0,199.1 177.4,214.2 143.9,264.4 110.3,256.2" fill="#efeeea"/>
+<line x1="60.0" y1="174.4" x2="466.0" y2="174.4" stroke="#52514e" stroke-width="1.2" stroke-dasharray="6 4"/>
+<text x="63.4" y="188.4" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">ω∞ from finite-D solutions</text>
+<line x1="181.5" y1="261.2" x2="181.5" y2="215.5" stroke="#1baf7a" stroke-width="2.5"/>
+<line x1="215.0" y1="233.8" x2="215.0" y2="183.6" stroke="#1baf7a" stroke-width="2.5"/>
+<line x1="248.6" y1="211.0" x2="248.6" y2="183.6" stroke="#1baf7a" stroke-width="2.5"/>
+<line x1="282.1" y1="176.7" x2="282.1" y2="171.2" stroke="#1baf7a" stroke-width="2.5"/>
+<line x1="315.7" y1="178.1" x2="315.7" y2="170.8" stroke="#1baf7a" stroke-width="2.5"/>
+<line x1="349.2" y1="175.0" x2="349.2" y2="174.8" stroke="#1baf7a" stroke-width="2.5"/>
+<line x1="382.8" y1="175.3" x2="382.8" y2="174.9" stroke="#1baf7a" stroke-width="2.5"/>
+<line x1="416.3" y1="174.7" x2="416.3" y2="173.8" stroke="#1baf7a" stroke-width="2.5"/>
+<line x1="449.9" y1="174.5" x2="449.9" y2="174.1" stroke="#1baf7a" stroke-width="2.5"/>
+<g><polygon points="181.5,233.6 186.2,238.3 181.5,243.0 176.8,238.3" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>Padé, 7 coefficients: 0.981–0.991</title></g>
+<g><polygon points="215.0,204.0 219.7,208.7 215.0,213.4 210.3,208.7" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>Padé, 8 coefficients: 0.987–0.998</title></g>
+<g><polygon points="248.6,192.6 253.3,197.3 248.6,202.0 243.9,197.3" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>Padé, 9 coefficients: 0.992–0.998</title></g>
+<g><polygon points="282.1,169.3 286.8,174.0 282.1,178.7 277.4,174.0" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>Padé, 10 coefficients: 0.9995–1.0007</title></g>
+<g><polygon points="315.7,169.7 320.4,174.4 315.7,179.1 311.0,174.4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>Padé, 11 coefficients: 0.9992–1.0008</title></g>
+<g><polygon points="349.2,170.2 353.9,174.9 349.2,179.6 344.5,174.9" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>Padé, 12 coefficients: 0.99987–0.99991</title></g>
+<g><polygon points="382.8,170.4 387.5,175.1 382.8,179.8 378.1,175.1" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>Padé, 13 coefficients: 0.9998–0.9999</title></g>
+<g><polygon points="416.3,169.6 421.0,174.3 416.3,179.0 411.6,174.3" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>Padé, 14 coefficients: 0.99995–1.00013</title></g>
+<g><polygon points="449.9,169.6 454.6,174.3 449.9,179.0 445.2,174.3" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>Padé, 15 coefficients: 0.999984–1.000063</title></g>
+<path d="M76.8,94.1 L110.3,136.5 L143.9,156.4 L177.4,165.0 L211.0,169.3 L244.5,171.8 L278.1,173.1 L311.7,173.5 L345.2,173.9 L378.8,174.2 L412.3,174.3 L445.9,174.3" fill="none" stroke="#2a78d6" stroke-width="2" stroke-opacity="0.85" stroke-linejoin="round"/>
+<path d="M110.3,256.2 L143.9,264.4 L177.4,214.2 L211.0,199.1 L244.5,192.1 L278.1,184.4 L311.7,178.1 L345.2,178.3 L378.8,177.7 L412.3,175.5 L445.9,174.8" fill="none" stroke="#eb6834" stroke-width="2" stroke-opacity="0.85" stroke-linejoin="round"/>
+<g><circle cx="76.8" cy="94.1" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 4: arg τ_k = π at ω/ω∞ = 1.017595</title></g>
+<g><circle cx="110.3" cy="136.5" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 5: arg τ_k = π at ω/ω∞ = 1.008320</title></g>
+<g><circle cx="143.9" cy="156.4" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 6: arg τ_k = π at ω/ω∞ = 1.003953</title></g>
+<g><circle cx="177.4" cy="165.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 7: arg τ_k = π at ω/ω∞ = 1.002076</title></g>
+<g><circle cx="211.0" cy="169.3" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 8: arg τ_k = π at ω/ω∞ = 1.001130</title></g>
+<g><circle cx="244.5" cy="171.8" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 9: arg τ_k = π at ω/ω∞ = 1.000570</title></g>
+<g><circle cx="278.1" cy="173.1" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 10: arg τ_k = π at ω/ω∞ = 1.000299</title></g>
+<g><circle cx="311.7" cy="173.5" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 11: arg τ_k = π at ω/ω∞ = 1.000197</title></g>
+<g><circle cx="345.2" cy="173.9" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 12: arg τ_k = π at ω/ω∞ = 1.000109</title></g>
+<g><circle cx="378.8" cy="174.2" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 13: arg τ_k = π at ω/ω∞ = 1.000046</title></g>
+<g><circle cx="412.3" cy="174.3" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 14: arg τ_k = π at ω/ω∞ = 1.000026</title></g>
+<g><circle cx="445.9" cy="174.3" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>k = 15: arg τ_k = π at ω/ω∞ = 1.000019</title></g>
+<g><circle cx="110.3" cy="256.2" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 5: ratio estimate real at ω/ω∞ = 0.98210</title></g>
+<g><circle cx="143.9" cy="264.4" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 6: ratio estimate real at ω/ω∞ = 0.98030</title></g>
+<g><circle cx="177.4" cy="214.2" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 7: ratio estimate real at ω/ω∞ = 0.99130</title></g>
+<g><circle cx="211.0" cy="199.1" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 8: ratio estimate real at ω/ω∞ = 0.99460</title></g>
+<g><circle cx="244.5" cy="192.1" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 9: ratio estimate real at ω/ω∞ = 0.99614</title></g>
+<g><circle cx="278.1" cy="184.4" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 10: ratio estimate real at ω/ω∞ = 0.99782</title></g>
+<g><circle cx="311.7" cy="178.1" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 11: ratio estimate real at ω/ω∞ = 0.99919</title></g>
+<g><circle cx="345.2" cy="178.3" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 12: ratio estimate real at ω/ω∞ = 0.99915</title></g>
+<g><circle cx="378.8" cy="177.7" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 13: ratio estimate real at ω/ω∞ = 0.99928</title></g>
+<g><circle cx="412.3" cy="175.5" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 14: ratio estimate real at ω/ω∞ = 0.99977</title></g>
+<g><circle cx="445.9" cy="174.8" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>k = 15: ratio estimate real at ω/ω∞ = 0.99992</title></g>
+<g><rect x="236.0" y="180.6" width="9.0" height="9.0" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>factored series to order 9: ω/ω∞ = 0.99767</title></g>
+<g><rect x="269.6" y="168.3" width="9.0" height="9.0" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>factored series to order 10: ω/ω∞ = 1.00035</title></g>
+<g><rect x="303.1" y="170.5" width="9.0" height="9.0" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>factored series to order 11: ω/ω∞ = 0.99987</title></g>
+<g><rect x="336.7" y="170.5" width="9.0" height="9.0" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>factored series to order 12: ω/ω∞ = 0.99988</title></g>
+<g><rect x="370.2" y="170.0" width="9.0" height="9.0" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>factored series to order 13: ω/ω∞ = 0.999995</title></g>
+<g><rect x="403.8" y="169.8" width="9.0" height="9.0" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>factored series to order 14: ω/ω∞ = 1.000027</title></g>
+<g><rect x="437.3" y="169.9" width="9.0" height="9.0" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>factored series to order 15: ω/ω∞ = 0.999999</title></g>
+<text x="86.8" y="98.1" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">1.0176</text>
+<text x="459.3" y="204.4" font-size="10" fill="#0b0b0b" text-anchor="end" font-weight="normal">bracket at k = 15:</text>
+<text x="459.3" y="218.4" font-size="10" fill="#0b0b0b" text-anchor="end" font-weight="normal">0.99992 – 1.00002</text>
+<text x="150.6" y="101.4" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">from above: simple-zero estimate (arg τ_k = π)</text>
+<text x="150.6" y="270.3" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">from below: exponent left free (ratio of τ_k−1, τ_k)</text>
+<g><circle cx="66.0" cy="32.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>from above</title></g>
+<text x="76.0" y="36.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">from above (simple zero)</text>
+<g><circle cx="243.6" cy="32.0" r="4.5" fill="#fcfcfb" stroke="#eb6834" stroke-width="1.6"/><title>from below</title></g>
+<text x="253.6" y="36.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">from below (exponent free)</text>
+<g><polygon points="66.0,45.3 70.7,50.0 66.0,54.7 61.3,50.0" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/><title>Padé</title></g>
+<text x="76.0" y="54.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">Padé approximants (range)</text>
+<g><rect x="245.5" y="46.0" width="8.0" height="8.0" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>factored series</title></g>
+<text x="259.5" y="54.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">factored series e^(−κA²)S₁</text>
+<text x="60.0" y="350.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">Keeping M harmonics</text>
+<line x1="60.0" y1="534.0" x2="210.0" y2="534.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="52.0" y="538.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">10⁻⁵</text>
+<line x1="60.0" y1="500.0" x2="210.0" y2="500.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="52.0" y="504.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">10⁻⁴</text>
+<line x1="60.0" y1="466.0" x2="210.0" y2="466.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="52.0" y="470.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">10⁻³</text>
+<line x1="60.0" y1="432.0" x2="210.0" y2="432.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="52.0" y="436.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">10⁻²</text>
+<line x1="60.0" y1="398.0" x2="210.0" y2="398.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="52.0" y="402.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">10⁻¹</text>
+<line x1="60.0" y1="364.0" x2="210.0" y2="364.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="52.0" y="368.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">10⁰</text>
+<line x1="78.8" y1="364.0" x2="78.8" y2="534.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="78.8" y="550.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">M = 1</text>
+<line x1="116.2" y1="364.0" x2="116.2" y2="534.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="116.2" y="550.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">M = 3</text>
+<line x1="153.8" y1="364.0" x2="153.8" y2="534.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="153.8" y="550.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">M = 5</text>
+<line x1="191.2" y1="364.0" x2="191.2" y2="534.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="191.2" y="550.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">M = 7</text>
+<line x1="60.0" y1="534.0" x2="210.0" y2="534.0" stroke="#52514e" stroke-width="1"/>
+<text x="135.0" y="568.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal">harmonics kept</text>
+<text x="12.0" y="449.0" font-size="11" fill="#52514e" text-anchor="middle" transform="rotate(-90 12.0 449.0)">|ω*/ω∞ − 1|</text>
+<path d="M78.8,386.2 L116.2,425.4 L153.8,469.8 L191.2,522.4" fill="none" stroke="#e87ba4" stroke-width="2" stroke-opacity="0.85" stroke-linejoin="round"/>
+<g><circle cx="78.8" cy="386.2" r="4.5" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>M = 1: ω/ω∞ = 0.776994 (-22.301%)</title></g>
+<text x="87.8" y="380.2" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">−22.3%</text>
+<g><circle cx="116.2" cy="425.4" r="4.5" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>M = 3: ω/ω∞ = 1.015603 (+1.560%)</title></g>
+<text x="125.2" y="419.4" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">+1.56%</text>
+<g><circle cx="153.8" cy="469.8" r="4.5" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>M = 5: ω/ω∞ = 0.999228 (-0.077%)</title></g>
+<text x="162.8" y="463.8" font-size="10" fill="#0b0b0b" text-anchor="start" font-weight="normal">−0.0772%</text>
+<g><circle cx="191.2" cy="522.4" r="4.5" fill="#e87ba4" stroke="#fcfcfb" stroke-width="2"/><title>M = 7: ω/ω∞ = 1.000022 (+0.002%)</title></g>
+<text x="182.2" y="526.4" font-size="10" fill="#0b0b0b" text-anchor="end" font-weight="normal">+0.0022%</text>
+<line x1="191.2" y1="534.0" x2="191.2" y2="492.2" stroke="#e87ba4" stroke-width="2" stroke-dasharray="3 3"/>
+<g><circle cx="191.2" cy="492.2" r="4.5" fill="#fcfcfb" stroke="#e87ba4" stroke-width="1.6"/><title>M = 7 predicted from M ≤ 5: 0.99997–1.00017</title></g>
+<text x="191.2" y="483.2" font-size="10" fill="#0b0b0b" text-anchor="middle" font-weight="normal">predicted</text>
+<text x="274.0" y="350.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">Effective exponent tends to 1</text>
+<line x1="274.0" y1="534.0" x2="468.0" y2="534.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="266.0" y="538.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">0.95</text>
+<line x1="274.0" y1="500.0" x2="468.0" y2="500.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="266.0" y="504.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">1.00</text>
+<line x1="274.0" y1="466.0" x2="468.0" y2="466.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="266.0" y="470.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">1.05</text>
+<line x1="274.0" y1="432.0" x2="468.0" y2="432.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="266.0" y="436.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">1.10</text>
+<line x1="274.0" y1="398.0" x2="468.0" y2="398.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="266.0" y="402.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">1.15</text>
+<line x1="274.0" y1="364.0" x2="468.0" y2="364.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="266.0" y="368.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">1.20</text>
+<line x1="283.7" y1="364.0" x2="283.7" y2="534.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="283.7" y="550.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">6</text>
+<line x1="303.1" y1="364.0" x2="303.1" y2="534.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="303.1" y="550.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">7</text>
+<line x1="322.5" y1="364.0" x2="322.5" y2="534.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="322.5" y="550.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">8</text>
+<line x1="341.9" y1="364.0" x2="341.9" y2="534.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="341.9" y="550.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">9</text>
+<line x1="361.3" y1="364.0" x2="361.3" y2="534.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="361.3" y="550.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">10</text>
+<line x1="380.7" y1="364.0" x2="380.7" y2="534.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="380.7" y="550.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">11</text>
+<line x1="400.1" y1="364.0" x2="400.1" y2="534.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="400.1" y="550.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">12</text>
+<line x1="419.5" y1="364.0" x2="419.5" y2="534.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="419.5" y="550.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">13</text>
+<line x1="438.9" y1="364.0" x2="438.9" y2="534.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="438.9" y="550.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">14</text>
+<line x1="458.3" y1="364.0" x2="458.3" y2="534.0" stroke="#e7e6e2" stroke-width="1"/>
+<text x="458.3" y="550.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal">15</text>
+<line x1="274.0" y1="534.0" x2="468.0" y2="534.0" stroke="#52514e" stroke-width="1"/>
+<text x="371.0" y="568.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal">last order used, k</text>
+<text x="226.0" y="449.0" font-size="11" fill="#52514e" text-anchor="middle" transform="rotate(-90 226.0 449.0)">effective exponent, Re c</text>
+<line x1="274.0" y1="500.0" x2="468.0" y2="500.0" stroke="#52514e" stroke-width="1.2" stroke-dasharray="6 4"/>
+<text x="464.0" y="514.0" font-size="10" fill="#52514e" text-anchor="end" font-weight="normal">simple zero: c = 1</text>
+<path d="M283.7,399.2 L303.1,379.6 L322.5,447.7 L341.9,464.6 L361.3,485.5 L380.7,488.7 L400.1,491.2 L419.5,497.5 L438.9,499.7 L458.3,498.7" fill="none" stroke="#2a78d6" stroke-width="2" stroke-opacity="0.85" stroke-linejoin="round"/>
+<g><circle cx="283.7" cy="399.2" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>orders 5–6: Re c = 1.148</title></g>
+<g><circle cx="303.1" cy="379.6" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>orders 6–7: Re c = 1.177</title></g>
+<g><circle cx="322.5" cy="447.7" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>orders 7–8: Re c = 1.077</title></g>
+<g><circle cx="341.9" cy="464.6" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>orders 8–9: Re c = 1.052</title></g>
+<g><circle cx="361.3" cy="485.5" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>orders 9–10: Re c = 1.021</title></g>
+<g><circle cx="380.7" cy="488.7" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>orders 10–11: Re c = 1.017</title></g>
+<g><circle cx="400.1" cy="491.2" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>orders 11–12: Re c = 1.013</title></g>
+<g><circle cx="419.5" cy="497.5" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>orders 12–13: Re c = 1.004</title></g>
+<g><circle cx="438.9" cy="499.7" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>orders 13–14: Re c = 1.000</title></g>
+<g><circle cx="458.3" cy="498.7" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>orders 14–15: Re c = 1.002</title></g>
+</svg>
