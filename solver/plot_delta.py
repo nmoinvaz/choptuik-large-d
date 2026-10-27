@@ -7,8 +7,12 @@ fitted on D <= FIT_MAX, where the independent setups agree to ~1e-8; the points 
 out of every fit, so the graph shows how well the formula predicts them.
 
 Usage (from solver/data, where the scan files live):
-    python3 ../plot_delta.py [-o ../delta.svg]
+    python3 ../plot_delta.py [-o ../delta.svg] [--raw DIR]
     python3 ../plot_delta.py --print     # the paper's layout, ../delta_print.svg
+
+--raw DIR: a clone of the raw-data repository (github.com/nmoinvaz/choptuik-large-d-raw); panel A and B then also draw
+the pinned double-double runs above the CSV's last point (folders T73 and T75: Delta after one full-system Newton step,
+pin 7 and pin 5). The README's graph is drawn with it, and with the CSV's double-double points below D = 4.
 
 The SVG is written by hand in the style of zlib-ng/codecbench's graph scripts: fixed categorical colors,
 a light surface with a prefers-color-scheme dark override, 2px lines, ringed markers with hover tooltips.
@@ -55,6 +59,7 @@ DD_CSV = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "hp", "d
 
 
 DD_MAX = math.inf     # --dd_max: the largest D of the double-double points drawn
+PINNED = (("T73", "t73/pin7.jsonl"), ("T73", "t73/pin5.jsonl"), ("T75", "pin7.jsonl"), ("T75", "pin5.jsonl"))
 
 
 def dd_points(Dmin, every=0.5):
@@ -68,6 +73,41 @@ def dd_points(Dmin, every=0.5):
             out.append((d, float(c[1]) + float(c[2])))
             last = d
     return np.array(out)
+
+
+def dd_low_points(Dmax=4.0):
+    """the CSV's double-double points below Dmax (the best value per D of the low-D runs)"""
+    out = []
+    for line in list(open(DD_CSV))[1:]:
+        c = line.split(",")
+        if float(c[0]) < Dmax:
+            out.append((float(c[0]), float(c[1]) + float(c[2])))
+    return np.array(sorted(out))
+
+
+def pinned_points(raw, Dmin, every=0.5):
+    """(D, Delta, run) of the pinned runs in the raw-data clone raw above Dmin: Delta_full1 (+ its low word), both pins
+    merged in D and thinned to about one per `every`"""
+    pts = []
+    for folder, f in PINNED:
+        path = os.path.join(raw, folder, f)
+        if not os.path.exists(path):
+            raise SystemExit(f"--raw: {path} missing (a clone of github.com/nmoinvaz/choptuik-large-d-raw?)")
+        pin = "pin 7" if "pin7" in f else "pin 5"
+        for line in open(path):
+            if line.strip():
+                r = json.loads(line)
+                if r["D"] > Dmin and "Delta_full1" in r:
+                    pts.append((r["D"], r["Delta_full1"] + r.get("Delta_full1_lo", 0.0), f"{folder} {pin}"))
+    out, last = [], -1e9
+    pts.sort()
+    for d, v, run in pts:
+        if d - last >= every:
+            out.append((d, v, run))
+            last = d
+    if pts and out[-1] != pts[-1]:
+        out.append(pts[-1])         # the frontier, whatever the thinning
+    return out
 
 
 def esc(s):
@@ -214,6 +254,7 @@ def main():
     ap.add_argument("--print", action="store_true", help="the paper layout, 620 px wide (default -o ../delta_print.svg)")
     ap.add_argument("--dd_max", type=float, default=math.inf, help="draw double-double points up to this D only (the "
                     "papers: 61.03, where their data end)")
+    ap.add_argument("--raw", help="a clone of the raw-data repository: also draw the pinned runs T73 and T75")
     args = ap.parse_args()
     DD_MAX = args.dd_max
     P = args.print
@@ -244,7 +285,13 @@ def main():
     dd_all = dd_points(FIT_MAX, every=0.0)
     dd_err = max(dd_err, np.abs(fR(dd_all[:, 0]) - dd_all[:, 1]).max())
     dd_max = dd_all[:, 0].max()
-    Dtop = math.ceil(dd_all[:, 0].max() + 0.5) if len(ddp) else 60
+    low_dd = dd_low_points() if not P else np.zeros((0, 2))       # below the formula's range, README only
+    pin = pinned_points(args.raw, dd_max) if args.raw and not P else []
+    pin_err = max((abs(fR(d) - v) for d, v, _ in pinned_points(args.raw, dd_max, every=0.0)), default=0.0) if pin else 0.0
+    pin_max = max((d for d, _, _ in pin), default=dd_max)
+    Dtop = math.ceil(max(dd_max, pin_max) + 0.5) if len(ddp) else 60
+    print(f"double-double: {len(dd_all)} points {FIT_MAX}-{dd_max:.2f}, formula within {dd_err:.1e}; {len(low_dd)} below "
+          f"D = 4" + (f"; pinned runs to {pin_max:.2f}, formula within {pin_err:.1e}" if pin else ""))
 
     # gamma: same points (gamma per point), older values below D = 8; series with gamma_inf = 1/2
     gm = np.isfinite(gsc)
@@ -273,8 +320,9 @@ def main():
         svg.text(16, 48, f"One rational formula in 1/(D−2) for all D ≥ 4, fitted on the computed points 4 ≤ D ≤ {FIT_MAX:g}; "
                          + (f"the {len(Dh)} hollow points above are held out and match it to {hold_err:.0e}," if len(Dh) else ""),
                  size=12)
-        svg.text(16, 66, f"and the double-double points (green) up to D = {dd_max:.0f} to {dd_err:.0e}.  "
-                         f"Δ∞ = {DINF_DD:.9f} from the double-double points, γ∞ = 1/2", size=12)
+        svg.text(16, 66, f"and the double-double points (green) up to D = {dd_max:.0f} to {dd_err:.0e}"
+                         + (f", the pinned runs (amber) to D = {pin_max:.1f} to {pin_err:.0e}" if pin else "")
+                         + f".  Δ∞ = {DINF_DD:.9f} from the double-double points, γ∞ = 1/2", size=12)
 
     # Panel A: Delta against D, full width
     A = Panel(svg, *boxA, (3, Dtop), (1.4, 3.6),
@@ -293,6 +341,12 @@ def main():
     for d, v in ddp:
         marker(svg, A.sx(d), A.sy(v), SERIES[2], f"D = {d:.4f}, Δ = {v:.13f} (double-double, never in the fit; "
                                                   f"formula {fR(d) - v:+.1e})", shape="diamond", r=3.2)
+    for d, v in low_dd:
+        marker(svg, A.sx(d), A.sy(v), SERIES[2], f"D = {d:.4f}, Δ = {v:.13f} (double-double, below the formula's "
+                                                  f"range D ≥ 4)", shape="diamond", r=3.2)
+    for d, v, run in pin:
+        marker(svg, A.sx(d), A.sy(v), SERIES[3], f"D = {d:.4f}, Δ = {v:.13f} (pinned double-double run {run}, after "
+                                                  f"one full-system step; formula {fR(d) - v:+.1e})", shape="diamond", r=3.2)
     xa = A.sx(5) if P else A.sx(44)                 # print: left, clear of the band and the diamonds
     svg.text(xa, A.sy(DINF_DD) + 16, f"Δ∞ = {DINF_DD:.9f}  (double-double; formula limit {dinf:.6f})",
              size=11, fill=INK)
@@ -300,6 +354,8 @@ def main():
     A.key("dot", SERIES[0], "in the fit" if P else "computed, in the fit")
     A.key("hollow", SERIES[0], "held out" if P else "computed, held out")
     A.key("diamond", SERIES[2], "double-double" if P else "double-double, held out")
+    if pin:
+        A.key("diamond", SERIES[3], "double-double, pinned runs")
     A.key("line", SERIES[1], "rational formula, D ≥ 4" if P else f"rational formula, D ≥ 4, extended to D = {Dtop}",
           dash="6 4")
     A.key("line", NEUTRAL, "π²/6" if P else "π²/6 for reference", dash="2 3")
@@ -316,6 +372,8 @@ def main():
         marker(svg, B.sx(1 / d), B.sy(v), SERIES[0], f"D = {d:.4f}, Δ = {v:.10f} (held out)", hollow=True, r=3.8)
     for d, v in dd_points(Dh.max() if len(Dh) else FIT_MAX, every=5.0):     # packed below a pixel apart otherwise
         marker(svg, B.sx(1 / d), B.sy(v), SERIES[2], f"D = {d:.4f}, Δ = {v:.13f} (double-double)", shape="diamond", r=3.0)
+    for d, v, run in pin[::4]:
+        marker(svg, B.sx(1 / d), B.sy(v), SERIES[3], f"D = {d:.4f}, Δ = {v:.13f} (pinned run {run})", shape="diamond", r=3.0)
     marker(svg, B.sx(0), B.sy(DINF_DD), SERIES[1], f"D = ∞: Δ∞ = {DINF_DD:.9f} ± 1.5e-8 (double-double points, analytic "
                                                    f"in 1/D; the formula's own limit is {dinf:.6f})", shape="diamond")
     svg.text(B.sx(0) + 12, B.sy(DINF_DD) + 18, f"D = ∞:  Δ∞ = {DINF_DD:.6f}", size=11, fill=INK)

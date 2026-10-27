@@ -63,7 +63,7 @@ under Nathan Moinvaziri's direction and have not yet been reviewed by an expert
 Headline results:
 
 - **One formula for all D ≥ 4.** A rational function of 1/(D-2) gives Δ and γ within the precision of the
-  computed points up to D = 30, and Δ to 6×10⁻⁸ up to D = 61 ([The formula](#the-formula), [Values](#values)).
+  computed points up to D = 30, and Δ to 9.6×10⁻⁸ up to D = 67.77 ([The formula](#the-formula), [Values](#values)).
 - **The large-D limit.** Δ is computed at 1199 points from D = 8.25 to 67.77. The 857 points up to D = 61.03 fit smooth
   curves to about 4×10⁻¹⁵ (estimated error per point 10⁻¹⁶ to a few 10⁻¹⁵); the 342 above them, from the continuation
   toward D = 70, are not used in the fits. The points support, but do not prove, that Δ is analytic in 1/D; then
@@ -134,17 +134,20 @@ Contents
 
 ## Results
 
-![Echo period Δ(D) and critical exponent γ(D) with one rational formula for all D ≥ 4, and the double-double points to D = 61](solver/delta.svg)
+![Echo period Δ(D) and critical exponent γ(D) with one rational formula for all D ≥ 4, and the double-double points from D = 3.05 to 73.3](solver/delta.svg)
 
 The echo period Δ(D) and critical exponent γ(D), computed with the f64 solver in [`solver/`](solver/) (its residual is the
 Rust kernel of [Software](#software-the-rust-kernel)) and the double-double solver in [`hp/`](hp/).
 The dashed curves are one rational formula in 1/(D−2) for every D ≥ 4 (below), fitted on the f64 points
 4 ≤ D ≤ 30.2 whose integration-step error has been extrapolated out ("step-converged"), with the solver's near-null
 directions resolved and enough Fourier modes in time at low D;
-hollow points are held out of the fit, and the green diamonds are double-double points up to D = 61, which it matches
-to 6×10⁻⁸. As D → ∞, γ → 1/2 (imposed in the γ fit) and Δ → Δ∞ = 1.643893746 ± 0.000000015 if Δ is analytic in 1/D
+hollow points are held out of the fit. The green diamonds are double-double points from D = 3.05 to 67.77 (below D = 4
+the formula does not apply); above D = 30.2 it matches them to 9.6×10⁻⁸. The amber diamonds are the pinned
+double-double runs T73 and T75 from D = 67.74 to 73.27 (Δ after one full-system Newton step), which it matches to
+7.4×10⁻⁸. As D → ∞, γ → 1/2 (imposed in the γ fit) and Δ → Δ∞ = 1.643893746 ± 0.000000015 if Δ is analytic in 1/D
 (from the double-double points; both limits are discussed [below](#the-formula)). Details are in
-[`solver/CONTEXT.md`](solver/CONTEXT.md). Regenerate with `cd solver/data && python3 ../plot_delta.py`.
+[`solver/CONTEXT.md`](solver/CONTEXT.md). Regenerate with `cd solver/data && python3 ../plot_delta.py --raw
+../../../choptuik-large-d-raw` (the pinned runs are in the [raw data](#raw-data)).
 
 ### The formula
 
@@ -184,7 +187,7 @@ ten times tighter), they reproduce each point within its own precision:
 | 4 – 4.3 | 5×10⁻¹⁰ | 3×10⁻⁷ | 3.4×10⁻⁷ | 5×10⁻⁷ |
 | 4.3 – 20 | ≤ 4.3×10⁻⁹ | 3×10⁻¹¹ – 4×10⁻⁹ (up to 4×10⁻¹⁰ at D ≈ 8–10) | ≤ 3.3×10⁻⁸ | ≤ 7×10⁻⁸ |
 | 20 – 30 | ≤ 1×10⁻⁸ | ≤ 3×10⁻⁸ | ≤ 2.3×10⁻⁹ | ~ 10⁻⁷ (assigned 10⁻⁹, but the fits' $`\chi^2/\mathrm{dof}`$ is about 7000 against it) |
-| 30.2 – 61, never seen by the fit | ≤ 6×10⁻⁸ | ≤ 10⁻¹⁴ (double-double) | ≤ 5×10⁻⁷ up to D = 35.8 | |
+| 30.2 – 67.77, never seen by the fit | ≤ 9.6×10⁻⁸ | ≤ 10⁻¹⁴ (double-double) | ≤ 5×10⁻⁷ up to D = 35.8 | |
 
 **Shorter forms for one range of D** (`cd hp && python3 short_forms.py`; `--selftest` runs it on a planted analytic
 function with controls). On a narrower range a plain series Δ ≈ c₀ + c₁/D + c₂/D² + … with fewer terms does as well
