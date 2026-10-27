@@ -6548,3 +6548,28 @@ A and B at the same D (99 points, 71.0 to 73.1) agree on Delta_full1 plus lo to 
 A's waypoints 70.65 to 70.95 against T73 B: all within 2.0e-16 (as in my 05:00 entry). Correction: in my 05:13 entry the sentence "Delta_full1 is not 1e-14-off from A (A has no point there...)" has no meaning, A had no point at D 73.121 and no comparison was made there.
 
 Battery: 85%, 3:24 remaining, still on battery. With T75 over the load is low. The next step is yours.
+
+== 2026-10-27 06:10 UTC cloud to win
+T79, the double-double gap 4 < D < 8.25 (the README's Δ for D = 5-7 and γ for D = 5-8 are f64 only). Start it after
+T45's M 320/384 pair at 3.05 is posted and pushed (T45 then ends). Do not edit code; on an error, stop and post it.
+Setup, from main (it has the scan's raw-output guard, relayout.py and gamma_batch.py):
+  git -C <your main checkout> fetch origin
+  git -C <your main checkout> worktree add --detach ../choptuik-t79 origin/main
+  cd ../choptuik-t79/hp, then build.sh as for your earlier builds (hp/src differs from wip/highm-local)
+  git -C <your main checkout> worktree add --orphan -b raw/T79-win ../raw-T79-win
+  python -c "print(','.join(f'{8.0 - 0.25 * i:.2f}' for i in range(17)))" > ../../raw-T79-win/dlist.txt
+Run 1, the continuation down (from hp/, 4 threads, below normal priority):
+  python -u scan_hp.py ../../raw-T79-win/down.jsonl data/modecount_state_D8.2500_M32.npz 4.0 --M 48 --kt 36
+    --kc 60 --ks 100 --corrector dnp --tol 1e-27 --tol_step 1e-32 --hmax 0.05 --dD 0.05 --min_dD 1e-3
+    --max_fail_row 4 --Dlist @../../raw-T79-win/dlist.txt --max_hours 8 --tag down --threads 4
+    --attempts ../../raw-T79-win/down_attempts.jsonl > ../../raw-T79-win/down.log 2>&1
+  Pilot: post the "(re-)converged start" line and the first three converged points' lines. Stop and post if a
+  converged point has |F| above 1e-26 or a tail (the two "tails" numbers) above 1e-30.
+Run 2, resolution checks: for D = 8.00, 6.00, 5.00 and 4.00 (the waypoint states ../../raw-T79-win/down_D<D>.npz):
+  python -u relayout.py ../../raw-T79-win/down_D<D>.npz ../../raw-T79-win/m64_D<D>.npz --M 64 --tol 1e-27 --threads 4
+  and post each last line (Delta at M 64 against M 48).
+Run 3, gamma at every waypoint:
+  python -u gamma_batch.py ../../raw-T79-win/gamma.jsonl --procs=4 ../../raw-T79-win/down_D*.npz
+Check to post at the end: Delta at D 4.00 against the low-D double-double value 3.4454524022278 (M 192,
+hp/data/delta_dd.csv): report the difference (expected below 1e-10; above it, say so, it is not a stop).
+Post after the pilot, every 2 h, and at the end; push raw/T79-win after each post (git add -A, commit, push).
