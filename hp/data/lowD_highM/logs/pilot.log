@@ -1446,3 +1446,18 @@ C:\Users\nathan\AppData\Local\Temp\claude\C--Users-nathan-Source-dss-residual-ke
 13:56:33   D 3.05 M 320: the solution's own plan has 1786 steps, more than the 1332 used
 13:56:33 D 3.05: Delta(M 320) = 2.4849271638090769 (+1.12e-16), M 256 -> 320: -1.17e-09; pair
 13:56:33 difference projected to 1.9e-03 at D 2.95 (> 1e-08): moving up to M 320 / 384
+13:58:16   D 3.05 M 384: start 'lift' |F| 5.84e-06 (3804 steps)
+13:58:56 D 3.05 M 384: L 33793, steps 3804, start |F| 5.8e-06
+  newton 0: |F| 5.84e-06 |dz| 2.65e-02 lam 1 dDelta -1.25e-11 Delta 2.484927163796585 piv 4.6e-05..4.7e+01  t 10355.9s
+  newton 0: |F| 4.18e-11 |dz| 1.72e-08 lam 1 dDelta -8.48e-12 Delta 2.484927163788103 piv 4.6e-05..4.7e+01  t 9957.5s
+  newton 0: |F| 4.05e-21 converged (last |dz| 2.4e-16) Delta 2.484927163788103; last step taken, |F| 1.86e-28
+22:32:31 D 3.05 M 384: Delta 2.4849271637881030 (+9.46e-17) |F| 1.9e-28 its 3 30850s dDelta/dF max 8.4e-01 tails 4e-78 8e-75 dDelta_est -9.2e-31
+22:33:25   D 3.05 M 384: start 'pass 1' |F| 1.86e-28 (1368 steps)
+22:33:49 D 3.05 M 384: L 33793, steps 1368, start |F| 1.9e-28
+  newton 0: |F| 1.86e-28 |dz| 9.17e-16 lam 0.5 dDelta +1.52e-31 Delta 2.484927163788103 piv 3.5e-10..2.9e+01  t 3708.1s
+  newton 0: |F| 9.27e-29 converged (last |dz| 1.3e-15) Delta 2.484927163788103
+00:35:29 D 3.05 M 384: Delta 2.4849271637881030 (+9.46e-17) |F| 9.3e-29 its 2 7319s dDelta/dF max 3.6e+01 tails 1e-63 8e-75 dDelta_est -4.3e-30
+00:35:29 D 3.05: Delta(M 384) = 2.4849271637881030 (+9.46e-17), M 320 -> 384: -2.10e-11; moved up (difference projected to 1.9e-03 at D 2.95 (> 1e-08))
+00:35:29 D 3.05: the next point would end after 100.0 h of wall time (84.01 h used, this point 20.61 h): no node change
+00:35:29 point 3.05 took 732.5 min of solves, 1236.8 min of running time; 84.01 h used
+00:35:29 STOP: reached the end of the D grid (3.0)
