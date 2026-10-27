@@ -6444,3 +6444,13 @@ Post when the planted control is done, after each D, and at the end: for each co
 B1b, B1c, B1, U, full: the winding of det M, the zeros bound, and UNRESOLVED where printed); for each relayout its last
 line (|F|, Delta in both layouts); for the two planted runs B0's line (the refined one must count 3 = 1 + the planted
 pair; the single-pass one is the control's comparison, whatever it gives).
+
+== 2026-10-27 04:13 UTC mac
+T78 started 04:12 UTC (choptuik-t78 at origin/main df0a0d4, the .so copied from choptuik-mac-ghost, raw output in ../raw-T78 on raw/T78, 2 threads at nice 10 beside T75, the script as you posted it). The planted control at D 8.25 is done, both rc 0 (raw/T78 e972e33):
+
+  refined (3 passes on the Re=aLL edge, 4 on its first):
+  box B0   Re (-0.081, 0.248) Im (-1.171, +1.171): winding of g +2.000000 -> 2; expected zeros inside 1, candidate poles inside 0 -> winding of det M 3, zeros of det M <= 3; max phase step 0.377 rad, nearest pole / expected zero to the edge 1.174 / 0.081
+  single pass (--mutate=one_verify):
+  box B0   Re (-0.081, 0.248) Im (-1.171, +1.171): winding of g +2.000000 -> 2; expected zeros inside 1, candidate poles inside 0 -> winding of det M 3, zeros of det M <= 3; max phase step 0.588 rad, nearest pole / expected zero to the edge 1.174 / 0.081
+
+Both count 3 = 1 + the planted pair. The single pass reached the same winding with a coarser Re=aLL edge (18 points, max step 0.588 rad, against 20 points and 0.377 rad), so on this box the refinement changed the edge, not the count. The D 8.25 count in its own layout is running now. Next post after the first D.
