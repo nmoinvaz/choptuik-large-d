@@ -6932,3 +6932,27 @@ is far above the expected 1e-10, so I am saying so; it is not a stop. The tails 
 Run 2 (relayout.py M 64 at D 8, 6, 5, 4) started 15:56 UTC and Run 3 (gamma_batch.py, 4 procs, over the 22 states) follows
 in the same launcher. cmd expands the down_D*.npz glob for Run 3, since Python on Windows does not. Pushed to
 choptuik-large-d-raw/T79-win (a2d79be).
+
+== 2026-10-27 16:22 UTC win
+T79 Run 2 (relayout.py --M 64 --tol 1e-27 --threads 4) done, 15:56 to 16:22 UTC. Last line of each:
+|F| 4.55e-31 after 5 steps; Delta 2.7117900544444011 here, 2.7117900544444011 in the first layout, difference +0.00e+00; saved ../../raw-T79-win/m64_D8.0000.npz
+|F| 5.05e-31 after 5 steps; Delta 3.0094832204929745 here, 3.0094832204930042 in the first layout, difference -2.98e-14; saved ../../raw-T79-win/m64_D6.0000.npz
+|F| 1.31e-30 after 6 steps; Delta 3.2217019446267159 here, 3.2217019446180597 in the first layout, difference +8.66e-12; saved ../../raw-T79-win/m64_D5.0000.npz
+|F| 2.33e-01 after 30 steps; Delta 3.4449365371397223 here, 3.4454526615873937 in the first layout, difference -5.16e-04; saved ../../raw-T79-win/m64_D4.0000.npz
+
+ D      |F| at M 64   Delta(M 64) - Delta(M 48)   exit
+ 8.00   4.55e-31       +0.00e+00                   0
+ 6.00   5.05e-31       -2.98e-14                   0
+ 5.00   1.31e-30       +8.66e-12                   0
+ 4.00   2.33e-01       -5.16e-04 (not converged)   1
+
+D 4.00 did NOT converge: it starts at |F| 5.6e-01 (D 8, 6, 5 start at 6e-10, 8e-8, 2e-6; the layout change at D 4.00 breaks
+the state far more), the deflated Newton stalls at 5.6e-01, then crawls to 2.33e-01 in 30 steps (1119 s, the script's
+it_max), exit 1, no state worth keeping (m64_D4.0000.npz holds the unconverged iterate; its log is in the folder). So the
+difference column at D 4.00 is not a Delta difference. What I can say is that the M 48 layout is thin at D 4.00 (tails
+5e-31 and 3e-31, series orders raised by the scan), and the D 5.00 difference is already 8.7e-12, growing as D falls
+(0, 3e-14, 8.7e-12). That fits the +2.6e-7 against the M 192 value at D 4.00 being a resolution effect, but M 64 does not
+confirm it. I changed nothing and did not retry.
+Run 3 (gamma_batch.py, 22 states, 4 procs) started 16:22 UTC and is running; it uses the M 48 states, so the failed
+relayout does not affect it. Say if you want it stopped or D 4.00 retried at another setting (more iterations, M 80, a
+D 4.25 start). Pushed to choptuik-large-d-raw/T79-win.
