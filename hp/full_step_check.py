@@ -21,7 +21,7 @@ import time
 os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
 import numpy as np  # noqa: E402
 
-from hpkernel.driver import QdhSolver, QdSolver, load, make_solver  # noqa: E402
+from hpkernel.driver import QdhSolver, QdSolver, load, make_solver, newton_solve  # noqa: E402
 from raw_out import FLAG, HELP, require_raw  # noqa: E402
 
 
@@ -39,6 +39,9 @@ def main():
     ap.add_argument("--tol_step", type=float, default=1e-32)
     ap.add_argument("--hmax", type=float, default=0.05)
     ap.add_argument("--threads", type=int, default=0)
+    ap.add_argument("--iterate", type=int, default=0, help="then Newton on the full quad-double system (QdSolver, GCR, "
+                    "line search) for at most this many steps from the state")
+    ap.add_argument("--iter_tol", type=float, default=1e-27)
     ap.add_argument(FLAG, action="store_true", help=HELP)
     a = ap.parse_args()
     require_raw(a.out, allow=a.allow_unraw)
@@ -67,6 +70,16 @@ def main():
                 g = q.last_gcr
                 rec[name].update(products=g.get("products"), converged=g.get("converged"),
                                  changes=[float(c) for c in g.get("changes", [])][-4:])
+        if a.iterate:
+            s = make_solver(D, M, **kw)
+            s.set_segs(s.plan(zh, zl, a.tol_step, a.hmax))
+            q = QdSolver(s, gcr=dict(max_products=a.max_products, step_tol=a.step_tol))
+            t0 = time.time()
+            nh, nl, hist = newton_solve(q, zh, zl, tol=a.iter_tol, it_max=a.iterate, verbose=True)
+            rec["iterated"] = dict(Delta_hl=[float(nh[-1]), float(nl[-1])], steps=len(hist),
+                                  F=[r.get("F") for r in hist], seconds=round(time.time() - t0, 1))
+            print(f"  full quad-double Newton: {len(hist)} steps, |F| {[f'{v:.1e}' for v in rec['iterated']['F']]}, "
+                  f"Delta {float(nh[-1]):.17f} {float(nl[-1]):+.2e}", flush=True)
         with open(a.out, "a") as fh:
             fh.write(json.dumps(rec) + "\n")
         print(f"D {D:.4f} {os.path.basename(path)}: Delta {rec['Delta']:.17f}; after the double-double step "
