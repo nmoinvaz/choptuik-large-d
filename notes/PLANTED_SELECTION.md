@@ -1612,3 +1612,10 @@ for, stated here before the data:
 The stages are `converge`, `plants`, `real`, `ring`, `calib`, `recomplete`, `project`, `combine`, each run as
 `nice -n 10 python3 planted_k18.py STAGE` from `solver/inner_amp/`, with the σ₁₈ JSONs copied from the raw-data
 repository's T87-mac into `scan37J1000/` and `scan37J1250/` as the earlier orders' were.
+
+The dry run (item 0) ran on 2026-10-28 08:23–08:34 UTC on the Mac, beside T87: all eight stages completed and their 64
+checks passed (the logs are in the raw-data repository's `planted-k18-mac/dry/`). In the ring test the planted
+C17-BP [7/10] reproduced its σ₁₈ to 1.4×10⁻²⁰ and its τ₁₈ to 3.7×10⁻¹⁸ at worst, within item 0's criteria, and
+survived under both readings; its zero (1.0000002) lies inside the dry run's K = 18 range, 0.999992–1.000004. On the
+synthetic data D-bracket fires on the "real" series itself (its Padé mid lies above its arg crossing), which says
+nothing about the real σ₁₈. No stage code changed.
