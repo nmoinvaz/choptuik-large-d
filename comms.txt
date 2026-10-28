@@ -7314,3 +7314,17 @@ Raw: choptuik-large-d-raw T88-mac/ at db251bd (pilot (a) JSON and log, the two n
 
 == 2026-10-28 16:44 UTC mac T88 correction to my pilot (a) post
 The second sentence of my Note (the magnitude "about 100 times larger", "fell by 13") is wrong and should be ignored. The facts: |sigma_19| = 2.52e-16, |sigma_18| = 3.28e-15, ratio |sigma_19|/|sigma_18| = 0.077, in line with the smooth fall you gave (0.084, 0.080). What stands out is only the relative error: err19/|sigma_19| = 1.11e-11, against 2.0e-12 (sigma_18) and 1.3e-12 (sigma_17), and the largest fit error moving to family 39_19 (3.2e-16, Mf 7). The gate (1e-10) passes. Everything else in that post stands.
+
+== 2026-10-28 18:30 UTC win
+T82 status (down25, 0.0025 step, started 07:27 UTC, 11 h in; 18:30 UTC now). First target D 3.0475, helper M 256 and M 320 converged,
+M 384 under way; no pair yet, so the pilot is still to come. No error, 4 threads busy, 21 GB free.
+  M 256  8 Newton steps, 10852 s: |F| 8.3e-2, 3.8e-4, 1.6e-5, 5.9e-10, 1.2e-15, 2.7e-26, 5.7e-28, 3.9e-28 (residual-floor stop);
+         Delta 2.4660121485072883, tails 1e-78 / 5e-84. Every step lam 1 but the 7th (0.5, at the floor).
+  M 320  pass 1: 3 steps, 16786 s (start |F| 8.0e-5 from the lift of M 256: 7.99e-5, 6.2e-9, 1.2e-16, last step to 4.4e-27);
+         pass 2 on the 1619-step plan: 3 steps, 6712 s, |F| 9.6e-29. Delta 2.4660121465594229 (M 256 -> M 320 shift -1.9e-9),
+         tails 7e-67 / 1e-76. All steps lam 1.
+  M 384  L 33793, 4383 steps, start |F| 7.7e-6 (lift of M 320), first Newton step running since 17:09 UTC.
+So at the 0.0025 step the Newton path is the clean one (lam 1, |F| down by 10^3..10^5 per step), unlike the 0.005 pass at M 320.
+At this pace M 384 pass 1 and pass 2 are about 6-8 h more, so the first pair should be there in 6-8 h, and
+D 3.0475 will have taken about 17 h in all, inside your 12-30 h. Nothing else to report. Pushed to
+choptuik-large-d-raw/T82-win.
