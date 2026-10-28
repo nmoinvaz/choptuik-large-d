@@ -1619,3 +1619,197 @@ C17-BP [7/10] reproduced its σ₁₈ to 1.4×10⁻²⁰ and its τ₁₈ to 3.7
 survived under both readings; its zero (1.0000002) lies inside the dry run's K = 18 range, 0.999992–1.000004. On the
 synthetic data D-bracket fires on the "real" series itself (its Padé mid lies above its arg crossing), which says
 nothing about the real σ₁₈. No stage code changed.
+
+The real stages ran on 2026-10-28 13:16–13:26 UTC on the Mac, beside T88, from the four T87 scan files committed as
+`solver/inner_amp/scan37J1000` and `scan37J1250` (raw-data repository T87-mac at 906916e); the logs are in the
+raw-data repository's `planted-k18-mac/` root. The first real K = 18 estimate was computed at 13:22 UTC; no decision on
+D-bracket had come, so item 4 stands as written.
+
+### 10.1 σ₁₈ is converged
+
+| wf | σ₁₈ | err18 (relative) | σ₀…σ₁₇ against `scan35J1000` | ratio law: \|Δ²\| at k = 16 |
+|---|---|---|---|---|
+| 0.99 | −1.8715942756321299754×10⁻¹⁶ + 3.3451545853624606799×10⁻¹⁵i | 6.11×10⁻²⁷ (1.82×10⁻¹²) | bitwise equal, 18/18 | 0.0084 |
+| 1.00 | +3.9681809423786068411×10⁻¹⁸ + 3.2762821151945967956×10⁻¹⁵i | 6.69×10⁻²⁷ (2.04×10⁻¹²) | bitwise equal, 18/18 | 0.0084 |
+| 1.01 | +1.8701563194321713779×10⁻¹⁶ + 3.1978690994501157227×10⁻¹⁵i | 7.31×10⁻²⁷ (2.28×10⁻¹²) | bitwise equal, 18/18 | 0.0083 |
+
+- **All four criteria of section 10.0 item 1 pass,** and each one's mutation (`--mutate=err|low|pilot|ratiolaw`) makes
+  it fire (err18 × 10¹⁴: 204 relative; σ₁₇ at wf 0.99 scaled by 1 + 10⁻¹⁵: 17/18 bitwise; pilot (b)'s σ₁₈ scaled by
+  1 + 10⁻¹⁰: 3.3×10⁻²⁵ against 6.7×10⁻²⁷; σ₁₈ × 1.1 at wf 1.01: |Δ²| = 1.14).
+  - err18 is 2.3×10⁻¹² relative at worst, against the 10⁻¹⁰ asked for.
+  - Pilot (b) at wf 1.00 (J 1250, 1280 bits) equals (a)'s σ₁₈ to 4.5×10⁻²⁸ (err18 6.7×10⁻²⁷). Its σ₁₅, σ₁₆, σ₁₇ equal
+    `scan35J1000`'s to 2.7×10⁻²⁶, 2.7×10⁻²⁶ and 1.6×10⁻²⁷, 110, 15 and 34 times below their errors. Its own sigma_err
+    is inf at every k (family 1_1's order-1 fit), as at K = 16 and 17.
+  - The second differences of σ_k/σ_{k+1} are 0.008–0.012 at k = 10–16 (0.002–0.048 over k = 7–16).
+- **σ₁₈ is nearly imaginary at ω∞** (its real part 1.2×10⁻³ of its modulus), where the ratio law puts it: arg σ_k
+  advances by 0.77 per order (σ₁₇/σ₁₈ = 8.96 − 8.68i); the nodes' real parts are ∓1.9×10⁻¹⁶.
+- **Spread in wf.** σ₁₈ changes by 6.1% of itself between the nodes (5.9%, 6.0% for σ₁₆, σ₁₇). err18 is 3.6×10⁻¹¹ of
+  that change.
+- **Cost.** On the Mac with two processes per run: pilot (a) 180 min, pilot (b) 320 min, the nodes 195 min each, the
+  late-order fits taking 84% of the time (comms, 2026-10-28 06:59–13:14 UTC).
+
+### 10.2 The pipeline on plants first
+
+51 plants at K = 16, 17, 18, before the real data. All four checks pass:
+- the regenerated plants' K = 16 and 17 estimates equal the stored K = 17 records exactly (both runs on the Mac);
+- N1, 7/7: a lone simple zero recovered at K = 18 by arg, ratio, Padé and G to 3.5×10⁻⁷ at worst; graded against
+  ω_t + 0.002 it fails, as it must;
+- N2, 2/2: no estimator prints a number.
+
+### 10.3 The real estimates at K = 18
+
+The record "N0 scan37J1000" equals "N0 scan35J1000" at K = 16 and 17 exactly.
+
+| estimator | K = 18 | K = 17 | K = 16 |
+|---|---|---|---|
+| arg crossing | 1.0000024 | 1.0000046 | 1.000010 |
+| ratio | 0.999966 | 0.999912 | 0.999882 |
+| central Padé | [3/14]–[13/4]: 0.999997–1.000002 (mid 0.9999995) | [3/13]–[12/4]: 0.999978–1.000002 (mid 0.999990) | 0.999992–1.000009 (mid 1.0000007) |
+| G (production κ̄) | 0.9999987 | 1.0000026 | 1.000005 |
+| Aitken, k − 2 … k | 1.0000011 | 0.9999925 | 1.000060 |
+| effective exponent c at ω∞ | 1.000 − 0.001i | 1.000 − 0.002i | 1.002 − 0.002i |
+
+- **The arg crossings keep falling monotonically:** 1.000046, 1.000026, 1.000019, 1.000010, 1.0000046, 1.0000024 for
+  k = 13–18. The distance from 1 shrank by ×0.44 from k = 16 to 17 and by ×0.52 from 17 to 18.
+- **G crossed below 1 for the first time** (0.9999987, from 1.0000026), 1.3×10⁻⁶ under it, with the Padé mid
+  (0.9999995) and every central approximant from [3/14] to [13/4] within 3×10⁻⁶ of 1: the central Padé range,
+  0.999997–1.000002, is the narrowest at any order, and the [3/K−3] approximant that widened it downward at K = 17
+  (0.999978) sits at 0.999999 now.
+- **Aitken is back above 1** (1.0000011; the last two differences of arg_k are 5.8×10⁻⁶, then 2.2×10⁻⁶). Context, not
+  part of any range.
+- **Detectors:** D-ratio and D-ratiolaw, as at K = 16 and 17. **D-bracket is silent again:** G (0.9999987) and the
+  Padé mid (0.9999995) both lie below the arg crossing (1.0000024).
+- **The mutation controls fire.** σ₁₈ → −σ₁₈ at wf 1.00 fires D-G and D-bracket; σ₁₈ × (1 + 10⁻³) fires D-G, D-arg
+  and D-bracket. Each moves the estimates by about 10⁻².
+
+### 10.4 The ring test: what each K = 17 completion predicted for σ₁₈
+
+Every completion was regenerated first and reproduces its stored zero to the printed digits, and its K = 17 (or
+K = 16, 17) estimates equal the stored records exactly. The benchmark, the simple-zero law from τ₁₆, τ₁₇, misses τ₁₈
+by 5.3–6.3×10⁻⁵. The last two columns are the two readings of section 10.0 item 4.
+
+| completion (K = 17) | its zero | zeros in \|x\| < 7.3 / 12 / 16 | σ₁₈ rel. error | τ₁₈ rel. error | its arg₁₈ | detectors beyond the real data's | survives | without D-bracket |
+|---|---|---|---|---|---|---|---|---|
+| C17-W1, W2, W3 (ratio law) | 1.00068–1.00090 | 7 / 16 / – | 5.9–8.7×10⁻³ | 1.4–2.2 | none | D-G, D-arg, D-bracket | no | no |
+| C17-ARC, four shapes | 0.99995–1.00019 | 2–5 / 14 / – | 3.5×10⁻⁴–1.6×10⁻³ | 0.10–0.39 | 0.979–0.9998 | D-G, D-bracket | no | no |
+| **C17-BP [3/14]** (ring of 9.6) | 0.999998 | 0 / 9 / 15 | 3.9–4.3×10⁻⁶ | 0.9–1.2×10⁻³ | 0.999946 | D-G, D-bracket | **no** | **no** |
+| **C17-BP [4/13]** (ring of 9.6) | 0.999998 | 0 / 6 / 12 | 6.8–8.6×10⁻⁷ | 1.9–2.1×10⁻⁴ | 0.999994 | D-G | **no** | **no** |
+| C17-BP [5/12] (fails the type rule) | 1.000004 | 0 / 3 / 13 | 3.2–6.4×10⁻⁷ | 0.9–1.5×10⁻⁴ | 1.000005 | D-arg, D-bracket | no | no |
+| C17-BP [6/11] | 1.0000004 | 0 / 1 / 10 | 5.5–5.6×10⁻⁸ | 1.3–1.5×10⁻⁵ | 1.000003 | D-bracket | no | yes |
+| C17-BP [7/10] | 1.0000002 | 0 / 1 / 7 | 1.8–2.6×10⁻⁸ | 5.0–6.1×10⁻⁶ | 1.000003 | D-bracket | no | yes |
+| C17-BP [8/9] | 0.9999999 | 0 / 1 / 6 | 4.3–7.1×10⁻⁹ | 1.2–1.7×10⁻⁶ | 1.000002 | D-bracket | no | yes |
+| C16-BP [6/10] | 1.0000005 | 0 / 1 / 9 | 5.8–6.1×10⁻⁷ | 2.6–2.9×10⁻⁵ | 1.000003 | – | yes | yes |
+| C16-BP [7/9] | 1.0000007 | 0 / 1 / 5 | 2.4–2.9×10⁻⁷ | 1.5–1.7×10⁻⁵ | 1.000003 | – | yes | yes |
+| C16-BP [8/8] | 1.0000007 | 0 / 1 / 5 | 2.4–2.9×10⁻⁷ | 1.5–1.7×10⁻⁵ | 1.000003 | – | yes | yes |
+| C15-BP [6/9] | 0.999999 | 0 / 1 / 11 | 4.9–5.7×10⁻⁶ | 3.9–4.4×10⁻⁵ | 1.000002 | D-bracket | no | yes |
+| C15-BP [7/8] | 1.000002 | 0 / 1 / 5 | 1.5×10⁻⁶ | 3.2–3.5×10⁻⁵ | 1.000004 | – | yes | yes |
+| C14-BP [5/9] | 0.999983 | 0 / 1 / 8 | 6.5–8.1×10⁻⁵ | 3.6–4.4×10⁻⁴ | 0.999981 | D-arg, D-bracket, D-padé | no | no |
+| C14-BP [6/8] | 0.999993 | 0 / 1 / 7 | 2.8–3.1×10⁻⁵ | 1.3–1.4×10⁻⁴ | 0.999997 | – | yes | yes |
+| C13-BP [5/8] | 0.999957 | – / 1 / – | 2.2–3.8×10⁻⁴ | 0.7–1.4×10⁻³ | 0.999967 | D-arg, D-bracket | no | no |
+| C13-BP [6/7] | 0.999982 | – / 1 / – | 0.95–1.1×10⁻⁴ | 3.4–3.7×10⁻⁴ | 0.999986 | – | yes | yes |
+
+- **Every ratio-law and arc ring is rejected,** as at K = 14–17: they miss τ₁₈ by 10–220% and fire D-G and D-bracket
+  (D-arg too for the ratio-law tails).
+- **The two rings of section 9.6, C17-BP [3/14] and [4/13], are rejected by σ₁₈,** under both readings. [3/14]
+  mispredicts σ₁₈ by 4×10⁻⁶ and τ₁₈ by fifteen to twenty times the benchmark and fires D-G and D-bracket; [4/13]
+  mispredicts σ₁₈ by 7–9×10⁻⁷ and τ₁₈ by three to four times the benchmark and fires D-G. [5/12], which already
+  failed the type rule, fires D-arg and D-bracket. So for the second order running no ring of the latest generation
+  survives its first test, and σ₀…σ₁₈ exclude every ring built so far.
+- **The ring-free sums of σ₀…σ₁₇ predicted σ₁₈ to 4×10⁻⁹–6×10⁻⁸** ([8/9] 4.3–7.1×10⁻⁹, the best prediction at any
+  order; [7/10] 1.8–2.6×10⁻⁸; [6/11] 5.5×10⁻⁸) and τ₁₈ to 1.2×10⁻⁶–1.5×10⁻⁵, four to fifty times better than the
+  benchmark. **All three are rejected by D-bracket alone** under section 5.3's rule and survive without it; the
+  detector again removes the best predictors in the table, as it did at K = 16 ([7/8]) and K = 17 ([7/9], [8/8]).
+- **D-bracket's verdict on a ring-free sum is not stable from one order to the next:** C16-BP [7/9] and [8/8], which
+  it rejected at K = 17, pass at K = 18 (their arg₁₈ 1.000003, no detector), while C15-BP [6/9] stays rejected by it
+  at both orders. The survivors under section 5.3's rule are C16-BP [6/10], [7/9], [8/8], C15-BP [7/8], C14-BP [6/8]
+  and C13-BP [6/7]; without D-bracket, those and C17-BP [6/11], [7/10], [8/9] and C15-BP [6/9]. All are ring-free,
+  with zeros at 0.999982–1.000002, and none moves the estimate.
+- C14-BP [5/9] fires D-padé as well now, the first time that detector fires at K = 18.
+
+### 10.5 Calibration at K = 18
+
+The implied zero for the real K = 18 estimate is real − error over each family:
+
+| family | n | arg | ratio | Padé mid | G |
+|---|---|---|---|---|---|
+| the 28 arc plants | 28 | **0.999992–1.000002** | 0.999884–1.000045 | 0.999993–1.000000 | 0.999999 |
+| C-EXP | 1 | 1.000005 | 0.999956 | 1.000012 | 0.999997 |
+| REFIT (fit residual ≤ 10⁻⁴) | 5 | 0.999995–0.999997 | 0.999997–1.000060 | 0.999998–1.000000 | 0.999999 |
+| BP family (twelve sums, section 10.0 item 5) | 12 | **0.999992–1.000004** | 0.999968–1.000244 | 0.999965–1.000754 | 0.999986–1.000002 |
+
+- The K = 17 calibration rebuilt from the new records reproduces section 9.5 exactly (arc 0.999990–1.000009, BP family
+  of nine 0.999990–1.000000).
+- **The arc plants' arg error shrank again and stopped changing sign:** +0.00…+0.10×10⁻⁴ at K = 18 against
+  −0.04…+0.15×10⁻⁴ at K = 17 (the mirror shapes, low before, are at +0.00…+0.01). The twelve-sum BP family's arg
+  range equals the nine-sum's: the three sums added (C17-BP [6/11], [7/10], [8/9]) lie inside it.
+- G on the arc plants is within 5×10⁻⁷ of their zeros (its implied zero 0.999999 on all 28).
+- The Padé mid's high bias on the mirror shapes is gone (its error −0.01…+0.06×10⁻⁴ over the 28, +0.5–0.6×10⁻⁴ at
+  K = 17), and Aitken on the mirror plants no longer runs away (−0.04…+0.17×10⁻⁴ over the 28). Neither is part of the
+  hull.
+- The plants' σ₁₈ deviate from the measured one by 5×10⁻³–1.2×10⁻¹ (C-EXP 2.5×10⁻³): calibration shapes, not
+  completions.
+
+### 10.6 The next generation and the ring-free completions at K = 18
+
+Glued at σ₁₈ (tails from k = 19); zeros counted at wf 1.00:
+
+| completion (K = 18) | its zero | zeros in \|x\| < 7.3 / 12 / 16 | type rule |
+|---|---|---|---|
+| C18-W1, W2, W3 (ratio law, windows 6–17, 8–17, 9–17) | 1.00037–1.00052 | 7–8 / 17 / – | – |
+| C18-ARC, four shapes (best ω_t 1.00022–1.00031, L2 floor 0.9–1.7×10⁻³) | 0.99993–1.00009 | 3–5 / 15 / – | – |
+| C18-BP [3/15] | 0.9999986 | 0 / 9 / 13 | passes (largest pole \|t\| = 1.67) |
+| C18-BP [4/14] | 0.9999997 | 0 / 6 / 13 | passes (1.71) |
+| C18-BP [5/13] | 1.0000004 | 0 / 2 / 11 | passes (1.70) |
+| **C18-BP [6/12]** | **1.0000002** | **0 / 1 / 11** | passes (1.73) |
+| **C18-BP [7/11]** | **1.0000000** | **0 / 1 / 7** | passes (1.83) |
+| **C18-BP [8/10]** | **1.0000000** | **0 / 1 / 5** | passes (1.76) |
+| **C18-BP [9/9]** | **1.0000000** | **0 / 1 / 5** | passes (1.76) |
+
+The ring-free completions that pass the type rule are C18-BP [6/12], [7/11], [8/10] and [9/9], at
+0.99999997–1.0000002 ([7/11] 0.99999997, [8/10] and [9/9] 0.99999998, [6/12] 1.0000002), the tightest cluster so far
+(K = 17: 0.9999999–1.0000004), again straddling 1. Every Borel–Padé sum passes the type rule this time ([5/12] failed
+it at K = 17). The ratio-law and arc tails carry rings again, and the sums [3/15], [4/14] and [5/13] carry one to eight
+zeros beyond x₀ in |x| < 12 with their own zero at 0.9999986–1.0000004; σ₁₉ (T88) tests them.
+
+### 10.7 The order-18 projection
+
+The model est_k = ω* + c r^k through k = 16 and 17 predicts arg₁₈ − 1 = +2.01×10⁻⁶ for ω* = 1, +0.42×10⁻⁶ for
+0.99999 and −0.28×10⁻⁶ for 0.999975; the real value is +2.41×10⁻⁶, 0.4×10⁻⁶ from the first, 2.0×10⁻⁶ from the second
+and 2.7×10⁻⁶ from the third. The model's own error is 1.1×10⁻⁵ (its largest miss over k = 15–17 on the real data
+0.1–0.7×10⁻⁵ depending on ω*, and over the arc plants at k = 18, −0.3…+1.1×10⁻⁵), so the projection favours ω* = 1 but
+is not decisive, as at K = 15–17. The log-linear trend of arg_k − 1 over k = 4–18 falls ×0.539 per order (×0.539 over
+k = 4–17) and puts arg₁₈ − 1 at 2.5×10⁻⁶, where it is. Under noise of size sigma_err on every σ_k (20 seeds), arg₁₈
+moves by at most 5.1×10⁻⁹.
+
+### 10.8 Combination
+
+- K = 18 estimator range (hull): the calibrated arg over the arc plants, 0.999992–1.000002; over the BP family of
+  twelve, 0.999992–1.000004; the ring-free completions, 0.99999997–1.0000002. **The hull is 0.999992–1.000004.**
+- It overlaps the K = 17 headline (0.999975–1.000050), so by section 10.0 item 7 the headline is their union,
+  **0.999975–1.000050, unchanged.** The K = 18 range lies inside the K = 17 one (0.999990–1.000009) at both ends;
+  the range from the last two orders alone, reported as context by item 7, is 0.999990–1.000009, and K = 16–18
+  would give 0.999980–1.000014. An estimator range, not a bound.
+- G, with its spread: production 0.9999987 at K = 18 (1.0000026 at K = 17); over the minima of its objective within a
+  factor 5 of the best, 0.999999–1.000010 (0.999908–1.000003 at K = 17); its global minimum 1.000010 (1.0000001).
+
+### 10.9 Verdict at K = 18
+
+- σ₁₈ is converged to 2.3×10⁻¹² relative and continues every trend of σ₀…σ₁₇.
+- The real estimates moved toward 1 again, and for the first time two of them crossed below it: arg 1.0000024,
+  G 0.9999987, central Padé [3/14]–[13/4] at 0.999997–1.000002; the ring-free sums of σ₀…σ₁₈ sit at
+  0.99999997–1.0000002, on both sides of 1.
+- The calibrated range shrank from 0.999990–1.000009 (arc plants, arg, K = 17) to 0.999992–1.000002, and the K = 18
+  hull is 0.999992–1.000004, a width of 1.2×10⁻⁵ against 1.9×10⁻⁵ at K = 17 and 3.4×10⁻⁵ at K = 16. The headline
+  union stays 0.999975–1.000050 because the procedure keeps the earlier orders' ranges; the last two orders alone give
+  0.999990–1.000009, and K = 16–18 would give 0.999980–1.000014.
+- ω∞ = 1 lies inside every range, as at K = 13–17. The order-18 projection puts ω* = 1 closest to arg₁₈ (0.4×10⁻⁶,
+  against 2.0×10⁻⁶ for a zero 10⁻⁵ below 1), but the model's own error, 1.1×10⁻⁵, is larger than both: the data still
+  do not decide between 1 and a value 10⁻⁵ below it.
+- The two rings of the K = 17 generation, C17-BP [3/14] and [4/13], are rejected by σ₁₈ under both readings, as every
+  ring of the K = 16 generation was by σ₁₇. So σ₀…σ₁₈ exclude every ring built so far, nearer than x₀ or just beyond
+  it, from any number of coefficients up to seventeen. The next generation (C18-BP [3/15], [4/14], [5/13], zeros
+  0.9999986–1.0000004) is tested by σ₁₉ (T88, running).
+- D-bracket: the two readings of 10.0 item 4 agree on every ring, as at K = 17. On its own it rejected only ring-free
+  sums, this time all three of the K = 17 generation, the best predictors of σ₁₈ (4×10⁻⁹–6×10⁻⁸), and its verdict on
+  C16-BP [7/9] and [8/8] reversed from K = 17 to K = 18. The rule stays as item 4 fixed it unless the author decides
+  otherwise before σ₁₉; it changed no finding at K = 18.
