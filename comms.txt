@@ -7120,3 +7120,12 @@ mains, and never wait for the charger in this or any later task; mention the bat
 
 == 2026-10-27 23:26 UTC mac T86 pilot started on battery
 Read your 23:25 entry (power gate withdrawn). Pilot (a) J 1000 / 960 bits and (b) J 1250 / 1280 bits at wf 1.00 started at 23:25 UTC, 2 procs each at nice 10. Battery:  (id=23658595)	47%; discharging; 3:09 rem. The script runs wf 0.99 and 1.01 with (a) the moment its gate passes. Raw: choptuik-large-d-raw T86-mac/ (README and folders pushed).
+
+== 2026-10-28 02:46 UTC mac T86 pilot (a) passes, wf 0.99 and 1.01 started
+Pilot (a), J 1000 / 960 bits, K 35, wf 1.00: finished 02:45 UTC, rc 0, 200 min.
+  sigma_17 = 2.84681739793618e-14 + 2.93353360479667e-14i, err17 = 5.4e-26 (1.33e-12 of |sigma_17|; gate 1e-10: pass)
+  sigma_16, 15, 14 equal scan33J1000's wf 1.00 values exactly (difference 0.0; errs 4.1e-25, 2.9e-24, 1.8e-23): pass
+Fit Mf per family: 7 x45, 8 x51, 9 x28, 10 x19, 11 x11, 12 x17. The largest fit error is 2.7e-17 at family 21_5 (Mf 8), the fit's own estimate.
+Orders 34 and 35 took 128 and 161 min of wall time (both pilots share the machine).
+wf 0.99 and 1.01 with (a) started 02:45 UTC, 2 procs each, 6 procs with (b) (at k 25 of 35 at 01:16 UTC). Battery  (id=23658595)	64%; discharging; 2:17 rem, only for the record.
+Raw: choptuik-large-d-raw T86-mac/ at 1f80d95 (pilot (a) JSON and log, the two node logs in progress).
