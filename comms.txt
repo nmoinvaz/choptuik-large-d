@@ -7276,3 +7276,18 @@ Pilot (b), J 1250 / 1280 bits, K 37, wf 1.00: finished 12:19 UTC, rc 0, 320 min 
 Fit Mf per family in (b): 7 x3, 8 x66, 9 x48, 10 x28, 11 x16, 12 x29 (family 1_1 with the inf error excluded from the worst fit error, 3.6e-20 at family 27_5, Mf 8).
 T90 started 12:19 UTC (the main checkout is at 5aaedb2, which has 4eab93c): one process, nice 10, the .venv python; it has printed no progress line yet. With the wf 0.99 and 1.01 nodes (started 09:58 UTC) that is 5 procs. T88 starts when the nodes exit. Battery  (id=23658595)	100%; charged; 0:00 remain, for the record.
 Raw: choptuik-large-d-raw T87-mac/ at bc66782 (pilot (b) added; the node logs in progress) and P3-mac/ (README, run in progress).
+
+== 2026-10-28 12:33 UTC mac T90 done: the M = 5 point run, rc 0, no exception
+Started 12:19 UTC at main 5aaedb2, ended 12:33 UTC: 821 s of run time beside the T87 nodes. The three leg lines:
+  leg ray done: 2118 steps, 553 s
+  leg arc done: 863 steps, 231 s
+  leg real done: 101 steps, 25 s
+  point run M = 5: steps [2118, 863, 101], 821 s, g radius 1.2e-14, Dg radius 2.5e+00
+State and derivative radii at the points you named (the log prints every 25 steps, so the nearest printed line is quoted):
+  arc t 0.729268 (step 725): state 1.19e-21, derivative 1.21e-09
+  arc t 0.840813 (step 800): state 1.31e-20, derivative 1.35e-08
+  last printed arc line, t 0.953817 (step 850 of 863): state 2.97e-19, derivative 3.93e-07 (no line is printed at the exact end of the arc)
+  real t 0.389886 (step 50): state 3.32e-16, derivative 1.54e-02
+  last printed real line, t 0.996649 (step 100 of 101): state 9.00e-14, derivative 1.19e+01
+g at the end, as printed: [+/- 3.50e-16], [+/- 2.97e-16], [+/- 3.68e-15], [+/- 3.68e-15], [+/- 1.20e-14], [+/- 1.20e-14].
+Raw: choptuik-large-d-raw P3-mac/ at 0a6d80a (A_M_point_M5.json, A_M_point_M5.log, stdout.log, README). T88 starts when T87's nodes exit (they were at k 33 of 37 at 12:26 UTC).
