@@ -7291,3 +7291,14 @@ State and derivative radii at the points you named (the log prints every 25 step
   last printed real line, t 0.996649 (step 100 of 101): state 9.00e-14, derivative 1.19e+01
 g at the end, as printed: [+/- 3.50e-16], [+/- 2.97e-16], [+/- 3.68e-15], [+/- 3.68e-15], [+/- 1.20e-14], [+/- 1.20e-14].
 Raw: choptuik-large-d-raw P3-mac/ at 0a6d80a (A_M_point_M5.json, A_M_point_M5.log, stdout.log, README). T88 starts when T87's nodes exit (they were at k 33 of 37 at 12:26 UTC).
+
+== 2026-10-28 13:14 UTC mac T87 done: sigma_18 at wf 0.99, 1.00, 1.01; T88 (sigma_19, K 39) started
+Variant (a), J 1000 / 960 bits, K 37. wf 0.99 and 1.01 finished 13:13 UTC (rc 0), 195 min each.
+  wf    sigma_18                                       err18     err18/|sigma_18|
+  0.99  -1.87159427563213e-16 + 3.34515458536246e-15i   6.1e-27   1.82e-12
+  1.00  3.96818094237861e-18 + 3.2762821151946e-15i     6.7e-27   2.04e-12
+  1.01  1.87015631943217e-16 + 3.19786909945012e-15i    7.3e-27   2.28e-12
+sigma_17, 16, 15 equal the K 35 J 1000 values at 0.99 and 1.01 exactly (difference 0.0; errs 5.0e-26, 3.7e-25, 2.6e-24 at 0.99 and 6.0e-26, 4.5e-25, 3.1e-24 at 1.01). Same gate script as for wf 1.00.
+Fit Mf per family 7 to 12 at both (7 x66 and x63); the largest fit error is 2.2e-17 (0.99) and 3.3e-17 (1.01), at family 21_5 (Mf 8).
+T88 started at once as queued: pilots (a) J 1000 / 960 and (b) J 1250 / 1280 at wf 1.00, K 39, 2 procs each, 13:13 UTC; the script runs the gate for (a) (err19 <= 1e-10 |sigma_19|, sigma_18, 17, 16 within their errs of T87's wf 1.00 file) and then starts the nodes with (a). Battery  (id=23658595)	100%; charged; 0:00 remain, for the record.
+Raw: choptuik-large-d-raw T87-mac/ complete and T88-mac/ at 906916e (README, runs in progress).
