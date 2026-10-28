@@ -1813,3 +1813,67 @@ moves by at most 5.1×10⁻⁹.
   sums, this time all three of the K = 17 generation, the best predictors of σ₁₈ (4×10⁻⁹–6×10⁻⁸), and its verdict on
   C16-BP [7/9] and [8/8] reversed from K = 17 to K = 18. The rule stays as item 4 fixed it unless the author decides
   otherwise before σ₁₉; it changed no finding at K = 18.
+
+## 11. Follow-up: σ₁₉ (post-freeze)
+
+### 11.0 Procedure, fixed before any K = 19 estimate was computed
+
+Written and committed before any estimator ran at K = 19, on any input. Already known at this point (the Mac's T88,
+started 2026-10-28 13:13 UTC; its logs at 16:18 UTC): pilot (a) at wf 1.00 is at order 37 of 39 and pilot (b) at
+order 33; no σ₁₉ exists yet. The procedure is section 10.0's one order up, with the changes section 10's findings call
+for, stated here before the data:
+
+0. **Dry run of the stages on a synthetic σ₁₉.** Before the real σ₁₉ exists, `planted_k19_dry.py` writes scan files
+   whose σ₀…σ₁₈ are the real ones and whose σ₁₉ at each node is the C18-BP [7/11] sum's (ring-free, passing the type
+   rule, zero at 0.99999997; section 10.6), with err19 = 10⁻¹² |σ₁₉| and the pilot's errors inf, and every stage runs on
+   them (`planted_k19.py STAGE --data DIR`). Pass: every stage completes with its checks passing, and in the ring test
+   C18-BP [7/11] has a σ₁₉ error below 10⁻¹⁸ and a τ₁₉ error below 10⁻¹⁷ and survives; whether its zero lies inside
+   the dry run's K = 19 range is reported. A stage that fails on the synthetic data is fixed before the real data, and
+   the fix is recorded here. The dry run's records and checks are discarded (its logs go to the raw-data repository);
+   it tests the code path, not the estimators (item 2 does that).
+1. **σ₁₉ is converged** if, at every node: (a) err19 ≤ 10⁻¹⁰ |σ₁₉|; (b) σ₀…σ₁₈ are bitwise the `scan37J1000` 960-bit
+   values; (c) pilot (b)'s σ₁₉ equals (a)'s within (a)'s err19, and its σ₁₆…σ₁₈ equal `scan37J1000`'s within their errors;
+   (d) the second difference of σ_k/σ_{k+1} at k = 17 is at most 0.05. Each check gets a mutation that must make it
+   fire (`--mutate=err|low|pilot|ratiolaw`).
+2. **The pipeline on plants first.** N1 recovered by arg, ratio, Padé and G to 10⁻⁶ at K = 19, N2 giving no number;
+   the 28 arc plants, C-EXP and the 13 REFIT plants regenerated and run at K = 17, 18, 19, their K = 17 and 18 estimates
+   equal to the stored K = 18 records (`planted_results_k18.jsonl`) to 10⁻⁹, or the work stops. Control: N1 graded
+   against ω_t + 0.002 must fail.
+3. **Real data at K = 19** (record "N0 scan39J1000"): its K = 17 and 18 estimates must equal those of "N0 scan37J1000".
+   Mutation controls: σ₁₉ → −σ₁₉ at wf 1.00 must fire a detector; σ₁₉ × (1 + 10⁻³) is reported.
+4. **Ring test.** Every K = 18 completion of section 10.6 is regenerated and its zero must reproduce the stored
+   "K18 recomplete" value to 10⁻⁹: C18-W1–3, C18-ARC (four shapes at their stored best ω_t) and C18-BP [m/(18 − m)],
+   m = 3…9. No ring survived σ₁₈ (section 10.4), so nothing is carried over from an earlier order; the rings under test
+   are this generation's, C18-BP [3/15], [4/14] and [5/13], all three passing the type rule this time. Benchmark: the
+   simple-zero law from τ₁₇, τ₁₈. **The D-bracket question** is handled as section 9.0 item 4 fixed it: section 5.3's
+   comparison is the primary reading (a completion survives if no detector fires on it at K = 19 that does not fire on
+   the real data), and the table gives a second reading with D-bracket left out, both fixed here. A ring is a finding
+   only if it survives under the first reading; a ring rejected under the first and surviving under the second is
+   reported as that. The author's decision asked for in 8.9 has still not come; if it comes before any K = 19 estimate
+   is computed, this item is amended with the date. A ring that survives σ₁₉ is a finding, reported as such.
+5. **Calibration** at K = 19, as section 10.5: the error of arg, ratio, Padé mid and G on (i) the 28 arc plants, (ii)
+   C-EXP, (iii) REFIT with fit residual ≤ 10⁻⁴, and (iv) the BP family, now sixteen sums (section 10.5's twelve and
+   C18-BP [6/12], [7/11], [8/10], [9/9], the ring-free sums passing the type rule at K = 18), each with its own zero as
+   truth. The calibration at K = 18 from the new records must reproduce section 10.5's arc range 0.999992–1.000002 and
+   BP-family range 0.999992–1.000004 to 6×10⁻⁷ (against the values stored in `planted_checks_k18.json`).
+6. **Next generation and ring-free completions,** glued at σ₁₉ (tail from k = 20): ratio-law windows k = 6–18, 8–18,
+   9–18; best-fit arc tails, four shapes, ω_t grid 0.9990–1.0010; the Borel–Padé sums [m/(19 − m)], m = 3…9 (up to
+   [9/10], as [8/9] was at K = 17). Frozen type rule: every pole has |t| < 2 at all three nodes. Zeros counted at
+   wf = 1.00 in |x| < 7.3, 12 and 16.
+7. **Combination.** The K = 19 estimator range is the hull of: the calibrated arg range over the 28 arc plants; the
+   calibrated arg range over the BP family (sixteen); and the zeros of the ring-free completions of item 6 that pass the
+   type rule (no zeros besides x₀ in |x| < 12). G is reported with its spread over the minima of its objective within a
+   factor 5 of the best and is not part of the hull. The headline is the union of the K = 18 headline
+   (0.999975–1.000050) and the K = 19 range if they overlap; if disjoint, both are reported and the reason diagnosed
+   before any headline is written. The range is an estimator range, not a bound; the range from the last two orders
+   alone is reported beside it as context, as at K = 17 and 18.
+8. **The order-19 projection.** est_k = ω* + c r^k through k = 17 and 18, for ω* = 1, 0.999992 (the lower end of the
+   K = 18 range) and 0.999975 (the lower end of the headline), against the real arg₁₉; decisive only if the other
+   prediction is farther from arg₁₉ than three times the model's own error (its largest miss over k = 16–18 on the
+   real data, and over the 28 arc plants at k = 19 given their true ω_t).
+
+The stages are `converge`, `plants`, `real`, `ring`, `calib`, `recomplete`, `project`, `combine`, each run as
+`nice -n 10 python3 planted_k19.py STAGE` from `solver/inner_amp/`, with the σ₁₉ JSONs copied from the raw-data
+repository's T88-mac into `scan39J1000/` and `scan39J1250/` as the earlier orders' were. `planted_k19.py` is
+`planted_k18.py` one order up (a mechanical renumbering) with the changes items 4–8 state: the ring test regenerates
+the C18 completions, the calibration family has sixteen sums, the projection's second hypothesis is 0.999992.
