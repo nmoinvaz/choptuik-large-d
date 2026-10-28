@@ -1888,3 +1888,20 @@ ring-free list was [6/13], [7/12], [8/11]. One stage was fixed: `combine` read t
 range where item 7 asks for the sixteen-sum family's (the renumbering had not advanced the label); on the synthetic
 data the two ranges coincide (0.999996–1.000000), so the dry run's hull did not change, and the stage was rerun after
 the fix (16:42 UTC; `dry/combine_before_fix.log` is the first run). No other stage code changed.
+
+**The pilot gate fired on the real σ₁₉ (2026-10-28 20:55 UTC).** Item 1(c) fails at wf 1.00: pilot (b) (J 1250, 1280
+bits) differs from (a) (J 1000, 960 bits) by 3.39×10⁻²⁷ at σ₁₉ against (a)'s err19 of 2.79×10⁻²⁷, a ratio of 1.21
+(`solver/inner_amp/pilot_agreement.py`, on the files in `scan39J1000/` and `scan39J1250/`); σ₁₆…σ₁₈ pass as at K = 18.
+The difference is 1.3×10⁻¹¹ of |σ₁₉|, nothing to the estimators of items 2–8 (they need about 10⁻⁶), but the control
+fired and the stages do not run until its cause is known. What the files say: (b)'s own plateau error at σ₁₉, read from
+its `fit_info` with the order-1 term set to zero, is 1.2×10⁻²⁸ (its `sigma_err` is inf because family 1_1's residual
+underflows to 0.0 at 1280 bits and `pick_plateau` reads a non-falling residual as no plateau; `scan29J1000`'s 1280-bit
+file has it at J 1000, so it is the bits, not J 1250), so the two fits' own errors do not cover their difference, and
+at least one plateau error omits something, most likely the J truncation: over k = 14…19 the (a)/(b) relative
+difference went 3×10⁻¹⁵, 5×10⁻¹⁵, 5×10⁻¹⁴, 4×10⁻¹⁴, 1.4×10⁻¹³, 1.3×10⁻¹¹ while (a)'s relative plateau error went
+3×10⁻¹³, 5×10⁻¹³, 8×10⁻¹³, 1.3×10⁻¹², 2.0×10⁻¹², 1.1×10⁻¹¹, and they met at k = 19; (a)'s fits all sit at Mf 7 from
+k = 33 up (20 of 20 at k = 39), (b)'s at Mf 8 (14 of 20). The attribution runs as T91 on the Mac, a third pilot at
+J 1250 and 960 bits ((a)'s bits with (b)'s J, so its differences to (a) and to (b) are the J effect and the bits
+effect), started 2026-10-28 21:06 UTC. Item 1 is amended for the cause once T91 lands, the amendment dated and
+committed before any K = 19 estimate; the `converge` stage runs as written on the three nodes first, and its failure
+is kept in the log.

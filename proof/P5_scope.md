@@ -77,8 +77,10 @@ Three findings.
    `solver/inner_amp/scan39J1000/sigF_w1.0000_K39_J1000_p960.json`, 2026-10-28 16:42 UTC): |σ₁₉| = 2.52×10⁻¹⁶,
    0.90 of the bound, the third order running at that margin, with |σ₁₈|/|σ₁₉| = 13.0 and the argument advancing
    by 0.76 (0.77 at the order before). Its fit error is 1.1×10⁻¹¹ of |σ₁₉| (2.0×10⁻¹² at σ₁₈), still three orders
-   below what (H_σ) needs. The nodes 0.99 and 1.01, the k ≤ 12 ratio at k = 19 and the K = 19 recalibration follow
-   when T88's node runs land; σ₂₀ (T89) is the next test.
+   below what (H_σ) needs; the J 1250 pilot differs from it by 1.3×10⁻¹¹ of |σ₁₉|, 1.21 times that fit error, the
+   first order where the cross-check exceeds the fit's own estimate (the cause is under test, PLANTED_SELECTION.md
+   §11.0; the bound test is unaffected). The nodes 0.99 and 1.01, the k ≤ 12 ratio at k = 19 and the K = 19
+   recalibration follow when T88's node runs land; σ₂₀ (T89) is the next test.
 
 So, numerically: at K = 17, a conditional certificate at radius about 10⁻⁴ in ω/ω∞ is within reach of (H_T) in its
 sharpened form, and the coefficient errors of (H_σ) (fit errors ~10⁻¹² of each σ_k, 10⁻²⁵ absolute at k = 17) are

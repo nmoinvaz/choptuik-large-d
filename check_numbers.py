@@ -19,7 +19,7 @@ import sys
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DOCS = {name: open(os.path.join(ROOT, name), encoding="utf-8").read()
         for name in ("README.md", "paper/physics/main.tex", "paper/math/main.tex", "proof/A_certify.md", "GAMMA.md",
-                     "notes/PLANTED_SELECTION.md")}
+                     "notes/PLANTED_SELECTION.md", "notes/PROOF_QUEUE.md", "proof/P5_scope.md")}
 
 
 def quoted_in(doc, text):
@@ -284,6 +284,24 @@ def selection_range():
             ("Delta_inf range, upper end", dhi, 1.64393, 1e-5, txt),
             ("Delta_inf range, centre", (dlo + dhi) / 2, 1.64387, 1e-5, txt),
             ("Delta_inf range, half-width", (dhi - dlo) / 2, 0.00006, 1e-5, txt)]
+
+
+@check
+def pilot_agreement():
+    """The two sigma_19 pilots at wf 1.00, (a) J 1000 / 960 bits and (b) J 1250 / 1280 bits (notes/PLANTED_SELECTION.md
+    section 11.0, solver/inner_amp/pilot_agreement.py): |sigma_19(a) - sigma_19(b)| over (a)'s err19, the pilot gate
+    that fired, and over |sigma_19|."""
+    d = os.path.join(ROOT, "solver/inner_amp")
+    a = json.load(open(os.path.join(d, "scan39J1000/sigF_w1.0000_K39_J1000_p960.json")))
+    b = json.load(open(os.path.join(d, "scan39J1250/sigF_w1.0000_K39_J1250_p1280.json")))
+    sa, sb = (complex(float(r["sigma_str"][19][0]), float(r["sigma_str"][19][1])) for r in (a, b))
+    diff = abs(sa - sb)
+    t = [("notes/PLANTED_SELECTION.md", "a ratio of 1.21"), ("proof/P5_scope.md", "1.21 times that fit error"),
+         ("notes/PROOF_QUEUE.md", "agreement gate by 1.21 at σ₁₉")]
+    t2 = [("notes/PLANTED_SELECTION.md", "The difference is 1.3×10⁻¹¹ of |σ₁₉|"),
+          ("proof/P5_scope.md", "differs from it by 1.3×10⁻¹¹ of |σ₁₉|")]
+    return [("sigma_19 pilot gate ratio", diff / a["sigma_err"][19], 1.21, 0.01, t),
+            ("sigma_19 pilot difference, relative", diff / abs(sa), 1.3e-11, 1e-12, t2)]
 
 
 @check
