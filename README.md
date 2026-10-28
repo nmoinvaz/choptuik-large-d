@@ -82,10 +82,10 @@ Headline results:
   predict the shape of the echo, F₃/F₁ = 0.055 against 0.055 extrapolated from the data, and with three harmonics
   the full set of conditions gives Δ = 1.619, 1.5% below Δ∞, and with five harmonics Δ = 1.64516, 0.077% above (one
   harmonic: 29% above): the offset alternates in sign and shrinks fifteen- to twentyfold per harmonic pair. Without truncation, an
-  amplitude expansion to seventeen orders puts the selected ω at 0.999975–1.00005 ω∞ (Δ∞ = 1.64387 ± 0.00006, an
-  estimator range over four orders, tested on planted functions; the seventeenth order alone gives 0.999990–1.000009),
+  amplitude expansion to eighteen orders puts the selected ω at 0.999975–1.00005 ω∞ (Δ∞ = 1.64387 ± 0.00006, an
+  estimator range over five orders, tested on planted functions; the eighteenth order alone gives 0.999992–1.000004),
   at amplitude 2.720 (measured: 2.70–2.72), provided the selection function has no zeros closer to the origin than the
-  selected one; the fourteenth to seventeenth coefficients rejected every such alternative built so far. Alternatives
+  selected one; the fourteenth to eighteenth coefficients rejected every such alternative built so far. Alternatives
   with further zeros just beyond the selected one survive one coefficient each, and they put the zero inside the
   range. The finite-D solutions give 1.643893746, inside that range. The rule itself is not yet proved ([Large D](#large-d-what-the-1d-expansion-can-and-cannot-see)).
 - **Relation to published work.** Agreement with the accepted values at D = 4 and at the maximum of Δ near D = 3.756;
@@ -1724,7 +1724,7 @@ C(n,s) \approx -\,i\,\frac{\sqrt{2\pi}}{\Gamma(1+s)}\,(n+1)^{s+1/2}\,e^{-i\pi\La
 Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = -1-s`$.
 
 <details>
-<summary>The amplitude expansion in detail: every harmonic exact, the shape, the harmonic-1 condition and where its zero is real, the planted test, seventeen orders</summary>
+<summary>The amplitude expansion in detail: every harmonic exact, the shape, the harmonic-1 condition and where its zero is real, the planted test, eighteen orders</summary>
 
 - *Every harmonic exact.* Put $`F = A\sin\theta + \sum_{\nu\ge3} f_\nu(A)\,e^{i\nu\theta}`$ (+ c.c.). Harmonic μ first appears at
   order $`A^{\lvert\mu\rvert}`$, so keeping $`\lvert\mu\rvert \le K`$ at each order in A is exact: no truncation error, unlike fixed M
@@ -1835,14 +1835,21 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   ring-carrying sum of σ₀…σ₁₆ is rejected at once, while the ring-free sums of σ₀…σ₁₆ predicted σ₁₇ to 2–6×10⁻⁸.
   The ring-free sums of σ₀…σ₁₇ put the zero at 0.9999999–1.0000004. Calibrated on the planted functions, the arg
   crossing puts it at 0.999990–1.000009, and the seventeen-order estimator range (arc plants, the Borel–Padé family,
-  the ring-free sums) is 0.999990–1.000009 ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md) §9). Taken
-  together over the last four orders, **ω*/ω∞ = 0.999975–1.00005, Δ∞ = 1.64387 ± 0.00006 (1.64381–1.64393) from the
-  D = ∞ inner equations alone** (the last two orders alone give 0.999980–1.000014). This is an estimator range over
-  four orders, the planted functions and the ring-free completions, not a bound, and it uses no input from the
-  finite-D solutions. Their value, 1.643893746, lies
-  inside it. The range assumes no zeros of S₁ nearer than x₀; every ring that put zeros there was rejected, and the
-  rings just beyond x₀ fitted to all the known coefficients, which survived one coefficient at a time through σ₁₆,
-  are all rejected by σ₁₇. The rule itself is
+  the ring-free sums) is 0.999990–1.000009 ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md) §9).
+- *Eighteen orders.* σ₁₈ converges at 960 bits with J = 1000 (`scan37J1000/`; 2.3×10⁻¹² relative, and a 1280-bit
+  run agrees with it to 5×10⁻²⁸). The arg crossing falls to 1.0000024, the factored series crosses below 1 for the
+  first time (0.9999987) and the central Padé approximants [3/14]–[13/4] lie at 0.999997–1.000002. The two rings built
+  from σ₀…σ₁₇ mispredict σ₁₈ by 0.7–4×10⁻⁶ and are rejected at once, while the ring-free sums of σ₀…σ₁₇ predicted it
+  to 4×10⁻⁹–6×10⁻⁸. The ring-free sums of σ₀…σ₁₈ put the zero at 0.99999997–1.0000002. Calibrated on the planted
+  functions, the arg crossing puts it at 0.999992–1.000002, and the eighteen-order estimator range (arc plants, the
+  Borel–Padé family, the ring-free sums) is 0.999992–1.000004 ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md)
+  §10). Taken together over the last five orders,
+  **ω*/ω∞ = 0.999975–1.00005, Δ∞ = 1.64387 ± 0.00006 (1.64381–1.64393) from the D = ∞ inner equations alone**
+  (the last two orders alone give 0.999990–1.000009). This is an estimator range over five orders, the planted
+  functions and the ring-free completions, not a bound, and it uses no input from the finite-D solutions. Their
+  value, 1.643893746, lies inside it. The range assumes no zeros of S₁ nearer than x₀; every ring that put zeros
+  there was rejected, and the rings just beyond x₀ fitted to all the known coefficients, which survived one
+  coefficient at a time through σ₁₆, are rejected by σ₁₇ and, rebuilt from σ₀…σ₁₇, by σ₁₈. The rule itself is
   still a conjecture (hypotheses H1–H2, gaps (a)–(c)). Tightening the number needs more orders, approximants that model
   the competing singularity explicitly (differential or algebraic approximants), or M = 7, which evaluates the
   multiplier at real amplitude with no series to resum (done: 1.000022).
