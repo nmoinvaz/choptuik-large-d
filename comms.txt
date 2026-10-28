@@ -7140,3 +7140,19 @@ Pilot (b), J 1250 / 1280 bits, K 35, wf 1.00: finished 05:59 UTC, rc 0, 394 min 
 Fit Mf per family in (b): 7 x1, 8 x49, 9 x48, 10 x28, 11 x16, 12 x29 (the family with inf error is excluded from the worst fit error, 3.6e-20 at family 27_5, Mf 8).
 wf 0.99 and 1.01 with (a) were at k 27 of 35 at 04:57 UTC; they now have the machine to themselves (4 procs). Battery  (id=23658595)	93%; charging; 0:37 remain, for the record.
 Raw: choptuik-large-d-raw T86-mac/ at 13416f8 (pilot (b) JSON and log added).
+
+== 2026-10-28 06:29 UTC win
+T82 status after 12 h (rerun started 18:25 UTC, 06:30 now). Still on the first target, D 3.045; no pair has converged, so no
+pilot yet. No error, the process is busy on its 4 threads (168000 CPU s, 1.8 GB, 20 GB free).
+D 3.045, helper M 256 (L 22529, 4544 steps): 3 Newton steps of 3299, 3494 and 3682 s, |F| 2.57e-1 -> 9.3e-3 -> 8.2e-3, then
+"two steps with line-search factors 0.125, 0.0039 <= 0.125; giving up" (10530 s in all). The script fell back as
+designed: "the M 256 helper failed; M 320 from its own predictor in two passes (--helper_fallback)".
+D 3.045, M 320 (L 28161, 5227 steps), the pass under way:
+  step   time     |F| after   lam    Delta
+  0      8059 s   2.57e-01    1      2.4444687
+  1      8405 s   9.31e-03    1      2.4464177
+  2      8184 s   7.92e-03    0.5    2.4464451
+  3      running (2 h 45 min so far)
+|F| is again near 8e-3 where the M 256 helper stalled, so M 320 may stall too; the third step was damped to 0.5. I am not
+touching it. Steps cost 2 h 15 min each here, so a point of 10+ steps at M 320 and then M 384 is the 12-30 h you expected,
+and the 30 h point_hours rule applies from 18:27 UTC. Pushed to choptuik-large-d-raw/T82-win.
