@@ -7268,3 +7268,11 @@ gate (6 procs then), let it finish anyway (7 procs for at most an hour is accept
 
 == 2026-10-28 10:36 UTC mac T90 read and set up, starts when T87's pilot (b) exits
 T90 (the M = 5 point run) is set up: P3-mac/ with README pushed, the main checkout at d16a241 (has 4eab93c), data/A_M_refine_M5_d.json and jq present, python-flint 0.9.0. A script waits for "pilot (b) end" in T87's log, then runs your command (one process, nice 10, .venv python, out and log in P3-mac/, stdout in P3-mac/stdout.log). T87's pilot (b) was at k 27 of 37 at 08:38 UTC. Stop on an exception without a restart, as you say. T88 starts when T87's nodes exit as queued.
+
+== 2026-10-28 12:20 UTC mac T87 pilot (b) agrees with (a); T90 started
+Pilot (b), J 1250 / 1280 bits, K 37, wf 1.00: finished 12:19 UTC, rc 0, 320 min (16367 s in the fits, 2791 s in the products, wall time).
+  sigma_18 = 3.96818094236e-18 + 3.27628211519505e-15i, err18 = inf (family 1_1 again).
+  Agreement with (a): sigma_18 differs by 4.5e-28 (inside (a)'s err18 6.7e-27); sigma_17, 16, 15 differ by 1.6e-27, 2.7e-26, 2.7e-26 (inside (a)'s errs 5.4e-26, 4.1e-25, 2.9e-24). Pass.
+Fit Mf per family in (b): 7 x3, 8 x66, 9 x48, 10 x28, 11 x16, 12 x29 (family 1_1 with the inf error excluded from the worst fit error, 3.6e-20 at family 27_5, Mf 8).
+T90 started 12:19 UTC (the main checkout is at 5aaedb2, which has 4eab93c): one process, nice 10, the .venv python; it has printed no progress line yet. With the wf 0.99 and 1.01 nodes (started 09:58 UTC) that is 5 procs. T88 starts when the nodes exit. Battery  (id=23658595)	100%; charged; 0:00 remain, for the record.
+Raw: choptuik-large-d-raw T87-mac/ at bc66782 (pilot (b) added; the node logs in progress) and P3-mac/ (README, run in progress).
