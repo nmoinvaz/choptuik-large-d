@@ -1,0 +1,26 @@
+=== mutate: none
+planted: k1 [1.20 +/- 3e-7] + 1.00j, k2 [0.700 +/- 3e-8] + [0.200 +/- 1e-8]j, c [-37.81 +/- 1.08e-3] + [14.37 +/- 9.52e-4]j, zero at 7.4000000000000003552713678800500929355621337890625000000000000000000000000000000000000000, K 17, kbar [0.950 +/- 3e-8] + [0.600 +/- 1e-8]j, r 0.4717, C 41.45, b 1.0
+   disc |x - x0| < 0.1 at x0 = [7.4000000 +/- 2e-12]: min |P| on the circle >= [0.547 +/- 2.97e-4] (widest evaluation 6.2e-02), coefficient radii delta <= [0.00022 +/- 2.13e-6], tail <= [5.98e-5 +/- 1.06e-8], (delta + tail) / min = 5.15e-04; roots of P inside: 1 at [7.40000 +/- 6.73e-6] + [+/- 9.55e-6]j; verdict CERTIFIED (given H_sigma, H_T)
+   the disc is centred on the planted zero, so the certified zero is it; P's root [7.40000 +/- 6.73e-6] + [+/- 9.55e-6]j
+PASS (expected certified)
+exit 0
+=== mutate: disc
+planted: k1 [1.20 +/- 3e-7] + 1.00j, k2 [0.700 +/- 3e-8] + [0.200 +/- 1e-8]j, c [-37.81 +/- 1.08e-3] + [14.37 +/- 9.52e-4]j, zero at 7.4000000000000003552713678800500929355621337890625000000000000000000000000000000000000000, K 17, kbar [0.950 +/- 3e-8] + [0.600 +/- 1e-8]j, r 0.4717, C 41.45, b 1.0, mutate disc
+   disc |x - x0| < 0.1 at x0 = [10.400000 +/- 2e-11]: min |P| on the circle >= [15.1 +/- 0.0358] (widest evaluation 1.8e-01), coefficient radii delta <= [0.037 +/- 4.97e-4], tail <= [0.0280 +/- 2.32e-6], (delta + tail) / min = 4.33e-03; roots of P inside: 0; verdict NOT certified
+PASS (expected not certified)
+exit 0
+=== mutate: rho
+planted: k1 [1.20 +/- 3e-7] + 1.00j, k2 [0.700 +/- 3e-8] + [0.200 +/- 1e-8]j, c [-37.81 +/- 1.08e-3] + [14.37 +/- 9.52e-4]j, zero at 7.4000000000000003552713678800500929355621337890625000000000000000000000000000000000000000, K 17, kbar [0.950 +/- 3e-8] + [0.600 +/- 1e-8]j, r 0.4717, C 41.45, b 1.0, mutate rho
+   disc |x - x0| < 7.0 at x0 = [7.4000000 +/- 2e-12]: min |P| on the circle >= 0 (widest evaluation 2.4e+02), coefficient radii delta <= [6.0 +/- 0.0441], tail <= [9.42 +/- 4.66e-3], (delta + tail) / min = inf; roots of P inside: 3; verdict NOT certified
+PASS (expected not certified)
+exit 0
+=== mutate: tail
+planted: k1 [1.20 +/- 3e-7] + 1.00j, k2 [0.700 +/- 3e-8] + [0.200 +/- 1e-8]j, c [-37.81 +/- 1.08e-3] + [14.37 +/- 9.52e-4]j, zero at 7.4000000000000003552713678800500929355621337890625000000000000000000000000000000000000000, K 17, kbar [0.950 +/- 3e-8] + [0.600 +/- 1e-8]j, r 0.4717, C 4144730.44, b 1.0, mutate tail
+   disc |x - x0| < 0.1 at x0 = [7.4000000 +/- 2e-12]: min |P| on the circle >= [0.547 +/- 2.97e-4] (widest evaluation 6.2e-02), coefficient radii delta <= [0.00022 +/- 2.13e-6], tail <= [5.98 +/- 1.06e-3], (delta + tail) / min = 1.09e+01; roots of P inside: 1 at [7.40000 +/- 6.73e-6] + [+/- 9.55e-6]j; verdict NOT certified
+PASS (expected not certified)
+exit 0
+=== mutate: coef
+planted: k1 [1.20 +/- 3e-7] + 1.00j, k2 [0.700 +/- 3e-8] + [0.200 +/- 1e-8]j, c [-37.81 +/- 1.08e-3] + [14.37 +/- 9.52e-4]j, zero at 7.4000000000000003552713678800500929355621337890625000000000000000000000000000000000000000, K 17, kbar [0.950 +/- 3e-8] + [0.600 +/- 1e-8]j, r 0.4717, C 41.45, b 1.0, mutate coef
+   disc |x - x0| < 0.1 at x0 = [7.4000000 +/- 2e-12]: min |P| on the circle >= [0.547 +/- 2.97e-4] (widest evaluation 6.2e-02), coefficient radii delta <= [5.9e+3 +/- 34.8], tail <= [5.98e-5 +/- 1.06e-8], (delta + tail) / min = 1.07e+04; roots of P inside: 1 at [7.40000 +/- 6.73e-6] + [+/- 9.55e-6]j; verdict NOT certified
+PASS (expected not certified)
+exit 0
