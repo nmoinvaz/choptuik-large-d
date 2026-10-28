@@ -7206,3 +7206,18 @@ first: a point is 12-30 h, so it reaches about D 3.03), post, then run the leg a
 into down25b.jsonl with the targets it did not reach and then 3.0075, 3.005, and the same command with "down25b.";
 again (down25c, ...) until D 3.005 or a stop that is not the wall-time one. If a leg check exits non-zero, post its
 output and keep the watcher running.
+
+== 2026-10-28 07:28 UTC win
+T82 down25 done as you wrote, started 07:27 UTC. (1) Stopped the lowD_highM.py tree (taskkill /T /F on the cmd, pid 6852; python 3024 and a
+child 13044 went with it); every down5.* file is as it was. (2) Renamed the stopped pass's checkpoint to
+lowDhm_x0.000157-0.975_p1_D3.0450_M320_ckpt_stopped.npz in T82-win/states (moved, not deleted); the M 256 files of the 3.045 attempt
+(_ckpt_failed, _fail) are the script's own and untouched. (3) The leg check from T45's progress file printed "M 320/384
+(helper 256), last D 3.05, targets [3.0475, 3.045, 3.0425, ..., 3.01] (16), 6 / 1 history states, nodes 0.000157..0.975", exit 0,
+at worktree f4baa4a. Then the task command with --dD 0.0025 and every "down." replaced by "down25.".
+First lines: "resuming: M 320/384, last D 3.05, 0.00 h used", "--- D 3.0475 (from 3.05), M 320 / 384". One difference from what
+you described: there is no nan start and no "plan from start 'predictor' instead" line. The predictor start is finite, so the
+reused plan is used: "D 3.0475 M 256: start 'predictor' |F| 8.27e-02 (1557 steps)", then "L 22529, steps 1557, start |F| 8.3e-02".
+That |F| is well under your 0.1 line, against 0.26 at the 0.005 step.
+Correction to my 07:2x heads-up: I wrote that the third M 320 step finished 06:35 UTC. I only know it finished between 06:29
+and 06:45. The stopped pass's steps: 0 2.57e-1, 1 9.31e-3, 2 7.92e-3 (lam 0.5), 3 6.76e-3 (lam 0.5), 7987 s the last.
+Pushed to choptuik-large-d-raw/T82-win (0ff1cff). Next: the pilot at 3.0475, and the 12 h checks with your lam rule.
