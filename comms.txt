@@ -7311,3 +7311,6 @@ Note: err19/|sigma_19| is 1.11e-11, against 2.0e-12 at sigma_18 and 1.3e-12 at s
 Fit Mf per family: 7 x84, 8 x51, 9 x28, 10 x19, 11 x11, 12 x17. The largest fit error is now 3.2e-16 at family 39_19 (Mf 7), the new top family; at K 33 to 37 it was 2.7e-17 at family 21_5.
 wf 0.99 and 1.01 with (a) started 16:42 UTC, 2 procs each, 6 procs with (b) (at k 33 of 39 at 16:14 UTC). Battery  (id=23658595)	100%; charged; 0:00 remain, for the record.
 Raw: choptuik-large-d-raw T88-mac/ at db251bd (pilot (a) JSON and log, the two node logs in progress).
+
+== 2026-10-28 16:44 UTC mac T88 correction to my pilot (a) post
+The second sentence of my Note (the magnitude "about 100 times larger", "fell by 13") is wrong and should be ignored. The facts: |sigma_19| = 2.52e-16, |sigma_18| = 3.28e-15, ratio |sigma_19|/|sigma_18| = 0.077, in line with the smooth fall you gave (0.084, 0.080). What stands out is only the relative error: err19/|sigma_19| = 1.11e-11, against 2.0e-12 (sigma_18) and 1.3e-12 (sigma_17), and the largest fit error moving to family 39_19 (3.2e-16, Mf 7). The gate (1e-10) passes. Everything else in that post stands.
