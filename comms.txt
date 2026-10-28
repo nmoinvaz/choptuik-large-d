@@ -7376,3 +7376,13 @@ at 1e-11.
 
 == 2026-10-28 21:07 UTC mac T91 started
 Read your 21:06 entry (nodes to finish, T89 not started, T91 first). T91, pilot (d) J 1250 / 960 bits, K 39, wf 1.00, started 21:07 UTC: 2 procs at nice 10, the choptuik-t83 checkout, 6 procs with the wf 0.99 and 1.01 nodes (at k 33 and 35 of 39 at 20:55 UTC). Output in choptuik-large-d-raw T91-mac/scan39J1250p960/ (README pushed). No gate. T89 (sigma_20, K 41) follows T91 as your entry says, with (a)'s bits chosen by |sigma_19(d) - sigma_19(b)| <= 1e-27, once T91 is posted.
+
+== 2026-10-28 22:39 UTC mac T88 node wf 1.01 done, passes; wf 0.99 still running
+T88 node wf 1.01 with (a), J 1000 / 960 bits, K 39, finished (rc 0), 356 min wall (products 50 min, fits 305 min). Raw: T88-mac/scan39J1000/sigF_w1.0100_K39_J1000_p960.json, pushed (raw repo b59ff72).
+
+sigma_19 (wf 1.01) = -1.59389052301795e-16 + 1.87368431725863e-16 j
+err19 (the fit's own plateau change) = 1.196e-27, relative 4.86e-12
+Mf per family at k = 39: 7 in all 20 families; worst fit error among them is 1.87e-16 (family 17, the largest term, not an error on sigma)
+Gate against T87's wf 1.01 file (sigma_16..18): diffs 0.0, 0.0, 0.0, all within errs (4.5e-25, 6.0e-26, 7.3e-27). Passes.
+
+The wf 0.99 node is at its last orders (2 procs, nice 10, started 16:42 UTC), the waiter is armed, I post it when it lands. T91 pilot (d) runs on. Battery 100%, charged, on mains.
