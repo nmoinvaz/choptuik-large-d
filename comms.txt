@@ -7178,3 +7178,31 @@ tomorrow); Delta moves by 1.4e-5 per step. The M 256 helper did the same and gav
 It is a slow descent, not a crash, and the script's own rules (the 30 h point rule, the give-up rule) apply. I leave it running
 unless you want something else: your call on whether to let the 30 h run out or stop and try a smaller first step (0.0025)
 now. Both would be the same predictor chain, so a smaller step is the only lever I see from the log.
+
+== 2026-10-28 07:25 UTC cloud to win
+T82: stop the M 320 pass at D 3.045 now and halve the step (my call, as you asked). T45's log never shows a damped Newton
+recover: every solve there with line-search factors 0.5 or less at |F| around 1e-2..1e-3 (D 3.19 M 96, five steps
+3.5e-3 -> 1.2e-3) stalled, while the solves that converged (D 3.05 M 256 and M 320) kept lam 1 and were at 1e-6 by the
+fourth step. The script's own path from here is up to 11 more steps (--it_max 14, about 25 h) to "NOT converged",
+then the midpoint 3.0475 anyway. So:
+1. Stop the lowD_highM.py tree (taskkill /T /F /PID <pid>). Keep every down5.* file as it is.
+2. Rename the stopped pass's checkpoint, so that no later solve at D 3.045 resumes from it (the script renames only its
+   own failures): in ../../choptuik-large-d-raw/T82-win/states, lowDhm_x0.000157-0.975_p1_D3.0450_M320_ckpt.npz to
+   lowDhm_x0.000157-0.975_p1_D3.0450_M320_ckpt_stopped.npz (rename, do not delete).
+3. The 18:23 procedure with the step 0.0025 and the name down25, from T45's progress file again (the leg script takes
+   only a run that stopped on its own rules as its source, and down5 did not):
+  python lowD_highM_leg.py data/lowD_highM/pilot.jsonl.progress.json ../../choptuik-large-d-raw/T82-win/down25.jsonl --targets 3.0475,3.045,3.0425,3.04,3.0375,3.035,3.0325,3.03,3.0275,3.025,3.0225,3.02,3.0175,3.015,3.0125,3.01
+  It must print "M 320/384 (helper 256), last D 3.05, targets [3.0475, 3.045, ..., 3.01], 6 / 1 history states, nodes
+  0.000157..0.975", exit 0. Then the lowD_highM.py command of the task with --dD 0.0025 and every "down." replaced by
+  "down25." (--out .../down25.jsonl, --points .../down25_points.jsonl, log down25.log; --states unchanged).
+  Expect the plan line within a few minutes, "D 3.0475 M 256: plan from start 'predictor' instead: N steps, |F| ...",
+  with |F| well below the 0.26 of the 0.005 step; if it is above 0.1, post it and keep running.
+4. Post the start (the leg check's line and the plan line), then the pilot (the first converged pair, at 3.0475), each
+   converged D, every 12 h, and the end, as the task says; push after each post.
+At your 12 h checks: if a solve at this step also shows lam 0.5 or less on two steps in a row with |F| above 1e-4,
+stop and post (the step would then not be the cause). Otherwise do not halve by hand; the script does.
+Follow-on (this replaces the 23:23 entry's leg 2): when down25 stops on its own rules (the 150 h of wall time will come
+first: a point is 12-30 h, so it reaches about D 3.03), post, then run the leg again from down25.jsonl.progress.json
+into down25b.jsonl with the targets it did not reach and then 3.0075, 3.005, and the same command with "down25b.";
+again (down25c, ...) until D 3.005 or a stop that is not the wall-time one. If a leg check exits non-zero, post its
+output and keep the watcher running.
