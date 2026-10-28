@@ -4,8 +4,9 @@
 //! rate can only be real there. This crate reuses hpkernel's arithmetic, fields, layout (`Ctx`) and LU, and repeats
 //! the parts of `model.rs` where lambda enters with a complex lambda = lr + i li:
 //!
-//! * `Dc`: a value (double-double lanes) with a complex forward-mode tangent (re, im). The background is real, so the
-//!   linearisation is real-linear in the tangent and every rule is the real dual rule applied to re and im separately;
+//! * `Dc` (multidouble's lane, written here first): a value (double-double lanes) with a complex forward-mode tangent
+//!   (re, im). The background is real, so the linearisation is real-linear in the tangent and every rule is the real
+//!   dual rule applied to re and im separately;
 //! * `dtau_c`: d/dtau = omega D, plus lambda (complex) times the tangent: re += lr re - li im, im += lr im + li re;
 //! * `psolve_c` / `horizon_lus_c`: the horizon series' periodic solves (A + lambda) f_d = r_d - kappa_d f_v with
 //!   A = omega D + diag kappa_kk, as the real 2M x 2M system [[A + lr, -li], [li, A + lr]] (li = 0: the M x M solves
@@ -14,8 +15,8 @@
 //!   (model::series_scale), for the default layout (Ctx::horizon_alpha 0; no early series end, which is for f64 lanes);
 //! * `mode_matrix_c`: the (L-1) x (L-1) mode matrix (Delta fixed, no phase row), as hpkernel's `jacobian` with
 //!   `Ctx::lam` set, but complex;
-//! * `clu_logdet`: complex double-double LU with partial pivoting (getf2 order, 8-row lane vectors):
-//!   ln|det| and arg det.
+//! * multidouble's `linalg::clu_logdet` (written here first): complex double-double LU with partial pivoting (getf2
+//!   order, 8-row lane vectors): ln|det| and arg det.
 //!
 //! With li = 0 the matrix equals hpkernel's mode matrix bit for bit (checked by hp/modecount_check.py and
 //! hp/modecount_test_check.py).
@@ -29,18 +30,16 @@
 //! p, m solves it at lambda = 0 (the p, m equations are linear in p, m), so lambda = 0 is a zero.
 //! TEST_MUT, the control, zeroes the tangents of c only: a's response to p, m stays in, and that identity breaks.
 use hpk::dd::DD;
-use hpk::dv::{DotAcc, DV};
+use hpk::dv::DV;
 use hpk::field::{cs, cs_range, cs_w, horner, DMat, FieldSolve, Fl, State};
-use hpk::lane::{BaseLane, Lane};
-use hpk::linalg::{ld_for, DDLu};
+use hpk::lane::{BaseLane, Dc};
+use hpk::linalg::{clu_logdet, ld_for, DDLu};
 use hpk::model::{self as hm, series_scale, Ctx};
-use hpk::simd::Native;
 use numpy::ndarray::Array2;
 use numpy::{IntoPyArray, PyArray1, PyArray2, PyReadonlyArray1, PyReadonlyArray2};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use rayon::prelude::*;
-use std::ops::{Add, Div, Mul, Neg, Sub};
 use std::sync::Arc;
 
 /// `Cx::test`: the full linearisation
@@ -49,151 +48,6 @@ pub const TEST_OFF: u8 = 0;
 pub const TEST_ON: u8 = 1;
 /// `Cx::test`: the control (c tangents zeroed, a's kept)
 pub const TEST_MUT: u8 = 2;
-
-// ---------------------------------------------------------------------------------------------------------------
-// value + complex tangent
-// ---------------------------------------------------------------------------------------------------------------
-#[derive(Clone, Copy, Debug)]
-pub struct Dc {
-    pub v: DV,
-    pub r: DV,
-    pub i: DV,
-}
-
-impl Add for Dc {
-    type Output = Dc;
-    #[inline(always)]
-    fn add(self, o: Dc) -> Dc {
-        Dc { v: self.v + o.v, r: self.r + o.r, i: self.i + o.i }
-    }
-}
-impl Sub for Dc {
-    type Output = Dc;
-    #[inline(always)]
-    fn sub(self, o: Dc) -> Dc {
-        Dc { v: self.v - o.v, r: self.r - o.r, i: self.i - o.i }
-    }
-}
-impl Neg for Dc {
-    type Output = Dc;
-    #[inline(always)]
-    fn neg(self) -> Dc {
-        Dc { v: -self.v, r: -self.r, i: -self.i }
-    }
-}
-impl Mul for Dc {
-    type Output = Dc;
-    #[inline(always)]
-    fn mul(self, o: Dc) -> Dc {
-        let r = DotAcc::zero().add_prod(self.v, o.r).add_prod(self.r, o.v).finish();
-        let i = DotAcc::zero().add_prod(self.v, o.i).add_prod(self.i, o.v).finish();
-        Dc { v: self.v * o.v, r, i }
-    }
-}
-impl Div for Dc {
-    type Output = Dc;
-    #[inline(always)]
-    fn div(self, o: Dc) -> Dc {
-        let q = self.v / o.v;
-        Dc { v: q, r: (self.r - q * o.r) / o.v, i: (self.i - q * o.i) / o.v }
-    }
-}
-
-impl BaseLane for Dc {
-    type S = Native;
-    type Acc = (DotAcc, DotAcc, DotAcc);
-    const TANGENT: bool = true;
-    #[inline(always)]
-    fn zero() -> Self {
-        Dc { v: DV::zero(), r: DV::zero(), i: DV::zero() }
-    }
-    #[inline(always)]
-    fn cst(c: DV) -> Self {
-        Dc { v: c, r: DV::zero(), i: DV::zero() }
-    }
-    #[inline(always)]
-    fn mulc(self, c: DV) -> Self {
-        Dc { v: self.v * c, r: self.r * c, i: self.i * c }
-    }
-    #[inline(always)]
-    fn mulf(self, s: f64) -> Self {
-        Dc { v: self.v.mul_f(s), r: self.r.mul_f(s), i: self.i.mul_f(s) }
-    }
-    #[inline(always)]
-    fn mul_pwr2(self, s: f64) -> Self {
-        Dc { v: self.v.mul_pwr2(s), r: self.r.mul_pwr2(s), i: self.i.mul_pwr2(s) }
-    }
-    #[inline(always)]
-    fn addc(self, c: DV) -> Self {
-        Dc { v: self.v + c, r: self.r, i: self.i }
-    }
-    #[inline(always)]
-    fn bcast(self, j: usize) -> Self {
-        Dc { v: self.v.bcast(j), r: self.r.bcast(j), i: self.i.bcast(j) }
-    }
-    #[inline(always)]
-    fn val(self) -> DV {
-        self.v
-    }
-    /// real part of the tangent (the generic helpers that use it are not called with Dc)
-    #[inline(always)]
-    fn tan(self) -> DV {
-        self.r
-    }
-    #[inline(always)]
-    fn from_vt(v: DV, t: DV) -> Self {
-        Dc { v, r: t, i: DV::zero() }
-    }
-    #[inline(always)]
-    fn acc0() -> Self::Acc {
-        (DotAcc::zero(), DotAcc::zero(), DotAcc::zero())
-    }
-    #[inline(always)]
-    fn acc(a: Self::Acc, x: Self, y: Self) -> Self::Acc {
-        (
-            a.0.add_prod(x.v, y.v),
-            a.1.add_prod(x.v, y.r).add_prod(x.r, y.v),
-            a.2.add_prod(x.v, y.i).add_prod(x.i, y.v),
-        )
-    }
-    #[inline(always)]
-    fn accc(a: Self::Acc, x: Self, c: DV) -> Self::Acc {
-        (a.0.add_prod(x.v, c), a.1.add_prod(x.r, c), a.2.add_prod(x.i, c))
-    }
-    #[inline(always)]
-    fn acc1(a: Self::Acc, x: Self) -> Self::Acc {
-        (a.0.add(x.v), a.1.add(x.r), a.2.add(x.i))
-    }
-    #[inline(always)]
-    fn fin(a: Self::Acc) -> Self {
-        Dc { v: a.0.finish(), r: a.1.finish(), i: a.2.finish() }
-    }
-}
-
-impl hpk::lane::MatLane for Dc {}
-impl Lane for Dc {}
-
-fn tan_re<const B: usize>(x: &Fl<Dc, B>) -> Fl<DV, B> {
-    let mut r = [DV::zero(); B];
-    for b in 0..B {
-        r[b] = x.0[b].r;
-    }
-    Fl(r)
-}
-fn tan_im<const B: usize>(x: &Fl<Dc, B>) -> Fl<DV, B> {
-    let mut r = [DV::zero(); B];
-    for b in 0..B {
-        r[b] = x.0[b].i;
-    }
-    Fl(r)
-}
-fn from_vri<const B: usize>(v: &Fl<DV, B>, re: &Fl<DV, B>, im: &Fl<DV, B>) -> Fl<Dc, B> {
-    let mut r = [Dc::zero(); B];
-    for b in 0..B {
-        r[b] = Dc { v: v.0[b], r: re.0[b], i: im.0[b] };
-    }
-    Fl(r)
-}
 
 /// The layout (hpkernel's Ctx), the complex growth rate and the sector (TEST_*).
 pub struct Cx<'a, const B: usize> {
@@ -506,11 +360,11 @@ impl HLus {
 fn psolve_c<const B: usize>(h: &HLus, kk: usize, kappa: &Fl<Dc, B>, rhs: &Fl<Dc, B>) -> Fl<Dc, B> {
     let m = 8 * B;
     let fv = h.lus[kk].solve_lanes(&rhs.val());
-    let rr = tan_re(rhs) - tan_re(kappa) * fv;
-    let ri = tan_im(rhs) - tan_im(kappa) * fv;
+    let rr = rhs.tan_re() - kappa.tan_re() * fv;
+    let ri = rhs.tan_im() - kappa.tan_im() * fv;
     if h.lus2.is_empty() {
         let lu_t = if h.lus_t.is_empty() { &h.lus[kk] } else { &h.lus_t[kk] };
-        return from_vri(&fv, &lu_t.solve_lanes(&rr), &lu_t.solve_lanes(&ri));
+        return Fl::from_vri(&fv, &lu_t.solve_lanes(&rr), &lu_t.solve_lanes(&ri));
     }
     let mut hh = vec![0.0; m];
     let mut ll = vec![0.0; m];
@@ -534,7 +388,7 @@ fn psolve_c<const B: usize>(h: &HLus, kk: usize, kappa: &Fl<Dc, B>, rhs: &Fl<Dc,
         ll[i] = b[i + m].lo;
     }
     let fi = Fl::<DV, B>::load(&hh, &ll);
-    from_vri(&fv, &fr, &fi)
+    Fl::from_vri(&fv, &fr, &fi)
 }
 
 fn horizon_series_c<const B: usize>(cx: &Cx<B>, m0: &Fl<Dc, B>, a0: &Fl<Dc, B>, omega: Dc, hl: &HLus) -> [Vec<Fl<Dc, B>>; 4] {
@@ -692,14 +546,14 @@ pub fn mode_matrix_c<const B: usize>(cx: &Cx<B>, zh: &[f64], zl: &[f64], par: bo
                     th[j] = 1.0;
                     t = Fl::load(&th, &tl);
                 }
-                from_vri(&v, &t, &Fl::<DV, B>::zero())
+                Fl::from_vri(&v, &t, &Fl::<DV, B>::zero())
             })
             .collect();
         let d = Dc::cst(DV::splat(delta));
         let s = block_state_c(cx, b, &inp, d, &hl);
         let mut out = Vec::with_capacity(4 * m);
         for q in 0..4 {
-            let (mut tr, mut ti) = (tan_re(&s[q]), tan_im(&s[q]));
+            let (mut tr, mut ti) = (s[q].tan_re(), s[q].tan_im());
             if let (true, 0, Some((lo, _))) = (b == ctx.k(), q, &ctx.freeze) {
                 tr = lo.apply(&tr);
                 ti = lo.apply(&ti);
@@ -785,141 +639,6 @@ pub fn test_matrix_c<const B: usize>(cx: &Cx<B>, zh: &[f64], zl: &[f64], par: bo
     Ok((a, b, c, d, ldp))
 }
 
-
-// ---------------------------------------------------------------------------------------------------------------
-// complex double-double LU
-// ---------------------------------------------------------------------------------------------------------------
-#[inline(always)]
-fn dd_at(h: &[f64], l: &[f64], i: usize) -> DD {
-    DD { hi: h[i], lo: l[i] }
-}
-
-/// ln|det| and arg det (in (-pi, pi]) of the complex n x n matrix (column-major, leading dimension ld, ld % 8 == 0,
-/// padding rows zero) by LU with partial pivoting; also min and max |u_kk| and the number of row interchanges.
-#[allow(clippy::type_complexity)]
-pub fn clu_logdet(n: usize, ld: usize, mut rh: Vec<f64>, mut rl: Vec<f64>, mut ih: Vec<f64>, mut il: Vec<f64>, par: bool) -> Result<(f64, f64, f64, f64), String> {
-    assert!(ld % 8 == 0 && ld >= n);
-    let mut la = 0.0f64;
-    let mut arg = 0.0f64;
-    let mut pmin = f64::INFINITY;
-    let mut pmax = 0.0f64;
-    let mut lrh = vec![0.0f64; ld];
-    let mut lrl = vec![0.0f64; ld];
-    let mut lih = vec![0.0f64; ld];
-    let mut lil = vec![0.0f64; ld];
-    for k in 0..n {
-        let ck = k * ld;
-        let mut p = k;
-        let mut best = -1.0f64;
-        for i in k..n {
-            let v = rh[ck + i].hypot(ih[ck + i]);
-            if v > best {
-                best = v;
-                p = i;
-            }
-        }
-        if best == 0.0 || !best.is_finite() {
-            return Err(format!("singular or non-finite pivot at column {k} ({best})"));
-        }
-        if p != k {
-            for j in 0..n {
-                rh.swap(j * ld + k, j * ld + p);
-                rl.swap(j * ld + k, j * ld + p);
-                ih.swap(j * ld + k, j * ld + p);
-                il.swap(j * ld + k, j * ld + p);
-            }
-            arg += std::f64::consts::PI;
-        }
-        let ur = dd_at(&rh, &rl, ck + k);
-        let ui = dd_at(&ih, &il, ck + k);
-        let mag = (ur.hi + ur.lo).hypot(ui.hi + ui.lo);
-        // |u| to double-double accuracy is not needed for ln|u| beyond f64; the phase likewise
-        la += mag.ln();
-        arg += (ui.hi + ui.lo).atan2(ur.hi + ur.lo);
-        pmin = pmin.min(mag);
-        pmax = pmax.max(mag);
-        if k + 1 == n {
-            break;
-        }
-        // 1/u = conj(u) / |u|^2
-        let den = ur * ur + ui * ui;
-        let vr = ur / den;
-        let vi = -(ui / den);
-        for i in k + 1..n {
-            let ar = dd_at(&rh, &rl, ck + i);
-            let ai = dd_at(&ih, &il, ck + i);
-            let xr = ar * vr - ai * vi;
-            let xi = ar * vi + ai * vr;
-            rh[ck + i] = xr.hi;
-            rl[ck + i] = xr.lo;
-            ih[ck + i] = xi.hi;
-            il[ck + i] = xi.lo;
-        }
-        let r0 = 8 * ((k + 1) / 8);
-        for i in r0..ld {
-            if i > k && i < n {
-                lrh[i] = rh[ck + i];
-                lrl[i] = rl[ck + i];
-                lih[i] = ih[ck + i];
-                lil[i] = il[ck + i];
-            } else {
-                lrh[i] = 0.0;
-                lrl[i] = 0.0;
-                lih[i] = 0.0;
-                lil[i] = 0.0;
-            }
-        }
-        let ncols = n - k - 1;
-        let (_, arh) = rh.split_at_mut((k + 1) * ld);
-        let (_, arl) = rl.split_at_mut((k + 1) * ld);
-        let (_, aih) = ih.split_at_mut((k + 1) * ld);
-        let (_, ail) = il.split_at_mut((k + 1) * ld);
-        let upd = |(((ch, cl), dh), dl): (((&mut [f64], &mut [f64]), &mut [f64]), &mut [f64])| {
-            let tr = DD { hi: ch[k], lo: cl[k] };
-            let ti = DD { hi: dh[k], lo: dl[k] };
-            if tr.hi == 0.0 && ti.hi == 0.0 {
-                return;
-            }
-            let ntr = DV::splat(-tr);
-            let nti = DV::splat(-ti);
-            let pti = DV::splat(ti);
-            let mut i = r0;
-            while i < ld {
-                let ar = DV::load(&ch[i..i + 8], &cl[i..i + 8]);
-                let ai = DV::load(&dh[i..i + 8], &dl[i..i + 8]);
-                let lr = DV::load(&lrh[i..i + 8], &lrl[i..i + 8]);
-                let li = DV::load(&lih[i..i + 8], &lil[i..i + 8]);
-                // a -= l t:  re: ar - lr tr + li ti,  im: ai - lr ti - li tr
-                let nr = DotAcc::zero().add(ar).add_prod(lr, ntr).add_prod(li, pti).finish();
-                let ni = DotAcc::zero().add(ai).add_prod(lr, nti).add_prod(li, ntr).finish();
-                nr.store(&mut ch[i..i + 8], &mut cl[i..i + 8]);
-                ni.store(&mut dh[i..i + 8], &mut dl[i..i + 8]);
-                i += 8;
-            }
-        };
-        if par && ncols * (ld - r0) > 32768 {
-            arh[..ncols * ld]
-                .par_chunks_mut(ld)
-                .zip(arl[..ncols * ld].par_chunks_mut(ld))
-                .zip(aih[..ncols * ld].par_chunks_mut(ld))
-                .zip(ail[..ncols * ld].par_chunks_mut(ld))
-                .for_each(upd);
-        } else {
-            arh[..ncols * ld]
-                .chunks_mut(ld)
-                .zip(arl[..ncols * ld].chunks_mut(ld))
-                .zip(aih[..ncols * ld].chunks_mut(ld))
-                .zip(ail[..ncols * ld].chunks_mut(ld))
-                .for_each(upd);
-        }
-    }
-    let two_pi = 2.0 * std::f64::consts::PI;
-    let mut a = arg.rem_euclid(two_pi);
-    if a > std::f64::consts::PI {
-        a -= two_pi;
-    }
-    Ok((la, a, pmin, pmax))
-}
 
 // ---------------------------------------------------------------------------------------------------------------
 // Python bindings

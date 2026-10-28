@@ -1,8 +1,9 @@
 # Mixed-precision Newton for the double-double solver (`hp/`)
 
 > The lane types, `v8.rs` and `linalg.rs` named below now live in the crate
-> [multidouble](https://github.com/nmoinvaz/multidouble) (crates.io, version in `hp/Cargo.toml`; the lane types on the compile-time backend, `multidouble::native`). hp keeps its `Lane` trait in
-> `hp/src/lane.rs` (the D-matrix products) and the many-right-hand-side solves in `hp/src/field.rs` (`FieldSolve`).
+> [multidouble](https://github.com/nmoinvaz/multidouble) (crates.io, version in `hp/Cargo.toml`; the lane types on the compile-time backend, `multidouble::native`), as do the
+> D-matrix products, the many-right-hand-side solves (`FieldSolve`) and the early end of the series (`TangentTail`); hp keeps only its `Lane` trait in
+> `hp/src/lane.rs`, which every multidouble lane type on that backend implements.
 
 A Newton step of the double-double DSS solver spent 96% of its time in the exact Jacobian (forward-mode duals over
 double-double, one Taylor integration per column; `hp/data/profile_newton.log`). The mixed-precision step keeps the
@@ -51,7 +52,7 @@ results as before (section 4.1).
     which is an f64 LU of the same matrices.
   - The Cauchy sums (`field::cs*`). For the f64 lanes the B lane vectors' accumulations are interleaved, because a
     single chain of f64 FMAs is latency-bound. Each lane vector still sums its terms in the same order.
-  - The centre and horizon series stop early for f64 tangents (`Tail` in `model.rs`). They stop once the tangent
+  - The centre and horizon series stop early for f64 tangents (multidouble's `TangentTail`, used in `model.rs`). They stop once the tangent
     terms max |c_k| r^k of four consecutive orders are all below 2⁻⁶⁰ of the largest so far (r the evaluation
     radius, k ≥ 8). The saved states' orders kc = 100 and ks = 250 are set for double-double values; the f64 tangents
     need 30–40 and 50–60 of them (section 3, "orders"). The horizon block is 35% of the double-double Jacobian's time

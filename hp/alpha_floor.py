@@ -36,7 +36,7 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from hpkernel.driver import dd_add, load, make_solver  # noqa: E402
+from hpkernel.driver import dd_add, dd_norm, load, make_solver  # noqa: E402
 
 EPS_DD = 2.0 ** -106
 
@@ -46,10 +46,6 @@ def states():
     for p in glob.glob(os.path.join(HERE, "data", "states", "up*_D*.npz")):
         out[float(re.search(r"_D([0-9.]+)\.npz$", p).group(1))] = p
     return out
-
-
-def fmax(Fh, Fl):
-    return float(np.max(np.abs(np.asarray(Fh) + np.asarray(Fl))))
 
 
 def run(path, mode, its, threads):
@@ -69,13 +65,13 @@ def run(path, mode, its, threads):
     t = time.time()
     for it in range(its):
         dh, dl, Fh, Fl, _, _ = s.newton(zh, zl)
-        hist.append(fmax(Fh, Fl))
+        hist.append(dd_norm(Fh, Fl))
         if it >= 1:
             ddel.append(abs(float(dh[-1]) + float(dl[-1])))
         zh, zl = dd_add(zh, zl, np.asarray(dh), np.asarray(dl))
         zh, zl = np.asarray(zh), np.asarray(zl)
     Fh, Fl = s.residual(zh, zl)
-    hist.append(fmax(Fh, Fl))
+    hist.append(dd_norm(Fh, Fl))
     n = m["D"] - 2
     xm = m["nodes"][-1]
     return dict(D=m["D"], M=m["M"], mode=mode, xm=xm, G=xm ** -(n - 1), predicted_floor=2.5 * EPS_DD * xm ** -(n - 1),

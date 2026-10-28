@@ -42,7 +42,7 @@ and 0 (the default) changes nothing (§6). The flags are the candidate fixes the
 | flag | what is double-double |
 |---|---|
 | 1 `HDD_SOLVE` | the horizon series' periodic solves (`psolve`), value and tangents, with the full double-double LU factors (the f64 path uses their hi parts) |
-| 2 `HDD_NOTAIL` | nothing; the horizon series of the f64 tangents runs to ks instead of stopping at 2⁻⁶⁰ (`Tail`) |
+| 2 `HDD_NOTAIL` | nothing; the horizon series of the f64 tangents runs to ks instead of stopping at 2⁻⁶⁰ (`TangentTail`) |
 | 8 `HDD_LASTSEG` | the last segment's columns (block K − 1): `Du` lanes, rounded to f64 |
 | 16 `HDD_DTN` | the horizon block on a double-double base trajectory (`Dtn<4>`, f64 tangents); 17 adds the solves |
 | 4 `HDD_BLOCK` | the horizon block's columns (m_h, a_h, Δ): `Du` lanes, i.e. the double-double Jacobian's columns, rounded to f64 |
@@ -468,7 +468,7 @@ Everything new is opt-in: `horizon_dd=0`, `Solver.jvp` and `step_timing` are new
    reached 414 by D = 27, in the unfrozen junk-accepted run); it never lowers it. Lowering it is the cheapest speedup
    of the double-double path at large D and changes no number; proposed for the coordinator. It also matters for the
    comparisons here: the double-double times at large D in §4 (as the scan ran, kc = 420) are about 3 times what they
-   need to be, while the f64 Jacobian stops its series by itself (`Tail`).
+   need to be, while the f64 Jacobian stops its series by itself (`TangentTail`).
 3. **Rounding amplification reaches the double-double Jacobian.** The dual pass is not exactly linear in its tangent
    at large D (§2): J(v₁ + v₂) − J v₁ − J v₂ is 10⁻²⁸ (D = 20) and 1.3×10⁻²⁶ (D = 50) of (|J| |v|), and a tangent on two
    columns differs from the sum of the two columns by up to 7×10⁻²³ of their size at D = 50. So the double-double

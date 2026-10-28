@@ -10,7 +10,7 @@ Solver.jacobian at the D = 3.7 states (solver settings from the state's meta), p
   M         M = 16 and 32 (the M = 48 state resampled) and 48, 64, 80 (their own states), f64x4 and dd4;
   orders    M = 48: the horizon block's error with the horizon series order ks lowered from the state's 250, and the
             centre block's with the centre order kc lowered from 100 (the f64 tangents need far fewer orders; the
-            f64 lanes stop the series by themselves once the tangent terms are below f64 rounding, model.rs Tail).
+            f64 lanes stop the series by themselves once the tangent terms are below f64 rounding, multidouble's TangentTail).
 
     cd hp && python3 mixed_diag.py [steps] [harmonics] [M] [orders]      (all sections by default; ~3 min on 2 cores)
 """

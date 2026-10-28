@@ -15,7 +15,7 @@
 //! K-1; and a phase row (sum_j w_j p1_j). All in physical values on the grid.
 use crate::dd::DD;
 use crate::dv::DV;
-use crate::field::{cs, cs_range, cs_w, horner, DMat, Fl, State};
+use crate::field::{cs, cs_range, cs_w, horner, DMat, Fl, State, TangentTail};
 use crate::lane::{BaseLane, Dtn, Du, F8, Fu, Fun, Lane};
 use crate::field::FieldSolve;
 use crate::linalg::{ld_for, DDLu};
@@ -74,11 +74,11 @@ pub const HDD_SOLVE: u8 = 1;
 pub const QD_MUT_NOREFINE: u8 = 7;
 /// `Ctx::mutate` for the quad-double lanes: four refinement steps, the reference of the refinement's convergence check
 pub const QD_MUT_REFINE4: u8 = 8;
-/// refinement steps of a horizon solve in the QD_SOLVE lanes: the double-double LU solves to about eps_dd times the
+/// refinement steps of a horizon solve in the quad-double lanes (VAL_QD): the double-double LU solves to about eps_dd times the
 /// condition number (pivots 1e-3..1e2), so two steps reach quad-double; a tangent lane takes one more, as its first
 /// solve ignores the derivative of the system
 const QD_REFINE: usize = 2;
-/// `Ctx::f64_dd`: no early end of the horizon series for f64 tangents (`Tail`); the series runs to ks
+/// `Ctx::f64_dd`: no early end of the horizon series for f64 tangents (`TangentTail`); the series runs to ks
 pub const HDD_NOTAIL: u8 = 2;
 /// `Ctx::f64_dd`: the horizon block's column tasks (m_h, a_h, Delta) with `Du` lanes, i.e. the double-double
 /// Jacobian's columns of that block, rounded to f64
@@ -89,7 +89,7 @@ pub const HDD_LASTSEG: u8 = 8;
 /// tangents); with HDD_SOLVE also the tangent solves in double-double
 pub const HDD_DTN: u8 = 16;
 /// `Ctx::f64_dd`, for the double-double tangent lanes (`Du`) of `jvp`: the centre and horizon series stop once their
-/// tangent terms are below double-double resolution (`Tail` with TAIL_TOL_DD), instead of running to kc and ks. The
+/// tangent terms are below double-double resolution (`TangentTail` with TAIL_TOL_DD), instead of running to kc and ks. The
 /// scan's kc = 420 at large D is far past that (the centre series' terms fall to 1e-134 at D = 50), and the centre
 /// series is most of a product's cost there.
 pub const HDD_DU_CUT: u8 = 32;
@@ -190,81 +190,40 @@ fn dtau<T: Lane, const B: usize>(ctx: &Ctx<B>, x: &Fl<T, B>, omega: T) -> Fl<T, 
 }
 
 /// Early end of the centre and horizon series for the f64-tangent lanes (a Jacobian in f64 needs their terms only
-/// to the f64 rounding level, and the series orders kc, ks are set for double-double values): the series stops after
-/// order k once the tangent terms max |c_k| r^k (r the evaluation radius, over the four fields, all lanes and
-/// tangents) of TAIL_RUN consecutive orders are all below TAIL_TOL times the largest tangent term so far, k >=
-/// TAIL_MIN. The dropped tail is then below the rounding of an f64 sum (checked against the double-double Jacobian
-/// by hp/mixed_check.py). The double-double lanes never stop early.
-struct Tail {
-    rk: f64,
-    r: f64,
-    big: f64,
-    run: usize,
-}
-
+/// to the f64 rounding level, and the series orders kc, ks are set for double-double values): multidouble's
+/// `TangentTail`, which stops a series after order k once the tangent terms max |c_k| r^k (r the evaluation radius,
+/// over the four fields, all lanes and tangents) of TAIL_RUN consecutive orders are all below TAIL_TOL times the
+/// largest tangent term so far, k >= TAIL_MIN. The dropped tail is then below the rounding of an f64 sum (checked
+/// against the double-double Jacobian by hp/mixed_check.py). The double-double lanes never stop early, unless
+/// HDD_DU_CUT asks (TAIL_TOL_DD).
 const TAIL_TOL: f64 = 8.673617379884035e-19; // 2^-60
 /// the cut of HDD_DU_CUT (double-double tangents)
 const TAIL_TOL_DD: f64 = 7.703719777548943e-34; // 2^-110
 const TAIL_RUN: usize = 4;
 const TAIL_MIN: usize = 8;
 
-impl Tail {
-    fn new(r: f64) -> Tail {
-        Tail { rk: 1.0, r, big: 0.0, run: 0 }
-    }
-    /// whether the series of lane type T stops early under ctx: f64 tangents always (TAIL_TOL), double-double
-    /// tangents with HDD_DU_CUT (TAIL_TOL_DD)
-    fn active<T: Lane, const B: usize>(ctx: &Ctx<B>) -> bool {
-        T::TAN_F64 || (T::TANGENT && ctx.f64_dd & HDD_DU_CUT != 0)
-    }
-    /// record order k as `done`, for the lanes `active` allows
-    fn done_any<T: Lane, const B: usize>(&mut self, k: usize, f: [&Fl<T, B>; 4]) -> bool {
-        if T::TAN_F64 {
-            return self.done(k, f);
-        }
-        let mut a = 0.0f64;
-        for x in f {
-            for b in 0..B {
-                a = a.max(x.0[b].tan().hi.abs().hmax());
-            }
-        }
-        let t = a * self.rk;
-        self.rk *= self.r;
-        self.big = self.big.max(t);
-        self.run = if t <= TAIL_TOL_DD * self.big { self.run + 1 } else { 0 };
-        self.big > 0.0 && k >= TAIL_MIN && self.run >= TAIL_RUN
-    }
-    /// record order k (called for k = 0, 1, 2, ... in turn); true when the series may stop after it
-    fn done<T: Lane, const B: usize>(&mut self, k: usize, f: [&Fl<T, B>; 4]) -> bool {
-        let mut a = 0.0f64;
-        for x in f {
-            for b in 0..B {
-                for t in 0..T::NT {
-                    a = a.max(x.0[b].tan64(t).abs().hmax());
-                }
-            }
-        }
-        let t = a * self.rk;
-        self.rk *= self.r;
-        self.big = self.big.max(t);
-        self.run = if t <= TAIL_TOL * self.big { self.run + 1 } else { 0 };
-        self.big > 0.0 && k >= TAIL_MIN && self.run >= TAIL_RUN
-    }
+/// whether the series of lane type T stop early under ctx: f64 tangents always (TAIL_TOL), double-double tangents
+/// with HDD_DU_CUT (TAIL_TOL_DD)
+fn tail_active<T: Lane, const B: usize>(ctx: &Ctx<B>) -> bool {
+    T::TAN_F64 || (T::TANGENT && ctx.f64_dd & HDD_DU_CUT != 0)
+}
+
+/// the tail monitor of lane type T for a series evaluated at radius r (in the scaled variable)
+fn tail_of<T: Lane>(r: f64) -> TangentTail {
+    TangentTail::new(r, if T::TAN_F64 { TAIL_TOL } else { TAIL_TOL_DD }, TAIL_RUN, TAIL_MIN)
 }
 
 // ---------------------------------------------------------------------------------------------------------------
 // centre series (regular centre), evaluated at nodes[0]
 // ---------------------------------------------------------------------------------------------------------------
-/// The power of two nearest to x (x > 0): the series below are computed in the scaled variable x / series_scale(x0)
+/// The power of two nearest to x (x > 0; multidouble's `pow2_near`): the series below are computed in the scaled
+/// variable x / series_scale(x0)
 /// (u / series_scale(u0) at the horizon), so that their coefficients c_k sigma^k stay near the evaluation radius's
 /// scale instead of growing like r^-k, which overflows the f64 exponent range (and the f64 Jacobian's tangents first)
 /// when r is small and the order high (r ~ 1e-3 at 100 orders: 1e300). Scaling by a power of two is exact in binary
 /// floating point, so the values agree bit for bit with the unscaled recursion wherever that one neither overflows nor
 /// underflows (notes/HIGH_M.md 9.5).
-pub fn series_scale(x: f64) -> f64 {
-    debug_assert!(x > 0.0 && x.is_finite());
-    2f64.powi(x.log2().round() as i32)
-}
+pub use multidouble::dd::pow2_near as series_scale;
 
 /// Centre-series coefficients of p, m, a, c in the scaled variable x / sigma, sigma = series_scale(nodes[0]): entry k
 /// is c_k sigma^k (multiply by sigma^-k for the coefficients in x).
@@ -287,11 +246,11 @@ pub fn centre_series<T: Lane, const B: usize>(ctx: &Ctx<B>, p1: &Fl<T, B>, c0: &
     mm[1] = -pp[1];
     a2[0] = aa[0] * aa[0];
     let invc = Fl::<T, B>::splat(DD::ONE) / cc[0];
-    let mut tail = Tail::new(ctx.nodes[0] / sig);
-    let cut = Tail::active::<T, B>(ctx);
+    let mut tail = tail_of::<T>(ctx.nodes[0] / sig);
+    let cut = tail_active::<T, B>(ctx);
     if cut {
-        tail.done_any(0, [&pp[0], &mm[0], &aa[0], &cc[0]]);
-        tail.done_any(1, [&pp[1], &mm[1], &aa[1], &cc[1]]);
+        tail.done(0, &[&pp[0], &mm[0], &aa[0], &cc[0]]);
+        tail.done(1, &[&pp[1], &mm[1], &aa[1], &cc[1]]);
     }
     for k in 2..=kmax {
         let kf = k as f64;
@@ -326,7 +285,7 @@ pub fn centre_series<T: Lane, const B: usize>(ctx: &Ctx<B>, p1: &Fl<T, B>, c0: &
         let idel = DD::ONE / (-(DD::from_f64(kf - 1.0) * (DD::from_f64(kf - 1.0) + n)));
         pp[k] = ((r4.muls(mu12) - r3.muls(mu22)) * invc).muls(idel);
         mm[k] = ((r3.muls(mu21) - r4.muls(mu11)) * invc).muls(idel);
-        if cut && tail.done_any(k, [&pp[k], &mm[k], &aa[k], &cc[k]]) {
+        if cut && tail.done(k, &[&pp[k], &mm[k], &aa[k], &cc[k]]) {
             for v in [&mut pp, &mut mm, &mut aa, &mut cc] {
                 v.truncate(k + 1);
             }
@@ -524,37 +483,21 @@ pub fn horizon_lus<const B: usize>(ctx: &Ctx<B>, a0: &Fl<DV, B>, delta: DD, par:
     }
 }
 
-/// f64 tangent k of a field (TAN_F64 lanes) as an f64 field
-#[inline(always)]
-fn tan_f8<T: Lane, const B: usize>(x: &Fl<T, B>, k: usize) -> Fl<F8, B> {
-    let mut r = [multidouble::dual::F8(crate::v8::V8::zero()); B];
-    for b in 0..B {
-        r[b] = multidouble::dual::F8(x.0[b].tan64(k));
-    }
-    Fl(r)
-}
-
 /// (omega D + diag kappa) f = r with the LU at the values; for tangents the derivative of the system:
 /// A_t f_d = r_d - omega_d D f_v - kappa_d f_v, with A_t = A + lam (lu_t; the same LU when lam = 0).
 fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, lu: &DDLu, lu_t: &DDLu, kappa: &Fl<T, B>, rhs: &Fl<T, B>, omega: T) -> Fl<T, B> {
-    if T::QD_SOLVE {
+    if T::VAL_QD {
         // the LU was factored at the double-double a_h and Delta; the refinement solves the lane's own system (omega
         // and kappa from the quad-double a_h and Delta), its residual formed in the lane's precision (iterative
-        // refinement with the residual in higher precision: Moler, J. ACM 14 (1967) 316, doi:10.1145/321386.321394).
-        // A tangent lane's residual is that of the differentiated system, so value and tangent refine together.
-        let z = Fl::<DV, B>::zero();
-        let tsolve = |r: &Fl<T, B>| if T::TANGENT { lu_t.solve_lanes(&r.tan()) } else { z };
-        let mut f = Fl::<T, B>::from_vt(&lu.solve_lanes(&rhs.val()), &tsolve(rhs));
+        // refinement with the residual in higher precision: Moler, J. ACM 14 (1967) 316, doi:10.1145/321386.321394),
+        // value and tangent together (multidouble's solve_lanes_refine_t: a tangent lane's residual is that of the
+        // differentiated system, solved with lu_t).
         let steps = match ctx.mutate {
             QD_MUT_NOREFINE => 0,
             QD_MUT_REFINE4 => 4,
             _ => QD_REFINE + T::TANGENT as usize,
         };
-        for _ in 0..steps {
-            let res = *rhs - (ctx.d.apply(&f).mul_t(omega) + *kappa * f);
-            f = f + Fl::<T, B>::from_vt(&lu.solve_lanes(&res.val()), &tsolve(&res));
-        }
-        return f;
+        return lu.solve_lanes_refine_t(lu_t, rhs, steps, |f| *rhs - (ctx.d.apply(f).mul_t(omega) + *kappa * *f));
     }
     if T::VAL_F64 || T::TAN_F64 {
         // f64 values: the value solve in plain f64 with the hi parts of the double-double LU factors; f64 tangents:
@@ -571,9 +514,9 @@ fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, lu: &DDLu, lu_t: &DDLu, kappa: 
         let dfv = ctx.d.apply(&fv8);
         for k in 0..T::NT {
             let od = multidouble::dual::F8(omega.tan64(k));
-            let mut r = tan_f8(rhs, k) - dfv.mul_t(od);
+            let mut r = rhs.tan64(k) - dfv.mul_t(od);
             if ctx.mutate != 3 {
-                r = r - tan_f8(kappa, k) * fv8;
+                r = r - kappa.tan64(k) * fv8;
             }
             let fd = if dds { lu_t.solve_lanes(&r.val()) } else { lu_t.solve_lanes_hi(&r.val()) };
             for b in 0..B {
@@ -658,8 +601,8 @@ pub fn horizon_series<T: Lane, const B: usize>(
     ww[0] = wfun(&cc, 0);
     zc[0] = zfun(&cc, 0);
     let izc0 = one / zc[0];
-    let mut tail = Tail::new(ctx.u0().hi * isig);
-    let cut = Tail::active::<T, B>(ctx) && ctx.f64_dd & HDD_NOTAIL == 0;
+    let mut tail = tail_of::<T>(ctx.u0().hi * isig);
+    let cut = tail_active::<T, B>(ctx) && ctx.f64_dd & HDD_NOTAIL == 0;
     let mut last = ks;
     // In the scaled variable each term of the order-kk equations carries sigma^kk: a coefficient of order kk + 1 made
     // from order-kk terms gains sigma, a term of index sum kk - 1 gains sigma, one of index sum kk + 1 loses it.
@@ -689,7 +632,7 @@ pub fn horizon_series<T: Lane, const B: usize>(
         pp[kk] = psolve(ctx, &lus[kk], &lus_t[kk], &kappa, &(-r), omega);
         dp[kk] = dtau(ctx, &pp[kk], omega);
         q2[kk] = cs(&pp, &pp, kk) + cs(&mm, &mm, kk);
-        if kk == ks || (cut && tail.done_any(kk, [&pp[kk], &mm[kk], &aa[kk], &cc[kk]])) {
+        if kk == ks || (cut && tail.done(kk, &[&pp[kk], &mm[kk], &aa[kk], &cc[kk]])) {
             last = kk;
             break;
         }

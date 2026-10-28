@@ -1100,39 +1100,17 @@ impl Solver {
     }
 }
 
-/// the SIMD backend this kernel was compiled for (multidouble's compile-time backend; the generic double-double
-/// functions dd_op and dd_solve moved to multidouble's Python package)
+/// the SIMD backend this kernel was compiled for (multidouble's compile-time backend; the generic functions dd_op,
+/// dd_solve and qd_axpy are multidouble's Python package's)
 #[pyfunction]
 fn isa() -> &'static str {
     V8::ISA
-}
-
-/// y + a x elementwise in quad-double (qsolve::qd_axpy), each vector in four parts: (y0, y1, y2, y3)
-#[pyfunction]
-#[allow(clippy::too_many_arguments, clippy::type_complexity)]
-fn qd_axpy<'py>(
-    py: Python<'py>,
-    a: f64,
-    x0: PyReadonlyArray1<'py, f64>,
-    x1: PyReadonlyArray1<'py, f64>,
-    x2: PyReadonlyArray1<'py, f64>,
-    x3: PyReadonlyArray1<'py, f64>,
-    y0: PyReadonlyArray1<'py, f64>,
-    y1: PyReadonlyArray1<'py, f64>,
-    y2: PyReadonlyArray1<'py, f64>,
-    y3: PyReadonlyArray1<'py, f64>,
-) -> PyResult<(A1<'py>, A1<'py>, A1<'py>, A1<'py>)> {
-    let n = slice(&y0, "y0")?.len();
-    let x = parts4([&x0, &x1, &x2, &x3], n)?;
-    let y = parts4([&y0, &y1, &y2, &y3], n)?;
-    Ok(arr4(py, qsolve::qd_axpy(a, x, y)))
 }
 
 #[pymodule]
 fn _hpkernel(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Solver>()?;
     m.add_function(wrap_pyfunction!(isa, m)?)?;
-    m.add_function(wrap_pyfunction!(qd_axpy, m)?)?;
     let _ = <DV as crate::lane::BaseLane>::TANGENT;
     Ok(())
 }

@@ -11,7 +11,6 @@
 use crate::dd::DD;
 use crate::dv::{DotAcc, DV};
 use crate::field::{DMat, FieldSolve, Fl, State};
-use crate::lane::Lane;
 use multidouble::dual::{take_counts, Counted, COUNTED_OPS};
 use crate::model::{block_state, centre_state, horizon_lus, residual, taylor_path, Ctx, TWork};
 use crate::qd::QD;
@@ -27,8 +26,6 @@ use std::time::Instant;
 const NC: usize = COUNTED_OPS.len();
 const CNAMES: [&str; NC] = COUNTED_OPS;
 type CDV = Counted<DV>;
-
-impl Lane for CDV {}
 
 // -------------------------------------------------------------------------------------------------------------
 // a small synthetic context (M = 8)
