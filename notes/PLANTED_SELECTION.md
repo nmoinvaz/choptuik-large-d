@@ -1905,3 +1905,30 @@ J 1250 and 960 bits ((a)'s bits with (b)'s J, so its differences to (a) and to (
 effect), started 2026-10-28 21:06 UTC. Item 1 is amended for the cause once T91 lands, the amendment dated and
 committed before any K = 19 estimate; the `converge` stage runs as written on the three nodes first, and its failure
 is kept in the log.
+
+### 11.1 σ₁₉: items 1(a), (b), (d) pass, item 1(c) fails
+
+The `converge` stage ran as written on 2026-10-28 23:16 UTC, after the three T88 nodes landed (logs in the raw-data
+repository's `planted-k19-mac/real/`; the record in `planted_checks_k19.json`, "K19 converge").
+
+| wf | σ₁₉ | err19 (relative) | σ₀…σ₁₈ against `scan37J1000` | ratio law: \|Δ²\| at k = 17 |
+|---|---|---|---|---|
+| 0.99 | −1.8854371907076884952×10⁻¹⁶ + 1.7574120025598862231×10⁻¹⁶i | 2.07×10⁻²⁶ (8.03×10⁻¹¹) | bitwise equal, 19/19 | 0.0079 |
+| 1.00 | −1.7398705529980921796×10⁻¹⁶ + 1.8204762245817697829×10⁻¹⁶i | 2.79×10⁻²⁷ (1.11×10⁻¹¹) | bitwise equal, 19/19 | 0.0078 |
+| 1.01 | −1.5938905230179470051×10⁻¹⁶ + 1.8736843172586269260×10⁻¹⁶i | 1.20×10⁻²⁷ (4.86×10⁻¹²) | bitwise equal, 19/19 | 0.0078 |
+
+- **Items 1(a), (b) and (d) pass at every node; item 1(c) fails at σ₁₉** (pilot (b) 3.39×10⁻²⁷ from (a) against (a)'s
+  err19 2.79×10⁻²⁷; its σ₁₆…σ₁₈ pass, 15, 34 and 15 times below their errors). Each mutation fires (err19 × 10¹⁴:
+  1.1×10³ relative; σ₁₈ at wf 0.99 scaled by 1 + 10⁻¹⁵: 18/19 bitwise; pilot (b)'s σ₁₉ scaled by 1 + 10⁻¹⁰: 1.6×10⁻²⁶
+  against 2.8×10⁻²⁷; σ₁₉ × 1.1 at wf 1.01: \|Δ²\| = 1.19). The stages past `converge` wait for T91 and the dated
+  amendment of item 1 (the record at the end of section 11.0).
+- **err19 at wf 0.99 is 8.0×10⁻¹¹ relative, a margin of 1.2 under the 10⁻¹⁰ asked for,** 7 times the ω∞ node's and
+  17 times the 1.01 node's (at K = 18 the three were within 25% of each other, 1.8–2.3×10⁻¹²). The J 1000 fits are at
+  their limit at this order; the follow-up order runs with J raised (T89).
+- **σ₁₉ follows the ratio law's rotation:** σ₁₈/σ₁₉ = 9.39 − 9.00i at ω∞ (arg advances 0.76 per order, |σ₁₈|/|σ₁₉| =
+  13.0); the second differences of σ_k/σ_{k+1} are 0.008–0.012 at k = 10–17.
+- **Spread in wf.** σ₁₉ changes by 6.2% of itself between the nodes (6.0%, 6.1% for σ₁₇, σ₁₈). The largest err19 is
+  1.3×10⁻⁹ of that change (3.6×10⁻¹¹ at σ₁₈), the wf 0.99 node's.
+- **Cost.** On the Mac with two processes per run: pilot (a) 209 min, pilot (b) 461 min, the nodes 356 and 390 min,
+  the late-order fits taking 86% of the time; T91 shared the cores during the nodes' last two hours (comms,
+  2026-10-28 13:14–23:13 UTC).
