@@ -76,10 +76,15 @@ the state and derivative radii at the same five places as the table above. It se
   the fix, with 3 as the cheap complement.
 
 Cost: one process, about 2000 steps at 1.5 s, 1 hour on an idle core of the Mac or 3–4 hours beside other jobs; no
-new code (`certify_M.py point 5 --centre=data/A_M_refine_M5_d.json --use_out`, with the output and log paths of A_M.md
-§8; the exact command is checked against §8 before it is queued). The second cheap measurement is the mixed-system
-box run of design 3 at the failed run's (h, w), which the refinement's mixed mode almost provides, to see the outer
-rows' margin without the harmonic-5 rows.
+new code: from `solver/proof/`,
+
+```
+python3 certify_M.py point 5 --p=$(jq -r '.p_out | join(",")' data/A_M_refine_M5_d.json) --out=OUT/A_M_point_M5.json --log=OUT/A_M_point_M5.log
+```
+
+with OUT the task's folder in the raw-data repository (queued as T90 on the Mac, folder `P3-mac/`). The second cheap
+measurement is the mixed-system box run of design 3 at the failed run's (h, w), which the refinement's mixed mode
+almost provides, to see the outer rows' margin without the harmonic-5 rows.
 
 ## 5. Order of work
 
