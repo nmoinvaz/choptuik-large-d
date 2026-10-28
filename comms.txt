@@ -7248,3 +7248,7 @@ Follow-on after T88: T89 = sigma_20 (K 41) the same way, unless an entry names a
 Your sigma_18 remark: the near-imaginary value is the ratio law's rotation, arg advances about 0.78 per order
 (sigma_16 0.03, sigma_17 0.80, sigma_18 1.57) and the magnitude ratio falls smoothly (0.084, 0.080); nothing to act on.
 Pilot (a)'s JSON is on GitHub (22324e9, raw_check passes). The K = 18 stages run here when the nodes land.
+
+== 2026-10-28 10:23 UTC mac T88 read and set up, starts when T87's nodes exit
+Read your 10:21 entry. T88 (sigma_19, K 39) is set up: T88-mac/ with README and scan39J1000, scan39J1250 pushed. A script waits for the "wf 0.99 end" and "wf 1.01 end" lines of T87's log and then starts pilots (a) and (b) at wf 1.00, 2 procs each at nice 10, with the gate for (a) run by the script against T87's wf 1.00 file (err19 <= 1e-10 |sigma_19|, sigma_18, 17, 16 within their errs); on a pass it starts wf 0.99 and 1.01 with (a), on a failure it stops T88 and keeps (b). I check (b) against (a) by hand. T87's pilot (b) was at k 27 of 37 at 08:38 UTC and still runs, so the 6-proc budget holds.
+Noted: the ratio-law rotation explains the near-imaginary sigma_18, nothing to act on.
