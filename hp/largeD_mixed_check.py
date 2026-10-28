@@ -9,7 +9,8 @@
     cd hp && python3 largeD_mixed_check.py costs [--states=8.25,20,40,50,60] [--reps=3] [--out=F.json]
 
 jvp: at each state, J v by Solver.jvp (one forward-mode pass per block, double-double) against the double-double
-  Jacobian (Solver.jacobian, hi and lo) times v, the product summed in double-double (dd_matvec below), for a random v
+  Jacobian (Solver.jacobian, hi and lo) times v, the product in double-double (multidouble's dd_matvec: each row a
+  double-double dot product), for a random v
   with nonzero lo parts. Per entry the difference is scaled by (|J| |v|)_i (the size of the terms summed), and the
   largest such ratio is reported, with the normwise ratio max |diff| / max |Jv| and the product's time against the
   Jacobian's. The same for the product with its series cut at double-double resolution (jvp(cut=True), what the
@@ -27,7 +28,7 @@ jvp: at each state, J v by Solver.jvp (one forward-mode pass per block, double-d
   --mutate breaks the product on purpose (1: the Delta tangent scaled by 1 + 1e-20; 2: the horizon block's tangent
   dropped; 3: the phase row dropped); the check must then fail (exit 1; --expect_fail inverts the exit code).
 controls: every mutation at the D = 50.01 state and at M = 16; each must fire; exit 0 if all fire.
-dotcheck: dd_matvec itself against exact rational arithmetic (fractions) on a few rows of the D = 20.04 Jacobian,
+dotcheck: multidouble's dd_matvec against exact rational arithmetic (fractions) on a few rows of the D = 20.04 Jacobian,
   and with one product term dropped as its control.
 steps: at the saved states nearest to --D (perturbed by 1e-12 relative as in hp/mixed_largeD_blocks.py, seeds
   --seeds), the Newton step of each variant against the double-double step (relative difference): f64 and f64h
@@ -50,48 +51,17 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
 from hpkernel.driver import GMRES, dd_add, load, make_solver, resample_z  # noqa: E402
+from multidouble import dd_matvec as _dd_matvec, two_sum  # noqa: E402
 
 LOWD = os.path.join(HERE, "data", "lowD_states", "lowDv_D3.7000_M48.npz")
-_SPLIT = 134217729.0  # 2^27 + 1
-
-
-def two_sum(a, b):
-    s = a + b
-    bb = s - a
-    return s, (a - (s - bb)) + (b - bb)
-
-
-def split(a):
-    t = _SPLIT * a
-    hi = t - (t - a)
-    return hi, a - hi
-
-
-def two_prod(a, b):
-    p = a * b
-    ah, al = split(a)
-    bh, bl = split(b)
-    return p, ((ah * bh - p) + ah * bl + al * bh) + al * bl
-
-
-def dd_mul(ah, al, bh, bl):
-    p, e = two_prod(ah, bh)
-    e = e + (ah * bl + al * bh)
-    h = p + e
-    return h, e - (h - p)
-
-
 def dd_matvec(Jh, Jl, vh, vl, drop=None):
-    """(Jh + Jl) (vh + vl) in double-double, column by column (each column's product added with dd_add); drop=(i, j)
-    leaves out one term (the control of dotcheck)"""
-    n = Jh.shape[0]
-    yh, yl = np.zeros(n), np.zeros(n)
-    for j in range(Jh.shape[1]):
-        ph, pl = dd_mul(Jh[:, j], Jl[:, j], np.full(n, vh[j]), np.full(n, vl[j]))
-        if drop is not None and drop[1] == j:
-            ph[drop[0]] = pl[drop[0]] = 0.0
-        yh, yl = dd_add(yh, yl, ph, pl)
-    return yh, yl
+    """(Jh + Jl) (vh + vl) in double-double (multidouble's dd_matvec, each row a double-double dot product);
+    drop=(i, j) leaves out one term (the control of dotcheck) by zeroing J_ij"""
+    if drop is not None:
+        Jh, Jl = Jh.copy(), Jl.copy()
+        Jh[drop] = Jl[drop] = 0.0
+    c = np.ascontiguousarray
+    return _dd_matvec(c(Jh), c(Jl), c(vh), c(vl))
 
 
 def opts_of(argv):

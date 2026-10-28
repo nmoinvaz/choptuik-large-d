@@ -13,10 +13,10 @@ import time
 import mpmath as mp
 import numpy as np
 
-from multidouble import dd_add, dd_axpy, dd_dot, dd_from_mp, dd_norm, dd_scale, gcr, two_sum  # noqa: F401
+from multidouble import dd_add, dd_axpy, dd_dot, dd_from_mp, dd_norm, dd_scale, gcr, qd_axpy, two_sum  # noqa: F401
 from multidouble import two_prod as _two_prod  # noqa: F401
 
-from ._hpkernel import Solver, qd_axpy
+from ._hpkernel import Solver
 
 # The double-double helpers above (numpy, elementwise) are multidouble's Python package (github.com/nmoinvaz/multidouble,
 # python/; hp/pyproject.toml pins it), the same float64 expressions as before; re-exported here under their old names
@@ -685,7 +685,8 @@ def deflated_newton(s, zh, zl, tol=1e-27, it_max=20, w=24, verbose=True, max_hal
     return zh, zl, hist
 
 # ------------------------------------------------------------------ the quad-double solver (notes/QUAD_DOUBLE.md 12)
-# A quad-double state is a 4-tuple of float64 arrays (z0, z1, z2, z3), its value z0 + z1 + z2 + z3 (multidouble's QD).
+# A quad-double state is a 4-tuple of float64 arrays (z0, z1, z2, z3), its value z0 + z1 + z2 + z3 (multidouble's QD);
+# qd_axpy (y + a x on such states) is multidouble's Python package's.
 # Solver.residual_q, jacobian_q and newton_q compute in quad-double (hp/src/qsolve.rs; M = 32 and 48 only).
 def qparts(zh, zl, z2=None, z3=None):
     """a four-part state from (hi, lo) and optional lower parts (zero if absent), each array contiguous float64"""

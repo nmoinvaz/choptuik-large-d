@@ -2,7 +2,7 @@
 //! its exact Jacobian by forward-mode duals over quad-double lanes (multidouble's `Qu`), the dense quad-double LU
 //! (`QDLu`), and the step -J^-1 F in quad-double. The state comes in four parts (z[0] + z[1] + z[2] + z[3], as
 //! multidouble's QD). Every operation on the state is quad-double, the horizon solves refined to quad-double
-//! (model::psolve with QD_SOLVE); the model's constants stay double-double, so the discrete system is the one the
+//! (model::psolve, `Lane::VAL_QD`); the model's constants stay double-double, so the discrete system is the one the
 //! double-double solver solves. Near and above D = 60 the double-double Jacobian's rounding, u sigma_max with
 //! u = 2^-104, exceeds its smallest singular value (README, "Why the solver stalls"); here u is 2^-209.
 //!
@@ -231,23 +231,11 @@ pub fn newton_q<const B: usize>(ctx: &Ctx<B>, z: [&[f64]; 4], par: bool) -> Resu
     Ok(QStep { dz, fh, fl, lu, t })
 }
 
-/// y + a x elementwise in quad-double (four parts each)
-pub fn qd_axpy(a: f64, x: [&[f64]; 4], y: [&[f64]; 4]) -> [Vec<f64>; 4] {
-    let n = y[0].len();
-    let mut out: [Vec<f64>; 4] = std::array::from_fn(|_| vec![0.0; n]);
-    for i in 0..n {
-        let s = QD { x: std::array::from_fn(|q| y[q][i]) } + QD { x: std::array::from_fn(|q| x[q][i]) }.mul_f(a);
-        for q in 0..4 {
-            out[q][i] = s.x[q];
-        }
-    }
-    out
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::model::{jacobian, residual, QD_MUT_NOREFINE, QD_MUT_REFINE4};
+    use crate::qv::axpy_parts;
     use crate::qd_residual::synth;
 
     fn parts(zh: &[f64], zl: &[f64]) -> [Vec<f64>; 4] {
@@ -273,7 +261,7 @@ mod tests {
         } else {
             d[0][j] = s;
         }
-        qd_axpy(1.0, view(&d), view(z))
+        axpy_parts(1.0, view(&d), view(z))
     }
 
     /// the quad-double residual and Jacobian at a double-double state agree with the double-double ones to about
@@ -360,7 +348,7 @@ mod tests {
             let mut b: Vec<QD> = (0..l).map(|i| f0[i] - f[i]).collect();
             lu.solve(&mut b);
             let dz: [Vec<f64>; 4] = std::array::from_fn(|q| b.iter().map(|v| v.x[q]).collect());
-            z = qd_axpy(1.0, view(&dz), view(&z));
+            z = axpy_parts(1.0, view(&dz), view(&z));
         }
         errs.push((0..l).map(|i| (qd_at(&z, i) - qd_at(&zs, i)).to_f64().abs()).fold(0.0, f64::max));
         errs

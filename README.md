@@ -691,8 +691,8 @@ with computed points rather than an assumed form. Its points are used in [The fo
   AVX2 registers, four SSE2 or NEON registers, or a portable array, chosen at compile time (`hp/build.sh` builds with
   `-C target-cpu=native`). Error-free two-sum and FMA two-product; sums of products accumulated Sum2-style[^16]. The
   arithmetic, the dual lanes, the double-double LU, the staircase LU of the block storage, the τ-field kernels and the
-  GMRES refinement are the separate crate [multidouble](https://github.com/nmoinvaz/multidouble) (version 1.5.1 from
-  crates.io, its lane types on the compile-time backend); every backend gives bitwise the same results, and the
+  GMRES refinement are the separate crate [multidouble](https://github.com/nmoinvaz/multidouble) (the version in
+  `hp/Cargo.toml`, its lane types on the compile-time backend); every backend gives bitwise the same results, and the
   solver's outputs are unchanged bit for bit by each move (`hp/highm_check.py ref` and `scaled` against the
   references of the build before it).
 - **No fixed-step error:** Taylor series in x (order 36, step points planned once per D so the truncation term is
@@ -2437,11 +2437,12 @@ src/
 python/rustkernel/  Python wrapper, RustResidual
 tests/              bindings test
 hp/                 double-double solver (crate hpkernel)
-├── Cargo.toml      the arithmetic comes from the multidouble crate (crates.io, version 1.5.1; on the compile-time
-│                   backend): double-double and quad-double, scalar and 8-lane SIMD (AVX-512 / AVX2 / SSE2 / NEON /
-│                   portable), dual lanes, the double-double LU, the staircase LU and the tau-field kernels; hp
-│                   re-exports its modules (hpkernel::dd, ::dv, ...)
-├── src/lane.rs     hp's Lane trait over multidouble's dual lanes: adds the D-matrix product of each lane type
+├── Cargo.toml      the arithmetic comes from the multidouble crate (crates.io, the version named there; on the
+│                   compile-time backend): double-double and quad-double, scalar and 8-lane SIMD (AVX-512 / AVX2 /
+│                   SSE2 / NEON / portable), dual lanes (with the complex tangent of modecount_cx), the double-double
+│                   LU (and the complex determinant), the staircase LU and the tau-field kernels (with the early end
+│                   of a series for the tangents); hp re-exports its modules (hpkernel::dd, ::dv, ...)
+├── src/lane.rs     hp's Lane trait: every multidouble lane type on the compile-time backend
 ├── src/model.rs    centre series, Taylor stepping, horizon series, residual, Jacobian (double-double and f64)
 ├── python/hpkernel/driver.py   grid, seeds, Newton, deflated Newton, Levenberg-Marquardt, re-noding (its numpy
 │                   double-double helpers come from multidouble's Python package, which build.sh installs)

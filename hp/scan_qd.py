@@ -22,7 +22,7 @@ import time
 os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
 import numpy as np  # noqa: E402
 
-from hpkernel import qd_axpy  # noqa: E402
+from multidouble import qd_axpy  # noqa: E402
 from hpkernel.driver import load_q, make_solver, newton_qd, predict_q, save_q, tangent_q  # noqa: E402
 from raw_out import FLAG, HELP, require_raw  # noqa: E402
 

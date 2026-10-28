@@ -5,7 +5,7 @@
 //! The field type and its arithmetic are multidouble's `field` module (this module's code, moved there): `Fl` and its
 //! operations, the Cauchy product coefficients (`cs`, `cs_range`, `cs_w`), `horner`, the constant matrix `DMat` (on
 //! the compile-time backend, multidouble's `native::DMat`) and `FieldSolve`. This crate adds the four-field state.
-pub use multidouble::field::{cs, cs_range, cs_w, horner, FieldSolve, Fl};
+pub use multidouble::field::{cs, cs_range, cs_w, horner, FieldSolve, Fl, TangentTail};
 pub use multidouble::native::DMat;
 
 /// the state at a point: the four fields p, m, a, c
