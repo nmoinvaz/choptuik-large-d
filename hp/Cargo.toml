@@ -16,9 +16,7 @@ pyo3 = { version = "0.30", features = ["extension-module"], optional = true }
 numpy = { version = "0.30", optional = true }
 rayon = "1.10"
 # double-double / quad-double arithmetic, dual lanes and LU (split out of this crate; crates.io)
-# main after 1.7.0 with the pieces moved there from hp (Dc and clu_logdet of modecount_cx, VAL_QD, tan64,
-# solve_lanes_refine_t, TangentTail, pow2_near, axpy_parts); "=1.8.0" once released, the same code
-multidouble = { git = "https://github.com/nmoinvaz/multidouble", rev = "e4f6388b43243ff6b6376d4b78d040d08b93c0d3" }
+multidouble = "=1.8.0"  # the pieces moved there from hp (Dc and clu_logdet of modecount_cx, VAL_QD, tan64, solve_lanes_refine_t, TangentTail, pow2_near, axpy_parts; PR #25)
 
 [profile.release]
 opt-level = 3
