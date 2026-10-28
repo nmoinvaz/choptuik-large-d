@@ -14,9 +14,13 @@ S_1/S_1^(1) = sum_k sigma_k x^k (x = A^2), sigma_k from scan25phys (K = 25, so s
      O(1) at x0 ~ 7.4 and decay (instead of terms ~240 that cancel); kbar chosen to minimise the last two terms of
      G_K at x0. Zeros of G_K across w give the w where the zero is real, per K;
   4. the other zeros of G_K (the next one is at |x| > 10 and not converged);
-  5. the margins a Rouche (disc in x) and a Krawczyk/Miranda (box in (A, w/w_inf)) certificate would need.
+  5. the margins a Rouche (disc in x) and a Krawczyk/Miranda (box in (A, w/w_inf)) certificate would need;
+  6. the type bound |sigma_k| <= C |kappa_*|^k / Gamma(k + Re beta) calibrated on the computed orders, the same for
+     G's coefficients with the shifted arc, and the tails they predict at x0 beyond K against the Rouche margins
+     (the hypothesis of the conditional Theorem A(inf) of proof/P5_scope.md; a calibration, not a bound).
 
-    python3 entire_cert.py [K]        (K <= 12; default 12)
+    python3 entire_cert.py [K] [--scan DIR]        (default K 12 on scan25phys; --scan ../inner_amp/scan35J1000 17
+                                                    runs the seventeen-order scans)
 """
 import glob
 import json
@@ -68,6 +72,7 @@ def ratio_law(S):
 
 
 def prony(S, ms=(3, 4, 5)):
+    """returns the exponents of the largest fit (points along the arc)"""
     print("2. Prony: a_k = k! sigma_k = sum_i c_i kappa_i^k (w = w_inf); exponents spread along an arc")
     sig = S[1.0]
     K = len(sig) - 1
@@ -80,6 +85,75 @@ def prony(S, ms=(3, 4, 5)):
         c, res = mp.qr_solve(V, mp.matrix(a))
         print(f"   m {m}: rel. resid {mp.nstr(res / mp.norm(mp.matrix(a)), 2)}; kappa_i = "
               + ", ".join(mp.nstr(r, 4) for r in sorted(roots, key=lambda z: abs(z))))
+    return roots
+
+
+def ratio_fit(sig, K):
+    """kappa_* and beta of the ratio law from a complex linear fit over k = 6..K-1"""
+    rat = [complex(sig[k] / sig[k + 1]) for k in range(K)]
+    ks = np.arange(6, K)
+    A = np.vstack([ks, np.ones_like(ks)]).T.astype(complex)
+    c = np.linalg.lstsq(A, np.array(rat[6:K]), rcond=None)[0]
+    kap = 1 / c[0]
+    return kap, c[1] * kap
+
+
+def type_bound(S, K, kb, arc):
+    """the type bound calibrated on k <= K and the tail it predicts beyond K at x0, in the S_1 and the G form"""
+    print("6. type bound calibrated on the computed orders (a hypothesis, not a bound), and its tail at x0")
+    sig = S[1.0]
+    kap, beta = ratio_fit(sig, K)
+    a, b = abs(kap), beta.real
+    Ck = [float(abs(sig[k]) * mp.gamma(k + b) / a ** k) for k in range(4, K + 1)]
+    C = max(Ck)
+    print(f"   S_1 form, |sigma_k| Gamma(k + {b:.2f}) / {a:.4f}^k for k = 4..{K}: "
+          + " ".join(f"{v:.1f}" for v in Ck) + f"; C = max = {C:.1f}")
+    print(f"   its prediction for the next orders, |sigma_k| <= C a^k / Gamma(k + b): "
+          + ", ".join(f"k {k}: {mp.nstr(C * mp.mpf(a) ** k / mp.gamma(k + b), 3)}" for k in (K + 1, K + 2)))
+    print("   the tail sum_(k>K) C a^k x0^k / Gamma(k + b) at x0, for the truncation orders K:")
+    ax = mp.mpf(a) * X0
+    for Kt in sorted({12, 14, K}):
+        if Kt <= K:
+            tail = mp.fsum(C * ax ** k / mp.gamma(k + b) for k in range(Kt + 1, Kt + 400))
+            print(f"      K {Kt}: {mp.nstr(tail, 3)}")
+    # a bound calibrated on fewer orders, tested on the orders after them (the planted-truth question for P5: does a
+    # per-coefficient bound fixed at one order hold at the next ones?)
+    for Kc in (12, 14):
+        if Kc < K:
+            kc, bc = ratio_fit(sig, Kc)
+            ac, bcr = abs(kc), bc.real
+            Cc = max(float(abs(sig[k]) * mp.gamma(k + bcr) / ac ** k) for k in range(4, Kc + 1))
+            ratios = [float(abs(sig[k]) / (Cc * ac ** k / mp.gamma(k + bcr))) for k in range(Kc + 1, K + 1)]
+            print(f"   calibrated on k <= {Kc} (a {ac:.4f}, b {bcr:.2f}, C {Cc:.1f}): |sigma_k| / bound for"
+                  f" k = {Kc + 1}..{K}: " + " ".join(f"{v:.3f}" for v in ratios)
+                  + ("  (violated)" if max(ratios) > 1 else "  (holds)"))
+    # G = e^{-kbar x} S_1 has the arc shifted by kbar; its type is the farthest arc point from kbar, taken over the
+    # Prony exponents and kappa_*; C_G is calibrated on the computed g_k
+    pts = list(arc) + [mp.mpc(kap)]
+    r = max(float(abs(t - kb)) for t in pts)
+    far = max(pts, key=lambda t: abs(t - kb))
+    g = gcoef(sig, kb, K)
+    CG = [float(abs(g[k]) * mp.factorial(k) / r ** k) for k in range(4, K + 1)]
+    Cg = max(CG)
+    print(f"   G form with kbar {mp.nstr(kb, 4)}: r = max |t - kbar| over the arc = {r:.3f} (at t = {mp.nstr(far, 4)});"
+          f" |g_k| k! / r^k for k = 4..{K}: " + " ".join(f"{v:.2f}" for v in CG) + f"; C_G = max = {Cg:.2f}")
+    rx = mp.mpf(r) * X0
+    tail_fact = float(mp.fsum(Cg * rx ** k / mp.factorial(k) for k in range(K + 1, K + 400)))
+    # the sharpened form: the density vanishes at the far end like (kappa_* - t)^(beta - 1), so the shifted
+    # coefficients decay like r^k / Gamma(k + Re beta), as the sigma_k do
+    CG2 = [float(abs(g[k]) * mp.gamma(k + b) / r ** k) for k in range(4, K + 1)]
+    Cg2 = max(CG2)
+    tail = float(mp.fsum(Cg2 * rx ** k / mp.gamma(k + b) for k in range(K + 1, K + 400)))
+    print(f"   sharpened, |g_k| Gamma(k + {b:.2f}) / r^k for k = 4..{K}: " + " ".join(f"{v:.1f}" for v in CG2)
+          + f"; C_G' = max = {Cg2:.1f}")
+    f = poly(g)
+    z0 = mp.findroot(f, mp.mpc(X0, 0))
+    print(f"   the G tail beyond K = {K} at x0: {tail_fact:.2e} with r^k/k!, {tail:.2e} sharpened;"
+          f" the sharpened tail against the Rouche minimum of |G_{K}| on the circles:")
+    for rho in (0.001, 0.01, 0.1):
+        m = float(min(abs(f(z0 + rho * mp.expjpi(2 * t / 240))) for t in range(240)))
+        print(f"      rho {rho}: min |G_K| {m:.2e}, tail / min = {tail / m:.2f}"
+              + ("  (the tail alone fits)" if tail < m else "  (the tail alone does not fit)"))
 
 
 def best_kbar(sig, K):
@@ -136,12 +210,19 @@ def zeros_and_margins(S, K, kb):
 
 
 def main():
-    K = int(sys.argv[1]) if len(sys.argv) > 1 else 12
+    global SCAN
+    args = sys.argv[1:]
+    if "--scan" in args:
+        i = args.index("--scan")
+        SCAN = os.path.abspath(args[i + 1])
+        del args[i:i + 2]
+    K = int(args[0]) if args else 12
     S = {w: load(w) for w in WFS}
     ratio_law(S)
-    prony(S)
+    arc = prony(S)
     res = resummed(S, K)
     zeros_and_margins(S, K, res[K][0])
+    type_bound(S, K, res[K][0], arc)
 
 
 if __name__ == "__main__":
