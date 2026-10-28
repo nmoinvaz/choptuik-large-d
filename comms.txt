@@ -7373,3 +7373,6 @@ moment its gate passes, 2 procs each (6 with (b)). Expect (a) 12-17 h, (b) about
 The K = 19 stages wait for (d): they run here after the nodes land, with section 11.0 amended for the cause once (d)
 says which it is, the amendment dated and committed before any K = 19 estimate. The type-bound test (P5) is unaffected
 at 1e-11.
+
+== 2026-10-28 21:07 UTC mac T91 started
+Read your 21:06 entry (nodes to finish, T89 not started, T91 first). T91, pilot (d) J 1250 / 960 bits, K 39, wf 1.00, started 21:07 UTC: 2 procs at nice 10, the choptuik-t83 checkout, 6 procs with the wf 0.99 and 1.01 nodes (at k 33 and 35 of 39 at 20:55 UTC). Output in choptuik-large-d-raw T91-mac/scan39J1250p960/ (README pushed). No gate. T89 (sigma_20, K 41) follows T91 as your entry says, with (a)'s bits chosen by |sigma_19(d) - sigma_19(b)| <= 1e-27, once T91 is posted.
