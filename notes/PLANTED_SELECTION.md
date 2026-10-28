@@ -1877,3 +1877,14 @@ The stages are `converge`, `plants`, `real`, `ring`, `calib`, `recomplete`, `pro
 repository's T88-mac into `scan39J1000/` and `scan39J1250/` as the earlier orders' were. `planted_k19.py` is
 `planted_k18.py` one order up (a mechanical renumbering) with the changes items 4–8 state: the ring test regenerates
 the C18 completions, the calibration family has sixteen sums, the projection's second hypothesis is 0.999992.
+
+The dry run (item 0) ran on 2026-10-28 16:26–16:41 UTC on the Mac, beside T88: all eight stages completed and their 72
+checks passed (the logs are in the raw-data repository's `planted-k19-mac/dry/`). In the ring test the planted
+C18-BP [7/11] reproduced its σ₁₉ to 2.4×10⁻²⁰ and its τ₁₉ to 3.5×10⁻¹⁸ at worst, within item 0's criteria, and
+survived under both readings; its zero (0.99999997) lies inside the dry run's K = 19 range, 0.999996–1.000004. On the
+synthetic data D-ratio and D-ratiolaw fire on the "real" series itself, which says nothing about the real σ₁₉;
+C19-BP [9/10] fails the type rule there (largest pole |t| = 4.6) and [3/16], [4/15], [5/14] carry rings, so the
+ring-free list was [6/13], [7/12], [8/11]. One stage was fixed: `combine` read the twelve-sum family's calibrated arg
+range where item 7 asks for the sixteen-sum family's (the renumbering had not advanced the label); on the synthetic
+data the two ranges coincide (0.999996–1.000000), so the dry run's hull did not change, and the stage was rerun after
+the fix (16:42 UTC; `dry/combine_before_fix.log` is the first run). No other stage code changed.

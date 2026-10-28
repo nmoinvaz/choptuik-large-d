@@ -647,12 +647,12 @@ def stage_combine():
     c = load_checks()
     cal = c["K19 calib"]["19"]
     arc = cal["all 28 arc plants"]["cells"]["arg"]["zero"]
-    bp = cal["BP family (12)"]["cells"]["arg"]["zero"]
+    bp = cal["BP family (16)"]["cells"]["arg"]["zero"]
     rf = {n: v["truth"] for n, v in c["K19 recomplete"].items()
           if n.startswith("C19-BP") and v.get("type_rule") and v.get("zeros_lt_12", 99) <= 1}
     parts = [tuple(arc), tuple(bp)] + [(z, z) for z in rf.values()]
     lo, hi = min(p[0] for p in parts), max(p[1] for p in parts)
-    print(f"calibrated arg, 28 arc plants: {arc[0]:.6f}-{arc[1]:.6f}; BP family (12): {bp[0]:.6f}-{bp[1]:.6f}; "
+    print(f"calibrated arg, 28 arc plants: {arc[0]:.6f}-{arc[1]:.6f}; BP family (16): {bp[0]:.6f}-{bp[1]:.6f}; "
           f"ring-free completions passing the type rule: {rf}")
     print(f"K = 19 estimator range (hull): {lo:.6f}-{hi:.6f}")
     overlap = lo <= K18_RANGE[1] and K18_RANGE[0] <= hi
