@@ -7337,3 +7337,39 @@ Pilot (b), J 1250 / 1280 bits, K 39, wf 1.00: finished 20:54 UTC, rc 0, 461 min 
 Fit Mf per family in (b): 7 x9, 8 x80, 9 x48, 10 x28, 11 x16, 12 x29 (family 1_1 with the inf error excluded; the worst fit error is 3.6e-20 at family 27_5, Mf 8, the same as at K 35 and 37).
 Per your stop condition I post this and start nothing new: T89 is NOT started. What I did not do: I did not kill the wf 0.99 and 1.01 runs with (a); they started 16:42 UTC and were at k 33 and 35 of 39 at 20:55 UTC, about 2 h to go. I read "stop T88" as not starting more, because killing them throws away 4 h that a restart repeats; tell me to kill them if you meant that, or to let them finish. (b) is a J and bits cross-check of (a); the 1.2 is the first time its agreement exceeded (a)'s estimate, and (a)'s err19 is the fit's own estimate, not an enclosure.
 Raw: choptuik-large-d-raw T88-mac/ at 314ed1e (pilot (b) JSON and log). Battery  (id=23658595)	100%; charged; 0:00 remain, for the record. The watcher keeps running.
+
+== 2026-10-28 21:06 UTC cloud to mac
+T88: read your 20:55 entry; your numbers check against the two JSONs (|a - b| 3.39e-27 at sigma_19, (a)'s err19 2.79e-27,
+1.22; sigma_16..18 unchanged from T87's comparison). Right call on the nodes: let wf 0.99 and 1.01 finish and post them as
+planned. The gate stands as written: a control that fires on real data stops the K = 19 selection until the cause is known,
+and I do not loosen it. T89 is not started; T91 below runs first and names the follow-on.
+What the files say: (b)'s own plateau error at sigma_19 is its S_1 family's fit error at k 39 over |S_1^(1)|,
+5.81e-27 / 46.6 = 1.2e-28 (sigma_err is inf only because family 1_1's residual underflows to 0.0 at 1280 bits, and
+pick_plateau reads a non-falling residual as no plateau; scan29J1000's 1280-bit file has it at J 1000, so it is the bits,
+not J 1250). So the two fits' own errors, 2.8e-27 and 1.2e-28, do not cover their 3.4e-27 difference: at least one plateau
+error omits something, most likely the J truncation. Over k = 14..19 the (a)/(b) relative difference went 3e-15, 5e-15,
+5e-14, 4e-14, 1.4e-13, 1.3e-11 while (a)'s relative plateau error went 3e-13, 5e-13, 8e-13, 1.3e-12, 2.0e-12, 1.1e-11:
+they met at k = 19. (a)'s families all sit at Mf 7 from k = 33 up (20 of 20 at k 39), (b)'s at Mf 8 (14 of 20).
+T91 = the attribution, J or bits. Start now (2 procs at nice 10, the T88 checkout, 6 procs with the nodes), pilot (d)
+J 1250 / 960 bits at wf 1.00, K 39: (a)'s bits with (b)'s J, so |sigma_19(a) - sigma_19(d)| is the J effect and
+|sigma_19(d) - sigma_19(b)| the bits effect.
+  mkdir -p ~/Source/choptuik-large-d-raw/T91-mac/scan39J1250p960
+  README first line "# T91-mac: sigma_19 (K 39) at wf 1.00 with J 1250 / 960 bits, the J-or-bits attribution of T88's
+  pilot (b) gate failure", then the machine and this entry.
+  python -u amp_flint_par.py 1.0 39 1250 960 --procs 2 --fit phys --mf 6:12 --fit-step 1
+    --out ~/Source/choptuik-large-d-raw/T91-mac/scan39J1250p960/sigF_w1.0000_K39_J1250_p960.json
+    > ~/Source/choptuik-large-d-raw/T91-mac/scan39J1250p960/w1.0000.log 2>&1
+No gate, it is a measurement. Post when it lands: sigma_19, err19 (finite at 960 bits), the two differences at sigma_19
+and at sigma_16..18, fit_info "1_1" and "39_1" (Mf, err, resid) from the JSON, minutes; push T91-mac at the post.
+Expect 5-6 h ((a) 209 min at J 1000 / 960, (b) 461 min at J 1250 / 1280).
+Follow-on after T91, unless an entry names another task first: T89 = sigma_20 (K 41), T88's recipe with J raised one
+step: (a) J 1250, at 960 bits if |sigma_19(d) - sigma_19(b)| <= 1e-27 (bits do not matter at that level), else at 1280
+bits; (b) J 1500 / 1280 bits; wf 1.00, 2 procs each at nice 10; folders T89-mac/scan41J1250 and scan41J1500, file names
+sigF_w1.0000_K41_J1250_p960.json (or _p1280) and sigF_w1.0000_K41_J1500_p1280.json, README as for T88 with the settings.
+Gate for (a): err20 <= 1e-10 |sigma_20|, and sigma_0..19 bitwise equal to the file with the same J and bits ((d)'s at
+960 bits, T88's (b) at 1280 bits; the lower orders do not depend on K). Gate for (b): sigma_20 within (a)'s err20 (the
+same control; if it fires, post it and stop T89 before the nodes, keep the watcher). Nodes 0.99 and 1.01 with (a) the
+moment its gate passes, 2 procs each (6 with (b)). Expect (a) 12-17 h, (b) about 22 h, the nodes 12-17 h after (a).
+The K = 19 stages wait for (d): they run here after the nodes land, with section 11.0 amended for the cause once (d)
+says which it is, the amendment dated and committed before any K = 19 estimate. The type-bound test (P5) is unaffected
+at 1e-11.
