@@ -1292,3 +1292,66 @@ k = 4–16 falls ×0.540 per order (×0.535 over k = 4–15).
 - A rule question for K = 17: D-bracket stopped firing on the real data, so section 5.3's comparison now rejects
   completions on it alone, including the best predictor of σ₁₆ (8.4). Whether to drop it from the comparison, as
   section 6.3's diagnosis suggests, is decided before σ₁₇, not after.
+
+## 9. Follow-up: σ₁₇ (post-freeze)
+
+### 9.0 Procedure, fixed before any K = 17 estimate was computed
+
+Written and committed before any estimator ran at K = 17, on any input. Already known at this point (comms, 2026-10-27
+23:26 UTC, the Mac's T86; its logs at 01:17 UTC on 2026-10-28): pilot (a) at wf 1.00 is at order 29 of 35 and pilot (b)
+at order 25; no σ₁₇ exists yet. The procedure is section 8.0's one order up, with the changes section 8's findings call
+for, stated here before the data:
+
+0. **Dry run of the stages on a synthetic σ₁₇.** Before the real σ₁₇ exists, `planted_k17_dry.py` writes scan files
+   whose σ₀…σ₁₆ are the real ones and whose σ₁₇ at each node is the C16-BP [7/9] sum's (ring-free, passing the type
+   rule, zero at 1.0000007; section 8.6), with err17 = 10⁻¹² |σ₁₇| and the pilot's errors inf, and every stage runs on
+   them (`planted_k17.py STAGE --data DIR`). Pass: every stage completes with its checks passing, and in the ring test
+   C16-BP [7/9] has σ₁₇ and τ₁₇ errors below 10⁻¹⁸ and survives; whether its zero lies inside the dry run's K = 17
+   range is reported. A stage that fails on the synthetic data is fixed before the real data, and the fix is recorded
+   here. The dry run's records and checks are discarded (its logs go to the raw-data repository); it tests the code
+   path, not the estimators (item 2 does that).
+1. **σ₁₇ is converged** if, at every node: (a) err17 ≤ 10⁻¹⁰ |σ₁₇|; (b) σ₀…σ₁₆ are bitwise the `scan33J1000` 960-bit
+   values; (c) pilot (b)'s σ₁₇ equals (a)'s within (a)'s err17, and its σ₁₄…σ₁₆ equal `scan33J1000`'s within their errors;
+   (d) the second difference of σ_k/σ_{k+1} at k = 15 is at most 0.05. Each check gets a mutation that must make it
+   fire (`--mutate=err|low|pilot|ratiolaw`).
+2. **The pipeline on plants first.** N1 recovered by arg, ratio, Padé and G to 10⁻⁶ at K = 17, N2 giving no number;
+   the 28 arc plants, C-EXP and the 13 REFIT plants regenerated and run at K = 15, 16, 17, their K = 15 and 16 estimates
+   equal to the stored K = 16 records (`planted_results_k16.jsonl`) to 10⁻⁹, or the work stops. Control: N1 graded
+   against ω_t + 0.002 must fail.
+3. **Real data at K = 17** (record "N0 scan35J1000"): its K = 15 and 16 estimates must equal those of "N0 scan33J1000".
+   Mutation controls: σ₁₇ → −σ₁₇ at wf 1.00 must fire a detector; σ₁₇ × (1 + 10⁻³) is reported.
+4. **Ring test.** Every K = 16 completion of section 8.6 is regenerated and its zero must reproduce the stored
+   "K16 recomplete" value to 10⁻⁹: C16-W1–3, C16-ARC (four shapes at their stored best ω_t) and C16-BP [m/(16 − m)],
+   m = 3…8. In addition, the two rings that survived σ₁₆ (section 8.4), C15-BP [4/11] and [5/10], are regenerated and
+   tested again: their σ₁₇ and τ₁₇ against the measured ones and the harness at K = 17. Benchmark: the simple-zero law
+   from τ₁₅, τ₁₆. **The D-bracket question (8.9):** section 5.3's comparison stays as it is, a completion survives if no
+   detector fires on it at K = 17 that does not fire on the real data; and because the real data stopped firing
+   D-bracket at K = 16 (8.3), the table also gives a second reading with D-bracket left out of the comparison, fixed
+   here so that neither reading is chosen after the data. A ring is a finding only if it survives under the first
+   reading; a ring rejected under the first and surviving under the second is reported as that. This is the
+   coordinator's provisional choice, made because the author's decision asked for in 8.9 had not come; if the author
+   decides before any K = 17 estimate is computed, this item is amended with the date. A ring that survives σ₁₇ as
+   well is a finding, reported as such; C15-BP [4/11] and [5/10] rejected by σ₁₇ closes section 8.4's open item.
+5. **Calibration** at K = 17, as section 8.5: the error of arg, ratio, Padé mid and G on (i) the 28 arc plants, (ii)
+   C-EXP, (iii) REFIT with fit residual ≤ 10⁻⁴, and (iv) the BP family, now nine sums (section 8.5's six and C16-BP
+   [6/10], [7/9], [8/8], the ring-free sums passing the type rule at K = 16), each with its own zero as truth. The
+   calibration at K = 16 from the new records must reproduce section 8.5's arc range 0.999982–1.000014 and BP-family
+   range 0.999980–1.000005 to 6×10⁻⁷ (against the values stored in `planted_checks_k16.json`).
+6. **Next generation and ring-free completions,** glued at σ₁₇ (tail from k = 18): ratio-law windows k = 6–16, 8–16,
+   9–16; best-fit arc tails, four shapes, ω_t grid 0.9990–1.0010; the Borel–Padé sums [m/(17 − m)], m = 3…8. Frozen
+   type rule: every pole has |t| < 2 at all three nodes. Zeros counted at wf = 1.00 in |x| < 7.3, 12 and 16.
+7. **Combination.** The K = 17 estimator range is the hull of: the calibrated arg range over the 28 arc plants; the
+   calibrated arg range over the BP family (nine); and the zeros of the ring-free completions of item 6 that pass the
+   type rule (no zeros besides x₀ in |x| < 12). G is reported with its spread over the minima of its objective within a
+   factor 5 of the best and is not part of the hull. The headline is the union of the K = 16 headline
+   (0.999975–1.000050) and the K = 17 range if they overlap; if disjoint, both are reported and the reason diagnosed
+   before any headline is written. The range is an estimator range, not a bound. Section 8.9 noted that the union never
+   narrows; the rule is kept, and the range from the last two orders alone is reported beside it as context.
+8. **The order-17 projection.** est_k = ω* + c r^k through k = 15 and 16, for ω* = 1, 0.99998 (the lower end of the
+   K = 16 range, 0.999980) and 0.999975 (the lower end of the headline), against the real arg₁₇; decisive only if the
+   other prediction is farther from arg₁₇ than three times the model's own error (its largest miss over k = 14–16 on
+   the real data, and over the 28 arc plants at k = 17 given their true ω_t).
+
+The stages are `converge`, `plants`, `real`, `ring`, `calib`, `recomplete`, `project`, `combine`, each run as
+`nice -n 10 python3 planted_k17.py STAGE` from `solver/inner_amp/`, with the σ₁₇ JSONs copied from the raw-data
+repository's T86-mac into `scan35J1000/` and `scan35J1250/` as the earlier orders' were.
