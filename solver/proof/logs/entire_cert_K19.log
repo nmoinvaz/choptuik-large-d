@@ -48,3 +48,7 @@
       rho 0.001: min |G_K| 3.36e-05, tail / min = 0.01  (the tail alone fits)
       rho 0.01: min |G_K| 3.35e-04, tail / min = 0.00  (the tail alone fits)
       rho 0.1: min |G_K| 3.22e-03, tail / min = 0.00  (the tail alone fits)
+   at the nodes, each on its own series: |sigma_19| / (bound calibrated on k <= 18), and the k <= 12 calibration's ratio at k = 19
+      wf 0.99: k <= 18 (a 1.7160, b 4.43, C 43.4): 0.906; k <= 12 (a 1.6684, b 4.10, C 24.5): 0.965
+      wf 1.0: k <= 18 (a 1.7167, b 4.46, C 45.6): 0.901; k <= 12 (a 1.6746, b 4.16, C 27.3): 0.950
+      wf 1.01: k <= 18 (a 1.7176, b 4.48, C 48.1): 0.896; k <= 12 (a 1.6817, b 4.23, C 30.8): 0.935

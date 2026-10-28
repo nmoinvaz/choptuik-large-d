@@ -79,8 +79,15 @@ Three findings.
    by 0.76 (0.77 at the order before). Its fit error is 1.1×10⁻¹¹ of |σ₁₉| (2.0×10⁻¹² at σ₁₈), still three orders
    below what (H_σ) needs; the J 1250 pilot differs from it by 1.3×10⁻¹¹ of |σ₁₉|, 1.21 times that fit error, the
    first order where the cross-check exceeds the fit's own estimate (the cause is under test, PLANTED_SELECTION.md
-   §11.0; the bound test is unaffected). The nodes 0.99 and 1.01, the k ≤ 12 ratio at k = 19 and the K = 19
-   recalibration follow when T88's node runs land; σ₂₀ (T89) is the next test.
+   §11.0; the bound test is unaffected). With all three nodes in (`solver/proof/logs/entire_cert_K19.log`,
+   2026-10-28 23:40 UTC; the per-node lines are new in `entire_cert.py`, and the K = 18 log gained the same four
+   lines and nothing else): **σ₁₉ at wf 0.99 and 1.01 is 0.906 and 0.896 of the K = 18 bound calibrated on each
+   node's own series** (0.901 at ω∞), the same 0.90 at all three. The k ≤ 12 calibration's ratio at k = 19 is
+   0.965, 0.950, 0.935 at wf 0.99, 1.00, 1.01 (0.947, 0.934, 0.921 at k = 18), rising 0.014–0.018 per order, so a
+   constant fixed at k ≤ 12 reaches 1 at the 0.99 node in about two orders: (H_T)'s constant has to be calibrated
+   on the latest orders, where the margin holds at 0.90. Recalibrated at K = 19 (a = 1.7276, b = 4.54, C = 52.9)
+   the bound predicts |σ₂₀| ≤ 2.06×10⁻¹⁷ (2.05×10⁻¹⁷ from K = 18). σ₂₀ (T89, with J raised after the pilot gate
+   fired at σ₁₉) is the next test.
 
 So, numerically: at K = 17, a conditional certificate at radius about 10⁻⁴ in ω/ω∞ is within reach of (H_T) in its
 sharpened form, and the coefficient errors of (H_σ) (fit errors ~10⁻¹² of each σ_k, 10⁻²⁵ absolute at k = 17) are
@@ -168,7 +175,7 @@ certifies one zero in the same discs at each node with (δ + tail)/min |P| = 0.1
 | step | item | who | cost | decides |
 |---|---|---|---|---|
 | 1 | the conditional certificate (4.1) at K = 17, rerun at K = 18 | coordinator | 2–4 days; the fixed-ω part done at K = 17 and 18 on 2026-10-28 (section 2), the (A, ω) Krawczyk with (H_ω) remains | the box radius the route gives, with (H_T)'s constants fixed and falsifiable |
-| 2 | the σ₁₈, σ₁₉ tests of (H_T) (section 2, item 3) | the Mac (T87, T88) | σ₁₈ and σ₁₉ (at ω∞) both passed at 0.90 of the bound (2026-10-28); σ₁₉'s nodes and σ₂₀ (T89) next | whether the calibrated bound keeps its margin |
+| 2 | the σ₁₈, σ₁₉ tests of (H_T) (section 2, item 3) | the Mac (T87, T88) | σ₁₈ and σ₁₉ passed at 0.90 of the bound at all three nodes (2026-10-28); the k ≤ 12 constant is at 0.965 at wf 0.99 and rising; σ₂₀ (T89, J raised) next | whether the calibrated bound keeps its margin |
 | 3 | the (H_ω) measurement (4.2) | the Mac, after T88 | 8 h | the number of nodes a radius-10⁻⁴ box needs |
 | 4 | the order-3 and order-5 Borel structure (4.4) | cloud agent | days, then 1–2 weeks | whether (H_T) is a theorem in reach or stays a hypothesis |
 | 5 | rigorous σ₂…σ_K (4.3) | cloud agent | months | only if step 4 says (H_T) is provable |

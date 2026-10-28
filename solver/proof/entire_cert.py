@@ -154,6 +154,20 @@ def type_bound(S, K, kb, arc):
         m = float(min(abs(f(z0 + rho * mp.expjpi(2 * t / 240))) for t in range(240)))
         print(f"      rho {rho}: min |G_K| {m:.2e}, tail / min = {tail / m:.2f}"
               + ("  (the tail alone fits)" if tail < m else "  (the tail alone does not fit)"))
+    # the S_1-form test at each node on its own series: the bound calibrated on k <= K - 1 tested on sigma_K (the
+    # order just computed), and the k <= 12 calibration's ratio at k = K
+    print(f"   at the nodes, each on its own series: |sigma_{K}| / (bound calibrated on k <= {K - 1}), and the k <= 12"
+          f" calibration's ratio at k = {K}")
+    for w in WFS:
+        s = S[w]
+        out = []
+        for Kc in (K - 1, 12):
+            kc, bc = ratio_fit(s, Kc)
+            ac, bcr = abs(kc), bc.real
+            Cc = max(float(abs(s[k]) * mp.gamma(k + bcr) / ac ** k) for k in range(4, Kc + 1))
+            out.append((Kc, ac, bcr, Cc, float(abs(s[K]) / (Cc * ac ** K / mp.gamma(K + bcr)))))
+        print(f"      wf {w}: " + "; ".join(f"k <= {Kc} (a {ac:.4f}, b {bcr:.2f}, C {Cc:.1f}): {r:.3f}"
+                                            for Kc, ac, bcr, Cc, r in out))
 
 
 def best_kbar(sig, K):
