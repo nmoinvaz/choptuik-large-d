@@ -7302,3 +7302,12 @@ sigma_17, 16, 15 equal the K 35 J 1000 values at 0.99 and 1.01 exactly (differen
 Fit Mf per family 7 to 12 at both (7 x66 and x63); the largest fit error is 2.2e-17 (0.99) and 3.3e-17 (1.01), at family 21_5 (Mf 8).
 T88 started at once as queued: pilots (a) J 1000 / 960 and (b) J 1250 / 1280 at wf 1.00, K 39, 2 procs each, 13:13 UTC; the script runs the gate for (a) (err19 <= 1e-10 |sigma_19|, sigma_18, 17, 16 within their errs of T87's wf 1.00 file) and then starts the nodes with (a). Battery  (id=23658595)	100%; charged; 0:00 remain, for the record.
 Raw: choptuik-large-d-raw T87-mac/ complete and T88-mac/ at 906916e (README, runs in progress).
+
+== 2026-10-28 16:43 UTC mac T88 pilot (a) passes, wf 0.99 and 1.01 started
+Pilot (a), J 1000 / 960 bits, K 39, wf 1.00: finished 16:42 UTC, rc 0, 209 min (1713 s in the products, 10794 s in the fits, wall time).
+  sigma_19 = -1.73987055299809e-16 + 1.82047622458177e-16i, err19 = 2.8e-27 (1.11e-11 of |sigma_19|; gate 1e-10: pass, with a margin of 9)
+  sigma_18, 17, 16 equal T87's wf 1.00 values exactly (difference 0.0; errs 6.7e-27, 5.4e-26, 4.1e-25): pass
+Note: err19/|sigma_19| is 1.11e-11, against 2.0e-12 at sigma_18 and 1.3e-12 at sigma_17; |sigma_19| is 2.5e-16, about 100 times larger than sigma_18's 3.3e-15 ratio of magnitudes would suggest (sigma_18 is 3.3e-15), i.e. the magnitude fell by 13, not by the usual 12 to 13 per order of the last two.
+Fit Mf per family: 7 x84, 8 x51, 9 x28, 10 x19, 11 x11, 12 x17. The largest fit error is now 3.2e-16 at family 39_19 (Mf 7), the new top family; at K 33 to 37 it was 2.7e-17 at family 21_5.
+wf 0.99 and 1.01 with (a) started 16:42 UTC, 2 procs each, 6 procs with (b) (at k 33 of 39 at 16:14 UTC). Battery  (id=23658595)	100%; charged; 0:00 remain, for the record.
+Raw: choptuik-large-d-raw T88-mac/ at db251bd (pilot (a) JSON and log, the two node logs in progress).
