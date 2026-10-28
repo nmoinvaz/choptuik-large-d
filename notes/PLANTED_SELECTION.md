@@ -1355,3 +1355,13 @@ for, stated here before the data:
 The stages are `converge`, `plants`, `real`, `ring`, `calib`, `recomplete`, `project`, `combine`, each run as
 `nice -n 10 python3 planted_k17.py STAGE` from `solver/inner_amp/`, with the σ₁₇ JSONs copied from the raw-data
 repository's T86-mac into `scan35J1000/` and `scan35J1250/` as the earlier orders' were.
+
+The dry run (item 0) ran on 2026-10-28 01:29–01:39 UTC on the Mac, beside T86: all eight stages completed and their 62
+checks passed (the logs are in the raw-data repository's `planted-k17-mac/dry/`). In the ring test the planted
+C16-BP [7/9] reproduced its σ₁₇ to 1.2×10⁻²⁰ and survived under both readings, and its zero (1.0000007) lies inside
+the dry run's K = 17 range, 0.999990–1.000009. One criterion of item 0 was missed: its τ₁₇ error was 3.3–4.7×10⁻¹⁸,
+not below 10⁻¹⁸. The cause is the scans' 20-digit format, in which the synthetic σ₁₇ was written: τ₁₇ amplifies that
+rounding about 400 times (τ₁₆ from the same file is exact to 10⁻⁴⁵, and the sum's exact σ₁₇ gives its exact τ₁₇), so
+the criterion was too tight for 20-digit input; it is left as written. The two rings of 8.4 were rejected by the
+synthetic σ₁₇ (D-G, D-arg), which says nothing about the real one. No stage code changed; the one defect was in the
+coordinator's stage runner (a shell word split), outside the procedure.
