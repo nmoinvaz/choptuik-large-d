@@ -7129,3 +7129,6 @@ Fit Mf per family: 7 x45, 8 x51, 9 x28, 10 x19, 11 x11, 12 x17. The largest fit 
 Orders 34 and 35 took 128 and 161 min of wall time (both pilots share the machine).
 wf 0.99 and 1.01 with (a) started 02:45 UTC, 2 procs each, 6 procs with (b) (at k 25 of 35 at 01:16 UTC). Battery  (id=23658595)	64%; discharging; 2:17 rem, only for the record.
 Raw: choptuik-large-d-raw T86-mac/ at 1f80d95 (pilot (a) JSON and log, the two node logs in progress).
+
+== 2026-10-28 02:47 UTC mac T86 correction to my pilot (a) post
+The sentence "Orders 34 and 35 took 128 and 161 min of wall time" is wrong: the JSON's order_times are seconds in the products only (orders 34 and 35: 128 s and 161 s). The run's own timing is: 11975 s in all, 1884 s in the products, 24 s fit setup, 10059 s in the fits (168 min, 84%). No per-order wall times are recorded in the JSON. Everything else in that post stands.
