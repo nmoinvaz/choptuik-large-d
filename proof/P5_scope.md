@@ -76,6 +76,23 @@ sharpened form, and the coefficient errors of (H_σ) (fit errors ~10⁻¹² of e
 far below the budget. (H_ω) is the open part: three nodes 0.01 apart do not control a box to 10⁻⁵ in G by
 interpolation alone (section 4, item 2).
 
+**The certificate at fixed ω, done** (2026-10-28, `solver/proof/entire_cert_rig.py`; logs
+`solver/proof/logs/entire_cert_rig_planted.log`, `entire_cert_rig_K17.log`). Ball arithmetic throughout: the σ_k as
+acb balls with their fit errors as radii, the g_k from them, Rouché on |x − x₀| = ρ against the exact midpoint
+polynomial P (whose roots `acb_poly.roots()` isolates), with |G − P| ≤ δ + tail, δ the coefficient radii summed with
+Rᵏ and the tail (H_T)'s sum bounded in arb. A planted function e^{κ₁x} + c e^{κ₂x} of known type with its zero placed
+at x = 7.4 is certified, and the four mutations (disc moved to no zero, ρ = 7 with three zeros, the tail constant
+×10⁵, the last coefficient unknown) each fail. On `scan35J1000` with K = 17, κ̄ from `entire_cert.best_kbar`,
+C_G′ = 11.4 × 2 (margin), r = 0.749, b = 4.38:
+
+```
+cd solver/proof && python3 entire_cert_rig.py real ../inner_amp/scan35J1000 17 11.4 0.749 4.38 --rho=1e-3
+```
+
+certifies exactly one zero of S₁(·, ω) in |x − x₀(ω)| < 10⁻³ at each of ω/ω∞ = 0.99, 1.00, 1.01, with
+(δ + tail)/min |P| = 0.125, 0.130, 0.137 (δ ≈ 3×10⁻⁸, tail ≈ 4–5×10⁻⁶). *Conditional* on (H_σ) and (H_T); it says
+nothing across ω, so the real zero (A*, ω*) is not certified by it. That is the (H_ω) step.
+
 ## 3. The closest published tools
 
 - **Entire functions of exponential type.** Pólya's theorem (Borel transform, conjugate indicator diagram) and the
@@ -127,7 +144,7 @@ interpolation alone (section 4, item 2).
 
 | step | item | who | cost | decides |
 |---|---|---|---|---|
-| 1 | the conditional certificate (4.1) at K = 17, rerun at K = 18 | coordinator | 2–4 days | the box radius the route gives, with (H_T)'s constants fixed and falsifiable |
+| 1 | the conditional certificate (4.1) at K = 17, rerun at K = 18 | coordinator | 2–4 days; the fixed-ω part done 2026-10-28 (section 2), the (A, ω) Krawczyk with (H_ω) remains | the box radius the route gives, with (H_T)'s constants fixed and falsifiable |
 | 2 | the σ₁₈, σ₁₉ tests of (H_T) (section 2, item 3) | the Mac (T87, T88) | running | whether the calibrated bound keeps its margin |
 | 3 | the (H_ω) measurement (4.2) | the Mac, after T88 | 8 h | the number of nodes a radius-10⁻⁴ box needs |
 | 4 | the order-3 and order-5 Borel structure (4.4) | cloud agent | days, then 1–2 weeks | whether (H_T) is a theorem in reach or stays a hypothesis |
