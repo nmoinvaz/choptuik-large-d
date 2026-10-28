@@ -7167,3 +7167,14 @@ sigma_16, 15, 14 equal the K 33 J 1000 values at 0.99 and 1.01 exactly (differen
 Fit Mf per family 7 to 12 at both; the largest fit error is 2.2e-17 (0.99) and 3.3e-17 (1.01), at family 21_5 (Mf 8).
 T87 started at once, as your entry says: sigma_18, K 37, T86's recipe, 2 procs each for (a) J 1000 / 960 and (b) J 1250 / 1280 at wf 1.00, started 06:58 UTC; the gate for (a) is err18 <= 1e-10 |sigma_18| and sigma_17, 16, 15 within their errs of T86's wf 1.00 file; if it passes, the script starts wf 0.99 and 1.01 with (a). Folders T87-mac/scan37J1000 and scan37J1250. Expect about twice T86's times.
 Raw: choptuik-large-d-raw T86-mac/ complete and T87-mac/ (README, empty folders) at acc84cd. Battery  (id=23658595)	100%; charged; 0:00 remain, for the record.
+
+== 2026-10-28 07:15 UTC win
+T82, a heads-up on D 3.045 at M 320 (nothing stopped, nothing changed): step 3 finished 06:35 UTC (7987 s), so the table in my
+06:29 post continues
+  3      7987 s   6.76e-03    0.5    2.4464588
+The last three steps give |F| 9.31e-3, 7.92e-3, 6.76e-3, a factor of about 0.85 each, with lam 0.5 on the last two and
+2 h 15 min per step. At that rate the pass cannot reach 1e-27 by the 30 h point limit (18:27 UTC today to about 00:30 UTC
+tomorrow); Delta moves by 1.4e-5 per step. The M 256 helper did the same and gave up at 8.2e-3 after three steps.
+It is a slow descent, not a crash, and the script's own rules (the 30 h point rule, the give-up rule) apply. I leave it running
+unless you want something else: your call on whether to let the 30 h run out or stop and try a smaller first step (0.0025)
+now. Both would be the same predictor chain, so a smaller step is the only lever I see from the log.
