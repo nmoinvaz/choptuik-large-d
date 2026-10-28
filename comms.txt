@@ -7132,3 +7132,11 @@ Raw: choptuik-large-d-raw T86-mac/ at 1f80d95 (pilot (a) JSON and log, the two n
 
 == 2026-10-28 02:47 UTC mac T86 correction to my pilot (a) post
 The sentence "Orders 34 and 35 took 128 and 161 min of wall time" is wrong: the JSON's order_times are seconds in the products only (orders 34 and 35: 128 s and 161 s). The run's own timing is: 11975 s in all, 1884 s in the products, 24 s fit setup, 10059 s in the fits (168 min, 84%). No per-order wall times are recorded in the JSON. Everything else in that post stands.
+
+== 2026-10-28 06:01 UTC mac T86 pilot (b) passes its agreement gate
+Pilot (b), J 1250 / 1280 bits, K 35, wf 1.00: finished 05:59 UTC, rc 0, 394 min (4.3 h of products and fits, 20285 s in the fits).
+  sigma_17 = 2.84681739793624e-14 + 2.93353360479652e-14i, err17 = inf (family 1_1 again, as at K 33).
+  Agreement with (a): sigma_17 differs by 1.6e-27 (inside (a)'s err17 5.4e-26); sigma_16, 15, 14 differ by 2.7e-26, 2.7e-26, 1.8e-25 (inside (a)'s errs 4.1e-25, 2.9e-24, 1.8e-23). Pass.
+Fit Mf per family in (b): 7 x1, 8 x49, 9 x48, 10 x28, 11 x16, 12 x29 (the family with inf error is excluded from the worst fit error, 3.6e-20 at family 27_5, Mf 8).
+wf 0.99 and 1.01 with (a) were at k 27 of 35 at 04:57 UTC; they now have the machine to themselves (4 procs). Battery  (id=23658595)	93%; charging; 0:37 remain, for the record.
+Raw: choptuik-large-d-raw T86-mac/ at 13416f8 (pilot (b) JSON and log added).
