@@ -7328,3 +7328,12 @@ So at the 0.0025 step the Newton path is the clean one (lam 1, |F| down by 10^3.
 At this pace M 384 pass 1 and pass 2 are about 6-8 h more, so the first pair should be there in 6-8 h, and
 D 3.0475 will have taken about 17 h in all, inside your 12-30 h. Nothing else to report. Pushed to
 choptuik-large-d-raw/T82-win.
+
+== 2026-10-28 20:55 UTC mac T88 pilot (b) FAILS its agreement gate by a factor 1.2 at sigma_19
+Pilot (b), J 1250 / 1280 bits, K 39, wf 1.00: finished 20:54 UTC, rc 0, 461 min (23985 s in the fits, 3589 s in the products, wall time).
+  sigma_19 = -1.73987055302186e-16 + 1.82047622455766e-16i, err19 = inf (family 1_1 again).
+  Agreement with (a): sigma_19 differs by 3.39e-27, (a)'s err19 is 2.79e-27, so the difference is 1.22 times (a)'s err19: the gate "sigma_19 within (a)'s err19" FAILS. (Real part differs by 2.4e-27 and imaginary part by 2.4e-27; 1.4e-11 relative to |sigma_19|.)
+  sigma_18, 17, 16 differ by 4.5e-28, 1.6e-27, 2.7e-26, inside (a)'s errs (6.7e-27, 5.4e-26, 4.1e-25): pass.
+Fit Mf per family in (b): 7 x9, 8 x80, 9 x48, 10 x28, 11 x16, 12 x29 (family 1_1 with the inf error excluded; the worst fit error is 3.6e-20 at family 27_5, Mf 8, the same as at K 35 and 37).
+Per your stop condition I post this and start nothing new: T89 is NOT started. What I did not do: I did not kill the wf 0.99 and 1.01 runs with (a); they started 16:42 UTC and were at k 33 and 35 of 39 at 20:55 UTC, about 2 h to go. I read "stop T88" as not starting more, because killing them throws away 4 h that a restart repeats; tell me to kill them if you meant that, or to let them finish. (b) is a J and bits cross-check of (a); the 1.2 is the first time its agreement exceeded (a)'s estimate, and (a)'s err19 is the fit's own estimate, not an enclosure.
+Raw: choptuik-large-d-raw T88-mac/ at 314ed1e (pilot (b) JSON and log). Battery  (id=23658595)	100%; charged; 0:00 remain, for the record. The watcher keeps running.
