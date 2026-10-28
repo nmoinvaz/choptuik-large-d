@@ -66,10 +66,14 @@ Three findings.
    vanishing at the far end gives, it is 2.3×10⁻⁶, sixteen times inside the Rouché margin at radius 10⁻³ in x and
    seven times inside the Krawczyk need at radius 10⁻⁴ in (A, ω/ω∞). The calibrated C_G′ = 11.4 is set by the last
    coefficient (κ̄ zeroes g_{K−1}, so g_K carries what is left); the earlier ones give 3–5.
-3. **The next test is already scheduled.** The K = 17 calibration predicts |σ₁₈| ≤ 3.63×10⁻¹⁵ and |σ₁₉| ≤
-   2.77×10⁻¹⁶. The Mac's T87 pilot gives |σ₁₈| = 3.28×10⁻¹⁵ at ω∞ (raw-data repository T87-mac at 22324e9), 0.90 of
-   the bound, the same margin as the orders before. The check is rerun on the committed scans when the three σ₁₈
-   nodes land, and on σ₁₉ (T88).
+3. **The σ₁₈ test passed; σ₁₉ is next.** The K = 17 calibration predicts |σ₁₈| ≤ 3.63×10⁻¹⁵ and |σ₁₉| ≤
+   2.77×10⁻¹⁶. The committed σ₁₈ scans (`solver/inner_amp/scan37J1000`, T87, 2026-10-28) give |σ₁₈| = 3.28×10⁻¹⁵ at
+   ω∞, 0.90 of the bound, the same margin as the orders before (3.35×10⁻¹⁵ and 3.20×10⁻¹⁵ at the nodes, 0.92 and 0.88
+   of the ω∞ bound). Under the bound calibrated on k ≤ 12 the ratio |σ_k|/bound is 0.912, 0.910, 0.911, 0.915, 0.923,
+   0.934 for k = 13…18 (`solver/proof/logs/entire_cert_K18.log`), still inside but rising by about 0.01 per order
+   over the last three, which is the quantity to watch: a hypothesis with a fixed C must hold for every k, and the
+   margin it needs is set by where that ratio levels off. Recalibrated at K = 18 (a = 1.7167, b = 4.46, C = 45.6)
+   the bound predicts |σ₁₉| ≤ 2.79×10⁻¹⁶ (2.77×10⁻¹⁶ from K = 17); σ₁₉ (T88) tests it.
 
 So, numerically: at K = 17, a conditional certificate at radius about 10⁻⁴ in ω/ω∞ is within reach of (H_T) in its
 sharpened form, and the coefficient errors of (H_σ) (fit errors ~10⁻¹² of each σ_k, 10⁻²⁵ absolute at k = 17) are
@@ -77,7 +81,8 @@ far below the budget. (H_ω) is the open part: three nodes 0.01 apart do not con
 interpolation alone (section 4, item 2).
 
 **The certificate at fixed ω, done** (2026-10-28, `solver/proof/entire_cert_rig.py`; logs
-`solver/proof/logs/entire_cert_rig_planted.log`, `entire_cert_rig_K17.log`). Ball arithmetic throughout: the σ_k as
+`solver/proof/logs/entire_cert_rig_planted.log`, `entire_cert_rig_K17.log`, `entire_cert_rig_K18.log`). Ball
+arithmetic throughout: the σ_k as
 acb balls with their fit errors as radii, the g_k from them, Rouché on |x − x₀| = ρ against the exact midpoint
 polynomial P (whose roots `acb_poly.roots()` isolates), with |G − P| ≤ δ + tail, δ the coefficient radii summed with
 Rᵏ and the tail (H_T)'s sum bounded in arb. A planted function e^{κ₁x} + c e^{κ₂x} of known type with its zero placed
@@ -92,6 +97,17 @@ cd solver/proof && python3 entire_cert_rig.py real ../inner_amp/scan35J1000 17 1
 certifies exactly one zero of S₁(·, ω) in |x − x₀(ω)| < 10⁻³ at each of ω/ω∞ = 0.99, 1.00, 1.01, with
 (δ + tail)/min |P| = 0.125, 0.130, 0.137 (δ ≈ 3×10⁻⁸, tail ≈ 4–5×10⁻⁶). *Conditional* on (H_σ) and (H_T); it says
 nothing across ω, so the real zero (A*, ω*) is not certified by it. That is the (H_ω) step.
+
+Rerun at K = 18 on the σ₁₈ scans (2026-10-28, `logs/entire_cert_K18.log` for the constants, κ̄ = 1.033 + 0.372i,
+r = 0.774, C_G′ = 12.0 × 2, b = 4.46; `logs/entire_cert_rig_K18.log`):
+
+```
+cd solver/proof && python3 entire_cert_rig.py real ../inner_amp/scan37J1000 18 12.0 0.774 4.46 --rho=1e-3
+```
+
+certifies one zero in the same discs at each node with (δ + tail)/min |P| = 0.105, 0.107, 0.112 (δ ≈ 7–9×10⁻⁸, tail
+≈ 1.5–1.9×10⁻⁶ against a minimum of 1.5–1.7×10⁻⁵). One order more lowers the tail by 2.7 and the circle minimum by
+1.8, so the margin improves slowly with K; the (H_ω) step, not K, is what the certificate now waits on.
 
 ## 3. The closest published tools
 
@@ -144,8 +160,8 @@ nothing across ω, so the real zero (A*, ω*) is not certified by it. That is th
 
 | step | item | who | cost | decides |
 |---|---|---|---|---|
-| 1 | the conditional certificate (4.1) at K = 17, rerun at K = 18 | coordinator | 2–4 days; the fixed-ω part done 2026-10-28 (section 2), the (A, ω) Krawczyk with (H_ω) remains | the box radius the route gives, with (H_T)'s constants fixed and falsifiable |
-| 2 | the σ₁₈, σ₁₉ tests of (H_T) (section 2, item 3) | the Mac (T87, T88) | running | whether the calibrated bound keeps its margin |
+| 1 | the conditional certificate (4.1) at K = 17, rerun at K = 18 | coordinator | 2–4 days; the fixed-ω part done at K = 17 and 18 on 2026-10-28 (section 2), the (A, ω) Krawczyk with (H_ω) remains | the box radius the route gives, with (H_T)'s constants fixed and falsifiable |
+| 2 | the σ₁₈, σ₁₉ tests of (H_T) (section 2, item 3) | the Mac (T87, T88) | σ₁₈ passed at 0.90 of the bound (2026-10-28); σ₁₉ running | whether the calibrated bound keeps its margin |
 | 3 | the (H_ω) measurement (4.2) | the Mac, after T88 | 8 h | the number of nodes a radius-10⁻⁴ box needs |
 | 4 | the order-3 and order-5 Borel structure (4.4) | cloud agent | days, then 1–2 weeks | whether (H_T) is a theorem in reach or stays a hypothesis |
 | 5 | rigorous σ₂…σ_K (4.3) | cloud agent | months | only if step 4 says (H_T) is provable |

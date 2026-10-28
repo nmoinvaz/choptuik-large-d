@@ -1,0 +1,49 @@
+1. ratio law sigma_k/sigma_{k+1} = (k + beta)/kappa_*  (entire, order 1, type |kappa_*| in x)
+   w/w_inf 0.99: increments k = 7..17: 0.4201-0.3937j 0.4559-0.3859j 0.4679-0.3891j 0.4660-0.3891j 0.4594-0.3835j 0.4528-0.3744j 0.4476-0.3642j 0.4435-0.3543j 0.4399-0.3450j 0.4367-0.3366j 0.4335-0.3288j
+      fit k = 6..17: kappa_* = 1.3271+1.0878j (|kappa_*| 1.7160, arg 0.6866), beta = 4.434-1.842j
+   w/w_inf 1.0: increments k = 7..17: 0.4135-0.3888j 0.4544-0.3805j 0.4691-0.3860j 0.4676-0.3882j 0.4605-0.3838j 0.4533-0.3752j 0.4476-0.3650j 0.4434-0.3550j 0.4398-0.3457j 0.4366-0.3373j 0.4335-0.3295j
+      fit k = 6..17: kappa_* = 1.3285+1.0872j (|kappa_*| 1.7167, arg 0.6858), beta = 4.458-1.841j
+   w/w_inf 1.01: increments k = 7..17: 0.4059-0.3836j 0.4526-0.3745j 0.4704-0.3823j 0.4695-0.3870j 0.4618-0.3841j 0.4539-0.3760j 0.4477-0.3659j 0.4432-0.3558j 0.4397-0.3464j 0.4365-0.3379j 0.4335-0.3301j
+      fit k = 6..17: kappa_* = 1.3303+1.0865j (|kappa_*| 1.7176, arg 0.6849), beta = 4.483-1.843j
+2. Prony: a_k = k! sigma_k = sum_i c_i kappa_i^k (w = w_inf); exponents spread along an arc
+   m 3: rel. resid 0.0039; kappa_i = (0.7263 + 0.3855j), (0.8523 + 0.801j), (1.131 + 1.027j)
+   m 4: rel. resid 0.0002; kappa_i = (0.7401 + 0.2727j), (0.7797 + 0.588j), (0.9533 + 0.8513j), (1.197 + 1.041j)
+   m 5: rel. resid 3.7e-6; kappa_i = (0.7455 + 0.1978j), (0.7759 + 0.4401j), (0.8695 + 0.6907j), (1.041 + 0.887j), (1.261 + 1.055j)
+3. resummed zero: G_K = e^{-kbar x} S_1 truncated at x^K (kbar minimising the last two terms at x0)
+   (the plain Taylor truncation, kbar = 0, gives A0 = 1.99, 2.15, ..., 2.53 for K = 6..12: useless)
+   K 9: kbar (0.94374 + 0.50279j), last terms 8.1e-03; A0(w_inf) = 2.714936-0.002837i; real zero at w/w_inf = 0.99767
+   K 10: kbar (1.0169 + 0.46379j), last terms 2.9e-03; A0(w_inf) = 2.722354+0.000540i; real zero at w/w_inf = 1.00035
+   K 11: kbar (0.95098 + 0.50656j), last terms 1.0e-03; A0(w_inf) = 2.719857-0.000188i; real zero at w/w_inf = 0.99987
+   K 12: kbar (0.8931 + 0.55005j), last terms 3.6e-04; A0(w_inf) = 2.719429-0.000167i; real zero at w/w_inf = 0.99988
+   K 13: kbar (0.94939 + 0.50488j), last terms 1.7e-04; A0(w_inf) = 2.719099-0.000007i; real zero at w/w_inf = 1.00000
+   K 14: kbar (1.0185 + 0.45107j), last terms 5.8e-05; A0(w_inf) = 2.719269+0.000039i; real zero at w/w_inf = 1.00003
+   K 15: kbar (0.94558 + 0.47374j), last terms 3.6e-05; A0(w_inf) = 2.719238-0.000002i; real zero at w/w_inf = 1.00000
+   K 16: kbar (1.0294 + 0.4116j), last terms 1.1e-05; A0(w_inf) = 2.719188+0.000007i; real zero at w/w_inf = 1.00000
+   K 17: kbar (0.95376 + 0.42909j), last terms 6.6e-06; A0(w_inf) = 2.719201+0.000004i; real zero at w/w_inf = 1.00000
+   K 18: kbar (1.0331 + 0.37224j), last terms 1.8e-06; A0(w_inf) = 2.719206-0.000002i; real zero at w/w_inf = 1.00000
+4. zeros of G_18 at w_inf with |x| < 16: (7.3941 - 1.0271e-5j), (11.962 + 1.5405j), (11.601 + 4.5121j), (10.373 + 7.7503j), (13.031 - 0.41279j), (8.1775 + 10.903j), (4.4017 + 13.636j), (15.151 - 3.3971j), (-1.8464 + 15.553j)
+   (the second zero moves with K: 10.09, 10.90, 11.36 for K = 10, 11, 12 - not converged)
+   terms |g_k| x0^k: 1.0e+00 2.4e+00 2.0e+00 1.2e+00 1.0e+00 4.5e-01 2.3e-01 1.0e-01 4.0e-02 1.7e-02 6.0e-03 2.4e-03 7.8e-04 2.7e-04 9.5e-05 2.2e-05 1.3e-05 6.6e-16 1.8e-06
+5. certificate margins
+   Rouche disc |x - x0| = 0.001: min |G_K| on the circle 2.04e-5 -> the tail (and coefficient errors) must be below this on the circle
+   Rouche disc |x - x0| = 0.01: min |G_K| on the circle 0.000203 -> the tail (and coefficient errors) must be below this on the circle
+   Rouche disc |x - x0| = 0.1: min |G_K| on the circle 0.00193 -> the tail (and coefficient errors) must be below this on the circle
+   2D Jacobian of (Re G, Im G) in (A, w/w_inf): [[0.0121, 0.1468], [-0.1101, 0.0995]], singular values 0.187, 0.093
+   box radius 0.01: total enclosure error of G must be below ~9.3e-04
+   box radius 0.001: total enclosure error of G must be below ~9.3e-05
+   box radius 0.0001: total enclosure error of G must be below ~9.3e-06
+6. type bound calibrated on the computed orders (a hypothesis, not a bound), and its tail at x0
+   S_1 form, |sigma_k| Gamma(k + 4.46) / 1.7167^k for k = 4..18: 45.6 45.4 44.8 44.3 43.9 43.6 43.2 42.8 42.3 41.8 41.4 41.1 40.9 40.8 40.9; C = max = 45.6
+   its prediction for the next orders, |sigma_k| <= C a^k / Gamma(k + b): k 19: 2.79e-16, k 20: 2.05e-17
+   the tail sum_(k>K) C a^k x0^k / Gamma(k + b) at x0, for the truncation orders K:
+      K 12: 404.0
+      K 14: 173.0
+      K 18: 18.9
+   calibrated on k <= 12 (a 1.6746, b 4.16, C 27.3): |sigma_k| / bound for k = 13..18: 0.912 0.910 0.911 0.915 0.923 0.934  (holds)
+   calibrated on k <= 14 (a 1.6797, b 4.19, C 28.7): |sigma_k| / bound for k = 15..18: 0.904 0.907 0.914 0.924  (holds)
+   G form with kbar (1.033 + 0.3722j): r = max |t - kbar| over the arc = 0.774 (at t = (1.329 + 1.087j)); |g_k| k! / r^k for k = 4..18: 0.02 0.01 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00; C_G = max = 0.02
+   sharpened, |g_k| Gamma(k + 4.46) / r^k for k = 4..18: 12.0 8.0 6.8 5.5 4.3 4.0 3.3 3.3 2.9 2.9 3.1 2.3 4.6 0.0 8.8; C_G' = max = 12.0
+   the G tail beyond K = 18 at x0: 6.35e-05 with r^k/k!, 8.34e-07 sharpened; the sharpened tail against the Rouche minimum of |G_18| on the circles:
+      rho 0.001: min |G_K| 2.04e-05, tail / min = 0.04  (the tail alone fits)
+      rho 0.01: min |G_K| 2.03e-04, tail / min = 0.00  (the tail alone fits)
+      rho 0.1: min |G_K| 1.93e-03, tail / min = 0.00  (the tail alone fits)

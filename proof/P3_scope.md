@@ -86,14 +86,43 @@ with OUT the task's folder in the raw-data repository (queued as T90 on the Mac,
 measurement is the mixed-system box run of design 3 at the failed run's (h, w), which the refinement's mixed mode
 almost provides, to see the outer rows' margin without the harmonic-5 rows.
 
+**Result** (T90, 2026-10-28 12:19–12:33 UTC, 821 s beside two other jobs; raw-data repository `P3-mac/` at 0a6d80a,
+`A_M_point_M5.log`). Derivative radii at the five places, the point run beside the box run of section 2 (the point
+run prints every 25 steps, so its arc value is the last printed line, t = 0.95 of 1):
+
+| where on the path (the same step in both runs) | box run, h = 10⁻¹³ | point run | ratio |
+|---|---|---|---|
+| ray, t = 0.02 (step 150) | 2.4×10⁻¹² | 4.9×10⁻¹⁹ | 5×10⁶ |
+| ray, t = 0.55 (step 1650) | 6.9×10⁻⁹ | 1.1×10⁻¹⁵ | 6×10⁶ |
+| ray, t = 0.98 (step 2100) | 4.3×10⁻⁶ | 5.7×10⁻¹³ | 8×10⁶ |
+| arc, t = 0.73 | 1.9×10⁻² | 1.2×10⁻⁹ | 1.6×10⁷ |
+| arc, t = 0.84 | 0.21 | 1.4×10⁻⁸ | 1.6×10⁷ |
+| arc, t = 0.95 (step 850 of 863) | 4.8 | 3.9×10⁻⁷ | 1.2×10⁷ |
+| real leg, t = 0.39 (step 50) | 8.6×10³ | 1.5×10⁻² | 6×10⁵ |
+| end of the real leg (ξ₁ = 0.3, step 100 of 101) | 3.2×10⁸ | 12 | 2.6×10⁷ |
+
+The point run's state radii grow from 9×10⁻³² (ray) through 1.2×10⁻²¹, 1.3×10⁻²⁰, 3.0×10⁻¹⁹ (the three arc rows)
+and 3.3×10⁻¹⁶ to 9.0×10⁻¹⁴ at ξ₁, and its g at ξ₁ has radius 1.2×10⁻¹⁴ (the centre's |g| ≤ 2.5×10⁻²⁹).
+
+Neither reading above as written: 12 is not 10⁸ and not 10⁻⁵. What the table separates is this. The box run's radii
+are 3×10⁶–3×10⁷ times the point run's at every checkpoint, a factor set by the initial set over the box, while
+along the path the two runs grow alike (×250–300 over the last fifth of the arc, ×3–7×10⁷ over the real leg,
+10¹⁹–10²⁰ from the ray's first checkpoint to ξ₁). So the amplification along the path is the enclosure's own handling
+of the fast directions, present with no box at all, and the box only sets the excess it starts from. The point run's 12 is
+itself too large: scaled from the box run (Y Dg̃(X) radius 9.3×10⁷ at derivative radius 3.2×10⁸) it gives a Krawczyk
+radius of about 3, above the 1 the test needs, so no treatment of the box alone (design 1) can pass, and the fix has
+to start with the amplification. **Decision:** design 2 first (the fast-direction-aware sets), judged by this same
+point run (target: a derivative radius at ξ₁ of 10⁻⁵, as the M = 3 point runs had); design 3 beside it for the
+harmonic-5 rows; design 1 only if the box run after design 2 still fails by a margin that scales with h.
+
 ## 5. Order of work
 
 | step | item | who | cost | decides |
 |---|---|---|---|---|
-| 1 | the M = 5 point run (§4) | the Mac, one thread, after T87's nodes free it | 1–4 h | whether the excess is the enclosure's or the box's |
-| 2 | design 3 (inner rows at ρ = 0.2) | cloud agent | 1 week | the −542 rows; lemma 6a(5) at both radii |
-| 3 | design 2 or 1, by step 1's answer | cloud agent | 2 weeks or a month | the outer rows' −14 |
-| 4 | the four box runs again, then Krawczyk, controls, re-check, 6a export (A_M.md §7's recipe) | the Mac or Windows, 4 threads | 3–4 h | Theorem A(5) |
+| 1 | the M = 5 point run (§4) | the Mac (T90) | done 2026-10-28, 14 min | the amplification is the enclosure's (×10¹⁹ along the path); the box adds a factor 10⁷ |
+| 2 | design 2 (fast-direction-aware sets), judged by the point run | cloud agent | 2 weeks | whether the point run's derivative radius at ξ₁ comes down from 12 to 10⁻⁵ |
+| 3 | design 3 (inner rows at ρ = 0.2), beside step 2 | cloud agent | 1 week | the −542 rows; lemma 6a(5) at both radii |
+| 4 | the four box runs again, then Krawczyk, controls, re-check, 6a export (A_M.md §7's recipe) | the Mac or Windows, 4 threads | 3–4 h | Theorem A(5), or whether design 1 (C² enclosures, a month) is needed for the box factor |
 
 Theorem A(M = 5) matters because it is the first truncation whose zero lies within 10⁻³ of ω∞; it does not by itself
 address uniformity in M (P6), and the entire-function route of [P5_scope.md](P5_scope.md) is the alternative that
