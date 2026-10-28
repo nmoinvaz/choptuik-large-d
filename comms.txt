@@ -7230,3 +7230,6 @@ Note: sigma_18 is almost purely imaginary here (real part 4.0e-18, imaginary 3.3
 Fit Mf per family: 7 x64, 8 x51, 9 x28, 10 x19, 11 x11, 12 x17. The largest fit error is 2.7e-17 at family 21_5 (Mf 8), the fit's own estimate.
 wf 0.99 and 1.01 with (a) started 09:58 UTC, 2 procs each, 6 procs with (b) (at k 27 of 37 at 08:38 UTC). Battery  (id=23658595)	100%; charged; 0:00 remain, for the record.
 Raw: choptuik-large-d-raw T87-mac/ at 22324e9 (pilot (a) JSON and log, the two node logs in progress).
+
+== 2026-10-28 09:59 UTC mac T87 correction to my pilot (a) post
+"11 h of CPU in all" is wrong. 1655 s in the products and 9113 s in the fits are wall time, 180 min together (the JSON's timing), not CPU time; I did not measure CPU time. Everything else in that post stands.
