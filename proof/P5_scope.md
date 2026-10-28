@@ -66,14 +66,19 @@ Three findings.
    vanishing at the far end gives, it is 2.3×10⁻⁶, sixteen times inside the Rouché margin at radius 10⁻³ in x and
    seven times inside the Krawczyk need at radius 10⁻⁴ in (A, ω/ω∞). The calibrated C_G′ = 11.4 is set by the last
    coefficient (κ̄ zeroes g_{K−1}, so g_K carries what is left); the earlier ones give 3–5.
-3. **The σ₁₈ test passed; σ₁₉ is next.** The K = 17 calibration predicts |σ₁₈| ≤ 3.63×10⁻¹⁵ and |σ₁₉| ≤
+3. **The σ₁₈ and σ₁₉ tests passed; σ₂₀ is next.** The K = 17 calibration predicts |σ₁₈| ≤ 3.63×10⁻¹⁵ and |σ₁₉| ≤
    2.77×10⁻¹⁶. The committed σ₁₈ scans (`solver/inner_amp/scan37J1000`, T87, 2026-10-28) give |σ₁₈| = 3.28×10⁻¹⁵ at
    ω∞, 0.90 of the bound, the same margin as the orders before (3.35×10⁻¹⁵ and 3.20×10⁻¹⁵ at the nodes, 0.92 and 0.88
    of the ω∞ bound). Under the bound calibrated on k ≤ 12 the ratio |σ_k|/bound is 0.912, 0.910, 0.911, 0.915, 0.923,
    0.934 for k = 13…18 (`solver/proof/logs/entire_cert_K18.log`), still inside but rising by about 0.01 per order
    over the last three, which is the quantity to watch: a hypothesis with a fixed C must hold for every k, and the
    margin it needs is set by where that ratio levels off. Recalibrated at K = 18 (a = 1.7167, b = 4.46, C = 45.6)
-   the bound predicts |σ₁₉| ≤ 2.79×10⁻¹⁶ (2.77×10⁻¹⁶ from K = 17); σ₁₉ (T88) tests it.
+   the bound predicts |σ₁₉| ≤ 2.79×10⁻¹⁶ (2.77×10⁻¹⁶ from K = 17). **σ₁₉ at ω∞ passed it** (T88's pilot (a),
+   `solver/inner_amp/scan39J1000/sigF_w1.0000_K39_J1000_p960.json`, 2026-10-28 16:42 UTC): |σ₁₉| = 2.52×10⁻¹⁶,
+   0.90 of the bound, the third order running at that margin, with |σ₁₈|/|σ₁₉| = 13.0 and the argument advancing
+   by 0.76 (0.77 at the order before). Its fit error is 1.1×10⁻¹¹ of |σ₁₉| (2.0×10⁻¹² at σ₁₈), still three orders
+   below what (H_σ) needs. The nodes 0.99 and 1.01, the k ≤ 12 ratio at k = 19 and the K = 19 recalibration follow
+   when T88's node runs land; σ₂₀ (T89) is the next test.
 
 So, numerically: at K = 17, a conditional certificate at radius about 10⁻⁴ in ω/ω∞ is within reach of (H_T) in its
 sharpened form, and the coefficient errors of (H_σ) (fit errors ~10⁻¹² of each σ_k, 10⁻²⁵ absolute at k = 17) are
@@ -161,7 +166,7 @@ certifies one zero in the same discs at each node with (δ + tail)/min |P| = 0.1
 | step | item | who | cost | decides |
 |---|---|---|---|---|
 | 1 | the conditional certificate (4.1) at K = 17, rerun at K = 18 | coordinator | 2–4 days; the fixed-ω part done at K = 17 and 18 on 2026-10-28 (section 2), the (A, ω) Krawczyk with (H_ω) remains | the box radius the route gives, with (H_T)'s constants fixed and falsifiable |
-| 2 | the σ₁₈, σ₁₉ tests of (H_T) (section 2, item 3) | the Mac (T87, T88) | σ₁₈ passed at 0.90 of the bound (2026-10-28); σ₁₉ running | whether the calibrated bound keeps its margin |
+| 2 | the σ₁₈, σ₁₉ tests of (H_T) (section 2, item 3) | the Mac (T87, T88) | σ₁₈ and σ₁₉ (at ω∞) both passed at 0.90 of the bound (2026-10-28); σ₁₉'s nodes and σ₂₀ (T89) next | whether the calibrated bound keeps its margin |
 | 3 | the (H_ω) measurement (4.2) | the Mac, after T88 | 8 h | the number of nodes a radius-10⁻⁴ box needs |
 | 4 | the order-3 and order-5 Borel structure (4.4) | cloud agent | days, then 1–2 weeks | whether (H_T) is a theorem in reach or stays a hypothesis |
 | 5 | rigorous σ₂…σ_K (4.3) | cloud agent | months | only if step 4 says (H_T) is provable |
