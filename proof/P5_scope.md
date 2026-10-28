@@ -1,0 +1,137 @@
+# P5 scoping note: the type bound, and a conditional Theorem A(∞)
+
+Queue item P5 of [notes/PROOF_QUEUE.md](../notes/PROOF_QUEUE.md): turn the amplitude series of the harmonic-1
+multiplier into a certified zero, with the exponential type of S₁ as the named hypothesis. This note fixes the
+statement, the tools, what is computable now and the cost, before any long computation. Written 2026-10-28 by Claude
+(Anthropic) under Nathan Moinvaziri's direction; not reviewed. Everything numerical here is *numerical evidence*
+from `solver/proof/entire_cert.py` on the seventeen-order scans (`solver/inner_amp/scan35J1000`, σ₀…σ₁₇ at
+ω/ω∞ = 0.99, 1.00, 1.01); nothing in it is a bound. [D_entire.md](D_entire.md) is the background (written at twelve
+orders; its sections 4, 5 and 7 are the starting point).
+
+## 1. The statement needed
+
+S₁/S₁⁽¹⁾ = Σ σ_k(ω) xᵏ, x = A², is the harmonic-1 multiplier of the tuned family (every S_ν, |ν| ≥ 3, tuned to zero
+order by order in the amplitude). Theorem A(∞) is Theorem A of [PROOF.md](../PROOF.md) for that family, the harmonic
+tail included, and in this route it is conditional on three named hypotheses:
+
+- **(H_σ) The computed coefficients.** σ_k(ω) for k ≤ K at the scanned ω, each within a stated error. Rigorous today
+  for σ₁ only (D_entire.md §6, `exact_sigma.py`); for σ₂…σ_K the fit errors (10⁻¹² relative at k = 17) are the
+  hypothesis until the order-by-order enclosures exist.
+- **(H_T) The type bound.** S₁(·, ω) is entire of exponential type, and for every k > K and every ω in the box the
+  coefficients of G = e^{−κ̄x} S₁ obey |g_k(ω)| ≤ C_G rᵏ/Γ(k + b) with explicit C_G, r, b. By Pólya's theorem this
+  is a statement about the Borel transform B(t) = Σ k! σ_k t^{−k−1}: its singularities lie in a stated convex set
+  (the hull of the arc of D_entire.md §7.1), with a bound on B on a contour around it; r is the distance from κ̄ to the
+  farthest point of that set and b the endpoint exponent of the density. The hypothesis is *explicit*, so that each new
+  order tests it (section 2).
+- **(H_ω) Uniformity in ω.** σ_k(ω) analytic in a stated strip around [ω₋, ω₊] with a stated bound, so that the
+  scanned nodes control the whole box (interpolation with a remainder), or enclosures of ∂σ_k/∂ω.
+
+**Conclusion.** In an explicit box B = [A₋, A₊] × [ω₋, ω₊], S₁(A, ω) has exactly one zero and it is simple. The proof is
+a Rouché test in x at fixed ω (|G − G_K| < min |G_K| on a circle around x₀) or a Krawczyk test for (Re G, Im G) in
+(A, ω/ω∞), in ball arithmetic, with the tail of (H_T) and the errors of (H_σ) and (H_ω) as the enclosure error. The
+status word is *conditional*, with (H_σ), (H_T), (H_ω) named; dropping (H_σ) is the rigorous-coefficient project of
+D_entire.md §4 item 1, dropping (H_T) is the new mathematics.
+
+What it serves. Layer A with no truncation in harmonics: the zero whose existence Theorem B assumes, at the
+untruncated profile. The truncated route (Theorem A(M), M = 1, 3 certified, M = 5 is P3) needs gap (b), uniformity in
+M (P6); this route trades that for the type bound, in which the harmonic tail becomes a tail in the amplitude.
+
+## 2. What the seventeen-order data say
+
+`cd solver/proof && python3 entire_cert.py 17 --scan ../inner_amp/scan35J1000` (seconds; the default,
+`entire_cert.py 12`, reproduces D_entire.md's twelve-order numbers unchanged).
+
+| quantity (ω = ω∞) | K = 12 (D_entire.md) | K = 17 |
+|---|---|---|
+| ratio-law fit κ⋆ (far end of the arc), type ∣κ⋆∣, β | 1.279 + 1.081i, 1.675, 4.16 − 1.60i | 1.317 + 1.085i, 1.706, 4.38 − 1.79i |
+| constant C = max_k ∣σ_k∣ Γ(k + Re β)/∣κ⋆∣ᵏ, k = 4…K | 27.3 (falling to 25.0 at k = 12) | 39.7 (falling to 35.6 at k = 17) |
+| Rouché minimum of ∣G_K∣ on ∣x − x₀∣ = 10⁻³ | 5.7×10⁻⁵ | 3.7×10⁻⁵ |
+| enclosure error of G allowed by a box of radius 10⁻⁴ (Krawczyk) | 2.6×10⁻⁵ | 1.7×10⁻⁵ |
+| tail beyond K at x₀, S₁ form | 400 | 35 |
+| tail beyond K at x₀, G form with rᵏ/k! | 3.5×10⁻³ | 6.1×10⁻⁵ |
+| tail beyond K at x₀, G form with rᵏ/Γ(k + Re β) | 1.8×10⁻⁴ | 2.3×10⁻⁶ |
+
+Three findings.
+
+1. **The ratio law is not a constant-increment law.** The increments of σ_k/σ_{k+1} drift, 0.469 − 0.386i at k = 9
+   to 0.437 − 0.337i at k = 16, so the fitted far end κ⋆ moves with the window (type 1.675 at twelve orders, 1.706 at
+   seventeen) and the constant C with it. A per-coefficient bound fixed at one order therefore has a margin that
+   shrinks: the bound calibrated on k ≤ 12 (C = 27.3, a = 1.6746, b = 4.16) holds at k = 13…17 with
+   |σ_k|/bound = 0.912, 0.910, 0.911, 0.915, 0.923, and the one calibrated on k ≤ 14 at k = 15…17 with 0.904,
+   0.907, 0.914. The hypothesis must carry an explicit margin (a factor in C, or r above the fitted far end), and it
+   is falsifiable at every new order.
+2. **Only the G form is usable, and only with the endpoint exponent.** The plain tail is 35 at seventeen orders (the
+   terms at x₀ peak near 240 and cancel). With κ̄ chosen as in D_entire.md §2 and r = max |t − κ̄| over the arc,
+   the rᵏ/k! tail is 6.1×10⁻⁵ (a box of radius 10⁻³, not 10⁻⁴); with rᵏ/Γ(k + Re β), which is what the density's
+   vanishing at the far end gives, it is 2.3×10⁻⁶, sixteen times inside the Rouché margin at radius 10⁻³ in x and
+   seven times inside the Krawczyk need at radius 10⁻⁴ in (A, ω/ω∞). The calibrated C_G′ = 11.4 is set by the last
+   coefficient (κ̄ zeroes g_{K−1}, so g_K carries what is left); the earlier ones give 3–5.
+3. **The next test is already scheduled.** The K = 17 calibration predicts |σ₁₈| ≤ 3.63×10⁻¹⁵ and |σ₁₉| ≤
+   2.77×10⁻¹⁶. The Mac's T87 pilot gives |σ₁₈| = 3.28×10⁻¹⁵ at ω∞ (raw-data repository T87-mac at 22324e9), 0.90 of
+   the bound, the same margin as the orders before. The check is rerun on the committed scans when the three σ₁₈
+   nodes land, and on σ₁₉ (T88).
+
+So, numerically: at K = 17, a conditional certificate at radius about 10⁻⁴ in ω/ω∞ is within reach of (H_T) in its
+sharpened form, and the coefficient errors of (H_σ) (fit errors ~10⁻¹² of each σ_k, 10⁻²⁵ absolute at k = 17) are
+far below the budget. (H_ω) is the open part: three nodes 0.01 apart do not control a box to 10⁻⁵ in G by
+interpolation alone (section 4, item 2).
+
+## 3. The closest published tools
+
+- **Entire functions of exponential type.** Pólya's theorem (Borel transform, conjugate indicator diagram) and the
+  Paley–Wiener–Pólya coefficient bounds: Boas, *Entire Functions* (Academic Press, 1954) *(unverified)*; Levin,
+  *Lectures on Entire Functions* (AMS, 1996) *(unverified)*. This is the standard form of (H_T).
+- **The endpoint exponent.** Darboux's method and Watson's lemma for the late orders of a Laplace integral with an
+  algebraic endpoint (Dingle 1973, verified in notes/REF_CHECK.md; already used for Proposition 4). Gives the
+  Γ(k + β) in (H_T).
+- **The certificate.** Rouché with interval evaluation on a circle; the Krawczyk operator (Krawczyk 1969 and
+  Neumaier, checked for the mathematics paper, REF_CHECK.md's 2026-10-21 addendum; the code is
+  `solver/proof/krawczyk.py`), in python-flint's acb balls.
+- **Rigorous Stokes constants, order by order.** Baldomá, Capiński, Guardia and Seara (J. Nonlinear Sci. 33, 2023,
+  verified) for the pattern: a validated lateral integration of a linear problem with an irregular singular point,
+  which each σ_k is (D_entire.md §4 item 1); Costin (Duke 1998, verified) for the transseries setting.
+- **The origin of the type.** No published result applies directly; D_entire.md §7.3 test 2 (the k-fold Borel
+  convolution of the order-1 and order-2 transforms over a simplex, bounded kernel → Mᵏ/(k − 1)!) is the candidate
+  mechanism. Nothing in notes/LIT_REVIEW.md covers an exponential-type bound for a tuned amplitude expansion of
+  Stokes constants; a literature pass on "Borel transform of a Stokes multiplier as a function of a parameter" is part
+  of item 4 below.
+
+## 4. What is computable now, with the cost
+
+1. **The conditional certificate at K = 17 (then 18).** A ball-arithmetic version of `entire_cert.py` sections 3–6:
+   σ_k as acb balls with their fit errors, the G coefficients and the tail of (H_T) as balls, the Rouché test on a
+   circle in x at each node, the Krawczyk test in (A, ω/ω∞) with (H_ω) as an explicit interpolation remainder, a
+   mutation for each check (a scaled σ_k, a tail constant halved, a node dropped) and a planted run on a function of
+   known type first (an explicit Laplace integral over an arc, whose coefficients the same code must certify). Output:
+   the explicit box and the explicit constants (C_G, r, b, margin) of (H_T). Cost: 2–4 days of coordinator or cloud
+   work; runs in seconds. This is D_entire.md §5's "feasible now, modulo engineering", with (H_σ) as a hypothesis in
+   place of rigorous coefficients.
+2. **(H_ω) by more nodes, measured first.** The Mac computes σ₀…σ₁₇ at ω/ω∞ = 0.995 and 1.005 (T86's recipe at two
+   more nodes, about 4 h each with 2 processes; a task for after T88 if the author prefers it to σ₂₀). The planted
+   check: predict σ_k(1.00) from the four other nodes and compare with the computed value; the miss, over k, is the
+   interpolation error that (H_ω) must cover, and it says how many nodes a box of radius 10⁻⁴ needs. Alternative,
+   cheaper in computer time and dearer in work: ∂σ_k/∂ω from the amplitude recursion with ω as a jet (the recursion
+   is polynomial in ω), enclosed by the same late-order fit; not started.
+3. **Rigorous σ₂…σ_K, (H_σ) dropped.** D_entire.md §6.6's scheme (Darboux telescoping, polygamma sums, log-convexity
+   bounds) by induction on the order, or validated lateral integration order by order. Mechanical and heavy: weeks of
+   agent work for σ₂…σ₆, a project (months) to k = 17. Not before item 4 says whether (H_T) is provable, because
+   with (H_T) unproved the theorem stays conditional either way.
+4. **The proof of (H_T): a scoping computation, not a proof attempt.** A cloud agent derives the order-3 and order-5
+   Borel structure of the amplitude recursion (test 2 of D_entire.md §7.3): whether the order-(2k+1) multiplier is a
+   k-fold convolution over a simplex of kernels bounded uniformly in k, which would give |σ_k| ≤ Mᵏ/(k − 1)! with
+   explicit M, and whether the exponent's values on the simplex fill the arc. Report only, with the formulas and a
+   numerical check of the predicted M against |κ⋆| ≈ 1.7. Cost: 1–2 weeks of an agent, open-ended; the first
+   milestone (the order-3 structure, where σ₁ is already exact) is a few days and decides whether to continue.
+
+## 5. Order of work and the decision points
+
+| step | item | who | cost | decides |
+|---|---|---|---|---|
+| 1 | the conditional certificate (4.1) at K = 17, rerun at K = 18 | coordinator | 2–4 days | the box radius the route gives, with (H_T)'s constants fixed and falsifiable |
+| 2 | the σ₁₈, σ₁₉ tests of (H_T) (section 2, item 3) | the Mac (T87, T88) | running | whether the calibrated bound keeps its margin |
+| 3 | the (H_ω) measurement (4.2) | the Mac, after T88 | 8 h | the number of nodes a radius-10⁻⁴ box needs |
+| 4 | the order-3 and order-5 Borel structure (4.4) | cloud agent | days, then 1–2 weeks | whether (H_T) is a theorem in reach or stays a hypothesis |
+| 5 | rigorous σ₂…σ_K (4.3) | cloud agent | months | only if step 4 says (H_T) is provable |
+
+Step 1 produces the deliverable of P5 as queued (the zero certified assuming an explicit type bound); steps 4 and 5
+are what would make it unconditional, and P6's uniformity question becomes moot on this route if they succeed.
