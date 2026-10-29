@@ -7467,3 +7467,19 @@ Read your 02:16 entry. T89 runs on unchanged (started 02:01 UTC, (a) J 1250 / 12
 Selftest, run once: "selftest: 52 files with finite sigma_err reproduced to 1e-12 relative at every order; the a1 mutation fires".
 Gate for (a) now = sigma_err_fit.py exit code (err20, --a1-from scan39J1000/sigF_w1.0000_K39_J1000_p960.json; 0 pass, 1 fail, 2 undefined stops T89 and I post the output) plus string-equality of sigma_0..19 with T88-mac/scan39J1250/sigF_w1.0000_K39_J1250_p1280.json. I tested the new gate script on T88's (b) file (err19 1.247e-28 = 4.95e-13 |sigma_19|, PASS) and its equality part against T91's (d) file as reference, where it fires as it should (960 against 1280 bits, sigma_0, 16, 17, 18 differ in the strings).
 Ruling 2 taken: if (b)'s sigma_20 differs from (a)'s by more than (a)'s err20 I post it and do not stop. Nodes' post as listed (sigma_16..20 with errs, the two differences to scan39J1000's sigma_19 at that wf, fit_info 1_1 and 41_1, minutes). T93 follows the nodes. Battery 100%, on mains.
+
+== 2026-10-29 06:31 UTC win
+T82 pilot: the first pair at the 0.0025 step has converged, D 3.0475, M 320 / 384, record 06:09 UTC (log 23:09:32 local), 22.7 h
+after the 07:27 UTC start (inside your 12-30 h). Peak RSS 2.8 GB at M 384, 18 GB free.
+  D 3.0475   Delta 2.4660121465217122 (M 384)    change from M_w (M 320, Delta 2.4660121465594229): -3.77e-11
+             decision "pair": below 1e-8, no move up to M 512. tails_ok true (tail_c 2.1e-61, tail_h 8.9e-72), kc 100, ks 250.
+  M 384  |F| 1.4e-28, passes 3 + 2 steps (pass 1 |F| 2.7e-28, 32744 s; pass 2 stopped on the floor, 4399 s the last step), 46797 s
+  M 320  |F| 9.6e-29, passes 3 + 3 steps, 23532 s
+  helper M 256  Delta 2.4660121485072883, |F| 3.0e-28, 8 steps, 10852 s; M 256 -> M 320: -1.95e-9.
+  Newton path: every step lam 1 except at the floor (lam 0.25, 0.125), |F| down 10^3..10^5 per step. No halving.
+One reading to check: the log's line after the pair, "series tails of the M 320 solution resampled to M 384: 2.7e-33 (centre),
+1.0e-76 (horizon)", has a centre value above the 1e-33 tail_max; the record itself has tails_ok true with tail_c 2.1e-61. I do
+not know which tail the 2.7e-33 is checked against, so I report it and leave it to you.
+My estimate at 20:32 UTC (pair in 5-8 h) was short: it came 9.6 h later, because the floor-to-summary step took 1 h 10 min at M 384.
+D 3.045 started 06:09 UTC: "D 3.045 M 256: start 'predictor' |F| 3.46e-02 (1759 steps)". Pushed to choptuik-large-d-raw/T82-win (09238bd).
+Next: each converged D, every 12 h, and the lam 0.5 / |F| above 1e-4 rule at the 12 h checks.
