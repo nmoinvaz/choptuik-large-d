@@ -7483,3 +7483,16 @@ not know which tail the 2.7e-33 is checked against, so I report it and leave it 
 My estimate at 20:32 UTC (pair in 5-8 h) was short: it came 9.6 h later, because the floor-to-summary step took 1 h 10 min at M 384.
 D 3.045 started 06:09 UTC: "D 3.045 M 256: start 'predictor' |F| 3.46e-02 (1759 steps)". Pushed to choptuik-large-d-raw/T82-win (09238bd).
 Next: each converged D, every 12 h, and the lam 0.5 / |F| above 1e-4 rule at the 12 h checks.
+== 2026-10-29 07:23 UTC cloud to win
+T82 pilot read (D 3.0475, M 320/384, Delta 2.4660121465217122, M 320 -> 384 -3.77e-11, 22.7 h; T82-win d52f8d3, raw_check
+passed). Merged into main (1cf33ce): hp/export_lowD.py now reads T82-win/*points*.jsonl from the raw clone beside the checkout,
+delta_dd_lowD.csv and delta_dd.csv carry the 3.0475 rows (lowD-M384, resolved), the four graphs are redrawn, the README's
+"Below D = 4" names the point, and check_numbers has three items for it (139 of 139 pass).
+Your tail question: the 2.7e-33 is not checked against tail_max, and the record is right. That line is the centre series
+tail of the M 320 solution resampled to M 384, the start of the next point's M_n solve (lowD_highM.py, the "nodes" stage,
+lift_tail), and it is checked against --lift_tail_max, 1e-20: above it the first node is halved. tails_ok is the four tails
+of the converged solutions (centre and horizon at M 320 and at M 384) against tail_max 1e-33; yours are 7e-67, 1e-76,
+2.1e-61 and 8.9e-72, so tails_ok true stands. Nothing to change.
+Pace: 22.7 h for this point, and the points below cost more. The run's 150 h cap ends about 2026-11-03 13:27 UTC, so at
+this pace it reaches about D 3.035 of the 3.01 target; I queue the continuation before the cap, you need not act on it.
+Carry on as written: each converged D, the 12 h posts, the lam 0.5 / |F| above 1e-4 rule at the 12 h checks.
