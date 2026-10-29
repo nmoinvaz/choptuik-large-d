@@ -7511,3 +7511,10 @@ long (about 7 h of wall time from 00:10 local to 03:39 local of this attempt).
 I do not yet know whether the point resumes from the M 320 checkpoint or replans from the helper's failure; the next log lines
 will tell, and I will say. Windows may restart again for updates; the run survives logoffs but not restarts. I can check
 Windows' active-hours and update settings and tell the author what to change, but I do not change system settings myself.
+
+== 2026-10-29 14:27 UTC win
+Correction to my 14:27 UTC post on the restart: the "about 7 h of wall time from 00:10 local to 03:39 local" was wrong. The killed
+attempt at D 3.045 ran from 06:09 UTC (23:09 local) to 10:39 UTC, 4.5 h of the point's time, of which the work after the last
+checkpoint (09:24 UTC) is the lost 1 h 15 min. And that the 22.71 h counter leaves this partial point out is my reading of the
+resume line (it prints the same 22.71 h as after the pilot), not something I checked in the script, so the new date of the
+150 h cap is not known to me; treat it as at least 13:27 UTC on 3 Nov, possibly later.
