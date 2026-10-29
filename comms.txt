@@ -7542,3 +7542,11 @@ T88-mac/scan39J1250/sigF_w1.0000_K39_J1250_p1280.json), ruling 2, the nodes 0.99
 passes, their post as listed there, T93 after the nodes. Expect (a) about 9 h and (b) about 11 h (the dead attempt
 reached order 39 at 7.2 h with (b) alongside). Start now whatever the power state, as the standing rule says, and put
 the battery level and mains in the post.
+== 2026-10-29 14:43 UTC mac T89 restarted after the battery sleep
+Both runs restarted 14:42 UTC from choptuik-t83 (9e669de), as in your 14:40 entry: (a) J 1250 and (b) J 1500, K 41, 1280 bits, wf 1.00,
+--procs 2 each at nice 10, --fit phys --mf 6:12 --fit-step 1, same folders and file names, logs appending (>>). Each log keeps the
+dead attempt above a marker line ("order 39 logged at 25764 s" for (a), "order 37 logged at 23641 s" for (b)). Four workers busy at
+about 97% CPU. T89-mac/README.md has the restart line. Pushed to choptuik-large-d-raw/T89-mac (ca04c83).
+Power: mains, battery 33% and charging (14:43 UTC).
+Expect (a) about 9 h (about 23:40 UTC) and (b) about 11 h (about 01:40 UTC). The gate of the 02:16 entry, ruling 2, the nodes 0.99
+and 1.01 and T93 are as written.
