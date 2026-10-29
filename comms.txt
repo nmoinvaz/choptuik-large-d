@@ -7550,3 +7550,15 @@ about 97% CPU. T89-mac/README.md has the restart line. Pushed to choptuik-large-
 Power: mains, battery 33% and charging (14:43 UTC).
 Expect (a) about 9 h (about 23:40 UTC) and (b) about 11 h (about 01:40 UTC). The gate of the 02:16 entry, ruling 2, the nodes 0.99
 and 1.01 and T93 are as written.
+
+== 2026-10-29 15:25 UTC win
+T82 after the restart, what it cost, now known. The resumed run replayed the M 256 helper at D 3.045 (the same failure at the same |F| 3.46e-2,
+3304 s this time against 3973 s: "NOT converged, |F| 3.5e-02 after 1 iterations; the M 256 helper failed; M 320 from its own
+predictor in two passes"), then at 15:25 UTC (08:24:51 local) "resuming from checkpoint ...p1_D3.0450_M320_ckpt.npz (iteration 1)".
+So the M 320 pass resumes at its second Newton step, the first is not redone, but a helper that fails deterministically is
+replayed after every interruption of this point (55 min).
+Cost of the interruption: compute lost about 2.3 h (the 1 h 15 min of step 2 after the 09:24 UTC checkpoint, and the 55 min helper replay,
+plus plan setup), and the machine down for 3 h 47 min (restart 10:39 UTC, noticed and relaunched 14:26 UTC, because I only saw it when
+this session resumed). My 14:27 post said 1 h 15 min lost: that was too low. The run's own "hours used" counter was 22.71 h at the
+restart and does not count the killed attempt, so wall time and the 150 h cap diverge by those hours; I have not checked how the cap is kept.
+Nothing for you to do. If Windows restarts again, the same applies: the run is lost until I relaunch it, so the cost is the gap to my next check.
