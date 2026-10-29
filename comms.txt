@@ -7398,3 +7398,30 @@ Gate against T87's wf 0.99 file (sigma_16..18): diffs 0.0, 0.0, 0.0, all within 
 Correction to my 22:39 post: I wrote that the worst fit error among the families was 1.87e-16 and called it the largest term. I did not check what the second number of a fit_info entry measures, so ignore that sentence. The facts are the Mf counts (wf 1.01: 7 in all 20 families) and sigma_err.
 
 T88 is complete, all three wf done with (a). T91 pilot (d) runs on (2 procs, nice 10); T89 starts when it ends, per your 21:06 entry. Battery 100%, on mains.
+
+== 2026-10-29 02:01 UTC mac T91 done (J 1250 / 960 bits pilot (d)); T89 started with (a) at 1280 bits
+T91 pilot (d), J 1250 / 960 bits, K 39, wf 1.00, finished (rc 0), 292 min wall (products 63 min, fits 229 min). Raw: T91-mac/scan39J1250p960/sigF_w1.0000_K39_J1250_p960.json, pushed (raw repo 4ce5097).
+
+sigma_19 (d) = -1.73987055300357e-16 + 1.82047622456407e-16 j
+err19 (d) = 1.851e-27, relative 7.35e-12 (finite at 960 bits)
+Mf per family at k = 39: 7 in all 20 families
+
+differences, absolute          sigma_19    sigma_18    sigma_17    sigma_16
+|a - d|  (J effect)            1.852e-27   4.53e-28    1.59e-27    5.39e-27
+|d - b|  (bits effect)         1.939e-27   3.99e-33    2.24e-33    2.94e-26
+|a - b|  (T88 gate)            3.386e-27   4.53e-28    1.59e-27    2.65e-26
+err (a)                        2.787e-27   6.69e-27    5.44e-26    4.11e-25
+err (d)                        1.851e-27   1.10e-27    9.01e-27    6.89e-26
+err (b)                        inf         inf         inf         inf
+(a) = J 1000 / 960, b = J 1250 / 1280, all wf 1.00.
+
+fit_info (Mf, err, resid)
+family   (a) J1000/960                       (d) J1250/960                       (b) J1250/1280
+1_1      7, 2.306e-274, 2.719e-289           7, 2.217e-274, 3.244e-289           12, inf, 0.0
+39_1     7, 1.300e-25, 3.020e-263            7, 8.632e-26, 5.634e-263            7, 5.814e-27, 9.887e-270
+
+Reading, numbers only: (d) and (b) agree to 4e-33 at sigma_17 and sigma_18 (same J, different bits), so the bits do not matter there. At sigma_19 the bits effect 1.94e-27 and the J effect 1.85e-27 are each about the size of (d)'s own err19 and each about half of |a - b|. At sigma_16 the (d)-(b) difference 2.9e-26 is larger than (a)-(d) 5.4e-27 but both are inside err (d) and err (a). I draw no attribution beyond these numbers, the analysis is yours.
+
+Your rule: |sigma_19(d) - sigma_19(b)| = 1.94e-27 > 1e-27, so T89 (a) runs at 1280 bits. T89 started 02:01 UTC, 2 procs each at nice 10: (a) J 1250 / 1280, (b) J 1500 / 1280, K 41, wf 1.00, folders T89-mac/scan41J1250 and scan41J1500, files sigF_w1.0000_K41_J1250_p1280.json and sigF_w1.0000_K41_J1500_p1280.json, README pushed. Gate for (a) as written (err20 <= 1e-10 |sigma_20|, sigma_0..19 string-equal to T88-mac/scan39J1250/sigF_w1.0000_K39_J1250_p1280.json), then the nodes with (a); (b)'s gate (sigma_20 within (a)'s err20) is checked when (b) ends.
+
+One risk for you to rule on before (a) lands in 12-17 h: your 21:06 entry says sigma_err is inf at 1280 bits when family 1_1's residual underflows to 0.0, and T88's pilot (b) at J 1250 / 1280 had exactly that (1_1: Mf 12, err inf, resid 0.0). If (a) at 1280 bits does the same, err20 is inf, the gate err20 <= 1e-10 |sigma_20| fails, and the script stops without starting the nodes (and (b)'s gate would compare against an inf err). I follow the gate as written unless an entry changes it. Battery 100%, on mains.
