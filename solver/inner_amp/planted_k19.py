@@ -7,7 +7,7 @@ projection model, the kbar minima of G), planted_k15.py, planted_k16.py, planted
 records and stored checks).
 
   converge    sigma_19's convergence (err19, pilot (b), sigma_0..18 unchanged, ratio law, spread in wf);
-              --mutate=err|low|pilot|ratiolaw breaks one input on purpose, and the matching check must fire
+              --mutate=err|low|pilot|ratiolaw|amend breaks one input on purpose, and the matching check must fire
   plants      N1, N2, the 28 arc plants, C-EXP and the 13 REFIT plants at K = 17, 18, 19 (planted_results_k19.jsonl,
               resumable); their K = 17, 18 estimates must equal the K = 18 records; N1 recovered at K = 19, N2 nothing
   real        the real sigma_0..19 ("N0 scan39J1000"); its K = 17, 18 estimates must equal "N0 scan37J1000"'s; the
@@ -28,6 +28,11 @@ records and stored checks).
 
 --data DIR reads the scans from DIR/scan39J1000 and DIR/scan39J1250 and writes the records and checks there (the dry
 run of section 11.0 item 0, planted_k19_dry.py); the default is this directory.
+--amend DIR applies section 11.0's amendment of item 1 (2026-10-29): err19 at each node becomes the node's plateau error
+(the file's sigma_err[19]) plus |sigma_19 - sigma_19 of DIR's J 1250 / 1280-bit file at the same wf| (T88's pilot (b)
+at wf 1.00, T89's node runs at 0.99 and 1.01, copied into scan41J1250/), in every stage that reads sigma_19's error;
+item 1(c) is then printed as written but not evaluated (its failure of 2026-10-28 is recorded in section 11.1), and
+--mutate=amend scales DIR's sigma_19 at wf 0.99 by 1 + 1e-9, which must make (a') fire.
 """
 import argparse
 import json
@@ -69,6 +74,7 @@ BP_CAL = BP_CAL_OLD + ("C18-BP 6-12", "C18-BP 7-11", "C18-BP 8-10", "C18-BP 9-9"
 RINGS17 = ()                                                            # no ring survived sigma_18 (section 10.4)
 K18_RANGE = (0.999975, 1.000050)                                        # the K = 18 headline (section 10.8)
 BRACKET = "D-bracket"                                                   # left out in the second reading (section 11.0 item 4)
+AMEND = None                                                            # --amend DIR (section 11.0's amendment of item 1)
 FAILED = []
 
 
@@ -109,8 +115,28 @@ def load_real(scandir, pattern):
     return {float(w): (K14.sigmas(r), list(r["sigma_err"])) for w, r in K14.raw_scan(scandir, pattern).items()}
 
 
+def amend_errs(p960, am=None):
+    """section 11.0's amendment of item 1: sigma_err[19] of each 960-bit node file becomes its plateau error plus the
+    node's pilot difference against the J 1250 / 1280-bit file at the same wf in AMEND (loaded here unless given)."""
+    if am is None:
+        am = K14.raw_scan(AMEND, "*.json")
+    for w, r in p960.items():
+        if w not in am:
+            raise SystemExit(f"--amend {AMEND}: no file at wf {w}; the amendment needs a J 1250 / 1280-bit file there")
+        if (am[w]["J"], am[w]["prec"]) != (1250, 1280):
+            raise SystemExit(f"--amend {AMEND}: the file at wf {w} is J {am[w]['J']} / {am[w]['prec']} bits, not 1250 / 1280")
+        d19 = float(abs(K14.sigmas(r)[19] - K14.sigmas(am[w])[19]))
+        r["err19_plateau"], r["pilot_d19"], r["amend_K"] = r["sigma_err"][19], d19, am[w]["K"]
+        r["sigma_err"][19] = r["err19_plateau"] + d19
+    return p960
+
+
 def load_real19():
-    return load_real(SCAN19, "*_p960.json")
+    if not AMEND:
+        return load_real(SCAN19, "*_p960.json")
+    mp.mp.dps = PP.DPS
+    raw = amend_errs(K14.raw_scan(SCAN19, "*_p960.json"))
+    return {float(w): (K14.sigmas(r), list(r["sigma_err"])) for w, r in raw.items()}
 
 
 def load_real18():
@@ -146,16 +172,34 @@ def stage_converge(mutate=None):
         pil[1.0]["sigma_str"][19][1] = mp.nstr(b, 20)
     elif mutate == "ratiolaw":
         p960[1.01]["sigma_str"][19] = [mp.nstr(mp.mpf(x) * mp.mpf("1.1"), 20) for x in p960[1.01]["sigma_str"][19]]
+    elif mutate == "amend":
+        if not AMEND:
+            raise SystemExit("--mutate=amend needs --amend DIR")
     elif mutate:
         raise SystemExit(f"unknown mutation {mutate}")
     out = {"nodes": {}}
-    print("(a) err19 against the 1e-10 relative requirement (section 3.6):")
+    if AMEND:
+        am = K14.raw_scan(AMEND, "*.json")
+        print(f"amendment of item 1 (section 11.0, 2026-10-29): J 1250 / 1280-bit files at wf {sorted(am)} from {AMEND}, "
+              + ", ".join(f"K {r['K']} at wf {w}" for w, r in sorted(am.items())))
+        if mutate == "amend":
+            x = mp.mpf(am[0.99]["sigma_str"][19][0]) * (1 + mp.mpf("1e-9"))
+            am[0.99]["sigma_str"][19][0] = mp.nstr(x, 20)
+        amend_errs(p960, am)
+        print("(a') err19 = plateau error + pilot difference at the node, against the 1e-10 relative requirement:")
+    else:
+        print("(a) err19 against the 1e-10 relative requirement (section 3.6):")
     for w, r in sorted(p960.items()):
         s = K14.sigmas(r)
         rel = r["sigma_err"][19] / float(abs(s[19]))
         out["nodes"][str(w)] = {"sigma19": r["sigma_str"][19], "err19": r["sigma_err"][19], "err19_rel": rel,
                                 "err18": r["sigma_err"][18]}
-        check(rel <= 1e-10, f"wf {w}: sigma_19 = {mp.nstr(s[19], 20)}, err19 {r['sigma_err'][19]:.3g} ({rel:.2e} relative)")
+        parts = ""
+        if AMEND:
+            out["nodes"][str(w)].update({"err19_plateau": r["err19_plateau"], "pilot_d19": r["pilot_d19"]})
+            parts = f" = plateau {r['err19_plateau']:.3g} + pilot difference {r['pilot_d19']:.3g}"
+        check(rel <= 1e-10, f"wf {w}: sigma_19 = {mp.nstr(s[19], 20)}, err19 {r['sigma_err'][19]:.3g}{parts} "
+              f"({rel:.2e} relative, margin {1e-10 / rel:.2f})")
     print("(b) sigma_0..18 against scan37J1000 (960 bits):")
     for w, r in sorted(p960.items()):
         same = [r["sigma_str"][k] == old[w]["sigma_str"][k] for k in range(19)]
@@ -167,10 +211,16 @@ def stage_converge(mutate=None):
     sa, sb, so = K14.sigmas(a), K14.sigmas(b), K14.sigmas(old[1.0])
     d19 = float(abs(sa[19] - sb[19]))
     low = {k: (float(abs(sb[k] - so[k])), old[1.0]["sigma_err"][k]) for k in (16, 17, 18)}
-    out["pilot"] = {"d19": d19, "err19": a["sigma_err"][19], "low": low, "pilot_sigma_err": b["sigma_err"][:3]}
-    check(d19 <= a["sigma_err"][19], f"sigma_19: |a - b| = {d19:.2e} against err19 {a['sigma_err'][19]:.2e}")
-    check(all(d <= e for d, e in low.values()), "sigma_16..18 of (b) against scan37J1000: " + ", ".join(
-        f"k {k}: {d:.1e} (err {e:.1e})" for k, (d, e) in low.items()))
+    err_a = a["err19_plateau"] if AMEND else a["sigma_err"][19]
+    out["pilot"] = {"d19": d19, "err19": err_a, "low": low, "pilot_sigma_err": b["sigma_err"][:3]}
+    if AMEND:
+        print(f"  as written, not evaluated (failed 2026-10-28, section 11.1): |a - b| = {d19:.2e} against the plateau err19 "
+              f"{err_a:.2e}, ratio {d19 / err_a:.2f}; the difference is part of err19 under (a'). sigma_16..18 of (b) "
+              "against scan37J1000: " + ", ".join(f"k {k}: {d:.1e} (err {e:.1e})" for k, (d, e) in low.items()))
+    else:
+        check(d19 <= err_a, f"sigma_19: |a - b| = {d19:.2e} against err19 {err_a:.2e}")
+        check(all(d <= e for d, e in low.values()), "sigma_16..18 of (b) against scan37J1000: " + ", ".join(
+            f"k {k}: {d:.1e} (err {e:.1e})" for k, (d, e) in low.items()))
     print(f"  note: (b)'s own sigma_err is {b['sigma_err'][19]} at every k (its order-1 fit has residual 0), so (b) checks "
           f"(a)'s values, not their error")
     print("(d) the ratio law through sigma_19: second difference of sigma_k/sigma_{k+1}, k = 7..17 (D-ratiolaw <= 0.05):")
@@ -194,6 +244,10 @@ def stage_converge(mutate=None):
         print(f"  k = {k}: |sigma_k(1.01) - sigma_k(0.99)|/2 = {float(d1 / abs(s[1.0])):.4f} |sigma_k(1.00)|; "
               f"second difference / first = {float(d2 / d1):.4f}; max err_k / first difference = {float(e / d1):.1e}")
     if not mutate:
+        c = load_checks()
+        if AMEND and "K19 converge" in c and "K19 converge as written" not in c:
+            save_checks("K19 converge as written", c["K19 converge"])     # the run of 2026-10-28 23:16 UTC, item 1(c) failed
+        out["amend"] = AMEND
         save_checks("K19 converge", out)
     return out
 
@@ -687,8 +741,11 @@ def main():
     ap.add_argument("--scratch", default=os.path.join(os.environ.get("TMPDIR", "/tmp"), "planted_scratch19"))
     ap.add_argument("--mutate", default=None)
     ap.add_argument("--data", default=HERE)
+    ap.add_argument("--amend", default=None, help="section 11.0's amendment of item 1: the J 1250 / 1280-bit files' directory")
     a = ap.parse_args()
     configure(a.data)
+    global AMEND
+    AMEND = a.amend
     {"converge": lambda: stage_converge(a.mutate), "plants": lambda: stage_plants(a.scratch),
      "real": lambda: stage_real(a.scratch), "ring": lambda: stage_ring(a.scratch), "calib": stage_calib,
      "recomplete": stage_recomplete, "project": stage_project, "combine": stage_combine, "table": stage_table,
