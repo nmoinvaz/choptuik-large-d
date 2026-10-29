@@ -300,8 +300,48 @@ def pilot_agreement():
          ("notes/PROOF_QUEUE.md", "agreement gate by 1.21 at σ₁₉")]
     t2 = [("notes/PLANTED_SELECTION.md", "The difference is 1.3×10⁻¹¹ of |σ₁₉|"),
           ("proof/P5_scope.md", "differs from it by 1.3×10⁻¹¹ of |σ₁₉|")]
-    return [("sigma_19 pilot gate ratio", diff / a["sigma_err"][19], 1.21, 0.01, t),
-            ("sigma_19 pilot difference, relative", diff / abs(sa), 1.3e-11, 1e-12, t2)]
+    out = [("sigma_19 pilot gate ratio", diff / a["sigma_err"][19], 1.21, 0.01, t),
+           ("sigma_19 pilot difference, relative", diff / abs(sa), 1.3e-11, 1e-12, t2)]
+    # T91's attribution pilot (d), J 1250 / 960 bits, and the amended err19 (section 11.0's amendment of 2026-10-29)
+    sys.path.insert(0, d)
+    import pilot_agreement
+    r = pilot_agreement.attribution(39)
+    sys.path.pop(0)
+    P = "notes/PLANTED_SELECTION.md"
+    out += [("sigma_19 J effect |a - d|", r["ad19"], 1.85e-27, 0.01e-27,
+             [(P, "puts σ₁₉ at 1.85×10⁻²⁷ from (a)"), (P, "4.5×10⁻²⁸, 1.85×10⁻²⁷ (the J effect)"),
+              ("notes/PROOF_QUEUE.md", "a J effect of 1.85×10⁻²⁷")]),
+            ("sigma_19 precision effect |d - b|", r["db19"], 1.94e-27, 0.01e-27,
+             [(P, "1.94×10⁻²⁷ from (b), with its own plateau error"), (P, "differ at σ₁₉ by 1.94×10⁻²⁷ with both"),
+              (P, "4×10⁻³³, 1.94×10⁻²⁷ (the precision effect)"), ("notes/PROOF_QUEUE.md", "a precision effect of 1.94×10⁻²⁷")]),
+            ("sigma_19 (d) plateau error", r["err_d19"], 1.85e-27, 0.01e-27,
+             [(P, "with its own plateau error 1.85×10⁻²⁷"), (P, "err19 1.85×10⁻²⁷ (7.35×10⁻¹²")]),
+            ("sigma_19 (d) plateau error, relative", r["err_d19"] / r["mag_a19"], 7.35e-12, 0.01e-12, [(P, "(7.35×10⁻¹²")]),
+            ("J effect over (a)'s plateau error", r["ad19"] / r["err_a19"], 2 / 3, 0.1,
+             [(P, "each move σ₁₉ by about two thirds of (a)'s plateau error")]),
+            ("precision effect over (a)'s plateau error", r["db19"] / r["err_a19"], 2 / 3, 0.1,
+             [(P, "each move σ₁₉ by about two thirds of (a)'s plateau error")]),
+            ("sigma_16 (d) - (b) over (b)'s plateau step", r["db16"] / r["err_b16"], 1.0, 0.001,
+             [(P, "differ at σ₁₆ by 2.94×10⁻²⁶, exactly (b)'s plateau step")]),
+            ("sigma_16 (d) - (b)", r["db16"], 2.94e-26, 0.01e-26, [(P, "|d − b|: 2.94×10⁻²⁶, 2×10⁻³³")]),
+            ("sigma_17 (d) - (b)", r["db17"], 2e-33, 1e-33, [(P, "to 2×10⁻³³ and 4×10⁻³³ at σ₁₇")]),
+            ("sigma_18 (d) - (b)", r["db18"], 4e-33, 1e-33, [(P, "to 2×10⁻³³ and 4×10⁻³³ at σ₁₇")]),
+            ("sigma_16..18 (a) - (d)", r["ad16"], 5.4e-27, 0.1e-27, [(P, "|a − d| at σ₁₆…σ₁₉: 5.4×10⁻²⁷, 1.6×10⁻²⁷, 4.5×10⁻²⁸")]),
+            ("sigma_17 (a) - (d)", r["ad17"], 1.6e-27, 0.1e-27, [(P, "5.4×10⁻²⁷, 1.6×10⁻²⁷, 4.5×10⁻²⁸")]),
+            ("sigma_18 (a) - (d)", r["ad18"], 4.5e-28, 0.1e-28, [(P, "1.6×10⁻²⁷, 4.5×10⁻²⁸, 1.85×10⁻²⁷")]),
+            ("neighbour families picking a different Mf at order 33", r["ndiff33"], 16, 0.5,
+             [(P, "at order 33 all 16 neighbour families pick Mf 8")]),
+            ("neighbour families at order 33", r["nfam33"], 16, 0.5, [(P, "all 16 neighbour families pick Mf 8")]),
+            ("tuning constants (d) vs (b) at order 33", r["fdb33"], 1.9e-5, 0.1e-5, [(P, "differ by 1.9×10⁻⁵ of themselves at order 33")]),
+            ("tuning constants (d) vs (b) at order 37", r["fdb37"], 3.1e-2, 0.1e-2, [(P, "and 3.1×10⁻² at order 37")]),
+            ("tuning constants (a) vs (d) at order 33", r["fad33"], 0.77, 0.01, [(P, "differ by 77% of themselves at order 33")]),
+            ("(d) and (b) equal at sigma_12..15", float(r["exact_12_15"]), 1, 0.5, [(P, "agree exactly at σ₁₂…σ₁₅")]),
+            ("amended err19 at wf 1.00", r["err_amended"], 6.17e-27, 0.01e-27,
+             [(P, "err19 = 6.17×10⁻²⁷, 2.45×10⁻¹¹ of |σ₁₉|"), (P, "6.17×10⁻²⁷; the amended item 1(a)")]),
+            ("amended err19 at wf 1.00, relative", r["err_amended_rel"], 2.45e-11, 0.01e-11, [(P, "2.45×10⁻¹¹ of |σ₁₉|, passing 1(a) by 4.1")]),
+            ("amended err19 margin under 1e-10", r["margin_amended"], 4.1, 0.1, [(P, "passing 1(a) by 4.1")]),
+            ("T91 minutes", r["seconds_d"] / 60, 293, 1, [(P, "J 1250 at 960 bits, 293 min")])]
+    return out
 
 
 @check

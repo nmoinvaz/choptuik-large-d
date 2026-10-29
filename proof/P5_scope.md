@@ -78,8 +78,9 @@ Three findings.
    0.90 of the bound, the third order running at that margin, with |σ₁₈|/|σ₁₉| = 13.0 and the argument advancing
    by 0.76 (0.77 at the order before). Its fit error is 1.1×10⁻¹¹ of |σ₁₉| (2.0×10⁻¹² at σ₁₈), still three orders
    below what (H_σ) needs; the J 1250 pilot differs from it by 1.3×10⁻¹¹ of |σ₁₉|, 1.21 times that fit error, the
-   first order where the cross-check exceeds the fit's own estimate (the cause is under test, PLANTED_SELECTION.md
-   §11.0; the bound test is unaffected). With all three nodes in (`solver/proof/logs/entire_cert_K19.log`,
+   first order where the cross-check exceeds the fit's own estimate (the J truncation and the precision each move
+   σ₁₉ by two thirds of that fit error, PLANTED_SELECTION.md §11.0's amendment of 2026-10-29; the bound test is
+   unaffected). With all three nodes in (`solver/proof/logs/entire_cert_K19.log`,
    2026-10-28 23:40 UTC; the per-node lines are new in `entire_cert.py`, and the K = 18 log gained the same four
    lines and nothing else): **σ₁₉ at wf 0.99 and 1.01 is 0.906 and 0.896 of the K = 18 bound calibrated on each
    node's own series** (0.901 at ω∞), the same 0.90 at all three. The k ≤ 12 calibration's ratio at k = 19 is

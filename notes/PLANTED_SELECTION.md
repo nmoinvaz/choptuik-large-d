@@ -1906,6 +1906,38 @@ effect), started 2026-10-28 21:06 UTC. Item 1 is amended for the cause once T91 
 committed before any K = 19 estimate; the `converge` stage runs as written on the three nodes first, and its failure
 is kept in the log.
 
+**Amendment of item 1 (2026-10-29 02:12 UTC), after T91 landed at 02:01 UTC.** Pilot (d), J 1250 at 960 bits
+(`scan39J1250p960/`, from the raw-data repository's T91-mac at 4ce5097), puts σ₁₉ at 1.85×10⁻²⁷ from (a) and
+1.94×10⁻²⁷ from (b), with its own plateau error 1.85×10⁻²⁷ (`pilot_agreement.py 39`): the J truncation and the
+precision each move σ₁₉ by about two thirds of (a)'s plateau error, and the two add to the 3.39×10⁻²⁷ of the gate.
+Neither is the S_1 family's plateau step, which is what `sigma_err` measures. The route is in the files: at 1280 bits
+the fit residuals still fall at Mf 8, so at order 33 all 16 neighbour families pick Mf 8 where the 960-bit runs pick
+Mf 7, and their tuning constants, added exactly into the later orders, differ by 1.9×10⁻⁵ of themselves at order 33
+and 3.1×10⁻² at order 37. So (d) and (b), the same J, agree exactly at σ₁₂…σ₁₅ and to 2×10⁻³³ and 4×10⁻³³ at σ₁₇
+and σ₁₈, differ at σ₁₆ by 2.94×10⁻²⁶, exactly (b)'s plateau step there (its S_1 family at Mf 8 against (d)'s at Mf 7),
+and differ at σ₁₉ by 1.94×10⁻²⁷ with both S_1 fits at Mf 7. The J effect takes the same route through the J
+truncation: the neighbour constants of (a) and (d) differ by 77% of themselves at order 33 and by more above. The
+record above guessed the J truncation alone; it is half.
+
+Item 1 is amended as follows, before any K = 19 estimate, and the sum below was chosen before the two differences it
+needs at wf 0.99 and 1.01 were known:
+
+- (a′) err19 at each node is the node's plateau error plus the node's pilot difference, |σ₁₉ at J 1000 and 960 bits
+  − σ₁₉ at J 1250 and 1280 bits| at the same wf. At wf 1.00 the difference is pilot (b)'s, 3.39×10⁻²⁷, and
+  err19 = 6.17×10⁻²⁷, 2.45×10⁻¹¹ of |σ₁₉|, passing 1(a) by 4.1. At wf 0.99 and 1.01 the difference comes from the σ₁₉
+  of T89's node runs (K 41, J 1250, 1280 bits, started once T89's pilot gate passes; σ₁₉ does not depend on K), which
+  land about 2026-10-30. Every later stage that reads σ₁₉'s error reads this one.
+- (c) stays as written, recorded as failed in section 11.1, and is not evaluated again; (b) and (d) are unchanged.
+- The K = 19 stages run when T89's nodes have landed. If (a′) fails at a node (the 0.99 node has a margin of 1.2 on
+  its plateau error alone, and its pilot difference is not known), the work stops as the planted protocol says, and
+  the fallback named now is a second dated amendment that takes T89's J 1250 / 1280-bit files as the K = 19 node data,
+  with the error there the plateau error plus the pilot difference against J 1500 at wf 1.00.
+- The `sigma_err` of a 1280-bit file is inf (the record above); `sigma_err_fit.py FILE --a1-from FILE2` recomputes it
+  from `fit_info` with the order-1 term set to zero, the dropped term bounded at 10⁻²⁹⁰, and |S_1^(1)| from a 960-bit
+  file at the same wf; its selftest reproduces every finite file's `sigma_err` to 10⁻¹² and its mutation fires. The
+  `pick_plateau` change that would store a finite value is deferred past T89, so that every file of the K = 20
+  campaign comes from the same code.
+
 ### 11.1 σ₁₉: items 1(a), (b), (d) pass, item 1(c) fails
 
 The `converge` stage ran as written on 2026-10-28 23:16 UTC, after the three T88 nodes landed (logs in the raw-data
@@ -1932,3 +1964,8 @@ repository's `planted-k19-mac/real/`; the record in `planted_checks_k19.json`, "
 - **Cost.** On the Mac with two processes per run: pilot (a) 209 min, pilot (b) 461 min, the nodes 356 and 390 min,
   the late-order fits taking 86% of the time; T91 shared the cores during the nodes' last two hours (comms,
   2026-10-28 13:14–23:13 UTC).
+- **T91, the attribution pilot (d), J 1250 at 960 bits, 293 min** (`scan39J1250p960/`; the amendment at the end of
+  section 11.0): σ₁₉ = −1.7398705530035671689×10⁻¹⁶ + 1.8204762245640747355×10⁻¹⁶i, err19 1.85×10⁻²⁷ (7.35×10⁻¹²
+  relative), all 20 fits at Mf 7. |a − d| at σ₁₆…σ₁₉: 5.4×10⁻²⁷, 1.6×10⁻²⁷, 4.5×10⁻²⁸, 1.85×10⁻²⁷ (the J effect);
+  |d − b|: 2.94×10⁻²⁶, 2×10⁻³³, 4×10⁻³³, 1.94×10⁻²⁷ (the precision effect). The amended err19 at wf 1.00 is
+  6.17×10⁻²⁷; the amended item 1(a) at the other two nodes waits for T89's node runs.
