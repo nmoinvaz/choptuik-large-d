@@ -4,8 +4,9 @@ row per (D, M). The best value at each D (the largest clean M) also goes into de
 points (hp/export_dd.py, run name lowD-M<M>, or lowD-M<M>-unresolved).
 
 Input: data/lowD_dd.jsonl, data/lowD_dd_local*.jsonl, data/lowD_highM/*points*.jsonl if present (records of
-hp/lowD_dd.py and the larger-M runs), and data/lowD_gamma*.jsonl for gamma. One row per (D, M); where several runs
-have the same (D, M), the one with the smaller |F| is kept. Columns:
+hp/lowD_dd.py and the larger-M runs), the *points*.jsonl of the task folders RAW_TASKS in the raw-data repository
+(the continuation below D = 3.05, which writes its records there; AGENTS.md), and data/lowD_gamma*.jsonl for gamma.
+One row per (D, M); where several runs have the same (D, M), the one with the smaller |F| is kept. Columns:
   D, M, Delta_hi, Delta_lo   Delta as hi + lo (double-double), at tau resolution M
   F                          the final residual |F|
   tail_c, tail_h             the centre and horizon series tails at that solution
@@ -16,17 +17,27 @@ have the same (D, M), the one with the smaller |F| is kept. Columns:
   gamma                      gamma at that (D, M) if computed (exact growth-mode matrix, hp/lowD_gamma.py)
   status                     "clean", or "polluted: ..." for converged solutions with content along the near-null
                              directions (POLLUTED below); those are listed but never used as a value
-  source                     the file the record came from
+  source                     the file the record came from (a raw-data task folder's files as <folder>/<file>)
 
-    cd hp && python3 export_lowD.py
+    cd hp && python3 export_lowD.py [--raw ROOT]
+
+ROOT is a clone of https://github.com/nmoinvaz/choptuik-large-d-raw, by default beside this checkout
+(git clone https://github.com/nmoinvaz/choptuik-large-d-raw ../../choptuik-large-d-raw); the script stops when a
+folder of RAW_TASKS is missing there, so that no row is dropped silently.
 """
 import csv
 import glob
 import json
 import os
+import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 RESOLVED = 1e-8
+# task folders of the raw-data repository whose *points*.jsonl are read, with the commit the CSV was last built from:
+# T82-win, the continuation below D = 3.05 at steps of 0.0025 (lowD_highM.py from T45's states, the Windows machine),
+# d52f8d3 (2026-10-29, D 3.0475 at M 256/320/384)
+RAW_ROOT = os.path.join(HERE, "..", "..", "choptuik-large-d-raw")
+RAW_TASKS = ("T82-win",)
 # converged solutions that picked up content along the near-null directions (centre-series tail 1e-9 to 1e-10 where
 # clean neighbours have 1e-50; an M 96 solve from them does not converge); the local machine's report in comms.txt,
 # 2026-10-23 05:51 PDT. Keyed by (D, M, source file): another run's solve at the same D and M can be clean (the cloud
@@ -35,19 +46,34 @@ POLLUTED = {(3.4, 128, "data/lowD_dd_local_t41.jsonl"): "centre tail 1.2e-9",
             (3.3875, 128, "data/lowD_dd_local_t41.jsonl"): "centre tail 2.8e-10; stepped from the polluted 3.40"}
 
 
-def records(pattern):
-    for f in sorted(glob.glob(os.path.join(HERE, "data", pattern))):
+def records(pattern, base=None):
+    """the records of the files matching pattern under base (default data/), with _src their path relative to base's
+    parent (data/... or <task folder>/...)"""
+    base = base or os.path.join(HERE, "data")
+    for f in sorted(glob.glob(os.path.join(base, pattern))):
         for line in open(f):
             if line.strip():
                 r = json.loads(line)
-                r["_src"] = os.path.relpath(f, HERE)
+                r["_src"] = os.path.relpath(f, os.path.dirname(base))
                 yield r
 
 
-def build():
+def raw_records(raw_root=RAW_ROOT):
+    """the *points*.jsonl records of every RAW_TASKS folder; a missing folder stops the export"""
+    out = []
+    for task in RAW_TASKS:
+        folder = os.path.join(raw_root, task)
+        if not os.path.isdir(folder):
+            sys.exit(f"export_lowD: {folder} is missing; clone https://github.com/nmoinvaz/choptuik-large-d-raw "
+                     f"beside the checkout or pass --raw ROOT")
+        out += list(records("*points*.jsonl", folder))
+    return out
+
+
+def build(raw_root=RAW_ROOT):
     """the rows of delta_dd_lowD.csv (dicts), sorted by D and M"""
     best, polluted = {}, {}
-    for r in list(records("lowD_dd*.jsonl")) + list(records("lowD_highM/*points*.jsonl")):
+    for r in list(records("lowD_dd*.jsonl")) + list(records("lowD_highM/*points*.jsonl")) + raw_records(raw_root):
         if r.get("converged") is False or r.get("Delta") is None or r.get("D", 99) >= 8.25:
             continue
         if r.get("F") is not None and r["F"] > 1e-25:
@@ -88,7 +114,9 @@ def build():
 
 
 def main():
-    rows = build()
+    args = sys.argv[1:]
+    raw_root = args[args.index("--raw") + 1] if "--raw" in args else RAW_ROOT
+    rows = build(raw_root)
     out = os.path.join(HERE, "data", "delta_dd_lowD.csv")
     cols = ["D", "M", "Delta_hi", "Delta_lo", "F", "tail_c", "tail_h", "change_from_lower_M", "best", "resolved", "gamma",
             "status", "source"]
