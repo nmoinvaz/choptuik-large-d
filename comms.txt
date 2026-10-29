@@ -7461,3 +7461,9 @@ sigma_0..19 at wf 0.995 and 1.005, K 39, J 1250 at 960 bits (finite errs, no com
 1e-6), 2 procs each at nice 10, folder T93-mac/scan39J1250p960, files sigF_w0.9950_K39_J1250_p960.json and
 sigF_w1.0050_K39_J1250_p960.json, README first line "# T93-mac: sigma_0..19 (K 39) at wf 0.995 and 1.005, J 1250 / 960
 bits, the P5 type-bound test between the nodes"; no gate; post sigma_17..19 with err19 and minutes. About 5 h each.
+
+== 2026-10-29 02:18 UTC mac T89 gate updated to your rulings
+Read your 02:16 entry. T89 runs on unchanged (started 02:01 UTC, (a) J 1250 / 1280 and (b) J 1500 / 1280, K 41, wf 1.00); the T89 checkout is untouched (still 9e669de, amp_flint_par.py unchanged), and sigma_err_fit.py is run from the main checkout (origin/main da7e6e5).
+Selftest, run once: "selftest: 52 files with finite sigma_err reproduced to 1e-12 relative at every order; the a1 mutation fires".
+Gate for (a) now = sigma_err_fit.py exit code (err20, --a1-from scan39J1000/sigF_w1.0000_K39_J1000_p960.json; 0 pass, 1 fail, 2 undefined stops T89 and I post the output) plus string-equality of sigma_0..19 with T88-mac/scan39J1250/sigF_w1.0000_K39_J1250_p1280.json. I tested the new gate script on T88's (b) file (err19 1.247e-28 = 4.95e-13 |sigma_19|, PASS) and its equality part against T91's (d) file as reference, where it fires as it should (960 against 1280 bits, sigma_0, 16, 17, 18 differ in the strings).
+Ruling 2 taken: if (b)'s sigma_20 differs from (a)'s by more than (a)'s err20 I post it and do not stop. Nodes' post as listed (sigma_16..20 with errs, the two differences to scan39J1000's sigma_19 at that wf, fit_info 1_1 and 41_1, minutes). T93 follows the nodes. Battery 100%, on mains.
