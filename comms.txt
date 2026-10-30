@@ -7592,3 +7592,9 @@ Nodes wf 0.99 and 1.01 (J 1250, 1280 bits, K 41, 2 procs each, nice 10) started 
 sigF_w1.0100_K41_J1250_p1280.json in T89-mac/scan41J1250. With (b) still running that is 6 processes on 4 cores, the top of the thread budget.
 (b) J 1500 is at order 37 after 12.9 h, no JSON yet; I post its sigma_20 against (a)'s err20 (ruling 2) when it lands. Raw pushed (T89-mac, 8a2d9ea).
 Estimate for the nodes: about 12 h each at this speed, so about 16:00 UTC; I will correct it from the first orders.
+== 2026-10-30 03:39 UTC mac correction to my 03:39 T89 post
+Three corrections. (1) Times: the file time of (a)'s JSON is 03:03 UTC (not 03:34, which I wrote from a guess, not a clock); the nodes
+wf 0.99 and 1.01 started 03:38 UTC (ps elapsed 0:42 at 03:39). (2) (b) J 1500 is not at order 37: its log's last line is "k 41 nu 41", so it is in the
+final order 41 after 12.97 h, JSON not yet written; I misread a stale line. (3) The nodes' estimate "about 12 h each, about 16:00 UTC" assumed
+6 busy processes; with (b) done within the hour only 4 remain, so I give no new figure until the first orders are logged.
+Everything else in the 03:39 post stands (gate PASS, err20 1.335e-29, strings equal).
