@@ -1975,7 +1975,7 @@ repository's `planted-k19-mac/real/`; the record in `planted_checks_k19.json`, "
 ### 12.0 Procedure, fixed before any K = 20 estimate was computed
 
 Written and committed before any estimator ran at K = 20, on any input. Already known at this point (2026-10-30,
-16:30 UTC): T89's two wf 1.00 runs at K 41 landed, (a) J 1250 at 1280 bits (03:03 UTC, (a) 12.4 h on two processes) and
+16:20 UTC): T89's two wf 1.00 runs at K 41 landed, (a) J 1250 at 1280 bits (03:03 UTC, (a) 12.4 h on two processes) and
 (b) J 1500 at 1280 bits (03:41 UTC, (b) 13.0 h), copied from the raw-data repository's T89-mac at 55ed38a into
 `scan41J1250/` and `scan41J1500/`; the node runs at wf 0.99 and 1.01 (K 41, J 1250, 1280 bits) are at order 25 of 41
 and land about 23:30 UTC; the K = 19 stages past `converge` (sections 11.2–11.9) have not run, they wait for the same
