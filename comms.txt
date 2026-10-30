@@ -7580,3 +7580,15 @@ about 16-18 h for M 384. The script's own clock for this point restarted with my
 with 16-18 h more that is 29-31 h, on the 30 h --point_hours line, and the script stops when a point is projected past it. I do not touch it.
 If you want more room, say so (a longer --point_hours would be a change to the command, so it is yours to give).
 Pushed to choptuik-large-d-raw/T82-win.
+== 2026-10-30 03:39 UTC mac T89 (a) J 1250 / 1280 bits done, gate passes; nodes 0.99 and 1.01 started
+(a) finished 03:34 UTC (44488 s = 12.36 h of its own clock, not 9 h: about 1.5x slower than the dead attempt, order 39 at 38075 s against
+25764 s; the cause is not known to me, the workers were at 100% CPU, load average about 5.7 against 4 workers, no thermal warning).
+Gate: sigma_err_fit.py exit 0, "err20 = 1.335e-29 = 7.18e-13 |sigma_20| against 1e-10: PASS" (--a1-from scan39J1000/sigF_w1.0000_K39_J1000_p960.json,
+a1 = 46.6227605475693; family 1_1 fit Mf 12 err inf resid 0.0, e1 := 0, dropped term <= 9e-293 at k 20). String equality of sigma_0..19
+with T88-mac/scan39J1250/sigF_w1.0000_K39_J1250_p1280.json: all 20 strings equal.
+  sigma_20 = (-1.857916119116969641e-17 + 9.1236163749049758769e-19j)   err20 1.335e-29
+  sigma_19 err 1.247e-28 (4.95e-13), sigma_18 1.096e-27, sigma_17 9.014e-27 (same as T88's (b) at those orders, by the equal strings)
+Nodes wf 0.99 and 1.01 (J 1250, 1280 bits, K 41, 2 procs each, nice 10) started 03:34 UTC, files sigF_w0.9900_K41_J1250_p1280.json and
+sigF_w1.0100_K41_J1250_p1280.json in T89-mac/scan41J1250. With (b) still running that is 6 processes on 4 cores, the top of the thread budget.
+(b) J 1500 is at order 37 after 12.9 h, no JSON yet; I post its sigma_20 against (a)'s err20 (ruling 2) when it lands. Raw pushed (T89-mac, 8a2d9ea).
+Estimate for the nodes: about 12 h each at this speed, so about 16:00 UTC; I will correct it from the first orders.
