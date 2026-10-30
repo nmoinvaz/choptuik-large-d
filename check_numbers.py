@@ -350,6 +350,42 @@ def pilot_agreement():
 
 
 @check
+def k20_gate():
+    """T89's two sigma_20 runs at wf 1.00, (a) K 41, J 1250, 1280 bits and (b) J 1500, 1280 bits (notes/PLANTED_SELECTION.md
+    section 12.0, the files in solver/inner_amp/scan41J1250 and scan41J1500 from the raw-data repository's T89-mac):
+    err20 from sigma_err_fit.py (a1 from the 960-bit scan39J1000 file), the pilot difference, the sigma_16 difference
+    against (a)'s plateau error, the strings equal to T88's pilot (b), the hours."""
+    d = os.path.join(ROOT, "solver/inner_amp")
+    sys.path.insert(0, d)
+    import sigma_err_fit as SF
+    sys.path.pop(0)
+    a = json.load(open(os.path.join(d, "scan41J1250/sigF_w1.0000_K41_J1250_p1280.json")))
+    b = json.load(open(os.path.join(d, "scan41J1500/sigF_w1.0000_K41_J1500_p1280.json")))
+    p = json.load(open(os.path.join(d, "scan39J1000/sigF_w1.0000_K39_J1000_p960.json")))
+    t88 = json.load(open(os.path.join(d, "scan39J1250/sigF_w1.0000_K39_J1250_p1280.json")))
+    a1 = SF.a1_of(p)
+    ra, rb = SF.recompute(a, a1), SF.recompute(b, a1)
+    sa, ea = ra[20][1], ra[20][2]
+    sb, eb = rb[20][1], rb[20][2]
+    diff = float(abs(sa - sb))
+    d16 = float(abs(ra[16][1] - rb[16][1]))
+    equal = sum(a["sigma_str"][k] == t88["sigma_str"][k] for k in range(20))
+    P = "notes/PLANTED_SELECTION.md"
+    return [("err20 of (a)", ea, 1.335e-29, 0.001e-29, [(P, "err20(a) = 1.335×10⁻²⁹")]),
+            ("err20 of (a), relative", ea / float(abs(sa)), 7.18e-13, 0.01e-13, [(P, "7.18×10⁻¹³ of |σ₂₀|")]),
+            ("err20 margin under 1e-10", 1e-10 / (ea / float(abs(sa))), 139, 1, [(P, "a margin of 139")]),
+            ("sigma_20 pilot difference", diff, 1.524e-31, 0.001e-31, [(P, "|σ₂₀(a) − σ₂₀(b)| = 1.524×10⁻³¹")]),
+            ("sigma_20 pilot difference over err20(a)", diff / ea, 0.011, 0.001, [(P, "0.011 of (a)'s err20")]),
+            ("err20 of (b)", eb, 6.431e-32, 0.001e-32, [(P, "(b)'s err20 = 6.431×10⁻³²")]),
+            ("sigma_16 difference of (a) and (b)", d16, 2.98e-26, 0.01e-26, [(P, "differ by 2.98×10⁻²⁶")]),
+            ("sigma_16 difference over (a)'s plateau error", d16 / ra[16][2], 1.01, 0.01,
+             [(P, "1.01 times (a)'s plateau error")]),
+            ("sigma_0..19 strings equal to T88's pilot (b)", equal, 20, 0.5, [(P, "20 of 20 strings")]),
+            ("T89 (a) hours", a["seconds"] / 3600, 12.4, 0.1, [(P, "(a) 12.4 h")]),
+            ("T89 (b) hours", b["seconds"] / 3600, 13.0, 0.1, [(P, "(b) 13.0 h")])]
+
+
+@check
 def first_order():
     """The 1/n coefficients from the O(1/n) inner problem (notes/FIRST_ORDER.md): omega_1, Delta_1 = -2 pi omega_1 /
     omega*^2 and lambda_1 in the M-harmonic truncations (M = 5: the mean of the three runs), and the fitted values."""

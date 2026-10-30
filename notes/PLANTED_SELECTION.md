@@ -1969,3 +1969,95 @@ repository's `planted-k19-mac/real/`; the record in `planted_checks_k19.json`, "
   relative), all 20 fits at Mf 7. |a − d| at σ₁₆…σ₁₉: 5.4×10⁻²⁷, 1.6×10⁻²⁷, 4.5×10⁻²⁸, 1.85×10⁻²⁷ (the J effect);
   |d − b|: 2.94×10⁻²⁶, 2×10⁻³³, 4×10⁻³³, 1.94×10⁻²⁷ (the precision effect). The amended err19 at wf 1.00 is
   6.17×10⁻²⁷; the amended item 1(a) at the other two nodes waits for T89's node runs.
+
+## 12. Follow-up: σ₂₀ (post-freeze)
+
+### 12.0 Procedure, fixed before any K = 20 estimate was computed
+
+Written and committed before any estimator ran at K = 20, on any input. Already known at this point (2026-10-30,
+16:30 UTC): T89's two wf 1.00 runs at K 41 landed, (a) J 1250 at 1280 bits (03:03 UTC, (a) 12.4 h on two processes) and
+(b) J 1500 at 1280 bits (03:41 UTC, (b) 13.0 h), copied from the raw-data repository's T89-mac at 55ed38a into
+`scan41J1250/` and `scan41J1500/`; the node runs at wf 0.99 and 1.01 (K 41, J 1250, 1280 bits) are at order 25 of 41
+and land about 23:30 UTC; the K = 19 stages past `converge` (sections 11.2–11.9) have not run, they wait for the same
+node files (section 11.0's amendment). What the two wf 1.00 files say was read before this section was written, by the
+pilot gate the comms entry of 2026-10-29 02:16 UTC fixed (rulings 1 and 2) and by `sigma_err_fit.py`, and is stated
+here so that nothing below can be read as chosen after it: err20(a) = 1.335×10⁻²⁹, 7.18×10⁻¹³ of |σ₂₀| (the 10⁻¹⁰ gate
+passes with a margin of 139); (a)'s σ₀…σ₁₉ are bitwise T88's pilot (b)'s (K 39, J 1250, 1280 bits), 20 of 20 strings;
+|σ₂₀(a) − σ₂₀(b)| = 1.524×10⁻³¹, 0.011 of (a)'s err20, so ruling 2's case (a difference beyond err20, posted and not a
+stop) did not arise; (b)'s err20 = 6.431×10⁻³²; and at σ₁₆ the two differ by 2.98×10⁻²⁶, 1.01 times (a)'s plateau error
+there, the Mf 7 against Mf 8 plateau step of the S_1 family at 1280 bits that section 11.0's amendment traced between
+(d) and (b) at K = 19 (2.94×10⁻²⁶), the same route. No estimator has run on any K = 20 input; no σ₂₀ exists at 0.99 or
+1.01. The procedure is section 11.0's one order up, with item 1 written in the amended form from the start, and the
+changes section 11's findings call for, stated here before the data:
+
+0. **Dry run of the stages on a synthetic σ₂₀.** Before the real nodes are used, `planted_k20_dry.py` writes scan files
+   whose σ₀…σ₁₉ are the real ones (`scan41J1250`'s) and whose σ₂₀ at each node is a C19-BP sum's: the ring-free sum
+   passing the type rule that section 11.6 lists first (on the synthetic K = 19 data of section 11.0's dry run that was
+   [6/13]; the real one is named when 11.6 is written, before this dry run), with err20 = 10⁻¹² |σ₂₀|, and a pilot
+   file whose σ₂₀ at wf 1.00 is the same sum's, so that item 1's pilot term is zero there and its mutation `amend`
+   tests the term. Every stage runs on them (`planted_k20.py STAGE --data DIR`). Pass: every stage completes with its
+   checks passing, and in the ring test the planted sum has a σ₂₀ error below 10⁻¹⁸ and a τ₂₀ error below 10⁻¹⁷ and
+   survives; whether its zero lies inside the dry run's K = 20 range is reported. A stage that fails on the synthetic
+   data is fixed before the real data, and the fix is recorded here. The dry run needs section 11.6's completions, so
+   it runs after section 11's stages and before any real K = 20 stage; its records and checks are discarded (its logs
+   go to the raw-data repository); it tests the code path, not the estimators (item 2 does that).
+1. **σ₂₀ is converged** if, at every node: (a) err20 ≤ 10⁻¹⁰ |σ₂₀|, where err20 is the node's plateau error from
+   `sigma_err_fit.py` (the files are 1280-bit, their stored `sigma_err` is inf; a1 from the 960-bit `scan39J1000` file
+   at the same wf) plus the wf 1.00 pilot difference |σ₂₀(a) − σ₂₀(b)|, 1.524×10⁻³¹, added at every node: it is the only
+   measured J difference at this order, and no second J runs at the nodes (13 h each) because no item below needs σ₂₀
+   to better than 10⁻⁹ of itself; (b) σ₀…σ₁₉ at wf 1.00 are bitwise T88's J 1250 / 1280-bit values (known to hold), and
+   at wf 0.99 and 1.01 σ₀…σ₁₈ equal `scan39J1000`'s within that file's plateau errors (the J 1000 against J 1250
+   differences at σ₁₆…σ₁₈ were 5.4×10⁻²⁷, 1.6×10⁻²⁷, 4.5×10⁻²⁸ at wf 1.00 against plateau errors 2.9×10⁻²⁶, 9.0×10⁻²⁷,
+   1.1×10⁻²⁷; section 11.1), while the σ₁₉ differences at those nodes are the measurement section 11.0's amendment takes
+   and are not a check here; (c) pilot (b)'s σ₁₇…σ₁₉ equal (a)'s within (a)'s plateau errors at those orders, and its
+   σ₂₀ difference is the term of (a), recorded and not evaluated as a gate (ruling 2); (d) the second difference of
+   σ_k/σ_{k+1} at k = 18 is at most 0.05. Each check gets a mutation that must make it fire
+   (`--mutate=err|low|pilot|ratiolaw|amend`, the last scaling the pilot's σ₂₀ by 1 + 10⁻⁹).
+2. **The pipeline on plants first.** N1 recovered by arg, ratio, Padé and G to 10⁻⁶ at K = 20, N2 giving no number;
+   the 28 arc plants, C-EXP and the 13 REFIT plants regenerated and run at K = 18, 19, 20, their K = 18 and 19 estimates
+   equal to the stored K = 19 records (`planted_results_k19.jsonl`) to 10⁻⁹, or the work stops. Control: N1 graded
+   against ω_t + 0.002 must fail.
+3. **Real data at K = 20** (record "N0 scan41J1250"): its K = 18 and 19 estimates must equal those of "N0 scan39J1000"
+   to 10⁻⁹ (the two files differ at σ₁₆…σ₁₉ by the J and precision effects, 10⁻¹¹ of σ₁₉ at most, far inside this).
+   Mutation controls: σ₂₀ → −σ₂₀ at wf 1.00 must fire a detector; σ₂₀ × (1 + 10⁻³) is reported.
+4. **Ring test.** Every K = 19 completion of section 11.6 is regenerated and its zero must reproduce the stored
+   "K19 recomplete" value to 10⁻⁹: C19-W1–3, C19-ARC (four shapes at their stored best ω_t) and C19-BP [m/(19 − m)],
+   m = 3…9. A ring that section 11.4 records as surviving σ₁₉ (the K = 18 generation's C18-BP [3/15], [4/14], [5/13]
+   are under test there; none is known to survive at this writing) is carried over and tested again here; if none
+   survives, nothing is carried over. Benchmark: the simple-zero law from τ₁₈, τ₁₉. **The D-bracket question** is
+   handled as section 9.0 item 4 fixed it: section 5.3's comparison is the primary reading (a completion survives if no
+   detector fires on it at K = 20 that does not fire on the real data), and the table gives a second reading with
+   D-bracket left out, both fixed here. A ring is a finding only if it survives under the first reading; a ring
+   rejected under the first and surviving under the second is reported as that. The author's decision asked for in
+   8.9 has still not come; if it comes before any K = 20 estimate is computed, this item is amended with the date. A
+   ring that survives σ₂₀ is a finding, reported as such.
+5. **Calibration** at K = 20, as section 10.5: the error of arg, ratio, Padé mid and G on (i) the 28 arc plants, (ii)
+   C-EXP, (iii) REFIT with fit residual ≤ 10⁻⁴, and (iv) the BP family: section 11.0's sixteen sums plus the C19-BP
+   sums that section 11.6 records as ring-free and passing the type rule at K = 19 (named when 11.6 is written, by
+   that rule and not by their values; if none, the family stays at sixteen), each with its own zero as truth. The
+   calibration at K = 19 from the new records must reproduce section 11.5's arc and BP-family ranges to 6×10⁻⁷
+   (against the values stored in `planted_checks_k19.json`).
+6. **Next generation and ring-free completions,** glued at σ₂₀ (tail from k = 21): ratio-law windows k = 6–19, 8–19,
+   9–19; best-fit arc tails, four shapes, ω_t grid 0.9990–1.0010; the Borel–Padé sums [m/(20 − m)], m = 3…10. Frozen
+   type rule: every pole has |t| < 2 at all three nodes. Zeros counted at wf = 1.00 in |x| < 7.3, 12 and 16.
+7. **Combination.** The K = 20 estimator range is the hull of: the calibrated arg range over the 28 arc plants; the
+   calibrated arg range over the BP family of item 5; and the zeros of the ring-free completions of item 6 that pass
+   the type rule (no zeros besides x₀ in |x| < 12). G is reported with its spread over the minima of its objective
+   within a factor 5 of the best and is not part of the hull. The headline is the union of the K = 19 headline (section
+   11.8) and the K = 20 range if they overlap; if disjoint, both are reported and the reason diagnosed before any
+   headline is written. The range is an estimator range, not a bound; the range from the last two orders alone is
+   reported beside it as context, as at K = 17, 18 and 19.
+8. **The order-20 projection.** est_k = ω* + c r^k through k = 18 and 19, for ω* = 1, the lower end of the K = 19
+   range (section 11.8) and the lower end of the headline, against the real arg₂₀; decisive only if the other
+   prediction is farther from arg₂₀ than three times the model's own error (its largest miss over k = 17–19 on the
+   real data, and over the 28 arc plants at k = 20 given their true ω_t).
+
+The stages are `converge`, `plants`, `real`, `ring`, `calib`, `recomplete`, `project`, `combine`, each run as
+`nice -n 10 python3 planted_k20.py STAGE` from `solver/inner_amp/`, on `scan41J1250/` (the three nodes) and
+`scan41J1500/` (the pilot). `planted_k20.py` is `planted_k19.py` one order up (a mechanical renumbering) with the
+changes items 1, 4, 5 and 8 state: item 1's error sum is the rule, not a flag (`--amend` goes); 1(b) and 1(c) read the
+files this item names; the calibration family and the projection's second hypothesis come from sections 11.6 and 11.8.
+Order of work: section 11's stages first (on T89's node files, through `--amend`), then item 0, then the K = 20 stages.
+The comparison of σ₂₀ with P5's type bound (the K = 19 recalibration's prediction) belongs to P5 and is recorded in
+`proof/P5_scope.md`, not here. The `pick_plateau` change deferred in section 11.0 stays deferred until the nodes have
+landed, so that all four files of this order come from the same code.
