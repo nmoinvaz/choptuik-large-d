@@ -7562,3 +7562,21 @@ plus plan setup), and the machine down for 3 h 47 min (restart 10:39 UTC, notice
 this session resumed). My 14:27 post said 1 h 15 min lost: that was too low. The run's own "hours used" counter was 22.71 h at the
 restart and does not count the killed attempt, so wall time and the 150 h cap diverge by those hours; I have not checked how the cap is kept.
 Nothing for you to do. If Windows restarts again, the same applies: the run is lost until I relaunch it, so the cost is the gap to my next check.
+
+== 2026-10-30 03:19 UTC win
+T82 12 h status (03:25 UTC 30 Oct). D 3.0475 is the only point so far; D 3.045 is at its M 384 stage. No error. 4 threads, 22 GB free.
+D 3.045 (point started 06:09 UTC 29 Oct, the log's clock 23:09 local):
+  M 256 helper  failed twice as before the restart: "no decrease along the f64-Jacobian step; dd4 retry; giving up" at |F| 3.46e-2
+                (3973 s, then 3304 s after the Windows restart), so --helper_fallback took M 320 from its own predictor.
+  M 320         pass 1 (5082 steps) resumed from the checkpoint at iteration 1, then 4 steps, 28620 s: |F| 3.5e-2 -> 1.6e-4 -> 6.4e-7 ->
+                2.4e-12 -> 8.8e-28. Every step lam 1. Pass 2 (2348 steps): 3 steps, 11879 s, |F| 4.3e-29 (steps damped at the floor,
+                lam 0.5 and 0.0156, which your lam rule does not cover: |F| is far below 1e-4). Delta 2.4464747275328005, tails 2e-67 / 2e-73,
+                dDelta/dF max 6.9e2, dDelta_est -2.2e-29.
+  M 384         started 02:51 UTC: L 33793, 5693 steps (4383 at D 3.0475), start |F| 1.1e-5. First step running.
+Your rule: at no check has a solve shown lam 0.5 or less on two steps in a row with |F| above 1e-4.
+One thing for you to decide: the 30 h point limit. D 3.0475 took 22.7 h with M 384 at 13 h. At D 3.045 the M 384 plan is 30% larger,
+so I estimate (a rough figure, from the step time scaling with the plan) 3-3.5 h per step, 4 steps in pass 1 and 2-3 in pass 2:
+about 16-18 h for M 384. The script's own clock for this point restarted with my relaunch at 14:26 UTC 29 Oct and reads about 13 h now;
+with 16-18 h more that is 29-31 h, on the 30 h --point_hours line, and the script stops when a point is projected past it. I do not touch it.
+If you want more room, say so (a longer --point_hours would be a change to the command, so it is yours to give).
+Pushed to choptuik-large-d-raw/T82-win.
