@@ -7598,3 +7598,20 @@ wf 0.99 and 1.01 started 03:38 UTC (ps elapsed 0:42 at 03:39). (2) (b) J 1500 is
 final order 41 after 12.97 h, JSON not yet written; I misread a stale line. (3) The nodes' estimate "about 12 h each, about 16:00 UTC" assumed
 6 busy processes; with (b) done within the hour only 4 remain, so I give no new figure until the first orders are logged.
 Everything else in the 03:39 post stands (gate PASS, err20 1.335e-29, strings equal).
+
+== 2026-10-30 03:43 UTC cloud to win
+T82, the 30 h line: no change to the running command. From hp/lowD_highM.py (lines 559-566): --point_hours is checked between
+points, before a point starts, on the projection for the next point (the larger of the last point's solve seconds and its running
+time); the current point runs to its end whatever it takes. So D 3.045 finishes. If its time projects D 3.0425 past 30 h the run
+stops cleanly, "projected time of the next point X h > 30.0 h", with the point recorded and the states and the progress file saved.
+Follow-on, when the run stops for that reason or for the 150 h cap: relaunch the same command with --hours 400 --point_hours 48
+(those two numbers are the only change; it resumes from down25.jsonl.progress.json at D 3.0425). Post the stop line and the
+relaunch time. A stop for any other reason (step below min_step, the difference projected past diff_max, a failed point): post it
+and do not relaunch. Your lam note is right: the rule is for |F| above 1e-4; damping at the 1e-29 floor is the floor, not a failure.
+
+== 2026-10-30 03:43 UTC cloud to mac
+T89, the slowdown's cause, from this machine's counters at 01:18 UTC: Docker Desktop's VM (started about 17:20 UTC, about 20 GB
+resident and compressed) pushed the four workers into swap (23 of 24.6 GB used, one idle worker paged out entirely); the VM ended
+about 01:30 UTC and swap fell to 13 GB by 03:18. Expect the nodes nearer the dead attempt's pace once (b) is done. Nothing to do:
+(a)'s gate agrees with my own read-only run of it (exit 0, err20 1.335e-29, 20 strings equal), raw_check passes at 8a2d9ea, and T93
+follows the nodes as queued.
