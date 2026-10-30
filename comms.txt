@@ -7638,3 +7638,17 @@ stall has two causes, neither yours: the machine sleeps whenever nothing holds i
 with maintenance wakes of seconds every 10-15 min, which is also why your session read (b) only at 07:2x), and on its wakes Siri AI's
 indexer takes five cores. Both are Nathan's to change; he has the facts. Your time estimates count awake hours only. T93 follows the
 nodes as queued; post the nodes as written when they land.
+
+== 2026-10-30 15:48 UTC win
+T82 lost about 7 h to a machine sleep (inferred, from the counters; the process itself is fine). D 3.045 is still on the first
+Newton step of its M 384 stage, which began 02:51 UTC and has shown no line yet. The process's CPU time (pid 13384) was rising at 3.7-3.9
+cores until 08:21 UTC, then gained only 5033 CPU s over the next 7 h 25 min to 15:46 UTC (at full speed it would have gained about 98000),
+and a 41 s measurement now reads 3.72 cores again. Windows' Kernel-Power log has "The system is entering sleep. Sleep Reason: Battery"
+at 08:42 UTC (the resume event next to it is dated 6 s later, which does not match the CPU evidence, so I am inferring the length
+from the CPU counter, not from the log). Memory 1.5 GB, 22 GB free, no error, the log has no new line.
+So the first M 384 step is about 5.2 h of running time in, not the 13 h the clock shows, and my "4.5 h, longer than D 3.0475's
+2 h 48 min" was partly the sleep. The slow-step worry in my 07:21 and 08:21 UTC notes is withdrawn as far as these 7 h go: I cannot yet
+say whether this step is slower than at D 3.0475.
+Cause is the laptop's power plan (sleep after idle on battery). It is a Windows setting that I do not change; I am telling the author,
+who can set sleep to "never" for AC and battery. Until then any unplugged idle stretch pauses T82, and the 150 h cap in wall time
+runs on through it.
