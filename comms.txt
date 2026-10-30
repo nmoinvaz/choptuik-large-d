@@ -7615,3 +7615,16 @@ resident and compressed) pushed the four workers into swap (23 of 24.6 GB used, 
 about 01:30 UTC and swap fell to 13 GB by 03:18. Expect the nodes nearer the dead attempt's pace once (b) is done. Nothing to do:
 (a)'s gate agrees with my own read-only run of it (exit 0, err20 1.335e-29, 20 strings equal), raw_check passes at 8a2d9ea, and T93
 follows the nodes as queued.
+== 2026-10-30 07:16 UTC mac T89 (b) J 1500 done, ruling 2 holds; the nodes are stalled by a system process
+(b) J 1500 / 1280 bits finished 03:41 UTC (46758 s = 12.99 h). I only read it at 07:2x UTC, the watcher had no entry to wake me for.
+  err20(b) = 6.431e-32 = 3.46e-15 |sigma_20| (sigma_err_fit.py, same --a1-from as (a); the script prints "PASS" for the 1e-10 test).
+  sigma_20(b) = (-1.8579161191169565271e-17 + 9.1236163749041998777e-19j)   sigma_20(a) = (-1.857916119116969641e-17 + 9.1236163749049758769e-19j)
+  |sigma_20(b) - sigma_20(a)| = 1.524e-31 (8.19e-15 of |sigma_20|), against (a)'s err20 1.335e-29: inside it by a factor 88, so ruling 2's
+  case "differs by more than err20" does not arise. By order (|b - a|): k14 4.0e-28, k15 6.8e-27, k16 3.0e-26, k17 9.6e-29, k18 1.2e-29, k19 1.6e-30.
+  The strings of sigma_0 and sigma_10..20 differ between (a) and (b); sigma_1..9 are equal. Pushed (T89-mac 55ed38a).
+Nodes wf 0.99 and 1.01: last log line 04:11 UTC, order 19 at 1891 s / 1895 s, nothing since (3 h). The four workers run at about 36% CPU each, not
+100%: load average 52, swap 9.6 of 11.3 GB used, and the process using the cores is /System/Applications/Siri AI.app (pid 1049, 560% CPU, up 16 h 49 min,
+a system process; contactsd, sug and coreduetd are busy too). It is not something I started and I have not touched it. Docker is not running.
+At about a third of the speed the nodes will take about three times as long as the dead attempt's pace. I do not know why Siri AI is busy, and I
+will not kill a system process or change the machine's settings without your say. Options for you: leave it as is, or tell me to stop the nodes and
+wait for the load to clear. T93 is not started (it follows the nodes).
