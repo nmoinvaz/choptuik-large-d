@@ -2324,3 +2324,18 @@ check; 1(b)'s check is the bitwise equality at wf 1.00 of σ₀…σ₁₉ with 
 "N0 scan39J1000"), its K = 18 and 19 estimates equal to 10⁻⁹: the same σ₀…σ₁₉ through the same code, a reproduction
 check and no longer a cross-precision one; the cross-precision comparison that remains is section 11.0's item 3, the
 node data's K = 17, 18 estimates against "N0 scan37J1000" (960 bits). Nothing else changes.
+
+### 12.1 The dry run (item 0)
+
+`planted_k20_dry.py` wrote the three node files and the pilot file with the real σ₀…σ₁₉ (the 1280-bit node data) and
+σ₂₀ = the C19-BP [6/13] sum's (section 11.6's first ring-free, type-passing sum; zero at 1.00000009), err20 = 10⁻¹² |σ₂₀|
+and the pilot term zero; the eight stages ran on them 2026-10-31 05:38–05:58 UTC (logs in the raw-data repository's
+`planted-k20-mac/dry/`; the scripts are commit 7f96edd), after section 12.0 and its amendment were committed. Every check
+passes (converge 8, plants 4, real 4, ring 60, calib 1), and each of the five converge mutations fires. In the ring test
+the planted sum's σ₂₀ error is at most 2.5×10⁻²⁰ and its τ₂₀ error at most 2.0×10⁻¹⁸ (the 20-digit format), it survives
+under both readings, and its zero lies inside the dry run's K = 20 range, 0.999997–1.000002. Two effects of the synthetic
+truth, not of the code: C19-BP [4/15], a ring of 5, also survives on it (its σ₂₀ differs from the planted one by
+0.6–1.5×10⁻⁷ and fires no detector), and the C20-BP [9/11] and [10/10] sums' root search fails on it (the planted
+function is an exact exponential sum of thirteen terms, so its Padé table degenerates past [6/13]; [8/12] shows the
+spurious poles, |t| = 5.0, 21 zeros in |x| < 12), which the stage records as entries, not as failures. Nothing was fixed;
+the real K = 20 stages follow.
