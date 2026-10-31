@@ -2613,15 +2613,16 @@ come from the same code as T89's.
 `planted_k21_dry.py` wrote the three node files and the pilot file with the real σ₀…σ₂₀ (the 1280-bit node data of
 section 12) and σ₂₁ = the C20-BP [6/14] sum's (section 12.7's first ring-free, type-passing sum; zero at 1.000000028),
 err21 = 10⁻¹² |σ₂₁| and the pilot term zero; the eight stages ran on them 2026-10-31 09:24–09:58 UTC (logs in the
-raw-data repository's `planted-k21-mac/dry/`, f85d3d0; the scripts are commit 49a1041), after section 13.0 was committed
-(32f958d). Every check passes (converge 10, plants 4, real 4, ring 72, calib 1), and each of the five converge mutations
-fires (`low` on the wf 0.99 node's bitwise check, the new form of item 1(b)). In the ring test the planted sum's σ₂₁ error
-is at most 2.9×10⁻²⁰ and its τ₂₁ error at most 1.5×10⁻¹⁸ (the 20-digit format), it survives under both readings, and its
-zero lies inside the dry run's K = 21 range, 0.999998–1.000002. Effects of the synthetic truth, not of the code: on it
-D-bracket fires on the real record at K = 21 and C19-BP [4/15], the context ring, survives (its σ₂₁ differs from the
-planted one by 0.8–1.4×10⁻⁶ and no detector fires on it beyond the real record's); the planted function is an exact
-exponential sum of fourteen terms, so the C21-BP table degenerates past [6/15]: [7/14] reproduces [6/15]'s zero exactly,
-[5/16], [8/13] and [9/12] show spurious poles (|t| up to 10, 37, 11 and 30 zeros in |x| < 12, the type rule failing) and
-the [10/11] root search fails, which the stage records as entries, not as failures; the K = 21 hull is then the two
-calibrated ranges and that one zero. The projection stage ran (favouring 1 by 0.2×10⁻⁷ against a model error of
-2.7×10⁻⁶, not decisive), as it will on the real data. Nothing was fixed; the real K = 21 stages wait for T94's four files.
+raw-data repository's `planted-k21-mac/dry/`, f85d3d0; the scripts are commit 49a1041), after section 13.0 was
+committed (32f958d). Every check passes (converge 10, plants 4, real 4, ring 72, calib 1), and each of the five
+converge mutations fires (`low` on the wf 0.99 node's bitwise check, the new form of item 1(b)). In the ring test the
+planted sum's σ₂₁ error is at most 2.9×10⁻²⁰ and its τ₂₁ error at most 1.5×10⁻¹⁸ (the 20-digit format), it survives
+under both readings, and its zero lies inside the dry run's K = 21 range, 0.999998–1.000002. Effects of the synthetic
+truth, not of the code: on it D-bracket fires on the real record at K = 21 and C19-BP [4/15], the context ring,
+survives (its σ₂₁ differs from the planted one by 0.8–1.4×10⁻⁶ and no detector fires on it beyond the real record's);
+the planted function is an exact exponential sum of fourteen terms, so the C21-BP table degenerates past [6/15]:
+[7/14] reproduces [6/15]'s zero exactly, [5/16], [8/13] and [9/12] show spurious poles (|t| up to 10, 37, 11 and 30
+zeros in |x| < 12, the type rule failing) and the [10/11] root search fails, which the stage records as entries, not
+as failures; the K = 21 hull is then the two calibrated ranges and that one zero. The projection stage ran (favouring
+1 by 0.2×10⁻⁷ against a model error of 2.7×10⁻⁶, not decisive), as it will on the real data. Nothing was fixed; the
+real K = 21 stages wait for T94's four files.
