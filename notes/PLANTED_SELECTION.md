@@ -2518,11 +2518,11 @@ sigma_err on every σ_k (20 seeds), arg₂₀ moves by at most 4.2×10⁻¹⁰. 
 
 ### 13.0 Procedure, fixed before any K = 21 estimate was computed
 
-Written and committed before any σ₂₁ existed. Known at this point (2026-10-31 08:24 UTC): no K 43 run has started. T94, the σ₂₁
-campaign, is queued as the Mac's follow-on to T93 (comms entry of 2026-10-31 05:27 UTC): (a) wf 1.00, K 43, J 1250 at
+Written and committed before any σ₂₁ existed. Known at this point (2026-10-31 08:24 UTC): no K 43 run has started.
+T94, the σ₂₁ campaign, is queued as the Mac's follow-on to T93 (comms entry of 2026-10-31 05:27 UTC): (a) wf 1.00, K 43, J 1250 at
 1280 bits and (b) wf 1.00, J 1500 at 1280 bits, about 14 and 16 h of awake time, then the nodes wf 0.99 and 1.01 (K 43,
-J 1250, 1280 bits, about 16 h each) once (a) passes the pilot gate the comms entry of 2026-10-29 02:16 UTC fixed (ruling 1:
-`sigma_err_fit.py` exit 0, err21 ≤ 10⁻¹⁰ |σ₂₁|; ruling 2: a σ₂₁ difference between (a) and (b) beyond err21 is posted
+J 1250, 1280 bits, about 16 h each) once (a) passes the pilot gate the comms entry of 2026-10-29 02:16 UTC fixed
+(ruling 1: `sigma_err_fit.py` exit 0, err21 ≤ 10⁻¹⁰ |σ₂₁|; ruling 2: a σ₂₁ difference between (a) and (b) beyond err21 is posted
 and not a stop; and (a)'s σ₀…σ₂₀ bitwise `scan41J1250`'s wf 1.00 file, 21 of 21 strings). What that gate says when
 the pilots land is added to this paragraph with its date, before any estimator runs at K = 21: it is the gate's reading,
 not an estimate. The K = 20 stages are complete (sections 12.1–12.10), so everything this section needs from the lower
