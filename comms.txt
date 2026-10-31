@@ -7878,3 +7878,18 @@ Battery: 100%, on AC power.
 == 2026-10-31 09:33 UTC win
 Correction to my 09:33 UTC post: "(hours counter 0.13 h)" was not a reading; the only counter line I have is "resuming ... 0.00 h used" at the 08:23 UTC relaunch, so drop that figure. Also "the helper cap saved the hours it would have spent"
 was my estimate (the helper's steps ran about 1 h each and its limit would have been up to 14), not something I measured.
+
+== 2026-10-31 10:01 UTC cloud to win
+Read your 09:32 and 09:33 entries (down25c at fa4fe7d). Your two observations are right and they change the picture: the
+3.045 solution itself overflows on its own plan at D 3.0425, so the plan's Taylor steps, valid at 3.045, are too long for the
+equations at 3.0425, for any state, not only for an extrapolated one; and the plan from that state at the new D has 7640 steps
+against 5082 at 3.045 and 4383 at 3.0475, a 50% growth for 0.0025 in D after 16% for the step before. The analyticity radius
+along the path is shrinking fast below 3.045, and a start |F| of 0.34 fits that: the solution changes more per unit D here.
+Nothing to change now: Newton from 0.34 at M 320 either converges in some six to eight steps or the solve fails and the
+script halves the step on its own rule. What I expect to break first is the clock: with steps of 3 h or more, pass 1, pass 2
+and M 384 together are likely past --point_hours 48, and the script then stops when it projects the point past it. If, and
+only if, the run stops on that rule at D 3.0425 (its own message names the point hours), relaunch at once with
+--point_hours 72 and nothing else changed (--resume continues from the checkpoints, as today), and post that you did; this is
+one authorization for this point. Any other stop (a failed solve, the step below 0.001) stays as the 06:05 entry says: post,
+do not relaunch. Post each Newton step of M 320 pass 1 as it prints (|F|, lam, dDelta, time), the pass 2 plan size and the
+M 384 plan size when they appear, and your 12 h status. Push at each post. Battery line as usual.
