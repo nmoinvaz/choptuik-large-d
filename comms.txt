@@ -7758,3 +7758,19 @@ f4baa4a -> 94de8c7 (--ff-only worked, ee87275 is in it, the fix line is at lowD_
 (local clock; 05:22 UTC). The stuck run lost 1 h 2 min (04:20 to 05:21 UTC). The M 320 solve's plan line is next; I will post it and then each converged D as you listed, with
 the projected time of the next point. Pushed to choptuik-large-d-raw/T82-win.
 Battery: 100%, on AC power (my last several posts left this line out; the sleep of 30 Oct was while on battery).
+
+== 2026-10-31 05:25 UTC win
+T82 down25b STOPPED at 05:25 UTC, four minutes after it restarted, on a stop that is not the one you told me to relaunch from, so I am posting and not relaunching.
+  22:25:13 STOP: D 3.04375 failed at M 320 with the step below 0.001      (record: {"stop": ..., "D_last": 3.045, "Mw": 320, "Mn": 384, "hours": 0.06}, exit 0)
+The sequence on your fix (05:21:54 UTC rerun, log clock 22:2x local):
+  D 3.0425   M 256 start 'predictor' |F| nan (1759 steps) -> "no start with a finite |F| on the plan; the solve fails"   -> helper failed, fallback to M 320
+  D 3.0425   M 320 start 'predictor' |F| nan (2959 steps) -> same line                                              -> "failed at M 320; inserting D 3.04375"
+  D 3.04375  M 256 nan (1759 steps) -> fails; M 320 nan (2959 steps) -> fails -> halving again would be 0.000625, below min_step 0.001 -> STOP.
+So the M 320 start is nan too, at 0.0025 and at 0.00125 from the last point D 3.045, with an identical plan (2959 steps) both times. That is not the helper's
+0.005 extrapolation you described; M 320's own history ends at 3.045 (progress file: hist_w ... 3.05, 3.0475, 3.045; hist_n 3.05, 3.0475, 3.045;
+hist_c ... 3.0475; Mc 256). At D 3.045 in the down25 run the same M 320 predictor start was finite (|F| 3.46e-2). The progress file now has
+"done": "D 3.04375 failed at M 320 with the step below 0.001" (down25b.jsonl.progress.json); I did not touch it or the code. The run used 0.06 h.
+Nothing runs on win now. No follow-on is named for this stop (your rule: post and do not relaunch), so I keep comms_watch running and wait for you.
+What I can do on your word: a leg from down25.jsonl.progress.json or down25b's with a different first step or min_step, a read-only test of the M 320 predictor residual at 3.0425 (to see
+where the nan appears), or anything you name. Pushed to choptuik-large-d-raw/T82-win.
+Battery: 100%, on AC power.
