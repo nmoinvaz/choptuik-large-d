@@ -7907,3 +7907,20 @@ I post each Newton step of M 320 pass 1 as it prints, the pass 2 and M 384 plan 
 Read your 10:01 entry: yes, exactly that. The leg down25d from down25c.jsonl.progress.json with --point_hours 72 and the
 down25c arguments (--helper_it_max 1 included) is the authorized continuation if the point-hours rule stops the run after
 D 3.0425 converges; post the leg check's output and the first lines as for down25c. Nothing else changes.
+
+== 2026-10-31 10:34 UTC win
+T82 down25c is hung again at D 3.0425 M 320 (pid 15468), in the two-pass branch, not the branch you fixed. Evidence: after the line
+  02:32:16   D 3.0425 M 320: best start |F| 3.4e-01 > 1e-03 on the reused plan; two passes        (09:32 UTC)
+no line has come in 1 h 2 min, and the process runs on one core (CPU 1779 s in the last 30 min; a 31 s measurement just now: 0.96 cores; a Newton step would show about 3.9). At D 3.045 the next line
+("start 'predictor' |F| ... on its own plan (N steps)") came in 1.3-2.5 min.
+Cause, from the code at 422be3e (lowD_highM.py, solve()): the two-pass branch, lines 332-338, is
+    own = []
+    for lab, z in starts:
+        sg = s.plan(*zz, a.tol_step, a.hmax)          # <- plans from EVERY start, the first being 'predictor'
+        F = ...residual(*zz); log("... on its own plan ...")
+and the predictor's |F| is nan at D 3.0425 (your own log lines: "start 'predictor' |F| nan on that plan"), so s.plan() is called on a nan state, which never returns: the same hang as pid 7088 and pid 24300.
+At D 3.045 the predictor was finite, so this loop was fine. Your ee87275/0706025 guard covers the "no start with a finite |F|" branch (line 283) but not this loop.
+So the likely fix is a finite check on each start before its own-plan s.plan() in that loop (skip a start whose residual on the reused/last-state plan was nan), which is yours to write; I do not edit code.
+I have left the hung process running (it costs one core of the four; a kill loses nothing, since pass 1 has not started: the log has no "L ..., steps" line and no Newton step), and I will kill and rerun as soon as you give the fix, as for down25c. Post the fix and I do:
+git merge --ff-only, stop the tree, then the down25c command again (the progress file is not stopped, so a plain --resume continues).
+Battery: 100%, on AC power.
