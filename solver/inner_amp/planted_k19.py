@@ -696,8 +696,14 @@ def stage_ring(scratch):
         extra_nb = [d for d in extra if d != BRACKET]                   # the second reading of section 11.0 item 4
         kq = int(name[1:3])                       # the order whose real coefficients the completion carries
         if kq in KS19:
-            same = K14.max_diff(K14.est_vector(rec, kq), K14.est_vector(real_rec, kq))[0]
-            label = f"its K = {kq} estimates are the real ones"
+            # the K = 17, 18 completions carry the 960-bit sigma_0..18; under --nodes the real record is the 1280-bit
+            # data, so their reproduction reference is the stored 960-bit record (fourth amendment, 2026-10-31)
+            if NODES and kq < 19:
+                ref_rec, ref_name = k18_records()[REAL18], f"{REAL18}'s (960 bits, the data it carries)"
+            else:
+                ref_rec, ref_name = real_rec, "the real ones"
+            same = K14.max_diff(K14.est_vector(rec, kq), K14.est_vector(ref_rec, kq))[0]
+            label = f"its K = {kq} estimates are {ref_name}"
         else:                                     # glued below K = 17: its K = 17, 18 estimates are the stored record's
             old = k18_records()[rec_name(name)]
             same = max(K14.max_diff(K14.est_vector(rec, K), K14.est_vector(old, K))[0] for K in (17, 18))

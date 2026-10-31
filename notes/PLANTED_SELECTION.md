@@ -1986,6 +1986,15 @@ Item 3 is amended as follows, before any K = 19 estimate is used:
   `--mutate=real` scales σ₁₈ at wf 1.00 of the node data by 1 + 10⁻⁹ and must fire. The 10⁻⁹ reproduction reading
   stays for same-data comparisons (section 12.0's item 3 as amended). Item 3's σ₁₉ mutation controls are unchanged.
 
+**Fourth amendment, item 4 (2026-10-31 05:09 UTC), after the `ring` stage fired under the second amendment.** The `real` stage
+passed under the third amendment at 05:04 UTC (every K = 17, 18 estimate within 0.61 rms of the noise reference, the
+control exact; `--mutate=real` fires at 4.96 rms). The `ring` stage then failed its reproduction check for the K = 17
+and 18 generations' completions (C18-W1–3, C18-ARC, C18-BP, C17-BP), "its K = 18 estimates are the real ones", by the
+same 3.3×10⁻⁸ (9.3×10⁻⁹ at K = 17): those completions carry the 960-bit σ₀…σ₁₈ of `scan37J1000` and were compared
+with the 1280-bit real record. Their reference is the record of the data they carry, "N0 scan37J1000" at K = 17 and
+18, to 10⁻⁹ as written; the K = 19 completions of section 11.6 carry the 1280-bit node data and are compared with
+"N0 scan41J1250" as written. Nothing else in item 4 changes.
+
 ### 11.1 σ₁₉: items 1(a), (b), (d) pass, item 1(c) fails
 
 The `converge` stage ran as written on 2026-10-28 23:16 UTC, after the three T88 nodes landed (logs in the raw-data
