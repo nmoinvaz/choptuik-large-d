@@ -428,6 +428,41 @@ def k19_amend2():
 
 
 @check
+def p5_sigma20():
+    """proof/P5_scope.md item 3: sigma_20 against the type bound (solver/proof/logs/entire_cert_K20.log, from
+    `entire_cert.py 20 --scan ../inner_amp/scan41J1250`), and its fit error from sigma_err_fit.py (section 12.0's gate)."""
+    import re
+    P = "proof/P5_scope.md"
+    L = open(os.path.join(ROOT, "solver/proof/logs/entire_cert_K20.log")).read()
+    node = {m.group(1): (float(m.group(2)), float(m.group(3)))
+            for m in re.finditer(r"wf (\S+): k <= 19 \(.*?\): ([0-9.]+); k <= 12 \(.*?\): ([0-9.]+)", L)}
+    cal = re.search(r"\|sigma_k\| Gamma\(k \+ ([0-9.]+)\) / ([0-9.]+)\^k for k = 4\.\.20:.*C = max = ([0-9.]+)", L)
+    pred = re.search(r"k 21: ([0-9.e+-]+),", L)
+    d = os.path.join(ROOT, "solver/inner_amp")
+    sys.path.insert(0, d)
+    import sigma_err_fit as SF
+    sys.path.pop(0)
+    a = json.load(open(os.path.join(d, "scan41J1250/sigF_w1.0000_K41_J1250_p1280.json")))
+    p = json.load(open(os.path.join(d, "scan39J1000/sigF_w1.0000_K39_J1000_p960.json")))
+    r = SF.recompute(a, SF.a1_of(p))
+    s20, e20 = float(abs(r[20][1])), r[20][2]
+    k12 = "0.988, 0.971, 0.953 at wf 0.99, 1.00, 1.01"
+    cs = "(a = 1.7386, b = 4.63, C = 62.0)"
+    return [("sigma_20 over the K = 19 bound at wf 1.00", node["1.0"][0], 0.901, 0.001, [(P, "0.901 of the K = 19 bound")]),
+            ("sigma_20 over the K = 19 bound at wf 0.99", node["0.99"][0], 0.905, 0.001, [(P, "0.905 and 0.896 of each node's own K = 19 bound")]),
+            ("sigma_20 over the K = 19 bound at wf 1.01", node["1.01"][0], 0.896, 0.001, [(P, "0.905 and 0.896 of each node's own K = 19 bound")]),
+            ("k <= 12 calibration's ratio at k = 20, wf 0.99", node["0.99"][1], 0.988, 0.001, [(P, k12)]),
+            ("k <= 12 calibration's ratio at k = 20, wf 1.00", node["1.0"][1], 0.971, 0.001, [(P, k12)]),
+            ("k <= 12 calibration's ratio at k = 20, wf 1.01", node["1.01"][1], 0.953, 0.001, [(P, k12)]),
+            ("K = 20 calibration a", float(cal.group(2)), 1.7386, 0.0001, [(P, cs)]),
+            ("K = 20 calibration b", float(cal.group(1)), 4.63, 0.01, [(P, cs)]),
+            ("K = 20 calibration C", float(cal.group(3)), 62.0, 0.1, [(P, cs)]),
+            ("predicted bound on sigma_21", float(pred.group(1)), 1.47e-18, 0.01e-18, [(P, "|σ₂₁| ≤ 1.47×10⁻¹⁸")]),
+            ("|sigma_20| at wf 1.00", s20, 1.86e-17, 0.01e-17, [(P, "|σ₂₀| = 1.86×10⁻¹⁷ at ω∞")]),
+            ("sigma_20 fit error at wf 1.00, relative", e20 / s20, 7.2e-13, 0.1e-13, [(P, "7.2×10⁻¹³ of |σ₂₀|")])]
+
+
+@check
 def first_order():
     """The 1/n coefficients from the O(1/n) inner problem (notes/FIRST_ORDER.md): omega_1, Delta_1 = -2 pi omega_1 /
     omega*^2 and lambda_1 in the M-harmonic truncations (M = 5: the mean of the three runs), and the fitted values."""

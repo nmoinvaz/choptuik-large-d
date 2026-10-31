@@ -66,7 +66,7 @@ Three findings.
    vanishing at the far end gives, it is 2.3×10⁻⁶, sixteen times inside the Rouché margin at radius 10⁻³ in x and
    seven times inside the Krawczyk need at radius 10⁻⁴ in (A, ω/ω∞). The calibrated C_G′ = 11.4 is set by the last
    coefficient (κ̄ zeroes g_{K−1}, so g_K carries what is left); the earlier ones give 3–5.
-3. **The σ₁₈ and σ₁₉ tests passed; σ₂₀ is next.** The K = 17 calibration predicts |σ₁₈| ≤ 3.63×10⁻¹⁵ and |σ₁₉| ≤
+3. **The σ₁₈, σ₁₉ and σ₂₀ tests passed; σ₂₁ is next.** The K = 17 calibration predicts |σ₁₈| ≤ 3.63×10⁻¹⁵ and |σ₁₉| ≤
    2.77×10⁻¹⁶. The committed σ₁₈ scans (`solver/inner_amp/scan37J1000`, T87, 2026-10-28) give |σ₁₈| = 3.28×10⁻¹⁵ at
    ω∞, 0.90 of the bound, the same margin as the orders before (3.35×10⁻¹⁵ and 3.20×10⁻¹⁵ at the nodes, 0.92 and 0.88
    of the ω∞ bound). Under the bound calibrated on k ≤ 12 the ratio |σ_k|/bound is 0.912, 0.910, 0.911, 0.915, 0.923,
@@ -87,8 +87,15 @@ Three findings.
    0.965, 0.950, 0.935 at wf 0.99, 1.00, 1.01 (0.947, 0.934, 0.921 at k = 18), rising 0.014–0.018 per order, so a
    constant fixed at k ≤ 12 reaches 1 at the 0.99 node in about two orders: (H_T)'s constant has to be calibrated
    on the latest orders, where the margin holds at 0.90. Recalibrated at K = 19 (a = 1.7276, b = 4.54, C = 52.9)
-   the bound predicts |σ₂₀| ≤ 2.06×10⁻¹⁷ (2.05×10⁻¹⁷ from K = 18). σ₂₀ (T89, with J raised after the pilot gate
-   fired at σ₁₉) is the next test.
+   the bound predicts |σ₂₀| ≤ 2.06×10⁻¹⁷ (2.05×10⁻¹⁷ from K = 18). **σ₂₀ passed it** (T89, K 41, J 1250, 1280 bits,
+   `solver/inner_amp/scan41J1250`; the ω∞ run landed 2026-10-30 03:03 UTC and the nodes 2026-10-31 03:58 UTC;
+   `solver/proof/logs/entire_cert_K20.log`): |σ₂₀| = 1.86×10⁻¹⁷ at ω∞, 0.901 of the K = 19 bound, and at wf 0.99 and
+   1.01 it is 0.905 and 0.896 of each node's own K = 19 bound, the fourth order running at 0.90. The k ≤ 12
+   calibration's ratio at k = 20 is 0.988, 0.971, 0.953 at wf 0.99, 1.00, 1.01, up 0.018–0.023 from k = 19, so it
+   reaches 1 at the 0.99 node at the next order, as predicted; the bound calibrated on the latest orders keeps its
+   0.90. Recalibrated at K = 20 (a = 1.7386, b = 4.63, C = 62.0) the bound predicts |σ₂₁| ≤ 1.47×10⁻¹⁸. σ₂₀'s fit
+   error at ω∞ is 7.2×10⁻¹³ of |σ₂₀| and the J 1500 pilot differs from it by 0.011 of that (PLANTED_SELECTION.md
+   §12.0). σ₂₁ would be the next test; no run for it is queued.
 
 So, numerically: at K = 17, a conditional certificate at radius about 10⁻⁴ in ω/ω∞ is within reach of (H_T) in its
 sharpened form, and the coefficient errors of (H_σ) (fit errors ~10⁻¹² of each σ_k, 10⁻²⁵ absolute at k = 17) are
