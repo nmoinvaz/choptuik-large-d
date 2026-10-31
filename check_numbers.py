@@ -244,12 +244,14 @@ def omega_quotes():
 
 @check
 def selection_range():
-    """The selection rule's estimator range from the D = infinity inner problem (notes/PLANTED_SELECTION.md section 10.8,
-    the headline of solver/inner_amp/planted_checks_k18.json, the union of the K = 17 headline and the K = 18 range),
-    the K = 18, 17 and 16 ranges alone, the unions of each pair of neighbouring orders, and the Delta_inf range the
+    """The selection rule's estimator range from the D = infinity inner problem (notes/PLANTED_SELECTION.md section 11.8,
+    the headline of solver/inner_amp/planted_checks_k19.json, the union of the K = 18 headline and the K = 19 range),
+    the K = 19, 18, 17 and 16 ranges alone, the unions of each pair of neighbouring orders, and the Delta_inf range the
     headline gives with the finite-D value 1.643893746 (dinf_quotes): Delta = 1.643893746 / (omega* / omega_inf)."""
+    c19 = json.load(open(os.path.join(ROOT, "solver/inner_amp/planted_checks_k19.json")))["K19 combine"]
+    lo, hi = c19["headline"]
+    lo19, hi19 = c19["range19"]
     c = json.load(open(os.path.join(ROOT, "solver/inner_amp/planted_checks_k18.json")))["K18 combine"]
-    lo, hi = c["headline"]
     lo18, hi18 = c["range18"]
     lo17, hi17 = json.load(open(os.path.join(ROOT, "solver/inner_amp/planted_checks_k17.json")))["K17 combine"]["range17"]
     lo16, hi16 = json.load(open(os.path.join(ROOT, "solver/inner_amp/planted_checks_k16.json")))["K16 combine"]["range16"]
@@ -260,8 +262,12 @@ def selection_range():
            ("paper/math/main.tex", "$\\omega^*/\\winf = 0.999975$--$1.00005$"),
            ("paper/physics/main.tex", "$\\omega/\\omega_\\infty = 0.999975$--$1.00005$"),
            ("paper/physics/main.tex", "\\Dinf = 1.64387 \\pm 0.00006")]
-    t18 = [("README.md", "the eighteenth order alone gives 0.999992–1.000004"),
-           ("README.md", "the ring-free sums) is 0.999992–1.000004"),
+    t19 = [("README.md", "the nineteenth order alone gives 0.999996–1.000004"),
+           ("README.md", "the ring-free sums) is 0.999996–1.000004"),
+           ("notes/PLANTED_SELECTION.md", "**The hull is 0.999996–1.000004.**"),
+           ("notes/PROOF_QUEUE.md", "K = 19 range 0.999996–1.000004"),
+           ("paper/math/main.tex", "the nineteen-order estimator range is $0.999996$--$1.000004$")]
+    t18 = [("README.md", "the ring-free sums) is 0.999992–1.000004"),
            ("notes/PLANTED_SELECTION.md", "**The hull is 0.999992–1.000004.**"),
            ("paper/math/main.tex", "the eighteen-order estimator range is $0.999992$--$1.000004$")]
     t17 = [("README.md", "the ring-free sums) is 0.999990–1.000009"),
@@ -270,19 +276,24 @@ def selection_range():
     t16 = [("README.md", "the ring-free sums) is 0.999980–1.000014"),
            ("notes/PLANTED_SELECTION.md", "**The hull is 0.999980–1.000014.**"),
            ("paper/math/main.tex", "the sixteen-order estimator range is $0.999980$--$1.000014$")]
-    t2 = [("README.md", "the last two orders alone give 0.999990–1.000009"),
-          ("notes/PLANTED_SELECTION.md", "the range from the last two orders alone, reported as context by item 7, is 0.999990–1.000009")]
+    t2 = [("README.md", "the last two orders alone give 0.999992–1.000004"),
+          ("notes/PLANTED_SELECTION.md", "the range from the last two orders alone, reported as context by item 7, is 0.999992–1.000004")]
+    t2_18 = [("notes/PLANTED_SELECTION.md", "the range from the last two orders alone, reported as context by item 7, is 0.999990–1.000009")]
     t2_17 = [("notes/PLANTED_SELECTION.md", "the range from the last two orders alone, reported as context by item 7, is 0.999980–1.000014")]
     return [("selection range, lower end", lo, 0.999975, 1e-6, txt),
             ("selection range, upper end", hi, 1.00005, 1e-5, txt),
+            ("K = 19 range, lower end", lo19, 0.999996, 1e-6, t19),
+            ("K = 19 range, upper end", hi19, 1.000004, 1e-6, t19),
             ("K = 18 range, lower end", lo18, 0.999992, 1e-6, t18),
             ("K = 18 range, upper end", hi18, 1.000004, 1e-6, t18),
             ("K = 17 range, lower end", lo17, 0.999990, 1e-6, t17),
             ("K = 17 range, upper end", hi17, 1.000009, 1e-6, t17),
             ("K = 16 range, lower end", lo16, 0.999980, 1e-6, t16),
             ("K = 16 range, upper end", hi16, 1.000014, 1e-6, t16),
-            ("K = 17 and 18 union, lower end", min(lo17, lo18), 0.999990, 1e-6, t2),
-            ("K = 17 and 18 union, upper end", max(hi17, hi18), 1.000009, 1e-6, t2),
+            ("K = 18 and 19 union, lower end", min(lo18, lo19), 0.999992, 1e-6, t2),
+            ("K = 18 and 19 union, upper end", max(hi18, hi19), 1.000004, 1e-6, t2),
+            ("K = 17 and 18 union, lower end", min(lo17, lo18), 0.999990, 1e-6, t2_18),
+            ("K = 17 and 18 union, upper end", max(hi17, hi18), 1.000009, 1e-6, t2_18),
             ("K = 16 and 17 union, lower end", min(lo16, lo17), 0.999980, 1e-6, t2_17),
             ("K = 16 and 17 union, upper end", max(hi16, hi17), 1.000014, 1e-6, t2_17),
             ("Delta_inf range, lower end", dlo, 1.64381, 1e-5, txt),
@@ -576,8 +587,8 @@ def k19_stages():
         out.append((f"{name} sigma_19 error, worst node", max(rt[name]["sigma19_rel"]), hi, u, [(P, sub)]))
         out.append((f"{name} rejected", int(not rt[name]["survives"]), 1, 0.5, []))
     free = [rt[n]["sigma19_rel"] for n in ("C18-BP [6/12]", "C18-BP [7/11]", "C18-BP [8/10]", "C18-BP [9/9]")]
-    out += [("ring-free C18-BP sums, best sigma_19 prediction", min(min(f) for f in free), 4e-9, 1e-9, [(P, "predicted σ₁₉ to 4×10⁻⁹–6×10⁻⁸")]),
-            ("ring-free C18-BP sums, worst sigma_19 prediction", max(max(f) for f in free), 6e-8, 1e-8, [(P, "predicted σ₁₉ to 4×10⁻⁹–6×10⁻⁸")]),
+    out += [("ring-free C18-BP sums, best sigma_19 prediction", min(min(f) for f in free), 4e-9, 1e-9, [(P, "predicted σ₁₉ to 4×10⁻⁹–6×10⁻⁸"), ("README.md", "predicted it to 4×10⁻⁹–6×10⁻⁸. The ring-free"), ("paper/math/main.tex", "predicted $\\sigma_{19}$ to $4\\times10^{-9}$--$6\\times10^{-8}$")]),
+            ("ring-free C18-BP sums, worst sigma_19 prediction", max(max(f) for f in free), 6e-8, 1e-8, [(P, "predicted σ₁₉ to 4×10⁻⁹–6×10⁻⁸"), ("README.md", "predicted it to 4×10⁻⁹–6×10⁻⁸. The ring-free"), ("paper/math/main.tex", "predicted $\\sigma_{19}$ to $4\\times10^{-9}$--$6\\times10^{-8}$")]),
             ("ring-free C18-BP sums surviving", sum(rt[n]["survives"] for n in ("C18-BP [6/12]", "C18-BP [7/11]", "C18-BP [8/10]", "C18-BP [9/9]")), 4, 0.5, []),
             ("K = 18 rings rejected", sum(1 for n, v in rt.items() if isinstance(v, dict) and v.get("ring") and not v["survives"]), 10, 0.5,
              [(P, "All ten rings of the K = 18 generation are rejected by σ₁₉ under both readings")]),
@@ -648,8 +659,8 @@ def k19_stages():
            max(cal["18"]["all 28 arc plants"]["cells"]["arg"]["zero"][1], cal["18"]["BP family (12)"]["cells"]["arg"]["zero"][1]))
     out += [("K = 19 hull, low", cb["range19"][0], 0.999996, 1e-6, [(P, "**The hull is 0.999996–1.000004.**")]),
             ("K = 19 hull, high", cb["range19"][1], 1.000004, 1e-6, [(P, "**The hull is 0.999996–1.000004.**")]),
-            ("ring-free completions, low", min(rf), 0.99999998, 1e-8, [(P, "the ring-free completions, 0.99999998–1.00000009")]),
-            ("ring-free completions, high", max(rf), 1.00000009, 1e-8, [(P, "the ring-free completions, 0.99999998–1.00000009")]),
+            ("ring-free completions, low", min(rf), 0.99999998, 1e-8, [(P, "the ring-free completions, 0.99999998–1.00000009"), ("README.md", "put the zero at 0.99999998–1.00000009"), ("paper/math/main.tex", "put the zero at $0.99999998$--$1.00000009$")]),
+            ("ring-free completions, high", max(rf), 1.00000009, 1e-8, [(P, "the ring-free completions, 0.99999998–1.00000009"), ("README.md", "put the zero at 0.99999998–1.00000009"), ("paper/math/main.tex", "put the zero at $0.99999998$--$1.00000009$")]),
             ("ring-free completions counted", len(rf), 4, 0.5, [(P, "C19-BP [6/13], [7/12], [8/11], [9/10],")]),
             ("headline, low", cb["headline"][0], 0.999975, 1e-6, [(P, "**0.999975–1.000050, unchanged.**")]),
             ("headline, high", cb["headline"][1], 1.000050, 1e-6, [(P, "**0.999975–1.000050, unchanged.**")]),
@@ -666,8 +677,8 @@ def k19_stages():
             ("G global minimum at K = 19", cb["G_minima"]["19"]["global"], 0.999998, 1e-6, [(P, "its global minimum 0.999998 (1.000010)")]),
             ("G global minimum at K = 18", cb["G_minima"]["18"]["global"], 1.000010, 1e-6, [(P, "its global minimum 0.999998 (1.000010)")])]
     cv = c["K19 converge"]["nodes"]
-    out += [("err19 relative at wf 0.99 (verdict)", cv["0.99"]["err19_rel"], 4.5e-13, 0.1e-13, [(P, "σ₁₉ is converged to 4.5–5.6×10⁻¹³ relative")]),
-            ("err19 relative at wf 1.01 (verdict)", cv["1.01"]["err19_rel"], 5.6e-13, 0.1e-13, [(P, "σ₁₉ is converged to 4.5–5.6×10⁻¹³ relative")])]
+    out += [("err19 relative at wf 0.99 (verdict)", cv["0.99"]["err19_rel"], 4.5e-13, 0.1e-13, [(P, "σ₁₉ is converged to 4.5–5.6×10⁻¹³ relative"), ("README.md", "the K = 41 runs; 4.5–5.6×10⁻¹³")]),
+            ("err19 relative at wf 1.01 (verdict)", cv["1.01"]["err19_rel"], 5.6e-13, 0.1e-13, [(P, "σ₁₉ is converged to 4.5–5.6×10⁻¹³ relative"), ("README.md", "the K = 41 runs; 4.5–5.6×10⁻¹³")])]
     return out
 
 
