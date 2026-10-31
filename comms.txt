@@ -7688,3 +7688,26 @@ stopped run; I record it in the notes with the leg as the way on. Nothing to cha
 once raw_check passes on your push. Post the leg as before (each converged D with Delta, change, tails, |F|, minutes, and the
 projected time of the next point), a stop line if it stops, and your 12 h status lines; follow-on after the leg's end or its 400 h
 cap: none queued yet, keep comms_watch running, an entry follows before then.
+== 2026-10-31 04:32 UTC mac T89 nodes wf 0.99 and 1.01 done; T93 started
+Both nodes (J 1250, 1280 bits, K 41, 2 procs each) finished 03:58 UTC (87601 s and 87605 s = 1460 min of the script's clock each, which includes the
+Mac's deep-idle hours; I read them at 04:30 UTC). Raw pushed (T89-mac, d9d0c01). sigma_err_fit.py prints "PASS" at 1e-10 for both (I did not capture its exit
+code; the printed line is the gate). Same --a1-from companions (scan39J1000, wf 0.99: a1 44.127185481763, wf 1.01: a1 49.2619338755261).
+fit_info [Mf, err, resid]: wf 0.99  1_1 [12, inf, 0.0]  41_1 [7, 5.3997237714749725e-28, 3.330965018469924e-283]
+                           wf 1.01  1_1 [12, inf, 0.0]  41_1 [7, 7.168560800637589e-28, 1.1951863714600554e-280]
+wf 0.99                                                                            err_k
+  16  (4.9643412758338021811e-13 + 4.0468033239923772546e-14j)    6.273e-26
+  17  (2.7351243334556578363e-14 + 3.1563007458760948862e-14j)    8.226e-27
+  18  (-1.8715942756317178056e-16 + 3.3451545853624811665e-15j)   1.002e-27
+  19  (-1.8854371908881486933e-16 + 1.7574120026504357237e-16j)   1.142e-28
+  20  (-1.9056066566181458225e-17 - 1.771869806514332509e-19j)    1.224e-29  (err20 6.42e-13 |sigma_20|)
+wf 1.01
+  16  (4.7770853894737774619e-13 - 1.4262221779069597112e-14j)    2.866e-27
+  17  (2.9434600330412767916e-14 + 2.7089922226788685193e-14j)    5.264e-27
+  18  (1.8701563194268146665e-16 + 3.1978690994502308317e-15j)   1.199e-27
+  19  (-1.5938905230187631094e-16 + 1.873684317260655231e-16j)    1.362e-28
+  20  (-1.804973102108868983e-17 + 1.9488798967780413342e-18j)   1.455e-29  (err20 8.02e-13 |sigma_20|)
+|sigma_19(node, J 1250 / 1280) - sigma_19(scan39J1000, J 1000 / 960)|, the two differences the amendment waits for:
+  wf 0.99  2.019e-26  (7.83e-11 of |sigma_19|)      wf 1.01  2.186e-28  (8.89e-13 of |sigma_19|)
+For comparison the cloud's figure at wf 1.00 was 6.17e-27 (2.45e-11); the wf 0.99 difference is 3.3 times that. No gate on them, I report them.
+T93 started 04:3x UTC, as queued: wf 0.995 and 1.005, K 39, J 1250, 960 bits, 2 procs each at nice 10, T93-mac/scan39J1250p960 (the README's first line as
+written, push d9d0c01). About 5 h each if the Mac stays awake. Next after T93: none queued, I keep comms_watch running.
