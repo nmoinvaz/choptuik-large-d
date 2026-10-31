@@ -39,7 +39,10 @@ sigma_err_fit.py recomputes from fit_info (a1 from the 960-bit scan39J1000 file 
 J 1500 pilot difference at wf 1.00 (scan41J1500/), (a''); the real record is "N0 scan41J1250". Its converge stage checks
 (a''), (b'') bitwise equality with scan39J1250's pilot (b) at wf 1.00 (the differences from the 960-bit values at 0.99 and
 1.01 are recorded, not checked) and (d); --mutate=err|low|pilot|ratiolaw, pilot scaling the J 1500 file's sigma_19 by
-1 + 1e-9. --amend and --nodes exclude each other.
+1 + 1e-9. --amend and --nodes exclude each other. Under --nodes the real stage reads item 3 as the third amendment says
+(2026-10-31): the K = 17, 18 estimates of "N0 scan41J1250" agree with "N0 scan37J1000"'s within 3 rms of the plateau-error
+noise reference (the 960-bit sigma_0..18 with Gaussian noise of their own sigma_err, 20 seeds, planted_noise_k19.jsonl,
+the unperturbed data as the control); --mutate=real scales sigma_18 at wf 1.00 of the node data by 1 + 1e-9 and must fire.
 """
 import argparse
 import json
@@ -84,6 +87,8 @@ BRACKET = "D-bracket"                                                   # left o
 AMEND = None                                                            # --amend DIR (section 11.0's amendment of item 1)
 NODES = None                                                            # --nodes DIR (its second amendment, 2026-10-31)
 J1500 = os.path.join(HERE, "scan41J1500")                               # the J 1500 pilot of (a'') at wf 1.00
+NOISE19 = os.path.join(HERE, "planted_noise_k19.jsonl")                  # item 3's noise reference (third amendment)
+NOISE_SEEDS = 20
 FAILED = []
 
 
@@ -91,8 +96,9 @@ def configure(data):
     global SCAN19, PILOT19, OUT19, CHECKS19
     SCAN19 = os.path.join(data, "scan39J1000")
     PILOT19 = os.path.join(data, "scan39J1250")
-    global J1500
+    global J1500, NOISE19
     J1500 = os.path.join(data, "scan41J1500")
+    NOISE19 = os.path.join(data, "planted_noise_k19.jsonl")
     OUT19 = os.path.join(data, "planted_results_k19.jsonl")
     CHECKS19 = os.path.join(data, "planted_checks_k19.json")
 
@@ -468,9 +474,49 @@ def plants_check():
 
 
 # ---------------------------------------------------------------- real data
-def stage_real(scratch):
+def noise_reference(scratch):
+    """section 11.0's third amendment of item 3: the 960-bit node data (sigma_0..18) with Gaussian noise of each sigma_k's
+    own plateau error, k = 1..18, NOISE_SEEDS seeds, through the harness at K = 17, 18, the unperturbed data first as the
+    control; records in NOISE19 (resumable). Returns them by name."""
+    real = load_real(SCAN19, "*_p960.json")
+    base = {wf: list(real[wf][0][:19]) for wf in PP.NODES}
+    out, ks, done = R.OUT, R.KS, set(R.DONE)
+    R.OUT, R.KS = NOISE19, (17, 18)
+    R.DONE.clear()
+    R.DONE.update(R.done_names())
+    try:
+        R.run_plant("N0 scan39J1000 sigma_0..18", "N0 control", base, None, scratch)
+        for seed in range(NOISE_SEEDS):
+            rng = np.random.default_rng(1000 + seed)
+            nodes = {}
+            for wf in PP.NODES:
+                sig = list(base[wf])
+                for k in range(1, 19):
+                    n = rng.standard_normal(2) / np.sqrt(2)
+                    sig[k] = sig[k] + mp.mpf(real[wf][1][k]) * mp.mpc(n[0], n[1])
+                nodes[wf] = sig
+            R.run_plant(f"N0 noise seed={seed}", "N0 noise", nodes, None, scratch)
+        recs = {r["name"]: r for r in R.records()}
+    finally:
+        R.OUT, R.KS = out, ks
+        R.DONE.clear()
+        R.DONE.update(done)
+    return recs
+
+
+def stage_real(scratch, mutate=None):
     use19()
     real = load_real19()
+    if mutate == "real":                      # the third amendment's mutation: records go to a scratch file
+        if not NODES:
+            raise SystemExit("--mutate=real needs --nodes")
+        real[1.0][0][18] = real[1.0][0][18] * (1 + mp.mpf("1e-9"))
+        R.OUT = os.path.join(scratch, "mutate_real_records.jsonl")
+        if os.path.exists(R.OUT):
+            os.remove(R.OUT)
+        R.DONE.clear()
+    elif mutate:
+        raise SystemExit(f"unknown mutation {mutate} (real stage: real)")
     R.run_plant(REAL19, "N0", {wf: real[wf][0] for wf in PP.NODES}, None, scratch)
     flip = {wf: list(real[wf][0]) for wf in PP.NODES}
     flip[1.0][19] = -flip[1.0][19]
@@ -478,12 +524,38 @@ def stage_real(scratch):
     sc = {wf: list(real[wf][0]) for wf in PP.NODES}
     sc[1.0][19] = sc[1.0][19] * (1 + mp.mpf("1e-3"))
     R.run_plant(f"{REAL19} X2 scale sigma_19", "N0 mutation", sc, None, scratch)
-    old, new = k18_records(), new_records()
+    old, new = k18_records(), {r["name"]: r for r in R.records()}
     rec = new[REAL19]
-    for K in (17, 18):
-        d, k = K14.max_diff(K14.est_vector(rec, K), K14.est_vector(old[REAL18], K))
-        check(d <= REPRO_TOL, f"K = {K}: the {REAL19[3:]} estimates equal those of scan37J1000 (largest difference "
-                              f"{d:.1e}{', ' + k if k else ''})")
+    noise = {}
+    if NODES:                                 # the third amendment: agreement within 3 rms of the plateau-error noise
+        ref = noise_reference(scratch)
+        ctl = ref["N0 scan39J1000 sigma_0..18"]
+        for K in (17, 18):
+            d, k = K14.max_diff(K14.est_vector(ctl, K), K14.est_vector(old[REAL18], K))
+            check(d <= REPRO_TOL, f"K = {K}: control, the 960-bit sigma_0..18 through the harness reproduce N0 scan37J1000 "
+                                  f"(largest difference {d:.1e})")
+            vn, vo, vc = K14.est_vector(rec, K), K14.est_vector(old[REAL18], K), K14.est_vector(ctl, K)
+            rows, worst = {}, (0.0, None)
+            for key in vn:
+                vals = [K14.est_vector(ref[f"N0 noise seed={s}"], K).get(key) for s in range(NOISE_SEEDS)]
+                if None in (vn[key], vo.get(key), vc.get(key)) or any(v is None for v in vals):
+                    continue
+                rms = float(np.sqrt(np.mean([(v - vc[key]) ** 2 for v in vals])))
+                obs = abs(vn[key] - vo[key])
+                ratio = obs / rms if rms else (0.0 if obs == 0 else float("inf"))
+                rows[key] = {"observed": obs, "noise_rms": rms, "ratio": ratio}
+                if ratio > worst[0]:
+                    worst = (ratio, key)
+            big = max(rows.items(), key=lambda kv: kv[1]["observed"])
+            noise[str(K)] = {"rows": rows, "worst_ratio": worst, "largest_difference": [big[0], big[1]["observed"]]}
+            check(worst[0] <= 3, f"K = {K}: the {REAL19[3:]} estimates agree with N0 scan37J1000's within 3 rms of the "
+                                 f"plateau-error noise ({NOISE_SEEDS} seeds): largest ratio {worst[0]:.2f} ({worst[1]}); "
+                                 f"largest difference {big[1]['observed']:.1e} ({big[0]}, noise rms {big[1]['noise_rms']:.1e})")
+    else:
+        for K in (17, 18):
+            d, k = K14.max_diff(K14.est_vector(rec, K), K14.est_vector(old[REAL18], K))
+            check(d <= REPRO_TOL, f"K = {K}: the {REAL19[3:]} estimates equal those of scan37J1000 (largest difference "
+                                  f"{d:.1e}{', ' + k if k else ''})")
     for K in KS19:
         g = R.grade(rec, K)["est"]
         print(f"  K = {K}: " + ", ".join(f"{e} {v:.7f}" if v is not None else f"{e} None" for e, v in g.items())
@@ -512,9 +584,10 @@ def stage_real(scratch):
         ce[k] = complex(-k * rt[k] * x0 ** k)
     print("  effective exponent c at wf 1.00 (two orders): " + ", ".join(f"k {k}: {v.real:.3f}{v.imag:+.3f}i"
                                                                           for k, v in ce.items()))
-    save_checks("K19 real", {"est": {str(K): R.grade(rec, K)["est"] for K in KS19},
-                             "detectors": {str(K): R.detectors(rec, K) for K in KS19},
-                             "c_eff_wf1": {str(k): [v.real, v.imag] for k, v in ce.items()}})
+    if not mutate:
+        save_checks("K19 real", {"est": {str(K): R.grade(rec, K)["est"] for K in KS19},
+                                 "detectors": {str(K): R.detectors(rec, K) for K in KS19},
+                                 "c_eff_wf1": {str(k): [v.real, v.imag] for k, v in ce.items()}, "noise_comparison": noise})
 
 
 # ---------------------------------------------------------------- ring test
@@ -895,7 +968,7 @@ def main():
         NODES = a.nodes if os.path.isabs(a.nodes) else os.path.join(HERE, a.nodes)
         REAL19 = "N0 " + os.path.basename(os.path.normpath(NODES))
     {"converge": lambda: stage_converge(a.mutate), "plants": lambda: stage_plants(a.scratch),
-     "real": lambda: stage_real(a.scratch), "ring": lambda: stage_ring(a.scratch), "calib": stage_calib,
+     "real": lambda: stage_real(a.scratch, a.mutate), "ring": lambda: stage_ring(a.scratch), "calib": stage_calib,
      "recomplete": stage_recomplete, "project": stage_project, "combine": stage_combine, "table": stage_table,
      "plants-check": plants_check}[a.stage]()
     if FAILED:

@@ -1968,6 +1968,24 @@ named above is taken as it was named:
   remains a check). The script is `planted_k19.py STAGE --nodes scan41J1250` (the `--amend` run stays as the record of
   the stop); mutations `err|low|pilot|ratiolaw`, `pilot` scaling the J 1500 file's σ₁₉ by 1 + 10⁻⁹.
 
+**Third amendment, item 3 (2026-10-31 05:01 UTC), after the `real` stage fired under the second amendment.** The stage ran
+at 04:51 UTC (`nodes/real.log`): the node data's K = 17 and 18 estimates differ from the 960-bit record
+"N0 scan37J1000" by up to 9.3×10⁻⁹ (K = 17, the Padé crossing `pade10/6`) and 3.3×10⁻⁸ (K = 18, `pade11/6`) against
+the 10⁻⁹ written for a same-data reproduction; the arg crossings move by at most 1.6×10⁻¹⁰, the ratio estimates by
+5.0×10⁻⁹, G by 1.1×10⁻⁹. The cause, found before this was written (`noise_test.py` and its log in the raw-data
+repository's `planted-k19-mac/nodes/`): the two data sets' σ₀…σ₁₈ differ by at most 1.7×10⁻¹³ of |σ_k| (section 11.2)
+and the estimators amplify that. The 960-bit data with Gaussian noise of each σ_k's own plateau error (k = 1…18,
+20 seeds, through the same harness) move those two Padé crossings by an rms of 1.7×10⁻⁷ and 9.3×10⁻⁷, ratio₁₇ and
+ratio₁₈ by 5.4×10⁻⁸ and 8.3×10⁻⁸, arg₁₇ and arg₁₈ by 2.1×10⁻⁹ and 2.8×10⁻⁹; every observed difference is at most 0.61
+of its rms (arg₁₁; the Padé crossings 0.01–0.07), and the unperturbed 960-bit data reproduce the stored record exactly.
+Item 3 is amended as follows, before any K = 19 estimate is used:
+
+- "N0 scan41J1250" is compared with "N0 scan37J1000" at K = 17 and 18 as before, and each estimate must agree within
+  three times the rms of that noise reference (the same 20 seeds, which the stage writes to `planted_noise_k19.jsonl`,
+  with the unperturbed 960-bit data as the control, which must reproduce the stored record to 10⁻⁹). The mutation
+  `--mutate=real` scales σ₁₈ at wf 1.00 of the node data by 1 + 10⁻⁹ and must fire. The 10⁻⁹ reproduction reading
+  stays for same-data comparisons (section 12.0's item 3 as amended). Item 3's σ₁₉ mutation controls are unchanged.
+
 ### 11.1 σ₁₉: items 1(a), (b), (d) pass, item 1(c) fails
 
 The `converge` stage ran as written on 2026-10-28 23:16 UTC, after the three T88 nodes landed (logs in the raw-data
@@ -1999,6 +2017,46 @@ repository's `planted-k19-mac/real/`; the record in `planted_checks_k19.json`, "
   relative), all 20 fits at Mf 7. |a − d| at σ₁₆…σ₁₉: 5.4×10⁻²⁷, 1.6×10⁻²⁷, 4.5×10⁻²⁸, 1.85×10⁻²⁷ (the J effect);
   |d − b|: 2.94×10⁻²⁶, 2×10⁻³³, 4×10⁻³³, 1.94×10⁻²⁷ (the precision effect). The amended err19 at wf 1.00 is
   6.17×10⁻²⁷; the amended item 1(a) at the other two nodes waits for T89's node runs.
+
+### 11.2 σ₁₉ under the second amendment: items 1(a″), (b″) and (d) pass
+
+The `converge` stage ran under `--nodes scan41J1250` on 2026-10-31 04:38 UTC (logs in the raw-data repository's
+`planted-k19-mac/nodes/`; the record "K19 converge" in `planted_checks_k19.json`; the (a′) run of 04:23 UTC that
+stopped the work is "K19 converge under (a')" there and `real/converge_amend.log`).
+
+| wf | σ₁₉ (K 41, J 1250, 1280 bits) | err19 = plateau + 1.57×10⁻³⁰ (relative, margin) | σ₀…σ₁₉ at wf 1.00 against `scan39J1250` | ratio law: \|Δ²\| at k = 17 |
+|---|---|---|---|---|
+| 0.99 | −1.8854371908881486933×10⁻¹⁶ + 1.7574120026504357237×10⁻¹⁶i | 1.16×10⁻²⁸ (4.49×10⁻¹³, 223) | – | 0.0079 |
+| 1.00 | −1.7398705530218642941×10⁻¹⁶ + 1.8204762245576625758×10⁻¹⁶i | 1.26×10⁻²⁸ (5.01×10⁻¹³, 199) | bitwise equal, 20/20 | 0.0078 |
+| 1.01 | −1.5938905230187631094×10⁻¹⁶ + 1.873684317260655231×10⁻¹⁶i | 1.38×10⁻²⁸ (5.60×10⁻¹³, 179) | – | 0.0078 |
+
+- **The 1280-bit plateau errors are 1.14, 1.25 and 1.36×10⁻²⁸** at wf 0.99, 1.00, 1.01, where the 960-bit files had
+  2.07×10⁻²⁶, 2.79×10⁻²⁷ and 1.20×10⁻²⁷ (181, 22 and 9 times larger); the J 1500 pilot difference added to each,
+  1.57×10⁻³⁰, is about 1% of them. The three nodes are within 20% of each other again, as at K = 18.
+- **σ₀…σ₁₈ against the 960-bit values, recorded (the second amendment):** the differences are at most 1.7×10⁻¹³ of
+  |σ_k| at k ≤ 18, and over that file's plateau errors the ratios are 1.00, 0.99 and 1.17 at σ₁₁ (wf 0.99, 1.00, 1.01),
+  0.01, 0.01 and 1.01 at σ₈, every other one at most 0.74 (0.74 at σ₁₀, wf 0.99); the S_1 family's Mf pick differs at σ₈
+  (9 against 10 at wf 1.01) and agrees at σ₁₁ (8 and 8), where seven or eight of the twelve neighbour families pick one
+  higher at 1280 bits.
+- **Each mutation fires** (`converge_mutate_<err|low|pilot|ratiolaw>.log`): err19 × 10¹⁴ at wf 1.00; σ₁₈ at wf 1.00
+  scaled by 1 + 10⁻¹⁵ (19/20 bitwise); the J 1500 file's σ₁₉ scaled by 1 + 10⁻⁹ (the pilot difference 1.8×10⁻²⁵ at every
+  node, 7×10⁻¹⁰ relative); σ₁₉ × 1.1 at wf 1.01 (\|Δ²\| = 1.19).
+- **Spread in wf.** σ₁₉ changes by 6.2% of itself between the nodes (6.0%, 6.1% for σ₁₇, σ₁₈); the largest err19 is
+  8.78×10⁻¹² of that change (3.65×10⁻¹² at σ₁₇, 5.96×10⁻¹² at σ₁₈).
+- **Cost.** The two node runs took 1460 min each of the script's clock (K 41, two processes each, started 2026-10-30
+  03:38 UTC, JSON at 2026-10-31 03:58 UTC); that clock counts the Mac's deep-idle hours (about 04:30–13:00 UTC) and
+  some four hours under a system indexer that took five of the cores (comms, 2026-10-30 07:16 and 13:02 UTC). The
+  wf 1.00 runs' times are in section 12.0.
+
+### 11.3 The pipeline on plants first
+
+51 plants at K = 17, 18, 19 (11.8 min in all), before the real data. All four checks pass:
+- the regenerated plants' K = 17 and 18 estimates equal the stored K = 18 records exactly (both runs on the Mac; the
+  plants do not read the node data below σ₁₈, so the change of node data leaves them unchanged);
+- N1, 7/7: a lone simple zero recovered at K = 19 by arg, ratio, Padé and G to 3.5×10⁻⁷ at worst; graded against
+  ω_t + 0.002 it fails, as it must;
+- N2, 2/2: no estimator prints a number.
+
 
 ## 12. Follow-up: σ₂₀ (post-freeze)
 

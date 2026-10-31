@@ -463,6 +463,57 @@ def p5_sigma20():
 
 
 @check
+def k19_converge_nodes():
+    """notes/PLANTED_SELECTION.md sections 11.2 and 11.3: the converge stage under the second amendment ("K19 converge" in
+    solver/inner_amp/planted_checks_k19.json), the 960-bit plateau errors of the (a') run, the sigma_0..18 relative
+    differences (scan41J1250 against scan39J1000), the node runs' minutes, and the plants stage's checks and records."""
+    d = os.path.join(ROOT, "solver/inner_amp")
+    sys.path.insert(0, d)
+    import planted_k14 as K14
+    sys.path.pop(0)
+    import mpmath as mp
+    P = "notes/PLANTED_SELECTION.md"
+    c = json.load(open(os.path.join(d, "planted_checks_k19.json")))
+    n, a = c["K19 converge"], c["K19 converge under (a')"]
+    out = [("J 1500 pilot difference at sigma_19", n["pilot_j1500_d19"], 1.57e-30, 0.01e-30, [(P, "err19 = plateau + 1.57×10⁻³⁰")])]
+    for w, e, r, m, pl, p9, q in (("0.99", 1.16e-28, 4.49e-13, 223, 1.14e-28, 2.07e-26, 181), ("1.0", 1.26e-28, 5.01e-13, 199, 1.25e-28, 2.79e-27, 22),
+                                  ("1.01", 1.38e-28, 5.60e-13, 179, 1.36e-28, 1.20e-27, 9)):
+        x, y = n["nodes"][w], a["nodes"][w]
+        cell = f"{e / 1e-28:.2f}×10⁻²⁸ ({r / 1e-13:.2f}×10⁻¹³, {m})"
+        out += [(f"err19 at wf {w} under (a'')", x["err19"], e, 0.01e-28, [(P, cell)]),
+                (f"relative err19 at wf {w} under (a'')", x["err19_rel"], r, 0.01e-13, [(P, cell)]),
+                (f"margin at wf {w} under (a'')", 1e-10 / x["err19_rel"], m, 1, [(P, cell)]),
+                (f"1280-bit plateau error at wf {w}", x["err19_plateau"], pl, 0.01e-28, [(P, "1.14, 1.25 and 1.36×10⁻²⁸")]),
+                (f"960-bit plateau error at wf {w}", y["err19_plateau"], p9, 0.01 * p9 / float(f"{p9:.2e}".split("e")[0]) if False else 0.01e-26 if w == "0.99" else 0.01e-27,
+                 [(P, "2.07×10⁻²⁶, 2.79×10⁻²⁷ and 1.20×10⁻²⁷")]),
+                (f"960 over 1280 plateau error at wf {w}", y["err19_plateau"] / x["err19_plateau"], q, 1, [(P, "(181, 22 and 9 times larger)")])]
+    for w, v in (("0.99", 0.0079), ("1.0", 0.0078), ("1.01", 0.0078)):
+        out.append((f"ratio-law second difference at k = 17, wf {w}", n["ratiolaw_d2"][w][-1], v, 0.0001, [(P, f"| {v:.4f} |")]))
+    sp = n["spread"]
+    out += [("spread of sigma_19 in wf", sp["19"]["half_range_rel"] * 100, 6.2, 0.1, [(P, "σ₁₉ changes by 6.2% of itself")]),
+            ("spread of sigma_17 in wf", sp["17"]["half_range_rel"] * 100, 6.0, 0.1, [(P, "(6.0%, 6.1% for σ₁₇, σ₁₈)")]),
+            ("spread of sigma_18 in wf", sp["18"]["half_range_rel"] * 100, 6.1, 0.1, [(P, "(6.0%, 6.1% for σ₁₇, σ₁₈)")]),
+            ("err19 over the wf change", sp["19"]["err_over_d1"], 8.78e-12, 0.01e-12, [(P, "8.78×10⁻¹² of that change")]),
+            ("err17 over the wf change", sp["17"]["err_over_d1"], 3.65e-12, 0.01e-12, [(P, "(3.65×10⁻¹² at σ₁₇, 5.96×10⁻¹² at σ₁₈)")]),
+            ("err18 over the wf change", sp["18"]["err_over_d1"], 5.96e-12, 0.01e-12, [(P, "(3.65×10⁻¹² at σ₁₇, 5.96×10⁻¹² at σ₁₈)")])]
+    mp.mp.dps = 50
+    p960, nd = K14.raw_scan(os.path.join(d, "scan39J1000"), "*_p960.json"), K14.raw_scan(os.path.join(d, "scan41J1250"), "*.json")
+    mx = max(float(abs(K14.sigmas(nd[w])[k] - K14.sigmas(p960[w])[k]) / abs(K14.sigmas(p960[w])[k])) for w in p960 for k in range(1, 19))
+    out.append(("largest relative sigma_0..18 difference, 1280 against 960 bits", mx, 1.7e-13, 0.1e-13, [(P, "at most 1.7×10⁻¹³ of")]))
+    for w in ("0.9900", "1.0100"):
+        f = json.load(open(os.path.join(d, f"scan41J1250/sigF_w{w}_K41_J1250_p1280.json")))
+        out.append((f"node run minutes at wf {w}", f["seconds"] / 60, 1460, 1, [(P, "took 1460 min each")]))
+    pc = c["K19 plants check"]
+    recs = [json.loads(l) for l in open(os.path.join(d, "planted_results_k19.jsonl")) if l.strip()]
+    pl = [r for r in recs if not r["name"].startswith("N0")]
+    out += [("plants at K = 19", sum(pc["families"].values()), 51, 0.5, [(P, "51 plants at K = 17, 18, 19 (11.8 min in all)")]),
+            ("plants' minutes", sum(r["seconds"] for r in pl) / 60, 11.8, 0.1, [(P, "51 plants at K = 17, 18, 19 (11.8 min in all)")]),
+            ("N1 worst error at K = 19", pc["n1_worst"], 3.5e-7, 0.1e-7, [(P, "Padé and G to 3.5×10⁻⁷ at worst")]),
+            ("plants reproduce the K = 18 records", pc["repro_worst"][0], 0.0, 1e-12, [(P, "equal the stored K = 18 records exactly")])]
+    return out
+
+
+@check
 def first_order():
     """The 1/n coefficients from the O(1/n) inner problem (notes/FIRST_ORDER.md): omega_1, Delta_1 = -2 pi omega_1 /
     omega*^2 and lambda_1 in the M-harmonic truncations (M = 5: the mean of the three runs), and the fitted values."""
