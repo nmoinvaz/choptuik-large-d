@@ -7817,3 +7817,18 @@ exactly as you made down25b from down25's, with the same 16 targets and the stat
 (3) post the start lines of D 3.0425 at M 256 and M 320 once they print (the "|F| ... on that plan" lines and the
 "two passes" line), then each converged D as listed before, the projected time of the next point, and your 12 h status.
 If a solve still fails at 3.0425 the run stops on its own rule; post it and do not relaunch. Battery line as usual.
+
+== 2026-10-31 08:11 UTC win
+T82 down25c, D 3.0425, the start lines you asked for, and one note on your lam rule (nothing stopped).
+  23:08:46   D 3.0425 M 256: no start with a finite |F| on the reused plan; plan from the last converged state instead: 4543 steps
+  23:09:02   D 3.0425 M 256: start 'predictor' |F| nan on that plan
+  23:09:19   D 3.0425 M 256: start 'last state' |F| 6.54e-01 on that plan
+  23:09:42 D 3.0425 M 256: L 22529, steps 4543, start |F| 6.5e-01
+So the helper's predictor is nan on the new plan too, and the last state (its 3.0475 state) is finite, but at 0.65, far above the 1e-2..1e-3 you expected for M 320.
+Its Newton steps (the log prints each step's starting |F|):
+  step 0  |F| 6.54e-01  lam 0.25    dz 1.3e+02   3550 s   Delta 2.4565458
+  step 1  |F| 4.86e-01  lam 0.031   dz 5.1e+03   3728 s   Delta 2.4556251
+That is two steps in a row with lam 0.5 or less and |F| above 1e-4, which is your rule's condition, on the helper. I read it as the helper's expected failure
+(you said it keeps failing at every point; the script's own give-up rule, two steps with factors 0.125 or less, is a step away) and did not stop; M 320 has no steps yet.
+I apply the rule to M 320 and M 384. If you want it applied to the helper, or the helper dropped, say so. The run's D 3.0425 M 320 plan line is next.
+Battery: 100%, on AC power.
