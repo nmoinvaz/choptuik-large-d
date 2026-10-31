@@ -2339,3 +2339,177 @@ truth, not of the code: C19-BP [4/15], a ring of 5, also survives on it (its σ�
 function is an exact exponential sum of thirteen terms, so its Padé table degenerates past [6/13]; [8/12] shows the
 spurious poles, |t| = 5.0, 21 zeros in |x| < 12), which the stage records as entries, not as failures. Nothing was fixed;
 the real K = 20 stages follow.
+
+### 12.2 σ₂₀ is converged: items 1(a)–(d) pass
+
+The `converge` stage ran on the real files 2026-10-31 06:00 UTC (logs in the raw-data repository's `planted-k20-mac/real/`;
+"K20 converge" in `planted_checks_k20.json`), after the dry run.
+
+| wf | σ₂₀ (K 41, J 1250, 1280 bits) | err20 = plateau + 1.52×10⁻³¹ (relative, margin) | σ₀…σ₁₉ at wf 1.00 against `scan39J1250` | ratio law: \|Δ²\| at k = 18 |
+|---|---|---|---|---|
+| 0.99 | −1.9056066566181458225×10⁻¹⁷ − 1.771869806514332509×10⁻¹⁹i | 1.24×10⁻²⁹ (6.50×10⁻¹³, 154) | – | 0.0074 |
+| 1.00 | −1.857916119116969641×10⁻¹⁷ + 9.1236163749049758769×10⁻¹⁹i | 1.35×10⁻²⁹ (7.26×10⁻¹³, 138) | bitwise equal, 20/20 | 0.0074 |
+| 1.01 | −1.804973102108868983×10⁻¹⁷ + 1.9488798967780413342×10⁻¹⁸i | 1.47×10⁻²⁹ (8.10×10⁻¹³, 123) | – | 0.0073 |
+
+- **Items 1(a)–(d) pass at every node.** The plateau errors are 1.22, 1.33 and 1.46×10⁻²⁹, within 20% of each other,
+  and the pilot difference added to each, |σ₂₀(a) − σ₂₀(b)| = 1.52×10⁻³¹, is 0.011 of (a)'s (ruling 2's case did not
+  arise). Pilot (b)'s σ₁₇…σ₁₉ sit at 0.01 of (a)'s plateau errors from (a)'s. The σ₀…σ₁₈ differences from the 960-bit
+  values at wf 0.99 and 1.01 are those of section 11.1 (the same files), recorded under the amended item 1(b). Each of the
+  five mutations fires (`converge_mutate_<err|low|pilot|ratiolaw|amend>.log`).
+- **σ₂₀ follows the ratio law's rotation:** σ₁₉/σ₂₀ = 9.82 − 9.32i at ω∞; the second differences of σ_k/σ_{k+1} are
+  0.007–0.012 at k = 10–18.
+- **Spread in wf.** σ₂₀ changes by 6.3% of itself between the nodes (6.1%, 6.2% for σ₁₈, σ₁₉); the largest err20 is
+  1.25×10⁻¹¹ of that change (5.96×10⁻¹² at σ₁₈, 8.68×10⁻¹² at σ₁₉).
+- **Cost.** The wf 1.00 runs' times are in section 12.0 and the nodes' in section 11.1 (the same four files).
+
+### 12.3 The pipeline on plants first
+
+51 plants at K = 18, 19, 20 (13.5 min in all), before the real data. All four checks pass:
+- the regenerated plants' K = 18 and 19 estimates equal the stored K = 19 records exactly (both runs on the Mac);
+- N1, 7/7: a lone simple zero recovered at K = 20 by arg, ratio, Padé and G to 3.5×10⁻⁷ at worst; graded against
+  ω_t + 0.002 it fails, as it must;
+- N2, 2/2: no estimator prints a number.
+
+### 12.4 The real estimates at K = 20
+
+The record "N0 scan41J1250" (K = 20) equals the K = 19 record of the same name at K = 18 and 19 exactly (the same
+σ₀…σ₁₉ through the same code, item 3 as amended).
+
+| estimator | K = 20 | K = 19 | K = 18 |
+|---|---|---|---|
+| arg crossing | 1.0000009 | 1.0000015 | 1.0000024 |
+| ratio | 0.999988 | 0.999986 | 0.999966 |
+| central Padé | [3/16]–[15/4]: 0.9999999–1.0000002 (mid 1.0000000) | [3/15]–[14/4]: 0.9999996–1.0000061 (mid 1.0000029) | [3/14]–[13/4]: 0.999997–1.000002 (mid 0.9999995) |
+| G (production κ̄) | 1.0000001 | 0.9999995 | 0.9999987 |
+| Aitken, k − 2 … k | 0.9999991 | 1.0000009 | 1.0000011 |
+| effective exponent c at ω∞ | 1.000 − 0.000i | 1.000 − 0.000i | 1.000 − 0.001i |
+
+- **The arg crossings keep falling:** 1.0000046, 1.0000024, 1.0000015, 1.0000009 for k = 17–20. The distance from 1
+  shrank by ×0.53 from k = 17 to 18, ×0.63 from 18 to 19 and ×0.57 from 19 to 20.
+- **Every central Padé approximant, [3/16] to [15/4], lies within 2×10⁻⁷ of 1** (0.9999999–1.0000002), the narrowest
+  at any order and the first order at which the [3/K−3] approximant is not the outlier; the mid is 1.0000000.
+- **G crossed back above 1** (1.0000001, from 0.9999995), 1.5×10⁻⁷ over it; **Aitken** 0.9999991 (the last two
+  differences of arg_k are 0.89×10⁻⁶, then 0.65×10⁻⁶). Context, not part of any range.
+- **Detectors:** D-ratio and D-ratiolaw, as at K = 16–18. **D-bracket is silent again:** G (1.0000001) and the Padé mid
+  (1.0000000) both lie below the arg crossing (1.0000009).
+- **The mutation controls fire.** σ₂₀ → −σ₂₀ at wf 1.00 fires D-G and D-bracket; σ₂₀ × (1 + 10⁻³) fires D-G, D-arg and
+  D-bracket. Each moves the estimates by about 10⁻².
+
+### 12.5 The ring test: what each K = 19 completion predicted for σ₂₀
+
+Every completion was regenerated first and reproduces its stored zero to the printed digits; the K = 19 completions'
+K = 19 estimates are the real ones and the earlier sums' K = 18, 19 estimates equal the stored K = 19 records exactly.
+The benchmark, the simple-zero law from τ₁₈, τ₁₉, misses τ₂₀ by 3.2–6.3×10⁻⁶. D-bracket is silent on the real data at
+K = 20 (section 12.4), so the two readings of item 4 can differ, and they do on one ring. Run 06:15 UTC (`real/ring.log`;
+"K20 ring test").
+
+| completion (K = 19) | its zero | zeros in \|x\| < 7.3 / 12 / 16 | σ₂₀ rel. error | τ₂₀ rel. error | its arg₂₀ | detectors beyond the real data's | survives | without D-bracket |
+|---|---|---|---|---|---|---|---|---|
+| C19-W1, W2, W3 (ratio law) | 1.00010–1.00016 | 7 / 18 / – | 7.4×10⁻³–1.1×10⁻² | 0.61–0.99 | 0.981–0.989 | D-G, D-bracket | no | no |
+| C19-ARC, four shapes | 0.99993–1.00001 | 2–5 / 16 / – | 8.6×10⁻⁴–2.9×10⁻³ | 0.07–0.24 | 0.996–1.005 | D-G, D-bracket (chord, mirror also D-arg) | no | no |
+| **C19-BP [3/16]** (ring of 9) | 0.9999994 | 0 / 9 / 14 | 2.2×10⁻⁶ | 1.8–2.1×10⁻⁴ | 0.999996 | D-G | **no** | **no** |
+| **C19-BP [4/15]** (ring of 5) | 1.00000003 | 0 / 5 / 13 | 0.6–1.3×10⁻⁷ | 0.5–1.2×10⁻⁵ | 1.0000011 | D-bracket | **no** | **yes** |
+| **C19-BP [5/14]** (ring of 4) | 1.00000007 | 0 / 4 / 11 | 2.5–2.9×10⁻⁷ | 2.3–2.4×10⁻⁵ | 1.0000020 | D-arg, D-bracket | **no** | **no** |
+| C19-BP [6/13] | 1.00000009 | 0 / 1 / 13 | 4.6–5.4×10⁻⁸ | 4.4–4.5×10⁻⁶ | 1.0000009 | D-bracket | no | yes |
+| C19-BP [7/12] | 0.99999998 | 0 / 1 / 7 | 0.7–1.1×10⁻⁸ | 6.5–8.7×10⁻⁷ | 1.0000009 | – | yes | yes |
+| C19-BP [8/11] | 0.99999999 | 0 / 1 / 4 | 4.7–5.2×10⁻⁹ | 4.2–4.5×10⁻⁷ | 1.0000009 | – | yes | yes |
+| C19-BP [9/10] | 0.99999999 | 0 / 1 / 5 | 0.8–1.3×10⁻⁹ | 0.8–1.0×10⁻⁷ | 1.0000009 | – | yes | yes |
+
+- **All ten rings of the K = 19 generation are rejected under the primary reading of item 4:** the ratio-law and arc
+  tails by D-G (σ₂₀ off by 10⁻³–10⁻²), C19-BP [3/16] by D-G (2.2×10⁻⁶) and C19-BP [5/14] by D-arg (2.5–2.9×10⁻⁷).
+  **C19-BP [4/15] is rejected by D-bracket alone and survives under the second reading:** its σ₂₀ is off by
+  0.6–1.3×10⁻⁷, twice the ring-free [6/13]'s and ten to a hundred times the other ring-free sums', and no other detector
+  fires on it. Item 4 says a ring rejected under the first reading and surviving under the second is reported as that,
+  not as a finding; it is the first ring that D-bracket alone decides (at K = 17 and 18 it alone rejected only ring-free
+  sums). The author's decision asked for in section 8.9 is still open; nothing in the headline depends on it.
+- **The ring-free sums predicted σ₂₀ to 8×10⁻¹⁰–5×10⁻⁸** ([9/10] best, [6/13] worst), the benchmark 3.2–6.3×10⁻⁶.
+  D-bracket alone also rejects the ring-free C19-BP [6/13], C17-BP [6/11], C16-BP [6/10], C15-BP [6/9] and C13-BP [6/7];
+  C18-BP [6/12] and C17-BP [7/10] fire D-G as well; the other eight sums of the family survive.
+- **Nothing is carried over to the K = 21 test under the primary reading;** under the second reading C19-BP [4/15]
+  would be, and section 13.0 states which reading its item 4 takes.
+
+### 12.6 Calibration at K = 20
+
+Errors ×10⁴ of each estimator on the plants (worst to best), and the zero each implies for the real data; the K = 19
+calibration from the new records reproduces section 11.5 (arc 0.999996–1.000004, BP family of sixteen
+0.999996–1.000000). Run 06:24 UTC (`real/calib.log`; "K20 calib").
+
+| plants | n | arg crossing → zero | ratio → zero | central Padé mid → zero | G → zero |
+|---|---|---|---|---|---|
+| all 28 arc plants | 28 | 0.00…+0.04 → 0.999997–1.000001 | −0.28…+0.58 → 0.999930–1.000016 | −0.01…+0.02 → 0.999998–1.000001 | 0.00 → 1.000000–1.000000 |
+| BP family (20) | 20 | −0.01…+0.03 → 0.999998–1.000002 | −1.22…−0.06 → 0.999995–1.000110 | −0.28…+0.47 → 0.999953–1.000028 | −0.01…+0.01 → 0.999999–1.000002 |
+| C-EXP | 1 | −0.01 → 1.000002 | +0.09 → 0.999980 | +0.02 → 0.999998 | +0.02 → 0.999999 |
+| REFIT (resid ≤ 10⁻⁴) | 5 | +0.02 → 0.999998–0.999999 | −0.33…−0.23 → 1.000012–1.000022 | −0.02…0.00 → 1.000000–1.000002 | 0.00 → 1.000000–1.000000 |
+
+- The arg crossing's error on the arc plants is at most 0.04×10⁻⁴, and G's below 0.005×10⁻⁴ on every arc plant; the
+  ratio estimate's error changed sign on part of the family (−0.28…+0.58×10⁻⁴, all low at K = 19); the Padé mid's is
+  within ±0.02×10⁻⁴ on the arc plants and −0.28…+0.47×10⁻⁴ on the BP family.
+- The arc plants' σ₁₉ and σ₂₀ differ from the measured ones by 1.4–2.7% and 2.2–3.9% (worst node), C-EXP's by 0.55%
+  and 1.1%, the REFIT plants' by 0.9–16% and 1.5–21%.
+
+### 12.7 The next generation and the ring-free completions at K = 20
+
+Glued at σ₂₀ (tails from k = 21); zeros counted at wf 1.00. Run 06:24 UTC (`real/recomplete.log`; "K20 recomplete").
+
+| completion (K = 20) | its zero | zeros in \|x\| < 7.3 / 12 / 16 | type rule |
+|---|---|---|---|
+| C20-W1, W2, W3 (ratio law, windows 6–19, 8–19, 9–19) | 0.999965–0.999970 | 6–7 / 18 / – | – |
+| C20-ARC, four shapes (best ω_t 0.99957–1.00040, L2 floor 1.5–3.6×10⁻³) | 0.99995–0.99999 | 0–5 / 16–18 / – | – |
+| C20-BP [3/17] | 0.9999998 | 0 / 9 / 15 | passes (largest pole \|t\| = 1.71) |
+| C20-BP [4/16] | 1.00000001 | 0 / 6 / 13 | passes (1.73) |
+| C20-BP [5/15] | 1.00000001 | 0 / 6 / 13 | passes (1.73) |
+| C20-BP [6/14] | 1.000000028 | 0 / 1 / 11 | passes (1.77) |
+| C20-BP [7/13] | 1.000000000 | 0 / 1 / 8 | passes (1.78) |
+| C20-BP [8/12] | 0.999999997 | 0 / 1 / 8 | passes (1.79) |
+| C20-BP [9/11] | 1.000000001 | 0 / 1 / 5 | passes (1.81) |
+| C20-BP [10/10] | 1.000000001 | 0 / 1 / 5 | passes (1.81) |
+
+- **Ring-free and passing the type rule, in this order: C20-BP [6/14], [7/13], [8/12], [9/11], [10/10],** with zeros at
+  0.999999997–1.000000028, within 3×10⁻⁸ of 1 on both sides. The first of them, C20-BP [6/14], is the sum for section
+  13.0's dry run.
+- **The next generation's rings,** C20-BP [3/17], [4/16] and [5/15] (9, 6 and 6 zeros in |x| < 12, their own zeros
+  0.9999998–1.00000001) and the ratio-law and arc tails (16–18 zeros, their zeros 0.99995–0.99999, now all below 1), are
+  tested by σ₂₁ (T94).
+
+### 12.8 The order-20 projection
+
+The model est_k = ω* + c r^k through k = 18 and 19 predicts arg₂₀ − 1 = +0.96×10⁻⁶ for ω* = 1, +0.76×10⁻⁶ for
+0.999996 and +0.66×10⁻⁶ for 0.999975; the real value is +0.87×10⁻⁶, 0.09×10⁻⁶ from the first, 0.11×10⁻⁶ from the second
+and 0.21×10⁻⁶ from the third. The model's own error is 1.7×10⁻⁵ (its largest miss over k = 17–19 on the real data is
+1.1–2.7×10⁻⁶ depending on ω*, and over the arc plants at k = 20, −1.7×10⁻⁵…+1.0×10⁻⁶, one plant far off), so the
+projection favours ω* = 1 but is not decisive, as at K = 15–19, and the three hypotheses now predict within 0.3×10⁻⁶ of
+each other: the model has little leverage left at this order. The log-linear trend of arg_k − 1 over k = 4–20 falls
+×0.542 per order (×0.540 over k = 4–19) and puts arg₂₀ − 1 at 0.74×10⁻⁶, near where it is. Under noise of size
+sigma_err on every σ_k (20 seeds), arg₂₀ moves by at most 4.2×10⁻¹⁰. Run 06:25 UTC (`real/project.log`; "K20 project").
+
+### 12.9 Combination
+
+- K = 20 estimator range (hull): the calibrated arg over the arc plants, 0.999997–1.000001; over the BP family of
+  twenty, 0.999998–1.000002; the ring-free completions, 0.999999997–1.000000028. **The hull is 0.999997–1.000002.**
+- It overlaps the K = 19 headline (0.999975–1.000050), so by section 12.0 item 7 the headline is their union,
+  **0.999975–1.000050, unchanged.** The K = 20 range lies inside the K = 19 one (0.999996–1.000004); the range from
+  the last two orders alone, reported as context by item 7, is 0.999996–1.000004, and K = 18–20 would give
+  0.999992–1.000004. An estimator range, not a bound.
+- G, with its spread: production 1.0000001 at K = 20 (0.9999995 at K = 19); over the minima of its objective within a
+  factor 5 of the best, 1.000000–1.000003 (0.999998–1.000001 at K = 19); its global minimum 1.000000 (0.999998).
+  Run 06:25 UTC (`real/combine.log`; "K20 combine").
+
+### 12.10 Verdict at K = 20
+
+- σ₂₀ is converged to 6.5–8.1×10⁻¹³ relative at the three nodes, with margins of 123–154 under item 1 and the J 1500
+  pilot at 0.011 of the plateau error, and continues every trend of σ₀…σ₁₉; it is 0.90 of the type bound (proof/P5_scope.md).
+- The real estimates sit within 10⁻⁶ of 1 on both sides of it: arg 1.0000009, G 1.0000001, every central Padé
+  approximant within 2×10⁻⁷ of 1, the ring-free sums of σ₀…σ₂₀ at 0.999999997–1.000000028.
+- The calibrated range narrowed from 0.999996–1.000004 (K = 19) to 0.999997–1.000001, and the K = 20 hull is
+  0.999997–1.000002, a width of 0.5×10⁻⁵ against 0.8×10⁻⁵ at K = 19 and 1.2×10⁻⁵ at K = 18. The headline union stays
+  0.999975–1.000050 because the procedure keeps the earlier orders' ranges; the last two orders alone give
+  0.999996–1.000004, and K = 18–20 would give 0.999992–1.000004.
+- ω∞ = 1 lies inside every range, as at K = 13–19. The order-20 projection puts ω* = 1 closest to arg₂₀ (0.09×10⁻⁶
+  against 0.11×10⁻⁶ for the K = 19 range's lower end) but the three hypotheses are within 0.3×10⁻⁶ of each other and
+  the model's own error is 1.7×10⁻⁵: the data do not decide between 1 and a value a few 10⁻⁶ below it.
+- All ten rings of the K = 19 generation are rejected by σ₂₀ under the primary reading; one, C19-BP [4/15], only by
+  D-bracket, and it survives under the second reading, which item 4 says to report as such. So σ₀…σ₂₀ exclude every
+  ring built so far from up to nineteen coefficients under the primary reading, and all but that one under the second.
+  The next generation (C20-BP [3/17], [4/16], [5/15], zeros 0.9999998–1.00000001) is tested by σ₂₁ (T94).
+- D-bracket is silent on the real data at K = 20 and, on its own, rejects one ring and five ring-free sums. Its rule
+  stays as item 4 fixed it unless the author decides otherwise before σ₂₁; it changed no range at K = 20.

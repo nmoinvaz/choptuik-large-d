@@ -244,12 +244,14 @@ def omega_quotes():
 
 @check
 def selection_range():
-    """The selection rule's estimator range from the D = infinity inner problem (notes/PLANTED_SELECTION.md section 11.8,
-    the headline of solver/inner_amp/planted_checks_k19.json, the union of the K = 18 headline and the K = 19 range),
-    the K = 19, 18, 17 and 16 ranges alone, the unions of each pair of neighbouring orders, and the Delta_inf range the
+    """The selection rule's estimator range from the D = infinity inner problem (notes/PLANTED_SELECTION.md section 12.9,
+    the headline of solver/inner_amp/planted_checks_k20.json, the union of the K = 19 headline and the K = 20 range),
+    the K = 20, 19, 18, 17 and 16 ranges alone, the unions of each pair of neighbouring orders, and the Delta_inf range the
     headline gives with the finite-D value 1.643893746 (dinf_quotes): Delta = 1.643893746 / (omega* / omega_inf)."""
+    c20 = json.load(open(os.path.join(ROOT, "solver/inner_amp/planted_checks_k20.json")))["K20 combine"]
+    lo, hi = c20["headline"]
+    lo20, hi20 = c20["range20"]
     c19 = json.load(open(os.path.join(ROOT, "solver/inner_amp/planted_checks_k19.json")))["K19 combine"]
-    lo, hi = c19["headline"]
     lo19, hi19 = c19["range19"]
     c = json.load(open(os.path.join(ROOT, "solver/inner_amp/planted_checks_k18.json")))["K18 combine"]
     lo18, hi18 = c["range18"]
@@ -262,8 +264,12 @@ def selection_range():
            ("paper/math/main.tex", "$\\omega^*/\\winf = 0.999975$--$1.00005$"),
            ("paper/physics/main.tex", "$\\omega/\\omega_\\infty = 0.999975$--$1.00005$"),
            ("paper/physics/main.tex", "\\Dinf = 1.64387 \\pm 0.00006")]
-    t19 = [("README.md", "the nineteenth order alone gives 0.999996–1.000004"),
-           ("README.md", "the ring-free sums) is 0.999996–1.000004"),
+    t20 = [("README.md", "the twentieth order alone gives 0.999997–1.000002"),
+           ("README.md", "the ring-free sums) is 0.999997–1.000002"),
+           ("notes/PLANTED_SELECTION.md", "**The hull is 0.999997–1.000002.**"),
+           ("notes/PROOF_QUEUE.md", "K = 20 range 0.999997–1.000002"),
+           ("paper/math/main.tex", "the twenty-order estimator range is $0.999997$--$1.000002$")]
+    t19 = [("README.md", "the ring-free sums) is 0.999996–1.000004"),
            ("notes/PLANTED_SELECTION.md", "**The hull is 0.999996–1.000004.**"),
            ("notes/PROOF_QUEUE.md", "K = 19 range 0.999996–1.000004"),
            ("paper/math/main.tex", "the nineteen-order estimator range is $0.999996$--$1.000004$")]
@@ -276,12 +282,15 @@ def selection_range():
     t16 = [("README.md", "the ring-free sums) is 0.999980–1.000014"),
            ("notes/PLANTED_SELECTION.md", "**The hull is 0.999980–1.000014.**"),
            ("paper/math/main.tex", "the sixteen-order estimator range is $0.999980$--$1.000014$")]
-    t2 = [("README.md", "the last two orders alone give 0.999992–1.000004"),
-          ("notes/PLANTED_SELECTION.md", "the range from the last two orders alone, reported as context by item 7, is 0.999992–1.000004")]
+    t2 = [("README.md", "the last two orders alone give 0.999996–1.000004"),
+          ("notes/PLANTED_SELECTION.md", "the last two orders alone, reported as context by item 7, is 0.999996–1.000004")]
+    t2_19 = [("notes/PLANTED_SELECTION.md", "the range from the last two orders alone, reported as context by item 7, is 0.999992–1.000004")]
     t2_18 = [("notes/PLANTED_SELECTION.md", "the range from the last two orders alone, reported as context by item 7, is 0.999990–1.000009")]
     t2_17 = [("notes/PLANTED_SELECTION.md", "the range from the last two orders alone, reported as context by item 7, is 0.999980–1.000014")]
     return [("selection range, lower end", lo, 0.999975, 1e-6, txt),
             ("selection range, upper end", hi, 1.00005, 1e-5, txt),
+            ("K = 20 range, lower end", lo20, 0.999997, 1e-6, t20),
+            ("K = 20 range, upper end", hi20, 1.000002, 1e-6, t20),
             ("K = 19 range, lower end", lo19, 0.999996, 1e-6, t19),
             ("K = 19 range, upper end", hi19, 1.000004, 1e-6, t19),
             ("K = 18 range, lower end", lo18, 0.999992, 1e-6, t18),
@@ -290,8 +299,10 @@ def selection_range():
             ("K = 17 range, upper end", hi17, 1.000009, 1e-6, t17),
             ("K = 16 range, lower end", lo16, 0.999980, 1e-6, t16),
             ("K = 16 range, upper end", hi16, 1.000014, 1e-6, t16),
-            ("K = 18 and 19 union, lower end", min(lo18, lo19), 0.999992, 1e-6, t2),
-            ("K = 18 and 19 union, upper end", max(hi18, hi19), 1.000004, 1e-6, t2),
+            ("K = 19 and 20 union, lower end", min(lo19, lo20), 0.999996, 1e-6, t2),
+            ("K = 19 and 20 union, upper end", max(hi19, hi20), 1.000004, 1e-6, t2),
+            ("K = 18 and 19 union, lower end", min(lo18, lo19), 0.999992, 1e-6, t2_19),
+            ("K = 18 and 19 union, upper end", max(hi18, hi19), 1.000004, 1e-6, t2_19),
             ("K = 17 and 18 union, lower end", min(lo17, lo18), 0.999990, 1e-6, t2_18),
             ("K = 17 and 18 union, upper end", max(hi17, hi18), 1.000009, 1e-6, t2_18),
             ("K = 16 and 17 union, lower end", min(lo16, lo17), 0.999980, 1e-6, t2_17),
@@ -679,6 +690,180 @@ def k19_stages():
     cv = c["K19 converge"]["nodes"]
     out += [("err19 relative at wf 0.99 (verdict)", cv["0.99"]["err19_rel"], 4.5e-13, 0.1e-13, [(P, "σ₁₉ is converged to 4.5–5.6×10⁻¹³ relative"), ("README.md", "the K = 41 runs; 4.5–5.6×10⁻¹³")]),
             ("err19 relative at wf 1.01 (verdict)", cv["1.01"]["err19_rel"], 5.6e-13, 0.1e-13, [(P, "σ₁₉ is converged to 4.5–5.6×10⁻¹³ relative"), ("README.md", "the K = 41 runs; 4.5–5.6×10⁻¹³")])]
+    return out
+
+
+@check
+def k20_stages():
+    """notes/PLANTED_SELECTION.md sections 12.2-12.10: the K = 20 stages ("K20 converge", "K20 plants check", "K20 real",
+    "K20 ring test", "K20 calib", "K20 recomplete", "K20 project", "K20 combine" in solver/inner_amp/planted_checks_k20.json
+    and the record "N0 scan41J1250" in planted_results_k20.jsonl)."""
+    d = os.path.join(ROOT, "solver/inner_amp")
+    sys.path.insert(0, d)
+    import planted_k14 as K14
+    sys.path.pop(0)
+    import mpmath as mp
+    P = "notes/PLANTED_SELECTION.md"
+    c = json.load(open(os.path.join(d, "planted_checks_k20.json")))
+    cv, pc, rl, rt, cal, rc, pj, cb = (c[k] for k in ("K20 converge", "K20 plants check", "K20 real", "K20 ring test", "K20 calib",
+                                                      "K20 recomplete", "K20 project", "K20 combine"))
+    out = [("pilot difference at sigma_20", cv["pilot_d20"], 1.52e-31, 0.01e-31, [(P, "err20 = plateau + 1.52×10⁻³¹"), (P, "|σ₂₀(a) − σ₂₀(b)| = 1.52×10⁻³¹, is 0.011")]),
+           ("pilot difference over (a)'s plateau err20", cv["pilot"]["d20_over_err20a"], 0.011, 0.001, [(P, "|σ₂₀(a) − σ₂₀(b)| = 1.52×10⁻³¹, is 0.011")])]
+    for w, e, r, m, pl, d2 in (("0.99", 1.24e-29, 6.50e-13, 154, 1.22e-29, 0.0074), ("1.0", 1.35e-29, 7.26e-13, 138, 1.33e-29, 0.0074),
+                               ("1.01", 1.47e-29, 8.10e-13, 123, 1.46e-29, 0.0073)):
+        n = cv["nodes"][w]
+        cell = f"{e / 1e-29:.2f}×10⁻²⁹ ({r / 1e-13:.2f}×10⁻¹³, {m})"
+        out += [(f"err20 at wf {w}", n["err20"], e, 0.01e-29, [(P, cell)]), (f"relative err20 at wf {w}", n["err20_rel"], r, 0.01e-13, [(P, cell)]),
+                (f"margin at wf {w}", 1e-10 / n["err20_rel"], m, 1, [(P, cell)]),
+                (f"plateau err20 at wf {w}", n["err20_plateau"], pl, 0.01e-29, [(P, "1.22, 1.33 and 1.46×10⁻²⁹")]),
+                (f"ratio-law second difference at k = 18, wf {w}", cv["ratiolaw_d2"][w][-1], d2, 0.0001, [(P, f"| {d2:.4f} |")])]
+    mp.mp.dps = 40
+    a = json.load(open(os.path.join(d, "scan41J1250/sigF_w1.0000_K41_J1250_p1280.json")))
+    sg = K14.sigmas(a)
+    q = complex(sg[19] / sg[20])
+    out += [("sigma_19 / sigma_20 at wf 1.00, real part", q.real, 9.82, 0.01, [(P, "σ₁₉/σ₂₀ = 9.82 − 9.32i")]),
+            ("sigma_19 / sigma_20 at wf 1.00, imaginary part", q.imag, -9.32, 0.01, [(P, "σ₁₉/σ₂₀ = 9.82 − 9.32i")])]
+    sp = cv["spread"]
+    out += [("spread of sigma_20 in wf", sp["20"]["half_range_rel"] * 100, 6.3, 0.1, [(P, "σ₂₀ changes by 6.3% of itself")]),
+            ("spread of sigma_18 in wf", sp["18"]["half_range_rel"] * 100, 6.1, 0.1, [(P, "(6.1%, 6.2% for σ₁₈, σ₁₉)")]),
+            ("spread of sigma_19 in wf", sp["19"]["half_range_rel"] * 100, 6.2, 0.1, [(P, "(6.1%, 6.2% for σ₁₈, σ₁₉)")]),
+            ("err20 over the wf change", sp["20"]["err_over_d1"], 1.25e-11, 0.01e-11, [(P, "1.25×10⁻¹¹ of that change")]),
+            ("err18 over the wf change", sp["18"]["err_over_d1"], 5.96e-12, 0.01e-12, [(P, "(5.96×10⁻¹² at σ₁₈, 8.68×10⁻¹² at σ₁₉)")]),
+            ("err19 over the wf change", sp["19"]["err_over_d1"], 8.68e-12, 0.01e-12, [(P, "(5.96×10⁻¹² at σ₁₈, 8.68×10⁻¹² at σ₁₉)")])]
+    recs = {x["name"]: x for x in (json.loads(l) for l in open(os.path.join(d, "planted_results_k20.jsonl")) if l.strip())}
+    plants = [x for x in recs.values() if not x["name"].startswith(("N0", "C1", "C2"))]
+    out += [("plants at K = 20", sum(pc["families"].values()), 51, 0.5, [(P, "51 plants at K = 18, 19, 20 (13.5 min in all)")]),
+            ("plants' minutes at K = 20", sum(x["seconds"] for x in plants) / 60, 13.5, 0.1, [(P, "51 plants at K = 18, 19, 20 (13.5 min in all)")]),
+            ("N1 worst error at K = 20", pc["n1_worst"], 3.5e-7, 0.1e-7, [(P, "Padé and G to 3.5×10⁻⁷ at worst")])]
+    e = rl["est"]
+    rows = {"arg": "| arg crossing | 1.0000009 | 1.0000015 | 1.0000024 |", "ratio": "| ratio | 0.999988 | 0.999986 | 0.999966 |",
+            "G": "| G (production κ̄) | 1.0000001 | 0.9999995 | 0.9999987 |", "aitken": "| Aitken, k − 2 … k | 0.9999991 | 1.0000009 | 1.0000011 |"}
+    for K, vals in (("20", {"arg": (1.0000009, 1e-7), "ratio": (0.999988, 1e-6), "G": (1.0000001, 1e-7), "aitken": (0.9999991, 1e-7)}),
+                    ("19", {"arg": (1.0000015, 1e-7), "ratio": (0.999986, 1e-6), "G": (0.9999995, 1e-7), "aitken": (1.0000009, 1e-7)}),
+                    ("18", {"arg": (1.0000024, 1e-7), "ratio": (0.999966, 1e-6), "G": (0.9999987, 1e-7), "aitken": (1.0000011, 1e-7)})):
+        for est, (qv, u) in vals.items():
+            out.append((f"{est} at K = {K} (section 12.4)", e[K][est], qv, u, [(P, rows[est])]))
+    rec = recs["N0 scan41J1250"]
+    pr = rec["est"]["20"]["pade_central_range"]
+    out += [("central Pade range at K = 20, low", pr[0], 0.9999999, 1e-7, [(P, "[3/16]–[15/4]: 0.9999999–1.0000002 (mid 1.0000000)")]),
+            ("central Pade range at K = 20, high", pr[1], 1.0000002, 1e-7, [(P, "[3/16]–[15/4]: 0.9999999–1.0000002 (mid 1.0000000)")]),
+            ("central Pade mid at K = 20", rec["est"]["20"]["pade_central_mid"], 1.0000000, 1e-7, [(P, "[3/16]–[15/4]: 0.9999999–1.0000002 (mid 1.0000000)")])]
+    ag = {int(k): v for k, v in rec["est"]["20"]["arg"].items()}
+    out += [("arg crossing at k = 17 (section 12.4)", ag[17], 1.0000046, 1e-7, [(P, "1.0000046, 1.0000024, 1.0000015, 1.0000009 for k = 17–20")]),
+            ("shrink of arg_k - 1, 17 to 18 (12.4)", (ag[18] - 1) / (ag[17] - 1), 0.53, 0.01, [(P, "shrank by ×0.53 from k = 17 to 18")]),
+            ("shrink of arg_k - 1, 18 to 19 (12.4)", (ag[19] - 1) / (ag[18] - 1), 0.63, 0.01, [(P, "×0.63 from 18 to 19 and ×0.57 from 19 to 20")]),
+            ("shrink of arg_k - 1, 19 to 20", (ag[20] - 1) / (ag[19] - 1), 0.57, 0.01, [(P, "×0.63 from 18 to 19 and ×0.57 from 19 to 20")]),
+            ("G over 1 at K = 20", (e["20"]["G"] - 1) * 1e7, 1.5, 0.1, [(P, "1.5×10⁻⁷ over it")]),
+            ("last two differences of arg_k (12.4)", abs(ag[19] - ag[18]) * 1e6, 0.89, 0.01, [(P, "are 0.89×10⁻⁶, then 0.65×10⁻⁶")]),
+            ("last difference of arg_k (12.4)", abs(ag[20] - ag[19]) * 1e6, 0.65, 0.01, [(P, "are 0.89×10⁻⁶, then 0.65×10⁻⁶")])]
+    sz = rt["simple-zero law from tau_18, tau_19"]["tau20_rel"]
+    out += [("simple-zero law at K = 20, best node", min(sz), 3.2e-6, 0.1e-6, [(P, "misses τ₂₀ by 3.2–6.3×10⁻⁶")]),
+            ("simple-zero law at K = 20, worst node", max(sz), 6.3e-6, 0.1e-6, [(P, "misses τ₂₀ by 3.2–6.3×10⁻⁶")])]
+    for name, lo, hi, u, sub in (("C19-BP [3/16]", None, 2.2e-6, 0.1e-6, "| 2.2×10⁻⁶ | 1.8–2.1×10⁻⁴ |"),
+                                 ("C19-BP [4/15]", 0.6e-7, 1.3e-7, 0.1e-7, "| 0.6–1.3×10⁻⁷ | 0.5–1.2×10⁻⁵ |"),
+                                 ("C19-BP [5/14]", 2.5e-7, 2.9e-7, 0.1e-7, "| 2.5–2.9×10⁻⁷ | 2.3–2.4×10⁻⁵ |"),
+                                 ("C19-BP [6/13]", 4.6e-8, 5.4e-8, 0.1e-8, "| 4.6–5.4×10⁻⁸ | 4.4–4.5×10⁻⁶ |"),
+                                 ("C19-BP [7/12]", 0.7e-8, 1.1e-8, 0.1e-8, "| 0.7–1.1×10⁻⁸ | 6.5–8.7×10⁻⁷ |"),
+                                 ("C19-BP [8/11]", 4.7e-9, 5.2e-9, 0.1e-9, "| 4.7–5.2×10⁻⁹ | 4.2–4.5×10⁻⁷ |"),
+                                 ("C19-BP [9/10]", 0.8e-9, 1.3e-9, 0.1e-9, "| 0.8–1.3×10⁻⁹ | 0.8–1.0×10⁻⁷ |")):
+        v = rt[name]["sigma20_rel"]
+        if lo is not None:
+            out.append((f"{name} sigma_20 error, best node", min(v), lo, u, [(P, sub)]))
+        out.append((f"{name} sigma_20 error, worst node", max(v), hi, u, [(P, sub)]))
+    out += [("K = 19 rings rejected under the primary reading", sum(1 for n, v in rt.items() if isinstance(v, dict) and v.get("ring") and not v["survives"]), 10, 0.5,
+             [(P, "All ten rings of the K = 19 generation are rejected under the primary reading of item 4")]),
+            ("K = 19 rings surviving without D-bracket", sum(1 for n, v in rt.items() if isinstance(v, dict) and v.get("ring") and v["survives_without_bracket"]), 1, 0.5,
+             [(P, "C19-BP [4/15] is rejected by D-bracket alone and survives under the second reading")]),
+            ("C19-BP [4/15] rejected by D-bracket alone", int(rt["C19-BP [4/15]"]["extra_detectors"] == ["D-bracket"]), 1, 0.5, []),
+            ("ring-free C19-BP sums, best sigma_20 prediction", min(min(rt[n]["sigma20_rel"]) for n in ("C19-BP [6/13]", "C19-BP [7/12]", "C19-BP [8/11]", "C19-BP [9/10]")), 8e-10, 1e-10,
+             [(P, "predicted σ₂₀ to 8×10⁻¹⁰–5×10⁻⁸")]),
+            ("ring-free C19-BP sums, worst sigma_20 prediction", max(max(rt[n]["sigma20_rel"]) for n in ("C19-BP [6/13]", "C19-BP [7/12]", "C19-BP [8/11]", "C19-BP [9/10]")), 5e-8, 1e-8,
+             [(P, "predicted σ₂₀ to 8×10⁻¹⁰–5×10⁻⁸")])]
+    z = lambda fam, est: cal["20"][fam]["cells"][est]["zero"]
+    out += [("arc plants, arg, zero low (K = 20)", z("all 28 arc plants", "arg")[0], 0.999997, 1e-6, [(P, "0.00…+0.04 → 0.999997–1.000001")]),
+            ("arc plants, arg, zero high (K = 20)", z("all 28 arc plants", "arg")[1], 1.000001, 1e-6, [(P, "0.00…+0.04 → 0.999997–1.000001")]),
+            ("arc plants, arg error high (K = 20)", cal["20"]["all 28 arc plants"]["cells"]["arg"]["hi"] * 1e4, 0.04, 0.01, [(P, "0.00…+0.04 → 0.999997–1.000001")]),
+            ("BP family (20), arg, zero low", z("BP family (20)", "arg")[0], 0.999998, 1e-6, [(P, "−0.01…+0.03 → 0.999998–1.000002")]),
+            ("BP family (20), arg, zero high", z("BP family (20)", "arg")[1], 1.000002, 1e-6, [(P, "−0.01…+0.03 → 0.999998–1.000002")]),
+            ("arc plants, ratio, zero low (K = 20)", z("all 28 arc plants", "ratio")[0], 0.999930, 1e-6, [(P, "−0.28…+0.58 → 0.999930–1.000016")]),
+            ("arc plants, ratio, zero high (K = 20)", z("all 28 arc plants", "ratio")[1], 1.000016, 1e-6, [(P, "−0.28…+0.58 → 0.999930–1.000016")]),
+            ("arc plants, Pade, zero low (K = 20)", z("all 28 arc plants", "pade")[0], 0.999998, 1e-6, [(P, "−0.01…+0.02 → 0.999998–1.000001")]),
+            ("arc plants, Pade, zero high (K = 20)", z("all 28 arc plants", "pade")[1], 1.000001, 1e-6, [(P, "−0.01…+0.02 → 0.999998–1.000001")]),
+            ("BP family (20), Pade, zero low", z("BP family (20)", "pade")[0], 0.999953, 1e-6, [(P, "−0.28…+0.47 → 0.999953–1.000028")]),
+            ("BP family (20), Pade, zero high", z("BP family (20)", "pade")[1], 1.000028, 1e-6, [(P, "−0.28…+0.47 → 0.999953–1.000028")]),
+            ("BP family (20), G, zero high", z("BP family (20)", "G")[1], 1.000002, 1e-6, [(P, "−0.01…+0.01 → 0.999999–1.000002")])]
+    dv = cal["sigma_dev_summary"]
+    arc = [dv[f] for f in ("P-ARC wt", "P-ARC-B chord", "P-ARC-B mirror", "P-ARC-B beta2")]
+    out += [("arc plants' sigma_19 deviation, least (12.6)", min(x["sigma19"][0] for x in arc) * 100, 1.4, 0.1, [(P, "by 1.4–2.7% and 2.2–3.9% (worst node)")]),
+            ("arc plants' sigma_19 deviation, most (12.6)", max(x["sigma19"][1] for x in arc) * 100, 2.7, 0.1, [(P, "by 1.4–2.7% and 2.2–3.9% (worst node)")]),
+            ("arc plants' sigma_20 deviation, least", min(x["sigma20"][0] for x in arc) * 100, 2.2, 0.1, [(P, "by 1.4–2.7% and 2.2–3.9% (worst node)")]),
+            ("arc plants' sigma_20 deviation, most", max(x["sigma20"][1] for x in arc) * 100, 3.9, 0.1, [(P, "by 1.4–2.7% and 2.2–3.9% (worst node)")]),
+            ("C-EXP sigma_20 deviation", dv["C-EXP"]["sigma20"][1] * 100, 1.1, 0.1, [(P, "C-EXP's by 0.55%\n  and 1.1%".split("\\n")[0] if False else "and 1.1%, the REFIT plants' by 0.9–16% and 1.5–21%")]),
+            ("REFIT sigma_20 deviation, most", dv["REFIT"]["sigma20"][1] * 100, 21, 1, [(P, "and 1.1%, the REFIT plants' by 0.9–16% and 1.5–21%")])]
+    for name, zq, u, pole, nz in (("C20-BP [3/17]", 0.9999998, 1e-7, 1.71, 9), ("C20-BP [4/16]", 1.00000001, 1e-8, 1.73, 6), ("C20-BP [5/15]", 1.00000001, 1e-8, 1.73, 6),
+                                  ("C20-BP [6/14]", 1.000000028, 1e-9, 1.77, 1), ("C20-BP [7/13]", 1.000000000, 1e-9, 1.78, 1), ("C20-BP [8/12]", 0.999999997, 1e-9, 1.79, 1),
+                                  ("C20-BP [9/11]", 1.000000001, 1e-9, 1.81, 1), ("C20-BP [10/10]", 1.000000001, 1e-9, 1.81, 1)):
+        r = rc[name]
+        digits = {1e-7: 7, 1e-8: 8, 1e-9: 9}[u]
+        out += [(f"{name} zero", r["truth"], zq, u, [(P, f"| {name} | {zq:.{digits}f} |")]),
+                (f"{name} largest pole", max(r["max_pole"].values()), pole, 0.01, []),
+                (f"{name} zeros in |x| < 12", r["zeros_lt_12"], nz, 0.5, []),
+                (f"{name} type rule", int(bool(r["type_rule"])), 1, 0.5, [])]
+    W = [rc[f"C20-W{i}"]["truth"] for i in (1, 2, 3)]
+    A = [rc[f"C20-ARC {k}"] for k in ("arc", "chord", "mirror", "beta2")]
+    out += [("C20-W zeros, low", min(W), 0.999965, 1e-6, [(P, "| 0.999965–0.999970 | 6–7 / 18 / – |")]),
+            ("C20-W zeros, high", max(W), 0.999970, 1e-6, [(P, "| 0.999965–0.999970 | 6–7 / 18 / – |")]),
+            ("C20-ARC zeros, low", min(x["truth"] for x in A), 0.99995, 1e-5, [(P, "| 0.99995–0.99999 | 0–5 / 16–18 / – |")]),
+            ("C20-ARC zeros, high", max(x["truth"] for x in A), 0.99999, 1e-5, [(P, "| 0.99995–0.99999 | 0–5 / 16–18 / – |")]),
+            ("C20-ARC best omega_t, low", min(float(x["best_wt"]) for x in A), 0.99957, 1e-5, [(P, "best ω_t 0.99957–1.00040")]),
+            ("C20-ARC best omega_t, high", max(float(x["best_wt"]) for x in A), 1.00040, 1e-5, [(P, "best ω_t 0.99957–1.00040")]),
+            ("C20-ARC L2 floor, low", min(x["L2_floor"] for x in A), 1.5e-3, 0.1e-3, [(P, "L2 floor 1.5–3.6×10⁻³")]),
+            ("C20-ARC L2 floor, high", max(x["L2_floor"] for x in A), 3.6e-3, 0.1e-3, [(P, "L2 floor 1.5–3.6×10⁻³")])]
+    h = pj["hyp"]
+    out += [("projection for a zero at 1 (K = 20)", h["1.0"]["pred20"] - 1, 0.96e-6, 0.01e-6, [(P, "predicts arg₂₀ − 1 = +0.96×10⁻⁶ for ω* = 1")]),
+            ("projection for a zero at 0.999996", h["0.999996"]["pred20"] - 1, 0.76e-6, 0.01e-6, [(P, "+0.76×10⁻⁶ for")]),
+            ("projection for a zero at 0.999975 (K = 20)", h["0.999975"]["pred20"] - 1, 0.66e-6, 0.01e-6, [(P, "0.999996 and +0.66×10⁻⁶ for 0.999975")]),
+            ("real arg_20 - 1", pj["arg"]["20"] - 1, 0.87e-6, 0.01e-6, [(P, "the real value is +0.87×10⁻⁶")]),
+            ("miss, zero at 1 (K = 20)", abs(h["1.0"]["miss"]), 0.09e-6, 0.01e-6, [(P, "0.09×10⁻⁶ from the first")]),
+            ("miss, zero at 0.999996", abs(h["0.999996"]["miss"]), 0.11e-6, 0.01e-6, [(P, "0.11×10⁻⁶ from the second")]),
+            ("miss, zero at 0.999975 (K = 20)", abs(h["0.999975"]["miss"]), 0.21e-6, 0.01e-6, [(P, "and 0.21×10⁻⁶ from the third")]),
+            ("model error (K = 20)", pj["model_err"], 1.7e-5, 0.1e-5, [(P, "The model's own error is 1.7×10⁻⁵")]),
+            ("back-test, least (K = 20)", min(pj["back_real_max"].values()), 1.1e-6, 0.1e-6, [(P, "1.1–2.7×10⁻⁶ depending on ω*")]),
+            ("back-test, most (K = 20)", max(pj["back_real_max"].values()), 2.7e-6, 0.1e-6, [(P, "1.1–2.7×10⁻⁶ depending on ω*")]),
+            ("plant misses, low (K = 20)", min(p["miss"] for p in pj["plants"]), -1.7e-5, 0.1e-5, [(P, "−1.7×10⁻⁵…+1.0×10⁻⁶")]),
+            ("plant misses, high (K = 20)", max(p["miss"] for p in pj["plants"]), 1.0e-6, 0.1e-6, [(P, "−1.7×10⁻⁵…+1.0×10⁻⁶")]),
+            ("trend per order, k = 4-20", pj["trend_4_20"]["per_order"], 0.542, 0.001, [(P, "falls\n×0.542 per order".split("\\n")[0] if False else "×0.542 per order (×0.540 over k = 4–19)")]),
+            ("trend per order, k = 4-19 (12.8)", pj["trend_4_19"]["per_order"], 0.540, 0.001, [(P, "×0.542 per order (×0.540 over k = 4–19)")]),
+            ("trend's arg_20 - 1", pj["trend_4_19"]["at20"], 0.74e-6, 0.01e-6, [(P, "puts arg₂₀ − 1 at 0.74×10⁻⁶")]),
+            ("noise shift of arg_20", max(abs(x) for x in pj["noise_shift"]), 4.2e-10, 0.1e-10, [(P, "moves by at most 4.2×10⁻¹⁰")]),
+            ("projection decisive (K = 20)", int(bool(pj["decisive"])), 0, 0.5, [])]
+    rf = list(cb["ring_free"].values())
+    k19 = json.load(open(os.path.join(d, "planted_checks_k19.json")))
+    r19 = k19["K19 combine"]["range19"]
+    c18 = k19["K19 calib"]["18"]
+    k18 = (min(c18["all 28 arc plants"]["cells"]["arg"]["zero"][0], c18["BP family (12)"]["cells"]["arg"]["zero"][0]),
+           max(c18["all 28 arc plants"]["cells"]["arg"]["zero"][1], c18["BP family (12)"]["cells"]["arg"]["zero"][1]))
+    out += [("K = 20 hull, low", cb["range20"][0], 0.999997, 1e-6, [(P, "**The hull is 0.999997–1.000002.**")]),
+            ("K = 20 hull, high", cb["range20"][1], 1.000002, 1e-6, [(P, "**The hull is 0.999997–1.000002.**")]),
+            ("ring-free completions at K = 20, low", min(rf), 0.999999997, 1e-9, [(P, "the ring-free completions, 0.999999997–1.000000028"), ("README.md", "put the zero at 0.999999997–1.000000028"), ("paper/math/main.tex", "put the zero at $0.999999997$--$1.000000028$")]),
+            ("ring-free completions at K = 20, high", max(rf), 1.000000028, 1e-9, [(P, "the ring-free completions, 0.999999997–1.000000028"), ("README.md", "put the zero at 0.999999997–1.000000028"), ("paper/math/main.tex", "put the zero at $0.999999997$--$1.000000028$")]),
+            ("ring-free completions counted at K = 20", len(rf), 5, 0.5, [(P, "C20-BP [6/14], [7/13], [8/12], [9/11], [10/10],")]),
+            ("headline overlap at K = 20", int(bool(cb["overlap_k19"])), 1, 0.5, []),
+            ("last two orders at K = 20, low", min(r19[0], cb["range20"][0]), 0.999996, 1e-6, [(P, "reported as context by item 7, is 0.999996–1.000004")]),
+            ("last two orders at K = 20, high", max(r19[1], cb["range20"][1]), 1.000004, 1e-6, [(P, "reported as context by item 7, is 0.999996–1.000004")]),
+            ("K = 18-20 union, low", min(k18[0], r19[0], cb["range20"][0]), 0.999992, 1e-6, [(P, "K = 18–20 would give\n  0.999992–1.000004".split("\\n")[0] if False else "K = 18–20 would give 0.999992–1.000004")]),
+            ("K = 20 hull width", (cb["range20"][1] - cb["range20"][0]) * 1e5, 0.5, 0.1, [(P, "a width of 0.5×10⁻⁵ against 0.8×10⁻⁵ at K = 19")]),
+            ("K = 19 hull width (12.10)", (r19[1] - r19[0]) * 1e5, 0.8, 0.1, [(P, "a width of 0.5×10⁻⁵ against 0.8×10⁻⁵ at K = 19")]),
+            ("G production at K = 20", cb["G_minima"]["20"]["production"], 1.0000001, 1e-7, [(P, "production 1.0000001 at K = 20 (0.9999995 at K = 19)")]),
+            ("G production at K = 19 (12.9)", cb["G_minima"]["19"]["production"], 0.9999995, 1e-7, [(P, "production 1.0000001 at K = 20 (0.9999995 at K = 19)")]),
+            ("G minima span at K = 20, low", cb["G_minima"]["20"]["span"][0], 1.000000, 1e-6, [(P, "factor 5 of the best, 1.000000–1.000003 (0.999998–1.000001 at K = 19)")]),
+            ("G minima span at K = 20, high", cb["G_minima"]["20"]["span"][1], 1.000003, 1e-6, [(P, "factor 5 of the best, 1.000000–1.000003 (0.999998–1.000001 at K = 19)")]),
+            ("G global minimum at K = 20", cb["G_minima"]["20"]["global"], 1.000000, 1e-6, [(P, "its global minimum 1.000000 (0.999998)")]),
+            ("G global minimum at K = 19 (12.9)", cb["G_minima"]["19"]["global"], 0.999998, 1e-6, [(P, "its global minimum 1.000000 (0.999998)")]),
+            ("relative err20 at wf 0.99 (verdict)", cv["nodes"]["0.99"]["err20_rel"], 6.5e-13, 0.1e-13, [(P, "σ₂₀ is converged to 6.5–8.1×10⁻¹³ relative"), ("README.md", "6.5–8.1×10⁻¹³ relative")]),
+            ("relative err20 at wf 1.01 (verdict)", cv["nodes"]["1.01"]["err20_rel"], 8.1e-13, 0.1e-13, [(P, "σ₂₀ is converged to 6.5–8.1×10⁻¹³ relative"), ("README.md", "6.5–8.1×10⁻¹³ relative")]),
+            ("margins at K = 20, least", min(1e-10 / cv["nodes"][w]["err20_rel"] for w in cv["nodes"]), 123, 1, [(P, "with margins of 123–154 under item 1")]),
+            ("margins at K = 20, most", max(1e-10 / cv["nodes"][w]["err20_rel"] for w in cv["nodes"]), 154, 1, [(P, "with margins of 123–154 under item 1")])]
     return out
 
 

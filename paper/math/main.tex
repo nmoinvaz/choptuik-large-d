@@ -167,7 +167,7 @@ Theorem~\ref{thm:A} & one simple zero of the $M = 1$ selection condition & certi
 Section~\ref{sec:A3} & one simple zero of the $M = 3$ selection condition & certified (computer-assisted), assuming Braaksma's theorem; not independently reviewed \\
 Lemma~\ref{lem:sigma1} & enclosure of the first amplitude coefficient $\sigma_1$ & certified (computer-assisted,\newline
 \repo{exact\_sigma.py}); not independently reviewed \\
-Section~\ref{sec:evidence} & $\omega^*/\winf = 0.999975$--$1.00005$ at fourteen to nineteen orders (no zeros of $S_1$ nearer the origin than $x_0$ assumed) & numerical evidence \\
+Section~\ref{sec:evidence} & $\omega^*/\winf = 0.999975$--$1.00005$ at fourteen to twenty orders (no zeros of $S_1$ nearer the origin than $x_0$ assumed) & numerical evidence \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -2158,8 +2158,11 @@ zero at $0.99999997$--$1.0000002$, and the eighteen-order estimator range is $0.
 coefficient rejects all ten rings built from $\sigma_0,\dots,\sigma_{18}$ at once (they mispredict it by
 $3\times10^{-7}$--$10^{-2}$), the ring-free sums having predicted $\sigma_{19}$ to $4\times10^{-9}$--$6\times10^{-8}$; the
 ring-free sums of $\sigma_0,\dots,\sigma_{19}$ put the zero at $0.99999998$--$1.00000009$, and
-the nineteen-order estimator range is $0.999996$--$1.000004$. Taken over the
-last six orders, and read as a value of the echo period,
+the nineteen-order estimator range is $0.999996$--$1.000004$. The twentieth coefficient rejects the ten rings built
+from $\sigma_0,\dots,\sigma_{19}$, nine by the value detectors and one by the bracket detector alone; the ring-free sums
+of $\sigma_0,\dots,\sigma_{20}$ put the zero at $0.999999997$--$1.000000028$, and
+the twenty-order estimator range is $0.999997$--$1.000002$. Taken over the
+last seven orders, and read as a value of the echo period,
 \[
 \Dinf = 1.64387 \pm 0.00006 \qquad (1.64381\text{--}1.64393)
 \]
@@ -2173,7 +2176,7 @@ other zeros of $S_1$.
 The coefficients $\sigma_k$ come from late-order fits; two fit windows agree to about $10^{-19}$ for $\sigma_1$--$\sigma_{12}$ ($\sigma_{13}$ to $2\times10^{-13}$ relative; $\sigma_{14}$--$\sigma_{17}$ were fitted with one window, to plateau steps of $3\times10^{-13}$ to $1.5\times10^{-12}$ relative), and the
 estimates need them to about $10^{-10}$, but only $\sigma_1$ is enclosed rigorously (Lemma~\ref{lem:sigma1}). At the zero the series \eqref{eq:sigmak} is far from summed, and every
 estimator (crossings, ratios, Pad\'e approximants, the factored series) is a resummation whose convergence is observed, not
-proved; the arc-shaped Borel singularity of Section~\ref{sec:entire} is a known source of slow convergence. Settling the other zeros needs more orders, starting with $\sigma_{20}$. Finally, agreement of the numbers is evidence that the selection rule is the right one, not a proof
+proved; the arc-shaped Borel singularity of Section~\ref{sec:entire} is a known source of slow convergence. Settling the other zeros needs more orders, starting with $\sigma_{21}$. Finally, agreement of the numbers is evidence that the selection rule is the right one, not a proof
 of Conjecture~\ref{conj}.
 
 \subsection{Other matter}
