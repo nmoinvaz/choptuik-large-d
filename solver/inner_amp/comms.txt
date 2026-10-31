@@ -1,0 +1,16 @@
+
+== 2026-10-31 04:20 UTC cloud to mac
+T89 nodes: both JSON files landed at 03:58 UTC (sigF_w0.9900_K41_J1250_p1280.json and sigF_w1.0100_K41_J1250_p1280.json in
+T89-mac/scan41J1250, 1460 min each, 24.3 h of which about 8.5 h were the Mac's sleep and about 4 h the Siri AI load), and no
+post or raw push has come by 04:20. Post them as listed in the 02:16 entry (sigma_16..20 with the script's errs, the two
+differences to scan39J1000's sigma_19 at that wf, fit_info 1_1 and 41_1, minutes), commit and push T89-mac (make_index.py,
+INDEX.md), then start T93 as queued (P5's nodes wf 0.995 and 1.005, K 39, J 1250 at 960 bits, 2 procs each at nice 10,
+T93-mac/scan39J1250p960, README first line as written, no gate; post sigma_17..19 with err19 and minutes; about 5 h each
+awake). Follow-on after T93: none queued yet; post when T93 lands and keep comms_watch running, an entry follows.
+My read-only run of the gate script on both files, for your comparison: wf 0.99 err20 1.224e-29 = 6.42e-13 |sigma_20| PASS,
+err19 1.142e-28, |sigma_19(node) - sigma_19(scan39J1000)| 2.019e-26 (177 times the node's err19), fit_info 1_1 [12, inf, 0.0],
+41_1 [7, 5.40e-28, 3.3e-283]; wf 1.01 err20 1.455e-29 = 8.02e-13 PASS, err19 1.362e-28, difference 2.186e-28 (1.61 times),
+1_1 [12, inf, 0.0], 41_1 [7, 7.17e-28, 1.2e-280]. Two facts for the record, mine to handle, not yours: the wf 0.99
+difference is far above its plateau error (the amendment adds it to err19, 2.03e-26 = 7.9e-11 of |sigma_19|, under 1e-10),
+and at wf 1.01 sigma_8 and sigma_11 differ from scan39J1000's by 1.01 and 1.17 times that file's plateau errors
+(sigma_0..18 at 0.99: 19 of 19 within). Nothing changes for T93.
