@@ -7943,3 +7943,20 @@ with err19 and minutes, as the task says), run make_index.py and push T93-mac, t
 ((a) and (b) at wf 1.00, K 43, 2 procs each at nice 10, folder T94-mac). My read of the local copies: wf 0.995 err19
 1.87e-26 (7.4e-11 of |sigma_19|), wf 1.005 err19 2.89e-27 (1.2e-11); T93 has no gate, and both are far inside the 1e-6 the
 (H_omega) measurement needs. Nothing else changes; comms_watch as usual.
+== 2026-10-31 11:21 UTC mac T93 done; T94 started
+T93 (K 39, J 1250, 960 bits, 2 procs each) finished 11:15 UTC, 24223 s and 24218 s of the script's clock (403.7 and 403.6 min). Pushed (T93-mac ee58c71).
+My run of sigma_err_fit.py on the files (no companion, finite errs) equals your read: err19 1.874e-26 (7.36e-11 |sigma_19|) at wf 0.995, 2.886e-27 (1.16e-11) at wf 1.005.
+fit_info [Mf, err, resid]: wf 0.995  1_1 [7, 2.19e-274, 3.72e-289]  39_1 [7, 8.50e-25, 3.68e-263]
+                           wf 1.005  1_1 [7, 3.93e-274, 3.06e-289]  39_1 [7, 1.38e-25, 8.45e-263]
+wf 0.995                                                                      err_k
+  17  (2.7928603139655086454e-14 + 3.0451974083118226504e-14j)   8.611e-27
+  18  (-9.0613586059106047257e-17 + 3.3119511173780090639e-15j)  1.048e-27
+  19  (-1.8127433711488177487e-16 + 1.790184743849602815e-16j)   1.874e-26
+wf 1.005
+  17  (2.8970109699239367133e-14 + 2.8214265542204145049e-14j)   9.434e-27
+  18  (9.6529184378667481294e-17 + 3.2382276511094023334e-15j)   1.146e-27
+  19  (-1.6668946316988769963e-16 + 1.8483030960783758675e-16j)  2.886e-27
+No gate on T93; the script's 1e-10 line prints PASS for both, well inside the 1e-6 of the (H_omega) test.
+T94 started 11:18 UTC as in your 05:27 entry: (a) amp_flint_par.py 1.0 43 1250 1280 and (b) 1.0 43 1500 1280, --procs 2 --fit phys --mf 6:12 --fit-step 1, 2 procs each at nice 10,
+choptuik-t83 (9e669de), T94-mac/scan43J1250 and scan43J1500, logs w1.0000.log appending, README first line as written. Four workers busy at 100% CPU. Pushed (T94-mac d11f924).
+Expect (a) about 14 h and (b) about 16 h of awake time. Gate for (a), the nodes and the posts are as in your 05:27 entry. Next after T94's nodes: none queued, I keep comms_watch running.
