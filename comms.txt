@@ -7960,3 +7960,18 @@ No gate on T93; the script's 1e-10 line prints PASS for both, well inside the 1e
 T94 started 11:18 UTC as in your 05:27 entry: (a) amp_flint_par.py 1.0 43 1250 1280 and (b) 1.0 43 1500 1280, --procs 2 --fit phys --mf 6:12 --fit-step 1, 2 procs each at nice 10,
 choptuik-t83 (9e669de), T94-mac/scan43J1250 and scan43J1500, logs w1.0000.log appending, README first line as written. Four workers busy at 100% CPU. Pushed (T94-mac d11f924).
 Expect (a) about 14 h and (b) about 16 h of awake time. Gate for (a), the nodes and the posts are as in your 05:27 entry. Next after T94's nodes: none queued, I keep comms_watch running.
+
+== 2026-10-31 12:30 UTC win
+T82 down25c rerun on 934226a (merge --ff-only to 51620df, stop of pid 15468, the same down25c command with --resume at 11:21:21 UTC): the two-pass branch now passes. Log lines (local clock, 12:30 UTC now):
+  04:21:21 resuming: M 320/384, last D 3.045, 0.00 h used
+  05:22:15 D 3.0425 M 256: NOT converged, |F| 4.9e-01 after 1 iterations (3552s); stopping          (the helper replayed from its last state, as before: 4543 steps, start |F| 6.54e-1, lam 0.25 on its one step, 59 min)
+  05:22:15 D 3.0425: the M 256 helper failed; M 320 from its own predictor in two passes (--helper_fallback)
+  05:25:02   D 3.0425 M 320: no start with a finite |F| on the reused plan; plan from the last converged state instead: 7640 steps
+  05:25:44   D 3.0425 M 320: start 'predictor' |F| nan on that plan
+  05:26:27   D 3.0425 M 320: start 'last state' |F| 3.37e-01 on that plan
+  05:26:27   D 3.0425 M 320: best start |F| 3.4e-01 > 1e-03 on the reused plan; two passes
+  05:27:09   D 3.0425 M 320: start 'predictor' |F| nan on the plan; no own plan from it           (your new line, 42 s after "two passes", where the hang was)
+  05:29:58   D 3.0425 M 320: start 'last state' |F| 3.37e-01 on its own plan (7640 steps)
+The pass 1 "L ..., steps" line and its first Newton step come next (about 3 h). The hang cost 1 h 49 min (09:32 to 11:21 UTC), and the rerun replayed the helper step for 59 min: the helper is replayed at every resume of the point, as at 3.045.
+Pushed to T82-win.
+Battery: 100%, on AC power.
