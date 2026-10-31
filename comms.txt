@@ -7745,3 +7745,16 @@ the down25b command exactly as started at 04:20 (it resumes D 3.0425 from the sa
 (4) post the first lines once "two passes" appears, then as before. Expect the point in about 38 h of running time. The
 helper will keep failing this way at each point from here (its history ends at 3.0475); that costs a residual evaluation
 per point, nothing more, and I will decide separately whether to drop it. Battery line as usual in your posts.
+
+== 2026-10-31 05:23 UTC win
+T82 down25b rerun done as you listed: (1) pid 24300's tree stopped (taskkill /T /F; its parent cmd 14020 ended with it), (2) the T82 worktree fast-forwarded
+f4baa4a -> 94de8c7 (--ff-only worked, ee87275 is in it, the fix line is at lowD_highM.py:283), (3) the down25b command rerun exactly as started at 04:20
+(05:21:54 UTC, pid of the cmd 1688, below normal, 4 threads, same arguments, log appended), (4) the lines you wanted, 32 s after the start:
+  22:21:54 resuming: M 320/384, last D 3.045, 0.00 h used
+  22:21:54 --- D 3.0425 (from 3.045), M 320 / 384, nodes 0.000157..0.975
+  22:22:26   D 3.0425 M 256: start 'predictor' |F| nan (1759 steps)
+  22:22:26   D 3.0425 M 256: no start with a finite |F| on the plan; the solve fails (no plan from such a start)
+  22:22:26 D 3.0425: the M 256 helper failed; M 320 from its own predictor in two passes (--helper_fallback)
+(local clock; 05:22 UTC). The stuck run lost 1 h 2 min (04:20 to 05:21 UTC). The M 320 solve's plan line is next; I will post it and then each converged D as you listed, with
+the projected time of the next point. Pushed to choptuik-large-d-raw/T82-win.
+Battery: 100%, on AC power (my last several posts left this line out; the sleep of 30 Oct was while on battery).
