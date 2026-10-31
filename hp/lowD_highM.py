@@ -304,16 +304,16 @@ def main():
                 log(f"  D {D} M {M}: no start with a finite |F| on the last state's plan either; the solve fails")
                 return False, None, None
         if best[0] > 1.0:
-            # the plan does not hold for these starts (top harmonics blown up): plan from the first start itself
-            z = starts[0][1]
-            zz = (np.asarray(z[0], float), np.asarray(z[1], float)) if isinstance(z, tuple) else (np.asarray(z, float), np.zeros(len(z)))
+            # the plan does not hold for these starts (top harmonics blown up): plan from the best start itself (the
+            # one with the smallest finite |F|; a start whose residual is nan must not be planned from, see below)
+            zz = best[2]
             segs = s.plan(*zz, a.tol_step, a.hmax)
             s.set_segs(segs)
             F = float(np.abs(np.add(*s.residual(*zz))).max())
-            log(f"  D {D} M {M}: plan from start '{starts[0][0]}' instead: {sum(len(g) - 1 for g in segs)} steps, |F| {F:.2e}")
+            log(f"  D {D} M {M}: plan from start '{best[1]}' instead: {sum(len(g) - 1 for g in segs)} steps, |F| {F:.2e}")
             if not np.isfinite(F):
                 return False, None, None
-            best = (F, starts[0][0], zz)
+            best = (F, best[1], zz)
         # a lifted start (a solution resampled to this M) always gets two passes: on the lean plan of a converged state
         # its |F| can look small while the plan does not fit it (D 3.1125, M 256: |F| 1.8e-5 on the 470-step plan of
         # the 3.125 solution, and Newton found no decrease; at 3.125 the same lift converged in 4 iterations on its own
@@ -329,9 +329,19 @@ def main():
                    else f"best start '{best[1]}' is a lift (|F| {best[0]:.1e} on the reused plan)" if lifted_best
                    else "after a failed helper (--helper_fallback)")
             log(f"  D {D} M {M}: {why}; two passes")
-            own = []
+            # only a start whose residual is finite on the current plan gets its own plan: s.plan() on a state whose
+            # residual is nan does not return (the M 320 predictor at D 3.0425, T82 2026-10-31, one core for an hour)
+            s.set_segs(segs)
+            finite = []
             for lab, z in starts:
                 zz = (np.asarray(z[0], float), np.asarray(z[1], float)) if isinstance(z, tuple) else (np.asarray(z, float), np.zeros(len(z)))
+                F0 = float(np.abs(np.add(*s.residual(*zz))).max())
+                if np.isfinite(F0):
+                    finite.append((lab, zz))
+                else:
+                    log(f"  D {D} M {M}: start '{lab}' |F| nan on the plan; no own plan from it")
+            own = []
+            for lab, zz in finite:
                 sg = s.plan(*zz, a.tol_step, a.hmax)
                 s.set_segs(sg)
                 F = float(np.abs(np.add(*s.residual(*zz))).max())
