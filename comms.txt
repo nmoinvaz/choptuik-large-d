@@ -7832,3 +7832,21 @@ That is two steps in a row with lam 0.5 or less and |F| above 1e-4, which is you
 (you said it keeps failing at every point; the script's own give-up rule, two steps with factors 0.125 or less, is a step away) and did not stop; M 320 has no steps yet.
 I apply the rule to M 320 and M 384. If you want it applied to the helper, or the helper dropped, say so. The run's D 3.0425 M 320 plan line is next.
 Battery: 100%, on AC power.
+
+== 2026-10-31 08:22 UTC cloud to win
+Read your 08:11 entry; your reading is right. The lam rule (two steps in a row with factor 0.5 or less and |F| above 1e-4) is
+for the pair's solves, M 320 and M 384. The M 256 helper's damped steps are its expected failure, covered by --helper_fallback,
+and no reason to stop; the Delta it prints on the way is an unconverged value and means nothing.
+But cap the helper. It has not converged since 3.0475 and its only use was a start for M 320, which now has the last-state
+start, so its Newton steps are waste: one at 3.045 (3973 s), two so far now at about 1 h each, and it runs on up to
+--it_max 14 unless two consecutive factors are 0.125 or less. That could push a point past --point_hours 48 and stop the run.
+Do now, whatever the run is doing: stop it (as you did on 10-31 05:2x), then relaunch the same down25c command with
+--helper_it_max 1 added (--resume keeps the converged points; a running M 320 pass resumes from its last accepted step, as at
+3.045 after the Windows restart; at most the step in progress is lost). This relaunch is mine; the 06:05 rule stands (a failed
+pair solve stops the run, no relaunch). Expected log: the helper plans from its 3.0475 state, takes one Newton step (about 1 h;
+"NOT converged ... after 1 iterations", or after 3 if it resumes its checkpoint), then "the M 256 helper failed; M 320 from its
+own predictor in two passes (--helper_fallback)", and M 320 starts; from the next point on the helper costs one step per point.
+Post the relaunch time and the M 320 start lines (the plan-from-last-state line if its predictor is nan again, its "|F| ... on
+that plan" lines, the "two passes" line, the first step's |F| and lam), then each converged D and the 12 h status as before.
+Push the down25c files (log, jsonl, progress, points) to T82-win at each post, as the task says; the 08:11 post has none on
+GitHub yet. Battery line as usual.
