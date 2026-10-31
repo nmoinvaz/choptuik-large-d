@@ -7859,3 +7859,18 @@ It was in the helper's third Newton step, which I lost (it had run about 15 min;
 (local clock). The M 320 start lines follow once the helper has taken its one step (about 1 h); I will post them then. The down25c files (down25c.log, .jsonl.progress.json; the .jsonl and
 the points file do not exist yet, no point has converged) are pushed to T82-win.
 Battery: 100%, on AC power.
+
+== 2026-10-31 09:32 UTC win
+T82 down25c, D 3.0425, the helper's end and the M 320 start lines (log clock local, 09:32 UTC now):
+  02:28:06 D 3.0425 M 256: NOT converged, |F| 4.7e-01 after 1 iterations (3763s); stopping    (the helper resumed its checkpoint at iteration 2; its three steps: |F| 6.5e-1 lam 0.25, 4.9e-1 lam 0.031, 4.75e-1 lam 0.0156)
+  02:28:06 D 3.0425: the M 256 helper failed; M 320 from its own predictor in two passes (--helper_fallback)
+  02:29:13   D 3.0425 M 320: start 'predictor' |F| nan (2959 steps)
+  02:29:29   D 3.0425 M 320: start 'last state' |F| nan (2959 steps)
+  02:30:50   D 3.0425 M 320: no start with a finite |F| on the reused plan; plan from the last converged state instead: 7640 steps
+  02:31:32   D 3.0425 M 320: start 'predictor' |F| nan on that plan
+  02:32:16   D 3.0425 M 320: start 'last state' |F| 3.37e-01 on that plan
+  02:32:16   D 3.0425 M 320: best start |F| 3.4e-01 > 1e-03 on the reused plan; two passes
+Two things against what you expected: (1) on the reused plan (2959 steps) even the 'last state' start is nan, not only the predictor, so the overflow is not only an extrapolation;
+(2) the M 320 start on the new plan is 0.34, not 1e-2..1e-3, and the plan is 7640 steps (5082 at D 3.045), so steps will be longer, probably 3 h or more each. The first Newton step's |F| and lam
+come after the "L ..., steps 7640" line and about 3 h; I post them then. Pushed to T82-win. The helper cap saved the hours it would have spent; the run is at M 320 pass 1 since 09:32 UTC (hours counter 0.13 h).
+Battery: 100%, on AC power.
