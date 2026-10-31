@@ -275,7 +275,14 @@ def main():
             log(f"  D {D} M {M}: start '{lab}' |F| {F:.2e} ({sum(len(g) - 1 for g in segs)} steps)")
             if np.isfinite(F) and (best is None or F < best[0]):
                 best = (F, lab, zz)
-        if best is None or best[0] > 1.0:
+        if best is None:
+            # every start has a non-finite residual on the reused plan (a predictor extrapolated too far: at D 3.0425
+            # the M 256 helper's, 0.005 past its last state after it failed at 3.045). Planning a Taylor integration
+            # from such a start does not return (one core for hours; T82 2026-10-29 and 2026-10-31), so the solve
+            # fails here and the point's fallbacks apply (--helper_fallback, the step halving).
+            log(f"  D {D} M {M}: no start with a finite |F| on the plan; the solve fails (no plan from such a start)")
+            return False, None, None
+        if best[0] > 1.0:
             # the plan does not hold for these starts (top harmonics blown up): plan from the first start itself
             z = starts[0][1]
             zz = (np.asarray(z[0], float), np.asarray(z[1], float)) if isinstance(z, tuple) else (np.asarray(z, float), np.zeros(len(z)))
