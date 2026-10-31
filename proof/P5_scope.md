@@ -167,6 +167,27 @@ certifies one zero in the same discs at each node with (δ + tail)/min |P| = 0.1
    interpolation error that (H_ω) must cover, and it says how many nodes a box of radius 10⁻⁴ needs. Alternative,
    cheaper in computer time and dearer in work: ∂σ_k/∂ω from the amplitude recursion with ω as a jet (the recursion
    is polynomial in ω), enclosed by the same late-order fit; not started.
+   **Procedure for the measurement, fixed 2026-10-31 10:25 UTC, before T93's files were read.** T93 computed σ₀…σ₁₉ at
+   ω/ω∞ = 0.995 and 1.005 (K 39, J 1250, 960 bits); with the J 1250 files at 0.99 and 1.01 (`scan41J1250`, 1280 bits) and
+   1.00 (`scan39J1250p960`, 960 bits) that is five nodes 0.005 apart, all at J 1250 (the precision mix enters at the
+   plateau-error level, 10⁻¹¹ of σ₁₉ at most, far below anything measured here). `solver/proof/homega_interp.py real`
+   reports, for each k ≤ 19, in t = (ω/ω∞ − 1)/0.01: the relative miss of the cubic through the four outer nodes at the
+   centre (m3, the four-node interpolation error), the misses of the quadratic through 0.99, 1.00, 1.01 at 0.995 and 1.005
+   (m2∓, how wrong the three-node interpolation every estimator uses is halfway between its nodes), the radius of
+   analyticity R = |a₃/a₄| from the degree-4 interpolant (exact for a simple pole: the aliasing cancels in that ratio on
+   these symmetric nodes; √|a₂/a₄| beside it, against what a pure pole at R aliases to, as the consistency check of the
+   single-pole picture at 30%), and the number of nodes a box of radius 10⁻⁴ in ω/ω∞ needs for a relative interpolation
+   error below 10⁻⁶ under the single-pole picture (the single-pole function through the five node values, Chebyshev
+   interpolation on n + 1 nodes, the smallest count whose error on the box is below 10⁻⁶; given only when the
+   consistency check passes). No threshold is set on the real data: the deliverable is the table, read at k = 19 (the
+   worst order) for the node count, and the m2 column as the measured (H_ω) error of the present three-node setup. The
+   planted stage (`homega_interp.py planted`: a simple pole at t = 3 and at t = 1.5 on the real σ_k(1.00) scale) ran
+   first and passed: R recovered exactly, the node count equal to the brute-force minimum at every k for both poles,
+   and the control (σ_k(0.995) scaled by 1 + 10⁻⁶) moving m2− by 10⁻⁶; the real run repeats the control with
+   `--mutate` and reports the shift. Two design changes were made on the planted data before any real file was read: a
+   closed-form node-count formula (gain 1/R per node) overestimated the count by five nodes and was replaced by the
+   brute-force count on the single-pole function; and √|a₂/a₄| as a second radius estimate aliases by a third for a pole
+   at t = 1.5 and became a consistency check against its own aliasing instead. Output: `solver/proof/logs/homega_interp.json`.
 3. **Rigorous σ₂…σ_K, (H_σ) dropped.** D_entire.md §6.6's scheme (Darboux telescoping, polygamma sums, log-convexity
    bounds) by induction on the order, or validated lateral integration order by order. Mechanical and heavy: weeks of
    agent work for σ₂…σ₆, a project (months) to k = 17. Not before item 4 says whether (H_T) is provable, because
