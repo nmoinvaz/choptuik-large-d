@@ -188,6 +188,24 @@ certifies one zero in the same discs at each node with (δ + tail)/min |P| = 0.1
    closed-form node-count formula (gain 1/R per node) overestimated the count by five nodes and was replaced by the
    brute-force count on the single-pole function; and √|a₂/a₄| as a second radius estimate aliases by a third for a pole
    at t = 1.5 and became a consistency check against its own aliasing instead. Output: `solver/proof/logs/homega_interp.json`.
+   **Result (2026-10-31 11:24 UTC; T93-mac ee58c71, raw_check passed, the two files copied into `scan39J1250p960/`).** The
+   three-node interpolation error halfway between the nodes rises from 9.2×10⁻⁸ of σ₁ to 1.52×10⁻⁵ and 1.55×10⁻⁵ of σ₁₉
+   (at 0.995 and 1.005), above 10⁻⁶ from k = 5 on: the three nodes 0.01 apart fix σ_k(ω) between them to 10⁻⁵, not
+   better, which is the (H_ω) error of the present setup. The four-node error at the centre is 5.5×10⁻¹⁰ of σ₁ and
+   1.66×10⁻⁷ of σ₁₉. The radius of analyticity |a₃/a₄| is 62–71 node spacings for k = 11…19 (61.8 at k = 19, settling
+   near 62: |ω/ω∞ − 1| ≈ 0.62, a common nearest singularity of the late coefficients; 93–170 at k = 5…10), and √|a₂/a₄|
+   agrees with the single-pole picture (54.3 against 61.8 at k = 19; inconsistent only at k = 0, where σ₀ is constant, and
+   at k = 3, 4). Under that picture a box of radius 10⁻⁴ in ω/ω∞ needs **3 nodes** at every k ≤ 19 for a 10⁻⁶ relative
+   interpolation error: the nodes the project already has, because the error there scales with the product of the
+   distances to the nodes (0.01 of the spacing), not with the midpoint error. So (H_ω) for the Krawczyk box is not a
+   question of more nodes but of bounding the third ω-derivative of σ_k, for which the measured radius 0.6 is the
+   evidence and not a proof. **Amendment of the control (2026-10-31 11:24 UTC, after the real data).** The control as first
+   written (the modulus of the miss at 0.995 shifting by at least 5×10⁻⁷ when σ_k(0.995) is scaled by 1 + 10⁻⁶) fired
+   on the real data: the shift was 3.9×10⁻⁷ at one order, because the modulus of a complex miss moves by the
+   perturbation's projection on it. The control now reads the complex miss itself, which the quadratic does not use that
+   node for, so it must move by exactly the perturbation; it does, to 10⁻⁹, in the planted and in the real run
+   (`logs/homega_interp_mutate.json`). The measured table is unchanged by this; the cause was in the control's
+   definition, not in the data, and it is recorded here as a change made after the real data was read.
 3. **Rigorous σ₂…σ_K, (H_σ) dropped.** D_entire.md §6.6's scheme (Darboux telescoping, polygamma sums, log-convexity
    bounds) by induction on the order, or validated lateral integration order by order. Mechanical and heavy: weeks of
    agent work for σ₂…σ₆, a project (months) to k = 17. Not before item 4 says whether (H_T) is provable, because
@@ -205,7 +223,7 @@ certifies one zero in the same discs at each node with (δ + tail)/min |P| = 0.1
 |---|---|---|---|---|
 | 1 | the conditional certificate (4.1) at K = 17, rerun at K = 18 | coordinator | 2–4 days; the fixed-ω part done at K = 17 and 18 on 2026-10-28 (section 2), the (A, ω) Krawczyk with (H_ω) remains | the box radius the route gives, with (H_T)'s constants fixed and falsifiable |
 | 2 | the σ₁₈, σ₁₉ tests of (H_T) (section 2, item 3) | the Mac (T87, T88) | σ₁₈ and σ₁₉ passed at 0.90 of the bound at all three nodes (2026-10-28); the k ≤ 12 constant is at 0.965 at wf 0.99 and rising; σ₂₀ (T89, J raised) next | whether the calibrated bound keeps its margin |
-| 3 | the (H_ω) measurement (4.2) | the Mac, after T88 | 8 h | the number of nodes a radius-10⁻⁴ box needs |
+| 3 | the (H_ω) measurement (4.2) | the Mac, after T88 | 8 h | the number of nodes a radius-10⁻⁴ box needs; done 2026-10-31 (T93): 3 nodes, with the three-node midpoint error 1.5×10⁻⁵ of σ₁₉ and the radius of analyticity 0.62 in ω/ω∞ |
 | 4 | the order-3 and order-5 Borel structure (4.4) | cloud agent | days, then 1–2 weeks | whether (H_T) is a theorem in reach or stays a hypothesis |
 | 5 | rigorous σ₂…σ_K (4.3) | cloud agent | months | only if step 4 says (H_T) is provable |
 

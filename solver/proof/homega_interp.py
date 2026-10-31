@@ -24,9 +24,12 @@ In t = (omega/omega_inf - 1)/0.01 the nodes are t = -1, -1/2, 0, 1/2, 1. For eac
         and the table says so.
 Planted truth first (`planted`): sigma_k(t) = sigma_k(0) (1 + eps_k / (1 - t/R)) with the real sigma_k(1.00) as scale, a
 simple pole at t = R, for R = 3 and R = 1.5 (0.03 and 0.015 in omega/omega_inf): |a_3/a_4| must recover R to 5%, and n_box
-must agree within one node with the brute-force minimum for the planted function itself, at every k. Control (`--mutate`):
-sigma_k(0.995) scaled by 1 + 1e-6 at every k must move m2- by at least 5e-7 at every k (the real run reports the shift;
-the planted run requires it).
+must agree within one node with the brute-force minimum for the planted function itself, at every k. Control (`--mutate`): sigma_k(0.995) scaled by 1 + 1e-6 at every k must move the complex miss at 0.995 (the quadratic's
+value minus the node value) by exactly the perturbation, 1e-6 |sigma_k(0.995)|, to 1e-9 of it, at every k, in the planted
+and in the real run (the quadratic does not use that node, so the miss moves by the perturbation and nothing else). The
+first form of this control, a shift of the miss's modulus by at least 5e-7, fired on the real data (3.9e-7 at one k): the
+modulus of a complex miss shifts by the perturbation's projection on it, a phase effect, not a failure of the measurement
+(recorded in proof/P5_scope.md, 2026-10-31).
 
     python3 homega_interp.py planted
     python3 homega_interp.py real [--mutate]      the five files named in FILES (the T93 pair copied into scan39J1250p960)
@@ -88,8 +91,9 @@ def analyse(sig, k):
     a4 = interp_coeffs(T, s)
     p3 = interp_coeffs((-1.0, -0.5, 0.5, 1.0), [sig[-1.0], sig[-0.5], sig[0.5], sig[1.0]])
     p2 = interp_coeffs((-1.0, 0.0, 1.0), [sig[-1.0], sig[0.0], sig[1.0]])
+    d2m = peval(p2, -0.5) - sig[-0.5]                         # the complex miss at 0.995 (the control's observable)
     m3 = abs(peval(p3, 0) - sig[0.0]) / abs(sig[0.0])
-    m2m = abs(peval(p2, -0.5) - sig[-0.5]) / abs(sig[-0.5])
+    m2m = abs(d2m) / abs(sig[-0.5])
     m2p = abs(peval(p2, 0.5) - sig[0.5]) / abs(sig[0.5])
     R34 = abs(a4[3] / a4[4]) if a4[4] != 0 else mp.inf
     R24 = mp.sqrt(abs(a4[2] / a4[4])) if a4[4] != 0 else mp.inf
@@ -111,7 +115,8 @@ def analyse(sig, k):
     else:
         nbox = None
     return {"k": k, "m3": float(m3), "m2m": float(m2m), "m2p": float(m2p), "R34": float(R34), "R24": float(R24),
-            "R24_model": float(R24_model), "consistent": bool(consistent), "nbox": nbox, "a": [complex(x) for x in a4]}
+            "R24_model": float(R24_model), "consistent": bool(consistent), "nbox": nbox, "a": [complex(x) for x in a4],
+            "d2m": complex(d2m), "s2m": float(abs(sig[-0.5]))}
 
 
 def brute_nbox(f):
@@ -162,8 +167,9 @@ def planted():
         rows0.append(analyse(sig, k))
         sig[-0.5] = sig[-0.5] * (1 + mp.mpf("1e-6"))
         rows1.append(analyse(sig, k))
-    shift = [abs(r1["m2m"] - r0["m2m"]) for r0, r1 in zip(rows0, rows1)]
-    check(min(shift) >= 5e-7, f"control: scaling sigma_k(0.995) by 1 + 1e-6 moves m2- by {min(shift):.1e} .. {max(shift):.1e}")
+    ratio = [abs(r1["d2m"] - r0["d2m"]) / (1e-6 * r0["s2m"]) for r0, r1 in zip(rows0, rows1)]
+    check(all(abs(x - 1) <= 1e-9 for x in ratio), f"control: scaling sigma_k(0.995) by 1 + 1e-6 moves the complex miss at 0.995 "
+                                                  f"by {min(ratio):.9f} .. {max(ratio):.9f} of the perturbation (1 expected)")
 
 
 def real(mutate=False):
@@ -182,15 +188,17 @@ def real(mutate=False):
     os.makedirs(os.path.dirname(out), exist_ok=True)
     with open(out, "w") as f:
         json.dump({"files": {str(t): os.path.relpath(fn, HERE) for t, fn in FILES.items()},
-                   "meta": {str(t): m for t, m in meta.items()}, "rows": [{k: v for k, v in r.items() if k != "a"} for r in rows],
+                   "meta": {str(t): m for t, m in meta.items()},
+                   "rows": [{**{k: v for k, v in r.items() if k not in ("a", "d2m")}, "d2m": [r["d2m"].real, r["d2m"].imag]} for r in rows],
                    "tau": TAU, "box_t": BOX, "mutate": mutate}, f, indent=1, default=str)
     print(f"written {os.path.relpath(out, HERE)}")
     if mutate:
         ref = os.path.join(HERE, "logs", "homega_interp.json")
         if os.path.exists(ref):
             r0 = json.load(open(ref))["rows"]
-            shift = [abs(a["m2m"] - b["m2m"]) for a, b in zip(rows, r0)]
-            check(min(shift) >= 5e-7, f"control on the real data: m2- moves by {min(shift):.1e} .. {max(shift):.1e}")
+            ratio = [abs(a["d2m"] - complex(*b["d2m"])) / (1e-6 * b["s2m"]) for a, b in zip(rows, r0)]
+            check(all(abs(x - 1) <= 1e-9 for x in ratio), f"control on the real data: the complex miss at 0.995 moves by "
+                                                          f"{min(ratio):.9f} .. {max(ratio):.9f} of the perturbation (1 expected)")
 
 
 def main():

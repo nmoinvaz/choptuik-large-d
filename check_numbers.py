@@ -868,6 +868,36 @@ def k20_stages():
 
 
 @check
+def homega():
+    """proof/P5_scope.md section 4.2 item 2's result: the (H_omega) interpolation measurement on the five nodes
+    (solver/proof/logs/homega_interp.json, from `homega_interp.py real` in solver/proof/)."""
+    P, Q = "proof/P5_scope.md", "notes/PROOF_QUEUE.md"
+    rows = json.load(open(os.path.join(ROOT, "solver/proof/logs/homega_interp.json")))["rows"]
+    r19, r1 = rows[19], rows[1]
+    k1e6 = next(r["k"] for r in rows if r["k"] >= 1 and max(r["m2m"], r["m2p"]) > 1e-6)
+    hi = [r["R34"] for r in rows if r["k"] >= 11]
+    incons = [r["k"] for r in rows if not r["consistent"]]
+    return [("three-node midpoint error at k = 19, 0.995", r19["m2m"], 1.52e-5, 0.01e-5, [(P, "1.52×10⁻⁵ and 1.55×10⁻⁵ of σ₁₉")]),
+            ("three-node midpoint error at k = 19, 1.005", r19["m2p"], 1.55e-5, 0.01e-5, [(P, "1.52×10⁻⁵ and 1.55×10⁻⁵ of σ₁₉")]),
+            ("three-node midpoint error at k = 19, rounded", r19["m2m"], 1.5e-5, 0.1e-5,
+             [(P, "midpoint error 1.5×10⁻⁵ of σ₁₉"), (Q, "halfway between the nodes is 1.5×10⁻⁵ of σ₁₉")]),
+            ("three-node midpoint error at k = 1", r1["m2m"], 9.2e-8, 0.1e-8, [(P, "rises from 9.2×10⁻⁸ of σ₁")]),
+            ("first k with the midpoint error above 1e-6", k1e6, 5, 1, [(P, "above 10⁻⁶ from k = 5 on")]),
+            ("four-node centre error at k = 1", r1["m3"], 5.5e-10, 0.1e-10, [(P, "5.5×10⁻¹⁰ of σ₁")]),
+            ("four-node centre error at k = 19", r19["m3"], 1.66e-7, 0.01e-7, [(P, "1.66×10⁻⁷ of σ₁₉")]),
+            ("radius |a3/a4| at k = 19", r19["R34"], 61.8, 0.1, [(P, "61.8 at k = 19")]),
+            ("radius in omega at k = 19", 0.01 * r19["R34"], 0.62, 0.01, [(P, "|ω/ω∞ − 1| ≈ 0.62"), (P, "the radius of analyticity 0.62 in ω/ω∞")]),
+            ("radius |a3/a4| over k = 11..19, min", min(hi), 62, 1, [(P, "62–71 node spacings for k = 11…19")]),
+            ("radius |a3/a4| over k = 11..19, max", max(hi), 71, 1, [(P, "62–71 node spacings for k = 11…19")]),
+            ("sqrt|a2/a4| at k = 19", r19["R24"], 54.3, 0.1, [(P, "54.3 against 61.8 at k = 19")]),
+            ("inconsistent orders (sum of 10^k)", sum(10 ** k for k in incons), 11001, 1,
+             [(P, "inconsistent only at k = 0, where σ₀ is constant"), (P, "at k = 3, 4). Under that picture")]),
+            ("nodes for the radius-1e-4 box at k = 19", r19["nbox"], 3, 1, [(P, "needs **3 nodes** at every k ≤ 19"), (Q, "a box of radius 10⁻⁴ needs 3 nodes")]),
+            ("nodes for the radius-1e-4 box, every consistent k", max(r["nbox"] for r in rows if r["consistent"]), 3, 1,
+             [(P, "needs **3 nodes** at every k ≤ 19")])]
+
+
+@check
 def first_order():
     """The 1/n coefficients from the O(1/n) inner problem (notes/FIRST_ORDER.md): omega_1, Delta_1 = -2 pi omega_1 /
     omega*^2 and lambda_1 in the M-harmonic truncations (M = 5: the mean of the three runs), and the fitted values."""
