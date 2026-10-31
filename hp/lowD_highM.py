@@ -12,8 +12,10 @@ The two start states are converged at the same D and nodes, at the working resol
      |dz| ~ 3 at |F| ~ 3e-2, and at M = 128 it went astray in the weak directions; lifted starts converge in 3-5
      calls); its Delta is recorded with the pair (Delta_c, diff_c);
   1. M_w: predictor = Lagrange (cubic) through the last <= 4 converged states at M_w, or the lifted helper solution if
-     its |F| is smaller; Newton (lowD_dd.solve_point: the f64-Jacobian Newton, Solver.newton_mixed, in block storage
-     above M = 128) on the plan of the last converged state at M_w;
+     its |F| is smaller, or the last converged state itself (every solve has it as a start; when no start has a finite
+     |F| on the reused plan, the plan is taken from that state at the new D and the starts are read again on it);
+     Newton (lowD_dd.solve_point: the f64-Jacobian Newton, Solver.newton_mixed, in block storage above M = 128) on the
+     plan of the last converged state at M_w;
   2. M_n: plan from the predictor through the last <= 4 states at M_n; start from the better (smaller |F|) of that
      predictor (with 2 or more states) and the M_w solution just found, resampled to M_n;
   2a. if the best start of M_w or M_n is a lift (a solution resampled to this M), or has |F| above --two_pass_above
@@ -276,12 +278,31 @@ def main():
             if np.isfinite(F) and (best is None or F < best[0]):
                 best = (F, lab, zz)
         if best is None:
-            # every start has a non-finite residual on the reused plan (a predictor extrapolated too far: at D 3.0425
-            # the M 256 helper's, 0.005 past its last state after it failed at 3.045). Planning a Taylor integration
-            # from such a start does not return (one core for hours; T82 2026-10-29 and 2026-10-31), so the solve
-            # fails here and the point's fallbacks apply (--helper_fallback, the step halving).
-            log(f"  D {D} M {M}: no start with a finite |F| on the plan; the solve fails (no plan from such a start)")
-            return False, None, None
+            # every start has a non-finite residual on the reused plan (at D 3.0425 the predictors of M 256 and M 320,
+            # the helper's 0.005 past its last state, M 320's at the usual step; T82 2026-10-31). Planning a Taylor
+            # integration from a predictor whose residual is nan does not return (one core for hours, T82 2026-10-29
+            # and 2026-10-31), so the plan is taken from the last converged state at this D instead (a solution at the
+            # previous D, regular at the sonic line) and every start is read again on it; without such a start the
+            # solve fails and the point's fallbacks apply (--helper_fallback, the step halving).
+            last = [(lab, z) for lab, z in starts if lab == "last state"]
+            if not last:
+                log(f"  D {D} M {M}: no start with a finite |F| on the plan and no last state; the solve fails")
+                return False, None, None
+            z = last[0][1]
+            zz = (np.asarray(z[0], float), np.asarray(z[1], float)) if isinstance(z, tuple) else (np.asarray(z, float), np.zeros(len(z)))
+            segs = s.plan(*zz, a.tol_step, a.hmax)
+            s.set_segs(segs)
+            log(f"  D {D} M {M}: no start with a finite |F| on the reused plan; plan from the last converged state instead: "
+                f"{sum(len(g) - 1 for g in segs)} steps")
+            for lab, z in starts:
+                zz = (np.asarray(z[0], float), np.asarray(z[1], float)) if isinstance(z, tuple) else (np.asarray(z, float), np.zeros(len(z)))
+                F = float(np.abs(np.add(*s.residual(*zz))).max())
+                log(f"  D {D} M {M}: start '{lab}' |F| {F:.2e} on that plan")
+                if np.isfinite(F) and (best is None or F < best[0]):
+                    best = (F, lab, zz)
+            if best is None:
+                log(f"  D {D} M {M}: no start with a finite |F| on the last state's plan either; the solve fails")
+                return False, None, None
         if best[0] > 1.0:
             # the plan does not hold for these starts (top harmonics blown up): plan from the first start itself
             z = starts[0][1]
@@ -586,7 +607,8 @@ def main():
         fallback = False
         if Mc and st["hist_c"]:
             zpc = predict([(d, zof(p)) for d, p in st["hist_c"][-4:]], Dt)
-            ok_c, rc, path_c = solve(Dt, Mc, [("predictor", zpc)], plan_prev(st["hist_c"], Mc), it_max=a.helper_it_max)
+            ok_c, rc, path_c = solve(Dt, Mc, [("predictor", zpc), ("last state", zof(st["hist_c"][-1][1]))],
+                                     plan_prev(st["hist_c"], Mc), it_max=a.helper_it_max)
             if not ok_c:
                 # its predictor was too far off (D 3.15: |F| 0.7, Newton astray): the point fails and the step is
                 # halved, or with --helper_fallback M_w is solved from its own predictor in two passes
@@ -598,12 +620,13 @@ def main():
         if ok_c:
             zpw = predict([(d, zof(p)) for d, p in st["hist_w"][-4:]], Dt)
             segs_w = plan_prev(st["hist_w"], Mw)
-            starts_w = [("predictor", zpw)] + ([("lift of M_c", lifted(path_c, Mw))] if path_c else [])
+            starts_w = [("predictor", zpw)] + ([("lift of M_c", lifted(path_c, Mw))] if path_c else []) \
+                + [("last state", zof(st["hist_w"][-1][1]))]
             ok_w, rw, path_w = solve(Dt, Mw, starts_w, segs_w, two_pass=True, force_two=fallback)
         if ok_w:
             rw["steps_own"] = plan_check(Dt, Mw, path_w, load(path_w)[2]["segs"])
             zpn = predict([(d, zof(p)) for d, p in st["hist_n"][-4:]], Dt)
-            starts = [("lift of M_w", lifted(path_w, Mn))]
+            starts = [("lift of M_w", lifted(path_w, Mn)), ("last state", zof(st["hist_n"][-1][1]))]
             if len(st["hist_n"]) >= 2:
                 starts.insert(0, ("predictor", zpn))
             segs_n = plan_prev(st["hist_n"], Mn)
