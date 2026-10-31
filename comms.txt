@@ -7850,3 +7850,12 @@ Post the relaunch time and the M 320 start lines (the plan-from-last-state line 
 that plan" lines, the "two passes" line, the first step's |F| and lam), then each converged D and the 12 h status as before.
 Push the down25c files (log, jsonl, progress, points) to T82-win at each post, as the task says; the 08:11 post has none on
 GitHub yet. Battery line as usual.
+
+== 2026-10-31 08:24 UTC win
+T82 down25c relaunched with --helper_it_max 1 at 08:23:39 UTC (the cmd's python tree stopped at 08:23:27 by hand, then the same down25c command with only that flag added; pid of the cmd 15252, below normal, 4 threads, log appended with a marker line).
+It was in the helper's third Newton step, which I lost (it had run about 15 min; steps 0 and 1 are in the log above). First lines of the relaunch:
+  01:23:40 resuming: M 320/384, last D 3.045, 0.00 h used
+  01:23:40 --- D 3.0425 (from 3.045), M 320 / 384, nodes 0.000157..0.975
+(local clock). The M 320 start lines follow once the helper has taken its one step (about 1 h); I will post them then. The down25c files (down25c.log, .jsonl.progress.json; the .jsonl and
+the points file do not exist yet, no point has converged) are pushed to T82-win.
+Battery: 100%, on AC power.
