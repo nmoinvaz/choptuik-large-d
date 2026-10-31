@@ -33,6 +33,13 @@ run of section 11.0 item 0, planted_k19_dry.py); the default is this directory.
 at wf 1.00, T89's node runs at 0.99 and 1.01, copied into scan41J1250/), in every stage that reads sigma_19's error;
 item 1(c) is then printed as written but not evaluated (its failure of 2026-10-28 is recorded in section 11.1), and
 --mutate=amend scales DIR's sigma_19 at wf 0.99 by 1 + 1e-9, which must make (a') fire.
+--nodes DIR applies section 11.0's second amendment of item 1 (2026-10-31, the fallback named in the first): the node data
+are DIR's J 1250 / 1280-bit files (T89's K 41 runs, scan41J1250/), sigma_0..19, with every error the plateau error
+sigma_err_fit.py recomputes from fit_info (a1 from the 960-bit scan39J1000 file at the same wf) and err19 that plus the
+J 1500 pilot difference at wf 1.00 (scan41J1500/), (a''); the real record is "N0 scan41J1250". Its converge stage checks
+(a''), (b'') bitwise equality with scan39J1250's pilot (b) at wf 1.00 (the differences from the 960-bit values at 0.99 and
+1.01 are recorded, not checked) and (d); --mutate=err|low|pilot|ratiolaw, pilot scaling the J 1500 file's sigma_19 by
+1 + 1e-9. --amend and --nodes exclude each other.
 """
 import argparse
 import json
@@ -75,6 +82,8 @@ RINGS17 = ()                                                            # no rin
 K18_RANGE = (0.999975, 1.000050)                                        # the K = 18 headline (section 10.8)
 BRACKET = "D-bracket"                                                   # left out in the second reading (section 11.0 item 4)
 AMEND = None                                                            # --amend DIR (section 11.0's amendment of item 1)
+NODES = None                                                            # --nodes DIR (its second amendment, 2026-10-31)
+J1500 = os.path.join(HERE, "scan41J1500")                               # the J 1500 pilot of (a'') at wf 1.00
 FAILED = []
 
 
@@ -82,6 +91,8 @@ def configure(data):
     global SCAN19, PILOT19, OUT19, CHECKS19
     SCAN19 = os.path.join(data, "scan39J1000")
     PILOT19 = os.path.join(data, "scan39J1250")
+    global J1500
+    J1500 = os.path.join(data, "scan41J1500")
     OUT19 = os.path.join(data, "planted_results_k19.jsonl")
     CHECKS19 = os.path.join(data, "planted_checks_k19.json")
 
@@ -131,7 +142,48 @@ def amend_errs(p960, am=None):
     return p960
 
 
+def node_files():
+    """the J 1250 / 1280-bit node files of NODES by wf, one at every wf of the 960-bit scan (section 11.0, second amendment)"""
+    am = K14.raw_scan(NODES, "*.json")
+    for w in K14.raw_scan(SCAN19, "*_p960.json"):
+        if w not in am:
+            raise SystemExit(f"--nodes {NODES}: no file at wf {w}")
+        if (am[w]["J"], am[w]["prec"]) != (1250, 1280):
+            raise SystemExit(f"--nodes {NODES}: the file at wf {w} is J {am[w]['J']} / {am[w]['prec']} bits, not 1250 / 1280")
+    return am
+
+
+def node_errs(am, p960, j1500=None):
+    """({wf: [err_0..err_19]}, the J 1500 pilot difference): the plateau errors sigma_err_fit.py recomputes from fit_info
+    (a1 from the 960-bit file at the same wf), err19 plus |sigma_19(J 1250) - sigma_19(J 1500)| at wf 1.00, (a'')"""
+    import sigma_err_fit as SF  # noqa: E402
+    if j1500 is None:
+        j1500 = K14.raw_scan(J1500, "*.json")
+    if 1.0 not in j1500 or (j1500[1.0]["J"], j1500[1.0]["prec"]) != (1500, 1280):
+        raise SystemExit(f"{J1500}: no J 1500 / 1280-bit file at wf 1.0 for the pilot difference of (a'')")
+    pd = float(abs(K14.sigmas(am[1.0])[19] - K14.sigmas(j1500[1.0])[19]))
+    errs = {}
+    for w, n in am.items():
+        if w not in p960:
+            continue
+        rec = SF.recompute(n, SF.a1_of(p960[w]))
+        errs[w] = [float(rec[k][2]) for k in range(20)]
+        errs[w][19] += pd
+    return errs, pd
+
+
+def load_nodes():
+    """{wf: (sigma_0..19, sigma_err)} from the J 1250 / 1280-bit node files, errors as node_errs gives them"""
+    mp.mp.dps = PP.DPS
+    p960 = K14.raw_scan(SCAN19, "*_p960.json")
+    am = node_files()
+    errs, _ = node_errs(am, p960)
+    return {float(w): (K14.sigmas(am[w])[:20], errs[w]) for w in p960}
+
+
 def load_real19():
+    if NODES:
+        return load_nodes()
     if not AMEND:
         return load_real(SCAN19, "*_p960.json")
     mp.mp.dps = PP.DPS
@@ -153,7 +205,96 @@ def new_records():
 
 
 # ---------------------------------------------------------------- converge
+def stage_converge_nodes(mutate=None):
+    """item 1 under section 11.0's second amendment (2026-10-31): the node data are NODES' J 1250 / 1280-bit files.
+    (a'') err19 = recomputed plateau error + the J 1500 pilot difference at wf 1.00; (b'') sigma_0..19 at wf 1.00
+    bitwise scan39J1250's pilot (b), the differences from the 960-bit values at 0.99 and 1.01 recorded; (c) not
+    evaluated; (d) the ratio law. Mutations err|low|pilot|ratiolaw, each making its check fire."""
+    mp.mp.dps = 50
+    p960 = K14.raw_scan(SCAN19, "*_p960.json")
+    am = node_files()
+    pil = K14.raw_scan(PILOT19, "*.json")
+    j15 = K14.raw_scan(J1500, "*.json")
+    print(f"node data: J 1250 / 1280-bit files at wf {sorted(am)} from {NODES}: "
+          + ", ".join(f"K {r['K']} at wf {w}" for w, r in sorted(am.items())))
+    print(f"  960-bit scan39J1000 at wf {sorted(p960)} (a1 and the sigma_0..18 comparison); scan39J1250's pilot (b) at wf "
+          f"{sorted(pil)}; J 1500 at wf {sorted(j15)}")
+    if mutate == "low":
+        x = mp.mpf(am[1.0]["sigma_str"][18][0]) * (1 + mp.mpf("1e-15"))
+        am[1.0]["sigma_str"][18][0] = mp.nstr(x, 20)
+    elif mutate == "pilot":
+        x = mp.mpf(j15[1.0]["sigma_str"][19][1]) * (1 + mp.mpf("1e-9"))
+        j15[1.0]["sigma_str"][19][1] = mp.nstr(x, 20)
+    elif mutate == "ratiolaw":
+        am[1.01]["sigma_str"][19] = [mp.nstr(mp.mpf(x) * mp.mpf("1.1"), 20) for x in am[1.01]["sigma_str"][19]]
+    elif mutate not in (None, "err"):
+        raise SystemExit(f"unknown mutation {mutate} (under --nodes: err|low|pilot|ratiolaw)")
+    errs, pd = node_errs(am, p960, j15)
+    if mutate == "err":
+        errs[1.0][19] *= 1e14
+    out = {"nodes": {}, "nodes_dir": NODES, "pilot_j1500_d19": pd}
+    print(f"(a'') err19 = the recomputed plateau error + the J 1500 pilot difference at wf 1.00, {pd:.3e}, against the 1e-10 "
+          "relative requirement:")
+    for w in sorted(p960):
+        s = K14.sigmas(am[w])
+        e19 = errs[w][19]
+        rel = e19 / float(abs(s[19]))
+        out["nodes"][str(w)] = {"sigma19": am[w]["sigma_str"][19], "err19": e19, "err19_rel": rel, "err19_plateau": e19 - pd,
+                                "err18": errs[w][18], "err17": errs[w][17]}
+        check(rel <= 1e-10, f"wf {w}: sigma_19 = {mp.nstr(s[19], 20)}, err19 {e19:.3g} = plateau {e19 - pd:.3g} + pilot "
+                            f"difference {pd:.3g} ({rel:.2e} relative, margin {1e-10 / rel:.2f})")
+    print("(b'') at wf 1.00, sigma_0..19 against scan39J1250's pilot (b) (K 39, J 1250, 1280 bits), bitwise:")
+    same = [am[1.0]["sigma_str"][k] == pil[1.0]["sigma_str"][k] for k in range(20)]
+    out["nodes"]["1.0"]["low_bitwise"] = all(same)
+    check(all(same), f"wf 1.0: sigma_0..19 bitwise equal ({sum(same)}/20)")
+    print("  at wf 0.99 and 1.01 (no second file at J 1250 / 1280 bits): sigma_0..18 against the 960-bit scan39J1000 values, "
+          "|difference| / that file's plateau error, with the S_1 family's Mf picks (960, 1280); recorded, not a check:")
+    for w in sorted(p960):
+        s, s0 = K14.sigmas(am[w]), K14.sigmas(p960[w])
+        rows = []
+        for k in range(19):
+            e0, kk = p960[w]["sigma_err"][k], 2 * k + 1
+            d = float(abs(s[k] - s0[k]))
+            r = d / e0 if e0 else None
+            rows.append({"k": k, "diff": d, "err960": e0, "ratio": r,
+                         "mf": [p960[w]["fit_info"].get(f"{kk}_1", [None])[0], am[w]["fit_info"].get(f"{kk}_1", [None])[0]]})
+        out["nodes"][str(w)]["low_vs_960"] = rows
+        over = [x for x in rows if x["ratio"] is not None and x["ratio"] > 1]
+        print(f"  wf {w}: " + " ".join(f"k{x['k']}:{x['ratio']:.2f}" for x in rows if x["ratio"] is not None) + "; over 1: "
+              + (", ".join(f"k {x['k']} ({x['ratio']:.2f}, Mf {x['mf'][0]} and {x['mf'][1]})" for x in over) or "none"))
+    print("(c) pilot (b): not evaluated (failed 2026-10-28, section 11.1); under (b'') it is the node data's bitwise copy at "
+          "sigma_0..19, wf 1.00")
+    print("(d) the ratio law through sigma_19: second difference of sigma_k/sigma_{k+1}, k = 7..17 (D-ratiolaw <= 0.05):")
+    out["ratiolaw_d2"] = {}
+    for w in sorted(p960):
+        s = K14.sigmas(am[w])
+        rat = [complex(s[k] / s[k + 1]) for k in range(19)]
+        d2 = [abs(rat[k + 1] - 2 * rat[k] + rat[k - 1]) for k in range(7, 18)]
+        out["ratiolaw_d2"][str(w)] = d2
+        check(d2[-1] <= 0.05, f"wf {w}: |d2| k = 7..17: " + " ".join(f"{x:.4f}" for x in d2)
+              + f"; sigma_18/sigma_19 = {rat[18]:.4f}")
+    print("spread in wf (context): the change of sigma_k across the nodes, against its error")
+    out["spread"] = {}
+    for k in (17, 18, 19):
+        s = {w: K14.sigmas(am[w])[k] for w in p960}
+        d1 = abs(s[1.01] - s[0.99]) / 2
+        d2 = abs(s[1.01] - 2 * s[1.0] + s[0.99])
+        e = max(errs[w][k] for w in p960)
+        out["spread"][str(k)] = {"half_range_rel": float(d1 / abs(s[1.0])), "d2_over_d1": float(d2 / d1),
+                                 "err_over_d1": float(e / d1)}
+        print(f"  k = {k}: |sigma_k(1.01) - sigma_k(0.99)|/2 = {float(d1 / abs(s[1.0])):.4f} |sigma_k(1.00)|; "
+              f"second difference / first = {float(d2 / d1):.4f}; max err_k / first difference = {float(e / d1):.1e}")
+    if not mutate:
+        c = load_checks()
+        if c.get("K19 converge", {}).get("amend") and "K19 converge under (a')" not in c:
+            save_checks("K19 converge under (a')", c["K19 converge"])  # the run of 2026-10-31 04:23 UTC, (a') failed at 0.99
+        save_checks("K19 converge", out)
+    return out
+
+
 def stage_converge(mutate=None):
+    if NODES:
+        return stage_converge_nodes(mutate)
     mp.mp.dps = 50
     p960 = K14.raw_scan(SCAN19, "*_p960.json")
     pil = K14.raw_scan(PILOT19, "*.json")
@@ -341,7 +482,7 @@ def stage_real(scratch):
     rec = new[REAL19]
     for K in (17, 18):
         d, k = K14.max_diff(K14.est_vector(rec, K), K14.est_vector(old[REAL18], K))
-        check(d <= REPRO_TOL, f"K = {K}: the scan39J1000 estimates equal those of scan37J1000 (largest difference "
+        check(d <= REPRO_TOL, f"K = {K}: the {REAL19[3:]} estimates equal those of scan37J1000 (largest difference "
                               f"{d:.1e}{', ' + k if k else ''})")
     for K in KS19:
         g = R.grade(rec, K)["est"]
@@ -742,10 +883,17 @@ def main():
     ap.add_argument("--mutate", default=None)
     ap.add_argument("--data", default=HERE)
     ap.add_argument("--amend", default=None, help="section 11.0's amendment of item 1: the J 1250 / 1280-bit files' directory")
+    ap.add_argument("--nodes", default=None, help="section 11.0's second amendment of item 1: the J 1250 / 1280-bit files "
+                                                  "are the node data (a directory, relative to this one unless absolute)")
     a = ap.parse_args()
     configure(a.data)
-    global AMEND
+    global AMEND, NODES, REAL19
     AMEND = a.amend
+    if a.nodes:
+        if AMEND:
+            raise SystemExit("--amend and --nodes exclude each other")
+        NODES = a.nodes if os.path.isabs(a.nodes) else os.path.join(HERE, a.nodes)
+        REAL19 = "N0 " + os.path.basename(os.path.normpath(NODES))
     {"converge": lambda: stage_converge(a.mutate), "plants": lambda: stage_plants(a.scratch),
      "real": lambda: stage_real(a.scratch), "ring": lambda: stage_ring(a.scratch), "calib": stage_calib,
      "recomplete": stage_recomplete, "project": stage_project, "combine": stage_combine, "table": stage_table,

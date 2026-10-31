@@ -386,6 +386,48 @@ def k20_gate():
 
 
 @check
+def k19_amend2():
+    """notes/PLANTED_SELECTION.md section 11.0, the second amendment of item 1 (2026-10-31), and section 12.0's amendment: the
+    (a') converge run's err19 at the nodes (solver/inner_amp/planted_checks_k19.json, "K19 converge under (a')") and the
+    sigma_8, sigma_11 differences of the 1280-bit node files (scan41J1250) from the 960-bit scan39J1000 values over that
+    file's plateau errors (sigma_err_fit.py recomputes the 1280-bit values' errors; the ratios use the 960-bit errors)."""
+    d = os.path.join(ROOT, "solver/inner_amp")
+    sys.path.insert(0, d)
+    import sigma_err_fit as SF
+    sys.path.pop(0)
+    import mpmath as mp
+    P = "notes/PLANTED_SELECTION.md"
+    c = json.load(open(os.path.join(d, "planted_checks_k19.json")))["K19 converge under (a')"]["nodes"]
+    n99 = c["0.99"]
+    out = [("(a') plateau error at wf 0.99", n99["err19_plateau"], 2.07e-26, 0.01e-26, [(P, "err19 = 2.07×10⁻²⁶ (the 960-bit")]),
+           ("(a') pilot difference at wf 0.99", n99["pilot_d19"], 2.02e-26, 0.01e-26, [(P, "+ 2.02×10⁻²⁶ (the pilot difference)")]),
+           ("(a') err19 at wf 0.99", n99["err19"], 4.09e-26, 0.01e-26, [(P, "= 4.09×10⁻²⁶ is 1.59×10⁻¹⁰ of |σ₁₉|")]),
+           ("(a') err19 at wf 0.99, relative", n99["err19_rel"], 1.59e-10, 0.01e-10, [(P, "is 1.59×10⁻¹⁰ of |σ₁₉|")]),
+           ("(a') margin at wf 0.99", 1e-10 / n99["err19_rel"], 0.63, 0.01, [(P, "a margin of 0.63")]),
+           ("(a') relative err19 at wf 1.00", c["1.0"]["err19_rel"], 2.45e-11, 0.01e-11, [(P, "wf 1.00 (2.45×10⁻¹¹) and 1.01 (5.75×10⁻¹²)")]),
+           ("(a') relative err19 at wf 1.01", c["1.01"]["err19_rel"], 5.75e-12, 0.01e-12, [(P, "wf 1.00 (2.45×10⁻¹¹) and 1.01 (5.75×10⁻¹²)")])]
+    mp.mp.dps = 60
+    rat = {}
+    for w in ("0.9900", "1.0000", "1.0100"):
+        p960 = json.load(open(os.path.join(d, f"scan39J1000/sigF_w{w}_K39_J1000_p960.json")))
+        n = json.load(open(os.path.join(d, f"scan41J1250/sigF_w{w}_K41_J1250_p1280.json")))
+        r = SF.recompute(n, SF.a1_of(p960))
+        for k in range(1, 19):
+            s0 = mp.mpc(mp.mpf(p960["sigma_str"][k][0]), mp.mpf(p960["sigma_str"][k][1]))
+            rat[(w, k)] = float(abs(r[k][1] - s0)) / p960["sigma_err"][k]
+    s11 = "the ratio is 1.00, 0.99 and 1.17 at σ₁₁ (wf 0.99, 1.00, 1.01) and 0.01, 0.01 and 1.01 at σ₈"
+    out += [("sigma_11 ratio at wf 0.99", rat[("0.9900", 11)], 1.00, 0.01, [(P, s11)]),
+            ("sigma_11 ratio at wf 1.00", rat[("1.0000", 11)], 0.99, 0.01, [(P, s11)]),
+            ("sigma_11 ratio at wf 1.01", rat[("1.0100", 11)], 1.17, 0.01, [(P, s11), (P, "σ₁₁ differs from `scan39J1000`'s by 1.17 times")]),
+            ("sigma_8 ratio at wf 0.99", rat[("0.9900", 8)], 0.01, 0.01, [(P, s11)]),
+            ("sigma_8 ratio at wf 1.00", rat[("1.0000", 8)], 0.01, 0.01, [(P, s11)]),
+            ("sigma_8 ratio at wf 1.01", rat[("1.0100", 8)], 1.01, 0.01, [(P, s11), (P, "and σ₈ by 1.01 times")]),
+            ("largest ratio at another order", max(v for (w, k), v in rat.items() if k not in (8, 11)), 0.74, 0.01,
+             [(P, "one at most 0.74")])]
+    return out
+
+
+@check
 def first_order():
     """The 1/n coefficients from the O(1/n) inner problem (notes/FIRST_ORDER.md): omega_1, Delta_1 = -2 pi omega_1 /
     omega*^2 and lambda_1 in the M-harmonic truncations (M = 5: the mean of the three runs), and the fitted values."""

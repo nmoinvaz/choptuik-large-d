@@ -1938,6 +1938,36 @@ needs at wf 0.99 and 1.01 were known:
   `pick_plateau` change that would store a finite value is deferred past T89, so that every file of the K = 20
   campaign comes from the same code.
 
+**Second amendment of item 1 (2026-10-31 04:32 UTC), after T89's nodes landed at 03:58 UTC.** The `converge` stage ran
+under (a′) at 04:23 UTC (log `converge_amend.log` in the raw-data repository's `planted-k19-mac/real/`; the record
+"K19 converge under (a')" in `planted_checks_k19.json`): (a′) fails at wf 0.99, where err19 = 2.07×10⁻²⁶ (the 960-bit
+plateau error) + 2.02×10⁻²⁶ (the pilot difference) = 4.09×10⁻²⁶ is 1.59×10⁻¹⁰ of |σ₁₉|, a margin of 0.63; it passes at
+wf 1.00 (2.45×10⁻¹¹) and 1.01 (5.75×10⁻¹²), and (b) and (d) pass at every node. The work stopped there, and the fallback
+named above is taken as it was named:
+
+- The K = 19 node data are T89's K 41, J 1250, 1280-bit files at wf 0.99, 1.00 and 1.01 (`scan41J1250/`, from the
+  raw-data repository's T89-mac), σ₀…σ₁₉; their σ₂₀ belongs to section 12. The files' stored `sigma_err` is inf, so
+  every error of the node data is the plateau error `sigma_err_fit.py` recomputes from `fit_info` (a1 from the 960-bit
+  `scan39J1000` file at the same wf). The real record is "N0 scan41J1250".
+- (a″) err19 at each node is that plateau error plus the pilot difference against J 1500 at wf 1.00,
+  |σ₁₉(J 1250) − σ₁₉(J 1500)| from `scan41J1250/` and `scan41J1500/`, added at every node. It is the only J difference
+  measured at 1280 bits; the fallback takes it for the two other nodes too, an assumption named with the fallback,
+  before the data. The values are recorded in section 11.2 from the stage's log.
+- (b″) at wf 1.00, σ₀…σ₁₉ are bitwise T88's pilot (b) (K 39, J 1250, 1280 bits, `scan39J1250/`), the one other file at
+  this J and precision (T89's pilot gate found 20 of 20; the mutation `low` alters one of them and must fire). At wf
+  0.99 and 1.01 there is no second file at J 1250 and 1280 bits, and the differences of σ₀…σ₁₈ from the 960-bit
+  `scan39J1000` values are recorded with their ratio to that file's plateau error and the Mf picks behind them; they
+  are not a check, because a threshold set now would be set after the data. What the files show, read before this was
+  written: the ratio is 1.00, 0.99 and 1.17 at σ₁₁ (wf 0.99, 1.00, 1.01) and 0.01, 0.01 and 1.01 at σ₈, every other
+  one at most 0.74; at order 23 (σ₁₁) seven or eight of the twelve neighbour families, and at order 17 (σ₈) all nine,
+  pick Mf one higher at 1280 bits, the route the first amendment traced at σ₁₆ and σ₁₉. The same comparison is section
+  12.0's item 1(b) at those nodes, which therefore fires; its amendment is at the end of section 12.0.
+- (c) stays not evaluated; (d) is unchanged, read on the node data.
+- Items 2–8 run on the node data; item 3's record is "N0 scan41J1250", and its K = 17, 18 estimates must equal
+  "N0 scan37J1000"'s to 10⁻⁹ as written (the one comparison of the 1280-bit node data with a 960-bit computation that
+  remains a check). The script is `planted_k19.py STAGE --nodes scan41J1250` (the `--amend` run stays as the record of
+  the stop); mutations `err|low|pilot|ratiolaw`, `pilot` scaling the J 1500 file's σ₁₉ by 1 + 10⁻⁹.
+
 ### 11.1 σ₁₉: items 1(a), (b), (d) pass, item 1(c) fails
 
 The `converge` stage ran as written on 2026-10-28 23:16 UTC, after the three T88 nodes landed (logs in the raw-data
@@ -2061,3 +2091,14 @@ Order of work: section 11's stages first (on T89's node files, through `--amend`
 The comparison of σ₂₀ with P5's type bound (the K = 19 recalibration's prediction) belongs to P5 and is recorded in
 `proof/P5_scope.md`, not here. The `pick_plateau` change deferred in section 11.0 stays deferred until the nodes have
 landed, so that all four files of this order come from the same code.
+
+**Amendment of items 1(b) and 3 (2026-10-31 04:32 UTC), before any K = 20 estimate.** Item 1(b)'s comparison at wf 0.99
+and 1.01 fires on the real data: at wf 1.01 σ₁₁ differs from `scan39J1000`'s by 1.17 times that file's plateau error
+and σ₈ by 1.01 times (section 11.0's second amendment has the ratios at every node and the Mf picks behind them); the
+cause is the one section 11.0's amendments record: the plateau error is the S_1 family's step, and the neighbour
+families pick Mf one higher at 1280 bits at orders 17 and 23. As there, the differences are recorded and are not a
+check; 1(b)'s check is the bitwise equality at wf 1.00 of σ₀…σ₁₉ with T88's J 1250 / 1280-bit file, with its mutation
+`low`. Item 3's comparison is with the K = 19 record "N0 scan41J1250" (section 11.0's second amendment replaced
+"N0 scan39J1000"), its K = 18 and 19 estimates equal to 10⁻⁹: the same σ₀…σ₁₉ through the same code, a reproduction
+check and no longer a cross-precision one; the cross-precision comparison that remains is section 11.0's item 3, the
+node data's K = 17, 18 estimates against "N0 scan37J1000" (960 bits). Nothing else changes.
