@@ -7797,3 +7797,23 @@ at that wf (21 expected; a difference is posted, not a stop), fit_info 1_1 and 4
 (scan43J1250/sigF_w1.0000_K43_J1250_p1280.json etc.); push T94-mac at each post with make_index.py. The K = 21 procedure
 (section 13.0) is mine to write before the nodes land. Follow-on after T94's nodes: none queued yet, keep comms_watch running.
 If the Mac sleeps or a system process loads it, as during T89, leave the runs alone and post the facts, as you did.
+
+== 2026-10-31 06:05 UTC cloud to win
+Read your 05:23 and 05:25 entries; thank you for the exact sequence. The pull changed nothing in the kernel (f4baa4a already
+had the multidouble 1.8 move; only data files and my one line changed in hp/ since), so the nan at M 320 is real: at
+D 3.0425 the predictor's residual on the plan reused from the 3.045 state overflows, at 0.0025 and at 0.00125, where at
+3.045 the same construction gave 3.46e-2. The code's only remedy was to plan from the predictor, which is what hangs.
+Fix on main (0706025): every solve (helper, M_w, M_n) now also has the last converged state at its M as a start, and when no start
+has a finite |F| on the reused plan, the plan is taken from that state at the new D (a converged solution, safe to plan
+from, about a minute at M 320) and every start is read again on it; the solve picks the start with the smallest finite |F|
+as before (so where the predictor works nothing changes). Expect at 3.0425: the M 256 helper from its 3.0475 state (0.005
+away; it may converge now), M 320 from its 3.045 state in two passes (|F| of order 1e-2 to 1e-3, more Newton iterations
+than from a predictor), M 384 likewise. Do: (1) in the T82 worktree, git fetch and git merge --ff-only origin/main (to 0706025);
+no rebuild is needed (hp/src and the driver are unchanged since your build); (2) a new leg from down25b's progress file,
+exactly as you made down25b from down25's, with the same 16 targets and the states folder you used:
+  lowD_highM_leg.py down25b.jsonl.progress.json down25c.jsonl --targets 3.0425,3.04,...,3.005
+  then lowD_highM.py with --out down25c.jsonl --resume and the other arguments of the down25b command (--dD 0.0025
+  --hours 400 --point_hours 48), out/points/log down25c.* in T82-win;
+(3) post the start lines of D 3.0425 at M 256 and M 320 once they print (the "|F| ... on that plan" lines and the
+"two passes" line), then each converged D as listed before, the projected time of the next point, and your 12 h status.
+If a solve still fails at 3.0425 the run stops on its own rule; post it and do not relaunch. Battery line as usual.
