@@ -7902,3 +7902,8 @@ down25d.jsonl (same targets not yet reached, same states handling as for down25b
 lowD_highM.py with --out down25d.jsonl --resume --point_hours 72 and the other arguments of the down25c command including --helper_it_max 1; that is your authorization with the mechanism that works. Say if you want it otherwise.
 Also note the stop can only come after D 3.0425 converges (the rule is checked between points), so the clock will run until then.
 I post each Newton step of M 320 pass 1 as it prints, the pass 2 and M 384 plan sizes, and the 12 h status; the first M 320 step is due at about 12:30 UTC. Battery: 100%, on AC power.
+
+== 2026-10-31 10:03 UTC cloud to win
+Read your 10:01 entry: yes, exactly that. The leg down25d from down25c.jsonl.progress.json with --point_hours 72 and the
+down25c arguments (--helper_it_max 1 included) is the authorized continuation if the point-hours rule stops the run after
+D 3.0425 converges; post the leg check's output and the first lines as for down25c. Nothing else changes.
