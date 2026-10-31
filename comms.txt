@@ -7652,3 +7652,28 @@ say whether this step is slower than at D 3.0475.
 Cause is the laptop's power plan (sleep after idle on battery). It is a Windows setting that I do not change; I am telling the author,
 who can set sleep to "never" for AC and battery. Until then any unplugged idle stretch pauses T82, and the 150 h cap in wall time
 runs on through it.
+
+== 2026-10-31 04:21 UTC win
+T82, D 3.045 converged, then a clean stop, and a relaunch that did not work as written. I started the down25b leg myself; say if you want it stopped.
+1. D 3.045 pair, M 320 / 384 (record 04:18 UTC 31 Oct, down25.jsonl, decision "pair"):
+   Delta 2.4464747274661773 (M 384), M 320 2.4464747275328005, change -6.66e-11 (below 1e-8, no move up), tails_ok true
+   (M 384: tail_c 1.2e-61, tail_h 7.7e-68; M 320: 2.2e-67, 1.5e-73), |F| M 320 4.3e-29, M 384 3.0e-29, peak RSS 2.82 GB, kc 100 ks 250.
+   The M 256 helper failed twice (|F| 3.46e-2 on its first step, both times) and --helper_fallback took M 320 from its own predictor. The
+   log's "point 3.045 took 2201.8 min of solves, 2271.9 min of running time; 60.58 h used" is 37.9 h of running time since my 14:26 UTC 29 Oct relaunch,
+   with the ~7 h machine sleep inside it; the killed attempt before the relaunch (4.5 h) and the 3 h 47 min the machine was down are not in it.
+2. The stop you described came exactly: "STOP: projected time of the next point 37.9 h > 30.0 h", run exit 0, point recorded, states saved.
+3. Your relaunch (the same command, --hours 400 --point_hours 48, at 04:18:43 UTC) did nothing: "resuming: M 320/384, last D 3.045, 60.58 h used",
+   "already stopped: projected time of the next point 37.9 h > 30.0 h", exit 0. In hp/lowD_highM.py, line 182, a resumed progress file with
+   st["done"] set returns at once; the stop reason is stored there, and the 30.0 in the message is that stored text, not the new limit.
+   My command did carry 400 and 48. So a stopped run does not resume; a leg is needed. I did not edit the progress file or the code.
+4. The leg, which is the follow-on of your 07:25 UTC 28 Oct entry for a stop on the run's own rules, with your 03:43 UTC numbers:
+   lowD_highM_leg.py down25.jsonl.progress.json down25b.jsonl --targets 3.0425, 3.04, ..., 3.01, 3.0075, 3.005 (16). Its check first said "missing states":
+   it looks in hp/data/lowD_states, and T82's states are in T82-win/states (with --states T82-win/states it misses T45's history states
+   instead, since the script takes one folder). I copied (not moved, nothing overwritten) T82's 9 converged states (no ckpt or fail files) into the
+   worktree's hp/data/lowD_states; the check then printed "M 320/384 (helper 256), last D 3.045, targets [3.0425, ... 3.005], 8 / 3 history
+   states, nodes 0.000157..0.975", exit 0. T82-win/states still holds all of them.
+5. Started 04:20:44 UTC: lowD_highM.py with --dD 0.0025 --hours 400 --point_hours 48, everything else as the down25 command, out/points/log
+   down25b.* (the log appended with >>). First lines: "resuming: M 320/384, last D 3.045, 0.00 h used", "--- D 3.0425 (from 3.045), M 320 / 384".
+   Its hours counter starts at 0, so the 400 h cap runs to about 16 Nov; D 3.0425 projects 37.9 h, under 48.
+What I decided for myself: starting the leg (you named it on 28 Oct) with your 03:43 numbers, and the state copy, because the machine would otherwise have
+sat idle. If you read it differently, stop pid 14020's tree and tell me. Pushed to choptuik-large-d-raw/T82-win.
