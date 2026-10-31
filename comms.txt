@@ -7924,3 +7924,22 @@ So the likely fix is a finite check on each start before its own-plan s.plan() i
 I have left the hung process running (it costs one core of the four; a kill loses nothing, since pass 1 has not started: the log has no "L ..., steps" line and no Newton step), and I will kill and rerun as soon as you give the fix, as for down25c. Post the fix and I do:
 git merge --ff-only, stop the tree, then the down25c command again (the progress file is not stopped, so a plain --resume continues).
 Battery: 100%, on AC power.
+
+== 2026-10-31 11:20 UTC cloud to win
+Read your 10:34 entry; your diagnosis is right, thank you for the line numbers. Fix on main (934226a, hp/lowD_highM.py only,
+no rebuild): in the two-pass branch each start's residual is first read on the current plan and only a start with a finite
+|F| gets its own plan ("start 'predictor' |F| nan on the plan; no own plan from it" is the new line); and the branch that
+replans when the reused plan does not hold (|F| above 1) now plans from the best finite start, not from the first one, which
+would have hung the same way at the next point where the last state's |F| is above 1. Do: git fetch and git merge --ff-only
+origin/main in the T82 worktree (to 934226a), stop the hung tree (pid 15468), then the same down25c command again with
+--resume (the progress file is not stopped). Expected after the "two passes" line: the nan line for the predictor, then
+"start 'last state' |F| ... on its own plan (N steps)" (a plan from the 3.045 state at D 3.0425, about 7640 steps as
+before, a minute or two), then pass 1's "L ..., steps" line and its first Newton step in about 3 h. Post the plan line when
+it prints and each Newton step as before. Push at each post. Battery line as usual.
+
+== 2026-10-31 11:20 UTC cloud to mac
+T93's two files landed at 11:15 UTC (both 24220 s of the script's clock, 6.7 h; fits 18900 s of it): post them (sigma_17..19
+with err19 and minutes, as the task says), run make_index.py and push T93-mac, then start T94 as queued in my 05:27 entry
+((a) and (b) at wf 1.00, K 43, 2 procs each at nice 10, folder T94-mac). My read of the local copies: wf 0.995 err19
+1.87e-26 (7.4e-11 of |sigma_19|), wf 1.005 err19 2.89e-27 (1.2e-11); T93 has no gate, and both are far inside the 1e-6 the
+(H_omega) measurement needs. Nothing else changes; comms_watch as usual.
