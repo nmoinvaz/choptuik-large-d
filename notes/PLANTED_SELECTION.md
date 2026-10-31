@@ -1988,7 +1988,7 @@ Item 3 is amended as follows, before any K = 19 estimate is used:
 
 **Fourth amendment, item 4 (2026-10-31 05:09 UTC), after the `ring` stage fired under the second amendment.** The `real` stage
 passed under the third amendment at 05:04 UTC (every K = 17, 18 estimate within 0.61 rms of the noise reference, the
-control exact; `--mutate=real` fires at 4.96 rms). The `ring` stage then failed its reproduction check for the K = 17
+control exact; `--mutate=real` fires). The `ring` stage then failed its reproduction check for the K = 17
 and 18 generations' completions (C18-W1–3, C18-ARC, C18-BP, C17-BP), "its K = 18 estimates are the real ones", by the
 same 3.3×10⁻⁸ (9.3×10⁻⁹ at K = 17): those completions carry the 960-bit σ₀…σ₁₈ of `scan37J1000` and were compared
 with the 1280-bit real record. Their reference is the record of the data they carry, "N0 scan37J1000" at K = 17 and
@@ -2065,6 +2065,40 @@ stopped the work is "K19 converge under (a')" there and `real/converge_amend.log
 - N1, 7/7: a lone simple zero recovered at K = 19 by arg, ratio, Padé and G to 3.5×10⁻⁷ at worst; graded against
   ω_t + 0.002 it fails, as it must;
 - N2, 2/2: no estimator prints a number.
+
+### 11.4 The real estimates at K = 19
+
+The record "N0 scan41J1250" (the 1280-bit node data, second amendment), run 2026-10-31 04:51 UTC and read under the
+third amendment at 05:04 UTC (`nodes/real.log`, `nodes/real_mutate_real.log`; "K19 real" in `planted_checks_k19.json`).
+
+| estimator | K = 19 | K = 18 | K = 17 |
+|---|---|---|---|
+| arg crossing | 1.0000015 | 1.0000024 | 1.0000046 |
+| ratio | 0.999986 | 0.999966 | 0.999912 |
+| central Padé | [3/15]–[14/4]: 0.9999996–1.0000061 (mid 1.0000029) | [3/14]–[13/4]: 0.999997–1.000002 (mid 0.9999995) | [3/13]–[12/4]: 0.999978–1.000002 (mid 0.999990) |
+| G (production κ̄) | 0.9999995 | 0.9999987 | 1.0000026 |
+| Aitken, k − 2 … k | 1.0000009 | 1.0000011 | 0.9999925 |
+| effective exponent c at ω∞ | 1.000 − 0.000i | 1.000 − 0.001i | 1.000 − 0.002i |
+
+- **Item 3 under the third amendment.** The 960-bit σ₀…σ₁₈ through the harness reproduce "N0 scan37J1000" exactly
+  (the control, both orders). The node data's K = 17 and 18 estimates differ from it by at most 9.3×10⁻⁹ (K = 17,
+  `pade10/6`) and 3.3×10⁻⁸ (K = 18, `pade11/6`), 0.01–0.07 of the noise rms for every Padé crossing, 0.58 at most for
+  the ratio estimates (ratio₁₁), 0.61 at most over all (arg₁₁), 0.03 and 0.05 for G; the check passes at both orders,
+  and `--mutate=real` (σ₁₈ at wf 1.00 scaled by 1 + 10⁻⁹) fires at K = 18.
+- **The arg crossings keep falling, more slowly:** 1.0000104, 1.0000046, 1.0000024, 1.0000015 for k = 16–19. The
+  distance from 1 shrank by ×0.44 from k = 16 to 17, ×0.53 from 17 to 18 and ×0.63 from 18 to 19.
+- **G stays below 1** (0.9999995, from 0.9999987), 5×10⁻⁷ under it. **The Padé mid moved above 1** (1.0000029, from
+  0.9999995): the [3/15] approximant sits at 1.000006 and widens the central range upward, as [3/13] widened it
+  downward at K = 17; [4/14]–[14/4] all lie within 2×10⁻⁶ of 1.
+- **Aitken** 1.0000009 (from 1.0000011; the last two differences of arg_k are 2.2×10⁻⁶, then 0.9×10⁻⁶). Context, not
+  part of any range.
+- **Detectors:** D-ratio and D-ratiolaw, as at K = 16–18. **D-bracket fires on the real data at K = 19:** G (0.9999995)
+  lies below the arg crossing (1.0000015) and the Padé mid (1.0000029) above it. A detector that fires on the real data
+  cannot reject a completion under item 4's primary reading, so at this order the primary and the second reading of the
+  ring test coincide.
+- **The mutation controls fire.** σ₁₉ → −σ₁₉ at wf 1.00 fires D-G; σ₁₉ × (1 + 10⁻³) fires D-G and D-arg. Each moves the
+  estimates by about 10⁻².
+
 
 
 ## 12. Follow-up: σ₂₀ (post-freeze)

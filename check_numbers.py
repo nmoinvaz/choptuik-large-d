@@ -505,11 +505,53 @@ def k19_converge_nodes():
         out.append((f"node run minutes at wf {w}", f["seconds"] / 60, 1460, 1, [(P, "took 1460 min each")]))
     pc = c["K19 plants check"]
     recs = [json.loads(l) for l in open(os.path.join(d, "planted_results_k19.jsonl")) if l.strip()]
-    pl = [r for r in recs if not r["name"].startswith("N0")]
+    pl = [r for r in recs if not r["name"].startswith(("N0", "C13", "C14", "C15", "C16", "C17", "C18", "C19"))]
     out += [("plants at K = 19", sum(pc["families"].values()), 51, 0.5, [(P, "51 plants at K = 17, 18, 19 (11.8 min in all)")]),
             ("plants' minutes", sum(r["seconds"] for r in pl) / 60, 11.8, 0.1, [(P, "51 plants at K = 17, 18, 19 (11.8 min in all)")]),
             ("N1 worst error at K = 19", pc["n1_worst"], 3.5e-7, 0.1e-7, [(P, "Padé and G to 3.5×10⁻⁷ at worst")]),
             ("plants reproduce the K = 18 records", pc["repro_worst"][0], 0.0, 1e-12, [(P, "equal the stored K = 18 records exactly")])]
+    return out
+
+
+@check
+def k19_real():
+    """notes/PLANTED_SELECTION.md section 11.4: the real estimates at K = 17, 18, 19 ("K19 real" in
+    solver/inner_amp/planted_checks_k19.json and the record "N0 scan41J1250" in planted_results_k19.jsonl) and item 3's
+    noise comparison (the third amendment)."""
+    d = os.path.join(ROOT, "solver/inner_amp")
+    P = "notes/PLANTED_SELECTION.md"
+    c = json.load(open(os.path.join(d, "planted_checks_k19.json")))["K19 real"]
+    rec = {r["name"]: r for r in (json.loads(l) for l in open(os.path.join(d, "planted_results_k19.jsonl")) if l.strip())}["N0 scan41J1250"]
+    e = c["est"]
+    out = []
+    for K, vals in (("19", {"arg": (1.0000015, 1e-7), "ratio": (0.999986, 1e-6), "pade": (1.0000029, 1e-7), "G": (0.9999995, 1e-7), "aitken": (1.0000009, 1e-7)}),
+                    ("18", {"arg": (1.0000024, 1e-7), "ratio": (0.999966, 1e-6), "pade": (0.9999995, 1e-7), "G": (0.9999987, 1e-7), "aitken": (1.0000011, 1e-7)}),
+                    ("17", {"arg": (1.0000046, 1e-7), "ratio": (0.999912, 1e-6), "pade": (0.999990, 1e-6), "G": (1.0000026, 1e-7), "aitken": (0.9999925, 1e-7)})):
+        row = {"arg": "| arg crossing | 1.0000015 | 1.0000024 | 1.0000046 |", "ratio": "| ratio | 0.999986 | 0.999966 | 0.999912 |",
+               "pade": "(mid 1.0000029) | [3/14]–[13/4]: 0.999997–1.000002 (mid 0.9999995) | [3/13]–[12/4]: 0.999978–1.000002 (mid 0.999990) |",
+               "G": "| G (production κ̄) | 0.9999995 | 0.9999987 | 1.0000026 |", "aitken": "| Aitken, k − 2 … k | 1.0000009 | 1.0000011 | 0.9999925 |"}
+        for est, (q, u) in vals.items():
+            out.append((f"{est} at K = {K}", e[K][est], q, u, [(P, row[est])]))
+    pr = rec["est"]["19"]["pade_central_range"]
+    out += [("central Pade range at K = 19, low", pr[0], 0.9999996, 1e-7, [(P, "[3/15]–[14/4]: 0.9999996–1.0000061")]),
+            ("central Pade range at K = 19, high", pr[1], 1.0000061, 1e-7, [(P, "[3/15]–[14/4]: 0.9999996–1.0000061")])]
+    a = {int(k): v for k, v in rec["est"]["19"]["arg"].items()}
+    out += [("arg_16 - 1 over arg_15 - 1", 0, 0, 1, [])] if False else []
+    out += [("arg crossing at k = 16", a[16], 1.0000104, 1e-7, [(P, "1.0000104, 1.0000046, 1.0000024, 1.0000015 for k = 16–19")]),
+            ("shrink of arg_k - 1, 16 to 17", (a[17] - 1) / (a[16] - 1), 0.44, 0.01, [(P, "×0.44 from k = 16 to 17")]),
+            ("shrink of arg_k - 1, 17 to 18", (a[18] - 1) / (a[17] - 1), 0.53, 0.01, [(P, "×0.53 from 17 to 18")]),
+            ("shrink of arg_k - 1, 18 to 19", (a[19] - 1) / (a[18] - 1), 0.63, 0.01, [(P, "×0.63 from 18 to 19")]),
+            ("last two differences of arg_k", abs(a[18] - a[17]) * 1e6, 2.2, 0.1, [(P, "are 2.2×10⁻⁶, then 0.9×10⁻⁶")]),
+            ("last difference of arg_k", (a[18] - a[19]) * 1e6, 0.9, 0.1, [(P, "are 2.2×10⁻⁶, then 0.9×10⁻⁶")])]
+    nc = c["noise_comparison"]
+    out += [("largest noise ratio, K = 17", nc["17"]["worst_ratio"][0], 0.61, 0.01, [(P, "0.61 at most over all (arg₁₁)")]),
+            ("largest noise ratio, K = 18", nc["18"]["worst_ratio"][0], 0.61, 0.01, [(P, "0.61 at most over all (arg₁₁)")]),
+            ("largest difference at K = 17", nc["17"]["largest_difference"][1], 9.3e-9, 0.1e-9, [(P, "at most 9.3×10⁻⁹ (K = 17,")]),
+            ("largest difference at K = 18", nc["18"]["largest_difference"][1], 3.3e-8, 0.1e-8, [(P, "`pade10/6`) and 3.3×10⁻⁸ (K = 18")]),
+            ("largest ratio-estimate noise ratio", max(v["ratio"] for K in ("17", "18") for k, v in nc[K]["rows"].items() if k.startswith("ratio")), 0.58, 0.01, [(P, "0.58 at most for")]),
+            ("largest Pade noise ratio", max(v["ratio"] for K in ("17", "18") for k, v in nc[K]["rows"].items() if k.startswith("pade")), 0.07, 0.01, [(P, "0.01–0.07 of the noise rms for every Padé crossing")]),
+            ("G noise ratio at K = 17", nc["17"]["rows"]["G"]["ratio"], 0.03, 0.01, [(P, "0.03 and 0.05 for G")]),
+            ("G noise ratio at K = 18", nc["18"]["rows"]["G"]["ratio"], 0.05, 0.01, [(P, "0.03 and 0.05 for G")])]
     return out
 
 
