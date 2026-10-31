@@ -1952,7 +1952,7 @@ named above is taken as it was named:
 - (a″) err19 at each node is that plateau error plus the pilot difference against J 1500 at wf 1.00,
   |σ₁₉(J 1250) − σ₁₉(J 1500)| from `scan41J1250/` and `scan41J1500/`, added at every node. It is the only J difference
   measured at 1280 bits; the fallback takes it for the two other nodes too, an assumption named with the fallback,
-  before the data. The values are recorded in section 11.2 from the stage's log.
+  before the data. The values are recorded in section 11.1 from the stage's log.
 - (b″) at wf 1.00, σ₀…σ₁₉ are bitwise T88's pilot (b) (K 39, J 1250, 1280 bits, `scan39J1250/`), the one other file at
   this J and precision (T89's pilot gate found 20 of 20; the mutation `low` alters one of them and must fire). At wf
   0.99 and 1.01 there is no second file at J 1250 and 1280 bits, and the differences of σ₀…σ₁₈ from the 960-bit
@@ -1973,7 +1973,7 @@ at 04:51 UTC (`nodes/real.log`): the node data's K = 17 and 18 estimates differ 
 "N0 scan37J1000" by up to 9.3×10⁻⁹ (K = 17, the Padé crossing `pade10/6`) and 3.3×10⁻⁸ (K = 18, `pade11/6`) against
 the 10⁻⁹ written for a same-data reproduction; the arg crossings move by at most 1.6×10⁻¹⁰, the ratio estimates by
 5.0×10⁻⁹, G by 1.1×10⁻⁹. The cause, found before this was written (`noise_test.py` and its log in the raw-data
-repository's `planted-k19-mac/nodes/`): the two data sets' σ₀…σ₁₈ differ by at most 1.7×10⁻¹³ of |σ_k| (section 11.2)
+repository's `planted-k19-mac/nodes/`): the two data sets' σ₀…σ₁₈ differ by at most 1.7×10⁻¹³ of |σ_k| (section 11.1)
 and the estimators amplify that. The 960-bit data with Gaussian noise of each σ_k's own plateau error (k = 1…18,
 20 seeds, through the same harness) move those two Padé crossings by an rms of 1.7×10⁻⁷ and 9.3×10⁻⁷, ratio₁₇ and
 ratio₁₈ by 5.4×10⁻⁸ and 8.3×10⁻⁸, arg₁₇ and arg₁₈ by 2.1×10⁻⁹ and 2.8×10⁻⁹; every observed difference is at most 0.61
@@ -2027,7 +2027,7 @@ repository's `planted-k19-mac/real/`; the record in `planted_checks_k19.json`, "
   |d − b|: 2.94×10⁻²⁶, 2×10⁻³³, 4×10⁻³³, 1.94×10⁻²⁷ (the precision effect). The amended err19 at wf 1.00 is
   6.17×10⁻²⁷; the amended item 1(a) at the other two nodes waits for T89's node runs.
 
-### 11.2 σ₁₉ under the second amendment: items 1(a″), (b″) and (d) pass
+#### 11.1, continued: σ₁₉ under the second amendment, items 1(a″), (b″) and (d) pass
 
 The `converge` stage ran under `--nodes scan41J1250` on 2026-10-31 04:38 UTC (logs in the raw-data repository's
 `planted-k19-mac/nodes/`; the record "K19 converge" in `planted_checks_k19.json`; the (a′) run of 04:23 UTC that
@@ -2057,7 +2057,7 @@ stopped the work is "K19 converge under (a')" there and `real/converge_amend.log
   some four hours under a system indexer that took five of the cores (comms, 2026-10-30 07:16 and 13:02 UTC). The
   wf 1.00 runs' times are in section 12.0.
 
-### 11.3 The pipeline on plants first
+### 11.2 The pipeline on plants first
 
 51 plants at K = 17, 18, 19 (11.8 min in all), before the real data. All four checks pass:
 - the regenerated plants' K = 17 and 18 estimates equal the stored K = 18 records exactly (both runs on the Mac; the
@@ -2066,7 +2066,7 @@ stopped the work is "K19 converge under (a')" there and `real/converge_amend.log
   ω_t + 0.002 it fails, as it must;
 - N2, 2/2: no estimator prints a number.
 
-### 11.4 The real estimates at K = 19
+### 11.3 The real estimates at K = 19
 
 The record "N0 scan41J1250" (the 1280-bit node data, second amendment), run 2026-10-31 04:51 UTC and read under the
 third amendment at 05:04 UTC (`nodes/real.log`, `nodes/real_mutate_real.log`; "K19 real" in `planted_checks_k19.json`).
@@ -2098,6 +2098,127 @@ third amendment at 05:04 UTC (`nodes/real.log`, `nodes/real_mutate_real.log`; "K
   ring test coincide.
 - **The mutation controls fire.** σ₁₉ → −σ₁₉ at wf 1.00 fires D-G; σ₁₉ × (1 + 10⁻³) fires D-G and D-arg. Each moves the
   estimates by about 10⁻².
+
+### 11.4 The ring test: what each K = 18 completion predicted for σ₁₉
+
+Every completion was regenerated first and reproduces its stored zero to the printed digits, and its K = 17 (or
+K = 17, 18) estimates equal the stored 960-bit record exactly (fourth amendment). The benchmark, the simple-zero law
+from τ₁₇, τ₁₈, misses τ₁₉ by 1.6–2.9×10⁻⁵. D-bracket fires on the real data at K = 19 (section 11.3), so the two readings
+of item 4 coincide at this order by construction. Run 2026-10-31 05:10 UTC (`nodes/ring.log`; "K19 ring test").
+
+| completion (K = 18) | its zero | zeros in \|x\| < 7.3 / 12 / 16 | σ₁₉ rel. error | τ₁₉ rel. error | its arg₁₉ | detectors beyond the real data's | survives | without D-bracket |
+|---|---|---|---|---|---|---|---|---|
+| C18-W1, W2, W3 (ratio law) | 1.00037–1.00052 | 7–8 / 17 / – | 6.7–9.9×10⁻³ | 0.95–1.5 | none | D-G, D-arg | no | no |
+| C18-ARC, four shapes | 0.99993–1.00009 | 3–5 / 15 / – | 7.5×10⁻⁴–2.2×10⁻³ | 0.11–0.31 | 0.987–1.003 | D-G (mirror also D-arg) | no | no |
+| **C18-BP [3/15]** (ring of 9) | 0.9999986 | 0 / 9 / 13 | 3.2–3.3×10⁻⁶ | 4.5–5.5×10⁻⁴ | 0.999979 | D-G | **no** | **no** |
+| **C18-BP [4/14]** (ring of 6) | 0.9999997 | 0 / 6 / 13 | 3.4–5.5×10⁻⁷ | 5.7–7.9×10⁻⁵ | 0.9999985 | D-G | **no** | **no** |
+| **C18-BP [5/13]** (ring of 2) | 1.0000004 | 0 / 2 / 11 | 2.3–3.2×10⁻⁷ | 3.9–4.5×10⁻⁵ | 1.0000034 | D-arg | **no** | **no** |
+| C18-BP [6/12] | 1.0000002 | 0 / 1 / 11 | 5.9–6.3×10⁻⁸ | 8.9–9.8×10⁻⁶ | 1.0000018 | – | yes | yes |
+| C18-BP [7/11] | 0.99999997 | 0 / 1 / 7 | 0.9–2.0×10⁻⁸ | 1.5–2.9×10⁻⁶ | 1.0000016 | – | yes | yes |
+| C18-BP [8/10], [9/9] | 0.99999998 | 0 / 1 / 5 | 4.1–5.0×10⁻⁹ | 6.8–7.0×10⁻⁷ | 1.0000015 | – | yes | yes |
+| C17-BP [6/11] | 1.0000004 | 0 / 1 / 10 | 6.0–6.1×10⁻⁷ | 1.9–2.1×10⁻⁵ | 1.0000022 | D-G | no | no |
+| C17-BP [7/10], [8/9] | 1.0000002, 0.9999999 | 0 / 1 / 6–7 | 5.9×10⁻⁸–3.0×10⁻⁷ | 3.0–9.6×10⁻⁶ | 1.0000013–1.0000019 | – | yes | yes |
+
+- **All ten rings of the K = 18 generation are rejected by σ₁₉ under both readings:** the three ratio-law tails and
+  the four arcs (zeros 15–17 in |x| < 12) miss σ₁₉ by 10⁻³–10⁻², and the three Borel–Padé rings, C18-BP [3/15], [4/14]
+  and [5/13], by 3.3×10⁻⁶, 5.5×10⁻⁷ and 3.2×10⁻⁷ at worst, each firing D-G or D-arg. Nothing is carried over to the
+  K = 20 test (section 12.0 item 4).
+- **The ring-free C18-BP sums predicted σ₁₉ to 4×10⁻⁹–6×10⁻⁸** ([6/12] to [9/9]), a hundred to a thousand times
+  better than the benchmark, and survive; of the earlier calibration family, C17-BP [6/11] (σ₁₉ off by 6×10⁻⁷) fires
+  D-G and C14-BP [5/9] and C13-BP [5/8] fire D-arg, the rest survive.
+- **D-bracket** fires on the real data at this order, so it rejects nothing (section 11.3): the primary and the second
+  reading of item 4 agree on every row, as they did on every ring at K = 17 and 18. The rule stays as item 4 fixed it.
+
+### 11.5 Calibration at K = 19
+
+Errors ×10⁴ of each estimator on the plants (worst to best), and the zero each implies for the real data; the K = 18
+calibration from the new records reproduces section 10.5 (arc 0.999992–1.000002, BP family of twelve
+0.999992–1.000004). Run 05:11 UTC (`nodes/calib.log`; "K19 calib").
+
+| plants | n | arg crossing → zero | ratio → zero | central Padé mid → zero | G → zero |
+|---|---|---|---|---|---|
+| all 28 arc plants | 28 | −0.03…+0.05 → 0.999996–1.000004 | −0.87…−0.20 → 1.000006–1.000072 | −0.01…+0.08 → 0.999995–1.000004 | 0.00 → 0.999999–1.000000 |
+| BP family (16) | 16 | +0.01…+0.06 → 0.999996–1.000000 | −1.08…+1.34 → 0.999852–1.000093 | −0.35…+0.20 → 0.999983–1.000038 | −0.03…+0.01 → 0.999999–1.000003 |
+| C-EXP | 1 | −0.01 → 1.000003 | +0.25 → 0.999961 | +0.24 → 0.999979 | 0.00 → 0.999999 |
+| REFIT (resid ≤ 10⁻⁴) | 5 | +0.03…+0.04 → 0.999997–0.999998 | −0.53…−0.38 → 1.000024–1.000039 | −0.04…0.00 → 1.000002–1.000007 | 0.00 → 0.999999–1.000000 |
+
+- The arg crossing's error on the arc plants is at most 0.05×10⁻⁴ either way, the narrowest at any order; the ratio
+  estimate's error keeps its sign (all 28 arc plants low by 0.20–0.87×10⁻⁴), G's is below 0.005×10⁻⁴ on every arc
+  plant, and the Padé mid's spans ±0.08×10⁻⁴ on them and −0.35…+0.20×10⁻⁴ on the BP family.
+- The arc plants' σ₁₈ and σ₁₉ differ from the measured ones by 0.5–1.8% and 1.4–2.7% (worst node), C-EXP's by 0.25%
+  and 0.55%, the REFIT plants' by 0.5–12% and 0.9–16%: the plants are not fits to σ₁₈, σ₁₉, and the calibration reads
+  their estimators' errors, not their coefficients'.
+
+### 11.6 The next generation and the ring-free completions at K = 19
+
+Glued at σ₁₉ (tails from k = 20); zeros counted at wf 1.00. Run 05:11 UTC (`nodes/recomplete.log`; "K19 recomplete").
+
+| completion (K = 19) | its zero | zeros in \|x\| < 7.3 / 12 / 16 | type rule |
+|---|---|---|---|
+| C19-W1, W2, W3 (ratio law, windows 6–18, 8–18, 9–18) | 1.00010–1.00016 | 7 / 18 / – | – |
+| C19-ARC, four shapes (best ω_t 0.99996–1.00032, L2 floor 1.1–2.5×10⁻³) | 0.99993–1.00001 | 2–5 / 16 / – | – |
+| C19-BP [3/16] | 0.9999994 | 0 / 9 / 14 | passes (largest pole \|t\| = 1.70) |
+| C19-BP [4/15] | 1.00000003 | 0 / 5 / 13 | passes (1.74) |
+| C19-BP [5/14] | 1.00000007 | 0 / 4 / 11 | passes (1.72) |
+| C19-BP [6/13] | 1.00000009 | 0 / 1 / 13 | passes (1.75) |
+| C19-BP [7/12] | 0.99999998 | 0 / 1 / 7 | passes (1.78) |
+| C19-BP [8/11] | 0.99999999 | 0 / 1 / 4 | passes (1.78) |
+| C19-BP [9/10] | 0.99999999 | 0 / 1 / 5 | passes (1.79) |
+
+- **Ring-free and passing the type rule, in this order: C19-BP [6/13], [7/12], [8/11], [9/10],** with zeros at
+  0.99999998–1.00000009, on both sides of 1 and within 10⁻⁷ of it. The first of them, C19-BP [6/13], is the sum
+  section 12.0 item 0 names for its dry run.
+- **The next generation's rings,** C19-BP [3/16], [4/15] and [5/14] (9, 5 and 4 zeros in |x| < 12, their own zeros
+  0.9999994–1.00000007) and the ratio-law and arc tails (16–18 zeros), are tested by σ₂₀ (section 12).
+
+### 11.7 The order-19 projection
+
+The model est_k = ω* + c r^k through k = 17 and 18 predicts arg₁₉ − 1 = +1.27×10⁻⁶ for ω* = 1, +0.62×10⁻⁶ for
+0.999992 and +0.41×10⁻⁶ for 0.999975; the real value is +1.52×10⁻⁶, 0.25×10⁻⁶ from the first, 0.90×10⁻⁶ from the second
+and 1.11×10⁻⁶ from the third. The model's own error is 3.4×10⁻⁶ (its largest miss over k = 16–18 on the real data,
+2.7–3.4×10⁻⁶ depending on ω*, and over the arc plants at k = 19, −2.6…+0.9×10⁻⁶), so the projection favours ω* = 1 but
+is not decisive, as at K = 15–18. The log-linear trend of arg_k − 1 over k = 4–19 falls ×0.540 per order (×0.539 over
+k = 4–18) and puts arg₁₉ − 1 at 1.3×10⁻⁶, where it is. Under noise of size sigma_err on every σ_k (20 seeds), arg₁₉
+moves by at most 2.6×10⁻¹⁰. Run 05:11 UTC (`nodes/project.log`; "K19 project").
+
+### 11.8 Combination
+
+- K = 19 estimator range (hull): the calibrated arg over the arc plants, 0.999996–1.000004; over the BP family of
+  sixteen, 0.999996–1.000000; the ring-free completions, 0.99999998–1.00000009. **The hull is 0.999996–1.000004.**
+- It overlaps the K = 18 headline (0.999975–1.000050), so by section 11.0 item 7 the headline is their union,
+  **0.999975–1.000050, unchanged.** The K = 19 range lies inside the K = 18 one (0.999992–1.000004), at its upper end;
+  the range from the last two orders alone, reported as context by item 7, is 0.999992–1.000004, and K = 17–19 would
+  give 0.999990–1.000009. An estimator range, not a bound.
+- G, with its spread: production 0.9999995 at K = 19 (0.9999987 at K = 18); over the minima of its objective within a
+  factor 5 of the best, 0.999998–1.000001 (0.999999–1.000010 at K = 18); its global minimum 0.999998 (1.000010).
+  Run 05:12 UTC (`nodes/combine.log`; "K19 combine").
+
+### 11.9 Verdict at K = 19
+
+- σ₁₉ is converged to 4.5–5.6×10⁻¹³ relative at the three nodes on the 1280-bit node data of the second amendment (at
+  960 bits the wf 0.99 node reached 8.0×10⁻¹¹, and its amended error failed item 1, which is why the data changed) and
+  continues every trend of σ₀…σ₁₈.
+- The real estimates sit within 3×10⁻⁶ of 1 on both sides of it: arg 1.0000015, G 0.9999995, central Padé mid
+  1.0000029 (the [3/15] approximant at 1.000006 widens the range upward; [4/14]–[14/4] lie within 2×10⁻⁶ of 1); the
+  ring-free sums of σ₀…σ₁₉ sit at 0.99999998–1.00000009.
+- The calibrated range narrowed from 0.999992–1.000002 (arc plants, arg, K = 18) to 0.999996–1.000004, and the K = 19
+  hull is 0.999996–1.000004, a width of 0.8×10⁻⁵ against 1.2×10⁻⁵ at K = 18 and 1.9×10⁻⁵ at K = 17. The headline
+  union stays 0.999975–1.000050 because the procedure keeps the earlier orders' ranges; the last two orders alone give
+  0.999992–1.000004, and K = 17–19 would give 0.999990–1.000009.
+- ω∞ = 1 lies inside every range, as at K = 13–18. The order-19 projection puts ω* = 1 closest to arg₁₉ (0.25×10⁻⁶,
+  against 0.90×10⁻⁶ for a zero at the lower end of the K = 18 range), but the model's own error, 3.4×10⁻⁶, is larger
+  than both: the data still do not decide between 1 and a value 10⁻⁵ below it, and the arg crossing's approach to 1
+  has slowed (×0.44, ×0.53, ×0.63 per order over the last three).
+- All ten rings of the K = 18 generation, C18-W1–3, the four C18-ARC tails and C18-BP [3/15], [4/14], [5/13], are
+  rejected by σ₁₉ under both readings, as every ring of the K = 16 and 17 generations was by σ₁₇ and σ₁₈. So σ₀…σ₁₉
+  exclude every ring built so far, nearer than x₀ or just beyond it, from any number of coefficients up to eighteen.
+  The next generation (C19-BP [3/16], [4/15], [5/14], zeros 0.9999994–1.00000007) is tested by σ₂₀ (section 12).
+- D-bracket fires on the real data at this order, so the two readings of item 4 coincide; it decided nothing at K = 19.
+- The procedure took four dated amendments after T89's nodes landed (the end of section 11.0): the pre-named fallback
+  to the 1280-bit node data when item 1's amended error failed at wf 0.99, and three readings of reproduction checks
+  written for identical inputs, each with its cause found and a mutation that fires before the stage reran. Between the
+  two data sets the K = 17, 18 estimates differ by at most 3.3×10⁻⁸, below every digit quoted here.
+
 
 
 
