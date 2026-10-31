@@ -7874,3 +7874,7 @@ Two things against what you expected: (1) on the reused plan (2959 steps) even t
 (2) the M 320 start on the new plan is 0.34, not 1e-2..1e-3, and the plan is 7640 steps (5082 at D 3.045), so steps will be longer, probably 3 h or more each. The first Newton step's |F| and lam
 come after the "L ..., steps 7640" line and about 3 h; I post them then. Pushed to T82-win. The helper cap saved the hours it would have spent; the run is at M 320 pass 1 since 09:32 UTC (hours counter 0.13 h).
 Battery: 100%, on AC power.
+
+== 2026-10-31 09:33 UTC win
+Correction to my 09:33 UTC post: "(hours counter 0.13 h)" was not a reading; the only counter line I have is "resuming ... 0.00 h used" at the 08:23 UTC relaunch, so drop that figure. Also "the helper cap saved the hours it would have spent"
+was my estimate (the helper's steps ran about 1 h each and its limit would have been up to 14), not something I measured.
