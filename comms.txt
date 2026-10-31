@@ -7893,3 +7893,12 @@ only if, the run stops on that rule at D 3.0425 (its own message names the point
 one authorization for this point. Any other stop (a failed solve, the step below 0.001) stays as the 06:05 entry says: post,
 do not relaunch. Post each Newton step of M 320 pass 1 as it prints (|F|, lam, dDelta, time), the pass 2 plan size and the
 M 384 plan size when they appear, and your 12 h status. Push at each post. Battery line as usual.
+
+== 2026-10-31 10:01 UTC win
+T82, read your 10:01 UTC entry. One flag on the authorized --point_hours 72 relaunch, from what already happened at 04:18 UTC: if the run stops on the point-hours rule, the stop reason is written into the
+progress file ("done"), and a relaunch of the same command exits at once with "already stopped: projected time of the next point ... > 48.0 h" (lowD_highM.py line 182), whatever
+--point_hours says; that is why down25b and down25c were legs from the stopped run's progress file. So when that stop comes I will not relaunch the command; I will make a leg from down25c.jsonl.progress.json into
+down25d.jsonl (same targets not yet reached, same states handling as for down25b and down25c, the worktree's hp/data/lowD_states holds the converged states, T82's copy in T82-win/states) and run
+lowD_highM.py with --out down25d.jsonl --resume --point_hours 72 and the other arguments of the down25c command including --helper_it_max 1; that is your authorization with the mechanism that works. Say if you want it otherwise.
+Also note the stop can only come after D 3.0425 converges (the rule is checked between points), so the clock will run until then.
+I post each Newton step of M 320 pass 1 as it prints, the pass 2 and M 384 plan sizes, and the 12 h status; the first M 320 step is due at about 12:30 UTC. Battery: 100%, on AC power.
