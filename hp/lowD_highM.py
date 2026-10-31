@@ -56,7 +56,8 @@ point would end after them.
 Restarts: every Newton step is checkpointed and every converged solve saved (lowD_dd.solve_point); the progress file
 <out>.progress.json holds the continuation state, including a pending move up or re-noding; rerun the same command
 with --resume to continue from the last converged point (a converged (D, M) is not solved again, a pair is not
-recorded twice).
+recorded twice). A run that stopped on one of its rules keeps the stop in the progress file, and a rerun with wider
+limits exits at once; lowD_highM_leg.py continues it from its last point (T82, 2026-10-31).
 Records: one per solve in --points (lowD_dd.solve_point's record: Delta hi/lo, |F|, iterations, seconds per
 iteration, steps, tails, sensitivities, harmonics, peak RSS), one per point and resolution pair in --out (D, M_w,
 M_n, both Deltas, the difference, |F|, iterations, seconds, tails, the decision). States:

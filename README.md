@@ -135,14 +135,14 @@ Contents
 
 ## Results
 
-![Echo period Δ(D) and critical exponent γ(D) with one rational formula for all D ≥ 4, and the double-double points from D = 3.0475 to 73.3](solver/delta.svg)
+![Echo period Δ(D) and critical exponent γ(D) with one rational formula for all D ≥ 4, and the double-double points from D = 3.045 to 73.3](solver/delta.svg)
 
 The echo period Δ(D) and critical exponent γ(D), computed with the f64 solver in [`solver/`](solver/) (its residual is the
 Rust kernel of [Software](#software-the-rust-kernel)) and the double-double solver in [`hp/`](hp/).
 The dashed curves are one rational formula in 1/(D−2) for every D ≥ 4 (below), fitted on the f64 points
 4 ≤ D ≤ 30.2 whose integration-step error has been extrapolated out ("step-converged"), with the solver's near-null
 directions resolved and enough Fourier modes in time at low D;
-hollow points are held out of the fit. The green diamonds are double-double points from D = 3.0475 to 67.77 (below D = 4
+hollow points are held out of the fit. The green diamonds are double-double points from D = 3.045 to 67.77 (below D = 4
 the formula does not apply); above D = 30.2 it matches them to 9.6×10⁻⁸. The amber diamonds are the pinned
 double-double runs: T73 and T75 from D = 67.74 to 73.27 (Δ after one full-system Newton step), which it matches to
 7.4×10⁻⁸, and T85 past 73.27 in a layout with the last node moved toward the horizon, where Δ is known only to about
@@ -264,8 +264,9 @@ run reached D = 3.05 at M = 320/384, Δ = 2.4849271637881, where the step from M
 resolution step, not a bound; [notes/HIGH_M.md](notes/HIGH_M.md)). Below it the continuation at steps of 0.0025
 (`hp/lowD_highM.py` from that run's states, on the Windows machine; its records are in the raw-data repository's folder
 T82-win, which `hp/export_lowD.py` reads) has
-reached D = 3.0475 at M = 320/384, Δ = 2.4660121465217, with the step from M = 320 to 384 3.8×10⁻¹¹, 1.8 times the step at 3.05;
-a first attempt with the step 0.005 (D = 3.045) crawled in Newton at M = 320 and was stopped (T82-win/down5.log).
+reached D = 3.045 at M = 320/384, Δ = 2.4464747274662, with the step from M = 320 to 384 6.7×10⁻¹¹, 3.2 times the step at 3.05;
+the run then stopped on its own time rule and continues as the leg `down25b` in the same folder. A first attempt that went from
+3.05 to 3.045 in one step of 0.005 crawled in Newton at M = 320 and was stopped (T82-win/down5.log).
 
 ![Below D = 4: every double-double value of Delta and gamma so far against the sqrt(D - 3) formula, and how much Delta moves when the tau resolution is raised](hp/lowD_values.svg)
 
@@ -780,7 +781,7 @@ ran there. Above D = 8.25 each accepted continuation point's Newton solve takes 
 graph. The machines differ (the cloud's 2 shared cores, the laptop's 4–6 threads, the Mac's 4 performance cores, from
 D = 61.63 at a median of 25 s), so this shows the effort, not a benchmark.
 
-![How far apart in D our solved points are: the low-D grid down to D = 3.0475, and the continuation's adaptive step from D = 8.25 to 67.79, by machine](hp/point_spacing.svg)
+![How far apart in D our solved points are: the low-D grid down to D = 3.045, and the continuation's adaptive step from D = 8.25 to 67.79, by machine](hp/point_spacing.svg)
 
 **How far apart the points are** (`hp/plot_point_spacing.py`). Below D = 4: the distance from each point to the next
 one below it, on a grid we chose, mostly 0.05 apart and halved to 0.0125 and 0.00625 toward D = 3. From D = 8.25 up
@@ -2500,7 +2501,7 @@ hp/                 double-double solver (crate hpkernel)
 │                       value at that D agrees within its stated uncertainty (published_ref, published_diff,
 │                       published_match; data/published_delta.csv); the continuation points (857 for D = 8.25-61.03, 342 from
 │                       the continuation toward 70 for 61.04-67.77, runs T48-pilotB and T48-up70) and the
-│                       best low-D value per D (run lowD-M<M>, D = 3.0475-4.0), which the large-D fits skip;
+│                       best low-D value per D (run lowD-M<M>, D = 3.045-4.0), which the large-D fits skip;
 │                       dDelta_exact on T48-up70's rows (the remaining correction with a quad-double horizon residual)
 ├── data/delta_dd_lowD.csv   the low-D points at every M, with gamma and status (export_lowD.py)
 ├── data/fit_residuals.csv   each continuation point from D = 10 up minus the degree-18 1/(D-1) fit (fit_residuals.py)

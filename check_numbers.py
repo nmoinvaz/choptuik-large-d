@@ -119,7 +119,7 @@ def qd_values():
 
 @check
 def lowD_305():
-    """README "Below D = 4": T45's lowest point, D = 3.05 at M = 384, its step from M = 320, and T82's D = 3.0475
+    """README "Below D = 4": T45's lowest point, D = 3.05 at M = 384, its step from M = 320, and T82's D = 3.045
     (hp/data/delta_dd_lowD.csv, hp/export_lowD.py reading the raw-data folder T82-win)"""
     rows = [r.rstrip("\n").split(",") for r in open(os.path.join(ROOT, "hp/data/delta_dd_lowD.csv")) if r[:1].isdigit()]
     r = [c for c in rows if float(c[0]) == 3.05 and c[1] == "384"][0]
@@ -127,14 +127,14 @@ def lowD_305():
            ("README.md", "and the step from 320 to 384 is 2.1×10⁻¹¹, 56 times smaller")]
     step = float(r[7])
     prev = [c for c in rows if float(c[0]) == 3.05 and c[1] == "320"][0]
-    r2 = [c for c in rows if float(c[0]) == 3.0475 and c[1] == "384"][0]
-    t2 = [("README.md", "reached D = 3.0475 at M = 320/384, Δ = 2.4660121465217, with the step from M = 320 to 384 3.8×10⁻¹¹, 1.8 times the step at 3.05")]
+    r2 = [c for c in rows if float(c[0]) == 3.045 and c[1] == "384"][0]
+    t2 = [("README.md", "reached D = 3.045 at M = 320/384, Δ = 2.4464747274662, with the step from M = 320 to 384 6.7×10⁻¹¹, 3.2 times the step at 3.05")]
     return [("D 3.05 Delta", float(r[2]) + float(r[3]), 2.4849271637881, 1e-13, txt),
             ("D 3.05 step 320 -> 384", abs(step), 2.1e-11, 1e-12, txt),
             ("ratio of the steps 256/320 and 320/384", abs(float(prev[7]) / step), 56, 1, txt),
-            ("D 3.0475 Delta (T82)", float(r2[2]) + float(r2[3]), 2.4660121465217, 1e-13, t2),
-            ("D 3.0475 step 320 -> 384", abs(float(r2[7])), 3.8e-11, 1e-12, t2),
-            ("ratio of the 3.0475 and 3.05 steps 320 -> 384", abs(float(r2[7]) / step), 1.8, 0.1, t2)]
+            ("D 3.045 Delta (T82)", float(r2[2]) + float(r2[3]), 2.4464747274662, 1e-13, t2),
+            ("D 3.045 step 320 -> 384", abs(float(r2[7])), 6.7e-11, 1e-12, t2),
+            ("ratio of the 3.045 and 3.05 steps 320 -> 384", abs(float(r2[7]) / step), 3.2, 0.1, t2)]
 
 
 @check

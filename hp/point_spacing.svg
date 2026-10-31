@@ -36,6 +36,7 @@
 <line x1="80.0" y1="104.0" x2="80.0" y2="344.0" stroke="#52514e" stroke-width="1"/>
 <text x="556.0" y="378.0" font-size="12" fill="#0b0b0b" text-anchor="middle" font-weight="normal">dimension D</text>
 <text x="30.1" y="224.0" font-size="12" fill="#0b0b0b" text-anchor="middle" transform="rotate(-90 30.1 224.0)">ΔD to the next point (log scale)</text>
+<circle cx="125.2" cy="334.3" r="4" fill="#2a78d6"><title>D = 3.0475: 0.0025 from D = 3.045 (run lowD)</title></circle>
 <circle cx="127.6" cy="334.3" r="4" fill="#2a78d6"><title>D = 3.05: 0.0025 from D = 3.0475 (run lowD)</title></circle>
 <circle cx="133.5" cy="294.5" r="4" fill="#2a78d6"><title>D = 3.05625: 0.00625 from D = 3.05 (run lowD)</title></circle>
 <circle cx="139.5" cy="294.5" r="4" fill="#2a78d6"><title>D = 3.0625: 0.00625 from D = 3.05625 (run lowD)</title></circle>
@@ -71,9 +72,9 @@
 <circle cx="822.6" cy="243.9" r="4" fill="#2a78d6"><title>D = 3.78: 0.02 from D = 3.76 (run lowD)</title></circle>
 <circle cx="841.6" cy="243.9" r="4" fill="#2a78d6"><title>D = 3.8: 0.02 from D = 3.78 (run lowD)</title></circle>
 <circle cx="1032.0" cy="143.8" r="4" fill="#2a78d6"><title>D = 4: 0.2 from D = 3.8 (run lowD)</title></circle>
-<circle cx="127.6" cy="334.3" r="10" fill="none" stroke="#0b0b0b" stroke-width="1.5"/>
-<line x1="135.5" y1="328.2" x2="161.6" y2="308.3" stroke="#0b0b0b" stroke-width="1"/>
-<text x="165.6" y="312.3" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="bold">steps of 0.0025 down to D = 3.0475, the lowest point</text>
+<circle cx="125.2" cy="334.3" r="10" fill="none" stroke="#0b0b0b" stroke-width="1.5"/>
+<line x1="133.2" y1="328.2" x2="159.2" y2="308.3" stroke="#0b0b0b" stroke-width="1"/>
+<text x="163.2" y="312.3" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="bold">steps of 0.0025 down to D = 3.045, the lowest point</text>
 <text x="1064.0" y="436.0" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="normal">Mac, Apple M5</text>
 <circle cx="971.1" cy="432" r="4.5" fill="#e87ba4"/>
 <text x="955.1" y="436.0" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="normal">Windows i7-1185G7</text>
