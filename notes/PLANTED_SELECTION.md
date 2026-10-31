@@ -2519,17 +2519,17 @@ sigma_err on every σ_k (20 seeds), arg₂₀ moves by at most 4.2×10⁻¹⁰. 
 ### 13.0 Procedure, fixed before any K = 21 estimate was computed
 
 Written and committed before any σ₂₁ existed. Known at this point (2026-10-31 08:24 UTC): no K 43 run has started.
-T94, the σ₂₁ campaign, is queued as the Mac's follow-on to T93 (comms entry of 2026-10-31 05:27 UTC): (a) wf 1.00, K 43, J 1250 at
-1280 bits and (b) wf 1.00, J 1500 at 1280 bits, about 14 and 16 h of awake time, then the nodes wf 0.99 and 1.01 (K 43,
-J 1250, 1280 bits, about 16 h each) once (a) passes the pilot gate the comms entry of 2026-10-29 02:16 UTC fixed
-(ruling 1: `sigma_err_fit.py` exit 0, err21 ≤ 10⁻¹⁰ |σ₂₁|; ruling 2: a σ₂₁ difference between (a) and (b) beyond err21 is posted
-and not a stop; and (a)'s σ₀…σ₂₀ bitwise `scan41J1250`'s wf 1.00 file, 21 of 21 strings). What that gate says when
-the pilots land is added to this paragraph with its date, before any estimator runs at K = 21: it is the gate's reading,
-not an estimate. The K = 20 stages are complete (sections 12.1–12.10), so everything this section needs from the lower
-orders is on record: the K = 20 records `planted_results_k20.jsonl` and checks `planted_checks_k20.json`, section
-12.7's completions and the ring-free sums it names. The procedure is section 12.0's one order up, with its amendment
-written into item 1(b) and item 3 from the start, and the changes section 12's findings call for, stated here before
-the data:
+T94, the σ₂₁ campaign, is queued as the Mac's follow-on to T93 (comms entry of 2026-10-31 05:27 UTC): (a) wf 1.00, K
+43, J 1250 at 1280 bits and (b) wf 1.00, J 1500 at 1280 bits, about 14 and 16 h of awake time, then the nodes wf 0.99
+and 1.01 (K 43, J 1250, 1280 bits, about 16 h each) once (a) passes the pilot gate the comms entry of 2026-10-29 02:16
+UTC fixed (ruling 1: `sigma_err_fit.py` exit 0, err21 ≤ 10⁻¹⁰ |σ₂₁|; ruling 2: a σ₂₁ difference between (a) and (b)
+beyond err21 is posted and not a stop; and (a)'s σ₀…σ₂₀ bitwise `scan41J1250`'s wf 1.00 file, 21 of 21 strings). What
+that gate says when the pilots land is added to this paragraph with its date, before any estimator runs at K = 21: it
+is the gate's reading, not an estimate. The K = 20 stages are complete (sections 12.1–12.10), so everything this
+section needs from the lower orders is on record: the K = 20 records `planted_results_k20.jsonl` and checks
+`planted_checks_k20.json`, section 12.7's completions and the ring-free sums it names. The procedure is section 12.0's
+one order up, with its amendment written into item 1(b) and item 3 from the start, and the changes section 12's
+findings call for, stated here before the data:
 
 0. **Dry run of the stages on a synthetic σ₂₁.** Before any K 43 file is used, `planted_k21_dry.py` writes scan files
    whose σ₀…σ₂₀ are the real ones (`scan41J1250`'s, the 1280-bit node data of section 12) and whose σ₂₁ at each node is
