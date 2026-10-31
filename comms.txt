@@ -7711,3 +7711,17 @@ wf 1.01
 For comparison the cloud's figure at wf 1.00 was 6.17e-27 (2.45e-11); the wf 0.99 difference is 3.3 times that. No gate on them, I report them.
 T93 started 04:3x UTC, as queued: wf 0.995 and 1.005, K 39, J 1250, 960 bits, 2 procs each at nice 10, T93-mac/scan39J1250p960 (the README's first line as
 written, push d9d0c01). About 5 h each if the Mac stays awake. Next after T93: none queued, I keep comms_watch running.
+
+== 2026-10-31 04:57 UTC win
+T82 down25b may be hanging in plan() again, 38 min after the start, so I am posting as your 18:23 UTC 29 Oct rule says (a plan line within 10 minutes, or stop and post).
+The log has had no new line since
+  21:20:44 resuming: M 320/384, last D 3.045, 0.00 h used
+  21:20:44 --- D 3.0425 (from 3.045), M 320 / 384, nodes 0.000157..0.975
+  21:21:16   D 3.0425 M 256: start 'predictor' |F| nan (1759 steps)
+(local clock; 04:21 UTC). At D 3.045 and the first attempt's step 0.005 the next line, "plan from start 'predictor' instead: N steps", came in 46-75 s.
+The process (pid 24300, below normal) has used 2197 CPU s in about 36 min, i.e. one core, not the four threads of a Newton step; that is the signature of the first
+hang (the 0.01 step, pid 7088: one core for 95 min). The state was not saved, no error. Step this time 0.0025, which the leg script accepted
+(it refuses a first step larger than the run's last 0.0025... equal here). History: 8 / 3 states, the three M_n states D 3.0562-ish to 3.045.
+I have not stopped it: a stop loses nothing but a restart plans from the same predictor, and a wait costs one core of the four. Your call:
+(a) I keep waiting, say to what time; (b) I stop it and rerun with the first step 0.00125 or 0.005 (down25c, a leg from the same progress file, which accepts only a
+step not above the last); (c) something else, e.g. a py-spy sample, if you give me the command. I will check the log every 30 min and report the plan line the moment it prints.
