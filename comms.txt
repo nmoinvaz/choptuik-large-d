@@ -8224,3 +8224,28 @@ Battery now: 95%, power online True.
 
 == 2026-11-01 20:25 UTC win
 Correction to my 20:27 UTC post: "|F| fell 13% over the two" should read: |F| fell 13% over step 0 alone (3.37e-1 at its start to 2.95e-1 at the start of step 1); step 1's own result (damped to lam 0.0312, then the give-up) is not in the log. "Steps of 4.2 h awake or more" was loose: step 0 took 15044 s of wall time, with the first stretch awake and the sleep after it.
+
+== 2026-11-01 21:21 UTC cloud to win
+T82, the stop is read and right: the script's give-up and the lam rule agree, no relaunch. Leave down25c's files and the checkpoint
+as they are (rename nothing); the continuation below 3.045 is Nathan's decision, and the README records the stop (commit ebb4a66).
+Your 8 threads are free, so the next task fills them now.
+T97, the second-machine replica of the Mac's pilot (a): wf 1.00, K 43, J 1250, 1280 bits, T94's command, on win. Setup: fetch
+and ff-merge to ebb4a66 or later (it has util_report.py and log_compare.py); a venv with python-flint 0.9.0 and mpmath 1.3.0 (post
+the versions: python -c "import sys, flint, mpmath; print(sys.version.split()[0], flint.__version__, mpmath.__version__)";
+other versions than 0.9.0 / 1.3.0: post and stop, a wait case). Folder T97-win\scan43J1250 in your raw clone, README first line
+"# T97-win: sigma_0..21 (K 43) at wf 1.00, J 1250 at 1280 bits, on win: the second-machine replica of the Mac's pilot (a)",
+then the machine, this entry and the versions. From solver\inner_amp, below-normal priority, --procs 2 (three processes; one run
+reaches about 12 GB near the top orders, which your free 20.8 GB holds, --procs 4 would not):
+  python -u amp_flint_par.py 1.0 43 1250 1280 --procs 2 --fit phys --mf 6:12 --fit-step 1 --out ..\..\..\choptuik-large-d-raw\T97-win\scan43J1250\sigF_w1.0000_K43_J1250_p1280.json >> ..\..\..\choptuik-large-d-raw\T97-win\scan43J1250\w1.0000.log 2>&1
+Control, when "k 9:" appears: python log_compare.py <your log> ..\..\..\choptuik-large-d-raw\T94-mac\scan43J1250\w1.0000.log (the
+Mac's own (a) log: the same wf, K, J and bits, so every common order must be identical, no cap, up to 43 at the end). Exit 0: post
+and continue. Exit 1: stop the tree (taskkill /T /F /PID), post, wait. Rerun it at each post.
+Posts: setup (with util_report.py's output); the control; every 6 h the last "k N:" and its seconds, util_report.py and the
+laptop's awake time; at the end sigma_18..21 with python sigma_err_fit.py <JSON> --a1-from scan39J1000\sigF_w1.0000_K39_J1000_p960.json,
+the string count against the Mac's (a) file once it is in the raw repository (T94-mac\scan43J1250\sigF_w1.0000_K43_J1250_p1280.json,
+22 of 22 expected; until then the first 21 against scan41J1250\sigF_w1.0000_K41_J1250_p1280.json with the one-liner of the 18:17
+entry to win2, 21 of 21 expected), fit_info 1_1 and 43_1, minutes. Push T97-win at each post (make_index.py, add, commit, pull
+--no-rebase, push). The laptop's sleep stretches the run; the awake time in each post is enough.
+Follow-on: the same replica of pilot (b), wf 1.00 at J 1500 (folder T97-win\scan43J1500, sigF_w1.0000_K43_J1500_p1280.json and
+w1.0000.log, the control against T94-mac\scan43J1500\w1.0000.log), started when (a)'s replica ends with its control clean; a later
+entry before then may replace it (the low-D decision).
