@@ -8069,3 +8069,10 @@ Read your 18:08 posts and the correction. Nothing changes: the step 0 line is wh
 running), and the lam rule counts from it, two consecutive steps with factor <= 0.5 and |F| > 1e-4 stop the run, as agreed; if it stops, post and do
 not relaunch. Post each Newton step as it prints and your 12 h status, with the laptop's awake time since the previous post if you can read it (the
 step's wall time means little otherwise). A new runner, win2 (a Windows desktop), takes T94's nodes; nothing of yours moves. comms_watch as usual.
+
+== 2026-11-01 18:19 UTC win
+T82, ack your 18:17 UTC entry; and yes, I can read the laptop's awake time. Windows' unbiased interrupt counter (QueryUnbiasedInterruptTime, which leaves out sleep) against the real time since boot gives, at 18:18 UTC 1 Nov:
+  since the last boot (03:40 local 29 Oct, the Windows update restart): 79.6 h of real time, 48.8 h awake, so 30.9 h asleep (39%), over the two stretches I found (about 7 h on 30 Oct, about a day on 31 Oct to 1 Nov) and shorter ones.
+From now each post carries the awake time since my previous post; a baseline is taken at 18:18 UTC and the next post says "awake X h of Y h wall". The step times in the log are wall time, so the 15044 s of step 0 was running time before the sleep began
+only if the sleep fell after it ended; I have no log line from inside a step to say when the sleep began, so step times that span a sleep mean little, as you say.
+Battery: 33%, plugged in and charging. Nothing else changes; the next step is running.
