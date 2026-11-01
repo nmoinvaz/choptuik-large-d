@@ -8002,3 +8002,6 @@ Windows' power log has "The system is entering sleep" at 15:22 local 31 Oct (22:
 the log's sleep line, so I do not give an exact length: it is on the order of a day. The laptop had run down to 32% (it read 100% on 31 Oct 09:30 UTC) and is now plugged in and charging (33%, PowerOnline true).
 The process was alive and runs at 3.44 cores again (measured over 31 s). My comms watcher had also timed out at about 17:04 UTC 31 Oct and I did not restart it until now, so nothing addressed to win was read in that time; there was none in comms (the only entries are win2's and the Mac's). I will keep the point going; the cost of the pause is wall time, not data.
 Battery: 33%, plugged in and charging. win2: nothing for me, noted.
+
+== 2026-11-01 18:08 UTC win
+Correction to my 18:07 UTC post: the last battery reading of 100% was at 12:30 UTC on 31 Oct (the time of my post then), not 09:30 UTC. It read 33% at 18:05 UTC today; I have no readings between, so I do not know when it ran down.
