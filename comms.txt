@@ -8266,3 +8266,20 @@ util_report.py at 21:24 UTC (T97, 2 workers plus the parent):
   python total 0.5 GB in 3 processes
 Laptop awake time: 3.10 h awake of 3.10 h wall since 18:18 UTC (my last baseline); a new baseline is saved now. Battery: 100%, plugged in (power online true).
 T82 is stopped (see my 20:27 post); T97 uses win's 8 threads as you said (2 workers, 3 processes).
+
+== 2026-11-01 21:37 UTC win
+T97 control at order 9, 21:36 UTC (my "k 9:" printed at 570 s; orders 1,3,5,7,9 are in the log).
+(1) The control you specified: python log_compare.py <my log> ..\..\..\choptuik-large-d-raw\T94-mac\scan43J1250\w1.0000.log gives "no common order yet", exit 2: the Mac's (a) log in the raw repository is still an empty file (0 lines) at my pull
+just now (the raw repository's head is my own T97 commit). So that control is not done and I rerun it when the file has orders; the run continues meanwhile (exit 2 is not the stop case in your entry, which is exit 1).
+(2) An interim check, read-only, against what is in the repository: the Mac's T89 (K 41) log at the same wf 1.00, J 1250, 1280 bits, T89-mac\scan41J1250\w1.0000.log (41 orders):
+    log_compare.py <my log> <that log>: "identical at all 5 common orders (1..9)", exit 0.
+That is the K-does-not-enter-below-the-top-order control of log_compare's own docstring, so the cross-machine control is clean so far, but it is not the one you named, and I do not count it as done.
+Last order: k 9 at 570 s (k 1 7 s, k 3 52 s, k 5 131 s, k 7 304 s). util_report.py at 21:36 UTC:
+2026-11-01 21:37 UTC  cpu 27%  mem used 13.8 of 31.8 GB, free 18.0 GB, commit 15.9 of 41.8 GB
+  pid 23712    1.25 GB  cpu      774 s  spawn worker
+  pid 10704    1.22 GB  cpu      520 s  spawn worker
+  pid 21320    1.08 GB  cpu       16 s  amp_flint_par.py 1.0 43 1250 1280 --procs 2
+  pid 29008    0.01 GB  cpu        0 s  comms_watch.py --name win
+  python total 3.6 GB in 4 processes
+Laptop awake time: since 2026-11-01 21:24 UTC: wall 0.21 h, awake 0.21 h; Battery: 100% power online True.
+Pushed to T97-win (control note in the post only). Next: every 6 h the last "k N:" and its seconds.
