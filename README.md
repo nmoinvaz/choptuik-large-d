@@ -265,8 +265,11 @@ resolution step, not a bound; [notes/HIGH_M.md](notes/HIGH_M.md)). Below it the 
 (`hp/lowD_highM.py` from that run's states, on the Windows machine; its records are in the raw-data repository's folder
 T82-win, which `hp/export_lowD.py` reads) has
 reached D = 3.045 at M = 320/384, Δ = 2.4464747274662, with the step from M = 320 to 384 6.7×10⁻¹¹, 3.2 times the step at 3.05;
-the run then stopped on its own time rule and continues as the leg `down25b` in the same folder. A first attempt that went from
-3.05 to 3.045 in one step of 0.005 crawled in Newton at M = 320 and was stopped (T82-win/down5.log).
+the run then stopped on its own time rule, and the legs `down25b` and `down25c` in the same folder went for D = 3.0425: there
+the M = 320 Newton solve from the 7640-step Taylor plan (5082 steps at 3.045) started at |F| 0.34 and damped twice
+(line-search factors 0.125 and 0.031), on which the script gave up and the run was stopped on 2026-11-01
+(T82-win/down25c.log, commit 28545dc of the raw-data repository); whether the leg goes on is open. A first attempt that went
+from 3.05 to 3.045 in one step of 0.005 crawled in Newton at M = 320 and was stopped (T82-win/down5.log).
 
 ![Below D = 4: every double-double value of Delta and gamma so far against the sqrt(D - 3) formula, and how much Delta moves when the tau resolution is raised](hp/lowD_values.svg)
 

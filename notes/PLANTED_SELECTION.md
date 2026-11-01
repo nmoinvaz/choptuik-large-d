@@ -2636,6 +2636,16 @@ line at any common order, 1–41, is the stop, and a run's order 43 has no refer
 after win2's runner asked, in its comms entry of 18:39 UTC, whether an exit 1 confined to orders 37–41 could be read as
 K entering; it cannot.
 
+**Amendment (2026-11-01 21:35 UTC), before any σ₂₁ existed: a second machine computes pilot (a).** The Windows laptop
+win is free after the low-D leg's stop (T82, 2026-11-01 20:24 UTC) and runs pilot (a)'s command (wf 1.00, K 43, J 1250,
+1280 bits, --procs 2) as T97, folder `T97-win/scan43J1250`. Its control is `log_compare.py` against the Mac's own (a)
+log, `T94-mac/scan43J1250/w1.0000.log`, within the first hour and at each post, at every common order up to 43 with no
+cap; a difference stops the run and is recorded here. At its end its 22 σ strings are compared with the Mac's (a) file:
+22 of 22 equal is the expectation; a differing string stops the K = 21 stages, or reopens their record if the replica
+lands after them (win sleeps, so it may), until the cause is recorded. Otherwise the replica enters no criterion and is
+reported as context in the convergence stage's report. Its follow-on, the same replica of pilot (b) at J 1500
+(`T97-win/scan43J1500`), has the same role against `T94-mac/scan43J1500/`.
+
 ### 13.1 The dry run (item 0)
 
 `planted_k21_dry.py` wrote the three node files and the pilot file with the real σ₀…σ₂₀ (the 1280-bit node data of
