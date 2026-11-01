@@ -8156,3 +8156,47 @@ no K 41 reference at these nodes); at each J 1500 end the same end-of-run post a
 scan41J1250 file of the same wf included, as context. Post the utilization report right after the four runs are up. Follow-on
 after all four node runs end: an hp build on win2 (Rust toolchain, hp/build.sh from git bash, as win built it for T82), with its
 checks named in a later entry before the node runs end.
+
+== 2026-11-01 20:19 UTC win2
+capacity: cpu 34%, free 36.2 GB.
+T94-win2, the J 1500 hedge pair is up beside the J 1250 pair; four node runs now, all below-normal, plus the memory guard.
+util_report.py --selftest (checkout root, venv): "threshold above RAM -> exit 3 (want 3), child dead True (want True); threshold 0
+-> exit 0 (want 0), child alive True (want True); 3 log lines", exit 0.
+J 1500 started 2026-11-01 20:15:12 UTC from solver\inner_amp, --procs 2 each, below-normal, folder T94-win2\scan43J1500
+(sigF_w0.9900_K43_J1500_p1280.json / w0.9900.log and the wf 1.01 pair). Both at order 3 now; their k 1-3 sigma equal the J 1250
+pair's to all printed digits with only err and resid differing, as the amendment says for different J, a first sanity check. No early
+control at these nodes (no K 41 reference).
+Memory guard running: util_report.py --guard 10 --log ..\choptuik-large-d-raw\T94-win2\scan43J1500\mem_guard.log --interval 300
+16544 13408, where 16544 is the wf 0.99 J 1500 main and 13408 the wf 1.01 J 1500 main (the base interpreters that parent the two
+workers each; identified by command line, confirmed not the J 1250 mains 28316 / 18532). It taskkills only those two trees if free
+memory drops below 10 GB, else exits 0 when both end. First guard line: "2026-11-01 20:17 UTC  cpu 44%  mem used ... free 36.2 GB".
+The guard log is pushed with the folder.
+J 1250 pair at order 27 (about 5140 s). The four runs' last "k N:" and seconds join the 6-hourly posts from here.
+util_report.py (full, 20:17 UTC):
+2026-11-01 20:17 UTC  cpu 34%  mem used 59.4 of 95.6 GB, free 36.2 GB, commit 63.4 of 101.6 GB
+  pid 7164     2.74 GB  cpu     6409 s  spawn worker
+  pid 23084    2.73 GB  cpu     4896 s  spawn worker
+  pid 28376    2.60 GB  cpu     4894 s  spawn worker
+  pid 12960    2.58 GB  cpu     6407 s  spawn worker
+  pid 28316    1.99 GB  cpu       48 s  amp_flint_par.py 0.99 43 1250 1280 --procs 4
+  pid 18532    1.98 GB  cpu       49 s  amp_flint_par.py 1.01 43 1250 1280 --procs 4
+  pid 26216    1.67 GB  cpu     4410 s  spawn worker
+  pid 31364    1.66 GB  cpu     4134 s  spawn worker
+  pid 24736    1.66 GB  cpu     4136 s  spawn worker
+  pid 19132    1.63 GB  cpu     4405 s  spawn worker
+  pid 9832     1.52 GB  cpu      146 s  spawn worker
+  pid 30276    1.52 GB  cpu      145 s  spawn worker
+  pid 656      1.26 GB  cpu      104 s  spawn worker
+  pid 28964    1.26 GB  cpu      104 s  spawn worker
+  pid 16544    1.07 GB  cpu        7 s  amp_flint_par.py 0.99 43 1500 1280 --procs 2
+  pid 13408    1.06 GB  cpu        7 s  amp_flint_par.py 1.01 43 1500 1280 --procs 2
+  pid 7340     0.02 GB  cpu        0 s  util_report.py --guard 10 (the J 1500 guard)
+  pid 13480    0.00 GB  cpu        0 s  amp_flint_par.py 0.99 43 1250 1280 --procs 4 (venv stub)
+  pid 6216     0.00 GB  cpu        0 s  amp_flint_par.py 1.01 43 1250 1280 --procs 4 (venv stub)
+  pid 7056     0.00 GB  cpu        0 s  amp_flint_par.py 1.01 43 1500 1280 --procs 2 (venv stub)
+  pid 29388    0.00 GB  cpu        0 s  amp_flint_par.py 0.99 43 1500 1280 --procs 2 (venv stub)
+  pid 14720    0.00 GB  cpu        0 s  util_report.py --guard 10 (guard venv stub)
+  python total 29.0 GB in 23 processes
+(The 0.00 GB "venv stub" lines are the venv python redirectors that launch the base interpreter; the resident figure undercounts,
+free is the figure that counts. One transient util_report.py of mine is also in the list.)
+Pushed T94-win2 (f0710e2).
