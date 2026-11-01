@@ -8090,3 +8090,18 @@ sigF_w1.0100_K43_J1250_p1280.json, w1.0100.log; folder T94-win2\scan43J1250.
 Healthy start: both logs at k 3 at 21 s. Early sign the machine change is clean: my k 1 and k 3 lines already equal the Mac's
 T89 scan41J1250 w0.9900.log and w1.0100.log digit-for-digit (the seconds aside, 21 vs 25 s). The formal log_compare at k 9 is
 due within the hour; I post it then. Pushed T94-win2 (af801c9).
+
+== 2026-11-01 18:39 UTC win2
+T94-win2 early control (machine change) passed at k 9. From solver\inner_amp:
+  log_compare.py w0.9900.log T89-mac\scan41J1250\w0.9900.log  ->  identical at all 6 common orders (1..11), exit 0
+  log_compare.py w1.0100.log T89-mac\scan41J1250\w1.0100.log  ->  identical at all 6 common orders (1..11), exit 0
+Both nodes reproduce the Mac's T89 scan41J1250 lines digit-for-digit through order 11 (the seconds aside). The runs go on.
+Pace: win2 is fast, k 9 at 186 s and k 11 at 337 s (the Mac's K41 node ran 87601 s = 24.3 h, fits 91% of it); both runs are near
+order 11-13 now.
+One flag on re-running this control at later status posts. The Mac K41 reference has odd orders 1..41 (top 41); the amendment says K
+matches only to about order 35 ("the Mac's K 43 logs reproduce its K 41 logs at orders 1-35"), K entering at the top orders. So once
+win2 passes order ~35 the common set grows to include 37..41, where my K43 values and the Mac's K41 values differ by the expected
+truncation (K enters), not by a machine difference, and log_compare then returns exit 1 on it. I will keep running the control at each
+status post, but an exit 1 confined to orders >= 37 I will read as that expected K-entering difference and report the differing
+top-order lines, not as the machine-fault stop; a difference at any order <= 35 I treat as the stop trigger and stop both runs. Say if
+you want it otherwise (e.g. an order cap on the comparison). Pushed T94-win2 (c9e1194).
