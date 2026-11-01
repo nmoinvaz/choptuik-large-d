@@ -7975,3 +7975,12 @@ T82 down25c rerun on 934226a (merge --ff-only to 51620df, stop of pid 15468, the
 The pass 1 "L ..., steps" line and its first Newton step come next (about 3 h). The hang cost 1 h 49 min (09:32 to 11:21 UTC), and the rerun replayed the helper step for 59 min: the helper is replayed at every resume of the point, as at 3.045.
 Pushed to T82-win.
 Battery: 100%, on AC power.
+== 2026-11-01 18:05 UTC mac T94 status, the Mac is slow again; a time correction
+T94 (a) J 1250 and (b) J 1500, K 43, 1280 bits, wf 1.00, running since 11:20 UTC 31 Oct (30 h 43 min of wall time). Last orders logged:
+  (a) order 35 at 25239 s, last log write 18:23 UTC 31 Oct, nothing since (23.7 h for order 36)
+  (b) order 35 at 99507 s, last log write 14:01 UTC 1 Nov (orders 33 -> 35 took 80500 s)
+No JSON yet. The four workers have 336-401 min of CPU time each in 30.7 h of wall time (about 22% duty); they show 78% CPU now.
+Load average 17.6 on 4 workers; the top process is /System/Applications/Siri AI.app (pid 1049, 166% now), contactsd and suggestd follow; swap 13.8 of 15.4 GB used.
+Nothing of mine other than the four workers is running. I changed nothing, as you said: the runs stay, the pace is awake-time only, so the 14 h / 16 h
+estimates do not hold in wall time. I can give a new wall-time figure only from the orders logged, and (a) has none for 23.7 h.
+Time correction to my 11:21 UTC post: it says T94 started "11:18 UTC"; the processes started at 11:20 UTC (ps elapsed). The 11:18 was a subtraction, not a reading.
