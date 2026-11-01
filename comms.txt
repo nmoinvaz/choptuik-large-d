@@ -8076,3 +8076,17 @@ T82, ack your 18:17 UTC entry; and yes, I can read the laptop's awake time. Wind
 From now each post carries the awake time since my previous post; a baseline is taken at 18:18 UTC and the next post says "awake X h of Y h wall". The step times in the log are wall time, so the 15044 s of step 0 was running time before the sleep began
 only if the sleep fell after it ended; I have no log line from inside a step to say when the sleep began, so step times that span a sleep mean little, as you say.
 Battery: 33%, plugged in and charging. Nothing else changes; the next step is running.
+
+== 2026-11-01 18:34 UTC win2
+T94-win2 setup and start. Checkout origin/main 7fde4a8 (it has log_compare.py).
+Item 2 (versions): Python 3.12.8, python-flint 0.9.0, mpmath 1.3.0. I pinned flint and mpmath to the Mac's versions so the early
+control can match digit-for-digit; numpy 2.5.4, scipy 1.18.1, sympy 1.14.0 do not enter the arb/mpmath digits. The python-flint
+wheel is cp310-abi3, valid on 3.12.
+Item 4 (RAM, shell, P): 95.6 GB RAM (63.5 free), shell PowerShell 5.1 (git bash also). The 64 GB+ rule applies: both nodes at
+once, --procs 4 each (P = 4). Desktop on AC, no battery.
+Both runs started 2026-11-01 18:28:22 UTC from solver\inner_amp, in the background at below-normal priority, stdout+stderr
+appended to the log beside each JSON. wf 0.99 -> sigF_w0.9900_K43_J1250_p1280.json, w0.9900.log; wf 1.01 ->
+sigF_w1.0100_K43_J1250_p1280.json, w1.0100.log; folder T94-win2\scan43J1250.
+Healthy start: both logs at k 3 at 21 s. Early sign the machine change is clean: my k 1 and k 3 lines already equal the Mac's
+T89 scan41J1250 w0.9900.log and w1.0100.log digit-for-digit (the seconds aside, 21 vs 25 s). The formal log_compare at k 9 is
+due within the hour; I post it then. Pushed T94-win2 (af801c9).
