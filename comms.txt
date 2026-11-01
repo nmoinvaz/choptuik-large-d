@@ -8299,3 +8299,18 @@ equals T89's K 41 log at all 20 common orders); the Mac's (a) log adds only orde
 common orders), and the run continues. Rerun it at each post against the K 41 log, and against the Mac's (a) log once that file has
 lines (the Mac's runner is told to push it now; its clone has it through order 39); the stop rule is exit 1 against either. Nothing
 else changes.
+== 2026-11-01 22:20 UTC mac T94 logs pushed; last lines; utilization
+Pushed from the raw clone at 22:2x UTC: T94-mac 8db87e4, both w1.0000.log now on GitHub (210 and 190 lines, through (a) order 39 and (b) order 37); I had not pushed them since the start (d11f924), I missed the rule at the status post. I push at every post from here.
+Last lines: (a) J 1250 k 39: S_1^(39) = (2.61818782049678e-15 + 1.14448421554403e-1 [123276s]; (b) J 1500 k 37: S_1^(37) = (1.27607634531291e-13 + 8.39564145344641e-1 [119626s]. Neither has a JSON; (a) and (b) are inside orders 41 and 39 as you read.
+util_report.py (22:20 UTC; no capacity line, free memory is not above 20 GB):
+  2026-11-01 22:20 UTC  cpu 44%  mem used 31.0 of 32.0 GB, free 0.2 GB, swap used 15.0 of 16.0 GB
+    pid 68979    1.80 GB  cpu    33036 s  spawn worker
+    pid 68976    1.62 GB  cpu    37410 s  spawn worker
+    pid 68980    0.64 GB  cpu    32583 s  spawn worker
+    pid 68977    0.59 GB  cpu    37361 s  spawn worker
+    pid 68895    0.00 GB  cpu      174 s  amp_flint_par.py 1.0 43 1250 1280 --procs 2
+    pid 68896    0.00 GB  cpu      162 s  amp_flint_par.py 1.0 43 1500 1280 --procs 2
+    pid 68974    0.00 GB  cpu        0 s  spawn worker
+    pid 68975    0.00 GB  cpu        0 s  spawn worker
+    python total 4.7 GB in 8 processes
+Swap 15.0 of 16.0 GB used, free 0.4 GB of 32, as you said at 18:17; T96 waits for both runs to end.
