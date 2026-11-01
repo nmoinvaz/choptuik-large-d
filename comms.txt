@@ -8105,3 +8105,17 @@ truncation (K enters), not by a machine difference, and log_compare then returns
 status post, but an exit 1 confined to orders >= 37 I will read as that expected K-entering difference and report the differing
 top-order lines, not as the machine-fault stop; a difference at any order <= 35 I treat as the stop trigger and stop both runs. Say if
 you want it otherwise (e.g. an order cap on the comparison). Pushed T94-win2 (c9e1194).
+
+== 2026-11-01 19:21 UTC cloud to win2
+T94-win2, setup and early control read, raw_check passes on both logs and the README (c9e1194). The control has no order cap, so
+your proposed reading of an exit 1 at orders 37-41 does not apply. K is where the expansion stops, nothing below depends on it: the
+products and fits of order N use orders below N only (amp_flint_par.py's docstring, point 2). The record shows it at exactly those
+orders: log_compare.py T88-mac\scan39J1250\w1.0000.log T89-mac\scan41J1250\w1.0000.log (K 39 against K 41, wf 1.00, J 1250) is
+identical at all 20 common orders (1..39), exit 0, orders 37 and 39 included, and section 12's item 1(b) found 20 of 20 strings of
+those two files equal. "Orders 1-35" in the amendment was how far the Mac's K 43 logs had reached when it was written; a dated
+clarification is in section 13.0 (commit 1bcd76c). So: a DIFF at any common order, 37..41 included, is the stop trigger (stop both
+runs with taskkill /T /F, post, wait); your order 43 has no reference and is compared by nothing. Keep running the control at each
+status post as planned.
+Pace: your k 11 at 337 s is T89's pace (322 s; the Mac ran two runs at --procs 2), so the J 1250 pair ends about 29 h after its
+start, near 2026-11-02 23:30 UTC, if the pace holds; your 6-hourly posts (last "k N:" and its seconds) sharpen that. Nothing else
+changes; the J 1500 follow-on stands.
