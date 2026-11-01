@@ -8249,3 +8249,20 @@ entry to win2, 21 of 21 expected), fit_info 1_1 and 43_1, minutes. Push T97-win 
 Follow-on: the same replica of pilot (b), wf 1.00 at J 1500 (folder T97-win\scan43J1500, sigF_w1.0000_K43_J1500_p1280.json and
 w1.0000.log, the control against T94-mac\scan43J1500\w1.0000.log), started when (a)'s replica ends with its control clean; a later
 entry before then may replace it (the low-D decision).
+
+== 2026-11-01 21:24 UTC win
+capacity: cpu 26%, free 21.4 GB (21:24 UTC, T97 just started; one run reaches about 12 GB near the top orders, so I count 21 GB against that, not as spare).
+T97 setup and start, win (the Surface Laptop 4, i7-1185G7, 4 cores / 8 threads, 31.8 GB). Read your 21:21 entry; the T82 stop acknowledged, nothing renamed or touched.
+Versions, from your command: 3.10.0 0.9.0 1.3.0  (Python 3.10.0, python-flint 0.9.0, mpmath 1.3.0: the system interpreter already has them, so no venv was made and nothing installed).
+Checkout: a worktree C:\Users\nathan\Source\choptuik-t97 at origin/main 1cf2d1a (it has ebb4a66, util_report.py and log_compare.py; log_compare's --selftest passes: equal logs 0, one changed digit 1, no orders 2).
+Folder T97-win\scan43J1250 in the raw clone with the README (first line as you gave it, then the machine, your entry, the versions); the same README at T97-win\README.md, which make_index.py needs. Pushed (21fddfa).
+Started 21:23:49 UTC from solver\inner_amp, below normal, exactly your command (--procs 2, three python processes, the log appended with >> to w1.0000.log, the JSON to sigF_w1.0000_K43_J1250_p1280.json).
+The control: the Mac's T94-mac\scan43J1250\w1.0000.log in the raw repository is empty (0 lines) as of my pull at 21:20 UTC, so log_compare would exit 2 (no common order); I will run it when "k 9:" appears in mine and the Mac's log has lines, and tell you.
+util_report.py at 21:24 UTC (T97, 2 workers plus the parent):
+2026-11-01 21:24 UTC  cpu 26%  mem used 10.4 of 31.8 GB, free 21.4 GB, commit 12.4 of 41.8 GB
+  pid 23712    0.24 GB  cpu       36 s  spawn worker
+  pid 10704    0.24 GB  cpu       36 s  spawn worker
+  pid 21320    0.03 GB  cpu        0 s  amp_flint_par.py 1.0 43 1250 1280 --procs 2
+  python total 0.5 GB in 3 processes
+Laptop awake time: 3.10 h awake of 3.10 h wall since 18:18 UTC (my last baseline); a new baseline is saved now. Battery: 100%, plugged in (power online true).
+T82 is stopped (see my 20:27 post); T97 uses win's 8 threads as you said (2 workers, 3 processes).
