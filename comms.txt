@@ -8200,3 +8200,24 @@ util_report.py (full, 20:17 UTC):
 (The 0.00 GB "venv stub" lines are the venv python redirectors that launch the base interpreter; the resident figure undercounts,
 free is the figure that counts. One transient util_report.py of mine is also in the list.)
 Pushed T94-win2 (f0710e2).
+
+== 2026-11-01 20:25 UTC win
+capacity: cpu 15%, free 20.8 GB (20:24 UTC; T82 is stopped, so win's 8 threads are free, 6 under my cap).
+T82 down25c STOPPED on your lam rule, 20:24 UTC 1 Nov; post and no relaunch, as agreed. M 320 pass 1 at D 3.0425:
+  newton 0: |F| 3.37e-01 |dz| 5.58e+01 lam 0.125  dDelta -2.45e-03 Delta 2.444022241779098  t 15044.3 s
+  newton 0: |F| 2.95e-01 |dz| 1.07e+03 lam 0.0312 dDelta -5.41e-04 Delta 2.443481731515682  t 99685.3 s     (wall time, with the laptop's sleep inside it)
+  12:23:56 D 3.0425 M 320: two steps with line-search factors 0.125, 0.03125 <= 0.125; giving up                (20:23:56 UTC; the script's own rule, 18 s before my stop)
+Two consecutive steps with factor 0.5 or less at |F| 0.34 and 0.30: |F| fell 13% over the two (3.37e-1 -> 2.95e-1 at the start of step 1, the second step's result is not logged). I stopped the process tree (pid 22344) at 20:24:14 UTC,
+18 s after the give-up line, before the script logged what it does next (the halving or a stop), so I do not know which. The progress file is not stopped ("done" None, last point D 3.045, hours 0.00 of the leg);
+the checkpoint lowDhm_x0.000157-0.975_p1_D3.0425_M320_ckpt.npz is still named as a live checkpoint (the script renames a failed run's to _failed; mine was killed first), so a relaunch would resume from it at iteration 2 unless it is renamed.
+I touched neither. The plan at this D is 7640 steps (5082 at 3.045), the start |F| 0.34, the steps of 4.2 h awake or more: consistent with your read of a shrinking analyticity radius; I make no claim beyond it.
+Laptop awake time: 2.09 h awake of 2.09 h wall since 18:18 UTC (the step 1 stretch before that, including the sleep, I cannot split; since boot 50.9 h awake of 81.7 h).
+util_report.py at 20:24 UTC, T82's 4 threads running (its last seconds):
+2026-11-01 20:24 UTC  cpu 15%  mem used 11.0 of 31.8 GB, free 20.8 GB, commit 13.1 of 41.8 GB
+  pid 22344    1.13 GB  cpu   124302 s  lowD_highM.py --start_w data/lowD_states/lowDhm_x0.000157-0.975_D3.0500_M320.npz --start_n data/lowD_states/lo
+  pid 18988    0.01 GB  cpu        0 s  comms_watch.py --name win
+  python total 1.1 GB in 2 processes
+(at 20:12 UTC during the step the same report read cpu 64%, free 20.2 GB, commit 13.7 of 41.8 GB.)
+Battery: 33% at 18:18 UTC, plugged in and charging; see the line below for now.
+Nothing runs on win now; I keep comms_watch running and wait for you. Pushed to T82-win.
+Battery now: 95%, power online True.
