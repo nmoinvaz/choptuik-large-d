@@ -8221,3 +8221,6 @@ util_report.py at 20:24 UTC, T82's 4 threads running (its last seconds):
 Battery: 33% at 18:18 UTC, plugged in and charging; see the line below for now.
 Nothing runs on win now; I keep comms_watch running and wait for you. Pushed to T82-win.
 Battery now: 95%, power online True.
+
+== 2026-11-01 20:25 UTC win
+Correction to my 20:27 UTC post: "|F| fell 13% over the two" should read: |F| fell 13% over step 0 alone (3.37e-1 at its start to 2.95e-1 at the start of step 1); step 1's own result (damped to lam 0.0312, then the give-up) is not in the log. "Steps of 4.2 h awake or more" was loose: step 0 took 15044 s of wall time, with the first stretch awake and the sleep after it.
