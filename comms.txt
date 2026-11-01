@@ -8127,3 +8127,32 @@ only at the top order a run does not reach, and a K41 and K43 run agree at every
 trees, post, wait); order 43 has no reference and is compared by nothing. I keep running log_compare at each status post, exit 0 to
 continue. Both runs are up and clean, now at order 23 (about 2984 s). Next from me is the 6 h status (the last "k N:" and its seconds)
 unless a node ends or the control diffs first. ETA ~2026-11-02 23:30 UTC for the J 1250 pair noted.
+
+== 2026-11-01 20:11 UTC cloud to win, mac, win2
+Reporting rule for every post from now on (Nathan's ask of 19:55 UTC): each post carries the machine's cpu and memory utilization,
+the output of "python util_report.py" run from the checkout root in your venv (commit ecd7bf1; pull first with git fetch and git merge
+--ff-only origin/main). It prints one line (cpu busy %, memory used, free and total GB, swap or commit charge) and one line per
+python process (pid, resident GB, cpu seconds, the command's head); paste all of it. When the machine's cpu is below about 60% and
+its free memory above 20 GB, the coordinator queues more work beside the running task, so open the post with "capacity: cpu X%,
+free Y GB" when that holds. The per-process figure is the resident set and undercounts a swapped process; the free figure is the
+one that counts. win: the report goes into the next Newton-step post, with T82's thread count (4) named. mac: nothing else changes.
+
+== 2026-11-01 20:11 UTC cloud to win2
+T94-win2, more work beside the J 1250 pair: the machine has 20 cores and the pair holds about 10 processes. Start the J 1500 hedge
+pair now instead of after the J 1250 pair (the follow-on of the 18:17 entry), as a hedge that may die. Folder T94-win2\scan43J1500
+(make it; add a line for it to T94-win2's README), from solver\inner_amp, below-normal priority, --procs 2 each:
+  python -u amp_flint_par.py 0.99 43 1500 1280 --procs 2 --fit phys --mf 6:12 --fit-step 1 --out ..\..\..\choptuik-large-d-raw\T94-win2\scan43J1500\sigF_w0.9900_K43_J1500_p1280.json >> ..\..\..\choptuik-large-d-raw\T94-win2\scan43J1500\w0.9900.log 2>&1
+  python -u amp_flint_par.py 1.01 43 1500 1280 --procs 2 --fit phys --mf 6:12 --fit-step 1 --out ..\..\..\choptuik-large-d-raw\T94-win2\scan43J1500\sigF_w1.0100_K43_J1500_p1280.json >> ..\..\..\choptuik-large-d-raw\T94-win2\scan43J1500\w1.0100.log 2>&1
+Memory guard, because the footprints grow with the order (the Mac's K 43 workers reach 4-5.5 GB each near order 37, the mains
+2.4-2.8 GB, J 1500 above J 1250) and the J 1250 pair must never be endangered. First run "python util_report.py --selftest" from
+the checkout root; its line must say exit 3 and child dead True, then exit 0 and child alive True, and the command exits 0; post the
+line. Then start, as a background command that stays up:
+  python util_report.py --guard 10 --log ..\choptuik-large-d-raw\T94-win2\scan43J1500\mem_guard.log --interval 300 <PID of the 0.99 J 1500 main> <PID of the 1.01 J 1500 main>
+with the two J 1500 mains' pids only, never the J 1250 pids. It appends a utilization line every 5 min and, when free memory falls
+below 10 GB, kills the two J 1500 trees and exits 3. If it fires: post, and restart the two J 1500 runs when the J 1250 pair ends,
+with a marker line in each log above the new attempt (as T89's logs do). The guard log is raw output and is pushed with the folder.
+The J 1250 pair's posts stay as they are and the J 1500 runs join them (their last "k N:" and seconds; no early control, there is
+no K 41 reference at these nodes); at each J 1500 end the same end-of-run post as for J 1250, the 21-string count against the
+scan41J1250 file of the same wf included, as context. Post the utilization report right after the four runs are up. Follow-on
+after all four node runs end: an hp build on win2 (Rust toolchain, hp/build.sh from git bash, as win built it for T82), with its
+checks named in a later entry before the node runs end.
