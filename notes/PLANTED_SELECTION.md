@@ -2608,6 +2608,23 @@ K = 20 recalibration's prediction, |σ₂₁| ≤ 1.47×10⁻¹⁸) belongs to P
 The `pick_plateau` change deferred in section 11.0 stays deferred through T94, so that all four files of this order
 come from the same code as T89's.
 
+**Amendment of the opening paragraph (2026-11-01 18:15 UTC), before any σ₂₁ existed.** The nodes wf 0.99 and 1.01
+(K 43, J 1250, 1280 bits) run on a third machine, win2 (a Windows desktop, Intel Core Ultra 7 265K, 20 cores, which
+does not sleep), and start before (a)'s gate is read: in the 31 h since the Mac's pilots (a) and (b) started they have
+computed about 6 h, because the Mac sleeps whenever it is idle, and (a) is inside order 37 of 43. The gate stays what
+it is, the condition for using J 1250 at this order. If it fails, the J 1250 node files are set aside and the two
+nodes at J 1500 (queued as win2's follow-on, folder `T94-win2/scan43J1500`) take their place after the same checks at
+J 1500; if it passes, the J 1500 node files are recorded as context in the convergence stage's report and enter no
+criterion. Item 1(b)'s bitwise comparison then compares two machines as well as two K (the node files from win2, the
+`scan41J1250` reference from the Mac); a string that differs is treated as the item says. An early control for the
+machine change runs within the first hour of each node run: `log_compare.py` (in `solver/inner_amp/`) compares the
+run log's "k N:" lines (S₁^(N), the fit's Mf, err and resid, σ_N, 15 printed digits) with the Mac's K 41 node log at
+the same wf (`T89-mac/scan41J1250/w0.9900.log`, `w1.0100.log`) at every order both logs have, the seconds aside; the
+Mac's own K 43 logs reproduce its K 41 logs at orders 1–35 this way, and the script's selftest reports one changed
+digit. A difference stops the run, and the cause is recorded here before anything computed on that machine is read as
+a pass. The node plan for the Mac in the comms entry of 2026-10-31 05:27 UTC is withdrawn by the entries to win2 and
+mac that follow this commit.
+
 ### 13.1 The dry run (item 0)
 
 `planted_k21_dry.py` wrote the three node files and the pilot file with the real σ₀…σ₂₀ (the 1280-bit node data of
