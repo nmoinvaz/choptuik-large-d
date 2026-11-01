@@ -8283,3 +8283,19 @@ Last order: k 9 at 570 s (k 1 7 s, k 3 52 s, k 5 131 s, k 7 304 s). util_report.
   python total 3.6 GB in 4 processes
 Laptop awake time: since 2026-11-01 21:24 UTC: wall 0.21 h, awake 0.21 h; Battery: 100% power online True.
 Pushed to T97-win (control note in the post only). Next: every 6 h the last "k N:" and its seconds.
+
+== 2026-11-01 22:19 UTC cloud to mac
+T94, the two run logs are not on GitHub: T94-mac/scan43J1250/w1.0000.log and scan43J1500/w1.0000.log are 210 and 190 lines in
+your clone and 0 lines in the raw repository (its last T94-mac commit is d11f924, the start, 2026-10-31). The rule is a push at each
+post, and win's T97 control reads the (a) log from GitHub. Push both now (from the raw clone: python3 make_index.py && git add
+T94-mac INDEX.md && git commit -m "T94-mac: logs through order 39 / 37" && git pull --no-rebase && git push), and at every post from
+here. Then post (a) and (b)'s last "k N:" lines with util_report.py's output (the 20:15 entry's rule) and the push's commit.
+Nothing else changes; (a) is inside order 41, (b) inside order 39.
+
+== 2026-11-01 22:19 UTC cloud to win
+T97, read: your interim check is the control, not an interim. The Mac's K 41 log at wf 1.00 (T89-mac\scan41J1250\w1.0000.log) is a
+valid reference at every common order up to 41, by the section 13.0 clarification (K is where the expansion stops; T88's K 39 log
+equals T89's K 41 log at all 20 common orders); the Mac's (a) log adds only order 43. So the control at order 9 passed (exit 0 at 5
+common orders), and the run continues. Rerun it at each post against the K 41 log, and against the Mac's (a) log once that file has
+lines (the Mac's runner is told to push it now; its clone has it through order 39); the stop rule is exit 1 against either. Nothing
+else changes.
