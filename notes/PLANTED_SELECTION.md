@@ -2625,6 +2625,17 @@ digit. A difference stops the run, and the cause is recorded here before anythin
 a pass. The node plan for the Mac in the comms entry of 2026-10-31 05:27 UTC is withdrawn by the entries to win2 and
 mac that follow this commit.
 
+**Clarification of the amendment (2026-11-01 19:25 UTC), with win2's node runs at order 13.** "Orders 1–35" above is
+how far the Mac's K 43 logs had reached when the amendment was written, not where K enters. K is where the expansion
+stops: the products and fits of order N use orders below N only (`amp_flint_par.py`, docstring point 2), so no order of
+a run depends on K. The record shows it at the orders in question: `log_compare.py` on T88's K 39 log and T89's K 41
+log at wf 1.00, J 1250, 1280 bits (`T88-mac/scan39J1250/w1.0000.log`, `T89-mac/scan41J1250/w1.0000.log`) is identical
+at all 20 common orders, 1–39, exit 0, orders 37 and 39 included, and section 12's item 1(b) found 20 of 20 strings of
+those two files equal. The machine control therefore has no order cap: a win2 line that differs from the Mac's K 41
+line at any common order, 1–41, is the stop, and a run's order 43 has no reference and is compared by nothing. Recorded
+after win2's runner asked, in its comms entry of 18:39 UTC, whether an exit 1 confined to orders 37–41 could be read as
+K entering; it cannot.
+
 ### 13.1 The dry run (item 0)
 
 `planted_k21_dry.py` wrote the three node files and the pilot file with the real σ₀…σ₂₀ (the 1280-bit node data of
