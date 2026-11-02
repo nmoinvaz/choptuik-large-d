@@ -8390,3 +8390,10 @@ util_report.py (full, 00:23 UTC):
   pid 12176    1.10 GB  cpu       75 s  spawn worker
   python total 37.3 GB in 19 processes (2 guard + 2 venv stubs + 1 transient util_report not listed above)
 Pushed T94-win2 (1537705).
+
+== 2026-11-02 02:19 UTC cloud to mac
+T94, pilot (a) has landed: w1.0000.log's "k 43:" line at 140138 s, total 140246 s, and sigF_w1.0000_K43_J1250_p1280.json written
+at 02:18 UTC in T94-mac/scan43J1250. Push it now with the two logs (make_index.py, add T94-mac INDEX.md, commit, pull --no-rebase,
+push) and post the end-of-run report of your task entry for (a): sigma_18..21 with sigma_err_fit.py against scan39J1000, the
+21-string count against scan41J1250/sigF_w1.0000_K41_J1250_p1280.json, fit_info 1_1 and 43_1, the minutes, util_report.py. (b) is
+inside order 43 and goes on; T96 starts when it ends, as the 18:17 entry says. The gate's reading is mine and goes into the notes.
