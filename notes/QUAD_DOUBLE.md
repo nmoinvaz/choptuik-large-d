@@ -964,3 +964,37 @@ points of layout B carry that layout's 10⁻⁶ to 10⁻³ uncertainty (the last
 What would move the wall is the discretisation, as 12.4 concluded: a horizon treatment without a series radius
 (collocation in u on the last segment, the regularity condition imposed at the horizon itself), which is kernel work
 with a planted test at a D where both treatments must agree before any point past 78 is read.
+
+### 12.7 Where the next wall falls: the off-solution radius against the matching distance (2026-11-02)
+
+Nathan asked whether the walls (67.8, 73.3, 76.5, 78.1) can be predicted. The Newton basin of 12.4 cannot be the
+predictor: at T85's states in the 0.8 and 0.85 layouts the full system's smallest pivot is 10⁻²⁰ to 10⁻²¹ and 10⁻²² to
+10⁻²⁵ (against 10⁻¹⁵ to 10⁻¹⁶ in the 0.7 layout; T101-mac/basin_x80.jsonl and basin_x85.jsonl, qd_basin.py), so the
+basin σ²/c there is 10⁻³⁸ to 10⁻⁵⁷, and the damped Newton nevertheless converged from predictor starts at |F| 10⁻³ to
+10⁻¹ up to D 78: the nearly singular direction is flat (Δ drifts along it, 12.3), not a trap. What the layouts do
+change is the matching distance u₀ = 1 − x_last at which the horizon series is summed, and 12.4 measured the series'
+radius R for data a given distance off the solution against D. `hp/wall_model.py RAWDIR` (`hp/large_d_walls.svg`,
+`hp/data/large_d_walls.json`) fits R = A·D^p to those nine points (D 40 to 73.27) per deviation and reads off where
+R crosses each layout's u₀:
+
+| data off the solution by | p | R at D 100 | R at D 200 | crosses u₀ = 0.30 (node 0.7) | 0.20 (node 0.8) | 0.15 (node 0.85) |
+|---|---|---|---|---|---|---|
+| on the solution | -0.34 | 0.525 | 0.413 | – | – | – |
+| 4×10⁻¹³ | -0.74 | 0.255 | 0.153 | 80 | 139 | 205 |
+| 4×10⁻¹¹ | -0.78 | 0.213 | 0.124 | 64 | 108 | 156 |
+| 4×10⁻⁹ | -0.80 | 0.172 | 0.098 | 50 | 83 | 118 |
+| 4×10⁻⁷ | -0.79 | 0.129 | 0.075 | 34 | 57 | 82 |
+
+Read against the record: the 0.8 layout stopped at 78.1 with its iterates stalling at |F| 10⁻⁷, between the
+crossings for 4×10⁻⁹ and 4×10⁻⁷ off (83 and 57); the 0.7 layouts stopped at 67.8 (plain, its floor)
+and 73.3 (pinned, the floor and the basin of 12.4) before the radius of their polished iterates (4×10⁻¹³ off,
+crossing 80) could bind; the 0.85 layout left the branch at 76.5 and 78.6 along its flat direction,
+which the radius does not describe. So the rule "a layout stalls where R for its iterates' deviation falls below
+u₀" fits the one wall set by the series (0.8) and is consistent with the others being set by something else. Its
+forecast for the series formulation: a last node at 0.9 (u₀ = 0.10) would move the 4×10⁻⁹ crossing near D 195, but
+each step of the node toward the horizon costs about five decades of the smallest pivot (10⁻¹⁵, 10⁻²⁰, 10⁻²⁵ at 0.7,
+0.8, 0.85), so Δ would be undetermined there even in quad-double; and the linear reading of the same nine points
+puts R at zero near D 128 for 4×10⁻⁹ off, where no node placement helps. Either way the series must go,
+which is the collocation route of 12.6. Caveats: nine points at D 40 to 73 extrapolated to 200 (the power law and the
+linear reading differ by a factor 2 in R at 200); the deviation scale 4×10⁻⁵ per unit of dD is 12.2's estimate; the
+iterates' deviation during a continuation was not measured, only bracketed by the stall.

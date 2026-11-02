@@ -19,7 +19,8 @@ import sys
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DOCS = {name: open(os.path.join(ROOT, name), encoding="utf-8").read()
         for name in ("README.md", "paper/physics/main.tex", "paper/math/main.tex", "proof/A_certify.md", "GAMMA.md",
-                     "notes/PLANTED_SELECTION.md", "notes/PROOF_QUEUE.md", "proof/P5_scope.md")}
+                     "notes/PLANTED_SELECTION.md", "notes/PROOF_QUEUE.md", "proof/P5_scope.md",
+                     "notes/QUAD_DOUBLE.md")}
 
 
 def quoted_in(doc, text):
@@ -517,6 +518,28 @@ def k21_hedge_nodes():
                  [(P, "8 of 21 strings equal the K 41 J 1250 files' at each node")]),
                 (f"J 1500 node wf {w}: hours", f15["seconds"] / 3600, h, 0.1, [(P, "after 17.7 and 17.1 h")])]
     return out
+
+
+@check
+def large_d_walls():
+    """notes/QUAD_DOUBLE.md 12.7: the fitted exponents, the crossings of the horizon series' off-solution radius with the
+    layouts' matching distances, the observed walls and the linear zero (hp/data/large_d_walls.json, written by
+    hp/wall_model.py from the raw-data repository's T84-mac, T85-mac and T101-mac records)."""
+    J = json.load(open(os.path.join(ROOT, "hp/data/large_d_walls.json")))
+    f, c, w = J["fits"], J["cross"], J["walls"]
+    Q = "notes/QUAD_DOUBLE.md"
+    return [("R exponent, 4e-9 off", f["1e-04"]["p"], -0.80, 0.01, [(Q, "| 4×10⁻⁹ | -0.80 |")]),
+            ("R exponent, on the solution", f["0e+00"]["p"], -0.34, 0.01, [(Q, "| on the solution | -0.34 |")]),
+            ("crossing u0 0.20, 4e-9 off", c["0.8"]["1e-04"], 83, 1, [(Q, "crossings for 4×10⁻⁹ and 4×10⁻⁷ off (83 and 57)")]),
+            ("crossing u0 0.20, 4e-7 off", c["0.8"]["1e-02"], 57, 1, [(Q, "crossings for 4×10⁻⁹ and 4×10⁻⁷ off (83 and 57)")]),
+            ("crossing u0 0.30, 4e-13 off", c["0.7"]["1e-08"], 80, 1, [(Q, "crossing 80) could bind")]),
+            ("crossing u0 0.15, 4e-9 off", c["0.85"]["1e-04"], 118, 1, [(Q, "| 4×10⁻⁹ | -0.80 | 0.172 | 0.098 | 50 | 83 | 118 |")]),
+            ("wall, 0.8 layout", w["0.8 pinned"], 78.1, 0.1, [(Q, "the 0.8 layout stopped at 78.1 with")]),
+            ("wall, 0.7 plain", w["0.7 plain"], 67.8, 0.1, [(Q, "stopped at 67.8 (plain, its floor)")]),
+            ("wall, 0.7 pinned", w["0.7 pinned"], 73.3, 0.1, [(Q, "and 73.3 (pinned, the floor and the basin")]),
+            ("walls, 0.85 layout", w["0.85 pinned"], 76.5, 0.1, [(Q, "left the branch at 76.5 and 78.6 along")]),
+            ("walls, 0.85 ladder", w["0.85 ladder"], 78.6, 0.1, [(Q, "left the branch at 76.5 and 78.6 along")]),
+            ("linear zero, 4e-9 off", f["1e-04"]["D_zero_linear"], 128, 1, [(Q, "puts R at zero near D 128 for 4×10⁻⁹ off")])]
 
 @check
 def k21_stages():
