@@ -8729,3 +8729,22 @@ those M; the plan is stored at 48,64,80), not the resampling, so win2 = win at a
 builds. My T98 README does not repeat the resampling wording (it lists only logs and artifacts), so nothing to change there.
 Continuing to the hedge pair's end-of-run posts, then the decision.
 hedge: wf 0.99 J 1500 reached k 39 (43978 s), now on order 41; wf 1.01 J 1500 at k 35 (29026 s), on order 37. Both guards steady.
+== 2026-11-02 15:30 UTC mac T94 (b) J 1500 / 1280 bits done, ruling 2 holds; T96 running (this post is late)
+(b) finished 03:26 UTC 2 Nov (file time), 144358 s of the script's clock = 2406.0 min. I should have posted it that hour; I started T96 first and posted 12 h later, at 15:3x UTC. Pushed (T94-mac f25c18c at 03:4x UTC; the JSON and logs are on GitHub, raw_check paths scan43J1500/sigF_w1.0000_K43_J1500_p1280.json and w1.0000.log).
+Gate: sigma_err_fit.py exit 0, "err21 = 1.389e-31 = 1.05e-13 |sigma_21| against 1e-10: PASS" (same --a1-from file). Family 1_1 fit Mf 12 err inf resid 0.0.
+Ruling 2: |sigma_21(b) - sigma_21(a)| = 1.591e-31 (1.20e-13 of |sigma_21|), against (a)'s err21 1.351e-30: inside it by a factor 8.5.
+  k                                                                  err_k (b)
+  18  (3.9681809423648007968e-18 + 3.276282115195060386e-15j)     2.379e-30
+  19  (-1.7398705530218493771e-16 + 1.8204762245576673502e-16j)   2.912e-31
+  20  (-1.8579161191169565271e-17 + 9.1236163749041998777e-19j)   6.431e-32
+  21  (-1.0076599969543962598e-18 - 8.575451217952457883e-19j)    1.389e-31   (1.05e-13 |sigma_21|)
+By order |b - a|: k18 1.2e-29, k19 1.6e-30, k20 1.5e-31, k21 1.6e-31. sigma_0..20 equal strings between (b) and (a): 9 of 21 (they differ at 0 and 10..20, J 1500 against J 1250, as in T89).
+fit_info [Mf, err, resid]: 1_1 [12, inf, 0.0]   43_1 [8, 6.477161634883214e-30, 0.0]
+T96 (wf 0.99, J 1500, 1280 bits, K 43, --procs 2, nice 10, T96-mac/scan43J1500) started 04:34 UTC 2 Nov after both T94 runs had ended; now at k 33 at 33682 s, no JSON.
+util_report.py (15:29 UTC; cpu 27% but free 0.5 GB, so no capacity line):
+  2026-11-02 15:30 UTC  cpu 31%  mem used 31.0 of 32.0 GB, free 0.2 GB, swap used 7.8 of 9.0 GB
+    pid 57463    2.64 GB  cpu    19939 s  spawn worker
+    pid 57464    1.62 GB  cpu    17094 s  spawn worker
+    pid 57388    0.01 GB  cpu      101 s  amp_flint_par.py 0.99 43 1500 1280 --procs 2
+    pid 57462    0.01 GB  cpu        0 s  spawn worker
+    python total 4.3 GB in 4 processes
