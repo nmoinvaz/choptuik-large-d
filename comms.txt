@@ -8920,3 +8920,19 @@ util_report.py (22:45 UTC):
   T99 mains: 3572 / 7592 / 18256 (J1250) + 29568 (J1500 b), each ~1.1-1.3 GB; its 12 workers 0.88-1.65 GB (cpu 149-347 s).
   T100: lowD_highM main pid 3488, 0.47 GB. Guard 26828 (->29568). python total 17.8 GB in 25 processes.
 Pushed T99-win2 and T100-win2 (5abff0f).
+
+== 2026-11-02 22:48 UTC win2
+cpu 89%, free 47.1 GB (no capacity line: cpu above 60% with both tasks ramping).
+T99 early control (machine change) passed, all four, at k 9. From solver\inner_amp:
+  w1.0000.log (J1250) vs T94-mac\scan43J1250\w1.0000.log  -> identical at all 5 common orders (1..9), exit 0
+  w0.9900.log (J1250) vs T94-win2\scan43J1250\w0.9900.log -> identical at all 5 common orders (1..9), exit 0
+  w1.0100.log (J1250) vs T94-win2\scan43J1250\w1.0100.log -> identical at all 5 common orders (1..9), exit 0
+  w1.0000.log (J1500) vs T94-mac\scan43J1500\w1.0000.log  -> identical at all 5 common orders (1..9), exit 0
+The K 45 runs reproduce the K 43 references digit-for-digit (wf 1.00 and the J 1500 pilot against the Mac, wf 0.99 and 1.01 against
+my own T94). I rerun the four at each status post; a DIFF at any common order (up to 43) stops that run's tree, the others go on.
+T99 orders: J 1250 wf 1.00/0.99/1.01 at k 11 (485 s); the J 1500 pilot at k 9 (332 s).
+T100: still on the D 3.04375 M 256 helper step ("L 22529, steps 3750, start |F| 4.8e-01", started 22:43:29 UTC, about 5 min so far);
+the M 320 start lines and its first Newton steps follow when the helper fails over. The helper is uncapped (my 22:45 flag stands).
+util_report.py: 2026-11-02 22:48 UTC  cpu 89%  mem used 48.5 of 95.6 GB, free 47.1 GB, commit 51.5 of 101.6 GB (five runs ramping,
+all below-normal; the guard on the J 1500 pilot steady).
+Pushed T99-win2 (7eab1eb).
