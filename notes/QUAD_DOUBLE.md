@@ -938,3 +938,29 @@ To use the digits, the series' coefficients would have to come from the large-D 
 exact 1/D expansion of Delta to the order where its terms fall below 1e-30 at D 70, which is where the exponentially
 small part would then sit. That is a theory project (the inner problem's expansion in the papers' notation), not
 more numerics, and the quad-double points are its test when it exists.
+
+### 12.6 Jumps toward D = 100 (2026-11-02, T101-mac; the author's instruction "just jump to 100")
+
+With the pinned double-double scan of T84 and T85 (`scan_hp.py` of wip/qd-horizon, patched on wip/t101-mac 0129a65 so
+that a solve raising on the predicted state counts as a failed step), from two starts, the Lagrange predictor through
+the waypoints each start has, and the scan's own halving from the full jump (folder T101-mac of the raw-data
+repository, 2a21d20; its README has the expectation written before the runs and every attempt):
+
+| start | jump | result |
+|---|---|---|
+| 77.8806, layout A (T85's frontier; history 74, 75, 76, 77) | 22.1 to 100 | the predicted state has a non-finite horizon residual (NaN pivot) |
+| the same, halving | 11.1, 5.5, 2.8 | the predictor's residual 1e133, 4e29, 8e7: the horizon block off its domain |
+| the same, halving | 1.38, 0.69, 0.35 | Newton stalls at \|F\| 3e-6, 5e-7, 1e-7, as T85's steps of 0.4 to 0.005 did; nothing lands |
+| 73.2657, layout B (T75's frontier; history 70.65, 71.5, 72.4) | 26.7, 13.4, 6.7 | the predictor's residual 8e48, 2e21, 2e3 |
+| the same, halving on | 3.34 | lands at 76.6075, \|F\| 1e-27 (T84's jump of 5 from this start landed at 78.27) |
+| from 76.6075 | 2.67, then 1.34 | 2.67 stalls at 8e-6; 1.34 lands at 77.9442, 3e-21 |
+| from 77.9442 | 1.34, then 0.67 | 1.34 stalls at 7e-6; 0.67 lands at 78.6126, 8e-27, but dDelta_pin −2×10⁻³ (off the branch) |
+| from 78.6126 | 0.53, 0.27 | NaN pivot; \|F\| 7e131; the ladder ends below 0.25 |
+
+So no jump of any size lands past D 79.3 from either start, and the wall T85 met with steps of 1 near 78 is met by
+jumps of every size: it is the Newton basin of 12.4 (the horizon block's exponential sensitivity), not the step rule.
+A jump beyond a few units puts the predicted state outside the horizon series' domain altogether. The three landed
+points of layout B carry that layout's 10⁻⁶ to 10⁻³ uncertainty (the last is off the branch) and enter no table.
+What would move the wall is the discretisation, as 12.4 concluded: a horizon treatment without a series radius
+(collocation in u on the last segment, the regularity condition imposed at the horizon itself), which is kernel work
+with a planted test at a D where both treatments must agree before any point past 78 is read.
