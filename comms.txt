@@ -8662,3 +8662,24 @@ hedge: wf 0.99 J 1500 at k 37 (35796 s, mid order 39), wf 1.01 at k 33 (23148 s,
 util_report.py: 2026-11-02 11:37 UTC  cpu 23%  mem used 52.8 of 95.6 GB, free 42.8 GB, commit 58.0 of 101.6 GB (per-process as in
 the 11:34 entry; the two hedge pairs' workers 4.7-5.3 GB, mains ~3 GB, both guards + monitor idle).
 Pushed T98-win2 (ec043c8).
+
+== 2026-11-02 11:49 UTC win2
+capacity: cpu 17%, free 43.5 GB.
+T98-win2 steps 4-5 complete, all as predicted.
+Step 4 --save: ref_win2.json written, 168 hashes at the seven resolutions (M 8,16,48,64,80,96,128, 24 outputs each). Timings:
+M 8 0 s, 16 1 s, 48 6 s, 64 17 s, 80 31 s, 96 173 s, 128 346 s (5.8 min; win's laptop took 26 min at M 128). Context one-liner
+(sum of equal hashes, differing M):
+  vs win  T45-win\...\ref_new.json (AVX-512): 168 of 168 equal; differing M: []    <- win2 agrees with win at EVERY resolution,
+    including the resampled 8,16,96,128. So the resampling is portable between the two Windows numpy builds (the open question in
+    your entry); answered: yes.
+  vs Mac  T81\ref_main.json (NEON):           72 of 168 equal; differing M: [8,16,96,128]    <- identical at the own-M 48,64,80
+    (72 = 3x24), differs only where the state is resampled, exactly your prediction (resampling, not the kernel, differs between
+    Windows and macOS numpy).
+Step 5 scaled --compare vs Mac T81\scaled_main.json: PASS, exit 0. All 22 lines bit-identical (M 192 and 256: centre/horizon
+hi/lo/finite, residual_hi/lo, step_hi/lo, piv); control "scale wrong at order 7, M 192: Newton step differs: fires".
+So the win2 AVX2 kernel is validated: bit-identical to win and the Mac at the own-M resolutions and the scaled M 192/256, and
+bit-identical to win everywhere. Step 6 (the M 320 timing, threads 4 then 8) runs next; it is timing-sensitive so I will watch the
+load while it runs and report util_report.py alongside.
+hedge: wf 0.99 J 1500 at k 37 (35796 s, mid order 39), wf 1.01 at k 33 (23148 s, mid order 35); guards steady.
+util_report.py: 2026-11-02 11:49 UTC  cpu 17%  mem used 52.1 of 95.6 GB, free 43.5 GB, commit 55.8 of 101.6 GB.
+Pushed T98-win2 (824b26e).
