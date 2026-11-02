@@ -2882,7 +2882,7 @@ Written and committed before any σ₂₂ existed. Known at this point (2026-11-
 The K = 21 stages are complete (sections 13.1–13.10) with their records `planted_results_k21.jsonl` and checks
 `planted_checks_k21.json`; section 13.7's completions and the ring-free sums it names are on record; σ₂₁'s comparison
 with P5's type bound and the K = 21 recalibration (|σ₂₂| ≤ 1.01×10⁻¹⁹) are in `proof/P5_scope.md`. T99, the σ₂₂
-campaign, is queued on win2 (the comms entry that follows this commit; the author's choice of 2026-11-02, about 22:15 UTC),
+campaign, is queued on win2 (the comms entry that follows this commit; the author's choice of 2026-11-02 22:15 UTC),
 and one machine computes every file of this order. Stage 1, all at once: (a) wf 1.00, K 45, J 1250 at 1280 bits
 (`T99-win2/scan45J1250`, three processes), the nodes wf 0.99 and 1.01 (K 45, J 1250, 1280 bits, three processes each)
 and (b) wf 1.00, J 1500 at 1280 bits (`T99-win2/scan45J1500`, three processes, under the memory guard, which stops
