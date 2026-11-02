@@ -8683,3 +8683,30 @@ load while it runs and report util_report.py alongside.
 hedge: wf 0.99 J 1500 at k 37 (35796 s, mid order 39), wf 1.01 at k 33 (23148 s, mid order 35); guards steady.
 util_report.py: 2026-11-02 11:49 UTC  cpu 17%  mem used 52.1 of 95.6 GB, free 43.5 GB, commit 55.8 of 101.6 GB.
 Pushed T98-win2 (824b26e).
+
+== 2026-11-02 12:24 UTC win2
+capacity: cpu 31%, free 42.3 GB.
+T98-win2 step 6, the M 320 timing (D 3.7 state resampled M 80 -> 320, N 17921, coarse plan tol 1e-30 hmax 0.05 -> 825 steps,
+reps 2). Seconds per rep, threads 4 then 8:
+  threads 4: residual 1.30 / 1.31 ; newton_mixed 383.96 / 386.72 ; jac 381.48 / 383.87 ; block factor 0.69 / 0.67 ;
+             jac_no_dtau 220.48 / 213.32 ; LU 418.2 MB.
+  threads 8: residual 0.97 / 0.85 ; newton_mixed 240.50 / 219.50 ; jac 238.63 / 217.67 ; block factor 0.49 / 0.47 ;
+             jac_no_dtau 123.64 / 121.96 ; LU 418.2 MB.
+Reading: newton_mixed is almost all Jacobian build; the block factorization is ~0.5 s and the LU 418 MB (both independent of the
+step count). 4 -> 8 threads speeds the Jacobian about 1.65x (382 -> 218 s). The tau derivative is about 45% of the Jacobian
+(jac - jac_no_dtau ~ 165 s at 4 threads, ~95 s at 8).
+peak_rss_mb and load came back null: highm_check uses getrusage / load average, Unix-only, so they are empty on Windows. The memory
+that is certain is LU 418.2 MB; in util sampling the profile's base process held about 0.6 GB working set and free RAM stayed ~42 GB
+across both runs, so the M 320 profile footprint is well under a GB plus the LU, far from the 10 GB guard floor.
+For the low-D decision (jac ~ proportional to steps): at the T82 M 320 plan of ~7640 steps, win2's 8-thread Jacobian projects to
+about 218 x 7640/825 ~ 2000 s per Newton step, against win's 15044 s on 4 cores for that continuation, about 7x faster; a projection
+from the coarse-plan profile, not a measured continuation step.
+This completes T98's six steps: build (avx2, commit matched), cargo test 9/0/2, controls/block/converge PASS, bit identity 72/72 vs
+win and the Mac at M 48/64/80 and the scaled 22/22 vs the Mac, ref_win2.json agreeing with win at all 168 (resampling portable
+between the Windows builds) and with the Mac at the own-M 72, M 320 timing above. The build is validated for use on win2.
+Follow-on: the hedge pair's end-of-run posts, then win2 waits for your decision (sigma_22 at K 45, or the low-D M 320 continuation
+here).
+hedge: wf 0.99 J 1500 at k 37 (mid order 39, ~2 h on it; worker 12176 +773 s in the last 12 min, active not stuck); wf 1.01 J 1500
+reached k 35 (29026 s). Both guards steady.
+util_report.py: 2026-11-02 12:24 UTC  cpu 31%  mem used 53.3 of 95.6 GB, free 42.3 GB, commit 58.0 of 101.6 GB.
+Pushed T98-win2 (908d57c).
