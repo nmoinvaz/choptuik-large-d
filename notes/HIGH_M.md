@@ -777,8 +777,8 @@ the cloud pilot was stopped. Where it stands:
 The commands, thread budget and stop conditions are in comms.txt (T45).
 
 
-**T45's end (comms 2026-10-27 07:36 UTC win; wip/highm-local 002265f, merged).** D = 3.05 converged at M = 320 and 384 on
-the 21 nodes 0.000157 … 0.975 (kc 100, ks 250): Δ(384) = 2.484927163788103 (lo +9.5×10⁻¹⁷), |F| 9.3×10⁻²⁹, tails
+**T45's end (comms 2026-10-27 07:36 UTC win; wip/highm-local 002265f, merged).** D = 3.05 converged at M = 320 and 384
+on the 21 nodes 0.000157 … 0.975 (kc 100, ks 250): Δ(384) = 2.484927163788103 (lo +9.5×10⁻¹⁷), |F| 9.3×10⁻²⁹, tails
 9.9×10⁻⁶⁴ (centre) and 8.2×10⁻⁷⁵ (horizon). The step from M = 320 to 384 is −2.10×10⁻¹¹, 56 times smaller than the
 step from 256 to 320 (−1.17×10⁻⁹); that step is the quoted ± of Δ at D = 3.05, a resolution step, not a bound. The
 M = 384 point took 10.6 h (a lift, three Newton steps of 2.4–2.9 h, a second pass of two 62-minute steps) at a peak
@@ -799,3 +799,8 @@ T81/scaled_main.json: 22 of 22 bit-identical, the control fires (`scaled_vs_mac.
 346 s on win2 against 1573 s on win's laptop (`ref_save.log`, T45's `ref_new.log`). So a build on a new machine
 is checked against the stored reference files at M = 48, 64, 80 and the scaled M = 192, 256, with no reference
 build on that machine.
+At M = 320 (the D = 3.7 state resampled from M = 80, N = 17921, a coarse plan of 825 Taylor steps;
+`profile_M320.jsonl`, `profile_M320_t4.log`, `profile_M320_t8.log`): the Jacobian build takes 382 s at 4 threads and
+218 s at 8, the tau derivative about 45% of it, the block factorization 0.5 s with a 418 MB LU. Scaled to T82's
+7640-step plan at D = 3.0425, a Newton step on win2 at 8 threads projects to about 2000 s against the 15044 s measured
+on win (a projection from the coarse-plan profile, not a measured continuation step).
