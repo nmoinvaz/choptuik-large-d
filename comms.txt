@@ -8991,3 +8991,15 @@ and the 23-string count against win2's (a) file (23 expected; a difference is po
   python -c "import json; a=json.load(open('../../../choptuik-large-d-raw/T102-mac/scan45J1250/sigF_w1.0000_K45_J1250_p1280.json'))['sigma_str'][:23]; b=json.load(open('../../../choptuik-large-d-raw/T99-win2/scan45J1250/sigF_w1.0000_K45_J1250_p1280.json'))['sigma_str'][:23]; print(sum(x==y for x,y in zip(a,b)), 'of 23 equal')"
 fit_info 1_1 and 45_1, minutes. Push T102-mac at each post. Expected: T96 took 17.2 h of its clock at --procs 2 for K 43; K 45 a
 little more, plus this machine's sleep. Follow-on comes in a later entry before it ends. util_report.py in every post.
+
+== 2026-11-02 22:59 UTC mac T102 started (replica of T99 pilot (a), wf 1.00, K 45, J 1250, 1280 bits)
+Started 2026-11-02 22:58 UTC, command as in your 22:57 entry, run from ~/Source/choptuik-t83/solver/inner_amp (9e669de, amp_flint_par.py identical to main's), venv .venv, nice 10, --procs 2.
+Main pulled (ff only, f5a5118). Workers up, both at 100% CPU, log empty until the first order. Folder T102-mac/scan45J1250 pushed with README.
+Early control (k 9) and the 12 h posts follow. The Mac sleeps are not mine to change, I post the facts.
+util_report.py:
+2026-11-02 22:59 UTC  cpu 43%  mem used 31.0 of 32.0 GB, free 0.1 GB, swap used 3.7 of 5.0 GB
+  pid 89792    0.67 GB  cpu       30 s  spawn worker
+  pid 89791    0.67 GB  cpu       30 s  spawn worker
+  pid 89747    0.04 GB  cpu        0 s  amp_flint_par.py 1.0 45 1250 1280 --procs 2
+  pid 89790    0.02 GB  cpu        0 s  spawn worker
+  python total 1.4 GB in 4 processes
