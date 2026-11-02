@@ -2541,7 +2541,8 @@ by 1.01 times (a)'s plateau error, the Mf step known from K = 20, and at σ₁�
 (wf 0.99 and 1.01, K 43, J 1250, 1280 bits) landed 03:41 UTC on win2 (T94-win2/scan43J1250 at 8676d14, 553 min each on
 four processes; their logs equal T89's K 41 node logs at all 21 common orders) and are copied into `scan43J1250/`;
 their convergence is item 1's reading, by the converge stage (section 13.2). The K = 20 stages are complete (sections
-12.1–12.10), so everything this section needs from the lower orders is on record: the K = 20 records `planted_results_k20.jsonl` and checks
+12.1–12.10), so everything this section needs from the lower orders is on record: the K = 20 records
+`planted_results_k20.jsonl` and checks
 `planted_checks_k20.json`, section 12.7's completions and the ring-free sums it names. The procedure is section 12.0's
 one order up, with its amendment written into item 1(b) and item 3 from the start, and the changes section 12's
 findings call for, stated here before the data:
