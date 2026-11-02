@@ -465,13 +465,16 @@ def k21_gate():
     """T94's pilot (a) at wf 1.00, K 43, J 1250, 1280 bits (notes/PLANTED_SELECTION.md section 13.0's gate reading; the
     file in solver/inner_amp/scan43J1250 from the raw-data repository's T94-mac at a769589): err21 from sigma_err_fit.py
     (a1 from the 960-bit scan39J1000 file), its margin under 1e-10, the strings equal to the K 41 file, |sigma_21| against
-    P5's K = 20 predicted bound 1.47e-18 (proof/P5_scope.md)."""
+    P5's K = 20 bound (the wf 1.0 node line of solver/proof/logs/entire_cert_K21.log, the unrounded bound; proof/P5_scope.md)."""
+    import re
     d = os.path.join(ROOT, "solver/inner_amp")
     sys.path.insert(0, d)
     import sigma_err_fit as SF
     sys.path.pop(0)
     a = json.load(open(os.path.join(d, "scan43J1250/sigF_w1.0000_K43_J1250_p1280.json")))
     p = json.load(open(os.path.join(d, "scan39J1000/sigF_w1.0000_K39_J1000_p960.json")))
+    L = open(os.path.join(ROOT, "solver/proof/logs/entire_cert_K21.log")).read()
+    r20 = float(re.search(r"wf 1\.0: k <= 20 \(.*?\): ([0-9.]+);", L).group(1))
     k41 = json.load(open(os.path.join(d, "scan41J1250/sigF_w1.0000_K41_J1250_p1280.json")))
     ra = SF.recompute(a, SF.a1_of(p))
     sa, ea = float(abs(ra[21][1])), ra[21][2]
@@ -482,8 +485,8 @@ def k21_gate():
             ("err21 margin under 1e-10", 1e-10 / (ea / sa), 98, 1, [(P, "a margin of 98")]),
             ("sigma_0..20 strings of (a) equal to the K 41 file", equal, 21, 0.5, [(P, "21 of 21 strings; its run log")]),
             ("|sigma_21| at wf 1.00", sa, 1.32e-18, 0.01e-18, [(P, "|σ₂₁(a)| = 1.32×10⁻¹⁸"), (Q, "|σ₂₁| = 1.32×10⁻¹⁸")]),
-            ("sigma_21 over the K = 20 predicted bound", sa / 1.47e-18, 0.900, 0.001,
-             [(P, "0.900 of P5's"), (Q, "0.900 of the K = 20 bound")])]
+            ("sigma_21 over the K = 20 bound at wf 1.00", r20, 0.899, 0.001,
+             [(P, "0.899 of P5's"), (Q, "0.899 of the K = 20 bound")])]
 
 @check
 def k21_stages():
@@ -684,6 +687,30 @@ def k21_stages():
             ("margins at K = 21, least", min(1e-10 / nodes[w]["err21_rel"] for w in nodes), 79, 1, [(P, "with margins of 79–97 under item 1")]),
             ("margins at K = 21, most", max(1e-10 / nodes[w]["err21_rel"] for w in nodes), 97, 1, [(P, "with margins of 79–97 under item 1")])]
     return out
+
+@check
+def p5_sigma21():
+    """proof/P5_scope.md item 3: sigma_21 at the nodes against the type bound (solver/proof/logs/entire_cert_K21.log,
+    from `entire_cert.py 21 --scan ../inner_amp/scan43J1250`), the k <= 12 calibration's ratio at k = 21, the K = 21
+    recalibration and its prediction for sigma_22."""
+    import re
+    P, Q = "proof/P5_scope.md", "notes/PROOF_QUEUE.md"
+    L = open(os.path.join(ROOT, "solver/proof/logs/entire_cert_K21.log")).read()
+    node = {m.group(1): (float(m.group(2)), float(m.group(3)))
+            for m in re.finditer(r"wf (\S+): k <= 20 \(.*?\): ([0-9.]+); k <= 12 \(.*?\): ([0-9.]+)", L)}
+    cal = re.search(r"\|sigma_k\| Gamma\(k \+ ([0-9.]+)\) / ([0-9.]+)\^k for k = 4\.\.21:.*C = max = ([0-9.]+)", L)
+    pred = re.search(r"k 22: ([0-9.e+-]+),", L)
+    k12 = "1.016, 0.996, 0.975 at wf 0.99, 1.00, 1.01"
+    cs = "(a = 1.7497, b = 4.72, C = 73.1)"
+    return [("sigma_21 over the K = 20 bound at wf 0.99", node["0.99"][0], 0.901, 0.001, [(P, "0.901 and 0.896 of each node's own K = 20 bound")]),
+            ("sigma_21 over the K = 20 bound at wf 1.01", node["1.01"][0], 0.896, 0.001, [(P, "0.901 and 0.896 of each node's own K = 20 bound")]),
+            ("k <= 12 calibration's ratio at k = 21, wf 0.99", node["0.99"][1], 1.016, 0.001, [(P, k12), (Q, "1.016 at the 0.99 node at k = 21")]),
+            ("k <= 12 calibration's ratio at k = 21, wf 1.00", node["1.0"][1], 0.996, 0.001, [(P, k12)]),
+            ("k <= 12 calibration's ratio at k = 21, wf 1.01", node["1.01"][1], 0.975, 0.001, [(P, k12)]),
+            ("K = 21 calibration a", float(cal.group(2)), 1.7497, 0.0001, [(P, cs)]),
+            ("K = 21 calibration b", float(cal.group(1)), 4.72, 0.01, [(P, cs)]),
+            ("K = 21 calibration C", float(cal.group(3)), 73.1, 0.1, [(P, cs)]),
+            ("predicted bound on sigma_22", float(pred.group(1)), 1.01e-19, 0.01e-19, [(P, "|σ₂₂| ≤ 1.01×10⁻¹⁹")])]
 
 @check
 def p5_sigma20():

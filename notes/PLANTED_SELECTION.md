@@ -2532,8 +2532,10 @@ repository T94-mac/scan43J1250 at a769589, copied into `scan43J1250/`): err21(a)
 21 of 21 strings; its run log equals T89's K 41 log at all 21 common orders, 1–41 (`log_compare.py`), and win's T97
 replica log at the 5 orders that had (the amendment of 21:35 UTC below). Ruling 1 passes, so J 1250 is used at this
 order: the node files are win2's `T94-win2/scan43J1250` and the J 1500 node files are context. Pilot (b) was inside
-order 43 at this reading; ruling 2 and (b)'s err21 are added when it lands. |σ₂₁(a)| = 1.32×10⁻¹⁸, 0.900 of P5's
-predicted bound 1.47×10⁻¹⁸ (recorded in `proof/P5_scope.md`). **Pilot (b) and the nodes (2026-11-02 05:45 UTC):** (b)
+order 43 at this reading; ruling 2 and (b)'s err21 are added when it lands. |σ₂₁(a)| = 1.32×10⁻¹⁸, 0.899 of P5's
+predicted bound 1.47×10⁻¹⁸ (the unrounded bound, `entire_cert_K21.log`; the reading said 0.900, the ratio
+to the printed three digits, corrected 2026-11-02; recorded in `proof/P5_scope.md`).
+**Pilot (b) and the nodes (2026-11-02 05:45 UTC):** (b)
 landed 2026-11-02 03:26 UTC (144358 s, 40.1 h wall; T94-mac/scan43J1500, copied into `scan43J1500/`; the Mac runner's
 push follows its end post): err21(b) = 1.389×10⁻³¹, 1.05×10⁻¹³ of |σ₂₁|; |σ₂₁(a) − σ₂₁(b)| = 1.591×10⁻³¹, 0.118 of
 (a)'s err21, so ruling 2's case (a difference beyond err21, posted and not a stop) did not arise; at σ₁₆ the two differ
@@ -2592,8 +2594,8 @@ findings call for, stated here before the data:
    A ring that survives σ₂₁ is a finding, reported as such.
 5. **Calibration** at K = 21, as section 10.5: the error of arg, ratio, Padé mid and G on (i) the 28 arc plants, (ii)
    C-EXP, (iii) REFIT with fit residual ≤ 10⁻⁴, and (iv) the BP family: section 12.0's twenty sums (section 11.0's
-   sixteen and section 11.6's four) plus the five C20-BP sums section 12.7 records as ring-free and passing the type rule
-   at K = 20, [6/14], [7/13], [8/12], [9/11] and [10/10] (named there by that rule and not by their values), each with
+   sixteen and section 11.6's four) plus the five C20-BP sums section 12.7 records as ring-free and passing the type
+   rule at K = 20, [6/14], [7/13], [8/12], [9/11] and [10/10] (named there by that rule and not by their values), each with
    its own zero as truth: twenty-five sums. The calibration at K = 20 from the new records must reproduce section
    12.6's arc and BP-family ranges to 6×10⁻⁷ (against the values stored in `planted_checks_k20.json`).
 6. **Next generation and ring-free completions,** glued at σ₂₁ (tail from k = 22): ratio-law windows k = 6–20, 8–20,

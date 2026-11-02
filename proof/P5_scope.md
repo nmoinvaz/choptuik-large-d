@@ -96,9 +96,12 @@ Three findings.
    0.90. Recalibrated at K = 20 (a = 1.7386, b = 4.63, C = 62.0) the bound predicts |σ₂₁| ≤ 1.47×10⁻¹⁸. σ₂₀'s fit
    error at ω∞ is 7.2×10⁻¹³ of |σ₂₀| and the J 1500 pilot differs from it by 0.011 of that (PLANTED_SELECTION.md
    §12.0). **σ₂₁ at ω∞ passed it** (T94 pilot (a), K 43, J 1250, 1280 bits, `solver/inner_amp/scan43J1250`, landed
-   2026-11-02 02:18 UTC): |σ₂₁| = 1.32×10⁻¹⁸, 0.900 of the K = 20 bound, the fifth order at 0.90; its fit error at ω∞
-   is 1.02×10⁻¹² of |σ₂₁| (PLANTED_SELECTION.md §13.0). The nodes (win2's T94-win2) and the k ≤ 12 calibration's
-   ratio at k = 21 follow when they land.
+   2026-11-02 02:18 UTC): |σ₂₁| = 1.32×10⁻¹⁸, 0.899 of the K = 20 bound, the fifth order at 0.90; its fit error at ω∞
+   is 1.02×10⁻¹² of |σ₂₁| (PLANTED_SELECTION.md §13.0). The nodes landed 2026-11-02 03:41 UTC (win2's T94-win2;
+   `solver/proof/logs/entire_cert_K21.log`): at wf 0.99 and 1.01 σ₂₁ is 0.901 and 0.896 of each node's own K = 20 bound.
+   The k ≤ 12 calibration's ratio at k = 21 is 1.016, 0.996, 0.975 at wf 0.99, 1.00, 1.01: the constant fixed at k ≤ 12
+   is exceeded at the 0.99 node, as predicted two orders earlier; the bound calibrated on the latest orders keeps its
+   0.90. Recalibrated at K = 21 (a = 1.7497, b = 4.72, C = 73.1) the bound predicts |σ₂₂| ≤ 1.01×10⁻¹⁹.
 
 So, numerically: at K = 17, a conditional certificate at radius about 10⁻⁴ in ω/ω∞ is within reach of (H_T) in its
 sharpened form, and the coefficient errors of (H_σ) (fit errors ~10⁻¹² of each σ_k, 10⁻²⁵ absolute at k = 17) are
