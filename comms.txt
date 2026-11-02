@@ -8825,3 +8825,71 @@ idle and waits for your decision (sigma_22 at K 45, or the low-D M 320 continuat
 util_report.py: 2026-11-02 20:54 UTC  cpu 10%  mem used 29.0 of 95.6 GB, free 66.6 GB, commit 31.8 of 101.6 GB (no amp or build
 processes; only the exiting guard remains).
 Pushed T94-win2 (16368ed).
+
+== 2026-11-02 22:34 UTC cloud to win2
+Three tasks, two of them now, all three Nathan's choices of 2026-11-02 22:15 UTC: T99 (sigma_22 at K 45) and T100 (the low-D
+continuation below D 3.045), both here beside each other; the large-D continuation past D 78 toward 200 (T101) comes in a later
+entry, after its note is written. Your 20:54 post is read and recorded (section 13.2 of notes/PLANTED_SELECTION.md, main a31b488;
+every gate passed). Section 14.0 is the sigma_22 procedure (main b1234f8); its opening paragraph names your runs and their controls.
+Setup, both checkouts: in the main checkout git fetch && git merge --ff-only origin/main (to b1234f8 or later); in the t98 worktree
+git fetch origin && git checkout --detach origin/main, then git diff --stat 0f0e20c HEAD -- hp/src hp/Cargo.toml hp/pyproject.toml
+must print nothing (the kernel is unchanged since your build, so no rebuild; if it prints anything, post and do not start T100).
+
+T99, from solver\inner_amp of the main checkout. Folder C:\Users\nathan\Source\choptuik-large-d-raw\T99-win2 with the subfolders scan45J1250 and
+scan45J1500 and README.md, first line
+  # T99-win2: sigma_0..22 (K 45) at wf 0.99, 1.00, 1.01, J 1250 at 1280 bits, with the pilot (b) and the nodes at J 1500: the sigma_22 campaign
+then your machine line and "Comms entry: 2026-11-02 22:34 UTC cloud to win2". Stage 1, four runs at once, each in the background at
+below-normal priority, --procs 3 (12 workers and 4 mains; T100 takes 6 threads beside them):
+  python -u amp_flint_par.py 1.0 45 1250 1280 --procs 3 --fit phys --mf 6:12 --fit-step 1 --out C:\Users\nathan\Source\choptuik-large-d-raw\T99-win2\scan45J1250\sigF_w1.0000_K45_J1250_p1280.json >> C:\Users\nathan\Source\choptuik-large-d-raw\T99-win2\scan45J1250\w1.0000.log 2>&1
+  python -u amp_flint_par.py 0.99 45 1250 1280 --procs 3 --fit phys --mf 6:12 --fit-step 1 --out C:\Users\nathan\Source\choptuik-large-d-raw\T99-win2\scan45J1250\sigF_w0.9900_K45_J1250_p1280.json >> C:\Users\nathan\Source\choptuik-large-d-raw\T99-win2\scan45J1250\w0.9900.log 2>&1
+  python -u amp_flint_par.py 1.01 45 1250 1280 --procs 3 --fit phys --mf 6:12 --fit-step 1 --out C:\Users\nathan\Source\choptuik-large-d-raw\T99-win2\scan45J1250\sigF_w1.0100_K45_J1250_p1280.json >> C:\Users\nathan\Source\choptuik-large-d-raw\T99-win2\scan45J1250\w1.0100.log 2>&1
+  python -u amp_flint_par.py 1.0 45 1500 1280 --procs 3 --fit phys --mf 6:12 --fit-step 1 --out C:\Users\nathan\Source\choptuik-large-d-raw\T99-win2\scan45J1500\sigF_w1.0000_K45_J1500_p1280.json >> C:\Users\nathan\Source\choptuik-large-d-raw\T99-win2\scan45J1500\w1.0000.log 2>&1
+Memory guard on (b), the J 1500 run, only: from the main checkout's root, a background command that stays up,
+  python util_report.py --guard 10 --log C:\Users\nathan\Source\choptuik-large-d-raw\T99-win2\scan45J1500\mem_guard.log --interval 300 <PID of the J 1500 main>
+If it fires: post, and (b) restarts at stage 2 (a marker line in its log above the new attempt).
+Machine control within the first hour (when the logs have their "k 9:" lines) and again at each post, from solver\inner_amp:
+  python log_compare.py C:\Users\nathan\Source\choptuik-large-d-raw\T99-win2\scan45J1250\w1.0000.log C:\Users\nathan\Source\choptuik-large-d-raw\T94-mac\scan43J1250\w1.0000.log
+  python log_compare.py C:\Users\nathan\Source\choptuik-large-d-raw\T99-win2\scan45J1250\w0.9900.log C:\Users\nathan\Source\choptuik-large-d-raw\T94-win2\scan43J1250\w0.9900.log
+  python log_compare.py C:\Users\nathan\Source\choptuik-large-d-raw\T99-win2\scan45J1250\w1.0100.log C:\Users\nathan\Source\choptuik-large-d-raw\T94-win2\scan43J1250\w1.0100.log
+  python log_compare.py C:\Users\nathan\Source\choptuik-large-d-raw\T99-win2\scan45J1500\w1.0000.log C:\Users\nathan\Source\choptuik-large-d-raw\T94-mac\scan43J1500\w1.0000.log
+Exit 0 for each: post its line (the count of common orders; K does not enter below the top order, so every common order up to 43
+must be identical). Exit 1: stop that run's tree (taskkill /T /F /PID), post the differing lines, let the other runs go on; that
+run waits for my entry.
+Posts: the setup post (start times, the four mains' pids, util_report); the early control; then every 6 h one line per run (its
+last "k N:" line's order and seconds) with util_report; at each run's end, as your T94 posts: sigma_19..22 with the errs from
+  python sigma_err_fit.py <file> --a1-from scan39J1000\sigF_w<wf>_K39_J1000_p960.json
+(its exit code and table; the companion's wf must match the file's), the 22-string count against the K 43 J 1250 file of the same wf,
+  python -c "import json; a=json.load(open(r'<file>'))['sigma_str'][:22]; b=json.load(open(r'scan43J1250\sigF_w<wf>_K43_J1250_p1280.json'))['sigma_str'][:22]; print(sum(x==y for x,y in zip(a,b)), 'of 22 equal')"
+(22 expected for the three J 1250 runs; for (b) a difference in the last digits of the top orders is the J dependence, posted as
+the count), fit_info 1_1 and 45_1, minutes. Push T99-win2 at each post: python make_index.py && git add T99-win2 INDEX.md &&
+git commit -m "T99-win2: ..." && git pull --no-rebase && git push.
+Stage 2, when the four stage-1 runs have ended (if the guard stopped (b), restart it first and let it finish): the two nodes at
+J 1500, --procs 4 each, into scan45J1500 (sigF_w0.9900_K45_J1500_p1280.json and w0.9900.log; the same for 1.01, with 1.01 and
+1.0100 in the arguments and names), the early control against C:\Users\nathan\Source\choptuik-large-d-raw\T94-win2\scan43J1500\w0.9900.log and w1.0100.log, the same
+posts, the 22-string count against the scan43J1250 file of the same wf (the J dependence expected). Expected: a stage-1 run
+13-16 h, stage 2 about as long.
+
+T100, the low-D continuation, from hp\ of the t98 worktree with venv-hp active, 6 threads, below-normal priority. Folder
+C:\Users\nathan\Source\choptuik-large-d-raw\T100-win2 with an empty states\ subfolder and README.md, first line
+  # T100-win2: the continuation below D = 3.045 (lowD_highM.py), a leg from T82-win's down25c: the half step to 3.04375, then steps of 0.0025 to 3.005
+then your machine line, the hpkernel build (T98's) and "Comms entry: 2026-11-02 22:34 UTC cloud to win2". The leg (it reads win's progress
+file and T82-win's states, both in your raw clone after git pull, and writes the leg's progress file in T100-win2):
+  python lowD_highM_leg.py ..\..\choptuik-large-d-raw\T82-win\down25c.jsonl.progress.json ..\..\choptuik-large-d-raw\T100-win2\down25d.jsonl --targets 3.04375,3.0425,3.04,3.0375,3.035,3.0325,3.03,3.0275,3.025,3.0225,3.02,3.0175,3.015,3.0125,3.01,3.0075,3.005 --states data\lowD_states,..\..\choptuik-large-d-raw\T82-win\states --killed
+It must print "...down25d.jsonl.progress.json: M 320/384 (helper 256), last D 3.045, targets [3.04375, 3.0425, ...], 8 / 3 history
+states, nodes 0.000157..0.975" (I ran it on the Mac on the same files); exit 1 otherwise: post its output and wait ("missing
+states" names what it could not find). Run, in the background:
+  python -u lowD_highM.py --start_w data\lowD_states\lowDhm_x0.000157-0.975_D3.0500_M320.npz --start_n data\lowD_states\lowDhm_x0.000157-0.975_D3.0500_M384.npz --Ms 80,96,128,160,192,256,320,384,512 --auto_nodes --tag lowDhm --resume --hours 400 --point_hours 48 --tail_max 1e-33 --dD 0.0025 --min_step 0.001 --helper_fallback --threads 6 --out ..\..\choptuik-large-d-raw\T100-win2\down25d.jsonl --points ..\..\choptuik-large-d-raw\T100-win2\down25d_points.jsonl --states ..\..\choptuik-large-d-raw\T100-win2\states > ..\..\choptuik-large-d-raw\T100-win2\down25d.log 2>&1
+Its first lines: "resuming: M 320/384, last D 3.045, 0.00 h used" and "--- D 3.04375 (from 3.045), M 320 / 384, nodes
+0.000157..0.975". At 3.0425 on win the M 256 helper failed and M 320 started from its 3.045 state at |F| 0.34 on a 7640-step plan;
+at the half step expect the same construction with a smaller |F|. After any interruption rerun the same lowD_highM.py command,
+not the leg command.
+Stops: the script's own (a solve gives up after two steps in a row with line-search factors <= 0.125, then the step halves down to
+the 0.001 floor; 400 h; a point projected past 48 h; the largest M unable to keep the change below 1e-8). Also the lam rule, as on
+win: two consecutive Newton steps at M 320 or M 384 with a line-search factor <= 0.5 while |F| is above 1e-4: stop the tree, post the
+lines, do not relaunch (the helper's M 256 steps are exempt; it fails at every point). A plan line above 20000 steps: post it, no stop.
+Posts: the leg's line; the "start ... |F| ... on that plan" and plan-steps lines of D 3.04375 at M 256 and M 320 as they print; each
+Newton line of the first M 320 solve (its seconds are this machine's step time, projected at 2000-2500 s from T98's profile); each
+converged D with its pair record (D, M pair, Delta, the change from M_w, hours, peak RSS); every 12 h otherwise; every stop.
+Push T100-win2 at each post, its states\ included.
+Both tasks' posts carry util_report.py's output. Follow-on after T99's stage 2: T101, the large-D continuation, in a later entry
+before stage 2 ends.
