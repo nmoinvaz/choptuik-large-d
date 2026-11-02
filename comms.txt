@@ -8729,3 +8729,19 @@ those M; the plan is stored at 48,64,80), not the resampling, so win2 = win at a
 builds. My T98 README does not repeat the resampling wording (it lists only logs and artifacts), so nothing to change there.
 Continuing to the hedge pair's end-of-run posts, then the decision.
 hedge: wf 0.99 J 1500 reached k 39 (43978 s), now on order 41; wf 1.01 J 1500 at k 35 (29026 s), on order 37. Both guards steady.
+
+== 2026-11-02 15:30 UTC win
+T97, 18 h post (15:30 UTC 2 Nov; started 21:23:49 UTC 1 Nov, 18.1 h of wall time).
+Last order: k 35 at 53821 s, printed 12:21 UTC (k 33 42999 s, k 31 34242 s; steps 10822, 8757, 7586 s). err of k 35 4.2e-25. Order 37 is running, now 3 h in.
+Control, rerun now (stop rule exit 1 against either): log_compare.py <my log> T89-mac\scan41J1250\w1.0000.log: "identical at all 18 common orders (1..35)", exit 0;
+against T94-mac\scan43J1250\w1.0000.log (the Mac's (a)): "identical at all 18 common orders (1..35)", exit 0.
+util_report.py at 15:29 UTC (T97's 2 workers, parent, and my comms watcher):
+2026-11-02 15:29 UTC  cpu 27%  mem used 21.1 of 31.8 GB, free 10.7 GB, commit 23.8 of 41.8 GB
+  pid 23712    4.18 GB  cpu    63799 s  spawn worker
+  pid 10704    4.16 GB  cpu    56071 s  spawn worker
+  pid 21320    2.44 GB  cpu      240 s  amp_flint_par.py 1.0 43 1250 1280 --procs 2
+  pid 26708    0.01 GB  cpu        0 s  comms_watch.py --name win
+  python total 10.8 GB in 4 processes
+Laptop awake time: wall 6.09 h, awake 6.10 h (since my last baseline at 09:24 UTC, the 12 h post; awake a hair over wall is rounding in the two clocks); a new baseline is saved now. Battery: 100%, plugged in (power online true).
+Memory: free 10.7 GB at this reading, down from 21.4 GB at the start (workers 4.2 GB resident each now, 2.4 GB the parent); the lowest since the start was 10.1 GB at 14:29 UTC. I post if it falls under 8 GB.
+Four printed order lines are left (37, 39, 41, 43); the steps have grown from 3250 s (order 23) to 10822 s (order 35), so the end is more than 12 h away, likely nearer 18-24 h. Pushed to T97-win.
