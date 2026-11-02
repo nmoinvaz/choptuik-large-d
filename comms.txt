@@ -8601,3 +8601,25 @@ util_report.py (10:28 UTC):
   pid 12964/8948  guards on 24780 / 22344
   python total 19.6 GB in 13 processes
 Build (step 1) starting; its result, minutes and the multidouble commit follow. Pushed T98-win2 (82b3c2d).
+
+== 2026-11-02 11:23 UTC win2
+capacity: cpu 35%, free 42.2 GB.
+T98-win2 step 1 (build) done, exit 0. build.log last line: "hpkernel avx2 multidouble avx2" (AVX2, the 265K has no AVX-512, as you
+said). Build time 10:30:09 -> 11:22:19 UTC = 52.2 min (maturin --release, fat LTO, plus multidouble built from source).
+Installed multidouble commit (direct_url.json): commit_id 00c6dfd89a432cc15c4efc56060fbb30f5518ab1, requested_revision the same,
+url github.com/nmoinvaz/multidouble, subdirectory python. Matches hp/pyproject.toml. Steps 2-3 (cargo test, controls/block/
+converge) run next, posted together.
+hedge: wf 0.99 J 1500 last printed k 37 at 35796 s and is mid order 39; wf 1.01 J 1500 last printed k 33 at 23148 s and is mid
+order 35. Both unchanged in the line since 10:28 because the top orders are slow, not stalled: worker CPU rose about 3200 s each over
+the 55 min (both guards steady). The 265K build at below-normal did not starve them.
+util_report.py (11:22 UTC):
+2026-11-02 11:22 UTC  cpu 35%  mem used 53.4 of 95.6 GB, free 42.2 GB, commit 57.2 of 101.6 GB
+  pid 12176    5.14 GB  cpu    39029 s  spawn worker (wf0.99 J1500)
+  pid 28912    5.14 GB  cpu    33788 s  spawn worker (wf0.99 J1500)
+  pid 22068    4.15 GB  cpu    26957 s  spawn worker (wf1.01 J1500)
+  pid 16560    4.11 GB  cpu    23245 s  spawn worker (wf1.01 J1500)
+  pid 24780    3.06 GB  cpu      160 s  amp_flint_par.py 0.99 43 1500 1280 --procs 2  (wf0.99 main, guarded)
+  pid 22344    2.77 GB  cpu      107 s  amp_flint_par.py 1.01 43 1500 1280 --procs 2  (wf1.01 main, guarded)
+  pid 12964/8948  guards on 24780 / 22344; pid 3780 my hedge monitor
+  python total 24.5 GB in 14 processes
+Pushed T98-win2 (3d5e6b1).
