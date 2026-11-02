@@ -2533,8 +2533,15 @@ repository T94-mac/scan43J1250 at a769589, copied into `scan43J1250/`): err21(a)
 replica log at the 5 orders that had (the amendment of 21:35 UTC below). Ruling 1 passes, so J 1250 is used at this
 order: the node files are win2's `T94-win2/scan43J1250` and the J 1500 node files are context. Pilot (b) was inside
 order 43 at this reading; ruling 2 and (b)'s err21 are added when it lands. |σ₂₁(a)| = 1.32×10⁻¹⁸, 0.900 of P5's
-predicted bound 1.47×10⁻¹⁸ (recorded in `proof/P5_scope.md`). The K = 20 stages are complete (sections 12.1–12.10), so
-everything this section needs from the lower orders is on record: the K = 20 records `planted_results_k20.jsonl` and checks
+predicted bound 1.47×10⁻¹⁸ (recorded in `proof/P5_scope.md`). **Pilot (b) and the nodes (2026-11-02 05:45 UTC):** (b)
+landed 2026-11-02 03:26 UTC (144358 s, 40.1 h wall; T94-mac/scan43J1500, copied into `scan43J1500/`; the Mac runner's
+push follows its end post): err21(b) = 1.389×10⁻³¹, 1.05×10⁻¹³ of |σ₂₁|; |σ₂₁(a) − σ₂₁(b)| = 1.591×10⁻³¹, 0.118 of
+(a)'s err21, so ruling 2's case (a difference beyond err21, posted and not a stop) did not arise; at σ₁₆ the two differ
+by 1.01 times (a)'s plateau error, the Mf step known from K = 20, and at σ₁₇…σ₂₀ by 0.011–0.013 of it. The node files
+(wf 0.99 and 1.01, K 43, J 1250, 1280 bits) landed 03:41 UTC on win2 (T94-win2/scan43J1250 at 8676d14, 553 min each on
+four processes; their logs equal T89's K 41 node logs at all 21 common orders) and are copied into `scan43J1250/`;
+their convergence is item 1's reading, by the converge stage (section 13.2). The K = 20 stages are complete (sections
+12.1–12.10), so everything this section needs from the lower orders is on record: the K = 20 records `planted_results_k20.jsonl` and checks
 `planted_checks_k20.json`, section 12.7's completions and the ring-free sums it names. The procedure is section 12.0's
 one order up, with its amendment written into item 1(b) and item 3 from the start, and the changes section 12's
 findings call for, stated here before the data:
