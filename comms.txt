@@ -8799,3 +8799,29 @@ guard; its end-of-run post follows when it finishes.
 util_report.py: 2026-11-02 18:07 UTC  cpu 13%  mem used 43.1 of 95.6 GB, free 52.5 GB, commit 46.3 of 101.6 GB (wf1.01 workers
 5.36-5.38 GB, main 3.21 GB, guard 8948).
 Pushed T94-win2 (954b57a).
+
+== 2026-11-02 20:54 UTC win2
+capacity: cpu 10%, free 66.6 GB (all four node runs done; win2 idle).
+T94-win2 wf 1.01 J 1500 node done at 20:53 UTC, total 61615 s = 1026.9 min (17.1 h), reached k 43. This is the last of win2's four
+node runs.
+sigma_err_fit.py --a1-from T88-mac\scan39J1000\sigF_w1.0100_K39_J1000_p960.json: exit 0, a1 = 49.2619338755261.
+  k 18  (1.8701563194269085848e-16 + 3.1978690994502406867e-15j)   err 2.608e-30  (8.14e-16 |sigma|)
+  k 19  (-1.5938905230187460571e-16 + 1.8736843172606550195e-16j)  err 3.143e-31  (1.28e-15 |sigma|)
+  k 20  (-1.8049731021088556247e-17 + 1.9488798967779088411e-18j)  err 3.674e-32  (2.02e-15 |sigma|)
+  k 21  (-1.0301779005933140043e-18 - 7.7674058526870588764e-19j)  err 2.964e-33  (2.30e-15 |sigma|)
+  gate: err21 = 2.964e-33 = 2.30e-15 |sigma_21| vs 1e-10: PASS.
+21-string count vs T89-mac\scan41J1250 wf 1.01 (K 41, context): 8 of 21 equal; the values agree to the fit precision everywhere
+(max relative |J1500 - J1250| over orders 0..20 is 1.3e-13, at the top order; sigma_0 agrees to ~1e-386, its string differs only in
+the tiny imaginary noise). Same last-digit J dependence as the wf 0.99 node, posted not fixed; no log_compare at J 1500.
+fit_info 1_1 [12, inf, 0.0], 43_1 [8, 1.4599741349896184e-31, 0.0]. minutes 1026.9.
+
+All four T94-win2 node runs are now complete and recorded in scan43J1250 and scan43J1500:
+  J 1250: wf 0.99 and 1.01, both gates PASS (err21 9.1e-13, 1.1e-12 |sigma_21|), 21/21 strings and log_compare identical to the
+    Mac's K 41 at all 21 common orders.
+  J 1500 (the hedge): wf 0.99 and 1.01, both gates PASS (err21 2.1e-13, 2.3e-15 |sigma_21|); strings agree with J 1250 to the fit
+    precision (the J-dependent last digits counted above).
+Both J 1500 memory guards end 0 ("guarded processes ended"; the wf 1.01 one at its next 5-min poll). With T98 also done, win2 is
+idle and waits for your decision (sigma_22 at K 45, or the low-D M 320 continuation here). comms_watch resumes.
+util_report.py: 2026-11-02 20:54 UTC  cpu 10%  mem used 29.0 of 95.6 GB, free 66.6 GB, commit 31.8 of 101.6 GB (no amp or build
+processes; only the exiting guard remains).
+Pushed T94-win2 (16368ed).
