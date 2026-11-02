@@ -8358,3 +8358,35 @@ on its pid. Your pace at the top orders is about 3.8 times T89's (k 37 at 18570 
 within about 2 h of this entry, near 02:20 UTC, not tomorrow evening: at each end the end-of-run post of the 18:17 entry (sigma_18..21
 with sigma_err_fit.py against scan39J1000, the 21-string count against the scan41J1250 file of the same wf, fit_info 1_1 and 43_1,
 minutes, log_compare's final reading, util_report.py). Nothing else changes; the hp build stays the follow-on after the J 1500 pair.
+
+== 2026-11-02 00:25 UTC win2
+util: cpu 54%, free 29.2 GB (headroom now committed, see below).
+T94-win2, read your 00:18 entry. Restarted the wf 0.99 J 1500 node at 00:21:43 UTC in the headroom: a marker line above the new
+attempt in w0.9900.log, same JSON path, --procs 2, below-normal; new main pid 24780. It is computing, k 1 at 4 s and k 3 at 31 s
+below the marker, the values equal to the J 1250 pair with only err and resid differing (the different-J signature), so the restart
+is clean. Its own guard is up: util_report.py --guard 10 --log ..\choptuik-large-d-raw\T94-win2\scan43J1500\mem_guard.log
+--interval 300 24780, appended below the old stopped line; first new line "2026-11-02 00:22 UTC ... free 29.1 GB". wf 1.01 J 1500
+stays held until the J 1250 pair ends, then restarted with a second guard on its pid, as you said.
+Pace: understood, the top orders run about 3.8x T89, J 1250 pair end near 02:20 UTC. At each J 1250 node end I post the 18:17
+end-of-run report (sigma_18..21 with sigma_err_fit.py against scan39J1000, the 21-string count against the scan41J1250 file of the
+same wf, fit_info 1_1 and 43_1, minutes, log_compare's final reading, util_report).
+On capacity: the headroom you measured is now taken by this wf 0.99 J 1500 node, and both it and the J 1250 pair grow toward their
+top orders (J 1250 to ~43 GB used at order 41), so there is no spare for new work before the J 1250 pair ends; I am not opening with
+a capacity line for that reason. The guard holds the floor at 10 GB and will drop this J 1500 node first if it is crossed again.
+util_report.py (full, 00:23 UTC):
+2026-11-02 00:23 UTC  cpu 54%  mem used 66.4 of 95.6 GB, free 29.2 GB, commit 71.3 of 101.6 GB
+  pid 7164     3.66 GB  cpu    20869 s  spawn worker
+  pid 23084    3.66 GB  cpu    16887 s  spawn worker
+  pid 24736    3.60 GB  cpu    15040 s  spawn worker
+  pid 31364    3.59 GB  cpu    15036 s  spawn worker
+  pid 26216    3.59 GB  cpu    15686 s  spawn worker
+  pid 28376    3.55 GB  cpu    16887 s  spawn worker
+  pid 19132    3.54 GB  cpu    15687 s  spawn worker
+  pid 12960    3.52 GB  cpu    20867 s  spawn worker
+  pid 28316    2.58 GB  cpu      144 s  amp_flint_par.py 0.99 43 1250 1280 --procs 4
+  pid 18532    2.57 GB  cpu      144 s  amp_flint_par.py 1.01 43 1250 1280 --procs 4
+  pid 24780    1.15 GB  cpu        5 s  amp_flint_par.py 0.99 43 1500 1280 --procs 2  (new wf 0.99 J1500 main, guarded)
+  pid 28912    1.10 GB  cpu       74 s  spawn worker
+  pid 12176    1.10 GB  cpu       75 s  spawn worker
+  python total 37.3 GB in 19 processes (2 guard + 2 venv stubs + 1 transient util_report not listed above)
+Pushed T94-win2 (1537705).
