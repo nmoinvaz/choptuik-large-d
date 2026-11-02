@@ -450,6 +450,31 @@ def k19_amend2():
 
 
 @check
+def k21_gate():
+    """T94's pilot (a) at wf 1.00, K 43, J 1250, 1280 bits (notes/PLANTED_SELECTION.md section 13.0's gate reading; the
+    file in solver/inner_amp/scan43J1250 from the raw-data repository's T94-mac at a769589): err21 from sigma_err_fit.py
+    (a1 from the 960-bit scan39J1000 file), its margin under 1e-10, the strings equal to the K 41 file, |sigma_21| against
+    P5's K = 20 predicted bound 1.47e-18 (proof/P5_scope.md)."""
+    d = os.path.join(ROOT, "solver/inner_amp")
+    sys.path.insert(0, d)
+    import sigma_err_fit as SF
+    sys.path.pop(0)
+    a = json.load(open(os.path.join(d, "scan43J1250/sigF_w1.0000_K43_J1250_p1280.json")))
+    p = json.load(open(os.path.join(d, "scan39J1000/sigF_w1.0000_K39_J1000_p960.json")))
+    k41 = json.load(open(os.path.join(d, "scan41J1250/sigF_w1.0000_K41_J1250_p1280.json")))
+    ra = SF.recompute(a, SF.a1_of(p))
+    sa, ea = float(abs(ra[21][1])), ra[21][2]
+    equal = sum(a["sigma_str"][k] == k41["sigma_str"][k] for k in range(21))
+    P, Q = "notes/PLANTED_SELECTION.md", "proof/P5_scope.md"
+    return [("err21 of (a)", ea, 1.351e-30, 0.001e-30, [(P, "err21(a) = 1.351×10⁻³⁰")]),
+            ("err21 of (a), relative", ea / sa, 1.02e-12, 0.01e-12, [(P, "1.02×10⁻¹² of |σ₂₁|"), (Q, "1.02×10⁻¹² of |σ₂₁|")]),
+            ("err21 margin under 1e-10", 1e-10 / (ea / sa), 98, 1, [(P, "a margin of 98")]),
+            ("sigma_0..20 strings of (a) equal to the K 41 file", equal, 21, 0.5, [(P, "21 of 21\nstrings")]),
+            ("|sigma_21| at wf 1.00", sa, 1.32e-18, 0.01e-18, [(P, "|σ₂₁(a)| = 1.32×10⁻¹⁸"), (Q, "|σ₂₁| = 1.32×10⁻¹⁸")]),
+            ("sigma_21 over the K = 20 predicted bound", sa / 1.47e-18, 0.900, 0.001,
+             [(P, "0.900 of P5's predicted"), (Q, "0.900 of the K = 20 bound")])]
+
+@check
 def p5_sigma20():
     """proof/P5_scope.md item 3: sigma_20 against the type bound (solver/proof/logs/entire_cert_K20.log, from
     `entire_cert.py 20 --scan ../inner_amp/scan41J1250`), and its fit error from sigma_err_fit.py (section 12.0's gate)."""

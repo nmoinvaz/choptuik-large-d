@@ -2525,8 +2525,16 @@ and 1.01 (K 43, J 1250, 1280 bits, about 16 h each) once (a) passes the pilot ga
 UTC fixed (ruling 1: `sigma_err_fit.py` exit 0, err21 ≤ 10⁻¹⁰ |σ₂₁|; ruling 2: a σ₂₁ difference between (a) and (b)
 beyond err21 is posted and not a stop; and (a)'s σ₀…σ₂₀ bitwise `scan41J1250`'s wf 1.00 file, 21 of 21 strings). What
 that gate says when the pilots land is added to this paragraph with its date, before any estimator runs at K = 21: it
-is the gate's reading, not an estimate. The K = 20 stages are complete (sections 12.1–12.10), so everything this
-section needs from the lower orders is on record: the K = 20 records `planted_results_k20.jsonl` and checks
+is the gate's reading, not an estimate. **Gate reading (2026-11-02 03:30 UTC), pilot (a) only:** (a) landed
+2026-11-02 02:18 UTC (140246 s of its clock, 39.0 h wall on two processes with the Mac's sleep inside it; raw-data
+repository T94-mac/scan43J1250 at a769589, copied into `scan43J1250/`): err21(a) = 1.351×10⁻³⁰, 1.02×10⁻¹² of |σ₂₁|
+(the 10⁻¹⁰ gate passes with a margin of 98); (a)'s σ₀…σ₂₀ are bitwise `scan41J1250`'s wf 1.00 file's,
+21 of 21 strings; its run log equals T89's K 41 log at all 21 common orders, 1–41 (`log_compare.py`), and win's T97
+replica log at the 5 orders that had (the amendment of 21:35 UTC below). Ruling 1 passes, so J 1250 is used at this
+order: the node files are win2's `T94-win2/scan43J1250` and the J 1500 node files are context. Pilot (b) was inside
+order 43 at this reading; ruling 2 and (b)'s err21 are added when it lands. |σ₂₁(a)| = 1.32×10⁻¹⁸, 0.900 of P5's
+predicted bound 1.47×10⁻¹⁸ (recorded in `proof/P5_scope.md`). The K = 20 stages are complete (sections 12.1–12.10), so
+everything this section needs from the lower orders is on record: the K = 20 records `planted_results_k20.jsonl` and checks
 `planted_checks_k20.json`, section 12.7's completions and the ring-free sums it names. The procedure is section 12.0's
 one order up, with its amendment written into item 1(b) and item 3 from the start, and the changes section 12's
 findings call for, stated here before the data:
