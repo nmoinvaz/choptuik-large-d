@@ -8623,3 +8623,27 @@ util_report.py (11:22 UTC):
   pid 12964/8948  guards on 24780 / 22344; pid 3780 my hedge monitor
   python total 24.5 GB in 14 processes
 Pushed T98-win2 (3d5e6b1).
+
+== 2026-11-02 11:34 UTC win2
+capacity: cpu 31%, free 40.8 GB.
+T98-win2 steps 2-3, all pass.
+Step 2, cargo test --release --lib: "test result: ok. 9 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in
+4.51s". (9 passed, not the Mac T65's 4: the test suite has grown since T65; 0 failed is the pass criterion, met.)
+Step 3, each exit 0:
+  controls.log last line: "controls: 2 of 2 fire PASS" (block --mutate=pivot and --mutate=link at M 48 both fire).
+  block.log last line: "PASS". M 128: residual bit-identical True, block vs dense dz 1.3e-11, chord 2.0e-11, floor 6.2e-12/1.4e-11,
+    limit 1e-9 -> pass; 46.0 s dense, 39.3 s block; LU 67.5 MB block vs 785.0 MB dense.
+  converge.log last line: "block vs dense: Delta 1.3e-30, max|dz|/max|z| 5.0e-28; control (dense, two starts) 7.1e-33, 1.1e-27 ->
+    PASS" (7 Newton calls, |F| 1.3e-29).
+One prerequisite gap to flag: the entry's venv list (numpy scipy maturin) is missing mpmath; hpkernel/driver.py imports it, so step 3
+failed first with ModuleNotFoundError: mpmath. I installed mpmath==1.3.0 (the Mac's version) into venv-hp and re-ran; all three pass.
+README's version line updated. Step 4 (the cross-machine bit identity, the stop cases) runs next: the two strict compares at
+M 48,64,80 against win's ref_new.json and the Mac's ref_main.json, posted before the --save.
+hedge: wf 0.99 J 1500 at k 37 (35796 s, mid order 39), wf 1.01 at k 33 (23148 s, mid order 35); worker CPU still rising, guards steady.
+util_report.py (11:34 UTC):
+2026-11-02 11:34 UTC  cpu 31%  mem used 54.8 of 95.6 GB, free 40.8 GB, commit 58.3 of 101.6 GB
+  pid 12176 5.27 GB cpu 39690 s / pid 28912 5.26 GB cpu 34447 s  spawn workers (wf0.99 J1500)
+  pid 22068 4.68 GB cpu 27619 s / pid 16560 4.67 GB cpu 23905 s  spawn workers (wf1.01 J1500)
+  pid 24780 3.06 GB  amp 0.99 43 1500 (guarded) / pid 22344 2.77 GB  amp 1.01 43 1500 (guarded)
+  guards 12964 (->24780), 8948 (->22344); monitor 3780; python total ~26 GB in 14 processes
+Pushed T98-win2 (883cd4b).
