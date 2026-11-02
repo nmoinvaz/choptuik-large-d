@@ -8314,3 +8314,36 @@ util_report.py (22:20 UTC; no capacity line, free memory is not above 20 GB):
     pid 68975    0.00 GB  cpu        0 s  spawn worker
     python total 4.7 GB in 8 processes
 Swap 15.0 of 16.0 GB used, free 0.4 GB of 32, as you said at 18:17; T96 waits for both runs to end.
+
+== 2026-11-02 00:16 UTC win2
+capacity: cpu 43%, free 30.1 GB (with the growth note below).
+T94-win2, the memory guard fired at 00:13 UTC and killed the J 1500 hedge pair, as designed; the J 1250 pair is untouched and
+running. Guard log tail:
+  2026-11-02 00:08 UTC  cpu 61%  mem used 85.4 of 95.6 GB, free 10.2 GB, commit 89.6 of 101.6 GB
+  2026-11-02 00:13 UTC  cpu 63%  mem used 87.8 of 95.6 GB, free 7.8 GB, commit 94.0 of 101.6 GB
+  stopped 16544 13408: free 7.8 GB < 10.0 GB
+Free fell as the orders grew (the J 1250 workers are ~3.9 GB each near order 37, climbing toward ~5 GB); the four runs together
+crossed the 10 GB floor and the guard stopped only the two J 1500 trees (16544, 13408). The J 1250 mains 28316 / 18532 are alive and
+BelowNormal. No orphans: the J 1500 workers, the two venv stubs and the guard process are all gone (util_report below); free is back
+to 30 GB. J 1500 reached order 27 at the kill (both nodes, ~12475 s); its logs end cleanly at the k 27 line, no traceback. Per your
+20:11 entry I hold the restart of the two J 1500 runs until the J 1250 pair ends, each with a marker line above the new attempt.
+J 1250 pair at order 37 (~18570 s). Growth: J 1250 alone peaks near ~43 GB used at order 41 (free ~22 GB at the sawtooth bottom), so
+it finishes on its own without the guard. One point on the capacity: a single J 1500 node (--procs 2, ~15 GB near its top) would fit
+beside the J 1250 pair, peak ~58 GB used / ~38 GB free, clear of the 10 GB floor; both J 1500 nodes do not (that is what just fired).
+Say if you want one J 1500 node restarted now in that headroom; otherwise I restart both when the J 1250 pair ends.
+util_report.py (full, 00:15 UTC):
+2026-11-02 00:15 UTC  cpu 43%  mem used 65.5 of 95.6 GB, free 30.1 GB, commit 69.3 of 101.6 GB
+  pid 7164     3.97 GB  cpu    20433 s  spawn worker
+  pid 23084    3.97 GB  cpu    16456 s  spawn worker
+  pid 26216    3.89 GB  cpu    15252 s  spawn worker
+  pid 24736    3.89 GB  cpu    14606 s  spawn worker
+  pid 31364    3.87 GB  cpu    14600 s  spawn worker
+  pid 28376    3.86 GB  cpu    16454 s  spawn worker
+  pid 19132    3.85 GB  cpu    15253 s  spawn worker
+  pid 12960    3.83 GB  cpu    20430 s  spawn worker
+  pid 28316    2.58 GB  cpu      144 s  amp_flint_par.py 0.99 43 1250 1280 --procs 4
+  pid 18532    2.57 GB  cpu      144 s  amp_flint_par.py 1.01 43 1250 1280 --procs 4
+  pid 13480    0.00 GB  cpu        0 s  amp_flint_par.py 0.99 43 1250 1280 --procs 4 (venv stub)
+  pid 6216     0.00 GB  cpu        0 s  amp_flint_par.py 1.01 43 1250 1280 --procs 4 (venv stub)
+  python total 36.3 GB in 13 processes (incl. one transient util_report.py of mine)
+Pushed T94-win2 (6590810).
