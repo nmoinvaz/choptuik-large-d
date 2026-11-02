@@ -2707,6 +2707,13 @@ section 13.0.
   1.92×10⁻¹¹ of that change (8.68×10⁻¹² at σ₁₉, 1.24×10⁻¹¹ at σ₂₀).
 - **Cost.** The pilots' times are in section 13.0 (39.0 and 40.1 h of wall time on the Mac, which slept for most of it);
   the nodes took 553 min each on win2 with four processes.
+- **The J 1500 node files (context, 2026-11-02 22:30 UTC).** win2's hedge runs at wf 0.99 and 1.01 (K 43, J 1500,
+  1280 bits, two processes each beside the J 1250 nodes; `T94-win2/scan43J1500` at 16368ed, copied into
+  `scan43J1500/`) ended 18:04 and 20:53 UTC after 17.7 and 17.1 h. Both pass the gate, err21 = 2.10×10⁻¹³ and
+  2.30×10⁻¹⁵ of |σ₂₁|, and their σ₂₁ differ from the J 1250 nodes' by 7.1×10⁻¹⁴ and 1.5×10⁻¹⁴ of |σ₂₁|, inside
+  the nodes' err21 (the table). 8 of 21 strings equal the K 41 J 1250 files' at each node, the differences in the last
+  digits growing with the order (the J dependence of the last digits, as between the pilots at wf 1.00). As the
+  amendment of section 13.0 says, they enter no criterion.
 
 ### 13.3 The pipeline on plants first
 

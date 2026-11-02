@@ -489,6 +489,36 @@ def k21_gate():
              [(P, "0.899 of P5's"), (Q, "0.899 of the K = 20 bound")])]
 
 @check
+def k21_hedge_nodes():
+    """win2's J 1500 node files at wf 0.99 and 1.01 (K 43, 1280 bits; solver/inner_amp/scan43J1500 from the raw-data
+    repository's T94-win2 at 16368ed), the context of notes/PLANTED_SELECTION.md section 13.2: err21 from sigma_err_fit.py
+    (a1 from the 960-bit scan39J1000 files), sigma_21 against the J 1250 node files, the strings equal to the K 41 files,
+    the run times."""
+    d = os.path.join(ROOT, "solver/inner_amp")
+    sys.path.insert(0, d)
+    import sigma_err_fit as SF
+    sys.path.pop(0)
+    P = "notes/PLANTED_SELECTION.md"
+    out = []
+    for w, e, ue, dlt, h, te in (("0.9900", 2.10e-13, 0.01e-13, 7.1e-14, 17.7, "err21 = 2.10×10⁻¹³ and"),
+                                 ("1.0100", 2.30e-15, 0.01e-15, 1.5e-14, 17.1, "2.30×10⁻¹⁵ of |σ₂₁|")):
+        f15 = json.load(open(os.path.join(d, f"scan43J1500/sigF_w{w}_K43_J1500_p1280.json")))
+        f12 = json.load(open(os.path.join(d, f"scan43J1250/sigF_w{w}_K43_J1250_p1280.json")))
+        k41 = json.load(open(os.path.join(d, f"scan41J1250/sigF_w{w}_K41_J1250_p1280.json")))
+        a1 = SF.a1_of(json.load(open(os.path.join(d, f"scan39J1000/sigF_w{w}_K39_J1000_p960.json"))))
+        r15 = {t[0]: t for t in SF.recompute(f15, a1)}
+        r12 = {t[0]: t for t in SF.recompute(f12, a1)}
+        s15, s12 = r15[21][1], r12[21][1]
+        equal = sum(f15["sigma_str"][k] == k41["sigma_str"][k] for k in range(21))
+        out += [(f"J 1500 node wf {w}: err21 relative", float(r15[21][2] / abs(s15)), e, ue, [(P, te)]),
+                (f"J 1500 node wf {w}: sigma_21 against the J 1250 node", float(abs(s15 - s12) / abs(s12)), dlt, 0.1e-14,
+                 [(P, "by 7.1×10⁻¹⁴ and 1.5×10⁻¹⁴ of |σ₂₁|")]),
+                (f"J 1500 node wf {w}: strings equal to the K 41 file", equal, 8, 0.5,
+                 [(P, "8 of 21 strings equal the K 41 J 1250 files' at each node")]),
+                (f"J 1500 node wf {w}: hours", f15["seconds"] / 3600, h, 0.1, [(P, "after 17.7 and 17.1 h")])]
+    return out
+
+@check
 def k21_stages():
     """notes/PLANTED_SELECTION.md sections 13.2-13.10: the K = 21 stages ("K21 converge", "K21 plants check", "K21 real",
     "K21 ring test", "K21 calib", "K21 recomplete", "K21 project", "K21 combine" in solver/inner_amp/planted_checks_k21.json
