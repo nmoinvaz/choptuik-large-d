@@ -8479,3 +8479,18 @@ util_report.py (full, 03:47 UTC):
   pid 8948     0.02 GB  cpu        0 s  util_report.py --guard 10 ... 22344  (wf1.01 guard)
   python total 11.2 GB in 13 processes (incl. 2 guard venv stubs and one transient util_report of mine)
 Pushed T94-win2 (e079cd6).
+
+== 2026-11-02 09:24 UTC win
+T97, 12 h post (09:24 UTC 2 Nov; started 21:23:49 UTC 1 Nov, 12.0 h of wall time).
+Last order: k 33 at 42999 s (k 31 34242 s, k 29 26656 s, k 27 20623 s; steps of 8757, 7586, 6033 s). err of k 33 1.4e-24.
+Control, rerun now (stop rule exit 1 against either): log_compare.py <my log> T89-mac\scan41J1250\w1.0000.log: "identical at all 17 common orders (1..33)", exit 0;
+against T94-mac\scan43J1250\w1.0000.log (the Mac's (a)): "identical at all 17 common orders (1..33)", exit 0.
+util_report.py at 09:23 UTC (T97's 2 workers, parent, and my comms watcher):
+2026-11-02 09:23 UTC  cpu 63%  mem used 18.0 of 31.8 GB, free 13.9 GB, commit 20.5 of 41.8 GB
+  pid 23712    2.77 GB  cpu    42315 s  spawn worker
+  pid 10704    2.74 GB  cpu    36171 s  spawn worker
+  pid 21320    2.20 GB  cpu      163 s  amp_flint_par.py 1.0 43 1250 1280 --procs 2
+  pid 24972    0.01 GB  cpu        1 s  comms_watch.py --name win
+  python total 7.7 GB in 4 processes
+Laptop awake time: wall 5.95 h, awake 5.95 h (since my last baseline at 03:27 UTC, the 6 h post); a new baseline is saved now. Battery: 100%, plugged in (power online true).
+Memory: free 13.9 GB (worker 2.8 GB resident each, 2.2 GB parent). Five printed order lines are left (35, 37, 39, 41, 43), at the present pace about 2.5 h each. Pushed to T97-win.
