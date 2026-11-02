@@ -8433,3 +8433,49 @@ Memory: free 15.0 GB, down from 21.4 GB at the start (workers 2.3 GB resident ea
 
 == 2026-11-02 03:27 UTC win
 Correction to my 03:27 UTC T97 post: its laptop awake line, "wall 0.00 h, awake 0.00 h", is wrong (I saved the new baseline before reading the figure, so it compared against itself). The reading from a minute earlier, since the setup post at 21:24 UTC: 6.03 h awake of 6.03 h wall, so no sleep in the 6 h. The new baseline is 03:27 UTC.
+
+== 2026-11-02 03:48 UTC win2
+capacity: cpu 21%, free 55.4 GB (the J 1250 pair is done; only the two J 1500 nodes run now).
+T94-win2, the J 1250 pair ended ~03:41 UTC, both nodes clean. End-of-run per the 18:17 entry. (Note: the a1-from companion is the
+wf-matching scan39J1000 file, not the wf 1.00 one the entry names literally; sigma_err_fit rejects a wf mismatch, exit 2. scan39J1000
+has all three wf, so wf 0.99 uses its sigF_w0.9900 companion and wf 1.01 its sigF_w1.0100.)
+
+wf 0.99 (sigF_w0.9900_K43_J1250_p1280.json, 553.1 min):
+  sigma_err_fit.py --a1-from T88-mac\scan39J1000\sigF_w0.9900_K39_J1000_p960.json: exit 0, a1 = 44.127185481763.
+    k 18  (-1.8715942756317178056e-16 + 3.3451545853624811665e-15j)  err 1.002e-27  (2.99e-13 |sigma|)
+    k 19  (-1.8854371908881486933e-16 + 1.7574120026504357237e-16j)  err 1.142e-28  (4.43e-13 |sigma|)
+    k 20  (-1.9056066566181458225e-17 - 1.771869806514332509e-19j)   err 1.224e-29  (6.42e-13 |sigma|)
+    k 21  (-9.7972268586239198838e-19 - 9.3866034129920474177e-19j)  err 1.240e-30  (9.14e-13 |sigma|)
+    gate: err21 = 1.240e-30 = 9.14e-13 |sigma_21| vs 1e-10: PASS.
+  21-string count vs T89-mac\scan41J1250 wf 0.99: 21 of 21 equal.
+  fit_info 1_1 [12, inf, 0.0], 43_1 [7, 5.47176711967707e-29, 1.7325664624907126e-295].
+  log_compare vs T89-mac\scan41J1250\w0.9900.log: "identical at all 21 common orders (1..41)", exit 0.
+
+wf 1.01 (sigF_w1.0100_K43_J1250_p1280.json, 552.9 min):
+  sigma_err_fit.py --a1-from T88-mac\scan39J1000\sigF_w1.0100_K39_J1000_p960.json: exit 0, a1 = 49.2619338755261.
+    k 18  (1.8701563194268146665e-16 + 3.1978690994502308317e-15j)   err 1.199e-27  (3.74e-13 |sigma|)
+    k 19  (-1.5938905230187631094e-16 + 1.873684317260655231e-16j)   err 1.362e-28  (5.54e-13 |sigma|)
+    k 20  (-1.804973102108868983e-17 + 1.9488798967780413342e-18j)   err 1.455e-29  (8.02e-13 |sigma|)
+    k 21  (-1.0301779005933135974e-18 - 7.7674058526868693751e-19j)  err 1.470e-30  (1.14e-12 |sigma|)
+    gate: err21 = 1.470e-30 = 1.14e-12 |sigma_21| vs 1e-10: PASS.
+  21-string count vs T89-mac\scan41J1250 wf 1.01: 21 of 21 equal.
+  fit_info 1_1 [12, inf, 0.0], 43_1 [7, 7.242897581986882e-29, 8.200410965716871e-293].
+  log_compare vs T89-mac\scan41J1250\w1.0100.log: "identical at all 21 common orders (1..41)", exit 0.
+
+Both nodes reproduce the Mac K41 run at all 21 common orders and all 21 sigma_0..20 strings; the gate passes with err21 ~ 1e-12
+|sigma_21|. JSONs and logs are in scan43J1250.
+J 1500: with the J 1250 pair ended I restarted the wf 1.01 J 1500 node at 03:46:16 UTC (marker above the new attempt in w1.0100.log,
+--procs 2, below-normal, JSON path unchanged), new main pid 22344, k 1 printing, under a second guard (--guard 10 ... 22344). The
+wf 0.99 J 1500 node (pid 24780, its guard running) is at order 27. Both J 1500 nodes now run, each under its own guard.
+util_report.py (full, 03:47 UTC):
+2026-11-02 03:47 UTC  cpu 21%  mem used 40.1 of 95.6 GB, free 55.4 GB, commit 43.3 of 101.6 GB
+  pid 12176    2.80 GB  cpu    12152 s  spawn worker (wf0.99 J1500)
+  pid 28912    2.75 GB  cpu     9753 s  spawn worker (wf0.99 J1500)
+  pid 24780    2.31 GB  cpu       49 s  amp_flint_par.py 0.99 43 1500 1280 --procs 2  (wf0.99 J1500 main, guarded)
+  pid 22068    1.21 GB  cpu       76 s  spawn worker (wf1.01 J1500)
+  pid 16560    1.11 GB  cpu       66 s  spawn worker (wf1.01 J1500)
+  pid 22344    0.98 GB  cpu        7 s  amp_flint_par.py 1.01 43 1500 1280 --procs 2  (wf1.01 J1500 main, guarded)
+  pid 12964    0.02 GB  cpu        0 s  util_report.py --guard 10 ... 24780  (wf0.99 guard)
+  pid 8948     0.02 GB  cpu        0 s  util_report.py --guard 10 ... 22344  (wf1.01 guard)
+  python total 11.2 GB in 13 processes (incl. 2 guard venv stubs and one transient util_report of mine)
+Pushed T94-win2 (e079cd6).
