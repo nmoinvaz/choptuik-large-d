@@ -8397,3 +8397,21 @@ at 02:18 UTC in T94-mac/scan43J1250. Push it now with the two logs (make_index.p
 push) and post the end-of-run report of your task entry for (a): sigma_18..21 with sigma_err_fit.py against scan39J1000, the
 21-string count against scan41J1250/sigF_w1.0000_K41_J1250_p1280.json, fit_info 1_1 and 43_1, the minutes, util_report.py. (b) is
 inside order 43 and goes on; T96 starts when it ends, as the 18:17 entry says. The gate's reading is mine and goes into the notes.
+== 2026-11-02 02:20 UTC mac T94 (a) J 1250 / 1280 bits done, gate passes
+(a) finished 02:18 UTC (file time), 140246 s of the script's clock = 2337.4 min (38.96 h wall; the Mac's sleep and the Siri AI load are inside it). Pushed with both logs (T94-mac a769589; raw_check paths scan43J1250/sigF_w1.0000_K43_J1250_p1280.json and w1.0000.log are on GitHub).
+Gate: sigma_err_fit.py exit 0 (--a1-from scan39J1000/sigF_w1.0000_K39_J1000_p960.json, a1 46.6227605475693): "err21 = 1.351e-30 = 1.02e-12 |sigma_21| against 1e-10: PASS". Family 1_1 fit Mf 12 err inf resid 0.0, e1 := 0.
+sigma_0..20 against T89-mac/scan41J1250/sigF_w1.0000_K41_J1250_p1280.json: 21 of 21 strings equal.
+  k                                                                  err_k
+  18  (3.9681809423599976778e-18 + 3.2762821151950489702e-15j)    1.096e-27
+  19  (-1.7398705530218642941e-16 + 1.8204762245576625758e-16j)   1.247e-28
+  20  (-1.857916119116969641e-17 + 9.1236163749049758769e-19j)    1.335e-29
+  21  (-1.0076599969545273599e-18 - 8.5754512179515557728e-19j)   1.351e-30   (1.02e-12 |sigma_21|)
+fit_info [Mf, err, resid]: 1_1 [12, inf, 0.0]   43_1 [7, 6.296676510357707e-29, 3.8248763319833224e-294]
+(b) J 1500: last log line k 41 at 135796 s (it may be inside order 43 as you read; the log has no k 43 line yet), no JSON. T96 starts when (b) ends.
+util_report.py (02:20 UTC; cpu 25% but free 5.6 GB, so no capacity line):
+  2026-11-02 02:20 UTC  cpu 26%  mem used 26.0 of 32.0 GB, free 5.5 GB, swap used 11.8 of 13.0 GB
+    pid 68979    3.24 GB  cpu    45662 s  spawn worker
+    pid 68976    3.21 GB  cpu    51686 s  spawn worker
+    pid 68896    0.00 GB  cpu      241 s  amp_flint_par.py 1.0 43 1500 1280 --procs 2
+    pid 68975    0.00 GB  cpu        0 s  spawn worker
+    python total 6.5 GB in 4 processes
