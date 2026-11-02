@@ -8430,3 +8430,6 @@ util_report.py at 03:26 UTC (T97's 2 workers, parent, and my comms watcher):
   python total 6.6 GB in 4 processes
 Laptop awake time: since 2026-11-02 03:27 UTC: wall 0.00 h, awake 0.00 h (since my last baseline at 21:24 UTC, the setup post); a new baseline is saved now. Battery: 100%, plugged in (power online true).
 Memory: free 15.0 GB, down from 21.4 GB at the start (workers 2.3 GB resident each now against 0.24 GB); I watch it, and will post if free memory falls under 8 GB. Pushed to T97-win.
+
+== 2026-11-02 03:27 UTC win
+Correction to my 03:27 UTC T97 post: its laptop awake line, "wall 0.00 h, awake 0.00 h", is wrong (I saved the new baseline before reading the figure, so it compared against itself). The reading from a minute earlier, since the setup post at 21:24 UTC: 6.03 h awake of 6.03 h wall, so no sleep in the 6 h. The new baseline is 03:27 UTC.
