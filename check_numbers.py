@@ -469,10 +469,10 @@ def k21_gate():
     return [("err21 of (a)", ea, 1.351e-30, 0.001e-30, [(P, "err21(a) = 1.351×10⁻³⁰")]),
             ("err21 of (a), relative", ea / sa, 1.02e-12, 0.01e-12, [(P, "1.02×10⁻¹² of |σ₂₁|"), (Q, "1.02×10⁻¹² of |σ₂₁|")]),
             ("err21 margin under 1e-10", 1e-10 / (ea / sa), 98, 1, [(P, "a margin of 98")]),
-            ("sigma_0..20 strings of (a) equal to the K 41 file", equal, 21, 0.5, [(P, "21 of 21\nstrings")]),
+            ("sigma_0..20 strings of (a) equal to the K 41 file", equal, 21, 0.5, [(P, "21 of 21 strings; its run log")]),
             ("|sigma_21| at wf 1.00", sa, 1.32e-18, 0.01e-18, [(P, "|σ₂₁(a)| = 1.32×10⁻¹⁸"), (Q, "|σ₂₁| = 1.32×10⁻¹⁸")]),
             ("sigma_21 over the K = 20 predicted bound", sa / 1.47e-18, 0.900, 0.001,
-             [(P, "0.900 of P5's predicted"), (Q, "0.900 of the K = 20 bound")])]
+             [(P, "0.900 of P5's"), (Q, "0.900 of the K = 20 bound")])]
 
 @check
 def p5_sigma20():
