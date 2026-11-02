@@ -8515,3 +8515,61 @@ util_report.py (full, 09:50 UTC):
   pid 8948     0.02 GB  cpu        1 s  util_report.py --guard 10 ... 22344  (wf1.01 guard)
   python total 22.8 GB in 13 processes (incl. 2 guard venv stubs and one transient util_report of mine)
 Pushed T94-win2 (72c7c4d).
+
+== 2026-11-02 10:22 UTC cloud to win2
+T98, the hp build on win2 (the follow-on named in the 20:11 entry), with its checks. Start it now beside the J 1500 hedge
+pair (the guard log shows cpu 22%, free 55 GB; the build peaks near 6 GB and the checks below 3 GB, the hedge pids stay
+under their guard, nothing of T98 goes on the guard). Below-normal priority throughout. Do not edit code; on any error
+not covered below, stop that step and post it.
+Prerequisites, post what each prints: cargo --version and rustc -vV (the stable toolchain with the x86_64-pc-windows-msvc
+target; cargo finds the MSVC linker itself); a new venv for hp, python -m venv venv-hp, with pip install numpy scipy maturin
+(python -c "import sys, numpy, scipy; print(sys.version.split()[0], numpy.__version__, scipy.__version__)"). If cargo or
+rustc is missing, or the first cargo build stops on "linker link.exe not found", post exactly that and wait: installing a
+toolchain is Nathan's call, and the hedge pair keeps you busy meanwhile.
+Setup: git fetch origin; a worktree git worktree add --detach ..\choptuik-t98 origin/main (5262c26 or later; leave the
+amp checkout alone, its runs are still importing from it). Folder T98-win2\hp_build in your raw clone, README first line
+"# T98-win2: the hp double-double kernel built on win2 (Core Ultra 7 265K), its bit-identity and control checks", then
+the machine, this entry, the toolchain and package versions; the same README at T98-win2\README.md for make_index.py.
+Every command's output goes to a log in that folder (> file 2>&1), and every log is pushed at each post.
+1. Build, from the worktree's root in git bash with venv-hp active: PIP_NO_CACHE_DIR=1 pip uninstall -y multidouble, then
+   bash hp/build.sh > ..\..\choptuik-large-d-raw\T98-win2\hp_build\build.log 2>&1 (the script's last line uses python3;
+   if git bash has no python3, run that print with python). Post its last line (expected "hpkernel avx2 multidouble
+   avx2": the 265K has no AVX-512, win's build said avx512), the minutes, and the installed package commit:
+   python -c "import importlib.metadata as m; print(m.distribution('multidouble').read_text('direct_url.json'))"
+   must contain 00c6dfd89a432cc15c4efc56060fbb30f5518ab1 (hp/pyproject.toml's commit); another commit: post and stop.
+2. From hp: cargo test --release --lib > ...\cargo_test.log 2>&1; post the "test result" line (the Mac's T65 build gave
+   4 passed, 0 failed, 2 ignored; any failed stops).
+3. From hp, the kernel's own controls and checks (each exits 0 on a pass, 1 on a failure; post each last line):
+   python highm_check.py controls > ...\controls.log 2>&1   (both mutations must fire; "controls: 2 of 2 fire PASS")
+   python highm_check.py block > ...\block.log 2>&1   (block storage against the dense path at M 16, 48, 80, 128; PASS)
+   python highm_check.py converge > ...\converge.log 2>&1   (PASS)
+   A FAIL in any of the three: post and wait, the build is not used until the cause is known.
+4. Cross-machine bit identity of the kernel, the stop cases of this task. The Mac's T81\ref_main.json (NEON) and win's
+   T45-win\scratch\t45\diag\ref_new.json (AVX-512) agree in every one of the 24 outputs at M 48, 64 and 80, the
+   resolutions computed at a state's own M, and differ at M 8, 16, 96 and 128, where the state is first resampled
+   (so the resampling, not the kernel, differs between machines). win2's build must agree with both at 48, 64, 80:
+   python highm_check.py ref --compare=..\..\..\choptuik-large-d-raw\T45-win\scratch\t45\diag\ref_new.json --Ms=48,64,80 > ...\ref_vs_win.log 2>&1
+   python highm_check.py ref --compare=..\..\..\choptuik-large-d-raw\T81\ref_main.json --Ms=48,64,80 > ...\ref_vs_mac.log 2>&1
+   Each must end "PASS: 72 outputs bit-identical", exit 0. Any DIFFERS line: post the lines and wait (the hedge pair is
+   untouched). Then the record of this build at all seven resolutions (M 128 took 26 min on win's laptop):
+   python highm_check.py ref --save=..\..\..\choptuik-large-d-raw\T98-win2\hp_build\ref_win2.json > ...\ref_save.log 2>&1
+   and, as context (no stop), the full comparison against both files with this one-liner, run twice, output posted:
+   python -c "import json,sys; a=json.load(open(sys.argv[1])); b=json.load(open(sys.argv[2])); print(sum(a[m][k]==b[m][k] for m in a for k in a[m]), 'of', sum(len(a[m]) for m in a), 'equal; differing M:', sorted({m for m in a for k in a[m] if a[m][k]!=b[m][k]}, key=int))" ..\..\..\choptuik-large-d-raw\T98-win2\hp_build\ref_win2.json <ref_new.json | ref_main.json>
+   The prediction: equal at 48, 64, 80 against both; whether 8, 16, 96, 128 agree with win is the resampling's
+   portability between two Windows numpy builds, unknown, reported either way.
+5. The scaled series at their own M 192 and 256 (states in the checkout), against the Mac's file; its control is inside:
+   python highm_check.py scaled --compare=..\..\..\choptuik-large-d-raw\T81\scaled_main.json > ...\scaled_vs_mac.log 2>&1
+   Expected: 22 bit-identical lines, "control ... Newton step differs: fires", PASS, exit 0. A DIFFERS line or a control
+   that does not fire: post and wait.
+6. Timing for the low-D decision (the T82 continuation at M 320 took 15044 s per Newton step on win's 4 cores; Nathan
+   weighs moving it here), the D 3.7 state resampled to M 320, one process:
+   python highm_check.py profile --M=320 --reps=2 --threads=4 --out=..\..\..\choptuik-large-d-raw\T98-win2\hp_build\profile_M320.jsonl > ...\profile_M320_t4.log 2>&1
+   then the same with --threads=8 (append to the same jsonl, log profile_M320_t8.log). Post each run's seconds of the
+   residual, of newton_mixed, of its Jacobian and of the block factorization, the LU's MB and the peak RSS, with
+   util_report.py's output while it runs. If --threads is not accepted, post the error and run without it.
+Posts: the prerequisites and setup; after step 1 (build line, minutes, package commit); after steps 2-3 together; after
+step 4's two strict compares (before the --save); after steps 4-5 (the one-liner's two outputs, scaled's last two lines);
+after step 6. Each post carries util_report.py's output and the hedge runs' last "k N:" lines, as the 6-hourly posts do,
+and a push of T98-win2 (make_index.py, add, commit, pull --no-rebase, push).
+Follow-on: the hedge pair's end-of-run posts as the 20:11 entry says; after them and T98, win2 waits for the decision
+Nathan has open (the sigma_22 run at K 45, or the low-D continuation at M 320 on win2), which a later entry brings.
