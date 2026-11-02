@@ -2873,3 +2873,109 @@ where it is. Under noise of size sigma_err on every σ_k (20 seeds), arg₂₁ m
   is queued.
 - D-bracket is silent on the real data at K = 21 and, on its own, rejects six ring-free sums and the context ring. Its
   rule stays as item 4 fixed it; it changed no range at K = 21.
+
+## 14. Follow-up: σ₂₂ (post-freeze)
+
+### 14.0 Procedure, fixed before any K = 22 estimate was computed
+
+Written and committed before any σ₂₂ existed. Known at this point (2026-11-02 22:45 UTC): no K 45 run has started.
+The K = 21 stages are complete (sections 13.1–13.10) with their records `planted_results_k21.jsonl` and checks
+`planted_checks_k21.json`; section 13.7's completions and the ring-free sums it names are on record; σ₂₁'s comparison
+with P5's type bound and the K = 21 recalibration (|σ₂₂| ≤ 1.01×10⁻¹⁹) are in `proof/P5_scope.md`. T99, the σ₂₂
+campaign, is queued on win2 (the comms entry that follows this commit; the author's choice of 2026-11-02, about 22:15 UTC),
+and one machine computes every file of this order. Stage 1, all at once: (a) wf 1.00, K 45, J 1250 at 1280 bits
+(`T99-win2/scan45J1250`, three processes), the nodes wf 0.99 and 1.01 (K 45, J 1250, 1280 bits, three processes each)
+and (b) wf 1.00, J 1500 at 1280 bits (`T99-win2/scan45J1500`, three processes, under the memory guard, which stops
+(b) alone). Stage 2, after stage 1: the two nodes at J 1500 (the hedge, four processes each, `scan45J1500`). The
+pilot gate is section 13.0's one order up: ruling 1, `sigma_err_fit.py` exit 0 and err22 ≤ 10⁻¹⁰ |σ₂₂| on (a), the
+condition for using J 1250 at this order (its margin was 98 at K = 21; if ruling 1 fails, the J 1250 node files are
+set aside and the J 1500 node files take their place after the same checks at J 1500); ruling 2, a σ₂₂ difference
+between (a) and (b) beyond err22 is posted and not a stop; and (a)'s σ₀…σ₂₁ bitwise `scan43J1250`'s wf 1.00 file,
+22 of 22 strings. What the gate says when the pilots land is added to this paragraph with its date, before any
+estimator runs at K = 22: it is the gate's reading, not an estimate. Machine control, within the first hour of each
+run and at each post: `log_compare.py` against the K 43 log at the same wf and J, at every common order up to 43 with
+no cap (section 13.0's clarification): (a) against `T94-mac/scan43J1250/w1.0000.log`, the nodes against win2's own
+`T94-win2/scan43J1250/w0.9900.log` and `w1.0100.log`, (b) against `T94-mac/scan43J1500/w1.0000.log`, and in stage 2
+the J 1500 nodes against `T94-win2/scan43J1500/`'s logs; a difference stops that run and is recorded here before
+anything computed in it is read as a pass. Item 1(b) below compares two K on one machine at the nodes and two
+machines at wf 1.00. The procedure is section 13.0's one order up, with the changes section 13's findings call for,
+stated here before the data:
+
+0. **Dry run of the stages on a synthetic σ₂₂.** Before any K 45 file is used, `planted_k22_dry.py` writes scan files
+   whose σ₀…σ₂₁ are the real ones (`scan43J1250`'s, the 1280-bit node data of section 13) and whose σ₂₂ at each node
+   is C21-BP [6/15]'s, the ring-free sum passing the type rule that section 13.7 lists first (named there before this
+   section), with err22 = 10⁻¹² |σ₂₂|, and a pilot file (`scan45J1500`) whose σ₂₂ at wf 1.00 is the same sum's, so
+   that item 1's pilot term is zero there and its mutation `amend` tests the term. Every stage runs on them
+   (`planted_k22.py STAGE --data DIR`, DIR outside the repository). Pass: every stage completes with its checks
+   passing, and in the ring test the planted sum has a σ₂₂ error below 10⁻¹⁹ and a τ₂₂ error below 10⁻¹⁸ and
+   survives; whether its zero lies inside the dry run's K = 22 range is reported. A stage that fails on the synthetic
+   data is fixed before the real data, and the fix is recorded here. The dry run needs only K ≤ 21 data, so it runs
+   before T99 lands; its records and checks are discarded (its logs go to the raw-data repository, folder
+   planted-k22-mac); it tests the code path, not the estimators (item 2 does that).
+1. **σ₂₂ is converged** if, at every node: (a) err22 ≤ 10⁻¹⁰ |σ₂₂|, where err22 is the node's plateau error from
+   `sigma_err_fit.py` (1280-bit files, stored `sigma_err` inf; a1 from the 960-bit `scan39J1000` file at the same wf)
+   plus the wf 1.00 pilot difference |σ₂₂(a) − σ₂₂(b)|, added at every node: the only measured J difference at this
+   order, and no second J enters a criterion at the nodes because no item below needs σ₂₂ to better than 10⁻⁹ of
+   itself; (b) at every node σ₀…σ₂₁ are bitwise the `scan43J1250` file's at that wf (22 of 22 strings; same J,
+   precision and code, K does not enter below the top order); a string that differs stops the stage, and the cause is
+   found and recorded in a dated amendment before anything is read as a pass, as at K = 19–21; (c) pilot (b)'s
+   σ₁₉…σ₂₁ equal (a)'s within (a)'s plateau errors at those orders, and its σ₂₂ difference is the term of (a),
+   recorded and not evaluated as a gate (ruling 2); (d) the second difference of σ_k/σ_{k+1} at k = 20 is at most
+   0.05. Each check gets a mutation that must make it fire (`--mutate=err|low|pilot|ratiolaw|amend`, the last scaling
+   the pilot's σ₂₂ by 1 + 10⁻⁹).
+2. **The pipeline on plants first.** N1 recovered by arg, ratio, Padé and G to 10⁻⁶ at K = 22, N2 giving no number;
+   the 28 arc plants, C-EXP and the 13 REFIT plants regenerated and run at K = 20, 21, 22, their K = 20 and 21
+   estimates equal to the stored K = 21 records (`planted_results_k21.jsonl`) to 10⁻⁹, or the work stops. Control: N1
+   graded against ω_t + 0.002 must fail.
+3. **Real data at K = 22** (record "N0 scan45J1250"): its K = 20 and 21 estimates must equal those of the K = 21 record
+   "N0 scan43J1250" to 10⁻⁹ (the same σ₀…σ₂₁ through the same code: a reproduction check). Mutation controls:
+   σ₂₂ → −σ₂₂ at wf 1.00 must fire a detector; σ₂₂ × (1 + 10⁻³) is reported.
+4. **Ring test.** Every K = 21 completion of section 13.7 is regenerated and its zero must reproduce the stored
+   "K21 recomplete" value to 10⁻⁹: C21-W1–3, C21-ARC (four shapes at their stored best ω_t) and C21-BP [m/(21 − m)],
+   m = 3…10 (C21-BP [5/16], which fails the type rule, is regenerated and tested like the others, as a completion and
+   not a candidate). Carried over: nothing; section 13.5 found no ring surviving σ₂₁ under either reading, and the
+   context ring C19-BP [4/15], rejected by D-bracket alone a second time, is not carried further. Benchmark: the
+   simple-zero law from τ₂₀, τ₂₁. **The D-bracket question** is handled as section 9.0 item 4 fixed it and sections
+   11.0–13.0 kept it: section 5.3's comparison is the primary reading (a completion survives if no detector fires on
+   it at K = 22 that does not fire on the real data), and the table gives a second reading with D-bracket left out,
+   both fixed here. A ring is a finding only if it survives under the first reading; a ring rejected under the first
+   and surviving under the second is reported as that. The author's decision asked for in 8.9 has still not come; if
+   it comes before any K = 22 estimate is computed, this item is amended with the date. A ring that survives σ₂₂ is a
+   finding, reported as such.
+5. **Calibration** at K = 22, as section 10.5: the error of arg, ratio, Padé mid and G on (i) the 28 arc plants, (ii)
+   C-EXP, (iii) REFIT with fit residual ≤ 10⁻⁴, and (iv) the BP family: section 13.0's twenty-five sums plus the five
+   C21-BP sums section 13.7 records as ring-free and passing the type rule at K = 21, [6/15], [7/14], [8/13], [9/12]
+   and [10/11] (named there by that rule and not by their values), each with its own zero as truth: thirty sums. The
+   calibration at K = 21 from the new records must reproduce section 13.6's arc and BP-family ranges to 6×10⁻⁷
+   (against the values stored in `planted_checks_k21.json`).
+6. **Next generation and ring-free completions,** glued at σ₂₂ (tail from k = 23): ratio-law windows k = 6–21, 8–21,
+   9–21; best-fit arc tails, four shapes, ω_t grid 0.9990–1.0010; the Borel–Padé sums [m/(22 − m)], m = 3…11. Frozen
+   type rule: every pole has |t| < 2 at all three nodes. Zeros counted at wf = 1.00 in |x| < 7.3, 12 and 16.
+7. **Combination.** The K = 22 estimator range is the hull of: the calibrated arg range over the 28 arc plants; the
+   calibrated arg range over the BP family of item 5; and the zeros of the ring-free completions of item 6 that pass
+   the type rule (no zeros besides x₀ in |x| < 12). G is reported with its spread over the minima of its objective
+   within a factor 5 of the best and is not part of the hull. The headline is the union of the K = 21 headline (section
+   13.9, 0.999975–1.000050) and the K = 22 range if they overlap; if disjoint, both are reported and the reason
+   diagnosed before any headline is written. The range is an estimator range, not a bound; the range from the last two
+   orders alone is reported beside it as context, as at K = 17–21.
+8. **The order-22 projection.** est_k = ω* + c r^k through k = 20 and 21, for ω* = 1, the lower end of the K = 21
+   range (section 13.9, 0.999998) and the lower end of the headline (0.999975), against the real arg₂₂; decisive only
+   if the other prediction is farther from arg₂₂ than three times the model's own error (its largest miss over
+   k = 19–21 on the real data, and over the 28 arc plants at k = 22 given their true ω_t). Section 13.8 found the three
+   hypotheses within 0.3×10⁻⁶ of each other against a model error of 2.7×10⁻⁶, so this item is expected to be
+   indecisive again; it is kept because the procedure keeps every stage, and a decisive outcome would be the news.
+
+The stages are `converge`, `plants`, `real`, `ring`, `calib`, `recomplete`, `project`, `combine`, each run as
+`nice -n 10 python3 planted_k22.py STAGE` from `solver/inner_amp/`, on `scan45J1250/` (the three nodes) and
+`scan45J1500/` (the pilot). `planted_k22.py` is `planted_k21.py` one order up (a mechanical renumbering) with the
+changes items 1(b), 4 and 5 state: 1(b)'s reference is the `scan43J1250` file at each node; the ring stage carries no
+context ring; the calibration family grows by section 13.7's five sums; the projection's second hypothesis comes from
+section 13.9. Order of work: item 0 (the dry run, before T99 lands), then the K = 22 stages once the three J 1250 files
+and the pilot (b) are in `scan45J1250/` and `scan45J1500/`. The J 1500 node files are recorded as context in the
+convergence stage's report and enter no criterion unless ruling 1 fails. The comparison of σ₂₂ with P5's type bound
+(the K = 21 recalibration's prediction, |σ₂₂| ≤ 1.01×10⁻¹⁹) belongs to P5 and is recorded in `proof/P5_scope.md`,
+not here. The `pick_plateau` change deferred in section 11.0 stays deferred through T99, so that every file of this
+order comes from the same code as T94's. Cost: a K 43 node took 553 min on win2 with four processes (section 13.2);
+with three processes each beside the other runs, a K 45 file is expected in 13–16 h, and stage 2 about as long again.
+The replicas of the K 43 runs still running on win (T97) and the Mac (T96) keep their section 13.0 roles; nothing at
+K = 22 depends on them.
