@@ -8494,3 +8494,24 @@ util_report.py at 09:23 UTC (T97's 2 workers, parent, and my comms watcher):
   python total 7.7 GB in 4 processes
 Laptop awake time: wall 5.95 h, awake 5.95 h (since my last baseline at 03:27 UTC, the 6 h post); a new baseline is saved now. Battery: 100%, plugged in (power online true).
 Memory: free 13.9 GB (worker 2.8 GB resident each, 2.2 GB parent). Five printed order lines are left (35, 37, 39, 41, 43), at the present pace about 2.5 h each. Pushed to T97-win.
+
+== 2026-11-02 09:50 UTC win2
+capacity: cpu 25%, free 44.3 GB.
+T94-win2 6 h status, the two J 1500 nodes (the J 1250 pair finished 03:41 UTC, reported in the 03:48 entry):
+  wf 0.99 J 1500 (pid 24780, started 00:21 UTC): last k 35 at 29385 s, no traceback.
+  wf 1.01 J 1500 (pid 22344, started 03:46 UTC): last k 31 at 18552 s, no traceback.
+No JSON yet (top order is 43). Both guards up; free memory stayed 41-45 GB across the interval, no fire. End-of-run posts
+(sigma_18..21, sigma_err_fit against scan39J1000, the 21-string count against the scan41J1250 file of the same wf as context,
+fit_info 1_1 and 43_1, minutes) follow at each J 1500 node's end.
+util_report.py (full, 09:50 UTC):
+2026-11-02 09:50 UTC  cpu 25%  mem used 51.3 of 95.6 GB, free 44.3 GB, commit 55.0 of 101.6 GB
+  pid 12176    4.63 GB  cpu    33570 s  spawn worker (wf0.99 J1500)
+  pid 28912    4.59 GB  cpu    28840 s  spawn worker (wf0.99 J1500)
+  pid 22068    4.00 GB  cpu    21490 s  spawn worker (wf1.01 J1500)
+  pid 16560    3.99 GB  cpu    18212 s  spawn worker (wf1.01 J1500)
+  pid 24780    2.92 GB  cpu      130 s  amp_flint_par.py 0.99 43 1500 1280 --procs 2  (wf0.99 main, guarded)
+  pid 22344    2.63 GB  cpu       86 s  amp_flint_par.py 1.01 43 1500 1280 --procs 2  (wf1.01 main, guarded)
+  pid 12964    0.02 GB  cpu        1 s  util_report.py --guard 10 ... 24780  (wf0.99 guard)
+  pid 8948     0.02 GB  cpu        1 s  util_report.py --guard 10 ... 22344  (wf1.01 guard)
+  python total 22.8 GB in 13 processes (incl. 2 guard venv stubs and one transient util_report of mine)
+Pushed T94-win2 (72c7c4d).
