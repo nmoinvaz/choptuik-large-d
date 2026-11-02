@@ -8573,3 +8573,31 @@ after step 6. Each post carries util_report.py's output and the hedge runs' last
 and a push of T98-win2 (make_index.py, add, commit, pull --no-rebase, push).
 Follow-on: the hedge pair's end-of-run posts as the 20:11 entry says; after them and T98, win2 waits for the decision
 Nathan has open (the sigma_22 run at K 45, or the low-D continuation at M 320 on win2), which a later entry brings.
+
+== 2026-11-02 10:28 UTC win2
+capacity: cpu 23%, free 47.4 GB.
+T98-win2 prerequisites and setup. Starting the hp build now beside the J 1500 hedge pair (nothing of T98 on the guard, below-normal).
+Prerequisites:
+  cargo 1.96.0 (30a34c682 2026-05-25)
+  rustc 1.96.0 (ac68faa20 2026-05-25); host x86_64-pc-windows-msvc, LLVM 22.1.2; MSVC linker found by cargo.
+  venv-hp (python -m venv): Python 3.12.8, numpy 2.5.4, scipy 1.18.1, maturin 1.16.0. (I added a python3.exe alias in venv-hp
+  so build.sh's last line, which calls python3, resolves to venv-hp and not the git-bash system python3.)
+  nice and python3 present in git bash; git 2.47.1.
+Setup: git fetch origin; worktree git worktree add --detach ..\choptuik-t98 origin/main -> 0f0e20c (the amp checkout is left
+alone, the J 1500 runs still import from it). Folder T98-win2\hp_build and README made.
+One path note: the entry's log/compare paths (..\..\choptuik-large-d-raw\..., ..\..\..\ from hp\) resolve one level too high
+for a worktree at Source\choptuik-t98 (they land at C:\Users\nathan\choptuik-large-d-raw, which does not exist). I use absolute
+paths into C:\Users\nathan\Source\choptuik-large-d-raw\T98-win2\hp_build for every log and the right absolute --compare paths
+(T45-win\scratch\t45\diag\ref_new.json, T81\ref_main.json, T81\scaled_main.json all present); the folder and files are unchanged.
+hedge: wf 0.99 J 1500 last k 37 at 35796 s; wf 1.01 J 1500 last k 33 at 23148 s; both guards steady.
+util_report.py (10:28 UTC):
+2026-11-02 10:28 UTC  cpu 23%  mem used 48.2 of 95.6 GB, free 47.4 GB, commit 51.3 of 101.6 GB
+  pid 12176    3.67 GB  cpu    35819 s  spawn worker (wf0.99 J1500)
+  pid 28912    3.60 GB  cpu    30597 s  spawn worker (wf0.99 J1500)
+  pid 16560    3.35 GB  cpu    20048 s  spawn worker (wf1.01 J1500)
+  pid 22068    3.30 GB  cpu    23738 s  spawn worker (wf1.01 J1500)
+  pid 24780    2.92 GB  cpu      132 s  amp_flint_par.py 0.99 43 1500 1280 --procs 2  (wf0.99 main, guarded)
+  pid 22344    2.72 GB  cpu       89 s  amp_flint_par.py 1.01 43 1500 1280 --procs 2  (wf1.01 main, guarded)
+  pid 12964/8948  guards on 24780 / 22344
+  python total 19.6 GB in 13 processes
+Build (step 1) starting; its result, minutes and the multidouble commit follow. Pushed T98-win2 (82b3c2d).
