@@ -2713,7 +2713,10 @@ section 13.0.
   2.30×10⁻¹⁵ of |σ₂₁|, and their σ₂₁ differ from the J 1250 nodes' by 7.1×10⁻¹⁴ and 1.5×10⁻¹⁴ of |σ₂₁|, inside
   the nodes' err21 (the table). 8 of 21 strings equal the K 41 J 1250 files' at each node, the differences in the last
   digits growing with the order (the J dependence of the last digits, as between the pilots at wf 1.00). As the
-  amendment of section 13.0 says, they enter no criterion.
+  amendment of section 13.0 says, they enter no criterion. The Mac's replica of the wf 0.99 J 1500 node (T96-mac,
+  0252384; --procs 2, 1031.6 min of its clock from 04:34 to 21:46 UTC with the Mac's sleep inside) reproduces win2's
+  file in all 22 strings and its log at all 22 common orders, 1–43 (`log_compare.py`, 2026-11-02 23:00 UTC): the
+  cross-machine identity of section 13.0's amendment holds at J 1500 and at the top order as well.
 
 ### 13.3 The pipeline on plants first
 
@@ -2979,3 +2982,13 @@ order comes from the same code as T94's. Cost: a K 43 node took 553 min on win2 
 with three processes each beside the other runs, a K 45 file is expected in 13–16 h, and stage 2 about as long again.
 The replicas of the K 43 runs still running on win (T97) and the Mac (T96) keep their section 13.0 roles; nothing at
 K = 22 depends on them.
+
+**Amendment (2026-11-02 23:05 UTC), before any σ₂₂ existed: the Mac computes a replica of (a).** T96 ended (section
+13.2) and the Mac is free, so it runs pilot (a)'s command (wf 1.00, K 45, J 1250, 1280 bits, --procs 2) as T102,
+folder `T102-mac/scan45J1250`, the role win's T97 has at K = 21: its control is `log_compare.py` against the Mac's own
+K 43 log `T94-mac/scan43J1250/w1.0000.log` within the first hour and at each post, at every common order up to 43,
+and against win2's T99 log at every common order the two have; a difference stops the run and is recorded here. At
+its end its 23 σ strings are compared with win2's (a) file: 23 of 23 equal is the expectation (the K 43 replicas
+gave 22 of 22 on win and on the Mac); a differing string stops the K = 22 stages, or reopens their record if the
+replica lands after them (the Mac sleeps, so it will), until the cause is recorded. Otherwise the replica enters no
+criterion and is reported as context in the convergence stage's report.
