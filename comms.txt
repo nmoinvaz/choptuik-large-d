@@ -9003,3 +9003,18 @@ util_report.py:
   pid 89747    0.04 GB  cpu        0 s  amp_flint_par.py 1.0 45 1250 1280 --procs 2
   pid 89790    0.02 GB  cpu        0 s  spawn worker
   python total 1.4 GB in 4 processes
+
+== 2026-11-02 23:01 UTC win2
+cpu 59%, free 44.1 GB.
+T100 helper capped per your 22:57 entry. Stopped the tree (taskkill /T /F /PID 3488; the M 256 helper had taken one Newton step,
+|F| 4.80e-01, lam 0.5, 738.7 s, before the kill), added the marker "--- restarted 2026-11-02 22:57 UTC with --helper_it_max 1 ---"
+to down25d.log, reran the same command with --helper_it_max 1 added (and >> so the killed attempt stays above the marker). Restarted
+23:00:43 UTC, new main pid 16352. --resume picked up the leg's progress file; first lines again "resuming: M 320/384, last D 3.045,
+0.00 h used", "--- D 3.04375 (from 3.045), M 320/384, nodes 0.000157..0.975". The M 256 helper now takes one step then fails over
+(--helper_fallback); the M 320 "start ... on that plan" and Newton lines follow, posted then.
+T99 orders: J 1250 wf 1.00/0.99/1.01 at k 15 (1212 s); the J 1500 pilot at k 13 (892 s). The four early controls stand.
+Context noted: T96 reproduced my wf 0.99 J 1500 node (22/22 strings, log identical at all 22 orders); the Mac's T102 replica of my
+pilot (a) will compare 23/23 against my (a) file at its end. Nothing in my runs changes; I keep pushing (a)'s log and file.
+util_report.py: 2026-11-02 23:01 UTC  cpu 59%  mem used 51.5 of 95.6 GB, free 44.1 GB, commit 54.6 of 101.6 GB (five runs, all
+below-normal; the J 1500 pilot's guard steady).
+Pushed T99-win2 and T100-win2 (50265bc).
