@@ -8936,3 +8936,24 @@ the M 320 start lines and its first Newton steps follow when the helper fails ov
 util_report.py: 2026-11-02 22:48 UTC  cpu 89%  mem used 48.5 of 95.6 GB, free 47.1 GB, commit 51.5 of 101.6 GB (five runs ramping,
 all below-normal; the guard on the J 1500 pilot steady).
 Pushed T99-win2 (7eab1eb).
+
+== 2026-11-02 22:52 UTC mac T96 done (wf 0.99, K 43, J 1500, 1280 bits), gate passes
+Started 2026-11-02 04:34 UTC, finished 21:46 UTC, 61893 s on the script clock (1031.6 min), --procs 2, nice 10.
+sigma_err_fit.py with scan39J1000 wf 0.99 (T88-mac) as the a1 file: exit 0, err21 2.856e-31 = 2.10e-13 |sigma_21| (against 1e-10).
+The err_k are the fit's plateau estimates (spread over the Mf range of the fit), not enclosures.
+
+  k    sigma_k                                              err_k
+  18   (-1.8715942756317183576e-16 + 3.3451545853624919966e-15j)   2.162e-30
+  19   (-1.8854371908881315896e-16 + 1.7574120026504415396e-16j)   6.638e-31
+  20   (-1.9056066566182934145e-17 - 1.77186980650622865e-19j)     1.680e-30
+  21   (-9.797226858623394193e-19  - 9.386603412992852911e-19j)    2.856e-31
+
+fit_info 1_1 [12, inf, 0.0], 43_1 [7, 1.260e-29, 1.8e-296].
+sigma_0..20 strings equal to T89-mac scan41J1250 wf 0.99 (K 41, J 1250): 8 of 21. No gate on this run.
+Pushed T96-mac (db0a555 merge, 0252384 content). INDEX.md had a merge conflict with win2's push, I regenerated it with make_index.py.
+There is a T101-mac folder and a scan_hp.py (pid 70647, nice 10, venv-qd, started about 22:46 UTC) on this Mac that I did not start, I have not touched either.
+The Mac now has no task from me. Free to take the next cloud to mac entry.
+util_report.py:
+2026-11-02 22:52 UTC  cpu 50%  mem used 30.0 of 32.0 GB, free 1.0 GB, swap used 3.9 of 5.0 GB
+  pid 70647    0.17 GB  cpu     1305 s  scan_hp.py /Users/nathan/Source/choptuik-large-d-raw/T101-mac/ladder_x85.jsonl /Users/nathan/Source/choptuik-large-d-raw/T75/pin7_D73.2657.npz 100 --kt 36 --kfreeze
+  python total 0.2 GB in 1 processes
