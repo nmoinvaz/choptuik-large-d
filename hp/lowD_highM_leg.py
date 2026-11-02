@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 """A new leg of a finished lowD_highM.py run: its progress file copied to OUT.progress.json for --resume, with the
-predictor histories' states looked up by file name in --states (a run's paths are those of the machine that wrote
-them), the stop cleared, new D targets, and the wall-time count restarted. The pairs, nodes, resolutions, helper and
-series orders carry over, so the leg continues the run's predictors and its move-up rule.
+predictor histories' states looked up by file name in the --states directories (a run's paths are those of the
+machine that wrote them; several directories, comma-separated, are searched in order, e.g. the checkout's
+data/lowD_states and a raw-data folder's states/), the stop cleared, new D targets, and the wall-time count restarted.
+The pairs, nodes, resolutions, helper and series orders carry over, so the leg continues the run's predictors and its
+move-up rule.
 
-    python3 lowD_highM_leg.py PROGRESS.json OUT.jsonl --targets 3.04,3.03,3.02,3.01 [--states data/lowD_states]
+    python3 lowD_highM_leg.py PROGRESS.json OUT.jsonl --targets 3.04,3.03,3.02,3.01 [--states DIR[,DIR...]] [--killed]
 
 then lowD_highM.py with --out OUT.jsonl --resume and the run's other arguments. Exit 1 if a history state is missing
-or OUT.progress.json exists, or the first step exceeds the run's last (--allow_bigger_step accepts it). OUT must be in a raw-data folder (raw_out.py; --allow_unraw writes anyway).
+or OUT.progress.json exists, or the first step exceeds the run's last (--allow_bigger_step accepts it), or the run has
+not stopped (no "done" in the progress file: a run killed by hand; --killed accepts it, and the leg starts from the
+run's last converged point, a pending point stage dropped). OUT must be in a raw-data folder (raw_out.py;
+--allow_unraw writes anyway).
 """
 import argparse
 import json
@@ -24,7 +29,10 @@ def main():
     ap.add_argument("progress")
     ap.add_argument("out")
     ap.add_argument("--targets", required=True)
-    ap.add_argument("--states", default=os.path.join(HERE, "data", "lowD_states"))
+    ap.add_argument("--states", default=os.path.join(HERE, "data", "lowD_states"),
+                    help="directories of the history states, comma-separated, searched in order")
+    ap.add_argument("--killed", action="store_true", help="accept a progress file without a stop (the run was killed by "
+                    "hand); the leg starts from its last converged point")
     ap.add_argument("--allow_bigger_step", action="store_true", help="accept a first step larger than the run's last")
     ap.add_argument(FLAG, action="store_true", help=HELP)
     a = ap.parse_args()
@@ -33,17 +41,19 @@ def main():
     if os.path.exists(prog):
         raise SystemExit(f"{prog} exists: resume that leg instead")
     st = json.load(open(a.progress))
-    if not st.get("done"):
-        raise SystemExit(f"{a.progress} has not stopped: resume that run instead")
+    if not st.get("done") and not a.killed:
+        raise SystemExit(f"{a.progress} has not stopped: resume that run instead, or --killed")
     missing = []
+    dirs = [d for d in a.states.split(",") if d]
 
     def relink(hist):
         out = []
         for D, p in hist:
-            q = os.path.abspath(os.path.join(a.states, p.replace("\\", "/").split("/")[-1]))
-            if not os.path.exists(q):
-                missing.append(q)
-            out.append([D, q])
+            name = p.replace("\\", "/").split("/")[-1]
+            found = [os.path.abspath(os.path.join(d, name)) for d in dirs if os.path.exists(os.path.join(d, name))]
+            if not found:
+                missing.append(name + " (in " + ", ".join(dirs) + ")")
+            out.append([D, found[0] if found else name])
         return out
 
     for k in ("hist_c", "hist_w", "hist_n"):
