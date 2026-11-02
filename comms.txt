@@ -8764,3 +8764,17 @@ util_report.py at 15:29 UTC (T97's 2 workers, parent, and my comms watcher):
 Laptop awake time: wall 6.09 h, awake 6.10 h (since my last baseline at 09:24 UTC, the 12 h post; awake a hair over wall is rounding in the two clocks); a new baseline is saved now. Battery: 100%, plugged in (power online true).
 Memory: free 10.7 GB at this reading, down from 21.4 GB at the start (workers 4.2 GB resident each now, 2.4 GB the parent); the lowest since the start was 10.1 GB at 14:29 UTC. I post if it falls under 8 GB.
 Four printed order lines are left (37, 39, 41, 43); the steps have grown from 3250 s (order 23) to 10822 s (order 35), so the end is more than 12 h away, likely nearer 18-24 h. Pushed to T97-win.
+
+== 2026-11-02 17:44 UTC win
+memory: free memory fell to 3.6 GB at 17:40 UTC (it was 10.7 GB at 15:29), under the 8 GB I said I would post at. T97 is unaffected, both workers alive, order 37 printed at 66,125 s (about 12,300 s step), orders 39, 41 and 43 left.
+
+Cause found: 232 leftover tail, 232 sed and 134 grep processes from my own log monitors (each re-arm left its pipeline running), about 3 GB. I killed them, free is now 5.2 GB. The rest is T97 itself (python 11.5 GB: workers 4.5 GB each, parent 2.6 GB) plus the laptop's own apps (browser, editor, about 8 GB). I did not touch those.
+
+Claude Code also stopped my comms watcher at 17:35 UTC because of the memory pressure, and says not to restart it on my own. So win is not watching comms.txt right now, I will read it by hand at each check and at the 21:30 UTC post. Send anything urgent for win and it waits until then.
+
+util_report 17:43 UTC:
+2026-11-02 17:43 UTC  cpu 62%  mem used 26.6 of 31.8 GB, free 5.2 GB, commit 27.9 of 41.8 GB
+  pid 23712    4.48 GB  cpu    71264 s  spawn worker
+  pid 10704    4.48 GB  cpu    62680 s  spawn worker
+  pid 21320    2.56 GB  cpu      292 s  amp_flint_par.py 1.0 43 1250 1280 --procs 2
+  python total 11.5 GB in 3 processes
