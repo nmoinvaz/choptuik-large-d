@@ -2595,8 +2595,8 @@ findings call for, stated here before the data:
 5. **Calibration** at K = 21, as section 10.5: the error of arg, ratio, Padé mid and G on (i) the 28 arc plants, (ii)
    C-EXP, (iii) REFIT with fit residual ≤ 10⁻⁴, and (iv) the BP family: section 12.0's twenty sums (section 11.0's
    sixteen and section 11.6's four) plus the five C20-BP sums section 12.7 records as ring-free and passing the type
-   rule at K = 20, [6/14], [7/13], [8/12], [9/11] and [10/10] (named there by that rule and not by their values), each with
-   its own zero as truth: twenty-five sums. The calibration at K = 20 from the new records must reproduce section
+   rule at K = 20, [6/14], [7/13], [8/12], [9/11] and [10/10] (named there by that rule and not by their values), each
+   with its own zero as truth: twenty-five sums. The calibration at K = 20 from the new records must reproduce section
    12.6's arc and BP-family ranges to 6×10⁻⁷ (against the values stored in `planted_checks_k20.json`).
 6. **Next generation and ring-free completions,** glued at σ₂₁ (tail from k = 22): ratio-law windows k = 6–20, 8–20,
    9–20; best-fit arc tails, four shapes, ω_t grid 0.9990–1.0010; the Borel–Padé sums [m/(21 − m)], m = 3…10. Frozen
