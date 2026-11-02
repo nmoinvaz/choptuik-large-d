@@ -8647,3 +8647,18 @@ util_report.py (11:34 UTC):
   pid 24780 3.06 GB  amp 0.99 43 1500 (guarded) / pid 22344 2.77 GB  amp 1.01 43 1500 (guarded)
   guards 12964 (->24780), 8948 (->22344); monitor 3780; python total ~26 GB in 14 processes
 Pushed T98-win2 (883cd4b).
+
+== 2026-11-02 11:37 UTC win2
+capacity: cpu 23%, free 42.8 GB.
+T98-win2 step 4, the cross-machine bit identity, PASS against both references. Each exit 0, last line "PASS: 72 outputs
+bit-identical":
+  ref_vs_win.log  (vs win T45-win\scratch\t45\diag\ref_new.json, AVX-512): 24 outputs in 6/14/29 s at M 48/64/80, all 72 bit-identical.
+  ref_vs_mac.log  (vs Mac T81\ref_main.json, NEON):                        24 outputs in 6/16/31 s at M 48/64/80, all 72 bit-identical.
+So win2's AVX2 kernel reproduces win's AVX-512 and the Mac's NEON byte for byte at the three resolutions computed at a state's own M
+(residual, segs, centre/horizon series, newton and mixed dz/piv/chord/solve_t, jacobian_f64, all hi and lo). The full hash tables are
+in the two logs. Running next: the --save of ref_win2.json at the seven resolutions (M 128 is the slow one), step 5 (scaled M 192,256
+vs the Mac), and the context one-liner against both files; posted together as steps 4-5.
+hedge: wf 0.99 J 1500 at k 37 (35796 s, mid order 39), wf 1.01 at k 33 (23148 s, mid order 35); worker CPU rising, guards steady.
+util_report.py: 2026-11-02 11:37 UTC  cpu 23%  mem used 52.8 of 95.6 GB, free 42.8 GB, commit 58.0 of 101.6 GB (per-process as in
+the 11:34 entry; the two hedge pairs' workers 4.7-5.3 GB, mains ~3 GB, both guards + monitor idle).
+Pushed T98-win2 (ec043c8).
