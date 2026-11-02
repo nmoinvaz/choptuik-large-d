@@ -389,7 +389,13 @@ def main():
             zp[:M], zpl[:M] = dd_add(zp[:M], zpl[:M], bh, bl)
             pin = (co, pin_ks)
         a.tol = tol0 * a.tol_growth ** abs(Dn - D_start)
-        s, zh2, zl2, hist, ok, dt = solve_at(Dn, zp, zpl, a, nodes, M, a.it_max, pin=pin)
+        try:
+            s, zh2, zl2, hist, ok, dt = solve_at(Dn, zp, zpl, a, nodes, M, a.it_max, pin=pin)
+        except (ValueError, FloatingPointError, ZeroDivisionError) as e:
+            # the predicted state is off the solver's domain (a non-finite residual or pivot, as a jump of 22 from
+            # D 77.88 gave, T101): a failed attempt, so the step halves like any other failure
+            print(f"D={Dn}: the solve raised {type(e).__name__}: {e}", flush=True)
+            s, zh2, zl2, hist, ok, dt = None, None, None, [], False, 0.0
         attempt(D_from=D, D_to=Dn, dD=abs(Dn - D), ok=ok, its=len(hist), polish=sum(1 for r in hist if r.get("polish")),
                 F_seed=hist[0]["F"] if hist else None, F_last=hist[-1]["F"] if hist else None, tol=a.tol,
                 seconds=round(dt, 1), Delta=float(zh2[-1]) if ok else None, Delta_lo=float(zl2[-1]) if ok else None)
