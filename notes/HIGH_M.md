@@ -783,3 +783,19 @@ the 21 nodes 0.000157 … 0.975 (kc 100, ks 250): Δ(384) = 2.484927163788103 (l
 step from 256 to 320 (−1.17×10⁻⁹); that step is the quoted ± of Δ at D = 3.05, a resolution step, not a bound. The
 M = 384 point took 10.6 h (a lift, three Newton steps of 2.4–2.9 h, a second pass of two 62-minute steps) at a peak
 RSS of 2.9 GB. That is the end of T45's grid.
+
+### 9.7 The kernel on a third machine (T98, win2)
+
+The hp build on the Windows desktop win2 (Core Ultra 7 265K, AVX2 without AVX-512; comms 2026-11-02 09:50–11:49 UTC;
+raw T98-win2 824b26e, `hp_build/`) at main 0f0e20c, multidouble 1.8.0 and its package at 00c6dfd: `cargo test
+--release --lib` 9 passed, 0 failed, 2 ignored; `highm_check.py controls` (both mutations fire), `block` and `converge`
+pass (`controls.log`, `block.log`, `converge.log`). Bit identity across the three instruction sets, at the resolutions
+whose plan is stored (M = 48, 64, 80, `ref --compare --Ms=48,64,80`): all 72 outputs equal to win's AVX-512 file
+(T45-win/scratch/t45/diag/ref_new.json) and to the Mac's NEON file (T81/ref_main.json), `ref_vs_win.log`,
+`ref_vs_mac.log`. The full table (`ref_win2.json`, 168 hashes) equals win's at every one of the seven M and the Mac's
+at 72 of 168, differing only at M = 8, 16, 96 and 128, where the plan is computed and its libm `pow` differs between
+macOS and Windows (9.5), not between the two Windows machines. The scaled series at M = 192 and 256 against the Mac's
+T81/scaled_main.json: 22 of 22 bit-identical, the control fires (`scaled_vs_mac.log`). M = 128 of the `ref` table took
+346 s on win2 against 1573 s on win's laptop (`ref_save.log`, T45's `ref_new.log`). So a build on a new machine
+is checked against the stored reference files at M = 48, 64, 80 and the scaled M = 192, 256, with no reference
+build on that machine.
