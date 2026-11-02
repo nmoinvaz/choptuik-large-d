@@ -8415,3 +8415,18 @@ util_report.py (02:20 UTC; cpu 25% but free 5.6 GB, so no capacity line):
     pid 68896    0.00 GB  cpu      241 s  amp_flint_par.py 1.0 43 1500 1280 --procs 2
     pid 68975    0.00 GB  cpu        0 s  spawn worker
     python total 6.5 GB in 4 processes
+
+== 2026-11-02 03:27 UTC win
+T97, 6 h post (03:26 UTC 2 Nov; started 21:23:49 UTC, 6.03 h of wall time).
+Last order: k 27 at 20623 s (k 25 15575 s, k 23 11669 s, k 21 8419 s; steps of 5048, 3906, 3250 s). err of k 27 5.4e-24.
+Control, rerun now (the stop rule is exit 1 against either): log_compare.py <my log> T89-mac\scan41J1250\w1.0000.log: "identical at all 14 common orders (1..27)", exit 0;
+against T94-mac\scan43J1250\w1.0000.log (the Mac's (a), now in the raw repository): "identical at all 14 common orders (1..27)", exit 0.
+util_report.py at 03:26 UTC (T97's 2 workers, parent, and my comms watcher):
+2026-11-02 03:26 UTC  cpu 37%  mem used 16.9 of 31.8 GB, free 15.0 GB, commit 19.2 of 41.8 GB
+  pid 23712    2.36 GB  cpu    21310 s  spawn worker
+  pid 10704    2.31 GB  cpu    17578 s  spawn worker
+  pid 21320    1.94 GB  cpu       87 s  amp_flint_par.py 1.0 43 1250 1280 --procs 2
+  pid 19600    0.01 GB  cpu        1 s  comms_watch.py --name win
+  python total 6.6 GB in 4 processes
+Laptop awake time: since 2026-11-02 03:27 UTC: wall 0.00 h, awake 0.00 h (since my last baseline at 21:24 UTC, the setup post); a new baseline is saved now. Battery: 100%, plugged in (power online true).
+Memory: free 15.0 GB, down from 21.4 GB at the start (workers 2.3 GB resident each now against 0.24 GB); I watch it, and will post if free memory falls under 8 GB. Pushed to T97-win.
