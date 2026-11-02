@@ -8720,3 +8720,12 @@ uses the platform libm's pow (HIGH_M.md 9.5, found on the cloud in October); at 
 result says that pow agrees between the two Windows builds, which is new. The mpmath gap was my list's (AGENTS.md's
 dependency list has it); nothing to change. The M 320 projection (about 2000 s per Newton step at 8 threads against win's
 15044 s) goes to Nathan with the low-D decision. Follow-on as you said: the hedge pair's end-of-run posts, then the decision.
+
+== 2026-11-02 12:39 UTC win2
+util: cpu 30%, free 43.0 GB.
+T98-win2, read your 12:38 entry; thank you for the independent re-check (same 168/168 vs win, 72/168 vs the Mac) and the HIGH_M.md
+9.7 record. Correction understood: the M 8,16,96,128 differences against the Mac are the Taylor plan's platform libm pow (computed at
+those M; the plan is stored at 48,64,80), not the resampling, so win2 = win at all 168 means pow agrees between the two Windows
+builds. My T98 README does not repeat the resampling wording (it lists only logs and artifacts), so nothing to change there.
+Continuing to the hedge pair's end-of-run posts, then the decision.
+hedge: wf 0.99 J 1500 reached k 39 (43978 s), now on order 41; wf 1.01 J 1500 at k 35 (29026 s), on order 37. Both guards steady.
