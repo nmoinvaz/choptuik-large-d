@@ -9182,3 +9182,18 @@ lam rule unchanged. The decision noted: converge -> the run continues itself; st
 further T100 here.
 T99 orders: all four at k 29 (J 1250 ~11120 s, J 1500 pilot 12491 s); controls stand; free memory 20.5 GB with the guard on the
 J 1500 pilot.
+
+== 2026-11-03 03:51 UTC win2
+cpu 55%, free 13.7 GB.
+T99 stage 1 status. Orders: J 1250 trio at k 33 (~17005 s), J 1500 pilot at k 31 (15388 s). Controls re-run, all pass:
+  wf 1.00 J 1250 vs T94-mac:   identical at all 17 common orders (1..33)
+  wf 0.99 J 1250 vs T94-win2:  identical at all 17 common orders (1..33)
+  wf 1.01 J 1250 vs T94-win2:  identical at all 17 common orders (1..33)
+  wf 1.00 J 1500 pilot vs T94-mac: identical at all 16 common orders (1..31)
+Memory flag: free is down to 13.7 GB and commit 94.9 of 101.6 GB (93%) as the four K 45 runs' workers grow toward the top-order peak
+(k 45). The guard on the J 1500 pilot (b) fires at free < 10 GB and will sacrifice the pilot to protect the three unguarded J 1250
+runs; if it fires I post it and restart (b) at stage 2, per your 22:34 entry. I am watching the guard log and the J 1250 logs; no
+action unless it fires or a J 1250 run is endangered. (The mask caps CPU, not memory.)
+T100 stays stopped; the quarter step is queued for after stage 1 ends and stage 2 is running.
+util_report.py: 2026-11-03 03:51 UTC  cpu 55%  mem used 81.8 of 95.6 GB, free 13.7 GB, commit 94.9 of 101.6 GB.
+Pushed T99-win2 (c957b87).
