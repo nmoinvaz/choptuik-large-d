@@ -764,6 +764,52 @@ def k21_stages():
     return out
 
 @check
+def p5_sigma22():
+    """proof/P5_scope.md item 3: sigma_22 at the nodes against the type bound (solver/proof/logs/entire_cert_K22.log,
+    from `entire_cert.py 22 --scan ../inner_amp/scan45J1250`), |sigma_22| and its fit errors from sigma_err_fit.py on the
+    K 45 files (a1 from the 960-bit scan39J1000 files; notes/PLANTED_SELECTION.md section 14.0's stage-1 reading), the
+    k <= 12 calibration's ratio at k = 22, the K = 22 recalibration and its prediction for sigma_23."""
+    import re
+    P, Q, N = "proof/P5_scope.md", "notes/PROOF_QUEUE.md", "notes/PLANTED_SELECTION.md"
+    d = os.path.join(ROOT, "solver/inner_amp")
+    sys.path.insert(0, d)
+    import sigma_err_fit as SF
+    sys.path.pop(0)
+    L = open(os.path.join(ROOT, "solver/proof/logs/entire_cert_K22.log")).read()
+    node = {m.group(1): (float(m.group(2)), float(m.group(3)))
+            for m in re.finditer(r"wf (\S+): k <= 21 \(.*?\): ([0-9.]+); k <= 12 \(.*?\): ([0-9.]+)", L)}
+    cal = re.search(r"\|sigma_k\| Gamma\(k \+ ([0-9.]+)\) / ([0-9.]+)\^k for k = 4\.\.22:.*C = max = ([0-9.]+)", L)
+    pred = re.search(r"k 23: ([0-9.e+-]+),", L)
+    rel = {}
+    for w in ("0.9900", "1.0000", "1.0100"):
+        a = json.load(open(os.path.join(d, f"scan45J1250/sigF_w{w}_K45_J1250_p1280.json")))
+        p = json.load(open(os.path.join(d, f"scan39J1000/sigF_w{w}_K39_J1000_p960.json")))
+        r = SF.recompute(a, SF.a1_of(p))
+        rel[w] = (float(abs(r[22][1])), r[22][2])
+    sa, ea = rel["1.0000"]
+    k12 = "1.050, 1.027, 1.003 at wf 0.99, 1.00, 1.01"
+    cs = "(a = 1.7609, b = 4.81, C = 86.8)"
+    both = "0.898 and 0.894 of each node's own K = 21 bound"
+    return [("|sigma_22| at wf 1.00", sa, 9.08e-20, 0.01e-20, [(P, "|σ₂₂| = 9.08×10⁻²⁰")]),
+            ("err22 of (a)", ea, 1.297e-31, 0.001e-31, [(N, "err22 = 1.297×10⁻³¹ = 1.43×10⁻¹²")]),
+            ("err22 of (a), relative", ea / sa, 1.43e-12, 0.01e-12,
+             [(N, "err22 = 1.297×10⁻³¹ = 1.43×10⁻¹²"), (P, "1.43×10⁻¹² of |σ₂₂|")]),
+            ("err22 margin under 1e-10", 1e-10 / (ea / sa), 70, 1, [(N, "a margin of 70")]),
+            ("err22 at wf 0.99, relative", rel["0.9900"][1] / rel["0.9900"][0], 1.28e-12, 0.01e-12, [(N, "1.28×10⁻¹² (wf 0.99)")]),
+            ("err22 at wf 1.01, relative", rel["1.0100"][1] / rel["1.0100"][0], 1.59e-12, 0.01e-12, [(N, "1.59×10⁻¹² (wf 1.01)")]),
+            ("sigma_22 over the K = 21 bound at wf 1.00", node["1.0"][0], 0.896, 0.001, [(P, "0.896 of the K = 21 bound")]),
+            ("sigma_22 over the K = 21 bound at wf 0.99", node["0.99"][0], 0.898, 0.001, [(P, both)]),
+            ("sigma_22 over the K = 21 bound at wf 1.01", node["1.01"][0], 0.894, 0.001, [(P, both)]),
+            ("k <= 12 calibration's ratio at k = 22, wf 0.99", node["0.99"][1], 1.050, 0.001,
+             [(P, k12), (Q, "1.050, 1.027, 1.003: above 1 at all three nodes")]),
+            ("k <= 12 calibration's ratio at k = 22, wf 1.00", node["1.0"][1], 1.027, 0.001, [(P, k12)]),
+            ("k <= 12 calibration's ratio at k = 22, wf 1.01", node["1.01"][1], 1.003, 0.001, [(P, k12)]),
+            ("K = 22 calibration a", float(cal.group(2)), 1.7609, 0.0001, [(P, cs)]),
+            ("K = 22 calibration b", float(cal.group(1)), 4.81, 0.01, [(P, cs)]),
+            ("K = 22 calibration C", float(cal.group(3)), 86.8, 0.1, [(P, cs)]),
+            ("predicted bound on sigma_23", float(pred.group(1)), 6.74e-21, 0.01e-21, [(P, "|σ₂₃| ≤ 6.74×10⁻²¹")])]
+
+@check
 def p5_sigma21():
     """proof/P5_scope.md item 3: sigma_21 at the nodes against the type bound (solver/proof/logs/entire_cert_K21.log,
     from `entire_cert.py 21 --scan ../inner_amp/scan43J1250`), the k <= 12 calibration's ratio at k = 21, the K = 21

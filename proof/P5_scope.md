@@ -102,6 +102,13 @@ Three findings.
    The k ≤ 12 calibration's ratio at k = 21 is 1.016, 0.996, 0.975 at wf 0.99, 1.00, 1.01: the constant fixed at k ≤ 12
    is exceeded at the 0.99 node, as predicted two orders earlier; the bound calibrated on the latest orders keeps its
    0.90. Recalibrated at K = 21 (a = 1.7497, b = 4.72, C = 73.1) the bound predicts |σ₂₂| ≤ 1.01×10⁻¹⁹.
+   **σ₂₂ passed it** (T99's stage 1 on win2, K 45, J 1250, 1280 bits, `solver/inner_amp/scan45J1250`, landed
+   2026-11-03 13:00 UTC; `solver/proof/logs/entire_cert_K22.log`): |σ₂₂| = 9.08×10⁻²⁰ at ω∞, 0.896 of the K = 21 bound,
+   the sixth order at 0.90, and 0.898 and 0.894 of each node's own K = 21 bound at wf 0.99 and 1.01; its fit error at
+   ω∞ is 1.43×10⁻¹² of |σ₂₂| (PLANTED_SELECTION.md §14.0). The k ≤ 12 calibration's ratio at k = 22 is
+   1.050, 1.027, 1.003 at wf 0.99, 1.00, 1.01: the constant fixed at k ≤ 12 is now exceeded at all three nodes, by
+   0.3–5%, while the bound calibrated on the latest orders keeps its 0.90.
+   Recalibrated at K = 22 (a = 1.7609, b = 4.81, C = 86.8) the bound predicts |σ₂₃| ≤ 6.74×10⁻²¹.
 
 So, numerically: at K = 17, a conditional certificate at radius about 10⁻⁴ in ω/ω∞ is within reach of (H_T) in its
 sharpened form, and the coefficient errors of (H_σ) (fit errors ~10⁻¹² of each σ_k, 10⁻²⁵ absolute at k = 17) are
