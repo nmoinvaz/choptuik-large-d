@@ -158,7 +158,8 @@ exists at any accuracy useful to the series block.
    fit with more orders; it decides whether (c) is single-valued.
 3. Homotopy in the matching point at fixed D (a homotopy in the discretisation, not in the literature): solve first
    with u₀′ < u_pole(δ_pred), where the series converges, then re-layout outward (`hp/relayout.py`), each rung starting
-   from data off by the previous rung's floor/σ_min(u₀′); it closes when R₀ + C ln(σ_min(u₀_k)/floor)/(n − 1) > u₀_{k+1}.
+   from data off by the previous rung's floor/σ_min(u₀′); it closes when R₀ + C ln(σ_min(u₀_k)/floor)/(n − 1)
+   > u₀_{k+1}.
    With 12.7's five decades per 0.05 of u₀ and 12.4's 0.73 per unit of D, quad-double closes the ladder at D = 100 and
    150 and misses 200 by a few decades; under H2's pure u₀^{Re s} it fails everywhere. Needs σ_min(u₀, D) measured.
 4. The premise "precision is not the obstacle" holds under 12.4's empirical σ_min law (10⁻³² at D 200, 0.7 layout) and
