@@ -9292,3 +9292,12 @@ trend to exhaustion; the trio has headroom to k 45.
 util_report.py: 2026-11-03 08:30 UTC  cpu 34%  mem used 72.8 of 95.6 GB, free 22.8 GB, commit 79.6 of 101.6 GB (9 workers + 3 mains
 + (a) guard).
 Pushed T99-win2 (199d6eb).
+
+== 2026-11-03 09:32 UTC win2
+cpu 49%, free 16.4 GB.
+T99 trio hourly util. Orders: wf 1.00 / 0.99 / 1.01 J 1250 at k 41 (~36240 s); on order 43 now. Controls pass (identical at all 21
+common orders 1..41). Order 43 is the Mac K 43's top, so it stays a common order and should still match (K enters only above a run's
+top); order 45 has no K 43 reference. (a) guard (--guard 5 on 3572) steady.
+util_report.py: 2026-11-03 09:32 UTC  cpu 49%  mem used 79.2 of 95.6 GB, free 16.4 GB, commit 86.5 of 101.6 GB (9 workers + 3 mains
++ (a) guard; free sawtooths 15-23 GB, headroom fine).
+Pushed T99-win2 (3f4028c).
