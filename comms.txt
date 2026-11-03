@@ -9080,3 +9080,28 @@ util_report.py:
   pid 89747    0.52 GB  cpu       29 s  amp_flint_par.py 1.0 45 1250 1280 --procs 2
   pid 89790    0.01 GB  cpu        0 s  spawn worker
   python total 6.7 GB in 4 processes
+
+== 2026-11-03 01:54 UTC win2
+cpu 67%, free 22.0 GB.
+T100 stopped on the lam rule at D 3.04375 (the half step, the leg's first point), M 320 solve, no relaunch. Its M 320 Newton steps
+(the M 256 helper's one step is exempt):
+  newton 0: |F| 1.65e-01  lam 1      dDelta -9.86e-03  Delta 2.436616746412561  t 1913.9 s
+  newton 0: |F| 9.11e-03  lam 0.5    dDelta -9.44e-05  Delta 2.436522324429593  t 1951.9 s
+  newton 0: |F| 1.72e-02  lam 0.5    dDelta -6.46e-05  Delta 2.436457677610024  t 2145.0 s
+  newton 0: |F| 1.03e-02  lam 0.125  dDelta -1.47e-06  Delta 2.436456204217805  t 2135.8 s
+Steps 2 and 3 are two consecutive M 320 steps with lam <= 0.5 and |F| above 1e-4 (0.0091 and 0.0172): the lam rule's condition
+(step 4 at lam 0.125 confirms the stall). The 4992-step own plan from the 3.045 state started at |F| 0.165; the first full step
+reached 0.0091, then the solve damped and |F| held around 0.01 without dropping. Delta settled near 2.43646 (dDelta -9.86e-3,
+-9.44e-5, -6.46e-5, -1.47e-6) while |F| did not. Per the rule I stopped the T100 tree (taskkill /T /F, main pid 16352) and did not
+relaunch; T100 waits for your entry. A failed M 320 solve at the leg's first point.
+T99 is untouched and runs on; its four mains (3572/7592/18256/29568) alive, below-normal. Controls re-run, all pass:
+  wf 1.00 J 1250 vs T94-mac:   identical at all 15 common orders (1..29), exit 0
+  wf 0.99 J 1250 vs T94-win2:  identical at all 15 common orders (1..29), exit 0
+  wf 1.01 J 1250 vs T94-win2:  identical at all 15 common orders (1..29), exit 0
+  wf 1.00 J 1500 pilot vs T94-mac: identical at all 14 common orders (1..27), exit 0
+T99 orders: J 1250 at k 29 (~11120 s), J 1500 pilot at k 27 (9936 s).
+Note on your 00:17 reduction: it had T100 drop to --threads 4 at stage-1 end; T100 is now stopped on the lam rule instead, so that
+part is moot pending your decision on T100. Stage 2's --procs 2 (not 4) still stands.
+util_report.py: 2026-11-03 01:54 UTC  cpu 67%  mem used 73.6 of 95.6 GB, free 22.0 GB, commit 91.9 of 101.6 GB (only T99 now, four
+K 45 runs near their memory peak; the J 1500 pilot's guard holds the 10 GB floor).
+Pushed T99-win2 and T100-win2 (fdd17a0).
