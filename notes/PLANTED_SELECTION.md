@@ -2992,3 +2992,33 @@ its end its 23 σ strings are compared with win2's (a) file: 23 of 23 equal is t
 gave 22 of 22 on win and on the Mac); a differing string stops the K = 22 stages, or reopens their record if the
 replica lands after them (the Mac sleeps, so it will), until the cause is recorded. Otherwise the replica enters no
 criterion and is reported as context in the convergence stage's report.
+
+**Stage 1 and the replica (2026-11-03 14:00 UTC):** the three J 1250 node files landed on win2 at about 13:00 UTC
+(T99-win2/scan45J1250 at bb6154c, 860–862 min each on three processes under the affinity cap of 2026-11-03 02:13 UTC)
+and are copied into `scan45J1250/`. Ruling 1 on (a): `sigma_err_fit.py` exit 0, err22 = 1.297×10⁻³¹ = 1.43×10⁻¹²
+|σ₂₂|, a margin of 70 under 10⁻¹⁰ (a1 = 46.62 from the 960-bit scan39J1000 file); the nodes give 1.28×10⁻¹² (wf 0.99)
+and 1.59×10⁻¹² (wf 1.01). Each file's σ₀…σ₂₁ are bitwise the `scan43J1250` file's at that wf, 22 of 22 strings, and
+`log_compare.py` finds each log identical to its K 43 log at all 22 common orders (1..43). The Mac's replica T102
+(--procs 2, 49936 s; T102-mac/scan45J1250, the Mac runner's push follows its end post) is identical to win2's (a) log
+at all 23 common orders (1..45), in all 23 σ strings and in every other field of the JSON except the process count,
+the timings and two things recorded here as a discrepancy of no consequence to σ₂₂: the fit values f of the three
+side families (k, ν′) = (45, 41), (45, 43), (45, 45), whose fit has no plateau in either run (fit_info [12, inf, 0.0]),
+differ entirely, and the plateau-error estimates of eight families (39_31, 41_19 to 41_27, 43_29, 45_31) differ in
+their trailing digits (10⁻¹⁵ to 5×10⁻⁴ relative; their f values are equal). σ₂₂ is the ν′ = 1 family's fit, and
+nothing at K = 22 reads f, so these enter nothing; the two runs differ only in the process count, and the cause is not
+investigated. Pilot (b) was stopped at k = 31 on 2026-11-03 04:20 UTC for memory (four K 45 runs did not fit win2's
+95.6 GB: the J 1500 workers were heading for 4.5–5.6 GB each at the top orders) and restarts first in stage 2 at three
+processes (expected 2026-11-04 about 08:00 UTC), followed by the J 1500 nodes at two processes (the author's
+instruction of 2026-11-03 to reduce win2's CPU); ruling 2 and item 1(c) wait for it, and so do the K = 22 stages. The
+dry run (item 0) runs on the Mac after this commit; its reading follows here.
+
+**Amendment (2026-11-03 14:00 UTC), before any σ₂₂ estimate was computed: the Mac computes a replica of (b).** T102
+ended and the Mac is free, so it runs pilot (b)'s command (wf 1.00, K 45, J 1500, 1280 bits, --procs 2) as T103,
+folder `T103-mac/scan45J1500`, with T102's role: its control is `log_compare.py` against the Mac's own K 43 J 1500 log
+`T94-mac/scan43J1500/w1.0000.log` within the first hour and at each post, at every common order up to 43, and against
+win2's stage-2 (b) log at every common order the two have; a difference stops the run and is recorded here. At its
+end its 23 σ strings are compared with win2's (b) file; 23 of 23 equal is the expectation; a differing string reopens
+the K = 22 stages' record (the replica lands after them: about 24 h at two processes) until the cause is recorded.
+Otherwise it enters no criterion and is reported as context in the convergence stage's report. Its memory is the
+Mac's limit (the J 1500 workers reach about 5 GB each): the Mac runner posts the swap in use hourly and stops the run,
+posting, if the swap in use passes 12 GB; a stopped replica is recorded here and not replaced.
