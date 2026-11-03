@@ -9633,3 +9633,14 @@ util_report.py:
   pid 13369    0.01 GB  cpu       76 s  amp_flint_par.py 1.0 45 1500 1280 --procs 2
   pid 13385    0.01 GB  cpu        0 s  spawn worker
   python total 2.9 GB in 5 processes
+
+== 2026-11-03 20:00 UTC win2
+cpu 57%, free 29.1 GB.
+T100 quarter step M 384 converging (all lam 1): M 320 converged (Delta 2.4414880960708945, |F| 6.6e-29, its 4 then 2); M 384 then
+|F| 1.12e-05 -> 1.69e-10, Delta 2.441488095994242, steps ~68 min each. ~2-3 more steps to the tol, then the converged pair
+(D 3.044375) to down25e.jsonl and the advance to D 3.04375. No lam-rule concern.
+T99 stage 2 (faster now under all cores): (b) wf 1.00 at k 33, nodes wf 0.99 / 1.01 at k 31; controls pass ((b) 1..33, nodes 1..31).
+Memory: free 29.1 GB, dropping as the J 1500 workers grow toward their peak; the (b) guard holds the 10 GB floor, the nodes have the
+headroom from stopping stage 1's (b) pilot. Watching.
+util_report.py: 2026-11-03 20:00 UTC  cpu 57%  mem used 66.4 of 95.6 GB, free 29.1 GB, commit 72.4 of 101.6 GB.
+Pushed T99-win2 and T100-win2 (7e0370d).
