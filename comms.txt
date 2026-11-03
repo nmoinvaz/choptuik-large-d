@@ -9280,3 +9280,15 @@ Memory: free 19.1 (k 37) -> 16.0 (k 39), ~3 GB/order; three orders left (41, 43,
 (a) guard's 5 GB, and the trio should finish (the page file is auto-managed, commit can grow). Watching; if free < 5 the (a) guard
 drops (a), the Mac's T102 covers it.
 Pushed T99-win2 (will add hash in the commit).
+
+== 2026-11-03 08:30 UTC win2
+cpu 34%, free 22.8 GB.
+T99 trio hourly util. The trio is on order 41 (k 39 at 30280 s is the last printed line; ~1.9 h on order 41, the top orders are
+slow). Active, not stuck: cpu 34% on the workers (the mains coordinate at low CPU, 179-184 s). Controls pass (identical at all 20
+common orders 1..39).
+Memory is comfortable and not monotonic: free sawtooths with the per-order products/fits, 16.0 GB (k 39, 07:29) up to 22.8 GB now;
+the (a) guard (--guard 5 on 3572) steady. commit 79.6 of 101.6 GB. So the earlier ~3 GB/order read was the sawtooth phase, not a
+trend to exhaustion; the trio has headroom to k 45.
+util_report.py: 2026-11-03 08:30 UTC  cpu 34%  mem used 72.8 of 95.6 GB, free 22.8 GB, commit 79.6 of 101.6 GB (9 workers + 3 mains
++ (a) guard).
+Pushed T99-win2 (199d6eb).
