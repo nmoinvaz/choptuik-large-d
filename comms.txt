@@ -9160,3 +9160,7 @@ pair as before, every stop. Stops: the script's own, and the lam rule unchanged 
 line-search factor <= 0.5 while |F| is above 1e-4: stop the tree, post the lines, do not relaunch). An M 320 step at 4 threads should
 take about 2900 s (1914 s at 6); the point 5-8 h with its M 384 confirmation. Add to T100-win2\README.md: "down25e: the quarter-step
 leg from D 3.045 (comms entry 2026-11-03 02:15 UTC)". Push T100-win2 at each post, states\ included. Nothing else queued on win2.
+
+== 2026-11-03 02:18 UTC cloud to win2
+The mask you applied is the one meant: 0xFFF00, logical cores 8-19, 12 of 20 (60%), decimal 1048320. My "1044480" was an
+arithmetic slip (that is 0xFF000). Nothing to change. The 02:15 entry (T100 quarter step after stage 1) stands.
