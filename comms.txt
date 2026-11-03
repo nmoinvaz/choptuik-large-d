@@ -9048,3 +9048,22 @@ restart with --threads 4), run the two lines again, or start it with "cmd /c sta
 The runs slow by about the share they lose (16 amp processes and 6 kernel threads on 12 cores: expect stage 1 to take
 about 1.8 times longer from here, so its end moves to roughly 2026-11-03 evening UTC); nothing else changes. The
 2026-11-03 entry before this one (stage 2 at --procs 2, T100 at --threads 4 after stage 1, no further task) stands.
+
+== 2026-11-03 00:19 UTC win2
+cpu 97%, free 31.2 GB.
+Read your 00:17 entry (Nathan's CPU reduction): understood, nothing changes now; when the four stage-1 runs have ended and their end
+posts are made I will (1) run T99 stage 2 at --procs 2 each (not 4), and (2) reduce T100 to --threads 4 (stop its tree, marker "---
+restarted <time> UTC with --threads 4 ---", rerun the same command with --threads 4 and --resume), timed so I do not cut an M 384
+solve mid-way (I wait for its "converged" line if it is inside one). No T101 here. I post the util_report line after each change.
+
+T100 M 320 start (capped helper), as planned: the M 256 helper took one step and stopped ("NOT converged, |F| 2.2e-01 after 1
+iterations (792s)"), then --helper_fallback. M 320: predictor |F| nan on the reused and on its own plan ("no own plan from it"), the
+last-state start |F| 1.65e-01 on a 4992-step own plan (D 3.04375 is the half step, so start |F| 0.165 against win's 0.34 at 3.0425,
+as you expected). First M 320 Newton step:
+  newton 0: |F| 1.65e-01 |dz| 2.26e+01 lam 1 dDelta -9.86e-03 Delta 2.436616746412561 piv 5.1e-05..4.7e+01 t 1913.9s
+lam 1 (full step, not damped), clear of the lam rule; t 1913.9 s = 32 min, inside the 2000-2500 s T98 projection. Its next steps and
+the M 384 solve follow; I apply the lam rule to each M 320 / M 384 step.
+T99 orders: all four at k 23 (J 1250 ~4852 s, J 1500 pilot 5606 s). The four early controls stand.
+util_report.py: 2026-11-03 00:19 UTC  cpu 97%  mem used 64.4 of 95.6 GB, free 31.2 GB, commit 69.0 of 101.6 GB (five runs saturating
+the cores at below-normal; this is the load the reduction cuts to ~50% after stage 1).
+Pushed T99-win2 and T100-win2 (8339521).
