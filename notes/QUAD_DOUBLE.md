@@ -1238,3 +1238,39 @@ only where the radius law allows the series to start from that accuracy (δ_max 
 layout for a 10⁻¹⁰ guess), not 200; whether a collocation solve delivers the horizon data m_h, a_h to that accuracy
 is not measured here. No formulation that is rigid at the horizon without a radius is known to the coordinator at
 this point; the record stands at D 78 with the formula's extrapolation and its stated assumption beyond it.
+
+### 13.8 Route 1b, the hybrid: procedure and pass criteria (2026-11-03 19:15 UTC, the author's choice, before the data)
+
+The author chose to try the hybrid of 13.7's reading ("ok let's try the D 90 option"). The step from D to D + h:
+the predictor's guess as now; then Newton on the collocation formulation (the ordinary basin, 13.7), whose result is
+taken only for what it determines well; then Newton on the series block from that result, which finishes the point
+sharply if the horizon data it receives are inside the series' basin, δ < δ_max(D, u₀) of 13.6. The ceiling follows
+from 13.6: a collocation solve in double-double can be expected to deliver the horizon data to about 10⁻¹² (its floor
+over its smallest singular value, 13.7), which the lines of 13.6 place at D ≈ 75 (last node 0.7), 90 (0.8), 105
+(0.85); the layout is then chosen by that table, and nothing in this route reaches 200.
+
+The measurement, in the prototype (f64, D 40.02 and 45.05, where the f64 collocation's accuracy of about 10⁻⁹ in Δ
+is inside the series' basin, 1.4×10⁻⁷ and 3.3×10⁻⁸; at higher D the f64 floor is outside it and only the kernel can
+test), `colloc_tests.py t5h`, records in `route1-mac/colloc/`:
+
+1. Starts ε off the double-double solution, ε = 10⁻⁴, 10⁻³, 10⁻², in two kinds: the mass direction (a_h scaled by
+   1 + ε) and every unknown scaled by 1 + ε r with r random (a predictor's error).
+2. **Stage 1**, the collocation Newton, pinned as 13.7 and with the flat directions regularised: each step is the
+   least-squares solution of the reduced linear system with singular values below 10⁻⁹ of the largest discarded
+   (the true solution has no component along the modes, so the minimum-norm step is the right prior); at most 12
+   steps, to within ten times the pinned floor. Recorded: the residual history; δ_h, the largest relative error of
+   the horizon data m_h, a_h (the collocation's values at u = 0) against the double-double state; the relative error
+   of Δ; the error of p1's kept harmonics.
+3. **Stage 2**, the series block's Newton from the series state assembled from stage 1's result (p1, c0, the nodes,
+   m_h, a_h from the point u = 0, Δ), pinned, plain solve, at most 8 steps. Recorded: whether its first residual is
+   finite, the history, Δ − Δ_dd.
+4. **Controls**: the series block from the raw start ε (must fail for ε ≥ 10⁻⁶ at D 40, as 13.7 found); stage 1
+   without the regularisation (must not deliver, as 13.7's pinned T2 found).
+
+Pass: at both D and for every start, stage 1 leaves δ_h and the relative error of Δ below δ_max(D, 0.30)/10
+(1.4×10⁻⁸ at D 40, 3.3×10⁻⁹ at 45) and stage 2 converges to within ten times the series block's pinned floor with
+Δ within 10× that floor's effect (the series' own polish from the double-double state, 4×10⁻¹¹ at D 40). Fail: any
+start from which stage 2's first residual is not finite or Newton does not converge, or δ_h above the threshold;
+then the hybrid is dropped too. If it passes, the kernel work is the collocation block in `hp/src` (13.2) plus the
+two-stage step in `scan_hp.py`, checked at D 60–73 against the stored states before any point past 78, with the
+ceiling of 13.6 read before the layout is chosen.
