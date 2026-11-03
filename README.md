@@ -812,14 +812,18 @@ residual was at most 1.4×10⁻⁵ (62) or 2.2×10⁻⁵ (64) converged and ever
 precision limit: past D ≈ 60 double-double cannot resolve the weakest direction at all (below, "Why the solver
 stalls").
 
-![The drop-offs of the continuation's step, and the precision wall behind them: each run's step in D with the stalls at 35.2, 60.96 and 67.78 named, and below it u times kappa at converged states with the full system's fit crossing 1 at D 59.9 and the pinned systems' crossings predicted at 79, 94 and 113](hp/large_d_dropoffs.svg)
+![The drop-offs of the continuation's step and the walls behind them: each run's step in D with the stalls at 35.2 (the junk floor), 60.96 (precision) and 67.78 named, and below it u times kappa at converged states with the full system's fit crossing 1 at D 59.9 and the pinned systems' crossings predicted at 79, 94 and 113](hp/large_d_dropoffs.svg)
 
 **Where the drop-offs are, and where the next ones would be** (`hp/plot_dropoffs.py`, from the same T76 records as the
-next figure). A run's step collapses at a precision wall: where u·κ for the harmonic set it keeps reaches about 1. That
-happened at D = 35.2 with every harmonic kept and at 60.96 with harmonics to 13 (the fit below puts u·κ = 1 at 59.9);
-T48 ran past the wall to 67.78 with the harmonics held on their trend (u·κ = 168 at 67.74). The other dips
-are not walls: at 45.3 a cloud run stopped with its sensitivity and residual floor unchanged and the next run continued
-at once, and below D = 27 the dips are the f64 solver's own limits ([solver/CONTEXT.md](solver/CONTEXT.md)). With the
+next figure). The step collapses at a wall, and the two walls have different causes. At 60.96, with harmonics to 13,
+it is precision: u·κ, the unit roundoff times the Jacobian's condition number, was 1.7 at the stall (the fit below puts
+u·κ = 1 at 59.9, 1.7 at 60.7; its scatter is ±0.4 in D). At 35.2, with every harmonic kept, u·κ was only 0.010 at
+35.02 (`T101-mac/stall_up6.jsonl`, 2026-11-03): that wall was the residual floor of 10⁻¹⁴ to 10⁻¹⁶ which the
+undetermined junk directions set, with the basin measure of the stall detector, κ = cF₀/σ² along the weakest direction
+(harmonic 31), at 26 against its limit of 2. T48 ran past the precision wall to 67.78 with the harmonics held on their
+trend (u·κ = 168 at 67.74). The other dips are not walls: at 45.3 a cloud run stopped with its sensitivity and residual
+floor unchanged and the next run continued at once, and below D = 27 the dips are the f64 solver's own limits
+([solver/CONTEXT.md](solver/CONTEXT.md)). With the
 same slope, u·κ reaches 1 at D = 79 with harmonics 11–13 held, 94 with 9–13 held and 113 with 7–13 held, and at
 372 for the full system in quad-double; the pinned runs stopped before that, at 73.3 and 78.1, at the horizon block
 ([notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md) 12.4 and 12.7). So the walls belong to the formulation and the arithmetic,

@@ -551,12 +551,17 @@ def dropoffs():
     R = "README.md"
     return [("u kappa slope", J["slope"], 38.9, 0.1, [(R, "grows\n  like n^38.9 and reaches 1 at D = 59.9")]),
             ("u kappa = 1, double-double, full system", J["cross_dd"], 59.9, 0.1,
-             [(R, "the fit below puts u·κ = 1 at 59.9"), (R, "like n^38.9 and reaches 1 at D = 59.9")]),
+             [(R, "u·κ = 1 at 59.9, 1.7 at 60.7"), (R, "like n^38.9 and reaches 1 at D = 59.9")]),
             ("u kappa at 67.74", J["u_kappa_67_74"], 168, 1, [(R, "(u·κ = 168 at 67.74)"), (R, "it is 1.7 at the stall at 60.96 and 168 at 67.74")]),
             ("u kappa = 1, pin 9", J["pinned"]["9"]["D_cross"], 79, 1, [(R, "u·κ reaches 1 at D = 79 with harmonics 11–13 held")]),
             ("u kappa = 1, pin 7", J["pinned"]["7"]["D_cross"], 94, 1, [(R, "94 with 9–13 held")]),
             ("u kappa = 1, pin 5", J["pinned"]["5"]["D_cross"], 113, 1, [(R, "113 with 7–13 held")]),
-            ("u kappa = 1, quad-double, full system", J["cross_qd"], 372, 1, [(R, "372 for the full system in quad-double")])]
+            ("u kappa = 1, quad-double, full system", J["cross_qd"], 372, 1, [(R, "372 for the full system in quad-double")]),
+            ("u kappa at the 60.96 stall", J["u_kappa_60_97"], 1.7, 0.1, [(R, "was 1.7 at the stall")]),
+            ("u kappa = 1.7 by the fit", 2 + (J["cross_dd"] - 2) * J["u_kappa_60_97"] ** (1 / J["slope"]), 60.7, 0.1,
+             [(R, "1.7 at 60.7")]),
+            ("u kappa at 35.02, every harmonic", [v for v in J["all_harmonics"] if abs(v["D"] - 35.0248) < 1e-3][0]["uk"], 0.010, 0.001, [(R, "u·κ was only 0.010 at\n35.02")]),
+            ("basin kappa at 35.02", [v for v in J["all_harmonics"] if abs(v["D"] - 35.0248) < 1e-3][0]["kappa"], 26, 1, [(R, "at 26 against its limit of 2")])]
 
 @check
 def k21_stages():
