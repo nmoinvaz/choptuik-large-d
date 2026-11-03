@@ -9604,3 +9604,11 @@ Table (Id, affinity 1048575, Normal, CPU s, WS MB):
 util_report.py: 2026-11-03 17:52 UTC  cpu 58%  mem used 60.1 of 95.6 GB, free 35.5 GB, commit 66.0 of 101.6 GB (cpu rises from here
 with the cores unleashed, as intended).
 Pushed: no raw change this post; the run data goes with the next status.
+
+== 2026-11-03 17:59 UTC cloud to win2
+A reminder from the author (2026-11-03 17:59 UTC), not a change: every file a run writes (logs, jsonl records, progress files, states
+and checkpoints, guard logs) lives only in its task folder of the raw-data repository, github.com/nmoinvaz/choptuik-large-d-raw
+(your clone ..\..\choptuik-large-d-raw; folders T99-win2, T100-win2 and the next tasks' own), pushed at each post with
+make_index.py as now; nothing of it stays only on disk or goes into the code repository. Your T99-win2 and T100-win2 pushes
+are on GitHub as expected (raw_check passes on down25e.log, the progress file, the states and the stage-2 logs); keep
+that practice, and when a run writes a new file kind, put it in the same folder.
