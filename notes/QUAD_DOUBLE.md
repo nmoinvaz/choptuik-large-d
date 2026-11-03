@@ -1366,7 +1366,8 @@ continuation worth building. With N = 30 terms the predictor error (h/R_D)^{N+1}
 and 10⁻²¹ (the 0.8 layout's need at D 200) for h ≈ 10. Whether R_D keeps growing with D as the formula's pole
 suggests (R_D ≈ D + 3) is not measured here; the plan below assumes only that it does not shrink.
 
-### 13.13 Measurement A fails as formulated; measurement C, the Taylor predictor from stored points (2026-11-03 20:25 UTC)
+### 13.13 Measurement A fails as formulated; measurement C, the Taylor predictor from stored points (2026-11-03
+20:25 UTC)
 
 `hp/mass_correct.py` (`route1-mac/mass_correct.jsonl`, `.log`), five states D 40–73, 58 series evaluations per
 search. For the mass kind at ε = 10⁻⁴ and 10⁻³ the search recovers the datum to the series' basin at every D
@@ -1378,7 +1379,8 @@ mean of a_h is one direction of sixty-four. By 13.11's criterion ("R(s*) > u₀ 
 and the idea is dropped as formulated; an M-dimensional search over all harmonics of a_h and m_h is untested and
 would cost about sixty evaluations per dimension per step.
 
-**C, the Taylor predictor from stored points** (`hp/taylor_predict.py RAWDIR`, records `route1-mac/taylor_predict.jsonl`),
+**C, the Taylor predictor from stored points** (`hp/taylor_predict.py RAWDIR`, records
+`route1-mac/taylor_predict.jsonl`),
 before any kernel change, since 13.12 found the branch analytic with R_D ≥ 50: the state z(D) is fitted over T75's
 window (D 70.63–73.27, 562 states, Chebyshev degree 16, the fit's own error 10⁻¹³ to 10⁻¹⁵ on the smooth components)
 and extrapolated to D = 73.27 + h for h = 0.5, 1, 2, 3, 4, 5. At each extrapolated state: the horizon series'
