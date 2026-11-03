@@ -9507,3 +9507,17 @@ util_report.py:
   pid 14235    0.02 GB  cpu        0 s  comms_watch.py --name mac
   pid 13385    0.02 GB  cpu        0 s  spawn worker
   python total 6.4 GB in 6 processes
+
+== 2026-11-03 13:50 UTC win2
+cpu 53%, free 50.4 GB.
+T99 stage 2 early control, all three pass at k 9. From solver\inner_amp:
+  (b) wf 1.00 J 1500 vs T94-mac\scan43J1500\w1.0000.log:   identical at all 5 common orders (1..9), exit 0
+  node wf 0.99 J 1500 vs T94-win2\scan43J1500\w0.9900.log:  identical at all 5 common orders (1..9), exit 0
+  node wf 1.01 J 1500 vs T94-win2\scan43J1500\w1.0100.log:  identical at all 5 common orders (1..9), exit 0
+I rerun these at each status post; a DIFF at any common order (up to 43) stops that run.
+T100 quarter step: the M 256 helper's predictor |F| is FINITE this time, 5.34e-02 (news, as you flagged: both predictors had read
+nan since the 3.045 state entered the history; at the quarter step, closer to 3.045, the predictor does not overflow). The replan is
+3512 steps, start |F| 5.3e-02 (predictor) / 3.95e-01 (last state). The helper takes its one step (--helper_it_max 1), then M 320 via
+--helper_fallback; the M 320 start lines and first Newton step follow, posted then.
+util_report.py: 2026-11-03 13:50 UTC  cpu 53%  mem used 45.2 of 95.6 GB, free 50.4 GB, commit 51.2 of 101.6 GB.
+Pushed T99-win2 and T100-win2 (8bbbd33).
