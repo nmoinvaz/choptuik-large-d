@@ -1176,3 +1176,7 @@ one whose pivots leave Δ undetermined (12.7). So the series cannot carry the br
 13.1's case for a block whose residual never evaluates the perturbed solution. T5 passes; T1–T4 follow in the
 prototype. Not established here: that the pole is the a-equation's (H1's mechanism as opposed to its law), which T2's
 basin test and the prototype's a-field profile near u_pole will show.
+
+![The radius lines at five D against the matching distance, and the basin threshold against D with the walls](../hp/pole_basin.svg)
+
+`hp/plot_pole_basin.py RAWDIR` draws the lines and the thresholds above (hp/pole_basin.svg).
