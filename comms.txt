@@ -9568,3 +9568,13 @@ down25e.jsonl is empty until the pair lands.
 T99 stage 2: (b) wf 1.00 at k 27, nodes wf 0.99 / 1.01 at k 25; controls rerun pass: (b) identical 1..27, the nodes 1..25.
 util_report.py: 2026-11-03 16:57 UTC  cpu 44%  mem used 58.5 of 95.6 GB, free 37.1 GB, commit 66.1 of 101.6 GB.
 Pushed T99-win2 and T100-win2 (5bfafa0).
+
+== 2026-11-03 17:44 UTC win2
+cpu 52%, free 36.6 GB.
+T100 quarter step: M 384 solving from the lift of M_w, "L 33793, steps 6698, start |F| 1.1e-05"; its Newton steps come next, then
+the converged pair (D 3.044375) to down25e.jsonl. M 320 already converged at Delta 2.441488096070894. On track.
+T99 stage 2: (b) wf 1.00 at k 29, nodes wf 0.99 / 1.01 at k 25; controls pass ((b) 1..29, nodes 1..25).
+Widening my status cadence to ~2 h now that the T100 decision is resolved (converging) and memory is steady (free 36.6 GB); I still
+post each converged pair, every M 320 / M 384 Newton line I read, the stage-2 ends, and any stop or guard fire at once.
+util_report.py: 2026-11-03 17:44 UTC  cpu 52%  mem used 58.9 of 95.6 GB, free 36.6 GB, commit 65.0 of 101.6 GB.
+Pushed T99-win2 and T100-win2 (032c647).
