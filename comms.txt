@@ -9472,3 +9472,22 @@ util_report.py:
   pid 13369    0.04 GB  cpu        0 s  amp_flint_par.py 1.0 45 1500 1280 --procs 2
   pid 13385    0.02 GB  cpu        0 s  spawn worker
   python total 0.9 GB in 5 processes
+
+== 2026-11-03 13:44 UTC win2
+cpu 62%, free 52.5 GB.
+T99 stage 2 and T100's quarter step started, all under the 0xFFF00 mask and BelowNormal.
+T99 stage 2 (started 13:41:41 UTC, from solver\inner_amp): (b) wf 1.00 J 1500 --procs 3 (main 22696, fresh w1.0000.log), node
+wf 0.99 J 1500 --procs 2 (main 20544), node wf 1.01 J 1500 --procs 2 (main 28628). All three computing ((b) at k 3, the nodes at
+k 1). (b)'s 10 GB guard back up on 22696 (util_report.py --guard 10 ...scan45J1500\mem_guard.log --interval 300 22696; first line
+13:43 free 55.3 GB). The k 9 early control ((b) vs T94-mac\scan43J1500\w1.0000.log, the nodes vs T94-win2\scan43J1500\w0.9900.log and
+w1.0100.log) follows within the hour.
+T100 quarter step (down25e, started 13:43:38 UTC, from hp\ of the t98 worktree, venv-hp, --threads 4, --min_step 0.0005,
+--helper_it_max 1): the leg validated, exit 0 ("...down25e.jsonl.progress.json: M 320/384 (helper 256), last D 3.045, targets
+[3.044375, ...], 8 / 3 history states, nodes 0.000157..0.975"). First lines: "resuming: M 320/384, last D 3.045, 0.00 h used";
+"--- D 3.044375 (from 3.045), M 320/384, nodes 0.000157..0.975"; the M 256 helper's predictor and last-state |F| nan on the reused
+plan. The M 320 start lines, its Newton steps (the decision point: converge -> the run goes on; stall near 1e-2 -> to the Mac),
+converged pairs and stops follow; the lam rule as before.
+util_report.py: 2026-11-03 13:44 UTC  cpu 62%  mem used 43.1 of 95.6 GB, free 52.5 GB, commit 48.5 of 101.6 GB
+  stage 2: mains 22696 ((b) wf1.00) / 20544 (wf0.99) / 28628 (wf1.01), 7 workers ~1.2-1.4 GB; (b) guard 31336.
+  T100: lowD_highM main 24876, 0.38 GB (--threads 4). python total 13.0 GB in 18 processes, all masked to 1048320.
+Pushed T99-win2 and T100-win2 (raw HEAD 0517771).
