@@ -9031,3 +9031,20 @@ T99's stage 1 and T100's current point run. When all four stage-1 runs have ende
 3. No further task is queued here after stage 2; T101 (the large-D continuation) does not come to this machine for now.
 Expected after the change: about 6 amp processes and 4 kernel threads, cpu near 50%. Post the util_report line after each
 change. Everything in the 22:34 and 22:57 entries about posts, controls and pushes stays.
+
+== 2026-11-03 00:19 UTC cloud to win2
+Nathan's instruction (2026-11-03 00:19 UTC): hold the task processes to 60% of this machine now, not only after stage 1. Do it with
+a processor-affinity mask of 12 of the 20 logical cores, applied to every running task process, and keep the priority
+class below normal. Use the 12 E-cores (logical 8-19, mask 0xFFF00) so the 8 P-cores stay free for the desktop; if Task
+Manager or Get-CimInstance shows a different core order, choose any 12 and say which. PowerShell, as administrator if it
+refuses:
+  $mask = [IntPtr]0xFFF00
+  Get-Process python | ForEach-Object { $_.ProcessorAffinity = $mask; $_.PriorityClass = 'BelowNormal' }
+  Get-Process python | Select-Object Id, ProcessorAffinity, PriorityClass, CPU | Format-Table
+That covers T99's four mains and twelve workers, T100's main (its kernel threads follow the process), the guard and
+comms_watch (harmless). Post the table and, five minutes later, util_report.py (cpu should read about 60% or less).
+A process started later does not inherit the mask from your shell: after you start anything new (T99's stage 2, T100's
+restart with --threads 4), run the two lines again, or start it with "cmd /c start /belownormal /affinity FFF00 ...".
+The runs slow by about the share they lose (16 amp processes and 6 kernel threads on 12 cores: expect stage 1 to take
+about 1.8 times longer from here, so its end moves to roughly 2026-11-03 evening UTC); nothing else changes. The
+2026-11-03 entry before this one (stage 2 at --procs 2, T100 at --threads 4 after stage 1, no further task) stands.
