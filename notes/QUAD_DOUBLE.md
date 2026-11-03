@@ -1186,3 +1186,55 @@ basin test and the prototype's a-field profile near u_pole will show.
 ![The radius lines at five D against the matching distance, and the basin threshold against D with the walls](../hp/pole_basin.svg)
 
 `hp/plot_pole_basin.py RAWDIR` draws the lines and the thresholds above (hp/pole_basin.svg).
+
+### 13.7 T1–T4 in the prototype: the collocation block fails T3 (2026-11-03 19:00 UTC)
+
+`solver/dss_colloc.py` is the block of 13.2 inside the reference solver (`dss.py`, DSSMulti): the kernel's stored
+double-double states load as DSSMulti states (the same layout; their f64 residual floors are 3×10⁻⁹ at D 40, 9×10⁻⁹ at
+50 and 3×10⁻⁶ at 67.7, all in the horizon block), and the collocation values come from the kernel's own horizon series
+summed at the points in 40-digit arithmetic. `solver/colloc_tests.py` runs the tests; the records and logs are in the
+raw-data repository's `route1-mac/colloc/` (2233e8c). Everything below is at D = 40.02 (`up7_D40.0201`), M = 32, f64.
+
+- **T1 passes.** On the double-double samples the collocation rows are 10⁻¹³ to 2×10⁻¹² at N_u = 16, 24, 32, 48 (D 40
+  and 50), against the series block's own f64 floor of 3×10⁻⁹: the block's equations are right.
+- **T2, the basin, half passes.** From the horizon datum a_h moved by 10⁻⁴ (the series' basin there is 1.4×10⁻⁷, 13.6)
+  the series block's residual starts at 10²⁹ and Newton never recovers, as the radius law says; the collocation
+  starts at 0.09 and one undamped step takes it to 1.8×10⁻⁸, the ordinary quadratic basin. But from a random
+  perturbation of m_h, a_h of the same size it stalls near 5×10⁻⁷ with Δ 2×10⁻⁴ off, and even the mass case leaves Δ
+  2×10⁻⁶ off: it converges into a valley, not onto a point.
+- **T3 fails.** Plain, the series block has 10 singular values below 10⁻⁸ (769 unknowns) and the collocation 32
+  (2753); all of them live in the centre datum p1, whose sensitivities are identical in the two formulations (the
+  centre block is shared), so the plain count measures the junk directions the kernel pins at D ≥ 35 (`kfreeze` 13),
+  not the block. With that pin reproduced (p1's harmonics above 13 removed, the horizon's p-matching rows projected):
+
+  | last node, u₀ | series: smallest singular value, count below 10⁻⁸, Δ − Δ_dd | collocation (N_u = 16): the same |
+  |---|---|---|
+  | 0.7, 0.30 | 7.9×10⁻⁶, 0, +4×10⁻¹¹ | 1.3×10⁻¹³, 14, −2×10⁻⁹ |
+  | 0.6, 0.40 | 1.5×10⁻⁵, 0, −1×10⁻¹⁰ | 2.5×10⁻¹², 14, +2×10⁻⁶ |
+
+  The series block, pinned, has no near-null direction and gives Δ to 10⁻¹⁰ in f64, and moving its node outward
+  raises its smallest singular value, as H2 says. The collocation keeps 14 near-null directions, one per retained
+  harmonic of p (the odd harmonics 1…13, cos and sin), in every layout. The block alone is not rank-deficient (its rows
+  are full rank with exactly the 2H free horizon data), and its p-equation sub-block is nonsingular at N_u = 16
+  (smallest singular value 4×10⁻³) but goes soft at N_u = 24 (10⁻⁷): the singular solutions u^{s_j}, with Re s = 21.1 at
+  this state (c₁ = −0.141, 13.1's formula), become representable as the degree grows, exactly 13.3's risk. The flat
+  directions are those modes coupled to p1 through the matching at the last node: the series block cannot absorb a
+  change of the centre data, the collocation can.
+- **T4.** Polishing the known solution with the pin, the series block returns Δ within 4×10⁻¹¹ of the double-double
+  value; the collocation within 2×10⁻⁹ (N_u 16), 2×10⁻⁸ (24), 1×10⁻⁹ (32), not improving with N_u. The mutations
+  `p0sign` and `dut` fire (Δ off by 0.43; the residual not finite); `nogauge` is inconclusive because the Jacobian is
+  singular with or without the gauge rows. With the pin and a plain linear solve, T2's starts no longer converge at
+  all (the step along the flat directions defeats the line search); the plain run's convergence to 10⁻⁸ relied on the
+  least-squares solve discarding them.
+
+Reading. The design's criterion for T3 (the same count of singular values below 10⁻¹⁰ in both blocks) fails: 0 against
+7, and 0 against 14 below 10⁻⁸. The reason is the one 13.3 named, not a defect of the prototype: a set of point
+equations cannot impose analyticity, so the block admits polynomial imitations of the horizon's singular solutions,
+and they leave Δ undetermined at the 10⁻⁹–10⁻⁶ level where the series determines it to 10⁻¹⁰. The route in its pure
+form stops here; T6 is not run. What the prototype also established: the collocation block's Newton basin is the
+ordinary one, as hoped, and in f64 its rows are satisfied to 10⁻¹³ where the series' floor is 10⁻⁹. A hybrid that
+uses the collocation to turn a predictor's guess into one accurate enough for the series block to finish would reach
+only where the radius law allows the series to start from that accuracy (δ_max of 13.6: about D 90 in the 0.8
+layout for a 10⁻¹⁰ guess), not 200; whether a collocation solve delivers the horizon data m_h, a_h to that accuracy
+is not measured here. No formulation that is rigid at the horizon without a radius is known to the coordinator at
+this point; the record stands at D 78 with the formula's extrapolation and its stated assumption beyond it.
