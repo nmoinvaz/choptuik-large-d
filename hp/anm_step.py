@@ -137,9 +137,17 @@ def main():
         sh.set_segs(segs)
         sh = wrap(sh)
         Fh, Fl = sh.residual(ph, pl)
+        Fp0 = float(rnorm(Fh, Fl))
+        # the segment plan of the base state loses accuracy as n grows (its Taylor steps were sized at D0): re-plan at
+        # the predicted state when it is good (a bad state, the control's for one, has no convergent plan: 13.14)
+        replanned = False
+        if mutate == 0 and np.isfinite(Fp0) and Fp0 <= 1e-6:
+            sh.set_segs(sh.plan(ph, pl, 1e-32, 0.05))
+            Fh, Fl = sh.residual(ph, pl)
+            replanned = True
         Fp = float(rnorm(Fh, Fl))
-        p = dict(h=h, D=D0 + h, F_pred=Fp, Delta_pred=float(ph[-1] + pl[-1]))
-        print(f"h {h}: predicted |F| {Fp:.2e}, Delta {p['Delta_pred']:.12f}", flush=True)
+        p = dict(h=h, D=D0 + h, F_pred_baseplan=Fp0, F_pred=Fp, replanned=replanned, Delta_pred=float(ph[-1] + pl[-1]))
+        print(f"h {h}: predicted |F| {Fp0:.2e} with the base plan, {Fp:.2e} re-planned, Delta {p['Delta_pred']:.12f}", flush=True)
         if np.isfinite(Fp):
             t0 = time.time()
             ch, cl, hist = newton_solve(sh, ph, pl, tol=opt["tol"], it_max=opt["it_max"], verbose=False)
