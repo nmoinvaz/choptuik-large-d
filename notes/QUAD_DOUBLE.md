@@ -1392,3 +1392,102 @@ not converging at any h ≥ 1; then the Taylor predictor is only as good as the 
 version of 13.10's method is still the decision. Expectation written before the run: the extrapolation's error is
 (h/R_D)^{17} from the truncation plus the fit's floor, so 10⁻¹³ or better for h ≤ 5, inside the 0.7 layout's basin
 to about D 80 (δ_max 2×10⁻¹³ there by 13.6's lines) and the 0.8 layout's to about D 115.
+
+### 13.14 Measurement C fails: a predictor from stored points cannot reach the basin (2026-11-03 21:30 UTC)
+
+`hp/taylor_predict.py` (`route1-mac/taylor_predict.jsonl`, `.log`). The first run (`taylor_predict_run1.*`) hung
+for 75 minutes in the kernel's segment planner on the cubic control at h = 0.5 and was stopped: by 13.6 that
+state's apparent horizon lies inside the domain, the planner's step goes to zero at the pole and it never reaches
+the matching node. The rerun plans the segments once, at the last converged state, so a guess past its pole shows a
+non-finite residual instead. Per predictor and step from D 73.27 (needed radius u₀ = 0.30; Newton at most 12
+steps, 11 s each case):
+
+| h | degree 16: radius, residual, Newton | cubic: radius, residual |
+|---|---|---|
+| 0.5 | 0.253, 1.5e8, stops after 1 step | 0.183, not finite |
+| 1 | 0.194, 9.5e59, stops after 1 step | 0.141, not finite |
+| 2 | 0.109, not finite | 0.089, not finite |
+| 3 | 0.001, not finite | 0.048, not finite |
+| 4 | 0.000, not finite | 0.022, not finite |
+| 5 | 0.000, not finite | 0.002, not finite |
+
+The degree-16 extrapolation's Δ is 1.764 at h = 3, 1.416 at h = 4 and −4.13 at h = 5 against the branch's
+1.7727 at D 78 (the README's formula): a polynomial fitted on a window of half-width 1.32 grows outside it like
+exp(N arccosh(1 + h/1.32)), which multiplies the fit's floor by 10⁵ at h = 0.5 and by 10¹⁰ at h = 2. The
+expectation written in 13.13 ignored this: it took the fit's residual on the window for the extrapolation's
+error. By 13.13's criterion C fails at every h, and the Taylor predictor from stored points is closed. The method
+of 13.10 can only work in its exact form: the branch's coefficients computed from the equations at one point, not
+fitted from stored states. Those have no window and no floor from stored noise; their error is the truncation
+(h/R_D)^{N+1} and the arithmetic of the solves alone. That build is the next section.
+
+### 13.15 The exact Taylor continuation in D (the asymptotic numerical method): design, before any code
+(2026-11-03 21:50 UTC)
+
+**The method.** F(z, n) = 0 is the kernel's residual (the series block's mismatches at the nodes and the phase
+row), n = D − 2. Along the branch z(n), with n = n₀ + h, z(h) = Σ_{k=0}^{N} z_k h^k. Order k of
+F(z(h), n₀ + h) = 0 is J z_k = −[F(z_{<k}(h), n₀ + h)]_k: the h^k coefficient of the residual evaluated on the
+series truncated below order k (the terms of order k that do not involve z_k), with J = ∂F/∂z at (z₀, n₀), the
+pinned Jacobian that Newton already factors. One factorisation, N right-hand sides, each one evaluation of the
+residual in truncated-power-series arithmetic at order k (the asymptotic numerical method, Cochelin 1994;
+Guillot–Cochelin–Vergez 2019; notes/LARGE_D_LITERATURE.md). The step is the standard rule
+a_max = (ε ‖z₁‖/‖z_N‖)^{1/(N−1)} with ε the tolerated truncation; the prediction z(a) starts the Newton of 12.x;
+the radius R_D comes from the coefficient ratios (a Domb–Sykes plot of ‖z_k‖), checked against 13.12's 50–75.
+
+**Why it can reach the basin and the fit cannot.** The error is (h/R_D)^{N+1} ‖z‖ plus the arithmetic floor, no
+stored-point noise and no window: with R_D = 50 and N = 30, h = 5 gives 10⁻³¹ and h = 10 gives 2×10⁻²². By 13.6
+the basin at D 200 is 1.8×10⁻¹⁶ for the 0.85 layout and 2.5×10⁻²¹ for the 0.8 layout, so the 0.85 layout with
+h ≈ 10 and N = 30 meets it with margin and 78 → 200 is about twelve steps, if R_D stays near 50 (the formula's
+pole at D = −3.2 suggests it grows with D). The floor: the right-hand sides in double-double (10⁻³² relative),
+the solves through the pinned LU, whose conditioning sets the loss; J3 below measures it, and the quad-double
+lanes (QV, Qu) are the fallback.
+
+**The build, three parts.**
+
+1. multidouble: a lane type `Jet<N>` (N double-double coefficients, a truncated power series in one variable h),
+   beside `Dtn<N>`: addition coefficient-wise, multiplication the Cauchy product truncated at N, division by the
+   series-reciprocal recurrence, the `Lane` methods (`cst`, `mulc`, `mulf`, `mul_pwr2`, `addc`, `bcast`, `val` the
+   coefficient 0, `tan` the coefficient 1, `from_vt`, the dot accumulators coefficient-wise), `MatLane::dmat_apply`
+   coefficient-wise, and one new trait method `fn var(c: DD) -> Self`, `splat(c)` for every existing lane and
+   c + h for `Jet<N>`. Its tests: products and quotients against exact polynomial arithmetic (`exact.rs`), the jet
+   of a rational expression against its derivatives, coefficient 1 against `Du`'s tangent for the same expression,
+   and a wrong convolution index as the mutation. Release 1.9.0, hp's Cargo.toml bumped, and the bit-identity
+   checks (`highm_check.py ref` and `scaled`) rerun, since the kernel's sites change.
+2. hp's kernel: the dimension as a lane value. The sites are `centre_series` (n − 1, n/2, the reciprocal
+   1/(−(k − 1)(k − 1 + n))), `taylor_coeffs` (n − 1, n/2) and `horizon_series` (n − 1, n/2, κ); `horizon_lus`
+   is unchanged (the LU at the values). `let n = T::var(ctx.n)`, and `.muls(n1)` becomes `* n1`, bit-identical for
+   the existing lanes (`muls` is `mulc` of the splat constant), which the checks confirm. `psolve` gets a jet branch,
+   the order-by-order solve with the value LU, A₀ f_k = r_k − Σ_{j=1}^{k} (ω_j D + κ_j) f_{k−j}, which is its
+   tangent branch continued past k = 1. A residual entry point `residual_jet` in python.rs takes z_0, …, z_K and
+   returns the K + 1 coefficient vectors of F (hi, lo), monomorphised for N in {8, 16, 24, 32}; Δ enters as its own
+   jet (the last entry of each z_k). Two mutation flags: the dimension frozen (`var` = `splat`; the control that must
+   fail J3) and κ's n-dependence dropped (must fail J2).
+3. The driver `hp/anm_step.py`: from a converged pinned state at n₀ with the block LU that `newton_solve` uses,
+   for k = 1, …, N: rhs_k = the order-k coefficient of `residual_jet(z_0, …, z_{k−1}, 0)`, z_k = −J⁻¹ rhs_k
+   (the pinned solve; the frozen harmonics' z_k are zero); records ‖z_k‖, the ratios, R_D, a_max; the prediction
+   and its Newton; raw records in a task folder of the raw-data repository.
+
+**Tests, in order, with their pass criteria.**
+
+- J1, the arithmetic (multidouble's tests): exact agreement; the mutation fails.
+- J2, the residual's jet against the residual itself: at T75's last state z, fixed, F(z, n₀ + h) by the plain
+  residual for h = ±0.25, ±0.5, ±1 against Σ_{k≤16} F_k h^k from one jet evaluation. The residual is rational in n
+  with no singularity within |h| ≤ 1, so the difference is the arithmetic floor plus (h/R)^{17}. Pass: the
+  difference at most 10⁻²⁰ of ‖F_1 h‖ at every h; central differences of orders 1 and 2 agree to their ε² as the
+  cruder cross-check; the κ mutation fails.
+- J3, the branch, planted truth from stored states: z_k at T75's converged state near D 71.0, N = 24, the
+  prediction at h = 0.5, 1, 2 against the state Newton converges to at exactly D₀ + h from the nearest stored state.
+  The truncation (2/50)^{25} ≈ 10⁻³⁵ is below any floor, so this measures the floor. Pass: the predicted state's
+  residual at most 10⁻¹⁸ at h = 2 (the need at D 200 is 10⁻¹⁶ for the 0.85 layout), Newton converges to 10⁻²⁵ in
+  at most 3 steps, the frozen harmonics' drift over h reported, R_D from the ratios consistent with 13.12. The
+  frozen-dimension control predicts z₀ and must fail.
+- J4, the step C failed: from T75's last state (D 73.27), h = 2, 3, 5: Newton converges to 10⁻²⁵ with Δ within
+  10⁻⁶ of the formula's value, 13.13's criterion unchanged. Then a pilot from the large-D run's end at D 78.12, one
+  step of a_max, on the Mac or win2.
+
+**Cost and risks.** The lane type half a day, the kernel's sites and `psolve` a day, the driver and tests a day.
+One step computes N evaluations at orders 1, …, N, each (k + 1)²/2 times a residual (0.1 s at M 32 on two
+threads), about ten full-order evaluations, some 8 minutes at N = 30 and M 32; the 0.85 layout at D 200 perhaps
+an hour a step. Risks: the floor above the basin at D 200 (J3 measures it; quad-double jets are the fallback); the
+frozen harmonics' drift over a step (J3 and J4 measure it; a larger kfreeze or re-pinning each step is the fix);
+R_D falling with D (the a_max rule adapts, and every step's ratios are recorded); a fold or bifurcation before 200
+(the ratios would show it; 13.12 shows none to 73).
