@@ -9269,3 +9269,14 @@ free should bottom near ~10 GB (above the (a) guard's 5 GB, so the trio should f
 goes under 5 GB the (a) guard drops (a) (the Mac's T102 replica covers it); the two nodes have no guard and are never stopped (they
 run in stage 2).
 Pushed T99-win2 (9617333).
+
+== 2026-11-03 07:29 UTC win2
+cpu 48%, free 16.0 GB.
+T99 trio hourly util. Orders: wf 1.00 / 0.99 / 1.01 J 1250 at k 39 (~30280 s). Controls pass (identical at all 20 common orders
+1..39). (a) guard (--guard 5 on 3572) steady, 07:28 line free 16.9 GB.
+util_report.py: 2026-11-03 07:29 UTC  cpu 48%  mem used 79.5 of 95.6 GB, free 16.0 GB, commit 86.6 of 101.6 GB (9 trio workers plus
+3 mains plus the (a) guard; resident undercounts, 79.5 GB used is the real figure).
+Memory: free 19.1 (k 37) -> 16.0 (k 39), ~3 GB/order; three orders left (41, 43, 45), so free should bottom near ~7 GB, above the
+(a) guard's 5 GB, and the trio should finish (the page file is auto-managed, commit can grow). Watching; if free < 5 the (a) guard
+drops (a), the Mac's T102 covers it.
+Pushed T99-win2 (will add hash in the commit).
