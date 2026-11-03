@@ -9197,3 +9197,28 @@ action unless it fires or a J 1250 run is endangered. (The mask caps CPU, not me
 T100 stays stopped; the quarter step is queued for after stage 1 ends and stage 2 is running.
 util_report.py: 2026-11-03 03:51 UTC  cpu 55%  mem used 81.8 of 95.6 GB, free 13.7 GB, commit 94.9 of 101.6 GB.
 Pushed T99-win2 (c957b87).
+
+== 2026-11-03 04:20 UTC cloud to win2
+Memory decision for T99 stage 1: stop the J 1500 pilot (b) now, before the guard does it later at a worse moment. The numbers: your
+workers were 1.7-2.2 GB at k 29 (02:13) and the total says about 2.6 GB at k 33; at K 43 the J 1500 workers peaked at 5.1-5.3 GB with
+--procs 2 (your 11:34-11:37 posts), so at k 44 the twelve workers reach roughly 4.5 GB each, 55 GB plus the mains, over the 95.6 GB
+with your 47 GB base; the guard would cut (b) near k 39 (10 h of its compute lost) with the trio then at about 90 GB used. Stopping
+(b) at k 31 loses 4.3 h instead and gives the trio its headroom. Steps, in order:
+  1. taskkill /T /F /PID 29568 (the (b) main and its three workers), then stop its guard (pid 26828's python; Ctrl-C or taskkill).
+  2. Append to T99-win2\scan45J1500\w1.0000.log the line "--- stopped by the coordinator 2026-11-03 04:20 UTC at k 31 (memory: free 13.7 GB with
+     the workers still growing; restarted in stage 2) ---" and rename it w1.0000_stage1_k31.log, so the stage-2 run writes a fresh
+     w1.0000.log; keep mem_guard.log. Note the stop in T99-win2\README.md.
+  3. A second guard, on (a) only, the wf 1.00 J 1250 main (the one started with --out ...sigF_w1.0000_K45_J1250_p1280.json):
+       python util_report.py --guard 5 --log C:\Users\nathan\Source\choptuik-large-d-raw\T99-win2\scan45J1250\mem_guard_a.log --interval 120 <PID of (a)'s main>
+     If free memory still falls under 5 GB, (a) is the run to lose: the Mac's T102 replica reproduces it (identical at all 17 common
+     orders so far) and lands about 09:30-10:30 UTC. The two nodes wf 0.99 and 1.01 are never stopped; they have no replica.
+  4. Post util_report.py (the per-process table) after step 1, and once an hour until the trio ends; post the page-file setting, no
+     change to it: PowerShell "Get-CimInstance Win32_ComputerSystem | Select AutomaticManagedPagefile" and
+     "Get-CimInstance Win32_PageFileSetting | Select Name, InitialSize, MaximumSize" (the commit limit 101.6 GB is RAM plus the
+     page file; whether it can grow matters for the trio's last orders).
+Stage 2, when the trio has ended (the 22:34 entry amended): first (b), the J 1500 wf 1.00 run, at --procs 3 (it gates the K 22 stages,
+notes/PLANTED_SELECTION.md 14.0), then the two J 1500 nodes at --procs 2 each, all three under the mask and BelowNormal, (b) with
+its 10 GB guard again; then T100's quarter step as the 02:15 entry says. Ten processes plus T100's four threads on the twelve cores;
+memory about 40 GB of tasks at the peak. Expectation: (b) ends about 16 h after it starts, the nodes about 20 h.
+Posts: step 1's result and table; the (a) guard's start line; the trio's end posts as the 22:34 entry asks (raw_check, the sigma_err_fit
+gate line of each file). The 22-string comparison of (a) against (b) waits for stage 2's (b).
