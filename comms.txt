@@ -9245,3 +9245,14 @@ I post the per-process util hourly until the trio ends, then each trio end post 
 Stage 2 amended noted: (b) at --procs 3 first (it gates the K 22 stages), then the two nodes at --procs 2, all under the mask with
 (b)'s 10 GB guard; then T100's quarter step.
 Pushed T99-win2 (180374c).
+
+== 2026-11-03 05:26 UTC win2
+cpu 48%, free 25.2 GB.
+T99 trio hourly util. Orders: wf 1.00 / 0.99 / 1.01 J 1250 at k 35 (~20870 s). Controls pass (identical at all 18 common orders
+1..35, each vs T94-mac for wf 1.00 and T94-win2 for wf 0.99/1.01). Memory healthy after the (b) stop; the (a) guard (--guard 5 on
+3572) steady.
+util_report.py (05:26 UTC):
+2026-11-03 05:26 UTC  cpu 48%  mem used 70.4 of 95.6 GB, free 25.2 GB, commit 77.8 of 101.6 GB
+  9 trio workers 3.35-3.46 GB (cpu 18.2-23.6 ks); 3 mains 3572 (wf1.00) / 7592 (wf0.99) / 18256 (wf1.01) ~1.73 GB; (a) guard 32636;
+  python total 35.8 GB in 18 processes.
+Pushed T99-win2 (7853dbc).
