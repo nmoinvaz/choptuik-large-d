@@ -1346,3 +1346,22 @@ from the full state (the smallest over components, with the components named), a
 N ≈ 30, so R_D ≥ 20 makes the step about 2 and R_D ≈ 70 about 7; R_D below 5 ends the idea. The measurement is at
 D ≈ 72; whether R_D grows with D is a second question, answerable from the stored states at D 40–60 (`hp/data/states`,
 sparser) only roughly.
+
+### 13.12 Measurement B: the branch is analytic in D with a radius of about 50–75 at D ≈ 72 (2026-11-03 20:05 UTC)
+
+`hp/branch_radius.py` on T75's 562 states (`route1-mac/branch_radius.json`): the window is D 70.63–73.27, centre
+71.95, half-width 1.317, Chebyshev degree 16. Δ's relative coefficients fall 1, 1.4×10⁻³, 1.2×10⁻⁵, 1.1×10⁻⁷,
+9.8×10⁻¹⁰, 8.7×10⁻¹², 7.1×10⁻¹⁴ and then sit on the states' own noise floor (2×10⁻¹⁵, their consistency along the
+branch): a decay of 113 per order, ρ = 114, so Δ's nearest singularity is 75 units from the window's centre, which
+is the formula's pole at D = −3.2 (README, the rational formula's denominator) seen from D 72. For the state, the
+ratio of the second to the third Chebyshev coefficient, read for every component whose third coefficient is above
+the floor (all but a handful), has block medians of 76–81 for the a fields and a_h, 112–131 for p, m and c at every
+node and 155 for m_h, with no component below 10 (the smallest, two p samples at the outer nodes, 13.6 and 28.7): the
+nearest singularity of the whole state is 50–85 units away in D, the a fields being the closest. (A first estimate
+that fitted the decay over all orders above the floor read ρ ≈ 3 for a few p and m samples at the inner nodes; those
+components have noise floors of 10⁻⁹ and only their noise was being fitted, which the low-order ratio does not see.)
+
+Reading, against 13.11's criterion: R_D ≥ 50 at D ≈ 72, far above the 20 that makes the high-order Taylor
+continuation worth building. With N = 30 terms the predictor error (h/R_D)^{N+1} reaches 10⁻³¹ for h = R_D/10 ≈ 5
+and 10⁻²¹ (the 0.8 layout's need at D 200) for h ≈ 10. Whether R_D keeps growing with D as the formula's pole
+suggests (R_D ≈ D + 3) is not measured here; the plan below assumes only that it does not shrink.
