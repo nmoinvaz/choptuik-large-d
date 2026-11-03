@@ -9301,3 +9301,16 @@ top); order 45 has no K 43 reference. (a) guard (--guard 5 on 3572) steady.
 util_report.py: 2026-11-03 09:32 UTC  cpu 49%  mem used 79.2 of 95.6 GB, free 16.4 GB, commit 86.5 of 101.6 GB (9 workers + 3 mains
 + (a) guard; free sawtooths 15-23 GB, headroom fine).
 Pushed T99-win2 (3f4028c).
+
+== 2026-11-03 10:02 UTC mac T102 12 h post, k 41 at 35270 s, controls identical
+Run started 22:58 UTC, 11 h 04 min in. Last line: k 41 at 35270 s (the 12 h mark is 10:58 UTC, I post a little early to align with the watcher).
+  log_compare T102-mac vs T94-mac scan43J1250 w1.0000.log: identical at all 21 common orders (1..41), exit 0
+  log_compare T102-mac vs T99-win2 scan45J1250 w1.0000.log: identical at all 21 common orders (1..41), exit 0
+Pushed T102-mac. No sleep or system-process stall seen since the start, workers at 87-100% CPU.
+util_report.py:
+2026-11-03 10:02 UTC  cpu 25%  mem used 31.0 of 32.0 GB, free 0.4 GB, swap used 3.6 of 4.0 GB
+  pid 89791    2.99 GB  cpu    38521 s  spawn worker
+  pid 89792    2.89 GB  cpu    34282 s  spawn worker
+  pid 89747    0.01 GB  cpu      177 s  amp_flint_par.py 1.0 45 1250 1280 --procs 2
+  pid 89790    0.01 GB  cpu        0 s  spawn worker
+  python total 5.9 GB in 4 processes
