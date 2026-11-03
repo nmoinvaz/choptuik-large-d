@@ -1274,3 +1274,23 @@ start from which stage 2's first residual is not finite or Newton does not conve
 then the hybrid is dropped too. If it passes, the kernel work is the collocation block in `hp/src` (13.2) plus the
 two-stage step in `scan_hp.py`, checked at D 60–73 against the stored states before any point past 78, with the
 ceiling of 13.6 read before the layout is chosen.
+
+### 13.9 Route 1b fails its first measurement: the collocation does not determine the horizon data (2026-11-03 19:25 UTC)
+
+`colloc_tests.py t5h` at D 40.02, N_u = 16, the mass direction (`route1-mac/colloc/t5h.jsonl`, `t5h.log`; stopped after
+these two starts, which decide it, to free the Mac's memory for T103):
+
+| start ε (a_h scaled by 1 + ε) | series block from the raw start | stage 1: residual, steps | δ_h after stage 1 | Δ error after stage 1 | plain stage 1: δ_h | stage 2 |
+|---|---|---|---|---|---|---|
+| 10⁻⁴ | fails (10²⁹) | 0.09 → 4×10⁻¹² in 2 | 5.1×10⁻⁵ | 7.7×10⁻⁶ | 5.1×10⁻⁵ | residual 1.4×10⁻⁸ → 1.3×10⁻⁸, Δ off by 1.4×10⁻⁵ |
+| 10⁻³ | fails (10⁵³) | 0.9 → 4×10⁻¹² in 2 | 5.1×10⁻⁴ | 7.6×10⁻⁵ | 5.1×10⁻⁴ | no decrease from 6.6×10⁻⁸, Δ off by 1.4×10⁻⁴ |
+
+The pass line was δ_h < 1.4×10⁻⁸. Stage 1 drives the collocation residual to 4×10⁻¹² in two steps and leaves the
+horizon datum a_h half as wrong as it started (δ_h ≈ ε/2), with or without the regularisation: the mass direction is
+one of the collocation's flat directions, so its Newton step does not move along it, and the residual does not see
+the error. The series block then starts from horizon data 10⁻⁵ to 10⁻⁴ off and either settles on a wrong Δ (10⁻⁵
+off at a residual its tolerance accepts) or does not decrease. The hybrid's premise, that a collocation solve sharpens
+the horizon data to the series' basin, is false at the smallest ε tried, and the remaining starts (10⁻², the random
+kind, D 45) cannot repair it. Route 1b is dropped; with 13.7 the collocation treatment of the horizon is closed, and
+the large-D record stands at D 78 with the formula's extrapolation beyond it under its stated assumption (README,
+"What the horizon block's wall is").

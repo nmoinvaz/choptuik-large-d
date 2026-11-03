@@ -214,6 +214,86 @@ def run_t4(out, states, Nus, threads):
         out.write(json.dumps(rec) + "\n"); out.flush()
 
 
+# ---------------------------------------------------------------- route 1b, the hybrid (section 13.8)
+def perturb_all(z, eps, rng):
+    r = rng.standard_normal(len(z))
+    return z * (1 + eps * r)
+
+
+def series_from_colloc(sc, zc):
+    """the DSSMulti state assembled from a DSSColloc state: p1, c0, the nodes, m_h and a_h from the point u = 0, Delta"""
+    H, K, L = sc.layout()
+    oc = sc.offsets()["coll"]
+    return np.concatenate([zc[:oc], zc[oc + H:oc + 3 * H], zc[-1:]])
+
+
+def horizon_errors(sc, zc, zh):
+    """(delta_h, delta_Delta, delta_p1): relative errors of the horizon data, Delta and p1's kept harmonics against the dd state"""
+    H, K, L = sc.layout()
+    oc = sc.offsets()["coll"]
+    o_s = 2 * H + 4 * H * K
+    mh, ah = zc[oc + H:oc + 2 * H], zc[oc + 2 * H:oc + 3 * H]
+    mh0, ah0 = zh[o_s:o_s + H], zh[o_s + H:o_s + 2 * H]
+    dh = max(np.linalg.norm(mh - mh0) / np.linalg.norm(mh0), np.linalg.norm(ah - ah0) / np.linalg.norm(ah0))
+    dD = abs(zc[-1] - zh[-1]) / abs(zh[-1])
+    Q = p1_keep_basis(sc)
+    dp = np.linalg.norm(Q.T @ (zc[:H] - zh[:H])) / np.linalg.norm(Q.T @ zh[:H])
+    return float(dh), float(dD), float(dp)
+
+
+def delta_max_of(D, raw):
+    """delta_max(D, u0 = 0.30) from T5's records (route1-mac/pole_test.jsonl), the nearest state"""
+    try:
+        recs = [json.loads(l) for l in open(os.path.join(raw, "route1-mac", "pole_test.jsonl")) if l.strip()]
+        recs = [r for r in recs if "delta_max" in r and "D" in r]
+        r = min(recs, key=lambda r: abs(r["D"] - D))
+        return r["delta_max"]["0.3"]
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def run_t5h(out, states, Nu, epss, threads, raw):
+    rng = np.random.default_rng(1)
+    for path in states:
+        zh, meta = load_state(path); D = meta["D"]
+        sm, sc = solvers(meta, Nu=Nu)
+        zc0 = colloc_state_from_kernel(path, sc, zh, threads=threads)
+        Fs = sm.residual(zh[None, :])[0]; Fc = sc.residual(zc0[None, :])[0]
+        fl_s = norm(reduce(sm, Fs, sm.jacobian(zh)[1], False)[0])
+        fl_c = norm(reduce(sc, Fc, sc.jacobian(zc0)[1], True)[0])
+        dmax = delta_max_of(D, raw)
+        print(f"t5h D {D:.2f}: pinned floors series {fl_s:.1e}, collocation {fl_c:.1e}; delta_max(0.30) {dmax}", flush=True)
+        for kind in ("mass", "all"):
+            for eps in epss:
+                t = time.time()
+                if kind == "mass":
+                    zp_c = perturb_coll(sc, zc0, eps, "mass", rng); zp_s = perturb_series(sm, zh, eps, "mass", rng)
+                else:
+                    zp_c = perturb_all(zc0, eps, rng); zp_s = perturb_all(zh, eps, rng)
+                rec = dict(test="t5h", state=os.path.basename(path), D=D, Nu=Nu, kind=kind, eps=eps, delta_max=dmax)
+                # control: the series block from the raw start
+                F0 = norm(sm.residual(zp_s[None, :])[0])
+                z1, hist, ok, note = newton_pinned(sm, zp_s, tol=10 * fl_s, is_colloc=False, maxit=6)
+                rec["series_raw"] = dict(F_start=F0, hist=hist, converged=bool(ok), note=note, dDelta=float(z1[-1] - zh[-1]))
+                # stage 1, regularised, and its unregularised control
+                for lab, rc in (("stage1", 1e-9), ("stage1_plain", None)):
+                    z1, hist, ok, note = newton_pinned(sc, zp_c, tol=10 * fl_c, is_colloc=True, maxit=12, rcond=rc)
+                    dh, dD, dp = horizon_errors(sc, z1, zh)
+                    rec[lab] = dict(hist=hist, converged=bool(ok), note=note, delta_h=dh, delta_Delta=dD, delta_p1=dp)
+                    if lab == "stage1":
+                        zs = series_from_colloc(sc, z1)
+                        F0 = sm.residual(zs[None, :])[0]
+                        fin = bool(np.all(np.isfinite(F0)))
+                        z2, hist2, ok2, note2 = newton_pinned(sm, zs, tol=10 * fl_s, is_colloc=False, maxit=8) if fin else (zs, [float("inf")], False, "not finite")
+                        rec["stage2"] = dict(F_start=norm(F0) if fin else float("inf"), hist=hist2, converged=bool(ok2), note=note2, dDelta=float(z2[-1] - zh[-1]))
+                rec["seconds"] = time.time() - t
+                out.write(json.dumps(rec) + "\n"); out.flush()
+                s1, s2, sp = rec["stage1"], rec["stage2"], rec["stage1_plain"]
+                print(f"   {kind:4s} eps {eps:.0e}: series raw {'ok' if rec['series_raw']['converged'] else 'FAILS'} (start {rec['series_raw']['F_start']:.1e}); "
+                      f"stage 1 |F| {s1['hist'][0]:.1e} -> {s1['hist'][-1]:.1e} in {len(s1['hist']) - 1} steps, delta_h {s1['delta_h']:.1e}, dDelta/Delta {s1['delta_Delta']:.1e}, dp1 {s1['delta_p1']:.1e}"
+                      f" [plain: delta_h {sp['delta_h']:.1e}]; stage 2 start {s2['F_start']:.1e} -> {s2['hist'][-1]:.1e}, {'CONVERGED' if s2['converged'] else 'FAILED'} ({s2['note']}), Delta - dd {s2['dDelta']:+.1e}; {rec['seconds']:.0f} s", flush=True)
+
+
 def main():
     args = list(sys.argv[1:])
     Nu, deltas, threads = 24, (1e-6, 1e-4, 1e-3, 1e-2), 2
@@ -239,6 +319,8 @@ def main():
             run_t4p(out, states, (16, 24, 32), threads)
         elif test == "t2p":
             run_t2p(out, states, Nu, deltas, threads)
+        elif test == "t5h":
+            run_t5h(out, states, Nu, deltas, threads, "/Users/nathan/Source/choptuik-large-d-raw")
         else:
             raise SystemExit(f"unknown test {test}")
 
@@ -288,7 +370,7 @@ def reduce(s, F, J, is_colloc):
     return Fr, Jr, expand
 
 
-def newton_pinned(s, z, tol, is_colloc, maxit=12):
+def newton_pinned(s, z, tol, is_colloc, maxit=12, rcond=None):
     hist = []
     try:
         for it in range(maxit):
@@ -300,7 +382,7 @@ def newton_pinned(s, z, tol, is_colloc, maxit=12):
                 return z, hist, False, "residual not finite"
             if nF < tol:
                 return z, hist, True, "converged"
-            dy = np.linalg.solve(Jr, -Fr) if Jr.shape[0] == Jr.shape[1] else np.linalg.lstsq(Jr, -Fr, rcond=None)[0]
+            dy = np.linalg.solve(Jr, -Fr) if (rcond is None and Jr.shape[0] == Jr.shape[1]) else np.linalg.lstsq(Jr, -Fr, rcond=rcond)[0]
             dz = expand(dy)
             t = 1.0
             for _ in range(14):
