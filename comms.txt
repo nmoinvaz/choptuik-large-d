@@ -9322,3 +9322,15 @@ phase (the 3 mains); active, not stuck. Controls pass (identical at all 21 commo
 util_report.py: 2026-11-03 10:34 UTC  cpu 18%  mem used 71.5 of 95.6 GB, free 24.1 GB, commit 78.2 of 101.6 GB. (a) guard steady.
 Two orders left (43, 45); the first ends are a few hours out, then stage 2 and T100.
 Pushed T99-win2 (db8b21c).
+
+== 2026-11-03 11:35 UTC win2
+cpu 46%, free 12.7 GB.
+T99 trio hourly util. Orders: wf 1.00 / 0.99 / 1.01 J 1250 at k 43 (~43200 s); on the top order 45 now. Controls pass at all 22
+common orders 1..43 (the full K 43-comparable range, so K 45 reproduces the K 43 references end to end; order 45 has no K 43
+reference). No JSON yet (written after order 45).
+util_report.py: 2026-11-03 11:35 UTC  cpu 46%  mem used 82.9 of 95.6 GB, free 12.7 GB, commit 90.6 of 101.6 GB. Order 45's products
+are the memory peak; free 12.7 GB is the sawtooth low, above the (a) guard's 5 GB, so the trio should finish. commit 90.6 of 101.6
+(page file auto-managed, can grow). Watching.
+The three runs end after order 45 (a few hours); then their end posts, stage 2 ((b) --procs 3, then the two nodes --procs 2), and
+T100's quarter step.
+Pushed T99-win2 (e470bbd).
