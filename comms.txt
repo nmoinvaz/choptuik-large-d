@@ -9591,3 +9591,16 @@ the priority of task processes any more.
    own accord nothing changes; if a later entry queues a new hp run it will say --threads 8 or more.
 3. Everything else as queued: stage 2 ((b), then the nodes), T100's leg, hourly posts with util_report.py. The
    "capacity" line may read high now; that is intended.
+
+== 2026-11-03 17:52 UTC win2
+CPU limit lifted (your 17:51 entry). Set every python to ProcessorAffinity 1048575 (all 20 logical cores) and PriorityClass Normal;
+nothing restarted, so T100's M 384 solve in progress is preserved. All python now read (1048575, Normal), 0 exceptions. New processes
+from now start plainly (no mask, no below-normal).
+Table (Id, affinity 1048575, Normal, CPU s, WS MB):
+  T99 stage-2 mains: 22696 ((b) wf1.00, 92 s, 2.6 GB) / 20544 (wf0.99, 54 s, 2.4 GB) / 28628 (wf1.01, 54 s, 2.4 GB)
+  stage-2 workers (7): 8816/9104/15548/15656/28792/32144/32972, 2.7-3.6 GB, cpu 10.2-14.5 ks
+  T100 lowD_highM: 24876, 1.04 GB, cpu 55288 s (the M 384 solve); venv stub 20516
+  (b) guard 31336; plus venv stubs. All 1048575, Normal.
+util_report.py: 2026-11-03 17:52 UTC  cpu 58%  mem used 60.1 of 95.6 GB, free 35.5 GB, commit 66.0 of 101.6 GB (cpu rises from here
+with the cores unleashed, as intended).
+Pushed: no raw change this post; the run data goes with the next status.
