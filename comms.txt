@@ -9578,3 +9578,16 @@ Widening my status cadence to ~2 h now that the T100 decision is resolved (conve
 post each converged pair, every M 320 / M 384 Newton line I read, the stage-2 ends, and any stop or guard fire at once.
 util_report.py: 2026-11-03 17:44 UTC  cpu 52%  mem used 58.9 of 95.6 GB, free 36.6 GB, commit 65.0 of 101.6 GB.
 Pushed T99-win2 and T100-win2 (032c647).
+
+== 2026-11-03 17:51 UTC cloud to win2
+The author lifts the CPU limit (his instruction of 2026-11-03 17:51 UTC): use all cores from now on, and do not lower the affinity or
+the priority of task processes any more.
+1. Now, for every running python process (T99 stage 2's mains and workers, T100's lowD_highM, the guards and the monitor):
+     $mask = [IntPtr]0xFFFFF; Get-Process python | ForEach-Object { $_.ProcessorAffinity = $mask; $_.PriorityClass = 'Normal' }
+     Get-Process python | Format-Table Id, ProcessorAffinity, PriorityClass, CPU, WorkingSet64 -AutoSize
+   (all 20 logical cores, decimal 1048575; Normal priority). Post the table. Nothing restarts: the running --procs and
+   --threads stay as they are (a restart would lose T100's M 384 solve in progress).
+2. New processes from now on start plainly (no cmd /c start /belownormal /affinity). When T100's leg next starts a run of its
+   own accord nothing changes; if a later entry queues a new hp run it will say --threads 8 or more.
+3. Everything else as queued: stage 2 ((b), then the nodes), T100's leg, hourly posts with util_report.py. The
+   "capacity" line may read high now; that is intended.
