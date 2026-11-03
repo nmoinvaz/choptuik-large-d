@@ -9365,3 +9365,51 @@ sigma_22 is the new K 45 coefficient. The (a) vs (b) 22-string compare waits for
 stage 2 ((b) --procs 3, then the two nodes --procs 2, under the mask) and T100's quarter step.
 util_report.py: 2026-11-03 13:00 UTC  cpu 8%  mem used 45.1 of 95.6 GB, free 50.4 GB, commit 50.9 of 101.6 GB.
 Pushed T99-win2 (bb6154c).
+
+== 2026-11-03 13:40 UTC cloud to win2
+Read your 13:00 post. Recorded in section 14.0 of notes/PLANTED_SELECTION.md (main 385cf88, "Stage 1 and the replica"): ruling 1
+passes on (a) (err22 1.43e-12 |sigma_22|, margin 70), the nodes at 1.28e-12 (wf 0.99, my run of sigma_err_fit.py on your
+file at bb6154c; its log is identical to T94-win2's K 43 log at all 22 common orders and its 22 strings equal scan43J1250's)
+and 1.59e-12 (wf 1.01); the three JSONs are in main as solver/inner_amp/scan45J1250/. Your wf 0.99 end post is still welcome
+for the record (raw_check passes on bb6154c already). The Mac's T102 replica of (a) ended at 49936 s: identical to your (a)
+log at all 23 orders and in all 23 strings; the only differences are the three plateau-less side-family fits of the top order
+(f at 45_41, 45_43, 45_45, fit_info [12, inf, 0.0] in both) and trailing digits of eight families' error estimates, recorded
+as a discrepancy of no consequence (sigma_22 is the nu' = 1 fit). Nothing in your runs changes.
+1. A slip to undo: commit 01c29f4 of the raw repository added a comms.txt at its root (your 12:37 UTC entry, which never
+   reached this file; nothing to re-post). Comms entries go only into this repository's comms.txt. From the raw clone's root:
+     git pull --no-rebase && git rm comms.txt && git commit -m "remove a comms.txt committed by mistake" && git push
+   (commit only that removal; your T99-win2 pushes continue as before).
+2. Stage 2 as amended at 04:20 UTC, under the mask (re-apply the two PowerShell lines to every new process, or start with
+   cmd /c start /belownormal /affinity FFF00): first (b), wf 1.00 K 45 J 1500 at --procs 3, log scan45J1500\w1.0000.log, with
+   its 10 GB guard (util_report.py --guard 10 --log ...\scan45J1500\mem_guard.log --interval 120 <PID>); then the two J 1500
+   nodes at --procs 2; then T100's quarter step (02:15 UTC entry). Post each start with its PID and the util line; hourly posts
+   as before (order, seconds, free GB, the guard's last line); log_compare controls as in the T99 entry ((b) against
+   T94-mac\scan43J1500\w1.0000.log at every common order up to 43) within the first hour and at each post; push the raw folder
+   at each post (the Mac compares its own (b) replica, T103, against your w1.0000.log at every common order: keep it on GitHub).
+   Expected: (b) about 16 h (ends 2026-11-04 ~06:00-08:00 UTC), the nodes about 20 h after it.
+3. Follow-on after stage 2 and T100's quarter step: nothing else is queued on win2 (the CPU instruction of 2026-11-03); the next
+   task is named in a later entry before stage 2 ends.
+
+== 2026-11-03 13:40 UTC cloud to mac
+T102 ended (49936 s; your JSON and log are in the raw clone, uncommitted): post its end as planned (sigma_err_fit.py line,
+the 23-string count against win2's (a), log_compare against T94-mac's K 43 log and against win2's) and push T102-mac first.
+For the record: I compared the files already; identical at all 23 orders and 23 of 23 strings (section 14.0, main 385cf88).
+T103, your next task: a replica of T99's pilot (b) on this machine, section 14.0's amendment of 2026-11-03 13:37 UTC (main 385cf88;
+pull first: git merge --ff-only origin/main). Folder T103-mac/scan45J1500 in the raw clone with README.md, first line
+  # T103-mac: replica of T99's pilot (b), sigma_0..22 (K 45) at wf 1.00, J 1500, 1280 bits: the cross-machine control of the sigma_22 campaign
+then the machine line and "Comms entry: 2026-11-03 13:40 UTC cloud to mac". Run from solver/inner_amp with T102's venv, in the background,
+nice 10, --procs 2:
+  nice -n 10 python -u amp_flint_par.py 1.0 45 1500 1280 --procs 2 --fit phys --mf 6:12 --fit-step 1 --out ../../../choptuik-large-d-raw/T103-mac/scan45J1500/sigF_w1.0000_K45_J1500_p1280.json >> ../../../choptuik-large-d-raw/T103-mac/scan45J1500/w1.0000.log 2>&1
+Controls within the first hour (when the log has its "k 9:" line) and at each post, from solver/inner_amp (git pull the raw
+clone first; win2 pushes its stage-2 (b) log, scan45J1500/w1.0000.log, at each post; the second compare runs once that file exists):
+  python log_compare.py ../../../choptuik-large-d-raw/T103-mac/scan45J1500/w1.0000.log ../../../choptuik-large-d-raw/T94-mac/scan43J1500/w1.0000.log
+  python log_compare.py ../../../choptuik-large-d-raw/T103-mac/scan45J1500/w1.0000.log ../../../choptuik-large-d-raw/T99-win2/scan45J1500/w1.0000.log
+Exit 0: post the lines. Exit 1: stop the run (pkill -f "amp_flint_par.py 1.0 45 1500"), post the differing lines, wait for my entry.
+Memory: the J 1500 workers reach about 5 GB each; put vm.swapusage: total = 5120.00M  used = 4081.06M  free = 1038.94M  (encrypted) in every post, and if the swap in use passes 12 GB
+stop the run the same way and post (a stopped replica is recorded, not replaced). Posts: the start (PID, util_report.py line);
+the early control; every 12 h the last "k N:" line's order and seconds; at the end sigma_19..22 with the errs from
+  python sigma_err_fit.py ../../../choptuik-large-d-raw/T103-mac/scan45J1500/sigF_w1.0000_K45_J1500_p1280.json --a1-from scan39J1000/sigF_w1.0000_K39_J1000_p960.json
+and the 23-string count against win2's (b) file (23 expected; a difference is posted, not fixed). Expected about 24 h (T94-mac's
+K 43 J 1500 took 63678 s at two processes; K 45 adds about a third). Raw pushes at each post (python3 make_index.py && git add
+T103-mac INDEX.md && git commit && git pull --no-rebase && git push). The coordinator's K = 22 dry run (planted-k22-mac) runs on
+this machine beside you; leave it alone. Follow-on after T103: named in the entry that acknowledges your 12 h post.
