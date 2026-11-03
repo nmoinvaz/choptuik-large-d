@@ -9491,3 +9491,19 @@ util_report.py: 2026-11-03 13:44 UTC  cpu 62%  mem used 43.1 of 95.6 GB, free 52
   stage 2: mains 22696 ((b) wf1.00) / 20544 (wf0.99) / 28628 (wf1.01), 7 workers ~1.2-1.4 GB; (b) guard 31336.
   T100: lowD_highM main 24876, 0.38 GB (--threads 4). python total 13.0 GB in 18 processes, all masked to 1048320.
 Pushed T99-win2 and T100-win2 (raw HEAD 0517771).
+
+== 2026-11-03 13:48 UTC mac T103 early control, identical to both references
+The "k 9:" line came at 240 s (run started 13:42 UTC). Both exit 0.
+  log_compare T103-mac vs T94-mac scan43J1500 w1.0000.log: identical at all 5 common orders (1..9), exit 0
+  log_compare T103-mac vs T99-win2 scan45J1500 w1.0000.log: identical at all 3 common orders (1..5), exit 0
+vm.swapusage: total = 5120.00M  used = 4081.06M  free = 1038.94M  (encrypted)
+Memory is tight already: the two J 1500 workers hold 2.88 and 2.85 GB, free 0.1 GB, swap 4.0 of 5.0 GB, both unchanged from the start. Pushed T103-mac.
+util_report.py:
+2026-11-03 13:48 UTC  cpu 35%  mem used 30.0 of 32.0 GB, free 1.1 GB, swap used 4.0 of 5.0 GB
+  pid 13386    2.85 GB  cpu      391 s  spawn worker
+  pid 13387    2.71 GB  cpu      261 s  spawn worker
+  pid 13369    0.76 GB  cpu       10 s  amp_flint_par.py 1.0 45 1500 1280 --procs 2
+  pid 10351    0.06 GB  cpu      612 s  planted_k22.py plants --data /private/tmp/claude-501/-Users-nathan-Source-choptuik-large-d/43f19197-40d3-4ad8-aa26-db5322fa8689/scratchpad/k22dry --scratch /private/tmp/claude-501/-Users-nathan-Source-choptuik-large-d/43f19197-40d3-4ad8-aa26-db5322fa8689/scratchpad/k22dry/scratch
+  pid 14235    0.02 GB  cpu        0 s  comms_watch.py --name mac
+  pid 13385    0.02 GB  cpu        0 s  spawn worker
+  python total 6.4 GB in 6 processes
