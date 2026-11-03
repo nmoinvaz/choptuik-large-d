@@ -1365,3 +1365,28 @@ Reading, against 13.11's criterion: R_D ≥ 50 at D ≈ 72, far above the 20 tha
 continuation worth building. With N = 30 terms the predictor error (h/R_D)^{N+1} reaches 10⁻³¹ for h = R_D/10 ≈ 5
 and 10⁻²¹ (the 0.8 layout's need at D 200) for h ≈ 10. Whether R_D keeps growing with D as the formula's pole
 suggests (R_D ≈ D + 3) is not measured here; the plan below assumes only that it does not shrink.
+
+### 13.13 Measurement A fails as formulated; measurement C, the Taylor predictor from stored points (2026-11-03 20:25 UTC)
+
+`hp/mass_correct.py` (`route1-mac/mass_correct.jsonl`, `.log`), five states D 40–73, 58 series evaluations per
+search. For the mass kind at ε = 10⁻⁴ and 10⁻³ the search recovers the datum to the series' basin at every D
+(R from 0.03–0.15 before to 0.36–0.63 after, |s* − s_true| from 5×10⁻¹⁰ δ_max at D 40 to 10⁻³ δ_max at D 73); at
+ε = 10⁻² the objective is no longer unimodal in the bracket and the search lands on the wrong side (R 0.05–0.08,
+fail). For a random error of m_h and a_h, or of every unknown, the correction changes R by 0.01–0.03 and leaves it
+below u₀ at every ε, even 10⁻⁶ (R 0.15–0.28): each harmonic of the horizon data drives a pole of its own, and the
+mean of a_h is one direction of sixty-four. By 13.11's criterion ("R(s*) > u₀ for every state and kind") A fails,
+and the idea is dropped as formulated; an M-dimensional search over all harmonics of a_h and m_h is untested and
+would cost about sixty evaluations per dimension per step.
+
+**C, the Taylor predictor from stored points** (`hp/taylor_predict.py RAWDIR`, records `route1-mac/taylor_predict.jsonl`),
+before any kernel change, since 13.12 found the branch analytic with R_D ≥ 50: the state z(D) is fitted over T75's
+window (D 70.63–73.27, 562 states, Chebyshev degree 16, the fit's own error 10⁻¹³ to 10⁻¹⁵ on the smooth components)
+and extrapolated to D = 73.27 + h for h = 0.5, 1, 2, 3, 4, 5. At each extrapolated state: the horizon series'
+radius by 12.4's ratio test (the basin: R > u₀ = 0.30 or not), and the kernel's double-double Newton of the series
+block (the production `newton_solve`, pinned as the states) from it, at most 12 steps. Pass: Newton converges to
+|F| ≤ 10⁻²⁵ at h ≥ 2 (where every predictor of 12.6 failed from this layout and start), with Δ continuous with the
+branch (within 10⁻⁶ of the formula's value). Fail: the predicted state's radius below u₀ at every h ≥ 1, or Newton
+not converging at any h ≥ 1; then the Taylor predictor is only as good as the fit's noise allows and the kernel
+version of 13.10's method is still the decision. Expectation written before the run: the extrapolation's error is
+(h/R_D)^{17} from the truncation plus the fit's floor, so 10⁻¹³ or better for h ≤ 5, inside the 0.7 layout's basin
+to about D 80 (δ_max 2×10⁻¹³ there by 13.6's lines) and the 0.8 layout's to about D 115.
