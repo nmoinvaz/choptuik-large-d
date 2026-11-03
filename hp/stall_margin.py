@@ -52,7 +52,15 @@ import sys
 os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
 import numpy as np  # noqa: E402
 
-from hpkernel.driver import junk_subspace, load, make_solver, predict, zadd  # noqa: E402
+from hpkernel.driver import junk_subspace, load, make_solver, predict  # noqa: E402
+try:
+    from hpkernel.driver import zadd  # noqa: E402  (the wip/qd-horizon driver, whose QdhSolver keeps more state parts)
+except ImportError:  # main's driver: the state update is multidouble's dd_add (T76 ran with the branch's driver)
+    from multidouble import dd_add  # noqa: E402
+
+    def zadd(s, zh, zl, dh, dl):
+        f = getattr(s, "zadd", None)
+        return f(zh, zl, dh, dl) if f is not None else dd_add(zh, zl, dh, dl)
 from pinning import band_coeffs, band_field, dd_add, predict_dd  # noqa: E402
 from raw_out import FLAG, HELP, require_raw  # noqa: E402
 
