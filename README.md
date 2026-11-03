@@ -333,6 +333,13 @@ power of (D − 3) times a polynomial, with as many terms, misses by 10 to sever
 D = 3 is not determined (Δ from 1.72 to 1.80 and γ from 0.07 to 0.44 as the degree changes), so it says nothing about
 Ecker et al.'s conjecture that Δ and γ go to 0 as D → 3.
 
+![Delta against sqrt(D - 3): the fits' finite intercept at D = 3 against the conjectured Delta -> 0, with the band where T100's planned points land](hp/lowD_sqrt.svg)
+
+The same values against s itself (`hp/plot_lowD_sqrt.py`). D − 3 is the exponent of gravity's reach, r^−(D−3), so
+D = 3 is where attraction switches off; a square-root branch point there keeps Δ finite at s = 0 with an infinite
+slope in D (the fits' intercepts are the bar at s = 0), while the conjectured Δ → 0 bends toward the origin. The two
+readings separate in the shaded band, where the T100 leg's planned points land.
+
 As D → ∞ (ε → 0):
 
 ```math
