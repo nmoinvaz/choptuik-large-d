@@ -9441,3 +9441,34 @@ and the 23-string count against win2's (b) file (23 expected; a difference is po
 K 43 J 1500 took 63678 s at two processes; K 45 adds about a third). Raw pushes at each post (python3 make_index.py && git add
 T103-mac INDEX.md && git commit && git pull --no-rebase && git push). The coordinator's K = 22 dry run (planted-k22-mac) runs on
 this machine beside you; leave it alone. Follow-on after T103: named in the entry that acknowledges your 12 h post.
+
+== 2026-11-03 13:42 UTC mac T102 done (wf 1.00, K 45, J 1250, 1280 bits), identical to win2's (a)
+Started 2026-11-02 22:58 UTC, JSON written 12:50 UTC, 49936 s on the script clock (832.3 min), --procs 2, nice 10. I saw it only at your 13:40 entry (my last look was 11:53, order 43), so the end post is about 50 min after the finish.
+sigma_err_fit.py with scan39J1000 wf 1.00 as the a1 file: exit 0, err22 1.297e-31 = 1.43e-12 |sigma_22| (against 1e-10). The err_k are the fit's plateau estimates, not enclosures.
+
+  k    sigma_k                                                     err_k
+  19   (-1.7398705530218642941e-16 + 1.8204762245576625758e-16j)   1.247e-28
+  20   (-1.857916119116969641e-17  + 9.1236163749049758769e-19j)   1.335e-29
+  21   (-1.0076599969545273599e-18 - 8.5754512179515557728e-19j)   1.351e-30
+  22   (-1.0524045221456612579e-20 - 9.0181465233453892797e-20j)   1.297e-31
+
+fit_info 1_1 [12, inf, 0.0], 45_1 [7, 6.048e-30, 2.1e-306].
+23-string count against T99-win2 scan45J1250 (a): 23 of 23 equal.
+  log_compare T102-mac vs T94-mac scan43J1250 w1.0000.log: identical at all 22 common orders (1..43), exit 0
+  log_compare T102-mac vs T99-win2 scan45J1250 w1.0000.log: identical at all 23 common orders (1..45), exit 0
+Pushed T102-mac (README closed).
+
+== 2026-11-03 13:42 UTC mac T103 started (replica of T99 pilot (b), wf 1.00, K 45, J 1500, 1280 bits)
+Started 2026-11-03 13:42 UTC, command as in your 13:40 entry, from ~/Source/choptuik-t83/solver/inner_amp (9e669de, amp_flint_par.py identical to main's), .venv, nice 10, --procs 2. Main ff-only pulled, raw clone pulled.
+PID 13369 (workers 13386, 13387, 100% CPU each). The planted_k22.py dry run (pid 10351) is beside it, I leave it alone.
+vm.swapusage: total = 5120.00M  used = 4081.06M  free = 1038.94M  (encrypted)
+Note for your 12 GB stop rule: the swap file total here is 5120 MB, so used swap cannot pass 12 GB unless macOS grows the file. I will post the swapusage line at each post and stop the run if used passes 12 GB.
+Early control (k 9) comes in the first hour.
+util_report.py:
+2026-11-03 13:42 UTC  cpu 36%  mem used 27.0 of 32.0 GB, free 4.1 GB, swap used 4.0 of 5.0 GB
+  pid 13386    0.36 GB  cpu       26 s  spawn worker
+  pid 13387    0.36 GB  cpu       26 s  spawn worker
+  pid 10351    0.08 GB  cpu      241 s  planted_k22.py plants --data /private/tmp/claude-501/-Users-nathan-Source-choptuik-large-d/43f19197-40d3-4ad8-aa26-db5322fa8689/scratchpad/k22dry --scratch /private/tmp/claude-501/-Users-nathan-Source-choptuik-large-d/43f19197-40d3-4ad8-aa26-db5322fa8689/scratchpad/k22dry/scratch
+  pid 13369    0.04 GB  cpu        0 s  amp_flint_par.py 1.0 45 1500 1280 --procs 2
+  pid 13385    0.02 GB  cpu        0 s  spawn worker
+  python total 0.9 GB in 5 processes
