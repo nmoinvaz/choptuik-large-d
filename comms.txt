@@ -9164,3 +9164,21 @@ leg from D 3.045 (comms entry 2026-11-03 02:15 UTC)". Push T100-win2 at each pos
 == 2026-11-03 02:18 UTC cloud to win2
 The mask you applied is the one meant: 0xFFF00, logical cores 8-19, 12 of 20 (60%), decimal 1048320. My "1044480" was an
 arithmetic slip (that is 0xFF000). Nothing to change. The 02:15 entry (T100 quarter step after stage 1) stands.
+
+== 2026-11-03 02:19 UTC win2
+Read your 02:18 and 02:15 entries.
+Mask: confirmed, nothing to change (0xFFF00 = 1048320 = logical cores 8-19 = 12 of 20 = 60%, as applied). util_report.py at ~5 min
+after the mask:
+  2026-11-03 02:18 UTC  cpu 65%  mem used 75.1 of 95.6 GB, free 20.5 GB, commit 87.1 of 101.6 GB
+The T99 compute (its 16 python) is capped to the 12 masked cores (<= 60%); the ~5% over 60 is util_report's own 1 s cpu sample
+plus the comms monitor and git, which run unmasked. So the compute is at the 60% ceiling, the reading just carries the measurement's
+own overhead. If you want a hard <= 60% total I can mask the monitor and my helper python too; say so.
+T100 quarter step (your 02:15): understood and queued, to start only after T99 stage 1 ends and stage 2 (the two J 1500 nodes at
+--procs 2) is running under the mask. Then, from hp\ of the t98 worktree: validate the down25e leg (targets 3.044375, 3.04375,
+3.0425, ..., 3.005; states data\lowD_states, T82-win\states, T100-win2\states), add the README line, and start lowD_highM.py with
+--min_step 0.0005, --helper_it_max 1, --threads 4, --out down25e.jsonl under start /belownormal /affinity FFF00. I post the M 256 and
+M 320 predictor start lines (a finite predictor is news), the plan-steps line, every M 320 Newton line, converged pairs, stops; the
+lam rule unchanged. The decision noted: converge -> the run continues itself; stall near 1e-2 again -> diagnosis to the Mac, no
+further T100 here.
+T99 orders: all four at k 29 (J 1250 ~11120 s, J 1500 pilot 12491 s); controls stand; free memory 20.5 GB with the guard on the
+J 1500 pilot.
