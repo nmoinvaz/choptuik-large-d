@@ -1139,3 +1139,40 @@ f64 floor at D is G × 10⁻¹⁶ (2×10⁻⁹ at D = 50, x_m = 0.7), which boun
 T5 first (a day of the Mac, coordinator's script on the stored states), T1–T4 in the prototype (one to two days of
 coordinator work, minutes of compute at M = 16–32), then T6 (three to five days of kernel work, each step with its
 control). Nothing in this section is read as a result; the first number from it is T5's.
+
+### 13.6 T5, the pole: H1's radius law holds at D = 40–73 (2026-11-03 16:45 UTC)
+
+`hp/pole_test.py` on the nine stored series states of 12.4 (`hp/data/states/up*` for D 40–60; T73/t73, T84-mac and
+T75 for 67.7–73.3; output `route1-mac/pole_test.jsonl` and `.log` of the raw-data repository): the horizon datum a_h
+scaled by 1 + δ, the state otherwise held, the series recomputed, its radius by 12.4's ratio test, and the control of
+12.4's own perturbation (D moved by 10⁻⁴ with the state held), which reproduces `horizon_radius.jsonl` to three
+decimals at all nine states.
+
+| D | R = R₀ + b ln(1/δ): R₀ | b | C = b (n − 1) | worst residual | δ_max at u₀ = 0.30 | 0.20 | 0.15 |
+|---|---|---|---|---|---|---|---|
+| 40.02 | −0.092 | 0.0248 | 0.92 | 0.013 | 1.4×10⁻⁷ | 7.8×10⁻⁶ | 5.8×10⁻⁵ |
+| 50.01 | −0.061 | 0.0190 | 0.89 | 0.008 | 5.8×10⁻⁹ | 1.1×10⁻⁶ | 1.5×10⁻⁵ |
+| 60.00 | −0.043 | 0.0153 | 0.87 | 0.007 | 1.7×10⁻¹⁰ | 1.2×10⁻⁷ | 3.1×10⁻⁶ |
+| 67.74 | −0.040 | 0.0138 | 0.89 | 0.006 | 2.0×10⁻¹¹ | 2.8×10⁻⁸ | 1.1×10⁻⁶ |
+| 73.27 | −0.035 | 0.0126 | 0.88 | 0.009 | 2.6×10⁻¹² | 7.5×10⁻⁹ | 4.0×10⁻⁷ |
+
+(The four other states, 45.05, 55.04, 70.5 and 72.4, lie on the same lines: C = 0.91, 0.87, 0.89, 0.88.) Over four
+decades of δ the radius is a line in ln(1/δ) to 0.01, and C = b (n − 1) is 0.87–0.92 at every D from 40 to 73: the
+pass criterion of 13.4 (one C within a factor 2) is met at the level of 6%. R₀ falls as about −2.6/(n − 1) at the
+large-D end, so u_pole ≈ 0.9 ln(1/(14 δ))/(n − 1). The same line reads 12.4's dD table once dD is converted to data
+error at 12.2's 4×10⁻⁵ per unit (dD = 10⁻⁸ is δ = 4×10⁻¹³, for which the line gives 0.32 at D 73, the table's 0.32).
+The Domb–Sykes ratios of the a field's τ-mean are positive at 98–100% of the last sixty orders for δ = 10⁻⁸ to 10⁻⁴:
+the singularity is on the positive real u axis, as H1 says; the fit's exponent is not determined (the ratios are not
+asymptotic within the orders computed), so whether it is a simple pole is not read. On the solution the same ratios
+point at u = 1 with exponent n − 1 (65.5, 57.2 and 69.5 at D 67.7, 60.0 and 72.4): the Tangherlini term
+(1 − u)^−(n−1) of the a field, far outside u₀, which is the mode H1 names.
+
+Reading. The series block's Newton basin is the set of iterates with u_pole > u₀, that is δ < δ_max(u₀) =
+exp(−(u₀ − R₀)(n − 1)/C), the last three columns: at D 73 an iterate must be within 3×10⁻¹² of the solution for the
+0.7 layout, 8×10⁻⁹ for 0.8, 4×10⁻⁷ for 0.85, against predictor errors of 10⁻⁹–10⁻⁶ per unit step (12.6): the walls
+of 12.7 in one formula. Extrapolated to D = 200 with C fixed and R₀ as 1/(n − 1) (the script's last line), δ_max is
+5×10⁻³¹, 3×10⁻²¹ and 2×10⁻¹⁶ for the three layouts: no predictor reaches it, and the layout that comes closest is the
+one whose pivots leave Δ undetermined (12.7). So the series cannot carry the branch to 200 in any layout, which is
+13.1's case for a block whose residual never evaluates the perturbed solution. T5 passes; T1–T4 follow in the
+prototype. Not established here: that the pole is the a-equation's (H1's mechanism as opposed to its law), which T2's
+basin test and the prototype's a-field profile near u_pole will show.
