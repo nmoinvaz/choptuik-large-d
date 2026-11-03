@@ -9365,3 +9365,34 @@ sigma_22 is the new K 45 coefficient. The (a) vs (b) 22-string compare waits for
 stage 2 ((b) --procs 3, then the two nodes --procs 2, under the mask) and T100's quarter step.
 util_report.py: 2026-11-03 13:00 UTC  cpu 8%  mem used 45.1 of 95.6 GB, free 50.4 GB, commit 50.9 of 101.6 GB.
 Pushed T99-win2 (bb6154c).
+
+== 2026-11-03 13:40 UTC win2
+Correction: my 12:37 and 13:34 posts were committed to the raw repo's comms.txt by mistake (a cd into the raw clone persisted
+through the heredoc). I have git-removed comms.txt from the raw repo (it belongs only here) and re-place the two entries below in
+their original wording, so they read out of order after the 13:00 entry. The wf 0.99 raw files were already in the raw repo from the
+13:00 push (bb6154c), which is the 13:34 entry's empty "Pushed" hash. No data was lost; only these two comms entries were misrouted.
+
+== 2026-11-03 12:37 UTC win2
+cpu 51%, free 10.1 GB.
+T99 trio: on the top order 45 (k 43 last printed, ~1.5 h on order 45), no JSON yet. Memory is at its order-45 products peak: free
+10.1 GB (the lowest so far), commit 93.0 of 101.6 GB (91%). Above the (a) guard's 5 GB, so I expect the trio to finish, but this is
+the tightest point; I am watching every 30 min now. If free < 5 the (a) guard drops (a) (the Mac's T102 replica covers it) and the
+two nodes continue; the monitor also watches mem_guard_a.log for the fire.
+util_report.py: 2026-11-03 12:37 UTC  cpu 51%  mem used 85.5 of 95.6 GB, free 10.1 GB, commit 93.0 of 101.6 GB.
+Pushed T99-win2 (d50b845).
+
+== 2026-11-03 13:34 UTC win2
+capacity: cpu 11%, free 65.4 GB.
+T99 wf 0.99 J 1250 ended ~13:00 UTC (861.7 min); all three trio runs are now done, stage 1 complete.
+wf 0.99 (sigF_w0.9900_K45_J1250_p1280.json, 861.7 min):
+  sigma_err_fit.py --a1-from scan39J1000 wf 0.99: exit 0, a1 = 44.127185481763.
+    k 19  (-1.8854371908881486933e-16 + 1.7574120026504357237e-16j)  err 1.142e-28  (4.43e-13 |sigma|)
+    k 20  (-1.9056066566181458225e-17 - 1.771869806514332509e-19j)   err 1.224e-29  (6.42e-13 |sigma|)
+    k 21  (-9.7972268586239198838e-19 - 9.3866034129920474177e-19j)  err 1.240e-30  (9.14e-13 |sigma|)
+    k 22  (-5.2880894193982202142e-21 - 9.3040184332180552966e-20j)  err 1.193e-31  (1.28e-12 |sigma|)
+    gate: err22 = 1.193e-31 = 1.28e-12 |sigma_22| vs 1e-10: PASS.
+  22-string vs T94-win2\scan43J1250 wf 0.99: 22 of 22 equal. fit_info 1_1 [12, inf, 0.0], 45_1 [7, 5.263256597069494e-30,
+  8.25602928729519e-308]. log_compare vs T94-win2\scan43J1250\w0.9900.log: identical at all 22 common orders (1..43), exit 0.
+T99 stage 1 (sigma_22 at K 45, J 1250) complete: wf 0.99 / 1.00 / 1.01 all gate-PASS (err22 1.2-1.6e-12 |sigma_22|), 22/22 strings
+and log_compare identical to the K 43 J 1250 end to end; sigma_22 new for the three wf. The (a) vs (b) 22-string compare waits for
+stage 2's (b). The wf 0.99 data is in bb6154c (13:00 push).
