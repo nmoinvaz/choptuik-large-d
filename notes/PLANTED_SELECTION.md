@@ -2993,7 +2993,7 @@ gave 22 of 22 on win and on the Mac); a differing string stops the K = 22 stages
 replica lands after them (the Mac sleeps, so it will), until the cause is recorded. Otherwise the replica enters no
 criterion and is reported as context in the convergence stage's report.
 
-**Stage 1 and the replica (2026-11-03 14:00 UTC):** the three J 1250 node files landed on win2 at about 13:00 UTC
+**Stage 1 and the replica (2026-11-03 13:37 UTC):** the three J 1250 node files landed on win2 at about 13:00 UTC
 (T99-win2/scan45J1250 at bb6154c, 860–862 min each on three processes under the affinity cap of 2026-11-03 02:13 UTC)
 and are copied into `scan45J1250/`. Ruling 1 on (a): `sigma_err_fit.py` exit 0, err22 = 1.297×10⁻³¹ = 1.43×10⁻¹²
 |σ₂₂|, a margin of 70 under 10⁻¹⁰ (a1 = 46.62 from the 960-bit scan39J1000 file); the nodes give 1.28×10⁻¹² (wf 0.99)
@@ -3012,7 +3012,7 @@ processes (expected 2026-11-04 about 08:00 UTC), followed by the J 1500 nodes at
 instruction of 2026-11-03 to reduce win2's CPU); ruling 2 and item 1(c) wait for it, and so do the K = 22 stages. The
 dry run (item 0) runs on the Mac after this commit; its reading follows here.
 
-**Amendment (2026-11-03 14:00 UTC), before any σ₂₂ estimate was computed: the Mac computes a replica of (b).** T102
+**Amendment (2026-11-03 13:37 UTC), before any σ₂₂ estimate was computed: the Mac computes a replica of (b).** T102
 ended and the Mac is free, so it runs pilot (b)'s command (wf 1.00, K 45, J 1500, 1280 bits, --procs 2) as T103,
 folder `T103-mac/scan45J1500`, with T102's role: its control is `log_compare.py` against the Mac's own K 43 J 1500 log
 `T94-mac/scan43J1500/w1.0000.log` within the first hour and at each post, at every common order up to 43, and against
