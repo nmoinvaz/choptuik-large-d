@@ -48,7 +48,7 @@ def load_state(path):
 def main():
     args = list(sys.argv[1:])
     opt = dict(state="T75/pin5_D71.0000.npz", N=24, hs="0.5,1,2", threads=4, mutate=0, it_max=8, tol=1e-25, eps="1e-16,1e-20",
-               kfreeze=0)
+               kfreeze=0, save_pred="")
     for flag in list(opt):
         f = "--" + flag
         if f in args:
@@ -147,6 +147,13 @@ def main():
             replanned = True
         Fp = float(rnorm(Fh, Fl))
         p = dict(h=h, D=D0 + h, F_pred_baseplan=Fp0, F_pred=Fp, replanned=replanned, Delta_pred=float(ph[-1] + pl[-1]))
+        if opt["save_pred"]:
+            # the predicted state (and the base state, the held harmonics' source) for the corrector diagnostics
+            path = f"{opt['save_pred']}_h{h:g}.npz"
+            require_raw(path)
+            np.savez(path, zh=ph, zl=pl, zh0=zh, zl0=zl, meta=json.dumps(dict(D=D0 + h, D0=D0, M=M, nodes=nodes, kt=kt, kc=kc,
+                                                                                ks=ks, kfreeze=kf, N=N, h=h)))
+            p["saved"] = path
         print(f"h {h}: predicted |F| {Fp0:.2e} with the base plan, {Fp:.2e} re-planned, Delta {p['Delta_pred']:.12f}", flush=True)
         if np.isfinite(Fp):
             t0 = time.time()
