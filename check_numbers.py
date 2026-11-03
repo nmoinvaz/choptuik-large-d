@@ -541,6 +541,23 @@ def large_d_walls():
             ("walls, 0.85 ladder", w["0.85 ladder"], 78.6, 0.1, [(Q, "left the branch at 76.5 and 78.6 along")]),
             ("linear zero, 4e-9 off", f["1e-04"]["D_zero_linear"], 128, 1, [(Q, "puts R at zero near D 128 for 4×10⁻⁹ off")])]
 
+
+@check
+def dropoffs():
+    """README, "Where the drop-offs are": u*kappa's slope and crossings (hp/data/dropoffs.json, written by hp/plot_dropoffs.py
+    from the raw-data repository's T76 records): the full system's fit n^38.9 crossing 1 at D 59.9, u*kappa at 67.74, the
+    pinned systems' predicted crossings and quad-double's."""
+    J = json.load(open(os.path.join(ROOT, "hp/data/dropoffs.json")))
+    R = "README.md"
+    return [("u kappa slope", J["slope"], 38.9, 0.1, [(R, "grows\n  like n^38.9 and reaches 1 at D = 59.9")]),
+            ("u kappa = 1, double-double, full system", J["cross_dd"], 59.9, 0.1,
+             [(R, "the fit below puts u·κ = 1 at 59.9"), (R, "like n^38.9 and reaches 1 at D = 59.9")]),
+            ("u kappa at 67.74", J["u_kappa_67_74"], 168, 1, [(R, "(u·κ = 168 at 67.74)"), (R, "it is 1.7 at the stall at 60.96 and 168 at 67.74")]),
+            ("u kappa = 1, pin 9", J["pinned"]["9"]["D_cross"], 79, 1, [(R, "u·κ reaches 1 at D = 79 with harmonics 11–13 held")]),
+            ("u kappa = 1, pin 7", J["pinned"]["7"]["D_cross"], 94, 1, [(R, "94 with 9–13 held")]),
+            ("u kappa = 1, pin 5", J["pinned"]["5"]["D_cross"], 113, 1, [(R, "113 with 7–13 held")]),
+            ("u kappa = 1, quad-double, full system", J["cross_qd"], 372, 1, [(R, "372 for the full system in quad-double")])]
+
 @check
 def k21_stages():
     """notes/PLANTED_SELECTION.md sections 13.2-13.10: the K = 21 stages ("K21 converge", "K21 plants check", "K21 real",

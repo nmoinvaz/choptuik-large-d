@@ -812,6 +812,19 @@ residual was at most 1.4×10⁻⁵ (62) or 2.2×10⁻⁵ (64) converged and ever
 precision limit: past D ≈ 60 double-double cannot resolve the weakest direction at all (below, "Why the solver
 stalls").
 
+![The drop-offs of the continuation's step, and the precision wall behind them: each run's step in D with the stalls at 35.2, 60.96 and 67.78 named, and below it u times kappa at converged states with the full system's fit crossing 1 at D 59.9 and the pinned systems' crossings predicted at 79, 94 and 113](hp/large_d_dropoffs.svg)
+
+**Where the drop-offs are, and where the next ones would be** (`hp/plot_dropoffs.py`, from the same T76 records as the
+next figure). A run's step collapses at a precision wall: where u·κ for the harmonic set it keeps reaches about 1. That
+happened at D = 35.2 with every harmonic kept and at 60.96 with harmonics to 13 (the fit below puts u·κ = 1 at 59.9);
+T48 ran past the wall to 67.78 with the harmonics held on their trend (u·κ = 168 at 67.74). The other dips
+are not walls: at 45.3 a cloud run stopped with its sensitivity and residual floor unchanged and the next run continued
+at once, and below D = 27 the dips are the f64 solver's own limits ([solver/CONTEXT.md](solver/CONTEXT.md)). With the
+same slope, u·κ reaches 1 at D = 79 with harmonics 11–13 held, 94 with 9–13 held and 113 with 7–13 held, and at
+372 for the full system in quad-double; the pinned runs stopped before that, at 73.3 and 78.1, at the horizon block
+([notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md) 12.4 and 12.7). So the walls belong to the formulation and the arithmetic,
+not to the solution: Δ(D) is smooth through every one of them, and each wall moved when the method changed.
+
 ![Where double-double runs out: u times kappa against D for the full system, crossing 1 near D = 60 at the stalls, and for the pinned systems 8 to 11 orders lower; below, the residual each state reached following the rounding floor u sigma_max |z|](hp/stall_kappa.svg)
 
 **Where double-double runs out** (`hp/plot_stall_kappa.py`, from the stall detector's runs in folder `T76` of the raw-data repository:
@@ -908,7 +921,7 @@ What the solver has shown:
   σ_min falls like n^−20.8 (to 4% at 9 points) and σ_max grows like n^18.1. Since ∂Δ/∂F is a row of J⁻¹,
   σ_min ≤ 1/max|∂Δ/∂F| (proved), and in fact σ_min·max|∂Δ/∂F| stays between 6.5 and 9.5×10⁻⁹, so the sensitivity
   in the CSV tracks the weakest direction. The product u·κ, with u = 2⁻¹⁰⁴ double-double's unit roundoff, grows
-  like n^38.9 and reaches 1 at D = 59.9 (numerical evidence): it is 1.7 at the stall at 60.96 and 170 at 67.74,
+  like n^38.9 and reaches 1 at D = 59.9 (numerical evidence): it is 1.7 at the stall at 60.96 and 168 at 67.74,
   where T48 stopped. A backward-stable solve's error relative to the solution is about u·κ[^21], so beyond D ≈ 60 a
   double-double Newton step's error along the weakest direction can be as large as the step, and the convergence
   theorem for inexact Newton methods, which needs each solve's relative residual to stay uniformly below 1[^22], no
