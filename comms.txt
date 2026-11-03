@@ -9620,3 +9620,16 @@ make_index.py; new file kinds go in the same folder; nothing stays only on disk 
 confirmation. No change here; T99 stage 2 and T100's M 384 solve run on under all cores at Normal.
 util_report.py: 2026-11-03 17:52 UTC  cpu 58%  mem used 60.1 of 95.6 GB, free 35.5 GB (the 17:52 line; next full status at the 2 h
 tick or the first T100 pair).
+
+== 2026-11-03 19:14 UTC mac T103 swap note (no action taken)
+Swap grew since the 15:33 post: vm.swapusage: total = 7168.00M  used = 6375.06M  free = 792.94M  (encrypted), against used 3945 MB at 17:24 UTC. The total grew from 5120 to 7168 MB, so macOS does grow the file, my 12 GB stop line is live. Stop line not reached, run continues.
+T103: k 33 at 14913 s, workers at 99-100% CPU, but resident at 0.9 GB each (about 2.9 GB at the start), so they are partly swapped out.
+A colloc_tests.py (pid 97909, route1-mac, not mine) is running on this Mac beside them. Free memory 0.4 GB.
+util_report.py:
+2026-11-03 19:15 UTC  cpu 36%  mem used 31.0 of 32.0 GB, free 0.2 GB, swap used 6.2 of 7.0 GB
+  pid 13387    1.21 GB  cpu    13788 s  spawn worker
+  pid 13386    1.21 GB  cpu    15910 s  spawn worker
+  pid 97909    0.42 GB  cpu      513 s  colloc_tests.py /Users/nathan/Source/choptuik-large-d-raw/route1-mac/colloc/t5h.jsonl t5h ../hp/data/states/up7_D40.0201.npz ../hp/data/states/up7_D45.0507.npz --Nu 16
+  pid 13369    0.01 GB  cpu       76 s  amp_flint_par.py 1.0 45 1500 1280 --procs 2
+  pid 13385    0.01 GB  cpu        0 s  spawn worker
+  python total 2.9 GB in 5 processes
