@@ -1275,7 +1275,7 @@ then the hybrid is dropped too. If it passes, the kernel work is the collocation
 two-stage step in `scan_hp.py`, checked at D 60–73 against the stored states before any point past 78, with the
 ceiling of 13.6 read before the layout is chosen.
 
-### 13.9 Route 1b fails its first measurement: the collocation does not determine the horizon data (2026-11-03 19:25 UTC)
+### 13.9 Route 1b fails: the collocation does not determine the horizon data (2026-11-03 19:25 UTC)
 
 `colloc_tests.py t5h` at D 40.02, N_u = 16, the mass direction (`route1-mac/colloc/t5h.jsonl`, `t5h.log`; stopped after
 these two starts, which decide it, to free the Mac's memory for T103):
