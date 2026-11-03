@@ -9334,3 +9334,34 @@ are the memory peak; free 12.7 GB is the sawtooth low, above the (a) guard's 5 G
 The three runs end after order 45 (a few hours); then their end posts, stage 2 ((b) --procs 3, then the two nodes --procs 2), and
 T100's quarter step.
 Pushed T99-win2 (e470bbd).
+
+== 2026-11-03 13:00 UTC win2
+capacity: cpu 8%, free 50.4 GB (two trio runs done; stage 2 and T100 will fill it after wf 0.99).
+T99 stage 1: wf 1.00 (a) and wf 1.01 J 1250 ended ~13:00 UTC; wf 0.99 still on order 45. The order-45 memory peak passed without the
+(a) guard firing (free bottomed 10.1 GB, now 50.4 GB).
+
+wf 1.00 (a) (sigF_w1.0000_K45_J1250_p1280.json, 860.9 min):
+  sigma_err_fit.py --a1-from scan39J1000 wf 1.00: exit 0, a1 = 46.6227605475693.
+    k 19  (-1.7398705530218642941e-16 + 1.8204762245576625758e-16j)  err 1.247e-28  (4.95e-13 |sigma|)
+    k 20  (-1.857916119116969641e-17 + 9.1236163749049758769e-19j)   err 1.335e-29  (7.18e-13 |sigma|)
+    k 21  (-1.0076599969545273599e-18 - 8.5754512179515557728e-19j)  err 1.351e-30  (1.02e-12 |sigma|)
+    k 22  (-1.0524045221456612579e-20 - 9.0181465233453892797e-20j)  err 1.297e-31  (1.43e-12 |sigma|)
+    gate: err22 = 1.297e-31 = 1.43e-12 |sigma_22| vs 1e-10: PASS.
+  22-string vs T94-mac\scan43J1250 wf 1.00: 22 of 22 equal. fit_info 1_1 [12, inf, 0.0], 45_1 [7, 6.0478558150359794e-30,
+  2.0942137282010143e-306]. log_compare vs T94-mac\scan43J1250\w1.0000.log: identical at all 22 common orders (1..43), exit 0.
+
+wf 1.01 (sigF_w1.0100_K45_J1250_p1280.json, 860.4 min):
+  sigma_err_fit.py --a1-from scan39J1000 wf 1.01: exit 0, a1 = 49.2619338755261.
+    k 19  (-1.5938905230187631094e-16 + 1.873684317260655231e-16j)   err 1.362e-28  (5.54e-13 |sigma|)
+    k 20  (-1.804973102108868983e-17 + 1.9488798967780413342e-18j)   err 1.455e-29  (8.02e-13 |sigma|)
+    k 21  (-1.0301779005933135974e-18 - 7.7674058526868693751e-19j)  err 1.470e-30  (1.14e-12 |sigma|)
+    k 22  (-1.5461948945375185363e-20 - 8.7086582629044377998e-20j)  err 1.410e-31  (1.59e-12 |sigma|)
+    gate: err22 = 1.410e-31 = 1.59e-12 |sigma_22| vs 1e-10: PASS.
+  22-string vs T94-win2\scan43J1250 wf 1.01: 22 of 22 equal. fit_info 1_1 [12, inf, 0.0], 45_1 [7, 6.946605280976776e-30,
+  5.154785354187006e-305]. log_compare vs T94-win2\scan43J1250\w1.0100.log: identical at all 22 common orders (1..43), exit 0.
+
+Both gates pass (err22 ~1.4-1.6e-12 |sigma_22|), 22/22 strings equal to the K 43 J 1250, log_compare identical at all 22 orders;
+sigma_22 is the new K 45 coefficient. The (a) vs (b) 22-string compare waits for stage 2's (b). wf 0.99's end post follows, then
+stage 2 ((b) --procs 3, then the two nodes --procs 2, under the mask) and T100's quarter step.
+util_report.py: 2026-11-03 13:00 UTC  cpu 8%  mem used 45.1 of 95.6 GB, free 50.4 GB, commit 50.9 of 101.6 GB.
+Pushed T99-win2 (bb6154c).
