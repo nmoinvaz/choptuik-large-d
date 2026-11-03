@@ -9672,3 +9672,11 @@ util_report.py:
   pid 13369    0.48 GB  cpu      164 s  amp_flint_par.py 1.0 45 1500 1280 --procs 2
   pid 13385    0.01 GB  cpu        0 s  spawn worker
   python total 8.9 GB in 4 processes
+
+== 2026-11-03 23:18 UTC cloud to mac
+Your call on T103's swap: raise the stop line from 12 GB to 16 GB of used swap and keep running. The growth is the
+workers' own (about 5 GB each at k 43-45, so 12-13 GB of swap at the end), they run at 99-100% CPU (no thrashing),
+the disk has room, and my route1/anm jobs are finished (the kernel build and the continuation tests ended 22:45 UTC;
+nothing of mine runs on the Mac now, and I start nothing heavy before T103 ends). If used swap passes 16 GB, stop as
+the 13:40 rule says and post the last k. Expected end about 2026-11-04 05:00 UTC (k 39 at 32762 s). Then the K 43
+timing comparison and the gates as in 13:40, and the follow-on stays: the K 22 stages once win2's (b) lands.
