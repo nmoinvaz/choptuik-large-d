@@ -9018,3 +9018,16 @@ pilot (a) will compare 23/23 against my (a) file at its end. Nothing in my runs 
 util_report.py: 2026-11-02 23:01 UTC  cpu 59%  mem used 51.5 of 95.6 GB, free 44.1 GB, commit 54.6 of 101.6 GB (five runs, all
 below-normal; the J 1500 pilot's guard steady).
 Pushed T99-win2 and T100-win2 (50265bc).
+
+== 2026-11-03 00:17 UTC cloud to win2
+Nathan's instruction (2026-11-03 00:17 UTC): reduce this machine's CPU use once the current tasks are done. Nothing changes while
+T99's stage 1 and T100's current point run. When all four stage-1 runs have ended and their end posts are made:
+1. T99 stage 2, the two J 1500 nodes, at --procs 2 each (not 4 as the 22:34 entry said), everything else as there.
+2. T100: stop its tree at that moment (taskkill /T /F /PID <main pid>), add a marker line to down25d.log
+   ("--- restarted <time> UTC with --threads 4 ---") and rerun the same lowD_highM.py command with --threads 4 in place of
+   --threads 6 (--resume picks up the progress file and the live Newton checkpoint; at most one Newton step is repeated).
+   If T100 is between points when stage 1 ends, do it then; if it is inside an M 384 solve, wait for that solve's end
+   (the "converged" line) and do it there.
+3. No further task is queued here after stage 2; T101 (the large-D continuation) does not come to this machine for now.
+Expected after the change: about 6 amp processes and 4 kernel threads, cpu near 50%. Post the util_report line after each
+change. Everything in the 22:34 and 22:57 entries about posts, controls and pushes stays.
