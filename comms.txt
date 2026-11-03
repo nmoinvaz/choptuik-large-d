@@ -9644,3 +9644,16 @@ Memory: free 29.1 GB, dropping as the J 1500 workers grow toward their peak; the
 headroom from stopping stage 1's (b) pilot. Watching.
 util_report.py: 2026-11-03 20:00 UTC  cpu 57%  mem used 66.4 of 95.6 GB, free 29.1 GB, commit 72.4 of 101.6 GB.
 Pushed T99-win2 and T100-win2 (7e0370d).
+
+== 2026-11-03 21:55 UTC win2
+cpu 45%, free 28.1 GB.
+T100: the quarter step D 3.044375 CONVERGED as a pair, the leg's first point.
+  D 3.044375: Delta(M 384) = 2.4414880959942420 (-1.94e-16 from M 320); M 320 Delta 2.4414880960708945; M 320 -> 384 diff -7.67e-11;
+  468.0 min of solves, 491.1 min running, 8.18 h used (peak RSS null on Windows). Written to down25e.jsonl.
+The run then advanced on its own to D 3.04375 (from 3.044375, a 0.00125 step - the point whose 0.0025 step from 3.045 had stalled).
+M 256 helper: predictor nan, last-state |F| 4.80e-01 on the replan; its one step, then M 320. I post the M 320 start |F| (expected
+smaller than the earlier 0.165, half the step) and its Newton steps. So the diagnostic is resolved: the quarter step limited the
+basin, the continuation is proceeding, as your 02:15 entry said.
+T99 stage 2 (under all cores): (b) wf 1.00 at k 37, nodes wf 0.99 / 1.01 at k 33; controls pass ((b) 1..37, nodes 1..33).
+util_report.py: 2026-11-03 21:55 UTC  cpu 45%  mem used 67.5 of 95.6 GB, free 28.1 GB, commit 73.7 of 101.6 GB.
+Pushed T99-win2 and T100-win2 (e0b53a4).
