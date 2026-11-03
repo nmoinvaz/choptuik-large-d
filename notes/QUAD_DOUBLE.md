@@ -1294,3 +1294,29 @@ the horizon data to the series' basin, is false at the smallest ε tried, and th
 kind, D 45) cannot repair it. Route 1b is dropped; with 13.7 the collocation treatment of the horizon is closed, and
 the large-D record stands at D 78 with the formula's extrapolation beyond it under its stated assumption (README,
 "What the horizon block's wall is").
+
+### 13.10 The literature search (2026-11-03 20:00 UTC)
+
+At the author's request a research subagent searched the literature for a way past the wall; its report is
+`notes/LARGE_D_LITERATURE.md`. Its verdict agrees with 13.7 and 13.9: no published method imposes analyticity at a
+regular singular point whose exponents are large and positive; the singular-BVP collocation theory (de Hoog–Weiss,
+Koch) admits the u^{s} branches as solutions fixed by the far boundary, which is 13.2 with theory attached; the
+critical-collapse codes impose Taylor conditions of order 2–3 at the light cone, sufficient only while the exponent is
+below that order (Ecker et al. meet the mechanism at D = 5 and say so); no group has a discretely self-similar solution
+past D = 14; the large-D effective theory fixes Δ at no order and cannot supply a guess. It also derives 13.6's law:
+a relative mass error δ at the horizon is δ x^{−(n−1)} inside, the Tangherlini term, and b = g_rr blows up where it
+reaches order one, u_pole = ln(1/δ)/(n − 1): C = 1 and R₀ = 0 at leading order against the measured 0.87–0.92 and
+−2.6/(n − 1). The basin is "no trapped surface before the matching node", a property of the equations.
+
+Two leads survive, both on the predictor's side, neither measured: (i) high-order Taylor continuation in D (the
+asymptotic numerical method: the branch's Taylor coefficients in D to order N from one Jacobian factorisation and N
+right-hand sides formed with truncated-power-series arithmetic through the residual), whose predictor error is
+(h/R_D)^{N+1} with R_D the branch's radius of convergence in complex D; 13.6's requirement at D = 200 is then
+(N + 1) ln(R_D/h) ≥ 69, so N = 30 with h = R_D/10. R_D is unmeasured; the formula's analytic structure (poles at
+D = −3.2 and −11.0 in Δ) suggests R_D of order D + 3 for Δ, which would make the step about 8 and the road to 200
+some fifteen steps, if the full state shares it. (ii) Analytic continuation of the horizon series past its pole
+(Fornberg–Weideman), costly in digits (about 130 in the horizon block for a 10⁻⁶ predictor at D = 200) and dependent
+on the pole's nature, unread. And one cheap idea from the derivation: the pole is driven by the mass-mode content of
+the data error alone, so adjusting the predicted a_h to maximise the series' radius before Newton might remove it;
+untested, a prototype test on the stored states. Order of work, if the author wants large D pursued: that cheap test
+first; then R_D from the stored states; then the kernel work for (i) only if R_D is large.
