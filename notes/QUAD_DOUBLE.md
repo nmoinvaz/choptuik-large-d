@@ -998,3 +998,144 @@ puts R at zero near D 128 for 4×10⁻⁹ off, where no node placement helps. Ei
 which is the collocation route of 12.6. Caveats: nine points at D 40 to 73 extrapolated to 200 (the power law and the
 linear reading differ by a factor 2 in R at 200); the deviation scale 4×10⁻⁵ per unit of dD is 12.2's estimate; the
 iterates' deviation during a continuation was not measured, only bracketed by the stall.
+
+## 13. Route 1: the horizon block as a collocation in u (design, 2026-11-03, before any code)
+
+The author's choice of 2026-11-02 ("1"): replace the horizon series by a collocation in u = 1 − x on the last segment,
+with the regularity condition imposed at the horizon itself (12.6, 12.7). This section fixes what is built, why, and
+the tests that decide, before any kernel code; the tests' pass criteria are written here first.
+
+### 13.1 What the series block does, and the two mechanisms behind the walls
+
+The horizon block (`model.rs`, `horizon_series`; the same recurrence in `solver/dss.py`, `ssh_series`) takes the
+horizon data m_h(τ), a_h(τ) and Δ, fixes c(1) = 1 (the gauge) and p(1) by the periodic solve of the p-equation's limit
+at the horizon (order 0 of the recurrence), continues all four fields as a Taylor series in u to order ks, and sums it
+at u₀ = 1 − x_last, where the 4M matching rows compare it with the last node's unknowns. Two things were measured:
+
+1. **The series' radius for data off the solution** (12.2, 12.4): on the solution the terms converge (radius 0.75 at
+   D = 60, 0.56 at 73.27, against u₀ = 0.30); for data δ off it the radius falls with log δ and with D, through u₀ at
+   D ≈ 50 for δ = 10⁻⁴ and D ≈ 80 for δ = 4×10⁻¹³, and the block's residual at the predicted state explodes (12.2's
+   table, 10¹⁵ to 10²⁴ at dD = 10⁻⁴). At D = 73.27 the radius moves 0.05 per factor 100 in δ (0.32, 0.27, 0.22, 0.17
+   for δ = 10⁻⁸ … 10⁻²), and read to the double-double rounding of the converged state (δ ~ 10⁻¹⁷) that line gives
+   0.55, the measured on-solution 0.56; at D = 40.02 the same reading overshoots (0.86 against 0.73). The mechanism
+   this suggests, **H1**: the perturbed data excite the mass mode μ x^−(n−1), which grows inward as (1 − u)^−(n−1) and,
+   through the a-equation's a² terms, gives the perturbed solution a pole at u_pole ≈ R₀ + C ln(1/δ)/(n − 1), a
+   genuine singularity of that solution, not of the series. If H1 holds, any formulation that *evaluates* the
+   perturbed solution at u₀ (the series summed there; a Taylor path marched from the horizon) hits the pole: Newton's
+   basin is the set of data with u_pole > u₀, which shrinks exponentially with D. A collocation never evaluates the
+   perturbed solution: its residual is the mismatch of the field equations at the points for whatever polynomial the
+   unknowns describe, finite for every iterate, and Newton's basin is the ordinary quadratic one. That is the case for
+   the route, and T2 and T5 below test it.
+2. **The near-singular direction** (12.3, 12.7): the global Jacobian's smallest pivots are 10⁻¹⁵–10⁻¹⁶ with the last
+   node at 0.7, 10⁻²⁰–10⁻²¹ at 0.8 and 10⁻²²–10⁻²⁵ at 0.85 (D 76–78), and Δ drifts along that direction. The
+   p-equation's coefficient (x − c) vanishes at the horizon, so x = 1 is a regular singular point for p
+   (BEYOND_LIGHT_CONE 2.3): the recurrence's operator at order k is ωD + κ_k with κ_k = (k + 1)(1 + c₁) − n/2 and
+   c₁ = (n − 1)(1 − a_h²) (`horizon_lus`), so the singular solutions behave as u^{s_j} e^{ijωτ} with
+   s_j = n/(2(1 + c₁)) − 1 − ijω/(1 + c₁), Re s ≈ (D − 4)/2 (≈ 35 at D 73). They are C^⌊Re s⌋ at the horizon: no
+   condition of finite order there excludes them, only analyticity does. Their size at the last node relative to their
+   size further in is u₀^{Re s}: 0.3³⁵, 0.2³⁵ and 0.15³⁵ are 10⁻¹⁸, 10⁻²⁴ and 10⁻²⁹, the measured pivots' spacing of
+   about five decades per layout step. **H2**: the flat direction is the regularity mode, invisible at the last node
+   by u₀^{Re s}. If H2 holds, the node should move *away* from the horizon, not toward it (u₀ = 0.5 gives 0.5⁹⁸ =
+   3×10⁻³⁰ at D = 200, 0.7 gives 6×10⁻¹⁶), which the series cannot do (its on-solution radius at D = 200 is 0.41 by
+   12.7's power law) and a collocation on [0, u₀] can, since polynomial interpolation on an interval converges for a
+   function analytic in a Bernstein ellipse around it, not in a disc about u = 0 (the on-solution singularities are a
+   complex pair at |u| ≈ 0.6–0.8, BEYOND_LIGHT_CONE 2.3; for the interval [0, 0.7] and a singularity at that
+   distance the rate is about 4 per point, 30 digits in 50 points). T3 tests H2.
+
+The series-at-small-u variant (sum the series at u_s = 0.05, where even perturbed data converge, and Taylor-step to
+u₀) is rejected without a test: marching outward from u_s amplifies the regularity modes by (u₀/u_s)^{Re s}, 10²⁷ at
+D = 73 for u₀ = 0.3, so the double-double rounding of the series' values at u_s reaches 10⁻⁵ at the node. The series
+summed at u₀ has no such step: it is the analytic continuation itself, which is why it is exact when it converges.
+
+### 13.2 The formulation
+
+On the last segment, u ∈ [0, u₀], the four fields are polynomials in u of degree N_u − 1 per τ-harmonic, held by their
+values at the Chebyshev–Gauss–Lobatto points u_i (u₀ = 0 the horizon, u_{N_u−1} = u₀ the last node); the τ-derivative
+is the harmonic multiplication as everywhere else, the u-derivative the dense Chebyshev differentiation matrix. The
+field equations in u (x = 1 − u, ∂_x = −∂_u):
+
+```
+−(x − c) p_u = −p_τ + c_x p − c p/x + n c (p + m)/(2x)        (singular at u = 0: x − c = −(1 + c₁) u + O(u²))
+−(x + c) m_u = −m_τ − c_x m + c m/x − n c (p + m)/(2x)
+−a_u = a [ (p² + m²) + (n − 1)(1 − a²) ] / (2x),   −c_u = c (n − 1)(a² − 1) / x
+```
+
+Rows and unknowns, per harmonic (M harmonics; B lanes of 8 as in the kernel):
+
+| field | unknowns | rows | where |
+|---|---|---|---|
+| p | N_u | N_u | the equation at u_1 … u_{N_u−1}; at u = 0 its limit, −p_τ + c_x p − p + n(p + m)/2 = 0, the periodic solve the series' order 0 does |
+| c | N_u − 1 (c(0) = 1 fixed) | N_u − 1 | the equation at u_1 … u_{N_u−1} |
+| a | N_u | N_u − 1 | the equation at u_1 … u_{N_u−1}; a(0) = a_h is free (the horizon datum) |
+| m | N_u | N_u − 1 | likewise; m(0) = m_h free |
+
+The values at u_{N_u−1} *are* the last node's unknowns (the node is absorbed into the block; segment K − 1 takes its
+initial data from them as now), so the block replaces m_h, a_h (2M unknowns) and the 4M horizon matching rows by
+4M N_u − M unknowns and 4M N_u − 2M rows: the same net count, −2M, the gauge and the regularity. The Jacobian of the
+block is sparse: a row couples its own point's four fields across all harmonics (the products, 4M entries) and its own
+field and harmonic across the N_u points (the derivative), about 4M + N_u entries per row; the kernel's tangent lanes
+give its columns as for any block (an unknown's column is the derivative row's column plus the products' local terms),
+and the quad-double residual is formed as for the other blocks. The global system grows from 4M(K + 1) + 1 to about
+4M(K + N_u) + 1 unknowns; at the large-D harmonic counts (M = 16–32, 12.3) and N_u = 50 that is 7000–14000, a dense
+double-double LU of 10¹¹–10¹² operations per Newton step, minutes on win2; a Schur complement of the block onto its
+two end points brings it back to the present size and is the second version, after the first has been measured
+(13.3's risk is a reason to keep the block's unknowns global at first). The residual costs N_u products per field
+against the series' ks orders of convolutions: comparable or less.
+
+### 13.3 What a collocation cannot do, and what that implies
+
+It cannot impose analyticity. The singular solutions u^{s_j} with Re s ≈ 35 are C³⁵ at the horizon and representable
+by the polynomials to about 10⁻⁷⁰ (the Chebyshev coefficients of u^α fall as N^−(2α+1)); the row at u = 0 is satisfied
+by them, as is every derivative condition up to order ⌊Re s⌋. So the discrete system does not exclude them at the
+horizon. The series excludes them by construction. In the collocation, their amplitude is fixed by the interior
+matching, where they are visible after growing by (u/u₀)^{Re s} between the node and the match point (10¹² for
+u₀ = 0.3 at D = 73), which is the same mechanism that makes the series layouts' pivots small, now acting on an explicit
+unknown. Whether this leaves the global Jacobian's spectrum as it is (the same count of singular values below 10⁻¹⁰,
+H2) or adds M near-null directions (the formulation fails) is T3, and the route stops there if it fails; no local
+cure at the horizon exists, because no finite-order condition sees the modes.
+
+What the route does not change: the residual floor of the mass mode, G = x_m^−(n−1) between the horizon and the
+match point (`model.rs`, HALPHA_ON; LARGE_D_MIXED 10), is the problem's conditioning, not the block's. The choice of
+x_last then trades G (smaller for x_last near 1) against the regularity mode's visibility u₀^{Re s} (larger for
+x_last far from 1); T3 measures the product, and the layout for the continuation is read off it, not chosen.
+
+### 13.4 Tests, in order, with their pass criteria
+
+All before kernel code, in `solver/dss.py`'s framework (f64, n = D − 2, RK4 segments, the same horizon recurrence),
+as `solver/dss_colloc.py`: a subclass whose horizon block is 13.2's, N_u a parameter, everything else shared. Its
+f64 floor at D is G × 10⁻¹⁶ (2×10⁻⁹ at D = 50, x_m = 0.7), which bounds what the agreement tests can see.
+
+- **T1, consistency.** At D = 10, 20, 40, 50 the converged series solution, evaluated at the points by the series
+  itself, gives a collocation residual at the f64 floor for N_u = 24, 32, 48, and the residual's convergence in N_u is
+  geometric. Fail: a residual above 10× the floor at N_u = 48.
+- **T2, the basin (H1, the case for the route).** At D = 40 and 50, from the converged state with (m_h, a_h) moved
+  by δ = 10⁻⁶, 10⁻⁴, 10⁻³, 10⁻² (a random harmonic vector, and the mass direction a_h → a_h(1 + δ)): the series block
+  must reproduce 12.2 (a residual that explodes or is not finite at δ ≥ 10⁻³ at D = 50; this is the control, and
+  the prototype is wrong if it does not fire); the collocation block must converge from every δ ≤ 10⁻² to the same
+  Δ within 10× the floor, with the last two steps quadratic. Fail: a start the series survives and the collocation
+  does not, or any δ ≤ 10⁻² from which the collocation does not converge.
+- **T3, the pivots (H2).** The smallest singular values of the global Jacobian at the solution, both blocks, layouts
+  x_last = 0.7, 0.8, 0.85, and 0.6, 0.5 for the collocation; D = 20, 40, 50. Pass for H2: σ_min scales as u₀^{Re s}
+  with Re s from 13.1's formula at the state's a_h, within a factor 10 across the layouts. Pass for the formulation:
+  the number of singular values below 10⁻¹⁰ (f64) is the same for both blocks at the same layout. Fail: M more of them
+  in the collocation (13.3's risk; the route stops).
+- **T4, agreement and controls.** Δ at D = 10, 20, 40, 50 from the two blocks agrees within 10× the floor at N_u = 48,
+  and the change from N_u = 32 to 48 is below it. Mutations, each of which must fire: the sign of n c(p + m)/2 flipped
+  in the row at u = 0 (Δ moves beyond the tolerance); the gauge row dropped (the Jacobian singular); the derivative
+  matrix transposed (T1 fails).
+- **T5, the pole (H1's mechanism, with the series alone, no new solver).** At D = 40, 50, 60, 73 (the stored states of
+  T75/T84, the double-double series in `horizon_radius.py`'s setting): for δ = 10⁻⁸ … 10⁻², the radius from the
+  late-order ratio test against ln(1/δ)/(n − 1), and the sign and position of the nearest singularity by a Domb–Sykes
+  plot (a real pole on the positive u axis is H1; a complex pair is not). Pass: a line in ln(1/δ) with slope within a
+  factor 2 of C/(n − 1) for one C across the four D. This test is independent of T2 and runs first, on the Mac.
+- **T6, the kernel.** Only after T1–T5: the block in `hp/src` at double-double, with T1 and T4 repeated at D = 40,
+  50, 60, 67.74, 73.27 against the stored series states (the block's residual on them, Δ within each layout's quoted
+  precision, 12.3), and 12.2's dD-response table repeated (the block at D + 10⁻⁶, 10⁻⁴: linear in dD or the route
+  has not removed the wall). Then one continuation past 78 in the layout T3 selects, on win2 when the author's CPU
+  instruction allows, with the quad-double residual.
+
+### 13.5 Order of work and cost
+
+T5 first (a day of the Mac, coordinator's script on the stored states), T1–T4 in the prototype (one to two days of
+coordinator work, minutes of compute at M = 16–32), then T6 (three to five days of kernel work, each step with its
+control). Nothing in this section is read as a result; the first number from it is T5's.
