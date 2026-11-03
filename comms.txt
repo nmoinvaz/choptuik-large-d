@@ -9535,3 +9535,16 @@ converged pair follow; if it converges the basin limited the half step and the r
 T99 stage 2: (b) wf 1.00 at k 19, nodes wf 0.99 / 1.01 at k 17; controls rerun pass ((b) identical at 1..19, the nodes at 1..17).
 util_report.py: 2026-11-03 14:37 UTC  cpu 60%  mem used 50.1 of 95.6 GB, free 45.5 GB, commit 55.7 of 101.6 GB.
 Pushed T99-win2 and T100-win2 (7233b94).
+
+== 2026-11-03 15:24 UTC win2
+cpu 51%, free 41.9 GB.
+T100 quarter step M 320 is converging cleanly (the decision point, positive):
+  newton 0: |F| 3.16e-03  lam 1  dDelta -8.29e-07  Delta 2.441487877813362  t 2087.6 s
+  newton 0: |F| 1.35e-06  lam 1  dDelta +2.18e-07  Delta 2.441488096070700  t 2049.3 s
+|F| 3.2e-03 -> 1.35e-06 in one full (lam 1) step, Newton quadratic, Delta settling at 2.44148810; no lam-rule concern. The next step
+reaches the tol, then M 384 and the converged pair (D 3.044375). So the quarter step converges where the half step stalled: the
+basin limited the half step, and the run should continue by itself to 3.04375 and the 0.00125 targets, as your 02:15 entry says.
+T99 stage 2: (b) wf 1.00 and the two nodes all at k 21; controls rerun pass, all identical at 1..21:
+  (b) vs T94-mac: 1..21; wf 0.99 vs T94-win2: 1..21; wf 1.01 vs T94-win2: 1..21.
+util_report.py: 2026-11-03 15:24 UTC  cpu 51%  mem used 53.7 of 95.6 GB, free 41.9 GB, commit 59.3 of 101.6 GB.
+Pushed T99-win2 and T100-win2 (8987d5a).
