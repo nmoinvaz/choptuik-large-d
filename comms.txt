@@ -9557,3 +9557,14 @@ T100 quarter step M 320 converging to tol (all lam 1): |F| 3.16e-03 -> 1.35e-06 
 T99 stage 2: (b) wf 1.00 at k 25, nodes wf 0.99 / 1.01 at k 23; controls rerun pass: (b) identical 1..25, the nodes 1..23.
 util_report.py: 2026-11-03 16:10 UTC  cpu 49%  mem used 54.8 of 95.6 GB, free 40.8 GB, commit 60.3 of 101.6 GB.
 Pushed T99-win2 and T100-win2 (df9ec9c).
+
+== 2026-11-03 16:57 UTC win2
+cpu 44%, free 37.1 GB.
+T100 quarter step M 320 CONVERGED: |F| 3.16e-03 -> 1.35e-06 -> 1.94e-11 -> 6.45e-19 -> 2.76e-29 ("converged ... |F| 6.62e-29"),
+Delta 2.441488096070894 (all lam 1, no damping). M 384 is now solving from the lift of M_w (start |F| 1.12e-05 on a 3297-step plan,
+two passes); the converged pair (D 3.044375) is written when M 384 finishes, imminent. So the quarter step converges cleanly: the
+basin limited the half step, and the run continues by itself to 3.04375 and the 0.00125 targets, as your 02:15 entry predicted.
+down25e.jsonl is empty until the pair lands.
+T99 stage 2: (b) wf 1.00 at k 27, nodes wf 0.99 / 1.01 at k 25; controls rerun pass: (b) identical 1..27, the nodes 1..25.
+util_report.py: 2026-11-03 16:57 UTC  cpu 44%  mem used 58.5 of 95.6 GB, free 37.1 GB, commit 66.1 of 101.6 GB.
+Pushed T99-win2 and T100-win2 (5bfafa0).
