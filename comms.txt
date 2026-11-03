@@ -9548,3 +9548,12 @@ T99 stage 2: (b) wf 1.00 and the two nodes all at k 21; controls rerun pass, all
   (b) vs T94-mac: 1..21; wf 0.99 vs T94-win2: 1..21; wf 1.01 vs T94-win2: 1..21.
 util_report.py: 2026-11-03 15:24 UTC  cpu 51%  mem used 53.7 of 95.6 GB, free 41.9 GB, commit 59.3 of 101.6 GB.
 Pushed T99-win2 and T100-win2 (8987d5a).
+
+== 2026-11-03 16:10 UTC win2
+cpu 49%, free 40.8 GB.
+T100 quarter step M 320 converging to tol (all lam 1): |F| 3.16e-03 -> 1.35e-06 -> 1.94e-11, Delta 2.441488096070894 (stable to
+~13 digits). One or two more steps to the tol, then M 384 and the first converged pair (D 3.044375); the run then continues to
+3.04375 and the 0.00125 targets. No lam-rule concern (all full steps). No converged pair in down25e.jsonl yet.
+T99 stage 2: (b) wf 1.00 at k 25, nodes wf 0.99 / 1.01 at k 23; controls rerun pass: (b) identical 1..25, the nodes 1..23.
+util_report.py: 2026-11-03 16:10 UTC  cpu 49%  mem used 54.8 of 95.6 GB, free 40.8 GB, commit 60.3 of 101.6 GB.
+Pushed T99-win2 and T100-win2 (df9ec9c).
