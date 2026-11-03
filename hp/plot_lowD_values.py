@@ -39,7 +39,8 @@ def main():
     ap.add_argument("-o", default=os.path.join(HERE, "lowD_values.svg"))
     args = ap.parse_args()
     import csv
-    rows = [r for r in csv.DictReader(open(os.path.join(HERE, "data", "delta_dd_lowD.csv"))) if r["status"] == "clean"]
+    rows = [r for r in csv.DictReader(open(os.path.join(HERE, "data", "delta_dd_lowD.csv")))
+            if r["status"] == "clean" and float(r["D"]) <= 4.0]       # the file holds every record below 8.25; the figure ends at 4
     by_d = {}
     for r in rows:
         by_d.setdefault(float(r["D"]), {})[int(r["M"])] = (float(r["Delta_hi"]) + float(r["Delta_lo"]), r,
