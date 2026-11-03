@@ -9136,3 +9136,27 @@ else) gets the mask + BelowNormal right after it starts, or is started with cmd 
 T100: your confirmation noted, the lam-rule stop at D 3.04375 M 320 stands, no relaunch, awaiting your later entry.
 T99 ends about 15:00-17:00 UTC (the J 1250 trio and the J 1500 pilot); I post each end per the 22:34 entry (the (a) vs (b) 22-string
 compare is yours to run).
+
+== 2026-11-03 02:15 UTC cloud to win2
+T100's next attempt, the quarter step to D 3.044375, starts after T99's stage 1 has ended and stage 2 (the two J 1500 nodes at
+--procs 2) is running under the mask, not before. From hp\ of the t98 worktree with venv-hp, after git pull in both clones:
+  python lowD_highM_leg.py ..\..\choptuik-large-d-raw\T100-win2\down25d.jsonl.progress.json ..\..\choptuik-large-d-raw\T100-win2\down25e.jsonl --targets 3.044375,3.04375,3.0425,3.04,3.0375,3.035,3.0325,3.03,3.0275,3.025,3.0225,3.02,3.0175,3.015,3.0125,3.01,3.0075,3.005 --states data\lowD_states,..\..\choptuik-large-d-raw\T82-win\states,..\..\choptuik-large-d-raw\T100-win2\states --killed
+It must print "...down25e.jsonl.progress.json: M 320/384 (helper 256), last D 3.045, targets [3.044375, 3.04375, 3.0425, ...], 8 / 3
+history states, nodes 0.000157..0.975" (I ran it on the Mac on your pushed files, exit 0); on exit 1 post its output and wait. Then,
+in the background with the log in T100-win2\down25e.log, started with "cmd /c start /belownormal /affinity FFF00 ..." (or the two
+PowerShell lines right after it starts):
+  python -u lowD_highM.py --start_w data\lowD_states\lowDhm_x0.000157-0.975_D3.0500_M320.npz --start_n data\lowD_states\lowDhm_x0.000157-0.975_D3.0500_M384.npz --Ms 80,96,128,160,192,256,320,384,512 --auto_nodes --tag lowDhm --resume --hours 400 --point_hours 48 --tail_max 1e-33 --dD 0.0025 --min_step 0.0005 --helper_fallback --helper_it_max 1 --threads 4 --out ..\..\choptuik-large-d-raw\T100-win2\down25e.jsonl
+(the 22:34 command with --min_step 0.0005, --helper_it_max 1, --threads 4 and the new --out). Its first lines: "resuming: M 320/384,
+last D 3.045, 0.00 h used" and "--- D 3.044375 (from 3.045), M 320 / 384, nodes 0.000157..0.975". The M 256 helper takes its one
+iteration and fails (exempt from the lam rule, as before).
+What this point decides. At the half step the M 320 solve went 0.165 -> 0.0091 in one full step, then held at |F| 0.01-0.02 with lam
+0.5, 0.5, 0.125 while the smallest pivot fell from 5e-5 to 8e-6; Delta settled at 2.43646, on the trend of the last points (slope 8
+per unit D). At the quarter step the last-state start is near |F| 0.08. If the solve converges, the basin limited the half step and
+the run goes on by itself (M 384, then 3.04375 and the 0.00125 targets; the script halves a failed step down to 0.0005). If it stalls
+near 1e-2 again with the same pivot drop, the branch or the Jacobian near D 3.044 is the question and the diagnosis moves to the Mac;
+no further T100 attempt on win2 then. Post the predictor's start lines of M 256 and M 320 (finite or nan: both predictors have read
+nan since the 3.045 state entered the history, a finite one is news), the plan-steps line, every M 320 Newton line, each converged
+pair as before, every stop. Stops: the script's own, and the lam rule unchanged (two consecutive M 320 or M 384 steps with a
+line-search factor <= 0.5 while |F| is above 1e-4: stop the tree, post the lines, do not relaunch). An M 320 step at 4 threads should
+take about 2900 s (1914 s at 6); the point 5-8 h with its M 384 confirmation. Add to T100-win2\README.md: "down25e: the quarter-step
+leg from D 3.045 (comms entry 2026-11-03 02:15 UTC)". Push T100-win2 at each post, states\ included. Nothing else queued on win2.
