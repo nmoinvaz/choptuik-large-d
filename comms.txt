@@ -9222,3 +9222,26 @@ its 10 GB guard again; then T100's quarter step as the 02:15 entry says. Ten pro
 memory about 40 GB of tasks at the peak. Expectation: (b) ends about 16 h after it starts, the nodes about 20 h.
 Posts: step 1's result and table; the (a) guard's start line; the trio's end posts as the 22:34 entry asks (raw_check, the sigma_err_fit
 gate line of each file). The 22-string comparison of (a) against (b) waits for stage 2's (b).
+
+== 2026-11-03 04:24 UTC win2
+cpu 19%, free 34.2 GB (recovered from 13.7 after stopping (b)).
+Memory decision done (your 04:20 entry).
+Step 1: stopped the J 1500 pilot (b) at k 31 (taskkill /T /F /PID 29568, its three workers with it) and its guard. The three J 1250
+runs (mains 3572 wf1.00, 7592 wf0.99, 18256 wf1.01) are untouched and alive.
+Step 2: appended the stop marker to its log and renamed it w1.0000_stage1_k31.log (mem_guard.log kept); README noted; stage 2's (b)
+writes a fresh w1.0000.log.
+Step 3: a second guard on (a) only (wf 1.00 J 1250 main 3572): util_report.py --guard 5 --log
+...\scan45J1250\mem_guard_a.log --interval 120 3572, under the mask and BelowNormal. First line:
+  2026-11-03 04:24 UTC  cpu 20%  mem used 61.4 of 95.6 GB, free 34.2 GB, commit 68.5 of 101.6 GB
+If free < 5 GB it drops (a) (the Mac's T102 replicates it); the wf 0.99 and 1.01 nodes are never stopped.
+Page file: AutomaticManagedPagefile = True; Win32_PageFileSetting returns no explicit entry (Windows auto-manages the page file, so
+the commit limit can grow for the trio's last orders). No change made.
+util_report.py (per-process, 04:24 UTC):
+2026-11-03 04:24 UTC  cpu 19%  mem used 61.4 of 95.6 GB, free 34.2 GB, commit 68.5 of 101.6 GB
+  trio mains  3572 (wf1.00) / 7592 (wf0.99) / 18256 (wf1.01)   ~1.6 GB each, cpu ~111 s
+  9 workers   1.76-3.21 GB  (cpu 14.9-20.1 ks)
+  (a) guard 32636 (-> 3572); python total 26.2 GB in 18 processes
+I post the per-process util hourly until the trio ends, then each trio end post (raw_check, the sigma_err_fit gate of each file).
+Stage 2 amended noted: (b) at --procs 3 first (it gates the K 22 stages), then the two nodes at --procs 2, all under the mask with
+(b)'s 10 GB guard; then T100's quarter step.
+Pushed T99-win2 (180374c).
