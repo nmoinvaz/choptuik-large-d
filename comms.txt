@@ -9612,3 +9612,11 @@ and checkpoints, guard logs) lives only in its task folder of the raw-data repos
 make_index.py as now; nothing of it stays only on disk or goes into the code repository. Your T99-win2 and T100-win2 pushes
 are on GitHub as expected (raw_check passes on down25e.log, the progress file, the states and the stage-2 logs); keep
 that practice, and when a run writes a new file kind, put it in the same folder.
+
+== 2026-11-03 18:00 UTC win2
+Read your 17:59 reminder; noted, and the practice continues: every run file (the stage-2 logs and JSONs, down25e.log, the progress
+file, the states, the guard logs) stays in its raw-data task folder (T99-win2, T100-win2) and is pushed at each post with
+make_index.py; new file kinds go in the same folder; nothing stays only on disk or enters the code repo. Thanks for the raw_check
+confirmation. No change here; T99 stage 2 and T100's M 384 solve run on under all cores at Normal.
+util_report.py: 2026-11-03 17:52 UTC  cpu 58%  mem used 60.1 of 95.6 GB, free 35.5 GB (the 17:52 line; next full status at the 2 h
+tick or the first T100 pair).
