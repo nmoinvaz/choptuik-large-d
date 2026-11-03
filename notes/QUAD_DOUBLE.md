@@ -1491,3 +1491,70 @@ an hour a step. Risks: the floor above the basin at D 200 (J3 measures it; quad-
 frozen harmonics' drift over a step (J3 and J4 measure it; a larger kfreeze or re-pinning each step is the fix);
 R_D falling with D (the a_max rule adapts, and every step's ratios are recorded); a fold or bifurcation before 200
 (the ratios would show it; 13.12 shows none to 73).
+
+### 13.16 The jet lanes and the exact Taylor continuation: J1–J4 (2026-11-03 22:50 UTC)
+
+**Built.** multidouble's `Jet<N>` (a truncated power series lane, N double-double coefficients) with the parameter
+arithmetic `Lane::P` (`Param`: `DD` on every other lane, so the constants a lane forms from the dimension stay bit
+for bit what they were; `Series<N>` on a jet): pull request #26 of nmoinvaz/multidouble (26 tests, 5 of them
+controls; 38 CI checks pass), the branch `feat/jet-lane` until release 1.9.0. hp's kernel on the branch `anm` (backed
+up as `wip/anm`): `centre_series`, `taylor_coeffs` and `horizon_series` take the dimension through `Param`,
+`psolve` solves a jet order by order with the value LU, and `residual_jet` returns the residual's coefficients in D
+on a jet state (M 32, 48, 64; up to 32 coefficients; the controls JET_MUT_FREEZE_N and JET_MUT_KAPPA). The
+bit-identity checks of AGENTS.md against T81's references pass with it: `ref` 72 outputs bit-identical, `scaled`
+bit-identical with its control firing (`anm-mac/highm_ref.log`, `highm_scaled.log`). Scripts `hp/jet_check.py` (J2)
+and `hp/anm_step.py` (J3, J4); records in `anm-mac/` of the raw-data repository.
+
+**J2, amended.** Its premise was wrong. At fixed data the residual is not analytic within |h| ≤ 1: the horizon data
+are then wrong for n + h by O(h), and by 13.6 the series' apparent horizon enters the domain once h exceeds the
+basin, so F(z, D + h) has a radius of about 10⁻⁷ at D 73 (its coefficients grow by 10⁷ per order: |F_k| = 1.1×10⁷,
+8.7×10¹³, 8.8×10²⁰, …), while the branch has 50–75 (13.12). Inside the basin (h = 10⁻¹⁴, 10⁻¹³, 10⁻¹²; D + h
+formed in mpmath, since a float rounds 10⁻¹² at D 73 to 10⁻¹⁴, which cost the first run 0.5% of F_1 h) the jet's
+sum and the direct residual agree to 2×10⁻²³ absolute at every h, the residual's own rounding floor (the
+double-double floor times the horizon block's growth); the criterion "10⁻²⁰ of |F_1 h|" is then 2×10⁻¹⁸ to
+2×10⁻¹⁶ and is failed by that floor, not by the jet. Independently, central differences at ε = 10⁻¹⁴ agree with
+F_1 to 8.2×10⁻¹⁵, exactly ε²|F_3|/|F_1|, and with 2F_2 to 2×10⁻⁹ (the floor over ε²); on the centre and Taylor
+blocks, where differences at ε = 10⁻⁴ stay inside the basin, F_1 and 2F_2 agree with them to every printed digit
+(the block diagnostic of 22:30 UTC). Both controls fire: κ frozen gives a ratio of 1.1 and n frozen gives
+coefficients 1–16 exactly zero against a changed residual. Amendment (2026-11-03 22:50 UTC): J2 passes as agreement
+to the residual's rounding floor inside the basin with both controls firing; passed in that form.
+
+**J3 and J4.** The unpinned kfreeze 13 problem first, at D 71: the Jacobian's smallest pivot is 5×10⁻¹⁶, z_1 comes
+out at 0.084 against the branch's tangent 2.6×10⁻³ (from neighbouring stored states), and the coefficients grow
+350× per order: the junk directions of 12.x make that branch meaningless here, as T75 found (it ran the pin
+ladder). In the pinned formulation of `hp/pinning.py` (the kernel built with kfreeze K, p1's odd harmonics in
+(K, 13] held at the base state's own values by the residual offset, so their coefficients are zero and the jets of
+orders 1 and up are the kernel's unchanged) the continuation behaves. From T75's state at D 71.0 (pin 5 and 3) and
+its last at 73.27 (pin 5 and 3), N = 24, the LU and the 24 right-hand sides take 1 + 20 s on four threads:
+
+| base, pin | pivots | Δ′ from z_1 | ratios of orders 2–5 | predicted residual at h = 0.5, 1, 2, 3 (5) |
+|---|---|---|---|---|
+| 71.0, pin 5 | 3.4e-9 to 5.6e8 | −1.924e-3 | 84, 77, 68, 19 | 9.4e-17, 1.9e-16, 3.0e-11, 1.1e-6 |
+| 71.0, pin 3 | 7.1e-7 to 5.6e8 | −1.923e-3 | 83, 75, 71, 68 | 3.7e-17, 8.0e-17, 1.6e-9, 5.7e-5 |
+| 73.27, pin 5 | 1.4e-9 to 1.2e9 | −1.810e-3 | 87, 80, 54, 6.8 | (h = 1) 5.7e-16, 7.7e-10, 2.7e-5, 7.6e4 |
+| 73.27, pin 3 | 4.8e-7 to 1.2e9 | −1.809e-3 | 87, 78, 74, 70 | (h = 1) 1.8e-16, 3.2e-9, 1.1e-4, 1.5e8 |
+
+The reading. (i) The low orders are the branch: Δ′ = −1.924×10⁻³ against −1.9239×10⁻³ from the stored
+neighbours, and Δ″/2 = +2.629×10⁻⁵ against +2.629×10⁻⁵ from three of them. (ii) The ratios of orders 2–5, 68–87,
+are the distance to the formula's pole at D = −3.2 (74 from D 71, 76.5 from 73.27): an independent confirmation
+of 13.12's radius and of the formula's analytic structure. (iii) From order 6 on a component of amplitude 10⁻¹⁰ to
+10⁻¹² with ratios 3–10 takes over, its largest entries in p1 (the weakly determined harmonics); it, not the
+arithmetic (the solves refine to 10⁻⁴⁰), sets the step: a_max = (ε|z_1|/|z_24|)^{1/23} is 1.7–1.9 at ε = 10⁻¹⁶
+and 1.1–1.3 at 10⁻²⁰. (iv) The predictions land inside the basin at h ≤ 2: residuals of 4×10⁻¹⁷ to 6×10⁻¹⁶ at
+h ≤ 1 and 8×10⁻¹⁰ to 3×10⁻⁹ at h = 2, against 1.5×10⁸ for the stored-point predictors of 13.14 at h = 0.5; at
+h = 3 they are 3×10⁻⁵ to 10⁻⁴ (outside) and at h = 5 lost. Newton (the pinned double-double Newton of the driver,
+tolerance 10⁻²⁰) converged from the h = 2 predictions at pin 3, D 71 → 73: 8×10⁻²¹ in 4 steps, and 73.27 →
+75.27: 1.9×10⁻²⁰ in 5 steps with Δ within 6.7×10⁻⁷ of the formula; it converged at h = 0.5 (pin 3, 7 steps) and
+stalled at 7×10⁻¹⁷ to 6×10⁻¹⁶ in the other h ≤ 1 cases, taking no step: a corrector matter at the floor (re-planning
+the segments at the predicted state changes nothing), not the basin, and not understood. The control (the dimension
+frozen) predicts z_0: residual 10⁵² at h = 0.5. Against 13.15's criteria: J3 fails (10⁻¹⁸ at h = 2 asked, 10⁻⁹
+found; Newton to 10⁻²⁵ in 3 steps asked); J4 passes at h = 2 (Newton to 2×10⁻²⁰, Δ within 10⁻⁶ of the formula)
+and fails at h = 3 and 5.
+
+**What it means.** The exact continuation works as a predictor, with steps of 1.5–2 in D rather than the 10 hoped
+for in 13.15, the step set by the weak harmonics' component of the series and not by the arithmetic. From 78 to 200
+that is 60–80 steps of a few minutes each at M 32, if the corrector converges at every one; the stalls at 10⁻¹⁶ are
+the open item, and the pin must follow the ladder as D grows (at 73.27 the quad-double Newton needed pin 1 or 3,
+12.x). Next, in order: the stalls (the pinned Newton here against T75's settings); a chained pilot from 73.27 at pin
+3 with steps of a_max, re-based at each converged point, to 78 and past it; the release (PR #26 merged, 1.9.0,
+hp's version bumped, the worktree merged).
