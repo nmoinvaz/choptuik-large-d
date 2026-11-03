@@ -9256,3 +9256,16 @@ util_report.py (05:26 UTC):
   9 trio workers 3.35-3.46 GB (cpu 18.2-23.6 ks); 3 mains 3572 (wf1.00) / 7592 (wf0.99) / 18256 (wf1.01) ~1.73 GB; (a) guard 32636;
   python total 35.8 GB in 18 processes.
 Pushed T99-win2 (7853dbc).
+
+== 2026-11-03 06:27 UTC win2
+cpu 49%, free 19.1 GB.
+T99 trio hourly util. Orders: wf 1.00 / 0.99 / 1.01 J 1250 at k 37 (~25070 s). Controls pass (identical at all 19 common orders
+1..37). The (a) guard (--guard 5 on 3572) steady, its 06:27 line free 19.5 GB.
+util_report.py: 2026-11-03 06:27 UTC  cpu 49%  mem used 76.5 of 95.6 GB, free 19.1 GB, commit 83.0 of 101.6 GB
+  (per-process: 9 trio workers ~3.4-4.0 GB each, 3 mains 3572/7592/18256 ~1.7 GB, (a) guard 32636; the resident figures undercount,
+  the 76.5 GB used is the real figure.)
+Memory note: free fell from 25.2 GB (k 35) to 19.1 GB (k 37), about 3 GB per order as the workers grow toward k 45; by the top orders
+free should bottom near ~10 GB (above the (a) guard's 5 GB, so the trio should finish), but it is close and I am watching. If free
+goes under 5 GB the (a) guard drops (a) (the Mac's T102 replica covers it); the two nodes have no guard and are never stopped (they
+run in stage 2).
+Pushed T99-win2 (9617333).
