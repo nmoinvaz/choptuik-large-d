@@ -1320,3 +1320,29 @@ on the pole's nature, unread. And one cheap idea from the derivation: the pole i
 the data error alone, so adjusting the predicted a_h to maximise the series' radius before Newton might remove it;
 untested, a prototype test on the stored states. Order of work, if the author wants large D pursued: that cheap test
 first; then R_D from the stored states; then the kernel work for (i) only if R_D is large.
+
+### 13.11 Two measurements before any kernel work (2026-11-03 20:20 UTC, the author's "do it", before the data)
+
+**A. The mass correction** (`hp/mass_correct.py RAWDIR`, records `route1-mac/mass_correct.jsonl`). On the stored
+states at D 40.02, 50.01, 60.00, 67.74, 73.27, the horizon data are perturbed three ways: a_h scaled by 1 + ε (the
+mass direction, ε = 10⁻⁴, 10⁻³, 10⁻²); m_h and a_h by a random vector of relative size ε (10⁻⁶, 10⁻⁴); every unknown
+by 1 + ε r (10⁻⁶, 10⁻⁴). For each, the kernel's double-double horizon series is recomputed and its radius R read by
+12.4's ratio test; then a one-parameter search over s, a_h → a_h(1 + s), maximises R (golden section on
+[−2ε, 2ε], about 50 series evaluations), as the 13.10 derivation suggests the pole is driven by the mass content of
+the data error alone. Recorded: R before, s*, R(s*), and for the mass kind the error of s* against the exact restoring
+value −ε/(1 + ε) in units of δ_max(D, 0.30) (13.6). Pass: R(s*) > u₀ = 0.30 for every state and kind, so the series
+block's Newton can start from the corrected data (the operational criterion), and for the mass kind |s* − s_true| <
+δ_max(D, 0.30). Fail: any case with R(s*) < u₀, which means the other components of the error, or the search's
+resolution, stop the correction; then the idea is dropped.
+
+**B. The branch's radius of convergence in D** (`hp/branch_radius.py RAWDIR`, records `route1-mac/branch_radius.json`),
+which decides whether the high-order Taylor continuation of 13.10 is worth building. T75 holds 562 states of one
+layout (M 32, nodes 0.3–0.7, kc 146, ks 130) at D = 70.63–73.27, spaced about 0.01. Every component of the state and
+Δ are fitted by Chebyshev polynomials in D over the window; the coefficients of a function analytic in the Bernstein
+ellipse of parameter ρ fall as ρ^−k, so the decay rate over the orders above the noise floor gives ρ, and the distance
+from the window's centre to the nearest singularity, R_D ≈ ρ·(half-width)/2 when it is far. Reported: R_D from Δ,
+from the full state (the smallest over components, with the components named), and the order where the noise floor
+(the states' own precision) is reached. Reading: 13.10's requirement at D = 200 is (N + 1) ln(R_D/h) ≥ 69 with
+N ≈ 30, so R_D ≥ 20 makes the step about 2 and R_D ≈ 70 about 7; R_D below 5 ends the idea. The measurement is at
+D ≈ 72; whether R_D grows with D is a second question, answerable from the stored states at D 40–60 (`hp/data/states`,
+sparser) only roughly.
