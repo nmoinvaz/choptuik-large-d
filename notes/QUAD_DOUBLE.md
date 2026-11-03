@@ -1286,8 +1286,8 @@ these two starts, which decide it, to free the Mac's memory for T103):
 | 10⁻³ | fails (10⁵³) | 0.9 → 4×10⁻¹² in 2 | 5.1×10⁻⁴ | 7.6×10⁻⁵ | 5.1×10⁻⁴ | no decrease from 6.6×10⁻⁸, Δ off by 1.4×10⁻⁴ |
 
 The pass line was δ_h < 1.4×10⁻⁸. Stage 1 drives the collocation residual to 4×10⁻¹² in two steps and leaves the
-horizon datum a_h half as wrong as it started (δ_h ≈ ε/2), with or without the regularisation: the mass direction is
-one of the collocation's flat directions, so its Newton step does not move along it, and the residual does not see
+horizon datum a_h half as wrong as it started (δ_h ≈ ε/2), with or without the regularisation: the mass direction
+is one of the collocation's flat directions, so its Newton step does not move along it, and the residual does not see
 the error. The series block then starts from horizon data 10⁻⁵ to 10⁻⁴ off and either settles on a wrong Δ (10⁻⁵
 off at a residual its tolerance accepts) or does not decrease. The hybrid's premise, that a collocation solve sharpens
 the horizon data to the series' basin, is false at the smallest ε tried, and the remaining starts (10⁻², the random
