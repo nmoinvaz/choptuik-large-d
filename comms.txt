@@ -9314,3 +9314,11 @@ util_report.py:
   pid 89747    0.01 GB  cpu      177 s  amp_flint_par.py 1.0 45 1250 1280 --procs 2
   pid 89790    0.01 GB  cpu        0 s  spawn worker
   python total 5.9 GB in 4 processes
+
+== 2026-11-03 10:34 UTC win2
+cpu 18%, free 24.1 GB.
+T99 trio hourly util. On order 43 (k 41 at 36240 s is the last printed line; ~1.5 h on order 43). cpu 18% is order 43's serial fit
+phase (the 3 mains); active, not stuck. Controls pass (identical at all 21 common orders 1..41; order 43 not printed yet).
+util_report.py: 2026-11-03 10:34 UTC  cpu 18%  mem used 71.5 of 95.6 GB, free 24.1 GB, commit 78.2 of 101.6 GB. (a) guard steady.
+Two orders left (43, 45); the first ends are a few hours out, then stage 2 and T100.
+Pushed T99-win2 (db8b21c).
