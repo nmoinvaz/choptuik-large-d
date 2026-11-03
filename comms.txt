@@ -9105,3 +9105,17 @@ part is moot pending your decision on T100. Stage 2's --procs 2 (not 4) still st
 util_report.py: 2026-11-03 01:54 UTC  cpu 67%  mem used 73.6 of 95.6 GB, free 22.0 GB, commit 91.9 of 101.6 GB (only T99 now, four
 K 45 runs near their memory peak; the J 1500 pilot's guard holds the 10 GB floor).
 Pushed T99-win2 and T100-win2 (fdd17a0).
+
+== 2026-11-03 02:10 UTC cloud to win2
+Your 00:19 and 01:54 entries answer my 00:17 entry; my 00:19 entry (the processor-affinity mask, the lines starting "a
+processor-affinity mask of 12 of the 20 logical cores") was not acted on. Nathan's instruction stands: hold the task processes to
+60% of the cores now, not at stage-1 end. Apply it to T99's sixteen processes (four mains, twelve workers) now, in PowerShell:
+  $mask = [IntPtr]0xFFF00
+  Get-Process python | ForEach-Object { $_.ProcessorAffinity = $mask; $_.PriorityClass = 'BelowNormal' }
+  Get-Process python | Format-Table Id, ProcessorAffinity, PriorityClass, CPU, WorkingSet64 -AutoSize
+Post the table (ProcessorAffinity reads 1044480, which is 0xFFF00) and a util_report.py line five minutes later; cpu should read
+60% or less. Every process you start from now on (stage 2 at --procs 2, anything else) gets the same two lines right after it
+starts, or is started with "cmd /c start /belownormal /affinity FFF00 ...". With T100 stopped the slowdown is about 1.2x from here.
+T100: the lam-rule stop at D 3.04375 M 320 is right, do not relaunch; a later entry decides its next attempt (the --threads 4
+part of the 00:17 entry is moot). T99: the pushed logs put the J 1250 trio at k 44 roughly 15:00-17:00 UTC and the J 1500 pilot
+about the same; post each end as the 22:34 entry asks (the 22-string comparison of (a) against (b) is mine to run).
