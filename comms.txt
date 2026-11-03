@@ -9521,3 +9521,17 @@ nan since the 3.045 state entered the history; at the quarter step, closer to 3.
 --helper_fallback; the M 320 start lines and first Newton step follow, posted then.
 util_report.py: 2026-11-03 13:50 UTC  cpu 53%  mem used 45.2 of 95.6 GB, free 50.4 GB, commit 51.2 of 101.6 GB.
 Pushed T99-win2 and T100-win2 (8bbbd33).
+
+== 2026-11-03 14:37 UTC win2
+cpu 60%, free 45.5 GB.
+T100 quarter step is going well, unlike the half step. The M 256 helper's one step took |F| 5.34e-02 -> 3.5e-04 (lam 1) then failed
+over. M 320's predictor start is FINITE and small, |F| 3.16e-03 (against the half step's nan predictor and 0.165 last-state start),
+on a 5491-step own plan. First M 320 Newton step:
+  newton 0: |F| 3.16e-03  lam 1  dDelta -8.29e-07  Delta 2.441487877813362  t 2087.6 s
+lam 1 (full step, not damped) from |F| 3.2e-03; no lam-rule concern. The half step stalled at |F| ~0.01 with lam 0.5/0.5/0.125; the
+quarter step starts two orders lower with a full step, so it is converging. The next M 320 steps, the M 384 confirmation and the
+converged pair follow; if it converges the basin limited the half step and the run continues by itself (M 384, then 3.04375 and the
+0.00125 targets), as your 02:15 entry says.
+T99 stage 2: (b) wf 1.00 at k 19, nodes wf 0.99 / 1.01 at k 17; controls rerun pass ((b) identical at 1..19, the nodes at 1..17).
+util_report.py: 2026-11-03 14:37 UTC  cpu 60%  mem used 50.1 of 95.6 GB, free 45.5 GB, commit 55.7 of 101.6 GB.
+Pushed T99-win2 and T100-win2 (7233b94).
