@@ -3010,7 +3010,7 @@ investigated. Pilot (b) was stopped at k = 31 on 2026-11-03 04:20 UTC for memory
 95.6 GB: the J 1500 workers were heading for 4.5–5.6 GB each at the top orders) and restarts first in stage 2 at three
 processes (expected 2026-11-04 about 08:00 UTC), followed by the J 1500 nodes at two processes (the author's
 instruction of 2026-11-03 to reduce win2's CPU); ruling 2 and item 1(c) wait for it, and so do the K = 22 stages. The
-dry run (item 0) runs on the Mac after this commit; its reading follows here.
+dry run (item 0) runs on the Mac after this commit; its reading is section 14.1.
 
 **Amendment (2026-11-03 13:37 UTC), before any σ₂₂ estimate was computed: the Mac computes a replica of (b).** T102
 ended and the Mac is free, so it runs pilot (b)'s command (wf 1.00, K 45, J 1500, 1280 bits, --procs 2) as T103,
@@ -3022,3 +3022,24 @@ the K = 22 stages' record (the replica lands after them: about 24 h at two proce
 Otherwise it enters no criterion and is reported as context in the convergence stage's report. Its memory is the
 Mac's limit (the J 1500 workers reach about 5 GB each): the Mac runner posts the swap in use hourly and stops the run,
 posting, if the swap in use passes 12 GB; a stopped replica is recorded here and not replaced.
+
+### 14.1 The dry run (item 0)
+
+`planted_k22_dry.py` wrote the three node files and the pilot file with the real σ₀…σ₂₁ (the 1280-bit node data of
+section 13) and σ₂₂ = the C21-BP [6/15] sum's (section 13.7's first ring-free, type-passing sum; zero at 1.000000009),
+err22 = 10⁻¹² |σ₂₂| and the pilot term zero; the eight stages ran on them 2026-11-03 13:38–14:09 UTC (logs in the
+raw-data repository's `planted-k22-mac/dry/`, b4eabd1; the scripts are commit f1853f6), after section 14.0 was
+committed (bd5528e) and its stage-1 reading (f1853f6). Every check passes (converge 10, plants 4, real 4, ring 80,
+calib 1), and each of the five converge mutations fires (`low` on the wf 0.99 node's bitwise check at k = 21, `pilot`
+on σ₁₉ of (b), `err` and `amend` on item 1(a), `ratiolaw` on the wf 1.01 node). In the ring test the planted sum's σ₂₂
+error is at most 3.7×10⁻²¹ and its τ₂₂ error at most 9.5×10⁻²⁰ (the 20-digit format), it survives under both readings,
+and its zero lies inside the dry run's K = 22 range, 0.9999988–1.0000003. Effects of the synthetic truth, not of the
+code: on it D-bracket fires on the real record at K = 22; the planted function is an exact exponential sum of fifteen
+terms, so the C22-BP table degenerates past [6/16]: [7/15] reproduces [6/16]'s zero exactly, [8/14] and [9/13] fail the
+type rule (poles at |t| up to 3.7 and 7.5, 19 and 36 zeros in |x| < 16), the [10/12] and [11/11] root searches fail,
+which the stage records as entries, not as failures, and [3/19], [4/18] and [5/17] pass the type rule with 9, 7 and 2
+zeros in |x| < 12; the K = 22 hull is then the two calibrated ranges and that one zero. The projection stage ran
+(favouring 1 by 0.3×10⁻⁷ against a model error of 3.9×10⁻⁶, not decisive), as it will on the real data. Nothing was
+fixed; the real K = 22 stages wait for pilot (b), the first run of T99's stage 2. A side observation, not a reading of
+the real data: the planted σ₂₂ (the K = 21 sum's prediction) differs from the measured σ₂₂ by 2×10⁻⁸ of it at every
+node (`generate.log` against `scan45J1250/`).
