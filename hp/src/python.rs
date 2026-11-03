@@ -62,6 +62,9 @@ trait Api: Send + Sync {
     fn jacobian_q(&mut self, z: [&[f64]; 4], mutate: u8) -> Result<(Q4, usize), String>;
     /// qsolve::newton_q
     fn newton_q(&mut self, z: [&[f64]; 4], mutate: u8) -> Result<qsolve::QStep, String>;
+    /// model::residual_jet: the residual's coefficients 0..nout-1 on the jet state zs with the dimension n + h as the
+    /// jet variable; the jet lanes are instantiated for M = 32, 48 and 64 and N = 8, 16, 32 coefficients only
+    fn residual_jet(&mut self, zs: &[(&[f64], &[f64])], nout: usize, mutate: u8) -> Result<Vec<(Vec<f64>, Vec<f64>)>, String>;
 }
 
 /// a quad-double vector as its four parts' arrays
@@ -254,6 +257,36 @@ impl<const B: usize> Api for Ctx<B> {
     }
     fn newton_q(&mut self, z: [&[f64]; 4], mutate: u8) -> Result<qsolve::QStep, String> {
         qd_sizes!(self, mutate, |c| qsolve::newton_q(c, z, true))
+    }
+    fn residual_jet(&mut self, zs: &[(&[f64], &[f64])], nout: usize, mutate: u8) -> Result<Vec<(Vec<f64>, Vec<f64>)>, String> {
+        self.mutate = mutate;
+        let r = self.residual_jet_sized(zs, nout);
+        self.mutate = 0;
+        r
+    }
+}
+
+impl<const B: usize> Ctx<B> {
+    /// residual_jet on the sizes the jet lanes are instantiated for
+    fn residual_jet_sized(&self, zs: &[(&[f64], &[f64])], nout: usize) -> Result<Vec<(Vec<f64>, Vec<f64>)>, String> {
+        let me: &dyn std::any::Any = self;
+        macro_rules! at {
+            ($bb:literal) => {
+                if let Some(c) = me.downcast_ref::<Ctx<$bb>>() {
+                    return match nout {
+                        0 => Err("nout must be at least 1".into()),
+                        1..=8 => model::residual_jet::<8, $bb>(c, zs, true, nout),
+                        9..=16 => model::residual_jet::<16, $bb>(c, zs, true, nout),
+                        17..=32 => model::residual_jet::<32, $bb>(c, zs, true, nout),
+                        _ => Err(format!("nout must be at most 32, not {nout}")),
+                    };
+                }
+            };
+        }
+        at!(4);
+        at!(6);
+        at!(8);
+        Err("residual_jet: M must be 32, 48 or 64 (the jet lanes are instantiated for these sizes only)".into())
     }
 }
 
@@ -485,6 +518,44 @@ impl Solver {
         self.lu = None;
         self.qlu = None;
         self.api.set_segs(segs).map_err(PyValueError::new_err)
+    }
+
+    /// The residual's Taylor coefficients in the dimension: on the jet state z(h) = sum_k z_k h^k (zs_hi, zs_lo the
+    /// coefficient vectors z_k, the first the state itself) with n + h as the variable, the coefficients of orders
+    /// 0..nout-1 of F, as two lists of arrays (hi, lo). With z_k absent the order-k coefficient is the right-hand side
+    /// of order k of the Taylor continuation in D (notes/QUAD_DOUBLE.md 13.15). M = 32, 48 or 64; nout <= 32.
+    /// mutate: model::JET_MUT_FREEZE_N (21, the dimension frozen) or JET_MUT_KAPPA (22, kappa's n frozen), the controls.
+    #[pyo3(signature = (zs_hi, zs_lo, nout, mutate=0))]
+    #[allow(clippy::type_complexity)]
+    fn residual_jet<'py>(
+        &mut self,
+        py: Python<'py>,
+        zs_hi: Vec<PyReadonlyArray1<'py, f64>>,
+        zs_lo: Vec<PyReadonlyArray1<'py, f64>>,
+        nout: usize,
+        mutate: u8,
+    ) -> PyResult<(Vec<Bound<'py, PyArray1<f64>>>, Vec<Bound<'py, PyArray1<f64>>>)> {
+        if zs_hi.len() != zs_lo.len() || zs_hi.is_empty() {
+            return Err(PyValueError::new_err("zs_hi and zs_lo must be non-empty lists of the same length"));
+        }
+        let l = self.api.len();
+        let mut zs: Vec<(&[f64], &[f64])> = Vec::with_capacity(zs_hi.len());
+        for (h, lo) in zs_hi.iter().zip(zs_lo.iter()) {
+            let (h, lo) = (slice(h, "zs_hi")?, slice(lo, "zs_lo")?);
+            if h.len() != l || lo.len() != l {
+                return Err(PyValueError::new_err(format!("every z_k must have length {l}")));
+            }
+            zs.push((h, lo));
+        }
+        let pool = self.pool.clone();
+        let api = &mut self.api;
+        let out = py.detach(|| pool.install(|| api.residual_jet(&zs, nout, mutate))).map_err(PyValueError::new_err)?;
+        let (mut hs, mut ls) = (Vec::with_capacity(out.len()), Vec::with_capacity(out.len()));
+        for (h, lo) in out {
+            hs.push(arr(py, h));
+            ls.push(arr(py, lo));
+        }
+        Ok((hs, ls))
     }
 
     fn residual<'py>(
