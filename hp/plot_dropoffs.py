@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""large_d_dropoffs.svg: the drop-offs of the continuation's step in D, and the precision wall that sets them.
+"""large_d_dropoffs.svg: the drop-offs of the continuation's step in D, and the walls that set them.
 
 Top: each large-D run's step in D (the records of plot_point_spacing.py: data/delta_dd.csv, the cloud pilot and T48),
 with the stalls named by their cause. Bottom: u·κ, double-double's unit roundoff u = 2^-104 times the Jacobian's
@@ -77,7 +77,7 @@ def main():
     json.dump(out, open(os.path.join(HERE, "data", "dropoffs.json"), "w"), indent=1)
 
     svg = Svg(WIDTH)
-    svg.text(16, 28, "The drop-offs of the continuation's step, and the precision wall behind them", size=15, fill=INK, weight="bold")
+    svg.text(16, 28, "The drop-offs of the continuation's step, and the walls behind them", size=15, fill=INK, weight="bold")
     # top: the steps
     large = [t for t in steps() if 8 <= t[0] <= 80]
     y = caption(svg, X, 58, "Each run's step in D, 8 ≤ D ≤ 68 (as in the point-spacing chart)",
