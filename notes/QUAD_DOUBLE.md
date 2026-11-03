@@ -1082,6 +1082,12 @@ two end points brings it back to the present size and is the second version, aft
 (13.3's risk is a reason to keep the block's unknowns global at first). The residual costs N_u products per field
 against the series' ks orders of convolutions: comparable or less.
 
+![Collocation on a toy equation: the equation demanded at five Chebyshev points, the error falling geometrically with the number of points, and a non-analytic u^21 indistinguishable from its 16-point interpolant](../hp/collocation_idea.svg)
+
+`hp/plot_collocation_idea.py` draws the method on a toy equation (an illustration, not project data): the equation at a
+few points with a polynomial between them, the geometric fall of the error with the number of points, and the
+non-analytic solution u²¹ that sixteen points cannot tell from a polynomial, which is 13.3's point.
+
 ### 13.3 What a collocation cannot do, and what that implies
 
 It cannot impose analyticity. The singular solutions u^{s_j} with Re s ≈ 35 are C³⁵ at the horizon and representable
