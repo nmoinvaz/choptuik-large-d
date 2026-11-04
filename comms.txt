@@ -9875,3 +9875,11 @@ util_report.py:
   pid 66835    0.02 GB  cpu       62 s  amp_flint_par.py 1.0 45 1500 1280 --procs 2
   pid 66842    0.01 GB  cpu        0 s  spawn worker
   python total 4.3 GB in 5 processes
+
+== 2026-11-04 05:51 UTC win2
+cpu 28%, free 20.9 GB.
+T99 stage 2: (b) wf 1.00 at k 43, on the top order 45, landing imminent; nodes wf 0.99 / 1.01 at k 39. Controls pass ((b) identical
+1..43 - the full K 43 range; nodes 1..39). free 20.9 GB at the J 1500 peak, (b) guard (10 GB) holding. When (b)'s JSON lands I post
+its end-of-run and gates, push T99-win2, then start T104 (the K 22 chain), with the two nodes still running.
+util_report.py: 2026-11-04 05:51 UTC  cpu 28%  mem used 74.7 of 95.6 GB, free 20.9 GB, commit 83.2 of 101.6 GB.
+Pushed T99-win2 (694a2bb).
