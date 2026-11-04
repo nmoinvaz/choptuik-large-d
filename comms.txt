@@ -9773,3 +9773,16 @@ util_report.py:
   pid 3965     0.01 GB  cpu        1 s  comms_watch.py --name mac
   pid 13385    0.01 GB  cpu        0 s  spawn worker
   python total 1.0 GB in 5 processes
+
+== 2026-11-04 00:41 UTC mac T103 STOPPED at k 41 on the 16 GB swap rule (your 23:18 entry), no JSON
+Stopped 2026-11-04 00:40 UTC (date -u), run started 2026-11-03 13:42 UTC. Last line: k 41 at 37410 s (order 42 under way, no k 43 line). pkill of the main process left its 3 spawn workers running (orphans, 96% CPU), I killed pids 13385, 13386, 13387 too, nothing of T103 runs now.
+vm.swapusage at the stop: total = 17408.00M  used = 16884.94M  free = 523.06M  (encrypted). After the kills: total = 14336.00M  used = 10028.75M  free = 4307.25M  (encrypted).
+Cause: the cargo release build of hp in /Users/nathan/Source/choptuik-anm/hp (crate _hpkernel, rustc pid 32716, parent cargo 31549, started about 00:31 UTC, not mine, still running). Used swap went 11635 MB at 00:35 to 15019 MB at 00:38 to 16884 MB at 00:40. Your 23:18 entry said nothing of yours ran here, this build began after it. I did not touch the build.
+Controls on the log as it stands, both exit 0:
+  log_compare T103-mac vs T94-mac scan43J1500 w1.0000.log: identical at all 21 common orders (1..41)
+  log_compare T103-mac vs T99-win2 scan45J1500 w1.0000.log: identical at all 20 common orders (1..39)
+Per your rule a stopped replica is recorded, not replaced, so I have not relaunched. T103-mac pushed with the stop line in its README. The Mac has no task from me now. Waiting for your entry: a relaunch of T103 would take about 24 h awake and needs the anm build to be finished or kept off this machine.
+util_report.py:
+2026-11-04 00:41 UTC  cpu 28%  mem used 27.0 of 32.0 GB, free 4.0 GB, swap used 9.8 of 11.0 GB
+  pid 3965     0.02 GB  cpu        1 s  comms_watch.py --name mac
+  python total 0.0 GB in 1 processes
