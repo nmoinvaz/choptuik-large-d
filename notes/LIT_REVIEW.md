@@ -379,3 +379,13 @@ singularity's contribution, is standard in resurgence (Dingle; Berry–Howls).
 
 PARALLEL.md was removed afterwards (2026-10-21). Its measurements are in the README (Performance) and in the docstrings
 of `solver/inner_amp/amp_flint_par.py` and `hp/src/linalg.rs`; it is in the git history.
+
+- 2026-11-04: **Ecker, Ecker, Grumiller & Jechtl**, arXiv:2602.10185v1, the arXiv HTML, Sections 6.2 ("Small-(D−3)
+  expansion": 6.2.1 Fuchsian system, 6.2.2 scaling regime) and 8 read (via fetch; Appendix D, their table, lies past
+  the fetched text). Their reading of the limit: a fit to their Fig. 16 data, Δ ≈ 3.88 (D − 3)^0.15 (Eq. 110), with α
+  ≈ 0.15 taken as a lower bound; a scaling argument (x ~ ε^δ, e^ω ~ 1/ε, Δ ~ ε^(δ−β), Eqs. 111–115) gives α ≈ 0.3; the
+  leading Fuchsian analysis gives no power law and says the limit D → 3 does not exist as stated; γ → 0 faster than Δ
+  (Section 5.3), so Δ/(2γ) diverges. Values quoted in the text: D = 3.05: Δ ≈ 2.48, γ ≈ 0.16. They cite Bland's thesis
+  (2007) for D = 3.02: Δ = 0.1379 ± 0.0042, "suggesting a faster falloff" (the thesis itself not read for it).
+  Recorded in `hp/data/published_lowD_limits.json` for `hp/plot_lowD_limits.py`. Their numerical values are already
+  `hp/data/published_delta.csv` (their repository's DeltaList.dat, 3.046 ≤ D ≤ 5.5).

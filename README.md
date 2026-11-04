@@ -340,6 +340,17 @@ D = 3 is where attraction switches off; a square-root branch point there keeps �
 slope in D (the fits' intercepts are the bar at s = 0), while the conjectured Δ → 0 bends toward the origin. The two
 readings separate in the shaded band, where the T100 leg's planned points land.
 
+![The limit D -> 3: our finite intercept against Ecker et al.'s power law, with their D = 3.05 value, Bland's cited D = 3.02 point and the T100 point, full range and the zoom below D = 3.0625](hp/lowD_limits.svg)
+
+The two readings side by side (`hp/plot_lowD_limits.py`; their side from `hp/data/published_lowD_limits.json`). Ecker
+et al. fit their own values to a power law, Δ ≈ 3.88 (D − 3)^0.15, with 0.15 read as a lower bound, and a scaling
+argument of theirs gives an exponent near 0.3; both send Δ to 0 as D → 3⁺.[^5] Our polynomial in √(D − 3) keeps a
+finite Δ(3). At D = 3.044375, the lowest converged point so far (the T100 leg, M = 384, Δ = 2.441488), the polynomial
+gives 2.4415 and the power law 2.4317; at D = 3.02 they give 2.20 and 2.16, at 3.005 they give 1.96 and 1.75, and the
+exponent 0.3 gives 1.88 and 1.24. A converged point at 3.02 separates them at the 2% level. Ecker et al. also cite a
+point from Bland's thesis at D = 3.02, Δ = 0.1379 ± 0.0042 (not verified in the thesis itself); it lies far below every
+reading and would need a resolution no 2007 code had.
+
 As D → ∞ (ε → 0):
 
 ```math

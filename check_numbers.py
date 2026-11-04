@@ -139,6 +139,37 @@ def lowD_305():
 
 
 @check
+def lowD_limits():
+    """README "Below D = 4", the limit graph's paragraph: our polynomial in sqrt(D - 3) (hp/plot_lowD_values.C_DELTA)
+    against Ecker et al.'s power law and scaling exponent (hp/data/published_lowD_limits.json) at D = 3.044375, 3.02
+    and 3.005, and the T100 point's Delta (hp/data/delta_dd_lowD.csv at D = 3.044375, the best M)"""
+    import json
+    sys.path.insert(0, os.path.join(ROOT, "hp"))
+    from plot_lowD_values import C_DELTA, formula
+    lim = json.load(open(os.path.join(ROOT, "hp/data/published_lowD_limits.json")))
+    e, sc, p305 = lim["EEGJ2026_eq110"], lim["EEGJ2026_scaling"], lim["EEGJ2026_D3.05"]
+    pw = lambda D: e["a"] * (D - 3) ** e["alpha"]  # noqa: E731
+    sl = lambda D: p305["Delta"] / (p305["D"] - 3) ** sc["alpha"] * (D - 3) ** sc["alpha"]  # noqa: E731
+    txt = [("README.md", "the polynomial\ngives 2.4415 and the power law 2.4317; at D = 3.02 they give 2.20 and 2.16, at 3.005 they give 1.96 and 1.75, and the\nexponent 0.3 gives 1.88 and 1.24")]
+    rows = [r.rstrip("\n").split(",") for r in open(os.path.join(ROOT, "hp/data/delta_dd_lowD.csv")) if r[:1].isdigit()]
+    t100 = sorted([c for c in rows if float(c[0]) == 3.044375], key=lambda c: int(c[1]))
+    out = [("ours at 3.044375", formula(C_DELTA, 3.044375), 2.4415, 1e-4, txt),
+           ("power law at 3.044375", pw(3.044375), 2.4317, 1e-4, txt),
+           ("ours at 3.02", formula(C_DELTA, 3.02), 2.20, 0.01, txt),
+           ("power law at 3.02", pw(3.02), 2.16, 0.01, txt),
+           ("ours at 3.005", formula(C_DELTA, 3.005), 1.96, 0.01, txt),
+           ("power law at 3.005", pw(3.005), 1.75, 0.01, txt),
+           ("exponent 0.3 at 3.02", sl(3.02), 1.88, 0.01, txt),
+           ("exponent 0.3 at 3.005", sl(3.005), 1.24, 0.01, txt),
+           ("Eq. (110) as quoted", e["a"], 3.88, 1e-9, [("README.md", "Δ ≈ 3.88 (D − 3)^0.15")]),
+           ("Bland 2007 point as cited", lim["Bland2007_D3.02"]["Delta"], 0.1379, 1e-9, [("README.md", "Δ = 0.1379 ± 0.0042")])]
+    if t100:
+        out.append(("T100 Delta at 3.044375 (M %s)" % t100[-1][1], float(t100[-1][2]) + float(t100[-1][3]), 2.441488, 1e-6,
+                    [("README.md", "the T100 leg, M = 384, Δ = 2.441488")]))
+    return out
+
+
+@check
 def loader_exact():
     """hp/dd_fits_mp.load_points must return hi + lo of every CSV row exactly. The CSV stores repr() of each double;
     reading those strings as decimals at 60 digits moves a point by up to 2e-16 (notes/NUMERICS_REVIEW.md F7,

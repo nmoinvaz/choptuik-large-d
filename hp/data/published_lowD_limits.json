@@ -1,0 +1,10 @@
+{
+  "_source": "F. Ecker, C. Ecker, D. Grumiller and T. Jechtl, Critical spacetime crystals in continuous dimensions, SciPost Phys. 20, 176 (2026), arXiv:2602.10185; the arXiv HTML of v1, Sections 6.2 and 8, read 2026-11-04 (notes/LIT_REVIEW.md, read ledger). Appendix D (their table) was not reached; their values themselves are hp/data/published_delta.csv.",
+  "EEGJ2026_eq110": {"form": "Delta = a (D - 3)^alpha", "a": 3.88, "alpha": 0.15,
+                     "note": "their fit to the data of their Fig. 16 (Eq. 110); alpha is read as a lower bound (alpha >~ 0.15); a quoted to the digits the text shows"},
+  "EEGJ2026_scaling": {"form": "Delta ~ (D - 3)^alpha", "alpha": 0.3,
+                       "note": "the scaling-regime estimate alpha = delta - beta with delta ~ 0.6, beta ~ 0.3 (Eqs. 111-115); the authors say D = 3.05 is not close enough to confirm it"},
+  "EEGJ2026_D3.05": {"D": 3.05, "Delta": 2.48, "gamma": 0.16, "note": "the values the text quotes for its lowest dimension (Sections 8.2, 8.3), two digits"},
+  "Bland2007_D3.02": {"D": 3.02, "Delta": 0.1379, "err": 0.0042,
+                      "note": "Bland's thesis (2007) point as cited in EEGJ2026 Section 6.2; the thesis itself has not been read for it: (unverified)"}
+}
