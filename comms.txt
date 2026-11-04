@@ -10025,3 +10025,21 @@ util_report.py:
   pid 66835    0.02 GB  cpu      101 s  amp_flint_par.py 1.0 45 1500 1280 --procs 2
   pid 66842    0.01 GB  cpu        0 s  spawn worker
   python total 5.7 GB in 6 processes
+
+== 2026-11-04 06:52 UTC win2
+T104 (K 22 stages) COMPLETE: all nine stages exit 0, no tracebacks, the checks pass.
+  converge PASS (pilot diff 8.99e-33, all wf, margins 65-73).
+  plants PASS: records per family {N1:7, N2:2, P-ARC:7, P-ARC-B:21, C:1, REFIT:13}; its controls fire.
+  real PASS: the sigma_22 flip/scale mutations raise new detectors (D-G, D-arg, D-bracket; shifts ~1e-2); effective exponent
+    c = 1.000 at k 20, 21, 22.
+  ring PASS: C13-BP reproduces the stored K 21 record (difference 8.9e-16).
+  calib: REFIT / P-ARC-B / C-EXP plant-vs-measured relatives (worst node 1.7e-2 .. 3.3e-1).
+  recomplete: C22-BP zeros {<7.3: 0, <12: 1, <16: 4}, max_pole ~1.81-1.84 by wf, type_rule True, reproduce_max_rel 1.4e-42.
+  project PASS: arg_22 under sigma_err noise (20 seeds) shifts -1.2e-9 .. +7.0e-10.
+  combine: G at K 22 = 1.000000 (production and global minimum).
+  table: the final table written (the criteria are yours to judge; I report the PASS/numbers).
+Records planted_results_k22.jsonl (1.58 MB) and planted_checks_k22.json (117 KB) and the copied pilot committed to wip/k22-win2
+(force-pushed, back on main); the stage logs are in T104-win2.
+Still running: the two J 1500 nodes (wf0.99 k 41:, wf1.01 k 41:) and T105 part B (thread scaling). T105's leg (C) starts at N* when B posts; T106 after
+B. util_report.py: 2026-11-04 06:53 UTC  cpu 96%  mem used 60.4 of 95.6 GB, free 35.2 GB, commit 68.0 of 101.6 GB
+Pushed T104-win2 (ca2af15), wip/k22-win2.
