@@ -179,8 +179,10 @@ def echo_shapes():
     the centre amplitudes of hp/data/echo_shapes.csv (hp/plot_echo.py on stored states of the raw-data repository)"""
     rows = [r.rstrip("\n").split(",") for r in open(os.path.join(ROOT, "hp/data/echo_shapes.csv")) if r[:1].isdigit()]
     by = {float(r[0]): r for r in rows}
-    txt = [("README.md", "From D = 45 up the curves lie on that harmonic to within 0.14 of the peak\n(99.2% to 99.4% of the field's power in it)"),
-           ("README.md", "the wave skews (98% at D = 16.76, 94% at 8), sharpens at D = 4 (76%, a deviation of 1.60), and at D = 3.044 is a\nnarrow pulse on a flat floor (37%, with a centre amplitude of 674 against 0.32 at D = 73.27)")]
+    txt = [("README.md", "| 45 – 73.27 | 99.2% to 99.4% | on the harmonic to within 0.14 of the peak"),
+           ("README.md", "| 16.76 | 98% | skewed |"), ("README.md", "| 8 | 94% | skewed |"),
+           ("README.md", "| 4 | 76% | sharpened, a deviation of 1.60 |"),
+           ("README.md", "| 3.044 | 37% | a narrow pulse on a flat floor, with a centre amplitude of 674 against 0.32 at D = 73.27 |")]
     frac = lambda D: 100 * float(by[D][4])  # noqa: E731
     dev = lambda D: float(by[D][5])  # noqa: E731
     return [("first harmonic at 45.05 (%)", frac(45.050722), 99.2, 0.1, txt),

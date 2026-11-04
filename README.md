@@ -165,36 +165,48 @@ Contents
 
 ![Echo period Δ(D) and critical exponent γ(D) with one rational formula for all D ≥ 4, and the double-double points from D = 3.045 to 73.3](solver/delta.svg)
 
-The echo period Δ(D) and critical exponent γ(D), computed with the f64 solver in [`solver/`](solver/) (its residual is
-the Rust kernel of [Software](#software-the-rust-kernel)) and the double-double solver in [`hp/`](hp/). The dashed
-curves are one rational formula in 1/(D−2) for every D ≥ 4 (below), fitted on the f64 points 4 ≤ D ≤ 30.2 whose
-integration-step error has been extrapolated out ("step-converged"), with the solver's near-null directions resolved and
-enough Fourier modes in time at low D; hollow points are held out of the fit. The green diamonds are
-double-double points from D = 3.045 to 67.77 (below D = 4 the formula does not apply);
-above D = 30.2 it matches them to 5.8×10⁻⁸. The amber diamonds are the pinned double-double runs: T73 and T75 from D =
-67.74 to 73.27 (Δ after one full-system Newton step), which it matches to 4.3×10⁻⁸, and T85 past 73.27 in a layout with
-the last node moved toward the horizon, where Δ is known only to about 10⁻⁶
-([notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), section 12.3). The shaded ranges say how well Δ is known in each (the
-median of the range's error estimate: the change from the next resolution, the nearby checks, or the difference between
-two runs; hover for the largest), and the grey trace is that error at every point, on the log axis at the right. As D →
-∞, γ → 1/2 (imposed in the γ fit) and Δ → Δ∞ = 1.643893746 ± 0.000000015 if Δ is analytic in 1/D (from the
-double-double points; both limits are discussed [below](#the-formula)). Details of the points are in
-[Values](#values) and [notes/SOLVER_HP.md](notes/SOLVER_HP.md). Regenerate with
+**Reading the graph.** The echo period Δ(D) and the critical exponent γ(D), for every dimension computed.
+
+- **Dots:** the f64 solver in [`solver/`](solver/), whose residual is the Rust kernel of
+  [Software](#software-the-rust-kernel). Its points are "step-converged": the integration-step error is extrapolated
+  out, the solver's near-null directions are resolved, and low D gets enough Fourier modes in time. Hollow points are
+  held out of the fit.
+- **Dashed curves:** one rational formula in 1/(D−2) for every D ≥ 4 ([below](#the-formula)), fitted on the f64 points
+  4 ≤ D ≤ 30.2.
+- **Green diamonds:** the double-double solver in [`hp/`](hp/), from D = 3.045 to 67.77. Below D = 4 the formula does
+  not apply; above D = 30.2 it matches them to 5.8×10⁻⁸.
+- **Amber diamonds:** the pinned double-double runs. T73 and T75 cover D = 67.74 to 73.27 (Δ after one full-system
+  Newton step), and the formula matches them to 4.3×10⁻⁸. T85 continues past 73.27 in a layout with the last node moved
+  toward the horizon, where Δ is known only to about 10⁻⁶ ([notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), section 12.3).
+- **Shading:** how well Δ is known in each range, the median of the range's error estimate (the change from the next
+  resolution, the nearby checks, or the difference between two runs; hover for the largest). The grey trace is that
+  error at every point, on the log axis at the right.
+- **Limits:** as D → ∞, γ → 1/2 (imposed in the γ fit) and Δ → Δ∞ = 1.643893746 ± 0.000000015 if Δ is analytic in 1/D,
+  from the double-double points (both limits are discussed [below](#the-formula)).
+
+Details of the points are in [Values](#values) and [notes/SOLVER_HP.md](notes/SOLVER_HP.md). Regenerate with
 `cd solver/data && python3 ../plot_delta.py --raw ../../../choptuik-large-d-raw` (the pinned runs are in the
 [raw data](#raw-data)).
 
 ![The echo itself: the centre field over one period at D = 3.044, 4, 8, 16.76, 45.05, 60.96 and 73.27, each scaled to its peak, with a pure first harmonic as the limit shape](hp/echo_shapes.svg)
 
-**What repeats with that period** (`hp/plot_echo.py`, its table in `hp/data/echo_shapes.csv`). Δ is a period: in the
-logarithmic time τ every field of the solution repeats after τ advances by Δ while space contracts by e^Δ, and the
-echo is the shape of a field within one period. The graph shows the scalar field at the centre, p(τ, x) ≈ p1(τ) x,
-over one period for seven converged states, each divided by its peak value and aligned at its peak, with a pure first
-harmonic, sin(2πτ/Δ), as the dashed line. From D = 45 up the curves lie on that harmonic to within 0.14 of the peak
-(99.2% to 99.4% of the field's power in it), so the large-D side is one oscillation of shrinking period; going down,
-the wave skews (98% at D = 16.76, 94% at 8), sharpens at D = 4 (76%, a deviation of 1.60), and at D = 3.044 is a
-narrow pulse on a flat floor (37%, with a centre amplitude of 674 against 0.32 at D = 73.27). The structure of the
-echo sits at the low-D end, which is why D → 3 needs hundreds of τ modes (M = 384 at 3.044) where M = 32 serves
-D = 73.
+**What repeats with that period** (`hp/plot_echo.py`, its table in `hp/data/echo_shapes.csv`). Δ is a period. In
+the logarithmic time τ, every field of the solution repeats after τ advances by Δ, while space contracts by e^Δ. The
+echo is the shape of a field within one period.
+
+The graph shows the scalar field at the centre, p(τ, x) ≈ p1(τ) x, over one period for seven converged states. Each is
+divided by its peak value and aligned at its peak, and the dashed line is a pure first harmonic, sin(2πτ/Δ).
+
+| D | field's power in the first harmonic | the shape |
+|---|---|---|
+| 45 – 73.27 | 99.2% to 99.4% | on the harmonic to within 0.14 of the peak: one oscillation of shrinking period |
+| 16.76 | 98% | skewed |
+| 8 | 94% | skewed |
+| 4 | 76% | sharpened, a deviation of 1.60 |
+| 3.044 | 37% | a narrow pulse on a flat floor, with a centre amplitude of 674 against 0.32 at D = 73.27 |
+
+So the echo's structure sits at the low-D end. That is why D → 3 needs hundreds of τ modes (M = 384 at 3.044), where
+M = 32 serves D = 73.
 
 ### The formula
 
