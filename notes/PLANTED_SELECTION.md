@@ -3075,10 +3075,16 @@ and 14.1.
 | 1.01 | −1.5461948945375185363×10⁻²⁰ − 8.7086582629044377998×10⁻²⁰i | 1.50×10⁻³¹ (1.70×10⁻¹², 59) | bitwise equal, 22/22 | 0.0066 |
 
 - **Items 1(a)–(d) pass at every node.** The plateau errors are 1.19, 1.30 and 1.41×10⁻³¹, and the pilot difference
-  added to each, |σ₂₂(a) − σ₂₂(b)| = 8.99×10⁻³³, is 0.069 of (a)'s (ruling 2's case did not arise). Pilot (b)'s
-  σ₁₉…σ₂₁ sit at 0.013, 0.011 and 0.118 of (a)'s plateau errors from (a)'s. Item 1(b) compares two K on one machine
-  at every node (win2's K 45 files against its own K 43 files): 22 of 22 strings at each node. The five mutations of
-  item 1 were not run on the real files by T104; they are queued (T104b) and recorded here when they land.
+  added to each, |σ₂₂(a) − σ₂₂(b)| = 8.99×10⁻³³, is 0.069 of (a)'s (ruling 2's case did not arise). Pilot (b)'s σ₁₉…σ₂₁
+  sit at 0.013, 0.011 and 0.118 of (a)'s plateau errors from (a)'s. Item 1(b) compares two K on one machine at every
+  node (win2's K 45 files against its own K 43 files): 22 of 22 strings at each node. The five mutations of item 1, run
+  on the real files as T104b (2026-11-04 07:29 UTC, `T104-win2/converge_mutate_*.log`), all fire: err, low, pilot and
+  ratiolaw each trip their one check, and amend trips the err22 check at all three nodes, as at K = 21, since item 1(a)
+  adds the pilot difference at every node. A discrepancy, recorded and not fixed: item 1 describes amend as scaling the
+  pilot's σ₂₂ by 1 + 10⁻⁹, and `planted_k22.py` scales its real part only. σ₂₂ is nearly imaginary (its real part is
+  0.12 of its modulus, against 0.76 for σ₂₁), so the mutation moves err22 to 1.1–1.2×10⁻¹⁰ relative, margins 0.83–0.87,
+  where at K = 21 it reached 7.4–7.8×10⁻¹⁰, margins 0.13: it fires, by a small factor. A K = 23 procedure should scale
+  both parts.
 - **σ₂₂ follows the ratio law's rotation:** σ₂₁/σ₂₂ = 10.67 − 9.93i at ω∞; the second differences of σ_k/σ_{k+1} are
   0.0066–0.012 at k = 10–20.
 - **Spread in wf.** σ₂₂ changes by 6.5% of itself between the nodes (6.3%, 6.4% for σ₂₀, σ₂₁); the largest err22 is
@@ -3229,8 +3235,8 @@ Under noise of size sigma_err on every σ_k (20 seeds), arg₂₂ moves by at mo
 
 - σ₂₂ is converged to 1.4–1.7×10⁻¹² relative at the three nodes, with margins of 59–73 under item 1 and the J 1500
   pilot at 0.069 of the plateau error, and continues every trend of σ₀…σ₂₁; it is 0.896 of P5's K = 21 type bound
-  (proof/P5_scope.md). The Mac's replica of (a) reproduced it in all 23 strings; the replica of (b) and item 1's five
-  mutations on the real files are still to land.
+  (proof/P5_scope.md). The Mac's replica of (a) reproduced it in all 23 strings, and item 1's five mutations fire on the
+  real files (section 14.2); the replica of (b) is still to land.
 - The real estimates sit within 2.3×10⁻⁷ of 1 on both sides of it: arg 1.0000002, G 0.99999999, the central Padé
   approximants [4/17]–[17/4] within 5×10⁻⁸ of 1 with [3/18] 2.1×10⁻⁷ below, Aitken 1.0000000; the ring-free sums of
   σ₀…σ₂₂ lie at 1.0000000019–1.0000000046.
