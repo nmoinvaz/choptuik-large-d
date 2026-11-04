@@ -9815,3 +9815,19 @@ util_report.py:
   pid 66835    0.04 GB  cpu        0 s  amp_flint_par.py 1.0 45 1500 1280 --procs 2
   pid 66842    0.02 GB  cpu        0 s  spawn worker
   python total 1.4 GB in 5 processes
+
+== 2026-11-04 01:27 UTC mac T103 early control (relaunch), identical to both references
+The "k 9:" line came at 334 s (relaunch started 01:18 UTC). Both exit 0.
+  log_compare T103-mac vs T94-mac scan43J1500 w1.0000.log: identical at all 5 common orders (1..9), exit 0
+  log_compare T103-mac vs T99-win2 scan45J1500 w1.0000.log: identical at all 5 common orders (1..9), exit 0
+vm.swapusage: total = 10240.00M  used = 8866.88M  free = 1373.12M  (encrypted)
+Workers resident 2.85 and 2.76 GB, free memory 1.8 GB. highm_check.py scaled (pid 56380) still running beside, 0.43 GB. Pushed T103-mac.
+util_report.py:
+2026-11-04 01:27 UTC  cpu 60%  mem used 30.0 of 32.0 GB, free 0.8 GB, swap used 8.7 of 10.0 GB
+  pid 66843    2.76 GB  cpu      509 s  spawn worker
+  pid 66844    2.66 GB  cpu      345 s  spawn worker
+  pid 66835    0.82 GB  cpu       11 s  amp_flint_par.py 1.0 45 1500 1280 --procs 2
+  pid 56380    0.45 GB  cpu     2859 s  highm_check.py scaled --compare=/Users/nathan/Source/choptuik-large-d-raw/T81/scaled_main.json
+  pid 68343    0.02 GB  cpu        0 s  comms_watch.py --name mac
+  pid 66842    0.02 GB  cpu        0 s  spawn worker
+  python total 6.7 GB in 6 processes
