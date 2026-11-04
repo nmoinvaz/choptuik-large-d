@@ -1604,3 +1604,30 @@ D from a fit along the converged history (log-linear per harmonic), entered into
 see their motion, and the corrector holds them at the trend's values at the new D. That is the one design change the
 pilot asks for; with it the pin-1 chain's floor (7×10⁻²⁰ at 80.5) suggests the corrector converges again. The build
 of 13.15 is otherwise complete, and the release of multidouble 1.9.0 (PR #26) and the merge of the worktree remain.
+
+### 13.18 The harmonics on a trend: Δ on the formula to 10⁻⁷, and the double-double wall at D ≈ 80 (2026-11-04 03:10 UTC)
+
+`hp/anm_run.py --trend T75` holds p1's harmonics above the pin on a trend instead of at the base's values, T75's
+pin-to-trend in the continuation's terms. Across T75's states (D 70.7–73.3, both pins) each held coefficient follows a
+power law in n: in |v| ~ n^s, harmonic 5 has s = −1.21 (cos) and +0.07 (sin), 7 has −1.61 and −0.71, 9 has −1.99
+and −1.30, with fit residuals of 10⁻⁵ to 5×10⁻³ in ln|v|; harmonics 11 and 13 are noise at their size (sign changes,
+residuals 0.04–0.7) and stay constant. The trend is taken relative to the base, its Taylor coefficients in h enter
+each order's right-hand side on the held rows (as the pinned solver's offset carries the values), and the corrector
+holds the trend's values at the new D. Records `anm-mac/run_trend_pin3/`, `run_trend_pin5.log`, `run_trend_pin3_cont/`.
+
+| chain from 73.27, pin 3, plain Newton | 75.27 | 77.27 | 79.27 | 79.77 | 80.27 |
+|---|---|---|---|---|---|
+| held at the base's values (13.17) | 2.0e-20, Δ − formula +6.7e-7 | 3.4e-20, +1.4e-6 | 6.6e-20, +2.0e-6 | — | 3e-14 accepted, +2.4e-6 |
+| held on the trend | 3.2e-20, −6.8e-8 | 2.8e-20, −9.9e-8 | 2.1e-15 accepted, Δ correction 4e-14, −1.4e-7 | 6e-14 accepted, −9e-10, −1.5e-7 | 9e-14 accepted, −1.9e-8, −1.4e-7 |
+
+The reading. (i) The stale holding was the source of the drift: on the trend, Δ sits 0.7–2×10⁻⁷ from the formula
+from 75 to 80, the formula's own extrapolation past the D ≤ 78 it was fitted on, where the stale chains drifted to
+2×10⁻⁶ by 80. (ii) The corrector's reach is unchanged: from 79.3 on the double-double Newton takes no step from
+residuals of 10⁻¹³ in the horizon block's weak directions, with the trend or without, and the chain ends at 80.27
+with its last three points accepted as stalls; their linearised Δ corrections are 4×10⁻¹⁴, 9×10⁻¹⁰ and 2×10⁻⁸, so
+Δ there is good to about 10⁻⁸. (iii) Pin 5 is unusable with the trend: its free harmonic 5 (pivot 4×10⁻⁹) takes up
+the held rows' forcing and the coefficients come out polluted (|z₂₄| 10⁻⁷, a_max 0.38), where pin 3 gives
+|z₂₄| 4×10⁻²⁶ and a_max 2.4. (iv) This is the double-double floor in the weak directions, the wall of 12.x in its
+corrector form: the predictor still lands inside the basin at every step (10⁻¹⁴ to 10⁻¹³), and the quad-double
+corrector of the kernel (`--corrector qd`: `newton_qd` with the held harmonics frozen as directions) is the next
+test, running as this is written.
