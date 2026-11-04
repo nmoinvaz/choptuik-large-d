@@ -13,7 +13,7 @@ formulation of hp/pinning.py; their coefficients are zero).
     python3 anm_run.py RAWDIR OUTDIR --state T75/pin7_D73.2657.npz --kfreeze 3 [--N 24] [--eps 1e-16] [--h_max 2]
         [--steps 20] [--D_max 200] [--corrector dnp|deflated|newton] [--tol 1e-20] [--tol_growth 1.45]
         [--accept_stall 1e-19] [--junk_only 0] [--threads 4] [--w 24] [--trend T75] [--tol_qd 1e-28]
-        [--qd_it 12] [--qd_w 0] [--refine 1] [--probe 0 --probe_c C] [--plan_tol 1e-32] [--fix1 0]
+        [--qd_it 12] [--qd_w 0] [--refine 1] [--probe 0 --probe_c C] [--plan_tol 1e-32] [--fix1 0] [--F_pred_max 0]
 
 --corrector qd runs the quad-double Newton of the kernel (hpkernel.driver.newton_qd, Solver.newton_q) on the pinned
 system (pinning.PinnedQ: the held harmonics' offset subtracted from the quad-double residual and added to the step, as
@@ -46,6 +46,9 @@ chain's recorded |F_pred| / a at this base: the probe exits 1 unless its own dou
 --fix1 1 corrects z_1 at every base by the quad-double model's order-1 residual (central differences at 2^-29 and
 2^-30, Richardson-combined, two passes through the stored LU) and rebuilds the series on it; records carry the
 residual norms (fix1). The double-double jet's own z_1 is wrong by 1e-4 relative at D 82.16 (13.19).
+--F_pred_max P (0: off) skips the corrector for a prediction above P and shrinks the step by 0.9 (P / |F_pred|)^(1/2)
+(at least 1/4) at once: with --fix1 the prediction error is second order in a, and from D 79.3 to 84.5 every attempt
+predicted below 1.53e-14 converged while a failed correction costs up to 12 min. Records carry the skipped (a, |F|).
 """
 import json
 import os
@@ -114,7 +117,7 @@ def main():
     args = list(sys.argv[1:])
     opt = dict(state="T75/pin7_D73.2657.npz", kfreeze=3, N=24, eps=1e-16, h_max=2.0, steps=20, D_max=200.0, corrector="dnp",
                tol=1e-20, tol_growth=1.45, accept_stall=1e-17, junk_only=0, threads=4, w=24, trend="", tol_qd=1e-28, qd_it=12, qd_w=0,
-               refine=1, probe=0, probe_c=0.0, plan_tol=1e-32, fix1=0)
+               refine=1, probe=0, probe_c=0.0, plan_tol=1e-32, fix1=0, F_pred_max=0.0)
     for k in list(opt):
         f = "--" + k
         if f in args:
@@ -353,20 +356,29 @@ def main():
             sys.exit(probe(D, zh, zl, Zh, Zl, refine, held_arg))
         converged = False
         for attempt in range(4):
-            ph, pl = np.array(zh), np.array(zl)
-            for k in range(1, N + 1):
-                ph, pl = dd_add(ph, pl, *dd_scale(Zh[k], Zl[k], a ** k))
-            Dn = D + mp.mpf(a)                 # exact: the series variable is a to double-double precision
-            sn = mk(Dn)
-            segs_n = segs
-            sn.set_segs(segs_n)
-            spn = wrap_at(sn, Dn)
-            Fh, Fl = spn.residual(ph, pl)
-            Fp = float(rnorm(Fh, Fl))
-            if np.isfinite(Fp) and Fp <= 1e-6:
-                segs_n = sn.plan(ph, pl, 1e-32, 0.05)
+            screens = []
+            while True:
+                ph, pl = np.array(zh), np.array(zl)
+                for k in range(1, N + 1):
+                    ph, pl = dd_add(ph, pl, *dd_scale(Zh[k], Zl[k], a ** k))
+                Dn = D + mp.mpf(a)                 # exact: the series variable is a to double-double precision
+                sn = mk(Dn)
+                segs_n = segs
                 sn.set_segs(segs_n)
-                Fh, Fl = spn.residual(ph, pl); Fp = float(rnorm(Fh, Fl))
+                spn = wrap_at(sn, Dn)
+                Fh, Fl = spn.residual(ph, pl)
+                Fp = float(rnorm(Fh, Fl))
+                if np.isfinite(Fp) and Fp <= 1e-6:
+                    segs_n = sn.plan(ph, pl, 1e-32, 0.05)
+                    sn.set_segs(segs_n)
+                    Fh, Fl = spn.residual(ph, pl); Fp = float(rnorm(Fh, Fl))
+                # --F_pred_max: a prediction above it is not corrected; with --fix1 the error is second order in a,
+                # so the step shrinks by the square root of the excess (at most 6 times per attempt)
+                if not (opt["F_pred_max"] and np.isfinite(Fp) and Fp > opt["F_pred_max"] and len(screens) < 6):
+                    break
+                screens.append((a, Fp))
+                print(f"    a {a:.4f}: predicted |F| {Fp:.2e} above {opt['F_pred_max']:.1e}, not corrected", flush=True)
+                a *= max(0.25, 0.9 * (opt["F_pred_max"] / Fp) ** 0.5)
             t1 = time.time()
             tol = tol_at(Dn)
             if np.isfinite(Fp):
@@ -377,7 +389,7 @@ def main():
             fd = float(formula_delta(float(Dn)))
             att = dict(attempt=attempt, a=a, D=float(Dn), D_str=str(Dn), F_pred=Fp, F_final=Fc, tol=tol, steps=nsteps, accepted=accepted, t_corr=t_corr,
                        Delta=float(ch[-1] + cl[-1]), dDelta_formula=float(ch[-1] + cl[-1]) - fd, dDelta_corr=dcorr,
-                       moved=float(dd_norm(*dd_add(ch, cl, -ph, -pl))))
+                       moved=float(dd_norm(*dd_add(ch, cl, -ph, -pl))), screens=screens)
             rec.setdefault("attempts", []).append(att)
             print(f"    a {a:.3f} -> D {mp.nstr(Dn, 12)}: predicted |F| {Fp:.2e}, {opt['corrector']} {nsteps} steps -> {Fc:.2e} (tol {tol:.1e}"
                   f"{', stall accepted, Delta correction ' + format(dcorr, '+.1e') if accepted and Fc > tol else ''}), "
