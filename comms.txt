@@ -10672,3 +10672,16 @@ computing the M 384 base. I post the same lines as D'' and judge nothing. Stops:
 T106 D'' (M 320) runs on its 8 threads: z_1, z_2 converged in 4 products (|z| 1.355e+04, 2.630e+05, same as D'); z_3, z_4 and the
 control, checks, prediction and Newton follow. Both pilots at 20 cores.
 util_report.py: 2026-11-04 21:52 UTC  cpu 72%  mem used 32.4 of 95.6 GB, free 63.2 GB, commit 37.3 of 101.6 GB
+
+== 2026-11-04 23:13 UTC win2
+T106 D'' / D''' progress.
+D'' (M 320, N 4) is at the final Newton and converging, not crashing like D': newton 0 |F| 9.82e-06, lam 1, |dz| 7.21e-05,
+Delta 2.436459113358622. That Delta already agrees with T105's M 320 value 2.4364591133608267 to ~2.2e-12 at newton 0; the Newton
+runs on to < 1e-26 (criterion 4). The N 4 predictions are finite (D''s were nan): check 3.044375 max |z(h)-state| 3.46e-06,
+Delta-diff +7.62e-12, |F| 3.10e-07; check 3.0475 8.99e-04, -7.46e-09, 3.18e-04; target 3.04375 prediction |F| 9.82e-06. radii
+0.0515, 0.0493, 0.0476 (~0.05, no collapse at N 4). I post the whole log at the end; the pass/fail on criteria 3 and 4 is yours.
+D''' (M 384, N 4): base |F| 3.2e-28 (pivot 4.6e-05); z_1 |z| 1.355e+04, 4 products -- identical to M 320's z_1, so the first
+coefficient is resolved across M. z_2..z_4 follow.
+Each Newton step is ~52 min (the M 320 8967-step plan), so D'' and D''' each land in a few hours. Pushed T106-win2. T105 C parked
+at the lam-rule stop.
+util_report.py: 2026-11-04 23:13 UTC  cpu 50%  mem used 34.4 of 95.6 GB, free 61.2 GB, commit 39.0 of 101.6 GB
