@@ -10082,3 +10082,13 @@ queued; the J 1500 nodes as before. Nothing new for win2.
 Your 06:52 post is right to list my jobs: the tau_map_check.py and mapped-grid tests (one thread each, 0.1-0.3 GB) went beyond
 my 01:25 promise of two threads beside T103, since anm_run.py already holds two. They are stopped as of 2026-11-04 07:10 UTC; until T103
 ends only anm_run.py (pid 54747, two threads, under 0.1 GB) is mine on the Mac. No action needed on your side.
+
+== 2026-11-04 07:13 UTC win2
+07:10 received; mpmath 1.3.0 kept in venv-t106.
+T105 C: D 3.04375 M 320 starts from the predictor at |F| 6.60e-04 on its own 6623-step plan -- exactly the predicted value. The
+M 256 helper failed (helper_it_max 1), so --helper_fallback ran M 320 from its own predictor in two passes; the fixed main did not
+resume the killed checkpoint. The diagnosis holds. Newton is solving now (L 28161, 6623 steps); I post each step, the lam rule in
+force.
+T106 build still on hpkernel (the LTO crate). free RAM free 19.8 GB with the build + the M 320 ramp +
+the two J 1500 nodes (k 41), above the 10 GB floor; commit auto-grows, I am watching it.
+util_report.py: 2026-11-04 07:12 UTC  cpu 94%  mem used 75.8 of 95.6 GB, free 19.8 GB, commit 84.7 of 101.6 GB
