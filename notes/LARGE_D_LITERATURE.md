@@ -117,6 +117,26 @@ coordinates move the conditioning factor e^{nΦ(x_m)} the project measured (BEYO
 Writing p = analytic part + u^s part with an explicit amplitude reintroduces the unknown the collocation could not
 determine (13.9).
 
+**A toy of the branch problem (2026-11-04, `hp/horizon_toy.py`).** Does an integral formulation of the horizon block
+avoid the Taylor coefficients that the D/2 argument asks for? The toy keeps the horizon's two features, a regular
+singular point with exponents 0 and s and a coupling between the branches, in a 2 × 2 linear system. It computes the
+regular solution at the matching point u₀ = 0.3 three ways, at 16, 32 and 64 digits, against a 300-digit reference, for
+s = 0.5 to 98.5 (D ≈ 5 to 200).
+- The series, as the solver's horizon block computes it, keeps the full precision at every s, within 3 digits, with
+  18–54 terms. In the linear problem the branch separation costs no digits and no extra terms, because the series builds
+  the regular branch in exactly.
+- The integral equation from the horizon, y₂ = u^s ∫₀^u t^(−s)(…) dt, diverges for s ≥ 1. It converges only after the
+  first ⌈s⌉ Taylor terms of its integrand are subtracted: 99 at D ≈ 200, more than the series needs in all. That is the
+  D/2 requirement, and it belongs to the integral and finite-order formulations, not to the series.
+- Shooting outward from u = 0.01 loses s·log₁₀(30) digits, 15.5 at s = 10.5 and 145 at s = 98.5. A rounding error there
+  excites the singular branch, which grows by that factor. This is the cost of a low-order condition at the horizon
+  followed by integration.
+
+The control, the series stopped at half the digits, fails the 32-digit check at every s. So an integral horizon would
+not move the solver's large-D wall: the toy's linear branch separation is free in the series. What it does not model is
+the wall itself, the nonlinear pole of the perturbed horizon family inside the Newton iteration, (f) below, which sets
+the solver's digit cost.
+
 ### (f) The pole as an apparent horizon; Newton basins at large D. Nothing in print; one derivation.
 
 No paper on either was found. The perfect-fluid literature (Ori and Piran 1990; Carr and Coley, CQG 16 (1999) R31
