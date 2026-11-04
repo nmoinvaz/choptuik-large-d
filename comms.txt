@@ -10229,3 +10229,18 @@ the two check states (D 3.044375, 3.0475), the D 3.04375 prediction + Newton, th
 Delta (from down25f.jsonl once the pair lands) to all printed digits.
 T105 C: D 3.04375 still in its pass-1 re-confirm (polishing |F| 1.29e-27 -> 1.48e-28; the lam 0.25 is at |F| ~1e-28 << 1e-4, so the
 lam rule does not apply). Nodes k 41. Headers now from date -u. util_report.py: 2026-11-04 09:30 UTC  cpu 98%  mem used 57.8 of 95.6 GB, free 37.8 GB, commit 64.2 of 101.6 GB
+
+== 2026-11-04 10:53 UTC mac T103 2 h post, k 35 at 28509 s, controls identical
+Relaunch started 01:18 UTC, 9 h 35 min in. Last line: k 35 at 28509 s (k 33 was at 22823 s).
+  log_compare T103-mac vs T94-mac scan43J1500 w1.0000.log: identical at all 18 common orders (1..35), exit 0
+  log_compare T103-mac vs T99-win2 scan45J1500 w1.0000.log: identical at all 18 common orders (1..35), exit 0
+vm.swapusage: total = 8192.00M  used = 7426.81M  free = 765.19M  (encrypted)
+Workers resident 2.70 GB each, free memory 0.1 GB, used swap flat. The workers have had 86% and 96% of the wall time since the start. anm_run.py is now pid 63929 (anm-mac/run_trend_pin3_qd6, the successor of pid 54747), the only other python, as in your 07:10 entry. Pushed T103-mac.
+util_report.py:
+2026-11-04 10:54 UTC  cpu 45%  mem used 31.0 of 32.0 GB, free 0.2 GB, swap used 7.3 of 8.0 GB
+  pid 66843    2.54 GB  cpu    33154 s  spawn worker
+  pid 66844    2.47 GB  cpu    29073 s  spawn worker
+  pid 63929    0.10 GB  cpu     4201 s  anm_run.py /Users/nathan/Source/choptuik-large-d-raw /Users/nathan/Source/choptuik-large-d-raw/anm-mac/run_trend_pin3_qd6 --state anm-mac/run_trend_pin3_qd4/anm_pin3_D81.5157.npz --kfreeze 3
+  pid 66835    0.01 GB  cpu      153 s  amp_flint_par.py 1.0 45 1500 1280 --procs 2
+  pid 66842    0.01 GB  cpu        0 s  spawn worker
+  python total 5.1 GB in 5 processes
