@@ -10439,3 +10439,24 @@ util_report.py:
 
 == 2026-11-04 16:48 UTC mac correction to the end estimate in my k 41 post
 The "03:00 to 08:00 UTC on 11-05" and "24 h would be 01:18 on 11-05" in my last post had no calculation behind them, here is one. Per-order increments of win2's (b) (T99-win2 scan45J1500): k 41 to 43 8286 s, k 43 to 45 8852 s, to the end 65 s. This run's k 39 to 41 took 8523 s against win2's 7319 s (x1.16). Scaled: k 43 at about 61300 s, k 45 at about 71600 s, end at about 71700 s on the script clock, so about 20000 s (5.5 h) after k 41 at 51684 s, that is about 22:00 to 23:00 UTC on 2026-11-04 (the script clock runs behind the wall clock by about 1 h 8 min, 51684 s against 15 h 29 min). If the Mac slows (swap, a third job) it moves later. T94-mac's own k 43 to end took 125 s, 8437 s from k 41.
+
+== 2026-11-04 16:50 UTC win2
+T106 E Run 3 (the coarse base D3.0450, defaults, no --others) done, exit 1 as expected. Every "(" line:
+  (a) jet order 0 against the residual: |c0 - F| 0.00e+00 (|F| 5.86e-29), bound 1e-3 |F|: PASS
+  (b) jet order 1 against central differences in D: best 8.97e-17 (|F_1| 1.744e+03, jet 198 s), bound 1e-6: PASS
+  (c) jvp(cut=False) (eps 1e-8, 1e-9, 1e-10): 2.3e-07, 2.3e-09, 2.3e-11, 28.3 s, bound 1e-6: PASS
+  (c_cut) jvp(cut=True) (eps 1e-8, 1e-9, 1e-10): 2.3e-07, 2.3e-09, 2.3e-11, 25.2 s, bound 1e-6: PASS
+  (d) |J t + F_1| / |F_1| 2.54e-04 against the interpolation's |J (t4 - t3)| / |F_1| 1.34e-03: PASS
+  (e_lu) f64 LU (pivots 3.8e-11..5.2e+01, 1834 s): |x| 4.6204e+09, dDelta/dD 7.945128, |J x+F_1|/|F_1| 3.0e-09, |x-t|/|t| 9.6e+04, bound 2e-03: FAIL
+  (e_gmres_cut_1e-26) cut=True 1e-26 (40 products, converged False, 607 s): |x| 1.2226e+09, |J x+F_1|/|F_1| 9.6e-12, |x-t|/|t| 2.5e+04: FAIL
+  (e_gmres_cut_1e-20) cut=True 1e-20 (40 products, converged False, 530 s): |x| 1.2226e+09, |J x+F_1|/|F_1| 9.6e-12, |x-t|/|t| 2.5e+04: FAIL
+  (e_gmres_1e-20) cut=False 1e-20 (40 products, converged False, 528 s): |x| 7.2388e+08, |J x+F_1|/|F_1| 1.0e-11, |x-t|/|t| 1.5e+04: FAIL
+  failed links: e_lu, e_gmres_cut_1e-26, e_gmres_cut_1e-20, e_gmres_1e-20
+On the coarse base ALL FOUR solve-based links fail (not just e_gmres_cut_1e-26 at M 48 as your entry read): the f64 LU pivot is
+3.8e-11 (vs 5.1e-05 on the p1 base), so e_lu gives |x| 4.62e9 and every GMRES variant 7e8..1.2e9 -- a tangent off by ~1e4-1e5 from
+the true 4.80e4, which is the |z_1| ~1e8 scale the pilot produced. (a)-(d) still pass: the jet itself is fine; only the solves off
+the ill-conditioned coarse LU are wrong. No traceback. Reporting the extra failed links, not fixing.
+T106 E complete. The two causes are now separated: (1) the wrong coarse base (ill-conditioned LU -> garbage tangent), Run 3; (2)
+even on the good p1 base, the 1e-26 GMRES tolerance diverges while 1e-20 converges in 4 products, Run 1. Pushed T106-win2. Awaiting
+your pilot-rerun entry. T105 C is on D 3.0425 (M 320 two-pass fallback); nodes done.
+util_report.py: 2026-11-04 16:50 UTC  cpu 20%  mem used 30.6 of 95.6 GB, free 65.0 GB, commit 36.3 of 101.6 GB
