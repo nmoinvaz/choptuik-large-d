@@ -154,6 +154,19 @@ axis at the right. As D → ∞, γ → 1/2 (imposed in the γ fit) and Δ → �
 [`solver/CONTEXT.md`](solver/CONTEXT.md). Regenerate with `cd solver/data && python3 ../plot_delta.py --raw
 ../../../choptuik-large-d-raw` (the pinned runs are in the [raw data](#raw-data)).
 
+![The echo itself: the centre field over one period at D = 3.044, 4, 8, 16.76, 45.05, 60.96 and 73.27, each scaled to its peak, with a pure first harmonic as the limit shape](hp/echo_shapes.svg)
+
+**What repeats with that period** (`hp/plot_echo.py`, its table in `hp/data/echo_shapes.csv`). Δ is a period: in the
+logarithmic time τ every field of the solution repeats after τ advances by Δ while space contracts by e^Δ, and the
+echo is the shape of a field within one period. The graph shows the scalar field at the centre, p(τ, x) ≈ p1(τ) x,
+over one period for seven converged states, each divided by its peak value and aligned at its peak, with a pure first
+harmonic, sin(2πτ/Δ), as the dashed line. From D = 45 up the curves lie on that harmonic to within 0.14 of the peak
+(99.2% to 99.4% of the field's power in it), so the large-D side is one oscillation of shrinking period; going down,
+the wave skews (98% at D = 16.76, 94% at 8), sharpens at D = 4 (76%, a deviation of 1.60), and at D = 3.044 is a
+narrow pulse on a flat floor (37%, with a centre amplitude of 674 against 0.32 at D = 73.27). The structure of the
+echo sits at the low-D end, which is why D → 3 needs hundreds of τ modes (M = 384 at 3.044) where M = 32 serves
+D = 73.
+
 ### The formula
 
 For massless scalar critical collapse in D = n + 2 spacetime dimensions, the echo period Δ and the critical

@@ -170,6 +170,28 @@ def lowD_limits():
 
 
 @check
+def echo_shapes():
+    """README "What repeats with that period": the first-harmonic power fractions, the deviations from the sinusoid and
+    the centre amplitudes of hp/data/echo_shapes.csv (hp/plot_echo.py on stored states of the raw-data repository)"""
+    rows = [r.rstrip("\n").split(",") for r in open(os.path.join(ROOT, "hp/data/echo_shapes.csv")) if r[:1].isdigit()]
+    by = {float(r[0]): r for r in rows}
+    txt = [("README.md", "From D = 45 up the curves lie on that harmonic to within 0.14 of the peak\n(99.2% to 99.4% of the field's power in it)"),
+           ("README.md", "the wave skews (98% at D = 16.76, 94% at 8), sharpens at D = 4 (76%, a deviation of 1.60), and at D = 3.044 is a\nnarrow pulse on a flat floor (37%, with a centre amplitude of 674 against 0.32 at D = 73.27)")]
+    frac = lambda D: 100 * float(by[D][4])  # noqa: E731
+    dev = lambda D: float(by[D][5])  # noqa: E731
+    return [("first harmonic at 45.05 (%)", frac(45.050722), 99.2, 0.1, txt),
+            ("first harmonic at 73.27 (%)", frac(73.265722), 99.4, 0.1, txt),
+            ("largest deviation from D 45 up", max(dev(45.050722), dev(60.962646), dev(73.265722)), 0.14, 0.01, txt),
+            ("first harmonic at 16.76 (%)", frac(16.76), 98, 1, txt),
+            ("first harmonic at 8 (%)", frac(8.0), 94, 1, txt),
+            ("first harmonic at 4 (%)", frac(4.0), 76, 1, txt),
+            ("deviation at 4", dev(4.0), 1.60, 0.01, txt),
+            ("first harmonic at 3.044 (%)", frac(3.044375), 37, 1, txt),
+            ("centre amplitude at 3.044", float(by[3.044375][3]), 674, 1, txt),
+            ("centre amplitude at 73.27", float(by[73.265722][3]), 0.32, 0.01, txt)]
+
+
+@check
 def loader_exact():
     """hp/dd_fits_mp.load_points must return hi + lo of every CSV row exactly. The CSV stores repr() of each double;
     reading those strings as decimals at 60 digits moves a point by up to 2e-16 (notes/NUMERICS_REVIEW.md F7,
