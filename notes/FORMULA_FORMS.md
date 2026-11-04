@@ -94,3 +94,60 @@ gives 4.3×10⁻⁸ (median 2.6×10⁻⁸), which the README quotes now. (For a 
 different quantity, `plot_delta.full1_of`'s pinned Δ plus its linearised correction, taken for the same one.) The graph
 `solver/delta.svg` was redrawn with the stored formula (its caption's double-double agreement 6×10⁻⁸ where it read
 1×10⁻⁷, its formula limit 1.643898 where the refit's constant gave 1.643897).
+
+## One formula for every D: a series on the cut plane, and its integral form (2026-11-04)
+
+**The form.** With u = (D + 2)/5 and ζ = u − √(u² − 1), which maps the D-plane cut along [−7, 3] onto the unit disc
+(ζ = 0 at D = ∞, ζ = 1 at D = 3),
+
+```math
+\Delta(D) = \sum_{k=0}^{28} c_k\,T_k(2\zeta - 1) = \Delta_\infty + \frac{1}{\pi}\int_{-7}^{3}\frac{\rho(D')\,dD'}{D' - D},
+\qquad \rho(D') = \mathrm{Im}\,\Delta(D' + i0).
+```
+
+The 29 coefficients are fitted at 256 bits (python-flint) on all 1214 resolved double-double points from D = 3.04 to
+67.77, less the 27 that the production cleaning drops (`hp/formula_cut_fit.py`, which writes
+[`hp/data/formula_cut.json`](../hp/data/formula_cut.json)). `hp/formula_cut.py` evaluates both forms and checks them.
+Every fitted point lies within 3.47 times its error (χ²/dof 0.152). The largest misses by range are:
+
+| D | points | largest miss |
+|---|---|---|
+| 3.04–3.1 | 11 | 2.2×10⁻¹⁰ |
+| 3.1–4 | 28 | 6.9×10⁻¹⁰ |
+| 4–8.3 | 4 | 8.9×10⁻¹² |
+| 8.3–30 | 184 | 5.5×10⁻¹⁶ |
+| 30–67.8 | 987 | 5.4×10⁻¹⁵ |
+
+The integral equals the series to 10⁻⁵⁸ at D = 3.1–1000. With c₁₀ shifted by 10⁻¹², the first check fails at 1000
+times the error (`--mutate`, the control). The series gives Δ∞ = 1.643893745, against the README's 1.643893746 ±
+1.5×10⁻⁸, and Δ(3) = 1.919.
+
+**What it is not.** It is a fit. Its error between D 4 and 8.25, where only four resolved points lie, is not
+established: the unresolved M 48 rows there differ from it by up to 5.3×10⁻⁹ (at D 4.25), inside their own
+truncation error. Below D 3.04 it is an extrapolation, and Δ(3) ranges over 1.87–2.13 across the forms that fit
+(raw-data repository, `formula-mac/v2/real.log`). The integral is the same function written by Cauchy's formula, not
+new information. ρ is the series' continuation onto the cut, where no data lie: the data reach only ζ ≤ 0.88. It
+reaches 3.6×10⁹ and changes sign 23 times, so it is not a spectral density. Two-sided Padé (Stieltjes) bounds do not
+exist either, because a Stieltjes function would be monotone for D > 3, and Δ peaks near D 3.76.
+
+**How it was found** (raw-data repository, `formula-mac/` at ef97c2f, the work of two coordinator subagents). No form
+without a series reaches the points' precision (`v2/closed_part1.log`):
+
+| form | parameters | largest miss, D ≥ 10 | largest miss, all D |
+|---|---|---|---|
+| two branch points, at D_s and D = 3, free exponents | 6 | 7.9×10⁻⁶ | 1.3×10⁻³ |
+| rational [3/3] in 1/(D − 2) | 7 | 3.5×10⁻⁷ | |
+| rational [2/2] in ζ | 6 | 4.3×10⁻⁷ | |
+
+The planted tests had their criteria fixed in `v2/planted.py` before the real data were fitted. The ζ series
+recovers the plant with the cut at −9 (P7), the plant with the cut misplaced at −6 (P8) and a ζ-series plant (Pz)
+(`v2/planted_rest.log`). Over its fit choices (K = 25–33 and the cut's end n_s) it gives Δ∞ = 1.64389375218 ±
+7.5×10⁻⁹, a spread over fit choices (`v2/real.log`).
+
+Two questions stay open.
+- Whether Δ(D) really has a cut ending near D −7 to −9, or poles there. The held-out gain of the cut variables over
+  1/n is 12× on a pole-only plant, 9× on the cut plant and 6× on the real data, so it does not discriminate.
+- Where the cut ends. The fit does not estimate it: on plants, a free n_s returns −7.5 for a true −11.
+
+The first pass's low-D numbers (Δ(3) from 0.93 to 1.95) were float64 artifacts. The weighted design has condition
+10¹¹–10¹⁴ (`v2/cond_probe.py`).

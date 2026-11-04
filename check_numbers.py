@@ -285,6 +285,20 @@ def formula_refit():
 
 
 @check
+def formula_cut():
+    """README "One formula for every D": the cut-plane series of hp/data/formula_cut.json (hp/formula_cut_fit.py, 256
+    bits; hp/formula_cut.py evaluates and checks it): its points, its largest residual in units of the points' errors,
+    its number of coefficients, Delta_inf = the series at zeta = 0"""
+    import json
+    J = json.load(open(os.path.join(ROOT, "hp/data/formula_cut.json")))
+    txt = [("README.md", "Its 29 coefficients"), ("README.md", "reproduce all 1214 points within 3.47 times their errors, and give Δ∞ = 1.643893745")]
+    return [("formula_cut points", J["points"], 1214, 0.5, txt),
+            ("formula_cut coefficients", len(J["c"]), 29, 0.5, txt),
+            ("formula_cut largest |r|/sigma", J["max_abs_residual_over_sigma"], 3.47, 0.01, txt),
+            ("formula_cut Delta_inf", float(J["Delta_inf"]), 1.643893745, 1e-9, txt)]
+
+
+@check
 def lowD_formula_bound():
     """README, the low-D figure's caption: the sqrt(D - 3) formula (hp/plot_lowD_values.py C_DELTA) against every point
     of hp/data/delta_dd_lowD.csv at its largest M, D <= 4"""

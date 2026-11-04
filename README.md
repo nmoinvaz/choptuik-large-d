@@ -245,6 +245,15 @@ a refit, is the formula, and that spread is the extrapolation's own uncertainty.
 The shorter forms of the formula for each range of D, and the earlier power series with its table, are in
 [notes/FORMULA_FORMS.md](notes/FORMULA_FORMS.md).
 
+**One formula for every D, and its integral form.** A single expression covers all the computed points from D = 3.04
+to 67.77. It is a Chebyshev series in ζ = u − √(u² − 1), u = (D + 2)/5, a variable that maps the plane cut along
+[−7, 3] onto a disc. Equivalently, it is a Cauchy integral over that cut: Δ(D) = Δ∞ + (1/π) ∫ ρ(D′) dD′/(D′ − D)
+from −7 to 3. Its 29 coefficients ([`hp/data/formula_cut.json`](hp/data/formula_cut.json), fitted at 256 bits by
+`hp/formula_cut_fit.py`) reproduce all 1214 points within 3.47 times their errors, and give Δ∞ = 1.643893745. It is a
+fit, not a law. ρ is the series' continuation onto the cut, large and oscillating, and Δ(3) is not determined
+(1.87–2.13 across forms). `hp/formula_cut.py` evaluates both forms and checks them; the details and the planted tests
+are in [notes/FORMULA_FORMS.md](notes/FORMULA_FORMS.md).
+
 An independent double-double computation ([below](#the-double-double-solver-hp)) agrees with the formula to
 2.7×10⁻⁹ or better on 8.25 ≤ D ≤ 21, 7.5×10⁻⁹ up to D = 30, and 5.8×10⁻⁸ from there to
 D = 61, which the fit never saw. It also shows that the f64 points at D ≈ 8–10 (23 Fourier modes in time)

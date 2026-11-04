@@ -1353,7 +1353,10 @@ sparser) only roughly.
 71.95, half-width 1.317, Chebyshev degree 16. Δ's relative coefficients fall 1, 1.4×10⁻³, 1.2×10⁻⁵, 1.1×10⁻⁷,
 9.8×10⁻¹⁰, 8.7×10⁻¹², 7.1×10⁻¹⁴ and then sit on the states' own noise floor (2×10⁻¹⁵, their consistency along the
 branch): a decay of 113 per order, ρ = 114, so Δ's nearest singularity is 75 units from the window's centre, which
-is the formula's pole at D = −3.2 (README, the rational formula's denominator) seen from D 72. For the state, the
+is the formula's pole at D = −3.2 (README, the rational formula's denominator) seen from D 72. *(Correction,
+2026-11-04: the radius does not identify the singularity. The README formula and a model with no poles, only a cut
+from −7 to 3, give the same coefficients there, R_D = 73.6 against the measured 77.5; raw-data repository
+`formula-mac/v2/radius.log`.)* For the state, the
 ratio of the second to the third Chebyshev coefficient, read for every component whose third coefficient is above
 the floor (all but a handful), has block medians of 76–81 for the a fields and a_h, 112–131 for p, m and c at every
 node and 155 for m_h, with no component below 10 (the smallest, two p samples at the outer nodes, 13.6 and 28.7): the
