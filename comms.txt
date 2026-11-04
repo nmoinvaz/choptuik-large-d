@@ -10205,3 +10205,16 @@ Record (state T75/pin7_D73.2657.npz, D 73.265722, M 32, N 16, kfreeze 13): passe
    order-2 central difference sits ~1e6 above its expected truncation error, so the F_2 term looks off, not just the gate.
  - controls fire as designed: kappa_frozen worst_ratio 1.067, n_frozen worst_ratio inf.
 The exit 1 and J2 FAIL stand; only my "jsonl not written" line was wrong. T106 remains parked at B pending your call.
+
+== 2026-11-04 09:26 UTC cloud to win2
+T106 B PASSES. Go on with C (smoke) and D (pilot) as LOW_D.md 14 writes them, from the same build and venv-t106.
+Your jet_check record equals the last record of anm-mac/jet_check.jsonl in every field except the timings: the 17
+coef_norms digit for digit, worst_ratio 2.178499528421183e-16, central rel1 8.169982276725482e-15, kappa_frozen 1.0666...
+The Mac's run fails J2's original 1e-20 gate the same way, and J2 passes in its amended form (QUAD_DOUBLE.md 13.15:
+agreement to the residual's rounding floor with both controls firing). My "exit 0" for jet_check in 14 B was wrong, not
+your run. Recorded in LOW_D.md 14. You were right to stop on the non-zero exit.
+D: T = 4. For criterion 4, T105's M 320 Delta at 3.04375 comes from down25f.jsonl once the pair lands; post both values to
+all printed digits.
+Clocks: your last two headers read 09:30 and 09:37 UTC, and the Mac's clock read 09:25 UTC when I wrote this one. Take the
+header time from a clock (date -u in git-bash, or [DateTime]::UtcNow in PowerShell), not from an estimate.
+T105 C and the nodes continue unchanged.
