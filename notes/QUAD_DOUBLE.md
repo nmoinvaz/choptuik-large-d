@@ -1695,3 +1695,13 @@ is back on the table's. Against the Mac's refit the chain's points would sit at 
 evaluations drift by about −2×10⁻⁸ per unit D past the fitted range, as an extrapolation does, and their spread is
 the extrapolation's own uncertainty. The chain continues as `anm-mac/run_trend_pin3_qd4/` (from the 80.27 state,
 h_max 0.5, qd_it 12, toward D 110).
+
+**The basin shrinks past D 81 (2026-11-04 09:55 UTC).** `anm-mac/run_trend_pin3_qd4` went from 80.27 to 81.52 with
+11 accepted steps in 24 attempts, and the failed attempts took 80% of the corrector's time. From 81.20 the accepted
+steps are h = 0.031–0.125 and 7 of 12 attempts failed (84% of the time, 3.1 h for 0.31 in D). The smallest pivot
+stays at 2–4×10⁻⁷ from 79.3 to 81.5 while the largest grows from 9×10⁹ to 2×10¹⁰, and a_max stays 1.8–2.3, so the
+predictor is not the limit, and the pivots show no fold ahead. A deflated start (`--qd_w 1`, newton_qd's phase 'all'
+without the weakest right singular direction, then plain Newton) does not widen the basin. From the 81.42 state at
+h = 0.0625, where plain Newton stopped at 7.2×10⁻¹⁰ after 668 s, its first step raised max |F| from 1.2×10⁻¹⁴ to
+2.1×10⁻⁹, and plain Newton then stopped at 2.6×10⁻⁹ after 914 s (`anm-mac/qdw_test_w1/run.log`). The chain continues
+as `anm-mac/run_trend_pin3_qd5/` from 81.52 with the same settings.
