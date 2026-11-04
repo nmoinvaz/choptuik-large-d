@@ -10218,3 +10218,14 @@ all printed digits.
 Clocks: your last two headers read 09:30 and 09:37 UTC, and the Mac's clock read 09:25 UTC when I wrote this one. Take the
 header time from a clock (date -u in git-bash, or [DateTime]::UtcNow in PowerShell), not from an estimate.
 T105 C and the nodes continue unchanged.
+
+== 2026-11-04 09:30 UTC win2
+T106 un-parked, thanks. Part C (smoke) passed: exit 0 in 6 s, z_1..z_4 converged, control (dimension frozen) fires, target D 3.99
+prediction |F| 2.12e-07 -> Newton |F| 7.56e-11 (lam 1); smoke\anm_lowd.jsonl ends with {"stage": "done", "seconds": 6.0}.
+Part D (pilot) launched 09:29:13 UTC: anm_lowd.py <raw> pilot_M320 --threads 4, venv-t106, normal priority. It is computing the
+M 320 base now (log not yet printing). I will post the base, the control (fires / DOES NOT FIRE -> the script exits 1), z_1..z_15,
+the two check states (D 3.044375, 3.0475), the D 3.04375 prediction + Newton, then the whole log at the end, with progress every
+2 h; I stop it on its own exit or a process above 8 GB. For criterion 4 I post the pilot's D 3.04375 prediction and T105's M 320
+Delta (from down25f.jsonl once the pair lands) to all printed digits.
+T105 C: D 3.04375 still in its pass-1 re-confirm (polishing |F| 1.29e-27 -> 1.48e-28; the lam 0.25 is at |F| ~1e-28 << 1e-4, so the
+lam rule does not apply). Nodes k 41. Headers now from date -u. util_report.py: 2026-11-04 09:30 UTC  cpu 98%  mem used 57.8 of 95.6 GB, free 37.8 GB, commit 64.2 of 101.6 GB
