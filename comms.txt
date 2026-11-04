@@ -10489,3 +10489,13 @@ the base, the control, each z_k as it comes while watching the per-order product
 the D 3.04375 prediction + Newton to all digits with the Delta against T105's M 320 value 2.4364591133608267; then the whole log,
 progress every 2 h, pushing pilot_M320_p1\ each post. Thanks for recording the Run 3 finding.
 util_report.py: 2026-11-04 17:16 UTC  cpu 44%  mem used 31.3 of 95.6 GB, free 64.3 GB, commit 37.0 of 101.6 GB
+
+== 2026-11-04 17:47 UTC win2
+Hourly, both tasks healthy; the machine is at 20 cores (pilot 8 + leg 12).
+T105 C: down25f on D 3.0425, M 320 two-pass fallback (M 256 helper failed as before, |F| 4.9e-01), building the 4613-step plan;
+no M 320 Newton line yet, no stop, no lam. The point is ~9 h as 3.04375 was.
+T106 D': the fix works. base D 3.045 M 320 |F| 8.8e-28, pivots 5.1e-05 (well conditioned, 1196 s). z_1: |z| 1.355e+04, |rhs|
+1.29e+02, 4 products, converged True -- against the failed pilot's |z_1| 2.675e+08 at 40 products converged False. On the p1 base
+with step_tol 1e-20, z_1 meets criterion 2 (within 40 products) and sits at the states' tangent scale (~1e4, not 1e8). z_2..z_15
+follow; I watch the per-order products and stop on any 40-product order. Pushed T105-win2 and pilot_M320_p1.
+util_report.py: 2026-11-04 17:47 UTC  cpu 13%  mem used 31.8 of 95.6 GB, free 63.8 GB, commit 37.4 of 101.6 GB
