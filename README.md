@@ -71,7 +71,7 @@ Each ± says what kind of bar it is.
 
 | Result | Value | Status | The bar | Where |
 |---|---|---|---|---|
-| Δ(D), γ(D) computed | 1199 double-double points, D = 8.25–67.77; 67 values of γ; points below D = 4 to 3.044 | numerical evidence | change from the next resolution, per point | [Values](#values), [Below D = 4](#the-formula) |
+| Δ(D), γ(D) computed | 1199 double-double points, D = 8.25–67.77; 67 values of γ; points below D = 4 to 3.044 | numerical evidence | change from the next resolution, per point | [Values](#values), [Below D = 4](#below-d--4-and-the-limit-d--3) |
 | One formula for all D ≥ 4 | a rational function of 1/(D − 2), 11 constants for Δ and 9 for γ | numerical evidence (an empirical fit) | its misfit on points it never saw | [The formula](#the-formula) |
 | The limit of Δ | Δ∞ = 1.643893746 ± 1.5×10⁻⁸ | conditional on Δ analytic in 1/D | the spread of 48 fit choices, corrected by a planted-truth test | [Is the period analytic in 1/D?](#is-the-period-analytic-in-1d) |
 | The limit of γ | γ∞ = 1/2 to about 5×10⁻⁷ | numerical evidence; explained given Conjecture 1 and one unstable mode | fit spread | [Proposition 5](#proposition-5-the-unstable-mode-at-infinite-d-is-exact), [GAMMA.md](GAMMA.md) |
@@ -80,7 +80,7 @@ Each ± says what kind of bar it is.
 | The one-harmonic selection theorem B(1) | exactly one solution for n ≥ e^{89.75} | certified, assuming Braaksma's theorem (ball arithmetic; proof/B_chain.md) | rigorous enclosures | [Limits and open problems](#limits-and-open-problems) |
 | Theorems A(M = 1), A(M = 3) | the selection condition has one simple zero | certified (M = 1 reviewed; M = 3 reviewed in part) | rigorous enclosures | [PROOF.md](PROOF.md) |
 | D = 4 and the maximum of Δ | agreement with the published values; the maximum at D = 3.755725 | numerical evidence | published uncertainty; fit spread | [Relation to published work](#relation-to-published-work) |
-| The limit D → 3 | a finite Δ(3) (1.72–1.80) or Δ → 0: open | open (two readings) | fit-degree spread | [The formula](#the-formula) |
+| The limit D → 3 | a finite Δ(3) (1.72–1.80) or Δ → 0: open | open (two readings) | fit-degree spread | [Below D = 4 and the limit D → 3](#below-d--4-and-the-limit-d--3) |
 | The echo's shape | a single harmonic from D ≈ 45 up (99.4% of the power), a pulse near D = 3 | numerical evidence | — | [Results](#results) |
 
 In detail:
@@ -124,11 +124,12 @@ Contents
 - [Main results](#main-results)
 - [Results](#results)
   - [The formula](#the-formula)
+  - [Below D = 4 and the limit D → 3](#below-d--4-and-the-limit-d--3)
   - [Values](#values)
   - [What the numbers mean physically](#what-the-numbers-mean-physically)
   - [Closed forms tested and excluded](#closed-forms-tested-and-excluded)
   - [Relation to published work](#relation-to-published-work)
-- [Evidence](#evidence)
+- [Validation and controls](#validation-and-controls)
   - [The double-double solver (`hp/`)](#the-double-double-solver-hp)
   - [Is the period analytic in 1/D?](#is-the-period-analytic-in-1d)
 - [Large D: what the 1/D expansion can and cannot see](#large-d-what-the-1d-expansion-can-and-cannot-see)
@@ -246,7 +247,11 @@ Near D = 4 the points themselves set the limit: the solution needs many Fourier 
 moves by −4.3×10⁻⁴, −3.4×10⁻⁵ and −2.8×10⁻⁶ from 23 to 31 to 39 to 47 modes, so the points
 below D = 5 are extrapolations in the mode count. Above D ≈ 36 the computed γ scatter by up to
 6×10⁻⁵ around both this formula and the power series below, which agree with each other; the growth-rate solve
-is not reliable there. Below D = 4 the formula is not fitted; Δ(D) turns over there (a separate fit for 3 < D ≤ 4 is
+is not reliable there.
+
+### Below D = 4 and the limit D → 3
+
+Below D = 4 the formula is not fitted; Δ(D) turns over there (a separate fit for 3 < D ≤ 4 is
 below). From double-double points at
 D = 3.70–3.80 (M = 80; `cd hp && python3 lowD_max.py`), polynomial fits put the maximum at D = 3.755725,
 Δ = 3.46677169 (spread over the fits 10⁻⁶ in D and 6×10⁻⁹ in Δ; the M = 80 truncation is about 10⁻⁹), in agreement
@@ -412,15 +417,8 @@ axis (−0.114 < Re λ < 0.193, |Im λ| < 6.38) in the second of two layouts (nu
 D = 4 showed zeros with Re λ > 0 that the second does not, artifacts of that discretization; the real decaying mode at
 λ = −0.3651 is in both.
 
-![The echo across dimensions: the field's slope at the centre over the same stretch of logarithmic time for D = 4, 10, 20 and 60](solver/echo.svg)
-
-**The echo itself.** The figure shows the field's slope at the centre, F(τ) = √(D−2)·∂p/∂x at r = 0, over the same stretch of
-logarithmic time τ for D = 4, 10, 20 and 60, each scaled to its peak (dashed: its first harmonic alone; dotted lines: the
-start of each echo). At D = 4 the echo is far from a sine: almost a square wave, with a third harmonic 44% of the first,
-and each echo 31× smaller than the one before. As D grows the echoes come faster (Δ = 2.52, 2.11, 1.81 at D = 10, 20, 60:
-12×, 8.3×, 6.1× per echo) and the profile turns into a pure sine: the third harmonic falls to 8% of the first at D = 60,
-and the D = ∞ theory predicts 5.5%. The D = 4 profile is from the f64 solver (39 harmonics, Δ within 3×10⁻⁶ of the best
-value); the others are double-double solutions (`solver/plot_echo.py`, data from `solver/echo_data.py`).
+An earlier figure of the echo over several periods (the centre slope at D = 4, 10, 20 and 60, `solver/echo.svg`) is
+in [notes/SOLVER_HP.md](notes/SOLVER_HP.md).
 
 ### Closed forms tested and excluded
 
@@ -543,7 +541,7 @@ Scripts: [`solver/eeg20/`](solver/eeg20/).
 Their supercritical branch and its continuously self-similar checks are in
 [notes/SUPERCRITICAL.md](notes/SUPERCRITICAL.md).
 
-## Evidence
+## Validation and controls
 
 ### The double-double solver (`hp/`)
 
@@ -595,15 +593,6 @@ figures) is in [notes/LARGE_D_WALL.md](notes/LARGE_D_WALL.md); the diagnosis and
   1.5–2×10⁻⁹), 1.8×10⁻⁸ at 30.1 and
   7×10⁻⁸ at 34.2, and 0.6–2.1×10⁻⁶ high from 35 to 40.3 (quoted 1–3×10⁻⁶). How well the
   rational formula holds against these points is in [The formula](#the-formula).
-
-![The past light cone of the singularity with the solver's node rays, beside the size of the fast mode exp(-n Phi(x)) along x for D = 20, 40 and 60, equal to 1 at x = 1/sqrt 2 for every D](hp/light_cone.svg)
-
-**The light cone and the fast mode** (`hp/plot_light_cone.py`; exact formulas, no data). Left: the singularity at
-r = 0, t = t*, its past light cone x = r/(t* − t) = 1, and the rays of the solver's nodes x = 0.3 … 0.7. Right: the
-fast mode e^(−nΦ(x)) that carries the selection ("How fast the selection weakens" above) has size exactly 1 at
-x = 1/√2 for every D, is huge deeper inside and exponentially small near the light cone. The solver matches at
-x = 0.7, where the mode is 10^0.16 at D = 20 and 10^0.50 at D = 60, so its condition sits where the effect is of
-order one.
 
 ### Is the period analytic in 1/D?
 
@@ -992,6 +981,15 @@ the leading order gives B = A(1-x)/(1+x), a₁, b₁ drop out of the projection,
    characteristic: at any order of this WKB expansion it carries no fast mode on 0 < x < 1. (A size argument,
    $`e^{-n\Phi}`$ being exponentially large for $`x < 1/\sqrt2`$, would not exclude an exponentially small A₀; regularity
    does.) The non-analytic piece comes from a Stokes phenomenon, which the next subsection locates.
+
+![The past light cone of the singularity with the solver's node rays, beside the size of the fast mode exp(-n Phi(x)) along x for D = 20, 40 and 60, equal to 1 at x = 1/sqrt 2 for every D](hp/light_cone.svg)
+
+**The light cone and the fast mode** (`hp/plot_light_cone.py`; exact formulas, no data). Left: the singularity at
+r = 0, t = t*, its past light cone x = r/(t* − t) = 1, and the rays of the solver's nodes x = 0.3 … 0.7. Right: the
+fast mode e^(−nΦ(x)) that carries the selection ([notes/LARGE_D_WALL.md](notes/LARGE_D_WALL.md)) has size exactly 1 at
+x = 1/√2 for every D, is huge deeper inside and exponentially small near the light cone. The solver matches at
+x = 0.7, where the mode is 10^0.16 at D = 20 and 10^0.50 at D = 60, so its condition sits where the effect is of
+order one.
 
 ### Proposition 4: late orders of the leading-order series
 

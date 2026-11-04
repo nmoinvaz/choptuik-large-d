@@ -141,3 +141,18 @@ changes sign at each dip, and the step at D = 35.35 is where the frozen-harmonic
 linearised correction to Δ (`dDelta_est`), up to 10⁻¹⁴ on the points solved before the freezing (D = 26.6–35.2) and
 growing 1.60-fold per unit of D after it, to about 10⁻¹⁷ at D = 61. Green: the cut itself, from the checks table.
 Above D = 35 the cut, about 10⁻¹⁵, is the largest of the three (see "How good the values are" above).
+
+## The echo over several periods (from the README)
+
+Moved verbatim from README.md (commit ecf2b38, "What the numbers mean physically") on 2026-11-04 (README_PLAN.md, stage 4): the
+earlier echo figure, superseded in the README by hp/echo_shapes.svg; links made relative to this folder.
+
+![The echo across dimensions: the field's slope at the centre over the same stretch of logarithmic time for D = 4, 10, 20 and 60](../solver/echo.svg)
+
+**The echo itself.** The figure shows the field's slope at the centre, F(τ) = √(D−2)·∂p/∂x at r = 0, over the same stretch of
+logarithmic time τ for D = 4, 10, 20 and 60, each scaled to its peak (dashed: its first harmonic alone; dotted lines: the
+start of each echo). At D = 4 the echo is far from a sine: almost a square wave, with a third harmonic 44% of the first,
+and each echo 31× smaller than the one before. As D grows the echoes come faster (Δ = 2.52, 2.11, 1.81 at D = 10, 20, 60:
+12×, 8.3×, 6.1× per echo) and the profile turns into a pure sine: the third harmonic falls to 8% of the first at D = 60,
+and the D = ∞ theory predicts 5.5%. The D = 4 profile is from the f64 solver (39 harmonics, Δ within 3×10⁻⁶ of the best
+value); the others are double-double solutions (`solver/plot_echo.py`, data from `solver/echo_data.py`).

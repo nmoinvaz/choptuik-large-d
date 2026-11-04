@@ -592,7 +592,7 @@ def large_d_walls():
 
 @check
 def dropoffs():
-    """README, "Where the drop-offs are": u*kappa's slope and crossings (hp/data/dropoffs.json, written by hp/plot_dropoffs.py
+    """notes/LARGE_D_WALL.md (from the README), "Where the drop-offs are": u*kappa's slope and crossings (hp/data/dropoffs.json, written by hp/plot_dropoffs.py
     from the raw-data repository's T76 records): the full system's fit n^38.9 crossing 1 at D 59.9, u*kappa at 67.74, the
     pinned systems' predicted crossings and quad-double's."""
     J = json.load(open(os.path.join(ROOT, "hp/data/dropoffs.json")))
