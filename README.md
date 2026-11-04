@@ -11,6 +11,16 @@ Papers (drafts, not yet reviewed):
   computer-assisted proof*](paper/math/dss_math.pdf). Propositions 1–5 with proofs, the selection rule (Conjecture 1)
   and Theorems A(M = 1) and A(M = 3).
 
+Choptuik's critical solution, the universal threshold between dispersal and black-hole formation for a massless scalar
+field, is computed as a periodic boundary-value problem in self-similar variables, in double-double precision, across
+spacetime dimensions D from 3.044 to about 78. One rational formula in 1/(D − 2) fits its echo period Δ(D) and critical
+exponent γ(D) for every D ≥ 4. If Δ is analytic in 1/D its limit is Δ∞ = 1.643893746 ± 1.5×10⁻⁸, finite, against the
+published conjecture Δ → 0; γ → 1/2 is explained by an exact symmetry of the D = ∞ equations; and a selection rule
+derived at D = ∞ reproduces Δ∞ to about 10⁻⁴ without the finite-D solutions. The rule's proof is in progress, and
+certified for a one-harmonic model.
+
+## The problem, prior work and what is new
+
 When a collapsing shell of scalar field is tuned exactly to the threshold between dispersing and forming a black hole,
 it approaches a universal solution, Choptuik's critical solution, which repeats itself on ever smaller scales: each
 "echo" is a copy of the last, shrunk by a factor e^Δ. Just above the threshold, the black hole's size scales like
@@ -35,13 +45,6 @@ This project asks three questions:
 3. **Can that limit be derived from first principles,** from the equations at D = ∞ alone rather than by extrapolating
    computed values, and eventually proved?
 
-In brief: one rational formula in 1/(D − 2) fits all D ≥ 4; Δ tends to a finite limit, Δ∞ = 1.643893746, and γ to 1/2;
-a selection rule derived at D = ∞ reproduces Δ∞ to about 10⁻⁴ without using the finite-D solutions, and an exact symmetry
-explains γ∞ = 1/2. A proof of the selection rule is in progress ([PROOF.md](PROOF.md)); in a one-harmonic model case, a
-computer-assisted proof shows that the selection condition has exactly one simple zero (Theorem A(M = 1), assuming
-Braaksma's summability theorem), and the same holds with three harmonics (Theorem A(M = 3), independently reviewed in
-part).
-
 What is new: not found in the literature searched ([notes/LIT_REVIEW.md](notes/LIT_REVIEW.md)):
 - Δ(D) to D = 61 at about 15 digits, and the finite limit Δ∞ = 1.643893746 against the Δ → 0 conjecture;
 - a single formula for Δ(D) and γ(D) for all D ≥ 4 (an empirical rational fit; the only earlier fit, Bland et al.'s
@@ -60,7 +63,27 @@ file; the software is described at the end. The computations, derivations and te
 under Nathan Moinvaziri's direction and have not yet been reviewed by an expert
 ([How this work was done](#how-this-work-was-done)).
 
-Headline results:
+## Main results
+
+Status words as in [AGENTS.md](AGENTS.md): *proved* (by hand), *checked symbolically* (sympy), *certified*
+(computer-assisted, the trusted code named), *conditional* (the hypothesis named), *conjecture*, *numerical evidence*.
+Each ± says what kind of bar it is.
+
+| Result | Value | Status | The bar | Where |
+|---|---|---|---|---|
+| Δ(D), γ(D) computed | 1199 double-double points, D = 8.25–67.77; 67 values of γ; points below D = 4 to 3.044 | numerical evidence | change from the next resolution, per point | [Values](#values), [Below D = 4](#the-formula) |
+| One formula for all D ≥ 4 | a rational function of 1/(D − 2), 11 constants for Δ and 9 for γ | numerical evidence (an empirical fit) | its misfit on points it never saw | [The formula](#the-formula) |
+| The limit of Δ | Δ∞ = 1.643893746 ± 1.5×10⁻⁸ | conditional on Δ analytic in 1/D | the spread of 48 fit choices, corrected by a planted-truth test | [Is the period analytic in 1/D?](#is-the-period-analytic-in-1d) |
+| The limit of γ | γ∞ = 1/2 to about 5×10⁻⁷ | numerical evidence; explained given Conjecture 1 and one unstable mode | fit spread | [Proposition 5](#proposition-5-the-unstable-mode-at-infinite-d-is-exact), [GAMMA.md](GAMMA.md) |
+| The 1/D expansion fixes no period | Propositions 1–4 | proved (parts checked symbolically) | — | [Large D](#large-d-what-the-1d-expansion-can-and-cannot-see) |
+| The selection rule at D = ∞ | Conjecture 1; its amplitude expansion gives Δ∞ = 1.64387 ± 0.00006 | conjecture; the value numerical evidence | an estimator range over eight orders, tested on planted functions | [The inner problem at large x](#the-inner-problem-at-large-x) |
+| The one-harmonic selection theorem B(1) | exactly one solution for n ≥ e^{89.75} | certified, assuming Braaksma's theorem (ball arithmetic; proof/B_chain.md) | rigorous enclosures | [Limits and open problems](#limits-and-open-problems) |
+| Theorems A(M = 1), A(M = 3) | the selection condition has one simple zero | certified (M = 1 reviewed; M = 3 reviewed in part) | rigorous enclosures | [PROOF.md](PROOF.md) |
+| D = 4 and the maximum of Δ | agreement with the published values; the maximum at D = 3.755725 | numerical evidence | published uncertainty; fit spread | [Relation to published work](#relation-to-published-work) |
+| The limit D → 3 | a finite Δ(3) (1.72–1.80) or Δ → 0: open | open (two readings) | fit-degree spread | [The formula](#the-formula) |
+| The echo's shape | a single harmonic from D ≈ 45 up (99.4% of the power), a pulse near D = 3 | numerical evidence | — | [Results](#results) |
+
+In detail:
 
 - **One formula for all D ≥ 4.** A rational function of 1/(D-2) gives Δ and γ within the precision of the
   computed points up to D = 30, and Δ to 9.6×10⁻⁸ up to D = 67.77 ([The formula](#the-formula), [Values](#values)).
@@ -94,8 +117,11 @@ Headline results:
   supported: a power-law approach to 0 (exponent at least 0.01) is excluded, a logarithmic one disfavoured
   ([Relation to published work](#relation-to-published-work)).
 
+---
 Contents
 
+- [The problem, prior work and what is new](#the-problem-prior-work-and-what-is-new)
+- [Main results](#main-results)
 - [Results](#results)
   - [The formula](#the-formula)
   - [Values](#values)
@@ -103,9 +129,8 @@ Contents
   - [Closed forms tested and excluded](#closed-forms-tested-and-excluded)
   - [Relation to published work](#relation-to-published-work)
 - [Evidence](#evidence)
-  - [The double-double solver](#the-double-double-solver-hp)
+  - [The double-double solver (`hp/`)](#the-double-double-solver-hp)
   - [Is the period analytic in 1/D?](#is-the-period-analytic-in-1d)
-  - [Reproduce](#reproduce)
 - [Large D: what the 1/D expansion can and cannot see](#large-d-what-the-1d-expansion-can-and-cannot-see)
   - [How the solution scales with D](#how-the-solution-scales-with-d)
   - [Proposition 1: the 1/n expansion never fixes the period](#proposition-1-the-1n-expansion-never-fixes-the-period)
@@ -115,15 +140,21 @@ Contents
   - [The inner problem at large x](#the-inner-problem-at-large-x)
   - [Proposition 5: the unstable mode at infinite D is exact](#proposition-5-the-unstable-mode-at-infinite-d-is-exact)
   - [Other matter at large D](#other-matter-at-large-d)
-  - [What is known about the selection, and what is open](#what-is-known-about-the-selection-and-what-is-open)
-  - [References](#references)
+- [Limits and open problems](#limits-and-open-problems)
+  - [Further references](#further-references)
 - [How this work was done](#how-this-work-was-done)
-- [Software: the Rust kernel](#software-the-rust-kernel)
+- [Reproduce](#reproduce)
+  - [Software: the Rust kernel](#software-the-rust-kernel)
+  - [Raw data](#raw-data)
 - Companion files
   - [AGENTS.md](AGENTS.md): conventions for the AI sessions that run computations here
   - [PROOF.md](PROOF.md): a roadmap for proving the selection rule (Conjecture 1): layers, precedents, staged plan, with
     parts in [proof/](proof/) (the M-harmonic selection theorem; the entire-function certificate)
   - [GAMMA.md](GAMMA.md): why γ∞ = 1/2: the inner problem as a nonlinear heat equation, whose r²-shift symmetry gives λ = 2
+  - [SOFTWARE.md](SOFTWARE.md): the Rust kernel, its backends, the build and the file layout
+  - [notes/README_PLAN.md](notes/README_PLAN.md): the plan of this README's reorganization
+
+---
 
 ## Results
 
@@ -238,8 +269,6 @@ Every point, resolved or not, lies within 8×10⁻⁶ of the √(D − 3) formul
 matrix at the largest M. Right: how much Δ moves when M is raised. The step from M = 80 to 96 grows a hundredfold from
 D = 3.7 to 3.4, while M = 96 → 128 stays at 1–2×10⁻⁹ down to D = 3.4.
 
-
-
 **A formula for 3 < D ≤ 4** (`hp/lowD_formula.py`, fitted to Ecker, Ecker, Grumiller & Jechtl's published values for
 3.046 ≤ D ≤ 4, which are not included here). The variable that works is s = √(D − 3):
 
@@ -256,7 +285,6 @@ They fit those points to 8×10⁻⁶ (Δ) and 10⁻⁶ (γ), and match our own d
 power of (D − 3) times a polynomial, with as many terms, misses by 10 to several hundred times more. This is an interpolation, not a law: the value at
 D = 3 is not determined (Δ from 1.72 to 1.80 and γ from 0.07 to 0.44 as the degree changes), so it says nothing about
 Ecker et al.'s conjecture that Δ and γ go to 0 as D → 3.
-
 
 ![The limit D -> 3: our finite intercept against Ecker et al.'s power law, with their D = 3.05 value, Bland's cited D = 3.02 point and the T100 point, full range and the zoom below D = 3.0625](hp/lowD_limits.svg)
 
@@ -315,7 +343,6 @@ tests, and why analyticity is still an assumption, are in [Is the period analyti
 ![Formulas that fit the f64 points, extended to D = 100000; the double-double points rule out all but the analytic ones](solver/extrapolation.svg)
 
 `solver/plot_extrapolation.py` draws the graph; the faded curves are the ones the double-double points rule out.
-
 
 ### Values
 
@@ -415,7 +442,7 @@ The candidate closed forms tested, the table, the influence function and the sea
 
 ### Relation to published work
 
-From a literature search (October 2026); the references are listed at the end of the [Large D](#references) section.
+From a literature search (October 2026); the references are in [Further references](#further-references) and the footnotes.
 
 <details>
 <summary>Point by point: D = 4, the maximum below 4, D = 5, below 4, large D, earlier formulas, the large-D theory</summary>
@@ -532,7 +559,6 @@ How the double-double solver works (arithmetic, step control, Jacobians, mixed p
 continuation), its benchmarks and solve times, the point spacing, a sample of the computed points and the three
 error indicators against D are in [notes/SOLVER_HP.md](notes/SOLVER_HP.md).
 
-
 Why the continuation stalls past D ≈ 73 (the weak directions, the horizon-series wall, the drop-offs, with their
 figures) is in [notes/LARGE_D_WALL.md](notes/LARGE_D_WALL.md); the diagnosis and the continuation in D are
 [notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), sections 12 and 13.
@@ -557,7 +583,6 @@ figures) is in [notes/LARGE_D_WALL.md](notes/LARGE_D_WALL.md); the diagnosis and
 
 </details>
 
-
 - **How good the values are.** The points themselves fit smooth curves to about 4×10⁻¹⁵ (degree 18–20) all the way to
   D = 60.1, not 10⁻²⁰. Points between
   D = 27 and 35.2, solved before the freezing, carry up to 10⁻¹⁴ from the weak directions; about 25 of them sit
@@ -579,7 +604,6 @@ fast mode e^(−nΦ(x)) that carries the selection ("How fast the selection weak
 x = 1/√2 for every D, is huge deeper inside and exponentially small near the light cone. The solver matches at
 x = 0.7, where the mode is 10^0.16 at D = 20 and 10^0.50 at D = 60, so its condition sits where the effect is of
 order one.
-
 
 ### Is the period analytic in 1/D?
 
@@ -646,21 +670,7 @@ truth not made by the fitting code (the rational formula, carrying the real data
 offset, 0.78×10⁻⁸ ([`hp/review/rv2_planted.py`](hp/review/rv2_planted.py)). One of the pre-set criteria failed in every case: the cleaning step missed one of the 20
 planted junk points, the one placed at its 10⁻¹⁵ threshold. That is a limit of the cleaning, not of the bar.
 
-
 These limits are the Δ∞ quoted in [The formula](#the-formula) and [Values](#values).
-
-### Reproduce
-
-`./reproduce.sh` reruns the headline numbers and prints PASS / FAIL / SKIP for each check, with the expected value
-next to the computed one: the data and the Values table, the rational formula, Δ∞ from five analytic fits on all
-cleaned points, the held-out test (fit on D ≤ 45, predict 45–61), and the theory checks of Propositions 1–3, the
-Stokes constant C(n,s) and both inner-multiplier methods (14 checks; about 6 minutes on a busy 2-core machine, 2–3 on
-an idle laptop;
-`--full` adds the Proposition 4 check). It needs numpy, scipy, mpmath and sympy. python-flint (the Borel–Darboux check)
-and the compiled double-double kernel (the checks on saved solutions; build it with `hp/build.sh`, which needs Rust and
-maturin) are optional and skipped if missing. The saved solutions in `hp/data/states/` (53 states, about one per unit of D
-from 8.25 to 60, about 1 MB) are what the profile scripts read (`hp/states.py`). `hp/dinf_budget.py` tabulates how Δ∞
-moves with model, degree, fit range, cleaning and data snapshot.
 
 ## Large D: what the 1/D expansion can and cannot see
 
@@ -1124,7 +1134,7 @@ Status of these gaps ([PROOF.md](PROOF.md)): for a model truncated to M harmonic
 lemma by lemma ([proof/C_selection.md](proof/C_selection.md)), on published templates (Xie–Tanveer;
 Baldomá–Fontich–Guardia–Seara). Gap (c) reduces to Olver's error control up to a routine step, and the inner half of
 gap (a) to Braaksma's summability theorem; the outer half is not needed at fixed M. Its status, and that of the
-one-harmonic theorem, is under [What is known about the selection](#what-is-known-about-the-selection-and-what-is-open).
+one-harmonic theorem, is under [Limits and open problems](#limits-and-open-problems).
 Gap (b) is narrower than stated above ([proof/B_tail.md](proof/B_tail.md)). Stated
 without harmonics, the condition is S(θ₀) ≡ 0 on the real label circle and uses F only on the real line; the weights
 $`e^{\pi\lvert\nu\rvert\omega/2}`$ are the linear connection coefficients of each label harmonic and cancel in every tuning
@@ -1210,7 +1220,6 @@ and a phase.
 code: *lateral solutions* (`solver/inner_stokes/`: the inner equations integrated from just above and just
 below the Stokes line and differenced) and *Borel–Darboux* (`solver/inner_borel/`, ball arithmetic with python-flint: the
 late orders of the inner series fitted with the predicted fast-mode exponents).
-
 
 **Without truncation: the amplitude expansion** (`solver/inner_amp/`).
 
@@ -1643,7 +1652,32 @@ not established: fits of λ(D) on 5 ≤ D ≤ 9 give γ∞ from 0.36 to 0.57 (a 
 λ∞ = 2 imposed, and get worse when D = 10 is added; the points above D ≈ 10 are preliminary (a near-null band in the
 Jacobian and an unexplained drift of the gauge mode's root).
 
-### What is known about the selection, and what is open
+## Limits and open problems
+
+- **The large-D wall.** The double-double continuation stalls near D = 73 in its working layout and near 78 with the
+  last node moved toward the horizon: the horizon series' radius of convergence falls with the accuracy of the horizon
+  data, R = R₀ + C ln(1/δ)/(n − 1), so Newton needs a guess good to about e^{−0.3 n} and no predictor from stored points
+  supplies it ([notes/LARGE_D_WALL.md](notes/LARGE_D_WALL.md); [notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), sections
+  12–13). An exact Taylor continuation in D (the asymptotic numerical method, with the dimension entered as a jet
+  through the kernel) reaches the basin at steps of 2 in D and converged to 79.27 in a pinned formulation; the
+  corrector in the horizon block's weak directions is the open item (section 13.17 there).
+- **The analyticity assumption.** Δ∞ = 1.643893746 ± 1.5×10⁻⁸ assumes that Δ is analytic in 1/D; the points support
+  it (held-out predictions, a planted-truth test, a transseries term excluded over a range) but do not prove it
+  ([Is the period analytic in 1/D?](#is-the-period-analytic-in-1d), [notes/DINF_FITS.md](notes/DINF_FITS.md)).
+- **The limit D → 3.** Our polynomial in √(D − 3) keeps Δ(3) finite, between 1.72 and 1.80 over the fit degrees; Ecker
+  et al. read a power law Δ → 0. The readings separate below D ≈ 3.04, where the lowest converged point so far is
+  3.044375 ([The formula](#the-formula), the limit graph).
+- **The proof status.** The selection rule is a conjecture with hypotheses H1–H2 and gaps (a)–(c); the one-harmonic
+  theorem B(1) is certified assuming Braaksma's theorem, with a threshold n ≥ e^{89.75} far beyond any computed D, so it
+  does not yet identify the computed branch ([PROOF.md](PROOF.md), [notes/PROOF_QUEUE.md](notes/PROOF_QUEUE.md)).
+
+![Where the large-D continuation stalls: the step collapse and u times kappa with the predicted crossings](hp/large_d_dropoffs.svg)
+
+The drop-offs of the continuation (`hp/plot_dropoffs.py`): where the solver's steps collapse against D, with the
+product u·κ of the horizon series that predicts the crossings; the reading is in
+[notes/LARGE_D_WALL.md](notes/LARGE_D_WALL.md).
+
+What is known about the selection, and what is open:
 
 - **The expansion diverges.** `solver/largeD_late_orders.py` runs the recursion of Proposition 1 numerically to order 36,
   as polynomials in x with coefficients sampled in θ. It reproduces sympy at orders 1–2 to 10⁻¹¹, and roundoff
@@ -1728,39 +1762,19 @@ the rest of the real strip, and −7 for each strip of seven poles (resonances o
 The grey dots are where det M was evaluated. Right: λ_phys (blue line: all 67 double-double points) and the gauge
 rate at the five D where the count was made.
 
-### References
+### Further references
 
-- M. W. Choptuik, PRL 70, 9 (1993).
-- T. Koike, T. Hara and S. Adachi, PRL 74, 5170 (1995), [gr-qc/9503007](https://arxiv.org/abs/gr-qc/9503007).
-- C. Gundlach, PRD 55, 695 (1997), [gr-qc/9604019](https://arxiv.org/abs/gr-qc/9604019).
-- J. M. Martín-García and C. Gundlach, PRD 68, 024011 (2003), [gr-qc/0304070](https://arxiv.org/abs/gr-qc/0304070).
-- J. Bland et al., CQG 22, 5355 (2005), [gr-qc/0507088](https://arxiv.org/abs/gr-qc/0507088).
-- D. Garfinkle, C. Cutler and G. C. Duncan, PRD 60, 104007 (1999), [gr-qc/9908044](https://arxiv.org/abs/gr-qc/9908044).
-- E. Sorkin and Y. Oren, PRD 71, 124005 (2005), [hep-th/0502034](https://arxiv.org/abs/hep-th/0502034).
+Cited above without a footnote:
+
 - B. Kol, *Choptuik scaling and the merger transition*, JHEP 10 (2006) 017,
   [hep-th/0502033](https://arxiv.org/abs/hep-th/0502033).
-- M. Rozali and B. Way, *Gravitating scalar stars in the large D limit*, JHEP 11 (2018) 106,
-  [arXiv:1807.10283](https://arxiv.org/abs/1807.10283).
-- C. R. Clark and G. L. Pimentel, *Black hole critical collapse in infinite dimensions: continuous self-similar
-  solutions*, JHEP 11 (2025) 017, [arXiv:2504.10590](https://arxiv.org/abs/2504.10590).
 - S.-H. Lai and W.-Y. Wen, *Polyakov backreaction in large D discretely self-similar collapse*,
   [arXiv:2610.04960](https://arxiv.org/abs/2610.04960).
-- T. Taves and G. Kunstatter, *Higher dimensional Choptuik scaling in Painlevé–Gullstrand coordinates*,
-  [arXiv:1105.0878](https://arxiv.org/abs/1105.0878).
-- M. Reiterer and E. Trubowitz, *Choptuik's critical spacetime exists*, Commun. Math. Phys. 368, 143 (2019),
-  [arXiv:1203.3766](https://arxiv.org/abs/1203.3766).
-- J. Bland and G. Kunstatter, PRD 75, 101501 (2007), [hep-th/0702226](https://arxiv.org/abs/hep-th/0702226); J. Bland,
-  *Dimension dependence of the critical phenomena in gravitational collapse of massless scalar field*, PhD thesis,
-  University of Manitoba (2007), [hdl:1993/20437](http://hdl.handle.net/1993/20437).
-- R. Donninger, J. Evol. Equ. 9, 511 (2009), [arXiv:0809.5177](https://arxiv.org/abs/0809.5177).
 - R. Emparan and C. P. Herzog, *The large D limit of Einstein's equations*, RMP 92, 045005 (2020),
   [arXiv:2003.11394](https://arxiv.org/abs/2003.11394).
-- C. Gundlach, D. Hilditch and J. M. Martín-García, *Critical phenomena in gravitational collapse* (2025),
-  [arXiv:2507.07636](https://arxiv.org/abs/2507.07636).
-- C. Ecker, F. Ecker and D. Grumiller, PRL 136, 191401 (2026), [arXiv:2601.14358](https://arxiv.org/abs/2601.14358).
-- C. Ecker, F. Ecker, D. Grumiller and T. Jechtl, SciPost Phys. 20, 176 (2026), [arXiv:2602.10185](https://arxiv.org/abs/2602.10185).
-- R. B. Dingle, *Asymptotic Expansions: Their Derivation and Interpretation*, Academic Press (1973).
 - NIST Digital Library of Mathematical Functions, §2.11 and §13.7 ([dlmf.nist.gov](https://dlmf.nist.gov)).
+
+The other references are the footnotes below.
 
 ## How this work was done
 
@@ -1792,7 +1806,20 @@ What has been checked, and how:
 
 No human expert has reviewed it. The results should be read with that in mind, and corrections are welcome.
 
-## Software: the Rust kernel
+## Reproduce
+
+`./reproduce.sh` reruns the headline numbers and prints PASS / FAIL / SKIP for each check, with the expected value
+next to the computed one: the data and the Values table, the rational formula, Δ∞ from five analytic fits on all
+cleaned points, the held-out test (fit on D ≤ 45, predict 45–61), and the theory checks of Propositions 1–3, the
+Stokes constant C(n,s) and both inner-multiplier methods (14 checks; about 6 minutes on a busy 2-core machine, 2–3 on
+an idle laptop;
+`--full` adds the Proposition 4 check). It needs numpy, scipy, mpmath and sympy. python-flint (the Borel–Darboux check)
+and the compiled double-double kernel (the checks on saved solutions; build it with `hp/build.sh`, which needs Rust and
+maturin) are optional and skipped if missing. The saved solutions in `hp/data/states/` (53 states, about one per unit of D
+from 8.25 to 60, about 1 MB) are what the profile scripts read (`hp/states.py`). `hp/dinf_budget.py` tabulates how Δ∞
+moves with model, degree, fit range, cleaning and data snapshot.
+
+### Software: the Rust kernel
 
 The kernel, its backends, its use from Python, the double-double residual, the exact Jacobian and growth-mode
 matrix, the build and tests, the performance notes, the file layout and the limits are in [SOFTWARE.md](SOFTWARE.md).
@@ -1806,7 +1833,7 @@ python tests/test_bindings.py     # bindings test, after pip install .
 hp/build.sh                       # double-double solver, built for this machine's instruction set
 ```
 
-## Raw data
+### Raw data
 
 The raw output of the runs (solver states, per-point records, attempts files, checkpoints and logs) is in a separate
 repository, [choptuik-large-d-raw](https://github.com/nmoinvaz/choptuik-large-d-raw), one folder per task and
@@ -1825,6 +1852,7 @@ Files that were moved out of this repository are listed with their new paths in 
 
 [^1]: M. W. Choptuik, PRL 70, 9 (1993).
 [^2]: T. Koike, T. Hara and S. Adachi, PRL 74, 5170 (1995), [gr-qc/9503007](https://arxiv.org/abs/gr-qc/9503007).
+
 [^3]: C. Gundlach, PRD 55, 695 (1997), [gr-qc/9604019](https://arxiv.org/abs/gr-qc/9604019); J. M. Martín-García and
     C. Gundlach, PRD 68, 024011 (2003), [gr-qc/0304070](https://arxiv.org/abs/gr-qc/0304070).
 [^4]: D. Garfinkle, C. Cutler and G. C. Duncan, PRD 60, 104007 (1999); E. Sorkin and Y. Oren, PRD 71, 124005 (2005);
