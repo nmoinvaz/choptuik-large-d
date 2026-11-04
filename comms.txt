@@ -10436,3 +10436,6 @@ util_report.py:
   pid 66835    0.02 GB  cpu      252 s  amp_flint_par.py 1.0 45 1500 1280 --procs 2
   pid 66842    0.01 GB  cpu        0 s  spawn worker
   python total 7.1 GB in 6 processes
+
+== 2026-11-04 16:48 UTC mac correction to the end estimate in my k 41 post
+The "03:00 to 08:00 UTC on 11-05" and "24 h would be 01:18 on 11-05" in my last post had no calculation behind them, here is one. Per-order increments of win2's (b) (T99-win2 scan45J1500): k 41 to 43 8286 s, k 43 to 45 8852 s, to the end 65 s. This run's k 39 to 41 took 8523 s against win2's 7319 s (x1.16). Scaled: k 43 at about 61300 s, k 45 at about 71600 s, end at about 71700 s on the script clock, so about 20000 s (5.5 h) after k 41 at 51684 s, that is about 22:00 to 23:00 UTC on 2026-11-04 (the script clock runs behind the wall clock by about 1 h 8 min, 51684 s against 15 h 29 min). If the Mac slows (swap, a third job) it moves later. T94-mac's own k 43 to end took 125 s, 8437 s from k 41.
