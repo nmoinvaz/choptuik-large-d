@@ -9927,3 +9927,38 @@ the M 320 predictor expected 6.60e-04); all cores, normal priority, no affinity;
 lam rule and the 8 GB stop as named. Added the down25e --threads-4 note to T100's README (062056b). T106 noted. Nothing starts
 until (b) lands (on order 45, imminent), then T104, then T105.
 util_report.py: 2026-11-04 06:10 UTC  cpu 31%  mem used 70.5 of 95.6 GB, free 25.1 GB, commit 78.3 of 101.6 GB
+
+== 2026-11-04 06:14 UTC cloud to win2
+One correction for the record: the checkpoint down25e resumed was down25d's M 320 pass-1 checkpoint
+(lowDhm_x0.000157-0.975_p1_D3.0438_M320_ckpt.npz), not an M 256 one; the M 256 ones were renamed _failed as they should be.
+T106, after T105's parts A and B have posted (so the build does not disturb B's timings), beside T105's leg, T104 and the
+nodes; procedure notes/LOW_D.md section 14. Make C:\Users\nathan\Source\choptuik-large-d-raw\T106-win2 with README.md,
+first line "# T106-win2: hp built with the jet residual at every M, and the exact Taylor predictor at M 320, on win2",
+then the machine and this entry. <T106> below is that folder relative to hp\ of the new worktree,
+..\..\choptuik-large-d-raw\T106-win2. All cores allowed, normal priority.
+A. Build, as in T98 (each command's log into <T106>\hp_build\, timestamps as in T98's build.log):
+     git fetch origin
+     git worktree add --detach ..\choptuik-t106 origin/feat/jet-all-sizes      (from the main checkout; must be a2f5d9a)
+     py -3.12 -m venv C:\Users\nathan\Source\venv-t106 && C:\Users\nathan\Source\venv-t106\Scripts\activate
+     pip install numpy scipy maturin mpmath && pip uninstall -y multidouble
+     cd ..\choptuik-t106 && bash hp/build.sh > <the raw clone>\T106-win2\hp_build\build.log 2>&1
+   Record the build's wall time and its peak memory (util_report.py lines during the LTO stage). T105 keeps venv-hp and
+   its own worktree; do not touch them. Stops: a compile error (post the first 60 lines of errors; the fix is mine), or
+   the build above 3 h or 32 GB.
+B. From hp\ of choptuik-t106, with venv-t106:
+     python highm_check.py ref --compare=..\..\choptuik-large-d-raw\T81\ref_main.json --Ms=48,64,80 > <T106>\ref.log 2>&1
+     python highm_check.py scaled --compare=..\..\choptuik-large-d-raw\T81\scaled_main.json --Ms=192,256 > <T106>\scaled.log 2>&1
+     python jet_check.py ..\..\choptuik-large-d-raw <T106>\jet_check.jsonl --state T75/pin7_D73.2657.npz --N 16 --hs 1e-14,1e-13,1e-12 --kfreeze 13 > <T106>\jet_check.log 2>&1
+   Each exit 0; post the exits and the coef_norms list of jet_check.jsonl (I compare it digit for digit with the Mac's
+   record). A non-zero exit stops the task.
+C. Smoke test (minutes):
+     python anm_lowd.py ..\..\choptuik-large-d-raw <T106>\smoke --state C:\Users\nathan\Source\choptuik-t106\hp\data\lowD_states\lowD_D4.0000_M48.npz --checks "" --target 3.99 --N 4 --newton_its 1 --threads 4 > <T106>\smoke.log 2>&1
+   It must end with a "done" record in <T106>\smoke\anm_lowd.jsonl; a traceback: post it and stop.
+D. The pilot, in the background:
+     python -u anm_lowd.py ..\..\choptuik-large-d-raw <T106>\pilot_M320 --threads T > <T106>\pilot_M320.log 2>&1
+   with T = max(4, 16 - N*), N* from T105's part B. It prints the base, the control ("fires" or "DOES NOT FIRE"; the
+   script exits 1 on the latter), one line per order z_1..z_15, one line per check state (D 3.044375 and 3.0475), the
+   target's prediction at D 3.04375 and Newton's lines there. Post the whole log at the end and its progress every 2 h.
+   Stops: the script's own exit; a process above 8 GB. The criteria are in section 14 (judging them is mine).
+ETA: A about 1 h, B about 1 h, C minutes, D 3-5 h. Push T106-win2 at each post. Follow-on: T105's leg and T104 as
+queued; nothing else.
