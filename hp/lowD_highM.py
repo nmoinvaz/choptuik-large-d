@@ -279,6 +279,13 @@ def main():
             log(f"  D {D} M {M}: start '{lab}' |F| {F:.2e} ({sum(len(g) - 1 for g in segs)} steps)")
             if np.isfinite(F) and (best is None or F < best[0]):
                 best = (F, lab, zz)
+        if best is None and any(lab == "last state" for lab, _ in starts):
+            # the last converged state is one of the starts, so its residual on the reused plan is nan as well, and
+            # s.plan() from it does not return either (T105 C at D 3.0425, M 320: one core for 3 h, 2026-11-04 16:25
+            # UTC): the solve fails here and the point's fallbacks apply (--helper_fallback, the step halving)
+            log(f"  D {D} M {M}: every start, the last state included, has |F| nan on the reused plan; no plan from a nan "
+                f"state; the solve fails")
+            return False, None, None
         if best is None:
             # every start has a non-finite residual on the reused plan (at D 3.0425 the predictors of M 256 and M 320,
             # the helper's 0.005 past its last state, M 320's at the usual step; T82 2026-10-31). Planning a Taylor
