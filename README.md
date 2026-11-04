@@ -246,8 +246,17 @@ The shorter forms of the formula for each range of D, and the earlier power seri
 [notes/FORMULA_FORMS.md](notes/FORMULA_FORMS.md).
 
 **One formula for every D, and its integral form.** A single expression covers all the computed points from D = 3.04 to
-67.77. It is a Chebyshev series in ζ = u − √(u² − 1), u = (D + 2)/5, a variable that maps the plane cut along [−7, 3]
-onto a disc. Equivalently, it is a Cauchy integral over that cut: Δ(D) = Δ∞ + (1/π) ∫ ρ(D′) dD′/(D′ − D) from −7 to 3.
+67.77. It is a Chebyshev series in a variable ζ that maps the plane cut along [−7, 3] onto a disc, and equivalently a
+Cauchy integral over that cut:
+
+```math
+\Delta(D) \;=\; \sum_{k=0}^{28} c_k\,T_k(2\zeta - 1) \;=\; \Delta_\infty + \frac{1}{\pi}\int_{-7}^{3}\frac{\rho(D')\,dD'}{D' - D}
+```
+
+```math
+\zeta = u - \sqrt{u^2 - 1}, \qquad u = \frac{D + 2}{5}, \qquad \rho(D') = \mathrm{Im}\,\Delta(D' + i0)
+```
+
 Its 29 coefficients ([`hp/data/formula_cut.json`](hp/data/formula_cut.json), fitted at 256 bits by
 `hp/formula_cut_fit.py`) reproduce all 1214 points within 3.47 times their errors, and give Δ∞ = 1.643893745. It is a
 fit, not a law. ρ is the series' continuation onto the cut, large and oscillating, and Δ(3) is not determined (1.87–2.13
