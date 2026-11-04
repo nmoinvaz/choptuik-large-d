@@ -16,7 +16,8 @@
 use crate::dd::DD;
 use crate::dv::DV;
 use crate::field::{cs, cs_range, cs_w, horner, DMat, Fl, State, TangentTail};
-use crate::lane::{BaseLane, Dtn, Du, F8, Fu, Fun, Lane};
+use crate::lane::{BaseLane, Dtn, Du, F8, Fu, Fun, Jet, Lane};
+use multidouble::dual::Param;
 use crate::field::FieldSolve;
 use crate::linalg::{ld_for, DDLu};
 use rayon::prelude::*;
@@ -229,8 +230,8 @@ pub use multidouble::dd::pow2_near as series_scale;
 /// is c_k sigma^k (multiply by sigma^-k for the coefficients in x).
 pub fn centre_series<T: Lane, const B: usize>(ctx: &Ctx<B>, p1: &Fl<T, B>, c0: &Fl<T, B>, omega: T) -> [Vec<Fl<T, B>>; 4] {
     let sig = series_scale(ctx.nodes[0]);
-    let n = ctx.n;
-    let n1 = n - DD::ONE;
+    let n = dim::<T, B>(ctx);
+    let n1 = n - T::P::one();
     let nh = n.mul_f(0.5);
     let kmax = ctx.kc;
     let z = Fl::<T, B>::zero();
@@ -258,9 +259,9 @@ pub fn centre_series<T: Lane, const B: usize>(ctx: &Ctx<B>, p1: &Fl<T, B>, c0: &
         a2[k] = cs(&aa, &aa, k); // aa[k] still 0
         let s = cs(&aa, &q2, k);
         let t3 = cs(&aa, &a2, k);
-        aa[k] = (s.mulf(0.5) - t3.muls(n1.mul_f(0.5))).muls(DD::ONE / (DD::from_f64(kf) + n1));
+        aa[k] = (s.mulf(0.5) - t3.mulp(n1.mul_f(0.5))).mulp(T::P::one() / (T::P::from_f64(kf) + n1));
         a2[k] = cs(&aa, &aa, k);
-        cc[k] = cs_range(&cc, &a2, k, 0, k - 1).muls(n1 * recip_int(k));
+        cc[k] = cs_range(&cc, &a2, k, 0, k - 1).mulp(n1 * T::P::from_dd(recip_int(k)));
         // in the scaled variable every term of the x^(k-1) equation carries sigma^k: those built from order k - 1
         // alone (the d/dtau and x p' terms) gain one factor sigma, the Cauchy sums of index sum k none
         let sk = if T::TAN_F64 && ctx.mutate == 6 && k == 7 { 2.0 * sig } else { sig };
@@ -275,16 +276,16 @@ pub fn centre_series<T: Lane, const B: usize>(ctx: &Ctx<B>, p1: &Fl<T, B>, c0: &
         let cp = cs(&cc, &pp, k);
         let cm = cs(&cc, &mm, k);
         let cpm = cp + cm;
-        let r3 = (((dp + xpx) - xcxp) + cp) - cpm.muls(nh);
-        let r4 = (((dm + xmx) + xcxm) - cm) + cpm.muls(nh);
+        let r3 = (((dp + xpx) - xcxp) + cp) - cpm.mulp(nh);
+        let r4 = (((dm + xmx) + xcxm) - cm) + cpm.mulp(nh);
         // [m11 m12; m21 m22] = c [mu11 mu12; mu21 mu22]; det = c^2 delta, delta = -(k-1)(k-1+n)
-        let mu11 = DD::from_f64(1.0 - kf) - nh;
+        let mu11 = T::P::from_f64(1.0 - kf) - nh;
         let mu12 = -nh;
         let mu21 = nh;
-        let mu22 = DD::from_f64(kf - 1.0) + nh;
-        let idel = DD::ONE / (-(DD::from_f64(kf - 1.0) * (DD::from_f64(kf - 1.0) + n)));
-        pp[k] = ((r4.muls(mu12) - r3.muls(mu22)) * invc).muls(idel);
-        mm[k] = ((r3.muls(mu21) - r4.muls(mu11)) * invc).muls(idel);
+        let mu22 = T::P::from_f64(kf - 1.0) + nh;
+        let idel = T::P::one() / (-(T::P::from_f64(kf - 1.0) * (T::P::from_f64(kf - 1.0) + n)));
+        pp[k] = ((r4.mulp(mu12) - r3.mulp(mu22)) * invc).mulp(idel);
+        mm[k] = ((r3.mulp(mu21) - r4.mulp(mu11)) * invc).mulp(idel);
         if cut && tail.done(k, &[&pp[k], &mm[k], &aa[k], &cc[k]]) {
             for v in [&mut pp, &mut mm, &mut aa, &mut cc] {
                 v.truncate(k + 1);
@@ -329,8 +330,8 @@ impl<T: Lane, const B: usize> TWork<T, B> {
 /// Taylor coefficients 0..=kt of the state about x0 (in w.p, w.m, w.a, w.c)
 pub fn taylor_coeffs<T: Lane, const B: usize>(ctx: &Ctx<B>, s: &State<T, B>, x0: f64, omega: T, w: &mut TWork<T, B>) {
     let kt = ctx.kt;
-    let n1 = ctx.n - DD::ONE;
-    let nh = ctx.n.mul_f(0.5);
+    let n1 = dim::<T, B>(ctx) - T::P::one();
+    let nh = dim::<T, B>(ctx).mul_f(0.5);
     let x0d = DD::from_f64(x0);
     let inv_x0 = DD::ONE / x0d;
     let x2 = [x0d * x0d, x0d.mul_f(2.0), DD::ONE];
@@ -344,8 +345,8 @@ pub fn taylor_coeffs<T: Lane, const B: usize>(ctx: &Ctx<B>, s: &State<T, B>, x0:
         let kf = k as f64;
         w.a2[k] = cs(&w.a, &w.a, k);
         w.q2[k] = cs(&w.p, &w.p, k) + cs(&w.m, &w.m, k);
-        w.g[k] = (cs(&w.c, &w.a2, k) - w.c[k]).muls(n1);
-        w.h[k] = cs(&w.a, &w.q2, k) + (w.a[k] - cs(&w.a, &w.a2, k)).muls(n1);
+        w.g[k] = (cs(&w.c, &w.a2, k) - w.c[k]).mulp(n1);
+        w.h[k] = cs(&w.a, &w.q2, k) + (w.a[k] - cs(&w.a, &w.a2, k)).mulp(n1);
         w.pth[k] = dtau(ctx, &w.p[k], omega);
         w.mth[k] = dtau(ctx, &w.m[k], omega);
         let mut xp = w.pth[k].muls(x0d);
@@ -357,8 +358,8 @@ pub fn taylor_coeffs<T: Lane, const B: usize>(ctx: &Ctx<B>, s: &State<T, B>, x0:
         let cp = cs(&w.c, &w.p, k);
         let cm = cs(&w.c, &w.m, k);
         let cpm = cp + cm;
-        let rp = ((cs(&w.g, &w.p, k) - xp) - cp) + cpm.muls(nh);
-        let rm = ((cm - xm) - cs(&w.g, &w.m, k)) - cpm.muls(nh);
+        let rp = ((cs(&w.g, &w.p, k) - xp) - cp) + cpm.mulp(nh);
+        let rm = ((cm - xm) - cs(&w.g, &w.m, k)) - cpm.mulp(nh);
         let ik = inv_x0 * recip_int(k + 1);
         w.c[k + 1] = (w.g[k] - w.c[k].mulf(kf)).muls(ik);
         w.a[k + 1] = (w.h[k].mulf(0.5) - w.a[k].mulf(kf)).muls(ik);
@@ -499,6 +500,25 @@ fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, lu: &DDLu, lu_t: &DDLu, kappa: 
         };
         return lu.solve_lanes_refine_t(lu_t, rhs, steps, |f| *rhs - (ctx.d.apply(f).mul_t(omega) + *kappa * *f));
     }
+    if T::NJ > 0 {
+        // a jet: order by order with the LU at the values, the tangent branch below continued past order 1,
+        // A_0 f_k = r_k - sum_{j=1..k} (omega_j D + kappa_j) f_{k-j}; no mode-matrix shift (lam) with jets
+        debug_assert!(ctx.lam.hi == 0.0);
+        let mut f = Fl::<T, B>::zero();
+        let mut fs: Vec<Fl<DV, B>> = Vec::with_capacity(T::NJ);
+        for k in 0..T::NJ {
+            let mut r = rhs.coef(k);
+            for j in 1..=k {
+                let dfv = ctx.d.apply::<DV>(&fs[k - j]);
+                let od = Fl::<DV, B>([omega.coef(j); B]);
+                r = (r - dfv * od) - kappa.coef(j) * fs[k - j];
+            }
+            let fk = lu.solve_lanes(&r);
+            f.set_coef(k, &fk);
+            fs.push(fk);
+        }
+        return f;
+    }
     if T::VAL_F64 || T::TAN_F64 {
         // f64 values: the value solve in plain f64 with the hi parts of the double-double LU factors; f64 tangents:
         // each tangent's solve likewise. With HDD_SOLVE both in double-double (the f64 right-hand side solved exactly
@@ -548,8 +568,10 @@ pub fn horizon_series<T: Lane, const B: usize>(
 ) -> [Vec<Fl<T, B>>; 4] {
     let sig = series_scale(ctx.u0().hi);
     let isig = 1.0 / sig;
-    let n1 = ctx.n - DD::ONE;
-    let nh = ctx.n.mul_f(0.5);
+    let n1 = dim::<T, B>(ctx) - T::P::one();
+    let nh = dim::<T, B>(ctx).mul_f(0.5);
+    // kappa's n: the control JET_MUT_KAPPA freezes it (the exponents of the horizon block at fixed n)
+    let nh_kappa = if ctx.mutate == JET_MUT_KAPPA { T::P::from_dd(ctx.n.mul_f(0.5)) } else { nh };
     let ks = ctx.ks;
     let len = ks + 2;
     let z = Fl::<T, B>::zero();
@@ -618,17 +640,17 @@ pub fn horizon_series<T: Lane, const B: usize>(
         } else {
             cs(&cc, &a2, kk) - cc[kk]
         };
-        cc[kk + 1] = (cc[kk].mulf(kf) - ca1.muls(n1)).muls(ik1).mul_pwr2(sig);
+        cc[kk + 1] = (cc[kk].mulf(kf) - ca1.mulp(n1)).muls(ik1).mul_pwr2(sig);
         ww[kk + 1] = wfun(&cc, kk + 1) - wfun(&cc, kk).mul_pwr2(sig);
         vv[kk] = cc[kk + 1].mulf((kk + 1) as f64).mul_pwr2(isig) - cc[kk].mulf(kf);
         zc[kk + 1] = zfun(&cc, kk + 1) - zfun(&cc, kk).mul_pwr2(sig);
         pm[kk] = pp[kk] + mm[kk];
         let wpu = cs_w(&pp, &ww, kk + 1, 0, kk, |i| i as f64).mul_pwr2(isig);
         let tau = if kk >= 1 { -dp[kk - 1].mul_pwr2(sig) } else { z };
-        let r = (((tau - wpu) + cs(&vv, &pp, kk)) + cs(&cc, &pp, kk)) - cs(&cc, &pm, kk).muls(nh);
+        let r = (((tau - wpu) + cs(&vv, &pp, kk)) + cs(&cc, &pp, kk)) - cs(&cc, &pm, kk).mulp(nh);
         // kappa (and the LUs of horizon_lus) take the unscaled first-order coefficient
         let c1 = cc[1].mul_pwr2(isig);
-        let kappa = ((c1 + one).mulf(kf) + c1 + one).adds(-nh);
+        let kappa = ((c1 + one).mulf(kf) + c1 + one).addp(-nh_kappa);
         pp[kk] = psolve(ctx, &lus[kk], &lus_t[kk], &kappa, &(-r), omega);
         dp[kk] = dtau(ctx, &pp[kk], omega);
         q2[kk] = cs(&pp, &pp, kk) + cs(&mm, &mm, kk);
@@ -638,12 +660,12 @@ pub fn horizon_series<T: Lane, const B: usize>(
         }
         // (a q2)_kk + (n - 1) (a - a^3)_kk
         let ag = if ctl {
-            cs(&af, &q2, kk) + (af[kk] - cs(&af, &af2, kk)).muls(n1)
+            cs(&af, &q2, kk) + (af[kk] - cs(&af, &af2, kk)).mulp(n1)
         } else if alpha {
             let a_a3 = -((aa[kk].mulf(2.0) + a2[kk].mulf(3.0)) + cs(&aa, &a2, kk));
-            (q2[kk] + cs(&aa, &q2, kk)) + a_a3.muls(n1)
+            (q2[kk] + cs(&aa, &q2, kk)) + a_a3.mulp(n1)
         } else {
-            cs(&aa, &q2, kk) + (aa[kk] - cs(&aa, &a2, kk)).muls(n1)
+            cs(&aa, &q2, kk) + (aa[kk] - cs(&aa, &a2, kk)).mulp(n1)
         };
         aa[kk + 1] = (aa[kk].mulf(kf) - ag.mulf(0.5)).muls(ik1).mul_pwr2(sig);
         a2[kk + 1] = cs(&aa, &aa, kk + 1);
@@ -654,7 +676,7 @@ pub fn horizon_series<T: Lane, const B: usize>(
         let tau = if kk >= 1 { dm[kk] - dm[kk - 1].mul_pwr2(sig) } else { dm[kk] };
         pm[kk] = pp[kk] + mm[kk];
         let zmu = cs_w(&mm, &zc, kk + 1, 0, kk, |i| i as f64).mul_pwr2(isig);
-        let rest = (((tau - zmu) - cs(&vv, &mm, kk)) - cs(&cc, &mm, kk)) + cs(&cc, &pm, kk).muls(nh);
+        let rest = (((tau - zmu) - cs(&vv, &mm, kk)) - cs(&cc, &mm, kk)) + cs(&cc, &pm, kk).mulp(nh);
         mm[kk + 1] = (rest * izc0).muls(ik1).mul_pwr2(sig);
         dm[kk + 1] = dtau(ctx, &mm[kk + 1], omega);
     }
@@ -737,6 +759,68 @@ pub fn residual<const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64], par: bool)
     fh[l - 1] = ph.hi;
     fl[l - 1] = ph.lo;
     Ok((fh, fl))
+}
+
+/// The residual on a jet state z(h) = sum_k z_k h^k with the dimension n + h as the jet variable: zs are the
+/// coefficient vectors z_k (hi, lo), at most N of them, and the result the residual's coefficients of orders
+/// 0..nout-1 (nout <= N), each (hi, lo) of length L. With z_k absent (zero) the order-k coefficient is the right-hand
+/// side of order k of the Taylor continuation in D (notes/QUAD_DOUBLE.md 13.15). The horizon LUs are those of the
+/// values (z_0); psolve continues them order by order.
+pub fn residual_jet<const N: usize, const B: usize>(ctx: &Ctx<B>, zs: &[(&[f64], &[f64])], par: bool, nout: usize) -> Result<Vec<(Vec<f64>, Vec<f64>)>, String> {
+    let l = ctx.len();
+    let m = Ctx::<B>::M;
+    if zs.is_empty() || zs.len() > N || nout == 0 || nout > N {
+        return Err(format!("residual_jet: 1..={N} coefficient vectors and 1..={N} outputs, not {} and {nout}", zs.len()));
+    }
+    if zs.iter().any(|(h, lo)| h.len() != l || lo.len() != l) {
+        return Err(format!("z_k must have length {l}"));
+    }
+    if ctx.lam.hi != 0.0 {
+        return Err("residual_jet: no mode-matrix shift (lam) supported".into());
+    }
+    let (zh, zl) = zs[0];
+    let delta = delta_of(zh, zl);
+    let lus = horizon_lus(ctx, &ctx.fld(zh, zl, ctx.off_ah()), delta, par, DD::ZERO)?;
+    // the coefficient-k field at offset o: z_k's, zero past the given vectors
+    let fld_k = |k: usize, o: usize| -> Fl<DV, B> { if k < zs.len() { ctx.fld(zs[k].0, zs[k].1, o) } else { Fl::zero() } };
+    let fld_jet = |o: usize| -> Fl<Jet<N>, B> {
+        let mut f = Fl::<Jet<N>, B>::zero();
+        for k in 0..zs.len() {
+            f.set_coef(k, &fld_k(k, o));
+        }
+        f
+    };
+    let mut dj = Jet::<N>::zero();
+    for (k, (h, lo)) in zs.iter().enumerate() {
+        dj.set_coef(k, DV::splat(delta_of(h, lo)));
+    }
+    let one_block = |b: usize| -> State<Jet<N>, B> {
+        let inp: Vec<Fl<Jet<N>, B>> = ctx.block_inputs(b).iter().map(|&o| fld_jet(o)).collect();
+        block_state::<Jet<N>, B>(ctx, b, &inp, dj, &lus, &lus)
+    };
+    let nb = ctx.k() + 1;
+    let states: Vec<State<Jet<N>, B>> = if par { (0..nb).into_par_iter().map(one_block).collect() } else { (0..nb).map(one_block).collect() };
+    let mut out: Vec<(Vec<f64>, Vec<f64>)> = (0..nout).map(|_| (vec![0.0; l], vec![0.0; l])).collect();
+    let kb = ctx.k();
+    for (b, s) in states.iter().enumerate() {
+        let t = ctx.block_target(b);
+        for q in 0..4 {
+            for (k, o_k) in out.iter_mut().enumerate() {
+                let mut d = s[q].coef(k) - fld_k(k, t + q * m);
+                if let (true, 0, Some((lo, hi))) = (b == kb, q, &ctx.freeze) {
+                    d = lo.apply(&d) + hi.apply(&fld_k(k, 0));
+                }
+                let o = b * 4 * m + q * m;
+                d.store(&mut o_k.0[o..o + m], &mut o_k.1[o..o + m]);
+            }
+        }
+    }
+    for (k, o_k) in out.iter_mut().enumerate() {
+        let ph = phase_row(ctx, &fld_k(k, 0));
+        o_k.0[l - 1] = ph.hi;
+        o_k.1[l - 1] = ph.lo;
+    }
+    Ok(out)
 }
 
 /// Exact Jacobian dF/dz by forward-mode duals, column-major with leading dimension ld_for(L): (hi, lo, ld).
@@ -992,6 +1076,22 @@ fn jacobian_lanes<T: Lane, const B: usize>(ctx: &Ctx<B>, zh: &[f64], zl: &[f64],
 /// Deliberate breakage of `jvp`, for the controls of hp/largeD_mixed_check.py: the Delta tangent scaled by
 /// 1 + 1e-20 (a subtle error in one column's contribution)
 pub const JVP_MUT_DELTA: u8 = 1;
+/// residual_jet's controls (Ctx::mutate): the dimension frozen (the jet variable a constant, so every coefficient
+/// past the value is that of a fixed n: the Taylor continuation then predicts no change, and must fail its branch
+/// test), and kappa's dependence on n frozen (the horizon exponents at fixed n: must fail the residual test)
+pub const JET_MUT_FREEZE_N: u8 = 21;
+pub const JET_MUT_KAPPA: u8 = 22;
+
+/// the dimension in the lane's parameter arithmetic (multidouble's Param): the double-double scalar on every lane
+/// but a jet, bit for bit as before; on a jet the series n + h, so the coefficients carry their own derivatives in
+/// n (the Taylor continuation in D, notes/QUAD_DOUBLE.md 13.15); JET_MUT_FREEZE_N keeps it a constant
+fn dim<T: Lane, const B: usize>(ctx: &Ctx<B>) -> T::P {
+    if ctx.mutate == JET_MUT_FREEZE_N {
+        T::P::from_dd(ctx.n)
+    } else {
+        <T::P as Param>::var(ctx.n)
+    }
+}
 /// `jvp` control: the horizon block's state tangent dropped
 pub const JVP_MUT_HORIZON: u8 = 2;
 /// `jvp` control: the phase row's product dropped
