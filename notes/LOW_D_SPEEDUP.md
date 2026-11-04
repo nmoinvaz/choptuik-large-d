@@ -40,6 +40,26 @@ lever is the thread count. Running the two M levels of a point concurrently pays
 | 5 | The mapped τ grid | a study first (Mac, minutes), then a new path | the converged values at D 3.05 and 3.15 from ≤ half the modes |
 
 
+## Step 3: chord steps in the point solver (2026-11-04)
+
+`hp/lowD_dd.py` `chord_phase`, used by `solve_point` when `--chord_from` (of `hp/lowD_highM.py`) is set, off by
+default: after a full Newton step whose max |F| is below the threshold, chord steps with that step's LU (one residual
+and one block solve each, `Solver.chord`), each taken only if it at least halves max |F|; the phase ends converged, at a
+rejected trial, or after 20 steps, and the LU is refreshed once at the end for the sensitivities. `hp/test_chord.py`
+on the D 4, M 48 state perturbed as `highm_check.py converge` does (Δ + 10⁻⁶, every unknown + 10⁻⁸ N(0, 1)), Jacobian
+builds counted on the solver:
+
+| case | converged | Δ | Jacobian builds |
+|---|---|---|---|
+| Newton only (the former rule) | yes | 3.44545279616531097 | 6 |
+| chord from 10⁻⁸ | yes | the same, every digit | 3 |
+| sign-flipped chord (the guard's control) | yes, 4 trials rejected | the same | 6 |
+| guard removed (`--mutate`) | no: diverges to a non-finite pivot | | |
+
+At M 320 a Jacobian build is about 2000 s and a chord step about 10 s, so the gain per point is the builds saved:
+here half, at the leg's points about a quarter to a half (pass 1 from a predictor at 10⁻³ needs two full steps before
+the threshold; pass 2 starts below it). Not yet run in the leg; T105 runs the former rule.
+
 ## Step 5, the study: a shared map saves about 3× in modes (2026-11-04)
 
 `hp/tau_map_study.py` on the converged D 3.044375, M 384 state (`T100-win2/states`), output
