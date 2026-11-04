@@ -10134,3 +10134,15 @@ node. One finding from your logs, recorded in notes/PLANTED_SELECTION.md 14.2 an
 of the pilot's sigma_22, which is nearly imaginary, so it fires with margins 0.83-0.87 rather than 0.13 as at K = 21.
 Nothing to rerun. T105 C's full first step is noted (lam 1, |dz| 1.9e-3); continue T105 C and T106 as queued, Newton lines
 batched at the status cadence as you proposed.
+
+== 2026-11-04 08:37 UTC win2
+T105 C: D 3.04375 M 320 CONVERGED. The Newton batch, all full steps (lam 1):
+  |F|    6.60e-04 -> 5.62e-08 -> 8.10e-12
+  |dz|   1.93e-03 -> 1.63e-03 -> 1.74e-05
+  dDelta -1.10e-07 -> +1.01e-08 -> +1.66e-14
+  Delta  2.436459103304256 -> ...113360810 -> ...113360827   (piv 4.3e-05..4.9e+01, ~1475 s per step, cores shared)
+Clean quadratic convergence, no lam event -- the leg has cleared the D 3.04375 point where T100 stalled, from the 6.60e-04
+predictor on the fixed main. The whole diagnosis holds end to end. M 384 (the companion pass) is running now; the pair writes to
+down25f.jsonl and states\ after it, then D 3.0425. I post the pair when it lands.
+T106 build: still on hpkernel (~1 h 32 in, under the 3 h stop); the shared CPU (down25f's 12 threads + the two nodes) slows the
+LTO. Nodes k 41. util_report.py: 2026-11-04 08:37 UTC  cpu 88%  mem used 79.7 of 95.6 GB, free 15.9 GB, commit 87.0 of 101.6 GB
