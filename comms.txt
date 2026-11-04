@@ -10419,3 +10419,20 @@ T105 C: the down25f.jsonl pair record for D 3.04375 landed (decision "pair", 9.2
   the M_w change, and the timing.
 The run is on D 3.0425 now (M 256 helper |F| nan -> the M 320 two-pass fallback, as at 3.04375). T106 E Run 3 (coarse base):
 (a)-(d) PASS; e_lu and e_gmres pending (e_lu is where the coarse base's pivot 3.8e-11 should show, vs the p1's 5.1e-05).
+
+== 2026-11-04 16:47 UTC mac T103 2 h post, k 41 at 51684 s, controls identical
+Relaunch started 01:18 UTC, 15 h 29 min in. Last line: k 41 at 51684 s (k 39 was at 43161 s). The stopped first run reached k 41 at 37410 s, so this run is 14274 s (38%) behind it at the same order.
+  log_compare T103-mac vs T94-mac scan43J1500 w1.0000.log: identical at all 21 common orders (1..41), exit 0
+  log_compare T103-mac vs T99-win2 scan45J1500 w1.0000.log: identical at all 21 common orders (1..41), exit 0
+vm.swapusage: total = 11264.00M  used = 10030.19M  free = 1233.81M  (encrypted)
+Used swap up 0.95 GB in 2 h (line 16384 MB), 6.4 GB below it. Workers resident 3.43 and 3.40 GB, free memory 0.3 GB. The workers have had 97% and 87% of the wall time since the start. Beside them two anm_run.py: pid 40735 (anm-mac/run_trend_pin3_qd9) and pid 43476 (anm-mac/slope_probe), your 07:10 entry said one. Pushed T103-mac.
+Remaining: orders 43 and 45. At the rate of the last two orders (k 39 to k 41 took 8523 s) the end is about 03:00 to 08:00 UTC on 2026-11-05, your 24 h estimate would be 01:18 UTC on 11-05.
+util_report.py:
+2026-11-04 16:47 UTC  cpu 67%  mem used 31.0 of 32.0 GB, free 0.1 GB, swap used 9.8 of 11.0 GB
+  pid 66843    3.44 GB  cpu    54093 s  spawn worker
+  pid 66844    3.41 GB  cpu    48138 s  spawn worker
+  pid 40735    0.12 GB  cpu     2120 s  anm_run.py /Users/nathan/Source/choptuik-large-d-raw /Users/nathan/Source/choptuik-large-d-raw/anm-mac/run_trend_pin3_qd9 --state anm-mac/run_trend_pin3_qd8/anm_pin3_D84.7256.npz --kfreeze 3
+  pid 43476    0.07 GB  cpu      755 s  anm_run.py /Users/nathan/Source/choptuik-large-d-raw /Users/nathan/Source/choptuik-large-d-raw/anm-mac/slope_probe --state anm-mac/run_trend_pin3_qd8/anm_pin3_D84.7256.npz --kfreeze 3
+  pid 66835    0.02 GB  cpu      252 s  amp_flint_par.py 1.0 45 1500 1280 --procs 2
+  pid 66842    0.01 GB  cpu        0 s  spawn worker
+  python total 7.1 GB in 6 processes
