@@ -1747,6 +1747,34 @@ precision rather than double-double's, and the two terms' errors differ by 1–3
 jet's arithmetic for that field, not in the series. The kernel code that computes it is the next place to read, and the
 quad-double correction (`--fix1`) stands in for it meanwhile.
 
+**Correction (2026-11-04 23:00 UTC): the float64-level errors were the probe's.** The previous paragraph is wrong about
+the cause. `probe_links` and `order1_r` formed the Richardson combination with the float64 weights 4/3 and −1/3, each
+2⁻⁵⁴ below its value, so the reference was (1 − 2⁻⁵⁴) times the true one, 5.55×10⁻¹⁷ relative in every row. The weights
+are now exact in double-double (8547ccc). With them, the two links agree with the differences to 8×10⁻¹², and the
+order-1 sum's 3.9×10⁻¹³ stands, since a common factor cancels in it. Its source is double-double rounding in the horizon
+series. There a² − 1 and a − a³ cancel down to α_h (`hp/src/model.rs` 641 and 668), which is as small as 4.6×10⁻⁶ at
+grid point 15, and the horizon block's mass mode amplifies the rounding by G = 0.7^−(n−1), 1.8×10¹² at D 82. Across 7
+bases from D 79.8 to 86.4 the order-1 error is 0.03–1.43 times ε_dd·G·|dF/dD| (raw-data repository
+`anm-mac/precision_study/exp_multi.log`, a coordinator subagent's study).
+
+**The series' high orders are rounding, not the branch.** The two horizon forms (`--horizon_alpha` 0 and 1) are the same
+function, yet with z_1 fixed their z_k differ by 0.5–3.6 times |z_k| for k ≥ 4 (`exp_series.log`). So a_max ≈ 1.7–2, the
+series' reach read in 13.16(iii) as a weak component of the branch, is the double-double noise of the jets.
+
+**Growth laws and what they predict (estimates).** Per unit of D, `exp_multi.log` and `growth_fit.log` measure:
+- the double-double value floor grows 1.43×;
+- |dF/dD| grows 1.38×;
+- the jets' order-1 error grows 2.1×, about G²;
+- the slope fix's contraction through the double-double LU grows 2.44×, from 7×10⁻⁷ at 79.8 to 7×10⁻⁵ at 86.4, which
+  reaches 1 near D 95–97.
+
+Through the quad-double LU (`--fix1_qlu 1`) the contraction stays at 10⁻¹⁰–10⁻¹³. At 85.75 that fix converges to 8×10⁻²⁴
+in one pass but predicts no better, 1.2×10⁻¹³ against 5.4×10⁻¹⁴ at h = 0.5, because the second order dominates
+(`anm-mac/slope_probe/probe_D85.7473_qlu*.log`). Quad-double jets would carry the chain to about D 170–185, since the
+derivative-level errors grow like G² (`d200_estimate.log`). That estimate assumes a flat basin, unchanged growth laws, M
+= 32 and a branch radius of at least 50. D = 200 would need about 80-digit jets and Jacobian, or a smaller G from a
+layout with the matching point nearer the horizon (untested).
+
 **The held harmonics' bias (2026-11-04 18:10 UTC).** `hp/chain_vs_series.py` compares the quad-double chain's Δ with the
 1/D and 1/n series fitted on the double-double points up to D 67.77. That series is the reference that matched the
 unpinned quad-double points at 68.5–73 to 10⁻¹⁵ (12.5); the output is in the raw-data repository,
