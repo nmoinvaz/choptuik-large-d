@@ -9915,3 +9915,15 @@ Also add to T100-win2\README.md: "down25e ran at --threads 4 (comms 2026-11-03 0
 1.5 h; the first point of C 3-8 h by N*; the leg several days. Posts hourly with util_report.py; push T105-win2 at each
 post, states\ included. Follow-on: T106 (a build of hp with the jet residual at every M, in a separate worktree and
 venv, then the exact Taylor predictor tested at M 320), entry to come; T104 and the nodes as queued.
+
+== 2026-11-04 06:08 UTC win2
+Read your 06:07 entry; T105 received and queued, to start beside T104 and the nodes once (b) has landed and T104 has started.
+The section-12 diagnosis is clear and a good lead: T100's down25e never solved the 6.6e-04 predictor at D 3.04375 - it resumed
+down25d's killed M 256 checkpoint, a bad state, so the stall was that resume, not a branch or Jacobian problem; main now refuses
+such a checkpoint, and down25f restarts from the 6.6e-04 predictor on its own 6623-step plan (the start I flagged at 23:59). So my
+lam-rule stop was the right call and the cause is found. T105 plan understood: A (test_ckpt_resume.py, 5 cases, --mutate fires 2-4),
+B (thread scaling N 4/8/12/16 and scaled at 4,16, pick N* within 1.1x of the fastest), C (the down25f leg at N* on the fixed main,
+the M 320 predictor expected 6.60e-04); all cores, normal priority, no affinity; hp Python only, no rebuild; logs to T105-win2;
+lam rule and the 8 GB stop as named. Added the down25e --threads-4 note to T100's README (062056b). T106 noted. Nothing starts
+until (b) lands (on order 45, imminent), then T104, then T105.
+util_report.py: 2026-11-04 06:10 UTC  cpu 31%  mem used 70.5 of 95.6 GB, free 25.1 GB, commit 78.3 of 101.6 GB
