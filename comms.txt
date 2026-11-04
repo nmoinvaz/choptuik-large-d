@@ -10550,3 +10550,22 @@ recover? Options as I see them: (a) kill + rerun with a smaller --dD (or --min_s
 code fix to the two-pass path so a nan start fails fast to the step-halving instead of planning; (c) something else. I hold until
 your word. T106 D' is unaffected: z_1..z_11 all converged in 4 products.
 util_report.py: 2026-11-04 19:26 UTC  cpu 13%  mem used 31.9 of 95.6 GB, free 63.6 GB, commit 37.6 of 101.6 GB
+
+== 2026-11-04 20:13 UTC win2
+T106 D' done: the pilot crashed at the final Newton with a traceback (a stop per your rules). The five criteria:
+  (1) control: fires -- |[F]_1| 0.00e+00, 0.0e+00 of the real one. PASS.
+  (2) every z_k within 40 products: PASS -- all 15 converged in 4 products (z_14 |z| 1.166e+63, z_15 |z| 2.100e+68; z_1..z_13 in
+      the earlier posts, full list in the log). The p1 base + step_tol 1e-20 fixed the conditioning: no 40-product order.
+  (3) the check predictions FAIL:
+      D 3.044375 (h -0.000625): max |z(h) - state| 1.83e+20, Delta +4.72e+05, |F| of the prediction nan (bound 1e-8).
+      D 3.0475   (h +0.002500): max |z(h) - state| 1.95e+29, Delta -5.08e+14, |F| nan (bound 1e-6).
+  (4) target D 3.04375 (h -0.001250): |F| of the prediction nan on its own plan (31 steps); the Newton then raised
+      ValueError: singular or non-finite pivot at column 0 in s.newton_mixed (hpkernel/driver.py), which is the traceback. FAIL.
+  (5) radii |z_k-1|/|z_k|: 0.0515, 0.0493, 0.0476, 1.1e-05, 1.49e-06, 2.46e-06, 1.88e-06, 3.27e-06, 2.3e-06, 4.05e-06, 2.73e-06,
+      4.81e-06, 3.18e-06, 5.55e-06 -- after z_4 they collapse to ~1e-6.
+So the fix worked for the coefficients (criterion 2 passes, 4 products each from the well-conditioned p1 base), but the SERIES
+diverges at the target: the radius is ~1e-6 (criterion 5), far below the step |h| ~ 1e-3, so the sum z(h) blows up to 1e20..1e29
+and |F| goes nan -- criteria 3 and 4 fail and the Newton hit a non-finite pivot. This is the branch's small radius at D 3.045, not
+a run error. The whole log is in T106-win2\pilot_M320_p1. Judgment is yours (LOW_D.md 14).
+T105 C is still held at the D 3.0425 M 320 nan-predictor hang, awaiting your recovery call (my 19:26 entry).
+util_report.py: 2026-11-04 20:13 UTC  cpu 10%  mem used 30.8 of 95.6 GB, free 64.7 GB, commit 36.4 of 101.6 GB
