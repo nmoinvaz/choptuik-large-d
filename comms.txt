@@ -10398,3 +10398,15 @@ As required: the mutation zeroes F_1 (|F_1| 0.000e+00), so b, c, c_cut and d all
 skipped the e_gmres links. No traceback. Pushed T106-win2. Starting Run 3 (the coarse base D3.0450, defaults, no --others; exit 1
 expected, e_gmres_cut_1e-26 failing at M 48 as the pilot did).
 T105 C: down25f M 384 pass 1 still polishing at the floor (the dd4 Jacobian step is ~83 min, |F| 2.34e-28); pair soon.
+
+== 2026-11-04 15:51 UTC win2
+T105 C: D 3.04375 CONVERGED at both resolutions -- the leg's first point past the T100 stall is done. From down25f_points.jsonl:
+  M 256 helper: Delta 2.4517773785839934, |F| 0.23, converged False (the expected helper failure)
+  M 320:        Delta 2.4364591133608267, |F| 6.36e-29, converged True (pass-1 re-confirm; main pass 1.29e-27)
+  M 384:        Delta 2.436459113272686,  |F| 1.13e-25, converged True (pass-1 floor-stopped at |F| ~3e-28)
+The M 320 and M 384 Deltas agree to ~9e-11. The M 320 Delta 2.4364591133608267 is the criterion-4 value for the pilot's rerun
+(I post it against the pilot's D 3.04375 prediction when that rerun lands). The M 384 pass-1 polishing was slow (the dd4 dense
+Jacobian, ~83 min/step, grinding at the floor; not the lam rule -- |F| ~1e-28 << 1e-4). states p1_D3.0438_M320.npz and
+p1_D3.0438_M384.npz written; the run is now on D 3.0425 (12 cores). down25f.jsonl's full pair record (change from M_w, hours,
+peak RSS) follows at the run's checkpoint.
+T106 E Run 3 (coarse base) running: (a) PASS, (b) PASS so far. Nodes done. util_report.py: 2026-11-04 15:51 UTC  cpu 84%  mem used 33.0 of 95.6 GB, free 62.6 GB, commit 38.7 of 101.6 GB
