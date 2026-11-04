@@ -11,7 +11,7 @@ code ([LOW_D.md](LOW_D.md) section 12) and the survey's identity |C(1, iy)|² = 
 | Option | Code analysis (A) | Survey (B) | Gain | Effort | What it must pass |
 |---|---|---|---|---|---|
 | Restart 3.04375 from its 6.6×10⁻⁴ predictor, stale checkpoint set aside | first item: unblocks the chain | not seen (B quotes the stall as real) | unblocks the leg | 10 lines in `solve_point`, one rerun | M 320 converges with full steps |
-| More threads per call (4 now, 16–20 after T99) | 2–3× per call; 1.75× measured from 4 to 8 | not covered | 2–3× | none | bit identity across thread counts (`highm_check.py scaled`) |
+| More threads per call (4 now, 16–20 after T99) | 2–3× per call; 1.75× measured from 4 to 8 | not covered | measured 1.87× (saturates at 12 threads, [LOW_D.md](LOW_D.md) 13) | none | bit identity across thread counts: passes at 4 and 16 |
 | Reuse the factored Jacobian: chord steps within a point (A), a stale LU from the previous D as GMRES preconditioner (B) | 1.5–1.7× (chord after the second call) | minutes instead of 43 min per step if GMRES needs under ~50 products | 1.5× to 10×+ | Python only | Δ equal to the LU path's to the double-double floor; product count logged; mutated preconditioner as control |
 | Exact Taylor predictor in D (the ANM of the large-D work), and predicting in s = √(D − 3) | 5–20× on the chain (steps 0.01–0.02 instead of 0.0006–0.0025); needs jet lanes for M 320/384 and a rebuild | first idea; the branch point at D = 3 degrades every predictor in D | 5–20× fewer points | rebuild (~1 h) + driver work | jet control `--mutate 21`; the 3.044375 state reproduced to the floor |
 | Mapped τ grid concentrating modes on the pulse | probe on the stored D 3.0444 state: 1.8× fewer modes, ~6× per call | the only idea that attacks the growth of M; ~4× fewer modes estimated | 6× (measured probe) to 30× (estimate) | new discretization, validation at D 3.05–3.15 | identity map bit-identical; converged values at D 3.05 and 3.15 from fewer modes under the two-M rule; planted pulse |
@@ -84,6 +84,19 @@ coordinates in (τ, x), not of the grid. (iii) The levels are where the state is
 harmonics sit at 3.5×10⁻⁶ of their peak, so the deeper levels (10⁻¹⁰, 10⁻¹²) measure the M 384 truncation, not the
 pulse, and gave mapped counts equal to 384 times the map's largest stretch; those runs are not used. The analysis's
 1.8× (the centre field alone) and the survey's 30–60× (an estimate) bracket the measured 3×.
+
+## Step 5, the implementation so far (2026-11-04)
+
+`hp/tau_map.py` builds the solver on the mapped grid from the two inputs that carry τ (the odd-sector d/dθ, rows
+scaled by 1/g′, and the phase row, sin g · g′), with the map written as the identity plus terms in L − 1 so that L = 1
+is exact; no kernel change. `hp/tau_map_check.py`: the identity map gives the uniform inputs and the residual bit for
+bit (0 differing words of 4704 inputs; 0 of the residual). On the resolved D 8, M 64 state (its top harmonic 2×10⁻¹¹ of
+its largest) mapped with L 0.9 the start's residual is 1.1×10⁻¹², Newton converges in 4 calls to |F| 5.5×10⁻³¹, and Δ
+equals the uniform grid's to every digit: the mapped grid solves the same problem. Not yet measured: L ≤ 0.7 with each
+state's own Taylor plan (an L 0.7 solve on the uniform plan overflowed, the plan's steps being too long for the
+mapped samples), the plan's length on mapped grids (it multiplies the cost of a call), and the gain at low D (the
+uniform M 48 state at D 4 is too under-resolved, 4×10⁻⁷ in Δ, to be mapped onto the same M). These runs need more than
+the Mac's two threads until T103 ends.
 
 ## Appendix A: code analysis
 
