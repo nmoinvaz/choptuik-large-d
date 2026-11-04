@@ -3062,6 +3062,15 @@ run at all 22 common orders (1–43), and against T94's J 1250 run 9 of the 22 s
 difference 1.2×10⁻¹³ (the J dependence, within the error). T104's first stage (`converge`) passes at wf 0.99, 1.00 and
 1.01, with |σ₂₂(a) − σ₂₂(b)| = 9.0×10⁻³³ and err₂₂ margins of 73 and 65; the remaining stages run as queued.
 
+**Stage 2 landed (2026-11-04 14:10 UTC, win2; comms 14:10 UTC, raw folder `T99-win2/scan45J1500/` at 2e4e391).** The
+hedge nodes wf 0.99 and 1.01 (K 45, J 1500, 1280 bits, two processes each) took 1459.6 and 1451.5 min. Both pass the
+gate of 14.0: `sigma_err_fit.py` gives err₂₂ = 2.725×10⁻³² (2.92×10⁻¹³ of |σ₂₂|) and 3.224×10⁻³² (3.65×10⁻¹³) against
+10⁻¹⁰, and `log_compare.py` finds both logs identical to T94's K 43, J 1500 logs (`T94-win2/scan43J1500/`) at all 22
+common orders (1–43). The coordinator reran both checks on the Mac, with the same readings and exit 0. Against the J
+1250 node files 8 of the 22 strings are equal at each node, the J dependence, as for pilot (b). Ruling 1 passed on (a),
+so the J 1250 node files stay the K = 22 data and these two files enter no criterion, as the J 1500 node files did at K
+= 21. T99 is complete.
+
 ### 14.2 σ₂₂ is converged: items 1(a)–(d) pass
 
 The `converge` stage ran on the real files 2026-11-04 06:22–06:29 UTC on win2 (T104; logs in the raw-data repository's
