@@ -10499,3 +10499,24 @@ T106 D': the fix works. base D 3.045 M 320 |F| 8.8e-28, pivots 5.1e-05 (well con
 with step_tol 1e-20, z_1 meets criterion 2 (within 40 products) and sits at the states' tangent scale (~1e4, not 1e8). z_2..z_15
 follow; I watch the per-order products and stop on any 40-product order. Pushed T105-win2 and pilot_M320_p1.
 util_report.py: 2026-11-04 17:47 UTC  cpu 13%  mem used 31.8 of 95.6 GB, free 63.8 GB, commit 37.4 of 101.6 GB
+
+== 2026-11-04 18:39 UTC mac T103 2 h post, k 43 at 58525 s, controls identical, SWAP at 13.6 GB, decision needed
+Relaunch started 01:18 UTC, 17 h 20 min in. Last line: k 43 at 58525 s (k 41 was at 51684 s, 6841 s, faster than my 8286 x 1.16 estimate).
+  log_compare T103-mac vs T94-mac scan43J1500 w1.0000.log: identical at all 22 common orders (1..43), exit 0
+  log_compare T103-mac vs T99-win2 scan45J1500 w1.0000.log: identical at all 22 common orders (1..43), exit 0
+vm.swapusage: total = 15360.00M  used = 13638.38M  free = 1721.62M  (encrypted)
+  16:47 UTC  used 10030 MB
+  18:38 UTC  used 13638 MB  (3.6 GB in 2 h)
+Workers resident 1.24 and 1.23 GB (partly swapped out), free memory 0.5 GB. One anm_run.py (pid 40735) beside them.
+Remaining: order 45. Win2's k 43 to k 45 took 8852 s, so the end is about 9000 s (2.5 h) after k 43, about 21:00 to 22:00 UTC today. At the last rate the swap reaches 16384 MB after about 1.5 h, before the end, and my stop rule fires at k 44 or 45.
+New fact: the disk under the swap has 17 GiB free (df -h: / and /System/Volumes/VM, 926 GiB, 17 GiB avail, 48% used). Swap files live there, so a line above 16 GB leaves the disk about full. I do not think raising it is safe.
+Options for you: (a) the stop rule as it stands, T103 stopped at k 43 or 44 and recorded, with k 43 in the log. (b) You or Nathan free memory on the Mac before then: the swap is mostly other apps' pages (Teams, Mail, Chrome, VS Code, three claude sessions, anm_run), quitting them is Nathan's to do, I do not touch them. (c) You stop anm_run.py now (it holds 2 threads).
+Tell me which. I will not stop before 16384 MB if I hear nothing. Pushed T103-mac.
+util_report.py:
+2026-11-04 18:39 UTC  cpu 65%  mem used 31.0 of 32.0 GB, free 0.1 GB, swap used 13.3 of 15.0 GB
+  pid 66844    1.70 GB  cpu    52615 s  spawn worker
+  pid 66843    1.66 GB  cpu    59574 s  spawn worker
+  pid 40735    0.06 GB  cpu     6515 s  anm_run.py /Users/nathan/Source/choptuik-large-d-raw /Users/nathan/Source/choptuik-large-d-raw/anm-mac/run_trend_pin3_qd9 --state anm-mac/run_trend_pin3_qd8/anm_pin3_D84.7256.npz --kfreeze 3
+  pid 66835    0.01 GB  cpu      354 s  amp_flint_par.py 1.0 45 1500 1280 --procs 2
+  pid 66842    0.01 GB  cpu        0 s  spawn worker
+  python total 3.4 GB in 5 processes
