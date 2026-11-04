@@ -1344,6 +1344,16 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   | 20 | 6.5–8.1×10⁻¹³ | 1.0000009 | 0.999999997–1.000000028 | 0.999997–1.000002 |
   | 21 | 1.0–1.3×10⁻¹² | 1.0000004 | 0.999999998–1.000000009 | 0.999998–1.000002 |
 
+  The twenty-first order in detail. σ₂₁ converges at 1280 bits with J = 1250 (1.0–1.3×10⁻¹² relative at the three ω, with the J = 1500
+  run 1.6×10⁻³¹ away; the two off-centre nodes were computed on a second machine and reproduce the first's K = 41 digits
+  at every common order). The arg crossing falls to 1.0000004, the factored series stays at 1.0000001 and the central
+  Padé approximants [4/16]–[16/4] lie within 5×10⁻⁷ of 1 ([3/17] is 1.3×10⁻⁶ below). All ten rings built from σ₀…σ₂₀
+  are rejected by σ₂₁ by the value detectors, with or without the bracket detector (they mispredict σ₂₁ by
+  4×10⁻⁷–10⁻², the ring-free sums predicted it to 6×10⁻¹⁰–3×10⁻⁸). The ring-free sums of σ₀…σ₂₁ put the zero at
+  0.999999998–1.000000009. Calibrated on the planted functions, the arg crossing puts it at 0.999998–1.000002, and the
+  twenty-one-order estimator range (arc plants, the Borel–Padé family,
+  the ring-free sums) is 0.999998–1.000002 ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md) §13).
+
   Taken together over the last eight orders,
 **ω*/ω∞ = 0.999975–1.00005, Δ∞ = 1.64387 ± 0.00006 (1.64381–1.64393) from the D = ∞ inner equations alone**
 (the last two orders alone give 0.999997–1.000002). This is an estimator range over eight orders, the planted
