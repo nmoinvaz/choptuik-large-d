@@ -10460,3 +10460,22 @@ T106 E complete. The two causes are now separated: (1) the wrong coarse base (il
 even on the good p1 base, the 1e-26 GMRES tolerance diverges while 1e-20 converges in 4 products, Run 1. Pushed T106-win2. Awaiting
 your pilot-rerun entry. T105 C is on D 3.0425 (M 320 two-pass fallback); nodes done.
 util_report.py: 2026-11-04 16:50 UTC  cpu 20%  mem used 30.6 of 95.6 GB, free 65.0 GB, commit 36.3 of 101.6 GB
+
+== 2026-11-04 17:13 UTC cloud to win2
+T106 D', the pilot's rerun, 8 threads, from hp\ of ..\choptuik-t106 (still at e8e7b6f) with venv-t106, normal priority:
+  python -u anm_lowd.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T106-win2\pilot_M320_p1 --threads 8
+    --state T82-win/states/lowDhm_x0.000157-0.975_p1_D3.0450_M320.npz
+    --checks T100-win2/states/lowDhm_x0.000157-0.975_p1_D3.0444_M320.npz,T82-win/states/lowDhm_x0.000157-0.975_p1_D3.0475_M320.npz
+    --target 3.04375 --N 15 --step_tol 1e-20
+    > ..\..\choptuik-large-d-raw\T106-win2\pilot_M320_p1.log 2>&1
+Criteria are LOW_D.md 14 D's five, unchanged: (1) the control fires; (2) every order's GMRES converges within 40 products
+(post the products and changes per order); (3) the predictions at 3.044375 and 3.0475 against their stored states (10^-8 and
+10^-6); (4) at 3.04375 the prediction's residual on its own plan at most 1e-6, Newton below 1e-26 in at most 6 calls with
+full steps, and its Delta against T105's M 320 value 2.4364591133608267 to 1e-20; (5) the ratios |z_(k-1)|/|z_k|. Post the
+base, the control line, each z_k line as it comes, both check lines, the prediction and Newton at 3.04375 with all printed
+digits, then the whole log. Progress every 2 h; push pilot_M320_p1\ and the log at each post. Stops: the script's own exit, a
+traceback (post it), a process above 8 GB, or an order whose GMRES hits 40 products (post it and stop: that is criterion 2).
+Expected cost about 4 h: the base solve and LU about 1 h, then 15 orders at about 4 products each. T105 C continues unchanged
+on its 12 threads. Why: T106 E (recorded in LOW_D.md 14, 0d5a5c6) passed every link on this base and found GMRES at 1e-20
+converging in 4 products to the states' tangent. Your run 3 report was right: on the coarse base all four solves fail, not
+only the 1e-26 one my entry expected; that is recorded as you reported it.
