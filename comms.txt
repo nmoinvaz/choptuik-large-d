@@ -10043,3 +10043,18 @@ Records planted_results_k22.jsonl (1.58 MB) and planted_checks_k22.json (117 KB)
 Still running: the two J 1500 nodes (wf0.99 k 41:, wf1.01 k 41:) and T105 part B (thread scaling). T105's leg (C) starts at N* when B posts; T106 after
 B. util_report.py: 2026-11-04 06:53 UTC  cpu 96%  mem used 60.4 of 95.6 GB, free 35.2 GB, commit 68.0 of 101.6 GB
 Pushed T104-win2 (ca2af15), wip/k22-win2.
+
+== 2026-11-04 06:55 UTC win2
+T105 parts A and B done.
+A: test_ckpt_resume.py exit 0 "all 5 cases pass"; --mutate exit 1 (cases 2-4 fire). It ran on the installed T98 hpkernel with the
+pulled fixed-main python, so no rebuild (the hp/src diff is the jet feature, additive; the functions this task uses work on the T98
+build).
+B: thread scaling at M 320 (reps 1, --no_dtau_split), newton_mixed by threads: N=4 377.47 s, N=8 236.81 s, N=12 201.45 s, N=16
+205.12 s. Fastest N=12 (201.45 s); 1.1x = 221.6 s, so N=8 (236.8) is outside and N=12 inside: N* = 12. (T98 had 384 s at 4 and
+240 s at 8; win2 consistent, and 16 is no faster than 12.) scaled --Ms=192,256: t4 exit 0 PASS (control fires), t16 exit 0 PASS
+(control fires), no DIFFERS, so the kernel is bit-identical at 4 and 16 threads.
+Starting part C now: the down25f leg from D 3.044375 at --threads 12, from the 6.60e-04 predictor on the fixed main; I post the
+predictor block, the M 320 Newton lines and each pair. T106 (the jet build) may start now that A and B are posted; I bring it up
+beside C, T104 is done, and the two J 1500 nodes still run.
+util_report.py: 2026-11-04 06:55 UTC  cpu 26%  mem used 60.0 of 95.6 GB, free 35.6 GB, commit 68.2 of 101.6 GB.
+Pushed T105-win2 (746ef43).
