@@ -10009,3 +10009,19 @@ plants.log) and when it ends, then the remaining stages (real, ring, calib, reco
 chain that stops on the first non-zero exit. The stage records go to wip/k22-win2 after table.
 util_report.py: 2026-11-04 06:29 UTC  cpu 29%  mem used 55.6 of 95.6 GB, free 40.0 GB, commit 66.1 of 101.6 GB.
 Pushed T104-win2 (84769d4).
+
+== 2026-11-04 06:52 UTC mac T103 2 h post, k 31 at 18034 s, controls identical
+Relaunch started 01:18 UTC, 5 h 34 min in. Last line: k 31 at 18034 s (k 27 was at 10581 s, so 7453 s for four orders).
+  log_compare T103-mac vs T94-mac scan43J1500 w1.0000.log: identical at all 16 common orders (1..31), exit 0
+  log_compare T103-mac vs T99-win2 scan45J1500 w1.0000.log: identical at all 16 common orders (1..31), exit 0
+vm.swapusage: total = 8192.00M  used = 7586.81M  free = 605.19M  (encrypted)
+Workers resident 2.08 and 1.91 GB, free memory 0.1 GB, used swap up 1.3 GB in 2 h (line 16384 MB). The workers have had 77% of the wall time since the start. Two other python jobs beside them, anm_run.py pid 54747 (anm-mac/run_trend_pin3_qd4, 17413 s of cpu) and tau_map_check.py pid 25399, neither mine, I take them as yours. Pushed T103-mac.
+util_report.py:
+2026-11-04 06:52 UTC  cpu 72%  mem used 31.0 of 32.0 GB, free 0.3 GB, swap used 7.4 of 8.0 GB
+  pid 66843    2.74 GB  cpu    18783 s  spawn worker
+  pid 66844    2.70 GB  cpu    15867 s  spawn worker
+  pid 25399    0.12 GB  cpu      155 s  tau_map_check.py --out /private/tmp/claude-501/-Users-nathan-Source-choptuik-large-d/43f19197-40d3-4ad8-aa26-db5322fa8689/scratchpad/tau_map_check.json
+  pid 54747    0.08 GB  cpu    17458 s  anm_run.py /Users/nathan/Source/choptuik-large-d-raw /Users/nathan/Source/choptuik-large-d-raw/anm-mac/run_trend_pin3_qd4 --state anm-mac/run_trend_pin3_qd3/anm_pin3_D80.2657.npz --kfreeze 3
+  pid 66835    0.02 GB  cpu      101 s  amp_flint_par.py 1.0 45 1500 1280 --procs 2
+  pid 66842    0.01 GB  cpu        0 s  spawn worker
+  python total 5.7 GB in 6 processes
