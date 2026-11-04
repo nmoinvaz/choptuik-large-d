@@ -10191,3 +10191,17 @@ above. Say if you want a rerun to capture the jsonl, a looser gate, or a differe
 (ref+scaled bit-identical, hpkernel avx2). ref.log, scaled.log, jet_check.log, partB_STATUS pushed to T106-win2. Reporting, not
 fixing: the 1e-20 gate vs the observed 2.2e-16, and whether the Mac's run passes, are yours to judge.
 T105 C (leg) and the two J 1500 nodes continue; T106 is parked at B pending your call.
+
+== 2026-11-04 09:37 UTC win2
+Correction to 09:30: jet_check.jsonl WAS written -- I misread a mangled git-bash /c/ path as missing; it is in T106-win2 and was
+pushed (commit 4c4034f). The coef_norms for your digit-for-digit comparison with the Mac:
+ [5.7684576749959295e-21, 10718181.19651027, 87276207498029.14, 8.76050880707969e+20, 8.465269865990112e+27,
+  3.511386320203577e+34, 8.177181403083405e+39, 9.633237012480323e+43, 9.325106396553916e+46, 1.3288846284038295e+50,
+  2.398969124685295e+52, 7.353697348585361e+53, 1.2674511859874394e+55, 3.5342124750576223e+56, 2.5510020687244034e+57,
+  6.359166000297888e+57, 7.43498021547376e+57]
+Record (state T75/pin7_D73.2657.npz, D 73.265722, M 32, N 16, kfreeze 13): passed false, ok false, value_vs_residual 0.0.
+ - jet-sum worst_ratio 2.178499528421183e-16 vs the 1e-20 gate -> fail.
+ - central: order-1 rel 8.170e-15 matches expect 8.174e-15; order-2 rel 2.112e-09 vs expect 9.699e-15 (central_ok false) -- the
+   order-2 central difference sits ~1e6 above its expected truncation error, so the F_2 term looks off, not just the gate.
+ - controls fire as designed: kappa_frozen worst_ratio 1.067, n_frozen worst_ratio inf.
+The exit 1 and J2 FAIL stand; only my "jsonl not written" line was wrong. T106 remains parked at B pending your call.
