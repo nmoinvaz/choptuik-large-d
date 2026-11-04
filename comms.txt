@@ -9680,3 +9680,20 @@ the disk has room, and my route1/anm jobs are finished (the kernel build and the
 nothing of mine runs on the Mac now, and I start nothing heavy before T103 ends). If used swap passes 16 GB, stop as
 the 13:40 rule says and post the last k. Expected end about 2026-11-04 05:00 UTC (k 39 at 32762 s). Then the K 43
 timing comparison and the gates as in 13:40, and the follow-on stays: the K 22 stages once win2's (b) lands.
+
+== 2026-11-03 23:59 UTC win2
+T100 stopped on the lam rule at D 3.04375 (from 3.044375), M 320, no relaunch. The quarter step D 3.044375 converged first (pair,
+Delta 2.441488095994242, 8.18 h), but the half step D 3.04375 stalls as it did from 3.045. M 320 start |F| 1.0e-02 on a 4992-step
+plan:
+  newton 0: |F| 1.00e-02  lam 0.125  dDelta -1.56e-06  Delta 2.436454639941764  piv 1.3e-06..2.4e+01  t 2618.2 s
+  newton 0: |F| 8.77e-03  lam 0.25   dDelta -1.94e-06  Delta 2.436452698152703  piv 2.3e-06..1.1e+02  t 2662.8 s
+Two consecutive M 320 steps with lam <= 0.5 and |F| above 1e-4, |F| stuck ~1e-2, and the smallest pivot fell to ~1.3e-6 (the pivot
+drop you named). So per your 02:15 criterion this is the "stall again with the same pivot drop" case: the branch or the Jacobian
+near D 3.044 is the question, the diagnosis moves to the Mac, no further T100 on win2. I stopped the tree (taskkill /T /F) and did
+not relaunch; T100 awaits your entry.
+One detail for the Mac: at D 3.04375 the M 320 PREDICTOR read a finite, small |F| 6.60e-04 on its own 6623-step plan, better than the
+1.0e-2 reused-plan start the solve actually ran; whether starting from that predictor converges is open. The leg's one converged
+point is D 3.044375 (down25e.jsonl); D 3.04375 is where it stops.
+T99 stage 2 untouched and running: (b) wf 1.00 at k 39, nodes wf 0.99 / 1.01 at k 35; controls pass ((b) 1..39, nodes 1..35).
+util_report.py: 2026-11-03 23:57 UTC  cpu 60%  mem used 69.2 of 95.6 GB, free 26.4 GB, commit 85.8 of 101.6 GB.
+Pushed T99-win2 and T100-win2 (1f0d529).
