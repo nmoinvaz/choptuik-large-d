@@ -10324,3 +10324,32 @@ the f64 LU's smallest pivot is 3.8e-11 (down25_points.jsonl), while the p1 file 
 12:44 entry: |z| in anm_lowd.py is the max norm, so the comparison is |z_1| 2.675e+08 against max|dz/dD| 1.4e4 from the
 states, not 4.8e4 (that was the 2-norm). The conclusion stands.
 After run 3: post, then wait for my next entry (the pilot's rerun). T105 C and the nodes continue unchanged.
+
+== 2026-11-04 14:10 UTC win2
+T99 stage 2 COMPLETE: both J 1500 nodes landed (k 45, --procs 2). sigma_22 at K 45 / J 1500 is the new coefficient for each.
+
+wf 0.99 (sigF_w0.9900_K45_J1500_p1280.json, 1459.6 min):
+  sigma_err_fit.py --a1-from scan39J1000 wf 0.99: exit 0, a1 = 44.127185481763.
+    k 19  (-1.8854371908881315896e-16 + 1.7574120026504415396e-16j)  err 6.638e-31  (2.58e-15 |sigma|)
+    k 20  (-1.9056066566182934145e-17 - 1.77186980650622865e-19j)    err 1.680e-30  (8.81e-14 |sigma|)
+    k 21  (-9.797226858623394193e-19 - 9.386603412992852911e-19j)    err 2.856e-31  (2.10e-13 |sigma|)
+    k 22  (-5.2880894193793714376e-21 - 9.3040184332156998752e-20j)  err 2.725e-32  (2.92e-13 |sigma|)
+    gate: err22 = 2.725e-32 = 2.92e-13 |sigma_22| vs 1e-10: PASS.
+  22-string vs scan43J1250 wf 0.99: 8 of 22 equal (the J dependence, posted not fixed; agree to ~1e-13). fit_info 1_1 [12, inf,
+  0.0], 45_1 [7, 1.2026371821014177e-30, 1.093514680990111e-308]. log_compare vs T94-win2\scan43J1500\w0.9900.log: identical at
+  all 22 common orders (1..43), exit 0.
+
+wf 1.01 (sigF_w1.0100_K45_J1500_p1280.json, 1451.5 min):
+  sigma_err_fit.py --a1-from scan39J1000 wf 1.01: exit 0, a1 = 49.2619338755261.
+    k 19  (-1.5938905230187460571e-16 + 1.8736843172606550195e-16j)  err 3.143e-31  (1.28e-15 |sigma|)
+    k 20  (-1.8049731021088556247e-17 + 1.9488798967779088411e-18j)  err 3.674e-32  (2.02e-15 |sigma|)
+    k 21  (-1.0301779005933140043e-18 - 7.7674058526870588764e-19j)  err 2.964e-33  (2.30e-15 |sigma|)
+    k 22  (-1.546194894537606287e-20 - 8.7086582629046320442e-20j)   err 3.224e-32  (3.65e-13 |sigma|)
+    gate: err22 = 3.224e-32 = 3.65e-13 |sigma_22| vs 1e-10: PASS.
+  22-string vs scan43J1250 wf 1.01: 8 of 22 equal (the J dependence). fit_info 1_1 [12, inf, 0.0], 45_1 [7, 1.588191124014601e-30,
+  6.912625455102176e-306]. log_compare vs T94-win2\scan43J1500\w1.0100.log: identical at all 22 common orders (1..43), exit 0.
+
+Both gates PASS (err22 2.9e-13 and 3.65e-13 |sigma_22|); log_compare identical at all 22 orders to the K 43 J 1500; 8 of 22
+strings equal to the K 43 J 1250 (the J dependence, as (b)'s 9 of 22). The three J 1500 wf (b)/0.99/1.01 now have sigma_22 at K 45.
+T99 fully done on win2. Pushed T99-win2. The freed cores go to T105 C and T106 E.
+util_report.py: 2026-11-04 14:10 UTC  cpu 84%  mem used 32.9 of 95.6 GB, free 62.7 GB, commit 38.6 of 101.6 GB
