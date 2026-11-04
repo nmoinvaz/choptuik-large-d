@@ -534,3 +534,13 @@ F_1|/|F_1| ≈ 10⁻¹¹ within 40 products, while |x| stays 7×10⁸ to 1.2×10
 that base the first-order equation's residual does not pin its solution, and the pilot's |z_1| = 2.7×10⁸ is that
 failure. The two causes are separate: the coarse base (run 3), and the 10⁻²⁶ tolerance even on the good base (run 1).
 The pilot reruns from the `p1` state with 10⁻²⁰ (the comms entry after this commit), under the criteria of D.
+
+**D′ (2026-11-04 20:13 UTC, win2; `T106-win2/pilot_M320_p1/`).** Criteria 1 and 2 pass: the control fires, and all 15
+orders converge in 4 products each from the `p1` base. Criteria 3 and 4 fail. The predictions miss the stored states by
+1.8×10²⁰ at 3.044375 and 1.95×10²⁹ at 3.0475, the target's prediction has a nan residual, and Newton stopped on a
+non-finite pivot. Criterion 5's ratios |z_(k−1)|/|z_k| are 0.0515, 0.0493 and 0.0476 for k = 2–4, then 1.1×10⁻⁵ and
+1.5–5.6×10⁻⁶ from k = 5 on. There are two readings. win2's: the branch's radius is about 10⁻⁶. The coordinator's: the
+radius is about 0.05, which is the distance 0.045 from the base to D = 3, and the drop at order 5, a single jump of 10⁵,
+is high-order pollution, as at large D past order 5 (QUAD_DOUBLE.md 13.15). A radius of 10⁻⁶ would show from order 1.
+The test is D″, the same run at N = 4, whose truncation error at the checks is (h/0.05)⁵: 3×10⁻¹⁰ at 3.044375 and 10⁻⁸
+at 3.04375. If criteria 3 and 4 fail there too, the coefficients themselves are wrong.
