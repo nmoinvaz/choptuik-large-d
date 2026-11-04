@@ -1746,3 +1746,22 @@ field. There each term is off by 3.5–5.3×10⁻¹⁷ of its value (dF/dD from 
 precision rather than double-double's, and the two terms' errors differ by 1–3×10⁻¹⁹ of it. So the defect is in the
 jet's arithmetic for that field, not in the series. The kernel code that computes it is the next place to read, and the
 quad-double correction (`--fix1`) stands in for it meanwhile.
+
+**The held harmonics' bias (2026-11-04 18:10 UTC).** `hp/chain_vs_series.py` compares the quad-double chain's Δ with the
+1/D and 1/n series fitted on the double-double points up to D 67.77. That series is the reference that matched the
+unpinned quad-double points at 68.5–73 to 10⁻¹⁵ (12.5); the output is in the raw-data repository,
+`anm-mac/slope_probe/chain_vs_series.txt`. The six series agree with one another to 8×10⁻¹² at D 79.8 and 2×10⁻¹¹ at
+85.7. The chain lies below them by 5.0×10⁻⁸ at 79.77, 8.4×10⁻⁸ at 82.22 and 1.44×10⁻⁷ at 85.75, thousands of times their
+spread, and the gap grows smoothly with D. T85's pinned runs agree in sign and size once their linearised full-system
+correction is applied (`Delta_full1`, the values the README graph plots): they lie 0 to 1.7×10⁻⁷ below the series from D
+75 to 78.1. Freeing the held harmonics in the chain's layout does not converge (`hp/full_release.py` at 79.77, kfreeze
+13). The full-system residual at the held state is 4.3×10⁻¹⁸, but its Newton correction is 0.51, along a near-null
+direction, so the step is damped to 1/128 and stalls, as 12 found past about 72.5. So past D 75 the pinned and held
+values carry a 10⁻⁸–10⁻⁷ bias from the holding, and the series is the better estimate of Δ there.
+
+**T85's states.** `hp/nec_center_check.py` checks the centre zero structure that the NEC-angle formula assumes
+(notes/LIT_REVIEW.md). It flags 4 of T85's 15 states, at D 76.4, 76.48, 78.0 and 78.1, with 6 zeros of p₁ per period
+instead of 2. Their pinned harmonics 9–13 are polluted: harmonic 13 is 5.6×10⁻² of the profile at D 78, against 2.4×10⁻⁵
+at 74. Their raw Δ is off by up to 2×10⁻³, which the linearised correction removes, so the plotted values stand. In a
+broader sample of 198 states from D 3.04 to 85.7, the only failure was T85's state at 78.0, and the check's control
+fires on all 198.

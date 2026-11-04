@@ -245,14 +245,16 @@ a refit, is the formula, and that spread is the extrapolation's own uncertainty.
 The shorter forms of the formula for each range of D, and the earlier power series with its table, are in
 [notes/FORMULA_FORMS.md](notes/FORMULA_FORMS.md).
 
-**One formula for every D, and its integral form.** A single expression covers all the computed points from D = 3.04
-to 67.77. It is a Chebyshev series in ζ = u − √(u² − 1), u = (D + 2)/5, a variable that maps the plane cut along
-[−7, 3] onto a disc. Equivalently, it is a Cauchy integral over that cut: Δ(D) = Δ∞ + (1/π) ∫ ρ(D′) dD′/(D′ − D)
-from −7 to 3. Its 29 coefficients ([`hp/data/formula_cut.json`](hp/data/formula_cut.json), fitted at 256 bits by
+**One formula for every D, and its integral form.** A single expression covers all the computed points from D = 3.04 to
+67.77. It is a Chebyshev series in ζ = u − √(u² − 1), u = (D + 2)/5, a variable that maps the plane cut along [−7, 3]
+onto a disc. Equivalently, it is a Cauchy integral over that cut: Δ(D) = Δ∞ + (1/π) ∫ ρ(D′) dD′/(D′ − D) from −7 to 3.
+Its 29 coefficients ([`hp/data/formula_cut.json`](hp/data/formula_cut.json), fitted at 256 bits by
 `hp/formula_cut_fit.py`) reproduce all 1214 points within 3.47 times their errors, and give Δ∞ = 1.643893745. It is a
-fit, not a law. ρ is the series' continuation onto the cut, large and oscillating, and Δ(3) is not determined
-(1.87–2.13 across forms). `hp/formula_cut.py` evaluates both forms and checks them; the details and the planted tests
-are in [notes/FORMULA_FORMS.md](notes/FORMULA_FORMS.md).
+fit, not a law. ρ is the series' continuation onto the cut, large and oscillating, and Δ(3) is not determined (1.87–2.13
+across forms). The integral states the analytic structure the series assumes: Δ analytic in D everywhere except on that
+cut, with a finite limit at D = ∞. An independent computation of the jump across the cut, which nobody has, would give Δ
+with no fit. `hp/formula_cut.py` evaluates both forms and checks them; the details and the planted tests are in
+[notes/FORMULA_FORMS.md](notes/FORMULA_FORMS.md).
 
 An independent double-double computation ([below](#the-double-double-solver-hp)) agrees with the formula to
 2.7×10⁻⁹ or better on 8.25 ≤ D ≤ 21, 7.5×10⁻⁹ up to D = 30, and 5.8×10⁻⁸ from there to
@@ -1691,8 +1693,14 @@ Jacobian and an unexplained drift of the gauge mode's root).
   data, R = R₀ + C ln(1/δ)/(n − 1), so Newton needs a guess good to about e^{−0.3 n} and no predictor from stored points
   supplies it ([notes/LARGE_D_WALL.md](notes/LARGE_D_WALL.md); [notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), sections
   12–13). An exact Taylor continuation in D (the asymptotic numerical method, with the dimension entered as a jet
-  through the kernel) reaches the basin at steps of 2 in D and converged to 79.27 in a pinned formulation; the
-  corrector in the horizon block's weak directions is the open item (section 13.17 there).
+  through the kernel) with a quad-double corrector carries the chain to D = 85.7, but only with harmonics 5–13 of the
+  centre profile held on a trend, and those values lie 5×10⁻⁸ to 1.4×10⁻⁷ below the 1/D series (section 13.19 there).
+  The wall is the digits the horizon block needs, which grow linearly with D, not the horizon series itself. In a toy
+  of the horizon's two branches (`hp/horizon_toy.py`), the series keeps the full precision up to D ≈ 200, while an
+  integral equation from the horizon converges only after its first (D − 4)/2 Taylor terms are subtracted, and
+  shooting outward from near the horizon loses about 0.7 digits per unit of D
+  ([notes/LARGE_D_LITERATURE.md](notes/LARGE_D_LITERATURE.md), section 1(e)). Integral formulations are the tool for a
+  certified horizon block, a contraction with explicit bounds, not for more digits.
 - **The analyticity assumption.** Δ∞ = 1.643893746 ± 1.5×10⁻⁸ assumes that Δ is analytic in 1/D; the points support
   it (held-out predictions, a planted-truth test, a transseries term excluded over a range) but do not prove it
   ([Is the period analytic in 1/D?](#is-the-period-analytic-in-1d), [notes/DINF_FITS.md](notes/DINF_FITS.md)).
