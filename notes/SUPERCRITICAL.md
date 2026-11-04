@@ -572,3 +572,29 @@ For the end of "Relation to Ecker, Ecker & Grumiller" (after the paragraph on th
 > when the shifted solution's front stops at r² = 2n|σ₀|. The exact CSS equations at n = 100–6400 bear this out.
 > Details, checks and the comparison with the Roberts and Brady self-similar families:
 > [notes/SUPERCRITICAL.md](notes/SUPERCRITICAL.md).
+
+## Their supercritical branch (from the README)
+
+Moved verbatim from README.md (commit ea42b3e, lines 693–712) on 2026-11-04 (notes/README_PLAN.md); links made
+relative to this folder.
+
+**Their supercritical branch.** They also note a second branch, $`f_{\rm LO} = f_0\sqrt{\beta^2x^2-1}`$ on β²x² > 1,
+whose singular point β²x² = 1 they treat as a proxy for the apparent horizon, citing Rozali and Way.[^6] In our
+variables the two branches are one leading-order family, y = √2 x/√(x² + C(τ)), with C > 0 regular and C < 0
+supercritical, and the r²-shift of Proposition 5 moves C by 2nσ₀ e^(2τ): the supercritical branch is the regular one
+pushed along the λ = 2 mode. Its 1/n expansion exists to all orders with nothing forced, as in Proposition 1. Near
+β²x² = 1 it is a series in 1/(n(β²x²−1)²) and breaks down at β²x² − 1 ~ n^(−1/2), where 2m/r^(n−1) is only of order
+n^(−1/2). There the solution crosses β²x² = 1 smoothly into a region where the polar lapse collapses exponentially.
+Behind this spacelike front, 2m/r^(n−1) stays near 1.63 κ̃ n^(−1/2), with κ̃ = fβ²/|β + β′| the inverse speed of the
+front. So for a moving front β²x² = 1 is not an apparent horizon; trapping needs the front to come to rest, as it does
+when the shifted solution's front stops at r² = 2n|σ₀|. The exact self-similar (CSS) equations solved at n = 100–6400
+bear this out. Details, checks and the comparison with the Roberts and Brady self-similar families:
+[notes/SUPERCRITICAL.md](SUPERCRITICAL.md), scripts in [`solver/supercrit/`](../solver/supercrit/).
+
+![The supercritical branch: the field across the front, the lapse collapsing behind it, and the exact CSS equations at n = 100-6400 approaching the layer](../solver/supercrit.svg)
+
+**The front** (`solver/supercrit/plot_supercrit.py`). Left and middle: the layer solution of the D = ∞ equations, in
+the layer coordinate θ. Ahead of the front it follows the outer 1/n series (dashed), which is singular at θ = 0. Behind
+the front the field settles at Y₁ = 1.8038 and the lapse falls exponentially, so the slicing freezes without trapping.
+Right: the exact self-similar equations, solved at n = 100–6400 for two values of κ = fβ, approach the layer's value
+of (n − 1)(b − 1)/(κ√n) behind the front, 1.627.

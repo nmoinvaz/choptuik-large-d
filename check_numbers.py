@@ -20,7 +20,8 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 DOCS = {name: open(os.path.join(ROOT, name), encoding="utf-8").read()
         for name in ("README.md", "paper/physics/main.tex", "paper/math/main.tex", "proof/A_certify.md", "GAMMA.md",
                      "notes/PLANTED_SELECTION.md", "notes/PROOF_QUEUE.md", "proof/P5_scope.md",
-                     "notes/QUAD_DOUBLE.md")}
+                     "notes/QUAD_DOUBLE.md",
+                     "notes/SOLVER_HP.md", "notes/LOW_D.md", "notes/INNER_STOKES.md", "notes/FORMULA_FORMS.md", "notes/LARGE_D_WALL.md")}
 
 
 def quoted_in(doc, text):
@@ -108,8 +109,8 @@ def qd_values():
     """README, the quad-double Newton: Delta at D = 68.5, 69.5, 70.5 (hp/data/delta_qd.csv, hp/export_qd.py) to the
     double-double digits quoted, and their two-start spreads at most 1e-32"""
     rows = {float(c[0]): c for c in (r.rstrip("\n").split(",") for r in open(os.path.join(ROOT, "hp/data/delta_qd.csv"))) if c[0][:1].isdigit()}
-    txt = [("README.md", "Δ(68.5) =\n  1.7899636306159916 − 1.016822×10⁻¹⁶, Δ(69.5) = 1.7879302979617628 + 7.083175×10⁻¹⁷ and Δ(70.5) = 1.7859529321182939 +\n  1.087438×10⁻¹⁶"),
-           ("README.md", "to 10⁻³²")]
+    txt = [("notes/SOLVER_HP.md", "Δ(68.5) =\n  1.7899636306159916 − 1.016822×10⁻¹⁶, Δ(69.5) = 1.7879302979617628 + 7.083175×10⁻¹⁷ and Δ(70.5) = 1.7859529321182939 +\n  1.087438×10⁻¹⁶"),
+           ("notes/SOLVER_HP.md", "to 10⁻³²")]
     out = []
     for D, hi, lo in ((68.5, 1.7899636306159916, -1.016822e-16), (69.5, 1.7879302979617628, 7.083175e-17), (70.5, 1.7859529321182939, 1.087438e-16)):
         c = rows[D]
@@ -124,12 +125,12 @@ def lowD_305():
     (hp/data/delta_dd_lowD.csv, hp/export_lowD.py reading the raw-data folder T82-win)"""
     rows = [r.rstrip("\n").split(",") for r in open(os.path.join(ROOT, "hp/data/delta_dd_lowD.csv")) if r[:1].isdigit()]
     r = [c for c in rows if float(c[0]) == 3.05 and c[1] == "384"][0]
-    txt = [("README.md", "run reached D = 3.05 at M = 320/384, Δ = 2.4849271637881, where the step from M = 320 to 384 is 2.1×10⁻¹¹"),
-           ("README.md", "and the step from 320 to 384 is 2.1×10⁻¹¹, 56 times smaller")]
+    txt = [("notes/LOW_D.md", "run reached D = 3.05 at M = 320/384, Δ = 2.4849271637881, where the step from M = 320 to 384 is 2.1×10⁻¹¹"),
+           ("notes/LOW_D.md", "and the step from 320 to 384 is 2.1×10⁻¹¹, 56 times smaller")]
     step = float(r[7])
     prev = [c for c in rows if float(c[0]) == 3.05 and c[1] == "320"][0]
     r2 = [c for c in rows if float(c[0]) == 3.045 and c[1] == "384"][0]
-    t2 = [("README.md", "reached D = 3.045 at M = 320/384, Δ = 2.4464747274662, with the step from M = 320 to 384 6.7×10⁻¹¹, 3.2 times the step at 3.05")]
+    t2 = [("notes/LOW_D.md", "reached D = 3.045 at M = 320/384, Δ = 2.4464747274662, with the step from M = 320 to 384 6.7×10⁻¹¹, 3.2 times the step at 3.05")]
     return [("D 3.05 Delta", float(r[2]) + float(r[3]), 2.4849271637881, 1e-13, txt),
             ("D 3.05 step 320 -> 384", abs(step), 2.1e-11, 1e-12, txt),
             ("ratio of the steps 256/320 and 320/384", abs(float(prev[7]) / step), 56, 1, txt),
@@ -601,7 +602,7 @@ def dropoffs():
     from the raw-data repository's T76 records): the full system's fit n^38.9 crossing 1 at D 59.9, u*kappa at 67.74, the
     pinned systems' predicted crossings and quad-double's."""
     J = json.load(open(os.path.join(ROOT, "hp/data/dropoffs.json")))
-    R = "README.md"
+    R = "notes/LARGE_D_WALL.md"      # the drop-offs text moved there from the README on 2026-11-04
     return [("u kappa slope", J["slope"], 38.9, 0.1, [(R, "grows\n  like n^38.9 and reaches 1 at D = 59.9")]),
             ("u kappa = 1, double-double, full system", J["cross_dd"], 59.9, 0.1,
              [(R, "u·κ = 1 at 59.9, 1.7 at 60.7"), (R, "like n^38.9 and reaches 1 at D = 59.9")]),
@@ -1375,7 +1376,7 @@ def five_harmonics():
     x = re.findall(r"x \[([0-9.]+), ([0-9.]+),", log)[-1]
     A, wf = float(x[0]), float(x[1])
     return [("M = 5 omega/omega_inf", wf, 0.999228, 1e-6, [("README.md", "0.999228")]),
-            ("M = 5 amplitude", A, 2.71858, 1e-5, [("README.md", "A = 2.71858")]),
+            ("M = 5 amplitude", A, 2.71858, 1e-5, [("notes/INNER_STOKES.md", "A = 2.71858")]),
             ("M = 5 Delta = Delta_inf / wf", DINF / wf, 1.64516, 1e-5, [("README.md", "Δ = 1.64516")]),
             ("M = 5 offset in Delta, percent", (1 / wf - 1) * 100, 0.077, 1e-3, [("README.md", "0.077% above")])]
 
@@ -1447,7 +1448,7 @@ def short_forms():
     ev, _, _ = F.fit(pts, Dl, "1/D", 2)
     c = [float(v) for v in S.series_coeffs(ev, 3)]
     err = float(S.error_in_range(pts, Ds, ev, 40, 61))
-    txt = [("README.md", "| 40–61 | 10⁻⁴ | 3 | 1.6450284 + 10.19239/D − 18.04099/D² | 5.7×10⁻⁶ |")]
+    txt = [("notes/FORMULA_FORMS.md", "| 40–61 | 10⁻⁴ | 3 | 1.6450284 + 10.19239/D − 18.04099/D² | 5.7×10⁻⁶ |")]
     return [("40-61 c0", c[0], 1.6450284, 1e-7, txt), ("40-61 c1", c[1], 10.19239, 1e-5, txt),
             ("40-61 c2", c[2], -18.04099, 1e-5, txt), ("40-61 margin", err, 5.7e-6, 1e-7, txt)]
 

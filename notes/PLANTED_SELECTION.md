@@ -3053,3 +3053,18 @@ to win2's pilot (b) at all 20 common orders then available, 1–39. The replica 
 with the same command and rules (expected end about 2026-11-04 17:00 UTC); until it finishes, the K 22 stages (T104 on
 win2) rest on win2's (b) with this partial replica agreement to order 39, and the full replica comparison follows
 when it lands. The stop is recorded, not hidden: a replica that stops is a replica that stopped.
+
+## The selection-zoom figure (from the README)
+
+Moved verbatim from README.md (commit ea42b3e, lines 1970–1978) on 2026-11-04 (notes/README_PLAN.md); links made
+relative to this folder.
+
+![The selection rule's estimates as distance from the finite-D answer on a log scale, with the calibrated band and the order-14 projections](../solver/selection_zoom.svg)
+
+**The same estimates as distance from the finite-D answer** (`solver/plot_selection_zoom.py`, with σ₁₅). On a log
+scale steady convergence is a straight line: from above, the estimates fall by about ×0.54 per order from k = 4 to
+15. The shaded band is the lower part of the earlier range, a zero 2–5×10⁻⁵ below 1. The hollow marks at k = 15 are what
+a simple geometric model through k = 13 and 14 (not a calibrated estimator) predicted: 1.5×10⁻⁵ above 1 if the zero
+is exactly at 1, and 1.0–1.2×10⁻⁵ if it is in the band. The measured crossing is 1.9×10⁻⁵ above 1, nearer the first,
+but the model's own error is 2×10⁻⁵, so this does not decide between them
+([notes/PLANTED_SELECTION.md](PLANTED_SELECTION.md) §7.7).

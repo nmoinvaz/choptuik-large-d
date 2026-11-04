@@ -306,3 +306,67 @@ unchecked, to 10⁻¹¹ by its neighbours); γ to 10⁻⁹ (its M 48 value; at D
 D ≥ 5 it was not measured). The growth-rate roots agree with the f64 formula's λ to 10⁻⁸–10⁻⁶. Not a stop, for the
 record: the task's note expected the D = 4 value within 10⁻¹⁰ of the M 192 one; 2.6×10⁻⁷ is the known M 48 truncation
 there, so the expectation was wrong, not the run.
+
+## 11. The continuation below D = 3.4 (from the README)
+
+Moved verbatim from README.md (commit ea42b3e, lines 269–285, 298–323, 325–330, 349–354) on 2026-11-04 (notes/README_PLAN.md); links made
+relative to this folder.
+
+![Below D = 4: double-double points and the maximum of Delta, the bias of the 47-mode f64 points, and the tau modes a 1e-10 Delta needs as D falls toward 3](../hp/lowD.svg)
+
+**Below D = 4** (`hp/plot_lowD.py`). Left: the double-double points at M = 80 and the 47-mode f64 points near the
+maximum. Middle: the f64 points sit 1.5–3.5×10⁻⁶ high there. Right: the τ modes a 10⁻¹⁰ Δ needs (`hp/lowD_cost.py`, an
+estimate over four model variants, not a bound) pass 128 near D = 3.4 and run into the hundreds near D = 3. The kernel
+now runs to M = 384: a continuation in double-double reached D = 3.15, Δ = 2.96131964246 (the change from M = 192 to
+256 is 9×10⁻¹²), where M = 160 already gives Δ to 10⁻⁸. Calibrated on it, the model put D = 3.05 at M = 256–384. The
+run reached D = 3.05 at M = 320/384, Δ = 2.4849271637881, where the step from M = 320 to 384 is 2.1×10⁻¹¹ (the
+resolution step, not a bound; [notes/HIGH_M.md](HIGH_M.md)). Below it the continuation at steps of 0.0025
+(`hp/lowD_highM.py` from that run's states, on the Windows machine; its records are in the raw-data repository's folder
+T82-win, which `hp/export_lowD.py` reads) has
+reached D = 3.045 at M = 320/384, Δ = 2.4464747274662, with the step from M = 320 to 384 6.7×10⁻¹¹, 3.2 times the step at 3.05;
+the run then stopped on its own time rule, and the legs `down25b` and `down25c` in the same folder went for D = 3.0425: there
+the M = 320 Newton solve from the 7640-step Taylor plan (5082 steps at 3.045) started at |F| 0.34 and damped twice
+(line-search factors 0.125 and 0.031), on which the script gave up and the run was stopped on 2026-11-01
+(T82-win/down25c.log, commit 28545dc of the raw-data repository); whether the leg goes on is open. A first attempt that went
+from 3.05 to 3.045 in one step of 0.005 crawled in Newton at M = 320 and was stopped (T82-win/down5.log).
+
+<details>
+<summary>Below D = 3.4: the resolution step at each D, and the node changes on the way</summary>
+
+Below that the larger grids take over
+(M = 128 → 160 → 192 → 256, each step one to two orders smaller than the one before): at D = 3.15 the step from 192
+to 256 is 9×10⁻¹², and at 3.125, 3.11875, 3.1125 and 3.1 it is 1.9, 2.8, 3.8 and 5.5×10⁻¹⁰; at 3.1 the next
+step, 256 → 320, is 7.2×10⁻¹³. At 3.0875 the steps are 1.8×10⁻⁹ and 7.0×10⁻¹², ten times those at 3.1 for 0.0125
+in D, at 3.08125 4.3×10⁻⁹ and 2.1×10⁻¹¹, at 3.075 1.0×10⁻⁸ and 5.0×10⁻¹¹, at 3.06875 2.3×10⁻⁸ and 1.0×10⁻¹⁰,
+at 3.0625 4.8×10⁻⁸ and 2.0×10⁻¹⁰, and at 3.05625 9.3×10⁻⁸ and 4.1×10⁻¹⁰, each about twice the one before. At 3.05
+(the lowest point of that run) M = 192 did not converge, the step from 256 to 320 is 1.2×10⁻⁹, 2.9 times the one at
+3.05625, and the step from 320 to 384 is 2.1×10⁻¹¹, 56 times smaller. At 3.0625 the M = 256
+solution lifted to M = 320 had a centre-series tail of 8×10⁻¹⁸, above the run's 10⁻²⁰, so the first node was halved
+(0.000313 to 0.000157, 21 nodes); there the M = 256 tail fell from 4×10⁻⁵⁴ to 2×10⁻⁹⁴ and the pair moved Δ by
+5×10⁻³¹. At 3.075 the M = 320 horizon-series tail, 5×10⁻³³, was above the run's 10⁻³³ bound,
+so a node was added at 0.975, taken from
+the horizon series (integrating out from 0.95 passed the series' nearest singularity and gave NaN); on the 20 nodes
+the tails are 3×10⁻⁵⁷ and 10⁻¹⁰⁷ and Δ moved by 2×10⁻³⁰. At D = 3.40 the second machine's M = 128 Newton (13
+nodes) converged to a solution with content along the near-null directions (its centre-series tail 10⁻⁹, against
+10⁻⁵⁰ at 3.425); the CSV lists it as polluted and does not use it. The cloud's M = 128 solve there (15 nodes) is clean
+(centre tail 4×10⁻⁷⁶). From it the Mac lifted D = 3.4 to M = 160. The second machine's 13-node states at 3.425–3.65 do
+not lift as they are (resampled at 3.425 the start has |F| = 3×10⁴, and at 3.5 Newton stalls); re-noded to the 15 nodes
+first (`hp/highm_check.py lift --nodes=...`), they do. The steps of these lifts, M = 128 → 160, are 3.5×10⁻¹² (3.4),
+6.8×10⁻¹² (3.425), 6.2×10⁻¹² (3.45), 2.9×10⁻¹² (3.475), 6.4×10⁻¹³ (3.5) and 1.6×10⁻¹³ (3.55), and M = 96 → 128 at 3.65
+is 4.6×10⁻¹¹: from D = 3.4 to 3.65 every value is now resolved to 5×10⁻¹¹ or better.
+
+</details>
+
+![Below D = 4: how much Delta moves when the tau resolution M goes up one step, at the largest M run at each D, on a log scale](../hp/lowD_errors.svg)
+
+**The last resolution step at each D** (`hp/plot_errors.py`, from `Delta_err` in
+[`hp/data/delta_dd.csv`](../hp/data/delta_dd.csv); rerun it after `hp/export_dd.py`). The right panel above on a log
+scale, one point per D: the step into the largest M run there. At D = 3.7 and 4 the grids were taken to M = 256 and
+192, far past what Δ needs, and the last step falls to 3×10⁻²¹ and 10⁻²². Below 3.7 it is 7×10⁻¹³ to 3×10⁻⁹.
+
+![Delta against sqrt(D - 3): the fits' finite intercept at D = 3 against the conjectured Delta -> 0, with the band where T100's planned points land](../hp/lowD_sqrt.svg)
+
+The same values against s itself (`hp/plot_lowD_sqrt.py`). D − 3 is the exponent of gravity's reach, r^−(D−3), so
+D = 3 is where attraction switches off; a square-root branch point there keeps Δ finite at s = 0 with an infinite
+slope in D (the fits' intercepts are the bar at s = 0), while the conjectured Δ → 0 bends toward the origin. The two
+readings separate in the shaded band, where the T100 leg's planned points land.
