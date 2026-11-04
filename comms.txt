@@ -10385,3 +10385,16 @@ Exactly as you expected: only the 1e-26 GMRES link fails (it diverges to NaN aft
 4 products to the states' tangent |x| 4.7981e+04 (dDelta/dD 7.945125). The fine p1 LU is well conditioned (pivots 5.1e-05). No
 traceback. Pushed T106-win2. Starting Run 2 (the control, --mutate --no_gmres; links b, c, c_cut, d must FAIL), then Run 3 (coarse
 base). T105 C down25f still polishing M 384 pass 1 at the floor; pair expected soon.
+
+== 2026-11-04 15:41 UTC win2
+T106 E Run 2 (the control, --mutate --no_gmres) done, exit 1 as required. Every "(" line:
+  (a) jet order 0 against the residual: |c0 - F| 0.00e+00 (|F| 8.85e-28), bound 1e-3 |F|: PASS
+  (b) jet order 1 against central differences in D: best 1.74e+303 (|F_1| 0.000e+00, jet 560 s), bound 1e-6: FAIL
+  (c) jvp(cut=False) along a random u (eps 1e-8, 1e-9, 1e-10): 6.8e-02, 6.8e-02, 6.8e-02, 47.8 s, bound 1e-6: FAIL
+  (c_cut) jvp(cut=True) along a random u (eps 1e-8, 1e-9, 1e-10): 6.8e-02, 6.8e-02, 6.8e-02, 39.3 s, bound 1e-6: FAIL
+  (d) |J t + F_1| / |F_1| 2.69e-01 against the interpolation's |J (t4 - t3)| / |F_1| 1.34e-03: FAIL
+  failed links: b, c, c_cut, d
+As required: the mutation zeroes F_1 (|F_1| 0.000e+00), so b, c, c_cut and d all FAIL while order 0 (a) still passes; --no_gmres
+skipped the e_gmres links. No traceback. Pushed T106-win2. Starting Run 3 (the coarse base D3.0450, defaults, no --others; exit 1
+expected, e_gmres_cut_1e-26 failing at M 48 as the pilot did).
+T105 C: down25f M 384 pass 1 still polishing at the floor (the dd4 Jacobian step is ~83 min, |F| 2.34e-28); pair soon.
