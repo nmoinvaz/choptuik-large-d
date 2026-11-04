@@ -416,7 +416,8 @@ control firing. A differing hash stops the task (a result that depends on the th
 setting to choose). The leg's thread count N* is the smallest tested N whose `newton_mixed` time is within 1.1× of the
 fastest.
 
-**C. The leg from D 3.044375.** `python lowD_highM_leg.py ..\..\choptuik-large-d-raw\T100-win2\down25e.jsonl.progress.json
+**C. The leg from D 3.044375.** `python lowD_highM_leg.py
+..\..\choptuik-large-d-raw\T100-win2\down25e.jsonl.progress.json
 <T105>\down25f.jsonl --targets 3.04375,3.0425,3.04,3.0375,3.035,3.0325,3.03,3.0275,3.025,3.0225,3.02,3.0175,3.015,3.0125,3.01,3.0075,3.005
 --states data\lowD_states,..\..\choptuik-large-d-raw\T100-win2\states,..\..\choptuik-large-d-raw\T82-win\states
 --killed` must print (a dry run on the Mac on the pushed files) "M 320/384 (helper 256), last D 3.044375, targets
@@ -427,13 +428,13 @@ command with `--threads N*`, `--out <T105>\down25f.jsonl`, `--points <T105>\down
 predictor should read |F| 6.60×10⁻⁴ on its own 6623-step plan (as in down25e, the same history), a different value is
 posted, not a stop.
 
-**What it decides.** Pass: the M 320 solve at D 3.04375 converges from the predictor, and the leg continues by itself
-(M 384, then the targets; the script halves a failed step down to 0.0005). Then the stall of section 12 was the stale
-checkpoint. Fail: two consecutive M 320 or M 384 steps with a line-search factor ≤ 0.5 while |F| is above 10⁻⁴ (the
-rule of the 2026-11-03 02:15 UTC entry): stop the tree, post the lines, no relaunch; then the branch or the Jacobian near
-D 3.044 is the question, and the next attempt is the exact Taylor predictor (LOW_D_SPEEDUP.md step 4). Other stops:
-the script's own, and a process above 8 GB. Expected cost: A and B about 1.5 h; the first point 3–8 h by N*; the 17
-targets with their halvings several days.
+**What it decides.** Pass: the M 320 solve at D 3.04375 converges from the predictor, and the leg continues by itself (M
+384, then the targets; the script halves a failed step down to 0.0005). Then the stall of section 12 was the stale
+checkpoint. Fail: two consecutive M 320 or M 384 steps with a line-search factor ≤ 0.5 while |F| is above 10⁻⁴ (the rule
+of the 2026-11-03 02:15 UTC entry): stop the tree, post the lines, no relaunch; then the branch or the Jacobian near D
+3.044 is the question, and the next attempt is the exact Taylor predictor (LOW_D_SPEEDUP.md step 4). Other stops: the
+script's own, and a process above 8 GB. Expected cost: A and B about 1.5 h; the first point 3–8 h by N*; the 17 targets
+with their halvings several days.
 
 **A and B (2026-11-04 06:55 UTC, win2; `T105-win2/` at 746ef43).** A passes (5 of 5, the mutation fails cases 2–4). B:
 `newton_mixed` at M 320 takes 377.5, 236.8, 201.5 and 205.1 s at 4, 8, 12 and 16 threads, so a call saturates near 12
@@ -443,10 +444,10 @@ the control firing: the kernel is bit-identical across the thread count. C start
 ## 14. T106: hp with the jet residual at every M, and the exact Taylor predictor at M 320 (procedure, 2026-11-04 06:50 UTC)
 
 Written before the run. Step 4 of [LOW_D_SPEEDUP.md](LOW_D_SPEEDUP.md). The change is on branch `feat/jet-all-sizes`
-(a2f5d9a): `residual_jet_sized` in `hp/src/python.rs` is generic in the block size, so the jet residual exists at every M
-the kernel builds (it was instantiated for M 32, 48 and 64 only), and `hp/anm_lowd.py` is the pilot. Machine win2,
-after T105's parts A and B (so that the build does not disturb B's timings), beside T105's leg, T104 and the T99
-nodes. Output folder `T106-win2/`.
+(a2f5d9a): `residual_jet_sized` in `hp/src/python.rs` is generic in the block size, so the jet residual exists at every
+M the kernel builds (it was instantiated for M 32, 48 and 64 only), and `hp/anm_lowd.py` is the pilot. Machine win2,
+after T105's parts A and B (so that the build does not disturb B's timings), beside T105's leg, T104 and the T99 nodes.
+Output folder `T106-win2/`.
 
 **A. Build**, as T98 did (`T98-win2/README.md`): a detached worktree `..\choptuik-t106` at `origin/feat/jet-all-sizes`,
 a new venv `venv-t106` (numpy, scipy, maturin, mpmath), `pip uninstall -y multidouble`, `bash hp/build.sh`, with the
@@ -486,3 +487,13 @@ most 6 calls. Criteria, fixed now:
 Pass on 1–4: the predictor goes into the leg's driver (a later change, with its own controls). Fail on 3 or 4 with 1
 and 2 passing: the coefficients are right but the branch's radius or the M 320 truncation limits the steps; the
 ratios of 5 say which. Expected cost: A about 1 h, B about 1 h, C minutes, D 3–5 h by T.
+
+**A and B (2026-11-04 09:37 UTC, win2; `T106-win2/` at 4c4034f of the raw-data repository).** The build took 119 min
+(`hp_build/build.log`), its LTO stage one rustc at up to 19.2 GB (the 09:02 UTC entry), against 52 min for main's
+hpkernel on the same machine in T98 (`T98-win2/hp_build/build.log`): the jet lanes at all 14 block sizes cost the build
+more than double, so branch `feat/jet-run-sizes` keeps them at M 32, 48, 64, 320 and 384, the sizes the runs use. `ref`
+and `scaled` pass bit for bit. `jet_check` exits 1 on J2's original gate (worst ratio 2.2×10⁻¹⁶ against 10⁻²⁰), as the
+last record of `anm-mac/jet_check.jsonl` does: J2 passes in its amended form ([QUAD_DOUBLE.md](QUAD_DOUBLE.md) 13.15),
+and the "exit 0" asked for above was an error of this procedure. The record equals the Mac's in every field but the
+timings, the 17 `coef_norms` digit for digit, with both controls firing (κ frozen 1.07, n frozen inf). B passes, and C
+and D follow.
