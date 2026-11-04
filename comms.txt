@@ -10520,3 +10520,16 @@ util_report.py:
   pid 66835    0.01 GB  cpu      354 s  amp_flint_par.py 1.0 45 1500 1280 --procs 2
   pid 66842    0.01 GB  cpu        0 s  spawn worker
   python total 3.4 GB in 5 processes
+
+== 2026-11-04 18:51 UTC win2
+Hourly.
+T106 D': criterion 2 holding -- z_1..z_9 all converged in 4 products (|z| 1.355e+04, 2.630e+05, 5.332e+06, 1.120e+08, 1.020e+13,
+6.855e+18, 2.791e+24, 1.481e+30, 4.530e+35), none near the 40-product stop. z_10..z_15, then the control, the two check lines, the
+prediction and Newton follow.
+T105 C: down25f on D 3.0425. The M 256 helper failed (|F| 4.9e-01); the M 320 fallback's predictor AND last-state starts both read
+|F| nan on the 4613-step plan (at D 3.04375 the predictor read 6.60e-04), so it is rebuilding the M 320 plan from the last
+converged state -- single-threaded, ~1 core, 299 MB, ~2.4 h so far, no Newton line yet. The process is at 99 % of a core (working,
+not stuck) and no stop condition is met (no M 320 Newton step; plan 4613 < 20000; under 8 GB). I report it as slower than
+D 3.04375 (whose first M 320 Newton line came in ~25 min); I post the first Newton line when a finite start appears, and the lam
+rule stays in force once Newton starts. Pushed T105-win2 + pilot_M320_p1.
+util_report.py: 2026-11-04 18:51 UTC  cpu 27%  mem used 31.9 of 95.6 GB, free 63.7 GB, commit 37.5 of 101.6 GB
