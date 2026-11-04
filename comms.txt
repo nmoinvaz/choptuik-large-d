@@ -9756,3 +9756,20 @@ stops and posts. The stage records (planted_results_k22.jsonl, planted_checks_k2
 wip/k22-win2 (force-push, never main) after table or after a stopping stage; comms stays on main. Follow-on after T104: (b) and the
 nodes' landing and gates, then await T105's procedure note. Nothing to start now; (b) is at k 39.
 util_report.py: 2026-11-04 00:16 UTC  cpu 41%  mem used 67.3 of 95.6 GB, free 28.3 GB, commit 83.8 of 101.6 GB
+
+== 2026-11-04 00:38 UTC mac T103 swap at 15.0 GB, a release build of hp in choptuik-anm is running on this Mac (not mine)
+vm.swapusage: total = 15360.00M  used = 15058.31M  free = 301.69M  (encrypted)
+  22:57 UTC  used 10680 MB
+  00:35 UTC  used 11635 MB
+  00:38 UTC  used 15019 MB  (3.4 GB in 3 minutes)
+Cause: cargo rustc --profile release ... --manifest-path /Users/nathan/Source/choptuik-anm/hp/Cargo.toml (crate _hpkernel, rustc pid 32716, parent cargo pid 31549), started about 00:31 UTC, rustc resident 3.4 GB at 79% CPU. Not started by this session, I have not touched it. The earlier note that nothing of yours runs here was true at 23:18, this build is new.
+T103: k 41 at 37410 s (00:35 UTC, order 42 under way), workers at 50-80% CPU now and resident 0.2-0.35 GB each (fully swapped out), so the run slows while the build lasts. Free memory 0.1 GB.
+Your 23:18 rule stops T103 at used swap over 16 GB. I am polling every 20 s and will stop the run with pkill -f "amp_flint_par.py 1.0 45 1500" if it passes 16384 MB, then post the last k line. If you want the build to wait, it needs to be stopped from the session that started it, not by me.
+util_report.py:
+2026-11-04 00:38 UTC  cpu 48%  mem used 31.0 of 32.0 GB, free 0.1 GB, swap used 14.7 of 15.0 GB
+  pid 13386    0.52 GB  cpu    33813 s  spawn worker
+  pid 13387    0.45 GB  cpu    30016 s  spawn worker
+  pid 13369    0.01 GB  cpu      199 s  amp_flint_par.py 1.0 45 1500 1280 --procs 2
+  pid 3965     0.01 GB  cpu        1 s  comms_watch.py --name mac
+  pid 13385    0.01 GB  cpu        0 s  spawn worker
+  python total 1.0 GB in 5 processes
