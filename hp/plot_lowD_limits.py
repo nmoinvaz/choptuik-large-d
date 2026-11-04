@@ -131,7 +131,7 @@ def main():
     print("wrote", a.o)
     print("| D | s | ours (√ polynomial) | Eq. (110) power law | scaling α 0.3 |")
     print("|---|---|---|---|---|")
-    for D in (3.044375, 3.02, 3.01, 3.005, 3.001):
+    for D in (3.04375, 3.044375, 3.02, 3.01, 3.005, 3.001):
         print(f"| {D} | {math.sqrt(D - 3):.4f} | {rd['ours'][1](D):.4f} | {rd['eq110'][1](D):.4f} | {rd['scaling'][1](D):.4f} |")
     if t100:
         print(f"T100 point: D = {t100[0]}, Δ = {t100[1]:.12f} (M = {t100[2]})")

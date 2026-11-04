@@ -281,8 +281,8 @@ hp/lowD_errors.svg and hp/lowD_sqrt.svg) is in [notes/LOW_D.md](notes/LOW_D.md),
 `hp/export_dd.py` puts the best value per D into [`hp/data/delta_dd.csv`](hp/data/delta_dd.csv) next to the continuation
 points, as run `lowD-M<M>`; `hp/plot_lowD_values.py` draws them; rerun all three as runs land). Left: Δ at the largest M
 at each D, filled where the two largest M agree to 10⁻⁸ (or M = 80 alone at D ≥ 3.7, where M 80 → 96 is 1.2×10⁻⁹) and
-hollow where they do not yet. Every point, resolved or not, lies within 1.3×10⁻⁵ of the √(D − 3) formula below (the
-two lowest, at D = 3.044 and 3.045, by 1.1–1.3×10⁻⁵; the rest within 8×10⁻⁶). Middle: γ,
+hollow where they do not yet. Every point, resolved or not, lies within 1.6×10⁻⁵ of the √(D − 3) formula below (the
+three lowest, at D = 3.04375–3.045, by 1.1–1.6×10⁻⁵; the rest within 8×10⁻⁶). Middle: γ,
 from the exact growth-mode matrix at the largest M. Right: how much Δ moves when M is raised. The step from M = 80 to 96
 grows a hundredfold from D = 3.7 to 3.4, while M = 96 → 128 stays at 1–2×10⁻⁹ down to D = 3.4.
 
@@ -308,8 +308,8 @@ as the degree changes), so it says nothing about Ecker et al.'s conjecture that 
 The two readings side by side (`hp/plot_lowD_limits.py`; their side from `hp/data/published_lowD_limits.json`). Ecker
 et al. fit their own values to a power law, Δ ≈ 3.88 (D − 3)^0.15, with 0.15 read as a lower bound, and a scaling
 argument of theirs gives an exponent near 0.3; both send Δ to 0 as D → 3⁺.[^5] Our polynomial in √(D − 3) keeps a
-finite Δ(3). At D = 3.044375, the lowest converged point so far (the T100 leg, M = 384, Δ = 2.441488), the polynomial
-gives 2.4415 and the power law 2.4317; at D = 3.02 they give 2.20 and 2.16, at 3.005 they give 1.96 and 1.75, and the
+finite Δ(3). At D = 3.04375, the lowest converged point so far (the T105 leg, M = 384, Δ = 2.436459), the polynomial
+gives 2.4364 and the power law 2.4265; at D = 3.02 they give 2.20 and 2.16, at 3.005 they give 1.96 and 1.75, and the
 exponent 0.3 gives 1.88 and 1.24. A converged point at 3.02 separates them at the 2% level. Ecker et al. also cite a
 point from Bland's thesis at D = 3.02, Δ = 0.1379 ± 0.0042 (not verified in the thesis itself); it lies far below every
 reading and would need a resolution no 2007 code had.
@@ -1689,7 +1689,7 @@ Jacobian and an unexplained drift of the gauge mode's root).
   ([Is the period analytic in 1/D?](#is-the-period-analytic-in-1d), [notes/DINF_FITS.md](notes/DINF_FITS.md)).
 - **The limit D → 3.** Our polynomial in √(D − 3) keeps Δ(3) finite, between 1.72 and 1.80 over the fit degrees; Ecker
   et al. read a power law Δ → 0. The readings separate below D ≈ 3.04, where the lowest converged point so far is
-  3.044375 ([The formula](#the-formula), the limit graph).
+  3.04375 ([The formula](#the-formula), the limit graph).
 - **The proof status.** The selection rule is a conjecture with hypotheses H1–H2 and gaps (a)–(c); the one-harmonic
   theorem B(1) is certified assuming Braaksma's theorem, with a threshold n ≥ e^{89.75} far beyond any computed D, so it
   does not yet identify the computed branch ([PROOF.md](PROOF.md), [notes/PROOF_QUEUE.md](notes/PROOF_QUEUE.md)).

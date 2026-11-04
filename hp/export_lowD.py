@@ -37,7 +37,7 @@ RESOLVED = 1e-8
 # T82-win, the continuation below D = 3.05 at steps of 0.0025 (lowD_highM.py from T45's states, the Windows machine),
 # 2bf3a7f (2026-10-31, D 3.045 at M 320/384)
 RAW_ROOT = os.path.join(HERE, "..", "..", "choptuik-large-d-raw")
-RAW_TASKS = ("T82-win", "T100-win2")
+RAW_TASKS = ("T82-win", "T100-win2", "T105-win2")
 # converged solutions that picked up content along the near-null directions (centre-series tail 1e-9 to 1e-10 where
 # clean neighbours have 1e-50; an M 96 solve from them does not converge); the local machine's report in comms.txt,
 # 2026-10-23 05:51 PDT. Keyed by (D, M, source file): another run's solve at the same D and M can be clean (the cloud

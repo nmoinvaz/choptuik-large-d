@@ -441,6 +441,15 @@ with their halvings several days.
 threads at 1.87× the 4-thread time (T98: 384 and 240 s at 4 and 8); N* = 12. `scaled` passes at 4 and 16 threads with
 the control firing: the kernel is bit-identical across the thread count. C started at 06:57 UTC at 12 threads.
 
+**C, the first point (2026-11-04 15:51 and 16:15 UTC, win2; `T105-win2/` at 92eb104).** D 3.04375 converged from the
+predictor at M 320 (|F| 6.4×10⁻²⁹) and M 384 (5.7×10⁻²⁸), so the stall of section 12 was the stale checkpoint, the pass
+case above. Δ = 2.4364591133608267 at M 320 and 2.436459113272686 at M 384, a change of 8.8×10⁻¹¹ (the leg's err_est in
+`down25f.jsonl`). The point took 9.28 h, 10051 s at M 320 and 22169 s at M 384, and the M 256 helper failed as at every
+point since 3.0475. The M 320 Δ is criterion 4's value for the T106 pilot's rerun. `hp/export_lowD.py` now reads
+`T105-win2`, and the point is the lowest of `hp/data/delta_dd_lowD.csv`. It lies 1.6×10⁻⁵ from the √(D − 3) formula, the
+largest gap of any point, after 1.3×10⁻⁵ at 3.044375 and 1.1×10⁻⁵ at 3.045 (the README's figure caption). The leg
+continues on D 3.0425.
+
 ## 14. T106: hp with the jet residual at every M, and the exact Taylor predictor at M 320 (procedure, 2026-11-04 06:50 UTC)
 
 Written before the run. Step 4 of [LOW_D_SPEEDUP.md](LOW_D_SPEEDUP.md). The change is on branch `feat/jet-all-sizes`
