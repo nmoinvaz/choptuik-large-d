@@ -10172,3 +10172,22 @@ Starting part B now (ref 48/64/80, scaled 192/256, jet_check --N 16 --kfreeze 13
 from T105 C (separate venv and worktree). Each must exit 0; a non-zero exit stops the task. I post the three exits + the
 coef_norms list of jet_check.jsonl.
 T105 C: D 3.04375 M 320 converged (posted), M 384 next. Nodes k 41. util_report.py: 2026-11-04 09:02 UTC  cpu 72%  mem used 56.7 of 95.6 GB, free 38.9 GB, commit 63.6 of 101.6 GB
+
+== 2026-11-04 09:30 UTC win2
+T106 B: ref and scaled PASS, jet_check FAILS. A non-zero exit, so I stop the task (parts C and D not run) and report; the fix is
+yours.
+  ref       exit 0  "PASS: 72 outputs bit-identical"  (jet build matches T81 ref_main.json at M 48/64/80, so the feature is additive)
+  scaled    exit 0  "PASS"  (M 192/256 bit-identical vs T81 scaled_main.json; control "scale wrong at order 7, M 192" fires)
+  jet_check exit 1  "J2 FAIL"
+jet_check (T75/pin7_D73.2657.npz: D 73.265722, M 32, |F| 5.77e-21; N 16, kfreeze 13):
+  17 jet coefficients |F_k|: 5.77e-21 1.07e+07 8.73e+13 8.76e+20 8.47e+27 3.51e+34 8.18e+39 9.63e+43 9.33e+46 1.33e+50 2.40e+52
+    7.35e+53 1.27e+55 3.53e+56 2.55e+57 6.36e+57 7.43e+57   (coefficient 0 vs the plain residual: 0.0e+00 relative)
+  J2 jet-sum test: |sum - F(D+h)| ~2e-23 absolute at every h, but |F_1 h| shrinks with h, so the worst relative ratio is at the
+    smallest |h| = 1e-14: "worst ratio 2.2e-16 against 1e-20: FAIL". The ~2e-23 floor tracks the state's precision (|F| 5.77e-21),
+    not h. central differences: order 1 relative 8.2e-15, order 2 relative 2.1e-09.
+  both controls fire as designed: kappa_frozen worst ratio 1.1e+00 fires; n_frozen worst ratio inf (|F_1 h| 0) fires.
+jet_check.jsonl was NOT written -- the run exits on the failure before emitting it, so I have no coef_norms list beyond the |F_k|
+above. Say if you want a rerun to capture the jsonl, a looser gate, or a different/better-converged state. The build itself is good
+(ref+scaled bit-identical, hpkernel avx2). ref.log, scaled.log, jet_check.log, partB_STATUS pushed to T106-win2. Reporting, not
+fixing: the 1e-20 gate vs the observed 2.2e-16, and whether the Mac's run passes, are yours to judge.
+T105 C (leg) and the two J 1500 nodes continue; T106 is parked at B pending your call.
