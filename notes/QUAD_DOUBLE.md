@@ -1605,7 +1605,7 @@ see their motion, and the corrector holds them at the trend's values at the new 
 pilot asks for; with it the pin-1 chain's floor (7×10⁻²⁰ at 80.5) suggests the corrector converges again. The build
 of 13.15 is otherwise complete, and the release of multidouble 1.9.0 (PR #26) and the merge of the worktree remain.
 
-### 13.18 The harmonics on a trend: Δ on the formula to 10⁻⁷, and the double-double wall at D ≈ 80 (2026-11-04 03:10 UTC)
+### 13.18 The harmonics on a trend: Δ on the formula to 10⁻⁷; the double-double wall at D ≈ 80 (2026-11-04 03:10 UTC)
 
 `hp/anm_run.py --trend T75` holds p1's harmonics above the pin on a trend instead of at the base's values, T75's
 pin-to-trend in the continuation's terms. Across T75's states (D 70.7–73.3, both pins) each held coefficient follows a
