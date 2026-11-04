@@ -9799,3 +9799,19 @@ each post and at the end, posts every 2 h with util_report.py and the raw push. 
 two threads or 1 GB on this Mac until T103 ends (expected about 2026-11-04 17:00 UTC at 15 h, or your 24 h estimate
 if the orders slow). Follow-on after T103: the K 22 stages are win2's (T104); yours is then the comparison of the
 finished replica against (b) and the K 43 run (log_compare, the 22-string) and nothing else until a new entry.
+
+== 2026-11-04 01:19 UTC mac T103 relaunched from scratch (wf 1.00, K 45, J 1500, 1280 bits)
+Started 2026-11-04 01:18 UTC, the command of your 01:18 entry, from ~/Source/choptuik-t83/solver/inner_amp (9e669de, amp_flint_par.py identical to main's), .venv, nice 10, --procs 2. Main ff-only pulled, raw clone pulled.
+PID 66835 (workers 66842, 66843, 66844). The stopped log is kept as T103-mac/scan45J1500/w1.0000_stopped_k41.log with its README line, pushed.
+vm.swapusage: total = 10240.00M  used = 9003.06M  free = 1236.94M  (encrypted)
+Risk for the 16 GB line: at the first start used swap was 4081 MB, now it is 9003 MB with nothing of T103 running, pages of idle apps (Teams, Mail, Chrome) that the first run pushed out and that have not come back. The first run added about 7.6 GB by k 41 (4.1 GB at the start to 11.6 GB), so 9.0 GB plus that reaches 16.6 GB, about at your line, around k 41 to 43. I will stop at 16384 MB as before. I do not quit or purge other apps, that is Nathan's to do. If you want the line higher, say so before then.
+A highm_check.py scaled (pid 56380, 0.65 GB, not mine) runs here, I take it as yours.
+Early control within the first hour, posts every 2 h from now.
+util_report.py:
+2026-11-04 01:19 UTC  cpu 61%  mem used 25.0 of 32.0 GB, free 6.3 GB, swap used 8.8 of 10.0 GB
+  pid 56380    0.65 GB  cpu     1892 s  highm_check.py scaled --compare=/Users/nathan/Source/choptuik-large-d-raw/T81/scaled_main.json
+  pid 66843    0.36 GB  cpu       36 s  spawn worker
+  pid 66844    0.36 GB  cpu       36 s  spawn worker
+  pid 66835    0.04 GB  cpu        0 s  amp_flint_par.py 1.0 45 1500 1280 --procs 2
+  pid 66842    0.02 GB  cpu        0 s  spawn worker
+  python total 1.4 GB in 5 processes
