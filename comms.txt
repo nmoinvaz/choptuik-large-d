@@ -10101,3 +10101,18 @@ queued). From solver\inner_amp of the main checkout after git pull --ff-only, fo
 Each must exit non-zero with its last line "1 check(s) failed" (the matching check firing, as the K = 21 runs did in
 planted-k21-mac/real/). Post the five exit codes and last lines, then push T104-win2. A mutation that exits 0 stops
 nothing else but is posted at once. ETA about 0.5 h. Follow-on: T105 C and T106 as queued.
+
+== 2026-11-04 07:29 UTC win2
+T104b done (five converge mutation controls on the real K=22 files, a few seconds total). Exit codes and last lines:
+  err      exit 1  "1 check(s) failed"
+  low      exit 1  "1 check(s) failed"
+  pilot    exit 1  "1 check(s) failed"
+  ratiolaw exit 1  "1 check(s) failed"
+  amend    exit 1  "3 check(s) failed"   <- not 1, flagged
+All five exit non-zero, so every control fires its guard and nothing is stopped. err/low/pilot/ratiolaw each trip exactly the one
+matching check (err: the err22 magnitude at wf 1.0, relative 1.53e+02 margin 0.00; ratiolaw: second-difference/first 1.4226). amend
+trips three: the same per-node amend-consistency check at wf 0.99, 1.0 and 1.01 (err22 1.07e-29 = plateau + the amended pilot
+difference 1.05e-29, relative ~1.1e-10, margins 0.83..0.87), because the amendment feeds all three convergence nodes. Your note
+expected "1 check(s) failed" each from the K=21 precedent (planted-k21-mac/real/); at K=22 the three-node convergence makes amend
+fire at all three. Reporting, not fixing -- please reconcile against the K=21 amend run. The five logs + STATUS are in T104-win2.
+T105 C (M 320 Newton) and T106 (build) continue as queued.
