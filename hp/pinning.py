@@ -11,7 +11,7 @@ h must be band-limited to double-double precision (any component outside the ban
 unknowns and is amplified by the remaining weak directions), so it is built from its Fourier coefficients in mpmath."""
 import mpmath as mp
 import numpy as np
-from hpkernel.driver import dd_add, dd_from_mp   # noqa: F401 (dd_add re-exported for scan_hp)
+from hpkernel.driver import dd_add, dd_from_mp, qd_axpy   # noqa: F401 (dd_add re-exported for scan_hp)
 
 
 def band_coeffs(f_hi, f_lo, M, ks, dps=40):
@@ -79,6 +79,30 @@ class PinnedSolver:
         dh, dl = self._corr(dh, dl)
         Fh, Fl = self._sub(Fh, Fl)
         return dh, dl, Fh, Fl
+
+
+class PinnedQ:
+    """PinnedSolver's offset for the quad-double methods (Solver.residual_q, newton_q, as hpkernel.driver.newton_qd
+    calls them): the kernel's frozen rows read coefficient - held value, so the quad-double Newton converges to the
+    pinned solution. ch, cl: the offset of the PinnedSolver (its ch, cl); everything else is the kernel's."""
+    def __init__(self, s, ch, cl):
+        self.s = s
+        self.ch, self.cl = np.ascontiguousarray(ch), np.ascontiguousarray(cl)
+        self.zero = np.zeros(len(self.ch))
+
+    def __getattr__(self, name):
+        return getattr(self.s, name)
+
+    def residual_q(self, z0, z1, z2, z3, mutate=0):
+        F = self.s.residual_q(z0, z1, z2, z3, mutate=mutate)
+        return qd_axpy(-1.0, self.ch, self.cl, self.zero, self.zero, *(np.ascontiguousarray(np.asarray(p)) for p in F))
+
+    def newton_q(self, z0, z1, z2, z3, mutate=0):
+        d0, d1, d2, d3, fh, fl, pmin, pmax = self.s.newton_q(z0, z1, z2, z3, mutate=mutate)
+        x = self.s.qlu_solve(self.ch, self.cl, self.zero, self.zero)       # dz = -J^-1 (F - c) = -J^-1 F + J^-1 c
+        d = qd_axpy(1.0, *(np.ascontiguousarray(np.asarray(p)) for p in x), *(np.ascontiguousarray(np.asarray(p)) for p in (d0, d1, d2, d3)))
+        fh, fl = dd_add(np.asarray(fh), np.asarray(fl), -self.ch, -self.cl)
+        return (*d, fh, fl, pmin, pmax)
 
 
 def predict_dd(hist, D, n=4):

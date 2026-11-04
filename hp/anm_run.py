@@ -12,7 +12,15 @@ formulation of hp/pinning.py; their coefficients are zero).
 
     python3 anm_run.py RAWDIR OUTDIR --state T75/pin7_D73.2657.npz --kfreeze 3 [--N 24] [--eps 1e-16] [--h_max 2]
         [--steps 20] [--D_max 200] [--corrector dnp|deflated|newton] [--tol 1e-20] [--tol_growth 1.45]
-        [--accept_stall 1e-19] [--junk_only 0] [--threads 4] [--w 24] [--trend T75]
+        [--accept_stall 1e-19] [--junk_only 0] [--threads 4] [--w 24] [--trend T75] [--tol_qd 1e-28]
+
+--corrector qd runs the quad-double Newton of the kernel (hpkernel.driver.newton_qd, Solver.newton_q) on the pinned
+system (pinning.PinnedQ: the held harmonics' offset subtracted from the quad-double residual and added to the step, as
+PinnedSolver does in double-double) from the double-double prediction, to --tol_qd on max |F|. The base is polished the
+same way first. The result's first two parts are the next base (the jets are double-double) and all four parts are
+saved (save_q). Where the double-double Newton takes no step from a residual of 1e-14 in the horizon block's weak
+directions (13.17), the quad-double one sees those directions. (Freezing the held harmonics as directions on the
+unpinned kernel instead diverges: the rows the pinning drops stay, 13.19.)
 
 --trend FOLDER holds the harmonics on a trend instead of at the base's values (T75's pin-to-trend, in the
 continuation's terms): for each held harmonic k the coefficients (a_k, b_k) of p1 across the stored states of FOLDER are
@@ -30,9 +38,9 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import mpmath as mp  # noqa: E402
 import numpy as np  # noqa: E402
-from hpkernel.driver import make_solver, newton_solve, deflated_newton, delta_correction, rnorm, save  # noqa: E402
+from hpkernel.driver import make_solver, newton_solve, deflated_newton, delta_correction, newton_qd, qparts, rnorm, save, save_q  # noqa: E402
 from multidouble import dd_add, dd_scale, dd_norm  # noqa: E402
-from pinning import PinnedSolver, band_coeffs, band_field  # noqa: E402
+from pinning import PinnedQ, PinnedSolver, band_coeffs, band_field  # noqa: E402
 from raw_out import require_raw  # noqa: E402
 from taylor_predict import formula_delta  # noqa: E402
 
@@ -80,7 +88,7 @@ def coefficients(s, zh, zl, N, held=None):
 def main():
     args = list(sys.argv[1:])
     opt = dict(state="T75/pin7_D73.2657.npz", kfreeze=3, N=24, eps=1e-16, h_max=2.0, steps=20, D_max=200.0, corrector="dnp",
-               tol=1e-20, tol_growth=1.45, accept_stall=1e-17, junk_only=0, threads=4, w=24, trend="")
+               tol=1e-20, tol_growth=1.45, accept_stall=1e-17, junk_only=0, threads=4, w=24, trend="", tol_qd=1e-28)
     for k in list(opt):
         f = "--" + k
         if f in args:
@@ -99,9 +107,21 @@ def main():
     def tol_at(Dx):
         return opt["tol"] * opt["tol_growth"] ** float(Dx - D_start)
 
+    last_q = {}
+
     def correct(spx, ph, pl, tol):
         """T75's corrector (scan_hp.py dnp): deflated Newton, then plain Newton steps from below 1e-12 if they lower |F|;
         returns zh, zl, |F|, steps, accepted (converged, or stalled below accept_stall)"""
+        if opt["corrector"] == "qd":
+            sq = PinnedQ(spx.s, spx.ch, spx.cl)
+            z4, hist, conv = newton_qd(sq, qparts(ph, pl), tol=opt["tol_qd"], it_max=8, verbose=True)
+            last_q["z4"] = z4
+            Fh, Fl = spx.residual(z4[0], z4[1])
+            Fc = float(rnorm(Fh, Fl))
+            fq = float(hist[-1]["F"]) if hist else float("nan")
+            print(f"      quad-double Newton: {len(hist)} steps, max|F| {fq:.1e}, {'converged' if conv else 'not converged'}; double-double |F| of its "
+                  f"first two parts {Fc:.1e}", flush=True)
+            return np.asarray(z4[0]), np.asarray(z4[1]), Fc, len(hist), bool(conv), 0.0
         if opt["corrector"] == "newton":
             ch, cl, hist = newton_solve(spx, ph, pl, tol=tol, it_max=12, verbose=False)
         else:
@@ -169,6 +189,7 @@ def main():
     s = mk(D); segs = s.plan(zh, zl, 1e-32, 0.05); s.set_segs(segs); sp = wrap(s)
     Kb = (len(zh) - 1) // (4 * M) - 1                                   # the horizon block
     rows = slice(Kb * 4 * M, Kb * 4 * M + M)
+    # the held harmonics as directions to freeze in the quad-double Newton: unit band fields in the p1 block
     Fh, Fl = sp.residual(zh, zl)
     F0 = float(rnorm(Fh, Fl))
     if F0 > opt["tol"]:
@@ -238,8 +259,11 @@ def main():
         # re-base the trend on the new state (its harmonics sit on the trend's values at D, to the corrector's floor)
         base_coeffs = band_coeffs(zh[:M], zl[:M], M, ks_held)
         n0 = float(D) - 2.0
-        save(os.path.join(out, f"anm_pin{kf}_D{float(D):.4f}.npz"), zh, zl, dict(D=float(D), D_str=str(D), M=M, nodes=nodes, kt=kt, kc=kc,
-                                                                                  ks=ks, kfreeze=kf, pin_held=ks_held, N=N, a=a, source=opt["state"]))
+        meta_out = dict(D=float(D), D_str=str(D), M=M, nodes=nodes, kt=kt, kc=kc, ks=ks, kfreeze=kf, pin_held=ks_held, N=N, a=a, source=opt["state"])
+        if opt["corrector"] == "qd" and "z4" in last_q:
+            save_q(os.path.join(out, f"anm_pin{kf}_D{float(D):.4f}.npz"), last_q["z4"], meta_out)
+        else:
+            save(os.path.join(out, f"anm_pin{kf}_D{float(D):.4f}.npz"), zh, zl, meta_out)
         a = min(2 * a, opt["h_max"])          # the next step may grow again
     print("done", flush=True)
 

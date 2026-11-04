@@ -1629,5 +1629,35 @@ with its last three points accepted as stalls; their linearised Δ corrections a
 the held rows' forcing and the coefficients come out polluted (|z₂₄| 10⁻⁷, a_max 0.38), where pin 3 gives
 |z₂₄| 4×10⁻²⁶ and a_max 2.4. (iv) This is the double-double floor in the weak directions, the wall of 12.x in its
 corrector form: the predictor still lands inside the basin at every step (10⁻¹⁴ to 10⁻¹³), and the quad-double
-corrector of the kernel (`--corrector qd`: `newton_qd` with the held harmonics frozen as directions) is the next
-test, running as this is written.
+corrector of the kernel (`--corrector qd`) is the next test (13.19).
+
+### 13.19 The quad-double corrector (2026-11-04 03:30 UTC)
+
+Two forms were tried; the pinned offset is what decides between them. The pinned solver of 13.16 works on a kernel
+built with `kfreeze 3`, whose rows for p1's harmonics 5–13 read "coefficient = 0", and subtracts the held values from
+those rows of the double-double residual (`PinnedSolver`), so the double-double Newton solves "coefficient = held
+value". The kernel's quad-double methods (`Solver.newton_q`, `residual_q`) know nothing of that offset.
+
+(a) *Frozen directions on the unpinned kernel* (`anm-mac/run_trend_pin3_qd.log`, `run_trend_pin3_qd2.log`). A first
+run handed `newton_qd` the pinned kernel itself: its quad-double residual was the offset, max |F| 2.6×10⁻³ at every
+prediction, and it accepted no step. The second run built the kernel unpinned (`kfreeze 13`) and froze the held
+harmonics as directions (`newton_qd`'s junk mode with V = their band fields): from the double-double prediction at
+80.27 (|F| 3.8×10⁻¹⁴) its first step raised max |F| to 1.0×10⁻⁵ at the line search's smallest step (1/128) with
+|dz| 9.3×10⁻⁴ growing to 8.4×10⁻³, and the run was stopped. Freezing the columns leaves the rows the pinning
+drops, p1's high-harmonic equations, whose near-singular combinations (pivots 6×10⁻⁶ against 1.3×10¹⁰) throw the
+step; the pinned system removes rows and columns together.
+
+(b) *The pinned quad-double corrector* (`pinning.PinnedQ`): the offset subtracted from the quad-double residual and
+its solve added to the step, dz = −J⁻¹(F − c) = −J⁻¹F + J⁻¹c with the quad-double LU of `newton_q`, so `newton_qd`
+runs unchanged on the pinned system, plain Newton (no frozen directions). `anm_run.py --corrector qd` polishes the base
+with it and corrects each prediction with it, to `--tol_qd` on max |F|; the chain's base is the result's first two
+parts (the jets are double-double) and the four parts are saved. Run from the 79.27 state of 13.18 (the chain's first
+accepted stall, double-double |F| 2.1×10⁻¹⁵) with h_max 1: `anm-mac/run_trend_pin3_qd3/`.
+
+The base polish decides the question of 13.18 (iv). The stalled state's quad-double residual is 5.5×10⁻¹⁶ (max norm),
+and two quad-double Newton steps at full length take it to 1.7×10⁻²⁹: the first moves Δ by +3.7×10⁻¹⁴ (the
+linearised correction recorded for the stall was 4×10⁻¹⁴) and |dz| from 5×10⁻¹³ to 7×10⁻²⁰, the second moves Δ by
+10⁻²⁰. The double-double residual of the result's first two parts is 6.1×10⁻²⁰, where the double-double Newton could
+take no step from 10⁻¹⁵. The wall of 13.17–13.18 is the corrector's precision, not the problem's conditioning or the
+predictor. A quad-double step costs 45–60 s at M 32 on two threads. The chain from there: pending (the run continues as
+this is written).
