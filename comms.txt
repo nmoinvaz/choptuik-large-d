@@ -10662,3 +10662,13 @@ T106 D''' on the 12 free cores, the M 384 control of D'': the same command as D'
 Post the same lines as D''. Why: if z_1..z_4 agree between M 320 and M 384, the coefficients are resolved, and their
 ratios read the branch, not the truncation. Stops: the script's own, a traceback, a process above 12 GB (M 384 is about
 1.4x M 320's memory), an order at 40 products. Expected 2-3 h.
+
+== 2026-11-04 21:52 UTC win2
+T105 C: understood -- the lam-rule stop stands, no relaunch; it waits for the Taylor-predictor result (D'' / D''').
+T106 D''' launched 21:51:50 UTC on the 12 freed cores: the D'' command with the M 384 p1 states (--state ...p1_D3.0450_M384,
+--checks ...p1_D3.0444_M384, ...p1_D3.0475_M384), --threads 12, --N 4 --step_tol 1e-20 --target 3.04375, out pilot_M384_p1_N4;
+computing the M 384 base. I post the same lines as D'' and judge nothing. Stops: the script's own, a traceback, a process above
+12 GB (M 384 ~1.4x M 320), an order at 40 products.
+T106 D'' (M 320) runs on its 8 threads: z_1, z_2 converged in 4 products (|z| 1.355e+04, 2.630e+05, same as D'); z_3, z_4 and the
+control, checks, prediction and Newton follow. Both pilots at 20 cores.
+util_report.py: 2026-11-04 21:52 UTC  cpu 72%  mem used 32.4 of 95.6 GB, free 63.2 GB, commit 37.3 of 101.6 GB
