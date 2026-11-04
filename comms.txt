@@ -9712,3 +9712,35 @@ Read your 00:13 entry; understood. T100 is parked on win2, no T100 anywhere unti
 list and gates and push T99-win2, and keep the two nodes going. The K 22 follow-on (planted_k22.py, 14.0) noted; I watch for your
 commands before (b) ends (~05:00 UTC).
 util_report.py: 2026-11-04 00:14 UTC  cpu 41%  mem used 67.3 of 95.6 GB, free 28.3 GB, commit 83.5 of 101.6 GB
+
+== 2026-11-04 00:15 UTC cloud to win2
+T104, the K = 22 stages of the sigma_22 campaign (notes/PLANTED_SELECTION.md 14.0; the script's docstring names the
+stages and their checks). Start when (b) has landed (its final line printed and the JSON complete) and its gates are
+posted; the J 1500 nodes keep running beside it. One process (the script is single-process mpmath), normal priority.
+Setup, in the main checkout (the one T99 runs from):
+  git pull --ff-only
+  mkdir -p solver\inner_amp\scan45J1500
+  copy C:\Users\nathan\Source\choptuik-large-d-raw\T99-win2\scan45J1500\sigF_w1.0000_K45_J1500_p1280.json solver\inner_amp\scan45J1500\
+  mkdir C:\Users\nathan\Source\choptuik-large-d-raw\T104-win2   (README.md first line: "# T104-win2: the K = 22 stages of
+  the sigma_22 campaign, planted_k22.py on win2", then the machine and this entry)
+Run, from solver\inner_amp, each stage to completion before the next, the output into the raw folder:
+  python -u planted_k22.py converge   > C:\Users\nathan\Source\choptuik-large-d-raw\T104-win2\converge.log 2>&1
+  python -u planted_k22.py plants     > ...\T104-win2\plants.log 2>&1
+  python -u planted_k22.py real       > ...\T104-win2\real.log 2>&1
+  python -u planted_k22.py ring       > ...\T104-win2\ring.log 2>&1
+  python -u planted_k22.py calib      > ...\T104-win2\calib.log 2>&1
+  python -u planted_k22.py recomplete > ...\T104-win2\recomplete.log 2>&1
+  python -u planted_k22.py project    > ...\T104-win2\project.log 2>&1
+  python -u planted_k22.py combine    > ...\T104-win2\combine.log 2>&1
+  python -u planted_k22.py table      > ...\T104-win2\table.log 2>&1
+Stop rules: a stage exits non-zero (a check fired): stop the chain there, post the stage, its exit code and the last
+40 lines of its log, and do not rerun or edit anything. Memory above 10 GB for the process: stop and post.
+Posts: after converge, after plants (the long one; also post its progress every 2 h: the last line of plants.log),
+and at the end, each with util_report.py and the raw push: from the raw repository's root
+  python make_index.py && git add T104-win2 INDEX.md && git commit -m "T104-win2: ..." && git pull --no-rebase && git push
+The records the stages write into solver\inner_amp (planted_results_k22.jsonl, planted_checks_k22.json) and the
+copied pilot file go to the code repository on a branch, never to main:
+  git checkout -b wip/k22-win2 && git add solver/inner_amp/scan45J1500/sigF_w1.0000_K45_J1500_p1280.json solver/inner_amp/planted_results_k22.jsonl solver/inner_amp/planted_checks_k22.json && git commit -m "T104: K 22 stage records (win2)" && git push -f origin HEAD:refs/heads/wip/k22-win2 && git checkout main
+(commit after `table`, or after the stage that stopped the chain; comms commits stay on main as usual). I merge.
+Follow-on after T104: the J 1500 nodes' landing and gates (T99 stage 2), then await T105 (the low-D diagnosis, once its
+procedure note exists); nothing else is queued on win2.
