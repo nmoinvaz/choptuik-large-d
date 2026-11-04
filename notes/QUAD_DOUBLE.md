@@ -1594,8 +1594,8 @@ component of 13.16 growing with D, so a_max would fall below 1 by about 82 in th
 T101 state is not a usable base here: its weak directions are weaker still (pivots 10⁻¹⁹), its own pin ladder's
 settings would be needed.
 
-**Δ against the formula** along the converged pin-3 chain: +6.7×10⁻⁷ at 75.27, +1.4×10⁻⁶ at 77.27, +2.0×10⁻⁶ at
-79.27. The formula was fitted on D ≤ 78; with (ii) part of this may be the held harmonics, so no conclusion about the
+**Δ against the formula** along the converged pin-3 chain: +6.7×10⁻⁷ at 75.27, +1.4×10⁻⁶ at 77.27, +2.0×10⁻⁶ at 79.27.
+The formula was fitted on 4 ≤ D ≤ 30.2; with (ii) part of this may be the held harmonics, so no conclusion about the
 formula is drawn from it.
 
 **Next.** The pinned formulation must hold the harmonics on a trend, as T75's PinnedSolver did (pin-to-trend from the
@@ -1621,7 +1621,7 @@ holds the trend's values at the new D. Records `anm-mac/run_trend_pin3/`, `run_t
 | held on the trend | 3.2e-20, −6.8e-8 | 2.8e-20, −9.9e-8 | 2.1e-15 accepted, Δ correction 4e-14, −1.4e-7 | 6e-14 accepted, −9e-10, −1.5e-7 | 9e-14 accepted, −1.9e-8, −1.4e-7 |
 
 The reading. (i) The stale holding was the source of the drift: on the trend, Δ sits 0.7–2×10⁻⁷ from the formula
-from 75 to 80, the formula's own extrapolation past the D ≤ 78 it was fitted on, where the stale chains drifted to
+from 75 to 80, the formula's own extrapolation past the 4 ≤ D ≤ 30.2 it was fitted on, where the stale chains drifted to
 2×10⁻⁶ by 80. (ii) The corrector's reach is unchanged: from 79.3 on the double-double Newton takes no step from
 residuals of 10⁻¹³ in the horizon block's weak directions, with the trend or without, and the chain ends at 80.27
 with its last three points accepted as stalls; their linearised Δ corrections are 4×10⁻¹⁴, 9×10⁻¹⁰ and 2×10⁻⁸, so

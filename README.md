@@ -57,11 +57,11 @@ What is new: not found in the literature searched ([notes/LIT_REVIEW.md](notes/L
 
 How: Choptuik's solution is computed as a periodic boundary-value problem in self-similar variables. An f64 solver in
 [`solver/`](solver/), with a Rust kernel for its residual (this crate), covers D = 3.6–40, and a separate double-double
-(about 32-digit) solver in [`hp/`](hp/) reaches D = 67.77 (73.27 with the pinned runs). The theory (the large-D
-expansion, its Stokes multipliers and the inner problem at D = ∞) is in the Large-D section, with the scripts that check
-each step. The physics is in this file; the software is described at the end. The computations, derivations and text
-were produced by Claude (Anthropic) under Nathan Moinvaziri's direction and have not yet been reviewed by an expert
-([How this work was done](#how-this-work-was-done)).
+(about 32-digit) solver in [`hp/`](hp/) reaches D = 67.77 (73.27 with the pinned runs, and 78.12 in a layout where Δ is
+known to about 10⁻⁶). The theory (the large-D expansion, its Stokes multipliers and the inner problem at D = ∞) is in
+the Large-D section, with the scripts that check each step. The physics is in this file; the software is described at
+the end. The computations, derivations and text were produced by Claude (Anthropic) under Nathan Moinvaziri's direction
+and have not yet been reviewed by an expert ([How this work was done](#how-this-work-was-done)).
 
 ## Main results
 
@@ -76,7 +76,7 @@ Each ± says what kind of bar it is.
 | The limit of Δ | Δ∞ = 1.643893746 ± 1.5×10⁻⁸ | conditional on Δ analytic in 1/D | the spread of 48 fit choices, corrected by a planted-truth test | [Is the period analytic in 1/D?](#is-the-period-analytic-in-1d) |
 | The limit of γ | γ∞ = 1/2 to about 5×10⁻⁷ | numerical evidence; explained given Conjecture 1 and one unstable mode | fit spread | [Proposition 5](#proposition-5-the-unstable-mode-at-infinite-d-is-exact), [GAMMA.md](GAMMA.md) |
 | The 1/D expansion fixes no period | Propositions 1–4 | proved (parts checked symbolically) | — | [Large D](#large-d-what-the-1d-expansion-can-and-cannot-see) |
-| The selection rule at D = ∞ | Conjecture 1; its amplitude expansion gives Δ∞ = 1.64387 ± 0.00006 | conjecture; the value numerical evidence | an estimator range over eight orders, tested on planted functions | [The inner problem at large x](#the-inner-problem-at-large-x) |
+| The selection rule at D = ∞ | Conjecture 1; its amplitude expansion gives Δ∞ = 1.64387 ± 0.00006 | conjecture; the value numerical evidence | an estimator range over nine orders, tested on planted functions | [The inner problem at large x](#the-inner-problem-at-large-x) |
 | The one-harmonic selection theorem B(1) | exactly one solution for n ≥ e^{89.75} | certified, assuming Braaksma's theorem (ball arithmetic; proof/B_chain.md) | rigorous enclosures | [Limits and open problems](#limits-and-open-problems) |
 | Theorems A(M = 1), A(M = 3) | the selection condition has one simple zero | certified (M = 1 reviewed; M = 3 reviewed in part) | rigorous enclosures | [PROOF.md](PROOF.md) |
 | D = 4 and the maximum of Δ | agreement with the published values; the maximum at D = 3.755725 | numerical evidence | published uncertainty; fit spread | [Relation to published work](#relation-to-published-work) |
@@ -1358,7 +1358,7 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   third estimator the same: S₁ is numerically an entire function of A² of exponential type, and the series of
   G = e^{−κ̄A²}S₁ (same zeros, no cancellation) puts the real zero at 0.99988, A₀ = 2.7194
   ([proof/D_entire.md](proof/D_entire.md)). The truncation sequence alternates and converges (0.777, 1.0156, 0.999228,
-  1.000022; limit 0.999985, [proof/B_tail_M7.md](proof/B_tail_M7.md)).
+  1.000022; limit 0.999985 ± 2×10⁻⁵, [proof/B_tail_M7.md](proof/B_tail_M7.md)).
 - *How far to trust those estimates.* A planted-truth test ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md))
   ran the same estimators, through the same code, on synthetic functions of the same class: Laplace integrals over a
   Borel arc whose coefficients match the real σ₀…σ₁₂ to 10⁻⁵, with the zero planted at ω/ω∞ = 0.996–1.004. The pair
