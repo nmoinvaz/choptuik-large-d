@@ -9853,3 +9853,10 @@ util_report.py:
   pid 66835    0.01 GB  cpu       40 s  amp_flint_par.py 1.0 45 1500 1280 --procs 2
   pid 66842    0.01 GB  cpu        0 s  spawn worker
   python total 3.6 GB in 5 processes
+
+== 2026-11-04 03:49 UTC win2
+cpu 32%, free 28.1 GB.
+T99 stage 2: (b) wf 1.00 at k 41 (on order 43, the slow top; ~2 h, cpu active), nodes wf 0.99 / 1.01 at k 39; controls pass ((b)
+1..41, nodes 1..39). No JSON yet. T100 parked, T104 waits for (b)'s landing.
+util_report.py: 2026-11-04 03:49 UTC  cpu 32%  mem used 67.5 of 95.6 GB, free 28.1 GB, commit 75.5 of 101.6 GB.
+Pushed T99-win2 (0e44529).
