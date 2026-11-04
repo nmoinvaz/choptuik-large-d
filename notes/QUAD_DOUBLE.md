@@ -1684,11 +1684,14 @@ from where the convergence is quadratic; from 4×10⁻⁹ it does not get there 
 step is h ≤ 0.5 with this corrector, and `--qd_it` is 12 now (8 cut off the 80.52 attempt at 7×10⁻¹⁷, two steps
 from converged). (iii) Cost: 17 s per quad-double Jacobian and LU at M 32 on two threads, 35–60 s per step when the
 "dz" acceptance tries trial points (each trial costs a Jacobian), 2.5–3 min per converged point plus the jets' 30 s; a
-failed attempt at h = 1 costs 9–12 min. (iv) Δ − formula: the chain quotes the README's tabulated coefficients; the
-live refit of `solver/formula_all.py` (what `check_numbers.py formula_dd` evaluates) lies below them by 6×10⁻⁸ at
-D 61, 8×10⁻⁸ at 67.77 and 1.1×10⁻⁷ at 80, so against it the same points sit at −3.7, −4.2 and −4.7×10⁻⁸. Both drift
-by about −2×10⁻⁸ per unit D past the fitted range, as an extrapolation does. The two evaluations disagree inside the
-range by the size of the formula's quoted error, and the tabulated coefficients fit the double-double points above
-30.2 to 5.8×10⁻⁸, the refit to 9.6×10⁻⁸ (`check_numbers.py formula_dd` now checks both); which fit the tabulated
-coefficients came from is for the coordinator to settle. The chain continues as `anm-mac/run_trend_pin3_qd4/` (from
-the 80.27 state, h_max 0.5, qd_it 12, toward D 110).
+failed attempt at h = 1 costs 9–12 min. (iv) Δ − formula is against the README's tabulated coefficients, since
+2026-11-04 the stored formula (`solver/data/formula_coefficients.json`, which `formula_all.delta` evaluates). Until
+then `formula_all.delta` refitted the points on every call, and on the Mac that refit lay 6×10⁻⁸ below the table at
+D 61 and 1.1×10⁻⁷ at 80 on the same data (the fit on the data of the table's commit, rerun here, gives the Mac's
+coefficients): the weighted least squares has a flat valley, and the 2026-10-19 cloud fit and the 2026-11 Mac fit
+are two points in it, 0.7% apart in the coefficients and 10⁻⁹ apart in value on the fitted range. The README's text
+had drifted to the refit's numbers (9.6×10⁻⁸ against the double-double points, where the table gives 5.8×10⁻⁸) and
+is back on the table's. Against the Mac's refit the chain's points would sit at −3.7, −4.2 and −4.7×10⁻⁸; both
+evaluations drift by about −2×10⁻⁸ per unit D past the fitted range, as an extrapolation does, and their spread is
+the extrapolation's own uncertainty. The chain continues as `anm-mac/run_trend_pin3_qd4/` (from the 80.27 state,
+h_max 0.5, qd_it 12, toward D 110).

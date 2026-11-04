@@ -19,6 +19,7 @@ should be two to four times faster:
   total                            ~6 min  (--full: +2 min)
 Nothing in the repository is written.
 """
+import json
 import os
 import re
 import subprocess
@@ -82,10 +83,10 @@ worst = max(abs(interp(D) - mp.mpf(v)) for D, v in TABLE.items())
 record("Values table, Delta(D) at D = 10..60 interpolated from the CSV", "within rounding, <= 1e-12",
        f"max |diff| {mp.nstr(worst, 2)}", worst <= 1e-12)
 
-# README coefficient table (solver/formula_all.py), Delta = P8(eps)/Q2(eps), eps = 1/(D-2)
-A = [1.6438975180, 4.0378045077e1, 2.5233285989e2, 2.0673502321e2, -3.5709850575e2, 3.1347320996e2,
-     -4.1891374574e2, 3.2695252782e2, -1.6050467699e2]
-B = [1, 1.8251453626e1, 6.8182050167e1]
+# README coefficient table (solver/data/formula_coefficients.json), Delta = P8(eps)/Q2(eps), eps = 1/(D-2)
+_C = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "solver", "data", "formula_coefficients.json")))
+A = [float(v) for v in _C["a"]]
+B = [1] + [float(v) for v in _C["b"]]
 
 
 def formula(D):

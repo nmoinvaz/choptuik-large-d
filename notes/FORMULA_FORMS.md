@@ -73,3 +73,23 @@ at D ≥ 20).
 | 10 | −1.5266460427 × 10⁷ | +7.7494021741 × 10⁷ |
 
 </details>
+
+## Where the coefficients live (2026-11-04)
+
+The eleven and nine coefficients of the README's table are the fit of 2026-10-19 (commit 6cd88d1, the cloud machine),
+stored as decimal strings in `solver/data/formula_coefficients.json`; `solver/formula_all.py`'s `delta` and `gamma`
+evaluate them, and `hp/taylor_predict.py`, `reproduce.py`, `hp/compare/cmp_ecker.py`, `solver/plot_physics.py` and
+`solver/inner_pert/first_order_fits.py` read the same file. Before that date `delta` refitted the points on every call,
+and the fit is not reproducible to the printed digits across environments: on the Mac (numpy and scipy of 2026-11)
+the same data give coefficients 0.7% away, values 9.5×10⁻¹⁰ (Δ) and 6×10⁻⁹ (γ) away on 4 ≤ D ≤ 30.2, and Δ 6×10⁻⁸
+lower at D = 61 and 1.1×10⁻⁷ lower at D = 80. The valley of the weighted least squares is that flat. The README's
+sentences on the double-double agreement had followed the Mac refit (9.6×10⁻⁸ above D = 30.2) while its table and the
+paper kept the stored fit (5.8×10⁻⁸); they are on the table's numbers again, `check_numbers.py` compares both tables
+to the file (`formula_table`) and checks that a fresh fit stays within 10⁻⁹ of the stored formula on the fitted range
+(`formula_refit`). `python3 ../formula_all.py --refit` from `solver/data` prints the fresh fit and its distance.
+One more number followed: the README's agreement of the formula with the pinned runs T73 and T75 (Δ after one
+full-system Newton step, 895 records at D = 67.74–73.27, printed by `python3 ../plot_delta.py --raw DIR`) read
+7.4×10⁻⁸, which neither fit reproduces now (the stored formula gives 1.3×10⁻⁷ with a median of 4.9×10⁻⁸, the Mac
+refit 1.7×10⁻⁷; the pinned Δ before that step, which the graph does not show, sits within 4.3×10⁻⁸); it is now the
+stored formula's 1.3×10⁻⁷. The graph `solver/delta.svg` was redrawn with the stored formula (its caption's
+double-double agreement 6×10⁻⁸ where it read 1×10⁻⁷).

@@ -73,22 +73,18 @@ def formula_dd():
                                   if lo <= float(c[0]) <= hi and ",lowD" not in ",".join(c))
         err = miss(30.2001, 99.0)
         bands = (miss(8.25, 21.0), miss(21.0, 30.0), miss(30.0, 61.03))
-        sys.path.insert(0, os.path.join(ROOT, "hp"))
-        from taylor_predict import formula_delta         # the README's tabulated coefficients, as a reader would use them
-        e_tab = max(abs(formula_delta(float(c[0])) - (float(c[1]) + float(c[2]))) for c in rows
-                    if 30.2001 <= float(c[0]) <= 99.0 and ",lowD" not in ",".join(c))
     finally:
         os.chdir(cwd)
-    t3 = [("notes/QUAD_DOUBLE.md", "30.2 to 5.8×10⁻⁸, the refit to 9.6×10⁻⁸")]
-    txt = [("README.md", "and Δ to 9.6×10⁻⁸ up to D = 67.77"),
-           ("README.md", "above D = 30.2 it matches them to 9.6×10⁻⁸"),
-           ("README.md", "| 30.2 – 67.77, never seen by the fit | ≤ 9.6×10⁻⁸ |")]
-    t2 = [("README.md", "3.0×10⁻⁹ or better on 8.25 ≤ D ≤ 21, 8.0×10⁻⁹ up to D = 30, and 9.6×10⁻⁸ from there to")]
-    return [("formula against the double-double points, D 30.2-67.77", err, 9.6e-8, 1e-9, txt),
-            ("the README's tabulated coefficients against the same points", e_tab, 5.8e-8, 1e-9, t3),
-            ("formula against the double-double points, D 8.25-21", bands[0], 3.0e-9, 1e-10, t2),
-            ("formula against the double-double points, D 21-30", bands[1], 8.0e-9, 1e-10, t2),
-            ("formula against the double-double points, D 30-61.03", bands[2], 9.6e-8, 1e-9, t2)]
+    txt = [("README.md", "and Δ to 5.8×10⁻⁸ up to D = 67.77"),
+           ("README.md", "above D = 30.2 it matches them to 5.8×10⁻⁸"),
+           ("README.md", "| 30.2 – 67.77, never seen by the fit | ≤ 5.8×10⁻⁸ |"),
+           ("paper/physics/main.tex", "$5.8\\times10^{-8}$ to $D = 61$")]
+    t2 = [("README.md", "2.7×10⁻⁹ or better on 8.25 ≤ D ≤ 21, 7.5×10⁻⁹ up to D = 30, and 5.8×10⁻⁸ from there to"),
+          ("paper/physics.main.tex".replace(".main", "/main"), "the formula holds to $2.7\\times10^{-9}$ on\n$8.25$--$21$, $7.5\\times10^{-9}$ to $D = 30$")]
+    return [("formula against the double-double points, D 30.2-67.77", err, 5.8e-8, 1e-9, txt),
+            ("formula against the double-double points, D 8.25-21", bands[0], 2.7e-9, 1e-10, t2),
+            ("formula against the double-double points, D 21-30", bands[1], 7.5e-9, 1e-10, t2),
+            ("formula against the double-double points, D 30-61.03", bands[2], 5.8e-8, 1e-9, t2)]
 
 
 @check
@@ -228,6 +224,64 @@ def hopf_law():
     out += [("fraction / deviation^2, least", min(ratio), 0.383, 0.001, txt), ("fraction / deviation^2, largest", max(ratio), 0.385, 0.001, txt)]
     out += [("-2/D at %.2f" % r["D"], -2 / r["D"], q, 0.001, txt) for r, q in zip(rows, (-0.044, -0.033, -0.027))]
     return out
+
+
+@check
+def formula_table():
+    """README "The formula" and paper/physics Table "Coefficients": every tabulated coefficient equals the stored one
+    (solver/data/formula_coefficients.json) in units of its last printed digit"""
+    C = json.load(open(os.path.join(ROOT, "solver/data/formula_coefficients.json")))
+    want = {"a": C["a"], "b": ["1"] + C["b"], "e": C["e"], "f": ["1"] + C["f"]}
+
+    def parse(cell):
+        s = cell.replace("$", "").replace("(fixed)", "").replace("−", "-").replace("\\times10^{", "e").replace("}", "")
+        s = re.sub(r"\s*×\s*10([⁰¹²³⁴⁵⁶⁷⁸⁹]+)", lambda m: "e" + m.group(1).translate(str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹", "0123456789")), s)
+        s = s.strip()
+        return s if s else None
+
+    def units_off(printed, exact):
+        """|printed - exact| in units of the printed mantissa's last digit"""
+        m = re.match(r"([+-]?)(\d+)(?:\.(\d+))?(?:e([+-]?\d+))?$", printed)
+        frac, ex = (m.group(3) or ""), int(m.group(4) or 0)
+        return abs(float(printed) - float(exact)) / 10.0 ** (ex - len(frac))
+
+    out = []
+    for doc, pat in (("README.md", r"^\| (\d) \| ([^|]*) \| ([^|]*) \| ([^|]*) \| ([^|]*) \|$"),
+                     ("paper/physics/main.tex", r"^(\d)\s*&\s*([^&]*?)\s*&\s*([^&]*?)\s*&\s*([^&]*?)\s*&\s*([^&]*?)\s*\\\\$")):
+        rows = [m for m in (re.match(pat, l) for l in DOCS[doc].split("\n")) if m]
+        rows = [m for m in rows if parse(m.group(2)) and re.match(r"[+-]\d\.\d{6,}", parse(m.group(2)))]
+        worst, n = 0.0, 0
+        for m in rows:
+            k = int(m.group(1))
+            for col, key in ((2, "a"), (3, "b"), (4, "e"), (5, "f")):
+                v = parse(m.group(col))
+                if v is None:
+                    continue
+                n += 1
+                worst = max(worst, units_off(v, want[key][k]) if k < len(want[key]) else float("inf"))
+        out.append((f"{doc}: {n} tabulated coefficients, worst distance in last-digit units", worst, 0.0, 1.0, [(doc, "1.6438975180")]))
+        out.append((f"{doc}: tabulated coefficients counted", n, 23, 1, [(doc, "1.6438975180")]))
+    return out
+
+
+@check
+def formula_refit():
+    """README "The formula": a fresh fit stays within 1e-9 of the stored Delta and 1e-8 of the stored gamma on the fitted
+    range and moves Delta(80) by about 1e-7 (0.5e-7 to 2e-7); the items are 1 when true, so a drift of the fit, or of
+    the data behind it, fails them"""
+    sys.path.insert(0, os.path.join(ROOT, "solver"))
+    cwd = os.getcwd()
+    os.chdir(os.path.join(ROOT, "solver", "data"))
+    try:
+        import formula_all
+        r = formula_all.refit_distance()
+    finally:
+        os.chdir(cwd)
+    txt = [("README.md", "the values by 10⁻⁹ on the fitted range and about 10⁻⁷ at\nD = 80"),
+           ("paper/physics/main.tex", "moves the values by $10^{-9}$ on the fitted range and about $10^{-7}$ at $D = 80$")]
+    return [("refit within 1e-9 of the stored Delta on 4-30.2 (1 = yes)", float(r["delta_fit_range"] <= 1e-9), 1, 0.1, txt),
+            ("refit within 1e-8 of the stored gamma on 4-30.2 (1 = yes)", float(r["gamma_fit_range"] <= 1e-8), 1, 0.1, txt),
+            ("refit - stored Delta(80) between 0.5e-7 and 2e-7 in size (1 = yes)", float(0.5e-7 <= abs(r["delta_80"]) <= 2e-7), 1, 0.1, txt)]
 
 
 @check

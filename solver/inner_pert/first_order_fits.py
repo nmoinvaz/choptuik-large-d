@@ -108,12 +108,11 @@ def planted():
     (logs/first_order_fits_planted_first.log)."""
     import random
     random.seed(1)
-    a = [mp.mpf(v) for v in ("1.6438975180", "40.378045077", "252.33285989", "206.73502321", "-357.09850575",
-                             "313.47320996", "-418.91374574", "326.95252782", "-160.50467699")]
-    b = [mp.mpf(1), mp.mpf("18.251453626"), mp.mpf("68.182050167")]
-    e = [mp.mpf(v) for v in ("0.5", "18.083629635", "152.41588758", "-52.341588541", "9.9259594505", "-98.386450353",
-                             "74.529506074", "-48.272358903")]
-    f = [mp.mpf(1), mp.mpf("37.683686025"), mp.mpf("342.45505235")]
+    C = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "formula_coefficients.json")))
+    a = [mp.mpf(v) for v in C["a"]]                  # the README's coefficient table, as decimal strings
+    b = [mp.mpf(1)] + [mp.mpf(v) for v in C["b"]]
+    e = [mp.mpf(v) for v in C["e"]]
+    f = [mp.mpf(1)] + [mp.mpf(v) for v in C["f"]]
     rat = lambda num, den, eps: sum(c * eps ** k for k, c in enumerate(num)) / sum(c * eps ** k for k, c in enumerate(den))
     D1_true = a[1] - a[0] * b[1]
     L1_true = -4 * (e[1] - f[1] / 2)

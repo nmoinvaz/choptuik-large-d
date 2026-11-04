@@ -7,57 +7,91 @@
 rational_fit.compact / compact_gamma find the smallest forms within the point precision (Delta: P7/Q2, 10 numbers, to
 ~2e-7); one more numerator term makes Delta ten times tighter (<= 2e-8 on 4-30), so that is the one used.
 
-    python3 ../formula_all.py            (from solver/data)
+The coefficients are stored in data/formula_coefficients.json (the fit of 2026-10-19, as the README and the paper
+tabulate them) and delta(), gamma() evaluate them: the least-squares valley is flat, so a refit in another environment
+moves the coefficients by up to 0.7 % and the values by 1e-9 on the fitted range and 1e-7 at D = 80, and would not
+reproduce the printed digits. refit_delta(), refit_gamma() fit afresh; --refit prints that fit and its distance.
+
+    python3 ../formula_all.py [--refit]  (from solver/data)
     from formula_all import delta, gamma
 """
+import json
+import os
+import sys
+
 import numpy as np
 
 from rational_fit import data, fit_rational, fit_rational_p0, gamma_data, rat
 
 FIT_MIN, FIT_MAX = 4.0, 30.2
+COEF = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "formula_coefficients.json")
 
 
-def fit_delta():
+def coefficients():
+    """{a, b, e, f} as floats (b, f without their leading 1) and the file's record"""
+    C = json.load(open(COEF))
+    return {k: np.array([float(v) for v in C[k]]) for k in ("a", "b", "e", "f")}, C
+
+
+def refit_delta():
     D, y, s, _ = data()
     m = (D >= FIT_MIN) & (D <= FIT_MAX)
     p, q, chi = fit_rational(1 / (D[m] - 2), y[m], 1 / np.maximum(s[m], 1e-7), 8, 2)   # P7/Q2: 2e-7, P8/Q2: 2e-8
     return p, q
 
 
-def fit_gamma():
+def refit_gamma():
     D, g, s = gamma_data()
     m = (D >= FIT_MIN) & (D <= FIT_MAX)
     p, q, chi = fit_rational_p0(1 / (D[m] - 2), g[m], 1 / np.maximum(s[m], 1e-8), 7, 2, 0.5)
     return p, q
 
 
-_PD, _QD = None, None
-_PG, _QG = None, None
+fit_delta, fit_gamma = refit_delta, refit_gamma       # the former names
+_C = None
 
 
 def delta(D):
-    global _PD, _QD
-    if _PD is None:
-        _PD, _QD = fit_delta()
-    return rat(_PD, _QD, 1 / (np.asarray(D, float) - 2))
+    """the stored formula"""
+    global _C
+    if _C is None:
+        _C = coefficients()[0]
+    return rat(_C["a"], _C["b"], 1 / (np.asarray(D, float) - 2))
 
 
 def gamma(D):
-    global _PG, _QG
-    if _PG is None:
-        _PG, _QG = fit_gamma()
-    return rat(_PG, _QG, 1 / (np.asarray(D, float) - 2))
+    global _C
+    if _C is None:
+        _C = coefficients()[0]
+    return rat(_C["e"], _C["f"], 1 / (np.asarray(D, float) - 2))
+
+
+def refit_distance():
+    """max |refit - stored| of Delta and gamma on the fitted range, and of Delta at D = 61 and 80"""
+    pd, qd = refit_delta()
+    pg, qg = refit_gamma()
+    Dx = np.linspace(FIT_MIN, FIT_MAX, 2000)
+    d = lambda D: rat(pd, qd, 1 / (np.asarray(D, float) - 2))  # noqa: E731
+    g = lambda D: rat(pg, qg, 1 / (np.asarray(D, float) - 2))  # noqa: E731
+    return dict(delta_fit_range=float(np.max(np.abs(d(Dx) - delta(Dx)))), gamma_fit_range=float(np.max(np.abs(g(Dx) - gamma(Dx)))),
+                delta_61=float(d(61.0) - delta(61.0)), delta_80=float(d(80.0) - delta(80.0)), p=pd, q=qd, pg=pg, qg=qg)
 
 
 def main():
-    pd, qd = fit_delta()
-    pg, qg = fit_gamma()
-    print("Delta: p =", " ".join(f"{v:+.10e}" for v in pd))
-    print("       q = 1", " ".join(f"{v:+.10e}" for v in qd))
-    print("gamma: p =", " ".join(f"{v:+.10e}" for v in pg))
-    print("       q = 1", " ".join(f"{v:+.10e}" for v in qg))
-    print("poles (D):", [round(2 + 1 / r.real, 3) for r in np.roots(np.r_[1, qd][::-1])],
-          [round(2 + 1 / r.real, 3) for r in np.roots(np.r_[1, qg][::-1])])
+    c, rec = coefficients()
+    print("stored (data/formula_coefficients.json, %s):" % rec["produced"].split(",")[0])
+    print("Delta: p =", " ".join(f"{v:+.10e}" for v in c["a"]))
+    print("       q = 1", " ".join(f"{v:+.10e}" for v in c["b"]))
+    print("gamma: p =", " ".join(f"{v:+.10e}" for v in c["e"]))
+    print("       q = 1", " ".join(f"{v:+.10e}" for v in c["f"]))
+    print("poles (D):", [round(2 + 1 / r.real, 3) for r in np.roots(np.r_[1, c["b"]][::-1])],
+          [round(2 + 1 / r.real, 3) for r in np.roots(np.r_[1, c["f"]][::-1])])
+    if "--refit" in sys.argv:
+        r = refit_distance()
+        print("refit here: Delta p =", " ".join(f"{v:+.10e}" for v in r["p"]), " q = 1", " ".join(f"{v:+.10e}" for v in r["q"]))
+        print("            gamma p =", " ".join(f"{v:+.10e}" for v in r["pg"]), " q = 1", " ".join(f"{v:+.10e}" for v in r["qg"]))
+        print(f"refit - stored: Delta {r['delta_fit_range']:.1e}, gamma {r['gamma_fit_range']:.1e} on {FIT_MIN}-{FIT_MAX}; "
+              f"Delta {r['delta_61']:+.1e} at D 61, {r['delta_80']:+.1e} at D 80")
     D, y, s, _ = data()
     Dg, g, sg = gamma_data()
     print("\n| D range | Delta: max |formula - computed| | precision | gamma: max |formula - computed| | precision |")

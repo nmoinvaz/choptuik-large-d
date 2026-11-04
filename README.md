@@ -86,7 +86,7 @@ Each ± says what kind of bar it is.
 In detail:
 
 - **One formula for all D ≥ 4.** A rational function of 1/(D-2) gives Δ and γ within the precision of the
-  computed points up to D = 30, and Δ to 9.6×10⁻⁸ up to D = 67.77 ([The formula](#the-formula), [Values](#values)).
+  computed points up to D = 30, and Δ to 5.8×10⁻⁸ up to D = 67.77 ([The formula](#the-formula), [Values](#values)).
 - **The large-D limit.** Δ is computed at 1199 points from D = 8.25 to 67.77. The 857 points up to D = 61.03 fit smooth
   curves to about 4×10⁻¹⁵ (estimated error per point 10⁻¹⁶ to a few 10⁻¹⁵); the 342 above them, from the continuation
   toward D = 70, are not used in the fits. The points support, but do not prove, that Δ is analytic in 1/D; then Δ∞ =
@@ -170,8 +170,8 @@ curves are one rational formula in 1/(D−2) for every D ≥ 4 (below), fitted o
 integration-step error has been extrapolated out ("step-converged"), with the solver's near-null directions resolved and
 enough Fourier modes in time at low D; hollow points are held out of the fit. The green diamonds are
 double-double points from D = 3.045 to 67.77 (below D = 4 the formula does not apply);
-above D = 30.2 it matches them to 9.6×10⁻⁸. The amber diamonds are the pinned double-double runs: T73 and T75 from D =
-67.74 to 73.27 (Δ after one full-system Newton step), which it matches to 7.4×10⁻⁸, and T85 past 73.27 in a layout with
+above D = 30.2 it matches them to 5.8×10⁻⁸. The amber diamonds are the pinned double-double runs: T73 and T75 from D =
+67.74 to 73.27 (Δ after one full-system Newton step), which it matches to 1.3×10⁻⁷, and T85 past 73.27 in a layout with
 the last node moved toward the horizon, where Δ is known only to about 10⁻⁶
 ([notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), section 12.3). The shaded ranges say how well Δ is known in each (the
 median of the range's error estimate: the change from the next resolution, the nearby checks, or the difference between
@@ -233,13 +233,19 @@ ten times tighter), they reproduce each point within its own precision:
 | 4 – 4.3 | 5×10⁻¹⁰ | 3×10⁻⁷ | 3.4×10⁻⁷ | 5×10⁻⁷ |
 | 4.3 – 20 | ≤ 4.3×10⁻⁹ | 3×10⁻¹¹ – 4×10⁻⁹ (up to 4×10⁻¹⁰ at D ≈ 8–10) | ≤ 3.3×10⁻⁸ | ≤ 7×10⁻⁸ |
 | 20 – 30 | ≤ 1×10⁻⁸ | ≤ 3×10⁻⁸ | ≤ 2.3×10⁻⁹ | ~ 10⁻⁷ (assigned 10⁻⁹, but the fits' $`\chi^2/\mathrm{dof}`$ is about 7000 against it) |
-| 30.2 – 67.77, never seen by the fit | ≤ 9.6×10⁻⁸ | ≤ 10⁻¹⁴ (double-double) | ≤ 5×10⁻⁷ up to D = 35.8 | |
+| 30.2 – 67.77, never seen by the fit | ≤ 5.8×10⁻⁸ | ≤ 10⁻¹⁴ (double-double) | ≤ 5×10⁻⁷ up to D = 35.8 | |
+
+The coefficients are the fit of 2026-10-19, kept in `solver/data/formula_coefficients.json`, which every script here
+evaluates (`solver/formula_all.py`). The weighted least squares has a flat valley: refitted on the same points in
+another environment, the coefficients move by up to 0.7% and the values by 10⁻⁹ on the fitted range and about 10⁻⁷ at
+D = 80 (`python3 ../formula_all.py --refit` from `solver/data` prints the fresh fit and its distance), so the table, not
+a refit, is the formula, and that spread is the extrapolation's own uncertainty.
 
 The shorter forms of the formula for each range of D, and the earlier power series with its table, are in
 [notes/FORMULA_FORMS.md](notes/FORMULA_FORMS.md).
 
 An independent double-double computation ([below](#the-double-double-solver-hp)) agrees with the formula to
-3.0×10⁻⁹ or better on 8.25 ≤ D ≤ 21, 8.0×10⁻⁹ up to D = 30, and 9.6×10⁻⁸ from there to
+2.7×10⁻⁹ or better on 8.25 ≤ D ≤ 21, 7.5×10⁻⁹ up to D = 30, and 5.8×10⁻⁸ from there to
 D = 61, which the fit never saw. It also shows that the f64 points at D ≈ 8–10 (23 Fourier modes in time)
 sit up to 4×10⁻¹⁰ above the true values (from 1.3×10⁻¹¹ to 3.7×10⁻¹⁰ on 8.25–9.9; within
 3×10⁻¹¹ on 10–15.2 and about 6×10⁻¹¹ on 15.6–21), so their quoted 3×10⁻¹¹ was optimistic

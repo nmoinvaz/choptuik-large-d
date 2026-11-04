@@ -6,11 +6,11 @@ Delta(D) (README rational formula, fitted on the f64 points 4 <= D <= 30.2; dire
 """
 import os, glob, json, sys
 import numpy as np
-A = [1.6438975180, 4.0378045077e1, 2.5233285989e2, 2.0673502321e2, -3.5709850575e2, 3.1347320996e2,
-     -4.1891374574e2, 3.2695252782e2, -1.6050467699e2]
-B = [1, 1.8251453626e1, 6.8182050167e1]
-E = [0.5, 1.8083629635e1, 1.5241588758e2, -5.2341588541e1, 9.9259594505, -9.8386450353e1, 7.4529506074e1, -4.8272358903e1]
-Fq = [1, 3.7683686025e1, 3.4245505235e2]
+_C = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "solver", "data", "formula_coefficients.json")))
+A = [float(v) for v in _C["a"]]                      # the README's coefficient table
+B = [1] + [float(v) for v in _C["b"]]
+E = [float(v) for v in _C["e"]]
+Fq = [1] + [float(v) for v in _C["f"]]
 poly = lambda c, x: sum(ci * x ** i for i, ci in enumerate(c))
 ours = lambda D: poly(A, 1 / (D - 2)) / poly(B, 1 / (D - 2))
 oursg = lambda D: poly(E, 1 / (D - 2)) / poly(Fq, 1 / (D - 2))

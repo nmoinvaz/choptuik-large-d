@@ -23,9 +23,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(HERE, "..", "solver"))
 from pole_test import ratio_radius  # noqa: E402
-# the rational formula of README "The formula" (solver/formula_all.py's fit; its coefficients as tabulated there)
-_A = [1.6438975180, 40.378045077, 252.33285989, 206.73502321, -357.09850575, 313.47320996, -418.91374574, 326.95252782, -160.50467699]
-_B = [1.0, 18.251453626, 68.182050167]
+# the rational formula of README "The formula" (solver/data/formula_coefficients.json, as tabulated there)
+_C = json.load(open(os.path.join(HERE, "..", "solver", "data", "formula_coefficients.json")))
+_A = [float(v) for v in _C["a"]]
+_B = [1.0] + [float(v) for v in _C["b"]]
 
 
 def formula_delta(D):
