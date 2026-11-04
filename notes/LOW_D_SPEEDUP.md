@@ -40,6 +40,31 @@ lever is the thread count. Running the two M levels of a point concurrently pays
 | 5 | The mapped τ grid | a study first (Mac, minutes), then a new path | the converged values at D 3.05 and 3.15 from ≤ half the modes |
 
 
+## Step 5, the study: a shared map saves about 3× in modes (2026-11-04)
+
+`hp/tau_map_study.py` on the converged D 3.044375, M 384 state (`T100-win2/states`), output
+[`hp/data/tau_map_study.json`](../hp/data/tau_map_study.json): the modes each of the 88 field blocks needs (the highest
+harmonic above a level eps of its largest), on the uniform grid and after one periodic map τ = g(s) shared by all
+blocks, the mapped fields evaluated on a grid eight times finer, the map's centre scanned over the half period.
+
+| grid | modes needed by the slowest block, eps 10⁻⁴ | eps 10⁻³ | slowest block |
+|---|---|---|---|
+| uniform | 251 | 181 | centre p |
+| sine, α 0.7 | 115 | 85 | centre p |
+| arctan, L 0.3 | 91 | 67 | centre p |
+| arctan, L 0.2 | 85 | 57 | node 7 p |
+| arctan, L 0.1 | 145 | 97 | node 7 m |
+
+Three readings. (i) About 3× fewer modes for the best shared map (arctan, L 0.2, centred on the centre field's pulse),
+the same at both levels; by the M³ law of a Newton call that is about 25× per call, an extrapolation until a mapped
+solve is run. (ii) The limit is the pulse's motion across the nodes: its position in τ sweeps the whole half period
+from the centre (1.97) through node 8 (0.56) and node 12 (3.06) to the horizon side, so a sharper map moves the
+slowest block to node 7, whose pulse lies off the map's centre. A map that follows the pulse in x as well is a change of
+coordinates in (τ, x), not of the grid. (iii) The levels are where the state is resolved: its centre fields' top
+harmonics sit at 3.5×10⁻⁶ of their peak, so the deeper levels (10⁻¹⁰, 10⁻¹²) measure the M 384 truncation, not the
+pulse, and gave mapped counts equal to 384 times the map's largest stretch; those runs are not used. The analysis's
+1.8× (the centre field alone) and the survey's 30–60× (an estimate) bracket the measured 3×.
+
 ## Appendix A: code analysis
 
 
