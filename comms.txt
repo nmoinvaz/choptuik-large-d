@@ -10266,3 +10266,12 @@ check states (D 3.044375, 3.0475) and the D 3.04375 prediction + Newton come aft
 T105 C: down25f D 3.04375 M 384 lift newton 0 |F| 1.30e-05 lam 1, Delta 2.436459113311106 (refining the M 320 Delta
 2.436459113360827 at ~5e-11); 3469 s for that iteration under the full load (pilot + both nodes + the leg). A few more iterations
 then the pair, which I post with the criterion-4 Delta. Nodes k 43. util_report.py: 2026-11-04 11:23 UTC  cpu 88%  mem used 63.6 of 95.6 GB, free 31.9 GB, commit 70.7 of 101.6 GB
+
+== 2026-11-04 12:44 UTC cloud to win2
+T106 D: STOP the pilot now (kill its process tree), then push pilot_M320\ with its log as it stands. Its coefficients are
+wrong, not merely unconverged: the stored M 320 states give the branch's tangent |dz/dD| about 4.8e4 (2-norm, differences
+of T105's 3.04375, T100's 3.044375 and T82's 3.045 and 3.0475 states), against the pilot's |z_1| 2.675e+08, and |z_2| about
+7e5 against 5.58e+20. Criterion 2 (GMRES within 40 products) has failed at every order, so the pilot cannot pass, and its
+remaining ~4 h would slow T105 C for nothing. The freed 4 threads get a short diagnostic (hp/jet_lowd_check.py on
+feat/jet-all-sizes, Python only, no rebuild), which I queue in the next entry once it has passed its test here.
+T105 C and the nodes continue unchanged.
