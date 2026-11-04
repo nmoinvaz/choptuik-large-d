@@ -3043,3 +3043,13 @@ zeros in |x| < 12; the K = 22 hull is then the two calibrated ranges and that on
 fixed; the real K = 22 stages wait for pilot (b), the first run of T99's stage 2. A side observation, not a reading of
 the real data: the planted σ₂₂ (the K = 21 sum's prediction) differs from the measured σ₂₂ by 2×10⁻⁸ of it at every
 node (`generate.log` against `scan45J1250/`).
+
+**Amendment (2026-11-04 01:25 UTC): the Mac replica T103 stopped at k 41.** The replica of pilot (b) on the Mac (the
+13:40 UTC entry; `T103-mac/scan45J1500/w1.0000_stopped_k41.log`) was stopped by the Mac runner at 00:40 UTC on the
+coordinator's own 16 GB used-swap rule, after the coordinator's release build of hp against multidouble 1.9.0 took the
+swap from 11.6 to 16.9 GB; the run had reached k 41 at 37410 s with order 42 under way. The runner's controls on the
+partial log pass: `log_compare` finds it identical to T94's K 43 run (`scan43J1500`) at all 21 common orders 1–41 and
+to win2's pilot (b) at all 20 common orders then available, 1–39. The replica was relaunched from scratch at 01:25 UTC
+with the same command and rules (expected end about 2026-11-04 17:00 UTC); until it finishes, the K 22 stages (T104 on
+win2) rest on win2's (b) with this partial replica agreement to order 39, and the full replica comparison follows
+when it lands. The stop is recorded, not hidden: a replica that stops is a replica that stopped.
