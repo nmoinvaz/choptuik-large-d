@@ -12,7 +12,15 @@ formulation of hp/pinning.py; their coefficients are zero).
 
     python3 anm_run.py RAWDIR OUTDIR --state T75/pin7_D73.2657.npz --kfreeze 3 [--N 24] [--eps 1e-16] [--h_max 2]
         [--steps 20] [--D_max 200] [--corrector dnp|deflated|newton] [--tol 1e-20] [--tol_growth 1.45]
-        [--accept_stall 1e-19] [--junk_only 0] [--threads 4] [--w 24]
+        [--accept_stall 1e-19] [--junk_only 0] [--threads 4] [--w 24] [--trend T75]
+
+--trend FOLDER holds the harmonics on a trend instead of at the base's values (T75's pin-to-trend, in the
+continuation's terms): for each held harmonic k the coefficients (a_k, b_k) of p1 across the stored states of FOLDER are
+fitted as |v| = C n^s (n = D - 2) when their sign is constant and the fit's residual in ln|v| is below 0.05 (harmonics
+3-9 at D 71-73: residuals 1e-5 to 5e-3); the others stay constant. The trend is taken relative to the base, v(D) =
+v(D0) (n/n0)^s, so the base state is unchanged, its Taylor coefficients in h enter the jet state order by order (the
+held rows of each right-hand side carry them, as PinnedSolver's offset carries the values), and the corrector at D + a
+holds the harmonics at the trend's values there. Records carry the exponents.
 """
 import json
 import os
@@ -41,19 +49,28 @@ def load_state(path):
 mp.mp.dps = 50
 
 
-def coefficients(s, zh, zl, N, threads_note=""):
-    """z_1..z_N from the stored LU at (zh, zl): [(zh_k, zl_k)], norms, the refinement residuals"""
+def coefficients(s, zh, zl, N, held=None):
+    """z_1..z_N from the stored LU at (zh, zl): [(zh_k, zl_k)], norms, the refinement residuals. held = (fn, rows):
+    fn(k) gives the held harmonics' order-k Taylor coefficients as a field (hi, lo) on the horizon block's p rows (the
+    slice rows), added to the right-hand side there as PinnedSolver's offset is, so that z_k carries their motion"""
     Zh, Zl, norms, refine = [zh], [zl], [float(dd_norm(zh, zl))], []
     for k in range(1, N + 1):
         Hs, Ls = s.residual_jet(Zh, Zl, k + 1, 0)
-        rh, rl = Hs[k], Ls[k]
-        xh, xl = s.lu_solve(-rh, -rl)
+        bh, bl = -np.asarray(Hs[k]), -np.asarray(Ls[k])
+        if held is not None:
+            fn, rows = held
+            th, tl = fn(k)
+            bh, bl = bh.copy(), bl.copy()
+            ah, al = dd_add(bh[rows], bl[rows], np.asarray(th), np.asarray(tl))
+            bh[rows], bl[rows] = ah, al
+        xh, xl = s.lu_solve(bh, bl)
         jh, jl = s.jvp(zh, zl, xh, xl)[:2]
-        r0h, r0l = dd_add(-rh, -rl, -jh, -jl)
+        r0h, r0l = dd_add(bh, bl, -jh, -jl)
         ch, cl = s.lu_solve(r0h, r0l)
         xh, xl = dd_add(xh, xl, ch, cl)
         jh, jl = s.jvp(zh, zl, xh, xl)[:2]
-        r1h, r1l = dd_add(-rh, -rl, -jh, -jl)
+        r1h, r1l = dd_add(bh, bl, -jh, -jl)
+        rh, rl = -bh, -bl
         Zh.append(xh); Zl.append(xl)
         norms.append(float(dd_norm(xh, xl)))
         refine.append((float(dd_norm(r0h, r0l)), float(dd_norm(r1h, r1l))))
@@ -63,7 +80,7 @@ def coefficients(s, zh, zl, N, threads_note=""):
 def main():
     args = list(sys.argv[1:])
     opt = dict(state="T75/pin7_D73.2657.npz", kfreeze=3, N=24, eps=1e-16, h_max=2.0, steps=20, D_max=200.0, corrector="dnp",
-               tol=1e-20, tol_growth=1.45, accept_stall=1e-17, junk_only=0, threads=4, w=24)
+               tol=1e-20, tol_growth=1.45, accept_stall=1e-17, junk_only=0, threads=4, w=24, trend="")
     for k in list(opt):
         f = "--" + k
         if f in args:
@@ -103,9 +120,55 @@ def main():
         return ch, cl, Fc, len(hist), bool(Fc <= tol or Fc <= opt["accept_stall"]), dcorr
     mk = lambda Dx: make_solver(Dx, M, nodes=nodes, kt=kt, kc=kc, ks=ks, threads=opt["threads"], kfreeze=kf)  # noqa: E731
     ks_held = [k for k in range(kf + 1, 14) if k % 2 == 1]
-    h_hi, h_lo = band_field(band_coeffs(zh[:M], zl[:M], M, ks_held), ks_held, M)
-    wrap = lambda sx: PinnedSolver(sx, M, h_hi, h_lo)  # noqa: E731
+    base_coeffs = band_coeffs(zh[:M], zl[:M], M, ks_held)         # [(a_k, b_k)] at the base, exact there
+    # the trend: exponents s of |v| ~ n^s per held coefficient, from the stored states of --trend (0 = held constant)
+    slopes = [[0.0, 0.0] for _ in ks_held]
+    if opt["trend"]:
+        import glob
+        ns, vals = [], []
+        for f in sorted(glob.glob(os.path.join(raw, opt["trend"], "pin*_D*.npz")))[::4]:
+            dd = np.load(f); mm = json.loads(str(dd["meta"]))
+            if int(mm["M"]) != M:
+                continue
+            ns.append(float(mm["D"]) - 2.0)
+            vals.append(band_coeffs(dd["zh"][:M], dd["zl"][:M], M, ks_held))
+        ns = np.array(ns)
+        for i, k in enumerate(ks_held):
+            for j in (0, 1):
+                v = np.array([c[i][j] for c in vals])
+                if len(v) >= 6 and (np.all(v > 0) or np.all(v < 0)):
+                    sl, c0 = np.polyfit(np.log(ns), np.log(np.abs(v)), 1)
+                    res = float(np.max(np.abs(np.log(np.abs(v)) - (c0 + sl * np.log(ns)))))
+                    if res < 0.05:
+                        slopes[i][j] = float(sl)
+        print("trend exponents (a, b) per held harmonic " + ", ".join(f"{k}: {sa:+.2f}/{sb:+.2f}" for k, (sa, sb) in zip(ks_held, slopes)), flush=True)
+    n0 = float(D) - 2.0
+
+    def held_at(Dx):
+        """the held coefficients at D = Dx on the trend, relative to the base"""
+        r = float(Dx) - 2.0
+        return [(a * (r / n0) ** sa, b * (r / n0) ** sb) for (a, b), (sa, sb) in zip(base_coeffs, slopes)]
+
+    def held_jet(j):
+        """the order-j Taylor coefficients in h of the held values, v(D0) binom(s, j) n0^-j"""
+        out = []
+        for (a, b), (sa, sb) in zip(base_coeffs, slopes):
+            ca = math.comb if False else None  # noqa: F841
+            def binom(sx, jj):
+                r = 1.0
+                for t in range(jj):
+                    r *= (sx - t) / (t + 1)
+                return r
+            out.append((a * binom(sa, j) / n0 ** j, b * binom(sb, j) / n0 ** j))
+        return out
+
+    def wrap_at(sx, Dx):
+        hh, hl = band_field(held_at(Dx), ks_held, M)
+        return PinnedSolver(sx, M, hh, hl)
+    wrap = lambda sx: wrap_at(sx, D)  # noqa: E731
     s = mk(D); segs = s.plan(zh, zl, 1e-32, 0.05); s.set_segs(segs); sp = wrap(s)
+    Kb = (len(zh) - 1) // (4 * M) - 1                                   # the horizon block
+    rows = slice(Kb * 4 * M, Kb * 4 * M + M)
     Fh, Fl = sp.residual(zh, zl)
     F0 = float(rnorm(Fh, Fl))
     if F0 > opt["tol"]:
@@ -119,14 +182,14 @@ def main():
             break
         t0 = time.time()
         dh, dl, Fh, Fl, pmin, pmax = sp.newton(zh, zl)
-        Zh, Zl, norms, refine = coefficients(s, zh, zl, N)
+        Zh, Zl, norms, refine = coefficients(s, zh, zl, N, held=(lambda j: band_field(held_jet(j), ks_held, M), rows) if any(any(sl) for sl in slopes) else None)
         t_coef = time.time() - t0
         a_max = (opt["eps"] * norms[1] / norms[N]) ** (1.0 / (N - 1)) if norms[N] else opt["h_max"]
         room = float(opt["D_max"] - D)
         a = min(a_max, opt["h_max"], room) if a is None else min(a, a_max, opt["h_max"], room)
         ratios = [norms[k - 1] / norms[k] if norms[k] else None for k in range(2, N + 1)]
         rec = dict(step=step, D0=float(D), D0_str=str(D), pin=kf, N=N, pivots=(float(pmin), float(pmax)), norms=norms, a_max=a_max,
-                   t_coef=t_coef, refine_last=refine[-1], ratios_2_5=ratios[:4])
+                   t_coef=t_coef, refine_last=refine[-1], ratios_2_5=ratios[:4], trend=opt["trend"], slopes=slopes, held=ks_held)
         print(f"step {step}: D {mp.nstr(D, 12)}, pivots {pmin:.1e}..{pmax:.1e}, |z_1| {norms[1]:.2e}, |z_N| {norms[N]:.2e}, ratios 2-5 "
               + " ".join(f"{r:.1f}" for r in ratios[:4] if r) + f", a_max {a_max:.3f}, {t_coef:.0f} s", flush=True)
         converged = False
@@ -138,7 +201,7 @@ def main():
             sn = mk(Dn)
             segs_n = segs
             sn.set_segs(segs_n)
-            spn = wrap(sn)
+            spn = wrap_at(sn, Dn)
             Fh, Fl = spn.residual(ph, pl)
             Fp = float(rnorm(Fh, Fl))
             if np.isfinite(Fp) and Fp <= 1e-6:
@@ -172,6 +235,9 @@ def main():
             print("stopped: no convergence after three halvings", flush=True)
             break
         D, zh, zl, s, sp, segs = Dn, ch, cl, sn, spn, segs_n
+        # re-base the trend on the new state (its harmonics sit on the trend's values at D, to the corrector's floor)
+        base_coeffs = band_coeffs(zh[:M], zl[:M], M, ks_held)
+        n0 = float(D) - 2.0
         save(os.path.join(out, f"anm_pin{kf}_D{float(D):.4f}.npz"), zh, zl, dict(D=float(D), D_str=str(D), M=M, nodes=nodes, kt=kt, kc=kc,
                                                                                   ks=ks, kfreeze=kf, pin_held=ks_held, N=N, a=a, source=opt["state"]))
         a = min(2 * a, opt["h_max"])          # the next step may grow again
