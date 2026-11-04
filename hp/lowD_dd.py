@@ -31,6 +31,7 @@ max |dDelta/dF| per block, the series tails, the linearised Delta correction, an
 as hp/data/lowD_states/<tag>_D<D>_M<M>.npz.
 """
 import argparse
+import hashlib
 import json
 import os
 import sys
@@ -169,6 +170,32 @@ def load_avg():
         return None
 
 
+def start_fingerprint(zh, zl, segs=None):
+    """sha256 of a solve's start (both words of the state, and the step plan handed in, if any): a checkpoint is resumed
+    only by the solve that wrote it, never by a later attempt at the same (D, M) from another start (notes/LOW_D.md 12)"""
+    h = hashlib.sha256()
+    h.update(np.ascontiguousarray(zh, dtype=np.float64).tobytes())
+    h.update(np.ascontiguousarray(zl, dtype=np.float64).tobytes())
+    h.update(json.dumps(segs, default=float).encode() if segs is not None else b"own plan")
+    return h.hexdigest()[:16]
+
+
+def resume_checkpoint(ckpt, fp, log, mutate=False):
+    """(zh, zl, meta) of the checkpoint ckpt if it was written from the start with fingerprint fp, else None; a
+    checkpoint from another start (or from before fingerprints) is renamed to *_stale.npz and kept. mutate: the former
+    rule, any checkpoint resumed (the control of test_ckpt_resume.py)"""
+    if not os.path.exists(ckpt):
+        return None
+    zh, zl, mc = load(ckpt)
+    if mutate or mc.get("start") == fp:
+        return zh, zl, mc
+    stale = ckpt[:-len(".npz")] + "_stale.npz"
+    os.replace(ckpt, stale)
+    log(f"checkpoint {ckpt} is from another start (its start {mc.get('start')}, this one {fp}): set aside as {stale}; "
+        "solving from this start")
+    return None
+
+
 def solve_point(D, M, zh, zl, src, a, nodes, outdir, log, segs=None):
     """one (D, M) solve with checkpoints; returns (converged, zh, zl). segs: the Taylor step points to use (default:
     planned from the start z with --tol_step, --hmax; a checkpoint's own plan takes precedence on resume)"""
@@ -179,12 +206,14 @@ def solve_point(D, M, zh, zl, src, a, nodes, outdir, log, segs=None):
         log(f"D {D} M {M}: already converged ({done}); skipped")
         return True, zh, zl
     ckpt = os.path.join(outdir, f"{a.tag}_D{D:.4f}_M{M}_ckpt.npz")
-    meta_c = dict(D=D, M=M, nodes=nodes, kt=a.kt, kc=a.kcs, ks=a.ks)
-    if a.resume and os.path.exists(ckpt):
-        zh, zl, mc = load(ckpt)
+    fp = start_fingerprint(zh, zl, segs)
+    meta_c = dict(D=D, M=M, nodes=nodes, kt=a.kt, kc=a.kcs, ks=a.ks, start=fp)
+    res = resume_checkpoint(ckpt, fp, log) if a.resume else None
+    if res is not None:
+        zh, zl, mc = res
         log(f"resuming from checkpoint {ckpt} (iteration {mc.get('it')})")
     s = make_solver(D, M, nodes=nodes, kt=a.kt, kc=a.kcs, ks=a.ks, threads=a.threads)
-    if a.resume and os.path.exists(ckpt) and mc.get("segs"):
+    if res is not None and mc.get("segs"):
         segs = mc["segs"]             # keep the step plan of the interrupted run (the residual depends on it)
     s.set_segs(segs or s.plan(zh, zl, a.tol_step, a.hmax))
     meta_c["segs"] = s.get_segs()
@@ -192,7 +221,7 @@ def solve_point(D, M, zh, zl, src, a, nodes, outdir, log, segs=None):
     F0 = float(np.abs(np.asarray(fh) + np.asarray(fl)).max())
     log(f"D {D} M {M}: L {s.size}, steps {sum(len(g) - 1 for g in s.get_segs())}, start |F| {F0:.1e}")
     hist = []
-    if a.solver == "dn" and not (a.resume and os.path.exists(ckpt)):
+    if a.solver == "dn" and res is None:
         # deflated phase only (the weakest w directions removed from the step), then plain Newton below
         zh, zl, hist = deflated_newton(s, zh, zl, tol=a.tol, it_max=a.dn_its, w=a.w, verbose=True, jac=a.jac)
         save(ckpt, np.asarray(zh), np.asarray(zl), dict(meta_c, it=len(hist)))

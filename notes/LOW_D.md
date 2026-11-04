@@ -397,3 +397,40 @@ still in `T100-win2/states/`. The predictor start has never been solved, and the
 pivot drop" is not established. T100 also ran at `--threads 4` (the 2026-11-03 02:15 UTC command), where its folder's
 README says 6. Found by the code analysis of [LOW_D_SPEEDUP.md](LOW_D_SPEEDUP.md); before any rerun the stale
 checkpoint is moved aside, and `solve_point` should refuse a checkpoint whose plan is not the start's.
+
+## 13. T105: thread scaling on win2 and the leg restarted from its predictor (procedure, 2026-11-04 06:10 UTC)
+
+Written before the run. Steps 1 and 2 of the plan in [LOW_D_SPEEDUP.md](LOW_D_SPEEDUP.md). Machine win2, from `hp\`
+of the t98 worktree with venv-hp, after `git pull --ff-only` in it and in the raw clone (main has the resume rule of
+section 12 in `hp/lowD_dd.py`, Python only, no rebuild). Output folder `T105-win2/` of the raw-data repository.
+
+**A. The resume rule.** `python test_ckpt_resume.py` exits 0 ("all 5 cases pass") and `python test_ckpt_resume.py
+--mutate` exits 1 (the former rule fails cases 2–4). Otherwise stop.
+
+**B. Thread scaling and bit identity, beside T104 and the T99 nodes.** For N = 4, 8, 12, 16 in turn:
+`python highm_check.py profile --M=320 --threads=N --reps=1 --no_dtau_split --out=<T105>\profile_M320.jsonl`, with a
+`util_report.py` line after each. Reference: T98 measured 384 s per call at 4 threads and 240 s at 8 on an 825-step
+plan (`T98-win2/hp_build/profile_M320.jsonl`). Then `python highm_check.py scaled
+--compare=..\..\choptuik-large-d-raw\T81\scaled_main.json --Ms=192,256 --threads=N` at N = 4 and 16: exit 0, the
+control firing. A differing hash stops the task (a result that depends on the thread count is a finding, not a
+setting to choose). The leg's thread count N* is the smallest tested N whose `newton_mixed` time is within 1.1× of the
+fastest.
+
+**C. The leg from D 3.044375.** `python lowD_highM_leg.py ..\..\choptuik-large-d-raw\T100-win2\down25e.jsonl.progress.json
+<T105>\down25f.jsonl --targets 3.04375,3.0425,3.04,3.0375,3.035,3.0325,3.03,3.0275,3.025,3.0225,3.02,3.0175,3.015,3.0125,3.01,3.0075,3.005
+--states data\lowD_states,..\..\choptuik-large-d-raw\T100-win2\states,..\..\choptuik-large-d-raw\T82-win\states
+--killed` must print (a dry run on the Mac on the pushed files) "M 320/384 (helper 256), last D 3.044375, targets
+[3.04375, 3.0425, ...], 9 / 4 history states, nodes 0.000157..0.975"; exit 1 stops the task. Then T100's down25e
+command with `--threads N*`, `--out <T105>\down25f.jsonl`, `--points <T105>\down25f_points.jsonl` and `--states
+<T105>\states`, log `<T105>\down25f.log`. Its first lines read "resuming: M 320/384, last D 3.044375" and "--- D 3.04375
+(from 3.044375)"; the M 256 helper takes its one iteration and fails, as at every point since 3.0475; the M 320
+predictor should read |F| 6.60×10⁻⁴ on its own 6623-step plan (as in down25e, the same history), a different value is
+posted, not a stop.
+
+**What it decides.** Pass: the M 320 solve at D 3.04375 converges from the predictor, and the leg continues by itself
+(M 384, then the targets; the script halves a failed step down to 0.0005). Then the stall of section 12 was the stale
+checkpoint. Fail: two consecutive M 320 or M 384 steps with a line-search factor ≤ 0.5 while |F| is above 10⁻⁴ (the
+rule of the 2026-11-03 02:15 UTC entry): stop the tree, post the lines, no relaunch; then the branch or the Jacobian near
+D 3.044 is the question, and the next attempt is the exact Taylor predictor (LOW_D_SPEEDUP.md step 4). Other stops:
+the script's own, and a process above 8 GB. Expected cost: A and B about 1.5 h; the first point 3–8 h by N*; the 17
+targets with their halvings several days.
