@@ -521,3 +521,16 @@ stored states' tangent and the f64 LU solve all pass, and GMRES at 10⁻²⁶ ru
 Its control (the dimension frozen, the horizon block's tangent dropped) fails links b, c and d as it must. `anm_lowd.py`
 now stops at 10⁻²⁰ and records each order's changes. The same check at M 320 on the fine-plan states, its control, and
 on the pilot's base are T106 E; the pilot is rerun from the `p1` state after it.
+
+**E (2026-11-04 13:00–16:50 UTC, win2; `T106-win2/jet_lowd_check_*.log`).** Run 1, on the fine-plan states (base the
+`p1` file at 3.045, others the `p1` files at 3.04375, 3.044375 and 3.0475), passes links a–d and the f64 LU solve: its
+pivots are 5.1×10⁻⁵ to 52, |J x + F_1|/|F_1| = 1.6×10⁻¹³, and |x − t|/|t| = 1.0×10⁻⁵ against the bound 2×10⁻³. GMRES at
+10⁻²⁰ converges in 4 products with and without the cut, to the same tangent (|J x + F_1|/|F_1| 1.9×10⁻¹⁵, dΔ/dD
+7.945125). At 10⁻²⁶ it reaches a change of 4.4×10⁻²⁶ and then goes to NaN, the M 48 pattern. Run 2, the control, fails
+b, c, c_cut and d, and a passes. Run 3, on the pilot's coarse base, passes a–d, but all four solve links fail, where the
+entry expected only the 10⁻²⁶ one, as at M 48. That expectation was wrong, and the run is recorded as it came. The f64
+LU there (smallest pivot 3.8×10⁻¹¹) gives |x| = 4.6×10⁹ against the tangent's 4.8×10⁴. Each GMRES variant reaches |J x +
+F_1|/|F_1| ≈ 10⁻¹¹ within 40 products, while |x| stays 7×10⁸ to 1.2×10⁹, 1.5–2.5×10⁴ times the tangent away from it. On
+that base the first-order equation's residual does not pin its solution, and the pilot's |z_1| = 2.7×10⁸ is that
+failure. The two causes are separate: the coarse base (run 3), and the 10⁻²⁶ tolerance even on the good base (run 1).
+The pilot reruns from the `p1` state with 10⁻²⁰ (the comms entry after this commit), under the criteria of D.
