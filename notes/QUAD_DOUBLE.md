@@ -544,7 +544,7 @@ In "The double-double solver" list:
 >   part, the square root near the ends of the exponent range). Against exact arithmetic they err by at most
 >   2.1×2⁻²⁰⁹ (63 digits). They cost 8–29 times double-double per operation and 14–17 times in sums of products. A
 >   quad-double residual would cost about 7 times the double-double one at the same orders
->   ([notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md); `hp/qd_check.py`).
+>   ([notes/QUAD_DOUBLE.md](QUAD_DOUBLE.md); `hp/qd_check.py`).
 
 [^qd]: Y. Hida, X. S. Li, D. H. Bailey, *Algorithms for quad-double precision floating point arithmetic*, ARITH-15
 (2001).

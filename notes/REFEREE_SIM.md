@@ -1,6 +1,6 @@
 # Referee simulation: "Choptuik's echo period at large dimension"
 
-Audit of [paper/main.tex](../paper/main.tex) (the build of 2026-10-21) and of the README statements it summarises. It
+Audit of [paper/main.tex](https://github.com/nmoinvaz/choptuik-large-d/blob/7028a4b5bd4d3509141737ab09435f232ee5fa94/paper/main.tex) (the build of 2026-10-21) and of the README statements it summarises. It
 follows the `referee-sim` protocol of the BootLoops skills repository. The closed-form statements get a separate
 `constant-recognition` audit in §4.
 

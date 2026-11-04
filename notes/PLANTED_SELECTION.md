@@ -846,7 +846,7 @@ A ring of fifteen or more zeros remains possible: the re-glued completions of se
 >   zeros, and those of the ring-free sums of σ₀…σ₁₄, lie at 0.99996–0.99999. Calibrated on planted functions, arg
 >   and G put the zero at 0.99992–0.99996 at thirteen orders but at 1.00004–1.00005 at fourteen. That shift is larger
 >   than either range, because the planted functions do not follow the real coefficients from one order to the next
->   ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md) §6). Taken together, **ω*/ω∞ = 0.99992–1.00005,
+>   ([notes/PLANTED_SELECTION.md](PLANTED_SELECTION.md) §6). Taken together, **ω*/ω∞ = 0.99992–1.00005,
 >   Δ∞ = 1.6439 ± 0.0001 (1.64381–1.64403) from the D = ∞ inner equations alone**. This is an estimator range over two
 >   orders, five plant shapes and four completions, not a bound, and it uses no input from the finite-D solutions.
 >   Their value, 1.643893746, lies inside it. The range assumes no zeros besides x₀ within |x| ≈ 12. A ring of fifteen
@@ -864,7 +864,7 @@ A ring of fifteen or more zeros remains possible: the re-glued completions of se
 > 1.9×10⁻⁵ above 1 if the zero is exactly at 1, and 0.4–1.4×10⁻⁵ if it is in the band. The measured crossing is
 > 2.6×10⁻⁵ above 1, nearer the first. The dashed trend of k = 4–13 extrapolated to 2.57×10⁻⁵. The same model had missed
 > k = 13 by 1.4×10⁻⁵, so this favours a zero at 1 without excluding the band. At fourteen orders the calibrated range
-> moved up and now contains 1 ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md) §6).
+> moved up and now contains 1 ([notes/PLANTED_SELECTION.md](PLANTED_SELECTION.md) §6).
 
 **Smaller README changes the new data imply:**
 

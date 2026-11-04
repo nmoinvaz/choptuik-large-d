@@ -3,7 +3,8 @@
 Review of 2026-10-21, following the `lit-review` protocol of the BootLoops skills repository, with the
 `reading-contract` rules.
 
-- **Scope.** The novelty and priority claims in [README.md](../README.md), [paper/main.tex](../paper/main.tex) and
+- **Scope.** The novelty and priority claims in [README.md](../README.md),
+  [paper/physics/main.tex](../paper/physics/main.tex), [paper/math/main.tex](../paper/math/main.tex) and
   [PROOF.md](../PROOF.md), plus one claim in [GAMMA.md](../GAMMA.md) that backs Proposition 5.
 - **No edits to the claims.** Wording is proposed in §2 for the integrator.
 - **How the papers were read.** Every statement about a paper's content comes from a page opened in this session

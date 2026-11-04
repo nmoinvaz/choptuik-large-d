@@ -4,7 +4,7 @@ Review of 2026-10-21 of the two papers split from the combined draft:
 
 - **physics**: [paper/physics/main.tex](../paper/physics/main.tex) (dss_physics.pdf, 14 pages);
 - **math**: [paper/math/main.tex](../paper/math/main.tex) (dss_math.pdf, 30 pages);
-- **old**: the combined draft [paper/main.tex](../paper/main.tex).
+- **old**: the combined draft [paper/main.tex](https://github.com/nmoinvaz/choptuik-large-d/blob/7028a4b5bd4d3509141737ab09435f232ee5fa94/paper/main.tex).
 
 References below are `file:line`, with `phys:` for paper/physics/main.tex, `math:` for paper/math/main.tex and `old:`
 for paper/main.tex. No paper was edited. Every fix is a proposal for the coordinator.

@@ -3,7 +3,7 @@
 Audit of 2026-10-21. It follows the `ref-check` protocol of the BootLoops skills repository (report, then fix), with the
 `reading-contract` rules for claim checks. Scope:
 
-- the 18 `\bibitem` entries of [paper/main.tex](../paper/main.tex);
+- the 18 `\bibitem` entries of [paper/main.tex](https://github.com/nmoinvaz/choptuik-large-d/blob/7028a4b5bd4d3509141737ab09435f232ee5fa94/paper/main.tex);
 - the 16 bullets (17 works) of the README's References list;
 - the 20 works in [PROOF.md](../PROOF.md)'s References and Precedents table.
 

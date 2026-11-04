@@ -571,7 +571,7 @@ For the end of "Relation to Ecker, Ecker & Grumiller" (after the paragraph on th
 > So, for a moving front, β²x² = 1 is not an apparent horizon. Trapping needs the front to come to rest, as it does
 > when the shifted solution's front stops at r² = 2n|σ₀|. The exact CSS equations at n = 100–6400 bear this out.
 > Details, checks and the comparison with the Roberts and Brady self-similar families:
-> [notes/SUPERCRITICAL.md](notes/SUPERCRITICAL.md).
+> [notes/SUPERCRITICAL.md](SUPERCRITICAL.md).
 
 ## Their supercritical branch (from the README)
 

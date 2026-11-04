@@ -373,7 +373,7 @@ In "The double-double solver" list, after "Exact Jacobian":
 >   f64 vector lanes (four columns per pass over the base trajectory) and factors it in f64. Newton then converges
 >   linearly to the same solution, with a contraction of about 10⁻⁷ per step and at most one extra step. A step is
 >   about 9–10 times faster at M = 48–80, and a whole solve 7–9 times
->   ([notes/MIXED_PRECISION.md](notes/MIXED_PRECISION.md); `hp/lowD_dd.py --jac f64`).
+>   ([notes/MIXED_PRECISION.md](MIXED_PRECISION.md); `hp/lowD_dd.py --jac f64`).
 
 In the Layout block under `hp/`, change two lines and add three:
 
@@ -389,7 +389,7 @@ In the paragraph on the Newton step's cost, replace "tangents that share one pri
 implemented" with:
 
 > tangents that share one primal pass are implemented for the f64 Jacobian of the mixed-precision Newton step (about
-> 1.2–1.35× on top of the f64 lanes; [notes/MIXED_PRECISION.md](notes/MIXED_PRECISION.md))
+> 1.2–1.35× on top of the f64 lanes; [notes/MIXED_PRECISION.md](MIXED_PRECISION.md))
 
 ## 8. Large D (added by the coordinator, 2026-10-22)
 

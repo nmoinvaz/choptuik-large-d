@@ -571,7 +571,7 @@ built.
 >   the same steps as the dense path to that path's rounding at M ≤ 128, where every other result is unchanged bit for
 >   bit. The exact double-double Jacobian, the Levenberg–Marquardt fallback and γ stay at M ≤ 128. At D = 3.7, Δ
 >   changes by −3.4×10⁻¹¹, −3.2×10⁻¹⁵ and −1.6×10⁻¹⁸ from M = 96 to 128, 160 and 192
->   ([notes/HIGH_M.md](notes/HIGH_M.md)).
+>   ([notes/HIGH_M.md](HIGH_M.md)).
 
 **(b)** In the "Below D = 4" caption, replace "cross the double-double kernel's limit of 128 near D = 3.4, which is
 where this computation stops; near D = 3 they run into the hundreds." by:
@@ -579,7 +579,7 @@ where this computation stops; near D = 3 they run into the hundreds." by:
 > pass 128 near D = 3.4 and run into the hundreds near D = 3. The kernel now runs to M = 384: a pilot continuation in
 > double-double reached D = 3.15, Δ = 2.96131964246 (the change from M = 192 to 256 is 9×10⁻¹²), where M = 160
 > gives Δ to 10⁻⁸; calibrated on it, the model puts D = 3.05 at M = 256–384 and 9–25 more hours on two cores
-> ([notes/HIGH_M.md](notes/HIGH_M.md)).
+> ([notes/HIGH_M.md](HIGH_M.md)).
 
 **(c)** In "A formula for 3 < D ≤ 4", replace "and match our own double-double values at D = 3.7–4, which the fit
 never saw, to 4×10⁻⁶ and 10⁻⁷" by:

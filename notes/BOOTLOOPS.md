@@ -144,7 +144,7 @@ Items 1, 2 and 4 are concrete and cheap. Item 3 is moderate. Items 5–7 are min
      - F₃/F₁, and the M = 3 and M = 5 values of Δ.
 
      Writing our own keeps the untrusted code out. The tex comment-swallow gate (`paper_seams.py`) is not worth it here:
-     [paper/main.tex](../paper/main.tex) has 7 comment lines.
+     [paper/main.tex](https://github.com/nmoinvaz/choptuik-large-d/blob/7028a4b5bd4d3509141737ab09435f232ee5fa94/paper/main.tex) has 7 comment lines.
 4. **A python-flint footgun, verified here.** Medium value, trivial cost.
    - **The claim.** The BALLER manual ([lines 286–289][baller-manual]) says `x**n` on a zero-containing arb ball returns
      NaN.

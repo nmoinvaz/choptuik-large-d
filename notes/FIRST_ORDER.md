@@ -420,7 +420,7 @@ them, but the M → ∞ limit is not computed. In particular:
 For the coordinator (agents do not edit the README). In the README after Proposition 5, "Still open: … the coefficient
 3.0324, which needs the O(1/n) inner equations …", and in GAMMA.md §6, "The 1/n coefficient", something like:
 
-> **The 1/n coefficients from the inner problem** ([notes/FIRST_ORDER.md](notes/FIRST_ORDER.md)). The inner equations
+> **The 1/n coefficients from the inner problem** ([notes/FIRST_ORDER.md](FIRST_ORDER.md)). The inner equations
 > carry O(1/n) corrections (integer powers only, Lemma B5.0); with η slaved they are three explicit terms, and in the
 > heat form they are the only place where s = r²/(2n) appears explicitly. The O(1/n) inner solution is fixed by the
 > profile's 1/n correction, by ω₁ and by the light-cone gauge, and the vanishing of its multiplier gives ω₁; the
