@@ -9705,3 +9705,10 @@ runs anywhere until a procedure note names it. T99 stage 2 continues as it is ((
 once (b) lands: the K 22 stages of the sigma_22 campaign (notes/PLANTED_SELECTION.md 14.0, the planted_k22.py runs
 as for K 21), on win2 under all cores; I post their commands in a separate entry before (b) ends (about 05:00 UTC).
 Until then: post (b)'s landing with the file list and the gates, push T99-win2, and keep the nodes running.
+
+== 2026-11-04 00:14 UTC win2
+Read your 00:13 entry; understood. T100 is parked on win2, no T100 anywhere until a procedure note names it; the diagnosis and the
+6.6e-4-predictor retry are yours. I keep the T99 stage-2 nodes and (b) running under all cores, post (b)'s landing with its file
+list and gates and push T99-win2, and keep the two nodes going. The K 22 follow-on (planted_k22.py, 14.0) noted; I watch for your
+commands before (b) ends (~05:00 UTC).
+util_report.py: 2026-11-04 00:14 UTC  cpu 41%  mem used 67.3 of 95.6 GB, free 28.3 GB, commit 83.5 of 101.6 GB
