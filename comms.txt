@@ -10301,3 +10301,26 @@ converged-False flags showed. The 4 threads are freed and go back to T105 C and 
 diagnostic in your next entry (feat/jet-all-sizes, Python only, no rebuild -- I will run it from choptuik-t106 / venv-t106).
 T105 C: down25f D 3.04375 M 384 converging (|F| 1.30e-05 -> 1.99e-10, lam 1), pair expected within ~1-2 h; I post it with the
 criterion-4 Delta. Nodes k 43. util_report.py: 2026-11-04 12:46 UTC  cpu 83%  mem used 64.9 of 95.6 GB, free 30.7 GB, commit 72.4 of 101.6 GB
+
+== 2026-11-04 13:00 UTC cloud to win2
+T106 E: the diagnostic, 4 threads, from hp\ of ..\choptuik-t106 with venv-t106. First: git fetch origin, git checkout --detach
+origin/feat/jet-all-sizes (e8e7b6f; it changes hp/jet_lowd_check.py and hp/anm_lowd.py only, so the a2f5d9a build stands, no
+rebuild). Each run writes its log into T106-win2\; push after each run; stops: a traceback (post it), a process above 8 GB.
+Run 1, the fine-plan states (the leg's p1 files):
+  python jet_lowd_check.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T106-win2\jet_lowd_check.jsonl --threads 4
+    --base T82-win/states/lowDhm_x0.000157-0.975_p1_D3.0450_M320.npz
+    --others T105-win2/states/lowDhm_x0.000157-0.975_p1_D3.0438_M320.npz,T100-win2/states/lowDhm_x0.000157-0.975_p1_D3.0444_M320.npz,T82-win/states/lowDhm_x0.000157-0.975_p1_D3.0475_M320.npz
+    > ..\..\choptuik-large-d-raw\T106-win2\jet_lowd_check_p1.log 2>&1
+Run 2, its control: the same with --mutate --no_gmres, log jet_lowd_check_p1_mutate.log. Links b, c, c_cut and d must FAIL.
+Run 3, the pilot's base: the same as run 1 with --base T82-win/states/lowDhm_x0.000157-0.975_D3.0450_M320.npz and no --others
+  (the defaults), log jet_lowd_check_coarse.log.
+Exit 1 is expected in runs 1 and 3: link e_gmres_cut_1e-26 (the pilot's GMRES tolerance) failed at M 48 as well. Post every
+line that starts with "(" and the "failed links" line of each run. Expected cost: runs 1 and 3 about 1 h each, run 2 about 15
+min.
+Why: at D 4, M 48 (T106-mac/ of the raw-data repository) every link passes except GMRES at step_tol 1e-26, whose changes go
+1, 6.9e-8, 6.4e-16, 3.1e-24 and then to NaN, while at 1e-20 it converges in 4 products to the stored states' tangent. The
+pilot's base was also the wrong file, my error in LOW_D.md 14: the plain D3.0450 file carries a coarse 2348-step plan, on which
+the f64 LU's smallest pivot is 3.8e-11 (down25_points.jsonl), while the p1 file (5082 steps) has 5.1e-5. A correction to my
+12:44 entry: |z| in anm_lowd.py is the max norm, so the comparison is |z_1| 2.675e+08 against max|dz/dD| 1.4e4 from the
+states, not 4.8e4 (that was the 2-norm). The conclusion stands.
+After run 3: post, then wait for my next entry (the pilot's rerun). T105 C and the nodes continue unchanged.
