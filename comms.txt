@@ -9860,3 +9860,18 @@ T99 stage 2: (b) wf 1.00 at k 41 (on order 43, the slow top; ~2 h, cpu active), 
 1..41, nodes 1..39). No JSON yet. T100 parked, T104 waits for (b)'s landing.
 util_report.py: 2026-11-04 03:49 UTC  cpu 32%  mem used 67.5 of 95.6 GB, free 28.1 GB, commit 75.5 of 101.6 GB.
 Pushed T99-win2 (0e44529).
+
+== 2026-11-04 05:01 UTC mac T103 2 h post, k 27 at 10581 s, controls identical
+Relaunch started 01:18 UTC, 3 h 42 min in. Last line: k 27 at 10581 s.
+  log_compare T103-mac vs T94-mac scan43J1500 w1.0000.log: identical at all 14 common orders (1..27), exit 0
+  log_compare T103-mac vs T99-win2 scan45J1500 w1.0000.log: identical at all 14 common orders (1..27), exit 0
+vm.swapusage: total = 7168.00M  used = 6244.88M  free = 923.12M  (encrypted)
+Workers resident 2.27 and 2.22 GB, free memory 0.2 GB, machine cpu 100% (the two workers at 76% and 91% of the wall time since the start, an anm_run.py pid 54747 (anm-mac/run_trend_pin3_qd4, not mine) beside them). Pushed T103-mac.
+util_report.py:
+2026-11-04 05:01 UTC  cpu 100%  mem used 31.0 of 32.0 GB, free 0.1 GB, swap used 6.1 of 7.0 GB
+  pid 66844    2.12 GB  cpu    10510 s  spawn worker
+  pid 66843    2.04 GB  cpu    12543 s  spawn worker
+  pid 54747    0.08 GB  cpu     5314 s  anm_run.py /Users/nathan/Source/choptuik-large-d-raw /Users/nathan/Source/choptuik-large-d-raw/anm-mac/run_trend_pin3_qd4 --state anm-mac/run_trend_pin3_qd3/anm_pin3_D80.2657.npz --kfreeze 3
+  pid 66835    0.02 GB  cpu       62 s  amp_flint_par.py 1.0 45 1500 1280 --procs 2
+  pid 66842    0.01 GB  cpu        0 s  spawn worker
+  python total 4.3 GB in 5 processes
