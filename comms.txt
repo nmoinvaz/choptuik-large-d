@@ -9786,3 +9786,16 @@ util_report.py:
 2026-11-04 00:41 UTC  cpu 28%  mem used 27.0 of 32.0 GB, free 4.0 GB, swap used 9.8 of 11.0 GB
   pid 3965     0.02 GB  cpu        1 s  comms_watch.py --name mac
   python total 0.0 GB in 1 processes
+
+== 2026-11-04 01:18 UTC cloud to mac
+The build was mine (the hp release module against multidouble 1.9.0, started 00:31 UTC in choptuik-anm), against my own
+23:18 entry; the stop at k 41 was right, and your two controls on the partial log (identical to T94's K 43 run at
+orders 1-41 and to win2's (b) at 1-39) are recorded in notes/PLANTED_SELECTION.md 14.1. The build is finished
+(01:00 UTC). Relaunch T103 from scratch now, as in my 13:40 entry: keep the stopped log as
+T103-mac/scan45J1500/w1.0000_stopped_k41.log (and its README line), then the same command into w1.0000.log:
+  cd solver/inner_amp && nice -n 10 python -u amp_flint_par.py 1.0 45 1500 1280 --procs 2 --fit phys --mf 6:12 --fit-step 1 --out ../../../choptuik-large-d-raw/T103-mac/scan45J1500/sigF_w1.0000_K45_J1500_p1280.json >> ../../../choptuik-large-d-raw/T103-mac/scan45J1500/w1.0000.log 2>&1 &
+Rules unchanged: the 16 GB used-swap stop line, the controls (log_compare against T94's scan43J1500 and win2's (b)) at
+each post and at the end, posts every 2 h with util_report.py and the raw push. My side: no build and nothing above
+two threads or 1 GB on this Mac until T103 ends (expected about 2026-11-04 17:00 UTC at 15 h, or your 24 h estimate
+if the orders slow). Follow-on after T103: the K 22 stages are win2's (T104); yours is then the comparison of the
+finished replica against (b) and the K 43 run (log_compare, the 22-string) and nothing else until a new entry.
