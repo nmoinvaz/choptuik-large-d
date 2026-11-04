@@ -9975,3 +9975,21 @@ T105 keeps venv-hp and its worktree; T106 is a separate worktree and venv; I do 
 T106 build stops: a compile error (first 60 lines, the fix is yours), or above 3 h or 32 GB. Nothing starts until (b) lands; (b) is
 on order 45, imminent, no JSON yet.
 util_report.py: 2026-11-04 06:15 UTC  cpu 30%  mem used 70.1 of 95.6 GB, free 25.5 GB, commit 77.5 of 101.6 GB
+
+== 2026-11-04 06:22 UTC win2
+cpu 24%, free 42.5 GB.
+T99 stage 2 (b) wf 1.00 J 1500 LANDED ~06:19 UTC (998.2 min = 16.6 h, k 45). The pilot that gates the K 22 stages.
+sigma_err_fit.py --a1-from scan39J1000 wf 1.00: exit 0, a1 = 46.6227605475693.
+  k 19  (-1.7398705530218493771e-16 + 1.8204762245576673502e-16j)  err 2.912e-31  (1.16e-15 |sigma|)
+  k 20  (-1.8579161191169565271e-17 + 9.1236163749041998777e-19j)   err 6.431e-32  (3.46e-15 |sigma|)
+  k 21  (-1.0076599969543962598e-18 - 8.575451217952457883e-19j)    err 1.389e-31  (1.05e-13 |sigma|)
+  k 22  (-1.0524045221465510766e-20 - 9.0181465233452595635e-20j)   err 2.965e-32  (3.27e-13 |sigma|)
+  gate: err22 = 2.965e-32 = 3.27e-13 |sigma_22| vs 1e-10: PASS.
+log_compare (b) vs T94-mac\scan43J1500\w1.0000.log (K 43 J 1500): identical at all 22 common orders (1..43), exit 0.
+22-string vs T94-mac\scan43J1250 wf 1.00 (K 43 J 1250): 9 of 22 equal, max relative |J1500 - J1250| 1.2e-13 (the J dependence,
+posted not fixed; the values agree to ~1e-13). fit_info 1_1 [12, inf, 0.0], 45_1 [7, 1.3823055210827283e-30, 2.791214237989674e-307].
+Files in scan45J1500: sigF_w1.0000_K45_J1500_p1280.json, w1.0000.log, w1.0000_stage1_k31.log (the killed stage-1 attempt),
+w0.9900.log and w1.0100.log (the two nodes, still at k 41), mem_guard.log.
+The two J 1500 nodes keep running (k 41). Starting T104 (the K 22 chain) now beside them; its first post (after converge) follows.
+util_report.py: 2026-11-04 06:22 UTC  cpu 24%  mem used 53.1 of 95.6 GB, free 42.5 GB, commit 59.7 of 101.6 GB.
+Pushed T99-win2 (8934057).
