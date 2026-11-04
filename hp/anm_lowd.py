@@ -7,7 +7,7 @@ and at --target, and Newton from the target's prediction. Pilot T106, procedure 
 
     python3 anm_lowd.py RAWDIR OUTDIR [--state T82-win/states/lowDhm_x0.000157-0.975_D3.0450_M320.npz]
         [--checks T100-win2/states/lowDhm_x0.000157-0.975_D3.0444_M320.npz,T82-win/states/lowDhm_x0.000157-0.975_D3.0475_M320.npz]
-        [--target 3.04375] [--N 15] [--threads 8] [--newton_its 6]
+        [--target 3.04375] [--N 15] [--threads 8] [--newton_its 6] [--step_tol 1e-20]
 
 RAWDIR is a clone of the raw-data repository; OUTDIR lies in a task folder of it (raw_out.py). Writes
 OUTDIR/anm_lowd.jsonl (one record per stage, flushed as it goes) and, when Newton converges at --target, its state.
@@ -43,8 +43,10 @@ def solver_for(meta, D, threads, segs=None):
     return s
 
 
-def coefficients(s, zh, zl, N, rec, mutate=0, step_tol=1e-26, max_products=40):
-    """z_1..z_N at (zh, zl) with the LU stored in s; per order the GMRES products, its relative last change and time"""
+def coefficients(s, zh, zl, N, rec, mutate=0, step_tol=1e-20, max_products=40):
+    """z_1..z_N at (zh, zl) with the LU stored in s; per order the GMRES products, its relative changes and time.
+    step_tol must lie above the solve's double-double floor: past it GMRES's basis degenerates and the iterate
+    leaves the solution (at 1e-26, D 4, M 48: changes 1, 7e-8, 6e-16, 3e-24, then NaN; hp/jet_lowd_check.py)."""
     Zh, Zl = [zh], [zl]
     for k in range(1, N + 1):
         t0 = time.time()
@@ -56,7 +58,7 @@ def coefficients(s, zh, zl, N, rec, mutate=0, step_tol=1e-26, max_products=40):
         xh, xl, info = gmres_refine(s, zh, zl, bh, bl, max_products=max_products, step_tol=step_tol)
         Zh.append(np.asarray(xh)); Zl.append(np.asarray(xl))
         rec.append(dict(k=k, norm=float(dd_norm(xh, xl)), rhs=float(dd_norm(bh, bl)), products=info["products"],
-                        converged=bool(info["converged"]), last_change=float(info["changes"][-1]) if info.get("changes") else None,
+                        converged=bool(info["converged"]), changes=[float(c) for c in info.get("changes", [])],
                         t_jet=round(t1 - t0, 1), t_solve=round(time.time() - t1, 1)))
         print(f"  z_{k}: |z| {rec[-1]['norm']:.3e}, |rhs| {rec[-1]['rhs']:.2e}, {info['products']} products, "
               f"converged {info['converged']}, {t1 - t0:.0f} + {time.time() - t1:.0f} s", flush=True)
@@ -84,6 +86,7 @@ def main():
     ap.add_argument("--newton_its", type=int, default=6)
     ap.add_argument("--tol_step", type=float, default=1e-32)
     ap.add_argument("--hmax", type=float, default=0.05)
+    ap.add_argument("--step_tol", type=float, default=1e-20)
     ap.add_argument(FLAG, action="store_true", help=HELP)
     a = ap.parse_args()
     require_raw(a.out)
@@ -110,7 +113,7 @@ def main():
     Hc, Lc = s.residual_jet([zh], [zl], 2, JET_MUT_FREEZE_N)
     ctl = float(dd_norm(np.asarray(Hc[1]), np.asarray(Lc[1])))
     orders = []
-    Zh, Zl = coefficients(s, zh, zl, a.N, orders)
+    Zh, Zl = coefficients(s, zh, zl, a.N, orders, step_tol=a.step_tol)
     ratio = ctl / orders[0]["rhs"]
     norms = [float(dd_norm(zh, zl))] + [o["norm"] for o in orders]
     radii = [norms[k - 1] / norms[k] for k in range(2, len(norms)) if norms[k]]
