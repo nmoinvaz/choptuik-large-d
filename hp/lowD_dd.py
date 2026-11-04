@@ -43,7 +43,7 @@ os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
 import numpy as np  # noqa: E402
 
 sys.path.insert(0, HERE)
-from hpkernel.driver import (deflated_newton, delta_correction, load, lm_solve, make_solver, newton_solve, predict,  # noqa: E402
+from hpkernel.driver import (dd_add, deflated_newton, delta_correction, load, lm_solve, make_solver, newton_solve, predict,  # noqa: E402
                              renode, resample_z, save, seed_from_f64, weak_subspace, _normal_solve)
 
 NL = [0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6]
@@ -196,6 +196,34 @@ def resume_checkpoint(ckpt, fp, log, mutate=False):
     return None
 
 
+def chord_phase(s, zh, zl, tol, start_below, max_steps, log, mutate=0):
+    """Chord steps with the LU stored in s (the last Newton call's): one residual and one block solve each (s.chord), no
+    Jacobian. Starts only when max |F| at z is below start_below; a trial z + dz is taken when its max |F| is at most half
+    the current one, and the phase ends converged (max |F| < tol), at the first rejected trial, or after max_steps.
+    mutate (the controls of test_chord.py): 1, the step's sign flipped (every trial must be rejected); 2, flipped and
+    taken without the test (the guard removed). Returns zh, zl, records, converged."""
+    ch, cl, Fh, Fl = s.chord(zh, zl)
+    F = float(np.abs(np.asarray(Fh) + np.asarray(Fl)).max())
+    recs = []
+    if not F < start_below:
+        return zh, zl, recs, False
+    for c in range(max_steps):
+        if F < tol:
+            return zh, zl, recs, True
+        if mutate:
+            ch, cl = -np.asarray(ch), -np.asarray(cl)
+        th, tl = dd_add(zh, zl, ch, cl)
+        ch2, cl2, Fh2, Fl2 = s.chord(th, tl)
+        F2 = float(np.abs(np.asarray(Fh2) + np.asarray(Fl2)).max())
+        ok = F2 <= 0.5 * F or mutate == 2
+        recs.append(dict(chord=c, F=F, F_trial=F2, dz=float(np.abs(np.asarray(ch) + np.asarray(cl)).max()), accepted=ok))
+        log(f"    chord {c}: max|F| {F:.2e} -> {F2:.2e} {'taken' if ok else 'rejected'}")
+        if not ok:
+            break
+        zh, zl, ch, cl, F = th, tl, ch2, cl2, F2
+    return zh, zl, recs, F < tol
+
+
 def solve_point(D, M, zh, zl, src, a, nodes, outdir, log, segs=None):
     """one (D, M) solve with checkpoints; returns (converged, zh, zl). segs: the Taylor step points to use (default:
     planned from the start z with --tol_step, --hmax; a checkpoint's own plan takes precedence on resume)"""
@@ -228,12 +256,20 @@ def solve_point(D, M, zh, zl, src, a, nodes, outdir, log, segs=None):
     # plain Newton with backtracking, one iteration per call so that every accepted step is checkpointed
     for it in range(a.it_max):
         if hist and (hist[-1].get("accepted") or ("lam" not in hist[-1] and "piv" in hist[-1] and hist[-1]["F"] < a.tol)
-                     or "failed" in hist[-1]):
+                     or "failed" in hist[-1] or hist[-1].get("chord_converged")):
             break
         zh, zl, h1 = newton_solve(s, zh, zl, tol=a.tol, it_max=1, verbose=True, jac=a.jac)
         hist += h1
         if h1 and "lam" in h1[-1]:
             save(ckpt, np.asarray(zh), np.asarray(zl), dict(meta_c, it=len(hist)))
+        # optional (a.chord_from, default off): after a full step, chord steps with that step's LU while |F| halves
+        # each step (notes/LOW_D_SPEEDUP.md, step 3); the final LU refresh below then serves the sensitivities
+        if getattr(a, "chord_from", 0) and h1 and h1[-1].get("lam") == 1.0:
+            zh, zl, recs, conv = chord_phase(s, zh, zl, a.tol, a.chord_from, getattr(a, "chord_max", 20), log,
+                                             getattr(a, "chord_mutate", 0))
+            if recs:
+                hist.append(dict(chords=recs, chord_converged=conv, F=recs[-1]["F_trial"] if recs[-1]["accepted"] else recs[-1]["F"]))
+                save(ckpt, np.asarray(zh), np.asarray(zl), dict(meta_c, it=len(hist)))
         # optional fail-fast (a.stop_lam, default off): two damped steps in a row with line-search factor <= stop_lam
         # mean Newton is wandering in the weak directions (hp/lowD_highM.py; notes/HIGH_M.md section 5.4)
         lams = [h.get("lam") for h in hist if "lam" in h]

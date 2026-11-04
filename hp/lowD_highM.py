@@ -151,6 +151,8 @@ def main():
     ap.add_argument("--two_pass_above", type=float, default=1e-3, help="solve M_w or M_n in two passes when its best "
                     "start's |F| on the reused plan is above this (0: never)")
     ap.add_argument("--resume", action="store_true")
+    ap.add_argument("--chord_from", type=float, default=0.0, help="after a full Newton step with max |F| below this, "
+                    "chord steps with its LU while |F| halves each step (lowD_dd.chord_phase; 0, the default: off)")
     ap.add_argument("--helper_fallback", action="store_true", help="when the M_c helper fails, solve M_w from its own "
                     "predictor in two passes instead of failing the point (off: the point fails and the step is halved)")
     ap.add_argument("--helper_it_max", type=int, default=None, help="Newton iterations of the M_c helper (default "
@@ -210,7 +212,7 @@ def main():
         return argparse.Namespace(out=a.points, tag=tag or st["tag"], resume=True, kt=a.kt, kcs=kc, ks=ks, tol_step=a.tol_step,
                                   hmax=a.hmax, solver="newton", it_max=it_max or a.it_max, tol=tol or a.tol, accept=tol or a.accept,
                                   lm=0, jac="f64", threads=a.threads, svd=0, dn_its=2, w=24, stop_lam=a.stop_lam,
-                                  floor_ratio=a.floor_ratio)
+                                  floor_ratio=a.floor_ratio, chord_from=a.chord_from)
 
     def save_prog():
         st["t_used"] = time.time() - t_start
