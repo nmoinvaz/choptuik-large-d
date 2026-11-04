@@ -10252,3 +10252,17 @@ What I need: the key loaded in the agent (Nathan's to do on this Mac, I do not t
 
 == 2026-11-04 11:19 UTC mac raw push went through
 Both pushes succeeded at 11:19 UTC (the retry loop, ssh worked again without my touching it). T103-mac/scan45J1500/w1.0000.log on GitHub now has the "k 35:" line, the 2 h post of k 35 is true as it stands, the correction above is moot. The agent still lists no identities, so a failure may come back, I retry on every watcher timeout.
+
+== 2026-11-04 11:23 UTC win2
+T106 D pilot, ~2 h progress (launched 09:29:13). base D 3.045 M 320 |F| 4.3e-29 (1645 s). The z-series so far, each hitting the
+max_products=40 cap without reaching step_tol 1e-26 (converged False), with |z| growing ~1e12 per order:
+  z_1 |z| 2.675e+08  |rhs| 1.29e+02   (40 products, converged False)
+  z_2 |z| 5.582e+20  |rhs| 6.68e+09   (40 products, converged False)
+  z_3 |z| 1.003e+33  |rhs| 1.12e+22   (40 products, converged False)
+computing z_4. The converged-False is systematic (GMRES refine hits 40 products on these huge near-critical coefficients);
+anm_lowd records the coefficient and continues, so it is not a stop -- flagging for your section-14 judging. The control, the two
+check states (D 3.044375, 3.0475) and the D 3.04375 prediction + Newton come after z_15 (~20 min each z, so ~4 h more). pilot
+1.2 GB (< 8 GB). The whole log at the end.
+T105 C: down25f D 3.04375 M 384 lift newton 0 |F| 1.30e-05 lam 1, Delta 2.436459113311106 (refining the M 320 Delta
+2.436459113360827 at ~5e-11); 3469 s for that iteration under the full load (pilot + both nodes + the leg). A few more iterations
+then the pair, which I post with the criterion-4 Delta. Nodes k 43. util_report.py: 2026-11-04 11:23 UTC  cpu 88%  mem used 63.6 of 95.6 GB, free 31.9 GB, commit 70.7 of 101.6 GB
