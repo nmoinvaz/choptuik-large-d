@@ -1733,3 +1733,13 @@ the base. At plan tolerance 10⁻³³ the same state gives 1.53×10⁻¹², whil
 both plans. The third run reproduces the first's 1.0492×10⁻¹² (exit 0). Why the jet's z_1 is wrong is not yet known. The
 chain now runs with the correction (`--fix1 1`) as `anm-mac/run_trend_pin3_qd7/`, from 82.2188 at h_max 0.5. Its first
 step, from 82.22 to 82.72, was predicted at 6.92×10⁻¹⁵ and converged in quad-double to 1.2×10⁻⁴¹ in 8 steps (247 s).
+
+**Where the jet's slope error sits (2026-11-04 18:00 UTC).** `hp/anm_run.py --probe 2` at the base 82.1642
+(`anm-mac/slope_probe/probe_D82.1642_links_rows.log`) compares the two terms of the order-1 equation separately with
+quad-double central differences. It uses steps 2⁻⁴² to 2⁻⁴⁶, where D ± e is exact in double-double, Richardson-combined,
+and the two step pairs agree. Each term's largest disagreement, 2.3×10⁻⁹ in row 767, is the same in both and cancels in
+their sum. The sum, the order-1 residual, is off by at most 3.9×10⁻¹³, in rows 649–654 of the horizon block's first
+field. There each term is off by 3.5–5.3×10⁻¹⁷ of its value (dF/dD from −2.9×10⁶ to −2.2×10⁵ in those rows), float64's
+precision rather than double-double's, and the two terms' errors differ by 1–3×10⁻¹⁹ of it. So the defect is in the
+jet's arithmetic for that field, not in the series. The kernel code that computes it is the next place to read, and the
+quad-double correction (`--fix1`) stands in for it meanwhile.

@@ -35,6 +35,7 @@ held rows of each right-hand side carry them, as PinnedSolver's offset carries t
 holds the harmonics at the trend's values there. Records carry the exponents.
 
 --refine R takes R refinement steps per order against the stored LU (1, the default, is the loop above). --probe 1
+(--probe 2: only the two links of the order-1 equation, against quad-double central differences)
 measures the series' first-order error at the base and stops (13.19's correction): the order-1 residual in the jet's
 model after each refinement; |F_pred| / a at a = 1/64, 1/32, 1/16 in double-double and quad-double; the quad-double
 model's order-1 residual of z_1 by central differences along (z_1, 1) in (z, D), at steps 2^-30 and 2^-33, with the held
@@ -289,10 +290,62 @@ def main():
             hist.append(float(rnorm(*x)))
         return np.asarray(z1h), np.asarray(z1l), hist
 
+    def probe_links(D0, zh0, zl0, Zh, Zl, zq):
+        """--probe 2: which link of the order-1 equation J z_1 = -dF/dD carries the error. The jet's order-1
+        coefficient at fixed z (dF/dD) against quad-double central differences in D at fixed z, and the jvp along z_1
+        against central differences along z_1 at fixed D, both Richardson-combined at steps e and e/2 and printed at
+        two e, with the row of the largest difference and its block (the held offset enters neither)"""
+        c4 = lambda v: tuple(np.ascontiguousarray(np.asarray(p)) for p in v)  # noqa: E731
+        Hs, Ls = s.residual_jet([np.array(zh0)], [np.array(zl0)], 2, 0)
+        jet = (np.asarray(Hs[1]), np.asarray(Ls[1]))
+        jv = tuple(np.asarray(v) for v in s.jvp(zh0, zl0, np.array(Zh[1]), np.array(Zl[1]))[:2])
+
+        def central(e, along_z):
+            Ks = []
+            for sg in (1.0, -1.0):
+                sx = mk(D0 if along_z else D0 + sg * mp.mpf(e))
+                sx.set_segs(segs)
+                zz = c4(qd_axpy(sg * e, *qparts(Zh[1], Zl[1]), *zq)) if along_z else zq
+                Ks.append(sx.residual_q(*zz))
+            d = qd_axpy(-1.0, *c4(Ks[1]), *c4(Ks[0]))
+            return dd_scale(np.asarray(d[0]), np.asarray(d[1]), 0.5 / e)
+
+        out = dict(D0=float(D0), links=[])
+        diffs = {}
+        for name, ref, along_z in (("dF/dD", jet, False), ("J z_1", jv, True)):
+            for e in (2.0 ** -42, 2.0 ** -45):
+                r1, r2 = central(e, along_z), central(e / 2, along_z)
+                rr = dd_add(*dd_scale(r2[0], r2[1], 4.0 / 3.0), *dd_scale(r1[0], r1[1], -1.0 / 3.0))
+                dh, dl = dd_add(ref[0], ref[1], -np.asarray(rr[0]), -np.asarray(rr[1]))
+                dv = np.abs(np.asarray(dh) + np.asarray(dl))
+                i = int(np.argmax(dv))
+                rec = dict(link=name, e=e, fd=float(rnorm(*rr)), jet=float(rnorm(*ref)), diff=float(dv[i]), row=i, block=i // (4 * M))
+                out["links"].append(rec)
+                print(f"  probe: {name}, step {e:.2e}: |finite difference| {rec['fd']:.4e}, |jet| {rec['jet']:.4e}, "
+                      f"max |jet - fd| {rec['diff']:.4e} at row {i} (block {rec['block']})", flush=True)
+                diffs[name] = (np.asarray(dh), np.asarray(dl), np.asarray(ref[0]) + np.asarray(ref[1]))
+        # the order-1 residual's error, jet (dF/dD + J z_1) minus finite differences, and each link's share by row
+        sh, sl = dd_add(*diffs["dF/dD"][:2], *diffs["J z_1"][:2])
+        sv = np.abs(np.asarray(sh) + np.asarray(sl))
+        top = [int(i) for i in np.argsort(sv)[::-1][:6]]
+        out["order1_error"] = float(sv.max())
+        out["order1_rows"] = [dict(row=i, block=i // (4 * M), field=(i % (4 * M)) // M, sum=float(sv[i]),
+                                   dFdD=float(diffs["dF/dD"][0][i] + diffs["dF/dD"][1][i]), Jz1=float(diffs["J z_1"][0][i] + diffs["J z_1"][1][i]),
+                                   dFdD_value=float(diffs["dF/dD"][2][i])) for i in top]
+        print(f"  probe: order-1 residual, jet minus finite differences: max {sv.max():.4e}", flush=True)
+        for r in out["order1_rows"]:
+            print(f"  probe:   row {r['row']} (block {r['block']}, field {r['field']}): sum {r['sum']:.3e}, dF/dD link {r['dFdD']:+.3e}, "
+                  f"J z_1 link {r['Jz1']:+.3e}, dF/dD there {r['dFdD_value']:+.3e}", flush=True)
+        with open(os.path.join(out_dir, "probe.jsonl"), "a") as f:
+            f.write(json.dumps(out) + "\n")
+        return 0
+
     def probe(D0, zh0, zl0, Zh, Zl, refine, held_arg):
         """--probe (the docstring): prints, records OUTDIR/probe.jsonl, returns the exit code"""
         zq = last_q["z4"] if "z4" in last_q else load_q(os.path.join(raw, opt["state"]))[0]
         zq = tuple(np.ascontiguousarray(np.asarray(p)) for p in zq)
+        if opt["probe"] == 2:
+            return probe_links(D0, zh0, zl0, Zh, Zl, zq)
         out = dict(D0=float(D0), D0_str=str(D0), refine_it=opt["refine"], refine_orders_1_2_N=[refine[0], refine[1], refine[-1]])
         print(f"  probe: jet-model residual norms, order 1 {refine[0]}, order 2 {refine[1]}, order N {refine[-1]}", flush=True)
         out["pred"] = []
