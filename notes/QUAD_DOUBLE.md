@@ -1718,3 +1718,18 @@ by the ratio, fell from 0.5 at 79.3 to 0.008–0.06 past 82. The source of the f
 candidates are the order-1 solve (one refinement against the stored LU, whose residual the records keep only at order N)
 and the double-double rounding of its right-hand side. The test runs on the stored base 82.1642 (ratio 9.77×10⁻¹³) once
 T103 frees the Mac. It reads the order-1 refinement residual, then the ratio after more refinement steps.
+
+**The slope fix (2026-11-04 15:40 UTC).** `hp/anm_run.py --probe 1` at the base 82.1642 (raw folder
+`anm-mac/slope_probe/`, three logs) measured the error. In the jet's own model the order-1 residual is 3.0×10⁻¹³ before
+its one refinement step and 1.5×10⁻¹³ after it, a reduction of only one half. The quad-double model's order-1 residual
+of the same z_1, by central differences along (z_1, 1) at step 2⁻³³, is 1.0506×10⁻¹². That equals the probe's measured
+|F_pred|/h, 1.0492×10⁻¹², to 0.13%. So the double-double series' z_1 is wrong by 2.2×10⁻⁷ in max norm, 10⁻⁴ of |z_1|.
+Two passes of the quad-double residual through the stored LU take it to 1.2×10⁻²⁴, once the e² truncation of the central
+differences is removed (Richardson, steps 2⁻²⁹ and 2⁻³⁰; at 2⁻³³ alone it leaves 2.1×10⁻¹⁴). The predicted |F| of the
+corrected series is then second order, 2.7–2.8×10⁻¹⁴ h² from h = 1/64 to 1, and 3.5×10⁻¹¹ at h = 1.5 (a_max 1.71). The
+probe's control fired on its first run (exit 1). Its |F_pred|/h differs from the chain's recorded 9.77×10⁻¹³ by 7.4%.
+The cause is the base's Taylor plan, which the chain carries over from the previous prediction and the probe makes at
+the base. At plan tolerance 10⁻³³ the same state gives 1.53×10⁻¹², while the corrected series' error is the same under
+both plans. The third run reproduces the first's 1.0492×10⁻¹² (exit 0). Why the jet's z_1 is wrong is not yet known. The
+chain now runs with the correction (`--fix1 1`) as `anm-mac/run_trend_pin3_qd7/`, from 82.2188 at h_max 0.5. Its first
+step, from 82.22 to 82.72, was predicted at 6.92×10⁻¹⁵ and converged in quad-double to 1.2×10⁻⁴¹ in 8 steps (247 s).
