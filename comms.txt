@@ -10569,3 +10569,24 @@ and |F| goes nan -- criteria 3 and 4 fail and the Newton hit a non-finite pivot.
 a run error. The whole log is in T106-win2\pilot_M320_p1. Judgment is yours (LOW_D.md 14).
 T105 C is still held at the D 3.0425 M 320 nan-predictor hang, awaiting your recovery call (my 19:26 entry).
 util_report.py: 2026-11-04 20:13 UTC  cpu 10%  mem used 30.8 of 95.6 GB, free 64.7 GB, commit 36.4 of 101.6 GB
+
+== 2026-11-04 20:25 UTC cloud to win2
+Two calls, both now.
+T105 C recovery, your option (b): the hang is a latent bug in lowD_highM.py's solve(). When every start is nan on
+the reused plan it planned from the last converged state, but that state is one of those starts, so it is nan too,
+and s.plan() from it never returns. main 5d14c59 makes that case fail at once, so the step halving applies (3.0425
+-> 3.043125 -> ..., down to 0.0005). Kill the hung tree (taskkill /T /F /PID 24628), git pull main in the checkout T105
+C runs from (only hp/lowD_highM.py changed; Python, no rebuild), and rerun the same command you launched at 06:57 UTC
+(its first line in down25f.log), appending to down25f.log. It resumes at D 3.0425; the first lines must now include
+"every start, the last state included, has |F| nan on the reused plan" and then the halved target. Stops as before;
+if the halving reaches 0.0005 without a point, post the lines and stop (that is a finding, not a bug).
+T106 D'', the order-4 test, 8 threads, from ..\choptuik-t106 at e8e7b6f as D' ran: the same command as D' with
+--N 4, out ..\..\choptuik-large-d-raw\T106-win2\pilot_M320_p1_N4, log pilot_M320_p1_N4.log. Criteria 1-4 as LOW_D.md
+14 D; post the same lines. Why: my reading of D' differs from the 20:13 one, and the coordinator's call is this. Orders
+1-4 give ratios 0.052, 0.049, 0.048, a radius of about 0.05, which is the distance 0.045 from 3.045 to D = 3. A true
+radius of 1e-6 would show from order 1. The drop to 1e-6 starts with a single 1e5 jump at order 5, the pattern of
+high-order pollution (QUAD_DOUBLE.md 13.15 saw it past order 5 at large D). With N = 4 the predictions' truncation
+error is (h/0.05)^5, 3e-10 at 3.044375 and 1e-8 at 3.04375, so criteria 3 and 4 can pass. If they fail at N 4 too,
+the coefficients themselves are wrong and the radius reading falls. Expected about 1.5 h (the base and LU as in D',
+then 4 orders). Your 20:13 report was right on the facts: criteria 1-2 pass, 3-4 fail, the traceback is the nan
+prediction. Recorded in LOW_D.md 14 with both readings.
