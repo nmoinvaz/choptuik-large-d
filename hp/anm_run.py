@@ -14,6 +14,7 @@ formulation of hp/pinning.py; their coefficients are zero).
         [--steps 20] [--D_max 200] [--corrector dnp|deflated|newton] [--tol 1e-20] [--tol_growth 1.45]
         [--accept_stall 1e-19] [--junk_only 0] [--threads 4] [--w 24] [--trend T75] [--tol_qd 1e-28]
         [--qd_it 12] [--qd_w 0] [--refine 1] [--probe 0 --probe_c C] [--plan_tol 1e-32] [--fix1 0] [--F_pred_max 0]
+        [--horizon_alpha 0] [--fix1_qlu 0]
 
 --corrector qd runs the quad-double Newton of the kernel (hpkernel.driver.newton_qd, Solver.newton_q) on the pinned
 system (pinning.PinnedQ: the held harmonics' offset subtracted from the quad-double residual and added to the step, as
@@ -50,6 +51,10 @@ residual norms (fix1). The double-double jet's own z_1 is wrong by 1e-4 relative
 --F_pred_max P (0: off) skips the corrector for a prediction above P and shrinks the step by 0.9 (P / |F_pred|)^(1/2)
 (at least 1/4) at once: with --fix1 the prediction error is second order in a, and from D 79.3 to 84.5 every attempt
 predicted below 1.53e-14 converged while a failed correction costs up to 12 min. Records carry the skipped (a, |F|).
+--horizon_alpha A is the horizon series' form for every solver of the run (make_solver's horizon_alpha; 0, the
+default, as before; 1 carries alpha = a - 1, notes/LARGE_D_MIXED.md 10). The model is the same in both forms, only the
+rounding differs, so the quad-double corrector solves the same system. The jet's order-1 error is rounding amplified
+by the mass mode in either form, and which form is smaller depends on the base.
 """
 import json
 import os
@@ -76,6 +81,15 @@ def load_state(path):
 # residual changes by about 2e6 per unit of D (13.16), so the float64 rounding of D + a (7e-15 at D 73) would put
 # 1e-8 into every prediction (found on the pilot's first run, 2026-11-04 00:10 UTC)
 mp.mp.dps = 50
+# 1/3 in double-double. The float64 weights 4/3 and -1/3 are each 2^-54 below their values, so a Richardson value formed
+# with them is (1 - 2^-54) times the true one, a 5.6e-17 relative error in every row.
+THIRD = (1.0 / 3.0, float(mp.mpf(1) / 3 - mp.mpf(1.0 / 3.0)))
+
+
+def richardson(r1, r2):
+    """(4 r2 - r1) / 3 in double-double, r1 at step e and r2 at e / 2: the central differences' e^2 term cancelled"""
+    th, tl = dd_add(*dd_scale(np.asarray(r2[0]), np.asarray(r2[1]), 4.0), -np.asarray(r1[0]), -np.asarray(r1[1]))
+    return dd_add(*dd_scale(th, tl, THIRD[0]), *dd_scale(th, tl, THIRD[1]))
 
 
 def series_at(zh, zl, Zh, Zl, a):
@@ -127,7 +141,7 @@ def main():
     args = list(sys.argv[1:])
     opt = dict(state="T75/pin7_D73.2657.npz", kfreeze=3, N=24, eps=1e-16, h_max=2.0, steps=20, D_max=200.0, corrector="dnp",
                tol=1e-20, tol_growth=1.45, accept_stall=1e-17, junk_only=0, threads=4, w=24, trend="", tol_qd=1e-28, qd_it=12, qd_w=0,
-               refine=1, probe=0, probe_c=0.0, plan_tol=1e-32, fix1=0, F_pred_max=0.0)
+               refine=1, probe=0, probe_c=0.0, plan_tol=1e-32, fix1=0, F_pred_max=0.0, horizon_alpha=0, fix1_qlu=0)
     for k in list(opt):
         f = "--" + k
         if f in args:
@@ -178,7 +192,8 @@ def main():
         # recorded as that point's Delta uncertainty
         dcorr = float(delta_correction(spx, Fh, Fl)) if Fc > tol and np.isfinite(Fc) else 0.0
         return ch, cl, Fc, len(hist), bool(Fc <= tol or Fc <= opt["accept_stall"]), dcorr
-    mk = lambda Dx: make_solver(Dx, M, nodes=nodes, kt=kt, kc=kc, ks=ks, threads=opt["threads"], kfreeze=kf)  # noqa: E731
+    mk = lambda Dx: make_solver(Dx, M, nodes=nodes, kt=kt, kc=kc, ks=ks, threads=opt["threads"], kfreeze=kf,  # noqa: E731
+                                horizon_alpha=opt["horizon_alpha"])
     ks_held = [k for k in range(kf + 1, 14) if k % 2 == 1]
     base_coeffs = band_coeffs(zh[:M], zl[:M], M, ks_held)         # [(a_k, b_k)] at the base, exact there
     # the trend: exponents s of |v| ~ n^s per held coefficient, from the stored states of --trend (0 = held constant)
@@ -276,15 +291,24 @@ def main():
         """order1_q at steps 2^-29 and 2^-30 combined as (4 r(e/2) - r(e)) / 3, which cancels the e^2 term (the step
         2^-33 alone left 2.1e-14 at D 82.16, 13.19)"""
         r1, r2 = order1_q(D0, zq, z1h, z1l, 2.0 ** -29), order1_q(D0, zq, z1h, z1l, 2.0 ** -30)
-        return dd_add(*dd_scale(r2[0], r2[1], 4.0 / 3.0), *dd_scale(r1[0], r1[1], -1.0 / 3.0))
+        return richardson(r1, r2)
 
     def fix_z1(D0, zq, z1h, z1l, passes=2):
         """z_1 corrected by the quad-double order-1 residual (order1_r) through the stored LU; returns z_1 and the
-        residual norms before and after each pass"""
+        residual norms before and after each pass. --fix1_qlu 1: through the quad-double LU at the base instead
+        (Solver.newton_q factors it, once per step), whose contraction stays at 1e-10 to 1e-13 from D 79.8 to 86.4
+        where the double-double LU's grows from 7e-7 to 7e-5, about 2.4x per unit of D"""
         x = order1_r(D0, zq, z1h, z1l)
         hist = [float(rnorm(*x))]
+        if opt["fix1_qlu"]:
+            s.newton_q(*zq)
+            zero = np.zeros(len(z1h))
         for _ in range(passes):
-            ch, cl = s.lu_solve(-np.asarray(x[0]), -np.asarray(x[1]))
+            if opt["fix1_qlu"]:
+                q = s.qlu_solve(-np.asarray(x[0]), -np.asarray(x[1]), zero, zero)
+                ch, cl = np.asarray(q[0]), np.asarray(q[1])
+            else:
+                ch, cl = s.lu_solve(-np.asarray(x[0]), -np.asarray(x[1]))
             z1h, z1l = dd_add(z1h, z1l, ch, cl)
             x = order1_r(D0, zq, z1h, z1l)
             hist.append(float(rnorm(*x)))
@@ -315,7 +339,7 @@ def main():
         for name, ref, along_z in (("dF/dD", jet, False), ("J z_1", jv, True)):
             for e in (2.0 ** -42, 2.0 ** -45):
                 r1, r2 = central(e, along_z), central(e / 2, along_z)
-                rr = dd_add(*dd_scale(r2[0], r2[1], 4.0 / 3.0), *dd_scale(r1[0], r1[1], -1.0 / 3.0))
+                rr = richardson(r1, r2)
                 dh, dl = dd_add(ref[0], ref[1], -np.asarray(rr[0]), -np.asarray(rr[1]))
                 dv = np.abs(np.asarray(dh) + np.asarray(dl))
                 i = int(np.argmax(dv))
@@ -422,7 +446,8 @@ def main():
         a = min(a_max, opt["h_max"], room) if a is None else min(a, a_max, opt["h_max"], room)
         ratios = [norms[k - 1] / norms[k] if norms[k] else None for k in range(2, N + 1)]
         rec = dict(step=step, D0=float(D), D0_str=str(D), pin=kf, N=N, pivots=(float(pmin), float(pmax)), norms=norms, a_max=a_max,
-                   t_coef=t_coef, refine_last=refine[-1], fix1=fix1, ratios_2_5=ratios[:4], trend=opt["trend"], slopes=slopes, held=ks_held)
+                   t_coef=t_coef, refine_last=refine[-1], fix1=fix1, ratios_2_5=ratios[:4], trend=opt["trend"], slopes=slopes, held=ks_held,
+                   horizon_alpha=opt["horizon_alpha"])
         print(f"step {step}: D {mp.nstr(D, 12)}, pivots {pmin:.1e}..{pmax:.1e}, |z_1| {norms[1]:.2e}, |z_N| {norms[N]:.2e}, ratios 2-5 "
               + " ".join(f"{r:.1f}" for r in ratios[:4] if r) + f", a_max {a_max:.3f}, {t_coef:.0f} s", flush=True)
         if opt["probe"]:
