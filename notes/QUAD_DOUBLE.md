@@ -1558,3 +1558,49 @@ the open item, and the pin must follow the ladder as D grows (at 73.27 the quad-
 12.x). Next, in order: the stalls (the pinned Newton here against T75's settings); a chained pilot from 73.27 at pin
 3 with steps of a_max, re-based at each converged point, to 78 and past it; the release (PR #26 merged, 1.9.0,
 hp's version bumped, the worktree merged).
+
+### 13.17 The chained pilot: D 73.27 → 79.27 converged, 82 on accepted stalls (2026-11-04 01:20 UTC)
+
+`hp/anm_run.py` chains the steps of 13.16: at each converged base the coefficients to N = 24, the step
+a = min(a_max, 2), the prediction, the corrector at D + a, and on acceptance the new base; a failed step is halved
+three times. D is carried in mpmath precision: at fixed data the residual moves by about 2×10⁶ per unit of D (13.16),
+so the float64 rounding of D + a, 7×10⁻¹⁵ at D 73, put 10⁻⁸ into every prediction of the first run
+(`anm-mac/run_pin3_float.log`). The corrector is the kernel's double-double Newton (`newton_solve`) or T75's
+recipe (`scan_hp.py`'s dnp: `deflated_newton`, then plain steps from below 10⁻¹²); a stall below `--accept_stall`
+is accepted with the linearised Δ correction of its residual recorded as that point's Δ uncertainty. Records:
+`anm-mac/run_*/anm_run.jsonl`, the converged states beside them, the logs `anm-mac/run_*.log`.
+
+| run (base, pin, corrector, step rule) | reached | how |
+|---|---|---|
+| T75's 73.27, pin 3, plain Newton, a = 2 (ε 10⁻¹⁴) | 79.27 | 75.27, 77.27, 79.27 converged to 2e-20, 3e-20, 7e-20 in 5, 7, 12 steps; predictions 3e-9 to 1e-8 |
+| same, ε 10⁻¹⁶ (a = 1.67) | 77.87 | 74.94, 76.62 (stall 4e-20 accepted), 77.45, 77.87 after halvings; then Newton stalls at 1e-11 |
+| same base, deflated corrector | none | every prediction (6e-11 at a = 1.68 to 4e-13 at 0.21) left at 1e-16 to 1e-15 after 30 steps |
+| from 79.27, pin 3, plain Newton, stalls below 1e-13 accepted | 80.52 | Newton takes no step from predictions at 1e-14 to 1e-13; two stalls accepted, Δ corrections 2e-9 and 3e-9 |
+| from 79.27, pin 3, deflated, stalls below 1e-13 accepted | 82.12 | six accepted stalls (7e-14 to 1e-13), Δ corrections 6e-9 to 2e-8; steps shrink to 0.12 |
+| from 79.27, pin 1 (harmonics 3–13 held), plain Newton | 81.86 | 80.52 and 81.86 accepted at 7e-20 and 1.2e-19 (Δ corrections 1e-27, 1e-20); then no progress at 1e-11 |
+| T101's 78.61 (the 0.85 layout), kfreeze 13 and pin 3 | none | pivots 10⁻¹⁹ to 10⁻²⁰; z_1 ten times the tangent; Δ off by 10⁻² |
+
+The reading. (i) The predictor is no longer the bottleneck: from 73.27 to 79.27 every prediction at a step of 2
+landed inside the basin, and it went on doing so to 82 (6×10⁻¹⁵ to 2×10⁻¹⁴ at steps of 0.25–1). The corrector is:
+past 79.3 the double-double Newton finds no decrease along its step from residuals of 10⁻¹⁴ in the horizon block,
+where the residual is strongly nonlinear in the weakly determined harmonics (the diagnosis of 13.16's stalls,
+`anm-mac/newton_diag*.log`: plain Newton creeps at λ = 1/16 with |dz| 10⁻¹²; the deflated phase reaches 2–4×10⁻¹⁸;
+the junk-only phases have nothing to freeze in the pinned problem). (ii) Holding p1's harmonics above the pin at the
+first base's values is not harmless over a long chain: at D 80.5 the pin-1 and pin-3 chains differ in Δ by 5×10⁻⁶
+(formula differences −2.8×10⁻⁶ and +2.4×10⁻⁶), against 3×10⁻¹⁷ between pins at 73.27 when T75 held them on their
+trend (12.x). The held harmonics drift, and Δ feels the stale values at the 10⁻⁵ level over seven units of D. (iii)
+The series' orders 4 and 5 lose their 70–90 ratios past D 79 (57, 5.4 at 79.3; 12.6, 5.1 at 80.3), the weak
+component of 13.16 growing with D, so a_max would fall below 1 by about 82 in this formulation. (iv) The 0.85 layout's
+T101 state is not a usable base here: its weak directions are weaker still (pivots 10⁻¹⁹), its own pin ladder's
+settings would be needed.
+
+**Δ against the formula** along the converged pin-3 chain: +6.7×10⁻⁷ at 75.27, +1.4×10⁻⁶ at 77.27, +2.0×10⁻⁶ at
+79.27. The formula was fitted on D ≤ 78; with (ii) part of this may be the held harmonics, so no conclusion about the
+formula is drawn from it.
+
+**Next.** The pinned formulation must hold the harmonics on a trend, as T75's PinnedSolver did (pin-to-trend from the
+history), not at stale values: in the continuation's terms, the held harmonics get their own Taylor coefficients in
+D from a fit along the converged history (log-linear per harmonic), entered into the jet state so that the equations
+see their motion, and the corrector holds them at the trend's values at the new D. That is the one design change the
+pilot asks for; with it the pin-1 chain's floor (7×10⁻²⁰ at 80.5) suggests the corrector converges again. The build
+of 13.15 is otherwise complete, and the release of multidouble 1.9.0 (PR #26) and the merge of the worktree remain.
