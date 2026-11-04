@@ -177,8 +177,9 @@ anatomical and combustion log-periodicity [33, 34]. Not analogues: Euler DSS pro
 What the project can borrow.
 
 1. The Hopf normal form as the test of its reading. With μ = 1/D and the bifurcation at μ = 0 the amplitude obeys
-   A² ∝ μ, the period Δ(D) = Δ_∞ + c/D + O(1/D²), and the second-harmonic power ∝ A², which the project already sees
-   from D = 16 up. On the project's own values A√D = 2.88, 2.81, 2.73 at D = 45, 61, 73 (drift −5 %) while A·D =
+   A² ∝ μ, the period Δ(D) = Δ_∞ + c/D + O(1/D²), and a harmonic content that falls with A (the field's half-period
+   antisymmetry leaves the third harmonic as the first correction to the sinusoid, at relative size ∝ A²). On the
+   project's own values A√D = 2.88, 2.81, 2.73 at D = 45, 61, 73 (drift −5 %) while A·D =
    19.4, 22.0, 23.4 (drift +21 %), so the square-root law fits better than 1/D; this is my arithmetic on quoted
    numbers, not a fit, and the project should fit A² against 1/D with the D ≥ 16 points and check the linearity of Δ
    in 1/D. A nonzero intercept of A² at 1/D = 0 would place the bifurcation at a finite D_c > 73 instead.
@@ -200,23 +201,61 @@ What the project can borrow.
    profile, with period 2π/Im λ at birth; the amplitude law is the one thing missing.
 2. The Brans–Dicke / 2d sigma-model transition within gravity [19, 36, 37]: the same Hopf conjecture for the same
    kind of object, never verified; the project's large-D limit would be its first confirmed instance if the tests in
-   C.1 and C.2 pass.
+   C.1 and C.2 pass (C.1 was run on 2026-11-04, below: the amplitude law passes, the shape law and the amplitude
+   mode do not).
 3. Bubble neck vibrations [9, 10]: a neutral log-periodic oscillation about a CSS collapse, the picture of the
    D = ∞ end point itself, with the amplitude left free because the problem is linear.
 
 ## The Hopf reading of the project's large-D limit
 
-Untested in the literature, and neither supported nor contradicted by a direct result. Supported indirectly: the Hopf
-route is the standard origin of DSS blow-up in the one non-gravitational case where the transition has been computed
-[1], it is the route Hirschmann and Eardley conjectured for the κ transition in gravity [19, 37], and the project's
-three signatures (finite period, falling amplitude, second-harmonic power ∝ amplitude²) are the normal form's. The
-rough A ∝ D^(−1/2) of the quoted amplitudes (C.1) is consistent with μ = 1/D as the unfolding parameter. Contradicted
-in one respect by Ecker et al. [41, 42], who conjecture Δ → 0⁺ as D → ∞ from data at D ≤ 14 and the structure of their
-expansion; their γ → 1/2 "CSS limit" agrees with a vanishing-amplitude cycle but not with a finite period. The
-Efimov-type literature [13, 14, 20, 22] is not a counter-example, since it concerns the other route, and it supplies the
-test that rules that route out here (Δ would have to grow). What would settle it is C.2: a CSS solution of the D = ∞
-equations with a purely imaginary eigenvalue pair at ±3.822i, or the next-order constraint of [41] selecting that
-frequency.
+Untested in the literature. Supported indirectly: the Hopf route is the standard origin of DSS blow-up in the one
+non-gravitational case where the transition has been computed [1], and it is the route Hirschmann and Eardley
+conjectured for the κ transition in gravity [19, 37]. Contradicted in one respect by Ecker et al. [41, 42], who
+conjecture Δ → 0⁺ as D → ∞ from data at D ≤ 14 and the structure of their expansion; their γ → 1/2 "CSS limit" agrees
+with a vanishing-amplitude cycle but not with a finite period. The Efimov-type literature [13, 14, 20, 22] is not a
+counter-example, since it concerns the other route, and it supplies the test that rules that route out here (Δ would
+have to grow). What would settle it is C.2: a CSS solution of the D = ∞ equations with a purely imaginary eigenvalue
+pair at ±3.822i, or the next-order constraint of [41] selecting that frequency.
+
+**The tests of C.1 on the project's states** (2026-11-04, `hp/hopf_amp_mode.py`; the records are `anm-mac/hopf/` of
+the raw-data repository). The states are those of `hp/plot_echo.py` (`hp/data/echo_shapes.csv`); the fits use the
+three at D ≥ 40, which is a factor 1.6 in D, so an exponent from them carries about ±0.1.
+
+1. **The amplitude law holds.** A = max |p1| at D = 45.05, 60.96, 73.27 gives A√D = 2.867, 2.790, 2.754, and the
+   three points lie on the line A√D = 2.574 + 13.2/D to 2e-4, so A²D → 6.62 at 1/D = 0: the normal form's A² ∝ μ with
+   μ = 1/D and its first correction, with the bifurcation at D = ∞ (a bifurcation at a finite D_c would put the
+   intercept of A² at 1/D_c, not at 0). A raw power fit gives A ∝ D^−0.58, the 1/D term's doing.
+2. **The shape law fails.** With the field's half-period antisymmetry the normal form's first correction to the
+   sinusoid is the third harmonic, at relative size ∝ A² ∝ 1/D, so the power fraction outside the first harmonic
+   should fall like D^−2 and the peak deviation from the sine like D^−1. Measured on the same three states: 0.0079,
+   0.0064, 0.0058, falling like D^−0.66, and 0.143, 0.129, 0.123, falling like D^−0.33 (the two are one quantity,
+   fraction / deviation² = 0.383 to 0.385). The shape approaches the sinusoid at a third of the normal form's rate,
+   so the cycle's harmonic content is not that of a normal form with D-independent coefficients. Whether a
+   D-dependence of the coefficients (the expansion of [41] is in 1/(D − 1) with the shape free at leading order) or a
+   different mechanism accounts for the slow approach is open.
+3. **The amplitude mode is absent in the scanned range.** For the cycle the Floquet exponent of its amplitude is
+   λ_amp = −2μ, real and tending to 0⁻, which with μ = 1/D literally would be −0.044, −0.033, −0.027 at these D. The
+   growth-rate determinant det M(λ) (`Solver.mode_det`, as `hp/gamma_dd.py` uses it: perturbations e^{λτ} of the
+   state with Δ fixed, the phase row dropped) was scanned on [−1.2, 0.5] in steps of 0.025 and on the geometric grid
+   −0.025·2^−i down to −3.9e-4 (`--fine`), every sign change refined by bisection; the test field's determinant of
+   notes/GHOST_ADMIXTURE.md, with its decaying mode at −0.3651 at D = 4, is a different matrix. At D = 4, 8, 16.76 and
+   45.05 the sign changes only across λ = 0, the phase mode (its simple zero shows as a fall of ln|det| toward 0 where
+   the determinant's exponential envelope, about e^{200λ} at D = 4, does not mask it). At D = 60.96 (the T12 state,
+   |F| 2.9×10⁻¹⁹, the horizon block's weak directions unpinned) the one sign change between −0.0016 and +0.025 is at
+   −0.000991, where ln|det| falls by 8 into the rounding floor (pivots 10⁻¹⁹ to 10⁻²¹), and there is none across 0:
+   the τ-translation is a null vector of the discrete Jacobian only to the truncation error of the state, so this is
+   read as the phase mode's zero displaced by the state's unresolved high harmonics, a hypothesis (J·∂τz of the state
+   would test it); read instead as a real mode at D = 61, a Hopf amplitude mode would have to sit at or beyond it at
+   D = 45, which that scan excludes down to −3.9e-4. At D = 73.27 (the T75 pin-7 state evaluated without pinning,
+   pivots 10⁻¹⁸ against 1.2×10⁹) ln|det| is flat on the fine grid with no sign change across 0 at all, so that
+   determinant does not resolve the phase mode, and the uniform scan's sign changes at −0.613 and −0.114, where
+   ln|det| dips by 4–10 and then scatters by ±1.3 between evaluations 10⁻⁹ apart, are at its rounding floor:
+   unresolved, not zeros. So no real Floquet exponent lies in [−1.2, −0.0016] at D ≤ 61, nor in [−1.2, −3.9×10⁻⁴] at
+   D ≤ 45; the state at 73 needs the pinned determinant.
+
+Where this leaves the reading: the amplitude is the normal form's, the shape and the spectrum are not. A cycle whose
+amplitude² falls like 1/D with its period tending to 1.6439 remains the description of the data; calling it a Hopf
+bifurcation at D = ∞ needs C.2, or a normal form whose coefficients carry the D-dependence that test 2 demands.
 
 ## References
 

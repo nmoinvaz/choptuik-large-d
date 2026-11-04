@@ -21,7 +21,8 @@ DOCS = {name: open(os.path.join(ROOT, name), encoding="utf-8").read()
         for name in ("README.md", "paper/physics/main.tex", "paper/math/main.tex", "proof/A_certify.md", "GAMMA.md",
                      "notes/PLANTED_SELECTION.md", "notes/PROOF_QUEUE.md", "proof/P5_scope.md",
                      "notes/QUAD_DOUBLE.md",
-                     "notes/SOLVER_HP.md", "notes/LOW_D.md", "notes/INNER_STOKES.md", "notes/FORMULA_FORMS.md", "notes/LARGE_D_WALL.md")}
+                     "notes/SOLVER_HP.md", "notes/LOW_D.md", "notes/INNER_STOKES.md", "notes/FORMULA_FORMS.md", "notes/LARGE_D_WALL.md",
+                     "notes/ECHO_ANALOGUES.md")}
 
 
 def quoted_in(doc, text):
@@ -190,6 +191,37 @@ def echo_shapes():
             ("first harmonic at 3.044 (%)", frac(3.044375), 37, 1, txt),
             ("centre amplitude at 3.044", float(by[3.044375][3]), 674, 1, txt),
             ("centre amplitude at 73.27", float(by[73.265722][3]), 0.32, 0.01, txt)]
+
+
+@check
+def hopf_law():
+    """notes/ECHO_ANALOGUES.md, "The tests of C.1": the amplitude law and the shape law of hp/hopf_amp_mode.py's
+    amplitude_law() on hp/data/echo_shapes.csv (the three states at D >= 40)"""
+    import contextlib
+    import io
+    sys.path.insert(0, os.path.join(ROOT, "hp"))
+    import hopf_amp_mode as H
+    with contextlib.redirect_stdout(io.StringIO()):
+        law = H.amplitude_law()
+    f, rows = law["fits"], [r for r in law["rows"] if r["D"] >= 40]
+    a, b = f["A_sqrtD_limit"], f["A_sqrtD_slope_1_over_D"]
+    misfit = max(abs(r["A_sqrtD"] - (a + b / r["D"])) for r in rows)
+    ratio = [r["rest"] / r["deviation"] ** 2 for r in rows]
+    N = "notes/ECHO_ANALOGUES.md"
+    txt = [(N, "gives A√D = 2.867, 2.790, 2.754"), (N, "A√D = 2.574 + 13.2/D to 2e-4, so A²D → 6.62 at 1/D = 0"),
+           (N, "A raw power fit gives A ∝ D^−0.58"),
+           (N, "0.0064, 0.0058, falling like D^−0.66, and 0.143, 0.129, 0.123, falling like D^−0.33"),
+           (N, "fraction / deviation² = 0.383 to 0.385"), (N, "would be −0.044, −0.033, −0.027 at these D")]
+    out = [("A sqrt(D) at %.2f" % r["D"], r["A_sqrtD"], q, 0.001, txt) for r, q in zip(rows, (2.867, 2.790, 2.754))]
+    out += [("A sqrt(D) limit", a, 2.574, 0.001, txt), ("its 1/D slope", b, 13.2, 0.1, txt), ("line misfit", misfit, 2e-4, 1e-4, txt),
+            ("A^2 D limit", a * a, 6.62, 0.01, txt), ("A exponent", f["A_exponent"], -0.58, 0.01, txt),
+            ("power-fraction exponent", f["rest_exponent"], -0.66, 0.01, txt),
+            ("deviation exponent", f["deviation_exponent"], -0.33, 0.01, txt)]
+    out += [("power fraction at %.2f" % r["D"], r["rest"], q, 0.0001, txt) for r, q in zip(rows, (0.0079, 0.0064, 0.0058))]
+    out += [("deviation at %.2f" % r["D"], r["deviation"], q, 0.001, txt) for r, q in zip(rows, (0.143, 0.129, 0.123))]
+    out += [("fraction / deviation^2, least", min(ratio), 0.383, 0.001, txt), ("fraction / deviation^2, largest", max(ratio), 0.385, 0.001, txt)]
+    out += [("-2/D at %.2f" % r["D"], -2 / r["D"], q, 0.001, txt) for r, q in zip(rows, (-0.044, -0.033, -0.027))]
+    return out
 
 
 @check
