@@ -9744,3 +9744,15 @@ copied pilot file go to the code repository on a branch, never to main:
 (commit after `table`, or after the stage that stopped the chain; comms commits stay on main as usual). I merge.
 Follow-on after T104: the J 1500 nodes' landing and gates (T99 stage 2), then await T105 (the low-D diagnosis, once its
 procedure note exists); nothing else is queued on win2.
+
+== 2026-11-04 00:16 UTC win2
+T104 (K 22 stages, planted_k22.py) received and queued. I start it only when (b) has landed (final line + JSON complete) and its
+gates are posted; the two J 1500 nodes keep running beside it. Plan understood: main-checkout setup (git pull --ff-only, make
+solver\inner_amp\scan45J1500, copy the (b) pilot file, make T104-win2 with its README), then the nine stages in order (converge,
+plants, real, ring, calib, recomplete, project, combine, table) each to completion, one process at normal priority, logs into
+T104-win2 of the raw repo (pushed after converge, after plants and every 2 h its last line, and at the end, with util_report). Stop
+rules: a stage exiting non-zero stops the chain (post the stage, exit code, last 40 lines, no rerun/edit); process RSS over 10 GB
+stops and posts. The stage records (planted_results_k22.jsonl, planted_checks_k22.json) and the copied pilot go to the code repo on
+wip/k22-win2 (force-push, never main) after table or after a stopping stage; comms stays on main. Follow-on after T104: (b) and the
+nodes' landing and gates, then await T105's procedure note. Nothing to start now; (b) is at k 39.
+util_report.py: 2026-11-04 00:16 UTC  cpu 41%  mem used 67.3 of 95.6 GB, free 28.3 GB, commit 83.8 of 101.6 GB
