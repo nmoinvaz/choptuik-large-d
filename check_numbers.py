@@ -322,26 +322,20 @@ def selection_range():
            ("paper/physics/main.tex", "$\\omega/\\omega_\\infty = 0.999975$--$1.00005$"),
            ("paper/physics/main.tex", "\\Dinf = 1.64387 \\pm 0.00006")]
     t21 = [("README.md", "the twenty-first order alone gives 0.999998–1.000002"),
-           ("README.md", "the ring-free sums) is 0.999998–1.000002"),
            ("notes/PLANTED_SELECTION.md", "**The hull is 0.999998–1.000002.**"),
            ("notes/PROOF_QUEUE.md", "K = 21 range 0.999998–1.000002"),
            ("paper/math/main.tex", "the twenty-one-order estimator range is $0.999998$--$1.000002$")]
-    t20 = [("README.md", "the ring-free sums) is 0.999997–1.000002"),
-           ("notes/PLANTED_SELECTION.md", "**The hull is 0.999997–1.000002.**"),
+    t20 = [("notes/PLANTED_SELECTION.md", "**The hull is 0.999997–1.000002.**"),
            ("notes/PROOF_QUEUE.md", "K = 20 range 0.999997–1.000002"),
            ("paper/math/main.tex", "the twenty-order estimator range is $0.999997$--$1.000002$")]
-    t19 = [("README.md", "the ring-free sums) is 0.999996–1.000004"),
-           ("notes/PLANTED_SELECTION.md", "**The hull is 0.999996–1.000004.**"),
+    t19 = [("notes/PLANTED_SELECTION.md", "**The hull is 0.999996–1.000004.**"),
            ("notes/PROOF_QUEUE.md", "K = 19 range 0.999996–1.000004"),
            ("paper/math/main.tex", "the nineteen-order estimator range is $0.999996$--$1.000004$")]
-    t18 = [("README.md", "the ring-free sums) is 0.999992–1.000004"),
-           ("notes/PLANTED_SELECTION.md", "**The hull is 0.999992–1.000004.**"),
+    t18 = [("notes/PLANTED_SELECTION.md", "**The hull is 0.999992–1.000004.**"),
            ("paper/math/main.tex", "the eighteen-order estimator range is $0.999992$--$1.000004$")]
-    t17 = [("README.md", "the ring-free sums) is 0.999990–1.000009"),
-           ("notes/PLANTED_SELECTION.md", "**The hull is 0.999990–1.000009.**"),
+    t17 = [("notes/PLANTED_SELECTION.md", "**The hull is 0.999990–1.000009.**"),
            ("paper/math/main.tex", "the seventeen-order estimator range is $0.999990$--$1.000009$")]
-    t16 = [("README.md", "the ring-free sums) is 0.999980–1.000014"),
-           ("notes/PLANTED_SELECTION.md", "**The hull is 0.999980–1.000014.**"),
+    t16 = [("notes/PLANTED_SELECTION.md", "**The hull is 0.999980–1.000014.**"),
            ("paper/math/main.tex", "the sixteen-order estimator range is $0.999980$--$1.000014$")]
     t2_21 = [("README.md", "the last two orders alone give 0.999997–1.000002"),
              ("notes/PLANTED_SELECTION.md", "the last two orders alone, reported as context by item 7, is 0.999997–1.000002")]
@@ -1036,8 +1030,8 @@ def k19_stages():
         out.append((f"{name} sigma_19 error, worst node", max(rt[name]["sigma19_rel"]), hi, u, [(P, sub)]))
         out.append((f"{name} rejected", int(not rt[name]["survives"]), 1, 0.5, []))
     free = [rt[n]["sigma19_rel"] for n in ("C18-BP [6/12]", "C18-BP [7/11]", "C18-BP [8/10]", "C18-BP [9/9]")]
-    out += [("ring-free C18-BP sums, best sigma_19 prediction", min(min(f) for f in free), 4e-9, 1e-9, [(P, "predicted σ₁₉ to 4×10⁻⁹–6×10⁻⁸"), ("README.md", "predicted it to 4×10⁻⁹–6×10⁻⁸. The ring-free"), ("paper/math/main.tex", "predicted $\\sigma_{19}$ to $4\\times10^{-9}$--$6\\times10^{-8}$")]),
-            ("ring-free C18-BP sums, worst sigma_19 prediction", max(max(f) for f in free), 6e-8, 1e-8, [(P, "predicted σ₁₉ to 4×10⁻⁹–6×10⁻⁸"), ("README.md", "predicted it to 4×10⁻⁹–6×10⁻⁸. The ring-free"), ("paper/math/main.tex", "predicted $\\sigma_{19}$ to $4\\times10^{-9}$--$6\\times10^{-8}$")]),
+    out += [("ring-free C18-BP sums, best sigma_19 prediction", min(min(f) for f in free), 4e-9, 1e-9, [(P, "predicted σ₁₉ to 4×10⁻⁹–6×10⁻⁸"), ("paper/math/main.tex", "predicted $\\sigma_{19}$ to $4\\times10^{-9}$--$6\\times10^{-8}$")]),
+            ("ring-free C18-BP sums, worst sigma_19 prediction", max(max(f) for f in free), 6e-8, 1e-8, [(P, "predicted σ₁₉ to 4×10⁻⁹–6×10⁻⁸"), ("paper/math/main.tex", "predicted $\\sigma_{19}$ to $4\\times10^{-9}$--$6\\times10^{-8}$")]),
             ("ring-free C18-BP sums surviving", sum(rt[n]["survives"] for n in ("C18-BP [6/12]", "C18-BP [7/11]", "C18-BP [8/10]", "C18-BP [9/9]")), 4, 0.5, []),
             ("K = 18 rings rejected", sum(1 for n, v in rt.items() if isinstance(v, dict) and v.get("ring") and not v["survives"]), 10, 0.5,
              [(P, "All ten rings of the K = 18 generation are rejected by σ₁₉ under both readings")]),
@@ -1108,8 +1102,8 @@ def k19_stages():
            max(cal["18"]["all 28 arc plants"]["cells"]["arg"]["zero"][1], cal["18"]["BP family (12)"]["cells"]["arg"]["zero"][1]))
     out += [("K = 19 hull, low", cb["range19"][0], 0.999996, 1e-6, [(P, "**The hull is 0.999996–1.000004.**")]),
             ("K = 19 hull, high", cb["range19"][1], 1.000004, 1e-6, [(P, "**The hull is 0.999996–1.000004.**")]),
-            ("ring-free completions, low", min(rf), 0.99999998, 1e-8, [(P, "the ring-free completions, 0.99999998–1.00000009"), ("README.md", "put the zero at 0.99999998–1.00000009"), ("paper/math/main.tex", "put the zero at $0.99999998$--$1.00000009$")]),
-            ("ring-free completions, high", max(rf), 1.00000009, 1e-8, [(P, "the ring-free completions, 0.99999998–1.00000009"), ("README.md", "put the zero at 0.99999998–1.00000009"), ("paper/math/main.tex", "put the zero at $0.99999998$--$1.00000009$")]),
+            ("ring-free completions, low", min(rf), 0.99999998, 1e-8, [(P, "the ring-free completions, 0.99999998–1.00000009"), ("paper/math/main.tex", "put the zero at $0.99999998$--$1.00000009$")]),
+            ("ring-free completions, high", max(rf), 1.00000009, 1e-8, [(P, "the ring-free completions, 0.99999998–1.00000009"), ("paper/math/main.tex", "put the zero at $0.99999998$--$1.00000009$")]),
             ("ring-free completions counted", len(rf), 4, 0.5, [(P, "C19-BP [6/13], [7/12], [8/11], [9/10],")]),
             ("headline, low", cb["headline"][0], 0.999975, 1e-6, [(P, "**0.999975–1.000050, unchanged.**")]),
             ("headline, high", cb["headline"][1], 1.000050, 1e-6, [(P, "**0.999975–1.000050, unchanged.**")]),
@@ -1126,8 +1120,8 @@ def k19_stages():
             ("G global minimum at K = 19", cb["G_minima"]["19"]["global"], 0.999998, 1e-6, [(P, "its global minimum 0.999998 (1.000010)")]),
             ("G global minimum at K = 18", cb["G_minima"]["18"]["global"], 1.000010, 1e-6, [(P, "its global minimum 0.999998 (1.000010)")])]
     cv = c["K19 converge"]["nodes"]
-    out += [("err19 relative at wf 0.99 (verdict)", cv["0.99"]["err19_rel"], 4.5e-13, 0.1e-13, [(P, "σ₁₉ is converged to 4.5–5.6×10⁻¹³ relative"), ("README.md", "the K = 41 runs; 4.5–5.6×10⁻¹³")]),
-            ("err19 relative at wf 1.01 (verdict)", cv["1.01"]["err19_rel"], 5.6e-13, 0.1e-13, [(P, "σ₁₉ is converged to 4.5–5.6×10⁻¹³ relative"), ("README.md", "the K = 41 runs; 4.5–5.6×10⁻¹³")])]
+    out += [("err19 relative at wf 0.99 (verdict)", cv["0.99"]["err19_rel"], 4.5e-13, 0.1e-13, [(P, "σ₁₉ is converged to 4.5–5.6×10⁻¹³ relative")]),
+            ("err19 relative at wf 1.01 (verdict)", cv["1.01"]["err19_rel"], 5.6e-13, 0.1e-13, [(P, "σ₁₉ is converged to 4.5–5.6×10⁻¹³ relative")])]
     return out
 
 
@@ -1283,8 +1277,8 @@ def k20_stages():
            max(c18["all 28 arc plants"]["cells"]["arg"]["zero"][1], c18["BP family (12)"]["cells"]["arg"]["zero"][1]))
     out += [("K = 20 hull, low", cb["range20"][0], 0.999997, 1e-6, [(P, "**The hull is 0.999997–1.000002.**")]),
             ("K = 20 hull, high", cb["range20"][1], 1.000002, 1e-6, [(P, "**The hull is 0.999997–1.000002.**")]),
-            ("ring-free completions at K = 20, low", min(rf), 0.999999997, 1e-9, [(P, "the ring-free completions, 0.999999997–1.000000028"), ("README.md", "put the zero at 0.999999997–1.000000028"), ("paper/math/main.tex", "put the zero at $0.999999997$--$1.000000028$")]),
-            ("ring-free completions at K = 20, high", max(rf), 1.000000028, 1e-9, [(P, "the ring-free completions, 0.999999997–1.000000028"), ("README.md", "put the zero at 0.999999997–1.000000028"), ("paper/math/main.tex", "put the zero at $0.999999997$--$1.000000028$")]),
+            ("ring-free completions at K = 20, low", min(rf), 0.999999997, 1e-9, [(P, "the ring-free completions, 0.999999997–1.000000028"), ("paper/math/main.tex", "put the zero at $0.999999997$--$1.000000028$")]),
+            ("ring-free completions at K = 20, high", max(rf), 1.000000028, 1e-9, [(P, "the ring-free completions, 0.999999997–1.000000028"), ("paper/math/main.tex", "put the zero at $0.999999997$--$1.000000028$")]),
             ("ring-free completions counted at K = 20", len(rf), 5, 0.5, [(P, "C20-BP [6/14], [7/13], [8/12], [9/11], [10/10],")]),
             ("headline overlap at K = 20", int(bool(cb["overlap_k19"])), 1, 0.5, []),
             ("last two orders at K = 20, low", min(r19[0], cb["range20"][0]), 0.999996, 1e-6, [(P, "reported as context by item 7, is 0.999996–1.000004")]),
@@ -1298,8 +1292,8 @@ def k20_stages():
             ("G minima span at K = 20, high", cb["G_minima"]["20"]["span"][1], 1.000003, 1e-6, [(P, "factor 5 of the best, 1.000000–1.000003 (0.999998–1.000001 at K = 19)")]),
             ("G global minimum at K = 20", cb["G_minima"]["20"]["global"], 1.000000, 1e-6, [(P, "its global minimum 1.000000 (0.999998)")]),
             ("G global minimum at K = 19 (12.9)", cb["G_minima"]["19"]["global"], 0.999998, 1e-6, [(P, "its global minimum 1.000000 (0.999998)")]),
-            ("relative err20 at wf 0.99 (verdict)", cv["nodes"]["0.99"]["err20_rel"], 6.5e-13, 0.1e-13, [(P, "σ₂₀ is converged to 6.5–8.1×10⁻¹³ relative"), ("README.md", "6.5–8.1×10⁻¹³ relative")]),
-            ("relative err20 at wf 1.01 (verdict)", cv["nodes"]["1.01"]["err20_rel"], 8.1e-13, 0.1e-13, [(P, "σ₂₀ is converged to 6.5–8.1×10⁻¹³ relative"), ("README.md", "6.5–8.1×10⁻¹³ relative")]),
+            ("relative err20 at wf 0.99 (verdict)", cv["nodes"]["0.99"]["err20_rel"], 6.5e-13, 0.1e-13, [(P, "σ₂₀ is converged to 6.5–8.1×10⁻¹³ relative")]),
+            ("relative err20 at wf 1.01 (verdict)", cv["nodes"]["1.01"]["err20_rel"], 8.1e-13, 0.1e-13, [(P, "σ₂₀ is converged to 6.5–8.1×10⁻¹³ relative")]),
             ("margins at K = 20, least", min(1e-10 / cv["nodes"][w]["err20_rel"] for w in cv["nodes"]), 123, 1, [(P, "with margins of 123–154 under item 1")]),
             ("margins at K = 20, most", max(1e-10 / cv["nodes"][w]["err20_rel"] for w in cv["nodes"]), 154, 1, [(P, "with margins of 123–154 under item 1")])]
     return out

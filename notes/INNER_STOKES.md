@@ -119,3 +119,42 @@ Moved verbatim from README.md (commit ea42b3e, lines 1637–1675, 1695–1770) o
   is ω/ω∞ = 0.999985, and the part above M = 7 is about 4×10⁻⁵ in ω.
 
 </details>
+
+## What is known about the selection, in detail (from the README)
+
+Moved verbatim from README.md (commit 96c7ab7, the four bullets of "Limits and open problems") on 2026-11-04 (README_PLAN.md,
+stage 3); links made relative to this folder.
+
+- **The expansion diverges.** `solver/largeD_late_orders.py` runs the recursion of Proposition 1 numerically to order 36,
+  as polynomials in x with coefficients sampled in θ. It reproduces sympy at orders 1–2 to 10⁻¹¹, and roundoff
+  harmonics are projected out. For $`F = 2.72\sin\theta`$ and ω = ω∞, the terms grow factorially (ratio of
+  successive orders ≈ 7–$`8.6\,k`$), dominated by ever-higher harmonics. The rate depends on the amplitude and on
+  ω. This is the setting of exponential asymptotics: the series is divergent and its Borel-type remainders carry the
+  selection.
+- **The weak directions look like the selection, measured.** The near-null directions of the Jacobian (the "junk"
+  directions of the solver sections) are variations of F's high harmonics, which Proposition 1 leaves free, so their
+  singular values plausibly measure how strongly the hidden condition pins each harmonic; that identification has not
+  been checked directly. For harmonics k = 7, 9, 11, 13 they fall between D = 20 and 60 about like
+  $`n^{-10.5}, n^{-14}, n^{-17.5}, n^{-21}`$, roughly $`n^{-1.6k}`$. $`\max\lvert\partial\Delta/\partial F\rvert`$ is itself a
+  power law where the harmonic set is fixed, $`n^{21.7}`$ on D = 40–61, so these power laws, not an exponential, are what
+  the solver measures: it matches at x = 0.7, where the selecting fast mode is of order one
+  ([notes/BEYOND_LIGHT_CONE.md](BEYOND_LIGHT_CONE.md)).
+- **F's singularities recede, to a finite distance.** The decay rate of F's harmonics grows from 0.58 at D = 12 to
+  1.02 at D = 60, which first suggested $`\tfrac14\ln n`$ growth and an entire F∞. The harmonic ratios extrapolate instead to
+  a finite rate, as the amplitude expansion of the inner problem predicts ([above](../README.md#the-inner-problem-at-large-x)), so
+  F∞ is likely not entire.
+- **The nonlinear late orders are dominated by something else.** In the nonlinear recursion the ratio of successive
+  orders grows like 7k–8.6k, against $`\lvert\chi\rvert \ge \pi/2`$ for the fast mode, so the fast
+  singulant is not directly visible. `solver/largeD_late_structure.py` characterizes the dominant growth: the rate is the
+  same at x = 0.25, 0.5, 0.75, 1 (at x = 0.25 it is carried by the x³ coefficient; the top-degree share at x = 1
+  falls to 0.008 by order 27), and the dominant harmonic grows like 0.55k, almost independently of the amplitude
+  (13, 15, 17 at order 25 for A = 1.36, 2.72, 5.44) and of ω, while the rate does depend on them (about 6, 8.5,
+  12 for those amplitudes, 25 at 2ω). An x-dependent singulant of either eikonal branch is ruled out: a heat-like
+  slow-branch singulant would give a rate that depends on x, a fast one $`\lvert\chi\rvert \ge \pi/2`$. The divergence lives in the free data
+  (θ-harmonics of F and the $`K_k`$), consistent with an x-independent Borel singularity per harmonic that moves
+  towards 0 as the harmonic grows. Its ambiguities are exponentially small changes of F's high harmonics, like the
+  solver's weak directions, not light-cone terms. (In the inner series the analogous fast high-harmonic growth turned out
+  to be the fast singularity itself, carried by harmonics with large exponents; whether the same holds for this outer
+  growth is not settled.) At a fixed number of harmonics there is no such singularity close to the origin: the
+  ball-arithmetic recomputation finds none at one harmonic and one near ζ ≈ −1.2 at three
+  ([proof/B3_borel.md](../proof/B3_borel.md) §5).

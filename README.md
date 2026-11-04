@@ -1327,79 +1327,35 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   on the plants, it put the zero at 0.99992–1.00019, provided S₁ has no zeros besides x₀ within |x| ≈ 9; twelve
   coefficients could not exclude those, and functions with exactly the real σ₀…σ₁₂ have their zero anywhere in
   0.996–1.002, the far cases hiding a ring of zeros. The estimates also need every σₖ to about 10⁻¹⁰.
-- *Fifteen orders.* σ₁₃–σ₁₅ converge at 960 bits with the late-order window J = 1000 (`solver/inner_amp/scan29J1000/`,
-  `scan31J1000/`; σ₁₅ to 5×10⁻¹³ relative, and a 1280-bit run agrees with it to 3×10⁻²⁶; at J = 750 σ₁₃ did not
-  converge, `scan27phys/`). The arg crossings keep falling (1.000299, 1.000197, 1.000109, 1.000046, 1.000026, 1.000019
-  at k = 10–15), and the effective exponent stays at 1.00. At k = 13, 14 and 15 the factored series gives 0.999995,
-  1.000027 and 0.999999, and the central Padé approximants 0.99980–0.99990, 0.99995–1.00013 and 0.99998–1.00006. Rings
-  of zeros constructed to fit the known coefficients mispredicted the next coefficient of ln S₁ by 10%–300% at k = 13,
-  by 35%–390% at k = 14 and by 40%–390% at k = 15. One ring survived σ₁₅: a Borel–Padé sum of σ₀…σ₁₄ with three zeros
-  just beyond x₀ (between |x| ≈ 7.4 and 12), which predicted σ₁₅ to 4×10⁻⁷; its zero, 0.999991, is that of the ring-free
-  sums of σ₀…σ₁₄ to 2×10⁻⁶. The ring-free Borel–Padé sums of σ₀…σ₁₅ put the zero at 0.999999 and 1.000002. Calibrated on
-  planted functions, the arg crossing alone puts the zero at 0.99992–0.99999 at thirteen orders, 0.99995–1.00005 at
-  fourteen and 0.999975–1.000018 at fifteen ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md) §5–7).
-- *Sixteen orders.* σ₁₆ converges at 960 bits with J = 1000 (`scan33J1000/`; 9×10⁻¹³ relative, and a 1280-bit run
-  agrees with it to 3×10⁻²⁶). The arg crossing falls to 1.000010, the factored series gives 1.000005 and the central
-  Padé approximants 0.999992–1.000009. The ring that survived σ₁₅ mispredicts σ₁₆ by 4×10⁻⁶ and is rejected; two
-  Borel–Padé sums of σ₀…σ₁₅ with zeros between |x| ≈ 7.4 and 12 predict σ₁₆ to 5×10⁻⁷ and survive in turn, both with
-  their zero at 0.999992. The ring-free sums of σ₀…σ₁₆ put the zero at 1.0000005–1.0000007. Calibrated on the planted
-  functions, the arg crossing puts it at 0.999982–1.000014, and the sixteen-order estimator range (arc plants, the
-  Borel–Padé family, the ring-free sums) is 0.999980–1.000014 ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md)
-  §8).
-- *Seventeen orders.* σ₁₇ converges at 960 bits with J = 1000 (`scan35J1000/`; 1.5×10⁻¹² relative, and a 1280-bit
-  run agrees with it to 2×10⁻²⁷). The arg crossing falls to 1.0000046, the factored series gives 1.0000026 and the
-  central Padé approximants [4/12]–[12/4] 0.999995–1.000002. The two rings that survived σ₁₆ mispredict σ₁₇ by
-  4–6×10⁻⁶ and are rejected, and for the first time no ring built from the latest coefficients survives either: every
-  ring-carrying sum of σ₀…σ₁₆ is rejected at once, while the ring-free sums of σ₀…σ₁₆ predicted σ₁₇ to 2–6×10⁻⁸.
-  The ring-free sums of σ₀…σ₁₇ put the zero at 0.9999999–1.0000004. Calibrated on the planted functions, the arg
-  crossing puts it at 0.999990–1.000009, and the seventeen-order estimator range (arc plants, the Borel–Padé family,
-  the ring-free sums) is 0.999990–1.000009 ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md) §9).
-- *Eighteen orders.* σ₁₈ converges at 960 bits with J = 1000 (`scan37J1000/`; 2.3×10⁻¹² relative, and a 1280-bit
-  run agrees with it to 5×10⁻²⁸). The arg crossing falls to 1.0000024, the factored series crosses below 1 for the
-  first time (0.9999987) and the central Padé approximants [3/14]–[13/4] lie at 0.999997–1.000002. The two rings built
-  from σ₀…σ₁₇ mispredict σ₁₈ by 0.7–4×10⁻⁶ and are rejected at once, while the ring-free sums of σ₀…σ₁₇ predicted it
-  to 4×10⁻⁹–6×10⁻⁸. The ring-free sums of σ₀…σ₁₈ put the zero at 0.99999997–1.0000002. Calibrated on the planted
-  functions, the arg crossing puts it at 0.999992–1.000002, and the eighteen-order estimator range (arc plants, the
-  Borel–Padé family, the ring-free sums) is 0.999992–1.000004 ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md)
-  §10).
-- *Nineteen orders.* σ₁₉ converges at 1280 bits with J = 1250 (`scan41J1250/`, the σ₀…σ₁₉ of the K = 41 runs; 4.5–5.6×10⁻¹³
-  relative at the three ω; the 960-bit J = 1000 run reached only 8×10⁻¹¹ at ω/ω∞ = 0.99, and the procedure's pre-named
-  fallback replaced it). The arg crossing falls to 1.0000015, the factored series stays below 1 (0.9999995) and the
-  central Padé approximants [4/14]–[14/4] lie within 2×10⁻⁶ of 1. All ten rings built from σ₀…σ₁₈ mispredict σ₁₉ by
-  3×10⁻⁷–10⁻² and are rejected at once, while the ring-free sums of σ₀…σ₁₈ predicted it to 4×10⁻⁹–6×10⁻⁸. The ring-free
-  sums of σ₀…σ₁₉ put the zero at 0.99999998–1.00000009. Calibrated on the planted functions, the arg crossing puts it at
-  0.999996–1.000004, and the nineteen-order estimator range (arc plants, the Borel–Padé family,
-  the ring-free sums) is 0.999996–1.000004, the narrowest yet ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md)
-  §11).
-- *Twenty orders.* σ₂₀ converges at 1280 bits with J = 1250 (the same runs' σ₂₀; 6.5–8.1×10⁻¹³ relative at the three ω,
-  and the J = 1500 run agrees to 1.5×10⁻³¹). The arg crossing falls to 1.0000009, the factored series crosses back above
-  1 (1.0000001) and every central Padé approximant [3/16]–[15/4] lies within 2×10⁻⁷ of 1. All ten rings built from
-  σ₀…σ₁₉ are rejected by σ₂₀, nine by the value detectors and one, C19-BP [4/15], by the bracket detector alone (it
-  mispredicts σ₂₀ by 10⁻⁷ where the ring-free sums predicted it to 8×10⁻¹⁰–5×10⁻⁸). The ring-free sums of σ₀…σ₂₀
-  put the zero at 0.999999997–1.000000028. Calibrated on the planted functions, the arg crossing puts it at
-  0.999997–1.000001, and the twenty-order estimator range (arc plants, the Borel–Padé family,
-  the ring-free sums) is 0.999997–1.000002 ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md) §12).
-- *Twenty-one orders.* σ₂₁ converges at 1280 bits with J = 1250 (1.0–1.3×10⁻¹² relative at the three ω, with the J = 1500
-  run 1.6×10⁻³¹ away; the two off-centre nodes were computed on a second machine and reproduce the first's K = 41 digits
-  at every common order). The arg crossing falls to 1.0000004, the factored series stays at 1.0000001 and the central
-  Padé approximants [4/16]–[16/4] lie within 5×10⁻⁷ of 1 ([3/17] is 1.3×10⁻⁶ below). All ten rings built from σ₀…σ₂₀
-  are rejected by σ₂₁ by the value detectors, with or without the bracket detector (they mispredict σ₂₁ by
-  4×10⁻⁷–10⁻², the ring-free sums predicted it to 6×10⁻¹⁰–3×10⁻⁸). The ring-free sums of σ₀…σ₂₁ put the zero at
-  0.999999998–1.000000009. Calibrated on the planted functions, the arg crossing puts it at 0.999998–1.000002, and the
-  twenty-one-order estimator range (arc plants, the Borel–Padé family,
-  the ring-free sums) is 0.999998–1.000002 ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md) §13).
+- *Orders fifteen to twenty-one.* Each new coefficient σ_K converges at 960 or 1280 bits (a 1280-bit run agrees with
+  the 960-bit one to 10⁻²⁶ or better), the arg crossing keeps falling toward 1, every ring of zeros built from the
+  known coefficients mispredicts the next one and is rejected while the ring-free Borel–Padé sums predict it to
+  10⁻⁹–10⁻⁷, and the estimator range (arc plants, the Borel–Padé family, the ring-free sums, calibrated on planted
+  functions) narrows order by order. The order-by-order record, with the ring tests, the calibrations and the
+  detectors, is [notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md) §7–13; its numbers:
+
+  | orders | σ_K converged to (relative) | arg crossing | ring-free sums' zero | estimator range |
+  |---|---|---|---|---|
+  | 15 | 5×10⁻¹³ (960 bits, J = 1000) | 1.000019 | 0.999999 and 1.000002 | 0.999975–1.000018 (arg crossing alone) |
+  | 16 | 9×10⁻¹³ | 1.000010 | 1.0000005–1.0000007 | 0.999980–1.000014 |
+  | 17 | 1.5×10⁻¹² | 1.0000046 | 0.9999999–1.0000004 | 0.999990–1.000009 |
+  | 18 | 2.3×10⁻¹² | 1.0000024 | 0.99999997–1.0000002 | 0.999992–1.000004 |
+  | 19 | 4.5–5.6×10⁻¹³ (1280 bits, J = 1250) | 1.0000015 | 0.99999998–1.00000009 | 0.999996–1.000004 |
+  | 20 | 6.5–8.1×10⁻¹³ | 1.0000009 | 0.999999997–1.000000028 | 0.999997–1.000002 |
+  | 21 | 1.0–1.3×10⁻¹² | 1.0000004 | 0.999999998–1.000000009 | 0.999998–1.000002 |
+
   Taken together over the last eight orders,
-  **ω*/ω∞ = 0.999975–1.00005, Δ∞ = 1.64387 ± 0.00006 (1.64381–1.64393) from the D = ∞ inner equations alone**
-  (the last two orders alone give 0.999997–1.000002). This is an estimator range over eight orders, the planted
-  functions and the ring-free completions, not a bound, and it uses no input from the finite-D solutions. Their
-  value, 1.643893746, lies inside it. The range assumes no zeros of S₁ nearer than x₀; every ring that put zeros
-  there was rejected, and the rings just beyond x₀ fitted to all the known coefficients, which survived one
-  coefficient at a time through σ₁₆, are rejected by σ₁₇, rebuilt from σ₀…σ₁₇ by σ₁₈, rebuilt from σ₀…σ₁₈ by σ₁₉,
-  and rebuilt from σ₀…σ₁₉ by σ₂₀ (one of them by the bracket detector alone), and rebuilt from σ₀…σ₂₀ by σ₂₁. The
-  rule itself is
-  still a conjecture (hypotheses H1–H2, gaps (a)–(c)). Tightening the number needs more orders, approximants that model
-  the competing singularity explicitly (differential or algebraic approximants), or M = 7, which evaluates the
-  multiplier at real amplitude with no series to resum (done: 1.000022).
+**ω*/ω∞ = 0.999975–1.00005, Δ∞ = 1.64387 ± 0.00006 (1.64381–1.64393) from the D = ∞ inner equations alone**
+(the last two orders alone give 0.999997–1.000002). This is an estimator range over eight orders, the planted
+functions and the ring-free completions, not a bound, and it uses no input from the finite-D solutions. Their
+value, 1.643893746, lies inside it. The range assumes no zeros of S₁ nearer than x₀; every ring that put zeros
+there was rejected, and the rings just beyond x₀ fitted to all the known coefficients, which survived one
+coefficient at a time through σ₁₆, are rejected by σ₁₇, rebuilt from σ₀…σ₁₇ by σ₁₈, rebuilt from σ₀…σ₁₈ by σ₁₉,
+and rebuilt from σ₀…σ₁₉ by σ₂₀ (one of them by the bracket detector alone), and rebuilt from σ₀…σ₂₀ by σ₂₁. The
+rule itself is
+still a conjecture (hypotheses H1–H2, gaps (a)–(c)). Tightening the number needs more orders, approximants that model
+the competing singularity explicitly (differential or algebraic approximants), or M = 7, which evaluates the
+multiplier at real amplitude with no series to resum (done: 1.000022).
 - *Shape.* The shape predictions at A = 2.72 are F₃/F₁ = 0.0551, F₅/F₁ = 0.00314 (data: above), and the D = ∞
   relation evaluated at each D's own amplitude and ω tracks the measured F₃/F₁ at D = 20–60 to within 0.004–0.006
   (0.126, 0.099, 0.087, 0.080, 0.075 against 0.130, 0.105, 0.093, 0.085, 0.080; `harm_pred.py`, heuristic).
@@ -1600,6 +1556,9 @@ symmetry is broken, stay well below it as far as they have been computed (D ≤ 
 under ℓ = 1's, more so at the smaller coupling. The σ-model's self-similar branch rises past 1/2 and ends at a fold at
 D = 8.544. Hollow marks (σ-model, D ≥ 10) are preliminary.
 
+<details>
+<summary>The four models in detail (the model notes in matter/ hold the full record)</summary>
+
 **Axion–dilaton and complex scalar** ([matter/CSS.md](matter/CSS.md)). The critical solution rotates in phase and is
 continuously self-similar (CSS), so it solves ordinary differential equations. The D = 4 values are reproduced:
 ω = 1.176952724 and γ = 0.2641066 for the axion–dilaton (Hamadé, Horne and Stewart), and ω = 1.9154447 and γ = 0.3871055
@@ -1652,6 +1611,8 @@ not established: fits of λ(D) on 5 ≤ D ≤ 9 give γ∞ from 0.36 to 0.57 (a 
 λ∞ = 2 imposed, and get worse when D = 10 is added; the points above D ≈ 10 are preliminary (a near-null band in the
 Jacobian and an unexplained drift of the gauge mode's root).
 
+</details>
+
 ## Limits and open problems
 
 - **The large-D wall.** The double-double continuation stalls near D = 73 in its working layout and near 78 with the
@@ -1679,39 +1640,15 @@ product u·κ of the horizon series that predicts the crossings; the reading is 
 
 What is known about the selection, and what is open:
 
-- **The expansion diverges.** `solver/largeD_late_orders.py` runs the recursion of Proposition 1 numerically to order 36,
-  as polynomials in x with coefficients sampled in θ. It reproduces sympy at orders 1–2 to 10⁻¹¹, and roundoff
-  harmonics are projected out. For $`F = 2.72\sin\theta`$ and ω = ω∞, the terms grow factorially (ratio of
-  successive orders ≈ 7–$`8.6\,k`$), dominated by ever-higher harmonics. The rate depends on the amplitude and on
-  ω. This is the setting of exponential asymptotics: the series is divergent and its Borel-type remainders carry the
-  selection.
-- **The weak directions look like the selection, measured.** The near-null directions of the Jacobian (the "junk"
-  directions of the solver sections) are variations of F's high harmonics, which Proposition 1 leaves free, so their
-  singular values plausibly measure how strongly the hidden condition pins each harmonic; that identification has not
-  been checked directly. For harmonics k = 7, 9, 11, 13 they fall between D = 20 and 60 about like
-  $`n^{-10.5}, n^{-14}, n^{-17.5}, n^{-21}`$, roughly $`n^{-1.6k}`$. $`\max\lvert\partial\Delta/\partial F\rvert`$ is itself a
-  power law where the harmonic set is fixed, $`n^{21.7}`$ on D = 40–61, so these power laws, not an exponential, are what
-  the solver measures: it matches at x = 0.7, where the selecting fast mode is of order one
+- **The expansion diverges**, factorially, dominated by ever-higher harmonics, at a rate set by the amplitude and
+  ω: the setting of exponential asymptotics, where Borel-type remainders carry the selection
+  ([notes/INNER_STOKES.md](notes/INNER_STOKES.md), the last section).
+- **The weak directions look like the selection, measured:** the Jacobian's near-null directions are F's high
+  harmonics, and their singular values fall like n^(−1.6k) in the harmonic k
   ([notes/BEYOND_LIGHT_CONE.md](notes/BEYOND_LIGHT_CONE.md)).
-- **F's singularities recede, to a finite distance.** The decay rate of F's harmonics grows from 0.58 at D = 12 to
-  1.02 at D = 60, which first suggested $`\tfrac14\ln n`$ growth and an entire F∞. The harmonic ratios extrapolate instead to
-  a finite rate, as the amplitude expansion of the inner problem predicts ([above](#the-inner-problem-at-large-x)), so
-  F∞ is likely not entire.
-- **The nonlinear late orders are dominated by something else.** In the nonlinear recursion the ratio of successive
-  orders grows like 7k–8.6k, against $`\lvert\chi\rvert \ge \pi/2`$ for the fast mode, so the fast
-  singulant is not directly visible. `solver/largeD_late_structure.py` characterizes the dominant growth: the rate is the
-  same at x = 0.25, 0.5, 0.75, 1 (at x = 0.25 it is carried by the x³ coefficient; the top-degree share at x = 1
-  falls to 0.008 by order 27), and the dominant harmonic grows like 0.55k, almost independently of the amplitude
-  (13, 15, 17 at order 25 for A = 1.36, 2.72, 5.44) and of ω, while the rate does depend on them (about 6, 8.5,
-  12 for those amplitudes, 25 at 2ω). An x-dependent singulant of either eikonal branch is ruled out: a heat-like
-  slow-branch singulant would give a rate that depends on x, a fast one $`\lvert\chi\rvert \ge \pi/2`$. The divergence lives in the free data
-  (θ-harmonics of F and the $`K_k`$), consistent with an x-independent Borel singularity per harmonic that moves
-  towards 0 as the harmonic grows. Its ambiguities are exponentially small changes of F's high harmonics, like the
-  solver's weak directions, not light-cone terms. (In the inner series the analogous fast high-harmonic growth turned out
-  to be the fast singularity itself, carried by harmonics with large exponents; whether the same holds for this outer
-  growth is not settled.) At a fixed number of harmonics there is no such singularity close to the origin: the
-  ball-arithmetic recomputation finds none at one harmonic and one near ζ ≈ −1.2 at three
-  ([proof/B3_borel.md](proof/B3_borel.md) §5).
+- **F's singularities recede to a finite distance,** so F∞ is likely not entire.
+- **The nonlinear late orders are dominated by something else** than the light-cone fast mode: an x-independent
+  Borel singularity per harmonic that moves toward 0 as the harmonic grows ([proof/B3_borel.md](proof/B3_borel.md) §5).
 - **The selection theorem for a truncated model (layer B).** For M harmonics the theorem is reduced to lemmas
   ([proof/C_selection.md](proof/C_selection.md)). For M = 1 the two contraction arguments are certified in ball
   arithmetic: the global continuation of the centre-regular solution, and the inner–outer matching on the matching
