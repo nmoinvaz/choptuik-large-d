@@ -382,3 +382,18 @@ The same values against s itself (`hp/plot_lowD_sqrt.py`). D − 3 is the expone
 D = 3 is where attraction switches off; a square-root branch point there keeps Δ finite at s = 0 with an infinite
 slope in D (the fits' intercepts are the bar at s = 0), while the conjectured Δ → 0 bends toward the origin. The two
 readings separate in the shaded band, where the T100 leg's planned points land.
+
+## 12. The T100 stall at D = 3.04375 was a stale checkpoint (2026-11-04)
+
+The diagnosis of T100's stop (comms 2026-11-03 23:59 UTC, "the lam-rule stop ... is right") read the second attempt,
+`down25e`, as a stall from its best start. It was not one. That attempt formed the M 320 predictor on its own plan
+(|F| 6.6×10⁻⁴, 6623 steps; `T100-win2/down25e.log` of the raw-data repository, lines 63–68) and then
+`lowD_dd.solve_point` resumed `lowDhm_x0.000157-0.975_p1_D3.0438_M320_ckpt.npz` (line 69: "resuming from checkpoint
+... (iteration 4)"), the state of the first attempt `down25d` after four damped steps, with that attempt's 4992-step
+plan and |F| 1.0×10⁻² (line 70). `solve_point` resumes any checkpoint of the tag and keeps its plan
+(`hp/lowD_dd.py`, the `a.resume` branch), and `lowD_highM.py` renames a checkpoint to `_failed` only when a solve
+returns a failure; `down25d` was stopped by the line-search rule from outside, so its checkpoint kept its name and is
+still in `T100-win2/states/`. The predictor start has never been solved, and the reading "stalls again with the same
+pivot drop" is not established. T100 also ran at `--threads 4` (the 2026-11-03 02:15 UTC command), where its folder's
+README says 6. Found by the code analysis of [LOW_D_SPEEDUP.md](LOW_D_SPEEDUP.md); before any rerun the stale
+checkpoint is moved aside, and `solve_point` should refuse a checkpoint whose plan is not the start's.
