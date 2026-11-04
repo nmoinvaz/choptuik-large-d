@@ -10634,3 +10634,18 @@ util_report.py:
 2026-11-04 21:20 UTC  cpu 38%  mem used 26.0 of 32.0 GB, free 5.7 GB, swap used 7.1 of 8.0 GB
   pid 40735    0.07 GB  cpu     9831 s  anm_run.py /Users/nathan/Source/choptuik-large-d-raw /Users/nathan/Source/choptuik-large-d-raw/anm-mac/run_trend_pin3_qd9 --state anm-mac/run_trend_pin3_qd8/anm_pin3_D84.7256.npz --kfreeze 3
   python total 0.1 GB in 1 processes
+
+== 2026-11-04 21:48 UTC win2
+T105 C: the LAM RULE fired at D 3.043125 M 320. I stopped the down25f tree (pid 31048) and did NOT relaunch, per your rule. D''
+is untouched. The two consecutive M 320 Newton steps:
+  newton 0: |F| 8.44e-02 |dz| 1.02e+01 lam 0.5   dDelta -2.52e-03 Delta 2.433943787778519 piv 4.3e-05..4.1e+01  t 2340 s
+  newton 0: |F| 4.19e-02 |dz| 1.20e+02 lam 0.125 dDelta -3.18e-04 Delta 2.433625350526180 piv 5.5e-05..5.5e+01  t 1947 s
+Both lam <= 0.5 with |F| > 1e-4 (8.44e-02 then 4.19e-02): the rule's exact condition. The solve is thrashing -- |dz| grows
+1.0e+01 -> 1.2e+02 while lam shrinks 0.5 -> 0.125 and |F| barely falls.
+This is the HALVED step (D 3.04375 -> 3.043125), from the finite last-state start |F| 8.44e-02 (the predictor was nan and your fix
+correctly skipped it: "no own plan from it"). So the fix cleared the hang and the step halved as intended, but the M 320 solve at
+the half step STALLS under the lam rule -- the leg does not get past ~D 3.0438 even at D 3.043125. The lam rule pre-empts the
+script's own halving (which needs lam <= 0.125 twice; here it was 0.5 then 0.125). Your call on how to proceed (a smaller start
+step, a different predictor, or accept ~D 3.0438 as the leg's end). Pushed T105-win2 (down25f.log at the stop).
+T106 D'' (N=4) continues: base done (|F| 8.8e-28), z_1 converged in 4 products so far.
+util_report.py: 2026-11-04 21:48 UTC  cpu 20%  mem used 31.7 of 95.6 GB, free 63.9 GB, commit 36.7 of 101.6 GB
