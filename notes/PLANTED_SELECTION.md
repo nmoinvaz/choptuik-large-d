@@ -3062,6 +3062,191 @@ run at all 22 common orders (1–43), and against T94's J 1250 run 9 of the 22 s
 difference 1.2×10⁻¹³ (the J dependence, within the error). T104's first stage (`converge`) passes at wf 0.99, 1.00 and
 1.01, with |σ₂₂(a) − σ₂₂(b)| = 9.0×10⁻³³ and err₂₂ margins of 73 and 65; the remaining stages run as queued.
 
+### 14.2 σ₂₂ is converged: items 1(a)–(d) pass
+
+The `converge` stage ran on the real files 2026-11-04 06:22–06:29 UTC on win2 (T104; logs in the raw-data repository's
+`T104-win2/`, "K22 converge" in `planted_checks_k22.json`), after the dry run and the gate readings of sections 14.0
+and 14.1.
+
+| wf | σ₂₂ (K 45, J 1250, 1280 bits) | err22 = plateau + 8.99×10⁻³³ (relative, margin) | σ₀…σ₂₁ against `scan43J1250` | ratio law: \|Δ²\| at k = 20 |
+|---|---|---|---|---|
+| 0.99 | −5.2880894193982202142×10⁻²¹ − 9.3040184332180552966×10⁻²⁰i | 1.28×10⁻³¹ (1.38×10⁻¹², 73) | bitwise equal, 22/22 | 0.0066 |
+| 1.00 | −1.0524045221456612579×10⁻²⁰ − 9.0181465233453892797×10⁻²⁰i | 1.39×10⁻³¹ (1.53×10⁻¹², 65) | bitwise equal, 22/22 | 0.0066 |
+| 1.01 | −1.5461948945375185363×10⁻²⁰ − 8.7086582629044377998×10⁻²⁰i | 1.50×10⁻³¹ (1.70×10⁻¹², 59) | bitwise equal, 22/22 | 0.0066 |
+
+- **Items 1(a)–(d) pass at every node.** The plateau errors are 1.19, 1.30 and 1.41×10⁻³¹, and the pilot difference
+  added to each, |σ₂₂(a) − σ₂₂(b)| = 8.99×10⁻³³, is 0.069 of (a)'s (ruling 2's case did not arise). Pilot (b)'s
+  σ₁₉…σ₂₁ sit at 0.013, 0.011 and 0.118 of (a)'s plateau errors from (a)'s. Item 1(b) compares two K on one machine
+  at every node (win2's K 45 files against its own K 43 files): 22 of 22 strings at each node. The five mutations of
+  item 1 were not run on the real files by T104; they are queued (T104b) and recorded here when they land.
+- **σ₂₂ follows the ratio law's rotation:** σ₂₁/σ₂₂ = 10.67 − 9.93i at ω∞; the second differences of σ_k/σ_{k+1} are
+  0.0066–0.012 at k = 10–20.
+- **Spread in wf.** σ₂₂ changes by 6.5% of itself between the nodes (6.3%, 6.4% for σ₂₀, σ₂₁); the largest err22 is
+  2.55×10⁻¹¹ of that change (1.24×10⁻¹¹ at σ₂₀, 1.73×10⁻¹¹ at σ₂₁).
+- **Cost and machines.** All four files were computed on win2: the three J 1250 files in 860–862 min each on three
+  processes (section 14.0), pilot (b) in 998.2 min. The Mac's replica of (a) (T102) reproduced its file in all 23
+  strings (section 14.0); the Mac's replica of (b) (T103) is identical to win2's (b) log at all 16 common orders up to
+  k = 31 (2026-11-04 06:52 UTC) and is still running; its final comparison is recorded here when it lands.
+
+### 14.3 The pipeline on plants first
+
+51 plants at K = 20, 21, 22 (10.2 min in all), before the real data. All four checks pass:
+- the regenerated plants' K = 20 and 21 estimates equal the stored K = 21 records to 1.4×10⁻¹² at worst (the 10⁻⁹ of
+  item 2; the two runs on different machines, the Mac at K = 21 and win2 here);
+- N1, 7/7: a lone simple zero recovered at K = 22 by arg, ratio, Padé and G to 3.5×10⁻⁷ at worst; graded against
+  ω_t + 0.002 it fails, as it must;
+- N2, 2/2: no estimator prints a number.
+
+### 14.4 The real estimates at K = 22
+
+The record "N0 scan45J1250" (K = 22) equals the K = 21 record "N0 scan43J1250" at K = 20 and 21 to 8.9×10⁻¹⁶ (the same
+σ₀…σ₂₁ through the same code, item 3).
+
+| estimator | K = 22 | K = 21 | K = 20 |
+|---|---|---|---|
+| arg crossing | 1.0000002 | 1.0000004 | 1.0000009 |
+| ratio | 0.999996 | 0.999992 | 0.999988 |
+| central Padé | [3/18]–[17/4]: 0.9999998–1.0000000 (mid 0.9999999) | [3/17]–[16/4]: 0.9999987–1.0000001 (mid 0.9999994) | [3/16]–[15/4]: 0.9999999–1.0000002 (mid 1.0000000) |
+| G (production κ̄) | 1.0000000 | 1.0000001 | 1.0000001 |
+| Aitken, k − 2 … k | 1.0000000 | 0.9999997 | 0.9999991 |
+| effective exponent c at ω∞ | 1.000 − 0.000i | 1.000 − 0.000i | 1.000 − 0.000i |
+
+- **The arg crossings keep falling:** 1.0000024, 1.0000015, 1.0000009, 1.0000004, 1.0000002 for k = 18–22. The distance
+  from 1 shrank by ×0.51 from k = 20 to 21 and ×0.52 from 21 to 22.
+- **The central Padé approximants [4/17] to [17/4] lie within 5×10⁻⁸ of 1, and [3/18], the lowest, is 2.1×10⁻⁷ below**
+  (0.99999979; [3/17] was 1.3×10⁻⁶ below at K = 21), so the mid is 0.9999999. The outer approximants [1/20], [2/19],
+  [19/2] and [20/1] lie at 0.999996–1.000004.
+- **G falls to 1.0000000** (0.99999999, 7×10⁻⁹ below 1, from 0.6×10⁻⁷ above at K = 21); **Aitken** 1.0000000 (the last
+  two differences of arg_k are 0.42×10⁻⁶, then 0.21×10⁻⁶). Context, not part of any range.
+- **Detectors:** D-ratio and D-ratiolaw, as at K = 16–21. **D-bracket is silent:** G (0.99999999) and the Padé mid
+  (0.99999992) both lie below the arg crossing (1.0000002).
+- **The mutation controls fire.** σ₂₂ → −σ₂₂ at wf 1.00 fires D-G, D-arg and D-bracket; σ₂₂ × (1 + 10⁻³) fires D-G and
+  D-bracket. They move the estimates by 9.8×10⁻³ and 8.2×10⁻³.
+
+### 14.5 The ring test: what each K = 21 completion predicted for σ₂₂
+
+Every completion was regenerated first and reproduces its stored zero to the printed digits; the K = 21 completions'
+K = 21 estimates are the real ones exactly and the earlier sums' K = 20, 21 estimates equal the stored K = 21 records.
+The benchmark, the simple-zero law from τ₂₀, τ₂₁, misses τ₂₂ by 3.8–4.1×10⁻⁶. D-bracket is silent on the real data at
+K = 22 (section 14.4). Run 2026-11-04 on win2 (`T104-win2/ring.log`; "K22 ring test").
+
+| completion (K = 21) | its zero | zeros in \|x\| < 7.3 / 12 / 16 | σ₂₂ rel. error | τ₂₂ rel. error | its arg₂₂ | detectors beyond the real data's | survives | without D-bracket |
+|---|---|---|---|---|---|---|---|---|
+| C21-W1, W2, W3 (ratio law) | 0.999925–0.999944 | 5–6 / 19 / – | 8.8×10⁻³–1.3×10⁻² | 0.21–0.35 | 1.0094–1.0134 | D-G, D-arg, D-bracket | no | no |
+| C21-ARC, four shapes | 0.99996–0.99999 | 0–4 / 17–19 / – | 1.6–5.3×10⁻³ | 0.04–0.13 | 1.0017–1.0051 | D-G, D-arg, D-bracket | no | no |
+| **C21-BP [3/18]** (ring of 9) | 0.99999997 | 0 / 9 / 15 | 1.4×10⁻⁶ | 3.4–4.1×10⁻⁵ | 1.0000017 | D-G, D-arg, D-bracket | **no** | **no** |
+| **C21-BP [4/17]** (ring of 8) | 0.99999999 | 0 / 8 / 14 | 5.0–6.0×10⁻⁷ | 1.4×10⁻⁵ | 1.0000008 | D-G, D-arg, D-bracket | **no** | **no** |
+| C21-BP [5/16] (fails the type rule; a completion, not a candidate) | 0.99097 | 12 / 34 / 54 | 0.8–2.1×10⁻⁶ | 2.3–5.5×10⁻⁵ | 0.9999981 | D-G, D-bracket | no | no |
+| C21-BP [6/15] | 1.000000009 | 0 / 1 / 12 | 2.6–2.8×10⁻⁸ | 6.2–8.0×10⁻⁷ | 1.0000002 | D-bracket | no | yes |
+| C21-BP [7/14] | 1.000000004 | 0 / 1 / 10 | 0.88–1.2×10⁻⁸ | 2.5–2.8×10⁻⁷ | 1.0000002 | D-bracket | no | yes |
+| C21-BP [8/13] | 0.999999998 | 0 / 1 / 7 | 4.5–5.4×10⁻⁹ | 1.3×10⁻⁷ | 1.0000002 | – | yes | yes |
+| C21-BP [9/12] | 1.000000002 | 0 / 1 / 4 | 4.4–6.6×10⁻¹⁰ | 1.2–1.9×10⁻⁸ | 1.0000002 | – | yes | yes |
+| C21-BP [10/11] | 1.000000002 | 0 / 1 / 4 | 3.5–8.7×10⁻¹⁰ | 0.84–2.5×10⁻⁸ | 1.0000002 | – | yes | yes |
+
+- **All nine rings of the K = 21 generation are rejected under both readings of item 4,** and so is C21-BP [5/16],
+  tested as a completion: the ratio-law and arc tails by D-G and D-arg (σ₂₂ off by 1.6×10⁻³–1.3×10⁻²), C21-BP [3/18]
+  by D-G and D-arg (1.4×10⁻⁶), C21-BP [4/17] by D-G and D-arg (5.0–6.0×10⁻⁷), C21-BP [5/16] by D-G (0.8–2.1×10⁻⁶).
+  As at K = 21, no ring's fate rests on D-bracket.
+- **The ring-free sums of σ₀…σ₂₁ predicted σ₂₂ to 3.5×10⁻¹⁰–2.8×10⁻⁸** ([9/12] and [10/11] best, [6/15] worst), the
+  benchmark 3.8–4.1×10⁻⁶. In the BP family of thirty (item 5: the twenty-five of section 13.0 and these five),
+  D-bracket alone rejects C21-BP [6/15] and [7/14] and C20-BP [7/13] and [8/12]; C20-BP [6/14] and C16-BP [6/10] fire
+  D-G as well, C18-BP [6/12], C14-BP [5/9] and C13-BP [5/8] D-arg and D-bracket; the other twenty-one survive.
+- **Nothing is carried over to a K = 23 test under either reading.**
+
+### 14.6 Calibration at K = 22
+
+Errors ×10⁶ of each estimator on the plants (worst to best; sections 13.6 and earlier give them ×10⁴), and the zero each
+implies for the real data at seven digits; the K = 21 calibration from the new records reproduces section 13.6 (arc
+0.999998–1.000002, BP family of twenty-five 0.999999–1.000000). The family of thirty gives the same ranges as the
+twenty-five at K = 21 and 22: the five new sums lie inside them. Run on win2 (`T104-win2/calib.log`; "K22 calib").
+
+| plants | n | arg crossing → zero | ratio → zero | central Padé mid → zero | G → zero |
+|---|---|---|---|---|---|
+| all 28 arc plants | 28 | +0.1…+1.4 → 0.9999988–1.0000002 | −12.4…+30.1 → 0.9999657–1.0000081 | −1.1…+0.6 → 0.9999993–1.0000010 | −0.1…+0.1 → 0.9999999–1.0000001 |
+| BP family (30) | 30 | −0.1…+0.8 → 0.9999995–1.0000004 | −35.5…+8.7 → 0.9999871–1.0000312 | −5.1…+6.6 → 0.9999933–1.0000050 | −0.9…+1.0 → 0.9999989–1.0000009 |
+| C-EXP | 1 | −0.2 → 1.0000004 | +4.1 → 0.9999916 | −1.9 → 1.0000019 | −0.1 → 1.0000001 |
+| REFIT (resid ≤ 10⁻⁴) | 5 | +0.6…+0.8 → 0.9999994–0.9999997 | −11.2…−10.4 → 1.0000062–1.0000069 | −0.3…+0.2 → 0.9999998–1.0000002 | 0.0 → 1.0000000 |
+
+- The arg crossing's error on the arc plants is +0.1…+1.4×10⁻⁶, all of one sign this time (−1.2…+2.0×10⁻⁶ at K = 21),
+  and G's within 0.1×10⁻⁶ on every arc plant; the ratio estimate's error has both signs on the arc plants (the mirror
+  family's is positive, +26…+30×10⁻⁶); the Padé mid's is within 1.1×10⁻⁶ on the arc plants and 6.6×10⁻⁶ on the BP
+  family.
+- The arc plants' σ₂₁ and σ₂₂ differ from the measured ones by 3.0–5.6% and 4.0–7.9% (worst node), C-EXP's by 2.1% and
+  3.5%, the REFIT plants' by 1.7–27% and 2.0–33%.
+
+### 14.7 The next generation and the ring-free completions at K = 22
+
+Glued at σ₂₂ (tails from k = 23); zeros counted at wf 1.00. Run on win2 (`T104-win2/recomplete.log`; "K22 recomplete").
+
+| completion (K = 22) | its zero | zeros in \|x\| < 7.3 / 12 / 16 | type rule |
+|---|---|---|---|
+| C22-W1, W2, W3 (ratio law) | 0.999949–0.999963 | 3–5 / 20 / – | – |
+| C22-ARC, four shapes (best ω_t 0.99847–1.00095, L2 floor 2.6–7.6×10⁻³) | 0.999976–0.999991 | 0–3 / 17–20 / – | – |
+| C22-BP [3/19] | 1.000000007 | 0 / 9 / 16 | passes (largest pole \|t\| = 1.74) |
+| C22-BP [4/18] | 0.999999986 | 0 / 7 / 15 | passes (1.80) |
+| C22-BP [5/17] | 1.000000023 | 0 / 4 / 17 | passes (1.84) |
+| C22-BP [6/16] | 1.0000000044 | 0 / 1 / 13 | passes (1.79) |
+| C22-BP [7/15] | 1.0000000046 | 0 / 1 / 11 | passes (1.86) |
+| C22-BP [8/14] | 1.0000000019 | 0 / 1 / 8 | passes (1.82) |
+| C22-BP [9/13] | 1.0000000029 | 0 / 1 / 4 | passes (1.84) |
+| C22-BP [10/12] | 1.0000000031 | 0 / 1 / 4 | passes (1.84) |
+| C22-BP [11/11] | 1.0000000031 | 0 / 1 / 4 | passes (1.84) |
+
+- **Ring-free and passing the type rule, in this order: C22-BP [6/16], [7/15], [8/14], [9/13], [10/12], [11/11],**
+  with zeros at 1.0000000019–1.0000000046, all above 1 by 2–5×10⁻⁹ (at K = 21 they lay on both sides of 1 within
+  10⁻⁸). [10/12] and [11/11] are the same sum, as [9/11] and [10/10] were at K = 20.
+- **The next generation's rings,** C22-BP [3/19], [4/18] and [5/17] (9, 7 and 4 zeros in |x| < 12, their own zeros
+  0.999999986–1.000000023) and the ratio-law and arc tails (17–20 zeros, their zeros 0.99995–0.99999, all below 1),
+  would be tested by σ₂₃; no run for it is queued. C22-BP [5/17] passes the type rule, where C21-BP [5/16] failed it.
+
+### 14.8 The order-22 projection
+
+The model est_k = ω* + c r^k through k = 20 and 21 predicts arg₂₂ − 1 = +2.27×10⁻⁷ for ω* = 1, +0.82×10⁻⁷ for 0.999998
+(the K = 21 range's lower end) and +0.27×10⁻⁷ for 0.999975 (the headline's); the real value is +2.30×10⁻⁷, 2.5×10⁻⁹
+from the first, 1.47×10⁻⁷ from the second and 2.03×10⁻⁷ from the third. The model's own error is 3.9×10⁻⁶ (its
+largest miss over the 28 arc plants at k = 22 given their true ω_t, −3.9×10⁻⁶…+0.4×10⁻⁶; over k = 19–21 on the real
+data, 0.25–1.1×10⁻⁶ depending on ω*). Item 8 calls the projection decisive only if the other prediction is farther from
+arg₂₂ than three times that, 1.2×10⁻⁵, and 1.47×10⁻⁷ is not: indecisive, as at K = 15–21, although ω* = 1 is 58 times
+closer to arg₂₂ than the K = 21 range's lower end. The log-linear trend of arg_k − 1 over k = 4–22 falls ×0.543 per
+order (the same over k = 4–21), and the trend through k = 21 put arg₂₂ − 1 at 2.29×10⁻⁷, 0.7×10⁻⁹ from where it is.
+Under noise of size sigma_err on every σ_k (20 seeds), arg₂₂ moves by at most 1.2×10⁻⁹. Run on win2
+(`T104-win2/project.log`; "K22 project").
+
+### 14.9 Combination
+
+- K = 22 estimator range (hull): the calibrated arg over the arc plants, 0.9999988–1.0000002; over the BP family of
+  thirty, 0.9999995–1.0000004; the ring-free completions, 1.0000000019–1.0000000046. **The hull is
+  0.9999988–1.0000004.**
+- It overlaps the K = 21 headline (0.999975–1.000050), so by section 14.0 item 7 the headline is their union,
+  **0.999975–1.000050, unchanged.** The K = 22 range lies inside the K = 21 one (0.9999984–1.0000016); the range from
+  the last two orders alone, reported as context by item 7, is 0.9999984–1.0000016, and K = 20–22 would give
+  0.9999971–1.0000017. An estimator range, not a bound.
+- G, with its spread: production 0.99999999 at K = 22 (1.00000006 at K = 21); over the minima of its objective within a
+  factor 5 of the best, 0.99999990–1.00000000 (0.99999997–1.00000007 at K = 21); its global minimum 0.99999990
+  (1.00000007). Run on win2 (`T104-win2/combine.log`; "K22 combine").
+
+### 14.10 Verdict at K = 22
+
+- σ₂₂ is converged to 1.4–1.7×10⁻¹² relative at the three nodes, with margins of 59–73 under item 1 and the J 1500
+  pilot at 0.069 of the plateau error, and continues every trend of σ₀…σ₂₁; it is 0.896 of P5's K = 21 type bound
+  (proof/P5_scope.md). The Mac's replica of (a) reproduced it in all 23 strings; the replica of (b) and item 1's five
+  mutations on the real files are still to land.
+- The real estimates sit within 2.3×10⁻⁷ of 1 on both sides of it: arg 1.0000002, G 0.99999999, the central Padé
+  approximants [4/17]–[17/4] within 5×10⁻⁸ of 1 with [3/18] 2.1×10⁻⁷ below, Aitken 1.0000000; the ring-free sums of
+  σ₀…σ₂₂ lie at 1.0000000019–1.0000000046.
+- The calibrated range narrowed from 0.9999984–1.0000016 (K = 21) to 0.9999988–1.0000004, a width of 1.6×10⁻⁶ against
+  3.2×10⁻⁶ at K = 21. The headline union stays 0.999975–1.000050 because the procedure keeps the earlier orders'
+  ranges; the last two orders alone give 0.9999984–1.0000016, and K = 20–22 would give 0.9999971–1.0000017.
+- ω∞ = 1 lies inside every range, as at K = 13–21. The order-22 projection puts ω* = 1 closest to arg₂₂ (2.5×10⁻⁹
+  against 1.5×10⁻⁷ for the K = 21 range's lower end), but the model's own error, 3.9×10⁻⁶, is 26 times the second
+  hypothesis's miss: by item 8 the data still do not decide between 1 and a value a few 10⁻⁷ below it.
+- All nine rings of the K = 21 generation, and C21-BP [5/16], are rejected by σ₂₂ under both readings of item 4, the
+  second order in a row at which D-bracket decides no ring. So σ₀…σ₂₂ exclude every ring built so far from up to
+  twenty-one coefficients. The next generation (C22-BP [3/19], [4/18], [5/17], zeros 0.999999986–1.000000023) would be
+  tested by σ₂₃; no run is queued.
+- D-bracket is silent on the real data at K = 22 and, on its own, rejects four ring-free sums of the family of thirty.
+  Its rule stays as item 4 fixed it; it changed no range at K = 22.
+
 ## The selection-zoom figure (from the README)
 
 Moved verbatim from README.md (commit ea42b3e, lines 1970–1978) on 2026-11-04 (notes/README_PLAN.md); links made

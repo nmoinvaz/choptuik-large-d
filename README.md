@@ -106,13 +106,14 @@ In detail:
   predict the shape of the echo, F₃/F₁ = 0.055 against 0.055 extrapolated from the data, and with three harmonics the
   full set of conditions gives Δ = 1.619, 1.5% below Δ∞, and with five harmonics Δ = 1.64516, 0.077% above (one
   harmonic: 29% above): the offset alternates in sign and shrinks fifteen- to twentyfold per harmonic pair. Without
-  truncation, an amplitude expansion to twenty-one orders
-  puts the selected ω at 0.999975–1.00005 ω∞ (Δ∞ = 1.64387 ± 0.00006, an estimator range over eight orders, tested on
-  planted functions; the twenty-first order alone gives 0.999998–1.000002), at amplitude 2.720 (measured: 2.70–2.72),
-  provided the selection function has no zeros closer to the origin than the selected one; the fourteenth to twentieth
-  coefficients rejected every such alternative built so far. Alternatives with further zeros just beyond the selected
-  one survive one coefficient each, and they put the zero inside the range. The finite-D solutions give 1.643893746,
-  inside that range. The rule itself is not yet proved ([Large D](#large-d-what-the-1d-expansion-can-and-cannot-see)).
+  truncation, an amplitude expansion to twenty-two orders
+  puts the selected ω at 0.999975–1.00005 ω∞ (Δ∞ = 1.64387 ± 0.00006, an estimator range over nine orders, tested on
+  planted functions; the twenty-second order alone gives 0.9999988–1.0000004), at amplitude 2.720 (measured: 2.70–2.72),
+  provided the selection function has no zeros closer to the origin than the selected one; the fourteenth to
+  twenty-second coefficients rejected every such alternative built so far. Alternatives with further zeros just beyond
+  the selected one survive one coefficient each, and they put the zero inside the range. The finite-D solutions give
+  1.643893746, inside that range. The rule itself is not yet proved
+  ([Large D](#large-d-what-the-1d-expansion-can-and-cannot-see)).
 - **Relation to published work.** Agreement with the accepted values at D = 4 and at the maximum of Δ near D = 3.756;
   a 6×10⁻⁵ difference at D = 5 that the published higher-resolution data trace to resolution; and the published
   conjecture Δ → 0 as D → ∞ is not
@@ -704,7 +705,7 @@ The results, in order:
 - [The inner problem at large x](#the-inner-problem-at-large-x): near $`x \sim \sqrt n`$ the equations lose n
   altogether; without gravity they reduce to Kummer's equation, whose Stokes constant gives C(n,s) asymptotically (times
   a power of n and a phase). With gravity, the working hypothesis is that this multiplier vanishing is the selection
-  rule (Conjecture 1); computed without truncation to twenty-one orders in the amplitude, it selects ω within 5×10⁻⁵
+  rule (Conjecture 1); computed without truncation to twenty-two orders in the amplitude, it selects ω within 5×10⁻⁵
   of ω∞, given an assumption about the selection function's other zeros (within 0.4% without it).
 - [Proposition 5](#proposition-5-the-unstable-mode-at-infinite-d-is-exact): in s = r²/(2n) the inner problem is a
   nonlinear heat equation, and its shift symmetry in r² gives an exact unstable mode with λ = 2, which explains
@@ -1278,7 +1279,7 @@ C(n,s) \approx -\,i\,\frac{\sqrt{2\pi}}{\Gamma(1+s)}\,(n+1)^{s+1/2}\,e^{-i\pi\La
 Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = -1-s`$.
 
 <details>
-<summary>The amplitude expansion in detail: every harmonic exact, the shape, the harmonic-1 condition and where its zero is real, the planted test, twenty-one orders</summary>
+<summary>The amplitude expansion in detail: every harmonic exact, the shape, the harmonic-1 condition and where its zero is real, the planted test, twenty-two orders</summary>
 
 - *Every harmonic exact.* Put $`F = A\sin\theta + \sum_{\nu\ge3} f_\nu(A)\,e^{i\nu\theta}`$ (+ c.c.). Harmonic μ first
   appears at order $`A^{\lvert\mu\rvert}`$, so keeping $`\lvert\mu\rvert \le K`$ at each order in A is exact: no
@@ -1367,12 +1368,12 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   calibrated on the plants, it put the zero at 0.99992–1.00019, provided S₁ has no zeros besides x₀ within |x| ≈ 9;
   twelve coefficients could not exclude those, and functions with exactly the real σ₀…σ₁₂ have their zero anywhere in
   0.996–1.002, the far cases hiding a ring of zeros. The estimates also need every σₖ to about 10⁻¹⁰.
-- *Orders fifteen to twenty-one.* Each new coefficient σ_K converges at 960 or 1280 bits (a 1280-bit run agrees with
+- *Orders fifteen to twenty-two.* Each new coefficient σ_K converges at 960 or 1280 bits (a 1280-bit run agrees with
   the 960-bit one to 10⁻²⁶ or better), the arg crossing keeps falling toward 1, every ring of zeros built from the
   known coefficients mispredicts the next one and is rejected while the ring-free Borel–Padé sums predict it to
   10⁻⁹–10⁻⁷, and the estimator range (arc plants, the Borel–Padé family, the ring-free sums, calibrated on planted
   functions) narrows order by order. The order-by-order record, with the ring tests, the calibrations and the
-  detectors, is [notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md) §7–13; its numbers:
+  detectors, is [notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md) §7–14; its numbers:
 
   | orders | σ_K converged to (relative) | arg crossing | ring-free sums' zero | estimator range |
   |---|---|---|---|---|
@@ -1383,6 +1384,7 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   | 19 | 4.5–5.6×10⁻¹³ (1280 bits, J = 1250) | 1.0000015 | 0.99999998–1.00000009 | 0.999996–1.000004 |
   | 20 | 6.5–8.1×10⁻¹³ | 1.0000009 | 0.999999997–1.000000028 | 0.999997–1.000002 |
   | 21 | 1.0–1.3×10⁻¹² | 1.0000004 | 0.999999998–1.000000009 | 0.999998–1.000002 |
+  | 22 | 1.4–1.7×10⁻¹² | 1.0000002 | 1.0000000019–1.0000000046 | 0.9999988–1.0000004 |
 
   The twenty-first order in detail. σ₂₁ converges at 1280 bits with J = 1250 (1.0–1.3×10⁻¹² relative at the three ω,
   with the J = 1500 run 1.6×10⁻³¹ away; the two off-centre nodes were computed on a second machine and reproduce the
@@ -1394,14 +1396,25 @@ Weber's classical Stokes constant $`\sqrt{2\pi}/\Gamma(-\nu_W)`$ with $`\nu_W = 
   the arg crossing puts it at 0.999998–1.000002, and the twenty-one-order estimator range (arc plants, the Borel–Padé
   family, the ring-free sums) is 0.999998–1.000002 ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md) §13).
 
-  Taken together over the last eight orders,
+  The twenty-second order in detail. σ₂₂ converges at 1280 bits with J = 1250 (1.4–1.7×10⁻¹² relative at the three ω,
+  with the J = 1500 run 9.0×10⁻³³ away; a replica on a second machine reproduced the central file in all 23
+  coefficients). The arg crossing falls to 1.0000002, the factored series to 0.99999999, and the central Padé
+  approximants [4/17]–[17/4] lie within 5×10⁻⁸ of 1 ([3/18] is 2.1×10⁻⁷ below). All nine rings built from σ₀…σ₂₁ are
+  rejected by σ₂₂ by the value detectors, with or without the bracket detector (they mispredict σ₂₂ by 5×10⁻⁷–10⁻², the
+  ring-free sums predicted it to 3.5×10⁻¹⁰–2.8×10⁻⁸). The ring-free sums of σ₀…σ₂₂ put the zero at
+  1.0000000019–1.0000000046. Calibrated on the planted functions, the arg crossing puts it at 0.9999988–1.0000002, and
+  the twenty-two-order estimator range is 0.9999988–1.0000004 ([notes/PLANTED_SELECTION.md](notes/PLANTED_SELECTION.md)
+  §14).
+
+  Taken together over the last nine orders,
 **ω*/ω∞ = 0.999975–1.00005, Δ∞ = 1.64387 ± 0.00006 (1.64381–1.64393) from the D = ∞ inner equations alone**
-(the last two orders alone give 0.999997–1.000002). This is an estimator range over eight orders, the planted
+(the last two orders alone give 0.9999984–1.0000016). This is an estimator range over nine orders, the planted
 functions and the ring-free completions, not a bound, and it uses no input from the finite-D solutions. Their
 value, 1.643893746, lies inside it. The range assumes no zeros of S₁ nearer than x₀; every ring that put zeros
 there was rejected, and the rings just beyond x₀ fitted to all the known coefficients, which survived one
 coefficient at a time through σ₁₆, are rejected by σ₁₇, rebuilt from σ₀…σ₁₇ by σ₁₈, rebuilt from σ₀…σ₁₈ by σ₁₉,
-and rebuilt from σ₀…σ₁₉ by σ₂₀ (one of them by the bracket detector alone), and rebuilt from σ₀…σ₂₀ by σ₂₁. The
+and rebuilt from σ₀…σ₁₉ by σ₂₀ (one of them by the bracket detector alone), rebuilt from σ₀…σ₂₀ by σ₂₁, and rebuilt
+from σ₀…σ₂₁ by σ₂₂. The
 rule itself is
 still a conjecture (hypotheses H1–H2, gaps (a)–(c)). Tightening the number needs more orders, approximants that model
 the competing singularity explicitly (differential or algebraic approximants), or M = 7, which evaluates the
@@ -1719,9 +1732,9 @@ What is known about the selection, and what is open:
 - **Open:** the D = ∞ selection rule itself. Without gravity the multiplier is C(n,s) (Proposition 2), asymptotically a
   $`{}_2F_0`$ Stokes constant (the inner problem), and propagation inside the light cone cannot change whether it
   vanishes (Proposition 3). With gravity, their vanishing with three and five harmonics, and without truncation, selects
-  ω ever closer to ω∞ (to within 5×10⁻⁵ without truncation, at twenty-one orders), with the measured shape
+  ω ever closer to ω∞ (to within 5×10⁻⁵ without truncation, at twenty-two orders), with the measured shape
   ([above](#the-inner-problem-at-large-x)). What remains is to converge these further (M = 9 and radius checks of M = 7;
-  the amplitude series beyond its twenty-one computed orders across ω), to see whether the harmonic-1 condition lands
+  the amplitude series beyond its twenty-two computed orders across ω), to see whether the harmonic-1 condition lands
   exactly on ω∞, and to prove the working hypothesis that this is the selection rule. That would be an equation for ω∞
   and F∞ alone, from which Δ∞ would follow to any precision.
 - **Checked at D = 30, 45 and 61: one physical unstable mode.** The zeros of the growth-mode determinant
