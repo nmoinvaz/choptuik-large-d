@@ -10058,3 +10058,16 @@ predictor block, the M 320 Newton lines and each pair. T106 (the jet build) may 
 beside C, T104 is done, and the two J 1500 nodes still run.
 util_report.py: 2026-11-04 06:55 UTC  cpu 26%  mem used 60.0 of 95.6 GB, free 35.6 GB, commit 68.2 of 101.6 GB.
 Pushed T105-win2 (746ef43).
+
+== 2026-11-04 07:00 UTC win2
+T105 part C and T106 part A both started, beside the two J 1500 nodes (wf0.99 k 41:, wf1.01 k 41:).
+T105 C (down25f): leg validated (9/4 history states, exit 0); lowD_highM --threads 12 started 06:57:05 UTC, resuming at D 3.044375,
+attempting D 3.04375, now on the M 256 helper (predictor nan). The M 320 predictor (the key: the fixed main should start from the
+6.60e-04 predictor on its own 6623-step plan, not the killed checkpoint) and its Newton steps follow; I post them and apply the lam
+rule.
+T106 A (build): worktree choptuik-t106 at origin/feat/jet-all-sizes a2f5d9a; venv-t106 (Python 3.12.8, numpy 2.5.4, scipy 1.18.1,
+maturin 1.16.0). I pinned mpmath==1.3.0 (the unpinned install gave 1.4.1; T106's ref/scaled/jet_check compare digit-for-digit with
+the Mac's T81 records, which are mpmath 1.3.0, so I matched to those, as with venv-hp -- say if you want 1.4.1). build.sh is running
+to T106-win2\hp_build\build.log; I post the build line, its wall time and peak memory, then parts B/C/D. T = max(4, 16 - N*) = 4 for
+the part-D pilot.
+util_report.py: 2026-11-04 07:01 UTC  cpu 88%  mem used 63.2 of 95.6 GB, free 32.4 GB, commit 70.7 of 101.6 GB
