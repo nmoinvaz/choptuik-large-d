@@ -10410,3 +10410,12 @@ Jacobian, ~83 min/step, grinding at the floor; not the lam rule -- |F| ~1e-28 <<
 p1_D3.0438_M384.npz written; the run is now on D 3.0425 (12 cores). down25f.jsonl's full pair record (change from M_w, hours,
 peak RSS) follows at the run's checkpoint.
 T106 E Run 3 (coarse base) running: (a) PASS, (b) PASS so far. Nodes done. util_report.py: 2026-11-04 15:51 UTC  cpu 84%  mem used 33.0 of 95.6 GB, free 62.6 GB, commit 38.7 of 101.6 GB
+
+== 2026-11-04 16:15 UTC win2
+T105 C: the down25f.jsonl pair record for D 3.04375 landed (decision "pair", 9.284 h for the point):
+  D 3.04375, M pair 320/384, Delta_w (M 320) 2.4364591133608267, Delta (M 384) 2.436459113272686, err_est 8.814034341042314e-11
+  (the M 320 <-> M 384 Richardson gap), change from M_w (diff) -8.814034341042314e-11, F_w 6.36e-29, F_n 5.66e-28, its 3/4,
+  seconds 10050.8 / 22169.3, steps 3975/3978, tails_ok true, peak_rss null (Windows). The 15:51 Deltas stand; this adds err_est,
+  the M_w change, and the timing.
+The run is on D 3.0425 now (M 256 helper |F| nan -> the M 320 two-pass fallback, as at 3.04375). T106 E Run 3 (coarse base):
+(a)-(d) PASS; e_lu and e_gmres pending (e_lu is where the coarse base's pivot 3.8e-11 should show, vs the p1's 5.1e-05).
