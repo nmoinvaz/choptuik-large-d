@@ -87,9 +87,10 @@ sentences on the double-double agreement had followed the Mac refit (9.6×10⁻�
 paper kept the stored fit (5.8×10⁻⁸); they are on the table's numbers again, `check_numbers.py` compares both tables
 to the file (`formula_table`) and checks that a fresh fit stays within 10⁻⁹ of the stored formula on the fitted range
 (`formula_refit`). `python3 ../formula_all.py --refit` from `solver/data` prints the fresh fit and its distance.
-One more number followed: the README's agreement of the formula with the pinned runs T73 and T75 (Δ after one
-full-system Newton step, 895 records at D = 67.74–73.27, printed by `python3 ../plot_delta.py --raw DIR`) read
-7.4×10⁻⁸, which neither fit reproduces now (the stored formula gives 1.3×10⁻⁷ with a median of 4.9×10⁻⁸, the Mac
-refit 1.7×10⁻⁷; the pinned Δ before that step, which the graph does not show, sits within 4.3×10⁻⁸); it is now the
-stored formula's 1.3×10⁻⁷. The graph `solver/delta.svg` was redrawn with the stored formula (its caption's
-double-double agreement 6×10⁻⁸ where it read 1×10⁻⁷).
+One more number followed: the README's agreement of the formula with the pinned runs T73 and T75 (the amber diamonds,
+Δ after one full-system Newton step, 1054 records above D = 67.77, the line `T73 and T75 ... against the formula` that
+`python3 ../plot_delta.py --raw DIR` prints) read 7.4×10⁻⁸, the Mac refit's number (7.35×10⁻⁸); the stored formula
+gives 4.3×10⁻⁸ (median 2.6×10⁻⁸), which the README quotes now. (For a few hours on 2026-11-04 it read 1.3×10⁻⁷, a
+different quantity, `plot_delta.full1_of`'s pinned Δ plus its linearised correction, taken for the same one.) The graph
+`solver/delta.svg` was redrawn with the stored formula (its caption's double-double agreement 6×10⁻⁸ where it read
+1×10⁻⁷, its formula limit 1.643898 where the refit's constant gave 1.643897).

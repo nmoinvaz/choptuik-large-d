@@ -391,7 +391,7 @@ and if that zero is the unique simple zero in a box containing the numerical lim
   inside the basin of Theorem B's construction, would close this; alternatively, Theorem B's construction at n ≥ n₀ with
   explicit n₀ and a certified solution at some D ≥ n₀ + 2.
 
-The numerical agreement (ω*/ω∞ = 0.9999–1.0002 under the assumption above) then becomes a consistency check of the
+The numerical agreement (ω*/ω∞ = 0.999975–1.00005 under the assumption above) then becomes a consistency check of the
 theorem rather than its basis.
 
 ## 7. Staged plan

@@ -285,6 +285,38 @@ def formula_refit():
 
 
 @check
+def lowD_formula_bound():
+    """README, the low-D figure's caption: the sqrt(D - 3) formula (hp/plot_lowD_values.py C_DELTA) against every point
+    of hp/data/delta_dd_lowD.csv at its largest M, D <= 4"""
+    import csv
+    sys.path.insert(0, os.path.join(ROOT, "hp"))
+    import plot_lowD_values as P
+    rows = [r for r in csv.DictReader(l for l in open(os.path.join(ROOT, "hp/data/delta_dd_lowD.csv")) if not l.startswith("#"))]
+    best = {}
+    for r in rows:
+        D, M = float(r["D"]), int(r["M"])
+        if D <= 4.0 and (D not in best or M > best[D][0]):
+            best[D] = (M, float(r["Delta_hi"]) + float(r["Delta_lo"] or 0))
+    err = sorted(abs(P.formula(P.C_DELTA, D) - v) for D, (M, v) in best.items())
+    return [("worst point against the sqrt(D - 3) formula, D <= 4", err[-1], 1.3e-5, 1e-6, [("README.md", "lies within 1.3×10⁻⁵ of the √(D − 3) formula")]),
+            ("third worst point (the rest)", err[-3], 8e-6, 1e-6, [("README.md", "the rest within 8×10⁻⁶")])]
+
+
+@check
+def gamma_formula_dd():
+    """README "gamma": the rational gamma formula (the stored coefficients) against the double-double gamma points
+    (hp/data/gamma_dd.jsonl) for D <= 30 and at D = 61"""
+    sys.path.insert(0, os.path.join(ROOT, "solver"))
+    import formula_all
+    rows = [json.loads(l) for l in open(os.path.join(ROOT, "hp/data/gamma_dd.jsonl"))]
+    g = [(r["D"], r["gamma"]) for r in rows if "gamma" in r]
+    e30 = max(abs(float(formula_all.gamma(D)) - v) for D, v in g if D <= 30)
+    e61 = max(abs(float(formula_all.gamma(D)) - v) for D, v in g if 60 <= D <= 61.1)
+    txt = [("README.md", "The rational γ formula is within 1.2×10⁻⁹"), ("README.md", "off by 1.0×10⁻⁷ at D = 61")]
+    return [("gamma formula against the double-double gamma, D <= 30", e30, 1.2e-9, 1e-10, txt), ("the same at D = 61", e61, 1.0e-7, 1e-8, txt)]
+
+
+@check
 def loader_exact():
     """hp/dd_fits_mp.load_points must return hi + lo of every CSV row exactly. The CSV stores repr() of each double;
     reading those strings as decimals at 60 digits moves a point by up to 2e-16 (notes/NUMERICS_REVIEW.md F7,

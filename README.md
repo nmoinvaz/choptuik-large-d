@@ -57,10 +57,10 @@ What is new: not found in the literature searched ([notes/LIT_REVIEW.md](notes/L
 
 How: Choptuik's solution is computed as a periodic boundary-value problem in self-similar variables. An f64 solver in
 [`solver/`](solver/), with a Rust kernel for its residual (this crate), covers D = 3.6–40, and a separate double-double
-(about 32-digit) solver in [`hp/`](hp/) reaches D = 61. The theory (the large-D expansion, its Stokes multipliers and
-the inner problem at D = ∞) is in the Large-D section, with the scripts that check each step. The physics is in this
-file; the software is described at the end. The computations, derivations and text were produced by Claude (Anthropic)
-under Nathan Moinvaziri's direction and have not yet been reviewed by an expert
+(about 32-digit) solver in [`hp/`](hp/) reaches D = 67.77 (73.27 with the pinned runs). The theory (the large-D
+expansion, its Stokes multipliers and the inner problem at D = ∞) is in the Large-D section, with the scripts that check
+each step. The physics is in this file; the software is described at the end. The computations, derivations and text
+were produced by Claude (Anthropic) under Nathan Moinvaziri's direction and have not yet been reviewed by an expert
 ([How this work was done](#how-this-work-was-done)).
 
 ## Main results
@@ -171,14 +171,14 @@ integration-step error has been extrapolated out ("step-converged"), with the so
 enough Fourier modes in time at low D; hollow points are held out of the fit. The green diamonds are
 double-double points from D = 3.045 to 67.77 (below D = 4 the formula does not apply);
 above D = 30.2 it matches them to 5.8×10⁻⁸. The amber diamonds are the pinned double-double runs: T73 and T75 from D =
-67.74 to 73.27 (Δ after one full-system Newton step), which it matches to 1.3×10⁻⁷, and T85 past 73.27 in a layout with
+67.74 to 73.27 (Δ after one full-system Newton step), which it matches to 4.3×10⁻⁸, and T85 past 73.27 in a layout with
 the last node moved toward the horizon, where Δ is known only to about 10⁻⁶
 ([notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), section 12.3). The shaded ranges say how well Δ is known in each (the
 median of the range's error estimate: the change from the next resolution, the nearby checks, or the difference between
 two runs; hover for the largest), and the grey trace is that error at every point, on the log axis at the right. As D →
 ∞, γ → 1/2 (imposed in the γ fit) and Δ → Δ∞ = 1.643893746 ± 0.000000015 if Δ is analytic in 1/D (from the
-double-double points; both limits are discussed [below](#the-formula)). Details are in
-[`solver/CONTEXT.md`](solver/CONTEXT.md). Regenerate with
+double-double points; both limits are discussed [below](#the-formula)). Details of the points are in
+[Values](#values) and [notes/SOLVER_HP.md](notes/SOLVER_HP.md). Regenerate with
 `cd solver/data && python3 ../plot_delta.py --raw ../../../choptuik-large-d-raw` (the pinned runs are in the
 [raw data](#raw-data)).
 
@@ -280,7 +280,8 @@ hp/lowD_errors.svg and hp/lowD_sqrt.svg) is in [notes/LOW_D.md](notes/LOW_D.md),
 `hp/export_dd.py` puts the best value per D into [`hp/data/delta_dd.csv`](hp/data/delta_dd.csv) next to the continuation
 points, as run `lowD-M<M>`; `hp/plot_lowD_values.py` draws them; rerun all three as runs land). Left: Δ at the largest M
 at each D, filled where the two largest M agree to 10⁻⁸ (or M = 80 alone at D ≥ 3.7, where M 80 → 96 is 1.2×10⁻⁹) and
-hollow where they do not yet. Every point, resolved or not, lies within 8×10⁻⁶ of the √(D − 3) formula below. Middle: γ,
+hollow where they do not yet. Every point, resolved or not, lies within 1.3×10⁻⁵ of the √(D − 3) formula below (the
+two lowest, at D = 3.044 and 3.045, by 1.1–1.3×10⁻⁵; the rest within 8×10⁻⁶). Middle: γ,
 from the exact growth-mode matrix at the largest M. Right: how much Δ moves when M is raised. The step from M = 80 to 96
 grows a hundredfold from D = 3.7 to 3.4, while M = 96 → 128 stays at 1–2×10⁻⁹ down to D = 3.4.
 
@@ -336,7 +337,7 @@ and the root of det M(λ); 67 points, D = 8.25–61, about 10⁻¹² for D = 16�
 and (1.6 ± 2.2)×10⁻⁶ for four to eight powers
 (`cd hp && python3 gamma_compare.py data/gamma_dd.jsonl data/local/gamma_dd.jsonl`), with no sign of levelling off;
 fixing λ∞ = 2 fits better with the same number of parameters. So γ∞ = 1/2 to about 5×10⁻⁷ (a spread over fit choices,
-not a bound), and λ = 2 + 3.0324/n − 34.3/n² + … (γ = 1/2 − 0.7581/n + …). The rational γ formula is within 10⁻⁹ of
+not a bound), and λ = 2 + 3.0324/n − 34.3/n² + … (γ = 1/2 − 0.7581/n + …). The rational γ formula is within 1.2×10⁻⁹ of
 these points for D ≤ 30 and off by 1.0×10⁻⁷ at D = 61, where it extrapolates. 1/2 is also the value conjectured in the
 literature ([below](#relation-to-published-work)), and like Δ∞ it is not fixed at any finite order of the 1/n expansion
 ([Proposition 5](#proposition-5-the-unstable-mode-at-infinite-d-is-exact)).
@@ -424,7 +425,8 @@ perturbations do not act back on the metric, and they obey the wave equation on 
 either sign. A growth rate with Re λ > 0 would be a second unstable mode of the critical solution. An argument-principle
 count of the test field's growth rates (`hp/modecount_test.py`, edges refined until their verification adds nothing)
 finds only the exact zero λ = 0, the rotation of the background's own field into ψ. That holds at D = 8.25, 16.76, 30.07
-and 45.05 for −0.15 < Re λ < 6.2–6.7 and |Im λ| < 1.5ω, in two node layouts each, and at D = 4 near the imaginary
+and 45.05 for −0.06 < Re λ < 6.18 (the boxes reach −0.15 and 6.70 at some D) and |Im λ| < 1.5ω, in two node layouts
+each, and at D = 4 near the imaginary
 axis (−0.114 < Re λ < 0.193, |Im λ| < 6.38) in the second of two layouts (numerical evidence). The first layout at
 D = 4 showed zeros with Re λ > 0 that the second does not, artifacts of that discretization; the real decaying mode at
 λ = −0.3651 is in both.
@@ -702,7 +704,7 @@ The results, in order:
 - [The inner problem at large x](#the-inner-problem-at-large-x): near $`x \sim \sqrt n`$ the equations lose n
   altogether; without gravity they reduce to Kummer's equation, whose Stokes constant gives C(n,s) asymptotically (times
   a power of n and a phase). With gravity, the working hypothesis is that this multiplier vanishing is the selection
-  rule (Conjecture 1); computed without truncation to twelve orders in the amplitude, it selects ω within about 2×10⁻⁴
+  rule (Conjecture 1); computed without truncation to twenty-one orders in the amplitude, it selects ω within 5×10⁻⁵
   of ω∞, given an assumption about the selection function's other zeros (within 0.4% without it).
 - [Proposition 5](#proposition-5-the-unstable-mode-at-infinite-d-is-exact): in s = r²/(2n) the inner problem is a
   nonlinear heat equation, and its shift symmetry in r² gives an exact unstable mode with λ = 2, which explains
@@ -1621,7 +1623,7 @@ scalar with no regular centre and no analytic light cone. So the γ∞ = 1/2 mec
 light cone and the inner scaling, as well as no 1/r² term.
 
 **Scalar multiplet with ℓ = 1** ([matter/ELL.md](matter/ELL.md)). The repository's DSS solver, adapted to the
-ℓ-multiplet and checked against the main solver at ℓ = 0 (Δ to 10⁻¹⁴), reproduces the published D = 4 values: Δ =
+ℓ-multiplet and checked against the main solver at ℓ = 0 (Δ to 9×10⁻¹⁴), reproduces the published D = 4 values: Δ =
 0.4598611 and γ = 0.118900, against 0.460 ± 0.002 and 0.119 ± 0.001 (Olabarrieta, Ventrella, Choptuik and Unruh 2007).
 Followed up in D:
 
@@ -1719,10 +1721,10 @@ What is known about the selection, and what is open:
   vanishes (Proposition 3). With gravity, their vanishing with three and five harmonics, and without truncation, selects
   ω ever closer to ω∞ (to within 5×10⁻⁵ without truncation, at twenty-one orders), with the measured shape
   ([above](#the-inner-problem-at-large-x)). What remains is to converge these further (M = 9 and radius checks of M = 7;
-  the amplitude series beyond its twelve computed orders across ω), to see whether the harmonic-1 condition lands
+  the amplitude series beyond its twenty-one computed orders across ω), to see whether the harmonic-1 condition lands
   exactly on ω∞, and to prove the working hypothesis that this is the selection rule. That would be an equation for ω∞
   and F∞ alone, from which Δ∞ would follow to any precision.
-- **Checked at D = 8.25, 16.76, 30, 45 and 61: one physical unstable mode.** The zeros of the growth-mode determinant
+- **Checked at D = 30, 45 and 61: one physical unstable mode.** The zeros of the growth-mode determinant
   were counted by the argument principle in −0.08 < Re λ < 6.18 and a full period in Im λ, which holds the growth rates
   of both symmetry sectors ([notes/MODE_COUNT.md](notes/MODE_COUNT.md); at D = 61 also to Im λ = 3.5ω and to Re λ = 12,
   figure below). Besides λ_phys there are only the τ translation (λ = 0) and a gauge mode of the formulation at λ = 1 +
@@ -1786,8 +1788,8 @@ What has been checked, and how:
   Eight deliberately broken versions of the final test fail or pass exactly as predicted
   (`solver/proof/mutation_controls.py`).
 - **The Δ∞ error bar:** a planted-truth test with known limits ([above](#is-the-period-analytic-in-1d)).
-- **Quoted numbers:** `check_numbers.py` ties 34 headline numbers to their source files, and a self-test shows each
-  check would catch a one-digit change.
+- **Quoted numbers:** `check_numbers.py` ties more than 800 quoted numbers to their source files, and a self-test shows
+  each check would catch a one-digit change.
 - **References and novelty:** every citation was checked against publisher or arXiv records
   ([notes/REF_CHECK.md](notes/REF_CHECK.md)), and every novelty claim against the closest prior papers, read rather than
   recalled ([notes/LIT_REVIEW.md](notes/LIT_REVIEW.md)).

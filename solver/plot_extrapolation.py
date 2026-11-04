@@ -90,7 +90,7 @@ def main():
     svg.text(16, 48, "Every curve reproduces the f64 Δ for D = 4–40 to its precision; they agree to 1e-5 up to D ≈ 60 "
                      "and fan out above D ≈ 100 toward different limits.", size=12)
     svg.text(16, 66, f"The double-double points up to D = {Dtop:.0f} decide it: fitted to them, half-integer series predict "
-                     "unseen points 40–300× worse than the 1/D series and forced limits 100–3500× worse (README).",
+                     "unseen points 20–250× worse than the 1/D series (README).",
              size=12)
     svg.text(16, 84, f"The analytic family (blue) is the one left, with Δ∞ = {DINF_DD:.9f}; the faded curves are ruled out.",
              size=12, fill=INK)

@@ -248,7 +248,7 @@
 <g><polygon points="1033.5,384.2 1038.2,388.9 1033.5,393.6 1028.8,388.9" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>D = 76.8000, Δ = 1.7746469185511 (pinned double-double run T85-mac x80, after one full-system step; formula +1.0e-07)</title></g>
 <g><polygon points="1042.7,384.4 1047.4,389.1 1042.7,393.8 1038.0,389.1" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>D = 77.5120, Δ = 1.7734815178820 (pinned double-double run T85-mac x80, after one full-system step; formula +1.6e-07)</title></g>
 <g><polygon points="1050.4,384.5 1055.1,389.2 1050.4,393.9 1045.7,389.2" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>D = 78.1049, Δ = 1.7725268462134 (pinned double-double run T85-mac x80, after one full-system step; formula +2.5e-07)</title></g>
-<text x="608.8" y="422.7" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Δ∞ = 1.643893746  (double-double; formula limit 1.643897)</text>
+<text x="608.8" y="422.7" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Δ∞ = 1.643893746  (double-double; formula limit 1.643898)</text>
 <text x="608.8" y="398.6" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">π²/6 = 1.6449</text>
 <g><circle cx="83.0" cy="116.0" r="4.5" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/><title>in the fit</title></g>
 <text x="92.0" y="120.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">in the fit</text>
@@ -396,7 +396,7 @@
 <g><polygon points="99.0,786.7 103.5,791.2 99.0,795.7 94.5,791.2" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>D = 71.8000, Δ = 1.7834622856612 (pinned run T75 pin5)</title></g>
 <g><polygon points="98.1,787.4 102.6,791.9 98.1,796.4 93.6,791.9" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>D = 75.0000, Δ = 1.7776889111985 (pinned run T85-mac x80)</title></g>
 <g><polygon points="97.3,788.1 101.8,792.6 97.3,797.1 92.8,792.6" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/><title>D = 78.1049, Δ = 1.7725268462134 (pinned run T85-mac x80)</title></g>
-<g><polygon points="78.0,803.0 84.0,809.0 78.0,815.0 72.0,809.0" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = ∞: Δ∞ = 1.643893746 ± 1.5e-8 (double-double points, analytic in 1/D; the formula's own limit is 1.643897)</title></g>
+<g><polygon points="78.0,803.0 84.0,809.0 78.0,815.0 72.0,809.0" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/><title>D = ∞: Δ∞ = 1.643893746 ± 1.5e-8 (double-double points, analytic in 1/D; the formula's own limit is 1.643898)</title></g>
 <text x="90.0" y="827.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">D = ∞:  Δ∞ = 1.643894</text>
 <text x="460.7" y="595.7" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">D=4</text>
 <text x="335.1" y="651.2" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">D=6</text>

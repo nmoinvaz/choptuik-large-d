@@ -338,7 +338,7 @@ def main():
     cD, _ = weighted_series(1 / Dsc[mfit], ysc[mfit], 1 / ssc[mfit], 10)
     fD = lambda d: np.polyval(cD[::-1], 1 / np.asarray(d, float))
     hold_err = np.abs(fR(Dh) - yh).max() if len(Dh) else np.nan
-    dinf = formula_all.fit_delta()[0][0]
+    dinf = formula_all.coefficients()[0]["a"][0]          # the stored formula's constant
     ddp = dd_points(Dh.max() if len(Dh) else FIT_MAX)          # double-double points beyond the f64 ones
     dd_err = np.abs(fR(ddp[:, 0]) - ddp[:, 1]).max()
     dd_all = dd_points(FIT_MAX, every=0.0)

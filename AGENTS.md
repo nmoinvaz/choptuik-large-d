@@ -22,7 +22,7 @@ Conventions for the Claude sessions (cloud and local) that run computations here
   `hp/gamma_dd.py` / `hp/gamma_batch.py --procs N`. Its root search is local (around the formula's value): to count
   unstable modes, use a winding count of det M(λ) (notes/MODE_COUNT.md, if present).
 - **Other matter models:** the ℓ-multiplet solver is `solver/matter/dss_ell.py` (a copy-and-adapt of `solver/dss.py`;
-  ℓ = 0 reproduces it to 10⁻¹⁴). Check new field equations symbolically against covariant ones first, as
+  ℓ = 0 reproduces it to 9×10⁻¹⁴). Check new field equations symbolically against covariant ones first, as
   `solver/matter/struct_eqs.py` does, and validate at D = 4 against published values before continuing in D.
 - **Validated numerics (`solver/proof/`):** python-flint (arb/acb) throughout; Lohner-type integration in
   `validated_int.py`; Taylor-disc certificates in `lemma6b1_disc.py`. Quote enclosures with endpoints rounded outward.
