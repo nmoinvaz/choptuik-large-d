@@ -16,7 +16,8 @@ formulation of hp/pinning.py; their coefficients are zero).
 
 --corrector qd runs the quad-double Newton of the kernel (hpkernel.driver.newton_qd, Solver.newton_q) on the pinned
 system (pinning.PinnedQ: the held harmonics' offset subtracted from the quad-double residual and added to the step, as
-PinnedSolver does in double-double) from the double-double prediction, to --tol_qd on max |F|. The base is polished the
+PinnedSolver does in double-double) from the double-double prediction, to --tol_qd on max |F| in at most --qd_it steps
+(the quadratic phase begins only below |dz| ~ 1e-11, 13.19, so 8 cut off converging iterations). The base is polished the
 same way first. The result's first two parts are the next base (the jets are double-double) and all four parts are
 saved (save_q). Where the double-double Newton takes no step from a residual of 1e-14 in the horizon block's weak
 directions (13.17), the quad-double one sees those directions. (Freezing the held harmonics as directions on the
@@ -88,7 +89,7 @@ def coefficients(s, zh, zl, N, held=None):
 def main():
     args = list(sys.argv[1:])
     opt = dict(state="T75/pin7_D73.2657.npz", kfreeze=3, N=24, eps=1e-16, h_max=2.0, steps=20, D_max=200.0, corrector="dnp",
-               tol=1e-20, tol_growth=1.45, accept_stall=1e-17, junk_only=0, threads=4, w=24, trend="", tol_qd=1e-28)
+               tol=1e-20, tol_growth=1.45, accept_stall=1e-17, junk_only=0, threads=4, w=24, trend="", tol_qd=1e-28, qd_it=12)
     for k in list(opt):
         f = "--" + k
         if f in args:
@@ -114,7 +115,7 @@ def main():
         returns zh, zl, |F|, steps, accepted (converged, or stalled below accept_stall)"""
         if opt["corrector"] == "qd":
             sq = PinnedQ(spx.s, spx.ch, spx.cl)
-            z4, hist, conv = newton_qd(sq, qparts(ph, pl), tol=opt["tol_qd"], it_max=8, verbose=True)
+            z4, hist, conv = newton_qd(sq, qparts(ph, pl), tol=opt["tol_qd"], it_max=opt["qd_it"], verbose=True)
             last_q["z4"] = z4
             Fh, Fl = spx.residual(z4[0], z4[1])
             Fc = float(rnorm(Fh, Fl))

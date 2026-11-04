@@ -1659,5 +1659,34 @@ and two quad-double Newton steps at full length take it to 1.7×10⁻²⁹: the 
 linearised correction recorded for the stall was 4×10⁻¹⁴) and |dz| from 5×10⁻¹³ to 7×10⁻²⁰, the second moves Δ by
 10⁻²⁰. The double-double residual of the result's first two parts is 6.1×10⁻²⁰, where the double-double Newton could
 take no step from 10⁻¹⁵. The wall of 13.17–13.18 is the corrector's precision, not the problem's conditioning or the
-predictor. A quad-double step costs 45–60 s at M 32 on two threads. The chain from there: pending (the run continues as
-this is written).
+predictor. The chain from there (h_max 1, three steps, `anm-mac/run_trend_pin3_qd3/`; Δ − formula against the README's
+tabulated coefficients, `hp/taylor_predict.py formula_delta`):
+
+| from | to (h) | quad-double steps | max \|F\| | Δ | Δ − formula |
+|---|---|---|---|---|---|
+| 79.27 | 80.27 (1) | 5, stalled at 2.3e-9 | — | — | — |
+| 79.27 | 79.77 (0.5) | 6 | 3.1e-30 | 1.76992625893774225 | −1.48e-7 |
+| 79.77 | 80.77 (1) | 8, crawling at 6e-9 with λ = 1/32 | — | — | — |
+| 79.77 | 80.27 (0.5) | 7, stalled at 3.2e-9 | — | — | — |
+| 79.77 | 80.02 (0.25) | 8 | 1.2e-43 | 1.76954388298321508 | −1.53e-7 |
+| 80.02 | 80.52 (0.5) | 8, cut off at 7.4e-17 while converging | — | — | — |
+| 80.02 | 80.27 (0.25) | 7 | 5.6e-38 | 1.76916382457664212 | −1.58e-7 |
+
+The reading. (i) Every accepted point converges to the quad-double floor (10⁻³⁰ to 10⁻⁴³ against the tolerance
+10⁻²⁸) where the double-double chain accepted stalls at 10⁻¹⁴. The quad-double Δ differs from the stalled states' by
+−9.0×10⁻¹⁰ at 79.77 and −1.85×10⁻⁸ at 80.27, the linearised corrections recorded for those stalls (−9×10⁻¹⁰ and
+−1.9×10⁻⁸), so the stall rule's Δ uncertainty was right. (ii) The corrector's basin sets the step, not the predictor's
+radius (a_max 2.2–2.3). The prediction's double-double residual is 10⁻¹⁴ at every h (the jets' double-double floor),
+but the first quad-double step from it is 4×10⁻⁹ to 1.2×10⁻⁸ in the three attempts that failed and 3×10⁻¹⁰ to 2×10⁻⁹
+in those that converged. The iteration creeps from there: the first step raises max |F| to 10⁻⁹ (its quadratic term,
+the pivot ratio is 10¹⁷), then |dz| falls by factors of 1.5–2 with half or smaller steps until it is below about 10⁻¹¹,
+from where the convergence is quadratic; from 4×10⁻⁹ it does not get there in 8 steps, from 2×10⁻⁹ it does. So the
+step is h ≤ 0.5 with this corrector, and `--qd_it` is 12 now (8 cut off the 80.52 attempt at 7×10⁻¹⁷, two steps
+from converged). (iii) Cost: 17 s per quad-double Jacobian and LU at M 32 on two threads, 35–60 s per step when the
+"dz" acceptance tries trial points (each trial costs a Jacobian), 2.5–3 min per converged point plus the jets' 30 s; a
+failed attempt at h = 1 costs 9–12 min. (iv) Δ − formula: the chain quotes the README's tabulated coefficients; the
+live refit of `solver/formula_all.py` (what `check_numbers.py formula_dd` evaluates) lies below them by 6×10⁻⁸ at
+D 61, 8×10⁻⁸ at 67.77 and 1.1×10⁻⁷ at 80, so against it the same points sit at −3.7, −4.2 and −4.7×10⁻⁸. Both drift
+by about −2×10⁻⁸ per unit D past the fitted range, as an extrapolation does; the two evaluations' disagreement inside
+the range is reported to the coordinator's status (it is of the size of the formula's quoted error). The chain
+continues as `anm-mac/run_trend_pin3_qd4/` (from the 80.27 state, h_max 0.5, qd_it 12, toward D 110).
