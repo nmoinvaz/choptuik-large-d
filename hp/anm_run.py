@@ -152,7 +152,7 @@ def main():
     rec_path = os.path.join(out, "anm_run.jsonl")
     require_raw(rec_path)
     zh, zl, m = load_state(os.path.join(raw, opt["state"]))
-    D, M, nodes = mp.mpf(m.get("D_str", repr(m["D"]))), int(m["M"]), list(m["nodes"])
+    D, M, nodes = (mp.mpf(m["D_str"]) if "D_str" in m else mp.mpf(float(m["D"]))), int(m["M"]), list(m["nodes"])
     kt, kc, ks = m.get("kt", 36), m.get("kc", 146), m.get("ks", 130)
     kf, N = opt["kfreeze"], opt["N"]
     D_start = D

@@ -30,7 +30,7 @@ Ds = F.clean(pts, sorted(d for d in pts if 10 <= d <= 67.77), verbose=False)
 ev, _, _ = F.fit(pts, Ds, "1/D", 20)
 for st in states:
     z, m = load_q(os.path.join(raw, st))
-    D, M = mp.mpf(m.get("D_str", repr(m["D"]))), int(m["M"])
+    D, M = (mp.mpf(m["D_str"]) if "D_str" in m else mp.mpf(float(m["D"]))), int(m["M"])
     s = make_solver(D, M, nodes=list(m["nodes"]), kt=m.get("kt", 36), kc=m.get("kc", 146), ks=m.get("ks", 130), threads=opt["threads"],
                     kfreeze=opt["kfreeze"])
     s.set_segs(s.plan(np.asarray(z[0]), np.asarray(z[1]), 1e-32, 0.05))
