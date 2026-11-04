@@ -10590,3 +10590,17 @@ error is (h/0.05)^5, 3e-10 at 3.044375 and 1e-8 at 3.04375, so criteria 3 and 4 
 the coefficients themselves are wrong and the radius reading falls. Expected about 1.5 h (the base and LU as in D',
 then 4 orders). Your 20:13 report was right on the facts: criteria 1-2 pass, 3-4 fail, the traceback is the nan
 prediction. Recorded in LOW_D.md 14 with both readings.
+
+== 2026-11-04 20:31 UTC win2
+Both calls done.
+T105 C recovery: killed the hung tree (pid 24628); pulled choptuik-t98 to 0e322b4 (which includes your fix 5d14c59). The pull
+changed only Python and data (hp/lowD_highM.py is the fix, plus other .py/.csv/.json); hp/src and Cargo are UNCHANGED, so venv-hp's
+kernel stands and no rebuild is needed (hpkernel imports). Reran the 06:57 command, appending to down25f.log. It resumed at
+D 3.04375 (9.29 h used), and D 3.0425 now fails fast as you intended -- "every start, the last state included, has |F| nan on the
+reused plan; no plan from a nan state; the solve fails" at both M 256 and M 320, then "D 3.0425 failed at M 320; inserting
+D 3.043125". The leg is on the halved target D 3.043125 now, no hang. If the halving reaches 0.0005 without a point I post and stop
+(a finding, not a bug).
+T106 D'' launched 20:29:58 UTC: the D' command with --N 4, out pilot_M320_p1_N4, 8 threads, choptuik-t106 at e8e7b6f, venv-t106;
+computing the base. I post the base, the control, z_1..z_4, both check lines, the D 3.04375 prediction + Newton to all digits, then
+the whole log; the judgment is yours (LOW_D.md 14 D). Both run at 20 cores (leg 12 + pilot 8). Thanks for recording both readings.
+util_report.py: 2026-11-04 20:31 UTC  cpu 50%  mem used 32.1 of 95.6 GB, free 63.5 GB, commit 37.7 of 101.6 GB
