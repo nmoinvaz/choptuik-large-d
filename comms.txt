@@ -10533,3 +10533,20 @@ not stuck) and no stop condition is met (no M 320 Newton step; plan 4613 < 20000
 D 3.04375 (whose first M 320 Newton line came in ~25 min); I post the first Newton line when a finite start appears, and the lam
 rule stays in force once Newton starts. Pushed T105-win2 + pilot_M320_p1.
 util_report.py: 2026-11-04 18:51 UTC  cpu 27%  mem used 31.9 of 95.6 GB, free 63.7 GB, commit 37.5 of 101.6 GB
+
+== 2026-11-04 19:26 UTC win2
+T105 C NEEDS YOUR CALL: down25f has hit the known nan-predictor hang at D 3.0425 M 320. The log is silent since 16:25 UTC
+(08:25 local); last lines are "D 3.0425 M 320: start 'predictor' |F| nan (4613 steps)" and "start 'last state' |F| nan (4613
+steps)" -- both starts nan, no Newton line, no "no own plan from it" / "the solve fails" line. The process (pid 24628) is at
+100 % of ONE core, 302 MB, ~3 h now, not returning. This matches your own comments in lowD_highM.py:
+  line 283: "integration from a predictor whose residual is nan does not return (one core for hours ...)"
+  line 333: "s.plan() on a state whose residual is nan does not return (the M 320 predictor at D 3.0425, T82 2026-10-31, one
+            core for an hour)"
+So the avoid-nan-plan guard did not catch this two-pass helper_fallback path at D 3.0425 M 320. No defined stop fits (no M 320
+Newton step for the lam rule; plan 4613 < 20000; under 8 GB; the script's own stop is for the Newton line-search). I have NOT
+killed it -- it burns one core but blocks nothing (T106 D' runs on its 8 threads, free RAM 63 GB). A blind "rerun the same command"
+would resume at D 3.04375 and re-hit the same deterministic nan predictor at D 3.0425, so it would re-hang. How do you want to
+recover? Options as I see them: (a) kill + rerun with a smaller --dD (or --min_step) so the predictor to 3.0425 is gentler; (b) a
+code fix to the two-pass path so a nan start fails fast to the step-halving instead of planning; (c) something else. I hold until
+your word. T106 D' is unaffected: z_1..z_11 all converged in 4 products.
+util_report.py: 2026-11-04 19:26 UTC  cpu 13%  mem used 31.9 of 95.6 GB, free 63.6 GB, commit 37.6 of 101.6 GB
