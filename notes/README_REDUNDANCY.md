@@ -115,3 +115,16 @@ These are outside a consolidation pass (they would change numbers or claims), so
   1056–1084).
 - The f64 points against the double-double values at D = 15.6–21: "5.6×10⁻¹¹" in The formula (189), "within
   5.5×10⁻¹¹" in Evidence (614).
+
+## Addendum (2026-11-04): the reorganization
+
+The line numbers above are those of the README before 2026-11-04. On that day the README was reorganized for a
+scientific reader in the stages of [README_PLAN.md](README_PLAN.md): stage 1 (commit 6e12026) moved the operational
+blocks verbatim into notes/FORMULA_FORMS.md, LOW_D.md, CLOSED_FORMS.md, SUPERCRITICAL.md, SOLVER_HP.md,
+LARGE_D_WALL.md, DINF_FITS.md, INNER_STOKES.md, PLANTED_SELECTION.md and the top-level SOFTWARE.md; stage 2 (96c7ab7)
+rebuilt the top (abstract, the problem and what is new, a main-results table with status words) and the bottom
+(Limits and open problems, Reproduce, the reference list reduced to the four entries without a footnote); stage 3
+(58814a1, ecf2b38) condensed the order-by-order record into a table and the open-problems bullets into one line each;
+stage 4 (955406a) placed the low-D section and the figures. The canonical homes named above are unchanged except
+where a block moved to a notes file, in which case that file is now the home and the README keeps a pointer.
+`check_links.py` resolves every link and `check_numbers.py --selftest` ran after each stage (807 of 807).

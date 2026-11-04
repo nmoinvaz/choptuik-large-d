@@ -248,3 +248,18 @@ not paper over: 813 "1218 points" vs 67 "1199"; 2652 "28 points"; F₅/F₁ roun
 3. One "Limits and open problems" section that gathers the large-D wall, the analyticity assumption, the D → 3 limit,
    the proof status and the mode count, now spread over 345–347, 683–690, 846–882, 1072–1076, 1535–1615, 2121–2127
    and 2210–2278.
+
+## Done (2026-11-04)
+
+The five stages were applied as commits 6e12026 (stage 1), 96c7ab7 (stage 2), 58814a1 and ecf2b38 (stage 3), 955406a
+(stage 4) and the stage-5 commit that carries this note, each leaving `check_numbers.py --selftest`, `check_links.py`
+and `solver/simplify_math.py README.md` (308 expressions) passing. Choices made by the author: the proofs of
+Propositions 1–5 stay in the README, collapsed; one new notes file (INNER_STOKES.md) holds the inner-problem
+computations. Deviations from the plan: the headline bullets stay verbatim under the main-results table (their pinned
+phrases), the order-by-order record keeps the twenty-first order's sentences after its table (six checks pin them), and
+the four model paragraphs of "Other matter" sit under a details block rather than condensed, pending a check of their
+numbers in matter/*.md. Still open from part G: the clean-room run of every command the README quotes
+(notes/REPRODUCTION.md's protocol, a runner task), the long lines the moved notes inherited (a re-wrap must not touch
+pinned phrases), and three pre-existing broken links inside quoted "proposed README text" blocks of
+notes/SUPERCRITICAL.md and notes/PLANTED_SELECTION.md, which belong to a cleanup of those blocks.
+
