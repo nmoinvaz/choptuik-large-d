@@ -77,6 +77,15 @@ def load_state(path):
 mp.mp.dps = 50
 
 
+def series_at(zh, zl, Zh, Zl, a):
+    """z0 + sum_k z_k a^k by Horner's rule in double-double (a float64): each product rounds to double-double, where
+    float64 powers a**k would carry 1e-16 of themselves into the prediction unless a is a power of 2"""
+    ph, pl = np.array(Zh[-1]), np.array(Zl[-1])
+    for k in range(len(Zh) - 2, 0, -1):
+        ph, pl = dd_add(Zh[k], Zl[k], *dd_scale(ph, pl, a))
+    return dd_add(zh, zl, *dd_scale(ph, pl, a))
+
+
 def coefficients(s, zh, zl, N, held=None, refine_it=1, z1=None):
     """z_1..z_N from the stored LU at (zh, zl): [(zh_k, zl_k)], norms, the refinement residuals. held = (fn, rows):
     fn(k) gives the held harmonics' order-k Taylor coefficients as a field (hi, lo) on the horizon block's p rows (the
@@ -227,11 +236,15 @@ def main():
     print(f"base {opt['state']}: D {mp.nstr(D, 12)}, M {M}, pin {kf} (held {ks_held}), |F| {F0:.1e}; N {N}, eps {opt['eps']}, h_max {opt['h_max']}, "
           f"corrector {opt['corrector']} (junk_only {junk_only}), tol {opt['tol']:.1e} x {opt['tol_growth']}^(D - {mp.nstr(D_start, 8)}), "
           f"stalls accepted below {opt['accept_stall']:.0e}", flush=True)
-    def predicted(D0, zh0, zl0, Zh_, Zl_, a_):
-        """the series' prediction at D0 + a_ and its max |F| in double-double and quad-double, as an attempt forms it"""
-        ph, pl = np.array(zh0), np.array(zl0)
-        for k in range(1, N + 1):
-            ph, pl = dd_add(ph, pl, *dd_scale(Zh_[k], Zl_[k], a_ ** k))
+    def predicted(D0, zh0, zl0, Zh_, Zl_, a_, powers=False):
+        """the series' prediction at D0 + a_ and its max |F| in double-double and quad-double, as an attempt forms it
+        (powers: the sum with float64 powers a_**k instead of Horner's rule, the control)"""
+        if powers:
+            ph, pl = np.array(zh0), np.array(zl0)
+            for k in range(1, N + 1):
+                ph, pl = dd_add(ph, pl, *dd_scale(Zh_[k], Zl_[k], a_ ** k))
+        else:
+            ph, pl = series_at(zh0, zl0, Zh_, Zl_, a_)
         Dn = D0 + mp.mpf(a_)
         sn = mk(Dn)
         sn.set_segs(segs)
@@ -318,6 +331,13 @@ def main():
             Fd, Fq = predicted(D0, zh0, zl0, Zr_h, Zr_l, a_)
             out["pred_richardson"].append(dict(a=a_, Fd=Fd, Fq=Fq))
             print(f"  probe: Richardson series, a {a_:.6g}: |F_pred| dd {Fd:.4e} ({Fd / a_:.4e} per unit a), qd {Fq:.4e} ({Fq / a_:.4e})", flush=True)
+        out["horner"] = []
+        for a_ in (0.4341, 0.1085):
+            Fh_, _ = predicted(D0, zh0, zl0, Zr_h, Zr_l, a_)
+            Fw_, _ = predicted(D0, zh0, zl0, Zr_h, Zr_l, a_, powers=True)
+            out["horner"].append(dict(a=a_, horner=Fh_, powers=Fw_))
+            print(f"  probe: Richardson series, a {a_}: |F_pred| by Horner {Fh_:.4e} ({Fh_ / a_ ** 2:.4e} per unit a^2), "
+                  f"by float64 powers {Fw_:.4e}", flush=True)
         code = 0
         if opt["probe_c"]:
             c16 = out["pred"][2]["Fd"] * 16
@@ -358,9 +378,7 @@ def main():
         for attempt in range(4):
             screens = []
             while True:
-                ph, pl = np.array(zh), np.array(zl)
-                for k in range(1, N + 1):
-                    ph, pl = dd_add(ph, pl, *dd_scale(Zh[k], Zl[k], a ** k))
+                ph, pl = series_at(zh, zl, Zh, Zl, a)
                 Dn = D + mp.mpf(a)                 # exact: the series variable is a to double-double precision
                 sn = mk(Dn)
                 segs_n = segs
