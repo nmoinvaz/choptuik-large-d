@@ -63,7 +63,7 @@ trait Api: Send + Sync {
     /// qsolve::newton_q
     fn newton_q(&mut self, z: [&[f64]; 4], mutate: u8) -> Result<qsolve::QStep, String>;
     /// model::residual_jet: the residual's coefficients 0..nout-1 on the jet state zs with the dimension n + h as the
-    /// jet variable; the jet lanes are instantiated at every M of make_ctx's list and for N = 8, 16, 32 coefficients
+    /// jet variable; the jet lanes are instantiated for M = 32, 48, 64, 320 and 384 and N = 8, 16, 32 coefficients only
     fn residual_jet(&mut self, zs: &[(&[f64], &[f64])], nout: usize, mutate: u8) -> Result<Vec<(Vec<f64>, Vec<f64>)>, String>;
 }
 
@@ -267,16 +267,30 @@ impl<const B: usize> Api for Ctx<B> {
 }
 
 impl<const B: usize> Ctx<B> {
-    /// residual_jet at this context's size: generic in B, so the jet lanes exist at every M that make_ctx builds and a
-    /// size added there needs nothing here (the low-D runs use M = 320, 384 and 512)
+    /// residual_jet on the sizes the jet lanes are instantiated for: the ANM and test sizes M = 32, 48, 64 and the
+    /// low-D sizes M = 320, 384. Each size costs build time and memory, so a run at a new M adds its size here in the
+    /// same change.
     fn residual_jet_sized(&self, zs: &[(&[f64], &[f64])], nout: usize) -> Result<Vec<(Vec<f64>, Vec<f64>)>, String> {
-        match nout {
-            0 => Err("nout must be at least 1".into()),
-            1..=8 => model::residual_jet::<8, B>(self, zs, true, nout),
-            9..=16 => model::residual_jet::<16, B>(self, zs, true, nout),
-            17..=32 => model::residual_jet::<32, B>(self, zs, true, nout),
-            _ => Err(format!("nout must be at most 32, not {nout}")),
+        let me: &dyn std::any::Any = self;
+        macro_rules! at {
+            ($bb:literal) => {
+                if let Some(c) = me.downcast_ref::<Ctx<$bb>>() {
+                    return match nout {
+                        0 => Err("nout must be at least 1".into()),
+                        1..=8 => model::residual_jet::<8, $bb>(c, zs, true, nout),
+                        9..=16 => model::residual_jet::<16, $bb>(c, zs, true, nout),
+                        17..=32 => model::residual_jet::<32, $bb>(c, zs, true, nout),
+                        _ => Err(format!("nout must be at most 32, not {nout}")),
+                    };
+                }
+            };
         }
+        at!(4);
+        at!(6);
+        at!(8);
+        at!(40);
+        at!(48);
+        Err(format!("residual_jet: M = {} has no jet lanes (instantiated for M = 32, 48, 64, 320, 384 only)", 8 * B))
     }
 }
 
