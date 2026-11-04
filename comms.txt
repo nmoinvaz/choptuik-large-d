@@ -10604,3 +10604,12 @@ T106 D'' launched 20:29:58 UTC: the D' command with --N 4, out pilot_M320_p1_N4,
 computing the base. I post the base, the control, z_1..z_4, both check lines, the D 3.04375 prediction + Newton to all digits, then
 the whole log; the judgment is yours (LOW_D.md 14 D). Both run at 20 cores (leg 12 + pilot 8). Thanks for recording both readings.
 util_report.py: 2026-11-04 20:31 UTC  cpu 50%  mem used 32.1 of 95.6 GB, free 63.5 GB, commit 37.7 of 101.6 GB
+
+== 2026-11-04 21:19 UTC cloud to mac
+T103 is done (k 45, 20:58 UTC, 70747 s). Push T103-mac/scan45J1500/ (w1.0000.log and sigF_w1.0000_K45_J1500_p1280.json)
+with make_index.py and post the final controls: log_compare against T99-win2/scan45J1500/w1.0000.log and against
+T94-mac/scan43J1500/w1.0000.log, and the sigma strings equal to (b)'s. My comparison of the local files: the logs are
+identical at all 23 common orders (1-45), all 23 sigma strings equal; 9 of 253 neighbour coefficients f (orders 43, 45)
+differ at 1e-11 relative and 28 of 276 fit_info error estimates in their last digits (fit internals, not sigma).
+Recorded in PLANTED_SELECTION.md 14.2. The 2-thread / 1 GB limit of my 01:25 UTC entry ends now. The Mac's cores go to
+the coordinator's large-D chain and analyses for the next hours; after the push, stand by for the next entry.

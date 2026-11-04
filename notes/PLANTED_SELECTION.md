@@ -3100,8 +3100,13 @@ and 14.1.
   2.55×10⁻¹¹ of that change (1.24×10⁻¹¹ at σ₂₀, 1.73×10⁻¹¹ at σ₂₁).
 - **Cost and machines.** All four files were computed on win2: the three J 1250 files in 860–862 min each on three
   processes (section 14.0), pilot (b) in 998.2 min. The Mac's replica of (a) (T102) reproduced its file in all 23
-  strings (section 14.0); the Mac's replica of (b) (T103) is identical to win2's (b) log at all 16 common orders up to
-  k = 31 (2026-11-04 06:52 UTC) and is still running; its final comparison is recorded here when it lands.
+  strings (section 14.0). The Mac's replica of (b) (T103) finished on 2026-11-04 at 20:58 UTC (70747 s, two
+  processes, after the restart of 01:25 UTC). Its log is identical to win2's (b) at all 23 common orders (1–45), and
+  its σ₀…σ₂₂ equal (b)'s in all 23 strings (`log_compare.py`; the coordinator's comparison of the two
+  `sigF_w1.0000_K45_J1500_p1280.json` files, T103-mac against T99-win2). Two fit internals differ and are recorded, not
+  fixed. 9 of the 253 neighbour-family coefficients `f`, at orders 43 and 45, differ by about 10⁻¹¹ relative, and 28 of
+  the 276 `fit_info` error estimates differ in their last digits. Neither enters σ: the fits' plateaus pick the same
+  values to every printed digit of σ.
 
 ### 14.3 The pipeline on plants first
 
@@ -3245,7 +3250,7 @@ Under noise of size sigma_err on every σ_k (20 seeds), arg₂₂ moves by at mo
 - σ₂₂ is converged to 1.4–1.7×10⁻¹² relative at the three nodes, with margins of 59–73 under item 1 and the J 1500
   pilot at 0.069 of the plateau error, and continues every trend of σ₀…σ₂₁; it is 0.896 of P5's K = 21 type bound
   (proof/P5_scope.md). The Mac's replica of (a) reproduced it in all 23 strings, and item 1's five mutations fire on the
-  real files (section 14.2); the replica of (b) is still to land.
+  real files (section 14.2); the replica of (b) reproduced σ₀…σ₂₂ in all 23 strings as well (section 14.2).
 - The real estimates sit within 2.3×10⁻⁷ of 1 on both sides of it: arg 1.0000002, G 0.99999999, the central Padé
   approximants [4/17]–[17/4] within 5×10⁻⁸ of 1 with [3/18] 2.1×10⁻⁷ below, Aitken 1.0000000; the ring-free sums of
   σ₀…σ₂₂ lie at 1.0000000019–1.0000000046.
