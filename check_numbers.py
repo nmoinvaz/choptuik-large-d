@@ -154,7 +154,7 @@ def lowD_limits():
     e, sc, p305 = lim["EEGJ2026_eq110"], lim["EEGJ2026_scaling"], lim["EEGJ2026_D3.05"]
     pw = lambda D: e["a"] * (D - 3) ** e["alpha"]  # noqa: E731
     sl = lambda D: p305["Delta"] / (p305["D"] - 3) ** sc["alpha"] * (D - 3) ** sc["alpha"]  # noqa: E731
-    txt = [("README.md", "the polynomial\ngives 2.4364 and the power law 2.4265; at D = 3.02 they give 2.20 and 2.16, at 3.005 they give 1.96 and 1.75, and the\nexponent 0.3 gives 1.88 and 1.24")]
+    txt = [("README.md", "| 2.4364 | 2.4265 | 2.3826 |"), ("README.md", "| 3.02 | 2.20 | 2.16 | 1.88 |"), ("README.md", "| 3.005 | 1.96 | 1.75 | 1.24 |")]
     rows = [r.rstrip("\n").split(",") for r in open(os.path.join(ROOT, "hp/data/delta_dd_lowD.csv")) if r[:1].isdigit()]
     t105 = sorted([c for c in rows if float(c[0]) == 3.04375], key=lambda c: int(c[1]))
     out = [("ours at 3.04375", formula(C_DELTA, 3.04375), 2.4364, 1e-4, txt),
@@ -163,6 +163,7 @@ def lowD_limits():
            ("power law at 3.02", pw(3.02), 2.16, 0.01, txt),
            ("ours at 3.005", formula(C_DELTA, 3.005), 1.96, 0.01, txt),
            ("power law at 3.005", pw(3.005), 1.75, 0.01, txt),
+           ("exponent 0.3 at 3.04375", sl(3.04375), 2.3826, 1e-4, txt),
            ("exponent 0.3 at 3.02", sl(3.02), 1.88, 0.01, txt),
            ("exponent 0.3 at 3.005", sl(3.005), 1.24, 0.01, txt),
            ("Eq. (110) as quoted", e["a"], 3.88, 1e-9, [("README.md", "Δ ≈ 3.88 (D − 3)^0.15")]),
@@ -298,6 +299,26 @@ def formula_cut():
             ("formula_cut coefficients", len(J["c"]), 29, 0.5, txt),
             ("formula_cut largest |r|/sigma", J["max_abs_residual_over_sigma"], 3.47, 0.01, txt),
             ("formula_cut Delta_inf", float(J["Delta_inf"]), 1.643893745, 1e-9, txt)]
+
+
+@check
+def lowD_logslope():
+    """README "The local exponent already separates them": the local exponent (D - 3) Delta'/Delta of the low-D points
+    and of the sqrt(D - 3) formula (hp/lowD_logslope.py)"""
+    sys.path.insert(0, os.path.join(ROOT, "hp"))
+    import lowD_logslope as LS
+    import plot_lowD_values as P
+    rows = LS.table(3.3)
+    peak = max(rows, key=lambda r: r[1])
+    low = min(rows, key=lambda r: r[0])
+    txt = [("README.md", "it rises to 0.163 near D = 3.1 and falls to 0.145 at D = 3.044"),
+           ("README.md", "the √(D − 3) formula follows it to 8×10⁻⁴ and sends it to 0, as about 0.71 √(D − 3)"),
+           ("README.md", "the\n  formula predicts 0.1441 at D = 3.0425 and 0.1418 at 3.04")]
+    return [("local exponent peak", peak[1], 0.163, 0.001, txt), ("D of the peak", peak[0], 3.1, 0.1, txt),
+            ("local exponent at the lowest point", low[1], 0.145, 0.001, txt),
+            ("largest |measured - formula|", max(abs(L - Lf) for _, L, Lf in rows), 8e-4, 1e-4, txt),
+            ("small-s slope c1 / (2 c0)", P.C_DELTA[1] / (2 * P.C_DELTA[0]), 0.71, 0.01, txt),
+            ("formula at 3.0425", LS.formula_L(3.0425), 0.1441, 1e-4, txt), ("formula at 3.04", LS.formula_L(3.04), 0.1418, 1e-4, txt)]
 
 
 @check

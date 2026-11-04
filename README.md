@@ -294,32 +294,39 @@ is not reliable there.
 
 ### Below D = 4 and the limit D → 3
 
-Below D = 4 the formula is not fitted; Δ(D) turns over there (a separate fit for 3 < D ≤ 4 is
-below). From double-double points at
-D = 3.70–3.80 (M = 80; `cd hp && python3 lowD_max.py`), polynomial fits put the maximum at D = 3.755725,
-Δ = 3.46677169 (spread over the fits 10⁻⁶ in D and 6×10⁻⁹ in Δ; the M = 80 truncation is about 10⁻⁹), in agreement
-with Ecker, Ecker, Grumiller & Jechtl 2026 ([below](#relation-to-published-work)). The 47-mode f64 points put it at
-D = 3.75570, Δ = 3.466774, 2×10⁻⁶ high, the size of their bias there (converged values below D = 4:
-[notes/LOW_D.md](notes/LOW_D.md)); the rational formula, extended outside its range, peaks at D = 3.75558,
-Δ = 3.466781.
+**Δ peaks at D ≈ 3.7557.** Below D = 4 the formula is not fitted (a separate fit for 3 < D ≤ 4 is below), and Δ(D)
+turns over:
 
-The continuation below D = 3.4 (its runs, node changes and resolution steps, with the figures hp/lowD.svg,
-hp/lowD_errors.svg and hp/lowD_sqrt.svg) is in [notes/LOW_D.md](notes/LOW_D.md), section 11.
+| source | D of the maximum | Δ there |
+|---|---|---|
+| double-double points at D = 3.70–3.80 (M = 80; `cd hp && python3 lowD_max.py`) | 3.755725 | 3.46677169 |
+| the 47-mode f64 points | 3.75570 | 3.466774 |
+| the rational formula, extended outside its range | 3.75558 | 3.466781 |
+
+The double-double maximum's spread over the fits is 10⁻⁶ in D and 6×10⁻⁹ in Δ, and the M = 80 truncation is about
+10⁻⁹. It agrees with Ecker, Ecker, Grumiller & Jechtl 2026 ([below](#relation-to-published-work)). The f64 value is
+2×10⁻⁶ high, the size of their bias there (converged values below D = 4: [notes/LOW_D.md](notes/LOW_D.md)). The
+continuation below D = 3.4, with its runs, node changes and resolution steps and the figures hp/lowD.svg,
+hp/lowD_errors.svg and hp/lowD_sqrt.svg, is in [notes/LOW_D.md](notes/LOW_D.md), section 11.
 
 ![Below D = 4: every double-double value of Delta and gamma so far against the sqrt(D - 3) formula, and how much Delta moves when the tau resolution is raised](hp/lowD_values.svg)
 
-**All our values below D = 4** (`hp/export_lowD.py` writes every converged double-double record below D = 8.25 to
-[`hp/data/delta_dd_lowD.csv`](hp/data/delta_dd_lowD.csv), one row per D and τ resolution M with γ where computed, and
-`hp/export_dd.py` puts the best value per D into [`hp/data/delta_dd.csv`](hp/data/delta_dd.csv) next to the continuation
-points, as run `lowD-M<M>`; `hp/plot_lowD_values.py` draws them; rerun all three as runs land). Left: Δ at the largest M
-at each D, filled where the two largest M agree to 10⁻⁸ (or M = 80 alone at D ≥ 3.7, where M 80 → 96 is 1.2×10⁻⁹) and
-hollow where they do not yet. Every point, resolved or not, lies within 1.6×10⁻⁵ of the √(D − 3) formula below (the
-three lowest, at D = 3.04375–3.045, by 1.1–1.6×10⁻⁵; the rest within 8×10⁻⁶). Middle: γ,
-from the exact growth-mode matrix at the largest M. Right: how much Δ moves when M is raised. The step from M = 80 to 96
-grows a hundredfold from D = 3.7 to 3.4, while M = 96 → 128 stays at 1–2×10⁻⁹ down to D = 3.4.
+**All our values below D = 4.**
 
-**A formula for 3 < D ≤ 4** (`hp/lowD_formula.py`, fitted to Ecker, Ecker, Grumiller & Jechtl's published values for
-3.046 ≤ D ≤ 4, which are not included here). The variable that works is s = √(D − 3):
+- **Where they live.** `hp/export_lowD.py` writes every converged double-double record below D = 8.25 to
+  [`hp/data/delta_dd_lowD.csv`](hp/data/delta_dd_lowD.csv), one row per D and τ resolution M, with γ where computed.
+  `hp/export_dd.py` puts the best value per D into [`hp/data/delta_dd.csv`](hp/data/delta_dd.csv) next to the
+  continuation points, as run `lowD-M<M>`, and `hp/plot_lowD_values.py` draws them. Rerun all three as runs land.
+- **Left panel:** Δ at the largest M at each D. A point is filled where the two largest M agree to 10⁻⁸ (or M = 80
+  alone at D ≥ 3.7, where M 80 → 96 is 1.2×10⁻⁹), hollow where they do not yet.
+- **Every point,** resolved or not, lies within 1.6×10⁻⁵ of the √(D − 3) formula below. The three lowest, at
+  D = 3.04375–3.045, are off by 1.1–1.6×10⁻⁵, and the rest within 8×10⁻⁶.
+- **Middle panel:** γ, from the exact growth-mode matrix at the largest M.
+- **Right panel:** how much Δ moves when M is raised. The step from M = 80 to 96 grows a hundredfold from D = 3.7 to
+  3.4, while M = 96 → 128 stays at 1–2×10⁻⁹ down to D = 3.4.
+
+**A formula for 3 < D ≤ 4** (`hp/lowD_formula.py`), fitted to Ecker, Ecker, Grumiller & Jechtl's published values for
+3.046 ≤ D ≤ 4, which are not included here. The variable that works is s = √(D − 3):
 
 ```math
 \Delta \approx 1.752403 + 2.486429\,s + 8.257623\,s^2 - 29.245836\,s^3 + 44.944706\,s^4 - 45.106964\,s^5 + 30.660868\,s^6 - 12.653060\,s^7 + 2.349289\,s^8 ,
@@ -329,22 +336,42 @@ grows a hundredfold from D = 3.7 to 3.4, while M = 96 → 128 stays at 1–2×10
 \gamma \approx 0.081437 + 0.285158\,s + 0.634589\,s^2 - 1.439299\,s^3 + 1.261792\,s^4 - 0.547493\,s^5 + 0.097777\,s^6 .
 ```
 
-They fit those points to 8×10⁻⁶ (Δ) and 10⁻⁶ (γ), and match our own double-double values at D = 3.15–4 (Δ; γ at 3.7–4),
-which the fit never saw, to 8×10⁻⁶ (Δ) and 10⁻⁷ (γ). On points held out of the fit, a polynomial in D, a form with ln(D
-− 3), or a single power of (D − 3) times a polynomial, with as many terms, misses by 10 to several hundred times more.
-This is an interpolation, not a law: the value at D = 3 is not determined (Δ from 1.72 to 1.80 and γ from 0.07 to 0.44
-as the degree changes), so it says nothing about Ecker et al.'s conjecture that Δ and γ go to 0 as D → 3.
+- **Fit:** it fits those points to 8×10⁻⁶ (Δ) and 10⁻⁶ (γ).
+- **Held-out check:** it matches our own double-double values at D = 3.15–4 (Δ; γ at 3.7–4), which the fit never saw,
+  to 8×10⁻⁶ (Δ) and 10⁻⁷ (γ).
+- **Alternatives:** on points held out of the fit, a polynomial in D, a form with ln(D − 3), or a single power of
+  (D − 3) times a polynomial, with as many terms, misses by 10 to several hundred times more.
+- **What it is not:** a law. It is an interpolation, and the value at D = 3 is not determined (Δ from 1.72 to 1.80 and
+  γ from 0.07 to 0.44 as the degree changes). So it says nothing about Ecker et al.'s conjecture that Δ and γ go to 0 as
+  D → 3.
 
 ![The limit D -> 3: our finite intercept against Ecker et al.'s power law, with their D = 3.05 value, Bland's cited D = 3.02 point and the T100 point, full range and the zoom below D = 3.0625](hp/lowD_limits.svg)
 
-The two readings side by side (`hp/plot_lowD_limits.py`; their side from `hp/data/published_lowD_limits.json`). Ecker
+**The two readings of D → 3** (`hp/plot_lowD_limits.py`; their side from `hp/data/published_lowD_limits.json`). Ecker
 et al. fit their own values to a power law, Δ ≈ 3.88 (D − 3)^0.15, with 0.15 read as a lower bound, and a scaling
-argument of theirs gives an exponent near 0.3; both send Δ to 0 as D → 3⁺.[^5] Our polynomial in √(D − 3) keeps a
-finite Δ(3). At D = 3.04375, the lowest converged point so far (the T105 leg, M = 384, Δ = 2.436459), the polynomial
-gives 2.4364 and the power law 2.4265; at D = 3.02 they give 2.20 and 2.16, at 3.005 they give 1.96 and 1.75, and the
-exponent 0.3 gives 1.88 and 1.24. A converged point at 3.02 separates them at the 2% level. Ecker et al. also cite a
-point from Bland's thesis at D = 3.02, Δ = 0.1379 ± 0.0042 (not verified in the thesis itself); it lies far below every
-reading and would need a resolution no 2007 code had.
+argument of theirs gives an exponent near 0.3. Both send Δ to 0 as D → 3⁺.[^5] Our polynomial in √(D − 3) keeps a
+finite Δ(3). Where they part:
+
+| D | our polynomial | their power law | exponent 0.3 |
+|---|---|---|---|
+| 3.04375, the lowest converged point so far (the T105 leg, M = 384, Δ = 2.436459) | 2.4364 | 2.4265 | 2.3826 |
+| 3.02 | 2.20 | 2.16 | 1.88 |
+| 3.005 | 1.96 | 1.75 | 1.24 |
+
+A converged point at 3.02 separates them at the 2% level. Ecker et al. also cite a point from Bland's thesis at
+D = 3.02, Δ = 0.1379 ± 0.0042 (not verified in the thesis itself). It lies far below every reading and would need a
+resolution no 2007 code had.
+
+![The local exponent (D - 3) Delta'/Delta below D = 3.3: our points rise to 0.163 near D = 3.1 and fall to 0.145 at 3.044, while a power law would hold it constant](hp/lowD_logslope.svg)
+
+**The local exponent already separates them** (`hp/plot_lowD_logslope.py`, its table from `hp/lowD_logslope.py`). A
+power law Δ = c (D − 3)^α holds the local exponent (D − 3)Δ′/Δ at α for every D. Ours is not constant:
+
+- it rises to 0.163 near D = 3.1 and falls to 0.145 at D = 3.044, already below the 0.15 that Ecker et al. read as a
+  lower bound;
+- the √(D − 3) formula follows it to 8×10⁻⁴ and sends it to 0, as about 0.71 √(D − 3);
+- a power-law limit of 0.15 or more needs it to turn back up below D = 3.044. The leg's next points test that: the
+  formula predicts 0.1441 at D = 3.0425 and 0.1418 at 3.04.
 
 As D → ∞ (ε → 0):
 
