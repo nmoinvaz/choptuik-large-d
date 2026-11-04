@@ -1706,3 +1706,15 @@ h = 0.0625, where plain Newton stopped at 7.2×10⁻¹⁰ after 668 s, its first
 2.1×10⁻⁹, and plain Newton then stopped at 2.6×10⁻⁹ after 914 s (`anm-mac/qdw_test_w1/run.log`). A restart from 81.52
 at h_max 0.5 (`anm-mac/run_trend_pin3_qd5.log`) was still at 4×10⁻⁸ with steps of 1/64 after 32 min, so the chain
 continues as `anm-mac/run_trend_pin3_qd6/` from 81.52 with h_max 0.0625, otherwise unchanged.
+
+**Correction (2026-11-04 15:10 UTC): the predictor is the limit, not the basin.** The previous paragraph's reading is
+wrong. `hp/anm_pred_slope.py` divides each attempt's predicted max |F| by its step h. Over qd3, qd4 and qd6 the ratio is
+the same at every h tried from a base, to 0.3% from qd4 on and to 5% at h = 1 in qd3, so the prediction error is linear
+in h. It is an error of the series' first-order coefficient, and the higher orders add nothing measurable. The ratio
+grows with D, from 3.0×10⁻¹⁴ at 79.27 and 1.2×10⁻¹³ at 80.27 to 0.65–13.8×10⁻¹³ at 81.5–82.2, and it differs by up to 15
+times between neighbouring bases. The corrector's reach does not shrink. From 79.3 to 82.2 every attempt with a
+predicted |F| below 1.53×10⁻¹⁴ converged and every one above 3.70×10⁻¹⁴ failed. The usable step, about 2×10⁻¹⁴ divided
+by the ratio, fell from 0.5 at 79.3 to 0.008–0.06 past 82. The source of the first-order error is not known yet. The
+candidates are the order-1 solve (one refinement against the stored LU, whose residual the records keep only at order N)
+and the double-double rounding of its right-hand side. The test runs on the stored base 82.1642 (ratio 9.77×10⁻¹³) once
+T103 frees the Mac. It reads the order-1 refinement residual, then the ratio after more refinement steps.
