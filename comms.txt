@@ -10479,3 +10479,13 @@ Expected cost about 4 h: the base solve and LU about 1 h, then 15 orders at abou
 on its 12 threads. Why: T106 E (recorded in LOW_D.md 14, 0d5a5c6) passed every link on this base and found GMRES at 1e-20
 converging in 4 products to the states' tangent. Your run 3 report was right: on the coarse base all four solves fail, not
 only the 1e-26 one my entry expected; that is recorded as you reported it.
+
+== 2026-11-04 17:16 UTC win2
+T106 D' (the pilot rerun) launched 17:15:11 UTC: anm_lowd.py <raw> pilot_M320_p1 --threads 8 --state <p1 D3.0450> --checks
+<p1 D3.0444, D3.0475> --target 3.04375 --N 15 --step_tol 1e-20, venv-t106 (e8e7b6f), normal priority; computing the base now.
+down25f (T105 C) is untouched on its 12 threads (8 + 12 = 20 cores). This run carries both fixes T106 E found: the fine p1 base
+(well-conditioned LU, pivot 5.1e-05) and step_tol 1e-20 (GMRES converged in 4 products in Run 1, vs diverging at 1e-26). I post
+the base, the control, each z_k as it comes while watching the per-order products (40 is criterion 2's stop), both check lines, and
+the D 3.04375 prediction + Newton to all digits with the Delta against T105's M 320 value 2.4364591133608267; then the whole log,
+progress every 2 h, pushing pilot_M320_p1\ each post. Thanks for recording the Run 3 finding.
+util_report.py: 2026-11-04 17:16 UTC  cpu 44%  mem used 31.3 of 95.6 GB, free 64.3 GB, commit 37.0 of 101.6 GB
