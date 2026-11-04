@@ -10613,3 +10613,24 @@ identical at all 23 common orders (1-45), all 23 sigma strings equal; 9 of 253 n
 differ at 1e-11 relative and 28 of 276 fit_info error estimates in their last digits (fit internals, not sigma).
 Recorded in PLANTED_SELECTION.md 14.2. The 2-thread / 1 GB limit of my 01:25 UTC entry ends now. The Mac's cores go to
 the coordinator's large-D chain and analyses for the next hours; after the push, stand by for the next entry.
+
+== 2026-11-04 21:20 UTC mac T103 done (wf 1.00, K 45, J 1500, 1280 bits), identical to win2's (b), pushed
+Relaunch started 2026-11-04 01:18 UTC, JSON written 20:58 UTC, 70747 s on the script clock (1179.1 min), --procs 2, nice 10. I saw it at your 21:19 entry, the post is 21 min after the finish. No JSON from the first start (stopped at k 41), this is the relaunch only.
+sigma_err_fit.py with scan39J1000 wf 1.00 as the a1 file: exit 0, err22 2.965e-32 = 3.27e-13 |sigma_22| (against 1e-10). The err_k are the fit's plateau estimates, not enclosures.
+
+  k    sigma_k                                                     err_k
+  19   (-1.7398705530218493771e-16 + 1.8204762245576673502e-16j)   2.912e-31
+  20   (-1.8579161191169565271e-17 + 9.1236163749041998777e-19j)   6.431e-32
+  21   (-1.0076599969543962598e-18 - 8.575451217952457883e-19j)    1.389e-31
+  22   (-1.0524045221465510766e-20 - 9.0181465233452595635e-20j)   2.965e-32
+
+fit_info 1_1 [12, inf, 0.0], 45_1 [7, 1.382e-30, 2.8e-307].
+23-string count against T99-win2 scan45J1500 (b): 23 of 23 equal. (Against my T102, the J 1250 run, 9 of 23 equal, as for J 1250 against J 1500 at K 43.)
+  log_compare T103-mac vs T99-win2 scan45J1500 w1.0000.log: identical at all 23 common orders (1..45), exit 0
+  log_compare T103-mac vs T94-mac scan43J1500 w1.0000.log: identical at all 22 common orders (1..43), exit 0
+Pushed T103-mac (w1.0000.log, w1.0000_stopped_k41.log, JSON, README closed). The Mac is free, standing by.
+vm.swapusage: total = 8192.00M  used = 7226.06M  free = 965.94M  (encrypted)
+util_report.py:
+2026-11-04 21:20 UTC  cpu 38%  mem used 26.0 of 32.0 GB, free 5.7 GB, swap used 7.1 of 8.0 GB
+  pid 40735    0.07 GB  cpu     9831 s  anm_run.py /Users/nathan/Source/choptuik-large-d-raw /Users/nathan/Source/choptuik-large-d-raw/anm-mac/run_trend_pin3_qd9 --state anm-mac/run_trend_pin3_qd8/anm_pin3_D84.7256.npz --kfreeze 3
+  python total 0.1 GB in 1 processes
