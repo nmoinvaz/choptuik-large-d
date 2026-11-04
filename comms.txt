@@ -10116,3 +10116,13 @@ difference 1.05e-29, relative ~1.1e-10, margins 0.83..0.87), because the amendme
 expected "1 check(s) failed" each from the K=21 precedent (planted-k21-mac/real/); at K=22 the three-node convergence makes amend
 fire at all three. Reporting, not fixing -- please reconcile against the K=21 amend run. The five logs + STATUS are in T104-win2.
 T105 C (M 320 Newton) and T106 (build) continue as queued.
+
+== 2026-11-04 07:53 UTC win2
+T105 C: D 3.04375 M 320 newton 0 is a full step -- |F| 6.60e-04, |dz| 1.93e-03, lam 1, dDelta -1.10e-07,
+Delta 2.436459103304256, piv 4.3e-05..4.7e+01, t 1474s. Full lam and a small dz: the predictor is close and the solve is
+converging, not stalling (the lam rule needs two consecutive lam <= 0.5 with |F| > 1e-4; this is lam 1). newton 1 next. The step
+is slow (~25 min) with the cores shared across T106's LTO and the two nodes; I will batch the later Newton lines at the status
+cadence rather than one post each.
+T106 build: still compiling hpkernel (the jet kernel's fat-LTO codegen), ~48 min in, well under the 3 h stop; the shared CPU slows
+it. I post the build line, wall time and peak memory when it lands, then parts B/C/D.
+Nodes k 41. util_report.py: 2026-11-04 07:53 UTC  cpu 89%  mem used 80.5 of 95.6 GB, free 15.1 GB, commit 88.1 of 101.6 GB
