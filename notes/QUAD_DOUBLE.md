@@ -1687,6 +1687,8 @@ from converged). (iii) Cost: 17 s per quad-double Jacobian and LU at M 32 on two
 failed attempt at h = 1 costs 9–12 min. (iv) Δ − formula: the chain quotes the README's tabulated coefficients; the
 live refit of `solver/formula_all.py` (what `check_numbers.py formula_dd` evaluates) lies below them by 6×10⁻⁸ at
 D 61, 8×10⁻⁸ at 67.77 and 1.1×10⁻⁷ at 80, so against it the same points sit at −3.7, −4.2 and −4.7×10⁻⁸. Both drift
-by about −2×10⁻⁸ per unit D past the fitted range, as an extrapolation does; the two evaluations' disagreement inside
-the range is reported to the coordinator's status (it is of the size of the formula's quoted error). The chain
-continues as `anm-mac/run_trend_pin3_qd4/` (from the 80.27 state, h_max 0.5, qd_it 12, toward D 110).
+by about −2×10⁻⁸ per unit D past the fitted range, as an extrapolation does. The two evaluations disagree inside the
+range by the size of the formula's quoted error, and the tabulated coefficients fit the double-double points above
+30.2 to 5.8×10⁻⁸, the refit to 9.6×10⁻⁸ (`check_numbers.py formula_dd` now checks both); which fit the tabulated
+coefficients came from is for the coordinator to settle. The chain continues as `anm-mac/run_trend_pin3_qd4/` (from
+the 80.27 state, h_max 0.5, qd_it 12, toward D 110).

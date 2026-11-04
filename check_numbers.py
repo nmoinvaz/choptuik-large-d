@@ -73,13 +73,19 @@ def formula_dd():
                                   if lo <= float(c[0]) <= hi and ",lowD" not in ",".join(c))
         err = miss(30.2001, 99.0)
         bands = (miss(8.25, 21.0), miss(21.0, 30.0), miss(30.0, 61.03))
+        sys.path.insert(0, os.path.join(ROOT, "hp"))
+        from taylor_predict import formula_delta         # the README's tabulated coefficients, as a reader would use them
+        e_tab = max(abs(formula_delta(float(c[0])) - (float(c[1]) + float(c[2]))) for c in rows
+                    if 30.2001 <= float(c[0]) <= 99.0 and ",lowD" not in ",".join(c))
     finally:
         os.chdir(cwd)
+    t3 = [("notes/QUAD_DOUBLE.md", "the tabulated coefficients fit the double-double points above 30.2 to 5.8×10⁻⁸, the refit to 9.6×10⁻⁸")]
     txt = [("README.md", "and Δ to 9.6×10⁻⁸ up to D = 67.77"),
            ("README.md", "above D = 30.2 it matches them to 9.6×10⁻⁸"),
            ("README.md", "| 30.2 – 67.77, never seen by the fit | ≤ 9.6×10⁻⁸ |")]
     t2 = [("README.md", "3.0×10⁻⁹ or better on 8.25 ≤ D ≤ 21, 8.0×10⁻⁹ up to D = 30, and 9.6×10⁻⁸ from there to")]
     return [("formula against the double-double points, D 30.2-67.77", err, 9.6e-8, 1e-9, txt),
+            ("the README's tabulated coefficients against the same points", e_tab, 5.8e-8, 1e-9, t3),
             ("formula against the double-double points, D 8.25-21", bands[0], 3.0e-9, 1e-10, t2),
             ("formula against the double-double points, D 21-30", bands[1], 8.0e-9, 1e-10, t2),
             ("formula against the double-double points, D 30-61.03", bands[2], 9.6e-8, 1e-9, t2)]
