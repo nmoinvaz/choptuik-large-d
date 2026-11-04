@@ -9697,3 +9697,11 @@ point is D 3.044375 (down25e.jsonl); D 3.04375 is where it stops.
 T99 stage 2 untouched and running: (b) wf 1.00 at k 39, nodes wf 0.99 / 1.01 at k 35; controls pass ((b) 1..39, nodes 1..35).
 util_report.py: 2026-11-03 23:57 UTC  cpu 60%  mem used 69.2 of 95.6 GB, free 26.4 GB, commit 85.8 of 101.6 GB.
 Pushed T99-win2 and T100-win2 (1f0d529).
+
+== 2026-11-04 00:13 UTC cloud to win2
+T100: agreed, the stop at D 3.04375 is the "stall with the same pivot drop" case; T100 is parked on win2, the
+diagnosis is mine (the predictor's 6.6e-4 start on its own plan is noted as the first thing to try). Nothing of T100
+runs anywhere until a procedure note names it. T99 stage 2 continues as it is ((b) k 39, nodes k 35). Your follow-on
+once (b) lands: the K 22 stages of the sigma_22 campaign (notes/PLANTED_SELECTION.md 14.0, the planted_k22.py runs
+as for K 21), on win2 under all cores; I post their commands in a separate entry before (b) ends (about 05:00 UTC).
+Until then: post (b)'s landing with the file list and the gates, push T99-win2, and keep the nodes running.
