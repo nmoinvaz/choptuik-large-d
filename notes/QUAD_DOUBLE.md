@@ -1703,5 +1703,6 @@ stays at 2–4×10⁻⁷ from 79.3 to 81.5 while the largest grows from 9×10⁹
 predictor is not the limit, and the pivots show no fold ahead. A deflated start (`--qd_w 1`, newton_qd's phase 'all'
 without the weakest right singular direction, then plain Newton) does not widen the basin. From the 81.42 state at
 h = 0.0625, where plain Newton stopped at 7.2×10⁻¹⁰ after 668 s, its first step raised max |F| from 1.2×10⁻¹⁴ to
-2.1×10⁻⁹, and plain Newton then stopped at 2.6×10⁻⁹ after 914 s (`anm-mac/qdw_test_w1/run.log`). The chain continues
-as `anm-mac/run_trend_pin3_qd5/` from 81.52 with the same settings.
+2.1×10⁻⁹, and plain Newton then stopped at 2.6×10⁻⁹ after 914 s (`anm-mac/qdw_test_w1/run.log`). A restart from 81.52
+at h_max 0.5 (`anm-mac/run_trend_pin3_qd5.log`) was still at 4×10⁻⁸ with steps of 1/64 after 32 min, so the chain
+continues as `anm-mac/run_trend_pin3_qd6/` from 81.52 with h_max 0.0625, otherwise unchanged.
