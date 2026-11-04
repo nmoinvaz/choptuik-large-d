@@ -872,14 +872,14 @@ table above said inside to about 71):
 | 71.5 | 1.78402924877823188 - 6.717132e-17 | stalls at 1.4e-20 | |
 | 72.0, 72.4 | stalls at 3e-19, 6e-20 | stalls | |
 
-So the full system's Delta is known to about 1e-32 at D 68.5, 69.5 and 70.5 (two starts, two plans), sixteen digits
-past the double-double data's 2e-15 check error, and to the single converged solution at 71.0 and 71.5, where the
-corrected pinned pairs above lie within 1e-17 (71.0) and 2e-17 (71.5) of it: that is the linearised correction's
-own error, and the pins' agreement to 1e-32 at 71.5 was a coincidence of the two pins. From 72 on no start of
-double-double quality reaches the full basin, as the table of basins said. At the frontier the two pins' quad-double values differ by 7e-16 and the double-double one lies 1e-15 from them: the
-digits there are set by the pin's cost (the full step's |dz| is 7.9e-6 against 1.6e-9 at 72.4), not by the
-arithmetic. So the quad-double solver adds digits where the pin is cheap, up to about 72.5 in this layout, and past
-that the full system's junk, not precision, bounds Delta.
+So the full system's Delta is known to about 1e-32 at D 68.5, 69.5 and 70.5 (two starts, two plans), sixteen digits past
+the double-double data's 2e-15 check error, and to the single converged solution at 71.0 and 71.5, where the corrected
+pinned pairs above lie within 1e-17 (71.0) and 2e-17 (71.5) of it: that is the linearised correction's own error, and
+the pins' agreement to 1e-32 at 71.5 was a coincidence of the two pins. From 72 on no start of double-double quality
+reaches the full basin, as the table of basins said. At the frontier the two pins' quad-double values differ by 7e-16
+and the double-double one lies 1e-15 from them: the digits there are set by the pin's cost (the full step's |dz| is
+7.9e-6 against 1.6e-9 at 72.4), not by the arithmetic. So the quad-double solver adds digits where the pin is cheap, up
+to about 72.5 in this layout, and past that the full system's junk, not precision, bounds Delta.
 
 Freezing p1's harmonics 3-13 or 9-13 as bare band fields (qd_freezeh.py) does not deflate: the first projected step
 of 5e-7 leaves a residual of 5e-7, identical for both sets, because a bare harmonic is not a weak direction of J

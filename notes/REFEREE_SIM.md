@@ -96,7 +96,8 @@ An abstract-only reader comes away believing:
   - "A search over products of standard constants and Bessel zeros finds nothing in $`1.6438936`$–$`1.6438939`$, nor
     in a window about 27 times wider";
   - "Whether $`\Delta_\infty`$ has a closed form is open".
-- README "Closed forms tested and excluded" (then "Candidate closed forms, all ruled out"): the same statements, plus the f64-era window search.
+- README "Closed forms tested and excluded" (then "Candidate closed forms, all ruled out"): the same statements, plus
+  the f64-era window search.
 - Discussion: "(and possibly a closed form)".
 
 **What was computed.** The script was
@@ -169,8 +170,8 @@ Distances of the nine candidates from $`\Delta_\infty = 1.64389375`$, in units o
 - **"Whether $`\Delta_\infty`$ has a closed form is open": justified.** It is the protocol's honourable null.
   Recognition should wait until the $`D=\infty`$ selection rule delivers $`\omega_\infty`$ to 100+ digits; then a
   declared ring, a height bound, controls and held-out digits apply. notes/BOOTLOOPS.md §5 makes the same point.
-- **The README heading "Closed forms tested and excluded" (then "Candidate closed forms, all ruled out").** It suggests the candidates were serious. Proposed:
-  "Closed forms tested and excluded".
+- **The README heading "Closed forms tested and excluded" (then "Candidate closed forms, all ruled out").** It suggests
+  the candidates were serious. Proposed: "Closed forms tested and excluded".
 
 ## 5. Cross-checks from the protocol
 
@@ -207,7 +208,8 @@ Distances of the nine candidates from $`\Delta_\infty = 1.64389375`$, in units o
      $`\pm0.00000001`$).
    - Why: rows 18 and 3; the project's own number contradicts the sentence.
 2. **Credit Rozali and Way for the inner equations and the heat-equation form.**
-   - Where: Sec. inner, first paragraph; Prop. 5(i); README "The problem, prior work and what is new" (then "What is new here"); GAMMA.md §2–3.
+   - Where: Sec. inner, first paragraph; Prop. 5(i); README "The problem, prior work and what is new" (then "What is new
+     here"); GAMMA.md §2–3.
    - Write out and verify the variable map to their Eqs. (9a)–(9c).
    - Why: row 9; LIT_REVIEW.md C4–C5.
 3. **State the $`\gamma`$ convention** in the intro: $`r_{\rm BH}\propto(p-p^*)^\gamma`$, equivalently

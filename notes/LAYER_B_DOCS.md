@@ -12,7 +12,8 @@ and c on the even harmonics |ν| ≤ M + 1, and hypothesis (H-σ) replaces H-a1/
   with projecting each right-hand side at M = 1 and not for M ≥ 3 (undecided, from B8_constants.md §11).
 - Summary: the outer-problem bullet and the "genuinely open" bullet rewritten; the step table's status column updated.
 - §2: Braaksma's hypotheses now "checked against the paper".
-- §4.1: the inner system's c harmonics |ν| ≤ M + 1; the Braaksma parameter paragraph replaced (B3_borel.md §9, Lemma B4.P).
+- §4.1: the inner system's c harmonics |ν| ≤ M + 1; the Braaksma parameter paragraph replaced (B3_borel.md §9, Lemma
+  B4.P).
 - §4.2: heading; "precise citation for the mixed case" replaced (B3 text); the H-a1/H-a2 block and the "if (H-a2)
   failed" paragraph replaced by the (H-σ) paragraph (B3 text).
 - §7: H-a1/H-a2 bullets → (H-σ); routine items marked done where they are.
@@ -36,7 +37,8 @@ B8_constants.md §12, the outer Borel plane, and the Theorem B(1) summary row), 
 
 **README.md**: "Where rigour fails" (a) rewritten without the 0.13 claim; "Status of these gaps" shortened to a pointer;
 in "What is known about the selection, and what is open" the "(a singulant of modulus about 0.13)" parenthesis removed,
-a sentence on the fixed-M recomputation added, and a new bullet on layer B and Theorem B(1). Inline-math count 406 → 405.
+a sentence on the fixed-M recomputation added, and a new bullet on layer B and Theorem B(1). Inline-math count 406 →
+405.
 
 **paper/math/main.tex** (rebuilt with `make`: no errors, no undefined references, no overfull boxes): abstract and
 Results item 5; Table 1's Theorem B row; "Where rigour fails" (a) and the paragraph after it; Section 7's introduction;
@@ -87,4 +89,5 @@ The error control of the outer transport of the jump along the Stokes line x > 1
 arc |x| = n^γ, is not written in C_selection.md, B5_inner.md or B8_constants.md. B6/B6′ cover x ∈ [½, 1), and
 Proposition 3 is a leading-order statement. It enters the explicit factor κ_{n,μ} in C_{n,μ} = κ_{n,μ}[S_μ + R]. Whether
 conclusions (2) and (3) of Theorem B need it, or only the equivalence "analytic at x = 1 ⇔ Y⁺ = Y⁻ on x > 1 ⇔ the jump's
-label vanishes", is for the coordinator (or a mathematician) to decide. Listed as missing item 3 in C_selection.md §13.1.
+label vanishes", is for the coordinator (or a mathematician) to decide. Listed as missing item 3 in C_selection.md
+§13.1.

@@ -51,11 +51,11 @@ code. The only reconstructed piece is the Padé crossing rule above.
 - Nodes wf ∈ {0.99, 1.00, 1.01}; σ₀ = 1; coefficients computed at 50 digits and written with 30 significant digits
   into `sigma_str`; one directory per plant and per K, read by the production code exactly as `scan25phys/` is.
 - Runs at K = 11, 12, 13 (σ₁…σ_K kept). K = 12 is the claim; 11 and 13 give the trend.
-- **The planted zero.** $`x_0(\mathrm{wf}) = X_t + v\,(\mathrm{wf}-\omega_t) + w\,(\mathrm{wf}-\omega_t)^2`$ with X_t = 7.400 (real),
-  v = 4.0 − 7.8i, w = −6.5 − 2.0i (the velocity and curvature of the zero across the three nodes, read off the real
-  ratio estimates at k = 11 in `zero.txt`: an input feature, not the answer). Im x₀(ω_t) = 0 exactly; the other root of
-  Im x₀ = 0 lies 3.9 away. **ω_t ∈ {0.9960, 0.9985, 0.9995, 1.0000, 1.00025, 1.0010, 1.0040}**: both sides of 1, on and off
-  the middle node, near and far.
+- **The planted zero.** $`x_0(\mathrm{wf}) = X_t + v\,(\mathrm{wf}-\omega_t) + w\,(\mathrm{wf}-\omega_t)^2`$ with X_t =
+  7.400 (real), v = 4.0 − 7.8i, w = −6.5 − 2.0i (the velocity and curvature of the zero across the three nodes, read off
+  the real ratio estimates at k = 11 in `zero.txt`: an input feature, not the answer). Im x₀(ω_t) = 0 exactly; the other
+  root of Im x₀ = 0 lies 3.9 away. **ω_t ∈ {0.9960, 0.9985, 0.9995, 1.0000, 1.00025, 1.0010, 1.0040}**: both sides of 1,
+  on and off the middle node, near and far.
 
 ### 2.2 Plants
 
@@ -267,9 +267,9 @@ real twelve-term polynomial to a tail it does not belong to creates a ring of ab
 exponentially small. C-W1 has 13 zeros in |x| < 12, on an arc from 11.8 + 1.8i through 2.5 + 8.2i and −6.0 + 0.4i to
 −2.2 − 11.4i. Six of them lie closer to the origin than x₀ (|x| < 7.3). The best-fit arc completion has 10 zeros in
 |x| < 12, two of them inside |x| < 7.3. Their power sums cancel for every k ≤ 12, which is exactly why these functions
-share τ₁…τ₁₂ with the real S₁. The ring shows only at k = 13. On every completion except C-EXP, arg₁₃ leaves the trend of
-arg₁₂ by 7×10⁻⁴ to 3×10⁻², in either direction, or has no crossing. (Zeros were counted only for C-W1 and the best-fit
-arc completion.)
+share τ₁…τ₁₂ with the real S₁. The ring shows only at k = 13. On every completion except C-EXP, arg₁₃ leaves the trend
+of arg₁₂ by 7×10⁻⁴ to 3×10⁻², in either direction, or has no crossing. (Zeros were counted only for C-W1 and the
+best-fit arc completion.)
 
 The functions without a ring behave differently:
 
@@ -541,10 +541,10 @@ Proposed README text, for the coordinator:
 > "With σ₁₃ converged (960 bits, `scan27J1000p960/`), the arg crossings keep falling (1.000109, 1.000046 at k = 12, 13)
 > and the factored series gives 0.999995. Calibrated on planted functions of the same class (Laplace integrals over a
 > Borel arc; notes/PLANTED_SELECTION.md §5), these put the real zero at ω*/ω∞ = 0.99992–0.99996. The one ring-free
-> function that reproduces σ₀…σ₁₃ exactly, a [6/7] Borel–Padé sum, puts it at 0.99998. So the D = ∞ inner equations alone
-> give Δ∞ = 1.6440 ± 0.0001 (estimator range, 1.64393–1.64403), against 1.64389375 from the finite-D solutions. This
-> assumes S₁ has no other zeros within |x| ≈ 12. Twelve coefficients could not test that; the thirteenth rejected every
-> alternative constructed so far, and σ₁₄ tests the next."
+> function that reproduces σ₀…σ₁₃ exactly, a [6/7] Borel–Padé sum, puts it at 0.99998. So the D = ∞ inner equations
+> alone give Δ∞ = 1.6440 ± 0.0001 (estimator range, 1.64393–1.64403), against 1.64389375 from the finite-D solutions.
+> This assumes S₁ has no other zeros within |x| ≈ 12. Twelve coefficients could not test that; the thirteenth rejected
+> every alternative constructed so far, and σ₁₄ tests the next."
 
 ## 6. Follow-up: the converged σ₁₄ (post-freeze)
 
@@ -603,9 +603,9 @@ The local machine's values are the files' values, digit for digit:
 
 - **All four criteria of section 6.0 pass.** err14 is 3×10⁻¹³ relative, against the 10⁻¹⁰ that section 3.6 asks for.
   σ₀…σ₁₃ and their sigma_err are bitwise those of `scan27J1000p960`. The 1280-bit pilot equals the 960-bit run at wf
-  1.00 in every printed digit, σ₁…σ₁₄. σ₁₄ continues the ratio law: the second differences of σ_k/σ_{k+1} for
-  k = 7–12 are 0.002–0.048 and fall to 0.012 at k = 12. Each criterion has a mutation (`--mutate=err|low|pilot|ratiolaw`)
-  that makes it fire.
+  1.00 in every printed digit, σ₁…σ₁₄. σ₁₄ continues the ratio law: the second differences of σ_k/σ_{k+1} for k = 7–12
+  are 0.002–0.048 and fall to 0.012 at k = 12. Each criterion has a mutation (`--mutate=err|low|pilot|ratiolaw`) that
+  makes it fire.
 - **What err14 is.** It is the late-order fit's plateau step, |S(Mf) − S(Mf − 1)| at fixed J = 1000: an estimate of the
   fit-truncation error, not a bound. No second J was run for σ₁₄. The pilot tests arithmetic precision only. The
   multiplier fits S₁^(k), k = 3–29, choose the same Mf with the same plateau step at 960 and 1280 bits. The pilot's own
@@ -765,8 +765,8 @@ The model est_k = ω* + c r^k, through the arg crossings at k = 12 and 13, predi
 
 ### 6.8 Post-hoc: why the calibrated range moved
 
-Added after the runs above (stage `posthoc`), to find out why the arc-plant calibration at K = 14 is disjoint from the one
-at K = 13.
+Added after the runs above (stage `posthoc`), to find out why the arc-plant calibration at K = 14 is disjoint from the
+one at K = 13.
 
 - **The arc plants do not follow the real coefficients from one order to the next. The Borel–Padé functions do.**
   - From K = 13 to 14 the real arg crossing moved −1.97×10⁻⁵. On the arc plants it moved −3.4 to −9.1×10⁻⁵, on C-EXP
@@ -887,9 +887,9 @@ A ring of fifteen or more zeros remains possible: the re-glued completions of se
 ## 7. Follow-up: σ₁₅ (post-freeze)
 
 Input: `solver/inner_amp/scan31J1000/`, σ₀…σ₁₅ at wf = 0.99, 1.00, 1.01 (K 31, J 1000, 960 bits; T44 on the Mac), and
-pilot (b) at wf 1.00 (`scan31J1250/`: K 31, J 1250, 1280 bits; its sigma_err is inf at every k, as for T38's pilot, so it
-checks (a)'s value only). Script: `solver/inner_amp/planted_k15.py`; records in `planted_results_k15.jsonl`, checks in
-`planted_checks_k15.json`.
+pilot (b) at wf 1.00 (`scan31J1250/`: K 31, J 1250, 1280 bits; its sigma_err is inf at every k, as for T38's pilot, so
+it checks (a)'s value only). Script: `solver/inner_amp/planted_k15.py`; records in `planted_results_k15.jsonl`, checks
+in `planted_checks_k15.json`.
 
 ### 7.0 Procedure, fixed before any K = 15 estimate was computed
 
@@ -901,13 +901,13 @@ that follows the real coefficients (section 6.8); and G enters the combination o
 minima of its objective (section 6.8), not as a calibrated estimator.
 
 1. **σ₁₅ is converged** if, at every node: (a) err15 ≤ 10⁻¹⁰ |σ₁₅|; (b) σ₀…σ₁₄ are bitwise the `scan29J1000` 960-bit
-   values; (c) pilot (b)'s σ₁₅ equals (a)'s within (a)'s err15, and its σ₁₂…σ₁₄ equal `scan29J1000`'s within their errors;
-   (d) σ₁₅ continues the ratio law: the second difference of σ_k/σ_{k+1} at k = 13 is at most 0.05. Each check gets a
-   mutation that must make it fire.
-2. **The pipeline on plants first.** N1 must be recovered by arg, ratio, Padé and G to 10⁻⁶ at K = 15 and N2 must give no
-   number. The 28 arc plants, C-EXP and the 13 REFIT plants are regenerated and run at K = 13, 14, 15; their K = 13 and 14
-   estimates must equal the stored K = 14 records (`planted_results_k14.jsonl`) to 10⁻⁹, or the work stops. Control that
-   must fail: N1 graded against ω_t + 0.002.
+   values; (c) pilot (b)'s σ₁₅ equals (a)'s within (a)'s err15, and its σ₁₂…σ₁₄ equal `scan29J1000`'s within their
+   errors; (d) σ₁₅ continues the ratio law: the second difference of σ_k/σ_{k+1} at k = 13 is at most 0.05. Each check
+   gets a mutation that must make it fire.
+2. **The pipeline on plants first.** N1 must be recovered by arg, ratio, Padé and G to 10⁻⁶ at K = 15 and N2 must give
+   no number. The 28 arc plants, C-EXP and the 13 REFIT plants are regenerated and run at K = 13, 14, 15; their K = 13
+   and 14 estimates must equal the stored K = 14 records (`planted_results_k14.jsonl`) to 10⁻⁹, or the work stops.
+   Control that must fail: N1 graded against ω_t + 0.002.
 3. **Real data at K = 15** (record "N0 scan31J1000"): its K = 13 and 14 estimates must equal those of "N0 scan29J1000".
    Mutation controls: σ₁₅ → −σ₁₅ at wf 1.00 must fire a detector; σ₁₅ × (1 + 10⁻³) is reported.
 4. **Ring test.** Every K = 14 completion of section 6.6 is regenerated and its zero must reproduce the stored
@@ -1085,9 +1085,9 @@ Written and committed before any estimator ran at K = 16, on any input. Already 
 procedure is section 7.0's one order up, with the changes section 7's findings call for, stated here before the data:
 
 1. **σ₁₆ is converged** if, at every node: (a) err16 ≤ 10⁻¹⁰ |σ₁₆|; (b) σ₀…σ₁₅ are bitwise the `scan31J1000` 960-bit
-   values; (c) pilot (b)'s σ₁₆ equals (a)'s within (a)'s err16, and its σ₁₃…σ₁₅ equal `scan31J1000`'s within their errors;
-   (d) the second difference of σ_k/σ_{k+1} at k = 14 is at most 0.05. Each check gets a mutation that must make it
-   fire (`--mutate=err|low|pilot|ratiolaw`).
+   values; (c) pilot (b)'s σ₁₆ equals (a)'s within (a)'s err16, and its σ₁₃…σ₁₅ equal `scan31J1000`'s within their
+   errors; (d) the second difference of σ_k/σ_{k+1} at k = 14 is at most 0.05. Each check gets a mutation that must make
+   it fire (`--mutate=err|low|pilot|ratiolaw`).
 2. **The pipeline on plants first.** N1 recovered by arg, ratio, Padé and G to 10⁻⁶ at K = 16, N2 giving no number;
    the 28 arc plants, C-EXP and the 13 REFIT plants regenerated and run at K = 14, 15, 16, their K = 14 and 15 estimates
    equal to the stored K = 15 records (`planted_results_k15.jsonl`) to 10⁻⁹, or the work stops. Control: N1 graded
@@ -1311,9 +1311,9 @@ for, stated here before the data:
    here. The dry run's records and checks are discarded (its logs go to the raw-data repository); it tests the code
    path, not the estimators (item 2 does that).
 1. **σ₁₇ is converged** if, at every node: (a) err17 ≤ 10⁻¹⁰ |σ₁₇|; (b) σ₀…σ₁₆ are bitwise the `scan33J1000` 960-bit
-   values; (c) pilot (b)'s σ₁₇ equals (a)'s within (a)'s err17, and its σ₁₄…σ₁₆ equal `scan33J1000`'s within their errors;
-   (d) the second difference of σ_k/σ_{k+1} at k = 15 is at most 0.05. Each check gets a mutation that must make it
-   fire (`--mutate=err|low|pilot|ratiolaw`).
+   values; (c) pilot (b)'s σ₁₇ equals (a)'s within (a)'s err17, and its σ₁₄…σ₁₆ equal `scan33J1000`'s within their
+   errors; (d) the second difference of σ_k/σ_{k+1} at k = 15 is at most 0.05. Each check gets a mutation that must make
+   it fire (`--mutate=err|low|pilot|ratiolaw`).
 2. **The pipeline on plants first.** N1 recovered by arg, ratio, Padé and G to 10⁻⁶ at K = 17, N2 giving no number;
    the 28 arc plants, C-EXP and the 13 REFIT plants regenerated and run at K = 15, 16, 17, their K = 15 and 16 estimates
    equal to the stored K = 16 records (`planted_results_k16.jsonl`) to 10⁻⁹, or the work stops. Control: N1 graded
@@ -1569,9 +1569,9 @@ for, stated here before the data:
    the fix is recorded here. The dry run's records and checks are discarded (its logs go to the raw-data repository);
    it tests the code path, not the estimators (item 2 does that).
 1. **σ₁₈ is converged** if, at every node: (a) err18 ≤ 10⁻¹⁰ |σ₁₈|; (b) σ₀…σ₁₇ are bitwise the `scan35J1000` 960-bit
-   values; (c) pilot (b)'s σ₁₈ equals (a)'s within (a)'s err18, and its σ₁₅…σ₁₇ equal `scan35J1000`'s within their errors;
-   (d) the second difference of σ_k/σ_{k+1} at k = 16 is at most 0.05. Each check gets a mutation that must make it
-   fire (`--mutate=err|low|pilot|ratiolaw`).
+   values; (c) pilot (b)'s σ₁₈ equals (a)'s within (a)'s err18, and its σ₁₅…σ₁₇ equal `scan35J1000`'s within their
+   errors; (d) the second difference of σ_k/σ_{k+1} at k = 16 is at most 0.05. Each check gets a mutation that must make
+   it fire (`--mutate=err|low|pilot|ratiolaw`).
 2. **The pipeline on plants first.** N1 recovered by arg, ratio, Padé and G to 10⁻⁶ at K = 18, N2 giving no number;
    the 28 arc plants, C-EXP and the 13 REFIT plants regenerated and run at K = 16, 17, 18, their K = 16 and 17 estimates
    equal to the stored K = 17 records (`planted_results_k17.jsonl`) to 10⁻⁹, or the work stops. Control: N1 graded
@@ -1832,9 +1832,9 @@ for, stated here before the data:
    the fix is recorded here. The dry run's records and checks are discarded (its logs go to the raw-data repository);
    it tests the code path, not the estimators (item 2 does that).
 1. **σ₁₉ is converged** if, at every node: (a) err19 ≤ 10⁻¹⁰ |σ₁₉|; (b) σ₀…σ₁₈ are bitwise the `scan37J1000` 960-bit
-   values; (c) pilot (b)'s σ₁₉ equals (a)'s within (a)'s err19, and its σ₁₆…σ₁₈ equal `scan37J1000`'s within their errors;
-   (d) the second difference of σ_k/σ_{k+1} at k = 17 is at most 0.05. Each check gets a mutation that must make it
-   fire (`--mutate=err|low|pilot|ratiolaw`).
+   values; (c) pilot (b)'s σ₁₉ equals (a)'s within (a)'s err19, and its σ₁₆…σ₁₈ equal `scan37J1000`'s within their
+   errors; (d) the second difference of σ_k/σ_{k+1} at k = 17 is at most 0.05. Each check gets a mutation that must make
+   it fire (`--mutate=err|low|pilot|ratiolaw`).
 2. **The pipeline on plants first.** N1 recovered by arg, ratio, Padé and G to 10⁻⁶ at K = 19, N2 giving no number;
    the 28 arc plants, C-EXP and the 13 REFIT plants regenerated and run at K = 17, 18, 19, their K = 17 and 18 estimates
    equal to the stored K = 18 records (`planted_results_k18.jsonl`) to 10⁻⁹, or the work stops. Control: N1 graded
@@ -1968,17 +1968,17 @@ named above is taken as it was named:
   remains a check). The script is `planted_k19.py STAGE --nodes scan41J1250` (the `--amend` run stays as the record of
   the stop); mutations `err|low|pilot|ratiolaw`, `pilot` scaling the J 1500 file's σ₁₉ by 1 + 10⁻⁹.
 
-**Third amendment, item 3 (2026-10-31 05:01 UTC), after the `real` stage fired under the second amendment.** The stage ran
-at 04:51 UTC (`nodes/real.log`): the node data's K = 17 and 18 estimates differ from the 960-bit record
-"N0 scan37J1000" by up to 9.3×10⁻⁹ (K = 17, the Padé crossing `pade10/6`) and 3.3×10⁻⁸ (K = 18, `pade11/6`) against
-the 10⁻⁹ written for a same-data reproduction; the arg crossings move by at most 1.6×10⁻¹⁰, the ratio estimates by
-5.0×10⁻⁹, G by 1.1×10⁻⁹. The cause, found before this was written (`noise_test.py` and its log in the raw-data
-repository's `planted-k19-mac/nodes/`): the two data sets' σ₀…σ₁₈ differ by at most 1.7×10⁻¹³ of |σ_k| (section 11.1)
-and the estimators amplify that. The 960-bit data with Gaussian noise of each σ_k's own plateau error (k = 1…18,
-20 seeds, through the same harness) move those two Padé crossings by an rms of 1.7×10⁻⁷ and 9.3×10⁻⁷, ratio₁₇ and
-ratio₁₈ by 5.4×10⁻⁸ and 8.3×10⁻⁸, arg₁₇ and arg₁₈ by 2.1×10⁻⁹ and 2.8×10⁻⁹; every observed difference is at most 0.61
-of its rms (arg₁₁; the Padé crossings 0.01–0.07), and the unperturbed 960-bit data reproduce the stored record exactly.
-Item 3 is amended as follows, before any K = 19 estimate is used:
+**Third amendment, item 3 (2026-10-31 05:01 UTC), after the `real` stage fired under the second amendment.** The stage
+ran at 04:51 UTC (`nodes/real.log`): the node data's K = 17 and 18 estimates differ from the 960-bit record "N0
+scan37J1000" by up to 9.3×10⁻⁹ (K = 17, the Padé crossing `pade10/6`) and 3.3×10⁻⁸ (K = 18, `pade11/6`) against the 10⁻⁹
+written for a same-data reproduction; the arg crossings move by at most 1.6×10⁻¹⁰, the ratio estimates by 5.0×10⁻⁹, G by
+1.1×10⁻⁹. The cause, found before this was written (`noise_test.py` and its log in the raw-data repository's
+`planted-k19-mac/nodes/`): the two data sets' σ₀…σ₁₈ differ by at most 1.7×10⁻¹³ of |σ_k| (section 11.1) and the
+estimators amplify that. The 960-bit data with Gaussian noise of each σ_k's own plateau error (k = 1…18, 20 seeds,
+through the same harness) move those two Padé crossings by an rms of 1.7×10⁻⁷ and 9.3×10⁻⁷, ratio₁₇ and ratio₁₈ by
+5.4×10⁻⁸ and 8.3×10⁻⁸, arg₁₇ and arg₁₈ by 2.1×10⁻⁹ and 2.8×10⁻⁹; every observed difference is at most 0.61 of its rms
+(arg₁₁; the Padé crossings 0.01–0.07), and the unperturbed 960-bit data reproduce the stored record exactly. Item 3 is
+amended as follows, before any K = 19 estimate is used:
 
 - "N0 scan41J1250" is compared with "N0 scan37J1000" at K = 17 and 18 as before, and each estimate must agree within
   three times the rms of that noise reference (the same 20 seeds, which the stage writes to `planted_noise_k19.jsonl`,
@@ -1986,14 +1986,14 @@ Item 3 is amended as follows, before any K = 19 estimate is used:
   `--mutate=real` scales σ₁₈ at wf 1.00 of the node data by 1 + 10⁻⁹ and must fire. The 10⁻⁹ reproduction reading
   stays for same-data comparisons (section 12.0's item 3 as amended). Item 3's σ₁₉ mutation controls are unchanged.
 
-**Fourth amendment, item 4 (2026-10-31 05:09 UTC), after the `ring` stage fired under the second amendment.** The `real` stage
-passed under the third amendment at 05:04 UTC (every K = 17, 18 estimate within 0.61 rms of the noise reference, the
-control exact; `--mutate=real` fires). The `ring` stage then failed its reproduction check for the K = 17
-and 18 generations' completions (C18-W1–3, C18-ARC, C18-BP, C17-BP), "its K = 18 estimates are the real ones", by the
-same 3.3×10⁻⁸ (9.3×10⁻⁹ at K = 17): those completions carry the 960-bit σ₀…σ₁₈ of `scan37J1000` and were compared
-with the 1280-bit real record. Their reference is the record of the data they carry, "N0 scan37J1000" at K = 17 and
-18, to 10⁻⁹ as written; the K = 19 completions of section 11.6 carry the 1280-bit node data and are compared with
-"N0 scan41J1250" as written. Nothing else in item 4 changes.
+**Fourth amendment, item 4 (2026-10-31 05:09 UTC), after the `ring` stage fired under the second amendment.** The `real`
+stage passed under the third amendment at 05:04 UTC (every K = 17, 18 estimate within 0.61 rms of the noise reference,
+the control exact; `--mutate=real` fires). The `ring` stage then failed its reproduction check for the K = 17 and 18
+generations' completions (C18-W1–3, C18-ARC, C18-BP, C17-BP), "its K = 18 estimates are the real ones", by the same
+3.3×10⁻⁸ (9.3×10⁻⁹ at K = 17): those completions carry the 960-bit σ₀…σ₁₈ of `scan37J1000` and were compared with the
+1280-bit real record. Their reference is the record of the data they carry, "N0 scan37J1000" at K = 17 and 18, to 10⁻⁹
+as written; the K = 19 completions of section 11.6 carry the 1280-bit node data and are compared with "N0 scan41J1250"
+as written. Nothing else in item 4 changes.
 
 ### 11.1 σ₁₉: items 1(a), (b), (d) pass, item 1(c) fails
 
@@ -2101,10 +2101,10 @@ third amendment at 05:04 UTC (`nodes/real.log`, `nodes/real_mutate_real.log`; "K
 
 ### 11.4 The ring test: what each K = 18 completion predicted for σ₁₉
 
-Every completion was regenerated first and reproduces its stored zero to the printed digits, and its K = 17 (or
-K = 17, 18) estimates equal the stored 960-bit record exactly (fourth amendment). The benchmark, the simple-zero law
-from τ₁₇, τ₁₈, misses τ₁₉ by 1.6–2.9×10⁻⁵. D-bracket fires on the real data at K = 19 (section 11.3), so the two readings
-of item 4 coincide at this order by construction. Run 2026-10-31 05:10 UTC (`nodes/ring.log`; "K19 ring test").
+Every completion was regenerated first and reproduces its stored zero to the printed digits, and its K = 17 (or K = 17,
+18) estimates equal the stored 960-bit record exactly (fourth amendment). The benchmark, the simple-zero law from τ₁₇,
+τ₁₈, misses τ₁₉ by 1.6–2.9×10⁻⁵. D-bracket fires on the real data at K = 19 (section 11.3), so the two readings of item
+4 coincide at this order by construction. Run 2026-10-31 05:10 UTC (`nodes/ring.log`; "K19 ring test").
 
 | completion (K = 18) | its zero | zeros in \|x\| < 7.3 / 12 / 16 | σ₁₉ rel. error | τ₁₉ rel. error | its arg₁₉ | detectors beyond the real data's | survives | without D-bracket |
 |---|---|---|---|---|---|---|---|---|
@@ -2327,23 +2327,23 @@ node data's K = 17, 18 estimates against "N0 scan37J1000" (960 bits). Nothing el
 
 ### 12.1 The dry run (item 0)
 
-`planted_k20_dry.py` wrote the three node files and the pilot file with the real σ₀…σ₁₉ (the 1280-bit node data) and
-σ₂₀ = the C19-BP [6/13] sum's (section 11.6's first ring-free, type-passing sum; zero at 1.00000009), err20 = 10⁻¹² |σ₂₀|
+`planted_k20_dry.py` wrote the three node files and the pilot file with the real σ₀…σ₁₉ (the 1280-bit node data) and σ₂₀
+= the C19-BP [6/13] sum's (section 11.6's first ring-free, type-passing sum; zero at 1.00000009), err20 = 10⁻¹² |σ₂₀|
 and the pilot term zero; the eight stages ran on them 2026-10-31 05:38–05:58 UTC (logs in the raw-data repository's
-`planted-k20-mac/dry/`; the scripts are commit 7f96edd), after section 12.0 and its amendment were committed. Every check
-passes (converge 8, plants 4, real 4, ring 60, calib 1), and each of the five converge mutations fires. In the ring test
-the planted sum's σ₂₀ error is at most 2.5×10⁻²⁰ and its τ₂₀ error at most 2.0×10⁻¹⁸ (the 20-digit format), it survives
-under both readings, and its zero lies inside the dry run's K = 20 range, 0.999997–1.000002. Two effects of the synthetic
-truth, not of the code: C19-BP [4/15], a ring of 5, also survives on it (its σ₂₀ differs from the planted one by
-0.6–1.5×10⁻⁷ and fires no detector), and the C20-BP [9/11] and [10/10] sums' root search fails on it (the planted
+`planted-k20-mac/dry/`; the scripts are commit 7f96edd), after section 12.0 and its amendment were committed. Every
+check passes (converge 8, plants 4, real 4, ring 60, calib 1), and each of the five converge mutations fires. In the
+ring test the planted sum's σ₂₀ error is at most 2.5×10⁻²⁰ and its τ₂₀ error at most 2.0×10⁻¹⁸ (the 20-digit format), it
+survives under both readings, and its zero lies inside the dry run's K = 20 range, 0.999997–1.000002. Two effects of the
+synthetic truth, not of the code: C19-BP [4/15], a ring of 5, also survives on it (its σ₂₀ differs from the planted one
+by 0.6–1.5×10⁻⁷ and fires no detector), and the C20-BP [9/11] and [10/10] sums' root search fails on it (the planted
 function is an exact exponential sum of thirteen terms, so its Padé table degenerates past [6/13]; [8/12] shows the
-spurious poles, |t| = 5.0, 21 zeros in |x| < 12), which the stage records as entries, not as failures. Nothing was fixed;
-the real K = 20 stages follow.
+spurious poles, |t| = 5.0, 21 zeros in |x| < 12), which the stage records as entries, not as failures. Nothing was
+fixed; the real K = 20 stages follow.
 
 ### 12.2 σ₂₀ is converged: items 1(a)–(d) pass
 
-The `converge` stage ran on the real files 2026-10-31 06:00 UTC (logs in the raw-data repository's `planted-k20-mac/real/`;
-"K20 converge" in `planted_checks_k20.json`), after the dry run.
+The `converge` stage ran on the real files 2026-10-31 06:00 UTC (logs in the raw-data repository's
+`planted-k20-mac/real/`; "K20 converge" in `planted_checks_k20.json`), after the dry run.
 
 | wf | σ₂₀ (K 41, J 1250, 1280 bits) | err20 = plateau + 1.52×10⁻³¹ (relative, margin) | σ₀…σ₁₉ at wf 1.00 against `scan39J1250` | ratio law: \|Δ²\| at k = 18 |
 |---|---|---|---|---|
@@ -2351,11 +2351,11 @@ The `converge` stage ran on the real files 2026-10-31 06:00 UTC (logs in the raw
 | 1.00 | −1.857916119116969641×10⁻¹⁷ + 9.1236163749049758769×10⁻¹⁹i | 1.35×10⁻²⁹ (7.26×10⁻¹³, 138) | bitwise equal, 20/20 | 0.0074 |
 | 1.01 | −1.804973102108868983×10⁻¹⁷ + 1.9488798967780413342×10⁻¹⁸i | 1.47×10⁻²⁹ (8.10×10⁻¹³, 123) | – | 0.0073 |
 
-- **Items 1(a)–(d) pass at every node.** The plateau errors are 1.22, 1.33 and 1.46×10⁻²⁹, within 20% of each other,
-  and the pilot difference added to each, |σ₂₀(a) − σ₂₀(b)| = 1.52×10⁻³¹, is 0.011 of (a)'s (ruling 2's case did not
-  arise). Pilot (b)'s σ₁₇…σ₁₉ sit at 0.01 of (a)'s plateau errors from (a)'s. The σ₀…σ₁₈ differences from the 960-bit
-  values at wf 0.99 and 1.01 are those of section 11.1 (the same files), recorded under the amended item 1(b). Each of the
-  five mutations fires (`converge_mutate_<err|low|pilot|ratiolaw|amend>.log`).
+- **Items 1(a)–(d) pass at every node.** The plateau errors are 1.22, 1.33 and 1.46×10⁻²⁹, within 20% of each other, and
+  the pilot difference added to each, |σ₂₀(a) − σ₂₀(b)| = 1.52×10⁻³¹, is 0.011 of (a)'s (ruling 2's case did not arise).
+  Pilot (b)'s σ₁₇…σ₁₉ sit at 0.01 of (a)'s plateau errors from (a)'s. The σ₀…σ₁₈ differences from the 960-bit values at
+  wf 0.99 and 1.01 are those of section 11.1 (the same files), recorded under the amended item 1(b). Each of the five
+  mutations fires (`converge_mutate_<err|low|pilot|ratiolaw|amend>.log`).
 - **σ₂₀ follows the ratio law's rotation:** σ₁₉/σ₂₀ = 9.82 − 9.32i at ω∞; the second differences of σ_k/σ_{k+1} are
   0.007–0.012 at k = 10–18.
 - **Spread in wf.** σ₂₀ changes by 6.3% of itself between the nodes (6.1%, 6.2% for σ₁₈, σ₁₉); the largest err20 is
@@ -2397,10 +2397,10 @@ The record "N0 scan41J1250" (K = 20) equals the K = 19 record of the same name a
 
 ### 12.5 The ring test: what each K = 19 completion predicted for σ₂₀
 
-Every completion was regenerated first and reproduces its stored zero to the printed digits; the K = 19 completions'
-K = 19 estimates are the real ones and the earlier sums' K = 18, 19 estimates equal the stored K = 19 records exactly.
-The benchmark, the simple-zero law from τ₁₈, τ₁₉, misses τ₂₀ by 3.2–6.3×10⁻⁶. D-bracket is silent on the real data at
-K = 20 (section 12.4), so the two readings of item 4 can differ, and they do on one ring. Run 06:15 UTC (`real/ring.log`;
+Every completion was regenerated first and reproduces its stored zero to the printed digits; the K = 19 completions' K =
+19 estimates are the real ones and the earlier sums' K = 18, 19 estimates equal the stored K = 19 records exactly. The
+benchmark, the simple-zero law from τ₁₈, τ₁₉, misses τ₂₀ by 3.2–6.3×10⁻⁶. D-bracket is silent on the real data at K =
+20 (section 12.4), so the two readings of item 4 can differ, and they do on one ring. Run 06:15 UTC (`real/ring.log`;
 "K20 ring test").
 
 | completion (K = 19) | its zero | zeros in \|x\| < 7.3 / 12 / 16 | σ₂₀ rel. error | τ₂₀ rel. error | its arg₂₀ | detectors beyond the real data's | survives | without D-bracket |
@@ -2497,7 +2497,8 @@ sigma_err on every σ_k (20 seeds), arg₂₀ moves by at most 4.2×10⁻¹⁰. 
 ### 12.10 Verdict at K = 20
 
 - σ₂₀ is converged to 6.5–8.1×10⁻¹³ relative at the three nodes, with margins of 123–154 under item 1 and the J 1500
-  pilot at 0.011 of the plateau error, and continues every trend of σ₀…σ₁₉; it is 0.90 of the type bound (proof/P5_scope.md).
+  pilot at 0.011 of the plateau error, and continues every trend of σ₀…σ₁₉; it is 0.90 of the type bound
+  (proof/P5_scope.md).
 - The real estimates sit within 10⁻⁶ of 1 on both sides of it: arg 1.0000009, G 1.0000001, every central Padé
   approximant within 2×10⁻⁷ of 1, the ring-free sums of σ₀…σ₂₀ at 0.999999997–1.000000028.
 - The calibrated range narrowed from 0.999996–1.000004 (K = 19) to 0.999997–1.000001, and the K = 20 hull is

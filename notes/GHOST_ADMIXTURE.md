@@ -72,15 +72,15 @@ yardsticks, and those failed outside D = 8–30:
   the mode matrix there: moving z by 10⁻³¹ relative moves M_ψ z_ψ by 2–5×10⁻²² while F_ψ moves by 4×10⁻²⁵ (a smooth
   change). That is what ν measures.
 
-The records of the earlier forms are in `modecount_test_check.jsonl`: its first four lines (cloud) and the Mac's D = 67 and
-D = 4 runs (`modecount_test_check_D4_mac.log`, `_D67_mac.log`). The counts do not use
-checks 3 and 4.
+The records of the earlier forms are in `modecount_test_check.jsonl`: its first four lines (cloud) and the Mac's D = 67
+and D = 4 runs (`modecount_test_check_D4_mac.log`, `_D67_mac.log`). The counts do not use checks 3 and 4.
 
-**A discrepancy found on the way.** The count at D = 8.25 committed with the mode count (`hp/data/modecount_D8.2500_M32*`,
-not used in MODE_COUNT.md's results) does not reproduce: its cached determinants differ from the current kernel's by
-0.1–0.5 in ln|det M| at real λ (the signs agree), and the kernel and the crate of that commit, rebuilt, give the
-current values bit for bit. At D = 30 the cached values reproduce exactly. So those cached D = 8.25 values came from a
-different state or layout than the one saved with them; that count should be rerun before it is quoted.
+**A discrepancy found on the way.** The count at D = 8.25 committed with the mode count
+(`hp/data/modecount_D8.2500_M32*`, not used in MODE_COUNT.md's results) does not reproduce: its cached determinants
+differ from the current kernel's by 0.1–0.5 in ln|det M| at real λ (the signs agree), and the kernel and the crate of
+that commit, rebuilt, give the current values bit for bit. At D = 30 the cached values reproduce exactly. So those
+cached D = 8.25 values came from a different state or layout than the one saved with them; that count should be rerun
+before it is quoted.
 
 ## 3. Counts
 

@@ -50,8 +50,8 @@ our proof certificate, our $`\Delta_\infty`$ error bar and our README numbers.
   - **Users:** the changelog credits outside users with bug reports and a fix (issues #2 and #3, and a separate
     feedback repository).
   - **Self-tests:** every package declares a verification class (selftest, partial, smoke, data-gated) and ships an
-    acceptance battery, run by [`run_selftests.py`][selftests]. Data-gated packages refuse with exit code 4 and a printed
-    reason.
+    acceptance battery, run by [`run_selftests.py`][selftests]. Data-gated packages refuse with exit code 4 and a
+    printed reason.
   - **Tested on:** Linux x86_64 and arm64; not on macOS.
   - **Not done here:** I ran none of it, so none of these claims is checked.
 - **Main ideas** (beyond the instruments):
@@ -103,17 +103,17 @@ Items 1, 2 and 4 are concrete and cheap. Item 3 is moderate. Items 5–7 are min
      Krawczyk test over $`X = \hat x + [-10^{-9}, 10^{-9}]^2`$. Its checks are positive ones: the linear problem against
      Kummer U ([`lin_check.py`](../solver/proof/lin_check.py)), and agreement with double precision. It states that
      "the certificate rests on the correctness of the code, which no second implementation has checked yet".
-   - **What BootLoops says.** The BALLER manual records a limit of the Krawczyk test ([MANUAL.md, lines 290–299][baller-manual]):
-     the centred contraction test is blind to the sign of c, and "any invertible claimed-H self-preconditions to E ~ 0
-     near a true zero". A mutation that changes only the Jacobian enclosure therefore proves nothing. "Meaningful
-     mutation controls flip signs in the ORACLE MATH (zero moves -> Krawczyk refuses)".
+   - **What BootLoops says.** The BALLER manual records a limit of the Krawczyk test ([MANUAL.md, lines
+     290–299][baller-manual]): the centred contraction test is blind to the sign of c, and "any invertible claimed-H
+     self-preconditions to E ~ 0 near a true zero". A mutation that changes only the Jacobian enclosure therefore proves
+     nothing. "Meaningful mutation controls flip signs in the ORACLE MATH (zero moves -> Krawczyk refuses)".
    - **The independence rule.** Holonomic's "independence fence" ([GUIDE][holonomic]) says an oracle and the evaluator
      it checks must share no code. Otherwise every cross-check grades the code against itself.
    - **Adoption:**
      - **(a) Mutation controls (minutes).** Add two or three to [`validated_int.py`](../solver/proof/validated_int.py)'s
        `krawczyk` mode, each a change to the function rather than to J. Examples: shift ω in the right-hand side by a
-       few h, flip the sign of one coupling term, or centre the box 3h off the zero. Record that each one makes K(X) leave
-       int X. Each box run at h = 10⁻⁹ takes about 4 minutes.
+       few h, flip the sign of one coupling term, or centre the box 3h off the zero. Record that each one makes K(X)
+       leave int X. Each box run at h = 10⁻⁹ takes about 4 minutes.
      - **(b) A second validated integrator (agent-days).** It must share no code with `validated_int.py` or
        `series_arb.py`. A C⁰ Taylor-model or interval-Picard integrator over the same path is enough at h = 10⁻⁹.
 2. **A planted-truth test of the $`\Delta_\infty`$ error bar.** High value, low cost.

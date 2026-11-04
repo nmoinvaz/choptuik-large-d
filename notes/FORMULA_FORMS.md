@@ -1,20 +1,21 @@
 # The formula's shorter forms by range, and the earlier power series
 
 Moved verbatim from README.md (commit ea42b3e, lines 210–245, 414–445) on 2026-11-04, in the reorganization of
-[README_PLAN.md](README_PLAN.md); the README keeps a pointer where each block stood. Links were made relative to this folder.
+[README_PLAN.md](README_PLAN.md); the README keeps a pointer where each block stood. Links were made relative to this
+folder.
 
 <details>
 <summary>Shorter forms for one range of D: plain series in 1/D with fewer terms, per range</summary>
 
-On a narrower range a plain series Δ ≈ c₀ + c₁/D + c₂/D² + … with fewer terms does as well
-as the rational formula. The table gives, per range, the fewest terms that reach each accuracy, the coefficients, and
-the error margin. Up to D = 61 the margin is the largest miss over the computed points in the range (an interpolation
-error, since the series is fitted on those points). Above D = 61 there are no computed points: the series is fitted on
-the points from half the range's lower end up, and the margin is the spread of its values across fits that differ in
-the lower cut and in one extra term, plus the fit's own residual (`cd hp && python3 short_forms.py`; `--selftest` runs
-it on a planted analytic function with controls). That is a fit spread, not a bound; it assumes Δ is
-analytic in 1/D ([Is the period analytic in 1/D?](../README.md#is-the-period-analytic-in-1d)), and `--selftest` shows it widens
-a hundredfold when a non-analytic term is present. Coefficients are given to two digits past the margin.
+On a narrower range a plain series Δ ≈ c₀ + c₁/D + c₂/D² + … with fewer terms does as well as the rational formula. The
+table gives, per range, the fewest terms that reach each accuracy, the coefficients, and the error margin. Up to D = 61
+the margin is the largest miss over the computed points in the range (an interpolation error, since the series is fitted
+on those points). Above D = 61 there are no computed points: the series is fitted on the points from half the range's
+lower end up, and the margin is the spread of its values across fits that differ in the lower cut and in one extra term,
+plus the fit's own residual (`cd hp && python3 short_forms.py`; `--selftest` runs it on a planted analytic function with
+controls). That is a fit spread, not a bound; it assumes Δ is analytic in 1/D
+([Is the period analytic in 1/D?](../README.md#is-the-period-analytic-in-1d)), and `--selftest` shows it widens a
+hundredfold when a non-analytic term is present. Coefficients are given to two digits past the margin.
 
 | D | accuracy | terms | Δ ≈ | error margin |
 |---|---|---|---|---|
@@ -51,11 +52,11 @@ physical constants (they are correlated, and shift with the range), only the fun
 \Delta(D) \approx 1.64389 + \frac{10.37}{D} - \frac{28.4}{D^2} + \frac{239}{D^3} - \cdots
 ```
 
-Fitted on 10 ≤ D ≤ 30.2 (`solver/formula.py`); it reproduces the points there to
-1.6×10⁻⁸ (Δ) and 2.3×10⁻⁹ (γ; the γ points themselves are good to about 10⁻⁷). The coefficients grow about ninefold per order with
-alternating signs: a singularity near D ≈ −9 on the negative axis, which the rational form represents by the
-zero of its denominator at D = −11.0. That singularity
-limits the series to $`D \gtrsim 10`$ and forbids cutting it short (five terms are off by 4×10⁻³ at D ≥ 20).
+Fitted on 10 ≤ D ≤ 30.2 (`solver/formula.py`); it reproduces the points there to 1.6×10⁻⁸ (Δ) and 2.3×10⁻⁹ (γ; the γ
+points themselves are good to about 10⁻⁷). The coefficients grow about ninefold per order with alternating signs: a
+singularity near D ≈ −9 on the negative axis, which the rational form represents by the zero of its denominator at D =
+−11.0. That singularity limits the series to $`D \gtrsim 10`$ and forbids cutting it short (five terms are off by 4×10⁻³
+at D ≥ 20).
 
 | k | $`c_k`$ (for Δ) | $`g_k`$ (for γ) |
 |---|---|---|

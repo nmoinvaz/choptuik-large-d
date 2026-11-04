@@ -1,15 +1,17 @@
 # The double-double solver: how it works, benchmarks, spacing, a sample of points, error indicators
 
-Moved verbatim from README.md (commit ea42b3e, lines 726–796, 798–827, 904–929, 1000–1007) on 2026-11-04, in the reorganization of
-[README_PLAN.md](README_PLAN.md); the README keeps a pointer where each block stood. Links were made relative to this folder.
+Moved verbatim from README.md (commit ea42b3e, lines 726–796, 798–827, 904–929, 1000–1007) on 2026-11-04, in the
+reorganization of [README_PLAN.md](README_PLAN.md); the README keeps a pointer where each block stood. Links were made
+relative to this folder.
 
 <details>
 <summary>How the solver works: arithmetic, step control, Jacobian, Newton variants, τ grids, quad-double, continuation, centre-series order</summary>
 
-- **Arithmetic:** double-double (hi + lo, about 32 digits)[^15] on 8-lane vectors: one AVX-512 register per lane group, two
-  AVX2 registers, four SSE2 or NEON registers, or a portable array, chosen at compile time (`hp/build.sh` builds with
-  `-C target-cpu=native`). Error-free two-sum and FMA two-product; sums of products accumulated Sum2-style[^16]. The
-  arithmetic, the dual lanes, the double-double LU, the staircase LU of the block storage, the τ-field kernels and the
+- **Arithmetic:** double-double (hi + lo, about 32 digits)[^15] on 8-lane vectors: one AVX-512 register per lane group,
+  two AVX2 registers, four SSE2 or NEON registers, or a portable array, chosen at compile time (`hp/build.sh` builds
+  with `-C target-cpu=native`). Error-free two-sum and FMA two-product; sums of products accumulated Sum2-style[^16].
+  The arithmetic, the dual lanes, the double-double LU, the staircase LU of the block storage, the τ-field kernels and
+  the
   GMRES refinement are the separate crate [multidouble](https://github.com/nmoinvaz/multidouble) (the version in
   `hp/Cargo.toml`, its lane types on the compile-time backend); every backend gives bitwise the same results, and the
   solver's outputs are unchanged bit for bit by each move (`hp/highm_check.py ref` and `scaled` against the
@@ -17,22 +19,22 @@ Moved verbatim from README.md (commit ea42b3e, lines 726–796, 798–827, 904�
 - **No fixed-step error:** Taylor series in x (order 36, step points planned once per D so the truncation term is
   10⁻³²), centre and horizon series run until their tails are below 10⁻³³, and collocation in τ on the
   half period (p, m odd harmonics, a, c even harmonics in τ) with no spectral truncation of the products.
-- **Exact Jacobian:** forward-mode duals[^17] over double-double, double-double LU for Newton, a transpose solve that gives
-  $`\partial\Delta/\partial F`$ at every point, and a Levenberg–Marquardt fallback.
+- **Exact Jacobian:** forward-mode duals[^17] over double-double, double-double LU for Newton, a transpose solve that
+  gives $`\partial\Delta/\partial F`$ at every point, and a Levenberg–Marquardt fallback.
 - **Mixed-precision Newton (opt-in):** `Solver.newton_mixed` keeps the residual in double-double but computes the
   Jacobian with f64 vector lanes (four columns per pass over the base trajectory) and factors it in f64. Newton then
-  converges to the same solution: at D = 3.7, M = 64 and 80, Δ agrees with the all-double-double solve to
-  5×10⁻³¹ and the fields to 1×10⁻²⁷, about as closely as two all-double-double solves from different starts agree
-  (6–7×10⁻²⁸). It needs at most one extra step. A step is 9–10 times faster at M = 48–80 and a whole solve 7–9 times
-  ([notes/MIXED_PRECISION.md](MIXED_PRECISION.md); `hp/lowD_dd.py --jac f64`, `driver.newton_solve(jac="f64")`).
-  At M ≥ 48 the f64 Jacobian agrees with the exact one only to about 10⁻⁷, against 10⁻¹⁴ at M ≤ 32. The Taylor
-  steps are planned for the solution, not for the top τ-harmonics of a single column, so rounding inside a step is
-  amplified. That costs Newton speed (a contraction of about 10⁻⁷ per step), not accuracy, since the residual stays
-  double-double. At large D the f64 Jacobian stops steering (from D = 40 in the benchmark below): the errors that matter all
-  sit in the horizon block (notes/MIXED_PRECISION.md §8). Two repairs restore the step
-  ([notes/LARGE_D_MIXED.md](LARGE_D_MIXED.md)): the horizon block's columns in double-double (`horizon_dd=4`),
-  and a correction loop (GMRES preconditioned by the f64 LU, with exact double-double Jacobian-vector products,
-  `Solver.jvp`). With both, Newton converges at every D tried, to the same Δ.
+  converges to the same solution: at D = 3.7, M = 64 and 80, Δ agrees with the all-double-double solve to 5×10⁻³¹ and
+  the fields to 1×10⁻²⁷, about as closely as two all-double-double solves from different starts agree (6–7×10⁻²⁸). It
+  needs at most one extra step. A step is 9–10 times faster at M = 48–80 and a whole solve 7–9 times
+  ([notes/MIXED_PRECISION.md](MIXED_PRECISION.md); `hp/lowD_dd.py --jac f64`, `driver.newton_solve(jac="f64")`). At M ≥
+  48 the f64 Jacobian agrees with the exact one only to about 10⁻⁷, against 10⁻¹⁴ at M ≤ 32. The Taylor steps are
+  planned for the solution, not for the top τ-harmonics of a single column, so rounding inside a step is amplified. That
+  costs Newton speed (a contraction of about 10⁻⁷ per step), not accuracy, since the residual stays double-double. At
+  large D the f64 Jacobian stops steering (from D = 40 in the benchmark below): the errors that matter all sit in the
+  horizon block (notes/MIXED_PRECISION.md §8). Two repairs restore the step
+  ([notes/LARGE_D_MIXED.md](LARGE_D_MIXED.md)): the horizon block's columns in double-double (`horizon_dd=4`), and a
+  correction loop (GMRES preconditioned by the f64 LU, with exact double-double Jacobian-vector products, `Solver.jvp`).
+  With both, Newton converges at every D tried, to the same Δ.
 - **Larger τ grids:** M = 160, 192, 256, 320 and 384 collocation points besides 8–128. Above M = 128 the
   mixed-precision step builds and factors its f64 Jacobian in block storage (a staircase LU over the
   multiple-shooting blocks, `hp/src/block.rs`): 8–12 times less memory than the dense matrix (173 MB at M = 192), and
@@ -78,11 +80,12 @@ Moved verbatim from README.md (commit ea42b3e, lines 726–796, 798–827, 904�
 ![The Newton variants of the double-double solver against D: seconds per solve and speedup over the double-double Jacobian, with the failures marked](../hp/bench_variants.svg)
 
 **The Newton variants against D** (`hp/plot_bench_variants.py`; data from `hp/bench_variants.py --repeat=3 --threads=4`
-on an otherwise idle laptop, i7-1185G7 with AVX-512, in `hp/data/bench_variants/bench_local.jsonl`). Left: seconds
-per whole solve, the median of three; right: the speedup over the double-double Jacobian; the arrows point the faster
-way, and crosses mark a variant that did not converge. Up to D = 30 the f64 Jacobian alone, or with the loop, is 5–8 times faster; alone it fails from
-D = 40, and with the loop alone (f64g) from D = 60. Only the horizon fix with the loop (f64hg) converges at every D, 1.6–2.6 times faster
-than double-double at D = 40–60. Every converged run gives the same Δ to 1.1×10⁻¹⁸.
+on an otherwise idle laptop, i7-1185G7 with AVX-512, in `hp/data/bench_variants/bench_local.jsonl`). Left: seconds per
+whole solve, the median of three; right: the speedup over the double-double Jacobian; the arrows point the faster way,
+and crosses mark a variant that did not converge. Up to D = 30 the f64 Jacobian alone, or with the loop, is 5–8 times
+faster; alone it fails from D = 40, and with the loop alone (f64g) from D = 60. Only the horizon fix with the loop
+(f64hg) converges at every D, 1.6–2.6 times faster than double-double at D = 40–60. Every converged run gives the same Δ
+to 1.1×10⁻¹⁸.
 
 ![How long each D took to solve: hours per point below D = 4, every solve and the one that gave the value; seconds per continuation point above D = 8.25, by machine](../hp/solve_times.svg)
 
@@ -110,7 +113,8 @@ a horizon-tail jump).
 <summary>A sample of the computed points</summary>
 
 A sample of the computed points (all of them, from D = 8.25 up, are in
-[`hp/data/delta_dd.csv`](../hp/data/delta_dd.csv)), with the residual and the largest entry of $`\partial\Delta/\partial F`$, the factor by which a residual error moves Δ:
+[`hp/data/delta_dd.csv`](../hp/data/delta_dd.csv)), with the residual and the largest entry of
+$`\partial\Delta/\partial F`$, the factor by which a residual error moves Δ:
 
 | D | Δ | $`\lvert F\rvert`$ | $`\max\lvert\partial\Delta/\partial F\rvert`$ |
 |---|---|---|---|
@@ -144,15 +148,16 @@ Above D = 35 the cut, about 10⁻¹⁵, is the largest of the three (see "How go
 
 ## The echo over several periods (from the README)
 
-Moved verbatim from README.md (commit ecf2b38, "What the numbers mean physically") on 2026-11-04 (README_PLAN.md, stage 4): the
-earlier echo figure, superseded in the README by hp/echo_shapes.svg; links made relative to this folder.
+Moved verbatim from README.md (commit ecf2b38, "What the numbers mean physically") on 2026-11-04 (README_PLAN.md, stage
+4): the earlier echo figure, superseded in the README by hp/echo_shapes.svg; links made relative to this folder.
 
 ![The echo across dimensions: the field's slope at the centre over the same stretch of logarithmic time for D = 4, 10, 20 and 60](../solver/echo.svg)
 
-**The echo itself.** The figure shows the field's slope at the centre, F(τ) = √(D−2)·∂p/∂x at r = 0, over the same stretch of
-logarithmic time τ for D = 4, 10, 20 and 60, each scaled to its peak (dashed: its first harmonic alone; dotted lines: the
-start of each echo). At D = 4 the echo is far from a sine: almost a square wave, with a third harmonic 44% of the first,
-and each echo 31× smaller than the one before. As D grows the echoes come faster (Δ = 2.52, 2.11, 1.81 at D = 10, 20, 60:
-12×, 8.3×, 6.1× per echo) and the profile turns into a pure sine: the third harmonic falls to 8% of the first at D = 60,
-and the D = ∞ theory predicts 5.5%. The D = 4 profile is from the f64 solver (39 harmonics, Δ within 3×10⁻⁶ of the best
-value); the others are double-double solutions (`solver/plot_echo.py`, data from `solver/echo_data.py`).
+**The echo itself.** The figure shows the field's slope at the centre, F(τ) = √(D−2)·∂p/∂x at r = 0, over the same
+stretch of logarithmic time τ for D = 4, 10, 20 and 60, each scaled to its peak (dashed: its first harmonic alone;
+dotted lines: the start of each echo). At D = 4 the echo is far from a sine: almost a square wave, with a third harmonic
+44% of the first, and each echo 31× smaller than the one before. As D grows the echoes come faster (Δ = 2.52, 2.11, 1.81
+at D = 10, 20, 60: 12×, 8.3×, 6.1× per echo) and the profile turns into a pure sine: the third harmonic falls to 8% of
+the first at D = 60, and the D = ∞ theory predicts 5.5%. The D = 4 profile is from the f64 solver (39 harmonics, Δ
+within 3×10⁻⁶ of the best value); the others are double-double solutions (`solver/plot_echo.py`, data from
+`solver/echo_data.py`).

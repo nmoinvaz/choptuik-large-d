@@ -1,7 +1,8 @@
 # Why the continuation stalls at large D: the weak directions, the drop-offs and the horizon-series wall
 
 Moved verbatim from README.md (commit ea42b3e, lines 829–882, 931–977) on 2026-11-04, in the reorganization of
-[README_PLAN.md](README_PLAN.md); the README keeps a pointer where each block stood. Links were made relative to this folder.
+[README_PLAN.md](README_PLAN.md); the README keeps a pointer where each block stood. Links were made relative to this
+folder.
 
 ![Why the continuation stalls along the weak directions: a model of one Newton step along a weak direction, where a large curvature against a small slope makes Newton land above its start, and each run's step in D diving at the stalls at D = 35.2, 60.96 and 67.75](../hp/newton_stall.svg)
 
@@ -49,14 +50,15 @@ block of section 13 there replaces it.
 
 ![Where double-double runs out: u times kappa against D for the full system, crossing 1 near D = 60 at the stalls, and for the pinned systems 8 to 11 orders lower; below, the residual each state reached following the rounding floor u sigma_max |z|](../hp/stall_kappa.svg)
 
-**Where double-double runs out** (`hp/plot_stall_kappa.py`, from the stall detector's runs in folder `T76` of the raw-data repository:
+**Where double-double runs out** (`hp/plot_stall_kappa.py`, from the stall detector's runs in folder `T76` of the
+raw-data repository:
 run `git clone https://github.com/nmoinvaz/choptuik-large-d-raw ../choptuik-large-d-raw` first). Top: u·κ, double-double's unit roundoff times the Jacobian's
 condition number, at converged states. The full system's rises like n^38.9 and crosses 1 at D = 59.9, just before the
 stall at 60.96; at 67.74, where T48 stopped, it is 168. The pinned systems the runs solve sit 8 to 11 orders lower
-(1.0×10⁻⁸ with harmonics 7–13 held at D = 70.98, 1.5×10⁻⁵ with 9–13 held at 70.63), which is why they still converge; the single
-full-system step that corrects for the pin is still taken at the full system's u·κ. Bottom: the residual each saved
-full-system state reached against u·σ_max·|z|, scaled by their median ratio 0.045, the rounding floor of evaluating F
-at a double-double state.
+(1.0×10⁻⁸ with harmonics 7–13 held at D = 70.98, 1.5×10⁻⁵ with 9–13 held at 70.63), which is why they still converge;
+the single full-system step that corrects for the pin is still taken at the full system's u·κ. Bottom: the residual each
+saved full-system state reached against u·σ_max·|z|, scaled by their median ratio 0.045, the rounding floor of
+evaluating F at a double-double state.
 
 What the solver has shown:
 
@@ -73,21 +75,20 @@ What the solver has shown:
   D = 35 and about 10⁻¹⁵ at D = 40–60 (freeing harmonic 15 changes Δ by +1.5, −1.1 and −1.2×10⁻¹⁵ at D = 40, 50 and 60,
   with full Newton steps), which moves Δ∞ by at most 5.5×10⁻¹⁰ ([notes/NUMERICS_REVIEW.md](NUMERICS_REVIEW.md)).
   A cut at 11 does not converge at D = 40.
-- **How fast the selection weakens.** $`\max\lvert\partial\Delta/\partial F\rvert`$ grows about 1.8 times per unit of D below
-  D = 27, 1.7 at 35–45, 1.6 at 45–56 and 1.5 at 56–61, to 9×10¹³ at D = 60 (table), and the
-  residual floor rises about 1.4-fold per unit. Their product, a
-  worst case that ignores the direction of F, bounds the error in Δ by 10⁻¹⁴ at D = 45 and 2×10⁻⁹ at
-  D = 60. The linearised estimate $`-\partial\Delta/\partial F \cdot F`$, which accounts for it, stays between
-  10⁻²¹ and 10⁻¹⁷ from D = 35.3 to 60.1 and reaches 3×10⁻¹⁵ above, where the tolerance was relaxed.
-  The falling per-unit factors are those of a power law, not an exponential: once the harmonic set is fixed (D = 40–61,
+- **How fast the selection weakens.** $`\max\lvert\partial\Delta/\partial F\rvert`$ grows about 1.8 times per unit of D
+  below D = 27, 1.7 at 35–45, 1.6 at 45–56 and 1.5 at 56–61, to 9×10¹³ at D = 60 (table), and the residual floor rises
+  about 1.4-fold per unit. Their product, a worst case that ignores the direction of F, bounds the error in Δ by 10⁻¹⁴
+  at D = 45 and 2×10⁻⁹ at D = 60. The linearised estimate $`-\partial\Delta/\partial F \cdot F`$, which accounts for it,
+  stays between 10⁻²¹ and 10⁻¹⁷ from D = 35.3 to 60.1 and reaches 3×10⁻¹⁵ above, where the tolerance was relaxed. The
+  falling per-unit factors are those of a power law, not an exponential: once the harmonic set is fixed (D = 40–61,
   harmonics above 13 frozen) $`\max\lvert\partial\Delta/\partial F\rvert`$ is $`n^{21.7}`$ to 2% in ln, while
   $`e^{n/2} n^p`$ misses by 15–17% (`solver/beyond_lc/sens_fit.py`). The fast mode that carries the selection,
-  $`e^{-n\Phi}`$ with $`\Phi = \ln x - \tfrac12\ln(1 - x^2)`$, has modulus 1 on $`\mathrm{Re}\,x^2 = \tfrac12`$, which crosses
-  the real axis at x = 1/√2. The solver matches at 0.7, where it is of order one, and moving the last node changes
-  $`\max\lvert\partial\Delta/\partial F\rvert`$ by $`e^{n[\Phi(x_m) - \Phi(0.7)]}`$, over 13 orders of magnitude with no
-  fitted parameter (`solver/beyond_lc/hp_node_test.py`). What grows is the high-harmonic ladder below
-  ([notes/BEYOND_LIGHT_CONE.md](BEYOND_LIGHT_CONE.md)); the residual floor's 1.4-fold rise per unit of D is
-  the growth of the Jacobian's largest singular value (next item).
+  $`e^{-n\Phi}`$ with $`\Phi = \ln x - \tfrac12\ln(1 - x^2)`$, has modulus 1 on $`\mathrm{Re}\,x^2 = \tfrac12`$, which
+  crosses the real axis at x = 1/√2. The solver matches at 0.7, where it is of order one, and moving the last node
+  changes $`\max\lvert\partial\Delta/\partial F\rvert`$ by $`e^{n[\Phi(x_m) - \Phi(0.7)]}`$, over 13 orders of magnitude
+  with no fitted parameter (`solver/beyond_lc/hp_node_test.py`). What grows is the high-harmonic ladder below
+  ([notes/BEYOND_LIGHT_CONE.md](BEYOND_LIGHT_CONE.md)); the residual floor's 1.4-fold rise per unit of D is the growth
+  of the Jacobian's largest singular value (next item).
 - **Why the solver stalls: double-double runs out of precision.** `hp/stall_margin.py` measures the Jacobian J at a
   solved point: its weakest singular directions, its largest singular value σ_max (from the dense double-double
   Jacobian) and the condition number κ = σ_max/σ_min. Its runs are in folder `T76` of the raw-data repository and `hp/stall_summary.py`

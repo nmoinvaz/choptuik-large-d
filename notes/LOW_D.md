@@ -27,9 +27,9 @@ for the local machine to go further. Status words as in AGENTS.md; every number 
 
 ## 1. What failed before (T15, comms.txt 2026-10-20/21)
 
-- kc 47 (solver/data/scan_lowD3_kc47.jsonl): the first step 4.0 -> 3.95 failed (|F| 1.3e-4). Re-seeded at 3.7938 and 3.7,
-  it reached 3.675 (|F| 1.8e-10) and 3.6425 (2.3e-9, accepted only by the relaxed NE_STRONG_TOL 2e-8), then failed at
-  3.6214 and 3.6002 (|F| 1.5e-6, 3.4e-6).
+- kc 47 (solver/data/scan_lowD3_kc47.jsonl): the first step 4.0 -> 3.95 failed (|F| 1.3e-4). Re-seeded at 3.7938 and
+  3.7, it reached 3.675 (|F| 1.8e-10) and 3.6425 (2.3e-9, accepted only by the relaxed NE_STRONG_TOL 2e-8), then failed
+  at 3.6214 and 3.6002 (|F| 1.5e-6, 3.4e-6).
 - kc 55: D = 4.0 and 3.7938 converged; at 3.7 the regridded kc 47 state landed on a false minimum (|F| 7.8e-5, the same
   point to all digits after a long LM). Continuation from 3.7938 needed steps <= 0.0125 at 1000-4800 s each, reached
   3.7689, then failed at 3.7564-3.7626 with weak residuals 8e-11 to 1.5e-10 above the 5e-11 cut.
@@ -116,12 +116,12 @@ extends the nodes during a continuation when they exceed 1e-30.
 
 ### Newton and cost
 
-From an f64 kc 47 seed the double-double Newton goes straight to M = 64 only by failing (line search at |F| 4.3e-2, all in
-the first block; filling the missing harmonics by each field's geometric trend, `--fill_tail`, only brings the start to
-1.4e-2). Through M = 48 it converges in 5-11 Jacobians (linear at first, then quadratic); each higher M from the lower M's
-solution in 4-6. Time per Newton iteration here (2 threads; hp/data/lowD_dd.jsonl, seconds / its): under a load of
-about 20, 260-340 s at M = 48, 625 s at M = 64, 865 s at M = 80; with the machine nearly idle, 180-280 s at M = 64 and
-400 s at M = 80. Roughly M^3 at fixed load, so about 2100 s at M = 96 and 5000 s at M = 128 under load.
+From an f64 kc 47 seed the double-double Newton goes straight to M = 64 only by failing (line search at |F| 4.3e-2, all
+in the first block; filling the missing harmonics by each field's geometric trend, `--fill_tail`, only brings the start
+to 1.4e-2). Through M = 48 it converges in 5-11 Jacobians (linear at first, then quadratic); each higher M from the
+lower M's solution in 4-6. Time per Newton iteration here (2 threads; hp/data/lowD_dd.jsonl, seconds / its): under a
+load of about 20, 260-340 s at M = 48, 625 s at M = 64, 865 s at M = 80; with the machine nearly idle, 180-280 s at M =
+64 and 400 s at M = 80. Roughly M^3 at fixed load, so about 2100 s at M = 96 and 5000 s at M = 128 under load.
 
 ## 3. Converged points
 
@@ -134,8 +134,8 @@ contraction between successive differences is below 0.5 (an estimator, tested on
 | 4.0 | 3.4454524022 +- 1.8e-9 | -2.6e-7, -1.8e-9 (ratio 0.007) | nodes 0.005..0.8, 100/250 terms, step tol 1e-30, at M = 64: < 1e-16 | 5e-57, 9e-31 | 0.3739607120 (M = 64), 0.3739607160 (M = 80) |
 | 3.7 | 3.46520048 +- 2.8e-8 | -9.35e-7, -2.83e-8 (ratio 0.030; geometric tail 9e-10) | nodes 0.0025..0.9, 120/300 terms, step tol 1e-31 against 0.005..0.8, 100/250, 1e-30, at M = 64: < 1e-16 | 2e-85, 4e-70 | 0.3486501896 (M = 80; steps -5.5e-6, -8.4e-8) |
 
-Node sets: D = 4 on 0.01, 0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6, 0.7 (80 centre / 200 horizon terms); D = 3.7 on
-0.005, 0.01, then the same, and 0.8 (100 / 250 terms, step tolerance 1e-30). At D = 3.7 the 0.01..0.7 set is exact at
+Node sets: D = 4 on 0.01, 0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6, 0.7 (80 centre / 200 horizon terms); D = 3.7
+on 0.005, 0.01, then the same, and 0.8 (100 / 250 terms, step tolerance 1e-30). At D = 3.7 the 0.01..0.7 set is exact at
 M = 48 (< 1e-16 from the wider set) but 4.1e-8 off at M = 64, where its series tails are 5e-7 and 4e-6: the node set has
 to follow M.
 
@@ -154,23 +154,26 @@ to follow M.
 
 - Double-double, `python3 hp/lowD_gamma.py <out> <state> --lam0=<guess>` (root of det M(lambda), the hp kernel's
   growth-mode matrix; hp/data/lowD_gamma.jsonl): gamma(4) = 0.3739607120 / 0.3739607160 at M = 64 / 80 (Ecker et al.
-  0.373961 +- 1e-6; f64 kc 55 0.3739607061); gamma(3.7) = 0.3486557785 / 0.3486502734 / 0.3486501896 at M = 48 / 64 / 80 (Ecker et al. 0.3486502642; f64 kc 47 0.3486495942).
+  0.373961 +- 1e-6; f64 kc 55 0.3739607061); gamma(3.7) = 0.3486557785 / 0.3486502734 / 0.3486501896 at M = 48 / 64 / 80
+  (Ecker et al. 0.3486502642; f64 kc 47 0.3486495942).
 - f64 (Rust mode matrix): gamma(3.7) = 0.3486470 (kc 39), 0.3486496 (kc 47).
-- **gamma(3.5) by extrapolation** (`python3 hp/lowD_gamma_extrap.py <ecc>`, hp/data/lowD_logs/gamma_extrap.log): from our
-  points at 3.6425-4.0, degree-2 and -3 fits, gamma(3.5) = 0.3235 +- 0.0030 (twice the spread of the fits; an estimator
-  range). The rule was first applied to Ecker et al.'s gamma curve at the same D and contained their gamma(3.5) =
-  0.32239 (error 1.1e-3); `--mutate` (a curve turning by 0.01) fails it. Our points sit within 8e-7 of their curve.
-- Against Bland et al. 2005 (Table I): 0.349 +- 0.003 at 3.5 is 0.0255 above, more than four times the two ranges added; Ecker et al.'s
-  direct 0.32239 and Bland's 2007 thesis value 0.3235 +- 0.0018 *(unverified, from Ecker et al.'s data file)* agree with
-  ours. So the 2005 value at 3.5 looks wrong; the README's "gamma(3.5) <~ 0.33, an open check" can be replaced.
+- **gamma(3.5) by extrapolation** (`python3 hp/lowD_gamma_extrap.py <ecc>`, hp/data/lowD_logs/gamma_extrap.log): from
+  our points at 3.6425-4.0, degree-2 and -3 fits, gamma(3.5) = 0.3235 +- 0.0030 (twice the spread of the fits; an
+  estimator range). The rule was first applied to Ecker et al.'s gamma curve at the same D and contained their
+  gamma(3.5) = 0.32239 (error 1.1e-3); `--mutate` (a curve turning by 0.01) fails it. Our points sit within 8e-7 of
+  their curve.
+- Against Bland et al. 2005 (Table I): 0.349 +- 0.003 at 3.5 is 0.0255 above, more than four times the two ranges added;
+  Ecker et al.'s direct 0.32239 and Bland's 2007 thesis value 0.3235 +- 0.0018 *(unverified, from Ecker et al.'s data
+  file)* agree with ours. So the 2005 value at 3.5 looks wrong; the README's "gamma(3.5) <~ 0.33, an open check" can be
+  replaced.
 
 ## 5. Comparison with Ecker et al.
 
 `python3 hp/lowD_ecker.py <ecc>` tabulates their Fortran data per Fourier resolution (128 / 256 / 512 / 1024) for D <= 4
-and our values at their D. Their own resolution changes 256 -> 512 in Delta: 8.9e-10 (D = 4), 3.0e-8 (3.7), 4.9e-7 (3.5),
-1.8e-5 (3.3), 2.2e-4 (3.2), 1.0e-3 (3.15), and alternate in sign (128 -> 256 is -8.5e-8 at 3.7): their Fourier error is
-not the limit at D >~ 3.6, while at D = 4 their 512-mode value is 2.8e-7 above Martin-Garcia & Gundlach and ours, an
-error their Fourier test cannot see. At common D:
+and our values at their D. Their own resolution changes 256 -> 512 in Delta: 8.9e-10 (D = 4), 3.0e-8 (3.7), 4.9e-7
+(3.5), 1.8e-5 (3.3), 2.2e-4 (3.2), 1.0e-3 (3.15), and alternate in sign (128 -> 256 is -8.5e-8 at 3.7): their Fourier
+error is not the limit at D >~ 3.6, while at D = 4 their 512-mode value is 2.8e-7 above Martin-Garcia & Gundlach and
+ours, an error their Fourier test cannot see. At common D:
 
 | D | ours | Ecker et al. (512) | Ecker - ours |
 |---|---|---|---|
@@ -194,53 +197,62 @@ are, as far as we can check, the only values; with their 256 -> 512 changes they
 ## 6. What should happen as D -> 3
 
 - **At n = 1 the equations decouple** (`python3 solver/lowD_n1_check.py`, solver/data/lowD_n1_check.log): in
-  solver/dss.py's equations c_x = c (n - 1)(a^2 - 1)/x vanishes, so c = c(tau, 1) = 1 by the gauge, and the p, m equations
-  no longer contain a: the scalar obeys the free 2+1 wave equation in self-similar form (checked on the code's
+  solver/dss.py's equations c_x = c (n - 1)(a^2 - 1)/x vanishes, so c = c(tau, 1) = 1 by the gauge, and the p, m
+  equations no longer contain a: the scalar obeys the free 2+1 wave equation in self-similar form (checked on the code's
   right-hand side; the control n = 1.01 shows the coupling).
 - **The free wave cannot echo at n = 1.** Proposition 2's argument goes through at kappa = (n + 1)/2 = 1: the solution
-  regular at the centre is p - m = x 2F1((1+s)/2, (2+s)/2; 1; x^2) (the other one has a logarithm), and its coefficient of
-  the non-analytic light-cone branch (1 - x^2)^(-1/2 - s) is C(1, s) = Gamma(s + 1/2)/(Gamma((1+s)/2) Gamma(1 + s/2)), with
-  no zero for imaginary s != 0 (*proved*; the solution, both first-order equations and Gauss's connection formula
-  checked at 40 digits for mu = 1, 3, 5 and omega = 1-3.82, |C| >= 0.13 there; a wrong kappa makes the check fail).
+  regular at the centre is p - m = x 2F1((1+s)/2, (2+s)/2; 1; x^2) (the other one has a logarithm), and its coefficient
+  of the non-analytic light-cone branch (1 - x^2)^(-1/2 - s) is C(1, s) = Gamma(s + 1/2)/(Gamma((1+s)/2) Gamma(1 +
+  s/2)), with no zero for imaginary s != 0 (*proved*; the solution, both first-order equations and Gauss's connection
+  formula checked at 40 digits for mu = 1, 3, 5 and omega = 1-3.82, |C| >= 0.13 there; a wrong kappa makes the check
+  fail).
 - **Consequence.** A regular finite-amplitude limit of the family at D = 3 would be a nonzero periodic regular solution
   of the free equation, which does not exist. So as D -> 3+ the family degenerates. The data show how: |F_1| grows like
   (D - 3)^(-1.09), the spectrum flattens (beta from 0.157 at D = 4 to about 0.03 at 3.046) and the series radii shrink,
   consistent with Ecker et al.'s narrow, large-amplitude peaks (their Psi reaches about 3e5 at 3.05). That the field has
-  to grow until (D - 3) a^2 is of order one, gravity's only coupling being the factor n - 1, is a heuristic (*conjecture*).
-  Their conjecture Delta -> 0 (fit 3.878 (D - 3)^0.15 on 3.01-3.05 in their plotting notebook) is not tested here.
-- **2+1 itself** (Lambda < 0 is needed for black holes): the critical solution is continuously self-similar with a scalar
-  linear in tau (c != 0), modelled by Garfinkle's n = 4 solution; gamma = 8/7 predicted, 1.23(4) measured (Jalmuzna,
-  Gundlach & Chmaj, PRD 92, 124044 (2015), arXiv:1510.02592); the review of Gundlach, Hilditch & Martin-Garcia
-  (arXiv:2507.07636, Sec. IV.A.1) quotes gamma = 1.20 +- 0.05 (Pretorius & Choptuik). Nothing ties that solution to the
-  D -> 3+ limit of the asymptotically flat family: Delta -> 0 would suggest a CSS limit, gamma -> 0 would not match.
+  to grow until (D - 3) a^2 is of order one, gravity's only coupling being the factor n - 1, is a heuristic
+  (*conjecture*). Their conjecture Delta -> 0 (fit 3.878 (D - 3)^0.15 on 3.01-3.05 in their plotting notebook) is not
+  tested here.
+- **2+1 itself** (Lambda < 0 is needed for black holes): the critical solution is continuously self-similar with a
+  scalar linear in tau (c != 0), modelled by Garfinkle's n = 4 solution; gamma = 8/7 predicted, 1.23(4) measured
+  (Jalmuzna, Gundlach & Chmaj, PRD 92, 124044 (2015), arXiv:1510.02592); the review of Gundlach, Hilditch &
+  Martin-Garcia (arXiv:2507.07636, Sec. IV.A.1) quotes gamma = 1.20 +- 0.05 (Pretorius & Choptuik). Nothing ties that
+  solution to the D -> 3+ limit of the asymptotically flat family: Delta -> 0 would suggest a CSS limit, gamma -> 0
+  would not match.
 
 ## 7. Proposed task for the local machine
 
 Double-double below D = 3.7: Delta and gamma with M = 96 / 128 and a node-set variant, down to D = 3.3. Needs this
-branch (hp/lowD_dd.py with --Dlist / --auto_nodes, the states hp/data/lowD_states/lowDv_D3.7000_M{64,80}.npz); hpkernel as
-built for T17 (hp/src unchanged since e0c77e5). From the repo root, every process `--threads 1` at below-normal
+branch (hp/lowD_dd.py with --Dlist / --auto_nodes, the states hp/data/lowD_states/lowDv_D3.7000_M{64,80}.npz); hpkernel
+as built for T17 (hp/src unchanged since e0c77e5). From the repo root, every process `--threads 1` at below-normal
 priority, at most 6 at a time, output to the logs named.
 
 - **A (pilot and chain, 1 process).** M = 96 at 3.7, then continuation in steps of 0.05:
 
-      python -u hp/lowD_dd.py hp/data/lowD_dd_local.jsonl --start hp/data/lowD_states/lowDv_D3.7000_M80.npz --nodes 0.005,0.01,0.02,0.05,0.1,0.16,0.23,0.3,0.4,0.5,0.6,0.7,0.8 --Ms 96 --kcs 100 --ks 250 --tol_step 1e-30 --it_max 30 --threads 1 --tag lowDv --resume --auto_nodes --Dlist 3.65,3.6,3.55,3.5,3.45,3.4,3.35,3.3 > hp/data/lowD_logs/local_A.log 2>&1
+      python -u hp/lowD_dd.py hp/data/lowD_dd_local.jsonl --start hp/data/lowD_states/lowDv_D3.7000_M80.npz --nodes
+      0.005,0.01,0.02,0.05,0.1,0.16,0.23,0.3,0.4,0.5,0.6,0.7,0.8 --Ms 96 --kcs 100 --ks 250 --tol_step 1e-30 --it_max 30
+      --threads 1 --tag lowDv --resume --auto_nodes --Dlist 3.65,3.6,3.55,3.5,3.45,3.4,3.35,3.3 >
+      hp/data/lowD_logs/local_A.log 2>&1
 
   Pilot rule: after 3.65, report the time per Newton iteration (expected about 15 min, a point in 4-6) and stop if the
   projected total exceeds 24 h. It stops by itself when a step below 0.005 fails; it restarts with the same command.
 - **B (as A's points appear, up to 4 processes).** For each new state S = hp/data/lowD_states/<tag>_D<D>_M96.npz at
   D = 3.6, 3.5, 3.4, 3.3 (use the nodes and tag that S was solved with; auto_nodes changes them, the tag says how):
 
-      python -u hp/lowD_dd.py hp/data/lowD_dd_local.jsonl --start S --nodes <S's nodes> --Ms 128 --kcs 100 --ks 250 --tol_step 1e-30 --it_max 30 --threads 1 --tag <S's tag> --resume > hp/data/lowD_logs/local_B_<D>.log 2>&1
-      python -u hp/lowD_dd.py hp/data/lowD_dd_local.jsonl --start S --nodes <S's nodes> --Ms 80 --kcs 100 --ks 250 --tol_step 1e-30 --it_max 30 --threads 1 --tag <S's tag> --resume >> hp/data/lowD_logs/local_B_<D>.log 2>&1
-      python -u hp/lowD_gamma.py hp/data/lowD_gamma_local.jsonl S --threads=1 > hp/data/lowD_logs/local_G_<D>.log 2>&1
+      python -u hp/lowD_dd.py hp/data/lowD_dd_local.jsonl --start S --nodes <S's nodes> --Ms 128 --kcs 100 --ks 250
+      --tol_step 1e-30 --it_max 30 --threads 1 --tag <S's tag> --resume > hp/data/lowD_logs/local_B_<D>.log 2>&1 python
+      -u hp/lowD_dd.py hp/data/lowD_dd_local.jsonl --start S --nodes <S's nodes> --Ms 80 --kcs 100 --ks 250 --tol_step
+      1e-30 --it_max 30 --threads 1 --tag <S's tag> --resume >> hp/data/lowD_logs/local_B_<D>.log 2>&1 python -u
+      hp/lowD_gamma.py hp/data/lowD_gamma_local.jsonl S --threads=1 > hp/data/lowD_logs/local_G_<D>.log 2>&1
 
   M = 128 is about 35 min per iteration locally (3-4 h per D); gamma about 8 determinants at M = 96 (2 h).
 - **C (optional, 1 process):** f64 kc 55 / 63 at D = 3.7 from the double-double state, to see whether the f64 solver
-  converges in kc there: `python -u solver/lowD_f64.py solver/data/lowD_f64_local.jsonl --dd hp/data/lowD_states/lowDv_D3.7000_M80.npz --kcs 55,63 --rks 2 --Ks 90 --threads 1 --gamma > solver/data/lowD_f64_local.log 2>&1`
+  converges in kc there:
+  `python -u solver/lowD_f64.py solver/data/lowD_f64_local.jsonl --dd hp/data/lowD_states/lowDv_D3.7000_M80.npz --kcs 55,63 --rks 2 --Ks 90 --threads 1 --gamma > solver/data/lowD_f64_local.log 2>&1`
   (needs rustkernel at cf79fba or later).
 - **Stop conditions:** a record with "converged": false that a rerun does not fix; M = 128 differing from M = 96 by more
-  than 1e-8 at some D (that D is then not resolved: finish it, then stop the chain); --auto_nodes asking for a first node
-  below 0.0025; 24 h in all.
+  than 1e-8 at some D (that D is then not resolved: finish it, then stop the chain); --auto_nodes asking for a first
+  node below 0.0025; 24 h in all.
 - **Push:** hp/data/lowD_dd_local.jsonl, hp/data/lowD_gamma_local.jsonl, the *_M96 and *_M128 states (not *_ckpt),
   hp/data/lowD_logs/local_*.log, solver/data/lowD_f64_local.*, and in the comms note the output of
   `python hp/lowD_conv.py hp/data/lowD_dd.jsonl hp/data/lowD_dd_local.jsonl`.
@@ -251,9 +263,9 @@ For "Relation to published work", replacing the "Below D = 4" bullet:
 
 > - **Below D = 4.** The double-double solver, with its first node moved to x = 0.005 and its last to 0.8 (the series
 >   there converge ever more slowly as D falls), gives Δ(3.7) = 3.46520048 ± 3×10⁻⁸ and γ(3.7) = 0.34865019 ± 8×10⁻⁸,
->   converged in the τ resolution (48, 64 and 80 points) and in the node layout (notes/LOW_D.md); Ecker et al. 2026
->   give 3.4652005 and 0.3486503 there. The f64 points below D = 4 (47 Fourier modes) are 2-5×10⁻⁶ high in Δ. Extrapolated from
->   3.64 ≤ D ≤ 4, γ(3.5) = 0.3235 ± 0.0030, in agreement with Ecker et al.'s 0.32239 and not with Bland et al.'s
+>   converged in the τ resolution (48, 64 and 80 points) and in the node layout (notes/LOW_D.md); Ecker et al. 2026 give
+>   3.4652005 and 0.3486503 there. The f64 points below D = 4 (47 Fourier modes) are 2-5×10⁻⁶ high in Δ. Extrapolated
+>   from 3.64 ≤ D ≤ 4, γ(3.5) = 0.3235 ± 0.0030, in agreement with Ecker et al.'s 0.32239 and not with Bland et al.'s
 >   0.349 ± 0.003. The modes needed grow from about 73 at D = 4 to about 110 at 3.5 and several hundred near 3.05, and
 >   at D = 3 the scalar decouples from gravity in these equations, so the family cannot reach a regular D = 3 limit.
 
@@ -277,11 +289,11 @@ notes/LOW_D.md for the converged values below 4.
 ## Files
 
 Scripts: hp/lowD_dd.py, hp/lowD_conv.py, hp/lowD_gamma.py, hp/lowD_gamma_extrap.py, hp/lowD_cost.py, hp/lowD_ecker.py,
-hp/lowD_series.py, hp/lowD_weak.py, solver/lowD_spectrum.py, solver/lowD_svd.py, solver/lowD_horizon.py, solver/lowD_f64.py,
-solver/lowD_n1_check.py. Data: hp/data/lowD_dd.jsonl, hp/data/lowD_gamma.jsonl, hp/data/lowD_weak.jsonl,
-hp/data/lowD_states/, hp/data/lowD_logs/, solver/data/lowD_*.jsonl, solver/data/lowD_*.log, solver/data/lowD_f64_*.npy.
-The f64 kc 55 / 63 runs used a rustkernel built from this tree (cf79fba) into a private directory, bitwise equal to the
-installed one at kc 47.
+hp/lowD_series.py, hp/lowD_weak.py, solver/lowD_spectrum.py, solver/lowD_svd.py, solver/lowD_horizon.py,
+solver/lowD_f64.py, solver/lowD_n1_check.py. Data: hp/data/lowD_dd.jsonl, hp/data/lowD_gamma.jsonl,
+hp/data/lowD_weak.jsonl, hp/data/lowD_states/, hp/data/lowD_logs/, solver/data/lowD_*.jsonl, solver/data/lowD_*.log,
+solver/data/lowD_f64_*.npy. The f64 kc 55 / 63 runs used a rustkernel built from this tree (cf79fba) into a private
+directory, bitwise equal to the installed one at kc 47.
 
 ## 10. The gap 4 < D < 8.25 in double-double (T79, win, 2026-10-27; folder T79-win of the raw-data repository)
 
@@ -309,26 +321,26 @@ there, so the expectation was wrong, not the run.
 
 ## 11. The continuation below D = 3.4 (from the README)
 
-Moved verbatim from README.md (commit ea42b3e, lines 269–285, 298–323, 325–330, 349–354) on 2026-11-04 (notes/README_PLAN.md); links made
-relative to this folder.
+Moved verbatim from README.md (commit ea42b3e, lines 269–285, 298–323, 325–330, 349–354) on 2026-11-04
+(notes/README_PLAN.md); links made relative to this folder.
 
 ![Below D = 4: double-double points and the maximum of Delta, the bias of the 47-mode f64 points, and the tau modes a 1e-10 Delta needs as D falls toward 3](../hp/lowD.svg)
 
 **Below D = 4** (`hp/plot_lowD.py`). Left: the double-double points at M = 80 and the 47-mode f64 points near the
 maximum. Middle: the f64 points sit 1.5–3.5×10⁻⁶ high there. Right: the τ modes a 10⁻¹⁰ Δ needs (`hp/lowD_cost.py`, an
 estimate over four model variants, not a bound) pass 128 near D = 3.4 and run into the hundreds near D = 3. The kernel
-now runs to M = 384: a continuation in double-double reached D = 3.15, Δ = 2.96131964246 (the change from M = 192 to
-256 is 9×10⁻¹²), where M = 160 already gives Δ to 10⁻⁸. Calibrated on it, the model put D = 3.05 at M = 256–384. The
+now runs to M = 384: a continuation in double-double reached D = 3.15, Δ = 2.96131964246 (the change from M = 192 to 256
+is 9×10⁻¹²), where M = 160 already gives Δ to 10⁻⁸. Calibrated on it, the model put D = 3.05 at M = 256–384. The
 run reached D = 3.05 at M = 320/384, Δ = 2.4849271637881, where the step from M = 320 to 384 is 2.1×10⁻¹¹ (the
 resolution step, not a bound; [notes/HIGH_M.md](HIGH_M.md)). Below it the continuation at steps of 0.0025
 (`hp/lowD_highM.py` from that run's states, on the Windows machine; its records are in the raw-data repository's folder
 T82-win, which `hp/export_lowD.py` reads) has
 reached D = 3.045 at M = 320/384, Δ = 2.4464747274662, with the step from M = 320 to 384 6.7×10⁻¹¹, 3.2 times the step at 3.05;
-the run then stopped on its own time rule, and the legs `down25b` and `down25c` in the same folder went for D = 3.0425: there
-the M = 320 Newton solve from the 7640-step Taylor plan (5082 steps at 3.045) started at |F| 0.34 and damped twice
+the run then stopped on its own time rule, and the legs `down25b` and `down25c` in the same folder went for D = 3.0425:
+there the M = 320 Newton solve from the 7640-step Taylor plan (5082 steps at 3.045) started at |F| 0.34 and damped twice
 (line-search factors 0.125 and 0.031), on which the script gave up and the run was stopped on 2026-11-01
-(T82-win/down25c.log, commit 28545dc of the raw-data repository); whether the leg goes on is open. A first attempt that went
-from 3.05 to 3.045 in one step of 0.005 crawled in Newton at M = 320 and was stopped (T82-win/down5.log).
+(T82-win/down25c.log, commit 28545dc of the raw-data repository); whether the leg goes on is open. A first attempt that
+went from 3.05 to 3.045 in one step of 0.005 crawled in Newton at M = 320 and was stopped (T82-win/down5.log).
 
 <details>
 <summary>Below D = 3.4: the resolution step at each D, and the node changes on the way</summary>

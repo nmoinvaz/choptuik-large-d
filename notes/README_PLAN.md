@@ -193,13 +193,14 @@ test, so these three checks are run by hand.
 honours them): `#how-this-work-was-done` (notes/BOOTLOOPS.md:74), `#large-d-what-the-1d-expansion-can-and-cannot-see`
 (PROOF.md:3, notes/FIRST_ORDER.md:6, matter/STRUCTURE.md:4, matter/LITERATURE.md:6), `#how-the-solution-scales-with-d`
 (matter/CSS.md:373), `#the-inner-problem-at-large-x` (GAMMA.md:74),
-`#proposition-5-the-unstable-mode-at-infinite-d-is-exact` (GAMMA.md:7). Neither paper links a README anchor (only the repository URL, physics 828, math 2246, 2258). Section
-names cited in prose: "Large D" (LIT_REVIEW:22, SUPERCRITICAL:41, LARGE_D_LITERATURE:9), "The formula" (LIT_REVIEW:332,
-REPRODUCTION:80, Layout 2582, 2636), "Reproduce" (REPRODUCTION:117), "Why the solver stalls" (REF_CHECK:227),
-"Leading structure and a prediction" (BEYOND_LIGHT_CONE:478), "How this work was done" (proof/FORMAL.md:125), and the
-check_numbers docstrings ("One formula", "Values", "Below D = 4", "What repeats with that period", "Where the drop-offs
-are", "The formula"). REFEREE_SIM:99, 205, 210 already cite names that no longer exist ("Candidate closed forms, all
-ruled out", "What is new here"); update them in passing.
+`#proposition-5-the-unstable-mode-at-infinite-d-is-exact` (GAMMA.md:7). Neither paper links a README anchor (only the
+repository URL, physics 828, math 2246, 2258). Section names cited in prose: "Large D" (LIT_REVIEW:22, SUPERCRITICAL:41,
+LARGE_D_LITERATURE:9), "The formula" (LIT_REVIEW:332, REPRODUCTION:80, Layout 2582, 2636), "Reproduce"
+(REPRODUCTION:117), "Why the solver stalls" (REF_CHECK:227), "Leading structure and a prediction"
+(BEYOND_LIGHT_CONE:478), "How this work was done" (proof/FORMAL.md:125), and the check_numbers docstrings ("One
+formula", "Values", "Below D = 4", "What repeats with that period", "Where the drop-offs are", "The formula").
+REFEREE_SIM:99, 205, 210 already cite names that no longer exist ("Candidate closed forms, all ruled out", "What is new
+here"); update them in passing.
 
 **Status-word audit.** Sentences that claim more than their status, or omit it:
 - 38–39 "Δ tends to a finite limit, Δ∞ = 1.643893746" without the analyticity condition that 69–70 states; add it.

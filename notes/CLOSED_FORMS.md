@@ -1,7 +1,8 @@
 # Closed forms tested and excluded: the tests, the table and the search
 
 Moved verbatim from README.md (commit ea42b3e, lines 540–591) on 2026-11-04, in the reorganization of
-[README_PLAN.md](README_PLAN.md); the README keeps a pointer where each block stood. Links were made relative to this folder.
+[README_PLAN.md](README_PLAN.md); the README keeps a pointer where each block stood. Links were made relative to this
+folder.
 
 <details>
 <summary>The two tests, the table, the influence function and the search</summary>
@@ -10,10 +11,11 @@ Moved verbatim from README.md (commit ea42b3e, lines 540–591) on 2026-11-04, i
   1/(D-1), 1/(D-2); degree 9 and 10; lower cut D ≥ 10 or 12). The table gives $`\chi^2/\mathrm{dof}`$ of the best
   and the worst of the 12 (0.62 is the unconstrained fit) and the rms error on the held-out f64 points, 30.2 < D ≤ 39.5.
   Five candidates passed it; four were already excluded.
-- **Double-double test** (`hp/dd_candidates.py 45 --dmax=59.8` on today's file): each candidate forced as the limit of a power series in 1/D fitted on
-  10 ≤ D ≤ 45 at degree 14 to 26, and compared with the 352 cleaned points from 45 to 59.8 that the fit never
-  saw. The table gives the best of those degrees and how many times worse it is than the free fit (4.8×10⁻¹³
-  at degree 16 on this range; held out to 60.1 the same fit gives 5.6×10⁻¹³, [below](../README.md#is-the-period-analytic-in-1d)).
+- **Double-double test** (`hp/dd_candidates.py 45 --dmax=59.8` on today's file): each candidate forced as the limit of a
+  power series in 1/D fitted on 10 ≤ D ≤ 45 at degree 14 to 26, and compared with the 352 cleaned points from 45 to 59.8
+  that the fit never saw. The table gives the best of those degrees and how many times worse it is than the free fit
+  (4.8×10⁻¹³ at degree 16 on this range; held out to 60.1 the same fit gives 5.6×10⁻¹³,
+  [below](../README.md#is-the-period-analytic-in-1d)).
 
 | Candidate | Value | − double-double limit | f64 test: $`\chi^2/\mathrm{dof}`$; held-out rms | Double-double test: held-out error (× free) | Verdict |
 |---|---|---|---|---|---|
@@ -36,22 +38,22 @@ still about 100 times the free fit's best.
 
 ![How far each candidate constant moves Δ(D) over the computed range](../solver/candidates.svg)
 
-The graph is from the f64 test. It shows, for every candidate, how much fixing Δ∞ to it changes the fitted Δ(D) over the computed
-range ($`|\text{forced fit} - \text{free fit}|`$, log scale), against the precision of the computed points (shaded).
-The five forms inside the window stay at the level of the data; π²/6 sits 10–100 times above it at
-D = 10–30, and $`2\pi/j_{1,1}`$, $`\sqrt e`$ and φ climb further out. Every curve has the same shape: forcing the
-limit is a linear constraint on a weighted least-squares fit, so forced minus free is (candidate − free limit) times one
-influence function h(D) with h(∞) = 1. It is ~ 10⁻⁷ where the points are known to about 3×10⁻¹¹
-(D ≤ 22; up to 4×10⁻¹⁰ at D ≈ 8–10), rises where their error bars step up (D = 22, 29.5), and climbs toward 1 past the data:
-h(40) = 3.8×10⁻³, h(100) = 0.17, h(1000) = 0.85. Regenerate with
-`cd solver/data && python3 ../plot_candidates.py`.
+The graph is from the f64 test. It shows, for every candidate, how much fixing Δ∞ to it changes the fitted Δ(D) over the
+computed range ($`|\text{forced fit} - \text{free fit}|`$, log scale), against the precision of the computed points
+(shaded). The five forms inside the window stay at the level of the data; π²/6 sits 10–100 times above it at D = 10–30,
+and $`2\pi/j_{1,1}`$, $`\sqrt e`$ and φ climb further out. Every curve has the same shape: forcing the limit is a linear
+constraint on a weighted least-squares fit, so forced minus free is (candidate − free limit) times one influence
+function h(D) with h(∞) = 1. It is ~ 10⁻⁷ where the points are known to about 3×10⁻¹¹ (D ≤ 22; up to 4×10⁻¹⁰ at D ≈
+8–10), rises where their error bars step up (D = 22, 29.5), and climbs toward 1 past the data: h(40) = 3.8×10⁻³, h(100)
+= 0.17, h(1000) = 0.85. Regenerate with `cd solver/data && python3 ../plot_candidates.py`.
 
 G is Catalan's constant and $`j_{\nu,k}`$ the k-th zero of the Bessel function $`J_\nu`$. The five that passed the f64
-test are all that a search finds in the f64-era window 1.64388–1.64403 (about ± 8×10⁻⁵ around the f64 estimate) among products $`r\, b_1^{p_1} b_2^{p_2}`$
-(r = i/j with i, j ≤ 12; $`p = \pm\tfrac12, \pm1, \pm2`$; b from π, e, $`\sqrt2`$, $`\sqrt3`$, $`\ln 2`$, $`\ln 3`$, Euler's
-γ, ζ(3), φ, G and Bessel zeros: $`j_{0,1}, j_{0,2}, j_{1,1}, j_{1,2}, j_{2,1}, j_{3/2,1}, j_{5/2,1}`$ and $`y_{0,1}`$, as in
-`solver/candidates.py`), 2π/(r b) and $`r \ln b`$. The same search finds nothing in the double-double window
-1.6438936–1.6438939 (deliberately ±1.5×10⁻⁷, 15 times the stated error, so that a constant just outside
-the error bar would still show), nor in one about 27 times wider (1.643890–1.643898).
+test are all that a search finds in the f64-era window 1.64388–1.64403 (about ± 8×10⁻⁵ around the f64 estimate) among
+products $`r\, b_1^{p_1} b_2^{p_2}`$ (r = i/j with i, j ≤ 12; $`p = \pm\tfrac12, \pm1, \pm2`$; b from π, e, $`\sqrt2`$,
+$`\sqrt3`$, $`\ln 2`$, $`\ln 3`$, Euler's γ, ζ(3), φ, G and Bessel zeros:
+$`j_{0,1}, j_{0,2}, j_{1,1}, j_{1,2}, j_{2,1}, j_{3/2,1}, j_{5/2,1}`$ and $`y_{0,1}`$, as in `solver/candidates.py`),
+2π/(r b) and $`r \ln b`$. The same search finds nothing in the double-double window 1.6438936–1.6438939 (deliberately
+±1.5×10⁻⁷, 15 times the stated error, so that a constant just outside the error bar would still show), nor in one about
+27 times wider (1.643890–1.643898).
 
 </details>

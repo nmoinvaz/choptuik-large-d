@@ -347,10 +347,10 @@ full texts checked:
   the black-string merger, not for scalar-field collapse.
 
 Verdict: no earlier formula for Δ(D) was found, and the only earlier fit for γ(D) (Bland et al.'s exponential) has a
-different form and limit. The rational formula is an empirical fit, a ratio of polynomials with 11 fitted coefficients for Δ and 9 for γ.
-Rational (Padé-type) fitting is a standard method, so what is new is the fitted function and its validation (precision
-across D ≥ 4, held-out agreement with the double-double points to D = 61, and the correct limits), not a law derived from
-the equations.
+different form and limit. The rational formula is an empirical fit, a ratio of polynomials with 11 fitted coefficients
+for Δ and 9 for γ. Rational (Padé-type) fitting is a standard method, so what is new is the fitted function and its
+validation (precision across D ≥ 4, held-out agreement with the double-double points to D = 61, and the correct limits),
+not a law derived from the equations.
 
 ## Addendum (2026-10-21): prior art for the techniques in PARALLEL.md
 
@@ -371,11 +371,11 @@ relevant section), not recalled:
 | §4 relaxed multiplication | van der Hoeven (texmacs.org/joris/relax), already cited | online power-series products |
 | §6 parallel continuation | arXiv:1312.3491 | parallel step-length adaptation in pseudo-arclength continuation (several predictor–corrector chains at once); not Parareal in the parameter |
 
-Verdict: every technique in PARALLEL.md has a named precedent. Not found in this search, and not a technique in any case:
-the CRC-32 framing of multiple shooting and of the series (an exposition), the instances specific to this code (the
-summation-factor closed form with T_j = (α)_j(β)_j/j!, the 193-unknown condensed system, the 1.9% nonzero LU work after
-pivoting), the measured speedups, and the late-order fit-basis finding of §4 (every neighbour family |ν′| ≤ k is needed).
-That last one is a numerics result about this computation; the general principle, that late orders carry every
+Verdict: every technique in PARALLEL.md has a named precedent. Not found in this search, and not a technique in any
+case: the CRC-32 framing of multiple shooting and of the series (an exposition), the instances specific to this code
+(the summation-factor closed form with T_j = (α)_j(β)_j/j!, the 193-unknown condensed system, the 1.9% nonzero LU work
+after pivoting), the measured speedups, and the late-order fit-basis finding of §4 (every neighbour family |ν′| ≤ k is
+needed). That last one is a numerics result about this computation; the general principle, that late orders carry every
 singularity's contribution, is standard in resurgence (Dingle; Berry–Howls).
 
 PARALLEL.md was removed afterwards (2026-10-21). Its measurements are in the README (Performance) and in the docstrings

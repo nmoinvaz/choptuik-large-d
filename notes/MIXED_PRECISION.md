@@ -2,8 +2,8 @@
 
 > The lane types, `v8.rs` and `linalg.rs` named below now live in the crate
 > [multidouble](https://github.com/nmoinvaz/multidouble) (crates.io, version in `hp/Cargo.toml`; the lane types on the compile-time backend, `multidouble::native`), as do the
-> D-matrix products, the many-right-hand-side solves (`FieldSolve`) and the early end of the series (`TangentTail`); hp keeps only its `Lane` trait in
-> `hp/src/lane.rs`, which every multidouble lane type on that backend implements.
+> D-matrix products, the many-right-hand-side solves (`FieldSolve`) and the early end of the series (`TangentTail`); hp
+> keeps only its `Lane` trait in `hp/src/lane.rs`, which every multidouble lane type on that backend implements.
 
 A Newton step of the double-double DSS solver spent 96% of its time in the exact Jacobian (forward-mode duals over
 double-double, one Taylor integration per column; `hp/data/profile_newton.log`). The mixed-precision step keeps the
@@ -52,11 +52,11 @@ results as before (section 4.1).
     which is an f64 LU of the same matrices.
   - The Cauchy sums (`field::cs*`). For the f64 lanes the B lane vectors' accumulations are interleaved, because a
     single chain of f64 FMAs is latency-bound. Each lane vector still sums its terms in the same order.
-  - The centre and horizon series stop early for f64 tangents (multidouble's `TangentTail`, used in `model.rs`). They stop once the tangent
-    terms max |c_k| r^k of four consecutive orders are all below 2⁻⁶⁰ of the largest so far (r the evaluation
-    radius, k ≥ 8). The saved states' orders kc = 100 and ks = 250 are set for double-double values; the f64 tangents
-    need 30–40 and 50–60 of them (section 3, "orders"). The horizon block is 35% of the double-double Jacobian's time
-    and 8% of the f64 one's (`hp/data/mixed_precision/bench_M48.log`).
+  - The centre and horizon series stop early for f64 tangents (multidouble's `TangentTail`, used in `model.rs`). They
+    stop once the tangent terms max |c_k| r^k of four consecutive orders are all below 2⁻⁶⁰ of the largest so far (r the
+    evaluation radius, k ≥ 8). The saved states' orders kc = 100 and ks = 250 are set for double-double values; the f64
+    tangents need 30–40 and 50–60 of them (section 3, "orders"). The horizon block is 35% of the double-double
+    Jacobian's time and 8% of the f64 one's (`hp/data/mixed_precision/bench_M48.log`).
 - **f64 LU** (`hp/src/linalg.rs`, `DDLu::factor_f64`): the blocked LU of `factor_blocked` in plain f64, with the same
   panels, row swaps, skipped zero blocks and register tiles. It is stored with lo = 0, so the double-double solves
   (`solve`, `solve_t`, `solve_many`, `chord`) use its factors as they are. The route the task suggested, promoting the
@@ -411,12 +411,13 @@ perturbs the fields by 10⁻¹² relative and compares Newton steps with the dou
 | 55.04 | 3×10⁻¹⁸ | 2×10⁻⁶ | 1.2–2.8 | 0.47–0.69 | 6.1 / 0.19 s |
 | 60.00 | 2×10⁻¹⁸ | 7×10⁻⁶ | 0.73–13 | 0.58–1.0 | 6.2 / 0.27 s |
 
-The step columns give the relative difference from the double-double step. That difference is the contraction factor
-of the mixed Newton iteration: below 1 it converges, gaining −log₁₀ of it in digits per step once the quadratic part is
-spent. Ranges are over three draws of the random perturbation for the f64 Jacobian (`largeD_run1`, `largeD_run2`, `largeD`) and two for the dd base (`run1`, `largeD`). The Jacobian times are on 2 threads shared with
-two other jobs. \*At D = 30.07 the saved state has |F| = 3.3×10⁻¹² with these settings, which are the scan's: it is a
-point the scan accepted with `--junk_only` (run up6), as notes/LARGE_D_MIXED.md §7 found (an earlier version of this
-note said the scan used other settings there, which was wrong).
+The step columns give the relative difference from the double-double step. That difference is the contraction factor of
+the mixed Newton iteration: below 1 it converges, gaining −log₁₀ of it in digits per step once the quadratic part is
+spent. Ranges are over three draws of the random perturbation for the f64 Jacobian (`largeD_run1`, `largeD_run2`,
+`largeD`) and two for the dd base (`run1`, `largeD`). The Jacobian times are on 2 threads shared with two other jobs.
+\*At D = 30.07 the saved state has |F| = 3.3×10⁻¹² with these settings, which are the scan's: it is a point the scan
+accepted with `--junk_only` (run up6), as notes/LARGE_D_MIXED.md §7 found (an earlier version of this note said the scan
+used other settings there, which was wrong).
 
 What this shows:
 

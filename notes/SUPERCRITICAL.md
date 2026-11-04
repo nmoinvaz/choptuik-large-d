@@ -2,28 +2,28 @@
 
 Ecker, Ecker and Grumiller (EEG, PRL 136, 191401 (2026), [arXiv:2601.14358](https://arxiv.org/html/2601.14358v1))
 describe, in their supplemental material ("More on CSS solutions") and in "Summary and Outlook", a second branch of
-large-D self-similar solutions, obtained from their regular one by β → iβ, f₀ → if₀: $`f_{LO} = f_0\sqrt{\beta^2x^2-1}`$,
-$`\Pi_{LO} = \beta/\sqrt{\beta^2x^2-1}`$ on β²x² > 1, with a second free function, β without zeros, and the singular point
-β²x² = 1 "sometimes used as a proxy for the apparent horizon, see, e.g., [14]" (Rozali and Way). This note analyses that
-branch. Scripts and logs: [`solver/supercrit/`](../solver/supercrit/).
+large-D self-similar solutions, obtained from their regular one by β → iβ, f₀ → if₀:
+$`f_{LO} = f_0\sqrt{\beta^2x^2-1}`$, $`\Pi_{LO} = \beta/\sqrt{\beta^2x^2-1}`$ on β²x² > 1, with a second free function,
+β without zeros, and the singular point β²x² = 1 "sometimes used as a proxy for the apparent horizon, see, e.g., [14]"
+(Rozali and Way). This note analyses that branch. Scripts and logs: [`solver/supercrit/`](../solver/supercrit/).
 
 **Results** (status words as in AGENTS.md):
 
 1. In this repository's variables the leading order is y = p − m = √2 βx/w, c = f w, (n−1)(b−1) = β²x²/w²,
    w = √(β²x² − 1), and it solves the exact equations to O(1/n) for arbitrary β(τ), f(τ) (*checked symbolically*).
    Both branches are one family, y = √2 x/√(x² + C(τ)), with C = +1/β² (regular) or −1/β² (supercritical).
-2. **Nothing is forced at any order.** The expansion in 1/n exists to all orders, with two free functions of τ per order,
-   which are shifts of β and f (*proved* by hand; *checked symbolically* through NNLO for CSS and through NLO for
-   general β(τ), f(τ); the general NNLO is proposed as a local-machine task, §2.4). Every order solves the exact equations to the next power of 1/n
-   (*numerical evidence*). There is no analogue of EEG's Eq. (20), and f(τ) is pure gauge (a time reparametrization)
-   unless the solution is restricted to CSS, where κ_f = fβ is physical.
+2. **Nothing is forced at any order.** The expansion in 1/n exists to all orders, with two free functions of τ per
+   order, which are shifts of β and f (*proved* by hand; *checked symbolically* through NNLO for CSS and through NLO for
+   general β(τ), f(τ); the general NNLO is proposed as a local-machine task, §2.4). Every order solves the exact
+   equations to the next power of 1/n (*numerical evidence*). There is no analogue of EEG's Eq. (20), and f(τ) is pure
+   gauge (a time reparametrization) unless the solution is restricted to CSS, where κ_f = fβ is physical.
 3. **β²x² = 1 is not an apparent horizon.** The expansion of outgoing null rays, θ₊ = n/(r√b), is positive at every
-   order. The series is one in 1/(n z²), z = β²x² − 1, and breaks down at z ~ n^{−1/2}. There the compactness
-   2m/r^{n−1} = 1 − 1/b is only of order n^{−1/2}. Inside that layer the solution passes smoothly through β²x² = 1 into a
-   region where the polar lapse collapses exponentially and 1 − 1/b → 1.627 κ̃/√n: a **lapse-collapse front, spacelike**,
-   not a marginally trapped surface (*numerical evidence*: exact CSS equations at n = 100–6400; for general β(τ) a
-   formal layer analysis, matched symbolically to the outer series at NLO). Only for a front at rest (β + β′ = 0) does the compactness behind it become large; Rozali and Way's
-   exact divergence is of that static kind.
+   order. The series is one in 1/(n z²), z = β²x² − 1, and breaks down at z ~ n^{−1/2}. There the compactness 2m/r^{n−1}
+   = 1 − 1/b is only of order n^{−1/2}. Inside that layer the solution passes smoothly through β²x² = 1 into a region
+   where the polar lapse collapses exponentially and 1 − 1/b → 1.627 κ̃/√n: a **lapse-collapse front, spacelike**, not a
+   marginally trapped surface (*numerical evidence*: exact CSS equations at n = 100–6400; for general β(τ) a formal
+   layer analysis, matched symbolically to the outer series at NLO). Only for a front at rest (β + β′ = 0) does the
+   compactness behind it become large; Rozali and Way's exact divergence is of that static kind.
 4. **Known solutions.** The branch is not a large-D limit of the Roberts family or of its D-dimensional versions
    (Frolov; Kim, Moon and Yee; Clark and Pimentel), whose scalar field is invariant under the homothety, while here
    ψ ≈ √n fβ τ (*proved*). Its large-x limit is an exact stationary solution, present at every D, which at D = 4 is
@@ -249,8 +249,8 @@ horizon.
 ### 3.2 Where the expansion breaks down
 
 At z ~ n^{−1/2}/κ̃ (§2.5): (n−1)(b−1) ~ n^{1/2}, so 1 − 1/b ~ n^{−1/2}; c ~ n^{−1/4}; y ~ n^{1/4}; p + m ~ 1. The time
-derivatives along the front enter at the same order as the radial ones (through β + β′), and the O(ε) term
-x²∂_x(p+m) of (B) is no longer small. Gravity is still weak there: the region where the series fails is far from trapped.
+derivatives along the front enter at the same order as the radial ones (through β + β′), and the O(ε) term x²∂_x(p+m) of
+(B) is no longer small. Gravity is still weak there: the region where the series fails is far from trapped.
 
 ### 3.3 The layer (`layer.py`)
 
@@ -561,17 +561,16 @@ its integrand; its two integrators give identical series (CSS, NNLO).
 For the end of "Relation to Ecker, Ecker & Grumiller" (after the paragraph on their conjecture Δ → 0):
 
 > **Their supercritical branch.** EEG also note a second branch, $`f_{LO} = f_0\sqrt{\beta^2x^2-1}`$ on β²x² > 1, whose
-> singular point β²x² = 1 they treat as a proxy for the apparent horizon, citing Rozali and Way.[^6] In our variables the
-> two branches are one leading-order family, y = √2 x/√(x² + C(τ)), with C > 0 regular and C < 0 supercritical, and
-> the r²-shift of Proposition 5 moves C by 2nσ₀e^{2τ}: the supercritical branch is the regular one pushed along the
-> λ = 2 mode. Its 1/n expansion exists to all orders with nothing forced (as in Proposition 1). Near β²x² = 1 it is a
-> series in 1/(n(β²x²−1)²) and breaks down at β²x² − 1 ~ n^{−1/2}, where 2m/r^{n−1} is only of order n^{−1/2}. There
-> the solution crosses β²x² = 1 smoothly into a region where the polar lapse collapses exponentially. Behind this
-> spacelike front, 2m/r^{n−1} stays near 1.63 κ̃ n^{−1/2}, with κ̃ = fβ²/|β + β′| the inverse speed of the front.
-> So, for a moving front, β²x² = 1 is not an apparent horizon. Trapping needs the front to come to rest, as it does
-> when the shifted solution's front stops at r² = 2n|σ₀|. The exact CSS equations at n = 100–6400 bear this out.
-> Details, checks and the comparison with the Roberts and Brady self-similar families:
-> [notes/SUPERCRITICAL.md](SUPERCRITICAL.md).
+> singular point β²x² = 1 they treat as a proxy for the apparent horizon, citing Rozali and Way.[^6] In our variables
+> the two branches are one leading-order family, y = √2 x/√(x² + C(τ)), with C > 0 regular and C < 0 supercritical, and
+> the r²-shift of Proposition 5 moves C by 2nσ₀e^{2τ}: the supercritical branch is the regular one pushed along the λ =
+> 2 mode. Its 1/n expansion exists to all orders with nothing forced (as in Proposition 1). Near β²x² = 1 it is a series
+> in 1/(n(β²x²−1)²) and breaks down at β²x² − 1 ~ n^{−1/2}, where 2m/r^{n−1} is only of order n^{−1/2}. There the
+> solution crosses β²x² = 1 smoothly into a region where the polar lapse collapses exponentially. Behind this spacelike
+> front, 2m/r^{n−1} stays near 1.63 κ̃ n^{−1/2}, with κ̃ = fβ²/|β + β′| the inverse speed of the front. So, for a moving
+> front, β²x² = 1 is not an apparent horizon. Trapping needs the front to come to rest, as it does when the shifted
+> solution's front stops at r² = 2n|σ₀|. The exact CSS equations at n = 100–6400 bear this out. Details, checks and the
+> comparison with the Roberts and Brady self-similar families: [notes/SUPERCRITICAL.md](SUPERCRITICAL.md).
 
 ## Their supercritical branch (from the README)
 

@@ -40,9 +40,9 @@ Progress (wip/theoremB1):
   its estimate. A link the notes did not list: B7 needs the Jacobian of the multiplier itself, while Theorem A certifies
   the Jacobian of the D-jump conditions at ξ = 0.3; the forward propagation between them must be certified. Uncertified
   estimate of the final threshold: ln n₀ ≈ 88–90.
-- Item 6 done (bc236d1): Lemma P (a certified adjoint from the multiplier's Jacobian to Theorem A's) and B7 (the implicit
-  function theorem by a Krawczyk test and a degree argument): Theorem B(1) for n ≥ e^{89.75}, conditional on (a)–(c)
-  below, now stated as hypotheses (H-LC), (H-G), (H-J) in C_selection.md §13.1. Merged into main (cba0f62).
+- Item 6 done (bc236d1): Lemma P (a certified adjoint from the multiplier's Jacobian to Theorem A's) and B7 (the
+  implicit function theorem by a Krawczyk test and a degree argument): Theorem B(1) for n ≥ e^{89.75}, conditional on
+  (a)–(c) below, now stated as hypotheses (H-LC), (H-G), (H-J) in C_selection.md §13.1. Merged into main (cba0f62).
 - Items 2–3 done (4c7c9d8): B8 and (H8) hold for |c(0) − c^K(0)| ≤ 10⁷ n⁻⁵ (`b8m_bounds.py --d0`); the rate is
   O(1/n) directly. Items 4–5 are harder than the notes said: three open gaps, (a) control of the nonlinear solution
   near the light cone x = 1 (B6′ is linear only), (b) the exact light-cone gauge, which needs (a), (c) a proof that
@@ -81,12 +81,12 @@ S-mode is attracting toward x = 1. Briot–Bouquet theory was not needed.
 ## P2: review
 
 A fresh agent, given the code and the statements but not P1's notes on how they were reached, re-derives or
-re-implements: `b5_bounds.py` and `b5_formulas.py` (B5(1)); `b8_alg.py` and `b8m_*.py` (B8 and (H8)); lemma 6b₁'s
-disc covering at M = 1 and M = 3; lemmas S and 6b₀'s majorant code at M = 3; and P1's new certificates once they
-exist: `b5_label.py`, `b5_jump.py`, `b8m_bounds.py --d0`, `b7_adjoint.py`, `b7_ift.py`, `b8m_lc.py`, `b8m_lcj.py`, and the
-hand arguments of B_chain.md §10 (most of all, in Lemma LC, that the majorant's derivative bounds the Lipschitz
-constant, and the double-sector symmetry). Shared machinery between the two implementations is recorded (AGENTS.md:
-independent checks are independent).
+re-implements: `b5_bounds.py` and `b5_formulas.py` (B5(1)); `b8_alg.py` and `b8m_*.py` (B8 and (H8)); lemma 6b₁'s disc
+covering at M = 1 and M = 3; lemmas S and 6b₀'s majorant code at M = 3; and P1's new certificates once they exist:
+`b5_label.py`, `b5_jump.py`, `b8m_bounds.py --d0`, `b7_adjoint.py`, `b7_ift.py`, `b8m_lc.py`, `b8m_lcj.py`, and the hand
+arguments of B_chain.md §10 (most of all, in Lemma LC, that the majorant's derivative bounds the Lipschitz constant, and
+the double-sector symmetry). Shared machinery between the two implementations is recorded (AGENTS.md: independent checks
+are independent).
 
 ## P3: Theorem A(M = 5)
 

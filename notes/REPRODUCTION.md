@@ -68,8 +68,8 @@ reveal a missing build step. All runs used the venv instead.
      from the `certificate` check through `solver/proof/mutation_controls.py`.
    - Fix: list python-flint as required in "Build and test" and next to `check_numbers.py` ("How this work was done").
      Alternatively, make that one check SKIP without flint, as `reproduce.py` does.
-   - The same gap applies more widely: every script in `solver/proof/` (and `review/`) and `solver/inner_amp/amp_flint*.py`
-     needs flint, while the README names it only "for `solver/inner_borel/`".
+   - The same gap applies more widely: every script in `solver/proof/` (and `review/`) and
+     `solver/inner_amp/amp_flint*.py` needs flint, while the README names it only "for `solver/inner_borel/`".
 3. **`hp/compare/cmp_ecker.py` crashes.**
    - What happens: `NameError: name 'sys' is not defined` at line 13. Line 3 imports `os, glob, json`; `sys` is first
      imported on line 35.

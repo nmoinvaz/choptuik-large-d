@@ -1,7 +1,7 @@
 # Independent review of the numerics behind Δ∞
 
-Task: an independent review, by reading the code and testing it, of the numerics behind the headline
-Δ∞ = 1.64389375 ± 1.5×10⁻⁸ at commit 78de00b. In scope: the double-double solver (`hp/src`, `hp/python/hpkernel/driver.py`,
+Task: an independent review, by reading the code and testing it, of the numerics behind the headline Δ∞ = 1.64389375 ±
+1.5×10⁻⁸ at commit 78de00b. In scope: the double-double solver (`hp/src`, `hp/python/hpkernel/driver.py`,
 `hp/scan_hp.py`, `hp/pinning.py`), the per-point error estimate, the data pipeline (`hp/export_dd.py`,
 `hp/data/delta_dd.csv`), the fits and the error bar (`hp/dd_fits_mp.py`, `hp/dinf_budget.py`, `hp/planted_dinf.py`), and
 briefly `hp/gamma_dd.py`. Reviewer: agent RV2. Test scripts and their logs: `hp/review/rv2_*`.
@@ -127,10 +127,10 @@ end), but the bar is then a property of the rule, not of the data, and it does n
 | corrected by the recorded dDelta_est, two lowest | 48 | 1.64389374439 – 1.64389376156 | 8.6×10⁻⁹ |
 
 The bar is robust to the degree set and to the floor factor; it is not robust to how many degrees count, nor to the
-data's quality. *Failing scenario:* remove the points the runs themselves flag as least converged. The max-residual floor drops from
-4×10⁻¹⁵ to 1–8×10⁻¹⁶, the floor test now admits degrees 20–22 on D ≥ 15, whose limits wander by 10⁻⁷, and the bar
-grows tenfold although the data got better. What keeps the published bar at 10⁻⁸ is that the floor is set at 4×10⁻¹⁵
-by a few dirty points (the kfreeze-cut points at 35.35–37 and the uncleaned up6 points), which stops the degree
+data's quality. *Failing scenario:* remove the points the runs themselves flag as least converged. The max-residual
+floor drops from 4×10⁻¹⁵ to 1–8×10⁻¹⁶, the floor test now admits degrees 20–22 on D ≥ 15, whose limits wander by 10⁻⁷,
+and the bar grows tenfold although the data got better. What keeps the published bar at 10⁻⁸ is that the floor is set at
+4×10⁻¹⁵ by a few dirty points (the kfreeze-cut points at 35.35–37 and the uncleaned up6 points), which stops the degree
 escalation at 16–20.
 
 **F2 (affects the error bar). The top of the quoted range is an under-resolved fit.** The floor test uses the largest
@@ -178,9 +178,9 @@ The effect changes sign near D ≈ 45 and stays at about 10⁻¹⁵ to the top o
 D = 40, and not falling off.
 
 *Failing scenario of the README's check:* at D = 60, plain Newton with line search from the kfreeze-13 state in the
-kfreeze-15 layout finds no descent direction, takes no step, and returns Δ unchanged: "agrees to 0". The first kfreeze-15
-run in R2 did exactly that. It needed full steps without line search to converge. I could not find a script for the
-D = 40 check; a run that stopped without stepping would report agreement at the 10⁻¹⁷ noise level, as quoted.
+kfreeze-15 layout finds no descent direction, takes no step, and returns Δ unchanged: "agrees to 0". The first
+kfreeze-15 run in R2 did exactly that. It needed full steps without line search to converge. I could not find a script
+for the D = 40 check; a run that stopped without stepping would report agreement at the 10⁻¹⁷ noise level, as quoted.
 
 *Effect on Δ∞:* correcting every kfreeze-13 point by the measured cut (linear in D between the table's points,
 `rv2_fits.py variants --kfcut=…`) moves the 48-fit range to 1.64389374499–1.64389376335, at most 5.5×10⁻¹⁰. The cut is
@@ -232,16 +232,16 @@ x(x+c)\,m_x = -\omega x\,m_\theta - G m + c m - \tfrac n2 c (p+m),
 with G = (n−1)(ca² − c) and H = a(p² + m²) + (n−1)(a − a³). Multiplying the equations of `solver/dss.py`'s header by x
 gives exactly these. I checked each recursion against them by hand:
 
-- **Centre series.** At order k ≥ 2 the unknowns enter as c₀[(1−k−n/2) P_k − (n/2) M_k] and c₀[(n/2) P_k + (k−1+n/2) M_k];
-  the determinant is −c₀²(k−1)(k−1+n) ≠ 0. A_k = (s/2 − (n−1)t₃/2)/(k+n−1) and k C_k = (n−1)Σ_{j<k} C_j (A²)_{k−j}
-  follow from the a and c equations with A₀ = 1. The x(x∓c)p_x sums, the x c_x p sums and the excluded P_k, M_k
-  terms are right.
-- **Taylor step about x₀.** c_{k+1} = (G_k − k c_k)/(x₀(k+1)), a_{k+1} = (H_k/2 − k a_k)/(x₀(k+1)), and
-  W₀(k+1)p_{k+1} = r_k − Σ_{j=1}^{k} W_j(k+1−j)p_{k+1−j} with W = x(x−c) = x₀² + 2x₀h + h² − (x₀ + h)c; the same for m with
-  V = x(x+c).
-- **Horizon series in u = 1 − x.** W = (1−u)(1−u−c) has W₀ = 0 (c₀ = 1), so the order-k p equation determines p_k through
-  (ωD + κ_k)p_k = −r_k with κ_k = (c₁+1)k + c₁ + 1 − n/2 and c₁ = (n−1)(1 − a_h²), which is `horizon_lus`. The m equation
-  has Z₀ = 2 and gives m_{k+1} explicitly. Tangents: f_d = A⁻¹(r_d − ω_d D f − κ_d f) is the derivative of A f = r.
+- **Centre series.** At order k ≥ 2 the unknowns enter as c₀[(1−k−n/2) P_k − (n/2) M_k] and c₀[(n/2) P_k + (k−1+n/2)
+  M_k]; the determinant is −c₀²(k−1)(k−1+n) ≠ 0. A_k = (s/2 − (n−1)t₃/2)/(k+n−1) and k C_k = (n−1)Σ_{j<k} C_j (A²)_{k−j}
+  follow from the a and c equations with A₀ = 1. The x(x∓c)p_x sums, the x c_x p sums and the excluded P_k, M_k terms
+  are right.
+- **Taylor step about x₀.** c_{k+1} = (G_k − k c_k)/(x₀(k+1)), a_{k+1} = (H_k/2 − k a_k)/(x₀(k+1)), and W₀(k+1)p_{k+1} =
+  r_k − Σ_{j=1}^{k} W_j(k+1−j)p_{k+1−j} with W = x(x−c) = x₀² + 2x₀h + h² − (x₀ + h)c; the same for m with V = x(x+c).
+- **Horizon series in u = 1 − x.** W = (1−u)(1−u−c) has W₀ = 0 (c₀ = 1), so the order-k p equation determines p_k
+  through (ωD + κ_k)p_k = −r_k with κ_k = (c₁+1)k + c₁ + 1 − n/2 and c₁ = (n−1)(1 − a_h²), which is `horizon_lus`. The m
+  equation has Z₀ = 2 and gives m_{k+1} explicitly. Tangents: f_d = A⁻¹(r_d − ω_d D f − κ_d f) is the derivative of A f
+  = r.
 
 R1 confirms all of it numerically (§1e).
 
@@ -273,9 +273,9 @@ with the kernel's to 2×10⁻³¹, so the folded matrix and the parity handling 
 rounding, exact), the accurate ("IEEE") add, the multiply without the lo·lo term, and the three-quotient divide.
 `DotAcc` is Ogita–Rump–Oishi Sum2 with exact products: the error terms accumulate in plain f64, which costs only a
 relative 2⁻¹⁰⁴ × (sum of |terms|). All three ISA paths use fused operations (the portable one through `f64::mul_add`,
-which is exact in software where the hardware lacks FMA). The DD constant 2π is correctly split (lo = 2.4492935982947064×10⁻¹⁶).
-n = D − 2 is formed in mpmath from the float D, so it is exact. `Du` (dual numbers) has the right quotient rule.
-**Verdict: OK.**
+which is exact in software where the hardware lacks FMA). The DD constant 2π is correctly split (lo =
+2.4492935982947064×10⁻¹⁶). n = D − 2 is formed in mpmath from the float D, so it is exact. `Du` (dual numbers) has the
+right quotient rule. **Verdict: OK.**
 
 **Where precision drops to f64** (all in the Python driver, none in the residual):
 
@@ -293,10 +293,11 @@ iterate (§1k). **Verdict: OK.** The precision drop that does matter is in the f
 
 - τ-derivative from the DFT definition (above);
 - centre and horizon blocks: the kernel's series (`Solver.series`) are *checked*, not recomputed. Each τ-point's four
-  series become `arb_poly`s, the leading data are compared with p₁, c₀, m_h, a_h, and the four equations (in x, or in
-  u = 1 − x) are evaluated as polynomials and must vanish through order kc (ks − 1). Then the series are summed at the node;
-- Taylor blocks: re-integrated by Picard iteration on power series (`arb_series`, order 40), with every kernel step split
-  in two; midpoints only (balls overestimate by tens of orders through the τ mixing);
+  series become `arb_poly`s, the leading data are compared with p₁, c₀, m_h, a_h, and the four equations (in x, or in u
+  = 1 − x) are evaluated as polynomials and must vanish through order kc (ks − 1). Then the series are summed at the
+  node;
+- Taylor blocks: re-integrated by Picard iteration on power series (`arb_series`, order 40), with every kernel step
+  split in two; midpoints only (balls overestimate by tens of orders through the τ mixing);
 - the freeze projector and the phase row.
 
 At D = 60.001952 (`up13_D60.0020`):
@@ -402,8 +403,8 @@ here because the acceptance test is the only place where a non-converged iterate
 
 ### 2a. What the runs record
 
-Each record carries |F|, the per-block max |∂Δ/∂F| and dDelta_est = −∂Δ/∂F·F, the linearised distance to the exact discrete
-solution (R4, `rv2_data.py`):
+Each record carries |F|, the per-block max |∂Δ/∂F| and dDelta_est = −∂Δ/∂F·F, the linearised distance to the exact
+discrete solution (R4, `rv2_data.py`):
 
 | D | points | max \|F\| | max \|dDelta_est\| | worst case \|F\|·max\|∂Δ/∂F\| |
 |---|---|---|---|---|
@@ -487,7 +488,8 @@ file names, the rows' Delta values in text files, and the git history of every c
 - **B.** Every D equals round(D, 6) (so `dd_fits_mp`'s keys are the floats the solver ran at, and n = D − 2 is exact);
   no two D closer than 2.3×10⁻⁴. **OK.**
 - **C.** |lo| ≤ ulp(hi)/2 and hi + lo = hi in f64 for every row. **OK.**
-- **E.** No D appears in two runs, so "the local one is kept" never applied, and there is no pair to compare directly (F8).
+- **E.** No D appears in two runs, so "the local one is kept" never applied, and there is no pair to compare directly
+  (F8).
 
 `--break=merge`, `--break=round` and `--break=lo` make A, B and C fail. The loader issue is F7. Re-noded records
 (`renoded: true`) would share a D with the point before them; none occur in the runs used.
@@ -532,21 +534,21 @@ every group against the data's actual precision.
 
 ### 4d. The cleaning
 
-`clean()` (degree-18 global fit, residual minus the median of two neighbours on each side, threshold 10⁻¹⁵) drops 27 of 850
-points on 10–61.03: 24 up6 points, D = 35.3532 (the first kfreeze-13 point) and two above 60.1 (60.9259, 60.9626, both
-with recorded corrections of 1.3 and 2.8×10⁻¹⁵; the cloud's re-convergence of 60.9626 confirms +3.3×10⁻¹⁵). It keeps
-60.952991 (leave-one-out residual 1.7×10⁻¹⁵, recorded correction −1.2×10⁻¹⁵), 60.959857 (re-converged by the cloud:
-−8.9×10⁻¹⁶) and up6 points with errors up to 5×10⁻¹⁵ that sit in clusters. With noise of 4×10⁻¹⁶ rms above 60.1 a 10⁻¹⁵ threshold is a 2.5σ cut there, so it drops
-honest points and misses dishonest ones at about the same rate, which is what the planted test saw ("missed the junk
-point at its threshold"). Replacing the cleaning with the recorded corrections (§2b) removes the threshold altogether;
-it moves the quoted range by ≤ 1.6×10⁻⁹.
+`clean()` (degree-18 global fit, residual minus the median of two neighbours on each side, threshold 10⁻¹⁵) drops 27 of
+850 points on 10–61.03: 24 up6 points, D = 35.3532 (the first kfreeze-13 point) and two above 60.1 (60.9259, 60.9626,
+both with recorded corrections of 1.3 and 2.8×10⁻¹⁵; the cloud's re-convergence of 60.9626 confirms +3.3×10⁻¹⁵). It
+keeps 60.952991 (leave-one-out residual 1.7×10⁻¹⁵, recorded correction −1.2×10⁻¹⁵), 60.959857 (re-converged by the
+cloud: −8.9×10⁻¹⁶) and up6 points with errors up to 5×10⁻¹⁵ that sit in clusters. With noise of 4×10⁻¹⁶ rms above 60.1 a
+10⁻¹⁵ threshold is a 2.5σ cut there, so it drops honest points and misses dishonest ones at about the same rate, which
+is what the planted test saw ("missed the junk point at its threshold"). Replacing the cleaning with the recorded
+corrections (§2b) removes the threshold altogether; it moves the quoted range by ≤ 1.6×10⁻⁹.
 
 ### 4e. The planted-truth tests (R6)
 
 `planted_dinf.py` builds its truth from the degree-18 1/D fit to the real points: a fixture made by the code under test
-and inside the fitted model class, with iid noise. It cannot detect a bias of the fitting procedure that comes from
-the real function's shape. `rv2_planted.py` plants instead the README's rational formula P8/Q2 in 1/(D−2) (fitted to the
-f64 points 4 ≤ D ≤ 30.2, limit a₀ = 1.6438975180 exactly, poles at D = −3.2 and −11.0, within 5.8×10⁻⁸ of the real points),
+and inside the fitted model class, with iid noise. It cannot detect a bias of the fitting procedure that comes from the
+real function's shape. `rv2_planted.py` plants instead the README's rational formula P8/Q2 in 1/(D−2) (fitted to the f64
+points 4 ≤ D ≤ 30.2, limit a₀ = 1.6438975180 exactly, poles at D = −3.2 and −11.0, within 5.8×10⁻⁸ of the real points),
 with three noise models, and runs the same 48-fit selection:
 
 | plant | range about the truth | centre − truth | half-width | truth inside |
@@ -563,12 +565,12 @@ pattern, not of the truth, since N2 shows almost none. Two side results:
 - N4: an error confined to the points above 60.1 cannot push the truth out of the quoted range, only widen it,
   because the range is the union of the D ≤ 60.1 and D ≤ 61.03 snapshots and the first does not see those points.
   That makes the range robust, but it also means the planted tests cannot detect such an error.
-- C1, the control, falls outside the range as it must, but only just. A non-analytic term as large as 10⁻⁴ at
-  D = 10 moves the range by only 3–4×10⁻⁹, still fits to the noise, and leaves the centre within the quoted
-  ±1.5×10⁻⁸ of the truth. It falls out because in N1 the truth already sits 1.8×10⁻¹⁰ above the bottom of the range:
-  for a realistic error pattern the range has almost no margin below the truth (the quoted ±1.5×10⁻⁸ about the
-  centre has 1.5×10⁻⁸ − 7.8×10⁻⁹ ≈ 7×10⁻⁹). The fits do not test analyticity; the README's held-out tests do, and the bar is
-  conditional on it (as the README says).
+- C1, the control, falls outside the range as it must, but only just. A non-analytic term as large as 10⁻⁴ at D = 10
+  moves the range by only 3–4×10⁻⁹, still fits to the noise, and leaves the centre within the quoted ±1.5×10⁻⁸ of the
+  truth. It falls out because in N1 the truth already sits 1.8×10⁻¹⁰ above the bottom of the range: for a realistic
+  error pattern the range has almost no margin below the truth (the quoted ±1.5×10⁻⁸ about the centre has 1.5×10⁻⁸ −
+  7.8×10⁻⁹ ≈ 7×10⁻⁹). The fits do not test analyticity; the README's held-out tests do, and the bar is conditional on it
+  (as the README says).
 
 ### 4f. Failure classes
 
@@ -578,8 +580,8 @@ pattern, not of the truth, since N2 shows almost none. Two side results:
   confined to the points above 60.1 cannot push the truth out of the two-snapshot range (§4e, N4).
 - *Fixtures produced by the code under test:* `planted_dinf.py`'s truth (§4e); `reproduce.py`'s expected Δ∞ ± 10⁻⁸ is a
   regression value from the same code (fine as a regression test, not as a validation).
-- *Silent passes:* the junk_only acceptance (§1k) by design; `export_dd.py` silently lets the last run win on a duplicate D
-  (none occur); `gamma_dd.py` records skipped states as skipped (not silent).
+- *Silent passes:* the junk_only acceptance (§1k) by design; `export_dd.py` silently lets the last run win on a
+  duplicate D (none occur); `gamma_dd.py` records skipped states as skipped (not silent).
 
 ## 5. γ
 

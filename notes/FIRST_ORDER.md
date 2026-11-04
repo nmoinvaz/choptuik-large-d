@@ -39,11 +39,11 @@ added, alternating from M = 3 on like the truncation sequence of ω* itself, and
 between the M = 3 and M = 5 values: 5% of the way from M = 5 to M = 3 for ω*, ω₁/ω* and Δ₁, 6% for ω₁ and 17% for λ₁.
 The truncated model's own growth rate tends to the exact 2 of Proposition 5 (λ* − 2 = −0.23, +0.0068, −0.00033).
 
-**Method.** The inner equations are expanded to O(1/n) from the exact equations (§1); the O(1/n) inner solution is
-fixed by the profile correction $`K_1`$, by $`\omega_1`$ and by the light-cone gauge (§2); the multiplier of the corrected
+**Method.** The inner equations are expanded to O(1/n) from the exact equations (§1); the O(1/n) inner solution is fixed
+by the profile correction $`K_1`$, by $`\omega_1`$ and by the light-cone gauge (§2); the multiplier of the corrected
 inner solution must vanish at O(1/n), which is a linear system for $`(K_1, \omega_1)`$ whose ω component is
-$`\omega_1 = -S_{1/n}/\partial_\omega S`$ with the profile correction eliminated (§3). The outer region adds nothing at this
-order: the light-cone exponent's gravitational shift and every matching factor multiply a multiplier that already
+$`\omega_1 = -S_{1/n}/\partial_\omega S`$ with the profile correction eliminated (§3). The outer region adds nothing at
+this order: the light-cone exponent's gravitational shift and every matching factor multiply a multiplier that already
 vanishes (§3). λ₁ is first-order perturbation theory of the growth-rate condition,
 $`\lambda_1 = -\ell\cdot S_{1/n}/\ell\cdot\partial_\lambda S\,f_*`$ (§4). All derivatives are exact jets of the lateral
 Stokes-jump integration (§5).
@@ -61,16 +61,18 @@ and an untruncated computation were not done.
 Write the exact self-similar equations (README, "Large D") in the inner variables and put ν = n^{−1/2}. Lemma B5.0 of
 [proof/C_selection.md](../proof/C_selection.md#9-new-second-pass-lemma-b50-the-inner-limit-is-reached-in-powers-of-1n-proved)
 (script `solver/proof/inner_corrections.py`) shows that only even powers of ν occur. The b equation is singularly
-perturbed (its O(1/n) part contains $`\xi\eta_\xi`$, the b fast mode $`\eta \sim x^{-n}`$, which is exponentially small for
+perturbed (its O(1/n) part contains $`\xi\eta_\xi`$, the b fast mode $`\eta \sim x^{-n}`$, which is exponentially small
+for
 |x| > 1), so η is slaved:
 
 ```math
 \eta = \tfrac12 y^2 + \frac1n\Big(\tfrac12 y^2 + \tfrac12\sigma^2 - \xi y y_\xi\Big) + O(n^{-2}) .
 ```
 
-Substituting it into the other three equations and keeping O(1/n) gives, with $`L = \xi^2\partial_\xi + \xi\,\partial_\tau`$
-($`\partial_\tau = \omega\partial_\theta`$ on a discretely self-similar solution, $`\lambda + \omega\partial_\theta`$ on a perturbation
-$`e^{\lambda\tau}`$), $`E = \tfrac12 y^2`$ and $`\Psi = \tfrac12\sigma^2 - \xi y y_\xi`$:
+Substituting it into the other three equations and keeping O(1/n) gives, with
+$`L = \xi^2\partial_\xi + \xi\,\partial_\tau`$ ($`\partial_\tau = \omega\partial_\theta`$ on a discretely self-similar
+solution, $`\lambda + \omega\partial_\theta`$ on a perturbation $`e^{\lambda\tau}`$), $`E = \tfrac12 y^2`$ and
+$`\Psi = \tfrac12\sigma^2 - \xi y y_\xi`$:
 
 ```math
 L y = c\,\sigma - \frac1n\,c\,\big(\sigma - \xi\sigma_\xi - E\sigma\big), \qquad
@@ -80,10 +82,11 @@ L\sigma = c\,\xi y_\xi + \Big(cE + \frac1n\,c\Psi\Big)\,y - c\,y, \qquad
 
 At 1/n = 0 this is the inner problem of the README. Two facts simplify it:
 
-- Given the c equation, the σ equation is $`L\sigma = (\xi\partial_\xi - 1)(c\,y)`$ exactly, including the O(1/n) terms: the
-  correction to the σ equation is entirely the correction of $`\xi c_\xi`$.
-- In the physical inner variables of Proposition 5 (ρ = r/√n, t; s = ρ²/2, $`y = \sqrt s\,Y`$, $`\sigma = \sqrt2\,s\,S`$; $`L = \rho\,\partial_t`$)
-  the system becomes the heat system of Proposition 5 plus explicit 1/n terms:
+- Given the c equation, the σ equation is $`L\sigma = (\xi\partial_\xi - 1)(c\,y)`$ exactly, including the O(1/n) terms:
+  the correction to the σ equation is entirely the correction of $`\xi c_\xi`$.
+- In the physical inner variables of Proposition 5 (ρ = r/√n, t; s = ρ²/2, $`y = \sqrt s\,Y`$,
+  $`\sigma = \sqrt2\,s\,S`$; $`L = \rho\,\partial_t`$) the system becomes the heat system of Proposition 5 plus explicit
+  1/n terms:
 
 ```math
 Y_t = cS + \frac1n\,c\,\Big(S + 2sS_s + \tfrac12 sY^2 S\Big), \qquad
@@ -102,24 +105,25 @@ powers of ν; the heat form; the identity $`L\sigma = (\xi\partial_\xi - 1)(cy)`
 
 ## 2. The O(1/n) inner solution and its matching data
 
-Write $`Z = (y, \sigma, c) = Z_0 + Z_1/n + \dots`$ and $`\omega = \omega_* + \omega_1/n + \dots`$, with $`Z_0`$ the D = ∞ inner
-solution (a zero of the multipliers). $`Z_1`$ solves the inner problem linearized about $`Z_0`$, forced by the O(1/n) terms
-and by $`\omega_1\xi\partial_\theta Z_0`$. Its formal power series ($`y_1 = \sum_j a_j\xi^{2j+1}`$, $`\sigma_1 = \sum_j b_j\xi^{2j+2}`$,
-$`c_1 = \sum_j h_j\xi^{2j}`$, the same structure as $`Z_0`$) is fixed by three pieces of data:
+Write $`Z = (y, \sigma, c) = Z_0 + Z_1/n + \dots`$ and $`\omega = \omega_* + \omega_1/n + \dots`$, with $`Z_0`$ the D =
+∞ inner solution (a zero of the multipliers). $`Z_1`$ solves the inner problem linearized about $`Z_0`$, forced by the
+O(1/n) terms and by $`\omega_1\xi\partial_\theta Z_0`$. Its formal power series ($`y_1 = \sum_j a_j\xi^{2j+1}`$,
+$`\sigma_1 = \sum_j b_j\xi^{2j+2}`$, $`c_1 = \sum_j h_j\xi^{2j}`$, the same structure as $`Z_0`$) is fixed by three
+pieces of data:
 
-- **$`K_1`$**, the 1/n correction of the profile, $`F_n = F + K_1/n + \dots`$: $`a_0 = K_1`$ (Proposition 1's free functions $`K_k`$; only
-  $`K_1`$ reaches this order of the inner problem);
+- **$`K_1`$**, the 1/n correction of the profile, $`F_n = F + K_1/n + \dots`$: $`a_0 = K_1`$ (Proposition 1's free
+  functions $`K_k`$; only $`K_1`$ reaches this order of the inner problem);
 - **$`\omega_1`$**;
-- **$`h_0 = c_1(0) = -F^2`$** (on the model's harmonics: $`-g_1`$, the ξ² coefficient of $`c_0`$). This is the light-cone gauge: the outer
-  normalization c(x = 1) = 1 is $`c(\xi = n^{-1/2}) = 1`$ in inner variables, i.e. $`1 + g_1/n + c_1(0)/n + O(n^{-2}) = 1`$. It is
-  the only datum that comes from outside the inner region at this order.
+- **$`h_0 = c_1(0) = -F^2`$** (on the model's harmonics: $`-g_1`$, the ξ² coefficient of $`c_0`$). This is the
+  light-cone gauge: the outer normalization c(x = 1) = 1 is $`c(\xi = n^{-1/2}) = 1`$ in inner variables, i.e.
+  $`1 + g_1/n + c_1(0)/n + O(n^{-2}) = 1`$. It is the only datum that comes from outside the inner region at this order.
 
-**Check** (`first_order_checks.py outer`). The outer 1/n expansion of Proposition 1, re-expanded at $`x = \sqrt n\,\xi`$, has
-its top-degree coefficients in $`Z_0`$ (README) and its next-to-top coefficients ($`D_k`$ at $`x^{2k-1}`$, $`S_k`$ at
-$`x^{2k-2}`$, $`G_k`$ at $`x^{2k-2}`$) in $`Z_1`$. With F = 2.72 sin θ, ω = ω∞ and $`K_k = 0`$, $`\omega_k = 0`$
-(`solver/largeD_late_orders.py`, orders 1–9), the recursion for $`Z_1`$ with $`K_1 = 0`$, $`\omega_1 = 0`$, $`h_0 = -F^2`$ reproduces
-them to 1×10⁻¹³ relative at every order (y, σ and c). This checks the O(1/n) equations, the slaving of η and the gauge
-datum at once.
+**Check** (`first_order_checks.py outer`). The outer 1/n expansion of Proposition 1, re-expanded at
+$`x = \sqrt n\,\xi`$, has its top-degree coefficients in $`Z_0`$ (README) and its next-to-top coefficients ($`D_k`$ at
+$`x^{2k-1}`$, $`S_k`$ at $`x^{2k-2}`$, $`G_k`$ at $`x^{2k-2}`$) in $`Z_1`$. With F = 2.72 sin θ, ω = ω∞ and $`K_k = 0`$,
+$`\omega_k = 0`$ (`solver/largeD_late_orders.py`, orders 1–9), the recursion for $`Z_1`$ with $`K_1 = 0`$,
+$`\omega_1 = 0`$, $`h_0 = -F^2`$ reproduces them to 1×10⁻¹³ relative at every order (y, σ and c). This checks the O(1/n)
+equations, the slaving of η and the gauge datum at once.
 
 ## 3. The selection at O(1/n), and what the outer region contributes
 
@@ -131,8 +135,9 @@ light-cone coefficient to the multiplier of the exact inner solution, whose expa
 S(Z_n) = S(Z_0) + \frac1n\,S^{(1)} + O(n^{-2}), \qquad S^{(1)} = \text{multiplier of } Z_1 \quad (\text{when } S(Z_0) = 0) .
 ```
 
-$`Z_1`$ is linear in its data, so with $`x = (A, \omega/\omega_\infty, B_3, C_3, \dots)`$ the parameters of $`F = A\sin\theta + \sum_\nu (B_\nu\sin\nu\theta + C_\nu\cos\nu\theta)`$
-(phase fixed by $`F_1`$ pure sine) and $`\delta x`$ their 1/n corrections ($`K_1`$ and $`\omega_1`$),
+$`Z_1`$ is linear in its data, so with $`x = (A, \omega/\omega_\infty, B_3, C_3, \dots)`$ the parameters of
+$`F = A\sin\theta + \sum_\nu (B_\nu\sin\nu\theta + C_\nu\cos\nu\theta)`$ (phase fixed by $`F_1`$ pure sine) and
+$`\delta x`$ their 1/n corrections ($`K_1`$ and $`\omega_1`$),
 
 ```math
 S^{(1)} = S_{1/n} + \frac{\partial S}{\partial x}\,\delta x = 0
@@ -140,41 +145,43 @@ S^{(1)} = S_{1/n} + \frac{\partial S}{\partial x}\,\delta x = 0
 \delta x = -\Big(\frac{\partial S}{\partial x}\Big)^{-1} S_{1/n}, \qquad \omega_1 = \omega_\infty\,\delta x_2 ,
 ```
 
-where $`S_{1/n}`$ is the multiplier induced by the O(1/n) terms of §1 with $`K_1 = 0`$, $`\omega_1 = 0`$ and the gauge datum
-$`h_0 = -F^2`$. This is "$`\omega_1 = -S_{1/n}/\partial_\omega S`$ with $`A_1`$ eliminated": by Cramer's rule, $`\omega_1`$ is
-$`-S_{1/n}`$ projected on the left null direction of the other columns of $`\partial S/\partial x`$, divided by
-$`\partial_\omega S`$ projected the same way.
+where $`S_{1/n}`$ is the multiplier induced by the O(1/n) terms of §1 with $`K_1 = 0`$, $`\omega_1 = 0`$ and the gauge
+datum $`h_0 = -F^2`$. This is "$`\omega_1 = -S_{1/n}/\partial_\omega S`$ with $`A_1`$ eliminated": by Cramer's rule,
+$`\omega_1`$ is $`-S_{1/n}`$ projected on the left null direction of the other columns of $`\partial S/\partial x`$,
+divided by $`\partial_\omega S`$ projected the same way.
 
-**The outer region contributes nothing else at O(1/n).** The chain from the inner multiplier to the light-cone coefficient
-$`C_{n,\mu}`$ is a product of linear maps on the label space (vectors over harmonics):
+**The outer region contributes nothing else at O(1/n).** The chain from the inner multiplier to the light-cone
+coefficient $`C_{n,\mu}`$ is a product of linear maps on the label space (vectors over harmonics):
 
 - the matching factor $`\kappa_{n,\mu}`$ of Lemma B5.1 (powers of n, the half-monodromy phases $`e^{\mp in\pi/2}`$,
-  $`e^{\mp i\pi\langle F^2\rangle}`$, $`e^{\mp\pi\mu\omega}`$, and corrections in $`1/(n u)`$ and $`1/(n u^2)`$ that describe the shape of the fast
-  mode, not its label);
+  $`e^{\mp i\pi\langle F^2\rangle}`$, $`e^{\mp\pi\mu\omega}`$, and corrections in $`1/(n u)`$ and $`1/(n u^2)`$ that
+  describe the shape of the fast mode, not its label);
 - the transport along the characteristics on 0 \< x \< 1 (Proposition 3; never zero);
-- the light-cone matching constant (Lemma B6) and the factor $`e^{-i\pi\Lambda_\mu} - e^{i\pi\Lambda_\mu}`$, with the light-cone
-  exponent $`\Lambda_\mu = n/2 - 1 - i\mu\omega + \langle F^2\rangle + O(1/n)`$. Its gravitational shift $`\langle F^2\rangle`$ and its O(1/n)
-  correction enter only here, and $`\sin\pi\Lambda_\mu \ne 0`$ because $`\mathrm{Im}\,\Lambda_\mu \ne 0`$.
+- the light-cone matching constant (Lemma B6) and the factor $`e^{-i\pi\Lambda_\mu} - e^{i\pi\Lambda_\mu}`$, with the
+  light-cone exponent $`\Lambda_\mu = n/2 - 1 - i\mu\omega + \langle F^2\rangle + O(1/n)`$. Its gravitational shift
+  $`\langle F^2\rangle`$ and its O(1/n) correction enter only here, and $`\sin\pi\Lambda_\mu \ne 0`$ because
+  $`\mathrm{Im}\,\Lambda_\mu \ne 0`$.
 
 Each map is invertible (non-resonance, B6 step 3), and each has a 1/n expansion. At a zero of $`S(Z_0)`$ their 1/n
 corrections multiply $`S(Z_0) = 0`$, so $`C_n = 0`$ to O(1/n) exactly when $`S^{(1)} = 0`$: the shift of the light-cone
-exponent changes the size of the light-cone coefficient, not where it vanishes. The outer region's only input at
-this order is the matching data of §2: $`K_1`$ and $`\omega_1`$ (the unknowns) and the gauge datum $`h_0`$. In the full problem
-even $`h_0`$ drops out: a θ-dependent change of c at ξ = 0 is a time reparametrization (§1), which maps solutions with
-zero jump to solutions with zero jump, so the selected $`\omega_1`$ does not depend on it. In the truncated models it does
-slightly, and that dependence is a measure of the truncation (§6).
+exponent changes the size of the light-cone coefficient, not where it vanishes. The outer region's only input at this
+order is the matching data of §2: $`K_1`$ and $`\omega_1`$ (the unknowns) and the gauge datum $`h_0`$. In the full
+problem even $`h_0`$ drops out: a θ-dependent change of c at ξ = 0 is a time reparametrization (§1), which maps
+solutions with zero jump to solutions with zero jump, so the selected $`\omega_1`$ does not depend on it. In the
+truncated models it does slightly, and that dependence is a measure of the truncation (§6).
 
 *Status of this argument.* It uses the lemma chain of C_selection.md at O(1/n): that the outer solution equals the inner
-lateral sum including $`Z_1`$ up to $`O(n^{-2+\epsilon})`$ ("the 1/n refinement" of Lemma B5(2)), which is written there at
-appendix level, and Conjecture 1 itself.
+lateral sum including $`Z_1`$ up to $`O(n^{-2+\epsilon})`$ ("the 1/n refinement" of Lemma B5(2)), which is written there
+at appendix level, and Conjecture 1 itself.
 
 ## 4. The growth rate at O(1/n)
 
-A perturbation $`e^{\lambda\tau}\delta Z`$ obeys the equations of §1 linearized about $`Z_n`$, with $`\partial_\tau \to \lambda + \omega\partial_\theta`$
-(the O(1/n) terms contain no τ-derivative). A growth rate is a λ for which a real profile $`f`$ (δy = 2fξ + …) gives a
-perturbation with zero multiplier, with the gauge δc(x = 1) = 0, i.e. $`\delta c_0(0) = 0`$ and $`\delta c_1(0) = -h_1`$ ($`h_1`$ the ξ²
-coefficient of $`\delta c_0`$). Let $`\mathcal S(\lambda)`$ be the real 2N × 2N map from the profile to the multiplier at n = ∞, $`f_*`$ its
-null vector at $`\lambda_*`$ and $`\ell`$ the left null vector. Then, at first order in perturbation theory in 1/n,
+A perturbation $`e^{\lambda\tau}\delta Z`$ obeys the equations of §1 linearized about $`Z_n`$, with
+$`\partial_\tau \to \lambda + \omega\partial_\theta`$ (the O(1/n) terms contain no τ-derivative). A growth rate is a λ
+for which a real profile $`f`$ (δy = 2fξ + …) gives a perturbation with zero multiplier, with the gauge δc(x = 1) = 0,
+i.e. $`\delta c_0(0) = 0`$ and $`\delta c_1(0) = -h_1`$ ($`h_1`$ the ξ² coefficient of $`\delta c_0`$). Let
+$`\mathcal S(\lambda)`$ be the real 2N × 2N map from the profile to the multiplier at n = ∞, $`f_*`$ its null vector at
+$`\lambda_*`$ and $`\ell`$ the left null vector. Then, at first order in perturbation theory in 1/n,
 
 ```math
 \lambda = \lambda_* + \frac{\lambda_1}{n} + \dots, \qquad
@@ -183,52 +190,55 @@ null vector at $`\lambda_*`$ and $`\ell`$ the left null vector. Then, at first o
 
 where $`S_{1/n}`$ is the multiplier of the O(1/n) part of the perturbation. Two ways to get it:
 
-**Direct route.** The O(1/n) part of the perturbation solves the perturbation equations at $`\lambda_*`$ forced by the O(1/n)
-terms linearized about $`Z_0`$ and by the second variation of the inner equations in the directions $`Z_1`$ and $`\delta Z_0`$
-(including $`\omega_1\xi\partial_\theta\delta Z_0`$). It needs $`Z_1`$, i.e. the selected $`K_1`$ and $`\omega_1`$ of §3. In the jets of §5 this
-is the mixed component $`\epsilon_e\epsilon_n`$ of a hyper-dual number; nothing has to be derived by hand. In a truncated
-model it gives the model's exact first-order coefficient, about the model's own $`\lambda_*`$.
+**Direct route.** The O(1/n) part of the perturbation solves the perturbation equations at $`\lambda_*`$ forced by the
+O(1/n) terms linearized about $`Z_0`$ and by the second variation of the inner equations in the directions $`Z_1`$ and
+$`\delta Z_0`$ (including $`\omega_1\xi\partial_\theta\delta Z_0`$). It needs $`Z_1`$, i.e. the selected $`K_1`$ and
+$`\omega_1`$ of §3. In the jets of §5 this is the mixed component $`\epsilon_e\epsilon_n`$ of a hyper-dual number;
+nothing has to be derived by hand. In a truncated model it gives the model's exact first-order coefficient, about the
+model's own $`\lambda_*`$.
 
-**Symmetry route (the formulation of GAMMA.md §6).** At n = ∞, $`\lambda_* = 2`$ and $`\delta Z_0 = \mathcal D Z_0`$ (Proposition 5:
-s-translation plus a time reparametrization, $`P + \omega P' = -2F^2`$). Write the finite-n mode as $`\mathcal D Z_n + W/n`$. Because the
-O(1) equations are invariant under s-translation and the reparametrization is exact, $`\mathcal D Z_n`$ fails to solve the
-finite-n perturbation equations at λ = 2 only through the explicit s of the O(1/n) terms
-(`first_order_equations.py`, section 3): W solves the n = ∞ perturbation equations at λ = 2 with the forcing
+**Symmetry route (the formulation of GAMMA.md §6).** At n = ∞, $`\lambda_* = 2`$ and $`\delta Z_0 = \mathcal D Z_0`$
+(Proposition 5: s-translation plus a time reparametrization, $`P + \omega P' = -2F^2`$). Write the finite-n mode as
+$`\mathcal D Z_n + W/n`$. Because the O(1) equations are invariant under s-translation and the reparametrization is
+exact, $`\mathcal D Z_n`$ fails to solve the finite-n perturbation equations at λ = 2 only through the explicit s of the
+O(1/n) terms (`first_order_equations.py`, section 3): W solves the n = ∞ perturbation equations at λ = 2 with the
+forcing
 
 ```math
 L_2 W_y = \dots - \frac{2}{\xi^2}\,c\,\big(\xi\sigma_\xi - 2\sigma + E\sigma\big), \qquad
 \xi\,\partial_\xi W_c = \dots - \frac{2}{\xi^2}\,c\,\big(\Psi + 2E\big)
 ```
 
-(the dots are the linearized inner equations; the σ equation, written as $`(\xi\partial_\xi - 1)(c y)`$, is not forced), and
+(the dots are the linearized inner equations; the σ equation, written as $`(\xi\partial_\xi - 1)(c y)`$, is not forced),
+and
 
 ```math
 \lambda_1 = -\,\frac{\ell\cdot S(W)}{\ell\cdot\partial_\lambda\mathcal S(2)\,f_2} ,
 ```
 
-since $`\mathcal D Z_n`$ has zero multiplier when $`Z_n`$ has. This route needs only n = ∞ quantities, not $`Z_1`$, $`K_1`$ or $`\omega_1`$.
-*Check* (`first_order_checks.py symmetry`): with 25 harmonics, $`\mathcal D Z_1 + W`$ equals the direct route's mixed component
-order by order to 3×10⁻¹⁵ (orders 1–8, harmonics not reached by the truncation). So the two routes are the same
-in the full problem. In a truncated model they are not. The gauge step multiplies by P(θ) and does not commute with the
-truncation, so there $`\mathcal D Z_0`$ and $`\mathcal D Z_1`$ do not solve the model's equations, $`\mathcal S(2)`$ is not singular, and the
-"jump" of $`\mathcal D Z_1`$ at ξ₁ is not a fast-type solution of the model. The symmetry-route number then depends on the
-matching radius (0.029 at ξ₁ = 0.2, 0.053 at 0.175 for M = 3, against 3.080 by the direct route at both) and is not a
-model quantity. The truncated results below use the direct route; the symmetry route is the one to use in an
-untruncated computation, where it needs only n = ∞ objects.
+since $`\mathcal D Z_n`$ has zero multiplier when $`Z_n`$ has. This route needs only n = ∞ quantities, not $`Z_1`$,
+$`K_1`$ or $`\omega_1`$. *Check* (`first_order_checks.py symmetry`): with 25 harmonics, $`\mathcal D Z_1 + W`$ equals
+the direct route's mixed component order by order to 3×10⁻¹⁵ (orders 1–8, harmonics not reached by the truncation). So
+the two routes are the same in the full problem. In a truncated model they are not. The gauge step multiplies by P(θ)
+and does not commute with the truncation, so there $`\mathcal D Z_0`$ and $`\mathcal D Z_1`$ do not solve the model's
+equations, $`\mathcal S(2)`$ is not singular, and the "jump" of $`\mathcal D Z_1`$ at ξ₁ is not a fast-type solution of
+the model. The symmetry-route number then depends on the matching radius (0.029 at ξ₁ = 0.2, 0.053 at 0.175 for M = 3,
+against 3.080 by the direct route at both) and is not a model quantity. The truncated results below use the direct
+route; the symmetry route is the one to use in an untruncated computation, where it needs only n = ∞ objects.
 
 ## 5. Numerical method and checks
 
-**Jets of the lateral integration.** The multipliers are computed as in `solver/inner_stokes/inner_np.py`: the formal series
-is summed (optimally truncated) on the ray $`\arg\xi^2 = \pi/2 + \pi/8`$, where every fast mode is exponentially large, the
-equations are integrated out to $`\xi_1`$ and along the arc to the real axis, and the jump is $`y^+ - \overline{y^+}`$ (real data).
-The model is inner_np's M-harmonic truncation (y, σ on odd |μ| ≤ M, c and E on even |μ| ≤ M + 1, same product order), so
-its zeros are those of the five-harmonic selection of the README. `first_order_jet.py` carries every field as a
-truncated multivariate dual number: component 0 is the solution and each other component a first-order derivative
-along a "direction" (a parameter, ω, the O(1/n) terms, a perturbation with its own λ, d/dλ), with mixed components
-for second order. The series recursion and the right-hand side are written once in jet arithmetic, so every Jacobian
-is exact (the derivative of the numerical scheme), and a linear response costs one more component of the same
-integration. The jumps are de-mixed and normalized as in inner_np (`residual_demixed`) with the map fixed at the
-zero.
+**Jets of the lateral integration.** The multipliers are computed as in `solver/inner_stokes/inner_np.py`: the formal
+series is summed (optimally truncated) on the ray $`\arg\xi^2 = \pi/2 + \pi/8`$, where every fast mode is exponentially
+large, the equations are integrated out to $`\xi_1`$ and along the arc to the real axis, and the jump is
+$`y^+ - \overline{y^+}`$ (real data). The model is inner_np's M-harmonic truncation (y, σ on odd |μ| ≤ M, c and E on
+even |μ| ≤ M + 1, same product order), so its zeros are those of the five-harmonic selection of the README.
+`first_order_jet.py` carries every field as a truncated multivariate dual number: component 0 is the solution and each
+other component a first-order derivative along a "direction" (a parameter, ω, the O(1/n) terms, a perturbation with its
+own λ, d/dλ), with mixed components for second order. The series recursion and the right-hand side are written once in
+jet arithmetic, so every Jacobian is exact (the derivative of the numerical scheme), and a linear response costs one
+more component of the same integration. The jumps are de-mixed and normalized as in inner_np (`residual_demixed`) with
+the map fixed at the zero.
 
 **Deflation for M = 5** (`first_order_hier.py`). The de-mixed residual is block triangular with huge couplings
 (harmonic ν leaks into the harmonic-1 row with weight ~$`e^{\pi(\nu-1)\omega/2}`$ times the finite-ξ de-mixing error;
@@ -339,8 +349,8 @@ The ω coefficients match the r = −0.05 reading (to 0.02–0.03%), λ₁ the r
 last step showed. This is a reading of three-term sequences, not an error bound; a sharper statement needs M = 7.
 
 **A second measure of the truncation error: the gauge data.** In the full problem ω₁ and λ₁ do not depend on the gauge
-data $`c_1(0)`$ and $`\delta c_1(0)`$ (§3, §4). In the models they do. With both set to 0 instead of the light-cone values
-(`--lam-gauge`; `omega1_gauge0`, `lam1_gauge0` in the JSON files):
+data $`c_1(0)`$ and $`\delta c_1(0)`$ (§3, §4). In the models they do. With both set to 0 instead of the light-cone
+values (`--lam-gauge`; `omega1_gauge0`, `lam1_gauge0` in the JSON files):
 
 | M | ω₁, light-cone gauge | ω₁, gauge 0 | λ₁, light-cone gauge | λ₁, gauge 0 |
 |---|---|---|---|---|
@@ -377,15 +387,16 @@ down to only ~10⁻², so that its Schur correction still carries ~10⁻³ of th
   $`\mathcal D Z_1 + W`$ = direct route to 3×10⁻¹⁵;
 - the exactness of the time reparametrization at O(1/n), hence the gauge independence of ω₁ and λ₁ in the full problem.
 
-**Derived, and checked numerically to roundoff:** the matching data of the O(1/n) inner solution, $`K_1`$, $`\omega_1`$ and the gauge
-datum $`c_1(0) = -F^2`$ (§2; the O(1/n) inner series equals the outer expansion's next-to-top coefficients to 10⁻¹³).
+**Derived, and checked numerically to roundoff:** the matching data of the O(1/n) inner solution, $`K_1`$, $`\omega_1`$
+and the gauge datum $`c_1(0) = -F^2`$ (§2; the O(1/n) inner series equals the outer expansion's next-to-top coefficients
+to 10⁻¹³).
 
 **Conditional**, on Conjecture 1 and on the lemma chain of C_selection.md carried one order further (its "1/n
 refinement" of Lemma B5(2), written at appendix level there):
 
-- that the selection at O(1/n) is the vanishing of the multiplier of $`Z_0 + Z_1/n`$, and that the outer region (matching
-  factors, transport, the light-cone exponent and its gravitational shift, the half-monodromy) contributes only
-  invertible factors at this order (§3);
+- that the selection at O(1/n) is the vanishing of the multiplier of $`Z_0 + Z_1/n`$, and that the outer region
+  (matching factors, transport, the light-cone exponent and its gravitational shift, the half-monodromy) contributes
+  only invertible factors at this order (§3);
 - first-order perturbation theory for λ, which also needs λ* to be a simple root with ℓ·∂_λS·f* ≠ 0 (seen in every
   model: ℓ·∂_λS·f* = −4.4×10³, −6.5×10⁴, −5.9×10⁴ for M = 1, 3, 5, in the units of the de-mixed residual).
 
@@ -442,7 +453,7 @@ For the coordinator (agents do not edit the README). In the README after Proposi
 | `first_order_fits.py [--planted]` | Δ₁, ω₁ and λ₁ fitted to the double-double points; `--planted` the planted-truth test | 10–15 min each |
 
 The numbers of §6 are reproduced, from `solver/inner_pert/`, by `python3 first_order_hier.py 5` (and `1`, `3`; add
-`--xi1=0.19` or `--rtol=1e-13` for the robustness runs; each resumes from its JSON, `--redo=omega1,lam,lam1` recomputes),
-`python3 first_order_run.py 3` and `python3 first_order_fits.py`.
+`--xi1=0.19` or `--rtol=1e-13` for the robustness runs; each resumes from its JSON, `--redo=omega1,lam,lam1`
+recomputes), `python3 first_order_run.py 3` and `python3 first_order_fits.py`.
 
 Results are in `solver/inner_pert/data/first_order_*.json`, logs in `solver/inner_pert/logs/`.

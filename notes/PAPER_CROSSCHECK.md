@@ -107,8 +107,8 @@ unreviewed parts omits it.**
 - *Fix:* "The late orders of the leading-order (gravity-free) $1/n$ series locate its origin".
 
 **S5. The physics abstract gives two of the three hypotheses behind $\gamma_\infty = 1/2$.**
-- phys:39–41: "which explains $\gamma_\infty = 1/2$ given a conjectured selection rule and the uniqueness of the unstable
-  mode".
+- phys:39–41: "which explains $\gamma_\infty = 1/2$ given a conjectured selection rule and the uniqueness of the
+  unstable mode".
 - The body (phys:561–563) and math's Corollary (math:822–826) also require continuity of $\lambda(D)$ at $1/n = 0$; the
   math abstract (math:70–71) says "under the conjecture and two further hypotheses".
 - Otherwise $\gamma_\infty = 1/2$ is conditional in the same way, with the same three hypotheses, in both papers
@@ -118,8 +118,8 @@ unreviewed parts omits it.**
 Statuses that were checked and **agree** across the papers and with the sources:
 - **Propositions 1–5, Conjecture 1, Corollary.** The physics paper describes each with the math paper's status (the
   ansatz for Proposition 1 at phys:485; "conjectured" for the rule at phys:572–573; "conditional" for γ∞ at phys:561).
-- **Theorem B(M).** Conditional on two contractions (math:154, 1237–1240); the physics paper says only "the points where a
-  proof is still missing" (phys:577–578).
+- **Theorem B(M).** Conditional on two contractions (math:154, 1237–1240); the physics paper says only "the points where
+  a proof is still missing" (phys:577–578).
 - **Theorem A(M = 1).** It matches proof/A_certify.md §12.6 in both papers.
   - math:1721–1736 is §12.6 verbatim (same box, same zero enclosure, same three bullets; Braaksma is "the one fact taken
     from the literature").
@@ -144,8 +144,8 @@ Statuses that were checked and **agree** across the papers and with the sources:
   holds for every period~\cite{companion}." Add the LaiWen2026 entry (phys:842–843).
 
 **M2. Unsupported novelty sentence in the math paper.**
-- math:108–109: "The new feature is that the unknown depends on two variables, … so that the inner problem is an infinite
-  system coupled through harmonics; neither of the templates we follow has that."
+- math:108–109: "The new feature is that the unknown depends on two variables, … so that the inner problem is an
+  infinite system coupled through harmonics; neither of the templates we follow has that."
 - notes/LIT_REVIEW.md:172–176 (C9): "I read neither template's full text: metadata only (FULL-TEXT-UNREAD), so this
   verdict is a ceiling", low confidence. AGENTS.md "Novelty claims" requires the closest prior work to be read first.
   The math paper's own disclosure (math:2081–2083) says the novelty claims were checked against prior work "read rather
@@ -268,9 +268,9 @@ F3) suggests 1.643893746. That would also move ω∞ = 2π/Δ∞ from 3.82213589
   - math:2024 ("against 1.64389375").
 
 *Not to update:*
-- The math paper's **convention** $\omega_\infty := 2\pi/1.64389375$ is an exact input decimal of the certificates. If it
-  changed, the certified boxes, stated in $\omega/\omega_\infty$, would no longer be the ones computed. These quotes are
-  math:242, 1294, 1347, 1723 (Theorem A) and 1892 (Lemma σ₁). If the headline moves, add one sentence at math:242
+- The math paper's **convention** $\omega_\infty := 2\pi/1.64389375$ is an exact input decimal of the certificates. If
+  it changed, the certified boxes, stated in $\omega/\omega_\infty$, would no longer be the ones computed. These quotes
+  are math:242, 1294, 1347, 1723 (Theorem A) and 1892 (Lemma σ₁). If the headline moves, add one sentence at math:242
   saying that the convention keeps the old decimal.
 - Fit outputs and test inputs, which are not the quoted Δ∞:
   - phys:317–319: limits of individual fits in the snapshot table;
@@ -281,8 +281,8 @@ F3) suggests 1.643893746. That would also move ω∞ = 2π/Δ∞ from 3.82213589
 of them):
 - phys:144 and phys:175 (Table checks): pinning the harmonics above 13 "moves $\Delta$ by … $3\times10^{-17}$ at
   $D = 40$". The review measures +1.5, −1.1 and −1.2×10⁻¹⁵ at D = 40, 50 and 60 (summary, row 1i; F5).
-- phys:146: "the estimated error per point is about $10^{-16}$ to $D = 60.1$". The review: as noise conservative, as error
-  not, because of the cut's smooth 10⁻¹⁵ (row 2a; F5, F6).
+- phys:146: "the estimated error per point is about $10^{-16}$ to $D = 60.1$". The review: as noise conservative, as
+  error not, because of the cut's smooth 10⁻¹⁵ (row 2a; F5, F6).
 - phys:176 and phys:792: "second machine … $2$–$4\times10^{-16}$". The review: 7×10⁻¹⁸ rms; the quoted figure is one ulp
   of the comparison (row 2c; F8).
 - phys:339: "the limit ranges over $1.643893744$–$1.643893763$". The review: the top comes from a fit that the same rule
@@ -353,19 +353,20 @@ proposed home; the other paper keeps one sentence and a pointer.
   - The second heat-equation field is $S$ in the physics paper (phys:515–520) and $W$ in the math paper (math:736–743,
     where $S$ is the multiplier).
 - **C7. Keys.** The Donninger bibkey says 2008 for a 2009 publication (phys:834; REF_CHECK.md:75 notes it).
-- **C8. Physics build.** After the Makefile's two pdflatex passes the log still says "Label(s) may have changed. Rerun to
-  get cross-references right". No reference is wrong in the text, but a third pass in paper/physics/Makefile would
+- **C8. Physics build.** After the Makefile's two pdflatex passes the log still says "Label(s) may have changed. Rerun
+  to get cross-references right". No reference is wrong in the text, but a third pass in paper/physics/Makefile would
   settle it.
 - **C9. Tooling.** check_numbers.py `DOCS` (line 20–21) reads paper/main.tex, README.md, proof/A_certify.md and GAMMA.md
-  only, so none of the new papers' numbers are tied to sources. The `dinf_quotes` and `omega_quotes` checks that guard Δ∞
-  and ω∞ in the old draft should be pointed at both new papers before P1 is applied.
-- **C10. A source inconsistency outside the papers.** The light-cone exponent spacing is "at least 7.27 apart in imaginary
-  part" in PROOF.md:275, and $|\mathrm{Im}| \ge 6.9$ in proof/C_selection.md:399 and 884, which math:1082 follows.
+  only, so none of the new papers' numbers are tied to sources. The `dinf_quotes` and `omega_quotes` checks that guard
+  Δ∞ and ω∞ in the old draft should be pointed at both new papers before P1 is applied.
+- **C10. A source inconsistency outside the papers.** The light-cone exponent spacing is "at least 7.27 apart in
+  imaginary part" in PROOF.md:275, and $|\mathrm{Im}| \ge 6.9$ in proof/C_selection.md:399 and 884, which math:1082
+  follows.
 
 ## Authorship and disclosure
 
-- **Authorship.** One author, Nathan Moinvaziri, "Independent researcher", nathan@nathanm.com, in both papers (phys:23–25;
-  math:54–56). Claude and Anthropic are not listed as authors.
+- **Authorship.** One author, Nathan Moinvaziri, "Independent researcher", nathan@nathanm.com, in both papers
+  (phys:23–25; math:54–56). Claude and Anthropic are not listed as authors.
 - **Disclosure.** Both papers have a "How this work was done" section (phys:785–801; math:2070–2089).
   - The two agree on the division of labour, that no human expert has reviewed the work, and "Corrections are welcome".
   - They differ only as in S1 (scope of the referee and reference checks), C1 and C2.

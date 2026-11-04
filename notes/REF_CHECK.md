@@ -79,7 +79,8 @@ rendered bibliography carries every fix (checked with `pdftotext`).
 
 Two MINOR items in the paper, no action taken:
 
-- Citation style. Entries carry no titles (house style) except the four that now have one. The CQG entry gives "J. Bland, B. Preston, ..." in full, while the README gives "J. Bland et al.".
+- Citation style. Entries carry no titles (house style) except the four that now have one. The CQG entry gives "J.
+  Bland, B. Preston, ..." in full, while the README gives "J. Bland et al.".
 - The A&S entry: see the row above.
 
 ## 2. README References list

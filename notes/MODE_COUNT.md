@@ -31,13 +31,13 @@ runs proposed for the local machine are in section 7.
 
 ## 1. What det M(λ) is, and which of its zeros and poles are known in advance
 
-The growth rate comes from the growth-mode matrix M(λ) of `hp/` (README, "Exact Jacobian and growth-mode matrix"):
-the exact Jacobian of the multiple-shooting residual for perturbations $`\propto e^{\lambda\tau}`$, periodic in τ, with Δ
+The growth rate comes from the growth-mode matrix M(λ) of `hp/` (README, "Exact Jacobian and growth-mode matrix"): the
+exact Jacobian of the multiple-shooting residual for perturbations $`\propto e^{\lambda\tau}`$, periodic in τ, with Δ
 held fixed and the phase row dropped. Its unknowns are the centre data, the node states and the horizon data on the
 half-period grid of M points in τ, with p, m odd and a, c even under τ → τ + Δ/2 (the "folded" layout). det M(λ) = 0
-exactly when the linearised equations have a solution $`e^{\lambda\tau}`$ × (periodic, regular at the centre and at
-the past light cone x = 1, with c(τ, 1) = 1). So its zeros with Re λ > 0 are the unstable modes of this formulation.
-Not all of them are physical, and det M also has poles; both have to be known before a count means anything.
+exactly when the linearised equations have a solution $`e^{\lambda\tau}`$ × (periodic, regular at the centre and at the
+past light cone x = 1, with c(τ, 1) = 1). So its zeros with Re λ > 0 are the unstable modes of this formulation. Not all
+of them are physical, and det M also has poles; both have to be known before a count means anything.
 
 **Both symmetry sectors are in one period.** Multiplying a perturbation by $`e^{i\omega\tau}`$ (ω = 2π/Δ) swaps its
 parity under the half-period shift, so a perturbation of the other sector (p, m even, a, c odd) with growth rate λ is a
@@ -89,8 +89,8 @@ and its only possible poles are the λ where one of these M × M matrices is sin
 \lambda_{kk,j} = \frac{n}{2} - \lambda_g\,(kk+1) - i(2j+1)\,\omega
 ```
 
-(the code uses the matrices' eigenvalues themselves). These are resonances of the horizon expansion: the exponent of
-a perturbation's singular branch at the light cone, $`\sigma = (n/2 - \lambda)/\lambda_g - 1`$, is an integer there. They
+(the code uses the matrices' eigenvalues themselves). These are resonances of the horizon expansion: the exponent of a
+perturbation's singular branch at the light cone, $`\sigma = (n/2 - \lambda)/\lambda_g - 1`$, is an integer there. They
 lie on Im λ = ±ω, ±3ω, …, spaced by λ_g in Re λ. Each is at most a simple pole of det M: the eigenvalues are simple, so
 near one of them one horizon coefficient, and with it the horizon block of M, has a rank-one singular part. At D = 61
 there are 7 of them in 0.3 < Re λ < 6.6 on each of the lines Im = ±ω.
@@ -150,13 +150,13 @@ too, so it can only make the bound weaker, never hide a zero. Along the real axi
 (|ln g| < 1.5 on every edge at D = 61), which is what keeps the cost near 100 determinants per state; it does not
 decide the count.
 
-**Contour network** (`hp/modecount_wind.py`): vertical edges at Re λ = aLL ≈ −0.1, aL = 0.3 and aR ≈ 6–6.6 from
-Im λ = 0 to y2 = 3ω/2, and at a1 (between λ_g and λ_phys) and a2 = λ_phys + 0.6 from Im λ = 0 to y1 = ω/2; horizontal edges
-at Im λ = y1 and y2 from aR to aLL. aLL, aL, a1 and aR are chosen within their ranges as far as possible from the real
-parts of the candidate poles and expected zeros. det M is real on the real axis and
-$`\det M(\bar\lambda) = \overline{\det M(\lambda)}`$, so a box symmetric about the real axis has winding (1/π) ×
-(phase change along its upper half); the strips y1 < Im λ < y2 are closed contours of their own (their mirror images
-hold the conjugate zeros).
+**Contour network** (`hp/modecount_wind.py`): vertical edges at Re λ = aLL ≈ −0.1, aL = 0.3 and aR ≈ 6–6.6 from Im λ = 0
+to y2 = 3ω/2, and at a1 (between λ_g and λ_phys) and a2 = λ_phys + 0.6 from Im λ = 0 to y1 = ω/2; horizontal edges at Im
+λ = y1 and y2 from aR to aLL. aLL, aL, a1 and aR are chosen within their ranges as far as possible from the real parts
+of the candidate poles and expected zeros. det M is real on the real axis and
+$`\det M(\bar\lambda) = \overline{\det M(\lambda)}`$, so a box symmetric about the real axis has winding (1/π) × (phase
+change along its upper half); the strips y1 < Im λ < y2 are closed contours of their own (their mirror images hold the
+conjugate zeros).
 
 | box | region | zeros expected | wind(g) expected |
 |---|---|---|---|
@@ -229,11 +229,12 @@ gauge, a coordinate change) and λ_phys. The real-axis scan of each run shows th
 | 30.0688, M 48 | 148 | 0.50 rad | 2.72 rad | −0.73 … 6.17 | 0.002–0.53 | 50 (0) | 0.134 |
 
 In the M = 32 counts the largest phase step of g is below π/8 = 0.39 on every edge, against the tolerance π/4. The
-larger steps of det M itself come from its growth along the real direction, ln|det M| rising by about 33 (D = 45, 61)
-to 57 (D = 30) per unit of Re λ; the matching phase is removed exactly by P₂. In the M = 32 counts ln|g| stays within
-−1.5 … 0.8 on every edge: no edge passes near an unaccounted zero or pole of g (one at distance d from an edge would pull ln|g| down by
-about |ln d| there). The determinant itself is accurate to about 10⁻¹⁰ relative at D = 61 (the two LUs above), far
-below what moves a phase. The windings, by construction integers, are reliable because every step is far below π.
+larger steps of det M itself come from its growth along the real direction, ln|det M| rising by about 33 (D = 45, 61) to
+57 (D = 30) per unit of Re λ; the matching phase is removed exactly by P₂. In the M = 32 counts ln|g| stays within −1.5
+… 0.8 on every edge: no edge passes near an unaccounted zero or pole of g (one at distance d from an edge would pull
+ln|g| down by about |ln d| there). The determinant itself is accurate to about 10⁻¹⁰ relative at D = 61 (the two LUs
+above), far below what moves a phase. The windings, by construction integers, are reliable because every step is far
+below π.
 
 At D = 61 the first count was run with λ_g ± iω wrongly in the list of expected zeros. It gave wind(g) = −1 in U and
 −2 in the full box, and with that bookkeeping the same windings of det M (−7, −12). Recounted from the same samples

@@ -92,8 +92,8 @@ today's file), so every change below is the fix.
 | (D−2)^−1/2, degree 20 | **3.9 → 4.0×10⁻¹⁵** | **2.0×10⁻¹¹ → 1.3×10⁻¹¹** | **3.9×10⁻¹⁰ → 6.6×10⁻¹⁰** | **1.636 → 1.638** |
 | D^−1/2, degree 20 | **3.8 → 3.9×10⁻¹⁵** | **1.6×10⁻¹⁰ → 1.4×10⁻¹⁰** | **6.2×10⁻⁹ → 5.3×10⁻⁹** | **1.547 → 1.556** |
 
-The fitted sets change too: 351 → 352 points on 10 ≤ D ≤ 45 and 278 → 279 on 10 ≤ D ≤ 37.5 (D = 10.75 kept); the held-out
-counts (379, 452) are unchanged.
+The fitted sets change too: 351 → 352 points on 10 ≤ D ≤ 45 and 278 → 279 on 10 ≤ D ≤ 37.5 (D = 10.75 kept); the
+held-out counts (379, 452) are unchanged.
 
 **Cause: D = 10.75, not the parse.** A1/A2 refit with each combination. For 1/D degree 16, held out to 60.1:
 
@@ -104,8 +104,8 @@ counts (379, 452) are unchanged.
 
 The other rows behave the same way, for example 2.01 vs 1.97×10⁻¹¹ (values) against 2.0 vs 1.3×10⁻¹¹ (point set) for
 (D−2)^−1/2. A single point at the low end of the fit range, 1×10⁻¹⁵ off its neighbours and on the cleaning threshold,
-moves these statistics by up to 70% (3.9 → 6.6×10⁻¹⁰). So the second digit of every held-out error and every half-integer limit depends
-on a threshold decision, not on the data's precision. The 1/D degree-16 cell moves by 8%.
+moves these statistics by up to 70% (3.9 → 6.6×10⁻¹⁰). So the second digit of every held-out error and every
+half-integer limit depends on a threshold decision, not on the data's precision. The 1/D degree-16 cell moves by 8%.
 
 ### Other numbers
 
@@ -181,12 +181,12 @@ The "minus Δ∞" column is computed from the quoted Δ∞ and is unchanged (als
 ### Planted truth (not rerun)
 
 README:651 ("0.79–0.88×10⁻⁸"), README:652–654 (the missed junk point), physics:348–350 ("0.8–0.9×10⁻⁸"):
-`hp/data/planted_dinf.log` and `.json` are the old loader's run and were left unchanged. What the fix touches there is the
-base polynomial P, the degree-18 1/D fit to the real 823 cleaned points (the same set under both parses). Its limit moves
-by 6×10⁻¹² (1.64389374468460 → 1.64389374467885, NUMERICS_REVIEW 4a); its residual moves from 4.305 to 4.338×10⁻¹⁵.
-The planted data are P plus seeded noise, so the centre offsets should move by about 10⁻¹¹. Two things are untested:
-those offsets, and whether the one junk point planted at the 10⁻¹⁵ cleaning threshold, missed in all six plants, is
-still missed. That criterion sits on a cliff, as D = 10.75 shows for the real data.
+`hp/data/planted_dinf.log` and `.json` are the old loader's run and were left unchanged. What the fix touches there is
+the base polynomial P, the degree-18 1/D fit to the real 823 cleaned points (the same set under both parses). Its limit
+moves by 6×10⁻¹² (1.64389374468460 → 1.64389374467885, NUMERICS_REVIEW 4a); its residual moves from 4.305 to
+4.338×10⁻¹⁵. The planted data are P plus seeded noise, so the centre offsets should move by about 10⁻¹¹. Two things are
+untested: those offsets, and whether the one junk point planted at the 10⁻¹⁵ cleaning threshold, missed in all six
+plants, is still missed. That criterion sits on a cliff, as D = 10.75 shows for the real data.
 
 ## The headline Δ∞ = 1.643893746 ± 1.5×10⁻⁸: unchanged at 10⁻⁹
 

@@ -82,7 +82,8 @@ Conventions for the Claude sessions (cloud and local) that run computations here
   evidence*.
 - **GitHub markdown math:** inline as $`…`$; display in ```math fences at column 0, never inside list items; no
   \operatorname; \lt for <. Keep the README's inline-math count from growing (`python3 solver/simplify_math.py
-  README.md` reports it; add `write` to convert simple cases to Unicode). Wrap prose at about 120 characters.
+  README.md` reports it; add `write` to convert simple cases to Unicode). Wrap prose at about 120 characters
+  (`python3 wrap_prose.py` lists the notes' over-long prose lines; `--write` re-wraps them, keeping pinned phrases).
 - **Prefer a clear sentence over a symbol** where it reads as well, and short paragraphs or lists for multi-part
   statements.
 

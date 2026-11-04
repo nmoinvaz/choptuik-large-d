@@ -28,10 +28,10 @@ AVX-512), two threads, with private builds; every command runs in `hp/`.
 - The M = 192 stall at D = 3.7 is not cured by exact steps: the loop corrects the f64 step (by 0.3–4.7 of its size),
   but the exact step's line search still cuts it to 1/2–1/8 (§8).
 
-**Machine load.** The two cores were shared with the high-M agent's three jobs and several of this work's runs at
-once; the load average was 3.5–14 during the measurements below (each table gives its own). The accuracy numbers do not depend on it. The times do:
-they are inflated by a factor of about 2–6 against an idle machine, and only ratios measured in the same run
-(interleaved) are comparable. The benchmark (§5) interleaves the variants for that reason.
+**Machine load.** The two cores were shared with the high-M agent's three jobs and several of this work's runs at once;
+the load average was 3.5–14 during the measurements below (each table gives its own). The accuracy numbers do not depend
+on it. The times do: they are inflated by a factor of about 2–6 against an idle machine, and only ratios measured in the
+same run (interleaved) are comparable. The benchmark (§5) interleaves the variants for that reason.
 
 ## 1. The horizon fix (`horizon_dd`)
 
@@ -289,8 +289,8 @@ which ran earlier at 9–13):
   2–5×10⁻¹⁸ (its predictor came from a longer history).
 - f64g did every step at D = 40 and 50, as fast as f64hg or faster, but failed at 59.8 (in the deflated phase: its weak
   subspace comes from the plain f64 LU). f64h failed at 50 and 59.8 (and at 59.8, where it did converge on shorter
-  steps, Δ was off by 2.2×10⁻¹⁶, 1000 times the double-double run's dDelta_est; its own dDelta_est, from the f64 LU, said
-  −1.6×10⁻¹⁵). The plain f64 Jacobian failed everywhere.
+  steps, Δ was off by 2.2×10⁻¹⁶, 1000 times the double-double run's dDelta_est; its own dDelta_est, from the f64 LU,
+  said −1.6×10⁻¹⁵). The plain f64 Jacobian failed everywhere.
 - The exact last step (`--dd_last`) costs one double-double Jacobian (6–7 s at kc = 420) and changed Δ by at most
   1×10⁻¹⁹; what it buys is the stored LU: the record's ∂Δ/∂F is then the double-double one (8.1×10¹³ at D = 59.83,
   against 1.8×10⁸ from f64hg's f64 LU).
@@ -356,9 +356,10 @@ error. `--calibrate` tries ε = 10⁻¹, 10⁻², … with the double-double var
 The basin is a start |F| of about 10⁻⁶ to 10⁻⁵ wherever the deflated Newton runs, and only 5.5×10⁻⁸ for the plain
 Newton at D = 20. In z it is tiny at large D: a step of 10⁻¹⁰ toward a neighbour one unit of D away.
 
-**The reference run here** (`python3 bench_variants.py --repeat=1 --threads=2 --out=data/bench_variants/bench_cloud.jsonl`,
-log `bench_cloud.log`; 3 177 s in all at a load average of 9–13; the correction loop then had at most 12 products per
-step). Whole-solve seconds, the speedup over dd at the same state, and the Newton calls (the last one confirms
+**The reference run here**
+(`python3 bench_variants.py --repeat=1 --threads=2 --out=data/bench_variants/bench_cloud.jsonl`, log `bench_cloud.log`;
+3 177 s in all at a load average of 9–13; the correction loop then had at most 12 products per step). Whole-solve
+seconds, the speedup over dd at the same state, and the Newton calls (the last one confirms
 |F| < tol):
 
 | state (kc used / the state's) | dd | f64 | f64h | f64g | f64hg |
@@ -437,11 +438,12 @@ Everything new is opt-in: `horizon_dd=0`, `Solver.jvp` and `step_timing` are new
 `newton_solve`, `deflated_newton` and `scan_hp.py --jac`) runs the loops as before, and `jac="f64"` calls
 `newton_mixed(**mixed)` as before. Checked:
 
-- `python3 mixed_check.py ref --save=REF.npz` with a private build of main (e6c908a), then `--compare=REF.npz` with
-  this branch's final build (its Rust as of be55e4a; nothing in `hp/src` changed after): 34 arrays, all bit-identical (`data/mixed_precision/largeD_mixed/ref_save_main_build.log`,
-  `ref_compare.log`). `ref` now also covers the mixed defaults (`jacobian_f64`, `newton_mixed`) at D = 3.7, M = 48, and
-  residual, Jacobian, Newton step, `lu_solve_t`, `jacobian_f64` and `newton_mixed` at the D = 50.01 scan state with
-  kfreeze 13; a reference file from before reports the arrays it lacks as not compared.
+- `python3 mixed_check.py ref --save=REF.npz` with a private build of main (e6c908a), then `--compare=REF.npz` with this
+  branch's final build (its Rust as of be55e4a; nothing in `hp/src` changed after): 34 arrays, all bit-identical
+  (`data/mixed_precision/largeD_mixed/ref_save_main_build.log`, `ref_compare.log`). `ref` now also covers the mixed
+  defaults (`jacobian_f64`, `newton_mixed`) at D = 3.7, M = 48, and residual, Jacobian, Newton step, `lu_solve_t`,
+  `jacobian_f64` and `newton_mixed` at the D = 50.01 scan state with kfreeze 13; a reference file from before reports
+  the arrays it lacks as not compared.
 - `cargo test --release --lib`: 13 passed, 7 ignored (benches and diagnostics), among them two new tests
   (`hp/src/jvp_tests.rs`, on the synthetic M = 8 context of `qd_residual.rs`): `jvp_matches_dd_jacobian` (3.8×10⁻³⁰;
   with the Δ tangent × (1 + 10⁻²⁰) 3.7×10⁻²⁴, which must fail) and `hdd_block_rows_are_dd` (with `HDD_BLOCK` the

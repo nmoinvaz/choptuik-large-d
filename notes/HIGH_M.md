@@ -156,18 +156,18 @@ Jacobian's rounding (which misplaces the step, and which the loop removes). That
 where both series are evaluated well inside their radii (below), the same lift took full steps and converged
 quadratically.
 
-**The cure was the node set, not the Newton step.** The start itself (the M = 160 solution resampled to 192, before
-any step) already has series tails of 10⁻²⁰ (centre, first node 0.005) and 1.5×10⁻²² (horizon, last node 0.8), against
+**The cure was the node set, not the Newton step.** The start itself (the M = 160 solution resampled to 192, before any
+step) already has series tails of 10⁻²⁰ (centre, first node 0.005) and 1.5×10⁻²² (horizon, last node 0.8), against
 2×10⁻⁶⁰ and 2×10⁻⁴⁰ for the M = 160 solution it came from; filling the new harmonics by each field's geometric trend
-(`lowD_dd.fill_tail`) changes that only to 2×10⁻²¹ (`python3 highm_diag.py start`, `diag_start.log`). With the first node
-at 0.0025 the centre tail of that start is 3×10⁻⁵⁰ (8.5×10⁻⁵⁰ at M = 256), and with a node at 0.9 (u₀ = 0.1) the horizon
-tail is 3×10⁻⁹⁷ (2×10⁻⁶⁸ at M = 256); with the last node at 0.8 the horizon series of the M = 256 start diverges
-(tail 10⁷). On the 15 nodes 0.0025, 0.005, 0.01, …, 0.8, 0.9 the M = 192 lift took its first step at λ = 1 and
-converged in two Newton calls (section 3). The node set has to follow M, as notes/LOW_D.md already found going from
-M = 48 to 64; here the decisive quantity is u₀ against the horizon series' radius, which shrinks as the top harmonics
-fill in. The deflated step with the junk directions frozen (`driver.deflated_newton(junk_only=True, jac="f64")`, now
-usable with the mixed step and block storage) was started on the 13-node set and stopped unfinished once the node set
-was found to be the cause.
+(`lowD_dd.fill_tail`) changes that only to 2×10⁻²¹ (`python3 highm_diag.py start`, `diag_start.log`). With the first
+node at 0.0025 the centre tail of that start is 3×10⁻⁵⁰ (8.5×10⁻⁵⁰ at M = 256), and with a node at 0.9 (u₀ = 0.1) the
+horizon tail is 3×10⁻⁹⁷ (2×10⁻⁶⁸ at M = 256); with the last node at 0.8 the horizon series of the M = 256 start diverges
+(tail 10⁷). On the 15 nodes 0.0025, 0.005, 0.01, …, 0.8, 0.9 the M = 192 lift took its first step at λ = 1 and converged
+in two Newton calls (section 3). The node set has to follow M, as notes/LOW_D.md already found going from M = 48 to 64;
+here the decisive quantity is u₀ against the horizon series' radius, which shrinks as the top harmonics fill in. The
+deflated step with the junk directions frozen (`driver.deflated_newton(junk_only=True, jac="f64")`, now usable with the
+mixed step and block storage) was started on the 13-node set and stopped unfinished once the node set was found to be
+the cause.
 
 `driver.renode`'s default Taylor step (0.004) blows up integrating toward a node at 0.9 at M = 160 (|F| 8×10⁹); with
 0.001 the re-noded state has |F| 1.1×10⁻¹⁶ (the f64 evaluation of the centre series at the new first node). The scripts
@@ -683,10 +683,10 @@ How close the model says we can get, honestly:
   and so do the other costs, which grew faster than M³ on the way down (the first node halved at D = 3.3 and 3.2, the
   last node moved at 3.15, the plans grew from 190 to 560 steps, two passes for most solves, and the step in D halved
   at 3.15 since Δ(D) changes like √(D − 3)).
-- **Hardware:** the Jacobian, 98–99% of a Newton call, is independent column work, and parallelizes nearly linearly;
-  the block LU is 0.3% of a call. On a 64-core AVX-512 machine with 64 GB, an M = 512 Newton call would take minutes
-  instead of hours, D = 3.01 at M = 384–512 hours to a day, and M = 768–1024 (for the amplitude-growth variants) would fit
-  in memory. An FFT τ-derivative would roughly halve the time at M ≥ 256 on any hardware.
+- **Hardware:** the Jacobian, 98–99% of a Newton call, is independent column work, and parallelizes nearly linearly; the
+  block LU is 0.3% of a call. On a 64-core AVX-512 machine with 64 GB, an M = 512 Newton call would take minutes instead
+  of hours, D = 3.01 at M = 384–512 hours to a day, and M = 768–1024 (for the amplitude-growth variants) would fit in
+  memory. An FFT τ-derivative would roughly halve the time at M ≥ 256 on any hardware.
 
 **Per-core time and peak memory**, for judging another machine (2 threads here, load about 2; the time of a Newton
 call is the Taylor steps of its plan times the per-step cost; plans at D ≈ 3.15: 230–390 steps for a converged
@@ -717,8 +717,9 @@ section 1.6 (`highm_diag.py orders`):
 | | 50 / 120 | bitwise identical | 3.6×10⁻³⁶ / 3.5×10⁻⁴⁴ |
 
 With kc = 60 / ks = 150 the M = 384 Newton step at the D = 3.15 state runs (it failed at once with 100 / 250; stopped
-after 10 minutes by the test's time limit, `logs/check_M384_D3.15_kc60.log`; the failure with 100 / 250: `check_M384_D3.15_kc100.log`). The horizon tail, which the
-coordinator asked to watch (radius 0.1–0.15 in u at 150 orders), is 4×10⁻⁵⁶ at u₀ = 0.05 there.
+after 10 minutes by the test's time limit, `logs/check_M384_D3.15_kc60.log`; the failure with 100 / 250:
+`check_M384_D3.15_kc100.log`). The horizon tail, which the coordinator asked to watch (radius 0.1–0.15 in u at 150
+orders), is 4×10⁻⁵⁶ at u₀ = 0.05 there.
 
 The switch was prepared for the point boundary after D = 3.125 (`--kc 60 --ks 150`: a re-solve of every resolution
 at D = 3.125 and the same nodes under the tag `..._kc60_ks150`, with `--tail_max 1e-33`, so that every pair records both
