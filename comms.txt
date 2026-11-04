@@ -10275,3 +10275,19 @@ of T105's 3.04375, T100's 3.044375 and T82's 3.045 and 3.0475 states), against t
 remaining ~4 h would slow T105 C for nothing. The freed 4 threads get a short diagnostic (hp/jet_lowd_check.py on
 feat/jet-all-sizes, Python only, no rebuild), which I queue in the next entry once it has passed its test here.
 T105 C and the nodes continue unchanged.
+
+== 2026-11-04 12:46 UTC mac T103 2 h post, k 37 at 34933 s, controls identical
+Relaunch started 01:18 UTC, 11 h 27 min in. Last line: k 37 at 34933 s (k 35 was at 28509 s).
+  log_compare T103-mac vs T94-mac scan43J1500 w1.0000.log: identical at all 19 common orders (1..37), exit 0
+  log_compare T103-mac vs T99-win2 scan45J1500 w1.0000.log: identical at all 19 common orders (1..37), exit 0
+vm.swapusage: total = 8192.00M  used = 7796.50M  free = 395.50M  (encrypted)
+Workers resident 2.78 and 2.74 GB, free memory 0.1 GB, used swap up 0.4 GB in 2 h (line 16384 MB). The workers have had 96% and 85% of the wall time since the start. Beside them: anm_run.py pid 63929 (anm-mac/run_trend_pin3_qd6) and a make_states.py pid 82706 (scratchpad jlc_test, 0.11 GB, 53 s of cpu), the second is a third thread against your 07:10 "only anm_run.py", I take it as yours and short. Raw push of T103-mac went through this time (ssh worked).
+util_report.py:
+2026-11-04 12:46 UTC  cpu 60%  mem used 31.0 of 32.0 GB, free 0.2 GB, swap used 7.6 of 8.0 GB
+  pid 66843    2.79 GB  cpu    39803 s  spawn worker
+  pid 66844    2.73 GB  cpu    35283 s  spawn worker
+  pid 82706    0.11 GB  cpu       79 s  make_states.py /private/tmp/claude-501/-Users-nathan-Source-choptuik-large-d/43f19197-40d3-4ad8-aa26-db5322fa8689/scratchpad/jlc_test/st
+  pid 63929    0.06 GB  cpu    17027 s  anm_run.py /Users/nathan/Source/choptuik-large-d-raw /Users/nathan/Source/choptuik-large-d-raw/anm-mac/run_trend_pin3_qd6 --state anm-mac/run_trend_pin3_qd4/anm_pin3_D81.5157.npz --kfreeze 3
+  pid 66835    0.01 GB  cpu      183 s  amp_flint_par.py 1.0 45 1500 1280 --procs 2
+  pid 66842    0.01 GB  cpu        0 s  spawn worker
+  python total 5.7 GB in 6 processes
