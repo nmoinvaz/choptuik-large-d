@@ -1,11 +1,12 @@
 # Toward a proof of the selection rule
 
-This page is a roadmap for turning Conjecture 1 of the [README](README.md#large-d-what-the-1d-expansion-can-and-cannot-see)
-into a theorem: at D = ∞ the echo frequency ω∞ = 2π/Δ∞ is selected by the vanishing of the Stokes multipliers of the
-n-free inner problem. It says what is already proved here, which existing theorems and techniques supply the remaining
-steps, what is genuinely new, and in what order to attack it. It is written by Claude (Anthropic) under Nathan
-Moinvaziri's direction and has not been reviewed by a mathematician. Its citations were checked against published records
-([notes/REF_CHECK.md](notes/REF_CHECK.md)); the few that could not be confirmed are marked *(unverified)*.
+This page is a roadmap for turning Conjecture 1 of the
+[README](README.md#large-d-what-the-1d-expansion-can-and-cannot-see) into a theorem: at D = ∞ the echo frequency ω∞ =
+2π/Δ∞ is selected by the vanishing of the Stokes multipliers of the n-free inner problem. It says what is already proved
+here, which existing theorems and techniques supply the remaining steps, what is genuinely new, and in what order to
+attack it. It is written by Claude (Anthropic) under Nathan Moinvaziri's direction and has not been reviewed by a
+mathematician. Its citations were checked against published records ([notes/REF_CHECK.md](notes/REF_CHECK.md)); the few
+that could not be confirmed are marked *(unverified)*.
 
 Contents
 
@@ -38,22 +39,22 @@ Contents
   problem is an infinite system of ODEs coupled through harmonics, and its Stokes multipliers carry weights
   $`e^{\pi\lvert\nu\rvert\omega/2}`$ that grow faster than the profile's harmonics decay (gap (b)). Neither template has
   that. Costin–Tanveer's Borel summability for PDEs with data analytic in a strip is the closest tool.
-- **Realistic targets, in order:** (A) a computer-assisted proof that the truncated (M = 5) inner multiplier has a simple
-  zero in an explicit small box around (A, ω/ω∞) = (2.7186, 0.9992), then a proof with a rigorous harmonic-tail bound
-  for the untruncated multiplier; (B) the selection theorem for large n, first for a model with finitely many harmonics,
-  then in a weighted space of functions analytic in a θ-strip; (C) then follows as a corollary of (B), with no further
-  numerics. (A) is a substantial but standard computer-assisted proof; (B) is a research-level paper in exponential
-  asymptotics; together they would derive a critical-collapse echo period, the large-D limit Δ∞, rigorously from a
-  limiting problem. (A single finite-D echo period has already been enclosed rigorously: Reiterer and Trubowitz's
+- **Realistic targets, in order:** (A) a computer-assisted proof that the truncated (M = 5) inner multiplier has a
+  simple zero in an explicit small box around (A, ω/ω∞) = (2.7186, 0.9992), then a proof with a rigorous harmonic-tail
+  bound for the untruncated multiplier; (B) the selection theorem for large n, first for a model with finitely many
+  harmonics, then in a weighted space of functions analytic in a θ-strip; (C) then follows as a corollary of (B), with
+  no further numerics. (A) is a substantial but standard computer-assisted proof; (B) is a research-level paper in
+  exponential asymptotics; together they would derive a critical-collapse echo period, the large-D limit Δ∞, rigorously
+  from a limiting problem. (A single finite-D echo period has already been enclosed rigorously: Reiterer and Trubowitz's
   computer-assisted existence proof of the D = 4 solution encloses Δ to about 80 digits.)
 - **A new structural fact that helps both:** the amplitude-series coefficients satisfy
   |σ_k/σ_{k+1}| ≈ 0.60 k + 2.5 with remarkable regularity (k = 3–11, `solver/proof/feasibility.py`), so S₁(·, ω) is,
   numerically, an *entire* function of x = A² of order 1 and exponential type (about 1.67 in x;
   [proof/D_entire.md](proof/D_entire.md)). Its logarithm's singularities are then exactly its zeros, which makes
-  argument-principle and Miranda-type root certificates natural. Factoring out the exponential,
-  G = e^{−κ̄x}S₁, removes the cancellation (the terms at x₀ are O(1) and fall to 4×10⁻⁴ by k = 12 instead of peaking near
-  240), puts the real zero at ω/ω∞ = 0.99988 at twelve orders (A₀ = 2.7194), and shows the zero x₀ ≈ 7.40 is isolated
-  (the next zeros lie at |x| > 10).
+  argument-principle and Miranda-type root certificates natural. Factoring out the exponential, G = e^{−κ̄x}S₁, removes
+  the cancellation (the terms at x₀ are O(1) and fall to 4×10⁻⁴ by k = 12 instead of peaking near 240), puts the real
+  zero at ω/ω∞ = 0.99988 at twelve orders (A₀ = 2.7194), and shows the zero x₀ ≈ 7.40 is isolated (the next zeros lie at
+  |x| > 10).
 
 ## 1. The statement, in three layers
 
@@ -65,10 +66,9 @@ multipliers of the inner problem
 L y = c\,\sigma,\qquad L\sigma = c\,\xi y_\xi + c\,\big(\tfrac12 y^2 - 1\big)\,y,\qquad \xi c_\xi = \tfrac12 c\,y^2,\qquad L = \xi^2\partial_\xi + \omega\,\xi\,\partial_\theta .
 ```
 
-**Theorem A (inner zero; computer-assisted).** There is an explicit box
-$`B = [A_-, A_+]\times[\omega_-, \omega_+]`$ and an explicit profile family F(A, ω) with $`S_\nu(F, \omega) = 0`$ for all
-odd |ν| ≥ 3, such that $`S_1(F(A,\omega), \omega)`$ has exactly one zero (A*, ω*) in B, and it is simple (the real 2×2
-Jacobian is invertible).
+**Theorem A (inner zero; computer-assisted).** There is an explicit box $`B = [A_-, A_+]\times[\omega_-, \omega_+]`$ and
+an explicit profile family F(A, ω) with $`S_\nu(F, \omega) = 0`$ for all odd |ν| ≥ 3, such that
+$`S_1(F(A,\omega), \omega)`$ has exactly one zero (A*, ω*) in B, and it is simple (the real 2×2 Jacobian is invertible).
 
 **Theorem B (selection for large n).** Let (A*, ω*) be a simple zero as in Theorem A. Then for all sufficiently large n
 there is a discretely self-similar solution, regular at the centre and analytic across the light cone x = 1, whose
@@ -126,12 +126,12 @@ coefficient, is proved. The nonlinear steps are in §4 (layer A) and §5 (layer 
 
 Two routes. The second is the one to build.
 
-**Route A1: sum the amplitude series rigorously.** S₁/S₁⁽¹⁾ = Σ σ_k x^k, x = A². The σ_k are computed in ball arithmetic,
-but each comes from a *fit* of late orders (j ≤ J) to an asymptotic form, which is not a rigorous enclosure; the ball radii
-(10⁻²⁰) measure rounding, not the fit's truncation. A rigorous σ_k needs the late-order remainder bounded, i.e. a
-rigorous Darboux/Borel statement for each order, which is as hard as the direct route. Worse, at the zero the series is
-far from summed at K = 25: the terms |σ_k| x₀^k grow to about 240 at k = 9 and are still 160 at k = 12, and with the
-observed growth law (|σ_k/σ_{k+1}| ≈ 0.60k + 2.5) they fall below 10⁻⁶ only near k ≈ 37 (K ≈ 75)
+**Route A1: sum the amplitude series rigorously.** S₁/S₁⁽¹⁾ = Σ σ_k x^k, x = A². The σ_k are computed in ball
+arithmetic, but each comes from a *fit* of late orders (j ≤ J) to an asymptotic form, which is not a rigorous enclosure;
+the ball radii (10⁻²⁰) measure rounding, not the fit's truncation. A rigorous σ_k needs the late-order remainder
+bounded, i.e. a rigorous Darboux/Borel statement for each order, which is as hard as the direct route. Worse, at the
+zero the series is far from summed at K = 25: the terms |σ_k| x₀^k grow to about 240 at k = 9 and are still 160 at k =
+12, and with the observed growth law (|σ_k/σ_{k+1}| ≈ 0.60k + 2.5) they fall below 10⁻⁶ only near k ≈ 37 (K ≈ 75)
 (`solver/proof/feasibility.py`). Route A1 is useful as a cross-check and for the structure (S₁ entire in x), not for the
 certificate.
 
@@ -140,35 +140,35 @@ harmonics, the multiplier is the jump across the Stokes line of solutions starte
 (`solver/inner_stokes/lateral_np.py`, `hier.py`). The rigorous version needs four lemmas:
 
 - **A.1 Asymptotic start.** For |ξ| ≥ R on a ray, the formal inner series (Gevrey-1 in 1/ξ², with the fast modes
-  $`e^{-1/(2\xi^2)}\xi^{2\langle F^2\rangle}e^{\Pi(\theta)}`$) is the asymptotic expansion of true solutions with explicit
-  remainder bounds. Source: Costin (1998) for existence and summability in sectors; for explicit constants, the fixed-point
-  construction in weighted spaces of Baldomá–Capiński–Guardia–Seara. New: the system is (2M+1)-dimensional with
-  θ-coupling, but for fixed M it is a finite ODE system with a rank-one irregular singular point, inside Costin's theory.
+  $`e^{-1/(2\xi^2)}\xi^{2\langle F^2\rangle}e^{\Pi(\theta)}`$) is the asymptotic expansion of true solutions with
+  explicit remainder bounds. Source: Costin (1998) for existence and summability in sectors; for explicit constants, the
+  fixed-point construction in weighted spaces of Baldomá–Capiński–Guardia–Seara. New: the system is (2M+1)-dimensional
+  with θ-coupling, but for fixed M it is a finite ODE system with a rank-one irregular singular point, inside Costin's
+  theory.
 - **A.2 Validated integration** from |ξ| = R to the matching radius ξ₁ ≈ 0.2 along rays on both sides of the Stokes
   line, in interval or ball arithmetic (Taylor models; the double-double kernel's Taylor stepping is already a natural
   base). Standard.
 - **A.3 Harmonic tail.** A bound on how much the omitted harmonics |ν| > M change r₁. This is gap (b) in finite form,
-  and the only genuinely hard lemma of layer A. The measured truncation sequence (ω/ω∞ − 1 = −22%, +1.56%, −0.077% for
-  M = 1, 3, 5; about twentyfold per pair) says the effect is small and decays geometrically. A proof needs the
+  and the only genuinely hard lemma of layer A. The measured truncation sequence (ω/ω∞ − 1 = −22%, +1.56%, −0.077% for M
+  = 1, 3, 5; about twentyfold per pair) says the effect is small and decays geometrically. A proof needs the
   higher-harmonic multipliers (tuned to zero) and their coupling into r₁ bounded in a weighted norm; the leakage
   coefficients measured in `hier.py` (∂r₃/∂B₅ ~ 10¹³ and ∂r₁/∂B₅ ~ 10¹⁷ at M = 5; at M = 7 one ulp of B₇ moves r₁ by
   about 200) show that this must be done for the *tuned* family (the Schur complement, in which the higher harmonics sit
-  on their own zeros), not harmonic by harmonic.
-  *Status* ([proof/B_tail.md](proof/B_tail.md)): the weights cancel in the tuned problem (they are the connection
-  coefficients of label harmonics tuned to zero; the tuning ratio is ν-independent to six digits, and neighbour-family
-  amplitudes fall by 10⁴–10⁸ per pair), so the condition needs F only on the real line. Naive Galerkin truncation brings
-  the weights back (σ_{M+1} wrong by 10⁴–10⁶), so the lemma must be stated for the jump-conditioned truncation. Proposed
-  framework: a strip-analytic weighted ℓ¹ space X_σ (σ ≈ 1), in which the leading tuning map has norm 0.0633·e^{2σ};
-  the target is a Lipschitz bound with per-pair constant about 0.05 (0.25 would suffice). Estimated tail in r₁: 4–6 above
-  M = 5, 0.2–0.35 above M = 7, so certifying a 10⁻³ box needs M = 7 explicit with a margin of about 13. Prediction for
-  M = 7: ω/ω∞ = 0.99997–1.00017. No evidence of secondary Stokes lines from F's complex singularities.
-  Since then ([proof/B_tail_M7.md](proof/B_tail_M7.md)): M = 7 gives ω/ω∞ = 1.000022 ± 2×10⁻⁵, inside the prediction,
-  with a per-pair ratio −0.049 (coupling 0.85); the tail above M = 7 is about 0.25 in r₁, against 3.9 needed for a 10⁻³
-  box. The tail lemma is stated for consecutive jump-conditioned truncations. Proved by hand: hier's Schur-corrected
-  residual has exactly the zeros of the jump-conditioned multiplier (the 10¹⁷ couplings cancel in its Schur complement),
-  the M-harmonic model is exact through σ_M in the amplitude expansion, and the weight e^{πνω/2} cancels exactly in
-  every tuning step. A ratio of ¼ per pair needs the linearized coupling bounded in X_σ* with σ ≤ 0.736, uniformly in
-  the harmonic; that inequality is the open part.
+  on their own zeros), not harmonic by harmonic. *Status* ([proof/B_tail.md](proof/B_tail.md)): the weights cancel in
+  the tuned problem (they are the connection coefficients of label harmonics tuned to zero; the tuning ratio is
+  ν-independent to six digits, and neighbour-family amplitudes fall by 10⁴–10⁸ per pair), so the condition needs F only
+  on the real line. Naive Galerkin truncation brings the weights back (σ_{M+1} wrong by 10⁴–10⁶), so the lemma must be
+  stated for the jump-conditioned truncation. Proposed framework: a strip-analytic weighted ℓ¹ space X_σ (σ ≈ 1), in
+  which the leading tuning map has norm 0.0633·e^{2σ}; the target is a Lipschitz bound with per-pair constant about 0.05
+  (0.25 would suffice). Estimated tail in r₁: 4–6 above M = 5, 0.2–0.35 above M = 7, so certifying a 10⁻³ box needs M =
+  7 explicit with a margin of about 13. Prediction for M = 7: ω/ω∞ = 0.99997–1.00017. No evidence of secondary Stokes
+  lines from F's complex singularities. Since then ([proof/B_tail_M7.md](proof/B_tail_M7.md)): M = 7 gives ω/ω∞ =
+  1.000022 ± 2×10⁻⁵, inside the prediction, with a per-pair ratio −0.049 (coupling 0.85); the tail above M = 7 is about
+  0.25 in r₁, against 3.9 needed for a 10⁻³ box. The tail lemma is stated for consecutive jump-conditioned truncations.
+  Proved by hand: hier's Schur-corrected residual has exactly the zeros of the jump-conditioned multiplier (the 10¹⁷
+  couplings cancel in its Schur complement), the M-harmonic model is exact through σ_M in the amplitude expansion, and
+  the weight e^{πνω/2} cancels exactly in every tuning step. A ratio of ¼ per pair needs the linearized coupling bounded
+  in X_σ* with σ ≤ 0.736, uniformly in the harmonic; that inequality is the open part.
 - **A.4 Krawczyk / interval Newton** on the 2×2 real system r₁(A, ω) = 0 (real and imaginary parts), with the tuned
   higher harmonics eliminated. The outer Jacobian at M = 5 is well conditioned: singular values about 6.8×10³ and
   3.9×10³ (condition 1.7), with second derivatives about 1.3×10⁵. A box of radius ρ in (A, ω/ω∞) is certified if the
@@ -177,42 +177,42 @@ harmonics, the multiplier is the jump across the Stokes line of solutions starte
   not the obstacle; the obstacle is A.3 (the M = 3 → 5 change of the zero corresponds to about 60–110 in r₁, so the
   M > 5 tail must be bounded below about 4 to certify a 10⁻³ box).
 
-**Prototype status at M = 1** ([proof/A_certify.md](proof/A_certify.md)). The one-harmonic model's zero
-(A = 2.5421480475, ω/ω∞ = 0.7769940136; Jacobian singular values 303 and 87) is the test case. Rigorous already, in ball
+**Prototype status at M = 1** ([proof/A_certify.md](proof/A_certify.md)). The one-harmonic model's zero (A =
+2.5421480475, ω/ω∞ = 0.7769940136; Jacobian singular values 303 and 87) is the test case. Rigorous already, in ball
 arithmetic: the linear normalization (the lateral jump over the closed-form Stokes constant is 1 ± 3×10⁻³⁰ at two radii
-and two ω, from arb's Kummer U on either side of its cut; `lin_check.py`), the formal series of the truncated system with
-(A, ω) boxes (`series_arb.py`), and the forcing bound of the start-value fixed point (the optimally truncated series has
-residual 1.0×10⁻³³ on |ξ| ≤ 0.1; `residual_poly.py`). In double precision, Poincaré–Miranda holds on all four faces of the
-box (`pm_dryrun.py`): half-width 10⁻³ needs the multiplier enclosed to 0.076, 10⁻⁵ to 7.8×10⁻⁴, i.e. 10⁻² to 10⁻³
-relative, the accuracy the Baldomá et al. template achieved. Since proved: the start-value fixed point (`fixed_point.py`: on the rays arg ξ = ±3π/8,
+and two ω, from arb's Kummer U on either side of its cut; `lin_check.py`), the formal series of the truncated system
+with (A, ω) boxes (`series_arb.py`), and the forcing bound of the start-value fixed point (the optimally truncated
+series has residual 1.0×10⁻³³ on |ξ| ≤ 0.1; `residual_poly.py`). In double precision, Poincaré–Miranda holds on all four
+faces of the box (`pm_dryrun.py`): half-width 10⁻³ needs the multiplier enclosed to 0.076, 10⁻⁵ to 7.8×10⁻⁴, i.e. 10⁻²
+to 10⁻³ relative, the accuracy the Baldomá et al. template achieved. Since proved: the start-value fixed point
+(`fixed_point.py`: on the rays arg ξ = ±3π/8,
 |ξ| ≤ 0.1, exactly one solution in an explicit weighted ball around the N = 53 series, contraction constant ≤ 0.2918, start
 values enclosed to 6×10⁻³⁴, with ∂/∂(A, ω) over a parameter box), and the Krawczyk test is built and validated on mock
 enclosures (`krawczyk.py`; matching at ξ₁ = 0.3 rather than 0.2 makes the absolute targets about 15,000× easier: the
-state at the centre to about 2×10⁻⁵ for a 10⁻³ box, the derivatives over the box to 10⁻²). **Certified** since (`validated_int.py`, §9 of
-[proof/A_certify.md](proof/A_certify.md)): a Lohner-type validated integrator in ball arithmetic (QR wrapping with
-Lohner's pivoting, the variational columns as their own Lohner sets) carries the start data along the ray to ξ₁ = 0.3 and
-the arc to the real axis (743 steps, state enclosed to 3×10⁻¹⁹, matching double precision to 9×10⁻¹⁶). With it the
-Krawczyk test passes on the box (A, ω/ω∞) = (2.5421480475, 0.7769940136) ± 10⁻⁹. An independent review
-([proof/A_review.md](proof/A_review.md)) reproduced every input and found no error, and stated precisely what is
-proved: **one component of the jump, J_D at ξ₁ = 0.3 with y⁺ continued along the ray-then-arc path, has exactly one
-zero in the box, and it is simple**, at A ∈ [2.54214804760, 2.54214804763], ω/ω∞ ∈ [0.7769940136011, 0.7769940136183].
-Two lemmas turn this into "the one-harmonic selection condition has exactly one simple zero there": (6a) that J_D(ξ₁) = 0
-forces the whole jump to vanish (the template's step 4, a contraction for y⁺ − y⁻), and (6b) that the continuation
-along the path is the Borel sum (y⁺ has a singularity between radii 0.30 and 0.35, just outside the swept region).
-Both hold in double precision and both are judged fixable. An independent re-implementation in C++ with CAPD
+state at the centre to about 2×10⁻⁵ for a 10⁻³ box, the derivatives over the box to 10⁻²). **Certified** since
+(`validated_int.py`, §9 of [proof/A_certify.md](proof/A_certify.md)): a Lohner-type validated integrator in ball
+arithmetic (QR wrapping with Lohner's pivoting, the variational columns as their own Lohner sets) carries the start data
+along the ray to ξ₁ = 0.3 and the arc to the real axis (743 steps, state enclosed to 3×10⁻¹⁹, matching double precision
+to 9×10⁻¹⁶). With it the Krawczyk test passes on the box (A, ω/ω∞) = (2.5421480475, 0.7769940136) ± 10⁻⁹. An independent
+review ([proof/A_review.md](proof/A_review.md)) reproduced every input and found no error, and stated precisely what is
+proved: **one component of the jump, J_D at ξ₁ = 0.3 with y⁺ continued along the ray-then-arc path, has exactly one zero
+in the box, and it is simple**, at A ∈ [2.54214804760, 2.54214804763], ω/ω∞ ∈ [0.7769940136011, 0.7769940136183]. Two
+lemmas turn this into "the one-harmonic selection condition has exactly one simple zero there": (6a) that J_D(ξ₁) = 0
+forces the whole jump to vanish (the template's step 4, a contraction for y⁺ − y⁻), and (6b) that the continuation along
+the path is the Borel sum (y⁺ has a singularity between radii 0.30 and 0.35, just outside the swept region). Both hold
+in double precision and both are judged fixable. An independent re-implementation in C++ with CAPD
 ([proof/A_certify.md](proof/A_certify.md) §10), sharing no integration or test code with the Python proof, confirms the
 result and certifies the box ±10⁻⁸ as well, ten times larger, with the zero enclosed eight to ten times more tightly.
 Since then (§11) lemma 6a is proved, 6b is proved near ξ = 0, and the certificate is redone on a lower path that needs
 analyticity only for |ξ| ≤ 0.2. Lemma 6b₁, the analyticity of y⁺ on the annular sector 0.0624 ≤ |ξ| ≤ 0.2, is proved by
-a covering with 178 validated Taylor discs (§12). **Theorem A(M = 1) is proved**, assuming Braaksma's summability theorem:
-the one-harmonic selection condition has exactly one zero in the box, it is simple, and it lies at
-A ∈ [2.54214804761338, 2.54214804761975], ω/ω∞ ∈ [0.776994013607438, 0.776994013612010]. Not yet done: an independent
-re-implementation of the disc covering. Larger boxes fail because the interval Jacobian's excess grows like 7×10⁵·h (the solution is
-large where the ray meets the arc), so 10⁻³ boxes need a C² Lohner step; a lower path (ray to 0.2, then the real axis)
-should allow 10⁻⁸. The integration is stiff (fast modes shrink by e⁻³¹, so naive interval Taylor would overestimate by
-about e⁵⁰), which is why the Lohner wrapping is essential. At M = 5 the system is
-38-dimensional, and the certificate must use the Schur-corrected conditions (leakage up to 10¹⁷), i.e. multiprecision
-Lohner.
+a covering with 178 validated Taylor discs (§12). **Theorem A(M = 1) is proved**, assuming Braaksma's summability
+theorem: the one-harmonic selection condition has exactly one zero in the box, it is simple, and it lies at A ∈
+[2.54214804761338, 2.54214804761975], ω/ω∞ ∈ [0.776994013607438, 0.776994013612010]. Not yet done: an independent
+re-implementation of the disc covering. Larger boxes fail because the interval Jacobian's excess grows like 7×10⁵·h (the
+solution is large where the ray meets the arc), so 10⁻³ boxes need a C² Lohner step; a lower path (ray to 0.2, then the
+real axis) should allow 10⁻⁸. The integration is stiff (fast modes shrink by e⁻³¹, so naive interval Taylor would
+overestimate by about e⁵⁰), which is why the Lohner wrapping is essential. At M = 5 the system is 38-dimensional, and
+the certificate must use the Schur-corrected conditions (leakage up to 10¹⁷), i.e. multiprecision Lohner.
 
 *Toward M = 3 and 5* ([proof/A_M.md](proof/A_M.md), [proof/A_lemmas_M.md](proof/A_lemmas_M.md)). The point certificate
 is **certified** at M = 3: the four real D-jump conditions at ξ₁ = 0.3 have exactly one zero, with a non-singular
@@ -228,44 +228,45 @@ M = 3 point certificate, H1–H3 and lemma 6a; the majorant code of lemmas S and
 not yet reviewed.
 
 Staged targets: **A(M=5)**, a certified simple zero of the five-harmonic multiplier (lemmas A.1, A.2, A.4 only; a
-standard computer-assisted proof); then **A(∞)**, the untruncated zero, adding A.3, or by the entire-function route below.
+standard computer-assisted proof); then **A(∞)**, the untruncated zero, adding A.3, or by the entire-function route
+below.
 
 **Route A3: the entire-function certificate** ([proof/D_entire.md](proof/D_entire.md), `solver/proof/entire_cert.py`).
 The coefficients follow σ_k/σ_{k+1} ≈ (k + β)/κ⋆ with κ⋆ ≈ 1.28 + 1.08i and β ≈ 4.2 − 1.6i, the same at ω/ω∞ = 0.99,
 1.00, 1.01 to about 1%: S₁ is entire of order 1 and exponential type, a Laplace integral over an arc of Borel
-singularities (from about 0.75 + 0.16i to κ⋆) rather than a sum of isolated exponents. With G = e^{−κ̄x}S₁ (κ̄ ≈ 0.89 + 0.55i,
-the arc's centre; same zeros) the truncated series at K = 9–12 puts the real zero at ω/ω∞ = 0.99767, 1.00035, 0.99987,
-0.99988, with A₀(ω∞) = 2.7194 − 0.0002i, matching the central Padé approximants (0.99987–0.99991); the plain Taylor
-truncation is useless at these orders. Certificate margins at ω∞: Rouché on |x − x₀| = 0.01 needs total error below
-5.7×10⁻⁴; Krawczyk/Miranda in (A, ω/ω∞) (Jacobian singular values 0.53, 0.26) needs below about 2.6×10⁻³ for a box of
-radius 0.01 and 2.6×10⁻⁴ for 10⁻³. A type bound calibrated at k = 12 gives a tail of about 2×10⁻⁴, so K = 12 would certify
-a 0.01 box and K ≈ 14–15 a 10⁻³ box, if the coefficients and the tail were rigorous. What that needs: rigorous σ_k for
-k ≤ 14 (standard but laborious: each order is a linear inhomogeneous Stokes problem, enclosed by validated lateral
-integration or an exact adjoint pairing instead of the late-order fit), and the tail bound, which is the new, hard part.
-A majorant on the recursion can only give geometric bounds, so it needs either a bound on G at complex amplitude on one
-circle |x| ≈ 15–20 (|A| ≈ 4–4.5) via Cauchy estimates, i.e. control of the tuned inner solution at complex amplitude, or a
-Laplace/Paley–Wiener representation proving the exponential type. This replaces the harmonic tail (gap (b)) by an
-amplitude tail that is much better behaved; a conditional theorem (zero certified assuming an explicit type bound) is
-within reach now.
+singularities (from about 0.75 + 0.16i to κ⋆) rather than a sum of isolated exponents. With G = e^{−κ̄x}S₁ (κ̄ ≈ 0.89 +
+0.55i, the arc's centre; same zeros) the truncated series at K = 9–12 puts the real zero at ω/ω∞ = 0.99767, 1.00035,
+0.99987, 0.99988, with A₀(ω∞) = 2.7194 − 0.0002i, matching the central Padé approximants (0.99987–0.99991); the plain
+Taylor truncation is useless at these orders. Certificate margins at ω∞: Rouché on |x − x₀| = 0.01 needs total error
+below 5.7×10⁻⁴; Krawczyk/Miranda in (A, ω/ω∞) (Jacobian singular values 0.53, 0.26) needs below about 2.6×10⁻³ for a box
+of radius 0.01 and 2.6×10⁻⁴ for 10⁻³. A type bound calibrated at k = 12 gives a tail of about 2×10⁻⁴, so K = 12 would
+certify a 0.01 box and K ≈ 14–15 a 10⁻³ box, if the coefficients and the tail were rigorous. What that needs: rigorous
+σ_k for k ≤ 14 (standard but laborious: each order is a linear inhomogeneous Stokes problem, enclosed by validated
+lateral integration or an exact adjoint pairing instead of the late-order fit), and the tail bound, which is the new,
+hard part. A majorant on the recursion can only give geometric bounds, so it needs either a bound on G at complex
+amplitude on one circle |x| ≈ 15–20 (|A| ≈ 4–4.5) via Cauchy estimates, i.e. control of the tuned inner solution at
+complex amplitude, or a Laplace/Paley–Wiener representation proving the exponential type. This replaces the harmonic
+tail (gap (b)) by an amplitude tail that is much better behaved; a conditional theorem (zero certified assuming an
+explicit type bound) is within reach now.
 
-*Progress on route A3* ([proof/D_entire.md](proof/D_entire.md) §6–7, `exact_sigma.py`). The late-order fit is replaced by
-an exact formula for σ₁: the order-3 recursion telescopes (base_j·T_j = 1/(Γ(a)Γ(b)) exactly), the increment is O(j⁻²)
-after two exact cancellations of its O(1/j) parts, its leading part is summed in closed form (digamma / Hurwitz ζ, and two
-summations by parts), and an explicit O(j⁻³) remainder bound closes it. In ball arithmetic σ₁ is now **rigorously
-enclosed** to ±3.5×10⁻⁵ at ω/ω∞ = 0.99, 1.00, 1.01 (it contains the fitted values; a 10⁻³ box needs about 2×10⁻³). σ₂ to σ₆
-telescope the same way (increments O(logᵏ j/j²)); they need the lower orders' large-j forms by induction, which is
-mechanical but long. Enclosures uniform over an ω box need log T_j carried through lgamma. The exponential type is
-characterised but not derived: |σ_k| Γ(k + 4.16)/1.675ᵏ stays within 24.9–27.3 for k = 4–12, the Borel transform has a cut
-from about 0.75 + 0.16i to κ⋆ ≈ 1.28 + 1.08i with density vanishing at κ⋆, and the mechanism is not a single exponential
-factor. A proof of the type, and so of the tail bound, still needs one a-priori bound at complex amplitude; writing order
-2k + 1 as k-fold Borel convolutions over a simplex is the proposed route.
+*Progress on route A3* ([proof/D_entire.md](proof/D_entire.md) §6–7, `exact_sigma.py`). The late-order fit is replaced
+by an exact formula for σ₁: the order-3 recursion telescopes (base_j·T_j = 1/(Γ(a)Γ(b)) exactly), the increment is
+O(j⁻²) after two exact cancellations of its O(1/j) parts, its leading part is summed in closed form (digamma / Hurwitz
+ζ, and two summations by parts), and an explicit O(j⁻³) remainder bound closes it. In ball arithmetic σ₁ is now
+**rigorously enclosed** to ±3.5×10⁻⁵ at ω/ω∞ = 0.99, 1.00, 1.01 (it contains the fitted values; a 10⁻³ box needs about
+2×10⁻³). σ₂ to σ₆ telescope the same way (increments O(logᵏ j/j²)); they need the lower orders' large-j forms by
+induction, which is mechanical but long. Enclosures uniform over an ω box need log T_j carried through lgamma. The
+exponential type is characterised but not derived: |σ_k| Γ(k + 4.16)/1.675ᵏ stays within 24.9–27.3 for k = 4–12, the
+Borel transform has a cut from about 0.75 + 0.16i to κ⋆ ≈ 1.28 + 1.08i with density vanishing at κ⋆, and the mechanism
+is not a single exponential factor. A proof of the type, and so of the tail bound, still needs one a-priori bound at
+complex amplitude; writing order 2k + 1 as k-fold Borel convolutions over a simplex is the proposed route.
 
 A cheaper intermediate certificate uses the entire-function structure: if S₁(·, ω) is entire of order 1 in x (lemma to
-prove: a bound $`\lvert\sigma_k\rvert \le C\,a^k/\Gamma(k+b)`$ with explicit C, a, b), then rigorous enclosures of σ₁…σ_K
-plus that tail bound give S₁ on a contour, and the argument principle counts its zeros near x₀ for each ω; Miranda's
-theorem in (A, ω) then gives the zero. This replaces A.2 by a proof about the amplitude recursion, which is exact (a
-convolution recursion with rational coefficients, `solver/inner_amp/amp_flint.py`); the late-order step would need a
-rigorous Darboux bound instead of a fit.
+prove: a bound $`\lvert\sigma_k\rvert \le C\,a^k/\Gamma(k+b)`$ with explicit C, a, b), then rigorous enclosures of
+σ₁…σ_K plus that tail bound give S₁ on a contour, and the argument principle counts its zeros near x₀ for each ω;
+Miranda's theorem in (A, ω) then gives the zero. This replaces A.2 by a proof about the amplitude recursion, which is
+exact (a convolution recursion with rational coefficients, `solver/inner_amp/amp_flint.py`); the late-order step would
+need a rigorous Darboux bound instead of a fit.
 
 A plausible structural reason for the entire-function behaviour, worth checking: the Dingle exponents depend on the
 amplitude through ⟨F²⟩ (g_ν = −(½ + iνω) + ⟨F²⟩), so the normalised multiplier contains Γ-function factors of
@@ -275,32 +276,32 @@ a finite radius of convergence and faster, cleaner convergence of all the estima
 ## 5. Layer B: the analytic selection theorem
 
 **Status for the M-harmonic model** ([proof/C_selection.md](proof/C_selection.md)). Theorem B(M): for n ≥ n₀(M), the
-centre-regular solution with profile F_n and frequency ω is analytic at the light cone exactly when
-C_{n,μ} = κ_{n,μ}[S_μ + O(1/n)] = 0 for every odd μ ≤ M, with κ explicit and non-zero; a zero of S that is simple once
-the phase is fixed gives a unique branch with ω_n − ω* = O(1/n), and any convergent sequence of solutions converges to a
-zero of S. Given the lemmas it is the finite-dimensional implicit function theorem, as in Xie–Tanveer. Lemma B2 is proved
-(`solver/proof/fast_eigenvalues.py`, sympy): the outer system's fast eigenvalues are n·c²/(x(x² − c²)) for p + m (equal to
-−nΦ′ at c = 1) and −n/x for b − 1, with no turning points on the real axis, regular-singular points at the centre and
+centre-regular solution with profile F_n and frequency ω is analytic at the light cone exactly when C_{n,μ} =
+κ_{n,μ}[S_μ + O(1/n)] = 0 for every odd μ ≤ M, with κ explicit and non-zero; a zero of S that is simple once the phase
+is fixed gives a unique branch with ω_n − ω* = O(1/n), and any convergent sequence of solutions converges to a zero of
+S. Given the lemmas it is the finite-dimensional implicit function theorem, as in Xie–Tanveer. Lemma B2 is proved
+(`solver/proof/fast_eigenvalues.py`, sympy): the outer system's fast eigenvalues are n·c²/(x(x² − c²)) for p + m (equal
+to −nΦ′ at c = 1) and −n/x for b − 1, with no turning points on the real axis, regular-singular points at the centre and
 the light cone, and the turning point at infinity (x ~ √n) being exactly the inner problem. Gap (c) reduces to Olver's
 error control (the WKB phase and the Frobenius exponent are the same object, since x − c has a simple zero at the light
 cone; the exponents of different harmonics differ by at least 2ω in imaginary part, so no resonance), up to a routine
-block-diagonalization (the Volterra bound B6′ is written). The inner half of gap (a) reduces to a citation: at fixed M the inner problem is a
-finite system with a rank-1 irregular point and is 1-summable by Braaksma's theorem (1992), so the multipliers are
-rigorously defined. Costin's rank-one theorems do not apply as stated: the fast eigenvalue repeats across harmonics, and
-the slow directions have eigenvalue 0. The outer formal series is Gevrey-1 on every disc in x, for every M (proved by
-majorants, constants certified for M = 1; [proof/B3_borel.md](proof/B3_borel.md)). Whether it is Borel summable along ℝ⁺
-(hypothesis (H-σ), proved in the linear case) is not needed for Theorem B(M),
-whose outer steps use fixed-order truncations only. Further progress ([proof/C_selection.md](proof/C_selection.md)
-§9–12): in inner variables the exact equations are the inner problem plus corrections in integer powers of 1/n only
-(B5.0, `inner_corrections.py`), so the matching error is O(1/n), not O(n^{−1/2}); the change to the fast-mode variable
-and the non-zero matching factor κ are explicit (B5.1, reducing to the linear C(n, s) at F = 0); the outer jump equals
-κ[S + small] given the inner fixed point (B5 part 2); and the Volterra bound of the light-cone lemma is written out (B6′).
-A correction: the inter-harmonic coupling in the light-cone exponents is O(1), not O(1/n), but the gauge e^{Π} removes it
+block-diagonalization (the Volterra bound B6′ is written). The inner half of gap (a) reduces to a citation: at fixed M
+the inner problem is a finite system with a rank-1 irregular point and is 1-summable by Braaksma's theorem (1992), so
+the multipliers are rigorously defined. Costin's rank-one theorems do not apply as stated: the fast eigenvalue repeats
+across harmonics, and the slow directions have eigenvalue 0. The outer formal series is Gevrey-1 on every disc in x, for
+every M (proved by majorants, constants certified for M = 1; [proof/B3_borel.md](proof/B3_borel.md)). Whether it is
+Borel summable along ℝ⁺ (hypothesis (H-σ), proved in the linear case) is not needed for Theorem B(M), whose outer steps
+use fixed-order truncations only. Further progress ([proof/C_selection.md](proof/C_selection.md) §9–12): in inner
+variables the exact equations are the inner problem plus corrections in integer powers of 1/n only (B5.0,
+`inner_corrections.py`), so the matching error is O(1/n), not O(n^{−1/2}); the change to the fast-mode variable and the
+non-zero matching factor κ are explicit (B5.1, reducing to the linear C(n, s) at F = 0); the outer jump equals κ[S +
+small] given the inner fixed point (B5 part 2); and the Volterra bound of the light-cone lemma is written out (B6′). A
+correction: the inter-harmonic coupling in the light-cone exponents is O(1), not O(1/n), but the gauge e^{Π} removes it
 exactly, and the exponent differences stay at least 6.89 apart in imaginary part (7.26 for M ≥ 3)
 (`lightcone_exponents.py`), so non-resonance holds. B5 part 1, the inner fixed point on the matching domain, is proved
 for each fixed M given B8's bound on the inner arc |x| = n^γ ([proof/B5_inner.md](proof/B5_inner.md)), in the sharper
-form W = O(1/n) relative. For M = 1 every constant is certified in ball arithmetic and the fixed point holds for
-D ≳ 10³²; the threshold is set by the radius |x²/n| ≈ 0.009 on which a perturbative fixed point around the inner series
+form W = O(1/n) relative. For M = 1 every constant is certified in ball arithmetic and the fixed point holds for D ≳
+10³²; the threshold is set by the radius |x²/n| ≈ 0.009 on which a perturbative fixed point around the inner series
 closes. The global continuation B8 is certified for M = 1 and delivers B5 part 1's hypothesis
 ([proof/B8_constants.md](proof/B8_constants.md)). The model is the M-harmonic truncation with b and c on the even
 harmonics |ν| ≤ M + 1, the one of Theorem A(M = 1). Uniformity in M (gap (b)) is a separate question.
@@ -318,14 +319,14 @@ The canonical status, link by link, is [proof/C_selection.md](proof/C_selection.
 in θ on a strip and in x on a complex domain that reaches the inner region x ~ √n and the light cone x = 1.
 
 - **B.1 Formal outer solution.** Proposition 1 (proved).
-- **B.2 Actual solutions near the formal one.** Borel summability of the 1/n expansion in sectors of the complex x-plane,
-  for each fixed (F, ω, K_k), with the summed solution regular at the centre. This is gap (a). For finite harmonic
-  truncation it is a parameter-dependent version of Costin (1998); for the full θ-dependence it needs Costin–Tanveer's
-  strip-analytic framework. For a fixed number of harmonics the Borel sum is not needed: the proof uses actual solutions
-  and fixed-order truncations ([proof/B3_borel.md](proof/B3_borel.md) §1). Recomputed in ball arithmetic at M = 1 and 3
-  (with b, c on |ν| ≤ M − 1), the outer late orders show no singularity on or near ℝ⁺; at M = 3 there is an
-  x-independent one near the negative real axis (ζ ≈ −1.2), which may approach the origin as M grows (B3_borel.md §5; a
-  gap-(b) question).
+- **B.2 Actual solutions near the formal one.** Borel summability of the 1/n expansion in sectors of the complex
+  x-plane, for each fixed (F, ω, K_k), with the summed solution regular at the centre. This is gap (a). For finite
+  harmonic truncation it is a parameter-dependent version of Costin (1998); for the full θ-dependence it needs
+  Costin–Tanveer's strip-analytic framework. For a fixed number of harmonics the Borel sum is not needed: the proof uses
+  actual solutions and fixed-order truncations ([proof/B3_borel.md](proof/B3_borel.md) §1). Recomputed in ball
+  arithmetic at M = 1 and 3 (with b, c on |ν| ≤ M − 1), the outer late orders show no singularity on or near ℝ⁺; at M =
+  3 there is an x-independent one near the negative real axis (ζ ≈ −1.2), which may approach the origin as M grows
+  (B3_borel.md §5; a gap-(b) question).
 - **B.3 Inner–outer matching.** The outer fast mode e^{−nΦ}A matches the inner fast mode on 1 ≪ x ≪ √n, and the outer
   late-order constant equals the inner Stokes multiplier. Proved in the linear case (Proposition 4 with the Weber
   constant); the nonlinear matching follows Baldomá–Fontich–Guardia–Seara: solve the inner problem in a domain near the
@@ -334,13 +335,13 @@ in θ on a strip and in x on a complex domain that reaches the inner region x ~ 
 - **B.4 Outer transport.** Proposition 3: transport of the fast mode inside the light cone is invertible (proved, as an
   ODE statement along characteristics; needs the error terms of B.2).
 - **B.5 The light cone x = 1 (gap (c)).** A regular singular point; the singular Floquet branch
-  $`(1-x)^\Lambda\varphi(\theta - \omega'\ln(1-x))`$ must be matched to the outer WKB amplitude (singular there, A ∝ (1 − x)⁻¹)
-  on 1/n ≪ |1 − x| ≪ 1. The exponents agree on both sides (Λ = n/2 − 1 − s + ⟨F²⟩ + O(1/n)). This is a classical
+  $`(1-x)^\Lambda\varphi(\theta - \omega'\ln(1-x))`$ must be matched to the outer WKB amplitude (singular there, A ∝ (1
+  − x)⁻¹) on 1/n ≪ |1 − x| ≪ 1. The exponents agree on both sides (Λ = n/2 − 1 − s + ⟨F²⟩ + O(1/n)). This is a classical
   turning-point / regular-singular-point matching; Xie (arXiv:1610.00076) handles the analogous difficulty of Stokes
   lines meeting a non-analytic point at the finger tip. Moderate difficulty.
 - **B.6 Non-degeneracy.** The zero of S is simple modulo the symmetries (θ shift, the λ = 0 mode; the scale/time shift,
-  the λ = 1 mode). This is the output of Theorem A, plus the statement that the tuned higher harmonics depend smoothly on
-  (A, ω) (the tuning conditions S_ν = 0, |ν| ≥ 3, have an invertible Jacobian; measured: condition about 2 for the
+  the λ = 1 mode). This is the output of Theorem A, plus the statement that the tuned higher harmonics depend smoothly
+  on (A, ω) (the tuning conditions S_ν = 0, |ν| ≥ 3, have an invertible Jacobian; measured: condition about 2 for the
   outer 2×2 after elimination).
 - **B.7 Implicit function theorem.** As in Xie–Tanveer and Xie (2016, Theorem 1.11 and its corollary): the light-cone
   obstruction is $`C_n(A, \omega) = \kappa_n\,[S(A,\omega) + O(n^{-1})]`$ with an explicit non-vanishing factor κ_n
@@ -353,16 +354,17 @@ The worry, stated in the README: the linear multipliers grow like $`S_\nu \propt
 (e^{6.0|ν|}) while F's harmonics decay only like e^{−1.4|ν|}, so S(θ₀) "involves F continued to Im θ ≈ ∓πω/2 ≈ ∓6",
 far outside the strip |Im θ| < 1.4 where F is analytic. Three observations:
 
-1. **The condition is diagonal.** S ≡ 0 means S_ν = 0 for every ν, and the map S ↦ C to the light cone is diagonal in
-   ν with non-zero entries (B.4–B.5). Nothing requires summing $`\sum_\nu S_\nu e^{i\nu\theta_0}`$ at complex θ₀; each S_ν is
-   a finite number, defined by its own late orders. So there is no divergent sum in the statement, only in naive
+1. **The condition is diagonal.** S ≡ 0 means S_ν = 0 for every ν, and the map S ↦ C to the light cone is diagonal in ν
+   with non-zero entries (B.4–B.5). Nothing requires summing $`\sum_\nu S_\nu e^{i\nu\theta_0}`$ at complex θ₀; each S_ν
+   is a finite number, defined by its own late orders. So there is no divergent sum in the statement, only in naive
    estimates.
 2. **The higher harmonics are tuned, not free.** The S_ν with |ν| ≥ 3 vanish by construction, so the large weights
-   multiply zero; what enters r₁ is the *sensitivity* of S₁ to errors in the tuned harmonics. That sensitivity is enormous
-   harmonic by harmonic (∂r₁/∂B₅ ~ 10¹⁷), but the tuning also absorbs it: in `hier.py`'s Schur-complement form the
-   effective coupling is what the truncation sequence measures, and it decays about twentyfold per pair of harmonics. A
-   proof should therefore estimate the *Schur complement* (r₁ with the higher levels eliminated), in a norm with weights
-   $`e^{\pi\lvert\nu\rvert\omega/2}`$ on the multipliers and $`e^{-\sigma\lvert\nu\rvert}`$ on the profile, dual to each other.
+   multiply zero; what enters r₁ is the *sensitivity* of S₁ to errors in the tuned harmonics. That sensitivity is
+   enormous harmonic by harmonic (∂r₁/∂B₅ ~ 10¹⁷), but the tuning also absorbs it: in `hier.py`'s Schur-complement form
+   the effective coupling is what the truncation sequence measures, and it decays about twentyfold per pair of
+   harmonics. A proof should therefore estimate the *Schur complement* (r₁ with the higher levels eliminated), in a norm
+   with weights $`e^{\pi\lvert\nu\rvert\omega/2}`$ on the multipliers and $`e^{-\sigma\lvert\nu\rvert}`$ on the profile,
+   dual to each other.
 3. **Each order of the amplitude expansion is a trigonometric polynomial,** so in the amplitude expansion every
    object is entire in θ and the strip problem does not arise order by order; it is moved into the convergence of the
    series in A², which numerically is that of an entire function of x. A proof route: establish S₁ as an analytic
@@ -389,7 +391,8 @@ and if that zero is the unique simple zero in a box containing the numerical lim
   inside the basin of Theorem B's construction, would close this; alternatively, Theorem B's construction at n ≥ n₀ with
   explicit n₀ and a certified solution at some D ≥ n₀ + 2.
 
-The numerical agreement (ω*/ω∞ = 0.9999–1.0002 under the assumption above) then becomes a consistency check of the theorem rather than its basis.
+The numerical agreement (ω*/ω∞ = 0.9999–1.0002 under the assumption above) then becomes a consistency check of the
+theorem rather than its basis.
 
 ## 7. Staged plan
 
@@ -436,7 +439,8 @@ against publisher, arXiv or catalogue records ([notes/REF_CHECK.md](notes/REF_CH
   see also [arXiv:math/0608414](https://arxiv.org/abs/math/0608414).
 - O. Costin, *Asymptotics and Borel Summability*, Chapman & Hall/CRC (2008; catalogues also give ©2009).
 - O. Costin, S. Tanveer, *Nonlinear evolution PDEs in R⁺ × C^d: existence and uniqueness of solutions, asymptotic and
-  Borel summability properties*, Ann. Inst. H. Poincaré Anal. Non Linéaire 24 (2007) 795–823, doi:10.1016/j.anihpc.2006.07.002.
+  Borel summability properties*, Ann. Inst. H. Poincaré Anal. Non Linéaire 24 (2007) 795–823,
+  doi:10.1016/j.anihpc.2006.07.002.
 - O. Costin, S. Tanveer, *Borel summability of Navier–Stokes equation in R³ and small time existence*,
   [arXiv:math/0612063](https://arxiv.org/abs/math/0612063).
 - M. D. Kruskal, H. Segur, *Asymptotics beyond all orders in a model of crystal growth*, Stud. Appl. Math. 85 (1991)
@@ -458,8 +462,8 @@ against publisher, arXiv or catalogue records ([notes/REF_CHECK.md](notes/REF_CH
 - I. Baldomá, M. J. Capiński, M. Guardia, T. M. Seara, *Breakdown of heteroclinic connections in the analytic Hopf-zero
   singularity: rigorous computation of the Stokes constant*, [arXiv:2206.13840](https://arxiv.org/abs/2206.13840);
   J. Nonlinear Sci. 33 (2023), doi:10.1007/s00332-022-09882-x.
-- E. Lombardi, *Oscillatory Integrals and Phenomena Beyond all Algebraic Orders, with Applications to Homoclinic Orbits in
-  Reversible Systems*, Lecture Notes in Math. 1741, Springer (2000).
+- E. Lombardi, *Oscillatory Integrals and Phenomena Beyond all Algebraic Orders, with Applications to Homoclinic Orbits
+  in Reversible Systems*, Lecture Notes in Math. 1741, Springer (2000).
 - M. Reiterer, E. Trubowitz, *Choptuik's critical spacetime exists*, Commun. Math. Phys. 368 (2019) 143–186,
   [arXiv:1203.3766](https://arxiv.org/abs/1203.3766).
 - C. Gundlach, *The Choptuik spacetime as an eigenvalue problem*, PRL 75 (1995) 3214,

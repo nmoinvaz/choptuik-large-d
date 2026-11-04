@@ -42,27 +42,27 @@ With λ∞ = 2 fixed,
 
 ## 2. What the literature says
 
-- **Rozali and Way**, "Gravitating scalars and critical collapse in the large D limit", arXiv:1807.10283 (2018); published
-  as "Gravitating scalar stars in the large D limit", JHEP 11 (2018) 106. Their leading-order large-D equations are
-  the inner problem of §3 in other variables (see §3), and they noted that the equations are parabolic with the roles of
-  space and time swapped. At
-  large D, with rescaled time √D t, they find a family of "oscillaton" solutions labelled by an amplitude ε, whose metric
-  function diverges where $`\varepsilon^2 e^{-r^2} = 1`$. Using the divergence radius as a proxy for the black-hole size,
+- **Rozali and Way**, "Gravitating scalars and critical collapse in the large D limit", arXiv:1807.10283 (2018);
+  published as "Gravitating scalar stars in the large D limit", JHEP 11 (2018) 106. Their leading-order large-D
+  equations are the inner problem of §3 in other variables (see §3), and they noted that the equations are parabolic
+  with the roles of space and time swapped. At large D, with rescaled time √D t, they find a family of "oscillaton"
+  solutions labelled by an amplitude ε, whose metric function diverges where $`\varepsilon^2 e^{-r^2} = 1`$. Using the
+  divergence radius as a proxy for the black-hole size,
   $`r_{\rm div} = \sqrt{2(\varepsilon - 1)} + O((\varepsilon-1)^{3/2})`$, hence γ = 1/2. They call this suggestive: the
   family is not the DSS critical solution, the divergence is only a proxy for a horizon, and no perturbative analysis or
-  1/D correction is attempted. *Against our data:* the value is right. The mechanism, a threshold set by r² rather than r,
-  is the one made exact in §4 below.
+  1/D correction is attempted. *Against our data:* the value is right. The mechanism, a threshold set by r² rather than
+  r, is the one made exact in §4 below.
 - **Ecker, Ecker and Grumiller**, "Analytic discrete self-similar solutions of Einstein–Klein–Gordon at large D",
-  arXiv:2601.14358 (PRL 2026). They state that "numerical and theoretical arguments suggest lim γ = 1/2, hinting at a CSS
-  limit", citing Clark and Pimentel, and leave γ as an open question; no derivation and no 1/D terms.
+  arXiv:2601.14358 (PRL 2026). They state that "numerical and theoretical arguments suggest lim γ = 1/2, hinting at a
+  CSS limit", citing Clark and Pimentel, and leave γ as an open question; no derivation and no 1/D terms.
 - **Clark and Pimentel**, "Black hole critical collapse in infinite dimensions: continuous self-similar solutions",
-  arXiv:2504.10590, JHEP 11 (2025) 017. Continuously self-similar (CSS) solutions at large D by matched asymptotics; they
-  find that the mass critical exponent of self-similarity-breaking perturbations "asymptotes to a constant value in
-  infinite dimensions". A summary of the paper gives the exponent as 2(D − 3)/(D − 2); its relation to our radius exponent
-  (mass ∝ r^{D−3}) and to the DSS solution was not checked here. It concerns a different (CSS) solution, so it neither
-  supports nor contradicts the DSS coefficient 3.0324 directly.
-- **Bland, Preston, Becker, Kunstatter and Husain**, CQG 22, 5355 (2005), gr-qc/0507088. γ(D) for 3.5 ≤ D ≤ 14, fitted by
-  γ ≈ 0.466 (1 − e^{−0.408D}), i.e. a limit of 0.466. *Excluded:* γ(61) = 0.48935 and the points keep rising.
+  arXiv:2504.10590, JHEP 11 (2025) 017. Continuously self-similar (CSS) solutions at large D by matched asymptotics;
+  they find that the mass critical exponent of self-similarity-breaking perturbations "asymptotes to a constant value in
+  infinite dimensions". A summary of the paper gives the exponent as 2(D − 3)/(D − 2); its relation to our radius
+  exponent (mass ∝ r^{D−3}) and to the DSS solution was not checked here. It concerns a different (CSS) solution, so it
+  neither supports nor contradicts the DSS coefficient 3.0324 directly.
+- **Bland, Preston, Becker, Kunstatter and Husain**, CQG 22, 5355 (2005), gr-qc/0507088. γ(D) for 3.5 ≤ D ≤ 14, fitted
+  by γ ≈ 0.466 (1 − e^{−0.408D}), i.e. a limit of 0.466. *Excluded:* γ(61) = 0.48935 and the points keep rising.
 - **Sorkin and Oren**, hep-th/0502034 (2005). γ(D) up to D = 14, with a suggested maximum near D = 11. *Excluded:* γ is
   monotone up to D = 61 (Bland et al. already saw no maximum).
 
@@ -90,13 +90,14 @@ the explicit factors of ρ cancel (`solver/inner_pert/heat_form.py`, sympy) and 
 Y_t = c\,S, \qquad S_t = c\Big(Y_s + \frac{Y^3}{4}\Big), \qquad c_s = \frac{c\,Y^2}{4} .
 ```
 
-This is a nonlinear heat equation, $`Y_s = c^{-1}\partial_t(c^{-1}\partial_t Y) - Y^3/4`$, whose "time" is s = r²/(2n) and
-whose "space" is the physical time t. It is Rozali and Way's leading-order flat-space system (their Sec. 2.2), who
-noted this parabolic character: with their (r, √D t) as our (ρ, t) and their 1 − δ₀ as our c², their equations read
-φ_s = c⁻¹∂_t(c⁻¹φ_t) and c_s = φ_t²/c, and Y = 2φ_t/c, S = Y_t/c satisfy the system above identically
-(`solver/inner_pert/rw_map.py`). What follows, the symmetry argument for the DSS solution, is new here. Two known facts fit this picture. The self-similar variable of a heat equation is
-t/√s, here −1/ξ, and the linear inner problem is indeed Hermite's (Weber's) equation. The fast mode of the inner problem,
-$`e^{-1/(2\xi^2)} = e^{-t^2/(4s)}`$, is the heat kernel.
+This is a nonlinear heat equation, $`Y_s = c^{-1}\partial_t(c^{-1}\partial_t Y) - Y^3/4`$, whose "time" is s = r²/(2n)
+and whose "space" is the physical time t. It is Rozali and Way's leading-order flat-space system (their Sec. 2.2), who
+noted this parabolic character: with their (r, √D t) as our (ρ, t) and their 1 − δ₀ as our c², their equations read φ_s
+= c⁻¹∂_t(c⁻¹φ_t) and c_s = φ_t²/c, and Y = 2φ_t/c, S = Y_t/c satisfy the system above identically
+(`solver/inner_pert/rw_map.py`). What follows, the symmetry argument for the DSS solution, is new here. Two known facts
+fit this picture. The self-similar variable of a heat equation is t/√s, here −1/ξ, and the linear inner problem is
+indeed Hermite's (Weber's) equation. The fast mode of the inner problem, $`e^{-1/(2\xi^2)} = e^{-t^2/(4s)}`$, is the
+heat kernel.
 
 The autonomous system has these continuous symmetries:
 
@@ -120,10 +121,10 @@ Infinitesimally, s → s + ε at fixed Y, S, c gives
 ```
 
 With the inner series $`y = \sum_j d_j\xi^{2j+1}`$, $`c = \sum_m g_m\xi^{2m}`$ (g₀ = 1), the perturbation series has
-$`a_k = 2(k+1)\,d_{k+1}`$ and $`h_m = 2(m+1)\,g_{m+1}`$. It is analytic in ξ, as the matching to the outer 1/n
-expansion requires, but it changes c at ξ = 0 by h₀ = 2g₁ = 2F². The value of c there is a lapse normalization (a
-function of t), which the matching fixes, h₀ = 0. A time reparametrization t → t + η(t), η = e^τ P(θ), is an exact symmetry
-(c → T′c) and adds
+$`a_k = 2(k+1)\,d_{k+1}`$ and $`h_m = 2(m+1)\,g_{m+1}`$. It is analytic in ξ, as the matching to the outer 1/n expansion
+requires, but it changes c at ξ = 0 by h₀ = 2g₁ = 2F². The value of c there is a lapse normalization (a function of t),
+which the matching fixes, h₀ = 0. A time reparametrization t → t + η(t), η = e^τ P(θ), is an exact symmetry (c → T′c)
+and adds
 
 ```math
 \delta y \mathrel{+}= e^{2\tau}P\,Xy, \qquad \delta c \mathrel{+}= e^{2\tau}\big[(P + \omega P')\,c + P\,Xc\big], \qquad X = \xi\partial_\xi + \omega\partial_\theta ,
@@ -136,11 +137,11 @@ which restores h₀ = 0 when P + ωP′ = −2F² (solvable harmonic by harmonic
 f = (2 + \omega\partial_\theta)(F + \omega F') - 2F^3 + P\,(F + \omega F'), \qquad P + \omega P' = -2F^2 .
 ```
 
-**Check** (`solver/inner_pert/pert_check3.py 45 11`). The perturbation recursion of `pert.py` (gravity included, h₀ = 0 imposed,
-nothing about symmetries built in) run at λ = 2 from this f reproduces the predicted a_j and h_j to 10⁻¹⁸⁰ relative in
-every harmonic the Galerkin truncation has not yet reached. The background is F = 2.72 sin θ + 0.15 sin 3θ, and the check
-runs to j = 11 at M = 45. The front where truncation errors enter moves with M (j ≈ 7 at M = 25, j ≈ 12 at M = 45), as it
-should. The same f at λ = 1.9 or 2.1 misses by 7.5% already at j = 3.
+**Check** (`solver/inner_pert/pert_check3.py 45 11`). The perturbation recursion of `pert.py` (gravity included, h₀ = 0
+imposed, nothing about symmetries built in) run at λ = 2 from this f reproduces the predicted a_j and h_j to 10⁻¹⁸⁰
+relative in every harmonic the Galerkin truncation has not yet reached. The background is F = 2.72 sin θ + 0.15 sin 3θ,
+and the check runs to j = 11 at M = 45. The front where truncation errors enter moves with M (j ≈ 7 at M = 25, j ≈ 12 at
+M = 45), as it should. The same f at λ = 1.9 or 2.1 misses by 7.5% already at j = 3.
 
 ## 5. Why its multiplier vanishes, and why it is the physical mode
 
@@ -156,14 +157,15 @@ numerics beyond the check above.
 
 **It is physical, not gauge.** The time reparametrization is pure gauge, and the t-translation (λ = 1) is the usual
 shift of the accumulation time. The s-translation, though, shifts r², and r is the areal radius, so it is a genuine
-deformation. It is a symmetry only of the D = ∞ inner problem: at finite D the outer region and the 1/n corrections to the
-inner equations depend on r explicitly. So at finite D it survives as an ordinary unstable mode, with λ = 2 + O(1/n).
-This matches the data, λ = 2 + 3.0324/n.
+deformation. It is a symmetry only of the D = ∞ inner problem: at finite D the outer region and the 1/n corrections to
+the inner equations depend on r explicitly. So at finite D it survives as an ordinary unstable mode, with λ = 2 +
+O(1/n). This matches the data, λ = 2 + 3.0324/n.
 
 **The physical picture.** In the inner region the collapse is diffusion in s = r²/(2n). The unstable mode moves the
 solution along s, so a supercritical evolution forms its horizon at $`s_{\rm BH} \propto (p - p_*)`$, i.e.
-$`r_{\rm BH} \propto (p - p_*)^{1/2}`$. This is the DSS counterpart of Rozali and Way's $`r_{\rm div} = \sqrt{2(\varepsilon-1)}`$,
-from an exact symmetry; γ∞ = 1/2 follows given Conjecture 1, the uniqueness of the unstable mode and continuity of λ(D).
+$`r_{\rm BH} \propto (p - p_*)^{1/2}`$. This is the DSS counterpart of Rozali and Way's
+$`r_{\rm div} = \sqrt{2(\varepsilon-1)}`$, from an exact symmetry; γ∞ = 1/2 follows given Conjecture 1, the uniqueness
+of the unstable mode and continuity of λ(D).
 
 **The one-harmonic model's 1.765.** There λ = 2 is not a root, for two reasons:
 - the model's background is not the D = ∞ solution (its ω is 22% low);
@@ -176,12 +178,13 @@ from an exact symmetry; γ∞ = 1/2 follows given Conjecture 1, the uniqueness o
   physical unstable mode, i.e. that the DSS solution has no other λ with Re λ > 0 at D = ∞. The finite-D data, one
   unstable mode with λ → 2, are consistent with it.
 - **The 1/n coefficient.** λ₁ = 3.0324 should follow from first-order perturbation theory in the symmetry breaking: with
-  the O(1/n) corrections to the inner equations (which break the s-translation), $`\lambda_1 = -\,S_{1/n}/\partial_\lambda S\,\big|_{\lambda=2}`$,
-  where S(λ) is the perturbation's fast-mode multiplier and $`S_{1/n}`$ the multiplier induced on the λ = 2 mode by the
-  O(1/n) terms. Now computed in the M-harmonic truncations ([notes/FIRST_ORDER.md](notes/FIRST_ORDER.md)): λ₁ = 7.76,
-  3.080 and 3.023 for M = 1, 3, 5, against the fitted 3.0324, which lies between the M = 3 and M = 5 values. The
-  symmetry route above agrees with the direct one to 3×10⁻¹⁵ at the series level, but in truncated models it depends on
-  the matching radius, so the M-sequence uses the direct route. Not done without truncation.
+  the O(1/n) corrections to the inner equations (which break the s-translation),
+  $`\lambda_1 = -\,S_{1/n}/\partial_\lambda S\,\big|_{\lambda=2}`$, where S(λ) is the perturbation's fast-mode
+  multiplier and $`S_{1/n}`$ the multiplier induced on the λ = 2 mode by the O(1/n) terms. Now computed in the
+  M-harmonic truncations ([notes/FIRST_ORDER.md](notes/FIRST_ORDER.md)): λ₁ = 7.76, 3.080 and 3.023 for M = 1, 3, 5,
+  against the fitted 3.0324, which lies between the M = 3 and M = 5 values. The symmetry route above agrees with the
+  direct one to 3×10⁻¹⁵ at the series level, but in truncated models it depends on the matching radius, so the
+  M-sequence uses the direct route. Not done without truncation.
 - **The eigenvector.** The predicted leading profile f(θ) in §4 can be compared with the unstable eigenvector of the
   double-double solver at large D (from `Solver.mode_matrix`), mapped to the outer leading-order profile. Not done here.
 - **Rigor.** The argument inherits the status of Conjecture 1 (gaps (a)–(c) in the README). Given the conjecture, the

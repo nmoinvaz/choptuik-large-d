@@ -5,15 +5,18 @@ Moved verbatim from README.md (commit ea42b3e, lines 2359–2713) on 2026-11-04,
 
 ## Software: the Rust kernel
 
-Rust port of the multiple-shooting[^18] residual `F(z)` used to compute Choptuik's discretely self-similar critical solution in D = n + 2 dimensions. It covers the centre series, the RK4 shooting segments and the horizon series on the Python solver's spectral layout (941 unknowns in the production configuration; [`solver/`](solver/)), and is
-called from Python through PyO3 as a drop-in for `S.residual`, the Python reference residual.
+Rust port of the multiple-shooting[^18] residual `F(z)` used to compute Choptuik's discretely self-similar critical
+solution in D = n + 2 dimensions. It covers the centre series, the RK4 shooting segments and the horizon series on the
+Python solver's spectral layout (941 unknowns in the production configuration; [`solver/`](solver/)), and is called from
+Python through PyO3 as a drop-in for `S.residual`, the Python reference residual.
 
 ### Backends
 
 <details>
 <summary>Which backend runs where</summary>
 
-The build targets the architecture's baseline, so one wheel runs on any CPU of that architecture. The instruction set is detected at runtime, and each residual block runs inside a `#[target_feature]` entry point for it.
+The build targets the architecture's baseline, so one wheel runs on any CPU of that architecture. The instruction set is
+detected at runtime, and each residual block runs inside a `#[target_feature]` entry point for it.
 
 | Backend | Kernels | Instruction set | f64 lanes |
 |---|---|---|---|
@@ -23,7 +26,8 @@ The build targets the architecture's baseline, so one wheel runs on any CPU of t
 | `auto` | plain loops, compiler-vectorised | best available | – |
 | `baseline` | plain loops | SSE2 on x86_64 | – |
 
-Every backend performs the same operations in the same order, so all of them give bitwise identical results. The tests check this on each backend the CPU supports.
+Every backend performs the same operations in the same order, so all of them give bitwise identical results. The tests
+check this on each backend the CPU supports.
 
 ```
 backend="simd" (default)
@@ -34,7 +38,9 @@ backend="simd" (default)
    └── none ................ RustResidual falls back to "auto"
 ```
 
-`available_backends()` lists what this CPU can run, and `auto:avx2` style names pick plain loops for a given instruction set. Setting `RUSTKERNEL_ISA=avx2` (or `baseline`) caps the instruction set for the whole process, which turns AVX-512 off without a rebuild.
+`available_backends()` lists what this CPU can run, and `auto:avx2` style names pick plain loops for a given instruction
+set. Setting `RUSTKERNEL_ISA=avx2` (or `baseline`) caps the instruction set for the whole process, which turns AVX-512
+off without a rebuild.
 
 </details>
 
@@ -104,12 +110,12 @@ Checked against the Python reference (`spec_c.jacobian_cs`, `spec_c.mode_matrix_
 | M(λ) | 3.0 s | 0.25 s | 1e-10 relative |
 | Growth rate λ (det root) | ~4 min per D | ~3.5 s per D | 5e-10 at D = 11.06, 13.98, 24.24 |
 
-The double-double kernel (`hp/`) has the same construction: with the growth rate `Ctx::lam` set, `jacobian` returns
-the exact mode matrix M(λ) in double-double (Δ held fixed, phase row dropped), and `Solver.mode_matrix` and
-`Solver.mode_det` (sign and ln|det| from a double-double LU) expose it to Python; at λ = 0 the residual and Jacobian
-are bit-identical to before. `hp/gamma_dd.py` brackets the root of det M(λ) around the formula's value and refines it
-with brentq; above D = 35 it drops the weak directions with the kfreeze-13 cut, without which they bias λ by about
-10⁻⁹ at D = 60. `hp/gamma_batch.py` runs every saved state on N processes (resumable), and `hp/gamma_compare.py` (given both
+The double-double kernel (`hp/`) has the same construction: with the growth rate `Ctx::lam` set, `jacobian` returns the
+exact mode matrix M(λ) in double-double (Δ held fixed, phase row dropped), and `Solver.mode_matrix` and
+`Solver.mode_det` (sign and ln|det| from a double-double LU) expose it to Python; at λ = 0 the residual and Jacobian are
+bit-identical to before. `hp/gamma_dd.py` brackets the root of det M(λ) around the formula's value and refines it with
+brentq; above D = 35 it drops the weak directions with the kfreeze-13 cut, without which they bias λ by about 10⁻⁹ at D
+= 60. `hp/gamma_batch.py` runs every saved state on N processes (resumable), and `hp/gamma_compare.py` (given both
 `gamma_dd.jsonl` files as arguments) compares with the f64 values and the formula.
 
 </details>
@@ -138,7 +144,8 @@ hp/build.sh                       # double-double solver, built for this machine
 <details>
 <summary>Timings of the residual</summary>
 
-One residual of a synthetic production-sized configuration (`tests/test_bindings.py --time`), single thread, on an i7-1185G7.
+One residual of a synthetic production-sized configuration (`tests/test_bindings.py --time`), single thread, on an
+i7-1185G7.
 
 | Build | Backend | ms per residual |
 |---|---|---|
@@ -150,17 +157,19 @@ One residual of a synthetic production-sized configuration (`tests/test_bindings
 | `-C target-cpu=native` (earlier build, before runtime dispatch) | `simd` | 0.86 |
 | `-C target-cpu=native` (earlier build, before runtime dispatch) | `auto` | 1.50 |
 
-`baseline` is slow because x86_64 without FMA turns every fused multiply-add into a libm call, which keeps it bitwise identical to the other backends. Only pre-2013 x86 CPUs land there.
+`baseline` is slow because x86_64 without FMA turns every fused multiply-add into a libm call, which keeps it bitwise
+identical to the other backends. Only pre-2013 x86 CPUs land there.
 
 The double-double solver's Newton step (`hp/`): a blocked LU[^19] that skips exact zeros (panels of 32 columns, parallel
 trailing update; 18–34× faster than the dense LU on one thread) and batched solves (`Solver.lu_solve_many`) for the
 deflation subspace bring one D-step from 15.4 to 9.5 s on one thread and from 10.1 to 5.5 s on two (D = 20, L = 1153),
 with every output bitwise identical; on 8 threads the estimate is about 2.3 s against 6.5 s. The step is now almost all
 Jacobian (its columns already run in parallel). The mixed-precision step computes the Jacobian in f64 instead, with
-several columns sharing one pass over the base trajectory (1.2–1.35× on top of the f64 lanes); at D = 3.7 the
-Jacobian goes from 7.5 to 0.72 s at M = 48 and from 31 to 3.3 s at M = 80 on two threads
-([notes/MIXED_PRECISION.md](notes/MIXED_PRECISION.md), `hp/profile_newton.py --mixed --solve`). Continuation in D stays sequential, since each step starts from the previous solution inside Newton's
-basin; past D = 61 it costs about 22 hours per unit of D.
+several columns sharing one pass over the base trajectory (1.2–1.35× on top of the f64 lanes); at D = 3.7 the Jacobian
+goes from 7.5 to 0.72 s at M = 48 and from 31 to 3.3 s at M = 80 on two threads
+([notes/MIXED_PRECISION.md](notes/MIXED_PRECISION.md), `hp/profile_newton.py --mixed --solve`). Continuation in D stays
+sequential, since each step starts from the previous solution inside Newton's basin; past D = 61 it costs about 22 hours
+per unit of D.
 
 </details>
 
