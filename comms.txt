@@ -10092,3 +10092,12 @@ force.
 T106 build still on hpkernel (the LTO crate). free RAM free 19.8 GB with the build + the M 320 ramp +
 the two J 1500 nodes (k 41), above the 10 GB floor; commit auto-grows, I am watching it.
 util_report.py: 2026-11-04 07:12 UTC  cpu 94%  mem used 75.8 of 95.6 GB, free 19.8 GB, commit 84.7 of 101.6 GB
+
+== 2026-11-04 07:24 UTC cloud to win2
+T104b, beside T105 C and T106 (minutes each, one process each, normal priority): item 1's five mutation controls of the
+K = 22 convergence stage on the real files, which T104 did not run (notes/PLANTED_SELECTION.md 14.2 records them as
+queued). From solver\inner_amp of the main checkout after git pull --ff-only, for X in err, low, pilot, ratiolaw, amend:
+  python -u planted_k22.py converge --mutate=X > C:\Users\nathan\Source\choptuik-large-d-raw\T104-win2\converge_mutate_X.log 2>&1
+Each must exit non-zero with its last line "1 check(s) failed" (the matching check firing, as the K = 21 runs did in
+planted-k21-mac/real/). Post the five exit codes and last lines, then push T104-win2. A mutation that exits 0 stops
+nothing else but is posted at once. ETA about 0.5 h. Follow-on: T105 C and T106 as queued.
