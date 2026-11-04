@@ -497,3 +497,18 @@ last record of `anm-mac/jet_check.jsonl` does: J2 passes in its amended form ([Q
 and the "exit 0" asked for above was an error of this procedure. The record equals the Mac's in every field but the
 timings, the 17 `coef_norms` digit for digit, with both controls firing (κ frozen 1.07, n frozen inf). B passes, and C
 and D follow.
+
+**C and D (2026-11-04, win2; `T106-win2/`).** C passes (the smoke test reaches its `done` record). D was stopped after
+z_7 (`pilot_M320.log`): every order's GMRES hit the 40-product cap unconverged, so criterion 2 fails, and the
+coefficients grow by about 10¹² per order from |z_1| = 2.7×10⁸ (max norm), far beyond the branch's tangent from the
+stored states. Two errors of this procedure explain it, neither of the jet. (i) The base named above, the plain
+`D3.0450` file, carries a coarse 2348-step plan, on which the f64 LU's smallest pivot is 3.8×10⁻¹¹; the leg's fine-plan
+state at the same D (the `p1` file, 5082 steps) has 5.1×10⁻⁵ (`T82-win/down25_points.jsonl`). (ii) `anm_lowd.py` stopped
+GMRES at a change of 10⁻²⁶, at or below the double-double floor of the solve, where its basis degenerates.
+`hp/jet_lowd_check.py` tests each link of the first order against a computation that does not use it. At D 4, M 48
+(`T106-mac/`, four converged states on one plan) the jet's orders 0 and 1, `jvp` with and without its early cut, the
+stored states' tangent and the f64 LU solve all pass, and GMRES at 10⁻²⁶ runs from changes 1, 6.9×10⁻⁸, 6.4×10⁻¹⁶,
+3.1×10⁻²⁴ into NaN, while at 10⁻²⁰ it converges in 4 products to the tangent (8.6×10⁻⁷, the interpolation's own size).
+Its control (the dimension frozen, the horizon block's tangent dropped) fails links b, c and d as it must. `anm_lowd.py`
+now stops at 10⁻²⁰ and records each order's changes. The same check at M 320 on the fine-plan states, its control, and
+on the pilot's base are T106 E; the pilot is rerun from the `p1` state after it.
