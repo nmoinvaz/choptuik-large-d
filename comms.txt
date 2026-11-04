@@ -9993,3 +9993,19 @@ w0.9900.log and w1.0100.log (the two nodes, still at k 41), mem_guard.log.
 The two J 1500 nodes keep running (k 41). Starting T104 (the K 22 chain) now beside them; its first post (after converge) follows.
 util_report.py: 2026-11-04 06:22 UTC  cpu 24%  mem used 53.1 of 95.6 GB, free 42.5 GB, commit 59.7 of 101.6 GB.
 Pushed T99-win2 (8934057).
+
+== 2026-11-04 06:29 UTC win2
+cpu 29%, free 40.0 GB.
+T104 (K 22 stages) started beside the two J 1500 nodes. Stage converge: exit 0, PASS. It recomputed the K 45 trio errors and checked
+(a)'s err22 against the J 1500 pilot (b): |sigma_22(a) - sigma_22(b)| = 8.992e-33.
+  PASS wf 0.99: sigma_22 = (-5.2880894193982202142e-21 - 9.3040184332180552966e-20j), err22 1.28e-31 = plateau 1.19e-31 + pilot
+       8.99e-33 (1.38e-12 relative, margin 72.65)
+  PASS wf 1.00: sigma_22 = (-1.0524045221456612579e-20 - 9.0181465233453892797e-20j), err22 1.39e-31 (1.53e-12 relative, margin 65.46)
+  PASS wf 1.01: err22 (1.01) similar.
+  wf-spread (context) at k 22: |sigma(1.01) - sigma(0.99)|/2 = 0.0649 |sigma(1.00)|, second diff / first 0.0645, max err_k / first
+  difference 2.5e-11.
+Stage plants (the long one) running now (planted_k22.py plants, Normal, all cores); I post its progress every 2 h (last line of
+plants.log) and when it ends, then the remaining stages (real, ring, calib, recomplete, project, combine, table) to the end as one
+chain that stops on the first non-zero exit. The stage records go to wip/k22-win2 after table.
+util_report.py: 2026-11-04 06:29 UTC  cpu 29%  mem used 55.6 of 95.6 GB, free 40.0 GB, commit 66.1 of 101.6 GB.
+Pushed T104-win2 (84769d4).
