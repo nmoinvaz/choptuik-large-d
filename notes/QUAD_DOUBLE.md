@@ -1775,6 +1775,26 @@ derivative-level errors grow like G² (`d200_estimate.log`). That estimate assum
 = 32 and a branch radius of at least 50. D = 200 would need about 80-digit jets and Jacobian, or a smaller G from a
 layout with the matching point nearer the horizon (untested).
 
+**Jumping ahead does not work in this layout (2026-11-04 23:30 UTC).** The source is a coordinator subagent's study,
+raw-data repository `anm-mac/jump_study/`. The full solution vector at D 35–61 (47 states, M = 32, nodes 0.3–0.7) was
+fitted in 1/n and extrapolated. Its non-smooth part is four directions: an SVD of the fit residual gives 1.8×10⁻⁷,
+1.3×10⁻⁸, 5.3×10⁻⁹ and 3.0×10⁻⁹, then 7.4×10⁻¹¹. They are p₁'s harmonics 13 and 11, with echoes in p and m at nodes
+0.3–0.4 and in c₀'s harmonics 12–14, and the double-double states carry a smooth bias in them. T73's
+`full1_D67.7422.npz` is a pin-7 state, not a full-system one: converged in quad-double, its p₁ harmonic 13 moved by
+1.0×10⁻⁷. Projecting the four directions out and extrapolating the rest (Chebyshev degree 12, chosen on a holdout before
+the truths were seen) gives the rest to 2.1×10⁻¹⁰ at 67.74, 3.4×10⁻¹⁰ at 68.5 and 5.8×10⁻¹⁰ at 69.5. The truths are the
+full-system quad-double states (T84-mac `*_full.npz`, T81). A planted check recovers that part within a factor 1.4, and
+its controls fire.
+
+Newton from that guess takes a first step of 106 and accepts no trial. Single perturbations of the truth show why.
+Errors of 2×10⁻⁷ along the four directions are removed in one step. But an error of 3.3×10⁻¹² in the horizon data gives
+a first step of 3.9, and 4×10⁻¹⁶ in Δ alone gives 2.5×10⁻⁶ and stalls. So the full system's basin is wide along those
+directions and about 10⁻¹⁶ across them. An extrapolated guess is 3×10⁻¹⁰ off in the horizon data 7.5 units ahead, and
+about 10⁻³ at D 200 (the spread over 96 fit choices), so it is at least six orders outside. The 2–4×10⁻⁹ first-step
+basin measured above is the pinned chain's, a different measure. The study's three routes to a jump are: a horizon block
+that stays linear over errors of 10⁻⁶; horizon data from a convergent solve from node 0.7 rather than extrapolated; or
+the chain's exact Taylor coefficients.
+
 **The held harmonics' bias (2026-11-04 18:10 UTC).** `hp/chain_vs_series.py` compares the quad-double chain's Δ with the
 1/D and 1/n series fitted on the double-double points up to D 67.77. That series is the reference that matched the
 unpinned quad-double points at 68.5–73 to 10⁻¹⁵ (12.5); the output is in the raw-data repository,
