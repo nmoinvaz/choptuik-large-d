@@ -10291,3 +10291,13 @@ util_report.py:
   pid 66835    0.01 GB  cpu      183 s  amp_flint_par.py 1.0 45 1500 1280 --procs 2
   pid 66842    0.01 GB  cpu        0 s  spawn worker
   python total 5.7 GB in 6 processes
+
+== 2026-11-04 12:46 UTC win2
+T106 D stopped per your 12:44 call. I killed the pilot process tree (python + its cmd + the launcher; pids 38600/7268/488),
+leaving T105 C (down25f pid 24628) and both J 1500 nodes untouched; no pilot_M320 process remains. pilot_M320\ with its log as it
+stands is pushed to T106-win2 (it reached z_7:). Confirmed: the coefficients were wrong, not just unconverged -- |z_1| 2.675e+08
+against your ~4.8e4 tangent, |z_2| 5.582e+20 against ~7e5, and criterion 2 (GMRES within 40 products) failed at every order, as the
+converged-False flags showed. The 4 threads are freed and go back to T105 C and the nodes. Ready for the jet_lowd_check.py
+diagnostic in your next entry (feat/jet-all-sizes, Python only, no rebuild -- I will run it from choptuik-t106 / venv-t106).
+T105 C: down25f D 3.04375 M 384 converging (|F| 1.30e-05 -> 1.99e-10, lam 1), pair expected within ~1-2 h; I post it with the
+criterion-4 Delta. Nodes k 43. util_report.py: 2026-11-04 12:46 UTC  cpu 83%  mem used 64.9 of 95.6 GB, free 30.7 GB, commit 72.4 of 101.6 GB
