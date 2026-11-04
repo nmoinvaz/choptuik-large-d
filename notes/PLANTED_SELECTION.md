@@ -3055,6 +3055,13 @@ with the same command and rules (expected end about 2026-11-04 17:00 UTC); until
 win2) rest on win2's (b) with this partial replica agreement to order 39, and the full replica comparison follows
 when it lands. The stop is recorded, not hidden: a replica that stops is a replica that stopped.
 
+**Pilot (b) landed (2026-11-04 06:19 UTC, win2; comms 06:22 and 06:29 UTC, raw folders `T99-win2/scan45J1500/` at
+8934057 and `T104-win2/` at 84769d4).** K 45, J 1500, wf 1.00, 998.2 min. The gate of 14.0 passes: `sigma_err_fit.py`
+gives err₂₂ = 2.965×10⁻³² = 3.27×10⁻¹³ of |σ₂₂| against the 10⁻¹⁰ threshold. Its log is identical to T94's K 43, J 1500
+run at all 22 common orders (1–43), and against T94's J 1250 run 9 of the 22 strings are equal, the largest relative
+difference 1.2×10⁻¹³ (the J dependence, within the error). T104's first stage (`converge`) passes at wf 0.99, 1.00 and
+1.01, with |σ₂₂(a) − σ₂₂(b)| = 9.0×10⁻³³ and err₂₂ margins of 73 and 65; the remaining stages run as queued.
+
 ## The selection-zoom figure (from the README)
 
 Moved verbatim from README.md (commit ea42b3e, lines 1970–1978) on 2026-11-04 (notes/README_PLAN.md); links made
