@@ -10161,3 +10161,14 @@ util_report.py:
   pid 66835    0.01 GB  cpu      125 s  amp_flint_par.py 1.0 45 1500 1280 --procs 2
   pid 66842    0.01 GB  cpu        0 s  spawn worker
   python total 5.8 GB in 5 processes
+
+== 2026-11-04 09:02 UTC win2
+T106 A (build) done. Finished release profile in 119m 06s wall; hpkernel-0.1.0 wheel built and installed, multidouble pinned
+00c6dfd (python wheel 0.1.0, Rust dep v1.9.0); self-check "hpkernel avx2 multidouble avx2"; build exit 0 at 08:59:59 UTC.
+Peak memory: the hpkernel LTO rustc reached ~19.2 GB working set (under the 32 GB stop). That rustc ran single-threaded at 98 %
+of one core the whole time, so the long wall is the jet kernel's size (the residual monomorphized at every M), not CPU starvation
+from the leg and nodes -- those cost memory, not build CPU. Machine mem used peaked ~82 GB (free 13.4 GB) under the concurrent load.
+Starting part B now (ref 48/64/80, scaled 192/256, jet_check --N 16 --kfreeze 13): venv-t106, from hp\ of choptuik-t106, isolated
+from T105 C (separate venv and worktree). Each must exit 0; a non-zero exit stops the task. I post the three exits + the
+coef_norms list of jet_check.jsonl.
+T105 C: D 3.04375 M 320 converged (posted), M 384 next. Nodes k 41. util_report.py: 2026-11-04 09:02 UTC  cpu 72%  mem used 56.7 of 95.6 GB, free 38.9 GB, commit 63.6 of 101.6 GB
