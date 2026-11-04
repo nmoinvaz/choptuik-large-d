@@ -79,7 +79,7 @@ def formula_dd():
                     if 30.2001 <= float(c[0]) <= 99.0 and ",lowD" not in ",".join(c))
     finally:
         os.chdir(cwd)
-    t3 = [("notes/QUAD_DOUBLE.md", "the tabulated coefficients fit the double-double points above 30.2 to 5.8×10⁻⁸, the refit to 9.6×10⁻⁸")]
+    t3 = [("notes/QUAD_DOUBLE.md", "30.2 to 5.8×10⁻⁸, the refit to 9.6×10⁻⁸")]
     txt = [("README.md", "and Δ to 9.6×10⁻⁸ up to D = 67.77"),
            ("README.md", "above D = 30.2 it matches them to 9.6×10⁻⁸"),
            ("README.md", "| 30.2 – 67.77, never seen by the fit | ≤ 9.6×10⁻⁸ |")]
