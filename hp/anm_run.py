@@ -13,7 +13,7 @@ formulation of hp/pinning.py; their coefficients are zero).
     python3 anm_run.py RAWDIR OUTDIR --state T75/pin7_D73.2657.npz --kfreeze 3 [--N 24] [--eps 1e-16] [--h_max 2]
         [--steps 20] [--D_max 200] [--corrector dnp|deflated|newton] [--tol 1e-20] [--tol_growth 1.45]
         [--accept_stall 1e-19] [--junk_only 0] [--threads 4] [--w 24] [--trend T75] [--tol_qd 1e-28]
-        [--qd_it 12] [--qd_w 0]
+        [--qd_it 12] [--qd_w 0] [--refine 1] [--probe 0 --probe_c C] [--plan_tol 1e-32] [--fix1 0]
 
 --corrector qd runs the quad-double Newton of the kernel (hpkernel.driver.newton_qd, Solver.newton_q) on the pinned
 system (pinning.PinnedQ: the held harmonics' offset subtracted from the quad-double residual and added to the step, as
@@ -33,6 +33,19 @@ fitted as |v| = C n^s (n = D - 2) when their sign is constant and the fit's resi
 v(D0) (n/n0)^s, so the base state is unchanged, its Taylor coefficients in h enter the jet state order by order (the
 held rows of each right-hand side carry them, as PinnedSolver's offset carries the values), and the corrector at D + a
 holds the harmonics at the trend's values there. Records carry the exponents.
+
+--refine R takes R refinement steps per order against the stored LU (1, the default, is the loop above). --probe 1
+measures the series' first-order error at the base and stops (13.19's correction): the order-1 residual in the jet's
+model after each refinement; |F_pred| / a at a = 1/64, 1/32, 1/16 in double-double and quad-double; the quad-double
+model's order-1 residual of z_1 by central differences along (z_1, 1) in (z, D), at steps 2^-30 and 2^-33, with the held
+harmonics' slope subtracted on their rows as the series' right-hand side carries it; z_1 corrected twice by that
+residual through the stored LU, the series rebuilt on it, and its predictions at a = 1/64 to 1. --probe_c C is the
+chain's recorded |F_pred| / a at this base: the probe exits 1 unless its own double-double value at a = 1/16 is within
+1% of it (the check that the probe reproduces the chain). Results go to OUTDIR/probe.jsonl.
+--plan_tol T is the tolerance of the first base's Taylor plan (1e-32; the chain replans each prediction at 1e-32).
+--fix1 1 corrects z_1 at every base by the quad-double model's order-1 residual (central differences at 2^-29 and
+2^-30, Richardson-combined, two passes through the stored LU) and rebuilds the series on it; records carry the
+residual norms (fix1). The double-double jet's own z_1 is wrong by 1e-4 relative at D 82.16 (13.19).
 """
 import json
 import os
@@ -42,9 +55,9 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import mpmath as mp  # noqa: E402
 import numpy as np  # noqa: E402
-from hpkernel.driver import make_solver, newton_solve, deflated_newton, delta_correction, newton_qd, qparts, rnorm, save, save_q  # noqa: E402
+from hpkernel.driver import make_solver, newton_solve, deflated_newton, delta_correction, newton_qd, qparts, rnorm, save, save_q, load_q  # noqa: E402
 from multidouble import dd_add, dd_scale, dd_norm  # noqa: E402
-from pinning import PinnedQ, PinnedSolver, band_coeffs, band_field  # noqa: E402
+from pinning import PinnedQ, PinnedSolver, band_coeffs, band_field, qd_axpy  # noqa: E402
 from raw_out import require_raw  # noqa: E402
 from taylor_predict import formula_delta  # noqa: E402
 
@@ -61,10 +74,12 @@ def load_state(path):
 mp.mp.dps = 50
 
 
-def coefficients(s, zh, zl, N, held=None):
+def coefficients(s, zh, zl, N, held=None, refine_it=1, z1=None):
     """z_1..z_N from the stored LU at (zh, zl): [(zh_k, zl_k)], norms, the refinement residuals. held = (fn, rows):
     fn(k) gives the held harmonics' order-k Taylor coefficients as a field (hi, lo) on the horizon block's p rows (the
-    slice rows), added to the right-hand side there as PinnedSolver's offset is, so that z_k carries their motion"""
+    slice rows), added to the right-hand side there as PinnedSolver's offset is, so that z_k carries their motion.
+    refine_it: refinement steps per order; refine gets the residual norms before and after each. z1 = (hi, lo): z_1
+    given instead of solved (its residual is still recorded)"""
     Zh, Zl, norms, refine = [zh], [zl], [float(dd_norm(zh, zl))], []
     for k in range(1, N + 1):
         Hs, Ls = s.residual_jet(Zh, Zl, k + 1, 0)
@@ -75,29 +90,37 @@ def coefficients(s, zh, zl, N, held=None):
             bh, bl = bh.copy(), bl.copy()
             ah, al = dd_add(bh[rows], bl[rows], np.asarray(th), np.asarray(tl))
             bh[rows], bl[rows] = ah, al
-        xh, xl = s.lu_solve(bh, bl)
-        jh, jl = s.jvp(zh, zl, xh, xl)[:2]
-        r0h, r0l = dd_add(bh, bl, -jh, -jl)
-        ch, cl = s.lu_solve(r0h, r0l)
-        xh, xl = dd_add(xh, xl, ch, cl)
+        res = []
+        if k == 1 and z1 is not None:
+            xh, xl = np.asarray(z1[0]), np.asarray(z1[1])
+        else:
+            xh, xl = s.lu_solve(bh, bl)
+            for _ in range(refine_it):
+                jh, jl = s.jvp(zh, zl, xh, xl)[:2]
+                r0h, r0l = dd_add(bh, bl, -jh, -jl)
+                res.append(float(dd_norm(r0h, r0l)))
+                ch, cl = s.lu_solve(r0h, r0l)
+                xh, xl = dd_add(xh, xl, ch, cl)
         jh, jl = s.jvp(zh, zl, xh, xl)[:2]
         r1h, r1l = dd_add(bh, bl, -jh, -jl)
-        rh, rl = -bh, -bl
+        res.append(float(dd_norm(r1h, r1l)))
         Zh.append(xh); Zl.append(xl)
         norms.append(float(dd_norm(xh, xl)))
-        refine.append((float(dd_norm(r0h, r0l)), float(dd_norm(r1h, r1l))))
+        refine.append(tuple(res))
     return Zh, Zl, norms, refine
 
 
 def main():
     args = list(sys.argv[1:])
     opt = dict(state="T75/pin7_D73.2657.npz", kfreeze=3, N=24, eps=1e-16, h_max=2.0, steps=20, D_max=200.0, corrector="dnp",
-               tol=1e-20, tol_growth=1.45, accept_stall=1e-17, junk_only=0, threads=4, w=24, trend="", tol_qd=1e-28, qd_it=12, qd_w=0)
+               tol=1e-20, tol_growth=1.45, accept_stall=1e-17, junk_only=0, threads=4, w=24, trend="", tol_qd=1e-28, qd_it=12, qd_w=0,
+               refine=1, probe=0, probe_c=0.0, plan_tol=1e-32, fix1=0)
     for k in list(opt):
         f = "--" + k
         if f in args:
             i = args.index(f); opt[k] = type(opt[k])(args[i + 1]); del args[i:i + 2]
     raw, out = args[0], args[1]
+    out_dir = out
     os.makedirs(out, exist_ok=True)
     rec_path = os.path.join(out, "anm_run.jsonl")
     require_raw(rec_path)
@@ -190,7 +213,7 @@ def main():
         hh, hl = band_field(held_at(Dx), ks_held, M)
         return PinnedSolver(sx, M, hh, hl)
     wrap = lambda sx: wrap_at(sx, D)  # noqa: E731
-    s = mk(D); segs = s.plan(zh, zl, 1e-32, 0.05); s.set_segs(segs); sp = wrap(s)
+    s = mk(D); segs = s.plan(zh, zl, opt["plan_tol"], 0.05); s.set_segs(segs); sp = wrap(s)
     Kb = (len(zh) - 1) // (4 * M) - 1                                   # the horizon block
     rows = slice(Kb * 4 * M, Kb * 4 * M + M)
     # the held harmonics as directions to freeze in the quad-double Newton: unit band fields in the p1 block
@@ -201,22 +224,133 @@ def main():
     print(f"base {opt['state']}: D {mp.nstr(D, 12)}, M {M}, pin {kf} (held {ks_held}), |F| {F0:.1e}; N {N}, eps {opt['eps']}, h_max {opt['h_max']}, "
           f"corrector {opt['corrector']} (junk_only {junk_only}), tol {opt['tol']:.1e} x {opt['tol_growth']}^(D - {mp.nstr(D_start, 8)}), "
           f"stalls accepted below {opt['accept_stall']:.0e}", flush=True)
+    def predicted(D0, zh0, zl0, Zh_, Zl_, a_):
+        """the series' prediction at D0 + a_ and its max |F| in double-double and quad-double, as an attempt forms it"""
+        ph, pl = np.array(zh0), np.array(zl0)
+        for k in range(1, N + 1):
+            ph, pl = dd_add(ph, pl, *dd_scale(Zh_[k], Zl_[k], a_ ** k))
+        Dn = D0 + mp.mpf(a_)
+        sn = mk(Dn)
+        sn.set_segs(segs)
+        spn = wrap_at(sn, Dn)
+        Fh, Fl = spn.residual(ph, pl)
+        if float(rnorm(Fh, Fl)) <= 1e-6:
+            sn.set_segs(sn.plan(ph, pl, 1e-32, 0.05))
+            Fh, Fl = spn.residual(ph, pl)
+        Fq = PinnedQ(sn, spn.ch, spn.cl).residual_q(*qparts(ph, pl))
+        return float(rnorm(Fh, Fl)), float(rnorm(Fq[0], Fq[1]))
+
+    def order1_q(D0, zq, z1h, z1l, e):
+        """the pinned quad-double model's order-1 residual of z_1: central differences of the kernel's residual along
+        (z_1, 1) in (z, D) at step e (a power of 2, so z +- e z_1 and D +- e are exact), minus the held slope on its rows"""
+        Ks = []
+        for sg in (1.0, -1.0):
+            Dx = D0 + sg * mp.mpf(e)
+            sx = mk(Dx)
+            sx.set_segs(segs)
+            Ks.append(sx.residual_q(*qd_axpy(sg * e, *qparts(z1h, z1l), *zq)))
+        d = qd_axpy(-1.0, *(np.ascontiguousarray(np.asarray(p)) for p in Ks[1]), *(np.ascontiguousarray(np.asarray(p)) for p in Ks[0]))
+        rh, rl = (np.array(p) for p in dd_scale(np.asarray(d[0]), np.asarray(d[1]), 0.5 / e))
+        th, tl = band_field(held_jet(1), ks_held, M)
+        rh[rows], rl[rows] = dd_add(rh[rows], rl[rows], -np.asarray(th), -np.asarray(tl))
+        return rh, rl
+
+    def order1_r(D0, zq, z1h, z1l):
+        """order1_q at steps 2^-29 and 2^-30 combined as (4 r(e/2) - r(e)) / 3, which cancels the e^2 term (the step
+        2^-33 alone left 2.1e-14 at D 82.16, 13.19)"""
+        r1, r2 = order1_q(D0, zq, z1h, z1l, 2.0 ** -29), order1_q(D0, zq, z1h, z1l, 2.0 ** -30)
+        return dd_add(*dd_scale(r2[0], r2[1], 4.0 / 3.0), *dd_scale(r1[0], r1[1], -1.0 / 3.0))
+
+    def fix_z1(D0, zq, z1h, z1l, passes=2):
+        """z_1 corrected by the quad-double order-1 residual (order1_r) through the stored LU; returns z_1 and the
+        residual norms before and after each pass"""
+        x = order1_r(D0, zq, z1h, z1l)
+        hist = [float(rnorm(*x))]
+        for _ in range(passes):
+            ch, cl = s.lu_solve(-np.asarray(x[0]), -np.asarray(x[1]))
+            z1h, z1l = dd_add(z1h, z1l, ch, cl)
+            x = order1_r(D0, zq, z1h, z1l)
+            hist.append(float(rnorm(*x)))
+        return np.asarray(z1h), np.asarray(z1l), hist
+
+    def probe(D0, zh0, zl0, Zh, Zl, refine, held_arg):
+        """--probe (the docstring): prints, records OUTDIR/probe.jsonl, returns the exit code"""
+        zq = last_q["z4"] if "z4" in last_q else load_q(os.path.join(raw, opt["state"]))[0]
+        zq = tuple(np.ascontiguousarray(np.asarray(p)) for p in zq)
+        out = dict(D0=float(D0), D0_str=str(D0), refine_it=opt["refine"], refine_orders_1_2_N=[refine[0], refine[1], refine[-1]])
+        print(f"  probe: jet-model residual norms, order 1 {refine[0]}, order 2 {refine[1]}, order N {refine[-1]}", flush=True)
+        out["pred"] = []
+        for a_ in (1 / 64, 1 / 32, 1 / 16):
+            Fd, Fq = predicted(D0, zh0, zl0, Zh, Zl, a_)
+            out["pred"].append(dict(a=a_, Fd=Fd, Fq=Fq))
+            print(f"  probe: a {a_:.6g}: |F_pred| dd {Fd:.4e} ({Fd / a_:.4e} per unit a), qd {Fq:.4e} ({Fq / a_:.4e})", flush=True)
+        r1 = {}
+        for e in (2.0 ** -30, 2.0 ** -33):
+            r1[e] = order1_q(D0, zq, Zh[1], Zl[1], e)
+            print(f"  probe: quad-double order-1 residual of z_1, central step {e:.3e}: max {float(rnorm(*r1[e])):.4e}", flush=True)
+        dr = dd_add(r1[2.0 ** -30][0], r1[2.0 ** -30][1], -r1[2.0 ** -33][0], -r1[2.0 ** -33][1])
+        out["order1_q"] = [float(rnorm(*r1[e])) for e in r1]
+        out["order1_q_step_diff"] = float(rnorm(*dr))
+        print(f"  probe: the two steps differ by {out['order1_q_step_diff']:.3e}", flush=True)
+        z1h, z1l, x = np.array(Zh[1]), np.array(Zl[1]), r1[2.0 ** -33]
+        out["corrected"] = []
+        for it in range(2):
+            ch, cl = s.lu_solve(-x[0], -x[1])
+            z1h, z1l = dd_add(z1h, z1l, ch, cl)
+            x = order1_q(D0, zq, z1h, z1l, 2.0 ** -33)
+            out["corrected"].append(dict(dz1=float(dd_norm(ch, cl)), order1_q=float(rnorm(*x))))
+            print(f"  probe: z_1 corrected ({it + 1}): |dz_1| {out['corrected'][-1]['dz1']:.3e}, quad-double order-1 residual "
+                  f"{out['corrected'][-1]['order1_q']:.4e}", flush=True)
+        Zc_h, Zc_l, _, refine_c = coefficients(s, zh0, zl0, N, held=held_arg, refine_it=opt["refine"], z1=(z1h, z1l))
+        out["pred_corrected"] = []
+        for a_ in (1 / 64, 1 / 16, 1 / 4, 1 / 2, 1.0):
+            Fd, Fq = predicted(D0, zh0, zl0, Zc_h, Zc_l, a_)
+            out["pred_corrected"].append(dict(a=a_, Fd=Fd, Fq=Fq))
+            print(f"  probe: corrected series, a {a_:.6g}: |F_pred| dd {Fd:.4e} ({Fd / a_:.4e} per unit a), qd {Fq:.4e} ({Fq / a_:.4e})", flush=True)
+        z1h, z1l, out["richardson"] = fix_z1(D0, zq, np.array(Zh[1]), np.array(Zl[1]))
+        print(f"  probe: z_1 corrected by the Richardson residual, its norms {out['richardson']}", flush=True)
+        Zr_h, Zr_l, _, _ = coefficients(s, zh0, zl0, N, held=held_arg, refine_it=opt["refine"], z1=(z1h, z1l))
+        out["pred_richardson"] = []
+        for a_ in (1 / 64, 1 / 16, 1 / 4, 1 / 2, 1.0, 1.5, 2.0):
+            Fd, Fq = predicted(D0, zh0, zl0, Zr_h, Zr_l, a_)
+            out["pred_richardson"].append(dict(a=a_, Fd=Fd, Fq=Fq))
+            print(f"  probe: Richardson series, a {a_:.6g}: |F_pred| dd {Fd:.4e} ({Fd / a_:.4e} per unit a), qd {Fq:.4e} ({Fq / a_:.4e})", flush=True)
+        code = 0
+        if opt["probe_c"]:
+            c16 = out["pred"][2]["Fd"] * 16
+            out["reproduces"] = abs(c16 / opt["probe_c"] - 1) <= 0.01
+            print(f"  probe: dd |F_pred| / a at 1/16 {c16:.4e} against the chain's {opt['probe_c']:.4e}: "
+                  f"{'reproduced' if out['reproduces'] else 'NOT reproduced'}", flush=True)
+            code = 0 if out["reproduces"] else 1
+        with open(os.path.join(out_dir, "probe.jsonl"), "a") as f:
+            f.write(json.dumps(out) + "\n")
+        return code
+
     a = None
     for step in range(opt["steps"]):
         if D >= opt["D_max"]:
             break
         t0 = time.time()
         dh, dl, Fh, Fl, pmin, pmax = sp.newton(zh, zl)
-        Zh, Zl, norms, refine = coefficients(s, zh, zl, N, held=(lambda j: band_field(held_jet(j), ks_held, M), rows) if any(any(sl) for sl in slopes) else None)
+        held_arg = (lambda j: band_field(held_jet(j), ks_held, M), rows) if any(any(sl) for sl in slopes) else None
+        Zh, Zl, norms, refine = coefficients(s, zh, zl, N, held=held_arg, refine_it=opt["refine"])
+        fix1 = None
+        if opt["fix1"] and not opt["probe"]:
+            zq = last_q["z4"] if "z4" in last_q else load_q(os.path.join(raw, opt["state"]))[0]
+            zq = tuple(np.ascontiguousarray(np.asarray(p)) for p in zq)
+            z1h, z1l, fix1 = fix_z1(D, zq, np.array(Zh[1]), np.array(Zl[1]))
+            Zh, Zl, norms, refine = coefficients(s, zh, zl, N, held=held_arg, refine_it=opt["refine"], z1=(z1h, z1l))
         t_coef = time.time() - t0
         a_max = (opt["eps"] * norms[1] / norms[N]) ** (1.0 / (N - 1)) if norms[N] else opt["h_max"]
         room = float(opt["D_max"] - D)
         a = min(a_max, opt["h_max"], room) if a is None else min(a, a_max, opt["h_max"], room)
         ratios = [norms[k - 1] / norms[k] if norms[k] else None for k in range(2, N + 1)]
         rec = dict(step=step, D0=float(D), D0_str=str(D), pin=kf, N=N, pivots=(float(pmin), float(pmax)), norms=norms, a_max=a_max,
-                   t_coef=t_coef, refine_last=refine[-1], ratios_2_5=ratios[:4], trend=opt["trend"], slopes=slopes, held=ks_held)
+                   t_coef=t_coef, refine_last=refine[-1], fix1=fix1, ratios_2_5=ratios[:4], trend=opt["trend"], slopes=slopes, held=ks_held)
         print(f"step {step}: D {mp.nstr(D, 12)}, pivots {pmin:.1e}..{pmax:.1e}, |z_1| {norms[1]:.2e}, |z_N| {norms[N]:.2e}, ratios 2-5 "
               + " ".join(f"{r:.1f}" for r in ratios[:4] if r) + f", a_max {a_max:.3f}, {t_coef:.0f} s", flush=True)
+        if opt["probe"]:
+            sys.exit(probe(D, zh, zl, Zh, Zl, refine, held_arg))
         converged = False
         for attempt in range(4):
             ph, pl = np.array(zh), np.array(zl)
