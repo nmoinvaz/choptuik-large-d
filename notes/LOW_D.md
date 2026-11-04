@@ -434,3 +434,50 @@ rule of the 2026-11-03 02:15 UTC entry): stop the tree, post the lines, no relau
 D 3.044 is the question, and the next attempt is the exact Taylor predictor (LOW_D_SPEEDUP.md step 4). Other stops:
 the script's own, and a process above 8 GB. Expected cost: A and B about 1.5 h; the first point 3–8 h by N*; the 17
 targets with their halvings several days.
+
+## 14. T106: hp with the jet residual at every M, and the exact Taylor predictor at M 320 (procedure, 2026-11-04 06:50 UTC)
+
+Written before the run. Step 4 of [LOW_D_SPEEDUP.md](LOW_D_SPEEDUP.md). The change is on branch `feat/jet-all-sizes`
+(a2f5d9a): `residual_jet_sized` in `hp/src/python.rs` is generic in the block size, so the jet residual exists at every M
+the kernel builds (it was instantiated for M 32, 48 and 64 only), and `hp/anm_lowd.py` is the pilot. Machine win2,
+after T105's parts A and B (so that the build does not disturb B's timings), beside T105's leg, T104 and the T99
+nodes. Output folder `T106-win2/`.
+
+**A. Build**, as T98 did (`T98-win2/README.md`): a detached worktree `..\choptuik-t106` at `origin/feat/jet-all-sizes`,
+a new venv `venv-t106` (numpy, scipy, maturin, mpmath), `pip uninstall -y multidouble`, `bash hp/build.sh`, with the
+wall time and the peak memory of the build recorded. The running T105 keeps venv-hp and is not touched. Stops: a
+compile error (post it; the fix is mine), or a build above 3 h or 32 GB.
+
+**B. Nothing else changed**, at the new build, from `hp\` of the new worktree: `python highm_check.py ref
+--compare=..\..\choptuik-large-d-raw\T81\ref_main.json --Ms=48,64,80` and `python highm_check.py scaled
+--compare=..\..\choptuik-large-d-raw\T81\scaled_main.json --Ms=192,256`, each exit 0 (the AVX2 build passed both bit for
+bit in T98). Then `python jet_check.py ..\..\choptuik-large-d-raw <T106>\jet_check.jsonl --state T75/pin7_D73.2657.npz
+--N 16 --hs 1e-14,1e-13,1e-12 --kfreeze 13`: exit 0, and its `coef_norms` equal to those of the last record of
+`anm-mac/jet_check.jsonl` digit for digit (the generic instance at M 32 is the same code as the former one). Any
+difference stops the task.
+
+**C. Smoke test** at M 48: `python anm_lowd.py ..\..\choptuik-large-d-raw <T106>\smoke --state <the checkout's>
+hp/data/lowD_states/lowD_D4.0000_M48.npz --checks "" --target 3.99 --N 4 --newton_its 1 --threads 4` (the state path
+relative to RAWDIR does not apply here; pass it as `..\choptuik-large-d\hp\data\lowD_states\lowD_D4.0000_M48.npz`
+relative to the raw clone, or copy the state into `<T106>\smoke\`). It must reach its `done` record; its numbers are
+not judged.
+
+**D. The pilot at M 320**: `python -u anm_lowd.py ..\..\choptuik-large-d-raw <T106>\pilot_M320 --threads T` with T =
+max(4, 16 − N*) (N* of T105), the defaults otherwise: base D 3.045 (`T82-win/states/..._D3.0450_M320.npz`, its own
+2348-step plan), N = 15 orders, checks at D 3.044375 (`T100-win2`) and 3.0475 (`T82-win`), target 3.04375, Newton at
+most 6 calls. Criteria, fixed now:
+1. The control fires: with the dimension frozen the first order's right-hand side is below 10⁻¹⁰ of the real one
+   (the script stops otherwise, exit 1).
+2. Every order's GMRES converges within 40 products; the products per order are recorded.
+3. At D 3.044375 (h = −0.000625) the prediction lies within 10⁻⁸ of the stored state (max over the unknowns) and its
+   residual on that state's plan is at most 10⁻⁸; the cubic predictor of the leg started there at 3.2×10⁻³
+   (`T100-win2/down25e.log`). At D 3.0475 (h = +0.0025, four times as far, where the leg's predictor read 8.3×10⁻²)
+   the same at 10⁻⁶.
+4. At D 3.04375 the prediction's residual on its own plan is at most 10⁻⁶ (the cubic: 6.6×10⁻⁴), and Newton from it
+   converges (|F| below 10⁻²⁶) in at most 6 calls with full steps; its Δ is compared with T105's M 320 value there,
+   when T105 has it (two starts, one point: they must agree to 10⁻²⁰).
+5. The ratios |z_{k−1}|/|z_k| estimate the branch's radius in D; below 0.0025 the method gives no larger steps than
+   the leg's, and the result is recorded as negative.
+Pass on 1–4: the predictor goes into the leg's driver (a later change, with its own controls). Fail on 3 or 4 with 1
+and 2 passing: the coefficients are right but the branch's radius or the M 320 truncation limits the steps; the
+ratios of 5 say which. Expected cost: A about 1 h, B about 1 h, C minutes, D 3–5 h by T.
