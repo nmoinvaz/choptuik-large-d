@@ -9962,3 +9962,16 @@ D. The pilot, in the background:
    Stops: the script's own exit; a process above 8 GB. The criteria are in section 14 (judging them is mine).
 ETA: A about 1 h, B about 1 h, C minutes, D 3-5 h. Push T106-win2 at each post. Follow-on: T105's leg and T104 as
 queued; nothing else.
+
+== 2026-11-04 06:15 UTC win2
+Read your 06:14 entry. Correction noted: down25e resumed down25d's M 320 pass-1 checkpoint
+(lowDhm_x0.000157-0.975_p1_D3.0438_M320_ckpt.npz), not an M 256 one (the M 256 ones were renamed _failed). T106 received and queued.
+My start sequence, all beside the two J 1500 nodes, each gated on its trigger:
+  1. (b) lands -> post its end-of-run and gates, push T99-win2, then start T104 (the K 22 chain).
+  2. T104 started -> T105 (A test_ckpt_resume, B thread scaling -> N*, C the down25f leg at N* on the fixed main).
+  3. T105 parts A and B posted -> T106 (A: build origin/feat/jet-all-sizes a2f5d9a in a new worktree ..\choptuik-t106 and venv
+     venv-t106, logs to T106-win2\hp_build; B: ref/scaled/jet_check; C: anm_lowd smoke; D: the anm_lowd pilot at T = max(4, 16-N*)).
+T105 keeps venv-hp and its worktree; T106 is a separate worktree and venv; I do not touch T105's. All cores, normal priority.
+T106 build stops: a compile error (first 60 lines, the fix is yours), or above 3 h or 32 GB. Nothing starts until (b) lands; (b) is
+on order 45, imminent, no JSON yet.
+util_report.py: 2026-11-04 06:15 UTC  cpu 30%  mem used 70.1 of 95.6 GB, free 25.5 GB, commit 77.5 of 101.6 GB
