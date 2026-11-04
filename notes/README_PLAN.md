@@ -260,7 +260,7 @@ computations. Deviations from the plan: the headline bullets stay verbatim under
 phrases), the order-by-order record keeps the twenty-first order's sentences after its table (six checks pin them), and
 the four model paragraphs of "Other matter" sit under a details block rather than condensed, pending a check of their
 numbers in matter/*.md. Still open from part G: the clean-room run of every command the README quotes
-(notes/REPRODUCTION.md's protocol, a runner task), the long lines the moved notes inherited (a re-wrap must not touch
-pinned phrases), and three pre-existing broken links inside quoted "proposed README text" blocks of
-notes/SUPERCRITICAL.md and notes/PLANTED_SELECTION.md, which belong to a cleanup of those blocks.
+(notes/REPRODUCTION.md's protocol, a runner task). Done on 2026-11-04: the long lines of the notes and the root
+documents (`wrap_prose.py`, pin-aware; 367 paragraphs, the checks and links intact) and the broken links (the quoted
+reports' root-relative self-links, and the audits' links to the removed combined paper, now at its last commit).
 
