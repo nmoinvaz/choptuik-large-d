@@ -11375,3 +11375,12 @@ Started at 16:29 UTC (detached, below normal, 4 threads): the four highm_check.p
 Watcher restarted 16:27 UTC. Awake: the whole time since 13:31 (13.67 h of 13.67 h since the 02:48 baseline). Battery: 100%, on AC.
 util_report.py: 2026-11-05 16:28 UTC  cpu 38%  mem used 13.4 of 31.8 GB, free 18.4 GB, commit 15.0 of 41.8 GB
   pid 28592    0.06 GB  cpu       49 s  highm_check.py ref (venv-t112)
+
+== 2026-11-05 16:33 UTC win2
+T107 N 3: a plan-build past 30 min, as you asked me to flag. Both legs are still on the base (leg.jsonl has only the "start"
+record, the printed logs are empty). leg_M384b is at ~12 cores -- past its base s.plan(), now in the base residual / newton_mixed.
+leg_M320c is at ~1 core, ~1 h 12 min, still in its base s.plan(). The base is the clean pilot state (D 3.04375 M 320, |F| 7.7e-29,
+pivots 4.3e-05), so the plan-build should finish -- it is the single-threaded M 320 plan rebuilt from scratch (the driver does
+s.plan() on the base regardless of the saved plan), not a polluted predicted state. Odd that M 320's base plan-build runs longer
+than M 384's, so I am watching it; if leg_M320c is still in the base past ~2 h I investigate and post. Once each base lands I post
+its z_1..z_3 orders and radii, then F_pred / F_const at 3.0425. util_report.py: 2026-11-05 16:33 UTC  cpu 19%  mem used 33.5 of 95.6 GB, free 62.1 GB, commit 38.3 of 101.6 GB
