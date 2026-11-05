@@ -516,7 +516,10 @@ def main():
                     elim["rs"] = rs_n if opt["reseed"] == 2 else None
                     rsd = dict(ok=rsd["ok"], dropped=rsd["dropped"], seconds=rsd["seconds"],
                                rungs=[dict(u=r["u"], its=r.get("its"), R=r.get("R"), conv=r.get("conv")) for r in rsd["rungs"]])
-                    print(f"    a {a:.4f}: re-seeded ({'ok' if rsd['ok'] else 'FAILED, prediction kept'}), {rsd['seconds']} s", flush=True)
+                    bad = [r for r in rsd["rungs"] if not r.get("conv")]
+                    print(f"    a {a:.4f}: re-seeded ({'ok' if rsd['ok'] else 'FAILED, prediction kept'}), {rsd['seconds']} s"
+                          + (f"; rung u {bad[0]['u']:.4f} not converged at |R| {bad[0].get('R', float('nan')):.2e} after {bad[0].get('its')} steps" if bad else "")
+                          + (f"; rungs dropped {rsd['dropped']}" if rsd["dropped"] else ""), flush=True)
                     ph, pl = np.asarray(zr[0]), np.asarray(zr[1])
                 sn = mk(Dn)
                 segs_n = segs

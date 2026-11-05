@@ -186,6 +186,15 @@ are those of 3.3. P runs before the 94.1184 basins, the pilot after its elim arm
 independent check of the h = 10 jump, from another base and series. The pass criterion for that check is that the two Δ
 agree to 10⁻²⁰.
 
+*Amendment 9 of 2026-11-05 07:10 UTC.* The pilot's second step, from 101.1184 at a = 5, had its re-seed fail ("prediction
+kept"). The corrector then crept for 12 steps, and the pilot was stopped. The unit check at the pilot's 101.1184 state
+passes (`unit_D101.1184.log`), so the code works at that D. The suspected cause is the rung's convergence test. Its floor
+rule needs a step below 10⁻²⁴, but at the double-double floor ε_dd·G the steps of the m_h directions of gain about 1 stay
+near that floor itself, about 10⁻¹⁶ at D 106. So the test also accepts a residual below 10⁻²⁹ (1 − u)^−(n−1), a thousand
+times the rung series' floor, once it stops halving or no trial lowers it. This is unverified until the rerun:
+`anm_run.py` now names the failing rung, and the pilot's step from 101.1184 runs again. The unit check and its `skip`
+control rerun at 84.9073 with the change.
+
 **3.4 Jump test** (only if 3.3 passes; `hp/reseed_check.py jump`). From the latest qdj1 state, the chain's quad-double
 series (anm_run.py's `coefficients_q`, N 24, the held harmonics on the T75 trend) is summed at h = 2, 5 and 10. Each
 prediction is re-seeded and corrected at D + h, with the held harmonics at the trend's values there. The plain arm runs

@@ -160,7 +160,10 @@ class Reseeder:
         """Newton on the 2M horizon data (dh, dl: m_h then a_h) so that the horizon series at u matches the target
         (th, tl) in the rung rows; damped by halving when the max norm of those rows does not fall (a trial whose
         series is not finite is rejected). Returns the data, the history and whether it converged (step below 1e-30
-        times the data's scale, or the residual at its floor: no decrease by 2 after a step below 1e-24)."""
+        times the data's scale, or the residual at its floor: no decrease by 2 after a step below 1e-24, or no decrease
+        by 2, or no trial accepted, with the residual below floor_tol = 1e-29 (1 - u)^-(n-1), a thousand times the
+        double-double floor eps_dd G_u of the rung's series; the steps of the m_h directions of gain about 1 stay near
+        that floor, above 1e-24 past D 100, notes/RESEED.md amendment 9)."""
         M, a = self.M, self.aoff
         s = self.rung_solver(u)
         rows = self.rung_rows()
@@ -188,6 +191,7 @@ class Reseeder:
             return dh, dl, [dict(it=0, R=nR)], False
         conv = False
         small_prev = None
+        floor_tol = 1e-29 * (1.0 - u) ** -(float(self.D) - 3.0)
         for it in range(self.it_max):
             Jh, Jl = (np.asarray(v) for v in s.jacobian(*put(dh, dl)))
             Ah = np.ascontiguousarray(Jh[np.ix_(rows, cols)]); Al = np.ascontiguousarray(Jl[np.ix_(rows, cols)])
@@ -213,6 +217,7 @@ class Reseeder:
                 lam *= 0.5
             hist.append(dict(it=it, R=nR, step=nd, lam=lam if ok else 0.0, R_new=nT if ok else None))
             if not ok:
+                conv = nR <= floor_tol          # no trial lowers a residual already at the floor
                 break
             dh, dl, Rh, Rl = np.asarray(th_), np.asarray(tl_), Th, Tl
             if nd * lam < 1e-30 * max(1.0, float(np.max(np.abs(dh)))):
@@ -225,6 +230,10 @@ class Reseeder:
                     conv = True              # the floor: the residual no longer falls
                     break
                 small_prev = nT
+            if nT <= floor_tol and nT > 0.5 * nR:
+                nR = nT
+                conv = True                  # at the floor and no longer halving
+                break
             nR = nT
         hist.append(dict(it=len(hist), R=nR))
         return dh, dl, hist, conv
