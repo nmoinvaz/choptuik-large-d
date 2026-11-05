@@ -15,7 +15,7 @@
 //! ```
 use crate::dd::DD;
 use crate::field::{Fl, State};
-use crate::lane::{BaseLane, Qu};
+use crate::lane::{BaseLane, QJet, Qu};
 use crate::linalg::{ld_for, DDLu, QDLu};
 use crate::model::{block_state, delta_of, horizon_lus, jac_tasks, Ctx};
 use crate::qd::{QdAcc, QD};
@@ -108,6 +108,65 @@ pub fn residual_parts<const B: usize>(ctx: &Ctx<B>, z: [&[f64]; 4], par: bool) -
 pub fn residual_q<const B: usize>(ctx: &Ctx<B>, z: [&[f64]; 4], par: bool) -> Result<(Vec<f64>, Vec<f64>), String> {
     let f = residual_parts(ctx, z, par)?;
     Ok(f.iter().map(|v| v.to_dd()).map(|d| (d.hi, d.lo)).unzip())
+}
+
+/// The residual on a jet state z(h) = sum_k z_k h^k in quad-double (`QJet<N>` lanes), with the dimension n + h as
+/// the jet variable: model::residual_jet with every block, the freeze projection and the phase row in quad-double
+/// and each z_k in four parts. zs holds at most N coefficient vectors; the result is F's coefficients of orders
+/// 0..nout-1 (nout <= N), one QD per row. The horizon LUs are those of z_0's double-double part, the preconditioners
+/// of the refined solves (model::psolve). The D-dependent constants are formed in the jet's parameter arithmetic
+/// (`QSeries<N>`, quad-double), where residual_parts forms them in double-double, so order 0 is residual_parts'
+/// residual up to that rounding.
+pub fn residual_jet_q<const N: usize, const B: usize>(ctx: &Ctx<B>, zs: &[[&[f64]; 4]], par: bool, nout: usize) -> Result<Vec<Vec<QD>>, String> {
+    if zs.is_empty() || zs.len() > N || nout == 0 || nout > N {
+        return Err(format!("residual_jet_q: 1..={N} coefficient vectors and 1..={N} outputs, not {} and {nout}", zs.len()));
+    }
+    for z in zs {
+        check(ctx, *z)?;
+    }
+    let l = ctx.len();
+    let m = Ctx::<B>::M;
+    let lus = lus_of(ctx, zs[0], par)?;
+    // the coefficient-k field at offset o: z_k's, zero past the given vectors
+    let fld_k = |k: usize, o: usize| -> Fl<QV, B> { if k < zs.len() { fld_q(ctx, zs[k], o) } else { Fl::zero() } };
+    let fld_jet = |o: usize| -> Fl<QJet<N>, B> {
+        let mut f = Fl::<QJet<N>, B>::zero();
+        for k in 0..zs.len() {
+            f.set_coef_qd(k, &fld_k(k, o));
+        }
+        f
+    };
+    let mut dj = <QJet<N> as BaseLane>::zero();
+    for (k, z) in zs.iter().enumerate() {
+        dj.set_coef_qd(k, QV::splat(delta_q(ctx, *z)));
+    }
+    let one_block = |b: usize| -> State<QJet<N>, B> {
+        let inp: Vec<Fl<QJet<N>, B>> = ctx.block_inputs(b).iter().map(|&o| fld_jet(o)).collect();
+        block_state::<QJet<N>, B>(ctx, b, &inp, dj, &lus, &lus)
+    };
+    let nb = ctx.k() + 1;
+    let states: Vec<State<QJet<N>, B>> = if par { (0..nb).into_par_iter().map(one_block).collect() } else { (0..nb).map(one_block).collect() };
+    let mut out = vec![vec![QD::ZERO; l]; nout];
+    let kb = ctx.k();
+    for (b, s) in states.iter().enumerate() {
+        let t = ctx.block_target(b);
+        for q in 0..4 {
+            for (k, o_k) in out.iter_mut().enumerate() {
+                let mut d = s[q].coef_qd(k) - fld_k(k, t + q * m);
+                if let (true, 0, Some((lo, hi))) = (b == kb, q, &ctx.freeze) {
+                    d = lo.apply(&d) + hi.apply(&fld_k(k, 0));
+                }
+                let o = b * 4 * m + q * m;
+                for i in 0..m {
+                    o_k[o + i] = d.get(i);
+                }
+            }
+        }
+    }
+    for (k, o_k) in out.iter_mut().enumerate() {
+        o_k[l - 1] = phase_q(ctx, &fld_k(k, 0));
+    }
+    Ok(out)
 }
 
 /// One column task (model::jac_tasks): block b's output state differentiated along a unit tangent on lane j of input
@@ -234,7 +293,7 @@ pub fn newton_q<const B: usize>(ctx: &Ctx<B>, z: [&[f64]; 4], par: bool) -> Resu
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::model::{jacobian, residual, QD_MUT_NOREFINE, QD_MUT_REFINE4};
+    use crate::model::{jacobian, residual, residual_jet, JET_MUT_FREEZE_N, QD_MUT_NOREFINE, QD_MUT_REFINE4};
     use crate::qv::axpy_parts;
     use crate::qd_residual::synth;
 
@@ -399,5 +458,118 @@ mod tests {
         println!("change of 2^-180: response error {resp:.1e} of J d, Newton leaves {undo:.1e} of it; state read in double-double: {resp_c:.1e}, {undo_c:.1e}");
         assert!(resp < 1e-6 && undo < 2f64.powi(-20), "response {resp:e}, left {undo:e}");
         assert!(resp_c > 0.5 && undo_c > 0.5, "control: the double-double state saw the change ({resp_c:e}, {undo_c:e})");
+    }
+
+    /// the direction of `shifted` (j = usize::MAX) times s, in four parts
+    fn direction(l: usize, s: f64) -> [Vec<f64>; 4] {
+        shifted(&std::array::from_fn(|_| vec![0.0; l]), usize::MAX, s)
+    }
+
+    /// F(h) = sum_k F_k h^k of the quad-double jet (N = 24) on the state jet z_0 + h v, v = direction(1), against
+    /// residual_parts at (z_0 + h v, n + h) for h = 2^-6, 2^-7, 2^-8 (n + h exact in f64): max |difference| /
+    /// max(1, |F|). The difference is the truncation, which falls as h^24 while it exceeds the rounding, and
+    /// residual_parts' D-dependent constants rounded to double-double.
+    fn jet_q_vs_residual(mutate: u8) -> [f64; 3] {
+        let (mut ctx, zh, zl) = synth();
+        let l = ctx.len();
+        let n0 = ctx.n.hi;
+        let z0 = parts(&zh, &zl);
+        let v = direction(l, 1.0);
+        ctx.mutate = mutate;
+        let fj = residual_jet_q::<24, 1>(&ctx, &[view(&z0), view(&v)], false, 24).unwrap();
+        ctx.mutate = 0;
+        let mut worst = [0.0f64; 3];
+        for (w, e) in [-6, -7, -8].into_iter().enumerate() {
+            let h = 2f64.powi(e);
+            ctx.n = DD::from_f64(n0 + h);
+            let f = residual_parts(&ctx, view(&shifted(&z0, usize::MAX, h)), false).unwrap();
+            let fs = f.iter().map(|v| v.to_f64().abs()).fold(1.0, f64::max);
+            for i in 0..l {
+                let p = (0..24).rev().fold(QD::ZERO, |a, k| a.mul_pwr2(h) + fj[k][i]);
+                worst[w] = worst[w].max((p - f[i]).to_f64().abs() / fs);
+            }
+        }
+        worst
+    }
+
+    #[test]
+    fn qsolve_jet_sums_to_the_residual() {
+        let [e6, e7, e8] = jet_q_vs_residual(0);
+        let [c6, c7, c8] = jet_q_vs_residual(JET_MUT_FREEZE_N);
+        println!("quad-double jet summed vs the quad-double residual at n + h: h = 2^-6 {e6:.1e}, 2^-7 {e7:.1e}, 2^-8 {e8:.1e}; dimension frozen: {c6:.1e}, {c7:.1e}, {c8:.1e}");
+        // the truncation's order: orders 0..23 right leave the order-24 term, a factor 2^24 per halving of h
+        let p = (e6 / e7).log2();
+        assert!((23.0..25.0).contains(&p), "truncation order {p:.2}, not 24");
+        let (e, ec) = (e7.max(e8), c7.min(c8));
+        assert!(e < 1e-28, "{e:e}");
+        assert!(ec > 1e3 * e, "control: the frozen dimension not seen ({ec:e} vs {e:e})");
+    }
+
+    /// the quad-double jet's coefficients against the double-double jet's (model::residual_jet) on the same state jet
+    /// z_0 + h v: max over orders k < 24 of max_i |difference| / max(1, max_i |F_k|)
+    #[test]
+    fn qsolve_jet_agrees_with_double_double_jet() {
+        let (ctx, zh, zl) = synth();
+        let l = ctx.len();
+        let z0 = parts(&zh, &zl);
+        let v = direction(l, 1.0);
+        let fq = residual_jet_q::<24, 1>(&ctx, &[view(&z0), view(&v)], false, 24).unwrap();
+        let fd = residual_jet::<24, 1>(&ctx, &[(&zh, &zl), (&v[0], &v[1])], false, 24).unwrap();
+        let mut worst = 0.0f64;
+        for k in 0..24 {
+            let fs = fq[k].iter().map(|v| v.to_f64().abs()).fold(1.0, f64::max);
+            for i in 0..l {
+                worst = worst.max((fq[k][i] - QD::from_dd(DD::new(fd[k].0[i], fd[k].1[i]))).to_f64().abs() / fs);
+            }
+        }
+        println!("quad-double jet vs double-double jet, 24 orders: {worst:.1e} (relative to max(1, |F_k|))");
+        assert!(worst < 1e-28, "{worst:e}");
+    }
+
+    /// F_1 = J v + dF/dn is linear in v: a change of v by 2^-180 w (w_i = ((i mod 5) - 2) / 2, Delta excluded),
+    /// below double-double resolution, must change F_1 by J(z_0) 2^-180 w (jacobian_q): the error of the response
+    /// relative to its size. v_i = ((i mod 7) - 3) / 3 in quad-double (all four parts), so that the change lands in
+    /// its last parts. Controls: v read in its double-double part (QD_MUT_STATE_DD) sees no change at all; with the
+    /// order-1 solves unrefined (QD_MUT_NOREFINE) the rows that pass through a horizon solve lose it.
+    fn jet_sub_dd_response(mutate: u8) -> f64 {
+        let (mut ctx, zh, zl) = synth();
+        let l = ctx.len();
+        let z0 = parts(&zh, &zl);
+        let mut v: [Vec<f64>; 4] = std::array::from_fn(|_| vec![0.0; l]);
+        for i in 0..l - 1 {
+            let x = QD::from_f64((i % 7) as f64 - 3.0) / QD::from_f64(3.0);
+            for q in 0..4 {
+                v[q][i] = x.x[q];
+            }
+        }
+        let s = 2f64.powi(-180);
+        let mut d: [Vec<f64>; 4] = std::array::from_fn(|_| vec![0.0; l]);
+        for i in 0..l - 1 {
+            d[0][i] = s * ((i % 5) as f64 - 2.0) / 2.0;
+        }
+        let vp = axpy_parts(1.0, view(&d), view(&v));
+        ctx.mutate = mutate;
+        let f0 = residual_jet_q::<8, 1>(&ctx, &[view(&z0), view(&v)], false, 2).unwrap();
+        let f1 = residual_jet_q::<8, 1>(&ctx, &[view(&z0), view(&vp)], false, 2).unwrap();
+        ctx.mutate = 0;
+        let (c, ld) = jacobian_q(&ctx, view(&z0), false).unwrap();
+        let (mut worst, mut big) = (0.0f64, 0.0f64);
+        for i in 0..l {
+            let jv = (0..l).fold(QdAcc::zero(), |a, j| a.add_prod(qd_at(&c, j * ld + i), QD::from_f64(d[0][j]))).finish();
+            big = big.max(jv.to_f64().abs());
+            worst = worst.max((f1[1][i] - f0[1][i] - jv).to_f64().abs());
+        }
+        worst / big
+    }
+
+    #[test]
+    fn qsolve_jet_resolves_sub_double_double_changes() {
+        let r = jet_sub_dd_response(0);
+        let rd = jet_sub_dd_response(QD_MUT_STATE_DD);
+        let rn = jet_sub_dd_response(QD_MUT_NOREFINE);
+        println!("jet order 1, change of 2^-180 in v: response error {r:.1e} of J d; v read in double-double: {rd:.1e}; unrefined: {rn:.1e}");
+        assert!(r < 1e-6, "{r:e}");
+        assert!(rd > 0.5, "control: the double-double v saw the change ({rd:e})");
+        assert!(rn > 1e3 * r, "control: the unrefined solves kept the change ({rn:e} vs {r:e})");
     }
 }

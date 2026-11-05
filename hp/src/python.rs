@@ -65,6 +65,9 @@ trait Api: Send + Sync {
     /// model::residual_jet: the residual's coefficients 0..nout-1 on the jet state zs with the dimension n + h as the
     /// jet variable; the jet lanes are instantiated for M = 32, 48 and 64 and N = 8, 16, 32 coefficients only
     fn residual_jet(&mut self, zs: &[(&[f64], &[f64])], nout: usize, mutate: u8) -> Result<Vec<(Vec<f64>, Vec<f64>)>, String>;
+    /// qsolve::residual_jet_q: residual_jet in quad-double, each z_k and each output coefficient in four parts; the
+    /// quad-double jet lanes are instantiated for M = 32 and 48 and N = 8, 24, 32 coefficients only
+    fn residual_jet_q(&mut self, zs: &[[&[f64]; 4]], nout: usize, mutate: u8) -> Result<Vec<Q4>, String>;
 }
 
 /// a quad-double vector as its four parts' arrays
@@ -263,6 +266,16 @@ impl<const B: usize> Api for Ctx<B> {
         let r = self.residual_jet_sized(zs, nout);
         self.mutate = 0;
         r
+    }
+    fn residual_jet_q(&mut self, zs: &[[&[f64]; 4]], nout: usize, mutate: u8) -> Result<Vec<Q4>, String> {
+        let parts = |f: Vec<Vec<QD>>| -> Vec<Q4> { f.iter().map(|v| std::array::from_fn(|q| v.iter().map(|x| x.x[q]).collect())).collect() };
+        qd_sizes!(self, mutate, |c| match nout {
+            0 => Err("nout must be at least 1".to_string()),
+            1..=8 => qsolve::residual_jet_q::<8, _>(c, zs, true, nout).map(parts),
+            9..=24 => qsolve::residual_jet_q::<24, _>(c, zs, true, nout).map(parts),
+            25..=32 => qsolve::residual_jet_q::<32, _>(c, zs, true, nout).map(parts),
+            _ => Err(format!("nout must be at most 32, not {nout}")),
+        })
     }
 }
 
@@ -780,6 +793,32 @@ impl Solver {
             out.push(arr(py, fl));
         }
         Ok(out)
+    }
+
+    /// residual_jet in quad-double (qsolve::residual_jet_q): zs a list of the coefficient vectors z_k, each a tuple of
+    /// its four parts (z_k = sum of the parts), the first the state itself; the coefficients of orders 0..nout-1 of F,
+    /// a list of nout tuples of four arrays. M = 32 and 48 only; nout <= 32. mutate: as residual_jet's, and
+    /// model::QD_MUT_NOREFINE, QD_MUT_REFINE4, qsolve::QD_MUT_STATE_DD as residual_q's.
+    #[pyo3(signature = (zs, nout, mutate=0))]
+    #[allow(clippy::type_complexity)]
+    fn residual_jet_q<'py>(
+        &mut self,
+        py: Python<'py>,
+        zs: Vec<(PyReadonlyArray1<'py, f64>, PyReadonlyArray1<'py, f64>, PyReadonlyArray1<'py, f64>, PyReadonlyArray1<'py, f64>)>,
+        nout: usize,
+        mutate: u8,
+    ) -> PyResult<Vec<(A1<'py>, A1<'py>, A1<'py>, A1<'py>)>> {
+        if zs.is_empty() {
+            return Err(PyValueError::new_err("zs must be a non-empty list of four-part tuples"));
+        }
+        let l = self.api.len();
+        let mut zq: Vec<[&[f64]; 4]> = Vec::with_capacity(zs.len());
+        for (a, b, c, d) in zs.iter() {
+            zq.push(parts4([a, b, c, d], l)?);
+        }
+        let (api, pool) = (&mut self.api, &self.pool);
+        let out = py.detach(|| pool.install(|| api.residual_jet_q(&zq, nout, mutate))).map_err(PyValueError::new_err)?;
+        Ok(out.into_iter().map(|f| arr4(py, f)).collect())
     }
 
     /// The residual with every block in quad-double (qsolve::residual_parts) at the state z0 + z1 + z2 + z3: F in four

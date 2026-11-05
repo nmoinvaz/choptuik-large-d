@@ -17,6 +17,7 @@ use crate::dd::DD;
 use crate::dv::DV;
 use crate::field::{cs, cs_range, cs_w, horner, DMat, Fl, State, TangentTail};
 use crate::lane::{BaseLane, Dtn, Du, F8, Fu, Fun, Jet, Lane};
+use crate::qv::QV;
 use multidouble::dual::Param;
 use crate::field::FieldSolve;
 use crate::linalg::{ld_for, DDLu};
@@ -487,6 +488,30 @@ pub fn horizon_lus<const B: usize>(ctx: &Ctx<B>, a0: &Fl<DV, B>, delta: DD, par:
 /// (omega D + diag kappa) f = r with the LU at the values; for tangents the derivative of the system:
 /// A_t f_d = r_d - omega_d D f_v - kappa_d f_v, with A_t = A + lam (lu_t; the same LU when lam = 0).
 fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, lu: &DDLu, lu_t: &DDLu, kappa: &Fl<T, B>, rhs: &Fl<T, B>, omega: T) -> Fl<T, B> {
+    if T::NJ > 0 && T::VAL_QD {
+        // a quad-double jet: order by order as below, the right-hand side of order k in quad-double and each order's
+        // solve refined to quad-double with the lane's omega_0 and kappa_0 (as the branch after this one)
+        debug_assert!(ctx.lam.hi == 0.0);
+        let steps = match ctx.mutate {
+            QD_MUT_NOREFINE => 0,
+            QD_MUT_REFINE4 => 4,
+            _ => QD_REFINE,
+        };
+        let om: Vec<QV> = (0..T::NJ).map(|j| omega.coef_qd(j)).collect();
+        let k0 = kappa.coef_qd(0);
+        let mut f = Fl::<T, B>::zero();
+        let mut fs: Vec<Fl<QV, B>> = Vec::with_capacity(T::NJ);
+        for k in 0..T::NJ {
+            let mut r = rhs.coef_qd(k);
+            for j in 1..=k {
+                r = (r - ctx.d.apply(&fs[k - j]).mul_t(om[j])) - kappa.coef_qd(j) * fs[k - j];
+            }
+            let fk = lu.solve_lanes_refine(&r, steps, |x| r - (ctx.d.apply(x).mul_t(om[0]) + k0 * *x));
+            f.set_coef_qd(k, &fk);
+            fs.push(fk);
+        }
+        return f;
+    }
     if T::VAL_QD {
         // the LU was factored at the double-double a_h and Delta; the refinement solves the lane's own system (omega
         // and kappa from the quad-double a_h and Delta), its residual formed in the lane's precision (iterative
