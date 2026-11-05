@@ -406,7 +406,14 @@ reseed-mac/basin/*.jsonl`). The "back" and "converged" measures are those of ame
   direction (amendment 2).
 - Every re-seeded or eliminated run that converged landed within 2×10⁻³⁰ of the truth (3×10⁻²⁵ at 10⁻¹⁴).
 - The criterion of 3.3, a re-seeded basin at least 100 times the plain one in family B, passes at this base by 10¹⁴ for
-  the single re-seed and 10¹⁵ for elim, with seed 1 for those two arms (seeds 2 and 3 pending).
+  the single re-seed and 10¹⁵ for elim. The single re-seed and elim have seed 1 only. Seeds 2 and 3 were not run
+  (amendments 3 and 10).
+- At 94.1184 (family B, seed 1; `D94.1184_B.jsonl`) the plain arm converges to 10⁻²⁷ and fails at 10⁻²⁶, as at 84.9.
+  Its starts reach max |F| 2.6×10⁻¹³ there. It is back by the criterion only from 10⁻²⁸, since at 10⁻³⁰ and 10⁻²⁹ it
+  lands 1.3×10⁻²³ and 1.3×10⁻²¹ away. The re-seeded and elim arms are back at 10⁻¹⁸ and 10⁻¹⁷ (to 2×10⁻³⁰), and both
+  were stopped at 10⁻¹⁶. There elim's re-seed failed the first design's floor test at the floor (amendment 10), so the
+  arms measured the test, not the basin. So at 94.1 the re-seeded basin is at least 10⁻¹⁷ against plain's 10⁻²⁷, and
+  the criterion passes there as a lower bound.
 - The controls of 3.3 fire (`D84.9073_B_C1.log`, `_C2_*.log`, `D84.9073_B_controls.jsonl`). C1, the plain arm at the
   re-seeded edge 10⁻¹³, does not converge: no trial of its first step is accepted. C2, the re-seed without its rungs
   (`skip`), fails its own u₀ inversion from data 10⁻¹³ off, and the corrector then fails as the plain one does. That
