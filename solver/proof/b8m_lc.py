@@ -280,7 +280,9 @@ def evaluate(geo, k, kc, h, Dinp=None, verbose=False, want_der=False):
                 raise ValueError(f"c lower bound on {r}")
             c.lo.t[r][kk] = (aa, v)
         beta = bK + Rb
-        c.d = (c * beta).v if beta.v is not None else None
+        # |x c'| for a member of the class K_h: the class bound |x c^K'| + |x R_c'| (P2 finding F3; |c||beta| would be
+        # the c-equation, which only solutions satisfy). Pass 1 has no derivative bound of R_c and uses values only.
+        c.d = cK.d + Rc.d if Rc.d is not None else None
         c.d2 = None
         iC = E.qinv(Q(c.v, c.d, None, c.lo))
         S, V, Y = SK + RS, VK + RV, YK + RV + RS
@@ -298,7 +300,7 @@ def evaluate(geo, k, kc, h, Dinp=None, verbose=False, want_der=False):
             if not v > 0:
                 raise ValueError(f"D lower bound on {r}")
             D.lo.t[r][kk] = (aa, v)
-        D.d = (x2 * two).v + (c * c * beta * two).v
+        D.d = (x2 * two).v + c.v * c.d * arb(2) if c.d is not None else None   # |x D'| <= 2|x|^2 + 2|c||x c'| (F3)
         iD = E.qinv(D)
         RcbK = Rc * bK
 

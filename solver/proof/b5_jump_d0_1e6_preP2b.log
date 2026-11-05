@@ -1,0 +1,16 @@
+B5(1) certificate: kappa = 0.3, Z = 0.0085, ln n0 = 73.8883; matching radius Z cos(kappa) = 0.008120 >= u* = 0.0081: True
+(H8) data certified by B8: delta = (P 8.23e-05, Phi 82.1764, C 3.23126, vt 6.46316) <= delta_ref {'P': 1.0, 'F': 200.0, 'C': 10.0, 'v': 20.0}: True
+superposition check (delta_ref vs the directly certified x): worst relative difference 3.13e-03 (< 0.02): PASS
+B5(1) bound for these data: x_Phi = (39858.7, 38848.4) (mu = -1, +1)
+lemma L at u*: eps_L = 0.35269, ||V^-1||_inf = 1.48096, min Re lambda = 1.731238
+B5(2): V^-1 L(Psi_out) = (I + R~) V^-1 k + E~, ||R~|| <= 0.35269, |E~| <= C_E/n with C_E = 2.536602e+33 = e^76.9161
+   e^(1/(2u*)) = e^61.7284; u*^(1 - mu_lo) = 33.837
+   derivatives (Cauchy, real p within 1e-6 of x^): |d E~| <= C_E/(n 1e-6) = e^90.7316/n, ||d R~|| <= 3.527e+05
+   ln n =  73.89: |E~| <= 2.062e+01
+   ln n =  80.00: |E~| <= 4.578e-02
+   ln n =  85.00: |E~| <= 3.085e-04
+   ln n =  90.00: |E~| <= 2.078e-06
+   ln n =  95.00: |E~| <= 1.400e-08
+   ln n = 100.00: |E~| <= 9.436e-11
+   ln n = 105.00: |E~| <= 6.358e-13
+all checks: PASS

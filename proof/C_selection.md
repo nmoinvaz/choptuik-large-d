@@ -953,11 +953,11 @@ This section is the canonical statement of layer B's status; PROOF.md and the RE
 ### 13.1 Theorem B(1): the status of the chain
 
 **Theorem B(1), the selection theorem for the one-harmonic model, is certified, assuming Braaksma's theorem**
-([B_chain.md](B_chain.md) §15). For every n ≥ n₀ = e^{89.75} (D = n + 2), exactly one parameter p_n = (A_n, ω_n/ω∞)
-in Theorem A's box X = x̂ ± 10⁻⁹ gives a light-cone-gauge, centre-regular solution that is analytic at the light cone,
-and |p_n − p*|_∞ ≤ e^{67.84}/n. The light-cone-gauge solution is the unique one in the class of Lemma LC, a
-neighbourhood of the formal series. None of the certificate code of B5, B8, lemma L, lemma P, B7, Lemma LC or Lemma J
-has had an independent review.
+([B_chain.md](B_chain.md) §15). For every n ≥ n₀ = e^{89.75} (D = n + 2), there is exactly one parameter
+p_n = (A_n, ω_n/ω∞) in Theorem A's box X = x̂ ± 10⁻⁹ for which the light-cone-gauge solution of Lemma LC (the unique
+centre-regular solution with c(1) = 1 whose remainder lies in 𝒦_h, a neighbourhood of the formal series) is analytic
+at the light cone, and |p_n − p*|_∞ ≤ e^{67.84}/n. None of the certificate code of B5, B8, lemma L, lemma P, B7,
+Lemma LC or Lemma J has had an independent review.
 
 The model throughout is that of Section 1 with M = 1: p, m on the harmonics ±1, b and c on {0, ±2}. Theorem A(M = 1),
 B5(1) and B8 all use it. The parameters are (A, ω/ω∞) in the complex box 𝒦 of B5_inner.md §5.1, which contains a

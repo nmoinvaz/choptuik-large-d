@@ -1,0 +1,16 @@
+certificate's G1 pieces at its constants, sup over the region of |piece|/w:
+  N0: T1 4.9263e-26, T3 1.1195e-25, T2 7.7886e-26, rho2 1318.3; |rho2| alone 1318.3 (x n^-1)
+  Na: T1 3.5349e-24, T3 1.0648e-22, T2 5.5807e-24, rho2 50996; |rho2| alone 50996 (x n^-1)
+  Nb: T1 3.9873e-22, T3 1.0248e-23, T2 6.2832e-22, rho2 1.6804e+05; |rho2| alone 1.6804e+05 (x n^-1)
+  F: T1 1.8543e+06, T3 1498, T2 3.3622e+06, rho2 2.6526e+05; |rho2| alone 2.3656e+05 (x n^-1)
+certificate's g^ terms on N0: sup |term|/((n-1) w) and sup |x term'|/((n-1) w):
+    t1: 9.2608e-65, 2.1963e-32
+    t2: 4.6304e-65, 1.0982e-32
+    t3: 7.9922e-26, 1.5985e-25
+    t4: 6.449e-63, 1.0685e-30
+    rho3: 20.122, 54.196
+certificate's Lemma J beta-row: sup over each band of (ell_g,j s_j)/rho and /(n rho^2) (None: unbounded)
+  S: L (2.605, 0.6679); Na (3.661, 3.32); Nb (9.223, 1.476); F (None, 0.7826)
+  V: L (5.342, 1.303); Na (11.44, 1.83); Nb (2034, 4.612); F (None, 6.038)
+  b: L (2.334e-62, 5.693e-63); Na (3.872e-60, 6.196e-61); Nb (2.271e-57, 5.151e-60); F (0.006966, 1.58e-05)
+  c: L (27.16, 6.623); Na (58.16, 9.306); Nb (1.034e+04, 23.45); F (None, 34.33)
