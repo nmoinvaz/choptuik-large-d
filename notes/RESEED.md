@@ -200,7 +200,9 @@ failure, before its cause was shown, which AGENTS.md does not allow. The failing
 (the pilot printed only "FAILED" and was stopped in its corrector), so the numbers of the failure are not known. The
 pilot stays stopped at 101.1184 and is not rerun on the amended test. Until the evidence is in, no result depends on
 the relative rule. Every result in 4.1–4.4 above came from the first design ('abs'), except the reruns at 84.9073 of the
-unit check (`unit_D84.9073_v2.log`: pass) and of `skip` (fires). The evidence, in `reseed-mac/amend9/` and
+unit check (`unit_D84.9073_v2.log`: pass) and of `skip` (fires). One run is uncertain. Family P's elim arm
+(`D96.1184_P_elim.log`) started at 07:10:13 UTC, between the edit and its commit (07:10:46), so which rule it loaded is
+not known. Family A's re-seeded arm started at 07:08:07, before the edit, so it used 'abs'. The evidence, in `reseed-mac/amend9/` and
 `amend9.jsonl`, runs in this order:
 - (1) The failing prediction reproduced. The pilot's step is 101.1184 → 106.1184 at a = 5, from the series of 101.1184,
   computed as the jump test computes it and cached. Each rung's Newton history (residual and step per iteration) is
