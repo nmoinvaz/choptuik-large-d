@@ -161,6 +161,13 @@ deflated phase hands over to plain Newton). A converged elim run is no longer pr
 going keeps the old version for its elim arms, so its elim records are of the stalling design. The elim basin runs
 start after this change.
 
+*Amendment 5 of 2026-11-05 05:17 UTC.* The machine is shared with other jobs (load average 70–110), so runs take two to
+three times longer than planned. The jump from 96.1184 is replaced by two runs. One is h = 10 from 91.1184, re-seeded
+arm only, on the cached series (no chain state there, so formula only). The other is a pilot of `anm_run.py --reseed 1`
+from 96.1184 with the chain's options, `--h_max 2.5` and 2 steps (raw folder `reseed-mac/anm_reseed_pilot/`), since the
+jump to 93.1184 showed that h = 2 converges with the re-seed. Its pass criterion is that both steps converge to
+`--tol_qd`, with Δ within 10⁻⁶ of the formula. 94.1184 runs before seeds 2 and 3 of 84.9073.
+
 **3.4 Jump test** (only if 3.3 passes; `hp/reseed_check.py jump`). From the latest qdj1 state, the chain's quad-double
 series (anm_run.py's `coefficients_q`, N 24, the held harmonics on the T75 trend) is summed at h = 2, 5 and 10. Each
 prediction is re-seeded and corrected at D + h, with the held harmonics at the trend's values there. The plain arm runs
