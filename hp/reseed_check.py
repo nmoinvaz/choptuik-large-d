@@ -273,14 +273,21 @@ def rungs(argv):
     return 0
 
 
+def dd_add_(h, l, x):
+    from multidouble import dd_add
+    a, b = dd_add(np.asarray(h), np.asarray(l), np.asarray(x), np.zeros_like(x))
+    return np.asarray(a), np.asarray(b)
+
+
 def floorflip(argv):
     """amendment 9's experiment: how often the first design's floor test (abs) fails at the u0 rung, against the relative
     one (rel). The target is BASE's last node (h = 0) or the cached series' prediction at h; the ladder runs once to u0/2,
-    then the u0 rung is solved TRIALS times from that rung's data moved by 1e-25 (relative, random signs, seed = trial),
-    which only changes the order in which the residual's floor noise arrives. Each trial records both rules' outcome,
+    then the u0 rung is solved TRIALS times with the target node moved by --size (1e-30, relative, random signs, seed =
+    trial; --move data moves the start data instead, which the first step erases), which changes only the rounding
+    pattern of the residual's floor. Each trial records both rules' outcome,
     steps and residuals."""
     raw, path, out = argv[0], argv[1], argv[2]
-    opt = parse(argv, dict(h=0.0, trials=20, threads=2, N=24))
+    opt = parse(argv, dict(h=0.0, trials=20, threads=2, N=24, move="target", size=1e-30))
     require_raw(out)
     z4, meta = load_q(path)
     D0 = mp.mpf(meta["D_str"])
@@ -313,10 +320,15 @@ def floorflip(argv):
     counts = {"abs": 0, "rel": 0}
     for t in range(opt["trials"]):
         rng = np.random.default_rng(t)
-        ph_ = dh * (1 + 1e-25 * rng.uniform(0.5, 1, 2 * M) * rng.choice([-1.0, 1.0], 2 * M))
-        rec = dict(test="floorflip", base=path, h=opt["h"], D=float(Dn), G=G, trial=t)
+        r = rng.uniform(0.5, 1, 4 * M) * rng.choice([-1.0, 1.0], 4 * M)
+        # --move target: the target node moved by size (relative), the start data fixed; data: the start data moved
+        ph_, tt = (dh * (1 + opt["size"] * r[:2 * M]), th) if opt["move"] == "data" else (dh, dd_add_(th, tl, opt["size"] * r * th))
+        rec = dict(test="floorflip", base=path, h=opt["h"], D=float(Dn), G=G, trial=t, move=opt["move"], size=opt["size"])
         for rule in ("abs", "rel"):
-            d2h, d2l, hist, conv = rs[rule].invert(u0, zh, zl, th, tl, ph_.copy(), dl.copy())
+            if opt["move"] == "data":
+                d2h, d2l, hist, conv = rs[rule].invert(u0, zh, zl, th, tl, ph_.copy(), dl.copy())
+            else:
+                d2h, d2l, hist, conv = rs[rule].invert(u0, zh, zl, tt[0], tt[1], dh.copy(), dl.copy())
             counts[rule] += int(conv)
             rec[rule] = dict(conv=bool(conv), its=len(hist) - 1, R=[x.get("R") for x in hist], step=[x.get("step") for x in hist],
                              lam=[x.get("lam") for x in hist])
