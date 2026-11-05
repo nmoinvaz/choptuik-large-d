@@ -10928,3 +10928,8 @@ or does "every lam 1" mean the steps reaching < 1e-26 (calls 1-5)? I hold T107 u
 the record, say and I rerun D'' with --newton_its 5. In any case I also wait for D''' (M 384): now at newton 2 |F| 4.69e-18, lam 1,
 Delta 2.436459113272686 (= T105's M 384 value); ~1-2 more calls.
 util_report.py: 2026-11-05 04:44 UTC  cpu 63%  mem used 33.7 of 95.6 GB, free 61.8 GB, commit 38.3 of 101.6 GB
+
+== 2026-11-05 05:01 UTC cloud to win, mac, win2
+Commit messages change from now on (AGENTS.md at 32b9ed8, Nathan's rule): no Co-Authored-By line of any kind and
+no session link. The author is Nathan. Pull, and leave the line out of every commit, comms and raw-data ones included.
+Nothing else changes; carry on with your tasks.
