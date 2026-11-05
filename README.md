@@ -638,6 +638,32 @@ Why the continuation stalls past D ≈ 73 (the weak directions, the horizon-seri
 figures) is in [notes/LARGE_D_WALL.md](notes/LARGE_D_WALL.md); the diagnosis and the continuation in D are
 [notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), sections 12 and 13.
 
+#### The continuation in D
+
+Past D ≈ 73 the chain is carried in D by an exact Taylor continuation, the asymptotic numerical method[^23]
+(`hp/anm_run.py`). It continues the pinned system, in which p₁'s harmonics 5–13 are held on a power-law trend in D
+(notes/QUAD_DOUBLE.md 13.18). Each step has a predictor, an optional re-seed and a corrector.
+
+- **Predictor.** At a converged base D₀ the branch's Taylor coefficients z₁, …, z₂₄ in h = D − D₀ come order by order
+  from one quad-double LU of the Jacobian. The right-hand side of order k is the quad-double jet of the lower orders,
+  with the dimension entered into the kernel as the jet's variable. The step a is where the series' last term falls to ε
+  of its first, capped at h_max, and the prediction Σ z_k aᵏ is summed by Horner's rule in quad-double.
+- **Re-seed.** The horizon data (m_h, a_h) enter through a series summed at the last node, where the mass mode amplifies
+  their errors by G = 0.7^−(D−3), about 10²⁰ at D = 131. `--reseed` replaces them by those of the regular solution
+  through the predicted last node: the node is integrated toward the horizon, and the horizon series is inverted on the
+  rungs u₀/32, …, u₀, each rung's Newton starting from the last rung's data and the last one polished in quad-double
+  (`hp/reseed.py`, [notes/RESEED.md](notes/RESEED.md)).
+- **Corrector.** Newton in quad-double on the pinned system at D₀ + a, to max |F| ≤ 10⁻²⁸. With `--reseed 2` every trial
+  point is re-seeded first, so the horizon data are eliminated. A failed correction halves a, three times at most, and
+  keeps the series.
+
+![One step of the continuation in D: base, quad-double jets, step, prediction, re-seed, corrector, then a new base or a halved step](hp/algo_step.svg)
+
+The predictor, the re-seed and the corrector are animated with the elimination pilot's measured values in
+[`hp/algo_predictor.svg`](hp/algo_predictor.svg), [`hp/algo_reseed.svg`](hp/algo_reseed.svg) and
+[`hp/algo_corrector.svg`](hp/algo_corrector.svg). The design, its checks and the runs are in
+[notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), sections 13.15–13.23.
+
 <details>
 <summary>Checks of the solver</summary>
 
@@ -1950,3 +1976,4 @@ Files that were moved out of this repository are listed with their new paths in 
 [^20]: Y. Hida, X. S. Li, D. H. Bailey, *Algorithms for quad-double precision floating point arithmetic*, Proc. 15th IEEE Symposium on Computer Arithmetic (ARITH-15), 155–162 (2001).
 [^21]: N. J. Higham, *Accuracy and Stability of Numerical Algorithms*, 2nd ed., SIAM (2002).
 [^22]: R. S. Dembo, S. C. Eisenstat and T. Steihaug, *Inexact Newton methods*, SIAM J. Numer. Anal. 19, 400–408 (1982), doi:10.1137/0719025 *(partly verified: notes/REF_CHECK.md)*.
+[^23]: B. Cochelin, Comput. Struct. 53, 1181–1192 (1994); L. Guillot, B. Cochelin and C. Vergez, Int. J. Numer. Methods Eng. 119, 261–280 (2019), doi:10.1002/nme.6049 *(partly verified: secondary listings, notes/LOW_D_SPEEDUP.md)*.
