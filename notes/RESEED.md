@@ -173,6 +173,14 @@ both where the single re-seed failed.* h = 10 from 91.1184 runs with the elim an
 uses `--reseed 2`, the elimination, with `--h_max 5 --eps 1e-6`, so that a_max allows a step near 5. Its criterion is
 unchanged. Elim also runs at 94.1184 (seed 1), and seeds 2 and 3 of both arms at 84.9073 come last.
 
+*Amendment 7 of 2026-11-05 05:47 UTC.* Elim's basin in family B at 84.9073 (seed 1) ends at 10⁻¹², one decade past the
+single re-seed's. Yet elim converged on the jump to 96.1184 from a prediction 4.3×10⁻⁹ off. Family B's direction is
+white noise on the τ grid, and the series' error is smooth, so a third family, **P**, follows the prediction's own error.
+The direction is (the cached series of 91.1184 summed at h = 5) minus the chain's state at 96.1184, the truth, scaled to
+max norm 1. δ = 10⁻¹², …, 10⁻⁴, so δ = 4.3×10⁻⁹ is the jump itself. It runs for elim first, then the re-seeded arm. The
+plain arm is not run, since it fails at 4×10⁻¹⁹ on this direction (the jump to 93.1184 and 96.1184). Criteria and rule
+are those of 3.3. P runs before the 94.1184 basins, the pilot after its elim arm.
+
 **3.4 Jump test** (only if 3.3 passes; `hp/reseed_check.py jump`). From the latest qdj1 state, the chain's quad-double
 series (anm_run.py's `coefficients_q`, N 24, the held harmonics on the T75 trend) is summed at h = 2, 5 and 10. Each
 prediction is re-seeded and corrected at D + h, with the held harmonics at the trend's values there. The plain arm runs

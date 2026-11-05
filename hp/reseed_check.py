@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """The basin and jump tests of the re-seed (notes/RESEED.md 3.3, 3.4).
 
-    python3 reseed_check.py basin STATE.npz OUT.jsonl --family A|B --arm plain|reseed|elim [--seeds 1,2,3]
+    python3 reseed_check.py basin STATE.npz OUT.jsonl --family A|B|P --arm plain|reseed|elim [--seeds 1,2,3]
+        [--pred_base BASE.npz --pred_h H] (family P)
         [--deltas 1e-12,1e-11,...,1e-2] [--threads 2] [--mutate none|skip] [--qd_it 12]
     python3 reseed_check.py summary OUT.jsonl ...
     python3 reseed_check.py firststep STATE.npz OUT.jsonl [--deltas 1e-12,1e-14] [--groups centre,nodes,data,Delta,all]
@@ -9,7 +10,8 @@
 
 basin: the truth (a converged chain state) perturbed by delta along a random direction per seed (family A: the centre
 data and every node state, each entry by delta r S, r uniform in +-[0.5, 1], S the max |z| of its field block; family
-B: also the horizon data, and Delta by the factor 1 + delta r), then the chain's corrector (hpkernel.driver.newton_qd on
+B: also the horizon data, and Delta by the factor 1 + delta r; family P: along the jump test's prediction error, the
+cached series of --pred_base summed at --pred_h minus the truth, max norm 1, one direction), then the chain's corrector (hpkernel.driver.newton_qd on
 pinning.PinnedQ, tol 1e-28, 12 steps, 8 halvings, acceptance "dz"), after the re-seed (hp/reseed.py) in the arm
 reseed. Per seed delta rises until the first failure. A run converged back to the truth when newton_qd converged,
 max |z - z_truth| <= 1e-20 and |Delta - Delta_truth| <= 1e-24. One record per run in OUT.jsonl.
@@ -66,7 +68,7 @@ def direction(truth, M, K, family, seed):
 def basin(argv):
     path, out = argv[0], argv[1]
     opt = parse(argv, dict(family="B", arm="reseed", seeds="1,2,3", deltas=",".join(f"1e-{k}" for k in range(12, 1, -1)),
-                           threads=2, mutate="none", qd_it=12, levels=5, stop="back"))
+                           threads=2, mutate="none", qd_it=12, levels=5, stop="back", pred_base="", pred_h=5.0))
     require_raw(out)
     z4, meta = load_q(path)
     D = mp.mpf(meta["D_str"])
@@ -78,8 +80,23 @@ def basin(argv):
     deltas = [float(x) for x in opt["deltas"].split(",")]
     print(f"basin {path}: D {mp.nstr(D, 12)}, truth max|F| {F_truth:.2e}; family {opt['family']}, arm {opt['arm']}, mutate "
           f"{opt['mutate']}, seeds {opt['seeds']}, deltas {deltas[0]:.0e}..{deltas[-1]:.0e}", flush=True)
+    if opt["family"] == "P":
+        # family P: along the series prediction's own error, the jump test's prediction (the cached quad-double series of
+        # --pred_base summed at --pred_h) minus the truth, scaled to max norm 1
+        from anm_run import series_at
+        zb, mb = load_q(opt["pred_base"])
+        cz = np.load(os.path.join(os.path.dirname(out), "..", "jump", f"series_D{float(mb['D']):.4f}_N24.npz"))
+        Zh = [np.asarray(cz[f"z{k}_0"]) for k in range(25)]
+        Zl = [np.asarray(cz[f"z{k}_1"]) for k in range(25)]
+        ph, pl = series_at(np.asarray(zb[0]), np.asarray(zb[1]), Zh, Zl, opt["pred_h"])
+        if abs(mp.mpf(mb["D_str"]) + mp.mpf(opt["pred_h"]) - D) > mp.mpf(10) ** -40:
+            raise SystemExit("family P: the prediction's D is not the truth's")
+        dP = qdiff((ph, pl, np.zeros_like(ph), np.zeros_like(ph)), truth)
+        dP = dP / np.max(np.abs(dP))
+        print(f"  family P: the prediction from {opt['pred_base']} at h {opt['pred_h']} lies {float(np.max(np.abs(qdiff((ph, pl, np.zeros_like(ph), np.zeros_like(ph)), truth)))):.2e} "
+              f"from the truth", flush=True)
     for seed in [int(x) for x in opt["seeds"].split(",")]:
-        d = direction(truth, M, K, opt["family"], seed)
+        d = dP if opt["family"] == "P" else direction(truth, M, K, opt["family"], seed)
         for delta in deltas:
             t0 = time.time()
             zp = c4(qd_axpy(delta, np.ascontiguousarray(d), np.zeros_like(d), np.zeros_like(d), np.zeros_like(d), *truth))
@@ -281,8 +298,16 @@ def jump(argv):
     Kb = K
     rows = slice(Kb * 4 * M, Kb * 4 * M + M)
     t0 = time.time()
-    s.newton_q(*zq)
-    Zq, norms = coefficients_q(s, zq, opt["N"], held=(lambda j: band_field(held_jet(j), ks_held, M), rows))
+    cache = os.path.join(os.path.dirname(out), f"series_D{float(D0):.4f}_N{opt['N']}.npz")
+    if os.path.exists(cache):
+        # the series of an earlier run from the same base (the quad-double jet takes 10-16 min)
+        cz = np.load(cache)
+        Zq = [tuple(np.ascontiguousarray(cz[f"z{k}_{q}"]) for q in range(4)) for k in range(opt["N"] + 1)]
+        norms = [float(v) for v in cz["norms"]]
+    else:
+        s.newton_q(*zq)
+        Zq, norms = coefficients_q(s, zq, opt["N"], held=(lambda j: band_field(held_jet(j), ks_held, M), rows))
+        np.savez(cache, norms=np.array(norms), **{f"z{k}_{q}": np.asarray(Zq[k][q]) for k in range(opt["N"] + 1) for q in range(4)})
     Zh, Zl = [np.asarray(z[0]) for z in Zq], [np.asarray(z[1]) for z in Zq]
     print(f"jump from {path}: D {mp.nstr(D0, 12)}; series N {opt['N']} in {time.time() - t0:.0f} s, |z_k| "
           + " ".join(f"{v:.1e}" for v in norms[::3]), flush=True)
