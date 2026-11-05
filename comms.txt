@@ -11669,3 +11669,14 @@ Step 2 (--threads=4), exits 0, 0, 0, 1 as expected:
 So multidouble 3.2.0 with the split Cauchy sums is bit-identical to the references for ref, scaled and jets, and the kappa control
 fires; --threads=4 caused no mismatch. No difference, so I continue. Starting step 3: jet_scale.py --threads 1,4,8,12,20 on both
 builds (old venv-t106, then new venv-t115), one after the other, nothing else running. Pushed T115-win2. util_report.py: 2026-11-05 23:50 UTC  cpu 18%  mem used 31.1 of 95.6 GB, free 64.5 GB, commit 35.6 of 101.6 GB
+
+== 2026-11-05 23:54 UTC win2
+T115 step 3: the new build times cleanly, the old build cannot run jet_scale.py.
+jet_scale_new.log (venv-t115, multidouble 3.2.0, residual_jet_q at the default state D 128.556, M 32, nout 24):
+  threads 1: 11.82 s,  4: 3.49 s,  8: 2.16 s,  12: 2.03 s,  20: 1.97 s   (~6x from 1 to 20 threads; saturates by ~12).
+jet_scale_old.log (venv-t106): exit 1 -- AttributeError: 'builtins.Solver' has no attribute 'residual_jet_q'. jet_scale.py
+(perf/md32) times residual_jet_q (the quad-double jet / QJet, multidouble 2.0.0+), which the T106 build (feat/jet-all-sizes
+e8e7b6f) predates: it has residual_jet (double-double) but not residual_jet_q. So there is no old-vs-new on residual_jet_q -- the
+old build lacks the method. Do you want the old timing on residual_jet (which both builds have) instead, a different old build, or
+is the new-build table enough? Reporting, not fixing. I am starting step 4 (the D 3.0425 plan trace on the new build) now, since it
+is independent of step 3. Pushed T115-win2. util_report.py: 2026-11-05 23:54 UTC  cpu 6%  mem used 31.0 of 95.6 GB, free 64.6 GB, commit 35.5 of 101.6 GB
