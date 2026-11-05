@@ -416,6 +416,9 @@ fn coef_norm<T: Lane, const B: usize>(w: &TWork<T, B>, k: usize) -> f64 {
 pub fn plan_path<const B: usize>(ctx: &Ctx<B>, s0: &State<DV, B>, xa: f64, xb: f64, omega: DV, tol: f64, hmax: f64) -> Vec<f64> {
     let mut w = TWork::<DV, B>::new(ctx.kt);
     let kt = ctx.kt;
+    // HP_PLAN_TRACE=N prints the position, step and time every N steps and at the end (diagnosis only)
+    let trace = std::env::var("HP_PLAN_TRACE").ok().and_then(|v| v.parse::<usize>().ok()).unwrap_or(0);
+    let t0 = std::time::Instant::now();
     let mut xs = vec![xa];
     let mut x = xa;
     let mut s = *s0;
@@ -437,6 +440,12 @@ pub fn plan_path<const B: usize>(ctx: &Ctx<B>, s0: &State<DV, B>, xa: f64, xb: f
         s = taylor_step(ctx, &s, x, xn, omega, &mut w);
         x = xn;
         xs.push(x);
+        if trace > 0 && (xs.len() - 1) % trace == 0 {
+            eprintln!("plan_path {xa}->{xb}: step {}, x {x:.12}, h {h:.3e}, {:.1} s", xs.len() - 1, t0.elapsed().as_secs_f64());
+        }
+    }
+    if trace > 0 {
+        eprintln!("plan_path {xa}->{xb}: done, {} steps, {:.1} s", xs.len() - 1, t0.elapsed().as_secs_f64());
     }
     xs
 }
