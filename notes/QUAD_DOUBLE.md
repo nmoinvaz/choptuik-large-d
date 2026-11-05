@@ -2042,7 +2042,7 @@ keeps the start (its rung stops at 3.9×10⁻¹³), and `wrongu` diverges. **The
 128.5559 state, `--reseed 2 --reseed_q 1 --pred_q 1 --h_max 2.5`. Pass: a step of 1.25 or more converges; otherwise the
 elimination gains nothing over T113's steps of 0.5 and T113 stays the route.
 
-**The pilot's result (2026-11-05 17:55 UTC; raw-data repository `anm-mac/elimq_pilot/`, commit 7e88b80).** Two steps
+**The pilot's result (2026-11-05 17:45 UTC; raw-data repository `anm-mac/elimq_pilot/`, commit 7e88b80).** Two steps
 of 2.5 converged, 128.56 → 131.06 → 133.56, so the pilot passes its criterion. The third does not. At 133.56 the
 series' first ratios |z_(k−1)|/|z_k| are 6.7, 0.9, 1.1 and 1.1, so a_max is 0.725. The re-seeds at 0.725 and 0.3625
 then fail at the u₀ rung (7.1×10⁻⁵ and 5.8×10⁻¹⁰), and the corrector takes no step. Three signs put the start at the

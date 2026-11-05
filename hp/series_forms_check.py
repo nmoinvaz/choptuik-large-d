@@ -8,7 +8,7 @@ At the base (a four-part state of anm_run.py) the series z_1..z_N is built as an
 this base) in both forms, on one Taylor plan. Printed and recorded per order k: |z_k| (form 0) and
 d_k = |z_k(0) - z_k(1)| / |z_k(0)|, max norms over the unknowns.
 
-Criteria (written before the first run, 2026-11-05 17:55 UTC):
+Criteria (written before the first run, 2026-11-05 17:43 UTC):
 - the orders k are the model's where d_k <= 1e-6, rounding where d_k >= 0.1, undetermined between;
 - the control: the double-double series (anm_run.py coefficients, one refinement) in the two forms must give d_k >= 0.1
   at some order k <= 12 at the same base, as at 82.16. If it does not, the test cannot see rounding here and exits 1.
