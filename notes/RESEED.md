@@ -163,6 +163,11 @@ the full sum is not a prediction. Each sum therefore stops at the order of its s
 orders at h = 2 and 5. The full sum's residual is recorded beside it. The arm elim (3.3's amendment) runs on the same
 predictions.
 
+*Amendment of 2026-11-05 03:47 UTC, before any jump ran.* The chain qdj1 stopped at 96.1184 (03:17 UTC), and no state past
+it exists. So the jumps also run from qdj1's state at 91.1184, at h = 2 and 5, where the chain's own states at 93.1184
+and 96.1184 are the truth (the chain stepped by exactly 1, so the D agree to 50 digits). They run before those from
+96.1184 at h = 2, 5 and 10, which can be compared with the formula only.
+
 ## 4. Results
 
 **4.1 The unit and stepper checks pass at three bases, and their controls fire** (raw-data repository
