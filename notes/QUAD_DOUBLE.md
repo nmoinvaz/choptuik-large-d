@@ -1927,3 +1927,31 @@ stable for the mass mode, the m-mode and p's singular branch, which the signs of
 failed match integrated the other way. It is also the second of the jump study's three routes (13.19, horizon data from
 a solve from node 0.7). The toy has one horizon unknown and no τ, interior or moving sonic point, and it does not model
 the weak directions of 13.19.
+
+**On other machines and other bases (2026-11-05 02:28 and 02:48 UTC).** win's build of the same commit (x86, AVX-512;
+raw-data repository `T108-win/`) passes the 8 Rust tests, `ref` (72 outputs bit-identical) and `scaled` (its control
+firing), and its `qjet_check.py` record equals the Mac's to every printed digit. It runs quad-double about 4.7 times
+faster than the Mac (the quad-double LU in 8.6 s against 40.6 s). The Mac runner's `qjet_check.py` at six bases
+(`T109-mac/`) gives:
+
+| D | \|R\| | dR | dd jet against R | z_1 error, qd jet | z_1 error, dd chain |
+|---|---|---|---|---|---|
+| 79.77 | 3.5×10⁻¹⁴ | 2.0×10⁻²⁴ | 8.2×10⁻²¹ | 1.8×10⁻¹⁶ | 2.4×10⁻⁸ |
+| 81.52 | 1.3×10⁻¹³ | 5.8×10⁻²⁴ | 1.9×10⁻²⁰ | 5.7×10⁻¹⁶ | 7.4×10⁻⁸ |
+| 82.22 | 3.4×10⁻¹³ | 9.0×10⁻²⁴ | 2.8×10⁻²⁰ | 8.9×10⁻¹⁶ | 3.4×10⁻⁷ |
+| 84.72 | 7.3×10⁻¹³ | 4.3×10⁻²³ | 5.7×10⁻²⁰ | 4.5×10⁻¹⁵ | 1.3×10⁻⁷ |
+| 86.95 | 9.6×10⁻¹² | 1.7×10⁻²² | 1.3×10⁻¹⁹ | 2.0×10⁻¹⁴ | 3.9×10⁻⁶ |
+| 88.12 | 9.2×10⁻¹² | 3.6×10⁻²² | 2.3×10⁻¹⁹ | 4.1×10⁻¹⁴ | 8.2×10⁻⁶ |
+
+At every base the double-double jet's order-1 coefficient is 10⁷ to 10⁸ times closer to the quad-double model than
+the chain's z_1 is to solving it (|R|), and the quad-double jet sits at R's spread. The chain's z_1 error grows from 10⁻⁵
+to 4×10⁻³ of |z_1| over these 8 units of D. At the four lower bases R resolves the "1000 times closer" criterion and
+it passes. At 86.95 and 88.12 the ratio is 1.4 and 1.7×10⁻³, R's spread limiting it, as at 85.75. The double-double
+jet's regression check on the 2.0.0 build (`jet_check.py`, J2 at T75's 73.27 state) reproduces the 1.9.0 build's
+record bit for bit, its coefficient norms and its failing literal criterion (J2 passes in its amended form, 13.16).
+
+**The chain with the quad-double jet (2026-11-05 03:17 UTC).** `anm-mac/run_trend_pin3_qdj1/` went from 87.12 to
+96.12 in 9 steps of 1.0. Each correction took 3 quad-double steps and moved about 3×10⁻¹⁹. Its Δ lies 3.7×10⁻⁷ below
+the formula at 88.12 and 6.3×10⁻⁷ at 96.12, the held harmonics' bias growing. It was stopped there, since the
+double-double floor of its predictions (1.2×10⁻¹⁴) had reached the pre-screen's `--F_pred_max`, which has no use with
+the quad-double jet. It continues on win as T110 from that state toward D 200, without the pre-screen.
