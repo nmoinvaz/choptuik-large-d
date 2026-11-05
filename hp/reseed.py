@@ -29,7 +29,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import mpmath as mp  # noqa: E402
 import numpy as np  # noqa: E402
 from hpkernel.driver import make_solver, load_q, qparts, qmax  # noqa: E402
-from multidouble import dd_add, dd_solve, qd_add_dd  # noqa: E402
+from multidouble import QDLu, dd_add, dd_solve, qd_add_dd, qd_axpy  # noqa: E402
 
 mp.mp.dps = 50
 
@@ -260,7 +260,7 @@ class Reseeder:
     def invert_q(self, z4, d4, it_max=6):
         """the u0 rung in quad-double: Newton on the 2M horizon data d4 (four parts) so that the horizon series at u0
         matches the last node of z4 (four parts) in the rung rows. The residual is Solver.residual_q and the step solves
-        the rung rows' block of the quad-double Jacobian (Solver.jacobian_q) in mpmath at 80 digits: the double-double
+        the rung rows' block of the quad-double Jacobian (Solver.jacobian_q) with multidouble's QDLu: the double-double
         Jacobian's own rounding, amplified by the mass mode, stops a double-double-preconditioned iteration near
         1e-19 at D 128. Stops when the residual no longer halves (its floor, about eps_qd G) or after it_max steps.
         Returns d4, the history and whether it converged (at least one step taken and the last residual below 1e-24)."""
@@ -290,49 +290,29 @@ class Reseeder:
             F = s.residual_q(*put(d))
             return [np.asarray(F[q])[rows] for q in range(4)]
 
-        def to_mp(parts, idx=None):
-            return [mp.mpf(float(parts[0][i])) + mp.mpf(float(parts[1][i])) + mp.mpf(float(parts[2][i])) + mp.mpf(float(parts[3][i]))
-                    for i in (range(len(parts[0])) if idx is None else idx)]
-
-        def to_parts(vals):
-            out = [np.zeros(len(vals)) for _ in range(4)]
-            for i, v in enumerate(vals):
-                r = v
-                for q in range(4):
-                    out[q][i] = float(r)
-                    r = r - mp.mpf(out[q][i])
-            return out
-
         d = [np.ascontiguousarray(np.asarray(x, dtype=float)) for x in d4]
         R = res(d)
         nR = float(np.max(np.abs(R[0] + R[1])))
         hist = [dict(it=0, R=nR)]
         if not np.isfinite(nR):
             return d, hist, False
-        with mp.workdps(80):
-            J = s.jacobian_q(*put(d))
-            A = mp.matrix(len(rows), len(cols))
-            for i, ri in enumerate(rows):
-                for j, cj in enumerate(cols):
-                    A[i, j] = (mp.mpf(float(J[0][ri, cj])) + mp.mpf(float(J[1][ri, cj])) + mp.mpf(float(J[2][ri, cj]))
-                               + mp.mpf(float(J[3][ri, cj])))
-            dm = to_mp(d)
-            steps = 0
-            for it in range(it_max):
-                x = mp.lu_solve(A, mp.matrix([-v for v in to_mp(R)]))
-                dn_m = [dm[i] + x[i] for i in range(len(dm))]
-                dn = [np.ascontiguousarray(p) for p in to_parts(dn_m)]
-                Rn = res(dn)
-                nn = float(np.max(np.abs(Rn[0] + Rn[1])))
-                hist.append(dict(it=it + 1, R=nn, step=float(max(abs(v) for v in x))))
-                if not np.isfinite(nn) or nn >= nR:
-                    break                               # the floor: this step does not lower the residual (not taken)
-                d, R, dm = dn, Rn, dn_m
-                halving = nn <= 0.5 * nR
-                nR = nn
-                steps += 1
-                if not halving:
-                    break                               # no longer halving: the floor
+        J = s.jacobian_q(*put(d))
+        lu = QDLu(*[np.asarray(J[q])[np.ix_(rows, cols)] for q in range(4)])     # the rung block, factored once
+        steps = 0
+        for it in range(it_max):
+            x = lu.solve(*[-np.asarray(r) for r in R])                            # J_block x = -R in quad-double
+            dn = [np.ascontiguousarray(np.asarray(p)) for p in qd_axpy(1.0, *x, *d)]
+            Rn = res(dn)
+            nn = float(np.max(np.abs(Rn[0] + Rn[1])))
+            hist.append(dict(it=it + 1, R=nn, step=float(np.max(np.abs(np.asarray(x[0]))))))
+            if not np.isfinite(nn) or nn >= nR:
+                break                                   # the floor: this step does not lower the residual (not taken)
+            d, R = dn, Rn
+            halving = nn <= 0.5 * nR
+            nR = nn
+            steps += 1
+            if not halving:
+                break                                   # no longer halving: the floor
         return d, hist, steps > 0 and nR < 1e-24
 
     # ------------------------------------------------------------------ the re-seed
