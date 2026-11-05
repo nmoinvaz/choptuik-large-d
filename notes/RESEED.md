@@ -248,3 +248,26 @@ The reading (*numerical evidence* at one base, one direction):
   carries that to the node. Node errors become second order with coefficient 2.7×10¹⁵, so the first step is linear only
   below about 4×10⁻¹⁶. Those m_h directions are fixed by the node only to the node's own error, so a better inversion
   cannot remove this.
+
+The plain arm's data errors, split up (`firststep_D84.9073_bands.log`, seed 1's direction restricted to m_h harmonics
+≤ 21, m_h harmonics above 21, and a_h):
+
+| data perturbed | \|e\| at δ = 10⁻¹⁴ | max \|F\| | first step | \|e\| at δ = 10⁻¹⁶ | max \|F\| | first step |
+|---|---|---|---|---|---|---|
+| m_h, harmonics ≤ 21 | 3.7×10⁻¹⁵ | 1.4×10⁻⁴ | 7.6×10⁻² | 3.7×10⁻¹⁷ | 1.4×10⁻⁶ | 5.3×10⁻⁶ |
+| m_h, harmonics > 21 | 2.2×10⁻¹⁵ | 7.2×10⁻⁵ | 1.1 | 2.2×10⁻¹⁷ | 7.2×10⁻⁷ | 3.1×10⁻⁵ |
+| a_h | 9.9×10⁻¹⁵ | 9.6×10⁻² | 2.3 | 9.9×10⁻¹⁷ | 9.6×10⁻⁴ | 0.18 |
+
+Every kind of data error the node does not imply is amplified by the horizon block, by 10¹⁰–10¹³ into the residual.
+The first step then grows about as δ², with coefficients near 10²⁶–10³³, so it is linear only below about 10⁻²⁷. That
+is the plain basin of 4.3. The high harmonics of m_h are no exception: alone they move the a rows through the mass mode.
+They have gain about 1 into the node only together with their own small a_h part, the singular directions of 2.1.
+
+**4.4 The jump test from 91.1184** (`reseed-mac/jump/jump.jsonl`, `jump_D91.1184*.log`). The quad-double series (N 24,
+958 s on two threads) has |z_k| falling from 1.8 to 1.4×10⁻²⁵. At h = 2 its smallest term is 2.4×10⁻¹⁸ (order 24). Still,
+the prediction's pinned quad-double max |F| is 3.2×10⁻⁸, mostly the horizon block. That is G (2×10¹³) times a data
+error near 10⁻²¹, outside the plain corrector's reach (4.3).
+- Re-seeded: 32 s brings it to 3.2×10⁻¹⁸. The corrector converges in 3 steps to 8.9×10⁻⁴⁴, with Δ within 2.5×10⁻²¹ of
+  the chain's state at 93.1184 (criterion 10⁻²⁰: pass) and the whole state within 2.6×10⁻¹⁹. The chain stepped there by
+  two steps of 1.
+- Elim, first design: stalls at 3.7×10⁻¹⁸ (amendment 4), so it was rerun after the fix.
