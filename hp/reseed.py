@@ -444,7 +444,7 @@ class ElimQ:
 
     def __init__(self, sq, rs, switch=1e-15):
         self.sq, self.rs, self.switch = sq, rs, switch
-        self.counts = dict(u0=0, ladder=0, failed=0, skipped=0)
+        self.counts = dict(u0=0, u0q=0, ladder=0, failed=0, skipped=0)
 
     def __getattr__(self, name):
         return getattr(self.sq, name)
