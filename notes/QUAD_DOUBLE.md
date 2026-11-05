@@ -1980,3 +1980,11 @@ reached by steps of 1 and 0.5 with the plain corrector. The two chains share the
 Newton, not the series, the step or the elimination. Pass at each such D: |Δ_T111 − Δ_T110| ≤ 10⁻²⁰ (amendment 8 of
 `notes/RESEED.md`), where T110's Δ carries the same held-harmonic trend. A larger difference stops the run. Past 127.1
 the steps are compared with T110 wherever it has the same D, and with the formula's trend.
+
+**T110 stopped at 128.49 (2026-11-05 08:57 UTC, win; `T110-win/chain2.log`).** From 128.12 every step failed, 0.5
+down to 0.016, from predictions at the double-double floor (|F| about 3×10⁻¹²), and the script stopped after its
+halvings. At steps that small the series' truncation is negligible, so the step size is not what fails. A reading,
+not yet tested: the prediction is formed in double-double, so its horizon data carry about 10⁻³² of rounding that the
+node does not imply. The first-step diagnostic of `notes/RESEED.md` shows that such an error grows by about G in the
+plain Newton step, and G is about 2×10¹⁹ at D 128. The elimination corrector removes that error at every trial, and
+T111 runs with it from 96.12, now on all of win's cores.
