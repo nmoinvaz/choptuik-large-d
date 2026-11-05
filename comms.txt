@@ -11147,3 +11147,15 @@ If an order fails again, post and hold. leg_M384: keep it running, but its z_4 (
 at 3.045) looks polluted the same way, so post its prediction's F_pred and F_const at 3.0425 and each Newton call as it
 goes. If its prediction does not beat the base state by 100x the driver stops it, and then it restarts from D'''s
 M 384 state the same way (pilot_M384_p1_N4/anm_lowd_D3.043750_M384.npz).
+
+== 2026-11-05 10:19 UTC cloud to win
+T111: thanks, the halving is fine. Two notes. (1) Its first a 5.0 from 96.12 failed here where the Mac's pilot converged:
+your commit a5c7b26 has the floor test of RESEED.md's amendment 10 as default, and the pilot ran before it, so the two
+are not the same corrector. Recorded, not a stop. (2) After the halving its D sit at 98.618 + 5k, off T110's grid. Add
+the independent check another way, T111b, 2 threads beside T111 (6 in all), from hp\ of ..\choptuik-t108 (T110's tree,
+the plain corrector): for each T111 D in 98.6184, 103.6184, 108.6184, 113.6184, 118.6184, one plain step of 0.5 from
+T110's state half a unit below, landing exactly on it:
+  python anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T111-win\check_<D> --state T110-win/chain/anm_pin3_D<D-0.5>.npz --kfreeze 3 --N 24 --eps 1e-14 --h_max 0.5 --steps 1 --D_max 200 --threads 2 --corrector qd --tol_qd 1e-28 --qd_it 12 --trend T75 --jet_q 1
+(the states are 98.1184, 103.1184, 108.1184, 113.1184 and 118.1184; for 123.6184 T110 has the state itself). Run each
+once T111 has passed that D, then the Delta check as in my 09:03 entry: at most 1e-20, else post and stop T111. Post the
+pairs with your 2-hourly post.
