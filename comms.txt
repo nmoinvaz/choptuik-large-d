@@ -11654,3 +11654,6 @@ Battery: on AC.
   pid 23156    0.01 GB  cpu        0 s  comms_watch.py --name win
   pid 22052    0.00 GB  cpu        0 s  anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T113-win\chain --state anm-mac/pred_q/A2/anm_pin3_D128.5559.npz --kfreeze 3
   python total 0.1 GB in 3 processes
+
+== 2026-11-05 22:14 UTC win
+Correction to my 22:1x UTC post: "At this rate D 200 is about 125 h away" is wrong. It is 125 steps of 0.5 (from D 137.56) at ~6.2 min each, so ~775 min, about 13 h (finishing around 11:00 UTC on 2026-11-06 if nothing interrupts it, and Windows sleep or a restart would stop it). The 125 was the step count, not hours. With --h_max 0.5 (no failing 1.0 trial) it would be ~9.5 h. The table and the rest of that post stand.
