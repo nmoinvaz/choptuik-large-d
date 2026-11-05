@@ -10,7 +10,7 @@ state there (the node itself at u0), and its equations are the m and a rows of t
 2M unknowns; notes/RESEED.md 2 gives the reasons). Delta, the centre data and the nodes are not changed.
 
     python3 reseed.py check STATE.npz [--threads 2] [--levels 5] [--rows ma|pm|all] [--mutate none|skip|wrongu]
-        [--plan_tol 1e-32] [--out OUT.jsonl] [--delta_h 1e-6] [--seed 1] [--floor_rule rel|abs]
+        [--plan_tol 1e-32] [--out OUT.jsonl] [--delta_h 1e-6] [--seed 1] [--floor_rule abs|rel]
     python3 reseed.py jac STATE.npz
 
 `check` is the unit check and the stepper check (notes/RESEED.md 3.1, 3.2): the converged state's own node re-seeded
@@ -48,7 +48,7 @@ class Reseeder:
     is the stepper's error estimate (a plan at check_tol with steps at most hmax / 2, at Taylor order check_kt)."""
 
     def __init__(self, meta, D, threads=2, levels=5, rows="ma", plan_tol=1e-32, hmax=0.05, check_tol=1e-36,
-                 check_kt=None, it_max=30, horizon_alpha=0, mutate="none", floor_rule="rel"):
+                 check_kt=None, it_max=30, horizon_alpha=0, mutate="none", floor_rule="abs"):
         self.M, self.nodes = int(meta["M"]), list(meta["nodes"])
         self.K = len(self.nodes)
         self.kt, self.kc, self.ks = meta.get("kt", 36), meta.get("kc", 146), meta.get("ks", 130)
@@ -56,8 +56,9 @@ class Reseeder:
         self.plan_tol, self.hmax, self.check_tol = plan_tol, hmax, check_tol
         self.check_kt = check_kt or self.kt + 12
         self.it_max, self.horizon_alpha, self.mutate = it_max, horizon_alpha, mutate
-        # the rung's floor test: 'rel' (amendment 9: also a residual below 1e-29 G_u that stops halving), 'abs' (the
-        # first design: only a step below 1e-24 with the residual no longer halving)
+        # the rung's floor test: 'abs' (the design: a step below 1e-24 with the residual no longer halving); 'rel'
+        # (amendment 9, withdrawn: also a residual below 1e-29 G_u that stops halving; it stops the u0 rung before its
+        # data converge and fails the unit check at D 101.1, notes/RESEED.md), kept runnable as a control
         self.floor_rule = floor_rule
         self.x_node = self.nodes[-1]
         u0 = 1.0 - self.x_node
@@ -164,9 +165,8 @@ class Reseeder:
         (th, tl) in the rung rows; damped by halving when the max norm of those rows does not fall (a trial whose
         series is not finite is rejected). Returns the data, the history and whether it converged (step below 1e-30
         times the data's scale, or the residual at its floor: no decrease by 2 after a step below 1e-24, or no decrease
-        by 2, or no trial accepted, with the residual below floor_tol = 1e-29 (1 - u)^-(n-1), a thousand times the
-        double-double floor eps_dd G_u of the rung's series; the steps of the m_h directions of gain about 1 stay near
-        that floor, above 1e-24 past D 100, notes/RESEED.md amendment 9)."""
+        by 2, or no trial accepted, with the residual below floor_tol = 1e-29 (1 - u)^-(n-1), with floor_rule 'rel'
+        only: amendment 9, withdrawn, notes/RESEED.md)."""
         M, a = self.M, self.aoff
         s = self.rung_solver(u)
         rows = self.rung_rows()
@@ -375,7 +375,7 @@ def parse(argv, opt):
 
 def check(argv):
     """notes/RESEED.md 3.1 and 3.2 on a converged state (the docstring); returns the exit code"""
-    opt = parse(argv, dict(threads=2, levels=5, rows="ma", mutate="none", out="", delta_h=1e-6, seed=1, plan_tol=1e-32, floor_rule="rel"))
+    opt = parse(argv, dict(threads=2, levels=5, rows="ma", mutate="none", out="", delta_h=1e-6, seed=1, plan_tol=1e-32, floor_rule="abs"))
     path = argv[0]
     if opt["out"]:
         from raw_out import require_raw
