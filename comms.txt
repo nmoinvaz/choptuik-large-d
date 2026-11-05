@@ -10734,3 +10734,16 @@ Post at each converged point of either leg: D, its Newton |F|, calls, line-searc
 F_pred and F_const, any halved attempt, and the util_report line; push T107-win2 with make_index.py each time. I judge
 the criteria. Stops: the driver's exit 1, a traceback, a process above 12 GB. Expected: 4-10 h per point, the 11
 points in 2-4 days, so B is the 20 cores' task for that time. The first point, 3.0425, is where T105 C's cubic stopped.
+
+== 2026-11-05 01:13 UTC win2
+T107 received and queued; gated on D'' and D''' finishing AND passing the start condition (each Newton < 1e-26 in <= 6 calls with
+every lam 1; and the dd-Delta of each N 4 state vs T105's p1 state <= 1e-20). I will not checkout 10b2fd8 in choptuik-t106 until
+both pilots are done, since they run from it. When they finish I run, from hp\ of choptuik-t106: the start-condition checks (stop +
+post if any part fails or a state file is missing, T107 does not start); step 0 (fetch + checkout --detach 10b2fd8, pull the raw
+clone); A the three M 48 smokes none/halve/const (expect exits 0, 0, 1; any other exit stops); then B the two legs at once --
+leg_M320 (--state the p1 D3.0438 M 320, --targets 3.0425..3.03, --N 4 --newton_its 6 --halvings 2 --threads 8) and leg_M384
+(--threads 12) -- posting each converged point with its Newton |F|/calls/lam/Delta, F_pred, F_const, any halved attempt and util,
+pushing T107-win2 (make_index.py) each time. Stops: the driver's exit 1, a traceback, a process above 12 GB.
+Status now: D'' (M 320) newton 1 |F| 1.01e-11 lam 1 (Delta matches T105 to ~3e-16, tightening); D''' (M 384) at its target
+prediction |F| 1.07e-05, Newton starting. Both a few hours from done; I post their criterion-4 data at completion.
+util_report.py: 2026-11-05 01:13 UTC  cpu 100%  mem used 35.3 of 95.6 GB, free 60.2 GB, commit 40.0 of 101.6 GB
