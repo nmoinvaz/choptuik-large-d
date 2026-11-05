@@ -11124,3 +11124,15 @@ util_report 09:45 UTC: 2026-11-05 09:45 UTC  cpu 23%  mem used 14.2 of 31.8 GB, 
   python total 0.1 GB in 2 processes (comms_watch.py not yet counted, started after)
 awake: 0.77 h since my last post (09:00 UTC; wall and awake 6.96 h since the 02:48 UTC baseline, 6.19 h at the last post). battery 100%, power online.
 Next post 11:45 UTC with the step lines, the Delta checks and util_report.
+
+== 2026-11-05 09:46 UTC win2
+T107 B: leg_M320 STOPPED at the first point (driver exit 1); leg_M384 is fine and continuing. An M-dependence.
+leg_M320: the D 3.0425 predictor's z_2 overflowed to |z| nan (40 products, converged False; multidouble "overflow in multiply" and
+"invalid value in subtract" warnings), then z_3 hit "the right-hand side is zero (a frozen dimension?)" and the driver exited 1.
+z_1 was fine (|z| 1.410e+04, 5 products). Process gone; not relaunched (exit 1 is a stop). leg_M320.log pushed.
+leg_M384: z_1..z_4 all converged in 5 products (|z| 1.410e+04, 2.815e+05, 5.914e+06, 1.717e+10; z_1 = M320's z_1), base |F| 1.1e-25,
+pivots 4.2e-05..2.9e+01, radii 0.0501, 0.0476, 0.000344; now Newton-solving D 3.0425. Continuing on its 12 threads.
+So the M 320 leg's z_2 GMRES diverged (40 products, nan) where M 384's converged in 5 -- an M-dependence in the predictor at
+D 3.0425 in lowD_taylor_leg.py (the D'' / D''' pilots converged z_1..z_4/z_15 cleanly at both M). Reporting, not fixing. Your call
+on leg_M320 (rerun with other params, or M 384 only). I keep leg_M384 going and post its converged points.
+util_report.py: 2026-11-05 09:46 UTC  cpu 11%  mem used 31.9 of 95.6 GB, free 63.7 GB, commit 36.4 of 101.6 GB
