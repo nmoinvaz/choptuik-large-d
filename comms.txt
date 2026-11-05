@@ -11271,3 +11271,32 @@ does not predict", I restart it at --N 3 from the same base for the rest of the 
 T106-win2/pilot_M320_p1_N4/anm_lowd_D3.043750_M320.npz (log leg_M320c.log), leg_M384 -> leg_M384b from
 pilot_M384_p1_N4/anm_lowd_D3.043750_M384.npz (log leg_M384b.log). If a prediction passes at N 4, I let it continue and post the
 Newton calls. Both still on the D 3.0425 F_pred (M 384 ~2.5 h in; M 320b just finished its predictor).
+
+== 2026-11-05 12:42 UTC win
+capacity: cpu 2%, free 17.8 GB
+
+T111 chain3 stopped itself at 12:41 UTC (exit 0): "stopped: no convergence after three halvings", at base D 127.993364981, its last saved state (T111-win/chain3/anm_pin3_D127.9934.npz). Not relaunched. Nothing is running on win. Pushed T111-win (chain3 4 states, log), raw head 9838afb, checked on the remote. No traceback, nothing above 0.1 GB. Run time 66 min (11:35 to 12:41) for D 123.618 to 127.993.
+
+States: D 126.1184 (step 0, a 2.5 after a 5.0 failed), 127.3684 (a 1.25), 127.6809 (a 0.312), 127.9934 (a 0.312). Attempts from step 1 on (a = step tried, pred = predicted |F|, qd steps -> |F| after, formula diff in every row -1.8e-06 to -2.0e-06; "stall" = accepted as a stall, the rest failed):
+  base D     a      to D       pred      qd -> |F|       result
+  123.618    5.0    128.618    1.09e-04  2 -> 1.71e-04   failed (formula diff +2.4e-04)
+             2.5    126.118    9.06e-13  7 -> 1.06e-12   stall
+  126.118    5.0    131.118    1.39e-04  1 -> 1.39e-04   failed
+             2.5    128.618    2.19e-12  4 -> 2.61e-12   failed
+             1.25   127.368    1.60e-12  4 -> 2.17e-12   stall
+  127.368    2.5    129.868    5.32e-12  3 -> 4.95e-12   failed
+             1.25   128.618    2.77e-12  2 -> 3.05e-12   failed
+             0.625  127.993    1.82e-12  2 -> 1.56e-12   failed
+             0.312  127.681    1.90e-12  6 -> 1.73e-12   stall
+  127.681    0.625  128.306    2.25e-12  4 -> 2.93e-12   failed
+             0.312  127.993    1.89e-12  6 -> 1.64e-12   stall
+  127.993    0.625  128.618    2.72e-12  4 -> 2.79e-12   failed
+             0.312  128.306    2.16e-12  4 -> 2.35e-12   failed
+             0.156  128.150    1.71e-12  4 -> 2.14e-12   failed
+             0.078  128.071    2.03e-12  3 -> 2.13e-12   failed  -> stopped
+Same place as T110 chain2, which stopped at base 128.4934: here the elimination corrector (--reseed 2, 4 threads) fails from D 128.07 on, 0.4 earlier than the plain corrector's last state. No attempt landing at or past 128.07 converged, 128.15 and 128.07 included. I read this and do not interpret it. The jet ratios at the base D 123.618 (153.6 131.5 28.6 3.3) are back to normal from step 1 (157.0 141.9 132.7 50.1, then 158.6 143.4 140.1 45.9 ... 159.4 144.1 135.6 48.5 at D 127.99), so that one is not what stopped it.
+
+util_report 12:42 UTC: 2026-11-05 12:42 UTC  cpu 2%  mem used 14.1 of 31.8 GB, free 17.8 GB, commit 15.6 of 41.8 GB
+  pid 29884    0.01 GB  cpu 1 s  comms_watch.py --name win
+  python total 0.0 GB in 1 processes
+awake: 0.9 h since my last post (11:49 UTC; 9.90 h awake of 9.90 h wall since the 02:48 UTC baseline, 9.00 h at the last post). battery 100%, power online. comms_watch.py --name win is running. Stand by for your next entry.
