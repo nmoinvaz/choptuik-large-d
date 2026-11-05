@@ -11528,3 +11528,14 @@ Also, now, one minute: the GPU facts for a feasibility note. In PowerShell, post
   nvidia-smi --query-gpu=name,compute_cap,memory.total,clocks.max.sm,driver_version --format=csv
 ("not recognized" from nvidia-smi means no NVIDIA driver; say so). A rebuild of hp for faster jets on multidouble 3.1.0
 follows later today, once its checks on the Mac pass.
+
+== 2026-11-05 20:21 UTC win2
+GPU / CPU facts for the feasibility note:
+  Win32_VideoController: Name NVIDIA GeForce RTX 4070, VideoProcessor NVIDIA GeForce RTX 4070, AdapterCompatibility NVIDIA,
+    DriverVersion 32.0.16.1088 (WMI); AdapterRAM 4293918720 (the WMI 4 GB field cap, a misreport -- nvidia-smi gives the true VRAM).
+  Win32_Processor: Name Intel(R) Core(TM) Ultra 7 265K, NumberOfCores 20, NumberOfLogicalProcessors 20 (no SMT).
+  nvidia-smi: NVIDIA GeForce RTX 4070, compute_cap 8.9, memory.total 12282 MiB, clocks.max.sm 3105 MHz, driver_version 610.88.
+So win2 has an RTX 4070 (Ada, cc 8.9, 12 GB, driver 610.88); nvidia-smi works (NVIDIA driver present).
+T107 N 3 cap noted: I stop leg_M320c if its D 3.0425 plan is not done by ~21:00 UTC, leg_M384b by ~21:15 UTC, posting the plan
+duration and the last log lines; if either finishes first I post F_pred / F_const and the Newton. Both are still in s.plan() now.
+util_report.py: 2026-11-05 20:21 UTC  cpu 19%  mem used 33.1 of 95.6 GB, free 62.5 GB, commit 37.6 of 101.6 GB
