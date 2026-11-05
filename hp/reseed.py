@@ -274,6 +274,62 @@ class Reseeder:
         return tuple(np.ascontiguousarray(p) for p in out), diag
 
 
+    def project(self, z):
+        """z (four parts) with its horizon data re-inverted at u0 only, from its own data (a warm start for points near
+        the regular family: the corrector's iterates); the full ladder (reseed) when that Newton does not converge.
+        Returns (z', how): how is 'u0', 'ladder' or 'failed' (z' = z)."""
+        zh, zl = np.asarray(z[0], dtype=float), np.asarray(z[1], dtype=float)
+        M, o = self.M, self.off
+        sl_ = slice(o["mh"], o["mh"] + 2 * M)
+        u0 = self.us[-1]
+        nh = zh[o["node"](self.K - 1):o["node"](self.K - 1) + 4 * M]
+        nl = zl[o["node"](self.K - 1):o["node"](self.K - 1) + 4 * M]
+        dh, dl, hist, conv = self.invert(u0, zh, zl, np.array(nh), np.array(nl), np.array(zh[sl_]), np.array(zl[sl_]))
+        how = "u0"
+        if not conv:
+            zr, diag = self.reseed(z)
+            if not diag["ok"]:
+                return tuple(np.ascontiguousarray(np.asarray(p, dtype=float)) for p in z), "failed"
+            return tuple(np.ascontiguousarray(np.asarray(p, dtype=float)) for p in zr), "ladder"
+        out = [np.array(p, dtype=float) for p in z]
+        out[0][sl_], out[1][sl_] = dh, dl
+        for p in out[2:]:
+            p[sl_] = 0.0
+        return tuple(np.ascontiguousarray(p) for p in out), how
+
+
+class ElimQ:
+    """The corrector on the system with the horizon data eliminated (notes/RESEED.md 3.3, the arm elim): a wrapper of a
+    pinned quad-double solver (pinning.PinnedQ) for hpkernel.driver.newton_qd. residual_q and newton_q project the point
+    first (Reseeder.project: the horizon data re-inverted from the point's last node); newton_q returns the step from
+    the given point, the projection's displacement included, so newton_qd's trial points z + lam dz are steps of the
+    eliminated system. counts: the projections by kind."""
+
+    def __init__(self, sq, rs):
+        self.sq, self.rs = sq, rs
+        self.counts = dict(u0=0, ladder=0, failed=0)
+
+    def __getattr__(self, name):
+        return getattr(self.sq, name)
+
+    def _proj(self, z):
+        zp, how = self.rs.project(z)
+        self.counts[how] += 1
+        return zp
+
+    def residual_q(self, z0, z1, z2, z3, mutate=0):
+        return self.sq.residual_q(*self._proj((z0, z1, z2, z3)), mutate=mutate)
+
+    def newton_q(self, z0, z1, z2, z3, mutate=0):
+        from hpkernel.driver import qd_axpy
+        z = tuple(np.ascontiguousarray(np.asarray(p, dtype=float)) for p in (z0, z1, z2, z3))
+        zp = self._proj(z)
+        st = self.sq.newton_q(*zp, mutate=mutate)
+        disp = qd_axpy(-1.0, *z, *zp)                                  # z' - z
+        d = qd_axpy(1.0, *(np.ascontiguousarray(np.asarray(p)) for p in disp), *(np.ascontiguousarray(np.asarray(p)) for p in st[:4]))
+        return (*d, *st[4:])
+
+
 # ------------------------------------------------------------------ the unit check
 def pinned(meta, D, z, threads=2):
     """the chain's solver at D (kfreeze from meta, segs planned at z at 1e-32 as anm_run.py plans a prediction) and its

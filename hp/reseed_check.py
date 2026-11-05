@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The basin and jump tests of the re-seed (notes/RESEED.md 3.3, 3.4).
 
-    python3 reseed_check.py basin STATE.npz OUT.jsonl --family A|B --arm plain|reseed [--seeds 1,2,3]
+    python3 reseed_check.py basin STATE.npz OUT.jsonl --family A|B --arm plain|reseed|elim [--seeds 1,2,3]
         [--deltas 1e-12,1e-11,...,1e-2] [--threads 2] [--mutate none|skip] [--qd_it 12]
     python3 reseed_check.py jump RAWDIR STATE.npz OUT.jsonl [--hs 2,5,10] [--arms reseed,plain] [--threads 2]
 
@@ -28,7 +28,7 @@ import mpmath as mp  # noqa: E402
 import numpy as np  # noqa: E402
 from hpkernel.driver import load_q, newton_qd, qd_axpy, qmax  # noqa: E402
 from raw_out import require_raw  # noqa: E402
-from reseed import Reseeder, offsets, parse, pinned  # noqa: E402
+from reseed import ElimQ, Reseeder, offsets, parse, pinned  # noqa: E402
 
 mp.mp.dps = 50
 
@@ -72,7 +72,7 @@ def basin(argv):
     s, sp, sq = pinned(meta, D, z4, threads=opt["threads"])
     truth = c4(z4)
     F_truth = qmax(sq.residual_q(*truth))
-    rs = Reseeder(meta, D, threads=opt["threads"], levels=opt["levels"], mutate=opt["mutate"]) if opt["arm"] == "reseed" else None
+    rs = Reseeder(meta, D, threads=opt["threads"], levels=opt["levels"], mutate=opt["mutate"]) if opt["arm"] in ("reseed", "elim") else None
     deltas = [float(x) for x in opt["deltas"].split(",")]
     print(f"basin {path}: D {mp.nstr(D, 12)}, truth max|F| {F_truth:.2e}; family {opt['family']}, arm {opt['arm']}, mutate "
           f"{opt['mutate']}, seeds {opt['seeds']}, deltas {deltas[0]:.0e}..{deltas[-1]:.0e}", flush=True)
@@ -100,10 +100,15 @@ def basin(argv):
                 print(f"    re-seeded ({'ok' if diag['ok'] else 'FAILED'}, dropped {diag['dropped']}): max|F| {rec['F_reseeded']:.2e}, "
                       f"|m_h - truth| {rec['reseeded_err_mh']:.1e}, |a_h - truth| {rec['reseeded_err_ah']:.1e}, {diag['seconds']} s", flush=True)
             t1 = time.time()
+            solver = ElimQ(sq, rs) if opt["arm"] == "elim" else sq
             try:
-                zc, hist, conv = newton_qd(sq, zp, tol=1e-28, it_max=opt["qd_it"], verbose=True)
+                zc, hist, conv = newton_qd(solver, zp, tol=1e-28, it_max=opt["qd_it"], verbose=True)
             except ValueError as ex:          # a singular or non-finite Jacobian at the start
                 zc, hist, conv = zp, [dict(error=str(ex))], False
+            if opt["arm"] == "elim":
+                zc = c4(rs.project(zc)[0])     # the eliminated system's point
+                rec["projections"] = dict(solver.counts)
+                rec["F_final"] = qmax(sq.residual_q(*zc))
             e = qdiff(zc, truth)
             rec.update(conv=bool(conv), steps=len(hist), hist=hist, t_corr=round(time.time() - t1, 1), t_total=round(time.time() - t0, 1),
                        err=float(np.max(np.abs(e))), err_delta=float(abs(e[-1])))

@@ -124,6 +124,22 @@ Controls that must fire:
 
 If the re-seeded basin is not wider, C1 and C2 are moot and that is the result.
 
+*Amendments of 2026-11-05 03:30 UTC, after the first runs at 84.9073 (4.2) and before the runs they govern.*
+
+- The grid is extended downward, since both arms failed at δ = 10⁻¹² in family B. The plain arm now starts at 10⁻³⁰,
+  the re-seeded one at 10⁻¹⁸, by decades. The rule (δ rises per seed until the first failure) and the criteria are
+  unchanged.
+- A third arm, *elim*, is added: the re-seed before the corrector and again inside it, at every point where the
+  corrector takes a Newton step or tries one. That re-seed has the rung u₀ only, warm-started from the point's data, and
+  falls back to the full ladder if that Newton fails. So the corrector works on the system with the horizon data
+  eliminated, the toy's "elim" formulation. It is a wrapper of `PinnedQ` for the unchanged `newton_qd` (`ElimQ` in
+  `hp/reseed.py`). The wrapper returns each step measured from the point the corrector holds, with the re-seed's
+  displacement included. A run's result is re-seeded once more before it is compared with the truth. The criteria are
+  those of the other arms. The claim "elimination widens the basin" needs an elim basin at least 100 times the plain
+  one in family B.
+- A first-step diagnostic (`reseed_check.py firststep`, 4.2) is recorded beside the basin runs. It perturbs one group
+  of unknowns at a time and records how far the first Newton step departs from the exact correction.
+
 **3.4 Jump test** (only if 3.3 passes; `hp/reseed_check.py jump`). From the latest qdj1 state, the chain's quad-double
 series (anm_run.py's `coefficients_q`, N 24, the held harmonics on the T75 trend) is summed at h = 2, 5 and 10. Each
 prediction is re-seeded and corrected at D + h, with the held harmonics at the trend's values there. The plain arm runs
@@ -134,4 +150,36 @@ reference. Then `anm_run.py --reseed 1` re-seeds every prediction before its cor
 
 ## 4. Results
 
-(Filled in as the runs finish.)
+**4.1 The unit and stepper checks pass at three bases, and their controls fire** (raw-data repository
+`reseed-mac/unit.jsonl` and `unit_*.log`; the re-seed takes 12–13 s on two threads). φ is the truth's double-double
+residual, the floor of 2.5.
+
+| base D | G | φ | rungs (Newton steps) | \|m_h − truth\| | \|a_h − truth\| | quad-double max \|F\| | 3.1 | 3.2b, worst |
+|---|---|---|---|---|---|---|---|---|
+| 84.9073 | 4.9×10¹² | 3.5×10⁻¹⁹ | 4, 2, 2, 2, 2, 3 | 5.7×10⁻³² | 1.7×10⁻³² | 1.7×10⁻¹⁹ | pass | 3.1×10⁻³¹ |
+| 87.0224 | 1.0×10¹³ | 8.7×10⁻¹⁹ | 4, 2, 2, 2, 2, 3 | 1.0×10⁻³¹ | 1.3×10⁻³² | 2.7×10⁻¹⁹ | pass | 1.9×10⁻³¹ |
+| 94.1184 | 1.3×10¹⁴ | 1.2×10⁻¹⁷ | 4, 2, 2, 2, 2, 3 | 4.8×10⁻³² | 1.6×10⁻³² | 4.3×10⁻¹⁸ | pass | 2.2×10⁻³¹ |
+
+From horizon data off by 10⁻⁶ the re-seed returns the truth's to 10⁻³¹, far below the bounds of 3.1 (10φ/G and 20φ).
+The quad-double residual it leaves is the double-double floor φ, mostly in the c rows. The first rung's Newton takes
+4 steps from 2×10⁻⁶, and each later rung takes 2–3 from the last. The stepper's error estimate is 1.5–3×10⁻³¹ at every
+rung. It takes 6 steps per piece, the smallest 1.0×10⁻³ near u₀/32. max (x − c) runs from −0.13 at x = 0.85 to
+−8.1×10⁻³ at u₀/32, so no sonic crossing occurs (*numerical evidence*, on converged states).
+
+The controls, at 84.9073:
+- `skip` fails 3.1. Newton at u₀ from 10⁻⁶ runs 30 steps and ends at |R| = 3×10⁴³.
+- `wrongu` fails 3.1. The rungs below u₀ converge (the series at 1.001u fits a nearby state), and the rung u₀ does not
+  (|R| stays at 4.5×10⁻²).
+- `--plan_tol 1e-12` fails 3.2b, at 1.9×10⁻¹⁵ against 10⁻²⁴, with its error estimate at the same level. 3.1 still
+  passes there. The last rung's target is the node itself, so the intermediate targets need only lie inside the next
+  rung's basin.
+- `--rows all` (least squares over 4M rows) fails 3.1. a_h comes out 1.0×10⁻²⁰ off against the bound 7×10⁻³¹, and the
+  residual is 3.9×10⁻¹⁸. The node's off-family part enters a_h, as 2.2 expected. This supports the m and a rows.
+
+**3.2 as written fails, and the cause is the freeze, not the stepper.** At every rung below u₀ the integrated truth
+differs from the truth's series by 6–9×10⁻¹⁹ (84.9), 0.8–1.0×10⁻¹⁸ (87.0) and 1.1–1.4×10⁻¹⁸ (94.1). The difference lies
+in p (harmonic 5), m and c, and it hardly decays toward the horizon. The unfrozen quad-double residual of the truth's
+horizon block locates it. Its m, a and c rows are 3–6×10⁻⁴⁷, while its p rows are 8.4×10⁻¹⁸, all in harmonics 5 and
+above (9.2×10⁻¹⁸ in harmonic 5, falling by about 8 per harmonic). Those are the harmonics the freeze drops. So a chain
+state's last node lies off the regular family by about 10⁻¹⁷ in p, and the integration carries that part inward. The
+node planted on the family (3.2b) agrees with the series to 2–3×10⁻³¹.
