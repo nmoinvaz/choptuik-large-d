@@ -64,7 +64,9 @@ before the residual, the plan and the corrector (hp/reseed.py, notes/RESEED.md: 
 the series inverted on the rungs u0/32 .. u0 in the m and a rows); 0, the default, changes nothing. Records carry each
 re-seed's rungs (reseed). --reseed 2 does the same and runs the quad-double corrector with the horizon data eliminated
 (reseed.ElimQ: every point the corrector steps from or tries is re-seeded at u0 while its max |F| exceeds 1e-15), which
-converged from the series at a = 5 where the single re-seed did not (notes/RESEED.md 4.4).
+converged from the series at a = 5 where the single re-seed did not (notes/RESEED.md 4.4). Past D ~ 100 the re-seed's
+last rung can fail its floor test (17 of 20 at D 106, notes/RESEED.md amendment 9); the prediction is then kept, and the
+attempt usually fails.
 """
 import json
 import os
