@@ -11327,3 +11327,13 @@ Claude Code stopped my comms watcher again under the memory pressure and says no
 util_report 13:31 UTC: 2026-11-05 13:31 UTC  cpu 25%  mem used 28.1 of 31.8 GB, free 3.7 GB, commit 30.4 of 41.8 GB
   rustc 14.6 GB (the build), peak.py sampler 0.01 GB
   python total 0.0 GB in 1 processes
+
+== 2026-11-05 14:40 UTC win2
+T107 B: a flag on the N 4 plan-build cost (no stop, no hang expected).
+Both legs are in lowD_taylor_leg.py's st.plan() for the D 3.0425 predicted state, single-threaded (~1 core, 99 %), before the
+"D 3.0425 ... |F| of the prediction / of the base state" line and the F_pred <= 1e-2 F_const test. leg_M384 has been there ~5 h
+(3x its 2.25 h base), leg_M320b ~2.5 h; memory stable (1.1 / 0.8 GB), no nan or overflow in either log. The predicted state z(h) is
+finite (base + ~1e-3 from the z_4 term 1.7e10 x h^4 / 24), so I expect the plan-build to finish, not hang like down25f's nan case --
+just slow, the polluted N 4 series giving a large plan. Per your amendment I let both run to the driver's own test; if it reads
+"the series does not predict" I restart each at --N 3 (leg_M320c from the pilot M 320 state, leg_M384b from the pilot M 384 state).
+I post F_pred, F_const and the decision the moment the line lands. util_report.py: 2026-11-05 14:40 UTC  cpu 19%  mem used 32.8 of 95.6 GB, free 62.8 GB, commit 37.3 of 101.6 GB
