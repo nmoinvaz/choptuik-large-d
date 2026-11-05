@@ -14,7 +14,7 @@ formulation of hp/pinning.py; their coefficients are zero).
         [--steps 20] [--D_max 200] [--corrector dnp|deflated|newton] [--tol 1e-20] [--tol_growth 1.45]
         [--accept_stall 1e-19] [--junk_only 0] [--threads 4] [--w 24] [--trend T75] [--tol_qd 1e-28]
         [--qd_it 12] [--qd_w 0] [--refine 1] [--probe 0 --probe_c C] [--plan_tol 1e-32] [--fix1 0] [--F_pred_max 0]
-        [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0]
+        [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0]
 
 --corrector qd runs the quad-double Newton of the kernel (hpkernel.driver.newton_qd, Solver.newton_q) on the pinned
 system (pinning.PinnedQ: the held harmonics' offset subtracted from the quad-double residual and added to the step, as
@@ -59,6 +59,14 @@ by the mass mode in either form, and which form is smaller depends on the base.
 quad-double LU at the base's four parts (Solver.newton_q, once per base), so every z_k carries the quad-double
 rounding instead of the double-double one amplified by the mass mode; --fix1 is then not applied. hp/qjet_check.py
 checks the quad-double jet against the quad-double residual on a stored state.
+--reseed 1 replaces each prediction's horizon data (m_h, a_h) by those of the regular solution through its last node
+before the residual, the plan and the corrector (hp/reseed.py, notes/RESEED.md: the node integrated toward the horizon,
+the series inverted on the rungs u0/32 .. u0 in the m and a rows); 0, the default, changes nothing. Records carry each
+re-seed's rungs (reseed). --reseed 2 does the same and runs the quad-double corrector with the horizon data eliminated
+(reseed.ElimQ: every point the corrector steps from or tries is re-seeded at u0 while its max |F| exceeds 1e-15), which
+converged from the series at a = 5 where the single re-seed did not (notes/RESEED.md 4.4). The re-seed's floor test
+is reseed.py's default 'stall' (amendment 10), which converged in 19 of 20 trials at D 106 where the first design's
+converged in 3; a re-seed that fails keeps the prediction, and the attempt then usually fails.
 """
 import json
 import os
@@ -72,6 +80,7 @@ from hpkernel.driver import make_solver, newton_solve, deflated_newton, delta_co
 from multidouble import dd_add, dd_horner, dd_scale, dd_norm, qd_add_dd  # noqa: E402
 from pinning import PinnedQ, PinnedSolver, band_coeffs, band_field, qd_axpy  # noqa: E402
 from raw_out import require_raw  # noqa: E402
+from reseed import ElimQ, Reseeder  # noqa: E402
 from taylor_predict import formula_delta  # noqa: E402
 
 
@@ -163,7 +172,7 @@ def main():
     args = list(sys.argv[1:])
     opt = dict(state="T75/pin7_D73.2657.npz", kfreeze=3, N=24, eps=1e-16, h_max=2.0, steps=20, D_max=200.0, corrector="dnp",
                tol=1e-20, tol_growth=1.45, accept_stall=1e-17, junk_only=0, threads=4, w=24, trend="", tol_qd=1e-28, qd_it=12, qd_w=0,
-               refine=1, probe=0, probe_c=0.0, plan_tol=1e-32, fix1=0, F_pred_max=0.0, horizon_alpha=0, fix1_qlu=0, jet_q=0)
+               refine=1, probe=0, probe_c=0.0, plan_tol=1e-32, fix1=0, F_pred_max=0.0, horizon_alpha=0, fix1_qlu=0, jet_q=0, reseed=0)
     for k in list(opt):
         f = "--" + k
         if f in args:
@@ -184,13 +193,21 @@ def main():
         return opt["tol"] * opt["tol_growth"] ** float(Dx - D_start)
 
     last_q = {}
+    elim = {}             # --reseed 2: the attempt's Reseeder, for ElimQ in the corrector
 
     def correct(spx, ph, pl, tol):
         """T75's corrector (scan_hp.py dnp): deflated Newton, then plain Newton steps from below 1e-12 if they lower |F|;
         returns zh, zl, |F|, steps, accepted (converged, or stalled below accept_stall)"""
         if opt["corrector"] == "qd":
             sq = PinnedQ(spx.s, spx.ch, spx.cl)
+            if elim.get("rs") is not None:
+                # --reseed 2: the corrector on the system with the horizon data eliminated (hp/reseed.py ElimQ)
+                sq = ElimQ(sq, elim["rs"])
             z4, hist, conv = newton_qd(sq, qparts(ph, pl), tol=opt["tol_qd"], it_max=opt["qd_it"], w=opt["qd_w"], verbose=True)
+            if elim.get("rs") is not None:
+                print(f"      elim projections {sq.counts}", flush=True)
+                if not conv:
+                    z4 = elim["rs"].project(z4)[0]
             last_q["z4"] = z4
             Fh, Fl = spx.residual(z4[0], z4[1])
             Fc = float(rnorm(Fh, Fl))
@@ -488,6 +505,22 @@ def main():
             while True:
                 ph, pl = series_at(zh, zl, Zh, Zl, a)
                 Dn = D + mp.mpf(a)                 # exact: the series variable is a to double-double precision
+                rsd = None
+                elim["rs"] = None
+                if opt["reseed"]:
+                    # --reseed 1: the prediction's horizon data from its last node (hp/reseed.py); 2: also eliminated
+                    # inside the corrector
+                    rs_n = Reseeder(dict(M=M, nodes=nodes, kt=kt, kc=kc, ks=ks), Dn, threads=opt["threads"],
+                                    horizon_alpha=opt["horizon_alpha"])
+                    zr, rsd = rs_n.reseed((ph, pl))
+                    elim["rs"] = rs_n if opt["reseed"] == 2 else None
+                    rsd = dict(ok=rsd["ok"], dropped=rsd["dropped"], seconds=rsd["seconds"],
+                               rungs=[dict(u=r["u"], its=r.get("its"), R=r.get("R"), conv=r.get("conv")) for r in rsd["rungs"]])
+                    bad = [r for r in rsd["rungs"] if not r.get("conv")]
+                    print(f"    a {a:.4f}: re-seeded ({'ok' if rsd['ok'] else 'FAILED, prediction kept'}), {rsd['seconds']} s"
+                          + (f"; rung u {bad[0]['u']:.4f} not converged at |R| {bad[0].get('R', float('nan')):.2e} after {bad[0].get('its')} steps" if bad else "")
+                          + (f"; rungs dropped {rsd['dropped']}" if rsd["dropped"] else ""), flush=True)
+                    ph, pl = np.asarray(zr[0]), np.asarray(zr[1])
                 sn = mk(Dn)
                 segs_n = segs
                 sn.set_segs(segs_n)
@@ -515,7 +548,7 @@ def main():
             fd = float(formula_delta(float(Dn)))
             att = dict(attempt=attempt, a=a, D=float(Dn), D_str=str(Dn), F_pred=Fp, F_final=Fc, tol=tol, steps=nsteps, accepted=accepted, t_corr=t_corr,
                        Delta=float(ch[-1] + cl[-1]), dDelta_formula=float(ch[-1] + cl[-1]) - fd, dDelta_corr=dcorr,
-                       moved=float(dd_norm(*dd_add(ch, cl, -ph, -pl))), screens=screens)
+                       moved=float(dd_norm(*dd_add(ch, cl, -ph, -pl))), screens=screens, reseed=rsd)
             rec.setdefault("attempts", []).append(att)
             print(f"    a {a:.3f} -> D {mp.nstr(Dn, 12)}: predicted |F| {Fp:.2e}, {opt['corrector']} {nsteps} steps -> {Fc:.2e} (tol {tol:.1e}"
                   f"{', stall accepted, Delta correction ' + format(dcorr, '+.1e') if accepted and Fc > tol else ''}), "
