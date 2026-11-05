@@ -1813,3 +1813,60 @@ instead of 2. Their pinned harmonics 9–13 are polluted: harmonic 13 is 5.6×10
 at 74. Their raw Δ is off by up to 2×10⁻³, which the linearised correction removes, so the plotted values stand. In a
 broader sample of 198 states from D 3.04 to 85.7, the only failure was T85's state at 78.0, and the check's control
 fires on all 198.
+
+### 13.20 The quad-double jet (2026-11-05)
+
+multidouble 2.0.0 (pull request #29 of nmoinvaz/multidouble) adds `QJet<N>`, the jet lane in quad-double. hp uses it on
+branch `feat/qd-jet`: c218de7 pins the version, and c6c5ec9 adds `qsolve::residual_jet_q` and `Solver.residual_jet_q`
+(M 32 and 48; N 8, 24 and 32). In `psolve` a quad-double jet is solved order by order, each order's solve refined to
+quad-double. The jet forms its D-dependent constants in quad-double (`QSeries`), where `residual_q` forms them in
+double-double, so its order 0 equals `residual_q`'s only to that rounding.
+
+The Rust tests on the synthetic context (`cargo test --release --lib qsolve_`, 8 of 8) check three things. The jet's
+sum, at n + h with the state moved along a direction, matches the quad-double residual. Its error falls by 2²⁴ per
+halving of h, the order-24 truncation, to 4×10⁻³⁹ at h = 2⁻⁸; the frozen dimension fails it by 10³⁴. The coefficients
+agree with the double-double jet's to 1.1×10⁻³⁰. A change of 2⁻¹⁸⁰ in z_1 reaches F_1 to 7.5×10⁻⁹ of J·δ, which neither
+the double-double reading of z_1 nor unrefined solves see. The release build (NEON) passes the bit-identity checks
+against T81's references: `highm_check.py ref`, 72 outputs bit-identical, and `scaled`, bit-identical at M 192 and 256
+with its control firing (raw-data repository `anm-mac/release200/highm_ref.log`, `highm_scaled.log`).
+
+**`hp/qjet_check.py`, first version: fails as written.** At the base 85.7473 (`anm-mac/release200/qjet_check_v1.log`),
+order 0 is 1.15×10⁻³⁵ from `residual_q` for the quad-double jet and 2.02×10⁻¹⁹ for the double-double one. Order 1 is
+compared along (z1d, 1) with R, the Richardson-combined central differences of `residual_q`, whose own spread is
+3.24×10⁻²². There the quad-double jet is 3.45×10⁻²² from R, the double-double jet 7.20×10⁻²⁰, so the criterion "1000
+times closer" fails. The cause is the check's z1d, the double-double jet's dF/dD solved through the quad-double LU. The
+double-double jet's errors in dF/dD and in J·v are common-mode, as the probe of 13.19 found, and they cancel in its own
+LU solve. Through the quad-double LU they do not, so z1d lies 8.96×10⁻³ from the corrected slope, whose norm is
+1.88×10⁻³. Along that direction the double-double jet's order-1 error is below what R resolves. The z_1 criterion
+passes: the quad-double jet's z_1 lies 6.82×10⁻¹⁴ from the corrected one, R's resolution through J⁻¹. The kappa and
+frozen-dimension controls fire, at 6.7×10⁷ and 1.3×10⁸. The unrefined-solve control does not fire (3.51×10⁻²²): at
+this resolution the horizon solves' refinement does not show in order 1, since the double-double jet's error comes
+from the horizon series' arithmetic, not its solves. The second version takes z1d the chain's way (the double-double
+jet through the double-double LU, `anm_run.py coefficients`). It keeps the criteria and the two firing controls, and it
+records the unrefined jet without counting it as a control, whose control is the Rust test above.
+
+**The chain pilot, A against B (criteria fixed before the run).** Both start from qd9's state at 86.9494
+(`anm-mac/run_trend_pin3_qd9/anm_pin3_D86.9494.npz`) with qd9's options, one step (`--steps 1`), `--h_max 0.169` and
+`--eps 1e-6`, so that h_max sets the first attempt. A has `--jet_q 1`, B the double-double jet with `--fix1 1`.
+From bases at 86.36 to 86.95 every one of qd9's attempts at 0.146–0.169 failed, the corrector stalling after moving
+1.1–3.1×10⁻⁹, and the attempts that converged moved 0.7–1.4×10⁻¹⁰ at 0.042 (`run_trend_pin3_qd9/anm_run.jsonl`). The
+basin has shrunk: from 84.73 to 86.07 attempts converged after moving up to 1.9×10⁻⁹. Pass: A's first attempt
+converges, and its distance moved is at most a tenth of B's first attempt's. Fail: A fails at 0.169 as B does, and then
+the second-order error was not the jets'.
+
+**`hp/qjet_check.py`, second version: fails as written, and it relocates the slope error.** At the same base
+(`anm-mac/release200/qjet_check_v2.log`), z1d is now the chain's z_1 on the bare kernel. Its order-1 residual in the
+quad-double model is |R| = 4.66×10⁻¹³, with R's spread 8.1×10⁻²³. The double-double jet's own order-1 coefficient on
+(z0, z1d) equals R to 7.21×10⁻²⁰, and the quad-double jet's to 8.64×10⁻²³, at R's resolution. The criterion "1000
+times closer" fails by a ratio of 1.2×10⁻³, and the other criteria pass. z_1 through the quad-double jet and LU lies
+8.9×10⁻¹⁵ from the corrected slope, against 2.95×10⁻⁷ for the chain's, and both controls fire.
+
+The criterion fails because its premise is wrong. The double-double jet's order-1 coefficient is not where the slope
+error sits: it agrees with the quad-double model to 7×10⁻²⁰, while the chain's z_1 leaves a residual of 4.66×10⁻¹³ in
+both models. So the chain's z_1 does not solve the jet's own order-1 equation. `coefficients` refines it with a
+residual formed by `jvp`, J·x in a separate evaluation. The links of 13.19 (the jet's dF/dD and `jvp`'s J·z_1, each
+off by up to 8×10⁻¹² against quad-double differences, in the same rows) are rounding in the horizon series, as found.
+Their errors cancel within one jet evaluation to below 7×10⁻²⁰, and between the jet and `jvp` only to about 4×10⁻¹³.
+This corrects the attribution in 13.19's correction paragraph, which put the order-1 error in the jet's arithmetic. It
+is in the solve's mixing of two evaluations. A test follows from it, without quad-double: refine each order with the
+jet's own residual, F_k on (z_0, …, z_(k−1), x), through the double-double LU.
