@@ -195,6 +195,24 @@ times the rung series' floor, once it stops halving or no trial lowers it. This 
 `anm_run.py` now names the failing rung, and the pilot's step from 101.1184 runs again. The unit check and its `skip`
 control rerun at 84.9073 with the change.
 
+*Amendment 9, status at 07:27 UTC, after the coordinator's review.* This change loosened a convergence test after a
+failure, before its cause was shown, which AGENTS.md does not allow. The failing step's rung data were not recorded
+(the pilot printed only "FAILED" and was stopped in its corrector), so the numbers of the failure are not known. The
+pilot stays stopped at 101.1184 and is not rerun on the amended test. Until the evidence is in, no result depends on
+the relative rule. Every result in 4.1–4.4 above came from the first design ('abs'), except the reruns at 84.9073 of the
+unit check (`unit_D84.9073_v2.log`: pass) and of `skip` (fires). The evidence, in `reseed-mac/amend9/` and
+`amend9.jsonl`, runs in this order:
+- (1) The failing prediction reproduced. The pilot's step is 101.1184 → 106.1184 at a = 5, from the series of 101.1184,
+  computed as the jump test computes it and cached. Each rung's Newton history (residual and step per iteration) is
+  recorded under both rules (`reseed_check.py rungs`).
+- (2) The unit check under both rules at 84.9073, 87.0224, 94.1184 and 101.1184. Each rung's history shows whether the
+  last steps and the floor of the u₀ rung scale with G.
+- (3) The controls under the relative rule at 101.1184: `skip` and `wrongu` must still fail. `--floor_rule abs` keeps the
+  first design runnable.
+
+If (1) does not show the failure in the u₀ rung's floor test, with steps above 10⁻²⁴ at a residual that scales with G,
+the cause is not established, and the amendment is withdrawn and reported as such.
+
 **3.4 Jump test** (only if 3.3 passes; `hp/reseed_check.py jump`). From the latest qdj1 state, the chain's quad-double
 series (anm_run.py's `coefficients_q`, N 24, the held harmonics on the T75 trend) is summed at h = 2, 5 and 10. Each
 prediction is re-seeded and corrected at D + h, with the held harmonics at the trend's values there. The plain arm runs
