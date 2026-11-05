@@ -2079,6 +2079,14 @@ values, their float64 trend and the plan, so its "model" means only "not the hor
 question is which of these three, changed at the 10⁻²⁰ level and amplified by G ≈ 7×10¹⁹, decides the series' orders
 4-12.
 
+**The jets bit-identity check across systems (2026-11-05 20:19 UTC; raw-data repository `T112-win/`,
+`anm-mac/jets_plans/`, `anm-mac/jets_inputs/`).** On win's T112 build `highm_check.py jets` against the Mac's reference
+differed at the 12 outputs of M 32 and matched at M 48 and 64. M 32 is the only resolution whose plan is computed and
+whose input is resampled (from the M 48 state, by numpy). With the Mac's plans given, the 12 still differed. With the
+Mac's inputs given as well, all 28 outputs were bit-identical, and win's own resampled M 32 input hash differed from the
+Mac's while those of M 48 and 64 agreed. So the difference was the resampling, not the build. The check now stores each
+resolution's plan and input with its hashes (main 30c3db1, 7a59d78), and T113 started on the T112 build.
+
 ### 13.23 The step, animated (2026-11-05)
 
 `hp/plot_algorithm.py RAWDIR` draws one step of the chain with `--jet_q 1 --pred_q 1 --reseed 2 --reseed_q 1` in four
