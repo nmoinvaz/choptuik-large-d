@@ -47,6 +47,13 @@ from hpkernel.driver import (dd_add, deflated_newton, delta_correction, load, lm
                              renode, resample_z, save, seed_from_f64, weak_subspace, _normal_solve)
 
 NL = [0.02, 0.05, 0.1, 0.16, 0.23, 0.3, 0.4, 0.5, 0.6]
+# [s0, L, None] when every solver of the run is on the mapped tau grid of tau_map.py (lowD_highM.py --tau_map, which
+# also replaces make_solver); solve_point then writes it into the meta of its states. None: the uniform grid.
+TAU_MAP = None
+
+
+def _tau_meta():
+    return {"tau_map": list(TAU_MAP)} if TAU_MAP else {}
 
 
 def harmonics(f):
@@ -235,7 +242,7 @@ def solve_point(D, M, zh, zl, src, a, nodes, outdir, log, segs=None):
         return True, zh, zl
     ckpt = os.path.join(outdir, f"{a.tag}_D{D:.4f}_M{M}_ckpt.npz")
     fp = start_fingerprint(zh, zl, segs)
-    meta_c = dict(D=D, M=M, nodes=nodes, kt=a.kt, kc=a.kcs, ks=a.ks, start=fp)
+    meta_c = dict(D=D, M=M, nodes=nodes, kt=a.kt, kc=a.kcs, ks=a.ks, start=fp, **_tau_meta())
     res = resume_checkpoint(ckpt, fp, log) if a.resume else None
     if res is not None:
         zh, zl, mc = res
@@ -300,7 +307,7 @@ def solve_point(D, M, zh, zl, src, a, nodes, outdir, log, segs=None):
         with open(a.out, "a") as f:
             f.write(json.dumps(rec) + "\n")
         save(os.path.join(outdir, f"{a.tag}_D{D:.4f}_M{M}_fail.npz"), zh, zl,
-             dict(D=D, M=M, nodes=nodes, kt=a.kt, kc=a.kcs, ks=a.ks))
+             dict(D=D, M=M, nodes=nodes, kt=a.kt, kc=a.kcs, ks=a.ks, **_tau_meta()))
         log(f"D {D} M {M}: NOT converged, |F| {F:.1e} after {len(hist)} iterations ({dt:.0f}s); stopping")
         return False, zh, zl
     # the LU stored in s must be at the final z for the sensitivities: the solvers' last s.newton call is at the
@@ -333,7 +340,7 @@ def solve_point(D, M, zh, zl, src, a, nodes, outdir, log, segs=None):
         rec.update(weak_sv=sv, weak_delta=dc, svd_seconds=round(time.time() - t1, 1))
     with open(a.out, "a") as f:
         f.write(json.dumps(rec) + "\n")
-    save(done, zh, zl, dict(D=D, M=M, nodes=nodes, kt=a.kt, kc=a.kcs, ks=a.ks, segs=s.get_segs()))
+    save(done, zh, zl, dict(D=D, M=M, nodes=nodes, kt=a.kt, kc=a.kcs, ks=a.ks, segs=s.get_segs(), **_tau_meta()))
     if os.path.exists(ckpt):
         os.remove(ckpt)
     log(f"D {D} M {M}: Delta {zh[-1]:.16f} ({zl[-1]:+.2e}) |F| {F:.1e} its {len(hist)} {dt:.0f}s "

@@ -85,6 +85,22 @@ from raw_out import FLAG, HELP, require_raw  # noqa: E402
 STATES = os.path.join(HERE, "data", "lowD_states")
 
 
+def install_tau_map(tm):
+    """--tau_map: every solver of the run (here and in lowD_dd.solve_point) on the mapped tau grid tm = [s0, L, None]
+    of tau_map.py, and the lifts between M by interpolation in s on that grid (tau_map.map_state, which for one grid is
+    resample_z bit for bit; notes/LOW_D_SPEEDUP.md, step 5)"""
+    global make_solver, resample_z
+    from tau_map import make_solver_mapped, map_state
+
+    def make_solver(D, M, **kw):
+        return make_solver_mapped(D, M, tm[0], tm[1], **kw)
+
+    def resample_z(z, M_old, M_new, K):
+        return map_state(z, np.zeros_like(z), M_old, M_new, K, tm[:2], tm[:2])
+    lowD_dd.make_solver = make_solver
+    lowD_dd.TAU_MAP = list(tm)
+
+
 def find_record(path, D, M, nodes):
     """the last converged record of (D, M) on these nodes in a lowD_dd.solve_point jsonl (also after a resumed run,
     where solve_point skips a converged (D, M) without writing a record)"""
@@ -157,9 +173,14 @@ def main():
                     "predictor in two passes instead of failing the point (off: the point fails and the step is halved)")
     ap.add_argument("--helper_it_max", type=int, default=None, help="Newton iterations of the M_c helper (default "
                     "--it_max; a test of --helper_fallback forces the helper to fail with 1)")
+    ap.add_argument("--tau_map", default="", help="s0,L: every solve on the mapped tau grid of tau_map.py (the start "
+                    "states must carry the same tau_map in their meta; default: the uniform grid)")
     ap.add_argument(FLAG, action="store_true", help=HELP)
     a = ap.parse_args()
     STATES = a.states
+    tau_map = [float(v) for v in a.tau_map.split(",")] + [None] if a.tau_map else None
+    if tau_map:
+        install_tau_map(tau_map)
     require_raw(a.out, a.points, os.path.join(STATES, "x"), allow=a.allow_unraw)
     os.makedirs(os.path.dirname(a.out), exist_ok=True)
     log = lambda m: print(time.strftime("%H:%M:%S ") + m, flush=True)  # noqa: E731
@@ -170,6 +191,9 @@ def main():
     zn, znl, mn = load(a.start_n)
     if mw["D"] != mn["D"] or list(mw["nodes"]) != list(mn["nodes"]) or Ms.index(mn["M"]) != Ms.index(mw["M"]) + 1:
         raise SystemExit("the start states must be at the same D and nodes, at consecutive M of --Ms")
+    for m_ in (mw, mn):
+        if (m_.get("tau_map") or [None, None])[:2] != (tau_map or [None, None])[:2]:
+            raise SystemExit(f"a start state's tau map {m_.get('tau_map')} is not --tau_map {a.tau_map or 'none'}")
     nodes = list(mw["nodes"])
     kc, ks = mw["kc"], mw["ks"]
 
@@ -180,9 +204,11 @@ def main():
     D0 = mw["D"]
     st = dict(t_used=0.0, Mw=mw["M"], Mn=mn["M"], nodes=nodes, tag=a.tag, hist_w=[[D0, a.start_w]],
               hist_n=[[D0, a.start_n]], pairs=[], targets=None, done=None, post=None, last_point_s=None, Mc=None,
-              hist_c=[])
+              hist_c=[], **({"tau_map": tau_map} if tau_map else {}))
     if a.resume and os.path.exists(prog_path):
         st = json.load(open(prog_path))
+        if st.get("tau_map") != tau_map:
+            raise SystemExit(f"the run's tau map {st.get('tau_map')} is not --tau_map {a.tau_map or 'none'}")
         log(f"resuming: M {st['Mw']}/{st['Mn']}, last D {st['hist_n'][-1][0]}, {st['t_used'] / 3600:.2f} h used")
     if st.get("done"):
         log(f"already stopped: {st['done']}")
