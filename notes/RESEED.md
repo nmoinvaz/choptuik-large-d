@@ -339,6 +339,15 @@ moved 7.8×10⁻⁷ from the prediction, and Δ = 1.743933931207271 lies 8.2×10
 plausibility criterion, and it sits on the chain's drift (−4.6×10⁻⁷ at 91.1, −6.3×10⁻⁷ at 96.1, about −3.5×10⁻⁸ per
 unit). No chain state exists there, so the pilot (amendment 8) checks it from 96.1184.
 
+**The pilot, `anm_run.py --reseed 2`** (`reseed-mac/anm_reseed_pilot.log` and `anm_reseed_pilot/`), from 96.1184 with the
+chain's options and `--eps 1e-5 --h_max 5`. The quad-double series takes 1049 s, with a_max 5.435. At a = 5 the
+re-seed (60 s) takes the prediction to max |F| 4.4×10⁻¹¹. The elimination corrector converges in 5 steps to 1.4×10⁻³⁰,
+in 659 s with three projections at u₀, one through the ladder, one that failed (a refused trial) and one skipped. It
+saves the state at 101.1184. Its Δ, 1.743933931207271110837, agrees with the h = 10 jump's from 91.1184,
+1.743933931207271110840, to 2.6×10⁻²¹. That passes amendment 8's 10⁻²⁰. The two routes share the kernel, the model and
+the corrector, but not the base, the series or the prediction. Their difference is the size of the held harmonics' f64
+rounding at re-basing, as at 93.1184 (2.5×10⁻²¹).
+
 That is the mechanism (*numerical evidence*, from these runs and 4.2). A Newton step from a point on the regular family
 leaves its horizon data inconsistent with its new node, at second order, and the horizon block amplifies that by G, so
 the next correction is large and the trial is refused. Re-seeding the trial point at u₀ removes exactly that part. The
