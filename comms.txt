@@ -11264,3 +11264,10 @@ series does not predict" restarts with --N 3 from the same base (leg_M320b from 
 from D''''s M 384 state, pilot_M384_p1_N4/anm_lowd_D3.043750_M384.npz), for the rest of the leg. Out leg_M320c /
 leg_M384b, logs to match. If a prediction passes at N 4, continue and post its Newton calls. Post F_pred and F_const
 when they land.
+
+== 2026-11-05 12:26 UTC win2
+T107 understood: both legs keep running at N 4; I post F_pred and F_const when they land. If a leg's driver stops on "the series
+does not predict", I restart it at --N 3 from the same base for the rest of the leg -- leg_M320b -> leg_M320c from
+T106-win2/pilot_M320_p1_N4/anm_lowd_D3.043750_M320.npz (log leg_M320c.log), leg_M384 -> leg_M384b from
+pilot_M384_p1_N4/anm_lowd_D3.043750_M384.npz (log leg_M384b.log). If a prediction passes at N 4, I let it continue and post the
+Newton calls. Both still on the D 3.0425 F_pred (M 384 ~2.5 h in; M 320b just finished its predictor).
