@@ -17,6 +17,7 @@ use crate::dd::DD;
 use crate::dv::DV;
 use crate::field::{cs, cs_range, cs_w, horner, DMat, Fl, State, TangentTail};
 use crate::lane::{BaseLane, Dtn, Du, F8, Fu, Fun, Jet, Lane};
+use crate::qv::QV;
 use multidouble::dual::Param;
 use crate::field::FieldSolve;
 use crate::linalg::{ld_for, DDLu};
@@ -487,6 +488,24 @@ pub fn horizon_lus<const B: usize>(ctx: &Ctx<B>, a0: &Fl<DV, B>, delta: DD, par:
 /// (omega D + diag kappa) f = r with the LU at the values; for tangents the derivative of the system:
 /// A_t f_d = r_d - omega_d D f_v - kappa_d f_v, with A_t = A + lam (lu_t; the same LU when lam = 0).
 fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, lu: &DDLu, lu_t: &DDLu, kappa: &Fl<T, B>, rhs: &Fl<T, B>, omega: T) -> Fl<T, B> {
+    if T::NJ > 0 && T::VAL_QD {
+        // a quad-double jet: order by order as below, the right-hand side of order k in quad-double and each order's
+        // solve refined to quad-double with the lane's omega_0 and kappa_0 (as the branch after this one)
+        debug_assert!(ctx.lam.hi == 0.0);
+        let steps = match ctx.mutate {
+            QD_MUT_NOREFINE => 0,
+            QD_MUT_REFINE4 => 4,
+            _ => QD_REFINE,
+        };
+        let om: Vec<QV> = (0..T::NJ).map(|j| omega.coef_qd(j)).collect();
+        let k0 = kappa.coef_qd(0);
+        return lu.solve_lanes_jet_refine(
+            rhs,
+            steps,
+            |j, x, r| (r - ctx.d.apply(x).mul_t(om[j])) - kappa.coef_qd(j) * *x,
+            |r, x| *r - (ctx.d.apply(x).mul_t(om[0]) + k0 * *x),
+        );
+    }
     if T::VAL_QD {
         // the LU was factored at the double-double a_h and Delta; the refinement solves the lane's own system (omega
         // and kappa from the quad-double a_h and Delta), its residual formed in the lane's precision (iterative
@@ -504,20 +523,11 @@ fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, lu: &DDLu, lu_t: &DDLu, kappa: 
         // a jet: order by order with the LU at the values, the tangent branch below continued past order 1,
         // A_0 f_k = r_k - sum_{j=1..k} (omega_j D + kappa_j) f_{k-j}; no mode-matrix shift (lam) with jets
         debug_assert!(ctx.lam.hi == 0.0);
-        let mut f = Fl::<T, B>::zero();
-        let mut fs: Vec<Fl<DV, B>> = Vec::with_capacity(T::NJ);
-        for k in 0..T::NJ {
-            let mut r = rhs.coef(k);
-            for j in 1..=k {
-                let dfv = ctx.d.apply::<DV>(&fs[k - j]);
-                let od = Fl::<DV, B>([omega.coef(j); B]);
-                r = (r - dfv * od) - kappa.coef(j) * fs[k - j];
-            }
-            let fk = lu.solve_lanes(&r);
-            f.set_coef(k, &fk);
-            fs.push(fk);
-        }
-        return f;
+        return lu.solve_lanes_jet(rhs, |j, x, r| {
+            let dfv = ctx.d.apply::<DV>(x);
+            let od = Fl::<DV, B>([omega.coef(j); B]);
+            (r - dfv * od) - kappa.coef(j) * *x
+        });
     }
     if T::VAL_F64 || T::TAN_F64 {
         // f64 values: the value solve in plain f64 with the hi parts of the double-double LU factors; f64 tangents:

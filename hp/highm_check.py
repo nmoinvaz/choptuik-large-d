@@ -4,6 +4,7 @@ storage of the mixed-precision Newton system (notes/HIGH_M.md).
 
     cd hp && python3 highm_check.py ref --save=REF.json [--Ms=8,16,48,64,80,96,128]    (with a build of main)
     cd hp && python3 highm_check.py ref --compare=REF.json [--Ms=...]                   (with this branch's build)
+    cd hp && python3 highm_check.py jets --save=F.json | --compare=F.json [--Ms=32,48,64] [--mutate=kappa]
     cd hp && python3 highm_check.py block [--Ms=16,48,80,128] [--variants=f64x4,f64x1,dd4] [--mutate=pivot|link] [--expect_fail] [--json=F]
     cd hp && python3 highm_check.py controls
     cd hp && python3 highm_check.py converge [--M=80] [--json=F]
@@ -23,6 +24,9 @@ ref: bit-identity at M <= 128 of everything the kernel computes there (residual,
   for M <= 48, the M = 64 and 80 states at their own M, M = 96 and 128 from M = 80). Each output is stored as the
   sha256 of its float64 bytes (so M = 128, where a dense Jacobian is 400-800 MB, costs no disk); --compare exits 1
   on any differing hash. Uses only methods that the parent commit's kernel has, so --save runs on a build of main.
+jets: the same for the jet residuals, which ref does not run: Solver.residual_jet at M 32, 48, 64 and
+  Solver.residual_jet_q at M 32, 48 on a state jet at the D = 3.7 state, at nout 8 and 20 (so every lane size the
+  bindings choose); --mutate=kappa (model.rs JET_MUT_KAPPA) must make --compare fail.
 block: at M <= 128, newton_mixed in block storage (block=True) against the dense path (block=False) at the state
   and at a perturbed state (Delta + 1e-6, fields + 1e-8, seed 1): the residuals must be bit-identical (same code);
   the steps dz, the sensitivities y = J^-T e_Delta (lu_solve_t) and a chord step after are compared relative to
@@ -192,6 +196,54 @@ def ref(opts):
             same = want[M].get(k) == v
             bad += not same
             print(f"  M = {M:>3} {k:24s} {v[:16]} {'bit-identical' if same else 'DIFFERS from ' + str(want[M].get(k))[:16]}")
+    print(f"PASS: {n} outputs bit-identical" if not bad else f"FAIL: {bad} of {n} outputs differ")
+    return 1 if bad else 0
+
+
+# ------------------------------------------------------------------ jets
+JET_MUT_KAPPA = 22
+
+
+def jet_hashes(M, threads, mutate=0):
+    """the residual's Taylor coefficients on the state jet z_0 + h v at the D = 3.7 state resampled to M (v a fixed
+    seeded direction of size 1e-3, Delta excluded): Solver.residual_jet at nout 8 and 20 (its N 8 and 32 lanes), and at
+    M 32 and 48 Solver.residual_jet_q at nout 8 and 20 (its N 8 and 24 lanes), as SHA-256 hashes"""
+    s, zh, zl, m = solver_at(M, threads)
+    v = 1e-3 * np.random.default_rng(7).uniform(-1, 1, len(zh))
+    v[-1] = 0.0
+    z = np.zeros(len(zh))
+    out = {}
+    t0 = time.time()
+    for nout in (8, 20):
+        Hs, Ls = s.residual_jet([zh, v], [zl, z], nout, mutate)
+        out[f"jet_dd_n{nout}_hi"], out[f"jet_dd_n{nout}_lo"] = sha(np.concatenate(Hs)), sha(np.concatenate(Ls))
+        if M in (32, 48):
+            F = s.residual_jet_q([(zh, zl, z, z), (v, z, z, z)], nout, mutate)
+            for q in range(4):
+                out[f"jet_qd_n{nout}_{q}"] = sha(np.concatenate([np.asarray(f[q]) for f in F]))
+    print(f"  M = {M} (N = {s.size}, from {m['source']}): {len(out)} jet outputs in {time.time() - t0:.0f} s", flush=True)
+    return out
+
+
+def jets(opts):
+    """bit-identity of the jet residuals (the dd jet and the qd jet), as ref for the solver: --save=F with one build,
+    --compare=F with another; --mutate=kappa runs the jets with model.rs JET_MUT_KAPPA, which must make --compare fail"""
+    Ms = [int(v) for v in str(opts.get("Ms", "32,48,64")).split(",")]
+    threads = int(opts.get("threads", 2))
+    mutate = JET_MUT_KAPPA if opts.get("mutate") == "kappa" else 0
+    allh = {str(M): jet_hashes(M, threads, mutate) for M in Ms}
+    if "save" in opts:
+        json.dump(allh, open(opts["save"], "w"), indent=1)
+        print(f"saved {sum(len(v) for v in allh.values())} hashes to {opts['save']}")
+        return 0
+    want = json.load(open(opts["compare"]))
+    bad = n = 0
+    for M, h in allh.items():
+        for k, v in h.items():
+            n += 1
+            same = want.get(M, {}).get(k) == v
+            bad += not same
+            print(f"  M = {M:>3} {k:18s} {v[:16]} {'bit-identical' if same else 'DIFFERS from ' + str(want.get(M, {}).get(k))[:16]}")
     print(f"PASS: {n} outputs bit-identical" if not bad else f"FAIL: {bad} of {n} outputs differ")
     return 1 if bad else 0
 
@@ -531,7 +583,7 @@ def scaled(opts):
 def main():
     pos, opts = opts_of(sys.argv[1:])
     cmd = pos[0] if pos else "block"
-    return {"ref": ref, "block": block, "controls": controls, "converge": converge, "lift": lift, "profile": profile,
+    return {"ref": ref, "jets": jets, "block": block, "controls": controls, "converge": converge, "lift": lift, "profile": profile,
             "scaled": scaled}[cmd](opts)
 
 
