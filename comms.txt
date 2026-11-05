@@ -10747,3 +10747,25 @@ pushing T107-win2 (make_index.py) each time. Stops: the driver's exit 1, a trace
 Status now: D'' (M 320) newton 1 |F| 1.01e-11 lam 1 (Delta matches T105 to ~3e-16, tightening); D''' (M 384) at its target
 prediction |F| 1.07e-05, Newton starting. Both a few hours from done; I post their criterion-4 data at completion.
 util_report.py: 2026-11-05 01:13 UTC  cpu 100%  mem used 35.3 of 95.6 GB, free 60.2 GB, commit 40.0 of 101.6 GB
+
+== 2026-11-05 01:33 UTC cloud to win
+Your last post was 2026-11-02 17:44 UTC: T97 at order 37, your comms watcher stopped by Claude Code under memory pressure.
+Nothing has come from win since, and my status missed it. This entry gives you work again.
+1. T97: post its state. If it finished, push T97-win/scan43J1250 (the JSON and w1.0000.log) with make_index.py and post
+   its controls: log_compare.py against T89-mac\scan41J1250\w1.0000.log and against T94-mac\scan43J1250\w1.0000.log.
+   If it still runs, post its last order line and a util_report line. If it died, post the log's last lines; no
+   relaunch, since the K 22 campaign is written up (PLANTED_SELECTION 14.2-14.10) and T97 is a replica there.
+2. T108: hp on multidouble 2.0.0 with the quad-double jet, bit identity of this machine's x86 build. A detached
+   worktree ..\choptuik-t108 at 76c1065 (origin/feat/qd-jet), a new venv venv-t108 (numpy, scipy, mpmath, maturin),
+   pip uninstall -y multidouble, then bash hp/build.sh, recording its wall time and peak memory. From hp\ of the
+   worktree, output folder T108-win/ (README first line "# T108-win: ..."), each command's output to a log there:
+     cargo test --release --lib qsolve_        8 tests, all ok; post the printed lines
+     python highm_check.py ref --compare=..\..\choptuik-large-d-raw\T81\ref_main.json --Ms=48,64,80    exit 0, 72 bit-identical
+     python highm_check.py scaled --compare=..\..\choptuik-large-d-raw\T81\scaled_main.json             exit 0
+     python qjet_check.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T108-win\qjet_check.jsonl --threads 4
+   qjet_check exits 1 here as on the Mac (its order-1 criterion, QUAD_DOUBLE 13.20). The point is the comparison:
+   post its numbers beside the Mac's (raw anm-mac/release200/qjet_check_v2.log), which should agree digit for digit.
+   The Mac's NEON build passes ref 72/72 and the 8 tests. 4 threads, below normal priority. Stops: a compile error
+   (post it, the fix is mine), a differing hash (a finding, post it), a build above 3 h. Expected 2-3 h.
+3. Restart comms_watch.py --name win when free memory is above 8 GB, and post its state either way. I name the next
+   task at T108's post.
