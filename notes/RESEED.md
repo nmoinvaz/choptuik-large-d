@@ -316,7 +316,7 @@ from 96.1184 at h = 2, 5 and 10, which can be compared with the formula only.
 
 ## 4. Results
 
-**4.1 The unit and stepper checks pass at three bases, and their controls fire** (raw-data repository
+**4.1 The unit and stepper checks pass at four bases, and their controls fire** (raw-data repository
 `reseed-mac/unit.jsonl` and `unit_*.log`; the re-seed takes 12–13 s on two threads). φ is the truth's double-double
 residual, the floor of 2.5.
 
@@ -325,6 +325,7 @@ residual, the floor of 2.5.
 | 84.9073 | 4.9×10¹² | 3.5×10⁻¹⁹ | 4, 2, 2, 2, 2, 3 | 5.7×10⁻³² | 1.7×10⁻³² | 1.7×10⁻¹⁹ | pass | 3.1×10⁻³¹ |
 | 87.0224 | 1.0×10¹³ | 8.7×10⁻¹⁹ | 4, 2, 2, 2, 2, 3 | 1.0×10⁻³¹ | 1.3×10⁻³² | 2.7×10⁻¹⁹ | pass | 1.9×10⁻³¹ |
 | 94.1184 | 1.3×10¹⁴ | 1.2×10⁻¹⁷ | 4, 2, 2, 2, 2, 3 | 4.8×10⁻³² | 1.6×10⁻³² | 4.3×10⁻¹⁸ | pass | 2.2×10⁻³¹ |
+| 101.1184 (the pilot's state) | 1.6×10¹⁵ | 1.5×10⁻¹⁶ | 4, 2, 2, 2, 2, 4 | 5.5×10⁻³² | 2.6×10⁻³² | 8.3×10⁻¹⁷ | pass | 5.4×10⁻³¹ |
 
 From horizon data off by 10⁻⁶ the re-seed returns the truth's to 10⁻³¹, far below the bounds of 3.1 (10φ/G and 20φ).
 The quad-double residual it leaves is the double-double floor φ, mostly in the c rows. The first rung's Newton takes
@@ -447,10 +448,10 @@ this run loaded is not known (amendment 9's status). The δ up to 10⁻⁵ conve
 
 With the horizon data exact at the start, the plain corrector reaches 10⁻¹⁰, the "about 10⁻¹⁰" of the task. The single
 re-seed narrows that by three decades, and the elimination recovers it (10⁻¹⁰) without widening it. The criterion "many
-orders beyond the plain basin" therefore fails in family A at this base, for both arms. This run of elim loaded the
-withdrawn 'rel' rule (amendment 9). It replaces exact horizon data with data consistent with the perturbed node, so the
-node's white noise enters the m_h directions of gain about 1 (4.2). On the re-seeded start, families A and B differ only
-in Δ, and their trajectories at 10⁻¹² are the same to the printed digits.
+orders beyond the plain basin" therefore fails in family A at this base, for both arms. The re-seed replaces exact
+horizon data with data consistent with the perturbed node, so the node's white noise enters the m_h directions of gain
+about 1 (4.2). On the re-seeded start, families A and B differ only in Δ, and their trajectories at 10⁻¹² are the same
+to the printed digits. This run of elim loaded the withdrawn 'rel' rule (amendment 9).
 
 **4.4 The jump test from 91.1184** (`reseed-mac/jump/jump.jsonl`, `jump_D91.1184*.log`). The quad-double series (N 24,
 958 s on two threads) has |z_k| falling from 1.8 to 1.4×10⁻²⁵. At h = 2 its smallest term is 2.4×10⁻¹⁸ (order 24).
@@ -493,7 +494,8 @@ saves the state at 101.1184. Its Δ, 1.743933931207271110837, agrees with the h 
 the corrector, but not the base, the series or the prediction. Their difference is the size of the held harmonics' f64
 rounding at re-basing, as at 93.1184 (2.5×10⁻²¹).
 
-That is the mechanism (*numerical evidence*, from these runs and 4.2). A Newton step from a point on the regular family
+Why elim succeeds where the single re-seed fails (*numerical evidence*, from these runs and 4.2): a Newton step from a
+point on the regular family
 leaves its horizon data inconsistent with its new node, at second order, and the horizon block amplifies that by G, so
 the next correction is large and the trial is refused. Re-seeding the trial point at u₀ removes exactly that part. The
 re-seed before the corrector fixes the start but not the iterates. The elimination fixes both.
