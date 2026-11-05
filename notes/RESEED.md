@@ -228,8 +228,9 @@ the cause is not established, and the amendment is withdrawn and reported as suc
   times from data moved by 10⁻²⁵, at D 84.9, 94.1, 101.1 and 106.1) measures how often 'abs' fails this way.
 - (2) The floor scales with G, but the relative test is unsound. The u₀ rung's final residual under 'abs' is 6.9×10⁻²⁰,
   1.6×10⁻¹⁹, 4.5×10⁻¹⁸, 4.0×10⁻¹⁷ and 1.7×10⁻¹⁶ at G = 4.9×10¹², 1.0×10¹³, 1.3×10¹⁴, 1.6×10¹⁵ and 9.4×10¹⁵, that is
-  (1.4–3.4)×10⁻³² G. So the residual reaches its floor while the data still move. The second step at the floor grows with
-  D: 1.2×10⁻²⁸, 7.1×10⁻²⁸, 2.6×10⁻²⁶, 8.7×10⁻²³ and 4.1×10⁻¹⁴. A test on the residual alone therefore stops too early.
+  (1.4–3.4)×10⁻³² G. So the residual reaches its floor while the data still move. In the unit checks the step taken from
+  the floor's first point grows with D: 1.2×10⁻²⁸, 7.1×10⁻²⁸, 2.6×10⁻²⁶ and 8.7×10⁻²³ at 84.9, 87.0, 94.1 and 101.1.
+  At 106.1, from the prediction, it is 1.8×10⁻¹⁹. A test on the residual alone therefore stops too early.
   Under 'rel' the unit check fails at 101.1184. The u₀ rung stops after 2 steps at |R| 3.1×10⁻¹⁷ with a step of
   8.7×10⁻²³ still pending, and a_h ends 2.4×10⁻³⁰ off against the bound 9.3×10⁻³¹ (m_h 4.9×10⁻²⁸). It passes at
   84.9, 87.0 and 94.1.
@@ -241,7 +242,7 @@ must fail, and it does at 101.1184. The pilot's failed re-seed at 101.1184 → 1
 stays stopped at 101.1184. A sound fix would accept steps at the floor by their own decrease, as `newton_qd` does
 ("dz"), not by the residual's. It is proposed, not built.
 
-Runs that loaded 'rel' as their default, between 07:10 and the withdrawal: family A elim at 84.9073 (started 07:5x),
+Runs that loaded 'rel' as their default, between 07:10 and the withdrawal: family A elim at 84.9073 (started 07:50),
 and maybe family P elim. Their records are corrector outcomes, measured against the truth by 3.3's criteria. The rule
 decides only whether a re-seed or projection is declared failed, and a projection whose rung stopped early leaves an
 error at the 10⁻³⁰ level that the corrector removes. So their basin numbers stand, with that caveat.
