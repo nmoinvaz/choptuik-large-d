@@ -149,6 +149,10 @@ to about 10⁻²⁰ along it. The criterion stays as written ("back"). The ascen
 "converged" when `newton_qd` meets its tolerance. Seed 1 of the plain arm continues from 10⁻²⁸, and seeds 2 and 3
 restart from 10⁻³⁰.
 
+*Amendment 3 of 2026-11-05 04:24 UTC.* A failing run costs 10–30 min (the corrector creeps through its 12 steps), so
+the bases after 84.9073 run with seeds 1 and 2 only. 94.1184 runs first (plain, re-seeded and elim), and 87.0224 runs if
+time allows. Family A runs at 84.9073 with seed 1, for the plain and re-seeded arms.
+
 **3.4 Jump test** (only if 3.3 passes; `hp/reseed_check.py jump`). From the latest qdj1 state, the chain's quad-double
 series (anm_run.py's `coefficients_q`, N 24, the held harmonics on the T75 trend) is summed at h = 2, 5 and 10. Each
 prediction is re-seeded and corrected at D + h, with the held harmonics at the trend's values there. The plain arm runs
