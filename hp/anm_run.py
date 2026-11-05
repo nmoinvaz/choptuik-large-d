@@ -14,7 +14,7 @@ formulation of hp/pinning.py; their coefficients are zero).
         [--steps 20] [--D_max 200] [--corrector dnp|deflated|newton] [--tol 1e-20] [--tol_growth 1.45]
         [--accept_stall 1e-19] [--junk_only 0] [--threads 4] [--w 24] [--trend T75] [--tol_qd 1e-28]
         [--qd_it 12] [--qd_w 0] [--refine 1] [--probe 0 --probe_c C] [--plan_tol 1e-32] [--fix1 0] [--F_pred_max 0]
-        [--horizon_alpha 0] [--fix1_qlu 0]
+        [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0]
 
 --corrector qd runs the quad-double Newton of the kernel (hpkernel.driver.newton_qd, Solver.newton_q) on the pinned
 system (pinning.PinnedQ: the held harmonics' offset subtracted from the quad-double residual and added to the step, as
@@ -55,6 +55,10 @@ predicted below 1.53e-14 converged while a failed correction costs up to 12 min.
 default, as before; 1 carries alpha = a - 1, notes/LARGE_D_MIXED.md 10). The model is the same in both forms, only the
 rounding differs, so the quad-double corrector solves the same system. The jet's order-1 error is rounding amplified
 by the mass mode in either form, and which form is smaller depends on the base.
+--jet_q 1 builds the series with the quad-double jet (Solver.residual_jet_q, multidouble 2.0.0's QJet) through the
+quad-double LU at the base's four parts (Solver.newton_q, once per base), so every z_k carries the quad-double
+rounding instead of the double-double one amplified by the mass mode; --fix1 is then not applied. hp/qjet_check.py
+checks the quad-double jet against the quad-double residual on a stored state.
 """
 import json
 import os
@@ -65,7 +69,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import mpmath as mp  # noqa: E402
 import numpy as np  # noqa: E402
 from hpkernel.driver import make_solver, newton_solve, deflated_newton, delta_correction, newton_qd, qparts, rnorm, save, save_q, load_q  # noqa: E402
-from multidouble import dd_add, dd_scale, dd_norm  # noqa: E402
+from multidouble import dd_add, dd_scale, dd_norm, qd_add_dd  # noqa: E402
 from pinning import PinnedQ, PinnedSolver, band_coeffs, band_field, qd_axpy  # noqa: E402
 from raw_out import require_raw  # noqa: E402
 from taylor_predict import formula_delta  # noqa: E402
@@ -137,11 +141,31 @@ def coefficients(s, zh, zl, N, held=None, refine_it=1, z1=None):
     return Zh, Zl, norms, refine
 
 
+def coefficients_q(s, zq, N, held=None):
+    """z_1..z_N by the quad-double jet (Solver.residual_jet_q) and the quad-double LU of the last Solver.newton_q, which
+    must have been taken at zq (the base's four parts): the list of four-part z_k (z_0 first) and their norms. held as
+    in coefficients, added in quad-double. No refinement: the LU is the exact Jacobian's in quad-double."""
+    Zq, norms = [tuple(np.ascontiguousarray(np.asarray(p)) for p in zq)], [float(dd_norm(zq[0], zq[1]))]
+    for k in range(1, N + 1):
+        F = s.residual_jet_q(Zq, k + 1)
+        b = [-np.asarray(p) for p in F[k]]
+        if held is not None:
+            fn, rows = held
+            th, tl = fn(k)
+            r = qd_add_dd(*(np.ascontiguousarray(p[rows]) for p in b), np.asarray(th), np.asarray(tl))
+            for p, v in zip(b, r):
+                p[rows] = v
+        x = s.qlu_solve(*(np.ascontiguousarray(p) for p in b))
+        Zq.append(tuple(np.ascontiguousarray(np.asarray(p)) for p in x))
+        norms.append(float(dd_norm(Zq[-1][0], Zq[-1][1])))
+    return Zq, norms
+
+
 def main():
     args = list(sys.argv[1:])
     opt = dict(state="T75/pin7_D73.2657.npz", kfreeze=3, N=24, eps=1e-16, h_max=2.0, steps=20, D_max=200.0, corrector="dnp",
                tol=1e-20, tol_growth=1.45, accept_stall=1e-17, junk_only=0, threads=4, w=24, trend="", tol_qd=1e-28, qd_it=12, qd_w=0,
-               refine=1, probe=0, probe_c=0.0, plan_tol=1e-32, fix1=0, F_pred_max=0.0, horizon_alpha=0, fix1_qlu=0)
+               refine=1, probe=0, probe_c=0.0, plan_tol=1e-32, fix1=0, F_pred_max=0.0, horizon_alpha=0, fix1_qlu=0, jet_q=0)
     for k in list(opt):
         f = "--" + k
         if f in args:
@@ -431,11 +455,19 @@ def main():
         if D >= opt["D_max"]:
             break
         t0 = time.time()
-        dh, dl, Fh, Fl, pmin, pmax = sp.newton(zh, zl)
         held_arg = (lambda j: band_field(held_jet(j), ks_held, M), rows) if any(any(sl) for sl in slopes) else None
-        Zh, Zl, norms, refine = coefficients(s, zh, zl, N, held=held_arg, refine_it=opt["refine"])
         fix1 = None
-        if opt["fix1"] and not opt["probe"]:
+        if opt["jet_q"]:
+            # --jet_q 1: the series from the quad-double jet through the quad-double LU at the base's four parts
+            zq = last_q["z4"] if "z4" in last_q else load_q(os.path.join(raw, opt["state"]))[0]
+            zq = tuple(np.ascontiguousarray(np.asarray(p)) for p in zq)
+            pmin, pmax = s.newton_q(*zq)[6:8]
+            Zq, norms = coefficients_q(s, zq, N, held=held_arg)
+            Zh, Zl, refine = [np.asarray(z[0]) for z in Zq], [np.asarray(z[1]) for z in Zq], [()]
+        else:
+            dh, dl, Fh, Fl, pmin, pmax = sp.newton(zh, zl)
+            Zh, Zl, norms, refine = coefficients(s, zh, zl, N, held=held_arg, refine_it=opt["refine"])
+        if opt["fix1"] and not opt["probe"] and not opt["jet_q"]:
             zq = last_q["z4"] if "z4" in last_q else load_q(os.path.join(raw, opt["state"]))[0]
             zq = tuple(np.ascontiguousarray(np.asarray(p)) for p in zq)
             z1h, z1l, fix1 = fix_z1(D, zq, np.array(Zh[1]), np.array(Zl[1]))
@@ -447,7 +479,7 @@ def main():
         ratios = [norms[k - 1] / norms[k] if norms[k] else None for k in range(2, N + 1)]
         rec = dict(step=step, D0=float(D), D0_str=str(D), pin=kf, N=N, pivots=(float(pmin), float(pmax)), norms=norms, a_max=a_max,
                    t_coef=t_coef, refine_last=refine[-1], fix1=fix1, ratios_2_5=ratios[:4], trend=opt["trend"], slopes=slopes, held=ks_held,
-                   horizon_alpha=opt["horizon_alpha"])
+                   horizon_alpha=opt["horizon_alpha"], jet_q=opt["jet_q"])
         print(f"step {step}: D {mp.nstr(D, 12)}, pivots {pmin:.1e}..{pmax:.1e}, |z_1| {norms[1]:.2e}, |z_N| {norms[N]:.2e}, ratios 2-5 "
               + " ".join(f"{r:.1f}" for r in ratios[:4] if r) + f", a_max {a_max:.3f}, {t_coef:.0f} s", flush=True)
         if opt["probe"]:
