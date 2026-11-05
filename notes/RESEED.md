@@ -343,3 +343,20 @@ That is the mechanism (*numerical evidence*, from these runs and 4.2). A Newton 
 leaves its horizon data inconsistent with its new node, at second order, and the horizon block amplifies that by G, so
 the next correction is large and the trial is refused. Re-seeding the trial point at u₀ removes exactly that part. The
 re-seed before the corrector fixes the start but not the iterates. The elimination fixes both.
+
+## 5. Reading and next steps (written as the runs finished; status words of AGENTS.md)
+
+- *Numerical evidence*, three bases. The re-seed does what it is built for. From a chain state's last node it returns
+  the state's horizon data to 10⁻³¹ (4.1). The inward integration is stable and accurate to 3×10⁻³¹ against a node
+  planted on the regular family, with x − c below zero along the whole path. The m and a rows are the right equations:
+  least squares over all four fields fails 3.1.
+- *Numerical evidence*, one base. The corrector's basin is not only the pole of 13.6. The plain corrector also refuses any
+  start whose horizon data are not those its node implies, by more than about 10⁻²⁷ in any direction (4.2, 4.3). A Δ
+  error alone is enough, and that was the jump study's 4×10⁻¹⁶ (13.19). The re-seed removes that whole class. Against
+  white-noise errors (family B) it widens the basin from 10⁻²⁷ to 10⁻¹³, and the elimination to 10⁻¹².
+- *Numerical evidence*, one chain. On the series' own predictions the elimination converges at h = 2, 5 and 10 from
+  91.1184. At h = 2 and 5 it lands within 5×10⁻²¹ of the chain's own states in Δ. The plain corrector fails at h = 2,
+  from a prediction already 6.5×10⁻¹⁹ from the truth.
+- *Conjecture.* Families B and P differ because a node error that is white in τ reaches the m_h directions of gain
+  about 1, where the equations' second-order term carries the factor G (4.2). The series' error is smooth in τ, so the
+  elimination's reach on predictions is set by the series, not by 10⁻¹².
