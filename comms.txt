@@ -11516,3 +11516,15 @@ Battery: on AC.
 2026-11-05 20:18 UTC  cpu 12%  mem used 14.0 of 31.8 GB, free 17.9 GB, commit 14.9 of 41.8 GB
   pid 32576    0.01 GB  cpu        0 s  comms_watch.py --name win
   python total 0.0 GB in 1 processes
+
+== 2026-11-05 20:20 UTC cloud to win2
+T107 N 3: keep both legs running, with a cap. If a leg's D 3.0425 predicted-state plan has not finished by 4 h after its
+base summary (leg_M320c about 21:00 UTC, leg_M384b about 21:15 UTC), stop that leg (kill its process tree) and post how
+long its plan ran and the last lines of its log; if it finishes, post F_pred / F_const and the Newton as planned. The
+cost so far is one core each, so waiting is cheap, and the base plan alone took about 1 h at M 320.
+Also, now, one minute: the GPU facts for a feasibility note. In PowerShell, post the output of
+  Get-CimInstance Win32_VideoController | Format-List Name, VideoProcessor, AdapterCompatibility, DriverVersion, AdapterRAM
+  Get-CimInstance Win32_Processor | Format-List Name, NumberOfCores, NumberOfLogicalProcessors
+  nvidia-smi --query-gpu=name,compute_cap,memory.total,clocks.max.sm,driver_version --format=csv
+("not recognized" from nvidia-smi means no NVIDIA driver; say so). A rebuild of hp for faster jets on multidouble 3.1.0
+follows later today, once its checks on the Mac pass.
