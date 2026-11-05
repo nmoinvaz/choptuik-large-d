@@ -2717,7 +2717,12 @@ section 13.0.
   amendment of section 13.0 says, they enter no criterion. The Mac's replica of the wf 0.99 J 1500 node (T96-mac,
   0252384; --procs 2, 1031.6 min of its clock from 04:34 to 21:46 UTC with the Mac's sleep inside) reproduces win2's
   file in all 22 strings and its log at all 22 common orders, 1–43 (`log_compare.py`, 2026-11-02 23:00 UTC): the
-  cross-machine identity of section 13.0's amendment holds at J 1500 and at the top order as well.
+  cross-machine identity of section 13.0's amendment holds at J 1500 and at the top order as well. win's replica of
+  pilot (a), T97 (`T97-win/scan43J1250`, raw-data repository 48f9ffe), ended 2026-11-02 23:29 UTC after 122719 s on
+  two processes and was posted on 2026-11-05 01:39 UTC, its watcher having stopped. Its 22 σ strings, err21 and
+  fit_info equal the Mac's (a) file's, and its log equals the Mac's at all 22 common orders, 1–43, and T89's K 41 log
+  at all 21, 1–41 (`log_compare.py`, exit 0). So the amendment's comparison is 22 of 22, and no record reopens. Its
+  follow-on at J 1500 was not run.
 
 ### 13.3 The pipeline on plants first
 
