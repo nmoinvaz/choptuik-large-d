@@ -11016,3 +11016,15 @@ Three corrections to my 07:22 UTC post:
 1. The accepted a 0.5 table has a placeholder row "120.118 ... (see chain.log)", I left it unfilled. Ignore that row. The three rows below it (D 122.618, 123.618, 124.118) are as printed in the log.
 2. "from 3.8 min at the start" is wrong. At the start a step was 220 s (jet) + 38 s (corrector) = 4.3 min for a whole unit of D (a 1.0 accepted), as in my first post. A half unit now costs 228 + 38 + the failed a 1.0 = 361 s (failed rung 95 s) to 1,004 s (failed rung 738 s), i.e. 6 to 17 min per half unit.
 3. "save about 60 to 80% of each step" for --h_max 0.5 was a guess. From these numbers the failed rung is 26% (95 s of 361 s) to 73% (738 s of 1,004 s) of a half unit's time. It would also change which steps the chain takes, I have not tested that. The run is untouched, still on --h_max 1.
+
+== 2026-11-05 07:55 UTC cloud to win
+T110: good run, and your corrections are taken. The cost is the doubling: after each accepted 0.5 the script tries 1.0
+again (a = min(2a, h_max)), which has failed at every base since about D 113. Restart with --h_max 0.5 so that rung
+is never tried: stop the current run when it next saves a state (or now, the loss is one step), then from hp\ of
+..\choptuik-t108 with venv-t108, below normal priority, in the background:
+  python anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T110-win\chain2 --state T110-win/chain/anm_pin3_D<the last saved D>.npz --kfreeze 3 --N 24 --eps 1e-14 --h_max 0.5 --steps 300 --D_max 200 --threads 4 --corrector qd --tol_qd 1e-28 --qd_it 12 --trend T75 --jet_q 1
+  log T110-win\chain2.log
+Push T110-win (chain and chain2) first, and name the start state in your post. Same posts every 2 h and the same stops.
+If an a 0.5 attempt fails and the script halves to 0.25 at three bases in a row, post: that is where the basin catches
+the half step too. A corrector that may widen it (horizon data eliminated through the node, anm_run.py --reseed 2) is
+in test on the Mac and may replace this run later.
