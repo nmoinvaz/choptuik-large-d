@@ -13,7 +13,7 @@ v_c' := sup_[1,x] |v_c'|).
 
 Claim. If v -> 0 as x -> 1+ and the label of v at u* vanishes (Phi+(u*) = Phi-(u*) in B5's inner variables), v = 0.
 Proof. In the norm N(v) = max_j sup |v_j| / (s_j m), m = e^{(n-1) Phi(x)/2} (half the fast exponent, Phi(x) =
-(1/2) ln(1 - x^-2)), s_S = 1, s_V = s_c = rho, s_b = 1/n, the map T0 (fast from x* backward, with the endpoint value
+(1/2) ln(1 - x^-2)), s_S = 1, s_V = s_c = rho, s_b = rho/n + rho^2, the map T0 (fast from x* backward, with the endpoint value
 from the label condition Lambda (v_S + dG) = -Om v_S + dC Phi- + d[x c' P]; slow and b-mode from 1 forward with zero
 data) satisfies N(T0 v)_i <= sum_j Gam_ij N_j(v) with
     Gam_{S,j} = (1 + hH)/(1/2 - hH) sup(l_{G,j} s_j) + e_j s_j(x*)      (backward kernel |E(x,y)| <= e^{-(n-1)(1-hH)(Phi(y)-Phi(x))})

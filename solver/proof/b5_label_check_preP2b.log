@@ -1,0 +1,19 @@
+formula (J_F - G)/z vs jac_blocks: worst relative difference 9.87e-49 (PASS, < 1e-30)
+   z = 0.00027: numerical ||R~|| = 0.0015 (from z0 = 1e-4, not rigorous) <= certified eps_L = 0.0102: True
+   z = 0.00081: numerical ||R~|| = 0.0056 (from z0 = 1e-4, not rigorous) <= certified eps_L = 0.0309: True
+   z = 0.00135: numerical ||R~|| = 0.0091 (from z0 = 1e-4, not rigorous) <= certified eps_L = 0.0521: True
+   z = 0.00189: numerical ||R~|| = 0.0133 (from z0 = 1e-4, not rigorous) <= certified eps_L = 0.0736: True
+   z = 0.00243: numerical ||R~|| = 0.0172 (from z0 = 1e-4, not rigorous) <= certified eps_L = 0.0956: True
+   z = 0.00297: numerical ||R~|| = 0.0208 (from z0 = 1e-4, not rigorous) <= certified eps_L = 0.1180: True
+   z = 0.00351: numerical ||R~|| = 0.0243 (from z0 = 1e-4, not rigorous) <= certified eps_L = 0.1408: True
+   z = 0.00405: numerical ||R~|| = 0.0278 (from z0 = 1e-4, not rigorous) <= certified eps_L = 0.1641: True
+   z = 0.00459: numerical ||R~|| = 0.0314 (from z0 = 1e-4, not rigorous) <= certified eps_L = 0.1879: True
+   z = 0.00513: numerical ||R~|| = 0.0350 (from z0 = 1e-4, not rigorous) <= certified eps_L = 0.2121: True
+   z = 0.00567: numerical ||R~|| = 0.0386 (from z0 = 1e-4, not rigorous) <= certified eps_L = 0.2368: True
+   z = 0.00621: numerical ||R~|| = 0.0422 (from z0 = 1e-4, not rigorous) <= certified eps_L = 0.2619: True
+   z = 0.00675: numerical ||R~|| = 0.0457 (from z0 = 1e-4, not rigorous) <= certified eps_L = 0.2876: True
+   z = 0.00729: numerical ||R~|| = 0.0491 (from z0 = 1e-4, not rigorous) <= certified eps_L = 0.3137: True
+   z = 0.00783: numerical ||R~|| = 0.0524 (from z0 = 1e-4, not rigorous) <= certified eps_L = 0.3404: True
+   z = 0.00810: numerical ||R~|| = 0.0541 (from z0 = 1e-4, not rigorous) <= certified eps_L = 0.3539: True
+certified eps_L dominates the numerical label variation: PASS
+exit 0

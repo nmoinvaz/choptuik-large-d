@@ -20,7 +20,7 @@ Claims certified here (for every p in K):
   (L1) Fast-type solutions. For every k in C^2 there is a solution Psi(z) k of the secant equation on (0, Z_L] with
        psi_Phi = e^{-1/(2z)} V z^Lambda a~(z), a~(0+) = V^-1 k, and
            |a~(z) - a~(0)|_inf <= eps_L(z) |a~(0)|_inf,   eps_L(z) = exp(int_0^z g) - 1,
-           g(t) = t^-delta (gamma_F + gamma_P) + 2 gamma_C kappa_P e^{kappa_C t} t^2,
+           g(t) = t^-delta (gamma_F + gamma_P) + 2 gamma_C kappa_P e^{kappa_C t} t^(2 - delta),
        gamma_F = sup ||V^-1 ((J_F - G)/t) V||, gamma_P = sup ||V^-1 J_P V||, gamma_C = sup ||V^-1 J_C||,
        kappa_P = sup ||K_P V||, kappa_C = sup ||K_C|| (inf-norms, sup over the cells), delta = max |Re(lambda_1 -
        lambda_2)| over K. Proof (Volterra, Groenwall): proof/B_chain.md section 2.
@@ -235,7 +235,12 @@ def run(ZL="0.0081", Zf="0.004489", ncell=60, box=BOX, verbose=True, scale=None)
             lin = t2 ** (1 - delta) / (1 - delta)
         else:
             lin = (t2 - t1) * t1 ** (-delta)
-        cubic = (t2 ** 3 - t1 ** 3) / 3
+        # the C-term: |z^-Lambda| <= z^-mu_+ and |psi_C| <= 2 e^{kappa_C z} kappa_P A z^(mu_- + 3) e^{-1/(2z)}, so its
+        # integrand is t^(2 - delta) (P2 finding F5); int_t1^t2 t^(2 - delta) dt = (t2^(3-delta) - t1^(3-delta))/(3-delta)
+        if i == 0:
+            cubic = t2 ** (3 - delta) / (3 - delta)
+        else:
+            cubic = (t2 ** (3 - delta) - t1 ** (3 - delta)) / (3 - delta)
         I = I + (cf["gF"] + cf["gP"]) * lin + 2 * cf["gC"] * cf["kP"] * (cf["kC"] * t2).exp() * cubic
         table.append((float(t2.upper()), float(I.upper()), float((I.exp() - 1).upper())))
     epsL = I.exp() - 1

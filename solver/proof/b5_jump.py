@@ -7,11 +7,12 @@ B_chain.md section 1), and the label map L(Y) := e^{1/(2u*)} u*^{-G} Y_Phi(u*) (
 Y+_out - Y-_out the outer jump and k(p) the Stokes multiplier vector of b5_label.py (psi_in = Psi k),
     V^-1 L(Psi_out) = (I + R~) V^-1 k + E~,    ||R~||_inf <= eps_L,    |E~|_inf <= C_E / n,
 where eps_L is lemma L's bound at u* (b5_label.py) and
-    C_E = e^{1/(2u*)} u*^{1 - mu_lo} ||V^-1||_inf (x_Phi,-1 + x_Phi,+1),
+    C_E = e^{1/(2u*)} u*^{1 - mu_hi} ||V^-1||_inf (x_Phi,-1 + x_Phi,+1),
 with x_Phi the B5(1) super-solution (b5_bounds_k0.3_Z0.0085.json) for the (H8) data delta certified by B8
-(b8m_h8_K4_L73.89.log), by superposition (super-solutions add; b5_threshold.py), and mu_lo = min Re(eig G).
+(b8m_h8_K4_L73.89.log), by superposition (super-solutions add; b5_threshold.py), and mu_hi = max Re(eig G).
 Proof: E~ = V^-1 L(W+ - W-), |W+_Phi,mu(u*)| <= x_Phi,mu u*/n (B5(1) on the Stokes segment of W+_n), W-(z; p) =
-sigma(W+(z; p^bar)) so |W-_Phi,mu| <= x_Phi,-mu u*/n, and |(u*^-Lambda)_ii| = u*^{-Re lambda_i} <= u*^{-mu_lo}.
+sigma(W+(z; p^bar)) so |W-_Phi,mu| <= x_Phi,-mu u*/n, and |(u*^-Lambda)_ii| = u*^{-Re lambda_i} <= u*^{-mu_hi}
+(u* < 1, so the largest Re lambda gives the largest factor; P2 finding F6).
 All three terms are holomorphic in p on K, so for real p with |p - x^| <= 1e-6 (componentwise) Cauchy's estimate on
 the polydisc of radius 1e-6 gives |d_j E~| <= C_E/(n 1e-6) and ||d_j R~|| <= eps_L/1e-6.
 
@@ -81,10 +82,10 @@ def main():
         return 1
     Zc = arb(b5["Z"]) * arb(b5["kappa"]).cos()
     ok_dom = bool(ustar <= Zc)
-    mu_lo = arb(lab["mu_lo"]) - arb("1e-12")
+    mu_hi = arb(lab["mu_hi"]) + arb("1e-12")       # u*^(1 - mu) increases with mu (u* < 1): inflate upward
     Vinv = arb(lab["Vinv_norm"]) * (1 + INFL)
     epsL = arb(lab["epsL"]) * (1 + INFL)
-    CE = (1 / (2 * ustar)).exp() * ustar ** (1 - mu_lo) * Vinv * (xF[-1] + xF[1])
+    CE = (1 / (2 * ustar)).exp() * ustar ** (1 - mu_hi) * Vinv * (xF[-1] + xF[1])
     lnCE = CE.log()
     cauchy = arb("1e-6")
     print(f"B5(1) certificate: kappa = {b5['kappa']}, Z = {b5['Z']}, ln n0 = {b5['ln_n0_domain']:.4f}; matching radius "
@@ -94,17 +95,17 @@ def main():
     print(f"superposition check (delta_ref vs the directly certified x): worst relative difference {dev:.2e} (< 0.02): "
           f"{'PASS' if ok_sup else 'FAIL'}")
     print(f"B5(1) bound for these data: x_Phi = ({float(xF[-1]):.6g}, {float(xF[1]):.6g}) (mu = -1, +1)")
-    print(f"lemma L at u*: eps_L = {float(epsL):.5f}, ||V^-1||_inf = {float(Vinv):.5f}, min Re lambda = {float(mu_lo):.6f}")
+    print(f"lemma L at u*: eps_L = {float(epsL):.5f}, ||V^-1||_inf = {float(Vinv):.5f}, max Re lambda = {float(mu_hi):.6f}")
     print(f"B5(2): V^-1 L(Psi_out) = (I + R~) V^-1 k + E~, ||R~|| <= {float(epsL.upper()):.5f}, |E~| <= C_E/n with "
           f"C_E = {float(CE.upper()):.6e} = e^{float(lnCE.upper()):.4f}")
-    print(f"   e^(1/(2u*)) = e^{float((1 / (2 * ustar)).upper()):.4f}; u*^(1 - mu_lo) = {float((ustar ** (1 - mu_lo)).upper()):.5g}")
+    print(f"   e^(1/(2u*)) = e^{float((1 / (2 * ustar)).upper()):.4f}; u*^(1 - mu_hi) = {float((ustar ** (1 - mu_hi)).upper()):.5g}")
     print(f"   derivatives (Cauchy, real p within 1e-6 of x^): |d E~| <= C_E/(n 1e-6) = e^{float((lnCE - cauchy.log()).upper()):.4f}/n, "
           f"||d R~|| <= {float((epsL / cauchy).upper()):.4g}")
     for L in (73.89, 80, 85, 90, 95, 100, 105):
         print(f"   ln n = {L:6.2f}: |E~| <= {float((CE * arb(-L).exp()).upper()):.3e}")
     ok = ok_sup and ok_ref and ok_dom and lab["ok"]
     out = dict(h8log=OPTS.get("h8log", "b8m_h8_K4_L73.89.log"), ustar=float(ustar.mid()), Zc=float(Zc.lower()), delta=delta, xPhi=[float(xF[-1].upper()), float(xF[1].upper())],
-               epsL=float(epsL.upper()), Vinv=float(Vinv.upper()), mu_lo=float(mu_lo.lower()), CE=float(CE.upper()),
+               epsL=float(epsL.upper()), Vinv=float(Vinv.upper()), mu_hi=float(mu_hi.upper()), CE=float(CE.upper()),
                lnCE=float(lnCE.upper()), cauchy=1e-6, ok=bool(ok))
     if "json" in OPTS:
         with open(os.path.join(HERE, OPTS["json"]), "w") as fh:

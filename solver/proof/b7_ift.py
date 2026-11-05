@@ -74,11 +74,11 @@ def ell_bound(adj, lab_rep, ustar):
     # remainder (lemma L bounds, A <= |S~| e^I):
     lab = json.load(open(os.path.join(HERE, "b5_label.json")))
     I = arb(lab["int_g"])
-    mu_lo, mu_hi = arb(lab["mu_lo"]), arb(lab["mu_hi"])
+    mu_lo = arb(lab["mu_lo"]) - arb("1e-12")          # u^(mu + c) decreases with mu (u < 1): inflate downward
     kP, kC = arb(lab["coef_sup"]["kP"]), arb(lab["coef_sup"]["kC"])
     eI = I.exp()
     pt = ef * u ** (mu_lo + 1) * eI                       # max_j |p~_j| per unit |S~|
-    psC = 2 * (kC * u).exp() * kP * u ** (mu_hi + 3) * ef * eI     # |psi_C|_inf per unit |S~|
+    psC = 2 * (kC * u).exp() * kP * u ** (mu_lo + 3) * ef * eI     # |psi_C|_inf per unit |S~| (smallest Re lambda; F6)
     t1 = xi * rowabs1([(rowD * V)[0, j] for j in range(2)]) * pt
     t2 = u * rowabs1([(rowS * Ci * Dg * V)[0, j] for j in range(2)]) * pt
     sQ = sum((up(q["Q"][m]) for m in ODD), arb(0))

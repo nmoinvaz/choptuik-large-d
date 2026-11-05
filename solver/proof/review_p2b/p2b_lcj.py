@@ -67,9 +67,27 @@ def coef(node, j, cell, extra=(0, 0, 0)):
 def main():
     st = Al.Setting(OPTS.get("ln_n0", "73.89"))
     hfile = OPTS.get("h", "p2b_lc_cells.json")
-    with open(os.path.join(HERE, hfile)) as fh:
-        Hj = json.load(fh)["h"]
-    H = {k: iv.mpf(Hj[L.idxname(L.key_index(k))]) for k in L.KEYS}
+    if hfile == "cert":
+        # the certificate's class constants (b8m_lc_K4.log hyp, b8m_lc_lip.json hprime); h_cc from p2b's closure
+        CM = {"V": "V", "S": "S", "B": "b", "C": "c"}
+        rec = None
+        for line in open(os.path.join(os.path.dirname(HERE), "b8m_lc_K4.log")):
+            r_ = json.loads(line)
+            if r_.get("closes") and not r_.get("mutate"):
+                rec = r_
+        lip = json.load(open(os.path.join(os.path.dirname(HERE), "b8m_lc_lip.json")))
+        own = json.load(open(os.path.join(HERE, "p2b_lc_cells.json")))
+        H = {}
+        for c_ in L.COMP:
+            for b_ in L.BANDS:
+                H[("h", c_, b_)] = iv.mpf(repr(rec["hyp"][f"{CM[c_]}.{b_}"]))
+                H[("d", c_, b_)] = iv.mpf(repr(lip["hprime"][f"{CM[c_]}.{b_}"]))
+        H[("d", "S", "L")] = iv.mpf(repr(rec["hyp"]["Sp"]))
+        H[("cc",)] = iv.mpf(own["h"]["cc,L"])
+    else:
+        with open(os.path.join(HERE, hfile)) as fh:
+            Hj = json.load(fh)["h"]
+        H = {k: iv.mpf(Hj[L.idxname(L.key_index(k))]) for k in L.KEYS}
     T = Ser.tables()
     known = L.Known(st, T)
     L.KN = known
@@ -184,6 +202,7 @@ def main():
                e={j: float(mpup(e[j])) for j in COMPJ}, Laminv=float(mpup(Laminv)), Phi=float(mpup(Phi)),
                sup={f"{f},{j}": float(mpup(v_)) for (f, j), v_ in sup.items()}, hfile=hfile, mutate=MUT)
     tag = OPTS.get("tag", os.path.splitext(hfile)[0].replace("p2b_lc_", "") + (f"_mut_{MUT}" if MUT else ""))
+    out["Gamma_cert"] = None
     with open(os.path.join(HERE, f"p2b_lcj_{tag}.json"), "w") as fh:
         json.dump(out, fh, indent=1)
     if OPTS.get("log"):
