@@ -11045,3 +11045,35 @@ util_report 08:03 UTC: 2026-11-05 08:03 UTC  cpu 49%  mem used 14.3 of 31.8 GB, 
   pid 14592    0.00 GB  cpu 0 s  anm_run.py (launcher stub)
   python total 0.1 GB in 3 processes
 awake: 0.68 h since my last post (07:24 UTC; wall and awake 5.26 h since the 02:48 UTC baseline, 4.58 h at the last post). battery 100%, power online. comms_watch.py --name win is running.
+
+== 2026-11-05 09:00 UTC win
+capacity: cpu 13%, free 17.8 GB
+
+T110 chain2 stopped itself at 08:57 UTC (exit 0): "stopped: no convergence after three halvings", at base D 128.493364981 (its last saved state, T110-win/chain2/anm_pin3_D128.4934.npz). Not relaunched, as your stops say. Pushed T110-win (chain 41 states D 97.12 to 127.12, chain2 7 states D 127.62 to 128.49), raw head c2661a4, checked on the remote. No traceback, nothing above 0.2 GB. Run time 57 min for 1.375 units of D.
+
+Every attempt in chain2 (a = step size tried; "stall" = accepted as a stall; the rest failed; pred = predicted |F|, |F| after = double-double |F| of the qd iterate's first two parts; tol 1.2e-20 to 1.7e-20):
+  base D      a      to D        pred      qd steps -> |F| after   result  time
+  127.118     0.5    127.618     1.82e-12  5 -> 1.62e-12           stall   57 s
+  127.618     0.5    128.118     2.07e-12  5 -> 2.16e-12           stall   57 s
+  128.118     0.5    128.618     2.91e-12  3 -> 2.50e-12           failed  113 s
+              0.25   128.368     2.54e-12  3 -> 2.74e-12           failed  113 s
+              0.125  128.243     1.91e-12  4 -> 2.04e-12           stall   38 s
+  128.243     0.25   128.493     3.19e-12  4 -> 2.43e-12           failed  153 s
+              0.125  128.368     3.08e-12  4 -> 2.00e-12           failed  179 s
+              0.062  128.306     2.68e-12  4 -> 1.98e-12           stall   38 s
+  128.306     0.125  128.431     2.39e-12  2 -> 2.86e-12           failed  112 s
+              0.062  128.368     2.17e-12  5 -> 1.94e-12           stall   57 s
+  128.368     0.125  128.493     3.35e-12  4 -> 2.48e-12           failed  166 s
+              0.062  128.431     3.02e-12  5 -> 2.67e-12           stall   56 s
+  128.431     0.125  128.556     3.37e-12  2 -> 2.36e-12           failed  112 s
+              0.062  128.493     2.39e-12  5 -> 2.92e-12           stall   57 s
+  128.493     0.125  128.618     3.25e-12  2 -> 3.13e-12           failed  114 s
+              0.062  128.556     2.84e-12  2 -> 2.32e-12           failed  112 s
+              0.031  128.525     3.41e-12  2 -> 2.37e-12           failed  115 s
+              0.016  128.509     3.17e-12  3 -> 2.07e-12           failed  113 s  -> stopped
+Your 0.25 rule: the 0.5 failed at D 128.118 (0.25 failed too), the 0.25 failed at D 128.243, and from D 128.306 on the step size is 0.125 or 0.062: a full 0.5 half step has not converged since D 128.118. The failed attempts end "no trial step accepted" after 1 to 3 qd steps (damped, lam 0.5, |F| stuck at 3e-13 to 1.5e-15), while the accepted ones end in qd 4 or 5 steps to ~1e-31 in the true quad-double |F|. At the stop the step 0.016 changed D by 0.016 only. I read this and do not interpret it: the time per unit of D here was ~42 min (1.375 units in 57 min), against 17 min before D 127 on h_max 1. Nothing is running on win now. What next? Your reseed idea (anm_run.py --reseed 2) is the one you named, tell me the command and I start it from chain2's last state or from chain's D 127.1184.
+
+util_report 09:00 UTC: 2026-11-05 08:59 UTC  cpu 13%  mem used 14.0 of 31.8 GB, free 17.8 GB, commit 15.5 of 41.8 GB
+  pid 24180    0.01 GB  cpu 1 s  comms_watch.py --name win
+  python total 0.0 GB in 1 processes
+awake: 0.93 h since my last post (08:03 UTC after the 07:24 baseline use: 6.19 h wall and awake since 02:48 UTC, 5.26 h at the last post). battery 100%, power online. comms_watch.py --name win is running.
