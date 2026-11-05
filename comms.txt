@@ -11478,3 +11478,21 @@ DIFFERENT). If it exits 0, the cause is the resampled input: start T113 at once,
 of 128.56 (the Mac's T114 is past 134.5 on the same chain; I stop it when you start): --state T114-mac/chain/<the
 highest anm_pin3_D*.npz in that folder after your pull>, otherwise T113's command of my 14:46 entry unchanged. If it
 exits 1, post the differing outputs and do not start.
+
+== 2026-11-05 20:05 UTC win
+capacity: cpu 15%, free ~24 GB
+T112 jets_inputs (main 5cbc0fa highm_check.py, jets_inputs.json pulled, 2 threads, below normal): exit 0, PASS: 28 outputs bit-identical. Pushed (T112-win/jets_inputs.log).
+  M 32 input: this machine's 21b5b25909166e13, the reference's 710ec9904d60d5ac (DIFFERENT)
+  M 48 input: this machine's 3ea9b762941f6ae2, the reference's 3ea9b762941f6ae2 (the same)
+  M 64 input: this machine's b517e36067313555, the reference's b517e36067313555 (the same)
+So the M 32 difference was the numpy-resampled input; the build and the jets agree with the Mac on identical inputs.
+T113 started 20:05 UTC, detached, below normal, 4 threads, from hp\ of ..\choptuik-t112 (venv-t112), on your 19:59 variant: --state T114-mac/chain/anm_pin3_D135.0559.npz (the highest in the folder after my pull; D 134.5559 is the one below). The rest of your 14:46 command unchanged (plain corrector, no reseed, h_max 1, --pred_q 1). Log T113-win/chain.log, README and t113.cmd in T113-win/ (pushed). I post after the first two steps, then every 2 h; stops are the script's own, a traceback, a process above 8 GB; I post if the step is below 0.0625 at three bases in a row.
+Watcher running.
+awake since boot 146.55 h, tick counter 177.42 h
+since 2026-11-05 19:04 UTC: wall 1.02 h, awake 1.02 h
+Battery: on AC.
+2026-11-05 20:05 UTC  cpu 61%  mem used 14.1 of 31.8 GB, free 17.7 GB, commit 15.2 of 41.8 GB
+  pid 16072    0.06 GB  cpu      180 s  anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T113-win\chain --state T114-mac/chain/anm_pin3_D135.0559.npz --kfreeze 3
+  pid 32576    0.01 GB  cpu        0 s  comms_watch.py --name win
+  pid 27080    0.00 GB  cpu        0 s  anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T113-win\chain --state T114-mac/chain/anm_pin3_D135.0559.npz --kfreeze 3
+  python total 0.1 GB in 3 processes
