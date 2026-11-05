@@ -69,7 +69,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import mpmath as mp  # noqa: E402
 import numpy as np  # noqa: E402
 from hpkernel.driver import make_solver, newton_solve, deflated_newton, delta_correction, newton_qd, qparts, rnorm, save, save_q, load_q  # noqa: E402
-from multidouble import dd_add, dd_scale, dd_norm, qd_add_dd  # noqa: E402
+from multidouble import dd_add, dd_horner, dd_scale, dd_norm, qd_add_dd  # noqa: E402
 from pinning import PinnedQ, PinnedSolver, band_coeffs, band_field, qd_axpy  # noqa: E402
 from raw_out import require_raw  # noqa: E402
 from taylor_predict import formula_delta  # noqa: E402
@@ -97,12 +97,10 @@ def richardson(r1, r2):
 
 
 def series_at(zh, zl, Zh, Zl, a):
-    """z0 + sum_k z_k a^k by Horner's rule in double-double (a float64): each product rounds to double-double, where
-    float64 powers a**k would carry 1e-16 of themselves into the prediction unless a is a power of 2"""
-    ph, pl = np.array(Zh[-1]), np.array(Zl[-1])
-    for k in range(len(Zh) - 2, 0, -1):
-        ph, pl = dd_add(Zh[k], Zl[k], *dd_scale(ph, pl, a))
-    return dd_add(zh, zl, *dd_scale(ph, pl, a))
+    """z0 + sum_k z_k a^k by Horner's rule in double-double (a float64; multidouble's dd_horner, bit for bit the
+    dd_add / dd_scale loop it replaced): each product rounds to double-double, where float64 powers a**k would carry
+    1e-16 of themselves into the prediction unless a is a power of 2"""
+    return dd_horner([zh] + list(Zh[1:]), [zl] + list(Zl[1:]), a)
 
 
 def coefficients(s, zh, zl, N, held=None, refine_it=1, z1=None):
