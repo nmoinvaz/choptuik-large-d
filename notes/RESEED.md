@@ -140,7 +140,7 @@ If the re-seeded basin is not wider, C1 and C2 are moot and that is the result.
 - A first-step diagnostic (`reseed_check.py firststep`, 4.2) is recorded beside the basin runs. It perturbs one group
   of unknowns at a time and records how far the first Newton step departs from the exact correction.
 
-*Amendment 2 of 2026-11-05 03:35 UTC.* At δ = 10⁻²⁸ the plain arm converged (max |F| ≤ 10⁻²⁸) to a point 1.4×10⁻²²
+*Amendment 2 of 2026-11-05 03:33 UTC.* At δ = 10⁻²⁸ the plain arm converged (max |F| ≤ 10⁻²⁸) to a point 1.4×10⁻²²
 from the truth, with |Δ − Δ_truth| = 1.2×10⁻²³. That fails the criterion |Δ − Δ_truth| ≤ 10⁻²⁴, which was set before
 the system's resolution was known. The first step from δ moves the point by 1.4×10³⁴ δ² along a direction where |F|
 changes by only about 1.4×10⁻⁸ per unit (a near-null direction, σ ≈ 10⁻⁸). So a point converged to 10⁻²⁸ is fixed only
