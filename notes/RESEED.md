@@ -461,19 +461,42 @@ leaves its horizon data inconsistent with its new node, at second order, and the
 the next correction is large and the trial is refused. Re-seeding the trial point at u₀ removes exactly that part. The
 re-seed before the corrector fixes the start but not the iterates. The elimination fixes both.
 
-## 5. Reading and next steps (written as the runs finished; status words of AGENTS.md)
+## 5. Reading and next steps (status words of AGENTS.md)
 
-- *Numerical evidence*, three bases. The re-seed does what it is built for. From a chain state's last node it returns
-  the state's horizon data to 10⁻³¹ (4.1). The inward integration is stable and accurate to 3×10⁻³¹ against a node
-  planted on the regular family, with x − c below zero along the whole path. The m and a rows are the right equations:
+**What holds.**
+- *Numerical evidence*, four bases (84.9–101.1). The re-seed does what it was built for. From a chain state's last node
+  it returns the state's horizon data to 10⁻³¹ (4.1). The inward integration is stable and accurate to 3×10⁻³¹ against a
+  node planted on the regular family, with x − c negative along every path. The m and a rows are the right equations:
   least squares over all four fields fails 3.1.
-- *Numerical evidence*, one base. The corrector's basin is not only the pole of 13.6. The plain corrector also refuses any
-  start whose horizon data are not those its node implies, by more than about 10⁻²⁷ in any direction (4.2, 4.3). A Δ
-  error alone is enough, and that was the jump study's 4×10⁻¹⁶ (13.19). The re-seed removes that whole class. Against
-  white-noise errors (family B) it widens the basin from 10⁻²⁷ to 10⁻¹³, and the elimination to 10⁻¹².
-- *Numerical evidence*, one chain. On the series' own predictions the elimination converges at h = 2, 5 and 10 from
-  91.1184. At h = 2 and 5 it lands within 5×10⁻²¹ of the chain's own states in Δ. The plain corrector fails at h = 2,
-  from a prediction already 6.5×10⁻¹⁹ from the truth.
-- *Conjecture.* Families B and P differ because a node error that is white in τ reaches the m_h directions of gain
-  about 1, where the equations' second-order term carries the factor G (4.2). The series' error is smooth in τ, so the
-  elimination's reach on predictions is set by the series, not by 10⁻¹².
+- *Numerical evidence*, one base and one direction per family. The corrector's basin is not only 13.6's pole. The plain
+  corrector refuses any start whose horizon data differ from those its node implies by more than about 10⁻²⁷ (4.2,
+  4.3). A Δ error alone does it, as did 13.19's 4×10⁻¹⁶. The re-seed removes that class of error. Against errors white
+  in τ (family B) it widens the basin from 10⁻²⁷ to 10⁻¹³ at 84.9, and the elimination to 10⁻¹². Along the series' own
+  error (family P, 96.1) the elimination converges up to 10⁻⁵.
+- *Numerical evidence*, one chain. On the series' predictions from 91.1184, elim converges at h = 2, 5 and 10, and
+  `anm_run.py --reseed 2` takes a step of 5 from 96.1184. Every check against an independent state agrees to
+  2.5–4.8×10⁻²¹ in Δ: at 93.1, at 96.1, and the two routes to 101.1. The plain corrector fails at h = 2, from a
+  prediction already 6.5×10⁻¹⁹ from the truth.
+
+**What fails or is open.**
+- The task's test as stated (family A: node and centre data only, horizon data exact) does not show the widening. Plain
+  reaches 10⁻¹⁰, the single re-seed 10⁻¹³, elim 10⁻¹⁰. The criterion "re-seeded basin ≥ 100× plain" passes in family B
+  (10¹⁴ at 84.9) but fails in family A. The difference is the start: the re-seed fixes inconsistent horizon data, and
+  family A has none.
+- The toy's 10⁻¹ for white-noise errors is not reached. The re-seed puts node-sized errors into the m_h directions of
+  gain about 1, where the equations' second-order term carries G (4.2). Family P's 10⁻⁵ is the realistic figure.
+- Past D ≈ 100 the re-seed's u₀ rung fails its floor test in most cases (17 of 20 at 106.1; amendment 9). The pilot's
+  second step from 101.1184 failed this way and was stopped. The relative test tried for it was unsound and is
+  withdrawn. A floor test on the steps' own stall is proposed, not built.
+- 3.2 as written failed. A chain state's node is off the regular family by about 10⁻¹⁷, in the p harmonics that the
+  freeze drops, so 3.2b replaced it with a planted node.
+
+**What to do next.**
+1. Build the floor test on step stall (stop when the residual no longer halves and the step no longer shrinks) with
+   criteria first. It must pass the unit check at 84.9–106 and floorflip at 106.1 (20 of 20), and the 'rel' rule and the
+   `skip`/`wrongu` mutations must still fail it. Then rerun the pilot's step from 101.1184.
+2. Run the chain with `--reseed 2 --h_max 5 --eps 1e-5` from 101.1184, after item 1. The series' smallest term at h = 5
+   is 9×10⁻⁹, against family P's basin of 10⁻⁵. Steps of 5 instead of 1 would cut the cost per unit of D about fourfold
+   (one series and corrector per step), though how far that holds is a *conjecture*.
+3. Family P at more bases and seeds (other directions: the predictions at h = 2 and 10), and family B at 94.1 and 87.0
+   with seeds 2 and 3 (amendment 3).
