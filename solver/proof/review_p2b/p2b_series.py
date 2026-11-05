@@ -483,7 +483,7 @@ def build(fs, conv, one, check_exact=False):
     Sx2 = {m: b_divx(p, 2) for m, p in St.items()}
     bx2 = {h: b_divx(p, 2) for h, p in bt.items()}
     out.update(V=Vt, S=St, Sx2=Sx2, Y=Yt, Dl=Dt, detrho2=detrho2, beta=bt, betax2=bx2, cm1=cm1, cb=cb, cbx2=cbx2,
-               C=Cop, Gam=Gam, detm1={0: detm1}, Neta=Neta, adj=adj)
+               C=Cop, Cm1=mult_op(cm1), Bb=Bb, Bbx2=Bbx2, Gam=Gam, detm1={0: detm1}, Neta=Neta, adj=adj)
     return out
 
 
@@ -549,6 +549,44 @@ def enclose(obj, A, W):
     out = {}
     for key, p in obj.items():
         out[key] = {jm: absup(v.ev(A, W)) for jm, v in p.items()}
+    return out
+
+
+def tables(rA=2e-6, rW=2e-6, mutate=None):
+    """in-process: {name: list of columns [(j, m, C)]}, C an upper bound (mp.mpf) of |coef| over the box, summed over
+    the rows (harmonics) of the column; vectors and scalars have one column. Also |A|, |omega| upper bounds."""
+    prec0 = iv.prec
+    iv.prec = 200
+    fs = formal(K, mutate)
+    bad = verify_low_orders(fs)
+    if bad and mutate is None:
+        raise ValueError(f"Lemma F's residual orders fail exactly: {bad[:4]}")
+    A, W = box(rA, rW)
+    q = build(fs, ic_conv(A, W), IC(iv.mpc(1)))
+    out = {}
+    for nm, obj in q.items():
+        keys = list(obj.keys())
+        if keys and isinstance(keys[0], tuple):             # operator: columns
+            cols = {}
+            for (r, c), p in obj.items():
+                for jm, v in p.items():
+                    if v.iszero():
+                        continue
+                    cols.setdefault(c, {})
+                    cols[c][jm] = cols[c].get(jm, iv.mpf(0)) + iv.mpf(absup(v.v))
+            out[nm] = [[(j, m, hi(C)) for (j, m), C in d.items()] for d in cols.values()]
+        else:
+            d = {}
+            for h, p in obj.items():
+                for jm, v in p.items():
+                    if v.iszero():
+                        continue
+                    d[jm] = d.get(jm, iv.mpf(0)) + iv.mpf(absup(v.v))
+            out[nm] = [[(j, m, hi(C)) for (j, m), C in d.items()]]
+    out["_absA"] = absup(A)
+    out["_absW"] = absup(W)
+    out["_lowbad"] = bad
+    iv.prec = prec0
     return out
 
 
