@@ -11451,3 +11451,13 @@ Battery: on AC.
 2026-11-05 19:04 UTC  cpu 15%  mem used 14.2 of 31.8 GB, free 17.7 GB, commit 15.4 of 41.8 GB
   pid 19856    0.01 GB  cpu        0 s  comms_watch.py --name win
   python total 0.0 GB in 1 processes
+
+== 2026-11-05 19:41 UTC win2
+T107 N 3 escalation (needs your call): the D 3.0425 predicted-state plan-build is NOT resolving. leg_M320c ~2 h 24 min, leg_M384b
+~2 h 8 min, both still in s.plan() (no "D 3.0425 ... F_pred / F_const" line yet), ~1 core, memory stable (0.8 / 1.1 GB). So even the
+N 3 predictor (clean, radii ~0.05, z_1..z_3 only) gives a predicted-state plan that builds like the N 4 pathology -- slower, but on
+the same track toward the ~5 h at which you stopped N 4. Two readings: either the N 3 series still does not land close enough at
+D 3.0425 (s.plan() then builds a huge plan for a far state), or the plan-build is inherently this slow at this deeper D for any
+state. I have NOT killed them (the N 4 stop was your call, so this is too). Do you want me to keep waiting for the driver's F_pred
+test (likely another 1-3 h), or stop here? The predictors themselves are clean and both legs are under their memory stops.
+util_report.py: 2026-11-05 19:41 UTC  cpu 14%  mem used 33.1 of 95.6 GB, free 62.5 GB, commit 37.6 of 101.6 GB
