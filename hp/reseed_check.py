@@ -3,7 +3,7 @@
 
     python3 reseed_check.py basin STATE.npz OUT.jsonl --family A|B --arm plain|reseed|elim [--seeds 1,2,3]
         [--deltas 1e-12,1e-11,...,1e-2] [--threads 2] [--mutate none|skip] [--qd_it 12]
-    python3 reseed_check.py jump RAWDIR STATE.npz OUT.jsonl [--hs 2,5,10] [--arms reseed,plain] [--threads 2]
+    python3 reseed_check.py jump RAWDIR STATE.npz OUT.jsonl [--hs 2,5,10] [--arms reseed,elim,plain] [--threads 2]
 
 basin: the truth (a converged chain state) perturbed by delta along a random direction per seed (family A: the centre
 data and every node state, each entry by delta r S, r uniform in +-[0.5, 1], S the max |z| of its field block; family
@@ -196,7 +196,7 @@ def trend_slopes(raw, M, ks_held, folder="T75"):
 def jump(argv):
     """notes/RESEED.md 3.4 (the docstring)"""
     raw, path, out = argv[0], argv[1], argv[2]
-    opt = parse(argv, dict(hs="2,5,10", arms="reseed,plain", threads=2, N=24, qd_it=12, chain="anm-mac/run_trend_pin3_qdj1"))
+    opt = parse(argv, dict(hs="2,5,10", arms="reseed,elim,plain", threads=2, N=24, qd_it=12, chain="anm-mac/run_trend_pin3_qdj1"))
     require_raw(out)
     from anm_run import coefficients_q, series_at
     from hpkernel.driver import make_solver, rnorm
@@ -269,17 +269,22 @@ def jump(argv):
             rec = dict(test="jump", base=path, D0=float(D0), D0_str=str(D0), h=h, D=float(Dn), D_str=str(Dn), arm=arm, k_opt=k_opt,
                        term_min=terms[k_opt - 1], F_pred=F_pred, F_full=F_full, chain=chain[0] if chain else None)
             zs = zp
-            if arm == "reseed":
-                rs = Reseeder(meta, Dn, threads=opt["threads"])
+            rs = Reseeder(meta, Dn, threads=opt["threads"])
+            if arm in ("reseed", "elim"):
                 zr, diag = rs.reseed(zp, verbose=True)
                 zs = c4(zr)
                 rec["reseed"] = dict(ok=diag["ok"], dropped=diag["dropped"], rungs=diag["rungs"], seconds=diag["seconds"])
                 rec["F_reseeded"] = qmax(sqn.residual_q(*zs))
                 print(f"    re-seeded ({'ok' if diag['ok'] else 'FAILED'}): max|F| {rec['F_reseeded']:.2e}, {diag['seconds']} s", flush=True)
+            solver = ElimQ(sqn, rs) if arm == "elim" else sqn
             try:
-                zc, hist, conv = newton_qd(sqn, zs, tol=1e-28, it_max=opt["qd_it"], verbose=True)
+                zc, hist, conv = newton_qd(solver, zs, tol=1e-28, it_max=opt["qd_it"], verbose=True)
             except ValueError as ex:
                 zc, hist, conv = zs, [dict(error=str(ex))], False
+            if arm == "elim":
+                zc = c4(rs.project(zc)[0])
+                rec["projections"] = dict(solver.counts)
+                rec["F_final"] = qmax(sqn.residual_q(*zc))
             Dl = float(zc[0][-1]) + float(zc[1][-1])
             rec.update(conv=bool(conv), steps=len(hist), hist=hist, t=round(time.time() - t1, 1), Delta=Dl,
                        Delta_str=mp.nstr(mp.mpf(float(zc[0][-1])) + mp.mpf(float(zc[1][-1])) + mp.mpf(float(zc[2][-1])), 34),

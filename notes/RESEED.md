@@ -148,6 +148,12 @@ state at that D (when the chain has one), or, with no chain state, Δ lies withi
 (`taylor_predict.formula_delta`; the chain sits at −4.6×10⁻⁷ at 91.1). The second is a plausibility check, not a
 reference. Then `anm_run.py --reseed 1` re-seeds every prediction before its corrector, with the default (0) unchanged.
 
+*Amendment of 2026-11-05 03:45 UTC, before any jump ran.* The chain's records at 91–93 show the series' terms |z_k|h^k
+still falling at k = 24 for h = 2 (to 3×10⁻¹⁸) and h = 5 (to 9×10⁻⁹). At h = 10 they grow, to 0.15 at k = 24, so there
+the full sum is not a prediction. Each sum therefore stops at the order of its smallest term at h, which is all 24
+orders at h = 2 and 5. The full sum's residual is recorded beside it. The arm elim (3.3's amendment) runs on the same
+predictions.
+
 ## 4. Results
 
 **4.1 The unit and stepper checks pass at three bases, and their controls fire** (raw-data repository
@@ -183,3 +189,36 @@ horizon block locates it. Its m, a and c rows are 3–6×10⁻⁴⁷, while its 
 above (9.2×10⁻¹⁸ in harmonic 5, falling by about 8 per harmonic). Those are the harmonics the freeze drops. So a chain
 state's last node lies off the regular family by about 10⁻¹⁷ in p, and the integration carries that part inward. The
 node planted on the family (3.2b) agrees with the series to 2–3×10⁻³¹.
+
+**4.2 The first runs at 84.9073, and the first-step diagnostic** (`reseed-mac/basin/D84.9073_B_*.log`,
+`firststep_D84.9073.jsonl`). In family B at δ = 10⁻¹² both arms fail. The plain start has max |F| = 0.6–1.0×10⁵. The
+horizon data off by 10⁻¹² put the series' pole inside u₀, and the first Newton step of 10⁴ is refused at every halving
+(3 seeds). The re-seeded start has max |F| = 3.7×10⁻¹² (seed 1), node level, with a_h within 5.6×10⁻¹⁶ of the truth.
+But the first step is 2.7×10⁻⁹, 2700 times the error and almost all along Δ. The corrector then creeps (λ = 1/8–1/4)
+and ends after 12 steps 1.5×10⁻⁹ from the truth. That matches 13.19's failed attempts.
+
+The diagnostic perturbs one group at a time along seed 1's direction. It reports how far the first step departs from the
+exact correction −e, as the ratio |dz + e|/|e| (small in the linear regime).
+
+| group perturbed | plain, δ = 10⁻¹² | plain, 10⁻¹⁴ | re-seeded, 10⁻¹² | re-seeded, 10⁻¹⁴ |
+|---|---|---|---|---|
+| centre data | 4×10⁻¹⁴ | 4×10⁻¹⁶ | 4×10⁻¹⁴ | 4×10⁻¹⁶ |
+| nodes | 1.2×10⁻² | 1.2×10⁻⁴ | 2.7×10³ | 27 |
+| horizon data | 1.2×10¹⁶ (\|F\| 10⁵) | 2.4×10¹⁴ (\|F\| 0.1) | — | — |
+| Δ | 1.8×10⁹ | 2.4×10⁹ | 4.6×10⁻⁸ | 4.6×10⁻¹⁰ |
+| all (family B) | 1.2×10¹⁶ | 2.4×10¹⁴ | 2.6×10³ | 26 |
+
+The reading (*numerical evidence* at one base, one direction):
+- The centre and node errors are in the linear regime for the plain corrector. Node errors are second order with
+  coefficient 1.2×10¹⁰, so they become nonlinear only near 10⁻¹¹. That may be the "about 10⁻¹⁰" basin of the chain.
+- Horizon-data and Δ errors are not, at any δ tried. A Δ error alone of 10⁻¹⁴ gives a step 2.4×10⁹ times too large, the
+  same ratio as at 10⁻¹², so this is not a second-order term. The Jacobian at a point whose data are not those of a
+  regular solution through its node is far from the truth's, in the weak direction (pivot 3×10⁻⁷, with Δ content).
+  13.19's jump study saw the same in the full system: 4×10⁻¹⁶ in Δ gave a step of 2.5×10⁻⁶.
+- The re-seed puts the point back on that family. A Δ error is then linear (second order with coefficient 5×10⁴), and so
+  is a data error, which the re-seed removes. That is the toy's mechanism, and it holds in the real solver.
+- But the re-seed moves node-sized errors into the m_h directions of gain about 1 (the high harmonics, 2.1). There the
+  equations' second-order term is amplified, in the form G δm²: the a equation is sourced by m², and the mass mode
+  carries that to the node. Node errors become second order with coefficient 2.7×10¹⁵, so the first step is linear only
+  below about 4×10⁻¹⁶. Those m_h directions are fixed by the node only to the node's own error, so a better inversion
+  cannot remove this.
