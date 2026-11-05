@@ -2068,6 +2068,16 @@ property of the pinned branch, a singularity about 3 beyond 131.06, and not the 
 plain chain from 128.56 to 140 on the Mac) meet it too. Whether it belongs to the critical solution or to the pinned
 formulation, whose held harmonics follow the trend of 13.18, is open.
 
+**Correction: the plain chain passes 131-132.6 with a healthy series (2026-11-05 18:54 UTC; raw-data
+repository `T114-mac/`).** T114 runs T113's chain on the Mac, from 128.56 to 140 in steps of 0.5. At its bases 131.06,
+131.56, 132.06 and 132.56 the series' first ratios are 164-166, 148-150, 139-145 and 40-44, and |z_N| is 6.4-6.5×10⁻²⁵,
+as at 128.56. The pilot's 131.06 base gave 164, 91, 4.7 and 2.8, and 2.5×10⁻²⁴. The two 131.06 states agree to
+5×10⁻²⁰ in every block and Δ to 2×10⁻²², and their held harmonics differ by 2.7×10⁻²⁰ (the path dependence above). So
+the degenerate series belongs to the pilot's state and its pinned system, not to the branch, and the paragraph above is
+wrong where it says T113 and T114 meet it. `series_forms_check.py` cannot see this cause. Its two forms share the held
+values, their float64 trend and the plan, so its "model" means only "not the horizon series' rounding". The open
+question is which of these three, changed at the 10⁻²⁰ level and amplified by G ≈ 7×10¹⁹, decides the series' orders 4-12.
+
 ### 13.23 The step, animated (2026-11-05)
 
 `hp/plot_algorithm.py RAWDIR` draws one step of the chain with `--jet_q 1 --pred_q 1 --reseed 2 --reseed_q 1` in four
