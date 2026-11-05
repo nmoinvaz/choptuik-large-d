@@ -31,12 +31,13 @@ CMAP = {"V": "V", "S": "S", "B": "b", "C": "c"}
 
 
 def cert():
+    """the certificate's record: by default the certified run that was reviewed (kept as *_preP2b after the F3 rerun)"""
     rec = None
-    for line in open(os.path.join(PROOF, "b8m_lc_K4.log")):
+    for line in open(os.path.join(PROOF, OPTS.get("certlog", "b8m_lc_K4_preP2b.log"))):
         r = json.loads(line)
         if r.get("closes") and not r.get("mutate"):
             rec = r
-    lip = json.load(open(os.path.join(PROOF, "b8m_lc_lip.json")))
+    lip = json.load(open(os.path.join(PROOF, OPTS.get("certlip", "b8m_lc_lip_preP2b.json"))))
     return rec, lip
 
 
@@ -67,7 +68,8 @@ def main():
         o = L.evaluate(st, cells, known, H)
         H[("cc",)] = Al.up(iv.mpf("1.01") * o[("cc",)].v)
     cfg = f"mode {mode}" + (", crude_d" if L.CRUDE_D else "") + (", notesH" if L.NOTESH else "")
-    log(f"p2b_lc's majorant ({cfg}) at the certificate's constants (b8m_lc_K4.log hyp, b8m_lc_lip.json hprime)")
+    log(f"p2b_lc's majorant ({cfg}) at the certificate's constants ({OPTS.get('certlog', 'b8m_lc_K4_preP2b.log')} hyp, "
+        f"{OPTS.get('certlip', 'b8m_lc_lip_preP2b.json')} hprime)")
     out = L.evaluate(st, cells, known, H, detail=True)
     log("  component.band: cert P/h | p2b P/h   (cert P | p2b P)")
     worst = 0

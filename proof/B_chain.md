@@ -163,13 +163,15 @@ Bounds, with |·| the ∞-norm and A(z) = sup over (0, z] of |ã|:
   over 𝒦 (δ ≤ 4.1×10⁻⁵). The first term is at most $`\gamma_F z^{-\delta}A`$.
 - $`\int_0^z e^{-1/(2t)}t^q\,dt \le 2z^{q+2}e^{-1/(2z)}`$ for q + 2 ≥ 0 (substitute u = 1/t). So
   $`\lvert\tilde p_j(z)\rvert \le A\,e^{-1/(2z)}z^{\mathrm{Re}\lambda_j+1}`$, and the P-term is at most $`\gamma_P z^{-\delta}A`$.
-- $`\lvert\psi_C(z)\rvert \le 2e^{\kappa_C z}\kappa_P A\,z^{\mu_+ + 3}e^{-1/(2z)}`$, and the C-term is at most
-  $`2\gamma_C\kappa_P e^{\kappa_C z}z^{2}A`$.
+- $`\lvert\psi_C(z)\rvert \le 2e^{\kappa_C z}\kappa_P A\,z^{\mu_- + 3}e^{-1/(2z)}`$, μ₋ = min Re λ (for z < 1 the largest of the
+  $`z^{\mathrm{Re}\lambda_j + 1}`$ is at the smallest Re λ, and K_P mixes the components). With
+  $`\lvert z^{-\lambda_i}\rvert \le z^{-\mu_+}`$ the C-term is at most $`2\gamma_C\kappa_P e^{\kappa_C z}z^{2-\delta}A`$
+  (the exponents do not cancel; P2 finding F5, effect on $`\int_0^{Z_L}g`$ below 10⁻⁸).
 
 Here γ_F, γ_P, γ_C are suprema of $`\lVert V^{-1}\tfrac{J_F - \mathcal G}{z}V\rVert`$, $`\lVert V^{-1}J_PV\rVert`$,
 $`\lVert V^{-1}J_C\rVert`$, and κ_P, κ_C of $`\lVert K_PV\rVert`$, $`\lVert K_C\rVert`$ (∞-norms), over 60 cells of
 (0, Z_L] and over 𝒦. So $`\lvert\tilde a'(t)\rvert \le g(t)A(t)`$ with
-$`g(t) = t^{-\delta}(\gamma_F + \gamma_P) + 2\gamma_C\kappa_P e^{\kappa_C t}t^2`$. The map ã ↦ V⁻¹k + ∫₀^z (right-hand side) is a
+$`g(t) = t^{-\delta}(\gamma_F + \gamma_P) + 2\gamma_C\kappa_P e^{\kappa_C t}t^{2-\delta}`$. The map ã ↦ V⁻¹k + ∫₀^z (right-hand side) is a
 Volterra operator with an integrable kernel bound, so it has a unique fixed point in the bounded continuous functions,
 and Grönwall's inequality gives $`A \le \lvert\tilde a(0)\rvert e^{\int g}`$ and $`\lvert\tilde a(z) - \tilde a(0)\rvert \le \lvert\tilde a(0)\rvert(e^{\int_0^z g} - 1)`$.
 Finally $`L_z(\Psi k) = V\tilde a(z)`$. Each component of Ψk carries the factor e^{−1/(2z)}, and ã(0⁺) = V⁻¹k gives
@@ -237,15 +239,16 @@ factor 1 ± 0.353 in the eigen-coordinates), the second additive and O(1/n).
 $`L_{u_*}(\Psi_{\rm out}) = L_{u_*}(\psi_{\rm in}) + L_{u_*}(W^+ - W^-)`$, with W^± = Y^±_out − Z^±_in, and
 $`L_{u_*}(\psi_{\rm in}) = (I + R(u_*))k`$ by lemma L. B5(1) (with §1) bounds $`\lvert W^+_{\Phi,\mu}(u_*)\rvert \le x_{\Phi,\mu}u_*/n`$
 on the Stokes segment of 𝒲⁺_n, and by reflection $`\lvert W^-_{\Phi,\mu}\rvert \le x_{\Phi,-\mu}u_*/n`$. In eigen-coordinates
-$`V^{-1}L_{u_*}(Y) = e^{1/(2u_*)}u_*^{-\Lambda}V^{-1}Y_\Phi`$ and $`\lvert u_*^{-\lambda_i}\rvert \le u_*^{-\mu_-}`$, μ₋ = min Re λ. So
+$`V^{-1}L_{u_*}(Y) = e^{1/(2u_*)}u_*^{-\Lambda}V^{-1}Y_\Phi`$ and $`\lvert u_*^{-\lambda_i}\rvert \le u_*^{-\mu_+}`$, μ₊ = max Re λ (u* < 1, so
+the largest Re λ gives the largest factor; P2 finding F6). So
 
 ```math
-\lvert\tilde E\rvert_\infty \le \frac{e^{1/(2u_*)}\,u_*^{1-\mu_-}\,\lVert V^{-1}\rVert_\infty\,(x_{\Phi,-1} + x_{\Phi,+1})}{n} .
+\lvert\tilde E\rvert_\infty \le \frac{e^{1/(2u_*)}\,u_*^{1-\mu_+}\,\lVert V^{-1}\rVert_\infty\,(x_{\Phi,-1} + x_{\Phi,+1})}{n} .
 ```
 
 x_Φ is the B5(1) super-solution for the (H8) data certified by B8, δ = (8.2×10⁻⁵, 79.03, 3.231, 6.463), by
 superposition of the certified super-solutions (B5_inner.md §5.2): x_Φ = (39784, 38776) for μ = (−1, +1). With
-e^{1/(2u*)} = e^{61.728}, $`u_*^{1-\mu_-}`$ = 33.84 and ‖V⁻¹‖ ≤ 1.481, C_E = 2.53×10³³ = e^{76.914}. ∎
+e^{1/(2u*)} = e^{61.728}, $`u_*^{1-\mu_+}`$ = 33.84 and ‖V⁻¹‖ ≤ 1.481, C_E = 2.53×10³³ = e^{76.914}. ∎
 
 **Correction to B5_inner.md §7 and `b5_threshold.py`.** Their model of the relative error,
 $`x_\Phi n^{-1+1/(2\kappa_1)}(\ln n/\kappa_1)^{\langle F^2\rangle}`$, has two inaccuracies:
@@ -726,8 +729,15 @@ The paths use the ray parts Ra and Rb and the arc Ac = {|x − 1| = δ/2} ∩ Σ
 For constants h (per band, for R_V, R_S, R̂_β, R_c) and h_Sp, let 𝒦_h be the set of U = (R_V, R_S, R̂_β, R_c) that are
 analytic in the interior of Σ_n, continuous with x-derivative on Σ_n ∖ {0}, and satisfy:
 - on each band r, |R_V| ≤ h_{V,r}w₁, |R_S| ≤ h_{S,r}w, |R̂_β| ≤ h_{β,r}w and |R_c| ≤ h_{c,r}w₁;
+- R_c(1) = 0 (it makes δD/(x − 1) bounded on L, §13.3);
 - the x-derivative bounds D₀(h) that the equations give (pass 1 of B8_constants.md Lemma B8.a; on L,
-  |xR_S′| ≤ h_Sp n w).
+  |xR_S′| ≤ h_Sp n w). Where a bound of |xc′| enters (the derivatives of C⁻¹ and D⁻¹), it is the class bound
+  |xc^K′| + |xR_c′|, not the c-equation;
+- on L, the second-derivative bound |x(xR_c′)′| ≤ D₀,cc(h), the bound of |xF_c(U)′| that these derivative bounds give
+  (it enters (δD/(x − 1))′ through R_c″).
+
+T preserves the last two conditions: T_c(U)(1) = 0 and x(xT_c(U)′)′ = xF_c(U)′. (These three points are P2's findings
+F1–F3; the certificate's numbers with them are in §13.4.)
 
 **Lemma LC (M = 1; certified).** Take the constants of `b8m_lc_K4.log`, any n ≥ n₀ = e^{73.89} and any p in B8's
 complex parameter box (A, ω/ω∞ within 2×10⁻⁶(1 + i) of B5's centre, which contains 𝒦).
@@ -784,7 +794,7 @@ The lower bound of D̃ is (2 − δ/2)(1 − ‖Γ‖) − sup|δD/(x − 1)| = 
 N_L = \frac{(n_0-1)(1 - c_1\delta/2)}{2} - \eta_L \approx 5.8\times10^{31},\qquad \eta_L = 6.17 .
 ```
 
-*S on L.* With u = R_S + G, u′ = (Λ/x)u − G′ on the segment, so
+*S on L.* With u = R_S + G, u′ = (Λ/x)u + G′ on the segment, so
 
 ```math
 R_S(x) = -G(x) + E(x,x')\,u(x') + \int_{x'}^xE(x,s)\,G'(s)\,ds ,
@@ -817,7 +827,10 @@ So T maps 𝒦_h into itself:
 - the derivative bounds follow from pass 1 with own values ≤ h.
 
 **Contraction.** Use the norm N(U) = max over components and bands of sup|U|/(hw) and sup|xU′|/(h′m), where
-m = nw (nw/X² on F) for S and β, m = w for V and c, and h′ = sup D₀/m.
+m = nw (nw/X² on F) for S and β, m = w for V and c, and h′ = sup D₀/m, together with sup_L|x(xR_c′)′|/(h_cc nw)
+for the second-derivative condition of §13.1. That component enters T only through (δD/(x − 1))′ in G′ on L, with
+factors 1/(N_L − 1) and n₀⁻¹; the certificate's 40 × 40 matrix leaves it out, and with it the matrix has the same
+Perron root (P2_review.md §3.2; the second implementation's 41 × 41 matrix, P2b_review.md).
 
 *Why the matrix below bounds the Lipschitz constant.* By induction over the bound algebra (sums, products, inverses
 with ‖g⁻¹ − g̃⁻¹‖ ≤ ‖g⁻¹‖‖g̃⁻¹‖‖g − g̃‖, and the integral operators, which are linear), the difference of any node at
@@ -918,8 +931,9 @@ the Neumann series there. That series converges in N as well, so N(Ψ_out) < ∞
 ## 15. Theorem B(1) (certified, assuming Braaksma's theorem)
 
 **Theorem B(1) (M = 1).** For every n ≥ n₀ = e^{89.75} (D = n + 2) there is exactly one p_n = (A_n, ω_n/ω∞) in
-Theorem A's box X = x̂ ± 10⁻⁹ for which the centre-regular solution of the one-harmonic model in the light-cone gauge
-(c(1) = 1, the solution of Lemma LC) is analytic at the light cone x = 1. Moreover
+Theorem A's box X = x̂ ± 10⁻⁹ for which the light-cone-gauge solution of Lemma LC (the unique centre-regular solution
+of the one-harmonic model with c(1) = 1 whose remainder lies in 𝒦_h, a neighbourhood of the formal series) is analytic
+at the light cone x = 1. Moreover
 $`\lvert p_n - p_*\rvert_\infty \le e^{67.84}/n`$, where p* is Theorem A(M = 1)'s zero of the inner multiplier.
 
 *Proof.*

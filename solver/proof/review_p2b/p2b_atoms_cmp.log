@@ -1,0 +1,17 @@
+centre: 325 coefficients; (cert - p2b)/max: smallest 0.000e+00, largest 1.000e+00
+box: 325 coefficients; (cert - p2b)/max: smallest -4.864e-06, largest 1.000e+00
+  largest excesses of the certificate's enclosure (cert | p2b):
+    taub (13, 4): 44234.1 | 0  (+1.000)
+    taub (12, 4): 37767.6 | 0  (+1.000)
+    taub (11, 4): 37434.6 | 0  (+1.000)
+    taub (10, 4): 19290.6 | 0  (+1.000)
+    taub (9, 2): 1603.39 | 0  (+1.000)
+    taub (8, 2): 1653.36 | 0  (+1.000)
+    taub (7, 2): 51.1267 | 0  (+1.000)
+    taub (6, 2): 1.18047 | 0  (+1.000)
+  entries where the certificate's bound is below p2b's:
+    V (3, 6): 1504.536655 | 1504.543973  (-4.86e-06)
+    V (4, 8): 9884.210098 | 9884.254886  (-4.53e-06)
+    V (2, 4): 172.5886049 | 172.5889323  (-1.90e-06)
+    Y (2, 4): 289.5262122 | 289.5263387  (-4.37e-07)
+    S (1, 2): 15.9323208 | 15.93232079  (+8.18e-10)

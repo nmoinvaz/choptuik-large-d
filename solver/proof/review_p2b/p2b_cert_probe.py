@@ -5,7 +5,8 @@ certificate's modules and re-assembles the pieces of its G1, W2 and g^ on each r
 (the assembly lines are copied from b8m_lc.evaluate.build, which is a nested function); it is not part of the second
 implementation and shares everything with the certificate.
 
-    python3 p2b_cert_probe.py
+    python3 p2b_cert_probe.py         # G1 pieces per region, g^ terms on N0 (b8m_lc_K4_preP2b.log, the certified run)
+    python3 p2b_cert_probe.py lcj     # Lemma J's beta-row per band
 """
 import json
 import os
@@ -14,6 +15,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 PROOF = os.path.dirname(HERE)
 sys.path.insert(0, PROOF)
+ARGS = sys.argv[1:]
 sys.argv = [sys.argv[0]]
 from flint import arb  # noqa: E402
 import b8_alg as E  # noqa: E402
@@ -25,7 +27,7 @@ B, Q = E.B, E.Q
 
 def main():
     rec = None
-    for line in open(os.path.join(PROOF, "b8m_lc_K4.log")):
+    for line in open(os.path.join(PROOF, "b8m_lc_K4_preP2b.log")):
         r = json.loads(line)
         if r.get("closes") and not r.get("mutate"):
             rec = r
@@ -105,5 +107,43 @@ def main():
     return 0
 
 
-if __name__ == "__main__":
+if __name__ == "__main__" and "lcj" not in ARGS:
     sys.exit(main())
+
+
+def probe_lcj():
+    """the certificate's Lemma J b-row per band (b8m_lcj.main's loop, with both normalizations printed)"""
+    import b8m_lcj as LJ
+    rec = None
+    for line in open(os.path.join(PROOF, "b8m_lc_K4_preP2b.log")):
+        r = json.loads(line)
+        if r.get("closes") and not r.get("mutate"):
+            rec = r
+    K = 4
+    at = AT.atoms(K, rec["rA"], rec["rW"])
+    g = LC.GeoLC(K, "73.89", atoms=at)
+    k = LC.known_lc(g)
+    h = LC.unflat({s: arb(repr(v)) for s, v in rec["hyp"].items()})
+    dq = LJ.build_dq(g, k, h)
+    one = B.mono(1)
+    rhoB = B.mono(1, eX=2, eN=-1)
+    sig = {"S": one, "V": rhoB, "c": rhoB, "b": B.mono(1, eX=2, eN=-2) + B.mono(1, eX=4, eN=-2)}
+    inv_rho = E.inv_lo(E.lo_mono(1, eX=2, eN=-1))
+    inv_nrho2 = E.inv_lo(E.lo_mono(1, eX=4, eN=-1))
+    print("certificate's Lemma J beta-row: sup over each band of (ell_g,j s_j)/rho and /(n rho^2) (None: unbounded)")
+    for j in ("S", "V", "b", "c"):
+        fb = dq["gb"].g[j] * sig[j] if j in dq["gb"].g else B()
+        row = []
+        for r in LJ.SEG:
+            vals = []
+            for inv in (inv_rho, inv_nrho2):
+                try:
+                    vals.append(f"{float(E.bsup_r(fb * inv, r)):.4g}")
+                except ValueError:
+                    vals.append("None")
+            row.append(f"{r} ({vals[0]}, {vals[1]})")
+        print(f"  {j}: " + "; ".join(row))
+
+
+if __name__ == "__main__" and "lcj" in ARGS:
+    probe_lcj()

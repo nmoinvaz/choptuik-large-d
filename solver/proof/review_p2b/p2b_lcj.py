@@ -71,11 +71,11 @@ def main():
         # the certificate's class constants (b8m_lc_K4.log hyp, b8m_lc_lip.json hprime); h_cc from p2b's closure
         CM = {"V": "V", "S": "S", "B": "b", "C": "c"}
         rec = None
-        for line in open(os.path.join(os.path.dirname(HERE), "b8m_lc_K4.log")):
+        for line in open(os.path.join(os.path.dirname(HERE), OPTS.get("certlog", "b8m_lc_K4_preP2b.log"))):
             r_ = json.loads(line)
             if r_.get("closes") and not r_.get("mutate"):
                 rec = r_
-        lip = json.load(open(os.path.join(os.path.dirname(HERE), "b8m_lc_lip.json")))
+        lip = json.load(open(os.path.join(os.path.dirname(HERE), OPTS.get("certlip", "b8m_lc_lip_preP2b.json"))))
         own = json.load(open(os.path.join(HERE, "p2b_lc_cells.json")))
         H = {}
         for c_ in L.COMP:
