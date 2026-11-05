@@ -9,7 +9,7 @@ requires-python = ">=3.9"
 # multidouble: its Python package (the double-double helpers, dd_matvec and qd_axpy the driver and the checks use), from
 # the repository at release 1.8.0's commit (tag 1.8.0; the package is not on PyPI); hp/Cargo.toml takes the same release
 # from crates.io
-dependencies = ["numpy", "multidouble @ git+https://github.com/nmoinvaz/multidouble@00c6dfd89a432cc15c4efc56060fbb30f5518ab1#subdirectory=python"]
+dependencies = ["numpy", "multidouble @ git+https://github.com/nmoinvaz/multidouble@454b8ca41af0e019564c268bad87849cfda1d457#subdirectory=python"]
 
 [tool.maturin]
 python-source = "python"
