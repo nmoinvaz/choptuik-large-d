@@ -25,7 +25,7 @@ fn split<T: Lane>(terms: usize) -> bool {
 }
 
 /// `sum_{j=lo..=hi} (w(j) x[j]) y[k-j]`, each lane vector's terms in the order j = lo..=hi as multidouble's sums
-/// take them, the B vectors on separate threads
+/// take them (its in-place lane-vector sums), the B vectors on separate threads
 fn split_sum<T: Lane, const B: usize>(
     x: &[Fl<T, B>],
     y: &[Fl<T, B>],
@@ -34,28 +34,23 @@ fn split_sum<T: Lane, const B: usize>(
     hi: usize,
     w: Option<&(dyn Fn(usize) -> f64 + Sync)>,
 ) -> Fl<T, B> {
-    let mut out = [T::zero(); B];
-    out.par_iter_mut().enumerate().for_each(|(b, o)| {
-        let mut a = T::acc0();
-        for j in lo..=hi {
-            let xj = match w {
-                Some(w) => x[j].0[b].mulf(w(j)),
-                None => x[j].0[b],
-            };
-            a = T::acc(a, xj, y[k - j].0[b]);
-        }
-        *o = T::fin(a);
+    let mut out = Fl::<T, B>::zero();
+    out.0.par_iter_mut().enumerate().for_each(|(b, o)| match w {
+        Some(w) => multidouble::field::cs_w_lane_into(o, b, x, y, k, lo, hi, w),
+        None => multidouble::field::cs_lane_into(o, b, x, y, k, lo, hi),
     });
-    Fl(out)
+    out
 }
 
-/// `sum_{j=0..=k} x[j] y[k-j]` (multidouble's `cs`, bitwise)
+/// `sum_{j=0..=k} x[j] y[k-j]` (multidouble's `cs`, bitwise), the accumulator borrowed rather than moved
 #[inline(always)]
 pub fn cs<T: Lane, const B: usize>(x: &[Fl<T, B>], y: &[Fl<T, B>], k: usize) -> Fl<T, B> {
     if split::<T>(k + 1) {
         split_sum(x, y, k, 0, k, None)
     } else {
-        multidouble::field::cs(x, y, k)
+        let mut out = Fl::<T, B>::zero();
+        multidouble::field::cs_into(&mut out, x, y, k);
+        out
     }
 }
 
@@ -65,7 +60,9 @@ pub fn cs_range<T: Lane, const B: usize>(x: &[Fl<T, B>], y: &[Fl<T, B>], k: usiz
     if hi >= lo && split::<T>(hi - lo + 1) {
         split_sum(x, y, k, lo, hi, None)
     } else {
-        multidouble::field::cs_range(x, y, k, lo, hi)
+        let mut out = Fl::<T, B>::zero();
+        multidouble::field::cs_range_into(&mut out, x, y, k, lo, hi);
+        out
     }
 }
 
@@ -82,6 +79,8 @@ pub fn cs_w<T: Lane, const B: usize>(
     if hi >= lo && split::<T>(hi - lo + 1) {
         split_sum(x, y, k, lo, hi, Some(&w))
     } else {
-        multidouble::field::cs_w(x, y, k, lo, hi, w)
+        let mut out = Fl::<T, B>::zero();
+        multidouble::field::cs_w_into(&mut out, x, y, k, lo, hi, w);
+        out
     }
 }
