@@ -98,6 +98,52 @@ mapped samples), the plan's length on mapped grids (it multiplies the cost of a 
 uniform M 48 state at D 4 is too under-resolved, 4×10⁻⁷ in Δ, to be mapped onto the same M). These runs need more than
 the Mac's two threads until T103 ends.
 
+## Step 5, the test: procedure and criteria (2026-11-05, written before the runs)
+
+The question is whether a mapped τ grid reproduces the converged low-D values from at most half the modes, and what
+it saves per Newton call. Raw output in the raw-data repository's folder `taumap-mac/`.
+
+References, the uniform grid's converged pairs (the leg's estimator: the change from the next resolution, not a bound):
+
+| D | states | M_w, M_n | Δ(M_n) | error estimate \|Δ(M_n) − Δ(M_w)\| |
+|---|---|---|---|---|
+| 3.15 | `hp/data/lowD_states/lowDhm_x0.000625-0.95_D3.1500_M{192,256}.npz`, 18 nodes | 192, 256 | 2.96131964245600311 | 9.27×10⁻¹² |
+| 3.044375 | `T100-win2/states/lowDhm_x0.000157-0.975_D3.0444_M{320,384}.npz`, 21 nodes | 320, 384 | 2.44148809599424181 | 7.67×10⁻¹¹ |
+
+Driver: `hp/tau_map_solve.py` (new). The start is the M_n reference's trigonometric interpolant sampled on the mapped
+grid (`tau_map.map_state`). The solve is `lowD_dd.solve_point`, unchanged, with its solver built by
+`tau_map.make_solver_mapped`, in the leg's two passes: pass 1 on the start's own plan (tol_step 10⁻³⁰, hmax 0.05) to
+|F| ≤ 10⁻¹⁴, pass 2 on the pass-1 state's own plan to tol 10⁻²⁸, accept 10⁻²⁷. The Jacobian is f64 (`jac="f64"`), with
+the leg's stop rules (stop_lam 1/8, floor_ratio 1/2, it_max 14).
+
+Maps: the periodic arctan map of `tau_map.py` with centre s0, the best centre of `tau_map_study.py`'s scan on the M_n
+reference (scanned finer than the study's 24 points). At D 3.15, L = 1 (the uniform grid), 0.5, 0.35 and 0.25 at M 96
+and 128. At D 3.044375, the L that passes at D 3.15 with the largest margin and its neighbours, at M 160 and 192, and
+at 128 if 160 passes.
+
+Pass criterion (P), per D: some map at M ≤ M_n / 2 (128 at D 3.15, 192 at D 3.044375) converges to max |F| < 10⁻²⁷
+(the leg's accept) with |Δ_map − Δ(M_n)| ≤ |Δ(M_n) − Δ(M_w)|. Recorded besides, not part of (P): the mapped pair's
+difference at two mapped M, against the leg's diff_max 10⁻⁸ and against the uniform pair's difference.
+
+Speedup (S): one `newton_mixed` call at the passing mapped M on the mapped state's own plan, against one at the uniform
+M_n on the reference's own plan, on the Mac at the same thread count, back to back. Recorded per run: plan steps of
+both passes, seconds per call and per Jacobian build, calls to convergence, final |F|, Δ and its difference from
+the reference.
+
+Planted truth: `tau_map_check.py` (the identity map bit for bit) is rerun first. Then L = 1 through the same driver at
+M_w = 192 at D 3.15 must reproduce the stored uniform Δ(192) to 10⁻¹³. It is the uniform solver from another start on
+another plan, so the two agree to the floor but not bit for bit.
+
+Controls that must fire, each at the passing map and M:
+
+- (C0) L = 1 at that M: the uniform grid must fail (P), else (P) does not test the map.
+- (C1) `--mutate gp`: d/dθ without its rows' 1/g′ (the chain rule dropped). Δ must miss the reference by more than
+  100 times the tolerance, or the solve must fail.
+- (C2) wrong centre, s0 + π/2, which puts the pulse where the map is coarsest: (P) must fail.
+
+Stop and report early if no map at M ≤ 128 passes at D 3.15, if a control does not fire, or if S < 2 at D 3.15 (the
+mapped plan's length eats the gain).
+
 ## Appendix A: code analysis
 
 
