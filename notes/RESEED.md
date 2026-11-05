@@ -336,6 +336,27 @@ reseed-mac/basin/*.jsonl`). The "back" and "converged" measures are those of ame
   m_h directions of gain about 1 through the re-seed. Elim takes one decade more, then fails the same way (its first
   step at 10⁻¹¹ is 2.7×10⁻⁷).
 
+**Family P at 96.1184, the series' own error direction (elim, seed 1; `D96.1184_P_elim.log`).** Every δ from 10⁻¹² to
+10⁻⁵ converges back to the truth, within 6×10⁻²⁴ in z and 7×10⁻²⁵ in Δ (at 10⁻⁵), in 4–7 steps. The starts' max |F|
+runs from 3.7×10⁻¹² to 1.8×10³². At 10⁻⁴ the re-seed itself fails: its u₀ rung stops at |R| = 4.3×10⁻⁴ after 30 steps,
+from a start at 1.4×10⁴⁰. That run was stopped by hand without its corrector and is recorded as not converged. So
+along the direction the predictor actually errs in, elim's basin is 10⁻⁵, 10⁷ times its white-noise basin (10⁻¹²) and
+10²² times the plain corrector's in data. Which floor rule this run loaded is not known (amendment 9's status). The δ up
+to 10⁻⁵ converged with the u₀ rung far above the floor (start residuals 10⁻¹¹ and up), where both rules decide alike.
+
+**Family A at 84.9073, the task's test as stated (node and centre data only; seed 1).**
+
+| arm | basin, converged | basin, back | first failure |
+|---|---|---|---|
+| plain | 10⁻¹⁰ | 10⁻¹⁰ | 10⁻⁹ (creeps 12 steps) |
+| re-seeded | 10⁻¹³ | 10⁻¹⁵ (10⁻¹⁴ converged 8×10⁻²³ away, Δ 3.7×10⁻²⁴) | 10⁻¹² |
+| elim | (running) | | |
+
+With the horizon data exact at the start, the plain corrector reaches 10⁻¹⁰, the "about 10⁻¹⁰" of the task. The
+re-seed narrows that by three decades. It replaces exact horizon data with data consistent with the perturbed node, so
+the node's white noise enters the m_h directions of gain about 1 (4.2). On the re-seeded start, families A and B differ
+only in Δ, and their trajectories at 10⁻¹² are the same to the printed digits.
+
 **4.4 The jump test from 91.1184** (`reseed-mac/jump/jump.jsonl`, `jump_D91.1184*.log`). The quad-double series (N 24,
 958 s on two threads) has |z_k| falling from 1.8 to 1.4×10⁻²⁵. At h = 2 its smallest term is 2.4×10⁻¹⁸ (order 24). Still,
 the prediction's pinned quad-double max |F| is 3.2×10⁻⁸, mostly the horizon block. That is G (2×10¹³) times a data
