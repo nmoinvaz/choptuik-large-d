@@ -2011,3 +2011,7 @@ held values' difference and its effect on Δ are recorded beside it. T111 contin
 At 123.6184, against T110's own state, reached by 36 plain steps of 1 and 0.5 (`anm-mac/held_plan/D123.6184.log`), the
 held values differ by 6.5×10⁻¹⁹ and move Δ by 8.6×10⁻²¹. On equal held values and plan the two agree to 4.9×10⁻³⁰,
 inside the amended 10⁻²⁸, and the plans are equal (13 steps).
+The other three pairs pass the amended check too (`anm-mac/held_plan/D*.log`): on equal held values and plan the two
+states agree to 1.1×10⁻³¹ at 108.62, 2.8×10⁻³³ at 113.62 and 7.4×10⁻³² at 118.62. Their raw differences, 2.8×10⁻²¹,
+2.2×10⁻²² and 2.7×10⁻²¹, are again the held values' effect alone, and the plans are equal. So from 98.62 to 123.62 the
+elimination corrector reaches the plain corrector's root of the same system at every pair, to quad-double.
