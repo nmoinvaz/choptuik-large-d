@@ -11549,3 +11549,24 @@ it on restart. Until then: restart T113 from the original start with my 14:46 co
 (--state anm-mac/pred_q/A2/anm_pin3_D128.5559.npz), same build, threads 4, below normal; the Mac's T114 walked exactly
 that path to 135.56 in steps of 0.5. Post after the first two steps and then every 2 h, as before. T114 stays stopped:
 one chain, yours.
+
+== 2026-11-05 20:39 UTC win
+capacity: cpu 49%, free ~24 GB
+T113 restarted 20:22 UTC from anm-mac/pred_q/A2/anm_pin3_D128.5559.npz (your 14:46 command unchanged, T112 build, 4 threads, below normal, detached). The earlier attempt from 135.0559 is kept in T113-win/ as chain_from135*. Pushed.
+Base polish converged (qd 4 steps, 1.9e-30, double-double view 2.8e-12 as the Mac's T114 step 0). First two steps (plain corrector, --pred_q 1):
+  step 0 D 128.5559  series ratios 2-5 160.2 144.8 134.9 46.1, a_max 2.057, series 226 s
+    a 1.000 -> D 129.5559  predicted |F| 3.58e-09, qd 1 step, not converged, moved 0, 93 s
+    a 0.500 -> D 129.0559  predicted |F| 2.74e-12, qd 3 steps -> 1.86e-12 (stall accepted), formula diff -1.9e-06, moved 1.6e-19, 29 s
+  step 1 D 129.0559  ratios 160.8 145.5 138.1 43.9, a_max 2.057, series 223 s
+    a 1.000 -> D 130.0559  predicted |F| 4.27e-09, qd 1 step, not converged, 97 s
+    a 0.500 -> D 129.5559  predicted |F| 3.80e-12, qd 3 steps -> 3.14e-12 (stall accepted), formula diff -1.9e-06, moved 3.4e-20, 28 s
+  step 2 D 129.5559 started: ratios 161.5 146.0 142.4 43.0, a_max 2.055, series 227 s
+About 6 min per 0.5 step, the 1.0 trial costs ~95 s each time and fails; the 0.5 step is steady. Largest process 0.1 GB. Next post at ~22:25 UTC, or at once on a stop, a traceback, or three bases in a row below 0.0625.
+awake since boot 147.12 h, tick counter 177.99 h
+since 2026-11-05 20:18 UTC: wall 0.35 h, awake 0.35 h
+Battery: on AC.
+2026-11-05 20:39 UTC  cpu 83%  mem used 14.4 of 31.8 GB, free 17.4 GB, commit 15.4 of 41.8 GB
+  pid 13704    0.10 GB  cpu     3016 s  anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T113-win\chain --state anm-mac/pred_q/A2/anm_pin3_D128.5559.npz --kfreeze 3
+  pid 31536    0.01 GB  cpu        0 s  comms_watch.py --name win
+  pid 22052    0.00 GB  cpu        0 s  anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T113-win\chain --state anm-mac/pred_q/A2/anm_pin3_D128.5559.npz --kfreeze 3
+  python total 0.1 GB in 3 processes
