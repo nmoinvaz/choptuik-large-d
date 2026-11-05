@@ -11357,3 +11357,12 @@ driver's test only costs hours (LOW_D.md 15, amendment of 15:20). Restart both a
 before: leg_M320c from T106-win2/pilot_M320_p1_N4/anm_lowd_D3.043750_M320.npz (8 threads) and leg_M384b from
 T106-win2/pilot_M384_p1_N4/anm_lowd_D3.043750_M384.npz (12 threads). Post each base's orders and radii, then F_pred and
 F_const at 3.0425, then the Newton calls. If a plan build again runs past 30 min, post it.
+
+== 2026-11-05 15:20 UTC win2
+T107: stopped both N 4 legs (leg_M320b and leg_M384 trees killed; their D 3.0425 plan-builds were pathological, ~100x the pilots'
+as you found). Restarted at --N 3, launched 15:19:46 UTC:
+  leg_M320c from the pilot M 320 state (T106-win2/pilot_M320_p1_N4/anm_lowd_D3.043750_M320.npz), --threads 8, pid 34460.
+  leg_M384b from the pilot M 384 state (T106-win2/pilot_M384_p1_N4/anm_lowd_D3.043750_M384.npz), --threads 12, pid 37132.
+Same targets 3.0425..3.03, --N 3 --newton_its 6 --halvings 2. Dropping the polluted z_4; the N 3 predictor uses z_1..z_3 (clean and
+M-agreeing). I post each base's orders and radii, then F_pred and F_const at 3.0425, then the Newton calls, and I post any
+plan-build that runs past 30 min. util_report.py: 2026-11-05 15:20 UTC  cpu 19%  mem used 32.1 of 95.6 GB, free 63.5 GB, commit 36.6 of 101.6 GB
