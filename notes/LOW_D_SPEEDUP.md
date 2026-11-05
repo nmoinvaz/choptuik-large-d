@@ -144,6 +144,49 @@ Controls that must fire, each at the passing map and M:
 Stop and report early if no map at M ≤ 128 passes at D 3.15, if a control does not fire, or if S < 2 at D 3.15 (the
 mapped plan's length eats the gain).
 
+## Step 5, the test: results so far (2026-11-05, interim)
+
+At D 3.15 the mapped grid passes (P) with 2.7× fewer modes than the reference, at the same plan length (*numerical
+evidence*). At D 3.044375 the first mapped solve, M 160, is heading for about twice the tolerance, and M 192 is
+running. Raw data in `taumap-mac/` of the raw-data repository (`runs.jsonl`, `timing.jsonl`, `logs/`, `states/`);
+scripts `hp/tau_map_solve.py`, `hp/tau_map_leg_check.py`.
+
+D 3.15, Δ − Δ(256) at max |F| below 10⁻²⁸ in every converged row; tolerance |Δ(256) − Δ(192)| = 9.27×10⁻¹²:
+
+| grid | M 64 | M 80 | M 96 | M 128 | M 192 |
+|---|---|---|---|---|---|
+| uniform | | | +1.7×10⁻⁶ (C0, fails) | +4.5×10⁻⁸ | +9.27×10⁻¹² (planted: the stored Δ(192) to 6×10⁻³²) |
+| arctan L 0.25, s0 1.79 | −1.4×10⁻⁹ | −7.9×10⁻¹² | +1.4×10⁻¹⁵ | −4.6×10⁻¹⁵ | |
+| arctan L 0.35, s0 1.88 | | | +3.1×10⁻¹⁴ | −4.6×10⁻¹⁵ | |
+| arctan L 0.5, s0 1.83 | | | +8.7×10⁻¹² | | |
+
+- Mapped M 64 matches uniform M 160 (+1.2×10⁻⁹) and mapped M 80 matches uniform M 192: about 2.4–2.5× fewer modes
+  at equal accuracy. At M 128 both maps give Δ(256) − 4.6×10⁻¹⁵, which agrees with one M 384 Newton step from the
+  M 256 state (−4.9×10⁻¹⁵, `hp/data/lowD_highM/check512.jsonl`). The M 256 reference is therefore good to about
+  5×10⁻¹⁵, far inside its estimator.
+- The pass-2 plans are 408 steps (L 0.25, M 96) against 406 for the uniform M 256 state's own plan. Pass-1 plans are
+  1.5–2.7× their pass-2 plans, as for uniform lifts. The stored M 256 plan (626 steps) is longer than that state's own.
+- Controls. C0: the uniform grid at M 96 misses by 1.7×10⁻⁶, so it fails. C1 (`--mutate gp`) does not converge
+  (|F| 1.2 after three calls, line-search factors 1/32 and 1/512, Δ wanders to 2.53), so it fires. C2 (s0 + π/2):
+  its start has |F| 3.5×10¹⁶ on its own plan, with no decrease along the f64 step. Its exact-Jacobian retry (hours at
+  M 96) was stopped by hand and is recorded as a failed solve (`logs/d315_C.log`). The perturbed start (Δ + 10⁻⁶,
+  10⁻⁸ N(0, 1) noise) returns the unperturbed Δ to 1.7×10⁻³¹.
+- Timing, wall seconds per Newton call at 2 threads under other jobs' load 55–118: the uniform M 256 on its own
+  406-step plan took 1304 and 1868 s, the mapped M 96 on its own 407-step plan 128 and 77 s. The ratio is 10–24×,
+  against (256/96)³ = 19. A repeat with CPU seconds is queued.
+
+D 3.044375, reference Δ(384), tolerance 7.67×10⁻¹¹: arctan L 0.25, s0 1.83, M 160 (pass-1 plan 2806 steps; the
+uniform M 384's lean plan is 2796). Δ − Δ(384) after four pass-1 calls is −1.6×10⁻¹⁰, at |F| 4.2×10⁻⁹. The
+convergence is linear (2.5×10⁻⁴, 1.5×10⁻⁷, a half step, 1.0×10⁻⁷, 4.2×10⁻⁹), where the uniform M 320 pass 1 was
+quadratic. It approaches from below, as the mapped grid did at D 3.15, while the uniform grid approaches from above,
+so the true Δ is probably between the two. Mapped M 192 (L 0.25 and 0.2) decides it. Queued or running: M 160 to
+convergence, the uniform M 384 call timed with CPU seconds, M 192 L 0.25 and L 0.2, M 160 L 0.2 and 0.35.
+
+The leg option, `lowD_highM.py --tau_map s0,L`: run 1 of `tau_map_leg_check.py` found the identity map equal to the
+uniform leg bit for bit. Its control (L 1 + 10⁻⁹) changed 15 words but not Δ's hi word, which was all the first
+version tested, so it reported FAIL. The check now judges the control by the full comparison with L 1 + 10⁻⁶
+(0b372ed). The rerun is queued.
+
 ## Appendix A: code analysis
 
 
