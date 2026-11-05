@@ -1785,9 +1785,9 @@ What is known about the selection, and what is open:
   that is analytic across the light cone, and |p_n − p*| ≤ e^{67.84}/n ([proof/B_chain.md](proof/B_chain.md) §15). The
   last links were the light cone itself: the continuation carried up to x = 1 in the exact light-cone gauge (Lemma LC, a
   contraction) and a proof that the outer jump vanishes with its label (Lemma J). "The" solution is unique within a
-  neighbourhood of the formal series. A first independent review ([proof/P2_review.md](proof/P2_review.md)) finds that
-  it stands as stated, with seven corrections that change no constant or threshold; its second implementations of Lemma
-  LC's closure and of Lemma J's secant bounds are not done. The threshold is far beyond any D a solver reaches, so the
+  neighbourhood of the formal series. Two independent reviews ([proof/P2_review.md](proof/P2_review.md),
+  [proof/P2b_review.md](proof/P2b_review.md)) find that it stands as stated. They re-implement B7, Lemma LC and Lemma J
+  in other arithmetic, and the first one's seven corrections, now applied, change no constant or threshold. The threshold is far beyond any D a solver reaches, so the
   theorem does not yet identify the computed branch ([notes/PROOF_QUEUE.md](notes/PROOF_QUEUE.md), P7). The canonical
   status, link by link, is C_selection.md §13.
 - **The critical exponent, and why γ∞ = 1/2: [Proposition 5](#proposition-5-the-unstable-mode-at-infinite-d-is-exact).**

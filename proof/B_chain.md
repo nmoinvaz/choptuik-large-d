@@ -30,7 +30,8 @@ Contents
 
 **Theorem B(1) is certified for M = 1, assuming Braaksma's theorem (§15).** For every n ≥ n₀ = e^{89.75}, exactly
 one parameter in Theorem A's box gives a light-cone-gauge solution that is analytic at the light cone, within
-e^{67.84}/n of Theorem A's zero. None of the certificate code has had an independent review yet (§10).
+e^{67.84}/n of Theorem A's zero. Two independent reviews ([P2_review.md](P2_review.md), [P2b_review.md](P2b_review.md))
+re-implement B7, Lemma LC and Lemma J; the rest of §10's code is audited or not yet reviewed (C_selection.md §13.1).
 
 The certified links (python-flint; trusted code named in each section):
 - *B5(2)* with constants (§§2–3). The label of the outer jump at the fixed point u* = 0.0081 of the Stokes line is
@@ -524,7 +525,8 @@ annotations to B5_inner.md and `b5_threshold.py`:
 
 ## 10. What the independent review (P2) should check
 
-New certificate code and the claims it carries (none reviewed yet):
+New certificate code and the claims it carries. P2 ([P2_review.md](P2_review.md)) and P2b ([P2b_review.md](P2b_review.md))
+re-implemented B7, Lemma LC and Lemma J and audited lemma L, B5(2) and Lemma P; the rest is not yet reviewed.
 
 | file | claim | shares machinery with |
 |---|---|---|
@@ -945,7 +947,8 @@ $`\lvert p_n - p_*\rvert_\infty \le e^{67.84}/n`$, where p* is Theorem A(M = 1)'
 
 **What it rests on.**
 - Braaksma's theorem, through Theorem A(M = 1) and lemma S.
-- Certificate code not yet reviewed independently (§10).
+- Certificate code: B7, Lemma LC and Lemma J re-implemented independently (P2, P2b); the rest of §10 audited or not
+  yet reviewed.
 
 Uniqueness holds among light-cone-gauge solutions in the class 𝒦_h, a neighbourhood of the formal series. That is the
 sense of "the" centre-regular solution in the light-cone gauge.

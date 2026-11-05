@@ -749,7 +749,7 @@ estimate gives the C¹ statement. $`\square`$
   - B5.1, the fast variable, the label continuation and the explicit matching factor κ.
   - Part (2) given part (1), in the corrected form above (a statement about the label of the outer jump at one point);
     **certified** for M = 1 at u* = 0.0081 for every n ≥ e^{73.89} ([B_chain.md](B_chain.md) §§2–3; trusted code
-    `b5_label.py`, `b5_jump.py`, not yet reviewed independently). The earlier estimate of its error (`b5_threshold.py`)
+    `b5_label.py`, `b5_jump.py`, audited by P2, not re-implemented). The earlier estimate of its error (`b5_threshold.py`)
     used a wrong exponent and is superseded.
 - **Part (1).** **Proved conditional on (H8)** for fixed M; **certified** for M = 1 with n₀(1) = max(e^{73.89}, n₈)
   ([B5_inner.md](B5_inner.md); trusted code `b5_bounds.py`, `b5_formulas.py`, not yet independently reviewed). The
@@ -836,7 +836,8 @@ uses.
 variables of B8_constants.md §1.2; **certified** for M = 1 over B5(1)'s parameter box; h = (2.4×10⁶, 6.3×10⁶, 6.2×10⁵,
 1.7×10⁵) at n₀ = e^{73.89}). It gives B5(1)'s hypothesis (H8) for n ≥ e^{73.89} with δ = (8.3×10⁻⁵, 79.04, 3.232, 6.464)
 ≤ δ_ref. For every fixed M the same holds for n ≥ n₀(M) (**proved**, no numerical value). Trusted code: `b8_alg.py`,
-`b8m_formal.py`, `b8m_atoms.py`, `b8m_bounds.py`, `b8m_h8.py`; not yet reviewed independently.
+`b8m_formal.py`, `b8m_atoms.py`, `b8m_bounds.py`, `b8m_h8.py`; the formal series and atoms reproduced independently
+(P2), the rest not yet reviewed.
 
 Where B8_constants.md departs from the plan above (its §11):
 - the domain carries the factor 1/cos κ in R′_n = (κ₁n/(cos κ ln n))^{1/2}, which B5(1) needs; R_n above lacks it;
@@ -956,8 +957,9 @@ This section is the canonical statement of layer B's status; PROOF.md and the RE
 ([B_chain.md](B_chain.md) §15). For every n ≥ n₀ = e^{89.75} (D = n + 2), there is exactly one parameter
 p_n = (A_n, ω_n/ω∞) in Theorem A's box X = x̂ ± 10⁻⁹ for which the light-cone-gauge solution of Lemma LC (the unique
 centre-regular solution with c(1) = 1 whose remainder lies in 𝒦_h, a neighbourhood of the formal series) is analytic
-at the light cone, and |p_n − p*|_∞ ≤ e^{67.84}/n. None of the certificate code of B5, B8, lemma L, lemma P, B7,
-Lemma LC or Lemma J has had an independent review.
+at the light cone, and |p_n − p*|_∞ ≤ e^{67.84}/n. B7, Lemma LC and Lemma J have independent second implementations in
+other arithmetic ([P2_review.md](P2_review.md), [P2b_review.md](P2b_review.md)), and the code of lemma L, B5(2) and
+Lemma P was audited there. The code of B5(1), of B8 beyond `--d0` and of (H8) has not been reviewed independently.
 
 The model throughout is that of Section 1 with M = 1: p, m on the harmonics ±1, b and c on {0, ±2}. Theorem A(M = 1),
 B5(1) and B8 all use it. The parameters are (A, ω/ω∞) in the complex box 𝒦 of B5_inner.md §5.1, which contains a
