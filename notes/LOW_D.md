@@ -642,3 +642,9 @@ the order-5 pollution of D′ moved to order 4. The legs run on as they are, and
 against the base state) decides. A leg that stops there restarts with `--N 3` from the same base, for the rest of the
 leg. Its truncation at h = 0.00125, |z_3|/R h⁴ with R = 0.047, is about 3×10⁻⁴, and the two halvings bring it to about
 10⁻⁶. Criterion 1 is unchanged.
+
+**Amendment (2026-11-05 15:20 UTC): the N 4 legs stopped before the driver's test, restarted at N 3.** Both legs spent
+2.5 h (M 320) and 5 h (M 384) in the Taylor plan of their predicted state at 3.0425, single-threaded, where the pilots'
+plans of about 9000 steps took 130 and 143 s (`T106-win2/pilot_M*_p1_N4/anm_lowd.jsonl`). The polluted z_4 makes the
+predicted state's plan pathological, so the driver's own test would come hours late and, with that z_4, almost surely
+fail. Both legs restart at `--N 3` from the pilots' converged states at 3.04375, as the amendment above provides.

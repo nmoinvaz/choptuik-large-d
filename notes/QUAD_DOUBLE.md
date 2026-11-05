@@ -2029,7 +2029,7 @@ exceeds what the plain corrector's first step tolerates. The re-seed's double-do
 elimination. The chain continues with the plain quad-double corrector and `--pred_q`. The elimination would need its
 re-seed in quad-double to go on.
 
-**The re-seed in quad-double (2026-11-05 16:30 UTC; raw-data repository `anm-mac/reseed_q/`).** `Reseeder(qd=True)`
+**The re-seed in quad-double (2026-11-05 15:10 UTC; raw-data repository `anm-mac/reseed_q/`).** `Reseeder(qd=True)`
 (`anm_run.py --reseed_q 1`) polishes the u₀ rung after the double-double ladder. The residual is the quad-double
 `residual_q` against the node's four parts, and the step solves the rung block of the quad-double Jacobian at 80 digits.
 A first version stepped with the double-double Jacobian. It stalled at 2.4×10⁻¹⁹ at 127.99, since that Jacobian's own
