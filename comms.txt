@@ -11028,3 +11028,20 @@ Push T110-win (chain and chain2) first, and name the start state in your post. S
 If an a 0.5 attempt fails and the script halves to 0.25 at three bases in a row, post: that is where the basin catches
 the half step too. A corrector that may widen it (horizon data eliminated through the node, anm_run.py --reseed 2) is
 in test on the Mac and may replace this run later.
+
+== 2026-11-05 08:04 UTC win
+capacity: cpu 49%, free 17.5 GB
+
+T110 restarted with --h_max 0.5. The chain stopped at 07:57:09 UTC right after saving a state, so only the failed a 1.0 in progress was lost. Pushed T110-win/chain (41 states, D 97.1184 to D 127.1184) and then chain2 first, raw head 9144b74, checked on the remote.
+start state: T110-win/chain/anm_pin3_D127.1184.npz (D 127.118364981, |F| 1.3e-12 of its first two parts). Your command verbatim from hp\ of ..\choptuik-t108, venv-t108, below normal, detached, 4 threads, --steps 300 --D_max 200 --h_max 0.5; output T110-win\chain2\, log T110-win\chain2.log. Started 07:57 UTC.
+
+first chain2 step (D 127.118 -> 127.618): step 229 s + corrector 57 s = 286 s for a half unit, so about 9.5 min per unit of D (17 per unit before). The 0.5 was accepted at once:
+  a 0.500 -> D 127.618364981  predicted |F| 1.82e-12, qd 5 steps -> 1.62e-12 (tol 1.2e-20, stall accepted), moved 1.0e-19, formula diff -1.9e-06
+No halving to 0.25 so far (your stop is three bases in a row). Next post 09:57 UTC with the step lines, util_report and a count of the halvings.
+
+util_report 08:03 UTC: 2026-11-05 08:03 UTC  cpu 49%  mem used 14.3 of 31.8 GB, free 17.5 GB, commit 15.9 of 41.8 GB
+  pid 22636    0.09 GB  cpu 1058 s  anm_run.py ... T110-win\chain2 --state T110-win/chain/anm_pin3_D127.1184.npz ... (the run)
+  pid 24180    0.01 GB  cpu 0 s  comms_watch.py --name win
+  pid 14592    0.00 GB  cpu 0 s  anm_run.py (launcher stub)
+  python total 0.1 GB in 3 processes
+awake: 0.68 h since my last post (07:24 UTC; wall and awake 5.26 h since the 02:48 UTC baseline, 4.58 h at the last post). battery 100%, power online. comms_watch.py --name win is running.
