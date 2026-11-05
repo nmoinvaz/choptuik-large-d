@@ -1881,3 +1881,49 @@ is 1.0×10⁻²⁵, where B's is 4.7×10⁻²¹. So the double-double series' hi
 the quad-double series reads a radius near 90 from the first orders on. The second-order prediction error that
 shrank qd9's steps to 0.04 was the double-double series'. The chain continues as `anm-mac/run_trend_pin3_qdj1/` from
 A's state at 87.1184 with `--jet_q 1` and qd9's other options (h_max 1); qd9 was stopped at its base 87.0224.
+
+### 13.21 The formulation study: horizon data re-seeded from the node (a toy model, 2026-11-05)
+
+A coordinator subagent's study, with numerical evidence in a toy model only. Scripts are in `hp/horizon_toy_nl/` and
+output in the raw-data repository's `formulation-mac/`. It asks whether the corrector's shrinking basin (13.6, 13.19)
+belongs to the equations or to the formulation. The formulation makes the horizon data independent Newton unknowns,
+with the horizon series evaluated out to the matching point.
+
+**The toy (`toy_nl.py`).** The b-equation x b′ = (N + k) b² − (N + y²) b is the a-equation of `hp/src/model.rs` (b = a²)
+with a planting source k. It is a Bernoulli equation, so 1/b is linear and b has movable simple poles. The y-equation
+u y′ = s y + u(½ + ½N(b − 1)) y + g has exponents 0 and s and the real equations' coupling through N(b − 1). N = 2s + 1,
+the planted truth is in closed form, and an algebraic condition at the node u₀ = 0.3 stands for the interior. The
+toy reproduces the pole law of 13.6 (`calib.py`): a simple pole on the positive real axis, the slope C within 5–20%
+(0.72–0.84 against 0.87–0.92 at D 39–73), and δ_max about 10 times the real one, a constant offset in R₀.
+
+**Basins** (`run_basin.py`; every unknown off by 0.5δ–δ, three seeds; "prec" where the planted test fails at that
+precision; † one seed). The three formulations are the series one (ours), inward integration from u_e = 0.1, and
+re-seeding, the series formulation with b_h recomputed from the node data before Newton.
+
+| s (toy D) | series, 64 digits | inward, 64 digits | re-seeded, 64 digits | 1/G, G = x₀^(−N) |
+|---|---|---|---|---|
+| 5.5 (15) | 10⁻² | 10⁻¹·⁵ | ≥ 10⁻⁰·⁵ | 9×10⁻³ |
+| 20.5 (45) | 10⁻⁷ | 10⁻⁷·⁵ † | 10⁻¹ | 2×10⁻⁷ |
+| 40.5 (85) | 10⁻¹³·⁵ | 10⁻¹⁵·⁵ † | 10⁻¹ | 10⁻¹³ |
+| 70.5 (145) | 10⁻²²·⁵ | 10⁻²⁸ † | 10⁻¹·⁵ | 5×10⁻²³ |
+| 98.5 (201) | below 10⁻³⁰ | not run | 10⁻¹ | 10⁻³¹ |
+
+The series formulation's basin follows 1/G within a factor of 3 at every s and at both 32 and 64 digits. That is the
+basin of Newton on the Möbius map from b_h to b(u₀). The inward formulation pays twice: a weak direction of size
+(u_e/u₀)^s and as many digits lost. The re-seeded one does not see the pole. An error δ_n at the node becomes δ_n/G in
+b_h (`diag.py`: 1.05×10⁻³² at s 98.5 for δ_n = 0.1), and that member of the family has its pole at
+u₀ + ln(1/δ_n)/N, beyond u₀. Its remaining cost is the series' slow convergence near its radius, polynomial in s. The
+precision floor εG stays in every formulation (residual floors at 64 digits from 10⁻⁶³·⁸ at s 5.5 to 10⁻³⁴·¹ at
+98.5). A Padé form (`pade_nl.py`, [30/30] at s 20.5) passes its planted test but stalls at |F| ≈ 0.5 from δ = 10⁻⁶,
+since the perturbed b has a ring of N poles. The controls (the coupling scaled by 1 + 10⁻⁶, and the series stopped at
+half the digits) fire wherever the planted test passes.
+
+**What it suggests for the solver (untested).** Before each corrector, replace the predicted (m_h, a_h) by those of
+the regular solution through the predicted last node. Integrate the node toward x = 1 with the existing Taylor stepper
+to u₀/32, invert the horizon series there (a Newton of size 2M on the m_h and a_h columns), and re-invert on the
+rungs u₀/16 … u₀. That would turn the corrector's requirement on the horizon data from the basin of 13.6 (about
+5×10⁻³¹ at D 200, extrapolated) into node-level accuracy. Its assumption is that integrating toward the horizon is
+stable for the mass mode, the m-mode and p's singular branch, which the signs of their leading terms suggest. 12.3's
+failed match integrated the other way. It is also the second of the jump study's three routes (13.19, horizon data from
+a solve from node 0.7). The toy has one horizon unknown and no τ, interior or moving sonic point, and it does not model
+the weak directions of 13.19.
