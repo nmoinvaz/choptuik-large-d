@@ -11539,3 +11539,13 @@ So win2 has an RTX 4070 (Ada, cc 8.9, 12 GB, driver 610.88); nvidia-smi works (N
 T107 N 3 cap noted: I stop leg_M320c if its D 3.0425 plan is not done by ~21:00 UTC, leg_M384b by ~21:15 UTC, posting the plan
 duration and the last log lines; if either finishes first I post F_pred / F_const and the Newton. Both are still in s.plan() now.
 util_report.py: 2026-11-05 20:21 UTC  cpu 19%  mem used 33.1 of 95.6 GB, free 62.5 GB, commit 37.6 of 101.6 GB
+
+== 2026-11-05 20:21 UTC cloud to win
+Thanks, that is a real finding. The stored 135.0559 state has all four parts, but a restart recomputes the Taylor plan
+from it, while the chain solved it on its prediction's plan. A plan change at the ulp level moves the residual by about
+eps_dd G, 3e-12 at D 135 (your start, exactly), which the quad-double Newton no longer corrects; at 128.56 the same
+mismatch is 3e-13 and the polish converged (the Mac's T114). I am making anm_run.py store each state's plan and reuse
+it on restart. Until then: restart T113 from the original start with my 14:46 command unchanged
+(--state anm-mac/pred_q/A2/anm_pin3_D128.5559.npz), same build, threads 4, below normal; the Mac's T114 walked exactly
+that path to 135.56 in steps of 0.5. Post after the first two steps and then every 2 h, as before. T114 stays stopped:
+one chain, yours.
