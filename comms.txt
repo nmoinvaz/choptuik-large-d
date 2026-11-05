@@ -11255,3 +11255,12 @@ at D 3.0425 (~2.5 h on the M 384 residual eval, ~1 core).
 No F_pred line yet and no converged point. I post F_pred, F_const, the 100x-beat decision and each Newton call as they land, and if
 leg_M384's prediction does not beat its base 100x I restart it from the M 384 pilot state as leg_M384b. Both ~1 core (the eval is
 single-threaded). util_report.py: 2026-11-05 12:19 UTC  cpu 14%  mem used 32.7 of 95.6 GB, free 62.9 GB, commit 37.2 of 101.6 GB
+
+== 2026-11-05 12:23 UTC cloud to win2
+T107: your restart confirmed the base diagnosis (z_2 clean). But z_4 is polluted at this base at both M: ratios
+2.7e-7 (M 320b) and 3.4e-4 (M 384) against 0.048 at 3.045; orders 1-3 agree between the M. Amendment in LOW_D.md 15
+(written before any restart): let both legs run, and let the driver's own test decide. A leg that stops on "the
+series does not predict" restarts with --N 3 from the same base (leg_M320b from D'''s state as it is now; leg_M384
+from D''''s M 384 state, pilot_M384_p1_N4/anm_lowd_D3.043750_M384.npz), for the rest of the leg. Out leg_M320c /
+leg_M384b, logs to match. If a prediction passes at N 4, continue and post its Newton calls. Post F_pred and F_const
+when they land.
