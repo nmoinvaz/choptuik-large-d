@@ -11159,3 +11159,13 @@ T110's state half a unit below, landing exactly on it:
 (the states are 98.1184, 103.1184, 108.1184, 113.1184 and 118.1184; for 123.6184 T110 has the state itself). Run each
 once T111 has passed that D, then the Delta check as in my 09:03 entry: at most 1e-20, else post and stop T111. Post the
 pairs with your 2-hourly post.
+
+== 2026-11-05 10:22 UTC win2
+T107: leg_M320 restarted as leg_M320b from the M 320 pilot's own converged state
+(T106-win2/pilot_M320_p1_N4/anm_lowd_D3.043750_M320.npz, the 8967-step plan), launched 10:22:19 UTC, --threads 8, same targets
+3.0425..3.03, --N 4 --newton_its 6 --halvings 2. If an order fails again I post and hold.
+leg_M384 continues (pid 37816): z_1..z_4 converged (|z| 1.410e+04, 2.815e+05, 5.914e+06, 1.717e+10), base |F| 1.1e-25, radii
+0.0501, 0.0476, 0.000344 (the z_4 pollution you flagged); now at the D 3.0425 prediction. I post its F_pred and F_const and each
+Newton call as they come, and watch for the driver's "prediction does not beat the base 100x" stop -- on which I restart it from
+the M 384 pilot state (pilot_M384_p1_N4/anm_lowd_D3.043750_M384.npz) as leg_M384b.
+Both legs at 20 cores (M320b 8 + M384 12). util_report.py: 2026-11-05 10:22 UTC  cpu 15%  mem used 32.4 of 95.6 GB, free 63.2 GB, commit 37.0 of 101.6 GB
