@@ -10,7 +10,7 @@ state there (the node itself at u0), and its equations are the m and a rows of t
 2M unknowns; notes/RESEED.md 2 gives the reasons). Delta, the centre data and the nodes are not changed.
 
     python3 reseed.py check STATE.npz [--threads 2] [--levels 5] [--rows ma|pm|all] [--mutate none|skip|wrongu]
-        [--plan_tol 1e-32] [--out OUT.jsonl] [--delta_h 1e-6] [--seed 1] [--floor_rule abs|stall|rel]
+        [--plan_tol 1e-32] [--out OUT.jsonl] [--delta_h 1e-6] [--seed 1] [--floor_rule stall|abs|rel]
     python3 reseed.py jac STATE.npz
 
 `check` is the unit check and the stepper check (notes/RESEED.md 3.1, 3.2): the converged state's own node re-seeded
@@ -48,7 +48,7 @@ class Reseeder:
     is the stepper's error estimate (a plan at check_tol with steps at most hmax / 2, at Taylor order check_kt)."""
 
     def __init__(self, meta, D, threads=2, levels=5, rows="ma", plan_tol=1e-32, hmax=0.05, check_tol=1e-36,
-                 check_kt=None, it_max=30, horizon_alpha=0, mutate="none", floor_rule="abs"):
+                 check_kt=None, it_max=30, horizon_alpha=0, mutate="none", floor_rule="stall"):
         self.M, self.nodes = int(meta["M"]), list(meta["nodes"])
         self.K = len(self.nodes)
         self.kt, self.kc, self.ks = meta.get("kt", 36), meta.get("kc", 146), meta.get("ks", 130)
@@ -386,7 +386,7 @@ def parse(argv, opt):
 
 def check(argv):
     """notes/RESEED.md 3.1 and 3.2 on a converged state (the docstring); returns the exit code"""
-    opt = parse(argv, dict(threads=2, levels=5, rows="ma", mutate="none", out="", delta_h=1e-6, seed=1, plan_tol=1e-32, floor_rule="abs"))
+    opt = parse(argv, dict(threads=2, levels=5, rows="ma", mutate="none", out="", delta_h=1e-6, seed=1, plan_tol=1e-32, floor_rule="stall"))
     path = argv[0]
     if opt["out"]:
         from raw_out import require_raw

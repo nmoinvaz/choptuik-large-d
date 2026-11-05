@@ -280,6 +280,16 @@ tenfold, or when no trial lowers the residual after a step that did not shrink t
 If (a)–(c) pass, 'stall' becomes the default. The pilot's step from 101.1184 is not rerun in this study. That is left to
 the coordinator.
 
+*Result (08:57 UTC; `reseed-mac/amend10/`, `amend10.jsonl`): all three pass, and 'stall' is the default.*
+- (a) The unit check passes 3.1 and 3.2b at 84.9073, 87.0224, 94.1184 and 101.1184.
+- (b) floorflip converges in 20 of 20 at 101.1 ('abs' 17) and 19 of 20 at 106.1 ('abs' 3). The one failure, trial 12 at
+  106.1, is a line search that found no lower residual right after a step 1000 times smaller than the one before
+  (10⁻¹⁶ → 10⁻¹⁹), so it was not yet a stall. That case remains.
+- (c) `skip` and `wrongu` fail the unit check under 'stall' at 101.1184 (exit 1).
+
+No basin, jump or pilot result in this note used 'stall'. Those all used 'abs', except the two runs named under
+amendment 9.
+
 **3.4 Jump test** (only if 3.3 passes; `hp/reseed_check.py jump`). From the latest qdj1 state, the chain's quad-double
 series (anm_run.py's `coefficients_q`, N 24, the held harmonics on the T75 trend) is summed at h = 2, 5 and 10. Each
 prediction is re-seeded and corrected at D + h, with the held harmonics at the trend's values there. The plain arm runs
@@ -499,16 +509,16 @@ re-seed before the corrector fixes the start but not the iterates. The eliminati
   family A has none.
 - The toy's 10⁻¹ for white-noise errors is not reached. The re-seed puts node-sized errors into the m_h directions of
   gain about 1, where the equations' second-order term carries G (4.2). Family P's 10⁻⁵ is the realistic figure.
-- Past D ≈ 100 the re-seed's u₀ rung fails its floor test in most cases (17 of 20 at 106.1; amendment 9). The pilot's
-  second step from 101.1184 failed this way and was stopped. The relative test tried for it was unsound and is
-  withdrawn. A floor test on the steps' own stall is proposed, not built.
+- Past D ≈ 95 the first design's floor test at the u₀ rung fails often (17 of 20 at 106.1, and once at 94.1 in a
+  basin run; amendment 9). The pilot's second step from 101.1184 failed this way and was stopped. The relative test tried
+  for it was unsound and is withdrawn. The test on the steps' own stall (amendment 10) passes its unit checks, controls
+  and floorflip (19–20 of 20) and is now the default. No basin, jump or pilot run has used it yet.
 - 3.2 as written failed. A chain state's node is off the regular family by about 10⁻¹⁷, in the p harmonics that the
   freeze drops, so 3.2b replaced it with a planted node.
 
 **What to do next.**
-1. Build the floor test on step stall (stop when the residual no longer halves and the step no longer shrinks) with
-   criteria first. It must pass the unit check at 84.9–106 and floorflip at 106.1 (20 of 20), and the 'rel' rule and the
-   `skip`/`wrongu` mutations must still fail it. Then rerun the pilot's step from 101.1184.
+1. Rerun the pilot's step from 101.1184 with the 'stall' default (amendment 10), and the re-seeded and elim arms at
+   94.1184, which were stopped because the first design's floor test failed there.
 2. Run the chain with `--reseed 2 --h_max 5 --eps 1e-5` from 101.1184, after item 1. The series' smallest term at h = 5
    is 9×10⁻⁹, against family P's basin of 10⁻⁵. Steps of 5 instead of 1 would cut the cost per unit of D about fourfold
    (one series and corrector per step), though how far that holds is a *conjecture*.
