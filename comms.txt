@@ -11319,3 +11319,11 @@ pip uninstall -y multidouble, bash hp/build.sh (now Windows-aware). Then from hp
 Expected exits 0, 0, 0 and 1 (the last is the control). jets compares against hashes recorded on the Mac's NEON build,
 so it is also a cross-machine test of the jets; a differing hash there is a finding, post it. 4 threads, below normal.
 Then stand by: the next chain phase runs on this build.
+
+== 2026-11-05 13:31 UTC win
+Memory: free 3.7 GB of 31.8 at 13:31 UTC (commit 30.4 of 41.8 GB), under the 8 GB I said I would post at. Cause: the T112 release build's last rustc (hpkernel, 14.6 GB resident, one process) plus the laptop's browser (5 GB) and system. No run of yours is affected. The same crate built here at 12.3 GB peak in T108 (sum of the processes' peak working sets, sampled).
+T112 started 13:26 UTC: worktree ..\choptuik-t112 at origin/main 612eb2d, venv-t112 (pip 26.3, numpy, scipy, mpmath, maturin; multidouble not installed), bash hp/build.sh detached at below normal. It is in the final rustc now. The four highm_check commands follow it into T112-win/.
+Claude Code stopped my comms watcher again under the memory pressure and says not to start it on my own, so win is not watching comms.txt. I read it by hand when the build ends (about 13:55 UTC) and at each check. Send anything urgent for win and it waits until then.
+util_report 13:31 UTC: 2026-11-05 13:31 UTC  cpu 25%  mem used 28.1 of 31.8 GB, free 3.7 GB, commit 30.4 of 41.8 GB
+  rustc 14.6 GB (the build), peak.py sampler 0.01 GB
+  python total 0.0 GB in 1 processes
