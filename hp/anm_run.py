@@ -14,7 +14,7 @@ formulation of hp/pinning.py; their coefficients are zero).
         [--steps 20] [--D_max 200] [--corrector dnp|deflated|newton] [--tol 1e-20] [--tol_growth 1.45]
         [--accept_stall 1e-19] [--junk_only 0] [--threads 4] [--w 24] [--trend T75] [--tol_qd 1e-28]
         [--qd_it 12] [--qd_w 0] [--refine 1] [--probe 0 --probe_c C] [--plan_tol 1e-32] [--fix1 0] [--F_pred_max 0]
-        [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0] [--pred_q 0]
+        [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0] [--pred_q 0] [--reseed_q 0]
 
 --corrector qd runs the quad-double Newton of the kernel (hpkernel.driver.newton_qd, Solver.newton_q) on the pinned
 system (pinning.PinnedQ: the held harmonics' offset subtracted from the quad-double residual and added to the step, as
@@ -172,14 +172,14 @@ def main():
     args = list(sys.argv[1:])
     opt = dict(state="T75/pin7_D73.2657.npz", kfreeze=3, N=24, eps=1e-16, h_max=2.0, steps=20, D_max=200.0, corrector="dnp",
                tol=1e-20, tol_growth=1.45, accept_stall=1e-17, junk_only=0, threads=4, w=24, trend="", tol_qd=1e-28, qd_it=12, qd_w=0,
-               refine=1, probe=0, probe_c=0.0, plan_tol=1e-32, fix1=0, F_pred_max=0.0, horizon_alpha=0, fix1_qlu=0, jet_q=0, reseed=0, pred_q=0)
+               refine=1, probe=0, probe_c=0.0, plan_tol=1e-32, fix1=0, F_pred_max=0.0, horizon_alpha=0, fix1_qlu=0, jet_q=0, reseed=0, pred_q=0, reseed_q=0)
     for k in list(opt):
         f = "--" + k
         if f in args:
             i = args.index(f); opt[k] = type(opt[k])(args[i + 1]); del args[i:i + 2]
     raw, out = args[0], args[1]
-    if opt["pred_q"] and (not opt["jet_q"] or opt["reseed"]):
-        raise SystemExit("--pred_q needs --jet_q 1 and no --reseed")
+    if opt["pred_q"] and (not opt["jet_q"] or (opt["reseed"] and not opt["reseed_q"])):
+        raise SystemExit("--pred_q needs --jet_q 1, and with --reseed also --reseed_q 1")
     out_dir = out
     os.makedirs(out, exist_ok=True)
     rec_path = os.path.join(out, "anm_run.jsonl")
@@ -523,16 +523,18 @@ def main():
                     # --reseed 1: the prediction's horizon data from its last node (hp/reseed.py); 2: also eliminated
                     # inside the corrector
                     rs_n = Reseeder(dict(M=M, nodes=nodes, kt=kt, kc=kc, ks=ks), Dn, threads=opt["threads"],
-                                    horizon_alpha=opt["horizon_alpha"])
-                    zr, rsd = rs_n.reseed((ph, pl))
+                                    horizon_alpha=opt["horizon_alpha"], qd=bool(opt["reseed_q"]))
+                    zr, rsd = rs_n.reseed(pred4 if pred4 is not None else (ph, pl))
                     elim["rs"] = rs_n if opt["reseed"] == 2 else None
                     rsd = dict(ok=rsd["ok"], dropped=rsd["dropped"], seconds=rsd["seconds"],
                                rungs=[dict(u=r["u"], its=r.get("its"), R=r.get("R"), conv=r.get("conv")) for r in rsd["rungs"]])
                     bad = [r for r in rsd["rungs"] if not r.get("conv")]
                     print(f"    a {a:.4f}: re-seeded ({'ok' if rsd['ok'] else 'FAILED, prediction kept'}), {rsd['seconds']} s"
-                          + (f"; rung u {bad[0]['u']:.4f} not converged at |R| {bad[0].get('R', float('nan')):.2e} after {bad[0].get('its')} steps" if bad else "")
+                          + (f"; rung u {bad[0]['u']:.4f} not converged at |R| {bad[0].get('R', float('nan')):.2e} after {bad[0].get('its')} steps" if bad and not rsd["ok"] else "")
                           + (f"; rungs dropped {rsd['dropped']}" if rsd["dropped"] else ""), flush=True)
                     ph, pl = np.asarray(zr[0]), np.asarray(zr[1])
+                    if pred4 is not None:
+                        pred4 = tuple(np.ascontiguousarray(np.asarray(v)) for v in zr)
                 sn = mk(Dn)
                 segs_n = segs
                 sn.set_segs(segs_n)

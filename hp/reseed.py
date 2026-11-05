@@ -29,7 +29,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import mpmath as mp  # noqa: E402
 import numpy as np  # noqa: E402
 from hpkernel.driver import make_solver, load_q, qparts, qmax  # noqa: E402
-from multidouble import dd_add, dd_solve  # noqa: E402
+from multidouble import dd_add, dd_solve, qd_add_dd  # noqa: E402
 
 mp.mp.dps = 50
 
@@ -48,7 +48,7 @@ class Reseeder:
     is the stepper's error estimate (a plan at check_tol with steps at most hmax / 2, at Taylor order check_kt)."""
 
     def __init__(self, meta, D, threads=2, levels=5, rows="ma", plan_tol=1e-32, hmax=0.05, check_tol=1e-36,
-                 check_kt=None, it_max=30, horizon_alpha=0, mutate="none", floor_rule="stall"):
+                 check_kt=None, it_max=30, horizon_alpha=0, mutate="none", floor_rule="stall", qd=False):
         self.M, self.nodes = int(meta["M"]), list(meta["nodes"])
         self.K = len(self.nodes)
         self.kt, self.kc, self.ks = meta.get("kt", 36), meta.get("kc", 146), meta.get("ks", 130)
@@ -62,6 +62,11 @@ class Reseeder:
         # (amendment 9, withdrawn: also a residual below 1e-29 G_u that stops halving; it stops the u0 rung before its
         # data converge and fails the unit check at D 101.1, notes/RESEED.md), kept runnable as a control
         self.floor_rule = floor_rule
+        # qd: after the double-double ladder, the u0 rung polished in quad-double (invert_q): the quad-double residual
+        # against the node's four parts, steps from the double-double Jacobian, so that the horizon data agree with the
+        # node to the quad-double floor eps_qd G rather than eps_dd G (the double-double rung's floor exceeds what the
+        # corrector tolerates past D ~ 128, notes/QUAD_DOUBLE.md 13.22)
+        self.qd = qd
         self.x_node = self.nodes[-1]
         u0 = 1.0 - self.x_node
         # the rungs u0 / 2^j, j = J..0 (exact in f64: u0 is the f64 value 1 - x_K-1 and the divisions are by powers of 2)
@@ -252,6 +257,84 @@ class Reseeder:
         hist.append(dict(it=len(hist), R=nR))
         return dh, dl, hist, conv
 
+    def invert_q(self, z4, d4, it_max=6):
+        """the u0 rung in quad-double: Newton on the 2M horizon data d4 (four parts) so that the horizon series at u0
+        matches the last node of z4 (four parts) in the rung rows. The residual is Solver.residual_q and the step solves
+        the rung rows' block of the quad-double Jacobian (Solver.jacobian_q) in mpmath at 80 digits: the double-double
+        Jacobian's own rounding, amplified by the mass mode, stops a double-double-preconditioned iteration near
+        1e-19 at D 128. Stops when the residual no longer halves (its floor, about eps_qd G) or after it_max steps.
+        Returns d4, the history and whether it converged (at least one step taken and the last residual below 1e-24)."""
+        M, a, o = self.M, self.aoff, self.off
+        u = self.us[-1]
+        s = self.rung_solver(u)
+        rows = self.rung_rows()
+        cols = np.r_[a["mh"]:a["mh"] + 2 * M]
+        L = a["L"]
+        base = [np.zeros(L) for _ in range(4)]
+        n0, n1 = o["node"](0), o["node"](1)
+        nk = o["node"](self.K - 1)
+        for q in range(4):
+            zq = np.asarray(z4[q], dtype=float)
+            base[q][:2 * M] = zq[:2 * M]
+            base[q][a["node"](0):a["node"](1)] = zq[n0:n1]
+            base[q][a["node"](1):a["node"](1) + 4 * M] = zq[nk:nk + 4 * M]
+            base[q][-1] = zq[-1]
+
+        def put(d):
+            v = [b.copy() for b in base]
+            for q in range(4):
+                v[q][cols] = d[q]
+            return tuple(np.ascontiguousarray(x) for x in v)
+
+        def res(d):
+            F = s.residual_q(*put(d))
+            return [np.asarray(F[q])[rows] for q in range(4)]
+
+        def to_mp(parts, idx=None):
+            return [mp.mpf(float(parts[0][i])) + mp.mpf(float(parts[1][i])) + mp.mpf(float(parts[2][i])) + mp.mpf(float(parts[3][i]))
+                    for i in (range(len(parts[0])) if idx is None else idx)]
+
+        def to_parts(vals):
+            out = [np.zeros(len(vals)) for _ in range(4)]
+            for i, v in enumerate(vals):
+                r = v
+                for q in range(4):
+                    out[q][i] = float(r)
+                    r = r - mp.mpf(out[q][i])
+            return out
+
+        d = [np.ascontiguousarray(np.asarray(x, dtype=float)) for x in d4]
+        R = res(d)
+        nR = float(np.max(np.abs(R[0] + R[1])))
+        hist = [dict(it=0, R=nR)]
+        if not np.isfinite(nR):
+            return d, hist, False
+        with mp.workdps(80):
+            J = s.jacobian_q(*put(d))
+            A = mp.matrix(len(rows), len(cols))
+            for i, ri in enumerate(rows):
+                for j, cj in enumerate(cols):
+                    A[i, j] = (mp.mpf(float(J[0][ri, cj])) + mp.mpf(float(J[1][ri, cj])) + mp.mpf(float(J[2][ri, cj]))
+                               + mp.mpf(float(J[3][ri, cj])))
+            dm = to_mp(d)
+            steps = 0
+            for it in range(it_max):
+                x = mp.lu_solve(A, mp.matrix([-v for v in to_mp(R)]))
+                dn_m = [dm[i] + x[i] for i in range(len(dm))]
+                dn = [np.ascontiguousarray(p) for p in to_parts(dn_m)]
+                Rn = res(dn)
+                nn = float(np.max(np.abs(Rn[0] + Rn[1])))
+                hist.append(dict(it=it + 1, R=nn, step=float(max(abs(v) for v in x))))
+                if not np.isfinite(nn) or nn >= nR:
+                    break                               # the floor: this step does not lower the residual (not taken)
+                d, R, dm = dn, Rn, dn_m
+                halving = nn <= 0.5 * nR
+                nR = nn
+                steps += 1
+                if not halving:
+                    break                               # no longer halving: the floor
+        return d, hist, steps > 0 and nR < 1e-24
+
     # ------------------------------------------------------------------ the re-seed
     def reseed(self, z, verbose=False):
         """z: a state of two or four parts (hi, lo[, z2, z3]). Returns (z', diag): z' has the same parts with m_h and a_h
@@ -287,11 +370,30 @@ class Reseeder:
             if not conv:
                 diag["ok"] = False
                 break
+        sl_ = slice(o["mh"], o["mh"] + 2 * M)
+        if self.qd and len(z) == 4:
+            # the ladder's last (u0) rung may stop at its double-double floor; the quad-double polish decides
+            if not diag["ok"] and diag["rungs"] and diag["rungs"][-1].get("u") == self.us[-1] and np.all(np.isfinite(dh)):
+                diag["ok"] = True
+            if diag["ok"]:
+                tq = time.time()
+                d4, hq, cq = self.invert_q(z, (dh, dl, np.zeros(2 * M), np.zeros(2 * M)))
+                diag["rungs"].append(dict(u=self.us[-1], qd=True, conv=cq, its=len(hq) - 1, R0=hq[0]["R"], R=hq[-1]["R"],
+                                          seconds=round(time.time() - tq, 2)))
+                if verbose:
+                    print(f"    rung u0 in quad-double: {len(hq) - 1} its, |R| {hq[0]['R']:.2e} -> {hq[-1]['R']:.2e}, "
+                          f"{'converged' if cq else 'NOT converged'}, {time.time() - tq:.1f} s", flush=True)
+                diag["ok"] = cq
+                if cq:
+                    diag["seconds"] = round(time.time() - t0, 2)
+                    out = [np.array(p, dtype=float) for p in z]
+                    for q in range(4):
+                        out[q][sl_] = d4[q]
+                    return tuple(np.ascontiguousarray(p) for p in out), diag
         diag["seconds"] = round(time.time() - t0, 2)
         if not diag["ok"]:
             return tuple(np.array(p) for p in z), diag
         out = [np.array(p, dtype=float) for p in z]
-        sl_ = slice(o["mh"], o["mh"] + 2 * M)
         out[0][sl_], out[1][sl_] = dh, dl
         for p in out[2:]:
             p[sl_] = 0.0
@@ -310,6 +412,15 @@ class Reseeder:
         nl = zl[o["node"](self.K - 1):o["node"](self.K - 1) + 4 * M]
         dh, dl, hist, conv = self.invert(u0, zh, zl, np.array(nh), np.array(nl), np.array(zh[sl_]), np.array(zl[sl_]))
         how = "u0"
+        if self.qd and len(z) == 4 and np.all(np.isfinite(dh)):
+            # the double-double u0 rung as the start (converged or at its floor), then the quad-double polish
+            d4, hq, cq = self.invert_q(z, (dh, dl, np.zeros(2 * M), np.zeros(2 * M)))
+            if cq:
+                out = [np.array(p, dtype=float) for p in z]
+                for q in range(4):
+                    out[q][sl_] = d4[q]
+                return tuple(np.ascontiguousarray(p) for p in out), "u0q"
+            conv = False
         if not conv:
             zr, diag = self.reseed(z)
             if not diag["ok"]:
@@ -386,7 +497,8 @@ def parse(argv, opt):
 
 def check(argv):
     """notes/RESEED.md 3.1 and 3.2 on a converged state (the docstring); returns the exit code"""
-    opt = parse(argv, dict(threads=2, levels=5, rows="ma", mutate="none", out="", delta_h=1e-6, seed=1, plan_tol=1e-32, floor_rule="stall"))
+    opt = parse(argv, dict(threads=2, levels=5, rows="ma", mutate="none", out="", delta_h=1e-6, seed=1, plan_tol=1e-32, floor_rule="stall",
+                           qd=0))
     path = argv[0]
     if opt["out"]:
         from raw_out import require_raw
@@ -409,7 +521,7 @@ def check(argv):
     zs[0][sl_] = zs[0][sl_] * (1 + opt["delta_h"] * r)
     zs[1][sl_] = 0.0; zs[2][sl_] = 0.0; zs[3][sl_] = 0.0
     rs = Reseeder(meta, D, threads=opt["threads"], levels=opt["levels"], rows=opt["rows"], mutate=opt["mutate"],
-                  plan_tol=opt["plan_tol"], floor_rule=opt["floor_rule"])
+                  plan_tol=opt["plan_tol"], floor_rule=opt["floor_rule"], qd=bool(opt["qd"]))
     print(f"check {path}: D {mp.nstr(D, 12)}, G {G:.2e}, truth max|F| (pinned, quad-double) {F_truth:.2e}, double-double "
           f"|F|_2 phi {phi:.2e}; start: horizon data off by {opt['delta_h']:.0e}; rungs {[round(u, 6) for u in rs.us]}, rows "
           f"{opt['rows']}, mutate {opt['mutate']}, plan_tol {opt['plan_tol']:.0e}", flush=True)
@@ -458,6 +570,13 @@ def check(argv):
     # the criteria of notes/RESEED.md 3.1 and 3.2, written before the first run
     crit = dict(ok=bool(diag["ok"]) and not diag["dropped"], err_ah=err_ah <= 10 * phi / G, err_mh=err_mh <= 20 * phi,
                 F=Fmax <= 10 * phi)
+    if opt["qd"]:
+        # --qd 1 (the quad-double u0 rung, notes/QUAD_DOUBLE.md 13.22, written before its first run): the re-seeded state's
+        # pinned quad-double residual within 100 times the larger of the truth's own and the quad-double scale 2^-209 G
+        bound_q = 100 * max(F_truth, 2.0 ** -209 * G)
+        crit = dict(ok=bool(diag["ok"]) and not diag["dropped"], F_qd=Fmax <= bound_q)
+        print(f"  quad-double mode: pinned max|F| {Fmax:.2e} against {bound_q:.1e} (truth {F_truth:.1e}, 2^-209 G {2.0 ** -209 * G:.1e})",
+              flush=True)
     crit_step = dict(agree=all(r.get("vs_truth_series", np.inf) <= 1e-24 for r in stepper) and len(stepper) == len(rs.us) - 1,
                      err_est=all(r["err_est"] <= 1e-28 for r in stepper), sonic=all(r["max_x_minus_c"] < 0 for r in stepper))
     crit_planted = dict(agree=bool(planted) and all(r["vs_series"] <= 1e-24 for r in planted),
