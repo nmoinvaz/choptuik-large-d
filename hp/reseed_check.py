@@ -6,6 +6,7 @@
         [--deltas 1e-12,1e-11,...,1e-2] [--threads 2] [--mutate none|skip] [--qd_it 12]
     python3 reseed_check.py summary OUT.jsonl ...
     python3 reseed_check.py rungs RAWDIR BASE.npz OUT.jsonl [--h 5]   (the cached jump series of BASE; amendment 9)
+    python3 reseed_check.py floorflip RAWDIR BASE.npz OUT.jsonl [--h 0] [--trials 20]   (amendment 9)
     python3 reseed_check.py firststep STATE.npz OUT.jsonl [--deltas 1e-12,1e-14] [--groups centre,nodes,data,Delta,all]
     python3 reseed_check.py jump RAWDIR STATE.npz OUT.jsonl [--hs 2,5,10] [--arms reseed,elim,plain] [--threads 2]
 
@@ -272,6 +273,62 @@ def rungs(argv):
     return 0
 
 
+def floorflip(argv):
+    """amendment 9's experiment: how often the first design's floor test (abs) fails at the u0 rung, against the relative
+    one (rel). The target is BASE's last node (h = 0) or the cached series' prediction at h; the ladder runs once to u0/2,
+    then the u0 rung is solved TRIALS times from that rung's data moved by 1e-25 (relative, random signs, seed = trial),
+    which only changes the order in which the residual's floor noise arrives. Each trial records both rules' outcome,
+    steps and residuals."""
+    raw, path, out = argv[0], argv[1], argv[2]
+    opt = parse(argv, dict(h=0.0, trials=20, threads=2, N=24))
+    require_raw(out)
+    z4, meta = load_q(path)
+    D0 = mp.mpf(meta["D_str"])
+    M, K = int(meta["M"]), len(meta["nodes"])
+    o = offsets(M, K)
+    if opt["h"] > 0:
+        from anm_run import series_at
+        cz = np.load(os.path.join(os.path.dirname(out), "jump", f"series_D{float(D0):.4f}_N{opt['N']}.npz"))
+        Zh = [np.asarray(cz[f"z{k}_0"]) for k in range(opt["N"] + 1)]
+        Zl = [np.asarray(cz[f"z{k}_1"]) for k in range(opt["N"] + 1)]
+        norms = [float(v) for v in cz["norms"]]
+        k_opt = int(np.argmin([norms[k] * opt["h"] ** k for k in range(1, opt["N"] + 1)])) + 1
+        zh, zl = series_at(np.asarray(z4[0]), np.asarray(z4[1]), Zh[:k_opt + 1], Zl[:k_opt + 1], opt["h"])
+    else:
+        zh, zl = np.asarray(z4[0]), np.asarray(z4[1])
+    Dn = D0 + mp.mpf(opt["h"])
+    G = float(meta["nodes"][-1]) ** -(float(Dn) - 3.0)
+    rs = {rule: Reseeder(meta, Dn, threads=opt["threads"], floor_rule=rule) for rule in ("abs", "rel")}
+    r0 = rs["abs"]
+    tg, _ = r0.targets(zh, zl)
+    sl_ = slice(o["mh"], o["mh"] + 2 * M)
+    dh, dl = np.array(zh[sl_]), np.array(zl[sl_])
+    for u in r0.us[:-1]:
+        dh, dl, hist, conv = r0.invert(u, zh, zl, *tg[u], dh, dl)
+        if not conv:
+            raise SystemExit(f"floorflip: the ladder failed at u {u}")
+    u0 = r0.us[-1]
+    th, tl = tg[u0]
+    print(f"floorflip {path} h {opt['h']:g}: D {mp.nstr(Dn, 12)}, G {G:.2e}, floor_tol(u0) {1e-29 * G:.1e}", flush=True)
+    counts = {"abs": 0, "rel": 0}
+    for t in range(opt["trials"]):
+        rng = np.random.default_rng(t)
+        ph_ = dh * (1 + 1e-25 * rng.uniform(0.5, 1, 2 * M) * rng.choice([-1.0, 1.0], 2 * M))
+        rec = dict(test="floorflip", base=path, h=opt["h"], D=float(Dn), G=G, trial=t)
+        for rule in ("abs", "rel"):
+            d2h, d2l, hist, conv = rs[rule].invert(u0, zh, zl, th, tl, ph_.copy(), dl.copy())
+            counts[rule] += int(conv)
+            rec[rule] = dict(conv=bool(conv), its=len(hist) - 1, R=[x.get("R") for x in hist], step=[x.get("step") for x in hist],
+                             lam=[x.get("lam") for x in hist])
+        print(f"  trial {t}: abs {'conv' if rec['abs']['conv'] else 'FAIL'} ({rec['abs']['its']} its, |R| {rec['abs']['R'][-1]:.2e}, steps "
+              + " ".join(f"{x:.0e}" for x in rec["abs"]["step"] if x is not None) + f"); rel {'conv' if rec['rel']['conv'] else 'FAIL'} "
+              f"({rec['rel']['its']} its, |R| {rec['rel']['R'][-1]:.2e})", flush=True)
+        with open(out, "a") as f:
+            f.write(json.dumps(rec, default=float) + "\n")
+    print(f"  converged: abs {counts['abs']}/{opt['trials']}, rel {counts['rel']}/{opt['trials']}", flush=True)
+    return 0
+
+
 def trend_slopes(raw, M, ks_held, folder="T75"):
     """anm_run.py --trend: the exponents s of |v| ~ n^s per held coefficient from the stored states of folder (every fourth),
     the same rule (constant sign, at least 6 states, fit residual in ln|v| below 0.05; else 0)"""
@@ -422,6 +479,8 @@ def jump(argv):
 
 
 if __name__ == "__main__":
+    if len(sys.argv) > 2 and sys.argv[1] == "floorflip":
+        sys.exit(floorflip(sys.argv[2:]))
     if len(sys.argv) > 2 and sys.argv[1] == "rungs":
         sys.exit(rungs(sys.argv[2:]))
     if len(sys.argv) > 2 and sys.argv[1] == "summary":
