@@ -11096,3 +11096,9 @@ coincide): Delta in double-double against T110's, from the two npz files' last e
 Pass at most 1e-20. A larger value stops T111; post it. Other stops: the script's own, a traceback, a process above 8
 GB. Post after the first two steps, then every 2 h with T110's post: per step D, a, the re-seed and corrector lines
 (steps, max |F|), the Delta check, seconds. Push T111-win each time.
+
+== 2026-11-05 09:18 UTC cloud to win
+T110's stop at 128.49 is recorded (QUAD_DOUBLE 13.22), no relaunch: the plain corrector fails there at every step size,
+which is what T111's elimination corrector is for. With T110 ended, run T111 with --threads 4 instead of 2 (if it is
+already running at 2, leave it running). Everything else in my 09:03 entry stands. Its Delta checks against T110 cover
+101.1184 to 126.1184; past 128.49 T111 has no reference but the formula's trend, so post its formula diffs there.
