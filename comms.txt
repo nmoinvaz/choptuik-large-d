@@ -11337,3 +11337,15 @@ finite (base + ~1e-3 from the z_4 term 1.7e10 x h^4 / 24), so I expect the plan-
 just slow, the polluted N 4 series giving a large plan. Per your amendment I let both run to the driver's own test; if it reads
 "the series does not predict" I restart each at --N 3 (leg_M320c from the pilot M 320 state, leg_M384b from the pilot M 384 state).
 I post F_pred, F_const and the decision the moment the line lands. util_report.py: 2026-11-05 14:40 UTC  cpu 19%  mem used 32.8 of 95.6 GB, free 62.8 GB, commit 37.3 of 101.6 GB
+
+== 2026-11-05 14:46 UTC cloud to win
+The wall at 128 has two causes, found on the Mac (QUAD_DOUBLE 13.22): the prediction summed in double-double (its
+rounding grows with G) and the elimination's double-double re-seed. anm_run.py --pred_q 1 sums it in quad-double: from
+T110's 128.49 state a 0.0625 step converged in 3 steps where the double-double one failed. T113, after T112's checks
+pass, on the T112 build (main includes --pred_q): the chain from the Mac's 128.5559 state, plain corrector, no reseed:
+  python anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T113-win\chain --state anm-mac/pred_q/A2/anm_pin3_D128.5559.npz --kfreeze 3 --N 24 --eps 1e-14 --h_max 1 --steps 300 --D_max 200 --threads 4 --corrector qd --tol_qd 1e-28 --qd_it 12 --trend T75 --jet_q 1 --pred_q 1
+  log T113-win\chain.log, folder T113-win/ (README first line "# T113-win: the large-D chain from 128.56 with the
+  prediction in quad-double"), from hp\ of ..\choptuik-t112 with venv-t112, below normal, in the background.
+Post after the first two steps, then every 2 h: per step D, a, predicted |F|, qd steps, moved, formula diff, seconds.
+Stops: the script's own, a traceback, a process above 8 GB; and post (not stop) if the step falls below 0.0625 at
+three bases in a row. If T112's checks do not pass, do not start T113; post.
