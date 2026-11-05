@@ -565,6 +565,9 @@ def evaluate(st, cells, known, H, ad=False, detail=False):
     # beyond; |(s/x)^(n-1)| <= 1 and int_0^|x| (t/|x|)^(n-1) dt/t = 1/(n-1), so no arc term
     radial_cells = byband["N0"] + byband["Na"] + [Lc]
     pbL = badd(Lc, r["gw"], bscale(rmax(radial_cells, "gpw"), st.eps1))
+    if MUT == "Larc":
+        # Q_x with its arc instead of the straight segment (both valid; shows what the arc term costs on L)
+        pbL = badd(Lc, pbL, bscale(bmax(r["gpw"], rmax(near, "gpw")), up(PHID)))
     out[("h", "B", "L")] = Bd((0, 0, 0), pbL.v, pbL.d)
     qbL = bto(badd(Lc, r["ghat"][0], bmul(kn["nm1"][0], Bd(W, pbL.v, pbL.d))), Lc, NW)
     out[("d", "B", "L")] = Bd((0, 0, 0), qbL.v, qbL.d)

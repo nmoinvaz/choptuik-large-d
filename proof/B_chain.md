@@ -163,8 +163,8 @@ Bounds, with |·| the ∞-norm and A(z) = sup over (0, z] of |ã|:
   over 𝒦 (δ ≤ 4.1×10⁻⁵). The first term is at most $`\gamma_F z^{-\delta}A`$.
 - $`\int_0^z e^{-1/(2t)}t^q\,dt \le 2z^{q+2}e^{-1/(2z)}`$ for q + 2 ≥ 0 (substitute u = 1/t). So
   $`\lvert\tilde p_j(z)\rvert \le A\,e^{-1/(2z)}z^{\mathrm{Re}\lambda_j+1}`$, and the P-term is at most $`\gamma_P z^{-\delta}A`$.
-- $`\lvert\psi_C(z)\rvert \le 2e^{\kappa_C z}\kappa_P A\,z^{\mu_- + 3}e^{-1/(2z)}`$, μ₋ = min Re λ (for z < 1 the largest of the
-  $`z^{\mathrm{Re}\lambda_j + 1}`$ is at the smallest Re λ, and K_P mixes the components). With
+- $`\lvert\psi_C(z)\rvert \le 2e^{\kappa_C z}\kappa_P A\,z^{\mu_- + 3}e^{-1/(2z)}`$, μ₋ = min Re λ (for z < 1
+  the largest of the $`z^{\mathrm{Re}\lambda_j + 1}`$ is at the smallest Re λ, and K_P mixes the components). With
   $`\lvert z^{-\lambda_i}\rvert \le z^{-\mu_+}`$ the C-term is at most $`2\gamma_C\kappa_P e^{\kappa_C z}z^{2-\delta}A`$
   (the exponents do not cancel; P2 finding F5, effect on $`\int_0^{Z_L}g`$ below 10⁻⁸).
 
@@ -239,8 +239,8 @@ factor 1 ± 0.353 in the eigen-coordinates), the second additive and O(1/n).
 $`L_{u_*}(\Psi_{\rm out}) = L_{u_*}(\psi_{\rm in}) + L_{u_*}(W^+ - W^-)`$, with W^± = Y^±_out − Z^±_in, and
 $`L_{u_*}(\psi_{\rm in}) = (I + R(u_*))k`$ by lemma L. B5(1) (with §1) bounds $`\lvert W^+_{\Phi,\mu}(u_*)\rvert \le x_{\Phi,\mu}u_*/n`$
 on the Stokes segment of 𝒲⁺_n, and by reflection $`\lvert W^-_{\Phi,\mu}\rvert \le x_{\Phi,-\mu}u_*/n`$. In eigen-coordinates
-$`V^{-1}L_{u_*}(Y) = e^{1/(2u_*)}u_*^{-\Lambda}V^{-1}Y_\Phi`$ and $`\lvert u_*^{-\lambda_i}\rvert \le u_*^{-\mu_+}`$, μ₊ = max Re λ (u* < 1, so
-the largest Re λ gives the largest factor; P2 finding F6). So
+$`V^{-1}L_{u_*}(Y) = e^{1/(2u_*)}u_*^{-\Lambda}V^{-1}Y_\Phi`$ and $`\lvert u_*^{-\lambda_i}\rvert \le u_*^{-\mu_+}`$,
+μ₊ = max Re λ (u* < 1, so the largest Re λ gives the largest factor; P2 finding F6). So
 
 ```math
 \lvert\tilde E\rvert_\infty \le \frac{e^{1/(2u_*)}\,u_*^{1-\mu_+}\,\lVert V^{-1}\rVert_\infty\,(x_{\Phi,-1} + x_{\Phi,+1})}{n} .

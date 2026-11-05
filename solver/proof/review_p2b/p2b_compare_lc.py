@@ -105,6 +105,13 @@ def main():
         f"{rec['diag']['r4']:.6g} | p2b {float(mpup(known.d0_rho4)):.6g}")
     det = out["_detail"]
     res, gains = det["res"], det["gains"]
+    g0 = [gains[id(c)] for c in cells if c.kind == "sector" and c.band == "N0"]
+    log("  N0 arc gains (per cell): " + ", ".join(f"{float(mpup(g['garc'])):.4g}" for g in g0) +
+        f" (cert gamma_N0 {rec['kernel']['gN0']:.5g})")
+    gn = [gains[id(c)] for c in det["near"]]
+    log("  arc gains at radius 1 +- delta/2 (the data u(x') at Ac): " + ", ".join(f"{float(mpup(g['garc'])):.3g}"
+                                                                         for g in gn) +
+        f" (cert gamma_Na {rec['kernel']['gNa']:.4g}); |u(x')|/w <= {float(mpup(det['uint'].v)):.4g} + |G2|/w")
     for c in cells:
         if c.kind == "sector" and c.band == "F" and c.rhi is None:
             r = res[id(c)]
