@@ -132,8 +132,11 @@ Contents
   - [What the numbers mean physically](#what-the-numbers-mean-physically)
   - [Closed forms tested and excluded](#closed-forms-tested-and-excluded)
   - [Relation to published work](#relation-to-published-work)
+- [How the points are computed](#how-the-points-are-computed)
+  - [Solving one point](#solving-one-point)
+  - [The continuation in D](#the-continuation-in-d)
 - [Validation and controls](#validation-and-controls)
-  - [The solver and its algorithm (`hp/`)](#the-solver-and-its-algorithm-hp)
+  - [Checks of the solver (`hp/`)](#checks-of-the-solver-hp)
   - [Is the period analytic in 1/D?](#is-the-period-analytic-in-1d)
 - [Large D: what the 1/D expansion can and cannot see](#large-d-what-the-1d-expansion-can-and-cannot-see)
   - [How the solution scales with D](#how-the-solution-scales-with-d)
@@ -277,7 +280,7 @@ cut, with a finite limit at D = ∞. An independent computation of the jump acro
 with no fit. `hp/formula_cut.py` evaluates both forms and checks them; the details and the planted tests are in
 [notes/FORMULA_FORMS.md](notes/FORMULA_FORMS.md).
 
-An independent double-double computation ([below](#the-solver-and-its-algorithm-hp)) agrees with the formula to
+An independent double-double computation ([below](#how-the-points-are-computed)) agrees with the formula to
 2.7×10⁻⁹ or better on 8.25 ≤ D ≤ 21, 7.5×10⁻⁹ up to D = 30, and 5.8×10⁻⁸ from there to
 D = 61, which the fit never saw. It also shows that the f64 points at D ≈ 8–10 (23 Fourier modes in time)
 sit up to 4×10⁻¹⁰ above the true values (from 1.3×10⁻¹¹ to 3.7×10⁻¹⁰ on 8.25–9.9; within
@@ -456,7 +459,7 @@ to 10⁻¹¹ and 2×10⁻⁸ (the half-integer series included). D = 1000 and �
 1/D; the half-integer series differ there by 3×10⁻⁶ and more.
 
 The physics figure below and the candidate test use these values; the double-double points behind them are described in
-[The solver and its algorithm](#the-solver-and-its-algorithm-hp).
+[How the points are computed](#how-the-points-are-computed).
 
 ### What the numbers mean physically
 
@@ -617,21 +620,20 @@ Scripts: [`solver/eeg20/`](solver/eeg20/).
 Their supercritical branch and its continuously self-similar checks are in
 [notes/SUPERCRITICAL.md](notes/SUPERCRITICAL.md).
 
-## Validation and controls
-
-### The solver and its algorithm (`hp/`)
+## How the points are computed
 
 Above D ≈ 26 the f64 points lose precision: the condition that selects the period weakens with D (as a power of n in
 this solver, about n²² at D = 40–61; below), so rounding at 10⁻¹⁶ in the residual moves Δ by 10⁻⁷–10⁻⁶ at D = 30–40
-(through the sensitivity $`\max\lvert\partial\Delta/\partial F\rvert`$ of the table below), and points far above D = 40
-are out of reach. [`hp/`](hp/) (crate `hpkernel`) is a separate solver built for that regime, to settle the large-D
-behaviour with computed points rather than an assumed form. It works in double-double, and in quad-double where the
-large-D chain needs it, with its arithmetic from the crate [multidouble](https://github.com/nmoinvaz/multidouble). Its
-points are used in [The formula](#the-formula) (agreement and Δ∞), [Values](#values), the
-[candidate test](#closed-forms-tested-and-excluded), the [analyticity tests](#is-the-period-analytic-in-1d) and the
-large-D scaling ([How the solution scales with D](#how-the-solution-scales-with-d)).
+(through the sensitivity $`\max\lvert\partial\Delta/\partial F\rvert`$ of the
+[solver's checks](#checks-of-the-solver-hp)), and points far above D = 40 are out of reach. [`hp/`](hp/) (crate
+`hpkernel`) is a separate solver built for that regime, to settle the large-D behaviour with computed points rather than
+an assumed form. It works in double-double, and in quad-double where the large-D chain needs it, with its arithmetic
+from the crate [multidouble](https://github.com/nmoinvaz/multidouble). Its points are used in [The
+formula](#the-formula) (agreement and Δ∞), [Values](#values), the [candidate test](#closed-forms-tested-and-excluded),
+the [analyticity tests](#is-the-period-analytic-in-1d) and the large-D scaling ([How the solution scales with
+D](#how-the-solution-scales-with-d)).
 
-#### Solving one point
+### Solving one point
 
 The unknowns are the fields at a few nodes in x, the centre and horizon data, and Δ, each field on M collocation points
 in τ over the half period. The residual shoots between the nodes: a series at the centre, Taylor steps of order 36
@@ -643,7 +645,7 @@ the point spacing, a sample of the points and the error indicators against D are
 horizon-series wall, the drop-offs) is in [notes/LARGE_D_WALL.md](notes/LARGE_D_WALL.md), and the diagnosis in
 [notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), section 12.
 
-#### The continuation in D
+### The continuation in D
 
 Past D ≈ 73 the chain is carried in D by an exact Taylor continuation, the asymptotic numerical method[^23]
 (`hp/anm_run.py`). It continues the pinned system, in which p₁'s harmonics 5–13 are held on a power-law trend in D
@@ -676,7 +678,9 @@ point is re-seeded first, so the horizon data are eliminated.
 The animations show the elimination pilot's measured values (`hp/plot_algorithm.py`). The design, its checks and the
 runs are in [notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), sections 13.15–13.23.
 
-#### Checks and accuracy
+## Validation and controls
+
+### Checks of the solver (`hp/`)
 
 <details>
 <summary>Checks of the solver</summary>
