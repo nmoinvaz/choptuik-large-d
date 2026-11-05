@@ -222,11 +222,55 @@ def bconst(c, w=(0, 0, 0)):
     return Bd(w, c)
 
 
+# Derivative entries: normally numbers in the value's weight (Lemma LC's Lipschitz matrix). With OWNW = True (Lemma
+# J's pointwise secant coefficients) each entry is a list of (weight, number) terms in its own weight, because the
+# derivative of a node with respect to a pointwise perturbation scales differently in n from the node itself.
+OWNW = False
+
+
+def wadd(a, b):
+    return (a[0] + b[0], a[1] + b[1], a[2] + b[2])
+
+
+def dzero(d):
+    if OWNW:
+        return all(mpup(v) == 0 for ts in d.values() for (_, v) in ts)
+    return all(mpup(a) == 0 for a in d.values())
+
+
+def pick_weight(cell, ws_vs):
+    """choose a common weight for terms [(w, v)]: candidates each term's weight and (max a, min b, min e); the
+    smallest bound at the cell's upper corner (any valid choice gives a valid bound). Returns (w, total, factors)."""
+    cands = {(max(w[0] for w, _ in ws_vs), min(w[1] for w, _ in ws_vs), min(w[2] for w, _ in ws_vs))}
+    cands.update(w for w, _ in ws_vs)
+    best = None
+    for w in cands:
+        try:
+            fs = [cell.msup(x[0] - w[0], x[1] - w[1], x[2] - w[2]) if x != w else ONEI for x, _ in ws_vs]
+        except ValueError:
+            continue
+        tot = ZEROI
+        for (_, v), f in zip(ws_vs, fs):
+            tot = tot + v * f
+        size = mpup(tot) * cell.corner(w)
+        if best is None or size < best[3]:
+            best = (w, up(tot), fs, size)
+    if best is None:
+        raise ValueError("no common weight")
+    return best[0], best[1], best[2]
+
+
 def bmul(x, y):
     if x is None or y is None:
         return None
-    w = (x.w[0] + y.w[0], x.w[1] + y.w[1], x.w[2] + y.w[2])
+    w = wadd(x.w, y.w)
     d = {}
+    if OWNW:
+        for i, ts in x.d.items():
+            d[i] = [(wadd(y.w, tw), up(y.v * tv)) for tw, tv in ts]
+        for i, ts in y.d.items():
+            d[i] = d.get(i, []) + [(wadd(x.w, tw), up(x.v * tv)) for tw, tv in ts]
+        return Bd(w, x.v * y.v, d)
     for i, a in x.d.items():
         d[i] = up(a * y.v)
     for i, a in y.d.items():
@@ -237,49 +281,45 @@ def bmul(x, y):
 def bscale(x, c):
     if x is None:
         return None
+    if OWNW:
+        return Bd(x.w, x.v * c, {i: [(tw, up(tv * c)) for tw, tv in ts] for i, ts in x.d.items()})
     return Bd(x.w, x.v * c, {i: up(a * c) for i, a in x.d.items()})
 
 
 def bto(x, cell, w):
-    """the same bound in weight w (factor = sup of the weight ratio over the cell)"""
+    """the same bound in weight w (factor = sup of the weight ratio over the cell); own-weight derivative entries
+    are left in their weights"""
     if x is None:
         return None
     if x.w == tuple(w):
         return x
-    if mpup(x.v) == 0 and all(mpup(a) == 0 for a in x.d.values()):
+    if mpup(x.v) == 0 and dzero(x.d):
         return Bd(tuple(w), ZEROI, dict(x.d))
     f = cell.msup(x.w[0] - w[0], x.w[1] - w[1], x.w[2] - w[2])
+    if OWNW:
+        return Bd(tuple(w), x.v * f, dict(x.d))
     return Bd(tuple(w), x.v * f, {i: up(a * f) for i, a in x.d.items()})
 
 
 def badd(cell, *xs):
-    """sum of bounds in one weight. Candidates for the common weight: each operand's own and (max a, min b, min e);
-    the one with the smallest total is used (every candidate is a valid bound; the choice is made at the point of
-    evaluation and the derivatives follow the same chain)"""
-    xs = [x for x in xs if x is not None and not (mpup(x.v) == 0 and all(mpup(a) == 0 for a in x.d.values()))]
+    """sum of bounds in one weight, chosen by pick_weight (the choice is made at the point of evaluation and the
+    derivatives follow the same chain)"""
+    xs = [x for x in xs if x is not None and not (mpup(x.v) == 0 and dzero(x.d))]
     if not xs:
         return Bd((0, 0, 0), ZEROI)
     if len(xs) == 1:
         return xs[0]
-    cands = {(max(x.w[0] for x in xs), min(x.w[1] for x in xs), min(x.w[2] for x in xs))}
-    cands.update(x.w for x in xs)
-    best = None
-    for w in cands:
-        try:
-            fs = [cell.msup(x.w[0] - w[0], x.w[1] - w[1], x.w[2] - w[2]) if x.w != w else ONEI for x in xs]
-        except ValueError:
-            continue
-        tot = ZEROI
-        for x, f in zip(xs, fs):
-            tot = tot + x.v * f
-        # compare the candidates by the size of the bound at the cell's upper corner (any choice is valid)
-        size = mpup(tot) * cell.corner(w)
-        if best is None or size < best[3]:
-            best = (tot, w, fs, size)
-    if best is None:
-        raise ValueError("no common weight")
-    tot, w, fs, _ = best
+    w, tot, fs = pick_weight(cell, [(x.w, x.v) for x in xs])
     d = {}
+    if OWNW:
+        for x in xs:
+            for i, ts in x.d.items():
+                d[i] = d.get(i, []) + ts
+        for i in d:
+            if len(d[i]) > 1:
+                tw, tv, _ = pick_weight(cell, d[i])
+                d[i] = [(tw, tv)]
+        return Bd(w, tot, d)
     for x, f in zip(xs, fs):
         for i, a2 in x.d.items():
             t = up(a2 * f)
@@ -298,12 +338,25 @@ def binvlb(L, s, w=(0, 0, 0)):
     if mpup(den) <= 0:
         raise ValueError("inverse: lower bound lost")
     v = up(1 / iv.mpf(den))
-    d = {i: up(a * v * v) for i, a in s.d.items()}
+    if OWNW:
+        d = {i: [(wadd(tuple(w), tw), up(tv * v * v)) for tw, tv in ts] for i, ts in s.d.items()}
+    else:
+        d = {i: up(a * v * v) for i, a in s.d.items()}
     return Bd(tuple(w), v, d)
+
+
+def dsup(x, cell, i, w=(0, 0, 0)):
+    """OWNW: sup over the cell of the derivative entry i of x, in weight w"""
+    tot = ZEROI
+    for tw, tv in x.d.get(i, []):
+        tot = tot + tv * cell.msup(tw[0] - w[0], tw[1] - w[1], tw[2] - w[2])
+    return up(tot)
 
 
 def bmax(*xs):
     """componentwise max (value and each derivative); same weight required"""
+    if OWNW:
+        raise ValueError("bmax is not used with own-weight derivatives")
     xs = [x for x in xs if x is not None]
     w = xs[0].w
     v = xs[0].v

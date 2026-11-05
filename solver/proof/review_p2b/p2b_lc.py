@@ -34,6 +34,8 @@ from p2b_alg import (Bd, Jet, Cell, KJet, Poly, jadd, jmul, jprod, jscale, jinv,
 HERE = os.path.dirname(os.path.abspath(__file__))
 OPTS = {a.split("=", 1)[0][2:]: (a.split("=", 1)[1] if "=" in a else "1") for a in sys.argv[1:] if a.startswith("--")}
 MUT = OPTS.get("mutate")
+CRUDE_D = "crude_d" in OPTS      # the offset terms as in B8_constants.md 8.4: rho^(K+1) >= n^-(K+1), no X^-10
+NOTESH = "notesH" in OPTS        # H_F as written in Lemma K.3: |eta|/X^2 <= |eta~| and X^2/|x^2-1| <= l_F = 21/19
 
 COMP = ("V", "S", "B", "C")
 BANDS = ("N0", "Na", "L", "Nb", "F")
@@ -70,15 +72,23 @@ def geom_points(a, b, n):
 def make_cells(st, mode):
     cells = []
 
-    def add(band, pts, far=False):
+    def add(band, pts, far=False, aux=False):
         for a, b in zip(pts[:-1], pts[1:]):
             kind = "sector"
-            cells.append(Cell(st, band, kind, a, b))
-            cells.append(Cell(st, band, "ray", a, b))
+            c = Cell(st, band, kind, a, b)
+            c.aux = aux
+            cells.append(c)
+            if not aux:
+                r = Cell(st, band, "ray", a, b)
+                r.aux = False
+                cells.append(r)
 
     if mode == "box":
+        # one box per band (B8_constants.md 1.3) and, for the paths through the disc's arc Ac only, the annulus
+        # 1 - delta/2 <= |x| <= 1 + delta/2 of Na (aux: not used for Na's own supremum or the radial sums)
         add("N0", [0, "0.05"])
         add("Na", ["0.05", "1.5"])
+        add("Na", ["0.975", "1.025"], aux=True)
         add("Nb", ["1.5", "20"])
         add("F", ["20", None])
     else:
@@ -90,7 +100,9 @@ def make_cells(st, mode):
         add("Na", [str(p) for p in lowpts] + [str(p) for p in mid] + [str(p) for p in hipts])
         add("Nb", [str(p) for p in geom_points("1.5", "20", 30)])
         add("F", ["20", "29", "49", "99", "999", "1e5", "1e8", None])
-    cells.append(Cell(st, "L", "L", 0, 0))
+    Lc = Cell(st, "L", "L", 0, 0)
+    Lc.aux = False
+    cells.append(Lc)
     return cells
 
 
@@ -179,17 +191,31 @@ class Known:
 
 
 # ---------------------------------------------------------------- inputs
-def seed_bd(w, val, idx, ad):
+JSEEDS = None      # Lemma J: {component: (shape weight, factor per cell)}: value inputs seeded with the shape s_j
+PCIDX = "pc"
+
+
+def seed_bd(w, val, idx, ad, cell=None):
+    if JSEEDS is not None:
+        if idx < 20:
+            comp = COMP[idx // 5]
+            sw, fac = JSEEDS[comp]
+            return Bd(w, val, {comp: [(sw, fac(cell))]})
+        return Bd(w, val)
     return Bd(w, val, {idx: up(val)} if ad else None)
 
 
 def inputs_for(H, band, cell, ad):
     """the class bounds on a cell of `band` as jets (value, x-derivative)"""
     mS = NWF if cell.far else NW
-    RV = Jet(seed_bd(W1, H[("h", "V", band)], vidx("V", band), ad), seed_bd(W, H[("d", "V", band)], didx("V", band), ad))
-    RS = Jet(seed_bd(W, H[("h", "S", band)], vidx("S", band), ad), seed_bd(mS, H[("d", "S", band)], didx("S", band), ad))
-    RB = Jet(seed_bd(W, H[("h", "B", band)], vidx("B", band), ad), seed_bd(NW, H[("d", "B", band)], didx("B", band), ad))
-    RC = Jet(seed_bd(W1, H[("h", "C", band)], vidx("C", band), ad), seed_bd(W, H[("d", "C", band)], didx("C", band), ad))
+    RV = Jet(seed_bd(W1, H[("h", "V", band)], vidx("V", band), ad, cell),
+             seed_bd(W, H[("d", "V", band)], didx("V", band), ad, cell))
+    RS = Jet(seed_bd(W, H[("h", "S", band)], vidx("S", band), ad, cell),
+             seed_bd(mS, H[("d", "S", band)], didx("S", band), ad, cell))
+    RB = Jet(seed_bd(W, H[("h", "B", band)], vidx("B", band), ad, cell),
+             seed_bd(NW, H[("d", "B", band)], didx("B", band), ad, cell))
+    RC = Jet(seed_bd(W1, H[("h", "C", band)], vidx("C", band), ad, cell),
+             seed_bd(W, H[("d", "C", band)], didx("C", band), ad, cell))
     return RV, RS, RB, RC
 
 
@@ -232,9 +258,12 @@ def cell_eval(cell, kn, H, ad, st):
         dC = RC[1]                                               # |x R_c'| <= dC w
         cc = seed_bd(NW, H[("cc",)], CCIDX, ad)
         Pc0 = bscale(Bd((dC.w[0] - 1, dC.w[1] - 1, dC.w[2]), dC.v, dC.d), spread((dC.w[0] - 1, dC.w[1] - 1, dC.w[2])))
+        if JSEEDS is not None:
+            Pc0 = Bd(Pc0.w, Pc0.v, {PCIDX: [((0, 0, 0), ONEI)]})      # delta P_c <= p (pseudo-component)
         t = badd(c_, cc, dC)
+        # |x| sup_s t(s)/|s|^2 = [t(s)/|s|] (|x|/|s|): the spread of the weight t/|x| and |x|/|s| <= (1+d/2)/(1-d/2)
         Pc1 = bscale(Bd((t.w[0] - 1, t.w[1] - 1, t.w[2]), t.v, t.d), up(iv.mpf("0.5") *
-                     spread((t.w[0] - 1, t.w[1] - 1, t.w[2]))))
+                     spread((t.w[0] - 1, t.w[1] - 1, t.w[2])) * (1 + HD) / (1 - HD)))
         Pc = Jet(Pc0, Pc1)
         QD = jadd(c_, jscale(jmul(c_, kn["C"], Pc), 2), jmul(c_, RC, Pc))     # delta D/(x - 1)
         Gm = kn["Gam"]
@@ -284,7 +313,7 @@ def cell_eval(cell, kn, H, ad, st):
                 jmul(c_, kn["bK"], g3), jmul(c_, xqp, RS), qxgS, kn["rho3"])
     Fc_nr = jadd(c_, jmul(c_, RC, beta), jmul(c_, kn["cK"], Rb))        # F_c without rho4
     Fc = jadd(c_, Fc_nr, kn["rho4"])
-    out.update(ghat=ghat, Fc_nr=Fc_nr, Fc=Fc, RS=RS)
+    out.update(ghat=ghat, Fc_nr=Fc_nr, Fc=Fc, RS=RS, Cinv=Cinv, Y=Y, Cj=C, S=S)
     # ratios
     out["G1w"] = bto(out["G1"][0], c_, W)
     if cell.kind != "L":
@@ -341,6 +370,8 @@ def cell_gains(st, cell, kn, sstar):
         N = ZEROI if mpup(cell.rlo) == 0 else lo((st.n0lo - 1) * iv.mpf(min(mplo(f(cell.rlo)), mplo(f(cell.rhi)))))
         Dr = iv.sqrt(1 + 2 * cell.rhi ** 2 * SK + cell.rhi ** 4)
         Dr_over_n1 = up(Dr * st.eps1)
+    if NOTESH and cell.far:
+        H = up(kn["n_etat"] * (Al.XF + 1) / (Al.XF - 1) / (1 - kn["n_Gam"]))
     if MUT == "kernelH":
         H = ZEROI
     Ea = iv.exp(H * ALPHA)
@@ -374,13 +405,15 @@ def evaluate(st, cells, known, H, ad=False, detail=False):
     kres = {id(c): known.at(c) for c in cells}
     res = {id(c): cell_eval(c, kres[id(c)], H, ad, st) for c in cells}
     sstar, hHray = kernel_consts(st, cells, kres)
-    sec = [c for c in cells if c.kind in ("sector",)]
+    sec = [c for c in cells if c.kind in ("sector",) and not c.aux]
+    auxc = [c for c in cells if c.kind == "sector" and c.aux]
     rays = [c for c in cells if c.kind == "ray"]
     Lc = [c for c in cells if c.kind == "L"][0]
-    gains = {id(c): cell_gains(st, c, kres[id(c)], sstar) for c in sec}
+    gains = {id(c): cell_gains(st, c, kres[id(c)], sstar) for c in sec + auxc}
     byband = {b: [c for c in sec if c.band == b] for b in RADIAL_ORDER}
     raysby = {b: [c for c in rays if c.band == b] for b in RADIAL_ORDER}
-    near = [c for c in byband["Na"] if mplo(c.rlo) >= mplo(1 - HD) - 1e-30 and mpup(c.rhi) <= mpup(1 + HD) + 1e-30]
+    near = [c for c in byband["Na"] + auxc if mplo(c.rlo) >= mplo(1 - HD) - 1e-30 and
+            mpup(c.rhi) <= mpup(1 + HD) + 1e-30]
     if not near:
         near = [c for c in byband["Na"] if mplo(c.rlo) <= mpup(1 + HD) and mpup(c.rhi) >= mplo(1 - HD)]
     zero = Bd(W, ZEROI)
@@ -467,11 +500,11 @@ def evaluate(st, cells, known, H, ad=False, detail=False):
                     outs.append(bscale(top, up(iv.mpf(1) / 10)))
                 return bmax(*outs)
             rv = endpoint_vals(Cv, hb("S", b))
-            pv = badd(c, bscale(Bd((0, 0, 0), d0.v, d0.d), up(twoF / Yf(c.rlo))),
+            pv = badd(c, bscale(Bd((0, 0, 0), d0.v, d0.d), up(twoF / (1 if CRUDE_D else Yf(c.rlo)))),
                       bscale(badd(c, rv, bscale(hb("S", b), up(PHID * c.thhi))), up(known.absW)))
             PV.append(Bd(W1, pv.v, pv.d))
             rc_ = endpoint_vals(Cc, Bd((0, 0, 0), r["Icw"].v, r["Icw"].d))
-            pc = badd(c, bscale(Bd((0, 0, 0), d0.v, d0.d), up(1 / Yf(c.rlo))), rc_,
+            pc = badd(c, bscale(Bd((0, 0, 0), d0.v, d0.d), up(1 / (1 if CRUDE_D else Yf(c.rlo)))), rc_,
                       bscale(Bd((0, 0, 0), r["Icw"].v, r["Icw"].d), up(PHID * c.thhi)),
                       Bd((0, 0, 0), r["r4int"].v, r["r4int"].d))
             PC.append(Bd(W1, pc.v, pc.d))
@@ -547,7 +580,7 @@ def evaluate(st, cells, known, H, ad=False, detail=False):
     Ya = Yf(1 - HD)
     for Yr in (Yf(1 - HD), Yf(1 + HD)):
         vals.append(badd(Lc, bscale(CvL, up(1 / (10 * Yr))), bscale(hb("S", "Na"), up((Yr - Ya) / (10 * Yr)))))
-    pvL = badd(Lc, bscale(Bd((0, 0, 0), d0.v, d0.d), up(twoF / Yf(1 - HD))),
+    pvL = badd(Lc, bscale(Bd((0, 0, 0), d0.v, d0.d), up(twoF / (1 if CRUDE_D else Yf(1 - HD)))),
                bscale(badd(Lc, bmax(*vals), bscale(hSm, up(PHID * Lc.thhi))), up(known.absW)))
     out[("h", "V", "L")] = pvL
     out[("d", "V", "L")] = bscale(hb("S", "L"), up(known.absW))
@@ -687,7 +720,9 @@ def main():
                sstar=float(mpup(det["sstar"])), NL=float(mpup(det["NL"])), etaL=float(mpup(det["etaL"])),
                M=[[float(M[i][j]) for j in range(NIDX)] for i in range(NIDX)], index=[idxname(i) for i in range(NIDX)],
                mode=mode, ln_n0=ln_n0, mutate=MUT, seconds=time.time() - t0)
-    tag = OPTS.get("tag", f"{mode}" + (f"_mut_{MUT}" if MUT else "") + ("_hcert" if "hfrom" in OPTS else ""))
+    tag = OPTS.get("tag", f"{mode}" + ("_crude_d" if CRUDE_D else "") + ("_notesH" if NOTESH else "") +
+                   (f"_mut_{MUT}" if MUT else "") +
+                   ("_hcert" if "hfrom" in OPTS else ""))
     with open(os.path.join(HERE, f"p2b_lc_{tag}.json"), "w") as fh:
         json.dump(res, fh, indent=1)
     log(f"  wrote p2b_lc_{tag}.json ({time.time() - t0:.0f} s)")

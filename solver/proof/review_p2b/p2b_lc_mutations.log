@@ -1,0 +1,60 @@
+== tauD
+     iter 0: max relative change 1.0, d0 = 190034.0
+     iter 10: max relative change 0.0163, d0 = 3.54212e+6
+     iter 20: max relative change 0.000217, d0 = 3.54212e+6
+     iter 30: max relative change 2.96e-6, d0 = 3.54212e+6
+       h_S: N0 5810.4 (0.9901), Na 77005.0 (0.9901), L 3084.6 (0.9901), Nb 2.5449e+5 (0.9901), F 3.233e+7 (0.9814)
+       h_B: N0 8.9915 (0.9901), Na 37282.0 (0.9901), L 2085.8 (0.9901), Nb 1.9652e+5 (0.9901), F 3.4946e+6 (0.9839)
+     d0 = 3.57564e+6; h_Sp = D_S on L = 3.65787e-8; closure: yes, max ratio 0.9901
+     Lipschitz matrix 40 x 40: spectral radius 0.65171, certified theta 0.66561
+== taub
+     iter 0: max relative change 1.0, d0 = 190034.0
+     iter 10: max relative change 0.0182, d0 = 5.21817e+6
+     iter 20: max relative change 0.000271, d0 = 5.21817e+6
+     iter 30: max relative change 4.18e-6, d0 = 5.21817e+6
+       h_S: N0 3873.7 (0.9901), Na 51337.0 (0.9901), L 2056.4 (0.9901), Nb 1.6966e+5 (0.9901), F 4.6323e+7 (0.9809)
+       h_B: N0 13.487 (0.9901), Na 55923.0 (0.9901), L 3128.7 (0.9901), Nb 2.9478e+5 (0.9901), F 5.1153e+6 (0.9839)
+     d0 = 5.26845e+6; h_Sp = D_S on L = 5.47164e-8; closure: yes, max ratio 0.9901
+     Lipschitz matrix 40 x 40: spectral radius 0.65983, certified theta 0.67404
+== rho4
+     iter 0: max relative change 1.0, d0 = 0.0
+     iter 10: max relative change 0.0168, d0 = 3.35209e+6
+     iter 20: max relative change 0.00022, d0 = 3.35209e+6
+     iter 30: max relative change 2.96e-6, d0 = 3.35209e+6
+       h_S: N0 3873.6 (0.9901), Na 51337.0 (0.9901), L 2056.4 (0.9901), Nb 1.6966e+5 (0.9901), F 2.9713e+7 (0.9811)
+       h_B: N0 8.9915 (0.9901), Na 37282.0 (0.9901), L 2085.8 (0.9901), Nb 1.9652e+5 (0.9901), F 3.297e+6 (0.9839)
+     d0 = 3.38561e+6; h_Sp = D_S on L = 3.6518e-8; closure: yes, max ratio 0.9901
+     Lipschitz matrix 40 x 40: spectral radius 0.65066, certified theta 0.66477
+== kernelH
+     iter 0: max relative change 1.0, d0 = 190034.0
+     iter 10: max relative change 0.00507, d0 = 3.54212e+6
+     iter 20: max relative change 8.76e-6, d0 = 3.54212e+6
+       h_S: N0 3806.9 (0.9901), Na 51337.0 (0.9901), L 2056.4 (0.9901), Nb 1.6966e+5 (0.9901), F 1.6208e+7 (0.9688)
+       h_B: N0 8.9915 (0.9901), Na 37282.0 (0.9901), L 2085.8 (0.9901), Nb 1.9652e+5 (0.9901), F 3.0176e+6 (0.9885)
+     d0 = 3.57564e+6; h_Sp = D_S on L = 3.6518e-8; closure: yes, max ratio 0.9901
+     Lipschitz matrix 40 x 40: spectral radius 0.53001, certified theta 0.54380
+== gamma3
+     iter 0: max relative change 1.0, d0 = 190034.0
+     iter 10: max relative change 0.14, d0 = 3.54212e+6
+     iter 20: max relative change 0.113, d0 = 3.54212e+6
+     iter 30: max relative change 0.307, d0 = 3.54212e+6
+       raise ValueError("inverse: lower bound lost")
+   ValueError: inverse: lower bound lost
+== NL
+     iter 0: max relative change 1.0, d0 = 190034.0
+     iter 10: max relative change 0.0167, d0 = 3.54212e+6
+     iter 20: max relative change 0.000221, d0 = 3.54212e+6
+     iter 30: max relative change 3.02e-6, d0 = 3.54212e+6
+       h_S: N0 3873.6 (0.9901), Na 51337.0 (0.9901), L 7675.9 (0.9901), Nb 1.6966e+5 (0.9901), F 3.1254e+7 (0.9812)
+       h_B: N0 8.9915 (0.9901), Na 37282.0 (0.9901), L 2085.8 (0.9901), Nb 1.9652e+5 (0.9901), F 3.4632e+6 (0.984)
+     d0 = 3.57564e+6; h_Sp = D_S on L = 113814.0; closure: yes, max ratio 0.9901
+     Lipschitz matrix 40 x 40: spectral radius 0.65156, certified theta 0.66559
+== nod0
+     iter 0: max relative change 1.0, d0 = 0.0
+     iter 10: max relative change 0.00611, d0 = 0.0
+     iter 20: max relative change 6.45e-5, d0 = 0.0
+     iter 30: max relative change 6.88e-7, d0 = 0.0
+       h_S: N0 3873.6 (0.9901), Na 51337.0 (0.9901), L 2056.4 (0.9901), Nb 1.6966e+5 (0.9901), F 3.6864e+6 (0.9812)
+       h_B: N0 8.9915 (0.9901), Na 37282.0 (0.9901), L 2085.8 (0.9901), Nb 1.9652e+5 (0.9901), F 3.7581e+5 (0.9822)
+     d0 = 0.0; h_Sp = D_S on L = 3.6518e-8; closure: yes, max ratio 0.9901
+     Lipschitz matrix 40 x 40: spectral radius 0.63509, certified theta 0.64178

@@ -1,0 +1,16 @@
+P2b Lemma J second implementation: class constants from p2b_lc_cells.json, ln n0 = 73.89, mutate = None
+  u* = 0.0081, rho(x*) <= 0.0081; 50 cells on the Stokes segment
+  L: pseudo-component: ell_G,pc = 3.123e-31, Q_j = sup_L(ell_Fc,j s_j/|s|): S 2.146e-33, V 0.0, B 1.396e-63, C 3.589e-63
+  h_H = sup |H'| on the segment = 0.102275
+  endpoint at x*: |Lambda^-1| <= 0.0090228, |C^-1| <= 1.0431, |P| <= 5.5662, |x c'| <= 0.086832, |Phi^-| <= 1.3175
+  e_j s_j(x*): S 0.032651, V 0.00032207, B 6.9537e-6, C 0.0055827
+  sup ell s_j over the segment (G, F_c, g/(n s_beta)):
+    G: S 0.0025457, V 0.00031545, B 3.4768e-6, C 0.0054003
+    F: S 0.04962, V 0.0, B 6.9228e-5, C 0.00098088
+    g: S 0.66792, V 5.806, B 5.2153e-19, C 32.317
+  Gamma (rows S, V, beta, c; columns S, V, beta, c):
+       0.039706    0.0011963    1.6589e-5     0.020549
+         5.9396          0.0          0.0          0.0
+        0.66792        5.806   5.2153e-19       32.317
+        0.09924          0.0   0.00013846    0.0019618
+  Perron root of Gamma 0.15966; certified theta = 0.16295 (weight [24.020043120434305, 876.5238413719785, 41554.95052204579, 51.55702302975742])

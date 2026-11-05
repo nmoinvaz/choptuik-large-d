@@ -1,0 +1,25 @@
+P2b Lemma LC second implementation: mode box, ln n0 = 73.89, 10 cells, mutate = None
+  n0 = 1.2303234e+32, rho_max = 0.00849981, |A| <= 2.5421500475, |omega| <= 2.96978435279
+  exact rho4 part of d0: 190034.09
+  iter 0: max relative change 1.0, d0 = 190034.0
+  iter 10: max relative change 0.0134, d0 = 3.54212e+6
+  iter 20: max relative change 0.00012, d0 = 3.54212e+6
+  iter 30: max relative change 1.1e-6, d0 = 3.54212e+6
+  converged after 31 iterations
+  descent: closed after 4 steps
+  constants h (rows V, S, beta, c; derivative constants D; P/h ratios):
+    h_V: N0 1.8362e+7 (0.9901), Na 1.8379e+7 (0.9901), L 1.8367e+7 (0.9901), Nb 1.8424e+7 (0.9901), F 2.8729e+7 (0.983)
+    h_S: N0 3873.6 (0.9901), Na 51337.0 (0.9901), L 2056.4 (0.9901), Nb 1.6966e+5 (0.9901), F 2.7101e+7 (0.981)
+    h_B: N0 8.9915 (0.9901), Na 37282.0 (0.9901), L 2085.8 (0.9901), Nb 1.9652e+5 (0.9901), F 3.3422e+6 (0.9838)
+    h_C: N0 3.6116e+6 (0.9901), Na 3.6398e+6 (0.9901), L 67.656 (0.9901), Nb 3.6549e+6 (0.9901), F 4.3345e+6 (0.9891)
+    D_V: N0 11619.0 (0.9901), Na 1.5398e+5 (0.9901), L 6168.1 (0.9901), Nb 5.089e+5 (0.9901), F 8.2937e+7 (0.9704)
+    D_S: N0 5740.4 (0.9901), Na 2.2594e+7 (0.9901), L 3.6518e-8 (0.9901), Nb 1.9154e+7 (0.9901), F 3.9085e+7 (0.9815)
+    D_B: N0 17.22 (0.9901), Na 69542.0 (0.9901), L 3834.0 (0.9901), Nb 3.559e+5 (0.9901), F 6.2101e+6 (0.9841)
+    D_C: N0 6698.5 (0.9901), Na 1.3945e+5 (0.9901), L 4162.5 (0.9901), Nb 3.4734e+5 (0.9901), F 5.7855e+6 (0.9841)
+    h_cc (L): 3872.3 (0.9901)
+  d0 = 3.57564e+6; h_Sp = D_S on L = 3.6518e-8; closure: yes, max ratio 0.9901
+  kernel: s_* = 0.187493 (sup_ray |H'| = 0.108027), N_L = 5.75828e+31, eta_L = 5.86499
+  far-band gains per cell (g_arc, g_top, H, N): (0.3031, 0.07235, 12.74, 117.5)
+  Lipschitz matrix 40 x 40: spectral radius 0.62593, certified theta 0.64008
+  with the F2 component (41 x 41): spectral radius 0.62593, certified theta 0.64008
+  wrote p2b_lc_box_crude_d.json (13 s)

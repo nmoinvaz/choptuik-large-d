@@ -1,0 +1,24 @@
+P2b Lemma LC second implementation: mode cells, ln n0 = 73.89, 181 cells, mutate = None
+  n0 = 1.2303234e+32, rho_max = 0.00849981, |A| <= 2.5421500475, |omega| <= 2.96978435279
+  exact rho4 part of d0: 190034.09
+  iter 0: max relative change 1.0, d0 = 190034.0
+  iter 10: max relative change 0.00374, d0 = 654377.0
+  iter 20: max relative change 2.08e-5, d0 = 654377.0
+  converged after 26 iterations
+  descent: closed after 1 steps
+  constants h (rows V, S, beta, c; derivative constants D; P/h ratios):
+    h_V: N0 3.5988e+6 (0.9311), Na 2.2094e+6 (0.9311), L 4554.9 (0.9283), Nb 30985.0 (0.9091), F 1.1531e+6 (0.9652)
+    h_S: N0 965.08 (0.9901), Na 4419.0 (0.9901), L 2056.4 (0.9901), Nb 1.1604e+5 (0.9901), F 2.9983e+6 (0.9701)
+    h_B: N0 7.031 (0.9901), Na 4923.1 (0.9901), L 2085.8 (0.9901), Nb 1.366e+5 (0.9901), F 3.5234e+5 (0.9892)
+    h_C: N0 7.0782e+5 (0.9311), Na 4.3471e+5 (0.9311), L 70.708 (0.9474), Nb 25261.0 (0.9507), F 93523.0 (0.9565)
+    D_V: N0 3152.7 (0.9091), Na 14436.0 (0.9091), L 6717.7 (0.9091), Nb 3.7908e+5 (0.9091), F 9.2248e+6 (0.9652)
+    D_S: N0 1972.4 (0.9901), Na 90799.0 (0.9901), L 5.2535e-9 (0.9109), Nb 9812.3 (0.9901), F 3.7224e+6 (0.9718)
+    D_B: N0 13.463 (0.9901), Na 8974.0 (0.9901), L 3834.0 (0.9901), Nb 2.4591e+5 (0.9901), F 6.2363e+5 (0.9899)
+    D_C: N0 4896.7 (0.99), Na 12226.0 (0.9542), L 4350.2 (0.9474), Nb 2.5916e+5 (0.9431), F 7.4927e+5 (0.9565)
+    h_cc (L): 4217.4 (0.9091)
+  d0 = 659020.0; h_Sp = D_S on L = 5.25354e-9; closure: yes, max ratio 0.9901
+  kernel: s_* = 0.187568 (sup_ray |H'| = 0.107952), N_L = 5.75828e+31, eta_L = 5.86499
+  far-band gains per cell (g_arc, g_top, H, N): (5.388e-15, 3.903e-29, 11.33, 1.462e+29); (9.101e-15, 1.084e-28, 11.31, 5.123e+28); (1.839e-14, 4.334e-28, 11.31, 1.255e+28); (1.855e-13, 4.333e-26, 11.3, 1.233e+26); (1.857e-11, 4.333e-22, 11.3, 1.23e+22); (1.857e-8, 4.333e-16, 11.3, 1.23e+16); (0.3017, 0.072, 12.7, 117.6)
+  Lipschitz matrix 40 x 40: spectral radius 0.59535, certified theta 0.60222
+  with the F2 component (41 x 41): spectral radius 0.59535, certified theta 0.60222
+  wrote p2b_lc_cells.json (124 s)
