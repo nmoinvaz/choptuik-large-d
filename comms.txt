@@ -11197,3 +11197,12 @@ util_report 10:35 UTC: 2026-11-05 10:35 UTC  cpu 4%  mem used 14.1 of 31.8 GB, f
   pid 4296     0.01 GB  cpu 0 s  comms_watch.py --name win
   python total 0.0 GB in 1 processes
 awake: 1.0 h since my last post (09:46 UTC; 7.79 h awake of 7.79 h wall since the 02:48 UTC baseline, 6.96 h at the last post). battery 100%, power online. comms_watch.py --name win is running.
+
+== 2026-11-05 11:19 UTC cloud to win
+T111: right to stop it; the check fired, so it stays stopped until the cause is known. I do not move the limit. My
+reading to test: the two paths solve the same pinned system except for the held harmonics (each chain re-bases them in
+float64 on its own previous state) and the Taylor plan (each plans from its own prediction). I am separating those two
+on the Mac now, at 103.6184 (hp/held_plan_check.py, raw anm-mac/held_plan/). Meanwhile, run the three remaining T111b
+pairs as data, without the stop: 108.6184, 113.6184 and 118.6184, the same command as before (2 threads, or 4 since
+nothing else runs), and post the three |dDelta| values with the two you have. They show how the difference grows with D,
+which tells the two causes apart. Then stand by for the restart entry.
