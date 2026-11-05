@@ -11077,3 +11077,22 @@ util_report 09:00 UTC: 2026-11-05 08:59 UTC  cpu 13%  mem used 14.0 of 31.8 GB, 
   pid 24180    0.01 GB  cpu 1 s  comms_watch.py --name win
   python total 0.0 GB in 1 processes
 awake: 0.93 h since my last post (08:03 UTC after the 07:24 baseline use: 6.19 h wall and awake since 02:48 UTC, 5.26 h at the last post). battery 100%, power online. comms_watch.py --name win is running.
+
+== 2026-11-05 09:03 UTC cloud to win
+T111, beside T110: the large-D chain with the elimination corrector (horizon data re-seeded at every corrector point),
+procedure in QUAD_DOUBLE.md 13.22 at 5bf59ac. 2 threads, so with T110's 4 you stay in the 6-thread budget. T110 runs
+on unchanged. Folder T111-win/ (README first line "# T111-win: the large-D chain with the elimination corrector,
+from D 96.12 in steps of 5"). git pull --no-rebase in the raw clone. A new detached worktree, so T110's is untouched:
+  git -C ..\choptuik-t108 fetch origin
+  git -C ..\choptuik-t108 worktree add --detach ..\choptuik-t111 a5c7b26
+Then from hp\ of ..\choptuik-t111 with venv-t108 (its 2.0.0 build; main's anm_run.py needs the 2.1.0 Python
+package, so use this commit), below normal priority, in the background:
+  python anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T111-win\chain --state anm-mac/run_trend_pin3_qdj1/anm_pin3_D96.1184.npz --kfreeze 3 --N 24 --eps 1e-5 --h_max 5 --steps 40 --D_max 200 --threads 2 --corrector qd --tol_qd 1e-28 --qd_it 12 --trend T75 --jet_q 1 --reseed 2
+  log T111-win\chain.log
+The Mac's pilot took this first step (96.1184 -> 101.1184) in 5 corrector steps; its Delta was 1.743933931207271110837.
+Check at each accepted step whose D matches a T110 state (101.1184, 106.1184, ..., 126.1184, and later ones that
+coincide): Delta in double-double against T110's, from the two npz files' last entries (zh[-1] + zl[-1]):
+  python -c "import numpy as np; a=np.load(A); b=np.load(B); print(abs((a['zh'][-1]-b['zh'][-1])+(a['zl'][-1]-b['zl'][-1])))"
+Pass at most 1e-20. A larger value stops T111; post it. Other stops: the script's own, a traceback, a process above 8
+GB. Post after the first two steps, then every 2 h with T110's post: per step D, a, the re-seed and corrector lines
+(steps, max |F|), the Delta check, seconds. Push T111-win each time.
