@@ -15,6 +15,7 @@ the mapped fields are the state's trigonometric interpolants evaluated on a grid
 compression does not alias) and transformed there.
 
     python3 tau_map_study.py RAWDIR [--state T100-win2/states/lowDhm_x0.000157-0.975_D3.0444_M384.npz] [--eps 1e-10,1e-12] [--out data/tau_map_study.json]
+        [--ns0 24] [--Ls 0.5,0.3,0.2,0.1]
 
 Minutes, one thread. Prints the table and writes the JSON.
 """
@@ -63,6 +64,8 @@ def main():
     ap.add_argument("--state", default="T100-win2/states/lowDhm_x0.000157-0.975_D3.0444_M384.npz")
     ap.add_argument("--eps", default="1e-10,1e-12")
     ap.add_argument("--fine", type=int, default=8)
+    ap.add_argument("--ns0", type=int, default=24, help="centres s0 scanned over [0, pi)")
+    ap.add_argument("--Ls", default="0.5,0.3,0.2,0.1", help="arctan map parameters")
     ap.add_argument("--out", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "tau_map_study.json"))
     a = ap.parse_args()
     d = np.load(os.path.join(a.raw, a.state))
@@ -89,10 +92,10 @@ def main():
     pp = [(n, float(sf[np.argmax(np.abs(vals[:, i]))] % np.pi)) for i, n in enumerate(names) if n.endswith(" p")]
     print("pulse of p mod pi: " + ", ".join(f"{n.replace('node ', 'n').replace(' p', '')} {v:.2f}" for n, v in pp))
     rows = []
-    for fam, params in (("sine", (0.5, 0.7, 0.9)), ("arctan", (0.5, 0.3, 0.2, 0.1))):
+    for fam, params in (("sine", (0.5, 0.7, 0.9)), ("arctan", tuple(float(v) for v in a.Ls.split(",")))):
         for par_ in params:
             best = None
-            for s0 in np.linspace(0, np.pi, 24, endpoint=False):
+            for s0 in np.linspace(0, np.pi, a.ns0, endpoint=False):
                 u = sf - s0
                 g = sf - par_ * np.sin(2 * u) / 2 if fam == "sine" else s0 + np.arctan(par_ * np.tan(u)) + np.pi * np.round(u / np.pi)
                 Q = interpolant(C, g)                        # (Nf, blocks)

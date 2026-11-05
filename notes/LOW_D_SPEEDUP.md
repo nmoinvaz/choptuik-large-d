@@ -108,7 +108,7 @@ References, the uniform grid's converged pairs (the leg's estimator: the change 
 | D | states | M_w, M_n | Δ(M_n) | error estimate \|Δ(M_n) − Δ(M_w)\| |
 |---|---|---|---|---|
 | 3.15 | `hp/data/lowD_states/lowDhm_x0.000625-0.95_D3.1500_M{192,256}.npz`, 18 nodes | 192, 256 | 2.96131964245600311 | 9.27×10⁻¹² |
-| 3.044375 | `T100-win2/states/lowDhm_x0.000157-0.975_D3.0444_M{320,384}.npz`, 21 nodes | 320, 384 | 2.44148809599424181 | 7.67×10⁻¹¹ |
+| 3.044375 | `T100-win2/states/lowDhm_x0.000157-0.975_D3.0444_M{320,384}.npz`, 21 nodes | 320, 384 | 2.44148809599424180 | 7.67×10⁻¹¹ |
 
 Driver: `hp/tau_map_solve.py` (new). The start is the M_n reference's trigonometric interpolant sampled on the mapped
 grid (`tau_map.map_state`). The solve is `lowD_dd.solve_point`, unchanged, with its solver built by

@@ -9,7 +9,9 @@ which puts the points densest at theta = s0 and s0 + pi (both pulses, g' = L the
 the tau grid in two inputs only (hp/src/model.rs: the odd-sector d/dtheta and the phase row; the even fields a, c have
 no tau derivative): here d/dtheta = diag(1/g'(s_i)) d/ds, and the phase row is sum_j sin(g(s_j)) g'(s_j) p1_j, the
 trapezoid rule in s for the uniform grid's integral of sin(theta) p1(theta), so a mapped solution has the uniform one's
-tau origin and the same Delta. L = 1 is the identity (the control: the inputs equal the uniform ones).
+tau origin and the same Delta. L = 1 is the identity (the control: the inputs equal the uniform ones). mutate="gp" (a
+control, notes/LOW_D_SPEEDUP.md "Step 5, the test"): the rows of d/dtheta not scaled by 1/g', so that the chain rule
+is dropped and the equations are wrong; a solve on it must miss the uniform Delta.
 
     from tau_map import make_solver_mapped, map_state
 """
@@ -36,8 +38,11 @@ def g_inverse(theta, s0, L):
     return s0 + np.arctan2(np.sin(v), L * np.cos(v))
 
 
-def mapped_inputs(M, s0, L, dps=40):
-    """(dh, dl, ph, pl): the folded odd d/dtheta and the phase weights on the mapped half grid, double-double"""
+def mapped_inputs(M, s0, L, dps=40, mutate=None):
+    """(dh, dl, ph, pl): the folded odd d/dtheta and the phase weights on the mapped half grid, double-double.
+    mutate "gp": d/ds in place of d/dtheta (the control above)"""
+    if mutate not in (None, "gp"):
+        raise ValueError(f"mutate must be None or 'gp', not {mutate!r}")
     with mp.workdps(dps):
         N = 2 * M
         L, s0 = mp.mpf(L), mp.mpf(s0)
@@ -50,19 +55,20 @@ def mapped_inputs(M, s0, L, dps=40):
                 for jj, sgn in ((j, 1), (j + M, -1)):
                     if jj != i:
                         v += sgn * mp.mpf(0.5) * (-1) ** (i - jj) * mp.cot((i - jj) * mp.pi / N)
-                rows.append(v / gpi)
+                rows.append(v if mutate == "gp" else v / gpi)
             ph.append(mp.sin(gi) * gpi)
         dh, dl = dd_from_mp(rows)
         phh, phl = dd_from_mp(ph)
     return dh.reshape(M, M), dl.reshape(M, M), phh, phl
 
 
-def make_solver_mapped(D, M, s0, L, nodes=None, kt=36, kc=40, ks=120, segs=None, threads=0, match_node=None):
-    """driver.make_solver on the mapped grid (no kfreeze: the projector is a uniform-grid object)"""
+def make_solver_mapped(D, M, s0, L, nodes=None, kt=36, kc=40, ks=120, segs=None, threads=0, match_node=None, mutate=None):
+    """driver.make_solver on the mapped grid (no kfreeze: the projector is a uniform-grid object); mutate as
+    mapped_inputs"""
     nodes = list(NODES_OLD if nodes is None else nodes)
     with mp.workdps(40):
         nh, nl = dd_from_mp([mp.mpf(D) - 2])
-    dh, dl, ph, pl = mapped_inputs(M, s0, L)
+    dh, dl, ph, pl = mapped_inputs(M, s0, L, mutate=mutate)
     return Solver(M, float(nh[0]), float(nl[0]), dh, dl, ph, pl, nodes, segs or [], kt, kc, ks, threads, None, None, match_node)
 
 
