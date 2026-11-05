@@ -79,7 +79,7 @@ identical to the Python reference.
 <details>
 <summary>The double-double residual</summary>
 
-Above D ≈ 26 the f64 residual can no longer pin Δ ([The double-double solver](README.md#the-double-double-solver-hp)).
+Above D ≈ 26 the f64 residual can no longer pin Δ ([The solver and its algorithm](README.md#the-solver-and-its-algorithm-hp)).
 `residual_dd` evaluates the same residual in double-double arithmetic
 (`scalar::DD`: hi + lo with two-sum / FMA two-product, about 32 digits) on plain loops. At D = 30 the
 residual's rounding noise (the maximum over the residual's entries) drops from 1.3e-11 (f64) to about 1e-27, at 8–9×

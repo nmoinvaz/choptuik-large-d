@@ -133,7 +133,7 @@ Contents
   - [Closed forms tested and excluded](#closed-forms-tested-and-excluded)
   - [Relation to published work](#relation-to-published-work)
 - [Validation and controls](#validation-and-controls)
-  - [The double-double solver (`hp/`)](#the-double-double-solver-hp)
+  - [The solver and its algorithm (`hp/`)](#the-solver-and-its-algorithm-hp)
   - [Is the period analytic in 1/D?](#is-the-period-analytic-in-1d)
 - [Large D: what the 1/D expansion can and cannot see](#large-d-what-the-1d-expansion-can-and-cannot-see)
   - [How the solution scales with D](#how-the-solution-scales-with-d)
@@ -277,7 +277,7 @@ cut, with a finite limit at D = ∞. An independent computation of the jump acro
 with no fit. `hp/formula_cut.py` evaluates both forms and checks them; the details and the planted tests are in
 [notes/FORMULA_FORMS.md](notes/FORMULA_FORMS.md).
 
-An independent double-double computation ([below](#the-double-double-solver-hp)) agrees with the formula to
+An independent double-double computation ([below](#the-solver-and-its-algorithm-hp)) agrees with the formula to
 2.7×10⁻⁹ or better on 8.25 ≤ D ≤ 21, 7.5×10⁻⁹ up to D = 30, and 5.8×10⁻⁸ from there to
 D = 61, which the fit never saw. It also shows that the f64 points at D ≈ 8–10 (23 Fourier modes in time)
 sit up to 4×10⁻¹⁰ above the true values (from 1.3×10⁻¹¹ to 3.7×10⁻¹⁰ on 8.25–9.9; within
@@ -456,7 +456,7 @@ to 10⁻¹¹ and 2×10⁻⁸ (the half-integer series included). D = 1000 and �
 1/D; the half-integer series differ there by 3×10⁻⁶ and more.
 
 The physics figure below and the candidate test use these values; the double-double points behind them are described in
-[The double-double solver](#the-double-double-solver-hp).
+[The solver and its algorithm](#the-solver-and-its-algorithm-hp).
 
 ### What the numbers mean physically
 
@@ -619,50 +619,64 @@ Their supercritical branch and its continuously self-similar checks are in
 
 ## Validation and controls
 
-### The double-double solver (`hp/`)
+### The solver and its algorithm (`hp/`)
 
 Above D ≈ 26 the f64 points lose precision: the condition that selects the period weakens with D (as a power of n in
 this solver, about n²² at D = 40–61; below), so rounding at 10⁻¹⁶ in the residual moves Δ by 10⁻⁷–10⁻⁶ at D = 30–40
 (through the sensitivity $`\max\lvert\partial\Delta/\partial F\rvert`$ of the table below), and points far above D = 40
 are out of reach. [`hp/`](hp/) (crate `hpkernel`) is a separate solver built for that regime, to settle the large-D
-behaviour with computed points rather than an assumed form. Its points are used in [The formula](#the-formula)
-(agreement and Δ∞), [Values](#values), the [candidate test](#closed-forms-tested-and-excluded), the
-[analyticity tests](#is-the-period-analytic-in-1d) and the large-D scaling
-([How the solution scales with D](#how-the-solution-scales-with-d)).
+behaviour with computed points rather than an assumed form. It works in double-double, and in quad-double where the
+large-D chain needs it, with its arithmetic from the crate [multidouble](https://github.com/nmoinvaz/multidouble). Its
+points are used in [The formula](#the-formula) (agreement and Δ∞), [Values](#values), the
+[candidate test](#closed-forms-tested-and-excluded), the [analyticity tests](#is-the-period-analytic-in-1d) and the
+large-D scaling ([How the solution scales with D](#how-the-solution-scales-with-d)).
 
-How the double-double solver works (arithmetic, step control, Jacobians, mixed precision, τ grids, quad-double,
-continuation), its benchmarks and solve times, the point spacing, a sample of the computed points and the three
-error indicators against D are in [notes/SOLVER_HP.md](notes/SOLVER_HP.md).
+#### Solving one point
 
-Why the continuation stalls past D ≈ 73 (the weak directions, the horizon-series wall, the drop-offs, with their
-figures) is in [notes/LARGE_D_WALL.md](notes/LARGE_D_WALL.md); the diagnosis and the continuation in D are
-[notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), sections 12 and 13.
+The unknowns are the fields at a few nodes in x, the centre and horizon data, and Δ, each field on M collocation points
+in τ over the half period. The residual shoots between the nodes: a series at the centre, Taylor steps of order 36
+between the nodes (planned so that each step's truncation term is about 10⁻³²), and a series at the horizon, the two
+series run until their tails fall below 10⁻³³. Newton solves it with the exact Jacobian from forward-mode duals[^17],
+or with an f64 Jacobian and the residual kept in double-double. How it works in detail, its benchmarks and solve times,
+the point spacing, a sample of the points and the error indicators against D are in
+[notes/SOLVER_HP.md](notes/SOLVER_HP.md). Why the continuation stalls past D ≈ 73 (the weak directions, the
+horizon-series wall, the drop-offs) is in [notes/LARGE_D_WALL.md](notes/LARGE_D_WALL.md), and the diagnosis in
+[notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), section 12.
 
 #### The continuation in D
 
 Past D ≈ 73 the chain is carried in D by an exact Taylor continuation, the asymptotic numerical method[^23]
 (`hp/anm_run.py`). It continues the pinned system, in which p₁'s harmonics 5–13 are held on a power-law trend in D
-(notes/QUAD_DOUBLE.md 13.18). Each step has a predictor, an optional re-seed and a corrector.
-
-- **Predictor.** At a converged base D₀ the branch's Taylor coefficients z₁, …, z₂₄ in h = D − D₀ come order by order
-  from one quad-double LU of the Jacobian. The right-hand side of order k is the quad-double jet of the lower orders,
-  with the dimension entered into the kernel as the jet's variable. The step a is where the series' last term falls to ε
-  of its first, capped at h_max, and the prediction Σ z_k aᵏ is summed by Horner's rule in quad-double.
-- **Re-seed.** The horizon data (m_h, a_h) enter through a series summed at the last node, where the mass mode amplifies
-  their errors by G = 0.7^−(D−3), about 10²⁰ at D = 131. `--reseed` replaces them by those of the regular solution
-  through the predicted last node: the node is integrated toward the horizon, and the horizon series is inverted on the
-  rungs u₀/32, …, u₀, each rung's Newton starting from the last rung's data and the last one polished in quad-double
-  (`hp/reseed.py`, [notes/RESEED.md](notes/RESEED.md)).
-- **Corrector.** Newton in quad-double on the pinned system at D₀ + a, to max |F| ≤ 10⁻²⁸. With `--reseed 2` every trial
-  point is re-seeded first, so the horizon data are eliminated. A failed correction halves a, three times at most, and
-  keeps the series.
+(notes/QUAD_DOUBLE.md 13.18). Each step has a predictor, an optional re-seed and a corrector, and a failed correction
+halves the step, three times at most, keeping the series.
 
 ![One step of the continuation in D: base, quad-double jets, step, prediction, re-seed, corrector, then a new base or a halved step](hp/algo_step.svg)
 
-The predictor, the re-seed and the corrector are animated with the elimination pilot's measured values in
-[`hp/algo_predictor.svg`](hp/algo_predictor.svg), [`hp/algo_reseed.svg`](hp/algo_reseed.svg) and
-[`hp/algo_corrector.svg`](hp/algo_corrector.svg). The design, its checks and the runs are in
-[notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), sections 13.15–13.23.
+**Predictor.** At a converged base D₀ the branch's Taylor coefficients z₁, …, z₂₄ in h = D − D₀ come order by order
+from one quad-double LU of the Jacobian. The right-hand side of order k is the quad-double jet of the lower orders, with
+the dimension entered into the kernel as the jet's variable. The step a is where the series' last term falls to ε of its
+first, capped at h_max, and the prediction Σ z_k aᵏ is summed by Horner's rule in quad-double.
+
+![The predictor: a toy branch's partial sums converging order by order, beside the chain's series terms at D 128.56 and 131.06](hp/algo_predictor.svg)
+
+**Re-seed.** The horizon data (m_h, a_h) enter through a series summed at the last node, where the mass mode amplifies
+their errors by G = 0.7^−(D−3), about 10²⁰ at D = 131. `--reseed` replaces them by those of the regular solution
+through the predicted last node: the node is integrated toward the horizon, and the horizon series is inverted on the
+rungs u₀/32, …, u₀, each rung's Newton starting from the last rung's data and the last one polished in quad-double
+(`hp/reseed.py`, [notes/RESEED.md](notes/RESEED.md)). Each rung's residual falls to the double-double floor 2⁻¹⁰⁶ G(u),
+and the quad-double polish at u₀ to 2⁻²¹² G(u₀).
+
+![The re-seed: the last node integrated toward the horizon, the series inverted on the rungs, and each rung's residual against the double- and quad-double floors](hp/algo_reseed.svg)
+
+**Corrector.** Newton in quad-double on the pinned system at D₀ + a, to max |F| ≤ 10⁻²⁸. With `--reseed 2` every trial
+point is re-seeded first, so the horizon data are eliminated.
+
+![The corrector: the prediction re-seeded, a Newton step, the trial re-seeded, beside max |F| at each quad-double Newton iterate](hp/algo_corrector.svg)
+
+The animations show the elimination pilot's measured values (`hp/plot_algorithm.py`). The design, its checks and the
+runs are in [notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), sections 13.15–13.23.
+
+#### Checks and accuracy
 
 <details>
 <summary>Checks of the solver</summary>
