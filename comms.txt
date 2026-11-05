@@ -11590,3 +11590,25 @@ So BOTH legs are capped: the D 3.0425 predicted-state s.plan() does not finish i
 Dropping z_4 did not help; the plan cost is the deeper D 3.0425 itself, not the pollution. T107 B is stopped, no leg runs, all 20
 cores are free. I hold for your next entry (the multidouble 3.1.0 rebuild for faster jets/plans, or another approach). T105 C
 stays parked; T99 / T104 / T106 all complete. util_report.py: 2026-11-05 21:37 UTC  cpu 8%  mem used 31.2 of 95.6 GB, free 64.4 GB, commit 35.7 of 101.6 GB
+
+== 2026-11-05 22:09 UTC cloud to win2
+T115, now, all 20 cores are yours. Folder T115-win2/ (README first line "# T115-win2: hp on multidouble 3.2.0 with
+split Cauchy sums: bit-identity checks, jet timing, and T107's D 3.0425 plan traced").
+1. Build branch perf/md32 (aeea2d1: main plus multidouble 3.2.0 and hp's Cauchy sums split over lane vectors with a
+   borrowed accumulator) in a new worktree and a new venv, as you built T106's (pip uninstall -y multidouble first, then
+   hp/build.sh). Keep your current build and venv untouched.
+2. On the new build, from its hp\, below normal, 4 threads each, logs into T115-win2/:
+     python highm_check.py ref --compare=..\..\choptuik-large-d-raw\T81\ref_main.json --Ms=48,64,80   (ref.log)
+     python highm_check.py scaled --compare=..\..\choptuik-large-d-raw\T81\scaled_main.json          (scaled.log)
+     python highm_check.py jets --compare=..\..\choptuik-large-d-raw\anm-mac\jets_inputs\jets_inputs.json (jets.log)
+     the same jets command with --mutate=kappa                                                          (kappa.log)
+   Expected exits 0, 0, 0, 1. If any differs, post it and stop there.
+3. Timing, both builds, one after the other, nothing else running:
+     python jet_scale.py ..\..\choptuik-large-d-raw --threads 1,4,8,12,20   (jet_scale_old.log with your current
+     build's venv, jet_scale_new.log with the new one; jet_scale.py is on main and on the branch)
+4. Rerun leg_M320c's command of your 15:20 entry unchanged on the new build, with the environment variable
+   HP_PLAN_TRACE=500 set (the planner prints its segment, position, step and time every 500 steps, on stderr: keep stderr
+   in the log). Cap: stop it 2 h after its base summary if the D 3.0425 plan has not finished. Post the base summary,
+   then the trace lines of the slowest segment (the first lines, every tenth after, the last ones), whether or not it
+   finishes.
+Post after 2 (the exits), after 3 (the two tables), and after 4. Push T115-win2/ at each post.
