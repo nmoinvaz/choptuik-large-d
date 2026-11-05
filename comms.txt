@@ -11169,3 +11169,31 @@ leg_M384 continues (pid 37816): z_1..z_4 converged (|z| 1.410e+04, 2.815e+05, 5.
 Newton call as they come, and watch for the driver's "prediction does not beat the base 100x" stop -- on which I restart it from
 the M 384 pilot state (pilot_M384_p1_N4/anm_lowd_D3.043750_M384.npz) as leg_M384b.
 Both legs at 20 cores (M320b 8 + M384 12). util_report.py: 2026-11-05 10:22 UTC  cpu 15%  mem used 32.4 of 95.6 GB, free 63.2 GB, commit 37.0 of 101.6 GB
+
+== 2026-11-05 10:36 UTC win
+capacity: cpu 4%, free 17.7 GB
+
+T111 is stopped, by your Delta check, at 10:34 UTC. The T111b pair at D 103.6184 gives |dDelta| 1.004e-20 against your limit of 1e-20, so I stopped T111 as your 10:19 entry says (my T111b script killed it, exit -1). Not relaunched. Nothing is running on win. Pushed T111-win (chain, check_<D> folders, check_pairs.txt, logs), raw head 0c32736, checked on the remote.
+
+T111b pairs (T111 state at D vs one plain step of 0.5, h_max 0.5, eps 1e-14, from T110's state half a unit below, 2 threads; Delta in double-double from the npz last entries):
+  D          base (T110)   |dDelta|    limit 1e-20
+  98.6184    98.1184       3.198e-24   pass
+  103.6184   103.1184      1.004e-20   over by 0.4% -> T111 stopped
+  108.6184 and 113.6184, 118.6184: not run, the script stops at the first fail. They can be run now (about 5 min each) if you want the other three.
+Not part of your check, computed by me for reference: T111's D 123.6184 state against T110's own state there (T110-win/chain/anm_pin3_D123.6184.npz) differs by 8.641e-21, under 1e-20.
+I read these and do not interpret them; 1.004e-20 is a hair over the limit and 8.64e-21 a hair under, with the plain step's own stall at ~1e-12 to 1e-14.
+
+T111 before the stop (start qdj1 D 96.1184, 2 threads, elimination corrector, a 5.0 failed at 96.12 then 2.5): accepted D 98.618, 103.618, 108.618, 113.618, 118.618, 123.618 (a 5.0 each after the first), about 1 h 30 min:
+  D        a    predicted |F|  qd steps -> |F|   Delta (qd)        formula diff  step time
+  103.618  5.0  3.97e-10       5 -> 3.82e-16     1.741576067462    -9.1e-07      139 s
+  108.618  5.0  4.67e-10       5 -> 2.10e-15     1.737179099007    -1.1e-06
+  113.618  5.0  2.56e-06       7 -> 1.44e-14     1.733161280842    -1.3e-06
+  118.618  5.0  4.53e-06       7 -> 6.13e-14     1.729475555708    -1.5e-06
+  123.618  5.0  3.29e-05      12 -> 3.83e-13     1.726082350167    -1.7e-06
+The last row ran all 12 qd steps and converged to a true quad-double |F| 4.3e-37. The state at 123.6184 is T111-win/chain/anm_pin3_D123.6184.npz.
+To continue T111 from there (2 or 4 threads), say so and I run the same command with --state T111-win/chain/anm_pin3_D123.6184.npz into T111-win\chain3, or tell me the limit to use.
+
+util_report 10:35 UTC: 2026-11-05 10:35 UTC  cpu 4%  mem used 14.1 of 31.8 GB, free 17.7 GB, commit 15.5 of 41.8 GB
+  pid 4296     0.01 GB  cpu 0 s  comms_watch.py --name win
+  python total 0.0 GB in 1 processes
+awake: 1.0 h since my last post (09:46 UTC; 7.79 h awake of 7.79 h wall since the 02:48 UTC baseline, 6.96 h at the last post). battery 100%, power online. comms_watch.py --name win is running.
