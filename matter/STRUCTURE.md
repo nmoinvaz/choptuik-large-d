@@ -316,8 +316,9 @@ free (elementary): the flat outer problem is nonlinear at leading order, unlike 
 Cannot compete (argued). Flat Yang–Mills blows up self-similarly for d ≥ 5 (D ≥ 6) with O(1) amplitude, but with gravity
 an O(1) field at radius r has gravitational strength ∼ $`n\,\ell_{\rm YM}^2/r^2`$; a blowup that shrinks to
 $`r \lesssim \sqrt n\,\ell_{\rm YM}`$ is inside its own strong-gravity region and forms a black hole of that size. So the
-flat blowup ends in black holes with a mass gap; it is not a threshold phenomenon. The type II threshold is the U-system's
-critical solution, as in D = 4.
+generic flat blowup ends in black holes with a mass gap. The flat critical solutions (W₁ in d = 5, and u* or u₋ in odd
+d ≥ 11, LITERATURE.md §4.2) would by the same argument give a black-hole threshold with a mass gap, not a type II one
+(argued). The type II threshold is the U-system's critical solution, as in D = 4.
 
 ## 6. Wave maps
 
@@ -445,7 +446,10 @@ truncation; its first 1/n correction would need the O(1/n) inner equations.
   step: continuation in a continuous ℓ from ℓ = 0, where λ = 2 and its multiplier derivative are available.
 - **The symmetry search is complete only within polynomial infinitesimals of bounded degree** (≤ 3 for the multiplet
   and wave maps, the latter with cos 2u, sin 2u factors on degree ≤ 1; ≤ 2 for the complex scalar). A generalized or non-local symmetry of weight 2 for ℓ ≥ 1 is not
-  excluded, though nothing suggests one.
+  excluded. In flat Yang–Mills in d = 5 an exact growth rate (λ = 5 for every excited profile) comes from a
+  profile-universal identity on the self-similar reduction, not from a point symmetry ([B26] in LITERATURE.md). A search
+  of that kind has not been run for the inner systems. A test of the inner selection on the flat Yang–Mills family is queued in
+  [YM_FAMILY.md](YM_FAMILY.md).
 - **ℓ ∝ n** needs the turning-point layer with gravity written out, including how the time dependence enters.
 - **Yang–Mills:** that the type II threshold in D ≥ 6 is the U-system's critical solution is argued, not shown; no
   Einstein–Yang–Mills collapse in D ≥ 5 has been computed.

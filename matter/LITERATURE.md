@@ -188,6 +188,8 @@ r\frac{\alpha_r}{\alpha} = \frac{a^2-1}{2} + \Phi^2 + \Pi^2 - \frac{a^2}{2r^2}(1
 - [MR18] studied the general (non-magnetic) spherical SU(2) system. There type I disappears and the threshold is always
   type II, but the critical solution differs from the magnetic DSS one, and universality may be lost. In the magnetic
   sector they measure γ = 0.20018 ± 0.00017.
+- [SMH26] evolved the magnetic system with characteristic methods out to null infinity. They found Δ ≃ 0.7388 and
+  γ = 0.1977 ± 0.0009, and the same echoing in the Bondi mass and news.
 
 **Why the type II solution is only asymptotically self-similar.** The coupling G/g² is a length squared, so EYM is not
 scale invariant. *(Remark: this holds in every D, since G/g² has dimension length² in all D.)* [G97] states that "the
@@ -225,6 +227,15 @@ that is, (D − 4)/r and (D − 3)/r² = (n − 1)/r².
   - [CST98] proved existence for some d; [BT01] cite d = 5, 7, 9.
   - In d = 5 the generic blowup profile is $`W_0 = (1-\eta^2)/(1+\tfrac35\eta^2)`$, η = r/(T − t). The threshold
     between blowup and dispersal is the excited solution W₁, with one unstable mode of eigenvalue 5 [BT01].
+  - *d = 5, excited profiles:* every $`u_n`$, n ≥ 1, has the exact least unstable eigenvalue 5, with an eigenfunction
+    built from the profile [B26]. It comes from a profile-universal identity, not from a Lie point symmetry.
+  - *odd d ≥ 11:* the smooth self-similar profiles correspond to the zeros in (0, 1) of an explicit polynomial of
+    degree (d − 5)/2, the light-cone resonance condition (proved, [BGW26]). There are at least three in every odd
+    d ≥ 11 [BK26]: exactly three for 11 ≤ d ≤ 35 by explicit computation [BGW26], and for 11 ≤ d ≤ 101 by
+    "AI-assisted exact root-counting computations" [BK26]. Two are explicit, u₊ (the ground state below) and u₋, the
+    same form with the signs of the square roots reversed. The third, u*, is numerical. Numerically u* is the threshold
+    solution for 11 ≤ d ≤ 17 and u₋ for d ≥ 19 (one unstable mode besides the gauge mode, [BGW26]), and the two cross at
+    d ≈ 17.22 [BK26].
 
 **The ground state in every d.** [BB15] give it in closed form (their Yang–Mills equation uses u = 1 − w, and their d
 is the present d − 2). In the form of [Gl23]:
@@ -248,7 +259,10 @@ inner scale as the DSS scalar. With s = r²/(2(d − 3)) and t unscaled, the equ
 w_\infty = 1 - \frac{2\alpha_\infty\,s}{2s + c_\infty\,t^2}, \qquad \alpha_\infty = 2\Big(1+\frac{1}{\sqrt3}\Big),\ c_\infty = \frac{2+\sqrt3}{3},
 ```
 
-and $`w_\infty`$ solves the leading-order equation exactly. The 1/s potential is nonlinear and cannot be removed.
+and $`w_\infty`$ solves the leading-order equation exactly. The 1/s potential is nonlinear and cannot be removed. The
+explicit u₋ of [BGW26] has the inner limit of the same form with α = 2 − 2/√3 and c = (2 − √3)/3, which also solves the
+leading-order equation exactly (remark, checked symbolically; `solver/matter/lit_remarks_check.py` part 4, whose
+controls, α or c off by 1%, leave a nonzero residual).
 Linearized about the vacuum (w = 1 − δ), the equation has the potential $`2(n-1)\delta/r^2`$. In flat space, δ = r²g
 turns it into the radial wave equation in D + 2 dimensions, as for an ℓ = 1 field.
 
@@ -356,7 +370,8 @@ u_0 = 2\arctan\frac{r}{\sqrt{d-2}\,(T-t)} .
 ```
 
 So the flat-space blowup of wave maps has an n-free inner problem at x ~ √n, like the gravitating scalar, but with a
-nonlinear 1/s potential that cannot be removed. No large-d study of wave-map or Yang–Mills blowup was found.
+nonlinear 1/s potential that cannot be removed. No study of the limit d → ∞ of wave-map or Yang–Mills blowup was
+found. Self-similar Yang–Mills blowup has been studied at every fixed odd d ≥ 11 [BGW26, BK26] (§4.2).
 
 ## 6. Vacuum collapse
 
@@ -528,7 +543,8 @@ mass drops out of the leading-order equations.
 - **[GHMG25]** The 2025 review covers D-dependence for the scalar, Einstein–Gauss–Bonnet, Kaluza–Klein, Bianchi IX in
   4+1 and 8+1, and σ-models. The parts we could read do not discuss large D.
 
-**Not found:** any large-D study of the ℓ-multiplet, the complex scalar, Yang–Mills (with or without gravity),
+**Not found:** any large-D study of the ℓ-multiplet, the complex scalar, Yang–Mills (with or without gravity; flat
+Yang–Mills at high fixed odd d is in [BGW26, BK26], with no limit d → ∞),
 σ-models or wave maps (with or without gravity), axion–dilaton, perfect fluids, or vacuum collapse.
 
 ## 10. Recommendations
@@ -605,6 +621,10 @@ Journal reference and arXiv number checked unless noted.
 - [G97] C. Gundlach, PRD 55, 6002 (1997), [gr-qc/9610069](https://arxiv.org/abs/gr-qc/9610069).
 - [CHM99] M. W. Choptuik, E. W. Hirschmann, R. L. Marsa, PRD 60, 124011 (1999), [gr-qc/9903081](https://arxiv.org/abs/gr-qc/9903081).
 - [MR18] M. Maliborski, O. Rinne, PRD 97, 044053 (2018), [arXiv:1712.04458](https://arxiv.org/abs/1712.04458).
+- [SMH26] R. P. Santos, K. Marouda, D. Hilditch, PRD 113, 024058 (2026), [arXiv:2510.25534](https://arxiv.org/abs/2510.25534) *(the subagent's reading, notes/YANG_MILLS_AI.md N3)*.
+- [BGW26] P. Bizoń, I. Glogić, A. Wasserman, PRD 114, 064021 (2026), [arXiv:2602.00345](https://arxiv.org/abs/2602.00345).
+- [BK26] P. Bizoń, R. Kluszczyński, [arXiv:2610.36784](https://arxiv.org/abs/2610.36784) (2026, preprint).
+- [B26] P. Bizoń, [arXiv:2611.04861](https://arxiv.org/abs/2611.04861) (2026, preprint).
 - [BT01] P. Bizoń, Z. Tabor, PRD 64, 121701 (2001), [math-ph/0105016](https://arxiv.org/abs/math-ph/0105016).
 - [CST98] T. Cazenave, J. Shatah, A. S. Tahvildar-Zadeh, Ann. Inst. H. Poincaré Phys. Théor. 68, 315 (1998) (no arXiv version found).
 - [BB15] P. Biernat, P. Bizoń, Comm. Math. Phys. 338, 1443 (2015), [arXiv:1409.8214](https://arxiv.org/abs/1409.8214).

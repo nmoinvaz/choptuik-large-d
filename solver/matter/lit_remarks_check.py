@@ -48,3 +48,25 @@ w0 = 1 - a_inf*2*s/(2*s + c_inf*T**2)
 res0Y = sp.diff(w0, T, 2) - (sp.diff(w0, s) + w0*(1 - w0**2)/(2*s))
 print("YM inner residual:", sp.simplify(res0Y))
 print("alpha(inf), beta/d(inf):", sp.N(sp.limit(alpha, d, sp.oo)), sp.N(sp.limit(beta/d, d, sp.oo)))
+
+# 4. The second explicit YM profile u_- of Bizon-Glogic-Wasserman (the square roots' signs reversed), smooth for d > 10,
+# and its inner limit; the controls (c and alpha off by 1%) must leave a nonzero residual. Exit 1 on any failure.
+bad = []
+am = 2*(1 - sp.sqrt((d-4)/(3*(d-2))))
+bm = sp.Rational(1, 3)*(2*d - 8 - sp.sqrt(3*(d-2)*(d-4)))
+wm = 1 - r**2*am/(rho**2 + bm)/T**2
+resM = sp.diff(wm, T, 2) - (sp.diff(wm, r, 2) + (d-3)/r*sp.diff(wm, r) + (d-2)/r**2*wm*(1 - wm**2))
+for dv in [11, 19, 35]:
+    v = sp.N(resM.subs({d: dv, r: sp.Rational(7, 5), T: -sp.Rational(2, 3)}), 60)
+    print("YM u_- exact residual d=%d:" % dv, v, "beta_- =", sp.N(bm.subs(d, dv), 6))
+    bad += [] if abs(v) < 1e-50 else ["u_- profile d=%d" % dv]
+for name, a, c in (("u_+", a_inf, c_inf), ("u_-", 2*(1 - 1/sp.sqrt(3)), (2 - sp.sqrt(3))/3)):
+    for mut, fa, fc in (("none", 1, 1), ("c x 1.01", 1, sp.Rational(101, 100)), ("alpha x 1.01", sp.Rational(101, 100), 1)):
+        wi = 1 - a*fa*2*s/(2*s + c*fc*T**2)
+        ri = sp.simplify(sp.diff(wi, T, 2) - (sp.diff(wi, s) + wi*(1 - wi**2)/(2*s)))
+        zero = ri == 0
+        print("YM %s inner residual, mutation %s: %s" % (name, mut, "0" if zero else "nonzero"))
+        bad += [] if zero == (mut == "none") else ["%s inner, mutation %s" % (name, mut)]
+print("alpha_-(inf), beta_-/d(inf):", sp.N(sp.limit(am, d, sp.oo)), sp.N(sp.limit(bm/d, d, sp.oo)))
+print("FAIL: " + ", ".join(bad) if bad else "all checks pass, every control fires")
+raise SystemExit(1 if bad else 0)
