@@ -2015,3 +2015,16 @@ The other three pairs pass the amended check too (`anm-mac/held_plan/D*.log`): o
 states agree to 1.1×10⁻³¹ at 108.62, 2.8×10⁻³³ at 113.62 and 7.4×10⁻³² at 118.62. Their raw differences, 2.8×10⁻²¹,
 2.2×10⁻²² and 2.7×10⁻²¹, are again the held values' effect alone, and the plans are equal. So from 98.62 to 123.62 the
 elimination corrector reaches the plain corrector's root of the same system at every pair, to quad-double.
+
+**The wall at D ≈ 128 and its two causes (2026-11-05 14:40 UTC; raw-data repository `anm-mac/pred_q/`).** T110 (plain
+corrector) stopped at 128.49 and T111 (elimination) at 127.99, both failing even at steps below 0.1 from predictions
+at the double-double floor. The horizon solves' refinement is converged there (four steps against two change F by
+3×10⁻⁴⁸), and the series do not end early in quad-double. One step each from the two stops, on the Mac, separates the
+causes. From T110's 128.4934 state at a = 0.0625, the prediction summed in double-double fails (the corrector stops at
+3.4×10⁻¹⁵ with no trial accepted). Summed in quad-double from the base's four parts (`anm_run.py --pred_q`), it
+converges in 3 steps to 7.5×10⁻⁴⁵. From 127.9934 the elimination corrector fails at 0.078 and 0.039, and at 0.0195 its
+re-seed itself fails (the u₀ rung stops at 3.5×10⁻¹³; its inversions are double-double Newton, whose floor grows with
+G, amendment 10 of `notes/RESEED.md`). So past 128 the double-double rounding of the prediction, about ε_dd·G in F,
+exceeds what the plain corrector's first step tolerates. The re-seed's double-double floor does the same for the
+elimination. The chain continues with the plain quad-double corrector and `--pred_q`. The elimination would need its
+re-seed in quad-double to go on.
