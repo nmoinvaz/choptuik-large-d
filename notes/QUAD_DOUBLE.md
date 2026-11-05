@@ -1988,3 +1988,10 @@ not yet tested: the prediction is formed in double-double, so its horizon data c
 node does not imply. The first-step diagnostic of `notes/RESEED.md` shows that such an error grows by about G in the
 plain Newton step, and G is about 2×10¹⁹ at D 128. The elimination corrector removes that error at every trial, and
 T111 runs with it from 96.12, now on all of win's cores.
+
+**T111's first steps (2026-11-05 09:46 UTC, win; `T111-win/chain.log`).** The step of 5 from 96.12 failed after 12
+damped corrector steps, where the Mac's pilot had converged from the same state in 5. The two did not run the same
+corrector: win's commit a5c7b26 has amendment 10's floor test as its default, and the pilot ran before it. The halved
+step of 2.5 converged, then a full 5 to 103.62. With its D at 98.62 + 5k, off T110's grid, the check against T110 is
+made by one plain step of 0.5 from T110's state half a unit below each of T111's D up to 118.62 (T111b), and directly
+at 123.62, with the same bound of 10⁻²⁰.

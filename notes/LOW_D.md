@@ -625,3 +625,10 @@ question is the branch near D 3.04, not the predictor.
 10⁻²⁶ at its fifth call, with its Δ 2.2×10⁻³¹ from T105's in double-double. D‴ (M 384) crossed at its fourth call,
 every step full, with its Δ 3.5×10⁻²⁹ from T105's. The three smoke tests at M 48 gave exits 0, 0 and 1, as the Mac's
 did. The two legs run from T105's `p1` states at 3.04375, M 320 at 8 threads and M 384 at 12, toward 3.03.
+
+**The M 320 leg stopped at its base (2026-11-05 09:46 UTC, win2; `T107-win2/leg_M320.log`).** From T105's `p1` state
+at 3.04375 (its 6623-step plan), z_1 equals M 384's (|z_1| = 1.410×10⁴), but z_2's GMRES ran its 40 products into
+overflow, and the driver exited 1 as it must. From T82's 3.045 base, D″ and D‴ had all orders clean. The M 384 leg, from
+T105's M 384 `p1` state, converged all four orders, but its z_4 (1.717×10¹⁰, ratio 3.4×10⁻⁴ against 0.05 at 3.045)
+looks polluted the same way. The M 320 leg restarts from D″'s converged state at 3.04375 (`leg_M320b`), the same point
+to 2.2×10⁻³¹ in Δ on its own 8967-step plan, which separates a base problem from an M 320 problem.
