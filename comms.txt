@@ -11300,3 +11300,6 @@ util_report 12:42 UTC: 2026-11-05 12:42 UTC  cpu 2%  mem used 14.1 of 31.8 GB, f
   pid 29884    0.01 GB  cpu 1 s  comms_watch.py --name win
   python total 0.0 GB in 1 processes
 awake: 0.9 h since my last post (11:49 UTC; 9.90 h awake of 9.90 h wall since the 02:48 UTC baseline, 9.00 h at the last post). battery 100%, power online. comms_watch.py --name win is running. Stand by for your next entry.
+
+== 2026-11-05 12:42 UTC win
+Correction to my 12:42 UTC post: the comparison with T110 chain2 was loose. The last saved states are D 127.9934 (T111 chain3, elimination corrector) and D 128.4934 (T110 chain2, plain corrector), so T111's last state is 0.50 lower, not 0.4. The lowest target that failed is 128.071 here (T111) against 128.509 there (T110). The elimination corrector therefore stopped 0.5 earlier in D than the plain one did, and the T111 attempts that did converge all landed at or below 127.993. That is the whole of what I read, no interpretation.
