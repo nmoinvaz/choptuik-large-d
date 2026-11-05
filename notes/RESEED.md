@@ -340,8 +340,8 @@ reseed-mac/basin/*.jsonl`). The "back" and "converged" measures are those of ame
 10⁻⁵ converges back to the truth, within 6×10⁻²⁴ in z and 7×10⁻²⁵ in Δ (at 10⁻⁵), in 4–7 steps. The starts' max |F|
 runs from 3.7×10⁻¹² to 1.8×10³². At 10⁻⁴ the re-seed itself fails: its u₀ rung stops at |R| = 4.3×10⁻⁴ after 30 steps,
 from a start at 1.4×10⁴⁰. That run was stopped by hand without its corrector and is recorded as not converged. So
-along the direction the predictor actually errs in, elim's basin is 10⁻⁵, 10⁷ times its white-noise basin (10⁻¹²) and
-10²² times the plain corrector's in data. Which floor rule this run loaded is not known (amendment 9's status). The δ up
+along the direction the predictor actually errs in, elim's basin is 10⁻⁵. That is 10⁷ times its white-noise basin
+(10⁻¹²). The plain corrector failed on this kind of error from 6.5×10⁻¹⁹ (the jump at h = 2), 10¹³ times closer. Which floor rule this run loaded is not known (amendment 9's status). The δ up
 to 10⁻⁵ converged with the u₀ rung far above the floor (start residuals 10⁻¹¹ and up), where both rules decide alike.
 
 **Family A at 84.9073, the task's test as stated (node and centre data only; seed 1).**
