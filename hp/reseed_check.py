@@ -3,6 +3,8 @@
 
     python3 reseed_check.py basin STATE.npz OUT.jsonl --family A|B --arm plain|reseed|elim [--seeds 1,2,3]
         [--deltas 1e-12,1e-11,...,1e-2] [--threads 2] [--mutate none|skip] [--qd_it 12]
+    python3 reseed_check.py summary OUT.jsonl ...
+    python3 reseed_check.py firststep STATE.npz OUT.jsonl [--deltas 1e-12,1e-14] [--groups centre,nodes,data,Delta,all]
     python3 reseed_check.py jump RAWDIR STATE.npz OUT.jsonl [--hs 2,5,10] [--arms reseed,elim,plain] [--threads 2]
 
 basin: the truth (a converged chain state) perturbed by delta along a random direction per seed (family A: the centre
@@ -176,6 +178,44 @@ def firststep(argv):
     return 0
 
 
+def summary(argv):
+    """the basins of 3.3 from basin records (OUT.jsonl files): per (D, family, arm, mutate) and seed, the largest delta
+    with every run up to it back at the truth (and, separately, converged); the arm's basin is the smallest over its
+    seeds. A later record of the same (seed, delta) replaces an earlier one."""
+    runs = {}
+    for path in argv:
+        for line in open(path):
+            r = json.loads(line)
+            if r.get("test") != "basin":
+                continue
+            runs[(round(r["D"], 4), r["family"], r["arm"], r.get("mutate", "none"), r["seed"], r["delta"])] = r
+    groups = {}
+    for (D, fam, arm, mu, seed, delta), r in runs.items():
+        groups.setdefault((D, fam, arm, mu), {}).setdefault(seed, []).append((delta, r["back"], r["conv"]))
+    print("| D | family | arm | seeds | basin (back) | basin (converged) | per seed back / converged / first failure |")
+    print("|---|---|---|---|---|---|---|")
+    for key in sorted(groups):
+        per = []
+        for seed, lst in sorted(groups[key].items()):
+            lst.sort()
+            def edge(i):
+                best = None
+                for d, *flags in lst:
+                    if flags[i]:
+                        best = d
+                    else:
+                        return best, d
+                return best, None
+            (b, fb), (c, fc) = edge(0), edge(1)
+            per.append((seed, b, c, fc if fc is not None else fb))
+        fmt = lambda v: "none" if v is None else f"{v:.0e}"  # noqa: E731
+        bb = None if any(p[1] is None for p in per) else min(p[1] for p in per)
+        cc = None if any(p[2] is None for p in per) else min(p[2] for p in per)
+        print(f"| {key[0]} | {key[1]} | {key[2]}{'' if key[3] == 'none' else ' (' + key[3] + ')'} | {len(per)} | {fmt(bb)} | {fmt(cc)} | "
+              + ", ".join(f"{s_}: {fmt(b_)} / {fmt(c_)} / {fmt(f_)}" for s_, b_, c_, f_ in per) + " |")
+    return 0
+
+
 def trend_slopes(raw, M, ks_held, folder="T75"):
     """anm_run.py --trend: the exponents s of |v| ~ n^s per held coefficient from the stored states of folder (every fourth),
     the same rule (constant sign, at least 6 states, fit residual in ln|v| below 0.05; else 0)"""
@@ -315,6 +355,8 @@ def jump(argv):
 
 
 if __name__ == "__main__":
+    if len(sys.argv) > 2 and sys.argv[1] == "summary":
+        sys.exit(summary(sys.argv[2:]))
     if len(sys.argv) > 2 and sys.argv[1] == "firststep":
         sys.exit(firststep(sys.argv[2:]))
     if len(sys.argv) > 2 and sys.argv[1] == "jump":
