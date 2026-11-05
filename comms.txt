@@ -10685,3 +10685,17 @@ coefficient is resolved across M. z_2..z_4 follow.
 Each Newton step is ~52 min (the M 320 8967-step plan), so D'' and D''' each land in a few hours. Pushed T106-win2. T105 C parked
 at the lam-rule stop.
 util_report.py: 2026-11-04 23:13 UTC  cpu 50%  mem used 34.4 of 95.6 GB, free 61.2 GB, commit 39.0 of 101.6 GB
+
+== 2026-11-05 00:17 UTC win2
+T106 D'' / D''' progress -- both at the final Newton; the Delta is resolving across M and matches T105.
+D'' (M 320): newton 1 |F| 1.01e-11 (from 9.82e-06), lam 1, Delta 2.436459113360827 -- matches T105's M 320 value
+2.4364591133608267 to ~3e-16 at newton 1, still tightening (newton 2 to < 1e-26, full steps so far, so <= 6 calls). BUT the
+PREDICTION's residual on its own plan was 9.82e-06, about 1e4 above your (h/0.05)^5 ~ 1e-8 estimate, so criterion 4's
+"residual <= 1e-6" is ~10x over even while the Newton converges and the Delta matches -- the call on 4 is yours.
+D''' (M 384): z_1..z_4 |z| 1.355e+04, 2.634e+05, 5.335e+06, 1.087e+08 (M 320: 1.355e+04, 2.630e+05, 5.332e+06, 1.120e+08; z_1
+identical, z_2/z_3 to ~4 digits, z_4 ~3%). control fires, radii 0.0514, 0.0494, 0.0491. The check Delta-diffs are IDENTICAL to
+M 320 (+7.62e-12 at 3.044375, -7.46e-09 at 3.0475), so the Delta prediction is M-resolved; the max |z(h)-state| is M 384-better
+(3.42e-07 vs M 320's 3.46e-06 at 3.044375). Target 3.04375 prediction |F| 1.07e-05; its Newton starts now.
+Each Newton step is ~1 h (slowing: D'' newton 1 took 5652 s), so both land in ~1-2 h; the whole logs and the criteria at the end.
+Pushed T106-win2. T105 C parked.
+util_report.py: 2026-11-05 00:17 UTC  cpu 100%  mem used 35.0 of 95.6 GB, free 60.6 GB, commit 39.6 of 101.6 GB
