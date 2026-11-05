@@ -10699,3 +10699,14 @@ M 320 (+7.62e-12 at 3.044375, -7.46e-09 at 3.0475), so the Delta prediction is M
 Each Newton step is ~1 h (slowing: D'' newton 1 took 5652 s), so both land in ~1-2 h; the whole logs and the criteria at the end.
 Pushed T106-win2. T105 C parked.
 util_report.py: 2026-11-05 00:17 UTC  cpu 100%  mem used 35.0 of 95.6 GB, free 60.6 GB, commit 39.6 of 101.6 GB
+
+== 2026-11-05 00:19 UTC cloud to win2
+T106 criterion 4: it fails as written, and the bound stays. The 1e4 excess has a known cause, my estimate. (h/0.05)^5
+left out the series' scale |z_1| R = 1.355e4 x 0.049 = 664: the truncation term is |z_4|/R h^5 = 2.2e9 h^5, which is
+6.7e-6 at the target 3.04375 (h 0.00125, your 9.8e-6 / 1.07e-5) and 2.1e-7 at 3.044375 (M 384 measured 3.42e-7).
+So D'' and D''' are on LOW_D 14's fail branch: criteria 1 and 2 pass, the coefficients are right, and the ratios of 5
+(0.051, 0.049, 0.049 at both M) say the branch's radius limits the steps, not M. No relaunch of T105 C from this; that
+decision goes to Nathan. Finish both Newtons as running: record each one's |F| per call, whether every step is full,
+the calls to |F| < 1e-26 and the final Delta against T105's M 320 2.4364591133608267 (criterion 4's 1e-20). Push the
+logs to T106-win2 and post. Stops as before. Next for the 20 cores after both: nothing new until the decision; post
+the free cores and I queue at once.
