@@ -62,7 +62,9 @@ checks the quad-double jet against the quad-double residual on a stored state.
 --reseed 1 replaces each prediction's horizon data (m_h, a_h) by those of the regular solution through its last node
 before the residual, the plan and the corrector (hp/reseed.py, notes/RESEED.md: the node integrated toward the horizon,
 the series inverted on the rungs u0/32 .. u0 in the m and a rows); 0, the default, changes nothing. Records carry each
-re-seed's rungs (reseed).
+re-seed's rungs (reseed). --reseed 2 does the same and runs the quad-double corrector with the horizon data eliminated
+(reseed.ElimQ: every point the corrector steps from or tries is re-seeded at u0 while its max |F| exceeds 1e-15), which
+converged from the series at a = 5 where the single re-seed did not (notes/RESEED.md 4.4).
 """
 import json
 import os
@@ -76,7 +78,7 @@ from hpkernel.driver import make_solver, newton_solve, deflated_newton, delta_co
 from multidouble import dd_add, dd_scale, dd_norm, qd_add_dd  # noqa: E402
 from pinning import PinnedQ, PinnedSolver, band_coeffs, band_field, qd_axpy  # noqa: E402
 from raw_out import require_raw  # noqa: E402
-from reseed import Reseeder  # noqa: E402
+from reseed import ElimQ, Reseeder  # noqa: E402
 from taylor_predict import formula_delta  # noqa: E402
 
 
@@ -191,13 +193,21 @@ def main():
         return opt["tol"] * opt["tol_growth"] ** float(Dx - D_start)
 
     last_q = {}
+    elim = {}             # --reseed 2: the attempt's Reseeder, for ElimQ in the corrector
 
     def correct(spx, ph, pl, tol):
         """T75's corrector (scan_hp.py dnp): deflated Newton, then plain Newton steps from below 1e-12 if they lower |F|;
         returns zh, zl, |F|, steps, accepted (converged, or stalled below accept_stall)"""
         if opt["corrector"] == "qd":
             sq = PinnedQ(spx.s, spx.ch, spx.cl)
+            if elim.get("rs") is not None:
+                # --reseed 2: the corrector on the system with the horizon data eliminated (hp/reseed.py ElimQ)
+                sq = ElimQ(sq, elim["rs"])
             z4, hist, conv = newton_qd(sq, qparts(ph, pl), tol=opt["tol_qd"], it_max=opt["qd_it"], w=opt["qd_w"], verbose=True)
+            if elim.get("rs") is not None:
+                print(f"      elim projections {sq.counts}", flush=True)
+                if not conv:
+                    z4 = elim["rs"].project(z4)[0]
             last_q["z4"] = z4
             Fh, Fl = spx.residual(z4[0], z4[1])
             Fc = float(rnorm(Fh, Fl))
@@ -496,10 +506,14 @@ def main():
                 ph, pl = series_at(zh, zl, Zh, Zl, a)
                 Dn = D + mp.mpf(a)                 # exact: the series variable is a to double-double precision
                 rsd = None
+                elim["rs"] = None
                 if opt["reseed"]:
-                    # --reseed 1: the prediction's horizon data from its last node (hp/reseed.py)
-                    zr, rsd = Reseeder(dict(M=M, nodes=nodes, kt=kt, kc=kc, ks=ks), Dn, threads=opt["threads"],
-                                       horizon_alpha=opt["horizon_alpha"]).reseed((ph, pl))
+                    # --reseed 1: the prediction's horizon data from its last node (hp/reseed.py); 2: also eliminated
+                    # inside the corrector
+                    rs_n = Reseeder(dict(M=M, nodes=nodes, kt=kt, kc=kc, ks=ks), Dn, threads=opt["threads"],
+                                    horizon_alpha=opt["horizon_alpha"])
+                    zr, rsd = rs_n.reseed((ph, pl))
+                    elim["rs"] = rs_n if opt["reseed"] == 2 else None
                     rsd = dict(ok=rsd["ok"], dropped=rsd["dropped"], seconds=rsd["seconds"],
                                rungs=[dict(u=r["u"], its=r.get("its"), R=r.get("R"), conv=r.get("conv")) for r in rsd["rungs"]])
                     print(f"    a {a:.4f}: re-seeded ({'ok' if rsd['ok'] else 'FAILED, prediction kept'}), {rsd['seconds']} s", flush=True)

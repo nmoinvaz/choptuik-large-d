@@ -168,6 +168,11 @@ from 96.1184 with the chain's options, `--h_max 2.5` and 2 steps (raw folder `re
 jump to 93.1184 showed that h = 2 converges with the re-seed. Its pass criterion is that both steps converge to
 `--tol_qd`, with Δ within 10⁻⁶ of the formula. 94.1184 runs before seeds 2 and 3 of 84.9073.
 
+*Amendment 6 of 2026-11-05 05:36 UTC, after elim converged at δ = 10⁻¹² (84.9073, seed 1) and on the jump to 96.1184,
+both where the single re-seed failed.* h = 10 from 91.1184 runs with the elim and re-seeded arms. The `anm_run.py` pilot
+uses `--reseed 2`, the elimination, with `--h_max 5 --eps 1e-6`, so that a_max allows a step near 5. Its criterion is
+unchanged. Elim also runs at 94.1184 (seed 1), and seeds 2 and 3 of both arms at 84.9073 come last.
+
 **3.4 Jump test** (only if 3.3 passes; `hp/reseed_check.py jump`). From the latest qdj1 state, the chain's quad-double
 series (anm_run.py's `coefficients_q`, N 24, the held harmonics on the T75 trend) is summed at h = 2, 5 and 10. Each
 prediction is re-seeded and corrected at D + h, with the held harmonics at the trend's values there. The plain arm runs
