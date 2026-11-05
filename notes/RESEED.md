@@ -270,4 +270,14 @@ error near 10⁻²¹, outside the plain corrector's reach (4.3).
 - Re-seeded: 32 s brings it to 3.2×10⁻¹⁸. The corrector converges in 3 steps to 8.9×10⁻⁴⁴, with Δ within 2.5×10⁻²¹ of
   the chain's state at 93.1184 (criterion 10⁻²⁰: pass) and the whole state within 2.6×10⁻¹⁹. The chain stepped there by
   two steps of 1.
-- Elim, first design: stalls at 3.7×10⁻¹⁸ (amendment 4), so it was rerun after the fix.
+- Elim, first design: stalls at 3.7×10⁻¹⁸ (amendment 4), so it was rerun after the fix. The fixed elim
+  (`jump_D91.1184_v2.log`) projects no point, since the re-seeded start is already below its switch, and gives the
+  re-seeded arm's result exactly.
+- Plain: fails. No trial of the first step is accepted (13 min), although the prediction lies within 6.5×10⁻¹⁹ of the
+  chain's state and its Δ within 8×10⁻²⁰. Its horizon data are off by about 10⁻²¹, which is enough.
+
+So the prediction at h = 2 is already as good as the chain's two steps of 1. What stops the plain corrector is only
+that its horizon data do not match its last node, and the re-seed removes exactly that. The series' terms at k = 24 are
+1.4×10⁻²⁵ hᵏ: 5×10⁻¹⁶ at h = 2.5 and 4×10⁻¹⁴ at h = 3, against a re-seeded basin near 10⁻¹³ (4.3). So with the
+re-seed this chain could step by about 2.5–3 instead of 1 (*conjecture*, from these two numbers). At h = 5 the
+smallest term is 8.5×10⁻⁹, and the prediction's max |F| is 1.9×10¹².
