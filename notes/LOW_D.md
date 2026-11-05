@@ -544,3 +544,72 @@ radius is about 0.05, which is the distance 0.045 from the base to D = 3, and th
 is high-order pollution, as at large D past order 5 (QUAD_DOUBLE.md 13.15). A radius of 10⁻⁶ would show from order 1.
 The test is D″, the same run at N = 4, whose truncation error at the checks is (h/0.05)⁵: 3×10⁻¹⁰ at 3.044375 and 10⁻⁸
 at 3.04375. If criteria 3 and 4 fail there too, the coefficients themselves are wrong.
+
+**D″ and D‴ (2026-11-05 00:17 UTC, win2, interim; `T106-win2/pilot_M320_p1_N4.log`, `pilot_M384_p1_N4.log`).** D″
+is the N = 4 run at M 320 and D‴ the same at M 384, both from the `p1` base at 3.045. Criteria 1 and 2 pass in both:
+the control fires, and every order converges in 4 products. z_1 is the same at both M (|z_1| = 1.355×10⁴), z_2 and z_3
+agree to about four digits, and z_4 to 3%. The ratios of criterion 5 are 0.0515, 0.0493, 0.0476 at M 320 and 0.0514,
+0.0494, 0.0491 at M 384. Criterion 3 fails, as follows.
+
+| check | M 320 max \|z(h) − state\| | M 384 max \|z(h) − state\| | Δ difference, both M |
+|---|---|---|---|
+| D 3.044375 (h −0.000625) | 3.46×10⁻⁶ | 3.42×10⁻⁷ | +7.62×10⁻¹² |
+| D 3.0475 (h +0.0025) | 8.99×10⁻⁴ | 3.08×10⁻⁴ | −7.46×10⁻⁹ |
+
+Criterion 4 fails too: the prediction's residual at the target 3.04375 is 9.82×10⁻⁶ at M 320 and 1.07×10⁻⁵ at M 384,
+against 10⁻⁶. The excess over the estimate of D′'s paragraph, (h/0.05)⁵ = 10⁻⁸, is that estimate's error. It left out
+the series' scale. With |z_k| ≈ |z_4| R^(4−k), the first omitted term is |z_4| h⁵/R = 2.2×10⁹ h⁵: 6.7×10⁻⁶ at the target
+and 2.1×10⁻⁷ at 3.044375, which matches M 384's 3.42×10⁻⁷. So this is the fail branch with 1 and 2 passing. The
+coefficients are right, and the ratios, unchanged between M 320 and M 384, say that the branch's radius (about 0.05,
+the distance to D = 3) limits the steps, not M. Newton from the M 320 prediction takes full steps, from 9.82×10⁻⁶ to
+1.01×10⁻¹¹ in its first call, and its Δ then lies within 3×10⁻¹⁶ of T105's M 320 value. Both Newtons are still running;
+their final calls and the 10⁻²⁰ comparison with T105 follow.
+
+## 15. T107: the low-D leg with the Taylor predictor (procedure, 2026-11-05 01:00 UTC)
+
+Written before the run, after Nathan's decision (2026-11-05): restart T105 C from the order-4 Taylor predictor under a
+new procedure, if T106's final Newton passes. The driver is `hp/lowD_taylor_leg.py` on branch `feat/jet-all-sizes`. It
+is Python only, built on `hp/anm_lowd.py`, so win2's venv-t106 build serves. From a converged state, each target is
+predicted by the series at the current base (N orders, as `anm_lowd.py`) and solved by Newton with the f64 Jacobian. A
+converged point (|F| below 10⁻²⁶ within `--newton_its` calls) becomes the next base. A failed attempt is retried at half
+the step from the same base, at most `--halvings` times, and then the leg stops. At every attempt the driver also
+records the residual of the base state itself on the target's plan (the zeroth-order predictor), and it stops when the
+prediction is not at least 100 times better.
+
+**Start condition.** D″'s Newton at 3.04375 reaches |F| below 10⁻²⁶ in at most 6 calls, all with full steps. Its Δ, in
+double-double, equals that of T105's `T105-win2/states/lowDhm_x0.000157-0.975_p1_D3.0438_M320.npz` to 10⁻²⁰. D‴
+passes the same against the M 384 `p1` file. If either fails, T107 does not start, and the post goes to the
+coordinator.
+
+**A. Smoke test** at M 48 from `hp/data/lowD_states/lowD_D4.0000_M48.npz`, targets 3.99, 3.98, `--newton_its 4`, with
+each `--mutate`. The plain run reaches both targets (exit 0). `halve` gives the first attempt at each target one Newton
+call, so it fails, the half step converges and the leg still reaches both targets (exit 0, with a halved attempt in
+`leg.jsonl`). `const` replaces the prediction by the base state, so the check fails at the first target (exit 1). On
+win2 the same three runs come first, with the same outcomes.
+
+The Mac's run (2026-11-05, driver at 10b2fd8, raw-data repository `T107-mac/` at 095fd91) has all three outcomes. The
+plain run reaches 3.99 and 3.98 in one attempt each, Newton to 3.4×10⁻³⁰ and 8.5×10⁻³¹ with full steps, the predictions
+at 2.1×10⁻⁷ against the base state's 5.5×10⁻³. With `halve` every base's first attempt fails, its half step converges,
+and the leg reaches both targets by halving its way in. `const` stops at the first target with exit 1.
+
+**B. Two legs**, M 320 at 8 threads and M 384 at 12, from T105's `p1` states at 3.04375 (`T105-win2/states/`), with
+`--N 4 --newton_its 6 --halvings 2` and targets 3.0425, 3.04125, 3.04, 3.03875, 3.0375, 3.03625, 3.035, 3.03375,
+3.0325, 3.03125, 3.03. The step is 0.00125, D″'s. The truncation term there was 10⁻⁵, and Newton converged from it with
+full steps. With |z_1| growing like (D − 3)^(−1/2) and R like D − 3, the same step's term grows like (D − 3)^(−4.5),
+about 3.6 times by D 3.03; the halvings take what that does not cover.
+
+**Criteria, fixed now:**
+1. Every point converges by the driver's rule, and its prediction beats the base state by 100 times. The first point,
+   3.0425 at M 320, is where T105 C's cubic predictor stopped on the line-search rule.
+2. At each D both legs reach, |Δ_384 − Δ_320| is the point's error estimate. Pass: at most 10⁻⁹ (T105's was 8.8×10⁻¹¹
+   at 3.04375). A larger value is posted, not a stop.
+3. The base ratios |z_(k−1)|/|z_k| track the distance to D = 3 (1.09 (D − 3) at 3.045). A ratio below 0.5 (D − 3) is
+   posted, not a stop.
+
+**Stops:** the driver's own (exit 1), a traceback, and a process above 12 GB. **Cost:** per point, the base (the f64
+Jacobian and four orders, 1–2 h at M 320–384) and 2–6 Newton calls of 1–1.5 h on the target's plan of about 9000
+steps, so 4–10 h per point and 2–4 days for the 11 points.
+
+**What it decides.** A pass to 3.03 adds 11 points below 3.04375, the lowest point now, at the leg's step. A stop at
+the first point after its halvings means that the series' radius does not cover even 0.0003125 there, and the next
+question is the branch near D 3.04, not the predictor.
