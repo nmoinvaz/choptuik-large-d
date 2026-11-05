@@ -5,6 +5,7 @@
         [--pred_base BASE.npz --pred_h H] (family P)
         [--deltas 1e-12,1e-11,...,1e-2] [--threads 2] [--mutate none|skip] [--qd_it 12]
     python3 reseed_check.py summary OUT.jsonl ...
+    python3 reseed_check.py rungs RAWDIR BASE.npz OUT.jsonl [--h 5]   (the cached jump series of BASE; amendment 9)
     python3 reseed_check.py firststep STATE.npz OUT.jsonl [--deltas 1e-12,1e-14] [--groups centre,nodes,data,Delta,all]
     python3 reseed_check.py jump RAWDIR STATE.npz OUT.jsonl [--hs 2,5,10] [--arms reseed,elim,plain] [--threads 2]
 
@@ -234,6 +235,43 @@ def summary(argv):
     return 0
 
 
+def rungs(argv):
+    """amendment 9's diagnostic: from BASE the chain's quad-double series (the jump test's, cached beside OUT) summed at h
+    as the jump test sums it, then re-seeded with each floor rule (abs, the first design, and rel), every rung's Newton
+    history (residual and step per iteration) printed and recorded"""
+    raw, path, out = argv[0], argv[1], argv[2]
+    opt = parse(argv, dict(h=5.0, threads=2, N=24))
+    require_raw(out)
+    z4, meta = load_q(path)
+    D0 = mp.mpf(meta["D_str"])
+    cache = os.path.join(os.path.dirname(out), "jump", f"series_D{float(D0):.4f}_N{opt['N']}.npz")
+    if not os.path.exists(cache):
+        raise SystemExit(f"{cache}: run the jump test from this base first (it caches the series)")
+    from anm_run import series_at
+    cz = np.load(cache)
+    Zh = [np.asarray(cz[f"z{k}_0"]) for k in range(opt["N"] + 1)]
+    Zl = [np.asarray(cz[f"z{k}_1"]) for k in range(opt["N"] + 1)]
+    norms = [float(v) for v in cz["norms"]]
+    h = opt["h"]
+    terms = [norms[k] * h ** k for k in range(1, opt["N"] + 1)]
+    k_opt = int(np.argmin(terms)) + 1
+    ph, pl = series_at(np.asarray(z4[0]), np.asarray(z4[1]), Zh[:k_opt + 1], Zl[:k_opt + 1], h)
+    Dn = D0 + mp.mpf(h)
+    G = float(meta["nodes"][-1]) ** -(float(Dn) - 3.0)
+    print(f"rungs: from {path} at h {h:g} -> D {mp.nstr(Dn, 12)} (G {G:.2e}), series to order {k_opt}", flush=True)
+    for rule in ("abs", "rel"):
+        rs = Reseeder(meta, Dn, threads=opt["threads"], floor_rule=rule)
+        zr, diag = rs.reseed((ph, pl), verbose=True)
+        print(f"  floor rule {rule}: {'ok' if diag['ok'] else 'FAILED'}", flush=True)
+        for r in diag["rungs"]:
+            print(f"    u {r['u']:.6f} ({'converged' if r['conv'] else 'NOT converged'}): "
+                  + "; ".join(f"|R| {x['R']:.2e} step {x['step']:.1e}" if x.get("step") is not None else f"|R| {x['R']:.2e}" for x in r["hist"]), flush=True)
+        with open(out, "a") as f:
+            f.write(json.dumps(dict(test="rungs", base=path, h=h, D=float(Dn), D_str=str(Dn), G=G, rule=rule, ok=diag["ok"],
+                                    rungs=diag["rungs"], dropped=diag["dropped"]), default=float) + "\n")
+    return 0
+
+
 def trend_slopes(raw, M, ks_held, folder="T75"):
     """anm_run.py --trend: the exponents s of |v| ~ n^s per held coefficient from the stored states of folder (every fourth),
     the same rule (constant sign, at least 6 states, fit residual in ln|v| below 0.05; else 0)"""
@@ -311,6 +349,8 @@ def jump(argv):
     Zh, Zl = [np.asarray(z[0]) for z in Zq], [np.asarray(z[1]) for z in Zq]
     print(f"jump from {path}: D {mp.nstr(D0, 12)}; series N {opt['N']} in {time.time() - t0:.0f} s, |z_k| "
           + " ".join(f"{v:.1e}" for v in norms[::3]), flush=True)
+    if opt["arms"] == "none":
+        return 0                     # the series only (cached for rungs and family P)
     for h in [float(x) for x in opt["hs"].split(",")]:
         terms = [norms[k] * h ** k for k in range(1, opt["N"] + 1)]
         k_opt = int(np.argmin(terms)) + 1
@@ -382,6 +422,8 @@ def jump(argv):
 
 
 if __name__ == "__main__":
+    if len(sys.argv) > 2 and sys.argv[1] == "rungs":
+        sys.exit(rungs(sys.argv[2:]))
     if len(sys.argv) > 2 and sys.argv[1] == "summary":
         sys.exit(summary(sys.argv[2:]))
     if len(sys.argv) > 2 and sys.argv[1] == "firststep":

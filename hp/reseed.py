@@ -10,7 +10,7 @@ state there (the node itself at u0), and its equations are the m and a rows of t
 2M unknowns; notes/RESEED.md 2 gives the reasons). Delta, the centre data and the nodes are not changed.
 
     python3 reseed.py check STATE.npz [--threads 2] [--levels 5] [--rows ma|pm|all] [--mutate none|skip|wrongu]
-        [--plan_tol 1e-32] [--out OUT.jsonl] [--delta_h 1e-6] [--seed 1]
+        [--plan_tol 1e-32] [--out OUT.jsonl] [--delta_h 1e-6] [--seed 1] [--floor_rule rel|abs]
     python3 reseed.py jac STATE.npz
 
 `check` is the unit check and the stepper check (notes/RESEED.md 3.1, 3.2): the converged state's own node re-seeded
@@ -48,7 +48,7 @@ class Reseeder:
     is the stepper's error estimate (a plan at check_tol with steps at most hmax / 2, at Taylor order check_kt)."""
 
     def __init__(self, meta, D, threads=2, levels=5, rows="ma", plan_tol=1e-32, hmax=0.05, check_tol=1e-36,
-                 check_kt=None, it_max=30, horizon_alpha=0, mutate="none"):
+                 check_kt=None, it_max=30, horizon_alpha=0, mutate="none", floor_rule="rel"):
         self.M, self.nodes = int(meta["M"]), list(meta["nodes"])
         self.K = len(self.nodes)
         self.kt, self.kc, self.ks = meta.get("kt", 36), meta.get("kc", 146), meta.get("ks", 130)
@@ -56,6 +56,9 @@ class Reseeder:
         self.plan_tol, self.hmax, self.check_tol = plan_tol, hmax, check_tol
         self.check_kt = check_kt or self.kt + 12
         self.it_max, self.horizon_alpha, self.mutate = it_max, horizon_alpha, mutate
+        # the rung's floor test: 'rel' (amendment 9: also a residual below 1e-29 G_u that stops halving), 'abs' (the
+        # first design: only a step below 1e-24 with the residual no longer halving)
+        self.floor_rule = floor_rule
         self.x_node = self.nodes[-1]
         u0 = 1.0 - self.x_node
         # the rungs u0 / 2^j, j = J..0 (exact in f64: u0 is the f64 value 1 - x_K-1 and the divisions are by powers of 2)
@@ -191,7 +194,7 @@ class Reseeder:
             return dh, dl, [dict(it=0, R=nR)], False
         conv = False
         small_prev = None
-        floor_tol = 1e-29 * (1.0 - u) ** -(float(self.D) - 3.0)
+        floor_tol = 1e-29 * (1.0 - u) ** -(float(self.D) - 3.0) if self.floor_rule == "rel" else -1.0
         for it in range(self.it_max):
             Jh, Jl = (np.asarray(v) for v in s.jacobian(*put(dh, dl)))
             Ah = np.ascontiguousarray(Jh[np.ix_(rows, cols)]); Al = np.ascontiguousarray(Jl[np.ix_(rows, cols)])
@@ -263,6 +266,7 @@ class Reseeder:
             dh, dl, hist, conv = self.invert(u, zh, zl, th, tl, dh, dl)
             dv = dh + dl
             rec = dict(u=u, conv=conv, its=len(hist) - 1, R0=hist[0]["R"], R=hist[-1]["R"], seconds=round(time.time() - t1, 2),
+                       hist=[dict(R=h_.get("R"), step=h_.get("step"), lam=h_.get("lam")) for h_ in hist],
                        moved_mh=float(np.max(np.abs(dv[:M] - d0[:M]))), moved_ah=float(np.max(np.abs(dv[M:] - d0[M:]))))
             diag["rungs"].append(rec)
             if verbose:
@@ -371,7 +375,7 @@ def parse(argv, opt):
 
 def check(argv):
     """notes/RESEED.md 3.1 and 3.2 on a converged state (the docstring); returns the exit code"""
-    opt = parse(argv, dict(threads=2, levels=5, rows="ma", mutate="none", out="", delta_h=1e-6, seed=1, plan_tol=1e-32))
+    opt = parse(argv, dict(threads=2, levels=5, rows="ma", mutate="none", out="", delta_h=1e-6, seed=1, plan_tol=1e-32, floor_rule="rel"))
     path = argv[0]
     if opt["out"]:
         from raw_out import require_raw
@@ -394,7 +398,7 @@ def check(argv):
     zs[0][sl_] = zs[0][sl_] * (1 + opt["delta_h"] * r)
     zs[1][sl_] = 0.0; zs[2][sl_] = 0.0; zs[3][sl_] = 0.0
     rs = Reseeder(meta, D, threads=opt["threads"], levels=opt["levels"], rows=opt["rows"], mutate=opt["mutate"],
-                  plan_tol=opt["plan_tol"])
+                  plan_tol=opt["plan_tol"], floor_rule=opt["floor_rule"])
     print(f"check {path}: D {mp.nstr(D, 12)}, G {G:.2e}, truth max|F| (pinned, quad-double) {F_truth:.2e}, double-double "
           f"|F|_2 phi {phi:.2e}; start: horizon data off by {opt['delta_h']:.0e}; rungs {[round(u, 6) for u in rs.us]}, rows "
           f"{opt['rows']}, mutate {opt['mutate']}, plan_tol {opt['plan_tol']:.0e}", flush=True)
@@ -448,7 +452,7 @@ def check(argv):
     crit_planted = dict(agree=bool(planted) and all(r["vs_series"] <= 1e-24 for r in planted),
                         err_est=all(r["err_est"] <= 1e-28 for r in planted), sonic=all(r["max_x_minus_c"] < 0 for r in planted))
     passed, passed_step, passed_planted = all(crit.values()), all(crit_step.values()), all(crit_planted.values())
-    rec = dict(test="unit", state=path, D=float(D), D_str=meta["D_str"], G=G, phi=phi, mutate=opt["mutate"], rows=opt["rows"],
+    rec = dict(test="unit", state=path, D=float(D), D_str=meta["D_str"], G=G, phi=phi, mutate=opt["mutate"], rows=opt["rows"], floor_rule=opt["floor_rule"],
                levels=opt["levels"], plan_tol=opt["plan_tol"], delta_h=opt["delta_h"], seed=opt["seed"], F_truth=F_truth, err_mh=err_mh,
                err_ah=err_ah, F_max=Fmax, F_horizon_pmac=Fh_rows, crit=crit, passed=passed, stepper=stepper, crit_stepper=crit_step,
                passed_stepper=passed_step, planted=planted, crit_planted=crit_planted, passed_planted=passed_planted, rungs=diag["rungs"], dropped=diag["dropped"], seconds=diag["seconds"])
