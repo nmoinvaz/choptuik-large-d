@@ -293,3 +293,15 @@ that its horizon data do not match its last node, and the re-seed removes exactl
 1.4×10⁻²⁵ hᵏ: 5×10⁻¹⁶ at h = 2.5 and 4×10⁻¹⁴ at h = 3, against a re-seeded basin near 10⁻¹³ (4.3). So with the
 re-seed this chain could step by about 2.5–3 instead of 1 (*conjecture*, from these two numbers). At h = 5 the
 smallest term is 8.5×10⁻⁹, and the prediction's max |F| is 1.9×10¹².
+
+At h = 5, to 96.1184, where the prediction lies 4.3×10⁻⁹ from the chain's state:
+- Re-seeded: the re-seed takes max |F| from 1.9×10¹² to 3.4×10⁻¹¹. The corrector then accepts no trial of its first step
+  (|dz| 4.3×10⁻⁹) and stops. Fail.
+- Elim: from the same start, the first full step lands at 2.4×10⁻¹⁴ and the next three converge quadratically, to
+  4.1×10⁻²⁹. Δ lies within 4.8×10⁻²¹ of the chain's state (criterion 10⁻²⁰: pass) and the state within 5.0×10⁻¹⁹. The
+  corrector projected three points at u₀ and skipped one below the switch.
+
+That is the mechanism (*numerical evidence*, from these runs and 4.2). A Newton step from a point on the regular family
+leaves its horizon data inconsistent with its new node, at second order, and the horizon block amplifies that by G, so
+the next correction is large and the trial is refused. Re-seeding the trial point at u₀ removes exactly that part. The
+re-seed before the corrector fixes the start but not the iterates. The elimination fixes both.
