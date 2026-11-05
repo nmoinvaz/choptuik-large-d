@@ -266,6 +266,20 @@ and maybe family P elim. Their records are corrector outcomes, measured against 
 decides only whether a re-seed or projection is declared failed, and a projection whose rung stopped early leaves an
 error at the 10⁻³⁰ level that the corrector removes. So their basin numbers stand, with that caveat.
 
+*Amendment 10 of 2026-11-05 08:48 UTC, written before its runs.* At 94.1184 the elim arm's re-seed failed at
+δ = 10⁻¹⁶: its u₀ rung stopped at the floor (|R| 1.9×10⁻¹⁸ after 5 steps) under the first design's test. That is
+amendment 9's mechanism, now below D 100. Both re-seeding arms at 94.1184 were stopped, since they measured that test
+rather than the basin. The floor test 'stall' follows the cause shown by floorflip. It keeps the first design's
+criteria and adds one more. A rung has converged when its residual no longer halves and its step no longer shrinks
+tenfold, or when no trial lowers the residual after a step that did not shrink tenfold. The unit check at 101.1 failed
+'rel' by stopping while the steps still fell 10⁴-fold per step, and 'stall' cannot stop there. Its criteria:
+- (a) `check --floor_rule stall` passes 3.1 and 3.2b at 84.9073, 87.0224, 94.1184 and 101.1184, with the bounds of 3.1.
+- (b) floorflip (target moved by 10⁻³⁰, 20 trials) with 'stall' converges in at least 19 of 20 at 101.1 and 106.1.
+- (c) `skip` and `wrongu` under 'stall' fail the unit check at 101.1184, and 'rel' fails it, as shown.
+
+If (a)–(c) pass, 'stall' becomes the default. The pilot's step from 101.1184 is not rerun in this study. That is left to
+the coordinator.
+
 **3.4 Jump test** (only if 3.3 passes; `hp/reseed_check.py jump`). From the latest qdj1 state, the chain's quad-double
 series (anm_run.py's `coefficients_q`, N 24, the held harmonics on the T75 trend) is summed at h = 2, 5 and 10. Each
 prediction is re-seeded and corrected at D + h, with the held harmonics at the trend's values there. The plain arm runs

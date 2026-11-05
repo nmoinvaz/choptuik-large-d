@@ -287,7 +287,7 @@ def floorflip(argv):
     pattern of the residual's floor. Each trial records both rules' outcome,
     steps and residuals."""
     raw, path, out = argv[0], argv[1], argv[2]
-    opt = parse(argv, dict(h=0.0, trials=20, threads=2, N=24, move="target", size=1e-30))
+    opt = parse(argv, dict(h=0.0, trials=20, threads=2, N=24, move="target", size=1e-30, rules="abs,rel"))
     require_raw(out)
     z4, meta = load_q(path)
     D0 = mp.mpf(meta["D_str"])
@@ -305,8 +305,9 @@ def floorflip(argv):
         zh, zl = np.asarray(z4[0]), np.asarray(z4[1])
     Dn = D0 + mp.mpf(opt["h"])
     G = float(meta["nodes"][-1]) ** -(float(Dn) - 3.0)
-    rs = {rule: Reseeder(meta, Dn, threads=opt["threads"], floor_rule=rule) for rule in ("abs", "rel")}
-    r0 = rs["abs"]
+    rules = opt["rules"].split(",")
+    rs = {rule: Reseeder(meta, Dn, threads=opt["threads"], floor_rule=rule) for rule in rules}
+    r0 = rs[rules[0]]
     tg, _ = r0.targets(zh, zl)
     sl_ = slice(o["mh"], o["mh"] + 2 * M)
     dh, dl = np.array(zh[sl_]), np.array(zl[sl_])
@@ -317,14 +318,14 @@ def floorflip(argv):
     u0 = r0.us[-1]
     th, tl = tg[u0]
     print(f"floorflip {path} h {opt['h']:g}: D {mp.nstr(Dn, 12)}, G {G:.2e}, floor_tol(u0) {1e-29 * G:.1e}", flush=True)
-    counts = {"abs": 0, "rel": 0}
+    counts = {rule: 0 for rule in rules}
     for t in range(opt["trials"]):
         rng = np.random.default_rng(t)
         r = rng.uniform(0.5, 1, 4 * M) * rng.choice([-1.0, 1.0], 4 * M)
         # --move target: the target node moved by size (relative), the start data fixed; data: the start data moved
         ph_, tt = (dh * (1 + opt["size"] * r[:2 * M]), th) if opt["move"] == "data" else (dh, dd_add_(th, tl, opt["size"] * r * th))
         rec = dict(test="floorflip", base=path, h=opt["h"], D=float(Dn), G=G, trial=t, move=opt["move"], size=opt["size"])
-        for rule in ("abs", "rel"):
+        for rule in rules:
             if opt["move"] == "data":
                 d2h, d2l, hist, conv = rs[rule].invert(u0, zh, zl, th, tl, ph_.copy(), dl.copy())
             else:
@@ -332,12 +333,11 @@ def floorflip(argv):
             counts[rule] += int(conv)
             rec[rule] = dict(conv=bool(conv), its=len(hist) - 1, R=[x.get("R") for x in hist], step=[x.get("step") for x in hist],
                              lam=[x.get("lam") for x in hist])
-        print(f"  trial {t}: abs {'conv' if rec['abs']['conv'] else 'FAIL'} ({rec['abs']['its']} its, |R| {rec['abs']['R'][-1]:.2e}, steps "
-              + " ".join(f"{x:.0e}" for x in rec["abs"]["step"] if x is not None) + f"); rel {'conv' if rec['rel']['conv'] else 'FAIL'} "
-              f"({rec['rel']['its']} its, |R| {rec['rel']['R'][-1]:.2e})", flush=True)
+        print(f"  trial {t}: " + "; ".join(f"{rule} {'conv' if rec[rule]['conv'] else 'FAIL'} ({rec[rule]['its']} its, |R| {rec[rule]['R'][-1]:.2e}, steps "
+                                         + " ".join(f"{x:.0e}" for x in rec[rule]["step"] if x is not None) + ")" for rule in rules), flush=True)
         with open(out, "a") as f:
             f.write(json.dumps(rec, default=float) + "\n")
-    print(f"  converged: abs {counts['abs']}/{opt['trials']}, rel {counts['rel']}/{opt['trials']}", flush=True)
+    print("  converged: " + ", ".join(f"{rule} {counts[rule]}/{opt['trials']}" for rule in rules), flush=True)
     return 0
 
 

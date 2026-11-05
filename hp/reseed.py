@@ -10,7 +10,7 @@ state there (the node itself at u0), and its equations are the m and a rows of t
 2M unknowns; notes/RESEED.md 2 gives the reasons). Delta, the centre data and the nodes are not changed.
 
     python3 reseed.py check STATE.npz [--threads 2] [--levels 5] [--rows ma|pm|all] [--mutate none|skip|wrongu]
-        [--plan_tol 1e-32] [--out OUT.jsonl] [--delta_h 1e-6] [--seed 1] [--floor_rule abs|rel]
+        [--plan_tol 1e-32] [--out OUT.jsonl] [--delta_h 1e-6] [--seed 1] [--floor_rule abs|stall|rel]
     python3 reseed.py jac STATE.npz
 
 `check` is the unit check and the stepper check (notes/RESEED.md 3.1, 3.2): the converged state's own node re-seeded
@@ -56,7 +56,9 @@ class Reseeder:
         self.plan_tol, self.hmax, self.check_tol = plan_tol, hmax, check_tol
         self.check_kt = check_kt or self.kt + 12
         self.it_max, self.horizon_alpha, self.mutate = it_max, horizon_alpha, mutate
-        # the rung's floor test: 'abs' (the design: a step below 1e-24 with the residual no longer halving); 'rel'
+        # the rung's floor test: 'abs' (the design: a step below 1e-24 with the residual no longer halving); 'stall'
+        # (amendment 10: also the residual no longer halving with the step no longer shrinking tenfold, or no trial
+        # lowering the residual after such a step; the steps stall at the floor eps_dd G above 1e-24 past D ~ 95); 'rel'
         # (amendment 9, withdrawn: also a residual below 1e-29 G_u that stops halving; it stops the u0 rung before its
         # data converge and fails the unit check at D 101.1, notes/RESEED.md), kept runnable as a control
         self.floor_rule = floor_rule
@@ -195,6 +197,8 @@ class Reseeder:
         conv = False
         small_prev = None
         floor_tol = 1e-29 * (1.0 - u) ** -(float(self.D) - 3.0) if self.floor_rule == "rel" else -1.0
+        stall = self.floor_rule == "stall"
+        nd_prev = None
         for it in range(self.it_max):
             Jh, Jl = (np.asarray(v) for v in s.jacobian(*put(dh, dl)))
             Ah = np.ascontiguousarray(Jh[np.ix_(rows, cols)]); Al = np.ascontiguousarray(Jl[np.ix_(rows, cols)])
@@ -221,6 +225,8 @@ class Reseeder:
             hist.append(dict(it=it, R=nR, step=nd, lam=lam if ok else 0.0, R_new=nT if ok else None))
             if not ok:
                 conv = nR <= floor_tol          # no trial lowers a residual already at the floor
+                if stall and nd_prev is not None and nd > 0.1 * nd_prev:
+                    conv = True                 # 'stall': no trial lowers the residual, and the step stopped shrinking
                 break
             dh, dl, Rh, Rl = np.asarray(th_), np.asarray(tl_), Th, Tl
             if nd * lam < 1e-30 * max(1.0, float(np.max(np.abs(dh)))):
@@ -237,6 +243,11 @@ class Reseeder:
                 nR = nT
                 conv = True                  # at the floor and no longer halving
                 break
+            if stall and nd_prev is not None and nd > 0.1 * nd_prev and nT > 0.5 * nR:
+                nR = nT
+                conv = True                  # 'stall': the residual no longer halves and the step no longer shrinks
+                break
+            nd_prev = nd
             nR = nT
         hist.append(dict(it=len(hist), R=nR))
         return dh, dl, hist, conv
