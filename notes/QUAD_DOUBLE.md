@@ -1870,3 +1870,14 @@ Their errors cancel within one jet evaluation to below 7×10⁻²⁰, and betwee
 This corrects the attribution in 13.19's correction paragraph, which put the order-1 error in the jet's arithmetic. It
 is in the solve's mixing of two evaluations. A test follows from it, without quad-double: refine each order with the
 jet's own residual, F_k on (z_0, …, z_(k−1), x), through the double-double LU.
+
+**The chain pilot: A passes (2026-11-05 02:00 UTC; `anm-mac/pilot_qdjet_A.log`, `pilot_qdjet_B.log`).** From 86.9494,
+A's series (quad-double jet and LU, 770 s) predicts at a = 0.169 with |F| 1.48×10⁻¹⁸, the double-double floor. The
+quad-double corrector converges in 2 steps after moving 1.3×10⁻¹⁹, in 85 s. B's series (185 s) is pre-screened from
+0.169 to 0.148, fails there after moving 1.9×10⁻⁹ and at 0.074 after 5.7×10⁻¹⁰, and converges at 0.037 after
+1.5×10⁻¹⁰, with 2263 s in its corrector. So A's distance moved is 10⁻¹⁰ of B's, far inside the criterion. A's ratios
+|z_(k−1)|/|z_k| for k = 2–5 are 105.5, 95.5, 90.6 and 86.5, steady, where B's are 105.5, 83.8, 1.5 and 3.3. Its |z_24|
+is 1.0×10⁻²⁵, where B's is 4.7×10⁻²¹. So the double-double series' high orders were its rounding (as found above), and
+the quad-double series reads a radius near 90 from the first orders on. The second-order prediction error that
+shrank qd9's steps to 0.04 was the double-double series'. The chain continues as `anm-mac/run_trend_pin3_qdj1/` from
+A's state at 87.1184 with `--jet_q 1` and qd9's other options (h_max 1); qd9 was stopped at its base 87.0224.
