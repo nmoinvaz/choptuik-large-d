@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="384" viewBox="0 0 1000 384" font-family="system-ui, sans-serif">
+<style>@media (prefers-color-scheme: dark){[fill="#fcfcfb"]{fill:#201f1d}[stroke="#fcfcfb"]{stroke:#201f1d}[fill="#0b0b0b"]{fill:#e8e6e3}[stroke="#0b0b0b"]{stroke:#e8e6e3}[fill="#52514e"]{fill:#a8a49d}[stroke="#52514e"]{stroke:#a8a49d}[fill="#e7e6e2"]{fill:#343230}[stroke="#e7e6e2"]{stroke:#343230}[fill="#c98500"]{fill:#d69a2d}[stroke="#c98500"]{stroke:#d69a2d}[fill="#eb6834"]{fill:#dd5c26}[stroke="#eb6834"]{stroke:#dd5c26}[fill="#eda100"]{fill:#c08800}[stroke="#eda100"]{stroke:#c08800}[fill="#e87ba4"]{fill:#d1678f}[stroke="#e87ba4"]{stroke:#d1678f}[fill="#4a3aa7"]{fill:#7263cf}[stroke="#4a3aa7"]{stroke:#7263cf}[fill="#a6339a"]{fill:#c257b5}[stroke="#a6339a"]{stroke:#c257b5}[fill="#7a7668"]{fill:#948e82}[stroke="#7a7668"]{stroke:#948e82}}</style>
+<rect width="1000" height="384" fill="#fcfcfb"/>
+<text x="40.0" y="34.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">One step of the large-D chain: predict in D, re-seed the horizon, correct in quad-double</text>
+<text x="40.0" y="50.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">hp/anm_run.py --jet_q 1 --pred_q 1 --reseed 2 --reseed_q 1 · times of the step from D 128.56 to 131.06 on the Mac: jets 386 s, re-seed 26 s, corrector 74 s</text>
+<rect x="40" y="88" width="196" height="66" rx="8" fill="#fcfcfb" stroke="#52514e" stroke-width="1.2"/>
+<text x="138.0" y="116.0" font-size="13" fill="#0b0b0b" text-anchor="middle" font-weight="bold">base z₀ at D₀</text>
+<text x="138.0" y="135.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal">converged, four double parts</text>
+<rect x="290" y="88" width="196" height="66" rx="8" fill="#fcfcfb" stroke="#52514e" stroke-width="1.2"/>
+<text x="388.0" y="116.0" font-size="13" fill="#0b0b0b" text-anchor="middle" font-weight="bold">jets z₁ … z₂₄</text>
+<text x="388.0" y="135.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal">quad-double, one LU · 386 s</text>
+<rect x="540" y="88" width="196" height="66" rx="8" fill="#fcfcfb" stroke="#52514e" stroke-width="1.2"/>
+<text x="638.0" y="116.0" font-size="13" fill="#0b0b0b" text-anchor="middle" font-weight="bold">step a</text>
+<text x="638.0" y="135.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal">min(a_max, h_max)</text>
+<rect x="764" y="88" width="196" height="66" rx="8" fill="#fcfcfb" stroke="#52514e" stroke-width="1.2"/>
+<text x="862.0" y="116.0" font-size="13" fill="#0b0b0b" text-anchor="middle" font-weight="bold">prediction z(D₀ + a)</text>
+<text x="862.0" y="135.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal">Σ z_k aᵏ, Horner in quad-double</text>
+<rect x="764" y="230" width="196" height="66" rx="8" fill="#fcfcfb" stroke="#52514e" stroke-width="1.2"/>
+<text x="862.0" y="258.0" font-size="13" fill="#0b0b0b" text-anchor="middle" font-weight="bold">re-seed</text>
+<text x="862.0" y="277.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal">horizon from the last node · 26 s</text>
+<rect x="540" y="230" width="196" height="66" rx="8" fill="#fcfcfb" stroke="#52514e" stroke-width="1.2"/>
+<text x="638.0" y="258.0" font-size="13" fill="#0b0b0b" text-anchor="middle" font-weight="bold">corrector</text>
+<text x="638.0" y="277.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal">qd Newton, trials re-seeded · 74 s</text>
+<rect x="40" y="230" width="196" height="66" rx="8" fill="#fcfcfb" stroke="#52514e" stroke-width="1.2"/>
+<text x="138.0" y="258.0" font-size="13" fill="#0b0b0b" text-anchor="middle" font-weight="bold">new base</text>
+<text x="138.0" y="277.0" font-size="11" fill="#52514e" text-anchor="middle" font-weight="normal">D₀ ← D₀ + a, a ← min(2a, h_max)</text>
+<polygon points="388.0,223.0 448.0,263.0 388.0,303.0 328.0,263.0" fill="#fcfcfb" stroke="#52514e" stroke-width="1.2"/>
+<text x="388.0" y="267.0" font-size="12" fill="#0b0b0b" text-anchor="middle" font-weight="bold">converged?</text>
+<line x1="240.0" y1="121.0" x2="279.6" y2="121.0" stroke="#52514e" stroke-width="1.6"/>
+<polygon points="286.0,121.0 278.0,124.6 278.0,117.4" fill="#52514e"/>
+<line x1="490.0" y1="121.0" x2="529.6" y2="121.0" stroke="#52514e" stroke-width="1.6"/>
+<polygon points="536.0,121.0 528.0,124.6 528.0,117.4" fill="#52514e"/>
+<line x1="740.0" y1="121.0" x2="753.6" y2="121.0" stroke="#52514e" stroke-width="1.6"/>
+<polygon points="760.0,121.0 752.0,124.6 752.0,117.4" fill="#52514e"/>
+<line x1="862.0" y1="158.0" x2="862.0" y2="219.6" stroke="#52514e" stroke-width="1.6"/>
+<polygon points="862.0,226.0 858.4,218.0 865.6,218.0" fill="#52514e"/>
+<line x1="760.0" y1="263.0" x2="746.4" y2="263.0" stroke="#52514e" stroke-width="1.6"/>
+<polygon points="740.0,263.0 748.0,259.4 748.0,266.6" fill="#52514e"/>
+<line x1="536.0" y1="263.0" x2="458.4" y2="263.0" stroke="#52514e" stroke-width="1.6"/>
+<polygon points="452.0,263.0 460.0,259.4 460.0,266.6" fill="#52514e"/>
+<line x1="324.0" y1="263.0" x2="246.4" y2="263.0" stroke="#1baf7a" stroke-width="1.6"/>
+<polygon points="240.0,263.0 248.0,259.4 248.0,266.6" fill="#1baf7a"/>
+<text x="318.0" y="255.0" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="normal">yes</text>
+<line x1="138.0" y1="226.0" x2="138.0" y2="164.4" stroke="#1baf7a" stroke-width="1.6"/>
+<polygon points="138.0,158.0 141.6,166.0 134.4,166.0" fill="#1baf7a"/>
+<line x1="408.0" y1="237.0" x2="574.2" y2="160.7" stroke="#eb6834" stroke-width="1.6" stroke-dasharray="5 4"/>
+<polygon points="580.0,158.0 574.2,164.6 571.2,158.1" fill="#eb6834"/>
+<text x="594.0" y="184.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">no: a ← a/2, the series kept</text>
+<text x="594.0" y="199.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">(three times at most)</text>
+<g><rect x="40" y="88" width="196" height="66" rx="8" fill="none" stroke="#2a78d6" stroke-width="3"/><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0.0000;0.0187;0.0375;0.0875;0.1062;1.0000" dur="16.0s" repeatCount="indefinite"/></g>
+<g><rect x="290" y="88" width="196" height="66" rx="8" fill="none" stroke="#2a78d6" stroke-width="3"/><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0.0000;0.0875;0.1062;0.4000;0.4188;1.0000" dur="16.0s" repeatCount="indefinite"/></g>
+<g><rect x="540" y="88" width="196" height="66" rx="8" fill="none" stroke="#2a78d6" stroke-width="3"/><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0.0000;0.4000;0.4188;0.4625;0.4813;1.0000" dur="16.0s" repeatCount="indefinite"/></g>
+<g><rect x="764" y="88" width="196" height="66" rx="8" fill="none" stroke="#2a78d6" stroke-width="3"/><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0.0000;0.4625;0.4813;0.5375;0.5563;1.0000" dur="16.0s" repeatCount="indefinite"/></g>
+<g><rect x="764" y="230" width="196" height="66" rx="8" fill="none" stroke="#2a78d6" stroke-width="3"/><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0.0000;0.5375;0.5563;0.6250;0.6438;1.0000" dur="16.0s" repeatCount="indefinite"/></g>
+<g><rect x="540" y="230" width="196" height="66" rx="8" fill="none" stroke="#2a78d6" stroke-width="3"/><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0.0000;0.6250;0.6438;0.7875;0.8063;1.0000" dur="16.0s" repeatCount="indefinite"/></g>
+<g><polygon points="388.0,223.0 448.0,263.0 388.0,303.0 328.0,263.0" fill="none" stroke="#2a78d6" stroke-width="3"/><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0.0000;0.7875;0.8063;0.8375;0.8563;1.0000" dur="16.0s" repeatCount="indefinite"/></g>
+<g><rect x="40" y="230" width="196" height="66" rx="8" fill="none" stroke="#2a78d6" stroke-width="3"/><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0.0000;0.8375;0.8563;0.9375;0.9563;1.0000" dur="16.0s" repeatCount="indefinite"/></g>
+<g><text x="500.0" y="346.0" font-size="12" fill="#0b0b0b" text-anchor="middle">the converged state at D₀: 769 unknowns in four double parts</text><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0.0000;0.0187;0.0375;0.0875;0.1062;1.0000" dur="16.0s" repeatCount="indefinite"/></g>
+<g><text x="500.0" y="346.0" font-size="12" fill="#0b0b0b" text-anchor="middle">the Taylor coefficients of the branch in D, order by order, through one quad-double LU</text><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0.0000;0.0875;0.1062;0.4000;0.4188;1.0000" dur="16.0s" repeatCount="indefinite"/></g>
+<g><text x="500.0" y="346.0" font-size="12" fill="#0b0b0b" text-anchor="middle">the step from the series' tail: its last term ε = 10⁻⁵ of the first, capped at h_max</text><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0.0000;0.4000;0.4188;0.4625;0.4813;1.0000" dur="16.0s" repeatCount="indefinite"/></g>
+<g><text x="500.0" y="346.0" font-size="12" fill="#0b0b0b" text-anchor="middle">the series summed at D₀ + a in quad-double</text><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0.0000;0.4625;0.4813;0.5375;0.5563;1.0000" dur="16.0s" repeatCount="indefinite"/></g>
+<g><text x="500.0" y="346.0" font-size="12" fill="#0b0b0b" text-anchor="middle">the horizon data replaced by the regular solution's through the last node</text><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0.0000;0.5375;0.5563;0.6250;0.6438;1.0000" dur="16.0s" repeatCount="indefinite"/></g>
+<g><text x="500.0" y="346.0" font-size="12" fill="#0b0b0b" text-anchor="middle">quad-double Newton on the pinned system; each trial point is re-seeded first</text><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0.0000;0.6250;0.6438;0.7875;0.8063;1.0000" dur="16.0s" repeatCount="indefinite"/></g>
+<g><text x="500.0" y="346.0" font-size="12" fill="#0b0b0b" text-anchor="middle">converged to max |F| &lt; 10⁻²⁸, or the step is halved and the prediction redone</text><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0.0000;0.7875;0.8063;0.8375;0.8563;1.0000" dur="16.0s" repeatCount="indefinite"/></g>
+<g><text x="500.0" y="346.0" font-size="12" fill="#0b0b0b" text-anchor="middle">the converged state is the next base</text><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0.0000;0.8375;0.8563;0.9375;0.9563;1.0000" dur="16.0s" repeatCount="indefinite"/></g>
+<text x="16.0" y="372.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">anm-mac/elimq_pilot (anm_run.jsonl, .log) of the raw-data repository at 7e88b80  ·  hp/plot_algorithm.py  ·  Apple M5, 32 GB, macOS 27.0.1</text>
+<a href="https://github.com/nmoinvaz/choptuik-large-d"><text x="984" y="372" font-size="10" fill="#52514e" text-anchor="end" text-decoration="underline">github.com/nmoinvaz/choptuik-large-d</text></a>
+</svg>

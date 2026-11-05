@@ -2059,3 +2059,20 @@ pinned branch about 1 beyond 133.56. If it is the model's, T113 meets it too. `h
 two (its criteria are in its docstring, written before the run). It builds each series in both forms of the horizon
 series, which share the model and differ in rounding, and its control is the double-double series, whose high orders
 must differ by their own size.
+
+### 13.23 The step, animated (2026-11-05)
+
+`hp/plot_algorithm.py RAWDIR` draws one step of the chain with `--jet_q 1 --pred_q 1 --reseed 2 --reseed_q 1` in four
+animated SVGs. The measured panels are the elimination pilot's records of 13.22 (raw-data repository
+`anm-mac/elimq_pilot/`), and the schematic panels are illustrations. `--frame T` writes the still at T seconds.
+
+![The chain's step as a loop: base, quad-double jets, step, prediction, re-seed, corrector, then a new base or a halved step](../hp/algo_step.svg)
+
+![The predictor: a toy branch's partial sums beside the chain's series terms at D 128.56 and 131.06](../hp/algo_predictor.svg)
+
+The re-seed's rungs reach the double-double floor 2⁻¹⁰⁶ G(u), with G(u) = (1 − u)^−(D−3), at every rung, and the
+quad-double polish at u₀ reaches 2⁻²¹² G(u₀).
+
+![The re-seed: the last node integrated toward the horizon, the series inverted on the rungs, and each rung's residual against the two floors](../hp/algo_reseed.svg)
+
+![The corrector: re-seed, Newton step and the re-seeded trial, beside max |F| at each quad-double Newton iterate](../hp/algo_corrector.svg)
