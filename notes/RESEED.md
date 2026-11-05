@@ -124,7 +124,7 @@ Controls that must fire:
 
 If the re-seeded basin is not wider, C1 and C2 are moot and that is the result.
 
-*Amendments of 2026-11-05 03:30 UTC, after the first runs at 84.9073 (4.2) and before the runs they govern.*
+*Amendments of 2026-11-05 03:28 UTC, after the first runs at 84.9073 (4.2) and before the runs they govern.*
 
 - The grid is extended downward, since both arms failed at δ = 10⁻¹² in family B. The plain arm now starts at 10⁻³⁰,
   the re-seeded one at 10⁻¹⁸, by decades. The rule (δ rises per seed until the first failure) and the criteria are
@@ -148,7 +148,7 @@ state at that D (when the chain has one), or, with no chain state, Δ lies withi
 (`taylor_predict.formula_delta`; the chain sits at −4.6×10⁻⁷ at 91.1). The second is a plausibility check, not a
 reference. Then `anm_run.py --reseed 1` re-seeds every prediction before its corrector, with the default (0) unchanged.
 
-*Amendment of 2026-11-05 03:45 UTC, before any jump ran.* The chain's records at 91–93 show the series' terms |z_k|h^k
+*Amendment of 2026-11-05 03:30 UTC, before any jump ran.* The chain's records at 91–93 show the series' terms |z_k|h^k
 still falling at k = 24 for h = 2 (to 3×10⁻¹⁸) and h = 5 (to 9×10⁻⁹). At h = 10 they grow, to 0.15 at k = 24, so there
 the full sum is not a prediction. Each sum therefore stops at the order of its smallest term at h, which is all 24
 orders at h = 2 and 5. The full sum's residual is recorded beside it. The arm elim (3.3's amendment) runs on the same
