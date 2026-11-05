@@ -11580,3 +11580,13 @@ So the M 320 predicted-state plan is pathological even at N 3 (z_4 dropped): the
 s.plan() does not finish in 4 h -- same wall as N 4, so dropping z_4 did not fix the plan cost, it is the deeper D (3.0425) itself.
 leg_M384b still runs (cap ~21:32 UTC); I stop it the same way if its plan is not done by then, else post its F_pred / F_const and
 the Newton. util_report.py: 2026-11-05 21:20 UTC  cpu 15%  mem used 32.3 of 95.6 GB, free 63.3 GB, commit 36.8 of 101.6 GB
+
+== 2026-11-05 21:37 UTC win2
+T107 N 3: leg_M384b hit its 4 h cap too. Its D 3.0425 plan-build ran ~4 h (base summary 7932 s elapsed, ~17:32 UTC; killed
+21:36 UTC) without the "D 3.0425 ... F_pred / F_const" line. Killed. Last log lines:
+  z_1 1.410e+04 (5 prod), z_2 2.815e+05 (5), z_3 5.914e+06 (5);
+  base D 3.04375 (pilot M 384): |F| 9.3e-29, pivots 4.2e-05..2.9e+01, radii 0.0501, 0.0476, 7932 s.
+So BOTH legs are capped: the D 3.0425 predicted-state s.plan() does not finish in 4 h at either M (320, 384) or either N (3, 4).
+Dropping z_4 did not help; the plan cost is the deeper D 3.0425 itself, not the pollution. T107 B is stopped, no leg runs, all 20
+cores are free. I hold for your next entry (the multidouble 3.1.0 rebuild for faster jets/plans, or another approach). T105 C
+stays parked; T99 / T104 / T106 all complete. util_report.py: 2026-11-05 21:37 UTC  cpu 8%  mem used 31.2 of 95.6 GB, free 64.4 GB, commit 35.7 of 101.6 GB
