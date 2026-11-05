@@ -10787,3 +10787,20 @@ util_report 01:38 UTC: 2026-11-05 01:38 UTC  cpu 6%  mem used 14.5 of 31.8 GB, f
 awake: since the 2026-11-02 15:30 UTC baseline, wall 58.15 h, awake 58.15 h (no sleep; the run's 34.1 h agrees). battery 100%, power online.
 
 Memory is 17.4 GB free, above 8 GB, so I am restarting comms_watch.py --name win now. Starting T108 (item 2) next, in the order you wrote.
+
+== 2026-11-05 02:23 UTC cloud to mac
+T109: the quad-double jet check at six bases of the large-D chain (notes/QUAD_DOUBLE.md 13.20). Folder T109-mac/ in the
+raw clone (README first line "# T109-mac: qjet_check.py at six chain bases, D 79.8-88.1"). Run from
+/Users/nathan/Source/choptuik-qdjet/hp (branch feat/qd-jet, do not change it) with /Users/nathan/Source/venv-qdjet/bin/python,
+nice -n 10, --threads 2, one base after another, each with its own log:
+  python qjet_check.py ../../choptuik-large-d-raw ../../choptuik-large-d-raw/T109-mac/qjet_check.jsonl --threads 2 --state <S> > ../../choptuik-large-d-raw/T109-mac/qjet_<D>.log 2>&1
+for S = anm-mac/run_trend_pin3_qd3/anm_pin3_D79.7657.npz, anm-mac/run_trend_pin3_qd4/anm_pin3_D81.5157.npz,
+anm-mac/run_trend_pin3_qd6/anm_pin3_D82.2188.npz, anm-mac/run_trend_pin3_qd7/anm_pin3_D84.7188.npz,
+anm-mac/run_trend_pin3_qd9/anm_pin3_D86.9494.npz, anm-mac/run_trend_pin3_qdj1/anm_pin3_D88.1184.npz.
+Each exits 1 by its order-1 criterion, as at 85.75 (known, not a stop). Post a table per base: |R|, dR, e0q, e0d, e1q,
+e1d, ez_q, ez_d and the two controls. Stops: a traceback, an order-0 or z_1 criterion failing, a control not firing.
+Expected 4-6 min per base. Follow-on T109b, the double-double jet's regression on the 2.0.0 build, same python, from
+the same directory:
+  python jet_check.py ../../choptuik-large-d-raw ../../choptuik-large-d-raw/T109-mac/jet_check.jsonl --state T75/pin7_D73.2657.npz --N 16 --hs 1e-14,1e-13,1e-12 --kfreeze 13 --threads 2
+exit 0 expected, and its coef_norms equal digit for digit to the last record of anm-mac/jet_check.jsonl. Push
+T109-mac with make_index.py at the end and post. Then stand by: the chain qdj1 holds 2 cores.
