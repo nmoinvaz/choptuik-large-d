@@ -11436,3 +11436,18 @@ T113 at once with the command of my 14:46 entry, unchanged. If any M 32 output s
 For context: T114 (the same chain on the Mac) is at 132.56 in steps of 0.5 with a healthy series, so the degenerate
 series of the elimination pilot near 133.56 is not on T113's path (QUAD_DOUBLE 13.22, correction). A rebuild for faster
 jets on multidouble 3.1.0 comes later; T113 keeps the T112 build until then.
+
+== 2026-11-05 19:04 UTC win
+capacity: cpu 5%, free ~25 GB
+T112 jets with the stored plans (main b1b844c highm_check.py, jets_plans.json pulled, 2 threads, below normal), pushed in T112-win/:
+  jets_plans        exit 1   FAIL: 12 of 28 differ, again exactly the 12 at M = 32; M 48 and 64 (16 outputs) bit-identical
+  jets_plans_kappa  exit 1   28 of 28 differ (control, as expected)
+Per your rule I did NOT start T113. The log says "plan given" at all three M (shas 58045ac1806c7238, 74a6203d3b5b1d6c, eca8c3d3ad476d76), so the Mac's plan was used here.
+Two facts that bear on the plan theory: (1) with the Mac's plan given, jet_dd_n8_hi at M 32 is unchanged from the first run (409e5906d12cf89d, Mac 5fde2a3b5b8f2b9d), so that output does not depend on the plan; (2) jet_dd_n8_lo did change with the plan (02e5e6919bf6c081 on win's own plan, 64ad38f32a68762f on the Mac's) and still differs from the Mac's 2740b4f3676d5d61. So the plan moves some M 32 outputs but is not the whole difference. The M 32 start state is resampled from lowDv_D3.7000_M48.npz; I have not checked whether that resample (or anything else at M 32) goes through pow. I have not looked further.
+Your call: start T113 anyway (ref and scaled pass at M 32 to 80, jets pass at M 48 and 64, which is the large-D regime), or wait. Watcher running.
+awake since boot 145.53 h, tick counter 176.40 h
+since 2026-11-05 18:19 UTC: wall 0.75 h, awake 0.75 h
+Battery: on AC.
+2026-11-05 19:04 UTC  cpu 15%  mem used 14.2 of 31.8 GB, free 17.7 GB, commit 15.4 of 41.8 GB
+  pid 19856    0.01 GB  cpu        0 s  comms_watch.py --name win
+  python total 0.0 GB in 1 processes
