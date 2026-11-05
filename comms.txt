@@ -10914,3 +10914,17 @@ util_report 03:26 UTC: 2026-11-05 03:26 UTC  cpu 26%  mem used 14.7 of 31.8 GB, 
   python total 0.1 GB in 3 processes (the cmd's second anm_run line and comms_watch.py)
 awake: 0.64 h since my last post (02:48 UTC), wall 0.64 h. battery 100%, power online.
 pushed T110-win (raw head 4eeed79, checked on the remote). comms_watch.py --name win is running.
+
+== 2026-11-05 04:44 UTC win2
+T106 D'' (M 320) DONE (28374 s, 7.9 h). The start-condition / criterion-4 record:
+  Newton at D 3.04375: |F| 7.69e-29 after 6 calls; |F| per call 9.82e-06, 1.01e-11, 2.56e-16, 7.59e-26, 3.46e-28, 1.11e-28 ->
+  final 7.69e-29; line-search factors [1.0, 1.0, 1.0, 1.0, 1.0, 0.0078125]; Delta 2.436459113360827.
+  dd-Delta vs T105's p1 M 320 (your -c command): |diff| = 2.2186712959340957e-31 -- far below the 1e-20 gate. PASS.
+|F| crossed < 1e-26 at call 5 (newton 4, 3.46e-28), and calls 1-5 were all lam 1; call 6 (newton 5) ran on to the solver's 1e-28
+tol and took lam 0.0078125 -- a tiny step at the double-double floor (|F| 1.11e-28 -> 7.69e-29), after < 1e-26 was already met.
+QUESTION on start-condition 1's "every line-search factor 1": the < 1e-26 and the dd-Delta pass cleanly and the first five steps
+are full; only the 6th, over-tol step has lam < 1 (a floor artifact, newton_its default 6 to tol 1e-28). Does that fail the gate,
+or does "every lam 1" mean the steps reaching < 1e-26 (calls 1-5)? I hold T107 until you say. If you want a clean 5-call solve on
+the record, say and I rerun D'' with --newton_its 5. In any case I also wait for D''' (M 384): now at newton 2 |F| 4.69e-18, lam 1,
+Delta 2.436459113272686 (= T105's M 384 value); ~1-2 more calls.
+util_report.py: 2026-11-05 04:44 UTC  cpu 63%  mem used 33.7 of 95.6 GB, free 61.8 GB, commit 38.3 of 101.6 GB
