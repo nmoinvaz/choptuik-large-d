@@ -633,12 +633,12 @@ T105's M 384 `p1` state, converged all four orders, but its z_4 (1.717×10¹⁰,
 looks polluted the same way. The M 320 leg restarts from D″'s converged state at 3.04375 (`leg_M320b`), the same point
 to 2.2×10⁻³¹ in Δ on its own 8967-step plan, which separates a base problem from an M 320 problem.
 
-**z_4 polluted at the 3.04375 base, and the amendment to N = 3 (2026-11-05 12:30 UTC, written before any restart at
-N = 3).** From D″'s converged state the M 320 leg's z_2 is clean (2.819×10⁵, against M 384's 2.815×10⁵), so the first
-stop was the T105 base. But at this base z_4 is not: the ratios |z_(k−1)|/|z_k| are 0.050, 0.047 and 2.7×10⁻⁷ at M 320
-(|z_4| = 2.2×10¹³) and 0.050, 0.048 and 3.4×10⁻⁴ at M 384 (1.7×10¹⁰), against 0.051, 0.049 and 0.048 at 3.045 (D‴,
-1.1×10⁸). Orders 1–3 agree between the two M; order 4 does not, and its term alone is about 50 at h = 0.00125 at M 320.
-This is the order-5 pollution of D′ moved to order 4. The legs run on as they are, and the driver's own test (the
-prediction against the base state) decides. A leg that stops there restarts with `--N 3` from the same base, for the
-rest of the leg. Its truncation at h = 0.00125, |z_3|/R h⁴ with R = 0.047, is about 3×10⁻⁴, and the two halvings bring it
-to about 10⁻⁶. Criterion 1 is unchanged.
+**z_4 polluted at the 3.04375 base, and the amendment to N = 3 (2026-11-05 12:30 UTC, written before any restart at N =
+3).** From D″'s converged state the M 320 leg's z_2 is clean (2.819×10⁵, against M 384's 2.815×10⁵), so the first stop
+was the T105 base. But at this base z_4 is not: the ratios |z_(k−1)|/|z_k| are 0.050, 0.047 and 2.7×10⁻⁷ at M 320 (|z_4|
+= 2.2×10¹³) and 0.050, 0.048 and 3.4×10⁻⁴ at M 384 (1.7×10¹⁰), against 0.051, 0.049 and 0.048 at 3.045 (D‴, 1.1×10⁸).
+Orders 1–3 agree between the two M; order 4 does not, and its term alone is about 50 at h = 0.00125 at M 320. This is
+the order-5 pollution of D′ moved to order 4. The legs run on as they are, and the driver's own test (the prediction
+against the base state) decides. A leg that stops there restarts with `--N 3` from the same base, for the rest of the
+leg. Its truncation at h = 0.00125, |z_3|/R h⁴ with R = 0.047, is about 3×10⁻⁴, and the two halvings bring it to about
+10⁻⁶. Criterion 1 is unchanged.
