@@ -237,6 +237,25 @@ the cause is not established, and the amendment is withdrawn and reported as suc
 - (3) The `skip` control still fails under 'rel' at 101.1184 (the u₀ rung at |R| 7×10⁵² after 30 steps). That control
   does not touch the floor test, so it says nothing for 'rel'. Its first failure is the unit check itself.
 
+*The cause, from the floorflip experiment (08:31 UTC; `floorflip_target_*.log`).* The first design (data moved by 10⁻²⁵)
+left all 20 trials at 106.1 identical, because the first step erases such a move, so it was stopped. The rerun moves
+the target node by 10⁻³⁰ (relative, about 100 ulps of double-double). That changes only the rounding pattern of the
+floor, and the u₀ rung is solved 20 times under each rule.
+
+| D | G | 'abs' fails | where its steps stall | 'rel' fails |
+|---|---|---|---|---|
+| 84.9073 | 4.9×10¹² | 0 of 20 | (none: steps fall to 10⁻³¹) | 0 of 20 |
+| 101.1184 (unit check's start) | 1.6×10¹⁵ | 3 of 20 | 4×10⁻²⁴ – 4×10⁻²³ | 0 of 20 |
+| 106.1184 (the pilot's step, rebuilt) | 9.4×10¹⁵ | 17 of 20 | 10⁻²⁴ – 10⁻¹⁸ | 0 of 20 |
+
+So the cause is shown (*numerical evidence*). At the u₀ rung's floor ε_dd·G, the double-double Newton's steps stop
+shrinking at a level that grows with G. Past D ≈ 100 that level crosses the first design's absolute 10⁻²⁴, and the rung
+then ends when a line search cannot lower a residual already at its floor. The pilot's failure at 101.1184 → 106.1184
+is the typical case there (17 of 20). The unperturbed rebuild was one of the three that pass. The relative residual
+test of amendment 9 converges every time but stops too early (the 101.1184 unit check, above). A test that fits the
+mechanism would stop when the steps themselves stall at the floor, the residual no longer halving and the step no
+longer shrinking, not when the residual is small. It is not built or tested here.
+
 So the default is 'abs' again, the first design. 'rel' stays runnable (`--floor_rule rel`) as a case the unit check
 must fail, and it does at 101.1184. The pilot's failed re-seed at 101.1184 → 106.1184 stays unexplained, and the pilot
 stays stopped at 101.1184. A sound fix would accept steps at the floor by their own decrease, as `newton_qd` does
