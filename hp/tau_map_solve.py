@@ -17,7 +17,8 @@ a pass cannot come from the start alone.
 time: one Solver.newton_mixed call (residual, Jacobian build, LU, solve) at each stored state on its stored plan,
 uniform or mapped (by its meta's tau_map), one after another at --threads; records in OUTDIR/timing.jsonl. --own_plan:
 on the state's own plan at --tol_step, --hmax instead (the rule of pass 2, so that states made elsewhere are timed on
-plans made the same way); --repeat N calls per state.
+plans made the same way); --repeat N calls per state. Each record has the wall and the CPU seconds of the call (the
+CPU seconds of all threads, which other jobs' load does not inflate).
 
     python3 tau_map_solve.py solve OUTDIR --ref REF.npz [--ref_w REF_W.npz] --M 128 --L 0.35 --s0 1.9 [--mutate gp]
         [--perturb] [--threads 2] [--tag tm]
@@ -58,6 +59,14 @@ def _capture(fn):
 def commit():
     r = subprocess.run(["git", "-C", HERE, "rev-parse", "--short", "HEAD"], capture_output=True, text=True)
     return r.stdout.strip() or None
+
+
+def cpu():
+    """the process's CPU seconds, all threads (user + system): the work of a call, robust to other jobs' load where the
+    wall time is not"""
+    import resource
+    r = resource.getrusage(resource.RUSAGE_SELF)
+    return r.ru_utime + r.ru_stime
 
 
 def fmax(s, zh, zl):
@@ -174,13 +183,13 @@ def cmd_time(a):
             t = time.time()
             F = fmax(s, zh, zl)
             t_res = time.time() - t
-            t = time.time()
+            t, c = time.time(), cpu()
             s.newton_mixed(zh, zl)
-            t_call = time.time() - t
+            t_call, c_call = time.time() - t, cpu() - c
             tr, tj, tf, ts = s.step_timing()
             rec = dict(state=os.path.basename(path), D=m["D"], M=m["M"], tau_map=tm, plan="own" if a.own_plan else "stored",
                        steps=steps(segs), steps_stored=steps(m["segs"]), threads=a.threads, repeat=r, F=F,
-                       t_residual=round(t_res, 2), t_call=round(t_call, 1), t_jac=round(tj, 1), t_lu=round(tf, 2),
+                       t_residual=round(t_res, 2), t_call=round(t_call, 1), cpu_call=round(c_call, 1), t_jac=round(tj, 1), t_lu=round(tf, 2),
                        t_solve=round(ts, 2), s_per_step=round(tj / steps(segs), 4), load_before=l0,
                        load_after=lowD_dd.load_avg(), peak_rss_mb=lowD_dd.peak_rss_mb(), commit=commit())
             with open(out, "a") as f:
