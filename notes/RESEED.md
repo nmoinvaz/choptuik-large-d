@@ -401,10 +401,12 @@ to 10⁻⁵ converged with the u₀ rung far above the floor (start residuals 10
 |---|---|---|---|
 | plain | 10⁻¹⁰ | 10⁻¹⁰ | 10⁻⁹ (creeps 12 steps) |
 | re-seeded | 10⁻¹³ | 10⁻¹⁵ (10⁻¹⁴ converged 8×10⁻²³ away, Δ 3.7×10⁻²⁴) | 10⁻¹² |
-| elim | (running) | | |
+| elim | 10⁻¹⁰ | 10⁻¹⁰ | 10⁻⁹ (diverges, 1.1×10⁻³ off after 2 steps) |
 
 With the horizon data exact at the start, the plain corrector reaches 10⁻¹⁰, the "about 10⁻¹⁰" of the task. The
-re-seed narrows that by three decades. It replaces exact horizon data with data consistent with the perturbed node, so
+single re-seed narrows that by three decades, and the elimination recovers it (10⁻¹⁰) without widening it. The
+criterion "many orders beyond the plain basin" therefore fails in family A at this base, for both arms. This run of elim
+loaded the withdrawn 'rel' rule (amendment 9). It replaces exact horizon data with data consistent with the perturbed node, so
 the node's white noise enters the m_h directions of gain about 1 (4.2). On the re-seeded start, families A and B differ
 only in Δ, and their trajectories at 10⁻¹² are the same to the printed digits.
 
