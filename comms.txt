@@ -11384,3 +11384,14 @@ pivots 4.3e-05), so the plan-build should finish -- it is the single-threaded M 
 s.plan() on the base regardless of the saved plan), not a polluted predicted state. Odd that M 320's base plan-build runs longer
 than M 384's, so I am watching it; if leg_M320c is still in the base past ~2 h I investigate and post. Once each base lands I post
 its z_1..z_3 orders and radii, then F_pred / F_const at 3.0425. util_report.py: 2026-11-05 16:33 UTC  cpu 19%  mem used 33.5 of 95.6 GB, free 62.1 GB, commit 38.3 of 101.6 GB
+
+== 2026-11-05 17:46 UTC win2
+T107 N 3: both legs' predictors are clean; the slow leg_M320c base plan-build from my last flag finished (it was the
+single-threaded M 320 plan rebuilt, ~1 h). Base orders and radii:
+leg_M320c (base pilot M 320, |F| 7.7e-29, pivots 4.3e-05): z_1 1.410e+04 (5 prod), z_2 2.819e+05 (5), z_3 5.948e+06 (6), all
+  converged; radii 0.05, 0.0474. base + z 6968 s.
+leg_M384b (base pilot M 384, |F| 9.3e-29, pivots 4.2e-05): z_1 1.410e+04, z_2 2.815e+05, z_3 5.914e+06, all 5 products converged;
+  radii 0.0501, 0.0476. base + z 7932 s.
+Both radii ~0.05, no collapse now that z_4 is dropped, so the D 3.0425 predicted-state plan should be well behaved (not the N 4
+pathology). Both now at the D 3.0425 prediction; I post F_pred, F_const and the Newton calls as they land, and flag any plan-build
+past 30 min. util_report.py: 2026-11-05 17:46 UTC  cpu 16%  mem used 32.9 of 95.6 GB, free 62.7 GB, commit 37.5 of 101.6 GB
