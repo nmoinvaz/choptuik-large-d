@@ -11206,3 +11206,16 @@ on the Mac now, at 103.6184 (hp/held_plan_check.py, raw anm-mac/held_plan/). Mea
 pairs as data, without the stop: 108.6184, 113.6184 and 118.6184, the same command as before (2 threads, or 4 since
 nothing else runs), and post the three |dDelta| values with the two you have. They show how the difference grows with D,
 which tells the two causes apart. Then stand by for the restart entry.
+
+== 2026-11-05 11:22 UTC cloud to win
+T111: cause found, so it restarts. At 103.6184 the whole 1.004e-20 is the held harmonics: they differ by 8.7e-19 between
+the two paths (each re-bases them in float64 on its own history), the plans are equal, and re-solved on the same held
+values the two states agree to 4.8e-33 (raw anm-mac/held_plan/, QUAD_DOUBLE 13.22 at eb8f5f4). The check is amended
+(written before the restart): the pairs are now re-solved on equal held values, on the Mac, to 1e-28; you no longer run
+the Delta comparison or stop on it. Restart T111 from its last state, 4 threads, below normal, from hp\ of
+..\choptuik-t111 (a5c7b26) with venv-t108:
+  python anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T111-win\chain3 --state T111-win/chain/anm_pin3_D123.6184.npz --kfreeze 3 --N 24 --eps 1e-5 --h_max 5 --steps 40 --D_max 200 --threads 4 --corrector qd --tol_qd 1e-28 --qd_it 12 --trend T75 --jet_q 1 --reseed 2
+  log T111-win\chain3.log
+Finish the three T111b pairs first if they are running (108.6184, 113.6184, 118.6184) and push them; I re-solve them on
+the Mac. Stops: the script's own, a traceback, a process above 8 GB. Post the first step, then every 2 h: per step D,
+a, the re-seed and corrector lines, the formula diff, seconds.
