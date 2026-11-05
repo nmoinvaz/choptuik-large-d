@@ -11219,3 +11219,28 @@ the Delta comparison or stop on it. Restart T111 from its last state, 4 threads,
 Finish the three T111b pairs first if they are running (108.6184, 113.6184, 118.6184) and push them; I re-solve them on
 the Mac. Stops: the script's own, a traceback, a process above 8 GB. Post the first step, then every 2 h: per step D,
 a, the re-seed and corrector lines, the formula diff, seconds.
+
+== 2026-11-05 11:48 UTC win
+capacity: cpu 65%, free 17.6 GB (the run itself, 4 threads)
+
+The three T111b pairs finished at 11:35 UTC (4 threads, run as data, no stop), pushed with chain3's first step, raw head 55b22a8, checked on the remote. All five pairs, |dDelta| of T111's state against one plain 0.5 step from T110's state half a unit below:
+  D          base (T110)   |dDelta|
+  98.6184    98.1184       3.198e-24
+  103.6184   103.1184      1.004e-20
+  108.6184   108.1184      2.762e-21
+  113.6184   113.1184      2.207e-22
+  118.6184   118.1184      2.734e-21
+Not monotonic in D here (a single value over 1e-20, none since). The check_<D> folders and logs are in T111-win.
+
+T111 chain3 started 11:35 UTC, your command verbatim from hp\ of ..\choptuik-t111 (a5c7b26), venv-t108, 4 threads, below normal, detached, from T111-win/chain/anm_pin3_D123.6184.npz (|F| 3.6e-13); log T111-win\chain3.log, states in T111-win\chain3\. First step (base D 123.618, jet 223 s, a_max 5.112):
+  a 5.0 -> D 128.618  re-seeded; predicted |F| 1.09e-04; qd 2 steps -> 1.71e-04 (tol 6.4e-20), failed, moved 2.4e-04, formula diff +2.4e-04, 261 s ("no trial step accepted", lam 0.03125, |F| 3.2e-05 -> 5.1e-05, |dz| 7.8e-03)
+  a 2.5 -> D 126.118  predicted |F| 9.06e-13; qd 7 steps (|F| 4.1e-13 -> 4.4e-13 -> 3.0e-13 -> 6.2e-13 -> 2.6e-16 -> 1.3e-16 -> 1.5e-29) -> 1.06e-12 (tol 2.5e-20, stall accepted), moved 7.0e-09, Delta 1.724484762646, formula diff -1.8e-06, 112 s
+Two things I see in the log: the jet's ratios 2-5 at this base are 153.6 131.5 28.6 3.3, where at D 118.618 (step 5 of chain) they were 147.1 133.0 128.7 58.2, so the third and fourth ratios dropped sharply at D 123.618; and the failed a 5.0 is a different failure from the ones before (formula diff +2.4e-04 where the accepted steps sit near -1.7e-06). I post them and do not interpret them; no stop of yours fires.
+
+util_report 11:48 UTC: 2026-11-05 11:48 UTC  cpu 65%  mem used 14.2 of 31.8 GB, free 17.6 GB, commit 15.9 of 41.8 GB
+  pid 27996    0.08 GB  cpu 2494 s  anm_run.py ... T111-win\chain3 --state chain D123.6184 ... (the run)
+  pid 29884    0.01 GB  cpu 0 s  comms_watch.py --name win
+  pid 19920    0.00 GB  cpu 0 s  anm_run.py (launcher stub)
+  python total 0.1 GB in 3 processes
+awake: 1.21 h since my last post (10:36 UTC; 9.00 h awake of 9.00 h wall since the 02:48 UTC baseline, 7.79 h at the last post). battery 100%, power online. comms_watch.py --name win is running.
+Next post 13:48 UTC.
