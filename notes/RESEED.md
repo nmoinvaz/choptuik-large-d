@@ -153,6 +153,14 @@ restart from 10⁻³⁰.
 the bases after 84.9073 run with seeds 1 and 2 only. 94.1184 runs first (plain, re-seeded and elim), and 87.0224 runs if
 time allows. Family A runs at 84.9073 with seed 1, for the plain and re-seeded arms.
 
+*Amendment 4 of 2026-11-05 04:29 UTC.* The first elim run, the jump 91.1184 → 93.1184, stalled at max |F| 3.7×10⁻¹⁸
+with steps of 6×10⁻²⁸. The cause is the design, not the problem. The projection is double-double, so it resets the
+horizon data to double-double accuracy at every step and holds the point at the floor φ. `ElimQ` now projects only
+points whose pinned quad-double max |F| exceeds a switch of 10⁻¹⁵, and plain Newton finishes below it (as `newton_qd`'s
+deflated phase hands over to plain Newton). A converged elim run is no longer projected again. The jump run already
+going keeps the old version for its elim arms, so its elim records are of the stalling design. The elim basin runs
+start after this change.
+
 **3.4 Jump test** (only if 3.3 passes; `hp/reseed_check.py jump`). From the latest qdj1 state, the chain's quad-double
 series (anm_run.py's `coefficients_q`, N 24, the held harmonics on the T75 trend) is summed at h = 2, 5 and 10. Each
 prediction is re-seeded and corrected at D + h, with the held harmonics at the trend's values there. The plain arm runs

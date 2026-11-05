@@ -108,7 +108,8 @@ def basin(argv):
             except ValueError as ex:          # a singular or non-finite Jacobian at the start
                 zc, hist, conv = zp, [dict(error=str(ex))], False
             if opt["arm"] == "elim":
-                zc = c4(rs.project(zc)[0])     # the eliminated system's point
+                if not conv:
+                    zc = c4(rs.project(zc)[0])     # the eliminated system's point (a converged one is the system's own)
                 rec["projections"] = dict(solver.counts)
                 rec["F_final"] = qmax(sq.residual_q(*zc))
             e = qdiff(zc, truth)
@@ -330,7 +331,8 @@ def jump(argv):
             except ValueError as ex:
                 zc, hist, conv = zs, [dict(error=str(ex))], False
             if arm == "elim":
-                zc = c4(rs.project(zc)[0])
+                if not conv:
+                    zc = c4(rs.project(zc)[0])
                 rec["projections"] = dict(solver.counts)
                 rec["F_final"] = qmax(sqn.residual_q(*zc))
             Dl = float(zc[0][-1]) + float(zc[1][-1])

@@ -303,16 +303,21 @@ class ElimQ:
     pinned quad-double solver (pinning.PinnedQ) for hpkernel.driver.newton_qd. residual_q and newton_q project the point
     first (Reseeder.project: the horizon data re-inverted from the point's last node); newton_q returns the step from
     the given point, the projection's displacement included, so newton_qd's trial points z + lam dz are steps of the
-    eliminated system. counts: the projections by kind."""
+    eliminated system. counts: the projections by kind. switch: a point whose pinned quad-double max |F| is at most
+    switch is not projected (plain Newton finishes): the projection is double-double, so it would hold every point at
+    the double-double floor phi (the first jump run stalled at max |F| 3.7e-18 this way, notes/RESEED.md 3.3)."""
 
-    def __init__(self, sq, rs):
-        self.sq, self.rs = sq, rs
-        self.counts = dict(u0=0, ladder=0, failed=0)
+    def __init__(self, sq, rs, switch=1e-15):
+        self.sq, self.rs, self.switch = sq, rs, switch
+        self.counts = dict(u0=0, ladder=0, failed=0, skipped=0)
 
     def __getattr__(self, name):
         return getattr(self.sq, name)
 
     def _proj(self, z):
+        if qmax(self.sq.residual_q(*z)) <= self.switch:
+            self.counts["skipped"] += 1
+            return z
         zp, how = self.rs.project(z)
         self.counts[how] += 1
         return zp
