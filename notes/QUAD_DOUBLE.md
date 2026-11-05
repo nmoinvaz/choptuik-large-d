@@ -2060,6 +2060,14 @@ two (its criteria are in its docstring, written before the run). It builds each 
 series, which share the model and differ in rounding, and its control is the double-double series, whose high orders
 must differ by their own size.
 
+**The series' orders are the model's (2026-11-05 18:10 UTC; raw-data repository `anm-mac/series_forms/`).** At
+the 131.06 base `series_forms_check.py` built the quad-double series in both horizon forms. They agree to 8.6×10⁻¹⁴
+relative at every order from 1 to 24, so by the check's criteria every order is the model's. The control fired: the
+double-double series of the two forms differ by 1.3 to 10¹³ times their size. So the component of small radius is a
+property of the pinned branch, a singularity about 3 beyond 131.06, and not the jets' rounding. T113 and T114 (the
+plain chain from 128.56 to 140 on the Mac) meet it too. Whether it belongs to the critical solution or to the pinned
+formulation, whose held harmonics follow the trend of 13.18, is open.
+
 ### 13.23 The step, animated (2026-11-05)
 
 `hp/plot_algorithm.py RAWDIR` draws one step of the chain with `--jet_q 1 --pred_q 1 --reseed 2 --reseed_q 1` in four
