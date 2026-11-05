@@ -64,7 +64,7 @@ def direction(truth, M, K, family, seed):
 def basin(argv):
     path, out = argv[0], argv[1]
     opt = parse(argv, dict(family="B", arm="reseed", seeds="1,2,3", deltas=",".join(f"1e-{k}" for k in range(12, 1, -1)),
-                           threads=2, mutate="none", qd_it=12, levels=5))
+                           threads=2, mutate="none", qd_it=12, levels=5, stop="back"))
     require_raw(out)
     z4, meta = load_q(path)
     D = mp.mpf(meta["D_str"])
@@ -117,7 +117,8 @@ def basin(argv):
                   f"|Delta - truth| {rec['err_delta']:.2e} -> {'BACK' if rec['back'] else 'NOT BACK'}; {rec['t_corr']} s", flush=True)
             with open(out, "a") as f:
                 f.write(json.dumps(rec, default=float) + "\n")
-            if not rec["back"]:
+            # --stop back: the first run not back at the truth ends the seed (3.3); conv: the first not converged
+            if not (rec["back"] if opt["stop"] == "back" else rec["conv"]):
                 break
     print("done", flush=True)
     return 0
@@ -139,12 +140,19 @@ def firststep(argv):
     truth = c4(z4)
     rs = Reseeder(meta, D, threads=opt["threads"])
     dfull = direction(truth, M, K, "B", opt["seed"])
-    span = dict(centre=(0, 2 * M), nodes=(2 * M, o["mh"]), data=(o["mh"], o["mh"] + 2 * M), Delta=(o["L"] - 1, o["L"]), all=(0, o["L"]))
+    span = dict(centre=(0, 2 * M), nodes=(2 * M, o["mh"]), data=(o["mh"], o["mh"] + 2 * M), Delta=(o["L"] - 1, o["L"]), all=(0, o["L"]),
+                mh_lo=(o["mh"], o["mh"] + M), mh_hi=(o["mh"], o["mh"] + M), ah=(o["ah"], o["ah"] + M))
+    from hpkernel.driver import plow_odd
+    P = plow_odd(M, 21)
+    P = np.asarray(P[0]) + np.asarray(P[1])        # the odd harmonics <= 21 of a field on the half grid
     for delta in [float(x) for x in opt["deltas"].split(",")]:
         for g in opt["groups"].split(","):
             d = np.zeros_like(dfull)
             a, b = span[g]
             d[a:b] = dfull[a:b]
+            if g in ("mh_lo", "mh_hi"):
+                lo = P @ dfull[a:b]
+                d[a:b] = lo if g == "mh_lo" else dfull[a:b] - lo
             for arm in opt["arms"].split(","):
                 if arm == "reseed" and g in ("data",):
                     continue

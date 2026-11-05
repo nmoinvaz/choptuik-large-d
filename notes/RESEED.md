@@ -140,6 +140,15 @@ If the re-seeded basin is not wider, C1 and C2 are moot and that is the result.
 - A first-step diagnostic (`reseed_check.py firststep`, 4.2) is recorded beside the basin runs. It perturbs one group
   of unknowns at a time and records how far the first Newton step departs from the exact correction.
 
+*Amendment 2 of 2026-11-05 03:35 UTC.* At δ = 10⁻²⁸ the plain arm converged (max |F| ≤ 10⁻²⁸) to a point 1.4×10⁻²²
+from the truth, with |Δ − Δ_truth| = 1.2×10⁻²³. That fails the criterion |Δ − Δ_truth| ≤ 10⁻²⁴, which was set before
+the system's resolution was known. The first step from δ moves the point by 1.4×10³⁴ δ² along a direction where |F|
+changes by only about 1.4×10⁻⁸ per unit (a near-null direction, σ ≈ 10⁻⁸). So a point converged to 10⁻²⁸ is fixed only
+to about 10⁻²⁰ along it. The criterion stays as written ("back"). The ascent now continues while the corrector converges
+(`--stop conv`), so each run records both measures, and both basins are reported: "back" by 3.3's criterion, and
+"converged" when `newton_qd` meets its tolerance. Seed 1 of the plain arm continues from 10⁻²⁸, and seeds 2 and 3
+restart from 10⁻³⁰.
+
 **3.4 Jump test** (only if 3.3 passes; `hp/reseed_check.py jump`). From the latest qdj1 state, the chain's quad-double
 series (anm_run.py's `coefficients_q`, N 24, the held harmonics on the T75 trend) is summed at h = 2, 5 and 10. Each
 prediction is re-seeded and corrected at D + h, with the held harmonics at the trend's values there. The plain arm runs
