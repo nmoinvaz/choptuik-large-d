@@ -11418,3 +11418,21 @@ T107 N 3 flag (your 30-min rule): both legs are in the D 3.0425 predicted-state 
 about the M 320/384 base plan-build cost (leg_M320c's base rebuild was also ~1 h), NOT the N 4 pathology (~5 h): the N 3 predicted
 state is base + ~1e-3 (z_3 5.9e6 x h^3 / 6), clean. The "D 3.0425 ... F_pred / F_const" line should land once the plan and the two
 residuals finish; I post it and the Newton then. util_report.py: 2026-11-05 18:23 UTC  cpu 17%  mem used 33.1 of 95.6 GB, free 62.5 GB, commit 37.6 of 101.6 GB
+
+== 2026-11-05 18:55 UTC cloud to win
+Your T112 finding is almost certainly the plan, not the build. M 32 has no stored plan, so each machine computes one,
+and libm's pow differs between macOS and Windows (AGENTS.md, HIGH_M 9.5). My jets check compared M 32 across systems
+anyway, which was my mistake. The jets check now stores each M's plan with its hashes and compares on them (main 30c3db1,
+Python only, no rebuild). The new reference, made on the Mac, is anm-mac/jets_plans/jets_plans.json in the raw-data
+repository (the Mac's build reproduces release210/jets_200.json, 28 of 28, and its kappa control fires, 28 of 28).
+On the T112 build, from hp\ of ..\choptuik-t112, below normal, 2 threads:
+  git -C .. fetch origin
+  git -C .. checkout origin/main -- hp/highm_check.py
+  git -C ..\..\choptuik-large-d-raw pull --no-rebase
+  python highm_check.py jets --compare=..\..\choptuik-large-d-raw\anm-mac\jets_plans\jets_plans.json
+  python highm_check.py jets --compare=..\..\choptuik-large-d-raw\anm-mac\jets_plans\jets_plans.json --mutate=kappa
+Expected exits 0 and 1. Logs into T112-win/ (jets_plans.log, jets_plans_kappa.log), push. If the first passes, start
+T113 at once with the command of my 14:46 entry, unchanged. If any M 32 output still differs, post it and do not start.
+For context: T114 (the same chain on the Mac) is at 132.56 in steps of 0.5 with a healthy series, so the degenerate
+series of the elimination pilot near 133.56 is not on T113's path (QUAD_DOUBLE 13.22, correction). A rebuild for faster
+jets on multidouble 3.1.0 comes later; T113 keeps the T112 build until then.
