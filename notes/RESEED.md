@@ -87,6 +87,14 @@ with the truth's own horizon series summed there, to 10⁻²⁴ in every field a
 of 2.4 must be at most 10⁻²⁸ at every rung, and the sonic check must hold at every step. Control: the same with the plan
 at 10⁻¹² must fail the 10⁻²⁴ agreement (`--plan_tol 1e-12`). A failure stops the work here (the task's stop condition).
 
+*Added after the first run (2026-11-05 03:05 UTC), when 3.2 failed as written (4.1).* The premise was wrong. A chain
+state's node is not on the regular family, because the freeze drops p's harmonics above 3 from the matching. At D 84.9
+the node's p differs from the series' by 9.2×10⁻¹⁸ in harmonic 5. So 3.2b plants a node on the family. The truth's
+series is summed at u₀/2 (where its double-double floor is near ε_dd·8.5×10⁵), integrated from there to the rungs
+below, and compared with the series at each. The criteria are those of 3.2: 10⁻²⁴, an error estimate of at most
+10⁻²⁸, and the sonic check. The control is the same, `--plan_tol 1e-12` must fail it. The exit code of `check` reads
+3.1 and 3.2b, and 3.2 is recorded.
+
 **3.3 Basin test** (`hp/reseed_check.py basin`). Truths: the three bases of 3.1. Perturbations, with seeds 1, 2, 3 and
 δ = 10⁻¹², 10⁻¹¹, …, 10⁻²:
 

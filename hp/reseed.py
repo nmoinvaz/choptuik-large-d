@@ -85,13 +85,13 @@ class Reseeder:
         return self.solver((self.nodes[0], 1.0 - u * self.u_scale))
 
     # ------------------------------------------------------------------ the stepper toward the horizon
-    def integrate(self, zh, zl, sh, sl, xs_to, tol, hmax, kt):
+    def integrate(self, zh, zl, sh, sl, xs_to, tol, hmax, kt, x_start=None):
         """the state (sh, sl) at the last node carried to each x in xs_to (increasing), with Delta from z: per piece
         a plan (model.rs plan_path, from a two-node solver) and the kernel's Taylor steps along it, step by step.
         Returns the states at xs_to and per piece the steps' x points and max (x - c) over tau at each of them."""
         M = self.M
         out, info = [], []
-        x = self.x_node
+        x = self.x_node if x_start is None else x_start
         for xb in xs_to:
             s = self.solver((x, xb), kt=kt)
             a = offsets(M, 2)
@@ -192,13 +192,13 @@ class Reseeder:
             Jh, Jl = (np.asarray(v) for v in s.jacobian(*put(dh, dl)))
             Ah = np.ascontiguousarray(Jh[np.ix_(rows, cols)]); Al = np.ascontiguousarray(Jl[np.ix_(rows, cols)])
             if len(rows) == len(cols):
-                xh, xl = dd_solve(Ah.ravel(), Al.ravel(), -Rh, -Rl)
+                xh, xl = dd_solve(Ah, Al, np.ascontiguousarray(-Rh), np.ascontiguousarray(-Rl))
             else:
                 # least squares through the augmented system [[I, A], [A^T, 0]] [r; x] = [-R; 0]
                 nr, nc = len(rows), len(cols)
                 Bh = np.zeros((nr + nc, nr + nc)); Bl = np.zeros_like(Bh)
                 Bh[:nr, :nr] = np.eye(nr); Bh[:nr, nr:] = Ah; Bl[:nr, nr:] = Al; Bh[nr:, :nr] = Ah.T; Bl[nr:, :nr] = Al.T
-                yh, yl = dd_solve(Bh.ravel(), Bl.ravel(), np.r_[-Rh, np.zeros(nc)], np.r_[-Rl, np.zeros(nc)])
+                yh, yl = dd_solve(Bh, Bl, np.r_[-Rh, np.zeros(nc)], np.r_[-Rl, np.zeros(nc)])
                 xh, xl = np.asarray(yh)[nr:], np.asarray(yl)[nr:]
             xh, xl = np.asarray(xh), np.asarray(xl)
             nd = float(np.max(np.abs(xh + xl)))
@@ -343,6 +343,26 @@ def check(argv):
         print(f"    plan to x {p['x']:.6f}: {p['steps']} steps (smallest {p['h_min']:.1e}), max (x - c) {p['max_x_minus_c']:+.2e}, "
               f"stepper error estimate {p['err_est']:.1e}, against the truth's series {rec.get('vs_truth_series', float('nan')):.1e}",
               flush=True)
+    # 3.2b (added after 3.2 failed as written, notes/RESEED.md 3.2): a node planted on the regular family, the truth's
+    # series summed at u_s = u0 / 2, integrated to the rungs below and compared with the series there
+    planted = []
+    inner = sorted([u for u in rs.us if u < rs.us[-1]], reverse=True)
+    if len(inner) >= 2:
+        u_s = inner[0]
+        Nh, Nl = rs.series_at(u_s, np.asarray(z4[0]), np.asarray(z4[1]), th_d, tl_d)
+        xs_to = [1.0 - u for u in inner[1:]]
+        T, info = rs.integrate(np.asarray(z4[0]), np.asarray(z4[1]), Nh, Nl, xs_to, rs.plan_tol, rs.hmax, rs.kt, x_start=1.0 - u_s)
+        T2, _ = rs.integrate(np.asarray(z4[0]), np.asarray(z4[1]), Nh, Nl, xs_to, rs.check_tol, rs.hmax / 2, rs.check_kt, x_start=1.0 - u_s)
+        for u, t, t2, p in zip(inner[1:], T, T2, info):
+            Hh, Hl = rs.series_at(u, np.asarray(z4[0]), np.asarray(z4[1]), th_d, tl_d)
+            d = (t[0] - Hh) + (t[1] - Hl)
+            rec = dict(u=u, steps=p["steps"], max_x_minus_c=p["max_x_minus_c"], vs_series=float(np.max(np.abs(d))),
+                       vs_series_pmac=[float(np.max(np.abs(d[q * M:(q + 1) * M]))) for q in range(4)],
+                       err_est=float(np.max(np.abs((t[0] - t2[0]) + (t[1] - t2[1])))))
+            planted.append(rec)
+            print(f"    3.2b: node on the family at u {u_s:.4f} integrated to u {u:.6f}: {rec['steps']} steps, against the series "
+                  f"{rec['vs_series']:.1e} (p {rec['vs_series_pmac'][0]:.0e} m {rec['vs_series_pmac'][1]:.0e} a {rec['vs_series_pmac'][2]:.0e} "
+                  f"c {rec['vs_series_pmac'][3]:.0e}), error estimate {rec['err_est']:.1e}", flush=True)
     e = (np.asarray(zr[0][sl_]) - np.asarray(z4[0][sl_])) + (np.asarray(zr[1][sl_]) - np.asarray(z4[1][sl_])) - np.asarray(z4[2][sl_])
     err_mh, err_ah = float(np.max(np.abs(e[:M]))), float(np.max(np.abs(e[M:])))
     Fq = sq.residual_q(*zr)
@@ -355,20 +375,23 @@ def check(argv):
                 F=Fmax <= 10 * phi)
     crit_step = dict(agree=all(r.get("vs_truth_series", np.inf) <= 1e-24 for r in stepper) and len(stepper) == len(rs.us) - 1,
                      err_est=all(r["err_est"] <= 1e-28 for r in stepper), sonic=all(r["max_x_minus_c"] < 0 for r in stepper))
-    passed, passed_step = all(crit.values()), all(crit_step.values())
+    crit_planted = dict(agree=bool(planted) and all(r["vs_series"] <= 1e-24 for r in planted),
+                        err_est=all(r["err_est"] <= 1e-28 for r in planted), sonic=all(r["max_x_minus_c"] < 0 for r in planted))
+    passed, passed_step, passed_planted = all(crit.values()), all(crit_step.values()), all(crit_planted.values())
     rec = dict(test="unit", state=path, D=float(D), D_str=meta["D_str"], G=G, phi=phi, mutate=opt["mutate"], rows=opt["rows"],
                levels=opt["levels"], plan_tol=opt["plan_tol"], delta_h=opt["delta_h"], seed=opt["seed"], F_truth=F_truth, err_mh=err_mh,
                err_ah=err_ah, F_max=Fmax, F_horizon_pmac=Fh_rows, crit=crit, passed=passed, stepper=stepper, crit_stepper=crit_step,
-               passed_stepper=passed_step, rungs=diag["rungs"], dropped=diag["dropped"], seconds=diag["seconds"])
+               passed_stepper=passed_step, planted=planted, crit_planted=crit_planted, passed_planted=passed_planted, rungs=diag["rungs"], dropped=diag["dropped"], seconds=diag["seconds"])
     print(f"  re-seeded: |m_h - truth| {err_mh:.2e} (bound {20 * phi:.1e}), |a_h - truth| {err_ah:.2e} (bound {10 * phi / G:.1e}); "
           f"pinned quad-double max|F| {Fmax:.2e} (bound {10 * phi:.1e}; horizon rows p {Fh_rows[0]:.1e}, m {Fh_rows[1]:.1e}, "
           f"a {Fh_rows[2]:.1e}, c {Fh_rows[3]:.1e}); {diag['seconds']} s", flush=True)
     print(f"  3.1 {crit}: {'PASS' if passed else 'FAIL'}", flush=True)
     print(f"  3.2 {crit_step}: {'PASS' if passed_step else 'FAIL'}", flush=True)
+    print(f"  3.2b {crit_planted}: {'PASS' if passed_planted else 'FAIL'}", flush=True)
     if opt["out"]:
         with open(opt["out"], "a") as f:
             f.write(json.dumps(rec) + "\n")
-    return 0 if (passed and passed_step) else 1
+    return 0 if (passed and passed_planted) else 1
 
 
 def jac(argv):
@@ -378,18 +401,27 @@ def jac(argv):
     M, K = int(meta["M"]), len(meta["nodes"])
     o = offsets(M, K)
     s, sp, sq = pinned(meta, D, z4, threads=2)
-    Jh, Jl = (np.asarray(v) for v in s.jacobian(z4[0], z4[1]))
-    J = Jh + Jl
-    r0 = K * 4 * M
-    H = J[r0:r0 + 4 * M, o["mh"]:o["mh"] + 2 * M]
     print(f"{argv[0]}: D {mp.nstr(D, 12)}, G = x_K-1^-(n-1) {float(meta['nodes'][-1]) ** -(float(D) - 3):.3e}")
+    # the chain's kernel (the p rows projected by the freeze: rank 4 at kfreeze 3) and the same without the freeze
+    s0 = make_solver(D, M, nodes=meta["nodes"], kt=meta.get("kt", 36), kc=meta.get("kc", 146), ks=meta.get("ks", 130), threads=2)
+    s0.set_segs(s.get_segs())
+    for label, sx in (("freeze (the chain's)", s), ("no freeze", s0)):
+        Jh, Jl = (np.asarray(v) for v in sx.jacobian(z4[0], z4[1]))
+        J = Jh + Jl
+        r0 = K * 4 * M
+        H = J[r0:r0 + 4 * M, o["mh"]:o["mh"] + 2 * M]
+        print(f" {label}:")
+        jac_groups(H, M)
+    return 0
+
+
+def jac_groups(H, M):
     for name, rr in (("all", np.r_[0:4 * M]), ("p,m", np.r_[0:2 * M]), ("a,c", np.r_[2 * M:4 * M]), ("m,a", np.r_[M:3 * M]),
                      ("m,c", np.r_[M:2 * M, 3 * M:4 * M])):
         U, S, Vt = np.linalg.svd(H[rr])
         mh = np.linalg.norm(Vt[:, :M], axis=1)
         print(f"  rows {name}: singular values {S[0]:.3e} .. {S[-1]:.3e}; the a_h-dominated ones {S[mh < 0.5].min() if (mh < 0.5).any() else 0:.3e}"
               f"..{S[mh < 0.5].max() if (mh < 0.5).any() else 0:.3e}, the m_h-dominated ones {S[mh >= 0.5].min():.3e}..{S[mh >= 0.5].max():.3e}")
-    return 0
 
 
 if __name__ == "__main__":
