@@ -1965,3 +1965,18 @@ recorded on the 2.0.0 build (`anm-mac/release210/jets_200.json`, 28 hashes at M 
 (NEON) every check is bit-identical: `ref` 72 of 72, `scaled`, and `jets` 28 of 28. The kappa control makes all 28 jet
 hashes differ, the 8 Rust tests pass, and `qjet_check.py` prints every number of its 2.0.0 run
 (`anm-mac/release210/`). `dd_horner` equals the replaced loop bit for bit at five points, dyadic and not.
+
+### 13.22 The elimination corrector in the chain: T111 (procedure, 2026-11-05 09:00 UTC)
+
+Written before the run. A coordinator subagent's study (`notes/RESEED.md`, raw-data repository `reseed-mac/`) found that
+re-seeding the horizon data at every point the quad-double corrector steps from or tries (`anm_run.py --reseed 2`,
+`reseed.ElimQ`) converges after jumps of 2, 5 and 10 from 91.12 where the plain corrector fails. Each lands within
+2.5–4.8×10⁻²¹ in Δ of an independent state, and the basin along the series' error direction at 96.12 is 10⁻⁵. Its
+floor test of amendment 10 has passed its unit checks but has not yet run in a chain step. T111 runs the chain with it
+on win, from qdj1's 96.1184 state, with qd9's other options, `--jet_q 1 --reseed 2 --h_max 5 --eps 1e-5`. The
+code is the branch commit a5c7b26 with win's 2.0.0 build (venv-t108); main's `anm_run.py` needs multidouble 2.1.0's
+Python package. T110 (`T110-win/chain`, `chain2`) holds states at every fifth unit from 96.1184, 101.1184 to 126.1184,
+reached by steps of 1 and 0.5 with the plain corrector. The two chains share the kernel, the model and the corrector's
+Newton, not the series, the step or the elimination. Pass at each such D: |Δ_T111 − Δ_T110| ≤ 10⁻²⁰ (amendment 8 of
+`notes/RESEED.md`), where T110's Δ carries the same held-harmonic trend. A larger difference stops the run. Past 127.1
+the steps are compared with T110 wherever it has the same D, and with the formula's trend.
