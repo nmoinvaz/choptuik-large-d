@@ -620,3 +620,8 @@ steps, so 4–10 h per point and 2–4 days for the 11 points.
 **What it decides.** A pass to 3.03 adds 11 points below 3.04375, the lowest point now, at the leg's step. A stop at
 the first point after its halvings means that the series' radius does not cover even 0.0003125 there, and the next
 question is the branch near D 3.04, not the predictor.
+
+**T107 started (2026-11-05 07:19 UTC, win2; `T107-win2/`).** Both pilots passed the start condition. D″ crossed
+10⁻²⁶ at its fifth call, with its Δ 2.2×10⁻³¹ from T105's in double-double. D‴ (M 384) crossed at its fourth call,
+every step full, with its Δ 3.5×10⁻²⁹ from T105's. The three smoke tests at M 48 gave exits 0, 0 and 1, as the Mac's
+did. The two legs run from T105's `p1` states at 3.04375, M 320 at 8 threads and M 384 at 12, toward 3.03.
