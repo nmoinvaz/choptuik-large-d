@@ -1956,3 +1956,12 @@ bit for bit, its coefficient norms and its failing literal criterion (J2 passes 
 the formula at 88.12 and 6.3×10⁻⁷ at 96.12, the held harmonics' bias growing. It was stopped there, since the
 double-double floor of its predictions (1.2×10⁻¹⁴) had reached the pre-screen's `--F_pred_max`, which has no use with
 the quad-double jet. It continues on win as T110 from that state toward D 200, without the pre-screen.
+
+**multidouble 2.1.0 (2026-11-05 07:40 UTC).** psolve's two jet branches moved into multidouble (pull request #30) as
+`FieldSolve::solve_lanes_jet` and `solve_lanes_jet_refine`, which take the coupling and the residual as closures, so hp
+keeps its order of operations. `anm_run.series_at` is multidouble's `dd_horner`, and `solve_lanes_refine_t` now refuses
+a jet lane. hp's `highm_check.py` gained `jets`, the jet residuals' hashes, which `ref` never covered. Its reference was
+recorded on the 2.0.0 build (`anm-mac/release210/jets_200.json`, 28 hashes at M 32, 48 and 64). On the 2.1.0 build
+(NEON) every check is bit-identical: `ref` 72 of 72, `scaled`, and `jets` 28 of 28. The kappa control makes all 28 jet
+hashes differ, the 8 Rust tests pass, and `qjet_check.py` prints every number of its 2.0.0 run
+(`anm-mac/release210/`). `dd_horner` equals the replaced loop bit for bit at five points, dyadic and not.
