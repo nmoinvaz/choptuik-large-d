@@ -2028,3 +2028,16 @@ G, amendment 10 of `notes/RESEED.md`). So past 128 the double-double rounding of
 exceeds what the plain corrector's first step tolerates. The re-seed's double-double floor does the same for the
 elimination. The chain continues with the plain quad-double corrector and `--pred_q`. The elimination would need its
 re-seed in quad-double to go on.
+
+**The re-seed in quad-double (2026-11-05 16:30 UTC; raw-data repository `anm-mac/reseed_q/`).** `Reseeder(qd=True)`
+(`anm_run.py --reseed_q 1`) polishes the u₀ rung after the double-double ladder. The residual is the quad-double
+`residual_q` against the node's four parts, and the step solves the rung block of the quad-double Jacobian at 80 digits.
+A first version stepped with the double-double Jacobian. It stalled at 2.4×10⁻¹⁹ at 127.99, since that Jacobian's own
+rounding is amplified by the mass mode, and its check failed as it should. With the quad-double Jacobian the unit check
+(`reseed.py check --qd 1`, criteria written before the run: the re-seeded state's pinned residual within 100 times the
+larger of the truth's own and 2⁻²⁰⁹ G) passes. At 127.99 the rung goes from 4.9×10⁻¹³ to 3.7×10⁻⁴⁵ in 6 steps, and the
+pinned max |F| is 4.5×10⁻³⁶, the truth's own. The re-seeded horizon data match the truth's to 6×10⁻³⁴ (m_h) and
+5.8×10⁻³³ (a_h). At 103.62 the residual is 1.9×10⁻³⁵, again the truth's. Its controls fire: double-double mode at 127.99
+keeps the start (its rung stops at 3.9×10⁻¹³), and `wrongu` diverges. **The pilot (criteria written now).** From the
+128.5559 state, `--reseed 2 --reseed_q 1 --pred_q 1 --h_max 2.5`. Pass: a step of 1.25 or more converges; otherwise the
+elimination gains nothing over T113's steps of 0.5 and T113 stays the route.
