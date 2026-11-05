@@ -11102,3 +11102,25 @@ T110's stop at 128.49 is recorded (QUAD_DOUBLE 13.22), no relaunch: the plain co
 which is what T111's elimination corrector is for. With T110 ended, run T111 with --threads 4 instead of 2 (if it is
 already running at 2, leave it running). Everything else in my 09:03 entry stands. Its Delta checks against T110 cover
 101.1184 to 126.1184; past 128.49 T111 has no reference but the formula's trend, so post its formula diffs there.
+
+== 2026-11-05 09:46 UTC win
+capacity: cpu 23%, free 17.7 GB
+
+Your 09:18 entry read: T111 was already running at 2 threads, so I left it (started 09:04 UTC, your command verbatim from hp\ of ..\choptuik-t111 at a5c7b26, venv-t108, below normal, detached). T110 chain2 had already stopped at 08:57 (my 09:00 post). Pushed T111-win, raw head 503e991, checked on the remote.
+Correction on myself: my comms watcher had exited on your 09:18 entry and I did not restart it, so for about 25 minutes win was not watching. Restarted now.
+
+T111, start state anm-mac/run_trend_pin3_qdj1/anm_pin3_D96.1184.npz, first two accepted steps:
+  step 0  base D 96.118   jet 278 s, a_max 5.435
+    a 5.0 -> D 101.118  re-seeded ok 18.9 s; predicted |F| 3.59e-10; qd 12 steps (the cap) -> 1.18e-08 (tol 6.4e-20), failed, moved 3.2e-09, 1558 s; Delta 1.743933931478, formula diff -8.2e-07
+    a 2.5 -> D 98.618   re-seeded ok 12.1 s; predicted |F| 5.82e-17; qd 3 steps -> 5.50e-17 (tol 2.5e-20, stall accepted), moved 1.9e-16, 56 s; Delta 1.746408586375, formula diff -7.2e-07
+  step 1  base D 98.618   jet 320 s, a_max 5.394
+    a 5.0 -> D 103.618  re-seeded ok 18.9 s; predicted |F| 3.97e-10; qd 5 steps -> 3.82e-16 (tol 1.6e-19, stall accepted), moved 6.8e-09, 139 s; Delta 1.741576067462, formula diff -9.1e-07
+The a 5.0 at 96.12 did not converge here: the Mac's pilot took 96.1184 -> 101.1184 in 5 corrector steps with Delta 1.743933931207271110837; mine ran all 12 steps damped (lam 0.0625 from step 2), |F| 4.4e-11 -> 1.4e-09 -> 5.5e-09 -> 3.75e-09, each step 105 to 135 s, and its Delta 1.743933931478 differs from the Mac's by 2.7e-10 (that |F| is 1.2e-08, so I do not use it). I post it and do not interpret it. The script then halved to 2.5 (accepted at 98.618) and its next a 5.0 from there converged in 5 steps.
+Delta check against T110: none yet, the accepted D are 98.618 and 103.618 and no T110 state sits there; the first match is a T111 step landing on 101.1184 or later x.1184. Past 128.49 I will post the formula diffs.
+
+util_report 09:45 UTC: 2026-11-05 09:45 UTC  cpu 23%  mem used 14.2 of 31.8 GB, free 17.7 GB, commit 15.8 of 41.8 GB
+  pid 19660    0.08 GB  cpu 4615 s  anm_run.py ... T111-win\chain --state qdj1 D96.1184 ... (the run, 2 threads)
+  pid 18124    0.00 GB  cpu 0 s  anm_run.py (launcher stub)
+  python total 0.1 GB in 2 processes (comms_watch.py not yet counted, started after)
+awake: 0.77 h since my last post (09:00 UTC; wall and awake 6.96 h since the 02:48 UTC baseline, 6.19 h at the last post). battery 100%, power online.
+Next post 11:45 UTC with the step lines, the Delta checks and util_report.
