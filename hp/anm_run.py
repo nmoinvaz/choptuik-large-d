@@ -14,7 +14,7 @@ formulation of hp/pinning.py; their coefficients are zero).
         [--steps 20] [--D_max 200] [--corrector dnp|deflated|newton] [--tol 1e-20] [--tol_growth 1.45]
         [--accept_stall 1e-19] [--junk_only 0] [--threads 4] [--w 24] [--trend T75] [--tol_qd 1e-28]
         [--qd_it 12] [--qd_w 0] [--refine 1] [--probe 0 --probe_c C] [--plan_tol 1e-32] [--fix1 0] [--F_pred_max 0]
-        [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0]
+        [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0] [--pred_q 0]
 
 --corrector qd runs the quad-double Newton of the kernel (hpkernel.driver.newton_qd, Solver.newton_q) on the pinned
 system (pinning.PinnedQ: the held harmonics' offset subtracted from the quad-double residual and added to the step, as
@@ -172,12 +172,14 @@ def main():
     args = list(sys.argv[1:])
     opt = dict(state="T75/pin7_D73.2657.npz", kfreeze=3, N=24, eps=1e-16, h_max=2.0, steps=20, D_max=200.0, corrector="dnp",
                tol=1e-20, tol_growth=1.45, accept_stall=1e-17, junk_only=0, threads=4, w=24, trend="", tol_qd=1e-28, qd_it=12, qd_w=0,
-               refine=1, probe=0, probe_c=0.0, plan_tol=1e-32, fix1=0, F_pred_max=0.0, horizon_alpha=0, fix1_qlu=0, jet_q=0, reseed=0)
+               refine=1, probe=0, probe_c=0.0, plan_tol=1e-32, fix1=0, F_pred_max=0.0, horizon_alpha=0, fix1_qlu=0, jet_q=0, reseed=0, pred_q=0)
     for k in list(opt):
         f = "--" + k
         if f in args:
             i = args.index(f); opt[k] = type(opt[k])(args[i + 1]); del args[i:i + 2]
     raw, out = args[0], args[1]
+    if opt["pred_q"] and (not opt["jet_q"] or opt["reseed"]):
+        raise SystemExit("--pred_q needs --jet_q 1 and no --reseed")
     out_dir = out
     os.makedirs(out, exist_ok=True)
     rec_path = os.path.join(out, "anm_run.jsonl")
@@ -195,15 +197,16 @@ def main():
     last_q = {}
     elim = {}             # --reseed 2: the attempt's Reseeder, for ElimQ in the corrector
 
-    def correct(spx, ph, pl, tol):
+    def correct(spx, ph, pl, tol, z4_start=None):
         """T75's corrector (scan_hp.py dnp): deflated Newton, then plain Newton steps from below 1e-12 if they lower |F|;
-        returns zh, zl, |F|, steps, accepted (converged, or stalled below accept_stall)"""
+        returns zh, zl, |F|, steps, accepted (converged, or stalled below accept_stall). z4_start: the quad-double
+        corrector's start in four parts (--pred_q), else (ph, pl)"""
         if opt["corrector"] == "qd":
             sq = PinnedQ(spx.s, spx.ch, spx.cl)
             if elim.get("rs") is not None:
                 # --reseed 2: the corrector on the system with the horizon data eliminated (hp/reseed.py ElimQ)
                 sq = ElimQ(sq, elim["rs"])
-            z4, hist, conv = newton_qd(sq, qparts(ph, pl), tol=opt["tol_qd"], it_max=opt["qd_it"], w=opt["qd_w"], verbose=True)
+            z4, hist, conv = newton_qd(sq, z4_start if z4_start is not None else qparts(ph, pl), tol=opt["tol_qd"], it_max=opt["qd_it"], w=opt["qd_w"], verbose=True)
             if elim.get("rs") is not None:
                 print(f"      elim projections {sq.counts}", flush=True)
                 if not conv:
@@ -504,6 +507,15 @@ def main():
             screens = []
             while True:
                 ph, pl = series_at(zh, zl, Zh, Zl, a)
+                pred4 = None
+                if opt["pred_q"]:
+                    # --pred_q 1: the prediction summed in quad-double from the quad-double series, the base in its four
+                    # parts, so the corrector starts from it unrounded (a double-double start carries ~eps_dd G in F)
+                    pq = Zq[-1]
+                    for k in range(len(Zq) - 2, -1, -1):
+                        pq = tuple(np.ascontiguousarray(np.asarray(v)) for v in qd_axpy(a, *pq, *Zq[k]))
+                    pred4 = pq
+                    ph, pl = np.asarray(pq[0]), np.asarray(pq[1])
                 Dn = D + mp.mpf(a)                 # exact: the series variable is a to double-double precision
                 rsd = None
                 elim["rs"] = None
@@ -541,7 +553,7 @@ def main():
             t1 = time.time()
             tol = tol_at(Dn)
             if np.isfinite(Fp):
-                ch, cl, Fc, nsteps, accepted, dcorr = correct(spn, ph, pl, tol)
+                ch, cl, Fc, nsteps, accepted, dcorr = correct(spn, ph, pl, tol, pred4)
             else:
                 ch, cl, Fc, nsteps, accepted, dcorr = ph, pl, float("nan"), 0, False, 0.0
             t_corr = time.time() - t1
