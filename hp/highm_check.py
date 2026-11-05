@@ -208,12 +208,15 @@ def ref(opts):
 JET_MUT_KAPPA = 22
 
 
-def jet_hashes(M, threads, mutate=0, segs=None):
+def jet_hashes(M, threads, mutate=0, segs=None, inp=None):
     """the residual's Taylor coefficients on the state jet z_0 + h v at the D = 3.7 state resampled to M (v a fixed
     seeded direction of size 1e-3, Delta excluded): Solver.residual_jet at nout 8 and 20 (its N 8 and 32 lanes), and at
-    M 32 and 48 Solver.residual_jet_q at nout 8 and 20 (its N 8 and 24 lanes), as SHA-256 hashes, and the plan used
-    (segs when given)"""
+    M 32 and 48 Solver.residual_jet_q at nout 8 and 20 (its N 8 and 24 lanes), as SHA-256 hashes, the plan used
+    (segs when given) and the input z (inp = (zh, zl) when given; at M 32 it is the M 48 state resampled by numpy here)"""
     s, zh, zl, m = solver_at(M, threads, segs=segs)
+    own = sha(np.concatenate([zh, zl]))
+    if inp is not None:
+        zh, zl = np.ascontiguousarray(inp[0]), np.ascontiguousarray(inp[1])
     v = 1e-3 * np.random.default_rng(7).uniform(-1, 1, len(zh))
     v[-1] = 0.0
     z = np.zeros(len(zh))
@@ -228,9 +231,9 @@ def jet_hashes(M, threads, mutate=0, segs=None):
                 out[f"jet_qd_n{nout}_{q}"] = sha(np.concatenate([np.asarray(f[q]) for f in F]))
     plan = [list(map(float, g)) for g in m["segs_used"]]
     print(f"  M = {M} (N = {s.size}, from {m['source']}, plan {'given' if segs is not None else 'own'}, sha "
-          f"{sha(np.concatenate([np.asarray(g) for g in plan]))[:16]}): {len(out)} jet outputs in {time.time() - t0:.0f} s",
-          flush=True)
-    return out, plan
+          f"{sha(np.concatenate([np.asarray(g) for g in plan]))[:16]}; input {'given' if inp is not None else 'own'}, "
+          f"this machine's input sha {own[:16]}): {len(out)} jet outputs in {time.time() - t0:.0f} s", flush=True)
+    return out, plan, (zh, zl, own)
 
 
 def jets(opts):
@@ -244,11 +247,21 @@ def jets(opts):
     mutate = JET_MUT_KAPPA if opts.get("mutate") == "kappa" else 0
     want = json.load(open(opts["compare"])) if "compare" in opts else {}
     plans = want.get("plans", {})
-    runs = {str(M): jet_hashes(M, threads, mutate, plans.get(str(M))) for M in Ms}
-    allh = {M: h for M, (h, _) in runs.items()}
+    # the inputs beside the reference (F_inputs.npz), so that a resampled input (M 32) is the same on every machine
+    fin = opts["compare"][:-5] + "_inputs.npz" if "compare" in opts else None
+    inputs = np.load(fin) if fin and os.path.exists(fin) else {}
+    runs = {str(M): jet_hashes(M, threads, mutate, plans.get(str(M)),
+                               (inputs[f"zh_{M}"], inputs[f"zl_{M}"]) if f"zh_{M}" in inputs else None) for M in Ms}
+    allh = {M: r[0] for M, r in runs.items()}
+    for M, r in runs.items():
+        if M in want.get("inputs", {}):
+            print(f"  M = {M:>3} input: this machine's {r[2][2][:16]}, the reference's {want['inputs'][M][:16]}"
+                  f" ({'the same' if r[2][2] == want['inputs'][M] else 'DIFFERENT'})")
     if "save" in opts:
-        json.dump(dict(allh, plans={M: p for M, (_, p) in runs.items()}), open(opts["save"], "w"), indent=1)
-        print(f"saved {sum(len(v) for v in allh.values())} hashes and {len(runs)} plans to {opts['save']}")
+        json.dump(dict(allh, plans={M: r[1] for M, r in runs.items()}, inputs={M: r[2][2] for M, r in runs.items()}),
+                  open(opts["save"], "w"), indent=1)
+        np.savez(opts["save"][:-5] + "_inputs.npz", **{f"{q}_{M}": r[2][i] for M, r in runs.items() for i, q in enumerate(("zh", "zl"))})
+        print(f"saved {sum(len(v) for v in allh.values())} hashes, {len(runs)} plans and inputs to {opts['save']}")
         return 0
     bad = n = 0
     for M, h in allh.items():
