@@ -283,6 +283,25 @@ The first step then grows about as δ², with coefficients near 10²⁶–10³³
 is the plain basin of 4.3. The high harmonics of m_h are no exception: alone they move the a rows through the mass mode.
 They have gain about 1 into the node only together with their own small a_h part, the singular directions of 2.1.
 
+**4.3 The basin test** (`reseed-mac/basin/*.jsonl`, the table from `python3 hp/reseed_check.py summary
+reseed-mac/basin/*.jsonl`). The "back" and "converged" measures are those of amendment 2. Family B at 84.9073:
+
+| arm | seeds | basin, converged | basin, back | first failure | start max \|F\| at the edge, after the re-seed |
+|---|---|---|---|---|---|
+| plain | 3 | 10⁻²⁷ | 10⁻²⁹ | 10⁻²⁶ (all three seeds) | 9.6×10⁻¹⁵ |
+| re-seeded | 1 | 10⁻¹³ | 10⁻¹³ | 10⁻¹² | 3.7×10⁻¹³ |
+| elim | 1 | 10⁻¹² | 10⁻¹² | 10⁻¹¹ | 3.7×10⁻¹² |
+
+- The plain corrector converges while the start's max |F| is at most about 10⁻¹⁴. That is 13.19's empirical edge, here
+  reached by data errors of 10⁻²⁷ through G. Above 10⁻²⁹ it converges to points up to 4×10⁻²¹ away along the near-null
+  direction (amendment 2).
+- Every re-seeded or eliminated run that converged landed within 2×10⁻³⁰ of the truth (3×10⁻²⁵ at 10⁻¹⁴).
+- The criterion of 3.3, a re-seeded basin at least 100 times the plain one in family B, passes at this base by 10¹⁴ for
+  the single re-seed and 10¹⁵ for elim, with seed 1 for those two arms (seeds 2 and 3 pending).
+- The toy's 10⁻¹ is far off. In family B the limit is the second-order term of 4.2. The node's white noise reaches the
+  m_h directions of gain about 1 through the re-seed. Elim takes one decade more, then fails the same way (its first
+  step at 10⁻¹¹ is 2.7×10⁻⁷).
+
 **4.4 The jump test from 91.1184** (`reseed-mac/jump/jump.jsonl`, `jump_D91.1184*.log`). The quad-double series (N 24,
 958 s on two threads) has |z_k| falling from 1.8 to 1.4×10⁻²⁵. At h = 2 its smallest term is 2.4×10⁻¹⁸ (order 24). Still,
 the prediction's pinned quad-double max |F| is 3.2×10⁻⁸, mostly the horizon block. That is G (2×10¹³) times a data
