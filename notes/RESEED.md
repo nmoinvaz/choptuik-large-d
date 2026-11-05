@@ -87,7 +87,7 @@ with the truth's own horizon series summed there, to 10⁻²⁴ in every field a
 of 2.4 must be at most 10⁻²⁸ at every rung, and the sonic check must hold at every step. Control: the same with the plan
 at 10⁻¹² must fail the 10⁻²⁴ agreement (`--plan_tol 1e-12`). A failure stops the work here (the task's stop condition).
 
-*Added after the first run (2026-11-05 03:05 UTC), when 3.2 failed as written (4.1).* The premise was wrong. A chain
+*Added after the first run (2026-11-05, between 02:51 and 02:57 UTC), when 3.2 failed as written (4.1).* The premise was wrong. A chain
 state's node is not on the regular family, because the freeze drops p's harmonics above 3 from the matching. At D 84.9
 the node's p differs from the series' by 9.2×10⁻¹⁸ in harmonic 5. So 3.2b plants a node on the family. The truth's
 series is summed at u₀/2 (where its double-double floor is near ε_dd·8.5×10⁵), integrated from there to the rungs

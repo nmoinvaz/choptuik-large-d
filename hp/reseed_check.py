@@ -118,6 +118,51 @@ def basin(argv):
     return 0
 
 
+def firststep(argv):
+    """the first Newton step's nonlinearity, by unknown group: the truth perturbed by delta along seed 1's family-B
+    direction restricted to one group (centre data, nodes, horizon data, Delta, or all), with or without the re-seed;
+    one Solver.newton_q (the pinned quad-double Newton step dz at the start) per case. |dz + e| / |e| is the step's
+    departure from the exact correction -e (small where the start is in the linear regime)."""
+    path, out = argv[0], argv[1]
+    opt = parse(argv, dict(deltas="1e-12,1e-14", groups="centre,nodes,data,Delta,all", arms="plain,reseed", threads=2, seed=1))
+    require_raw(out)
+    z4, meta = load_q(path)
+    D = mp.mpf(meta["D_str"])
+    M, K = int(meta["M"]), len(meta["nodes"])
+    o = offsets(M, K)
+    s, sp, sq = pinned(meta, D, z4, threads=opt["threads"])
+    truth = c4(z4)
+    rs = Reseeder(meta, D, threads=opt["threads"])
+    dfull = direction(truth, M, K, "B", opt["seed"])
+    span = dict(centre=(0, 2 * M), nodes=(2 * M, o["mh"]), data=(o["mh"], o["mh"] + 2 * M), Delta=(o["L"] - 1, o["L"]), all=(0, o["L"]))
+    for delta in [float(x) for x in opt["deltas"].split(",")]:
+        for g in opt["groups"].split(","):
+            d = np.zeros_like(dfull)
+            a, b = span[g]
+            d[a:b] = dfull[a:b]
+            for arm in opt["arms"].split(","):
+                if arm == "reseed" and g in ("data",):
+                    continue
+                t0 = time.time()
+                zp = c4(qd_axpy(delta, np.ascontiguousarray(d), np.zeros_like(d), np.zeros_like(d), np.zeros_like(d), *truth))
+                if arm == "reseed":
+                    zp = c4(rs.reseed(zp)[0])
+                e = qdiff(zp, truth)
+                st = sq.newton_q(*zp)
+                dz = np.asarray(st[0]) + np.asarray(st[1])
+                rec = dict(test="firststep", state=path, D=float(D), delta=delta, group=g, arm=arm, e=float(np.max(np.abs(e))),
+                           e_mh=float(np.max(np.abs(e[o["mh"]:o["mh"] + M]))), e_ah=float(np.max(np.abs(e[o["ah"]:o["ah"] + M]))),
+                           e_Delta=float(abs(e[-1])), F=qmax(st[4:6]), dz=float(np.max(np.abs(dz))), dz_Delta=float(dz[-1]),
+                           dz_plus_e=float(np.max(np.abs(dz + e))), piv=[float(st[6]), float(st[7])], seconds=round(time.time() - t0, 1))
+                rec["nonlin"] = rec["dz_plus_e"] / max(rec["e"], 1e-300)
+                print(f"  delta {delta:.0e}, {g:6s} {arm:6s}: |e| {rec['e']:.1e} (m_h {rec['e_mh']:.1e}, a_h {rec['e_ah']:.1e}, Delta "
+                      f"{rec['e_Delta']:.1e}), max|F| {rec['F']:.1e}, |dz| {rec['dz']:.1e} (Delta {rec['dz_Delta']:+.1e}), |dz + e| / |e| "
+                      f"{rec['nonlin']:.1e}; {rec['seconds']} s", flush=True)
+                with open(out, "a") as f:
+                    f.write(json.dumps(rec) + "\n")
+    return 0
+
+
 def trend_slopes(raw, M, ks_held, folder="T75"):
     """anm_run.py --trend: the exponents s of |v| ~ n^s per held coefficient from the stored states of folder (every fourth),
     the same rule (constant sign, at least 6 states, fit residual in ln|v| below 0.05; else 0)"""
@@ -252,6 +297,8 @@ def jump(argv):
 
 
 if __name__ == "__main__":
+    if len(sys.argv) > 2 and sys.argv[1] == "firststep":
+        sys.exit(firststep(sys.argv[2:]))
     if len(sys.argv) > 2 and sys.argv[1] == "jump":
         sys.exit(jump(sys.argv[2:]))
     if len(sys.argv) > 2 and sys.argv[1] == "basin":
