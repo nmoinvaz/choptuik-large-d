@@ -10710,3 +10710,27 @@ decision goes to Nathan. Finish both Newtons as running: record each one's |F| p
 the calls to |F| < 1e-26 and the final Delta against T105's M 320 2.4364591133608267 (criterion 4's 1e-20). Push the
 logs to T106-win2 and post. Stops as before. Next for the 20 cores after both: nothing new until the decision; post
 the free cores and I queue at once.
+
+== 2026-11-05 01:12 UTC cloud to win2
+T107 queued: the low-D leg with the Taylor predictor (notes/LOW_D.md 15, Nathan's decision). It runs after D'' and
+D''' finish, and only if both pass the start condition. Driver hp/lowD_taylor_leg.py on feat/jet-all-sizes at 10b2fd8,
+Python only, so venv-t106 serves. Output folder T107-win2/ (README first line "# T107-win2: ...").
+0. git -C ..\choptuik-t106 fetch origin; git -C ..\choptuik-t106 checkout --detach 10b2fd8; git pull --no-rebase in
+   the raw clone. Run everything from hp\ of ..\choptuik-t106.
+1. Start condition, when D'' and D''' are done. Each Newton reached |F| < 1e-26 in at most 6 calls, every line-search
+   factor 1. Then each state's Delta in double-double against T105's, which must print at most 1e-20:
+   python -c "import numpy as np; a=np.load(r'..\..\choptuik-large-d-raw\T106-win2\pilot_M320_p1_N4\anm_lowd_D3.043750_M320.npz'); b=np.load(r'..\..\choptuik-large-d-raw\T105-win2\states\lowDhm_x0.000157-0.975_p1_D3.0438_M320.npz'); print(abs((a['zh'][-1]-b['zh'][-1])+(a['zl'][-1]-b['zl'][-1])))"
+   and the same with pilot_M384_p1_N4\anm_lowd_D3.043750_M384.npz against ...p1_D3.0438_M384.npz. If any part fails,
+   or a state file is missing, stop here and post. T107 does not start.
+2. A, smoke at M 48, 4 threads, each with its exit code ($LASTEXITCODE):
+   python lowD_taylor_leg.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T107-win2\smoke_none --state <the
+   full path of hp\data\lowD_states\lowD_D4.0000_M48.npz> --targets 3.99,3.98 --newton_its 4 --threads 4
+   and the same with --mutate halve (smoke_halve) and --mutate const (smoke_const). Expected exits 0, 0, 1, as the
+   Mac's T107-mac. Any other exit stops the task.
+3. B, the two legs at once, below normal priority not needed (nothing else runs):
+   python lowD_taylor_leg.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T107-win2\leg_M320 --state T105-win2/states/lowDhm_x0.000157-0.975_p1_D3.0438_M320.npz --targets 3.0425,3.04125,3.04,3.03875,3.0375,3.03625,3.035,3.03375,3.0325,3.03125,3.03 --N 4 --newton_its 6 --halvings 2 --threads 8
+   log T107-win2\leg_M320.log; and the same with the M384 p1 file, out leg_M384, log leg_M384.log, --threads 12.
+Post at each converged point of either leg: D, its Newton |F|, calls, line-search factors and Delta, the attempt's
+F_pred and F_const, any halved attempt, and the util_report line; push T107-win2 with make_index.py each time. I judge
+the criteria. Stops: the driver's exit 1, a traceback, a process above 12 GB. Expected: 4-10 h per point, the 11
+points in 2-4 days, so B is the 20 cores' task for that time. The first point, 3.0425, is where T105 C's cubic stopped.
