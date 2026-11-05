@@ -1995,3 +1995,16 @@ corrector: win's commit a5c7b26 has amendment 10's floor test as its default, an
 step of 2.5 converged, then a full 5 to 103.62. With its D at 98.62 + 5k, off T110's grid, the check against T110 is
 made by one plain step of 0.5 from T110's state half a unit below each of T111's D up to 118.62 (T111b), and directly
 at 123.62, with the same bound of 10⁻²⁰.
+
+**The check fired at 103.62, and its cause (2026-11-05 11:40 UTC).** T111b's plain step to 103.6184 gave a Δ 1.004×10⁻²⁰
+from T111's, over the bound, and win stopped T111 (`T111-win/check_pairs.txt`; 3.2×10⁻²⁴ at 98.62, and 8.6×10⁻²¹
+against T110's own state at 123.62). `hp/held_plan_check.py` separates the two ways the paths' systems differ
+(raw-data repository `anm-mac/held_plan/D103.6184.log`). The held harmonics differ by 8.7×10⁻¹⁹ between the two
+states, since each chain re-bases them in float64 on its own previous state. The Taylor plans are equal (12 steps
+each). Re-solved from the plain state with T111's held values and plan, Δ equals T111's to 4.8×10⁻³³. With only the held
+values swapped back, the difference is again 1.0042×10⁻²⁰, and with only the plan swapped it is 0. So the whole
+difference is the held values' dependence on the path, about 10⁻¹³ of their bias against the formula (13.19), and the
+two correctors reach the same root of the same system to quad-double. The bound of amendment 8 measured that dependence,
+not the corrector. **Amendment (written before T111 restarts):** at each pair the check re-solves the plain state with
+T111's held values and plan (`held_plan_check.py`, run 1), and passes at |ΔΔ| ≤ 10⁻²⁸, the corrector's tolerance. The
+held values' difference and its effect on Δ are recorded beside it. T111 continues from its 123.62 state.
