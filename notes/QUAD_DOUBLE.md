@@ -1943,12 +1943,12 @@ faster than the Mac (the quad-double LU in 8.6 s against 40.6 s). The Mac runner
 | 86.95 | 9.6×10⁻¹² | 1.7×10⁻²² | 1.3×10⁻¹⁹ | 2.0×10⁻¹⁴ | 3.9×10⁻⁶ |
 | 88.12 | 9.2×10⁻¹² | 3.6×10⁻²² | 2.3×10⁻¹⁹ | 4.1×10⁻¹⁴ | 8.2×10⁻⁶ |
 
-At every base the double-double jet's order-1 coefficient is 4×10⁶ to 7×10⁷ times closer to the quad-double model
-than the chain's z_1 is to solving it (|R|), and the quad-double jet sits at R's spread. The chain's z_1 error grows
-from 10⁻⁵ to 4×10⁻³ of |z_1| over these 8 units of D. At the four lower bases R resolves the "1000 times closer"
-criterion and it passes. At 86.95 and 88.12 the ratio is 1.4 and 1.7×10⁻³, R's spread limiting it, as at 85.75. The double-double
-jet's regression check on the 2.0.0 build (`jet_check.py`, J2 at T75's 73.27 state) reproduces the 1.9.0 build's
-record bit for bit, its coefficient norms and its failing literal criterion (J2 passes in its amended form, 13.16).
+At every base the double-double jet's order-1 coefficient is 4×10⁶ to 7×10⁷ times closer to the quad-double model than
+the chain's z_1 is to solving it (|R|), and the quad-double jet sits at R's spread. The chain's z_1 error grows from
+10⁻⁵ to 4×10⁻³ of |z_1| over these 8 units of D. At the four lower bases R resolves the "1000 times closer" criterion
+and it passes. At 86.95 and 88.12 the ratio is 1.4 and 1.7×10⁻³, R's spread limiting it, as at 85.75. The double-double
+jet's regression check on the 2.0.0 build (`jet_check.py`, J2 at T75's 73.27 state) reproduces the 1.9.0 build's record
+bit for bit, its coefficient norms and its failing literal criterion (J2 passes in its amended form, 13.16).
 
 **The chain with the quad-double jet (2026-11-05 03:17 UTC).** `anm-mac/run_trend_pin3_qdj1/` went from 87.12 to
 96.12 in 9 steps of 1.0. Each correction took 3 quad-double steps and moved about 3×10⁻¹⁹. Its Δ lies 3.7×10⁻⁷ below
