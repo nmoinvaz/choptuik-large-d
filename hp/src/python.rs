@@ -63,7 +63,7 @@ trait Api: Send + Sync {
     /// qsolve::newton_q
     fn newton_q(&mut self, z: [&[f64]; 4], mutate: u8) -> Result<qsolve::QStep, String>;
     /// model::residual_jet: the residual's coefficients 0..nout-1 on the jet state zs with the dimension n + h as the
-    /// jet variable; the jet lanes are instantiated for M = 32, 48 and 64 and N = 8, 16, 32 coefficients only
+    /// jet variable; the jet lanes are instantiated at every M of make_ctx's list and for N = 8, 16, 32 coefficients
     fn residual_jet(&mut self, zs: &[(&[f64], &[f64])], nout: usize, mutate: u8) -> Result<Vec<(Vec<f64>, Vec<f64>)>, String>;
     /// qsolve::residual_jet_q: residual_jet in quad-double, each z_k and each output coefficient in four parts; the
     /// quad-double jet lanes are instantiated for M = 32 and 48 and N = 8, 24, 32 coefficients only
@@ -280,26 +280,16 @@ impl<const B: usize> Api for Ctx<B> {
 }
 
 impl<const B: usize> Ctx<B> {
-    /// residual_jet on the sizes the jet lanes are instantiated for
+    /// residual_jet at this context's size: generic in B, so the jet lanes exist at every M that make_ctx builds and a
+    /// size added there needs nothing here (the low-D runs use M = 320, 384 and 512)
     fn residual_jet_sized(&self, zs: &[(&[f64], &[f64])], nout: usize) -> Result<Vec<(Vec<f64>, Vec<f64>)>, String> {
-        let me: &dyn std::any::Any = self;
-        macro_rules! at {
-            ($bb:literal) => {
-                if let Some(c) = me.downcast_ref::<Ctx<$bb>>() {
-                    return match nout {
-                        0 => Err("nout must be at least 1".into()),
-                        1..=8 => model::residual_jet::<8, $bb>(c, zs, true, nout),
-                        9..=16 => model::residual_jet::<16, $bb>(c, zs, true, nout),
-                        17..=32 => model::residual_jet::<32, $bb>(c, zs, true, nout),
-                        _ => Err(format!("nout must be at most 32, not {nout}")),
-                    };
-                }
-            };
+        match nout {
+            0 => Err("nout must be at least 1".into()),
+            1..=8 => model::residual_jet::<8, B>(self, zs, true, nout),
+            9..=16 => model::residual_jet::<16, B>(self, zs, true, nout),
+            17..=32 => model::residual_jet::<32, B>(self, zs, true, nout),
+            _ => Err(format!("nout must be at most 32, not {nout}")),
         }
-        at!(4);
-        at!(6);
-        at!(8);
-        Err("residual_jet: M must be 32, 48 or 64 (the jet lanes are instantiated for these sizes only)".into())
     }
 }
 
@@ -536,7 +526,7 @@ impl Solver {
     /// The residual's Taylor coefficients in the dimension: on the jet state z(h) = sum_k z_k h^k (zs_hi, zs_lo the
     /// coefficient vectors z_k, the first the state itself) with n + h as the variable, the coefficients of orders
     /// 0..nout-1 of F, as two lists of arrays (hi, lo). With z_k absent the order-k coefficient is the right-hand side
-    /// of order k of the Taylor continuation in D (notes/QUAD_DOUBLE.md 13.15). M = 32, 48 or 64; nout <= 32.
+    /// of order k of the Taylor continuation in D (notes/QUAD_DOUBLE.md 13.15). Every M the kernel is built for; nout <= 32.
     /// mutate: model::JET_MUT_FREEZE_N (21, the dimension frozen) or JET_MUT_KAPPA (22, kappa's n frozen), the controls.
     #[pyo3(signature = (zs_hi, zs_lo, nout, mutate=0))]
     #[allow(clippy::type_complexity)]

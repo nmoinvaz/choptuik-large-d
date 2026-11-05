@@ -1503,7 +1503,8 @@ for bit what they were; `Series<N>` on a jet): pull request #26 of nmoinvaz/mult
 controls; 38 CI checks pass), the branch `feat/jet-lane` until release 1.9.0. hp's kernel on the branch `anm` (backed
 up as `wip/anm`): `centre_series`, `taylor_coeffs` and `horizon_series` take the dimension through `Param`,
 `psolve` solves a jet order by order with the value LU, and `residual_jet` returns the residual's coefficients in D
-on a jet state (M 32, 48, 64; up to 32 coefficients; the controls JET_MUT_FREEZE_N and JET_MUT_KAPPA). The
+on a jet state (M 32, 48, 64 then, every M the kernel builds since 2026-11-04, [LOW_D.md](LOW_D.md) 14; up to 32
+coefficients; the controls JET_MUT_FREEZE_N and JET_MUT_KAPPA). The
 bit-identity checks of AGENTS.md against T81's references pass with it: `ref` 72 outputs bit-identical, `scaled`
 bit-identical with its control firing (`anm-mac/highm_ref.log`, `highm_scaled.log`). Scripts `hp/jet_check.py` (J2)
 and `hp/anm_step.py` (J3, J4); records in `anm-mac/` of the raw-data repository.
