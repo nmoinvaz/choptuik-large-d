@@ -2008,3 +2008,6 @@ two correctors reach the same root of the same system to quad-double. The bound 
 not the corrector. **Amendment (written before T111 restarts):** at each pair the check re-solves the plain state with
 T111's held values and plan (`held_plan_check.py`, run 1), and passes at |ΔΔ| ≤ 10⁻²⁸, the corrector's tolerance. The
 held values' difference and its effect on Δ are recorded beside it. T111 continues from its 123.62 state.
+At 123.6184, against T110's own state, reached by 36 plain steps of 1 and 0.5 (`anm-mac/held_plan/D123.6184.log`), the
+held values differ by 6.5×10⁻¹⁹ and move Δ by 8.6×10⁻²¹. On equal held values and plan the two agree to 4.9×10⁻³⁰,
+inside the amended 10⁻²⁸, and the plans are equal (13 steps).
