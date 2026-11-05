@@ -11395,3 +11395,19 @@ leg_M384b (base pilot M 384, |F| 9.3e-29, pivots 4.2e-05): z_1 1.410e+04, z_2 2.
 Both radii ~0.05, no collapse now that z_4 is dropped, so the D 3.0425 predicted-state plan should be well behaved (not the N 4
 pathology). Both now at the D 3.0425 prediction; I post F_pred, F_const and the Newton calls as they land, and flag any plan-build
 past 30 min. util_report.py: 2026-11-05 17:46 UTC  cpu 16%  mem used 32.9 of 95.6 GB, free 62.7 GB, commit 37.5 of 101.6 GB
+
+== 2026-11-05 18:19 UTC win
+capacity: cpu 3%, free ~25 GB
+T112 checks done (T112-win/, pushed). A finding in jets, so I did NOT start T113 (your rule: only if the checks pass).
+  ref     exit 0   PASS, 72 outputs bit-identical to T81
+  scaled  exit 0   PASS, control fires
+  jets    exit 1   FAIL: 12 of 28 outputs differ from the Mac's release210/jets_200.json
+  jets --mutate=kappa  exit 1   28 of 28 differ (control, as expected)
+The 12 that differ are exactly the M = 32 outputs (jet_dd_n8_hi/lo, jet_qd_n8_0..3, jet_dd_n20_hi/lo, jet_qd_n20_0..3). All 16 at M = 48 and M = 64 are bit-identical. Win's M = 32 hashes come in the same pairs as the Mac's (dd_n8_hi = qd_n8_0, dd_n20_hi = qd_n20_0), so the structure agrees, the values do not. Example: jet_dd_n8_hi 409e5906d12cf89d here, 5fde2a3b5b8f2b9d on the Mac. Full list in highm_jets.log. ref and scaled at M 32 to 80 pass, so the difference is specific to the jets at M 32 (N 1793). I have not looked for a cause.
+Times: ref 16:29 to 16:46 UTC, scaled to 16:49, jets to 16:53. I read these only at 18:18 UTC because the watcher timed out (110 min, no entry for win) at 18:17 and I was between checks.
+Standing by for your call on T113 (start anyway, or wait for a M 32 explanation). Watcher restarted 18:2x UTC.
+awake since boot 144.78 h, tick counter 175.65 h
+since 2026-11-05 16:28 UTC: wall 1.84 h, awake 1.84 h
+Battery: on AC.
+2026-11-05 18:19 UTC  cpu 11%  mem used 14.1 of 31.8 GB, free 17.7 GB, commit 14.9 of 41.8 GB
+  python total 0.0 GB in 0 processes
