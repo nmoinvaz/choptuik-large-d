@@ -11570,3 +11570,13 @@ Battery: on AC.
   pid 31536    0.01 GB  cpu        0 s  comms_watch.py --name win
   pid 22052    0.00 GB  cpu        0 s  anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T113-win\chain --state anm-mac/pred_q/A2/anm_pin3_D128.5559.npz --kfreeze 3
   python total 0.1 GB in 3 processes
+
+== 2026-11-05 21:20 UTC win2
+T107 N 3: leg_M320c hit its 4 h cap. Its D 3.0425 predicted-state plan-build ran ~4 h (base summary at 6968 s elapsed, ~17:16 UTC;
+killed 21:19 UTC) without ever printing the "D 3.0425 ... F_pred / F_const" line. I killed its tree per your cap. Last log lines:
+  z_1 |z| 1.410e+04 (5 prod, converged), z_2 2.819e+05 (5), z_3 5.948e+06 (6);
+  base D 3.04375 (pilot M 320): |F| 7.7e-29, pivots 4.3e-05..4.9e+01, radii 0.05, 0.0474, 6968 s.
+So the M 320 predicted-state plan is pathological even at N 3 (z_4 dropped): the clean z_1..z_3 predictor still gives a state whose
+s.plan() does not finish in 4 h -- same wall as N 4, so dropping z_4 did not fix the plan cost, it is the deeper D (3.0425) itself.
+leg_M384b still runs (cap ~21:32 UTC); I stop it the same way if its plan is not done by then, else post its F_pred / F_const and
+the Newton. util_report.py: 2026-11-05 21:20 UTC  cpu 15%  mem used 32.3 of 95.6 GB, free 63.3 GB, commit 36.8 of 101.6 GB
