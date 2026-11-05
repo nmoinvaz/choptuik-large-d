@@ -11621,3 +11621,36 @@ cores at normal priority (nothing else runs; T107 stopped, T105 C parked). I pos
 (ref / scaled / jets 0,0,0 and kappa 1), step 3's two jet_scale tables (old venv-t106 vs new venv-t115), and step 4's D 3.0425
 plan trace with HP_PLAN_TRACE=500 (2 h cap). Build stops: a compile error (I post the first 60 lines), above 3 h, or above 32 GB.
 util_report.py: 2026-11-05 22:13 UTC  cpu 15%  mem used 31.6 of 95.6 GB, free 64.0 GB, commit 36.0 of 101.6 GB
+
+== 2026-11-05 22:14 UTC win
+capacity: cpu 49%, free ~18 GB
+T113 is at D 137.5559 (step 18 series done, step 19 corrector next), 1 h 52 min since the 20:22 UTC restart, no stop, no traceback, largest process 0.09 GB. It is past the 135.56 wall (T110 stopped at 128.49, T111 at 127.99). Pushed (T113-win/chain.log, chain/ with anm_pin3_D137.5559.npz).
+Accepted steps (plain corrector, --pred_q 1; every one is a = 0.5, qd 3 to 4 steps, stall accepted; seconds are the corrector only, each step also costs ~228 s for the series):
+  D          pred |F|   qd  formula diff  moved    s
+  129.0559   2.74e-12   3   -1.9e-06      1.6e-19  29
+  129.5559   3.80e-12   3   -1.9e-06      3.4e-20  28
+  130.0559   4.19e-12   4   -2.0e-06      1.2e-19  35
+  130.5559   4.69e-12   3   -2.0e-06      8.9e-20  27
+  131.0559   3.87e-12   3   -2.0e-06      1.5e-19  29
+  131.5559   6.79e-12   3   -2.0e-06      1.0e-19  29
+  132.0559   9.56e-12   3   -2.0e-06      1.7e-19  28
+  132.5559   9.03e-12   3   -2.1e-06      3.0e-20  27
+  133.0559   1.27e-11   3   -2.1e-06      3.0e-20  28
+  133.5559   1.91e-11   3   -2.1e-06      8.8e-20  28
+  134.0559   1.40e-11   3   -2.1e-06      9.7e-20  28
+  134.5559   1.59e-11   4   -2.1e-06      8.4e-20  38
+  135.0559   2.51e-11   4   -2.2e-06      1.3e-19  37
+  135.5559   3.17e-11   4   -2.2e-06      2.2e-19  37
+  136.0559   3.28e-11   4   -2.2e-06      4.8e-20  37
+  136.5559   3.56e-11   4   -2.2e-06      1.2e-19  38
+  137.0559   5.69e-11   4   -2.2e-06      1.9e-19  37
+  137.5559   7.13e-11   4   -2.3e-06      1.9e-19  38
+The a = 1 trial fails at every base (18 of 18, qd 1 step, predicted |F| 3.6e-09 at 129.56 growing to 7.1e-08 at 138.06), ~95 s each, so about 27 % of the wall time (~6.2 min per 0.5 step). The series stays healthy: ratios 2-5 at D 137.56 are 172.0 155.6 145.5 33.9, a_max 2.041 (at 128.56 they were 160.2 144.8 134.9 46.1). No step has fallen below 0.5, so the 0.0625 rule has not triggered. At this rate D 200 is about 125 h away; --h_max 0.5 would save the failing trial if you want it, I change nothing without your word. Next post ~00:15 UTC.
+awake since boot 148.69 h, tick counter 179.56 h
+since 2026-11-05 20:39 UTC: wall 1.57 h, awake 1.57 h
+Battery: on AC.
+2026-11-05 22:13 UTC  cpu 53%  mem used 13.9 of 31.8 GB, free 17.9 GB, commit 15.6 of 41.8 GB
+  pid 13704    0.09 GB  cpu    19938 s  anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T113-win\chain --state anm-mac/pred_q/A2/anm_pin3_D128.5559.npz --kfreeze 3
+  pid 23156    0.01 GB  cpu        0 s  comms_watch.py --name win
+  pid 22052    0.00 GB  cpu        0 s  anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T113-win\chain --state anm-mac/pred_q/A2/anm_pin3_D128.5559.npz --kfreeze 3
+  python total 0.1 GB in 3 processes
