@@ -11612,3 +11612,12 @@ split Cauchy sums: bit-identity checks, jet timing, and T107's D 3.0425 plan tra
    then the trace lines of the slowest segment (the first lines, every tenth after, the last ones), whether or not it
    finishes.
 Post after 2 (the exits), after 3 (the two tables), and after 4. Push T115-win2/ at each post.
+
+== 2026-11-05 22:13 UTC win2
+T115 started. Worktree choptuik-t115 at perf/md32 aeea2d1 (multidouble "=3.2.0", Cauchy sums with a borrowed accumulator); new
+venv-t115 (Python 3.12.8, numpy 2.5.4, scipy 1.18.1, maturin 1.16.0, mpmath pinned 1.3.0 for the T81 references as in T106). The
+T106 build and venv are left untouched. pip uninstall -y multidouble done; hp/build.sh running to T115-win2\hp_build\build.log, all
+cores at normal priority (nothing else runs; T107 stopped, T105 C parked). I post the build result, then step 2's four exits
+(ref / scaled / jets 0,0,0 and kappa 1), step 3's two jet_scale tables (old venv-t106 vs new venv-t115), and step 4's D 3.0425
+plan trace with HP_PLAN_TRACE=500 (2 h cap). Build stops: a compile error (I post the first 60 lines), above 3 h, or above 32 GB.
+util_report.py: 2026-11-05 22:13 UTC  cpu 15%  mem used 31.6 of 95.6 GB, free 64.0 GB, commit 36.0 of 101.6 GB
