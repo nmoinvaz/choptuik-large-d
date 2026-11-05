@@ -101,15 +101,19 @@ def source_for(M):
     return STATE(48) if M <= 48 else STATE(80)
 
 
-def solver_at(M, threads=2, path=None, plan=(1e-30, 0.05)):
-    """solver and z at the D = 3.7 state resampled to M, with the state's meta settings and a plan for z"""
+def solver_at(M, threads=2, path=None, plan=(1e-30, 0.05), segs=None):
+    """solver and z at the D = 3.7 state resampled to M, with the state's meta settings and a plan for z: segs when
+    given, else the state's stored plan at its own M, else one computed for z (its libm pow differs between macOS
+    and Windows, notes/HIGH_M.md 9.5); the plan used is the result's segs_used"""
     path = path or source_for(M)
     zh, zl, m = load(path)
     if M != m["M"]:
         zh, zl = resample_z(zh + zl, m["M"], M, len(m["nodes"]))
     s = make_solver(m["D"], M, nodes=m["nodes"], kt=m["kt"], kc=m["kc"], ks=m["ks"], threads=threads)
-    s.set_segs(m.get("segs") if M == m["M"] and m.get("segs") else s.plan(zh, zl, *plan))
-    return s, np.asarray(zh), np.asarray(zl), dict(m, M=M, source=os.path.basename(path))
+    if segs is None:
+        segs = m.get("segs") if M == m["M"] and m.get("segs") else s.plan(zh, zl, *plan)
+    s.set_segs(segs)
+    return s, np.asarray(zh), np.asarray(zl), dict(m, M=M, source=os.path.basename(path), segs_used=segs)
 
 
 def perturb(zh, zl, dDelta, dz, seed):
@@ -204,11 +208,12 @@ def ref(opts):
 JET_MUT_KAPPA = 22
 
 
-def jet_hashes(M, threads, mutate=0):
+def jet_hashes(M, threads, mutate=0, segs=None):
     """the residual's Taylor coefficients on the state jet z_0 + h v at the D = 3.7 state resampled to M (v a fixed
     seeded direction of size 1e-3, Delta excluded): Solver.residual_jet at nout 8 and 20 (its N 8 and 32 lanes), and at
-    M 32 and 48 Solver.residual_jet_q at nout 8 and 20 (its N 8 and 24 lanes), as SHA-256 hashes"""
-    s, zh, zl, m = solver_at(M, threads)
+    M 32 and 48 Solver.residual_jet_q at nout 8 and 20 (its N 8 and 24 lanes), as SHA-256 hashes, and the plan used
+    (segs when given)"""
+    s, zh, zl, m = solver_at(M, threads, segs=segs)
     v = 1e-3 * np.random.default_rng(7).uniform(-1, 1, len(zh))
     v[-1] = 0.0
     z = np.zeros(len(zh))
@@ -221,22 +226,30 @@ def jet_hashes(M, threads, mutate=0):
             F = s.residual_jet_q([(zh, zl, z, z), (v, z, z, z)], nout, mutate)
             for q in range(4):
                 out[f"jet_qd_n{nout}_{q}"] = sha(np.concatenate([np.asarray(f[q]) for f in F]))
-    print(f"  M = {M} (N = {s.size}, from {m['source']}): {len(out)} jet outputs in {time.time() - t0:.0f} s", flush=True)
-    return out
+    plan = [list(map(float, g)) for g in m["segs_used"]]
+    print(f"  M = {M} (N = {s.size}, from {m['source']}, plan {'given' if segs is not None else 'own'}, sha "
+          f"{sha(np.concatenate([np.asarray(g) for g in plan]))[:16]}): {len(out)} jet outputs in {time.time() - t0:.0f} s",
+          flush=True)
+    return out, plan
 
 
 def jets(opts):
     """bit-identity of the jet residuals (the dd jet and the qd jet), as ref for the solver: --save=F with one build,
-    --compare=F with another; --mutate=kappa runs the jets with model.rs JET_MUT_KAPPA, which must make --compare fail"""
+    --compare=F with another; --mutate=kappa runs the jets with model.rs JET_MUT_KAPPA, which must make --compare fail.
+    --save stores each M's plan with its hashes (key "plans"), and --compare runs on those plans, so the comparison
+    holds across operating systems at the M whose plan is computed (M 32: libm pow differs between macOS and Windows);
+    a reference without plans is compared on this machine's own plans."""
     Ms = [int(v) for v in str(opts.get("Ms", "32,48,64")).split(",")]
     threads = int(opts.get("threads", 2))
     mutate = JET_MUT_KAPPA if opts.get("mutate") == "kappa" else 0
-    allh = {str(M): jet_hashes(M, threads, mutate) for M in Ms}
+    want = json.load(open(opts["compare"])) if "compare" in opts else {}
+    plans = want.get("plans", {})
+    runs = {str(M): jet_hashes(M, threads, mutate, plans.get(str(M))) for M in Ms}
+    allh = {M: h for M, (h, _) in runs.items()}
     if "save" in opts:
-        json.dump(allh, open(opts["save"], "w"), indent=1)
-        print(f"saved {sum(len(v) for v in allh.values())} hashes to {opts['save']}")
+        json.dump(dict(allh, plans={M: p for M, (_, p) in runs.items()}), open(opts["save"], "w"), indent=1)
+        print(f"saved {sum(len(v) for v in allh.values())} hashes and {len(runs)} plans to {opts['save']}")
         return 0
-    want = json.load(open(opts["compare"]))
     bad = n = 0
     for M, h in allh.items():
         for k, v in h.items():
