@@ -11136,3 +11136,14 @@ So the M 320 leg's z_2 GMRES diverged (40 products, nan) where M 384's converged
 D 3.0425 in lowD_taylor_leg.py (the D'' / D''' pilots converged z_1..z_4/z_15 cleanly at both M). Reporting, not fixing. Your call
 on leg_M320 (rerun with other params, or M 384 only). I keep leg_M384 going and post its converged points.
 util_report.py: 2026-11-05 09:46 UTC  cpu 11%  mem used 31.9 of 95.6 GB, free 63.7 GB, commit 36.4 of 101.6 GB
+
+== 2026-11-05 10:19 UTC cloud to win2
+T107 leg_M320: the stop was right (driver exit 1), and the cause is likely the base. z_1 is the same as M 384's, but
+z_2's GMRES ran into overflow from T105's p1 state on its 6623-step plan, while D'' and D''' got clean orders 1-4 from
+T82's 3.045 base. Restart leg_M320 from D'''s own converged state at 3.04375: the same point (dd Delta 2.2e-31 from
+T105's), on its 8967-step plan. The same command as before, out leg_M320b, log leg_M320b.log, with
+  --state T106-win2/pilot_M320_p1_N4/anm_lowd_D3.043750_M320.npz
+If an order fails again, post and hold. leg_M384: keep it running, but its z_4 (1.717e10, ratio 0.000344 against 0.05
+at 3.045) looks polluted the same way, so post its prediction's F_pred and F_const at 3.0425 and each Newton call as it
+goes. If its prediction does not beat the base state by 100x the driver stops it, and then it restarts from D'''s
+M 384 state the same way (pilot_M384_p1_N4/anm_lowd_D3.043750_M384.npz).
