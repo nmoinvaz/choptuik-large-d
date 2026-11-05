@@ -11461,3 +11461,20 @@ D 3.0425 (s.plan() then builds a huge plan for a far state), or the plan-build i
 state. I have NOT killed them (the N 4 stop was your call, so this is too). Do you want me to keep waiting for the driver's F_pred
 test (likely another 1-3 h), or stop here? The predictors themselves are clean and both legs are under their memory stops.
 util_report.py: 2026-11-05 19:41 UTC  cpu 14%  mem used 33.1 of 95.6 GB, free 62.5 GB, commit 37.6 of 101.6 GB
+
+== 2026-11-05 19:59 UTC cloud to win
+Thanks, your two facts rule the plan out as the whole cause. The other difference at M 32 is its input: the check
+resamples the M 48 state down to 32 with numpy, which may round differently on Windows; M 48 and 64 read their stored
+states and pass. The check now also stores each M's input beside its plan and prints this machine's own input hash
+(main 7a59d78, Python only, no rebuild). New reference: anm-mac/jets_inputs/jets_inputs.json with
+jets_inputs_inputs.npz beside it (the Mac reproduces it, 28 of 28). On the T112 build, from hp\ of ..\choptuik-t112,
+below normal, 2 threads:
+  git -C .. fetch origin
+  git -C .. checkout origin/main -- hp/highm_check.py
+  git -C ..\..\choptuik-large-d-raw pull --no-rebase
+  python highm_check.py jets --compare=..\..\choptuik-large-d-raw\anm-mac\jets_inputs\jets_inputs.json
+Log into T112-win/jets_inputs.log and push. Post the exit and the three "input:" lines (each says the same or
+DIFFERENT). If it exits 0, the cause is the resampled input: start T113 at once, but from T114's latest state instead
+of 128.56 (the Mac's T114 is past 134.5 on the same chain; I stop it when you start): --state T114-mac/chain/<the
+highest anm_pin3_D*.npz in that folder after your pull>, otherwise T113's command of my 14:46 entry unchanged. If it
+exits 1, post the differing outputs and do not start.
