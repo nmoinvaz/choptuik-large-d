@@ -13,13 +13,13 @@ P2b Lemma LC second implementation: mode box, ln n0 = 73.89, 10 cells, mutate = 
     h_B: N0 8.9915 (0.9901), Na 37282.0 (0.9901), L 2085.8 (0.9901), Nb 1.9652e+5 (0.9901), F 3.4632e+6 (0.984)
     h_C: N0 3.6116e+6 (0.9901), Na 3.6398e+6 (0.9901), L 67.656 (0.9901), Nb 3.6549e+6 (0.9901), F 4.3792e+6 (0.9891)
     D_V: N0 11619.0 (0.9901), Na 1.5398e+5 (0.9901), L 6168.1 (0.9901), Nb 5.089e+5 (0.9901), F 9.5552e+7 (0.9714)
-    D_S: N0 5740.4 (0.9901), Na 2.2594e+7 (0.9901), L 3.6518e-8 (0.9901), Nb 1.9154e+7 (0.9901), F 4.4316e+7 (0.9816)
+    D_S: N0 5740.4 (0.9901), Na 8.5526e+6 (0.9901), L 3.5579e-8 (0.9901), Nb 2.7572e+5 (0.9901), F 4.4316e+7 (0.9816)
     D_B: N0 17.22 (0.9901), Na 69542.0 (0.9901), L 3834.0 (0.9901), Nb 3.559e+5 (0.9901), F 6.4233e+6 (0.9842)
     D_C: N0 6698.5 (0.9901), Na 1.3945e+5 (0.9901), L 4162.5 (0.9901), Nb 3.4734e+5 (0.9901), F 6.1431e+6 (0.9842)
     h_cc (L): 3872.3 (0.9901)
-  d0 = 3.57564e+6; h_Sp = D_S on L = 3.6518e-8; closure: yes, max ratio 0.9901
+  d0 = 3.57564e+6; h_Sp = D_S on L = 3.55791e-8; closure: yes, max ratio 0.9901
   kernel: s_* = 0.187493 (sup_ray |H'| = 0.108027), N_L = 5.75828e+31, eta_L = 5.86499
   far-band gains per cell (g_arc, g_top, H, N): (0.3351, 0.08, 14.05, 117.5)
   Lipschitz matrix 40 x 40: spectral radius 0.65156, certified theta 0.66559
   with the F2 component (41 x 41): spectral radius 0.65156, certified theta 0.66559
-  wrote p2b_lc_box_crude_d_notesH.json (10 s)
+  wrote p2b_lc_box_crude_d_notesH.json (14 s)

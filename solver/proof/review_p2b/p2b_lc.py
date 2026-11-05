@@ -294,7 +294,7 @@ def cell_eval(cell, kn, H, ad, st):
         T3 = jprod(c_, dD, Dinv, A0SmB0V)
         G1 = jmul(c_, kn["AKinv"], jadd(c_, T1, T2, T3, kn["rho2"]))
         xW2 = jmul(c_, Dinv, MhTerm)                             # x W_2 = D^-1 (C M_h S + x^2 M_h C^-1 Y)
-        out.update(G1=G1, xW2=xW2, Dinv=Dinv)
+        out.update(G1=G1, xW2=xW2, Dinv=Dinv, parts=dict(T1=T1, T2=T2, T3=T3))
         # Lemma J's G = G1 + G2, G2 = (A^K)^-1 D^K D^-1 (...)
         G2 = jprod(c_, kn["AKinv"], jmul(c_, jmono(2, 0, 0, 0, 0, cell.d2hi), jadd(c_, one, Gm)), Dinv, MhTerm)
         out["G"] = jadd(c_, G1, G2)
@@ -560,10 +560,11 @@ def evaluate(st, cells, known, H, ad=False, detail=False):
     inner = badd(Lc, bscale(Bd(W, uxp.v, uxp.d), up(sw / HD)), bscale(Bd(W, xGp.v, xGp.d), up(sw / (NL - 1))))
     qsL = bto(bmul(DKA, inner), Lc, NW)
     out[("d", "S", "L")] = Bd((0, 0, 0), qsL.v, qsL.d)
-    # beta on L: radial at angle phi_delta (N0, Na) and the arc (L and the Na cells at that radius)
-    radial_cells = byband["N0"] + byband["Na"]
-    pbL = badd(Lc, r["gw"], bscale(rmax(radial_cells, "gpw"), st.eps1),
-               bscale(bmax(r["gpw"], rmax(near, "gpw")), up(PHID)))
+    # beta on L: the integrand of T_beta is analytic on the closed sector (which contains L), so for x in L the
+    # straight radial segment [0, x] can replace Q_x: it runs in N0, in Na for |s| < 1 - delta/2 and in Na or L
+    # beyond; |(s/x)^(n-1)| <= 1 and int_0^|x| (t/|x|)^(n-1) dt/t = 1/(n-1), so no arc term
+    radial_cells = byband["N0"] + byband["Na"] + [Lc]
+    pbL = badd(Lc, r["gw"], bscale(rmax(radial_cells, "gpw"), st.eps1))
     out[("h", "B", "L")] = Bd((0, 0, 0), pbL.v, pbL.d)
     qbL = bto(badd(Lc, r["ghat"][0], bmul(kn["nm1"][0], Bd(W, pbL.v, pbL.d))), Lc, NW)
     out[("d", "B", "L")] = Bd((0, 0, 0), qbL.v, qbL.d)
@@ -573,15 +574,15 @@ def evaluate(st, cells, known, H, ad=False, detail=False):
     out[("h", "C", "L")] = pcL
     out[("d", "C", "L")] = Bd((0, 0, 0), bto(r["Fc"][0], Lc, W).v, bto(r["Fc"][0], Lc, W).d)
     out[("cc",)] = Bd((0, 0, 0), bto(r["Fc"][1], Lc, NW).v, bto(r["Fc"][1], Lc, NW).d)
-    # V on L: d term, radial (N0, Na up to |x|) and the arc (phi_delta, h_S of Na and L)
+    # V on L: d term and the straight radial segment [0, x] (as for beta): N0, Na below 1 - delta/2, then Na or L
     CvL = radial_sum("L", 1 - HD, comp="S")
     hSm = bmax(hb("S", "Na"), hb("S", "L"))
     vals = []
     Ya = Yf(1 - HD)
     for Yr in (Yf(1 - HD), Yf(1 + HD)):
-        vals.append(badd(Lc, bscale(CvL, up(1 / (10 * Yr))), bscale(hb("S", "Na"), up((Yr - Ya) / (10 * Yr)))))
+        vals.append(badd(Lc, bscale(CvL, up(1 / (10 * Yr))), bscale(hSm, up((Yr - Ya) / (10 * Yr)))))
     pvL = badd(Lc, bscale(Bd((0, 0, 0), d0.v, d0.d), up(twoF / (1 if CRUDE_D else Yf(1 - HD)))),
-               bscale(badd(Lc, bmax(*vals), bscale(hSm, up(PHID * Lc.thhi))), up(known.absW)))
+               bscale(bmax(*vals), up(known.absW)))
     out[("h", "V", "L")] = pvL
     out[("d", "V", "L")] = bscale(hb("S", "L"), up(known.absW))
     out["d0"] = d0

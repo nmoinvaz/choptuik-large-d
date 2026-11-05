@@ -156,50 +156,68 @@ class Cell:
         return mp.mpf(X) ** w[0] * mp.mpf(th) ** w[1] * mp.mpf(rho) ** w[2]
 
     def geom(self):
-        """inf and sup of |x^2 - 1|/X^2 and sup |x|^2/|x^2 - 1| over the cell"""
+        """inf and sup of |x^2 - 1|/X^2 and sup |x|^2/|x^2 - 1| over the cell. On sector and ray cells the radius
+        range is split into sub-intervals (each with decoupled interval bounds) and the extreme is taken over them"""
         k, rlo, rhi = self.kind, self.rlo, self.rhi
-        if k == "ray" and not self.far:
-            dlo = iv.sqrt(1 + 2 * rlo ** 2 * SK + rlo ** 4)
-            dhi = iv.sqrt(1 + 2 * rhi ** 2 * SK + rhi ** 4)
-            self.d2lo = lo(dlo / self.Xhi ** 2)
-            self.d2hi = up(dhi / self.Xlo ** 2)
-            self.x2d = up(rhi ** 2 / dlo)
-            self.Dr = up(dhi)                       # |D_r| on the ray, r <= rhi
-        elif k == "L":
+        if k == "L":
             self.d2lo = None                         # not used: the bounded forms of B_chain.md 13.3
             self.d2hi = up(HD * (2 + HD) / self.Xlo ** 2)
             self.x2d = None
             self.xp1lo = lo(2 - HD)                  # |x + 1| >= 2 - delta/2
             self.xp1hi = up(2 + HD)
-        elif self.far:
-            # |x^2 - 1| >= r^2 - 1 = X^2 - 2X
-            self.d2lo = lo(1 - 2 / iv.mpf(self.Xlo))
+            return
+        if self.far:
+            # |x^2 - 1|/X^2 >= (r^2 - 1)/(1 + r)^2 = (r - 1)/(r + 1), increasing in r; |x|^2/|x^2 - 1| <= r^2/(r^2 - 1)
+            self.d2lo = lo((rlo - 1) / (rlo + 1))
             self.d2hi = ONEI
             self.x2d = up(rlo ** 2 / (rlo ** 2 - 1))
-        elif k == "real":
-            self.d2lo = lo((rlo ** 2 - 1) / self.Xhi ** 2)
-            self.d2hi = up((rhi ** 2 - 1) / self.Xlo ** 2)
-            self.x2d = up(rhi ** 2 / (rlo ** 2 - 1)) if mplo(rlo) > 1 else None
+            return
+        nsub = 200
+        a, b = mplo(rlo), mpup(rhi)
+        if a > 0:
+            pts = [mp.mpf(a) * (mp.mpf(b) / a) ** (mp.mpf(i) / nsub) for i in range(nsub + 1)]
         else:
-            # sector: |x^2 - 1| >= |r^2 - 1| (|x^2-1|^2 = r^4 - 2 r^2 cos 2phi + 1), and outside the open disc
-            # |x^2 - 1| = |x - 1||x + 1| >= (delta/2) (rlo^2 + 2 rlo cos(alpha) + 1)^(1/2)
-            if mpup(rhi) < 1:
-                m = 1 - rhi ** 2
-            elif mplo(rlo) > 1:
-                m = rlo ** 2 - 1
+            pts = [mp.mpf(b) * mp.mpf(i) / nsub for i in range(nsub + 1)]
+        pts[0], pts[-1] = a, b
+        d2lo = d2hi = x2d = None
+        dabs = None
+        Drmax = None
+        for p, q in zip(pts[:-1], pts[1:]):
+            r = iv.mpf([p, q])
+            X = 1 + r
+            if k == "ray":
+                D = iv.sqrt(1 + 2 * r ** 2 * SK + r ** 4)        # |x^2 - 1| on the ray, exactly
+                m, M = lo(D), up(D)
+            elif k == "real":
+                m, M = lo(r ** 2 - 1), up(r ** 2 - 1)
             else:
-                m = ZEROI
-            near = mplo(rlo) <= mpup(1 + HD) and mpup(rhi) >= mplo(1 - HD)
-            if near:
-                m2 = HD * iv.sqrt(rlo ** 2 + 2 * rlo * iv.cos(ALPHA) + 1)
-                if mplo(m2) > mpup(m):
-                    m = m2
+                # sector: |x^2 - 1| >= |r^2 - 1| (|x^2-1|^2 = r^4 - 2 r^2 cos 2phi + 1); outside the open disc,
+                # with d = |x - 1| >= delta/2 and |x + 1|^2 = 2 r^2 + 2 - d^2 (parallelogram law),
+                # |x^2 - 1| = d (2 r^2 + 2 - d^2)^(1/2), increasing in d while d^2 <= r^2 + 1 (true for
+                # 0 <= arg x <= alpha < pi/2), so |x^2 - 1| >= (delta/2)(2 r^2 + 2 - delta^2/4)^(1/2)
+                if q < 1:
+                    m = lo(1 - r ** 2)
+                elif p > 1:
+                    m = lo(r ** 2 - 1)
+                else:
+                    m = ZEROI
+                if p <= mpup(1 + HD) and q >= mplo(1 - HD):
+                    m2 = lo(HD * iv.sqrt(2 * r ** 2 + 2 - HD ** 2))
+                    if mplo(m2) > mplo(m):
+                        m = m2
+                M = up(r ** 2 + 1)
             if mplo(m) <= 0:
-                raise ValueError("no lower bound of |x^2 - 1| on a sector cell")
-            self.dabs_lo = lo(m)
-            self.d2lo = lo(m / self.Xhi ** 2)
-            self.d2hi = up((rhi ** 2 + 1) / self.Xlo ** 2)
-            self.x2d = up(rhi ** 2 / m)
+                raise ValueError(f"no lower bound of |x^2 - 1| on {self.kind} cell at r = {p}")
+            v1, v2, v3 = lo(iv.mpf(m) / X ** 2), up(iv.mpf(M) / X ** 2), up(r ** 2 / iv.mpf(m))
+            d2lo = v1 if d2lo is None or mplo(v1) < mplo(d2lo) else d2lo
+            d2hi = v2 if d2hi is None or mpup(v2) > mpup(d2hi) else d2hi
+            x2d = v3 if x2d is None or mpup(v3) > mpup(x2d) else x2d
+            dabs = iv.mpf(m) if dabs is None or mplo(m) < mplo(dabs) else dabs
+            Drmax = iv.mpf(M) if Drmax is None or mpup(M) > mpup(Drmax) else Drmax
+        self.d2lo, self.d2hi, self.x2d = d2lo, d2hi, x2d
+        self.dabs_lo = lo(dabs)
+        if k == "ray":
+            self.Dr = up(Drmax)
 
     def __repr__(self):
         return f"Cell({self.band},{self.kind},[{mp.nstr(mpup(self.rlo), 6)},{'inf' if self.rhi is None else mp.nstr(mpup(self.rhi), 6)}])"
