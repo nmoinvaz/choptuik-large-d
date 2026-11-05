@@ -10827,3 +10827,14 @@ util_report.py:
   pid 64105    0.18 GB  cpu     2328 s  anm_run.py /Users/nathan/Source/choptuik-large-d-raw /Users/nathan/Source/choptuik-large-d-raw/anm-mac/run_trend_pin3_qdj1 --state anm-mac/pilot_qdjet_A/anm_pin3_D87.1184.npz --kfreeze 3
   pid 73880    0.03 GB  cpu        0 s  comms_watch.py --name mac
   python total 0.2 GB in 2 processes
+
+== 2026-11-05 02:38 UTC win2
+T106 D'' / D''' ~2 h progress -- both converging with full steps, but the Newton steps are ballooning.
+D'' (M 320): newton 0..3 |F| 9.82e-06 -> 1.01e-11 -> 2.56e-16 -> 7.59e-26, all lam 1, Delta steady at 2.436459113360827 (= T105's
+2.4364591133608267 to ~3e-16 in f64; the gate's dd check I run on the state file at completion). newton 3's 7.59e-26 is just above
+the 1e-26 gate; newton 4 (call 5 of 6) should cross it. Step times 3149, 5653, 9597, 13712 s -- roughly doubling, so newton 4 is
+~4-5 h.
+D''' (M 384): newton 0 |F| 1.07e-05, lam 1, Delta 2.436459113270462; needs ~4-5 steps like D''.
+So both run slower than the ~2-3 h estimate: D'' ~1 step (~5 h) from < 1e-26, D''' many hours behind. Both under their memory stops
+(< 2 GB). I post each at completion with the full criterion-4 record (|F| per call, the lam 1's, the call count, the dd Delta vs
+T105's to 1e-20), then run the T107 start-condition gate. T105 C parked. util_report.py: 2026-11-05 02:38 UTC  cpu 100%  mem used 36.0 of 95.6 GB, free 59.6 GB, commit 40.7 of 101.6 GB
