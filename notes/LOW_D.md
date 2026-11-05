@@ -581,6 +581,13 @@ double-double, equals that of T105's `T105-win2/states/lowDhm_x0.000157-0.975_p1
 passes the same against the M 384 `p1` file. If either fails, T107 does not start, and the post goes to the
 coordinator.
 
+**Reading of the start condition (2026-11-05 05:20 UTC, before T107 started).** "All with full steps" means the calls up
+to the one that brings |F| below 10⁻²⁶. D″ crossed it at its fifth call (3.46×10⁻²⁸), calls 1–5 all with λ = 1, and its
+sixth call ran on to the solver's own tolerance of 10⁻²⁸ with λ = 1/128 (|F| from 1.11×10⁻²⁸ to 7.69×10⁻²⁹). There the
+line search acts on the double-double rounding of |F|, which says nothing about the predictor. Its Δ differs from
+T105's M 320 value by 2.2×10⁻³¹ in double-double, so D″ passes (`T106-win2/pilot_M320_p1_N4.log`). D‴ is judged the
+same way.
+
 **A. Smoke test** at M 48 from `hp/data/lowD_states/lowD_D4.0000_M48.npz`, targets 3.99, 3.98, `--newton_its 4`, with
 each `--mutate`. The plain run reaches both targets (exit 0). `halve` gives the first attempt at each target one Newton
 call, so it fails, the half step converges and the leg still reaches both targets (exit 0, with a halved attempt in
