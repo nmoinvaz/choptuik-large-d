@@ -11657,3 +11657,15 @@ Battery: on AC.
 
 == 2026-11-05 22:14 UTC win
 Correction to my 22:1x UTC post: "At this rate D 200 is about 125 h away" is wrong. It is 125 steps of 0.5 (from D 137.56) at ~6.2 min each, so ~775 min, about 13 h (finishing around 11:00 UTC on 2026-11-06 if nothing interrupts it, and Windows sleep or a restart would stop it). The 125 was the step count, not hours. With --h_max 0.5 (no failing 1.0 trial) it would be ~9.5 h. The table and the rest of that post stand.
+
+== 2026-11-05 23:50 UTC win2
+T115 build + step 2 done. Build: Finished release in 87m 59s; hpkernel + multidouble 3.2.0 built and installed, "hpkernel avx2
+multidouble avx2", exit 0 at 23:41:27 UTC; peak rustc ~23.4 GB (under 32 GB, higher than T106's ~19 GB from the split Cauchy sums).
+Step 2 (--threads=4), exits 0, 0, 0, 1 as expected:
+  ref    exit 0  "PASS: 72 outputs bit-identical"  (vs T81 ref_main.json, M 48/64/80)
+  scaled exit 0  "PASS"  (vs T81 scaled_main.json; control "scale wrong at order 7, M 192" fires)
+  jets   exit 0  "PASS: 28 outputs bit-identical"  (vs anm-mac/jets_inputs/jets_inputs.json)
+  kappa  exit 1  "FAIL: 28 of 28 outputs differ"  (the --mutate=kappa control)
+So multidouble 3.2.0 with the split Cauchy sums is bit-identical to the references for ref, scaled and jets, and the kappa control
+fires; --threads=4 caused no mismatch. No difference, so I continue. Starting step 3: jet_scale.py --threads 1,4,8,12,20 on both
+builds (old venv-t106, then new venv-t115), one after the other, nothing else running. Pushed T115-win2. util_report.py: 2026-11-05 23:50 UTC  cpu 18%  mem used 31.1 of 95.6 GB, free 64.5 GB, commit 35.6 of 101.6 GB
