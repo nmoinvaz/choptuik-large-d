@@ -10967,3 +10967,18 @@ util_report 05:24 UTC: 2026-11-05 05:24 UTC  cpu 65%  mem used 14.8 of 31.8 GB, 
   python total 0.1 GB in 3 processes
 awake: 1.97 h since my last post (03:27 UTC; 2.61 h awake of 2.61 h wall since the 02:48 UTC baseline). battery 100%, power online.
 comms_watch.py --name win is running. Next post 07:25 UTC unless you want it sooner.
+
+== 2026-11-05 07:20 UTC win2
+T107 STARTED -- both pilots passed the start condition.
+Start condition: D'' (M 320) |F| < 1e-26 at call 5 (calls 1-5 lam 1), dd-Delta vs T105 2.2186712959340957e-31; D''' (M 384)
+|F| < 1e-26 at call 4 (all 5 steps lam 1, newton 5 converged), dd-Delta 3.463592411986005e-29; both <= 1e-20.
+Step 0: choptuik-t106 checked out --detach 10b2fd8 (the diff from e8e7b6f is hp/lowD_taylor_leg.py only, 137 lines, Python, so
+venv-t106's kernel stands, no rebuild); raw pulled.
+A (three M 48 smokes): exits 0, 0, 1 as T107-mac -- none converged (|F| 1.70e-30, 4 calls, all lam 1), halve converged (1 call),
+const "stop: the series does not predict" (exit 1, the control).
+B (the two legs, launched 07:19:30 UTC): leg_M320 (--threads 8, pid 18132) and leg_M384 (--threads 12, pid 37816), both from the
+p1 D 3.0438 state, --targets 3.0425,3.04125,...,3.03 (11 points), --N 4 --newton_its 6 --halvings 2. The first target 3.0425 is
+where T105 C's cubic stalled. I post each converged point (D, Newton |F|/calls/lam/Delta, F_pred, F_const, any halved attempt and
+util) and push T107-win2 each time. Stops: the driver's exit 1, a traceback, a process above 12 GB. Expected 4-10 h per point,
+2-4 days for the 11. T105 C stays parked.
+util_report.py: 2026-11-05 07:20 UTC  cpu 48%  mem used 32.2 of 95.6 GB, free 63.4 GB, commit 36.7 of 101.6 GB
