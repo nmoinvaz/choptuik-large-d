@@ -74,17 +74,25 @@ def make_solver_mapped(D, M, s0, L, nodes=None, kt=36, kc=40, ks=120, segs=None,
 
 def map_state(zh, zl, M_from, M_to, K, frm=None, to=None):
     """A state on one grid (frm = None: uniform; else (s0, L)) as a start on another (to, same convention), every field
-    block by trigonometric interpolation in the source's s (f64; the lo parts dropped, as driver.resample_z)"""
+    block by trigonometric interpolation in the source's s (f64; the lo parts dropped, as driver.resample_z). On one
+    grid (frm == to: a change of M only) the interpolation is in s at the target's s points, the harmonics above M_to
+    dropped when M_to < M_from, which is driver.resample_z bit for bit on the uniform grid"""
     z = np.asarray(zh, float) + np.asarray(zl, float)
     parity = ["odd", "even"] + ["odd", "odd", "even", "even"] * K + ["odd", "even"]
     s_to = np.pi * np.arange(M_to) / M_to
-    theta = s_to if to is None else np.array([float(g_and_gp(mp.mpf(v), mp.mpf(to[0]), mp.mpf(to[1]))[0]) for v in s_to])
-    s_src = theta if frm is None else g_inverse(theta, frm[0], frm[1])
+    same = (frm is None and to is None) or (frm is not None and to is not None and tuple(frm[:2]) == tuple(to[:2]))
+    if same:
+        s_src = 2 * np.pi * np.arange(M_to) / (2 * M_to)          # resample_z's points (the same floats as s_to)
+    else:
+        theta = s_to if to is None else np.array([float(g_and_gp(mp.mpf(v), mp.mpf(to[0]), mp.mpf(to[1]))[0]) for v in s_to])
+        s_src = theta if frm is None else g_inverse(theta, frm[0], frm[1])
     out = []
     for j, par in enumerate(parity):
         f = z[j * M_from:(j + 1) * M_from]
         full = np.r_[f, -f] if par == "odd" else np.r_[f, f]
         c = np.fft.rfft(full) / (2 * M_from)
+        if same and M_to < M_from:
+            c = c[:M_to + 1]
         k = np.arange(len(c))
         w = np.where((k == 0) | (k == M_from), 1.0, 2.0)
         out.append((w[None, :] * c[None, :] * np.exp(1j * np.outer(s_src, k))).real.sum(1))

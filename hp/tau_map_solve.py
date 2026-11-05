@@ -10,13 +10,15 @@ state's own plan to --tol, accepted below --accept. The f64-Jacobian Newton and 
 Jacobian seconds, |F|, Delta and its difference from REF's Delta, and the pass test of the procedure (converged below
 --accept and |Delta - Delta(REF)| <= --tol_delta, by default |Delta(REF) - Delta(--ref_w)|). solve_point's own
 records go to OUTDIR/points.jsonl, the states to OUTDIR/states (their meta carries tau_map = [s0, L, mutate]).
---mutate gp: the control of tau_map.mapped_inputs (d/dtheta without the 1/g' rows), which must miss.
+--mutate gp: the control of tau_map.mapped_inputs (d/dtheta without the 1/g' rows), which must miss. --perturb: the start
+moved off the reference as highm_check.py converge does (Delta + 1e-6, every unknown + 1e-8 N(0, 1), seed 1), so that
+a pass cannot come from the start alone.
 
 time: one Solver.newton_mixed call (residual, Jacobian build, LU, solve) at each stored state on its own stored plan,
 uniform or mapped (by its meta's tau_map), one after another at --threads; records in OUTDIR/timing.jsonl.
 
     python3 tau_map_solve.py solve OUTDIR --ref REF.npz [--ref_w REF_W.npz] --M 128 --L 0.35 --s0 1.9 [--mutate gp]
-        [--threads 2] [--tag tm]
+        [--perturb] [--threads 2] [--tag tm]
     python3 tau_map_solve.py time OUTDIR STATE.npz [STATE.npz ...] [--threads 2]
 
 OUTDIR must be in a task folder of the raw-data repository (raw_out.py; --allow_unraw for tests).
@@ -91,7 +93,7 @@ def cmd_solve(a):
     else:
         err_est = None
     tol_delta = a.tol_delta if a.tol_delta else err_est
-    tag = a.tag or f"tm_L{a.L:g}_s{a.s0:.4f}_M{a.M}" + (f"_mut{a.mutate}" if a.mutate else "")
+    tag = a.tag or f"tm_L{a.L:g}_s{a.s0:.4f}_M{a.M}" + (f"_mut{a.mutate}" if a.mutate else "") + ("_pert" if a.perturb else "")
     # every solver of solve_point on this map (the leg's code path, unchanged): make_solver replaced, the Newton
     # history captured for the per-call seconds
     lowD_dd.make_solver = lambda D_, M_, **kw: make_solver_mapped(D_, M_, a.s0, a.L, mutate=a.mutate, **kw)
@@ -99,6 +101,9 @@ def cmd_solve(a):
     mk = lambda: lowD_dd.make_solver(D, a.M, nodes=nodes, kt=a.kt, kc=a.kc, ks=a.ks, threads=a.threads)  # noqa: E731
     t0 = time.time()
     z0, z0l = map_state(zh, zl, Mr, a.M, len(nodes), None, (a.s0, a.L))
+    if a.perturb:
+        z0 = z0 + 1e-8 * np.random.default_rng(1).standard_normal(len(z0))
+        z0[-1] += 1e-6
     s = mk()
     tp = time.time()
     seg1 = s.plan(z0, z0l, a.tol_step, a.hmax)
@@ -106,7 +111,7 @@ def cmd_solve(a):
     F0 = fmax(s, z0, z0l)
     log(f"D {D} M {a.M} map s0 {a.s0} L {a.L} mutate {a.mutate}: start |F| {F0:.2e} on its own plan, {steps(seg1)} steps "
         f"(plan {time.time() - tp:.0f}s)")
-    rec = dict(D=D, M=a.M, s0=a.s0, L=a.L, mutate=a.mutate, ref=os.path.basename(a.ref), M_ref=Mr,
+    rec = dict(D=D, M=a.M, s0=a.s0, L=a.L, mutate=a.mutate, perturb=a.perturb, ref=os.path.basename(a.ref), M_ref=Mr,
                Delta_ref=Dref, err_est_ref=err_est, tol_delta=tol_delta, threads=a.threads, tag=tag, commit=commit(),
                F_start=F0, steps_p1=steps(seg1))
     ok = np.isfinite(F0)
@@ -190,6 +195,7 @@ def main():
     p.add_argument("--L", type=float, required=True)
     p.add_argument("--s0", type=float, required=True)
     p.add_argument("--mutate", default=None, choices=[None, "gp"])
+    p.add_argument("--perturb", action="store_true")
     p.add_argument("--tol_delta", type=float, default=0.0, help="the pass test's tolerance (default |Delta(REF) - Delta(REF_W)|)")
     p.add_argument("--tag", default="")
     p.add_argument("--threads", type=int, default=2)
