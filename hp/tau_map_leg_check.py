@@ -2,9 +2,10 @@
 """The --tau_map option of lowD_highM.py (notes/LOW_D_SPEEDUP.md, step 5) against the uniform path: one continuation
 point (D 4 -> 3.95, M 48 / 64, from hp/data/lowD_states/lowDn_D4.0000_M{48,64}.npz) run three times through
 lowD_highM.py, (U) without the option, (I) with the identity map --tau_map S0,1 (the start states copied with that
-tau_map in their meta), (X) the control, --tau_map S0,1+1e-9.
+tau_map in their meta), (X) the control, --tau_map S0,1+1e-6.
 Pass: (I) equals (U) bit for bit (every Delta, |F|, iteration and step count of the pair record, and both words of
-every saved state), and (X) differs from (U) in Delta (the comparison can fail).
+every saved state), and the same comparison reports differences between (X) and (U), Delta's hi word among them (the
+comparison can fail; a map change of 1e-9 moved only the lo words, 2026-11-05).
 
     python3 tau_map_leg_check.py [--threads 1] [--s0 1.83] [--keep DIR]
 
@@ -86,7 +87,7 @@ def main():
     os.makedirs(work, exist_ok=True)
     U = run(work, "U", a.threads)
     I_ = run(work, "I", a.threads, (a.s0, 1.0))
-    X = run(work, "X", a.threads, (a.s0, 1.0 + 1e-9))
+    X = run(work, "X", a.threads, (a.s0, 1.0 + 1e-6))
     for name, r in (("U", U), ("I", I_), ("X", X)):
         p = r[1][-1] if r[1] else {}
         print(f"({name}) exit {r[0]}, {len(r[1])} pair record(s), Delta {p.get('Delta')!r} (lo {p.get('Delta_lo')!r}), "
@@ -94,10 +95,10 @@ def main():
     d_ui = same(U, I_)
     d_ux = same(U, X)
     ok_i = U[0] == 0 and I_[0] == 0 and not d_ui
-    fired = bool(U[1]) and bool(X[1]) and U[1][-1].get("Delta") != X[1][-1].get("Delta")
+    fired = bool(d_ux) and bool(U[1]) and bool(X[1]) and U[1][-1].get("Delta") != X[1][-1].get("Delta")
     print("(I) against (U): " + ("bit for bit equal, PASS" if ok_i else "FAIL\n  " + "\n  ".join(d_ui or ["a run failed"])))
-    print(f"(X) against (U): {len(d_ux)} differences" + (", Delta differs: the control fires" if fired else
-          ", Delta equal: the control does NOT fire (FAIL)"))
+    print(f"(X) against (U): {len(d_ux)} differences" + (", Delta's hi word among them: the control fires" if fired else
+          ", Delta's hi word equal: the control does NOT fire (FAIL)"))
     if not a.keep:
         shutil.rmtree(work, ignore_errors=True)
     sys.exit(0 if ok_i and fired else 1)
