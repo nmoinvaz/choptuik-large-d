@@ -1,0 +1,109 @@
+p2b_lc's majorant (mode box, crude_d, notesH) at the certificate's constants (b8m_lc_K4_preP2b.log hyp, b8m_lc_lip_preP2b.json hprime)
+  component.band: cert P/h | p2b P/h   (cert P | p2b P)
+    V.N0 : 0.9901 | 0.9900   (1.8235e+07 | 1.8234e+07)
+    V.Na : 0.9901 | 0.9900   (1.8253e+07 | 1.8251e+07)
+    V.L  : 0.9901 | 0.9894   (1.8249e+07 | 1.8237e+07)
+    V.Nb : 0.9901 | 0.9900   (1.8297e+07 | 1.8296e+07)
+    V.F  : 0.9833 | 0.9833   (3.3532e+07 | 3.3532e+07)
+    S.N0 : 0.9901 | 0.9988   (3802 | 3835.4)
+    S.Na : 0.9901 | 0.9868   (50996 | 50828)
+    S.L  : 0.9901 | 0.9890   (2038.3 | 2036)
+    S.Nb : 0.9901 | 0.9898   (1.6804e+05 | 1.6798e+05)
+    S.F  : 0.9708 | 0.8960   (4.0009e+07 | 3.6926e+07)
+    b.N0 : 0.9901 | 0.4104   (21.477 | 8.9024)
+    b.Na : 0.9901 | 0.9858   (37074 | 36913)
+    b.L  : 0.9901 | 1.1802   (1732.5 | 2065.2)
+    b.Nb : 0.9901 | 0.9899   (1.946e+05 | 1.9457e+05)
+    b.F  : 0.9897 | 0.9120   (4.0822e+06 | 3.7619e+06)
+    c.N0 : 0.9901 | 0.9899   (3.5871e+06 | 3.5864e+06)
+    c.Na : 0.9901 | 0.9931   (3.6036e+06 | 3.6144e+06)
+    c.L  : 0.9901 | 0.9655   (63.092 | 61.525)
+    c.Nb : 0.9901 | 0.9901   (3.6293e+06 | 3.6293e+06)
+    c.F  : 0.9837 | 0.9719   (4.5536e+06 | 4.4989e+06)
+    Sp   : 0.9901 | 0.0530   (5.909e-07 | 3.1634e-08)
+  derivative outputs at the certificate's h' (p2b's D/h'; the certificate's D0 equals h' by construction):
+    (F2 component: h_cc = 3517.1, P_cc/h_cc = 0.9901)
+    V.N0 1.00000, V.Na 1.00000, V.L 1.00000, V.Nb 1.00000, V.F 0.95238, S.N0 0.99691, S.Na 0.97896, S.L 0.05301, S.Nb 1.01031, S.F 0.86116, b.N0 0.40776, b.Na 0.99019, b.L 1.09010, b.Nb 0.99435, b.F 0.89106, c.N0 0.99946, c.Na 0.99964, c.L 0.99985, c.Nb 0.99997, c.F 0.94366
+  d0: cert 3.58631e+06 | p2b 3.58623e+06;  rho4 part: cert 190109 | p2b 190034
+  N0 arc gains (per cell): 0.9605 (cert gamma_N0 0.9354)
+  arc gains at radius 1 +- delta/2 (the data u(x') at Ac): 2.99e-16 (cert gamma_Na 3.721e-15); |u(x')|/w <= 1.186e-09 + |G2|/w
+  F: loc |G1|/w = 5.0669e+06 (cert loc_F 5.4926e+06); integrand (|xG1'| + |xW2|)/w = 7.6743e+07 (cert int_F 8.3162e+07); gains arc 0.3351, ray 0.08 (cert gamma_F 0.41504)
+  F: p2b's G1 pieces, sup |piece|/w: T1 1.7405e+06, T2 3.0974e+06, T3 10006, rho2 2.1904e+05  (certificate, p2b_cert_probe.py: T1 1.8543e6, T2 3.3622e6, T3 1498, rho2 2.6526e5)
+  F ray: integrand 7.6743e+07
+  Lipschitz matrices at the certificate's constants: Perron root cert 0.70521 (theta 0.71907) | p2b 0.65357 (theta 0.66650)
+  entries above 1e-3 in either (row <- column: cert | p2b):
+    der/V/N0   <- val/S/N0  : 1 | 1
+    der/V/Na   <- val/S/Na  : 1 | 1
+    der/V/L    <- val/S/L   : 1 | 1
+    der/V/Nb   <- val/S/Nb  : 1 | 1
+    der/V/F    <- val/S/F   : 1 | 0.9524
+    der/S/L    <- val/b/Na  : 0.9463 | 0.0528   *
+    val/V/N0   <- val/b/Na  : 0.9317 | 0.9317
+    val/c/N0   <- val/b/Na  : 0.9316 | 0.9316
+    val/V/L    <- val/b/Na  : 0.931 | 0.931
+    val/V/Na   <- val/b/Na  : 0.9308 | 0.9308
+    val/c/Na   <- val/b/Na  : 0.9286 | 0.9285
+    val/V/Nb   <- val/b/Na  : 0.9286 | 0.9286
+    val/c/Nb   <- val/b/Na  : 0.922 | 0.9208
+    val/c/F    <- val/b/Na  : 0.7301 | 0.7291
+    der/c/F    <- val/b/F   : 0.5924 | 0.5642
+    der/c/Nb   <- val/b/Nb  : 0.5715 | 0.5715
+    val/V/F    <- val/b/Na  : 0.5032 | 0.5032
+    der/b/F    <- val/V/F   : 0.4992 | 0.449   *
+    val/b/F    <- val/V/F   : 0.4727 | 0.4357
+    der/c/L    <- val/b/L   : 0.4622 | 0.4622
+    val/c/L    <- val/b/L   : 0.4576 | 0.4463
+    val/V/F    <- val/S/F   : 0.4486 | 0.4486
+    der/b/F    <- val/c/F   : 0.3868 | 0.3424   *
+    val/b/F    <- val/c/F   : 0.3675 | 0.3333
+    val/S/F    <- val/b/F   : 0.3046 | 0.2722   *
+    der/c/F    <- val/S/F   : 0.3035 | 0.2803
+    der/S/F    <- val/b/F   : 0.2734 | 0.2328   *
+    der/c/Na   <- val/b/Na  : 0.2708 | 0.2708
+    der/S/F    <- val/c/F   : 0.2677 | 0.2401   *
+    val/S/F    <- der/S/F   : 0.2613 | 0.2388
+    der/S/F    <- der/S/F   : 0.2309 | 0.2009   *
+    val/S/F    <- val/c/F   : 0.2204 | 0.2048
+    val/c/F    <- val/b/F   : 0.1238 | 0.1179
+    der/S/F    <- val/V/F   : 0.09823 | 0.08708   *
+    der/c/F    <- val/c/F   : 0.08057 | 0.07673
+    val/S/F    <- val/V/F   : 0.07593 | 0.06929
+    val/c/F    <- val/S/F   : 0.06341 | 0.05857
+    val/S/F    <- der/c/F   : 0.06016 | 0.05593
+    val/S/F    <- der/V/F   : 0.05787 | 0.05352
+    der/S/F    <- der/c/F   : 0.05316 | 0.04705   *
+    der/S/F    <- der/V/F   : 0.05113 | 0.04503   *
+    val/b/F    <- der/V/F   : 0.04198 | 0.03877
+    val/b/F    <- der/b/F   : 0.03725 | 0.03375
+    val/S/F    <- val/b/Nb  : 0.02582 | 1.571e-30   *
+    der/b/F    <- der/V/F   : 0.02336 | 0.02055   *
+    der/S/F    <- val/b/Nb  : 0.02281 | 1.322e-30   *
+    der/b/F    <- der/b/F   : 0.02073 | 0.01789   *
+    val/c/F    <- val/c/F   : 0.01684 | 0.01603
+    val/b/F    <- der/c/F   : 0.01437 | 0.01307
+    der/S/F    <- val/S/F   : 0.01281 | 0.01114   *
+    val/S/F    <- val/S/F   : 0.01099 | 0.009886   *
+    der/b/F    <- der/c/F   : 0.007996 | 0.006928   *
+    val/c/Nb   <- val/b/Nb  : 0.006703 | 0.006639
+    val/V/N0   <- val/b/L   : 0.005846 | 0.005846
+    val/c/N0   <- val/b/L   : 0.005846 | 0.005846
+    val/V/L    <- val/b/L   : 0.005842 | 0.005842
+    val/V/Na   <- val/b/L   : 0.005841 | 0.005841
+    val/V/Nb   <- val/b/L   : 0.005827 | 0.005827
+    val/c/Na   <- val/b/L   : 0.005819 | 0.005819
+    val/c/Nb   <- val/b/L   : 0.005778 | 0.005778
+    val/c/F    <- val/b/Nb  : 0.005308 | 0.0004246   *
+    val/c/F    <- val/b/L   : 0.004575 | 0.004575
+    val/V/Nb   <- val/S/Nb  : 0.003409 | 0.003377
+    der/c/N0   <- val/b/N0  : 0.003263 | 0.003263
+    val/V/F    <- val/b/L   : 0.003158 | 0.003158
+    val/b/F    <- der/S/F   : 0.00259 | 0.002372
+    val/S/F    <- val/b/Na  : 0.001952 | 8.737e-34   *
+    val/V/F    <- val/S/Nb  : 0.001848 | 0.0001478   *
+    der/S/F    <- val/b/Na  : 0.001725 | 7.351e-34   *
+    der/b/F    <- der/S/F   : 0.001441 | 0.001257   *
+    val/b/F    <- val/S/F   : 0.001438 | 0.001355
+    der/b/F    <- val/S/F   : 0.001121 | 0.001012
+    val/V/Na   <- val/S/Na  : 0.001037 | 0.000954
+    val/V/Nb   <- val/S/Na  : 0.001035 | 8.276e-05   *
+  closure of the certified class under p2b's majorant: FAILS; largest value ratio 1.1802

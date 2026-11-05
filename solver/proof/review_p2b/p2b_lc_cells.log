@@ -21,4 +21,4 @@ P2b Lemma LC second implementation: mode cells, ln n0 = 73.89, 181 cells, mutate
   far-band gains per cell (g_arc, g_top, H, N): (5.388e-15, 3.903e-29, 11.33, 1.462e+29); (9.101e-15, 1.084e-28, 11.31, 5.123e+28); (1.839e-14, 4.334e-28, 11.31, 1.255e+28); (1.855e-13, 4.333e-26, 11.3, 1.233e+26); (1.857e-11, 4.333e-22, 11.3, 1.23e+22); (1.857e-8, 4.333e-16, 11.3, 1.23e+16); (0.3017, 0.072, 12.7, 117.6)
   Lipschitz matrix 40 x 40: spectral radius 0.59535, certified theta 0.60222
   with the F2 component (41 x 41): spectral radius 0.59535, certified theta 0.60222
-  wrote p2b_lc_cells.json (188 s)
+  wrote p2b_lc_cells.json (111 s)

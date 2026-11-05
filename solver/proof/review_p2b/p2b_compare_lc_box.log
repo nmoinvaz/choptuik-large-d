@@ -1,4 +1,4 @@
-p2b_lc's majorant (mode box, crude_d, notesH) at the certificate's constants (b8m_lc_K4.log hyp, b8m_lc_lip.json hprime)
+p2b_lc's majorant (mode box, crude_d, notesH) at the certificate's constants (b8m_lc_K4_preP2b.log hyp, b8m_lc_lip_preP2b.json hprime)
   component.band: cert P/h | p2b P/h   (cert P | p2b P)
     V.N0 : 0.9901 | 0.9900   (1.8235e+07 | 1.8234e+07)
     V.Na : 0.9901 | 0.9900   (1.8253e+07 | 1.8251e+07)
@@ -25,6 +25,8 @@ p2b_lc's majorant (mode box, crude_d, notesH) at the certificate's constants (b8
     (F2 component: h_cc = 3517.1, P_cc/h_cc = 0.9901)
     V.N0 1.00000, V.Na 1.00000, V.L 1.00000, V.Nb 1.00000, V.F 0.95238, S.N0 0.99691, S.Na 0.97896, S.L 0.05301, S.Nb 1.01031, S.F 0.86116, b.N0 0.40776, b.Na 0.99019, b.L 0.99409, b.Nb 0.99435, b.F 0.89106, c.N0 0.99946, c.Na 0.99964, c.L 0.99985, c.Nb 0.99997, c.F 0.94366
   d0: cert 3.58631e+06 | p2b 3.58623e+06;  rho4 part: cert 190109 | p2b 190034
+  N0 arc gains (per cell): 0.9605 (cert gamma_N0 0.9354)
+  arc gains at radius 1 +- delta/2 (the data u(x') at Ac): 2.99e-16 (cert gamma_Na 3.721e-15); |u(x')|/w <= 1.186e-09 + |G2|/w
   F: loc |G1|/w = 5.0669e+06 (cert loc_F 5.4926e+06); integrand (|xG1'| + |xW2|)/w = 7.6743e+07 (cert int_F 8.3162e+07); gains arc 0.3351, ray 0.08 (cert gamma_F 0.41504)
   F: p2b's G1 pieces, sup |piece|/w: T1 1.7405e+06, T2 3.0974e+06, T3 10006, rho2 2.1904e+05  (certificate, p2b_cert_probe.py: T1 1.8543e6, T2 3.3622e6, T3 1498, rho2 2.6526e5)
   F ray: integrand 7.6743e+07

@@ -1,4 +1,4 @@
-p2b_lc's majorant (mode cells) at the certificate's constants (b8m_lc_K4.log hyp, b8m_lc_lip.json hprime)
+p2b_lc's majorant (mode cells) at the certificate's constants (b8m_lc_K4_preP2b.log hyp, b8m_lc_lip_preP2b.json hprime)
   component.band: cert P/h | p2b P/h   (cert P | p2b P)
     V.N0 : 0.9901 | 0.9900   (1.8235e+07 | 1.8233e+07)
     V.Na : 0.9901 | 0.6072   (1.8253e+07 | 1.1195e+07)
@@ -25,6 +25,8 @@ p2b_lc's majorant (mode cells) at the certificate's constants (b8m_lc_K4.log hyp
     (F2 component: h_cc = 3517.1, P_cc/h_cc = 0.9901)
     V.N0 1.00000, V.Na 1.00000, V.L 1.00000, V.Nb 1.00000, V.F 0.95238, S.N0 0.34253, S.Na 0.01164, S.L 0.05299, S.Nb 0.03238, S.F 0.70115, b.N0 0.31879, b.Na 0.12778, b.L 0.99409, b.Nb 0.68704, b.F 0.88937, c.N0 0.73133, c.Na 0.31956, c.L 0.99985, c.Nb 0.88495, c.F 0.94325
   d0: cert 3.58631e+06 | p2b 3.58623e+06;  rho4 part: cert 190109 | p2b 190034
+  N0 arc gains (per cell): 0.9354, 0.0001857, 1.857e-07, 1.857e-10, 1.857e-12, 1.857e-13, 6.191e-14, 1.857e-14, 9.287e-15, 6.192e-15, 4.645e-15 (cert gamma_N0 0.9354)
+  arc gains at radius 1 +- delta/2 (the data u(x') at Ac): 2.99e-16, 2.99e-16, 2.99e-16, 2.99e-16 (cert gamma_Na 3.721e-15); |u(x')|/w <= 1.186e-09 + |G2|/w
   F ray: integrand 2.2971e+07
   F ray: integrand 2.3059e+07
   F ray: integrand 2.3029e+07
@@ -110,4 +112,4 @@ p2b_lc's majorant (mode cells) at the certificate's constants (b8m_lc_K4.log hyp
     der/b/F    <- val/S/F   : 0.001121 | 0.000977   *
     val/V/Na   <- val/S/Na  : 0.001037 | 0.0004644   *
     val/V/Nb   <- val/S/Na  : 0.001035 | 8.276e-05   *
-  closure of the certified class under p2b's majorant: every ratio < 1; largest value ratio 0.9900
+  closure of the certified class under p2b's majorant: every value ratio < 1, every derivative ratio <= 1; largest value ratio 0.9900

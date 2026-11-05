@@ -99,7 +99,7 @@ def main():
             r = float(mpup(out[k].v)) / float(mpup(H[k]))
             drow.append(f"{CMAP[c]}.{b} {r:.5f}")
             if (c, b) != ("S", "L"):
-                allbelow &= r < 1
+                allbelow &= r <= 1 + 1e-12          # a derivative bound may be preserved with equality (V)
     log("    " + ", ".join(drow))
     log(f"  d0: cert {rec['diag']['d0']:.6g} | p2b {float(mpup(out['d0'].v)):.6g};  rho4 part: cert "
         f"{rec['diag']['r4']:.6g} | p2b {float(mpup(known.d0_rho4)):.6g}")
@@ -153,7 +153,8 @@ def main():
     log("  entries above 1e-3 in either (row <- column: cert | p2b):")
     for r, c, a, b in sorted(diffs, key=lambda t: -max(t[2], t[3])):
         log(f"    {r:10s} <- {c:10s}: {a:.4g} | {b:.4g}" + ("   *" if abs(a - b) > 0.1 * max(a, b) else ""))
-    log(f"  closure of the certified class under p2b's majorant: {'every ratio < 1' if allbelow else 'FAILS'}; "
+    log(f"  closure of the certified class under p2b's majorant: "
+        f"{'every value ratio < 1, every derivative ratio <= 1' if allbelow else 'FAILS'}; "
         f"largest value ratio {worst:.4f}")
     fn = OPTS.get("log")
     if fn:

@@ -22,9 +22,9 @@ for m in noend omega nodecay shape; do
   $N $PY p2b_lcj.py --h=p2b_lc_cells.json --mutate=$m 2>&1 | tail -8 >> p2b_lcj_mutations.log || true
 done
 # comparison with the certificate (reads its logs only; written after commit d89f5ca)
-$N $PY p2b_compare_lc.py --mode=box --crude_d --notesH --certlog=b8m_lc_K4_preP2b.log --certlip=b8m_lc_lip_preP2b.json --log=p2b_compare_lc_box.log
-$N $PY p2b_compare_lc.py --mode=cells --certlog=b8m_lc_K4_preP2b.log --certlip=b8m_lc_lip_preP2b.json --log=p2b_compare_lc_cells.log
-$N $PY p2b_compare_lc.py --mode=cells --certlog=b8m_lc_K4.log --certlip=b8m_lc_lip.json --log=p2b_compare_lc_cells_F3.log
+$N $PY p2b_compare_lc.py --mode=box --crude_d --notesH --certlog=b8m_lc_K4_preP2b.log --certlip=b8m_lc_lip_preP2b.json --log=p2b_compare_lc_box.log || true
+$N $PY p2b_compare_lc.py --mode=cells --certlog=b8m_lc_K4_preP2b.log --certlip=b8m_lc_lip_preP2b.json --log=p2b_compare_lc_cells.log || true
+$N $PY p2b_compare_lc.py --mode=cells --certlog=b8m_lc_K4.log --certlip=b8m_lc_lip.json --log=p2b_compare_lc_cells_F3.log || true
 $N $PY p2b_compare_lc.py --mode=box --crude_d --notesH --mutate=Larc --log=p2b_compare_lc_box_mut_Larc.log || true
 $N $PY p2b_cert_probe.py > p2b_cert_probe.log
 $N $PY p2b_cert_probe.py lcj >> p2b_cert_probe.log

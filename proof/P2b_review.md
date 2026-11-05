@@ -28,7 +28,8 @@ Contents
 - *Lemma LC, own class.* The second implementation (`p2b_lc.py`) closes on its own: P(h) < h for every component and
   band (ratios ≤ 0.990), d₀ = 6.55×10⁵ (the certificate: 3.59×10⁶), and its 40 × 40 Lipschitz matrix (41 × 41 with
   the component of finding F2) has a certified Perron weight with θ = 0.602.
-- *Lemma LC, the certificate's class.* At the certified constants (h, h′, h_Sp of `b8m_lc_K4.log`), the second
+- *Lemma LC, the certificate's class.* At the certified constants (h, h′, h_Sp of the certified run, kept as
+  `b8m_lc_K4_preP2b.log` and `b8m_lc_lip_preP2b.json`), the second
   implementation's majorant gives every value ratio below 1 (largest 0.9900) and every derivative ratio at most 1, and
   its Lipschitz matrix there has θ = 0.621. So the class with those constants (value bounds h, derivative bounds h′m,
   F1–F3 built in; it contains the certificate's 𝒦_h, whose derivative bounds are D₀(h) ≤ h′m) is mapped into itself
@@ -96,7 +97,7 @@ P_c = R_C/(x − 1) (|P_c| ≤ sup|R_c′|, |xP_c′| ≤ |x| sup|R_c″|/2).
   (each with its own integrand and the gain from its top radius).
 - T_S on L: |G| + |u(x′)| + sup|G′|·(δ/2)/(N_L − 1), with u(x′) = G₂(x′) + ∫_{P_x′} from the Na cells at radius
   1 ± δ/2; the derivative bound h_Sp from ‖(D̃^K)⁻¹A^K‖(|u(x′)|/(δ/2) + sup|G′|/(N_L − 1)).
-- T_β: |ĝ|/(n − 1) + (1/(n₀ − 1)) sup_radial + φ_δ sup_arc of |xĝ′|/(n − 1).
+- T_β: |ĝ|/(n − 1) + (1/(n₀ − 1)) sup_radial + φ_δ sup_arc of |xĝ′|/(n − 1) (no arc term on L).
 - T_V, T_c: the offset d and the radial integrals with ∫w dt/t = ν⁵((1 + t_b)^{10} − (1 + t_a)^{10})/10 piece by piece,
   ρ₄ integrated term by term; on L the straight segment [0, x] for V and β and [1, x] for c (§7, O1).
 - d₀ = n⁵ sup|d|: ρ₄ exactly on [0, 1], the rest cell by cell.
@@ -129,9 +130,10 @@ B5(1) and B5(2) with the data of d₀ = 10⁷ apply (B_chain.md §13.1, conseque
 
 ### 3.1 The certificate's class under the second implementation
 
-`p2b_compare_lc.py` evaluates p2b's majorant at the certificate's constants (h of `b8m_lc_K4.log`, h′ of
-`b8m_lc_lip.json`, h_Sp; h_cc closed at 3517 from p2b's own value), in cells mode (`p2b_compare_lc_cells.log`) and in
-the certificate-like box mode (`p2b_compare_lc_box.log`).
+`p2b_compare_lc.py` evaluates p2b's majorant at the certificate's constants (h of the certified run
+`b8m_lc_K4_preP2b.log`, h′ of `b8m_lc_lip_preP2b.json`, h_Sp; h_cc closed at 3517 from p2b's own value), in cells mode
+(`p2b_compare_lc_cells.log`) and in the certificate-like box mode (`p2b_compare_lc_box.log`); at the constants of the F3
+rerun (§6) in `p2b_compare_lc_cells_F3.log`.
 
 | | certificate | p2b, box mode | p2b, cells |
 |---|---|---|---|
@@ -145,10 +147,13 @@ the certificate-like box mode (`p2b_compare_lc_box.log`).
 θ here is the same Perron-weight routine for all three matrices (λ = 1.03 × spectral radius + 0.001); the
 certificate's own θ = 0.7355 is the value at λ = 0.755.
 
+At the constants of the F3 rerun (§6) the result is the same (`p2b_compare_lc_cells_F3.log`: largest value ratio
+0.9900, θ = 0.6205; the certificate's matrix there has spectral radius 0.70513).
+
 In cells mode every value ratio is below 1, every derivative ratio is at most 1 (the V-derivative bound is preserved
 with equality, D_V = |ω|h_S, as in the certificate) and θ < 1. That is the independent confirmation of the certified
-class. In box mode the derivative bound of S on Nb comes out 1 % above the certificate's h′ (p2b keeps one weight per
-bound, and on the wide Nb box the conversion of P_S w + |G₁| to one weight loses 1 %); the cells resolve it.
+class. In box mode the derivative bound of S on Nb comes out 1 % above the certificate's h′: p2b keeps one weight
+per bound, which costs about that much on the wide Nb box; with cells the ratio is 0.032.
 
 ### 3.2 Item by item, certificate-like settings
 
@@ -175,12 +180,12 @@ Each was traced with `p2b_cert_probe.py` (it imports the certificate's modules a
 reading the certificate code.
 
 1. **d₀, V and c on N0–Nb, S and β on Na, L, Nb (0.03–0.4 %).** The atoms over the box: the certificate's enclosures of
-   the formal coefficients come from ball arithmetic through the recursion and are 0.1–0.3 % wider than the exact
-   polynomials' ranges for many entries (§3.4). The ρ₄ part of d₀: 1.90034×10⁵ here, 1.90109×10⁵ there.
+   the formal coefficients come from ball arithmetic through the recursion and are wider than the exact polynomials'
+   ranges (§3.4). The ρ₄ part of d₀: 1.90034×10⁵ here, 1.90109×10⁵ there.
 2. **β on N0 (8.90 vs 21.48).** On N0 only the x² coefficients of τ_b matter. Their box enclosures in the certificate
    are much wider than the exact range: (j, m) = (4, 2): 276.8 vs 25.85; (5, 2): 242 vs exactly 0 (no product of the
    truncated series reaches ε⁵x²). The probe: the certificate's |ρ₃|/((n − 1)w) on N0 is 20.1, p2b's 8.9.
-3. **S on N0 (+0.9 %).** Box mode has one N0 cell, so its arc gain is αe^{Hα} with H over all of N0 (0.960); the
+3. **S on N0 (+0.9 %).** Box mode has one N0 cell, so its arc gain is αe^{Hα} with H over all of N0 (0.9605); the
    certificate takes the maximum over 300 radial cells (γ_N0 = 0.93540 ≈ α). In cells mode p2b's S.N0 is 0.25.
 4. **S, β, c on F (1–8 % lower).** The local term (5.07×10⁶ vs 5.49×10⁶) and the integrand (7.67×10⁷ vs 8.32×10⁷).
    The probe splits G₁ on F: T₁ = (A₀ − A^K)S: 1.741×10⁶ vs 1.854×10⁶; T₂ = x²(B₀V − B^KV^K): 3.097×10⁶ vs 3.362×10⁶;
@@ -188,12 +193,13 @@ reading the certificate code.
    l¹ norm), the certificate by |c|₁; p2b's ρ₂ is det C^K·ρ₂ (one polynomial) over det C^K, the certificate sums five
    terms.
 5. **h_Sp (3.2×10⁻⁸ vs 5.9×10⁻⁷).** The datum u(x′) at the arc Ac uses Lemma K's arc gain at radius 1 ± δ/2 in p2b
-   (≈ 3×10⁻¹⁶) and γ_Na, the maximum over all of Na (3.72×10⁻¹⁵, attained at |x| = 0.05), in the certificate. Both are
-   valid; it feeds nothing back (the certificate's own row der/S/L).
+   (2.99×10⁻¹⁶) and γ_Na, the maximum over all of Na (3.72×10⁻¹⁵; N_r is smallest at the inner edge), in the
+   certificate. Both are valid; h_Sp feeds nothing back (the column der/S/L of the certificate's matrix is below
+   10⁻⁶¹, `b8m_lc_K4_preP2b.out`).
 6. **β and V on L.** The certificate bounds T_β and T_V on L along the straight segment [0, x] (no arc term:
    `fac = nf/n0` and `slowr` for r = L in `b8m_lc.evaluate`), which is valid because the integrands are analytic on the
-   closed sector. p2b first used Q_x with its arc and got β.L = 1.18 at the certificate's h; with the straight segment,
-   0.9892. (§7, O1.)
+   closed sector; p2b does the same (0.9892). With Q_x and its arc instead (`--mutate=Larc`,
+   `p2b_compare_lc_box_mut_Larc.log`) the β bound on L at the certificate's h is 1.18 h_{β,L}. (§7, O1.)
 7. **The derivative ratio V.F = 0.952.** The certificate's h′_{V,F} = 1.285×10⁸ is |ω|h_{S,F} times θ_hi/θ_lo = 1.05,
    because its far-region representation replaces θ by its bounds at once; p2b's output is |ω|h_{S,F}.
 8. **D_S on Na and Nb.** p2b bounds |x² − 1|/X² from below on 200 sub-intervals of each cell's radius range, near the
@@ -202,18 +208,19 @@ reading the certificate code.
 9. **The Lipschitz entries.** The rows fed by d₀ (val/V/·, val/c/· ← val/β/Na) agree to 4 digits in box mode; in
    cells mode p2b's offset term carries X^{−10} and they are small except on N0. On F p2b's entries are 5–15 % smaller
    (item 4). The certificate's val/S/F ← val/β/Nb = 0.026 comes from its candidate γ_F × I_Rb (the full far gain on
-   the Nb ray integrand); in p2b the Nb ray piece has the gain from radius 20, |D_20|/((n − 1)s_*) ≈ 10⁻²⁹.
+   the Nb ray integrand); in p2b the Nb ray piece has the gain from radius 20, |D_20|/((n − 1)s_*), and the entry is
+   7×10⁻³¹.
    der/S/L ← val/β/Na: item 5.
 
 ### 3.4 The atoms
 
 `p2b_atoms_cmp.py` compares the 325 descriptor coefficients of `b8m_atoms.atoms` with p2b's exact ones. At the box
-centre they agree to all printed digits wherever both are nonzero; the certificate carries structurally zero entries as
-rounding-level balls (≤ 2×10⁻⁶⁹). Over the box the certificate's bound is never below p2b's by more than 5×10⁻⁶
-(relative; V (3, 6): 1504.5367 vs 1504.5440) and both contain the range sampled at 216 points of the box
-(1504.4887). The certificate's bounds are wider for the low x-powers of τ_b and β (item 2) and it carries 25
-structurally zero entries of τ_b as balls up to 4.4×10⁴ (j = 13); they enter only through weights with large powers of
-ρ.
+centre the 312 entries that are nonzero in both agree to double precision; the certificate carries the 13 structurally
+zero entries as rounding-level balls (≤ 2.1×10⁻⁶⁹). Over the box the certificate's bound is never below p2b's by more
+than 5×10⁻⁶ (relative; V (3, 6): 1504.5367 vs 1504.5440), and both contain the range sampled at 216 points of the box
+(1504.4887). The certificate's bounds are wider for the low x-powers of τ_b and β (item 2; largest relative excess
+0.91, at τ_b (4, 2)), and it carries the 13 structurally zero entries of τ_b as balls up to 4.4×10⁴ (j = 13); they
+enter only through weights with large powers of ρ.
 
 ## 4. Lemma J: the second implementation and the comparison
 
@@ -230,7 +237,7 @@ with n s_β ≥ nρ².
 
 ### 4.2 Results and comparison
 
-| Γ (row ← column) | certificate (`b8m_lcj.json`) | p2b, own class | p2b, certificate's class |
+| Γ (row ← column) | certificate (`b8m_lcj_preP2b.json`) | p2b, own class | p2b, certificate's class |
 |---|---|---|---|
 | V ← S | 5.9396 | 5.9396 | 5.9396 |
 | S ← V, S, β, c | 1.397×10⁻³, 4.603×10⁻², 2.17×10⁻⁵, 2.420×10⁻² | 1.196×10⁻³, 3.97×10⁻², 1.66×10⁻⁵, 2.055×10⁻² | 1.197×10⁻³, 4.11×10⁻², 1.66×10⁻⁵, 2.067×10⁻² |
@@ -253,21 +260,22 @@ Lemma J's inputs from Lemma LC are the class constants; θ changes by 0.0007 bet
 
 ## 5. Mutations
 
-Pass criteria, set from the notes' published numbers (B_chain.md §§13.4, 14): every certificate-like run must close
-with θ < 1, d₀ within 2 % of the certificate's 3.59×10⁶, S on N0–Nb within 2 % of the certificate's table,
-h_Sp ≤ 6.0×10⁻⁷; Lemma J must give θ < 1 and Γ_{S,S} within a factor 2 of 0.046. Each mutation below violates one (`p2b_lc_mutations.log`,
-`p2b_lcj_mutations.log`; LC mutations in the certificate-like box mode):
+Pass criteria, set from the notes' published numbers (B_chain.md §§13.4, 14): every certificate-like run must close with
+θ < 1, d₀ within 2 % of the certificate's 3.59×10⁶, S on N0–Nb within 2 % of the certificate's table, h_Sp ≤ 6.0×10⁻⁷;
+Lemma J must give θ < 1 and Γ_{S,S} within a factor 2 of 0.046. Each mutation below violates one
+(`p2b_lc_mutations.log`, `p2b_lcj_mutations.log`; LC mutations in the certificate-like box mode):
 
 | mutation | effect | caught by |
 |---|---|---|
 | `tauD`: ρ₂ × 1.5 | h_S on N0–Nb × 1.5 (Na 7.7×10⁴) | the S comparison |
-| `taub`: τ_b × 1.5 | d₀ = 5.27×10⁶ | the d₀ comparison |
-| `rho4`: the exact ρ₄ part of d₀ dropped | d₀ = 3.39×10⁶ (−5.6 %) | the d₀ comparison |
-| `kernelH`: H_r = 0 in Lemma K | h_{S,F} = 1.62×10⁷, θ = 0.54 | the S.F comparison |
-| `NL`: N_L = 2 | h_Sp = 1.1×10⁵ | h_Sp ≤ 6.0×10⁻⁷ |
-| `nod0`: the offset d dropped | h_V ≈ 4×10⁵ | the V comparison |
+| `taub`: τ_b × 1.5 | d₀ = 5.26×10⁶ | the d₀ comparison |
+| `rho4`: the exact ρ₄ part of d₀ dropped | d₀ = 3.38×10⁶ (−5.7 %) | the d₀ comparison |
+| `kernelH`: H_r = 0 in Lemma K | h_{S,F} = 1.62×10⁷, θ = 0.544 | the S.F comparison |
+| `NL`: N_L = 2 | h_Sp = 1.05×10⁵ | h_Sp ≤ 6.0×10⁻⁷ |
+| `nod0`: the offset d dropped | h_V on N0–Nb ≤ 6.3×10⁴ (certificate 1.84×10⁷) | the V comparison |
 | `gamma3`: arc gains × 3 | no closure ("inverse: lower bound lost") | closure |
-| J `noend`: endpoint coefficients 0 | Γ_{S,S} = 7×10⁻³ | Γ_{S,S} comparison |
+| `Larc` (comparison run): Q_x's arc for β on L | β.L = 1.18 at the certificate's h | closure of the certified class |
+| J `noend`: endpoint coefficients 0 | Γ_{S,S} = 7.1×10⁻³, θ = 0.135 | Γ_{S,S} comparison |
 | J `omega`: \|ω\| × 10⁴ | θ = 8.66 | θ < 1 |
 | J `nodecay`: backward factor × n₀ | θ = 8.8×10²⁹ | θ < 1 |
 | J `shape`: s_V = 1 | unbounded weight ratio (the run stops) | the run |
@@ -301,13 +309,19 @@ descent steps with every ratio ≤ 0.990. Only the F constants move, by 0.01–0
 | Lipschitz spectral radius, θ (`--lipcheck`) | 0.70521, 0.73554 (0.7355) | 0.70513, 0.73547 (0.7355) |
 | Lemma J (`b8m_lcj.py`): θ, θ₀, \|Φ⁻\| | 0.17593, 5.8367×10⁻⁵, 2.001 | 0.17593, 5.8367×10⁻⁵, 2.000 |
 
-These equal P2's patched copy (`review_p2/p2_lc_fix.log`) to every printed digit, so the fix is the one P2 measured.
-The table of B_chain.md §13.4 (three digits) and θ = 0.7355, d₀ = 3.59×10⁶ are unchanged. NUMCHECK_PLACEHOLDER
+These equal P2's patched copy (`review_p2/p2_lc_fix.log`) to every printed digit, so the fix is the one P2 measured. The
+table of B_chain.md §13.4 (three digits) and θ = 0.7355, d₀ = 3.59×10⁶ are unchanged. `b8m_lc_numcheck.py 1000` on the
+new log passes every check with the same numbers (its double-precision continuation jump at 1 + η moves from 1.19×10⁻²⁰
+to 1.40×10⁻²⁰, integration noise), and P2's exact Perron check (`review_p2/p2_perron.py`, output in
+`review_p2b/p2b_p2perron_F3.log`) confirms θ ≤ 0.7356 for the new matrix and θ_J ≤ 0.1760.
 
-The old outputs are kept beside the new ones as `*_preP2b.*` (`b5_label`, `b5_jump*`, `b7_ift`, `b7_ift_mutJD`,
-`b8m_lc_K4`, `b8m_lc_lip`, `b8m_lc_lipcheck`, `b8m_lcj`, `b8m_lc_numcheck_n1e3`). The quoted constants C_E = e^{76.914}
-(d₀ = 0), e^{76.916} (10⁶), e^{76.940} (10⁷), u*^{1−μ₊} = 33.84 (B_chain.md §3), ε_L ≤ 0.3527, n₀ = e^{89.75},
-C₇ = e^{67.84} are unchanged at their printed precision.
+`b5_label.py check` (the formula check and the comparison with the numerical label variation) reproduces its log
+unchanged, and `check_numbers.py --selftest` passes (1043 of 1043).
+
+The old outputs are kept beside the new ones as `*_preP2b.*` (`b5_label`, `b5_label_check`, `b5_jump*`, `b7_ift`,
+`b7_ift_mutJD`, `b8m_lc_K4`, `b8m_lc_lip`, `b8m_lc_lipcheck`, `b8m_lcj`, `b8m_lc_numcheck_n1e3`). The quoted constants
+C_E = e^{76.914} (d₀ = 0), e^{76.916} (10⁶), e^{76.940} (10⁷), u*^{1−μ₊} = 33.84 (B_chain.md §3), ε_L ≤ 0.3527, n₀ =
+e^{89.75}, C₇ = e^{67.84} are unchanged at their printed precision.
 
 ## 7. New observations
 
@@ -320,9 +334,10 @@ None changes a number or breaks a lemma.
    §13.2, after the definition of T: "For x ∈ L the bounds of T_V and T_β use the segment [0, x], and that of T_c the
    segment [1, x]; this is allowed because the integrands are analytic on Σ_n."
 2. **O2 (notes): the atoms over the box.** B8_constants.md §2 says the structural zeros of Lemma F are imposed exactly;
-   over the box the certificate carries some structurally zero coefficients (τ_b at ε^{6..13}x^{2,4}) as balls up to
-   4.4×10⁴, and its enclosures of the low x-powers of τ_b and β are up to 10× wider than the exact range (§3.4). This is
-   valid (every ball contains the true value) and costs only in β on N0 (21.7 where 9.0 suffices).
+   over the box the certificate carries some structurally zero coefficients (13 entries of τ_b, among them
+   ε^{6..13}x^{2,4}) as balls up to 4.4×10⁴, and its enclosures of the low x-powers of τ_b and β are up to 10.7 times
+   wider than the exact range (§3.4). This is valid (every ball contains the true value) and costs only in β on N0 (21.7
+   where 9.0 suffices).
 3. **O3 (notes): the derivative weight of β on F.** B_chain.md §13.4 says m = nw (nw/X² on F) "for S and β";
    `b8m_lc.der_weights` uses nw/X² on F for S only and nw for β on every band. The latter is what the equation gives
    (|xR̂_β′| ≤ |ĝ| + (n − 1)|R̂_β| is of order n h_β w on F as well), and p2b uses the same. *Proposed text:* "where
@@ -344,13 +359,13 @@ None changes a number or breaks a lemma.
 
 ## 9. Reproduce
 
-In `solver/proof/review_p2b/` (`run_p2b.sh` runs all of it, about 20 minutes on the Mac):
+In `solver/proof/review_p2b/` (`run_p2b.sh` runs all of it; the cell-mode runs take a few minutes each):
 
 ```
 python3 p2b_series.py                     # exact series over the box; Lemma F's orders (p2b_series.json)
 python3 p2b_lc.py --mode=cells --log=p2b_lc_cells.log                          # own closure, theta 0.6022
 python3 p2b_lc.py --mode=box --crude_d --notesH --log=p2b_lc_box_crude_d_notesH.log   # certificate-like, d0 3.57e6
-python3 p2b_lc.py --mode=box --crude_d --notesH --mutate=rho4                  # d0 3.39e6: caught (also tauD, taub,
+python3 p2b_lc.py --mode=box --crude_d --notesH --mutate=rho4                  # d0 3.38e6: caught (also tauD, taub,
                                                                                 # kernelH, NL, nod0, gamma3)
 python3 p2b_lcj.py --h=p2b_lc_cells.json --log=p2b_lcj_cells.log               # Lemma J, theta 0.163
 python3 p2b_lcj.py --h=cert --tag=cert --log=p2b_lcj_cert.log                   # on the certificate's class, 0.164
