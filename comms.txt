@@ -10804,3 +10804,26 @@ the same directory:
   python jet_check.py ../../choptuik-large-d-raw ../../choptuik-large-d-raw/T109-mac/jet_check.jsonl --state T75/pin7_D73.2657.npz --N 16 --hs 1e-14,1e-13,1e-12 --kfreeze 13 --threads 2
 exit 0 expected, and its coef_norms equal digit for digit to the last record of anm-mac/jet_check.jsonl. Push
 T109-mac with make_index.py at the end and post. Then stand by: the chain qdj1 holds 2 cores.
+
+== 2026-11-05 02:28 UTC mac T109 and T109b done: four bases pass, two fail the order-1 criterion, jet_check exits 1
+Run 02:24 to 02:27 UTC (date -u), from /Users/nathan/Source/choptuik-qdjet/hp (feat/qd-jet, unchanged) with venv-qdjet, nice 10, --threads 2, each base about 27-34 s, not 4-6 min. No traceback, no order-0 or z_1 criterion failing, both controls fired at every base. Pushed T109-mac (README, qjet_check.jsonl, six qjet_<D>.log, jet_check.jsonl and .log).
+
+T109 qjet_check.py, per base (e* are errors against the order-0 residual_q, order-1 central differences R, and the fixed z_1):
+  D        |R|       dR        e0q       e0d       e1q       e1d       ez_q      ez_d      kappa     freeze_n  exit
+  79.7657  3.53e-14  1.96e-24  1.23e-35  2.29e-20  2.10e-24  8.17e-21  1.81e-16  2.44e-08  9.84e+06  1.91e+07  0
+  81.5157  1.30e-13  5.81e-24  7.50e-36  5.31e-20  6.20e-24  1.90e-20  5.70e-16  7.38e-08  1.72e+07  3.34e+07  0
+  82.2188  3.43e-13  8.99e-24  2.12e-35  7.79e-20  9.59e-24  2.78e-20  8.92e-16  3.38e-07  2.16e+07  4.19e+07  0
+  84.7188  7.32e-13  4.26e-23  2.33e-35  1.60e-19  4.55e-23  5.70e-20  4.52e-15  1.28e-07  4.81e+07  9.35e+07  0
+  86.9494  9.64e-12  1.72e-22  1.78e-35  3.72e-19  1.83e-22  1.33e-19  1.95e-14  3.89e-06  9.87e+07  1.92e+08  1
+  88.1184  9.21e-12  3.58e-22  3.58e-36  6.32e-19  3.81e-22  2.26e-19  4.14e-14  8.19e-06  1.44e+08  2.80e+08  1
+(D 86.94936, 88.11836 in the files, the JSON prints them cut.) kappa and freeze_n are the two controls, e1 of each against e1q, fired at every base (>= 100 e1q).
+Discrepancy with your entry: you wrote that each base exits 1 by the order-1 criterion, here four exit 0 (all six checks pass) and only the last two exit 1, on "order 1: e1q <= 1e-3 e1d" (e1q/e1d 1.4e-3 at 86.9494, 1.7e-3 at 88.1184). I post it, I do not interpret it.
+
+T109b jet_check.py (--state T75/pin7_D73.2657.npz --N 16 --hs 1e-14,1e-13,1e-12 --kfreeze 13 --threads 2): exit 1, "J2 FAIL", you expected exit 0. The failing line is "jet worst ratio 2.2e-16 against 1e-20: FAIL" (jet h +-1e-14: |sum - F(D+h)| 2.15e-23 and 2.33e-23 against |F_1 h| 1.07e-07). Both controls fire (kappa_frozen worst ratio 1.1, n_frozen inf), central differences pass.
+Against the last record of anm-mac/jet_check.jsonl (3 records, the last N 16, hs 1e-14..1e-12): coef_norms equal digit for digit (the check you named), and rows, worst_ratio 2.178499528421183e-16, ok False and passed False are equal too, so the 2.0.0 build reproduces that record bit for bit, including its failing criterion. The earlier two records have ok False as well.
+Mac is free, standing by. The chain qdj1 (anm_run.py pid 64105) holds its 2 cores.
+util_report.py:
+2026-11-05 02:28 UTC  cpu 34%  mem used 31.0 of 32.0 GB, free 0.2 GB, swap used 5.8 of 7.0 GB
+  pid 64105    0.18 GB  cpu     2328 s  anm_run.py /Users/nathan/Source/choptuik-large-d-raw /Users/nathan/Source/choptuik-large-d-raw/anm-mac/run_trend_pin3_qdj1 --state anm-mac/pilot_qdjet_A/anm_pin3_D87.1184.npz --kfreeze 3
+  pid 73880    0.03 GB  cpu        0 s  comms_watch.py --name mac
+  python total 0.2 GB in 2 processes
