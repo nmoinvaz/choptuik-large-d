@@ -2041,3 +2041,21 @@ pinned max |F| is 4.5×10⁻³⁶, the truth's own. The re-seeded horizon data m
 keeps the start (its rung stops at 3.9×10⁻¹³), and `wrongu` diverges. **The pilot (criteria written now).** From the
 128.5559 state, `--reseed 2 --reseed_q 1 --pred_q 1 --h_max 2.5`. Pass: a step of 1.25 or more converges; otherwise the
 elimination gains nothing over T113's steps of 0.5 and T113 stays the route.
+
+**The pilot's result (2026-11-05 17:55 UTC; raw-data repository `anm-mac/elimq_pilot/`, commit 7e88b80).** Two steps
+of 2.5 converged, 128.56 → 131.06 → 133.56, so the pilot passes its criterion. The third does not. At 133.56 the
+series' first ratios |z_(k−1)|/|z_k| are 6.7, 0.9, 1.1 and 1.1, so a_max is 0.725. The re-seeds at 0.725 and 0.3625
+then fail at the u₀ rung (7.1×10⁻⁵ and 5.8×10⁻¹⁰), and the corrector takes no step. Three signs put the start at the
+131.06 base.
+- Its series' terms |z_k| aᵏ of orders 4–12 are up to 715 times those at 128.56 (`hp/plot_algorithm.py` prints both).
+- Its step moved the state by 6.0×10⁻⁸, against 6.0×10⁻¹⁶ for the step before.
+- The 133.56 re-seed's quad-double polish stopped at 1.5×10⁻⁴², 60 times its floor 2⁻²¹² G, where the one at 131.06
+  reached its floor.
+
+The cause is not known, and the elimination does not continue past 133.56 until it is. A component of small radius
+(ratios 2.4–8 from order 6) is already in the 128.56 series at the 10⁻¹² level. Either it is the quad-double jets'
+rounding, which 13.19's growth laws put near D 170–185 instead, or it belongs to the model, as a singularity of the
+pinned branch about 1 beyond 133.56. If it is the model's, T113 meets it too. `hp/series_forms_check.py` separates the
+two (its criteria are in its docstring, written before the run). It builds each series in both forms of the horizon
+series, which share the model and differ in rounding, and its control is the double-double series, whose high orders
+must differ by their own size.
