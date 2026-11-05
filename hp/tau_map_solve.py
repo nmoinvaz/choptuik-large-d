@@ -14,12 +14,14 @@ records go to OUTDIR/points.jsonl, the states to OUTDIR/states (their meta carri
 moved off the reference as highm_check.py converge does (Delta + 1e-6, every unknown + 1e-8 N(0, 1), seed 1), so that
 a pass cannot come from the start alone.
 
-time: one Solver.newton_mixed call (residual, Jacobian build, LU, solve) at each stored state on its own stored plan,
-uniform or mapped (by its meta's tau_map), one after another at --threads; records in OUTDIR/timing.jsonl.
+time: one Solver.newton_mixed call (residual, Jacobian build, LU, solve) at each stored state on its stored plan,
+uniform or mapped (by its meta's tau_map), one after another at --threads; records in OUTDIR/timing.jsonl. --own_plan:
+on the state's own plan at --tol_step, --hmax instead (the rule of pass 2, so that states made elsewhere are timed on
+plans made the same way); --repeat N calls per state.
 
     python3 tau_map_solve.py solve OUTDIR --ref REF.npz [--ref_w REF_W.npz] --M 128 --L 0.35 --s0 1.9 [--mutate gp]
         [--perturb] [--threads 2] [--tag tm]
-    python3 tau_map_solve.py time OUTDIR STATE.npz [STATE.npz ...] [--threads 2]
+    python3 tau_map_solve.py time OUTDIR STATE.npz [STATE.npz ...] [--threads 2] [--own_plan] [--repeat 1]
 
 OUTDIR must be in a task folder of the raw-data repository (raw_out.py; --allow_unraw for tests).
 """
@@ -165,22 +167,25 @@ def cmd_time(a):
         tm = m.get("tau_map")
         kw = dict(nodes=m["nodes"], kt=m["kt"], kc=m["kc"], ks=m["ks"], threads=a.threads)
         s = make_solver_mapped(m["D"], m["M"], tm[0], tm[1], mutate=tm[2], **kw) if tm else make_solver(m["D"], m["M"], **kw)
-        s.set_segs(m["segs"])
-        l0 = lowD_dd.load_avg()
-        t = time.time()
-        F = fmax(s, zh, zl)
-        t_res = time.time() - t
-        t = time.time()
-        s.newton_mixed(zh, zl)
-        t_call = time.time() - t
-        tr, tj, tf, ts = s.step_timing()
-        rec = dict(state=os.path.basename(path), D=m["D"], M=m["M"], tau_map=tm, steps=steps(m["segs"]), threads=a.threads,
-                   F=F, t_residual=round(t_res, 2), t_call=round(t_call, 1), t_jac=round(tj, 1), t_lu=round(tf, 2),
-                   t_solve=round(ts, 2), s_per_step=round(tj / steps(m["segs"]), 4), load_before=l0,
-                   load_after=lowD_dd.load_avg(), peak_rss_mb=lowD_dd.peak_rss_mb(), commit=commit())
-        with open(out, "a") as f:
-            f.write(json.dumps(rec) + "\n")
-        print(json.dumps(rec), flush=True)
+        segs = s.plan(zh, zl, a.tol_step, a.hmax) if a.own_plan else m["segs"]
+        s.set_segs(segs)
+        for r in range(a.repeat):
+            l0 = lowD_dd.load_avg()
+            t = time.time()
+            F = fmax(s, zh, zl)
+            t_res = time.time() - t
+            t = time.time()
+            s.newton_mixed(zh, zl)
+            t_call = time.time() - t
+            tr, tj, tf, ts = s.step_timing()
+            rec = dict(state=os.path.basename(path), D=m["D"], M=m["M"], tau_map=tm, plan="own" if a.own_plan else "stored",
+                       steps=steps(segs), steps_stored=steps(m["segs"]), threads=a.threads, repeat=r, F=F,
+                       t_residual=round(t_res, 2), t_call=round(t_call, 1), t_jac=round(tj, 1), t_lu=round(tf, 2),
+                       t_solve=round(ts, 2), s_per_step=round(tj / steps(segs), 4), load_before=l0,
+                       load_after=lowD_dd.load_avg(), peak_rss_mb=lowD_dd.peak_rss_mb(), commit=commit())
+            with open(out, "a") as f:
+                f.write(json.dumps(rec) + "\n")
+            print(json.dumps(rec), flush=True)
     return 0
 
 
@@ -212,6 +217,10 @@ def main():
     q.add_argument("outdir")
     q.add_argument("states", nargs="+")
     q.add_argument("--threads", type=int, default=2)
+    q.add_argument("--own_plan", action="store_true")
+    q.add_argument("--repeat", type=int, default=1)
+    q.add_argument("--tol_step", type=float, default=1e-30)
+    q.add_argument("--hmax", type=float, default=0.05)
     q.add_argument(FLAG, action="store_true", help=HELP)
     a = ap.parse_args()
     sys.exit(cmd_solve(a) if a.cmd == "solve" else cmd_time(a))
