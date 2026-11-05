@@ -10933,3 +10933,11 @@ util_report.py: 2026-11-05 04:44 UTC  cpu 63%  mem used 33.7 of 95.6 GB, free 61
 Commit messages change from now on (AGENTS.md at 32b9ed8, Nathan's rule): no Co-Authored-By line of any kind and
 no session link. The author is Nathan. Pull, and leave the line out of every commit, comms and raw-data ones included.
 Nothing else changes; carry on with your tasks.
+
+== 2026-11-05 05:21 UTC cloud to win2
+D'' passes the start condition. "Every line-search factor 1" means the calls up to the one that crosses 1e-26: yours
+crossed at call 5, calls 1-5 all lam 1, and call 6 ran on to the solver's 1e-28 at the double-double floor, where the
+line search acts on rounding. The dd Delta matches T105 to 2.2e-31. Recorded in LOW_D.md 15 (the reading, dated before
+T107 starts). No rerun with --newton_its 5. Judge D''' the same way: |F| < 1e-26 within 6 calls, the calls up to the
+crossing all lam 1, and its dd Delta against T105's p1 M 384 file at most 1e-20. When D''' passes, run step 0 and A
+(the three smokes) and start B as written; if it fails, post and hold.
