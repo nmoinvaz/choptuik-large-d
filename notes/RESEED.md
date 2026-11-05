@@ -383,6 +383,11 @@ reseed-mac/basin/*.jsonl`). The "back" and "converged" measures are those of ame
 - Every re-seeded or eliminated run that converged landed within 2×10⁻³⁰ of the truth (3×10⁻²⁵ at 10⁻¹⁴).
 - The criterion of 3.3, a re-seeded basin at least 100 times the plain one in family B, passes at this base by 10¹⁴ for
   the single re-seed and 10¹⁵ for elim, with seed 1 for those two arms (seeds 2 and 3 pending).
+- The controls of 3.3 fire (`D84.9073_B_C1.log`, `_C2_*.log`, `D84.9073_B_controls.jsonl`). C1, the plain arm at the
+  re-seeded edge 10⁻¹³, does not converge: no trial of its first step is accepted. C2, the re-seed without its rungs
+  (`skip`), fails its own u₀ inversion from data 10⁻¹³ off, and the corrector then fails as the plain one does. That
+  holds at 10⁻¹³ for the re-seeded arm and at 10⁻¹² for elim, where elim's projections, also without rungs, never
+  succeed. So the rungs carry the basin.
 - The toy's 10⁻¹ is far off. In family B the limit is the second-order term of 4.2. The node's white noise reaches the
   m_h directions of gain about 1 through the re-seed. Elim takes one decade more, then fails the same way (its first
   step at 10⁻¹¹ is 2.7×10⁻⁷).
