@@ -178,7 +178,7 @@ single re-seed's. Yet elim converged on the jump to 96.1184 from a prediction 4.
 white noise on the τ grid, and the series' error is smooth, so a third family, **P**, follows the prediction's own error.
 The direction is (the cached series of 91.1184 summed at h = 5) minus the chain's state at 96.1184, the truth, scaled to
 max norm 1. δ = 10⁻¹², …, 10⁻⁴, so δ = 4.3×10⁻⁹ is the jump itself. It runs for elim first, then the re-seeded arm. The
-plain arm is not run, since it fails at 4×10⁻¹⁹ on this direction (the jump to 93.1184 and 96.1184). Criteria and rule
+plain arm is not run. It failed on both jumps, from 6.5×10⁻¹⁹ (h = 2) and 4.3×10⁻⁹ (h = 5) off. Criteria and rule
 are those of 3.3. P runs before the 94.1184 basins, the pilot after its elim arm.
 
 **3.4 Jump test** (only if 3.3 passes; `hp/reseed_check.py jump`). From the latest qdj1 state, the chain's quad-double
