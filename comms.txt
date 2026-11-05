@@ -10982,3 +10982,31 @@ where T105 C's cubic stalled. I post each converged point (D, Newton |F|/calls/l
 util) and push T107-win2 each time. Stops: the driver's exit 1, a traceback, a process above 12 GB. Expected 4-10 h per point,
 2-4 days for the 11. T105 C stays parked.
 util_report.py: 2026-11-05 07:20 UTC  cpu 48%  mem used 32.2 of 95.6 GB, free 63.4 GB, commit 36.7 of 101.6 GB
+
+== 2026-11-05 07:23 UTC win
+capacity: cpu 43%, free 17.5 GB
+
+T110 at 07:22 UTC (4 h 1 min in): D 124.6184 after the last accepted half step, 36 steps logged (step 35 = D 123.618). No traceback, no stop of yours, no process above 0.2 GB. Pushed T110-win, raw head 14c859b, checked on the remote (INDEX.md merge conflict with the 12 new raw commits regenerated with make_index.py).
+
+The last 2 h: D 117.12 -> 124.12 in 118 min, 7 units, 16.9 min per unit (5.9 min per unit in the first 2 h, 12 per unit in the second). The cost is the full-unit attempt: every step first tries a 1.0, fails it, and is finished by a 0.5 which is accepted as a stall. The failed a 1.0 now runs either to its qd_it cap or stops at once:
+  D        a 1.0 predicted |F|   qd steps -> |F|     tol       moved     time
+  120.118  1.12e-10              12 -> 8.53e-11       7.5e-17   9.1e-14   739 s
+  121.118  1.62e-10              12 -> 1.87e-10       1.1e-16   1.2e-13   683 s
+  121.618  1.97e-10               1 -> 1.97e-10       1.3e-16   0.0       95 s
+  122.618  2.81e-10               8 -> 2.75e-10       1.9e-16   3.8e-14   688 s
+  124.118  4.94e-10               1 -> 4.94e-10       3.3e-16   0.0       92 s
+  124.618  5.83e-10               1 -> 5.83e-10       4.0e-16   0.0       95 s
+and the accepted a 0.5 (all "stall accepted", 38 s each):
+  D        pred      qd steps -> |F|     tol       moved
+  120.118  ...       (see chain.log)
+  122.618  3.79e-13  4 -> 3.03e-13        1.9e-16   2.9e-20
+  123.618  5.58e-13  4 -> 4.89e-13        2.7e-16   1.6e-19
+  124.118  7.63e-13  4 -> 4.90e-13        3.3e-16   8.5e-20
+A step now costs 228 s (jet) + 94 to 740 s (failed a 1.0) + 38 s (a 0.5): 6 to 17 min per half unit, from 3.8 min at the start. The a 1.0 predicted |F| grows 1.2x per half unit, the a 0.5 one about 1.3x. At the last 7 units' rate D 200 is more than a day away, and the a 1.0 attempts are most of the time. I do not change the run; I read this as the corrector's step ladder (a 1.0 first, then a 0.5) and the cost of the failed first rung. Say if you want a start from the last state with --h_max 0.5 (it would skip the failed rung and save about 60 to 80% of each step), the run is not touched until you say.
+
+util_report 07:22 UTC: 2026-11-05 07:22 UTC  cpu 43%  mem used 14.3 of 31.8 GB, free 17.5 GB, commit 15.9 of 41.8 GB
+  pid 25776    0.15 GB  cpu 43649 s  anm_run.py ... T110-win\chain --state qdj1 D96.1184 ... (the run)
+  pid 25476    0.01 GB  cpu  1 s  comms_watch.py --name win
+  pid 4216     0.00 GB  cpu  0 s  anm_run.py (launcher stub)
+  python total 0.2 GB in 3 processes
+awake: 1.97 h since my last post (05:25 UTC; wall and awake 4.58 h since the 02:48 UTC baseline, 2.61 h at the last post). battery 100%, power online. comms_watch.py --name win running, next post 09:25 UTC.
