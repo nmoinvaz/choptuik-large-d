@@ -181,6 +181,11 @@ max norm 1. δ = 10⁻¹², …, 10⁻⁴, so δ = 4.3×10⁻⁹ is the jump its
 plain arm is not run. It failed on both jumps, from 6.5×10⁻¹⁹ (h = 2) and 4.3×10⁻⁹ (h = 5) off. Criteria and rule
 are those of 3.3. P runs before the 94.1184 basins, the pilot after its elim arm.
 
+*Amendment 8 of 2026-11-05 06:04 UTC, after the elim jump to 101.1184 converged (4.4).* The pilot runs first, with
+`--eps 1e-5` (a_max ≈ 5.5, so the first step is exactly h_max = 5, from 96.1184 to 101.1184). Its state there is an
+independent check of the h = 10 jump, from another base and series. The pass criterion for that check is that the two Δ
+agree to 10⁻²⁰.
+
 **3.4 Jump test** (only if 3.3 passes; `hp/reseed_check.py jump`). From the latest qdj1 state, the chain's quad-double
 series (anm_run.py's `coefficients_q`, N 24, the held harmonics on the T75 trend) is summed at h = 2, 5 and 10. Each
 prediction is re-seeded and corrected at D + h, with the held harmonics at the trend's values there. The plain arm runs
@@ -327,6 +332,12 @@ At h = 5, to 96.1184, where the prediction lies 4.3×10⁻⁹ from the chain's s
 - Elim: from the same start, the first full step lands at 2.4×10⁻¹⁴ and the next three converge quadratically, to
   4.1×10⁻²⁹. Δ lies within 4.8×10⁻²¹ of the chain's state (criterion 10⁻²⁰: pass) and the state within 5.0×10⁻¹⁹. The
   corrector projected three points at u₀ and skipped one below the switch.
+
+At h = 10, to 101.1184 (`jump_D91.1184_h10.log`), the series is summed to order 6, its smallest term 9.4×10⁻⁷ there. The
+prediction's max |F| is 6.5×10³⁰, and the re-seed brings it to 1.3×10⁻⁸. Elim converges in 7 steps to 2.2×10⁻³⁶. It
+moved 7.8×10⁻⁷ from the prediction, and Δ = 1.743933931207271 lies 8.2×10⁻⁷ below the formula. That passes 3.4's
+plausibility criterion, and it sits on the chain's drift (−4.6×10⁻⁷ at 91.1, −6.3×10⁻⁷ at 96.1, about −3.5×10⁻⁸ per
+unit). No chain state exists there, so the pilot (amendment 8) checks it from 96.1184.
 
 That is the mechanism (*numerical evidence*, from these runs and 4.2). A Newton step from a point on the regular family
 leaves its horizon data inconsistent with its new node, at second order, and the horizon block amplifies that by G, so
