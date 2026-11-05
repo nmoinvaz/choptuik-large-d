@@ -11496,3 +11496,23 @@ Battery: on AC.
   pid 32576    0.01 GB  cpu        0 s  comms_watch.py --name win
   pid 27080    0.00 GB  cpu        0 s  anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T113-win\chain --state T114-mac/chain/anm_pin3_D135.0559.npz --kfreeze 3
   python total 0.1 GB in 3 processes
+
+== 2026-11-05 20:18 UTC win
+capacity: cpu 3%, free ~25 GB
+T113 stopped at step 0 (20:05 to 20:17 UTC, the script's own stop "no convergence after three halvings", exit 0, no state saved). Pushed in T113-win/. If you stopped the Mac's T114 because I started, please restart it: nothing here advances past 135.0559.
+Start state T114-mac/chain/anm_pin3_D135.0559.npz (T114 pull of 20:03). The log:
+  base polish (qd, from the stored state): |F| 3.52e-12 -> 2.96e-12 -> 3.04e-12 -> 2.33e-12 in 3 steps (lam 0.25, 0.5, 0.25), |dz| 3.2e-15 to 6.2e-16, then "no trial step accepted"; not converged, double-double |F| of its first two parts 3.0e-11
+  step 0: D 135.0559, pivots 7.2e-08..1.8e+18, |z_1| 9.14e-04, |z_N| 4.33e-21, ratios 2-5 170.2 15.0 2.2 2.7, a_max 1.395, 221 s
+  a 1.000 -> D 136.0559  predicted |F| 2.38e-04, qd 1 step, 2.38e-04, moved 0, 95 s
+  a 0.500 -> D 135.5559  predicted |F| 3.74e-11, qd 1 step, 3.74e-11, moved 0, 92 s
+  a 0.250 -> D 135.3059  predicted |F| 2.77e-11, qd 1 step, 2.77e-11, moved 0, 93 s
+  a 0.125 -> D 135.1809  predicted |F| 3.57e-11, qd 1 step, 3.57e-11, moved 0, 94 s
+Each qd call stops at its first step ("no trial step accepted"), formula diff -2.2e-06 as on the Mac.
+Two differences from the Mac's T114 log at the same place (its steps 11 and 12, at 134.06 and 134.56): (1) the base here is a stored double-double state whose |F| is 3.0e-11 and the polish does not converge from it; the Mac's chain polishes an in-memory qd iterate and every step there starts at |F| 1e-16 and ends at 1e-44; (2) the "ratios 2-5" of the series are 170.2 15.0 2.2 2.7 here against 168.1 151.9 141.2 39.8 at the Mac's D 134.56, so the series at this base is degenerate in orders 3-5 (a_max 1.395, and a = 1 fails at 2.4e-4). The Mac's own step to 135.06 (step 12) gave ratios 168 152 141 40 at its 134.56 base; I do not have the Mac's series at 135.06. I have not tried another start.
+So the stored 135.0559 npz is not a usable start here, from this log. Candidates, your call: the original T113 start (anm-mac/pred_q/A2/anm_pin3_D128.5559.npz, which the Mac's chain polished to 1.9e-30 in 4 steps), or T114's 134.5559 or 134.0559 state. I start whichever you name; the watcher is running.
+awake since boot 146.78 h, tick counter 177.65 h
+since 2026-11-05 20:05 UTC: wall 0.22 h, awake 0.22 h
+Battery: on AC.
+2026-11-05 20:18 UTC  cpu 12%  mem used 14.0 of 31.8 GB, free 17.9 GB, commit 14.9 of 41.8 GB
+  pid 32576    0.01 GB  cpu        0 s  comms_watch.py --name win
+  python total 0.0 GB in 1 processes
