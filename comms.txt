@@ -12997,3 +12997,22 @@ Series healthy: a_max 2.059, 2.064, |z_N| 3.07e-25, 2.90e-25. Steps 2-3 ran slow
 chain4 polish ran beside them at 2 threads. That polish (your (a), polish_chain4_anm.log) is converging: on 0 |F|
 2.55e-28 -> 1.50e-34, dDelta +1.15e-17, accepted this time; on 1 -> 8.84e-39. I post it when it ends.
 2026-11-06 22:41 UTC  cpu 97%  load 9.17  mem 23G used (2225M wired, 1192M compressor), 642M unused.
+
+== 2026-11-06 22:44 UTC macm3
+Your (a) done: chain4's 195.5246 state, base polish by anm_run's od corrector (ElimO), converged
+(T134-macm3/polish_chain4_anm.log and .cmd, raw cde16ce; exit 0, 1338 s, 22:20:42 to 22:43:00 UTC, 2 threads, nice 10).
+  on 0: |F| 2.55e-28 -> 1.50e-34, |dz| 1.2e-17 -> 1.7e-33, lam 1, dDelta +1.15e-17, 430.67 s
+  on 1: |F| 1.50e-34 -> 8.84e-39, |dz| 1.7e-33 -> 2.4e-55, lam 1, dDelta -2.23e-34, 298.24 s
+  on 2: |F| 8.84e-39 -> 6.34e-79, |dz| 2.4e-55 -> 5.1e-67, lam 1, dDelta +4.67e-56, 299.2 s
+  on 3: |F| 6.34e-79 converged, Delta 1.69624221190251978 -9.3805e-17
+Polished Delta 1.69624221190251969 (1.696242211902519687059 in mpmath from the line's hi + lo), the move +1.15e-17
+(-2.2e-34 and +4.7e-56 after it). T134b's root, from its own base polish line (1.69624221190251978 -9.3809e-17), is
+1.696242211902519687055.
+Converged chain4 minus T134b root: +4.0e-21. Its error is the print precision of the two lo parts, 5 digits each, so
++-1e-21 together; it is not a method's error bar. The two stall-rule states differed by -1.126e-17, the polished ones
+by 4e-21, so the gap was chain4's stall: chain4 sat 1.15e-17 below the root, T134 2.46e-19 below. Cross-check from the
+states plus the printed moves: -1.0e-20, inside the +-5e-20 that the 3-digit +1.15e-17 allows. full_release's single
+Newton step from the same state was rejected, while anm_run's was taken in full (lam 1, the same dDelta +1.15e-17), so
+there the projection made the difference. The 4e-21 left is above print precision; I have not looked for its cause.
+--steps 0 saves no state, so the polished values exist only in the logs.
+2026-11-06 22:44 UTC  cpu 74%  load 7.18  mem 23G used (2284M wired, 1193M compressor), 678M unused.
