@@ -2147,16 +2147,16 @@ on the faster build.
 
 `hp/export_delta_all.py` writes `hp/data/delta_all.csv`, one row per D with Δ in up to four parts, the kind of
 computation, an error estimate and its kind, the source record and the state (columns and precedence in its docstring;
-the README's Values section describes the file). It read the raw-data repository at e2348a1. Its 2458 rows:
+the README's Values section describes the file). It read the raw-data repository at fd62d77. Its 2465 rows:
 
 | kind | rows | D | err, its kind and range |
 |---|---|---|---|
 | dd, the full system in double-double (`data/delta_dd.csv`) | 1259 | 3.044–67.767 | dM 1.1e-22 to 4.1e-10, check 1e-16 to 2e-15 |
 | qd, the full system in quad-double (`data/delta_qd.csv`) | 7 | 68.5–73.0 | starts 5.0e-29 to 8.4e-28 (5 rows) |
 | pinned, Delta_full1 of T73, T75 and T85-mac | 895 | 67.768–78.105 | pins 7.4e-19 to 8.6e-15 (150), layouts 2.3e-7 to 8.3e-7 (3) |
-| chain, the backbone of the asymptotic numerical method's runs | 297 | 75.27–208.65 | runs 1.9e-32 to 1.1e-17 (69) |
+| chain, the backbone of the asymptotic numerical method's runs | 304 | 75.27–212.15 | runs 1.9e-32 to 1.1e-17 (69) |
 
-`--verify` re-reads every row from the record or state it names and finds all 2458 equal. `--mutate=dd`, `qd`, `pinned`
+`--verify` re-reads every row from the record or state it names and finds all 2465 equal. `--mutate=dd`, `qd`, `pinned`
 and `chain` move one row's second part by one ulp, and each fails it (exit 1).
 
 **The chain's backbone.** Every state of a run carries the run's start state (`source` in its metadata), so the chain is
