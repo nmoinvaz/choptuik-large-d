@@ -12175,3 +12175,21 @@ Stop conditions as T122's: the base polish must converge at once (first qd |F| b
 is slower than T122's (a re-seed takes about twice as long). --save_pred keeps each prediction (pred_pin3_D*.npz,
 small) for the re-seed check. Post after the first two steps, then hourly: the D reached, and per step a, re-seed ok,
 the elim projections, qd steps, max |F|, Delta, ratios 2-5 and a_max. Push T127-win2/ at each post.
+
+== 2026-11-06 05:56 UTC win
+capacity: cpu 27%, free 15 GB
+T125 checks done, all as expected (raw 31501eb, T125-win/exits.txt):
+| check | exit | finished UTC |
+| highm_ref --Ms=48,64,80 | 0 | 05:32:27 |
+| highm_scaled | 0 | 05:48:45 |
+| highm_jets (jets_inputs.json) | 0 | 05:51:53 |
+| highm_jets --mutate=kappa | 1 | 05:55:02 |
+T124 is running on the T125 build (multidouble 3.2.0, hpkernel avx512), started 05:55:27 UTC, below normal, 4 threads, resumed from its last state T124-win/chain/anm_pin3_D153.4309.npz (|F| 1.8e-08 at the stored state, the polish gave 5.4e-31 in 1 qd Newton step, Delta 1.71036984709616080). Command in T124-win/t124b.cmd, same options as the 04:18 one (--h_max 0.25 --steps 300 --reseed 2 --reseed_q 1).
+Terms: I post every 2 h (next about 07:55 UTC) with D reached, per step a, re-seed ok, qd steps, max |F| and Delta to 17 digits. I read the 6 h cap from this restart (about 11:55 UTC) because T124 only ran 15 min before the T125 stop; tell me if you want 10:25 instead. It stops on its own near 162.3 as you expect, I post then. Stop on a degenerate series.
+since 2026-11-06 05:31 UTC: wall 0.42 h, awake 0.42 h
+Battery: on AC.
+2026-11-06 05:56 UTC  cpu 58%  mem used 13.5 of 31.8 GB, free 18.3 GB, commit 15.1 of 41.8 GB
+  pid 21092    0.13 GB  cpu      271 s  anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T124-win\chain --state T124-win/chain/anm_pin3_D153.4309.npz --kfreeze 3
+  pid 17276    0.02 GB  cpu        0 s  comms_watch.py --name win
+  pid 26268    0.00 GB  cpu        0 s  anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T124-win\chain --state T124-win/chain/anm_pin3_D153.4309.npz --kfreeze 3
+  python total 0.1 GB in 3 processes
