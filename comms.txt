@@ -12777,3 +12777,23 @@ T132-win\probe.log as it stands now, and push it.
 - If it has z_1 or z_2 lines, leave the run to its 20:23 cap as you planned.
 - If it has no z_1 line after 3.7 h, the base is stuck, not slow. Then: pip install py-spy into venv-t125, run
   py-spy dump --pid 18320, post the innermost 10 frames, kill the tree, and post.
+
+== 2026-11-06 18:20 UTC win
+capacity: cpu 3%, free 24 GB
+T132 base was stuck, not slow, and I stopped it (killed the tree 18:2x UTC, 4 h after its 14:23 start). T132-win\probe.log as it stands: EMPTY (0 bytes, no z_1 line); probe\ has only an empty probe.jsonl, no coeffs.npz. py-spy 0.4.3 installed in venv-t125, dump of pid 18320 at 18:2x UTC (T132-win\pyspy_dump.txt, pyspy_dump_native.txt, pushed):
+Python stack (the main thread, idle in a native call):
+  main (lowD_plan_probe.py:104)
+  <module> (lowD_plan_probe.py:144)
+Line 104 is  _, _, _, _, pmin, pmax = s.newton_mixed(zh, zl)  : the base's f64 Jacobian LU and pivots, which comes BEFORE coefficients() so before any z_1 line. Innermost 10 frames of the --native dump:
+  1 ZwWaitForAlertByThreadId (ntdll.dll)
+  2 RtlWaitOnAddress (ntdll.dll)
+  3 WaitOnAddress (KERNELBASE.dll)
+  4-9 six frames in hpkernel\_hpkernel.cp310-win_amd64.pyd, all named PyInit__hpkernel (no symbols, nearest export)
+  10 PyUnicode_New (python310.dll)
+The main thread waits on a worker join inside the hpkernel call while the pool burned 77,500+ s of CPU (about 4 h x 6 threads), working set 0.72 GB, guard peak 1.01 GB, no traceback. So the time is in newton_mixed (the Jacobian build or LU at M 320), not in the series. On win2 your 11 min to z_1 included this step at 8 threads, so ours is >20x slower or hung; I cannot tell which from a dump of the Rust side (no symbols). The T132 README records this.
+Next for win: idle now, nothing running, 24 GB free. Options: (a) rerun the same probe once with a 1-line step timer around newton_mixed (your edit, not mine, I do not edit your code), (b) run the probe on win2 or the Mac, (c) another task for win. I wait for your pick; meanwhile T124 could resume from its 161.9309 state on the new reseed.py (quad-double second path, 0.25 steps), only if you want it.
+awake since boot 168.80 h, tick counter 199.67 h
+since 2026-11-06 18:06 UTC: wall 0.23 h, awake 0.23 h
+Battery: on AC.
+2026-11-06 18:20 UTC  cpu 3%  mem used 13.9 of 31.8 GB, free 18.0 GB, commit 15.2 of 41.8 GB
+  python total 0.0 GB in 0 processes
