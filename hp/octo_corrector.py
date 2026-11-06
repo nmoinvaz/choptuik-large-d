@@ -12,7 +12,7 @@ the first four.
 The octo-double helpers (od_add_dd, od_axpy) are multidouble's from f092018 on; they are imported where they are
 used, so that a module importing this one runs on the older packages the runners have.
 
-    python3 octo_corrector.py planted RAW STATE.npz [--threads 3] [--rel 1e-12] [--seed 1] [--qd 1]
+    python3 octo_corrector.py planted RAW STATE.npz [--threads 3] [--rel 1e-12] [--seed 1] [--qd 1] [--Delta_ref D]
         [--mutate_offset qd] [--mutate 10] [--out PREFIX]
     python3 octo_corrector.py wall RAW PRED.npz [--threads 3] [--qd 0] [--F_max 1e-36] [--mutate_offset qd]
         [--mutate 10] [--out PREFIX]
@@ -277,15 +277,17 @@ def planted(argv):
     agrees with the quad-double corrector's from the same start (ElimQ, newton_qd to tol 1e-45 in 12 steps, its
     floor) to 1e-30. The pinned system is the state's own (held harmonics at its values, the plan at it at 1e-32).
     Controls, which must fail: --mutate_offset qd (PinnedO's J^-1 c through the quad-double LU), --mutate 10 (the
-    kernel's OD_MUT_STATE_QD, the state read in its quad-double part). --qd 0 skips the quad-double run (then only the
-    residual is judged). Exit 1 on failure."""
+    kernel's OD_MUT_STATE_QD, the state read in its quad-double part). --qd 0 skips the quad-double run; --Delta_ref
+    then gives the quad-double Delta to compare with (a passing run's), else only the residual is judged. Exit 1 on
+    failure."""
     import os
     import time
     import mpmath as mp
     from hpkernel.driver import load_q, qd_axpy
     from reseed import Reseeder
     raw, path = argv[0], argv[1]
-    opt = _parse(argv[2:], dict(threads=3, rel=1e-12, seed=1, mutate_offset="", mutate=0, it_max=12, qd=1, tol=1e-40, out=""))
+    opt = _parse(argv[2:], dict(threads=3, rel=1e-12, seed=1, mutate_offset="", mutate=0, it_max=12, qd=1, tol=1e-40, out="",
+                                Delta_ref=""))
     z4, meta = load_q(os.path.join(raw, path))
     z4 = o8(z4)
     D = mp.mpf(meta["D_str"])
@@ -320,8 +322,15 @@ def planted(argv):
               flush=True)
         ok = ok and dD <= 1e-30
         rec["qd"] = dict(steps=len(hq), converged=bool(cq), F_last=hq[-1]["F"], F_octo=Fq, Delta=mp.nstr(Dq, 40), dDelta=float(dD))
+    elif opt["Delta_ref"]:
+        with mp.workdps(60):
+            dD = abs(Do - mp.mpf(opt["Delta_ref"]))
+        print(f"  |Delta_od - Delta_ref| {mp.nstr(dD, 5)} (Delta_ref {opt['Delta_ref']})", flush=True)
+        ok = ok and dD <= 1e-30
+        rec["Delta_ref"], rec["dDelta_ref"] = opt["Delta_ref"], float(dD)
     rec["passed"] = bool(ok)
-    print(f"  (a) {'PASS' if ok else 'FAIL'}: od max|F| {Fo:.2e} < 1e-40" + (", |Delta_od - Delta_qd| <= 1e-30" if opt["qd"] else ""), flush=True)
+    print(f"  (a) {'PASS' if ok else 'FAIL'}: od max|F| {Fo:.2e} < 1e-40" + (", |Delta_od - Delta_qd| <= 1e-30" if opt["qd"] or opt["Delta_ref"] else ""),
+          flush=True)
     if opt["out"]:
         import json
         save_o(opt["out"] + ".npz", zo, dict(meta, D_str=meta["D_str"], planted=True))
