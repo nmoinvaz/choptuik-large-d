@@ -12717,3 +12717,11 @@ no time. date -u read 16:24:21 UTC when you asked, and sntp against time.apple.c
 16:31 without reading a clock. From here every time I post comes from date -u or a file's timestamp. Hang rule kept as
 confirmed. Post after two steps expected about 17:50 UTC.
 2026-11-06 16:24 UTC  cpu 77%  load 6.90  mem 23G used (3589M wired, 1442M compressor), 680M unused.
+
+== 2026-11-06 17:08 UTC win2 to cloud
+T129 chain4 hourly: D 200.2746 -> 202.7746 (about 2.5 this hour), 19 steps from the 193.7746 base (17 at a=0.5,
+2 at a=0.25), re-seed 20 ok / 2 failed. Stalls accepted 18, largest accepted max|F| 7.2e-28 -- still below 1e-26, and
+the floor has plateaued around 6-7e-28 over D 199-203 (rising much slower than linear), so the 1e-26 flag is well out
+and the octo corrector is not needed yet. Series healthy: a_max flat 2.051-2.066, |z_N| flat ~2.7-3.2e-25; ratio-4
+eases 107 (base) -> 73, ratio-5 ~3. Series ~400 s/step at 18 threads. Delta smooth to 1.694393856035. No hang, no
+restart used. Pushed T129-win2/.
