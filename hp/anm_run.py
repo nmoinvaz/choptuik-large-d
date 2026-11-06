@@ -14,7 +14,7 @@ formulation of hp/pinning.py; their coefficients are zero).
         [--steps 20] [--D_max 200] [--corrector dnp|deflated|newton] [--tol 1e-20] [--tol_growth 1.45]
         [--accept_stall 1e-19] [--junk_only 0] [--threads 4] [--w 24] [--trend T75] [--tol_qd 1e-28]
         [--qd_it 12] [--qd_w 0] [--refine 1] [--probe 0 --probe_c C] [--plan_tol 1e-32] [--fix1 0] [--F_pred_max 0]
-        [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0] [--pred_q 0] [--reseed_q 0]
+        [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0] [--pred_q 0] [--reseed_q 0] [--save_pred 0]
 
 --corrector qd runs the quad-double Newton of the kernel (hpkernel.driver.newton_qd, Solver.newton_q) on the pinned
 system (pinning.PinnedQ: the held harmonics' offset subtracted from the quad-double residual and added to the step, as
@@ -68,7 +68,10 @@ re-seed's rungs (reseed). --reseed 2 does the same and runs the quad-double corr
 (reseed.ElimQ: every point the corrector steps from or tries is re-seeded at u0 while its max |F| exceeds 1e-15), which
 converged from the series at a = 5 where the single re-seed did not (notes/RESEED.md 4.4). The re-seed's floor test
 is reseed.py's default 'stall' (amendment 10), which converged in 19 of 20 trials at D 106 where the first design's
-converged in 3; a re-seed that fails keeps the prediction, and the attempt then usually fails.
+converged in 3; a re-seed that fails keeps the prediction, and the attempt then usually fails. With --reseed 2 the
+step's solution, stored and carried on as the next base, is the projection of the corrector's last iterate, whose
+residual is the one the corrector converged (notes/QUAD_DOUBLE.md 13.26). --save_pred 1 stores each prediction before
+its re-seed as pred_pin<k>_D<D>.npz, an input for testing the re-seed (13.26).
 """
 import json
 import os
@@ -174,7 +177,7 @@ def main():
     args = list(sys.argv[1:])
     opt = dict(state="T75/pin7_D73.2657.npz", kfreeze=3, N=24, eps=1e-16, h_max=2.0, steps=20, D_max=200.0, corrector="dnp",
                tol=1e-20, tol_growth=1.45, accept_stall=1e-17, junk_only=0, threads=4, w=24, trend="", tol_qd=1e-28, qd_it=12, qd_w=0,
-               refine=1, probe=0, probe_c=0.0, plan_tol=1e-32, fix1=0, F_pred_max=0.0, horizon_alpha=0, fix1_qlu=0, jet_q=0, reseed=0, pred_q=0, reseed_q=0)
+               refine=1, probe=0, probe_c=0.0, plan_tol=1e-32, fix1=0, F_pred_max=0.0, horizon_alpha=0, fix1_qlu=0, jet_q=0, reseed=0, pred_q=0, reseed_q=0, save_pred=0)
     for k in list(opt):
         f = "--" + k
         if f in args:
@@ -211,8 +214,9 @@ def main():
             z4, hist, conv = newton_qd(sq, z4_start if z4_start is not None else qparts(ph, pl), tol=opt["tol_qd"], it_max=opt["qd_it"], w=opt["qd_w"], verbose=True)
             if elim.get("rs") is not None:
                 print(f"      elim projections {sq.counts}", flush=True)
-                if not conv:
-                    z4 = elim["rs"].project(z4)[0]
+                # ElimQ's residual is that of the point's projection, so the solution is the projected iterate (the
+                # iterate itself is off the root by its horizon data's last step, 2.9e-10 in |F| at 153.43, 13.26)
+                z4 = elim["rs"].project(z4)[0]
             last_q["z4"] = z4
             Fh, Fl = spx.residual(z4[0], z4[1])
             Fc = float(rnorm(Fh, Fl))
@@ -529,6 +533,11 @@ def main():
                     # inside the corrector
                     rs_n = Reseeder(dict(M=M, nodes=nodes, kt=kt, kc=kc, ks=ks), Dn, threads=opt["threads"],
                                     horizon_alpha=opt["horizon_alpha"], qd=bool(opt["reseed_q"]))
+                    if opt["save_pred"] and pred4 is not None:
+                        # the prediction before its re-seed, for testing the re-seed on it (13.26)
+                        save_q(os.path.join(out, f"pred_pin{kf}_D{float(Dn):.4f}.npz"), pred4,
+                               dict(D=float(Dn), D_str=str(Dn), M=M, nodes=nodes, kt=kt, kc=kc, ks=ks, kfreeze=kf, pin_held=ks_held,
+                                    N=N, a=a, source=opt["state"], prediction=True))
                     zr, rsd = rs_n.reseed(pred4 if pred4 is not None else (ph, pl))
                     elim["rs"] = rs_n if opt["reseed"] == 2 else None
                     rsd = dict(ok=rsd["ok"], dropped=rsd["dropped"], seconds=rsd["seconds"],

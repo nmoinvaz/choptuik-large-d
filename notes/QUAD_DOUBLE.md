@@ -2178,3 +2178,40 @@ They are the held values' dependence on the path, about 1e-20 (13.22). Two compa
 hold the harmonics constant (`run_pin3_newton_e14`, `run_pin3_cont`) are another system and differ by 7.3e-7 to 2.5e-6
 at 75.27–80.27. The double-double `run_trend_pin3_cont` differs from the quad-double `run_trend_pin3_qd3` by 9.0e-10 at
 79.77 and 1.9e-8 at 80.27, which measures the double-double run's accepted stalls, not the quad-double row.
+
+### 13.26 Past the stall at 152.93: the u0 polish, and the corrector's solution (2026-11-06 04:15 UTC)
+
+T118 (win2) stopped at 152.93. At every attempt the re-seed failed at the rung u 0.3, and the plain prediction it kept
+did not converge. Replaying T118's step from its 152.93 state on the Mac found two defects (raw-data repository
+`anm-mac/stall153/`, 45ad089).
+
+**The u0 rung's quad-double polish** (`reseed.py` `invert_q`) factored its Jacobian once, allowed 6 steps and stopped
+at the first step that did not halve |R|. At 152.93 + 0.5 it falls by about 10⁻⁴·⁵ every two steps from the
+double-double rung's 4.35e-9, and after six steps it is at 3.6e-23, above the 1e-24 it must reach. T118's attempts
+stopped at 3.9e-22 after six steps, and at 4.5e-15 to 2e-9 where a step did not halve. The corrector reaches 1e-36 on
+the same rows, so 1e-24 is not a floor. The polish now allows 16 steps and refactors the Jacobian, at most 3 times,
+where a step does not halve. The same prediction converges to 3.4e-38 in 12 steps without refactoring. A projection in
+the corrector that stalled at 6.9e-15 converges to 4.0e-41 after one refactoring. T117's 5 failed re-seeds of 7 fit
+the same defect.
+
+**The corrector's solution.** With `--reseed 2` the corrector's residual is that of the point's projection
+(`ElimQ`), but `correct()` returned Newton's last iterate and projected it only when Newton did not converge. The step
+to 153.43 converged (max |F| 5.5e-32), but the state carried on and stored was the unprojected iterate. A restart from
+it starts its base polish at |F| 2.85e-10 and takes no step, and the series built there is degenerate:
+
+| base at 153.43 | base polish starts at | \|z_N\| | ratios 2-5 | a_max |
+|---|---|---|---|---|
+| the corrector's last iterate, as stored | 2.85e-10 | 6.5e-11 | 6.1, 1.7, 2.8, 1.9 | 0.50 |
+| its projection | 5.55e-32 | 4.3e-25 | 193, 174, 171, 15 | 2.06 |
+
+The projection moves only the horizon data, by 1.1e-31, which the mass mode's gain turns into the 2.9e-10.
+`correct()` now projects the final iterate. From the projected state the next step converges at a = 0.5 (re-seed ok,
+corrector 8.2e-30, D 153.93). The elimination pilot's degenerate series at 131.06 (13.22) also followed a converged
+elimination step, so it is very likely the same defect (not rerun).
+
+**A first check, not used.** The polish alone, started from a converged state's horizon data rounded to double-double,
+fails under both rules. One step from 1.0e-9 lands 4.6e-19 (relative) from the state's data along an m_h column, and
+|R| stays at 2.43e-16 there, though the exact correction from that point gives 7e-37. The computed steps miss it by
+1e-31 to 7e-26, so the rung block's conditioning limits the step in that direction. The chain's projections did not
+meet that start in these runs (none failed). `anm_run.py --save_pred 1` now stores each prediction before its re-seed,
+so a check can run on predictions.

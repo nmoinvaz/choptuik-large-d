@@ -257,13 +257,17 @@ class Reseeder:
         hist.append(dict(it=len(hist), R=nR))
         return dh, dl, hist, conv
 
-    def invert_q(self, z4, d4, it_max=6):
+    def invert_q(self, z4, d4, it_max=16, refactor_max=3, R_stop=1e-34):
         """the u0 rung in quad-double: Newton on the 2M horizon data d4 (four parts) so that the horizon series at u0
         matches the last node of z4 (four parts) in the rung rows. The residual is Solver.residual_q and the step solves
         the rung rows' block of the quad-double Jacobian (Solver.jacobian_q) with multidouble's QDLu: the double-double
         Jacobian's own rounding, amplified by the mass mode, stops a double-double-preconditioned iteration near
-        1e-19 at D 128. Stops when the residual no longer halves (its floor, about eps_qd G) or after it_max steps.
-        Returns d4, the history and whether it converged (at least one step taken and the last residual below 1e-24)."""
+        1e-19 at D 128. The Jacobian is factored at the start and again, at most refactor_max times, where a step does
+        not halve the residual. Stops below R_stop, when a step after the last refactoring does not halve the residual
+        (its floor, about eps_qd G), or after it_max steps. Past D ~ 150 the iteration with one factoring needs about 12
+        steps from the double-double rung and stalls near 1e-14 at some points (notes/QUAD_DOUBLE.md 13.26);
+        it_max=6, refactor_max=0 is the earlier rule. Returns d4, the history and whether it converged (at least one
+        step taken and the last residual below 1e-24)."""
         M, a, o = self.M, self.aoff, self.off
         u = self.us[-1]
         s = self.rung_solver(u)
@@ -296,23 +300,30 @@ class Reseeder:
         hist = [dict(it=0, R=nR)]
         if not np.isfinite(nR):
             return d, hist, False
-        J = s.jacobian_q(*put(d))
-        lu = QDLu(*[np.asarray(J[q])[np.ix_(rows, cols)] for q in range(4)])     # the rung block, factored once
-        steps = 0
+        def factor(d):
+            J = s.jacobian_q(*put(d))
+            return QDLu(*[np.asarray(J[q])[np.ix_(rows, cols)] for q in range(4)])     # the rung block
+
+        lu, steps, refactors = factor(d), 0, 0
         for it in range(it_max):
             x = lu.solve(*[-np.asarray(r) for r in R])                            # J_block x = -R in quad-double
             dn = [np.ascontiguousarray(np.asarray(p)) for p in qd_axpy(1.0, *x, *d)]
             Rn = res(dn)
             nn = float(np.max(np.abs(Rn[0] + Rn[1])))
-            hist.append(dict(it=it + 1, R=nn, step=float(np.max(np.abs(np.asarray(x[0]))))))
-            if not np.isfinite(nn) or nn >= nR:
-                break                                   # the floor: this step does not lower the residual (not taken)
-            d, R = dn, Rn
-            halving = nn <= 0.5 * nR
-            nR = nn
-            steps += 1
+            hist.append(dict(it=it + 1, R=nn, step=float(np.max(np.abs(np.asarray(x[0])))), refactors=refactors))
+            lower = bool(np.isfinite(nn) and nn < nR)
+            halving = lower and nn <= 0.5 * nR
+            if lower:
+                d, R, nR = dn, Rn, nn                   # a step that does not lower the residual is not taken
+                steps += 1
+            if nR < R_stop:
+                break
             if not halving:
-                break                                   # no longer halving: the floor
+                if refactors >= refactor_max:
+                    break                               # no longer halving after the last factoring: the floor
+                lu = factor(d)                          # the Jacobian at the current data
+                refactors += 1
+        hist.append(dict(it=len(hist), R=nR, refactors=refactors))     # the accepted residual, as invert() ends
         return d, hist, steps > 0 and nR < 1e-24
 
     # ------------------------------------------------------------------ the re-seed
