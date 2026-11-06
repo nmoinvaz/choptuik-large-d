@@ -2284,3 +2284,53 @@ after the block steps and one Newton step, which raised |R| more than the 1e6-fo
 the guard at 1e12 the predictions at 162.81, 163.31 and 163.81 converge (9.0e-39, 2.0e-39, 1.7e-39), the Mac's still
 pass, and checkq's control still fails (`anm-mac/stall162/guard_test.log`, 9c24d53). The guard is now 1e12 (`rise_max`);
 plain Newton's divergence from the double-double rung (to 9.4e11 from 1.3e-7) still stops it.
+
+### 13.28 Past 188: the hang, the quad-double floor and the octo-double corrector (2026-11-06 21:00 UTC)
+
+**The hang above 188.02.** T129 (win2, octo-double series, quad-double corrector) ran one step for over an hour on one
+core. A py-spy dump put it in `Reseeder.integrate`, inside the full re-seed of a trial point's projection. The start's
+projection had failed, so every trial sat far off (|dz| 0.19) and integrating its node crawled. Since 2164efe an
+attempt stops when its start's projection fails at max |F| above 1e-6, and the step halves. Across every logged
+attempt, 5 started that way and none converged; attempts with later failures and a small start still converge.
+
+**The quad-double floor.** From 193.77 every halving stalled at max |F| 1.0–1.1e-28 against `tol_qd` 1e-28. Plain
+quad-double Newton from stored states reaches 1.7e-37 at 175.52 and 1.6e-36 at 180.52, but from 185.52 on its steps
+raise |F| (2.3e-29 to 1.5e-22 at 185.52, 9.8e-29 to 7.9e-16 at 188.02; `od-corrector-mac/qd_floor.log`). The cause is
+the quad-double LU, whose smallest pivot drifts below the octo-double one (6.4e-12 against 1.5e-10 at 188.02, its step
+45% wrong in the weak direction; notes/OCTO_DOUBLE.md 5). `--accept_stall_qd 1e-24` (d898c15) carried chain4 from
+193.77 to 207.90, its accepted stalls rising from 1.2e-28 to 4.9e-26, where the 1e-26 trigger switched win2 to the
+octo-double corrector (chain5, `--corrector od`), which converges each step to 1e-41 or below.
+
+**What a stall costs Δ, measured.** The octo-double corrector polished stall-rule states at 195.52 to convergence
+(macm3, `T134-macm3/`, cde16ce): chain4's state (stall 2.55e-28) moved by +1.15e-17, T134's (2.5e-28) by +2.46e-19,
+and the two polished values agree to 4e-21. So the 1.1e-17 between the two second paths was chain4's stall, and the
+stall rule's cost there is up to about 1e-17, far below the held harmonics' bias.
+
+### 13.29 The gap to arXiv:2611.07007 above D 80 (2026-11-06 23:30 UTC)
+
+Ecker, Ecker and Grumiller's table to D = 200 (notes/LIT_REVIEW.md; `hp/data/delta_published_compare.csv`) agrees with
+our values within its printed digits up to D 80, except a bump at D 21–27 in their table, and lies above our chain by an
+amount growing to 7.4e-6 at D 200. Two measurements locate it.
+
+**Releasing the held harmonics fails in octo-double too** (`T136-mac/`, 91fa7c4). Its control passed (the chain's own
+system polished in octo-double moved Δ by −1.7e-26), but the full-system release at 79.77 took the same first step as
+the quad-double release of 13.19, a correction of 0.51 along a near-null direction damped to 1/128, with max |F| rising
+from 4.3e-18 to 5.9e-4. The obstacle is the full system's conditioning, not the arithmetic, so the bias cannot be
+measured this way.
+
+**Both against a third reference** (`hp/published_vs_series.py`, output `hp/data/published_vs_series.txt`): the 1/D and
+1/n series of degrees 16–20 fitted on our full-system double-double points 10 ≤ D ≤ 67.77, extrapolated. Their spread
+over fit choices is 2.3e-9 at D 200, a spread and not a bound. The control, 1e-6 planted in the published values,
+moves their column by exactly 1e-6 (`published_vs_series_plant.txt`).
+
+| D | ours − series | published − series | ours − published |
+|---|---|---|---|
+| 80 | −5.3e-8 | +8.6e-8 | −1.4e-7 |
+| 100 | −4.7e-7 | +5.2e-7 | −9.9e-7 |
+| 150 | −1.9e-6 | +3.0e-6 | −4.9e-6 |
+| 200 | −3.2e-6 | +4.3e-6 | −7.4e-6 |
+
+Our chain falls below the series smoothly, continuing the held harmonics' bias of 13.19 (−5.0e-8 at 79.77). The
+published values lie above it by more and scatter by about 1e-6 between neighbouring D. If the extrapolated series is
+right, the gap is about 40% our bias and 60% the published values' error. That rests on an extrapolation over a factor
+of three in D, which nothing here checks; it is numerical evidence, not a resolution.
