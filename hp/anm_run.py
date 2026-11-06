@@ -90,7 +90,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import mpmath as mp  # noqa: E402
 import numpy as np  # noqa: E402
 from hpkernel.driver import make_solver, newton_solve, deflated_newton, delta_correction, newton_qd, qparts, rnorm, save, save_q, load_q  # noqa: E402
-from multidouble import dd_add, dd_horner, dd_scale, dd_norm, od_add_dd, od_axpy, qd_add_dd  # noqa: E402
+from multidouble import dd_add, dd_horner, dd_scale, dd_norm, qd_add_dd  # noqa: E402
 from pinning import PinnedQ, PinnedSolver, band_coeffs, band_field, qd_axpy  # noqa: E402
 from raw_out import require_raw  # noqa: E402
 from reseed import ElimQ, Reseeder  # noqa: E402
@@ -204,6 +204,9 @@ def coefficients_o(s, zo, N, held=None):
     """z_1..z_N by the octo-double jet (Solver.residual_jet_o) and the octo-double LU of the last Solver.newton_o, which
     must have been taken at zo (eight parts): the list of eight-part z_k (z_0 first) and their norms. held as in
     coefficients, added in octo-double (od_add_dd). No refinement: the LU is the exact Jacobian's in octo-double."""
+    # the octo-double helpers are in multidouble's Python package from f092018 on; imported here so that the other
+    # paths run on the older packages the runners have
+    from multidouble import od_add_dd
     Zo, norms = [o8(zo)], [float(dd_norm(zo[0], zo[1]))]
     for k in range(1, N + 1):
         F = s.residual_jet_o(list(Zo), k + 1)
@@ -221,6 +224,7 @@ def coefficients_o(s, zo, N, held=None):
 
 def horner_o(Zo, a):
     """z_0 + sum_k z_k a^k by Horner's rule in octo-double (od_axpy, y + a x), a a float64"""
+    from multidouble import od_axpy
     p = Zo[-1]
     for k in range(len(Zo) - 2, -1, -1):
         p = o8(od_axpy(a, *p, *Zo[k]))
