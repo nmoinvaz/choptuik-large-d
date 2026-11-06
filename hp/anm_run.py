@@ -15,6 +15,7 @@ formulation of hp/pinning.py; their coefficients are zero).
         [--accept_stall 1e-19] [--junk_only 0] [--threads 4] [--w 24] [--trend T75] [--tol_qd 1e-28]
         [--qd_it 12] [--qd_w 0] [--refine 1] [--probe 0 --probe_c C] [--plan_tol 1e-32] [--fix1 0] [--F_pred_max 0]
         [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0] [--pred_q 0] [--reseed_q 0] [--save_pred 0]
+        [--jet_o 0]
 
 --corrector qd runs the quad-double Newton of the kernel (hpkernel.driver.newton_qd, Solver.newton_q) on the pinned
 system (pinning.PinnedQ: the held harmonics' offset subtracted from the quad-double residual and added to the step, as
@@ -61,6 +62,13 @@ by the mass mode in either form, and which form is smaller depends on the base.
 quad-double LU at the base's four parts (Solver.newton_q, once per base), so every z_k carries the quad-double
 rounding instead of the double-double one amplified by the mass mode; --fix1 is then not applied. hp/qjet_check.py
 checks the quad-double jet against the quad-double residual on a stored state.
+--jet_o 1 builds the series in octo-double (notes/OCTO_DOUBLE.md): the octo-double jet (Solver.residual_jet_o,
+multidouble 4.0.0's OJet; M = 32 only) through the octo-double LU at the base (Solver.newton_o, once per base, at the
+base's four quad-double parts promoted to eight), the held rows added in octo-double (od_add_dd). The prediction is
+summed by Horner's rule in octo-double (od_axpy) and rounded to quad-double, where the quad-double corrector starts, so
+it needs --corrector qd and with --reseed also --reseed_q 1; it replaces --jet_q, --pred_q and --fix1, and --probe does
+not apply. Its series errs by about the octo-double unit times G^2 where the quad-double one errs by the quad-double
+unit times G^2, which reaches the chain's tolerance near D 170-185; hp/ojet_check.py compares the two on stored states.
 --reseed 1 replaces each prediction's horizon data (m_h, a_h) by those of the regular solution through its last node
 before the residual, the plan and the corrector (hp/reseed.py, notes/RESEED.md: the node integrated toward the horizon,
 the series inverted on the rungs u0/32 .. u0 in the m and a rows); 0, the default, changes nothing. Records carry each
@@ -82,7 +90,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import mpmath as mp  # noqa: E402
 import numpy as np  # noqa: E402
 from hpkernel.driver import make_solver, newton_solve, deflated_newton, delta_correction, newton_qd, qparts, rnorm, save, save_q, load_q  # noqa: E402
-from multidouble import dd_add, dd_horner, dd_scale, dd_norm, qd_add_dd  # noqa: E402
+from multidouble import dd_add, dd_horner, dd_scale, dd_norm, od_add_dd, od_axpy, qd_add_dd  # noqa: E402
 from pinning import PinnedQ, PinnedSolver, band_coeffs, band_field, qd_axpy  # noqa: E402
 from raw_out import require_raw  # noqa: E402
 from reseed import ElimQ, Reseeder  # noqa: E402
@@ -173,11 +181,58 @@ def coefficients_q(s, zq, N, held=None):
     return Zq, norms
 
 
+def o8(z):
+    """an octo-double vector's eight parts as contiguous float64 arrays"""
+    return tuple(np.ascontiguousarray(np.asarray(p, dtype=float)) for p in z)
+
+
+def o8_of_q(zq):
+    """a quad-double vector's four parts promoted to eight (the lower four zero): the same values exactly"""
+    zero = np.zeros(len(zq[0]))
+    return o8(tuple(zq) + (zero, zero, zero, zero))
+
+
+def q4_of_o(zo):
+    """an octo-double vector rounded to quad-double: its first four parts plus the rest's sum (float64, from the
+    smallest up), renormalized by qd_add_dd, as OD::to_qd does; the rounding is about 2^-212 of each entry"""
+    zo = o8(zo)
+    tail = zo[4] + (zo[5] + (zo[6] + zo[7]))
+    return tuple(np.ascontiguousarray(np.asarray(p)) for p in qd_add_dd(zo[0], zo[1], zo[2], zo[3], tail, np.zeros(len(tail))))
+
+
+def coefficients_o(s, zo, N, held=None):
+    """z_1..z_N by the octo-double jet (Solver.residual_jet_o) and the octo-double LU of the last Solver.newton_o, which
+    must have been taken at zo (eight parts): the list of eight-part z_k (z_0 first) and their norms. held as in
+    coefficients, added in octo-double (od_add_dd). No refinement: the LU is the exact Jacobian's in octo-double."""
+    Zo, norms = [o8(zo)], [float(dd_norm(zo[0], zo[1]))]
+    for k in range(1, N + 1):
+        F = s.residual_jet_o(list(Zo), k + 1)
+        b = [-np.asarray(p) for p in F[k]]
+        if held is not None:
+            fn, rows = held
+            th, tl = fn(k)
+            r = od_add_dd(*(np.ascontiguousarray(p[rows]) for p in b), np.asarray(th), np.asarray(tl))
+            for p, v in zip(b, r):
+                p[rows] = v
+        Zo.append(o8(s.olu_solve([np.ascontiguousarray(p) for p in b])))
+        norms.append(float(dd_norm(Zo[-1][0], Zo[-1][1])))
+    return Zo, norms
+
+
+def horner_o(Zo, a):
+    """z_0 + sum_k z_k a^k by Horner's rule in octo-double (od_axpy, y + a x), a a float64"""
+    p = Zo[-1]
+    for k in range(len(Zo) - 2, -1, -1):
+        p = o8(od_axpy(a, *p, *Zo[k]))
+    return p
+
+
 def main():
     args = list(sys.argv[1:])
     opt = dict(state="T75/pin7_D73.2657.npz", kfreeze=3, N=24, eps=1e-16, h_max=2.0, steps=20, D_max=200.0, corrector="dnp",
                tol=1e-20, tol_growth=1.45, accept_stall=1e-17, junk_only=0, threads=4, w=24, trend="", tol_qd=1e-28, qd_it=12, qd_w=0,
-               refine=1, probe=0, probe_c=0.0, plan_tol=1e-32, fix1=0, F_pred_max=0.0, horizon_alpha=0, fix1_qlu=0, jet_q=0, reseed=0, pred_q=0, reseed_q=0, save_pred=0)
+               refine=1, probe=0, probe_c=0.0, plan_tol=1e-32, fix1=0, F_pred_max=0.0, horizon_alpha=0, fix1_qlu=0, jet_q=0, reseed=0, pred_q=0, reseed_q=0,
+               save_pred=0, jet_o=0)
     for k in list(opt):
         f = "--" + k
         if f in args:
@@ -185,6 +240,10 @@ def main():
     raw, out = args[0], args[1]
     if opt["pred_q"] and (not opt["jet_q"] or (opt["reseed"] and not opt["reseed_q"])):
         raise SystemExit("--pred_q needs --jet_q 1, and with --reseed also --reseed_q 1")
+    if opt["jet_o"] and (opt["corrector"] != "qd" or opt["jet_q"] or opt["pred_q"] or opt["fix1"] or opt["probe"]
+                         or (opt["reseed"] and not opt["reseed_q"])):
+        raise SystemExit("--jet_o 1 needs --corrector qd, and with --reseed also --reseed_q 1; it replaces --jet_q, --pred_q "
+                         "and --fix1, and --probe does not apply")
     out_dir = out
     os.makedirs(out, exist_ok=True)
     rec_path = os.path.join(out, "anm_run.jsonl")
@@ -193,6 +252,8 @@ def main():
     D, M, nodes = (mp.mpf(m["D_str"]) if "D_str" in m else mp.mpf(float(m["D"]))), int(m["M"]), list(m["nodes"])
     kt, kc, ks = m.get("kt", 36), m.get("kc", 146), m.get("ks", 130)
     kf, N = opt["kfreeze"], opt["N"]
+    if opt["jet_o"] and (M != 32 or not 1 <= N <= 31):
+        raise SystemExit(f"--jet_o 1: the octo-double solver is built for M = 32 and N <= 31, not M {M}, N {N}")
     D_start = D
     junk_only = bool(opt["junk_only"])
 
@@ -484,7 +545,16 @@ def main():
         t0 = time.time()
         held_arg = (lambda j: band_field(held_jet(j), ks_held, M), rows) if any(any(sl) for sl in slopes) else None
         fix1 = None
-        if opt["jet_q"]:
+        Zo = None
+        if opt["jet_o"]:
+            # --jet_o 1: the series from the octo-double jet through the octo-double LU at the base's four parts
+            # promoted to eight
+            zq = last_q["z4"] if "z4" in last_q else load_q(os.path.join(raw, opt["state"]))[0]
+            zo = o8_of_q(zq)
+            pmin, pmax = s.newton_o(list(zo))[3:5]
+            Zo, norms = coefficients_o(s, zo, N, held=held_arg)
+            Zh, Zl, refine = [np.asarray(z[0]) for z in Zo], [np.asarray(z[1]) for z in Zo], [()]
+        elif opt["jet_q"]:
             # --jet_q 1: the series from the quad-double jet through the quad-double LU at the base's four parts
             zq = last_q["z4"] if "z4" in last_q else load_q(os.path.join(raw, opt["state"]))[0]
             zq = tuple(np.ascontiguousarray(np.asarray(p)) for p in zq)
@@ -506,7 +576,7 @@ def main():
         ratios = [norms[k - 1] / norms[k] if norms[k] else None for k in range(2, N + 1)]
         rec = dict(step=step, D0=float(D), D0_str=str(D), pin=kf, N=N, pivots=(float(pmin), float(pmax)), norms=norms, a_max=a_max,
                    t_coef=t_coef, refine_last=refine[-1], fix1=fix1, ratios_2_5=ratios[:4], trend=opt["trend"], slopes=slopes, held=ks_held,
-                   horizon_alpha=opt["horizon_alpha"], jet_q=opt["jet_q"])
+                   horizon_alpha=opt["horizon_alpha"], jet_q=opt["jet_q"], jet_o=opt["jet_o"])
         print(f"step {step}: D {mp.nstr(D, 12)}, pivots {pmin:.1e}..{pmax:.1e}, |z_1| {norms[1]:.2e}, |z_N| {norms[N]:.2e}, ratios 2-5 "
               + " ".join(f"{r:.1f}" for r in ratios[:4] if r) + f", a_max {a_max:.3f}, {t_coef:.0f} s", flush=True)
         if opt["probe"]:
@@ -525,6 +595,11 @@ def main():
                         pq = tuple(np.ascontiguousarray(np.asarray(v)) for v in qd_axpy(a, *pq, *Zq[k]))
                     pred4 = pq
                     ph, pl = np.asarray(pq[0]), np.asarray(pq[1])
+                elif opt["jet_o"]:
+                    # --jet_o 1: the prediction summed in octo-double from the octo-double series and rounded to
+                    # quad-double, the corrector's start
+                    pred4 = q4_of_o(horner_o(Zo, a))
+                    ph, pl = np.asarray(pred4[0]), np.asarray(pred4[1])
                 Dn = D + mp.mpf(a)                 # exact: the series variable is a to double-double precision
                 rsd = None
                 elim["rs"] = None

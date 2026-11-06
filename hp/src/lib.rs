@@ -10,6 +10,7 @@
 //! * `linalg`: dense double-double LU with partial pivoting (periodic solves, Newton), and the same blocked LU in f64.
 //! * `model`: centre series, Taylor stepping in x, horizon series, residual and Jacobian (double-double or f64).
 //! * `qsolve`: the residual, its exact Jacobian and the Newton step in quad-double (notes/QUAD_DOUBLE.md, section 12).
+//! * `osolve`: the same in octo-double, with the jet in the dimension (notes/OCTO_DOUBLE.md).
 //! * `qd`: scalar quad-double (~64 digits); `qv`: 8-lane quad-double built on `v8`, bitwise the same per lane; `exact`:
 //!   exact dyadic and decimal arithmetic for their decimal input/output and their tests. Not used by the solver yet
 //!   (notes/QUAD_DOUBLE.md).
@@ -21,6 +22,7 @@ pub mod block;
 pub mod field;
 pub mod lane;
 pub mod model;
+pub mod osolve;
 pub mod qsolve;
 
 // The arithmetic, the dual lanes and the dense LU live in the multidouble crate (crates.io; github.com/nmoinvaz/multidouble),
