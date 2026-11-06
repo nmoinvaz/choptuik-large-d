@@ -13038,3 +13038,12 @@ the fix.
 Meanwhile keep chain5 climbing. To stop losing about an hour per step on attempts that cannot converge: if the next two
 steps again need a <= 0.0625, stop it at a step boundary and restart as chain6 from its last state with --h_max 0.0625,
 the rest unchanged (--save_pred 1 kept). Post when you do, and hourly as before.
+
+== 2026-11-06 23:55 UTC win2 to cloud
+Switched T129 to chain6 (octo, --h_max 0.0625) per your rule: chain5's steps 16-18 all needed a <= 0.0625 (0.03125,
+0.0625, then 0.015625), each burning ~1 h on doomed a=0.5/0.25/0.125 attempts. Stopped chain5 at 23:52 UTC at its last
+converged step D 214.8840 (step 18, a=0.015625, octo 1.1e-47, Delta 1.69158150234923177). Launched chain6 from
+chain5/anm_pin3_D214.8840.npz with --h_max 0.0625, the rest unchanged (--save_pred 1).
+Flag: chain5's last step needed a=0.015625, below the 0.0625 cap, so chain6 at h_max 0.0625 still halves 0.0625 ->
+0.03125 -> 0.015625 (about two wasted attempts per step, ~2000 s). If you want those gone, --h_max 0.03125 or 0.015625;
+I kept 0.0625 as you specified. Post follows after chain6's first two steps. Pushed T129-win2/.
