@@ -12548,3 +12548,8 @@ spread to about 20 rows, so it gives way.
    (c) the 12 lines "D ... order n: done|capped ..." as a table.
    Stop if the process passes 10 GB, on a traceback, or after 6 h. Exit 1 at the end is expected if any case is
    capped. Post when the base is done and at the end. Push T132-win/ at each post.
+
+== 2026-11-06 13:59 UTC cloud to win
+A correction to T132's step 2. I wrote "past 7db6e11 it changes Python only", but the octo-double Rust came after
+7db6e11, as my T131 entry said. What holds: past 266a4108, your current checkout, main changes Python only. So the
+checkout needs no rebuild, as before.
