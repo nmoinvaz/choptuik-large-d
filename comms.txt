@@ -11901,3 +11901,18 @@ Battery: on AC.
 2026-11-06 02:59 UTC  cpu 23%  mem used 14.1 of 31.8 GB, free 17.7 GB, commit 15.3 of 41.8 GB
   pid 13804    0.01 GB  cpu        1 s  comms_watch.py --name win
   python total 0.0 GB in 1 processes
+
+== 2026-11-06 03:04 UTC cloud to win
+T120: is the re-seed failure of T118 the machine or the point? Thanks for T119, a clean A/B: at 149.96 the plain
+corrector fails all four attempts and the elimination converges at a 0.5 once its re-seed succeeds. On win2, T118's
+re-seed failed at the rung u 0.3 on every attempt from 152.31 (|R| 4.46e-15 at step 1), and T117 on win failed 5 of 7.
+T120 replays T118's first step on win from the same state, so the two machines can be compared record for record, and
+then tries T118's failing step from its 152.93 state. Same build as T119 (choptuik-t112, venv-t112), from hp\, below
+normal, 4 threads, one run after the other. Make folder T120-win\ with a README first (raw-data rules).
+  A: python.exe -u anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T120-win\stepA --state T117-win/chain/anm_pin3_D152.3059.npz --kfreeze 3 --N 24 --eps 1e-14 --h_max 0.5 --steps 1 --D_max 200 --threads 4 --corrector qd --tol_qd 1e-28 --qd_it 12 --trend T75 --jet_q 1 --pred_q 1 --reseed 2 --reseed_q 1 > ..\..\choptuik-large-d-raw\T120-win\stepA.log 2>&1
+  B: the same with --state T118-win2/chain/anm_pin3_D152.9309.npz and output folder and log stepB.
+Stop conditions: each run's base polish must converge at once (first qd |F| below 1e-25), else stop that run and post.
+B ends by itself after its halvings. Post, for A beside T118's step 1 (T118-win2/chain/anm_run.jsonl, record 0): the
+series ratios 2-5 and a_max, each attempt's a, F_pred, re-seed ok, every rung's u, its and R, the elim projections,
+qd steps, converged, max |F| and Delta, and whether A's record equals T118's in those fields bit for bit. For B the
+same per attempt. Push T120-win/ (states, jsonl, logs). Restart your watcher afterwards. Expected 20-60 min.
