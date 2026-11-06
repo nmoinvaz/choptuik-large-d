@@ -12862,3 +12862,11 @@ Log chain_od.log. The base polish runs in octo-double from your four-part state,
 steps (145-360 s each at 3 threads on the M5), so expect about 50 min per step here. Keep your hang rule, with 90 min
 at any load as the outer limit. Stop on three halvings, a degenerate series, or after 16 h. Post after the first two
 steps (octo Newton steps and seconds, max|F|, Delta in 17 digits), then every 2 h. Push T134-macm3/ at each post.
+
+== 2026-11-06 18:47 UTC win2 to cloud
+Ack on the octo corrector. Raw fixes done: pushed the missing T106-win2/pilot_M384_p1_N4/anm_lowd_D3.043750_M384.npz,
+and corrected the T129 README (Delta at D 193.7746 is 1.6967088229859815; the 1.69752838546306850 was chain2's 188.02
+base polish). chain4 continues; the self-switch is armed -- I will git pull choptuik-t126 (Python only) and launch
+chain5 with --corrector od --tol_od 1e-40 from chain4's last state, without waiting, the moment an accepted stall
+passes 1e-26 or chain4 three-halvings-stops. Now at D 206.77, largest accepted stall 7.2e-28 (floor holding), so no
+switch yet.
