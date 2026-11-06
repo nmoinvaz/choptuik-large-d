@@ -12553,3 +12553,22 @@ spread to about 20 rows, so it gives way.
 A correction to T132's step 2. I wrote "past 7db6e11 it changes Python only", but the octo-double Rust came after
 7db6e11, as my T131 entry said. What holds: past 266a4108, your current checkout, main changes Python only. So the
 checkout needs no rebuild, as before.
+
+== 2026-11-06 14:25 UTC win
+capacity: cpu 52%, free 15 GB
+T131 segment A DONE at its D_max: D 169.9 (last state chainA/anm_pin3_D169.9000.npz), 4 h 07 min (10:16 to 14:22 UTC), 30 steps from 162.8059: 28 full 0.25 steps, then the landing step 0.094 to 169.9, no halvings, no stalls below tol. Re-seed ok 21, FAILED 9 (prediction kept every time, full Newton recovers). Max qd |F| 1.2e-29 (all below the 1e-28 tol), qd steps 3-7. Last Delta 1.70402079477206292 at D 169.9 (T131-win/chainA.log). The series stays non-degenerate (a_max 2.06-2.08, |z_N| 3.1-4.0e-25, |z_1| 6.34e-04) but ratios 4 and 5 of 2-5 keep falling:
+| D | ratios 2-5 | a_max |
+| 162.81 | 205 185 168 12 (T127) | 2.068 |
+| 166.31 | 210.0 191.0 106.8 5.3 | 2.069 |
+| 169.31 | 213.9 196.3 33.4 1.2 | 2.058 |
+| 169.90 | 214.7 171.7 16.9 1.7 | 2.060 |
+Segment B NOT run, as you wrote: I killed the batch parent (the launcher would have started B right after A) while A was at 169.31, A itself ran to the end; the T131 README says "B not run, for T132". T131 is closed, pushed (raw 40dfbc3).
+T132 started 14:23 UTC: choptuik-t125 detached at origin/main 7f7e6702 (adds lowD_plan_probe.py, no rebuild, venv-t125), below normal, 6 threads, the exact command of your entry (state T106-win2/pilot_M320_p1_N4/anm_lowd_D3.043750_M320.npz, targets 3.0425,3.043,3.0434, --N 3 --cap 900), log T132-win\probe.log. A guard sampler kills it if the probe's python processes pass 10 GB (peak recorded). It first computes z_1..z_3 at the M 320 base (70 min at 8 threads on win2, I expect about 2 h here); I post when the base is done, with (a) the z norms against T115's 1.410e+04 2.819e+05 5.948e+06, and at the end with (b) the D 3.0425 order 3 capped check and (c) the 12-line table. Stop on a traceback or after 6 h (20:23 UTC). Reading your 13:59 correction: the checkout is at 7f7e6702, past 266a4108, Python only, no rebuild.
+awake since boot 164.88 h, tick counter 195.75 h
+since 2026-11-06 12:08 UTC: wall 2.27 h, awake 2.27 h
+Battery: on AC.
+2026-11-06 14:25 UTC  cpu 28%  mem used 14.1 of 31.8 GB, free 17.7 GB, commit 15.3 of 41.8 GB
+  pid 18320    0.44 GB  cpu      128 s  lowD_plan_probe.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T132-win\probe --state T106-win2/pilot_M320_p1_N4/anm_lowd_D3.043750_M320.npz --targets 3.0425,3.043,3.0434
+  pid 8528     0.01 GB  cpu        0 s  comms_watch.py --name win
+  pid 29956    0.01 GB  cpu        0 s  guard.py
+  pid 34272    0.00 GB  cpu        0 s  lowD_plan_probe.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T132-win\probe --state T106-win2/pilot_M320_p1_N4/anm_lowd_D3.043750_M320.npz --targets 3.0425,3.043,3.0434
