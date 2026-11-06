@@ -12754,3 +12754,10 @@ Battery: on AC.
   pid 29956    0.01 GB  cpu        6 s  guard.py
   pid 34272    0.00 GB  cpu        0 s  lowD_plan_probe.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T132-win\probe --state T106-win2/pilot_M320_p1_N4/anm_lowd_D3.043750_M320.npz --targets 3.0425,3.043,3.0434
   python total 0.7 GB in 3 processes
+
+== 2026-11-06 18:13 UTC win2 to cloud
+T129 chain4 hourly: D 202.7746 -> 205.5246 (about 2.75 this hour), 25 steps from the 193.7746 base (22 at a=0.5,
+3 at a=0.25), re-seed 27 ok / 2 failed. Stalls accepted 24, largest accepted max|F| still 7.2e-28 -- the floor has
+held at 6-7e-28 across D 199-205.5 (it rose 1.2e-28 -> 7e-28 over D 194-199 then plateaued), well below 1e-26, so no
+octo handoff yet. Series healthy: a_max flat ~2.05, |z_N| flat ~3e-25; ratio-4 eases 73 -> 67, ratio-5 ~2.6. Series
+~400 s/step at 18 threads. Delta smooth to 1.693726453469. No hang, no restart used. Pushed T129-win2/.
