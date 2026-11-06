@@ -169,3 +169,64 @@ With T113's options, `--jet_o 1` in place of `--jet_q 1 --pred_q 1` (M = 32; N u
         --h_max 1 --steps 300 --D_max 200 --threads 4 --corrector qd --tol_qd 1e-28 --qd_it 12 --trend T75 --jet_o 1
 
 Each base then costs about 7 times the quad-double series' time on this Mac, about 1 h on 2 threads at N = 24.
+
+## 5. The corrector in octo-double (2026-11-06)
+
+The chain's corrector was quad-double (`anm_run.py --corrector qd`: `newton_qd` on `pinning.PinnedQ`, inside
+`reseed.ElimQ` under `--reseed 2`). It stopped T129's chain2 at D 193.77, where each of four halvings ended in "no trial
+step accepted" at max |F| 1.0–1.1×10⁻²⁸ against `--tol_qd` 1e-28 (raw-data repository `T129-win2/chain2.log`). This
+section finds why, and adds the same corrector one level up, `--corrector od`.
+
+### 5.1 Why the quad-double Newton stops
+
+Every test starts from stored converged chain states (`T129-win2/chain/` and `chain2/`), on the pinned system of
+`reseed.pinned` (the state's own held values, the segments planned at the state). The scripts and logs are in the
+scratch folder `octo_agent/` of the coordinating session.
+
+**The residual is accurate.** `step0_res.py RAW PLAN_TOL STATES` evaluates the pinned residual in quad-double and in
+octo-double at the state's four parts (`step0_res.log`). Their difference is the quad-double residual's own error.
+
+| D | pinned max \|F\| | \|F_qd − F_od\| | with four refinement steps (mutate 8) |
+|---|---|---|---|
+| 180.52 | 2.83e-30 | 1.74e-36 | 1.74e-36 |
+| 185.52 | 2.30e-29 | 1.20e-35 | 1.20e-35 |
+| 188.02 | 9.75e-29 | 1.34e-35 | 1.34e-35 |
+| 193.77 | 1.00e-28 | 9.69e-35 | 9.69e-35 |
+
+The plan at 1e-40 (27–30 Taylor steps) and 1e-48 (44–48) gives the same values to three digits as the chain's 1e-32
+(17–18). The octo-double residual with eight refinement steps differs from the default's by 1e-107 to 4e-105. So the
+residual at these states is right to 10⁻³⁵ in quad-double, far below the floor, and the plan does not move it.
+
+**A tighter plan does not lower the floor.** `step0_floor.py RAW PLAN_TOL STATES` is `rungdiag/qd_floor.py` (plain
+`newton_qd`, tol 1e-45, it_max 5) with the plan's tolerance as an argument (`step0.log`; the 1e-32 column is
+`rungdiag/qd_floor.log`, the same procedure). The entries are the start and the last max |F|. No step lowered max |F|
+below the start in any run at D ≥ 185.
+
+| D | plan 1e-32 | plan 1e-40 | plan 1e-48 |
+|---|---|---|---|
+| 175.52 | 6.57e-32 → 1.71e-37 | | |
+| 180.52 | 2.83e-30 → 1.59e-36 | | |
+| 185.52 | 2.30e-29 → 1.45e-22 | 2.30e-29 → 1.45e-24 | 2.30e-29 → 1.39e-24 |
+| 188.02 | 9.75e-29 → 7.93e-16 | 9.75e-29 → 8.56e-16 | |
+| 193.77 | 1.00e-28 → 3.07e-16 | 1.00e-28 → 1.92e-17 (stalled) | |
+
+**The quad-double step is wrong in the weak direction.** `step0_step.py RAW 1e-32 anm_pin3_D188.0246.npz` takes one
+Newton step from the state in quad-double (`PinnedQ.newton_q`), in quad-double with the horizon solves refined four
+steps (mutate 8), and in octo-double (`PinnedO.newton_o`), and evaluates the octo-double residual after each full step:
+
+| step | \|dz\| (all in Delta) | LU pivots | max \|F\| after the full step | \|dz − dz_od\| / \|dz_od\| |
+|---|---|---|---|---|
+| quad-double | 6.59e-20 | 6.4e-12 .. 1.8e26 | 5.14e-14 | 0.45 |
+| quad-double, four refinements | 1.35e-19 | 2.4e-11 .. 1.8e26 | 3.76e-14 | 0.14 |
+| octo-double | 1.19e-19 | 1.5e-10 .. 1.8e26 | 4.37e-14 | |
+
+A full step raises max |F| by fourteen orders in all three, so that rise is the step's quadratic term in the strong rows
+(newton_qd's docstring), not rounding; newton_qd's dz test is made for it. What differs is the step itself: the
+quad-double LU's smallest pivot is 24 times the octo-double one's too small, and its step in Delta is wrong by 45%.
+Four refinement steps of the horizon solves (QD_REFINE is 2) recover part of it. The quad-double LU's smallest pivot
+falls from 3.7e-9 at D 175.52 to 1.0e-13 at 193.77 (`rungdiag/qd_floor.log`), 3.7×10⁴ times, while its largest grows
+600 times. A reading consistent with this, not tested further, is that the quad-double Jacobian's error, of order
+eps_qd G² (5×10⁻¹² at 188), approaches the weak direction's pivot (1.5×10⁻¹⁰ in octo-double), so the Newton iteration
+loses its contraction in that direction. Neither the plan's truncation nor the held offset (formed exactly in
+double-double, its rounding in the measured |F| about 10⁻³⁵) is the cause. In octo-double eps_od G² is about 10⁻⁷⁵.
+

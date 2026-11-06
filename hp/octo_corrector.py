@@ -12,7 +12,7 @@ the first four.
 The octo-double helpers (od_add_dd, od_axpy) are multidouble's from f092018 on; they are imported where they are
 used, so that a module importing this one runs on the older packages the runners have.
 
-    python3 octo_corrector.py planted RAW STATE.npz [--threads 3] [--rel 1e-12] [--seed 1] [--qd 1] [--Delta_ref D]
+    python3 octo_corrector.py planted RAW STATE.npz [--threads 3] [--rel 1e-12] [--seed 1] [--qd 1] [--Delta_ref D] [--last 0]
         [--mutate_offset qd] [--mutate 10] [--out PREFIX]
     python3 octo_corrector.py wall RAW PRED.npz [--threads 3] [--qd 0] [--F_max 1e-36] [--mutate_offset qd]
         [--mutate 10] [--out PREFIX]
@@ -271,8 +271,9 @@ def _run_qd(sq, so, rs, z4, tol, it_max):
 
 
 def planted(argv):
-    """check (a): the converged chain state RAW/STATE with its centre data and nodes (not m_h, a_h, Delta) moved by
-    rel r relative, r uniform in +-[0.5, 1] (--seed), is the start. Pass, fixed before the first run: the octo-double
+    """check (a): the converged chain state RAW/STATE with its centre data and nodes but the last (--last 1: all
+    nodes; not m_h, a_h, Delta) moved by rel r relative, r uniform in +-[0.5, 1] (--seed), is the start. Pass, fixed
+    before the first run: the octo-double
     corrector (ElimO, newton_od, tol 1e-40) converges with the octo-double pinned max |F| below 1e-40, and its Delta
     agrees with the quad-double corrector's from the same start (ElimQ, newton_qd to tol 1e-45 in 12 steps, its
     floor) to 1e-30. The pinned system is the state's own (held harmonics at its values, the plan at it at 1e-32).
@@ -287,13 +288,15 @@ def planted(argv):
     from reseed import Reseeder
     raw, path = argv[0], argv[1]
     opt = _parse(argv[2:], dict(threads=3, rel=1e-12, seed=1, mutate_offset="", mutate=0, it_max=12, qd=1, tol=1e-40, out="",
-                                Delta_ref=""))
+                                Delta_ref="", last=0))
     z4, meta = load_q(os.path.join(raw, path))
     z4 = o8(z4)
     D = mp.mpf(meta["D_str"])
     s, sp, sq, so = pinned_o(meta, z4, threads=opt["threads"], mutate_offset=opt["mutate_offset"])
     rs = Reseeder(meta, D, threads=opt["threads"], qd=True)
-    n = rs.off["mh"]
+    # the moved unknowns: the centre data and the nodes but the last (--last 1: all nodes). A last node moved by 1e-12
+    # leaves the regular family by G 1e-12 at the horizon, and its projection fails (180.5246, 2026-11-06)
+    n = rs.off["mh"] if opt["last"] else rs.off["node"](rs.K - 1)
     rng = np.random.default_rng(opt["seed"])
     r = rng.uniform(0.5, 1.0, n) * rng.choice([-1.0, 1.0], n)
     dz = np.zeros(len(z4[0]))
