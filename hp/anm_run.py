@@ -45,6 +45,8 @@ residual through the stored LU, the series rebuilt on it, and its predictions at
 chain's recorded |F_pred| / a at this base: the probe exits 1 unless its own double-double value at a = 1/16 is within
 1% of it (the check that the probe reproduces the chain). Results go to OUTDIR/probe.jsonl.
 --plan_tol T is the tolerance of the first base's Taylor plan (1e-32; the chain replans each prediction at 1e-32).
+A run started from a saved four-part state polishes it from all four parts, so a restart continues where the chain
+stopped (from the first two alone the polish starts eps_dd G off the root, outside its basin past D ~ 131).
 --fix1 1 corrects z_1 at every base by the quad-double model's order-1 residual (central differences at 2^-29 and
 2^-30, Richardson-combined, two passes through the stored LU) and rebuilds the series on it; records carry the
 residual norms (fix1). The double-double jet's own z_1 is wrong by 1e-4 relative at D 82.16 (13.19).
@@ -290,7 +292,10 @@ def main():
     Fh, Fl = sp.residual(zh, zl)
     F0 = float(rnorm(Fh, Fl))
     if F0 > opt["tol"]:
-        zh, zl, F0, _, _, _ = correct(sp, zh, zl, opt["tol"])
+        # the quad-double polish starts from all four stored parts: from the first two alone it starts eps_dd G off the
+        # root, outside the basin past D ~ 131 (the restart of T113 at 135.06, notes/QUAD_DOUBLE.md 13.22)
+        z4_base = tuple(np.ascontiguousarray(np.asarray(p)) for p in load_q(os.path.join(raw, opt["state"]))[0])
+        zh, zl, F0, _, _, _ = correct(sp, zh, zl, opt["tol"], z4_base if opt["corrector"] == "qd" else None)
     print(f"base {opt['state']}: D {mp.nstr(D, 12)}, M {M}, pin {kf} (held {ks_held}), |F| {F0:.1e}; N {N}, eps {opt['eps']}, h_max {opt['h_max']}, "
           f"corrector {opt['corrector']} (junk_only {junk_only}), tol {opt['tol']:.1e} x {opt['tol_growth']}^(D - {mp.nstr(D_start, 8)}), "
           f"stalls accepted below {opt['accept_stall']:.0e}", flush=True)
