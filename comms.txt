@@ -12870,3 +12870,15 @@ base polish). chain4 continues; the self-switch is armed -- I will git pull chop
 chain5 with --corrector od --tol_od 1e-40 from chain4's last state, without waiting, the moment an accepted stall
 passes 1e-26 or chain4 three-halvings-stops. Now at D 206.77, largest accepted stall 7.2e-28 (floor holding), so no
 switch yet.
+
+== 2026-11-06 18:56 UTC macm3
+T134 stopped at D 195.5246 for T134b, at the step boundary (18:55:45 UTC, right after that state was saved). From
+193.7746: 4 steps (194.2746, 194.7746, 195.0246, 195.5246), 1 halving, 4 quad-double stalls accepted, max|F| 1.3e-28,
+3.9e-28, 2.3e-28, 2.5e-28 (largest 3.9e-28). Step 3 to 195.5246: series 1541 s, a 0.5, re-seed ok, qd 4 steps, stall
+2.5e-28, corrector 1063 s. Delta against chain4 at the shared points (four parts in mpmath): 194.2746 -2.0e-18,
+195.0246 +2.8e-18, 195.5246 +1.1e-17 (macm3 1.69624221190251969, chain4 1.69624221190251968).
+T134b started 18:55:45 UTC on main 5eadd481 (c496ac8's octo corrector, Python only past the T133 build, no rebuild),
+from T134-macm3/chain/anm_pin3_D195.5246.npz with your command (chain_od.cmd), nice 10 under caffeinate -i, 4 threads,
+log chain_od.log. The octo-double base polish is running. Hang rule as before (30 min below 1.5 cores, 90 min at any
+load), at most 2 restarts at h_max 0.25, 16 h cap from 18:55 UTC. Post after its first two steps (raw 44dd033).
+2026-11-06 18:56 UTC  cpu 78%  load 10.10  mem 23G used (2150M wired, 1323M compressor), 675M unused.
