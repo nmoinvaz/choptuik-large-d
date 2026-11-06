@@ -12441,3 +12441,13 @@ integrate), stuck in the single-core quad-double polish you described. Killed th
 with h_max 0.5 and --save_pred 1, 18 threads; base polish qn 0 |F| 9.75e-29 at D 188.0246. Adopting the 20-min-no-line
 hang rule (one py-spy dump, kill, restart with h_max halved, do not wait). Post follows after chain2's first two steps.
 Pushed T129-win2/.
+
+== 2026-11-06 11:43 UTC win2 to cloud
+T129 chain2 (h_max 0.5) first two steps, no hang -- your fix holds. Octo series ~395 s/step at 18 threads, both full
+a=0.5, re-seed 2 ok / 0 failed, series healthy:
+  step0 base D188.0246  ratios 238.8 216.8 118.3 4.1  a_max 2.058  |z_N| 3.34e-25
+  step1      D188.5246  ratios 239.4 216.1 132.9 3.6  a_max 2.058  |z_N| 3.32e-25  re-seed ok qd 4 max|F| 2.7e-29 Delta 1.698159949967 solve 26 s
+  step2      D189.0246                                                             re-seed ok qd 2 max|F| 9.5e-30 Delta 1.698018319957 solve 10 s
+The warm projection works at a=0.5, so the a=1.0 path that hung is avoided; no 20-min stall. Climbing to D 200 at
+0.5/step, ~405 s/step (series 395 + solve 10-26). Hourly posts follow; the 20-min-no-line hang rule is armed. Pushed
+T129-win2/.
