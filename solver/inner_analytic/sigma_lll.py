@@ -23,8 +23,9 @@ d - 6 digits. Controls through the same code and the same digits:
 
     python3 sigma_lll.py RUN_A.json RUN_B.json [--mutate=perturb]
 
-RUN_A, RUN_B: two sigma1_hp.py outputs at omega = 4 with different J; their agreement sets d. --mutate=perturb adds
-10^(-d/2) to the planted target, which must then not be found (exit status 1 if any control misbehaves).
+RUN_A, RUN_B: two sigma1_hp.py outputs at omega = 4 with different J; their agreement sets d. Exit status 1 if any
+control misbehaves. --mutate=perturb adds 10^(-d/2) to the planted targets, which are then not found, so the run must
+exit 1.
 """
 import json
 import random
@@ -36,21 +37,37 @@ from flint import fmpz_mat
 H_MAX = 10 ** 3
 
 
-def basket(w):
+def baskets(w):
+    """two frozen baskets. A: polygamma values (psi(1 - z), psi(conj a), psi'(1 - z) are in its span through the
+    reflection and duplication formulas, the reflection terms giving pi coth(pi w), pi coth(pi w/2) and pi^2);
+    B: Gamma ratios of the kind Gauss- and Kummer-type sums of T^+-/T^- produce, with digamma partners."""
     z = mp.mpc(0, w)
     a = (1 + z) / 2
+    b = (2 + z) / 2
+    r1 = mp.gamma(1 - z) / mp.gamma(1 + z)
+    r2 = mp.power(2, z) * mp.gamma(a) / mp.gamma(b)
+    A = [
+        ("1", mp.mpc(1)),
+        ("ln2", mp.log(2)),
+        ("pi", mp.pi),
+        ("pi^2", mp.pi ** 2),
+        ("psi(1+z)", mp.digamma(1 + z)),
+        ("psi(a)", mp.digamma(a)),
+        ("psi'(1+z)", mp.psi(1, 1 + z)),
+        ("pi coth(pi w)", mp.pi * mp.coth(mp.pi * w)),
+        ("pi coth(pi w/2)", mp.pi * mp.coth(mp.pi * w / 2)),
+    ]
     B = [
         ("1", mp.mpc(1)),
         ("ln2", mp.log(2)),
         ("pi", mp.pi),
         ("psi(1+z)", mp.digamma(1 + z)),
-        ("psi(a)", mp.digamma(a)),
-        ("psi'(1+z)", mp.psi(1, 1 + z)),
-        ("pi coth(pi w)", mp.pi * mp.coth(mp.pi * w)),
-        ("G(1-z)/G(1+z)", mp.gamma(1 - z) / mp.gamma(1 + z)),
-        ("4^z G(a)^2/G(1+z)", mp.power(4, z) * mp.gamma(a) ** 2 / mp.gamma(1 + z)),
+        ("G(1-z)/G(1+z)", r1),
+        ("2^z G(a)/G(b)", r2),
+        ("G(1-z)/G(1+z) psi(1-z)", r1 * mp.digamma(1 - z)),
+        ("2^z G(a)/G(b) psi(a)", r2 * mp.digamma(a)),
     ]
-    return B
+    return {"A (polygamma)": A, "B (Gamma ratios)": B}
 
 
 def lll_relation(xs, d):
@@ -107,21 +124,33 @@ def main(argv):
     sig = s[best]
     print(f"omega = {mp.nstr(w, 20)}; sigma_1 = {mp.nstr(sig, 40)}")
     print(f"two fit windows (J = {[r['J'] for r in runs]}) agree to {mp.nstr(agree, 4)} digits; using d = {d}")
-    B = basket(w)
-    names = [n for n, _ in B]
-    vals = [v for _, v in B]
     bad = 0
     random.seed(20261106)
-
-    print("planted control: random Gaussian-integer combination of the basket")
-    g = [complex(random.randint(-30, 30), random.randint(-30, 30)) for _ in vals]
-    t = sum(mp.mpc(x.real, x.imag) * v for x, v in zip(g, vals))
-    if mutate:
-        t += mp.mpf(10) ** (-d // 2)
-    t = mp.mpc(mp.nstr(t.real, d + 1), mp.nstr(t.imag, d + 1))
-    ok, _ = accept([t] + vals, d, "planted")
-    if ok == mutate:
-        bad += 1
+    found = []
+    for bname, B in baskets(w).items():
+        names = [n for n, _ in B]
+        vals = [v for _, v in B]
+        print(f"basket {bname}: {', '.join(names)}")
+        g = [complex(random.randint(-30, 30), random.randint(-30, 30)) for _ in vals]
+        t = sum(mp.mpc(x.real, x.imag) * v for x, v in zip(g, vals))
+        if mutate:
+            t += mp.mpf(10) ** (-d // 2)
+        t = mp.mpc(mp.nstr(t.real, d + 1), mp.nstr(t.imag, d + 1))
+        ok, _ = accept([t] + vals, d, "planted (height 30)")
+        if not ok:
+            bad += 1
+        r = mp.mpc(mp.rand(), mp.rand())
+        r = mp.mpc(mp.nstr(r.real, d + 1), mp.nstr(r.imag, d + 1))
+        ok, _ = accept([r] + vals, d, "random")
+        if ok:
+            bad += 1
+        sg = mp.mpc(mp.nstr(sig.real, d + 1), mp.nstr(sig.imag, d + 1))
+        ok, gs = accept([sg] + vals, d, "sigma_1")
+        if ok:
+            found.append((bname, list(zip(["sigma_1"] + names, gs))))
+            print(f"      CANDIDATE relation: {found[-1][1]}")
+        print(f"   a random target gives LLL height ~ 10^{mp.nstr(d / (len(vals) + 1), 3)} at d = {d}; "
+              f"the null covers heights up to {H_MAX}")
 
     print("linear-multiplier control: log S^(1) from the late-order fit")
     z = mp.mpc(0, w)
@@ -131,22 +160,7 @@ def main(argv):
     print(f"      relation {gl}  (exact: 2 log S1 = -i pi + 2 z ln2 - ln pi - 2 lnGamma(1+z), up to 2 pi i k)")
     if not ok:
         bad += 1
-
-    print("random control")
-    r = mp.mpc(mp.rand(), mp.rand())
-    r = mp.mpc(mp.nstr(r.real, d + 1), mp.nstr(r.imag, d + 1))
-    ok, _ = accept([r] + vals, d, "random")
-    if ok:
-        bad += 1
-
-    print("target: sigma_1")
-    sg = mp.mpc(mp.nstr(sig.real, d + 1), mp.nstr(sig.imag, d + 1))
-    ok, gs = accept([sg] + vals, d, "sigma_1")
-    if ok:
-        print(f"      CANDIDATE relation: {list(zip(['sigma_1'] + names, gs))}")
-    expected_chance = 10 ** (d / (len(vals) + 1))
-    print(f"basket of {len(vals)} constants; a random target gives LLL height ~ 10^{mp.nstr(d / (len(vals) + 1), 3)} "
-          f"= {expected_chance:.3g} at d = {d}, so the null covers heights up to about {H_MAX}")
+    print(f"sigma_1 relations accepted: {len(found)}")
     print(f"controls misbehaving: {bad}")
     return 1 if bad else 0
 

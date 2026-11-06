@@ -1,29 +1,31 @@
 # DINF_ANALYTIC: can the infinite-dimension echo period be derived without numerics?
 
 **Verdict.** No route found gives $`\Delta_\infty`$ (or $`\omega_\infty`$) without numerical evaluation, and none of the
-routes tested here is close to one. The inner problem fails the Painlevé test in its gauge-fixed form and in both of
-its Lie-point reductions, while integrable and non-integrable controls pass and fail as they should (checked
-symbolically; non-integrability itself stays a conjecture, since the converse of the Ablowitz–Ramani–Segur conjecture is
-not a theorem). So there is no Lax pair to look for and no isomonodromy or Riemann–Hilbert problem to solve for the
-Stokes data. Rozali and Way's exact oscillaton is a single-mode solution that does not extend to superpositions, so it
-does not hide a linearization. The first amplitude coefficient $`\sigma_1`$ is already an exact double hypergeometric sum
-(solver/proof/exact_sigma.py), but an LLL search against a frozen basket of the constants that sum could produce found no
-relation, with planted and random controls behaving as required (§2; the scope of the null is stated there). The inner
-problem has no small parameter, and every approximation to the selected zero is itself a numerically computed nonlinear
-Stokes constant (§3). The closest rigorous statement within reach is a *certified* enclosure of the selected frequency of
-the inner problem, *conditional* on Braaksma's theorem and on a harmonic-tail lemma that is not yet proved (§4). The
-truncations $`M = 1`$ and $`M = 3`$ are certified now, and $`M = 5`$ is a few hours of local runs away. Matching eq. (9)'s
-$`\pm 0.00006`$ needs $`M = 9`$ explicit plus that lemma. Even then, the identification of the inner zero with
-$`\lim_{D\to\infty}\Delta(D)`$ rests on Conjecture 1.
+routes tested here is close to one. The inner problem fails the Painlevé test in its gauge-fixed form and in both of its
+Lie-point reductions, while integrable and non-integrable controls pass and fail as they should (checked symbolically;
+non-integrability itself stays a conjecture, since the converse of the Ablowitz–Ramani–Segur conjecture is not a
+theorem). So there is no Lax pair to look for and no isomonodromy or Riemann–Hilbert problem to solve for the Stokes
+data. Rozali and Way's exact oscillaton is a single-mode solution that does not extend to superpositions, so it does not
+hide a linearization. The first amplitude coefficient $`\sigma_1`$ is already an exact double hypergeometric sum
+(solver/proof/exact_sigma.py), but an LLL search against a frozen basket of the constants that sum could produce found
+no relation, with planted and random controls behaving as required (§2; the scope of the null is stated there). The
+inner problem has no small parameter, and every approximation to the selected zero is itself a numerically computed
+nonlinear Stokes constant (§3). The closest rigorous statement within reach is a *certified* enclosure of the selected
+frequency of the inner problem, *conditional* on Braaksma's theorem and on a harmonic-tail lemma that is not yet proved
+(§4). The truncations $`M = 1`$ and $`M = 3`$ are certified now, and $`M = 5`$ is a few hours of local runs away.
+Matching eq. (9)'s $`\pm 0.00006`$ needs $`M = 9`$ explicit plus that lemma. Even then, the identification of the inner
+zero with $`\lim_{D\to\infty}\Delta(D)`$ rests on Conjecture 1. A paper of 4 Nov 2026 (Ecker, Ecker, Grumiller,
+arXiv:2611.07007) also has no analytic value. It extrapolates its $`D \le 200`$ solutions to 1.643911,
+$`1.7\times10^{-5}`$ above eq. (7), a discrepancy recorded in §5.
 
 Scripts: `solver/inner_analytic/`. Logs of the runs quoted here are in the session scratchpad
 (`dinf_analytic/`); every number below is printed by a command in §7.
 
 ## 0. The question and what "without numerics" can mean
 
-Eq. (9) of the physics paper, $`\Delta_\infty = 1.64387 \pm 0.00006`$, is the real zero of the harmonic-1 Stokes multiplier
-of the $`D = \infty`$ inner problem, located by calibrated estimators on 22 late-order-fitted amplitude coefficients. The
-question has three readings.
+Eq. (9) of the physics paper, $`\Delta_\infty = 1.64387 \pm 0.00006`$, is the real zero of the harmonic-1 Stokes
+multiplier of the $`D = \infty`$ inner problem, located by calibrated estimators on 22 late-order-fitted amplitude
+coefficients. The question has three readings.
 
 1. **A closed form, or an exact equation in known functions** (Gamma, hypergeometric, Painlevé transcendents), whose
    root is $`\omega_\infty`$. Routes 1–3 address this.
@@ -53,10 +55,11 @@ Y_s + (VY)_u = Y_{uu}, \qquad V_u = \tfrac14 Y^2 .
 - **(L) List's flow on a line.** In Rozali and Way's potential form ($`\phi_s = c^{-1}\partial_t(c^{-1}\phi_t)`$,
   $`c_s = \phi_t^2/c`$, $`Y = 2\phi_t/c`$; the proof of Prop. 5(i)), with the metric $`g = c^2dt^2`$ on the $`t`$-line,
   $`\partial_s g = 2\,d\phi\otimes d\phi`$ and $`\partial_s\phi = \Delta_g\phi`$. That is the Ricci flow coupled to the
-  harmonic map flow, $`\partial_s g = -2\,\mathrm{Rc} + 2\alpha\,d\phi\otimes d\phi`$ (Müller [M12]), with $`\alpha = 1`$ and
-  target $`\mathbb R`$, on a one-dimensional domain, where $`\mathrm{Rc} = 0`$; with $`\phi = \sqrt2\,\psi`$ it is List's
-  flow [L08] ($`\alpha = 2`$). This is a reformulation, recorded for orientation. The results on those flows are for
-  closed manifolds of dimension at least 2, and none bears on discretely self-similar solutions on a line.
+  harmonic map flow, $`\partial_s g = -2\,\mathrm{Rc} + 2\alpha\,d\phi\otimes d\phi`$ (Müller [M12]), with
+  $`\alpha = 1`$ and target $`\mathbb R`$, on a one-dimensional domain, where $`\mathrm{Rc} = 0`$; with
+  $`\phi = \sqrt2\,\psi`$ it is List's flow [L08] ($`\alpha = 2`$). This is a reformulation, recorded for orientation.
+  The results on those flows are for closed manifolds of dimension at least 2, and none bears on discretely self-similar
+  solutions on a line.
 
 ### 1.2 Criterion and controls (fixed before the runs)
 
@@ -79,19 +82,19 @@ and every compatibility condition holds identically in $`f(t)`$ and the earlier 
 | (B) eq. (8) in $`(s, t)`$ with the lapse | leading $`Y, c \sim \psi^{-1/2}`$ | movable square-root branch point | — |
 | (C) the math paper's $`(\xi, \theta)`$ form | leading $`y \sim \psi^{-1/2}`$ | movable square-root branch point | — |
 
-The forced Burgers system is the closest control: the same code path, with $`V_u = Y^2/4`$ replaced by $`V_u = Y`$. It is
-Burgers' equation for $`V`$ with a free forcing $`g(s)`$, which is linearizable, and it passes. Two runnable mutations
-swap the two source terms (`--mutate=real_to_forced`, `--mutate=forced_to_real`). Each flips its verdict and makes the
-script exit non-zero (7 of 9 verdicts as expected).
+The forced Burgers system is the closest control: the same code path, with $`V_u = Y^2/4`$ replaced by $`V_u = Y`$. It
+is Burgers' equation for $`V`$ with a free forcing $`g(s)`$, which is linearizable, and it passes. Two runnable
+mutations swap the two source terms (`--mutate=real_to_forced`, `--mutate=forced_to_real`). Each flips its verdict and
+makes the script exit non-zero (7 of 9 verdicts as expected).
 
-For (A0) the log term is explicit. With $`Y = 2/\psi + y_2\psi + b\,\psi\log\psi + \dots`$, the order-$`\psi^0`$ equations
-give $`b = k_1/3`$, so every solution with $`k_1 \ne 0`$ has a movable logarithmic branch point. In (A) the double
-resonance does the same with a free function of $`s`$ (`log_check` in `painleve.py`).
+For (A0) the log term is explicit. With $`Y = 2/\psi + y_2\psi + b\,\psi\log\psi + \dots`$, the order-$`\psi^0`$
+equations give $`b = k_1/3`$, so every solution with $`k_1 \ne 0`$ has a movable logarithmic branch point. In (A) the
+double resonance does the same with a free function of $`s`$ (`log_check` in `painleve.py`).
 
 (B) and (C) are not decisive by themselves. The lapse gauge $`c \to T'(t)c`$ can move such branch points, and Rozali and
-Way's exact oscillaton, for which $`c^2 = (1 - \epsilon^2e^{-2\omega^2s})/(1 - w^2)`$, $`w = \tanh\phi`$, has exactly these
-square-root points where $`w = \pm1`$. (A) is the gauge-fixed form, and (A0), (A1) are reductions of it by its Lie point
-symmetries.
+Way's exact oscillaton, for which $`c^2 = (1 - \epsilon^2e^{-2\omega^2s})/(1 - w^2)`$, $`w = \tanh\phi`$, has exactly
+these square-root points where $`w = \pm1`$. (A) is the gauge-fixed form, and (A0), (A1) are reductions of it by its Lie
+point symmetries.
 
 ### 1.3 Lie point symmetries and exact solutions
 
@@ -108,45 +111,127 @@ reductions fail the Painlevé test for general values of their integration const
 indicates that (A) is not integrable.
 
 Exact solutions found along the way:
-- the pole family $`Y = 2/(u - f(s))`$, $`V = -1/(u - f(s)) + f'(s)`$ (the truncated Painlevé expansion; the drift carries
-  the pole);
-- Rozali and Way's oscillaton [RW18, Eq. (10)], $`\phi = \operatorname{artanh} w`$ with $`w = \epsilon e^{-\omega^2 s}\sin\omega t`$,
-  a single heat mode. If $`\operatorname{artanh}`$ of every heat solution solved (8), the problem would be linearizable.
-  It does not. `oscillaton_lin.py` reproduces the single mode to $`5\times10^{-32}`$ (planted truth; its mutation,
-  $`c_s = 2\phi_t^2/c`$, misses by $`0.04`$–$`0.09`$) and gives residuals $`2\times10^{-3}`$ to $`3.6\times10^{-2}`$ for
-  two modes ($`\omega = 1`$ and $`3`$), in Rozali and Way's gauge ($`c \to 1`$ as $`s \to \infty`$). Another gauge per
-  solution is not excluded by this check. The Painlevé result in the gauge-fixed form argues against it.
+- the pole family $`Y = 2/(u - f(s))`$, $`V = -1/(u - f(s)) + f'(s)`$ (the truncated Painlevé expansion; the drift
+  carries the pole);
+- Rozali and Way's oscillaton [RW18, Eq. (10)], $`\phi = \operatorname{artanh} w`$ with
+  $`w = \epsilon e^{-\omega^2 s}\sin\omega t`$, a single heat mode. If $`\operatorname{artanh}`$ of every heat solution
+  solved (8), the problem would be linearizable. It does not. `oscillaton_lin.py` reproduces the single mode to
+  $`5\times10^{-32}`$ (planted truth; its mutation, $`c_s = 2\phi_t^2/c`$, misses by $`0.04`$–$`0.09`$) and gives
+  residuals $`2\times10^{-3}`$ to $`3.6\times10^{-2}`$ for two modes ($`\omega = 1`$ and $`3`$), in Rozali and Way's
+  gauge ($`c \to 1`$ as $`s \to \infty`$). Another gauge per solution is not excluded by this check. The Painlevé result
+  in the gauge-fixed form argues against it.
 
 ### 1.4 What integrability would have given, and status
 
 An integrable (A) would have a Lax pair whose spectral data are conserved under the flow in $`s`$. A discretely
 self-similar solution would then correspond to spectral data invariant under the discrete scaling, a $`q`$-type
-isomonodromy problem. The fast-mode Stokes multipliers would be functions of those data, as the Stokes constants of
-the Painlevé I tritronquée solution follow from its isomonodromy problem (Kapaev; rederived by O. Costin, R. D. Costin
-and Huang [CCH] from the Painlevé property itself). $`S = 0`$ would then be an equation in known functions. That route is
+isomonodromy problem. The fast-mode Stokes multipliers would be functions of those data, as the Stokes constants of the
+Painlevé I tritronquée solution follow from its isomonodromy problem (Kapaev; rederived by O. Costin, R. D. Costin and
+Huang [CCH] from the Painlevé property itself). $`S = 0`$ would then be an equation in known functions. That route is
 closed: (A) fails the test.
 
 *Status:* the test results are **checked symbolically**; the non-integrability of (A) is a **conjecture**.
 
 ## 2. Exact structure in the amplitude coefficients
 
-PENDING
+### 2.1 What is already exact
+
+$`\sigma_1 = S_1^{(3)}/S_1^{(1)}`$ has an exact representation. The order-1 sequences are the hypergeometric terms
+$`T^\pm_l = (a_\pm)_l(b_\pm)_l/l!`$, the order-2 lapse coefficients are their convolutions, and the order-3 multiplier
+sequence $`R_j`$ telescopes, so $`\sigma_1`$ is the limit of an explicit double sum of hypergeometric terms
+(solver/proof/exact_sigma.py; proof/D_entire.md §6). Each $`\sigma_k`$ is a nested sum of the same kind, $`2k`$ levels
+deep. In that weak sense $`S_1(A, \omega) = 0`$ is already "an exact equation in known functions": a power series in
+$`A^2`$ whose coefficients are nested hypergeometric sums. It is exact but not closed. Summing it in $`A^2`$ is the
+problem itself, since the terms reach 240 at the zero.
+
+### 2.2 Integer-relation test of $`\sigma_1`$
+
+*Target.* $`\sigma_1`$ at $`\omega = 4`$ exactly (`sigma1_hp.py`, which drives the amplitude code with $`K = 3`$ and
+overrides $`\omega`$; at $`\omega = 4`$ a rational function of $`\omega`$ in a closed form is a Gaussian rational). Two
+fit windows, $`J = 2400`$ and $`3000`$ (1280 bits, families with 10–30 terms), agree to 44.8 digits:
+
+```math
+\sigma_1(\omega = 4) = 0.77614460080113095690617189690294953863517 + 0.50415694742534165372735881448622696512992\,i .
+```
+
+The same code at $`\omega_\infty`$, $`J = 1500`$, reproduces the stored 20-digit $`\sigma_1`$ in every digit, and its
+fitted linear multiplier equals the closed form $`-i/(\Gamma(a)\Gamma(b))`$ to $`10^{-354}`$ at $`\omega = 4`$.
+
+*Baskets, frozen in the script before the target was read:*
+- A (polygamma): $`1, \ln2, \pi, \pi^2, \psi(1+z), \psi(a), \psi'(1+z), \pi\coth\pi\omega, \pi\coth(\pi\omega/2)`$, with
+  $`z = i\omega`$, $`a = (1+z)/2`$. Through the reflection and duplication formulas its span contains $`\psi(1-z)`$,
+  $`\psi(b)`$, $`\psi(\bar a)`$, $`\psi(\bar b)`$ and the reflection terms these produce.
+- B (Gamma ratios): $`1, \ln2, \pi, \psi(1+z)`$, $`\rho_1 = \Gamma(1-z)/\Gamma(1+z)`$,
+  $`\rho_2 = 2^z\Gamma(a)/\Gamma(b)`$, $`\rho_1\psi(1-z)`$, $`\rho_2\psi(a)`$, the kind of values Gauss- and Kummer-type
+  sums of $`T^-/T^+`$ produce.
+
+*Method and criterion, fixed before the run.* LLL on the lattice of Gaussian-integer relations at $`d = 42`$ digits.
+A relation is accepted if it involves the target, has height (largest coefficient modulus) at most $`10^3`$, a residual
+below $`10^{5-d}`$, and is returned unchanged at $`d - 6`$ digits.
+
+| test | basket | height of the LLL vector | stable at d − 6 | verdict | expected |
+|---|---|---|---|---|---|
+| planted, random Gaussian combination of height 30 | A | 35.5 | yes | relation | relation |
+| planted | B | 39.7 | yes | relation | relation |
+| linear multiplier, $`\log S^{(1)}`$ from the fit, against $`1, i\pi, \ln2, \ln\pi, \ln\Gamma(1+z)`$ | | 8 | yes | relation $`2\log S^{(1)} = -i\pi + 8i\ln2 - \ln\pi - 2\ln\Gamma(1+4i)`$ | relation |
+| random complex number | A | $`1.6\times10^4`$ | no | none | none |
+| random | B | $`3.0\times10^4`$ | no | none | none |
+| **$`\sigma_1`$** | **A** | $`1.4\times10^4`$ | no | **none** | |
+| **$`\sigma_1`$** | **B** | $`3.3\times10^4`$ | no | **none** | |
+
+A random target gives height about $`10^{d/(n+1)}`$, $`10^{4.2}`$ for A and $`10^{4.7}`$ for B, so each null excludes
+relations of height up to $`10^3`$ within that basket and nothing else. $`\sigma_1`$ behaves as a random number does.
+With `--mutate=perturb` ($`10^{-21}`$ added to the planted targets) both planted relations disappear and the script
+exits 1.
+
+*Status:* the null is **numerical evidence** of limited scope. Joining the two baskets (17 constants) would bring the
+random height down to $`10^{2.3}`$, below the bound, so that test needs about 60 digits. A closed form for $`\sigma_1`$
+would not give $`\Delta_\infty`$ anyway; it would only make one coefficient of route 4.3 exact.
+
+### 2.3 What the ratio law implies
+
+The coefficients follow $`\sigma_k \approx C\kappa_\star^k/\Gamma(k + \beta_\star)`$ with
+$`\kappa_\star = 1.279 + 1.081i`$ and $`\beta_\star = 4.16 - 1.60i`$ at $`\omega_\infty`$ (math paper Sec. "Exponential
+type"; D_entire.md §1). So $`S_1`$ is numerically an entire function of $`\mathcal A = A^2`$ of order 1 and type 1.675.
+Three consequences:
+
+- $`S_1(\mathcal A) = (2\pi i)^{-1}\oint B(\zeta)e^{\zeta\mathcal A}\,d\zeta`$ exactly, with
+  $`B(\zeta) = \sum_k k!\,\sigma_k\zeta^{-k-1}`$ (Pólya), and
+  $`S_1 = e^{c_0 + c_1\mathcal A}\prod_n(1 - \mathcal A/\mathcal A_n)e^{\mathcal A/\mathcal A_n}`$ (Hadamard). Neither
+  representation says where the zeros are without $`B`$.
+- $`S_1 = 0`$ would be an equation in special functions if $`B`$ had finitely many singular points with known exponents
+  and connection data. Its jump across the cut would then be an explicit product of powers, and $`S_1`$ a finite sum of
+  confluent hypergeometric (Kummer or Humbert) functions. The data show a density along an arc from about
+  $`0.75 + 0.16i`$ to $`\kappa_\star`$, vanishing at $`\kappa_\star`$ like $`(\kappa_\star - \zeta)^{\beta_\star - 1}`$.
+  That is consistent with a cut between two branch points, but the endpoints and $`\beta_\star`$ are known to about
+  three digits, they move with $`\omega`$ ($`\kappa_\star = 1.271 + 1.081i`$ to $`1.289 + 1.080i`$ for
+  $`\omega/\omega_\infty = 0.99`$–$`1.01`$), and none matches a combination of the linear exponents
+  $`a, b = (1 + i\omega)/2, (2 + i\omega)/2`$. Determining the jump function would mean solving the inner problem to all
+  orders in $`A`$.
+- The proposed mechanism (the math paper: $`\langle F^2\rangle = \mathcal A/2`$ at leading order, so the late-order
+  normalization $`\xi^{2\langle F^2\rangle} = \xi^{\mathcal A}`$ is a Laplace kernel in $`\zeta = \ln\xi`$) would make
+  the arc the image of a bounded path in $`\xi`$. An exact form of that path's endpoints would give $`\kappa_\star`$ in
+  closed form, and the type of $`S_1`$ with it, but not the zero.
+
+*Status:* the order-1 behaviour is **numerical evidence**; no exact resummation of $`S_1`$ is in sight.
 
 ## 3. Analytic approximations
 
 The inner problem has no parameter. Its symmetries remove every scale, and $`\omega`$ is the eigenvalue. A
 small-parameter expansion needs a parameter of the solution, and the two natural ones do not give closed forms.
 
-- **The harmonic ratio** $`|q|A^2 \approx 0.063`$. Expanding in it is the truncation sequence $`M = 1, 3, 5, \dots`$, which
-  converges geometrically (ratio $`-0.045`$ to $`-0.057`$ per pair). Its leading term, the $`M = 1`$ zero, is itself a
-  nonlinear Stokes constant of an ODE, computed (and certified) numerically.
-- **The amplitude** $`A`$. The selected zero is at $`A_0 = 2.72`$, where the terms $`|\sigma_k|A_0^{2k}`$ reach 240. There is
-  no small-amplitude regime, and the linear problem has no zero at all (Prop. 2, **proved**).
+- **The harmonic ratio** $`|q|A^2 \approx 0.063`$. Expanding in it is the truncation sequence $`M = 1, 3, 5, \dots`$,
+  which converges geometrically (ratio $`-0.045`$ to $`-0.057`$ per pair). Its leading term, the $`M = 1`$ zero, is
+  itself a nonlinear Stokes constant of an ODE, computed (and certified) numerically.
+- **The amplitude** $`A`$. The selected zero is at $`A_0 = 2.72`$, where the terms $`|\sigma_k|A_0^{2k}`$ reach 240.
+  There is no small-amplitude regime, and the linear problem has no zero at all (Prop. 2, **proved**).
 
-No WKB or matched limit of the inner problem itself was found. The weights $`e^{\pi\nu\omega/2}`$ ($`\pi\omega_\infty/2 = 6.0`$)
-are large, but they cancel exactly in each tuning step (B_tail_M7.md, Lemma W), so they supply no small parameter.
+No WKB or matched limit of the inner problem itself was found. The weights $`e^{\pi\nu\omega/2}`$
+($`\pi\omega_\infty/2 = 6.0`$) are large, but they cancel exactly in each tuning step (B_tail_M7.md, Lemma W), so they
+supply no small parameter.
 
-The approximations available, all numerical, against $`\Delta = 1.64387`$ (from the papers' numbers; $`\Delta = 1.643893746/(\omega/\omega_\infty)`$):
+The approximations available, all numerical, against $`\Delta = 1.64387`$ (from the papers' numbers;
+$`\Delta = 1.643893746/(\omega/\omega_\infty)`$):
 
 | approximation | $`\omega/\omega_\infty`$ | $`\Delta`$ | minus 1.64387 | closed form? |
 |---|---|---|---|---|
@@ -174,15 +259,15 @@ Braaksma's theorem, as Thm A does for $`M = 1`$. This answers reading 2 of §0. 
 
 - *Now:* $`M = 1`$ (Thm A) and $`M = 3`$ (math paper Sec. A3) are certified. $`M = 5`$: the centre is refined to
   $`|g| \le 2.5\times10^{-29}`$ and four box runs of about 2000 Lohner steps each, 3–4 hours on 4 local threads, are
-  specified (proof/A_M.md §6.3, §7). $`M = 7`$: the zero is known to $`\pm2\times10^{-5}`$ only (proof/B_tail_M7.md), and
-  its conditioning (couplings $`10^{14}`$–$`10^{17}`$ already at $`M = 5`$) needs the Schur-corrected conditions in
+  specified (proof/A_M.md §6.3, §7). $`M = 7`$: the zero is known to $`\pm2\times10^{-5}`$ only (proof/B_tail_M7.md),
+  and its conditioning (couplings $`10^{14}`$–$`10^{17}`$ already at $`M = 5`$) needs the Schur-corrected conditions in
   multiprecision.
-- *The tail lemma* ($`|\omega_* - \omega_M| \le`$ explicit bound) is the open mathematics. proof/B_tail_M7.md §5 states it
-  and proves its algebraic parts (Lemmas R, O, L, C, W), and its §8.4 names the one inequality (★) that needs a new idea:
-  a bound on the linearized coupling uniform in the harmonic.
-- *Precision versus $`M`$* (from the measured tail sizes in $`r_1`$: 4–6 above $`M = 5`$, 0.2–0.35 above $`M = 7`$, 0.015
-  above $`M = 9`$, and the requirement of about 4 for a box of radius $`10^{-3}`$, scaled linearly in the radius and
-  continued at 0.05 per pair beyond $`M = 9`$; estimates, not measurements):
+- *The tail lemma* ($`|\omega_* - \omega_M| \le`$ explicit bound) is the open mathematics. proof/B_tail_M7.md §5 states
+  it and proves its algebraic parts (Lemmas R, O, L, C, W), and its §8.4 names the one inequality (★) that needs a new
+  idea: a bound on the linearized coupling uniform in the harmonic.
+- *Precision versus $`M`$* (from the measured tail sizes in $`r_1`$: 4–6 above $`M = 5`$, 0.2–0.35 above $`M = 7`$,
+  0.015 above $`M = 9`$, and the requirement of about 4 for a box of radius $`10^{-3}`$, scaled linearly in the radius
+  and continued at 0.05 per pair beyond $`M = 9`$; estimates, not measurements):
 
 | target | box radius in $`\omega/\omega_\infty`$ | tail needed in $`r_1`$ | explicit $`M`$ |
 |---|---|---|---|
@@ -198,10 +283,10 @@ Braaksma's theorem, as Thm A does for $`M = 1`$. This answers reading 2 of §0. 
 
 The math paper's Sec. "What a certificate would need": rigorous $`\sigma_k`$ for $`k \le 14`$–15 (for a $`10^{-3}`$ box;
 about 17–18 for eq. (9)'s precision, from the Jacobian singular values 0.53 and 0.26), a tail bound, and uniformity in
-$`\omega`$. Only $`\sigma_1`$ is enclosed ($`3.5\times10^{-5}`$, Lemma $`\sigma_1`$). The tail bound needs control of the
-inner problem at complex amplitude $`|A| \approx 4`$–4.5, as hard as the direct problem. On top of that, the amplitude
-series defines $`S_1`$ order by order, and its equality with the multiplier of an actual solution of the untruncated
-problem is gap (a)–(b). Route T is the nearer one.
+$`\omega`$. Only $`\sigma_1`$ is enclosed ($`3.5\times10^{-5}`$, Lemma $`\sigma_1`$). The tail bound needs control of
+the inner problem at complex amplitude $`|A| \approx 4`$–4.5, as hard as the direct problem. On top of that, the
+amplitude series defines $`S_1`$ order by order, and its equality with the multiplier of an actual solution of the
+untruncated problem is gap (a)–(b). Route T is the nearer one.
 
 *Status:* both routes are open; their estimates are **numerical evidence** about cost, not results.
 
@@ -213,17 +298,39 @@ Costin–Tanveer are not repeated).
 - **[RW18] Rozali, Way**, JHEP 11 (2018) 106, arXiv:1807.10283 (verified, JHEP DOI 10.1007/JHEP11(2018)106; arXiv title
   "Gravitating Scalars and Critical Collapse in the Large D Limit"). Read now beyond Sec. 2.3 (ar5iv, through a
   summarizing fetch). *Contains:* the leading-order equations (9a)–(9c); the exact oscillaton Eq. (10),
-  $`\phi_0 = \tanh^{-1}(\epsilon e^{-\omega^2r^2/2}\sin(\omega\tau - \tau_0))$`; "One can use scale invariance to fix ω"; the
-  oscillatons "do not exhibit self symmetry of any sort"; $`\gamma = 1/2`$ from the divergence. *Not there:* integrability,
-  DSS solutions at large $`D`$, $`\Delta`$ at large $`D`$ (only mentioned in the introduction), Stokes phenomena.
-- **[PP96] Price, Pullin**, gr-qc/9601009, PRD 54, 3792 (1996) (as in LIT_REVIEW.md). Read now for the number: "Δ∼2π/√3∼3.6"
-  (their Eq. (50)) from ⟨m/r⟩ ≈ 1/6, with "Our argument can only establish that Δ is of order unity"; $`D = 4`$ only.
+  $`\phi_0 = \tanh^{-1}(\epsilon e^{-\omega^2r^2/2}\sin(\omega\tau - \tau_0))`$; "One can use scale invariance to fix
+  ω"; the oscillatons "do not exhibit self symmetry of any sort"; $`\gamma = 1/2`$ from the divergence. *Not there:*
+  integrability, DSS solutions at large $`D`$, $`\Delta`$ at large $`D`$ (only mentioned in the introduction), Stokes
+  phenomena.
+- **[PP96] Price, Pullin**, gr-qc/9601009, PRD 54, 3792 (1996) (as in LIT_REVIEW.md). Read now for the number:
+  "Δ∼2π/√3∼3.6" (their Eq. (50)) from ⟨m/r⟩ ≈ 1/6, with "Our argument can only establish that Δ is of order unity";
+  $`D = 4`$ only.
 - **[EEG26], [LW26]** as in LIT_REVIEW.md: no Stokes phenomena; the NLO condition, which the physics paper's Sec. eeg
   shows does not select $`\Delta`$.
+- **[EEG26b] C. Ecker, F. Ecker, D. Grumiller**, *Critical collapse remains discretely self-similar at large D*,
+  arXiv:2611.07007, submitted 4 Nov 2026 (verified, arXiv listing; not in LIT_REVIEW.md yet). Read through summarizing
+  fetches of the abstract and the HTML. *Contains:* critical solutions from $`D = 4`$ to 200 in steps of 1/2 (spectral
+  Newton, Reiterer–Trubowitz infrastructure, GMP); "we predict Delta remains finite at infinite dimension D, contrary to
+  a recent conjecture" (their own $`\Delta \to 0`$ of EEGJ); the fit "Delta=1.6439+10.37/D-O(1/D^2)"; a Table 1 whose
+  last row is $`D = \infty`$, 1.643911, with no fit range or method given; and "an explicit large-D model", the profile
+  $`\tilde\beta = A_*\,\mathrm{Re}[e^{i\theta}/(1 + qe^{i(2\theta+\delta)})]`$ with $`q \approx 0.0551`$ and
+  $`\delta \approx 0.0985`$ fitted to the numerical profile. That is the geometric form of the math paper's tuned
+  profile ($`|q|A^2 \approx 0.063`$ at leading order; $`|F_3/F_1| \to 0.0549`$–$`0.0552`$). It cites this project: "A
+  similar result was obtained independently by Nathan Moinvaziri, who used the AI Claude to determine the critical
+  solution in dimensions up to D=61", and says $`\gamma \to 1/2`$ there "has not yet been verified by human analysis".
+  *Not there:* any analytic value of $`\Delta_\infty`$ (it is an input of the model), Stokes phenomena, the heat
+  equation. Rozali and Way appear only as a future matching target, and a first-principles derivation "will likely
+  require to add instanton corrections" $`e^{-1/\varepsilon}`$. **A discrepancy:** their $`D = \infty`$ entry, 1.643911,
+  is $`1.7\times10^{-5}`$ above the finite-$`D`$ limit of eq. (7), 1.643893746 ± 1.5×10⁻⁸, about 1100 times its bar,
+  while their finite-$`D`$ values agree with ours in all six printed decimals at $`D = 20`$, 40 and 50 (README table:
+  2.112080154580, 1.888568197910, 1.841659503007) and with the repository's formula
+  (solver/data/formula_coefficients.json, fitted on $`D \le 30.2`$) to $`3\times10^{-6}`$ at $`D = 200`$ (1.695090
+  against their 1.695093). Their $`4\pi\mu_0`$ with $`\mu_0 \approx 0.130818`$ is 1.643907. The inner-problem value of
+  eq. (9), $`1.64387 \pm 0.00006`$, contains both. Reported, not resolved.
 - **[KS91] Kruskal, Segur**, *Asymptotics beyond all orders in a model of crystal growth*, Stud. Appl. Math. 85 (1991)
-  129–181 (verified, Colorado expert record and MaRDI). The prototype of a selection by a nonlinear inner Stokes constant:
-  needle solutions exist for discrete values of the parameter. Its full text was not read here, so whether its constant is
-  closed-form is *(unverified)*.
+  129–181 (verified, Colorado expert record and MaRDI). The prototype of a selection by a nonlinear inner Stokes
+  constant: needle solutions exist for discrete values of the parameter. Its full text was not read here, so whether its
+  constant is closed-form is *(unverified)*.
 - **[CKA98] Chapman, King, Adams**, Proc. R. Soc. Lond. A 454 (1998) 2733 (verified, Crossref listing on the publisher
   page). A method for exponentially small terms in nonlinear ODEs. Full text not read.
 - **[CCH] O. Costin, R. D. Costin, M. Huang**, *Tronquée solutions of the Painlevé equation PI*, arXiv:1310.5330
@@ -232,17 +339,18 @@ Costin–Tanveer are not repeated).
   from the Painlevé property. That is the integrable case §1.4 has in mind. Kapaev's papers were not located
   *(unverified)*.
 - **[MP16] Michalik, Podhajecka**, *The Stokes phenomenon for certain partial differential equations with meromorphic
-  initial data*, Asymptotic Analysis 99 (2016) 163–182, arXiv:1603.04209 (verified, arXiv listing). For the linear complex
-  heat equation with meromorphic initial data the jumps across Stokes lines are computed exactly through Borel summation.
-  It is the linear analogue of $`C(n,s)`$ and $`K'(s)`$; nothing nonlinear.
+  initial data*, Asymptotic Analysis 99 (2016) 163–182, arXiv:1603.04209 (verified, arXiv listing). For the linear
+  complex heat equation with meromorphic initial data the jumps across Stokes lines are computed exactly through Borel
+  summation. It is the linear analogue of $`C(n,s)`$ and $`K'(s)`$; nothing nonlinear.
 - **[CT89] Cariello, Tabor**, *Painlevé expansions for nonintegrable evolution equations*, Physica D 39 (1989) 77–94,
   DOI 10.1016/0167-2789(89)90040-7 (verified, Arizona expert record). The WTC test on non-integrable evolution equations
   (the Newell–Whitehead and Fisher controls are of this kind). Full text not read; the failing conditions in §1.2 are
   this note's own computation.
-- **[L08] List**, *Evolution of an extended Ricci flow system*, Comm. Anal. Geom. 16 (2008) 1007–1048,
-  DOI 10.4310/CAG.2008.v16.n5.a5 (verified, MaRDI/zbMATH record). **[M12] Müller**, *Ricci flow coupled with harmonic map
+- **[L08] List**, *Evolution of an extended Ricci flow system*, Comm. Anal. Geom. 16 (2008) 1007–1048, DOI
+  10.4310/CAG.2008.v16.n5.a5 (verified, MaRDI/zbMATH record). **[M12] Müller**, *Ricci flow coupled with harmonic map
   flow*, Ann. Sci. ÉNS 45 (2012) 101–142, DOI 10.24033/asens.2161, arXiv:0912.2907 (verified, Numdam and arXiv). Its
-  flow: "∂g/∂t = −2Rc + 2α∇ϕ⊗∇ϕ, ∂ϕ/∂t = τ_g ϕ", List's being "N ⊆ ℝ" and α ≡ 2. Neither treats a one-dimensional domain.
+  flow: "∂g/∂t = −2Rc + 2α∇ϕ⊗∇ϕ, ∂ϕ/∂t = τ_g ϕ", List's being "N ⊆ ℝ" and α ≡ 2. Neither treats a one-dimensional
+  domain.
 - **Methods:** [ARS80] Ablowitz, Ramani, Segur, J. Math. Phys. 21 (1980) 715; [WTC83] Weiss, Tabor, Carnevale, J. Math.
   Phys. 24 (1983) 522; [JKM82] Jimbo, Kruskal, Miwa, Phys. Lett. A 92 (1982) 59 (Kruskal's simplification); [LLL82]
   Lenstra, Lenstra, Lovász, Math. Ann. 261 (1982) 515. These four were not re-verified in this session *(unverified)*.
@@ -256,13 +364,13 @@ nearest, and it is linear.
 Eq. (9)'s standing does not change. Proposed additions, for the coordinator:
 
 - *Physics paper, Sec. "The selection rule at D = ∞", after eq. (9):* "No closed form is expected. In the proper length
-  $`u = \int c\,dt`$ the inner equations become $`Y_s + (VY)_u = Y_{uu}`$, $`V_u = Y^2/4`$ with $`V = u_s`$, and this system,
-  like its stationary and continuously self-similar reductions, fails the Painlevé test, so its Stokes data cannot be
-  obtained from an isomonodromy problem; the inner problem has no small parameter, and every approximation to the zero
-  is itself a nonlinear Stokes constant."
-- *Math paper, Sec. "The selection rule" or Prop. 5(i), a remark:* the gauge-fixed form (A), with the identity of §1.1 and
-  the Painlevé result as **checked symbolically**, and the non-integrability as a conjecture; and the List-flow reading
-  (L) as a one-line remark crediting [L08, M12].
+  $`u = \int c\,dt`$ the inner equations become $`Y_s + (VY)_u = Y_{uu}`$, $`V_u = Y^2/4`$ with $`V = u_s`$, and this
+  system, like its stationary and continuously self-similar reductions, fails the Painlevé test, so its Stokes data
+  cannot be obtained from an isomonodromy problem; the inner problem has no small parameter, and every approximation to
+  the zero is itself a nonlinear Stokes constant."
+- *Math paper, Sec. "The selection rule" or Prop. 5(i), a remark:* the gauge-fixed form (A), with the identity of §1.1
+  and the Painlevé result as **checked symbolically**, and the non-integrability as a conjecture; and the List-flow
+  reading (L) as a one-line remark crediting [L08, M12].
 - *README, the "Candidate closed forms" paragraph:* "whether Δ∞ has one is open" can stay, with a pointer to this note
   for the integrability and integer-relation tests.
 
@@ -277,4 +385,12 @@ python3 solver/inner_analytic/heat_forms.py                     # identities hol
 python3 solver/inner_analytic/oscillaton_lin.py                 # single mode 5e-32, two modes 3.6e-2; --mutate=coef exit 1
 ```
 
-PENDING (route 2 commands)
+python3 solver/inner_analytic/sigma1_hp.py 4 2400 1280 --mf 10:30 > RUN_A.json   # about 12 min on a free core python3
+solver/inner_analytic/sigma1_hp.py 4 3000 1280 --mf 10:30 > RUN_B.json   # about 14 min python3
+solver/inner_analytic/sigma_lll.py RUN_A.json RUN_B.json                   # 44.77 digits, d = 42, no relation, exit 0
+python3 solver/inner_analytic/sigma_lll.py RUN_A.json RUN_B.json --mutate=perturb  # planted lost, exit 1 python3
+solver/inner_analytic/sigma1_hp.py 1.0 1500 1280 --wf --mf 8:20             # omega_inf: the stored 20 digits
+```
+
+The two $`\omega = 4`$ records (RUN_A, RUN_B) are in the session scratchpad, `dinf_analytic/sigma1_w4_J2400.json` and
+`sigma1_w4_J3000.json`; they belong in the raw-data repository if the coordinator keeps them.

@@ -20,9 +20,9 @@ Eq. (8):  Y_t = c W,  W_t = c (Y_s + Y^3/4),  c_s = c Y^2/4.
     where Rc = 0; with phi = sqrt(2) psi it is List's flow (B. List, Comm. Anal. Geom. 16 (2008) 1007), alpha = 2.
     Check: g_tt = c^2, Laplacian_g phi = c^-1 d_t(c^-1 phi_t); d_s(c^2) = 2 c c_s = 2 phi_t^2.
 
-    python3 heat_forms.py [--mutate=quarter]     the mutation uses Y^3/2 in (8) and must make the check fail
+    python3 heat_forms.py [--mutate=quarter]     the mutation uses Y^3/2 in (8), so the check must fail (exit 1)
 
-Exit status 0 only if both identities hold (and, with the mutation, only if the check fails as it must).
+Exit status 0 only if every identity holds.
 """
 import sys
 
@@ -96,8 +96,6 @@ def main(argv):
     print(f"RW potential form -> (8): residual of (8a) = {r8a}, of (8b) = {r8b}")
     ok = id1 == 0 and id2 == 0 and idL1 == 0 and idL2 == 0 and r8a == 0 and r8b == 0
     print("identities hold" if ok else "an identity FAILS")
-    if mut:
-        return 0 if not ok else 1
     return 0 if ok else 1
 
 
