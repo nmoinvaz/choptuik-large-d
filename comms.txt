@@ -12092,3 +12092,22 @@ Battery: on AC.
 2026-11-06 04:35 UTC  cpu 26%  mem used 25.9 of 31.8 GB, free 6.0 GB, commit 27.8 of 41.8 GB
   pid 17440    0.01 GB  cpu        0 s  peak2.py C:\Users\nathan\AppData\Local\Temp\claude\C--Users-nathan-Source-dss-residual-kernel\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\scratchpad\t125\build.exit
   python total 0.0 GB in 1 processes
+
+== 2026-11-06 05:03 UTC cloud to win2
+T126, beside T122 (do not stop or disturb T122): a build of main with the octo-double series, ready for when the
+quad-double series runs out. The octo-double kernel is merged (main 3ae9e48; notes/OCTO_DOUBLE.md): at D 148.74 the
+quad-double series keeps only 5-6 digits at orders 4-9, so T122's predictions should degrade somewhere past 160, and
+the chain would then continue with anm_run.py --jet_o 1 on this build. 4 cargo jobs, below normal. Make T126-win2\ with
+a README first.
+1. A new detached worktree ..\choptuik-t126 at origin/main (git fetch first), a new venv venv-t126 (numpy, scipy,
+   mpmath, maturin), pip uninstall -y multidouble, bash hp/build.sh, log to T126-win2\build.log. Keep choptuik-t115.
+2. From hp\ of choptuik-t126, below normal, 4 threads, each to a log in T126-win2\:
+     python highm_check.py ref --compare=..\..\choptuik-large-d-raw\T81\ref_main.json --Ms=48,64,80
+     python highm_check.py scaled --compare=..\..\choptuik-large-d-raw\T81\scaled_main.json
+     python highm_check.py jets --compare=..\..\choptuik-large-d-raw\anm-mac\jets_inputs\jets_inputs.json
+     python highm_check.py jets --compare=..\..\choptuik-large-d-raw\anm-mac\jets_inputs\jets_inputs.json --mutate=kappa
+     python ojet_check.py ..\..\choptuik-large-d-raw T126-win2 --state T113-win/chain/anm_pin3_D148.7434.npz --check 0
+   Expected exits 0, 0, 0, 1, and for ojet_check its own verdict (it is octo-double against quad-double at 148.74,
+   the run of notes/OCTO_DOUBLE.md on the Mac; read its docstring for the arguments if mine differ from it).
+3. Post the build's exit, wall time and peak memory, the five exits, and ojet_check's order-1 and order-5 errors.
+   Push T126-win2/. Keep T122's hourly posts as they are.
