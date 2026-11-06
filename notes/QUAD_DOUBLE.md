@@ -2215,3 +2215,9 @@ fails under both rules. One step from 1.0e-9 lands 4.6e-19 (relative) from the s
 1e-31 to 7e-26, so the rung block's conditioning limits the step in that direction. The chain's projections did not
 meet that start in these runs (none failed). `anm_run.py --save_pred 1` now stores each prediction before its re-seed,
 so a check can run on predictions.
+
+**The check.** `reseed.py checkq PRED.npz` re-seeds a stored prediction with the quad-double polish and passes when it
+converges. On the prediction at 152.93 + 0.5 (`anm-mac/stall153/pred_pin3_D153.4309.npz`, ) the new rule
+passes (|R| 2.25e-37 in 12 steps), and its control `--legacy 1`, the earlier rule, fails at 3.60e-23 with exit 1:
+
+    cd hp && python3 reseed.py checkq ../../choptuik-large-d-raw/anm-mac/stall153/pred_pin3_D153.4309.npz [--legacy 1]

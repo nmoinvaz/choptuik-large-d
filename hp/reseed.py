@@ -12,13 +12,16 @@ state there (the node itself at u0), and its equations are the m and a rows of t
     python3 reseed.py check STATE.npz [--threads 2] [--levels 5] [--rows ma|pm|all] [--mutate none|skip|wrongu]
         [--plan_tol 1e-32] [--out OUT.jsonl] [--delta_h 1e-6] [--seed 1] [--floor_rule stall|abs|rel]
     python3 reseed.py jac STATE.npz
+    python3 reseed.py checkq PRED.npz [--threads 4] [--legacy 1]
 
 `check` is the unit check and the stepper check (notes/RESEED.md 3.1, 3.2): the converged state's own node re-seeded
 from horizon data off by delta_h (relative, random signs) must return the state's horizon data to the floor of 3.1,
 and the node integrated to each rung must agree with the state's horizon series there (3.2); exit 1 otherwise. The
 mutations must make 3.1 fail: skip (only the last rung, u0), wrongu (each rung's series summed at 1.001 u against the
 target at u); --plan_tol 1e-12 must make 3.2 fail. `jac` prints the singular values of the horizon block's m_h, a_h
-columns by row groups (notes/RESEED.md 2.1).
+columns by row groups (notes/RESEED.md 2.1). `checkq` re-seeds a stored prediction (anm_run.py --save_pred 1) with
+the quad-double polish and must converge; --legacy 1, the earlier polish rule, must make it fail where that rule fell
+short (its docstring).
 """
 import json
 import os
@@ -619,9 +622,33 @@ def jac_groups(H, M):
               f"..{S[mh < 0.5].max() if (mh < 0.5).any() else 0:.3e}, the m_h-dominated ones {S[mh >= 0.5].min():.3e}..{S[mh >= 0.5].max():.3e}")
 
 
+def checkq(argv):
+    """the re-seed with its quad-double polish (reseed, qd) on a stored prediction (anm_run.py --save_pred 1, at its D):
+    it must converge, the u0 rung's quad-double residual below 1e-24 (notes/QUAD_DOUBLE.md 13.26); exit 1 otherwise.
+    The control --legacy 1 (the polish with it_max 6 and one factoring, the earlier rule) must fail on a prediction
+    where that rule stopped short, as T118's at D 152.93 did."""
+    opt = parse(argv, dict(threads=4, legacy=0))
+    z4, meta = load_q(argv[0])
+    D = mp.mpf(meta["D_str"])
+    rs = Reseeder(meta, D, threads=opt["threads"], qd=True)
+    if opt["legacy"]:
+        inv = rs.invert_q
+        rs.invert_q = lambda z, d, **kw: inv(z, d, it_max=6, refactor_max=0)
+    t0 = time.time()
+    _, diag = rs.reseed(z4, verbose=True)
+    q = [r for r in diag["rungs"] if r.get("qd")]
+    ok = bool(diag["ok"]) and bool(q) and q[-1]["R"] < 1e-24
+    print(f"checkq {argv[0]}: D {mp.nstr(D, 12)}, {'legacy rule' if opt['legacy'] else 'refactoring rule'}: re-seed "
+          f"{'ok' if diag['ok'] else 'FAILED'}, u0 quad-double |R| {q[-1]['R'] if q else float('nan'):.2e}, "
+          f"{time.time() - t0:.0f} s: {'PASS' if ok else 'FAIL'}", flush=True)
+    return 0 if ok else 1
+
+
 if __name__ == "__main__":
     if len(sys.argv) > 2 and sys.argv[1] == "check":
         sys.exit(check(sys.argv[2:]))
+    if len(sys.argv) > 2 and sys.argv[1] == "checkq":
+        sys.exit(checkq(sys.argv[2:]))
     if len(sys.argv) > 2 and sys.argv[1] == "jac":
         sys.exit(jac(sys.argv[2:]))
     print(__doc__)
