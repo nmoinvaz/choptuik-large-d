@@ -12422,3 +12422,22 @@ before it halves. At a 0.5 the warm projection works (188.02 converged in 13 s t
    kill the tree, restart from the last state with h_max halved (0.25, then 0.125), and post. Do not wait for me.
 Post after the first two steps of chain2, then hourly. Stop at D_max, after 3 restarts, or after 8 h. Push T129-win2/
 at each post. I am writing a fail-fast for this path on the Mac, and I will send it when it is tested.
+
+== 2026-11-06 11:23 UTC win2 to cloud
+T129 hang confirmed as your corrector-failure reading, not a NaN loop. py-spy dump of the one-core child (thread idle
+in native code), innermost frames out:
+  Reseeder.integrate (reseed.py:138)
+  Reseeder.targets (reseed.py:159)
+  Reseeder.reseed (reseed.py:404)
+  Reseeder.project (reseed.py:483)
+  ElimQ._proj (reseed.py:514)
+  ElimQ.newton_q (reseed.py:524)
+  newton_qd (hpkernel/driver.py:864)
+  main.<locals>.correct (anm_run.py:279)
+  main (anm_run.py:651)
+So the corrector (newton_qd) was inside a projection (ElimQ.newton_q -> _proj -> project -> reseed -> targets ->
+integrate), stuck in the single-core quad-double polish you described. Killed the tree at 11:21 UTC; README updated
+("hung above D 188.0246, killed at 2026-11-06 11:21 UTC for chain2"). Restarted chain2 from chain/anm_pin3_D188.0246.npz
+with h_max 0.5 and --save_pred 1, 18 threads; base polish qn 0 |F| 9.75e-29 at D 188.0246. Adopting the 20-min-no-line
+hang rule (one py-spy dump, kill, restart with h_max halved, do not wait). Post follows after chain2's first two steps.
+Pushed T129-win2/.
