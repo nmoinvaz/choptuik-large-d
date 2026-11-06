@@ -325,3 +325,33 @@ float64 of its first two parts, `chain2/anm_run.jsonl`), the same to those digit
 horizon rows' quadratic term above ElimO's switch, and its projection removed it, which is the mechanism the plain
 octo-double Newton at D 188 lacked.
 
+**(c) The control.** See below.
+
+**(d) One chain step and a restart: PASS** (`run_d.sh`, `d_step.log`, `d_restart.log`). The base polish, inside ElimO
+from chain2's four-part state at D 193.77, took three full steps, 1.00e-28 → 2.37e-34 → 8.93e-42, its first moving
+Delta by −9.19e-19 (its trial projected once). The octo-double series at the polished base (2991 s on 3 threads) has
+the record of chain2's last base to the printed digits: a_max 2.058, |z_N| 3.18e-25, ratios 246.4 220.9 106.5 3.4. The
+step at a = 0.5 re-seeded in 84 s, and the corrector converged in three full steps, 1.36e-19 → 7.52e-35 → 3.20e-51,
+in 518 s; the state `anm_pin3_D194.2746.npz` holds eight parts (`load_q` reads its first four, `has_o` is true). Its
+Delta, 1.69657465869794022 − 2.4348e-17, differs from (b)'s, 1.69657465869794022 − 2.4350e-17, by about 2×10⁻²¹:
+(b) holds the harmonics at the prediction's own values and plans at the prediction, the chain at the trend's values.
+The restart (`--steps 0`) from that state started at 5.96e-36, since its segments are planned at the state rather than
+at the step's re-seeded prediction, and converged in two steps to 2.85e-58, moving Delta by −6.25e-29. So a replanned
+segment plan moves the root by about 10⁻²⁸ in Delta at D 194.
+
+**(e) Unchanged paths.** See below.
+
+**(f) `check_numbers.py --selftest`: PASS**, 1043 of 1043 checks pass and each rejects a value shifted by one unit
+(`check_f.log`).
+
+## 6. Running the chain with the octo-double corrector
+
+T129's options with `--corrector od --tol_od 1e-40` in place of `--corrector qd --tol_qd 1e-28` (M = 32, `--jet_o 1`):
+
+    cd hp && python3 -u anm_run.py RAWDIR RAWDIR/TASK/chain --state STATE.npz --kfreeze 3 --N 24 --eps 1e-14
+        --h_max 0.5 --steps 300 --D_max 1000 --threads 18 --corrector od --tol_od 1e-40 --qd_it 12 --trend T75
+        --jet_o 1 --reseed 2 --reseed_q 1
+
+A quad-double state (four parts) as the start is polished in octo-double first. An octo-double Newton step costs
+3–5 min on 3 threads of the Mac against 20–40 s for a quad-double one, nearly all of it the Jacobian (`newton_o`'s
+timing, 355 s of 360 s at D 188 under load, `probe_time.py`, `probe_time.log`).
