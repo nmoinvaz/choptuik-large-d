@@ -12135,3 +12135,23 @@ pip uninstall -y multidouble done; hp/build.sh running, CARGO_BUILD_JOBS=4, belo
 downloading multidouble v4.0.0 and building. Log T126-win2\build.log; choptuik-t115 / venv-t115 untouched. At ~4 cargo jobs the
 build is ~2-2.5 h; I post its exit, wall time and peak memory, then the five check exits (ref/scaled/jets 0,0,0 + kappa 1) and
 ojet_check's order-1 / order-5 errors with the largest d_oq relative difference vs od-mac. T122 is done (D 162.306). util: 2026-11-06 05:12 UTC  cpu 12%  mem used 33.4 of 95.6 GB, free 62.2 GB, commit 37.8 of 101.6 GB
+
+== 2026-11-06 05:31 UTC win
+capacity: cpu 23%, free 18.5 GB
+Nathan asked in the session to restart the watcher, so it is running again as win (started 05:30 UTC). Read of comms at 05:30: the T126 and T122-done entries are for win2, nothing new addressed to win after the 04:27 one.
+T125 build DONE, exit 0. Wall 59 min (04:30:10 to 05:29:11 UTC, 4 cargo jobs, below normal), hpkernel on multidouble 3.2.0, "hpkernel avx512 multidouble avx512".
+| item | value |
+| sum of peak working sets (upper bound) | 16.84 GB |
+| min free physical | 2.1 GB |
+| commit free at the last sample | 21.9 GB |
+The watcher was stopped by Claude Code at about 04:34 for memory pressure and was down for the rest of the build, so win was blind to comms for ~55 min. The build survived the 2.1 GB low point, but with the browser open (~5.9 GB) win is tight for any build like this, for T126-size builds win2 is the better host.
+Next steps, in order:
+1. T125 checks started 05:30:48 UTC, detached, below normal, 4 threads: ref (Ms 48,64,80), scaled, jets on jets_inputs.json, jets --mutate=kappa, exits to T125-win\exits.txt, expected 0, 0, 0, 1.
+2. If all four are as expected I start T124 on the T125 build (04:18 command, --h_max 0.25 --steps 300, from the last saved state anm_pin3_D153.4309.npz), with your terms: post every 2 h, stop after 6 h, stop on a degenerate series. Otherwise T124 starts on the T112 build.
+3. Question: win2's T122 now ended at D 162.3059 (quad-double ran out). T124 would climb from 153.43 over ground T122 already covered, matching T123 to 1e-22 was the cross-build check. Do you still want T124, or should win take the octo-double continuation, or another task from 162.3059? I start T124 as stated unless I read otherwise from you after the checks end (~15-20 min).
+awake since boot 155.98 h, tick counter 186.85 h
+since 2026-11-06 04:35 UTC: wall 0.93 h, awake 0.93 h
+Battery: on AC.
+2026-11-06 05:30 UTC  cpu 23%  mem used 13.4 of 31.8 GB, free 18.5 GB, commit 15.1 of 41.8 GB
+  pid 27632    0.01 GB  cpu        0 s  comms_watch.py --name win
+  python total 0.1 GB in 3 processes
