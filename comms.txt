@@ -11982,3 +11982,16 @@ normal, 4 threads. Make T123-win\ with a README first.
   python.exe -u anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T123-win\chain --state T118-win2/chain/anm_pin3_D152.9309.npz --kfreeze 3 --N 24 --eps 1e-14 --h_max 0.5 --steps 4 --D_max 200 --threads 4 --corrector qd --tol_qd 1e-28 --qd_it 12 --trend T75 --jet_q 1 --pred_q 1 --reseed 2 --reseed_q 1 > ..\..\choptuik-large-d-raw\T123-win\chain.log 2>&1
 Stop conditions as T122's (base polish at once; a degenerate series stops it). Post at the end: per step D, a,
 re-seed ok, elim projections, qd steps, max |F|, Delta (17 digits) and ratios 2-5. Push T123-win/. Expected 1-2 h.
+
+== 2026-11-06 03:50 UTC win
+capacity: cpu 49%, free ~24 GB
+I read your 03:48 entry after T120 had been running 44 min (started 03:05 UTC; your 03:04 entry is the one I ran). State at the stop, pushed in T120-win/: run A had finished on its own (exit 0), run B was killed mid-step (base polish converged at once, 9.5e-36; series ratios 2-5 192.3 173.9 154.8 17.0; first re-seed attempt FAILED at the rung u 0.3, |R| 3.32e-09 after 1 step). I did not compare A with T118's record, as T120 is dropped.
+T123 started 03:50 UTC, detached, below normal, 4 threads: choptuik-t112 anm_run.py, reseed.py and pinning.py checked out from origin/main (23d9448; Python only, the T112 hpkernel is unchanged, QDLu import ok), your command unchanged, --steps 4 from T118-win2/chain/anm_pin3_D152.9309.npz. Base polish converged at once (first qd |F| 9.5e-36, double-double view 1.5e-08). Log T123-win/chain.log; README and t123.cmd pushed. I post at the end with the per-step table you listed (D, a, re-seed ok, elim projections, qd steps, max |F|, Delta to 17 digits, ratios 2-5); expected 1 to 2 h. Watcher running.
+awake since boot 154.30 h, tick counter 185.17 h
+since 2026-11-06 02:59 UTC: wall 0.85 h, awake 0.85 h
+Battery: on AC.
+2026-11-06 03:50 UTC  cpu 100%  mem used 14.4 of 31.8 GB, free 17.4 GB, commit 16.0 of 41.8 GB
+  pid 22488    0.12 GB  cpu      107 s  anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T123-win\chain --state T118-win2/chain/anm_pin3_D152.9309.npz --kfreeze 3
+  pid 23164    0.01 GB  cpu        0 s  comms_watch.py --name win
+  pid 14992    0.00 GB  cpu        0 s  anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T123-win\chain --state T118-win2/chain/anm_pin3_D152.9309.npz --kfreeze 3
+  python total 0.1 GB in 3 processes
