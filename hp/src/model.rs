@@ -19,6 +19,7 @@ use crate::field::{cs, cs_range, cs_w, horner, DMat, Fl, State, TangentTail};
 use crate::lane::{BaseLane, Dtn, Du, F8, Fu, Fun, Jet, Lane};
 use crate::qv::QV;
 use multidouble::dual::Param;
+use multidouble::native::OV;
 use crate::field::FieldSolve;
 use crate::linalg::{ld_for, DDLu};
 use rayon::prelude::*;
@@ -56,7 +57,7 @@ pub struct Ctx<const B: usize> {
     /// kappa tangent term dropped; 6 the centre series' scale wrong at one order (twice sigma for the order-7 terms
     /// built from order 6), the control of the scaled series' bit-identity (hp/highm_check.py scaled). The
     /// double-double lanes never read it. The quad-double lanes read QD_MUT_NOREFINE and QD_MUT_REFINE4 only (and `qsolve`
-    /// QD_MUT_STATE_DD).
+    /// QD_MUT_STATE_DD), and the octo-double lanes the same two (and `osolve` OD_MUT_STATE_QD).
     pub mutate: u8,
     /// Parts of the f64 Jacobian (TAN_F64 lanes) computed in double-double instead, rounded to f64; bit flags HDD_*
     /// (notes/LARGE_D_MIXED.md). 0, the default, changes nothing. The double-double lanes never read it.
@@ -71,15 +72,20 @@ pub struct Ctx<const B: usize> {
 /// `Ctx::f64_dd`: the horizon series' periodic solves (`psolve`) in double-double for the f64 lanes, value and
 /// tangents, with the full double-double LU factors instead of their hi parts
 pub const HDD_SOLVE: u8 = 1;
-/// `Ctx::mutate` for the quad-double lanes (the control of qsolve's checks): the horizon solves without their
-/// refinement, so only to the double-double LU's accuracy
+/// `Ctx::mutate` for the quad-double and octo-double lanes (the control of qsolve's and osolve's checks): the horizon
+/// solves without their refinement, so only to the double-double LU's accuracy
 pub const QD_MUT_NOREFINE: u8 = 7;
-/// `Ctx::mutate` for the quad-double lanes: four refinement steps, the reference of the refinement's convergence check
+/// `Ctx::mutate` for the quad-double lanes: four refinement steps, the reference of the refinement's convergence check;
+/// for the octo-double lanes eight steps, twice that, as their refinement takes twice the steps
 pub const QD_MUT_REFINE4: u8 = 8;
 /// refinement steps of a horizon solve in the quad-double lanes (VAL_QD): the double-double LU solves to about eps_dd times the
 /// condition number (pivots 1e-3..1e2), so two steps reach quad-double; a tangent lane takes one more, as its first
 /// solve ignores the derivative of the system
 const QD_REFINE: usize = 2;
+/// refinement steps of a horizon solve in the octo-double lanes (VAL_OD): twice QD_REFINE, as each step gains about
+/// cond 2^-104 and octo-double needs twice quad-double's bits (multidouble's `Lane::VAL_OD`); a tangent lane (`Ou`)
+/// takes one more, as for QD_REFINE
+const OD_REFINE: usize = 4;
 /// `Ctx::f64_dd`: no early end of the horizon series for f64 tangents (`TangentTail`); the series runs to ks
 pub const HDD_NOTAIL: u8 = 2;
 /// `Ctx::f64_dd`: the horizon block's column tasks (m_h, a_h, Delta) with `Du` lanes, i.e. the double-double
@@ -497,6 +503,34 @@ pub fn horizon_lus<const B: usize>(ctx: &Ctx<B>, a0: &Fl<DV, B>, delta: DD, par:
 /// (omega D + diag kappa) f = r with the LU at the values; for tangents the derivative of the system:
 /// A_t f_d = r_d - omega_d D f_v - kappa_d f_v, with A_t = A + lam (lu_t; the same LU when lam = 0).
 fn psolve<T: Lane, const B: usize>(ctx: &Ctx<B>, lu: &DDLu, lu_t: &DDLu, kappa: &Fl<T, B>, rhs: &Fl<T, B>, omega: T) -> Fl<T, B> {
+    if T::NJ > 0 && T::VAL_OD {
+        // an octo-double jet (multidouble 4.0.0's OJet): as the quad-double jet below, the right-hand side of order k
+        // in octo-double and each order's solve refined to octo-double, with twice the steps
+        debug_assert!(ctx.lam.hi == 0.0);
+        let steps = match ctx.mutate {
+            QD_MUT_NOREFINE => 0,
+            QD_MUT_REFINE4 => 8,
+            _ => OD_REFINE,
+        };
+        let om: Vec<OV> = (0..T::NJ).map(|j| omega.coef_od(j)).collect();
+        let k0 = kappa.coef_od(0);
+        return lu.solve_lanes_jet_refine_od(
+            rhs,
+            steps,
+            |j, x, r| (r - ctx.d.apply(x).mul_t(om[j])) - kappa.coef_od(j) * *x,
+            |r, x| *r - (ctx.d.apply(x).mul_t(om[0]) + k0 * *x),
+        );
+    }
+    if T::VAL_OD {
+        // octo-double values (OV) or value and tangent (Ou): refined as the quad-double lanes below (Moler's
+        // refinement with the residual in the lane's precision), to octo-double
+        let steps = match ctx.mutate {
+            QD_MUT_NOREFINE => 0,
+            QD_MUT_REFINE4 => 8,
+            _ => OD_REFINE + T::TANGENT as usize,
+        };
+        return lu.solve_lanes_refine_t(lu_t, rhs, steps, |f| *rhs - (ctx.d.apply(f).mul_t(omega) + *kappa * *f));
+    }
     if T::NJ > 0 && T::VAL_QD {
         // a quad-double jet: order by order as below, the right-hand side of order k in quad-double and each order's
         // solve refined to quad-double with the lane's omega_0 and kappa_0 (as the branch after this one)
