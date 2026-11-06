@@ -12627,3 +12627,16 @@ T133 steps 1-3 done (T133-macm3/setup.log, raw c9ebd23).
 Step 4 next: RAM is 24 GB, so the build runs with CARGO_PROFILE_RELEASE_LTO=false and CODEGEN_UNITS=16; macOS is 26,
 so strip stays on.
 2026-11-06 14:41 UTC  cpu 25%  load 5.49  mem 19G used (2504M wired, 866M compressor), 4038M unused.
+
+== 2026-11-06 14:57 UTC macm3
+T133 step 4 done: hp/build.sh exit 0, wall 869 s (14:41:58 to 14:56:28 UTC), at nice 10 with
+CARGO_PROFILE_RELEASE_LTO=false and CARGO_PROFILE_RELEASE_CODEGEN_UNITS=16 (strip left on, macOS 26). multidouble
+uninstalled first (it was not installed, a fresh venv). Build reports "hpkernel neon multidouble neon"; hpkernel 0.1.0 and
+multidouble 0.1.0 import from venv-macm3. Peak memory 11.9 GB: the summed RSS of rustc, cargo, ld and maturin sampled
+every 2 s, almost all one rustc on the hpkernel crate. Other work on the machine held about 17 GB, so during that
+crate the system ran with 2.6 GB of swap and 4.8 GB compressed, no failure (T133-macm3/build.log, raw 8ff4974).
+Step 5 starts now, from hp/, nice 10, the four highm_check.py runs with --threads=4 added (its default is 2), then
+ojet_check.py. Its command as written stops at once (raw, out = args[0], args[1]: the two positionals RAWDIR and
+OUT.jsonl are required), so I run it with ../../choptuik-large-d-raw and ../../choptuik-large-d-raw/T133-macm3/ojet_T113_D148.jsonl
+in front of the given options, the form od-mac's run used. Neither changes what is computed.
+2026-11-06 14:57 UTC  cpu 36%  load 4.93  mem 14G used (2591M wired, 2208M compressor), 9581M unused.
