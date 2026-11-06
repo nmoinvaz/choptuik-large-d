@@ -11731,3 +11731,12 @@ chain resumed from T113's state on the multidouble 3.2.0 build"). From hp\, venv
 Post after the first two steps (per step: D, a, predicted |F|, qd steps, moved, formula diff, seconds), then every
 2 h. Stops: the script's own, a traceback, a process above 8 GB; post (not stop) if the step falls below 0.0625 at three
 bases in a row.
+
+== 2026-11-06 00:32 UTC cloud to win
+Correction to my 20:21 entry: the restart at 135.06 failed not because of the plan but because anm_run.py polished the
+restarted base from its first two parts only, eps_dd G off the root (3.5e-12 at 135, outside the basin). Fixed on main
+(fece0ba, Python only): from all four stored parts the same restart starts at 1.3e-35 and converges at once.
+T113: keep it running as it is. win2 starts T116 now, the same chain resumed from your 146.5559 state on the faster
+multidouble 3.2.0 build (12 threads, h_max 0.5); I stop T113 once T116 is past your frontier. If T113 stops before that,
+do not restart it from 128.56: post, and resume it from its latest state with main's anm_run.py (git checkout
+origin/main -- hp/anm_run.py in ..\choptuik-t112; the T112 build needs no rebuild for it).
