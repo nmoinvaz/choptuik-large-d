@@ -100,7 +100,7 @@ import mpmath as mp  # noqa: E402
 import numpy as np  # noqa: E402
 from hpkernel.driver import make_solver, newton_solve, deflated_newton, delta_correction, newton_qd, qparts, rnorm, save, save_q, load_q  # noqa: E402
 from multidouble import dd_add, dd_horner, dd_scale, dd_norm, qd_add_dd  # noqa: E402
-from pinning import PinnedQ, PinnedSolver, band_coeffs, band_field, qd_axpy  # noqa: E402
+from pinning import HeldFit, PinnedQ, PinnedSolver, band_coeffs, band_field, qd_axpy  # noqa: E402
 from raw_out import require_raw  # noqa: E402
 from octo_corrector import ElimO, PinnedO, has_o, load_o, newton_od, o8, o8_of_q, q4_of_o, save_o, with_horizon  # noqa: E402,F401
 from reseed import ElimQ, Reseeder, StartNotProjected  # noqa: E402
@@ -229,6 +229,7 @@ def main():
                refine=1, probe=0, probe_c=0.0, plan_tol=1e-32, fix1=0, F_pred_max=0.0, horizon_alpha=0, fix1_qlu=0, jet_q=0, reseed=0, pred_q=0, reseed_q=0,
                save_pred=0, jet_o=0)
     opt.update(tol_od=1e-40)            # --corrector od (hp/octo_corrector.py)
+    opt.update(held_fit="")             # --held_fit FILE (pinning.HeldFit; notes/HELD_HARMONICS.md)
     for k in list(opt):
         f = "--" + k
         if f in args:
@@ -359,14 +360,31 @@ def main():
                         slopes[i][j] = float(sl)
         print("trend exponents (a, b) per held harmonic " + ", ".join(f"{k}: {sa:+.2f}/{sb:+.2f}" for k, (sa, sb) in zip(ks_held, slopes)), flush=True)
     n0 = float(D) - 2.0
+    # --held_fit FILE: the held values' increments from a fit of the full-system states (pinning.HeldFit), in place
+    # of the trend; relative to the base as the trend is (notes/HELD_HARMONICS.md)
+    hfit = HeldFit(opt["held_fit"]) if opt["held_fit"] else None
+    hfit_jets = {}
+    if hfit is not None:
+        if opt["trend"]:
+            raise SystemExit("--held_fit replaces --trend; give one of them")
+        print(f"held values from the fit {opt['held_fit']} (degree {hfit.meta.get('deg')}, {hfit.meta.get('n_points')} full-system states, "
+              f"D {hfit.meta.get('Dmin')}-{hfit.meta.get('Dmax')}), relative to the base", flush=True)
 
     def held_at(Dx):
         """the held coefficients at D = Dx on the trend, relative to the base"""
+        if hfit is not None:
+            return [(float(mp.mpf(a) + da), float(mp.mpf(b) + db)) for (a, b), (da, db) in zip(base_coeffs, hfit.increment(D, Dx, ks_held))]
         r = float(Dx) - 2.0
         return [(a * (r / n0) ** sa, b * (r / n0) ** sb) for (a, b), (sa, sb) in zip(base_coeffs, slopes)]
 
     def held_jet(j):
         """the order-j Taylor coefficients in h of the held values, v(D0) binom(s, j) n0^-j"""
+        if hfit is not None:
+            key = str(D)
+            if key not in hfit_jets:
+                hfit_jets.clear()
+                hfit_jets[key] = hfit.jets(D, N, ks_held)
+            return hfit_jets[key][j]
         out = []
         for (a, b), (sa, sb) in zip(base_coeffs, slopes):
             ca = math.comb if False else None  # noqa: F841
@@ -585,7 +603,7 @@ def main():
         if D >= opt["D_max"]:
             break
         t0 = time.time()
-        held_arg = (lambda j: band_field(held_jet(j), ks_held, M), rows) if any(any(sl) for sl in slopes) else None
+        held_arg = (lambda j: band_field(held_jet(j), ks_held, M), rows) if (any(any(sl) for sl in slopes) or hfit is not None) else None
         fix1 = None
         Zo = None
         if opt["jet_o"]:
@@ -621,7 +639,7 @@ def main():
         ratios = [norms[k - 1] / norms[k] if norms[k] else None for k in range(2, N + 1)]
         rec = dict(step=step, D0=float(D), D0_str=str(D), pin=kf, N=N, pivots=(float(pmin), float(pmax)), norms=norms, a_max=a_max,
                    t_coef=t_coef, refine_last=refine[-1], fix1=fix1, ratios_2_5=ratios[:4], trend=opt["trend"], slopes=slopes, held=ks_held,
-                   horizon_alpha=opt["horizon_alpha"], jet_q=opt["jet_q"], jet_o=opt["jet_o"])
+                   horizon_alpha=opt["horizon_alpha"], jet_q=opt["jet_q"], jet_o=opt["jet_o"], held_fit=opt["held_fit"])
         print(f"step {step}: D {mp.nstr(D, 12)}, pivots {pmin:.1e}..{pmax:.1e}, |z_1| {norms[1]:.2e}, |z_N| {norms[N]:.2e}, ratios 2-5 "
               + " ".join(f"{r:.1f}" for r in ratios[:4] if r) + f", a_max {a_max:.3f}, {t_coef:.0f} s", flush=True)
         if opt["probe"]:
