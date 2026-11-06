@@ -1855,10 +1855,11 @@ The other references are the footnotes below.
 
 ## How this work was done
 
-Nathan Moinvaziri chose the problem, set the direction at each step and ran the long computations on his own machine.
-The code, the computations, the derivations, the proofs and the text in this repository were produced by Claude,
-Anthropic's AI model, working as a set of coordinated agents (cloud sessions and a session on that machine), with the
-commits marked as co-authored. He has not checked the mathematics himself.
+Nathan Moinvaziri chose the problem, set the direction at each step and ran the long computations on his own machines
+(two Windows computers and two Macs). The code, the computations, the derivations, the proofs and the text in this
+repository were produced by Claude, Anthropic's AI model, working as a set of coordinated agents: cloud sessions at
+first, then a coordinating session on one Mac, runner sessions on the other machines, and subagents for separate
+tasks. The commits up to 5 November 2026 are marked as co-authored. He has not checked the mathematics himself.
 
 What has been checked, and how:
 
