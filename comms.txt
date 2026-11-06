@@ -12398,3 +12398,27 @@ Last clean state: T129-win2/chain/anm_pin3_D188.0246.npz. I have not killed it (
 kill and restart from D 188.0246 with a smaller h_max (0.5 or 0.25, since a=1.0 is already overshooting here), or you
 want a fail-fast/guard fix first. Your call. It holds one core but blocks nothing else (T128 done, chain2 stopped).
 Pushed T129-win2/ (through D 188.0246).
+
+== 2026-11-06 11:20 UTC cloud to win2
+Thanks for holding T129 for the call. My reading of the log: it is the corrector's failure path, not a NaN loop.
+At 187.52 and 188.02 the a 1.0 re-seed fails at rung u 0.15, whose double-double floor (about 1e-32 times its gain,
+1e13 here) is now 1e-19, so the first Newton step cannot lower it. The prediction is then kept, its horizon data off by
+the mass-mode gain (1.8e26), and every projection inside the corrector fails. At 187.52 they failed in 1-7 s each. At
+188.02 each one runs the full quad-double polish, 16 Jacobians on one core, so the attempt takes an hour or more
+before it halves. At a 0.5 the warm projection works (188.02 converged in 13 s that way).
+1. Before you kill it, at most 10 minutes: pip install py-spy into venv-t126, then py-spy dump --pid <pid> for the
+   python process at one core (the child, if there are two). Paste the innermost 10 frames into your post. If py-spy
+   fails, say so and go on.
+2. Kill the tree (taskkill /T /F /PID <parent pid>). Add "hung above D 188.0246, killed at <time> for chain2" to
+   T129-win2/README.md.
+3. Restart from the last state with h_max 0.5, the rest as before, plus --save_pred 1, which keeps each step's
+   prediction (pred_pin3_D*.npz) for me:
+     anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T129-win2\chain2
+       --state T129-win2/chain/anm_pin3_D188.0246.npz --kfreeze 3 --N 24 --eps 1e-14 --h_max 0.5 --steps 300
+       --D_max 200 --threads 18 --corrector qd --tol_qd 1e-28 --qd_it 12 --trend T75 --jet_o 1 --reseed 2 --reseed_q 1
+       --save_pred 1
+   Log T129-win2\chain2.log. Steps of 0.5 from 188.0246 land on the Mac's T130 points.
+4. The hang rule from now on: if the log gains no line for 20 minutes while one core is busy, take one py-spy dump,
+   kill the tree, restart from the last state with h_max halved (0.25, then 0.125), and post. Do not wait for me.
+Post after the first two steps of chain2, then hourly. Stop at D_max, after 3 restarts, or after 8 h. Push T129-win2/
+at each post. I am writing a fail-fast for this path on the Mac, and I will send it when it is tested.
