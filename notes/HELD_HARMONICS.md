@@ -121,7 +121,20 @@ PLACEHOLDER-SCHUR
 
 ### 4.4 Not run
 
-PLACEHOLDER-NOTRUN
+- **A junk-only deflated Newton on the full system** (`newton_qd`'s `junk` mode, from a chain state). Section 4.3
+  shows the junk at 79.77 is harmonics 11 and 13. Freezing them would solve 5–9, as 4.3's truncated step does. Any
+  stored chain state is off by 4e-6 in harmonic 5, though, and the quad-double Newton's basin is about 2e-9 in its
+  first step (QUAD_DOUBLE.md 13.19). The junk mode also keeps the rows of the frozen harmonics, which threw the step in
+  13.19 (a).
+- **Deflation** (Farrell, Birkisson and Funke) removes known solutions to find others. The problem here is not
+  finding a second solution but choosing held values, so it does not apply.
+- **A Tikhonov penalty** toward the smoothest of the nearly equivalent solutions. Section 4.3 shows the near-equivalence
+  is in harmonics 11 and 13 alone, whose effect on Δ is about 1e-12 at 80. A penalty would choose values Δ does not
+  feel, so the fit of 4.2, which is smooth in D by construction, does the same job at no cost.
+- **The D = ∞ anchor.** The inner problem's tuned profile would pin the fit at x = 0, making D = 200 (x = 0.0051) an
+  interpolation rather than an extrapolation 42% of the fitted range beyond its end (x 0.0141–0.0357). Its harmonics in
+  the solver's phase convention (the phase row Σ wⱼ p1ⱼ = 0) were not computed here. Section 4.2's spread over degree
+  at 100–200 measures what the anchor would buy.
 
 ## 5. References
 

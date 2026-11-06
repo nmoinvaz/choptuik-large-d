@@ -13,9 +13,10 @@ The bias of a held value h against the full system's h_full at the same D is, to
 s = dDelta/dh the pinned system's response (one quad-double LU, `sens`). The pinned solution with h = h_full is the full
 solution, so this is the whole bias to first order in h - h_full.
 
-    cd hp && python3 held_fit.py fit RAWDIR OUT.json [--deg=8] [--Dmin=30] [--Dmax=73.01]
+    cd hp && python3 held_fit.py fit RAWDIR OUT.json [--deg=8] [--deg_hi=DEG] [--Dmin=30] [--Dmax=73.01]
     cd hp && python3 held_fit.py sens RAWDIR OUT.json STATE [STATE ...] [--threads=2]
-    cd hp && python3 held_fit.py planted RAWDIR SENS.json [--deg=8] [--mutate=scale5]
+    cd hp && python3 held_fit.py planted RAWDIR SENS.json [--deg=8] [--deg_hi=DEG] [--mutate=scale5]
+    cd hp && python3 held_fit.py check RAWDIR FIT.json [--mutate=jet]
     cd hp && python3 held_fit.py series RAWDIR SENS.json FIT.json [--plant=0]
 
 `sens` (kernel needed) writes s at each state with the state's own p1 coefficients. `planted` (criteria fixed before
@@ -95,8 +96,9 @@ def full_states(raw):
     return res
 
 
-def fit(pts, deg, mutate=""):
-    """{key: Chebyshev coefficients} of sqrt(n) v in x = 1/n on the points' domain, and the domain"""
+def fit(pts, deg, mutate="", deg_hi=None):
+    """{key: Chebyshev coefficients} of sqrt(n) v in x = 1/n on the points' domain, and the domain. deg_hi: the degree
+    for harmonics 11 and 13 (deg if None), whose double-double values carry noise of 1e-8 to 1e-7"""
     n = np.array([float(r["D"]) - 2.0 for r in pts])
     x = 1.0 / n
     dom = [float(x.min()), float(x.max())]
@@ -105,15 +107,16 @@ def fit(pts, deg, mutate=""):
         y = np.sqrt(n) * np.array([r["c"][key] for r in pts])
         if mutate == "scale5" and key.startswith("5"):
             y = y * (1 + 1e-6)
-        c = np.polynomial.chebyshev.Chebyshev.fit(x, y, deg, domain=dom)
+        dk = deg_hi if (deg_hi is not None and int(key[:-1]) >= 11) else deg
+        c = np.polynomial.chebyshev.Chebyshev.fit(x, y, dk, domain=dom)
         out[key] = [float(v) for v in c.coef]
         res[key] = float(np.max(np.abs(c(x) - y) / np.sqrt(n)))
     return out, dom, res
 
 
-def write_fit(path, pts, deg, mutate=""):
-    coeffs, dom, res = fit(pts, deg, mutate)
-    d = dict(kind="held_fit", model="sqrt(n) v = Chebyshev series in x = 1/n, n = D - 2", deg=deg, domain=dom, coeffs=coeffs,
+def write_fit(path, pts, deg, mutate="", deg_hi=None):
+    coeffs, dom, res = fit(pts, deg, mutate, deg_hi)
+    d = dict(kind="held_fit", model="sqrt(n) v = Chebyshev series in x = 1/n, n = D - 2", deg=deg, deg_hi=deg_hi, domain=dom, coeffs=coeffs,
              n_points=len(pts), Dmin=float(pts[0]["D"]), Dmax=float(pts[-1]["D"]), max_residual=res,
              states=[os.path.relpath(r["path"], HERE) if r["path"].startswith(HERE) else r["path"].split("choptuik-large-d-raw/")[-1] for r in pts])
     with open(path, "w") as fh:
@@ -174,9 +177,10 @@ def main():
         sys.exit(__doc__)
     cmd, raw = args[0], args[1]
     deg = int(opts.get("deg", 8))
+    deg_hi = int(opts["deg_hi"]) if "deg_hi" in opts else None
     if cmd == "fit":
         pts = [r for r in full_states(raw) if float(opts.get("Dmin", 30)) <= r["D"] <= float(opts.get("Dmax", 73.01))]
-        d = write_fit(args[2], pts, deg)
+        d = write_fit(args[2], pts, deg, deg_hi=deg_hi)
         print(f"{args[2]}: degree {deg}, {d['n_points']} states D {d['Dmin']:.4f}-{d['Dmax']:.4f}; max residual per coefficient "
               + ", ".join(f"{k} {v:.1e}" for k, v in d["max_residual"].items()))
         return 0
@@ -225,7 +229,7 @@ def main():
         ok = True
         rows = []
         # P1: fit on every full state with D <= 71.0, predict the later quad-double ones
-        write_fit(tmp, [r for r in dd + qd if r["D"] <= 71.0 + 1e-9], deg, mutate)
+        write_fit(tmp, [r for r in dd + qd if r["D"] <= 71.0 + 1e-9], deg, mutate, deg_hi)
         hf = HeldFit(tmp)
         for r in [q for q in qd if q["D"] > 71.0 + 1e-9]:
             s, Ds = s_near(r["D"])
@@ -234,7 +238,7 @@ def main():
             ok &= abs(b) <= 1e-12
             rows.append(("P1 fit D <= 71.0", r["D"], b, abs(b) <= 1e-12, Ds))
         # P2: fit on the double-double states alone
-        write_fit(tmp, dd, deg, mutate)
+        write_fit(tmp, dd, deg, mutate, deg_hi)
         hf = HeldFit(tmp)
         for r in qd:
             s, Ds = s_near(r["D"])
@@ -261,7 +265,7 @@ def main():
         for r in qd:
             s, Ds = s_near(r["D"])
             rows.append((f"B2 trend's rule on dd {float(win[0]['D']):.2f}-{float(win[-1]['D']):.2f}", r["D"], bias(s, fn2(r["D"]), r["c"]), None, Ds))
-        print(f"degree {deg}, mutate '{mutate}'; bias = s . (h - h_full), s from the nearest of SENS.json")
+        print(f"degree {deg} (11 and 13: {deg_hi if deg_hi is not None else deg}), mutate '{mutate}'; bias = s . (h - h_full), s from the nearest of SENS.json")
         print("| method | D | bias in Delta | pass | s at D |")
         print("|---|---|---|---|---|")
         for name, D, b, p, Ds in rows:
