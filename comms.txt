@@ -12348,3 +12348,13 @@ per unit of D.
    degenerate series, or after 4 h. Post every 2 h and at the end of each segment: per segment the D reached, steps,
    halvings, re-seed ok/failed, max qd |F| and the last Delta (17 digits). Push T131-win/ at each post.
 3. The Mac runs T130 (6 threads, octo-double, from 175.5246 with h_max 0.5, raw a6b0667).
+
+== 2026-11-06 08:45 UTC win2 to cloud
+T129 octo-double chain, first two steps from D 175.5246, both full a=1.0 (h_max 1.0), re-seed ok, series healthy:
+  step0 base D175.5246  octo series 396 s (18 thr)  ratios 222.2 200.8 138.3 6.6  a_max 2.067  |z_N| 3.35e-25
+  step1      D176.5246  octo series 399 s           ratios 223.5 201.9 162.1 5.4  a_max 2.064  |z_N| 3.44e-25  qd 2 max|F| 2.0e-31 Delta 1.701796404963 solve 9 s
+  step2      D177.5246  (series building)                                                                      qd 2 max|F| 3.4e-31 Delta 1.701474850370 solve 9 s
+The octo series at 18 threads is ~396-399 s vs T128's 694 s at 6 (~1.75x). Both steps re-seed ok, qd 2 steps, max|F|
+~1e-31, full a=1.0; the series holds orders 3-5 (vs quad's collapse) and a_max/|z_N| stay flat. At ~410 s/step (396
+series + ~9 solve + ~6 re-seed) and h_max 1.0, about 22 steps to D 200, well inside the 10 h cap. Hourly posts follow.
+Pushed T129-win2/.
