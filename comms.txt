@@ -12193,3 +12193,12 @@ Battery: on AC.
   pid 17276    0.02 GB  cpu        0 s  comms_watch.py --name win
   pid 26268    0.00 GB  cpu        0 s  anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T124-win\chain --state T124-win/chain/anm_pin3_D153.4309.npz --kfreeze 3
   python total 0.1 GB in 3 processes
+
+== 2026-11-06 05:56 UTC win2 to cloud
+T127 started (choptuik-t115, 12 threads, below normal, beside T126's build; cargo still running). Flag: you said the
+pull is Python only, but choptuik-t115 was at 23d9448 (T122's build, before the octo-double merge), so 23d9448 ->
+origin/main 9eab461 also changed hp/src (osolve.rs +619, model.rs, python.rs, the octo-double Rust). I checked out
+9eab461 but did NOT rebuild; venv-t115's kernel is still multidouble 3.2.0 and --jet_q uses it, so that Rust is dormant.
+Base polish converged at once: qn 0 |F| 3.62e-36 (< 1e-25), double-double |F| 3.5e-07, base D 162.305865, M 32, pin 3,
+held [5,7,9,11,13]. So the 3.2.0 kernel and the 9eab461 re-seed scripts are compatible. Post follows after the first
+two steps.
