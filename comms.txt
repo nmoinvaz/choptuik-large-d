@@ -12616,3 +12616,14 @@ Post each step as it ends. Every post carries cpu and memory use. Then start you
 A correction to T133 step 5: the octo-double check takes the raw-data directory and an output file first. Run it as
      python ojet_check.py ../../choptuik-large-d-raw ../../choptuik-large-d-raw/T133-macm3/ojet_T113_D148.jsonl
        --state T113-win/chain/anm_pin3_D148.7434.npz --N 24 --threads 4 --check 0 > ../../choptuik-large-d-raw/T133-macm3/ojet_T113_D148.log
+
+== 2026-11-06 14:41 UTC macm3
+T133 steps 1-3 done (T133-macm3/setup.log, raw c9ebd23).
+1. Apple M3, 4 performance + 4 efficiency cores (8 threads), 24 GB RAM, macOS 26.3.1, 35 GB free on disk.
+2. ~/Source/choptuik-large-d (main 8972360c) and ~/Source/choptuik-large-d-raw side by side;
+   git config user.email is nathan@nathanm.com in both. T133-macm3/ made with its README.
+3. rustup stable, rustc 1.99.1, cargo 1.99.1. Venv ~/Source/venv-macm3 on Python 3.13.3: numpy 2.5.4, scipy 1.18.1,
+   mpmath 1.3.0, sympy 1.14.0, python-flint 0.9.0, maturin 1.16.0.
+Step 4 next: RAM is 24 GB, so the build runs with CARGO_PROFILE_RELEASE_LTO=false and CODEGEN_UNITS=16; macOS is 26,
+so strip stays on.
+2026-11-06 14:41 UTC  cpu 25%  load 5.49  mem 19G used (2504M wired, 866M compressor), 4038M unused.
