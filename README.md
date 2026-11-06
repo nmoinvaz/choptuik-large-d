@@ -630,16 +630,11 @@ Their supercritical branch and its continuously self-similar checks are in
 
 ## How the points are computed
 
-Above D ≈ 26 the f64 points lose precision: the condition that selects the period weakens with D (as a power of n in
-this solver, about n²² at D = 40–61; below), so rounding at 10⁻¹⁶ in the residual moves Δ by 10⁻⁷–10⁻⁶ at D = 30–40
-(through the sensitivity $`\max\lvert\partial\Delta/\partial F\rvert`$ of the
-[solver's checks](#checks-of-the-solver-hp)), and points far above D = 40 are out of reach. [`hp/`](hp/) (crate
-`hpkernel`) is a separate solver built for that regime, to settle the large-D behaviour with computed points rather than
-an assumed form. It works in double-double, and in quad- and octo-double where the large-D chain needs them, with its
-arithmetic from the crate [multidouble](https://github.com/nmoinvaz/multidouble). Its points are used in [The
-formula](#the-formula) (agreement and Δ∞), [Values](#values), the [candidate test](#closed-forms-tested-and-excluded),
-the [analyticity tests](#is-the-period-analytic-in-1d) and the large-D scaling ([How the solution scales with
-D](#how-the-solution-scales-with-d)).
+The points are computed by [`hp/`](hp/) (crate `hpkernel`), in double-double and, where the large-D chain needs them,
+in quad- and octo-double, with its arithmetic from the crate [multidouble](https://github.com/nmoinvaz/multidouble).
+Its points are used in [The formula](#the-formula) (agreement and Δ∞), [Values](#values), the [candidate
+test](#closed-forms-tested-and-excluded), the [analyticity tests](#is-the-period-analytic-in-1d) and the large-D scaling
+([How the solution scales with D](#how-the-solution-scales-with-d)).
 
 [ALGORITHM.md](ALGORITHM.md) explains how the solver works, at a high level and down to its data types: the
 unknowns and the residual, Newton's method, the continuation in D with its predictor, re-seed and corrector, the

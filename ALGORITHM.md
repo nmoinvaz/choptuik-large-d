@@ -54,7 +54,7 @@ z.
 
 ## 2. Solving one point
 
-Above D ≈ 26 the f64 points lose precision, so [`hp/`](hp/) (crate `hpkernel`) works in double-double and, where the large-D chain needs it, in quad-double and octo-double, with its arithmetic from the crate [multidouble](https://github.com/nmoinvaz/multidouble). Why the f64 points fail there is in the README's [How the points are computed](README.md#how-the-points-are-computed).
+[`hp/`](hp/) (crate `hpkernel`) works in double-double and, where the large-D chain needs it, in quad-double and octo-double, with its arithmetic from the crate [multidouble](https://github.com/nmoinvaz/multidouble).
 
 The unknowns are the fields at a few nodes in x, the centre and horizon data, and Δ, each field on M collocation points
 in τ over the half period. The residual shoots between the nodes: a series at the centre, Taylor steps of order 36
