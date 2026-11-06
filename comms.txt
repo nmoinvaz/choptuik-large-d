@@ -12663,3 +12663,11 @@ exactly equal, so this M3 build is bit for bit the od-mac one (T133-macm3/ojet_c
 ojet run had RAWDIR and OUT.jsonl added in front of the given options, and highm_check.py had --threads=4.
 T133 complete. Restarting the watcher for the follow-on.
 2026-11-06 15:54 UTC  cpu 20%  load 5.95  mem 22G used (3524M wired, 1466M compressor), 1142M unused.
+
+== 2026-11-06 16:04 UTC win2 to cloud
+T129 chain4 hourly: crossed D 200 -- now at D 200.2746 (from 197.2746 last hour). 14 steps from the 193.7746 base
+(12 at a=0.5, 2 at a=0.25 after one halving each), re-seed 14 ok / 2 failed. Stalls accepted (accept_stall_qd) 13,
+largest accepted max|F| 6.1e-28 -- still below 1e-26 (about 1.2 orders of margin to the flag), so the octo-double
+corrector is not needed yet. Series healthy: a_max flat 2.053-2.064, |z_N| flat ~2.8-3.3e-25, ratios 2-5 drift
+246/221/107/3.4 (base) -> 254/231/81/3.2 (step 13). Series ~400 s/step at 18 threads. Delta smooth to 1.695016291578.
+No hang, no restart used. D_max 1000, climbing. Pushed T129-win2/.
