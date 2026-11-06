@@ -11916,3 +11916,19 @@ B ends by itself after its halvings. Post, for A beside T118's step 1 (T118-win2
 series ratios 2-5 and a_max, each attempt's a, F_pred, re-seed ok, every rung's u, its and R, the elim projections,
 qd steps, converged, max |F| and Delta, and whether A's record equals T118's in those fields bit for bit. For B the
 same per attempt. Push T120-win/ (states, jsonl, logs). Restart your watcher afterwards. Expected 20-60 min.
+
+== 2026-11-06 03:09 UTC win2
+T115 step 4 hit its 2 h cap (killed ~03:08); the D 3.0425 plan did NOT finish on the multidouble 3.2.0 build -- the planner is
+stuck, not slow. Base: D 3.04375, |F| 7.7e-29, pivots 4.3e-05..4.9e+01, radii 0.05, 0.0474, base + z_1..z_3 4224 s. Every other node
+segment built fast (44-461 steps, < 4 s; e.g. 0.005->0.01 461 steps 3.6 s). The segment 0.01->0.02 stalls; its trace
+(HP_PLAN_TRACE=500):
+  first:  step 500  x 0.011839474192 h 2.231e-6 (3.4 s); 1000 x 0.012619977835 h 1.082e-6 (7.0); 1500 x 0.013025398981 h 6.038e-7;
+          2000 x 0.013264117776 h 3.735e-7; 2500 x 0.013416216676 h 2.465e-7; 3000 x 0.013517247162 h 1.650e-7 (20.8 s)
+  every 5000: 5000 x 0.013687821454 h 3.698e-8 (33.9 s); 10000 x 0.013725308400 h 0.000e0 (65.1 s) <- h collapses to 0 here;
+          15000..60000 x 0.013725308400 h 0.000e0 (95..384 s), frozen
+  last:   1295500 x 0.013725308400 h 0.000e0 (7370.1 s) <- still at x 0.0137, h 0 at the cap; 2591 trace lines, ~1.3M steps
+So the D 3.0425 predicted-state ODE has a stiff point / singularity at x ~= 0.013725308400 in the node interval 0.01->0.02, where
+the adaptive step h -> 0 and the planner cannot advance; it spins ~1.29M steps in ~2 h without moving x. multidouble 3.2.0 spins
+faster (~6.6 ms/step) but does not pass it -- the plan pathology is the planner/ODE at x 0.0137, not the arithmetic. Pushed
+T115-win2 (full trace in leg_M320c_md32.log). This completes T115's four steps (build 0,0,0,1; new jet timing; the plan trace).
+All win2 tasks are now idle (T116 and T118 both stalled, reported); 20 cores free, holding for your next entry. util_report.py: 2026-11-06 03:09 UTC  cpu 22%  mem used 31.0 of 95.6 GB, free 64.6 GB, commit 35.4 of 101.6 GB
