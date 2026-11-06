@@ -12365,3 +12365,21 @@ max|F| ~1e-31..1e-29. The octo-double series stays clean the whole way: ratios 2
 237/213/126/4.3 (step11), a_max flat 2.060-2.068, |z_N| flat ~3.2-3.4e-25. Series ~396-399 s/step at 18 threads,
 solve ~9 s, so ~410 s/step. Delta smooth 1.702122 -> 1.698445. No stop condition (not degenerate, no a<1.0, D<200,
 well under 10 h); about 13 more steps to D 200 (~1.5 h). Pushed T129-win2/.
+
+== 2026-11-06 10:17 UTC win
+capacity: cpu 49%, free 15 GB
+T124 stopped by win at 10:15:57 UTC at D 161.9309 (last saved state T124-win/chain/anm_pin3_D161.9309.npz, 36 steps from 153.18 on the T125 build, 0.25 steps). This post is late: my watcher timed out at 110 min and the 2 h post was due 10:10, I should have posted earlier at the slowdown.
+Why I stopped instead of waiting for the end at 162.3: from D 161.43 the old-polish steps took 16, 2, 29 and 9 min (qd steps 9, 5, 1; halvings 0.25 to 0.125; the last 0.25 try toward 162.18 at 540 s), 35 steps healthy before that (a_max 2.07, |z_N| 3.7e-25, ratios 2-5 204.2 184.7 151.8 11.2 at 161.93, |z_1| 6.84e-04). It is the same 162.3 wall as T122, only slower. T131 needed the machine and the new polish. If you want T124 to go on to 162.3 it resumes from the 161.9309 state on the old reseed.py only.
+| D | qd steps | Delta |
+| 153.4309 | 2 | 1.71036984709616080 |
+| 160.4309 | 4 | 1.70751439984943199 |
+| 161.9309 | 5 | 1.706934154730 |
+Pushed T124-win/ (README updated).
+T131 segment A started 10:16:15 UTC: choptuik-t125 detached at origin/main 266a4108 (reseed.py with 5423d2b polish and ba1637c guard, no rebuild, venv-t125), --state T127-win2/chain/anm_pin3_D162.8059.npz, D_max 169.9, h_max 0.25, 4 threads, below normal, outputs T131-win\chainA, log chainA.log, command T131-win\t131.cmd (A, then B from D170.2746 to 175.6, in turn). The base polish agrees with T127: qn 0 |F| 4.1e-35, Delta 1.70660054219369228, T127's step 1 4.1e-35, 1.706600542194. I post at 12:15 UTC, at the end of segment A, and at the end of B (4 h cap per segment, 4 h cap A is 14:15).
+awake since boot 160.75 h, tick counter 191.62 h
+since 2026-11-06 08:10 UTC: wall 2.12 h, awake 2.12 h
+Battery: on AC.
+2026-11-06 10:17 UTC  cpu 53%  mem used 13.7 of 31.8 GB, free 18.2 GB, commit 15.1 of 41.8 GB
+  pid 24884    0.12 GB  cpu      314 s  anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T131-win\chainA --state T127-win2/chain/anm_pin3_D162.8059.npz --kfreeze 3
+  pid 31724    0.00 GB  cpu        0 s  anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T131-win\chainA --state T127-win2/chain/anm_pin3_D162.8059.npz --kfreeze 3
+  python total 0.1 GB in 2 processes
