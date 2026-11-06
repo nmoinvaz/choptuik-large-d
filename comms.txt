@@ -11818,3 +11818,26 @@ steps confirm the restart fix works; it is the D ~150 convergence (the qd Newton
 Your call on D ~150: a smaller h_max, higher M, a gentler tol_qd schedule, or accept it.
 T115 step 4 is still spinning at x 0.013725308400 (h 0, step 367000, ~2168 s); 2 h cap ~03:05 UTC, full slowest-segment trace
 then. util_report.py: 2026-11-06 01:43 UTC  cpu 18%  mem used 31.8 of 95.6 GB, free 63.8 GB, commit 36.2 of 101.6 GB
+
+== 2026-11-06 02:10 UTC win
+capacity: cpu 2%, free ~25 GB
+T117 ended 02:09 UTC (exit 0; started 01:25 after the multidouble Python reinstall at 78efd7e, QDLu import ok, hpkernel untouched). Pushed (T117-win/, state chain/anm_pin3_D152.3059.npz). Base polish converged at once: first qd |F| 1.33e-29 (below your 1e-25), double-double view 3.3e-09.
+Your criterion (a step of 0.125 or more converges at least twice in the first 6 steps): met, 6 of 6 steps converged at a >= 0.125 (five at 0.5, one at 0.25). T116's plain corrector at 149.56 converged only at a = 0.031.
+Per attempt (from D 149.5559; re-seed = the --reseed 2 --reseed_q 1 elimination; "ok / FAILED" is its own verdict, a FAILED one keeps the prediction):
+  step  D start   a      re-seed  qd steps  converged   moved    qd s
+  0     149.5559  0.500  FAILED   4         yes         2.3e-16  72
+  1     150.0559  0.500  ok       3         yes         5.2e-16  45
+  2     150.5559  0.500  ok       5         yes         2.9e-16  203
+  3     151.0559  0.500  FAILED   5         yes         6.1e-16  142
+  4     151.5559  0.500  FAILED   3         NO (1.2e-20 vs tol 2.5e-20 not met, 1.2e-08 dd view)  3.2e-16  405
+  4     151.5559  0.250  FAILED   7         yes         2.5e-16  222
+  5     151.8059  0.500  FAILED   6         yes         6.3e-16  89
+Series each step (ratios 2-5, a_max): 149.56 187.9 169.6 154.1 20.9 / 2.060, 150.06 188.5 170.3 150.0 20.6 / 2.061, 150.56 189.2 171.1 152.2 19.3 / 2.061, 151.06 189.9 171.6 163.9 17.4 / 2.062, 151.56 190.5 172.0 159.2 18.2 / 2.063, 151.81 190.9 172.3 154.7 18.7 / 2.064; 224 to 228 s each. The elimination re-seed itself failed in 5 of 7 attempts, with "rung u 0.3000 not converged" at |R| 1.7e-23 to 2.1e-09 after 1 to 6 steps, and ok in the other 2 (steps 1 and 2).
+One thing to weigh before reading the pass as the elimination's gain: in 5 of the 6 converged attempts the re-seed FAILED and the plain quad-double Newton converged from the kept prediction, at a = 0.5 in 4 of them (steps 0, 3, 5 and the a = 0.25 of step 4). So from this state the plain qd Newton already converges at 0.5, unlike T116's at 149.56 on the 3.2.0 build. What differs from T116 is the build (T112, multidouble 2.1.0 vs 3.2.0), the restart from all four parts (fece0ba) and the new start, so I cannot say the re-seed helped. A control would answer it: the same command without --reseed, 6 steps, ~45 min, 4 threads. I have not started it and wait for your word (the pilot's own criterion is met either way).
+Idle now; watcher running.
+awake since boot 152.63 h, tick counter 183.50 h
+since 2026-11-06 01:20 UTC: wall 0.83 h, awake 0.83 h
+Battery: on AC.
+2026-11-06 02:10 UTC  cpu 16%  mem used 13.6 of 31.8 GB, free 18.2 GB, commit 15.3 of 41.8 GB
+  pid 26884    0.01 GB  cpu        1 s  comms_watch.py --name win
+  python total 0.0 GB in 1 processes
