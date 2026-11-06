@@ -12905,3 +12905,30 @@ Step 1 (a=0.25) restored the series (a_max 1.785 -> 2.048, ratio-3/4 48.6/2.6 ->
 the full a=0.5, the octo corrector converging to octo 9.5e-45 (well under tol_od 1e-40). re-seed 3 ok / 0 failed, |z_N|
 back to ~3e-25. Delta 1.692989138342 at step 2. So the clean-restart option (D 207.7746) is moot; I leave chain5 on
 the D 207.8996 line. Each octo step is ~400 s series + 60-560 s corrector. Hourly posts follow. Pushed T129-win2/.
+
+== 2026-11-06 20:40 UTC macm3
+T134b first two steps done (chain_od.log, chain_od/, raw c8405aa). Every octo-double Newton converged, no stall.
+Base polish at 195.5246 from T134's stall-rule state: octo Newton 4 steps (131, 102, 101 s), max|F| 2.5e-28 -> 3.0e-80.
+| step | series (4 threads) | a | re-seed | octo Newton steps (s) | max\|F\| | to D | Delta (eight parts, 17 digits) | corrector |
+| 0 | 1825 s | 0.5 | ok (57 s) | 3 (208, 102, check) | 7.2e-54 | 196.0246 | 1.69611040533790137 | 417 s |
+| 1 | 1874 s | 0.5 | ok (129 s) | 3 (220, 118, check) | 8.9e-52 | 196.5246 | 1.69597926098512968 | 456 s |
+About 2350 s per step. Series healthy: a_max 2.053, 2.056, |z_N| 3.31e-25, 3.21e-25. (The log's "stall accepted" on the
+od attempt lines is the double-double |F| of the first two parts against tol, not a stall: on 2 converged both times.)
+The stall rule's cost, measured exactly at one point: at D 195.5246 the octo polish of T134's stall-rule state (qd stall
+2.5e-28) moved Delta by +2.46e-19 (on 0 +2.46e-19, on 1 -1.9e-34, on 2 -9.2e-57): stall-rule Delta
+1.696242211902519686809, octo-converged 1.696242211902519687055 (four and eight parts summed in mpmath, 50 digits).
+For comparison, T134's and chain4's stall-rule states at that D differ by 1.1e-17, so the two paths differ by more than
+the stall's own cost here; I have not looked for the cause. The same polish on chain4's 195.5246 state (about 6 min
+here) would measure chain4's cost directly, if you want it.
+No same-D comparison past 195.5246: chain4's grid is 195.7746, 196.2746, ..., a quarter step off this path's. I tried
+interpolating chain4's Deltas (6-point Lagrange) to this path's points, but its leave-one-out error on chain4's own
+points is 4e-13 to 2e-12, far above the 1e-17 scale, so those differences (2.9e-14, 1.6e-13) measure nothing.
+Next post at 2 h. 16 h cap at 10:55 UTC tomorrow.
+2026-11-06 20:40 UTC  cpu 72%  load 7.00  mem 23G used (2248M wired, 1202M compressor), 545M unused.
+
+== 2026-11-06 21:01 UTC win2 to cloud
+T129 chain5 (octo corrector) hourly: D 207.8996 (handoff) -> 211.6496, 8 steps (step 1 at a=0.25 to recover the
+degraded handoff, then all a=0.5). The octo corrector converges in ~3 octo Newton steps to octo |F| 9.5e-45 to 2.0e-41
+(well under tol_od 1e-40). re-seed 6 ok / 4 failed. Series healthy and stable: a_max 2.05-2.07, |z_N| ~2.4-3.2e-25,
+ratios 2-5 ~270/236/47/2.5. Each step ~400 s octo series + ~60-200 s corrector (~8-10 min/step). Delta smooth to
+1.692301553854. No hang, no three-halvings. Pushed T129-win2/.
