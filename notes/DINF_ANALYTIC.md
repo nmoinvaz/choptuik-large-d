@@ -16,7 +16,8 @@ frequency of the inner problem, *conditional* on Braaksma's theorem and on a har
 Matching eq. (9)'s $`\pm 0.00006`$ needs $`M = 9`$ explicit plus that lemma. Even then, the identification of the inner
 zero with $`\lim_{D\to\infty}\Delta(D)`$ rests on Conjecture 1. A paper of 4 Nov 2026 (Ecker, Ecker, Grumiller,
 arXiv:2611.07007) also has no analytic value. It extrapolates its $`D \le 200`$ solutions to 1.643911,
-$`1.7\times10^{-5}`$ above eq. (7), a discrepancy recorded in §5.
+$`1.7\times10^{-5}`$ above the finite-$`D`$ limit of eq. (4), a discrepancy recorded in §5. (Equation numbers are
+the physics paper's.)
 
 Scripts: `solver/inner_analytic/`. Logs of the runs quoted here are in the session scratchpad
 (`dinf_analytic/`); every number below is printed by a command in §7.
@@ -58,7 +59,7 @@ Y_s + (VY)_u = Y_{uu}, \qquad V_u = \tfrac14 Y^2 .
   harmonic map flow, $`\partial_s g = -2\,\mathrm{Rc} + 2\alpha\,d\phi\otimes d\phi`$ (Müller [M12]), with
   $`\alpha = 1`$ and target $`\mathbb R`$, on a one-dimensional domain, where $`\mathrm{Rc} = 0`$; with
   $`\phi = \sqrt2\,\psi`$ it is List's flow [L08] ($`\alpha = 2`$). This is a reformulation, recorded for orientation.
-  The results on those flows are for closed manifolds of dimension at least 2, and none bears on discretely self-similar
+  The results on those flows are for closed manifolds, and none that was read bears on discretely self-similar
   solutions on a line.
 
 ### 1.2 Criterion and controls (fixed before the runs)
@@ -87,9 +88,10 @@ is Burgers' equation for $`V`$ with a free forcing $`g(s)`$, which is linearizab
 mutations swap the two source terms (`--mutate=real_to_forced`, `--mutate=forced_to_real`). Each flips its verdict and
 makes the script exit non-zero (7 of 9 verdicts as expected).
 
-For (A0) the log term is explicit. With $`Y = 2/\psi + y_2\psi + b\,\psi\log\psi + \dots`$, the order-$`\psi^0`$
-equations give $`b = k_1/3`$, so every solution with $`k_1 \ne 0`$ has a movable logarithmic branch point. In (A) the
-double resonance does the same with a free function of $`s`$ (`log_check` in `painleve.py`).
+For (A0) and (A1) the failed compatibility condition means that a solution with $`k_1 \ne 0`$ (or $`k \ne 1`$) needs a
+$`\psi\log\psi`$ term in $`Y`$: a movable logarithmic branch point. In (A) the double resonance does the same with a
+free function of $`s`$. `log_check` in `painleve.py` adds $`\psi\log\psi`$ terms at $`r = 2`$ and finds the log
+coefficient free for (A) and forced to 0 for the forced Burgers control.
 
 (B) and (C) are not decisive by themselves. The lapse gauge $`c \to T'(t)c`$ can move such branch points, and Rozali and
 Way's exact oscillaton, for which $`c^2 = (1 - \epsilon^2e^{-2\omega^2s})/(1 - w^2)`$, $`w = \tanh\phi`$, has exactly
@@ -99,10 +101,10 @@ point symmetries.
 ### 1.3 Lie point symmetries and exact solutions
 
 The Lie point symmetries of this system with polynomial infinitesimals of degree up to 3 were computed in
-`matter/struct_symmetry.py` (matter/STRUCTURE.md, the multiplet with $`\ell = 0`$, which is this system in potential
-form): $`s`$- and $`t`$-translation, the scaling $`(t, s) \to (at, a^2s)`$, the shift $`\phi \to \phi + k`$ and the time
-reparametrizations. In (A) the reparametrizations are gone and the translations and the scaling remain, with the
-Galilean shift $`u \to u + \kappa s`$, $`V \to V + \kappa`$. The reductions are therefore
+`solver/matter/struct_symmetry.py` (matter/STRUCTURE.md, the multiplet with $`\ell = 0`$, which is this system in
+potential form): $`s`$- and $`t`$-translation, the scaling $`(t, s) \to (at, a^2s)`$, the shift $`\phi \to \phi + k`$
+and the time reparametrizations. In (A) the reparametrizations are gone and the translations and the scaling remain,
+with the Galilean shift $`u \to u + \kappa s`$, $`V \to V + \kappa`$. The reductions are therefore
 - $`s`$-translation: (A0); travelling waves $`Y(u - \kappa s)`$ are (A0) after the Galilean shift;
 - the scaling: (A1), the continuously self-similar solutions.
 
@@ -273,7 +275,7 @@ Braaksma's theorem, as Thm A does for $`M = 1`$. This answers reading 2 of §0. 
 |---|---|---|---|
 | a box of radius $`10^{-3}`$ | $`10^{-3}`$ | ≲ 4 | 7 (margin about 13–16) |
 | eq. (9), $`\pm0.00006`$ in $`\Delta`$ | $`3.6\times10^{-5}`$ | ≲ 0.15 | 9 |
-| eq. (7), $`\pm1.5\times10^{-8}`$ | $`9\times10^{-9}`$ | ≲ $`4\times10^{-5}`$ | 13–15 |
+| eq. (4), $`\pm1.5\times10^{-8}`$ | $`9\times10^{-9}`$ | ≲ $`4\times10^{-5}`$ | 13–15 |
 
 - *Work:* $`M = 5`$ is a queued run. $`M = 7`$ and $`M = 9`$ need the existing machinery extended to 25–31 complex
   unknowns with multiprecision Lohner steps (weeks of runs and engineering). The lemma needs (★): unknown effort, the
@@ -321,7 +323,7 @@ Costin–Tanveer are not repeated).
   *Not there:* any analytic value of $`\Delta_\infty`$ (it is an input of the model), Stokes phenomena, the heat
   equation. Rozali and Way appear only as a future matching target, and a first-principles derivation "will likely
   require to add instanton corrections" $`e^{-1/\varepsilon}`$. **A discrepancy:** their $`D = \infty`$ entry, 1.643911,
-  is $`1.7\times10^{-5}`$ above the finite-$`D`$ limit of eq. (7), 1.643893746 ± 1.5×10⁻⁸, about 1100 times its bar,
+  is $`1.7\times10^{-5}`$ above the finite-$`D`$ limit of eq. (4), 1.643893746 ± 1.5×10⁻⁸, about 1100 times its bar,
   while their finite-$`D`$ values agree with ours in all six printed decimals at $`D = 20`$, 40 and 50 (README table:
   2.112080154580, 1.888568197910, 1.841659503007) and with the repository's formula
   (solver/data/formula_coefficients.json, fitted on $`D \le 30.2`$) to $`3\times10^{-6}`$ at $`D = 200`$ (1.695090
@@ -349,8 +351,8 @@ Costin–Tanveer are not repeated).
 - **[L08] List**, *Evolution of an extended Ricci flow system*, Comm. Anal. Geom. 16 (2008) 1007–1048, DOI
   10.4310/CAG.2008.v16.n5.a5 (verified, MaRDI/zbMATH record). **[M12] Müller**, *Ricci flow coupled with harmonic map
   flow*, Ann. Sci. ÉNS 45 (2012) 101–142, DOI 10.24033/asens.2161, arXiv:0912.2907 (verified, Numdam and arXiv). Its
-  flow: "∂g/∂t = −2Rc + 2α∇ϕ⊗∇ϕ, ∂ϕ/∂t = τ_g ϕ", List's being "N ⊆ ℝ" and α ≡ 2. Neither treats a one-dimensional
-  domain.
+  flow: "∂g/∂t = −2Rc + 2α∇ϕ⊗∇ϕ, ∂ϕ/∂t = τ_g ϕ", List's being "N ⊆ ℝ" and α ≡ 2. The part of [M12] read (its
+  first 100 000 characters, through a summarizing fetch) does not treat a one-dimensional domain; [L08] was not read.
 - **Methods:** [ARS80] Ablowitz, Ramani, Segur, J. Math. Phys. 21 (1980) 715; [WTC83] Weiss, Tabor, Carnevale, J. Math.
   Phys. 24 (1983) 522; [JKM82] Jimbo, Kruskal, Miwa, Phys. Lett. A 92 (1982) 59 (Kruskal's simplification); [LLL82]
   Lenstra, Lenstra, Lovász, Math. Ann. 261 (1982) 515. These four were not re-verified in this session *(unverified)*.
@@ -381,15 +383,15 @@ From the repository root, with python-flint 0.9.0, mpmath 1.3.0, sympy 1.14.0:
 ```
 python3 solver/inner_analytic/painleve.py                       # 9/9 verdicts as expected, exit 0 (seconds)
 python3 solver/inner_analytic/painleve.py --mutate=real_to_forced   # 7/9, exit 1
-python3 solver/inner_analytic/heat_forms.py                     # identities hold, exit 0; --mutate=quarter fails
-python3 solver/inner_analytic/oscillaton_lin.py                 # single mode 5e-32, two modes 3.6e-2; --mutate=coef exit 1
-```
-
-python3 solver/inner_analytic/sigma1_hp.py 4 2400 1280 --mf 10:30 > RUN_A.json   # about 12 min on a free core python3
-solver/inner_analytic/sigma1_hp.py 4 3000 1280 --mf 10:30 > RUN_B.json   # about 14 min python3
-solver/inner_analytic/sigma_lll.py RUN_A.json RUN_B.json                   # 44.77 digits, d = 42, no relation, exit 0
-python3 solver/inner_analytic/sigma_lll.py RUN_A.json RUN_B.json --mutate=perturb  # planted lost, exit 1 python3
-solver/inner_analytic/sigma1_hp.py 1.0 1500 1280 --wf --mf 8:20             # omega_inf: the stored 20 digits
+python3 solver/inner_analytic/heat_forms.py                     # identities hold, exit 0
+python3 solver/inner_analytic/heat_forms.py --mutate=quarter    # an identity fails, exit 1
+python3 solver/inner_analytic/oscillaton_lin.py                 # single mode 5e-32, two modes 3.6e-2, exit 0
+python3 solver/inner_analytic/oscillaton_lin.py --mutate=coef   # planted single mode fails, exit 1
+python3 solver/inner_analytic/sigma1_hp.py 4 2400 1280 --mf 10:30 > RUN_A.json   # 12 min (719 s) here
+python3 solver/inner_analytic/sigma1_hp.py 4 3000 1280 --mf 10:30 > RUN_B.json   # 14 min (845 s) here
+python3 solver/inner_analytic/sigma_lll.py RUN_A.json RUN_B.json                   # 44.77 digits, d = 42, exit 0
+python3 solver/inner_analytic/sigma_lll.py RUN_A.json RUN_B.json --mutate=perturb  # planted lost, exit 1
+python3 solver/inner_analytic/sigma1_hp.py 1.0 1500 1280 --wf --mf 8:20           # omega_inf: the stored 20 digits
 ```
 
 The two $`\omega = 4`$ records (RUN_A, RUN_B) are in the session scratchpad, `dinf_analytic/sigma1_w4_J2400.json` and
