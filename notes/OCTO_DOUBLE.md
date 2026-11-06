@@ -309,3 +309,18 @@ and from step 2 on it converges linearly to its floor near 1e-36. The two LUs' s
 1.3e-9). The octo-double Delta lies 8.5×10⁻²² from the stored state's, the move rungdiag's quad-double floor run made
 from it.
 
+**(b) The wall: PASS** (`check_b.log`). The re-seed of `pred_pin3_D194.2746.npz` succeeded in 83 s and left pinned
+max |F| 5.16e-20 in octo-double. The octo-double corrector then converged in 3 steps, all full:
+
+| step | max \|F\| | \|dz\| | dDelta | projections |
+|---|---|---|---|---|
+| 0 | 5.16e-20 → 1.34e-34 | 6.7e-19 → 9.7e-35 | +6.69e-19 | the trial projected (u0q) |
+| 1 | 1.34e-34 → 1.84e-41 | 9.7e-35 → 4.2e-57 | −4.24e-35 | skipped |
+| 2 | 1.84e-41, converged | | | |
+
+629 s on 3 threads from the prediction, the re-seed included. The LU's pivots are 1.7e-11 .. 1.6e27. Delta is
+1.69657465869794019449316000856225522831, and the quad-double stall's recorded Delta is 1.6965746586979402 (17 digits,
+float64 of its first two parts, `chain2/anm_run.jsonl`), the same to those digits. The first step's trial carried the
+horizon rows' quadratic term above ElimO's switch, and its projection removed it, which is the mechanism the plain
+octo-double Newton at D 188 lacked.
+
