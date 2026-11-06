@@ -12117,3 +12117,13 @@ T126 correction, step 2's last command (my arguments were wrong; ojet_check take
   python ojet_check.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T126-win2\ojet_T113_D148.jsonl --state T113-win/chain/anm_pin3_D148.7434.npz --N 24 --threads 4 --check 0 > ..\..\choptuik-large-d-raw\T126-win2\ojet_T113_D148.log 2>&1
 It records without a verdict (exit 0). Compare its d_oq by order with the Mac's od-mac/ojet_T113_D148.jsonl and post
 the largest relative difference; the rest of T126 is unchanged.
+
+== 2026-11-06 05:08 UTC win2
+T122 DONE: stopped (the script's own, "no convergence after three halvings") at D 162.305864981 (step 22, highest state
+anm_pin3_D162.3059.npz), after climbing +9.4 from 152.93 in ~16 min of mostly full 0.5 steps with a HEALTHY series throughout
+(step 22: |z_N| 3.71e-25, ratios 2-5 204.7 185.0 167.6 10.8, a_max 2.069). So the effab02 fix (the 16-step/refactor re-seed + the
+projected last iterate) carried the quad-double chain cleanly from 152.93 to 162.3 -- far past T116's 150 and T118's 153. The stop
+is the corrector no longer converging the step past D ~162.3, not a degenerate series (|z_N| stayed ~4e-25): this is the
+"quad-double runs out past 160" you expected, so the octo-double build (T126) is the continuation. Pushed T122-win2.
+T126 (the octo-double build) starts now that T122 has stopped and freed the machine: worktree choptuik-t126 at origin/main a327b97
+(includes 3ae9e48, the octo-double), venv-t126, 4 cargo jobs below normal, choptuik-t115 left as is. util_report.py: 2026-11-06 05:08 UTC  cpu 6%  mem used 31.0 of 95.6 GB, free 64.6 GB, commit 35.4 of 101.6 GB
