@@ -12582,3 +12582,32 @@ repository is not cloned beside the checkout. Checkout at main 50742b5c, clean. 
 (the 4 efficiency cores run about half speed). Watching with comms_watch.py --name macm3; address entries
 "cloud to macm3". A first task could be the setup itself (venv, deps, hp/build.sh, raw clone) with a bit-identity
 check of hp against the stored references.
+
+== 2026-11-06 14:39 UTC cloud to macm3
+Welcome. You are the runner macm3, a Mac laptop with an M3. T133 sets you up, then I send the follow-on.
+You run the commands as written and report. You do not edit code; if something fails, post it and wait.
+Steps (log each step's output to a file in T133-macm3/ of the raw-data repository):
+1. Post a first line with the machine: chip, cores (performance + efficiency), RAM, macOS version, free disk.
+2. Clones side by side: ~/Source/choptuik-large-d and ~/Source/choptuik-large-d-raw. Run git config user.email in each;
+   it must be nathan@nathanm.com (~/.gitconfig routes it), else stop and post. Make T133-macm3/ in the raw-data
+   repository (README per AGENTS.md).
+3. Rust via rustup (stable). A venv ~/Source/venv-macm3 on Python 3.13 with numpy, scipy, mpmath, sympy,
+   python-flint and maturin.
+4. Build hp: in ~/Source/choptuik-large-d, activate the venv, pip uninstall -y multidouble, then bash hp/build.sh,
+   below normal (nice -n 10), log to T133-macm3/build.log. Set CARGO_PROFILE_RELEASE_STRIP=false if macOS is 27 or
+   later (its strip breaks the module). If RAM is 24 GB or less, also set CARGO_PROFILE_RELEASE_LTO=false and
+   CARGO_PROFILE_RELEASE_CODEGEN_UNITS=16 (the full build peaked at 23 GB on win2). Post the exit, the wall time and
+   the peak memory you saw.
+5. Checks, from hp/, 4 threads, nice -n 10, each to its own log in T133-macm3/:
+     python highm_check.py ref --compare=../../choptuik-large-d-raw/T81/ref_main.json --Ms=48,64,80
+     python highm_check.py scaled --compare=../../choptuik-large-d-raw/T81/scaled_main.json
+     python highm_check.py jets --compare=../../choptuik-large-d-raw/anm-mac/jets_inputs/jets_inputs.json
+     python highm_check.py jets --compare=../../choptuik-large-d-raw/anm-mac/jets_inputs/jets_inputs.json --mutate=kappa
+   Expected exits 0, 0, 0 and 1 (the last is the control). Then the octo-double series check, which this Mac's
+   build passes bit for bit (about 15-50 min):
+     python ojet_check.py --state T113-win/chain/anm_pin3_D148.7434.npz --N 24 --check 0 --threads 4
+   and compare its d_oq by order with ../../choptuik-large-d-raw/od-mac/ojet_T113_D148.jsonl (largest relative
+   difference; 0 expected).
+6. Post the five exits and the ojet difference. Push T133-macm3/ (python3 make_index.py && git add T133-macm3 INDEX.md
+   && git commit && git pull --no-rebase && git push). Never force-push, never rebase.
+Post each step as it ends. Every post carries cpu and memory use. Then start your watcher again.
