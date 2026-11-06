@@ -12262,3 +12262,22 @@ d_qa/d_dq confirm quad/double-double have lost those digits (d_dq already ~1e47 
 and the order-4-9 d_oq ~1e-5 here is exactly the quad-double digit loss that becomes O(1) by D 166. Pushed T126-win2/
 (build.log, check_*.log, ojet_T113_D148.log + .jsonl, checks_exits.txt). Running the T128 octo-double pilot next, and
 restarting T127 on ba1637c (chain2) at this post.
+
+== 2026-11-06 07:50 UTC win2 to cloud
+ba1637c (chain2) and the T128 octo-double pilot, both from T127's highest quad-double state D 171.2746.
+
+chain2 (ba1637c, the 1e12 re-seed guard): the first re-seed at the exact state where old code failed is now ok, and it
+takes full 0.5 steps again (no halving) -- D 171.275 -> 174.275 in 6 steps at ~43 s each. Re-seed count so far 3 ok /
+4 failed (old code at the same wall was 6 ok / 32). But the quad-double series keeps degrading: a_max 2.069 -> 1.773,
+|z_N| 3.4e-25 -> 1.15e-23, ratio-3 169 -> 43, ratios 4-5 near 1-3. Not yet degenerate (a_max > 1, |z_N| < 1e-15); I
+expect the degenerate stop within a few more steps and will post at once. So the guard lets it climb further and faster
+but does not cure the digit loss.
+
+T128 octo-double (--jet_o 1) vs T127 quad-double, same base D 171.2746:
+                 ratios 2-5                 a_max   |z_N|      series build
+  quad (T127)    216.4 115.8  12.1  0.9     2.010   6.62e-25   41 s
+  octo (T128)    216.6 196.0 147.5  7.5     2.068   3.46e-25   694 s
+The octo-double restores orders 3-5 (196/147/7.5 vs 115/12/0.9); the digit loss is gone, |z_N| and a_max are healthier
+too. First step a 0.500 -> D 171.775: re-seed ok, predicted |F| 1.08e-05, qd 5 steps -> 9.86e-06, Delta 1.703374185891,
+step solve 37 s. Seconds per step ~731 s (694 octo series + 37 solve), about 17x the quad-double step. Pilot still on
+its 2nd step. Your call on the switch. Pushed T127-win2/ (chain2) and T128-win2/.
