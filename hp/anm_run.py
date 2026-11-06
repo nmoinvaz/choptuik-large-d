@@ -65,10 +65,11 @@ checks the quad-double jet against the quad-double residual on a stored state.
 --jet_o 1 builds the series in octo-double (notes/OCTO_DOUBLE.md): the octo-double jet (Solver.residual_jet_o,
 multidouble 4.0.0's OJet; M = 32 only) through the octo-double LU at the base (Solver.newton_o, once per base, at the
 base's four quad-double parts promoted to eight), the held rows added in octo-double (od_add_dd). The prediction is
-summed by Horner's rule in octo-double (od_axpy) and rounded to quad-double, where the quad-double corrector starts, so
-it needs --corrector qd (or od) and with --reseed also --reseed_q 1; it replaces --jet_q, --pred_q and --fix1, and --probe does
-not apply. Its series errs by about the octo-double unit times G^2 where the quad-double one errs by the quad-double
-unit times G^2, which reaches the chain's tolerance near D 170-185; hp/ojet_check.py compares the two on stored states.
+summed by Horner's rule in octo-double (od_axpy) and rounded to quad-double, where the quad-double corrector starts
+(--corrector od starts from all eight parts), so it needs --corrector qd or od and with --reseed also --reseed_q 1; it
+replaces --jet_q, --pred_q and --fix1, and --probe does not apply. Its series errs by about the octo-double unit times
+G^2 where the quad-double one errs by the quad-double unit times G^2, which reaches the chain's tolerance near D
+170-185; hp/ojet_check.py compares the two on stored states.
 --reseed 1 replaces each prediction's horizon data (m_h, a_h) by those of the regular solution through its last node
 before the residual, the plan and the corrector (hp/reseed.py, notes/RESEED.md: the node integrated toward the horizon,
 the series inverted on the rungs u0/32 .. u0 in the m and a rows); 0, the default, changes nothing. Records carry each

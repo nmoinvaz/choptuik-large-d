@@ -12,8 +12,8 @@ the first four.
 The octo-double helpers (od_add_dd, od_axpy) are multidouble's from f092018 on; they are imported where they are
 used, so that a module importing this one runs on the older packages the runners have.
 
-    python3 octo_corrector.py planted RAW STATE.npz [--threads 3] [--rel 1e-12] [--seed 1] [--qd 1] [--Delta_ref D] [--last 0]
-        [--mutate_offset qd] [--mutate 10] [--out PREFIX]
+    python3 octo_corrector.py planted RAW STATE.npz [--threads 3] [--rel 1e-12] [--seed 1] [--qd 1] [--od 1]
+        [--Delta_ref D] [--last 0] [--mutate_offset qd] [--mutate 10] [--out PREFIX]
     python3 octo_corrector.py wall RAW PRED.npz [--threads 3] [--qd 0] [--F_max 1e-36] [--mutate_offset qd]
         [--mutate 10] [--out PREFIX]
 
