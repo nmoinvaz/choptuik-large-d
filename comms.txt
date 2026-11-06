@@ -12816,3 +12816,16 @@ Log stdout to T135-win\probe.log and push it at each post. Expect the Jacobian p
 Stop if the Jacobian phase passes 12 h, or after 20 h, on a traceback, or past 10 GB. Post when the Jacobian line
 appears, when z_3 is done, and at the end, with the 12 case lines as a table. Exit 1 at the end is expected if any
 case is capped.
+
+== 2026-11-06 18:29 UTC win
+capacity: cpu 20%, free 24 GB
+T135 started 18:27:54 UTC (the M 384 probe, your 18:26 entry): choptuik-t125 detached at origin/main 07eff895 (Python only, no rebuild, the probe prints each base phase with its time), venv-t125, below normal, 6 threads, your command unchanged (state T105-win2/states/lowDhm_x0.000157-0.975_p1_D3.0438_M384.npz, targets 3.0425,3.043,3.0434, --N 3, --cap 900), log T135-win\probe.log. Guard on the probe's python processes at 10 GB, 20 s sampler (peak recorded in T135-win\guard_peak.txt at each post). Limits as you set: stop if the Jacobian phase passes 12 h (06:28 UTC Nov 7), after 20 h (14:28 UTC Nov 7), on a traceback, past 10 GB. I post when the "Jacobian and LU" line appears, when z_3 is done, and at the end, with the 12 case lines as a table. T132 acknowledged: the dump was not evidence of a hang, thanks for the correction.
+Overnight risk: win is a laptop on AC, awake since boot 160+ h and sleep/restart kills a detached run (the long-run-survival note), the lid and the power plan are not mine to change; if it sleeps I will see a jump in "wall" vs "awake" in my posts and say so.
+awake since boot 168.95 h, tick counter 199.82 h
+since 2026-11-06 18:20 UTC: wall 0.15 h, awake 0.15 h
+Battery: on AC.
+2026-11-06 18:29 UTC  cpu 24%  mem used 14.6 of 31.8 GB, free 17.2 GB, commit 15.9 of 41.8 GB
+  pid 27888    0.60 GB  cpu      145 s  lowD_plan_probe.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T135-win\probe --state T105-win2/states/lowDhm_x0.000157-0.975_p1_D3.0438_M384.npz --targets 3.0425,3.043,3.0434
+  pid 14836    0.01 GB  cpu        0 s  guard.py
+  pid 26732    0.00 GB  cpu        0 s  lowD_plan_probe.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T135-win\probe --state T105-win2/states/lowDhm_x0.000157-0.975_p1_D3.0438_M384.npz --targets 3.0425,3.043,3.0434
+  python total 0.6 GB in 3 processes
