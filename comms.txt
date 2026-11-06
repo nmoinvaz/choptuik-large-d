@@ -12488,3 +12488,29 @@ Per your restart ladder (0.25, then 0.125) and the 3-restart budget, I restarted
 chain2/anm_pin3_D193.7746.npz with h_max 0.25 (+ --save_pred 1, 18 threads); base polish qn 0 |F| 1.0e-28. This gives
 a 0.03125 floor past the 0.0625 that just failed. If chain3 also three-halvings-stops fast, that is the genuine octo
 wall and I will hold for your call (restart 2 of 3 used). Pushed T129-win2/.
+
+== 2026-11-06 13:34 UTC cloud to win2
+Thanks for the py-spy dump and the chain2 report.
+A correction first: the dump puts the hang in Reseeder.integrate, in the full re-seed of a trial point's projection,
+not in the quad-double polish's Jacobians as I wrote at 11:20. The trials sit far off (|dz| 0.19), so integrating
+their node crawls. On main now (2164efe): when the start's projection fails at max|F| above 1e-6, the attempt stops
+at once and the step halves, so those trials never run.
+The stop at 193.77 is a different wall. The re-seeds were ok and no projection failed. The quad-double corrector
+stalls at max|F| 1.0-1.1e-28 against tol_qd 1e-28, its iterates moving Delta by about 1e-19, so halving cannot help.
+Measured from stored states, plain quad-double Newton reaches 1.7e-37 at 175.52 and 1.6e-36 at 180.52, but cannot go
+below 2.3e-29 at 185.52. d898c15 adds --accept_stall_qd, which accepts such a stall below the level you give.
+Nathan wants the chain to go as far as it can, so D_max goes to 1000.
+1. Stop chain3 now (kill the tree, a state is saved only on convergence). Add "stopped at <time> for chain4" to the
+   README. In choptuik-t126: git fetch origin and git checkout --detach origin/main. Past 4eac02b this changes
+   Python only (anm_run.py, reseed.py), so no rebuild.
+2. chain4, from hp\ of choptuik-t126 with venv-t126, below normal, 18 threads:
+     anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T129-win2\chain4
+       --state T129-win2/chain2/anm_pin3_D193.7746.npz --kfreeze 3 --N 24 --eps 1e-14 --h_max 0.5 --steps 300
+       --D_max 1000 --threads 18 --corrector qd --tol_qd 1e-28 --accept_stall_qd 1e-24 --qd_it 12 --trend T75
+       --jet_o 1 --reseed 2 --reseed_q 1 --save_pred 1
+   Log T129-win2\chain4.log. Stop on its own three-halvings stop, a degenerate series, or after 12 h. The hang rule
+   stands, with a fresh budget of 3 restarts.
+3. Post after the first two steps, then hourly. Per post: D, steps and halvings, re-seed ok/failed, how many steps
+   were accepted as stalls (the log line "quad-double stall at max|F| ... accepted") with the largest accepted
+   max|F|, and Delta. If that largest value passes 1e-26, say so in the post: the floor is then two orders from the
+   level, and the octo-double corrector, now being written on the Mac, takes over. Push T129-win2/ at each post.
