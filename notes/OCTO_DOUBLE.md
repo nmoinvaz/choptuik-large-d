@@ -225,13 +225,14 @@ A full step raises max |F| by fourteen orders in all three, so that rise is the 
 quad-double LU's smallest pivot is 24 times the octo-double one's too small, and its step in Delta is wrong by 45%.
 Four refinement steps of the horizon solves (QD_REFINE is 2) recover part of it. The quad-double LU's smallest pivot
 falls from 3.7e-9 at D 175.52 to 1.0e-13 at 193.77 (`rungdiag/qd_floor.log`), 3.7×10⁴ times, while its largest grows
-600 times. A reading consistent with this, not tested further, is that the quad-double Jacobian's error, of order
+600 times. The octo-double LU's smallest pivot is 1.3e-9 at 180.52 (quad-double 1.2e-9), 1.5e-10 at 188.02 (6.4e-12)
+and 2.5e-11 at 193.77 (1.0e-13; `check_a.log`, `step0.log`, `d_step.log`), so the two part ways between 180 and 188. A reading consistent with this, not tested further, is that the quad-double Jacobian's error, of order
 eps_qd G² (5×10⁻¹² at 188), approaches the weak direction's pivot (1.5×10⁻¹⁰ in octo-double), so the Newton iteration
 loses its contraction in that direction. Neither the plan's truncation nor the held offset (formed exactly in
 double-double, its rounding in the measured |F| about 10⁻³⁵) is the cause. In octo-double eps_od G² is about 10⁻⁷⁵.
 
 **The octo-double step needs damping there too.** Plain `newton_od` from the same state (`step0_od.py`, stopped after
-its first step, `step0_od188.log`) rejected the full step and the half step by its dz test and took lam 1/4: |dz| 1.2e-19
+its first step, `step0_od188.log`) rejected the full and the half step by its dz test and took lam 1/4: |dz| 1.2e-19
 → 8.1e-20, max |F| 9.75e-29 → 2.73e-15, in 782 s (three octo-double Newton steps on 3 threads). So the state at D 188,
 which the quad-double corrector left 1.2×10⁻¹⁹ off in Delta, lies outside the full step's basin in the weak direction
 even with an exact step. At 175.52 and 180.52 the converged floor runs moved Delta by 2.3×10⁻²⁴ and 8.5×10⁻²² in all.
@@ -266,11 +267,11 @@ Step 0 found no dependence on the segment plan's tolerance, so the corrector has
 
 ### 5.3 Checks and their criteria (fixed before the runs)
 
-- (a) Planted truth, `octo_corrector.py planted RAW T129-win2/chain/anm_pin3_D180.5246.npz`: the converged state with its
-  centre data and its nodes but the last moved by 10⁻¹² relative (random signs, sizes 0.5–1, seed 1) is the start, on
-  the state's own pinned system. Pass: the octo-double corrector (ElimO, newton_od, tol 1e-40) converges with the
+- (a) Planted truth, `octo_corrector.py planted RAW T129-win2/chain/anm_pin3_D180.5246.npz`. The start is the
+  converged state with its centre data and its nodes but the last moved by 10⁻¹² relative (random signs, sizes 0.5–1,
+  seed 1), on the state's own pinned system. Pass: the octo-double corrector (ElimO, newton_od, tol 1e-40) converges with the
   octo-double pinned max |F| below 1e-40, and its Delta agrees with the quad-double corrector's from the same start
-  (ElimQ, newton_qd to tol 1e-45 in 12 steps) to 10⁻³⁰. The brief moved every node. A last node moved by 10⁻¹²
+  (ElimQ, newton_qd to tol 1e-45 in 12 steps) to 10⁻³⁰. The task as set moved every node. A last node moved by 10⁻¹²
   leaves the regular family by about G·10⁻¹² at the horizon, and the start's projection then failed (`probe_a.py`:
   max |F| 3.62e-12, projection 'failed' in 173 s), so the last node stays at the truth; `--last 1` moves it too.
 - (b) The wall, `octo_corrector.py wall RAW T129-win2/chain2/pred_pin3_D194.2746.npz`: the stored prediction where
