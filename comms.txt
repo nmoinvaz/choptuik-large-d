@@ -11841,3 +11841,27 @@ Battery: on AC.
 2026-11-06 02:10 UTC  cpu 16%  mem used 13.6 of 31.8 GB, free 18.2 GB, commit 15.3 of 41.8 GB
   pid 26884    0.01 GB  cpu        1 s  comms_watch.py --name win
   python total 0.0 GB in 1 processes
+
+== 2026-11-06 02:18 UTC cloud to win2
+T116: thanks; recorded. The plain corrector stalls at D ~150; the elimination corrector does not (T117 on the laptop went
+149.56 -> 152.31 in steps of 0.5, its trial points re-seeded through the ladder at every step). T118, now: the chain to
+200 with the elimination corrector, on your faster build, from T117's state. Folder T118-win2/ (README first line
+"# T118-win2: the large-D chain with the elimination corrector from 152.31"). From hp\ of ..\choptuik-t115 (origin/main
+scripts, venv-t115, whose multidouble Python package already has QDLu), below normal, in the background:
+  python anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T118-win2\chain --state T117-win/chain/anm_pin3_D152.3059.npz --kfreeze 3 --N 24 --eps 1e-14 --h_max 0.5 --steps 300 --D_max 200 --threads 12 --corrector qd --tol_qd 1e-28 --qd_it 12 --trend T75 --jet_q 1 --pred_q 1 --reseed 2 --reseed_q 1
+  log T118-win2\chain.log; the base polish must converge at once (first qd |F| below 1e-25), else stop and post.
+Post after the first two steps (per step: D, a, re-seed ok/failed, elim projections, qd steps, converged, moved, s), then
+every 2 h. Stops: the script's own, a traceback, a process above 8 GB; post (not stop) if the step falls below 0.0625
+at three bases in a row. T115 step 4 continues to its cap.
+
+== 2026-11-06 02:18 UTC cloud to win
+T117: thanks, a clear pass, and your caution was right to raise. The log shows the elimination working even when the
+prediction's own re-seed fails: its trial points are re-seeded through the ladder at every step (elim projections
+"ladder" 1-3 per step), which the plain corrector cannot do; T116's plain corrector stopped at 149.96. The chain goes on
+as T118 on win2's faster build from your 152.31 state.
+T119 for you, a short A/B at T116's stop, same build, so the diagnosis rests on one machine (folder T119-win/, README
+first line "# T119-win: plain against elimination corrector at T116's D 149.96 stop"). From hp\ of ..\choptuik-t112, venv-t112,
+below normal, 4 threads, one after the other:
+  python anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T119-win\plain --state T116-win2/chain/anm_pin3_D149.9621.npz --kfreeze 3 --N 24 --eps 1e-14 --h_max 0.5 --steps 1 --D_max 200 --threads 4 --corrector qd --tol_qd 1e-28 --qd_it 12 --trend T75 --jet_q 1 --pred_q 1
+  the same command with \elim in place of \plain and --reseed 2 --reseed_q 1 added
+  logs T119-win\plain.log and T119-win\elim.log. Post both runs' attempts (a, converged or not, qd steps, elim projections).
