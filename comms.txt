@@ -11680,3 +11680,35 @@ e8e7b6f) predates: it has residual_jet (double-double) but not residual_jet_q. S
 old build lacks the method. Do you want the old timing on residual_jet (which both builds have) instead, a different old build, or
 is the new-build table enough? Reporting, not fixing. I am starting step 4 (the D 3.0425 plan trace on the new build) now, since it
 is independent of step 3. Pushed T115-win2. util_report.py: 2026-11-05 23:54 UTC  cpu 6%  mem used 31.0 of 95.6 GB, free 64.6 GB, commit 35.5 of 101.6 GB
+
+== 2026-11-06 00:04 UTC win
+capacity: cpu 49%, free ~18 GB
+T113 is at D 146.5559 (step 36 series done), 3 h 42 min since the 20:22 UTC restart, no stop, no traceback, largest process 0.09 GB. Pushed (T113-win/chain.log, chain/ with the state up to the last accepted step). 36 accepted steps, every one at a = 0.5 (0 below 0.5), 36 failed a = 1 trials (~95 s each). Steps since my 22:14 post (first 18 are in it):
+  D          pred |F|   qd  formula diff  moved    s
+  138.0559   6.59e-11   4   -2.3e-06      1.2e-19  39
+  138.5559   7.30e-11   4   -2.3e-06      1.6e-19  38
+  139.0559   9.96e-11   4   -2.3e-06      1.7e-19  39
+  139.5559   1.11e-10   4   -2.3e-06      1.5e-19  39
+  140.0559   1.51e-10   4   -2.4e-06      1.7e-19  38
+  140.5559   1.64e-10   4   -2.4e-06      3.0e-19  38
+  141.0559   2.64e-10   5   -2.4e-06      3.6e-18  47
+  141.5559   2.88e-10   4   -2.4e-06      7.4e-19  38
+  142.0559   2.65e-10   4   -2.4e-06      1.5e-18  38
+  142.5559   4.28e-10   4   -2.4e-06      1.3e-18  38
+  143.0559   3.13e-10   5   -2.5e-06      3.9e-18  48
+  143.5559   6.44e-10   4   -2.5e-06      1.1e-18  39
+  144.0559   6.48e-10   5   -2.5e-06      1.5e-17  48
+  144.5559   9.93e-10   6   -2.5e-06      1.9e-17  65
+  145.0559   7.67e-10   5   -2.5e-06      2.2e-17  48
+  145.5559   7.53e-10   4   -2.5e-06      1.4e-18  38
+  146.0559   9.52e-10   5   -2.6e-06      1.3e-17  48
+  146.5559   1.59e-09   6   -2.6e-06      1.8e-17  66
+Drift to watch, no failure: the predicted |F| grows ~2x per 1.5 in D (7e-11 at 138 to 1.6e-9 at 146.6), the qd steps go from 4 to 5 and 6, and "moved" (how far the corrector moves from the prediction) rose from ~1e-19 to ~1e-17 from D 144. The series ratios 2-5 at D 146.56 are 183.9 166.2 158.7 22.2 (33.9 at 137.56, 46.1 at 128.56), so order 5 is thinning. Each step still ends in "stall accepted" at the tolerance. Next post ~02:15 UTC, or at once on a stop, a traceback, or three bases in a row below 0.0625.
+awake since boot 150.54 h, tick counter 181.41 h
+since 2026-11-05 22:13 UTC: wall 1.85 h, awake 1.85 h
+Battery: on AC.
+2026-11-06 00:04 UTC  cpu 52%  mem used 14.0 of 31.8 GB, free 17.8 GB, commit 15.6 of 41.8 GB
+  pid 13704    0.10 GB  cpu    40282 s  anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T113-win\chain --state anm-mac/pred_q/A2/anm_pin3_D128.5559.npz --kfreeze 3
+  pid 3176     0.01 GB  cpu        0 s  comms_watch.py --name win
+  pid 22052    0.00 GB  cpu        0 s  anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T113-win\chain --state anm-mac/pred_q/A2/anm_pin3_D128.5559.npz --kfreeze 3
+  python total 0.1 GB in 3 processes
