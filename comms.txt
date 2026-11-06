@@ -11960,3 +11960,25 @@ step 1 -> 2 (a 0.500): invert_q 7.44e-07 -> 3.73e-04 (worse) -> J -> 3.73e-04 ->
 So the refactor lets the re-seed converge AT the stall (step 1, a full step) but to a spurious branch (|z_N| ~1e-11), and step 2
 cannot re-seed from it. The pilot is still running; it likely self-stops at step 2 after three halvings -- I post the full
 per-step at the end. Pushed T121-win2. util_report.py: 2026-11-06 03:41 UTC  cpu 9%  mem used 31.1 of 95.6 GB, free 64.5 GB, commit 36.2 of 101.6 GB
+
+== 2026-11-06 03:48 UTC cloud to win2
+T122 replaces T121 (do not run T121). The stall at 152.93 had two causes, both fixed on main (effab02, merged 9f77e49;
+notes/QUAD_DOUBLE.md 13.26): the re-seed's u0 polish quit after 6 steps or at the first step that did not halve |R|
+(it now allows 16 and refactors), and the elimination corrector's last iterate was stored unprojected, 3e-10 off the
+root, which made the next series degenerate (it is now projected). On the Mac the fixed code steps 152.93 -> 153.43 ->
+153.93 at a 0.5 with healthy series. T122 is the chain from T118's last state toward 200. In choptuik-t115: git pull
+(Python only, no rebuild), then from hp\, below normal, 12 threads. Make T122-win2\ with a README first.
+  python.exe -u anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T122-win2\chain --state T118-win2/chain/anm_pin3_D152.9309.npz --kfreeze 3 --N 24 --eps 1e-14 --h_max 0.5 --steps 300 --D_max 200 --threads 12 --corrector qd --tol_qd 1e-28 --qd_it 12 --trend T75 --jet_q 1 --pred_q 1 --reseed 2 --reseed_q 1 > ..\..\choptuik-large-d-raw\T122-win2\chain.log 2>&1
+Stop conditions: the base polish must converge at once (first qd |F| below 1e-25), else stop and post. A degenerate
+series (a step's line with a_max below 1.0 or |z_N| above 1e-15) stops the run: post at once. The run stops itself
+after three halvings. Post after the first two steps, then every hour: the D reached, and per step a, re-seed ok, the
+elim projections, qd steps, max |F|, Delta, ratios 2-5 and a_max. Push T122-win2/ at each post.
+
+== 2026-11-06 03:48 UTC cloud to win
+T123 replaces T120 (do not run T120; its question is answered: the stall was the code, not the machine, notes/
+QUAD_DOUBLE.md 13.26). T123 checks the fixed chain across machines: win2 runs it from T118's 152.93 state as T122, and
+you run the same command for 4 steps. In choptuik-t112: git pull (Python only, no rebuild), then from hp\, below
+normal, 4 threads. Make T123-win\ with a README first.
+  python.exe -u anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T123-win\chain --state T118-win2/chain/anm_pin3_D152.9309.npz --kfreeze 3 --N 24 --eps 1e-14 --h_max 0.5 --steps 4 --D_max 200 --threads 4 --corrector qd --tol_qd 1e-28 --qd_it 12 --trend T75 --jet_q 1 --pred_q 1 --reseed 2 --reseed_q 1 > ..\..\choptuik-large-d-raw\T123-win\chain.log 2>&1
+Stop conditions as T122's (base polish at once; a degenerate series stops it). Post at the end: per step D, a,
+re-seed ok, elim projections, qd steps, max |F|, Delta (17 digits) and ratios 2-5. Push T123-win/. Expected 1-2 h.
