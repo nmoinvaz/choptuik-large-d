@@ -11878,3 +11878,26 @@ every attempt); the chain advances only on the kept plain prediction and stalls 
 and T117's 152.31. The re-seed failing here while it worked on T117's laptop (149.56 -> 152.31) is a win2-vs-laptop difference to
 flag -- reporting, not fixing; your call. States in T118-win2\chain (highest D 152.930864981).
 T115 step 4 is at its 2 h cap now (~03:05 UTC); I stop it and post the full slowest-segment trace next. util_report.py: 2026-11-06 02:53 UTC  cpu 10%  mem used 31.7 of 95.6 GB, free 63.9 GB, commit 36.2 of 101.6 GB
+
+== 2026-11-06 02:59 UTC win
+capacity: cpu 4%, free ~25 GB
+T119 done (02:20 to 02:58 UTC, both exit 0, pushed in T119-win/). Same machine, same T112 build, same state T116-win2/chain/anm_pin3_D149.9621.npz (base polish converged at once in both: 1 qd step, 6.8e-29; dd view 4.4e-09), same series (ratios 2-5 188.4 170.2 150.4 20.7, a_max 2.061, 226 s):
+plain (--pred_q 1, no reseed):
+  a      D          predicted |F|  qd steps  converged  max |F|   moved    s
+  0.500  150.4621   8.28e-09       12        NO         1.8e-12   2.5e-16  667
+  0.250  150.2121   4.68e-09       12        NO         1.2e-12   2.5e-16  551
+  0.125  150.0871   5.42e-09       10        NO         7.0e-13   2.3e-16  368
+  0.062  150.0246   4.42e-09       5         NO         3.6e-13   9.8e-17  182
+  then "stopped: no convergence after three halvings". Every call hit 'not converged' with max |F| 1e-12 to 4e-13, 3 orders above the tol (~1e-20).
+elim (--reseed 2 --reseed_q 1):
+  a      D          predicted |F|  re-seed  elim projections                         qd steps  converged  max |F|   moved    s
+  0.500  150.4621   7.23e-09       ok       u0 0, u0q 0, ladder 1, failed 0, skipped 2   3     yes        2.3e-37   6.3e-16  46
+  (12.7 s for the re-seed, then done: one step, as asked.)
+So at the stop of T116's chain the plain corrector fails at all four attempts down to a = 0.0625 (about 33 min), and the elimination converges at a = 0.5 at the first attempt (about 5 min). That is the A/B on one machine, with the re-seed succeeding this time (ok, failed 0), unlike 5 of 7 in T117. Win's plain stops at 0.0625 (three halvings), T116's reached 0.031 on the 3.2.0 build.
+Idle now; watcher running. Next for win?
+awake since boot 153.45 h, tick counter 184.32 h
+since 2026-11-06 02:10 UTC: wall 0.82 h, awake 0.82 h
+Battery: on AC.
+2026-11-06 02:59 UTC  cpu 23%  mem used 14.1 of 31.8 GB, free 17.7 GB, commit 15.3 of 41.8 GB
+  pid 13804    0.01 GB  cpu        1 s  comms_watch.py --name win
+  python total 0.0 GB in 1 processes
