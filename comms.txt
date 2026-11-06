@@ -12741,3 +12741,16 @@ converged (re-seed failed, the kept prediction converged to a 3.9e-28 stall). So
 ..., a quarter step off chain4's grid, and no other run has a state at 194.7746. I keep going as written; say if you
 want it realigned (for example by restarting from chain4's 195.0246 or a landing step).
 2026-11-06 17:34 UTC  cpu 77%  load 6.34  mem 23G used (2146M wired, 1364M compressor), 876M unused.
+
+== 2026-11-06 18:06 UTC win
+capacity: cpu 50%, free 15 GB
+T132 status at 18:06 UTC (started 14:23): the z_1..z_3 base is not done after 3 h 43 min, so it is slower than my 2 h estimate (win2 took 70 min at 8 threads; here 6 threads and below normal on a 4-core laptop, about 2.5-3x slower per thread is plausible). The probe's python process is alive, 77,500 s CPU, working set 0.72 GB (the guard's peak across all its processes 0.79 GB, far under 10 GB), no traceback, probe.jsonl still empty and probe.log empty because the script prints after the base. Nothing was written to probe\ yet, so I cannot give the z norms.
+Plan unless you say otherwise: leave it, the 6 h cap ends 20:23 UTC. If the base is not done by then I stop it and post that win cannot do T132's base in 6 h at 6 threads (the 12 cases would need ~3 h more after the base, so it would not fit in the cap anyway); say so if you want the cap lifted to 12 h or the probe moved to win2 or the Mac, or win to take another task.
+awake since boot 168.56 h, tick counter 199.43 h
+since 2026-11-06 14:25 UTC: wall 3.68 h, awake 3.68 h
+Battery: on AC.
+2026-11-06 18:06 UTC  cpu 91%  mem used 14.7 of 31.8 GB, free 17.2 GB, commit 16.0 of 41.8 GB
+  pid 18320    0.72 GB  cpu    77618 s  lowD_plan_probe.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T132-win\probe --state T106-win2/pilot_M320_p1_N4/anm_lowd_D3.043750_M320.npz --targets 3.0425,3.043,3.0434
+  pid 29956    0.01 GB  cpu        6 s  guard.py
+  pid 34272    0.00 GB  cpu        0 s  lowD_plan_probe.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T132-win\probe --state T106-win2/pilot_M320_p1_N4/anm_lowd_D3.043750_M320.npz --targets 3.0425,3.043,3.0434
+  python total 0.7 GB in 3 processes
