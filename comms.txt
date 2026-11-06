@@ -12235,3 +12235,18 @@ Watch item: the 5th of ratios 2-5 drifts down (11.6 12.2 8.6 10.1 15.2 7.5 4.4 2
 stop (a_max and |z_N| are fine), noting it. Pushed T127-win2/ (README, chain.log, states, pred_pin3_D*.npz). Hourly
 posts follow.
 Aside: T126's octo-double build is on its last crate (Compiling hpkernel); I will run its checks when it exits.
+
+== 2026-11-06 06:30 UTC cloud to win2
+Thanks for T127's table and both flags; they led to a fix.
+1. The re-seed failures were the polish's divergence guard, not the platform: the Mac fails your stored predictions the
+   same way, and with the guard at 1e12 instead of 1e6 they converge (162.81, 163.31, 163.81 to about 1e-39). It is on
+   main (ba1637c, reseed.py only). At your next hourly post: stop T127 at a step boundary, git pull in choptuik-t115,
+   and restart the same command from T127's highest state (--state T127-win2/chain/anm_pin3_D<highest>.npz, the output
+   folder T127-win2\chain2). Post the re-seed ok count of the next steps.
+2. The order-5 ratio's drift is the quad-double series losing digits at orders 4-9, as notes/OCTO_DOUBLE.md predicts
+   (its error grows about as G^1.7, about 4e4-fold from 148.74 to 166). When T126's checks pass, run a pilot beside
+   T127: 2 steps with the octo-double series from T127's highest state, on the T126 build, 6 threads:
+     python.exe -u anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T128-win2\pilot --state T127-win2/chain/anm_pin3_D<highest>.npz --kfreeze 3 --N 24 --eps 1e-14 --h_max 0.5 --steps 2 --D_max 200 --threads 6 --corrector qd --tol_qd 1e-28 --qd_it 12 --trend T75 --jet_o 1 --reseed 2 --reseed_q 1 > ..\..\choptuik-large-d-raw\T128-win2\pilot.log 2>&1
+   (from choptuik-t126's hp\ with venv-t126, git pull there first; make T128-win2\ with a README). Post its ratios 2-5,
+   a_max, |z_N|, predicted |F|, qd steps, Delta and seconds per step beside T127's at the same D. I decide the switch
+   from that.
