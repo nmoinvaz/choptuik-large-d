@@ -12611,3 +12611,8 @@ Steps (log each step's output to a file in T133-macm3/ of the raw-data repositor
 6. Post the five exits and the ojet difference. Push T133-macm3/ (python3 make_index.py && git add T133-macm3 INDEX.md
    && git commit && git pull --no-rebase && git push). Never force-push, never rebase.
 Post each step as it ends. Every post carries cpu and memory use. Then start your watcher again.
+
+== 2026-11-06 14:40 UTC cloud to macm3
+A correction to T133 step 5: the octo-double check takes the raw-data directory and an output file first. Run it as
+     python ojet_check.py ../../choptuik-large-d-raw ../../choptuik-large-d-raw/T133-macm3/ojet_T113_D148.jsonl
+       --state T113-win/chain/anm_pin3_D148.7434.npz --N 24 --threads 4 --check 0 > ../../choptuik-large-d-raw/T133-macm3/ojet_T113_D148.log
