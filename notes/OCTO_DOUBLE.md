@@ -133,3 +133,39 @@ The second pilot passes (`od-mac/pilot2_jet_o.log`). At a = 0.0125 the octo-doub
 `pilot2_jet_o/anm_pin3_D128.5684.npz` is saved. Its series took 531 s on 2 threads. The quad-double path at the same
 options (`pilot2_jet_q.log`, 53 s for its series) predicts the same |F|, 3.00×10⁻¹⁵, and converges to the same Δ to 17
 digits. At D 128.56 and this step the quad-double series' rounding is not what limits the prediction.
+
+**`hp/ojet_check.py --check 0` at T113's last state, D 148.74** (`od-mac/ojet_T113_D148.log`, N = 24, 2 threads). G =
+3.8×10²², so eps_qd G² = 1.7×10⁻¹⁸. Relative errors of the quad-double series by order, taking the octo-double one as
+the reference (d_oq the default form, d_oq1 the alpha form, d_qa the two forms' difference):
+
+| k | \|z_k\| | d_oq | d_oq1 | d_qa |
+|---|---|---|---|---|
+| 1 | 7.75e-4 | 6.67e-13 | 3.00e-13 | 6.65e-13 |
+| 2 | 4.13e-6 | 1.82e-10 | 3.11e-11 | 1.86e-10 |
+| 3 | 2.45e-8 | 2.24e-8 | 1.13e-8 | 2.24e-8 |
+| 4 | 1.58e-10 | 1.68e-6 | 2.75e-7 | 1.71e-6 |
+| 5 | 8.02e-12 | 1.19e-5 | 6.80e-6 | 1.20e-5 |
+| 6 | 3.29e-12 | 8.42e-6 | 1.29e-6 | 8.59e-6 |
+| 8 | 4.75e-13 | 2.89e-6 | 4.04e-7 | 2.95e-6 |
+| 10 | 4.29e-14 | 9.16e-7 | 1.14e-7 | 9.37e-7 |
+| 12 | 2.65e-15 | 2.77e-7 | 2.93e-8 | 2.83e-7 |
+| 16 | 4.01e-18 | 2.29e-8 | 2.55e-9 | 2.38e-8 |
+| 20 | 2.26e-21 | 2.76e-9 | 3.05e-9 | 4.41e-9 |
+| 24 | 5.91e-25 | 9.40e-9 | 1.75e-8 | 1.64e-8 |
+
+The full table, all 24 orders and the double-double series' d_dq (above 10³ everywhere), is in the log. The quad-double
+series keeps about 12 digits at order 1 and 5–6 at orders 4–9, the worst near order 5 (1.2×10⁻⁵). From D 128.56 to
+148.74 its order-1 error grew 3.1×10⁵ times and its order-5 error 2×10⁵ times, where G² grew 1.8×10⁶, about G^1.7. The
+alpha form is better by a factor 2–10 here, not by the margin D 128.56 suggested, so switching forms does not
+postpone the need for octo-double by much. T113's last steps were 0.031 long (raw-data repository
+`T113-win/README.md`); whether the series' lost digits set that step is not tested here. The octo-double series took
+3108 s on 2 threads against 477 s for the quad-double one, and its LU 254 s against 31 s.
+
+## 4. Running the chain with octo-double jets
+
+With T113's options, `--jet_o 1` in place of `--jet_q 1 --pred_q 1` (M = 32; N up to 31):
+
+    cd hp && python3 -u anm_run.py RAWDIR RAWDIR/TASK/chain --state STATE.npz --kfreeze 3 --N 24 --eps 1e-14
+        --h_max 1 --steps 300 --D_max 200 --threads 4 --corrector qd --tol_qd 1e-28 --qd_it 12 --trend T75 --jet_o 1
+
+Each base then costs about 7 times the quad-double series' time on this Mac, about 1 h on 2 threads at N = 24.
