@@ -648,3 +648,29 @@ leg. Its truncation at h = 0.00125, |z_3|/R h⁴ with R = 0.047, is about 3×10�
 plans of about 9000 steps took 130 and 143 s (`T106-win2/pilot_M*_p1_N4/anm_lowd.jsonl`). The polluted z_4 makes the
 predicted state's plan pathological, so the driver's own test would come hours late and, with that z_4, almost surely
 fail. Both legs restart at `--N 3` from the pilots' converged states at 3.04375, as the amendment above provides.
+
+**The N 3 legs froze in the planner too (T115, 2026-11-06 03:09 UTC, win2; `T115-win2/leg_M320c_md32.log`).** On the
+multidouble 3.2.0 build the plan of leg_M320c's order-3 prediction at 3.0425 (base: D″'s state at 3.04375,
+`T106-win2/pilot_M320_p1_N4/anm_lowd_D3.043750_M320.npz`) finished every node segment in under 4 s except 0.01 → 0.02.
+There the step fell from 2.2×10⁻⁶ at x 0.01184 to 0 at x 0.013725308400 by step 10000, and the planner ran 1.3 million
+steps in 2 h without moving x. So the plan is frozen, not slow, and the arithmetic does not change it.
+
+## 16. T132: where the planner freezes (procedure, 2026-11-06 14:10 UTC)
+
+A frozen plan has two readings. Either the predicted state has left the branch and its ODE has a singular point near
+x 0.0137, or the planner (`model.rs` `plan_path`, which loops while h > 0 with no floor) fails on a regular state.
+`hp/lowD_plan_probe.py` separates them. From the same base it computes z_1..z_3 once. It then plans each predicted state
+Σ_(k≤n) z_k h^k for n = 0..3, at the targets 3.0425, 3.043 and 3.0434 (h = −0.00125, −0.00075 and −0.00035), on the
+target's solver. Each plan runs in a child process with a 900 s cap (the pilots' plans of about 9000 steps took 130–143
+s on win2). n = 0 is the base state itself on the target's solver.
+
+**Criteria, fixed now:**
+1. Planted truth first: the case (3.0425, n 3) must be capped, its last trace in the segment 0.01 → 0.02 at x within
+   10⁻⁶ of 0.013725308400. If it plans, the base or the build differs from T115's, and the table is not read.
+2. The base's z_1..z_3 norms must match T115's (1.410×10⁴, 2.819×10⁵, 5.948×10⁶) to 1%.
+3. Reading. If every n and h freezes at the same x, the base state included, the fault is the planner's. If the freeze
+   moves with h or n, or the small-h and low-order cases plan, the prediction leaves the branch. The leg then needs a
+   shorter step or a lower order, and the frozen x marks the singular point that the prediction brings in.
+
+**Control:** `--cap 0.001` reports every case capped (exit 1). On the Mac at M 48 from `lowD_D4.0000_M48.npz`, targets
+3.99 and 3.98, every case plans (exit 0) and the control exits 1.
