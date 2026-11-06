@@ -15,7 +15,7 @@ formulation of hp/pinning.py; their coefficients are zero).
         [--accept_stall 1e-19] [--junk_only 0] [--threads 4] [--w 24] [--trend T75] [--tol_qd 1e-28] [--accept_stall_qd 0]
         [--qd_it 12] [--qd_w 0] [--refine 1] [--probe 0 --probe_c C] [--plan_tol 1e-32] [--fix1 0] [--F_pred_max 0]
         [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0] [--pred_q 0] [--reseed_q 0] [--save_pred 0]
-        [--jet_o 0]
+        [--jet_o 0] [--corrector od --tol_od 1e-40]
 
 --corrector qd runs the quad-double Newton of the kernel (hpkernel.driver.newton_qd, Solver.newton_q) on the pinned
 system (pinning.PinnedQ: the held harmonics' offset subtracted from the quad-double residual and added to the step, as
@@ -65,10 +65,11 @@ checks the quad-double jet against the quad-double residual on a stored state.
 --jet_o 1 builds the series in octo-double (notes/OCTO_DOUBLE.md): the octo-double jet (Solver.residual_jet_o,
 multidouble 4.0.0's OJet; M = 32 only) through the octo-double LU at the base (Solver.newton_o, once per base, at the
 base's four quad-double parts promoted to eight), the held rows added in octo-double (od_add_dd). The prediction is
-summed by Horner's rule in octo-double (od_axpy) and rounded to quad-double, where the quad-double corrector starts, so
-it needs --corrector qd and with --reseed also --reseed_q 1; it replaces --jet_q, --pred_q and --fix1, and --probe does
-not apply. Its series errs by about the octo-double unit times G^2 where the quad-double one errs by the quad-double
-unit times G^2, which reaches the chain's tolerance near D 170-185; hp/ojet_check.py compares the two on stored states.
+summed by Horner's rule in octo-double (od_axpy) and rounded to quad-double, where the quad-double corrector starts
+(--corrector od starts from all eight parts), so it needs --corrector qd or od and with --reseed also --reseed_q 1; it
+replaces --jet_q, --pred_q and --fix1, and --probe does not apply. Its series errs by about the octo-double unit times
+G^2 where the quad-double one errs by the quad-double unit times G^2, which reaches the chain's tolerance near D
+170-185; hp/ojet_check.py compares the two on stored states.
 --reseed 1 replaces each prediction's horizon data (m_h, a_h) by those of the regular solution through its last node
 before the residual, the plan and the corrector (hp/reseed.py, notes/RESEED.md: the node integrated toward the horizon,
 the series inverted on the rungs u0/32 .. u0 in the m and a rows); 0, the default, changes nothing. Records carry each
@@ -80,6 +81,14 @@ converged in 3; a re-seed that fails keeps the prediction, and the attempt then 
 step's solution, stored and carried on as the next base, is the projection of the corrector's last iterate, whose
 residual is the one the corrector converged (notes/QUAD_DOUBLE.md 13.26). --save_pred 1 stores each prediction before
 its re-seed as pred_pin<k>_D<D>.npz, an input for testing the re-seed (13.26).
+--corrector od is the corrector in octo-double (hp/octo_corrector.py, notes/OCTO_DOUBLE.md 5): newton_od, newton_qd's
+rule on the octo-double kernel (PinnedO: Solver.newton_o, olu_solve and residual_o with the held offset), to --tol_od
+on max |F| in at most --qd_it steps, with --reseed 2 inside ElimO (ElimQ's quad-double projection put back in eight
+parts). Under --jet_o 1 it starts from the octo-double prediction in all eight parts, its horizon data re-seeded. The
+base is polished from all its stored parts (eight from a state saved by it), with --reseed 2 inside ElimO at the
+base's D (the quad-double polish runs without the projection). Its states are saved in eight parts
+(octo_corrector.save_o: save_q's four, which load_q reads, and four more), and the series of the next base (--jet_o)
+is taken at all eight. M = 32 only; --accept_stall_qd does not apply.
 """
 import json
 import os
@@ -93,6 +102,7 @@ from hpkernel.driver import make_solver, newton_solve, deflated_newton, delta_co
 from multidouble import dd_add, dd_horner, dd_scale, dd_norm, qd_add_dd  # noqa: E402
 from pinning import PinnedQ, PinnedSolver, band_coeffs, band_field, qd_axpy  # noqa: E402
 from raw_out import require_raw  # noqa: E402
+from octo_corrector import ElimO, PinnedO, has_o, load_o, newton_od, o8, o8_of_q, q4_of_o, save_o, with_horizon  # noqa: E402,F401
 from reseed import ElimQ, Reseeder, StartNotProjected  # noqa: E402
 from taylor_predict import formula_delta  # noqa: E402
 
@@ -181,25 +191,6 @@ def coefficients_q(s, zq, N, held=None):
     return Zq, norms
 
 
-def o8(z):
-    """an octo-double vector's eight parts as contiguous float64 arrays"""
-    return tuple(np.ascontiguousarray(np.asarray(p, dtype=float)) for p in z)
-
-
-def o8_of_q(zq):
-    """a quad-double vector's four parts promoted to eight (the lower four zero): the same values exactly"""
-    zero = np.zeros(len(zq[0]))
-    return o8(tuple(zq) + (zero, zero, zero, zero))
-
-
-def q4_of_o(zo):
-    """an octo-double vector rounded to quad-double: its first four parts plus the rest's sum (float64, from the
-    smallest up), renormalized by qd_add_dd, as OD::to_qd does; the rounding is about 2^-212 of each entry"""
-    zo = o8(zo)
-    tail = zo[4] + (zo[5] + (zo[6] + zo[7]))
-    return tuple(np.ascontiguousarray(np.asarray(p)) for p in qd_add_dd(zo[0], zo[1], zo[2], zo[3], tail, np.zeros(len(tail))))
-
-
 def coefficients_o(s, zo, N, held=None):
     """z_1..z_N by the octo-double jet (Solver.residual_jet_o) and the octo-double LU of the last Solver.newton_o, which
     must have been taken at zo (eight parts): the list of eight-part z_k (z_0 first) and their norms. held as in
@@ -237,6 +228,7 @@ def main():
                tol=1e-20, tol_growth=1.45, accept_stall=1e-17, junk_only=0, threads=4, w=24, trend="", tol_qd=1e-28, accept_stall_qd=0.0, qd_it=12, qd_w=0,
                refine=1, probe=0, probe_c=0.0, plan_tol=1e-32, fix1=0, F_pred_max=0.0, horizon_alpha=0, fix1_qlu=0, jet_q=0, reseed=0, pred_q=0, reseed_q=0,
                save_pred=0, jet_o=0)
+    opt.update(tol_od=1e-40)            # --corrector od (hp/octo_corrector.py)
     for k in list(opt):
         f = "--" + k
         if f in args:
@@ -244,9 +236,9 @@ def main():
     raw, out = args[0], args[1]
     if opt["pred_q"] and (not opt["jet_q"] or (opt["reseed"] and not opt["reseed_q"])):
         raise SystemExit("--pred_q needs --jet_q 1, and with --reseed also --reseed_q 1")
-    if opt["jet_o"] and (opt["corrector"] != "qd" or opt["jet_q"] or opt["pred_q"] or opt["fix1"] or opt["probe"]
+    if opt["jet_o"] and (opt["corrector"] not in ("qd", "od") or opt["jet_q"] or opt["pred_q"] or opt["fix1"] or opt["probe"]
                          or (opt["reseed"] and not opt["reseed_q"])):
-        raise SystemExit("--jet_o 1 needs --corrector qd, and with --reseed also --reseed_q 1; it replaces --jet_q, --pred_q "
+        raise SystemExit("--jet_o 1 needs --corrector qd or od, and with --reseed also --reseed_q 1; it replaces --jet_q, --pred_q "
                          "and --fix1, and --probe does not apply")
     out_dir = out
     os.makedirs(out, exist_ok=True)
@@ -258,6 +250,8 @@ def main():
     kf, N = opt["kfreeze"], opt["N"]
     if opt["jet_o"] and (M != 32 or not 1 <= N <= 31):
         raise SystemExit(f"--jet_o 1: the octo-double solver is built for M = 32 and N <= 31, not M {M}, N {N}")
+    if opt["corrector"] == "od" and (M != 32 or (opt["reseed"] and not opt["reseed_q"])):
+        raise SystemExit(f"--corrector od: the octo-double solver is built for M = 32 (not {M}), and with --reseed it needs --reseed_q 1")
     D_start = D
     junk_only = bool(opt["junk_only"])
 
@@ -267,10 +261,32 @@ def main():
     last_q = {}
     elim = {}             # --reseed 2: the attempt's Reseeder, for ElimQ in the corrector
 
-    def correct(spx, ph, pl, tol, z4_start=None):
+    def correct(spx, ph, pl, tol, z4_start=None, z8_start=None):
         """T75's corrector (scan_hp.py dnp): deflated Newton, then plain Newton steps from below 1e-12 if they lower |F|;
         returns zh, zl, |F|, steps, accepted (converged, or stalled below accept_stall). z4_start: the quad-double
-        corrector's start in four parts (--pred_q), else (ph, pl)"""
+        corrector's start in four parts (--pred_q), else (ph, pl). z8_start: the octo-double corrector's in eight"""
+        if opt["corrector"] == "od":
+            # --corrector od: the octo-double Newton (hp/octo_corrector.py), with --reseed 2 inside ElimO
+            so = PinnedO(spx.s, spx.ch, spx.cl)
+            if elim.get("rs") is not None:
+                so = ElimO(so, elim["rs"])
+            z0 = z8_start if z8_start is not None else o8_of_q(z4_start if z4_start is not None else qparts(ph, pl))
+            try:
+                z8, hist, conv = newton_od(so, z0, tol=opt["tol_od"], it_max=opt["qd_it"], verbose=True)
+            except StartNotProjected as e:
+                print(f"      elim projections {e.args[0]}: the start's projection failed, attempt stopped", flush=True)
+                Fh, Fl = spx.residual(z0[0], z0[1])
+                return np.asarray(z0[0]), np.asarray(z0[1]), float(rnorm(Fh, Fl)), 0, False, 0.0
+            if elim.get("rs") is not None:
+                print(f"      elim projections {so.counts}", flush=True)
+                z8 = so.project(z8)             # the point whose residual converged (unprojected below the switch)
+            last_q["z8"], last_q["z4"] = z8, q4_of_o(z8)
+            Fh, Fl = spx.residual(z8[0], z8[1])
+            Fc = float(rnorm(Fh, Fl))
+            fo = float(hist[-1]["F"]) if hist else float("nan")
+            print(f"      octo-double Newton: {len(hist)} steps, max|F| {fo:.1e}, {'converged' if conv else 'not converged'}; double-double |F| "
+                  f"of its first two parts {Fc:.1e}", flush=True)
+            return np.asarray(z8[0]), np.asarray(z8[1]), Fc, len(hist), bool(conv), 0.0
         if opt["corrector"] == "qd":
             sq = PinnedQ(spx.s, spx.ch, spx.cl)
             if elim.get("rs") is not None:
@@ -376,7 +392,17 @@ def main():
         # the quad-double polish starts from all four stored parts: from the first two alone it starts eps_dd G off the
         # root, outside the basin past D ~ 131 (the restart of T113 at 135.06, notes/QUAD_DOUBLE.md 13.22)
         z4_base = tuple(np.ascontiguousarray(np.asarray(p)) for p in load_q(os.path.join(raw, opt["state"]))[0])
-        zh, zl, F0, _, _, _ = correct(sp, zh, zl, opt["tol"], z4_base if opt["corrector"] == "qd" else None)
+        if opt["corrector"] == "od":
+            # --corrector od: the octo-double polish from all eight stored parts (a four-part state's promoted), with
+            # --reseed 2 inside ElimO: from a quad-double state at D 188 a full step leaves 4e-14 in the horizon rows
+            # alone (its quadratic term there; 1e-41 in the others), which the projection removes
+            if opt["reseed"] == 2:
+                elim["rs"] = Reseeder(dict(M=M, nodes=nodes, kt=kt, kc=kc, ks=ks), D, threads=opt["threads"],
+                                      horizon_alpha=opt["horizon_alpha"], qd=bool(opt["reseed_q"]))
+            zh, zl, F0, _, _, _ = correct(sp, zh, zl, opt["tol"], z8_start=load_o(os.path.join(raw, opt["state"]))[0])
+            elim["rs"] = None
+        else:
+            zh, zl, F0, _, _, _ = correct(sp, zh, zl, opt["tol"], z4_base if opt["corrector"] == "qd" else None)
     print(f"base {opt['state']}: D {mp.nstr(D, 12)}, M {M}, pin {kf} (held {ks_held}), |F| {F0:.1e}; N {N}, eps {opt['eps']}, h_max {opt['h_max']}, "
           f"corrector {opt['corrector']} (junk_only {junk_only}), tol {opt['tol']:.1e} x {opt['tol_growth']}^(D - {mp.nstr(D_start, 8)}), "
           f"stalls accepted below {opt['accept_stall']:.0e}", flush=True)
@@ -567,6 +593,9 @@ def main():
             # promoted to eight
             zq = last_q["z4"] if "z4" in last_q else load_q(os.path.join(raw, opt["state"]))[0]
             zo = o8_of_q(zq)
+            if "z8" in last_q or ("z4" not in last_q and has_o(os.path.join(raw, opt["state"]))):
+                # the base in eight parts: the octo-double corrector's, or a state it stored
+                zo = last_q["z8"] if "z8" in last_q else load_o(os.path.join(raw, opt["state"]))[0]
             pmin, pmax = s.newton_o(list(zo))[3:5]
             Zo, norms = coefficients_o(s, zo, N, held=held_arg)
             Zh, Zl, refine = [np.asarray(z[0]) for z in Zo], [np.asarray(z[1]) for z in Zo], [()]
@@ -603,6 +632,7 @@ def main():
             while True:
                 ph, pl = series_at(zh, zl, Zh, Zl, a)
                 pred4 = None
+                pred8 = None                       # --corrector od: the octo-double prediction, the start
                 if opt["pred_q"]:
                     # --pred_q 1: the prediction summed in quad-double from the quad-double series, the base in its four
                     # parts, so the corrector starts from it unrounded (a double-double start carries ~eps_dd G in F)
@@ -614,7 +644,8 @@ def main():
                 elif opt["jet_o"]:
                     # --jet_o 1: the prediction summed in octo-double from the octo-double series and rounded to
                     # quad-double, the corrector's start
-                    pred4 = q4_of_o(horner_o(Zo, a))
+                    pred8 = horner_o(Zo, a)
+                    pred4 = q4_of_o(pred8)
                     ph, pl = np.asarray(pred4[0]), np.asarray(pred4[1])
                 Dn = D + mp.mpf(a)                 # exact: the series variable is a to double-double precision
                 rsd = None
@@ -640,6 +671,8 @@ def main():
                     ph, pl = np.asarray(zr[0]), np.asarray(zr[1])
                     if pred4 is not None:
                         pred4 = tuple(np.ascontiguousarray(np.asarray(v)) for v in zr)
+                    if pred8 is not None and rsd["ok"]:
+                        pred8 = with_horizon(pred8, zr, rs_n)          # the re-seeded horizon data in eight parts
                 sn = mk(Dn)
                 segs_n = segs
                 sn.set_segs(segs_n)
@@ -660,7 +693,7 @@ def main():
             t1 = time.time()
             tol = tol_at(Dn)
             if np.isfinite(Fp):
-                ch, cl, Fc, nsteps, accepted, dcorr = correct(spn, ph, pl, tol, pred4)
+                ch, cl, Fc, nsteps, accepted, dcorr = correct(spn, ph, pl, tol, pred4, z8_start=pred8)
             else:
                 ch, cl, Fc, nsteps, accepted, dcorr = ph, pl, float("nan"), 0, False, 0.0
             t_corr = time.time() - t1
@@ -690,6 +723,8 @@ def main():
         meta_out = dict(D=float(D), D_str=str(D), M=M, nodes=nodes, kt=kt, kc=kc, ks=ks, kfreeze=kf, pin_held=ks_held, N=N, a=a, source=opt["state"])
         if opt["corrector"] == "qd" and "z4" in last_q:
             save_q(os.path.join(out, f"anm_pin{kf}_D{float(D):.4f}.npz"), last_q["z4"], meta_out)
+        elif opt["corrector"] == "od" and "z8" in last_q:
+            save_o(os.path.join(out, f"anm_pin{kf}_D{float(D):.4f}.npz"), last_q["z8"], dict(meta_out, parts=8))
         else:
             save(os.path.join(out, f"anm_pin{kf}_D{float(D):.4f}.npz"), zh, zl, meta_out)
         a = min(2 * a, opt["h_max"])          # the next step may grow again
