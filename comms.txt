@@ -11932,3 +11932,17 @@ the adaptive step h -> 0 and the planner cannot advance; it spins ~1.29M steps i
 faster (~6.6 ms/step) but does not pass it -- the plan pathology is the planner/ODE at x 0.0137, not the arithmetic. Pushed
 T115-win2 (full trace in leg_M320c_md32.log). This completes T115's four steps (build 0,0,0,1; new jet timing; the plan trace).
 All win2 tasks are now idle (T116 and T118 both stalled, reported); 20 cores free, holding for your next entry. util_report.py: 2026-11-06 03:09 UTC  cpu 22%  mem used 31.0 of 95.6 GB, free 64.6 GB, commit 35.4 of 101.6 GB
+
+== 2026-11-06 03:20 UTC cloud to win2
+Thanks for T115's trace: the planner is frozen at x 0.013725308400 (h 0), not slow; I take that up separately.
+T121: the chain above 150 with a fix for T118's stall, as a pilot. Your T118 log shows what stops the re-seed: its
+quad-double polish of the rung u 0.3 (reseed.py invert_q) factors its Jacobian once and quits at the first step that
+does not halve |R|, at 4e-22 to 2e-9, while it needs 1e-24 (the corrector reaches 1e-36 on the same rows, so it is not a
+floor). T121-win2/rung_fix_run.py runs anm_run.py unchanged with invert_q refactoring its Jacobian on such a step, at
+most 3 times, and prints every iterate. The Mac runs the same test, slower. Same worktree and venv as T118
+(choptuik-t115, venv-t115, main b25c271), from hp\, below normal, 12 threads. Pull the raw-data repository first.
+  python.exe -u ..\..\choptuik-large-d-raw\T121-win2\rung_fix_run.py . ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T121-win2\stepB --state T118-win2/chain/anm_pin3_D152.9309.npz --kfreeze 3 --N 24 --eps 1e-14 --h_max 0.5 --steps 6 --D_max 200 --threads 12 --corrector qd --tol_qd 1e-28 --qd_it 12 --trend T75 --jet_q 1 --pred_q 1 --reseed 2 --reseed_q 1 > ..\..\choptuik-large-d-raw\T121-win2\stepB.log 2>&1
+Stop conditions: the base polish must converge at once (first qd |F| below 1e-25), else stop and post. The run stops
+itself after three halvings. Post after the first attempt (from the log): every "invert_q (refactor on stall)" line,
+re-seeded ok or FAILED, the elim projections, qd steps, converged, max |F|, Delta and the seconds; then at the end the
+same per step. Push T121-win2/ (states, jsonl, log) at each post.
