@@ -93,7 +93,7 @@ from hpkernel.driver import make_solver, newton_solve, deflated_newton, delta_co
 from multidouble import dd_add, dd_horner, dd_scale, dd_norm, qd_add_dd  # noqa: E402
 from pinning import PinnedQ, PinnedSolver, band_coeffs, band_field, qd_axpy  # noqa: E402
 from raw_out import require_raw  # noqa: E402
-from reseed import ElimQ, Reseeder  # noqa: E402
+from reseed import ElimQ, Reseeder, StartNotProjected  # noqa: E402
 from taylor_predict import formula_delta  # noqa: E402
 
 
@@ -276,7 +276,14 @@ def main():
             if elim.get("rs") is not None:
                 # --reseed 2: the corrector on the system with the horizon data eliminated (hp/reseed.py ElimQ)
                 sq = ElimQ(sq, elim["rs"])
-            z4, hist, conv = newton_qd(sq, z4_start if z4_start is not None else qparts(ph, pl), tol=opt["tol_qd"], it_max=opt["qd_it"], w=opt["qd_w"], verbose=True)
+            z0 = z4_start if z4_start is not None else qparts(ph, pl)
+            try:
+                z4, hist, conv = newton_qd(sq, z0, tol=opt["tol_qd"], it_max=opt["qd_it"], w=opt["qd_w"], verbose=True)
+            except StartNotProjected as e:
+                # the start's projection failed, so the attempt stops and the step is halved (hp/reseed.py ElimQ)
+                print(f"      elim projections {e.args[0]}: the start's projection failed, attempt stopped", flush=True)
+                Fh, Fl = spx.residual(z0[0], z0[1])
+                return np.asarray(z0[0]), np.asarray(z0[1]), float(rnorm(Fh, Fl)), 0, False, 0.0
             if elim.get("rs") is not None:
                 print(f"      elim projections {sq.counts}", flush=True)
                 # ElimQ's residual is that of the point's projection, so the solution is the projected iterate (the

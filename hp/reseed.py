@@ -13,6 +13,7 @@ state there (the node itself at u0), and its equations are the m and a rows of t
         [--plan_tol 1e-32] [--out OUT.jsonl] [--delta_h 1e-6] [--seed 1] [--floor_rule stall|abs|rel]
     python3 reseed.py jac STATE.npz
     python3 reseed.py checkq PRED.npz [--threads 4] [--legacy 1] [--rule136 1]
+    python3 reseed.py checkstart PRED.npz [--threads 4] [--start_F 1e-6] [--budget 900]
 
 `check` is the unit check and the stepper check (notes/RESEED.md 3.1, 3.2): the converged state's own node re-seeded
 from horizon data off by delta_h (relative, random signs) must return the state's horizon data to the floor of 3.1,
@@ -21,7 +22,8 @@ mutations must make 3.1 fail: skip (only the last rung, u0), wrongu (each rung's
 target at u); --plan_tol 1e-12 must make 3.2 fail. `jac` prints the singular values of the horizon block's m_h, a_h
 columns by row groups (notes/RESEED.md 2.1). `checkq` re-seeds a stored prediction (anm_run.py --save_pred 1) with
 the quad-double polish and must converge; --legacy 1, the earlier polish rule, must make it fail where that rule fell
-short (its docstring).
+short (its docstring). `checkstart` runs the corrector on a stored prediction after its re-seed and must end
+within a budget; --start_F 0 must make it fail on a prediction whose start projection fails (its docstring).
 """
 import json
 import os
@@ -491,6 +493,10 @@ class Reseeder:
         return tuple(np.ascontiguousarray(p) for p in out), how
 
 
+class StartNotProjected(Exception):
+    """ElimQ: the projection of the corrector's start failed (its counts are the argument)"""
+
+
 class ElimQ:
     """The corrector on the system with the horizon data eliminated (notes/RESEED.md 3.3, the arm elim): a wrapper of a
     pinned quad-double solver (pinning.PinnedQ) for hpkernel.driver.newton_qd. residual_q and newton_q project the point
@@ -498,21 +504,31 @@ class ElimQ:
     the given point, the projection's displacement included, so newton_qd's trial points z + lam dz are steps of the
     eliminated system. counts: the projections by kind. switch: a point whose pinned quad-double max |F| is at most
     switch is not projected (plain Newton finishes): the projection is double-double, so it would hold every point at
-    the double-double floor phi (the first jump run stalled at max |F| 3.7e-18 this way, notes/RESEED.md 3.3)."""
+    the double-double floor phi (the first jump run stalled at max |F| 3.7e-18 this way, notes/RESEED.md 3.3).
+    start_F: a start (the first point projected) whose projection fails at max |F| above start_F raises
+    StartNotProjected (None: never); no such attempt of the chain logs to D 188 converged (notes/QUAD_DOUBLE.md 13.28).
+    """
 
-    def __init__(self, sq, rs, switch=1e-15):
-        self.sq, self.rs, self.switch = sq, rs, switch
+    def __init__(self, sq, rs, switch=1e-15, start_F=1e-6):
+        self.sq, self.rs, self.switch, self.start_F = sq, rs, switch, start_F
         self.counts = dict(u0=0, u0q=0, ladder=0, failed=0, skipped=0)
+        self.first = True
 
     def __getattr__(self, name):
         return getattr(self.sq, name)
 
     def _proj(self, z):
-        if qmax(self.sq.residual_q(*z)) <= self.switch:
+        first, self.first = self.first, False
+        nf = qmax(self.sq.residual_q(*z))
+        if nf <= self.switch:
             self.counts["skipped"] += 1
             return z
         zp, how = self.rs.project(z)
         self.counts[how] += 1
+        if how == "failed" and first and self.start_F is not None and nf > self.start_F:
+            # an unprojected start keeps its horizon data off by up to the mass-mode gain, so every trial's
+            # projection fails too, at minutes apiece past D 185 (notes/QUAD_DOUBLE.md 13.28)
+            raise StartNotProjected(dict(self.counts))
         return zp
 
     def residual_q(self, z0, z1, z2, z3, mutate=0):
@@ -710,11 +726,53 @@ def checkq(argv):
     return 0 if ok else 1
 
 
+def checkstart(argv):
+    """the corrector of anm_run.py --reseed 2 (ElimQ around the pinned quad-double solver, newton_qd with the chain's
+    tol 1e-28 and 12 steps) on a stored prediction (anm_run.py --save_pred 1), after its re-seed: it must end,
+    converged or stopped by StartNotProjected, within --budget seconds; exit 1 otherwise. The control --start_F 0 (no
+    stop) must fail on a prediction whose start projection fails, as T129's at D 189.02 (notes/QUAD_DOUBLE.md 13.28).
+    The budget is a SIGALRM (macOS, Linux)."""
+    import signal
+    from hpkernel.driver import newton_qd
+    opt = parse(argv, dict(threads=4, start_F=1e-6, budget=900))
+    z4, meta = load_q(argv[0])
+    D = mp.mpf(meta["D_str"])
+    _, _, sq = pinned(meta, D, z4, threads=opt["threads"])
+    rs = Reseeder(meta, D, threads=opt["threads"], qd=True)
+    t0 = time.time()
+    zr, diag = rs.reseed(z4)
+    el = ElimQ(sq, rs, start_F=opt["start_F"] if opt["start_F"] > 0 else None)
+
+    class Budget(Exception):
+        pass
+
+    def over(*_):
+        raise Budget()
+
+    signal.signal(signal.SIGALRM, over)
+    signal.alarm(int(opt["budget"]))
+    try:
+        _, hist, conv = newton_qd(el, zr, tol=1e-28, it_max=12, verbose=True)
+        how = f"{'converged' if conv else 'not converged'} after {len(hist)} steps"
+    except StartNotProjected:
+        how = "stopped, the start's projection failed"
+    except Budget:
+        how = f"over the budget of {opt['budget']} s"
+    finally:
+        signal.alarm(0)
+    ok = not how.startswith("over")
+    print(f"checkstart {argv[0]}: D {mp.nstr(D, 12)}, start_F {opt['start_F']:g}: re-seed {'ok' if diag['ok'] else 'FAILED'}, "
+          f"corrector {how}, projections {el.counts}, {time.time() - t0:.0f} s: {'PASS' if ok else 'FAIL'}", flush=True)
+    return 0 if ok else 1
+
+
 if __name__ == "__main__":
     if len(sys.argv) > 2 and sys.argv[1] == "check":
         sys.exit(check(sys.argv[2:]))
     if len(sys.argv) > 2 and sys.argv[1] == "checkq":
         sys.exit(checkq(sys.argv[2:]))
+    if len(sys.argv) > 2 and sys.argv[1] == "checkstart":
+        sys.exit(checkstart(sys.argv[2:]))
     if len(sys.argv) > 2 and sys.argv[1] == "jac":
         sys.exit(jac(sys.argv[2:]))
     print(__doc__)
