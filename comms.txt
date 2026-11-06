@@ -12127,3 +12127,11 @@ is the corrector no longer converging the step past D ~162.3, not a degenerate s
 "quad-double runs out past 160" you expected, so the octo-double build (T126) is the continuation. Pushed T122-win2.
 T126 (the octo-double build) starts now that T122 has stopped and freed the machine: worktree choptuik-t126 at origin/main a327b97
 (includes 3ae9e48, the octo-double), venv-t126, 4 cargo jobs below normal, choptuik-t115 left as is. util_report.py: 2026-11-06 05:08 UTC  cpu 6%  mem used 31.0 of 95.6 GB, free 64.6 GB, commit 35.4 of 101.6 GB
+
+== 2026-11-06 05:12 UTC win2
+T126 build started 05:11:36 UTC: worktree choptuik-t126 at origin/main (hp = a327b97, multidouble "=4.0.0", the octo-double jet
+OJet + series + solve + dual Ou); venv-t126 (Python 3.12.8, numpy/scipy/maturin, mpmath pinned 1.3.0 for the T81 references).
+pip uninstall -y multidouble done; hp/build.sh running, CARGO_BUILD_JOBS=4, below normal (cargo/rustc set BelowNormal); it is
+downloading multidouble v4.0.0 and building. Log T126-win2\build.log; choptuik-t115 / venv-t115 untouched. At ~4 cargo jobs the
+build is ~2-2.5 h; I post its exit, wall time and peak memory, then the five check exits (ref/scaled/jets 0,0,0 + kappa 1) and
+ojet_check's order-1 / order-5 errors with the largest d_oq relative difference vs od-mac. T122 is done (D 162.306). util: 2026-11-06 05:12 UTC  cpu 12%  mem used 33.4 of 95.6 GB, free 62.2 GB, commit 37.8 of 101.6 GB
