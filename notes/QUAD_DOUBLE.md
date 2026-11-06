@@ -2130,3 +2130,39 @@ degenerate too. `anm_run.py` now starts the polish from all four parts (fece0ba)
 2.0e-32 and 1.3e-35 and converge at once (`anm-mac/restart_plan/v3/`). Storing the plan and the held values with the
 state was tried first and made no difference at 129.06, so it is not used. T116 on win2 resumes T113's chain from 146.56
 on the faster build.
+
+### 13.25 Every value of Δ in one table (2026-11-06 03:10 UTC)
+
+`hp/export_delta_all.py` writes `hp/data/delta_all.csv`, one row per D with Δ in up to four parts, the kind of
+computation, an error estimate and its kind, the source record and the state (columns and precedence in its docstring;
+the README's Values section describes the file). It read the raw-data repository at c5771da. Its 2337 rows:
+
+| kind | rows | D | err, its kind and range |
+|---|---|---|---|
+| dd, the full system in double-double (`data/delta_dd.csv`) | 1257 | 3.045–67.767 | dM 1.1e-22 to 4.1e-10, check 1e-16 to 2e-15 |
+| qd, the full system in quad-double (`data/delta_qd.csv`) | 7 | 68.5–73.0 | starts 5.5e-34 to 6.5e-33 (3 rows) |
+| pinned, Delta_full1 of T73, T75 and T85-mac | 895 | 67.768–78.105 | pins 7.4e-19 to 8.6e-15 (150), layouts 2.3e-7 to 8.3e-7 (3) |
+| chain, the backbone of the asymptotic numerical method's runs | 178 | 75.27–152.31 | runs 1.9e-32 to 1.2e-20 (22) |
+
+`--verify` re-reads every row from the record or state it names and finds all 2337 equal. `--mutate=dd`, `qd`, `pinned`
+and `chain` move one row's second part by one ulp, and each fails it (exit 1).
+
+**The chain's backbone.** Every state of a run carries the run's start state (`source` in its metadata), so the chain is
+traced from the highest-D state back through the start states, taking from each run its states up to the next run's
+start. That gives 17 runs from T75's pin 7 state at 73.27, through `anm-mac/run_trend_pin3` (double-double to 79.27),
+the quad-double runs from 79.77 and T110, T113 and T116, to T117. Each state is checked to be an accepted step of its
+run's `anm_run.jsonl` from the state before it. Eight runs off the backbone reach a backbone D with the same held trend
+and precision, and they give the err of 22 rows:
+
+| D | other run | other − backbone |
+|---|---|---|
+| 101.12 | `reseed-mac/anm_reseed_pilot` | +2.2e-21 |
+| 123.62, 126.12 | `T111-win/chain`, `chain3` | +8.6e-21, +5.9e-21 |
+| 129.06–135.56 | `T114-mac/chain` (14 states), `anm-mac/restart_plan` (2) | +2.9e-21 to +1.2e-20 |
+| 131.06, 133.56 | `anm-mac/elimq_pilot` | +3.1e-21, +3.0e-21 |
+| 146.81–148.56 | `T113-win/chain` past T116's start | 1.9e-32 to 3.2e-21 |
+
+They are the held values' dependence on the path, about 1e-20 (13.22). Two comparisons are not counted. The runs that
+hold the harmonics constant (`run_pin3_newton_e14`, `run_pin3_cont`) are another system and differ by 7.3e-7 to 2.5e-6
+at 75.27–80.27. The double-double `run_trend_pin3_cont` differs from the quad-double `run_trend_pin3_qd3` by 9.0e-10 at
+79.77 and 1.9e-8 at 80.27, which measures the double-double run's accepted stalls, not the quad-double row.

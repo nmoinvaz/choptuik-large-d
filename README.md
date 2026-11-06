@@ -316,10 +316,11 @@ hp/lowD_errors.svg and hp/lowD_sqrt.svg, is in [notes/LOW_D.md](notes/LOW_D.md),
 
 **All our values below D = 4.**
 
-- **Where they live.** `hp/export_lowD.py` writes every converged double-double record below D = 8.25 to
-  [`hp/data/delta_dd_lowD.csv`](hp/data/delta_dd_lowD.csv), one row per D and τ resolution M, with γ where computed.
-  `hp/export_dd.py` puts the best value per D into [`hp/data/delta_dd.csv`](hp/data/delta_dd.csv) next to the
-  continuation points, as run `lowD-M<M>`, and `hp/plot_lowD_values.py` draws them. Rerun all three as runs land.
+- **Where they live.** The best value per D is a row of [`hp/data/delta_all.csv`](hp/data/delta_all.csv)
+  ([Values](#values)), with source `lowD-M<M>` and, as its error, the change from the next lower τ resolution M.
+  `hp/export_lowD.py` collects every converged double-double record below D = 8.25, one per D and M with γ where
+  computed, and `hp/plot_lowD_values.py` draws them. Rerun `hp/export_lowD.py`, `hp/export_dd.py` and
+  `hp/export_delta_all.py` as runs land.
 - **Left panel:** Δ at the largest M at each D. A point is filled where the two largest M agree to 10⁻⁸ (or M = 80
   alone at D ≥ 3.7, where M 80 → 96 is 1.2×10⁻⁹), hollow where they do not yet.
 - **Every point,** resolved or not, lies within 1.6×10⁻⁵ of the √(D − 3) formula below. The three lowest, at
@@ -446,9 +447,18 @@ is still an assumption, are in [Is the period analytic in 1/D?](#is-the-period-a
 | 1000 | 1.65424086 | 0.499250 |
 | ∞ | 1.643893746 ± 0.000000015 | 1/2 (free fits: to about 5×10⁻⁷) |
 
-Δ for D = 10–60 is double-double, interpolated to 10⁻¹⁴ from [`hp/data/delta_dd.csv`](hp/data/delta_dd.csv)
-where D is not itself a computed point. Δ and γ for D = 5–8 are double-double, from the run T79 (M = 48, 22
-points from D = 8.25 down to 4 in steps of 0.25, [`hp/data/delta_dd_lowD.csv`](hp/data/delta_dd_lowD.csv); the
+**Every value of Δ** we computed, from D = 3.045 to the large-D chain's frontier, is in
+[`hp/data/delta_all.csv`](hp/data/delta_all.csv), one row per D. Each row has Δ in up to four parts (their sum is the
+value), the kind of computation, an error estimate and what that estimate is, and the source run and state in the
+[raw data](#raw-data). The kinds are the full system in double-double (D ≤ 67.77) or quad-double (68.5–73), the pinned
+double-double runs after one full-system step (67.77–78.1), and the large-D chain (from 75.27), whose held harmonics
+bias Δ by about 10⁻⁸–10⁻⁷ at D 79–86, growing with D, a bias its error column does not include
+([notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), 13.19). `cd hp && python3 export_delta_all.py
+../../choptuik-large-d-raw` rebuilds it, and `--verify` checks every row against its source.
+
+Δ for D = 10–60 is double-double, interpolated to 10⁻¹⁴ from that file's double-double rows where D is not itself a
+computed point. Δ and γ for D = 5–8 are double-double, from the run T79 (M = 48, 22 points from D = 8.25 down to 4 in
+steps of 0.25, records `hp/data/lowD_dd_t79.jsonl` and `hp/data/lowD_gamma_t79.jsonl`; the
 change from M = 48 to 64 is 8.7×10⁻¹² at D = 5, 3×10⁻¹⁴ at 6 and 10⁻²⁰ at 8, and Δ(7), checked at M = 48 only, is
 quoted to 10⁻¹¹; γ is quoted to 10⁻⁹, its M = 48 value). D = 4 is from the low-D double-double runs (M = 192,
 [notes/LOW_D.md](notes/LOW_D.md)). γ for D = 10–60 is double-double, a computed point at D = 10, 12 and 15 and
