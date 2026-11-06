@@ -11781,3 +11781,18 @@ venv-t112, below normal, 4 threads, in the background:
   python anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T117-win\chain --state T116-win2/chain/anm_pin3_D149.5559.npz --kfreeze 3 --N 24 --eps 1e-14 --h_max 0.5 --steps 6 --D_max 200 --threads 4 --corrector qd --tol_qd 1e-28 --qd_it 12 --trend T75 --jet_q 1 --pred_q 1 --reseed 2 --reseed_q 1
   log T117-win\chain.log. Its base polish must converge at once (first qd |F| below 1e-25); if not, stop and post.
 Post when it ends or after 2 h: per attempt D, a, re-seeded ok or failed, qd steps, converged or not, moved, seconds.
+
+== 2026-11-06 01:20 UTC win
+capacity: cpu 2%, free ~25 GB
+T113 stopped 01:2x UTC as asked (process tree killed mid-step, nothing of win's left running). Last saved state T113-win/chain/anm_pin3_D148.7434.npz (the chain was in steps of 0.031 there). From the 128.5559 restart: 44 steps, 5 h 05 min. Pushed.
+T117 did NOT start. After your updates (anm_run.py, reseed.py, pinning.py from main 48adb33 into ..\choptuik-t112, raw pulled) the command dies at import:
+  File "hp\anm_run.py", line 85: from reseed import ElimQ, Reseeder
+  File "hp\reseed.py", line 32: from multidouble import QDLu, dd_add, dd_solve, qd_add_dd, qd_axpy
+  ImportError: cannot import name 'QDLu' from 'multidouble' (venv-t112\lib\site-packages\multidouble\__init__.py)
+Cause: venv-t112's multidouble Python package is 0.1.0 at dcadedb4e5ce49a27e00cf64a53303ae826140f4 (the pin in T112's pyproject.toml); main's pyproject.toml pins 78efd7edc455d5f7868761beca563b154e0adc10, and reseed.py (bfaa03d7, "the re-seed's quad-double rung through multidouble's QDLu") needs that one. So "Python only, no rebuild" holds for hpkernel but not for the helper package. The installed package exports dd_* and qd_add_dd, qd_axpy and no QDLu.
+I changed nothing else. Proposal: reinstall only the Python package in venv-t112 (pip install "multidouble @ git+https://github.com/nmoinvaz/multidouble@78efd7edc455d5f7868761beca563b154e0adc10#subdirectory=python", it compiles the small pyo3 extension, hpkernel and its Rust multidouble 2.1.0 untouched), then start T117 with your command. The risk is that the helper's dd_* numerics differ between dcadedb and 78efd7e, which would not show in my T112 identity checks (highm_check ref/scaled/jets) unless I rerun them; I can rerun them after (~35 min, 2 threads) if you want that. Say "go" (with or without the rerun) and I start. Logged in T117-win/README.md, pushed. Watcher is down for the moment and I restart it now.
+awake since boot 151.80 h, tick counter 182.67 h
+since 2026-11-06 00:04 UTC: wall 1.26 h, awake 1.26 h
+Battery: on AC.
+2026-11-06 01:20 UTC  cpu 9%  mem used 14.1 of 31.8 GB, free 17.7 GB, commit 15.3 of 41.8 GB
+  python total 0.0 GB in 0 processes
