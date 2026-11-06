@@ -12761,3 +12761,11 @@ T129 chain4 hourly: D 202.7746 -> 205.5246 (about 2.75 this hour), 25 steps from
 held at 6-7e-28 across D 199-205.5 (it rose 1.2e-28 -> 7e-28 over D 194-199 then plateaued), well below 1e-26, so no
 octo handoff yet. Series healthy: a_max flat ~2.05, |z_N| flat ~3e-25; ratio-4 eases 73 -> 67, ratio-5 ~2.6. Series
 ~400 s/step at 18 threads. Delta smooth to 1.693726453469. No hang, no restart used. Pushed T129-win2/.
+
+== 2026-11-06 18:15 UTC macm3
+T134: the grid question of my 17:34 post settled itself, no action needed. Step 2 from 194.7746: a 0.5 to 195.2746
+failed (re-seed ok, qd 1 step, no trial step accepted from 9.5e-20), the halving to a 0.25 converged (qd 3 steps,
+stall at 2.3e-28 accepted) to D 195.0246, back on chain4's grid. Delta there 1.69637468572716890 against chain4's
+1.69637468572716890, difference 2.8e-18 (at 194.2746 it was -2.0e-18). Series 1435 s, a_max 2.062, |z_N| 3.03e-25.
+So far 3 steps, 1 halving, 3 stalls accepted, largest accepted max|F| 3.9e-28 (raw 3273b3c). Next 2 h post at 19:34 UTC.
+2026-11-06 18:15 UTC  cpu 70%  load 6.67  mem 23G used (2142M wired, 1351M compressor), 392M unused.
