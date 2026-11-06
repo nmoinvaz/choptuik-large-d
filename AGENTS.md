@@ -23,8 +23,8 @@ Conventions for the Claude sessions (cloud and local) that run computations here
   unstable modes, use a winding count of det M(λ) (notes/MODE_COUNT.md, if present).
 - **Octo-double kernel:** `Solver.residual_o`, `residual_jet_o`, `jacobian_o`, `newton_o` and `olu_solve` (sequences of
   eight parts, M = 32 only), `anm_run.py --jet_o 1` and `hp/ojet_check.py` (notes/OCTO_DOUBLE.md). Its Python helpers
-  `od_add_dd` and `od_axpy` come from multidouble's Python package at the commit `hp/pyproject.toml` names, so import them
-  only on the octo-double path: a runner's older build and package run every other path unchanged.
+  `od_add_dd` and `od_axpy` come from multidouble's Python package at the commit `hp/pyproject.toml` names, so import
+  them only on the octo-double path: a runner's older build and package run every other path unchanged.
 - **Other matter models:** the ℓ-multiplet solver is `solver/matter/dss_ell.py` (a copy-and-adapt of `solver/dss.py`;
   ℓ = 0 reproduces it to 9×10⁻¹⁴). Check new field equations symbolically against covariant ones first, as
   `solver/matter/struct_eqs.py` does, and validate at D = 4 against published values before continuing in D.
