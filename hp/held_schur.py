@@ -12,7 +12,12 @@ s_j = Delta's component of dz_j. Truncating the SVD of S (Hansen, BIT 27 (1987) 
 the directions the full equations determine and holds the rest: dh_tau = -sum over sigma_i > tau sigma_1 of
 v_i (u_i . g) / sigma_i, a linear estimate of "solve the well-determined held directions, hold the near-null ones".
 
-    cd hp && python3 held_schur.py RAWDIR STATE [--threads=2] [--mutate=pinned_rows]
+    cd hp && python3 held_schur.py RAWDIR STATE [--threads=2] [--mutate=pinned_rows] [--plant=5a:1e-8,13a:1e-6]
+        [--json=OUT]
+
+--plant adds a held error dh to the state in the linear model (g + S dh): the planted truth at a full-system state,
+where g = 0, is that the truncated step recovers the planted error's Delta in the solved directions and leaves the
+held ones' part.
 
 Check (exit 1 on failure): S from eps and eps/2 agree to 1e-6 relative in every singular value above 1e-12 sigma_1,
 and sigma_1 > 1e-14 (a full system that sees its held rows). --mutate=pinned_rows takes g and S from the pinned kernel's
@@ -99,6 +104,17 @@ def main():
                     gm = [a + (eps * (1 if r == col else 0)) for r, a in enumerate(gm)]
                 for r in range(10):
                     S[div][r, col] = (gp[r] - gm[r]) / (2 * mp.mpf(eps))
+    plant = {}
+    if opts.get("plant"):
+        # a planted held error dh (KEY:VALUE,...): g becomes g + S dh, the residual of a pinned state held at
+        # h_state + dh in the linear model, and the exact correction's dDelta is -s . dh
+        for item in opts["plant"].split(","):
+            key, val = item.split(":")
+            plant[LAB.index(key)] = mp.mpf(val)
+        for r in range(10):
+            g0[r] += mp.fsum(S[1][r, c] * v for c, v in plant.items())
+        print(f"  planted dh {opts['plant']}: the exact correction moves Delta by {mp.nstr(-mp.fsum(sens[c] * v for c, v in plant.items()), 6)}; "
+              + ", ".join(f"{LAB[c]} part {mp.nstr(-sens[c] * v, 4)}" for c, v in plant.items()))
     U, sig, V = mp.svd_r(S[1])
     sig2 = mp.svd_r(S[2], compute_uv=False)
     smax = sig[0]
