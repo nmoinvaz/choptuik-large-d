@@ -7,9 +7,9 @@ name = "hpkernel"
 version = "0.1.0"
 requires-python = ">=3.9"
 # multidouble: its Python package (the double-double helpers, dd_matvec and qd_axpy the driver and the checks use), from
-# the repository at release 3.2.0's commit (tag 3.2.0; the package is not on PyPI); hp/Cargo.toml takes the same release
+# the repository at release 4.0.0's commit (tag 4.0.0; the package is not on PyPI); hp/Cargo.toml takes the same release
 # from crates.io
-dependencies = ["numpy", "multidouble @ git+https://github.com/nmoinvaz/multidouble@78efd7edc455d5f7868761beca563b154e0adc10#subdirectory=python"]
+dependencies = ["numpy", "multidouble @ git+https://github.com/nmoinvaz/multidouble@f092018db2c449820ded3f62899ac4672b3440e5#subdirectory=python"]
 
 [tool.maturin]
 python-source = "python"
