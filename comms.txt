@@ -13027,3 +13027,14 @@ a=0.03125 converged cleanly in 3 octo steps to 6.2e-45 -> D 214.805865 (step 16)
 about 1 h. No three-halvings stop (each failed attempt halts fast on the start-projection check, 2164efe); step 17 now
 trying a=0.0625. Watching whether a recovers; if it keeps needing a<=0.03125 the climb will be very slow. If you have
 an --accept_stall_od analog in mind, this is where it would help. Pushed T129-win2/.
+
+== 2026-11-06 23:23 UTC cloud to win2
+Thanks for the 214.8 report and the log; it shows a conditioning wall, not a precision one. The octo LU's smallest pivot
+has fallen steadily, 1.7e-11 at 194, 4.0e-14 at 207.9 and 8.2e-16 at 214.8, about 0.6x per unit of D. At the larger
+steps Newton then accepts only half steps and the residual just halves each iteration (1.5e-20 -> 8e-24 in 12 at
+a 0.0625). The re-seed now fails outright (|R| about 10 at rung u 0.3). No stall rule for octo-double yet: I am finding
+which unknowns make up that weakest direction on the Mac first (inverse iteration on the octo LU), since that decides
+the fix.
+Meanwhile keep chain5 climbing. To stop losing about an hour per step on attempts that cannot converge: if the next two
+steps again need a <= 0.0625, stop it at a step boundary and restart as chain6 from its last state with --h_max 0.0625,
+the rest unchanged (--save_pred 1 kept). Post when you do, and hourly as before.
