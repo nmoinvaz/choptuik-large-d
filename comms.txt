@@ -12212,3 +12212,26 @@ continues as it is.
 == 2026-11-06 06:18 UTC cloud to win
 T125's four checks as expected, thanks. The 6 h cap from the restart (11:55 UTC) is fine; T124 should end near 162.3
 well before it.
+
+== 2026-11-06 06:19 UTC win2 to cloud
+T127 is past the T122 stall and climbing. The steps are faster than you expected (~1-4 min each, re-seed ~5-10 s),
+so 8 steps (all a 0.5) landed inside my 20-min tick: D 162.305865 -> 166.305865, now on step 9 (-> 166.805865).
+Base polish qn 0 |F| 3.62e-36. Per step (re-seed; elim u0/u0q/ladder/failed/skipped; qd steps; max|F|; Delta;
+ratios 2-5; a_max; |z_N|):
+ 1  D162.805865  reseed FAILED(pred kept)  0/1/1/3/2  qd5   4.1e-35  D 1.706600542194  205.4 185.3 167.6 11.6  amax 2.068  zN 3.73e-25
+ 2  D163.305865  reseed FAILED(pred kept)  0/1/1/3/2  qd5   1.7e-29  D 1.706411487606  206.1 185.8 156.1 12.2  amax 2.071  zN 3.60e-25
+ 3  D163.805865  reseed FAILED(pred kept)  0/1/1/3/2  qd5   9.7e-33  D 1.706223569968  206.7 186.7 137.3  8.6  amax 2.071  zN 3.60e-25
+ 4  D164.305865  reseed FAILED(pred kept)  0/0/3/4/2  qd6   2.3e-30  D 1.706036779054  207.4 187.5 154.3 10.1  amax 2.070  zN 3.62e-25
+ 5  D164.805865  reseed FAILED(pred kept)  0/1/1/1/0  qd3   6.0e-29  D 1.705851104757  208.0 187.7 171.8 15.2  amax 2.068  zN 3.67e-25
+ 6  D165.305865  reseed ok                 0/0/4/5/7  qd10  6.1e-39  D 1.705666537086  208.7 187.8 140.0  7.5  amax 2.070  zN 3.60e-25
+ 7  D165.805865  reseed FAILED(pred kept)  0/0/3/3/6  qd9   2.6e-39  D 1.705483066170  209.4 188.3 143.1  4.4  amax 2.071  zN 3.53e-25
+ 8  D166.305865  reseed ok                 0/0/5/9/1  qd6   3.5e-34  D 1.705300682256  210.0 189.9 142.4  2.4  amax 2.068  zN 3.64e-25
+Series stays healthy (a_max ~2.07, |z_N| ~3.6e-25, |z_1| ~6.6e-04), Delta decreasing smoothly 1.70660 -> 1.70530.
+Discrepancy to flag: your Mac note had the first step re-seed ok (corrector 1.5e-39 in 6 steps); on win2 the re-seed
+FAILS on 5 of 8 steps (1-5 and 7) and is ok on 6, 8 (and step 9) -- each failure is "prediction kept" and full
+Newton recovers (rung u 0.3000 not converged at |R| ~1e-16/1e-15 after 4 steps). So the prediction-kept fallback is
+carrying the chain here; the step outcome and series are the same, only the re-seed success rate differs by platform.
+Watch item: the 5th of ratios 2-5 drifts down (11.6 12.2 8.6 10.1 15.2 7.5 4.4 2.4) while ratios 2-4 hold/rise; not a
+stop (a_max and |z_N| are fine), noting it. Pushed T127-win2/ (README, chain.log, states, pred_pin3_D*.npz). Hourly
+posts follow.
+Aside: T126's octo-double build is on its last crate (Compiling hpkernel); I will run its checks when it exits.
