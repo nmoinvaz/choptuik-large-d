@@ -220,15 +220,16 @@ steps (mutate 8), and in octo-double (`PinnedO.newton_o`), and evaluates the oct
 | quad-double, four refinements | 1.35e-19 | 2.4e-11 .. 1.8e26 | 3.76e-14 | 0.14 |
 | octo-double | 1.19e-19 | 1.5e-10 .. 1.8e26 | 4.37e-14 | |
 
-A full step raises max |F| by fourteen orders in all three, so that rise is the step's quadratic term in the strong rows
-(newton_qd's docstring), not rounding; newton_qd's dz test is made for it. What differs is the step itself: the
+A full step raises max |F| by fourteen orders in all three, so that rise is the step's quadratic term (in the horizon
+rows, below), not rounding; newton_qd's dz test is made for it. What differs is the step itself: the
 quad-double LU's smallest pivot is 24 times the octo-double one's too small, and its step in Delta is wrong by 45%.
 Four refinement steps of the horizon solves (QD_REFINE is 2) recover part of it. The quad-double LU's smallest pivot
 falls from 3.7e-9 at D 175.52 to 1.0e-13 at 193.77 (`rungdiag/qd_floor.log`), 3.7×10⁴ times, while its largest grows
 600 times. The octo-double LU's smallest pivot is 1.3e-9 at 180.52 (quad-double 1.2e-9), 1.5e-10 at 188.02 (6.4e-12)
-and 2.5e-11 at 193.77 (1.0e-13; `check_a.log`, `step0.log`, `d_step.log`), so the two part ways between 180 and 188. A reading consistent with this, not tested further, is that the quad-double Jacobian's error, of order
-eps_qd G² (5×10⁻¹² at 188), approaches the weak direction's pivot (1.5×10⁻¹⁰ in octo-double), so the Newton iteration
-loses its contraction in that direction. Neither the plan's truncation nor the held offset (formed exactly in
+and 2.5e-11 at 193.77 (1.0e-13; `check_a.log`, `step0.log`, `d_step.log`), so the two part ways between 180 and 188.
+A reading consistent with this, not tested further, is that the quad-double Jacobian's error, of order eps_qd G²
+(5×10⁻¹² at 188), approaches the weak direction's pivot (1.5×10⁻¹⁰ in octo-double), so the Newton iteration loses its
+contraction in that direction. Neither the plan's truncation nor the held offset (formed exactly in
 double-double, its rounding in the measured |F| about 10⁻³⁵) is the cause. In octo-double eps_od G² is about 10⁻⁷⁵.
 
 **The octo-double step needs damping there too.** Plain `newton_od` from the same state (`step0_od.py`, stopped after
@@ -269,10 +270,10 @@ Step 0 found no dependence on the segment plan's tolerance, so the corrector has
 
 - (a) Planted truth, `octo_corrector.py planted RAW T129-win2/chain/anm_pin3_D180.5246.npz`. The start is the
   converged state with its centre data and its nodes but the last moved by 10⁻¹² relative (random signs, sizes 0.5–1,
-  seed 1), on the state's own pinned system. Pass: the octo-double corrector (ElimO, newton_od, tol 1e-40) converges with the
-  octo-double pinned max |F| below 1e-40, and its Delta agrees with the quad-double corrector's from the same start
-  (ElimQ, newton_qd to tol 1e-45 in 12 steps) to 10⁻³⁰. The task as set moved every node. A last node moved by 10⁻¹²
-  leaves the regular family by about G·10⁻¹² at the horizon, and the start's projection then failed (`probe_a.py`,
+  seed 1), on the state's own pinned system. Pass: the octo-double corrector (ElimO, newton_od, tol 1e-40) converges
+  with the octo-double pinned max |F| below 1e-40, and its Delta agrees with the quad-double corrector's from the same
+  start (ElimQ, newton_qd to tol 1e-45 in 12 steps) to 10⁻³⁰. The task as set moved every node. A last node moved by
+  10⁻¹² leaves the regular family by about G·10⁻¹² at the horizon, and the start's projection then failed (`probe_a.py`,
   `probe_a_last.log`: max |F| 3.62e-12, projection 'failed' in 249 s), so the last node stays at the truth and the
   projection succeeds (`probe_a.log`: 3.39e-12, 'u0q' in 88 s); `--last 1` moves it too.
 - (b) The wall, `octo_corrector.py wall RAW T129-win2/chain2/pred_pin3_D194.2746.npz`: the stored prediction where
@@ -337,8 +338,9 @@ Delta by −9.19e-19 (its trial projected once). The octo-double series at the p
 the record of chain2's last base to the printed digits: a_max 2.058, |z_N| 3.18e-25, ratios 246.4 220.9 106.5 3.4. The
 step at a = 0.5 re-seeded in 84 s, and the corrector converged in three full steps, 1.36e-19 → 7.52e-35 → 3.20e-51,
 in 518 s; the state `anm_pin3_D194.2746.npz` holds eight parts (`load_q` reads its first four, `has_o` is true). Its
-Delta, 1.69657465869794022 − 2.4348e-17, differs from (b)'s, 1.69657465869794022 − 2.4350e-17, by about 2×10⁻²¹:
-(b) holds the harmonics at the prediction's own values and plans at the prediction, the chain at the trend's values.
+Delta, 1.69657465869794022 − 2.4348e-17, differs from (b)'s, 1.69657465869794022 − 2.4350e-17, by about 2×10⁻²¹.
+(b) holds the harmonics at the prediction's own coefficients rounded to float64, the chain at the trend's, and the
+two predictions come from different bases (chain2's and the polished one).
 The restart (`--steps 0`) from that state started at 5.96e-36, since its segments are planned at the state rather than
 at the step's re-seeded prediction, and converged in two steps to 2.85e-58, moving Delta by −6.25e-29. So a replanned
 segment plan moves the root by about 10⁻²⁸ in Delta at D 194.
@@ -361,6 +363,7 @@ T129's options with `--corrector od --tol_od 1e-40` in place of `--corrector qd 
         --h_max 0.5 --steps 300 --D_max 1000 --threads 18 --corrector od --tol_od 1e-40 --qd_it 12 --trend T75
         --jet_o 1 --reseed 2 --reseed_q 1
 
-A quad-double state (four parts) as the start is polished in octo-double first. An octo-double Newton step costs
-3–5 min on 3 threads of the Mac against 20–40 s for a quad-double one, nearly all of it the Jacobian (`newton_o`'s
-timing, 355 s of 360 s at D 188 under load, `probe_time.py`, `probe_time.log`).
+A quad-double state (four parts) as the start is polished in octo-double first. An octo-double Newton step took
+145–360 s on 3 threads of the Mac in these runs, against 19–41 s for a quad-double one, nearly all of it the Jacobian
+(`newton_o`'s timing, 355 s of 360 s at D 188 under load, `probe_time.py`, `probe_time.log`). From a prediction the
+corrector took three steps in (b) and (d), 518–629 s with the re-seed.
