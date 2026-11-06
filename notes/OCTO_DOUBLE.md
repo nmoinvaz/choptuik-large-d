@@ -272,8 +272,9 @@ Step 0 found no dependence on the segment plan's tolerance, so the corrector has
   seed 1), on the state's own pinned system. Pass: the octo-double corrector (ElimO, newton_od, tol 1e-40) converges with the
   octo-double pinned max |F| below 1e-40, and its Delta agrees with the quad-double corrector's from the same start
   (ElimQ, newton_qd to tol 1e-45 in 12 steps) to 10⁻³⁰. The task as set moved every node. A last node moved by 10⁻¹²
-  leaves the regular family by about G·10⁻¹² at the horizon, and the start's projection then failed (`probe_a.py`:
-  max |F| 3.62e-12, projection 'failed' in 173 s), so the last node stays at the truth; `--last 1` moves it too.
+  leaves the regular family by about G·10⁻¹² at the horizon, and the start's projection then failed (`probe_a.py`,
+  `probe_a_last.log`: max |F| 3.62e-12, projection 'failed' in 249 s), so the last node stays at the truth and the
+  projection succeeds (`probe_a.log`: 3.39e-12, 'u0q' in 88 s); `--last 1` moves it too.
 - (b) The wall, `octo_corrector.py wall RAW T129-win2/chain2/pred_pin3_D194.2746.npz`: the stored prediction where
   chain2's quad-double corrector stalled at 1.12e-28 (Delta 1.6965746586979402 in `chain2/anm_run.jsonl`), re-seeded
   with the quad-double polish, then the octo-double corrector. Pass: its octo-double pinned max |F| below 1e-36.
