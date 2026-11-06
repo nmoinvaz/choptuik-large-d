@@ -12451,3 +12451,22 @@ a=0.5, re-seed 2 ok / 0 failed, series healthy:
 The warm projection works at a=0.5, so the a=1.0 path that hung is avoided; no 20-min stall. Climbing to D 200 at
 0.5/step, ~405 s/step (series 395 + solve 10-26). Hourly posts follow; the 20-min-no-line hang rule is armed. Pushed
 T129-win2/.
+
+== 2026-11-06 12:08 UTC win
+capacity: cpu 49%, free 15 GB
+T131 segment A at 12:10 UTC, 1 h 54 min in: D 166.5559 after 15 steps (162.8059 to 166.5559, all full 0.25, no halvings), last state anm_pin3_D166.5559.npz, pushed to T131-win/. Re-seed ok 12, FAILED 3 (163.31, 165.31, 166.06, each prediction kept, full Newton recovers), qd steps 3-7, max qd |F| 1.1e-35 to 1.2e-29 at 163-164.6 (1e-29 at 164.56 and 165.06, below the 1e-28 tol), the rest 1e-33 and below. Series healthy: a_max 2.070, |z_N| 3.6e-25, |z_1| 6.56e-04. Watch item as in T127: ratio 5 of 2-5 falls (12.1 at 160.9 on T124, now 5.3 at 166.31), ratio 4 111.6 then 106.8; consistent with the quad-double series losing digits at orders 4-9.
+| D | re-seed | qd steps | max qd \|F\| | Delta | s |
+| 163.0559 | ok | 4 | 7.6e-32 | 1.70650587213694016 | 164 |
+| 163.3059 | FAILED | 4 | 1.1e-35 | 1.70641148760599481 | 179 |
+| 164.3059 | ok | 7 | 4.4e-39 | 1.70603677905363149 | 184 |
+| 165.3059 | FAILED | 7 | 6.0e-39 | 1.70566653708633820 | 361 |
+| 166.3059 | ok | 3 | 4.2e-34 | 1.70530068225626108 | 138 |
+| 166.5559 | ok | 3 | 2.1e-33 | 1.70520989491158570 | 186 |
+Steps take 140-360 s, about 7 min per 0.25 with the step time on 4 threads (T127 used full steps of 0.5 at 1-4 min on win2). Delta at 163.3059 and 166.3059 equals T127's 1.706411487606 and 1.705300682256 to the 12 digits it printed; the diff to 17 digits is for export_delta_all.py. At this pace segment A reaches 169.9 in ~1.5 h (about 13:40 UTC), B then needs ~24 steps (about 3 h) from 170.2746 to 175.6.
+awake since boot 162.61 h, tick counter 193.48 h
+since 2026-11-06 10:17 UTC: wall 1.85 h, awake 1.85 h
+Battery: on AC.
+2026-11-06 12:08 UTC  cpu 48%  mem used 13.8 of 31.8 GB, free 18.0 GB, commit 15.3 of 41.8 GB
+  pid 24884    0.19 GB  cpu    25646 s  anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T131-win\chainA --state T127-win2/chain/anm_pin3_D162.8059.npz --kfreeze 3
+  pid 31724    0.00 GB  cpu        0 s  anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T131-win\chainA --state T127-win2/chain/anm_pin3_D162.8059.npz --kfreeze 3
+  python total 0.2 GB in 2 processes
