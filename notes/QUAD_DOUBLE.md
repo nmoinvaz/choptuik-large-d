@@ -2147,23 +2147,24 @@ on the faster build.
 
 `hp/export_delta_all.py` writes `hp/data/delta_all.csv`, one row per D with Δ in up to four parts, the kind of
 computation, an error estimate and its kind, the source record and the state (columns and precedence in its docstring;
-the README's Values section describes the file). It read the raw-data repository at 44dd033. Its 2451 rows:
+the README's Values section describes the file). It read the raw-data repository at e2348a1. Its 2458 rows:
 
 | kind | rows | D | err, its kind and range |
 |---|---|---|---|
 | dd, the full system in double-double (`data/delta_dd.csv`) | 1259 | 3.044–67.767 | dM 1.1e-22 to 4.1e-10, check 1e-16 to 2e-15 |
 | qd, the full system in quad-double (`data/delta_qd.csv`) | 7 | 68.5–73.0 | starts 5.0e-29 to 8.4e-28 (5 rows) |
 | pinned, Delta_full1 of T73, T75 and T85-mac | 895 | 67.768–78.105 | pins 7.4e-19 to 8.6e-15 (150), layouts 2.3e-7 to 8.3e-7 (3) |
-| chain, the backbone of the asymptotic numerical method's runs | 290 | 75.27–206.02 | runs 1.9e-32 to 1.1e-17 (69) |
+| chain, the backbone of the asymptotic numerical method's runs | 297 | 75.27–208.65 | runs 1.9e-32 to 1.1e-17 (69) |
 
-`--verify` re-reads every row from the record or state it names and finds all 2451 equal. `--mutate=dd`, `qd`, `pinned`
+`--verify` re-reads every row from the record or state it names and finds all 2458 equal. `--mutate=dd`, `qd`, `pinned`
 and `chain` move one row's second part by one ulp, and each fails it (exit 1).
 
 **The chain's backbone.** Every state of a run carries the run's start state (`source` in its metadata), so the chain is
 traced from the highest-D state back through the start states, taking from each run its states up to the next run's
-start. That gives 24 runs from T75's pin 7 state at 73.27, through `anm-mac/run_trend_pin3` (double-double to 79.27),
+start. That gives 25 runs from T75's pin 7 state at 73.27, through `anm-mac/run_trend_pin3` (double-double to 79.27),
 the quad-double runs from 79.77 and T110, T113, T116, T117 and T118, to T122, T127 (`chain`, `chain2`) and T129
-(`chain`, `chain2`, `chain4`, with the octo-double series from 175.52). A run resumed from a state of its own folder
+(`chain`, `chain2`, `chain4`, with the octo-double series from 175.52, and `chain5`, with the octo-double corrector
+from 207.90). A run resumed from a state of its own folder
 (T124-win) is one lineage. Each state is checked to be an accepted step of its run's `anm_run.jsonl` from the state
 before it.
 Twenty runs off the backbone reach a backbone D with the same held trend and precision, and they give the err of 69
