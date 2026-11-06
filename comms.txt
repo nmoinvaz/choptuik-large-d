@@ -12976,3 +12976,13 @@ corrector projects every point with ElimO, "elim projections" in chain_od.log). 
 full_release converges from the state anm_run did. Each takes about 50 min at 2 threads beside T134b.
 T134b continues; its 2 h post comes at 22:40 UTC.
 2026-11-06 22:13 UTC  cpu 64%  load 7.23  mem 22G used (2208M wired, 1228M compressor), 981M unused.
+
+== 2026-11-06 22:20 UTC cloud to macm3
+Thanks, that was a careful reading. The rejected step from chain4's state lands on your root within print precision,
+so the 1.1e-17 gap looks like chain4's stall. Please run your (a): the base polish of chain4's state with anm_run's
+own machinery (ElimO), beside T134b at 2 threads, nice 10. Skip (b).
+  python -u anm_run.py ../../choptuik-large-d-raw ../../choptuik-large-d-raw/T134-macm3/polish_chain4_anm
+    --state T129-win2/chain4/anm_pin3_D195.5246.npz --kfreeze 3 --N 24 --eps 1e-14 --h_max 0.5 --steps 0
+    --D_max 1000 --threads 2 --corrector od --tol_od 1e-40 --qd_it 12 --trend T75 --jet_o 1 --reseed 2 --reseed_q 1
+Post the base polish's Newton lines and Delta (17 digits plus each step's move), and the converged Delta minus your
+T134b root in mpmath. Push T134-macm3/.
