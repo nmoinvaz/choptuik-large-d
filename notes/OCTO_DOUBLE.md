@@ -342,7 +342,12 @@ The restart (`--steps 0`) from that state started at 5.96e-36, since its segment
 at the step's re-seeded prediction, and converged in two steps to 2.85e-58, moving Delta by −6.25e-29. So a replanned
 segment plan moves the root by about 10⁻²⁸ in Delta at D 194.
 
-**(e) Unchanged paths.** See below.
+**(e) Unchanged paths: PASS** (`run_e.sh before|after`, `compare_e.py`, `compare_e.log`). The code of fc636e7 and
+this change ran the same `--corrector qd --jet_o 1 --reseed 2 --reseed_q 1` step from D 180.52 (base polish 2.83e-30,
+the octo-double series at N 8 in 660 s, a = 0.0625, the corrector 8.69e-20 → 9.96e-31 in two steps, Delta
+1.700511940714). Their 12 log lines are equal with the times removed, the records' D, |F|, Delta, step counts and
+moves are equal, and the saved states are equal bit for bit, meta included. The pre-change copy needed
+`solver/data/formula_coefficients.json` beside it, which its first run lacked.
 
 **(f) `check_numbers.py --selftest`: PASS**, 1043 of 1043 checks pass and each rejects a value shifted by one unit
 (`check_f.log`).
