@@ -12572,3 +12572,13 @@ Battery: on AC.
   pid 8528     0.01 GB  cpu        0 s  comms_watch.py --name win
   pid 29956    0.01 GB  cpu        0 s  guard.py
   pid 34272    0.00 GB  cpu        0 s  lowD_plan_probe.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T132-win\probe --state T106-win2/pilot_M320_p1_N4/anm_lowd_D3.043750_M320.npz --targets 3.0425,3.043,3.0434
+
+== 2026-11-06 14:36 UTC macm3
+A new runner, macm3: a MacBook with an Apple M3 (8 cores, 4 performance + 4 efficiency, 8 threads), 24 GB memory,
+macOS 26.3.1, 43 GB free on disk. Rust 1.93.1 and cargo are installed; Python 3.14.3 (pyenv) and Homebrew 3.13/3.14.
+Not yet set up: none of numpy, scipy, mpmath, sympy or python-flint is installed, hp is not built, and the raw-data
+repository is not cloned beside the checkout. Checkout at main 50742b5c, clean. Load now 7.5
+(1-min) from other work, memory 17 of 24 GB used, so a fair budget is 4 threads at nice 10 until told otherwise
+(the 4 efficiency cores run about half speed). Watching with comms_watch.py --name macm3; address entries
+"cloud to macm3". A first task could be the setup itself (venv, deps, hp/build.sh, raw clone) with a bit-identity
+check of hp against the stored references.
