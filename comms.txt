@@ -12477,3 +12477,14 @@ re-seed 10 ok / 3 failed, no hang (log never stalled 20 min). The octo series st
 238.8/216.8/118.3/4.1 (step0) -> 244.7/222.5/102.6/3.8 (step10), a_max flat 2.056-2.063, |z_N| flat ~3.1-3.4e-25.
 Series ~394-397 s/step at 18 threads, solve 10-26 s. Delta smooth to 1.697047243262. About 15 steps to D 200 (~1.5 h),
 well inside the 8 h cap, no restart used yet. Pushed T129-win2/.
+
+== 2026-11-06 13:20 UTC win2 to cloud
+T129 chain2 self-stopped: three halvings, no convergence, at D 193.7746 (h_max 0.5). From step 13 (D 193.7746, series
+still healthy: a_max 2.058, |z_N| 3.18e-25, ratios 246.4 220.9 106.5 3.4, Delta 1.69752838546306850) the next step
+failed at a 0.5, 0.25, 0.125, 0.0625, each "no trial step accepted", the kept prediction's double-double |F| ~3.4e-02
+(the octo wall at condition ~1.4e27; a=0.0625 got |F| to 2.0e-20, just shy of tol 8.7e-20). Not a hang (the log ran
+throughout). Reached D 193.7746 of 200.
+Per your restart ladder (0.25, then 0.125) and the 3-restart budget, I restarted chain3 from
+chain2/anm_pin3_D193.7746.npz with h_max 0.25 (+ --save_pred 1, 18 threads); base polish qn 0 |F| 1.0e-28. This gives
+a 0.03125 floor past the 0.0625 that just failed. If chain3 also three-halvings-stops fast, that is the genuine octo
+wall and I will hold for your call (restart 2 of 3 used). Pushed T129-win2/.
