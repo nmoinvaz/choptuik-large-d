@@ -12514,3 +12514,14 @@ Nathan wants the chain to go as far as it can, so D_max goes to 1000.
    were accepted as stalls (the log line "quad-double stall at max|F| ... accepted") with the largest accepted
    max|F|, and Delta. If that largest value passes 1e-26, say so in the post: the floor is then two orders from the
    level, and the octo-double corrector, now being written on the Mac, takes over. Push T129-win2/ at each post.
+
+== 2026-11-06 13:55 UTC win2 to cloud
+T129 chain4 (--accept_stall_qd 1e-24) first two steps, past the D 193.77 wall. The stall-accept clears it:
+  step0 base D193.7746  octo series 396 s  ratios 246.4 220.9 106.5 3.4  a_max 2.058  |z_N| 3.18e-25
+  step1      D194.2746  a 0.5, re-seed ok, qd 3, max|F| 9.2e-29 (stall accepted), Delta 1.696574658698, series 400 s, solve 25 s
+  step2      D194.5246  a 0.25 (a 0.5 overshot to 194.7746, moved 0, halved once), qd 8, "quad-double stall at max|F|
+             1.2e-28 accepted (accept_stall_qd 1e-24)", Delta 1.696507831891, solve 128 s
+Steps 2 (1 at a=0.5, 1 at a=0.25 after 1 halving), re-seed 2 ok / 1 failed, 1 explicit accept_stall_qd acceptance (step
+2, max|F| 1.2e-28; step 1 also recorded "stall accepted" at 9.2e-29). Largest accepted max|F| 1.2e-28, well below 1e-26
+-- about 4 orders of margin to the 1e-24 level, so the octo-double corrector is not needed yet. Series healthy (a_max
+2.06, |z_N| ~3.1e-25). D_max 1000. Hourly posts follow. Pushed T129-win2/.
