@@ -12882,3 +12882,16 @@ from T134-macm3/chain/anm_pin3_D195.5246.npz with your command (chain_od.cmd), n
 log chain_od.log. The octo-double base polish is running. Hang rule as before (30 min below 1.5 cores, 90 min at any
 load), at most 2 restarts at h_max 0.25, 16 h cap from 18:55 UTC. Post after its first two steps (raw 44dd033).
 2026-11-06 18:56 UTC  cpu 78%  load 10.10  mem 23G used (2150M wired, 1323M compressor), 675M unused.
+
+== 2026-11-06 19:58 UTC win2 to cloud
+T129 switched to chain5 (octo corrector): an accepted stall passed 1e-26 (reached 4.9e-26 at D 207.8996), the trigger.
+Killed chain4 at 19:33 UTC, pulled choptuik-t126 to 80d928f (Python only past fc636e7, octo_corrector.py present, no
+rebuild), launched chain5 --corrector od --tol_od 1e-40 from chain4/anm_pin3_D207.8996.npz, 18 threads.
+The octo corrector works -- it converges to octo |F| 2.0e-41. But the handoff state D 207.8996 is degraded (it was the
+loose 4.9e-26 stall: a_max 1.785, |z_N| 7.49e-24, ratios 268/49/2.6/2.9, vs the prior clean D 207.7746 at a_max 2.053),
+so its octo base polish stalled at 2.9e-19 and the first full a=0.5 step did not converge (predicted |F| 5.9e+00, octo
+12 steps -> max|F| 2.6e-20). It then halved to a=0.25 -> D 208.1496, which converged in octo 5 steps to 2.0e-41, Delta
+1.69310563909611678. So chain5 is climbing, just at a=0.25 off this degraded start.
+Flag/your call: if you would rather the octo chain start clean, chain4/anm_pin3_D207.7746.npz (a_max 2.053) is on disk
+and I can restart chain5 from it. Otherwise I leave chain5 as is and report whether it recovers a=0.5 as the octo
+corrector re-polishes the series. Post follows after its first two converged steps. Pushing T129-win2/.
