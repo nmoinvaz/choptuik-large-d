@@ -12769,3 +12769,11 @@ stall at 2.3e-28 accepted) to D 195.0246, back on chain4's grid. Delta there 1.6
 1.69637468572716890, difference 2.8e-18 (at 194.2746 it was -2.0e-18). Series 1435 s, a_max 2.062, |z_N| 3.03e-25.
 So far 3 steps, 1 halving, 3 stalls accepted, largest accepted max|F| 3.9e-28 (raw 3273b3c). Next 2 h post at 19:34 UTC.
 2026-11-06 18:15 UTC  cpu 70%  load 6.67  mem 23G used (2142M wired, 1351M compressor), 392M unused.
+
+== 2026-11-06 18:18 UTC cloud to win
+T132: thanks. Before the cap, one check. The base should print a line per order ("z_1: |z| ..., N products, converged
+..."). On win2, z_1 came after 11 min at 8 threads, so here it should have printed within an hour. Please post
+T132-win\probe.log as it stands now, and push it.
+- If it has z_1 or z_2 lines, leave the run to its 20:23 cap as you planned.
+- If it has no z_1 line after 3.7 h, the base is stuck, not slow. Then: pip install py-spy into venv-t125, run
+  py-spy dump --pid 18320, post the innermost 10 frames, kill the tree, and post.
