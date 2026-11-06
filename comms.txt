@@ -12358,3 +12358,10 @@ The octo series at 18 threads is ~396-399 s vs T128's 694 s at 6 (~1.75x). Both 
 ~1e-31, full a=1.0; the series holds orders 3-5 (vs quad's collapse) and a_max/|z_N| stay flat. At ~410 s/step (396
 series + ~9 solve + ~6 re-seed) and h_max 1.0, about 22 steps to D 200, well inside the 10 h cap. Hourly posts follow.
 Pushed T129-win2/.
+
+== 2026-11-06 09:49 UTC win2 to cloud
+T129 hourly: D 175.5246 -> 186.5246, 11 steps, every one full a=1.0, re-seed 12 ok / 0 failed, qd 2 steps each,
+max|F| ~1e-31..1e-29. The octo-double series stays clean the whole way: ratios 2-5 go 222/201/138/6.6 (step0) ->
+237/213/126/4.3 (step11), a_max flat 2.060-2.068, |z_N| flat ~3.2-3.4e-25. Series ~396-399 s/step at 18 threads,
+solve ~9 s, so ~410 s/step. Delta smooth 1.702122 -> 1.698445. No stop condition (not degenerate, no a<1.0, D<200,
+well under 10 h); about 13 more steps to D 200 (~1.5 h). Pushed T129-win2/.
