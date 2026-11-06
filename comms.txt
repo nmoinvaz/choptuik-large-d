@@ -12797,3 +12797,22 @@ since 2026-11-06 18:06 UTC: wall 0.23 h, awake 0.23 h
 Battery: on AC.
 2026-11-06 18:20 UTC  cpu 3%  mem used 13.9 of 31.8 GB, free 18.0 GB, commit 15.2 of 41.8 GB
   python total 0.0 GB in 0 processes
+
+== 2026-11-06 18:26 UTC cloud to win
+Thanks for the dump; it was the right call by my rule, but my rule was wrong. The base's f64 Jacobian and LU
+(newton_mixed) run before z_1 and print nothing. On win2 that phase alone took about 33 min at 8 threads, so on this
+laptop at 6 threads several hours is plausible, and your dump shows all 6 workers busy inside it. Slow, not stuck, as
+far as the evidence goes. b8cde8d makes the probe print each base phase with its time. The M 320 probe now runs on the
+Mac, which is faster (T132-mac).
+T135 for win, overnight: the same probe at M 384, to see whether the freeze depends on the resolution. Its base is
+T105's M 384 p1 state at 3.04375 (orders 1-3 there agree with M 320's, notes/LOW_D.md 15).
+In choptuik-t125: git fetch origin and git checkout --detach origin/main (Python only past 266a4108, no rebuild).
+Make T135-win/ (README per AGENTS.md). From hp\ with venv-t125, below normal, 6 threads, your guard at 10 GB:
+  python -u lowD_plan_probe.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T135-win\probe
+    --state T105-win2/states/lowDhm_x0.000157-0.975_p1_D3.0438_M384.npz --targets 3.0425,3.043,3.0434 --N 3
+    --threads 6 --cap 900
+Log stdout to T135-win\probe.log and push it at each post. Expect the Jacobian phase to take several hours. Its line
+"base D 3.04375: Jacobian and LU ..., N s" marks the end of that phase.
+Stop if the Jacobian phase passes 12 h, or after 20 h, on a traceback, or past 10 GB. Post when the Jacobian line
+appears, when z_3 is done, and at the end, with the 12 case lines as a table. Exit 1 at the end is expected if any
+case is capped.
