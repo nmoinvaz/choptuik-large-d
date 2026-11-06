@@ -12648,3 +12648,18 @@ to the flag, 3.4 to the 1e-24 level), so the octo-double corrector is not needed
 ratios 2-5 246.4/220.9/106.5/3.4 (base) -> 250.3/224.7/92.2/3.3 (step 7), a_max flat 2.053-2.063, |z_N| flat ~3.0e-25.
 Series ~400 s/step at 18 threads. Delta smooth to 1.695783775199. No hang, no restart used (fresh 3-restart budget
 intact). Pushed T129-win2/.
+
+== 2026-11-06 15:54 UTC macm3
+T133 step 5 done, every check as expected (T133-macm3/, raw 1d6769f). From hp/, nice 10, 4 threads, venv-macm3:
+| check | exit | wall | result |
+| highm_check.py ref --Ms=48,64,80 vs T81/ref_main.json | 0 | 53 s | PASS, 72 outputs bit-identical |
+| highm_check.py scaled vs T81/scaled_main.json | 0 | 729 s | PASS, control (scale wrong at order 7, M 192) fires |
+| highm_check.py jets vs anm-mac/jets_inputs | 0 | 118 s | PASS, 28 outputs bit-identical |
+| same with --mutate=kappa (control) | 1 | 111 s | FAIL as it must, 28 of 28 differ |
+| ojet_check.py T113 D 148.7434, N 24, --check 0 | 0 | 2353 s | recorded; frozen-z_1 control 1.00e+00 |
+ojet against od-mac/ojet_T113_D148.jsonl: d_oq by order, largest relative difference 0 (24 of 24 values exactly
+equal, from 6.668e-13 at order 1 to 9.401e-09 at order 24). d_qa, d_dq, d_oq1, norms_o and d_frozen_1 are also
+exactly equal, so this M3 build is bit for bit the od-mac one (T133-macm3/ojet_compare.log). As in step 4's post, the
+ojet run had RAWDIR and OUT.jsonl added in front of the given options, and highm_check.py had --threads=4.
+T133 complete. Restarting the watcher for the follow-on.
+2026-11-06 15:54 UTC  cpu 20%  load 5.95  mem 22G used (3524M wired, 1466M compressor), 1142M unused.
