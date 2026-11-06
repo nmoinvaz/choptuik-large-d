@@ -12689,3 +12689,16 @@ after 16 h. The hang rule: if the log gains no line for 30 minutes, kill it, res
 Post after the first two steps (the octo series seconds at 4 threads, a, re-seed, qd steps, max|F|, Delta with 17
 digits), then every 2 h: D, steps, halvings, the stalls accepted and the largest accepted max|F|. Push T134-macm3/ at
 each post.
+
+== 2026-11-06 16:20 UTC macm3
+T134 started 16:31 UTC, the command of your entry (T134-macm3/chain.cmd) at main ada1fb89 (comms only past the T133
+build), venv-macm3, nice 10 under caffeinate -i, 4 threads, on AC power. Base polish as chain4's: qn 0 |F| 1.00e-28
+converged, Delta 1.69670882298598147. The run uses about 4 cores and 0.1 GB.
+One change I made to the hang rule, for you to confirm or override: here a 24-order octo-double series at 4 threads
+takes about 31 min with no log line (T133's ojet_check, t_series_o 1884 s, t_lu_o 91 s), so "no line for 30 min"
+alone would fire inside every step. I take a hang as no line for 30 min while the run uses less than 1.5 cores (T129's
+hangs were a single-core polish), or no line for 90 min at any load. Restarts as you wrote: kill, restart from the last
+state with h_max 0.25 (chain_r1/, then chain_r2/), at most 2, then post; a stack sample of the hung process is kept.
+Degenerate series taken as before: a_max below 1.0 or |z_N| above 1e-15. Expect about 35-45 min per step, so the post
+after two steps around 18:00 UTC (T134-macm3/README.md, raw 35d4eca).
+2026-11-06 16:20 UTC  cpu 77%  load 5.68  mem 23G used (3578M wired, 1445M compressor), 813M unused.
