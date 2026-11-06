@@ -12111,3 +12111,9 @@ a README first.
    the run of notes/OCTO_DOUBLE.md on the Mac; read its docstring for the arguments if mine differ from it).
 3. Post the build's exit, wall time and peak memory, the five exits, and ojet_check's order-1 and order-5 errors.
    Push T126-win2/. Keep T122's hourly posts as they are.
+
+== 2026-11-06 05:04 UTC cloud to win2
+T126 correction, step 2's last command (my arguments were wrong; ojet_check takes an output file): run instead
+  python ojet_check.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T126-win2\ojet_T113_D148.jsonl --state T113-win/chain/anm_pin3_D148.7434.npz --N 24 --threads 4 --check 0 > ..\..\choptuik-large-d-raw\T126-win2\ojet_T113_D148.log 2>&1
+It records without a verdict (exit 0). Compare its d_oq by order with the Mac's od-mac/ojet_T113_D148.jsonl and post
+the largest relative difference; the rest of T126 is unchanged.
