@@ -1,0 +1,15 @@
+ok   forms_check.py (unmutated): exit 0, expected 0
+ok   forms_check.py --mutate=sign_q: exit 1, expected non-zero
+ok   forms_check.py --mutate=fourier_phase: exit 1, expected non-zero
+ok   forms_check.py --mutate=pole_dist: exit 1, expected non-zero
+ok   forms_check.py --mutate=norm: exit 1, expected non-zero
+ok   forms_check.py --mutate=recip: exit 1, expected non-zero
+ok   forms_check.py --mutate=ellipse: exit 1, expected non-zero
+ok   forms_check.py --mutate=atanh: exit 1, expected non-zero
+ok   tuned_profile.py --plant: exit 0, expected 0
+ok   tuned_profile.py --plant --mutate=drift: exit 1, expected non-zero
+ok   tuned_profile.py --plant --mutate=sign_q: exit 1, expected non-zero
+ok   finiteD_ratios.py (unmutated): orientation check PASS, expected PASS
+ok   finiteD_ratios.py --mutate=reverse: orientation check FAIL, expected FAIL
+
+all controls behave

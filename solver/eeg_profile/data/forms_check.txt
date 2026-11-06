@@ -1,0 +1,31 @@
+PASS  R  real closed form = A Re[g]  
+PASS  F  Fourier partial sum (N = 6) + exact remainder = A Re[g]  
+PASS  H  g = 1/(e^{-it} + w e^{it})  
+PASS  H  h'' + h = 0  
+PASS  H  g g'' = 2 g'^2 + g^2 (autonomous, nonlinear)  
+PASS  E  ellipse form in p = t + d/2  
+PASS  E  bt = A Re[e^{-i d/2} G_q(t + d/2)]  
+PASS  P  Poisson-kernel form  
+PASS  PF partial fractions with a = i sqrt(w)  
+PASS  ODE (d^2 + 1)[(1 + q^2 + 2q cos(2t + d)) bt] = 0  
+PASS  SYM (q, d) -> (-q, d + pi) leaves bt unchanged  
+PASS  SYM bt(-t; q, d) = bt(t; q, -d)  
+PASS  F  60-term series vs closed form (num.)  max err 2.14e-50
+PASS  M  AM-FM carrier form (num.)  max err 1.07e-50
+PASS     continuation equals bt on the real axis (num.)  max err 1.07e-50
+PASS  POLE t = (pi-d)/2 + 0 pi - i sigma: residue  res (-4.0906291 + 0.20162653j)  formula (-4.0906291 + 0.20162653j)
+PASS  POLE t = (pi-d)/2 + 0 pi + i sigma: residue  res (-4.0906291 - 0.20162653j)  formula (-4.0906291 - 0.20162653j)
+PASS  POLE t = (pi-d)/2 + 1 pi - i sigma: residue  res (4.0906291 - 0.20162653j)  formula (4.0906291 - 0.20162653j)
+PASS  POLE t = (pi-d)/2 + 1 pi + i sigma: residue  res (4.0906291 + 0.20162653j)  formula (4.0906291 + 0.20162653j)
+PASS  POLE sigma = (1/2) ln(1/q) (paper's q)  sigma = 1.4493
+PASS  ZERO bt(pi/2 - arg(1 + w)) = 0, two zeros per period  theta_0 = 1.565659466
+PASS  EXT 2 extrema per period at the paper's (q, d)  
+PASS  EXT q_c(0) = 3 - 2 sqrt 2: 2 extrema below, 6 above  q_c = 0.17157288
+PASS  NORM <bt^2> = A^2/(2(1 - q^2)) for d = 0, 0.0985, 1, 2.5  = 7.416451546
+PASS  SYM d is not removable by a shift (best-shift rms residual > 0)  best shift -0.00088062 (-d/2 = -0.04925), rms 0.01464
+PASS  INT d/dt[-i w^{-1/2} arctan(w^{1/2} e^{it})] = e^{it}/(1 + w e^{2it})  
+PASS  INT d = 0: integral of Re[g] = artanh(a sin t)/(2 sqrt q), a = 2 sqrt(q)/(1 + q)  max err 2.67e-51
+PASS  NLO control: Eq. (21) of arXiv:2601.14358 gives Delta = 1  Delta = 1.0
+PASS  NLO Eq. (16) at the paper's (q, d): Delta = (2 pi/3) |2 Dn'/Dn| at the zero  Delta = 0.0910656 (formula 0.0910656; zero at theta = 1.5656595), not 1.6439
+
+29/29 checks pass
