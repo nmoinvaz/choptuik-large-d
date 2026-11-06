@@ -12,7 +12,7 @@ state there (the node itself at u0), and its equations are the m and a rows of t
     python3 reseed.py check STATE.npz [--threads 2] [--levels 5] [--rows ma|pm|all] [--mutate none|skip|wrongu]
         [--plan_tol 1e-32] [--out OUT.jsonl] [--delta_h 1e-6] [--seed 1] [--floor_rule stall|abs|rel]
     python3 reseed.py jac STATE.npz
-    python3 reseed.py checkq PRED.npz [--threads 4] [--legacy 1]
+    python3 reseed.py checkq PRED.npz [--threads 4] [--legacy 1] [--rule136 1]
 
 `check` is the unit check and the stepper check (notes/RESEED.md 3.1, 3.2): the converged state's own node re-seeded
 from horizon data off by delta_h (relative, random signs) must return the state's horizon data to the floor of 3.1,
@@ -40,6 +40,29 @@ mp.mp.dps = 50
 def offsets(M, K):
     """z offsets of the layout (hpkernel.driver's docstring): node i, m_h, a_h, and the length"""
     return dict(node=lambda i: 2 * M + 4 * M * i, mh=2 * M + 4 * M * K, ah=3 * M + 4 * M * K, L=4 * M * (K + 1) + 1)
+
+
+def cols_least_squares(B, R, lo, hi, dps=90):
+    """the correction (four parts, the block's width) minimizing |B x + R| over the block's columns lo..hi-1 with the
+    others zero, by the normal equations in mpmath at dps digits (B, R in four parts). The rung block's a_h columns
+    have singular values all about the mass mode's gain and its m_h columns all about 1, so each set alone is well
+    conditioned (notes/QUAD_DOUBLE.md 13.27)."""
+    n, w = len(R[0]), B[0].shape[1]
+    with mp.workdps(dps):
+        A = mp.matrix(n, hi - lo)
+        for i in range(n):
+            for j in range(hi - lo):
+                A[i, j] = mp.mpf(float(B[0][i, lo + j])) + mp.mpf(float(B[1][i, lo + j])) + mp.mpf(float(B[2][i, lo + j])) + mp.mpf(float(B[3][i, lo + j]))
+        r = mp.matrix([mp.mpf(float(R[0][i])) + mp.mpf(float(R[1][i])) + mp.mpf(float(R[2][i])) + mp.mpf(float(R[3][i])) for i in range(n)])
+        xs = mp.lu_solve(A.T * A, -(A.T * r))
+        out = [np.zeros(w) for _ in range(4)]
+        for j in range(hi - lo):
+            v = xs[j]
+            for q in range(4):
+                f = float(v)
+                out[q][lo + j] = f
+                v = v - mp.mpf(f)
+    return out
 
 
 class Reseeder:
@@ -260,7 +283,7 @@ class Reseeder:
         hist.append(dict(it=len(hist), R=nR))
         return dh, dl, hist, conv
 
-    def invert_q(self, z4, d4, it_max=16, refactor_max=3, R_stop=1e-34):
+    def invert_q(self, z4, d4, it_max=16, refactor_max=3, R_stop=1e-34, pre="am", take_all=True):
         """the u0 rung in quad-double: Newton on the 2M horizon data d4 (four parts) so that the horizon series at u0
         matches the last node of z4 (four parts) in the rung rows. The residual is Solver.residual_q and the step solves
         the rung rows' block of the quad-double Jacobian (Solver.jacobian_q) with multidouble's QDLu: the double-double
@@ -269,8 +292,13 @@ class Reseeder:
         not halve the residual. Stops below R_stop, when a step after the last refactoring does not halve the residual
         (its floor, about eps_qd G), or after it_max steps. Past D ~ 150 the iteration with one factoring needs about 12
         steps from the double-double rung and stalls near 1e-14 at some points (notes/QUAD_DOUBLE.md 13.26);
-        it_max=6, refactor_max=0 is the earlier rule. Returns d4, the history and whether it converged (at least one
-        step taken and the last residual below 1e-24)."""
+        pre: least-squares steps before Newton in the block's a_h ("a") then m_h ("m") columns alone; take_all: Newton
+        steps refactored at every step and taken whether or not they lower |R|, the best iterate kept, instead of the
+        rule above (refactor_max). Past D 160 neither plain Newton nor that rule converges from the double-double
+        rung, and the a_h and m_h steps followed by Newton do (the first Newton step may raise |R| before it falls
+        quadratically; notes/QUAD_DOUBLE.md 13.27). pre="", take_all=False is the rule of 13.26, and with it_max=6,
+        refactor_max=0 the earlier one. Returns d4, the history and whether it converged (at least one step taken and
+        the residual below 1e-24)."""
         M, a, o = self.M, self.aoff, self.off
         u = self.us[-1]
         s = self.rung_solver(u)
@@ -303,29 +331,64 @@ class Reseeder:
         hist = [dict(it=0, R=nR)]
         if not np.isfinite(nR):
             return d, hist, False
-        def factor(d):
+        def block(d):
             J = s.jacobian_q(*put(d))
-            return QDLu(*[np.asarray(J[q])[np.ix_(rows, cols)] for q in range(4)])     # the rung block
+            return [np.asarray(J[q])[np.ix_(rows, cols)] for q in range(4)]           # the rung block
 
-        lu, steps, refactors = factor(d), 0, 0
-        for it in range(it_max):
-            x = lu.solve(*[-np.asarray(r) for r in R])                            # J_block x = -R in quad-double
-            dn = [np.ascontiguousarray(np.asarray(p)) for p in qd_axpy(1.0, *x, *d)]
+        def factor(d):
+            return QDLu(*block(d))
+
+        B = block(d)
+        steps, refactors = 0, 0
+        for part in pre:
+            lo, hi = (M, 2 * M) if part == "a" else (0, M)
+            dn = [np.ascontiguousarray(np.asarray(p)) for p in qd_axpy(1.0, *cols_least_squares(B, R, lo, hi), *d)]
             Rn = res(dn)
             nn = float(np.max(np.abs(Rn[0] + Rn[1])))
-            hist.append(dict(it=it + 1, R=nn, step=float(np.max(np.abs(np.asarray(x[0])))), refactors=refactors))
-            lower = bool(np.isfinite(nn) and nn < nR)
-            halving = lower and nn <= 0.5 * nR
-            if lower:
-                d, R, nR = dn, Rn, nn                   # a step that does not lower the residual is not taken
+            hist.append(dict(it=len(hist), R=nn, pre=part, refactors=0))
+            if np.isfinite(nn) and nn < nR:
+                d, R, nR = dn, Rn, nn
                 steps += 1
-            if nR < R_stop:
-                break
-            if not halving:
-                if refactors >= refactor_max:
-                    break                               # no longer halving after the last factoring: the floor
-                lu = factor(d)                          # the Jacobian at the current data
+                B = block(d)
+        if take_all:
+            best = (nR, d)
+            for it in range(it_max):
+                if nR < R_stop:
+                    break
+                x = QDLu(*B).solve(*[-np.asarray(r) for r in R])                 # Newton, the block at d
+                dn = [np.ascontiguousarray(np.asarray(p)) for p in qd_axpy(1.0, *x, *d)]
+                Rn = res(dn)
+                nn = float(np.max(np.abs(Rn[0] + Rn[1])))
+                hist.append(dict(it=len(hist), R=nn, refactors=refactors))
+                if not np.isfinite(nn) or nn > 1e6 * best[0]:
+                    break                                   # diverging: keep the best iterate
+                d, R, nR = dn, Rn, nn
+                steps += 1
+                if nR < best[0]:
+                    best = (nR, d)
+                B = block(d)
                 refactors += 1
+            nR, d = best
+        else:
+            lu = QDLu(*B)
+            for it in range(it_max):
+                x = lu.solve(*[-np.asarray(r) for r in R])                        # J_block x = -R in quad-double
+                dn = [np.ascontiguousarray(np.asarray(p)) for p in qd_axpy(1.0, *x, *d)]
+                Rn = res(dn)
+                nn = float(np.max(np.abs(Rn[0] + Rn[1])))
+                hist.append(dict(it=it + 1, R=nn, step=float(np.max(np.abs(np.asarray(x[0])))), refactors=refactors))
+                lower = bool(np.isfinite(nn) and nn < nR)
+                halving = lower and nn <= 0.5 * nR
+                if lower:
+                    d, R, nR = dn, Rn, nn                   # a step that does not lower the residual is not taken
+                    steps += 1
+                if nR < R_stop:
+                    break
+                if not halving:
+                    if refactors >= refactor_max:
+                        break                               # no longer halving after the last factoring: the floor
+                    lu = factor(d)                          # the Jacobian at the current data
+                    refactors += 1
         hist.append(dict(it=len(hist), R=nR, refactors=refactors))     # the accepted residual, as invert() ends
         return d, hist, steps > 0 and nR < 1e-24
 
@@ -627,18 +690,20 @@ def checkq(argv):
     it must converge, the u0 rung's quad-double residual below 1e-24 (notes/QUAD_DOUBLE.md 13.26); exit 1 otherwise.
     The control --legacy 1 (the polish with it_max 6 and one factoring, the earlier rule) must fail on a prediction
     where that rule stopped short, as T118's at D 152.93 did."""
-    opt = parse(argv, dict(threads=4, legacy=0))
+    opt = parse(argv, dict(threads=4, legacy=0, rule136=0))
     z4, meta = load_q(argv[0])
     D = mp.mpf(meta["D_str"])
     rs = Reseeder(meta, D, threads=opt["threads"], qd=True)
-    if opt["legacy"]:
+    if opt["legacy"] or opt["rule136"]:
         inv = rs.invert_q
-        rs.invert_q = lambda z, d, **kw: inv(z, d, it_max=6, refactor_max=0)
+        kw0 = dict(pre="", take_all=False) if opt["rule136"] else dict(pre="", take_all=False, it_max=6, refactor_max=0)
+        rs.invert_q = lambda z, d, **kw: inv(z, d, **kw0)
     t0 = time.time()
     _, diag = rs.reseed(z4, verbose=True)
     q = [r for r in diag["rungs"] if r.get("qd")]
     ok = bool(diag["ok"]) and bool(q) and q[-1]["R"] < 1e-24
-    print(f"checkq {argv[0]}: D {mp.nstr(D, 12)}, {'legacy rule' if opt['legacy'] else 'refactoring rule'}: re-seed "
+    rule = 'legacy rule' if opt['legacy'] else ('13.26 rule' if opt['rule136'] else 'a_h, m_h steps and Newton')
+    print(f"checkq {argv[0]}: D {mp.nstr(D, 12)}, {rule}: re-seed "
           f"{'ok' if diag['ok'] else 'FAILED'}, u0 quad-double |R| {q[-1]['R'] if q else float('nan'):.2e}, "
           f"{time.time() - t0:.0f} s: {'PASS' if ok else 'FAIL'}", flush=True)
     return 0 if ok else 1

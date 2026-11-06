@@ -2228,3 +2228,37 @@ u0 polish at 3.7e-14), and the kept prediction converged. T123 (win, the same co
 multidouble 2.1.0 against win2's 3.2.0) re-seeded every step. The two machines' states agree to 1.3e-27 in Delta at
 153.43, 6.3e-27 at 153.93, 3.8e-26 at 154.43 and 2.2e-22 at 154.93 (2.8e-20 over the whole state). They are not bit
 for bit equal, since the builds differ and each chain re-bases its held values on its own states (13.22).
+
+### 13.27 Past 162.31: the u0 polish as two block steps and Newton (2026-11-06 06:00 UTC)
+
+T122 (win2, main 23d9448) took the chain from 152.93 to 162.31 in 22 steps, mostly of a = 0.5, with healthy series
+to the end (|z_N| 3.7e-25, a_max 2.07). It stopped at 162.31: the re-seed failed at every a from 0.25 to 0.031 (the
+polish from the double-double rung's 8e-8 to 1.2e-7), 9 of 10 projections failed, and the corrector stalled at 2e-20 to
+1.2e-19. The cause is neither the series nor the precision (raw-data repository `anm-mac/stall162/`, 036c6b2):
+
+- The rung block's quad-double Jacobian equals the octo-double one to 1.2e-36, and the octo-double LU gives the same
+  polish steps.
+- The block's singular values are 32 near G (1.8e23 at 152.93, 5.2e24 at 162.31) and 32 near 1 (0.71 to 1.2), so its
+  condition number is about G and no direction is nearly null.
+- From a converged state's horizon data rounded to double-double (|R| 1.0e-9 at 152.93), one Newton step moves m_h by
+  4.6e-19 where the root is 6.1e-33 away. The residual then stays at 2.43e-16 through steps that land within 1e-31 of
+  the root, because the start's error is mostly in the high-gain a_h data.
+- Moving the last node to 0.8 (G 2.6e15 at 162.31, `renode_q.py`) does not help: the base polish stalls at 7.9e-18, with
+  pivots down to 9e-20, as T85's 0.85 layout did.
+
+The rules compared on the stored prediction at 162.31 + 0.5 (`pred_pin3_D162.8059.npz`, `polish_variants.py`):
+
+| rule | \|R\| from the double-double rung's 9.5e-8 | result |
+|---|---|---|
+| 13.26's (one factoring, refactored on a stall, steps that raise R refused) | 1.3e-7, then stuck | fails |
+| an a_h least-squares step, then 13.26's | 4.0e-15, then 1.4e-13, stuck | fails |
+| plain Newton | 1.3e-7, 5.8e-7, 7.5e-5, 9.4e11 | diverges |
+| an a_h step, an m_h step, then Newton taking every step | 4.0e-15, 2.5e-18, 1.4e-13, 9.1e-27, 6.3e-31, 1.3e-39 | converges |
+
+`invert_q` now takes a least-squares step in the block's a_h columns, then one in its m_h columns, each set's singular
+values alike so each alone is well conditioned (normal equations in mpmath at 90 digits). Then it takes Newton steps,
+refactored at every step and taken whether or not |R| falls, and keeps the best iterate. `reseed.py checkq` passes on
+both stored predictions (4.4e-41 at 153.43, 1.3e-39 at 162.81), and its control `--rule136 1`, 13.26's rule, fails at
+162.81 (9.5e-8, exit 1). A re-seed takes about 40 s on the loaded Mac, against 20 s before. On the Mac the chain from
+162.31 then steps to 162.81 at a = 0.5: the re-seed converges, 3 of 6 projections succeed, and the corrector converges
+in 6 steps to max |F| 1.5e-39 (324 s), where every attempt of T122 failed.
