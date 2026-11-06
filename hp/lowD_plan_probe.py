@@ -101,7 +101,11 @@ def main():
         if not meta.get("segs"):
             s.set_segs(s.plan(zh, zl, a.tol_step, a.hmax))
         F0 = fmax(s, zh, zl)
+        print(f"base D {D0}: plan and residual |F| {F0:.1e}, {time.time() - t0:.0f} s", flush=True)
+        t1 = time.time()
         _, _, _, _, pmin, pmax = s.newton_mixed(zh, zl)
+        # the f64 Jacobian and its LU print nothing while they run (about 33 min at M 320 on win2 at 8 threads)
+        print(f"base D {D0}: Jacobian and LU, pivots {pmin:.1e}..{pmax:.1e}, {time.time() - t1:.0f} s", flush=True)
         orders = []
         Zh, Zl = coefficients(s, zh, zl, a.N, orders, step_tol=a.step_tol)
         np.savez(cpath, Zh=np.array(Zh), Zl=np.array(Zl), D0=D0, state=a.state)
