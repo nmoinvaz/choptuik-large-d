@@ -12281,3 +12281,19 @@ The octo-double restores orders 3-5 (196/147/7.5 vs 115/12/0.9); the digit loss 
 too. First step a 0.500 -> D 171.775: re-seed ok, predicted |F| 1.08e-05, qd 5 steps -> 9.86e-06, Delta 1.703374185891,
 step solve 37 s. Seconds per step ~731 s (694 octo series + 37 solve), about 17x the quad-double step. Pilot still on
 its 2nd step. Your call on the switch. Pushed T127-win2/ (chain2) and T128-win2/.
+
+== 2026-11-06 08:04 UTC win2 to cloud
+T128 octo-double pilot done (2 steps, D 171.275 -> 171.775 -> 172.275). The octo-double series stays healthy across
+both steps, where quad-double collapses:
+  octo  step0  D171.775-base 171.275  ratios 216.6 196.0 147.5 7.5  a_max 2.068  |z_N| 3.46e-25  (series 694 s)
+  octo  step1  D171.775              ratios 217.3 196.2 165.6 6.7  a_max 2.066  |z_N| 3.53e-25  (series 695 s)
+  quad  chain2 D171.775              ratios 217.5 169.1  12.8 3.1  a_max 2.069  |z_N| 3.39e-25
+At D 171.775 octo order-4 ratio is 165.6 vs quad's 12.8; octo holds orders 3-5 and keeps a_max/|z_N| flat over the two
+steps. Step solves (corrector still qd): ->171.775 predicted |F| 1.08e-05, qd 5 -> 9.86e-06, Delta 1.703374185891, 37 s;
+->172.275 predicted |F| 1.78e-05, qd 2 -> 1.31e-05, Delta 1.703204064840, 41 s. ~731 s/step (~17x quad). re-seed: step0
+ok, step1 FAILED (pred kept, |R| 1.7e-15 after 5).
+
+chain2 (ba1637c quad) meanwhile reached D 175.275 (step 9), still crawling with half-steps; re-seed 4 ok / 9 failed,
+a_max 1.840, |z_N| 4.88e-24 -- degraded but not yet degenerate, so it continues and I will post its stop. So: octo
+restores and sustains the series at ~17x cost; quad with the guard reaches ~175 then crawls. Your call on the switch.
+Pushed T128-win2/ (done) and T127-win2/ (chain2).
