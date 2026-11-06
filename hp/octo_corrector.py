@@ -10,7 +10,16 @@ eight-part iterates. save_o, load_o: eight-part states in save_q's layout plus f
 the first four.
 
 The octo-double helpers (od_add_dd, od_axpy) are multidouble's from f092018 on; they are imported where they are
-used, so that a module importing this one runs on the older packages the runners have."""
+used, so that a module importing this one runs on the older packages the runners have.
+
+    python3 octo_corrector.py planted RAW STATE.npz [--threads 3] [--rel 1e-12] [--seed 1] [--qd 1]
+        [--mutate_offset qd] [--mutate 10] [--out PREFIX]
+    python3 octo_corrector.py wall RAW PRED.npz [--threads 3] [--qd 0] [--F_max 1e-36] [--mutate_offset qd]
+        [--mutate 10] [--out PREFIX]
+
+`planted` is check (a) of notes/OCTO_DOUBLE.md 5 (a converged state moved by a known amount, corrected in
+octo-double and in quad-double), `wall` check (b) (a stored prediction where the quad-double corrector stalls). The
+controls --mutate_offset qd and --mutate 10 must make them fail. Each exits 1 when its check fails."""
 import json
 
 import numpy as np
@@ -149,6 +158,16 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
     return z, hist, False
 
 
+def with_horizon(z8, z4, rs):
+    """z8 (eight parts) with its horizon data (m_h, a_h) taken from z4 (four parts), their parts 4-7 zero: a re-seed or
+    projection (rs, a reseed.Reseeder of the layout, changes only those) put back on an octo-double point"""
+    sl = slice(rs.off["mh"], rs.off["mh"] + 2 * rs.M)
+    out = [np.array(p, dtype=float) for p in o8(z8)]
+    for q in range(8):
+        out[q][sl] = np.asarray(z4[q])[sl] if q < 4 else 0.0
+    return o8(out)
+
+
 class ElimO:
     """reseed.ElimQ for eight-part iterates: residual_o and newton_o project the point first while its pinned max |F|
     exceeds switch, and newton_o's step includes the projection's displacement. The projection is the quad-double one
@@ -164,9 +183,6 @@ class ElimO:
         self.sq = PinnedQ(so.s, so.ch, so.cl)
         self.counts = dict(u0=0, u0q=0, ladder=0, failed=0, skipped=0)
         self.first = True
-        M, K = rs.M, rs.K
-        mh = 2 * M + 4 * M * K
-        self.sl = slice(mh, mh + 2 * M)               # m_h, a_h (reseed.offsets)
 
     def __getattr__(self, name):
         return getattr(self.so, name)
@@ -186,12 +202,7 @@ class ElimO:
         self.counts[how] += 1
         if how == "failed" and first and self.start_F is not None and nf > self.start_F:
             raise StartNotProjected(dict(self.counts))
-        if how == "failed":
-            return z
-        out = [np.array(p) for p in z]
-        for q in range(8):
-            out[q][self.sl] = np.asarray(zp[q])[self.sl] if q < 4 else 0.0
-        return o8(out)
+        return z if how == "failed" else with_horizon(z, zp, self.rs)
 
     def residual_o(self, z, mutate=0):
         return self.so.residual_o(self.project(z), mutate=mutate)
@@ -221,3 +232,157 @@ def pinned_o(meta, z, threads=2, plan_tol=1e-32, mutate_offset=""):
     sp = PinnedSolver(s, M, hh, hl)
     return s, sp, PinnedQ(s, sp.ch, sp.cl), PinnedO(s, sp.ch, sp.cl, mutate_offset=mutate_offset)
 
+
+
+# ------------------------------------------------------------------ the checks (notes/OCTO_DOUBLE.md 5)
+def _delta(z):
+    """Delta (the last unknown) summed from its parts in mpmath, 40 digits"""
+    import mpmath as mp
+    with mp.workdps(140):
+        return sum((mp.mpf(float(p[-1])) for p in z), mp.mpf(0))
+
+
+def _parse(argv, opt):
+    for k in list(opt):
+        if "--" + k in argv:
+            i = argv.index("--" + k)
+            opt[k] = type(opt[k])(argv[i + 1])
+    return opt
+
+
+def _run_od(so, rs, z8, opt):
+    """ElimO around so (PinnedO), newton_od to opt's tol and it_max; the final point (its projection, the point whose
+    residual converged), the history, converged, the octo-double pinned max |F| there and the projections"""
+    el = ElimO(so, rs)
+    z, hist, conv = newton_od(el, z8, tol=opt["tol"], it_max=opt["it_max"], mutate=opt["mutate"])
+    z = el.project(z)
+    return z, hist, conv, omax(so.residual_o(z)), dict(el.counts)
+
+
+def _run_qd(sq, so, rs, z4, tol, it_max):
+    """the quad-double corrector of anm_run.py --corrector qd --reseed 2 (ElimQ, newton_qd, the last iterate
+    projected) from z4; its final point, history, converged and the octo-double pinned max |F| there"""
+    from hpkernel.driver import newton_qd
+    from reseed import ElimQ
+    el = ElimQ(sq, rs)
+    z, hist, conv = newton_qd(el, z4, tol=tol, it_max=it_max, verbose=True)
+    z = rs.project(z)[0]
+    return o8(z), hist, conv, omax(so.residual_o(o8_of_q(z))), dict(el.counts)
+
+
+def planted(argv):
+    """check (a): the converged chain state RAW/STATE with its centre data and nodes (not m_h, a_h, Delta) moved by
+    rel r relative, r uniform in +-[0.5, 1] (--seed), is the start. Pass, fixed before the first run: the octo-double
+    corrector (ElimO, newton_od, tol 1e-40) converges with the octo-double pinned max |F| below 1e-40, and its Delta
+    agrees with the quad-double corrector's from the same start (ElimQ, newton_qd to tol 1e-45 in 12 steps, its
+    floor) to 1e-30. The pinned system is the state's own (held harmonics at its values, the plan at it at 1e-32).
+    Controls, which must fail: --mutate_offset qd (PinnedO's J^-1 c through the quad-double LU), --mutate 10 (the
+    kernel's OD_MUT_STATE_QD, the state read in its quad-double part). --qd 0 skips the quad-double run (then only the
+    residual is judged). Exit 1 on failure."""
+    import os
+    import time
+    import mpmath as mp
+    from hpkernel.driver import load_q, qd_axpy
+    from reseed import Reseeder
+    raw, path = argv[0], argv[1]
+    opt = _parse(argv[2:], dict(threads=3, rel=1e-12, seed=1, mutate_offset="", mutate=0, it_max=12, qd=1, tol=1e-40, out=""))
+    z4, meta = load_q(os.path.join(raw, path))
+    z4 = o8(z4)
+    D = mp.mpf(meta["D_str"])
+    s, sp, sq, so = pinned_o(meta, z4, threads=opt["threads"], mutate_offset=opt["mutate_offset"])
+    rs = Reseeder(meta, D, threads=opt["threads"], qd=True)
+    n = rs.off["mh"]
+    rng = np.random.default_rng(opt["seed"])
+    r = rng.uniform(0.5, 1.0, n) * rng.choice([-1.0, 1.0], n)
+    dz = np.zeros(len(z4[0]))
+    dz[:n] = opt["rel"] * r * z4[0][:n]
+    zero = np.zeros(len(dz))
+    zs = o8(qd_axpy(1.0, dz, zero, zero, zero, *z4))
+    print(f"planted {path}: D {mp.nstr(D, 12)}, start = truth moved by {opt['rel']:.0e} relative in [0, {n}); pinned max|F| (octo) "
+          f"truth {omax(so.residual_o(o8_of_q(z4))):.2e}, start {omax(so.residual_o(o8_of_q(zs))):.2e}; mutate_offset "
+          f"'{opt['mutate_offset']}', mutate {opt['mutate']}", flush=True)
+    t0 = time.time()
+    zo, ho, co, Fo, counts = _run_od(so, rs, o8_of_q(zs), opt)
+    Do = _delta(zo)
+    print(f"  od: {len(ho)} steps, {'converged' if co else 'NOT converged'}, pinned max|F| (octo) {Fo:.2e}, Delta {mp.nstr(Do, 40)}, "
+          f"projections {counts}, {time.time() - t0:.0f} s", flush=True)
+    ok = bool(co) and Fo < 1e-40
+    rec = dict(test="planted", state=path, D_str=meta["D_str"], rel=opt["rel"], seed=opt["seed"], mutate_offset=opt["mutate_offset"],
+               mutate=opt["mutate"], od=dict(steps=len(ho), converged=bool(co), F=Fo, Delta=mp.nstr(Do, 40), hist=ho, counts=counts))
+    print(f"  od against the truth: dDelta {mp.nstr(Do - _delta(z4), 5)}", flush=True)
+    if opt["qd"]:
+        t0 = time.time()
+        zq, hq, cq, Fq, cntq = _run_qd(sq, so, rs, q4_of_o(zs), 1e-45, 12)
+        Dq = _delta(zq)
+        dD = abs(Do - Dq)
+        print(f"  qd: {len(hq)} steps, {'converged' if cq else 'stopped'}, its last max|F| {hq[-1]['F']:.2e} (octo at the projected point "
+              f"{Fq:.2e}), Delta {mp.nstr(Dq, 40)}, projections {cntq}, {time.time() - t0:.0f} s; |Delta_od - Delta_qd| {mp.nstr(dD, 5)}",
+              flush=True)
+        ok = ok and dD <= 1e-30
+        rec["qd"] = dict(steps=len(hq), converged=bool(cq), F_last=hq[-1]["F"], F_octo=Fq, Delta=mp.nstr(Dq, 40), dDelta=float(dD))
+    rec["passed"] = bool(ok)
+    print(f"  (a) {'PASS' if ok else 'FAIL'}: od max|F| {Fo:.2e} < 1e-40" + (", |Delta_od - Delta_qd| <= 1e-30" if opt["qd"] else ""), flush=True)
+    if opt["out"]:
+        import json
+        save_o(opt["out"] + ".npz", zo, dict(meta, D_str=meta["D_str"], planted=True))
+        with open(opt["out"] + ".json", "w") as f:
+            f.write(json.dumps(rec, default=float) + "\n")
+    return 0 if ok else 1
+
+
+def wall(argv):
+    """check (b): a stored prediction RAW/PRED (anm_run.py --save_pred 1, four parts, before its re-seed), re-seeded
+    (Reseeder, quad-double polish) and corrected by the octo-double corrector (ElimO, newton_od, tol 1e-40). Pass,
+    fixed before the first run: the octo-double pinned max |F| of the result below 1e-36. The pinned system is that
+    of reseed.pinned on the re-seeded prediction (its own held values, the plan at it at 1e-32). --qd 1 also runs the
+    chain's quad-double corrector (ElimQ, newton_qd, tol 1e-28, 12 steps) from the same start, for its Delta.
+    Controls as planted's. Exit 1 on failure."""
+    import os
+    import time
+    import mpmath as mp
+    from hpkernel.driver import load_q
+    from reseed import Reseeder
+    raw, path = argv[0], argv[1]
+    opt = _parse(argv[2:], dict(threads=3, mutate_offset="", mutate=0, it_max=12, qd=0, tol=1e-40, out="", F_max=1e-36))
+    z4, meta = load_q(os.path.join(raw, path))
+    D = mp.mpf(meta["D_str"])
+    rs = Reseeder(meta, D, threads=opt["threads"], qd=True)
+    t0 = time.time()
+    zr, diag = rs.reseed(o8(z4))
+    zr = o8(zr)
+    s, sp, sq, so = pinned_o(meta, zr, threads=opt["threads"], mutate_offset=opt["mutate_offset"])
+    print(f"wall {path}: D {mp.nstr(D, 12)}, re-seed {'ok' if diag['ok'] else 'FAILED'} ({diag['seconds']} s), pinned max|F| (octo) "
+          f"{omax(so.residual_o(o8_of_q(zr))):.2e}; mutate_offset '{opt['mutate_offset']}', mutate {opt['mutate']}", flush=True)
+    zo, ho, co, Fo, counts = _run_od(so, rs, o8_of_q(zr), opt)
+    Do = _delta(zo)
+    print(f"  od: {len(ho)} steps, {'converged' if co else 'NOT converged'}, pinned max|F| (octo) {Fo:.2e}, Delta {mp.nstr(Do, 40)}, "
+          f"projections {counts}, {time.time() - t0:.0f} s", flush=True)
+    ok = Fo < opt["F_max"]
+    rec = dict(test="wall", pred=path, D_str=meta["D_str"], mutate_offset=opt["mutate_offset"], mutate=opt["mutate"],
+               od=dict(steps=len(ho), converged=bool(co), F=Fo, Delta=mp.nstr(Do, 40), hist=ho, counts=counts))
+    if opt["qd"]:
+        t0 = time.time()
+        zq, hq, cq, Fq, cntq = _run_qd(sq, so, rs, q4_of_o(zr), 1e-28, 12)
+        Dq = _delta(zq)
+        print(f"  qd: {len(hq)} steps, {'converged' if cq else 'stopped'}, its last max|F| {hq[-1]['F']:.2e} (octo at the projected point "
+              f"{Fq:.2e}), Delta {mp.nstr(Dq, 40)}, projections {cntq}, {time.time() - t0:.0f} s; Delta_od - Delta_qd {mp.nstr(Do - Dq, 5)}",
+              flush=True)
+        rec["qd"] = dict(steps=len(hq), converged=bool(cq), F_last=hq[-1]["F"], F_octo=Fq, Delta=mp.nstr(Dq, 40))
+    rec["passed"] = bool(ok)
+    print(f"  (b) {'PASS' if ok else 'FAIL'}: od max|F| {Fo:.2e} < {opt['F_max']:.0e}", flush=True)
+    if opt["out"]:
+        import json
+        save_o(opt["out"] + ".npz", zo, dict(meta, D_str=meta["D_str"], prediction=False, corrected="od"))
+        with open(opt["out"] + ".json", "w") as f:
+            f.write(json.dumps(rec, default=float) + "\n")
+    return 0 if ok else 1
+
+
+if __name__ == "__main__":
+    import os
+    import sys
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    if len(sys.argv) > 3 and sys.argv[1] in ("planted", "wall"):
+        sys.exit((planted if sys.argv[1] == "planted" else wall)(sys.argv[2:]))
+    print(__doc__)
+    sys.exit(2)
