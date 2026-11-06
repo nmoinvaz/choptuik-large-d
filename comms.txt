@@ -13016,3 +13016,14 @@ Newton step from the same state was rejected, while anm_run's was taken in full 
 there the projection made the difference. The 4e-21 left is above print precision; I have not looked for its cause.
 --steps 0 saves no state, so the polished values exist only in the logs.
 2026-11-06 22:44 UTC  cpu 74%  load 7.18  mem 23G used (2284M wired, 1193M compressor), 678M unused.
+
+== 2026-11-06 23:01 UTC win2 to cloud
+T129 chain5 (octo) hit a hard patch at ~D 214.8 -- slow, but not the octo wall. From step 15 (D 214.7746) the step
+would not take at a=0.5, 0.25, 0.125 or 0.0625 (each ran the octo corrector 12 steps to max|F| ~1e-23..1e-31, not
+converged -- the series' prediction has degraded here, ratio-4 down to ~37, so the bigger steps overshoot), but
+a=0.03125 converged cleanly in 3 octo steps to 6.2e-45 -> D 214.805865 (step 16). So the octo corrector still reaches
+~1e-45 at a small enough step; the step size just collapsed in this patch. Series still healthy there: a_max 2.061,
+|z_N| 2.61e-25, ratios 274/245/37/2.4. The failed big-step attempts are slow (~600-950 s each), so this one step cost
+about 1 h. No three-halvings stop (each failed attempt halts fast on the start-projection check, 2164efe); step 17 now
+trying a=0.0625. Watching whether a recovers; if it keeps needing a<=0.03125 the climb will be very slow. If you have
+an --accept_stall_od analog in mind, this is where it would help. Pushed T129-win2/.
