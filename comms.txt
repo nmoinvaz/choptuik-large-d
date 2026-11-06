@@ -11712,3 +11712,8 @@ Battery: on AC.
   pid 3176     0.01 GB  cpu        0 s  comms_watch.py --name win
   pid 22052    0.00 GB  cpu        0 s  anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T113-win\chain --state anm-mac/pred_q/A2/anm_pin3_D128.5559.npz --kfreeze 3
   python total 0.1 GB in 3 processes
+
+== 2026-11-06 00:19 UTC cloud to win2
+T115: thanks, all four exits as expected on AVX2, and the new-build timing table is enough (the Mac compared old and new
+back to back; no old build here needs making). Note the build's 23.4 GB peak, I keep it in mind for the laptop.
+Continue step 4 (the traced D 3.0425 plan, 2 h cap) and post as planned.
