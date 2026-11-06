@@ -10,8 +10,10 @@ re-reads every row of the written CSV from the source and state its row names an
 must fail).
 
 Columns: D; Delta in up to four parts, Delta = q0 + q1 + q2 + q3 (each an f64; q2 and q3 are empty where the value is
-double-double); kind; err and err_kind; the source record; the state file (relative to RAWDIR, empty where none was
-stored). The kinds, in order of precedence where two share a D:
+double-double); kind; err and err_kind; the source record; published_ref, published_Delta and published_diff, the most
+precise value of data/published_delta.csv at this D (6 decimals), as printed, and this row's Delta minus it (empty
+where none is listed); the state file (relative to RAWDIR, empty where none was stored). The kinds, in order of
+precedence where two share a D:
   qd      the full system converged in quad-double (data/delta_qd.csv, export_qd.py). err: the spread between two
           starts with their own Taylor plans (err_kind "starts"), not a bound.
   dd      the full system in double-double (data/delta_dd.csv, export_dd.py). err and err_kind are that file's: "dM",
@@ -41,7 +43,8 @@ import numpy as np
 mp.mp.dps = 80
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "data", "delta_all.csv")
-COLS = ["D", "Delta_q0", "Delta_q1", "Delta_q2", "Delta_q3", "kind", "err", "err_kind", "source", "state"]
+COLS = ["D", "Delta_q0", "Delta_q1", "Delta_q2", "Delta_q3", "kind", "err", "err_kind", "source", "published_ref",
+        "published_Delta", "published_diff", "state"]
 RANK = {"qd": 0, "dd": 1, "pinned": 2, "chain": 3}
 PINNED = (("T73/t73/pin7.jsonl", "T73/t73/pin5.jsonl", "pins"), ("T75/pin7.jsonl", "T75/pin5.jsonl", "pins"),
           ("T85-mac/x80.jsonl", "T85-mac/x85.jsonl", "layouts"))
@@ -204,6 +207,27 @@ def lineage_check(folder, seg, src, states):
         prev = D
 
 
+def published():
+    """data/published_delta.csv by D (6 decimals): its rows (reference, value as printed, stated uncertainty)"""
+    pub = defaultdict(list)
+    for line in open(os.path.join(HERE, "data", "published_delta.csv")):
+        if line.startswith("#") or line.startswith("D,"):
+            continue
+        d, v, u, ref = line.strip().split(",")
+        pub[round(float(d), 6)].append((ref, v, float(u)))
+    return pub
+
+
+def published_cols(r, pub):
+    """the most precise published value at the row's D: reference, value, and this row's Delta minus it"""
+    hit = pub.get(round(float(r["D"]), 6))
+    if not hit:
+        return dict(published_ref="", published_Delta="", published_diff="")
+    ref, v, _ = min(hit, key=lambda t: t[2])
+    diff = total([r[f"Delta_q{i}"] for i in range(4)]) - mp.mpf(v)
+    return dict(published_ref=ref, published_Delta=v, published_diff=format(float(diff), ".2e"))
+
+
 def build():
     dd = dd_rows()
     dmax = max(float(r["D"]) for r in dd)
@@ -212,7 +236,8 @@ def build():
         k = round(float(r["D"]), 9)
         if k not in rows or RANK[r["kind"]] < RANK[rows[k]["kind"]]:
             rows[k] = r
-    return [rows[k] for k in sorted(rows)]
+    pub = published()
+    return [{**rows[k], **published_cols(rows[k], pub)} for k in sorted(rows)]
 
 
 def verify(rows, mutate=""):
@@ -222,6 +247,7 @@ def verify(rows, mutate=""):
         r["Delta_q1"] = fmt(float(r["Delta_q1"]) + np.spacing(float(r["Delta_q1"])))
         print(f"mutated: {mutate} row at D {r['D']}")
     bad = 0
+    pub = published()
     dd = {r["D"]: r for r in csv.DictReader(open(os.path.join(HERE, "data", "delta_dd.csv")))}
     qd = {r["D"]: r for r in csv.DictReader(open(os.path.join(HERE, "data", "delta_qd.csv")))}
     recs = {}
@@ -241,9 +267,10 @@ def verify(rows, mutate=""):
             want = [fmt(s["Delta_full1"]), fmt(s["Delta_full1_lo"]), "", ""]
         else:
             want = load_state(r["state"])[1]
-        if parts != want:
+        pc = published_cols({**r, **{f"Delta_q{i}": want[i] for i in range(4)}}, pub)
+        if parts != want or any(r[k] != v for k, v in pc.items()):
             bad += 1
-            print(f"DIFFERS: {r['kind']} D {r['D']}: {parts} against {want}")
+            print(f"DIFFERS: {r['kind']} D {r['D']}: {parts} against {want}, published {pc}")
     print(f"verify: {len(rows) - bad} of {len(rows)} rows equal their sources")
     return bad == 0
 

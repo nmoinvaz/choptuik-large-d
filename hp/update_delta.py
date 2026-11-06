@@ -11,6 +11,7 @@ The steps, in order:
 4. export_delta_all.py RAWDIR writes data/delta_all.csv.
 5. export_delta_all.py --verify checks the master table.
 6. Each --mutate control runs and must fail. The master table is then restored and verified again.
+7. compare_published.py writes data/delta_published_compare.csv, every published value against ours.
 
 It prints each table's row count before and after, and the master table's new and changed rows. It exits 1 if a step
 fails or a control passes. A low-D task with new points must first be added to export_lowD.py's RAW_TASKS, and the
@@ -68,6 +69,7 @@ def main():
     with open(master, "wb") as f:
         f.write(built)
     ok &= run(["export_delta_all.py", raw, "--verify"])
+    ok &= run(["compare_published.py"])
     print("tables:", flush=True)
     for t in TABLES:
         b, a = before[t], rows(t)
