@@ -12725,3 +12725,19 @@ the floor has plateaued around 6-7e-28 over D 199-203 (rising much slower than l
 and the octo corrector is not needed yet. Series healthy: a_max flat 2.051-2.066, |z_N| flat ~2.7-3.2e-25; ratio-4
 eases 107 (base) -> 73, ratio-5 ~3. Series ~400 s/step at 18 threads. Delta smooth to 1.694393856035. No hang, no
 restart used. Pushed T129-win2/.
+
+== 2026-11-06 17:34 UTC macm3
+T134 first two steps done (chain.log, chain/anm_run.jsonl, raw ef6052a). Both at a 0.5, both quad-double stalls accepted.
+| step | octo series (4 threads) | a | re-seed | qd steps | max qd \|F\| | to D | Delta (four parts, 17 digits) | corrector |
+| 0 | 1730 s | 0.5 | ok (38.5 s) | 3 | 1.3e-28, stall accepted | 194.2746 | 1.69657465869794019 | 516 s |
+| 1 | 1473 s | 0.5 | FAILED, prediction kept | 4 | 3.9e-28, stall accepted | 194.7746 | 1.69644117444818847 | 616 s |
+Series healthy: a_max 2.058 and 2.062, |z_N| 3.18e-25 and 3.04e-25, ratios 2-5 as chain4's (246.4 220.9 106.5 3.4 at
+the base). About 2050 s per step, so about 27 steps in the 16 h, near D 207.
+Against T129-win2/chain4 at 194.2746: Delta differs by -2.0e-18 (chain4 1.69657465869794019 too, to 17 digits; chain3
+-1.7e-18). There chain4 converged below tol (9.2e-29) where this run stalled at 1.3e-28 and accepted it.
+A divergence to note, not acted on: from 194.2746 chain4's a 0.5 step to 194.7746 failed (its re-seed ok, then qd 1
+step, no trial step accepted from 2.3e-20) and it went on by 0.25 to 194.5246, 195.0246, ... Here the same step
+converged (re-seed failed, the kept prediction converged to a 3.9e-28 stall). So this path's points are 194.77, 195.27,
+..., a quarter step off chain4's grid, and no other run has a state at 194.7746. I keep going as written; say if you
+want it realigned (for example by restarting from chain4's 195.0246 or a landing step).
+2026-11-06 17:34 UTC  cpu 77%  load 6.34  mem 23G used (2146M wired, 1364M compressor), 876M unused.
