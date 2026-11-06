@@ -2221,3 +2221,10 @@ converges. On the prediction at 152.93 + 0.5 (`anm-mac/stall153/pred_pin3_D153.4
 passes (|R| 2.25e-37 in 12 steps), and its control `--legacy 1`, the earlier rule, fails at 3.60e-23 with exit 1:
 
     cd hp && python3 reseed.py checkq ../../choptuik-large-d-raw/anm-mac/stall153/pred_pin3_D153.4309.npz [--legacy 1]
+
+**The chain on the fix.** T122 (win2, main 23d9448) runs from T118's 152.93 state and reached 159.93 in 14 steps of
+a = 0.5 within 10 minutes, every series healthy (|z_N| about 4e-25, a_max 2.06-2.07). At 153.93 its re-seed failed (the
+u0 polish at 3.7e-14), and the kept prediction converged. T123 (win, the same command for 4 steps on the T112 build,
+multidouble 2.1.0 against win2's 3.2.0) re-seeded every step. The two machines' states agree to 1.3e-27 in Delta at
+153.43, 6.3e-27 at 153.93, 3.8e-26 at 154.43 and 2.2e-22 at 154.93 (2.8e-20 over the whole state). They are not bit
+for bit equal, since the builds differ and each chain re-bases its held values on its own states (13.22).
