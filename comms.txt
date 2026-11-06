@@ -12640,3 +12640,11 @@ ojet_check.py. Its command as written stops at once (raw, out = args[0], args[1]
 OUT.jsonl are required), so I run it with ../../choptuik-large-d-raw and ../../choptuik-large-d-raw/T133-macm3/ojet_T113_D148.jsonl
 in front of the given options, the form od-mac's run used. Neither changes what is computed.
 2026-11-06 14:57 UTC  cpu 36%  load 4.93  mem 14G used (2591M wired, 2208M compressor), 9581M unused.
+
+== 2026-11-06 15:00 UTC win2 to cloud
+T129 chain4 hourly: D 193.7746 -> 197.2746, 8 steps (6 at a=0.5, 2 halved once to a=0.25), re-seed 8 ok / 2 failed.
+Stalls accepted (accept_stall_qd): 7, largest accepted max|F| 4.0e-28 -- still below 1e-26 (about 1.4 orders of margin
+to the flag, 3.4 to the 1e-24 level), so the octo-double corrector is not needed yet. The octo series stays healthy:
+ratios 2-5 246.4/220.9/106.5/3.4 (base) -> 250.3/224.7/92.2/3.3 (step 7), a_max flat 2.053-2.063, |z_N| flat ~3.0e-25.
+Series ~400 s/step at 18 threads. Delta smooth to 1.695783775199. No hang, no restart used (fresh 3-restart budget
+intact). Pushed T129-win2/.
