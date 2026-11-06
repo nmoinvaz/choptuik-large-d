@@ -2217,7 +2217,7 @@ meet that start in these runs (none failed). `anm_run.py --save_pred 1` now stor
 so a check can run on predictions.
 
 **The check.** `reseed.py checkq PRED.npz` re-seeds a stored prediction with the quad-double polish and passes when it
-converges. On the prediction at 152.93 + 0.5 (`anm-mac/stall153/pred_pin3_D153.4309.npz`, ) the new rule
+converges. On the prediction at 152.93 + 0.5 (`anm-mac/stall153/pred_pin3_D153.4309.npz`, c2371f9) the new rule
 passes (|R| 2.25e-37 in 12 steps), and its control `--legacy 1`, the earlier rule, fails at 3.60e-23 with exit 1:
 
     cd hp && python3 reseed.py checkq ../../choptuik-large-d-raw/anm-mac/stall153/pred_pin3_D153.4309.npz [--legacy 1]
