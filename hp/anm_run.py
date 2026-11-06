@@ -15,7 +15,7 @@ formulation of hp/pinning.py; their coefficients are zero).
         [--accept_stall 1e-19] [--junk_only 0] [--threads 4] [--w 24] [--trend T75] [--tol_qd 1e-28] [--accept_stall_qd 0]
         [--qd_it 12] [--qd_w 0] [--refine 1] [--probe 0 --probe_c C] [--plan_tol 1e-32] [--fix1 0] [--F_pred_max 0]
         [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0] [--pred_q 0] [--reseed_q 0] [--save_pred 0]
-        [--jet_o 0] [--corrector od --tol_od 1e-40]
+        [--jet_o 0] [--corrector od --tol_od 1e-40] [--held_fit FILE]
 
 --corrector qd runs the quad-double Newton of the kernel (hpkernel.driver.newton_qd, Solver.newton_q) on the pinned
 system (pinning.PinnedQ: the held harmonics' offset subtracted from the quad-double residual and added to the step, as
@@ -35,6 +35,10 @@ fitted as |v| = C n^s (n = D - 2) when their sign is constant and the fit's resi
 v(D0) (n/n0)^s, so the base state is unchanged, its Taylor coefficients in h enter the jet state order by order (the
 held rows of each right-hand side carry them, as PinnedSolver's offset carries the values), and the corrector at D + a
 holds the harmonics at the trend's values there. Records carry the exponents.
+--held_fit FILE holds them instead on a fit of the full-system states (hp/held_fit.py fit; pinning.HeldFit: sqrt(n) v
+a Chebyshev series in 1/n per coefficient), also relative to the base, v(D) = v(D0) + fit(D) - fit(D0), its Taylor
+coefficients in h from the fit's power series; it replaces --trend. The trend's harmonic-5 power law is what puts the
+chain 5e-8 below the series at D 79.8 (notes/HELD_HARMONICS.md); the fit is meant to start from a full-system state.
 
 --refine R takes R refinement steps per order against the stored LU (1, the default, is the loop above). --probe 1
 (--probe 2: only the two links of the order-1 equation, against quad-double central differences)

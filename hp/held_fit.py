@@ -272,22 +272,27 @@ def main():
     if cmd == "series":
         import dd_fits_mp as F
         mp.mp.dps = 60
-        hf = HeldFit(args[3])
+        fits = args[3].split(",")
+        hfs = [HeldFit(p) for p in fits]
         plant = float(opts.get("plant", 0))
         pts, _ = F.load_points()
         Ds = F.clean(pts, sorted(d for d in pts if 10 <= d <= 67.77), verbose=False)
         ev, _, _ = F.fit(pts, Ds, "1/D", 20)
-        print(f"fit {args[3]}, plant {plant:g} on 5a; reference: the 1/D series of degree 20 on the double-double points 10 <= D <= 67.77")
-        print("| D | chain state | chain - series | s . (h_fit - h_chain) | fit's Delta - series |")
-        print("|---|---|---|---|---|")
+        print(f"fits {', '.join(fits)} (the first is the candidate, the others its spread over degree), plant {plant:g} on 5a; reference: "
+              "the 1/D series of degree 20 on the double-double points 10 <= D <= 67.77")
+        print("| D | chain state | chain - series | s . (h_fit - h_chain) | fit's Delta - series | other degrees - series |")
+        print("|---|---|---|---|---|---|")
         for r in sorted(sens, key=lambda r: float(r["D"])):
             D = mp.mpf(r["D"])
-            h = dict(zip(KEYS, [v for ab in hf.values(D, KS) for v in ab]))
-            h["5a"] += plant
-            corr = bias(r["sens"], h, r["h"])
+            cols = []
+            for hf in hfs:
+                h = dict(zip(KEYS, [v for ab in hf.values(D, KS) for v in ab]))
+                h["5a"] += plant
+                cols.append(bias(r["sens"], h, r["h"]))
             ser = ev(D)
             d0 = mp.mpf(r["delta"])
-            print(f"| {mp.nstr(D, 8)} | {r['state']} | {float(d0 - ser):+.3e} | {corr:+.3e} | {float(d0 + corr - ser):+.2e} |")
+            print(f"| {mp.nstr(D, 8)} | {r['state']} | {float(d0 - ser):+.3e} | {cols[0]:+.3e} | {float(d0 + cols[0] - ser):+.2e} | "
+                  + ", ".join(f"{float(d0 + c - ser):+.2e}" for c in cols[1:]) + " |")
         return 0
     sys.exit(__doc__)
 
