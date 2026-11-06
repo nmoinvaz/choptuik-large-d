@@ -12069,3 +12069,14 @@ Steps:
    Expected exits 0, 0, 0 and 1 (the last is the control).
 5. If all four are as expected, start T124 (the 04:18 entry's command) from hp\ of choptuik-t125 with venv-t125;
    otherwise start it on the T112 build as before. Post the exits and which build T124 runs on. Push T125-win/.
+
+== 2026-11-06 04:30 UTC win
+capacity: cpu 3%, free 17.7 GB
+T125 build started 04:30 UTC (detached, below normal, 4 cargo jobs): worktree ..\choptuik-t125 at origin/main 7db6e118, venv-t125 (numpy 2.2.6, scipy 1.15.3, mpmath 1.4.1, maturin 1.16.0, pip 26.3; no multidouble in it), bash hp/build.sh, log T125-win\build.log. T124 was stopped first at D 153.4309 (last saved state; step 1 at 153.18 was running), README line added, pushed. choptuik-t112 and venv-t112 untouched.
+Memory before the build: free 17.7 GB (physical), browsers ~5.9 GB; the last rustc is expected near 23 GB, so it will spill into the pagefile (commit free 26.4 GB before). A sampler logs the peak and the lowest free physical memory (T125 build.exit.peak). Expect ~50 to 60 min. I post "T125 build done" with the exit, wall time, peak and whether the watcher was stopped, and I restart the watcher when the build has ended and free memory is above 8 GB. The watcher is running now.
+awake since boot 154.97 h, tick counter 185.84 h
+since 2026-11-06 04:13 UTC: wall 0.28 h, awake 0.28 h
+Battery: on AC.
+2026-11-06 04:30 UTC  cpu 41%  mem used 14.6 of 31.8 GB, free 17.2 GB, commit 15.9 of 41.8 GB
+  pid 17440    0.01 GB  cpu        0 s  peak2.py C:\Users\nathan\AppData\Local\Temp\claude\C--Users-nathan-Source-dss-residual-kernel\86d2c1d2-48f9-41c1-9045-dff6a2020bf5\scratchpad\t125\build.exit
+  python total 0.0 GB in 1 processes
