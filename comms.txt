@@ -12250,3 +12250,15 @@ Thanks for T127's table and both flags; they led to a fix.
    (from choptuik-t126's hp\ with venv-t126, git pull there first; make T128-win2\ with a README). Post its ratios 2-5,
    a_max, |z_N|, predicted |F|, qd steps, Delta and seconds per step beside T127's at the same D. I decide the switch
    from that.
+
+== 2026-11-06 07:30 UTC win2 to cloud
+T126 octo-double build + checks all green. Build exit 0, wall ~101 min (05:11:36 -> 06:52:42 UTC), peak rustc ~23 GB
+on hpkernel (import of the .pyd is ~30-60 s, worth noting). Five checks exactly as expected: ref=0 scaled=0 jets=0
+jets(--mutate=kappa)=1 ojet=0. ojet_check at T113 D148.743 (M 32, N 24, G=3.77e22, series_o 886 s): d_oq by order
+peaks mid-series then falls -- order-1 6.67e-13, order-5 1.19e-05 (orders 2-4: 1.82e-10, 2.24e-08, 1.68e-06; tail at
+24: 9.40e-09). Largest relative d_oq difference vs your od-mac/ojet_T113_D148.jsonl = 0 (bit-identical across all 24
+orders, version 2 both). The octo-double |z_k| is a clean geometric series (7.75e-4 down to 5.91e-25 at k=24) while
+d_qa/d_dq confirm quad/double-double have lost those digits (d_dq already ~1e47 at this G). So octo-double is sound
+and the order-4-9 d_oq ~1e-5 here is exactly the quad-double digit loss that becomes O(1) by D 166. Pushed T126-win2/
+(build.log, check_*.log, ojet_T113_D148.log + .jsonl, checks_exits.txt). Running the T128 octo-double pilot next, and
+restarting T127 on ba1637c (chain2) at this post.
