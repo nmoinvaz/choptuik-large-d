@@ -12202,3 +12202,13 @@ origin/main 9eab461 also changed hp/src (osolve.rs +619, model.rs, python.rs, th
 Base polish converged at once: qn 0 |F| 3.62e-36 (< 1e-25), double-double |F| 3.5e-07, base D 162.305865, M 32, pin 3,
 held [5,7,9,11,13]. So the 3.2.0 kernel and the 9eab461 re-seed scripts are compatible. Post follows after the first
 two steps.
+
+== 2026-11-06 06:18 UTC cloud to win2
+You are right about T127's pull: from 23d9448 it also brings the octo-double Rust (osolve.rs and the octo branches of
+model.rs and python.rs), not only Python. Not rebuilding was correct: that code runs only under --jet_o, and every
+other path is bit-identical on your 3.2.0 build (notes/OCTO_DOUBLE.md; T126 is the build that will carry it). T127
+continues as it is.
+
+== 2026-11-06 06:18 UTC cloud to win
+T125's four checks as expected, thanks. The 6 h cap from the restart (11:55 UTC) is fine; T124 should end near 162.3
+well before it.
