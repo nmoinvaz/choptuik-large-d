@@ -12,7 +12,7 @@ formulation of hp/pinning.py; their coefficients are zero).
 
     python3 anm_run.py RAWDIR OUTDIR --state T75/pin7_D73.2657.npz --kfreeze 3 [--N 24] [--eps 1e-16] [--h_max 2]
         [--steps 20] [--D_max 200] [--corrector dnp|deflated|newton] [--tol 1e-20] [--tol_growth 1.45]
-        [--accept_stall 1e-19] [--junk_only 0] [--threads 4] [--w 24] [--trend T75] [--tol_qd 1e-28]
+        [--accept_stall 1e-19] [--junk_only 0] [--threads 4] [--w 24] [--trend T75] [--tol_qd 1e-28] [--accept_stall_qd 0]
         [--qd_it 12] [--qd_w 0] [--refine 1] [--probe 0 --probe_c C] [--plan_tol 1e-32] [--fix1 0] [--F_pred_max 0]
         [--horizon_alpha 0] [--fix1_qlu 0] [--jet_q 0] [--reseed 0] [--pred_q 0] [--reseed_q 0] [--save_pred 0]
         [--jet_o 0]
@@ -234,7 +234,7 @@ def horner_o(Zo, a):
 def main():
     args = list(sys.argv[1:])
     opt = dict(state="T75/pin7_D73.2657.npz", kfreeze=3, N=24, eps=1e-16, h_max=2.0, steps=20, D_max=200.0, corrector="dnp",
-               tol=1e-20, tol_growth=1.45, accept_stall=1e-17, junk_only=0, threads=4, w=24, trend="", tol_qd=1e-28, qd_it=12, qd_w=0,
+               tol=1e-20, tol_growth=1.45, accept_stall=1e-17, junk_only=0, threads=4, w=24, trend="", tol_qd=1e-28, accept_stall_qd=0.0, qd_it=12, qd_w=0,
                refine=1, probe=0, probe_c=0.0, plan_tol=1e-32, fix1=0, F_pred_max=0.0, horizon_alpha=0, fix1_qlu=0, jet_q=0, reseed=0, pred_q=0, reseed_q=0,
                save_pred=0, jet_o=0)
     for k in list(opt):
@@ -293,6 +293,11 @@ def main():
             Fh, Fl = spx.residual(z4[0], z4[1])
             Fc = float(rnorm(Fh, Fl))
             fq = float(hist[-1]["F"]) if hist else float("nan")
+            if not conv and opt["accept_stall_qd"] > 0 and np.isfinite(fq) and fq <= opt["accept_stall_qd"]:
+                # --accept_stall_qd: a stall at the quad-double floor, which rises past tol_qd near D 194 (1.1e-28 there,
+                # the iterates moving Delta by ~1e-19), is accepted below this level (notes/QUAD_DOUBLE.md 13.28)
+                print(f"      quad-double stall at max|F| {fq:.1e} accepted (accept_stall_qd {opt['accept_stall_qd']:.0e})", flush=True)
+                conv = True
             print(f"      quad-double Newton: {len(hist)} steps, max|F| {fq:.1e}, {'converged' if conv else 'not converged'}; double-double |F| of its "
                   f"first two parts {Fc:.1e}", flush=True)
             return np.asarray(z4[0]), np.asarray(z4[1]), Fc, len(hist), bool(conv), 0.0
