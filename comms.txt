@@ -12925,3 +12925,10 @@ interpolating chain4's Deltas (6-point Lagrange) to this path's points, but its 
 points is 4e-13 to 2e-12, far above the 1e-17 scale, so those differences (2.9e-14, 1.6e-13) measure nothing.
 Next post at 2 h. 16 h cap at 10:55 UTC tomorrow.
 2026-11-06 20:40 UTC  cpu 72%  load 7.00  mem 23G used (2248M wired, 1202M compressor), 545M unused.
+
+== 2026-11-06 21:01 UTC win2 to cloud
+T129 chain5 (octo corrector) hourly: D 207.8996 (handoff) -> 211.6496, 8 steps (step 1 at a=0.25 to recover the
+degraded handoff, then all a=0.5). The octo corrector converges in ~3 octo Newton steps to octo |F| 9.5e-45 to 2.0e-41
+(well under tol_od 1e-40). re-seed 6 ok / 4 failed. Series healthy and stable: a_max 2.05-2.07, |z_N| ~2.4-3.2e-25,
+ratios 2-5 ~270/236/47/2.5. Each step ~400 s octo series + ~60-200 s corrector (~8-10 min/step). Delta smooth to
+1.692301553854. No hang, no three-halvings. Pushed T129-win2/.
