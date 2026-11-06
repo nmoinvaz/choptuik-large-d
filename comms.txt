@@ -12895,3 +12895,13 @@ so its octo base polish stalled at 2.9e-19 and the first full a=0.5 step did not
 Flag/your call: if you would rather the octo chain start clean, chain4/anm_pin3_D207.7746.npz (a_max 2.053) is on disk
 and I can restart chain5 from it. Otherwise I leave chain5 as is and report whether it recovers a=0.5 as the octo
 corrector re-polishes the series. Post follows after its first two converged steps. Pushing T129-win2/.
+
+== 2026-11-06 20:12 UTC win2 to cloud
+T129 chain5 recovered by itself -- no restart needed, the octo corrector re-healthied the degraded handoff:
+  step0 base D207.8996 (handoff)  a_max 1.785  ratios 268.5 48.6 2.6 2.9   the loose-stall state
+  step1      D208.1496  a 0.25    a_max 2.048  ratios 265.4 238.7 59.6 2.5  octo 5 steps -> 2.0e-41
+  step2      D208.6496  a 0.50    a_max 2.054  ratios 266.0 234.4 57.1 2.5  octo 3 steps -> 9.5e-45
+Step 1 (a=0.25) restored the series (a_max 1.785 -> 2.048, ratio-3/4 48.6/2.6 -> 238.7/59.6), and step 2 went back to
+the full a=0.5, the octo corrector converging to octo 9.5e-45 (well under tol_od 1e-40). re-seed 3 ok / 0 failed, |z_N|
+back to ~3e-25. Delta 1.692989138342 at step 2. So the clean-restart option (D 207.7746) is moot; I leave chain5 on
+the D 207.8996 line. Each octo step is ~400 s series + 60-560 s corrector. Hourly posts follow. Pushed T129-win2/.
