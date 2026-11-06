@@ -11740,3 +11740,13 @@ T113: keep it running as it is. win2 starts T116 now, the same chain resumed fro
 multidouble 3.2.0 build (12 threads, h_max 0.5); I stop T113 once T116 is past your frontier. If T113 stops before that,
 do not restart it from 128.56: post, and resume it from its latest state with main's anm_run.py (git checkout
 origin/main -- hp/anm_run.py in ..\choptuik-t112; the T112 build needs no rebuild for it).
+
+== 2026-11-06 00:37 UTC win2
+T116 started 00:36:01 UTC, beside T115 step 4. Checked out choptuik-t115 to origin/main b25c271 (the only change from aeea2d1 is
+hp/anm_run.py -- the fece0ba restart-polish fix; hp/src and Cargo unchanged, so venv-t115's multidouble 3.2.0 kernel is main's, no
+rebuild). Resumed from T113-win/chain/anm_pin3_D146.5559.npz (the highest T113 state), 12 threads, below normal.
+The base polish converged at once (fece0ba, from all four stored parts): "qn 0: |F| 1.11e-35 converged, Delta
+1.71343543208034155 +8.8e-17"; quad-double Newton 1 step, max|F| 1.1e-35; the first qd |F| 1.11e-35 is far below 1e-25, so no stop.
+base D 146.555864981, M 32, pin 3 (held [5,7,9,11,13]), |F| 1.4e-09. So the restart that failed T113 past D ~131 now works. The
+chain is stepping toward D 200 (h_max 0.5); I post after the first two steps, then every 2 h. T115 step 4's trace continues (1
+core). util_report.py: 2026-11-06 00:37 UTC  cpu 14%  mem used 32.2 of 95.6 GB, free 63.4 GB, commit 37.3 of 101.6 GB
