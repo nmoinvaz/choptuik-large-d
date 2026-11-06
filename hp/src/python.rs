@@ -4,9 +4,11 @@ use crate::block::BlockLu;
 use crate::dd::DD;
 use crate::dv::DV;
 use crate::field::{DMat, Fl, State};
-use crate::linalg::{DDLu, QDLu};
+use crate::linalg::{DDLu, ODLu, QDLu};
+use crate::osolve;
 use crate::qd::QD;
 use crate::qsolve;
+use multidouble::od::OD;
 use crate::model::{self, Ctx, TWork};
 use crate::v8::V8;
 use numpy::ndarray::Array2;
@@ -68,10 +70,41 @@ trait Api: Send + Sync {
     /// qsolve::residual_jet_q: residual_jet in quad-double, each z_k and each output coefficient in four parts; the
     /// quad-double jet lanes are instantiated for M = 32 and 48 and N = 8, 24, 32 coefficients only
     fn residual_jet_q(&mut self, zs: &[[&[f64]; 4]], nout: usize, mutate: u8) -> Result<Vec<Q4>, String>;
+    /// osolve::residual_parts_o at the eight-part state z, F in eight parts; mutate: Ctx::mutate for this call
+    fn residual_o(&mut self, z: [&[f64]; 8], mutate: u8) -> Result<O8, String>;
+    /// osolve::jacobian_o: (eight parts, ld)
+    fn jacobian_o(&mut self, z: [&[f64]; 8], mutate: u8) -> Result<(O8, usize), String>;
+    /// osolve::newton_o
+    fn newton_o(&mut self, z: [&[f64]; 8], mutate: u8) -> Result<osolve::OStep, String>;
+    /// osolve::residual_jet_o: residual_jet in octo-double, each z_k and each output coefficient in eight parts
+    fn residual_jet_o(&mut self, zs: &[[&[f64]; 8]], nout: usize, mutate: u8) -> Result<Vec<O8>, String>;
 }
 
 /// a quad-double vector as its four parts' arrays
 type Q4 = [Vec<f64>; 4];
+/// an octo-double vector as its eight parts' arrays
+type O8 = [Vec<f64>; 8];
+
+/// f on the context as Ctx<4> (M = 32), with Ctx::mutate set for the call: the octo-double lanes are instantiated for
+/// this size only (the release build's memory, notes/OCTO_DOUBLE.md)
+macro_rules! od_sizes {
+    ($me:expr, $mutate:expr, |$c:ident| $body:expr) => {{
+        let me: &mut dyn std::any::Any = $me;
+        if let Some($c) = me.downcast_mut::<Ctx<4>>() {
+            $c.mutate = $mutate;
+            let r = $body;
+            $c.mutate = 0;
+            r
+        } else {
+            Err("the octo-double solver is built for M = 32 only".to_string())
+        }
+    }};
+}
+
+/// an octo-double vector's eight parts' arrays from a Vec<OD>
+fn od_parts(v: &[OD]) -> O8 {
+    std::array::from_fn(|q| v.iter().map(|x| x.x[q]).collect())
+}
 
 /// f on the context as Ctx<4> or Ctx<6> (M = 32 or 48), with Ctx::mutate set for the call: the quad-double lanes are
 /// instantiated for these sizes only (the release build's memory)
@@ -277,6 +310,25 @@ impl<const B: usize> Api for Ctx<B> {
             _ => Err(format!("nout must be at most 32, not {nout}")),
         })
     }
+    fn residual_o(&mut self, z: [&[f64]; 8], mutate: u8) -> Result<O8, String> {
+        od_sizes!(self, mutate, |c| osolve::residual_parts_o(c, z, true).map(|f| od_parts(&f)))
+    }
+    fn jacobian_o(&mut self, z: [&[f64]; 8], mutate: u8) -> Result<(O8, usize), String> {
+        od_sizes!(self, mutate, |c| osolve::jacobian_o(c, z, true))
+    }
+    fn newton_o(&mut self, z: [&[f64]; 8], mutate: u8) -> Result<osolve::OStep, String> {
+        od_sizes!(self, mutate, |c| osolve::newton_o(c, z, true))
+    }
+    fn residual_jet_o(&mut self, zs: &[[&[f64]; 8]], nout: usize, mutate: u8) -> Result<Vec<O8>, String> {
+        let parts = |f: Vec<Vec<OD>>| -> Vec<O8> { f.iter().map(|v| od_parts(v)).collect() };
+        od_sizes!(self, mutate, |c| match nout {
+            0 => Err("nout must be at least 1".to_string()),
+            1..=8 => osolve::residual_jet_o::<8, _>(c, zs, true, nout).map(parts),
+            9..=24 => osolve::residual_jet_o::<24, _>(c, zs, true, nout).map(parts),
+            25..=32 => osolve::residual_jet_o::<32, _>(c, zs, true, nout).map(parts),
+            _ => Err(format!("nout must be at most 32, not {nout}")),
+        })
+    }
 }
 
 impl<const B: usize> Ctx<B> {
@@ -353,6 +405,29 @@ fn parts4<'a>(z: [&'a PyReadonlyArray1<f64>; 4], n: usize) -> PyResult<[&'a [f64
     Ok(out)
 }
 
+/// the eight parts of an octo-double vector, each of length n, from a sequence of eight arrays
+fn parts8<'a>(z: &'a [PyReadonlyArray1<f64>], n: usize) -> PyResult<[&'a [f64]; 8]> {
+    if z.len() != 8 {
+        return Err(PyValueError::new_err(format!("an octo-double vector is eight part arrays, not {}", z.len())));
+    }
+    let mut out: [&[f64]; 8] = [&[]; 8];
+    for (q, a) in z.iter().enumerate() {
+        out[q] = slice(a, "z")?;
+        if out[q].len() != n {
+            return Err(PyValueError::new_err(format!("each part must have length {n}")));
+        }
+    }
+    Ok(out)
+}
+
+/// an octo-double vector's eight parts as a tuple of arrays
+type T8<'py> = (A1<'py>, A1<'py>, A1<'py>, A1<'py>, A1<'py>, A1<'py>, A1<'py>, A1<'py>);
+
+fn arr8<'py>(py: Python<'py>, v: O8) -> T8<'py> {
+    let [a, b, c, d, e, f, g, h] = v.map(|p| arr(py, p));
+    (a, b, c, d, e, f, g, h)
+}
+
 fn arr4<'py>(py: Python<'py>, v: Q4) -> (A1<'py>, A1<'py>, A1<'py>, A1<'py>) {
     let [a, b, c, d] = v;
     (arr(py, a), arr(py, b), arr(py, c), arr(py, d))
@@ -365,6 +440,8 @@ struct Solver {
     lu: Option<Lu>,
     /// the quad-double LU of the last newton_q (qlu_solve)
     qlu: Option<QDLu>,
+    /// the octo-double LU of the last newton_o (olu_solve)
+    olu: Option<ODLu>,
     /// seconds of the last newton / newton_mixed call: residual, Jacobian, factorization, solve (step_timing)
     last_t: [f64; 4],
 }
@@ -486,7 +563,7 @@ impl Solver {
         // a large stack for the workers: the field arrays live on the stack and grow with M (a state of Dtn<8> lanes
         // at M = 384 is 120 kB); the pages are only touched as needed
         let pool = Arc::new(rayon::ThreadPoolBuilder::new().num_threads(t).stack_size(256 << 20).build().unwrap());
-        Ok(Solver { api, pool, lu: None, qlu: None, last_t: [0.0; 4] })
+        Ok(Solver { api, pool, lu: None, qlu: None, olu: None, last_t: [0.0; 4] })
     }
 
     #[getter]
@@ -513,6 +590,7 @@ impl Solver {
         }
         self.lu = None;
         self.qlu = None;
+        self.olu = None;
         self.api.set_horizon_alpha(mode);
         Ok(())
     }
@@ -520,6 +598,7 @@ impl Solver {
     fn set_segs(&mut self, segs: Vec<Vec<f64>>) -> PyResult<()> {
         self.lu = None;
         self.qlu = None;
+        self.olu = None;
         self.api.set_segs(segs).map_err(PyValueError::new_err)
     }
 
@@ -892,6 +971,84 @@ impl Solver {
         let mut x: Vec<QD> = (0..lu.n).map(|i| QD::new(b[0][i], b[1][i], b[2][i], b[3][i])).collect();
         py.detach(|| if transpose { lu.solve_t(&mut x) } else { lu.solve(&mut x) });
         Ok(arr4(py, std::array::from_fn(|q| x.iter().map(|v| v.x[q]).collect())))
+    }
+
+    /// The residual with every block in octo-double (osolve::residual_parts_o) at the state z, a sequence of eight part
+    /// arrays: F in eight parts. mutate: Ctx::mutate for this call (model::QD_MUT_NOREFINE, QD_MUT_REFINE4,
+    /// osolve::OD_MUT_STATE_QD; 0 none). M = 32 only.
+    #[pyo3(signature = (z, mutate=0))]
+    fn residual_o<'py>(&mut self, py: Python<'py>, z: Vec<PyReadonlyArray1<'py, f64>>, mutate: u8) -> PyResult<T8<'py>> {
+        let z = parts8(&z, self.api.len())?;
+        let (api, pool) = (&mut self.api, &self.pool);
+        let f = py.detach(|| pool.install(|| api.residual_o(z, mutate))).map_err(PyValueError::new_err)?;
+        Ok(arr8(py, f))
+    }
+
+    /// residual_jet in octo-double (osolve::residual_jet_o): zs a list of the coefficient vectors z_k, each a sequence
+    /// of its eight parts, the first the state itself; the coefficients of orders 0..nout-1 of F, a list of nout
+    /// tuples of eight arrays. M = 32 only; nout <= 32 (the jets of 8, 24 and 32 coefficients). mutate: as
+    /// residual_jet_q's, with osolve::OD_MUT_STATE_QD for QD_MUT_STATE_DD.
+    #[pyo3(signature = (zs, nout, mutate=0))]
+    fn residual_jet_o<'py>(
+        &mut self,
+        py: Python<'py>,
+        zs: Vec<Vec<PyReadonlyArray1<'py, f64>>>,
+        nout: usize,
+        mutate: u8,
+    ) -> PyResult<Vec<T8<'py>>> {
+        if zs.is_empty() {
+            return Err(PyValueError::new_err("zs must be a non-empty list of eight-part sequences"));
+        }
+        let l = self.api.len();
+        let mut zo: Vec<[&[f64]; 8]> = Vec::with_capacity(zs.len());
+        for z in zs.iter() {
+            zo.push(parts8(z, l)?);
+        }
+        let (api, pool) = (&mut self.api, &self.pool);
+        let out = py.detach(|| pool.install(|| api.residual_jet_o(&zo, nout, mutate))).map_err(PyValueError::new_err)?;
+        Ok(out.into_iter().map(|f| arr8(py, f)).collect())
+    }
+
+    /// The exact Jacobian in octo-double (osolve::jacobian_o, `Ou` lanes) at the eight-part state z, as eight (L, L)
+    /// arrays, its parts (row = residual, column = unknown). M = 32 only.
+    #[pyo3(signature = (z, mutate=0))]
+    fn jacobian_o<'py>(&mut self, py: Python<'py>, z: Vec<PyReadonlyArray1<'py, f64>>, mutate: u8) -> PyResult<Vec<Bound<'py, PyArray2<f64>>>> {
+        let n = self.api.len();
+        let z = parts8(&z, n)?;
+        let (api, pool) = (&mut self.api, &self.pool);
+        let (c, ld) = py.detach(|| pool.install(|| api.jacobian_o(z, mutate))).map_err(PyValueError::new_err)?;
+        Ok(c.iter().map(|p| Array2::from_shape_fn((n, n), |(i, j)| p[j * ld + i]).into_pyarray(py)).collect())
+    }
+
+    /// One Newton step in octo-double (osolve::newton_o) at the eight-part state z: returns (dz, F hi, F lo, min
+    /// |u_kk|, max |u_kk|), dz = -J^-1 F a tuple of its eight parts. The octo-double LU is kept for olu_solve; the
+    /// times are step_timing's. M = 32 only.
+    #[pyo3(signature = (z, mutate=0))]
+    #[allow(clippy::type_complexity)]
+    fn newton_o<'py>(
+        &mut self,
+        py: Python<'py>,
+        z: Vec<PyReadonlyArray1<'py, f64>>,
+        mutate: u8,
+    ) -> PyResult<(T8<'py>, A1<'py>, A1<'py>, f64, f64)> {
+        let z = parts8(&z, self.api.len())?;
+        let (api, pool) = (&mut self.api, &self.pool);
+        let st = py.detach(|| pool.install(|| api.newton_o(z, mutate))).map_err(PyValueError::new_err)?;
+        self.last_t = st.t;
+        let (pmin, pmax) = st.lu.pivot_range();
+        self.olu = Some(st.lu);
+        Ok((arr8(py, st.dz), arr(py, st.fh), arr(py, st.fl), pmin, pmax))
+    }
+
+    /// x with J x = b (J^T x = b with transpose) by the octo-double LU of the last newton_o; b a sequence of eight part
+    /// arrays (each entry renormalized), x their tuple
+    #[pyo3(signature = (b, transpose=false))]
+    fn olu_solve<'py>(&self, py: Python<'py>, b: Vec<PyReadonlyArray1<'py, f64>>, transpose: bool) -> PyResult<T8<'py>> {
+        let lu = self.olu.as_ref().ok_or_else(|| PyValueError::new_err("no octo-double LU (call newton_o first)"))?;
+        let b = parts8(&b, lu.n)?;
+        let mut x: Vec<OD> = (0..lu.n).map(|i| OD::new(std::array::from_fn(|q| b[q][i]))).collect();
+        py.detach(|| if transpose { lu.solve_t(&mut x) } else { lu.solve(&mut x) });
+        Ok(arr8(py, od_parts(&x)))
     }
 
     /// Mode matrix M(lam) (Delta fixed, no phase row) as two (L-1, L-1) arrays.
