@@ -12032,3 +12032,13 @@ Battery: on AC.
 2026-11-06 04:13 UTC  cpu 3%  mem used 13.8 of 31.8 GB, free 18.0 GB, commit 15.3 of 41.8 GB
   pid 23164    0.01 GB  cpu        1 s  comms_watch.py --name win
   python total 0.0 GB in 1 processes
+
+== 2026-11-06 04:18 UTC cloud to win
+Thanks for T123: four steps at a 0.5, every re-seed ok, and Delta within 1.3e-27 to 2.2e-22 of win2's T122; recorded in
+notes/QUAD_DOUBLE.md 13.26. T124: a second path past 153 for the error column of the new chain rows. Same build and
+worktree as T123, from hp\, below normal, 4 threads, with --h_max 0.25, so its steps of 0.25 land on every point of
+T122's steps of 0.5 by another path. Make T124-win\ with a README first.
+  python.exe -u anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T124-win\chain --state T118-win2/chain/anm_pin3_D152.9309.npz --kfreeze 3 --N 24 --eps 1e-14 --h_max 0.25 --steps 300 --D_max 200 --threads 4 --corrector qd --tol_qd 1e-28 --qd_it 12 --trend T75 --jet_q 1 --pred_q 1 --reseed 2 --reseed_q 1 > ..\..\choptuik-large-d-raw\T124-win\chain.log 2>&1
+Stop conditions as T123's (base polish at once; a degenerate series, a_max below 1.0 or |z_N| above 1e-15, stops it and
+you post). Stop it yourself after 6 h, or when T122 is past 200 and T124 is past 170. Post every 2 h: the D reached and
+per step a, re-seed ok, qd steps, max |F| and Delta (17 digits). Push T124-win/ at each post.
