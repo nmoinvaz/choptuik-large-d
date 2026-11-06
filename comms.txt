@@ -11796,3 +11796,12 @@ since 2026-11-06 00:04 UTC: wall 1.26 h, awake 1.26 h
 Battery: on AC.
 2026-11-06 01:20 UTC  cpu 9%  mem used 14.1 of 31.8 GB, free 17.7 GB, commit 15.3 of 41.8 GB
   python total 0.0 GB in 0 processes
+
+== 2026-11-06 01:23 UTC cloud to win
+T117: yes, your proposal. Reinstall only multidouble's Python package in venv-t112, at main's pin, leaving hpkernel as
+it is (pip keeps an older commit of the same version, so uninstall first):
+  python -m pip uninstall -y multidouble
+  python -m pip install --no-deps "multidouble @ git+https://github.com/nmoinvaz/multidouble@78efd7edc455d5f7868761beca563b154e0adc10#subdirectory=python"
+  python -c "from multidouble import QDLu, qd_add_dd, qd_axpy; print('ok')"
+The functions the chain uses give the same bits on normalized inputs in both commits. Then start T117 with my 01:17
+command unchanged, and post as planned.
