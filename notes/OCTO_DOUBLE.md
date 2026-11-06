@@ -230,3 +230,54 @@ eps_qd G² (5×10⁻¹² at 188), approaches the weak direction's pivot (1.5×10
 loses its contraction in that direction. Neither the plan's truncation nor the held offset (formed exactly in
 double-double, its rounding in the measured |F| about 10⁻³⁵) is the cause. In octo-double eps_od G² is about 10⁻⁷⁵.
 
+**The octo-double step needs damping there too.** Plain `newton_od` from the same state (`step0_od.py`, stopped after
+its first step, `step0_od188.log`) rejected the full step and the half step by its dz test and took lam 1/4: |dz| 1.2e-19
+→ 8.1e-20, max |F| 9.75e-29 → 2.73e-15, in 782 s (three octo-double Newton steps on 3 threads). So the state at D 188,
+which the quad-double corrector left 1.2×10⁻¹⁹ off in Delta, lies outside the full step's basin in the weak direction
+even with an exact step. At 175.52 and 180.52 the converged floor runs moved Delta by 2.3×10⁻²⁴ and 8.5×10⁻²² in all.
+
+### 5.2 What was added
+
+- `hp/octo_corrector.py`. `PinnedO` is PinnedQ's offset on the octo-double methods: `residual_o` returns F − c in eight
+  parts (`od_add_dd`), and `newton_o` returns dz + J⁻¹c (`olu_solve`, added by `od_axpy`) with F − c formed from
+  `residual_o`, since the kernel's F in `newton_o` is rounded to double-double, 2⁻¹⁰⁶|c| ≈ 10⁻³⁵ on the held rows.
+  `newton_od` is newton_qd's mode 'full' on it (the dz test, eight halvings), returning (z, hist, converged) the same
+  way. `ElimO` is ElimQ for eight-part iterates: above the switch (pinned quad-double max |F| > 1e-15 at the point's
+  quad-double rounding) the point is projected by `Reseeder.project` and its horizon data put back with parts 4–7 zero
+  (`with_horizon`); below it plain octo-double Newton runs. A start whose projection fails above `start_F` raises
+  `reseed.StartNotProjected`, as ElimQ. `save_o` writes save_q's keys and z4..z7, so `load_q` reads the first four
+  parts; `load_o` reads eight (four-part files get zeros), `has_o` tells them apart. The helpers `o8`, `o8_of_q` and
+  `q4_of_o` moved here from anm_run.py, which imports them.
+- `hp/anm_run.py --corrector od --tol_od 1e-40` (`--qd_it` steps). Under `--jet_o 1` the start is the octo-double
+  prediction `horner_o(Zo, a)` in all eight parts, its horizon data replaced by the re-seed's when that succeeds. The
+  base polish starts from all eight stored parts. A converged state is saved by `save_o` (meta `parts` 8), and under
+  `--jet_o 1` the next base's series is taken at the eight parts (also on a restart from an eight-part file). The qd,
+  dd and other paths are unchanged; `--accept_stall_qd` does not apply to od. M = 32 only, and `--reseed` needs
+  `--reseed_q 1`.
+- The checks, `octo_corrector.py planted` and `wall` (their docstrings).
+
+Step 0 found no dependence on the segment plan's tolerance, so the corrector has no `--plan_tol` of its own (anm_run's
+`--plan_tol` still plans the first base only, and each prediction is replanned at 1e-32).
+
+### 5.3 Checks and their criteria (fixed before the runs)
+
+- (a) Planted truth, `octo_corrector.py planted RAW T129-win2/chain/anm_pin3_D180.5246.npz`: the converged state with its
+  centre data and its nodes but the last moved by 10⁻¹² relative (random signs, sizes 0.5–1, seed 1) is the start, on
+  the state's own pinned system. Pass: the octo-double corrector (ElimO, newton_od, tol 1e-40) converges with the
+  octo-double pinned max |F| below 1e-40, and its Delta agrees with the quad-double corrector's from the same start
+  (ElimQ, newton_qd to tol 1e-45 in 12 steps) to 10⁻³⁰. The brief moved every node. A last node moved by 10⁻¹²
+  leaves the regular family by about G·10⁻¹² at the horizon, and the start's projection then failed (`probe_a.py`:
+  max |F| 3.62e-12, projection 'failed' in 173 s), so the last node stays at the truth; `--last 1` moves it too.
+- (b) The wall, `octo_corrector.py wall RAW T129-win2/chain2/pred_pin3_D194.2746.npz`: the stored prediction where
+  chain2's quad-double corrector stalled at 1.12e-28 (Delta 1.6965746586979402 in `chain2/anm_run.jsonl`), re-seeded
+  with the quad-double polish, then the octo-double corrector. Pass: its octo-double pinned max |F| below 1e-36.
+- (c) The control, `planted ... --qd 0 --mutate_offset qd --Delta_ref <(a)'s quad-double Delta>`: PinnedO's J⁻¹c taken
+  through the quad-double LU at the point's quad-double rounding. It must fail (a).
+- (d) One chain step, `anm_run.py --corrector od --jet_o 1 --reseed 2 --reseed_q 1 --h_max 0.5 --steps 1` from
+  `T129-win2/chain2/anm_pin3_D193.7746.npz` with T129's other options (N 24, eps 1e-14, trend T75), then a run with
+  `--steps 0` from the eight-part state it saved. Pass: the step converges, and the restart's base polish converges.
+- (e) Unchanged paths: one `--corrector qd` step (`--jet_o 1 --reseed 2 --reseed_q 1`, N 8, h_max 0.0625) from
+  `T129-win2/chain/anm_pin3_D180.5246.npz` by the code of fc636e7 and by this change. Pass: the logs equal line by line
+  with the times removed, and the records' Delta, |F| and step counts equal (`compare_e.py`).
+- (f) `python3 check_numbers.py --selftest` passes.
+

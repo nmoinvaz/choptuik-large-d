@@ -278,9 +278,9 @@ def planted(argv):
     agrees with the quad-double corrector's from the same start (ElimQ, newton_qd to tol 1e-45 in 12 steps, its
     floor) to 1e-30. The pinned system is the state's own (held harmonics at its values, the plan at it at 1e-32).
     Controls, which must fail: --mutate_offset qd (PinnedO's J^-1 c through the quad-double LU), --mutate 10 (the
-    kernel's OD_MUT_STATE_QD, the state read in its quad-double part). --qd 0 skips the quad-double run; --Delta_ref
-    then gives the quad-double Delta to compare with (a passing run's), else only the residual is judged. Exit 1 on
-    failure."""
+    kernel's OD_MUT_STATE_QD, the state read in its quad-double part). --qd 0 skips the quad-double run and --od 0 the
+    octo-double one; --Delta_ref then gives the other's Delta (a passing run's) to compare with, else only the
+    residual is judged. Exit 1 on failure."""
     import os
     import time
     import mpmath as mp
@@ -288,7 +288,7 @@ def planted(argv):
     from reseed import Reseeder
     raw, path = argv[0], argv[1]
     opt = _parse(argv[2:], dict(threads=3, rel=1e-12, seed=1, mutate_offset="", mutate=0, it_max=12, qd=1, tol=1e-40, out="",
-                                Delta_ref="", last=0))
+                                Delta_ref="", last=0, od=1))
     z4, meta = load_q(os.path.join(raw, path))
     z4 = o8(z4)
     D = mp.mpf(meta["D_str"])
@@ -306,39 +306,54 @@ def planted(argv):
     print(f"planted {path}: D {mp.nstr(D, 12)}, start = truth moved by {opt['rel']:.0e} relative in [0, {n}); pinned max|F| (octo) "
           f"truth {omax(so.residual_o(o8_of_q(z4))):.2e}, start {omax(so.residual_o(o8_of_q(zs))):.2e}; mutate_offset "
           f"'{opt['mutate_offset']}', mutate {opt['mutate']}", flush=True)
-    t0 = time.time()
-    zo, ho, co, Fo, counts = _run_od(so, rs, o8_of_q(zs), opt)
-    Do = _delta(zo)
-    print(f"  od: {len(ho)} steps, {'converged' if co else 'NOT converged'}, pinned max|F| (octo) {Fo:.2e}, Delta {mp.nstr(Do, 40)}, "
-          f"projections {counts}, {time.time() - t0:.0f} s", flush=True)
-    ok = bool(co) and Fo < 1e-40
+    import json
     rec = dict(test="planted", state=path, D_str=meta["D_str"], rel=opt["rel"], seed=opt["seed"], mutate_offset=opt["mutate_offset"],
-               mutate=opt["mutate"], od=dict(steps=len(ho), converged=bool(co), F=Fo, Delta=mp.nstr(Do, 40), hist=ho, counts=counts))
-    print(f"  od against the truth: dDelta {mp.nstr(Do - _delta(z4), 5)}", flush=True)
+               mutate=opt["mutate"], last=opt["last"])
+
+    def dump():
+        if opt["out"]:
+            with open(opt["out"] + ".json", "w") as f:
+                f.write(json.dumps(rec, default=float) + "\n")
+    ok, judged = True, []
+    if opt["od"]:
+        t0 = time.time()
+        zo, ho, co, Fo, counts = _run_od(so, rs, o8_of_q(zs), opt)
+        Do = _delta(zo)
+        print(f"  od: {len(ho)} steps, {'converged' if co else 'NOT converged'}, pinned max|F| (octo) {Fo:.2e}, Delta {mp.nstr(Do, 40)}, "
+              f"projections {counts}, {time.time() - t0:.0f} s", flush=True)
+        print(f"  od against the truth: dDelta {mp.nstr(Do - _delta(z4), 5)}", flush=True)
+        ok = bool(co) and Fo < 1e-40
+        judged.append(f"od max|F| {Fo:.2e} < 1e-40")
+        rec["od"] = dict(steps=len(ho), converged=bool(co), F=Fo, Delta=mp.nstr(Do, 40), hist=ho, counts=counts)
+        if opt["out"]:
+            save_o(opt["out"] + ".npz", zo, dict(meta, D_str=meta["D_str"], planted=True))
+        dump()
+    else:
+        # --od 0: the quad-double run alone, against the octo-double Delta of an earlier run (--Delta_ref)
+        Do = None
+    ref = None
+    if opt["Delta_ref"]:
+        with mp.workdps(60):
+            ref = mp.mpf(opt["Delta_ref"])
     if opt["qd"]:
         t0 = time.time()
-        zq, hq, cq, Fq, cntq = _run_qd(sq, so, rs, q4_of_o(zs), 1e-45, 12)
+        zq, hq, cq, Fq, cntq = _run_qd(sq, so, rs, zs, 1e-45, 12)
         Dq = _delta(zq)
-        dD = abs(Do - Dq)
         print(f"  qd: {len(hq)} steps, {'converged' if cq else 'stopped'}, its last max|F| {hq[-1]['F']:.2e} (octo at the projected point "
-              f"{Fq:.2e}), Delta {mp.nstr(Dq, 40)}, projections {cntq}, {time.time() - t0:.0f} s; |Delta_od - Delta_qd| {mp.nstr(dD, 5)}",
-              flush=True)
+              f"{Fq:.2e}), Delta {mp.nstr(Dq, 40)}, projections {cntq}, {time.time() - t0:.0f} s", flush=True)
+        rec["qd"] = dict(steps=len(hq), converged=bool(cq), F_last=hq[-1]["F"], F_octo=Fq, Delta=mp.nstr(Dq, 40), hist=hq)
+        Da, Db = (Do, Dq) if Do is not None else (ref, Dq)
+    else:
+        Da, Db = Do, ref
+    if Da is not None and Db is not None:
+        dD = abs(Da - Db)
+        print(f"  |Delta_od - Delta_qd| {mp.nstr(dD, 5)}" + (f" (Delta_ref {opt['Delta_ref']})" if ref is not None else ""), flush=True)
         ok = ok and dD <= 1e-30
-        rec["qd"] = dict(steps=len(hq), converged=bool(cq), F_last=hq[-1]["F"], F_octo=Fq, Delta=mp.nstr(Dq, 40), dDelta=float(dD))
-    elif opt["Delta_ref"]:
-        with mp.workdps(60):
-            dD = abs(Do - mp.mpf(opt["Delta_ref"]))
-        print(f"  |Delta_od - Delta_ref| {mp.nstr(dD, 5)} (Delta_ref {opt['Delta_ref']})", flush=True)
-        ok = ok and dD <= 1e-30
-        rec["Delta_ref"], rec["dDelta_ref"] = opt["Delta_ref"], float(dD)
+        judged.append("|Delta_od - Delta_qd| <= 1e-30")
+        rec["dDelta"] = float(dD)
     rec["passed"] = bool(ok)
-    print(f"  (a) {'PASS' if ok else 'FAIL'}: od max|F| {Fo:.2e} < 1e-40" + (", |Delta_od - Delta_qd| <= 1e-30" if opt["qd"] or opt["Delta_ref"] else ""),
-          flush=True)
-    if opt["out"]:
-        import json
-        save_o(opt["out"] + ".npz", zo, dict(meta, D_str=meta["D_str"], planted=True))
-        with open(opt["out"] + ".json", "w") as f:
-            f.write(json.dumps(rec, default=float) + "\n")
+    dump()
+    print(f"  (a) {'PASS' if ok else 'FAIL'}: " + ", ".join(judged), flush=True)
     return 0 if ok else 1
 
 
@@ -369,24 +384,28 @@ def wall(argv):
     Do = _delta(zo)
     print(f"  od: {len(ho)} steps, {'converged' if co else 'NOT converged'}, pinned max|F| (octo) {Fo:.2e}, Delta {mp.nstr(Do, 40)}, "
           f"projections {counts}, {time.time() - t0:.0f} s", flush=True)
+    import json
     ok = Fo < opt["F_max"]
     rec = dict(test="wall", pred=path, D_str=meta["D_str"], mutate_offset=opt["mutate_offset"], mutate=opt["mutate"],
-               od=dict(steps=len(ho), converged=bool(co), F=Fo, Delta=mp.nstr(Do, 40), hist=ho, counts=counts))
+               od=dict(steps=len(ho), converged=bool(co), F=Fo, Delta=mp.nstr(Do, 40), hist=ho, counts=counts), passed=bool(ok))
+
+    def dump():
+        if opt["out"]:
+            with open(opt["out"] + ".json", "w") as f:
+                f.write(json.dumps(rec, default=float) + "\n")
+    if opt["out"]:
+        save_o(opt["out"] + ".npz", zo, dict(meta, D_str=meta["D_str"], prediction=False, corrected="od"))
+    dump()
+    print(f"  (b) {'PASS' if ok else 'FAIL'}: od max|F| {Fo:.2e} < {opt['F_max']:.0e}", flush=True)
     if opt["qd"]:
         t0 = time.time()
-        zq, hq, cq, Fq, cntq = _run_qd(sq, so, rs, q4_of_o(zr), 1e-28, 12)
+        zq, hq, cq, Fq, cntq = _run_qd(sq, so, rs, zr, 1e-28, 12)
         Dq = _delta(zq)
         print(f"  qd: {len(hq)} steps, {'converged' if cq else 'stopped'}, its last max|F| {hq[-1]['F']:.2e} (octo at the projected point "
               f"{Fq:.2e}), Delta {mp.nstr(Dq, 40)}, projections {cntq}, {time.time() - t0:.0f} s; Delta_od - Delta_qd {mp.nstr(Do - Dq, 5)}",
               flush=True)
         rec["qd"] = dict(steps=len(hq), converged=bool(cq), F_last=hq[-1]["F"], F_octo=Fq, Delta=mp.nstr(Dq, 40))
-    rec["passed"] = bool(ok)
-    print(f"  (b) {'PASS' if ok else 'FAIL'}: od max|F| {Fo:.2e} < {opt['F_max']:.0e}", flush=True)
-    if opt["out"]:
-        import json
-        save_o(opt["out"] + ".npz", zo, dict(meta, D_str=meta["D_str"], prediction=False, corrected="od"))
-        with open(opt["out"] + ".json", "w") as f:
-            f.write(json.dumps(rec, default=float) + "\n")
+        dump()
     return 0 if ok else 1
 
 
