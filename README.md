@@ -447,12 +447,15 @@ is still an assumption, are in [Is the period analytic in 1/D?](#is-the-period-a
 
 **Every value of Δ** we computed, from D = 3.04375 to the large-D chain's frontier, is in
 [`hp/data/delta_all.csv`](hp/data/delta_all.csv), one row per D. Each row has Δ in up to four parts (their sum is the
-value), the kind of computation, an error estimate and what that estimate is, and the source run and state in the
-[raw data](#raw-data). The kinds are the full system in double-double (D ≤ 67.77) or quad-double (68.5–73), the pinned
-double-double runs after one full-system step (67.77–78.1), and the large-D chain (from 75.27), whose held harmonics
-bias Δ by about 10⁻⁸–10⁻⁷ at D 79–86, growing with D, a bias its error column does not include
-([notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), 13.19). `cd hp && python3 export_delta_all.py
-../../choptuik-large-d-raw` rebuilds it, and `--verify` checks every row against its source.
+value), the kind of computation, an error estimate and what that estimate is, a published value at that D where one
+exists (with our Δ minus it), and the source run and state in the [raw data](#raw-data). Every published value,
+including Ecker, Ecker and Grumiller's table to D = 200[^23], is compared with ours in
+[`hp/data/delta_published_compare.csv`](hp/data/delta_published_compare.csv). The kinds are the full system in
+double-double (D ≤ 67.77) or quad-double (68.5–73), the pinned double-double runs after one full-system step
+(67.77–78.1), and the large-D chain (from 75.27), whose held harmonics bias Δ by about 10⁻⁸–10⁻⁷ at D 79–86, growing
+with D, a bias its error column does not include ([notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), 13.19).
+`cd hp && python3 export_delta_all.py ../../choptuik-large-d-raw` rebuilds it, and `--verify` checks every row against
+its source.
 
 Δ for D = 10–60 is double-double, interpolated to 10⁻¹⁴ from that file's double-double rows where D is not itself a
 computed point. Δ and γ for D = 5–8 are double-double, from the run T79 (M = 48, 22 points from D = 8.25 down to 4 in
@@ -1956,3 +1959,4 @@ Files that were moved out of this repository are listed with their new paths in 
 [^20]: Y. Hida, X. S. Li, D. H. Bailey, *Algorithms for quad-double precision floating point arithmetic*, Proc. 15th IEEE Symposium on Computer Arithmetic (ARITH-15), 155–162 (2001).
 [^21]: N. J. Higham, *Accuracy and Stability of Numerical Algorithms*, 2nd ed., SIAM (2002).
 [^22]: R. S. Dembo, S. C. Eisenstat and T. Steihaug, *Inexact Newton methods*, SIAM J. Numer. Anal. 19, 400–408 (1982), doi:10.1137/0719025 *(partly verified: notes/REF_CHECK.md)*.
+[^23]: C. Ecker, F. Ecker and D. Grumiller, "Critical collapse remains discretely self-similar at large D", arXiv:2611.07007 (2026).

@@ -344,6 +344,11 @@ full texts checked:
 - **Ecker, Ecker, Grumiller & Jechtl**, SciPost Phys. 20, 176 (2026), arXiv:2602.10185 (abstract): numerical values for
   3.05 ≤ D ≤ 5.5, analytic expansions in 1/D and in D − 3 suggesting Δ, γ → 0 as D → 3⁺, and the conjectures Δ → 0,
   γ → 1/2 as D → ∞; no fitting formula.
+- **Ecker, Ecker & Grumiller**, "Critical collapse remains discretely self-similar at large D", arXiv:2611.07007v1
+  (4 Nov 2026; verified, arXiv listing; HTML read 2026-11-06): computed Δ for D ≤ 200 (supplemental Table 1, six
+  decimals, no stated uncertainty), the fit Δ ≈ 1.6439 + 10.37/D, Δ(∞) = 1.643911 from a fit in 1/(D − 1), and an
+  explicit large-D model profile; no analytic value of Δ∞. It argues that Δ stays finite as D → ∞. Its values are
+  compared with ours in hp/data/delta_published_compare.csv (hp/compare_published.py).
 - **Kol**, hep-th/0502033 (full text, already recorded above): 2π/Δ = √((10 − D)/(D − 2)) and a formula for γ, but for
   the black-string merger, not for scalar-field collapse.
 
