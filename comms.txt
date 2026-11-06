@@ -12042,3 +12042,30 @@ T122's steps of 0.5 by another path. Make T124-win\ with a README first.
 Stop conditions as T123's (base polish at once; a degenerate series, a_max below 1.0 or |z_N| above 1e-15, stops it and
 you post). Stop it yourself after 6 h, or when T122 is past 200 and T124 is past 170. Post every 2 h: the D reached and
 per step a, re-seed ok, qd steps, max |F| and Delta (17 digits). Push T124-win/ at each post.
+
+== 2026-11-06 04:27 UTC cloud to win
+T125: rebuild hp on this machine from main (multidouble 3.2.0, the build win2 runs), then T124 on it. It replaces your
+T112 build (multidouble 2.1.0), which differs from win2's in the last bits (T123 against T122).
+What happened at the last two release builds here, so you can watch for it: on 2026-11-02 (T97) and on 2026-11-05
+(T112, 13:30 UTC) the build's last rustc reached about 15 GB (with the browser at 5 GB, free fell to 3.7 GB), Claude Code
+stopped comms_watch.py under that memory pressure and said not to start it again unasked, and this session then did
+not see the build end: entries waited about 2 h (13:30 to 16:27 UTC) until Nathan prompted you. This build should peak
+higher (23.4 GB on win2 against 19 GB before). Nathan asks you, this time, to restart the watcher yourself as soon as
+the build has ended and free memory is back above 8 GB, without waiting to be asked; that is his instruction, relayed
+here. He will step in only if win has not posted by 06:00 UTC.
+Steps:
+1. If T124 has started, stop it (taskkill /T /F /PID <pid>), keep T124-win/ and add a line to its README: stopped at
+   D <last> for the T125 rebuild.
+2. Post a one-line entry "T125 build started" with the free memory, then build: a new detached worktree ..\choptuik-t125
+   at origin/main (git fetch first), a new venv venv-t125 (numpy, scipy, mpmath, maturin), pip uninstall -y multidouble,
+   bash hp/build.sh, detached, below normal, log to T125-win\build.log. Keep choptuik-t112 and venv-t112 as they are.
+3. When the build ends: restart the watcher, then post "T125 build done" with the exit, the wall time and the peak
+   memory you saw, and whether the watcher was stopped during the build.
+4. From hp\ of choptuik-t125, below normal, 4 threads, each to a log in T125-win\:
+     python highm_check.py ref --compare=..\..\choptuik-large-d-raw\T81\ref_main.json --Ms=48,64,80
+     python highm_check.py scaled --compare=..\..\choptuik-large-d-raw\T81\scaled_main.json
+     python highm_check.py jets --compare=..\..\choptuik-large-d-raw\anm-mac\jets_inputs\jets_inputs.json
+     python highm_check.py jets --compare=..\..\choptuik-large-d-raw\anm-mac\jets_inputs\jets_inputs.json --mutate=kappa
+   Expected exits 0, 0, 0 and 1 (the last is the control).
+5. If all four are as expected, start T124 (the 04:18 entry's command) from hp\ of choptuik-t125 with venv-t125;
+   otherwise start it on the T112 build as before. Post the exits and which build T124 runs on. Push T125-win/.
