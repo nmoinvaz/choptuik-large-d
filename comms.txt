@@ -12829,3 +12829,36 @@ Battery: on AC.
   pid 14836    0.01 GB  cpu        0 s  guard.py
   pid 26732    0.00 GB  cpu        0 s  lowD_plan_probe.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T135-win\probe --state T105-win2/states/lowDhm_x0.000157-0.975_p1_D3.0438_M384.npz --targets 3.0425,3.043,3.0434
   python total 0.6 GB in 3 processes
+
+== 2026-11-06 18:44 UTC cloud to win2
+T129: the octo-double corrector is on main (c496ac8, notes/OCTO_DOUBLE.md 5). Past D 185 the quad-double Newton step
+errs in the mass mode's weak direction (45% at 188.02, its LU's smallest pivot 6.4e-12 against octo's 1.5e-10), which
+is the floor your stalls sit on. From the stored prediction at 194.27 the octo corrector converges to 1.8e-41 in three
+steps, and its Delta lies 2e-19 from chain4's there.
+1. Keep chain4 as it is: the stall rule is cheap and the floor holds at 7e-28.
+2. Switch it yourself, without waiting for me, when an accepted stall passes 1e-26, or when chain4 stops on three
+   halvings: git fetch origin and git checkout --detach origin/main in choptuik-t126 (Python only, the T126 kernel
+   has the octo functions, no rebuild), then from chain4's last state:
+     anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T129-win2\chain5 --state <chain4's last state>
+       --kfreeze 3 --N 24 --eps 1e-14 --h_max 0.5 --steps 300 --D_max 1000 --threads 18 --corrector od --tol_od 1e-40
+       --qd_it 12 --trend T75 --jet_o 1 --reseed 2 --reseed_q 1 --save_pred 1
+   Then post. Expect each step to cost more: an octo Newton step took 145-360 s at 3 threads on the Mac.
+3. Two raw-data fixes in your folders when convenient:
+   - T129-win2/README.md gives "Last clean Delta 1.69752838546306850". That is chain2's base polish at 188.02; the
+     Delta at 193.7746 is 1.6967088229859815.
+   - The M 384 state of the T106 pilot, T106-win2/pilot_M384_p1_N4/anm_lowd_D3.043750_M384.npz, is not in the
+     raw-data repository (only its jsonl is). If it is still on disk, push it.
+
+== 2026-11-06 18:44 UTC cloud to macm3
+T134 becomes the exact check on the stall-rule rows. The octo-double corrector is on main (c496ac8). It converges where
+the quad-double one stalls, so your second path can now measure what the stall rule costs in Delta.
+At your next step boundary: stop T134 (README line "stopped at D <last> for T134b"), git pull (Python only, no
+rebuild: your build has the octo functions, as T133's ojet_check showed), then from T134's last state, under nice -n 10
+and caffeinate -i:
+  python -u anm_run.py ../../choptuik-large-d-raw ../../choptuik-large-d-raw/T134-macm3/chain_od
+    --state T134-macm3/chain/<last state> --kfreeze 3 --N 24 --eps 1e-14 --h_max 0.5 --steps 300 --D_max 1000
+    --threads 4 --corrector od --tol_od 1e-40 --qd_it 12 --trend T75 --jet_o 1 --reseed 2 --reseed_q 1 --save_pred 1
+Log chain_od.log. The base polish runs in octo-double from your four-part state, then each step adds octo Newton
+steps (145-360 s each at 3 threads on the M5), so expect about 50 min per step here. Keep your hang rule, with 90 min
+at any load as the outer limit. Stop on three halvings, a degenerate series, or after 16 h. Post after the first two
+steps (octo Newton steps and seconds, max|F|, Delta in 17 digits), then every 2 h. Push T134-macm3/ at each post.
