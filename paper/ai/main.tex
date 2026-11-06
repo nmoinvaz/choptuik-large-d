@@ -55,27 +55,26 @@ mass mode amplifies errors at the horizon by a gain $G \approx 0.7^{-(D-3)}$, so
 $D$ grows, from double-double~\cite{Dekker1971} (about 32 digits) through quad-double~\cite{HidaLiBailey2001} (about 64)
 to octo-double (about 126). At low $D$ one point costs 4 to 10 hours.
 
-This paper is about the method, not the physics. The project began in a chat on claude.ai on 17 and 18 October 2026
-(Sec.~\ref{sec:origin}). From 19 October to 6 November I directed Claude sessions running in Claude
-Code~\cite{ClaudeCode} on five machines. Claude produced the code under my direction. Downward, the lowest converged point
-is $D = 3.04375$. Upward, a chain of continuation steps passed $D = 200$ at 16:04 UTC on 6 November and stood at
-$D = 206.77$ at 18:47 UTC, still climbing.
+This paper is about the method, not the physics. The project began in a chat on claude.ai (Sec.~\ref{sec:origin}).
+Over the following three weeks I directed Claude sessions running in Claude Code~\cite{ClaudeCode} on five machines.
+Claude produced the code under my direction. Downward, the lowest converged point is $D = 3.04375$. Upward, a chain of
+continuation steps passed $D = 200$ and was still climbing when this was written.
 
 The sources are the chat where the project began~\cite{chat}, the coordination log \file{comms.txt}, the git history, the notes in
 \file{notes/}, the raw-data repository~\cite{raw} and the transcripts of the Claude Code sessions on the coordinator
-machine. The other machines' side is known from their entries in the log. Times are UTC, and every number and quotation
-is listed with its source in \file{paper/ai/SOURCES.md}.
+machine. The other machines' side is known from their entries in the log. Every number, quotation and date is listed
+with its source in \file{paper/ai/SOURCES.md}.
 
 \section{How it began}
 \label{sec:origin}
 
-The chat began on 17 October at 23:24 with general questions, such as \prompt{Are you able to make new discoveries
-about physics?} I asked for \prompt{a toy numerical reality} (23:42), and Claude chose a collapse simulation in general
+The chat began with general questions, such as \prompt{Are you able to make new discoveries about physics?} I asked for
+\prompt{a toy numerical reality}, and Claude chose a collapse simulation in general
 relativity. From 177 runs it reproduced Choptuik's mass scaling, with an exponent of 0.377 and 0.378 for two pulse shapes
 against the accepted 0.374, and an echo period $\Delta \approx 3.30$ against 3.445. It named its own limit, a fixed grid
 that resolved only about one echo.
 
-The turn came with \prompt{Explain the collapse numbers} on 18 October (16:43). The answer said that both numbers are
+The turn came with \prompt{Explain the collapse numbers}. The answer said that both numbers are
 eigenvalues of exact problems with no known formula, and it proposed a plan with a literature check first. The check
 changed the target, since a 2026 paper had already computed $\Delta$ for continuous $D$ between 3.05 and 5.5
 (see~\cite{physics}).
@@ -83,9 +82,9 @@ Claude then computed the critical solution directly, as a periodic problem rathe
 it gave $\Delta = 3.4454523972$ in four dimensions, which agrees with the best published value, $3.445452402$, to nine
 digits, and it went on to scan $D$.
 
-Four prompts that evening pushed toward a formula: \prompt{Yes continue to find the formula you are doing great don't
-give up. It exists} (20:24), \prompt{Could it be a sum?} (20:41), \prompt{What if is a combination of a small sum and large
-sum?} (21:41) and \prompt{Where is the formula?} (21:45). They shaped the method in two ways. First, each suggested form
+Four prompts then pushed toward a formula: \prompt{Yes continue to find the formula you are doing great don't give up.
+It exists}, \prompt{Could it be a sum?}, \prompt{What if is a combination of a small sum and large sum?} and
+\prompt{Where is the formula?} They shaped the method in two ways. First, each suggested form
 was turned into a fit and tested on dimensions it had not seen, as when a fit to $D \le 8$ predicted the computed values
 out to $D = 10.1$ to within $2\times10^{-5}$. That habit later became the held-out and planted-truth tests of
 Sec.~\ref{sec:evidence}. Second, the search produced a structural finding. The solutions that compete with the smooth one
@@ -95,37 +94,35 @@ idea became Proposition 1 of the later work, ``the $1/n$ expansion never fixes t
 themselves did not last. The first one for $\Delta$, fitted on data below $D = 11$, fell like $(D-2)^{-1/4}$, while the
 later data give a finite limit, $\Delta_\infty = 1.643893746$~\cite{physics}.
 
-A formula needed many precise points, so speed became the problem. On 19 October I asked \prompt{can we speed up the
-runtime by using SIMD?} and \prompt{Does it make sense to rewrite in Rust?} (02:02), and then \prompt{With a subagent make
-a purpose build Rust build and measure speed.} (02:24), the first subagent of the project. The chat ran in a cloud
-container with two virtual cores. I put what the chat had produced into a repository, whose first commit, ``Import the DSS
-residual kernel'', is dated 19 October 03:53, and told Claude so at 04:27. At 04:35 I linked the chat to my laptop,
-\prompt{You are now local on my computer. It has AVX512 too which is nice. Continue our work.} By 08:00 the first entries
-of \file{comms.txt} passed between a cloud session and the laptop, and the method of the following sections grew from
-that pair.
+A formula needed many precise points, so speed became the problem. I asked \prompt{can we speed up the runtime by using
+SIMD?} and \prompt{Does it make sense to rewrite in Rust?}, and then \prompt{With a subagent make a purpose build Rust
+build and measure speed.}, the first subagent of the project. The chat ran in a cloud container with two virtual cores.
+I put what the chat had produced into a repository, whose first commit is ``Import the DSS residual kernel'', and linked
+the chat to my laptop: \prompt{You are now local on my computer. It has AVX512 too which is nice. Continue our work.}
+Within hours the first entries of \file{comms.txt} passed between a cloud session and the laptop, and the method of the
+following sections grew from that pair.
 
 \section{Roles}
 \label{sec:roles}
 
-\emph{I} set the goals, from \prompt{continue to D = 200} on 27 October to \prompt{we can push past D=200 and go as large
-as we can} on 6 November. I set the standards of evidence and chose between options, by short prompts and by answering
+\emph{I} set the goals, from \prompt{continue to D = 200} to \prompt{we can push past D=200 and go as large as we
+can}. I set the standards of evidence and chose between options, by short prompts and by answering
 the coordinator's multiple-choice questions. I also acted on the machines myself. I merged and released the arithmetic
 library \file{multidouble}~\cite{multidouble}, and I woke, plugged in and set up machines.
 
-\emph{The coordinator} was one Claude Code session at a time, on a cloud machine until 26 October and on the Mac after
-it. It wrote all the code in its own worktrees, merged results into main, wrote the notes and queued numbered tasks, T1
+\emph{The coordinator} was one Claude Code session at a time, first on a cloud machine and then on the Mac. It wrote all the code in its own worktrees, merged results into main, wrote the notes and queued numbered tasks, T1
 to T135.
 
 \emph{The runners} were one Claude Code session per other machine. They ran the commands of their tasks, posted results
-and pushed raw output, and they did not edit code. That rule came from my prompt of 26 October, \prompt{make a note that
+and pushed raw output, and they did not edit code. That rule came from my prompt \prompt{make a note that
 the other machines are running a lower model than you are, so it is best for you to write any code and not them.} The Mac
-runner's transcripts record Claude Sonnet 5.5 from that day.
+runner's transcripts record Claude Sonnet 5.5 from then on.
 
 \emph{Subagents} were sessions the coordinator started for one bounded task, each returning a single report.
 
 \begin{table}[h]
 \caption{The machines, by their names in \file{comms.txt}, with the entries each posted (headers counted at commit
-07eff89). The laptop posted as \file{local} until 24 October.}
+07eff89). The laptop posted as \file{local} at first.}
 \label{tab:machines}
 \small
 \begin{tabular}{L{1.4cm}L{5.4cm}L{7.4cm}r}
@@ -186,7 +183,7 @@ are sessions that ended.}
 
 \emph{One log.} All sessions talked through \file{comms.txt} in the code repository (Fig.~\ref{fig:arch}). It is
 append-only. Each entry has a header such as \file{== 2026-11-06 13:34 UTC cloud to win2}, with the time read from a
-clock, and a writer pulls, appends, commits only that file and pushes. It held 974 entries by 18:26 on 6 November.
+clock, and a writer pulls, appends, commits only that file and pushes. It held 974 entries when this was written.
 When the coordinator moved to the Mac, I chose to keep \file{cloud} as its name so the runners' watchers needed no
 change.
 
@@ -197,7 +194,7 @@ polling loops.
 
 \emph{Raw output} goes to a separate repository, one folder per task and machine, each with a README whose first line
 says what it holds, indexed by \file{INDEX.md}. The long-running scripts refuse any other output path, and
-\file{raw\_check.py} fails when a folder a post names is not on GitHub. The rule followed a loss. On 26 October the
+\file{raw\_check.py} fails when a folder a post names is not on GitHub. The rule followed a loss. Early on the
 coordinator found that the per-point records of 757 early points had stayed on the cloud machine's disk and were gone,
 though their values survived. I then asked \prompt{from now on all agents should store the raw output in git somewhere
 different.}
@@ -210,7 +207,7 @@ serves and an ETA in hours, and I asked the runners to report processor and memo
 \label{sec:tasks}
 
 A task entry states its commands, its thread count, its stop conditions and what to push (AGENTS.md). A shortened
-example, the entry that sent the octo-double chain to win2 on 6 November, shows the form.
+example, the entry that sent the octo-double chain to win2, shows the form.
 {\footnotesize
 \begin{verbatim}
 1. win2, T129 (the chain to 200 in octo-double): ... below normal, 18 threads:
@@ -237,7 +234,7 @@ edit code; on an error, stop and post it'' closes eleven entries.
 \section{Rules of evidence}
 \label{sec:evidence}
 
-AGENTS.md states the rules, written on 21 October and partly taken from the verification protocols of
+AGENTS.md states the rules, partly taken from the verification protocols of
 BootLoops~\cite{BootLoops}. Every check must be able to fail, so each check is broken once on purpose and the broken
 version stays runnable. Planted truth comes before real data. Every error bar says what it is. Independent checks share
 none of the machinery under test. Discrepancies are reported, not quietly fixed, and thresholds are not loosened to pass.
@@ -303,7 +300,7 @@ Ten were builds, among them pull requests to \file{multidouble}, re-seeding of t
 corrector, and one wrote this paper. The coordinator used them where independence mattered (a reviewer that did not write
 the work), where a wide search would fill its own context, and where a build of hours could run beside its work. My
 standing instruction is not to use subagents without asking and naming their number, and 26 of the 29 followed a prompt
-of mine asking for one, such as \prompt{run two subagents if u need to}. From 4 November, 22:45, every brief named a git
+of mine asking for one, such as \prompt{run two subagents if u need to}. From the third week on, every brief named a git
 worktree and many a backup branch \file{wip/$\langle$topic$\rangle$}. The coordinator checked each report before relaying it. When
 it merged the octo-double series, its smoke test showed that the merged driver imported the new helpers at module level,
 which would have broken every other path on the runners' older packages, and it moved the import. A subagent's code
@@ -312,7 +309,7 @@ analysis also corrected one of the coordinator's diagnoses, a stall at low $D$ t
 \section{Unblocking stuck work}
 \label{sec:unblock}
 
-The large-$D$ chain met five walls on 6 November (Fig.~\ref{fig:frontier}). Each was passed by one of a few patterns.
+The large-$D$ chain met five walls in its last day (Fig.~\ref{fig:frontier}). Each was passed by one of a few patterns.
 
 \begin{figure}[t]
 \centering
@@ -351,11 +348,11 @@ which would have made the coming octo-double series useless there. A cheap test 
 Jacobians equal to $1.2\times10^{-36}$, and the stored predictions then let candidate rules be compared on the failing
 input until one converged (\file{notes/QUAD\_DOUBLE.md} 13.27).
 
-\emph{C. Build the next precision ahead of need, pilot it, then switch.} On 5 November I wrote \prompt{yes add octo-double
+\emph{C. Build the next precision ahead of need, pilot it, then switch.} I wrote \prompt{yes add octo-double
 jets in hp engine, we don't need to run it until it is needed.} When a runner flagged the quad-double series losing
 digits near 171, a two-step pilot showed the octo-double series healthy and $\Delta$ unchanged in 21 printed digits, and
 the switch took one entry. The octo-double corrector followed the same path. It was built by a subagent with a planted
-check and a failing control, merged at c496ac8 on 6 November (\file{notes/OCTO\_DOUBLE.md} 5--6), and handed to the
+check and a failing control, merged at c496ac8 (\file{notes/OCTO\_DOUBLE.md} 5--6), and handed to the
 runners as a rule to switch on their own.
 
 \emph{D. Dump the stack before killing, then fail fast.} Above 188.02 a step ran on one core for more than an hour with
