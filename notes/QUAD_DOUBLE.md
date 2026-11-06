@@ -2103,3 +2103,30 @@ quad-double polish at u₀ reaches 2⁻²¹² G(u₀).
 ![The re-seed: the last node integrated toward the horizon, the series inverted on the rungs, and each rung's residual against the two floors](../hp/algo_reseed.svg)
 
 ![The corrector: re-seed, Newton step and the re-seeded trial, beside max |F| at each quad-double Newton iterate](../hp/algo_corrector.svg)
+
+### 13.24 Faster jets, and restarting the chain (2026-11-06 00:32 UTC)
+
+**The jet call's parallelism.** One `residual_jet_q` call parallelized only over its six blocks, and the centre block's
+series recursion (146 orders, about 97% Cauchy sums) took 45% of the work, so the call stopped gaining at three threads.
+hp's `cs`, `cs_range` and `cs_w` (`hp/src/field.rs`) now sum each lane vector of a jet lane on its own thread, in the
+order multidouble sums it, and through multidouble 3.2.0's in-place lane sums, which add each term to a borrowed
+accumulator instead of moving it (multidouble PR #35). The bits are unchanged. `highm_check.py ref`, `scaled` and
+`jets` pass and the kappa control fires on the Mac (raw-data repository `anm-mac/md32/`) and on win2's AVX2 build
+(`T115-win2/`). `hp/jet_scale.py` times one call at the 128.56 base (nout 24):
+
+| machine | build | 1 thread | 4 threads | 8 | 12 | 20 |
+|---|---|---|---|---|---|---|
+| Mac, loaded, interleaved runs | before | 28.9, 33.5 s | 19.8, 21.3 s | | | |
+| Mac, loaded, interleaved runs | split, multidouble 3.1.0 | 34.5, 33.0 s | 17.0, 17.4 s | | | |
+| win2 | split, multidouble 3.2.0 | 11.8 s | 3.49 s | 2.16 s | 2.03 s | 1.97 s |
+
+The Mac's logs are `anm-mac/jetpar/scale_interleaved.log`, win2's `T115-win2/jet_scale_new.log`. The release build
+peaked at 23.4 GB on win2 (19 GB before), which matters on the laptop (31.8 GB).
+
+**Restarting the chain.** A run started from a stored state polished it in quad-double from its first two parts only,
+which puts it eps_dd G off the root: 3.9e-13 at 129.06 (still converging) and 3.5e-12 at 135.06, where the polish failed
+and T113's restart from T114's state stopped (`T113-win/chain_from135*`). The series built at that unconverged base was
+degenerate too. `anm_run.py` now starts the polish from all four parts (fece0ba). The same restarts then start at 2.0e-32
+and 1.3e-35 and converge at once (`anm-mac/restart_plan/v3/`). Storing the plan and the held values with the state was
+tried first and made no difference at 129.06, so it is not used. T116 on win2 resumes T113's chain from 146.56 on the
+faster build.
