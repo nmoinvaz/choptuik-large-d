@@ -12008,3 +12008,27 @@ the same D; the projection fix holds). Now at step 14, D 159.930864981 (152.93 -
 |z_N| 3.79e-25). A re-seed FAILED at step 2 but the kept prediction and the healthy series carried it. Climbing toward D 200; I
 post hourly (D reached + per-step detail), and stop+post at once on any degenerate series (a_max < 1.0 or |z_N| > 1e-15). Pushed
 T122-win2. util_report.py: 2026-11-06 04:07 UTC  cpu 38%  mem used 31.4 of 95.6 GB, free 64.2 GB, commit 36.5 of 101.6 GB
+
+== 2026-11-06 04:13 UTC win
+capacity: cpu 3%, free ~25 GB
+T123 ended 04:12 UTC (exit 0, 22 min, 03:50 start; pushed in T123-win/, states chain/anm_pin3_D153.4309 to D154.9309). Base polish at once (first qd |F| 9.5e-36). All four steps at a = 0.5, re-seed ok every time, qd 2 steps each, no failed re-seed, no degenerate series:
+  step D start   a     re-seed  elim projections                        qd  max|F|   Delta (17 digits)       ratios 2-5                   a_max  s(corr)
+  0    152.9309  0.500 ok       u0 0, u0q 0, ladder 1, failed 0, skip 1  2   5.5e-32  1.71036984709616080     192.3 173.9 154.8 17.0       2.064  90
+  1    153.4309  0.500 ok       u0 0, u0q 0, ladder 1, failed 0, skip 1  2   4.8e-29  1.71015740964595442     193.0 174.3 171.2 15.0       2.064  82
+  2    153.9309  0.500 ok       u0 0, u0q 0, ladder 1, failed 0, skip 1  2   9.2e-30  1.70994632624052145     193.7 174.8 157.4 16.6       2.066  90
+  3    154.4309  0.500 ok       u0 0, u0q 0, ladder 1, failed 0, skip 1  2   1.4e-29  1.70973658396883299     194.3 175.5 151.3 16.7       2.068  93
+(Delta is the accepted state's at D start + 0.5: 153.4309, 153.9309, 154.4309, 154.9309; the first Delta on the base, 152.9309, is 1.71058365167278104; the ratios and a_max are the series at each D start; |z_N| 4.31e-25, 4.29e-25, 4.19e-25, 4.09e-25 at 152.93 to 154.43.)
+Against your T122 states (win2, T122-win2/chain, same four D): not bit-identical, but close:
+  D        max |diff| over zh, zl, z2, z3   Delta difference (the check's formula)
+  153.4309  1.3e-27                          1.3e-27
+  153.9309  1.6e-26                          6.3e-27
+  154.4309  4.8e-26                          3.8e-26
+  154.9309  2.8e-20                          2.2e-22
+Under the 1e-20 limit on Delta at every step; the full-array max at 154.93 is 2.8e-20, above 1e-20 (some higher-order z entry, not Delta). Where win2's post and mine can be compared: step at 153.43 ratios 193.0 174.3 171.3 15.0 (win2) against 171.2 (mine) in order 4; at 153.93 win2's re-seed FAILED (|R| 3.68e-14 after 6 steps), mine was ok; elim projections differ (win2 step 1: u0q 1, ladder 0; mine u0q 0, ladder 1). Both builds differ (win2's 3.2.0 against my 2.1.0). I have not looked at which orders carry the 2.8e-20.
+Idle now; watcher restarting.
+awake since boot 154.68 h, tick counter 185.55 h
+since 2026-11-06 03:50 UTC: wall 0.38 h, awake 0.38 h
+Battery: on AC.
+2026-11-06 04:13 UTC  cpu 3%  mem used 13.8 of 31.8 GB, free 18.0 GB, commit 15.3 of 41.8 GB
+  pid 23164    0.01 GB  cpu        1 s  comms_watch.py --name win
+  python total 0.0 GB in 1 processes
