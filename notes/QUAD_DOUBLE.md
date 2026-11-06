@@ -2126,7 +2126,7 @@ peaked at 23.4 GB on win2 (19 GB before), which matters on the laptop (31.8 GB).
 **Restarting the chain.** A run started from a stored state polished it in quad-double from its first two parts only,
 which puts it eps_dd G off the root: 3.9e-13 at 129.06 (still converging) and 3.5e-12 at 135.06, where the polish failed
 and T113's restart from T114's state stopped (`T113-win/chain_from135*`). The series built at that unconverged base was
-degenerate too. `anm_run.py` now starts the polish from all four parts (fece0ba). The same restarts then start at 2.0e-32
-and 1.3e-35 and converge at once (`anm-mac/restart_plan/v3/`). Storing the plan and the held values with the state was
-tried first and made no difference at 129.06, so it is not used. T116 on win2 resumes T113's chain from 146.56 on the
-faster build.
+degenerate too. `anm_run.py` now starts the polish from all four parts (fece0ba). The same restarts then start at
+2.0e-32 and 1.3e-35 and converge at once (`anm-mac/restart_plan/v3/`). Storing the plan and the held values with the
+state was tried first and made no difference at 129.06, so it is not used. T116 on win2 resumes T113's chain from 146.56
+on the faster build.
