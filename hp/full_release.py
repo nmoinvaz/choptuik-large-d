@@ -5,8 +5,11 @@ full-system Newton step"; notes/QUAD_DOUBLE.md 12, the full-system convergence o
 full-system residual at the pinned state, each step, Delta before and after with the first step's dDelta, and the
 1/D series fitted on D <= 67.77 (dd_fits_mp, degree 20) at that D for reference. --kfreeze K (default 13) frees the
 harmonics above K only; --kfreeze 3 reproduces the chain's own system, whose residual at its state must be at the floor
-(the control).
-    cd hp && python3 full_release.py RAWDIR STATE [STATE ...] [--kfreeze 13] [--threads 2] [--it 10]
+(the control). --octo 1 runs the Newton in octo-double instead (octo_corrector.newton_od on the kernel's newton_o,
+M = 32 only), whose LU resolves the mass mode's weak direction past D ~ 185 where the quad-double one does not
+(notes/OCTO_DOUBLE.md 5); the state's parts are promoted to eight. The test (notes/QUAD_DOUBLE.md 13.29): at 79.77 the
+released Delta must land on the series, about 5.0e-8 above the chain, where the quad-double release stalled.
+    cd hp && python3 full_release.py RAWDIR STATE [STATE ...] [--kfreeze 13] [--threads 2] [--it 10] [--octo 0]
 """
 import json
 import os
@@ -19,12 +22,33 @@ from pinning import PinnedQ, PinnedSolver, band_coeffs, band_field  # noqa: E402
 import dd_fits_mp as F  # noqa: E402
 mp.mp.dps = 60
 args = [a for a in sys.argv[1:] if not a.startswith("--")]
-opt = dict(kfreeze=13, threads=2, it=10)
+opt = dict(kfreeze=13, threads=2, it=10, octo=0)
 for k in list(opt):
     if f"--{k}" in sys.argv:
         opt[k] = int(sys.argv[sys.argv.index(f"--{k}") + 1])
         args = [a for a in args if a != str(opt[k])]
 raw, states = args[0], args[1:]
+
+
+class FullO:
+    """the full system's octo-double Newton, as newton_od calls it: the kernel's newton_o and residual_o, no offset"""
+
+    def __init__(self, s):
+        self.s = s
+
+    def __getattr__(self, name):
+        return getattr(self.s, name)
+
+    def residual_o(self, z, mutate=0):
+        from octo_corrector import o8
+        return o8(self.s.residual_o(list(o8(z)), mutate=mutate))
+
+    def newton_o(self, z, mutate=0):
+        from octo_corrector import o8
+        d, fh, fl, pmin, pmax = self.s.newton_o(list(o8(z)), mutate=mutate)
+        return o8(d), fh, fl, pmin, pmax
+
+
 pts, _ = F.load_points()
 Ds = F.clean(pts, sorted(d for d in pts if 10 <= d <= 67.77), verbose=False)
 ev, _, _ = F.fit(pts, Ds, "1/D", 20)
@@ -41,10 +65,19 @@ for st in states:
         hh, hl = band_field(band_coeffs(np.asarray(z[0])[:M], np.asarray(z[1])[:M], M, ks_held), ks_held, M)
         ps = PinnedSolver(s, M, hh, hl)
         s = PinnedQ(s, ps.ch, ps.cl)
-    F0 = s.residual_q(*z)
     d0 = sum(mp.mpf(float(p[-1])) for p in z)
-    print(f"{st}: D {mp.nstr(D, 12)}, M {M}, kfreeze {opt['kfreeze']}: residual at the pinned state {qmax(F0[:2]):.2e}, Delta {mp.nstr(d0, 17)}", flush=True)
-    z2, hist, conv = newton_qd(s, z, tol=1e-40, it_max=opt["it"], verbose=True)
+    if opt["octo"]:
+        from octo_corrector import PinnedO, newton_od, o8, o8_of_q, omax
+        so = PinnedO(s.s, s.ch, s.cl) if isinstance(s, PinnedQ) else FullO(s)
+        z8 = o8_of_q(z)
+        F0 = so.residual_o(z8)
+        print(f"{st}: D {mp.nstr(D, 12)}, M {M}, kfreeze {opt['kfreeze']}, octo-double: residual at the pinned state "
+              f"{omax(F0[:2]):.2e}, Delta {mp.nstr(d0, 17)}", flush=True)
+        z2, hist, conv = newton_od(so, z8, tol=1e-50, it_max=opt["it"], verbose=True)
+    else:
+        F0 = s.residual_q(*z)
+        print(f"{st}: D {mp.nstr(D, 12)}, M {M}, kfreeze {opt['kfreeze']}: residual at the pinned state {qmax(F0[:2]):.2e}, Delta {mp.nstr(d0, 17)}", flush=True)
+        z2, hist, conv = newton_qd(s, z, tol=1e-40, it_max=opt["it"], verbose=True)
     d1 = sum(mp.mpf(float(p[-1])) for p in z2)
     ser = ev(D)
     first = hist[0].get("dDelta") if hist else None
