@@ -283,7 +283,7 @@ class Reseeder:
         hist.append(dict(it=len(hist), R=nR))
         return dh, dl, hist, conv
 
-    def invert_q(self, z4, d4, it_max=16, refactor_max=3, R_stop=1e-34, pre="am", take_all=True):
+    def invert_q(self, z4, d4, it_max=16, refactor_max=3, R_stop=1e-34, pre="am", take_all=True, rise_max=1e12):
         """the u0 rung in quad-double: Newton on the 2M horizon data d4 (four parts) so that the horizon series at u0
         matches the last node of z4 (four parts) in the rung rows. The residual is Solver.residual_q and the step solves
         the rung rows' block of the quad-double Jacobian (Solver.jacobian_q) with multidouble's QDLu: the double-double
@@ -294,7 +294,8 @@ class Reseeder:
         steps from the double-double rung and stalls near 1e-14 at some points (notes/QUAD_DOUBLE.md 13.26);
         pre: least-squares steps before Newton in the block's a_h ("a") then m_h ("m") columns alone; take_all: Newton
         steps refactored at every step and taken whether or not they lower |R|, the best iterate kept, instead of the
-        rule above (refactor_max). Past D 160 neither plain Newton nor that rule converges from the double-double
+        rule above (refactor_max), and stopped once |R| exceeds rise_max times the best (the first Newton step after
+        the block steps can raise it by 1e6 or more before it falls quadratically). Past D 160 neither plain Newton nor that rule converges from the double-double
         rung, and the a_h and m_h steps followed by Newton do (the first Newton step may raise |R| before it falls
         quadratically; notes/QUAD_DOUBLE.md 13.27). pre="", take_all=False is the rule of 13.26, and with it_max=6,
         refactor_max=0 the earlier one. Returns d4, the history and whether it converged (at least one step taken and
@@ -360,7 +361,7 @@ class Reseeder:
                 Rn = res(dn)
                 nn = float(np.max(np.abs(Rn[0] + Rn[1])))
                 hist.append(dict(it=len(hist), R=nn, refactors=refactors))
-                if not np.isfinite(nn) or nn > 1e6 * best[0]:
+                if not np.isfinite(nn) or nn > rise_max * best[0]:
                     break                                   # diverging: keep the best iterate
                 d, R, nR = dn, Rn, nn
                 steps += 1

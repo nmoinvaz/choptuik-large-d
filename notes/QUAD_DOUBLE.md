@@ -2262,3 +2262,11 @@ both stored predictions (4.4e-41 at 153.43, 1.3e-39 at 162.81), and its control 
 162.81 (9.5e-8, exit 1). A re-seed takes about 40 s on the loaded Mac, against 20 s before. On the Mac the chain from
 162.31 then steps to 162.81 at a = 0.5: the re-seed converges, 3 of 6 projections succeed, and the corrector converges
 in 6 steps to max |F| 1.5e-39 (324 s), where every attempt of T122 failed.
+
+**The guard (2026-11-06 06:35 UTC).** T127 (win2) re-seeded only 3 of its first 8 steps, which the kept predictions
+and the corrector carried. On the Mac its stored predictions fail the same way, so the input, not the platform, is
+the cause (win2's prediction at 162.81 differs from the Mac's by up to 1.3e-14, through the plans). Each failure ended
+after the block steps and one Newton step, which raised |R| more than the 1e6-fold the divergence guard allowed. With
+the guard at 1e12 the predictions at 162.81, 163.31 and 163.81 converge (9.0e-39, 2.0e-39, 1.7e-39), the Mac's still
+pass, and checkq's control still fails (`anm-mac/stall162/guard_test.log`, 9c24d53). The guard is now 1e12 (`rise_max`);
+plain Newton's divergence from the double-double rung (to 9.4e11 from 1.3e-7) still stops it.
