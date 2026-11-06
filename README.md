@@ -133,8 +133,6 @@ Contents
   - [Closed forms tested and excluded](#closed-forms-tested-and-excluded)
   - [Relation to published work](#relation-to-published-work)
 - [How the points are computed](#how-the-points-are-computed)
-  - [Solving one point](#solving-one-point)
-  - [The continuation in D](#the-continuation-in-d)
 - [Validation and controls](#validation-and-controls)
   - [Checks of the solver (`hp/`)](#checks-of-the-solver-hp)
   - [Is the period analytic in 1/D?](#is-the-period-analytic-in-1d)
@@ -637,59 +635,15 @@ this solver, about n²² at D = 40–61; below), so rounding at 10⁻¹⁶ in th
 (through the sensitivity $`\max\lvert\partial\Delta/\partial F\rvert`$ of the
 [solver's checks](#checks-of-the-solver-hp)), and points far above D = 40 are out of reach. [`hp/`](hp/) (crate
 `hpkernel`) is a separate solver built for that regime, to settle the large-D behaviour with computed points rather than
-an assumed form. It works in double-double, and in quad-double where the large-D chain needs it, with its arithmetic
-from the crate [multidouble](https://github.com/nmoinvaz/multidouble). Its points are used in [The
+an assumed form. It works in double-double, and in quad- and octo-double where the large-D chain needs them, with its
+arithmetic from the crate [multidouble](https://github.com/nmoinvaz/multidouble). Its points are used in [The
 formula](#the-formula) (agreement and Δ∞), [Values](#values), the [candidate test](#closed-forms-tested-and-excluded),
 the [analyticity tests](#is-the-period-analytic-in-1d) and the large-D scaling ([How the solution scales with
 D](#how-the-solution-scales-with-d)).
 
-### Solving one point
-
-The unknowns are the fields at a few nodes in x, the centre and horizon data, and Δ, each field on M collocation points
-in τ over the half period. The residual shoots between the nodes: a series at the centre, Taylor steps of order 36
-between the nodes (planned so that each step's truncation term is about 10⁻³²), and a series at the horizon, the two
-series run until their tails fall below 10⁻³³. Newton solves it with the exact Jacobian from forward-mode duals[^17],
-or with an f64 Jacobian and the residual kept in double-double. How it works in detail, its benchmarks and solve times,
-the point spacing, a sample of the points and the error indicators against D are in
-[notes/SOLVER_HP.md](notes/SOLVER_HP.md). Why the continuation stalls past D ≈ 73 (the weak directions, the
-horizon-series wall, the drop-offs) is in [notes/LARGE_D_WALL.md](notes/LARGE_D_WALL.md), and the diagnosis in
-[notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), section 12.
-
-### The continuation in D
-
-Past D ≈ 73 the chain is carried in D by an exact Taylor continuation, the asymptotic numerical method[^23]
-(`hp/anm_run.py`). It continues the pinned system, in which p₁'s harmonics 5–13 are held on a power-law trend in D
-(notes/QUAD_DOUBLE.md 13.18). Each step has a predictor, an optional re-seed and a corrector, and a failed correction
-halves the step, three times at most, keeping the series.
-
-![One step of the continuation in D: base, quad-double jets, step, prediction, re-seed, corrector, then a new base or a halved step](hp/algo_step.svg)
-
-**Predictor.** At a converged base D₀ the branch's Taylor coefficients z₁, …, z₂₄ in h = D − D₀ come order by order
-from one quad-double LU of the Jacobian. The right-hand side of order k is the quad-double jet of the lower orders, with
-the dimension entered into the kernel as the jet's variable. The step a is where the series' last term falls to ε of its
-first, capped at h_max, and the prediction Σ z_k aᵏ is summed by Horner's rule in quad-double. `--jet_o 1` builds the
-same series in octo-double (multidouble's `OJet`, `Ou` and `ODLu`; `hp/src/osolve.rs`) and rounds the prediction to
-quad-double for the corrector. At D 148.74 the quad-double series keeps only 5–6 digits at orders 4–9
-([notes/OCTO_DOUBLE.md](notes/OCTO_DOUBLE.md)).
-
-![The predictor: a toy branch's partial sums converging order by order, beside the chain's series terms at D 128.56 and 131.06](hp/algo_predictor.svg)
-
-**Re-seed.** The horizon data (m_h, a_h) enter through a series summed at the last node, where the mass mode amplifies
-their errors by G = 0.7^−(D−3), about 10²⁰ at D = 131. `--reseed` replaces them by those of the regular solution
-through the predicted last node: the node is integrated toward the horizon, and the horizon series is inverted on the
-rungs u₀/32, …, u₀, each rung's Newton starting from the last rung's data and the last one polished in quad-double
-(`hp/reseed.py`, [notes/RESEED.md](notes/RESEED.md)). Each rung's residual falls to the double-double floor 2⁻¹⁰⁶ G(u),
-and the quad-double polish at u₀ to 2⁻²¹² G(u₀).
-
-![The re-seed: the last node integrated toward the horizon, the series inverted on the rungs, and each rung's residual against the double- and quad-double floors](hp/algo_reseed.svg)
-
-**Corrector.** Newton in quad-double on the pinned system at D₀ + a, to max |F| ≤ 10⁻²⁸. With `--reseed 2` every trial
-point is re-seeded first, so the horizon data are eliminated.
-
-![The corrector: the prediction re-seeded, a Newton step, the trial re-seeded, beside max |F| at each quad-double Newton iterate](hp/algo_corrector.svg)
-
-The animations show the elimination pilot's measured values (`hp/plot_algorithm.py`). The design, its checks and the
-runs are in [notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), sections 13.15–13.23.
+[ALGORITHM.md](ALGORITHM.md) explains how the solver works, at a high level and down to its data types: the
+unknowns and the residual, Newton's method, the continuation in D with its predictor, re-seed and corrector, the
+double-, quad- and octo-double number types, and why their precision has to grow with D.
 
 ## Validation and controls
 
@@ -1844,9 +1798,9 @@ What is known about the selection, and what is open:
   contraction) and a proof that the outer jump vanishes with its label (Lemma J). "The" solution is unique within a
   neighbourhood of the formal series. Two independent reviews ([proof/P2_review.md](proof/P2_review.md),
   [proof/P2b_review.md](proof/P2b_review.md)) find that it stands as stated. They re-implement B7, Lemma LC and Lemma J
-  in other arithmetic, and the first one's seven corrections, now applied, change no constant or threshold. The threshold is far beyond any D a solver reaches, so the
-  theorem does not yet identify the computed branch ([notes/PROOF_QUEUE.md](notes/PROOF_QUEUE.md), P7). The canonical
-  status, link by link, is C_selection.md §13.
+  in other arithmetic, and the first one's seven corrections, now applied, change no constant or threshold. The
+  threshold is far beyond any D a solver reaches, so the theorem does not yet identify the computed branch
+  ([notes/PROOF_QUEUE.md](notes/PROOF_QUEUE.md), P7). The canonical status, link by link, is C_selection.md §13.
 - **The critical exponent, and why γ∞ = 1/2: [Proposition 5](#proposition-5-the-unstable-mode-at-infinite-d-is-exact).**
   λ = 1/γ is also selected beyond all orders; in the inner problem λ = 0, 1 and 2 are exact, from symmetries, and the λ
   = 2 mode, from the r²-shift of the inner heat equation, explains γ∞ = 1/2. The 1/n coefficient 3.0324 is reproduced to
@@ -2001,10 +1955,8 @@ Files that were moved out of this repository are listed with their new paths in 
 [^15]: T. J. Dekker, Numer. Math. 18, 224 (1971), doi:10.1007/BF01397083 (double-length arithmetic from pairs of
     floating-point numbers, with the exact two-product).
 [^16]: T. Ogita, S. M. Rump and S. Oishi, SIAM J. Sci. Comput. 26, 1955 (2005), doi:10.1137/030601818.
-[^17]: R. E. Wengert, Commun. ACM 7, 463 (1964) (forward-mode automatic differentiation).
 [^18]: D. D. Morrison, J. D. Riley and J. F. Zancanaro, Commun. ACM 5, 613 (1962), doi:10.1145/355580.369128.
 [^19]: E. Anderson et al., *LAPACK Users' Guide*, 3rd ed., SIAM (1999) (the getf2 and blocked getrf factorizations).
 [^20]: Y. Hida, X. S. Li, D. H. Bailey, *Algorithms for quad-double precision floating point arithmetic*, Proc. 15th IEEE Symposium on Computer Arithmetic (ARITH-15), 155–162 (2001).
 [^21]: N. J. Higham, *Accuracy and Stability of Numerical Algorithms*, 2nd ed., SIAM (2002).
 [^22]: R. S. Dembo, S. C. Eisenstat and T. Steihaug, *Inexact Newton methods*, SIAM J. Numer. Anal. 19, 400–408 (1982), doi:10.1137/0719025 *(partly verified: notes/REF_CHECK.md)*.
-[^23]: B. Cochelin, Comput. Struct. 53, 1181–1192 (1994); L. Guillot, B. Cochelin and C. Vergez, Int. J. Numer. Methods Eng. 119, 261–280 (2019), doi:10.1002/nme.6049 *(partly verified: secondary listings, notes/LOW_D_SPEEDUP.md)*.
