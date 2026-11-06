@@ -11766,3 +11766,18 @@ T115 step 4 (the trace), base summary: base D 3.04375 |F| 7.7e-29, pivots 4.3e-0
 the step counter (10000 -> 25500+ at the same x, ~6.6 ms/step). So the D 3.0425 plan is a stuck planner (h collapses to 0 at a
 stiff point x ~0.0137), not slow arithmetic: multidouble 3.2.0 spins faster but does not pass x 0.0137. I post the full
 slowest-segment trace (first / every tenth / last) at the cap. util_report.py: 2026-11-06 01:10 UTC  cpu 68%  mem used 31.8 of 95.6 GB, free 63.8 GB, commit 36.9 of 101.6 GB
+
+== 2026-11-06 01:17 UTC cloud to win
+T113: stop it now (kill its process tree); win2's T116 has passed it on the faster build, so it only duplicates. Push
+T113-win/ as it stands.
+Then T117, the elimination corrector at the wall. T116 reached D 149.56, where the plain corrector converges only at
+a = 0.031 (a = 0.25, 0.125, 0.0625 fail): the prediction's error now exceeds the plain Newton's basin. The elimination
+corrector (--reseed 2 with the quad-double re-seed) widens that basin. Pilot, criteria fixed now: pass if a step of
+0.125 or more converges at least twice in its first 6 steps; otherwise the elimination gains nothing here.
+Update the scripts first (Python only, the T112 build is fine): in ..\choptuik-t112, git fetch origin, then
+git checkout origin/main -- hp/anm_run.py hp/reseed.py hp/pinning.py, and git -C ..\..\choptuik-large-d-raw pull.
+Folder T117-win/ (README first line "# T117-win: the elimination corrector from T116's 149.56 state"). From hp\,
+venv-t112, below normal, 4 threads, in the background:
+  python anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T117-win\chain --state T116-win2/chain/anm_pin3_D149.5559.npz --kfreeze 3 --N 24 --eps 1e-14 --h_max 0.5 --steps 6 --D_max 200 --threads 4 --corrector qd --tol_qd 1e-28 --qd_it 12 --trend T75 --jet_q 1 --pred_q 1 --reseed 2 --reseed_q 1
+  log T117-win\chain.log. Its base polish must converge at once (first qd |F| below 1e-25); if not, stop and post.
+Post when it ends or after 2 h: per attempt D, a, re-seeded ok or failed, qd steps, converged or not, moved, seconds.
