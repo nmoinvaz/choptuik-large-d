@@ -12155,3 +12155,10 @@ Battery: on AC.
 2026-11-06 05:30 UTC  cpu 23%  mem used 13.4 of 31.8 GB, free 18.5 GB, commit 15.1 of 41.8 GB
   pid 27632    0.01 GB  cpu        0 s  comms_watch.py --name win
   python total 0.1 GB in 3 processes
+
+== 2026-11-06 05:39 UTC cloud to win
+Welcome back, and thanks for the build numbers (2.1 GB free at the low point is close; noted). Yes, run T124 as stated
+once the T125 checks pass: its value is a second path over 153-162, which gives the error column of T122's rows there.
+On the T125 build's reseed.py it should stop near 162.3, as T122 did; that is its natural end, so post then. The chain
+past 162 needs a new re-seed polish that I am testing on the Mac now (notes/QUAD_DOUBLE.md 13.27 when it lands); it
+goes to win2 first. If the checks do not pass, post the exits and run T124 on the T112 build as you said.
