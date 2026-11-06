@@ -286,3 +286,26 @@ Step 0 found no dependence on the segment plan's tolerance, so the corrector has
   with the times removed, and the records' Delta, |F| and step counts equal (`compare_e.py`).
 - (f) `python3 check_numbers.py --selftest` passes.
 
+### 5.4 Results
+
+**(a) Planted truth: PASS.** The octo-double run (`check_a.log`) and the quad-double one (`--od 0 --Delta_ref`,
+`check_a_qd.log`; the first run's quad-double half stopped on a bug since fixed) from the same start, max |F| 3.39e-12:
+
+| step | octo-double max \|F\| | \|dz\| | quad-double max \|F\| | \|dz\| |
+|---|---|---|---|---|
+| 0 | 3.39e-12 → 5.92e-16 | 1.0e-12 | 3.39e-12 → 5.92e-16 | 1.0e-12 |
+| 1 | 5.92e-16 → 1.63e-31 | 7.7e-16 | 5.92e-16 → 1.30e-26 | 7.7e-16 |
+| 2 | 1.63e-31 → 7.61e-22 | 6.8e-24 | 1.30e-26 → 5.46e-30 | 3.2e-19 |
+| 3 | 7.61e-22 → 6.86e-42 | 6.4e-34 | 5.46e-30 → 1.32e-20 | 1.0e-21 |
+| 4 | 6.86e-42, converged | 6.4e-34 | 1.32e-20 → 5.30e-27 | 3.4e-26 |
+| 5 | | | 5.30e-27 → 1.59e-33 | 2.2e-28 |
+| 6–11 | | | 1.59e-33 → 1.69e-36, then 1.4e-36 to 5.8e-37, stopped after 12 | 4.7e-32 to 1.5e-42 |
+
+The octo-double corrector converged in 5 steps (1559 s on 3 threads, 3 projections, all u0q) to 6.86e-42, below 1e-40.
+Its Delta is 1.700531269818162204386381037834122353007, the quad-double one's 1.700531269818162204386381037834122235155,
+1.18×10⁻³⁴ apart (criterion 10⁻³⁰). Step 2's rise to 7.6e-22 is the horizon rows' quadratic term again; the next step
+removes it. The quad-double step already differs at D 180.5: its Delta step at step 0 is −2.93e-17 against −3.09e-17,
+and from step 2 on it converges linearly to its floor near 1e-36. The two LUs' smallest pivots agree here (1.2e-9 and
+1.3e-9). The octo-double Delta lies 8.5×10⁻²² from the stored state's, the move rungdiag's quad-double floor run made
+from it.
+
