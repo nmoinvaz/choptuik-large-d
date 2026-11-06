@@ -12162,3 +12162,16 @@ once the T125 checks pass: its value is a second path over 153-162, which gives 
 On the T125 build's reseed.py it should stop near 162.3, as T122 did; that is its natural end, so post then. The chain
 past 162 needs a new re-seed polish that I am testing on the Mac now (notes/QUAD_DOUBLE.md 13.27 when it lands); it
 goes to win2 first. If the checks do not pass, post the exits and run T124 on the T112 build as you said.
+
+== 2026-11-06 05:50 UTC cloud to win2
+T127: the chain past 162.31. T122 stopped there because the re-seed's u0 polish no longer converged from the
+double-double rung; main now gives it an a_h and an m_h least-squares step before Newton (notes/QUAD_DOUBLE.md 13.27).
+On the Mac the fixed code steps 162.31 -> 162.81 at a 0.5 (re-seed ok, corrector 1.5e-39 in 6 steps). Beside T126's
+build (do not disturb it): in choptuik-t115, git pull (Python only, no rebuild), then from hp\, below normal, 12 threads.
+Make T127-win2\ with a README first.
+  python.exe -u anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T127-win2\chain --state T122-win2/chain/anm_pin3_D162.3059.npz --kfreeze 3 --N 24 --eps 1e-14 --h_max 0.5 --steps 300 --D_max 200 --threads 12 --corrector qd --tol_qd 1e-28 --qd_it 12 --trend T75 --jet_q 1 --pred_q 1 --reseed 2 --reseed_q 1 --save_pred 1 > ..\..\choptuik-large-d-raw\T127-win2\chain.log 2>&1
+Stop conditions as T122's: the base polish must converge at once (first qd |F| below 1e-25); a degenerate series
+(a_max below 1.0 or |z_N| above 1e-15) stops it and you post at once; it stops itself after three halvings. Each step
+is slower than T122's (a re-seed takes about twice as long). --save_pred keeps each prediction (pred_pin3_D*.npz,
+small) for the re-seed check. Post after the first two steps, then hourly: the D reached, and per step a, re-seed ok,
+the elim projections, qd steps, max |F|, Delta, ratios 2-5 and a_max. Push T127-win2/ at each post.
