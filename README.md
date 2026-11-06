@@ -447,7 +447,7 @@ is still an assumption, are in [Is the period analytic in 1/D?](#is-the-period-a
 | 1000 | 1.65424086 | 0.499250 |
 | ∞ | 1.643893746 ± 0.000000015 | 1/2 (free fits: to about 5×10⁻⁷) |
 
-**Every value of Δ** we computed, from D = 3.045 to the large-D chain's frontier, is in
+**Every value of Δ** we computed, from D = 3.04375 to the large-D chain's frontier, is in
 [`hp/data/delta_all.csv`](hp/data/delta_all.csv), one row per D. Each row has Δ in up to four parts (their sum is the
 value), the kind of computation, an error estimate and what that estimate is, and the source run and state in the
 [raw data](#raw-data). The kinds are the full system in double-double (D ≤ 67.77) or quad-double (68.5–73), the pinned

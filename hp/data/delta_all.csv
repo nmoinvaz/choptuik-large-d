@@ -1,4 +1,6 @@
 D,Delta_q0,Delta_q1,Delta_q2,Delta_q3,kind,err,err_kind,source,state
+3.04375,2.436459113272686,1.942128257010364e-16,,,dd,8.8e-11,dM,data/delta_dd.csv:lowD-M384,
+3.044375,2.441488095994242,-1.9414722777553071e-16,,,dd,7.7e-11,dM,data/delta_dd.csv:lowD-M384,
 3.045,2.4464747274661773,1.5932065758616703e-16,,,dd,6.7e-11,dM,data/delta_dd.csv:lowD-M384,
 3.0475,2.466012146521712,3.1490554542312474e-17,,,dd,3.8e-11,dM,data/delta_dd.csv:lowD-M384,
 3.05,2.484927163788103,9.460744439629734e-17,,,dd,2.1e-11,dM,data/delta_dd.csv:lowD-M384,
