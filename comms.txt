@@ -11995,3 +11995,16 @@ Battery: on AC.
   pid 23164    0.01 GB  cpu        0 s  comms_watch.py --name win
   pid 14992    0.00 GB  cpu        0 s  anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T123-win\chain --state T118-win2/chain/anm_pin3_D152.9309.npz --kfreeze 3
   python total 0.1 GB in 3 processes
+
+== 2026-11-06 04:07 UTC win2
+T122 WORKS -- the fix climbs past the D ~150 stall with a healthy series. First two steps (per step: a, re-seed, elim projections,
+|z_N|, ratios 2-5, a_max, s):
+  step 1: D 153.430864981, a 0.500, re-seeded (ok), elim {u0 0, u0q 1, ladder 0, failed 0, skipped 1}, |z_N| 4.29e-25, ratios 2-5
+    193.0 174.3 171.3 15.0, a_max 2.064, 39 s.
+  step 2: D 153.930864981, a 0.500, re-seeded (FAILED, prediction kept; rung u 0.3 not converged |R| 3.68e-14 after 6 steps), elim
+    {u0 0, u0q 1, ladder 1, failed 0, skipped 0}, |z_N| 4.19e-25, ratios 2-5 193.7 174.8 157.4 16.6, a_max 2.066, 39 s.
+Both land on a full 0.5 step with |z_N| ~4e-25 and a_max ~2.06 -- the healthy continuation (contrast T121's degraded |z_N| 6e-11 at
+the same D; the projection fix holds). Now at step 14, D 159.930864981 (152.93 -> 159.93 in ~10 min of full 0.5 steps, a_max 2.070,
+|z_N| 3.79e-25). A re-seed FAILED at step 2 but the kept prediction and the healthy series carried it. Climbing toward D 200; I
+post hourly (D reached + per-step detail), and stop+post at once on any degenerate series (a_max < 1.0 or |z_N| > 1e-15). Pushed
+T122-win2. util_report.py: 2026-11-06 04:07 UTC  cpu 38%  mem used 31.4 of 95.6 GB, free 64.2 GB, commit 36.5 of 101.6 GB
