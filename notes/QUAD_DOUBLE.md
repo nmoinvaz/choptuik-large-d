@@ -865,21 +865,33 @@ table above said inside to about 71):
 
 | D | from the pin 7 state | from the pin 5 state | difference |
 |---|---|---|---|
-| 68.5 | 1.78996363061599162 - 1.016822e-16 - 5.7e-33 | the same to the parts shown, - 5.1e-33 | 6e-34 |
-| 69.5 | 1.78793029796176284 + 7.083175e-17 + 3.6e-33 | the same, - 2.8e-33 | 6e-33 |
-| 70.5 | 1.78595293211829387 + 1.087438e-16 + 2.8e-33 | the same, - 6.9e-34 | 3e-33 |
+| 68.5 | 1.78996363061599162 - 1.016822e-16 - 5.7e-33 | the same to the parts shown, - 5.1e-33 | 3.2e-28 |
+| 69.5 | 1.78793029796176284 + 7.083175e-17 + 3.6e-33 | the same, - 2.8e-33 | 5.0e-29 |
+| 70.5 | 1.78595293211829387 + 1.087438e-16 + 2.8e-33 | the same, - 6.9e-34 | 9.1e-29 |
 | 71.0 | 1.78498451800529279 - 4.310301e-17 | stalls at 2e-19 | |
 | 71.5 | 1.78402924877823188 - 6.717132e-17 | stalls at 1.4e-20 | |
 | 72.0, 72.4 | stalls at 3e-19, 6e-20 | stalls | |
 
-So the full system's Delta is known to about 1e-32 at D 68.5, 69.5 and 70.5 (two starts, two plans), sixteen digits past
-the double-double data's 2e-15 check error, and to the single converged solution at 71.0 and 71.5, where the corrected
-pinned pairs above lie within 1e-17 (71.0) and 2e-17 (71.5) of it: that is the linearised correction's own error, and
-the pins' agreement to 1e-32 at 71.5 was a coincidence of the two pins. From 72 on no start of double-double quality
-reaches the full basin, as the table of basins said. At the frontier the two pins' quad-double values differ by 7e-16
-and the double-double one lies 1e-15 from them: the digits there are set by the pin's cost (the full step's |dz| is
-7.9e-6 against 1.6e-9 at 72.4), not by the arithmetic. So the quad-double solver adds digits where the pin is cheap, up
-to about 72.5 in this layout, and past that the full system's junk, not precision, bounds Delta.
+So the full system's Delta is known to about 3e-28 at D 68.5, 69.5 and 70.5 (two starts, two plans), thirteen digits
+past the double-double data's 2e-15 check error, and to the single converged solution at 71.0 and 71.5, where the
+corrected pinned pairs above lie within 1e-17 (71.0) and 2e-17 (71.5) of it: that is the linearised correction's own
+error, and the pins' agreement to 1e-32 at 71.5 was a coincidence of the two pins. From 72 on no start of double-double
+quality reaches the full basin, as the table of basins said. At the frontier the two pins' quad-double values differ by
+7e-16 and the double-double one lies 1e-15 from them: the digits there are set by the pin's cost (the full step's |dz|
+is 7.9e-6 against 1.6e-9 at 72.4), not by the arithmetic. So the quad-double solver adds digits where the pin is cheap,
+up to about 72.5 in this layout, and past that the full system's junk, not precision, bounds Delta.
+
+**Second starts at 71-73, and the spread corrected (2026-11-06 04:00 UTC).** The other pin's states polished in
+quad-double in their own pinned system (T84-mac's `*_pinned5_dz.npz` at 71.0, 71.5 and 72.8, `*_pinned7_dz.npz` at 73.0,
+whose full-system residual is 7e-33 to 5e-30) were converged in the full system by `qd_fullleg.py` with their own
+plans (raw-data repository `qd2start-mac/`). At 71.5 and 73.0 they converge (|F| 1.9e-53, 2.2e-51) and differ from
+the first solutions by +3.8e-28 and -8.4e-28. At 71.0 and 72.8 they stall at |F| 2.04e-19 and 8.2e-18, the values the
+double-double starts stalled at, so those two D keep one solution. Measured as the difference of the exact sums of the
+four parts, the spreads at 68.5, 69.5 and 70.5 are 3.2e-28, 5.0e-29 and 9.1e-29, all in the second part. The
+`spread` of `hp/data/delta_qd.csv` was formed with an f64 sum of the parts, which cannot see that part, and gave
+6e-34 to 6e-33. `export_qd.py` now sums the parts exactly, and this section, 12.5 and notes/SOLVER_HP.md quote the
+corrected spread. The two plans' agreement to about 3e-28 is the plan's truncation (each plan's step terms are about
+1e-32), not the arithmetic.
 
 Freezing p1's harmonics 3-13 or 9-13 as bare band fields (qd_freezeh.py) does not deflate: the first projected step
 of 5e-7 leaves a residual of 5e-7, identical for both sets, because a bare harmonic is not a weak direction of J
@@ -911,7 +923,7 @@ sensitivity near its radius. A horizon discretisation without a radius (collocat
 
 ### 12.5 What the quad-double digits can test now (2026-10-27, hp/qd_remainder.py)
 
-The seven quad-double values (hp/data/delta_qd.csv: D 68.5, 69.5, 70.5 to 1e-32 by two starts, 71, 71.5, 72.8, 73 by
+The seven quad-double values (hp/data/delta_qd.csv: D 68.5, 69.5, 70.5 to 3e-28 by two starts, 71, 71.5, 72.8, 73 by
 one) against the 1/D and 1/n series fitted on the double-double points (dd_fits_mp, 60 digits), evaluated at 25
 digits:
 
@@ -2135,24 +2147,24 @@ on the faster build.
 
 `hp/export_delta_all.py` writes `hp/data/delta_all.csv`, one row per D with Δ in up to four parts, the kind of
 computation, an error estimate and its kind, the source record and the state (columns and precedence in its docstring;
-the README's Values section describes the file). It read the raw-data repository at c5771da. Its 2337 rows:
+the README's Values section describes the file). It read the raw-data repository at 77a38de. Its 2339 rows:
 
 | kind | rows | D | err, its kind and range |
 |---|---|---|---|
 | dd, the full system in double-double (`data/delta_dd.csv`) | 1257 | 3.045–67.767 | dM 1.1e-22 to 4.1e-10, check 1e-16 to 2e-15 |
-| qd, the full system in quad-double (`data/delta_qd.csv`) | 7 | 68.5–73.0 | starts 5.5e-34 to 6.5e-33 (3 rows) |
+| qd, the full system in quad-double (`data/delta_qd.csv`) | 7 | 68.5–73.0 | starts 5.0e-29 to 8.4e-28 (5 rows) |
 | pinned, Delta_full1 of T73, T75 and T85-mac | 895 | 67.768–78.105 | pins 7.4e-19 to 8.6e-15 (150), layouts 2.3e-7 to 8.3e-7 (3) |
-| chain, the backbone of the asymptotic numerical method's runs | 178 | 75.27–152.31 | runs 1.9e-32 to 1.2e-20 (22) |
+| chain, the backbone of the asymptotic numerical method's runs | 180 | 75.27–152.93 | runs 1.9e-32 to 1.2e-20 (22) |
 
-`--verify` re-reads every row from the record or state it names and finds all 2337 equal. `--mutate=dd`, `qd`, `pinned`
+`--verify` re-reads every row from the record or state it names and finds all 2339 equal. `--mutate=dd`, `qd`, `pinned`
 and `chain` move one row's second part by one ulp, and each fails it (exit 1).
 
 **The chain's backbone.** Every state of a run carries the run's start state (`source` in its metadata), so the chain is
 traced from the highest-D state back through the start states, taking from each run its states up to the next run's
-start. That gives 17 runs from T75's pin 7 state at 73.27, through `anm-mac/run_trend_pin3` (double-double to 79.27),
-the quad-double runs from 79.77 and T110, T113 and T116, to T117. Each state is checked to be an accepted step of its
-run's `anm_run.jsonl` from the state before it. Eight runs off the backbone reach a backbone D with the same held trend
-and precision, and they give the err of 22 rows:
+start. That gives 18 runs from T75's pin 7 state at 73.27, through `anm-mac/run_trend_pin3` (double-double to 79.27),
+the quad-double runs from 79.77 and T110, T113, T116 and T117, to T118. Each state is checked to be an accepted step of
+its run's `anm_run.jsonl` from the state before it. Eight runs off the backbone reach a backbone D with the same held
+trend and precision, and they give the err of 22 rows:
 
 | D | other run | other − backbone |
 |---|---|---|

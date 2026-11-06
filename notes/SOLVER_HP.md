@@ -52,8 +52,9 @@ relative to this folder.
   A fully quad-double Newton (`hp/src/qsolve.rs`, on multidouble's quad-double dual numbers and LU) converges the
   full system from the double-double states up to D ≈ 71.5 and the pinned system to 73.3: Δ(68.5) =
   1.7899636306159916 − 1.016822×10⁻¹⁶, Δ(69.5) = 1.7879302979617628 + 7.083175×10⁻¹⁷ and Δ(70.5) = 1.7859529321182939 +
-  1.087438×10⁻¹⁶, each reproduced by a second start with its own Taylor plan to 10⁻³² ([`hp/data/delta_qd.csv`](../hp/data/delta_qd.csv),
-  `hp/export_qd.py`), sixteen digits past the double-double data. It does not step past D ≈ 73 in this discretisation:
+  1.087438×10⁻¹⁶, each reproduced by a second start with its own Taylor plan to 3×10⁻²⁸
+  ([`hp/data/delta_qd.csv`](../hp/data/delta_qd.csv), `hp/export_qd.py`), thirteen digits past the double-double data.
+  It does not step past D ≈ 73 in this discretisation:
   Newton's basin there shrinks below any start the double-double runs can give, because the horizon series' sensitivity
   near its radius grows with D (notes/QUAD_DOUBLE.md, sections 12.3–12.4).
 - **Continuation in D:** prediction by the cubic through the last four converged points (a tangent from the

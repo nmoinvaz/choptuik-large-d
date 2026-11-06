@@ -49,8 +49,8 @@ TOL_D = 1e-9
 
 
 def total(parts):
-    """the exact sum of the parts (empty parts are 0), in mpmath"""
-    return sum((mp.mpf(p) for p in parts if p != ""), mp.mpf(0))
+    """the exact sum of the parts (f64 values or their repr strings; empty parts are 0), in mpmath"""
+    return sum((mp.mpf(float(p)) for p in parts if p != ""), mp.mpf(0))
 
 
 def fmt(x):
