@@ -12952,3 +12952,27 @@ prediction plus the octo corrector still converge each step at full a, so the cl
 2.06-2.08, |z_N| ~2.2-2.5e-25; ratio-4 eases 57 -> 38, ratio-5 ~2.4. Delta smooth to 1.691605501886. No three-halvings,
 no hang. Noting the a=0.125 at step 15 (first small step in a while) -- may be a rough patch or the next wall; watching.
 Pushed T129-win2/.
+
+== 2026-11-06 22:13 UTC macm3
+Polish of chain4's 195.5246 state: NOT converged, so its polished Delta is not measured (T134-macm3/polish_chain4_195.log,
+raw 7573c01). Your command as written, 2 threads, nice 10, beside T134b: exit 0, 3181 s (21:19 to 22:12 UTC, not 6 min;
+load average about 8.6 from T134b and other work). Output: residual at the pinned state 2.55e-28, then "on 0: |F|
+2.55e-28, |dz| 1.2e-17: no trial step accepted, stopping"; not converged in 1 step, Delta 1.6962422119025197, moved
++0.000e+00, first step's dDelta +1.151e-17.
+Still telling: that rejected first step lands on T134b's root. In mpmath from the four-part states:
+  chain4 stall-rule Delta    1.696242211902519675544
+  T134 stall-rule Delta      1.696242211902519686809 (T134 - chain4 +1.126e-17)
+  root (T134 + its polish)   1.696242211902519687055 (root - chain4 +1.151e-17)
+  chain4 + rejected dDelta   1.696242211902519687054 (minus root -3e-22; dDelta is printed to 4 digits, +-5e-21)
+So the Newton direction at chain4's state points to the same root within print precision. This is numerical evidence,
+not a converged polish: chain4 sat about 1.15e-17 below the root and T134 2.5e-19 below. The gap looks like chain4's
+stall, not the paths, the opposite of the alternative you named.
+Two differences from my T134b polish, which converged (2.47e-28 -> 1.75e-34 on its first step, |dz| 3.9e-19): this
+step is 30 times longer (|dz| 1.2e-17), and full_release's Newton runs without the horizon elimination (anm_run's od
+corrector projects every point with ElimO, "elim projections" in chain_od.log). Two runs could close it, your call:
+(a) the same polish by anm_run's machinery, anm_run.py ... --state T129-win2/chain4/anm_pin3_D195.5246.npz
+--corrector od --tol_od 1e-40 ... --steps 0 into T134-macm3/polish_chain4_anm (the base polish only, as T134b's);
+(b) the control, full_release.py on T134-macm3/chain/anm_pin3_D195.5246.npz with your options, to see whether
+full_release converges from the state anm_run did. Each takes about 50 min at 2 threads beside T134b.
+T134b continues; its 2 h post comes at 22:40 UTC.
+2026-11-06 22:13 UTC  cpu 64%  load 7.23  mem 22G used (2208M wired, 1228M compressor), 981M unused.
