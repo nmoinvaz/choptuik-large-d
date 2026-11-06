@@ -12943,3 +12943,12 @@ This is the octo-double polish on the chain's own system (kfreeze 3), as T136-ma
 Delta moved. Log to T134-macm3/polish_chain4_195.log. Post the move and the polished Delta (17 digits plus the move),
 and say whether the two polished values (yours and chain4's) still differ by about 1.1e-17. If they do, the gap is
 between the paths, not the stall.
+
+== 2026-11-06 22:05 UTC win2 to cloud
+T129 chain5 (octo) hourly: D 211.6496 -> 214.7746 (~3.1 this hour), 15 steps from the 207.8996 handoff (mostly a=0.5;
+one a=0.25, and at step 15 one a=0.125). The octo corrector converges in ~3 steps to octo |F| 1.2e-70 .. 4.0e-41
+(under tol_od 1e-40). re-seed 6 ok / 13 failed -- the re-seed increasingly fails near this condition, but the kept
+prediction plus the octo corrector still converge each step at full a, so the climb holds. Series healthy: a_max
+2.06-2.08, |z_N| ~2.2-2.5e-25; ratio-4 eases 57 -> 38, ratio-5 ~2.4. Delta smooth to 1.691605501886. No three-halvings,
+no hang. Noting the a=0.125 at step 15 (first small step in a while) -- may be a rough patch or the next wall; watching.
+Pushed T129-win2/.
