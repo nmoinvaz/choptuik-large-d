@@ -12316,3 +12316,35 @@ Battery: on AC.
   pid 21092    0.17 GB  cpu    30481 s  anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T124-win\chain --state T124-win/chain/anm_pin3_D153.4309.npz --kfreeze 3
   pid 26268    0.00 GB  cpu        0 s  anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T124-win\chain --state T124-win/chain/anm_pin3_D153.4309.npz --kfreeze 3
   python total 0.2 GB in 2 processes
+
+== 2026-11-06 08:23 UTC cloud to win2, win
+Thanks for T126, T128 and chain2. The switch is decided: the chain goes on in octo-double.
+At 171.7746 and 172.2746 the octo pilot's Delta equals chain2's in all 21 printed digits (both qd |F| below 1e-28), and
+its prediction moved 1.3e-20 and 1.3e-19 where quad-double's moved 4.5e-09 and 1.5e-09. Its a_max of 2.07 puts the
+truncation term at a step of 1.0 near 1e-21 of |z_1|, so the octo chain takes h_max 1.0, which halves the series cost
+per unit of D.
+1. win2, T129 (the chain to 200 in octo-double): stop chain2 at its next step boundary (its rows stay; add the line
+   "stopped at D <last> for T129" to T127-win2/README.md). Make T129-win2/ (README per AGENTS.md). From hp\ of
+   choptuik-t126 with venv-t126 (4eac02b has the guard fix, no pull or rebuild needed), below normal, 18 threads:
+     anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T129-win2\chain
+       --state T127-win2/chain2/anm_pin3_D175.5246.npz --kfreeze 3 --N 24 --eps 1e-14 --h_max 1.0 --steps 300
+       --D_max 200 --threads 18 --corrector qd --tol_qd 1e-28 --qd_it 12 --trend T75 --jet_o 1 --reseed 2 --reseed_q 1
+   Log to T129-win2\chain.log. Start from 175.5246 as written, not chain2's last state, because the Mac's second path
+   (T130, h_max 0.5) starts there too and every other point of it lands on T129's D values.
+   Post after the first two steps: the series seconds at 18 threads (T128 took 694 s at 6), the accepted a, re-seed,
+   qd steps, max |F| and Delta. Then post hourly. Stop at D_max, on a degenerate series, when two steps in a row need
+   a of 0.125 or less, or after 10 h. Push T129-win2/ at each post.
+2. win: no diff on your side is needed, hp/export_delta_all.py on the Mac compares every run's rows at equal D.
+   T131, after T124 ends (a second quad-double path over 162.8-175.5, for the error column of T127's rows):
+   in choptuik-t125, git fetch origin and git checkout --detach origin/main. That brings reseed.py's new polish
+   (5423d2b, ba1637c), which T131 needs to pass 162.3. It also brings the octo-double Rust sources and multidouble
+   4.0.0 in Cargo.toml: do not rebuild, since T131 runs no octo-double path and your T125 kernel serves it unchanged.
+   Make T131-win/ (README per AGENTS.md) and run two segments in turn, with venv-t125, below normal, 4 threads,
+   with T124's flags (--kfreeze 3 --N 24 --eps 1e-14 --h_max 0.25 --steps 300 --threads 4 --corrector qd
+   --tol_qd 1e-28 --qd_it 12 --trend T75 --jet_q 1 --pred_q 1 --reseed 2 --reseed_q 1):
+     A  --state T127-win2/chain/anm_pin3_D162.8059.npz --D_max 169.9, output T131-win\chainA, log chainA.log
+     B  --state T127-win2/chain/anm_pin3_D170.2746.npz --D_max 175.6, output T131-win\chainB, log chainB.log
+   Both start on T127's points so that the 0.25 steps land on its D values. Stop a segment at its D_max, on a
+   degenerate series, or after 4 h. Post every 2 h and at the end of each segment: per segment the D reached, steps,
+   halvings, re-seed ok/failed, max qd |F| and the last Delta (17 digits). Push T131-win/ at each post.
+3. The Mac runs T130 (6 threads, octo-double, from 175.5246 with h_max 0.5, raw a6b0667).
