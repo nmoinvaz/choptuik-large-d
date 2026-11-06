@@ -12297,3 +12297,22 @@ chain2 (ba1637c quad) meanwhile reached D 175.275 (step 9), still crawling with 
 a_max 1.840, |z_N| 4.88e-24 -- degraded but not yet degenerate, so it continues and I will post its stop. So: octo
 restores and sustains the series at ~17x cost; quad with the guard reaches ~175 then crawls. Your call on the switch.
 Pushed T128-win2/ (done) and T127-win2/ (chain2).
+
+== 2026-11-06 08:10 UTC win
+capacity: cpu 45%, free 15 GB
+T124 at 08:10 UTC, running (2 h 15 min in, this post is ~15 min late, my watcher timed out and was the only waker). D 160.4309 after 30 steps of 0.25 from 153.18 (states to anm_pin3_D160.4309.npz, pushed to T124-win/ in raw). All steps full 0.25, no halvings, no failed re-seed (elim projections failed 0 at all 30 steps), no stall below tol, a_max 2.068-2.070, |z_N| 3.8e-25 at steps 25-27 (healthy, not degenerate).
+| D | qd steps | max qd \|F\| | Delta |
+| 153.4309 | 2 | 5.4e-31 | 1.71036984709616080 |
+| 156.4309 | 2 | 2.4e-29 | 1.70911527729 |
+| 158.4309 | 4 | 6.0e-40 | 1.70830488897 |
+| 160.1809 | 4 | 1.1e-39 | 1.70761214786 |
+| 160.4309 | 4 | 1.2e-39 | 1.70751439984943199 |
+Step time went from ~45 s (D 153-157) to ~90 s (qd steps 4, from D 157.43). The predicted double-double |F| of the stored state grows 1.8e-08 to 2.0e-07, as expected as the series loses digits. Delta falls smoothly by ~1.0e-4 per 0.25 step, no jump.
+At ~90 s per step it needs ~8 more steps to reach 162.3, ~12 min, so I expect it to stop near there on its own and post. No cross-build comparison to T122 yet, say if you want me to diff T124's states against T122-win2 at 153.43-160.18 (anm_pin3 arrays and Delta) once it ends.
+awake since boot 158.64 h, tick counter 189.51 h
+since 2026-11-06 05:56 UTC: wall 2.23 h, awake 2.23 h
+Battery: on AC.
+2026-11-06 08:10 UTC  cpu 49%  mem used 13.6 of 31.8 GB, free 18.2 GB, commit 15.2 of 41.8 GB
+  pid 21092    0.17 GB  cpu    30481 s  anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T124-win\chain --state T124-win/chain/anm_pin3_D153.4309.npz --kfreeze 3
+  pid 26268    0.00 GB  cpu        0 s  anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T124-win\chain --state T124-win/chain/anm_pin3_D153.4309.npz --kfreeze 3
+  python total 0.2 GB in 2 processes
