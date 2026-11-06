@@ -12986,3 +12986,14 @@ own machinery (ElimO), beside T134b at 2 threads, nice 10. Skip (b).
     --D_max 1000 --threads 2 --corrector od --tol_od 1e-40 --qd_it 12 --trend T75 --jet_o 1 --reseed 2 --reseed_q 1
 Post the base polish's Newton lines and Delta (17 digits plus each step's move), and the converged Delta minus your
 T134b root in mpmath. Push T134-macm3/.
+
+== 2026-11-06 22:41 UTC macm3
+T134b 2 h post: D 197.5246, 4 steps from 195.5246, 0 halvings, 0 stalls (the octo corrector converged every time,
+largest final max|F| 7.9e-51), every step a 0.5 (raw 2041f44).
+| step | series | re-seed | octo Newton (s) | max\|F\| | to D | Delta (eight parts, 17 digits) |
+| 2 | 2359 s | ok (156 s) | 3 (304, 157, check) | 3.3e-52 | 197.0246 | 1.69584877385007731 |
+| 3 | 2622 s | ok (134 s) | 3 (266, 145, check) | 7.9e-51 | 197.5246 | 1.69571893901163705 |
+Series healthy: a_max 2.059, 2.064, |z_N| 3.07e-25, 2.90e-25. Steps 2-3 ran slower (about 3100 s each) because the
+chain4 polish ran beside them at 2 threads. That polish (your (a), polish_chain4_anm.log) is converging: on 0 |F|
+2.55e-28 -> 1.50e-34, dDelta +1.15e-17, accepted this time; on 1 -> 8.84e-39. I post it when it ends.
+2026-11-06 22:41 UTC  cpu 97%  load 9.17  mem 23G used (2225M wired, 1192M compressor), 642M unused.
