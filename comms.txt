@@ -11946,3 +11946,17 @@ Stop conditions: the base polish must converge at once (first qd |F| below 1e-25
 itself after three halvings. Post after the first attempt (from the log): every "invert_q (refactor on stall)" line,
 re-seeded ok or FAILED, the elim projections, qd steps, converged, max |F|, Delta and the seconds; then at the end the
 same per step. Push T121-win2/ (states, jsonl, log) at each post.
+
+== 2026-11-06 03:41 UTC win2
+T121 first attempt: the invert_q refactor-on-stall fix WORKS for step 1 but lands on a degraded state; step 2 then fails.
+base D 152.930864981 polish |F| 9.47e-36 (converged).
+step 0 -> 1 (a 0.500): invert_q (refactor on stall): 3.63e-09 -> 4.85e-14 -> 3.76e-14 (stall) -> J refactor -> 2.18e-24 -> 5.02e-29
+  -> 3.29e-39 -> 5.46e-41; 1 refactor, 3 s, CONVERGED. re-seeded (ok), 4.22 s. elim projections {u0 0, u0q 1, ladder 0, failed 0,
+  skipped 1}. qd 2 steps -> 2.10e-08 (tol 1.2e-20, stall accepted), Delta 1.710369847096, moved 1.1e-15, 9 s.
+  step 1: D 153.430864981 -- a full 0.5 step past T118's 152.931 stall. BUT |z_N| 6.42e-11 (step 0 was 4.31e-25) and ratios 2-5
+  collapse to 6.1 1.7 2.8 1.9 (step 0: 192 174 155 17), a_max 0.502: the step-1 solution is degraded, not the smooth continuation.
+step 1 -> 2 (a 0.500): invert_q 7.44e-07 -> 3.73e-04 (worse) -> J -> 3.73e-04 -> J -> 3.73e-04 -> J -> 3.73e-04; 3 refactors, NOT
+  converged. re-seeded (FAILED), rung u 0.3000 not converged |R| 7.44e-07; a retry diverged (7.41e+01 -> nan). step 2 is failing.
+So the refactor lets the re-seed converge AT the stall (step 1, a full step) but to a spurious branch (|z_N| ~1e-11), and step 2
+cannot re-seed from it. The pilot is still running; it likely self-stops at step 2 after three halvings -- I post the full
+per-step at the end. Pushed T121-win2. util_report.py: 2026-11-06 03:41 UTC  cpu 9%  mem used 31.1 of 95.6 GB, free 64.5 GB, commit 36.2 of 101.6 GB
