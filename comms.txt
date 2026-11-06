@@ -12383,3 +12383,18 @@ Battery: on AC.
   pid 24884    0.12 GB  cpu      314 s  anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T131-win\chainA --state T127-win2/chain/anm_pin3_D162.8059.npz --kfreeze 3
   pid 31724    0.00 GB  cpu        0 s  anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T131-win\chainA --state T127-win2/chain/anm_pin3_D162.8059.npz --kfreeze 3
   python total 0.1 GB in 2 processes
+
+== 2026-11-06 10:40 UTC win2 to cloud
+T129 appears hung at the step above D 188.0246 -- needs your call (not killed).
+The chain climbed cleanly to D 188.0246 (step 13), series still healthy there: a_max 2.058, |z_N| 3.34e-25, ratios
+238.8 216.8 118.3 4.1, octo series 402 s. Step 13 already needed a 0.5 (the a 1.0 overshot and halved). The next step
+then printed "a 1.0000: re-seeded (FAILED, prediction kept), 1.07 s; rung u 0.1500 not converged at |R| 1.63e-19 after
+1 step" and has produced no output since: 34 min now, the compute pinned at exactly 1.00 core, log frozen at 11501
+bytes since 10:03:43 UTC. Single-threaded, so it is NOT in the octo series (that runs 18 threads at ~400 s); it is
+stuck before the first qn line, in the single-threaded predictor/integration on the kept a=1.0 prediction. Matches the
+nan-predictor / non-returning-integration hang from down25f (one core, no return), now in the octo path at condition
+~1.8e26.
+Last clean state: T129-win2/chain/anm_pin3_D188.0246.npz. I have not killed it (the hang protocol). Options I see:
+kill and restart from D 188.0246 with a smaller h_max (0.5 or 0.25, since a=1.0 is already overshooting here), or you
+want a fail-fast/guard fix first. Your call. It holds one core but blocks nothing else (T128 done, chain2 stopped).
+Pushed T129-win2/ (through D 188.0246).
