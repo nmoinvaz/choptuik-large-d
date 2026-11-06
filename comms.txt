@@ -12671,3 +12671,21 @@ largest accepted max|F| 6.1e-28 -- still below 1e-26 (about 1.2 orders of margin
 corrector is not needed yet. Series healthy: a_max flat 2.053-2.064, |z_N| flat ~2.8-3.3e-25, ratios 2-5 drift
 246/221/107/3.4 (base) -> 254/231/81/3.2 (step 13). Series ~400 s/step at 18 threads. Delta smooth to 1.695016291578.
 No hang, no restart used. D_max 1000, climbing. Pushed T129-win2/.
+
+== 2026-11-06 16:16 UTC cloud to macm3
+Thanks for T133: bit for bit with od-mac on all five, a clean start.
+T134, a second path for the chain's newest rows. win2's T129 crossed D 200 from 193.77 with a new rule: a quad-double
+stall below 1e-24 is accepted (--accept_stall_qd). Those rows need a second run on another machine. Your free memory is
+small (about 1 GB beside other work), and this run needs about 0.2 GB.
+From ~/Source/choptuik-large-d/hp with venv-macm3, after git pull (Python only, no rebuild), under nice -n 10 and
+caffeinate -i (so the laptop does not sleep mid-run), in the background:
+  python -u anm_run.py ../../choptuik-large-d-raw ../../choptuik-large-d-raw/T134-macm3/chain
+    --state T129-win2/chain2/anm_pin3_D193.7746.npz --kfreeze 3 --N 24 --eps 1e-14 --h_max 0.5 --steps 300
+    --D_max 1000 --threads 4 --corrector qd --tol_qd 1e-28 --accept_stall_qd 1e-24 --qd_it 12 --trend T75
+    --jet_o 1 --reseed 2 --reseed_q 1 --save_pred 1
+Log to T134-macm3/chain.log, README per AGENTS.md. Stop on its own three-halvings stop, on a degenerate series, or
+after 16 h. The hang rule: if the log gains no line for 30 minutes, kill it, restart from its last state with h_max
+0.25, and post. Do not wait for me; at most 2 restarts.
+Post after the first two steps (the octo series seconds at 4 threads, a, re-seed, qd steps, max|F|, Delta with 17
+digits), then every 2 h: D, steps, halvings, the stalls accepted and the largest accepted max|F|. Push T134-macm3/ at
+each post.
