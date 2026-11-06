@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="860" height="268" viewBox="0 0 860 268" font-family="system-ui, sans-serif">
+<style>@media (prefers-color-scheme: dark){[fill="#fcfcfb"]{fill:#201f1d}[stroke="#fcfcfb"]{stroke:#201f1d}[fill="#0b0b0b"]{fill:#e8e6e3}[stroke="#0b0b0b"]{stroke:#e8e6e3}[fill="#52514e"]{fill:#a8a49d}[stroke="#52514e"]{stroke:#a8a49d}[fill="#e7e6e2"]{fill:#343230}[stroke="#e7e6e2"]{stroke:#343230}[fill="#c98500"]{fill:#d69a2d}[stroke="#c98500"]{stroke:#d69a2d}[fill="#eb6834"]{fill:#dd5c26}[stroke="#eb6834"]{stroke:#dd5c26}[fill="#eda100"]{fill:#c08800}[stroke="#eda100"]{stroke:#c08800}[fill="#e87ba4"]{fill:#d1678f}[stroke="#e87ba4"]{stroke:#d1678f}[fill="#4a3aa7"]{fill:#7263cf}[stroke="#4a3aa7"]{stroke:#7263cf}[fill="#a6339a"]{fill:#c257b5}[stroke="#a6339a"]{stroke:#c257b5}[fill="#7a7668"]{fill:#948e82}[stroke="#7a7668"]{stroke:#948e82}}</style>
+<rect width="860" height="268" fill="#fcfcfb"/>
+<text x="16.0" y="24.0" font-size="13" fill="#0b0b0b" text-anchor="start" font-weight="bold">A quad-double vector in memory: four float64 arrays, not an array of structs</text>
+<text x="16.0" y="42.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">z0 .. z3 are each 769 doubles (6152 bytes); element i is z0[i] + z1[i] + z2[i] + z3[i]</text>
+<text x="16.0" y="82.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">z0</text>
+<rect x="50" y="64" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="70.5" y="81.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[0]</text>
+<rect x="94" y="64" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="114.5" y="81.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[1]</text>
+<rect x="138" y="64" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="158.5" y="81.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[2]</text>
+<rect x="182" y="64" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="202.5" y="81.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[3]</text>
+<rect x="226" y="64" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="246.5" y="81.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[4]</text>
+<rect x="270" y="64" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="290.5" y="81.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[5]</text>
+<rect x="314" y="64" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="334.5" y="81.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[6]</text>
+<rect x="358" y="64" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="378.5" y="81.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[7]</text>
+<rect x="402" y="64" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="422.5" y="81.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[8]</text>
+<rect x="446" y="64" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="466.5" y="81.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[9]</text>
+<text x="512.0" y="82.0" font-size="12" fill="#52514e" text-anchor="middle" font-weight="normal">...</text>
+<rect x="534" y="64" width="41" height="26" rx="2" fill="#eb6834"/>
+<text x="554.5" y="81.0" font-size="10" fill="#ffffff" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[768]</text>
+<text x="586.0" y="82.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-variant-numeric="tabular-nums">bytes 0 .. 6151</text>
+<text x="16.0" y="116.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">z1</text>
+<rect x="50" y="98" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="70.5" y="115.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[0]</text>
+<rect x="94" y="98" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="114.5" y="115.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[1]</text>
+<rect x="138" y="98" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="158.5" y="115.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[2]</text>
+<rect x="182" y="98" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="202.5" y="115.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[3]</text>
+<rect x="226" y="98" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="246.5" y="115.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[4]</text>
+<rect x="270" y="98" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="290.5" y="115.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[5]</text>
+<rect x="314" y="98" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="334.5" y="115.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[6]</text>
+<rect x="358" y="98" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="378.5" y="115.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[7]</text>
+<rect x="402" y="98" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="422.5" y="115.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[8]</text>
+<rect x="446" y="98" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="466.5" y="115.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[9]</text>
+<text x="512.0" y="116.0" font-size="12" fill="#52514e" text-anchor="middle" font-weight="normal">...</text>
+<rect x="534" y="98" width="41" height="26" rx="2" fill="#eb6834"/>
+<text x="554.5" y="115.0" font-size="10" fill="#ffffff" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[768]</text>
+<text x="586.0" y="116.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-variant-numeric="tabular-nums">bytes 6152 .. 12303</text>
+<text x="16.0" y="150.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">z2</text>
+<rect x="50" y="132" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="70.5" y="149.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[0]</text>
+<rect x="94" y="132" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="114.5" y="149.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[1]</text>
+<rect x="138" y="132" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="158.5" y="149.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[2]</text>
+<rect x="182" y="132" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="202.5" y="149.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[3]</text>
+<rect x="226" y="132" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="246.5" y="149.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[4]</text>
+<rect x="270" y="132" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="290.5" y="149.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[5]</text>
+<rect x="314" y="132" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="334.5" y="149.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[6]</text>
+<rect x="358" y="132" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="378.5" y="149.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[7]</text>
+<rect x="402" y="132" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="422.5" y="149.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[8]</text>
+<rect x="446" y="132" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="466.5" y="149.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[9]</text>
+<text x="512.0" y="150.0" font-size="12" fill="#52514e" text-anchor="middle" font-weight="normal">...</text>
+<rect x="534" y="132" width="41" height="26" rx="2" fill="#eb6834"/>
+<text x="554.5" y="149.0" font-size="10" fill="#ffffff" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[768]</text>
+<text x="586.0" y="150.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-variant-numeric="tabular-nums">bytes 12304 .. 18455</text>
+<text x="16.0" y="184.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="normal">z3</text>
+<rect x="50" y="166" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="70.5" y="183.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[0]</text>
+<rect x="94" y="166" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="114.5" y="183.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[1]</text>
+<rect x="138" y="166" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="158.5" y="183.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[2]</text>
+<rect x="182" y="166" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="202.5" y="183.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[3]</text>
+<rect x="226" y="166" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="246.5" y="183.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[4]</text>
+<rect x="270" y="166" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="290.5" y="183.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[5]</text>
+<rect x="314" y="166" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="334.5" y="183.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[6]</text>
+<rect x="358" y="166" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="378.5" y="183.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[7]</text>
+<rect x="402" y="166" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="422.5" y="183.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[8]</text>
+<rect x="446" y="166" width="41" height="26" rx="2" fill="#e7e6e2"/>
+<text x="466.5" y="183.0" font-size="10" fill="#52514e" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[9]</text>
+<text x="512.0" y="184.0" font-size="12" fill="#52514e" text-anchor="middle" font-weight="normal">...</text>
+<rect x="534" y="166" width="41" height="26" rx="2" fill="#eb6834"/>
+<text x="554.5" y="183.0" font-size="10" fill="#ffffff" text-anchor="middle" font-weight="normal" font-variant-numeric="tabular-nums">[768]</text>
+<text x="586.0" y="184.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal" font-variant-numeric="tabular-nums">bytes 18456 .. 24607</text>
+<circle cx="554.5" cy="179.0" r="10" fill="none" stroke="#0b0b0b" stroke-width="1.5"/>
+<line x1="544.6" y1="180.6" x2="344.5" y2="213.0" stroke="#0b0b0b" stroke-width="1"/>
+<text x="340.5" y="217.0" font-size="11" fill="#0b0b0b" text-anchor="end" font-weight="bold">element 768 is Delta, four parts</text>
+<text x="16.0" y="256.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">hp/plot_explainer.py  ·  the .npz states hold zh, zl, z2, z3 (and z4..z7)</text>
+<a href="https://github.com/nmoinvaz/choptuik-large-d"><text x="844" y="256" font-size="10" fill="#52514e" text-anchor="end" text-decoration="underline">github.com/nmoinvaz/choptuik-large-d</text></a>
+</svg>
