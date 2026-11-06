@@ -139,8 +139,9 @@ def chain_rows():
         by_dir[os.path.dirname(rel)].append(rel)
     for d in by_dir:
         by_dir[d].sort(key=lambda r: states[r][0]["D"])
+        # a run resumed from a state of its own folder (T124-win) continues that folder's lineage
         srcs = {states[r][0].get("source") for r in by_dir[d]}
-        if len(srcs) != 1:
+        if len({x for x in srcs if os.path.dirname(x) != d}) != 1:
             sys.exit(f"chain: {d} has states from several starts {srcs}")
     top = max(states, key=lambda r: states[r][0]["D"])
     backbone, cur, upper = [], os.path.dirname(top), states[top][0]["D"]
