@@ -235,6 +235,10 @@ its first step, `step0_od188.log`) rejected the full step and the half step by i
 → 8.1e-20, max |F| 9.75e-29 → 2.73e-15, in 782 s (three octo-double Newton steps on 3 threads). So the state at D 188,
 which the quad-double corrector left 1.2×10⁻¹⁹ off in Delta, lies outside the full step's basin in the weak direction
 even with an exact step. At 175.52 and 180.52 the converged floor runs moved Delta by 2.3×10⁻²⁴ and 8.5×10⁻²² in all.
+After the full octo-double step the residual sits in the horizon block's rows alone, 6.4e-15 to 4.4e-14 in its p, m, a
+and c rows and at most 2.0e-41 in every other block (`rows188.py`, `rows188.log`; the quad-double step's is alike). It
+is the horizon series' quadratic term, which the projection of ElimQ and ElimO removes, so the octo-double base polish
+runs inside ElimO too.
 
 ### 5.2 What was added
 
@@ -250,7 +254,8 @@ even with an exact step. At 175.52 and 180.52 the converged floor runs moved Del
   `q4_of_o` moved here from anm_run.py, which imports them.
 - `hp/anm_run.py --corrector od --tol_od 1e-40` (`--qd_it` steps). Under `--jet_o 1` the start is the octo-double
   prediction `horner_o(Zo, a)` in all eight parts, its horizon data replaced by the re-seed's when that succeeds. The
-  base polish starts from all eight stored parts. A converged state is saved by `save_o` (meta `parts` 8), and under
+  base polish starts from all eight stored parts, inside ElimO at the base's D under `--reseed 2` (the quad-double
+  polish has no projection). A converged state is saved by `save_o` (meta `parts` 8), and under
   `--jet_o 1` the next base's series is taken at the eight parts (also on a restart from an eight-part file). The qd,
   dd and other paths are unchanged; `--accept_stall_qd` does not apply to od. M = 32 only, and `--reseed` needs
   `--reseed_q 1`.

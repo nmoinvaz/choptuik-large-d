@@ -83,10 +83,11 @@ its re-seed as pred_pin<k>_D<D>.npz, an input for testing the re-seed (13.26).
 --corrector od is the corrector in octo-double (hp/octo_corrector.py, notes/OCTO_DOUBLE.md 5): newton_od, newton_qd's
 rule on the octo-double kernel (PinnedO: Solver.newton_o, olu_solve and residual_o with the held offset), to --tol_od
 on max |F| in at most --qd_it steps, with --reseed 2 inside ElimO (ElimQ's quad-double projection put back in eight
-parts). Under --jet_o 1 it starts from the octo-double prediction in all eight parts, its horizon data re-seeded; a
-restart from a state saved by it polishes all eight parts. Its states are saved in eight parts (octo_corrector.save_o:
-save_q's four, which load_q reads, and four more), and the series of the next base (--jet_o) is taken at all eight.
-M = 32 only; --accept_stall_qd does not apply.
+parts). Under --jet_o 1 it starts from the octo-double prediction in all eight parts, its horizon data re-seeded. The
+base is polished from all its stored parts (eight from a state saved by it), with --reseed 2 inside ElimO at the
+base's D (the quad-double polish runs without the projection). Its states are saved in eight parts
+(octo_corrector.save_o: save_q's four, which load_q reads, and four more), and the series of the next base (--jet_o)
+is taken at all eight. M = 32 only; --accept_stall_qd does not apply.
 """
 import json
 import os
@@ -391,8 +392,14 @@ def main():
         # root, outside the basin past D ~ 131 (the restart of T113 at 135.06, notes/QUAD_DOUBLE.md 13.22)
         z4_base = tuple(np.ascontiguousarray(np.asarray(p)) for p in load_q(os.path.join(raw, opt["state"]))[0])
         if opt["corrector"] == "od":
-            # --corrector od: the octo-double polish from all eight stored parts (a four-part state's promoted)
+            # --corrector od: the octo-double polish from all eight stored parts (a four-part state's promoted), with
+            # --reseed 2 inside ElimO: from a quad-double state at D 188 a full step leaves 4e-14 in the horizon rows
+            # alone (its quadratic term there; 1e-41 in the others), which the projection removes
+            if opt["reseed"] == 2:
+                elim["rs"] = Reseeder(dict(M=M, nodes=nodes, kt=kt, kc=kc, ks=ks), D, threads=opt["threads"],
+                                      horizon_alpha=opt["horizon_alpha"], qd=bool(opt["reseed_q"]))
             zh, zl, F0, _, _, _ = correct(sp, zh, zl, opt["tol"], z8_start=load_o(os.path.join(raw, opt["state"]))[0])
+            elim["rs"] = None
         else:
             zh, zl, F0, _, _, _ = correct(sp, zh, zl, opt["tol"], z4_base if opt["corrector"] == "qd" else None)
     print(f"base {opt['state']}: D {mp.nstr(D, 12)}, M {M}, pin {kf} (held {ks_held}), |F| {F0:.1e}; N {N}, eps {opt['eps']}, h_max {opt['h_max']}, "
