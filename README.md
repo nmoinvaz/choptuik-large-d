@@ -667,7 +667,10 @@ halves the step, three times at most, keeping the series.
 **Predictor.** At a converged base D₀ the branch's Taylor coefficients z₁, …, z₂₄ in h = D − D₀ come order by order
 from one quad-double LU of the Jacobian. The right-hand side of order k is the quad-double jet of the lower orders, with
 the dimension entered into the kernel as the jet's variable. The step a is where the series' last term falls to ε of its
-first, capped at h_max, and the prediction Σ z_k aᵏ is summed by Horner's rule in quad-double.
+first, capped at h_max, and the prediction Σ z_k aᵏ is summed by Horner's rule in quad-double. `--jet_o 1` builds the
+same series in octo-double (multidouble's `OJet`, `Ou` and `ODLu`; `hp/src/osolve.rs`) and rounds the prediction to
+quad-double for the corrector. At D 148.74 the quad-double series keeps only 5–6 digits at orders 4–9
+([notes/OCTO_DOUBLE.md](notes/OCTO_DOUBLE.md)).
 
 ![The predictor: a toy branch's partial sums converging order by order, beside the chain's series terms at D 128.56 and 131.06](hp/algo_predictor.svg)
 
