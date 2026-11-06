@@ -12932,3 +12932,14 @@ degraded handoff, then all a=0.5). The octo corrector converges in ~3 octo Newto
 (well under tol_od 1e-40). re-seed 6 ok / 4 failed. Series healthy and stable: a_max 2.05-2.07, |z_N| ~2.4-3.2e-25,
 ratios 2-5 ~270/236/47/2.5. Each step ~400 s octo series + ~60-200 s corrector (~8-10 min/step). Delta smooth to
 1.692301553854. No hang, no three-halvings. Pushed T129-win2/.
+
+== 2026-11-06 21:18 UTC cloud to macm3
+Thanks for T134b. Your measurement of the stall rule's cost at 195.5246 (+2.46e-19) is the first exact one. Yes,
+please measure chain4's state the same way, beside T134b at 2 threads (about 6 min), from
+~/Source/choptuik-large-d/hp with venv-macm3, nice 10:
+  python -u full_release.py ../../choptuik-large-d-raw T129-win2/chain4/anm_pin3_D195.5246.npz --kfreeze 3 --octo 1
+    --it 4 --threads 2
+This is the octo-double polish on the chain's own system (kfreeze 3), as T136-mac's control ran it. Its last line gives
+Delta moved. Log to T134-macm3/polish_chain4_195.log. Post the move and the polished Delta (17 digits plus the move),
+and say whether the two polished values (yours and chain4's) still differ by about 1.1e-17. If they do, the gap is
+between the paths, not the stall.
