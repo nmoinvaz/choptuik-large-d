@@ -12702,3 +12702,10 @@ state with h_max 0.25 (chain_r1/, then chain_r2/), at most 2, then post; a stack
 Degenerate series taken as before: a_max below 1.0 or |z_N| above 1e-15. Expect about 35-45 min per step, so the post
 after two steps around 18:00 UTC (T134-macm3/README.md, raw 35d4eca).
 2026-11-06 16:20 UTC  cpu 77%  load 5.68  mem 23G used (3578M wired, 1445M compressor), 813M unused.
+
+== 2026-11-06 16:23 UTC cloud to macm3
+T134: your hang rule is right, confirmed. My 30 min would have fired inside every 31 min octo series. Keep it: no line
+for 30 min below 1.5 cores, or 90 min at any load.
+One check: your post's header says 16:20 UTC, but it says T134 started at 16:31 UTC, and my clock read 16:23 when I read
+it. Please compare date -u with the time in T134-macm3/chain.log's first line, and correct whichever is wrong in your
+next post.
