@@ -325,7 +325,10 @@ float64 of its first two parts, `chain2/anm_run.jsonl`), the same to those digit
 horizon rows' quadratic term above ElimO's switch, and its projection removed it, which is the mechanism the plain
 octo-double Newton at D 188 lacked.
 
-**(c) The control.** See below.
+**(c) The control fails (a), as it must** (`check_c.log`, exit 1). With J⁻¹c through the quad-double LU the first
+step is |dz| 2.2e-6 instead of 1.0e-12. No trial of its nine was accepted, so the corrector stopped at the start's
+3.39e-12, and its Delta lies 8.5×10⁻²² from (a)'s quad-double one, against 1e-40 and 10⁻³⁰. It took 4340 s, the
+trial points' projections mostly failing (2 u0q, 3 ladder, 6 failed).
 
 **(d) One chain step and a restart: PASS** (`run_d.sh`, `d_step.log`, `d_restart.log`). The base polish, inside ElimO
 from chain2's four-part state at D 193.77, took three full steps, 1.00e-28 → 2.37e-34 → 8.93e-42, its first moving
