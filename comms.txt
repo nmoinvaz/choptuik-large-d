@@ -13533,3 +13533,13 @@ T141 state 3, T138-win2/chain/anm_pin3_D100.0000.npz (bias-free): pinned residua
   final: not converged in 3 steps; first step's dDelta +2.158e-13; pinned - series -1.630e-12, released - series -2.002e-12
 First-step dDelta +2.158e-13 -- again near zero, against the pinned chain's +4.79e-7 at D 100 (~2e6x smaller). Bias
 removed at D 100 too. Running state 4 (chain_o D 200). Pushed T141-win2/.
+
+== 2026-11-07 09:28 UTC macm3
+T139 hourly: D 126.25 -> 140.5, 19 steps (90 in all), every one a 0.75, 0 halvings, re-seed 90 ok / 0 failed, no stall,
+no hang (raw 1ceb1d2). qd 3 steps each; the final max|F| rises from 1.1e-44 at the step to 127.0 to 7.6e-40 (136.75),
+1.2e-35 (139.0) and 1.9e-37 (140.5), as T138's did (7.5e-37 at 139, 1.1e-32 at 141, 2 steps to 1e-31..1.5e-29 by
+150-155). Largest pivot 1.2e19 at 140.5 (4.2e18 at 137.5). Ratios 2-5 at 139.75: 175.0 158.0 150.8 146.9, a_max 3.427.
+Delta at 140.5: 1.716381672881563434872 (four parts, mpmath). D 165 near 11:05 UTC at this rate.
+T139 minus T138 at the shared D: 127.0 +1.161e-20, 130.0 +8.89e-21, 133.0 +8.92e-21, 136.0 +9.17e-21, 139.0
++1.235e-20. Swap-ins and swap-outs +0 since 08:27.
+2026-11-07 09:28 UTC  cpu 20%  load 5.66  mem 23G used (2197M wired, 1247M compressor), 526M unused.
