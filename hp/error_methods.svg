@@ -1,0 +1,220 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1284" height="704" viewBox="0 0 1284 704" font-family="system-ui, sans-serif">
+<style>@media (prefers-color-scheme: dark){[fill="#fcfcfb"]{fill:#201f1d}[stroke="#fcfcfb"]{stroke:#201f1d}[fill="#0b0b0b"]{fill:#e8e6e3}[stroke="#0b0b0b"]{stroke:#e8e6e3}[fill="#52514e"]{fill:#a8a49d}[stroke="#52514e"]{stroke:#a8a49d}[fill="#e7e6e2"]{fill:#343230}[stroke="#e7e6e2"]{stroke:#343230}[fill="#c98500"]{fill:#d69a2d}[stroke="#c98500"]{stroke:#d69a2d}[fill="#eb6834"]{fill:#dd5c26}[stroke="#eb6834"]{stroke:#dd5c26}[fill="#eda100"]{fill:#c08800}[stroke="#eda100"]{stroke:#c08800}[fill="#e87ba4"]{fill:#d1678f}[stroke="#e87ba4"]{stroke:#d1678f}[fill="#4a3aa7"]{fill:#7263cf}[stroke="#4a3aa7"]{stroke:#7263cf}[fill="#a6339a"]{fill:#c257b5}[stroke="#a6339a"]{stroke:#c257b5}[fill="#7a7668"]{fill:#948e82}[stroke="#7a7668"]{stroke:#948e82}}</style>
+<rect width="1284" height="704" fill="#fcfcfb"/>
+<text x="16.0" y="24.0" font-size="14" fill="#0b0b0b" text-anchor="start" font-weight="bold">How each group computes the echo period Δ(D) and estimates its error</text>
+<text x="16.0" y="42.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">Rows run left to right: the computation, the error quoted on each value, the fit across D, and the limit quoted. Colour is the kind of error estimate.</text>
+<rect x="16.0" y="54" width="10" height="10" rx="2" fill="#2a78d6"/>
+<text x="31.0" y="63.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">spread between two computations</text>
+<rect x="250.8" y="54" width="10" height="10" rx="2" fill="#eb6834"/>
+<text x="265.8" y="63.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">spread over fits or estimators</text>
+<rect x="479.2" y="54" width="10" height="10" rx="2" fill="#1baf7a"/>
+<text x="494.2" y="63.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">rigorous enclosure</text>
+<rect x="631.0" y="54" width="10" height="10" rx="2" fill="#eda100"/>
+<text x="646.0" y="63.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">quoted precision or rounding only</text>
+<rect x="878.6" y="54" width="10" height="10" rx="2" fill="#7a7668"/>
+<text x="893.6" y="63.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">none stated</text>
+<rect x="985.7" y="54" width="22" height="10" rx="2" fill="none" stroke="#52514e" stroke-dasharray="4 3"/>
+<text x="1013.7" y="63.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">our reading, not stated by the source</text>
+<text x="16.0" y="96.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="bold">GROUP</text>
+<text x="244.0" y="96.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="bold">COMPUTED BY</text>
+<text x="522.0" y="96.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="bold">ERROR ON EACH VALUE</text>
+<text x="800.0" y="96.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="bold">FIT OR EXTRAPOLATION</text>
+<text x="1078.0" y="96.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="bold">QUOTED LIMIT Δ∞</text>
+<text x="16.0" y="131.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="bold">Martín-García, Gundlach</text>
+<text x="16.0" y="145.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">PRD 2003 · D = 4</text>
+<rect x="244.0" y="108.0" width="250.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="258.0" y="131.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Periodic boundary-value solve,</text>
+<text x="258.0" y="145.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">analytic at centre and light cone</text>
+<rect x="522.0" y="108.0" width="250.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1" stroke-dasharray="4 3"/>
+<rect x="522.0" y="108.0" width="6" height="52.0" rx="2" fill="#2a78d6"/>
+<text x="536.0" y="131.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Δ = 3.445452402(3), the (3)</text>
+<text x="536.0" y="145.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">from convergence in resolution</text>
+<line x1="497.0" y1="134.0" x2="513.0" y2="134.0" stroke="#52514e" stroke-width="1"/>
+<polygon points="519.0,134.0 512.0,130.0 512.0,138.0" fill="#52514e"/>
+<rect x="800.0" y="108.0" width="250.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1"/>
+<text x="814.0" y="138.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">None, one dimension</text>
+<line x1="775.0" y1="134.0" x2="791.0" y2="134.0" stroke="#52514e" stroke-width="1"/>
+<polygon points="797.0,134.0 790.0,130.0 790.0,138.0" fill="#52514e"/>
+<rect x="1078.0" y="108.0" width="190.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1"/>
+<text x="1092.0" y="138.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">—</text>
+<line x1="1053.0" y1="134.0" x2="1069.0" y2="134.0" stroke="#52514e" stroke-width="1"/>
+<polygon points="1075.0,134.0 1068.0,130.0 1068.0,138.0" fill="#52514e"/>
+<text x="16.0" y="193.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="bold">Reiterer, Trubowitz</text>
+<text x="16.0" y="207.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">CMP 2019 · D = 4</text>
+<rect x="244.0" y="170.0" width="250.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1"/>
+<text x="258.0" y="193.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Computer-assisted existence proof</text>
+<text x="258.0" y="207.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">of a real analytic solution</text>
+<rect x="522.0" y="170.0" width="250.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1"/>
+<rect x="522.0" y="170.0" width="6" height="52.0" rx="2" fill="#1baf7a"/>
+<text x="536.0" y="193.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Rigorous enclosure of Δ/2</text>
+<text x="536.0" y="207.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">to 80 digits</text>
+<line x1="497.0" y1="196.0" x2="513.0" y2="196.0" stroke="#52514e" stroke-width="1"/>
+<polygon points="519.0,196.0 512.0,192.0 512.0,200.0" fill="#52514e"/>
+<rect x="800.0" y="170.0" width="250.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1"/>
+<text x="814.0" y="200.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">None, one dimension</text>
+<line x1="775.0" y1="196.0" x2="791.0" y2="196.0" stroke="#52514e" stroke-width="1"/>
+<polygon points="797.0,196.0 790.0,192.0 790.0,200.0" fill="#52514e"/>
+<rect x="1078.0" y="170.0" width="190.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1"/>
+<text x="1092.0" y="200.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">—</text>
+<line x1="1053.0" y1="196.0" x2="1069.0" y2="196.0" stroke="#52514e" stroke-width="1"/>
+<polygon points="1075.0,196.0 1068.0,192.0 1068.0,200.0" fill="#52514e"/>
+<text x="16.0" y="248.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="bold">Evolution codes, 2005–11</text>
+<text x="16.0" y="262.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">Sorkin–Oren, Bland et al.,</text>
+<text x="16.0" y="276.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">Taves–Kunstatter · D ≤ 14</text>
+<rect x="244.0" y="232.0" width="250.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="258.0" y="255.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Time evolution and bisection,</text>
+<text x="258.0" y="269.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">Δ read off the echoes</text>
+<rect x="522.0" y="232.0" width="250.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1"/>
+<rect x="522.0" y="232.0" width="6" height="52.0" rx="2" fill="#7a7668"/>
+<text x="536.0" y="262.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Not recorded in our notes</text>
+<line x1="497.0" y1="258.0" x2="513.0" y2="258.0" stroke="#52514e" stroke-width="1"/>
+<polygon points="519.0,258.0 512.0,254.0 512.0,262.0" fill="#52514e"/>
+<rect x="800.0" y="232.0" width="250.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1"/>
+<text x="814.0" y="255.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">γ ≈ 0.466(1 − e^(−0.408 D)), γ only</text>
+<text x="814.0" y="269.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">(Bland et al., 3.5 ≤ D ≤ 14)</text>
+<line x1="775.0" y1="258.0" x2="791.0" y2="258.0" stroke="#52514e" stroke-width="1"/>
+<polygon points="797.0,258.0 790.0,254.0 790.0,262.0" fill="#52514e"/>
+<rect x="1078.0" y="232.0" width="190.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1"/>
+<rect x="1078.0" y="232.0" width="6" height="52.0" rx="2" fill="#7a7668"/>
+<text x="1092.0" y="255.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Δ∞ = 5/2, conjectured</text>
+<text x="1092.0" y="269.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">in Bland's thesis (2007)</text>
+<line x1="1053.0" y1="258.0" x2="1069.0" y2="258.0" stroke="#52514e" stroke-width="1"/>
+<polygon points="1075.0,258.0 1068.0,254.0 1068.0,262.0" fill="#52514e"/>
+<text x="16.0" y="317.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="bold">Ecker, Ecker, Grumiller</text>
+<text x="16.0" y="331.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">PRL 2026 · 1/D expansion</text>
+<rect x="244.0" y="294.0" width="250.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1"/>
+<text x="258.0" y="317.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Expansion in ε = 1/(D − 1), the</text>
+<text x="258.0" y="331.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">NLO condition Eq. (20) fixes Δ</text>
+<rect x="522.0" y="294.0" width="250.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1"/>
+<rect x="522.0" y="294.0" width="6" height="52.0" rx="2" fill="#7a7668"/>
+<text x="536.0" y="317.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Analytic, no error stated; we</text>
+<text x="536.0" y="331.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">dispute that Eq. (20) selects Δ</text>
+<line x1="497.0" y1="320.0" x2="513.0" y2="320.0" stroke="#52514e" stroke-width="1"/>
+<polygon points="519.0,320.0 512.0,316.0 512.0,324.0" fill="#52514e"/>
+<rect x="800.0" y="294.0" width="250.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1"/>
+<text x="814.0" y="324.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Existing data suggest Δ → 0</text>
+<line x1="775.0" y1="320.0" x2="791.0" y2="320.0" stroke="#52514e" stroke-width="1"/>
+<polygon points="797.0,320.0 790.0,316.0 790.0,324.0" fill="#52514e"/>
+<rect x="1078.0" y="294.0" width="190.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1"/>
+<rect x="1078.0" y="294.0" width="6" height="52.0" rx="2" fill="#7a7668"/>
+<text x="1092.0" y="324.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Δ → 0, conjectured</text>
+<line x1="1053.0" y1="320.0" x2="1069.0" y2="320.0" stroke="#52514e" stroke-width="1"/>
+<polygon points="1075.0,320.0 1068.0,316.0 1068.0,324.0" fill="#52514e"/>
+<text x="16.0" y="372.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="bold">Ecker, Ecker, Grumiller,</text>
+<text x="16.0" y="386.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">Jechtl · SciPost 2026</text>
+<text x="16.0" y="400.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">3.05 ≤ D ≤ 5.5</text>
+<rect x="244.0" y="356.0" width="250.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1"/>
+<text x="258.0" y="379.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Series about the self-similarity</text>
+<text x="258.0" y="393.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">horizon, order raised above D 4.8</text>
+<rect x="522.0" y="356.0" width="250.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1"/>
+<rect x="522.0" y="356.0" width="6" height="52.0" rx="2" fill="#eda100"/>
+<text x="536.0" y="379.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Precision 1e-6, quoted at the</text>
+<text x="536.0" y="393.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">maximum of Δ and at D = 4</text>
+<line x1="497.0" y1="382.0" x2="513.0" y2="382.0" stroke="#52514e" stroke-width="1"/>
+<polygon points="519.0,382.0 512.0,378.0 512.0,386.0" fill="#52514e"/>
+<rect x="800.0" y="356.0" width="250.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1"/>
+<text x="814.0" y="386.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Expansions in 1/D and in D − 3</text>
+<line x1="775.0" y1="382.0" x2="791.0" y2="382.0" stroke="#52514e" stroke-width="1"/>
+<polygon points="797.0,382.0 790.0,378.0 790.0,386.0" fill="#52514e"/>
+<rect x="1078.0" y="356.0" width="190.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1"/>
+<rect x="1078.0" y="356.0" width="6" height="52.0" rx="2" fill="#7a7668"/>
+<text x="1092.0" y="379.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Δ → 0 at D → 3⁺ and at</text>
+<text x="1092.0" y="393.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">D → ∞, conjectured</text>
+<line x1="1053.0" y1="382.0" x2="1069.0" y2="382.0" stroke="#52514e" stroke-width="1"/>
+<polygon points="1075.0,382.0 1068.0,378.0 1068.0,386.0" fill="#52514e"/>
+<text x="16.0" y="434.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="bold">Ecker, Ecker, Grumiller</text>
+<text x="16.0" y="448.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">arXiv:2611.07007</text>
+<text x="16.0" y="462.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">D 4–200 in steps of 1/2</text>
+<rect x="244.0" y="418.0" width="250.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1"/>
+<text x="258.0" y="441.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Spectral Newton in GMP, on</text>
+<text x="258.0" y="455.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">Reiterer–Trubowitz infrastructure</text>
+<rect x="522.0" y="418.0" width="250.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1"/>
+<rect x="522.0" y="418.0" width="6" height="52.0" rx="2" fill="#eda100"/>
+<text x="536.0" y="441.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">No uncertainty stated, six</text>
+<text x="536.0" y="455.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">decimals, so rounding 5e-7</text>
+<line x1="497.0" y1="444.0" x2="513.0" y2="444.0" stroke="#52514e" stroke-width="1"/>
+<polygon points="519.0,444.0 512.0,440.0 512.0,448.0" fill="#52514e"/>
+<rect x="800.0" y="418.0" width="250.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1"/>
+<text x="814.0" y="434.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Δ ≈ 1.6439 + 10.37/D − O(1/D²);</text>
+<text x="814.0" y="448.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">the D = ∞ entry's fit range and</text>
+<text x="814.0" y="462.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">method are not stated</text>
+<line x1="775.0" y1="444.0" x2="791.0" y2="444.0" stroke="#52514e" stroke-width="1"/>
+<polygon points="797.0,444.0 790.0,440.0 790.0,448.0" fill="#52514e"/>
+<rect x="1078.0" y="418.0" width="190.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1"/>
+<rect x="1078.0" y="418.0" width="6" height="52.0" rx="2" fill="#7a7668"/>
+<text x="1092.0" y="441.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Δ∞ = 1.643911,</text>
+<text x="1092.0" y="455.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">no uncertainty stated</text>
+<line x1="1053.0" y1="444.0" x2="1069.0" y2="444.0" stroke="#52514e" stroke-width="1"/>
+<polygon points="1075.0,444.0 1068.0,440.0 1068.0,448.0" fill="#52514e"/>
+<line x1="16.0" y1="481.0" x2="1268.0" y2="481.0" stroke="#e7e6e2" stroke-width="2"/>
+<text x="16.0" y="513.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="bold">This project</text>
+<text x="16.0" y="527.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">full system, D 3.04–73</text>
+<rect x="244.0" y="490.0" width="250.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1"/>
+<text x="258.0" y="513.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Newton on the full system in</text>
+<text x="258.0" y="527.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">double- and quad-double</text>
+<rect x="522.0" y="490.0" width="250.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1"/>
+<rect x="522.0" y="490.0" width="6" height="52.0" rx="2" fill="#2a78d6"/>
+<text x="536.0" y="506.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Two resolutions M, or two starts,</text>
+<text x="536.0" y="520.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">a spread, not a bound</text>
+<text x="536.0" y="534.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">(1e-22 to 4e-10; 1e-28 in qd)</text>
+<line x1="497.0" y1="516.0" x2="513.0" y2="516.0" stroke="#52514e" stroke-width="1"/>
+<polygon points="519.0,516.0 512.0,512.0 512.0,520.0" fill="#52514e"/>
+<rect x="800.0" y="490.0" width="250.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1"/>
+<text x="814.0" y="506.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">1/D and 1/n series (degree 16–20),</text>
+<text x="814.0" y="520.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">rational in 1/(D − 2), cut-plane</text>
+<text x="814.0" y="534.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">ζ-series: 48 fit choices</text>
+<line x1="775.0" y1="516.0" x2="791.0" y2="516.0" stroke="#52514e" stroke-width="1"/>
+<polygon points="797.0,516.0 790.0,512.0 790.0,520.0" fill="#52514e"/>
+<rect x="1078.0" y="490.0" width="190.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1"/>
+<rect x="1078.0" y="490.0" width="6" height="52.0" rx="2" fill="#eb6834"/>
+<text x="1092.0" y="506.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Δ∞ = 1.643893746 ± 1.5e-8,</text>
+<text x="1092.0" y="520.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">fit spread, corrected by</text>
+<text x="1092.0" y="534.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">a planted-truth test</text>
+<line x1="1053.0" y1="516.0" x2="1069.0" y2="516.0" stroke="#52514e" stroke-width="1"/>
+<polygon points="1075.0,516.0 1068.0,512.0 1068.0,520.0" fill="#52514e"/>
+<text x="16.0" y="575.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="bold">This project</text>
+<text x="16.0" y="589.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">ANM chain, D 74–215</text>
+<rect x="244.0" y="552.0" width="250.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1"/>
+<text x="258.0" y="575.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Taylor steps in D, harmonics 5–13</text>
+<text x="258.0" y="589.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">held on a fit of 138 full states</text>
+<rect x="522.0" y="552.0" width="250.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1"/>
+<rect x="522.0" y="552.0" width="6" height="52.0" rx="2" fill="#eb6834"/>
+<text x="536.0" y="568.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Spread over the held fit's degree,</text>
+<text x="536.0" y="582.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">1e-15 to 1e-11; release step:</text>
+<text x="536.0" y="596.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">bias 1e-14 to 3e-12</text>
+<line x1="497.0" y1="578.0" x2="513.0" y2="578.0" stroke="#52514e" stroke-width="1"/>
+<polygon points="519.0,578.0 512.0,574.0 512.0,582.0" fill="#52514e"/>
+<rect x="800.0" y="552.0" width="250.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1"/>
+<text x="814.0" y="568.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Checked against the 1/D series,</text>
+<text x="814.0" y="582.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">inside its spread at D 74–190</text>
+<text x="814.0" y="596.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">(8e-12 at 80, 2e-9 at 190)</text>
+<line x1="775.0" y1="578.0" x2="791.0" y2="578.0" stroke="#52514e" stroke-width="1"/>
+<polygon points="797.0,578.0 790.0,574.0 790.0,582.0" fill="#52514e"/>
+<rect x="1078.0" y="552.0" width="190.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1"/>
+<text x="1092.0" y="582.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">—</text>
+<line x1="1053.0" y1="578.0" x2="1069.0" y2="578.0" stroke="#52514e" stroke-width="1"/>
+<polygon points="1075.0,578.0 1068.0,574.0 1068.0,582.0" fill="#52514e"/>
+<text x="16.0" y="637.0" font-size="12" fill="#0b0b0b" text-anchor="start" font-weight="bold">This project</text>
+<text x="16.0" y="651.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">D = ∞ inner problem</text>
+<rect x="244.0" y="614.0" width="250.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1"/>
+<text x="258.0" y="637.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Zero of the harmonic-1 Stokes</text>
+<text x="258.0" y="651.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">multiplier, 22 amplitude terms</text>
+<rect x="522.0" y="614.0" width="250.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1"/>
+<rect x="522.0" y="614.0" width="6" height="52.0" rx="2" fill="#eb6834"/>
+<text x="536.0" y="637.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Estimator range over nine orders,</text>
+<text x="536.0" y="651.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">tested on planted functions</text>
+<line x1="497.0" y1="640.0" x2="513.0" y2="640.0" stroke="#52514e" stroke-width="1"/>
+<polygon points="519.0,640.0 512.0,636.0 512.0,644.0" fill="#52514e"/>
+<rect x="800.0" y="614.0" width="250.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1"/>
+<text x="814.0" y="644.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">None, D = ∞ directly</text>
+<line x1="775.0" y1="640.0" x2="791.0" y2="640.0" stroke="#52514e" stroke-width="1"/>
+<polygon points="797.0,640.0 790.0,636.0 790.0,644.0" fill="#52514e"/>
+<rect x="1078.0" y="614.0" width="190.0" height="52.0" rx="4" fill="#fcfcfb" stroke="#52514e" stroke-width="1"/>
+<rect x="1078.0" y="614.0" width="6" height="52.0" rx="2" fill="#eb6834"/>
+<text x="1092.0" y="637.0" font-size="11" fill="#0b0b0b" text-anchor="start" font-weight="normal">Δ∞ = 1.64387 ± 0.00006,</text>
+<text x="1092.0" y="651.0" font-size="11" fill="#52514e" text-anchor="start" font-weight="normal">under Conjecture 1</text>
+<line x1="1053.0" y1="640.0" x2="1069.0" y2="640.0" stroke="#52514e" stroke-width="1"/>
+<polygon points="1075.0,640.0 1068.0,636.0 1068.0,644.0" fill="#52514e"/>
+<text x="16.0" y="692.0" font-size="10" fill="#52514e" text-anchor="start" font-weight="normal">notes/LIT_REVIEW.md  ·  notes/DINF_ANALYTIC.md  ·  README.md  ·  hp/data/delta_all.csv (raw 7b52e58)</text>
+<a href="https://github.com/nmoinvaz/choptuik-large-d"><text x="1268" y="692" font-size="10" fill="#52514e" text-anchor="end" text-decoration="underline">github.com/nmoinvaz/choptuik-large-d</text></a>
+</svg>
