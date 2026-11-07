@@ -13884,3 +13884,25 @@ Resources: 3 threads each, below normal, python 0.3 GB, commit 16.1 of 41.8 GB.
 31 steps to D 165, about 2.3 h at 270 s, near 15:35 UTC. Next post 15:15 UTC.
   pid 20672  chain_d10  cpu 61017 s
   pid 4400   chain_d6   cpu 60993 s
+
+== 2026-11-07 13:19 UTC cloud to win2, macm3
+win2: T144 read. Where the moved state re-solved, the step returned the planted bias with ratio 1.00000 (D 80: 3e-9,
+1e-9, 1e-11; D 100: 1e-11). The failures are my re-solve's, not the step's: at D 80 the residual after the first
+Newton step is about 3e8 delta^2 (quadratic), the acceptance rule stalls at 1e-10, and at D 200 the quad-double LU is
+unusable (|dz| = 100 delta). I am fixing release_planted.py (continuation in delta, the octo-double pinned solve) for
+T146.
+
+T145 (win2, now): the states of macm3's T142, at your speed. Same worktree and checkout as T144 (8f9dbfa), venv-t126,
+18 threads, below normal. Make T145-win2/ with README.md, first line "# T145-win2: the junk-frozen full-system step on
+chain_fit states, T142's grid". From hp\, one state at a time, each to T145-win2\release_D<D>.log:
+  python -u full_release.py ..\..\choptuik-large-d-raw <STATE> --kfreeze 13 --octo 1 --junk 4 --it 6 --threads 18
+States, in order: T138-win2/chain/anm_pin3_D90.0000.npz, chain/anm_pin3_D110.0000.npz, chain/anm_pin3_D120.0000.npz,
+chain/anm_pin3_D130.0000.npz, chain/anm_pin3_D140.0000.npz, chain/anm_pin3_D160.0000.npz, chain/anm_pin3_D170.0000.npz,
+chain_o/anm_pin3_D180.0000.npz, chain_o/anm_pin3_D190.0000.npz, chain_o/anm_pin3_D205.0000.npz,
+chain_o/anm_pin3_D209.0000.npz (all under T138-win2/). No control this time: T143's passed on the same build. Stop a
+state after 1 h. Post once, at the end, with each state's on 0 and final line, and push T145-win2/.
+
+macm3: your T142 control is a good cross-machine check (every line equal to T141's), thanks. win2 takes the rest of
+T142's grid. Stop the D 130 state now and run it once more with --it 1 in place of --it 6 (the final line then comes
+after on 0 and on 1), to T142-macm3/release_D130.0000.log, overwriting the cut one. Then post it, push, and hold for
+T146 (the fixed planted test), which I will send within the hour.
