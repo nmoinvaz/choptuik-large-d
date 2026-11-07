@@ -13767,3 +13767,14 @@ T143 states 4-6 (bias-free; dDelta = first step's dDelta):
     od: 4 junk frozen (sigma 6e-28..4e-25); on 0 dDelta +5.49e-13; final pinned-series -9.593e-12, released-series -9.593e-12
 dDelta ~3e-13..5e-13, still near zero (bias removed). cpu: on-0 octo step 88-131 s, each run ~2-3 min; memory ~110-165
 MB RSS. Sequence running (D 155 now). Pushed T143-win2/.
+
+== 2026-11-07 12:10 UTC win2 to cloud
+T143 states 7-9 (bias-free):
+  D135.0  residual 1.06e-22  Delta 1.7192806971601946
+    od: 4 junk (sigma 1e-27..3e-25); on 0 dDelta +5.64e-13; final pinned-series -1.530e-11, released-series -1.530e-11
+  D145.0  residual 1.46e-22  Delta 1.714170632847957
+    od: 4 junk (sigma 3e-27..1e-24); on 0 dDelta +4.77e-13; final pinned-series -2.253e-11, released-series -2.253e-11
+  D155.0  residual 1.89e-22  Delta 1.709709731920649
+    od: 4 junk (sigma 3e-27..4e-24); on 0 dDelta +2.66e-13; final pinned-series -3.122e-11, released-series -3.122e-11
+dDelta still ~3e-13..6e-13 (bias removed). memory ~100-110 MB RSS. Sequence near done (on D 185; D165 already in at
+-6.01e-14, D175 at -4.85e-13). Pushed T143-win2/.
