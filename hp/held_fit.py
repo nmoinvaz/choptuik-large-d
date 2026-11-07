@@ -105,8 +105,9 @@ def fit(pts, deg, mutate="", deg_hi=None):
     out, res = {}, {}
     for key in KEYS:
         y = np.sqrt(n) * np.array([r["c"][key] for r in pts])
-        if mutate == "scale5" and key.startswith("5"):
-            y = y * (1 + 1e-6)
+        if mutate.startswith("scale5") and key.startswith("5"):
+            # scale5 (1 + 1e-6), or scale5:E (1 + E): a deliberately wrong harmonic 5, the controls
+            y = y * (1 + (float(mutate.split(":")[1]) if ":" in mutate else 1e-6))
         dk = deg_hi if (deg_hi is not None and int(key[:-1]) >= 11) else deg
         c = np.polynomial.chebyshev.Chebyshev.fit(x, y, dk, domain=dom)
         out[key] = [float(v) for v in c.coef]
@@ -180,7 +181,7 @@ def main():
     deg_hi = int(opts["deg_hi"]) if "deg_hi" in opts else None
     if cmd == "fit":
         pts = [r for r in full_states(raw) if float(opts.get("Dmin", 30)) <= r["D"] <= float(opts.get("Dmax", 73.01))]
-        d = write_fit(args[2], pts, deg, deg_hi=deg_hi)
+        d = write_fit(args[2], pts, deg, opts.get("mutate", ""), deg_hi=deg_hi)
         print(f"{args[2]}: degree {deg}, {d['n_points']} states D {d['Dmin']:.4f}-{d['Dmax']:.4f}; max residual per coefficient "
               + ", ".join(f"{k} {v:.1e}" for k, v in d["max_residual"].items()))
         return 0

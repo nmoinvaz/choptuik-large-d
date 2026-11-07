@@ -2,7 +2,22 @@
 
 ## Recommendation
 
-PLACEHOLDER
+Hold the harmonics on a fit of the full-system states in 1/n (`hp/held_fit.py`, `hp/data/held_fit.json`) instead of
+the power-law trend, and restart the chain from the full-system quad-double state at 73.0 (T81) with
+`anm_run.py --held_fit ../hp/data/held_fit.json`. The defaults are unchanged. The evidence is numerical:
+
+- **The cause.** The chain's gap to the series is its held harmonic 5. The pinned system's first-order response,
+  s · (h_chain − h_fit), gives −5.003e-8 at 79.77 against the measured −5.002e-8, and 90% of it is harmonic 5's cosine
+  (section 3).
+- **Harmonics 11 and 13.** They are held constant from 73.27 on, at values T75 had already polluted: harmonic 13 is
+  13–50 times its full-system size. Δ hardly feels them, though, and they cost about 3e-12 at 80 (section 3).
+- **Planted truth.** Fitted on the double-double states alone, the fit predicts the full system's Δ 7.5–12 units ahead
+  to 3e-13, where the trend's rule in the same geometry is off by 1–2e-7 (4.1, 4.2). Its control fires.
+- **In the chain.** PLACEHOLDER-CHAIN
+- **Holding less.** The Schur complement on the held rows (4.3) shows the full equations determine harmonics 5, 7 and
+  9 at 80, and harmonics 11 and 13 are the near-null directions. Solving 5–9 and holding only 11 and 13 gives, to
+  first order, the same Δ as the fit (PLACEHOLDER-SCHUR-SHORT). That is the extrapolation-free route past D 100, where
+  the fit extrapolates 42% beyond its range. Its chain form is `--kfreeze 9` or `7`, which is untested here past 80.
 
 ## 1. The question
 
@@ -113,11 +128,44 @@ its control `--mutate=jet` fails at 1.4e-10.
 
 Over the distance at which B2 is off by 1–2e-7, P2 is off by at most 7e-13 at any of the three degrees.
 
+**In the chain** (the nonlinear test). `anm_run.py --held_fit data/held_fit_deg8.json` ran from T81's full-system
+quad-double state at 73.0. The settings were `--kfreeze 3 --corrector qd --h_max 2 --fix1 1 --F_pred_max 1.5e-14
+--threads 2`, everything else default, and the run used the first fit (degree 8, D ≥ 30, every harmonic at degree 8).
+The log, `anm_run.jsonl` and the states are in the scratch folder `held_harmonics/chain_fit73/`. The run took 8
+steps to 79.83, with the Mac's load average at 53–74 when it was read. Every point converged in quad-double (no
+stall accepted), and the run was stopped there. `chain_vs_series.py --folders=<that folder>,anm-mac/run_trend_pin3,anm-mac/run_trend_pin3_qd3`
+gives Δ minus the series. The spread is over the six series (degrees 16–20 in 1/D and 1/n), a spread over fit choices
+and not a bound:
+
+| D | run | Δ | 1/D 20 | 1/n 20 | spread of the six | \|mean\| / spread |
+|---|---|---|---|---|---|---|
+| 73.0 | full system (delta_qd.csv) | 1.781239681930926 | −7.0e-15 | −3.9e-15 | 1.6e-12 | 0.2 |
+| 75.27 | old chain (trend) | 1.77723094864874 | −8.31e-9 | −8.31e-9 | 3.0e-12 | 2749 |
+| 75.43 | new chain (fit) | 1.776944961053467 | −1.9e-14 | −1.2e-14 | 3.2e-12 | 0.2 |
+| 77.27 | old chain | 1.773882303309153 | −2.32e-8 | −2.32e-8 | 4.9e-12 | 4787 |
+| 77.43 | new chain | 1.773610529686257 | −3.6e-14 | −2.2e-14 | 5.0e-12 | 0.2 |
+| 78.90 | new chain | 1.771269501318305 | −5.3e-14 | −3.3e-14 | 6.8e-12 | 0.2 |
+| 79.77 | old chain | 1.769926258937742 | −5.00e-8 | −5.00e-8 | 8.0e-12 | 6225 |
+| 79.83 | new chain | 1.769822950693969 | −6.7e-14 | −4.1e-14 | 8.1e-12 | 0.2 |
+
+The new chain lies on the series inside the series' own spread at every point, with the same residual pattern as the
+full-system points at 68.5–73 (|mean| / spread 0.2). The old chain lies 2700–6200 spreads below. At 79.8 the gap
+shrinks from 5.0e-8 to under 1e-13 against the degree-20 series, a factor of more than 10⁵. The criterion was 100
+and agreement within 1e-10, so the test passes. The old chain's points at 75.27 and 77.27 are its double-double run
+(`run_trend_pin3`).
+
 PLACEHOLDER-SERIES
 
 ### 4.3 Holding less: solve the well-determined held directions (`held_schur.py`)
 
-PLACEHOLDER-SCHUR
+**The method.** At a pinned state, block elimination of the full system's Newton step on the ten held rows gives the
+Schur complement S = dg/dh. Here g is the full system's residual in the dropped matching rows, harmonics 5–13 of the
+horizon block's p rows, and it is the only part of the full residual that the pinned solution leaves nonzero.
+Truncating S's SVD solves the directions the full equations determine and holds the others. That is a linear estimate
+of "hold only the near-null combination" and of the self-consistent update of the held values, which are the same
+computation once iterated.
+
+PLACEHOLDER-SCHUR-RESULTS
 
 ### 4.4 Not run
 
@@ -136,7 +184,21 @@ PLACEHOLDER-SCHUR
   the solver's phase convention (the phase row Σ wⱼ p1ⱼ = 0) were not computed here. Section 4.2's spread over degree
   at 100–200 measures what the anchor would buy.
 
-## 5. References
+## 5. For the coordinator
+
+- **Raw output.** The chain run of 4.2 wrote to the scratch folder named in its log line (`--allow_unraw`, as the
+  task brief asked; the raw-data repository was read-only here). Its states and `anm_run.jsonl` belong in a raw-data
+  folder, `held-harmonics-mac/`, before anything in main cites them.
+- **Proposed text for QUAD_DOUBLE.md 13.19 and 13.29** (the held harmonics' bias): "The bias is harmonic 5's held
+  trend. Its power law, fitted over 2.6 units of D, is used over 6–140, and the pinned system's response to the held
+  values reproduces the chain's gap to the series at 79.77 to 0.03% (notes/HELD_HARMONICS.md). Harmonics 11 and 13,
+  held constant at polluted values, cost about 3e-12. Holding the harmonics on a fit of the full-system states in 1/n
+  removes the bias (`anm_run.py --held_fit`)."
+- **The existing chain to 214.** It can be corrected to first order at each stored state by s · (h_fit − h_chain),
+  with one quad-double LU per state (`held_fit.py sens`, then `series`). Past D 100 the held harmonic 5 is off by 2–18%,
+  so the first-order correction is an estimate there, and a restarted chain is the test.
+
+## 6. References
 
 Verified against the publisher's page, arXiv or a library record on 2026-11-06 (web search; the full texts were not
 read, so nothing here rests on their content beyond the method each names):
