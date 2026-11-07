@@ -5,16 +5,18 @@ fit of degree 8, and each state is a converged pinned state at its D. The full s
 for all three, and the step from a degree-k state must differ from chain_fit's by the difference of their pinned
 Deltas: r = dDelta(k) - dDelta(8) = -(Delta(k) - Delta(8)) = -b. b is the planted bias, exact from the states' four
 parts. Pass, set before the run: |r / (-b) - 1| <= 0.02 at every pair. chain_fit's steps come from
-data/release_steps.csv (release_steps.py), the degree-k steps from the logs of T147-win2. --mutate=pair (the control,
+data/release_steps.csv (release_steps.py), the degree-k steps from the logs of T147-win2. A log whose name ends in
+_j<w> (the number of frozen junk directions) is paired instead with the chain_fit log of the same folder, D and w. --mutate=pair (the control,
 which must fail) scales the first pair's r by 1.03.
 
-    cd hp && python3 release_pairs.py RAWDIR [--tasks=T147-win2] [--mutate=pair]
+    cd hp && python3 release_pairs.py RAWDIR [--tasks=T147-win2[,T148-win2,...]] [--mutate=pair]
 
 Writes data/release_pairs.csv and prints the table. Exits 1 when a pair fails or no pair is found.
 """
 import csv
 import glob
 import os
+import re
 import sys
 
 import mpmath as mp
@@ -42,13 +44,25 @@ def main(argv):
     fit = {round(float(r["D"]), 6): r for r in csv.DictReader(open(os.path.join(HERE, "data", "release_steps.csv")))}
     rows, ok = [], True
     for t in opts.get("tasks", "T147-win2").split(","):
+        logs = {}
         for p in sorted(glob.glob(os.path.join(E.RAW, t, "release_*_D*.log"))):
             r = read(p)
+            if r is not None:
+                r["log"] = os.path.relpath(p, E.RAW)
+                m = re.search(r"_j(\d+)\.log$", p)
+                r["junk"] = int(m[1]) if m else None
+                logs[p] = r
+        for p in sorted(glob.glob(os.path.join(E.RAW, t, "release_*_D*.log"))):
             rel = os.path.relpath(p, E.RAW)
-            if r is None:
+            if p not in logs:
                 print(f"  incomplete: {rel}")
                 continue
-            f = fit.get(round(r["D"], 6))
+            r = logs[p]
+            if r["junk"] is None:
+                f = fit.get(round(r["D"], 6))
+            else:                                   # chain_fit's run in this folder at the same D and junk count
+                f = next((x for x in logs.values() if x["junk"] == r["junk"] and abs(x["D"] - r["D"]) < 1e-6
+                          and x["state"].startswith("T138-win2/")), None)
             if f is None:
                 print(f"  no chain_fit step at D {r['D']}: {rel}")
                 continue
@@ -57,21 +71,21 @@ def main(argv):
                 print(f"  the same Delta as chain_fit's state, no bias: {rel}")
                 continue
             resp = r["dDelta"] - float(f["dDelta"])
-            rows.append(dict(D=r["D"], state=r["state"], bias=b, step=r["dDelta"], step_fit=float(f["dDelta"]),
-                             response=resp, log=rel, log_fit=f["log"]))
+            rows.append(dict(D=r["D"], state=r["state"], junk=r["junk"] if r["junk"] is not None else 4, bias=b,
+                             step=r["dDelta"], step_fit=float(f["dDelta"]), response=resp, log=rel, log_fit=f["log"]))
     if not rows:
         print("FAIL: no pair")
         return 1
     if opts.get("mutate") == "pair":
         rows[0]["response"] *= 1.03
         print(f"mutated: the response at D {rows[0]['D']} ({rows[0]['log']}) scaled by 1.03")
-    rows.sort(key=lambda x: (x["D"], x["state"]))
-    print(f"{'D':>7} {'state':44s} {'bias':>11} {'response':>11} {'ratio':>10}")
+    rows.sort(key=lambda x: (x["junk"], x["D"], x["state"]))
+    print(f"{'D':>7} {'junk':>4} {'state':44s} {'bias':>11} {'response':>11} {'ratio':>10}")
     for x in rows:
         x["ratio"] = x["response"] / -x["bias"]
         x["pass"] = abs(x["ratio"] - 1) <= TOL
         ok &= x["pass"]
-        print(f"{x['D']:7.2f} {x['state']:44s} {x['bias']:+11.4e} {x['response']:+11.4e} {x['ratio']:10.6f}"
+        print(f"{x['D']:7.2f} {x['junk']:4d} {x['state']:44s} {x['bias']:+11.4e} {x['response']:+11.4e} {x['ratio']:10.6f}"
               f"  {'pass' if x['pass'] else 'FAIL'}")
     if not opts.get("mutate"):
         with open(OUT, "w", newline="") as fh:
