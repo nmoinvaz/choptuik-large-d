@@ -2147,14 +2147,14 @@ on the faster build.
 
 `hp/export_delta_all.py` writes `hp/data/delta_all.csv`, one row per D with Δ in up to four parts, the kind of
 computation, an error estimate and its kind, the source record and the state (columns and precedence in its docstring;
-the README's Values section describes the file). It read the raw-data repository at 8c7bdff. Its 2295 rows:
+the README's Values section describes the file). It read the raw-data repository at 7b52e58. Its 2295 rows:
 
 | kind | rows | D | err, its kind and range |
 |---|---|---|---|
 | dd, the full system in double-double (`data/delta_dd.csv`) | 1259 | 3.044–67.767 | dM 1.1e-22 to 4.1e-10, check 1e-16 to 2e-15 |
 | qd, the full system in quad-double (`data/delta_qd.csv`) | 7 | 68.5–73.0 | starts 5.0e-29 to 8.4e-28 (5 rows) |
 | pinned, Delta_full1 of T73 and T75 | 883 | 67.768–73.266 | pins 7.4e-19 to 8.6e-15 (150) |
-| chain_fit, the chain with the harmonics held on the 1/n fit (T138) | 146 | 74.0–215.0 | fits 1.4e-15 to 6.7e-12 (61, at 74–134), runs 6.6e-21 to 2.0e-20 (10, at 136–163) |
+| chain_fit, the chain with the harmonics held on the 1/n fit (T138) | 146 | 74.0–215.0 | fits 1.4e-15 to 1.1e-11 (77, at 74–150), runs 1.3e-20 to 2.0e-20 (5, at 151–163) |
 
 `--verify` re-reads every row from the record or state it names and finds all 2295 equal. `--mutate=dd`, `qd`, `pinned`
 and `chain_fit` move one row's second part by one ulp, and each fails it (exit 1). `--mutate=chain` finds no chain row
@@ -2177,8 +2177,8 @@ rounds each step's held coefficients to float64 and the next step starts from th
 few ulps apart (macm3, comms 2026-11-07 06:26 UTC). That is far below chain_fit's distance from the 1/D series
 (notes/HELD_HARMONICS.md). T140 (win, `T140-win/`) reruns its path from 73.0 with the harmonics held on the fits of
 degree 6 and 10 (chain_fit's is 8). Where it reached a D, err is the larger difference (err_kind fits), a spread over
-the fit's degree: 1.4e-15 at 74, 1.5e-13 at 85, 1.2e-12 at 100 and 6.7e-12 at 134, with degree 6 above chain_fit and
-degree 10 below it at every D (raw 79ecedb).
+the fit's degree: 1.4e-15 at 74, 1.5e-13 at 85, 1.2e-12 at 100 and 1.1e-11 at 150, with degree 6 above chain_fit and
+degree 10 below it at every D (raw edcf11a).
 
 **T85-mac below 78.1, replaced by chain_fit.** chain_fit, interpolated through nine of its rows, agrees with T75's
 pin 7 and pin 5 rows at 73.10–73.26 to 5.3e-13 or better (the interpolation's own spread, from dropping its end points,
@@ -2428,9 +2428,33 @@ the state itself equals T141's.
 | 80 | 1e-9 | +9.2204e-12 | 0.999998 |
 | 80 | 1e-11 | +9.2204e-14 | 0.99999999 |
 | 100 | 1e-11 | +1.1066e-13 | 1.000006 |
+| 80 | 1e-10 (T146, macm3) | +9.2204e-13 | 0.9999998 |
+| 100 | 3e-11 (T146, macm3, in moves of 1e-11) | +3.3198e-13 | 1.000006 |
+| 100 | 1e-10 (T146, macm3, in moves of 1e-11) | +1.1066e-12 | 1.000007 |
 
 Where the moved state solved, the step returns the bias to about 1e-5 of itself, down to 9e-14. b is linear in δ, with
 dΔ/dδ 9.2204e-3 at 80 and 1.1066e-2 at 100 (notes/HELD_HARMONICS.md: 9.197e-3 at 79.77). The other moves did not
 solve, which is a limit of the test, not of the step. The quad-double Newton's residual after its first step is
 quadratic in δ (3e8 δ² at 80), so it converged from 3e-9 at 80 but only from 1e-11 at 100, and at 200 the quad-double LU
-cannot solve it. T146 makes the move in steps of 1e-11, and in octo-double at 200.
+cannot solve it. T146 (`T146-macm3/`, `T146-win2/`, raw fb646d6 and 224b0a5) made the move in steps of 1e-11, which
+re-solves at 80 and 100 (the rows marked T146). At 150 and 200 it does not, in quad-double or octo-double, with either
+acceptance rule or the junk frozen: no fraction of the first Newton step lowers |F| from a move of 1e-11.
+
+**The step on the other fits' states fails the 2% criterion (T147, win2, `T147-win2/`, raw 98300d3).** T140's chains
+are converged pinned states at chain_fit's D with the harmonics held on the fits of degree 6 and 10, so with no
+re-solve their steps must differ from chain_fit's by b, the difference of the pinned Δs (`hp/release_pairs.py RAW`,
+`hp/data/release_pairs.csv`; `--mutate=pair` fails). The criterion was set before the run.
+
+| D | b, degree 6 | ratio | b, degree 10 | ratio |
+|---|---|---|---|---|
+| 100 | +9.103e-13 | 1.0666 | −1.2255e-12 | 0.9892 |
+| 110 | +2.0365e-12 | 1.0441 | −2.5659e-12 | 0.9827 |
+| 120 | +3.6594e-12 | 1.0323 | −4.1510e-12 | 0.9794 |
+| 130 | +5.7410e-12 | 1.0251 | −5.6518e-12 | 0.9786 |
+
+Six of the eight fail. The miss, r + b, is negative for both degrees, −1.3e-14 to −1.4e-13: the released Δ (pinned plus
+step) of the degree-6 and degree-10 states lies below chain_fit's by that much at every D, while their pinned Δs lie
+on either side of it by up to 5.7e-12. So the step removes 97–99% of the fit's effect, not all of it, and the
+remainder does not change sign with b. The moves of harmonic 5's cosine alone return b to 1e-5 at the same size, so
+the remainder comes from the other held harmonics or from the junk directions the step freezes. Until the cause is
+known, the step is a measurement of chain_fit's bias to about 1e-13, not a correction.
