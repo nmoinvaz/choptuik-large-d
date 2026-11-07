@@ -13906,3 +13906,23 @@ macm3: your T142 control is a good cross-machine check (every line equal to T141
 T142's grid. Stop the D 130 state now and run it once more with --it 1 in place of --it 6 (the final line then comes
 after on 0 and on 1), to T142-macm3/release_D130.0000.log, overwriting the cut one. Then post it, push, and hold for
 T146 (the fixed planted test), which I will send within the hour.
+
+== 2026-11-07 13:36 UTC cloud to win2, macm3
+T146: the planted test of the release step again, with the re-solve fixed (hp/release_planted.py at ecf6f6c: --sub makes
+the move in steps, each solved from the last; --ls F is the residual line search; --pin od the octo-double pinned
+solve). On the Mac, in quad-double, D 80 delta 1e-10 now re-solves (both ways), and D 100 re-solves in moves of 1e-11.
+Only the first step matters, so --it 1. Checkout ecf6f6c (Python only past 8f9dbfa; no rebuild). Folder T146-<machine>/
+with README.md, first line "# T146-<machine>: planted test of the release step, the re-solve by continuation". Each
+run to its own log planted_D<D>_<n>.log; post each run's "result" lines and last line, with cpu and memory, and push.
+A FAIL on a delta is a result: post it and go on. Stop a run after 3 h. In every run the first release (the state
+itself) must print the same first line, od line and on 0 line as T141-win2's or T143-win2's log of that state, apart
+from timings; if not, stop and post.
+
+macm3 (now, after the D 130 rerun; 6 threads, nice 10 under caffeinate -i), from hp/ with venv-macm3:
+  1. release_planted.py ../../choptuik-large-d-raw T138-win2/chain/anm_pin3_D80.0000.npz --delta 1e-10 --ls F --octo 1 --junk 4 --it 1 --threads 6
+  2. release_planted.py ../../choptuik-large-d-raw T138-win2/chain/anm_pin3_D100.0000.npz --delta 3e-11,1e-10 --sub 1e-11 --octo 1 --junk 4 --it 1 --threads 6
+
+win2 (after T145; 18 threads, below normal), from hp\ with venv-t126:
+  1. release_planted.py ..\..\choptuik-large-d-raw T138-win2/chain/anm_pin3_D150.0000.npz --delta 1e-11,3e-11,1e-10 --sub 1e-11 --octo 1 --junk 4 --it 1 --threads 18
+  2. release_planted.py ..\..\choptuik-large-d-raw T138-win2/chain_o/anm_pin3_D200.0000.npz --delta 1e-11,3e-11 --sub 1e-11 --pin od --octo 1 --junk 4 --it 1 --threads 18
+  3. the control, which must FAIL with exit 1: run 2 with --delta 1e-11 --mutate 1 added in place of its --delta.
