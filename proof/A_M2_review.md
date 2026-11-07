@@ -6,10 +6,10 @@ under review and had not seen it before. The review followed AGENTS.md, "How res
 "Computer-assisted proofs".
 
 **Verdict.** The claim holds as stated, given Braaksma's theorem and the start-value lemma. I found no error in any
-enclosure the proof needs: the second variational equation and its remainder, the start data's second derivatives,
-the chart term, the mean-value Jacobian and the Krawczyk test are each what the theorem requires (§2). An independent
-computation that shares no integration code with the certificate reproduces the second derivatives that set the
-margins to 15 digits, deep inside the certified enclosures, and the third-order variation across the box is at most
+enclosure the proof needs: the second variational equation and its remainder, the start data's second derivatives, the
+chart term, the mean-value Jacobian and the Krawczyk test are each what the theorem requires (§2). An independent
+computation that shares no integration code with the certificate reproduces the second derivatives that set the margins
+to 14 or 15 digits, deep inside the certified enclosures, and the third-order variation across the box is at most
 1.5×10⁻³ of the radius the certificate allows for it (§5). The certified run reproduces bit for bit (§6).
 
 The weaknesses are in the controls. At M = 5 the Krawczyk test passes with a wrong second derivative in three
@@ -108,9 +108,9 @@ over the steps, if each step's enclosures are right.
 
 - Dg̃(x) = Dg̃(0) + ∫₀¹D²g̃(sx)[·, x]ds ∈ ℓV₀ + Σₖ ℓW(X)_{·,jk}Xₖ. `Mx` (:348) is I − Y(ℓV₀ + ΣₖℓW_{jk}Xₖ), entry by
   entry, with the symmetric pair index. No factor ½ belongs here, and there is none.
-- J(X) is a box that contains Dg̃ on the convex X, so it contains every slope ∫₀¹Dg̃(y + s(x − y))ds. With
-  K(X) = −Yg̃(0) + (I − YJ(X))X ⊂ int X, X centred at 0, g̃ has exactly one zero in X and every matrix in J(X) is
-  non-singular (Krawczyk 1969; Neumaier 1990, as cited in A_M2.md §2). p(·) is a bijection of ℝ^{M+1} with unit lower-triangular
+- J(X) is a box that contains Dg̃ on the convex X, so it contains every slope ∫₀¹Dg̃(y + s(x − y))ds. With K(X) =
+  −Yg̃(0) + (I − YJ(X))X ⊂ int X, X centred at 0, g̃ has exactly one zero in X and every matrix in J(X) is non-singular
+  (Krawczyk 1969; Neumaier 1990, as cited in A_M2.md §2). p(·) is a bijection of ℝ^{M+1} with unit lower-triangular
   derivative, so the statement transfers to p(X).
 - Y is the exact midpoint of a 768-bit inverse of mid ℓV₀, and Yℓ is applied to the Lohner sets before any interval
   product (`apply_var`, `apply_set`). This is the Schur correction of A_M.md §2: Y's outer rows remove the leakage
@@ -133,13 +133,14 @@ Ranked by weight. None changes the verdict.
    them only at M = 1 and M = 3. I ran both at M = 5 on the certified box (h = 10⁻¹⁰, w = 10⁻¹⁸, 10⁻¹⁹, 40 min each).
    Both pass D2, with worst ratios 0.16 and 0.21, and both pass the Krawczyk test, with margins of at least 0.650 and
    0.468. The mutations widen the shared frame QW of the W columns more than they move the midpoints. The inner rows'
-   (outer, outer) radii grow by 10⁴ to 10⁵, and the (outer, inner) radii from 8×10⁻³ to 4×10² of the entries, so a
-   containment test cannot see them. A midpoint form of D2, |FD − mid| ≤ 3·err + 10⁻¹⁰|FD| with the radius left out
-   (`review_M2_d2mid.py`), separates them: 0.010 on the clean run (0.0084 on the clean h = 10⁻¹¹ run), 2.4×10⁴ (w0),
-   2.5×10⁴ (chart) and 2.2×10¹¹ (lin2). The review's
-   independent check separates them too (§5, §4). Recommendation: add the midpoint criterion to `d2check`, record the
-   w0 and chart controls at M = 5, and say in §6.4 that D2 in its present form is not a control of the start data
-   or the chart at M = 5.
+   (outer, outer) radii grow by 1.2×10⁴ to 2×10⁴, and the (outer, inner) radii from 8×10⁻³ of the entries to 2.5×10²
+   (w0) and 4×10² (chart), so a containment test cannot see them. A midpoint form of D2, |FD − mid| ≤ 3·err + 10⁻¹⁰|FD|
+   with the radius left out (`review_M2_d2mid.py`), separates them: 0.010 on the clean run (0.0084 on the clean h =
+   10⁻¹¹ run), 2.4×10⁴ (w0), 2.5×10⁴ (chart) and 2.2×10¹¹ (lin2). The review's independent check separates them too: its
+   largest
+   |here − midpoint| / radius is 7×10⁻¹² on the clean run and 0.16 and 0.21 on the two mutants (§4). Recommendation:
+   add the midpoint criterion to `d2check`, record the w0 and chart controls at M = 5, and say in §6.4 that D2 in its
+   present form is not a control of the start data or the chart at M = 5.
 2. **No control reaches the remainders of the C² step** (medium; the controls). The self-test and D2 compare
    midpoints, and a remainder moves a midpoint by far less than the radii they allow. With both remainders dropped
    (H's Lagrange term and the step Jacobian's remainder), `certify_M2_lohner.py selftest` still prints PASS. This
@@ -150,9 +151,9 @@ Ranked by weight. None changes the verdict.
    to the self-test.
 3. **Where D2 is sharp on the certified run** (low; the documentation). A_M2.md §6.5 says D2 rules out a wrong
    enclosure "on the runs where it is sharp". On the h = 10⁻¹⁰ run it is sharp in the blocks that set the inner
-   margins, the inner rows against pairs with an inner index (radius 4.5×10⁻⁴ to 9×10⁻³ of the entries, deviations
+   margins, the inner rows against pairs with an inner index (radius 5.6×10⁻⁴ to 9.3×10⁻³ of the entries, deviations
    below 10⁻¹³ of them). It is blind in the (outer, outer) blocks and in the outer rows' (outer, inner) blocks (radius
-   2 to 3×10⁸ times the entries), which contribute at most 2×10⁻⁶ to |K_i|/w_i. The inner margins (0.889) would
+   2 to 3×10⁸ times the entries), which contribute at most 3×10⁻⁶ to |K_i|/w_i. The inner margins (0.889) would
    absorb inner-inner second-order terms about nine times larger, so the Krawczyk pass is no evidence that W is right.
    §6.4 should say this per block.
 4. **float() in the Cauchy radius rounds toward zero** (low; latent, no effect on this run). `start_data2` takes
@@ -190,7 +191,7 @@ review's comparison of §5, as the largest |here − midpoint| / radius; it fail
 | none | M = 5, h = 10⁻¹⁰ | pass, 0.889 | pass, 2.6×10⁻⁷ | 0.010 | 7×10⁻¹², pass | pass |
 | none | M = 5, h = 10⁻¹¹ | pass, 0.989 (author) | pass, 1.0×10⁻⁶ (author) | | 5×10⁻¹¹, pass | pass |
 | lin2, a sign in F_yy | M = 5, h = 10⁻¹¹ | **pass**, 0.994 | fail, 1.4×10⁴ | 2.2×10¹¹ | 1.4×10⁴, fail | fail |
-| w0, start D² dropped | M = 5, h = 10⁻¹⁰ | **pass**, 0.650 | **pass**, 0.16 | 2.4×10⁴ | 0.15, pass | fail |
+| w0, start D² dropped | M = 5, h = 10⁻¹⁰ | **pass**, 0.650 | **pass**, 0.16 | 2.4×10⁴ | 0.16, pass | fail |
 | chart, chart term dropped | M = 5, h = 10⁻¹⁰ | **pass**, 0.468 | **pass**, 0.21 | 2.5×10⁴ | 0.21, pass | fail |
 
 | mutation | check | result | expected |
@@ -236,8 +237,8 @@ directions, at M = 5, with code written for this review.
 (p̂, C, Γ); the lemma's series code; python-flint; and the saved Lohner sets it compares with. It shares none of
 certify_M_sys.SysM, certify_M_lohner, validated_int, certify_M2_lohner, certify_M2 and certify_M2_fd.
 
-**Results** (14 directions: the six coordinate axes and eⱼ + eₖ for (0,1), (0,4), (2,3), (2,4), (2,5), (3,4), (3,5), (4,5),
-each scaled to the box half-widths; 4 points each, 614 steps per run, about 40 s per run).
+**Results** (14 directions: the six coordinate axes and eⱼ + eₖ for (0,1), (0,4), (2,3), (2,4), (2,5), (3,4), (3,5),
+(4,5), each scaled to the box half-widths; 4 points each, 614 steps per run, about 40 s per run).
 
 | directions, rows | n | \|here − mid\| / \|value\| | \|here − mid\| / radius | radius / \|value\| | variation / radius |
 |---|---|---|---|---|---|
@@ -254,14 +255,14 @@ along u, and the variation is (|6c₃| + |12c₄|), the change of D²g̃[u, u] f
 Every value, and both box edges along every u, lie in the enclosure, and Y Dg̃[u] lies in Y ℓV₀u in every row.
 
 By polarization the mixed entries that set the inner margins, (Y D²g̃)_{i,jk} for i, j, k inner, agree with the
-enclosure's midpoints to 5×10⁻¹⁶ – 3.5×10⁻¹⁵ relative, at most 7×10⁻¹² of its radius; for example
-(Y D²g̃)_{2,45} = 1.095963322×10¹⁸ here and 1.095963322×10¹⁸ ± 4.6×10¹⁴ in the certificate. The inner rows' (outer,
-outer) entries, which the chart removes, are between 6×10⁻¹³ and 2.7×10⁻¹¹ here, equal to the certificate's midpoints to
-10⁻⁷ relative, against enclosure radii of 10⁻⁵ to 1.3×10⁻⁴. Without the chart term they would be of order Γ, about
-0.1 to 1, so the chart term is right. The centre: Y g̃(0) is −1.6×10⁻³³ here (A row) inside the certificate's ±6.1×10⁻²⁴.
+enclosure's midpoints to 5×10⁻¹⁶ – 3.5×10⁻¹⁵ relative, at most 7×10⁻¹² of its radius; for example (Y D²g̃)_{2,45} =
+1.095963322×10¹⁸ here and 1.095963322×10¹⁸ ± 4.6×10¹⁴ in the certificate. The inner rows' (outer, outer) entries, which
+the chart removes, are between 6×10⁻¹³ and 2.7×10⁻¹¹ here, equal to the certificate's midpoints to 10⁻⁷ relative,
+against enclosure radii of 10⁻⁵ to 1.3×10⁻⁴. Without the chart term they would be of order Γ, about 0.1 to 1, so the
+chart term is right. The centre: Y g̃(0) is −1.6×10⁻³³ here (A row) inside the certificate's ±6.1×10⁻²⁴.
 
-So two computations that share no integration code agree to 15 digits on the second derivatives that set the margins,
-and the true variation of D²g̃ across the box along these 14 directions is at most 1.5×10⁻³ of the radius the
+So two computations that share no integration code agree to 14 or 15 digits on the second derivatives that set the
+margins, and the true variation of D²g̃ across the box along these 14 directions is at most 1.5×10⁻³ of the radius the
 certificate gives it. Mixed third derivatives across directions not in the list are not measured.
 
 **Accuracy and controls of the check itself.** With order 20 and half the step rate (933 steps instead of 614) the
