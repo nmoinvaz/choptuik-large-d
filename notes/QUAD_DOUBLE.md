@@ -2474,9 +2474,27 @@ result lines. Harmonic 5's cosine is T144's.
 | 9 sin | +1.0825e-5 | 0.988 | — |
 | 11 cos | −5.9000e-6 | 0.222 | — |
 | 13 cos | +6.1406e-7 | 0.191 | — |
+| 11 sin | −3.0557e-6 | 1.394 | — |
+| 13 sin | +7.2384e-7 | 0.644 | — |
 
 The step returns moves of harmonics 5 and 7 to 1e-4 or better, at both D. It misses most of the highest cosines'
-response, whose sensitivities are 10³–10⁴ times smaller. Those are among the directions in which the degree-6, 8 and 10
-fits differ, so they are a likely source of T147's remainder. The decomposition of that remainder by coefficient waits
-for the sines of 11 and 13 (macm3, T148 part 1b), and the dependence on the number of frozen junk directions is T148
-part 2.
+response, whose sensitivities are 10³–10⁴ times smaller. The sines of 11 and 13 (macm3, T148 part 1b, raw b410b29) miss
+too, at biases of 3e-17 and 7e-18. The highest harmonics are among the directions in which the degree-6, 8 and 10 fits
+differ, so they are a likely source of T147's remainder.
+
+**The step against the number of frozen junk directions** (T148 part 2, win2, raw de18686). `full_release.py --junk w`
+for w = 2, 3, 5 and 6 on the three D 100 states. `hp/release_pairs.py RAW --tasks=T147-win2,T148-win2` pairs each
+degree-6 and degree-10 run with chain_fit's at the same w. The step is flat from w = 2 to 3 and grows 4–5 times at 5
+and 6, where the frozen set takes in directions with singular values near 8e-21. The detector labels them Δ-free, yet
+they carry Δ. No w passes both pairs:
+
+| w | ratio, degree 6 | ratio, degree 10 |
+|---|---|---|
+| 2 | 0.9970 | 0.9667 |
+| 3 | 0.9928 | 0.9754 |
+| 4 | 1.0666 | 0.9892 |
+| 5 | 2.005 | 4.357 |
+| 6 | 1.916 | 4.075 |
+
+So the choice of frozen set moves the step by about 1e-13 at D 100, a few percent of the fits' differences. That is the
+step's systematic uncertainty there. T154 (win2) repeats w = 2 and 3 at D 120 and 130.
