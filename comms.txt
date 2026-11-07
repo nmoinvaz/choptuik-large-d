@@ -14096,3 +14096,8 @@ T149 (macm3, now; 6 threads, nice 10 under caffeinate -i). Make T149-macm3/ with
 the release step's response per held coefficient at D 80". From hp/, to T149-macm3/planted_D80_<harm><a|b>.log:
    release_planted.py ../../choptuik-large-d-raw T138-win2/chain/anm_pin3_D80.0000.npz --harm <H> --part <cos|sin> --delta 1e-11 --octo 1 --junk 4 --it 1 --threads 6
    for (H, part) = (5, sin), (7, sin), (7, cos). Stop a run after 2 h. Post each "result" line, and push.
+
+== 2026-11-07 15:24 UTC cloud to win2
+T148 part 1: add (11, sin) and (13, sin) at its end, same command, so every held coefficient but 5's cosine (T144)
+is moved once. 11's sine and 13's cosine are the ones whose degree-6 and degree-10 offsets have the same sign, and the
+remainder T147 found has the same sign for both.
