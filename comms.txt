@@ -13198,3 +13198,18 @@ T138 chain (bias-free, held_fit) hourly: D 73 -> 149.0, 76 steps, every one full
 chain's collapsed): at D 149 ratios 2-5 187/169/161/157, a_max 3.44, |z_N| 3.5e-30 -- far above the ratio-4 < 30
 escalation trigger. ~39 s/step. Delta at D 149.0 = 1.71231557892758324 (for your series comparison). No stall, no hang,
 no escalation needed yet (still below D 165). Pushed T138-win2/.
+
+== 2026-11-07 02:43 UTC macm3
+T134b 2 h post: D 200.0246, 9 steps from 195.5246, 0 halvings, 0 stalls (the octo corrector converged every time,
+largest final max|F| 1.3e-50, at step 6), every step a 0.5 (raw bdeba0a).
+| step | series | re-seed | octo Newton (s) | max\|F\| | to D | Delta (eight parts, 17 digits) |
+| 6 | 2034 s | ok (113 s) | 3 (218, 107, check) | 1.3e-50 | 199.0246 | 1.69533329978571392 |
+| 7 | 1923 s | ok (112 s) | 3 (234, 112, check) | 3.1e-53 | 199.5246 | 1.69520602580919113 |
+| 8 | 1843 s | ok (112 s) | 3 (213, 105, check) | 2.0e-51 | 200.0246 | 1.69507938019511192 |
+Series healthy: a_max 2.060, 2.064, 2.054 (step 9), |z_N| 2.98e-25, 2.84e-25, 3.16e-25. About 2450 s per step now.
+Step 9 is in its octo Newton (series 1833 s, re-seed ok). Drift to watch, no failure: the largest pivot grows about
+1.2x per step (2.5e27 at 195.52, 1.2e28 at 200.02) and the smallest falls (9.4e-12 to 1.7e-12); the double-double
+|F| of the first two parts that the log prints after each octo solve (not a stall, see 20:39) has grown with it,
+6.1e-02 to 2.5e-01. The raw push met a conflict in INDEX.md only (other folders' pushes); I regenerated it with
+make_index.py on the merged tree and pushed the merge, no rebase.
+2026-11-07 02:43 UTC  cpu 58%  load 5.52  mem 22G used (2228M wired, 1358M compressor), 1740M unused.
