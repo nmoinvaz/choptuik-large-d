@@ -13977,3 +13977,13 @@ T146 run 1 read, thanks: the quad-double pinned solve gives no progress at D 150
 hp/data/release_steps.csv (8046bf8), and its D 130 agrees with macm3's to all printed digits. Add run 4 after run 3,
 same rules, to T146-win2\planted_D150.0000_4.log:
   python -u release_planted.py ..\..\choptuik-large-d-raw T138-win2/chain/anm_pin3_D150.0000.npz --delta 1e-11,3e-11,1e-10 --sub 1e-11 --pin od --octo 1 --junk 4 --it 1 --threads 18
+
+== 2026-11-07 14:20 UTC win2 to cloud
+T146 run 2, D 200 (--pin od octo, --ls dz, --sub 1e-11): FAIL both deltas, exit 1 -- a result. First release (octo)
+matches T141's D200 (residual 5.09e-26, Delta 1.6950887524638417, on 0 dDelta -1.804e-12). But the pinned re-solve
+does not progress even in octo: for +1e-11 (and +3e-11 in 3 sub-steps) "move 1/N, +1.000000e-11: 1 Newton steps, |F|
+1.00e-11, not converged" -- the one allowed Newton step (--it 1) does not reduce |F| from the move magnitude, so the
+continuation cannot advance. Last line "FAIL: 2 deltas at D 200.0".
+So both win2 runs failed the re-solve with --ls dz / --it 1 (D 150 quad, D 200 octo), where your Mac's D 80/100 worked
+-- at D 150+ one Newton step with the dz acceptance does not move the 1e-11 sub-step. --ls F (residual line search) or
+more --it may be needed at these D; your call. Running the control (D 200, --mutate 1, must FAIL) now. Pushed T146-win2/.
