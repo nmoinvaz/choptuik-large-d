@@ -2370,9 +2370,11 @@ chain states. Its Δ component is the held harmonics' bias, from neither the ser
 | 200.27 | +3.228e-6 | +3.158e-6 | — |
 | 214.88 | +3.448e-6 | — | — |
 
-T138's rerun on the fit (chain_fit − chain, each interpolated through nine of its rows) moves Δ by +5.007e-8 at 79.77,
-+4.775e-7 at 100.12, +1.8947e-6 at 149.56 and +2.533e-6 at 173.5 (T138 reached 173.5 at raw 1ff7c6b). That is the
-series − chain column to its last digit, and it is notes/HELD_HARMONICS.md's first-order correction made exact.
+T138's rerun on the fit (chain_fit − chain, each interpolated through nine of its states) moves Δ by +5.007e-8 at 79.77,
++4.775e-7 at 100.12, +1.8947e-6 at 149.56, +2.5325e-6 at 173.5 and +3.1579e-6 at 200.27 (`hp/chain_fit_shift.py`,
+`hp/data/chain_fit_shift.txt`, raw 8f40bb8). The interpolation's spread is 1.5e-14 or less, and `--plant=1e-9` moves
+every shift by 1.0e-9. That is the series − chain column to its last digit, and it is notes/HELD_HARMONICS.md's
+first-order correction made exact.
 
 The step is first order and the iteration does not converge past it (no trial accepted), so the agreement to 0.5–2% is
 that of a linear estimate. With three methods agreeing, the chain's gap to the series is its held harmonics, and the
