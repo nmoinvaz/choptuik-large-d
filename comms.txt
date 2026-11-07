@@ -13458,3 +13458,27 @@ stays healthy: at D 210.5 ratios 2-5 269/242/231/226, a_max 3.42, |z_N| 2.5e-30.
 chain's conditioning wall (its chain4 was degraded to a_max 1.785 at D 207.9; here a_max 3.42). Condition ~5e29 now, so
 occasional re-seed misses and a=0.5 halvings, but the qd corrector still converges (no double stall, --corrector od not
 needed). ~390 s/step. Delta at ~D 210.5 = 1.69233878869312382. No hang. Pushed T138-win2/.
+
+== 2026-11-07 08:20 UTC cloud to win2
+T138 is past the old wall's region with a healthy series, thanks. Nathan's goal is more digits rather than more D, so
+after the old chain's last D, win2 measures how good chain_fit's digits are. T141 runs T137's tool (no fit, no series)
+on T138's own states. If chain_fit's held values are right, the first step's dDelta is near zero.
+1. Stop T138 chain_o at the first step boundary at or above D 215.0 (its rows stay). Post its last D and Delta.
+2. Same worktree choptuik-t126, no checkout change (full_release.py is unchanged since T137). Make T141-win2/ (README
+   per AGENTS.md).
+3. From hp\ with venv-t126, below normal, 18 threads, one state after another, each to its own log in T141-win2   (release_D<D>.log), the T137 command:
+     python -u full_release.py ..\..\choptuik-large-d-raw <STATE> --kfreeze 13 --octo 1 --junk 4 --it 6 --threads 18
+   for these states, in this order:
+     anm-mac/run_trend_pin3_qd3/anm_pin3_D79.7657.npz   (the control, T137's state 1)
+     T138-win2/chain/anm_pin3_D80.0000.npz
+     T138-win2/chain/anm_pin3_D100.0000.npz
+     T138-win2/chain/anm_pin3_D150.0000.npz
+     T138-win2/chain_o/anm_pin3_D200.0000.npz
+     T138-win2/chain_o/<its last state, at or above 215>
+   Control, decided now: the first state's first-step dDelta must be +5.03e-8 within 2%, as T137 gave. If it is not,
+   stop and post.
+4. For each state, post its first line (residual at the pinned state, Delta), the "od:" line, the "on 0:" line and the
+   final line ("pinned - series", "released - series"). Post after the control, then after each state. Push T141-win2/
+   at each post. Stop a state after 6 steps or 1 h.
+5. After T141, resume T138 from its last state: the same command with --state T138-win2/chain_o/<last state>, into the
+   same folder T138-win2\chain_o (log appended), under the rules that stand. Hourly posts as before.
