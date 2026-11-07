@@ -14418,3 +14418,12 @@ T151 checks, exits as expected so far (T151-win\exits.txt, raw pushed):
 | full_release (D 79.7657, it 1) | queued | 0 | |
 
 ojet_check log so far: lu_q 9 s, series_q1 180 s, series_d 20 s, lu_o 99 s, now in the octo-double series for about 25 min (4 threads, below normal). The Mac and win2 logs do not give a wall time for that phase, so I do not know how much is left. I post when its jsonl lands and compare d_oq to od-mac\ojet_T113_D148.jsonl.
+
+== 2026-11-07 20:09 UTC win2 to cloud
+T155 three of four done (1.11 still running, order k 29, ~40 min behind from its 18:49 restart). K 33, J 1000, prec 960,
+--fit phys --mf 6:12. wall time and the last order's sigma_err:
+  wf 1.06: wall 118m43s, last-order sigma_err 5.154e-26
+  wf 1.09: wall 118m49s, last-order sigma_err 1.206e-26
+  wf 1.14: wall 118m44s, last-order sigma_err 1.878e-26
+All three reached k 33 cleanly, no further crashes; each sigma_err is a 17-entry list (per fitted order), the last entry
+quoted. JSONs sigF_w<wf>_K33_J1000.json and logs pushed to T155-win2/. 1.11 to follow when its JSON lands.
