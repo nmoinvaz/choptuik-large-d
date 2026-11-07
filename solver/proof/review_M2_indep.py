@@ -18,6 +18,12 @@ Written for the review, without the code under review. What it computes:
     c5 r^4 and c6 r^4. Then Dgt[u] = c1 and D^2 gt[u, u] = 2 c2 (Re and Im parts give the real rows).
   * the certificate's enclosures from the saved box file (the Lohner sets at xi1), assembled anew here in arb at 768
     bits: Y = inverse of the midpoint of l V0 (rounded to an exact matrix), Y l (cW + QW qW), Y l (cV + QV qV).
+  * the tests, per direction u (scaled to the box half-widths) and row: Y D^2 gt[u, u] in the enclosure
+    sum_jk (Y l W)_jk u_j u_k; the box edges D^2 gt(+-u)[u, u] = 2 c2 +- 6 c3 + 12 c4 (c4 from the centre run) in it
+    too; Y Dgt[u] in Y l V0 u. The report also gives |here - midpoint| / radius: a wrong term that inflates the radius
+    as much as it moves the midpoint passes the containment tests but not this one (proof/A_M2_review.md section 4).
+    Exit status 1 if any containment fails (control: the saved lin2-mutated run data/A_M2_box_M5_1e-11_mut_lin2.json
+    must fail; the clean h = 1e-11 run must pass).
 
 Shares with the certificate: the definition of the system, path, jump and chart (and their data: p^, C, Gamma), the
 lemma's series code for Y_N (fixed_point_M.series_jet_M, an assumed fact of the claim, not the series code that
@@ -26,7 +32,9 @@ certify_M_lohner, validated_int, certify_M2*, certify_M2_fd.py (no variational e
 
     python3 review_M2_indep.py centre --out=f.json            the step sequence and g(p^) at the centre
     python3 review_M2_indep.py dir --steps=f.json --u=j[,k,lam] --r=R --out=g.json   the 4 contour runs along u
-    python3 review_M2_indep.py compare --box=data/A_M2_box_M5_1e-10.json g1.json g2.json ...
+    python3 review_M2_indep.py compare --box=data/A_M2_box_M5_1e-10.json --centre=f.json g1.json g2.json ...
+options of centre: --nt=16 (Taylor order), --rate=0.5 (steps with h |xi'| / |xi|^3 <= rate), --prec=256; dir uses the
+centre file's order and precision.
 """
 import json
 import os
