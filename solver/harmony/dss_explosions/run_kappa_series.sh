@@ -1,0 +1,7 @@
+#!/bin/zsh
+# waits for the D run, then locates the Hopf point at D = 4, 5, 6 (one process at a time)
+while pgrep -f hopf_D.py > /dev/null; do sleep 5; done
+cd /tmp
+nice -n 10 /Users/nathan/venv-qd/bin/python /private/tmp/claude-501/-Users-nathan-Source-choptuik-large-d/43f19197-40d3-4ad8-aa26-db5322fa8689/scratchpad/harmony/dss_explosions/scripts/hopf_kappa.py 4 1.9154446898931115 1.2439879248968544 0.2586698339 3.502248797 0.005 0.3 > /private/tmp/claude-501/-Users-nathan-Source-choptuik-large-d/43f19197-40d3-4ad8-aa26-db5322fa8689/scratchpad/harmony/dss_explosions/out/hopf_k_D4.jsonl 2>&1
+nice -n 10 /Users/nathan/venv-qd/bin/python /private/tmp/claude-501/-Users-nathan-Source-choptuik-large-d/43f19197-40d3-4ad8-aa26-db5322fa8689/scratchpad/harmony/dss_explosions/scripts/hopf_kappa.py 5 2.036666357811153 1.084647758568574 0.31456395175996643 3.7901171784109224 0.005 0.4 > /private/tmp/claude-501/-Users-nathan-Source-choptuik-large-d/43f19197-40d3-4ad8-aa26-db5322fa8689/scratchpad/harmony/dss_explosions/out/hopf_k_D5.jsonl 2>&1
+nice -n 10 /Users/nathan/venv-qd/bin/python /private/tmp/claude-501/-Users-nathan-Source-choptuik-large-d/43f19197-40d3-4ad8-aa26-db5322fa8689/scratchpad/harmony/dss_explosions/scripts/hopf_kappa.py 6 2.176286413045793 0.9876527546543659 0.3516833317400159 4.097897151828809 0.005 0.5 > /private/tmp/claude-501/-Users-nathan-Source-choptuik-large-d/43f19197-40d3-4ad8-aa26-db5322fa8689/scratchpad/harmony/dss_explosions/out/hopf_k_D6.jsonl 2>&1

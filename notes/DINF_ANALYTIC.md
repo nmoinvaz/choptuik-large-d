@@ -372,8 +372,8 @@ were read through their arXiv or journal pages, as marked. These are analogies, 
 
 | field and problem | what selects the parameter | closed form? | what they do instead |
 |---|---|---|---|
-| Gas dynamics: Guderley's converging shock [RBB17] | numerators vanish where the denominator does (the sonic point) | no; "determined numerically" | numerics, approximations |
-| Gas dynamics: smooth implosion of compressible Euler [BCG25, BCG23] | smoothness across the sonic point | no; r = 1.079404 at γ = 7/5, numerical | explicit brackets r_j and a computer-assisted proof |
+| Gas dynamics: Guderley's converging shock [BRB17] | numerators vanish where the denominator does (the sonic point) | no; "determined numerically" | numerics, approximations |
+| Gas dynamics: smooth implosion of compressible Euler [BCG25, BCG23] | smoothness across the sonic point | no; r⁽³⁾ = 1.079404 at γ = 7/5, numerical (shown in a figure) | explicit brackets r_j and a computer-assisted proof |
 | Astrophysics: Larson–Penston collapse of an isothermal gas [GHJ21] | regularity at a single sonic point y* ∈ (2, 3) | no | an existence proof (its method not read) |
 | Self-gravitating Brownian particles in D dimensions [SC02] | an analyticity condition, then the largest admissible α | canonical: α = 2 and the profile, exactly; otherwise no | a 1/D expansion of α |
 | Water waves and optics: embedded solitons [CMYK01, BK10] | the Stokes constant of the tail vanishes | asymptotically, in a large-parameter limit | Stokes-line asymptotics, numerics |
@@ -385,14 +385,14 @@ What carries over:
   derived. That includes Guderley's exponent, the implosion parameter and Larson–Penston's sonic point. §0's answer to
   reading 1 is what the neighbouring fields found too.
 - **Closed-form brackets.** At the sonic point of the implosion problem, the ratio k(r) of the two local eigenvalues is
-  explicit. The values r_j where it is an integer j are singular and explicit, for example r₃ = 6 − 2√6. A shooting
-  function changes sign between consecutive r_j, which brackets the selected r between explicit numbers [BCG23]. The
-  direct analogue fails here. With s = iμω, the zeros of C(n, s) of eq. (6) lie at s = −1 − 2m and −2 − 2m and its
-  poles at s = n/2 − 1 − m, all at real s and so at imaginary ω, and C(n, s) ≠ 0 for real ω (Proposition 2). Nothing
-  in it can bracket the real ω∞. A bracket would need conditions that depend on the amplitude, as in the large-index
-  limit of the Hunter family of collapsing gas spheres, where the profiles are bracketed explicitly (Sandine,
-  arXiv:2310.18870, verified, arXiv). (Found by the 2026-11-07 cross-field agents, below.)
-- **Proof method.** The implosion proof combines a shooting argument with interval arithmetic in Arb on a few thousand
+  explicit. The values r_j where it is an integer j are singular and explicit, for example r₃ = 6 − 2√6 at γ = 5/3. A
+  shooting function changes sign between consecutive r_j, which brackets the selected r between explicit numbers
+  [BCG23]. The direct analogue fails here. With s = iμω, the zeros of C(n, s) of eq. (6) lie at s = −1 − 2m and −2 − 2m
+  and its poles at s = n/2 − 1 − m, all at real s and so at imaginary ω, and C(n, s) ≠ 0 for real ω (Proposition 2).
+  Nothing in it can bracket the real ω∞. A bracket would need conditions that depend on the amplitude, as in the
+  large-index limit of the Hunter family of collapsing gas spheres, where the profiles are bracketed explicitly
+  (Sandine, arXiv:2310.18870, verified, arXiv). (Found by the cross-field comparison of 2026-11-07, notes/HARMONY.md.)
+- **Proof method.** The implosion proof combines a shooting argument with interval arithmetic in Arb on 10,000 pairs of
   Taylor coefficients at the sonic point, with a desingularization at a resonance and branch-and-bound barrier checks
   [BCG23]. That is the same family as route T (§4.2), at a larger scale than this project has run.
 - **A large-D expansion can select an exponent.** The Smoluchowski–Poisson system is a drift-diffusion equation whose
@@ -421,7 +421,7 @@ One test follows from this, open: the Stokes-line asymptotics of S₁ in a large
 
 References:
 
-- **[RBB17] Ramsey, Baty, Boyd**, *On the existence of self-similar converging shocks for arbitrary equation of state*,
+- **[BRB17] Boyd, Ramsey, Baty**, *On the existence of self-similar converging shocks for arbitrary equation of state*,
   arXiv:1707.03792 (verified, arXiv; journal not checked).
 - **[BCG25] Buckmaster, Cao-Labora, Gómez-Serrano**, *Smooth imploding solutions for 3D compressible fluids*, Forum
   Math. Pi 13 (2025) e6, doi:10.1017/fmp.2024.12, arXiv:2208.09445 (verified, arXiv and the journal record).
