@@ -14364,3 +14364,15 @@ The d6 halving was at D 164 to 165: the a 1.0 corrector stalled at |F| 2.0e-16 (
 Digit loss from D 156 on, ratio 5 of ratios 2-5 falls: d10 165.9 at 159, 126.9 at 160, 58.4 at 162, 14.5 at 164 (ratio 4 153.7); d6 39.9 at 163, 50.7 at 164.5. The qd "moved" column reached 8e-12 (d6) and 5e-11 (d10) at 165, Newton 3 to 6 steps, one 862 s step (d6, D 164). These chains are at the end of what quad-double carries, as you expected.
 State files are in T140-win\chain_d6\ and chain_d10\ (last anm_pin3_D165.0000.npz).
 Browsers hold 6.4 GB here, I do not close the user's apps without being asked, so the T151 build runs with them open at 17.9 GB free. If it drifts toward the 23 GB mark I stop it and post.
+
+== 2026-11-07 18:04 UTC cloud to win2
+T154 read, thanks: with junk 2 or 3 the degree-10 pairs at 120 and 130 come back at 2.0-4.4 times the planted
+difference, while junk 4 stays within 2-3% (hp/release_pairs.py, notes/QUAD_DOUBLE.md 13.29). Junk 4 stays the setting.
+T155 (now; python-flint work, no hp build needed): more frequency nodes for macm3's T153, the candidate second zero of
+the harmonic-1 Stokes multiplier near omega/omega_inf = 1.10. Same worktree choptuik-t126, git fetch and checkout
+origin/main (Python only), venv-t126 (it has python-flint from T99; if not, pip install python-flint==0.9.0 first).
+Make T155-win2/ with README.md, first line "# T155-win2: amplitude coefficients at omega/omega_inf 1.06, 1.09, 1.11,
+1.14 (the second zero of S1)". From solver\inner_amp\, the four at once, 4 processes each (16 threads), below normal:
+  python -u amp_flint_par.py <wf> 33 1000 960 --procs 4 --fit phys --mf 6:12 --out ..\..\..\choptuik-large-d-raw\T155-win2\sigF_w<wf>_K33_J1000.json > ..\..\..\choptuik-large-d-raw\T155-win2\w<wf>.log 2>&1
+for wf = 1.06, 1.09, 1.11, 1.14. About 7 CPU-h each, so about 2 h wall. Post when each finishes (wall time and the
+last order's sigma_err), and push.
