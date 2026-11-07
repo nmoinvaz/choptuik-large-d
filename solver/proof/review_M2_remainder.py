@@ -14,7 +14,8 @@ Mutations (applied to every step, by wrapping functions of certify_M2_lohner; th
   remJ   the remainder of the step Jacobian dropped (the coefficient NJ + 1 of taylor_VA's remainder call set to 0)
   both   the two together
 
-    python3 review_M2_remainder.py [--mutate=psiR|remJ|both] [--h=2^-8] [--K=8] [--NJ=8] [--M=1|3]
+    python3 review_M2_remainder.py [--mutate=psiR|remJ|both] [--h=2^-10] [--K=8] [--NJ=8] [--M=1|3] [--box=1e-12]
+                                   [--wscale=1e-2]
 Exit status 0 if every enclosure overlaps, 1 otherwise.
 """
 import sys
@@ -48,7 +49,7 @@ def tva_wrap(s, ctxv, N):
 C2.psi_coeffs, C2.taylor_VA = psi_wrap, tva_wrap
 
 
-def start(M, NJ, box):
+def start(M, NJ, box, wscale=1e-2):
     rng = np.random.default_rng(7)
     ctx.prec = 256
     s = CS.SysM(M)
@@ -66,7 +67,7 @@ def start(M, NJ, box):
     cols = [[acb(v.mid()) for v in ders[k]] for k in range(m)]
     wcol = [W0 if k == 1 else arb(0) for k in range(m)]
     P = m * (m + 1) // 2
-    Wc = [[acb(complex(*(1e-2 * rng.normal(size=2)))) for _ in range(s.nd)] for _ in range(P)]
+    Wc = [[acb(complex(*(wscale * rng.normal(size=2)))) for _ in range(s.nd)] for _ in range(P)]
     pdx = [acb(arb(0, box)) for _ in range(m)]
     N = 24 if M == 1 else 20
     lo = C2.start_set2(s, c, W0 * p[1], cols, wcol, Wc, pdx, N, NJ)
@@ -105,8 +106,9 @@ def main():
     h = 2.0 ** int(hstr.split("^")[1]) if "^" in hstr else float(hstr)
     box = float(o.get("box", "1e-12"))
     NJ_RUN[0] = NJ
-    s, leg, lo1 = start(M, NJ, box)
-    _, _, loK = start(M, NJ, box)
+    wscale = float(o.get("wscale", "1e-2"))
+    s, leg, lo1 = start(M, NJ, box, wscale)
+    _, _, loK = start(M, NJ, box, wscale)
     ok1 = lo1.step(leg, 0.0, h)
     okK = all(loK.step(leg, k * h / K, h / K) for k in range(K))
     if not (ok1 and okK):
@@ -114,7 +116,7 @@ def main():
         return 2
     A, B = sets(lo1), sets(loK)
     allok = True
-    print(f"M = {M}, NJ = {NJ}, one step h = {h:.3e} against {K} steps h / {K}, box half-width {box:g}; "
+    print(f"M = {M}, NJ = {NJ}, one step h = {h:.3e} against {K} steps h / {K}, box half-width {box:g}, start W of size {wscale:g}; "
           f"mutations {sorted(MUT) or 'none'}")
     for key in ("centre", "V0", "W"):
         ws = [sep(a, b) for a, b in zip(A[key], B[key])]
