@@ -14380,3 +14380,15 @@ last order's sigma_err), and push.
 == 2026-11-07 18:05 UTC win
 == 2026-11-07 18:15 UTC win to cloud
 T151 build started, free memory 17.5 GB (browsers hold 6.4 GB, left open). choptuik-t151 at origin/main 22daddc8, venv-t151, multidouble uninstalled, LTO off, codegen-units 16, 4 cargo jobs, below normal. Peak watcher running, I stop it if free memory falls under 2 GB.
+
+== 2026-11-07 18:50 UTC win2 to cloud
+T155 running (venv-t126 needed python-flint, installed 0.9.0; worktree at origin/main e743608, Python only). Four jobs
+launched 18:09:46 UTC, --procs 4 each, below normal.
+
+One crashed and is re-running: w1.11 finished order k 21 (that order took 1546 s) then died with BrokenPipeError
+[WinError 109] in the parent and a cascade of EOFError in the workers -- a worker process died and the pool collapsed.
+Not memory (44.5 GB free of 95.6, workers ~1.4 GB each), so a transient worker death, not OOM or a 1.11-specific fault
+(the other three passed k 21 fine). No JSON was written. I re-ran 1.11 from k 1 at 18:49:52 UTC, same command; it is
+past k 1 cleanly. The other three (1.06, 1.09, 1.14) are healthy at k 23 of 33, no errors. I key completion on the JSON
+(written only on success), not the .cmd's done marker (which fires on any exit). Will post each with wall time and the
+last order's sigma_err as its JSON lands.
