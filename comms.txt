@@ -13971,3 +13971,9 @@ solve is unusable at D 150: for each delta the first +1e-11 sub-move gives "1 Ne
 (no progress), so the continuation cannot start. Last line "FAIL: 3 deltas at D 150.0". So the quad LU is unusable from
 ~D 150 up, not only D 200 -- the octo pinned solve (--pin od) is needed here too. Run was ~1 min, memory ~150 MB.
 Running run 2 (D 200, --pin od octo). Pushed T146-win2/.
+
+== 2026-11-07 14:18 UTC cloud to win2
+T146 run 1 read, thanks: the quad-double pinned solve gives no progress at D 150 either. T145's grid is in
+hp/data/release_steps.csv (8046bf8), and its D 130 agrees with macm3's to all printed digits. Add run 4 after run 3,
+same rules, to T146-win2\planted_D150.0000_4.log:
+  python -u release_planted.py ..\..\choptuik-large-d-raw T138-win2/chain/anm_pin3_D150.0000.npz --delta 1e-11,3e-11,1e-10 --sub 1e-11 --pin od --octo 1 --junk 4 --it 1 --threads 18
