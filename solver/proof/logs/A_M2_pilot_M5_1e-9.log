@@ -1,0 +1,7 @@
+C2 box run M = 5, chart data/A_M2_chart_M5.json, h = 1e-9, w = ['1e-17', '1e-18']; start: fixed_point_M.start_data_M (rigorous given that lemma; sha256 589e5a810bc50289), arg 5pi/16, diag splitting, N = 132; second derivatives: series jets + Cauchy; mutations []
+   ray t 0.003617 h 1.03e-04 steps 25  state radius (box) 5.82e-11  V0 radius 3.81e-20  W radius 7.14e-09  V(X) radius 2.35e-10  [97 s]
+   ray t 0.007257 h 1.07e-04 steps 50  state radius (box) 5.93e-11  V0 radius 6.67e-20  W radius 1.19e-08  V(X) radius 2.47e-10  [117 s]
+   ray t 0.011020 h 1.11e-04 steps 75  state radius (box) 6.04e-11  V0 radius 1.12e-19  W radius 1.58e-08  V(X) radius 2.60e-10  [136 s]
+   ray t 0.014805 h 1.14e-04 steps 100  state radius (box) 6.16e-11  V0 radius 2.55e-19  W radius 3.49e-08  V(X) radius 2.74e-10  [152 s]
+   ray t 0.018720 h 1.18e-04 steps 125  state radius (box) 6.28e-11  V0 radius 4.48e-19  W radius 7.52e-08  V(X) radius 2.88e-10  [172 s]
+   ray t 0.022657 h 1.22e-04 steps 150  state radius (box) 6.40e-11  V0 radius 5.56e-19  W radius 9.30e-08  V(X) radius 3.04e-10  [191 s]
