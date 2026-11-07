@@ -2384,5 +2384,24 @@ first-order correction made exact.
 
 The step is first order and the iteration does not converge past it (no trial accepted), so the agreement to 0.5–2% is
 that of a linear estimate. With three methods agreeing, the chain's gap to the series is its held harmonics, and the
-rest of the gap to arXiv:2611.07007, about +4e-6 at D 200, is on the published side. The chain is being rerun with the
-harmonics held on the 1/n fit (T138).
+rest of the gap to arXiv:2611.07007, about +4e-6 at D 200, is on the published side. T138 reran the chain with the
+harmonics held on the 1/n fit, and its rows replace the chain's (13.25).
+
+**The step from chain_fit's states (2026-11-07 09:52 UTC).** T141 (win2, `T141-win2/`, raw f06d3af) took the same step
+from T138's states. Its control, T137's state at 79.77, moved Δ by +5.029e-8 again. The series column is the release
+log's, the 1/D fit of degree 20.
+
+| D | step from the chain (T137) | step from chain_fit (T141) | chain_fit − series | spread over the fit's degree (13.25) |
+|---|---|---|---|---|
+| 80 | +5.03e-8 (79.77) | +1.195e-14 | −7.61e-14 | 4.2e-14 |
+| 100 | +4.79e-7 (100.12) | +2.158e-13 | −1.630e-12 | 1.1e-12 (99) |
+| 150 | +1.905e-6 (149.56) | +3.859e-13 | −2.670e-11 | — |
+| 200 | +3.228e-6 (200.27) | −1.804e-12 | −8.570e-11 | — |
+| 215 | +3.448e-6 (214.88) | −3.149e-12 | −1.077e-10 | — |
+
+The fit removes the held harmonics' bias, by a factor of about 4e6 at 80 and 1e6 at 215. Had the step's 0.5–2% error on
+the chain been a fixed offset, about 7e-8 at 200, it would show here, so it scales with the bias or is below 2e-12. At
+80 and 100 the step lies inside the spread over the fit's degree. chain_fit's distance from the series, 1.1e-10 at 215,
+is inside the series' own spread (9.1e-11 at 100 and 1.5e-9 at 173.5, notes/HELD_HARMONICS.md 4.2), so above about 100
+the series no longer resolves chain_fit's error and the step does. The iteration took 3–4 steps without converging at
+80 and 100 and accepted no trial step at 150–215, so each value is a linear estimate, as T137's were.

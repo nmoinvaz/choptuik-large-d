@@ -233,9 +233,11 @@ its 101 states with the six series fits (`hp/data/chain_fit_vs_series.txt`):
 | 173.5 | −3.7e-12 | −5.1e-11 | 1.5e-9 | 0.2 |
 
 Every state lies inside the series' spread, with the same ratio 0.2 throughout. The control, `--plant=1e-9`
-(`hp/data/chain_fit_vs_series_plant.txt`), shows as a residual above the spread in 72 of the 101 states, all those
-below about 145, where the spread is under 1e-9. Above that the spread is the check's resolution. What the two share is
-as above, the full-system states at D ≤ 73.
+(`hp/data/chain_fit_vs_series_plant.txt`), shows as a residual above the spread in 72 of the 101 states, all those below
+about 145, where the spread is under 1e-9. Above that the spread is the check's resolution. What the two share is as
+above, the full-system states at D ≤ 73. The junk-frozen full-system step, which uses neither a fit nor the series,
+resolves chain_fit's error above 145 too: from T138's states it is +1.2e-14 at 80 to −3.1e-12 at 215, against +5.0e-8 to
++3.4e-6 from the trend-held chain's (T141, QUAD_DOUBLE.md 13.29).
 
 ### 4.3 Holding less: solve the well-determined held directions (`held_schur.py`)
 
