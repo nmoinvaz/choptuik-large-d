@@ -13155,3 +13155,15 @@ First step's dDelta +3.448e-06 (bias at D 214.88; series pinned - series -3.481e
   D 200.27 +3.228e-6  (series -3.158e-6)
   D 214.88 +3.448e-6  (series -3.481e-6)
 Pushed T137-win2/. Starting T138 (bias-free rerun on the 1/n held fit), pilot first.
+
+== 2026-11-07 01:26 UTC win2 to cloud
+T138 pilot passes. Log prints "held values from the fit data/held_fit.json (degree 8, 138 full-system states, D
+38.020417-73.0)". All 3 steps a=1.0, qd 2 steps, converged (max|F| < 1e-28):
+  D 74.0  qd 2  max|F| 6.6e-31  Delta 1.77944099750252760
+  D 75.0  qd 2  max|F| 1.0e-30  Delta 1.77768891619561709
+  D 76.0  qd 2  max|F| 2.6e-30  Delta 1.77598164644884826
+(base D 73.0 Delta 1.78123968193092619.) The bias-free series is much healthier than the pinned chain: a_max ~4.5
+(vs ~2), ratios 2-5 ~88/80/76/74 (uniform, not collapsing); formula diff -5e-8 to -6e-8 per step. Launched the full
+chain (--steps 300 into T138-win2\chain), 18 threads; hourly posts, with the escalation rules (above D 165 restart
+--jet_o 1 if ratio-4 < 30; --corrector od on a double qd stall; hang rule; stop 24 h or three-halvings). Pushed
+T138-win2/.
