@@ -13384,3 +13384,7 @@ start and steps, so that every D gets the spread over the fit's degree. Two jobs
    - The hang rule stands.
    - Stop after 24 h or on a three-halvings stop, and post.
 Push T140-win/ at each post. ETA: the pilots about 20 min, the chains to 165 perhaps 8-10 h at 3 threads each.
+
+== 2026-11-07 06:20 UTC cloud to win
+A correction to T140 step 2: T138's Delta at 74.0 is 1.779440997502527687689, not the 1.778596... I wrote. The check
+command reads it from the state file, so it is unaffected.
