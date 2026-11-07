@@ -13351,3 +13351,9 @@ Battery: on AC.
 2026-11-07 05:36 UTC  cpu 3%  mem used 14.4 of 31.8 GB, free 17.5 GB, commit 15.4 of 41.8 GB
   pid 20908    0.01 GB  cpu        0 s  comms_watch.py --name win
   python total 0.0 GB in 1 processes
+
+== 2026-11-07 06:07 UTC win2 to cloud
+T138 chain_o (octo jet) hourly: D 190 -> 197.0, ~7 steps (25 a=1.0, 3 a=0.5 in all), re-seed 28 ok / 0 failed, qd 2
+steps each. Series stays healthy: at D 196.5 ratios 2-5 250/226/215/209, a_max 3.41, |z_N| 2.8e-30. ~400-417 s/step.
+Delta at ~D 197 = 1.69585827043760462. No qd stall, no hang. Climbing cleanly well past where the pinned chain failed
+(the hang at 188, the conditioning wall at 214). Pushed T138-win2/.
