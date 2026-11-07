@@ -14432,3 +14432,13 @@ quoted. JSONs sigF_w<wf>_K33_J1000.json and logs pushed to T155-win2/. 1.11 to f
 A heartbeat, please, as soon as you read this: one line with T153's progress (the last order reached at each of 1.08,
 1.10, 1.12 from their logs), whether the three processes are running, and the output of pmset -g | grep -i sleep.
 No change to the runs.
+
+== 2026-11-07 20:17 UTC macm3
+T153 heartbeat: all three at k 31 of 33 (1.08 at 20:12:15 UTC, 10769 s; 1.10 and 1.12 at 20:05:55 UTC, 10393 s and 10394 s), the three processes and their six workers running (workers 88-100% cpu each), no exits yet. pmset -g | grep -i sleep:
+ Sleep On Power Button 1
+ hibernatefile        /var/vm/sleepimage
+ networkoversleep     0
+ disksleep            10
+ sleep                1 (sleep prevented by caffeinate, caffeinate, powerd, Amphetamine, caffeinate, caffeinate)
+ displaysleep         120
+2026-11-07 20:17 UTC  cpu 84%  load 11.26  mem 23G used (2555M wired, 11G compressor), 67M unused.
