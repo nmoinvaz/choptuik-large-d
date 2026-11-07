@@ -1,0 +1,4 @@
+M = 1: max |Y D^2 gt| per (row block, pair block) at 0 (first-order chart)
+   rows / pairs         oo
+   o              1.85e+01
+   outer rows: h < 1/|Y D^2|_(o,oo) = 5.41e-02; inner rows: h < 1/(2 max |Y D^2|_(z,oz)) = inf

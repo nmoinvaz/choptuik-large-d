@@ -116,7 +116,7 @@ def structure(M, centre_file, fdfile, chart_file=None):
     T = np.array(fd["T"])
     with open(centre_file) as fh:
         rec = json.load(fh)
-    Dg = np.array([[float(arb(x).mid()) for x in r] for r in rec["history"][-1]["Dg"]])
+    Dg = np.array([[float(arb(x).mid()) for x in r] for r in (rec["history"][-1]["Dg"] if "history" in rec else rec["Dg"])])
     D1 = Dg @ T
     if chart_file:
         G = [[float(x) for x in r] for r in json.load(open(chart_file))["Gamma"]]
