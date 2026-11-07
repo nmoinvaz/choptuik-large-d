@@ -1,0 +1,12 @@
+C0 clean: expected pass, got pass (relative margins +9.80e-01, +9.90e-01, +4.14e-01, +4.13e-01, +6.84e-02, +6.69e-02)  OK
+C1 jump sign flipped, D_nu + conj D_-nu: expected fail, got fail (relative margins -7.05e+08, -4.02e+08, -1.35e+08, -7.46e+07, -2.21e+08, -9.92e+07)  OK
+C2 conjugation dropped, D_nu - D_-nu: expected fail, got fail (relative margins -1.12e+08, -5.94e+08, -7.97e+07, -1.55e+08, -1.45e+08, -2.32e+08)  OK
+C3 -conj J (null: same zeros): expected pass, got pass (relative margins +9.80e-01, +9.90e-01, +4.14e-01, +4.13e-01, +6.84e-02, +6.69e-02); zero enclosure overlaps C0's: True  OK
+C4 J_nu -> (nu + 1) J_nu (null: same zeros): expected pass, got pass (relative margins +9.80e-01, +9.90e-01, +4.14e-01, +4.13e-01, +6.84e-02, +6.69e-02); zero enclosure overlaps C0's: True  OK
+C5 zero planted outside, moved by 2h in A: expected fail, got fail (relative margins -1.02e+00, +9.90e-01, +4.14e-01, +4.13e-01, +6.84e-02, +6.69e-02)  OK
+C6 zero planted inside, moved by (h/2, -3h/10, w/4, ...): expected pass, got fail (relative margins +4.80e-01, +6.90e-01, +1.64e-01, +1.63e-01, -1.82e-01, -1.83e-01)  UNEXPECTED
+C6b zero planted inside, moved by half the clean margins (alternating signs): expected pass, got pass (relative margins +4.90e-01, +4.95e-01, +2.07e-01, +2.06e-01, +3.42e-02, +3.34e-02)  OK
+C7 g(p^) widened by 1e3 h |S| in the outer components: expected fail, got fail (relative margins -9.86e+02, -1.01e+03, +4.14e-01, +4.13e-01, +6.82e-02, +6.68e-02)  OK
+C8 zero planted outside in the first higher-harmonic coordinate, moved by 2w: expected fail, got fail (relative margins +9.80e-01, +9.90e-01, -1.59e+00, +4.13e-01, +6.84e-02, +6.69e-02)  OK
+CONTROLS SOME UNEXPECTED
+controls exit 1

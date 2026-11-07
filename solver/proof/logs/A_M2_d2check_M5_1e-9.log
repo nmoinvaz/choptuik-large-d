@@ -1,0 +1,8 @@
+D2 check M = 5 (no mutation): Y l W(X) contains Y D^2 gt(0) from the finite differences: True; worst |dev| / tolerance 9.92e-09, worst relative deviation 6.49e+01
+   (Y D^2 gt)_0,45: FD -3.028425e+24  enclosure -3.028425e+24 +- 1.1e+23  (FD error 5.1e+06)
+   (Y D^2 gt)_0,55: FD +2.669765e+24  enclosure +2.669765e+24 +- 1.1e+23  (FD error 5.0e+06)
+   (Y D^2 gt)_0,44: FD -2.669701e+24  enclosure -2.669701e+24 +- 1.1e+23  (FD error 5.0e+06)
+   (Y D^2 gt)_1,45: FD -2.411791e+24  enclosure -2.411791e+24 +- 9.6e+22  (FD error 3.9e+06)
+   (Y D^2 gt)_1,44: FD +4.356279e+23  enclosure +4.356279e+23 +- 9.6e+22  (FD error 3.0e+06)
+   (Y D^2 gt)_1,55: FD -4.355754e+23  enclosure -4.355754e+23 +- 9.6e+22  (FD error 3.0e+06)
+d2check exit 0

@@ -340,6 +340,21 @@ sharp in them.
 (`python3 certify_M2.py export6a --box=data/A_M2_box_M5_1e-10.json --out=...`; the format of certify_M.py's export,
 with V the x-derivatives in the second-order chart), max radius 4.3×10⁻⁴; a sub-box (`--sub=`) gives a smaller one.
 
+### 6.5 M = 5 on a ten times larger outer box
+
+The run at h = 10⁻⁹, w = (10⁻¹⁷, 10⁻¹⁸) (`data/A_M2_box_M5_1e-9.json`, 2118, 863, 101 steps, 37 min) fails on its own
+box in the harmonic-3 rows (margins 0.961, 0.981, −0.119, −0.121, 0.109, 0.107; `logs/A_M2_krawczyk_M5_1e-9.log`).
+The failing terms are the inner-inner pairs, ten times those of the h = 10⁻¹⁰ run because the inner widths are ten
+times larger: the intrinsic limit of §6.4, not the enclosure. On its sub-box h = 10⁻⁹, w = (10⁻¹⁷, 5×10⁻¹⁹) (found by
+`krawczyk --search`, a grid of sub-box factors; `logs/A_M2_krawczyk_M5_1e-9_search.log`) the test passes, with
+margins 0.980, 0.990, 0.414, 0.413, 0.068, 0.067, hier.py's two zeros inside the hull and within 3× their spread,
+and the independent assembly agrees (`logs/A_M2_recheck_M5_1e-9_sub.log`, same margins). Of the controls
+(`logs/A_M2_controls_M5_1e-9_sub.log`) all give their expected verdict except C6: the zero planted at a quarter of the
+inner widths falls outside the operator's image (margins −0.18 in the harmonic-5 rows) because the clean margins there
+are only 0.067. This is C6's known limitation (A_M.md §6.2 records the same at M = 3); C6b, planted at half the clean
+margins, passes. It is recorded, not changed; the h = 10⁻¹⁰ certificate of §6.4, where every control behaves, is the
+one this note states. D2 passes on this run as well (`logs/A_M2_d2check_M5_1e-9.log`, worst ratio 9.9×10⁻⁹).
+
 **Why D2 is needed.** The Krawczyk test alone does not see a wrong second derivative when the second-order terms are
 small: on the run with secondvar's sign flipped, the M = 3 test still passes with margins 1.000
 (`logs/A_M2_krawczyk_M3_1e-8_mut_lin2.log`), although the enclosed Y D²g̃ is off by a factor of about two. A wrong
