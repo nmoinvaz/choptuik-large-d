@@ -13311,3 +13311,18 @@ T138 chain_o (octo jet) hourly: D 181 -> 190.0, ~9 steps, all full a=1.0, re-see
 The series stays healthy and grows: at D 189 ratios 2-5 240/217/207/201, a_max 3.42, |z_N| 2.8e-30. Past D 188 (where
 the pinned chain hung) with no trouble -- the bias-free + octo-jet combination is robust. ~400 s/step. Delta at ~D 190
 = 1.69774708273193320. No qd stall (corrector stays qd), no hang. Pushed T138-win2/.
+
+== 2026-11-07 05:23 UTC macm3
+T139 hourly: D 73 -> 85.75, 17 steps, every one a 0.75, 0 halvings, re-seed 17 ok / 0 failed, qd 2 steps each, no
+stall, no hang (raw 942dbde). About 206 s per step, so about 13 in D per hour; D 165 near 11:30 UTC at this rate.
+| D (base) | ratios 2-5 | a_max | qd max\|F\| of the step from it |
+| 76.0 | 90.9 82.4 78.6 76.5 | 4.443 | 1.1e-30 |
+| 79.0 | 94.9 85.9 82.0 79.8 | 4.324 | 1.3e-30 |
+| 82.0 | 98.8 89.5 85.4 83.2 | 4.216 | 1.1e-29 |
+| 85.0 | 102.8 93.0 88.8 86.5 | 4.120 | 1.1e-29 |
+Delta at 85.75: 1.761369926439896962782 (four parts, mpmath). Against T138 at the shared D (four parts each, T139 minus
+T138): 76.0 -2.06e-22, 79.0 -4.07e-22, 82.0 -4.30e-21, 85.0 -2.15e-22. That is the spread of two corrector endpoints,
+each stopped below tol_qd 1e-28; it is not an error bar of either. Drift to watch: the qd max|F| after its 2 steps has
+risen from ~1e-30 at 73 to 5.9e-29 and 8.1e-29 at the steps to 84.25 and 85.0, close to tol_qd; above it a third
+step is needed, and a stall there is the od rule. Memory is tight here (251 MB unused) but nothing is swapping out.
+2026-11-07 05:23 UTC  cpu 62%  load 6.08  mem 23G used (2326M wired, 1345M compressor), 243M unused.
