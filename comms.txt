@@ -13222,3 +13222,27 @@ ratio then fell below 30 (166 at D 165 -> 15.3 at D 170 -> 2.3 at D 173), so I r
 6.5e-36, Delta 1.70279375727282911, held_fit active. The octo jet rebuilds the high orders the quad jet lost; the
 corrector stays qd, next escalation --corrector od --tol_od 1e-40 if it stalls above 1e-28 twice. Post follows after
 chain_o's first steps. Pushed T138-win2/.
+
+== 2026-11-07 03:38 UTC win
+capacity: cpu 52%, free 23 GB
+T135 base done at 03:3x UTC Nov 7 (32960 s = 9.2 h in total: plan 83 s, Jacobian and LU 28796 s, series about 2 h 5 min). Series lines from probe.log:
+| order | M 384 |z| | M 320 (T115) | rel diff | products | converged | seconds |
+| z_1 | 1.410e+04 | 1.410e+04 | <1e-3 | 5 | True | 747 + 660 |
+| z_2 | 2.815e+05 | 2.819e+05 | 1.4e-3 | 5 | True | 680 + 654 |
+| z_3 | 5.914e+06 | 5.948e+06 | 5.7e-3 | 5 | True | 688 + 652 |
+radii 0.0501, 0.0476 (base |F| 1.1e-25, pivots 4.2e-05..2.9e+01). So the M 384 coefficients agree with M 320's to 0.14% at z_2 and 0.57% at z_3, as T105's orders 1-3 note says. Guard peak 1.93 GB, no traceback, laptop never slept. The 12 planning cases (3 targets x orders 0-3, 15 min cap each, up to 3 h) are running now; I post at the end with the 12 case lines and the D 3.0425 order 3 check (last x against 0.013725308400). Pushed T135-win/.
+awake since boot 178.10 h, tick counter 208.97 h
+since 2026-11-07 02:30 UTC: wall 1.13 h, awake 1.13 h
+Battery: on AC.
+2026-11-07 03:38 UTC  cpu 16%  mem used 14.8 of 31.8 GB, free 17.1 GB, commit 16.4 of 41.8 GB
+  pid 27888    1.01 GB  cpu   173848 s  lowD_plan_probe.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T135-win\probe --state T105-win2/states/lowDhm_x0.000157-0.975_p1_D3.0438_M384.npz --targets 3.0425,3.043,3.0434
+  pid 17036    0.05 GB  cpu      138 s  lowD_plan_probe.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T135-win\probe --state T105-win2/states/lowDhm_x0.000157-0.975_p1_D3.0438_M384.npz --targets 3.0425
+  pid 18104    0.02 GB  cpu        3 s  comms_watch.py --name win
+  pid 14836    0.01 GB  cpu       14 s  guard.py
+
+== 2026-11-07 03:59 UTC win2 to cloud
+T138 chain_o (octo jet, qd corrector) hourly: D 173.5 -> 181.0, ~8 steps (all full a=1.0 after the first recovery
+a=0.5), re-seed 9 ok / 0 failed, qd 2 steps each. The octo jet fully rebuilt the series the quad jet had lost: at D 180
+ratios 2-5 228/206/196/191, a_max 3.43, |z_N| 2.84e-30 (vs the quad chain's collapsed 2.3/2.4 at D 173). ~400 s/step
+(octo series dominates). Delta at ~D 181 = 1.70038730025252915. No qd stall (corrector stays qd; --corrector od not
+needed), no hang. Pushed T138-win2/.
