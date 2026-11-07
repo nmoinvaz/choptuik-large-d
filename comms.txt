@@ -14141,3 +14141,27 @@ So the remainder is the highest held cosines: 9cos 0.89, 11cos 0.22, 13cos 0.19 
 low orders and the sines return ~1.0000. This matches T147's one-sign remainder (the high-order cosines are the same
 sign). memory ~226 MB, each run ~2 min. Pushed T148-win2/.
 Starting T150 pilot now (chain_fit from D 215 with --corrector od --od_junk 4, toward D 400).
+
+== 2026-11-07 16:09 UTC macm3
+T149 complete (D 80, one held coefficient moved by 1e-11; 6 threads; raw 33acc7f; main 0917e99e, hp/ code as at 79d3e84).
+All three exit 0, pass, and each first release's first, od and on 0 lines equal T141-win2/release_D80.0000.log's apart
+from timings. Each pinned re-solve was one move (qd, ls dz): 5b 5 Newton steps |F| 5.93e-31, 7b 3 steps 2.18e-30, 7a
+3 steps 2.21e-30, all converged.
+planted_D80_5b (15:22:57 to 15:48:50 UTC, 1553 s):
+result {"state": "T138-win2/chain/anm_pin3_D80.0000.npz", "D": 80.0, "harm": 5, "part": "sin", "delta": 9.999999987147026e-12, "bias": 7.253765489186446e-14, "s": 0.0072537654985096916, "step0": 1.1952416790406171e-14, "step": -6.058524522556491e-14, "response": -7.253766201597108e-14, "ratio": 1.00000009821253, "mutate": 0, "pass_": true}
+  planted bias +7.2538e-14 (s 7.2538e-03); step -6.0585e-14 - step at 0 +1.1952e-14 = -7.2538e-14; ratio to -bias 1.0000: pass
+pass: 1 deltas at D 80.0
+planted_D80_7b (15:48:50 to 15:56:10 UTC, 440 s):
+result {"state": "T138-win2/chain/anm_pin3_D80.0000.npz", "D": 80.0, "harm": 7, "part": "sin", "delta": 1.0000000000699553e-11, "bias": -8.793566608368485e-15, "s": -0.0008793566607753329, "step0": 1.1952416790406171e-14, "step": 2.074602524601212e-14, "response": 8.793608455605949e-15, "ratio": 1.0000047588469305, "mutate": 0, "pass_": true}
+  planted bias -8.7936e-15 (s -8.7936e-04); step +2.0746e-14 - step at 0 +1.1952e-14 = +8.7936e-15; ratio to -bias 1.0000: pass
+pass: 1 deltas at D 80.0
+planted_D80_7a (15:56:10 to 16:03:50 UTC, 460 s):
+result {"state": "T138-win2/chain/anm_pin3_D80.0000.npz", "D": 80.0, "harm": 7, "part": "cos", "delta": 9.999999987147026e-12, "bias": 1.6051521033615e-15, "s": 0.00016051521054245979, "step0": 1.1952416790406171e-14, "step": 1.0347407038188234e-14, "response": -1.6050097522179373e-15, "ratio": 0.9999113161031502, "mutate": 0, "pass_": true}
+  planted bias +1.6052e-15 (s 1.6052e-04); step +1.0347e-14 - step at 0 +1.1952e-14 = -1.6050e-15; ratio to -bias 0.9999: pass
+pass: 1 deltas at D 80.0
+Every release, of the state and of the three moved ones, ends at the same Delta, 1.7695679142833771, with lam 1 (the
+full step accepted). Next to win2's D 100 ratios: 5b 1.0000001 here against 0.99999522, 7b 1.0000048 against
+0.99999691, 7a 0.99991 against 0.99991485. Run 1 spent 21 min before its first on 0 line, runs 2 and 3 about 3 min,
+with the same code and state; T146 run 1 at D 80 took 18 min to it (13:44:33 to 14:02:25). No cache file was written; I do not know
+the cause. T148 (11b, 13b, then part 2) started 16:05 UTC into T148-macm3/; win2's 7 part 1 runs are skipped.
+2026-11-07 16:09 UTC  cpu 82%  load 6.29  mem 23G used (2298M wired, 1611M compressor), 392M unused.
