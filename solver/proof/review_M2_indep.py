@@ -41,8 +41,9 @@ sys.path.insert(0, HERE)
 M = 5
 ODD = [m for m in range(-M, M + 1) if m % 2]
 EVEN = [v for v in range(-(M + 1), M + 2) if v % 2 == 0]
-PREC = 320
-NT = 30                  # Taylor order of the integrator
+PREC = 256               # bits
+NT = 16                  # Taylor order of the integrator
+RATE = 0.5               # steps with h |xi'| / |xi|^3 (the fast-mode rate) <= RATE
 NSER = 132               # the lemma's truncation at M = 5 (the box file's start info)
 R0, RHO, XI1 = "0.0622", "0.2", "0.3"
 CHART = os.path.join(HERE, "data", "A_M2_chart_M5.json")
@@ -145,7 +146,7 @@ def evaluate(s, h, N):
     acc = acb(0)
     for k in range(min(N, len(cs) - 1), -1, -1):
         acc = acc * h + cs[k]
-    return acc
+    return acb(acc.mid())          # numerics: midpoints only (ball radii would grow by wrapping and are not used)
 
 
 def coefmax(Ser, k):
@@ -158,9 +159,11 @@ def coefmax(Ser, k):
     return m
 
 
-def integrate(y, w, steps=None, tol=1e-45, rate_fac=0.5, N=NT, log=None):
+def integrate(y, w, steps=None, tol=1e-32, rate_fac=None, N=None, log=None):
     """along the three legs; steps None: choose them (from the last Taylor coefficients and the fast-mode rate
     |xi'| / |xi|^3) and return them; else use the given list [(kind, h), ...] exactly"""
+    N = N or NT
+    rate_fac = rate_fac or RATE
     chosen = []
     it = iter(steps) if steps is not None else None
     for kind in ("ray", "arc", "real"):
@@ -190,6 +193,8 @@ def integrate(y, w, steps=None, tol=1e-45, rate_fac=0.5, N=NT, log=None):
             y = ({m: evaluate(Dser[m], ha, N) for m in ODD}, {m: evaluate(Sser[m], ha, N) for m in ODD},
                  {v: evaluate(Cser[v], ha, N) for v in EVEN})
             t = t + hh if h is not None else arb(1)
+            if log and len(chosen) % 100 == 0 and it is None:
+                log(f"   {kind} t {float(t.mid()):.4f} step {len(chosen)}")
         if log:
             log(f"   leg {kind} done")
     return y, chosen
@@ -237,7 +242,8 @@ def start(pz):
             a += g[j][v].v * pw
             pw = pw * z0
         C[v] = a
-    return (D, S, C), winf() * pz[1]
+    mid = lambda X: {k: acb(v.mid()) for k, v in X.items()}  # noqa: E731
+    return (mid(D), mid(S), mid(C)), acb((winf() * pz[1]).mid())
 
 
 def run_point(z, chart, steps=None, log=None):
@@ -299,7 +305,7 @@ def assemble(bx):
     z = arb_mat([[arb(v[0])] for v in c] + [[arb(v[1])] for v in c])
     Q = arb_mat([[arb(float.fromhex(x)) for x in row] for row in S["Q"]])
     q = arb_mat([[arb(x)] for x in S["q"]])
-    gv = ell * z + (ell * Q) * q
+    gv = Yl * z + (Yl * Q) * q
     return Y, G1, G2, [gv[i, 0] for i in range(m)]
 
 
@@ -307,9 +313,19 @@ def pairs():
     return [(j, k) for j in range(6) for k in range(j, 6)]
 
 
-def compare(bxfile, files):
+def compare(bxfile, files, centre_file=None):
     bx = json.load(open(bxfile))
     Y, G1, G2, g0 = assemble(bx)
+    centre = None
+    if centre_file:
+        ce = json.load(open(centre_file))
+        Dc = [p_c(v) for v in ce["D"]]
+        centre = [Dc[ODD.index(nu)] - Dc[ODD.index(-nu)].conjugate() for nu in (1, 3, 5)]
+        gr = [x for z in centre for x in (z.real, z.imag)]
+        gc = [sum((Y[i, j] * gr[j] for j in range(6)), arb(0)) for i in range(6)]
+        print("Y g(p^) here against the certificate's Y l (c + Q q): " + ", ".join(
+            f"{float(gc[i].mid()):+.6e} in {float(g0[i].mid()):+.6e} +- {float(g0[i].rad()):.1e}: "
+            f"{g0[i].contains(arb(gc[i].mid()))}" for i in range(6)))
     pidx = {pk: i for i, pk in enumerate(pairs())}
     Yn = [[Y[i, j] for j in range(6)] for i in range(6)]
     allok = True
@@ -325,12 +341,22 @@ def compare(bxfile, files):
         for k in range(4):
             kb = (4 - k) % 4                                  # conj(z_k) = z_kb
             J.append([Dk[k][ODD.index(nu)] - Dk[kb][ODD.index(-nu)].conjugate() for nu in (1, 3, 5)])
-        c1 = [sum((J[k][a] / zk[k] for k in range(4)), acb(0)) / 4 for a in range(3)]
-        c2 = [sum((J[k][a] / (zk[k] * zk[k]) for k in range(4)), acb(0)) / 4 for a in range(3)]
-        d1 = [x for a in range(3) for x in (c1[a].real, c1[a].imag)]
-        d2 = [x for a in range(3) for x in (2 * c2[a].real, 2 * c2[a].imag)]
+        def cn(n):
+            return [sum((J[k][a] / zk[k] ** n for k in range(4)), acb(0)) / 4 for a in range(3)]
+        c1, c2, c3 = cn(1), cn(2), cn(3)
+        c0 = cn(0)
+        if centre is not None:                                # c4 r^4 = mean J(z_k) - J(0) (c8 r^8 aliased)
+            c4 = [(c0[a] - centre[a]) / (zk[1] ** 4) for a in range(3)]
+        else:
+            c4 = [acb(0)] * 3
+
+        def rows(c, f):
+            return [x for a in range(3) for x in (f * c[a].real, f * c[a].imag)]
+        d1, d2, d3, d4 = rows(c1, 1), rows(c2, 2), rows(c3, 6), rows(c4, 12)
         Yd1 = [sum((Yn[i][j] * d1[j] for j in range(6)), arb(0)) for i in range(6)]
         Yd2 = [sum((Yn[i][j] * d2[j] for j in range(6)), arb(0)) for i in range(6)]
+        Yd3 = [sum((Yn[i][j] * d3[j] for j in range(6)), arb(0)) for i in range(6)]
+        Yd4 = [sum((Yn[i][j] * d4[j] for j in range(6)), arb(0)) for i in range(6)]
         # the certificate's enclosures along u: Y l V0 u and sum_{j<=k} mult (Y l W)_{jk} u_j u_k
         e1 = [sum((G1[i][j] * u[j] for j in range(6)), arb(0)) for i in range(6)]
         e2 = []
@@ -347,13 +373,19 @@ def compare(bxfile, files):
         for i in range(6):
             in1 = e1[i].contains(arb(Yd1[i].mid()))
             in2 = e2[i].contains(arb(Yd2[i].mid()))
+            # D^2 gt(t u)[u, u] = 2 c2 + 6 c3 t + 12 c4 t^2 + ...: at the box edges t = +-1 (u is a box half-width)
+            edge = [arb((Yd2[i] + sg * Yd3[i] + Yd4[i]).mid()) for sg in (1, -1)]
+            in_e = all(e2[i].contains(x) for x in edge)
             dev2 = float(abs(arb(Yd2[i].mid()) - arb(e2[i].mid())).mid())
             rad2 = float(e2[i].rad())
-            ok &= in1 and in2
+            ok &= in1 and in2 and in_e
             print(f"   row {i}: Y D^2 gt[u,u] here {float(Yd2[i].mid()):+.9e}  enclosure {float(e2[i].mid()):+.9e} "
                   f"+- {rad2:.2e}  |dev| {dev2:.2e} (= {dev2 / (rad2 + 1e-300):.2e} radius, "
-                  f"{dev2 / (abs(float(Yd2[i].mid())) + 1e-300):.2e} relative)  contained {in2};  "
-                  f"Y Dgt[u] {float(Yd1[i].mid()):+.6e} in {float(e1[i].mid()):+.6e} +- {float(e1[i].rad()):.1e}: {in1}")
+                  f"{dev2 / (abs(float(Yd2[i].mid())) + 1e-300):.2e} relative)  contained {in2};  variation over the "
+                  f"box |6 c3| {abs(float(Yd3[i].mid())):.2e}, |12 c4| {abs(float(Yd4[i].mid())):.2e} "
+                  f"(= {(abs(float(Yd3[i].mid())) + abs(float(Yd4[i].mid()))) / (rad2 + 1e-300):.2e} radius), edges "
+                  f"contained {in_e};  Y Dgt[u] {float(Yd1[i].mid()):+.6e} in {float(e1[i].mid()):+.6e} +- "
+                  f"{float(e1[i].rad()):.1e}: {in1}")
         allok &= ok
         diag[tag] = (u, Yd2)
     # polarization: entries (j, k) from the directions e_j, e_k, e_j + lam e_k (scaled)
@@ -387,6 +419,10 @@ def main():
     mode = a[0]
     o = {x.split("=", 1)[0][2:]: (x.split("=", 1)[1] if "=" in x else True) for x in a if x.startswith("--")}
     pos = [x for x in a[1:] if not x.startswith("--")]
+    global NT, PREC, RATE
+    NT = int(o.get("nt", NT))
+    PREC = int(o.get("prec", PREC))
+    RATE = float(o.get("rate", RATE))
     ctx.prec = PREC
     chart = load_chart()
     t0 = time.time()
@@ -398,7 +434,7 @@ def main():
         D, chosen = run_point(z, chart, log=log)
         J = [D[nu] - D[-nu].conjugate() for nu in (1, 3, 5)]
         out = {"steps": [(k, (h.hex() if h is not None else None)) for k, h in chosen], "D": [s_c(D[m]) for m in ODD],
-               "g": [s_c(x) for x in J], "NT": NT, "prec": PREC, "sec": time.time() - t0}
+               "g": [s_c(x) for x in J], "NT": NT, "prec": PREC, "rate": RATE, "sec": time.time() - t0}
         json.dump(out, open(o["out"], "w"), indent=1)
         log(f"centre: {len(chosen)} steps ({sum(1 for k, _ in chosen if k == 'ray')} ray, "
             f"{sum(1 for k, _ in chosen if k == 'arc')} arc, {sum(1 for k, _ in chosen if k == 'real')} real); "
@@ -406,6 +442,9 @@ def main():
         return 0
     if mode == "dir":
         st = json.load(open(o["steps"]))
+        NT, PREC = st["NT"], st["prec"]               # the centre's integrator exactly (same numerical map)
+        ctx.prec = PREC
+        chart = load_chart()
         steps = [(k, (float.fromhex(h) if h is not None else None)) for k, h in st["steps"]]
         spec = o["u"].split(",")
         scale = [1e-10, 1e-10, 1e-18, 1e-18, 1e-19, 1e-19]
@@ -425,10 +464,10 @@ def main():
             Ds.append([s_c(D[m]) for m in ODD])
             log(f"   {tag} point {k} done")
         json.dump({"tag": tag, "u": [repr(x) for x in u], "r": repr(r), "D": Ds, "steps_from": o["steps"],
-                   "NT": NT, "prec": PREC, "sec": time.time() - t0}, open(o["out"], "w"), indent=1)
+                   "NT": NT, "prec": PREC, "rate": RATE, "sec": time.time() - t0}, open(o["out"], "w"), indent=1)
         return 0
     if mode == "compare":
-        return 0 if compare(o["box"], pos) else 1
+        return 0 if compare(o["box"], pos, o.get("centre")) else 1
     print(__doc__)
     return 2
 
