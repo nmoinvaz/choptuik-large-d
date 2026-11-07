@@ -6,7 +6,12 @@ chart and second-order (C²) enclosures of the flow, so that the Jacobian over t
 It is the design change A_M.md §2 and §7 name after the first-order M = 5 runs failed. Written by Claude (Anthropic)
 under Nathan Moinvaziri's direction; not reviewed.
 
-**Status.** See §6 (results), filled in as the runs finish.
+**Status.** M = 5: **certified**, given the M-harmonic start-value lemma `fixed_point_M.start_data_M` and Braaksma's
+theorem, on a curved parallelepiped of outer half-width 10⁻¹⁰ and inner widths 10⁻¹⁸ (harmonic 3) and 10⁻¹⁹
+(harmonic 5), with margins of at least 0.889 (§6.4); the new code is not reviewed. The same code path reproduces
+Theorem A(M = 1) on a box 2×10⁴ times larger than the first-order one and the M = 3 certificate on boxes 10² and 10⁴
+times larger (§6.1–6.2). What limited the first-order runs was the excess of the C¹ enclosure: their derivative
+radius at ξ₁ was 10² to 10⁵ times the true variation over the box (§1).
 
 Code: [`solver/proof/certify_M2_lohner.py`](../solver/proof/certify_M2_lohner.py) (the second derivative of the
 right-hand side, the second variational series and its remainder, the C² Lohner step),
@@ -375,4 +380,13 @@ python3 certify_M2.py d2check --box=data/A_M2_box_M3_1e-8.json --fd=data/A_M2_fd
 python3 certify_M_recheck.py data/A_M2_box_M3_1e-8.json [--mutate]                                        # pass [fail]
 python3 certify_M2.py box 3 --chart=data/A_M2_chart_M3.json --h=1e-8 --w=1e-13 --mutate=lin2|chart --out=data/A_M2_box_M3_1e-8_mut_T.json --log=logs/A_M2_box_M3_1e-8_mut_T.log
 python3 certify_M2.py d2check --box=data/A_M2_box_M3_1e-8_mut_T.json --fd=data/A_M2_fd_M3.json            # must fail
+# M = 5 (about 40 min per run, 78 s of it the start data); a pilot first:
+python3 certify_M2.py box 5 --chart=data/A_M2_chart_M5.json --h=1e-9 --w=1e-17,1e-18 --out=PILOT.json --log=logs/A_M2_pilot_M5_1e-9.log --pilot=150
+python3 certify_M2.py box 5 --chart=data/A_M2_chart_M5.json --h=1e-10 --w=1e-18,1e-19 --out=data/A_M2_box_M5_1e-10.json --log=logs/A_M2_box_M5_1e-10.log
+python3 certify_M2.py krawczyk --box=data/A_M2_box_M5_1e-10.json --shrink --hier                         # passes; hier (a), (b)
+python3 certify_M2.py krawczyk --box=data/A_M2_box_M5_1e-10.json --hier --mutate=hier                    # must fail
+python3 certify_M2.py controls --box=data/A_M2_box_M5_1e-10.json                                         # exit 0
+python3 certify_M2.py d2check --box=data/A_M2_box_M5_1e-10.json --fd=data/A_M2_fd_M5.json                 # pass
+python3 certify_M_recheck.py data/A_M2_box_M5_1e-10.json [--mutate]                                       # pass [fail]
+python3 certify_M2.py export6a --box=data/A_M2_box_M5_1e-10.json --out=data/A_M2_6a_M5_1e-10.json        # for lemma 6a(M)
 ```
