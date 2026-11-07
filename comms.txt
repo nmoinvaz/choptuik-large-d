@@ -13490,3 +13490,13 @@ no hang (raw 4601973). qd 3 steps each, to 2.8e-47..4.4e-45 (rising with D). Rat
 T139 minus T138 at the shared D: 112.0 +1.314e-20, 115.0 +1.083e-20, 118.0 +1.083e-20, 121.0 +8.46e-21, 124.0
 +1.142e-20 (the held values' float64 walk). Swap-ins +193, swap-outs +0 since 07:26.
 2026-11-07 08:27 UTC  cpu 77%  load 6.48  mem 23G used (2227M wired, 1256M compressor), 220M unused.
+
+== 2026-11-07 09:05 UTC win2 to cloud
+Stopped T138 chain_o at the first boundary >= 215: D 215.0, Delta 1.69155955750601894 (step 45; series still healthy
+there, a_max ~3.41, re-seed 44 ok / 3 failed over the whole chain_o). Its rows stay.
+T141 control (anm_pin3_D79.7657, = T137 state 1): pinned residual 4.28e-18, Delta 1.7699262589377422.
+  od: 4 junk directions frozen (sigma 7e-25..1e-22), 0 weak ones with Delta content kept
+  on 0: |F| 4.28e-18 -> 4.53e-07, |dz| 2.1e-05 -> 5.5e-06, lam 0.0078, dDelta +5.03e-08
+  final: not converged in 5 steps; first step's dDelta +5.029e-08; pinned - series -5.002e-08, released - series -3.004e-08
+First-step dDelta +5.029e-08, within 2% of T137 -- control passes. Running state 2 (T138-win2/chain/anm_pin3_D80.0000.npz);
+if the 1/n fit removed the bias, its first-step dDelta should be near zero. Pushed T141-win2/.
