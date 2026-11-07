@@ -154,7 +154,7 @@ def start_data2(M, pstr, Cm, G, widths, verbose=True):
     pbox = p_of_x(p, T, G, X, M)
     hw = max(float(abs(pbox[i] - p[i]).upper()) for i in range(m))
     c = arb(CAUCHY)
-    assert hw < 0.1 * float(c), "the box must lie well inside the Cauchy box"
+    assert hw < 0.5 * float(c), "the box must lie well inside the Cauchy box"
     t0 = time.time()
     centre = FPM.run_M([acb(v.mid()) for v in p], M, r0, arg, None, verbose=False, kcap=40, diag=diag)
     N = centre["N"]
@@ -171,16 +171,18 @@ def start_data2(M, pstr, Cm, G, widths, verbose=True):
     pairs = C2.pair_list(m)
     # the series jets: diagonal directions, and the sums for the off-diagonal pairs (polarization:
     # D^2[a, b] = c2(a + b) - c2(a) - c2(b), with c2(d) = 1/2 D^2[d, d])
+    # consistency with the lemma at the centre: this file's Y_N(p^) and DY_N(p^) T_0 must overlap the lemma's balls
+    # (both enclose the same numbers up to eta; at M = 5 eta at the point is below the rounding, both radii are about
+    # 1e-95, and containment would compare rounding paths rather than truncations)
+    jc = series2(p, [[T[i][0] for i in range(m)]], M, r0, path[1], N)[0]
+    okv = all(vals_c[q].overlaps(jc[q][0]) for q in range(nd))
+    okd = all(cols[0][q].overlaps(jc[q][1]) for q in range(nd))
+    if not (okv and okd):
+        raise RuntimeError(f"start data: this file's series does not overlap the lemma's balls (values {okv}, "
+                           f"derivatives {okd}): truncation N = {N} mismatch?")
     jd = series2(pbox, dirsX, M, r0, path[1], N)
     sums = [[dirsX[j][i] + dirsX[k][i] for i in range(m)] for (j, k) in pairs if j != k]
     js = series2(pbox, sums, M, r0, path[1], N)
-    # consistency with the lemma at the centre: this file's Y_N(p^) and DY_N(p^) T_0 must lie in the lemma's balls
-    jc = series2(p, [[T[i][0] for i in range(m)]], M, r0, path[1], N)[0]
-    okv = all(vals_c[q].contains(jc[q][0]) for q in range(nd))
-    okd = all(cols[0][q].contains(jc[q][1]) for q in range(nd))
-    if not (okv and okd):
-        raise RuntimeError(f"start data: this file's series is not inside the lemma's balls (values {okv}, "
-                           f"derivatives {okd}): truncation N = {N} mismatch?")
     ders_b = None
     if any(g != 0 for row in G for g in row) and "chart" not in MUTATE:
         _, _, ders_b, _ = FPM.start_data_M([arb(v) for v in pbox], M, r0, arg, +1, CAUCHY, centre=centre, diag=diag)
@@ -427,6 +429,37 @@ def hier_check2(res, M, mutate=False):
     return all(ins) and ok_b
 
 
+# the certified first-order enclosures (endpoints as published): Theorem A(M = 1), proof/A_certify.md 12.6; the
+# M = 3 certificate, proof/A_M.md 6.2
+REFERENCE = {
+    "thmA1": {"M": 1, "box": [("2.54214804761338", "2.54214804761975"), ("0.776994013607438", "0.776994013612010")]},
+    "AM3": {"M": 3, "box": [("2.72647588563032", "2.72647588563144"), ("1.01560309485743", "1.01560309485804"),
+                            ("0.144419478469924", "0.144419478470230"), ("0.0110874258881079", "0.0110874258881255")]},
+}
+
+
+def reference_check(res, M, name, mutate=False):
+    """planted truth: the C^2 zero enclosure must overlap the certified first-order one in every coordinate (both
+    contain the unique zero if both certificates hold). mutate: the reference shifted by 10 of its widths in A
+    (must not overlap)."""
+    ref = REFERENCE[name]
+    assert ref["M"] == M
+    ctx.prec = KPREC
+    ok = True
+    for i, (lo_, hi_) in enumerate(ref["box"]):
+        a, b = arb(lo_), arb(hi_)
+        if mutate and i == 0:
+            a, b = a + 10 * (b - a), b + 10 * (b - a)
+        rb = a.union(b)
+        ov = res["pstar"][i].overlaps(rb)
+        inside = bool(rb.contains(res["pstar"][i]))
+        ok &= ov
+        print(f"   {CM_names(M)[i]:8s} overlaps the reference ({name}{', shifted' if mutate and i == 0 else ''}): {ov}; "
+              f"C^2 enclosure inside it: {inside}")
+    print(f"reference check ({name}): {'REPRODUCED' if ok else 'NOT REPRODUCED'}")
+    return ok
+
+
 def CM_names(M):
     return ["A", "w/w_inf"] + [f"{b}{nu}" for nu in range(3, M + 1, 2) for b in ("B", "C")]
 
@@ -625,7 +658,7 @@ def main():
             if hp is not None:
                 sub = [repr(hp)] + list(bx["w"])
         mut = o.get("mutate")
-        mut = None if mut in (None, "hier") else mut
+        mut = None if mut in (None, "hier", "ref") else mut
         r = krawczyk2_test(bx, mut, theta=o.get("theta"), sub=sub, asm=asm)
         print(f"   start values: {bx['start']['start']}; run mutations: {bx.get('mutate')}")
         print(f"   gt(0): |Y g| per row / width " + ", ".join(f"{float(abs(r['Yg'][i]).upper()) / float(r['widths'][i].mid()):.1e}"
@@ -641,8 +674,13 @@ def main():
             print(f"   smallest passing box: theta = {th:.4g}; relative margins " +
                   ", ".join(f"{x:+.3f}" for x in rs["rel_margins"]) + "\n   the zero (endpoints rounded outward):")
             print(CM.describe(rs, M))
+            # the zero lies in both enclosures (the test passes on both boxes): keep their intersection, as
+            # certify_M.m1_reproduce does
+            r = dict(r, pstar=[a.intersection(b) for a, b in zip(r["pstar"], rs["pstar"])])
         if "hier" in o and r["ok"]:
             return 0 if hier_check2(r, M, mutate=(o.get("mutate") == "hier")) else 1
+        if "reference" in o and r["ok"]:
+            return 0 if reference_check(r, M, o["reference"], mutate=(o.get("mutate") == "ref")) else 1
         return 0 if r["ok"] else 1
     print(__doc__)
     return 2

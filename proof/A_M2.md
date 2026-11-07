@@ -112,6 +112,17 @@ accuracy of Γ, and radius of first order in |X| (third derivatives and the C² 
 O(h³) instead of the first-order chart's Γh². What remains in K_H at second order are the mixed and inner-inner terms
 2|YℓW|_{H,oH} h w and |YℓW|_{H,HH} w², which are below w once h·|Y D²g̃|_{H,oH} and w·|Y D²g̃|_{H,HH} are small.
 
+**An alternative weighed: a Poincaré–Miranda test.** Existence alone would follow if each component of Y g̃ had
+opposite constant signs on the two opposite faces of X (Poincaré–Miranda), with no uniqueness. It does not avoid the
+derivative growth. On the face x_i = ±w_i the sign of (Y g̃)_i needs ±w_i to dominate everything else in it,
+Σ_{j≠i} |(Y Dg̃ − I)_{ij}| w_j plus the second-order terms, which is the Krawczyk condition for row i with the
+diagonal entering only through (1 ± its radius) w_i. To evaluate g̃ on a face one needs either a mean value form on the face (the same C¹ or C² columns over
+an 11-dimensional face, so the same excess per unit width) or a C⁰ enclosure of the state over the face, which loses
+the cancellation in the jumps (A_certify.md §9.4 item 3: at M = 1 a face of half-width 3×10⁻⁶ already failed). On
+T33's box it would not have passed either: every failing contribution in §1 is off-diagonal (j ≠ i; the outer rows
+fail through the harmonic-3 columns, the harmonic-5 rows through the harmonic-3 and outer columns), so the face test
+fails by the same margins. The C² route attacks the excess itself, and keeps uniqueness and non-singularity.
+
 **Start data.** The start-value lemma gives y⁺(ξ₀; p) = Y_N(p) + η(p) with Y_N the series truncated at the lemma's N
 and |η_k| ≤ e_k on the complex box p̂ + c(1 + i), c = 10⁻³ (`fixed_point_M.start_data_M`, A_lemmas_M.md §2). The
 second derivatives along the chart's columns d_k(x) = ∂p/∂x_k over X are
