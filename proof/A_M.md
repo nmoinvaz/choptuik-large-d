@@ -14,7 +14,8 @@ four box runs of §7 on the local machine all failed: at h = 3×10⁻¹¹ and 10
 order one on the arc, and the one run that finished (h = 10⁻¹³) fails the Krawczyk test (margins −13.7, −11.8, +0.29,
 +0.33, −542, −511; `logs/A_M_krawczyk_M5_1e-13.log`). The design change of §7, a second-order chart with C² enclosures,
 is [A_M2.md](A_M2.md): with it M = 5 is **certified** (given the same lemma and Braaksma's theorem; the new code not
-reviewed) on a curved parallelepiped of outer half-width 10⁻¹⁰ (A_M2.md §6.4). An independent review ([A_M_review.md](A_M_review.md)) confirms the M = 3 certificate. With lemma 6a run on this certificate's state box
+reviewed) on a curved parallelepiped of outer half-width 10⁻¹⁰ (A_M2.md §6.4). An independent review
+([A_M_review.md](A_M_review.md)) confirms the M = 3 certificate. With lemma 6a run on this certificate's state box
 (ρ₆ₐ = 0.041) and the other lemmas of [A_lemmas_M.md](A_lemmas_M.md), **Theorem A(3) is certified** (A_lemmas_M.md §7).
 
 Code: [`solver/proof/certify_M.py`](../solver/proof/certify_M.py) (driver, the Krawczyk test, refinement, controls),
