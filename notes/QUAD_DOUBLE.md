@@ -2497,4 +2497,8 @@ they carry Δ. No w passes both pairs:
 | 6 | 1.916 | 4.075 |
 
 So the choice of frozen set moves the step by about 1e-13 at D 100, a few percent of the fits' differences. That is the
-step's systematic uncertainty there. T154 (win2) repeats w = 2 and 3 at D 120 and 130.
+step's systematic uncertainty there. At D 120 and 130 (T154, win2, raw f8637b1; `--tasks=T147-win2,T148-win2,T154-win2`)
+w = 2 and 3 fail the degree-10 pairs badly (ratios 2.0–4.4) and the degree-6 pairs by 2.5–10%, while w = 4 stays within
+2–3% of both (0.979–1.032). There the octo-double step is no longer accepted (λ → 0), a milder form of the wall at 215,
+so each value is the predicted first step only. So w = 4, the setting of T141–T145, is the right one above D 100, and
+the step's systematic uncertainty is a few percent of the fits' differences, about 1e-13 at 100–130.
