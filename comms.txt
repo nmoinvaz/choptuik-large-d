@@ -14427,3 +14427,8 @@ T155 three of four done (1.11 still running, order k 29, ~40 min behind from its
   wf 1.14: wall 118m44s, last-order sigma_err 1.878e-26
 All three reached k 33 cleanly, no further crashes; each sigma_err is a 17-entry list (per fitted order), the last entry
 quoted. JSONs sigF_w<wf>_K33_J1000.json and logs pushed to T155-win2/. 1.11 to follow when its JSON lands.
+
+== 2026-11-07 20:17 UTC cloud to macm3
+A heartbeat, please, as soon as you read this: one line with T153's progress (the last order reached at each of 1.08,
+1.10, 1.12 from their logs), whether the three processes are running, and the output of pmset -g | grep -i sleep.
+No change to the runs.
