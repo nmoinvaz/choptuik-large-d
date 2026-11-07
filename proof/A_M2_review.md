@@ -111,3 +111,62 @@ over the steps, if each step's enclosures are right.
 - The quoted zero is the intersection of K(θX) (θ = 1.045×10⁻⁴) and K(X), both of which contain the unique zero.
   `outward` rounds the 60-digit endpoints outward past a 10⁻⁵⁵ relative nudge. The six intervals of A_M2.md §6.4
   match the rerun digit for digit.
+
+## 3. Issues
+
+ISSUES_PLACEHOLDER
+
+## 4. Making it fail: mutations and what they reach
+
+MUTATIONS_PLACEHOLDER
+
+## 5. The independent computation
+
+`solver/proof/review_M2_indep.py` recomputes Y D²g̃(0), Y Dg̃(0) and the third-order variation of D²g̃ along a set of
+directions, at M = 5, with code written for this review.
+
+- **System.** The M = 5 equations of certify_M_sys.py's docstring (and A_M_review.md §2), coded anew: projected
+  products by a plain convolution, the grouping (CE)D kept.
+- **Integrator.** A non-rigorous Taylor method of order 16 (Picard iteration on acb_series in the leg parameter, 256
+  bits, midpoints only), on the path of A_M.md §1. The steps are chosen once at the centre, from the fast-mode rate
+  h|ξ′|/|ξ|³ ≤ 1/2 and the last Taylor coefficients, and reused at every other parameter point. So the numerical flow
+  is one analytic function of the parameters, and its derivatives are those of one fixed numerical map.
+- **Start values.** The lemma's truncated series Y_N (fixed_point_M.series_jet_M, values only, N = 132). This is
+  the lemma's own code, not certify_M_sys.series_generic_M, which the certificate's series2 and the control D2 use.
+- **Derivatives without differences of derivatives.** The chart and g̃ extend holomorphically to complex x, with
+  J_ν(z) = D_ν(p(z)) − conj(D_{−ν}(p(z̄))). Along a real direction u (scaled to the box half-widths), four complex
+  points z_k = r iᵏ on a circle (r = 10⁻³) give the Taylor coefficients c_n of z ↦ J(zu) by Cauchy's formula,
+  c_n = mean J(z_k)z_k⁻ⁿ, up to the aliased c_{n+4}r⁴. Then Dg̃[u] = c₁, D²g̃[u, u] = 2c₂, and D²g̃(tu)[u, u] =
+  2c₂ + 6c₃t + 12c₄t² + …, which gives the variation of the second derivative across the box (t = ±1). No variational
+  equation and no finite difference of derivatives is used. The mixed entries come from the directions eⱼ, eₖ and
+  eⱼ + eₖ by polarization.
+- **The certificate's side.** The final Lohner sets of `data/A_M2_box_M5_1e-10.json`, assembled anew in arb at 768
+  bits: the jump rows, Y = the midpoint of (mid ℓV₀)⁻¹, Yℓ(cW + QW qW), Yℓ(cV + QV qV), Yℓ(c + Qq).
+
+**What it shares with the certificate.** The definition of the system, the path, the jump and the chart, and their data
+(p̂, C, Γ); the lemma's series code; python-flint; and the saved Lohner sets it compares with. It shares none of
+certify_M_sys.SysM, certify_M_lohner, validated_int, certify_M2_lohner, certify_M2 and certify_M2_fd.
+
+**Results** (14 directions: the six coordinate axes and eⱼ + eₖ for (0,1), (0,4), (2,3), (2,4), (2,5), (3,4), (3,5), (4,5),
+each scaled to the box half-widths; 4 points each, 614 steps per run, about 40 s per run).
+
+| quantity | inner directions (B₃, C₃, B₅, C₅ and their sums) | outer directions (A, ω and their sum) |
+|---|---|---|
+| \|here − midpoint of Y ℓW(X)\| / \|here\|, Y D²g̃[u, u] | 3×10⁻¹⁶ – 8×10⁻¹⁵ (the inner rows) | 3×10⁻¹³ – 5×10⁻⁸ |
+| the same, divided by the enclosure's radius | ≤ 7×10⁻¹² | ≤ 2×10⁻¹⁴ |
+| radius of the enclosure / \|Y D²g̃[u, u]\| | 4.5×10⁻⁴ – 1.3×10⁻² | 40 – 1.3×10⁷ |
+| variation across the box, (\|6c₃\| + \|12c₄\|) / radius | ≤ 1.5×10⁻³ | ≤ 3×10⁻⁶ |
+| Y D²g̃(±u)[u, u] at the box edges inside the enclosure | yes, every row | yes, every row |
+| Y Dg̃[u] inside Y ℓV₀ u | yes | yes |
+
+By polarization the mixed entries that set the inner margins, (Y D²g̃)_{i,jk} for i, j, k inner, agree with the
+enclosure's midpoints to 1×10⁻¹⁵ – 7×10⁻¹⁵ relative, at 2×10⁻¹² – 4×10⁻¹² of its radius; for example
+(Y D²g̃)_{2,45} = 1.095963322×10¹⁸ here and 1.095963322×10¹⁸ ± 4.6×10¹⁴ in the certificate. The inner rows' (outer,
+outer) entries, which the chart removes, are 2.7×10⁻¹¹ and 5.7×10⁻¹² here against enclosures of radius 10⁻⁴, so the
+chart term is right. The centre: Y g̃(0) is −1.6×10⁻³³ here (A row) inside the certificate's ±6.1×10⁻²⁴.
+
+So two computations that share no integration code agree to 15 digits on the second derivatives that set the margins,
+and the true variation of D²g̃ across the box along these 14 directions is at most 1.5×10⁻³ of the radius the
+certificate gives it. Mixed third derivatives across directions not in the list are not measured.
+
+ACCURACY_PLACEHOLDER
