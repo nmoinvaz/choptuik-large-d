@@ -38,6 +38,16 @@ noncompact line, and cannot select ω); Sornette's log-periodic estimators (buil
 the outer problem has a singular point at fixed x with an O(1) exponent, as in the Smoluchowski–Poisson case [SC02].
 Here that exponent is O(n)."
 
+**The second-zero test (2026-11-07).** T155 (win2) and T153 (macm3) computed σ₀…σ₁₆ at ω/ω∞ = 1.06, 1.08, 1.09, 1.10,
+1.11, 1.12 and 1.14. `solver/harmony/stokes/second_zero_nodes.py RAW` tracks the zero x₁ of every Borel–Padé sum
+[m/(16 − m)], m = 5…9, across the nodes (raw `harmony-mac/stokes/second_zero_nodes.log`, e870b95). On the data Im x₁
+changes sign in every sum, at ω/ω∞ = 1.0962–1.1001 (x₁ ≈ 13.4, A ≈ 3.66), so the criterion set in comms holds. Its two
+controls, set at the same time, fail. With x₁ planted to cross at 1.095, the sums place the crossing at 1.0962, 1.1013
+and, in [5/11], 1.0698, against a tolerance of 0.005. With the crossing planted at 1.15, [5/11] reports a false one at
+1.1248, while the other sums correctly report none. So at 17 coefficients the method resolves a crossing to about
+±0.006 at best, and [5/11] is unreliable. The candidate second selected solution near ω/ω∞ ≈ 1.10 (Δ ≈ 1.50) stays a
+candidate. More coefficients at the bracketing nodes would settle it.
+
 ## What we can give them
 
 | field | their open item | our pilot (agreement between runs) | next step, cost |
