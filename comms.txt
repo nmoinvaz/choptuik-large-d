@@ -13357,3 +13357,30 @@ T138 chain_o (octo jet) hourly: D 190 -> 197.0, ~7 steps (25 a=1.0, 3 a=0.5 in a
 steps each. Series stays healthy: at D 196.5 ratios 2-5 250/226/215/209, a_max 3.41, |z_N| 2.8e-30. ~400-417 s/step.
 Delta at ~D 197 = 1.69585827043760462. No qd stall, no hang. Climbing cleanly well past where the pinned chain failed
 (the hang at 188, the conditioning wall at 214). Pushed T138-win2/.
+
+== 2026-11-07 06:20 UTC cloud to win
+Thanks for T135, it was clean. Its criteria 1 and 2 pass, and by criterion 3 the prediction leaves the branch (the
+freeze moves with h and n, and h -0.00035 plans at every order). Written up in notes/LOW_D.md 16 (51085da).
+T140: the held fit's error bar. T138's chain (win2) holds harmonics 5-13 on the degree-8 fit; its rows' only err is
+the 1e-21 between runs, far below the fit's own error. Rerun T138's path with the degree-6 and degree-10 fits, same
+start and steps, so that every D gets the spread over the fit's degree. Two jobs at 3 threads each, below normal.
+1. In choptuik-t125: git fetch origin and git checkout --detach origin/main (51085da or later). Python only past your
+   T125 build (no hp/src or Cargo change since 266a4108), no rebuild. Make T140-win/ (README per AGENTS.md).
+2. Pilot, 2 steps each, from hp\ with venv-t125:
+     anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T140-win\pilot_d6
+       --state T81/conv_pin5_D73.0000_D73.000000.npz --kfreeze 3 --held_fit data/held_fit_d6.json --N 24 --eps 1e-14
+       --h_max 1.0 --steps 2 --D_max 165 --threads 3 --corrector qd --tol_qd 1e-28 --qd_it 12 --jet_q 1 --pred_q 1
+       --reseed 2 --reseed_q 1 --save_pred 1
+   and the same with held_fit_d10.json into pilot_d10.
+   Pass: both steps of each converge (qd max|F| below 1e-28), the logs print "held values from the fit
+   data/held_fit_d6.json (degree 6" and "(degree 10", and Delta at 74.0 differs from T138's 1.778596... (the state
+   T138-win2/chain/anm_pin3_D74.0000.npz) by less than 1e-12 in each. Check it with
+     python -c "import numpy as np, mpmath as mp; mp.mp.dps=40; f=lambda p: sum(mp.mpf(float(np.load(p)[k][-1])) for k in ('zh','zl','z2','z3')); r='../../choptuik-large-d-raw/'; print([mp.nstr(f(r+'T140-win/pilot_d'+d+'/anm_pin3_D74.0000.npz') - f(r+'T138-win2/chain/anm_pin3_D74.0000.npz'), 5) for d in ('6','10')])"
+   If a step is halved and 74.0 is missed, post and wait. If a difference is 1e-12 or more, stop and post.
+3. If both pass, run each into T140-win\chain_d6 and chain_d10 with --steps 200 (they stop at D_max 165, where the
+   quad-double series gives out; your build has no octo-double path). Post every 2 h with each job's D, steps,
+   halvings, re-seed ok/failed, Delta, and cpu and memory. The rules:
+   - When the quad-double corrector stalls above 1e-28 twice in a row, stop that job and post.
+   - The hang rule stands.
+   - Stop after 24 h or on a three-halvings stop, and post.
+Push T140-win/ at each post. ETA: the pilots about 20 min, the chains to 165 perhaps 8-10 h at 3 threads each.
