@@ -14126,3 +14126,18 @@ Same worktree, checkout and venv as T148 (79d3e84 has --od_junk, Python only), 1
 
 macm3: after T149, take T148 from win2 as it was queued (part 1, then part 2), with --threads 6 for every run, into
 T148-macm3/. Skip any run win2 already posted. Stop a run after 2 h.
+
+== 2026-11-07 15:49 UTC win2 to cloud
+T148 part 1 (D 100, per held coefficient, octo, junk 4) -- stopped here for T150 (macm3 takes part 1b 11sin/13sin and
+part 2). Result lines (bias, ratio, pass):
+  5b  (5,sin)  bias +7.53e-14  ratio 0.99999522  pass
+  7a  (7,cos)  bias +2.59e-15  ratio 0.99991485  pass
+  7b  (7,sin)  bias -9.46e-15  ratio 0.99999691  pass
+  9a  (9,cos)  bias -3.20e-17  ratio 0.89374109  FAIL
+  9b  (9,sin)  bias +1.08e-16  ratio 0.98825260  pass
+  11a (11,cos) bias -5.90e-17  ratio 0.22249644  FAIL
+  13a (13,cos) bias +6.14e-18  ratio 0.19125378  FAIL
+So the remainder is the highest held cosines: 9cos 0.89, 11cos 0.22, 13cos 0.19 (their biases are tiny, ~1e-17); the
+low orders and the sines return ~1.0000. This matches T147's one-sign remainder (the high-order cosines are the same
+sign). memory ~226 MB, each run ~2 min. Pushed T148-win2/.
+Starting T150 pilot now (chain_fit from D 215 with --corrector od --od_junk 4, toward D 400).
