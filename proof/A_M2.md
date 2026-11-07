@@ -193,7 +193,47 @@ A control that fires on the clean run stops the work until its cause is known; n
 
 ## 6. Results
 
-(To be filled in by the runs.)
+All runs on the Mac (Apple silicon, 10 cores, at most 4 runs at once under `nice -n 10`), orders N = NJ = 24 at
+M = 1 and N = 20, NJ = 12 at M ≥ 3 (A_M.md §3), 256-bit integration, 768-bit assembly. Margins are relative,
+(w_i − |K_i|)/w_i. The contributions are the terms of |K_i|/w_i (`krawczyk` prints them): |Y g̃(0)|, the first-order
+part |I − YℓV₀|·X, and the second-order part Σ|YℓW(X)|_{i,jk} w_j w_k.
+
+### 6.1 M = 1: Theorem A(M = 1) reproduced (planted truth)
+
+| run | box | steps (ray, arc, real) | time | the test on the run's box | margins |
+|---|---|---|---|---|---|
+| A_M.md §6.1 (C¹, for comparison) | h = 10⁻⁹ | 303, 320, 46 | | passes | 0.863, 0.976 |
+| `data/A_M2_box_M1_1e-6.json` | h = 10⁻⁶ | 303, 320, 46 | 104 s | passes | 1.000, 1.000 |
+| `data/A_M2_box_M1_1e-4.json` | h = 10⁻⁴ | 303, 321, 46 | 98 s | fails (−3.69, −2.17) | |
+| the same, sub-box (`--best`) | h′ = 2.06×10⁻⁵ | | | passes | 0.034, 0.348 |
+
+(`logs/A_M2_krawczyk_M1_1e-6.log`, `logs/A_M2_krawczyk_M1_1e-4_best.log`.) At h = 10⁻⁶ the contributions are at most
+1.2×10⁻⁴ (|Y g̃(0)|: the centre is Theorem A's 10-digit point), 1.5×10⁻⁶ (first order) and 3.8×10⁻⁵ (second order).
+At h = 10⁻⁴ the second-order part reaches 2.1: the radius of YℓW at ξ₁ grows faster than the box (about 19 at
+h = 10⁻⁶ and 1.4×10⁴ at h = 10⁻⁴, against true second derivatives of at most 18.5), which is the C² excess. The largest
+passing box, 2.06×10⁻⁵, is 2×10⁴ times the C¹ one.
+
+The zero, from the smallest passing box of the h = 10⁻⁶ run (θ = 1.29×10⁻⁴, endpoints rounded outward):
+A ∈ [2.54214804761655, 2.54214804761657], ω/ω∞ ∈ [0.776994013609722, 0.776994013609726]. It lies inside Theorem
+A(M = 1)'s enclosure in both coordinates (`--reference=thmA1`: REPRODUCED); with the reference shifted by ten of its
+widths in A (`--mutate=ref`, `logs/A_M2_krawczyk_M1_1e-6_mutate_ref.log`) the check reports NOT REPRODUCED and exits 1.
+
+### 6.2 M = 3: the certified zero reproduced (planted truth)
+
+| run | box (h; w) | steps | time | the test | margins |
+|---|---|---|---|---|---|
+| A_M.md §6.2 (C¹, for comparison) | 10⁻¹⁰; 4×10⁻¹⁶ | 955, 552, 72 | | passes | 0.994, 0.997, 0.778, 0.778 |
+| `data/A_M2_box_M3_1e-8.json` | 10⁻⁸; 10⁻¹³ | 955, 552, 72 | 414 s | passes | 1.000 (all four) |
+
+(`logs/A_M2_krawczyk_M3_1e-8.log`.) The chart's Γ is in `data/A_M2_chart_M3.json`. Every contribution is at most
+2.8×10⁻⁶ of its width: the box could be much larger (§6.4). The zero, from the smallest passing box (θ = 1.05×10⁻⁴):
+A ∈ [2.72647588563088, 2.72647588563089], ω/ω∞ ∈ [1.01560309485773, 1.01560309485774],
+B₃ ∈ [0.144419478470076, 0.144419478470077], C₃ ∈ [0.0110874258881167, 0.0110874258881168], inside the certified
+enclosure of A_M.md §6.2 in every coordinate (`--reference=AM3`: REPRODUCED).
+
+The D2 check (`logs/A_M2_d2check_M3_1e-8.log`) passes: the largest entries of Y D²g̃(0), up to 3.9×10¹¹ (the outer rows
+in the harmonic-3 pairs), agree with the finite differences to the enclosure's radius 4.7×10⁷; the worst deviation
+is 3.5×10⁻¹⁰ of its tolerance.
 
 ## 7. Reproduce
 
