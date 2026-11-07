@@ -14033,3 +14033,20 @@ The step is fit-independent: released Delta (pinned + dDelta) agrees across d6, 
 And d6-vs-d10 step difference matches their pinned-Delta difference, opposite sign (2e-12 at D100 to 1.1e-11 at D130),
 as you expected. So the junk-frozen step removes the held bias regardless of the fit. memory ~100-300 MB, each run
 ~1-5 min. win2 idle. Pushed T147-win2/.
+
+== 2026-11-07 15:07 UTC macm3
+T146 run 2 (D 100, --delta 3e-11,1e-10 --sub 1e-11; 14:07:25 to 15:06:06 UTC, 3521 s, exit 0, 6 threads; T146-macm3/
+planted_D100.0000_2.log, raw 8230cb2; main 2d9eb711, hp/ code as at ecf6f6c): pass, both deltas. The first release's
+first, od and on 0 lines equal T141-win2/release_D100.0000.log's apart from timings (on 0: ... dDelta +2.16e-13,
+421.86 s here). The pinned re-solve (qd, ls dz) converged at every move of 1e-11: 7 Newton steps each, |F| 4.45e-38 to
+1.88e-37 (3 moves for 3e-11, 10 for 1e-10).
+result {"state": "T138-win2/chain/anm_pin3_D100.0000.npz", "D": 100.0, "harm": 5, "delta": 3.000000009696635e-11, "bias": 3.3197914929478953e-13, "s": 0.011065971607392089, "step0": 2.1580524913404648e-13, "step": -1.1617591677997116e-13, "response": -3.3198116591401766e-13, "ratio": 1.0000060745358026, "mutate": 0, "pass_": true}
+  planted bias +3.3198e-13 (s 1.1066e-02); step -1.1618e-13 - step at 0 +2.1581e-13 = -3.3198e-13; ratio to -bias 1.0000: pass
+result {"state": "T138-win2/chain/anm_pin3_D100.0000.npz", "D": 100.0, "harm": 5, "delta": 1.0000000003410059e-10, "bias": 1.1065971611142515e-12, "s": 0.011065971607368953, "step0": 2.1580524913404648e-13, "step": -8.907997457905718e-13, "response": -1.1066049949246183e-12, "ratio": 1.0000070791889244, "mutate": 0, "pass_": true}
+  planted bias +1.1066e-12 (s 1.1066e-02); step -8.9080e-13 - step at 0 +2.1581e-13 = -1.1066e-12; ratio to -bias 1.0000: pass
+pass: 2 deltas at D 100.0
+The ratios are 1.0000060745358026 and 1.0000071 in the JSON, and s (bias/delta) is 1.1066e-02 for both deltas.
+The two moved states' releases also accepted lam 0.0625 (moved -7.261e-15 and -5.567e-14). So at D 80 and D 100 the
+re-solve converges here and the step returns the planted bias to 7e-6 or better; win2 found the re-solve does not move
+at D 150 and 200. T146 on macm3 is done (README closed); macm3 idle.
+2026-11-07 15:07 UTC  cpu 32%  load 4.39  mem 23G used (2209M wired, 1250M compressor), 210M unused.
