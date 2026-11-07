@@ -94,14 +94,13 @@ propagated with the step Jacobian J₀ enclosed over the centre set alone (the C
 W_{jk} \;\mapsto\; D\varphi(y)\,W_{jk} + D^2\varphi(y)[V_j, V_k] \;\in\; J_X\,W(X)_{jk} + H_{jk},
 ```
 
-with J_X the step Jacobian enclosed over Y(X) and H an enclosure of D²φ(y)[a, b] over y ∈ Y(X), a ∈ V(X)_j,
-b ∈ V(X)_k. H is the second variational equation Ψ′ = A Ψ + B[Φa, Φb], Ψ(0) = 0 (B the second derivative of the
-right-hand side, `secondvar`), integrated by its Taylor coefficients (the recursion Ψ_{l+1} = (Σ A_{l−i}Ψ_i + β_l)/(l + 1)
-on the trajectory series over Y(X)) plus the Lagrange-type remainder h^{NJ+1}Ψ^{(NJ+1)}(s)/(NJ+1)!, enclosed by the
-same recursion at the interval time t₀ + [0, h] from a-priori enclosures of the trajectory, of Φ and of Ψ
-(`apriori_Psi`: [0, h](F_y Ψ̃ + B) ⊂ Ψ̃, the Picard argument of validated_int.apriori_V). The integral form of the
-remainder (the mean of a function with values in a box lies in the box) makes this valid for complex values, as for J
-in A_M.md §3.
+with J_X the step Jacobian enclosed over Y(X) and H an enclosure of D²φ(y)[a, b] over y ∈ Y(X), a ∈ V(X)_j, b ∈ V(X)_k.
+H is the second variational equation Ψ′ = A Ψ + B[Φa, Φb], Ψ(0) = 0 (B the second derivative of the right-hand side,
+`secondvar`), integrated by its Taylor coefficients (the recursion Ψ_{l+1} = (Σ A_{l−i}Ψ_i + β_l)/(l + 1) on the
+trajectory series over Y(X)) plus the Lagrange-type remainder h^{NJ+1}Ψ^{(NJ+1)}(s)/(NJ+1)!, enclosed by the same
+recursion at the interval time t₀ + [0, h] from a-priori enclosures of the trajectory, of Φ and of Ψ (`apriori_Psi`:
+[0, h](F_y Ψ̃ + B) ⊂ Ψ̃, the Picard argument of validated_int.apriori_V). The integral form of the remainder (the mean
+of a function with values in a box lies in the box) makes this valid for complex values, as for J in A_M.md §3.
 
 **The Jacobian over the box in mean value form.** At ξ₁, with ℓ the real jump functionals,
 
@@ -128,16 +127,16 @@ accuracy of Γ, and radius of first order in |X| (third derivatives and the C² 
 O(h³) instead of the first-order chart's Γh². What remains in K_H at second order are the mixed and inner-inner terms
 2|YℓW|_{H,oH} h w and |YℓW|_{H,HH} w², which are below w once h·|Y D²g̃|_{H,oH} and w·|Y D²g̃|_{H,HH} are small.
 
-**An alternative weighed: a Poincaré–Miranda test.** Existence alone would follow if each component of Y g̃ had
-opposite constant signs on the two opposite faces of X (Poincaré–Miranda), with no uniqueness. It does not avoid the
-derivative growth. On the face x_i = ±w_i the sign of (Y g̃)_i needs ±w_i to dominate everything else in it,
-Σ_{j≠i} |(Y Dg̃ − I)_{ij}| w_j plus the second-order terms, which is the Krawczyk condition for row i with the
-diagonal entering only through (1 ± its radius) w_i. To evaluate g̃ on a face one needs either a mean value form on the face (the same C¹ or C² columns over
-an 11-dimensional face, so the same excess per unit width) or a C⁰ enclosure of the state over the face, which loses
-the cancellation in the jumps (A_certify.md §9.4 item 3: at M = 1 a face of half-width 3×10⁻⁶ already failed). On
-T33's box it would not have passed either: every failing contribution in §1 is off-diagonal (j ≠ i; the outer rows
-fail through the harmonic-3 columns, the harmonic-5 rows through the harmonic-3 and outer columns), so the face test
-fails by the same margins. The C² route attacks the excess itself, and keeps uniqueness and non-singularity.
+**An alternative weighed: a Poincaré–Miranda test.** Existence alone would follow if each component of Y g̃ had opposite
+constant signs on the two opposite faces of X (Poincaré–Miranda), with no uniqueness. It does not avoid the derivative
+growth. On the face x_i = ±w_i the sign of (Y g̃)_i needs ±w_i to dominate everything else in it, Σ_{j≠i} |(Y Dg̃ −
+I)_{ij}| w_j plus the second-order terms, which is the Krawczyk condition for row i with the diagonal entering only
+through (1 ± its radius) w_i. To evaluate g̃ on a face one needs either a mean value form on the face (the same C¹ or C²
+columns over an 11-dimensional face, so the same excess per unit width) or a C⁰ enclosure of the state over the face,
+which loses the cancellation in the jumps (A_certify.md §9.4 item 3: at M = 1 a face of half-width 3×10⁻⁶ already
+failed). On T33's box it would not have passed either: every failing contribution in §1 is off-diagonal (j ≠ i; the
+outer rows fail through the harmonic-3 columns, the harmonic-5 rows through the harmonic-3 and outer columns), so the
+face test fails by the same margins. The C² route attacks the excess itself, and keeps uniqueness and non-singularity.
 
 **Start data.** The start-value lemma gives y⁺(ξ₀; p) = Y_N(p) + η(p) with Y_N the series truncated at the lemma's N
 and |η_k| ≤ e_k on the complex box p̂ + c(1 + i), c = 10⁻³ (`fixed_point_M.start_data_M`, A_lemmas_M.md §2). The
