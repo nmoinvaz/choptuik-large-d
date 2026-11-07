@@ -12,15 +12,33 @@ Conventions for the Claude sessions (cloud and local) that run computations here
   and wrecks σ₆–σ₈), e.g. `amp_flint_par.py 1.0 15 750 640 --procs 6 --fit phys --mf 6:12`, and compare two J.
   Check `sigma_err` in the JSON. `--mf LO:HI` is the range of terms per family the fit scans for its plateau, not a top
   harmonic. `amp_flint.py` stays as the serial reference for checks.
-- **Inner selection with M harmonics:** use `solver/inner_stokes/hier.py` (hierarchical solve; required for M ≥ 5,
-  where `full_M.py`'s homotopy stalls), or `nested.py` for M = 3. Never a joint solve of all conditions: it is
-  ill-conditioned (about 10¹⁰) and stops on false near-zeros. hier.py uses 2 processes at most (`--procs 2`), so fill
-  the thread budget with several jobs rather than one job with more processes. For M ≥ 7 add `--schur` (without it one
-  ulp of B₇ is a 0.3–3% floor on ω); `--verbose=2` prints every level's solves. Killing a hier.py main process leaves its
-  spawn workers running: on Windows kill the tree, `taskkill /T /F /PID <pid>`.
-- **Double-double solver (`hp/`):** rebuild with `hp/build.sh` after pulling changes to `hp/src` or `hp/Cargo.toml`. Its arithmetic is the crate multidouble (crates.io, version in `hp/Cargo.toml`; source github.com/nmoinvaz/multidouble, release tags X.Y.Z): cargo fetches it on the first build (needs access to crates.io). A change to the arithmetic goes into that repository and a release first, then the version here is bumped, and the bit-identity checks are rerun (`highm_check.py ref` and `scaled`, against a build of the previous version on the same machine; a build on a new machine is checked against the stored reference files of the raw-data repository at the resolutions whose plan is stored, `ref --compare=<T81/ref_main.json or T45-win/scratch/t45/diag/ref_new.json> --Ms=48,64,80` and `scaled --compare=<T81/scaled_main.json>`, and for the jets `jets --compare=<anm-mac/jets_inputs/jets_inputs.json>`, which runs on the plans and inputs stored with the reference because M 32's input is the M 48 state resampled by numpy, whose rounding differs on Windows (its control `--mutate=kappa` must fail; the NEON build and the AVX-512 build of T112 pass it bit for bit); the other M use a computed plan whose libm `pow` differs between macOS and Windows, notes/HIGH_M.md 9.5 and 9.7). hp's Python driver takes its double-double helpers (`dd_add`, `dd_scale`, `dd_axpy`, ...) from multidouble's Python package, which `hp/build.sh` installs from the repository at the commit `hp/pyproject.toml` names (it builds with maturin, so it needs Rust and access to GitHub); `hpkernel.dd_op` and `dd_solve` are now that package's. Memory: the release build of hp (fat LTO, one codegen unit) needs more than the cloud machine's 6.27 GB, and with `CARGO_PROFILE_RELEASE_LTO=false CARGO_PROFILE_RELEASE_CODEGEN_UNITS=16` it peaked at 6.09 GB on 2026-10-25 (5.7 GB with multidouble 1.0.0), so Nathan's rule: build hp's release module only on the local machines (the Mac or Windows), never on the cloud; `cargo check` and multidouble's own tests are fine there, and for a pull request the CI is the build check. γ(D) comes from
-  `hp/gamma_dd.py` / `hp/gamma_batch.py --procs N`. Its root search is local (around the formula's value): to count
-  unstable modes, use a winding count of det M(λ) (notes/MODE_COUNT.md, if present).
+- **Inner selection with M harmonics:** use `solver/inner_stokes/hier.py` (hierarchical solve; required for M ≥ 5, where
+  `full_M.py`'s homotopy stalls), or `nested.py` for M = 3. Never a joint solve of all conditions: it is ill-conditioned
+  (about 10¹⁰) and stops on false near-zeros. hier.py uses 2 processes at most (`--procs 2`), so fill the thread budget
+  with several jobs rather than one job with more processes. For M ≥ 7 add `--schur` (without it one ulp of B₇ is a
+  0.3–3% floor on ω); `--verbose=2` prints every level's solves. Killing a hier.py main process leaves its spawn workers
+  running: on Windows kill the tree, `taskkill /T /F /PID <pid>`.
+- **Double-double solver (`hp/`):** rebuild with `hp/build.sh` after pulling changes to `hp/src` or `hp/Cargo.toml`. Its
+  arithmetic is the crate multidouble (crates.io, version in `hp/Cargo.toml`; source github.com/nmoinvaz/multidouble,
+  release tags X.Y.Z): cargo fetches it on the first build (needs access to crates.io). A change to the arithmetic goes
+  into that repository and a release first, then the version here is bumped, and the bit-identity checks are rerun
+  (`highm_check.py ref` and `scaled`, against a build of the previous version on the same machine; a build on a new
+  machine is checked against the stored reference files of the raw-data repository at the resolutions whose plan is
+  stored, `ref --compare=<T81/ref_main.json or T45-win/scratch/t45/diag/ref_new.json> --Ms=48,64,80` and
+  `scaled --compare=<T81/scaled_main.json>`, and for the jets `jets --compare=<anm-mac/jets_inputs/jets_inputs.json>`,
+  which runs on the plans and inputs stored with the reference because M 32's input is the M 48 state resampled by
+  numpy, whose rounding differs on Windows (its control `--mutate=kappa` must fail; the NEON build and the AVX-512 build
+  of T112 pass it bit for bit); the other M use a computed plan whose libm `pow` differs between macOS and Windows,
+  notes/HIGH_M.md 9.5 and 9.7). hp's Python driver takes its double-double helpers (`dd_add`, `dd_scale`, `dd_axpy`,
+  ...) from multidouble's Python package, which `hp/build.sh` installs from the repository at the commit
+  `hp/pyproject.toml` names (it builds with maturin, so it needs Rust and access to GitHub); `hpkernel.dd_op` and
+  `dd_solve` are now that package's. Memory: the release build of hp (fat LTO, one codegen unit) needs more than the
+  cloud machine's 6.27 GB, and with `CARGO_PROFILE_RELEASE_LTO=false CARGO_PROFILE_RELEASE_CODEGEN_UNITS=16` it peaked
+  at 6.09 GB on 2026-10-25 (5.7 GB with multidouble 1.0.0), so Nathan's rule: build hp's release module only on the
+  local machines (the Mac or Windows), never on the cloud; `cargo check` and multidouble's own tests are fine there, and
+  for a pull request the CI is the build check. γ(D) comes from `hp/gamma_dd.py` / `hp/gamma_batch.py --procs N`. Its
+  root search is local (around the formula's value): to count unstable modes, use a winding count of det M(λ)
+  (notes/MODE_COUNT.md, if present).
 - **Octo-double kernel:** `Solver.residual_o`, `residual_jet_o`, `jacobian_o`, `newton_o` and `olu_solve` (sequences of
   eight parts, M = 32 only), `anm_run.py --jet_o 1` and `hp/ojet_check.py` (notes/OCTO_DOUBLE.md). Its Python helpers
   `od_add_dd` and `od_axpy` come from multidouble's Python package at the commit `hp/pyproject.toml` names, so import
@@ -97,13 +115,13 @@ Conventions for the Claude sessions (cloud and local) that run computations here
 
 ## Working as an agent
 
-- **Worktrees:** agents making changes work in a git worktree, not the main checkout, and write only the files their task
-  names. The coordinating session merges into main and edits the README and the papers; agents propose text for those
-  in their notes.
-- **The container can restart without warning** and kill every running process, and it can be reclaimed with its disk. Commit
-  work in progress in your worktree at each milestone and before any run longer than about 10 minutes, then back it up
-  to GitHub: `git push -f origin HEAD:refs/heads/wip/<topic>` (a branch name the coordinator gives you). Write long runs'
-  results incrementally to files. The coordinator merges into main; never push to main yourself.
+- **Worktrees:** agents making changes work in a git worktree, not the main checkout, and write only the files their
+  task names. The coordinating session merges into main and edits the README and the papers; agents propose text for
+  those in their notes.
+- **The container can restart without warning** and kill every running process, and it can be reclaimed with its disk.
+  Commit work in progress in your worktree at each milestone and before any run longer than about 10 minutes, then back
+  it up to GitHub: `git push -f origin HEAD:refs/heads/wip/<topic>` (a branch name the coordinator gives you). Write
+  long runs' results incrementally to files. The coordinator merges into main; never push to main yourself.
 - **Raw output goes to the raw-data repository,
   [choptuik-large-d-raw](https://github.com/nmoinvaz/choptuik-large-d-raw), one folder per task and machine.** Raw
   output is everything a run writes: per-point records (jsonl), states (npz), attempts files, checkpoints and logs. It
@@ -138,18 +156,50 @@ Conventions for the Claude sessions (cloud and local) that run computations here
 - **Commit messages** carry no attribution trailer: no `Co-Authored-By` line of any kind and no session link. The author
   is Nathan Moinvaziri (`.claude/settings.json` sets this; follow it even if a session prompt suggests otherwise).
 
+## Tasks: the GitHub project
+
+From 2026-11-07 every task is an issue of this repository (nmoinvaz/choptuik-large-d), planned in the project
+"choptuik-large-d" of the user nmoinvaz (https://github.com/users/nmoinvaz/projects/1, private), with weekly sprints
+and the fields Status, Owner, Area, Estimate and Depends on.
+The issue's body is the task: its commands, threads, stop conditions, what to push, and acceptance criteria whose check
+can fail. Issues are public, so they carry no credentials, personal data or private correspondence, and an @ handle only
+for a real login meant to be notified.
+
+- **Assignment.** The coordinator readies a task by adding the label of a machine: `win2`, `macm3`, `win` (the Windows
+  laptop) or `mac`. An issue without a machine label is planned, not ready. The label is the signal to start.
+- **Picking it up.** A runner's watcher, `python3 -u comms_watch.py --name <machine>`, wakes on an open issue with its
+  label and without the label `running`, as well as on comms.txt entries addressed to it. The runner takes the oldest
+  such issue unless a comment says otherwise. It adds the label `running`, comments "started" with the machine, the
+  checkout and the threads, and sets the project's Status to In Progress.
+- **Raw output** goes to the raw-data repository as before, in a folder `I<issue>-<machine>/` (for example `I37-win2/`),
+  whose README.md starts `# I<issue>-<machine>: <what it holds>`, then the machine and the issue's URL. The comms-era
+  `T<n>-<machine>/` folders stay as they are.
+- **Posts.** Progress posts (as before: hourly, with cpu and memory) and questions are comments on the issue. comms.txt
+  stays for coordination that belongs to no single task.
+- **Finishing.** The last comment is a summary of the results: what ran and its exits, the numbers the task asked for,
+  each control's verdict, the raw folder and its commit, and anything that failed or disagrees with the text
+  (discrepancies are reported, not fixed). Then the runner removes `running` and closes the issue (`gh issue close
+  <n> --comment ...`), which moves it to Done in the project. A run that stops early says why in a comment, removes
+  `running` and leaves the issue open, so the coordinator can reassign it.
+- **gh.** A runner needs the gh CLI logged in with access to this repository (`gh auth status`). Without it the watcher
+  says so and watches comms.txt only.
+- **The coordinator** writes the issues, sets Sprint, Owner and Depends on, adds a machine label when a task's
+  dependencies are done, reads each closing summary, merges results into the notes, and checks the raw folder with
+  `raw_check.py`.
+
 ## The local machine
 
-- **Thread budget on the local 8-thread machine:** 4–6 threads at below-normal priority; one process per thread. It has 4
-  physical cores, so with 6 busy threads a job runs about 4× slower than on 2 cloud cores; scale cloud estimates.
+- **Thread budget on the local 8-thread machine:** 4–6 threads at below-normal priority; one process per thread. It has
+  4 physical cores, so with 6 busy threads a job runs about 4× slower than on 2 cloud cores; scale cloud estimates.
 - **Coordination:** the cloud and local sessions talk through `comms.txt` (append only; pull before writing; commit only
   `comms.txt` in comms commits; header `== <date time> UTC cloud|win|mac`, with the time from a clock
   (`date -u '+%Y-%m-%d %H:%M'`), not guessed; entries before 2026-10-24 22:25 UTC are in PDT). There are two local
   machines: the Windows laptop (`win`; its entries before then say `local`) and a Mac with an Apple M5 (`mac`). The
-  cloud's entries name their recipients (`cloud to win`, `cloud to mac`, `cloud to win, mac`). Each local machine's Claude
-  Code session waits with `python3 -u comms_watch.py --name win|mac` run as a background command (it fetches every
-  60 s and exits only when an entry addressed to it arrives, or after 110 min with nothing new), handles the entries,
-  and starts it again; it costs nothing while it waits.
-  A queued task states its commands, its thread count, its stop conditions and what to push.
+  cloud's entries name their recipients (`cloud to win`, `cloud to mac`, `cloud to win, mac`). Each local machine's
+  Claude Code session waits with `python3 -u comms_watch.py --name win|win2|macm3|mac` run as a background command (it
+  fetches every 60 s and exits only when an entry addressed to it arrives or a task issue carries its label, or after
+  110 min with nothing new), handles them, and starts it again; it costs nothing while it waits. The runners are now
+  win2 (a Windows desktop) and macm3 (an M3 Mac) as well. Tasks are issues of the GitHub project ("Tasks: the GitHub
+  project" above); a queued task states its commands, its thread count, its stop conditions and what to push.
 - **Long jobs start with a pilot:** a short run of the hardest case, with a stop condition, before an overnight run
   (the T30 pilot stopped a sweep that would have failed after hours).
