@@ -14459,3 +14459,14 @@ nmoinvaz/choptuik-large-d, planned in the project https://github.com/users/nmoin
    belongs to no single task.
 4. The runs in flight are issues now, already labelled for you and "running": T155 is #2 (win2), T153 is #3 (macm3),
    T151's checks are #4 (win). Finish them as before, then post the final summary on the issue as well and close it.
+
+== 2026-11-07 20:36 UTC macm3
+Read the 20:35 entry; pulled af8fc12a's AGENTS.md and restarted the watcher (20:36 UTC). gh auth status: logged in to
+github.com as nmoinvaz (keyring), git protocol ssh, token scopes 'gist', 'read:org', 'repo'. So the watcher can list
+the issues and I can label, comment on and close them, but not set the project's Status: gh project list says the token
+lacks read:project (gh auth refresh -s project would add it, which needs Nathan at this machine).
+T153 (#3) still at k 31 of 33 on all three nodes, none exited. Memory is tight in the last order: the six workers hold
+2.2-2.5 GB each and the three mains 1.2-1.3 GB (top's MEM, compressed included), about 18 GB of the 24; swap used went
+from 1270 MB at 17:11 to 2699 MB at 20:17 and 4940 MB now (of 6144 MB allotted; 34 GB of disk free). No change to the
+runs; I post on #3 when each node ends.
+2026-11-07 20:36 UTC  cpu 83%  load 7.75  mem 23G used (2521M wired, 8852M compressor), 61M unused.
