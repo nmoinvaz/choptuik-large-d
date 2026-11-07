@@ -1,0 +1,25 @@
+Krawczyk (C^2) M = 3: K(X) in int X: True; relative margins +0.997, +0.998, +0.995, +0.995
+   start values: fixed_point_M.start_data_M (rigorous given that lemma; sha256 589e5a810bc50289), arg 5pi/16, diag splitting, N = 95; second derivatives: series jets + Cauchy; run mutations: []
+   gt(0): |Y g| per row / width 1.5e-14, 1.3e-14, 1.6e-12, 1.6e-12
+   box of the run: h = 1e-6, w = ['1e-11']; tested on: half-widths 1e-06, 1e-06, 1e-11, 1e-11
+   contributions to |K_i| / w_i (columns: |Y g|, first order, then each pair jk):
+[[1.45e-14 2.55e-08 2.30e-04 9.51e-04 6.97e-05 1.55e-04 9.69e-04 1.36e-04 3.33e-04 3.99e-05 5.60e-05 3.92e-05]
+ [1.34e-14 1.73e-08 1.79e-04 7.27e-04 9.92e-05 4.15e-05 7.48e-04 2.12e-04 8.71e-05 2.35e-05 2.36e-05 2.35e-05]
+ [1.55e-12 5.63e-08 5.49e-04 2.24e-03 1.37e-06 1.06e-05 2.32e-03 4.72e-05 2.09e-06 1.47e-06 1.58e-06 1.45e-06]
+ [1.56e-12 5.63e-08 5.49e-04 2.24e-03 1.07e-05 1.20e-06 2.32e-03 2.18e-06 4.72e-05 7.91e-07 2.93e-06 8.08e-07]]
+   A        in [2.72647588265281, 2.72647588860895]  (radius 2.98e-09)
+   w/w_inf  in [1.01560309269270, 1.01560309702276]  (radius 2.17e-09)
+   B3       in [0.144419477516903, 0.144419479423251]  (radius 9.53e-10)
+   C3       in [0.0110874258300796, 0.0110874259461538]  (radius 5.80e-11)
+   smallest passing box: theta = 0.0001045; relative margins +1.000, +1.000, +1.000, +1.000
+   the zero (endpoints rounded outward):
+   A        in [2.72647588563088, 2.72647588563089]  (radius 3.52e-17)
+   w/w_inf  in [1.01560309485773, 1.01560309485774]  (radius 2.55e-17)
+   B3       in [0.144419478470076, 0.144419478470077]  (radius 1.12e-17)
+   C3       in [0.0110874258881167, 0.0110874258881168]  (radius 6.83e-19)
+   A        overlaps the reference (AM3): True; C^2 enclosure inside it: True
+   w/w_inf  overlaps the reference (AM3): True; C^2 enclosure inside it: True
+   B3       overlaps the reference (AM3): True; C^2 enclosure inside it: True
+   C3       overlaps the reference (AM3): True; C^2 enclosure inside it: True
+reference check (AM3): REPRODUCED
+krawczyk exit 0

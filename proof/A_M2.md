@@ -39,9 +39,20 @@ harmonic-3 coordinates:
 | harmonic 3 | 0.007–0.013 | 0.32–0.34 | 0.0004 |
 | harmonic 5 | 6.2–11.3 | 247–263 | 0.31–0.33 |
 
-That radius is the C¹ enclosure's, and it is mostly excess: the true variation of Y Dg̃ over the box (from the
-second derivatives of §3) is smaller by the factors in the same log. The C¹ excess is linear in the box (the
-derivative radii in the four T33 logs are proportional to h at equal steps), as at M = 1 (A_certify.md §9.3–9.4).
+That radius is mostly wrapping, not curvature. The true variation of Y Dg̃ over the box, Σ_k |Y D²g̃(0)|_{i,jk} w_k
+from the finite differences of §3 (the first-order version of |Dg̃(p̂ ± w_k e_k) − Dg̃(p̂)|), is smaller than the C¹
+radius by these factors (same log; the control is the certified M = 3 first-order box, h = 10⁻¹⁰,
+`logs/A_M2_diag1_M3_1e-10.log`):
+
+| ratio C¹ radius / true variation | outer columns | inner columns |
+|---|---|---|
+| M = 5, T33's box (h = 10⁻¹³) | 4.3×10⁴ – 4.5×10⁵ | 290 – 4150 |
+| M = 3, the certified box (h = 10⁻¹⁰) | 7.2×10³ – 5.3×10⁵ | 99 – 1690 |
+
+So the excess dominates at both M, by two to five orders of magnitude; at M = 3 the margins happened to absorb it,
+at M = 5 they did not. The C¹ excess is linear in the box (the derivative radii in the four T33 logs are proportional
+to h at equal steps), as at M = 1 (A_certify.md §9.3–9.4). The intrinsic curvature alone would allow far larger boxes
+(§3), so a second-order chart without second-order enclosures, or a smaller first-order box, is not what is missing.
 
 ## 2. Design
 
@@ -224,16 +235,45 @@ widths in A (`--mutate=ref`, `logs/A_M2_krawczyk_M1_1e-6_mutate_ref.log`) the ch
 |---|---|---|---|---|---|
 | A_M.md §6.2 (C¹, for comparison) | 10⁻¹⁰; 4×10⁻¹⁶ | 955, 552, 72 | | passes | 0.994, 0.997, 0.778, 0.778 |
 | `data/A_M2_box_M3_1e-8.json` | 10⁻⁸; 10⁻¹³ | 955, 552, 72 | 414 s | passes | 1.000 (all four) |
+| `data/A_M2_box_M3_1e-6.json` | 10⁻⁶; 10⁻¹¹ | 955, 551, 72 | 421 s | passes | 0.997, 0.998, 0.995, 0.995 |
 
-(`logs/A_M2_krawczyk_M3_1e-8.log`.) The chart's Γ is in `data/A_M2_chart_M3.json`. Every contribution is at most
-2.8×10⁻⁶ of its width: the box could be much larger (§6.4). The zero, from the smallest passing box (θ = 1.05×10⁻⁴):
+(`logs/A_M2_krawczyk_M3_1e-8.log`, `logs/A_M2_krawczyk_M3_1e-6.log`.) The chart's Γ is in `data/A_M2_chart_M3.json`.
+At h = 10⁻⁸ every contribution is at most 2.8×10⁻⁶ of its width, at h = 10⁻⁶ at most 2.3×10⁻³ (the largest in the
+inner rows from the (outer, outer) pairs, whose midpoint the chart has removed: what is left is the radius, the third
+order term of §2): the boxes are 10² and 10⁴ times the C¹ one in the outer
+directions and 2.5×10² and 2.5×10⁴ times in the inner ones. The zero, from the smallest passing box of the h = 10⁻⁸ run
+(θ = 1.05×10⁻⁴):
 A ∈ [2.72647588563088, 2.72647588563089], ω/ω∞ ∈ [1.01560309485773, 1.01560309485774],
 B₃ ∈ [0.144419478470076, 0.144419478470077], C₃ ∈ [0.0110874258881167, 0.0110874258881168], inside the certified
 enclosure of A_M.md §6.2 in every coordinate (`--reference=AM3`: REPRODUCED).
 
 The D2 check (`logs/A_M2_d2check_M3_1e-8.log`) passes: the largest entries of Y D²g̃(0), up to 3.9×10¹¹ (the outer rows
 in the harmonic-3 pairs), agree with the finite differences to the enclosure's radius 4.7×10⁷; the worst deviation
-is 3.5×10⁻¹⁰ of its tolerance.
+is 3.5×10⁻¹⁰ of its tolerance (6.3×10⁻¹¹ on the h = 10⁻⁶ run).
+
+### 6.3 Controls at M = 1 and M = 3
+
+| check | run | result | expected |
+|---|---|---|---|
+| C² self-test | | PASS | PASS |
+| | `--mutate=lin2` | FAIL (secondvar vs differences 0.25–3.3 relative; one step's W not contained) | FAIL |
+| D2 | M = 1, h = 10⁻⁹, clean (`logs/A_M2_d2check_M1_1e-9_none.log`) | pass (worst ratio 4.8×10⁻¹²) | pass |
+| | M = 1, h = 10⁻⁹, secondvar's sign flipped (`_lin2.log`) | fail (worst ratio 17, exit 1) | fail |
+| | M = 1, h = 10⁻⁹, start second derivatives dropped (`_w0.log`) | fail (worst ratio 4.5, exit 1) | fail |
+| | M = 3, h = 10⁻⁸, secondvar's sign flipped, chart term dropped | §6.3a | fail |
+| Krawczyk C0–C8, C6b | M = 1, h = 10⁻⁶ (`logs/A_M2_controls_M1_1e-6.log`) | all as expected (no C8 at M = 1) | as A_M.md §5 |
+| | M = 3, h = 10⁻⁸ (`logs/A_M2_controls_M3_1e-8.log`) | all as expected | as A_M.md §5 |
+| recheck (mpmath) | M = 1, h = 10⁻⁶ (`logs/A_M2_recheck_M1_1e-6.log`) | pass, margins 1.000, 1.000; A ∈ [2.5421480475422, 2.5421480476910] | the same verdict |
+| | the same, jump sign flipped (`_mutate.log`) | fail (exit 1) | fail |
+| | M = 3, h = 10⁻⁸ (`logs/A_M2_recheck_M3_1e-8.log`) | pass, margins 1.000 (all four); A ∈ [2.7264758856308, 2.7264758856310] | the same verdict |
+| | the same, jump sign flipped (`_mutate.log`) | fail (exit 1) | fail |
+
+**One finding about the D2 control.** Run on the h = 10⁻⁶ box at M = 1, the two mutated runs did *not* fail the D2
+check (`logs/A_M2_d2check_M1_1e-6_mut_lin2.log`, `_w0.log`): there the radius of YℓW(X) (about 20) is as large as the
+second derivatives themselves (at most 18.5), so a containment test cannot see an error of order one. D2 is a test
+only where the radius is small against the entries; at M = 1 that needs a small box (h = 10⁻⁹: radius 0.5, where both
+mutations fire), at M = 3 the h = 10⁻⁸ box already has a relative radius of 10⁻⁴ in the largest entries. The table
+reports the controls on those boxes; the h = 10⁻⁶ results are kept in the logs.
 
 ## 7. Reproduce
 
