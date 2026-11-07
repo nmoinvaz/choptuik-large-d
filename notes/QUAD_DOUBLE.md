@@ -2147,16 +2147,16 @@ on the faster build.
 
 `hp/export_delta_all.py` writes `hp/data/delta_all.csv`, one row per D with Δ in up to four parts, the kind of
 computation, an error estimate and its kind, the source record and the state (columns and precedence in its docstring;
-the README's Values section describes the file). It read the raw-data repository at 91fa7c4. Its 2471 rows:
+the README's Values section describes the file). It read the raw-data repository at fca1d5e. Its 2474 rows:
 
 | kind | rows | D | err, its kind and range |
 |---|---|---|---|
 | dd, the full system in double-double (`data/delta_dd.csv`) | 1259 | 3.044–67.767 | dM 1.1e-22 to 4.1e-10, check 1e-16 to 2e-15 |
 | qd, the full system in quad-double (`data/delta_qd.csv`) | 7 | 68.5–73.0 | starts 5.0e-29 to 8.4e-28 (5 rows) |
 | pinned, Delta_full1 of T73, T75 and T85-mac | 895 | 67.768–78.105 | pins 7.4e-19 to 8.6e-15 (150), layouts 2.3e-7 to 8.3e-7 (3) |
-| chain, the backbone of the asymptotic numerical method's runs | 310 | 75.27–214.77 | runs 1.9e-32 to 1.1e-17 (69) |
+| chain, the backbone of the asymptotic numerical method's runs | 313 | 75.27–214.88 | runs 1.9e-32 to 1.1e-17 (69) |
 
-`--verify` re-reads every row from the record or state it names and finds all 2471 equal. `--mutate=dd`, `qd`, `pinned`
+`--verify` re-reads every row from the record or state it names and finds all 2474 equal. `--mutate=dd`, `qd`, `pinned`
 and `chain` move one row's second part by one ulp, and each fails it (exit 1).
 
 **The chain's backbone.** Every state of a run carries the run's start state (`source` in its metadata), so the chain is
@@ -2345,6 +2345,7 @@ chain states. Its Δ component is the held harmonics' bias, from neither the ser
 | 100.12 | +4.79e-7 | +4.78e-7 | — |
 | 149.56 | +1.905e-6 | +1.895e-6 | — |
 | 200.27 | +3.228e-6 | +3.158e-6 | — |
+| 214.88 | +3.448e-6 | — | — |
 
 The step is first order and the iteration does not converge past it (no trial accepted), so the agreement to 0.5–2% is
 that of a linear estimate. With three methods agreeing, the chain's gap to the series is its held harmonics, and the
