@@ -4,7 +4,7 @@
 
 Hold the harmonics on a fit of the full-system states in 1/n (`hp/held_fit.py`, `hp/data/held_fit.json`) instead of
 the power-law trend, and restart the chain from the full-system quad-double state at 73.0 (T81) with
-`anm_run.py --held_fit ../hp/data/held_fit.json`. The defaults are unchanged. The evidence is numerical:
+`anm_run.py --held_fit data/held_fit.json` (run from `hp/`). The defaults are unchanged. The evidence is numerical:
 
 - **The cause.** The chain's gap to the series is its held harmonic 5. The pinned system's first-order response,
   s · (h_chain − h_fit), gives −5.003e-8 at 79.77 against the measured −5.002e-8, and 90% of it is harmonic 5's cosine
@@ -22,8 +22,8 @@ the power-law trend, and restart the chain from the full-system quad-double stat
 - **Holding less.** The Schur complement on the held rows (4.3) shows the full equations determine harmonics 5, 7 and
   9 at 80, and harmonics 11 and 13 are the near-null directions. Solving 5–9 and holding only 11 and 13 gives, to
   first order, the same Δ as the fit: +5.00e-8 when solving 5 and 7, against the +5.002e-8 needed. Its
-finite-difference check fails in the near-null singular values (4.3). That is the extrapolation-free route past D 100, where
-  the fit extrapolates 42% beyond its range. Its chain form is `--kfreeze 9` or `7`, which is untested here past 80.
+  finite-difference check fails in the near-null singular values (4.3). This is the route that needs no extrapolation
+  past D 100, where the fit extrapolates 42% beyond its range. Its chain form is `--kfreeze 7` or `9`, untested here.
 
 ## 1. The question
 
@@ -88,12 +88,12 @@ At 79.77 the chain's 11 and 13 differ from the full-system fit of section 4 by u
 about +3e-12 (the sum of their four terms, 2.6e-12 + 4.2e-12 − 3.8e-12 − 0.06e-12). Holding them constant costs about
 3e-12 at 80, four orders below the bias.
 
-**The bias is harmonic 5's trend.** The same products, s times the chain's held value minus the fit's, give the
-bias term by term. At 79.77 harmonic 5's cosine gives −4.5e-8 and its sine −4.9e-9, and harmonic 7 gives +1.1e-10.
-Their sum, −5.003e-8, is the chain's measured gap to the series, −5.002e-8. At 82.72 the sum is −8.91e-8, against a
-measured −9.17e-8, and at 84.47 it is −1.154e-7 against −1.21e-7. Those two use s at 79.77, so they are estimates. The
-exponent −1.21 of harmonic 5's cosine was fitted over 2.6 units of D and is used over 6–140 units. The full-system
-curve of √n h₅ bends away from that power law, and harmonic 5 is the held harmonic that Δ is most sensitive to.
+**The bias is harmonic 5's trend.** The same products, s times the chain's held value minus the fit's, give the bias
+term by term. At 79.77 harmonic 5's cosine gives −4.5e-8 and its sine −4.9e-9, and harmonic 7 gives +1.1e-10. Their sum,
+−5.003e-8 (this first estimate used the run's fit of 4.2), is the chain's measured gap to the series, −5.002e-8. With s
+at each state and the recommended fit, the sum equals the gap to 1e-13 at 79.77–85.75 and to 2.5e-11 at 150 (4.2). The
+exponent −1.21 of harmonic 5's cosine was fitted over 2.6 units of D and is used over 6–140 units. The full-system curve
+of √n h₅ bends away from that power law, and harmonic 5 is the held harmonic that Δ is most sensitive to.
 
 ## 4. Candidates
 
@@ -153,9 +153,10 @@ quad-double state at 73.0. The settings were `--kfreeze 3 --corrector qd --h_max
 --threads 2`, everything else default, and the run used the first fit (degree 8, D ≥ 30, every harmonic at degree 8).
 The log, `anm_run.jsonl` and the states are in the scratch folder `held_harmonics/chain_fit73/`. The run took 8
 steps to 79.83, with the Mac's load average at 53–74 when it was read. Every point converged in quad-double (no
-stall accepted), and the run was stopped there. `chain_vs_series.py --folders=<that folder>,anm-mac/run_trend_pin3,anm-mac/run_trend_pin3_qd3`
-gives Δ minus the series. The spread is over the six series (degrees 16–20 in 1/D and 1/n), a spread over fit choices
-and not a bound:
+stall accepted), and the run was stopped there.
+`chain_vs_series.py RAW --folders=<that folder>,anm-mac/run_trend_pin3,anm-mac/run_trend_pin3_qd3`
+gives Δ minus the series (that command, with the folder path written out). The spread is over the six series (degrees
+16–20 in 1/D and 1/n), a spread over fit choices and not a bound:
 
 | D | run | Δ | 1/D 20 | 1/n 20 | spread of the six | \|mean\| / spread |
 |---|---|---|---|---|---|---|
@@ -241,14 +242,13 @@ of the finite differences):
 | 5–11 | 13 | +3.91e-8 | +3.08e-8 | −1.1e-8; −1.9e-8 |
 | all | none | −4.0e-10 | −3.58e-8 | −5.0e-8; −8.6e-8 |
 
-The chain's gap to the series is −5.002e-8. To first order, solving 5 and 7 and holding the rest removes it to 1–5e-11,
-and solving 5 to 9 removes it to 2e-10. Harmonic 9's singular values are uncertain by 3% in the finite differences,
-which moves the second result by 4e-10. Solving everything (the full Newton step) does not, because the near-null steps of 11 and 13 are
-far outside the linear range. Their Δ terms, −1.1e-8 and −4.0e-8 from S at eps, cancel the gain from harmonic 5, and they change with eps, since
-their singular values are not resolved. So "hold only the
-near-null combination" works here when the near-null combination is harmonics 11 and 13 (or 9–13). The first-order
-estimate leaves 1e-11 to 2e-10, against the fit's 1e-11 at the same state. The fit's estimate is first
-order too, but in a much smaller held error.
+The chain's gap to the series is −5.002e-8. To first order, solving 5 and 7 and holding the rest removes it to
+1–5e-11, and solving 5 to 9 removes it to 2e-10. Harmonic 9's singular values are uncertain by 3% in the finite
+differences, which moves the second result by 4e-10. Solving everything (the full Newton step) does not remove it,
+because the near-null steps of 11 and 13 are far outside the linear range. Their Δ terms, −1.1e-8 and −4.0e-8 from S
+at eps, cancel the gain from harmonic 5, and they change with eps, since their singular values are not resolved. So
+holding only the near-null combination works here when that combination is harmonics 11 and 13 (or 9–13). The
+first-order estimate leaves 1e-11 to 2e-10, against the fit's 6e-14 at the same state (4.2).
 
 **Planted truth** (`--plant=5a:1e-8,13a:1e-6` at the full state at 73.0, where g = 0). A planted held error of 1e-8 in
 harmonic 5's cosine and 1e-6 in 13's, in the linear model, has an exact Δ correction of −8.565e-11. Of that, −8.49e-11
@@ -259,12 +259,11 @@ recovers the error in the directions it solves and leaves the error in the ones 
 **Its check fails, and its control fires.** The check fixed beforehand was that S from eps and eps/2 agree to 1e-6 in
 every singular value above 1e-12 σ₁, and it fails. At 73.0 the relative differences are 1.5e-6 for harmonic 5, 5e-5
 for 7, 2e-3 for 9, 1e-2 for 11 and 0.1 for 13. At 79.77 they are 4e-5 for 5, 3e-5 to 2e-4 for 7, 0.5–3% for 9,
-3–19% for 11 and 66–76% for 13. Central differences at a relative step
-of 2⁻⁴⁰ do not resolve the near-null singular values. So those values are bounds of order 1e-22 to 1e-23, not
-measurements. Between eps and eps/2, the truncated steps that solve 5 or 5–7 change by less than 1e-3 relative, and the one
-that solves 5–9 by 7e-3. The control
-`--mutate=pinned_rows` reads g and S from the pinned kernel's own rows, which do not contain the dropped matching.
-There σ₁ is 1.3e-33 and the check fails, exit 1.
+3–19% for 11 and 66–76% for 13. Central differences at a relative step of 2⁻⁴⁰ do not resolve the near-null singular
+values, so those values are estimates of order 1e-22 to 1e-23, not measurements. Between eps and eps/2, the
+truncated steps that solve 5 or 5–7 change by less than 1e-3 relative, and the one that solves 5–9 by 7e-3. The
+control `--mutate=pinned_rows` reads g and S from the pinned kernel's own rows, which do not contain the dropped
+matching. There σ₁ is 1.3e-33 and the check fails, exit 1.
 
 ### 4.4 Not run
 
