@@ -21,8 +21,8 @@ the power-law trend, and restart the chain from the full-system quad-double stat
   to 6e-14 at 79.77, 1e-12 at 100, 2.5e-11 at 150 and 9e-11 at 200 (4.2, with the octo-double LU at 200). The whole
   gap of 13.29, −3.2e-6 at 200, is the held harmonics' first-order error.
 - **Holding less.** The Schur complement on the held rows (4.3) shows the full equations determine harmonics 5, 7 and
-  9 at 80, and harmonics 11 and 13 are the near-null directions. Solving 5–9 and holding only 11 and 13 gives, to
-  first order, the same Δ as the fit: +5.00e-8 when solving 5 and 7, against the +5.002e-8 needed. Its
+  9 at 80, and harmonics 11 and 13 are the near-null directions. Solving 5 and 7 and holding the rest gives, to first
+  order, the same Δ as the fit, +5.00e-8 against the +5.002e-8 needed. Solving 5–9 gives the same to 2e-10. Its
   finite-difference check fails in the near-null singular values (4.3). This is the route that needs no extrapolation
   past D 100, where the fit extrapolates 42% beyond its range. Its chain form is `--kfreeze 7` or `9`, untested here.
 
