@@ -1,0 +1,12 @@
+M = 3: max |Y D^2 gt| per (row block, pair block) at 0 (first-order chart)
+   rows / pairs         oo        oz3       z3z3
+   o              1.46e+01   1.37e+07   3.94e+11
+   z3             5.85e-01   2.32e+01   1.47e+05
+   outer rows: h < 1/|Y D^2|_(o,oo) = 6.85e-02; inner rows: h < 1/(2 max |Y D^2|_(z,oz)) = 2.15e-02
+   inner width z3: w < 1/(2 |Y D^2|_(o,oz3)) = 3.64e-08 and < 1/|Y D^2|_(z,z3z3) = 6.81e-06
+M = 3: max |Y D^2 gt| per (row block, pair block) at 0 (second-order chart)
+   rows / pairs         oo        oz3       z3z3
+   o              1.46e+01   1.37e+07   3.94e+11
+   z3             1.01e-16   2.32e+01   1.47e+05
+   outer rows: h < 1/|Y D^2|_(o,oo) = 6.85e-02; inner rows: h < 1/(2 max |Y D^2|_(z,oz)) = 2.15e-02
+   inner width z3: w < 1/(2 |Y D^2|_(o,oz3)) = 3.64e-08 and < 1/|Y D^2|_(z,z3z3) = 6.81e-06

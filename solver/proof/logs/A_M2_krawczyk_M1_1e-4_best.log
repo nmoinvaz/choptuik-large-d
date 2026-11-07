@@ -1,0 +1,10 @@
+   largest passing outer half-width with the run's inner widths: 2.0589113209464907e-05
+Krawczyk (C^2) M = 1: K(X) in int X: True; relative margins +0.034, +0.348
+   start values: fixed_point_M.start_data_M (rigorous given that lemma; sha256 589e5a810bc50289), arg 3pi/8, plain splitting, N = 53; second derivatives: series jets + Cauchy; run mutations: []
+   gt(0): |Y g| per row / width 5.7e-06, 4.7e-07
+   box of the run: h = 1e-4, w = ['0']; tested on: half-widths 2.06e-05, 2.06e-05
+   contributions to |K_i| / w_i (columns: |Y g|, first order, then each pair jk):
+[[5.66e-06 1.47e-06 1.21e-01 4.30e-01 4.15e-01]
+ [4.72e-07 8.25e-07 8.16e-02 2.90e-01 2.80e-01]]
+   A        in [2.54212815597267, 2.54216793926045]  (radius 1.99e-05)
+   w/w_inf  in [0.776980589169327, 0.777007438050121]  (radius 1.34e-05)

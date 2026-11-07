@@ -1,0 +1,13 @@
+Krawczyk (C^2) M = 3: K(X) in int X: True; relative margins +1.000, +1.000, +1.000, +1.000
+   start values: fixed_point_M.start_data_M (rigorous given that lemma; sha256 589e5a810bc50289), arg 5pi/16, diag splitting, N = 95; second derivatives: series jets + Cauchy; run mutations: ['lin2']
+   gt(0): |Y g| per row / width 1.2e-12, 1.2e-12, 1.6e-10, 1.6e-10
+   box of the run: h = 1e-8, w = ['1e-13']; tested on: half-widths 1e-08, 1e-08, 1e-13, 1e-13
+   contributions to |K_i| / w_i (columns: |Y g|, first order, then each pair jk):
+[[1.22e-12 2.21e-08 5.62e-08 2.89e-07 4.88e-07 1.19e-06 2.43e-07 8.53e-07 2.49e-06 2.06e-07 2.47e-07 2.02e-07]
+ [1.21e-12 1.50e-08 8.13e-08 1.99e-07 7.50e-07 1.46e-07 2.47e-07 1.55e-06 3.03e-07 1.07e-07 1.27e-07 1.07e-07]
+ [1.55e-10 5.60e-08 6.07e-05 2.31e-04 1.18e-08 8.30e-08 1.23e-04 4.83e-07 2.13e-08 8.85e-09 7.26e-09 8.73e-09]
+ [1.55e-10 5.61e-08 1.95e-06 5.20e-05 8.36e-08 1.06e-08 1.12e-04 2.20e-08 4.83e-07 3.63e-09 1.76e-08 3.74e-09]]
+   A        in [2.72647588563081, 2.72647588563095]  (radius 6.29e-14)
+   w/w_inf  in [1.01560309485769, 1.01560309485777]  (radius 3.63e-14)
+   B3       in [0.144419478470059, 0.144419478470095]  (radius 1.79e-14)
+   C3       in [0.0110874258881156, 0.0110874258881178]  (radius 1.05e-15)

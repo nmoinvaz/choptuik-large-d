@@ -1,0 +1,16 @@
+Krawczyk (C^2) M = 1: K(X) in int X: True; relative margins +1.000, +1.000
+   start values: fixed_point_M.start_data_M (rigorous given that lemma; sha256 589e5a810bc50289), arg 3pi/8, plain splitting, N = 53; second derivatives: series jets + Cauchy; run mutations: []
+   gt(0): |Y g| per row / width 1.2e-04, 9.7e-06
+   box of the run: h = 1e-6, w = ['0']; tested on: half-widths 1e-06, 1e-06
+   contributions to |K_i| / w_i (columns: |Y g|, first order, then each pair jk):
+[[1.17e-04 1.47e-06 7.58e-06 3.32e-05 3.21e-05]
+ [9.73e-06 8.25e-07 1.29e-05 2.91e-05 3.76e-05]]
+   A        in [2.54214804754220, 2.54214804769092]  (radius 7.44e-11)
+   w/w_inf  in [0.776994013529307, 0.776994013690141]  (radius 8.04e-11)
+   smallest passing box: theta = 0.000129; relative margins +0.096, +0.925
+   the zero (endpoints rounded outward):
+   A        in [2.54214804761655, 2.54214804761657]  (radius 2.19e-15)
+   w/w_inf  in [0.776994013609722, 0.776994013609726]  (radius 1.88e-15)
+   A        overlaps the reference (thmA1, shifted): False; C^2 enclosure inside it: False
+   w/w_inf  overlaps the reference (thmA1): True; C^2 enclosure inside it: True
+reference check (thmA1): NOT REPRODUCED

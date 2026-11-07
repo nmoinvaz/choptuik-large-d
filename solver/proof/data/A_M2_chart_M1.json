@@ -1,0 +1,12 @@
+{
+ "M": 1,
+ "p": [
+  "2.5421480475",
+  "0.7769940136"
+ ],
+ "C": [],
+ "Gamma": [],
+ "centre": "data/A_M_point_M1.json",
+ "fd": null,
+ "note": "chart p(x) = p^ + T x + (0, Gamma[x_o, x_o]/2); Gamma rows [g_00, g_01, g_11] (numerics; any chart is allowed)"
+}

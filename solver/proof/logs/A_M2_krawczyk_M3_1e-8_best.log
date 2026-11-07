@@ -1,0 +1,14 @@
+   largest passing outer half-width with the run's inner widths: 1e-08
+Krawczyk (C^2) M = 3: K(X) in int X: True; relative margins +1.000, +1.000, +1.000, +1.000
+   start values: fixed_point_M.start_data_M (rigorous given that lemma; sha256 589e5a810bc50289), arg 5pi/16, diag splitting, N = 95; second derivatives: series jets + Cauchy; run mutations: []
+   gt(0): |Y g| per row / width 1.2e-12, 1.2e-12, 1.6e-10, 1.6e-10
+   box of the run: h = 1e-8, w = ['1e-13']; tested on: half-widths 1e-08, 1e-08, 1e-13, 1e-13
+   contributions to |K_i| / w_i (columns: |Y g|, first order, then each pair jk):
+[[1.22e-12 2.21e-08 2.10e-08 9.64e-08 4.18e-07 1.27e-06 1.01e-07 7.76e-07 2.75e-06 3.94e-07 5.50e-07 3.87e-07]
+ [1.21e-12 1.50e-08 6.57e-08 1.28e-07 7.62e-07 1.86e-07 2.08e-07 1.64e-06 3.91e-07 2.31e-07 2.28e-07 2.31e-07]
+ [1.55e-10 5.60e-08 5.32e-08 2.17e-07 1.10e-08 1.04e-07 2.24e-07 4.65e-07 1.37e-08 1.47e-08 1.57e-08 1.45e-08]
+ [1.55e-10 5.61e-08 5.33e-08 2.17e-07 1.04e-07 9.39e-09 2.24e-07 1.45e-08 4.64e-07 7.89e-09 2.92e-08 8.06e-09]]
+   A        in [2.72647588563081, 2.72647588563095]  (radius 6.78e-14)
+   w/w_inf  in [1.01560309485769, 1.01560309485778]  (radius 4.09e-14)
+   B3       in [0.144419478470057, 0.144419478470097]  (radius 1.96e-14)
+   C3       in [0.0110874258881155, 0.0110874258881179]  (radius 1.15e-15)

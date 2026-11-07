@@ -9,11 +9,13 @@ point is being written separately (`solver/proof/fixed_point_M.py`, notes in `pr
 
 **Status.** M = 1: this code path reproduces Theorem A(M = 1)'s box (§6.1). M = 3: **certified**, given the M-harmonic
 start-value lemma `fixed_point_M.start_data_M` and Braaksma's theorem, on a parallelepiped of outer half-width 10⁻¹⁰
-(§6.2). M = 5: **not certified**. The centre is refined (numerical evidence), but the four box runs of §7 on the local
-machine all failed: at h = 3×10⁻¹¹ and 10⁻¹² (twice) the derivative radius grew past order one on the arc, and the one
-run that finished (h = 10⁻¹³) fails the Krawczyk test (margins −13.7, −11.8, +0.29, +0.33, −542, −511;
-`logs/A_M_krawczyk_M5_1e-13.log`). By §7 the next step is a design change (a second-order chart or C² enclosures), not
-more runs. An independent review ([A_M_review.md](A_M_review.md)) confirms the M = 3 certificate. With lemma 6a run on this certificate's state box
+(§6.2). M = 5: **not certified by this note's first-order code**. The centre is refined (numerical evidence), but the
+four box runs of §7 on the local machine all failed: at h = 3×10⁻¹¹ and 10⁻¹² (twice) the derivative radius grew past
+order one on the arc, and the one run that finished (h = 10⁻¹³) fails the Krawczyk test (margins −13.7, −11.8, +0.29,
++0.33, −542, −511; `logs/A_M_krawczyk_M5_1e-13.log`). The design change of §7, a second-order chart with C² enclosures,
+is [A_M2.md](A_M2.md): with it M = 5 is **certified** (given the same lemma and Braaksma's theorem; the new code not
+reviewed) on a curved parallelepiped of outer half-width 10⁻¹⁰ (A_M2.md §6.4). An independent review
+([A_M_review.md](A_M_review.md)) confirms the M = 3 certificate. With lemma 6a run on this certificate's state box
 (ρ₆ₐ = 0.041) and the other lemmas of [A_lemmas_M.md](A_lemmas_M.md), **Theorem A(3) is certified** (A_lemmas_M.md §7).
 
 Code: [`solver/proof/certify_M.py`](../solver/proof/certify_M.py) (driver, the Krawczyk test, refinement, controls),
@@ -172,7 +174,8 @@ nothing to the leakage at first order. What limits the box:
   limited M = 1 to 10⁻⁹ (10⁻⁸ in CAPD).
 
 A larger box at M = 5 would need a second-order chart and second-order (C²) enclosures, so that the inner widths are
-third order in h and the Jacobian is enclosed in mean value form; that is not attempted here.
+third order in h and the Jacobian is enclosed in mean value form; that is not attempted here. It is built in
+[A_M2.md](A_M2.md).
 
 **The centre.** The box must be centred within a fraction of its widths of the zero, in every coordinate:
 |x_o − x_o*| ≪ h and the inner coordinates to ≪ w. hier.py's zeros are good to about 2×10⁻¹¹ (the spread between two

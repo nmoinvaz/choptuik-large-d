@@ -1,0 +1,22 @@
+Krawczyk M = 3: K(X) in int X: True; relative margins +0.994, +0.997, +0.778, +0.778
+radius of Y Dgt(X) (box data/A_M_box_M3_1e-10.json):
+[[1.84e-03 3.75e-03 2.27e-01 2.26e-01]
+ [9.83e-04 2.00e-03 1.43e-01 1.42e-01]
+ [3.17e-07 5.72e-07 1.14e-06 1.14e-06]
+ [3.17e-07 5.73e-07 1.14e-06 1.14e-06]]
+relative contribution to |K_i| / w_i, rad_ij w_j / w_i:
+[[1.84e-03 3.75e-03 9.08e-07 9.03e-07]
+ [9.83e-04 2.00e-03 5.72e-07 5.69e-07]
+ [7.92e-02 1.43e-01 1.14e-06 1.14e-06]
+ [7.93e-02 1.43e-01 1.14e-06 1.14e-06]]
+|Y gt(0)|_i / w_i: 1.2e-10, 1.2e-10, 3.9e-08, 3.9e-08
+true variation of Y Dgt over the box, sum_k |Y D^2 gt|_(i,jk) w_k (finite differences):
+[[3.47e-09 7.33e-09 8.64e-04 2.27e-03]
+ [2.73e-09 5.85e-09 1.34e-03 4.26e-04]
+ [2.83e-11 7.94e-11 2.47e-09 6.75e-10]
+ [1.34e-12 4.47e-12 6.82e-10 2.46e-09]]
+excess of the C^1 enclosure, radius / true variation:
+[[5.31e+05 5.12e+05 2.63e+02 9.94e+01]
+ [3.60e+05 3.42e+05 1.07e+02 3.34e+02]
+ [1.12e+04 7.20e+03 4.61e+02 1.69e+03]
+ [2.36e+05 1.28e+05 1.67e+03 4.63e+02]]

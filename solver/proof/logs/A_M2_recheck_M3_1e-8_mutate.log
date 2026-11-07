@@ -1,0 +1,6 @@
+recheck, second order (mpmath intervals) [mutated: jump sign] data/A_M2_box_M3_1e-8.json: K(X) in int X: False; relative margins -69705846.168, -35811886.687, -9200.584, -11849.997
+   A        in [2.0294174139521009, 2.0294174139522873]
+   w/w_inf  in [1.3737219717274396, 1.3737219717275182]
+   B3       in [0.065291480630613059, 0.065291480630710229]
+   C3       in [-0.00017051454866742071, -0.00017051454866215366]
+recheck exit 1
