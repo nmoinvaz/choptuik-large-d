@@ -2458,3 +2458,24 @@ on either side of it by up to 5.7e-12. So the step removes 93–99% of the fit's
 remainder does not change sign with b. The moves of harmonic 5's cosine alone return b to 1e-5 at the same size, so
 the remainder comes from the other held harmonics or from the junk directions the step freezes. Until the cause is
 known, the step is a measurement of chain_fit's bias to about 1e-13, not a correction.
+
+**The step's response per held coefficient (T148, win2, `T148-win2/`, raw 732d9ef; T149, macm3, `T149-macm3/`, raw
+33acc7f).** `release_planted.py --harm --part` moves one coefficient by 1e-11 and solves the pinned system again. The
+ratio is the step's response over the planted bias, and s is the bias per unit move (dΔ/dh), both from the runs'
+result lines. Harmonic 5's cosine is T144's.
+
+| coefficient | s at 100 | ratio at 100 | ratio at 80 |
+|---|---|---|---|
+| 5 cos | +1.1066e-2 | 1.000006 | 0.99999999 |
+| 5 sin | +7.5347e-3 | 0.9999952 | 1.0000001 |
+| 7 cos | +2.5931e-4 | 0.99991 | 0.99991 |
+| 7 sin | −9.4625e-4 | 0.9999969 | 1.0000048 |
+| 9 cos | −3.1959e-6 | 0.894 | — |
+| 9 sin | +1.0825e-5 | 0.988 | — |
+| 11 cos | −5.9000e-6 | 0.222 | — |
+| 13 cos | +6.1406e-7 | 0.191 | — |
+
+The step returns moves of harmonics 5 and 7 to 1e-4 or better, at both D. It misses most of the highest cosines'
+response, whose sensitivities are 10³–10⁴ times smaller. Those are the directions whose held offsets differ most
+between the degree-6, 8 and 10 fits (10⁻⁸–10⁻⁷ at 100), so they are T147's remainder's likely source. The sines of 11
+and 13 (macm3, T148 part 1b) and the dependence on the number of frozen junk directions (T148 part 2) are running.
