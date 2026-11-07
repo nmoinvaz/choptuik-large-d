@@ -2476,6 +2476,7 @@ result lines. Harmonic 5's cosine is T144's.
 | 13 cos | +6.1406e-7 | 0.191 | — |
 
 The step returns moves of harmonics 5 and 7 to 1e-4 or better, at both D. It misses most of the highest cosines'
-response, whose sensitivities are 10³–10⁴ times smaller. Those are the directions whose held offsets differ most
-between the degree-6, 8 and 10 fits (10⁻⁸–10⁻⁷ at 100), so they are T147's remainder's likely source. The sines of 11
-and 13 (macm3, T148 part 1b) and the dependence on the number of frozen junk directions (T148 part 2) are running.
+response, whose sensitivities are 10³–10⁴ times smaller. Those are among the directions in which the degree-6, 8 and 10
+fits differ, so they are a likely source of T147's remainder. The decomposition of that remainder by coefficient waits
+for the sines of 11 and 13 (macm3, T148 part 1b), and the dependence on the number of frozen junk directions is T148
+part 2.
