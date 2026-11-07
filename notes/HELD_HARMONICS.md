@@ -13,10 +13,16 @@ the power-law trend, and restart the chain from the full-system quad-double stat
   13–50 times its full-system size. Δ hardly feels them, though, and they cost about 3e-12 at 80 (section 3).
 - **Planted truth.** Fitted on the double-double states alone, the fit predicts the full system's Δ 7.5–12 units ahead
   to 3e-13, where the trend's rule in the same geometry is off by 1–2e-7 (4.1, 4.2). Its control fires.
-- **In the chain.** PLACEHOLDER-CHAIN
+- **In the chain.** From T81's full state at 73.0, the chain with `--held_fit` reached 79.83 in 8 quad-double steps.
+  Every point lies on the series within the series' spread: −6.7e-14 against the degree-20 series at 79.83, where the
+  old chain is at −5.0e-8 at 79.77 (4.2). The control, a fit with harmonic 5's increments 1% wrong, shows −2.99e-9
+  after one step against a predicted −2.96e-9.
+- **The old chain, corrected to first order.** s · (h_fit − h_chain) at its stored states brings it onto the series
+  to 6e-14 at 79.77, 1e-12 at 100 and 2.5e-11 at 150 (4.2). At 200 the quad-double LU cannot give s.
 - **Holding less.** The Schur complement on the held rows (4.3) shows the full equations determine harmonics 5, 7 and
   9 at 80, and harmonics 11 and 13 are the near-null directions. Solving 5–9 and holding only 11 and 13 gives, to
-  first order, the same Δ as the fit (PLACEHOLDER-SCHUR-SHORT). That is the extrapolation-free route past D 100, where
+  first order, the same Δ as the fit: +5.00e-8 when solving 5 and 7, against the +5.002e-8 needed. Its
+finite-difference check fails in the near-null singular values (4.3). That is the extrapolation-free route past D 100, where
   the fit extrapolates 42% beyond its range. Its chain form is `--kfreeze 9` or `7`, which is untested here past 80.
 
 ## 1. The question
@@ -168,7 +174,39 @@ shrinks from 5.0e-8 to under 1e-13 against the degree-20 series, a factor of mor
 and agreement within 1e-10, so the test passes. The old chain's points at 75.27 and 77.27 are its double-double run
 (`run_trend_pin3`).
 
-PLACEHOLDER-SERIES
+**The chain's control** (fixed before its run): one step from 73.0 to 73.81 on a fit whose harmonic 5 is 1% wrong
+(`fit --deg=8 --mutate=scale5:0.01`, the run's fit otherwise). In relative mode that puts 1% of harmonic 5's increment
+into the held values, −3.48e-7 in its cosine. The predicted bias, s(73) times that error, is −2.96e-9. The step
+converged (quad-double, 3 steps), with Δ 1.779777558776957 and Δ − series −2.99e-9, 1470 spreads off the series and
+1% from the prediction. The unmutated step to the same D gave −1.0e-14 against the degree-20 series.
+
+**The series check at 79–200, to first order** (`held_fit.py series`, with s from `sens` at each chain state). Each
+row is a stored state of the old chain, corrected by s · (h_fit − h_chain). The last column is the same with the
+degree-6 and degree-10 variants and with the run's fit:
+
+| D | chain − series | s · (h_fit − h_chain) | corrected − series | other fits − series |
+|---|---|---|---|---|
+| 79.77 | −5.002e-8 | +5.002e-8 | −6.3e-14 | −4.1e-14, −1.0e-13, −5.8e-14 |
+| 82.72 | −9.167e-8 | +9.167e-8 | −1.2e-13 | −5.5e-14, −2.1e-13, −9.8e-14 |
+| 85.75 | −1.438e-7 | +1.438e-7 | −1.9e-13 | −6.7e-14, −3.7e-13, −1.5e-13 |
+| 100.12 | −4.775e-7 | +4.775e-7 | −1.2e-12 | −2.7e-13, −2.4e-12, −8.7e-13 |
+| 149.56 | −1.895e-6 | +1.895e-6 | −2.5e-11 | −1.4e-11, −3.2e-11, −2.1e-11 |
+| 200.27 | −3.158e-6 | not valid (quad-double LU) | | |
+
+To first order, the held values' error accounts for the whole of the old chain's gap to the series up to D 150. What
+remains is 1e-13 at 80–86, 1e-12 at 100 and 2.5e-11 at 150. That lies inside the series' own spread over its six
+fits, 8.4e-12 at 80, 9.1e-11 at 100 and 9.0e-10 at 150 (`hp/data/published_vs_series.txt`), and is of the size of the
+held fits' spread over degree. At 150 the chain's held harmonic 5 is 10% off the fit and the first-order term is
+still all of the gap, so the second-order term is below 1e-11 there. At 200 the quad-double LU's smallest pivot is
+5e-15, against 1e-7 below 150, and s comes out of order 10 with random signs. That is the quad-double LU failure of
+QUAD_DOUBLE.md 13.28 and OCTO_DOUBLE.md 5, so the row needs the octo-double LU (`sens --octo=1`), PLACEHOLDER-OCTO.
+
+Two references, two extrapolations. The series extrapolates Δ itself in 1/D from D ≤ 67.77. The fit extrapolates
+p1's harmonics in 1/n from D ≤ 73 and passes them through the chain's pinned system. They share the full-system
+double-double states (the fit's 38–61 and the series' 10–67.77 overlap) and the assumption of analyticity in 1/n.
+They do not share the chain, the held-value treatment or the Δ data above 61. Their agreement to 1e-13–2.5e-11 at
+80–150 is numerical evidence for both, and in particular for the series' 13.29 gap to the published table. It is not
+a bound.
 
 ### 4.3 Holding less: solve the well-determined held directions (`held_schur.py`)
 
@@ -195,32 +233,36 @@ Newton step wants to move harmonic 13's coefficients by 0.06–0.08, against a f
 carry the 0.51 step that stopped the release of 13.19 and T136. Truncated steps (S from eps, and from eps/2 as a check
 of the finite differences):
 
-| solved | held | Δ change of the truncated step | from S at eps/2 | chain − series + change |
+| solved | held | Δ change, S at eps | S at eps/2 | chain − series + change (eps; eps/2) |
 |---|---|---|---|---|
-| 5 | 7–13 | +5.031e-8 | PLACEHOLDER | +2.9e-10 |
-| 5, 7 | 9–13 | +4.997e-8 | PLACEHOLDER | −4.7e-11 |
-| 5, 7, 9 | 11, 13 | +4.983e-8 | PLACEHOLDER | −1.9e-10 |
-| 5–11 | 13 | +3.91e-8 | PLACEHOLDER | −1.1e-8 |
-| all | none | −4.0e-10 | PLACEHOLDER | −5.0e-8 |
+| 5 | 7–13 | +5.031e-8 | +5.031e-8 | +2.9e-10; +2.9e-10 |
+| 5, 7 | 9–13 | +4.997e-8 | +5.001e-8 | −4.7e-11; −1.3e-11 |
+| 5, 7, 9 | 11, 13 | +4.983e-8 | +5.020e-8 | −1.9e-10; +1.8e-10 |
+| 5–11 | 13 | +3.91e-8 | +3.08e-8 | −1.1e-8; −1.9e-8 |
+| all | none | −4.0e-10 | −3.58e-8 | −5.0e-8; −8.6e-8 |
 
-The chain's gap to the series is −5.002e-8. Solving 5 and 7, or 5 to 9, and holding the rest removes it to 5e-11 to
-2e-10, to first order. Solving everything (the full Newton step) does not, because the near-null steps of 11 and 13 are
-far outside the linear range. Their Δ terms, −1.1e-8 and −4.0e-8, cancel the gain from harmonic 5. So "hold only the
+The chain's gap to the series is −5.002e-8. To first order, solving 5 and 7 and holding the rest removes it to 1–5e-11,
+and solving 5 to 9 removes it to 2e-10. Harmonic 9's singular values are uncertain by 3% in the finite differences,
+which moves the second result by 4e-10. Solving everything (the full Newton step) does not, because the near-null steps of 11 and 13 are
+far outside the linear range. Their Δ terms, −1.1e-8 and −4.0e-8 from S at eps, cancel the gain from harmonic 5, and they change with eps, since
+their singular values are not resolved. So "hold only the
 near-null combination" works here when the near-null combination is harmonics 11 and 13 (or 9–13). The first-order
-estimate leaves 5e-11 to 2e-10, which is larger than the fit's +1e-11 at the same state. The fit's estimate is first
+estimate leaves 1e-11 to 2e-10, against the fit's 1e-11 at the same state. The fit's estimate is first
 order too, but in a much smaller held error.
 
 **Planted truth** (`--plant=5a:1e-8,13a:1e-6` at the full state at 73.0, where g = 0). A planted held error of 1e-8 in
 harmonic 5's cosine and 1e-6 in 13's, in the linear model, has an exact Δ correction of −8.565e-11. Of that, −8.49e-11
 is the 5a part and −7.6e-13 the 13a part. Solving 5–9 and holding 11 and 13 recovers −8.520e-11 (−8.514e-11 from S at
-eps/2), which is the 5a part plus half the 13a part. Solving 5 alone recovers −8.596e-11. The method therefore
-recovers what lies in the directions it solves.
+eps/2), the 5a part and 3e-13 more. Solving 5 alone recovers −8.596e-11. Within 1e-12, the method therefore
+recovers the error in the directions it solves and leaves the error in the ones it holds.
 
 **Its check fails, and its control fires.** The check fixed beforehand was that S from eps and eps/2 agree to 1e-6 in
 every singular value above 1e-12 σ₁, and it fails. At 73.0 the relative differences are 1.5e-6 for harmonic 5, 5e-5
-for 7, 2e-3 for 9, 1e-2 for 11 and 0.1 for 13, and at 79.77 the worst is 0.76. Central differences at a relative step
+for 7, 2e-3 for 9, 1e-2 for 11 and 0.1 for 13. At 79.77 they are 4e-5 for 5, 3e-5 to 2e-4 for 7, 0.5–3% for 9,
+3–19% for 11 and 66–76% for 13. Central differences at a relative step
 of 2⁻⁴⁰ do not resolve the near-null singular values. So those values are bounds of order 1e-22 to 1e-23, not
-measurements. The truncated steps that solve 5–9 change by less than 1e-3 relative between eps and eps/2. The control
+measurements. Between eps and eps/2, the truncated steps that solve 5 or 5–7 change by less than 1e-3 relative, and the one
+that solves 5–9 by 7e-3. The control
 `--mutate=pinned_rows` reads g and S from the pinned kernel's own rows, which do not contain the dropped matching.
 There σ₁ is 1.3e-33 and the check fails, exit 1.
 

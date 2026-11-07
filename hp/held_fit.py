@@ -14,7 +14,7 @@ s = dDelta/dh the pinned system's response (one quad-double LU, `sens`). The pin
 solution, so this is the whole bias to first order in h - h_full.
 
     cd hp && python3 held_fit.py fit RAWDIR OUT.json [--deg=8] [--deg_hi=DEG] [--Dmin=30] [--Dmax=73.01]
-    cd hp && python3 held_fit.py sens RAWDIR OUT.json STATE [STATE ...] [--threads=2]
+    cd hp && python3 held_fit.py sens RAWDIR OUT.json STATE [STATE ...] [--threads=2] [--octo=1]
     cd hp && python3 held_fit.py planted RAWDIR SENS.json [--deg=8] [--deg_hi=DEG] [--mutate=scale5]
     cd hp && python3 held_fit.py check RAWDIR FIT.json [--mutate=jet]
     cd hp && python3 held_fit.py series RAWDIR SENS.json FIT.json [--plant=0]
@@ -150,8 +150,10 @@ def bias(sens, h, h_ref):
     return sum(sens[key] * (h[key] - h_ref[key]) for key in KEYS)
 
 
-def sens_at(raw, rel, threads):
-    """s = dDelta/dh for each held coefficient at a state (pinned kernel, kfreeze 3; one Solver.newton_q for the LU)"""
+def sens_at(raw, rel, threads, octo=False):
+    """s = dDelta/dh for each held coefficient at a state (pinned kernel, kfreeze 3; one Solver.newton_q for the LU).
+    octo: the octo-double LU instead (Solver.newton_o, olu_solve; M = 32), for D >~ 185, where the quad-double LU's
+    smallest pivot is wrong (notes/OCTO_DOUBLE.md 5)"""
     from hpkernel.driver import make_solver, load_q
     from pinning import band_field
     z, m = load_q(os.path.join(raw, rel))
@@ -159,7 +161,13 @@ def sens_at(raw, rel, threads):
     s = make_solver(D, M, nodes=list(m["nodes"]), kt=m.get("kt", 36), kc=m.get("kc", 146), ks=m.get("ks", 130), threads=threads,
                     kfreeze=3)
     s.set_segs(s.plan(np.asarray(z[0]), np.asarray(z[1]), 1e-32, 0.05))
-    out = s.newton_q(*z)
+    if octo:
+        from octo_corrector import load_o
+        zo, _ = load_o(os.path.join(raw, rel))
+        o = s.newton_o(list(zo))
+        out = (None,) * 6 + (o[3], o[4])
+    else:
+        out = s.newton_q(*z)
     L = len(z[0])
     r0 = ((L - 1) // (4 * M) - 1) * 4 * M
     zero = np.zeros(L)
@@ -169,7 +177,10 @@ def sens_at(raw, rel, threads):
             fh, fl = band_field([ab], [k], M)
             ch, cl = zero.copy(), zero.copy()
             ch[r0:r0 + M], cl[r0:r0 + M] = fh, fl
-            x = s.qlu_solve(ch, cl, zero, zero)
+            if octo:
+                x = s.olu_solve([ch, cl] + [zero] * 6)
+            else:
+                x = s.qlu_solve(ch, cl, zero, zero)
             res[f"{k}{c}"] = float(np.asarray(x[0])[-1] + np.asarray(x[1])[-1])
     Dz, zf, _, delta = load(os.path.join(raw, rel))
     return dict(state=rel, D=str(D), sens=res, h=coeffs_of(zf), delta=str(delta), piv=[float(out[6]), float(out[7])])
@@ -190,7 +201,7 @@ def main():
               + ", ".join(f"{k} {v:.1e}" for k, v in d["max_residual"].items()))
         return 0
     if cmd == "sens":
-        out = [sens_at(raw, rel, int(opts.get("threads", 2))) for rel in args[3:]]
+        out = [sens_at(raw, rel, int(opts.get("threads", 2)), octo=opts.get("octo") == "1") for rel in args[3:]]
         for r in out:
             print(f"{r['state']}: D {r['D']}, pivots {r['piv'][0]:.1e}..{r['piv'][1]:.1e}; s = " + ", ".join(f"{k} {v:+.4e}" for k, v in r["sens"].items()),
                   flush=True)
