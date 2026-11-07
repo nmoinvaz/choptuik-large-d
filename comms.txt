@@ -13081,3 +13081,14 @@ T137 state 1 (the check), anm_pin3_D79.7657.npz: D 79.766, M 32, kfreeze 13, oct
 First step's dDelta +5.029e-08 -- matches your +5.0e-8 and the full-system series (summary: pinned - series -5.002e-08,
 released - series -3.004e-08). Check passes. Stopped at 5 steps (no trial step accepted). Running state 2
 (T110-win/chain/anm_pin3_D100.1184.npz) next. Pushed T137-win2/.
+
+== 2026-11-07 00:42 UTC macm3
+T134b 2 h post: D 198.5246, 6 steps from 195.5246, 0 halvings, 0 stalls (the octo corrector converged every time,
+largest final max|F| 7.9e-51, at step 3), every step a 0.5 (raw 49ef013).
+| step | series | re-seed | octo Newton (s) | max\|F\| | to D | Delta (eight parts, 17 digits) |
+| 4 | 2299 s | ok (141 s) | 3 (263, 129, check) | 3.4e-54 | 198.0246 | 1.69558975160687710 |
+| 5 | 2265 s | ok (137 s) | 3 (253, 123, check) | 3.3e-51 | 198.5246 | 1.69546120680105266 |
+Series healthy: a_max 2.056, 2.053, 2.054 (step 6), |z_N| 3.17e-25, 3.27e-25, 3.21e-25. About 2900 s per step with
+the run alone on the machine. Step 6 is in its octo Newton now (series 2034 s, re-seed ok). The Deltas are the mpmath
+sums of the states' eight parts and agree with the log's hi + lo lines.
+2026-11-07 00:42 UTC  cpu 56%  load 4.94  mem 23G used (2211M wired, 1239M compressor), 689M unused.
