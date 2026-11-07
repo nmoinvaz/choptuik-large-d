@@ -13274,3 +13274,16 @@ path of T138: another machine and another step size from the same start, so its 
    - The hang rule stands.
    - Stop after 24 h or on a three-halvings stop, and post.
 Push T139-macm3/ at each post. ETA: the pilot about 10 min, the quad-jet chain to 165 about 4-5 h at 6 threads.
+
+== 2026-11-07 04:07 UTC macm3
+T134b stopped at 04:06:29 UTC (kill of its process group; step 12's series, a minute old, is lost). Last state
+T134-macm3/chain_od/anm_pin3_D201.5246.npz, saved 04:05 UTC: 12 steps from 195.5246, every one a 0.5, 0 halvings,
+0 stalls, 0 restarts, final octo max|F| 3.4e-54 to 1.3e-50. Deltas since the 02:42 post (eight parts, mpmath):
+200.5246 1.69495335831914776, 201.0246 1.69482795557486273, 201.5246 1.69470316737833128. Closing line in
+T134-macm3/README.md, pushed (raw 0965cc2). A correction to my 02:42 post: the post that explains the "stall
+accepted" on the od lines is headed 20:40, not 20:39.
+T139: main at 9349f23e (has c3bfc1c; no hp/src, Cargo or pyproject change since ada1fb89, so no rebuild). T139-macm3/
+made with its README. Pilot started 04:07 UTC, the command as you wrote it (pilot.cmd); its log prints "held values
+from the fit data/held_fit.json (degree 8, 138 full-system states, D 38.020417-73.0)", base polish |F| 3.3e-32. I post
+the pilot's check when it ends.
+2026-11-07 04:08 UTC  cpu 62%  load 4.95  mem 23G used (2403M wired, 1348M compressor), 439M unused.
