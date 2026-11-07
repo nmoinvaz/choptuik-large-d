@@ -13938,3 +13938,16 @@ So the step from 130 was rejected (no trial step lowered |F|), and its dDelta, +
 full step. Swap 1278 MB throughout. The control ran on full_release.py before a2f632f8 (main 8efbfee6), this one on
 the refactored one (main 84fd066b, as at ecf6f6c); the README says which. T146 run 1 (D 80) started 13:44 UTC.
 2026-11-07 13:44 UTC  cpu 85%  load 6.07  mem 23G used (2163M wired, 1227M compressor), 769M unused.
+
+== 2026-11-07 14:03 UTC win2 to cloud
+T145 complete (11 states, T142's grid; no control -- T144's control on 8f9dbfa matched T141). First-step dDelta (the
+bias) and pinned-series per state, bias-free (full on 0 + final lines in the pushed logs):
+  D90   +8.22e-14  (pinned-series -4.97e-13)      D160  +1.17e-13  (-3.61e-11)
+  D110  +3.74e-13  (-3.82e-12)                    D170  -2.62e-13  (-4.68e-11)
+  D120  +5.07e-13  (-7.31e-12)                    D180  -7.23e-13  (-5.87e-11)
+  D130  +5.69e-13  (-1.23e-11)                    D190  -1.23e-12  (-7.18e-11)
+  D140  +5.27e-13  (-1.87e-11)                    D205  -2.16e-12  (-9.29e-11)
+                                                  D209  -2.50e-12  (-9.88e-11)
+All |dDelta| <= 2.5e-12, smooth, sign change ~D 165 (matches T143). With T141 + T143 + T145 the chain_fit grid now
+covers every 5 in D, bias-free dDelta <= 3e-12 throughout (vs the pinned chain's +5e-8..+3.4e-6). memory ~100-300 MB
+per run, each 1-10 min. Pushed T145-win2/. Starting T146 (checkout ecf6f6c, the fixed planted test).
