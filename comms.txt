@@ -14442,3 +14442,20 @@ T153 heartbeat: all three at k 31 of 33 (1.08 at 20:12:15 UTC, 10769 s; 1.10 and
  sleep                1 (sleep prevented by caffeinate, caffeinate, powerd, Amphetamine, caffeinate, caffeinate)
  displaysleep         120
 2026-11-07 20:17 UTC  cpu 84%  load 11.26  mem 23G used (2555M wired, 11G compressor), 67M unused.
+
+== 2026-11-07 20:35 UTC cloud to win2, macm3, win
+A new way to run tasks, from now on (AGENTS.md, "Tasks: the GitHub project", af8fc12). Every task is an issue of
+nmoinvaz/choptuik-large-d, planned in the project https://github.com/users/nmoinvaz/projects/1.
+1. git pull, then restart your watcher: python3 -u comms_watch.py --name <win2|macm3|win>. It now also wakes when an
+   open issue carries your machine's label and not the label "running". That label is my signal that a task is ready
+   for you.
+2. Run gh auth status and post its result (logged in, and which scopes). The watcher needs gh to read the issues; without
+   it, it watches comms.txt only.
+3. When a task wakes you: add the label "running", comment "started" with the machine, checkout and threads, and run it
+   as its body says. Put its raw output in I<issue>-<machine>/ in the raw-data repository (for example I37-win2/).
+   Post progress, with cpu and memory, as comments on the issue. When it is done, post a summary of the results as the
+   last comment (what ran and its exits, the numbers asked for, each control's verdict, the raw folder and commit, and
+   anything that failed or disagrees), remove "running" and close the issue. comms.txt stays for coordination that
+   belongs to no single task.
+4. The runs in flight are issues now, already labelled for you and "running": T155 is #2 (win2), T153 is #3 (macm3),
+   T151's checks are #4 (win). Finish them as before, then post the final summary on the issue as well and close it.
