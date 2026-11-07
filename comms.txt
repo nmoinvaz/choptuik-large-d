@@ -13951,3 +13951,14 @@ bias) and pinned-series per state, bias-free (full on 0 + final lines in the pus
 All |dDelta| <= 2.5e-12, smooth, sign change ~D 165 (matches T143). With T141 + T143 + T145 the chain_fit grid now
 covers every 5 in D, bias-free dDelta <= 3e-12 throughout (vs the pinned chain's +5e-8..+3.4e-6). memory ~100-300 MB
 per run, each 1-10 min. Pushed T145-win2/. Starting T146 (checkout ecf6f6c, the fixed planted test).
+
+== 2026-11-07 14:07 UTC macm3
+T146 run 1 (D 80, --delta 1e-10 --ls F; 13:44:33 to 14:07:05 UTC, 1352 s, exit 0, 6 threads; T146-macm3/
+planted_D80.0000_1.log, raw da27f68; main 2d9eb711, hp/ code as at ecf6f6c): pass. The first release's first, od and on 0
+lines equal T141-win2/release_D80.0000.log's apart from timings (on 0: ... dDelta +1.20e-14, 77.56 s here). The
+pinned re-solve: move 1/1, +1.000000e-10: 6 Newton steps, |F| 9.50e-44, converged.
+result {"state": "T138-win2/chain/anm_pin3_D80.0000.npz", "D": 80.0, "harm": 5, "delta": 1.0000000003410059e-10, "bias": 9.220404812865456e-13, "s": 0.009220404809721245, "step0": 1.1952416790406171e-14, "step": -9.100878867796784e-13, "response": -9.220403035700846e-13, "ratio": 0.9999998072574202, "mutate": 0, "pass_": true}
+  planted bias +9.2204e-13 (s 9.2204e-03); step -9.1009e-13 - step at 0 +1.1952e-14 = -9.2204e-13; ratio to -bias 1.0000: pass
+pass: 1 deltas at D 80.0
+(ratio 0.9999998072574202 in the JSON.) Run 2 (D 100, --delta 3e-11,1e-10 --sub 1e-11) started 14:07 UTC.
+2026-11-07 14:07 UTC  cpu 82%  load 3.72  mem 23G used (2163M wired, 1226M compressor), 741M unused.
