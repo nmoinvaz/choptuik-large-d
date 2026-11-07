@@ -2,12 +2,13 @@
 """Every computed value of Delta in one table, hp/data/delta_all.csv, one row per D from the low-D runs to the large-D
 chain's frontier, with the kind of computation, an error estimate and what that estimate is.
 
-    cd hp && python3 export_delta_all.py RAWDIR [--verify] [--mutate=dd|qd|pinned|chain]
+    cd hp && python3 export_delta_all.py RAWDIR [--verify] [--mutate=dd|qd|pinned|chain_fit|chain|held|frontier]
 
 RAWDIR is a clone of the raw-data repository (git clone https://github.com/nmoinvaz/choptuik-large-d-raw). --verify
 re-reads every row of the written CSV from the source and state its row names and exits 1 on any difference;
 --mutate changes one row of that kind by one unit in its second part before the verification (the control, which
-must fail).
+must fail); --mutate=held labels the last chain_fit row chain, and --mutate=frontier moves the first chain row below the
+chain_fit frontier (the controls of the two chains' checks).
 
 Columns: D; Delta in up to four parts, Delta = q0 + q1 + q2 + q3 (each an f64; q2 and q3 are empty where the value is
 double-double); kind; err and err_kind; the source record; published_ref, published_Delta and published_diff, the most
@@ -23,12 +24,16 @@ precedence where two share a D:
           points' last D: Delta_full1, the pinned Delta plus one linearised full-system correction, as the README
           graph draws them (solver/plot_delta.py). Where both pins (layouts) reached a D, the row is pin 7's (0.8's) and
           err is the difference (err_kind "pins", "layouts"), a spread between two systems, not a bound.
-  chain   the asymptotic numerical method's chain (anm_run.py; harmonics 5-13 of p1 held on T75's trend, notes/
-          QUAD_DOUBLE.md 13.17-13.24), its backbone traced from the highest-D state back to T75's pin 7 state at
-          73.27 through each run's start state; double-double states to 79.27, quad-double after. Where another run
-          reached the same D with the same held trend and precision (another step history, corrector or machine), err is
-          the largest difference (err_kind "runs"), a spread, not a bound. The held harmonics bias every chain value
-          by about 1e-8 to 1e-7 at D 79-86, growing with D (13.19); err does not include it.
+  chain_fit  the asymptotic numerical method's chain (anm_run.py) with harmonics 5-13 of p1 held on a 1/n fit of the
+          full-system states (--held_fit, notes/HELD_HARMONICS.md), its backbone traced from its highest-D state back
+          through each run's start state to T81's quad-double state at 73.0. err as for chain. The fit's own error is
+          not in err.
+  chain   the chain with the harmonics held on T75's trend (notes/QUAD_DOUBLE.md 13.17-13.24), its backbone traced
+          the same way back to T75's pin 7 state at 73.27; double-double states to 79.27, quad-double after. Its rows at
+          or below the chain_fit frontier are left out, since chain_fit replaces them. Where another run reached the
+          same D with the same held harmonics and precision (another step history, corrector or machine), err is the
+          largest difference (err_kind "runs"), a spread, not a bound. The held trend biases every chain value low, by
+          5e-8 at D 80 growing to 3.2e-6 at D 200 (13.29); err does not include it.
 """
 import csv
 import glob
@@ -45,7 +50,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "data", "delta_all.csv")
 COLS = ["D", "Delta_q0", "Delta_q1", "Delta_q2", "Delta_q3", "kind", "err", "err_kind", "source", "published_ref",
         "published_Delta", "published_diff", "state"]
-RANK = {"qd": 0, "dd": 1, "pinned": 2, "chain": 3}
+RANK = {"qd": 0, "dd": 1, "pinned": 2, "chain_fit": 3, "chain": 4}
+HELD = {"chain_fit": "fit", "chain": "trend"}
 PINNED = (("T73/t73/pin7.jsonl", "T73/t73/pin5.jsonl", "pins"), ("T75/pin7.jsonl", "T75/pin5.jsonl", "pins"),
           ("T85-mac/x80.jsonl", "T85-mac/x85.jsonl", "layouts"))
 TOL_D = 1e-9
@@ -131,14 +137,14 @@ def load_state(p):
     return m, [fmt(x) for x in parts] + [""] * (4 - len(parts))
 
 
-def chain_rows():
+def chain_states():
+    """every anm_run.py state of the raw-data repository, and the states of each folder in D"""
     states = {}
     for p in glob.glob(os.path.join(RAW, "**", "anm_pin3_D*.npz"), recursive=True):
         rel = os.path.relpath(p, RAW)
-        m, parts = load_state(rel)
-        states[rel] = (m, parts)
+        states[rel] = load_state(rel)
     by_dir = defaultdict(list)
-    for rel, (m, parts) in states.items():
+    for rel in states:
         by_dir[os.path.dirname(rel)].append(rel)
     for d in by_dir:
         by_dir[d].sort(key=lambda r: states[r][0]["D"])
@@ -146,45 +152,65 @@ def chain_rows():
         srcs = {states[r][0].get("source") for r in by_dir[d]}
         if len({x for x in srcs if os.path.dirname(x) != d}) != 1:
             sys.exit(f"chain: {d} has states from several starts {srcs}")
-    top = max(states, key=lambda r: states[r][0]["D"])
-    backbone, cur, upper = [], os.path.dirname(top), states[top][0]["D"]
+    return states, by_dir
+
+
+def backbone(states, by_dir, held, kind):
+    """the states from the highest-D state of the runs whose harmonics are held as kind says, traced back through each
+    run's start state"""
+    mine = [r for r in states if held[os.path.dirname(r)][0] == HELD[kind]]
+    if not mine:
+        return []
+    top = max(mine, key=lambda r: states[r][0]["D"])
+    bb, cur, upper = [], os.path.dirname(top), states[top][0]["D"]
     while True:
         seg = [r for r in by_dir[cur] if states[r][0]["D"] <= upper + TOL_D]
         src = states[seg[0]][0]["source"]
         lineage_check(cur, seg, src, states)
-        backbone = seg + backbone
+        bb = seg + bb
         if src not in states:
             root = src
             break
         cur, upper = os.path.dirname(src), states[src][0]["D"]
-    on = set(backbone)
-    trends = {d: trend_of(d) for d in by_dir}
-    if len({trends[os.path.dirname(r)] for r in backbone}) != 1:
-        sys.exit(f"chain: the backbone mixes held trends {sorted({str(trends[os.path.dirname(r)]) for r in backbone})}")
+    if len({held[os.path.dirname(r)] for r in bb}) != 1:
+        sys.exit(f"{kind}: the backbone mixes held harmonics {sorted({str(held[os.path.dirname(r)]) for r in bb})}")
+    print(f"{kind}: {len(bb)} states from {root} to {top}")
+    return bb
+
+
+def chain_rows():
+    states, by_dir = chain_states()
+    held = {d: held_of(d) for d in by_dir}
+    fit = backbone(states, by_dir, held, "chain_fit")
+    trend = backbone(states, by_dir, held, "chain")
+    on = set(fit) | set(trend)
+    front = max((states[r][0]["D"] for r in fit), default=-np.inf)
     rows = []
-    print(f"chain: {len(backbone)} states from {root} to {top}")
-    for rel in backbone:
-        m, parts = states[rel]
-        v, err, others = total(parts), "", []
-        sysk = (trends[os.path.dirname(rel)], parts[3] != "")
-        for o, (mo, po) in states.items():
-            if o not in on and abs(mo["D"] - m["D"]) < TOL_D and (trends[os.path.dirname(o)], po[3] != "") == sysk:
-                others.append((float(total(po) - v), o))
-        if others:
-            dmax = max(others, key=lambda t: abs(t[0]))
-            err = f"{abs(dmax[0]):.1e}"
-            for d, o in others:
-                print(f"  check D {m['D']:.4f}: {o} - {rel} = {d:+.3e}")
-        rows.append(dict(D=fmt(m["D"]), Delta_q0=parts[0], Delta_q1=parts[1], Delta_q2=parts[2], Delta_q3=parts[3], kind="chain",
-                         err=err, err_kind="runs" if err else "", source=os.path.join(os.path.dirname(rel), "anm_run.jsonl"),
-                         state=rel))
+    for kind, bb in (("chain_fit", fit), ("chain", [r for r in trend if states[r][0]["D"] > front + TOL_D])):
+        for rel in bb:
+            m, parts = states[rel]
+            v, err, others = total(parts), "", []
+            sysk = (held[os.path.dirname(rel)], parts[3] != "")
+            for o, (mo, po) in states.items():
+                if o not in on and abs(mo["D"] - m["D"]) < TOL_D and (held[os.path.dirname(o)], po[3] != "") == sysk:
+                    others.append((float(total(po) - v), o))
+            if others:
+                dmax = max(others, key=lambda t: abs(t[0]))
+                err = f"{abs(dmax[0]):.1e}"
+                for d, o in others:
+                    print(f"  check D {m['D']:.4f}: {o} - {rel} = {d:+.3e}")
+            rows.append(dict(D=fmt(m["D"]), Delta_q0=parts[0], Delta_q1=parts[1], Delta_q2=parts[2], Delta_q3=parts[3],
+                             kind=kind, err=err, err_kind="runs" if err else "",
+                             source=os.path.join(os.path.dirname(rel), "anm_run.jsonl"), state=rel))
     return rows
 
 
-def trend_of(folder):
-    """the held harmonics' trend of a run (None: held constant, the runs before --trend)"""
+def held_of(folder):
+    """how a run holds the harmonics: ("fit", its file) for --held_fit, else ("trend", its trend; None: held constant,
+    the runs before --trend)"""
     f = os.path.join(RAW, folder, "anm_run.jsonl")
-    return json.loads(open(f).readline()).get("trend") if os.path.exists(f) else None
+    r = json.loads(open(f).readline()) if os.path.exists(f) else {}
+    return ("fit", r["held_fit"]) if r.get("held_fit") else ("trend", r.get("trend"))
 
 
 def lineage_check(folder, seg, src, states):
@@ -242,7 +268,15 @@ def build():
 
 def verify(rows, mutate=""):
     """each row against the source it names, read anew"""
-    if mutate:
+    if mutate == "held":
+        r = [r for r in rows if r["kind"] == "chain_fit"][-1]
+        r["kind"] = "chain"
+        print(f"mutated: the chain_fit row at D {r['D']} labelled chain")
+    elif mutate == "frontier":
+        r = next(r for r in rows if r["kind"] == "chain")
+        r["D"] = fmt(max(float(x["D"]) for x in rows if x["kind"] == "chain_fit") - 1)
+        print(f"mutated: the first chain row moved to D {r['D']}")
+    elif mutate:
         r = next(r for r in rows if r["kind"] == mutate)
         r["Delta_q1"] = fmt(float(r["Delta_q1"]) + np.spacing(float(r["Delta_q1"])))
         print(f"mutated: {mutate} row at D {r['D']}")
@@ -267,10 +301,20 @@ def verify(rows, mutate=""):
             want = [fmt(s["Delta_full1"]), fmt(s["Delta_full1_lo"]), "", ""]
         else:
             want = load_state(r["state"])[1]
+            h = held_of(os.path.dirname(r["state"]))[0]
+            if h != HELD[r["kind"]]:
+                bad += 1
+                print(f"DIFFERS: {r['kind']} D {r['D']}: its run holds the harmonics on a {h}")
         pc = published_cols({**r, **{f"Delta_q{i}": want[i] for i in range(4)}}, pub)
         if parts != want or any(r[k] != v for k, v in pc.items()):
             bad += 1
             print(f"DIFFERS: {r['kind']} D {r['D']}: {parts} against {want}, published {pc}")
+    # chain_fit replaces the chain up to its frontier
+    front = max((float(r["D"]) for r in rows if r["kind"] == "chain_fit"), default=-np.inf)
+    low = [r["D"] for r in rows if r["kind"] == "chain" and float(r["D"]) <= front + TOL_D]
+    if low:
+        bad += len(low)
+        print(f"DIFFERS: {len(low)} chain rows at or below the chain_fit frontier {front}: {low[:3]}")
     print(f"verify: {len(rows) - bad} of {len(rows)} rows equal their sources")
     return bad == 0
 

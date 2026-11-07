@@ -2147,17 +2147,35 @@ on the faster build.
 
 `hp/export_delta_all.py` writes `hp/data/delta_all.csv`, one row per D with Δ in up to four parts, the kind of
 computation, an error estimate and its kind, the source record and the state (columns and precedence in its docstring;
-the README's Values section describes the file). It read the raw-data repository at fca1d5e. Its 2474 rows:
+the README's Values section describes the file). It read the raw-data repository at 1ff7c6b. Its 2338 rows:
 
 | kind | rows | D | err, its kind and range |
 |---|---|---|---|
 | dd, the full system in double-double (`data/delta_dd.csv`) | 1259 | 3.044–67.767 | dM 1.1e-22 to 4.1e-10, check 1e-16 to 2e-15 |
 | qd, the full system in quad-double (`data/delta_qd.csv`) | 7 | 68.5–73.0 | starts 5.0e-29 to 8.4e-28 (5 rows) |
 | pinned, Delta_full1 of T73, T75 and T85-mac | 895 | 67.768–78.105 | pins 7.4e-19 to 8.6e-15 (150), layouts 2.3e-7 to 8.3e-7 (3) |
-| chain, the backbone of the asymptotic numerical method's runs | 313 | 75.27–214.88 | runs 1.9e-32 to 1.1e-17 (69) |
+| chain_fit, the chain with the harmonics held on the 1/n fit (T138) | 96 | 79.0–173.5 | none |
+| chain, the chain with the harmonics held on T75's trend, above chain_fit's frontier | 81 | 173.77–214.88 | runs 2.2e-26 to 1.1e-17 (11) |
 
-`--verify` re-reads every row from the record or state it names and finds all 2474 equal. `--mutate=dd`, `qd`, `pinned`
-and `chain` move one row's second part by one ulp, and each fails it (exit 1).
+`--verify` re-reads every row from the record or state it names and finds all 2338 equal. `--mutate=dd`, `qd`, `pinned`,
+`chain_fit` and `chain` move one row's second part by one ulp, and each fails it (exit 1). Two more checks hold the two
+chains apart. Each chain row's run must hold the harmonics as its kind says, and no chain row may lie at or below
+chain_fit's last D. `--mutate=held` labels the last chain_fit row chain and fails the first, and `--mutate=frontier`
+moves the first chain row below the frontier and fails the second.
+
+**chain_fit replaces the chain up to its frontier.** T138 (`T138-win2/`) reruns the chain with the harmonics held on the
+1/n fit of the full-system states (13.29, notes/HELD_HARMONICS.md). Its backbone runs from T81's quad-double state at
+73.0 through `T138-win2/chain` (steps of 1.0). The 232 chain rows at or below its last D are left out of the table, and
+the chain's rows continue above it, about 2.5e-6 low there (13.29). Five chain_fit states (74–78) share their D with
+pinned rows, which keep precedence. Its pilot (`T138-win2/pilot`) equals it bit for bit at 74, 75 and 76.
+
+**A discrepancy with T85-mac below 78.1** (reported, not resolved). chain_fit, interpolated through nine of its rows,
+agrees with T75's pin 7 and pin 5 rows at 73.10–73.26 to 5.3e-13 or better (the interpolation's own spread, from
+dropping its end points, is 3e-11). It lies above T85-mac's last-node-0.8
+rows (`x80`) by 1.1e-9 at 74, 3.9e-8 at 77 and 1.7e-7 at 78.1, and above its two `x85` rows by 3.0e-6 to 4.7e-6 at
+76.4–76.48. That is inside T85's own spread between its layouts, 2.3e-7 to 8.3e-7 where both reached a D. T85's rows
+at 77–78.1 have no err, since only one layout reached them. They keep precedence over chain_fit here until the
+coordinator decides.
 
 **The chain's backbone.** Every state of a run carries the run's start state (`source` in its metadata), so the chain is
 traced from the highest-D state back through the start states, taking from each run its states up to the next run's
@@ -2167,8 +2185,8 @@ the quad-double runs from 79.77 and T110, T113, T116, T117 and T118, to T122, T1
 from 207.90). A run resumed from a state of its own folder
 (T124-win) is one lineage. Each state is checked to be an accepted step of its run's `anm_run.jsonl` from the state
 before it.
-Twenty runs off the backbone reach a backbone D with the same held trend and precision, and they give the err of 69
-rows:
+Twenty runs off the backbone reach a backbone D with the same held trend and precision. They gave the err of 69
+rows, of which the 11 above 173.5 remain in the table:
 
 | D | other run | other − backbone |
 |---|---|---|
@@ -2346,6 +2364,10 @@ chain states. Its Δ component is the held harmonics' bias, from neither the ser
 | 149.56 | +1.905e-6 | +1.895e-6 | — |
 | 200.27 | +3.228e-6 | +3.158e-6 | — |
 | 214.88 | +3.448e-6 | — | — |
+
+T138's rerun on the fit (chain_fit − chain, each interpolated through nine of its rows) moves Δ by +5.007e-8 at 79.77,
++4.775e-7 at 100.12, +1.8947e-6 at 149.56 and +2.533e-6 at 173.5 (T138 reached 173.5 at raw 1ff7c6b). That is the
+series − chain column to its last digit, and it is notes/HELD_HARMONICS.md's first-order correction made exact.
 
 The step is first order and the iteration does not converge past it (no trial accepted), so the agreement to 0.5–2% is
 that of a linear estimate. With three methods agreeing, the chain's gap to the series is its held harmonics, and the

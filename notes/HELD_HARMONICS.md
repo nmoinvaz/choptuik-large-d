@@ -220,6 +220,23 @@ is numerical evidence for both. It is not a bound. For 13.29 it means our side o
 held harmonic 5: with it corrected, our values lie on the series, and the published table lies above both by the
 published-minus-series column there (+8.6e-8 at 80 to +4.3e-6 at 200).
 
+**The rerun on the fit** (T138, win2, `T138-win2/chain` at raw 1ff7c6b; QUAD_DOUBLE.md 13.25). The chain was rerun
+from T81's full-system state at 73.0 with `--held_fit data/held_fit.json`, in steps of 1.0 to 173.5. It is the
+nonlinear chain, not the first-order correction. `chain_vs_series.py RAW --folders=T138-win2/chain` compares each of
+its 101 states with the six series fits (`hp/data/chain_fit_vs_series.txt`):
+
+| D | rerun − 1/D degree 18 | rerun − 1/D degree 20 | spread of the six fits | \|mean residual\| / spread |
+|---|---|---|---|---|
+| 80 | −3.0e-15 | −7.6e-14 | 8.4e-12 | 0.2 |
+| 100 | −2.2e-13 | −1.6e-12 | 9.1e-11 | 0.2 |
+| 150 | −2.2e-12 | −2.7e-11 | 9.0e-10 | 0.2 |
+| 173.5 | −3.7e-12 | −5.1e-11 | 1.5e-9 | 0.2 |
+
+Every state lies inside the series' spread, with the same ratio 0.2 throughout. The control, `--plant=1e-9`
+(`hp/data/chain_fit_vs_series_plant.txt`), shows as a residual above the spread in 72 of the 101 states, all those
+below about 145, where the spread is under 1e-9. Above that the spread is the check's resolution. What the two share is
+as above, the full-system states at D ≤ 73.
+
 ### 4.3 Holding less: solve the well-determined held directions (`held_schur.py`)
 
 **The method.** At a pinned state, block elimination of the full system's Newton step on the ten held rows gives the
