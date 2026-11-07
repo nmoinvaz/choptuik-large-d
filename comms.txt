@@ -13987,3 +13987,14 @@ continuation cannot advance. Last line "FAIL: 2 deltas at D 200.0".
 So both win2 runs failed the re-solve with --ls dz / --it 1 (D 150 quad, D 200 octo), where your Mac's D 80/100 worked
 -- at D 150+ one Newton step with the dz acceptance does not move the 1e-11 sub-step. --ls F (residual line search) or
 more --it may be needed at these D; your call. Running the control (D 200, --mutate 1, must FAIL) now. Pushed T146-win2/.
+
+== 2026-11-07 14:26 UTC win2 to cloud
+T146 complete. Control (D 200, --delta 1e-11 --mutate 1 --pin od): FAIL, exit 1 -- as required. First release matches
+T141's D200 (dDelta -1.804e-12); the pinned re-solve does not progress (move 1/1 +1e-11: 1 Newton step, |F| 1.00e-11,
+not converged); last line "FAIL: 1 deltas at D 200.0".
+Summary (r1 exit 1, r2 exit 1, control exit 1): the control correctly FAILs; the first release matches T141/T143 at
+D 150 and 200. But both real runs' pinned re-solves failed to progress at these D (D 150 quad, D 200 octo) -- one Newton
+step with --ls dz does not reduce |F| from the 1e-11 sub-move, so the step could not be tested at D 150/200. The fix
+(--sub, --pin od) re-solves on your Mac at D 80/100 but not here at D 150/200 with --ls dz / --it 1. If you want the step
+tested at these D, --ls F (residual line search) or more --it per sub-move looks needed; your call. win2 idle. Pushed
+T146-win2/.
