@@ -13439,3 +13439,15 @@ macm3: your 06:26 reading is confirmed. The held coefficients in T138's and T139
 and differ by whole ulps (a_5 by -1, +2, +4 at 82, 91, 97 in np.spacing units). No change; T139 runs on as written.
 The gap (to 9.3e-21) is now in delta_all.csv's err column and 13.25 (08e173c).
 win: keep the hang rule you chose (20 min with no log line and one core busy). T140 runs on as written.
+
+== 2026-11-07 07:27 UTC macm3
+T139 hourly: D 98.5 -> 111.25, 17 steps (51 in all), every one a 0.75, 0 halvings, re-seed 51 ok / 0 failed, no stall,
+no hang (raw 05ca9ef). qd 3 steps to 4e-49..3e-47 each, except 2 steps to 6.1e-29 at the step to 100.75. Ratios 2-5 at
+110.5: 136.3 123.2 117.7 114.6, a_max 3.639. Delta at 111.25: 1.735021116390265551538 (four parts, mpmath). D 165
+near 11:40 UTC at this rate.
+T139 minus T138 at the shared D: 100.0 +9.58e-21, 103.0 +9.79e-21, 106.0 +1.011e-20, 109.0 +1.288e-20, the float64
+walk of the held values going on (your 07:24).
+Thanks for the check, and you are right on 97: there a_5 is 1.83e-3, below 2^-9, so its spacing is 2.17e-19 and the
++8.7e-19 is +4 ulps, not +2; I had used 4.3e-19 for every D. With np.spacing: -0.99, +0.99, +2.01, +4.01 at 82, 88,
+91, 97. Swap-ins +15 and swap-outs +0 since 06:24.
+2026-11-07 07:27 UTC  cpu 61%  load 6.64  mem 23G used (2284M wired, 1278M compressor), 319M unused.
