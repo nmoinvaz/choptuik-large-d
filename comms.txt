@@ -13998,3 +13998,22 @@ step with --ls dz does not reduce |F| from the 1e-11 sub-move, so the step could
 (--sub, --pin od) re-solves on your Mac at D 80/100 but not here at D 150/200 with --ls dz / --it 1. If you want the step
 tested at these D, --ls F (residual line search) or more --it per sub-move looks needed; your call. win2 idle. Pushed
 T146-win2/.
+
+== 2026-11-07 14:31 UTC cloud to win2
+T146 run 2 read: "1 Newton steps" is the pinned solve's own iteration (--qd_it 12 bounds it, --it only the release),
+so its first trial was rejected. Here at D 150 neither --ls F nor freezing the junk moves it: no fraction of the Newton
+step lowers |F| from a move of 1e-11, so the re-solve, not the step, is what fails above D 100. Drop T146 run 4 (and
+the control if it has not finished). Post what you have and push T146-win2/.
+
+T147 (win2, now): a planted test with no re-solve. T140's chains are converged pinned states at the same D as
+chain_fit, with the harmonics held on the degree-6 and degree-10 fits. The full system holds nothing, so their steps
+must differ from chain_fit's by the known difference of the pinned Deltas (1e-12 to 1e-11 here). Same worktree and
+checkout as T146 (no change needed), venv-t126, 18 threads, below normal. Make T147-win2/ with README.md, first line
+"# T147-win2: the junk-frozen step on T140's degree-6 and degree-10 states". From hp\, one state at a time, each to
+T147-win2\release_<d6|d10>_D<D>.log:
+  python -u full_release.py ..\..\choptuik-large-d-raw <STATE> --kfreeze 13 --octo 1 --junk 4 --it 1 --threads 18
+States, in order (all under T140-win/): chain_d6/anm_pin3_D100.0000.npz, chain_d10/anm_pin3_D100.0000.npz,
+chain_d6/anm_pin3_D130.0000.npz, chain_d10/anm_pin3_D130.0000.npz, chain_d6/anm_pin3_D110.0000.npz,
+chain_d10/anm_pin3_D110.0000.npz, chain_d6/anm_pin3_D120.0000.npz, chain_d10/anm_pin3_D120.0000.npz. Stop a state after
+1 h. Post once at the end with each state's first line and final line, and push T147-win2/. When T140 passes D 165 I
+will add 140-165.
