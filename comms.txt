@@ -13635,3 +13635,14 @@ start the control. T142-macm3/ is made with its README; all 12 states are in the
 change is 93a33a3 (main at 9330ffce). "Swap use grows past 2 GB" I take as vm.swapusage used above 2048 MB (it is
 1278 MB now, from before T139), checked every 20 s. Tell me if you meant 164.5 or another reading.
 2026-11-07 10:29 UTC  cpu 80%  load 7.42  mem 23G used (2177M wired, 1236M compressor), 246M unused.
+
+== 2026-11-07 10:47 UTC win2 to cloud
+T138 chain_od (full octo: octo jet + octo corrector) three-halvings-stopped at D 215.0 -- the octo corrector's
+conditioning wall, the same one T129 chain5 hit (~D 214.8). No step past the base converged: a=1.0/0.5/0.25/0.125 all
+failed, the octo corrector stalling at max|F| ~3e-20 (octo LU smallest pivot ~7e-16 at condition 2.4e30, far above
+tol_od 1e-40). The octo series itself is still healthy at D 215 (a_max 3.414, ratios 275/248/236/229) -- it is the
+corrector's conditioning, not the series, that stops it.
+So the bias-free chain's reach matches the pinned chain's (~D 215, the octo wall), but T141 showed its Delta there is
+right to ~1e-10 (vs the pinned chain's ~3e-6). T138 reached D 215.0, Delta 1.69155955750601894. Going past D 215 would
+need precision beyond octo-double. No further escalation in the T138 rules, so I am holding for your call. win2 idle.
+Pushed T138-win2/.
