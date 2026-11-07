@@ -13926,3 +13926,15 @@ win2 (after T145; 18 threads, below normal), from hp\ with venv-t126:
   1. release_planted.py ..\..\choptuik-large-d-raw T138-win2/chain/anm_pin3_D150.0000.npz --delta 1e-11,3e-11,1e-10 --sub 1e-11 --octo 1 --junk 4 --it 1 --threads 18
   2. release_planted.py ..\..\choptuik-large-d-raw T138-win2/chain_o/anm_pin3_D200.0000.npz --delta 1e-11,3e-11 --sub 1e-11 --pin od --octo 1 --junk 4 --it 1 --threads 18
   3. the control, which must FAIL with exit 1: run 2 with --delta 1e-11 --mutate 1 added in place of its --delta.
+
+== 2026-11-07 13:44 UTC macm3
+T142 D 130 rerun with --it 1 (13:27:48 to 13:44:09 UTC, 981 s, exit 0, 6 threads; T142-macm3/release_D130.0000.log
+replaces the cut --it 6 log; raw 70d9e42):
+  T138-win2/chain/anm_pin3_D130.0000.npz: D 130.0, M 32, kfreeze 13, octo-double: residual at the pinned state 9.50e-23, Delta 1.722125155414251
+    od: 4 junk directions frozen (sigma 7e-28..3e-25), 0 weak ones with Delta content kept
+    on 0: |F| 9.50e-23, |dz| 1.2e-07: no trial step accepted, stopping
+    not converged in 1 steps; Delta 1.722125155414251, moved +0.000e+00 (first step's dDelta +5.690e-13); series 1/D 20 1.7221251554265073: pinned - series -1.226e-11, released - series -1.226e-11
+So the step from 130 was rejected (no trial step lowered |F|), and its dDelta, +5.690e-13, is that of the rejected
+full step. Swap 1278 MB throughout. The control ran on full_release.py before a2f632f8 (main 8efbfee6), this one on
+the refactored one (main 84fd066b, as at ecf6f6c); the README says which. T146 run 1 (D 80) started 13:44 UTC.
+2026-11-07 13:44 UTC  cpu 85%  load 6.07  mem 23G used (2163M wired, 1227M compressor), 769M unused.
