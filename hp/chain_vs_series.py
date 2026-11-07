@@ -35,7 +35,8 @@ for r in csv.DictReader(open(os.path.join(HERE, "data", "delta_qd.csv"))):
     ref[float(r["D"])] = sum(mp.mpf(r[f"Delta_q{q}"]) for q in range(4))
 chain = {}
 for fo in folders:
-    for p in sorted(glob.glob(os.path.join(raw, fo, "*.npz"))):
+    # the corrected states only (a run with --save_pred also stores its predictions, pred_pin3_D*.npz)
+    for p in sorted(glob.glob(os.path.join(raw, fo, "anm_pin3_D*.npz"))):
         d = np.load(p)
         m = json.loads(str(d["meta"]))
         parts = [d[k] for k in ("zh", "zl", "z2", "z3") if k in d]
