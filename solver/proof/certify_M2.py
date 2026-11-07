@@ -391,6 +391,26 @@ def best_outer2(bx, lo=1e-6, asm=None):
     return None, None
 
 
+def search2(bx, asm=None, facs=None):
+    """sub-boxes of the run's box (the enclosures hold on each): every combination of factors (one for the outer
+    half-width, one per inner width) from facs; returns the passing sub-box with the largest outer half-width (ties:
+    the largest inner widths) and its result, or (None, None)"""
+    facs = facs or [1.0, 0.5, 0.2, 0.1, 0.05, 0.02, 0.01, 3e-3, 1e-3, 3e-4, 1e-4]
+    h = float(bx["h"])
+    ws = [float(x) for x in bx["w"]]
+    import itertools
+    best, rbest = None, None
+    for combo in itertools.product(facs, repeat=1 + len(ws)):
+        sub = [repr(h * combo[0])] + [repr(w * f) for w, f in zip(ws, combo[1:])]
+        key = (h * combo[0],) + tuple(w * f for w, f in zip(ws, combo[1:]))
+        if best is not None and key <= best:
+            continue
+        r = krawczyk2_test(bx, sub=sub, verbose=False, asm=asm)
+        if r["ok"]:
+            best, rbest = key, (sub, r)
+    return (rbest[0], rbest[1]) if rbest else (None, None)
+
+
 def shrink2(bx, sub=None, lo=1e-4, asm=None):
     r1 = krawczyk2_test(bx, sub=sub, verbose=False, asm=asm)
     if not r1["ok"]:
@@ -657,6 +677,11 @@ def main():
             print(f"   largest passing outer half-width with the run's inner widths: {hp}")
             if hp is not None:
                 sub = [repr(hp)] + list(bx["w"])
+        if "search" in o:
+            sb, _ = search2(bx, asm=asm)
+            print(f"   passing sub-box with the largest outer half-width (factor grid): {sb}")
+            if sb is not None:
+                sub = sb
         mut = o.get("mutate")
         mut = None if mut in (None, "hier", "ref") else mut
         r = krawczyk2_test(bx, mut, theta=o.get("theta"), sub=sub, asm=asm)

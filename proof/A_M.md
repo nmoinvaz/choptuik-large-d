@@ -172,7 +172,8 @@ nothing to the leakage at first order. What limits the box:
   limited M = 1 to 10⁻⁹ (10⁻⁸ in CAPD).
 
 A larger box at M = 5 would need a second-order chart and second-order (C²) enclosures, so that the inner widths are
-third order in h and the Jacobian is enclosed in mean value form; that is not attempted here.
+third order in h and the Jacobian is enclosed in mean value form; that is not attempted here. It is built in
+[A_M2.md](A_M2.md).
 
 **The centre.** The box must be centred within a fraction of its widths of the zero, in every coordinate:
 |x_o − x_o*| ≪ h and the inner coordinates to ≪ w. hier.py's zeros are good to about 2×10⁻¹¹ (the spread between two

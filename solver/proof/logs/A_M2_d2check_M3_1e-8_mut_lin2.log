@@ -1,0 +1,8 @@
+D2 check M = 3 (['lin2']): Y l W(X) contains Y D^2 gt(0) from the finite differences: False; worst |dev| / tolerance 2.72e+04, worst relative deviation 1.08e+17
+   (Y D^2 gt)_0,22: FD -3.944277e+11  enclosure -2.055454e+11 +- 4.6e+07  (FD error 7.7e-07)
+   (Y D^2 gt)_0,33: FD +3.871233e+11  enclosure +2.020500e+11 +- 4.6e+07  (FD error 7.9e-07)
+   (Y D^2 gt)_0,23: FD +2.749495e+11  enclosure +1.233717e+11 +- 4.6e+07  (FD error 1.2e-06)
+   (Y D^2 gt)_1,33: FD +2.308285e+11  enclosure +1.068752e+11 +- 3.9e+07  (FD error 6.9e-07)
+   (Y D^2 gt)_1,22: FD -2.308003e+11  enclosure -1.066943e+11 +- 3.9e+07  (FD error 7.0e-07)
+   (Y D^2 gt)_1,23: FD -1.139794e+11  enclosure -6.349478e+10 +- 3.9e+07  (FD error 7.6e-07)
+d2check exit 1

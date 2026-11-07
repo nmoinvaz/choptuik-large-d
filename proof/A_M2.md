@@ -277,4 +277,36 @@ reports the controls on those boxes; the h = 10⁻⁶ results are kept in the lo
 
 ## 7. Reproduce
 
-(To be filled in by the runs.)
+All commands from `solver/proof/`, with python-flint 0.9.0, mpmath and numpy; `fixed_point_M.py` sits next to these
+files. Times are on the Mac with four runs at once.
+
+```
+python3 certify_M2_lohner.py selftest                  # PASS (secondvar, H series, one C2 step); seconds
+python3 certify_M2_lohner.py selftest --mutate=lin2    # must FAIL
+# finite differences of the C1 numerics (independent of the C2 code; 2-3 min per point at M = 5), then combine:
+python3 certify_M2_fd.py run 5 --centre=data/A_M_refine_M5_d.json --use_out --k=K --s=S --delta=D --out=PTS/M5_kK_sS.json
+#   for K = 0..5, S = +1, -1, +2, -2, D = 1e-10 (K = 0, 1), 1e-19 (K = 2, 3), 1e-22 (K = 4, 5); M = 3: centre
+#   data/A_M_refine_M3_c.json, D = 1e-9, 1e-15; M = 1: centre data/A_M_point_M1.json (no --use_out), D = 1e-8
+python3 certify_M2_fd.py combine 5 --centre=data/A_M_refine_M5_d.json --use_out --glob=PTS/M5_ --out=data/A_M2_fd_M5.json
+python3 certify_M2_fd.py structure 5 --centre=data/A_M_refine_M5_d.json --fd=data/A_M2_fd_M5.json [--chart=data/A_M2_chart_M5.json]
+python3 certify_M2.py chart 5 --centre=data/A_M_refine_M5_d.json --use_out --fd=data/A_M2_fd_M5.json --out=data/A_M2_chart_M5.json
+python3 certify_M2.py diag1 --box=data/A_M_box_M5_1e-13.json --fd=data/A_M2_fd_M5.json     # section 1
+# M = 1 (about 100 s per run)
+python3 certify_M2.py box 1 --chart=data/A_M2_chart_M1.json --h=1e-6 --w=0 --out=data/A_M2_box_M1_1e-6.json --log=logs/A_M2_box_M1_1e-6.log
+python3 certify_M2.py krawczyk --box=data/A_M2_box_M1_1e-6.json --shrink --reference=thmA1                # REPRODUCED
+python3 certify_M2.py krawczyk --box=data/A_M2_box_M1_1e-6.json --shrink --reference=thmA1 --mutate=ref   # must not
+python3 certify_M2.py controls --box=data/A_M2_box_M1_1e-6.json                                           # exit 0
+python3 certify_M_recheck.py data/A_M2_box_M1_1e-6.json [--mutate]                                        # pass [fail]
+python3 certify_M2.py box 1 --chart=data/A_M2_chart_M1.json --h=1e-4 --w=0 --out=data/A_M2_box_M1_1e-4.json --log=logs/A_M2_box_M1_1e-4.log
+python3 certify_M2.py krawczyk --box=data/A_M2_box_M1_1e-4.json --best                                    # 2.06e-5
+python3 certify_M2.py box 1 --chart=data/A_M2_chart_M1.json --h=1e-9 --w=0 --mutate=none|lin2|w0 --out=data/A_M2_box_M1_1e-9_d2_T.json --log=logs/A_M2_box_M1_1e-9_d2_T.log
+python3 certify_M2.py d2check --box=data/A_M2_box_M1_1e-9_d2_T.json --fd=data/A_M2_fd_M1.json            # none: pass; lin2, w0: fail
+# M = 3 (about 7 min per run)
+python3 certify_M2.py box 3 --chart=data/A_M2_chart_M3.json --h=1e-8 --w=1e-13 --out=data/A_M2_box_M3_1e-8.json --log=logs/A_M2_box_M3_1e-8.log
+python3 certify_M2.py krawczyk --box=data/A_M2_box_M3_1e-8.json --shrink --reference=AM3                  # REPRODUCED
+python3 certify_M2.py controls --box=data/A_M2_box_M3_1e-8.json                                           # exit 0
+python3 certify_M2.py d2check --box=data/A_M2_box_M3_1e-8.json --fd=data/A_M2_fd_M3.json                  # pass
+python3 certify_M_recheck.py data/A_M2_box_M3_1e-8.json [--mutate]                                        # pass [fail]
+python3 certify_M2.py box 3 --chart=data/A_M2_chart_M3.json --h=1e-8 --w=1e-13 --mutate=lin2|chart --out=data/A_M2_box_M3_1e-8_mut_T.json --log=logs/A_M2_box_M3_1e-8_mut_T.log
+python3 certify_M2.py d2check --box=data/A_M2_box_M3_1e-8_mut_T.json --fd=data/A_M2_fd_M3.json            # must fail
+```
