@@ -2147,14 +2147,14 @@ on the faster build.
 
 `hp/export_delta_all.py` writes `hp/data/delta_all.csv`, one row per D with Δ in up to four parts, the kind of
 computation, an error estimate and its kind, the source record and the state (columns and precedence in its docstring;
-the README's Values section describes the file). It read the raw-data repository at 35a0d9e. Its 2326 rows:
+the README's Values section describes the file). It read the raw-data repository at 942dbde. Its 2326 rows:
 
 | kind | rows | D | err, its kind and range |
 |---|---|---|---|
 | dd, the full system in double-double (`data/delta_dd.csv`) | 1259 | 3.044–67.767 | dM 1.1e-22 to 4.1e-10, check 1e-16 to 2e-15 |
 | qd, the full system in quad-double (`data/delta_qd.csv`) | 7 | 68.5–73.0 | starts 5.0e-29 to 8.4e-28 (5 rows) |
 | pinned, Delta_full1 of T73 and T75 | 883 | 67.768–73.266 | pins 7.4e-19 to 8.6e-15 (150) |
-| chain_fit, the chain with the harmonics held on the 1/n fit (T138) | 118 | 74.0–190.0 | runs 0 to 2.1e-22 (3) |
+| chain_fit, the chain with the harmonics held on the 1/n fit (T138) | 118 | 74.0–190.0 | runs 0 to 4.3e-21 (6) |
 | chain, the chain with the harmonics held on T75's trend, above chain_fit's frontier | 59 | 190.02–214.88 | runs 2.0e-18 to 1.1e-17 (3) |
 
 `--verify` re-reads every row from the record or state it names and finds all 2326 equal. `--mutate=dd`, `qd`, `pinned`,
@@ -2170,7 +2170,7 @@ chain_fit row chain and fails the first. `--mutate=frontier` moves the first cha
 chain rows at or below its last D are left out of the table, and the chain's rows continue above it, about 2.5e-6 low
 there (13.29). It also replaces T85-mac's 12 rows at 74–78.1,
 below. The replaced rows stay in git history. Its pilot (`T138-win2/pilot`) equals it bit for bit at 74, 75 and 76. T139 (macm3, `T139-macm3/`), a second path
-in steps of 0.75 on another machine, differs from it by −2.1e-22 at 76.0.
+in steps of 0.75 on another machine, differs from it by 2.1e-22 to 4.3e-21 where the two share a D (every 3.0).
 
 **T85-mac below 78.1, replaced by chain_fit.** chain_fit, interpolated through nine of its rows, agrees with T75's
 pin 7 and pin 5 rows at 73.10–73.26 to 5.3e-13 or better (the interpolation's own spread, from dropping its end points,
