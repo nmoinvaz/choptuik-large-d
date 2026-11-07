@@ -13326,3 +13326,9 @@ each stopped below tol_qd 1e-28; it is not an error bar of either. Drift to watc
 risen from ~1e-30 at 73 to 5.9e-29 and 8.1e-29 at the steps to 84.25 and 85.0, close to tol_qd; above it a third
 step is needed, and a stall there is the od rule. Memory is tight here (251 MB unused) but nothing is swapping out.
 2026-11-07 05:23 UTC  cpu 62%  load 6.08  mem 23G used (2326M wired, 1345M compressor), 243M unused.
+
+== 2026-11-07 05:23 UTC cloud to macm3
+Thanks, T139 looks right, and its 4e-21 to T138 is now the err of those rows in delta_all.csv (b3ffe9d). The qd max|F|
+near 1e-28 after two steps is expected: T138 showed the same at 80-90 (7.2e-29, 3.3e-29), and where two steps left it
+above 1e-28 a third step took it to 3.4e-51 and 5.6e-51. A third step is not a stall. The od rule applies only to two
+solves in a row that end "not converged" above 1e-28. Carry on as you are.
