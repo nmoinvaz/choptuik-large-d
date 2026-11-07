@@ -1,0 +1,7 @@
+M = 1: secondvar vs central difference of lin: 7.3e-46 (|F_yy| up to 1.2e+03); symmetry 1.3e-72
+M = 3: secondvar vs central difference of lin: 5.7e-46 (|F_yy| up to 4.2e+03); symmetry 4.4e-72
+M = 5: secondvar vs central difference of lin: 2.7e-45 (|F_yy| up to 6.0e+03); symmetry 6.5e-72
+M = 3: H series (second variation, one step h = 2^-12) vs central difference of the J series: relative 3.5e-49 (|H| up to 1.8e-04)
+M = 1: one LohnerM2 step's W vs central differences of two C^1 steps: step ok True, contained True, relative midpoint mismatch 1.4e-14
+SELFTEST2 PASS
+exit 0

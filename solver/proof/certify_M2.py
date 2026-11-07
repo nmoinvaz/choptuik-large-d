@@ -25,10 +25,15 @@ gt has exactly one zero in X and every matrix in J(X), in particular Dgt(x), is 
     python3 certify_M2.py box M --chart=chart.json --h=H --w=W3[,W5] --out=g.json --log=f.log [--pilot=steps]
                               [--mutate=w0|chart|lin2]
         the C^2 run over X = [-H, H]^2 x prod [-W, W]^2 (checkpointed: resumes from g.json.ckpt)
-    python3 certify_M2.py krawczyk --box=g.json [--sub=h,w3[,w5]] [--best] [--shrink] [--hier] [--mutate=...]
+    python3 certify_M2.py krawczyk --box=g.json [--sub=h,w3[,w5]] [--best] [--search] [--shrink] [--hier]
+                              [--reference=thmA1|AM3] [--mutate=...|hier|ref]
+        the test (--best: largest outer sub-box; --search: a grid of sub-boxes; --reference: planted truth, the
+        enclosure must overlap the certified first-order one; --mutate=ref shifts that reference and must fail)
     python3 certify_M2.py controls --box=g.json [--sub=...]        C0-C8 of certify_M.py on the C^2 test
     python3 certify_M2.py d2check --box=g.json --fd=data/A_M2_fd_M{M}.json   control D2: l W(X) at xi1 must contain
                                                                   the independent finite-difference D^2 gt(0)
+    python3 certify_M2.py export6a --box=g.json --out=f.json [--sub=...]     the state box at xi1, for lemma 6a(M)
+    python3 certify_M2.py diag1 --box=first_order_box.json [--fd=...]        a certify_M.py run's test, split by entry
 """
 import hashlib
 import json
@@ -333,7 +338,7 @@ def krawczyk2_test(bx, mutate=None, theta=None, sub=None, verbose=True, asm=None
         sv = np.linalg.svd(np.array([[float(A["LV0"][i, j].mid()) for j in range(2)] for i in range(2)]),
                            compute_uv=False)
         wid = 1e3 * float(h.mid()) * sv[-1]
-        ell, gC = A["ell"], None
+        ell = A["ell"]
         c, Q, q, _, _, _ = C2.load2(bx["sets"])
         g = CM.apply_set(ell, c, Q, q)
         gw = [g[i] + (arb(0, wid) if i < 2 else arb(0)) for i in range(m)]
