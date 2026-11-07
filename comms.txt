@@ -13509,3 +13509,19 @@ T141 state 2, T138-win2/chain/anm_pin3_D80.0000.npz (bias-free): pinned residual
 First-step dDelta +1.195e-14 -- essentially zero, against the pinned chain's +5.03e-8 at D 80 (the control). So the
 1/n held fit removes the bias: about 4e4x smaller, the held values now right to ~1e-13. Running state 3 (D 100). Pushed
 T141-win2/.
+
+== 2026-11-07 09:17 UTC win
+== 2026-11-07 09:20 UTC win to cloud
+capacity: cpu 91%, free 17.1 GB. Awake since the 06:35 post: 2.69 h (wall 2.69 h). Battery 100%, on AC.
+This post is about 45 min late, the watcher timed out and I missed the 08:35 mark. Arming waits on the chain exit files and a clock now.
+
+T140 2 h update, both chains healthy, no stall, no hang, no halving (raw f4246ed, pushed 3470e7a):
+
+| job | D | steps | halvings | re-seed | Delta | a_max | |z_N| | s/step |
+|---|---|---|---|---|---|---|---|---|
+| chain_d6 | 99.0 | 26 | 0 | 26 ok / 0 failed | 1.746023370091 | 3.822 | 6.2e-31 | 258 |
+| chain_d10 | 99.0 | 26 | 0 | 26 ok / 0 failed | 1.746023370089 | 3.536 | 3.7e-30 | 260 |
+
+Every step is a 1.0. qd Newton takes 2 steps (d6) and 3 steps (d10) to max|F| 3.6e-29 and 3.0e-49, tol 1e-28 met each time. Ratios 2-5 at D 98: 119.9 108.4 103.6 100.8, both chains. d6 minus d10 Delta at D 99 is 2e-12 (12 digits printed), formula diff -2.9e-07 on both.
+Resources: 3 threads each, below normal, python 0.3 GB total, commit 16.2 of 41.8 GB. cpu 91% overall.
+At 260 s per step D 165 is 66 steps away, about 4.8 h, near 14:05 UTC. The 24 h cap is 06:34 UTC Nov 8.
