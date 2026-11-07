@@ -335,8 +335,8 @@ about 0.75 + 0.16i to κ⋆. Its near end moves with ω: Re t₁ goes as roughly
 1.668, 1.675, 1.682.
 
 The density vanishes at the far end. The ratio law $`\sigma_k/\sigma_{k+1}\approx(k+\beta)/\kappa_\star`$ is the
-coefficient asymptotics of a Laplace integral whose density behaves like $`(\kappa_\star-\zeta)^{\beta-1}`$ at the
-endpoint. That makes the endpoint exponent about 3.2 − 1.6i, from β ≈ 4.16 − 1.60i at ω∞.
+coefficient asymptotics of a Laplace integral whose density behaves like $`(\kappa_\star-\zeta)^{\beta-2}`$ at the
+endpoint. That makes the endpoint exponent about 2.16 − 1.60i, from β ≈ 4.16 − 1.60i at ω∞.
 
 The ratio law holds well. For k = 4–12 at ω∞:
 
@@ -345,7 +345,8 @@ The ratio law holds well. For k = 4–12 at ω∞:
 ```
 
 So the conjectured tail bound, in the form the brief asks for, is $`|\sigma_k|\le C\,a^k/\Gamma(k+b)`$ with
-a = |κ⋆| = 1.675, b = 4.16 and C = 27.3. It is calibrated on k ≤ 12, not proved.
+a = |κ⋆| = 1.675, b = 4.16 and C = 27.3. It is calibrated on k ≤ 12, not proved. The coefficients to k = 22 exceed
+it, by 2.7% at k = 22 (`solver/proof/logs/entire_cert_K22.log`).
 
 ### 7.2 What a Laplace representation would give, rigorously
 

@@ -1933,9 +1933,10 @@ $\omega/\winf$ & $\kappa_\star$ & type $|\kappa_\star|$ & $\beta_\star$ \\
 So $|\sigma_k| \approx C|\kappa_\star|^k/\Gamma(k + \beta_\star)$: numerically, $S_1$ is an entire function of $\mathcal A = A^2$ of order $1$ and
 exponential type about $1.67$. At $\winf$, $|\sigma_k|\,\Gamma(k + 4.16)/1.675^k = 27.3$, $26.8$, $26.3$, $25.9$, $25.6$, $25.5$, $25.3$,
 $25.1$, $24.9$ for $k = 4$--$12$, which suggests the tail bound $|\sigma_k| \le C\,a_\star^k/\Gamma(k + b_\star)$ with $a_\star = 1.675$,
-$b_\star = 4.16$, $C = 27.3$; it is calibrated on $k \le 12$, not proved. The Borel transform $B(t) = \sum_k k!\,\sigma_k\,t^{-k-1}$ has, by
+$b_\star = 4.16$, $C = 27.3$; it is calibrated on $k \le 12$, not proved, and the coefficients to $k = 22$ exceed it, by
+$2.7\%$ at $k = 22$ (\repo{solver/proof/logs/entire\_cert\_K22.log}), so $a_\star$ and $C$ are effective values at intermediate $k$. The Borel transform $B(t) = \sum_k k!\,\sigma_k\,t^{-k-1}$ has, by
 Pad\'e approximation, a continuous singular support rather than isolated exponents: an arc from about $0.75 + 0.16\iu$ to
-$\kappa_\star$, with a density vanishing at $\kappa_\star$ like $(\kappa_\star - \zeta)^{\beta_\star - 1}$. So $S_1$ behaves like a Laplace integral of
+$\kappa_\star$, with a density vanishing at $\kappa_\star$ like $(\kappa_\star - \zeta)^{\beta_\star - 2}$. So $S_1$ behaves like a Laplace integral of
 a density over that arc.
 
 Factoring out the arc's centre removes the cancellation. With $G = e^{-\bar\kappa\mathcal A}S_1$ (same zeros), $\bar\kappa$ chosen per
