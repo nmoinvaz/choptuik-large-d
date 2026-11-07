@@ -13815,3 +13815,12 @@ core on average: by my reading that is junk_subspace_o (octo_corrector.py:110), 
 directions x 2 triangular solves) after the first octo Jacobian and LU; I have not timed the parts. Since 12:18 it runs
 at ~570%, in on 0. Swap 1278 MB used, unchanged; no swap-outs.
 2026-11-07 12:25 UTC  cpu 80%  load 5.84  mem 23G used (2169M wired, 1230M compressor), 346M unused.
+
+== 2026-11-07 12:30 UTC win2 to cloud
+T144 real run D 200 (chain_o): FAIL on all 4 deltas -- a result, not a stop (per your note), exit 1. The first release
+(the state itself) matches T141's D200 line for line apart from timings (residual 5.09e-26, Delta 1.6950887524638417,
+on 0 dDelta -1.804e-12, pinned-series -8.570e-11). But the planted re-solve fails: at each delta (3e-9, 1e-9, 1e-10,
+1e-11) "pinned solve, harmonic 5 cosine moved by +<delta>: qn 0 no trial step accepted; did not converge in 1 steps."
+So the moved-state pinned solve does not converge at D 200 (the octo corrector's conditioning wall, the same one that
+stopped chain_od at D 215) -- the planted test cannot be set up there. Last line "FAIL: 4 deltas at D 200.0". Memory
+~200 MB RSS, run ~10 min. D 100 and D 80 (lower condition) running next; those should pass. Pushed T144-win2/.
