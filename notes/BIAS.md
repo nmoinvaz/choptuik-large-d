@@ -76,7 +76,10 @@ Each refinement answered the one before it:
   harmonic other than 5 or loses part of the response to the frozen junk.
 - **Above D 130.** No planted test reaches there. On the trend-held chain the step agreed with the exact shift to
   0.5–2% (13.29), at biases a million times larger than chain_fit's.
-- **Resolution.** The chain runs at M = 32 only. Its truncation error at large D has not been measured, and it bounds
-  how far correcting the bias can go.
+- **Resolution.** The chain runs at M = 32 only. At D 80 its state, resampled to M = 48 in τ and solved again in
+  quad-double (`hp/resolution_check.py`, converged to |F| 1.4e-38), moves Δ by −2.4e-25 (raw 3fbeeb5,
+  `resolution-mac/scan_chainfit_D80.log`), so resolution is far below the bias there. Above D 80 the check needs the
+  horizon block re-seeded at the new M: without it the start residual grows from 1.7e-9 at 80 to 2e15 at 200.
+
 - **Range.** The chain stops at 215, where the octo-double corrector's weakest pivot reaches 7e-16
   (`T138-win2/chain_od.log`). T150 reruns it with the junk frozen in the corrector, toward D 400.
