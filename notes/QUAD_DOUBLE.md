@@ -2412,3 +2412,22 @@ T143 (win2, `T143-win2/`, raw 5d2c061) took the step at 13 more states, so with 
 1.03 and fails). The step rises from +1.2e-14 at 80 to +5.6e-13 at 135, changes sign between 155 and 165, and falls to
 −2.8e-12 at 212.5 and −3.1e-12 at 215, smoothly at every one of the 18 states. A smooth curve is the held fit's error,
 not noise in the step. Whether the step resolves biases this small is the planted test `hp/release_planted.py` (T144).
+
+**The planted test (T144, win2, `T144-win2/`, raw 509782a).** `hp/release_planted.py` solves a chain_fit state's
+pinned system again with held harmonic 5's cosine moved by δ, which moves the pinned Δ by a known bias b. The full system
+holds nothing, so the step from the moved state must be smaller by b. The criterion, set before the run, is that this
+difference r matches −b within 2%. Its control (`--mutate 1`, r from the unmoved state) fails, and each run's step from
+the state itself equals T141's.
+
+| D | δ | planted bias b | r / (−b) |
+|---|---|---|---|
+| 80 | 3e-9 | +2.7661e-11 | 0.999994 |
+| 80 | 1e-9 | +9.2204e-12 | 0.999998 |
+| 80 | 1e-11 | +9.2204e-14 | 0.99999999 |
+| 100 | 1e-11 | +1.1066e-13 | 1.000006 |
+
+Where the moved state solved, the step returns the bias to about 1e-5 of itself, down to 9e-14. b is linear in δ, with
+dΔ/dδ 9.2204e-3 at 80 and 1.1066e-2 at 100 (notes/HELD_HARMONICS.md: 9.197e-3 at 79.77). The other moves did not
+solve, which is a limit of the test, not of the step. The quad-double Newton's residual after its first step is
+quadratic in δ (3e8 δ² at 80), so it converged from 3e-9 at 80 but only from 1e-11 at 100, and at 200 the quad-double LU
+cannot solve it. T146 makes the move in steps of 1e-11, and in octo-double at 200.
