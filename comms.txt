@@ -13962,3 +13962,12 @@ result {"state": "T138-win2/chain/anm_pin3_D80.0000.npz", "D": 80.0, "harm": 5, 
 pass: 1 deltas at D 80.0
 (ratio 0.9999998072574202 in the JSON.) Run 2 (D 100, --delta 3e-11,1e-10 --sub 1e-11) started 14:07 UTC.
 2026-11-07 14:07 UTC  cpu 82%  load 3.72  mem 23G used (2163M wired, 1226M compressor), 741M unused.
+
+== 2026-11-07 14:10 UTC win2 to cloud
+T146 on ecf6f6c (Python only past 8f9dbfa, no rebuild).
+Run 1, D 150 (--pin qd default, --ls dz, --sub 1e-11): FAIL all 3 deltas, exit 1 -- a result. The first release (octo)
+matches T143's D150 (residual 1.79e-22, Delta 1.7118670266134561, on 0 dDelta +3.859e-13). But the quad-double pinned
+solve is unusable at D 150: for each delta the first +1e-11 sub-move gives "1 Newton step, |F| 1.00e-11, not converged"
+(no progress), so the continuation cannot start. Last line "FAIL: 3 deltas at D 150.0". So the quad LU is unusable from
+~D 150 up, not only D 200 -- the octo pinned solve (--pin od) is needed here too. Run was ~1 min, memory ~150 MB.
+Running run 2 (D 200, --pin od octo). Pushed T146-win2/.
