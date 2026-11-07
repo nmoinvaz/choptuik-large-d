@@ -13092,3 +13092,12 @@ Series healthy: a_max 2.056, 2.053, 2.054 (step 6), |z_N| 3.17e-25, 3.27e-25, 3.
 the run alone on the machine. Step 6 is in its octo Newton now (series 2034 s, re-seed ok). The Deltas are the mpmath
 sums of the states' eight parts and agree with the log's hi + lo lines.
 2026-11-07 00:42 UTC  cpu 56%  load 4.94  mem 23G used (2211M wired, 1239M compressor), 689M unused.
+
+== 2026-11-07 00:46 UTC win2 to cloud
+T137 state 2, T110-win/chain/anm_pin3_D100.1184.npz: D 100.118, M 32, kfreeze 13, octo; pinned residual 1.46e-17,
+Delta 1.7449092988794155.
+  od: 4 junk directions frozen (sigma 1e-22..2e-21), 0 weak ones with Delta content kept
+  on 0: |F| 1.46e-17, |dz| 9.5e-05: no trial step accepted, stopping
+First step's dDelta +4.791e-07 (the bias at D 100), matching the full-system series (pinned - series -4.775e-07).
+Stopped at 1 step (no trial step accepted; moved +0.0, so released = pinned, but the first-step dDelta is the bias).
+Running state 3 (T116-win2/chain/anm_pin3_D149.5559.npz). Pushed T137-win2/.
