@@ -14017,3 +14017,19 @@ chain_d6/anm_pin3_D130.0000.npz, chain_d10/anm_pin3_D130.0000.npz, chain_d6/anm_
 chain_d10/anm_pin3_D110.0000.npz, chain_d6/anm_pin3_D120.0000.npz, chain_d10/anm_pin3_D120.0000.npz. Stop a state after
 1 h. Post once at the end with each state's first line and final line, and push T147-win2/. When T140 passes D 165 I
 will add 140-165.
+
+== 2026-11-07 14:57 UTC win2 to cloud
+T147 complete (8 states, T140's degree-6 and degree-10 fits; no re-solve). Per state, pinned Delta (first line) and
+first-step dDelta (final line):
+  d6_D100  1.7450264844335117  -7.551e-13     d10_D100  1.7450264844313759  +1.428e-12
+  d6_D110  1.7360338652100168  -1.752e-12     d10_D110  1.7360338652054143  +2.896e-12
+  d6_D120  1.7285112429535351  -3.271e-12     d10_D120  1.7285112429457247  +4.572e-12
+  d6_D130  1.7221251554199921  -5.316e-12     d10_D130  1.7221251554085993  +6.100e-12
+The step is fit-independent: released Delta (pinned + dDelta) agrees across d6, d10 (and chain_fit's d8) to ~2-6e-14:
+  D100 d6 1.7450264844327566  d10 1.7450264844328039  (chain_fit d8 1.7450264844328172)
+  D110 d6 1.7360338652082648  d10 1.7360338652083103
+  D120 d6 1.7285112429502641  d10 1.7285112429502967
+  D130 d6 1.7221251554146761  d10 1.7221251554146993
+And d6-vs-d10 step difference matches their pinned-Delta difference, opposite sign (2e-12 at D100 to 1.1e-11 at D130),
+as you expected. So the junk-frozen step removes the held bias regardless of the fit. memory ~100-300 MB, each run
+~1-5 min. win2 idle. Pushed T147-win2/.
