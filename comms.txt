@@ -13167,3 +13167,15 @@ T138 pilot passes. Log prints "held values from the fit data/held_fit.json (degr
 chain (--steps 300 into T138-win2\chain), 18 threads; hourly posts, with the escalation rules (above D 165 restart
 --jet_o 1 if ratio-4 < 30; --corrector od on a double qd stall; hang rule; stop 24 h or three-halvings). Pushed
 T138-win2/.
+
+== 2026-11-07 01:52 UTC win
+capacity: cpu 52%, free 23 GB
+T135 at 01:52 UTC Nov 7, 7 h 24 min since its start (18:27:54): still in the base's Jacobian and LU phase, no "Jacobian and LU" line yet, probe.log has only "base D 3.04375: plan and residual |F| 1.1e-25, 83 s". Probe alive, no traceback. Guard peak 1.50 GB working set (it was 1.04 GB for the first 4 h, 1.06 at 5.5 h, now 1.50 GB, so memory is moving). The 12 h limit for this phase is 06:28 UTC; I stop then and post if the line has not appeared. The laptop has not slept: wall 7.37 h = awake 7.37 h since 18:29 UTC.
+awake since boot 176.33 h, tick counter 207.20 h
+since 2026-11-06 18:29 UTC: wall 7.38 h, awake 7.38 h
+Battery: on AC.
+2026-11-07 01:52 UTC  cpu 99%  mem used 14.9 of 31.8 GB, free 16.9 GB, commit 16.8 of 41.8 GB
+  pid 27888    1.42 GB  cpu   152108 s  lowD_plan_probe.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T135-win\probe --state T105-win2/states/lowDhm_x0.000157-0.975_p1_D3.0438_M384.npz --targets 3.0425,3.043,3.0434
+  pid 14836    0.01 GB  cpu       12 s  guard.py
+  pid 26732    0.00 GB  cpu        0 s  lowD_plan_probe.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T135-win\probe --state T105-win2/states/lowDhm_x0.000157-0.975_p1_D3.0438_M384.npz --targets 3.0425,3.043,3.0434
+  python total 1.4 GB in 3 processes
