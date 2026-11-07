@@ -13068,3 +13068,45 @@ T137, on win2 (it is the fastest at octo-double):
 4. Per state, post the line "od: N junk directions frozen (...)" and each "on k:" line (|F|, |dz|, lam, dDelta). The
    first step's dDelta is the number that matters. Post after the first state, then after each state. Push T137-win2/
    at each post. Stop a state after 6 steps or 2 h.
+
+== 2026-11-07 00:35 UTC win2 to cloud
+T137 state 1 (the check), anm_pin3_D79.7657.npz: D 79.766, M 32, kfreeze 13, octo; pinned residual 4.28e-18, Delta
+1.7699262589377422.
+  od: 4 junk directions frozen (sigma 7e-25..1e-22), 0 weak ones with Delta content kept
+  on 0: |F| 4.28e-18 -> 4.53e-07, |dz| 2.1e-05 -> 5.5e-06, lam 0.0078125, dDelta +5.03e-08
+  on 1: |F| 4.53e-07 -> 7.87e-07, |dz| 5.5e-06 -> 5.3e-06, lam 0.03125,   dDelta +2.04e-07
+  on 2: |F| 7.87e-07 -> 1.05e-06, |dz| 5.3e-06 -> 4.4e-06, lam 0.03125,   dDelta +3.23e-07
+  on 3: |F| 1.05e-06 -> 1.07e-06, |dz| 4.4e-06 -> 4.2e-06, lam 0.00390625, dDelta +7.98e-07
+  on 4: |F| 1.07e-06, |dz| 4.2e-06: no trial step accepted, stopping
+First step's dDelta +5.029e-08 -- matches your +5.0e-8 and the full-system series (summary: pinned - series -5.002e-08,
+released - series -3.004e-08). Check passes. Stopped at 5 steps (no trial step accepted). Running state 2
+(T110-win/chain/anm_pin3_D100.1184.npz) next. Pushed T137-win2/.
+
+== 2026-11-07 00:42 UTC macm3
+T134b 2 h post: D 198.5246, 6 steps from 195.5246, 0 halvings, 0 stalls (the octo corrector converged every time,
+largest final max|F| 7.9e-51, at step 3), every step a 0.5 (raw 49ef013).
+| step | series | re-seed | octo Newton (s) | max\|F\| | to D | Delta (eight parts, 17 digits) |
+| 4 | 2299 s | ok (141 s) | 3 (263, 129, check) | 3.4e-54 | 198.0246 | 1.69558975160687710 |
+| 5 | 2265 s | ok (137 s) | 3 (253, 123, check) | 3.3e-51 | 198.5246 | 1.69546120680105266 |
+Series healthy: a_max 2.056, 2.053, 2.054 (step 6), |z_N| 3.17e-25, 3.27e-25, 3.21e-25. About 2900 s per step with
+the run alone on the machine. Step 6 is in its octo Newton now (series 2034 s, re-seed ok). The Deltas are the mpmath
+sums of the states' eight parts and agree with the log's hi + lo lines.
+2026-11-07 00:42 UTC  cpu 56%  load 4.94  mem 23G used (2211M wired, 1239M compressor), 689M unused.
+
+== 2026-11-07 00:46 UTC win2 to cloud
+T137 state 2, T110-win/chain/anm_pin3_D100.1184.npz: D 100.118, M 32, kfreeze 13, octo; pinned residual 1.46e-17,
+Delta 1.7449092988794155.
+  od: 4 junk directions frozen (sigma 1e-22..2e-21), 0 weak ones with Delta content kept
+  on 0: |F| 1.46e-17, |dz| 9.5e-05: no trial step accepted, stopping
+First step's dDelta +4.791e-07 (the bias at D 100), matching the full-system series (pinned - series -4.775e-07).
+Stopped at 1 step (no trial step accepted; moved +0.0, so released = pinned, but the first-step dDelta is the bias).
+Running state 3 (T116-win2/chain/anm_pin3_D149.5559.npz). Pushed T137-win2/.
+
+== 2026-11-07 00:58 UTC win2 to cloud
+T137 state 3, T116-win2/chain/anm_pin3_D149.5559.npz: D 149.556, M 32, kfreeze 13, octo; pinned residual 2.43e-17,
+Delta 1.712063621272758.
+  od: 4 junk directions frozen (sigma 6e-21..2e-20), 0 weak ones with Delta content kept
+  on 0: |F| 2.43e-17, |dz| 3.6e-04: no trial step accepted, stopping
+First step's dDelta +1.905e-06 (the bias at D 149.56), matching the full-system series (pinned - series -1.895e-06).
+Stopped at 1 step. Bias vs D so far: +5.03e-8 (D 80), +4.79e-7 (D 100), +1.905e-6 (D 149.6) -- growing toward your
+~3e-6 at 200. Running state 4 (T129-win2/chain4/anm_pin3_D200.2746.npz). Pushed T137-win2/.
