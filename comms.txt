@@ -13110,3 +13110,12 @@ Delta 1.712063621272758.
 First step's dDelta +1.905e-06 (the bias at D 149.56), matching the full-system series (pinned - series -1.895e-06).
 Stopped at 1 step. Bias vs D so far: +5.03e-8 (D 80), +4.79e-7 (D 100), +1.905e-6 (D 149.6) -- growing toward your
 ~3e-6 at 200. Running state 4 (T129-win2/chain4/anm_pin3_D200.2746.npz). Pushed T137-win2/.
+
+== 2026-11-07 01:09 UTC win2 to cloud
+T137 state 4, T129-win2/chain4/anm_pin3_D200.2746.npz: D 200.275, M 32, kfreeze 13, octo; pinned residual 5.14e-21,
+Delta 1.6950162915779796.
+  od: 4 junk directions frozen (sigma 8e-25..7e-24), 0 weak ones with Delta content kept
+  on 0: |F| 5.14e-21, |dz| 8.0e-04: no trial step accepted, stopping
+First step's dDelta +3.228e-06 (the bias at D 200.27), matching your ~3e-6 and the series (pinned - series -3.158e-06).
+Stopped at 1 step. Bias vs D: +5.03e-8 (D 80), +4.79e-7 (D 100), +1.905e-6 (D 149.6), +3.228e-6 (D 200.3). Running
+state 5 (T129-win2/chain5/anm_pin3_D214.8840.npz), the last. Pushed T137-win2/.
