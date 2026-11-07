@@ -387,9 +387,11 @@ What carries over:
 - **Closed-form brackets.** At the sonic point of the implosion problem, the ratio k(r) of the two local eigenvalues is
   explicit. The values r_j where it is an integer j are singular and explicit, for example r₃ = 6 − 2√6. A shooting
   function changes sign between consecutive r_j, which brackets the selected r between explicit numbers [BCG23]. The
-  analogue here is untested: the resonant frequencies of the inner problem's singular points, or the poles and zeros
-  in ω of the Gamma-ratio Stokes constant C(n, s) of eq. (6), might bracket ω∞ between explicit values. That would be a
-  closed-form statement that needs no estimator.
+  direct analogue fails here. With s = iμω, the zeros of C(n, s) of eq. (6) lie at s = −1 − 2m and −2 − 2m and its
+  poles at s = n/2 − 1 − m, all at real s and so at imaginary ω, and C(n, s) ≠ 0 for real ω (Proposition 2). Nothing
+  in it can bracket the real ω∞. A bracket would need conditions that depend on the amplitude, as in the large-index
+  limit of the Hunter family of collapsing gas spheres, where the profiles are bracketed explicitly (Sandine,
+  arXiv:2310.18870, verified, arXiv). (Found by the 2026-11-07 cross-field agents, below.)
 - **Proof method.** The implosion proof combines a shooting argument with interval arithmetic in Arb on a few thousand
   Taylor coefficients at the sonic point, with a desingularization at a resonance and branch-and-bound barrier checks
   [BCG23]. That is the same family as route T (§4.2), at a larger scale than this project has run.
@@ -415,9 +417,7 @@ What carries over:
   Sedov–Taylor–von Neumann explosion [YS13]. There the background is continuously self-similar. In Choptuik's problem
   the critical solution itself is discretely self-similar.
 
-Two tests follow from this, both open:
-- the resonance bracket: explicit singular frequencies around ω∞;
-- the Stokes-line asymptotics of S₁ in a large parameter.
+One test follows from this, open: the Stokes-line asymptotics of S₁ in a large parameter.
 
 References:
 
