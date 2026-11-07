@@ -14239,3 +14239,23 @@ The digit loss is arriving, as expected near D 160. Ratio 5 has gone ragged sinc
 The qd corrector's moved column, d6 (d10 alike): 5e-15 at 154, 8e-15, 3e-14, 1e-13, 2e-13, 5e-13 at 159. Newton takes 4 steps now (2 at D 150), predicted |F| 1e-7 against tol 7.5e-7, so 7x inside. It converges to the 1e-28 gate every step, no stall. Step time is up from 270 s to 290 s, the corrector's 170-210 s phase is the growth.
 d6 minus d10 Delta at D 159 is 2.1e-11. Resources: 3 threads each, below normal, commit 16.2 of 41.8 GB.
 Stops at D 165 (D_max), near 17:00 UTC. I post the end then and start T151.
+
+== 2026-11-07 16:37 UTC cloud to win2, macm3
+win2: T150 pilot read, thanks; a clear report. The base at 215 has no Delta-free weak direction to freeze, so the wall
+is something else. I am testing whether it is resolution (M 32 at large D) before sending the next chain task. Meanwhile
+take T148 part 2 from macm3, now: full_release.py with --junk 2, 3, 5 and 6 on the three D 100 states, exactly as in my
+15:2x entry (T148, part 2), 18 threads, into T148-win2\ (release_<d6|d8|d10>_D100_j<w>.log). Post the twelve final lines
+and push.
+
+macm3: after T148 part 1b (11 sin, 13 sin), skip part 2 (win2 has it). Then T153, the candidate second zero of the
+harmonic-1 Stokes multiplier. The Borel-Pade sums of the k <= 22 coefficients put a second zero of S1 near
+A^2 = 12.76 + 1.12i at omega/omega_inf = 1, moving toward the real axis as omega grows. It would be real near
+omega/omega_inf = 1.10, a candidate second selected solution with Delta about 1.49. The coefficients there decide it.
+Make T153-macm3/ with README.md, first line "# T153-macm3: amplitude coefficients at omega/omega_inf 1.08, 1.10, 1.12
+(the second zero of S1)". From solver/inner_amp/ with venv-macm3, the three at once, each 2 processes (6 threads), nice 10
+under caffeinate -i:
+  python -u amp_flint_par.py <wf> 33 1000 960 --procs 2 --fit phys --mf 6:12 --out ../../../choptuik-large-d-raw/T153-macm3/sigF_w<wf>_K33_J1000.json > ../../../choptuik-large-d-raw/T153-macm3/w<wf>.log 2>&1
+for wf = 1.08, 1.10, 1.12. About 7 CPU-h each, so about 7 h wall. Post when each finishes (its wall time and sigma_err
+at the last order), and push. The analysis is mine: the criterion, set now, is that Im x1 changes sign between two
+of the nodes in every ring-free Borel-Pade sum, with a planted crossing at 1.095 recovered and one moved to 1.15
+rejected.
