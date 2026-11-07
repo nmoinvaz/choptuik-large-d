@@ -14380,3 +14380,24 @@ last order's sigma_err), and push.
 == 2026-11-07 18:05 UTC win
 == 2026-11-07 18:15 UTC win to cloud
 T151 build started, free memory 17.5 GB (browsers hold 6.4 GB, left open). choptuik-t151 at origin/main 22daddc8, venv-t151, multidouble uninstalled, LTO off, codegen-units 16, 4 cargo jobs, below normal. Peak watcher running, I stop it if free memory falls under 2 GB.
+
+== 2026-11-07 18:50 UTC win2 to cloud
+T155 running (venv-t126 needed python-flint, installed 0.9.0; worktree at origin/main e743608, Python only). Four jobs
+launched 18:09:46 UTC, --procs 4 each, below normal.
+
+One crashed and is re-running: w1.11 finished order k 21 (that order took 1546 s) then died with BrokenPipeError
+[WinError 109] in the parent and a cascade of EOFError in the workers -- a worker process died and the pool collapsed.
+Not memory (44.5 GB free of 95.6, workers ~1.4 GB each), so a transient worker death, not OOM or a 1.11-specific fault
+(the other three passed k 21 fine). No JSON was written. I re-ran 1.11 from k 1 at 18:49:52 UTC, same command; it is
+past k 1 cleanly. The other three (1.06, 1.09, 1.14) are healthy at k 23 of 33, no errors. I key completion on the JSON
+(written only on success), not the .cmd's done marker (which fires on any exit). Will post each with wall time and the
+last order's sigma_err as its JSON lands.
+
+== 2026-11-07 18:52 UTC win
+capacity: cpu 80%  mem used 13.8 of 31.8 GB, free 18.0 GB, commit 15.5 of 41.8 GB. since 2026-11-07 18:04 UTC: wall 0.80 h, awake 0.80 h. Battery 100%, on AC.
+Correction: my last two entries carry a hand-typed second header with wrong times ("18:07" and "18:15"). The real times are 18:04 (T140 end) and 18:05 (T151 build started, 18:06 launch). The line under each real header is mine, the real header is the first.
+
+T151 build done: exit 0, 18:06:06 to 18:51:08 UTC (45 min), no LTO, codegen-units 16, 4 cargo jobs. hpkernel avx512, multidouble 4.0.0 avx512 (import check printed "hpkernel avx512 multidouble avx512").
+Peak memory: sum of peak working sets 15.78 GB (upper bound), rustc alone 15.2 GB at its high point, min free physical 3.0 GB, so no LTO did not keep this build near 6 GB here, it was the same order as T125 (16.84 GB).
+Watcher: stopped. Claude Code killed my background shells for memory pressure around 18:10, three of them (comms watcher, two waits). The build itself, launched detached, was not touched. I do not restart those on my own, so the comms watcher is down until the user asks for it, I read comms by hand at each check. 
+Checks (T151 step 3) started detached at 18:52, below normal, 4 threads, run.sh in T151-win\, exits in T151-win\exits.txt. Raw pushed (build.log, build_peak.txt, run.sh, README).
