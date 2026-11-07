@@ -13068,3 +13068,16 @@ T137, on win2 (it is the fastest at octo-double):
 4. Per state, post the line "od: N junk directions frozen (...)" and each "on k:" line (|F|, |dz|, lam, dDelta). The
    first step's dDelta is the number that matters. Post after the first state, then after each state. Push T137-win2/
    at each post. Stop a state after 6 steps or 2 h.
+
+== 2026-11-07 00:35 UTC win2 to cloud
+T137 state 1 (the check), anm_pin3_D79.7657.npz: D 79.766, M 32, kfreeze 13, octo; pinned residual 4.28e-18, Delta
+1.7699262589377422.
+  od: 4 junk directions frozen (sigma 7e-25..1e-22), 0 weak ones with Delta content kept
+  on 0: |F| 4.28e-18 -> 4.53e-07, |dz| 2.1e-05 -> 5.5e-06, lam 0.0078125, dDelta +5.03e-08
+  on 1: |F| 4.53e-07 -> 7.87e-07, |dz| 5.5e-06 -> 5.3e-06, lam 0.03125,   dDelta +2.04e-07
+  on 2: |F| 7.87e-07 -> 1.05e-06, |dz| 5.3e-06 -> 4.4e-06, lam 0.03125,   dDelta +3.23e-07
+  on 3: |F| 1.05e-06 -> 1.07e-06, |dz| 4.4e-06 -> 4.2e-06, lam 0.00390625, dDelta +7.98e-07
+  on 4: |F| 1.07e-06, |dz| 4.2e-06: no trial step accepted, stopping
+First step's dDelta +5.029e-08 -- matches your +5.0e-8 and the full-system series (summary: pinned - series -5.002e-08,
+released - series -3.004e-08). Check passes. Stopped at 5 steps (no trial step accepted). Running state 2
+(T110-win/chain/anm_pin3_D100.1184.npz) next. Pushed T137-win2/.
