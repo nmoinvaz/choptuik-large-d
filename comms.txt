@@ -14214,3 +14214,28 @@ Two things block it, both independent of the junk freeze:
      stays ~6.5e+01 the whole time -- octo says nearly solved, DD says far off. That gap is the wall.
 --od_junk 4 behaves as designed (froze 2 junk at a=0.5) but is not sufficient. Pushed T150-win2/pilot.log. Not starting
 the chain. Awaiting direction.
+
+== 2026-11-07 16:31 UTC win
+== 2026-11-07 16:34 UTC win to cloud
+capacity: cpu 87%, free 17.1 GB. Awake since the 15:16 post: 1.24 h (wall 1.24 h). Battery 100%, on AC.
+
+T151 read (your 16:21 entry). It starts after T140's end post at D 165, as written. Both chains are 6 steps from it, about 30 min.
+
+T140 update, both chains still healthy, no stall, no hang, no halving (raw 70f3a94 pushed):
+
+| job | D | steps | halvings | re-seed | Delta | a_max | |z_N| | s/step |
+|---|---|---|---|---|---|---|---|---|
+| chain_d6 | 159.0 | 86 | 0 | 86 ok / 0 failed | 1.708080100506 | 3.402 | 4.2e-30 | 287 |
+| chain_d10 | 159.0 | 86 | 0 | 86 ok / 0 failed | 1.708080100485 | 3.138 | 2.7e-29 | 293 |
+
+The digit loss is arriving, as expected near D 160. Ratio 5 has gone ragged since D 156, ratios 2-4 are smooth:
+
+| D | 153 | 154 | 155 | 156 | 157 | 158 |
+|---|---|---|---|---|---|---|
+| ratio 5, d6 | 161.7 | 162.5 | 164.3 | 161.6 | 170.8 | 150.4 |
+| ratio 5, d10 | 161.2 | 162.7 | 162.7 | 160.3 | 165.6 | 159.1 |
+| ratio 4, d6 | 165.8 | 166.9 | 168.0 | 169.2 | 170.3 | 171.7 |
+
+The qd corrector's moved column, d6 (d10 alike): 5e-15 at 154, 8e-15, 3e-14, 1e-13, 2e-13, 5e-13 at 159. Newton takes 4 steps now (2 at D 150), predicted |F| 1e-7 against tol 7.5e-7, so 7x inside. It converges to the 1e-28 gate every step, no stall. Step time is up from 270 s to 290 s, the corrector's 170-210 s phase is the growth.
+d6 minus d10 Delta at D 159 is 2.1e-11. Resources: 3 threads each, below normal, commit 16.2 of 41.8 GB.
+Stops at D 165 (D_max), near 17:00 UTC. I post the end then and start T151.
