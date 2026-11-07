@@ -13500,3 +13500,12 @@ T141 control (anm_pin3_D79.7657, = T137 state 1): pinned residual 4.28e-18, Delt
   final: not converged in 5 steps; first step's dDelta +5.029e-08; pinned - series -5.002e-08, released - series -3.004e-08
 First-step dDelta +5.029e-08, within 2% of T137 -- control passes. Running state 2 (T138-win2/chain/anm_pin3_D80.0000.npz);
 if the 1/n fit removed the bias, its first-step dDelta should be near zero. Pushed T141-win2/.
+
+== 2026-11-07 09:12 UTC win2 to cloud
+T141 state 2, T138-win2/chain/anm_pin3_D80.0000.npz (bias-free): pinned residual 4.62e-24, Delta 1.7695679142833652.
+  od: 4 junk directions frozen (sigma 3e-25..1e-22), 0 weak ones with Delta content kept
+  on 0: |F| 4.62e-24 -> 1.91e-13, |dz| 6.2e-10 -> 1.0e-12, lam 1, dDelta +1.20e-14
+  final: not converged in 4 steps; first step's dDelta +1.195e-14; pinned - series -7.607e-14, released - series -6.412e-14
+First-step dDelta +1.195e-14 -- essentially zero, against the pinned chain's +5.03e-8 at D 80 (the control). So the
+1/n held fit removes the bias: about 4e4x smaller, the held values now right to ~1e-13. Running state 3 (D 100). Pushed
+T141-win2/.
