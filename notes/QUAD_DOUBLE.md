@@ -2334,3 +2334,19 @@ Our chain falls below the series smoothly, continuing the held harmonics' bias o
 published values lie above it by more and scatter by about 1e-6 between neighbouring D. If the extrapolated series is
 right, the gap is about 40% our bias and 60% the published values' error. That rests on an extrapolation over a factor
 of three in D, which nothing here checks; it is numerical evidence, not a resolution.
+
+**The bias measured three ways (2026-11-07 01:15 UTC).** T137 (win2, `T137-win2/`) froze the full system's four
+Δ-free weak directions (`full_release.py --octo 1 --junk 4`, 93a33a3) and took one full-system Newton step from
+chain states. Its Δ component is the held harmonics' bias, from neither the series nor any fit:
+
+| D | junk-frozen full-system step (T137) | series − chain | first-order fit correction (notes/HELD_HARMONICS.md) |
+|---|---|---|---|
+| 79.77 | +5.03e-8 | +5.00e-8 | +5.003e-8 |
+| 100.12 | +4.79e-7 | +4.78e-7 | — |
+| 149.56 | +1.905e-6 | +1.895e-6 | — |
+| 200.27 | +3.228e-6 | +3.158e-6 | — |
+
+The step is first order and the iteration does not converge past it (no trial accepted), so the agreement to 0.5–2% is
+that of a linear estimate. With three methods agreeing, the chain's gap to the series is its held harmonics, and the
+rest of the gap to arXiv:2611.07007, about +4e-6 at D 200, is on the published side. The chain is being rerun with the
+harmonics held on the 1/n fit (T138).
