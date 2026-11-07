@@ -1,0 +1,39 @@
+Krawczyk (C^2) M = 5: K(X) in int X: True; relative margins +1.000, +1.000, +0.989, +0.989, +0.991, +0.991
+   start values: fixed_point_M.start_data_M (rigorous given that lemma; sha256 589e5a810bc50289), arg 5pi/16, diag splitting, N = 132; second derivatives: series jets + Cauchy; run mutations: []
+   gt(0): |Y g| per row / width 6.1e-13, 4.9e-13, 2.0e-09, 2.0e-09, 6.8e-09, 6.8e-09
+   box of the run: h = 1e-11, w = ['1e-19', '1e-20']; tested on: half-widths 1e-11, 1e-11, 1e-19, 1e-19, 1e-20, 1e-20
+   contributions to |K_i| / w_i (columns: |Y g|, first order, then each pair jk):
+[[6.07e-13 1.73e-08 5.15e-11 2.37e-10 6.96e-08 9.08e-08 7.95e-08 1.22e-07 2.87e-10 1.26e-07 1.44e-07 1.74e-07 1.71e-07 1.94e-05 3.15e-05 4.58e-05 4.40e-05 1.93e-05 4.40e-05 4.57e-05 2.67e-05
+  6.06e-05 2.67e-05]
+ [4.94e-13 1.18e-08 9.33e-11 2.49e-10 3.39e-08 6.01e-08 4.87e-08 7.34e-08 3.67e-10 8.75e-08 1.00e-08 1.11e-07 2.10e-08 1.96e-07 3.03e-05 3.70e-06 3.84e-05 2.46e-07 3.83e-05 3.76e-06 4.37e-06
+  4.83e-05 4.37e-06]
+ [1.99e-09 2.41e-07 5.36e-09 2.20e-08 5.01e-06 5.98e-06 5.73e-06 8.10e-06 2.32e-08 1.05e-05 1.20e-05 1.20e-05 1.63e-05 4.79e-04 1.21e-03 1.09e-03 1.64e-03 4.76e-04 1.64e-03 1.08e-03 6.02e-04
+  2.19e-03 6.02e-04]
+ [1.99e-09 2.43e-07 5.34e-09 2.20e-08 5.99e-06 4.98e-06 8.11e-06 5.70e-06 2.31e-08 1.21e-05 1.04e-05 1.64e-05 1.20e-05 6.08e-04 9.57e-04 1.64e-03 1.09e-03 6.08e-04 1.08e-03 1.64e-03 1.10e-03
+  1.21e-03 1.10e-03]
+ [6.80e-09 2.74e-07 4.08e-09 1.68e-08 4.31e-06 4.37e-06 5.00e-06 5.99e-06 1.78e-08 8.99e-06 8.76e-06 1.05e-05 1.20e-05 4.14e-04 8.90e-04 9.56e-04 1.21e-03 4.12e-04 1.22e-03 9.54e-04 5.42e-04
+  1.64e-03 5.42e-04]
+ [6.80e-09 2.75e-07 4.05e-09 1.67e-08 4.36e-06 4.29e-06 5.98e-06 4.99e-06 1.77e-08 8.76e-06 8.96e-06 1.21e-05 1.05e-05 4.44e-04 8.29e-04 1.21e-03 9.59e-04 4.45e-04 9.56e-04 1.21e-03 8.20e-04
+  1.09e-03 8.20e-04]]
+   A        in [2.71857918921173, 2.71857918921175]  (radius 3.65e-15)
+   w/w_inf  in [0.999228403206566, 0.999228403206570]  (radius 1.72e-15)
+   B3       in [0.149203574911446, 0.149203574911449]  (radius 9.99e-16)
+   C3       in [0.0147190524902512, 0.0147190524902515]  (radius 1.01e-16)
+   B5       in [0.00840534690576155, 0.00840534690576177]  (radius 1.03e-16)
+   C5       in [0.00147034518159155, 0.00147034518159160]  (radius 1.81e-17)
+   smallest passing box: theta = 0.0001045; relative margins +1.000, +1.000, +1.000, +1.000, +1.000, +1.000
+   the zero (endpoints rounded outward):
+   A        in [2.71857918921174, 2.71857918921175]  (radius 6.39e-23)
+   w/w_inf  in [0.999228403206567, 0.999228403206568]  (radius 3.61e-23)
+   B3       in [0.149203574911447, 0.149203574911448]  (radius 1.90e-23)
+   C3       in [0.0147190524902513, 0.0147190524902514]  (radius 1.98e-24)
+   B5       in [0.00840534690576166, 0.00840534690576167]  (radius 1.97e-24)
+   C5       in [0.00147034518159157, 0.00147034518159158]  (radius 3.54e-25)
+hier.py check M = 5: (a) inside the hull of p(X): False (per solve [False, True]); (b) agreement within 3x hier's spread: True
+   A        |hier - certified| <= 1.81e-11   hier spread 1.7e-11   hull half-width 1.0e-11
+   w/w_inf  |hier - certified| <= 1.21e-11   hier spread 1.6e-11   hull half-width 1.0e-11
+   B3       |hier - certified| <= 5.88e-12   hier spread 6.9e-12   hull half-width 4.1e-12
+   C3       |hier - certified| <= 6.27e-13   hier spread 7.7e-13   hull half-width 4.6e-13
+   B5       |hier - certified| <= 6.14e-13   hier spread 7.3e-13   hull half-width 4.4e-13
+   C5       |hier - certified| <= 1.12e-13   hier spread 1.4e-13   hull half-width 8.2e-14
+krawczyk exit 1

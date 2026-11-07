@@ -277,6 +277,65 @@ only where the radius is small against the entries; at M = 1 that needs a small 
 mutations fire), at M = 3 the h = 10⁻⁸ box already has a relative radius of 10⁻⁴ in the largest entries. The table
 reports the controls on those boxes; the h = 10⁻⁶ results are kept in the logs.
 
+### 6.4 M = 5
+
+**The chart** (`data/A_M2_chart_M5.json`): p̂ and C from `data/A_M_refine_M5_d.json` (the centre of A_M.md §6.3), Γ
+from the finite differences. In the second-order chart the largest |Y D²g̃|_{H,oo} drops from 0.66 (harmonic-3 rows)
+and 0.13 (harmonic-5 rows) to 3.6×10⁻¹⁰ and 3.1×10⁻¹¹ (`logs/A_M2_structure_M5.log`).
+
+**What the structure allows** (§3, numerics; `logs/A_M2_structure_M5.log`). The blocks of |Y D²g̃| reach 1.9×10²²,
+2.3×10²³ and 3.0×10²⁴ in the outer rows for the (z3, z3), (z3, z5) and (z5, z5) pairs, 6.1×10¹⁵, 8.2×10¹⁶ and
+1.1×10¹⁸ in the harmonic-3 rows, 4.5×10¹⁴, 6.1×10¹⁵ and 8.2×10¹⁶ in the harmonic-5 rows, and 6.0×10⁵ in the inner
+rows for the (outer, same harmonic) pairs. With exact enclosures this caps the inner widths near w₃ ≈ 10⁻¹⁷ and
+w₅ ≈ 10⁻¹⁸ (from the inner-inner pairs), requires w₅ ≳ 4.5×10¹⁴ w₃² and w₅ ≳ 9×10⁴ h w₃ (the harmonic-5 rows), and
+caps the outer half-width at a few 10⁻⁷ (the inner rows' (outer, inner) pairs: 2·6.0×10⁵ h < 1, and
+2·8.2×10⁶ h w₅/w₃ < 1). The pilot
+(`logs/A_M2_pilot_M5_1e-9.log`, 150 steps at h = 10⁻⁹) took 0.8 s per step; three full runs followed.
+
+| run | box (h; w₃, w₅) | steps | time | the test | margins |
+|---|---|---|---|---|---|
+| T33 (C¹, A_M.md §6.3, for comparison) | 10⁻¹³; 10⁻¹⁹, 10⁻²³ | 2118, 863, 101 | | fails | −13.7, −11.8, +0.29, +0.33, −542, −511 |
+| `data/A_M2_box_M5_1e-11.json` | 10⁻¹¹; 10⁻¹⁹, 10⁻²⁰ | 2118, 863, 101 | 38 min | passes | 1.000, 1.000, 0.989, 0.989, 0.991, 0.991 |
+| `data/A_M2_box_M5_1e-10.json` | 10⁻¹⁰; 10⁻¹⁸, 10⁻¹⁹ | 2118, 863, 101 | 38 min | passes | 0.996, 0.998, 0.889, 0.889, 0.912, 0.911 |
+
+(`logs/A_M2_krawczyk_M5_1e-11.log`, `logs/A_M2_krawczyk_M5_1e-10.log`; the h = 10⁻⁹ run is in §6.5.) On the
+h = 10⁻¹⁰ box the contributions are at most 6.8×10⁻¹⁰ (|Y g̃(0)|), 2.6×10⁻⁷ (first order) and 2.2×10⁻² per pair
+(second order); the largest are the inner-inner pairs of the inner rows, the intrinsic terms that set the inner
+widths, while the (outer, outer) pairs that the chart removes contribute at most 2.9×10⁻⁶ there. In the outer rows the
+largest pair term is 6.1×10⁻⁴.
+
+> **Certified** (given the start-value lemma `fixed_point_M.start_data_M`, SHA-256 prefix 589e5a810bc50289, and
+> Braaksma's theorem; trusted code certify_M2_lohner.py, certify_M2.py, certify_M_lohner.py, certify_M_sys.py,
+> validated_int.py and python-flint 0.9; certify_M2*.py not reviewed): the D-jump function g of A_M.md §1 at M = 5 has
+> exactly one zero in the curved parallelepiped p(X), X = [−10⁻¹⁰, 10⁻¹⁰]² × [−10⁻¹⁸, 10⁻¹⁸]² × [−10⁻¹⁹, 10⁻¹⁹]²,
+> and its Jacobian is non-singular there. The zero lies in (endpoints rounded outward; the smallest passing box,
+> θ = 1.05×10⁻⁴, intersected with the whole box's enclosure):
+>
+> A ∈ [2.71857918921174, 2.71857918921175], ω/ω∞ ∈ [0.999228403206567, 0.999228403206568],
+> B₃ ∈ [0.149203574911447, 0.149203574911448], C₃ ∈ [0.0147190524902513, 0.0147190524902514],
+> B₅ ∈ [0.00840534690576166, 0.00840534690576167], C₅ ∈ [0.00147034518159157, 0.00147034518159158].
+
+The axis-aligned hull of p(X) has half-widths 1.0×10⁻¹⁰, 1.0×10⁻¹⁰, 4.1×10⁻¹¹, 4.6×10⁻¹², 4.4×10⁻¹², 8.2×10⁻¹³ (the
+krawczyk log). The refined numerical centre lies inside the enclosure.
+
+**Controls on the h = 10⁻¹⁰ run.** C0–C8 and C6b of A_M.md §5 all give their expected verdicts
+(`logs/A_M2_controls_M5_1e-10.log`, exit 0): C1, C2 fail by relative margins of order −10⁹ in every row, C5 by −1.00
+in A, C7 by −10³, C8 by −1.11 in B₃; the null mutations C3, C4 pass with the clean margins and overlapping
+enclosures; the planted interior zeros C6 and C6b pass (0.50–0.70 and 0.44–0.50). The independent assembly
+(`logs/A_M2_recheck_M5_1e-10.log`, mpmath) gives the same verdict and margins and the zero in
+A ∈ [2.7185791892113759, 2.7185791892121089]; with the jump sign flipped (`_mutate.log`) it fails (exit 1).
+**hier.py's zeros** (same krawczyk log): both solves stored in certify_M.py (`HIER[5]`) lie in the hull of p(X), and
+agree with the certified zero within 3× their spread in every coordinate (|difference| ≤ 1.81×10⁻¹¹ in A against a
+spread of 1.7×10⁻¹¹); with them moved by 100× their spread (`--mutate=hier`, `logs/A_M2_hier_M5_1e-10_mutate.log`)
+the check fails (exit 1). On the h = 10⁻¹¹ box statement (a) fails for one solve, as A_M.md §6.3 predicted for boxes
+below 2×10⁻¹¹; (b) holds. **D2** passes on both runs (`logs/A_M2_d2check_M5_1e-10.log`, `_1e-11.log`; worst ratio
+2.6×10⁻⁷ and 1.0×10⁻⁶); there the largest entries, about 3×10²⁴, carry a relative radius of 5×10⁻³, so the check is
+sharp in them.
+
+**For lemma 6a(M).** The state box at ξ₁ over p(X) is in `data/A_M2_6a_M5_1e-10.json`
+(`python3 certify_M2.py export6a --box=data/A_M2_box_M5_1e-10.json --out=...`; the format of certify_M.py's export,
+with V the x-derivatives in the second-order chart), max radius 4.3×10⁻⁴; a sub-box (`--sub=`) gives a smaller one.
+
 **Why D2 is needed.** The Krawczyk test alone does not see a wrong second derivative when the second-order terms are
 small: on the run with secondvar's sign flipped, the M = 3 test still passes with margins 1.000
 (`logs/A_M2_krawczyk_M3_1e-8_mut_lin2.log`), although the enclosed Y D²g̃ is off by a factor of about two. A wrong
