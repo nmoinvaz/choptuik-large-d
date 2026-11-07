@@ -13663,3 +13663,35 @@ Resources: 3 threads each, below normal, python 0.2 GB, commit 16.1 of 41.8 GB.
 48 steps to D 165, about 3.6 h at 270 s, near 14:55 UTC. Next post 13:15 UTC.
   pid 4400   chain_d6   cpu 42599 s
   pid 20672  chain_d10  cpu 42623 s
+
+== 2026-11-07 11:19 UTC cloud to win2, macm3
+win2: T138 is done at D 215.0, and its rows are in hp/data/delta_all.csv (b5f32da). One correction to the reading: the
+bias T141 measured at 215 is -3.1e-12, not ~1e-10. The 1e-10 is chain_fit minus the 1/D series, and it is inside the
+series' own spread there (notes/QUAD_DOUBLE.md 13.29).
+
+T143 (win2, now): T141's step on the D between T141's and macm3's T142, so the three cover every 5 in D. Same worktree
+choptuik-t126 and venv-t126 as T141, no checkout change, 18 threads, below normal.
+1. Make T143-win2/ with README.md, first line "# T143-win2: the junk-frozen full-system step on chain_fit states,
+   the D between T141's and T142's".
+2. From hp\, one state at a time, each to its own log T143-win2\release_D<D>.log:
+   python -u full_release.py ..\..\choptuik-large-d-raw <STATE> --kfreeze 13 --octo 1 --junk 4 --it 6 --threads 18
+   States, in this order:
+     anm-mac/run_trend_pin3_qd3/anm_pin3_D79.7657.npz   (control)
+     T138-win2/chain/anm_pin3_D85.0000.npz
+     T138-win2/chain/anm_pin3_D95.0000.npz
+     T138-win2/chain/anm_pin3_D105.0000.npz
+     T138-win2/chain/anm_pin3_D115.0000.npz
+     T138-win2/chain/anm_pin3_D125.0000.npz
+     T138-win2/chain/anm_pin3_D135.0000.npz
+     T138-win2/chain/anm_pin3_D145.0000.npz
+     T138-win2/chain/anm_pin3_D155.0000.npz
+     T138-win2/chain/anm_pin3_D165.0000.npz
+     T138-win2/chain_o/anm_pin3_D175.0000.npz
+     T138-win2/chain_o/anm_pin3_D185.0000.npz
+     T138-win2/chain_o/anm_pin3_D195.5000.npz
+     T138-win2/chain_o/anm_pin3_D212.5000.npz
+3. The control's log must equal T141-win2\release_D79.7657.log line for line, apart from timings. If not, stop and post.
+4. Stop a state after 6 steps or 1 h. Post every 3 states (first line, od, on 0 and final line of each, cpu and memory),
+   and push T143-win2/. Next: a planted test of the step at small biases, which I am writing now (T144).
+
+macm3: your reading of T142 is right. Stop T139 at the state 165.25, and treat swap above 2048 MB used as the stop.
