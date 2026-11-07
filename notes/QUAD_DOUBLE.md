@@ -2406,11 +2406,14 @@ is inside the series' own spread (9.1e-11 at 100 and 1.5e-9 at 173.5, notes/HELD
 the series no longer resolves chain_fit's error and the step does. The iteration took 3–4 steps without converging at
 80 and 100 and accepted no trial step at 150–215, so each value is a linear estimate, as T137's were.
 
-T143 (win2, `T143-win2/`, raw 5d2c061) took the step at 13 more states, so with T141 it covers every 5 to 10 in D from
-80 to 215. Its control matched T141's log line for line. `hp/release_steps.py RAW` collects the logs into
-`hp/data/release_steps.csv` and checks every control against T137's +5.03e-8 within 2% (`--mutate=control` scales one by
-1.03 and fails). The step rises from +1.2e-14 at 80 to +5.6e-13 at 135, changes sign between 155 and 165, and falls to
-−2.8e-12 at 212.5 and −3.1e-12 at 215, smoothly at every one of the 18 states. A smooth curve is the held fit's error,
+T143 and T145 (win2, `T143-win2/`, `T145-win2/`, raw 5d2c061 and 0e024f0) took the step at 24 more states, so the
+29 cover every 5 in D from 80 to 215. T143's control matched T141's log line for line. macm3 (`T142-macm3/`, raw
+7047e85) ran the control and D 130 on another machine: its control printed T141's lines through the fourth step before
+its time limit, and its D 130 gives +5.6900e-13, as win2's does. `hp/release_steps.py RAW` collects the logs into
+`hp/data/release_steps.csv`, checks every control against T137's +5.03e-8 within 2% and every state in two logs for
+agreement within 2% (`--mutate=control` and `--mutate=duplicate` scale one by 1.03, and each fails). The step rises from
++1.2e-14 at 80 to +5.7e-13 at 130, changes sign between 160 and 165, and falls to −2.8e-12 at 212.5 and −3.1e-12 at
+215, smoothly at every one of the 29 states. A smooth curve is the held fit's error,
 not noise in the step. Whether the step resolves biases this small is the planted test `hp/release_planted.py` (T144).
 
 **The planted test (T144, win2, `T144-win2/`, raw 509782a).** `hp/release_planted.py` solves a chain_fit state's pinned

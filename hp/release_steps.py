@@ -4,9 +4,10 @@ release logs of the raw-data repository (notes/QUAD_DOUBLE.md 13.29). Per state:
 pinned state, the first step's dDelta (the held harmonics' bias, a linear estimate, not a bound), and the pinned Delta
 minus the 1/D series of degree 20, with the log it came from. The logs of the control state (T137's state at 79.77,
 anm-mac/) are checked instead: each must give T137's +5.03e-8 within 2%. Writes data/release_steps.csv and prints the
-table. --mutate=control (the check's control, which must fail) scales the first control's dDelta by 1.03.
+table. The controls of the checks, which must fail: --mutate=control scales the first control's dDelta by 1.03, and
+--mutate=duplicate the second log's of a state in two logs.
 
-    cd hp && python3 release_steps.py RAWDIR [--tasks=T141-win2,T142-macm3,T143-win2] [--mutate=control]
+    cd hp && python3 release_steps.py RAWDIR [--tasks=T141-win2,T142-macm3,T143-win2,T145-win2] [--mutate=control|duplicate]
 
 Exits 1 when a control fails, or when two logs of one state differ in dDelta by more than 2%.
 """
@@ -42,7 +43,7 @@ def main(argv):
     if len(args) != 1:
         sys.exit(__doc__)
     raw = os.path.abspath(args[0])
-    tasks = opts.get("tasks", "T141-win2,T142-macm3,T143-win2").split(",")
+    tasks = opts.get("tasks", "T141-win2,T142-macm3,T143-win2,T145-win2").split(",")
     rows, controls, ok = {}, [], True
     for t in tasks:
         for p in sorted(glob.glob(os.path.join(raw, t, "release_D*.log"))):
@@ -57,9 +58,13 @@ def main(argv):
                 continue
             if r["state"] in rows:
                 a, b = rows[r["state"]]["dDelta"], r["dDelta"]
-                if abs(a - b) > TOL * max(abs(a), abs(b)):
-                    ok = False
-                    print(f"DIFFERS: {r['state']}: dDelta {a:+.3e} ({rows[r['state']]['log']}) and {b:+.3e} ({rel})")
+                if opts.get("mutate") == "duplicate":
+                    b *= 1.03
+                    print(f"mutated: {rel}'s dDelta scaled by 1.03")
+                same = abs(a - b) <= TOL * max(abs(a), abs(b))
+                ok &= same
+                print(f"{'agree' if same else 'DIFFERS'}: {r['state']}: dDelta {a:+.4e} ({rows[r['state']]['log']}) and "
+                      f"{b:+.4e} ({rel})")
                 continue
             rows[r["state"]] = r
     if opts.get("mutate") == "control" and controls:
