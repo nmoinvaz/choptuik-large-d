@@ -2147,14 +2147,14 @@ on the faster build.
 
 `hp/export_delta_all.py` writes `hp/data/delta_all.csv`, one row per D with Δ in up to four parts, the kind of
 computation, an error estimate and its kind, the source record and the state (columns and precedence in its docstring;
-the README's Values section describes the file). It read the raw-data repository at 3470e7a. Its 2295 rows:
+the README's Values section describes the file). It read the raw-data repository at 38e926f. Its 2295 rows:
 
 | kind | rows | D | err, its kind and range |
 |---|---|---|---|
 | dd, the full system in double-double (`data/delta_dd.csv`) | 1259 | 3.044–67.767 | dM 1.1e-22 to 4.1e-10, check 1e-16 to 2e-15 |
 | qd, the full system in quad-double (`data/delta_qd.csv`) | 7 | 68.5–73.0 | starts 5.0e-29 to 8.4e-28 (5 rows) |
 | pinned, Delta_full1 of T73 and T75 | 883 | 67.768–73.266 | pins 7.4e-19 to 8.6e-15 (150) |
-| chain_fit, the chain with the harmonics held on the 1/n fit (T138) | 146 | 74.0–215.0 | fits 1.4e-15 to 1.1e-12 (26, at 74–99), runs 8.5e-21 to 1.3e-20 (9, at 100–124) |
+| chain_fit, the chain with the harmonics held on the 1/n fit (T138) | 146 | 74.0–215.0 | fits 1.4e-15 to 3.7e-12 (44, at 74–117), runs 6.6e-21 to 1.6e-20 (13, at 118–154) |
 
 `--verify` re-reads every row from the record or state it names and finds all 2295 equal. `--mutate=dd`, `qd`, `pinned`
 and `chain_fit` move one row's second part by one ulp, and each fails it (exit 1). `--mutate=chain` finds no chain row
@@ -2177,8 +2177,8 @@ gap is in the held values, not the corrector, whose residuals are 1e-51 to 1e-49
 histories hold values a few ulps apart (macm3, comms 2026-11-07 06:26 UTC). That is far below chain_fit's distance from
 the 1/D series (notes/HELD_HARMONICS.md). T140 (win, `T140-win/`) reruns its path from 73.0 with the harmonics held on
 the fits of degree 6 and 10 (chain_fit's is 8). Where it reached a D, err is the larger difference (err_kind fits), a
-spread over the fit's degree: 1.4e-15 at 74, 1.5e-13 at 85 and 1.1e-12 at 99, with degree 6 above chain_fit and degree
-10 below it at every D (raw f4246ed).
+spread over the fit's degree: 1.4e-15 at 74, 1.5e-13 at 85, 1.2e-12 at 100 and 3.7e-12 at 117, with degree 6 above
+chain_fit and degree 10 below it at every D (raw c09f77f).
 
 **T85-mac below 78.1, replaced by chain_fit.** chain_fit, interpolated through nine of its rows, agrees with T75's
 pin 7 and pin 5 rows at 73.10–73.26 to 5.3e-13 or better (the interpolation's own spread, from dropping its end points,
@@ -2394,7 +2394,7 @@ log's, the 1/D fit of degree 20.
 | D | step from the chain (T137) | step from chain_fit (T141) | chain_fit − series | spread over the fit's degree (13.25) |
 |---|---|---|---|---|
 | 80 | +5.03e-8 (79.77) | +1.195e-14 | −7.61e-14 | 4.2e-14 |
-| 100 | +4.79e-7 (100.12) | +2.158e-13 | −1.630e-12 | 1.1e-12 (99) |
+| 100 | +4.79e-7 (100.12) | +2.158e-13 | −1.630e-12 | 1.2e-12 |
 | 150 | +1.905e-6 (149.56) | +3.859e-13 | −2.670e-11 | — |
 | 200 | +3.228e-6 (200.27) | −1.804e-12 | −8.570e-11 | — |
 | 215 | +3.448e-6 (214.88) | −3.149e-12 | −1.077e-10 | — |
