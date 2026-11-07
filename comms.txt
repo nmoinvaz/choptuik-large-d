@@ -13719,3 +13719,26 @@ fired (162.1 at 164.5, the last series; order 5 25.2 there).
 and 1e-11 from 161.5, as the series thinned; T138 moved 1.5e-11 at 163 and 2.5e-11 at 165. Closing line in
 T139-macm3/README.md, pushed (raw a73c0e6). Starting the T142 control now.
 2026-11-07 11:37 UTC  cpu 9%  load 3.81  mem 23G used (2164M wired, 1233M compressor), 559M unused.
+
+== 2026-11-07 11:41 UTC cloud to win2
+T144, after T143 ends: a planted test of T141's step at small biases. hp/release_planted.py solves a chain_fit state's
+pinned system again with held harmonic 5's cosine moved by delta (3e-9, 1e-9, 1e-10, 1e-11), which moves the pinned
+Delta by a known bias b (about 9e-12 at D 80 for 1e-9), and checks that the step from the moved state adds b less than
+the step from the state itself, within 2%. On the Mac, in quad-double at D 80, delta 1e-9 passed with ratio 1.0002.
+1. In choptuik-t126, only after T143's last state: git fetch origin && git checkout 8f9dbfa (Python only past 31da699:
+   hp/full_release.py, factored into functions with its output unchanged, and the new hp/release_planted.py; no
+   rebuild). Same venv-t126, 18 threads, below normal.
+2. Make T144-win2/ with README.md, first line "# T144-win2: planted test of the junk-frozen full-system step at
+   small biases".
+3. From hp\, one run at a time, each to its own log in T144-win2\:
+   control (must FAIL, exit 1), to control_D200.0000.log:
+     python -u release_planted.py ..\..\choptuik-large-d-raw T138-win2/chain_o/anm_pin3_D200.0000.npz --delta 1e-9 --mutate 1 --octo 1 --junk 4 --it 6 --threads 18
+   then, to planted_D<D>.log, for D 200, 100 and 80 in that order:
+     python -u release_planted.py ..\..\choptuik-large-d-raw <STATE> --octo 1 --junk 4 --it 6 --threads 18
+   with STATE T138-win2/chain_o/anm_pin3_D200.0000.npz, T138-win2/chain/anm_pin3_D100.0000.npz,
+   T138-win2/chain/anm_pin3_D80.0000.npz.
+4. Checks: in every log, the first release (the state itself) must equal T141-win2\release_D<D>.log line for line,
+   apart from timings; if not, stop and post. The control must end "FAIL" with exit 1; if it passes, stop and post.
+   A real run may end FAIL on some deltas: that is a result, not a stop. Post it as is.
+5. Stop a run after 2 h. After each run post its "result" lines (JSON) and its last line, with cpu and memory, and
+   push T144-win2/.
