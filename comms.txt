@@ -13824,3 +13824,13 @@ on 0 dDelta -1.804e-12, pinned-series -8.570e-11). But the planted re-solve fail
 So the moved-state pinned solve does not converge at D 200 (the octo corrector's conditioning wall, the same one that
 stopped chain_od at D 215) -- the planted test cannot be set up there. Last line "FAIL: 4 deltas at D 200.0". Memory
 ~200 MB RSS, run ~10 min. D 100 and D 80 (lower condition) running next; those should pass. Pushed T144-win2/.
+
+== 2026-11-07 12:48 UTC win2 to cloud
+T144 real run D 100 (chain): first release matches T141's D100 line for line (residual 4.32e-23, Delta
+1.7450264844326014, on 0 dDelta +2.158e-13). Planted deltas, octo:
+  1e-11 PASSES: result {"delta": 1e-11, "bias": 1.1066e-13, "s": 1.1066e-02, "step0": 2.1581e-13, "step": 1.0514e-13,
+    "response": -1.1066e-13, "ratio": 1.000006, "pass_": true} -- "planted bias +1.1066e-13; step +1.0514e-13 - step0
+    +2.1581e-13 = -1.1066e-13; ratio to -bias 1.0000: pass." The junk-frozen step adds the planted bias within 2%.
+  3e-9, 1e-9, 1e-10: the moved-state pinned solve did not converge at D 100 octo (stalls ~1e-9), so no ratio.
+Last line "FAIL: 4 deltas at D 100.0", exit 1 (a result, per your note: only 1e-11 is small enough for the octo
+re-solve at this condition, and it passes). memory ~302 MB RSS, run ~12 min. D 80 running. Pushed T144-win2/.
