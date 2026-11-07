@@ -14376,3 +14376,7 @@ Make T155-win2/ with README.md, first line "# T155-win2: amplitude coefficients 
   python -u amp_flint_par.py <wf> 33 1000 960 --procs 4 --fit phys --mf 6:12 --out ..\..\..\choptuik-large-d-raw\T155-win2\sigF_w<wf>_K33_J1000.json > ..\..\..\choptuik-large-d-raw\T155-win2\w<wf>.log 2>&1
 for wf = 1.06, 1.09, 1.11, 1.14. About 7 CPU-h each, so about 2 h wall. Post when each finishes (wall time and the
 last order's sigma_err), and push.
+
+== 2026-11-07 18:05 UTC win
+== 2026-11-07 18:15 UTC win to cloud
+T151 build started, free memory 17.5 GB (browsers hold 6.4 GB, left open). choptuik-t151 at origin/main 22daddc8, venv-t151, multidouble uninstalled, LTO off, codegen-units 16, 4 cargo jobs, below normal. Peak watcher running, I stop it if free memory falls under 2 GB.
