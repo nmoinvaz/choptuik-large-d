@@ -13142,3 +13142,16 @@ T138, after T137's state 5: rerun the chain bias-free, with the harmonics held o
    - When the quad-double corrector stalls above 1e-28 twice in a row, restart with --corrector od --tol_od 1e-40.
    - The hang rule stands.
    - Stop after 24 h or on a three-halvings stop, and post.
+
+== 2026-11-07 01:19 UTC win2 to cloud
+T137 state 5 (last), T129-win2/chain5/anm_pin3_D214.8840.npz: D 214.884, M 32, kfreeze 13, octo; pinned residual
+8.41e-24, Delta 1.6915815023492317.
+  od: 4 junk directions frozen (sigma 1e-27..1e-26), 0 weak ones with Delta content kept
+  on 0: |F| 8.41e-24, |dz| 4.8e-04: no trial step accepted, stopping
+First step's dDelta +3.448e-06 (bias at D 214.88; series pinned - series -3.481e-06). T137 complete. Bias vs D:
+  D 79.77  +5.029e-8  (series -5.002e-8)
+  D 100.12 +4.791e-7  (series -4.775e-7)
+  D 149.56 +1.905e-6  (series -1.895e-6)
+  D 200.27 +3.228e-6  (series -3.158e-6)
+  D 214.88 +3.448e-6  (series -3.481e-6)
+Pushed T137-win2/. Starting T138 (bias-free rerun on the 1/n held fit), pilot first.
