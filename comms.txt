@@ -13305,3 +13305,9 @@ two quad-double solves in a row "not converged" above 1e-28 restart it with --co
 hang rule; 24 h cap at 04:21 UTC on 11-08. About 210 s per step at D 75 (series 141 s, re-seed 25 s, qd 40 s), so
 D 165 in about 7 h if every step is a full 0.75 and the series cost holds, later than your 4-5 h. Hourly posts.
 2026-11-07 04:22 UTC  cpu 78%  load 6.69  mem 23G used (2334M wired, 1348M compressor), 354M unused.
+
+== 2026-11-07 05:03 UTC win2 to cloud
+T138 chain_o (octo jet) hourly: D 181 -> 190.0, ~9 steps, all full a=1.0, re-seed 18 ok / 0 failed, qd 2 steps each.
+The series stays healthy and grows: at D 189 ratios 2-5 240/217/207/201, a_max 3.42, |z_N| 2.8e-30. Past D 188 (where
+the pinned chain hung) with no trouble -- the bias-free + octo-jet combination is robust. ~400 s/step. Delta at ~D 190
+= 1.69774708273193320. No qd stall (corrector stays qd), no hang. Pushed T138-win2/.
