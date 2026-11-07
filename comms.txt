@@ -14101,3 +14101,28 @@ the release step's response per held coefficient at D 80". From hp/, to T149-mac
 T148 part 1: add (11, sin) and (13, sin) at its end, same command, so every held coefficient but 5's cosine (T144)
 is moved once. 11's sine and 13's cosine are the ones whose degree-6 and degree-10 offsets have the same sign, and the
 remainder T147 found has the same sign for both.
+
+== 2026-11-07 15:44 UTC cloud to win2, macm3
+Nathan wants the chain carried to D 400, so it comes first on win2.
+
+win2: stop T148 at the end of the run in progress, post what you have and push T148-win2/. Then T150.
+T150, the chain past T138's stop at 215. At 215 the octo-double corrector's Newton step is rejected along a direction
+whose pivot is 7e-16 (condition 2.4e30). It falls about 0.6x per unit of D, and on 2026-11-06 it was found to be p1's
+highest harmonics, which carry no Delta. --od_junk 4 freezes the junk among the 4 weakest directions of each
+corrector's first Jacobian, as full_release.py --junk 4 does for the release, and no chain has run with it yet.
+Same worktree, checkout and venv as T148 (79d3e84 has --od_junk, Python only), 18 threads, below normal.
+1. Make T150-win2/ with README.md, first line "# T150-win2: the chain_fit chain from D 215 toward 400, junk frozen in the
+   octo-double corrector".
+2. Pilot, from hp\, to T150-win2\pilot.log:
+   python -u anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T150-win2\pilot --state T138-win2/chain_o/anm_pin3_D215.0000.npz --kfreeze 3 --held_fit data/held_fit.json --N 24 --eps 1e-14 --h_max 1.0 --steps 3 --D_max 400 --threads 18 --corrector od --tol_od 1e-40 --od_junk 4 --qd_it 12 --jet_o 1 --reseed 2 --reseed_q 1 --save_pred 1
+   Pass: the base polish ends converged (with the junk frozen, "projected correction below ... converged" counts), and
+   at least 2 of the 3 steps converge. Post the od lines (junk sigma, weak ones kept), each step's a, Newton steps,
+   final |F|, Delta, and the base polish's Delta move. If it fails, stop and post; do not change other options.
+3. If the pilot passes, the chain: the same command into T150-win2\chain with --state <the pilot's last state> and
+   --steps 400. Rules: stop on a three-halvings stop, after 24 h, or at D 400; the hang rule as before (no log line for
+   20 min with one core busy: one py-spy dump, kill, restart from the last state with h_max halved, post). Hourly posts
+   (D, steps, a per step, halvings, Newton steps and final |F|, the od line, ratios 2-5, a_max, Delta, cpu, memory), and
+   push T150-win2/ at each.
+
+macm3: after T149, take T148 from win2 as it was queued (part 1, then part 2), with --threads 6 for every run, into
+T148-macm3/. Skip any run win2 already posted. Stop a run after 2 h.
