@@ -12,7 +12,8 @@ no relation, with planted and random controls behaving as required (§2; the sco
 inner problem has no small parameter, and every approximation to the selected zero is itself a numerically computed
 nonlinear Stokes constant (§3). The closest rigorous statement within reach is a *certified* enclosure of the selected
 frequency of the inner problem, *conditional* on Braaksma's theorem and on a harmonic-tail lemma that is not yet proved
-(§4). The truncations $`M = 1`$ and $`M = 3`$ are certified now, and $`M = 5`$ is a few hours of local runs away.
+(§4). The truncations $`M = 1`$ and $`M = 3`$ are certified now. $`M = 5`$'s first-order certificate was run and
+fails (T33), so it needs a second-order chart or C² enclosures first.
 Matching eq. (9)'s $`\pm 0.00006`$ needs $`M = 9`$ explicit plus that lemma. Even then, the identification of the inner
 zero with $`\lim_{D\to\infty}\Delta(D)`$ rests on Conjecture 1. A paper of 4 Nov 2026 (Ecker, Ecker, Grumiller,
 arXiv:2611.07007) also has no analytic value. It extrapolates its $`D \le 200`$ solutions to 1.643911,
@@ -260,8 +261,10 @@ Braaksma's theorem, as Thm A does for $`M = 1`$. This answers reading 2 of §0. 
 ### 4.2 Route T: truncations plus a tail lemma
 
 - *Now:* $`M = 1`$ (Thm A) and $`M = 3`$ (math paper Sec. A3) are certified. $`M = 5`$: the centre is refined to
-  $`|g| \le 2.5\times10^{-29}`$ and four box runs of about 2000 Lohner steps each, 3–4 hours on 4 local threads, are
-  specified (proof/A_M.md §6.3, §7). $`M = 7`$: the zero is known to $`\pm2\times10^{-5}`$ only (proof/B_tail_M7.md),
+  $`|g| \le 2.5\times10^{-29}`$, and the four box runs of proof/A_M.md §7 were made on 2026-10-22 (T33) and failed. Two
+  grew a derivative radius past one on the arc, and the run that finished fails the Krawczyk test (proof/A_M.md, its
+  opening summary; `solver/proof/logs/A_M_krawczyk_M5_1e-13.log`). A box large enough needs a second-order chart and
+  C² enclosures (proof/A_M.md §2). $`M = 7`$: the zero is known to $`\pm2\times10^{-5}`$ only (proof/B_tail_M7.md),
   and its conditioning (couplings $`10^{14}`$–$`10^{17}`$ already at $`M = 5`$) needs the Schur-corrected conditions in
   multiprecision.
 - *The tail lemma* ($`|\omega_* - \omega_M| \le`$ explicit bound) is the open mathematics. proof/B_tail_M7.md §5 states
@@ -277,9 +280,9 @@ Braaksma's theorem, as Thm A does for $`M = 1`$. This answers reading 2 of §0. 
 | eq. (9), $`\pm0.00006`$ in $`\Delta`$ | $`3.6\times10^{-5}`$ | ≲ 0.15 | 9 |
 | eq. (4), $`\pm1.5\times10^{-8}`$ | $`9\times10^{-9}`$ | ≲ $`4\times10^{-5}`$ | 13–15 |
 
-- *Work:* $`M = 5`$ is a queued run. $`M = 7`$ and $`M = 9`$ need the existing machinery extended to 25–31 complex
-  unknowns with multiprecision Lohner steps (weeks of runs and engineering). The lemma needs (★): unknown effort, the
-  hard part.
+- *Work:* $`M = 5`$ needs the second-order design of proof/A_M.md §2, new certificate code. $`M = 7`$ and $`M = 9`$ need
+  the existing machinery extended to 25–31 complex unknowns with multiprecision Lohner steps (weeks of runs and
+  engineering). The lemma needs (★): unknown effort, the hard part.
 
 ### 4.3 Route E: the amplitude series
 

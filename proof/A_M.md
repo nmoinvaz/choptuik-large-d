@@ -378,6 +378,9 @@ w is four times larger.
 
 ### 6.3 M = 5: not certified here; the centre is ready and the runs are a local-machine task
 
+*Outcome (2026-10-22, T33):* the four runs of §7 were made and the certificate fails; see the summary at the top of this
+note. What follows is the plan as it stood before them.
+
 **The centre** (numerics). Two Newton iterations at ξ₁ (`data/A_M_refine_M5_a.json`, `_b.json`; logs of the same names)
 took |g| from 3.9×10⁻³ to 2.7×10⁻⁸ but the higher-harmonic steps only from 4.6×10⁻¹⁶ to 1.1×10⁻¹⁶ (§2, "The centre").
 The mixed system (`--mixed`; `data/A_M_refine_M5_c.json`, `logs/A_M_refine_M5_c.log`) then converged: full Newton steps
@@ -427,7 +430,8 @@ one process each, under `nice -n 10`:
 
 The step counts are set by the first-order a-priori enclosure (§3), not by the accuracy needed.
 
-**Proposed task for the local 8-thread machine** (for the coordinator to queue; about 3–4 hours on 4 threads).
+**Proposed task for the local 8-thread machine** (for the coordinator to queue; about 3–4 hours on 4 threads). It ran
+as T33 on 2026-10-22, and all four runs failed (§6.3).
 
 - *What:* the M = 5 point certificate: four box runs at different (h, w) in parallel, then the Krawczyk test,
   the controls, the independent re-check and the 6a export on the one that passes with the largest box.
