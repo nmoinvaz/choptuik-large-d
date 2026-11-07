@@ -10,13 +10,16 @@ agreement on the trend-held chain (13.29). The pinned Newton's residual after it
 (about 3e8 delta^2 at D 80, more at 100), so the move is made in --sub steps of at most that size, each solved from the
 last (continuation), with --ls the quad-double Newton's acceptance rule (newton_qd: "dz", its default, stalls at
 1e-10 at D 80; "F", backtracking on |F|). --pin od solves the pinned system in octo-double instead (PinnedO,
-newton_od to --tol_od), where the quad-double LU fails (D 200: |dz| = 100 delta). Every solve uses the plan of the state
-itself. Each release prints
+newton_od to --tol_od), where the quad-double LU fails (D 200: |dz| = 100 delta). --pin_junk W freezes the junk among
+the W weakest directions in the pinned solve (newton_qd's junk mode, newton_od's junk_w: no Delta content), as the
+release does; from D 150 the plain pinned Newton rejects its first step from a move of 1e-11. Every solve uses the plan
+of the state itself. Each release prints
 full_release.py's lines, the one of delta 0 being full_release.py's own run on the state. --mutate 1 (the control,
 which must fail) takes r from the unmoved state's step instead of the moved one's.
 
     cd hp && python3 release_planted.py RAWDIR STATE [--delta 3e-9,1e-9,1e-10,1e-11] [--harm 5] [--threads 2] [--it 6]
-        [--junk 4] [--octo 1] [--qd_it 12] [--tol_qd 1e-28] [--sub 0] [--ls dz] [--pin qd] [--tol_od 1e-40] [--mutate 0]
+        [--junk 4] [--octo 1] [--qd_it 12] [--tol_qd 1e-28] [--sub 0] [--ls dz] [--pin qd] [--pin_junk 0] [--tol_od 1e-40]
+        [--verbose 0] [--mutate 0]
 
 Prints one "result" line per delta (JSON). Exits 1 when a delta fails or a pinned solve does not converge.
 """
@@ -39,16 +42,17 @@ def pin_solve(sp, z, opt):
     if opt["pin"] == "od":
         from octo_corrector import PinnedO, newton_od, o8_of_q, q4_of_o
         z8, hist, conv = newton_od(PinnedO(sp.s, sp.ch, sp.cl), o8_of_q(z), tol=opt["tol_od"], it_max=opt["qd_it"],
-                                   verbose=False)
+                                   verbose=bool(opt["verbose"]), junk_w=opt["pin_junk"])
         return q4_of_o(z8), hist, conv
-    zz, hist, conv = newton_qd(sp, z, tol=opt["tol_qd"], it_max=opt["qd_it"], verbose=False, ls=opt["ls"])
+    zz, hist, conv = newton_qd(sp, z, tol=opt["tol_qd"], it_max=opt["qd_it"], verbose=bool(opt["verbose"]), ls=opt["ls"],
+                               w=opt["pin_junk"], junk=opt["pin_junk"] > 0)
     return tuple(np.ascontiguousarray(np.asarray(p)) for p in zz), hist, conv
 
 
 def main(argv):
     args = [a for a in argv if not a.startswith("--")]
     opt = dict(delta="3e-9,1e-9,1e-10,1e-11", harm=5, threads=2, it=6, junk=4, octo=1, qd_it=12, tol_qd=1e-28, sub=0.0,
-               ls="dz", pin="qd", tol_od=1e-40, mutate=0)
+               ls="dz", pin="qd", pin_junk=0, tol_od=1e-40, verbose=0, mutate=0)
     for k in list(opt):
         if f"--{k}" in argv:
             v = argv[argv.index(f"--{k}") + 1]
