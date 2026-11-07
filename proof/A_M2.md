@@ -263,8 +263,8 @@ is 3.5×10⁻¹⁰ of its tolerance (6.3×10⁻¹¹ on the h = 10⁻⁶ run).
 
 | check | run | result | expected |
 |---|---|---|---|
-| C² self-test | | PASS | PASS |
-| | `--mutate=lin2` | FAIL (secondvar vs differences 0.25–3.3 relative; one step's W not contained) | FAIL |
+| C² self-test | `logs/A_M2_selftest.log` | PASS (secondvar to 3×10⁻⁴⁵, H series to 4×10⁻⁴⁹, W step to 10⁻¹⁴) | PASS |
+| | `--mutate=lin2` (`logs/A_M2_selftest_mutate_lin2.log`) | FAIL (secondvar off by 0.25–3.3 relative; one step's W not contained) | FAIL |
 | D2 | M = 1, h = 10⁻⁹, clean (`logs/A_M2_d2check_M1_1e-9_none.log`) | pass (worst ratio 4.8×10⁻¹²) | pass |
 | | M = 1, h = 10⁻⁹, secondvar's sign flipped (`_lin2.log`) | fail (worst ratio 17, exit 1) | fail |
 | | M = 1, h = 10⁻⁹, start second derivatives dropped (`_w0.log`) | fail (worst ratio 4.5, exit 1) | fail |
@@ -338,7 +338,9 @@ spread of 1.7×10⁻¹¹); with them moved by 100× their spread (`--mutate=hier
 the check fails (exit 1). On the h = 10⁻¹¹ box statement (a) fails for one solve, as A_M.md §6.3 predicted for boxes
 below 2×10⁻¹¹; (b) holds. **D2** passes on both runs (`logs/A_M2_d2check_M5_1e-10.log`, `_1e-11.log`; worst ratio
 2.6×10⁻⁷ and 1.0×10⁻⁶); there the largest entries, about 3×10²⁴, carry a relative radius of 5×10⁻³, so the check is
-sharp in them.
+sharp in them. Its control at M = 5: a run with secondvar's sign flipped (`data/A_M2_box_M5_1e-11_mut_lin2.json`,
+h = 10⁻¹¹) fails D2 with a worst ratio of 1.4×10⁴ (`logs/A_M2_d2check_M5_1e-11_mut_lin2.log`, exit 1), while its
+Krawczyk test still passes with margins of at least 0.994 (`logs/A_M2_krawczyk_M5_1e-11_mut_lin2.log`).
 
 **For lemma 6a(M).** The state box at ξ₁ over p(X) is in `data/A_M2_6a_M5_1e-10.json`
 (`python3 certify_M2.py export6a --box=data/A_M2_box_M5_1e-10.json --out=...`; the format of certify_M.py's export,
