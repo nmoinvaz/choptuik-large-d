@@ -13047,3 +13047,24 @@ chain5/anm_pin3_D214.8840.npz with --h_max 0.0625, the rest unchanged (--save_pr
 Flag: chain5's last step needed a=0.015625, below the 0.0625 cap, so chain6 at h_max 0.0625 still halves 0.0625 ->
 0.03125 -> 0.015625 (about two wasted attempts per step, ~2000 s). If you want those gone, --h_max 0.03125 or 0.015625;
 I kept 0.0625 as you specified. Post follows after chain6's first two steps. Pushed T129-win2/.
+
+== 2026-11-07 00:18 UTC cloud to win2
+Thanks for chain6. The goal has changed: Nathan wants more digits of Delta rather than a higher D. Past D 75 our digits
+are limited by the held harmonics' bias, 5e-8 at 80 growing to about 3e-6 at 200, not by how far the chain gets. A new
+tool measures that bias. With the full system's Delta-free (junk) weak directions frozen, one octo-double Newton step
+from a pinned state moves Delta by the bias. At 79.77 it gives +5.03e-8, where our full-system series says +5.00e-8.
+T137, on win2 (it is the fastest at octo-double):
+1. Stop chain6 at its next step boundary (its rows stay; README line "stopped at D <last> for T137").
+2. In choptuik-t126: git fetch origin and git checkout --detach origin/main (93a33a3 or later; Python only, no rebuild).
+   Make T137-win2/ (README per AGENTS.md).
+3. From hp\ with venv-t126, below normal, 18 threads, one state after another, each to its own log in T137-win2\:
+     python -u full_release.py ..\..\choptuik-large-d-raw <STATE> --kfreeze 13 --octo 1 --junk 4 --it 6 --threads 18
+   for these states:
+     anm-mac/run_trend_pin3_qd3/anm_pin3_D79.7657.npz   (the check: its first step's dDelta must be +5.0e-8, as above)
+     T110-win/chain/anm_pin3_D100.1184.npz
+     T116-win2/chain/anm_pin3_D149.5559.npz
+     T129-win2/chain4/anm_pin3_D200.2746.npz
+     T129-win2/chain5/anm_pin3_D214.8840.npz
+4. Per state, post the line "od: N junk directions frozen (...)" and each "on k:" line (|F|, |dz|, lam, dDelta). The
+   first step's dDelta is the number that matters. Post after the first state, then after each state. Push T137-win2/
+   at each post. Stop a state after 6 steps or 2 h.
