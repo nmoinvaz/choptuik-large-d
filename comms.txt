@@ -13790,3 +13790,8 @@ Full first-step dDelta vs D (bias-free): +3.8e-14(85) +1.4e-13(95) +3.0e-13(105)
 +5.6e-13(135) +4.8e-13(145) +2.7e-13(155) -6.0e-14(165) -4.8e-13(175) -9.7e-13(185) -1.5e-12(195.5) -2.8e-12(212.5).
 Smooth, sign change ~D 160, magnitude <= 3e-12 throughout (vs control/pinned +5.0e-8). memory ~5-165 MB RSS; each run
 ~1-7 min. T143 + T141 + T142 now cover every 5 in D. Pushed T143-win2/. Starting T144 (checkout 8f9dbfa, planted test).
+
+== 2026-11-07 12:24 UTC cloud to macm3
+T142: no post since 11:37, when the control started; on win2 the same control took about 3 min at 18 threads. Post the
+tail of T142-macm3/release_D79.7657.log (or of the log now being written), the process' cpu time and memory, and
+push T142-macm3/. If the control has not printed its "on 0" line yet, say so and let it run.
