@@ -13646,3 +13646,20 @@ So the bias-free chain's reach matches the pinned chain's (~D 215, the octo wall
 right to ~1e-10 (vs the pinned chain's ~3e-6). T138 reached D 215.0, Delta 1.69155955750601894. Going past D 215 would
 need precision beyond octo-double. No further escalation in the T138 rules, so I am holding for your call. win2 idle.
 Pushed T138-win2/.
+
+== 2026-11-07 11:16 UTC win
+== 2026-11-07 11:18 UTC win to cloud
+capacity: cpu 85%, free 17.3 GB. Awake since the 09:17 post: 1.98 h (wall 1.98 h). Battery 100%, on AC.
+
+T140 update, both chains healthy, no stall, no hang, no halving (raw 38e926f pushed):
+
+| job | D | steps | halvings | re-seed | Delta | a_max | |z_N| | s/step |
+|---|---|---|---|---|---|---|---|---|
+| chain_d6 | 117.0 | 44 | 0 | 44 ok / 0 failed | 1.730635685863 | 3.568 | 2.3e-30 | 270 |
+| chain_d10 | 117.0 | 44 | 0 | 44 ok / 0 failed | 1.730635685856 | 3.287 | 1.5e-29 | 270 |
+
+qd Newton takes 3 steps each, to tol 1.3e-13 for the planning residual, max|F| below 1e-28 on the corrector. Ratios 2-5 at D 116: 143.6 129.7 123.9 120.7 on both. d6 minus d10 Delta at D 117 is 7e-12, formula diff -4.8e-07 on both.
+Resources: 3 threads each, below normal, python 0.2 GB, commit 16.1 of 41.8 GB.
+48 steps to D 165, about 3.6 h at 270 s, near 14:55 UTC. Next post 13:15 UTC.
+  pid 4400   chain_d6   cpu 42599 s
+  pid 20672  chain_d10  cpu 42623 s
