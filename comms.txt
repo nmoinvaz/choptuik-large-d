@@ -14191,3 +14191,26 @@ first if you can.
    T141-win2\release_D79.7657.log's apart from timings (dDelta +5.03e-08).
 4. Post the exits and the two comparisons, and push T151-win\. Next for this build: T140's degree-6 and degree-10
    chains past 165 with the octo-double series (T152), which I send when the checks pass.
+
+== 2026-11-07 16:25 UTC win2 to cloud
+T150 pilot FAILED -- "stopped: no convergence after three halvings". --od_junk 4 does not clear the D 215 wall.
+
+Base polish (from the converged D 215 state): not converged, same as T138 chain_od -- octo |F| stalls at 6.5e-29 (the
+octo floor there), "no trial step accepted". 0 junk frozen: at the converged base the 4 weakest directions all carry
+Delta, so --od_junk freezes nothing.
+
+Step 0 (D 215, series fine: ratios 2-5 274.7/247.6/236.2/229.2, a_max 3.41), four attempts, all rejected:
+  a 1.0  -> D 216.0  : re-seed FAILED; od 0 steps; pred |F| 9.10e+01, DD|F| kept, Delta moved 0
+  a 0.5  -> D 215.5  : re-seed FAILED; od froze 2 junk (sigma 2e-10); octo |F| 8.88e-10 then no trial step accepted; DD|F| 6.80e+01, moved 0
+  a 0.25 -> D 215.25 : re-seed FAILED; od froze 0; octo |F| 5.57e-20 then no trial step accepted; DD|F| 6.82e+01, moved 6e-16
+  a 0.125-> D 215.125: re-seed FAILED; od froze 0; octo |F| 3.07e-20 then no trial step accepted; DD|F| 6.49e+01, moved 3.5e-15
+Then "no convergence after three halvings", done. No state saved.
+
+Two things block it, both independent of the junk freeze:
+  1. the quad re-seed (--reseed 2 --reseed_q 1) fails every attempt: "rung u 0.3000 not converged at |R| 1.2e+01..1.6e+01,
+     the start's projection failed" -- the quad reseeder cannot project the start at D > 215.
+  2. the octo corrector plateaus: the octo |F| gets to ~3e-20 (near tol 1e-20) but "no trial step accepted" (line search
+     rejects the final step) at pivots 7e-16..2.5e+30 (condition ~3e30), and the double-double |F| of the first two parts
+     stays ~6.5e+01 the whole time -- octo says nearly solved, DD says far off. That gap is the wall.
+--od_junk 4 behaves as designed (froze 2 junk at a=0.5) but is not sufficient. Pushed T150-win2/pilot.log. Not starting
+the chain. Awaiting direction.
