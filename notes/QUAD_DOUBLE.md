@@ -2147,17 +2147,17 @@ on the faster build.
 
 `hp/export_delta_all.py` writes `hp/data/delta_all.csv`, one row per D with Δ in up to four parts, the kind of
 computation, an error estimate and its kind, the source record and the state (columns and precedence in its docstring;
-the README's Values section describes the file). It read the raw-data repository at 1ff7c6b. Its 2331 rows:
+the README's Values section describes the file). It read the raw-data repository at c798a0c. Its 2328 rows:
 
 | kind | rows | D | err, its kind and range |
 |---|---|---|---|
 | dd, the full system in double-double (`data/delta_dd.csv`) | 1259 | 3.044–67.767 | dM 1.1e-22 to 4.1e-10, check 1e-16 to 2e-15 |
 | qd, the full system in quad-double (`data/delta_qd.csv`) | 7 | 68.5–73.0 | starts 5.0e-29 to 8.4e-28 (5 rows) |
 | pinned, Delta_full1 of T73 and T75 | 883 | 67.768–73.266 | pins 7.4e-19 to 8.6e-15 (150) |
-| chain_fit, the chain with the harmonics held on the 1/n fit (T138) | 101 | 74.0–173.5 | none |
-| chain, the chain with the harmonics held on T75's trend, above chain_fit's frontier | 81 | 173.77–214.88 | runs 2.2e-26 to 1.1e-17 (11) |
+| chain_fit, the chain with the harmonics held on the 1/n fit (T138) | 109 | 74.0–181.0 | runs 0 (3, its pilot) |
+| chain, the chain with the harmonics held on T75's trend, above chain_fit's frontier | 70 | 181.52–214.88 | runs 7.1e-21 to 1.1e-17 (6) |
 
-`--verify` re-reads every row from the record or state it names and finds all 2331 equal. `--mutate=dd`, `qd`, `pinned`,
+`--verify` re-reads every row from the record or state it names and finds all 2328 equal. `--mutate=dd`, `qd`, `pinned`,
 `chain_fit` and `chain` move one row's second part by one ulp, and each fails it (exit 1). Two more checks hold the
 chains apart. Each chain row's run must hold the harmonics as its kind says, and no row that chain_fit replaces may
 remain (a chain row at or below its last D, or a T85-mac row inside its span). `--mutate=held` labels the last
@@ -2166,8 +2166,9 @@ chain_fit row chain and fails the first. `--mutate=frontier` moves the first cha
 
 **chain_fit replaces the chain up to its frontier.** T138 (`T138-win2/`) reruns the chain with the harmonics held on the
 1/n fit of the full-system states (13.29, notes/HELD_HARMONICS.md). Its backbone runs from T81's quad-double state at
-73.0 through `T138-win2/chain` (steps of 1.0). The 232 chain rows at or below its last D are left out of the table, and
-the chain's rows continue above it, about 2.5e-6 low there (13.29). It also replaces T85-mac's 12 rows at 74–78.1,
+73.0 through `T138-win2/chain` (steps of 1.0, quad-double series) and, from 173.5, `chain_o` (octo-double series). The
+chain rows at or below its last D are left out of the table, and the chain's rows continue above it, about 2.5e-6 low
+there (13.29). It also replaces T85-mac's 12 rows at 74–78.1,
 below. The replaced rows stay in git history. Its pilot (`T138-win2/pilot`) equals it bit for bit at 74, 75 and 76.
 
 **T85-mac below 78.1, replaced by chain_fit.** chain_fit, interpolated through nine of its rows, agrees with T75's
@@ -2187,7 +2188,7 @@ from 207.90). A run resumed from a state of its own folder
 (T124-win) is one lineage. Each state is checked to be an accepted step of its run's `anm_run.jsonl` from the state
 before it.
 Twenty runs off the backbone reach a backbone D with the same held trend and precision. They gave the err of 69
-rows, of which the 11 above 173.5 remain in the table:
+rows, of which the 6 above chain_fit's frontier remain in the table:
 
 | D | other run | other − backbone |
 |---|---|---|
