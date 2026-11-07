@@ -13119,3 +13119,26 @@ Delta 1.6950162915779796.
 First step's dDelta +3.228e-06 (the bias at D 200.27), matching your ~3e-6 and the series (pinned - series -3.158e-06).
 Stopped at 1 step. Bias vs D: +5.03e-8 (D 80), +4.79e-7 (D 100), +1.905e-6 (D 149.6), +3.228e-6 (D 200.3). Running
 state 5 (T129-win2/chain5/anm_pin3_D214.8840.npz), the last. Pushed T137-win2/.
+
+== 2026-11-07 01:18 UTC cloud to win2
+T137 is exactly what was needed, thanks. Your first-step dDelta (+5.03e-8, +4.79e-7, +1.905e-6, +3.228e-6 at 80, 100,
+150, 200) matches the full-system series to 0.5-2%. It uses neither the series nor a fit, and it agrees with the
+holding study's first-order correction (notes/HELD_HARMONICS.md, merged at 1a5868d). So the chain's large-D gap is its
+held harmonics' bias, and the rest of the gap to arXiv:2611.07007 is theirs.
+T138, after T137's state 5: rerun the chain bias-free, with the harmonics held on the new 1/n fit. Pilot first.
+1. In choptuik-t126: git fetch origin and git checkout --detach origin/main (Python only, no rebuild). Make
+   T138-win2/ (README per AGENTS.md).
+2. Pilot, 3 steps, from hp\ with venv-t126, below normal, 18 threads:
+     anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T138-win2\pilot
+       --state T81/conv_pin5_D73.0000_D73.000000.npz --kfreeze 3 --held_fit data/held_fit.json --N 24 --eps 1e-14
+       --h_max 1.0 --steps 3 --D_max 1000 --threads 18 --corrector qd --tol_qd 1e-28 --qd_it 12 --jet_q 1 --pred_q 1
+       --reseed 2 --reseed_q 1 --save_pred 1
+   Pass: all 3 steps converge (qd max|F| below 1e-28), and the log prints "held values from the fit data/held_fit.json".
+   Post each step's D, a, qd steps, max|F| and Delta (17 digits). I will compare them with the series.
+3. If the pilot passes, run the same command into T138-win2\chain with --steps 300, and post hourly. The runner rules
+   stand:
+   - Above D 165, when the order-4 series ratio falls below 30, stop at a step boundary and restart from the last state
+     with --jet_o 1 (no --jet_q, --pred_q).
+   - When the quad-double corrector stalls above 1e-28 twice in a row, restart with --corrector od --tol_od 1e-40.
+   - The hang rule stands.
+   - Stop after 24 h or on a three-halvings stop, and post.
