@@ -13407,3 +13407,23 @@ systems that differ at float64 in the held values, and their Delta rows differ b
 more steps the walk grows. I have not looked further and change nothing; T139 runs on as written.
 Memory: 520 MB unused; swap 1.28 GB used (from earlier), swap-ins +4 and swap-outs +0 since 05:24.
 2026-11-07 06:26 UTC  cpu 66%  load 6.99  mem 23G used (2323M wired, 1348M compressor), 503M unused.
+
+== 2026-11-07 06:35 UTC win
+capacity: cpu 50%, free 23 GB
+T140 pilots PASS, both (choptuik-t125 detached at origin/main 3de11fbd, Python only, no rebuild, venv-t125, below normal, 3 threads each, 06:21 to 06:34 UTC, 13 min; T140-win/ pushed, raw c4741ff).
+| check | d6 | d10 |
+| steps converged | 2 of 2 (D 74.0, 75.0), a 1.0, no halving | 2 of 2, a 1.0, no halving |
+| qd max\|F\| (base, 74.0, 75.0) | 3.3e-32 7.5e-31 7.2e-33 | 3.3e-32 1.1e-31 1.8e-30 |
+| degree line in the log | "held values from the fit data/held_fit_d6.json (degree 6," | "(degree 10," |
+| Delta(74.0) minus T138-win2 | +2.6308e-16 | -1.4295e-15 |
+| a_max step 0 / 1 | 4.474 / 4.450 | 4.311 / 4.270 |
+Your check command, run as written, gave ['2.6308e-16', '-1.4295e-15'], both below 1e-12. Delta at 74.0 (printed 13 digits) 1.779440997503, at 75.0 1.777688916196 in both. The degree changes a_max by 4% (4.474 d6, 4.311 d10) and |z_N| (2.7e-32 d6, 6.3e-32 d10) but not Delta to 1e-15. Series seconds 250 s per step, solve 55 s, at 3 threads each.
+Chains STARTED 06:34:30 UTC: chain_d6 and chain_d10, the pilot command with --steps 200, same start state T81/conv_pin5_D73.0000_D73.000000.npz (so they repeat the two pilot steps, then continue), --threads 3, below normal, logs T140-win\chain_d6.log and chain_d10.log (>>), commands chain_d6.cmd and chain_d10.cmd. Rules as you set them, I post every 2 h (next about 08:35 UTC: D, steps, halvings, re-seed ok/failed, Delta, cpu and memory), stop a job when the qd corrector stalls above 1e-28 twice in a row, on a three-halvings stop or after 24 h (06:34 UTC Nov 8). Hang rule: you wrote "stands" without a number, I use the T129 entry's: no log line for 20 min with one core busy, one py-spy dump, kill, restart that job from its last state with h_max halved, post. A background check watches both logs' last write for 20 min; say if you want T134's variant (30 min under 1.5 cores or 90 min at any load) instead. ETA 8-10 h from your message, series cost per step is 250 s so 92 steps of 1.0 to 165 is about 7-8 h if no halvings.
+awake since boot 181.05 h, tick counter 211.92 h
+since 2026-11-07 05:36 UTC: wall 0.98 h, awake 0.98 h
+Battery: on AC.
+2026-11-07 06:35 UTC  cpu 89%  mem used 14.6 of 31.8 GB, free 17.2 GB, commit 16.1 of 41.8 GB
+  pid 4400     0.07 GB  cpu       90 s  anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T140-win\chain_d6 --state T81/conv_pin5_D73.0000_D73.000000.npz --kfreeze 3
+  pid 20672    0.06 GB  cpu       89 s  anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T140-win\chain_d10 --state T81/conv_pin5_D73.0000_D73.000000.npz --kfreeze 3
+  pid 23188    0.01 GB  cpu        0 s  comms_watch.py --name win
+  pid 32328    0.00 GB  cpu        0 s  anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T140-win\chain_d10 --state T81/conv_pin5_D73.0000_D73.000000.npz --kfreeze 3
