@@ -364,6 +364,88 @@ Searched without finding analytic results: discretely self-similar solutions of 
 equations in closed form; exact (closed-form) Stokes data for nonlinear parabolic problems. Michalik–Podhajecka is the
 nearest, and it is linear.
 
+## 5a. The same selection in other fields (2026-11-07)
+
+Problems in gas dynamics, astrophysics, water waves and magnetism select a similarity exponent the way Δ is selected:
+by regularity at a singular surface, or by a vanishing Stokes constant. What they found bears on routes 2–4. Sources
+were read through their arXiv or journal pages, as marked. These are analogies, not prior work on this problem.
+
+| field and problem | what selects the parameter | closed form? | what they do instead |
+|---|---|---|---|
+| Gas dynamics: Guderley's converging shock [RBB17] | numerators vanish where the denominator does (the sonic point) | no; "determined numerically" | numerics, approximations |
+| Gas dynamics: smooth implosion of compressible Euler [BCG25, BCG23] | smoothness across the sonic point | no; r = 1.079404 at γ = 7/5, numerical | explicit brackets r_j and a computer-assisted proof |
+| Astrophysics: Larson–Penston collapse of an isothermal gas [GHJ21] | regularity at a single sonic point y* ∈ (2, 3) | no | an existence proof (its method not read) |
+| Self-gravitating Brownian particles in D dimensions [SC02] | an analyticity condition, then the largest admissible α | canonical: α = 2 and the profile, exactly; otherwise no | a 1/D expansion of α |
+| Water waves and optics: embedded solitons [CMYK01, BK10] | the Stokes constant of the tail vanishes | asymptotically, in a large-parameter limit | Stokes-line asymptotics, numerics |
+| Magnetism: harmonic map heat flow, the overdamped Landau–Lifshitz flow [BHK03, RS14] | quantized blow-up rates λ ∝ (T − t)^L/\|log(T − t)\|^{2L/(2L−1)} | yes, the rates | formal matched asymptotics, then proofs |
+
+What carries over:
+
+- **No closed form is the norm.** Wherever regularity at a sonic surface selects the parameter, it is computed, not
+  derived. That includes Guderley's exponent, the implosion parameter and Larson–Penston's sonic point. §0's answer to
+  reading 1 is what the neighbouring fields found too.
+- **Closed-form brackets.** At the sonic point of the implosion problem, the ratio k(r) of the two local eigenvalues is
+  explicit. The values r_j where it is an integer j are singular and explicit, for example r₃ = 6 − 2√6. A shooting
+  function changes sign between consecutive r_j, which brackets the selected r between explicit numbers [BCG23]. The
+  analogue here is untested: the resonant frequencies of the inner problem's singular points, or the poles and zeros
+  in ω of the Gamma-ratio Stokes constant C(n, s) of eq. (6), might bracket ω∞ between explicit values. That would be a
+  closed-form statement that needs no estimator.
+- **Proof method.** The implosion proof combines a shooting argument with interval arithmetic in Arb on a few thousand
+  Taylor coefficients at the sonic point, with a desingularization at a resonance and branch-and-bound barrier checks
+  [BCG23]. That is the same family as route T (§4.2), at a larger scale than this project has run.
+- **A large-D expansion can select an exponent.** The Smoluchowski–Poisson system is a drift-diffusion equation whose
+  drift the density generates, the structure of form (A) in §1.1. In D dimensions its collapse exponent is
+  α = 2 + 1/(2D) + 11/(16D²) + O(D⁻³), which gives 2.24 at D = 3 against 2.2097 computed [SC02]. The difference from
+  this problem is the base. There the leading order is explicit (α = 2, profile 4/(D − 2 + x²)), and each order is a
+  regularity condition on it. Here the D = ∞ problem has no explicit solution (§1, not integrable), and the 1/n
+  expansion never fixes Δ (README, Proposition 1).
+- **Vanishing Stokes constants.** An embedded soliton exists only where the Stokes constant of its radiating tail
+  vanishes. That is codimension one, the structure of Conjecture 1 [CMYK01]. In a water-wave model, the leading-order
+  Stokes constant is derived for a large parameter. There each Stokes line splits into a pair whose contributions cancel
+  at a countable set of parameter values [BK10]. The analogue here is untested and asymptotic, not exact: whether S₁
+  has a two-Stokes-line form in some large parameter (the harmonic index, or the amplitude), with zeros that continue to
+  the physical one.
+- **Magnetism: explicit only around an explicit solution.** In the harmonic map heat flow the singularity is an explicit
+  static solution (the harmonic-map bubble) shrinking. Its quantized rates are explicit [BHK03, RS14]. In List's-flow
+  form (§1.1, L) the inner problem is a harmonic map flow coupled to a metric flow. Its target is the line, though,
+  which has no bubble, and the critical solution here is not explicit. The equivariant wave maps of Bizoń, Chmaj and
+  Tabor, "a toy-model for some aspects of the critical behavior" in black-hole formation, have their threshold set by a
+  self-similar solution with one instability [BCT00].
+- **Discrete self-similarity in gas dynamics** arises as log-periodic perturbations of the continuously self-similar
+  Sedov–Taylor–von Neumann explosion [YS13]. There the background is continuously self-similar. In Choptuik's problem
+  the critical solution itself is discretely self-similar.
+
+Two tests follow from this, both open:
+- the resonance bracket: explicit singular frequencies around ω∞;
+- the Stokes-line asymptotics of S₁ in a large parameter.
+
+References:
+
+- **[RBB17] Ramsey, Baty, Boyd**, *On the existence of self-similar converging shocks for arbitrary equation of state*,
+  arXiv:1707.03792 (verified, arXiv; journal not checked).
+- **[BCG25] Buckmaster, Cao-Labora, Gómez-Serrano**, *Smooth imploding solutions for 3D compressible fluids*, Forum
+  Math. Pi 13 (2025) e6, doi:10.1017/fmp.2024.12, arXiv:2208.09445 (verified, arXiv and the journal record).
+- **[BCG23] Buckmaster, Cao-Labora, Gómez-Serrano**, *Smooth self-similar imploding profiles to 3D compressible Euler*,
+  arXiv:2301.10101 (verified, arXiv; read through ar5iv; journal not checked).
+- **[GHJ21] Guo, Hadžić, Jang**, *Larson–Penston self-similar gravitational collapse*, Commun. Math. Phys. 386 (2021),
+  doi:10.1007/s00220-021-04175-y, arXiv:2011.01013 (verified, arXiv and DOI; abstract only).
+- **[SC02] Sire, Chavanis**, *Thermodynamics and collapse of self-gravitating Brownian particles in D dimensions*, Phys.
+  Rev. E 66 (2002) 046133, doi:10.1103/PhysRevE.66.046133, arXiv:cond-mat/0204303 (verified, arXiv; read through
+  ar5iv).
+- **[CMYK01] Champneys, Malomed, Yang, Kaup**, *"Embedded solitons": solitary waves in resonance with the linear
+  spectrum*, arXiv:nlin/0005056 (verified, arXiv listing; journal not checked).
+- **[BK10] van den Berg, King**, *Vanishing beyond all orders: Stokes lines in a water-wave model equation*,
+  Nonlinearity 23 (2010) 1–21, doi:10.1088/0951-7715/23/1/001 (verified, publisher record; abstract only).
+- **[BHK03] van den Berg, King, Hulshof**, *Formal asymptotics of bubbling in the harmonic map heat flow*, SIAM J. Appl.
+  Math. 63 (2003) 1682–1717, doi:10.1137/S0036139902408874 (verified, the journal's DOI and bibliographic records;
+  content through later papers that cite it).
+- **[RS14] Raphaël, Schweyer**, *Quantized slow blow up dynamics for the corotational energy critical harmonic heat
+  flow*, Anal. PDE 7 (2014) 1713–1805, arXiv:1301.1859 (verified, arXiv).
+- **[BCT00] Bizoń, Chmaj, Tabor**, *Dispersion and collapse of wave maps*, Nonlinearity 13 (2000) 1411–1423,
+  arXiv:math-ph/9912009 (verified, arXiv).
+- **[YS13] Yalinewich, Sari**, *Discrete self similarity in filled type I strong explosions*, Phys. Fluids 25 (2013)
+  126101, arXiv:1407.6938 (verified, arXiv).
+
 ## 6. Proposed text for the papers
 
 Eq. (9)'s standing does not change. Proposed additions, for the coordinator:
