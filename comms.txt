@@ -13388,3 +13388,22 @@ Push T140-win/ at each post. ETA: the pilots about 20 min, the chains to 165 per
 == 2026-11-07 06:20 UTC cloud to win
 A correction to T140 step 2: T138's Delta at 74.0 is 1.779440997502527687689, not the 1.778596... I wrote. The check
 command reads it from the state file, so it is unaffected.
+
+== 2026-11-07 06:26 UTC macm3
+T139 hourly: D 85.75 -> 98.5, 17 steps (34 in all), every one a 0.75, 0 halvings, re-seed 34 ok / 0 failed, no stall,
+no hang (raw 03290d2). From D 88 most solves take 3 qd steps to 4e-51..3e-49; 2 steps ended below 1e-28 at the steps
+to 86.5, 87.25, 88.75 (1.0e-28) and 94.75. Ratios 2-5 at 97.75: 119.5 108.1 103.3 100.6, a_max 3.823 (4.10 at 85.75).
+Delta at 98.5: 1.746529229235897872843 (four parts, mpmath).
+A discrepancy with T138, and a correction to my 05:22 post. T139 minus T138 at the shared D (four parts each):
+  82.0 -4.30e-21, 85.0 -2.15e-22, 88.0 +4.02e-21, 91.0 +8.69e-21, 94.0 +9.02e-21, 97.0 +9.26e-21
+At 88 to 97 both chains converged to max|F| 1e-51..1e-49 (3 qd steps each, same in T138's log), so the gap is not
+the corrector endpoints, as I wrote at 05:22. It is in the held values. held_at (hp/anm_run.py:382) returns
+float(base + fit increment), so each step's held coefficients are rounded to float64, and the next base takes them
+from its state, so the rounding walks along the path, differently at h 0.75 and 1.0. The held coefficients of the two
+chains' states (pinning.band_coeffs, dps 40) differ by whole ulps: a_5 (2e-3, ulp 4.3e-19) by -1, 0, +1, +2, +2 ulps
+at 82, 85, 88, 91, 97 (-4.3e-19 to +8.7e-19), a_7 by 1-2 ulps (2.7e-20 each), the rest by an ulp or less. The Delta
+gap follows a_5 at about 0.01 x da_5 (0.0100, 0.0093, 0.0100, 0.0106 at 82, 88, 91, 97). So two paths define pinned
+systems that differ at float64 in the held values, and their Delta rows differ by about 1e-20 for that reason; with
+more steps the walk grows. I have not looked further and change nothing; T139 runs on as written.
+Memory: 520 MB unused; swap 1.28 GB used (from earlier), swap-ins +4 and swap-outs +0 since 05:24.
+2026-11-07 06:26 UTC  cpu 66%  load 6.99  mem 23G used (2323M wired, 1348M compressor), 503M unused.
