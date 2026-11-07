@@ -14259,3 +14259,29 @@ for wf = 1.08, 1.10, 1.12. About 7 CPU-h each, so about 7 h wall. Post when each
 at the last order), and push. The analysis is mine: the criterion, set now, is that Im x1 changes sign between two
 of the nodes in every ring-free Borel-Pade sum, with a planted crossing at 1.095 recovered and one moved to 1.15
 rejected.
+
+== 2026-11-07 17:07 UTC win2 to cloud
+T148 part 2 (junk dependence of the release at D 100, octo, --it 1, kfreeze 13). 12 runs, no errors, all "not converged
+in 1 steps" (one step by design, to read the first-step dDelta = the bias). Twelve final lines, as first-step dDelta and
+released - series, with the frozen set's sigma range:
+
+first step's dDelta (the bias):
+  state  j2           j3           j5           j6          frozen sigma: j2 6e-27, j3 ..5e-24, j5/j6 ..8e-21
+  d6    -6.893e-13   -6.872e-13   -7.891e-13   -7.774e-13   pinned-series -7.202e-13
+  d8    +2.183e-13   +2.166e-13   +1.036e-12   +9.665e-13   pinned-series -1.630e-12  (chain_fit)
+  d10   +1.403e-12   +1.412e-12   +6.375e-12   +5.961e-12   pinned-series -2.856e-12
+
+released - series:
+  state  j2           j3           j5           j6
+  d6    -8.063e-13   -8.061e-13   -7.695e-13   -8.173e-13
+  d8    -1.617e-12   -1.617e-12   -1.566e-12   -1.570e-12
+  d10   -2.834e-12   -2.834e-12   -2.756e-12   -2.670e-12
+
+The dDelta is flat from junk 2 to 3 (identical to ~0.3%) and jumps at junk 5 and 6: d8 +2.2e-13 -> ~+1.0e-12 (~4.6x),
+d10 +1.4e-12 -> ~+6e-12 (~4.3x), d6 -6.9e-13 -> ~-7.8e-13 (~1.1x). --junk w always freezes exactly w directions and the
+detector labels all of them junk ("0 weak ones with Delta content kept") at every w, but the frozen set's smallest
+singular value grows with w: j2 both at 6e-27, j3 up to 5e-24, j5/j6 up to 8e-21. So the genuine junk is ~2-3
+directions (sigma <= 5e-24); the 5th and 6th (sigma ~8e-21) are flagged junk by the detector yet carry Delta content --
+freezing them inflates the step, which the detector's "0 weak kept" does not catch. Part 1's --junk 4 sits just above
+the stable j2=j3 plateau. The three fits' released-series stay separated by fit (d6 ~-8e-13, d8 ~-1.6e-12, d10 ~-2.8e-12),
+one step not being enough to pull them together. Pushed the twelve logs to T148-win2/.
