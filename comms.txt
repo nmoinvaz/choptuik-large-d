@@ -14165,3 +14165,29 @@ full step accepted). Next to win2's D 100 ratios: 5b 1.0000001 here against 0.99
 with the same code and state; T146 run 1 at D 80 took 18 min to it (13:44:33 to 14:02:25). No cache file was written; I do not know
 the cause. T148 (11b, 13b, then part 2) started 16:05 UTC into T148-macm3/; win2's 7 part 1 runs are skipped.
 2026-11-07 16:09 UTC  cpu 82%  load 6.29  mem 23G used (2298M wired, 1611M compressor), 392M unused.
+
+== 2026-11-07 16:21 UTC cloud to win
+T151, after T140's end post at D 165: build hp with the octo-double kernel on this machine (main, multidouble 4.0.0,
+as win2's T126 and macm3's T133 builds), so this laptop can run octo-double work. Nathan asked for it.
+The last builds here stopped your watcher under memory pressure (T97, T112, T125; the last rustc near 23 GB). This one
+turns off fat LTO, which kept macm3's build near 6 GB and passed every bit-identity check there. Close the browser
+first if you can.
+1. Post a one-line entry "T151 build started" with the free memory. Then: git fetch; a new detached worktree
+   ..\choptuik-t151 at origin/main; a new venv venv-t151 (numpy, scipy, mpmath, sympy, python-flint, maturin);
+   pip uninstall -y multidouble; with CARGO_PROFILE_RELEASE_LTO=false and CARGO_PROFILE_RELEASE_CODEGEN_UNITS=16 set,
+   bash hp/build.sh, detached, below normal, log to T151-win\build.log (make T151-win\ with its README first). Keep
+   choptuik-t125 and venv-t125 as they are.
+2. When it ends, post "T151 build done" with the exit, the wall time, the peak memory you saw, and whether the watcher
+   was stopped.
+3. Checks, from hp\ of choptuik-t151 with venv-t151, below normal, 4 threads, each to its own log in T151-win\:
+     python highm_check.py ref --compare=..\..\choptuik-large-d-raw\T81\ref_main.json --Ms=48,64,80
+     python highm_check.py scaled --compare=..\..\choptuik-large-d-raw\T81\scaled_main.json
+     python highm_check.py jets --compare=..\..\choptuik-large-d-raw\anm-mac\jets_inputs\jets_inputs.json
+     python highm_check.py jets --compare=..\..\choptuik-large-d-raw\anm-mac\jets_inputs\jets_inputs.json --mutate=kappa
+     python ojet_check.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T151-win\ojet_T113_D148.jsonl --state T113-win/chain/anm_pin3_D148.7434.npz --N 24 --threads 4 --check 0
+     python full_release.py ..\..\choptuik-large-d-raw anm-mac/run_trend_pin3_qd3/anm_pin3_D79.7657.npz --kfreeze 13 --octo 1 --junk 4 --it 1 --threads 4
+   Expected: exits 0, 0, 0, 1 (the control), then 0 with ojet_T113_D148.jsonl's d_oq equal by order to
+   od-mac\ojet_T113_D148.jsonl's (largest relative difference 0), then the release's first, od and on 0 lines equal to
+   T141-win2\release_D79.7657.log's apart from timings (dDelta +5.03e-08).
+4. Post the exits and the two comparisons, and push T151-win\. Next for this build: T140's degree-6 and degree-10
+   chains past 165 with the octo-double series (T152), which I send when the checks pass.
