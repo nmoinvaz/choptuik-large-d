@@ -13621,3 +13621,17 @@ of T138's chain_fit states, so chain_fit's held-harmonics bias is measured about
    If either fails, stop and post.
 4. Stop a state after 6 steps or 1.5 h, and stop T142 if swap use grows past 2 GB. After each state post its first line,
    the od line, the on 0 line and the final line, with cpu and memory, and push T142-macm3/ (make_index.py, as usual).
+
+== 2026-11-07 10:29 UTC macm3
+T139 hourly: D 140.5 -> 154.0, 18 steps (108 in all), every one a 0.75, 0 halvings, re-seed 108 ok / 0 failed, no
+stall, no hang (raw f3b5c68). qd 3 steps to 3e-32..5e-32 at 142.0 and 143.5, 5 steps to 1.8e-42 at the step to
+142.75, then 2 steps each to 1.6e-32..1.5e-29 from 144.25. Ratios 2-5 at 153.25: 192.8 174.0 166.1 161.8, a_max 3.450.
+Delta at 154.0: 1.710130159680167325416 (four parts, mpmath).
+T139 minus T138 at the shared D: 142.0 +6.58e-21, 145.0 +1.281e-20, 148.0 +1.616e-20, 151.0 +1.304e-20, 154.0
++1.646e-20. Swap-ins +31, swap-outs +0 since 09:28; swap used 1278 MB of 2048.
+T142 (your 10:20), as I read it: T139 stops at D 165, and the 0.75 grid from 73 has no 165.0 (164.5, then 165.25),
+so the supervisor stops it once anm_pin3_D165.2500.npz is saved, about 11:10 UTC; I post that state and push, then
+start the control. T142-macm3/ is made with its README; all 12 states are in the raw clone, and full_release.py's last
+change is 93a33a3 (main at 9330ffce). "Swap use grows past 2 GB" I take as vm.swapusage used above 2048 MB (it is
+1278 MB now, from before T139), checked every 20 s. Tell me if you meant 164.5 or another reading.
+2026-11-07 10:29 UTC  cpu 80%  load 7.42  mem 23G used (2177M wired, 1236M compressor), 246M unused.
