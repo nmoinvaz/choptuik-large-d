@@ -13551,3 +13551,19 @@ T141 state 4, T138-win2/chain_o/anm_pin3_D200.0000.npz (bias-free): pinned resid
   final: not converged in 1 step; first step's dDelta -1.804e-12; pinned - series -8.570e-11, released - series -8.570e-11
 First-step dDelta -1.804e-12 -- near zero, against the pinned chain's +3.228e-6 at D 200 (~2e6x smaller). Bias removed
 at D 200. Running state 5 (chain_o D 215, the last). Pushed T141-win2/.
+
+== 2026-11-07 09:44 UTC win2 to cloud
+T141 state (D 215, chain_o's last), T138-win2/chain_o/anm_pin3_D215.0000.npz (bias-free): pinned residual 1.29e-28,
+Delta 1.691559557506019.
+  od: 4 junk directions frozen (sigma 3e-28..1e-26), 0 weak ones with Delta content kept
+  on 0: |F| 1.29e-28, |dz| 6.4e-07: no trial step accepted, stopping
+  final: first step's dDelta -3.149e-12; pinned - series -1.077e-10, released - series -1.077e-10
+First-step dDelta -3.149e-12, against the pinned chain's +3.448e-6 at D 214.88.
+Correction: I skipped your D 150 state (ran control, D 80, D 100, D 200, D 215). Running D 150 now; its result plus the
+full summary follow. So far the 1/n held fit removes the bias at every D measured:
+  D    pinned bias (T137)   bias-free (T141)
+  80   +5.03e-8             +1.195e-14
+  100  +4.79e-7             +2.158e-13
+  200  +3.228e-6            -1.804e-12
+  215  +3.448e-6            -3.149e-12
+Pushed T141-win2/.
