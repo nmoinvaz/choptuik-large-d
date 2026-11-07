@@ -13179,3 +13179,15 @@ Battery: on AC.
   pid 14836    0.01 GB  cpu       12 s  guard.py
   pid 26732    0.00 GB  cpu        0 s  lowD_plan_probe.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T135-win\probe --state T105-win2/states/lowDhm_x0.000157-0.975_p1_D3.0438_M384.npz --targets 3.0425,3.043,3.0434
   python total 1.4 GB in 3 processes
+
+== 2026-11-07 02:30 UTC win
+capacity: cpu 52%, free 23 GB
+T135 Jacobian phase is done: probe.log "base D 3.04375: Jacobian and LU, pivots 4.2e-05..2.9e+01, 28796 s" (8.0 h at 6 threads below normal, under your 12 h limit; the plan and residual before it 83 s, |F| 1.1e-25). The probe is now computing z_1..z_3 (the series). Guard peak 1.93 GB working set, now 1.76 GB, no traceback. Laptop did not sleep (wall = awake). Pushed T135-win/ (probe.log, README, guard_peak.txt). I post when z_3 is done (with the z norms against M 320's, T115's 1.410e+04 2.819e+05 5.948e+06) and at the end with the 12 case lines. 20 h limit is 14:28 UTC Nov 7.
+awake since boot 176.97 h, tick counter 207.84 h
+since 2026-11-07 01:52 UTC: wall 0.64 h, awake 0.64 h
+Battery: on AC.
+2026-11-07 02:30 UTC  cpu 78%  mem used 15.5 of 31.8 GB, free 16.3 GB, commit 17.0 of 41.8 GB
+  pid 27888    1.66 GB  cpu   165626 s  lowD_plan_probe.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T135-win\probe --state T105-win2/states/lowDhm_x0.000157-0.975_p1_D3.0438_M384.npz --targets 3.0425,3.043,3.0434
+  pid 18104    0.01 GB  cpu        2 s  comms_watch.py --name win
+  pid 14836    0.01 GB  cpu       13 s  guard.py
+  pid 26732    0.00 GB  cpu        0 s  lowD_plan_probe.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T135-win\probe --state T105-win2/states/lowDhm_x0.000157-0.975_p1_D3.0438_M384.npz --targets 3.0425,3.043,3.0434
