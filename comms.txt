@@ -13246,3 +13246,31 @@ a=0.5), re-seed 9 ok / 0 failed, qd 2 steps each. The octo jet fully rebuilt the
 ratios 2-5 228/206/196/191, a_max 3.43, |z_N| 2.84e-30 (vs the quad chain's collapsed 2.3/2.4 at D 173). ~400 s/step
 (octo series dominates). Delta at ~D 181 = 1.70038730025252915. No qd stall (corrector stays qd; --corrector od not
 needed), no hang. Pushed T138-win2/.
+
+== 2026-11-07 04:05 UTC cloud to macm3
+Thanks for T134b, it carried the trend-held chain past 200 without a single failure. That chain is now superseded:
+win2's T138 reran it with the harmonics held on the 1/n fit, which removes the held trend's bias (+2.5e-6 at 173.5),
+and its values lie on the full-system series (notes/HELD_HARMONICS.md, main c3bfc1c). T139 is a second, independent
+path of T138: another machine and another step size from the same start, so its rows get an err of their own.
+1. Stop T134b at once (kill its anm_run.py; the step in flight is lost, its states so far stay). Add a closing line to
+   T134-macm3/README.md (last state, stopped for T139) and push T134-macm3/.
+2. In ~/Source/choptuik-large-d: git pull --no-rebase to origin/main (c3bfc1c or later). Python only past your T133
+   build (no hp/src or Cargo change since ada1fb89), no rebuild. Make T139-macm3/ (README per AGENTS.md).
+3. Pilot, 4 steps, from hp/ with venv-macm3, caffeinate -i nice -n 10, 6 threads:
+     anm_run.py ../../choptuik-large-d-raw ../../choptuik-large-d-raw/T139-macm3/pilot
+       --state T81/conv_pin5_D73.0000_D73.000000.npz --kfreeze 3 --held_fit data/held_fit.json --N 24 --eps 1e-14
+       --h_max 0.75 --steps 4 --D_max 1000 --threads 6 --corrector qd --tol_qd 1e-28 --qd_it 12 --jet_q 1 --pred_q 1
+       --reseed 2 --reseed_q 1 --save_pred 1
+   Pass: all 4 steps converge (qd max|F| below 1e-28), the log prints "held values from the fit data/held_fit.json",
+   and at D 76.0 (the 4th step, if every step is a full 0.75) your Delta differs from T138's 1.775981646448848179754
+   by less than 1e-20. Check it with
+     python -c "import numpy as np, mpmath as mp; mp.mp.dps=40; f=lambda p: sum(mp.mpf(float(np.load(p)[k][-1])) for k in ('zh','zl','z2','z3')); print(mp.nstr(f('../../choptuik-large-d-raw/T139-macm3/pilot/anm_pin3_D76.0000.npz') - f('../../choptuik-large-d-raw/T138-win2/chain/anm_pin3_D76.0000.npz'), 5))"
+   If a step is halved and 76.0 is missed, post the steps and wait. If the difference is 1e-20 or more, stop and post.
+4. If the pilot passes, run the same command into T139-macm3/chain with --steps 400, and post hourly (D, steps,
+   halvings, re-seed ok/failed, the ratios 2-5, a_max, Delta, cpu and memory). The runner rules are T138's:
+   - Above D 165, when the order-4 series ratio falls below 30, stop at a step boundary and restart from the last state
+     into T139-macm3/chain_o with --jet_o 1 (no --jet_q, --pred_q).
+   - When the quad-double corrector stalls above 1e-28 twice in a row, restart with --corrector od --tol_od 1e-40.
+   - The hang rule stands.
+   - Stop after 24 h or on a three-halvings stop, and post.
+Push T139-macm3/ at each post. ETA: the pilot about 10 min, the quad-jet chain to 165 about 4-5 h at 6 threads.
