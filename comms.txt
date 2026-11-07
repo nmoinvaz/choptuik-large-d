@@ -14285,3 +14285,24 @@ directions (sigma <= 5e-24); the 5th and 6th (sigma ~8e-21) are flagged junk by 
 freezing them inflates the step, which the detector's "0 weak kept" does not catch. Part 1's --junk 4 sits just above
 the stable j2=j3 plateau. The three fits' released-series stay separated by fit (d6 ~-8e-13, d8 ~-1.6e-12, d10 ~-2.8e-12),
 one step not being enough to pull them together. Pushed the twelve logs to T148-win2/.
+
+== 2026-11-07 17:12 UTC macm3
+T148 part 1b (D 100, 11 and 13's sines moved by 1e-11; 6 threads; T148-macm3/, raw 2ac3d42; main 451b1b56, hp/ code as
+at 79d3e84 but for the added plot_error_methods.py and two SVGs): both exit 1, FAIL, a result. Both first releases'
+first, od and on 0 lines equal T141-win2/release_D100.0000.log's apart from timings. Each pinned re-solve was one move
+(qd, ls dz): 11b 3 Newton steps |F| 6.81e-29, 13b 3 steps 6.70e-33, converged.
+planted_D100_11b (16:05:18 to 16:51:28 UTC, 2770 s):
+result {"state": "T138-win2/chain/anm_pin3_D100.0000.npz", "D": 100.0, "harm": 11, "part": "sin", "delta": 1.000000000001134e-11, "bias": -3.05574024891555e-17, "s": -3.055740248912085e-06, "step0": 2.1580524913404648e-13, "step": 2.158478432403307e-13, "response": 4.259410628421962e-17, "ratio": 1.3939046782309399, "mutate": 0, "pass_": false}
+  planted bias -3.0557e-17 (s -3.0557e-06); step +2.1585e-13 - step at 0 +2.1581e-13 = +4.2594e-17; ratio to -bias 1.3939: FAIL
+FAIL: 1 deltas at D 100.0
+planted_D100_13b (16:51:28 to 17:10:49 UTC, 1161 s):
+result {"state": "T138-win2/chain/anm_pin3_D100.0000.npz", "D": 100.0, "harm": 13, "part": "sin", "delta": 9.999999999998104e-12, "bias": 7.238420035094039e-18, "s": 7.238420035095411e-07, "step0": 2.1580524913404648e-13, "step": 2.1580058656420252e-13, "response": -4.662569843967939e-18, "ratio": 0.6441419289516769, "mutate": 0, "pass_": false}
+  planted bias +7.2384e-18 (s 7.2384e-07); step +2.1580e-13 - step at 0 +2.1581e-13 = -4.6626e-18; ratio to -bias 0.6441: FAIL
+FAIL: 1 deltas at D 100.0
+The biases are 3.06e-17 and 7.24e-18, 1.4e-4 and 3.4e-5 of the step at 0 (+2.158e-13), and below one float64 ulp of
+Delta (2.2e-16): the moved states' first lines print the same Delta as the state's, 1.7450264844326014, and their
+releases the same released Delta, 1.7450264844326149. (The raw commit's message says "below a part in ten thousand of
+the step"; for 11b it is 1.4e-4.) 11b's first release spent 1771.82 s on its on 0 step; the other three releases took
+442-450 s. Part 2 skipped (win2 has it). T153 started 17:11:11 UTC, the three nodes at once (1.08, 1.10, 1.12; 2
+processes each), README pushed with this.
+2026-11-07 17:12 UTC  cpu 67%  load 6.97  mem 23G used (2291M wired, 1922M compressor), 251M unused.
