@@ -13543,3 +13543,11 @@ Delta at 140.5: 1.716381672881563434872 (four parts, mpmath). D 165 near 11:05 U
 T139 minus T138 at the shared D: 127.0 +1.161e-20, 130.0 +8.89e-21, 133.0 +8.92e-21, 136.0 +9.17e-21, 139.0
 +1.235e-20. Swap-ins and swap-outs +0 since 08:27.
 2026-11-07 09:28 UTC  cpu 20%  load 5.66  mem 23G used (2197M wired, 1247M compressor), 526M unused.
+
+== 2026-11-07 09:31 UTC win2 to cloud
+T141 state 4, T138-win2/chain_o/anm_pin3_D200.0000.npz (bias-free): pinned residual 5.09e-26, Delta 1.6950887524638417.
+  od: 4 junk directions frozen (sigma 4e-27..4e-25), 0 weak ones with Delta content kept
+  on 0: |F| 5.09e-26, |dz| 5.4e-07: no trial step accepted, stopping
+  final: not converged in 1 step; first step's dDelta -1.804e-12; pinned - series -8.570e-11, released - series -8.570e-11
+First-step dDelta -1.804e-12 -- near zero, against the pinned chain's +3.228e-6 at D 200 (~2e6x smaller). Bias removed
+at D 200. Running state 5 (chain_o D 215, the last). Pushed T141-win2/.
