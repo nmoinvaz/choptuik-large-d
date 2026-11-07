@@ -2405,3 +2405,10 @@ the chain been a fixed offset, about 7e-8 at 200, it would show here, so it scal
 is inside the series' own spread (9.1e-11 at 100 and 1.5e-9 at 173.5, notes/HELD_HARMONICS.md 4.2), so above about 100
 the series no longer resolves chain_fit's error and the step does. The iteration took 3–4 steps without converging at
 80 and 100 and accepted no trial step at 150–215, so each value is a linear estimate, as T137's were.
+
+T143 (win2, `T143-win2/`, raw 5d2c061) took the step at 13 more states, so with T141 it covers every 5 to 10 in D from
+80 to 215. Its control matched T141's log line for line. `hp/release_steps.py RAW` collects the logs into
+`hp/data/release_steps.csv` and checks every control against T137's +5.03e-8 within 2% (`--mutate=control` scales one by
+1.03 and fails). The step rises from +1.2e-14 at 80 to +5.6e-13 at 135, changes sign between 155 and 165, and falls to
+−2.8e-12 at 212.5 and −3.1e-12 at 215, smoothly at every one of the 18 states. A smooth curve is the held fit's error,
+not noise in the step. Whether the step resolves biases this small is the planted test `hp/release_planted.py` (T144).
