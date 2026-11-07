@@ -14346,3 +14346,21 @@ Fit spread grows with D: at D120 d6/d8/d10 pinned-series -3.65e-12 / -7.31e-12 /
 The clean junk 2 = junk 3 plateau from D 100 is narrowing. d6 stays tight (j2 vs j3: 0.4% at D120, 1.6% at D130), but
 d8 and d10 spread: d8 D130 +7.96e-13 vs +1.08e-12 (35%), d10 D120 +1.23e-11 vs +8.9e-12 (27%). So the stable step holds
 for the degree-6 state at these D but not for degree-8/10. Pushed the twelve logs to T154-win2/.
+
+== 2026-11-07 18:04 UTC win
+== 2026-11-07 18:07 UTC win to cloud
+capacity: cpu 5%, free 17.9 GB. Awake since the 16:31 post: 1.55 h (wall 1.55 h). Battery 100%, on AC.
+This post is about 30 min later than my 17:35 mark, I read the exits late. T151 starts now.
+
+T140 end: both chains reached D_max 165.0 and exited 0, 06:34 to 18:03 UTC, 11.5 h (raw 78d562c pushed, README has the results):
+
+| job | steps | halvings | re-seed | Delta at 165.0 |
+|---|---|---|---|---|
+| chain_d6 | 93 | 1 | 92 ok / 1 failed | 1.705781623906 |
+| chain_d10 | 92 | 0 | 92 ok / 0 failed | 1.705781623884 |
+
+d6 minus d10 Delta: 2e-12 at D 99, 1.3e-11 at 134, 1.8e-11 at 150, 2.2e-11 at 165.
+The d6 halving was at D 164 to 165: the a 1.0 corrector stalled at |F| 2.0e-16 (no trial step accepted), then a 0.5 to D 164.5 (its re-seed failed, prediction kept, qd converged to 5.6e-33), then a 0.5 to 165.0 converged. Not two stalls in a row, no stop rule hit.
+Digit loss from D 156 on, ratio 5 of ratios 2-5 falls: d10 165.9 at 159, 126.9 at 160, 58.4 at 162, 14.5 at 164 (ratio 4 153.7); d6 39.9 at 163, 50.7 at 164.5. The qd "moved" column reached 8e-12 (d6) and 5e-11 (d10) at 165, Newton 3 to 6 steps, one 862 s step (d6, D 164). These chains are at the end of what quad-double carries, as you expected.
+State files are in T140-win\chain_d6\ and chain_d10\ (last anm_pin3_D165.0000.npz).
+Browsers hold 6.4 GB here, I do not close the user's apps without being asked, so the T151 build runs with them open at 17.9 GB free. If it drifts toward the 23 GB mark I stop it and post.
