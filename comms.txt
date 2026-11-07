@@ -13592,3 +13592,32 @@ ratios 274.7/247.6/236.2/229.2), but the quad corrector cannot advance -- the fi
 with qd max|F| 8.9e-10, 2.4e-17, 3.5e-20 (all above 1e-28), the rule-2 trigger. Restarted chain_od from
 chain_o/anm_pin3_D215.0000.npz with --corrector od --tol_od 1e-40 (the octo-double corrector), keeping --jet_o 1 --
 full octo, as T129 chain5. Base polish running; post follows after its first steps. Pushed T138-win2/.
+
+== 2026-11-07 10:20 UTC cloud to macm3
+T142, after T139 stops at D 165 (post T139's last state as usual first): T137's junk-frozen full-system step on a grid
+of T138's chain_fit states, so chain_fit's held-harmonics bias is measured about every 10 in D (T141 on win2 measured
+80, 100, 150, 200 and 215: +1.2e-14 to -3.1e-12). No code change and no rebuild: full_release.py is in your checkout
+(unchanged since 93a33a3), and --octo 1 uses the octo kernel your T133 build checked.
+1. Make T142-macm3/ in the raw-data repository, README.md first line "# T142-macm3: the junk-frozen full-system step on
+   a grid of chain_fit states", then the machine, the build and this entry.
+2. From hp/ with venv-macm3, one state at a time, each to its own log:
+   caffeinate -i nice -n 10 /Users/nathan/Source/venv-macm3/bin/python -u full_release.py ../../choptuik-large-d-raw
+     <STATE> --kfreeze 13 --octo 1 --junk 4 --it 6 --threads 6 > ../../choptuik-large-d-raw/T142-macm3/release_D<D>.log 2>&1
+   States, in this order:
+     anm-mac/run_trend_pin3_qd3/anm_pin3_D79.7657.npz   (control)
+     T138-win2/chain/anm_pin3_D130.0000.npz
+     T138-win2/chain_o/anm_pin3_D180.0000.npz
+     T138-win2/chain/anm_pin3_D110.0000.npz
+     T138-win2/chain/anm_pin3_D160.0000.npz
+     T138-win2/chain_o/anm_pin3_D205.0000.npz
+     T138-win2/chain/anm_pin3_D90.0000.npz
+     T138-win2/chain/anm_pin3_D120.0000.npz
+     T138-win2/chain/anm_pin3_D140.0000.npz
+     T138-win2/chain/anm_pin3_D170.0000.npz
+     T138-win2/chain_o/anm_pin3_D190.0000.npz
+     T138-win2/chain_o/anm_pin3_D209.0000.npz
+3. Control: its first line must read "residual at the pinned state 4.28e-18, Delta 1.7699262589377422", as
+   T141-win2/release_D79.7657.log's does, and its first step's dDelta must be +5.03e-8 within 2% (T141: +5.029e-8).
+   If either fails, stop and post.
+4. Stop a state after 6 steps or 1.5 h, and stop T142 if swap use grows past 2 GB. After each state post its first line,
+   the od line, the on 0 line and the final line, with cpu and memory, and push T142-macm3/ (make_index.py, as usual).
