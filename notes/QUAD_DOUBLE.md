@@ -2147,17 +2147,17 @@ on the faster build.
 
 `hp/export_delta_all.py` writes `hp/data/delta_all.csv`, one row per D with Δ in up to four parts, the kind of
 computation, an error estimate and its kind, the source record and the state (columns and precedence in its docstring;
-the README's Values section describes the file). It read the raw-data repository at e09cb1e. Its 2317 rows:
+the README's Values section describes the file). It read the raw-data repository at 8f40bb8. Its 2312 rows:
 
 | kind | rows | D | err, its kind and range |
 |---|---|---|---|
 | dd, the full system in double-double (`data/delta_dd.csv`) | 1259 | 3.044–67.767 | dM 1.1e-22 to 4.1e-10, check 1e-16 to 2e-15 |
 | qd, the full system in quad-double (`data/delta_qd.csv`) | 7 | 68.5–73.0 | starts 5.0e-29 to 8.4e-28 (5 rows) |
 | pinned, Delta_full1 of T73 and T75 | 883 | 67.768–73.266 | pins 7.4e-19 to 8.6e-15 (150) |
-| chain_fit, the chain with the harmonics held on the 1/n fit (T138) | 126 | 74.0–197.0 | runs 0 to 4.3e-21 (6) |
-| chain, the chain with the harmonics held on T75's trend, above chain_fit's frontier | 42 | 197.27–214.88 | none |
+| chain_fit, the chain with the harmonics held on the 1/n fit (T138) | 133 | 74.0–203.0 | runs 0 to 9.3e-21 (10) |
+| chain, the chain with the harmonics held on T75's trend, above chain_fit's frontier | 30 | 203.27–214.88 | none |
 
-`--verify` re-reads every row from the record or state it names and finds all 2317 equal. `--mutate=dd`, `qd`, `pinned`,
+`--verify` re-reads every row from the record or state it names and finds all 2312 equal. `--mutate=dd`, `qd`, `pinned`,
 `chain_fit` and `chain` move one row's second part by one ulp, and each fails it (exit 1). Two more checks hold the
 chains apart. Each chain row's run must hold the harmonics as its kind says, and no row that chain_fit replaces may
 remain (a chain row at or below its last D, or a T85-mac row inside its span). `--mutate=held` labels the last
@@ -2166,13 +2166,16 @@ chain_fit row chain and fails the first. `--mutate=frontier` moves the first cha
 
 **chain_fit replaces the chain up to its frontier.** T138 (`T138-win2/`) reruns the chain with the harmonics held on the
 1/n fit of the full-system states (13.29, notes/HELD_HARMONICS.md). Its backbone runs from T81's quad-double state at
-73.0 through `T138-win2/chain` (steps of 1.0, quad-double series) and, from 173.5, `chain_o` (octo-double series).
-It passed 188 and 193.77, where the trend-held chain hung and stalled (13.28), with the quad-double corrector converging
-at every accepted step. The
-chain rows at or below its last D are left out of the table, and the chain's rows continue above it, about 2.5e-6 low
-there (13.29). It also replaces T85-mac's 12 rows at 74–78.1,
-below. The replaced rows stay in git history. Its pilot (`T138-win2/pilot`) equals it bit for bit at 74, 75 and 76. T139 (macm3, `T139-macm3/`), a second path
-in steps of 0.75 on another machine, differs from it by 2.1e-22 to 4.3e-21 where the two share a D (every 3.0).
+73.0 through `T138-win2/chain` (steps of 1.0, quad-double series) and, from 173.5, `chain_o` (octo-double series). It
+passed 188 and 193.77, where the trend-held chain hung and stalled (13.28), with the quad-double corrector converging at
+every accepted step. The chain rows at or below its last D are left out of the table, and the chain's rows continue
+above it, about 3.2e-6 low there (13.29). It also replaces T85-mac's 12 rows at 74–78.1, below. The replaced rows stay
+in git history. Its pilot (`T138-win2/pilot`) equals it bit for bit at 74, 75 and 76. T139 (macm3, `T139-macm3/`), a
+second path in steps of 0.75 on another machine, differs from it by 2.1e-22 to 9.3e-21 where the two share a D (every
+3.0). The gap is in the held values, not the corrector, whose residuals are 1e-51 to 1e-49 in both at 88–97. `held_at`
+(`hp/anm_run.py`) rounds each step's held coefficients to float64 and the next step starts from them, so two step
+histories hold values a few ulps apart (macm3, comms 2026-11-07 06:26 UTC). That is far below chain_fit's distance from
+the 1/D series (notes/HELD_HARMONICS.md).
 
 **T85-mac below 78.1, replaced by chain_fit.** chain_fit, interpolated through nine of its rows, agrees with T75's
 pin 7 and pin 5 rows at 73.10–73.26 to 5.3e-13 or better (the interpolation's own spread, from dropping its end points,

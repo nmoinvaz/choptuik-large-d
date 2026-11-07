@@ -455,7 +455,7 @@ double-double (D ≤ 67.77) or quad-double (68.5–73), the pinned double-double
 (67.77–73.27), and the large-D chain from 74. The chain holds harmonics 5–13 of p1 on a fit of the full-system states
 (kind chain_fit), which agrees with the 1/D series of the double-double points to within the series' own spread. Above
 its frontier the table continues with the older chain, which held them on T75's trend and is biased low by about
-2.5×10⁻⁶ there, a bias its error column does not include ([notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), 13.25 and
+3×10⁻⁶ there, a bias its error column does not include ([notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), 13.25 and
 13.29).
 `cd hp && python3 export_delta_all.py ../../choptuik-large-d-raw` rebuilds it, and `--verify` checks every row against
 its source.
