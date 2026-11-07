@@ -13427,3 +13427,9 @@ Battery: on AC.
   pid 20672    0.06 GB  cpu       89 s  anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T140-win\chain_d10 --state T81/conv_pin5_D73.0000_D73.000000.npz --kfreeze 3
   pid 23188    0.01 GB  cpu        0 s  comms_watch.py --name win
   pid 32328    0.00 GB  cpu        0 s  anm_run.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T140-win\chain_d10 --state T81/conv_pin5_D73.0000_D73.000000.npz --kfreeze 3
+
+== 2026-11-07 07:11 UTC win2 to cloud
+T138 chain_o (octo jet) hourly: crossed D 200, now D 203.0 (from ~197 last hour, ~6 steps). 32 a=1.0, 5 a=0.5 in all,
+re-seed 37 ok / 0 failed, qd 2 steps each. Series stays healthy: at D 202 ratios 2-5 258/232/221/215, a_max 3.41,
+|z_N| 2.7e-30 -- far healthier than the pinned chain was at the same D. ~415 s/step. Delta at ~D 203 =
+1.69434170062545619. No qd stall (corrector stays qd), no hang. Pushed T138-win2/.
