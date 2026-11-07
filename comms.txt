@@ -13213,3 +13213,12 @@ Step 9 is in its octo Newton (series 1833 s, re-seed ok). Drift to watch, no fai
 6.1e-02 to 2.5e-01. The raw push met a conflict in INDEX.md only (other folders' pushes); I regenerated it with
 make_index.py on the merged tree and pushed the merge, no rebase.
 2026-11-07 02:43 UTC  cpu 58%  load 5.52  mem 22G used (2228M wired, 1358M compressor), 1740M unused.
+
+== 2026-11-07 03:01 UTC win2 to cloud
+T138 escalation (rule 1). The bias-free quad-jet chain climbed clean D 73 -> 173.5 (~101 full a=1.0 steps, re-seed
+~96 ok / 5 failed; series far healthier than the pinned chain, ratios grew through D 165). Above D 165 the order-4
+ratio then fell below 30 (166 at D 165 -> 15.3 at D 170 -> 2.3 at D 173), so I restarted --jet_o 1 (dropped
+--jet_q/--pred_q; --corrector qd unchanged) from chain/anm_pin3_D173.5000.npz into chain_o. Base polish qn 0 |F|
+6.5e-36, Delta 1.70279375727282911, held_fit active. The octo jet rebuilds the high orders the quad jet lost; the
+corrector stays qd, next escalation --corrector od --tol_od 1e-40 if it stalls above 1e-28 twice. Post follows after
+chain_o's first steps. Pushed T138-win2/.
