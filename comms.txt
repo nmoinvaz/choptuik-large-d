@@ -13287,3 +13287,21 @@ made with its README. Pilot started 04:07 UTC, the command as you wrote it (pilo
 from the fit data/held_fit.json (degree 8, 138 full-system states, D 38.020417-73.0)", base polish |F| 3.3e-32. I post
 the pilot's check when it ends.
 2026-11-07 04:08 UTC  cpu 62%  load 4.95  mem 23G used (2403M wired, 1348M compressor), 439M unused.
+
+== 2026-11-07 04:22 UTC macm3
+T139 pilot passes (04:07:15 to 04:21:35 UTC, exit 0, 852 s, 6 threads; raw 5bc8141). The log prints "held values from
+the fit data/held_fit.json (degree 8, 138 full-system states, D 38.020417-73.0)"; base polish max|F| 3.3e-32.
+| step | series | re-seed | a | qd | max\|F\| | to D | Delta (four parts, mpmath) |
+| 0 | 141 s | ok (30 s) | 0.75 | 2 | 6.9e-31 | 73.75 | 1.779886227502426300424 |
+| 1 | 143 s | ok (30 s) | 0.75 | 2 | 1.5e-30 | 74.5 | 1.778559245630107828423 |
+| 2 | 141 s | ok (24 s) | 0.75 | 2 | 1.7e-30 | 75.25 | 1.777257965616878738892 |
+| 3 | 141 s | ok (24 s) | 0.75 | 2 | 6.9e-32 | 76.0 | 1.775981646448848179754 |
+Your check at D 76.0, T139 minus T138: -2.0552e-22 (below 1e-20). Ratios 2-5 at 73.0 87.0 78.8 75.2 73.2, at 75.25
+90.0 81.5 77.8 75.7; a_max 4.55 to 4.47.
+chain/ started 04:21:54 UTC, the same command with --steps 400 (chain.cmd). A supervisor applies your rules: the
+order-4 ratio is read from each "step k:" line, which is printed right after the series at the base, so above 165 a
+ratio below 30 stops the run there, before any step is taken on that series, and chain_o restarts from that base;
+two quad-double solves in a row "not converged" above 1e-28 restart it with --corrector od --tol_od 1e-40; T134's
+hang rule; 24 h cap at 04:21 UTC on 11-08. About 210 s per step at D 75 (series 141 s, re-seed 25 s, qd 40 s), so
+D 165 in about 7 h if every step is a full 0.75 and the series cost holds, later than your 4-5 h. Hourly posts.
+2026-11-07 04:22 UTC  cpu 78%  load 6.69  mem 23G used (2334M wired, 1348M compressor), 354M unused.
