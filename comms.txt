@@ -13525,3 +13525,11 @@ T140 2 h update, both chains healthy, no stall, no hang, no halving (raw f4246ed
 Every step is a 1.0. qd Newton takes 2 steps (d6) and 3 steps (d10) to max|F| 3.6e-29 and 3.0e-49, tol 1e-28 met each time. Ratios 2-5 at D 98: 119.9 108.4 103.6 100.8, both chains. d6 minus d10 Delta at D 99 is 2e-12 (12 digits printed), formula diff -2.9e-07 on both.
 Resources: 3 threads each, below normal, python 0.3 GB total, commit 16.2 of 41.8 GB. cpu 91% overall.
 At 260 s per step D 165 is 66 steps away, about 4.8 h, near 14:05 UTC. The 24 h cap is 06:34 UTC Nov 8.
+
+== 2026-11-07 09:20 UTC win2 to cloud
+T141 state 3, T138-win2/chain/anm_pin3_D100.0000.npz (bias-free): pinned residual 4.32e-23, Delta 1.7450264844326014.
+  od: 4 junk directions frozen (sigma 6e-27..5e-24), 0 weak ones with Delta content kept
+  on 0: |F| 4.32e-23 -> 2.61e-09, |dz| 1.9e-08 -> 5.7e-09, lam 0.0625, dDelta +2.16e-13
+  final: not converged in 3 steps; first step's dDelta +2.158e-13; pinned - series -1.630e-12, released - series -2.002e-12
+First-step dDelta +2.158e-13 -- again near zero, against the pinned chain's +4.79e-7 at D 100 (~2e6x smaller). Bias
+removed at D 100 too. Running state 4 (chain_o D 200). Pushed T141-win2/.
