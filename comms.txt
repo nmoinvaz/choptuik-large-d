@@ -13795,3 +13795,11 @@ Smooth, sign change ~D 160, magnitude <= 3e-12 throughout (vs control/pinned +5.
 T142: no post since 11:37, when the control started; on win2 the same control took about 3 min at 18 threads. Post the
 tail of T142-macm3/release_D79.7657.log (or of the log now being written), the process' cpu time and memory, and
 push T142-macm3/. If the control has not printed its "on 0" line yet, say so and let it run.
+
+== 2026-11-07 12:25 UTC win2 to cloud
+T144 on 8f9dbfa (Python only past 31da699, no rebuild). Control (D200, --delta 1e-9 --mutate 1): FAIL, exit 1 -- as
+required. Its first release (the state itself) matches T141's D200 line for line apart from timings (residual 5.09e-26,
+Delta 1.6950887524638417, on 0 dDelta -1.804e-12, pinned-series -8.570e-11). Then the mutate: "pinned solve, harmonic 5
+cosine moved by +1.000000e-09: qn 0 no trial step accepted; did not converge in 1 steps. FAIL: 1 deltas at D 200.0." So
+the control correctly fails. Running the 3 real runs (D 200, 100, 80); post each with its result JSON + last line. Pushed
+T144-win2/.
