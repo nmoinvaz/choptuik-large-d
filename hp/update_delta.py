@@ -10,7 +10,9 @@ The steps, in order:
 3. export_dd.py writes data/delta_dd.csv, which takes the low-D rows.
 4. export_delta_all.py RAWDIR writes data/delta_all.csv.
 5. export_delta_all.py --verify checks the master table.
-6. Each --mutate control runs and must fail (one per kind, and held, frontier and t85 for the chains' checks). The master table is then restored and verified again.
+6. Each --mutate control runs and must fail by its check (one per kind, and held, frontier and t85 for the chains'
+   checks). A kind with no rows has nothing to mutate, and its control is reported as skipped. The master table is then
+   restored and verified again.
 7. compare_published.py writes data/delta_published_compare.csv, every published value against ours.
 
 It prints each table's row count before and after, and the master table's new and changed rows. It exits 1 if a step
@@ -40,8 +42,11 @@ def rows(name):
 def run(args, expect=0):
     r = subprocess.run([sys.executable] + args, cwd=HERE, capture_output=True, text=True)
     last = (r.stdout.strip().splitlines() or [""])[-1]
-    ok = (r.returncode == 0) if expect == 0 else (r.returncode != 0)
-    print(f"  {'ok  ' if ok else 'FAIL'} {' '.join(args)}: exit {r.returncode}; {last[:110]}", flush=True)
+    # a control fails by its check (exit 1 after the verify line), not by a crash; exit 2 is a kind with no rows
+    skip = expect == 1 and r.returncode == 2
+    ok = (r.returncode == 0) if expect == 0 else (skip or (r.returncode == 1 and last.startswith("verify:")))
+    tag = "skip" if skip else "ok  " if ok else "FAIL"
+    print(f"  {tag} {' '.join(args)}: exit {r.returncode}; {last[:110]}", flush=True)
     if not ok:
         sys.stderr.write(r.stdout[-2000:] + r.stderr[-2000:])
     return ok

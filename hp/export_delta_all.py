@@ -7,9 +7,10 @@ chain's frontier, with the kind of computation, an error estimate and what that 
 RAWDIR is a clone of the raw-data repository (git clone https://github.com/nmoinvaz/choptuik-large-d-raw). --verify
 re-reads every row of the written CSV from the source and state its row names and exits 1 on any difference;
 --mutate changes one row of that kind by one unit in its second part before the verification (the control, which
-must fail); --mutate=held labels the last chain_fit row chain, and --mutate=frontier moves the first chain row below the
-chain_fit frontier, and --mutate=t85 gives the first chain_fit row a T85-mac source (the controls of the chains'
-checks).
+must fail; it exits 2 when the table has no row of that kind); --mutate=held labels the last chain_fit row chain, and
+--mutate=frontier moves the first chain row below the chain_fit frontier (or, when chain_fit replaces every chain row,
+puts the chain's last row back), and --mutate=t85 gives the first chain_fit row a T85-mac source (the controls of the
+chains' checks).
 
 Columns: D; Delta in up to four parts, Delta = q0 + q1 + q2 + q3 (each an f64; q2 and q3 are empty where the value is
 double-double); kind; err and err_kind; the source record; published_ref, published_Delta and published_diff, the most
@@ -183,7 +184,8 @@ def backbone(states, by_dir, held, kind):
     return bb
 
 
-def chain_rows():
+def chain_rows(keep=False):
+    """the chain_fit backbone's rows and the chain's above its frontier (every chain row with keep)"""
     states, by_dir = chain_states()
     held = {d: held_of(d) for d in by_dir}
     fit = backbone(states, by_dir, held, "chain_fit")
@@ -191,7 +193,7 @@ def chain_rows():
     on = set(fit) | set(trend)
     front = max((states[r][0]["D"] for r in fit), default=-np.inf)
     rows = []
-    for kind, bb in (("chain_fit", fit), ("chain", [r for r in trend if states[r][0]["D"] > front + TOL_D])):
+    for kind, bb in (("chain_fit", fit), ("chain", [r for r in trend if keep or states[r][0]["D"] > front + TOL_D])):
         for rel in bb:
             m, parts = states[rel]
             v, err, others = total(parts), "", []
@@ -297,10 +299,18 @@ def verify(rows, mutate=""):
         r = next(r for r in rows if r["kind"] == "chain_fit")
         r["source"] = f"{FIT_REPLACES[0]}x80.jsonl:D{r['D']}"
         print(f"mutated: the chain_fit row at D {r['D']} given the source {r['source']}")
-    elif mutate == "frontier":
+    elif mutate == "frontier" and any(r["kind"] == "chain" for r in rows):
         r = next(r for r in rows if r["kind"] == "chain")
         r["D"] = fmt(max(float(x["D"]) for x in rows if x["kind"] == "chain_fit") - 1)
         print(f"mutated: the first chain row moved to D {r['D']}")
+    elif mutate == "frontier":
+        # chain_fit replaces every chain row, so the chain's last row is put back
+        r = [x for x in chain_rows(keep=True) if x["kind"] == "chain"][-1]
+        rows.append({**r, **published_cols(r, published())})
+        print(f"mutated: the chain row at D {r['D']}, below the frontier, put back")
+    elif mutate and not any(r["kind"] == mutate for r in rows):
+        print(f"no {mutate} rows, so nothing to mutate")
+        sys.exit(2)
     elif mutate:
         r = next(r for r in rows if r["kind"] == mutate)
         r["Delta_q1"] = fmt(float(r["Delta_q1"]) + np.spacing(float(r["Delta_q1"])))
