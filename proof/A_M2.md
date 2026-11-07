@@ -260,7 +260,9 @@ is 3.5×10⁻¹⁰ of its tolerance (6.3×10⁻¹¹ on the h = 10⁻⁶ run).
 | D2 | M = 1, h = 10⁻⁹, clean (`logs/A_M2_d2check_M1_1e-9_none.log`) | pass (worst ratio 4.8×10⁻¹²) | pass |
 | | M = 1, h = 10⁻⁹, secondvar's sign flipped (`_lin2.log`) | fail (worst ratio 17, exit 1) | fail |
 | | M = 1, h = 10⁻⁹, start second derivatives dropped (`_w0.log`) | fail (worst ratio 4.5, exit 1) | fail |
-| | M = 3, h = 10⁻⁸, secondvar's sign flipped, chart term dropped | §6.3a | fail |
+| | M = 3, h = 10⁻⁸, clean (`logs/A_M2_d2check_M3_1e-8.log`) | pass (worst ratio 3.5×10⁻¹⁰) | pass |
+| | M = 3, h = 10⁻⁸, secondvar's sign flipped (`logs/A_M2_d2check_M3_1e-8_mut_lin2.log`) | fail (worst ratio 2.7×10⁴, exit 1) | fail |
+| | M = 3, h = 10⁻⁸, the chart term of the start data dropped (`_mut_chart.log`) | fail (worst ratio 1.4×10³, exit 1) | fail |
 | Krawczyk C0–C8, C6b | M = 1, h = 10⁻⁶ (`logs/A_M2_controls_M1_1e-6.log`) | all as expected (no C8 at M = 1) | as A_M.md §5 |
 | | M = 3, h = 10⁻⁸ (`logs/A_M2_controls_M3_1e-8.log`) | all as expected | as A_M.md §5 |
 | recheck (mpmath) | M = 1, h = 10⁻⁶ (`logs/A_M2_recheck_M1_1e-6.log`) | pass, margins 1.000, 1.000; A ∈ [2.5421480475422, 2.5421480476910] | the same verdict |
@@ -274,6 +276,11 @@ second derivatives themselves (at most 18.5), so a containment test cannot see a
 only where the radius is small against the entries; at M = 1 that needs a small box (h = 10⁻⁹: radius 0.5, where both
 mutations fire), at M = 3 the h = 10⁻⁸ box already has a relative radius of 10⁻⁴ in the largest entries. The table
 reports the controls on those boxes; the h = 10⁻⁶ results are kept in the logs.
+
+**Why D2 is needed.** The Krawczyk test alone does not see a wrong second derivative when the second-order terms are
+small: on the run with secondvar's sign flipped, the M = 3 test still passes with margins 1.000
+(`logs/A_M2_krawczyk_M3_1e-8_mut_lin2.log`), although the enclosed Y D²g̃ is off by a factor of about two. A wrong
+enclosure can make the test pass; D2 is what rules that out on the runs where it is sharp.
 
 ## 7. Reproduce
 

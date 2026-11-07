@@ -600,6 +600,32 @@ def make_chart(M, centre, use_out, fdfile, out):
     return d
 
 
+def export6a2(bx, out, sub=None):
+    """the state box at xi1 over the certified curved parallelepiped p(X') (X' the run's box or a sub-box), for
+    lemma 6a(M), in certify_M.export_6a's format (keys M, h, xi1, yX_xi1, V): Y(X') = c + Q q + V0 x + W(X)[x, x]/2
+    and V(X') = V0 + W(X)[., x], which contain y+(xi1; p(x)) and its x-derivative for every x in X'"""
+    ctx.prec = PREC
+    M = bx["M"]
+    m = M + 1
+    s = CS.SysM(M)
+    c, Q, q, var, w2, pdx = C2.load2(bx["sets"])
+    if sub is not None:
+        ws = [arb(sub[0]), arb(sub[0])] + [arb(sub[1 + (i // 2) % (len(sub) - 1)]) for i in range(M - 1)]
+        assert all(bool(ws[i].upper() <= pdx[i].real.rad()) for i in range(m)), "the sub-box must lie inside the run box"
+        pdx = [acb(arb(0, x)) for x in ws]
+    lo = C2.LohnerM2(s, c, Q, q, 1, var, w2, pdx)
+    X = lo.YX_box()
+    V = lo.VX_box()
+    d = {"M": M, "h": sub[0] if sub else bx["h"], "w": sub[1:] if sub else bx["w"], "xi1": bx["path"][3],
+         "path": bx["path"], "p": bx["p"], "C": bx["C"], "Gamma": bx["Gamma"], "start": bx["start"],
+         "yX_xi1": [CL.s_acb(x) for x in X[:s.nd]],
+         "V": [[CL.s_acb(V[i, j]) for j in range(V.ncols())] for i in range(s.nd)],
+         "note": "V = d(state)/d(x) over p(X) in the chart p = p^ + T x + (0, Gamma[x_o, x_o]/2) (certify_M2.py)"}
+    with open(out, "w") as fh:
+        json.dump(d, fh)
+    print(f"exported the state box at xi1 = {d['xi1']} (max radius {max(CL.VI.rad_of(x) for x in X[:s.nd]):.2e}) to {out}")
+
+
 def diag1(bxfile, fdfile=None):
     """diagnostic of a first-order (certify_M.py) box run's Krawczyk test: the radius of Y Dgt(X) per entry, its
     relative contribution rad_ij w_j / w_i to |K_i| / w_i, and (with fdfile, the finite differences of
@@ -667,6 +693,9 @@ def main():
     sub = o["sub"].split(",") if "sub" in o else None
     if mode == "controls":
         return 0 if run_controls2(bx, sub) else 1
+    if mode == "export6a":
+        export6a2(bx, o["out"], sub)
+        return 0
     if mode == "d2check":
         ok, _, _ = d2check(bx, o["fd"])
         return 0 if ok else 1
