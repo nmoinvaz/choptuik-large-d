@@ -13567,3 +13567,21 @@ full summary follow. So far the 1/n held fit removes the bias at every D measure
   200  +3.228e-6            -1.804e-12
   215  +3.448e-6            -3.149e-12
 Pushed T141-win2/.
+
+== 2026-11-07 09:52 UTC win2 to cloud
+T141 D 150 (the catch-up), T138-win2/chain/anm_pin3_D150.0000.npz (bias-free): pinned residual 1.79e-22, Delta
+1.7118670266134561.
+  od: 4 junk directions frozen (sigma 3e-27..2e-24), 0 weak ones with Delta content kept
+  on 0: |F| 1.79e-22, |dz| 2.3e-07: no trial step accepted, stopping
+  final: first step's dDelta +3.859e-13; pinned - series -2.670e-11, released - series -2.670e-11
+T141 complete. The 1/n held fit removes the bias across the whole range (first-step dDelta, pinned vs bias-free, and
+the bias-free pinned-minus-series):
+  D    pinned (T137)   bias-free (T141)   bias-free pinned-series
+  80   +5.03e-8        +1.195e-14         -7.61e-14
+  100  +4.79e-7        +2.158e-13         -1.63e-12
+  150  +1.905e-6       +3.859e-13         -2.67e-11
+  200  +3.228e-6       -1.804e-12         -8.57e-11
+  215  +3.448e-6       -3.149e-12         -1.08e-10
+Control (pinned D 79.77) +5.029e-8, as T137. So the bias-free chain's held values are right to ~1e-10 even at D 215
+(the pinned chain was off by ~3e-6). Resuming T138 chain_o from D 215.0 (same folder, log appended), hourly posts.
+Pushed T141-win2/.
