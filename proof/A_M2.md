@@ -4,11 +4,12 @@ This note is the second-order version of [A_M.md](A_M.md): the same function g (
 real conditions, A_M.md §1), the same path and start-value lemma, and the same Krawczyk theorem, with a second-order
 chart and second-order (C²) enclosures of the flow, so that the Jacobian over the box is enclosed in mean value form.
 It is the design change A_M.md §2 and §7 name after the first-order M = 5 runs failed. Written by Claude (Anthropic)
-under Nathan Moinvaziri's direction; not reviewed.
+under Nathan Moinvaziri's direction; reviewed independently in A_M2_review.md.
 
 **Status.** M = 5: **certified**, given the M-harmonic start-value lemma `fixed_point_M.start_data_M` and Braaksma's
 theorem, on a curved parallelepiped of outer half-width 10⁻¹⁰ and inner widths 10⁻¹⁸ (harmonic 3) and 10⁻¹⁹
-(harmonic 5), with margins of at least 0.889 (§6.4); the new code is not reviewed. The same code path reproduces
+(harmonic 5), with margins of at least 0.889 (§6.4). An independent review (A_M2_review.md) finds the claim holds; its
+issues are in the controls. The same code path reproduces
 Theorem A(M = 1) on a box 2×10⁴ times larger than the first-order one and the M = 3 certificate on boxes 10² and 10⁴
 times larger (§6.1–6.2). What limited the first-order runs was the excess of the C¹ enclosure: their derivative
 radius at ξ₁ was 10² to 10⁵ times the true variation over the box (§1).
@@ -188,7 +189,7 @@ these balls, so the statement holds for each of them, in particular for the char
   run), including its bound on the complex Cauchy box, from which the second-derivative bound of §2 is derived.
 - The correctness of the code: python-flint 0.9 (arb/acb); validated_int.py's Lohner step and certify_M_lohner.py
   (A_M.md §3, reviewed with the M = 3 certificate, A_M_review.md); and the new files certify_M2_lohner.py and
-  certify_M2.py (not reviewed).
+  certify_M2.py (reviewed in A_M2_review.md).
 
 ## 5. Controls, written down before the runs
 
@@ -314,7 +315,7 @@ largest pair term is 6.1×10⁻⁴.
 
 > **Certified** (given the start-value lemma `fixed_point_M.start_data_M`, SHA-256 prefix 589e5a810bc50289, and
 > Braaksma's theorem; trusted code certify_M2_lohner.py, certify_M2.py, certify_M_lohner.py, certify_M_sys.py,
-> validated_int.py and python-flint 0.9; certify_M2*.py not reviewed): the D-jump function g of A_M.md §1 at M = 5 has
+> validated_int.py and python-flint 0.9; certify_M2*.py reviewed in A_M2_review.md): the D-jump function g of A_M.md §1 at M = 5 has
 > exactly one zero in the curved parallelepiped p(X), X = [−10⁻¹⁰, 10⁻¹⁰]² × [−10⁻¹⁸, 10⁻¹⁸]² × [−10⁻¹⁹, 10⁻¹⁹]²,
 > and its Jacobian is non-singular there. The zero lies in (endpoints rounded outward; the smallest passing box,
 > θ = 1.05×10⁻⁴, intersected with the whole box's enclosure):
@@ -322,6 +323,10 @@ largest pair term is 6.1×10⁻⁴.
 > A ∈ [2.71857918921174, 2.71857918921175], ω/ω∞ ∈ [0.999228403206567, 0.999228403206568],
 > B₃ ∈ [0.149203574911447, 0.149203574911448], C₃ ∈ [0.0147190524902513, 0.0147190524902514],
 > B₅ ∈ [0.00840534690576166, 0.00840534690576167], C₅ ∈ [0.00147034518159157, 0.00147034518159158].
+
+The recheck prints these endpoints rounded to nearest, not outward (A_M2_review.md, issue 6), so each is within half a
+unit of its last digit. Rounded outward one digit shorter: A ∈ [2.7185791892117, 2.7185791892118] and ω/ω∞ ∈
+[0.99922840320656, 0.99922840320657].
 
 The axis-aligned hull of p(X) has half-widths 1.0×10⁻¹⁰, 1.0×10⁻¹⁰, 4.1×10⁻¹¹, 4.6×10⁻¹², 4.4×10⁻¹², 8.2×10⁻¹³ (the
 krawczyk log). The refined numerical centre lies inside the enclosure.

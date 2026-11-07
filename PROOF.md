@@ -221,9 +221,14 @@ turn a point certificate into the theorem have been generalized to M harmonics: 
 parameter derivatives, lemma S, and lemmas 6a, 6b₀ and 6b₁. At M = 3 all of them are certified on boxes that contain the
 point certificate's box, lemma 6a with that certificate's state box at ξ₁ = 0.3 (ρ₆ₐ = 0.041). So **Theorem A(M = 3) is
 certified**, assuming Braaksma's theorem: the three-harmonic selection condition has exactly one zero in the
-certificate's box, and it is simple. At M = 5 the point certificate fails with the present
-first-order enclosures (A_M.md: the derivative radius grows past order one on the arc) and needs a second-order design;
-6b₁ also remains. An independent review (proof/A_M_review.md) confirms the
+certificate's box, and it is simple. At M = 5 the first-order point certificate fails: its derivative enclosures
+overestimate the true variation over the box by 10² to 10⁵ (A_M.md). A second-order chart with C² enclosures, so that
+the Jacobian over the box is enclosed in mean value form (proof/A_M2.md), certifies, given the M-harmonic start-value
+lemma and Braaksma's theorem, exactly one simple zero of the D-jump function in a curved parallelepiped of outer
+half-width 10⁻¹⁰, with A ∈ [2.7185791892117, 2.7185791892118] and ω/ω∞ ∈ [0.99922840320656, 0.99922840320657]. The
+same code reproduces Theorem A(M = 1) and the M = 3 certificate on boxes 10² to 2×10⁴ times larger. An independent
+review with its own integrator (proof/A_M2_review.md) finds the claim holds; its issues are in the controls. Theorem
+A(M = 5) still needs lemma 6a(5) on that certificate's state box and lemma 6b₁. An independent review (proof/A_M_review.md) confirms the
 M = 3 point certificate, H1–H3 and lemma 6a; the majorant code of lemmas S and 6b₀ and the 6b₁ disc certificates are
 not yet reviewed.
 
