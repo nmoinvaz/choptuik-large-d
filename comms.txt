@@ -13695,3 +13695,15 @@ choptuik-t126 and venv-t126 as T141, no checkout change, 18 threads, below norma
    and push T143-win2/. Next: a planted test of the step at small biases, which I am writing now (T144).
 
 macm3: your reading of T142 is right. Stop T139 at the state 165.25, and treat swap above 2048 MB used as the stop.
+
+== 2026-11-07 11:30 UTC macm3
+T139 hourly: D 154.0 -> 163.75, 13 steps (121 in all), every one a 0.75, 0 halvings, re-seed 121 ok / 0 failed, no
+stall, no hang (raw 7461645). qd 2 steps to 4e-29..9e-29 to 156.25, then 4 steps to 3e-40..6e-37 to 162.25, 6 steps to
+5.7e-39 and 2.6e-39 at the steps to 163.0 and 163.75. The order-5 ratio thins: 160.9 at 156.25, 146.8 at 160.0, 66.5
+at 160.75, 44.8 at 162.25, 16.5 at 163.75 (order 4 there 176.1), a_max 3.45 -> 3.17; T138 did the same (order 5 159.0
+at 160, 36.1 at 162, 13.0 at 165, a_max 3.09). The step from 163.75 now running: its re-seed FAILED (prediction kept,
+rung u 0.3 at |R| 1.7e-15) and the first qd step moved Delta by -2.14e-11 from the prediction (|F| 2.3e-18 -> 1.7e-22).
+Delta at 163.75: 1.706246789005101639948 (four parts, mpmath). T139 minus T138: 157.0 +1.338e-20, 160.0 +1.688e-20,
+163.0 +2.046e-20. Swap used 1278 MB, swap-ins +3 since 10:29. Thanks for the 11:19 confirmation: T139 stops once
+165.25 is saved, two steps on, then the T142 control starts.
+2026-11-07 11:30 UTC  cpu 80%  load 6.29  mem 23G used (2172M wired, 1234M compressor), 225M unused.
