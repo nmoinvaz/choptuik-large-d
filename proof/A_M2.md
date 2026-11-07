@@ -57,7 +57,9 @@ radius by these factors (same log; the control is the certified M = 3 first-orde
 So the excess dominates at both M, by two to five orders of magnitude; at M = 3 the margins happened to absorb it,
 at M = 5 they did not. The C¹ excess is linear in the box (the derivative radii in the four T33 logs are proportional
 to h at equal steps), as at M = 1 (A_certify.md §9.3–9.4). The intrinsic curvature alone would allow far larger boxes
-(§3), so a second-order chart without second-order enclosures, or a smaller first-order box, is not what is missing.
+(§3): what limits the first-order test is the enclosure. (Whether a first-order box with other inner widths, for
+example w₃ near 10⁻²¹ at h = 10⁻¹³, would have passed was not run; the table above suggests it might, at a box a
+thousand times smaller than the C² one of §6.4.)
 
 ## 2. Design
 
@@ -175,7 +177,9 @@ parameter derivatives (from the start-value lemma, as in §2), the code proves:
 > g has exactly one zero in the curved parallelepiped p(X) = {p̂ + Tx + ½(0, Γ[x_o, x_o]) : x ∈ X}, and Dg is
 > non-singular there,
 
-for an explicit p̂, T, Γ and X. Nothing else: not lemma 6a or 6b, not the untruncated problem.
+for an explicit p̂, T, Γ and X. Nothing else: not lemma 6a or 6b, not the untruncated problem. (C and Γ are read from
+decimal strings into balls of radius below 10⁻⁶⁰, as certify_M.py reads C; every enclosure holds for every chart in
+these balls, so the statement holds for each of them, in particular for the chart at their midpoints.)
 
 **Assumed facts.**
 
