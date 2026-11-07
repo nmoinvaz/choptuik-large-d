@@ -10,17 +10,19 @@ The steps, in order:
 3. export_dd.py writes data/delta_dd.csv, which takes the low-D rows.
 4. export_delta_all.py RAWDIR writes data/delta_all.csv.
 5. export_delta_all.py --verify checks the master table.
-6. Each --mutate control runs and must fail (one per kind, and held and frontier for the two chains). The master table is then restored and verified again.
+6. Each --mutate control runs and must fail (one per kind, and held, frontier and t85 for the chains' checks). The master table is then restored and verified again.
 7. compare_published.py writes data/delta_published_compare.csv, every published value against ours.
 
 It prints each table's row count before and after, and the master table's new and changed rows. It exits 1 if a step
-fails, a control passes or a row is gone (other than chain rows that chain_fit replaces). A low-D task with new points must first be added to export_lowD.py's RAW_TASKS, and the
+fails, a control passes or a row is gone (other than rows that chain_fit replaces). A low-D task with new points must first be added to export_lowD.py's RAW_TASKS, and the
 counts quoted in notes/QUAD_DOUBLE.md 13.25 are updated by hand.
 """
 import csv
 import os
 import subprocess
 import sys
+
+from export_delta_all import COLS, fit_span, replaced
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, "data")
@@ -64,7 +66,7 @@ def main():
         built = f.read()
     print("checks of the master table:", flush=True)
     ok &= run(["export_delta_all.py", raw, "--verify"])
-    for m in ("dd", "qd", "pinned", "chain_fit", "chain", "held", "frontier"):
+    for m in ("dd", "qd", "pinned", "chain_fit", "chain", "held", "frontier", "t85"):
         ok &= run(["export_delta_all.py", raw, "--verify", f"--mutate={m}"], expect=1)
     with open(master, "wb") as f:
         f.write(built)
@@ -76,11 +78,11 @@ def main():
         new = sorted(set(a) - set(b), key=float)
         changed = [k for k in a if k in b and a[k] != b[k]]
         gone = [k for k in b if k not in a]
-        # chain rows at or below the chain_fit frontier are replaced by it (export_delta_all.py)
-        front = max((float(k) for k in a if t == "delta_all.csv" and a[k][5] == "chain_fit"), default=float("-inf"))
-        repl = [k for k in gone if b[k][5] == "chain" and float(k) <= front + 1e-9]
+        # rows that chain_fit replaces (export_delta_all.py), the old ones staying in git history
+        span = fit_span([dict(zip(COLS, a[k])) for k in a]) if t == "delta_all.csv" else None
+        repl = [k for k in gone if span and replaced(dict(zip(COLS, b[k])), span)]
         print(f"  {t}: {len(b)} -> {len(a)} rows, {len(new)} new, {len(changed)} changed, {len(gone)} gone"
-              + (f" ({len(repl)} chain rows replaced by chain_fit)" if repl else "")
+              + (f" ({len(repl)} rows replaced by chain_fit)" if repl else "")
               + (f"; new D {new[0]}..{new[-1]}" if new else ""), flush=True)
         ok &= len(gone) == len(repl)
     print("done" if ok else "FAILED", flush=True)

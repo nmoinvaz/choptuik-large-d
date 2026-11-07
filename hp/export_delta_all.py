@@ -2,13 +2,14 @@
 """Every computed value of Delta in one table, hp/data/delta_all.csv, one row per D from the low-D runs to the large-D
 chain's frontier, with the kind of computation, an error estimate and what that estimate is.
 
-    cd hp && python3 export_delta_all.py RAWDIR [--verify] [--mutate=dd|qd|pinned|chain_fit|chain|held|frontier]
+    cd hp && python3 export_delta_all.py RAWDIR [--verify] [--mutate=dd|qd|pinned|chain_fit|chain|held|frontier|t85]
 
 RAWDIR is a clone of the raw-data repository (git clone https://github.com/nmoinvaz/choptuik-large-d-raw). --verify
 re-reads every row of the written CSV from the source and state its row names and exits 1 on any difference;
 --mutate changes one row of that kind by one unit in its second part before the verification (the control, which
 must fail); --mutate=held labels the last chain_fit row chain, and --mutate=frontier moves the first chain row below the
-chain_fit frontier (the controls of the two chains' checks).
+chain_fit frontier, and --mutate=t85 gives the first chain_fit row a T85-mac source (the controls of the chains'
+checks).
 
 Columns: D; Delta in up to four parts, Delta = q0 + q1 + q2 + q3 (each an f64; q2 and q3 are empty where the value is
 double-double); kind; err and err_kind; the source record; published_ref, published_Delta and published_diff, the most
@@ -23,7 +24,9 @@ precedence where two share a D:
   pinned  a pinned double-double run (T73, T75: pin 7 and pin 5; T85-mac: last node 0.8 and 0.85) above the dd
           points' last D: Delta_full1, the pinned Delta plus one linearised full-system correction, as the README
           graph draws them (solver/plot_delta.py). Where both pins (layouts) reached a D, the row is pin 7's (0.8's) and
-          err is the difference (err_kind "pins", "layouts"), a spread between two systems, not a bound.
+          err is the difference (err_kind "pins", "layouts"), a spread between two systems, not a bound. T85-mac's rows
+          inside chain_fit's span are left out, since its layouts differ by 2.3e-7 to 8.3e-7 and chain_fit replaces
+          them (notes/QUAD_DOUBLE.md 13.25).
   chain_fit  the asymptotic numerical method's chain (anm_run.py) with harmonics 5-13 of p1 held on a 1/n fit of the
           full-system states (--held_fit, notes/HELD_HARMONICS.md), its backbone traced from its highest-D state back
           through each run's start state to T81's quad-double state at 73.0. err as for chain. The fit's own error is
@@ -52,6 +55,8 @@ COLS = ["D", "Delta_q0", "Delta_q1", "Delta_q2", "Delta_q3", "kind", "err", "err
         "published_Delta", "published_diff", "state"]
 RANK = {"qd": 0, "dd": 1, "pinned": 2, "chain_fit": 3, "chain": 4}
 HELD = {"chain_fit": "fit", "chain": "trend"}
+# pinned runs whose rows chain_fit replaces inside its span (their layouts' spread, 13.25)
+FIT_REPLACES = ("T85-mac/",)
 PINNED = (("T73/t73/pin7.jsonl", "T73/t73/pin5.jsonl", "pins"), ("T75/pin7.jsonl", "T75/pin5.jsonl", "pins"),
           ("T85-mac/x80.jsonl", "T85-mac/x85.jsonl", "layouts"))
 TOL_D = 1e-9
@@ -254,11 +259,27 @@ def published_cols(r, pub):
     return dict(published_ref=ref, published_Delta=v, published_diff=format(float(diff), ".2e"))
 
 
+def fit_span(rows):
+    """the D range of the chain_fit rows"""
+    fit = [float(r["D"]) for r in rows if r["kind"] == "chain_fit"]
+    return (min(fit), max(fit)) if fit else (np.inf, -np.inf)
+
+
+def replaced(r, span):
+    """a row that chain_fit replaces: the chain's at or below its frontier, and FIT_REPLACES' inside its span"""
+    D = float(r["D"])
+    if r["kind"] == "chain":
+        return D <= span[1] + TOL_D
+    return r["source"].startswith(FIT_REPLACES) and span[0] - TOL_D <= D <= span[1] + TOL_D
+
+
 def build():
     dd = dd_rows()
     dmax = max(float(r["D"]) for r in dd)
+    chain = chain_rows()
+    span = fit_span(chain)
     rows = {}
-    for r in qd_rows() + dd + pinned_rows(dmax) + chain_rows():
+    for r in qd_rows() + dd + [r for r in pinned_rows(dmax) if not replaced(r, span)] + chain:
         k = round(float(r["D"]), 9)
         if k not in rows or RANK[r["kind"]] < RANK[rows[k]["kind"]]:
             rows[k] = r
@@ -272,6 +293,10 @@ def verify(rows, mutate=""):
         r = [r for r in rows if r["kind"] == "chain_fit"][-1]
         r["kind"] = "chain"
         print(f"mutated: the chain_fit row at D {r['D']} labelled chain")
+    elif mutate == "t85":
+        r = next(r for r in rows if r["kind"] == "chain_fit")
+        r["source"] = f"{FIT_REPLACES[0]}x80.jsonl:D{r['D']}"
+        print(f"mutated: the chain_fit row at D {r['D']} given the source {r['source']}")
     elif mutate == "frontier":
         r = next(r for r in rows if r["kind"] == "chain")
         r["D"] = fmt(max(float(x["D"]) for x in rows if x["kind"] == "chain_fit") - 1)
@@ -309,12 +334,12 @@ def verify(rows, mutate=""):
         if parts != want or any(r[k] != v for k, v in pc.items()):
             bad += 1
             print(f"DIFFERS: {r['kind']} D {r['D']}: {parts} against {want}, published {pc}")
-    # chain_fit replaces the chain up to its frontier
-    front = max((float(r["D"]) for r in rows if r["kind"] == "chain_fit"), default=-np.inf)
-    low = [r["D"] for r in rows if r["kind"] == "chain" and float(r["D"]) <= front + TOL_D]
+    # chain_fit replaces the chain up to its frontier, and FIT_REPLACES' rows inside its span
+    span = fit_span(rows)
+    low = [f"{r['kind']} {r['D']} {r['source']}" for r in rows if replaced(r, span)]
     if low:
         bad += len(low)
-        print(f"DIFFERS: {len(low)} chain rows at or below the chain_fit frontier {front}: {low[:3]}")
+        print(f"DIFFERS: {len(low)} rows that chain_fit replaces (span {span}): {low[:3]}")
     print(f"verify: {len(rows) - bad} of {len(rows)} rows equal their sources")
     return bad == 0
 
