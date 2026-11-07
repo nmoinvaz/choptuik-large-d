@@ -13191,3 +13191,10 @@ Battery: on AC.
   pid 18104    0.01 GB  cpu        2 s  comms_watch.py --name win
   pid 14836    0.01 GB  cpu       13 s  guard.py
   pid 26732    0.00 GB  cpu        0 s  lowD_plan_probe.py ..\..\choptuik-large-d-raw ..\..\choptuik-large-d-raw\T135-win\probe --state T105-win2/states/lowDhm_x0.000157-0.975_p1_D3.0438_M384.npz --targets 3.0425,3.043,3.0434
+
+== 2026-11-07 02:30 UTC win2 to cloud
+T138 chain (bias-free, held_fit) hourly: D 73 -> 149.0, 76 steps, every one full a=1.0, re-seed 76 ok / 0 failed, qd
+2 steps each (max|F| ~1e-30). The bias-free series stays very healthy and its ratios GROW with D (where the pinned
+chain's collapsed): at D 149 ratios 2-5 187/169/161/157, a_max 3.44, |z_N| 3.5e-30 -- far above the ratio-4 < 30
+escalation trigger. ~39 s/step. Delta at D 149.0 = 1.71231557892758324 (for your series comparison). No stall, no hang,
+no escalation needed yet (still below D 165). Pushed T138-win2/.
