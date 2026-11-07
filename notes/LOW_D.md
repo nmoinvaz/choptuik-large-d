@@ -674,3 +674,21 @@ s on win2). n = 0 is the base state itself on the target's solver.
 
 **Control:** `--cap 0.001` reports every case capped (exit 1). On the Mac at M 48 from `lowD_D4.0000_M48.npz`, targets
 3.99 and 3.98, every case plans (exit 0) and the control exits 1.
+
+**Result** (T135, win, M 384, `T135-win/`, raw e095343). Criteria 1 and 2 pass. The case (3.0425, n 3) is capped at x
+0.013725225625, 8.3e-8 from the M 320 value, and the norms of z_1..z_3 match T115's to better than 0.1%, 0.14% and 0.57%. The
+twelve cases (capped ones with their frozen x):
+
+| target (h) | n 0 | n 1 | n 2 | n 3 |
+|---|---|---|---|---|
+| 3.0425 (−0.00125) | 0.014110 | 0.013702 | 0.013724 | 0.013725 |
+| 3.043 (−0.00075) | plans, 165 s | 0.014014 | 0.014032 | 0.014032 |
+| 3.0434 (−0.00035) | plans, 124 s | plans, 151 s | plans, 153 s | plans, 185 s |
+
+By criterion 3 the prediction leaves the branch, since the freeze moves with h and n and the smallest step plans at
+every order. Two facts go beyond the criteria. At each capped target the frozen x converges with the order, to
+0.013725 at 3.0425 and 0.014032 at 3.043, so it belongs to the continuation of the base state in D and not to the
+truncation. And at 3.043 the base state itself plans while its better predictions freeze. This is numerical evidence,
+not shown, that the continuation meets a singular point of the x integration between 3.0434 and 3.043, at x near
+0.0140, which moves to smaller x as D falls. The test that separates a prediction error from a branch that ends is the
+corrected leg in steps of at most 0.00035 from 3.04375, with Newton at each D.
