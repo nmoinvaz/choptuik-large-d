@@ -88,7 +88,9 @@ parts). Under --jet_o 1 it starts from the octo-double prediction in all eight p
 base is polished from all its stored parts (eight from a state saved by it), with --reseed 2 inside ElimO at the
 base's D (the quad-double polish runs without the projection). Its states are saved in eight parts
 (octo_corrector.save_o: save_q's four, which load_q reads, and four more), and the series of the next base (--jet_o)
-is taken at all eight. M = 32 only; --accept_stall_qd does not apply.
+is taken at all eight. M = 32 only; --accept_stall_qd does not apply. --od_junk w freezes, in every step of that
+corrector, the junk among the w weakest directions of its first Jacobian (octo_corrector.junk_subspace_o: no Delta
+content; p1's highest harmonics past D ~ 210, notes/QUAD_DOUBLE.md 13.30), as newton_qd's junk mode does.
 """
 import json
 import os
@@ -228,7 +230,7 @@ def main():
                tol=1e-20, tol_growth=1.45, accept_stall=1e-17, junk_only=0, threads=4, w=24, trend="", tol_qd=1e-28, accept_stall_qd=0.0, qd_it=12, qd_w=0,
                refine=1, probe=0, probe_c=0.0, plan_tol=1e-32, fix1=0, F_pred_max=0.0, horizon_alpha=0, fix1_qlu=0, jet_q=0, reseed=0, pred_q=0, reseed_q=0,
                save_pred=0, jet_o=0)
-    opt.update(tol_od=1e-40)            # --corrector od (hp/octo_corrector.py)
+    opt.update(tol_od=1e-40, od_junk=0)  # --corrector od (hp/octo_corrector.py); --od_junk w freezes junk (13.30)
     for k in list(opt):
         f = "--" + k
         if f in args:
@@ -272,7 +274,7 @@ def main():
                 so = ElimO(so, elim["rs"])
             z0 = z8_start if z8_start is not None else o8_of_q(z4_start if z4_start is not None else qparts(ph, pl))
             try:
-                z8, hist, conv = newton_od(so, z0, tol=opt["tol_od"], it_max=opt["qd_it"], verbose=True)
+                z8, hist, conv = newton_od(so, z0, tol=opt["tol_od"], it_max=opt["qd_it"], verbose=True, junk_w=opt["od_junk"])
             except StartNotProjected as e:
                 print(f"      elim projections {e.args[0]}: the start's projection failed, attempt stopped", flush=True)
                 Fh, Fl = spx.residual(z0[0], z0[1])

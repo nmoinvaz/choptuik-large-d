@@ -107,20 +107,70 @@ class PinnedO:
         return d, F[0], F[1], pmin, pmax
 
 
-def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0):
+def junk_subspace_o(s, w, delta_max=1e-2, iters=6, seed=0):
+    """the w weakest right singular directions of the Jacobian of s's last octo-double LU (subspace iteration on
+    (J^T J)^-1 by olu_solve, transposed then plain, in the leading part), Rayleigh-Ritz, keeping those whose Delta
+    component is below delta_max ("junk": at large D p1's highest harmonics, which carry no Delta;
+    notes/QUAD_DOUBLE.md 13.30), orthonormal; with the kept and the other singular values (junk_subspace_q's octo twin)"""
+    L = s.size
+    zero = np.zeros(L)
+    rng = np.random.default_rng(seed)
+
+    def apply(v):
+        y = s.olu_solve([np.ascontiguousarray(v)] + [zero] * 7, True)
+        return np.asarray(s.olu_solve([np.ascontiguousarray(np.asarray(y[0]))] + [zero] * 7, False)[0])
+
+    V = np.linalg.qr(rng.standard_normal((L, w)))[0]
+    for _ in range(iters):
+        V = np.linalg.qr(np.column_stack([apply(V[:, j]) for j in range(w)]))[0]
+    W = np.column_stack([apply(V[:, j]) for j in range(w)])
+    H = V.T @ W
+    ev, U = np.linalg.eigh((H + H.T) / 2)
+    X = V @ U
+    X /= np.linalg.norm(X, axis=0)
+    sig = 1 / np.sqrt(np.maximum(ev, 1e-300))
+    keep = (ev > 0) & (np.abs(X[-1, :]) < delta_max)
+    return (np.linalg.qr(X[:, keep])[0] if keep.any() else np.zeros((L, 0))), sig[keep], sig[~keep]
+
+
+def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0, junk_w=0, delta_max=1e-2, tol_dz=1e-45):
     """Newton in octo-double from the eight-part state z on s (PinnedO, or ElimO around it): newton_qd's mode 'full'
     one level up (hpkernel.driver.newton_qd, its acceptance rule). A trial z + lam dz (lam = 1, 1/2, ...,
     2^-max_halvings) is accepted when the Newton correction there, with its own Jacobian, is smaller than dz (max norms
     of the leading parts), or when its max |F| <= tol. Stops when max |F| <= tol (converged), when no trial is accepted
     (stalled), or after it_max steps. A trial whose Jacobian is not finite or singular is rejected. Returns (z, hist,
-    converged), hist one record per step as newton_qd's."""
+    converged), hist one record per step as newton_qd's. junk_w > 0: as newton_qd's junk mode, the junk among the
+    junk_w weakest directions of the first Jacobian (junk_subspace_o: no Delta content) is removed from every step and
+    every correction it is judged by, and the iteration also ends converged when that projected correction falls below
+    tol_dz (the residual left is the junk's)."""
     import time
     from multidouble import od_axpy
     z = o8(z)
     st = s.newton_o(z, mutate=mutate)
     hist = []
+    V = None
+    if junk_w:
+        V, sk, sd = junk_subspace_o(s, junk_w, delta_max)
+        if verbose:
+            print(f"  od: {V.shape[1]} junk directions frozen (sigma {sk.min() if len(sk) else 0:.0e}..{sk.max() if len(sk) else 0:.0e}), "
+                  f"{len(sd)} weak ones with Delta content kept", flush=True)
+    zero8 = np.zeros(len(z[0]))
+
+    def proj(d):
+        """the eight-part step with its components along V removed"""
+        if V is None or V.shape[1] == 0:
+            return d
+        c = V @ (V.T @ (np.asarray(d[0]) + np.asarray(d[1])))
+        return o8(od_axpy(-1.0, np.ascontiguousarray(c), *([zero8] * 7), *o8(d)))
+
     for it in range(it_max + 1):
         nf = omax(st[1:3])
+        if V is not None and V.shape[1] and float(np.abs(proj(st[0])[0]).max()) < tol_dz:
+            if verbose:
+                print(f"  on {it}: projected correction below {tol_dz:.0e} with the junk frozen: converged at |F| {nf:.2e}, "
+                      f"Delta {z[0][-1]:.17f} {z[1][-1]:+.4e}", flush=True)
+            hist.append(dict(it=it, F=nf, dz=float(np.abs(proj(st[0])[0]).max()), mode="sel", junk_floor=True))
+            return z, hist, True
         if nf <= tol:
             if verbose:
                 print(f"  on {it}: |F| {nf:.2e} converged, Delta {z[0][-1]:.17f} {z[1][-1]:+.4e}", flush=True)
@@ -128,10 +178,10 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
             return z, hist, True
         if it == it_max:
             break
-        d = st[0]
+        d = proj(st[0])
         nd = float(np.abs(d[0]).max())
         t0 = time.time()
-        rec = dict(it=it, F=nf, dz=nd, dDelta=float(d[0][-1] + d[1][-1]), piv=[st[3], st[4]], mode="full")
+        rec = dict(it=it, F=nf, dz=nd, dDelta=float(d[0][-1] + d[1][-1]), piv=[st[3], st[4]], mode="sel" if V is not None else "full")
         lam = 1.0
         for _ in range(max_halvings + 1):
             zt = o8(od_axpy(lam, *d, *z))
@@ -140,7 +190,7 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
                 good = np.isfinite(stt[0][0]).all() and np.isfinite(stt[1]).all()
             except ValueError:          # a non-finite or singular Jacobian at the trial point
                 good = False
-            if good and (float(np.abs(stt[0][0]).max()) < nd or omax(stt[1:3]) <= tol):
+            if good and (float(np.abs(proj(stt[0])[0]).max()) < nd or omax(stt[1:3]) <= tol):
                 break
             lam *= 0.5
         else:
@@ -150,7 +200,7 @@ def newton_od(s, z, tol=1e-40, it_max=12, max_halvings=8, verbose=True, mutate=0
                 print(f"  on {it}: |F| {nf:.2e}, |dz| {nd:.1e}: no trial step accepted, stopping", flush=True)
             return z, hist, False
         z, st = zt, stt
-        rec.update(lam=lam, F_new=omax(st[1:3]), dz_new=float(np.abs(st[0][0]).max()), seconds=round(time.time() - t0, 2))
+        rec.update(lam=lam, F_new=omax(st[1:3]), dz_new=float(np.abs(proj(st[0])[0]).max()), seconds=round(time.time() - t0, 2))
         hist.append(rec)
         if verbose:
             print(f"  on {it}: |F| {nf:.2e} -> {rec['F_new']:.2e}, |dz| {nd:.1e} -> {rec['dz_new']:.1e}, lam {lam:g}, "
@@ -254,7 +304,7 @@ def _run_od(so, rs, z8, opt):
     """ElimO around so (PinnedO), newton_od to opt's tol and it_max; the final point (its projection, the point whose
     residual converged), the history, converged, the octo-double pinned max |F| there and the projections"""
     el = ElimO(so, rs)
-    z, hist, conv = newton_od(el, z8, tol=opt["tol"], it_max=opt["it_max"], mutate=opt["mutate"])
+    z, hist, conv = newton_od(el, z8, tol=opt["tol"], it_max=opt["it_max"], mutate=opt["mutate"], junk_w=opt.get("junk", 0))
     z = el.project(z)
     return z, hist, conv, omax(so.residual_o(z)), dict(el.counts)
 
@@ -370,7 +420,7 @@ def wall(argv):
     from hpkernel.driver import load_q
     from reseed import Reseeder
     raw, path = argv[0], argv[1]
-    opt = _parse(argv[2:], dict(threads=3, mutate_offset="", mutate=0, it_max=12, qd=0, tol=1e-40, out="", F_max=1e-36))
+    opt = _parse(argv[2:], dict(threads=3, mutate_offset="", mutate=0, it_max=12, qd=0, tol=1e-40, out="", F_max=1e-36, junk=0))
     z4, meta = load_q(os.path.join(raw, path))
     D = mp.mpf(meta["D_str"])
     rs = Reseeder(meta, D, threads=opt["threads"], qd=True)

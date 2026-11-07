@@ -9,7 +9,10 @@ harmonics above K only; --kfreeze 3 reproduces the chain's own system, whose res
 M = 32 only), whose LU resolves the mass mode's weak direction past D ~ 185 where the quad-double one does not
 (notes/OCTO_DOUBLE.md 5); the state's parts are promoted to eight. The test (notes/QUAD_DOUBLE.md 13.29): at 79.77 the
 released Delta must land on the series, about 5.0e-8 above the chain, where the quad-double release stalled.
-    cd hp && python3 full_release.py RAWDIR STATE [STATE ...] [--kfreeze 13] [--threads 2] [--it 10] [--octo 0]
+--junk w (with --octo 1) freezes the junk among the w weakest directions of the first Jacobian (no Delta content;
+octo_corrector.junk_subspace_o), as newton_qd's junk mode does: whether the release then converges is the test of
+notes/QUAD_DOUBLE.md 13.30.
+    cd hp && python3 full_release.py RAWDIR STATE [STATE ...] [--kfreeze 13] [--threads 2] [--it 10] [--octo 0] [--junk 0]
 """
 import json
 import os
@@ -22,7 +25,7 @@ from pinning import PinnedQ, PinnedSolver, band_coeffs, band_field  # noqa: E402
 import dd_fits_mp as F  # noqa: E402
 mp.mp.dps = 60
 args = [a for a in sys.argv[1:] if not a.startswith("--")]
-opt = dict(kfreeze=13, threads=2, it=10, octo=0)
+opt = dict(kfreeze=13, threads=2, it=10, octo=0, junk=0)
 for k in list(opt):
     if f"--{k}" in sys.argv:
         opt[k] = int(sys.argv[sys.argv.index(f"--{k}") + 1])
@@ -73,7 +76,7 @@ for st in states:
         F0 = so.residual_o(z8)
         print(f"{st}: D {mp.nstr(D, 12)}, M {M}, kfreeze {opt['kfreeze']}, octo-double: residual at the pinned state "
               f"{omax(F0[:2]):.2e}, Delta {mp.nstr(d0, 17)}", flush=True)
-        z2, hist, conv = newton_od(so, z8, tol=1e-50, it_max=opt["it"], verbose=True)
+        z2, hist, conv = newton_od(so, z8, tol=1e-50, it_max=opt["it"], verbose=True, junk_w=opt["junk"])
     else:
         F0 = s.residual_q(*z)
         print(f"{st}: D {mp.nstr(D, 12)}, M {M}, kfreeze {opt['kfreeze']}: residual at the pinned state {qmax(F0[:2]):.2e}, Delta {mp.nstr(d0, 17)}", flush=True)
