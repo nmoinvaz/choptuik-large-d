@@ -2454,7 +2454,7 @@ re-solve their steps must differ from chain_fit's by b, the difference of the pi
 
 Six of the eight fail. The miss, r + b, is negative for both degrees, −1.3e-14 to −1.4e-13: the released Δ (pinned plus
 step) of the degree-6 and degree-10 states lies below chain_fit's by that much at every D, while their pinned Δs lie
-on either side of it by up to 5.7e-12. So the step removes 97–99% of the fit's effect, not all of it, and the
+on either side of it by up to 5.7e-12. So the step removes 93–99% of the fit's effect, not all of it, and the
 remainder does not change sign with b. The moves of harmonic 5's cosine alone return b to 1e-5 at the same size, so
 the remainder comes from the other held harmonics or from the junk directions the step freezes. Until the cause is
 known, the step is a measurement of chain_fit's bias to about 1e-13, not a correction.
