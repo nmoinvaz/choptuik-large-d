@@ -676,8 +676,8 @@ s on win2). n = 0 is the base state itself on the target's solver.
 3.99 and 3.98, every case plans (exit 0) and the control exits 1.
 
 **Result** (T135, win, M 384, `T135-win/`, raw e095343). Criteria 1 and 2 pass. The case (3.0425, n 3) is capped at x
-0.013725225625, 8.3e-8 from the M 320 value, and the norms of z_1..z_3 match T115's to better than 0.1%, 0.14% and 0.57%. The
-twelve cases (capped ones with their frozen x):
+0.013725225625, 8.3e-8 from the M 320 value, and the norms of z_1..z_3 match T115's to better than 0.1%, 0.14% and
+0.57%. The twelve cases (capped ones with their frozen x):
 
 | target (h) | n 0 | n 1 | n 2 | n 3 |
 |---|---|---|---|---|
