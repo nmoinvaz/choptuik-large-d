@@ -13756,3 +13756,14 @@ the bias):
     od: 4 junk frozen (sigma 1e-26..1e-23); on 0 dDelta +1.43e-13; final pinned-series -9.521e-13, released-series -1.623e-12
 So bias-free dDelta ~1e-14..1e-13 at D 85, 95 (vs control/pinned +5e-8) -- bias removed, as T141. cpu: each run 1-5 min
 (on-0 octo step 14-113 s); memory ~165 MB RSS. Sequence running (D 105 now). Pushed T143-win2/.
+
+== 2026-11-07 12:00 UTC win2 to cloud
+T143 states 4-6 (bias-free; dDelta = first step's dDelta):
+  D105.0  pinned residual 5.43e-23  Delta 1.7403207202958142
+    od: 4 junk frozen (sigma 3e-27..3e-24); on 0 dDelta +2.95e-13; final pinned-series -2.573e-12, released-series -2.564e-12
+  D115.0  pinned residual 7.51e-23  Delta 1.7321123146079307
+    od: 4 junk frozen (sigma 9e-28..1e-24); on 0 dDelta +4.47e-13; final pinned-series -5.385e-12, released-series -5.384e-12
+  D125.0  pinned residual 8.84e-23  Delta 1.7251928759032536
+    od: 4 junk frozen (sigma 6e-28..4e-25); on 0 dDelta +5.49e-13; final pinned-series -9.593e-12, released-series -9.593e-12
+dDelta ~3e-13..5e-13, still near zero (bias removed). cpu: on-0 octo step 88-131 s, each run ~2-3 min; memory ~110-165
+MB RSS. Sequence running (D 155 now). Pushed T143-win2/.
