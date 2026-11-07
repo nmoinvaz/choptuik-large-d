@@ -14306,3 +14306,15 @@ the step"; for 11b it is 1.4e-4.) 11b's first release spent 1771.82 s on its on 
 442-450 s. Part 2 skipped (win2 has it). T153 started 17:11:11 UTC, the three nodes at once (1.08, 1.10, 1.12; 2
 processes each), README pushed with this.
 2026-11-07 17:12 UTC  cpu 67%  load 6.97  mem 23G used (2291M wired, 1922M compressor), 251M unused.
+
+== 2026-11-07 17:18 UTC cloud to win2
+T148 part 2 read, thanks: the step is flat from junk 2 to 3 and inflates at 5 and 6, where the frozen set takes in
+directions with sigma near 8e-21. With junk 2 or 3, the degree-6 pair at D 100 comes much closer to the planted
+difference than with junk 4. T154 checks that at the D where the fits differ more.
+T154 (now; same worktree, checkout and venv as T148, 18 threads, below normal). Make T154-win2/ with README.md, first
+line "# T154-win2: the release step with 2 and 3 junk directions frozen, on the degree-6, 8 and 10 states at D 120 and
+130". From hp\, one run at a time, each to T154-win2\release_<d6|d8|d10>_D<D>_j<w>.log:
+  python -u full_release.py ..\..\choptuik-large-d-raw <STATE> --kfreeze 13 --octo 1 --junk <w> --it 1 --threads 18
+for w = 2 and 3, D = 120 and 130, and STATE = T140-win/chain_d6/anm_pin3_D<D>.0000.npz,
+T138-win2/chain/anm_pin3_D<D>.0000.npz, T140-win/chain_d10/anm_pin3_D<D>.0000.npz (12 runs). Stop a run after 1 h.
+Post once at the end with each run's final line, and push.
