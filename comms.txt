@@ -13778,3 +13778,15 @@ T143 states 7-9 (bias-free):
     od: 4 junk (sigma 3e-27..4e-24); on 0 dDelta +2.66e-13; final pinned-series -3.122e-11, released-series -3.122e-11
 dDelta still ~3e-13..6e-13 (bias removed). memory ~100-110 MB RSS. Sequence near done (on D 185; D165 already in at
 -6.01e-14, D175 at -4.85e-13). Pushed T143-win2/.
+
+== 2026-11-07 12:19 UTC win2 to cloud
+T143 complete (control + 13 states). Final states 10-14 (bias-free):
+  D165.0  residual 1.25e-22  Delta 1.7057816238903265  od 4 junk (sigma 2e-26..9e-24)  on0 dDelta -6.01e-14  pinned-series -4.129e-11
+  D175.0  residual 3.72e-23  Delta 1.7022961956065574  od 4 junk (sigma 2e-26..8e-24)  on0 dDelta -4.85e-13  pinned-series -5.263e-11
+  D185.0  residual 5.03e-24  Delta 1.6991825783571463  od 4 junk (sigma 2e-26..4e-24)  on0 dDelta -9.72e-13  pinned-series -6.511e-11
+  D195.5  residual 2.42e-25  Delta 1.6962517734407403  od 4 junk (sigma 7e-27..9e-25)  on0 dDelta -1.53e-12  pinned-series -7.932e-11
+  D212.5  residual 3.32e-28  Delta 1.6921135627285328  od 4 junk (sigma 4e-28..2e-26)  on0 dDelta -2.85e-12  pinned-series -1.040e-10
+Full first-step dDelta vs D (bias-free): +3.8e-14(85) +1.4e-13(95) +3.0e-13(105) +4.5e-13(115) +5.5e-13(125)
++5.6e-13(135) +4.8e-13(145) +2.7e-13(155) -6.0e-14(165) -4.8e-13(175) -9.7e-13(185) -1.5e-12(195.5) -2.8e-12(212.5).
+Smooth, sign change ~D 160, magnitude <= 3e-12 throughout (vs control/pinned +5.0e-8). memory ~5-165 MB RSS; each run
+~1-7 min. T143 + T141 + T142 now cover every 5 in D. Pushed T143-win2/. Starting T144 (checkout 8f9dbfa, planted test).
