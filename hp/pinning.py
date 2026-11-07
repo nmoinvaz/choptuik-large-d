@@ -120,3 +120,55 @@ def predict_dd(hist, D, n=4):
                 w *= (D - Dj) / (Di - Dj)
         inc = inc + w * ((zhi - zh0) + (zli - zl0))
     return dd_add(zh0, zl0, inc, np.zeros_like(inc))
+
+
+class HeldFit:
+    """Held values from a fit of the full-system states (hp/held_fit.py, notes/HELD_HARMONICS.md), the alternative to
+    anm_run.py --trend's power law: for each held coefficient v (a_k or b_k of p1), sqrt(n) v is a Chebyshev series in
+    x = 1/n on the fit's domain, the centre scaling p1 ~ F(theta)/sqrt(n) with F analytic in 1/n (README, "How the
+    solution scales with D"). path: the JSON of held_fit.py fit. Values and Taylor coefficients in D are formed in
+    mpmath (dps 50) by power-series arithmetic and returned as floats or mpf."""
+    def __init__(self, path):
+        import json
+        with open(path) as fh:
+            d = json.load(fh)
+        self.x0, self.x1 = (mp.mpf(v) for v in d["domain"])
+        self.c = {key: [mp.mpf(v) for v in cs] for key, cs in d["coeffs"].items()}
+        self.meta = d
+
+    def _series(self, D0, N):
+        """Taylor coefficients in u = D - D0, orders 0..N, of every fitted v: {key: [v_0, ..., v_N]} (mpf)"""
+        with mp.workdps(50):
+            n0 = mp.mpf(D0) - 2
+
+            def mul(p, q):
+                return [mp.fsum(p[i] * q[j - i] for i in range(j + 1)) for j in range(N + 1)]
+            x = [mp.mpf(-1) ** j / n0 ** (j + 1) for j in range(N + 1)]                 # 1/(n0 + u)
+            w = self.x1 - self.x0
+            t = [2 * v / w for v in x]
+            t[0] -= (self.x1 + self.x0) / w
+            rs = [mp.binomial(mp.mpf(-0.5), j) / n0 ** j / mp.sqrt(n0) for j in range(N + 1)]     # (n0 + u)^(-1/2)
+            deg = max(len(cs) for cs in self.c.values()) - 1
+            T = [[mp.mpf(1)] + [mp.mpf(0)] * N, t]
+            for _ in range(2, deg + 1):
+                T.append([2 * a - b for a, b in zip(mul(t, T[-1]), T[-2])])
+            out = {}
+            for key, cs in self.c.items():
+                y = [mp.fsum(cs[m] * T[m][j] for m in range(len(cs))) for j in range(N + 1)]
+                out[key] = mul(y, rs)
+            return out
+
+    def values(self, D, ks):
+        """[(a_k, b_k)] at D for k in ks, floats"""
+        s = self._series(D, 0)
+        return [(float(s[f"{k}a"][0]), float(s[f"{k}b"][0])) for k in ks]
+
+    def increment(self, D0, D, ks):
+        """[(a_k(D) - a_k(D0), b_k(D) - b_k(D0))] for k in ks, the differences formed in mpmath (mpf)"""
+        s0, s1 = self._series(D0, 0), self._series(D, 0)
+        return [(s1[f"{k}a"][0] - s0[f"{k}a"][0], s1[f"{k}b"][0] - s0[f"{k}b"][0]) for k in ks]
+
+    def jets(self, D0, N, ks):
+        """[[(a_k, b_k)'s Taylor coefficients of order j in D - D0, for k in ks] for j in 0..N], floats"""
+        s = self._series(D0, N)
+        return [[(float(s[f"{k}a"][j]), float(s[f"{k}b"][j])) for k in ks] for j in range(N + 1)]
