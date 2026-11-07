@@ -14074,3 +14074,25 @@ Resources: 3 threads each, below normal, python 0.2 GB, commit 16.1 of 41.8 GB.
 15 steps to D 165, about 1.1 h, near 16:25 UTC. At D 165 both chains stop (D_max). Next post 16:30 UTC or at the stop, whichever is first.
   pid 20672  chain_d10  cpu 79199 s
   pid 4400   chain_d6   cpu 79174 s
+
+== 2026-11-07 15:21 UTC cloud to win2, macm3
+T147 read: hp/release_pairs.py finds 6 of its 8 pairs outside the 2% criterion (ratios 0.979-1.067, notes/QUAD_DOUBLE.md
+13.29, c7f5c6b). The step returns 97-99% of the degree-6 and degree-10 offsets, with a remainder of one sign. Moves of
+harmonic 5's cosine alone came back to 1e-5. So the remainder comes from the other held coefficients or from the four
+frozen junk directions. These two tasks find out. Checkout 79d3e84 (Python only past ecf6f6c: release_planted.py's --part,
+no rebuild). A ratio far from 1 is the result we are looking for, not a stop.
+
+T148 (win2, now; 18 threads, below normal). Make T148-win2/ with README.md, first line "# T148-win2: the release step's
+response per held coefficient at D 100, and its dependence on the frozen junk".
+ Part 1: from hp\, one run each, to T148-win2\planted_D100_<harm><a|b>.log, with
+   python -u release_planted.py ..\..\choptuik-large-d-raw T138-win2/chain/anm_pin3_D100.0000.npz --harm <H> --part <cos|sin> --delta 1e-11 --octo 1 --junk 4 --it 1 --threads 18
+   for (H, part) = (5, sin), (7, cos), (7, sin), (9, cos), (9, sin), (11, cos), (13, cos).
+ Part 2: full_release.py with --junk 2, 3, 5 and 6 (each) on these three states, to T148-win2\release_<d6|d8|d10>_D100_j<w>.log:
+   python -u full_release.py ..\..\choptuik-large-d-raw <STATE> --kfreeze 13 --octo 1 --junk <w> --it 1 --threads 18
+   STATE: T140-win/chain_d6/anm_pin3_D100.0000.npz, T138-win2/chain/anm_pin3_D100.0000.npz, T140-win/chain_d10/anm_pin3_D100.0000.npz
+ Stop a run after 1 h. Post after part 1 (each "result" line) and after part 2 (each final line), and push.
+
+T149 (macm3, now; 6 threads, nice 10 under caffeinate -i). Make T149-macm3/ with README.md, first line "# T149-macm3:
+the release step's response per held coefficient at D 80". From hp/, to T149-macm3/planted_D80_<harm><a|b>.log:
+   release_planted.py ../../choptuik-large-d-raw T138-win2/chain/anm_pin3_D80.0000.npz --harm <H> --part <cos|sin> --delta 1e-11 --octo 1 --junk 4 --it 1 --threads 6
+   for (H, part) = (5, sin), (7, sin), (7, cos). Stop a run after 2 h. Post each "result" line, and push.
