@@ -116,11 +116,13 @@ def main():
         print(f"  planted dh {opts['plant']}: the exact correction moves Delta by {mp.nstr(-mp.fsum(sens[c] * v for c, v in plant.items()), 6)}; "
               + ", ".join(f"{LAB[c]} part {mp.nstr(-sens[c] * v, 4)}" for c, v in plant.items()))
     U, sig, V = mp.svd_r(S[1])
-    sig2 = mp.svd_r(S[2], compute_uv=False)
+    U2, sig2, V2 = mp.svd_r(S[2])
     smax = sig[0]
     agree = max([abs(sig[i] - sig2[i]) / sig[i] for i in range(10) if sig[i] > 1e-12 * smax] or [mp.inf])
     ok = bool(smax > 1e-14 and agree < 1e-6)
     print(f"  singular values of S (eps): " + " ".join(mp.nstr(v, 4) for v in sig))
+    print(f"  singular values of S (eps/2): " + " ".join(mp.nstr(v, 4) for v in sig2))
+    print(f"  eps vs eps/2, relative difference per singular value: " + " ".join(mp.nstr(abs(sig[i] - sig2[i]) / sig[i], 2) for i in range(10)))
     print(f"  eps vs eps/2: largest relative difference {mp.nstr(agree, 3)} over sigma > 1e-12 sigma_1")
     print("| sigma | direction (largest components) | dDelta per unit along v | u . g | full step along v | its dDelta |")
     print("|---|---|---|---|---|---|")
@@ -134,21 +136,25 @@ def main():
         print(f"| {mp.nstr(sig[i], 3)} | " + ", ".join(f"{LAB[c]} {mp.nstr(vi[c], 3)}" for c in big)
               + f" | {mp.nstr(sv, 3)} | {mp.nstr(ug, 3)} | {mp.nstr(step, 3)} | {mp.nstr(step * sv, 3)} |")
         rec.append(dict(sigma=str(sig[i]), dDelta_per_unit=str(sv), ug=str(ug)))
-    print("| kept: sigma > tau sigma_1 | harmonics solved | dDelta of the truncated step | max abs dh |")
-    print("|---|---|---|---|")
+    print("| kept: sigma > tau sigma_1 | harmonics solved | dDelta of the truncated step | the same from S at eps/2 | max abs dh |")
+    print("|---|---|---|---|---|")
     trunc = {}
-    for tau in (1e-2, 1e-5, 1e-8, 1e-10, 0.0):
+
+    def truncated(Ux, sx, Vx, tau):
         dt = [mp.mpf(0)] * 10
         kept = []
         for i in range(10):
-            if sig[i] > tau * smax and sig[i] > 0:
-                ug = mp.fsum(U[r, i] * g0[r] for r in range(10))
+            if sx[i] > tau * sx[0] and sx[i] > 0:
+                ug = mp.fsum(Ux[r, i] * g0[r] for r in range(10))
                 for c in range(10):
-                    dt[c] -= V[i, c] * ug / sig[i]
-                kept.append(LAB[max(range(10), key=lambda c: abs(V[i, c]))][:-1])
-        dd = mp.fsum(sens[c] * dt[c] for c in range(10))
-        trunc[str(tau)] = str(dd)
-        print(f"| {tau:g} | {', '.join(sorted(set(kept), key=int))} | {mp.nstr(dd, 6)} | {mp.nstr(max(abs(v) for v in dt), 3)} |")
+                    dt[c] -= Vx[i, c] * ug / sx[i]
+                kept.append(LAB[max(range(10), key=lambda c: abs(Vx[i, c]))][:-1])
+        return mp.fsum(sens[c] * dt[c] for c in range(10)), dt, kept
+    for tau in (1e-2, 1e-5, 1e-8, 1e-10, 0.0):
+        dd, dt, kept = truncated(U, sig, V, tau)
+        dd2 = truncated(U2, sig2, V2, tau)[0]
+        trunc[str(tau)] = [str(dd), str(dd2)]
+        print(f"| {tau:g} | {', '.join(sorted(set(kept), key=int))} | {mp.nstr(dd, 6)} | {mp.nstr(dd2, 6)} | {mp.nstr(max(abs(v) for v in dt), 3)} |")
     outp = opts.get("json")
     if outp:
         json.dump(dict(state=st, D=str(D), g0=[str(v) for v in g0], sens=[str(v) for v in sens], directions=rec, truncated=trunc,

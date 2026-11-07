@@ -40,6 +40,10 @@ import mpmath as mp
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+# D in mpmath precision, as anm_run.py carries it: at dps 15 the solver's n = D - 2 is the float64 one, 5e-17 relative
+# off the chain's, and at D 79.8 that moves the pinned Jacobian's smallest pivot from 2.4e-7 to 3.5e-6 and flips
+# the sign of s (found on this script's first run, 2026-11-07)
+mp.mp.dps = 50
 sys.path.insert(0, HERE)
 M = 32
 NODES = [0.3, 0.4, 0.5, 0.6, 0.7]

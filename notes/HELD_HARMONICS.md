@@ -93,12 +93,12 @@ curve of √n h₅ bends away from that power law, and harmonic 5 is the held ha
 
 ### 4.1 The baseline: a power law per coefficient (the chain's `--trend T75`)
 
-Planted truth with s from the nearest of 73.0 and 79.77 (`held_fit.py planted`, degree 8):
+Planted truth (`held_fit.py planted`), with s from the nearest of the full states at 68.5, 71.0 and 73.0:
 
 | method | 68.5 | 70.5 | 71.5 | 73.0 |
 |---|---|---|---|---|
-| B1, the chain's trend from T75's 73.27 state | −1.28e-8 | −1.03e-9 | +1.19e-9 | +5.61e-10 |
-| B2, the trend's rule on dd 58.01–61.03, from 61.03 | −1.02e-7 | −1.47e-7 | −1.71e-7 | −2.09e-7 |
+| B1, the chain's trend from T75's 73.27 state | −1.21e-8 | −1.00e-9 | +1.16e-9 | +5.61e-10 |
+| B2, the trend's rule on dd 58.01–61.03, from 61.03 | −9.68e-8 | −1.44e-7 | −1.67e-7 | −2.09e-7 |
 
 B1 at 73.0, a quarter unit from its base, is +5.6e-10. Its base already carries a held error, and B1 moves away
 from the full Δ as D moves away from 73.27 in either direction. B2 is the same rule in the chain's geometry, a fit
@@ -106,27 +106,41 @@ over 3 units extrapolated 7.5–12 units ahead, and it is off by 1–2e-7, the s
 
 ### 4.2 A fit of the full-system states in 1/n (`held_fit.py`, `anm_run.py --held_fit`)
 
-**The method.** For each held coefficient v, √n v is a Chebyshev series of degree 8 in x = 1/n, least squares on 146
-full-system states, 30.07 ≤ D ≤ 73.0. These are the double-double states of `hp/data/states` and of T12-win and T13-win,
-and the quad-double states of T84-mac and T81. The form is the centre scaling p ≈ x F(θ)/√n, with F converging as D
-grows (README, "How the solution scales with D"). `pinning.HeldFit` evaluates the fit and its Taylor coefficients in D
-by power-series arithmetic in mpmath, and `anm_run.py --held_fit FILE` holds the harmonics on it. As with the trend,
-the held values are taken relative to the base, v(D) = v(D₀) + fit(D) − fit(D₀). The fit's largest residuals are
-5.8e-13 for harmonic 5, 1.4e-11 for 7 and 5e-10 for 9. For 11 and 13 they are 1e-8 and 1e-7, the noise of the
-double-double states in those harmonics (the jump study of QUAD_DOUBLE.md 13.19 found the same), which costs Δ at most
-1e-13. `held_fit.py check` compares the Taylor coefficients with the values (2.2e-16 relative, pass below 1e-14), and
-its control `--mutate=jet` fails at 1.4e-10.
+**The method.** For each held coefficient v, √n v is a Chebyshev series in x = 1/n, fitted by least squares on the
+full-system states. These are the double-double states of `hp/data/states` and of T12-win and T13-win, and the
+quad-double states of T84-mac and T81. The form is the centre scaling p ≈ x F(θ)/√n, with F converging as D grows
+(README, "How the solution scales with D"). `pinning.HeldFit` evaluates the fit and its Taylor coefficients in D by
+power-series arithmetic in mpmath, and `anm_run.py --held_fit FILE` holds the harmonics on it. As with the trend, the
+held values are taken relative to the base, v(D) = v(D₀) + fit(D) − fit(D₀). `held_fit.py check` compares the Taylor
+coefficients with the values (2.2e-16 relative, pass below 1e-14), and its control `--mutate=jet` fails at 1.4e-10.
 
-**Planted truth** (s from the nearest of 73.0 and 79.77; degree 8, then 6 and 10):
+There are two versions.
 
-| fit | predicted | degree 8 | degree 6 | degree 10 | criterion |
-|---|---|---|---|---|---|
-| P1, every full state with D ≤ 71.0 | 71.5, 72.8, 73.0 | −0.8e-15 to −2.4e-15 | +1.2e-14 to +3.1e-14 | +2.1e-15 to +7.9e-15 | 1e-12, pass |
-| P2, the double-double states alone (D ≤ 61.03) | 68.5–73.0 | −9.6e-15 to −3.4e-14 | +6.4e-14 to +1.9e-13 | +1.5e-13 to +6.8e-13 | 1e-10, pass |
+- **The run's fit** (`hp/data/held_fit_deg8.json`) has degree 8 for every coefficient, on 146 states with
+  30.07 ≤ D ≤ 73.0. The chain run below used it.
+- **The recommended fit** (`hp/data/held_fit.json`, `fit --deg=8 --deg_hi=4 --Dmin=38`) has degree 8 for harmonics
+  5–9 and 4 for 11 and 13, on 138 states with 38.02 ≤ D ≤ 73.0. Two things in the run's fit prompted the change,
+  both seen after the run. The double-double states below D 36.5 step in harmonics 11 and 13, with residuals up to
+  9e-7 in √n v at 35–37. Also, the degree-8 and degree-10 fits of harmonic 13 extrapolate to −5e-5 and +5e-4 at
+  D 200, against a full-system size of 5e-7 at 73. With the change, harmonic 13 at 200 is −2e-8 to +5e-8 at
+  degrees 6, 8 and 10 (`held_fit_d6.json`, `held_fit_d10.json`, degree 3 and 5 for 11 and 13). The largest
+  residuals are 8e-14 (harmonic 5), 1.4e-11 (7), 5e-10 (9), 4e-9 (11) and 2e-8 (13), the last being the T12 and T13
+  states near 60.95. Times s, each is at most 3e-14 in Δ. The two versions agree in harmonic 5 to 1e-6 relative
+  at 79.8–200 (the 7 digits printed), and in harmonic 7 to 3e-4 relative at 200.
 
-**Control:** with `--mutate=scale5`, P1 fails at 71.5–73.0 with biases of +2.08e-11 to +2.14e-11, and the run exits 1.
+**Planted truth**, with s from the nearest of the full states at 68.5, 71.0 and 73.0. The recommended fit gave
+(`planted --deg=8 --deg_hi=4 --Dmin=38`):
 
-Over the distance at which B2 is off by 1–2e-7, P2 is off by at most 7e-13 at any of the three degrees.
+| fit | predicted | bias in Δ | criterion |
+|---|---|---|---|
+| P1, every full state with D ≤ 71.0 | 71.5, 72.8, 73.0 | +5.6e-16, +8.1e-16, +8.4e-16 | 1e-12, pass |
+| P2, the double-double states alone (38 ≤ D ≤ 61.03) | 68.5–73.0 | −9.8e-14 (68.5) to −3.2e-13 (73.0) | 1e-10, pass |
+
+The run's fit and its degree-6 and degree-10 variants (D ≥ 30, with s from 73.0 only) pass as well: P1 within 3e-14
+and P2 within 7e-13.
+
+**Control:** with `--mutate=scale5` (harmonic 5 × (1 + 1e-6)), P1 fails at 71.5–73.0 with +2.08e-11, and the run
+exits 1. Over the distance at which B2 is off by 1–2e-7, P2 is off by at most 3e-13.
 
 **In the chain** (the nonlinear test). `anm_run.py --held_fit data/held_fit_deg8.json` ran from T81's full-system
 quad-double state at 73.0. The settings were `--kfreeze 3 --corrector qd --h_max 2 --fix1 1 --F_pred_max 1.5e-14
@@ -165,7 +179,50 @@ Truncating S's SVD solves the directions the full equations determine and holds 
 of "hold only the near-null combination" and of the self-consistent update of the held values, which are the same
 computation once iterated.
 
-PLACEHOLDER-SCHUR-RESULTS
+**The spectrum at the chain's state at 79.77** (`held_schur.py RAW anm-mac/run_trend_pin3_qd3/anm_pin3_D79.7657.npz`).
+Each singular pair of S is one harmonic, its cosine and sine:
+
+| harmonic | σ (from S at eps) | Δ per unit along v | full Newton step along v | its Δ change |
+|---|---|---|---|---|
+| 5 | 7.42e-13, 7.42e-13 | −6.0e-3, +1.0e-2 | −4.4e-6, +2.4e-6 | +2.61e-8, +2.42e-8 |
+| 7 | 2.46e-16, 2.46e-16 | −5.1e-4, −6.4e-4 | 3.1e-8, 5.0e-7 | −1.6e-11, −3.2e-10 |
+| 9 | 1.75e-19, 1.69e-19 | 5.6e-5, −1.4e-5 | −6.9e-6, −1.7e-5 | −3.9e-10, +2.4e-10 |
+| 11 | 3.37e-22, 2.52e-22 | −1.3e-6, −4.1e-6 | 1.1e-3, 2.3e-3 | −1.4e-9, −9.3e-9 |
+| 13 | 2.24e-23, 1.45e-23 | 3.0e-7, 2.8e-7 | −0.060, −0.077 | −1.8e-8, −2.2e-8 |
+
+The full equations' grip falls by about 10³ per harmonic. Harmonics 11 and 13 are the near-null directions: the full
+Newton step wants to move harmonic 13's coefficients by 0.06–0.08, against a full-system size of 4e-7. Their pairs
+carry the 0.51 step that stopped the release of 13.19 and T136. Truncated steps (S from eps, and from eps/2 as a check
+of the finite differences):
+
+| solved | held | Δ change of the truncated step | from S at eps/2 | chain − series + change |
+|---|---|---|---|---|
+| 5 | 7–13 | +5.031e-8 | PLACEHOLDER | +2.9e-10 |
+| 5, 7 | 9–13 | +4.997e-8 | PLACEHOLDER | −4.7e-11 |
+| 5, 7, 9 | 11, 13 | +4.983e-8 | PLACEHOLDER | −1.9e-10 |
+| 5–11 | 13 | +3.91e-8 | PLACEHOLDER | −1.1e-8 |
+| all | none | −4.0e-10 | PLACEHOLDER | −5.0e-8 |
+
+The chain's gap to the series is −5.002e-8. Solving 5 and 7, or 5 to 9, and holding the rest removes it to 5e-11 to
+2e-10, to first order. Solving everything (the full Newton step) does not, because the near-null steps of 11 and 13 are
+far outside the linear range. Their Δ terms, −1.1e-8 and −4.0e-8, cancel the gain from harmonic 5. So "hold only the
+near-null combination" works here when the near-null combination is harmonics 11 and 13 (or 9–13). The first-order
+estimate leaves 5e-11 to 2e-10, which is larger than the fit's +1e-11 at the same state. The fit's estimate is first
+order too, but in a much smaller held error.
+
+**Planted truth** (`--plant=5a:1e-8,13a:1e-6` at the full state at 73.0, where g = 0). A planted held error of 1e-8 in
+harmonic 5's cosine and 1e-6 in 13's, in the linear model, has an exact Δ correction of −8.565e-11. Of that, −8.49e-11
+is the 5a part and −7.6e-13 the 13a part. Solving 5–9 and holding 11 and 13 recovers −8.520e-11 (−8.514e-11 from S at
+eps/2), which is the 5a part plus half the 13a part. Solving 5 alone recovers −8.596e-11. The method therefore
+recovers what lies in the directions it solves.
+
+**Its check fails, and its control fires.** The check fixed beforehand was that S from eps and eps/2 agree to 1e-6 in
+every singular value above 1e-12 σ₁, and it fails. At 73.0 the relative differences are 1.5e-6 for harmonic 5, 5e-5
+for 7, 2e-3 for 9, 1e-2 for 11 and 0.1 for 13, and at 79.77 the worst is 0.76. Central differences at a relative step
+of 2⁻⁴⁰ do not resolve the near-null singular values. So those values are bounds of order 1e-22 to 1e-23, not
+measurements. The truncated steps that solve 5–9 change by less than 1e-3 relative between eps and eps/2. The control
+`--mutate=pinned_rows` reads g and S from the pinned kernel's own rows, which do not contain the dropped matching.
+There σ₁ is 1.3e-33 and the check fails, exit 1.
 
 ### 4.4 Not run
 
