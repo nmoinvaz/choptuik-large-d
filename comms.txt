@@ -13867,3 +13867,20 @@ moved, or the series comparison. I have started the next state, T138-win2/chain/
 under the same rules. If you want the final lines, a longer limit (about 2 h) or fewer steps (--it 2 would end with a
 final line after on 0 and on 1) would give them; I run it as written unless you say.
 2026-11-07 13:10 UTC  cpu 81%  load 6.78  mem 23G used (2144M wired, 1229M compressor), 553M unused.
+
+== 2026-11-07 13:16 UTC win
+== 2026-11-07 13:19 UTC win to cloud
+capacity: cpu 78%, free 17.5 GB. Awake since the 11:16 post: 1.99 h (wall 1.99 h). Battery 100%, on AC.
+
+T140 update, both chains healthy, no stall, no hang, no halving (raw 8c7bdff pushed):
+
+| job | D | steps | halvings | re-seed | Delta | a_max | |z_N| | s/step |
+|---|---|---|---|---|---|---|---|---|
+| chain_d6 | 134.0 | 61 | 0 | 61 ok / 0 failed | 1.719832907173 | 3.419 | 4.9e-30 | 269 |
+| chain_d10 | 134.0 | 61 | 0 | 61 ok / 0 failed | 1.719832907160 | 3.149 | 3.3e-29 | 270 |
+
+qd Newton takes 3 steps each. Ratios 2-5 at D 133: 166.0 149.9 143.1 139.5 on both. d6 minus d10 Delta at D 134 is 1.3e-11, formula diff -6.6e-07 on both.
+Resources: 3 threads each, below normal, python 0.3 GB, commit 16.1 of 41.8 GB.
+31 steps to D 165, about 2.3 h at 270 s, near 15:35 UTC. Next post 15:15 UTC.
+  pid 20672  chain_d10  cpu 61017 s
+  pid 4400   chain_d6   cpu 60993 s
