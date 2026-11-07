@@ -13482,3 +13482,11 @@ on T138's own states. If chain_fit's held values are right, the first step's dDe
    at each post. Stop a state after 6 steps or 1 h.
 5. After T141, resume T138 from its last state: the same command with --state T138-win2/chain_o/<last state>, into the
    same folder T138-win2\chain_o (log appended), under the rules that stand. Hourly posts as before.
+
+== 2026-11-07 08:27 UTC macm3
+T139 hourly: D 111.25 -> 126.25, 20 steps (71 in all), every one a 0.75, 0 halvings, re-seed 71 ok / 0 failed, no stall,
+no hang (raw 4601973). qd 3 steps each, to 2.8e-47..4.4e-45 (rising with D). Ratios 2-5 at 125.5: 156.1 141.0 134.6
+131.2, a_max 3.496. Delta at 126.25: 1.724403590238046419164 (four parts, mpmath). D 165 near 11:00 UTC at this rate.
+T139 minus T138 at the shared D: 112.0 +1.314e-20, 115.0 +1.083e-20, 118.0 +1.083e-20, 121.0 +8.46e-21, 124.0
++1.142e-20 (the held values' float64 walk). Swap-ins +193, swap-outs +0 since 07:26.
+2026-11-07 08:27 UTC  cpu 77%  load 6.48  mem 23G used (2227M wired, 1256M compressor), 220M unused.
