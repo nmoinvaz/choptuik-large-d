@@ -18,7 +18,8 @@ the power-law trend, and restart the chain from the full-system quad-double stat
   old chain is at −5.0e-8 at 79.77 (4.2). The control, a fit with harmonic 5's increments 1% wrong, shows −2.99e-9
   after one step against a predicted −2.96e-9.
 - **The old chain, corrected to first order.** s · (h_fit − h_chain) at its stored states brings it onto the series
-  to 6e-14 at 79.77, 1e-12 at 100 and 2.5e-11 at 150 (4.2). At 200 the quad-double LU cannot give s.
+  to 6e-14 at 79.77, 1e-12 at 100, 2.5e-11 at 150 and 9e-11 at 200 (4.2, with the octo-double LU at 200). The whole
+  gap of 13.29, −3.2e-6 at 200, is the held harmonics' first-order error.
 - **Holding less.** The Schur complement on the held rows (4.3) shows the full equations determine harmonics 5, 7 and
   9 at 80, and harmonics 11 and 13 are the near-null directions. Solving 5–9 and holding only 11 and 13 gives, to
   first order, the same Δ as the fit: +5.00e-8 when solving 5 and 7, against the +5.002e-8 needed. Its
@@ -91,9 +92,10 @@ about +3e-12 (the sum of their four terms, 2.6e-12 + 4.2e-12 − 3.8e-12 − 0.0
 **The bias is harmonic 5's trend.** The same products, s times the chain's held value minus the fit's, give the bias
 term by term. At 79.77 harmonic 5's cosine gives −4.5e-8 and its sine −4.9e-9, and harmonic 7 gives +1.1e-10. Their sum,
 −5.003e-8 (this first estimate used the run's fit of 4.2), is the chain's measured gap to the series, −5.002e-8. With s
-at each state and the recommended fit, the sum equals the gap to 1e-13 at 79.77–85.75 and to 2.5e-11 at 150 (4.2). The
-exponent −1.21 of harmonic 5's cosine was fitted over 2.6 units of D and is used over 6–140 units. The full-system curve
-of √n h₅ bends away from that power law, and harmonic 5 is the held harmonic that Δ is most sensitive to.
+at each state and the recommended fit, the sum equals the gap to 1e-13 at 79.77–85.75, 2.5e-11 at 150 and 9e-11 at 200
+(4.2). The exponent −1.21 of harmonic 5's cosine was fitted over 2.6 units of D and is used over 6–140 units. The
+full-system curve of √n h₅ bends away from that power law, and harmonic 5 is the held harmonic that Δ is most sensitive
+to.
 
 ## 4. Candidates
 
@@ -181,9 +183,9 @@ into the held values, −3.48e-7 in its cosine. The predicted bias, s(73) times 
 converged (quad-double, 3 steps), with Δ 1.779777558776957 and Δ − series −2.99e-9, 1470 spreads off the series and
 1% from the prediction. The unmutated step to the same D gave −1.0e-14 against the degree-20 series.
 
-**The series check at 79–200, to first order** (`held_fit.py series`, with s from `sens` at each chain state). Each
-row is a stored state of the old chain, corrected by s · (h_fit − h_chain). The last column is the same with the
-degree-6 and degree-10 variants and with the run's fit:
+**The series check at 79–200, to first order** (`held_fit.py series`, with s from `sens` at each chain state, by the
+octo-double LU at 200). Each row is a stored state of the old chain, corrected by s · (h_fit − h_chain). The last
+column is the same with the degree-6 and degree-10 variants and with the run's fit:
 
 | D | chain − series | s · (h_fit − h_chain) | corrected − series | other fits − series |
 |---|---|---|---|---|
@@ -192,22 +194,31 @@ degree-6 and degree-10 variants and with the run's fit:
 | 85.75 | −1.438e-7 | +1.438e-7 | −1.9e-13 | −6.7e-14, −3.7e-13, −1.5e-13 |
 | 100.12 | −4.775e-7 | +4.775e-7 | −1.2e-12 | −2.7e-13, −2.4e-12, −8.7e-13 |
 | 149.56 | −1.895e-6 | +1.895e-6 | −2.5e-11 | −1.4e-11, −3.2e-11, −2.1e-11 |
-| 200.27 | −3.158e-6 | not valid (quad-double LU) | | |
+| 200.27 | −3.158e-6 | +3.158e-6 | −8.8e-11 | −6.0e-11, −8.8e-11, −7.9e-11 |
 
-To first order, the held values' error accounts for the whole of the old chain's gap to the series up to D 150. What
-remains is 1e-13 at 80–86, 1e-12 at 100 and 2.5e-11 at 150. That lies inside the series' own spread over its six
-fits, 8.4e-12 at 80, 9.1e-11 at 100 and 9.0e-10 at 150 (`hp/data/published_vs_series.txt`), and is of the size of the
-held fits' spread over degree. At 150 the chain's held harmonic 5 is 10% off the fit and the first-order term is
-still all of the gap, so the second-order term is below 1e-11 there. At 200 the quad-double LU's smallest pivot is
-5e-15, against 1e-7 below 150, and s comes out of order 10 with random signs. That is the quad-double LU failure of
-QUAD_DOUBLE.md 13.28 and OCTO_DOUBLE.md 5, so the row needs the octo-double LU (`sens --octo=1`), PLACEHOLDER-OCTO.
+To first order, the held values' error accounts for the whole of the old chain's gap to the series from 80 to 200.
+What remains is 1e-13 at 80–86, 1e-12 at 100, 2.5e-11 at 150 and 9e-11 at 200. That lies inside the series' own
+spread over its six fits, 8.4e-12 at 80, 9.1e-11 at 100, 9.0e-10 at 150 and 2.3e-9 at 200
+(`hp/data/published_vs_series.txt`), and it is of the size of the held fits' spread over degree. At 150 and 200 the
+chain's held harmonic 5 is 10% and 18% off the fit, and the first-order term is still all of the gap. The
+second-order term is therefore below 1e-10 there.
+
+The sensitivities at 200 need the octo-double LU. The quad-double LU's smallest pivot there is 5.1e-15, against
+1.3e-12 for the octo-double one and 6e-8 to 4e-7 below 150, and its s comes out of order 10 with random signs. That is
+the quad-double LU failure of QUAD_DOUBLE.md 13.28 and OCTO_DOUBLE.md 5. The octo-double LU at 79.77 reproduces the
+quad-double s there to all five printed digits (`sens --octo=1`, 79.77 and 200.27). At 200 its s continues the trend
+from 100 and 150 (harmonic 5's cosine 1.11e-2, 1.47e-2, 1.77e-2).
+
+**Control:** `series --plant=1e-6` adds 1e-6 to the fit's harmonic-5 cosine. It moves the corrected column by
++9.20e-9 at 79.77 and +1.76e-8 at 200, which is s₅ₐ times 1e-6 at each state (9.197e-3 and 1.767e-2).
 
 Two references, two extrapolations. The series extrapolates Δ itself in 1/D from D ≤ 67.77. The fit extrapolates
 p1's harmonics in 1/n from D ≤ 73 and passes them through the chain's pinned system. They share the full-system
 double-double states (the fit's 38–61 and the series' 10–67.77 overlap) and the assumption of analyticity in 1/n.
-They do not share the chain, the held-value treatment or the Δ data above 61. Their agreement to 1e-13–2.5e-11 at
-80–150 is numerical evidence for both, and in particular for the series' 13.29 gap to the published table. It is not
-a bound.
+They do not share the chain, the held-value treatment or the Δ data above 61. Their agreement to 1e-13–9e-11 at 80–200
+is numerical evidence for both. It is not a bound. For 13.29 it means our side of the gap to arXiv:2611.07007 is the
+held harmonic 5: with it corrected, our values lie on the series, and the published table lies above both by the
+published-minus-series column there (+8.6e-8 at 80 to +4.3e-6 at 200).
 
 ### 4.3 Holding less: solve the well-determined held directions (`held_schur.py`)
 
@@ -284,17 +295,22 @@ matching. There σ₁ is 1.3e-33 and the check fails, exit 1.
 
 ## 5. For the coordinator
 
-- **Raw output.** The chain run of 4.2 wrote to the scratch folder named in its log line (`--allow_unraw`, as the
-  task brief asked; the raw-data repository was read-only here). Its states and `anm_run.jsonl` belong in a raw-data
-  folder, `held-harmonics-mac/`, before anything in main cites them.
 - **Proposed text for QUAD_DOUBLE.md 13.19 and 13.29** (the held harmonics' bias): "The bias is harmonic 5's held
-  trend. Its power law, fitted over 2.6 units of D, is used over 6–140, and the pinned system's response to the held
-  values reproduces the chain's gap to the series at 79.77 to 0.03% (notes/HELD_HARMONICS.md). Harmonics 11 and 13,
-  held constant at polluted values, cost about 3e-12. Holding the harmonics on a fit of the full-system states in 1/n
-  removes the bias (`anm_run.py --held_fit`)."
-- **The existing chain to 214.** It can be corrected to first order at each stored state by s · (h_fit − h_chain),
-  with one quad-double LU per state (`held_fit.py sens`, then `series`). Past D 100 the held harmonic 5 is off by 2–18%,
-  so the first-order correction is an estimate there, and a restarted chain is the test.
+  trend, a power law fitted over 2.6 units of D and used over 6–140. The pinned system's first-order response to the
+  held values, s · (h_fit − h_chain), with h_fit a fit of the full-system states in 1/n, accounts for the chain's
+  whole gap to the series at 79.77–200.27, leaving 6e-14 to 9e-11 (notes/HELD_HARMONICS.md 4.2). Harmonics 11 and 13,
+  held constant at polluted values, cost about 3e-12. A chain on the fit (`anm_run.py --held_fit`) from the
+  full-system state at 73.0 lies on the series to 1e-13 up to 79.83. So the gap to arXiv:2611.07007 above D 80 is the
+  published values' minus the series, +4.3e-6 at 200, with our side of it removed; this is numerical evidence that
+  rests on the two extrapolations agreeing."
+- **The existing chain to 214.** Its stored states can be corrected to first order by s · (h_fit − h_chain), with one
+  LU per state (`held_fit.py sens`, then `series`), quad-double below about 185 and octo-double above. The correction
+  agrees with the series to 9e-11 at 200, where harmonic 5 is held 18% off. That agreement is with an extrapolation,
+  though. A restarted chain on the fit, or a `--kfreeze 7` chain that solves harmonics 5 and 7, is the independent
+  test of the correction at 100–200.
+- **Raw output** of this task: `chain_fit73/` (8 states and `anm_run.jsonl`, the logs beside it), `chain_wrong5/` (the
+  control step) and the sensitivity JSONs, all in the scratch folder `held_harmonics/` of this session. They belong in
+  a raw-data folder such as `held-harmonics-mac/`.
 
 ## 6. References
 
