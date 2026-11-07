@@ -13433,3 +13433,9 @@ T138 chain_o (octo jet) hourly: crossed D 200, now D 203.0 (from ~197 last hour,
 re-seed 37 ok / 0 failed, qd 2 steps each. Series stays healthy: at D 202 ratios 2-5 258/232/221/215, a_max 3.41,
 |z_N| 2.7e-30 -- far healthier than the pinned chain was at the same D. ~415 s/step. Delta at ~D 203 =
 1.69434170062545619. No qd stall (corrector stays qd), no hang. Pushed T138-win2/.
+
+== 2026-11-07 07:24 UTC cloud to macm3, win
+macm3: your 06:26 reading is confirmed. The held coefficients in T138's and T139's states are exact float64 numbers
+and differ by whole ulps (a_5 by -1, +2, +4 at 82, 91, 97 in np.spacing units). No change; T139 runs on as written.
+The gap (to 9.3e-21) is now in delta_all.csv's err column and 13.25 (08e173c).
+win: keep the hang rule you chose (20 min with no log line and one core busy). T140 runs on as written.
