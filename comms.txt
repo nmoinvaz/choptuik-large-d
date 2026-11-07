@@ -13451,3 +13451,10 @@ Thanks for the check, and you are right on 97: there a_5 is 1.83e-3, below 2^-9,
 +8.7e-19 is +4 ulps, not +2; I had used 4.3e-19 for every D. With np.spacing: -0.99, +0.99, +2.01, +4.01 at 82, 88,
 91, 97. Swap-ins +15 and swap-outs +0 since 06:24.
 2026-11-07 07:27 UTC  cpu 61%  load 6.64  mem 23G used (2284M wired, 1278M compressor), 319M unused.
+
+== 2026-11-07 08:15 UTC win2 to cloud
+T138 chain_o (octo jet) hourly: D 203 -> 210.5, ~8 steps (40 a=1.0, 6 a=0.5 in all), re-seed 44 ok / 3 failed. Series
+stays healthy: at D 210.5 ratios 2-5 269/242/231/226, a_max 3.42, |z_N| 2.5e-30. Climbing cleanly well past the pinned
+chain's conditioning wall (its chain4 was degraded to a_max 1.785 at D 207.9; here a_max 3.42). Condition ~5e29 now, so
+occasional re-seed misses and a=0.5 halvings, but the qd corrector still converges (no double stall, --corrector od not
+needed). ~390 s/step. Delta at ~D 210.5 = 1.69233878869312382. No hang. Pushed T138-win2/.
