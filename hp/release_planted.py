@@ -6,14 +6,17 @@ Newton on the pinned system as the chain's corrector does. That moves the pinned
 the planted bias (s_5a delta to first order: s_5a is 9.2e-3 at D 79.77 and 1.8e-2 at 200.27). The full system does
 not hold the harmonics, so it is the same for both states, and the step from the moved state must add b less:
 r = dDelta(delta) - dDelta(0) = -b. Pass, set before the run: |r / (-b) - 1| <= 0.02 for every delta, the step's
-agreement on the trend-held chain (13.29). The pinned Newton converges from moves of 3e-9 or less at D 80 and crawls
-(lam 1/64) from 1e-7, so the deltas stay small: 1e-9 plants 9.2e-12 at D 80. Every solve uses the plan of the state
+agreement on the trend-held chain (13.29). The pinned Newton's residual after its first step is quadratic in delta
+(about 3e8 delta^2 at D 80, more at 100), so the move is made in --sub steps of at most that size, each solved from the
+last (continuation), with --ls the quad-double Newton's acceptance rule (newton_qd: "dz", its default, stalls at
+1e-10 at D 80; "F", backtracking on |F|). --pin od solves the pinned system in octo-double instead (PinnedO,
+newton_od to --tol_od), where the quad-double LU fails (D 200: |dz| = 100 delta). Every solve uses the plan of the state
 itself. Each release prints
 full_release.py's lines, the one of delta 0 being full_release.py's own run on the state. --mutate 1 (the control,
 which must fail) takes r from the unmoved state's step instead of the moved one's.
 
     cd hp && python3 release_planted.py RAWDIR STATE [--delta 3e-9,1e-9,1e-10,1e-11] [--harm 5] [--threads 2] [--it 6]
-        [--junk 4] [--octo 1] [--qd_it 12] [--tol_qd 1e-28] [--mutate 0]
+        [--junk 4] [--octo 1] [--qd_it 12] [--tol_qd 1e-28] [--sub 0] [--ls dz] [--pin qd] [--tol_od 1e-40] [--mutate 0]
 
 Prints one "result" line per delta (JSON). Exits 1 when a delta fails or a pinned solve does not converge.
 """
@@ -30,9 +33,22 @@ import full_release as R  # noqa: E402
 TOL_RATIO = 0.02
 
 
+def pin_solve(sp, z, opt):
+    """the pinned system's Newton from the four-part z: quad-double (newton_qd, acceptance --ls) or octo-double
+    (--pin od: PinnedO, newton_od), returning four parts"""
+    if opt["pin"] == "od":
+        from octo_corrector import PinnedO, newton_od, o8_of_q, q4_of_o
+        z8, hist, conv = newton_od(PinnedO(sp.s, sp.ch, sp.cl), o8_of_q(z), tol=opt["tol_od"], it_max=opt["qd_it"],
+                                   verbose=False)
+        return q4_of_o(z8), hist, conv
+    zz, hist, conv = newton_qd(sp, z, tol=opt["tol_qd"], it_max=opt["qd_it"], verbose=False, ls=opt["ls"])
+    return tuple(np.ascontiguousarray(np.asarray(p)) for p in zz), hist, conv
+
+
 def main(argv):
     args = [a for a in argv if not a.startswith("--")]
-    opt = dict(delta="3e-9,1e-9,1e-10,1e-11", harm=5, threads=2, it=6, junk=4, octo=1, qd_it=12, tol_qd=1e-28, mutate=0)
+    opt = dict(delta="3e-9,1e-9,1e-10,1e-11", harm=5, threads=2, it=6, junk=4, octo=1, qd_it=12, tol_qd=1e-28, sub=0.0,
+               ls="dz", pin="qd", tol_od=1e-40, mutate=0)
     for k in list(opt):
         if f"--{k}" in argv:
             v = argv[argv.index(f"--{k}") + 1]
@@ -56,17 +72,24 @@ def main(argv):
     pin0 = sum(mp.mpf(float(p[-1])) for p in z)
     ok = step0 is not None
     for dl in deltas:
-        held = [list(c) for c in held0]
-        held[i][0] = float(held0[i][0] + dl)
-        dl_true = held[i][0] - held0[i][0]                               # the float64 move actually made
-        sp, _, _ = R.solver(m, z, kf, opt["threads"], held=[tuple(c) for c in held], segs=segs)
-        print(f"pinned solve, harmonic {opt['harm']} cosine moved by {dl_true:+.6e}:", flush=True)
-        zd, hist, conv = newton_qd(sp, z, tol=opt["tol_qd"], it_max=opt["qd_it"], verbose=True)
+        n = max(1, int(np.ceil(abs(dl) / opt["sub"] - 1e-9))) if opt["sub"] > 0 else 1
+        zd, conv = z, True
+        print(f"pinned solve ({opt['pin']}, ls {opt['ls']}), harmonic {opt['harm']} cosine moved by {dl:+.6e} in {n} steps:",
+              flush=True)
+        for j in range(1, n + 1):
+            held = [list(c) for c in held0]
+            held[i][0] = float(held0[i][0] + dl * j / n)
+            dl_true = held[i][0] - held0[i][0]                           # the float64 move actually made
+            sp, _, _ = R.solver(m, z, kf, opt["threads"], held=[tuple(c) for c in held], segs=segs)
+            zd, hist, conv = pin_solve(sp, zd, opt)
+            print(f"  move {j}/{n}, {dl_true:+.6e}: {len(hist)} Newton steps, |F| {hist[-1]['F'] if hist else float('nan'):.2e}, "
+                  f"{'converged' if conv else 'not converged'}", flush=True)
+            if not conv:
+                break
         if not conv:
-            print(f"  the pinned solve did not converge in {len(hist)} steps", flush=True)
+            print("  the pinned solve did not converge", flush=True)
             ok = False
             continue
-        zd = tuple(np.ascontiguousarray(np.asarray(p)) for p in zd)
         b = sum(mp.mpf(float(p[-1])) for p in zd) - pin0                 # the planted bias
         if opt["mutate"]:
             step = step0                                                 # the control: the unmoved state's step
