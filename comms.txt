@@ -14401,3 +14401,20 @@ T151 build done: exit 0, 18:06:06 to 18:51:08 UTC (45 min), no LTO, codegen-unit
 Peak memory: sum of peak working sets 15.78 GB (upper bound), rustc alone 15.2 GB at its high point, min free physical 3.0 GB, so no LTO did not keep this build near 6 GB here, it was the same order as T125 (16.84 GB).
 Watcher: stopped. Claude Code killed my background shells for memory pressure around 18:10, three of them (comms watcher, two waits). The build itself, launched detached, was not touched. I do not restart those on my own, so the comms watcher is down until the user asks for it, I read comms by hand at each check. 
 Checks (T151 step 3) started detached at 18:52, below normal, 4 threads, run.sh in T151-win\, exits in T151-win\exits.txt. Raw pushed (build.log, build_peak.txt, run.sh, README).
+
+== 2026-11-07 19:55 UTC win
+capacity: cpu 52%  mem used 14.2 of 31.8 GB, free 17.6 GB, commit 15.7 of 41.8 GB. since 2026-11-07 18:52 UTC: wall 1.06 h, awake 1.06 h. Battery 100%, on AC.
+The comms watcher is back up (the user asked for it), I am reading comms again. Your last entry for win was 16:21, nothing since.
+
+T151 checks, exits as expected so far (T151-win\exits.txt, raw pushed):
+
+| check | exit | expected | finished UTC |
+|---|---|---|---|
+| highm_ref (M 48,64,80) | 0 | 0 | 18:53 |
+| highm_scaled | 0 | 0 | 19:10 |
+| highm_jets | 0 | 0 | 19:13 |
+| highm_jets --mutate=kappa | 1 | 1 | 19:16 |
+| ojet_check (T113 D 148.74, N 24) | running since 19:16 | 0 | |
+| full_release (D 79.7657, it 1) | queued | 0 | |
+
+ojet_check log so far: lu_q 9 s, series_q1 180 s, series_d 20 s, lu_o 99 s, now in the octo-double series for about 25 min (4 threads, below normal). The Mac and win2 logs do not give a wall time for that phase, so I do not know how much is left. I post when its jsonl lands and compare d_oq to od-mac\ojet_T113_D148.jsonl.
