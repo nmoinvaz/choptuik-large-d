@@ -2413,9 +2413,9 @@ T143 (win2, `T143-win2/`, raw 5d2c061) took the step at 13 more states, so with 
 −2.8e-12 at 212.5 and −3.1e-12 at 215, smoothly at every one of the 18 states. A smooth curve is the held fit's error,
 not noise in the step. Whether the step resolves biases this small is the planted test `hp/release_planted.py` (T144).
 
-**The planted test (T144, win2, `T144-win2/`, raw 509782a).** `hp/release_planted.py` solves a chain_fit state's
-pinned system again with held harmonic 5's cosine moved by δ, which moves the pinned Δ by a known bias b. The full system
-holds nothing, so the step from the moved state must be smaller by b. The criterion, set before the run, is that this
+**The planted test (T144, win2, `T144-win2/`, raw 509782a).** `hp/release_planted.py` solves a chain_fit state's pinned
+system again with held harmonic 5's cosine moved by δ, which moves the pinned Δ by a known bias b. The full system holds
+nothing, so the step from the moved state must be smaller by b. The criterion, set before the run, is that this
 difference r matches −b within 2%. Its control (`--mutate 1`, r from the unmoved state) fails, and each run's step from
 the state itself equals T141's.
 
