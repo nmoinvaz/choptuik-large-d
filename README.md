@@ -453,10 +453,9 @@ including Ecker, Ecker and Grumiller's table to D = 200[^23], is compared with o
 [`hp/data/delta_published_compare.csv`](hp/data/delta_published_compare.csv). The kinds are the full system in
 double-double (D ≤ 67.77) or quad-double (68.5–73), the pinned double-double runs after one full-system step
 (67.77–73.27), and the large-D chain from 74. The chain holds harmonics 5–13 of p1 on a fit of the full-system states
-(kind chain_fit), which agrees with the 1/D series of the double-double points to within the series' own spread. Above
-its frontier the table continues with the older chain, which held them on T75's trend and is biased low by about
-3×10⁻⁶ there, a bias its error column does not include ([notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), 13.25 and
-13.29).
+(kind chain_fit), which agrees with the 1/D series of the double-double points to within the series' own spread, to
+D = 215. Its error column is the spread over the fit's degree where a rerun on the fits of degree 6 and 10 reached a D
+([notes/QUAD_DOUBLE.md](notes/QUAD_DOUBLE.md), 13.25).
 `cd hp && python3 export_delta_all.py ../../choptuik-large-d-raw` rebuilds it, and `--verify` checks every row against
 its source.
 

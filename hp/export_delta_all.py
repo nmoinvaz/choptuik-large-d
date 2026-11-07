@@ -30,8 +30,9 @@ precedence where two share a D:
           them (notes/QUAD_DOUBLE.md 13.25).
   chain_fit  the asymptotic numerical method's chain (anm_run.py) with harmonics 5-13 of p1 held on a 1/n fit of the
           full-system states (--held_fit, notes/HELD_HARMONICS.md), its backbone traced from its highest-D state back
-          through each run's start state to T81's quad-double state at 73.0. err as for chain. The fit's own error is
-          not in err.
+          through each run's start state to T81's quad-double state at 73.0. err as for chain, or, where a run with
+          the harmonics held on a fit of another degree (T140: 6 and 10, against chain_fit's 8) reached the same D and
+          differs by more, the largest such difference (err_kind "fits"), a spread over the fit's degree, not a bound.
   chain   the chain with the harmonics held on T75's trend (notes/QUAD_DOUBLE.md 13.17-13.24), its backbone traced
           the same way back to T75's pin 7 state at 73.27; double-double states to 79.27, quad-double after. Its rows at
           or below the chain_fit frontier are left out, since chain_fit replaces them. Where another run reached the
@@ -196,18 +197,27 @@ def chain_rows(keep=False):
     for kind, bb in (("chain_fit", fit), ("chain", [r for r in trend if keep or states[r][0]["D"] > front + TOL_D])):
         for rel in bb:
             m, parts = states[rel]
-            v, err, others = total(parts), "", []
+            v, err, ek = total(parts), "", ""
             sysk = (held[os.path.dirname(rel)], parts[3] != "")
+            spread = {"runs": [], "fits": []}
             for o, (mo, po) in states.items():
-                if o not in on and abs(mo["D"] - m["D"]) < TOL_D and (held[os.path.dirname(o)], po[3] != "") == sysk:
-                    others.append((float(total(po) - v), o))
-            if others:
-                dmax = max(others, key=lambda t: abs(t[0]))
-                err = f"{abs(dmax[0]):.1e}"
-                for d, o in others:
-                    print(f"  check D {m['D']:.4f}: {o} - {rel} = {d:+.3e}")
+                if o in on or abs(mo["D"] - m["D"]) >= TOL_D:
+                    continue
+                osys = (held[os.path.dirname(o)], po[3] != "")
+                # runs: the same held harmonics and precision; fits: the harmonics held on another fit (T140)
+                if osys == sysk:
+                    spread["runs"].append((float(total(po) - v), o))
+                elif kind == "chain_fit" and osys[0][0] == "fit" and osys[1] == sysk[1]:
+                    spread["fits"].append((float(total(po) - v), o))
+            for k, ds in spread.items():
+                for d, o in ds:
+                    print(f"  check D {m['D']:.4f} ({k}): {o} - {rel} = {d:+.3e}")
+            big = {k: max(abs(d) for d, _ in ds) for k, ds in spread.items() if ds}
+            if big:
+                ek = max(big, key=big.get)
+                err = f"{big[ek]:.1e}"
             rows.append(dict(D=fmt(m["D"]), Delta_q0=parts[0], Delta_q1=parts[1], Delta_q2=parts[2], Delta_q3=parts[3],
-                             kind=kind, err=err, err_kind="runs" if err else "",
+                             kind=kind, err=err, err_kind=ek,
                              source=os.path.join(os.path.dirname(rel), "anm_run.jsonl"), state=rel))
     return rows
 
