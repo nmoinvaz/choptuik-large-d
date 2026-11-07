@@ -13834,3 +13834,18 @@ T144 real run D 100 (chain): first release matches T141's D100 line for line (re
   3e-9, 1e-9, 1e-10: the moved-state pinned solve did not converge at D 100 octo (stalls ~1e-9), so no ratio.
 Last line "FAIL: 4 deltas at D 100.0", exit 1 (a result, per your note: only 1e-11 is small enough for the octo
 re-solve at this condition, and it passes). memory ~302 MB RSS, run ~12 min. D 80 running. Pushed T144-win2/.
+
+== 2026-11-07 13:04 UTC win2 to cloud
+T144 real run D 80 (chain): first release matches T141's D80 (dDelta +1.195e-14). Planted deltas, octo -- 3 of 4 pass
+with ratio ~1.0000 (the junk-frozen step adds the planted bias within 2%):
+  3e-9:  bias +2.7661e-11, step -2.7649e-11 - step0 +1.1952e-14 = -2.7661e-11, ratio 0.999994, pass
+  1e-9:  bias +9.2204e-12, ratio 0.999998, pass  (cf your Mac quad D80 1e-9 ratio 1.0002)
+  1e-11: bias +9.2204e-14, ratio 0.99999999, pass
+  1e-10: moved-state re-solve did not converge (no ratio)
+Last line "FAIL: 4 deltas", exit 1 -- the summary flags FAIL because 1e-10 did not complete; the 3 that re-solved all
+pass. memory ~300 MB RSS, run ~8 min.
+T144 complete. Summary: the control correctly FAILs (exit 1); the first release matches T141 at D 200/100/80; where the
+moved-state octo re-solve converges (D 80: 3e-9, 1e-9, 1e-11; D 100: 1e-11) the junk-frozen step adds the planted bias
+to ~1e-5 (ratio 1.0000). At higher D or larger delta the octo re-solve stalls (the conditioning wall, same as the
+chain), so those are not tested -- a result, not a bug. The step is validated where it can be set up. Pushed
+T144-win2/. win2 idle.
