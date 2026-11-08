@@ -89,13 +89,16 @@ def main():
                       f"{fmt(vb)} | {len(r['products'])} | {r['products']} | {path.rsplit('/', 1)[-1]} |")
     if a.table:
         print("\nevery D in both files:")
-        print("| D | A - hp | B - hp | A - B | Newton steps A, B | products A | products B |")
-        print("|---|---|---|---|---|---|---|")
+        print("| D | A - hp | B - hp | A - B | Newton steps A, B | products A | products B | s per Newton step A, B |"
+              " s per D A, B |")
+        print("|---|---|---|---|---|---|---|---|---|")
         for D in sorted(set(A) & set(B)):
             da, db, ea, eb, dab = row(D)
             fmt = lambda v: "n/a" if v is None else f"{v:+.2e}"
+            sp = lambda r: r["t_newton"] / max(1, len(r["products"]))
             print(f"| {D} | {fmt(ea)} | {fmt(eb)} | {dab:+.2e} | {len(A[D]['products'])}, {len(B[D]['products'])} | "
-                  f"{A[D]['products']} | {B[D]['products']} |")
+                  f"{A[D]['products']} | {B[D]['products']} | {sp(A[D]):.1f}, {sp(B[D]):.1f} | "
+                  f"{A[D]['secs']:.0f}, {B[D]['secs']:.0f} |")
     print(f"exit {1 if failed else 0}")
     sys.exit(1 if failed else 0)
 
