@@ -42,11 +42,13 @@ def norm2_inv(A, prec, it=40, seed=0, k=4):
     dot = lambda u, v: (u.transpose() * v)[0, 0]
 
     def orth(W):
+        # Gram-Schmidt on midpoints: a nearly degenerate pair leaves a ball around 0 whose sqrt would be NaN
         Q = []
         for w in W:
+            w = w.mid()
             for q in Q:
-                w = w - q * dot(q, w)
-            Q.append(w * (1 / dot(w, w).sqrt()))
+                w = (w - q * dot(q, w)).mid()
+            Q.append(w * (1 / arb(dot(w, w).mid()).sqrt()))
         return Q
     V = orth(V)
     for _ in range(it):
@@ -54,7 +56,7 @@ def norm2_inv(A, prec, it=40, seed=0, k=4):
     XV = [X * v for v in V]
     # the converged, Gram-Schmidt ordered block: |X v_j| are the k largest singular values of X in order (no
     # Rayleigh-Ritz rotation: their ratios can exceed f64's range of an eigensolver)
-    sig = [dot(x, x).sqrt() for x in XV]
+    sig = [arb(dot(x, x).mid()).sqrt() for x in XV]
     norm2_inv.all = [float(s.mid()) for s in sig]
     norm2_inv.vecs = []
     for x, s in zip(XV, sig):

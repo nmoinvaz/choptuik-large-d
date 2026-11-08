@@ -3,7 +3,17 @@
 Issue #91. Subagent of the coordinator on the Mac, 2026-11-08. Code in [`solver/rt/`](../solver/rt/), raw output in
 folder `I91-mac/` of the raw-data repository.
 
-**Verdict: adopt in part.** VERDICT_PLACEHOLDER
+**Verdict: adopt in part.** Adopt the map between the gauges with its identity Δ = 4πμ/(1 − (n − 1)⟨a_h² − 1⟩), the
+RT prototype as an independent check of Δ(D) at moderate D, and RT's quadratic framework for a certified solution at
+one D. Do not adopt the global Fourier × Chebyshev Newton for the chain. It does not avoid our horizon wall. The
+horizon's singular branch is nearly a polynomial, and the Chebyshev system's smallest singular value falls like a power
+of the resolution whose exponent grows by about 1.4 per unit of D, so its arithmetic must lengthen with D as ours does,
+on 14 to 24 times our unknowns in a dense LU. The quadratic form of the equations is not what sets the conditioning.
+
+What was run: the D-dimensional RT equations checked in sympy against the covariant ones (section 2), the map checked
+against RT's 80-digit μ (7.7×10⁻²⁸), a collocation prototype that reproduces our Δ at D = 4 and 10 to 1.5×10⁻¹³ and
+1.1×10⁻¹² (section 3), and the condition numbers of both formulations against D (section 4). EEG's Eq. (5) and their
+Eq. (1) use different normalizations of the scalar (section 2), which does not affect Δ.
 
 ## 1. The two formulations
 
@@ -113,7 +123,23 @@ term added) exit 1.
 
 **Δ against ours** (`rt_run.py`, records `I91-mac/accept/accept.jsonl`, `D4/res4.jsonl`, `cont/cont10.jsonl`):
 
-PROTO_TABLE_PLACEHOLDER
+| D | grid N_t × N | L | residual in | Δ_RT − Δ_hp |
+|---|---|---|---|---|
+| 4 | 32 × 41 | 4,705 | f64 | −6.4×10⁻⁷ |
+| 4 | 32 × 61 | 6,945 | f64 | +1.2×10⁻⁹ |
+| 4 | 48 × 81 | 13,777 | arb, 160 bits | −1.5×10⁻¹³ |
+| 10 | 32 × 61 | 6,945 | f64 | −1.2×10⁻⁶ |
+| 10 | 32 × 61 | 6,945 | arb, 160 bits | +1.7×10⁻⁷ |
+| 10 | 48 × 81 | 13,777 | f64 | −3.3×10⁻⁴ |
+| 10 | 48 × 81 | 13,777 | arb, 160 bits | −1.1×10⁻¹² |
+| 4, 10 | 48 × 81, `--mutate=coef` | 13,777 | arb, 160 bits | +1.07×10⁻³, −6.5×10⁻⁶ (exit 1) |
+
+Δ_hp is `hp/data/delta_all.csv` (3.4454524022278213 and 2.5210789195619445, errors 10⁻²² and 10⁻¹⁶). The acceptance
+holds: Δ at D = 4 and 10 to 1.5×10⁻¹³ and 1.1×10⁻¹² (tolerance 10⁻⁸), and the mutated coefficient moves Δ by 10⁻³ and
+6.5×10⁻⁶ and the run exits 1. At D = 4, μ is 3.8×10⁻¹⁵ from RT's enclosure (the f64 rounding of the stored μ). The
+error is set by the ξ resolution (40 × 41 gives the same Δ as 32 × 41 to 13 digits). Each error is the difference from
+our value, whose own error is far smaller, so it is the prototype's discretization error at that grid (a measured
+difference, not a bound).
 
 ## 4. The Jacobian's condition number against D
 
@@ -124,18 +150,33 @@ no error bar beyond the stated resolution checks). Scripts: `solver/rt/rt_cond.p
 inverse and block power iteration at two precisions that must agree, planted selftest at κ = 10⁴⁰, control
 `--mutate=lowprec`); ours from `hp/stall_margin.py` (T76's script: the double-double Jacobian, σ_max from its SVD, σ_min
 by Rayleigh–Ritz on the weak subspace). Ruiz equilibration (rows and columns scaled to unit max norm) changes RT's κ by
-less than a factor 3 (κ_eq in the records), so the growth is not a scaling artifact of the collocation.
+at most a factor 7 (κ_eq in the records), so the growth is not a scaling artifact of the collocation.
 
-**What sets RT's κ.** Three measurements in f64 at solved states (`I91-mac/rt_kappa*.jsonl`):
+**What sets RT's κ.** Three measurements in f64 at solved states (`I91-mac/rt_kappa*.jsonl`).
 
-- It does not depend on the t resolution: at D = 4, κ = 9.28×10⁶ with N = 81 for N_t = 16, 32 and 48; at D = 10,
-  3.2×10¹⁴ with N = 61 for N_t = 32 and 64. The weakest direction is a low harmonic (ω₃ or ω₂ at harmonic 0 of Δ, ω₄
-  at harmonic 1), with about 1% of its norm in μ, spread over ξ rather than at one end. Our κ is the opposite: it is
-  set by the highest τ harmonic kept (the weak directions are p₁'s top harmonics, LARGE_D_WALL.md).
-- It grows with the ξ resolution N. σ_max grows like N² (the Chebyshev derivative), and σ_min falls with N, faster at
-  larger D: N_SCALING_PLACEHOLDER
-- It grows fast with D at fixed N: σ_min at N = 61 is 2.1×10⁻⁴, 1.2×10⁻⁷, 2.6×10⁻¹⁰ and 1.7×10⁻¹² at D = 4, 6, 8 and
-  10, about 1.3 digits per unit of D.
+It does not depend on the t resolution. At D = 4, κ = 9.28×10⁶ with N = 81 for N_t = 16, 32 and 48, and at D = 10 it is
+3.2×10¹⁴ with N = 61 for N_t = 32 and 64. The weakest direction is a low harmonic (ω₃ or ω₂ at harmonic 0 of Δ, ω₄ at
+harmonic 1), with about 1% of its norm in μ, spread over ξ rather than at one end. Our κ is the opposite, set by the
+highest τ harmonic kept (the weak directions are p₁'s top harmonics, LARGE_D_WALL.md).
+
+It grows with the ξ resolution N. σ_max grows like N² (the Chebyshev derivative, fitted slope 2.00), and σ_min falls
+like a power of N whose exponent grows with D. The slopes are least-squares fits of ln σ_min against ln N over
+N = 41…81 at N_t = 16 (`I91-mac/rt_kappa_N.jsonl`, printed by `rt_summary.py`):
+
+| D | σ_min at N = 41 | σ_min at N = 81 | slope |
+|---|---|---|---|
+| 4 | 4.4×10⁻⁴ | 1.3×10⁻⁴ | −1.8 |
+| 6 | 8.3×10⁻⁷ | 3.0×10⁻⁸ | −4.9 |
+| 8 | 5.6×10⁻⁹ | 2.9×10⁻¹¹ | −7.7 |
+| 10 | 9.7×10⁻¹¹ | 3.4×10⁻¹³ (f64's floor) | −10.2 over N = 41…61, above the floor |
+
+Below σ_min/σ_max ≈ 2×10⁻¹⁵ the f64 rounding of J dominates (at D = 20 on 24 × 21 the f64 and arb values agree to three
+digits at 3.4×10⁻¹⁴). The slope steepens by about 1.4 per unit of D. That is what a near-null vector made of the
+singular branch gives. The part of (1 + ξ)^s that degree-N polynomials miss falls like N^(−2 Re s − 1), so
+σ_min ~ N^(−2 Re s − 1) with Re s growing linearly in D, here about 0.7 per unit of D (numerical evidence from four D).
+
+It grows fast with D at fixed N. σ_min at N = 61 is 2.1×10⁻⁴, 1.2×10⁻⁷, 2.6×10⁻¹⁰ and 1.7×10⁻¹² at D = 4, 6, 8 and 10,
+about 1.3 digits per unit of D.
 
 At D = 10 this is already f64's limit: on the 48 × 81 grid (κ = 1.7×10¹⁵), Newton in f64 stalls at a residual of 10⁻¹⁰
 with Δ 3.3×10⁻⁴ off, and the same start polished with the arb residual lands 1.1×10⁻¹² from ours (section 3). The f64
@@ -187,10 +228,11 @@ No. It moves the wall from the series' radius into the conditioning of the polyn
 RT's Chebyshev domain ends at the horizon: in the parity-extended form the horizon is the endpoint ξ = −1 of the +
 equations (and ξ = 1 of the − equations); the discretization is not "through" it, although RT prove analyticity
 beyond it (ξ < 41/40). Regularity there is not imposed by any row. It is left to the basis: a polynomial cannot
-contain the singular branch exactly. The singular branch at the horizon has an exponent with real part near
-(D − 4)/2 (EEG: it "becomes increasingly difficult to distinguish numerically from the regular one"; EEGJ's "less
-and less singular"; the toy of notes/LARGE_D_LITERATURE.md 2(e), whose integral form needs (D − 4)/2 subtracted
-Taylor terms). A function (1 + ξ)^s with Re s ≫ 1 is C^⌊Re s⌋ and its Chebyshev coefficients fall like n^(−2 Re s − 1)
+contain the singular branch exactly. The singular branch at the horizon has an exponent whose real part grows about
+linearly in D, 21.1 at D = 40 in our variables (notes/QUAD_DOUBLE.md 13.7; EEG: it "becomes increasingly difficult to
+distinguish numerically from the regular one"; EEGJ's "less and less singular"; the toy of
+notes/LARGE_D_LITERATURE.md 2(e), whose integral form needs (D − 4)/2 subtracted Taylor terms). A function (1 + ξ)^s
+with Re s ≫ 1 is C^⌊Re s⌋ and its Chebyshev coefficients fall like n^(−2 Re s − 1)
 (Boyd, Math. Comp. 37 (1981) 155, cited in LARGE_D_LITERATURE.md 2(b)), so the degree-N polynomials contain it to that
 accuracy, and the discrete operator has a near-null vector made of it. This is the mechanism that failed our own
 collocation of the horizon block (notes/QUAD_DOUBLE.md 13.3, 13.7: 14 near-null directions at D = 40 with 16 to 24
@@ -204,10 +246,23 @@ The unknowns are L = 3.5 N_t N (EEG: 11,200 at N_t = 40, N = 80). To carry our M
 N_t = 64, and with N = 81 that is L = 18,369, against our L = 769 in the chain. In coefficient space (RT, EEG) the
 products of fields are convolutions and the Jacobian is dense; in our collocation the products are diagonal and the
 derivatives Kronecker products, but an LU of such a two-dimensional spectral matrix fills in, and the prototype factors
-it densely. RT's approximate inverse exploits that their matrix is close to banded (Sec. 1.3) and still needed a few
-thousand CPU hours at D = 4. A dense LU costs about L³/3 multiply-adds per Newton step.
+it densely. RT's proof inverts a 654,375-dimensional matrix approximately, by Gaussian elimination on a dense block
+and a Neumann series that uses its near-banded form (Sec. 1.3), in "a few thousand CPU hours" at D = 4. A dense LU
+costs about L³/3 multiply-adds per Newton step.
 
-Q3_DATA_PLACEHOLDER
+On this machine a dense arb solve (`solver/rt/lu_cost.py`, python-flint's approximate LU, one thread, L = 300, log
+`I91-mac/lu_cost.log`; control `--mutate=perturb` exits 1) costs per L³:
+
+| bits | 128 | 256 | 512 | 1024 | 2048 |
+|---|---|---|---|---|---|
+| seconds / L³ | 3.8×10⁻⁹ | 6.4×10⁻⁹ | 1.1×10⁻⁸ | 3.0×10⁻⁸ | 8.2×10⁻⁸ |
+
+So one Newton step's LU at EEG's L = 11,200 takes about 4.2 hours at 512 bits and 11.5 hours at 1024 bits on one
+core, and at L = 18,369 (our harmonic content, N = 81) 19 and 51 hours (`rt_summary.py`, estimates from the L³ law;
+flint's blocking may do somewhat better at large L). EEG's 392 steps of 1/2 from 4 to 200, with "typically" four Newton iterations each, need that
+LU about 1,600 times. Our chain's step at D = 200 took 460 s on 18 threads, mostly the 24 Taylor coefficients in
+octo-double (T138-win2 `chain_o/anm_run.jsonl`: t_coef 415 s, the corrector 29 s, the re-seed 14 s). The precision
+the RT system needs is set by section 4: Q3_PREC_PLACEHOLDER
 
 ## 5b. What to adopt, and what not
 

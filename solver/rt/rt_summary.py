@@ -52,17 +52,23 @@ def main():
         import numpy as np
         print("\nRT sigma_min and sigma_max against N at N_t = 16 (rt_kappa_N.jsonl): exponents of a least-squares fit "
               "in log N")
-        print("| D | N | sigma_min | sigma_max | slope of ln sigma_min | slope of ln sigma_max |")
-        print("|---|---|---|---|---|---|")
+        print("(slope above the floor: only points with sigma_min / sigma_max >= 2e-15, below which f64 rounding of J "
+              "dominates)")
+        print("| D | N | sigma_min | sigma_max | slope of ln sigma_min | the same above the floor | slope of ln "
+              "sigma_max |")
+        print("|---|---|---|---|---|---|---|")
         for D in sorted({r["D"] for r in kn}):
             rr = sorted([r for r in kn if r["D"] == D], key=lambda r: r["grid"][1])
             lnN = np.log([r["grid"][1] for r in rr])
             a = np.polyfit(lnN, np.log([r["sigma_min"] for r in rr]), 1)[0]
             b = np.polyfit(lnN, np.log([r["sigma_max"] for r in rr]), 1)[0]
+            ok = [r for r in rr if r["sigma_min"] >= 2e-15 * r["sigma_max"]]
+            a2 = (np.polyfit(np.log([r["grid"][1] for r in ok]), np.log([r["sigma_min"] for r in ok]), 1)[0]
+                  if len(ok) >= 2 else float("nan"))
             Ns = ", ".join(str(r["grid"][1]) for r in rr)
             sm = ", ".join("%.2e" % r["sigma_min"] for r in rr)
             print(f"| {D:g} | {Ns} | {sm} | {rr[0]['sigma_max']:.0f} .. {rr[-1]['sigma_max']:.0f} | {a:+.2f} | "
-                  f"{b:+.2f} |")
+                  f"{a2:+.2f} (N {', '.join(str(r['grid'][1]) for r in ok)}) | {b:+.2f} |")
     km = rows(os.path.join(d, "kappa_mp.jsonl"))
     if km:
         seen += 1
@@ -96,6 +102,12 @@ def main():
         print("|---|---|---|---|")
         for r in lc:
             print(f"| {r['L']} | {r['prec']} | {r['seconds']:.2f} | {r['per_L3']:.2e} |")
+        big = max(r["L"] for r in lc)
+        print(f"\nEstimated hours of one dense LU on one core (the L = {big} rate times L^3):")
+        print("| L | " + " | ".join(f"{r['prec']} bits" for r in lc if r["L"] == big) + " |")
+        print("|---|" + "---|" * len([r for r in lc if r["L"] == big]))
+        for L in (11200, 18369):
+            print(f"| {L} | " + " | ".join(f"{r['per_L3'] * L ** 3 / 3600:.1f}" for r in lc if r["L"] == big) + " |")
     sys.exit(0 if seen else 1)
 
 
