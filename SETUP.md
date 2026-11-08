@@ -42,8 +42,8 @@ macOS and Linux:
 ```sh
 git clone https://github.com/nmoinvaz/choptuik-large-d && cd choptuik-large-d
 git clone https://github.com/nmoinvaz/choptuik-large-d-raw ../choptuik-large-d-raw   # raw output, read by some scripts
-uv python install 3.14.10
-uv venv --seed --python 3.14.10 .venv      # --seed puts pip in the venv, which hp/build.sh calls
+uv python install 3.14                     # the newest 3.14 this uv offers
+uv venv --seed --python 3.14 .venv         # --seed puts pip in the venv, which hp/build.sh calls
 source .venv/bin/activate
 uv pip install -r requirements.txt
 pip install .                              # rustkernel, the f64 solver's residual (optional)
@@ -53,13 +53,15 @@ hp/build.sh                                # hpkernel and multidouble's Python p
 Windows, in PowerShell for the venv and Git Bash for `hp/build.sh`:
 
 ```powershell
-uv python install 3.14.10
-uv venv --seed --python 3.14.10 .venv
+uv python install 3.14
+uv venv --seed --python 3.14 .venv
 .venv\Scripts\Activate.ps1
 uv pip install -r requirements.txt
 ```
 
 `uv python install` adds an interpreter beside any existing one and changes no system Python, PATH entry or launcher.
+The patch level does not matter: the runners use 3.14.3, 3.14.7 and 3.14.10, and their results agree bit for bit
+(#179).
 
 ## Checking the setup
 

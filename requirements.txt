@@ -1,5 +1,5 @@
 # Python packages for choptuik-large-d. Setup, system requirements and optional tools: SETUP.md.
-# Python 3.13 or 3.14 (the runners use 3.14.10). Install into a venv with:  uv pip install -r requirements.txt
+# Python 3.13 or 3.14 (the runners use 3.14). Install into a venv with:  uv pip install -r requirements.txt
 numpy==2.5.4
 scipy==1.18.1
 mpmath==1.3.0
