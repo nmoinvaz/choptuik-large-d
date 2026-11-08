@@ -1,17 +1,20 @@
-"""The weakest direction of the RT Jacobian at a state, by inverse iteration in arb (issue #163).
+"""An upper bound on the smallest gain of the RT Jacobian at a state, and the direction that attains it (issue #163).
 
-    python3 solver/rt/rt_sigma.py STATE.npz [--its 3] [--prec 192] [--horizon K] [--max_products 250]
+    python3 solver/rt/rt_sigma.py STATE.npz [--starts 3] [--prec 192] [--horizon K] [--max_products 250]
     python3 solver/rt/rt_sigma.py --planted [--mutate=shift]
 
-Each iteration solves J x = v / max|v| with rt_mpsolve's flexible GMRES (products by exact central differences of the
-arb residual, the f64 LU of the f64 Jacobian as preconditioner, relative residual 1e-30), starting from a smooth
-random v. Then 1 / max|x| estimates the smallest singular value in the max norm from above, and x tends to the weakest
-right singular vector (max norms, not an SVD). Printed per iteration: max|x|, the estimate, max|J x - v| / max|v| (the
-solve's residual), and x's content in mu, by field, by harmonic and at xi = +-1, -1 and near 0.
+For each of --starts smooth random right-hand sides v (max|v| = 1) it solves J x = v with rt_mpsolve's flexible GMRES
+(products by exact central differences of the arb residual, the f64 LU of the f64 Jacobian as preconditioner,
+relative residual 1e-30). Then max|J x| / max|x| = 1 / max|x| bounds the smallest gain of J in the max norm from
+above (a bound, not an SVD; it is near sigma_min when v is not nearly orthogonal to the weakest left singular vector),
+and x is dominated by the weakest right singular directions. Printed per start: max|x|, the bound, the solve's
+residual max|J x - v|, and x's content in mu, by field, by harmonic and at xi = +1, near 0 and -1. Repeated inverse
+iteration is not used: J is not normal, and J^-1 applied to its weakest right vector need not be large.
 Planted check: a diagonal operator A = diag(s) with s log-uniform in [1e-3, 1] and one entry 1e-22, through the same
-fgmres and LUdd (A rounded to f64 has the tiny entry exactly, so the f64 LU is exact); two iterations must give the
-estimate within 1 percent of 1e-22 and x along that entry to 1e-6. --mutate=shift adds 1e-20 to the tiny entry of the
-operator applied (not to the preconditioner), which must move the estimate by more than a factor 10 (exit 1 then).
+fgmres and LUdd (the f64 LU is exact for it); the best bound over three starts must lie in [1e-22, 1e-20], with x
+along that entry to 1e-6. (Revised after the first run of this version, whose window was a factor 3: the bound's
+slack is 1 / |u . v| for the weakest left vector u, and it came out 14.) --mutate=shift adds 1e-20 to the tiny entry
+of the operator applied (not to the preconditioner), which moves the bound by a factor 100 (exit 1 then).
 """
 import os
 for _v in ("VECLIB_MAXIMUM_THREADS", "OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
@@ -51,18 +54,18 @@ def describe(rt, x):
     return "; ".join(out)
 
 
-def inverse_iteration(apply, prec, v, its, max_products, log=print):
-    ests = []
-    for it in range(its):
+def bounds(apply, prec, vs, max_products, log=print):
+    """For each v (max|v| scaled to 1): x = J^-1 v and the bound 1 / max|x|. Returns [(bound, x / max|x|)]."""
+    out = []
+    for i, v in enumerate(vs):
         v = mps.mids(v * arb(1.0 / mps.amax(v)))
         x, info = mps.fgmres(apply, prec, v, tol=1e-30, max_products=max_products)
         mx = mps.amax(x)
         res = mps.amax(mps.mids(apply(x) - v))
-        ests.append(1.0 / mx)
-        log(f"  iteration {it}: max|x| {mx:.3e}, sigma estimate {1.0 / mx:.3e}, max|J x - v| {res:.1e}, "
-            f"{info['products']} products")
-        v = x
-    return mps.mids(v * arb(1.0 / mps.amax(v))), ests
+        log(f"  start {i}: max|x| {mx:.3e}, bound on the smallest gain {1.0 / mx:.3e}, max|J x - v| {res:.1e}, "
+            f"{info['products']} products", flush=True)
+        out.append((1.0 / mx, mps.mids(x * arb(1.0 / mx))))
+    return out
 
 
 def planted(mutate=None):
@@ -76,12 +79,12 @@ def planted(mutate=None):
         so[123] = so[123] + arb("1e-20")
     apply = lambda u: mps.mids(so * u)
     P = mps.LUdd(np.diag(s))
-    v0 = mps.obj(rng.normal(size=L))
-    x, ests = inverse_iteration(apply, P, v0, 2, 80)
+    res = bounds(apply, P, [mps.obj(rng.normal(size=L)) for _ in range(3)], 80)
+    best, x = min(res, key=lambda r: r[0])
     xf = np.abs(mps.to_f64(x))
     off = np.delete(xf, 123).max()
-    ok = abs(ests[-1] / 1e-22 - 1) < 0.01 and off < 1e-6
-    print(f"planted: estimate {ests[-1]:.4e} (1e-22 within 1%), largest other component {off:.1e} (< 1e-6): "
+    ok = 1e-22 <= best * (1 + 1e-12) and best < 1e-20 and off < 1e-6
+    print(f"planted: best bound {best:.4e} (in [1e-22, 1e-20]), largest other component {off:.1e} (< 1e-6): "
           f"{'ok' if ok else 'FAIL'}")
     return ok
 
@@ -89,7 +92,7 @@ def planted(mutate=None):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("state", nargs="?")
-    ap.add_argument("--its", type=int, default=3)
+    ap.add_argument("--starts", type=int, default=3)
     ap.add_argument("--prec", type=int, default=192)
     ap.add_argument("--horizon", type=int, default=None, help="default: the state's own")
     ap.add_argument("--max_products", type=int, default=250)
@@ -109,9 +112,12 @@ def main():
     print(f"{a.state.rsplit('/', 1)[-1]}: D {D} {Nt}x{N} K {K}, max|F| {mps.amax(F):.2e}")
     P = mps.LUdd(rt.jacobian(mps.to_f64(z)), overwrite=True)
     apply = lambda u: mps.jv_central(rm.residual_m, z, u)
-    x, ests = inverse_iteration(apply, P, mps.obj(smooth_start(rt)), a.its, a.max_products)
-    print("  weakest direction: " + describe(rt, mps.to_f64(x)))
-    print(f"  sigma_min estimate (max norm) {ests[-1]:.3e}; ratio of the last two {ests[-1] / ests[-2]:.3f}")
+    res = bounds(apply, P, [mps.obj(smooth_start(rt, seed=163 + i)) for i in range(a.starts)], a.max_products)
+    for i, (b, x) in enumerate(res):
+        print(f"  start {i}, x / max|x|: " + describe(rt, mps.to_f64(x)))
+    best = min(r[0] for r in res)
+    print(f"  best bound on the smallest gain (max norm) {best:.3e}; the bounds of the starts span a factor "
+          f"{max(r[0] for r in res) / best:.1f}")
 
 
 if __name__ == "__main__":
