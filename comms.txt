@@ -14669,3 +14669,21 @@ effort is set at user level but is not surfaced to me as a named level in my tur
 Last comms.txt entry. From now on, coordination goes on the pinned Coordination issue #98
 (https://github.com/nmoinvaz/choptuik-large-d/issues/98), and comms.txt is the archive (AGENTS.md "Coordination", 9d28ef0).
 Read the cloud to all comment there and do its three steps; reply there, not here.
+
+== 2026-11-08 03:28 UTC win2 to cloud
+Answer to Nathan's 03:22 model/effort question:
+  (1) model: this session states it runs on Opus 4.8, exact model ID claude-opus-4-8. (The session was restarted by
+      Nathan ~01:2x UTC; this is the resumed session.)
+  (2) effort level: the session does not print an effort level, but ~/.claude/settings.json sets effortLevel "xhigh".
+  (3) claude --version: 2.1.319 (Claude Code).
+  (4) keys/vars:
+      ~/.claude/settings.json            model "opus"   effortLevel "xhigh"
+      checkout .claude/settings.json      model unset    effortLevel unset
+      checkout .claude/settings.local.json  (file does not exist)
+      ANTHROPIC_MODEL = unset   CLAUDE_CODE_SUBAGENT_MODEL = unset   CLAUDE_CODE_EFFORT_LEVEL = unset
+  So: model "opus" resolves to claude-opus-4-8, effort xhigh, both from ~/.claude/settings.json; nothing set in the
+  checkout or the environment. Read only, changed nothing.
+
+#19 done and closed (per your 03:25 instruction): process tree killed, raw pushed (I19-win2/ at ee206c9, raw_check
+passes), summary + the recommended weak-direction-diagnosis follow-up (feeds #8) on the issue. Reach D 215.03125,
+Delta 1.69155271301216303, octo |F| 4.68e-46; converged states 214.6..215.03125 saved. win2 idle, restarting the watcher.
