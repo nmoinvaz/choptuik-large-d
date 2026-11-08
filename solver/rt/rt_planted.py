@@ -91,6 +91,9 @@ def main():
             rt_solve = rt_true
         zs = planted_state(rt_true, rng)
         fs = rt_true.residual(zs)[0]
+        from rt_cond import extremes
+        smax, smin, _, _ = extremes(rt_true.jacobian(zs))
+        print(f"    planted D = {D}: sigma_min(J(z*)) = {smin:.1e}, kappa = {smax / smin:.1e}")
         z0 = zs + 1e-3 * planted_state(rt_true, rng, mu=1.0)
         z, conv, hist = rt_solve.newton(z0, tol=1e-12, it_max=10, forcing=fs, verbose=False)
         err = np.abs(z - zs).max()
