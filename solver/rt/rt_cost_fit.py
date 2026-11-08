@@ -151,6 +151,11 @@ def analyse(G, old, tol=1e-12, project=(), table=False, say=print, delta_from=No
     res["newton_cont"] = float(np.median(nc)) if nc else float("nan")
     say(f"  Newton steps per continuation step: median {res['newton_cont']:g} over {len(nc)} steps"
         + (f", range {min(nc)}-{max(nc)}" if nc else ""))
+    for g in grids:
+        cs = sorted((r["D"], r["secs"]) for r in G[g].values() if r.get("label") == "cont")
+        if cs:
+            say(f"  {g[0]}x{g[1]}: measured seconds of the {len(cs)} continuation steps from D {cs[0][0]:g} to "
+                f"{cs[-1][0]:g}: {sum(c[1] for c in cs) / 3600:.2f} h (check points and restarts not counted)")
     pts = sorted((r["D"], len(r["products"])) for g in grids for r in G[g].values() if r.get("label") == "cont")
     if len(pts) >= 3:
         res["nsteps"] = fit_spread([q[0] for q in pts], [q[1] for q in pts])

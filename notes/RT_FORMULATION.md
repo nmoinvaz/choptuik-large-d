@@ -723,7 +723,14 @@ At each check D, Δ − Δ_hp on 32 × 101 (the continuation), 32 × 121 and 32 
 `hp/data/delta_all.csv` (runs up6, up7, up8, up10, up13), with err 1×10⁻¹⁶ at 34.99 and 2×10⁻¹⁵ from 40 on. Two
 entries in a cell are two roots of that grid from different starts. Every value is converged, to max|F| below 10⁻³².
 
-TABLE_CHECKS
+| D | 32 × 101 | 32 × 121 | 32 × 141 |
+|---|---|---|---|
+| 34.993266 | +9.9×10⁻¹⁶ | −3.9×10⁻¹⁸ | +3.1×10⁻¹⁸ |
+| 40.020065 | +3.5×10⁻¹⁵ (twice) | +1.5×10⁻¹⁵ (twice) | +1.0×10⁻¹⁴, +1.7×10⁻¹⁴ |
+| 44.963411 | +2.9×10⁻¹⁵ (twice) | −8.5×10⁻¹⁵, +3.2×10⁻¹⁵ | +3.8×10⁻¹² |
+| 50.007491 | +3.3×10⁻¹⁵, +7.5×10⁻¹⁵ | −2.9×10⁻¹² (twice), +4.5×10⁻¹² | −4.1×10⁻¹¹ |
+| 54.996085 | −2.1×10⁻¹⁴, +1.5×10⁻¹⁴ | +8.5×10⁻¹², +9.7×10⁻¹³ | −3.0×10⁻⁷ |
+ROW60_CHECKS
 
 From D = 40 the finer grids are no closer to hp. The best grid falls with D: at least 141 at D = 35, 121 at 40, 101
 from 45. A grid past its best has an error growing about 0.5 decade per unit of D: 32 × 141 from 1.0×10⁻¹⁴ at 40.02 to
@@ -743,7 +750,15 @@ Each grid was re-solved at the check D from a second start, another grid's root 
 `run_worker4.sh`), and `rt_roots.py` compares the two roots (`controls/roots_*.log`). The spread is the difference of
 the two converged Δ. It is a lower bound on how far the grid leaves Δ undetermined.
 
-TABLE_SPREAD
+| D | 32 × 101 | 32 × 121 | 32 × 141 |
+|---|---|---|---|
+| 40.020065 | 5.5×10⁻²³ | 4.6×10⁻²⁰ | 6.4×10⁻¹⁵ |
+| 44.963411 | 1.9×10⁻²⁰ | 1.2×10⁻¹⁴ | |
+| 50.007491 | 4.2×10⁻¹⁵ | 5.4×10⁻¹⁵ (starts 4.2×10⁻¹⁵ apart), 7.4×10⁻¹² (the 141 start) | |
+| 54.996085 | 3.6×10⁻¹⁴ | 7.6×10⁻¹² (starts 3.6×10⁻¹⁴ apart) | |
+ROW60_SPREAD
+
+The second 101 start is the 121 root resampled. The 121 starts are the 101 roots and, where marked, the 141 root.
 
 The two 32 × 141 roots at 40.02 reach max|F| = 5.4×10⁻⁵² and 2.5×10⁻⁴⁷ in the runs, and their states differ by max|z₂
 − z₁| = 4.3×10⁻¹⁶. The difference is mostly μ and harmonic 0 of every field, spread evenly over ξ: section 4's weakest
@@ -766,19 +781,30 @@ All times are on the shared Mac (Apple M5 with 4 performance and 6 efficiency co
 other agents' jobs). They are single measurements, and the same step varied by up to 1.5 times with the load. The arb
 parts use one thread and BLAS two. From `rt_cost_fit.py --table` on `cont/cont_32x101.jsonl` (32 × 101, L = 11,425):
 
-TABLE_COST
+| D | Newton steps | products per Newton step | s for the D step |
+|---|---|---|---|
+| 31 | 5 | 46–53 | 248 |
+| 35 | 6 | 45–75 | 193 |
+| 40 | 7 | 49–85 | 337 |
+| 45 | 8 | 51–91 | 435 |
+| 50 | 7 | 53–87 | 385 |
+| 51 | 12 | 56–104 | 660 |
+| 53 | 10 | 53–114 | 604 |
+| 55 | 11 | 54–105 | 621 |
+| 57 | 9 | 55–108 | 518 |
+| 60 | 8 | 57–104 | 403 |
 
 - **Products per Newton step.** The first Newton step of each D step uses factors fresh at the predictor. Its count
   grew about 2 per unit of D from D = 10 to 30 (#105) and about 0.5 per unit from 30 to 55: 46 at D = 31, 56 at 51.
-  The fit over all 70 D from 10.5 to 55 gives 1.0 per unit (windows: 2.1 for the first half, 0.47 for the second, a
+  The fit over all 77 D from 10.5 to 60 gives 0.89 per unit (windows: 1.8 for the first half, 0.36 for the second, a
   spread over fit windows). The mean over a D step's Newton steps, which includes the steps on stale factors, grows
-  1.1 per unit of D (0.95 to 1.8 over the windows).
-- **Newton steps per D step.** These grew from 5 at D 31–36 to 7–12 at D 48–55, about 0.19 per unit of D (0.12 to 0.28
-  over the windows). The extra steps are Newton's jumps along the weak direction. A step from max|F| below 10⁻¹⁷ moves
+  0.92 per unit of D from 30 to 60 (0.45 to 1.5 over the windows).
+- **Newton steps per D step.** These grew from 5 at D 31–36 to 7–12 at D 48–60. The fit over D 30–60 gives 0.12 per
+  unit of D (0.11 for the first half; the second half is biased by the change of target, 10.5). The extra steps are Newton's jumps along the weak direction. A step from max|F| below 10⁻¹⁷ moves
   by 10⁻⁷ to 2×10⁻⁶ there and raises max|F| to 10⁻¹¹ before the quadratic phase resumes.
 - **Seconds.** A product takes 0.48 s on 32 × 101, 0.65 s on 32 × 121 and 0.83 s on 32 × 141 (medians, L = 11,425,
   13,665, 15,905), about (N + 1)^1.7. A preconditioner application takes a quarter of that. The f64 Jacobian and its
-  LU take 15, 24 and 33 s. The peak resident memory is 1.5, 1.9 and 2.5 GB, and 4.9 GB for 48 × 141 (L = 23,857). A D
+  LU take 15, 24 and 33 s. The peak resident memory is 1.5, 1.9 and 2.5 GB, and 5.1 GB for 48 × 141 (L = 23,857). A D
   step took 190–350 s at D 31–41 and 380–680 s at D 45–55. By #105's linear predictor at steps of 1/2, one unit of D
   near D = 30 took about 7 min (2 × 256 s with its frequent rebuilds). Here it took 4 min, from the steps of 1 with
   the cubic predictor and one rebuild per D step.
@@ -789,7 +815,20 @@ TABLE_COST
 Newton steps per D step, at 32 × 101's measured seconds per product. It gives the cost of continuing on 32 × 101
 alone. It is an extrapolation over a factor of 2 to 4 in D beyond the data, and it is the cost only.
 
-TABLE_PROJ
+| D | window | products per Newton step | Newton steps per D step | s per D step | hours from D = 30 |
+|---|---|---|---|---|---|
+| 60 | all | 80 | 9.3 | 554 | 3.3 |
+| 60 | first half | 92 | 8.8 | 625 | 3.4 |
+| 100 | all | 116 | 13.9 | 1,269 | 13.2 |
+| 100 | first half | 152 | 13.1 | 1,665 | 15.7 |
+| 215 | all | 222 | 27.3 | 5,625 | 114 |
+| 215 | first half | 323 | 25.4 | 8,918 | 166 |
+
+The windows are those of the two fits: all D from 30 to 60, and the first half. The second half (D 45–60) gives
+falling Newton steps (−0.09 per unit of D). That window is biased by the change of Newton's target at D = 53 and 56,
+which dropped the last one or two steps, so it is left out. Its rows are in `fit/cost_fit.log`. The 30
+measured steps from D = 31 to 60 took 3.35 hours in all, against 3.3 from the fits, with the check points and the
+restarts not counted.
 
 N(D) is not projected. The method planned, the grid differences fitted in D and continued in N at the measured rate
 per 20 points, needs Δ_N − Δ_{N+20} to measure truncation. From D ≈ 40 it measures the finer grid's error along the
@@ -871,9 +910,8 @@ For the coordinator, after the RT sentence of "The large-D wall" (sections 7 and
 
 ### 10.10 Reproduction
 
-From the repository root, with the raw-data repository cloned beside it (RAW = `../choptuik-large-d-raw`), on the
-Mac with `/Users/nathan/venv-qd/bin/python` and `MULTIDOUBLE_SITE=/Users/nathan/Source/venv-anm/lib/python3.13/
-site-packages` (9.9). The drivers in `RAW/I145-mac/` hold the exact commands of the runs: `run_cont.sh` (the
+From the repository root, with the raw-data repository cloned beside it (RAW = `../choptuik-large-d-raw`). On the
+Mac, use `/Users/nathan/venv-qd/bin/python` with the MULTIDOUBLE_SITE of 9.9. The drivers in `RAW/I145-mac/` hold the exact commands of the runs: `run_cont.sh` (the
 continuation, with its restarts listed in the folder's README), `run_worker4.sh` (the re-solves) and `run_roots.sh`.
 
 ```
