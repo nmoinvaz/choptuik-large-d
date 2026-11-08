@@ -1189,6 +1189,7 @@ python3 solver/rt/rt_roots.py RAW/I164-mac/roots/a101_32x97_D60.0020_32x97.npz \
     RAW/I164-mac/roots/b121_32x97_D60.0020_32x97.npz   # 11.4: two roots; --mutate=mid and --mutate=same exit 1
 python3 RAW/I164-mac/nt_check.py RAW/I164-mac/roots/a101_48x95.jsonl RAW/I164-mac/roots/a101_32x95.jsonl
                                                  # 11.5: +1.5e-16, exit 0; with --tol 1e-17 exit 1
+```
 
 ## 12. EEG's resolution: the truncation of their 40 × 80 grid against D
 
