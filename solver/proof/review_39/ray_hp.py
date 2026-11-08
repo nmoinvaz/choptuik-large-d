@@ -4,7 +4,8 @@ estimated, not bounded).
 
 y+ at the centre is stepped inward along the start ray u = t e^{-3 i pi/4}, t from 405 to the row radii, by Taylor
 series of order N at each point (the review's coefficient recursion, check_6b1.LZ, at 192 bits), from the midpoint of
-the stored start box at s0. Each step is a third of the radius estimated from the coefficients, and the last kept
+the stored start box at s0. Only midpoints are carried from step to step. A first version carried the intervals, and
+their widths, grown by wrapping, were read as deviations from row 5 on. Each step is a third of the radius estimated from the coefficients, and the last kept
 term must be below 1e-40. At every row radius the value is compared with the stored ray box (ray.json "starts").
 
     python3 ray_hp.py --ray=ray.json [--to=17] [--mutate=w]      (w x (1 + 1e-12): the boxes must miss)
@@ -17,8 +18,12 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import civ as C  # noqa: E402
 import check_6b1 as K  # noqa: E402
-from mpmath.libmp import from_str, round_floor, round_ceiling, to_float, from_float  # noqa: E402
+from mpmath.libmp import from_str, round_floor, round_ceiling, to_float, from_float, mpf_add, mpf_shift  # noqa: E402
 import mpmath  # noqa: E402
+
+
+def mpf_mid(x):
+    return mpf_shift(mpf_add(x[0], x[1], C.PREC), -1)
 
 
 def ball(s):
@@ -47,7 +52,9 @@ def main():
     E3 = C.cexpi(C.rneg(C.rmul(C.rdiv(C.ri(3), C.ri(4)), C.rpi())))
     rhos = ray["rho"]
     jto = int(opts.get("to", str(len(rhos) - 1)))
-    N = 40
+    N = int(opts.get("N", "40"))
+    frac = float(opts.get("frac", "3"))
+    verbose = "verbose" in opts
     t = 405.0
     miss = 0
     for j in range(1, jto + 1):
@@ -66,7 +73,7 @@ def main():
             # radius estimate from the last coefficients, a third of it, landing on the row radius
             mags = [max(to_float(C.cabsup(sts[i].get(k))[1]) for i in range(nd)) for k in (N - 4, N)]
             R = (mags[0] / mags[1]) ** 0.25 if mags[1] > 0 else 1e9
-            h = min(R / 3, t - target, 25.0)
+            h = min(R / frac, t - target, 25.0)
             tail = mags[1] * h ** N
             if tail > 1e-40:
                 h = h * (1e-40 / tail) ** (1.0 / N)
@@ -77,7 +84,11 @@ def main():
                 acc = sts[i].get(N)
                 for k in range(N - 1, -1, -1):
                     acc = C.cadd(C.cmul(acc, tau), sts[i].get(k))
-                ynew.append(acc)
+                # keep the midpoint only: interval widths would grow by wrapping at every step, and this control
+                # follows one trajectory, not an enclosure
+                ynew.append(tuple((m, m) for m in (mpf_mid(acc[0]), mpf_mid(acc[1]))))
+            if verbose:
+                print(f"  step t {t:.6f} -> {tn:.6f}: h {t - tn:.4g}, R estimate {R:.4g}, last term {tail:.2e}", flush=True)
             y, t = ynew, tn
         box = ray["starts"][str(j)]
         worst = 0.0
