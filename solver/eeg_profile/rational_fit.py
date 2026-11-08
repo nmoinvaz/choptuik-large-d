@@ -354,7 +354,7 @@ def planted_f(c, A, K):
 
 
 # ---------------------------------------------------------------------------------------------------- report
-def report_fits(res, c, trunc, label):
+def report_fits(res, c, trunc, label, nmax=NMAX):
     print(f"\n== {label}")
     print(" nu   |c_k|            arg c_k          A-series remainder estimate (relative)")
     for k in range(len(c)):
@@ -368,7 +368,7 @@ def report_fits(res, c, trunc, label):
         if any(m == meth for (_, _, m) in res):
             n, hit = smallest(res, meth)
             print(f"  {meth:8s}: " + (f"L + N = {n} ({n + 1} complex parameters): {hit}" if n else
-                                      f"none with L + N <= {NMAX}"))
+                                      f"none with L + N <= {nmax}"))
 
 
 def report_poles(res, nmin):
@@ -399,6 +399,19 @@ def check_datafile(paths, A):
     return ok, worst
 
 
+class Tee:
+    def __init__(self, path):
+        self.f, self.o = open(path, "w"), sys.__stdout__
+
+    def write(self, x):
+        self.f.write(x)
+        self.o.write(x)
+
+    def flush(self):
+        self.f.flush()
+        self.o.flush()
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("json", nargs="*")
@@ -409,7 +422,10 @@ def main():
     ap.add_argument("--mutate", choices=["gauge", "drop", "A"], default=None)
     ap.add_argument("--fast", action="store_true", help="pade and ls only (no minimax)")
     ap.add_argument("--out", default=None)
+    ap.add_argument("--log", default=None, help="also write stdout to this file")
     a = ap.parse_args()
+    if a.log:
+        sys.stdout = Tee(a.log)
     gauge = a.mutate != "gauge"
     drop = 11 if a.mutate == "drop" else None
     methods = ("pade", "ls") if (a.fast or a.plant) else ("pade", "ls", "minimax")
@@ -427,7 +443,7 @@ def main():
         F, trunc = harmonics(f, 45, a.A, numax=2 * len(c0) - 1)
         c = coeffs(F, gauge, drop)[:KMAX + 1]
         res = scan(c, 5, methods)
-        report_fits(res, c, trunc, "planted [2/3]" + (f", mutation {a.mutate}" if a.mutate else ""))
+        report_fits(res, c, trunc, "planted [2/3]" + (f", mutation {a.mutate}" if a.mutate else ""), nmax=5)
         report_poles(res, 4)
         for meth in ("pade", "ls"):
             low = [(L, N) for (L, N, m), v in res.items() if m == meth and L + N <= 4 and v["emax"] <= TARGET]
@@ -453,12 +469,16 @@ def main():
         t2, d43, conv, mar = march(res)
         print(f"\ntheta_2 of pade [n/n], n = 2, 3, 4: " + ", ".join(fmt_t(t) for t in t2) +
               f";  |theta_2(4) - theta_2(3)| = {d43:.3f}")
+        d32 = abs(t2[1] - t2[0])
+        print(f"|theta_2(3) - theta_2(2)| = {d32:.3f}, ratio of the two steps {d43 / d32:.2f} (descriptive)")
         if a.plant == "branch":
             check("M branch", mar, f"marching {mar}, converged {conv}")
         else:
             d = abs(t2[2] - t2p)
-            check("M poles", conv and not mar and d < 0.02,
-                  f"converged {conv}, marching {mar}, |theta_2(4) - planted| = {d:.3f}")
+            # one criterion (docstring), printed in its two halves
+            check("M poles, not marching", not mar, f"marching {mar}")
+            check("M poles, converged", conv and d < 0.02,
+                  f"|theta_2(4) - theta_2(3)| = {d43:.3f} (< 0.02 required), |theta_2(4) - planted| = {d:.3f}")
     else:
         paths = a.json or DEFAULT
         if a.mutate:
@@ -498,8 +518,8 @@ def main():
                   " ".join(f"{float(abs(r[k + 1] - r[k]) * (k + 1.5) ** 4):.5f}" for k in range(1, 9)))
             t2, d43, conv, mar = march(res)
             print(f"pole-march test: theta_2 of pade [n/n], n = 2, 3, 4: " + ", ".join(fmt_t(t) for t in t2) +
-                  f";  |theta_2(4) - theta_2(3)| = {d43:.3f}; class: " +
-                  ("marching" if mar else "converged" if conv else "neither"))
+                  f";  |theta_2(4) - theta_2(3)| = {d43:.3f}, |theta_2(3) - theta_2(2)| = "
+                  f"{abs(t2[1] - t2[0]):.3f}; class: " + ("marching" if mar else "converged" if conv else "neither"))
             near = [(key, v["pz"][0][0][0]) for key, v in res.items() if key[1] > 0 and key[0] + key[1] >= 5]
             re_ = [t.real for _, t in near]
             im_ = [t.imag for _, t in near]
