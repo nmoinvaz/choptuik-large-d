@@ -377,8 +377,11 @@ def report_poles(res, nmin):
         if L + N < nmin or N == 0:
             continue
         pz, zs = v["pz"]
+        # after the nearest pole, each pole's distance to its nearest zero
+        dz = [min((abs(t - z) for z in zs), default=float("nan")) for t, _ in pz]
         print(f"  [{L}/{N}] {meth:7s} max {float(v['emax']):.2e}  poles " +
-              ", ".join(f"{fmt_t(t)} ({r:.1e})" for t, r in pz) + "  zeros " + ", ".join(fmt_t(t) for t in zs))
+              ", ".join(f"{fmt_t(t)} ({r:.1e}" + (f", zero at {d:.1e})" if i else ")")
+                        for i, ((t, r), d) in enumerate(zip(pz, dz))) + "  zeros " + ", ".join(fmt_t(t) for t in zs))
 
 
 def check_datafile(paths, A):
@@ -526,6 +529,8 @@ def main():
                 em = max(abs(abs(m[k]) / abs(c[k]) - 1) for k in range(NFIT))
                 print(f"  [{key[0]}/{key[1]}] {key[2]:7s} " + " ".join(f"{float(x):.1e}" for x in v["e"]) +
                       f"   modulus {float(em):.2e}")
+            ph = max(abs(mp.arg(v["p"][0])) for v in res.values())
+            print(f"largest |arg p_0| over all {len(res)} fits: {float(ph):.1e}")
             hitk = [key for key, v in res.items() if v["emax"] <= TARGET and key[1] > 0]
             if hitk:
                 tt = [res[key]["pz"][0][0][0] for key in hitk]
@@ -552,6 +557,8 @@ def main():
             im_ = [t.imag for _, t in near]
             print(f"nearest pole over the {len(near)} fits with L + N >= 5: Re {min(re_):.5f} .. {max(re_):.5f}, "
                   f"Im {min(im_):.5f} .. {max(im_):.5f}")
+            print(f"  in the repository's gauge (theta = theta_EEG + pi/2): Re {min(re_) + math.pi / 2:.5f} .. "
+                  f"{max(re_) + math.pi / 2:.5f}, the same Im")
             bad = [key for key, t in near if abs(t.real - THETA_REF[0]) > 1e-3 or abs(t.imag - THETA_REF[1]) > 1e-3]
             check("S", not bad, f"fits whose nearest pole is off 1.5344 - 1.4284i by more than 1e-3: "
                                 f"{len(bad)} of {len(near)}")
