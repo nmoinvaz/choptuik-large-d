@@ -368,7 +368,7 @@ For the physics paper Sec. V, after "a rate of 1.43 per harmonic":
 **Verdict.** The family $`\tilde\beta = A_*\,\mathrm{Re}[e^{i\theta}P_L(e^{2i\theta})/Q_N(e^{2i\theta})]`$ reaches
 10⁻⁶ at every $`\nu \le 19`$ first at $`L + N = 7`$, for [4/3], [3/4] and [2/5] fitted by least squares or minimax.
 That is 8 complex parameters for 10 complex harmonics. Padé matching reaches it for no $`L + N \le 8`$ on the data as
-stored: [4/4] misses $`\nu = 19`$ by 1.15×10⁻⁶, where the data's own truncation is 5.4×10⁻⁷. The error falls by about
+stored: [4/4] is off by 1.15×10⁻⁶ at $`\nu = 19`$, where the data's own truncation is 5.4×10⁻⁷. The error falls by about
 a factor 7 per added complex parameter, so the family converges, but it does not compress the profile at 10⁻⁶
 (*numerical evidence*).
 
