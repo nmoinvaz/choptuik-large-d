@@ -100,7 +100,7 @@ def orig_discs(opts):
             c = me2acb(d["c"])
             Y0 = [me2acb(y) for y in d["Y0"]]
             w = me2acb(d["w"])
-            r = d["r"] if rsc is None else str(arb(d["r"]) * arb(rsc))
+            r = d["r"] if rsc is None else repr(round(float(d["r"]) * float(rsc), 10))
             ctx.prec = 128
             res = LDM.certify(5, c, Y0, w, r, d["n"], mutate=mutate)
             allok = allok and res["ok"]
