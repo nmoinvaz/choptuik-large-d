@@ -45,6 +45,7 @@ import os
 import sys
 import time
 
+import mpmath as mp
 import numpy as np
 from scipy.integrate import solve_ivp
 import scipy.linalg as sl
@@ -64,12 +65,31 @@ def dmat_odd(M):
     return Dm.real.copy()
 
 
+def dmat_odd_mp(M):
+    """dmat_odd in mpmath (object array): D = V diag(i k) V^-1 at the working precision, real part"""
+    th = [mp.pi * j / M for j in range(M)]
+    ks = list(range(-(M - 1), 0, 2)) + list(range(1, M, 2))
+    V = mp.matrix(M, M)
+    for i in range(M):
+        for j, k in enumerate(ks):
+            V[i, j] = mp.expj(k * th[i])
+    Vi = V ** -1
+    out = np.empty((M, M), dtype=object)
+    for i in range(M):
+        for j in range(M):
+            out[i, j] = mp.re(sum(V[i, l] * (1j * ks[l]) * Vi[l, j] for l in range(M)))
+    return out
+
+
 # ------------------------------------------------------------------ background
 class Background:
-    def __init__(self, path, mutate=None, kc_series=50, xs_max=0.05, us=0.1, ks_series=60):
+    def __init__(self, path, mutate=None, kc_series=50, xs_max=0.05, us=0.0, ks_series=100):
         zf = np.load(path, allow_pickle=True)
         self.meta = json.loads(str(zf["meta"]))
         z = zf["zh"] + zf["zl"]
+        self.dps = 34
+        mp.mp.dps = self.dps
+        zmp = [mp.mpf(float(h)) + mp.mpf(float(l)) for h, l in zip(zf["zh"], zf["zl"])]
         self.path = path
         self.D = float(self.meta["D"])
         self.n = self.D - 2
@@ -84,16 +104,21 @@ class Background:
             self.node.append(z[o:o + 4 * M].reshape(4, M))     # p, m, a, c
         o = 2 * M + 4 * M * K
         self.mh, self.ah = z[o:o + M], z[o + M:o + 2 * M]
+        self.mh_mp = np.array(zmp[o:o + M], dtype=object)
+        self.ah_mp = np.array(zmp[o + M:o + 2 * M], dtype=object)
+        self.D_mp = mp.mpf(self.meta["D"])
         self.Delta = z[-1]
+        self.oD_mp = (2 * mp.pi / zmp[-1]) * dmat_odd_mp(M)
         self.omega = 2 * np.pi / self.Delta
         self.Dm = dmat_odd(M)
         self.oD = self.omega * self.Dm
         self.ks = ks_series
         self.kc = kc_series
         self.xs = min(self.nodes[0], xs_max)
-        # matching point near the light cone: the light-cone series is evaluated at u = us, where few orders suffice and
-        # the growth of its rounding errors (the mass mode, (1 - u)^-(n-1)) is small; [last node, x_e] is integrated
-        self.xe = max(1 - us, self.nodes[-1])
+        # the light-cone series is evaluated at x_e = max(1 - us, last node), by default the last node.  A matching point
+        # nearer the light cone is worse at large D: the propagator from the last node to x_e damps the irregular
+        # branch u^sigma by (u_e/u_last)^sigma, 3e-19 at D = 60 for x_e = 0.9, and det M is then rounding noise
+        self.xe = max(1 - us, self.nodes[-1]) if us > 0 else self.nodes[-1]
         self.X = self.nodes + ([self.xe] if self.xe > self.nodes[-1] + 1e-14 else [])
         self.mutate = mutate
         self._centre_series()
@@ -144,42 +169,56 @@ class Background:
 
     def _horizon_series(self):
         """light-cone series in u = 1 - x: c_0 = 1, a_0 = a_h, m_0 = m_h; at order k, G_k, then c_{k+1}, p_k from
-        (omega D + (1 + c1)(k + 1) - n/2) p_k = rhs, then a_{k+1}, m_{k+1} (complex_imag_eqs.py check 5)"""
-        M, n, K = self.M, self.n, self.ks
-        p = np.zeros((K + 1, M)); m = np.zeros((K + 2, M)); a = np.zeros((K + 2, M)); c = np.zeros((K + 2, M))
-        G = np.zeros((K + 1, M)); A2 = np.zeros((K + 2, M)); S = np.zeros((K + 1, M))
-        e = np.zeros((K + 2, M)); v = np.zeros((K + 2, M))
+        (omega D + (1 + c1)(k + 1) - n/2) p_k = rhs, then a_{k+1}, m_{k+1} (complex_imag_eqs.py check 5).
+        In mpmath at self.dps digits (from the state's double-double values): in double, rounding excites the mass
+        mode, whose coefficients grow like binomial(n - 2 + k, k), and at D = 60 the coefficients past order 15 are
+        that mode (|c_100| ~ 1e29), which then corrupts the test field's series.  The result is rounded to double."""
+        M, K = self.M, self.ks
+        mp.mp.dps = self.dps
+        n = mp.mpf(self.D_mp) - 2
+        Z = lambda *shape: np.array([mp.mpf(0)] * int(np.prod(shape)), dtype=object).reshape(shape)
+        p = Z(K + 1, M); m = Z(K + 2, M); a = Z(K + 2, M); c = Z(K + 2, M)
+        G = Z(K + 1, M); A2 = Z(K + 2, M); S = Z(K + 1, M); e = Z(K + 2, M); v = Z(K + 2, M)
         cp = lambda F, H, k: (F[:k + 1] * H[k::-1]).sum(0)
-        c[0] = 1.0; a[0] = self.ah; m[0] = self.mh
+        oD = self.oD_mp
+        oDm = mp.matrix(oD.tolist())
+        c[0] = np.array([mp.mpf(1)] * M, dtype=object); a[0] = self.ah_mp.copy(); m[0] = self.mh_mp.copy()
         A2[0] = a[0] * a[0]
+        one = mp.mpf(1)
+        half_n = n / 2
         for k in range(0, K + 1):
-            A2m = A2[:k + 1].copy(); A2m[0] -= 1
+            A2m = A2[:k + 1].copy(); A2m[0] = A2m[0] - one
             G[k] = (n - 1) * cp(c, A2m, k)
             c[k + 1] = (k * c[k] - G[k]) / (k + 1)
-            for l in (k, k + 1):     # e = (1 - u)(1 - u - c), v = (1 - u)(1 - u + c)
-                wl = (1.0 if l == 0 else 0.0) - (1.0 if l == 1 else 0.0)
-                wl1 = (1.0 if l == 1 else 0.0) - (1.0 if l == 2 else 0.0)
-                e[l] = (wl - c[l]) - ((wl1 - c[l - 1]) if l >= 1 else 0.0)
-                v[l] = (wl + c[l]) - ((wl1 + c[l - 1]) if l >= 1 else 0.0)
-            kap = (1 + c[1]) * (k + 1) - n / 2
-            rhs = 0.5 * n * m[k] + (self.oD @ p[k - 1] if k >= 1 else 0.0)
+            for l in (k, k + 1):
+                wl = (1 if l == 0 else 0) - (1 if l == 1 else 0)
+                wl1 = (1 if l == 1 else 0) - (1 if l == 2 else 0)
+                e[l] = (wl - c[l]) - ((wl1 - c[l - 1]) if l >= 1 else 0)
+                v[l] = (wl + c[l]) - ((wl1 + c[l - 1]) if l >= 1 else 0)
+            kap = (1 + c[1]) * (k + 1) - half_n
+            rhs = half_n * m[k] + (oD.dot(p[k - 1]) if k >= 1 else 0)
             for j in range(2, k + 1):
                 rhs = rhs + e[j] * (k + 1 - j) * p[k + 1 - j]
             for j in range(1, k + 1):
-                rhs = rhs + G[j] * p[k - j] - c[j] * p[k - j] + 0.5 * n * c[j] * (p[k - j] + m[k - j])
-            p[k] = np.linalg.solve(self.oD + np.diag(kap), rhs)
+                rhs = rhs + G[j] * p[k - j] - c[j] * p[k - j] + half_n * c[j] * (p[k - j] + m[k - j])
+            L = oDm.copy()
+            for i in range(M):
+                L[i, i] += kap[i]
+            sol = mp.lu_solve(L, mp.matrix(list(rhs)))
+            p[k] = np.array([sol[i] for i in range(M)], dtype=object)
             S[k] = cp(p, p, k) + cp(m, m, k)
             Ha = cp(a, S, k) + (n - 1) * (a[k] - cp(a, A2, k))
             a[k + 1] = (2 * k * a[k] - Ha) / (2 * (k + 1))
             A2[k + 1] = cp(a, a, k + 1)
-            rm = self.oD @ (m[k] - (m[k - 1] if k >= 1 else 0.0))
+            rm = oD.dot(m[k] - (m[k - 1] if k >= 1 else 0))
             for j in range(1, k + 1):
                 rm = rm - v[j] * (k + 1 - j) * m[k + 1 - j]
             for j in range(0, k + 1):
-                rm = rm + G[j] * m[k - j] - c[j] * m[k - j] + 0.5 * n * c[j] * (p[k - j] + m[k - j])
+                rm = rm + G[j] * m[k - j] - c[j] * m[k - j] + half_n * c[j] * (p[k - j] + m[k - j])
             m[k + 1] = rm / (v[0] * (k + 1))
-        self.hs = dict(p=p, m=m[:K + 1], a=a[:K + 1], c=c[:K + 2], G=G, e=e, v=v)
-        self.c1 = c[1]
+        fl = lambda X: np.array(X.tolist(), dtype=float)
+        self.hs = dict(p=fl(p), m=fl(m[:K + 1]), a=fl(a[:K + 1]), c=fl(c[:K + 2]), G=fl(G), e=fl(e), v=fl(v))
+        self.c1 = self.hs["c"][1]
 
     def horizon_eval(self, x):
         u = 1 - x
@@ -221,9 +260,10 @@ class Background:
 
 # ------------------------------------------------------------------ test field
 class TestField:
-    def __init__(self, bg, mutate=None, rtol=1e-11):
+    def __init__(self, bg, mutate=None, rtol=1e-11, kf=None):
         self.bg = bg
         self.rtol = rtol
+        self.kf = kf
         self.mutate = mutate
         self.kcoup = 1.1 if mutate == "coupling" else 1.0
         self.gG = 0.0 if mutate == "noG" else 1.0
@@ -336,7 +376,27 @@ class TestField:
         r0 = 2 * M * L
         A[r0:r0 + 2 * M, M + 2 * M * (L - 1):M + 2 * M * L] = -I2
         A[r0:r0 + 2 * M, M + 2 * M * L:] = H
+        if self.kf is not None:
+            # the cut (hp's kfreeze): P1 restricted to the odd harmonics <= kf, and the light-cone block's P rows
+            # projected onto the same harmonics; the matrix stays square
+            B, Bp = self.low_basis()
+            nl = B.shape[1]
+            keep = np.r_[0:2 * M * L, 2 * M * L + M:N]
+            A2 = np.zeros((N - (M - nl), N - (M - nl)), complex)
+            cols = np.r_[M:N]
+            A2[:, :nl] = np.concatenate([A[:r0, :M] @ B, np.zeros((nl + M, nl))])
+            A2[:r0, nl:] = A[:r0, cols]
+            A2[r0:r0 + nl, nl:] = Bp @ A[r0:r0 + M, cols]
+            A2[r0 + nl:, nl:] = A[r0 + M:, cols]
+            return A2
         return A
+
+    def low_basis(self):
+        """real basis cos k th, sin k th (odd k <= kf) on the half grid, and its least-squares inverse"""
+        M = self.bg.M
+        th = np.pi * np.arange(M) / M
+        B = np.stack([f(k * th) for k in range(1, self.kf + 1, 2) for f in (np.cos, np.sin)], 1)
+        return B, np.linalg.pinv(B)
 
     def lndet(self, lam):
         """ln det M from an LU with partial pivoting (scipy getrf): sum of ln u_ii, plus i pi per row swap"""
@@ -392,6 +452,18 @@ def track(lng, a, c, K, tol, maxdepth=14):
     return total, big, nint, hits
 
 
+LNDET_CACHE = {}
+
+
+def load_cache(path, mutate):
+    """ln det M values of an earlier run with the same state and mutation (the --evlog file)"""
+    if path and os.path.exists(path):
+        for l in open(path):
+            r = json.loads(l)
+            if r.get("kind") == "eval" and r.get("mutate") == mutate:
+                LNDET_CACHE[(round(r["lam"][0], 13), round(r["lam"][1], 13))] = complex(*r["lndet"])
+
+
 class G:
     """ln g(lam) = ln det M + sum ln(lam - p_j) + ln plant - trend, cached by lam"""
 
@@ -411,13 +483,19 @@ class G:
         key = (round(lam.real, 13), round(lam.imag, 13))
         if key not in self.cache:
             t = time.time()
-            v = self.tf.lndet(lam) + np.sum(np.log(lam - self.pl))
+            if key in LNDET_CACHE:
+                ld = LNDET_CACHE[key]
+            else:
+                ld = self.tf.lndet(lam)
+                LNDET_CACHE[key] = ld
+                if self.log:
+                    self.log(dict(kind="eval", lam=[lam.real, lam.imag], lndet=[ld.real, ld.imag],
+                                  s=round(time.time() - t, 2)))
+            v = ld + np.sum(np.log(lam - self.pl))
             if self.plant is not None:
                 v += np.log(lam - self.plant) + np.log(lam - np.conj(self.plant))
             self.cache[key] = v
             self.nev += 1
-            if self.log:
-                self.log(dict(kind="eval", lam=[lam.real, lam.imag], lng=[v.real, v.imag], s=round(time.time() - t, 2)))
         return self.cache[key]
 
     def fit_trend(self, pts):
@@ -434,25 +512,29 @@ class G:
         return self.raw(lam) - (c0 + c1 * mu + c2 * mu * mu)
 
 
-def count_box(tf, box, plant=None, K=8, tol=math.pi / 4, log=None):
+def count_box(tf, box, plant=None, h0=0.25, tol=math.pi / 4, log=None, maxdepth=14):
+    """winding of g around the box: edges sampled at spacing <= h0, then bisected (track); a quadratic trend fitted
+    to ln|g| at the corners and edge midpoints is taken out first (exp has no zeros: the winding is unchanged)"""
     re0, re1, im0, im1 = box
     g = G(tf, box, plant, log)
     sym = abs(im0 + im1) < 1e-12
-    g.fit_trend([complex(re0, 0) if sym else complex(re0, im0), complex(0.5 * (re0 + re1), im1),
-                 complex(re1, 0) if sym else complex(re1, im1), complex(re0, im1), complex(re1, im1)])
+    lo = 0.0 if sym else im0
+    g.fit_trend([complex(re0, lo), complex(re1, lo), complex(re1, im1), complex(re0, im1),
+                 complex(0.5 * (re0 + re1), im1), complex(re1, 0.5 * (lo + im1)), complex(re0, 0.5 * (lo + im1))])
     if sym:
         path = [complex(re1, 0), complex(re1, im1), complex(re0, im1), complex(re0, 0)]
     else:
         path = [complex(re0, im0), complex(re1, im0), complex(re1, im1), complex(re0, im1), complex(re0, im0)]
     tot, big, nint, hits = 0.0, 0.0, 0, 0
     for a, c in zip(path[:-1], path[1:]):
-        Ke = max(2, int(round(K * abs(c - a) / max(re1 - re0, im1 - im0))))
-        d, b, ni, h = track(g, a, c, Ke, tol)
+        Ke = max(1, int(math.ceil(abs(c - a) / h0)))
+        d, b, ni, h = track(g, a, c, Ke, tol, maxdepth=maxdepth)
         tot += d; big = max(big, b); nint += ni; hits += h
     wind = tot / math.pi if sym else tot / (2 * math.pi)
     inside = [p for p in g.pl if re0 < p.real < re1 and im0 < p.imag < im1]
-    return dict(winding_g=wind, largest_step=big, intervals=nint, refinement_limit_hits=hits, evaluations=g.nev,
-                candidate_poles_inside=len(inside), symmetric=sym)
+    return dict(winding_g=float(wind), largest_step=float(big), intervals=int(nint), refinement_limit_hits=int(hits),
+                evaluations=int(g.nev), candidate_poles_inside=len(inside), symmetric=bool(sym),
+                trend=[float(t) for t in g.trend])
 
 
 def std_boxes(omega):
@@ -483,39 +565,40 @@ def main():
                 fo.write(json.dumps(rec) + "\n")
 
     if pos[0] == "selftest":
+        # synthetic ln det: trend 40 lam + 1.5 lam^2 (as det M's growth), zeros at 0 (B0), 1.2 +- 0.7i and
+        # 5.98 +- 0.2i (FULL, the latter 0.02 inside its right edge), 3 +- 9i (outside); omega = 1
         zs = [0.0, 1.2 + 0.7j, 1.2 - 0.7j, 5.98 + 0.2j, 5.98 - 0.2j, 3.0 + 9.0j, 3.0 - 9.0j]
 
+        class FakeBg:
+            omega = 1.0
+
         class Fake:
-            pass
+            bg = FakeBg()
+
+            def lndet(self, l):
+                return 40 * l + 1.5 * l * l + sum(np.log(l - z) for z in zs)
+
+            def poles(self):
+                return np.array([], complex)
         ok = True
         for plant, want in ((None, (1, 0, 4)), (2.0 + 1.0j, (1, 0, 6))):
-            res = []
+            res, resc = [], []
             for name, bx in std_boxes(1.0).items():
-                def lng(l, bx=bx):
-                    v = 40 * l + 1.5 * l * l + sum(np.log(l - z) for z in zs)
-                    if plant is not None:
-                        v += np.log(l - plant) + np.log(l - np.conj(plant))
-                    return v
-                re0, re1, im0, im1 = bx
-                sym = abs(im0 + im1) < 1e-12
-                path = [complex(re1, 0), complex(re1, im1), complex(re0, im1), complex(re0, 0)] if sym else \
-                    [complex(re0, im0), complex(re1, im0), complex(re1, im1), complex(re0, im1), complex(re0, im0)]
-                tot = sum(track(lng, a, c, 8, math.pi / 4)[0] for a, c in zip(path[:-1], path[1:]))
-                totc = sum(track(lng, a, c, 1, 100.0, maxdepth=0)[0] for a, c in zip(path[:-1], path[1:]))
-                w = tot / math.pi if sym else tot / (2 * math.pi)
-                wc = totc / math.pi if sym else totc / (2 * math.pi)
-                res.append((name, round(w, 6), round(wc, 6)))
-            got = tuple(int(round(r[1])) for r in res)
-            ctl = any(abs(r[2] - g) > 1e-6 for r, g in zip(res, want))
-            print("selftest plant=%s: %s, expected %s; control (no refinement) %s" % (plant, res, want,
-                                                                                      "fires" if ctl else "DOES NOT FIRE"))
-            ok = ok and got == want and ctl
+                r = count_box(Fake(), bx, plant=plant)
+                rc = count_box(Fake(), bx, plant=plant, h0=10.0, tol=100.0, maxdepth=0)
+                res.append(round(r["winding_g"], 6)); resc.append(round(rc["winding_g"], 6))
+                ok = ok and r["largest_step"] <= math.pi / 4 and r["refinement_limit_hits"] == 0
+            got = tuple(int(round(w)) for w in res)
+            ctl = any(abs(w - e) > 1e-6 for w, e in zip(resc, want))
+            print("selftest plant=%s: B0, U0, FULL = %s, expected %s; control (one sample per edge) %s -> %s"
+                  % (plant, res, want, resc, "fires" if ctl else "DOES NOT FIRE"))
+            ok = ok and got == want and all(abs(w - e) < 1e-6 for w, e in zip(res, want)) and ctl
         print("selftest", "PASS" if ok else "FAIL")
         sys.exit(0 if ok else 1)
 
-    bg = Background(pos[1])
-    tf = TestField(bg, mutate)
-    info = dict(state=os.path.basename(bg.path), D=bg.D, M=bg.M, K=bg.K, nodes=bg.nodes, omega=bg.omega,
+    bg = Background(pos[1], us=float(o.get("us", "0")), ks_series=int(o.get("ks", "100")))
+    tf = TestField(bg, mutate, kf=int(o["kf"]) if o.get("kf") else None)
+    info = dict(state=os.path.basename(bg.path), D=bg.D, M=bg.M, K=bg.K, nodes=bg.nodes, omega=bg.omega, kf=tf.kf,
                 Delta=bg.Delta, ks_series=bg.ks, kc_series=bg.kc, xs=bg.xs, xe=bg.xe, mutate=mutate)
 
     if pos[0] == "check":
@@ -566,7 +649,10 @@ def main():
         boxes = std_boxes(bg.omega)
         evlog = o.get("evlog")
 
+        load_cache(evlog, mutate)
+
         def log(r):
+            r["mutate"] = mutate
             if evlog:
                 with open(evlog, "a") as fo:
                     fo.write(json.dumps(r) + "\n")
@@ -577,7 +663,7 @@ def main():
                 parts = spec.split(":")
                 name, bx = parts[0], tuple(float(v) for v in parts[1:5])
             t = time.time()
-            res = count_box(tf, bx, plant=plant, tol=tol, log=log)
+            res = count_box(tf, bx, plant=plant, tol=tol, log=log, h0=float(o.get("h0", "0.25")))
             emit(dict(kind="count", **info, box_name=name, box=list(bx), plant=None if plant is None else
                       [plant.real, plant.imag], seconds=round(time.time() - t, 1), **res))
         return

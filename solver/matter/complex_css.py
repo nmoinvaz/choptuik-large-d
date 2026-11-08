@@ -234,15 +234,16 @@ def main():
         return
 
     if pos[0] == "track":
-        # complex_css.py track D0 D1 LAM1[,LAM2..] [--h=0.1] [--hmax=1] [--out=F]: the background continued in D by
+        # complex_css.py track D0 D1 LAM1[,LAM2..] [--h=0.1] [--hmax=1] [--spread=1e-8] [--out=F]: the background continued in D by
         # Newton on its jump (css_lateral.newton), each root followed by secant at two radii; a step is accepted when
-        # the background converges, every root converges at both radii to the same lambda (1e-8) and lies within
+        # the background converges, every root converges at both radii to the same lambda (--spread) and lies within
         # 0.02 (1 + |lambda|) of its extrapolation; otherwise the step is halved.
         D0, D1 = float(pos[1]), float(pos[2])
         lams = [complex(s.replace(" ", "")) for s in pos[3].split(",")]
         h0 = float(o.get("h", "0.1"))
         hmax = float(o.get("hmax", "1.0"))
         Rfs = [float(s) for s in o.get("R", "0.85,0.6").split(",")]
+        smax = float(o.get("spread", "1e-8"))
         r = bg[D0]
         kap = r["kappa"]
         bh = [(D0, r["omega"], r["f0"])]
@@ -284,7 +285,7 @@ def main():
                         res.append((Rf, lam, conv))
                     lam = res[0][1]
                     spread = max(abs(q[1] - lam) for q in res)
-                    good = all(q[2] for q in res) and spread < 1e-8 and abs(lam - g) < 0.02 * (1 + abs(lam))
+                    good = all(q[2] for q in res) and spread < smax and abs(lam - g) < 0.02 * (1 + abs(lam))
                     if not good:
                         ok = False
                         break
