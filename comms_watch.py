@@ -14,10 +14,11 @@ in this order:
   entries since 2026-11-08; this check remains for an entry written by an old habit.
 
 After --max-minutes with nothing for it, it exits 3 with "nothing new", and the session simply restarts it (Claude
-Code stops a background command after 2 h, so keep the limit below that). The coordinator watches with --name cloud.
+Code stops a background command after 2 h, so keep the limit below that). The coordinator watches with
+--name coordinator; a comment addressed to its old name, cloud, reaches it too.
 If gh is missing or not logged in, it says so once and watches comms.txt only. Standard library, git and gh only.
 
-    python3 -u comms_watch.py --name cloud|win|win2|macm3|mac [--interval 60] [--max-minutes 110]
+    python3 -u comms_watch.py --name coordinator|win|win2|macm3|mac [--interval 60] [--max-minutes 110]
         [--repo nmoinvaz/choptuik-large-d] [--no-issues] [--state PATH]
     python3 comms_watch.py --selftest [--mutate=parse]     # the header parser on fixed cases; exits 1 on a failure
 """
@@ -61,12 +62,14 @@ def coord_addressed(body, name, mutate=None):
     sender, recips = m.group(1), [r.strip() for r in m.group(2).split(",") if r.strip()]
     if mutate == "parse":
         recips = recips[:1]
-    return sender != name and (name in recips or "all" in recips)
+    names = {name, "cloud"} if name == "coordinator" else {name}  # cloud: the coordinator's name before 2026-11-08
+    return sender not in names and (bool(names & set(recips)) or "all" in recips)
 
 
 def selftest(mutate=None):
     cases = [("cloud to win2, win, macm3\nbody", "win", True), ("cloud to win2\nbody", "win", False),
-             ("**cloud to all**\nbody", "macm3", True), ("win2 to cloud\n...", "cloud", True),
+             ("**coordinator to all**\nbody", "macm3", True), ("win2 to coordinator\n...", "coordinator", True),
+             ("win2 to cloud\n...", "coordinator", True), ("coordinator to all\n", "coordinator", False),
              ("win2 to cloud\n...", "win2", False), ("no header here", "win", False),
              ("cloud to win, macm3:\n", "macm3", True), ("", "win", False)]
     bad = [(b, n, e) for b, n, e in cases if coord_addressed(b, n, mutate) != e]

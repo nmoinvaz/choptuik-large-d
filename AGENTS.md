@@ -201,19 +201,19 @@ for a real login meant to be notified.
 
 - **Thread budget on the local 8-thread machine:** 4–6 threads at below-normal priority; one process per thread. It has
   4 physical cores, so with 6 busy threads a job runs about 4× slower than on 2 cloud cores; scale cloud estimates.
-- **Coordination:** from 2026-11-08 the coordinator (`cloud`) and the runners talk on the pinned Coordination issue,
-  [#98](https://github.com/nmoinvaz/choptuik-large-d/issues/98), when a message belongs to no single task; a message
-  about one task goes on that task's issue. Each comment starts with the header line `<sender> to <recipients>`
-  (`cloud`, `win2`, `win`, `macm3`, `mac`, or `all`; for example `cloud to win2, macm3` or `win to cloud`), since every
-  machine posts from the same GitHub account; times come from a clock (`date -u '+%Y-%m-%d %H:%M'`), not guessed.
-  `comms.txt` is the archive of the messages up to 2026-11-08 (entries before 2026-10-24 22:25 UTC are in PDT, and the
-  laptop's say `local`); it takes no new entries. The machines are the Windows laptop (`win`), a Windows desktop
-  (`win2`), an M3 Mac (`macm3`) and the Apple M5 Mac (`mac`), where the coordinator runs. Each machine's Claude Code
-  session waits with `python3 -u comms_watch.py --name win|win2|macm3|mac` (the coordinator with `--name cloud`) run as
-  a background command. It checks every 60 s and exits 0 on a Coordination comment addressed to it (printing it and
-  recording it as handled), on a task issue labelled for it, or on an archive entry addressed to it, and exits 3 after
-  110 min with nothing new; the session handles what it printed and starts it again, and it costs nothing while it
-  waits. Tasks are issues of the GitHub project ("Tasks: the GitHub project" above); a queued task states its commands,
-  its thread count, its stop conditions and what to push.
+- **Coordination:** from 2026-11-08 the coordinator (`coordinator`, before then `cloud`) and the runners talk on the
+  pinned Coordination issue, [#98](https://github.com/nmoinvaz/choptuik-large-d/issues/98), when a message belongs to no
+  single task; a message about one task goes on that task's issue. Each comment starts with the header line `<sender> to
+  <recipients>` (`coordinator`, `win2`, `win`, `macm3`, `mac`, or `all`; for example `coordinator to win2, macm3` or
+  `win to coordinator`), since every machine posts from the same GitHub account; times come from a clock (`date -u
+  '+%Y-%m-%d %H:%M'`), not guessed. `comms.txt` is the archive of the messages up to 2026-11-08 (entries before
+  2026-10-24 22:25 UTC are in PDT, and the laptop's say `local`); it takes no new entries. The machines are the Windows
+  laptop (`win`), a Windows desktop (`win2`), an M3 Mac (`macm3`) and the Apple M5 Mac (`mac`), where the coordinator
+  runs. Each machine's Claude Code session waits with `python3 -u comms_watch.py --name win|win2|macm3|mac` (the
+  coordinator with `--name coordinator`) run as a background command. It checks every 60 s and exits 0 on a Coordination
+  comment addressed to it (printing it and recording it as handled), on a task issue labelled for it, or on an archive
+  entry addressed to it, and exits 3 after 110 min with nothing new; the session handles what it printed and starts it
+  again, and it costs nothing while it waits. Tasks are issues of the GitHub project ("Tasks: the GitHub project"
+  above); a queued task states its commands, its thread count, its stop conditions and what to push.
 - **Long jobs start with a pilot:** a short run of the hardest case, with a stop condition, before an overnight run
   (the T30 pilot stopped a sweep that would have failed after hours).
