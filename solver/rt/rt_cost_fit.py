@@ -88,7 +88,7 @@ def ddiff(ra, rb):
     return float((arb(ra["Delta_str"]) - arb(rb["Delta_str"])).mid())
 
 
-def analyse(G, old, tol=1e-12, project=(), table=False, say=print, delta_from=None, alt=None):
+def analyse(G, old, tol=1e-12, project=(), table=False, say=print, delta_from=None, alt=None, fixed_N=None):
     res = {}
     grids = sorted(G)
     # ------------------------------------------------ products per Newton step against D
@@ -151,6 +151,11 @@ def analyse(G, old, tol=1e-12, project=(), table=False, say=print, delta_from=No
     res["newton_cont"] = float(np.median(nc)) if nc else float("nan")
     say(f"  Newton steps per continuation step: median {res['newton_cont']:g} over {len(nc)} steps"
         + (f", range {min(nc)}-{max(nc)}" if nc else ""))
+    pts = sorted((r["D"], len(r["products"])) for g in grids for r in G[g].values() if r.get("label") == "cont")
+    if len(pts) >= 3:
+        res["nsteps"] = fit_spread([q[0] for q in pts], [q[1] for q in pts])
+        say("  Newton steps per continuation step against D, n(D) = a + b D: " + "; ".join(
+            f"{w}: a {c[0]:.1f}, b {c[1]:.3f}" for w, c in res["nsteps"].items()))
     if len(tg) >= 2:
         g0, g1 = tg[0], tg[-1]
         lr = math.log((g1[1] + 1) / (g0[1] + 1))
@@ -178,6 +183,8 @@ def analyse(G, old, tol=1e-12, project=(), table=False, say=print, delta_from=No
         res["spread"] = root_spread(G, alt, tol, say)
     if project:
         res["project"] = projection(res, project, tol, say)
+        if fixed_N:
+            res["project_fixed"] = projection_fixed(res, G, project, fixed_N, say)
     return res
 
 
@@ -267,13 +274,40 @@ def projection(res, targets, tol, say):
     return out
 
 
-def step_secs(res, T, gT, Nt, N, k, parts=False):
+def step_secs(res, T, gT, Nt, N, k, parts=False, nsteps=None):
     L, L0, n0 = L_of(Nt, N), T["L"], gT[1] + 1
     s = (N + 1) / n0
     p, q = T["p"] * s ** res["alpha_p"], T["q"] * s ** res["alpha_q"]
     s_newton = k * (p + q) + T["e"] * k * k * L
-    s_step = res["newton_cont"] * s_newton + 2 * T["jl"] * (L / L0) ** 3
+    s_step = (nsteps or res["newton_cont"]) * s_newton + 2 * T["jl"] * (L / L0) ** 3
     return (s_step, s_newton, L) if parts else s_step
+
+
+def projection_fixed(res, G, targets, N, say):
+    """The cost of continuing on one grid N, with the products k(D) and the Newton steps n(D) per D step continued
+    linearly from their fits (each window), and the per-product times of the timed grid N: an extrapolation, and the
+    cost only (it says nothing about whether N still holds Delta)."""
+    out = {}
+    g = next((h for h in res["time"] if h[1] == N), None)
+    fk = res["k"].get((g, "mean")) if g else None
+    if g is None or fk is None or "nsteps" not in res:
+        say(f"fixed-N projection: needs a timed continuation on N = {N}")
+        return out
+    T = res["time"][g]
+    say(f"\ncost on 32x{N} alone (an extrapolation of the fits of k(D) and n(D), cost only):")
+    say("| D | window | k per Newton step | Newton steps per D step | s per Newton step | s per D step | "
+        "hours from D 30 |")
+    say("|---|---|---|---|---|---|---|")
+    for D in targets:
+        for w in fk:
+            ab, nb = fk[w], res["nsteps"].get(w, res["nsteps"]["all"])
+            hours = sum(step_secs(res, T, g, g[0], N, ab[0] + ab[1] * Dk, nsteps=max(1.0, nb[0] + nb[1] * Dk))
+                        for Dk in np.arange(30.0, D + 1e-9, 1.0)) / 3600
+            k, n = ab[0] + ab[1] * D, max(1.0, nb[0] + nb[1] * D)
+            s_step, s_newton, L = step_secs(res, T, g, g[0], N, k, parts=True, nsteps=n)
+            out[(D, w)] = dict(k=k, n=n, s_newton=s_newton, s_step=s_step, hours=hours)
+            say(f"| {D:g} | {w} | {k:.0f} | {n:.1f} | {s_newton:.0f} | {s_step:.0f} | {hours:.1f} |")
+    return out
 
 
 def planted(mutate=None):
@@ -332,6 +366,12 @@ def planted(mutate=None):
     cross = (-12 - c[0]) / c[1]
     ok.append(("root-spread crossing at D 50", abs(cross - 50) < 0.1, cross))
     print(f"planted {ok[-1][0]}: {cross:.4f} {'ok' if ok[-1][1] else 'FAIL'}")
+    # the fixed-N cost at D 60 on 101 against its formula: 5 Newton steps of k (p + q) + 1e-8 k^2 L, plus 2 (10 + 4) s
+    pf = projection_fixed(res, G, [60.0], 101, lambda s: None)[(60.0, "all")]
+    k60 = ka + kb * 60
+    want = 5 * (k60 * (p0 + 0.1) + 1e-8 * k60 * k60 * L_of(32, 101)) + 2 * 14.0
+    ok.append(("fixed-N seconds per D step at 60", abs(pf["s_step"] / want - 1) < 1e-6, pf["s_step"]))
+    print(f"planted {ok[-1][0]}: {pf['s_step']:.2f} against {want:.2f} {'ok' if ok[-1][1] else 'FAIL'}")
     passed = all(g for _, g, _ in ok)
     print("PASS" if passed else "FAIL")
     return passed
@@ -341,6 +381,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("files", nargs="*")
     ap.add_argument("--old", default="")
+    ap.add_argument("--fixed_N", type=int, default=None, help="also project the cost of staying on 32xN")
     ap.add_argument("--alt", default="", help="records of second roots (other starts) of the same grids, comma separated")
     ap.add_argument("--project", default="")
     ap.add_argument("--tol", type=float, default=1e-12)
@@ -356,6 +397,7 @@ def main():
     old = load([p for p in a.old.split(",") if p])
     alt = load([p for p in a.alt.split(",") if p])
     analyse(G, old, tol=a.tol, project=[float(v) for v in a.project.split(",") if v], table=a.table, alt=alt,
+            fixed_N=a.fixed_N,
             delta_from=a.delta_from)
 
 
