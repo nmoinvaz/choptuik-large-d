@@ -45,6 +45,7 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--tag", default="rt")
     ap.add_argument("--mutate", default=None)
+    ap.add_argument("--mp", type=int, default=0, help="bits of the arb residual for the final solves (0: f64 only)")
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
     coef = 1.0 + 1e-3 if a.mutate == "coef" else 1.0
@@ -68,10 +69,22 @@ def main():
         t0 = time.time()
         z, ok, hist = rt.newton(z, tol=1e-11, it_max=15, verbose=False)
         d0, d1 = rt.delta(z)
+        mp_hist = None
+        if a.mp and label in ("start", "end"):
+            # the residual in arb (rt_mp.py), f64 Jacobian: removes f64's rounding along the weak direction
+            from rt_mp import RTmp, newton_mixed, to_f64
+            rm = RTmp(D, rt.Nt, rt.N, prec=a.mp, coef_mut=coef)
+            zm, ok, mp_hist = newton_mixed(rm, z, tol=1e-28, it_max=40, log=lambda s: None)
+            dm0, dm1 = rm.delta_m(zm)
+            d0, d1 = float(dm0.mid()), float(dm1.mid())
+            z = to_f64(zm)
         ref = delta_hp(D)
         r = dict(D=D, grid=[rt.Nt, rt.N], L=rt.L, mu=float(z[-1]), Delta_xi0=float(d0), Delta_xi1=float(d1),
                  Delta_hp=ref, diff=(float(d0 - ref) if ref is not None else None), newton=[float(h) for h in hist],
-                 ok=bool(ok), secs=round(time.time() - t0, 1), label=label, mutate=a.mutate)
+                 mixed=mp_hist, ok=bool(ok), secs=round(time.time() - t0, 1), label=label, mutate=a.mutate)
+        if mp_hist:
+            say(f"    mixed refinement ({a.mp} bits): {len(mp_hist) - 1} its, max|F| {mp_hist[0]:.1e} -> "
+                f"{mp_hist[-1]:.1e}")
         rec.write(json.dumps(r) + "\n")
         rec.flush()
         say(f"  {label} D {D:.3f} grid {rt.Nt}x{rt.N} L {rt.L}: newton {len(hist) - 1} its, max|F| {hist[-1]:.1e}, "
