@@ -616,9 +616,22 @@ def main():
         zb = np.concatenate([bg.p1] + [bg.Xvals[x][:2].ravel() for x in bg.X] + [bg.mh])
         r0 = float(np.max(np.abs(A0 @ zb)) / np.max(np.abs(zb)))
         sv = np.linalg.svd(A0, compute_uv=False)
-        rec = dict(kind="check", **info, background_mismatch=mm, series_at_last_node=bg.mismatch_series_last, centre_symmetry=sym, dmat_vs_hpkernel=ddiff,
+        # analyticity (Cauchy-Riemann) of ln det M at l0, and its control: ln det M(conj lam), anti-analytic;
+        # conjugation symmetry det M(conj lam) = conj det M(lam) (real background)
+        l0, hh = 1.3 + 0.4j, 1e-5
+        f = tf.lndet
+        dre = (f(l0 + hh) - f(l0 - hh)) / (2 * hh)
+        dim = (f(l0 + 1j * hh) - f(l0 - 1j * hh)) / (2j * hh)
+        fc = lambda l: f(np.conj(l))
+        cre = (fc(l0 + hh) - fc(l0 - hh)) / (2 * hh)
+        cim = (fc(l0 + 1j * hh) - fc(l0 - 1j * hh)) / (2j * hh)
+        wr = lambda z: complex(z.real, math.remainder(z.imag, 2 * math.pi))
+        conj_sym = abs(wr(f(np.conj(l0)) - np.conj(f(l0))))
+        rec = dict(kind="check", **info, background_mismatch=mm, series_at_last_node=bg.mismatch_series_last,
+                   centre_symmetry=sym, dmat_vs_hpkernel=ddiff,
                    null_residual_bg=r0, sv_min=float(sv[-1]), sv_next=float(sv[-2]), sv_max=float(sv[0]),
-                   horizon_tail=tf.last_tail)
+                   horizon_tail=tf.last_tail, cauchy_riemann=float(abs(dre - dim) / abs(dre)),
+                   cauchy_riemann_control=float(abs(cre - cim) / abs(cre)), conj_symmetry=float(conj_sym))
         emit(rec)
         return
 

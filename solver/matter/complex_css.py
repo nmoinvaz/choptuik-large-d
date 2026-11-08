@@ -320,6 +320,37 @@ def main():
                   else [plant.real, plant.imag], mutate=mutate, omega=r["omega"],
                   resonance_Im=r["kappa_s"] * r["mu"][1]))
         return
+
+    if pos[0] == "boxes":
+        # complex_css.py boxes D LAMOSC [--R=0.85,0.6] [--names=A,B,C,S] [--plant=Z] [--mutate=M] [--out=F]
+        # the standard boxes of matter/COMPLEX_CRITICAL.md section 2 (omega from the background, eps = 0.25):
+        #   A  0.05 < Re < 0.9, |Im| < omega - eps            expected: none
+        #   B  0.9 < Re < RE1, |Im| < omega - eps             expected: lambda = 1 and lambda_phys
+        #   C  0.05 < Re < RE1, omega + eps < Im < Im(osc) + 1.5   expected: the oscillatory mode
+        #   S  0.05 < Re < RE1, omega - eps < Im < omega + eps  (the resonance line: the jump method's artefacts)
+        # RE1 = 5.  The oscillatory mode is first refined by secant from LAMOSC.
+        D = float(pos[1])
+        r = bg[D]
+        om = r["omega"]
+        lo = complex(pos[2].replace(" ", ""))
+        lo, ok = secant(Det(r, 0.85), lo)
+        eps, re1 = 0.25, 5.0
+        top = lo.imag + 1.5
+        allb = {"A": (0.05, 0.9, -(om - eps), om - eps), "B": (0.9, re1, -(om - eps), om - eps),
+                "C": (0.05, re1, om + eps, top), "S": (0.05, re1, om - eps, om + eps)}
+        names = o.get("names", "A,B,C,S").split(",")
+        plant = complex(o["plant"].replace(" ", "")) if "plant" in o else None
+        for Rf in [float(s) for s in o.get("R", "0.85,0.6").split(",")]:
+            for nm in names:
+                bx = allb[nm]
+                det = Det(r, Rf, plant)
+                t = time.time()
+                w, big, ni = winding(det, box(*bx), K=int(o.get("K", "12")))
+                emit(dict(kind="box", D=D, box_name=nm, box=list(bx), R_over_xh=Rf, winding=w, largest_step=big,
+                          intervals=ni, evaluations=det.nev, seconds=round(time.time() - t, 1),
+                          lam_osc=[lo.real, lo.imag], lam_osc_converged=ok, omega=om,
+                          plant=None if plant is None else [plant.real, plant.imag], mutate=mutate))
+        return
     raise SystemExit(__doc__)
 
 
