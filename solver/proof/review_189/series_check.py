@@ -145,13 +145,18 @@ def main():
     N, dev = best
     yN = sums[N]
     print(f"best-matching truncation N = {N}: max |Y_N(z0) - c| = {mp.nstr(dev, 3)}")
-    tail = []
+    # the stored eta disc of component i is the square [-e_i, e_i]^2 (q's real and imaginary entries)
+    e = [max(arbmid(st["q"][i])[1], arbmid(st["q"][21 + i])[1]) for i in range(19)]
+    tail, ok_eta = [], True
     for Np in (N + 10, N + 40, N + 80):
-        tail.append((Np, max(abs(a - b) for a, b in zip(sums[Np], yN))))
-    for Np, t in tail:
-        print(f"  |Y_{Np}(z0) - Y_{N}(z0)| = {mp.nstr(t, 3)} (the remainder eta is about this size; bound {mp.nstr(qr, 3)})")
+        diff = [a - b for a, b in zip(sums[Np], yN)]
+        worst = max(max(abs(dz.real), abs(dz.imag)) / e[i] for i, dz in enumerate(diff))
+        tail.append((Np, max(abs(dz) for dz in diff), worst))
+        ok_eta = ok_eta and worst <= 1
+    for Np, t, wr in tail:
+        print(f"  |Y_{Np}(z0) - Y_{N}(z0)| = {mp.nstr(t, 3)}; worst component (real or imaginary part) / its stored eta "
+              f"radius {mp.nstr(wr, 3)} (the remainder eta is about this size)")
     ok_val = dev < mp.mpf("1e-70")
-    ok_eta = all(t <= qr for _, t in tail)
     # derivative columns: central differences of Y_N in each parameter, step 1e-30
     hd = mp.mpf("1e-30")
     cV = [[mp.mpc(arbmid(re)[0], arbmid(im)[0]) for re, im in row] for row in st["cV"][:19]]
