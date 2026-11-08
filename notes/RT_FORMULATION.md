@@ -442,3 +442,233 @@ cd hp && python3 stall_margin.py OUT.jsonl STATE.npz --k 2 --threads 2      # OU
 PROF.npz files are `gg_to_rt.py profile` dumps of hp states (`I91-mac/profiles/`: up_D10.0000, up2_D20.0437,
 up6_D30.0688, up7_D40.0201 and up13_D60.0020 from `hp/data/states` of the main checkout, T139-macm3's
 anm_pin3_D100.0000).
+
+## 9. Past D = 10: the multiprecision Jacobian solve
+
+Issue #105. Subagent of the coordinator on the Mac, 2026-11-08. Code in `solver/rt/`: `rt_mpsolve.py` and
+`rt_mp_cost.py` (new), `rt_run.py --solver mp`, and `rt_grids.py` (new). Raw output is in folder `I105-mac/` of the
+raw-data repository.
+
+**Result.** On 32 × 101 the prototype reproduces our Δ at D = 15, 20.043653 and 29.984746 to 1.1×10⁻¹⁶, 1.7×10⁻¹⁶
+and 3.2×10⁻¹⁶. On 32 × 121 it does so to 2.3×10⁻²², 1.7×10⁻²⁰ and 5.3×10⁻¹⁸. On 32 × 81 it misses the acceptance at
+D = 20.04 and 29.98, at 1.4×10⁻¹⁰ and 1.2×10⁻⁹ against the threshold of 10⁻¹⁰. So do the two grids against each
+other. The cause is the truncation of 81 Chebyshev points, which grows with D, not the solve. From D = 15 to 30 a
+Newton step costs 13 to 35 s at L = 9,185 and 11,425, the arb parts on one core. A dense LU in extended precision at
+those sizes would take an estimated 4 to 7 min in double-double, or 50 to 98 min in arb, per step.
+
+### 9.1 The method
+
+Section 4 left the prototype at D = 10. There κ(J) on a grid that resolves Δ passes 2⁵³, and refinement with the f64
+LU alone (`rt_mp.newton_mixed`) stops converging. `rt_mpsolve.newton_mp` replaces the linear solve and keeps the
+residual.
+
+- Newton's residual is the arb residual of `rt_mp.py`, at 192 bits.
+- Each Newton step is solved in arb by flexible GMRES (Saad 1993), without restart, to a relative residual of 10⁻³⁰.
+  The products J(z)u are exact central differences of the arb residual, which is quadratic.
+- The right preconditioner is the f64 LU of the f64 Jacobian (`rt_model.RT.jacobian`). Its triangular solves run in
+  double-double, each row a `dd_dot` of multidouble's Python package. This is GMRES-based iterative refinement (Carson
+  and Higham 2017) with the factors applied in higher precision.
+- The f64 Jacobian and its LU are rebuilt after a Newton step larger than 10⁻³. The two continuations of 9.4 also
+  rebuilt after an inner solve of more than 25 products (commit a9cb86b). Later runs rebuild only when the count
+  exceeds 1.5 times that of the first solve with the current factors (1090efb).
+- Newton stops at max|F| < 10⁻⁴⁰.
+
+Why it works. The exact inverse of the f64 factors is (J + E)⁻¹ with |E| near 2⁻⁵³|J|. So J(LU)⁻¹ is the identity, plus
+a term of low rank from the weak directions, plus a term small in norm, and GMRES spends about one product on each weak
+direction. The preconditioner must be one fixed operator applied in extended precision. |(LU)⁻¹| is near 1/(2⁻⁵³|J|),
+so f64 triangular solves put errors the size of the solution into the well-conditioned directions.
+
+The inner solve runs to 10⁻³⁰, not to the loose tolerance of an inexact Newton method. An inner residual r leaves an
+error of about |r|/σ_min along the weak directions, and the quadratic term of that error would exceed the next residual.
+
+### 9.2 Planted truth first
+
+`rt_mpsolve.py --selftest` (logs `I105-mac/planted*.log`, records `planted.jsonl`) solves A x = b with A = U diag(s) Vᵀ
+in arb. U and V are products of eight Householder reflections, so they are exactly orthogonal. L = 1500, and s is
+log-uniform in [10⁻⁴, 1] except for twelve values log-spaced from 10⁻⁹ to 10⁻²⁰, so κ(A) = 10²⁰ exactly. The test runs
+`newton_mp` with the same central-difference products as for the RT residual. The criteria were written before the
+first run.
+
+- The error is below 10⁻³⁰. The expected error is about κ·2⁻¹⁹², or 2×10⁻³⁸.
+- It takes at most 8 Newton steps.
+- The f64 LU alone leaves an error above 10⁻⁶, so the system is beyond f64. It leaves 66.
+
+| inner solver | preconditioner | error | products per Newton step | verdict |
+|---|---|---|---|---|
+| flexible GMRES | f64 LU, double-double solves (the design) | 9.3×10⁻⁴⁰ | 11 | pass |
+| GCR | f64 LU, double-double solves | 6.1×10⁻⁴¹ | 11 | pass |
+| flexible GMRES | f64 LU, f64 solves | 1.4×10⁻³⁹ | 45–59 | pass |
+| flexible GMRES or GCR | explicit f64 inverse, applied in double-double | 9.3×10⁻³⁷ | 80 (the cap), 8 steps | pass |
+| GCR | f64 LU, f64 solves (the first design, `planted_first_run.log`) | 47 | 80 | fail |
+| the design, `--mutate=f64apply` (products with A rounded to f64) | | 64 | 23–38 | fail, exit 1 |
+| the design, `--mutate=lowprec` (64 bits) | | 5×10¹⁵ | 80 | fail, exit 1 |
+
+The explicit inverse does worse than f64 solves, because LAPACK builds each of its columns by such a solve. The
+factorization of Jᵀ in place, which the controls of 9.4 use (commit 1d577e7), passes the same test with 6.9×10⁻⁴⁰, and
+its two mutations exit 1 (`controls/planted_inplace*.log`).
+
+### 9.3 The pilot
+
+The pilot ran on 32 × 101 (L = 11,425), in folder `I105-mac/pilot/`.
+
+- At D = 10, the 48 × 81 state of section 3 was resampled and re-solved in 3 Newton steps. It lands 3.0×10⁻¹⁷ from
+  ours.
+- From that solution, one Newton solve at D = 12 started from a zeroth-order guess with residual 6.2×10⁻². It converged
+  in 8 steps to max|F| = 1.6×10⁻⁴², with Δ 5.8×10⁻¹⁷ from ours. It took 150 s: the Jacobian 9 s, its LU 7 s, the
+  Newton steps 49 s, and six rebuilds of the preconditioner 86 s. The pilot rebuilt after every step larger than 10⁻⁶
+  (commit 54220e6).
+- Without the rebuilds (`pilot12_32x101_norefresh.log`), a preconditioner from a point 8×10⁻² away needed 62 to 76
+  products per step instead of 10, and the run was stopped.
+- The guess lies outside Newton's quadratic region, so the residual falls only by a factor of about 3 per step down to
+  10⁻⁵.
+- The continuation in steps of 1/2 (`cont12_32x101.log`) lands 3.6×10⁻¹⁷ to 5.8×10⁻¹⁷ from ours at D = 10.5, 11, 11.5
+  and 12. At D = 12 it gives the same Δ as the direct solve to 20 digits.
+
+### 9.4 The continuation, D = 10 to 30
+
+`rt_run.py --solver mp` ran one process per grid (`I105-mac/cont/`), starting from the 48 × 81 state at D = 10 of
+section 3 (`I91-mac/accept/`). Each grid is re-solved at D = 10 and continued in steps of 1/2 to D = 30 with EEG's
+linear predictor. Two extra steps land on the hp rows nearest 20 and 30, D = 20.043653 and 29.984746, from runs up2 and
+up6. hp's continuation rounds D to six decimals, so these are the D it solved. D = 15 is an hp row too. Δ_hp is the
+row's Delta_q0 + Delta_q1 (`hp/data/delta_all.csv`, double-double, err 10⁻¹⁶). Every difference is taken in arb from
+Δ_RT's 30-digit string. Every step converged, to a final max|F| of at most 3.5×10⁻⁴⁷ on 32 × 81 and 3.5×10⁻⁴² on
+32 × 101.
+
+The table gives Δ_RT − Δ_hp at the check D, from `rt_grids.py` and the logs named. The 48 × 101 and 32 × 121 entries
+re-solve the 32 × 101 state on those grids (`controls/res_*`). They are controls of the t and ξ resolution, outside the
+acceptance.
+
+| D | 32 × 81 | 32 × 101 | 32 × 81 − 32 × 101 | 48 × 101 | 32 × 121 |
+|---|---|---|---|---|---|
+| 15 | +1.13×10⁻¹¹ | −1.13×10⁻¹⁶ | +1.13×10⁻¹¹ | −1.13×10⁻¹⁶ | −2.3×10⁻²² |
+| 20.043653 | +1.40×10⁻¹⁰ (fail) | −1.68×10⁻¹⁶ | +1.40×10⁻¹⁰ (fail) | −1.68×10⁻¹⁶ | +1.7×10⁻²⁰ |
+| 29.984746 | +1.24×10⁻⁹ (fail) | +3.20×10⁻¹⁶ | +1.24×10⁻⁹ (fail) | +3.21×10⁻¹⁶ | +5.3×10⁻¹⁸ |
+
+The verdicts on the acceptance of #105:
+
+- |Δ_RT − Δ_hp| < 10⁻¹⁰ on both grids. It is met on 32 × 101 at all three D. On 32 × 81 it is met at D = 15 only.
+  The 32 × 81 run exits 1 and the 32 × 101 run exits 0.
+- The two grids agree to 10⁻¹⁰ at D = 15 only, and `rt_grids.py` exits 1 (`accept_grids.log`). Its own control runs on
+  the 32 × 121 and 32 × 101 pair, which passes. That pair exits 0, and with `--mutate=shift` (2×10⁻¹⁰ added to one Δ)
+  it exits 1 (`controls/grids_121_101*.log`).
+- `--mutate=coef` from the unmutated 32 × 81 states moves Δ by 3.75×10⁻⁴ at D = 15 and 3.06×10⁻³ at D = 29.98, and
+  exits 1 both times (`controls/coef_*`).
+
+What the columns say. 48 × 101 differs from 32 × 101 by 1.3×10⁻²², 2.0×10⁻²² and 1.0×10⁻¹⁹, so N_t = 32 is not what
+limits Δ. 32 × 121 moves Δ by 1.1 to 3.2×10⁻¹⁶, so the 10⁻¹⁶ offset of 32 × 101 is its own ξ truncation, not hp's
+error. Our double-double values agree with the 32 × 121 RT values to 2×10⁻²², 2×10⁻²⁰ and 5×10⁻¹⁸, well inside the
+10⁻¹⁶ their rows state. The truncation of 32 × 81 along the path is its difference from 32 × 101, whose own offset
+stays below 4×10⁻¹⁶.
+
+| D | 10 | 12 | 14 | 16 | 18 | 20 | 22 | 24 | 26 | 28 | 30 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 32 × 81 − 32 × 101 | −1.1×10⁻¹² | −7.7×10⁻¹³ | +4.5×10⁻¹² | +2.2×10⁻¹¹ | +6.3×10⁻¹¹ | +1.4×10⁻¹⁰ | +2.6×10⁻¹⁰ | +4.3×10⁻¹⁰ | +6.5×10⁻¹⁰ | +9.3×10⁻¹⁰ | +1.24×10⁻⁹ |
+| products per Newton step, 32 × 101 | 7–8 | 10–15 | 15–25 | 20–29 | 25–36 | 30–31 | 35 | 39–40 | 43–44 | 47 | 47–51 |
+
+N = 81's error changes sign between D = 12.5 and 13 and then grows about ninefold from D = 20 to 30. The number of
+products per Newton step counts roughly the directions the f64 LU gets wrong. It grows about linearly in D, by about 2
+per unit of D on 32 × 101.
+
+Independence. The RT code shares three things with hp. The first is the D = 10 start state, which section 3 continued
+from our D = 4 double-double state at M = 48 mapped by `gg_to_rt.py`. That was only a first guess, and Newton
+converged far from it at D = 4. The second is multidouble's `dd_dot`, here used only inside the preconditioner. It sets
+how fast GMRES converges, not the solution, which the arb residual fixes. The third is Python and numpy. The equations
+(EEG's Eq. (5), checked in sympy in section 2), the gauge, the unknowns, the discretization and the residual's
+arithmetic are separate. The agreement is numerical evidence: a measured difference between two discretizations, not a
+bound.
+
+### 9.5 Costs
+
+`rt_mp_cost.py` ran at D = 15 (`I105-mac/controls/mp_cost3_*.log`, `mp_cost3.jsonl`). The arb parts use one thread and
+BLAS two, on the Mac shared with one other job. The dense rows are the alternative, a full LU in extended precision at
+every Newton step, estimated from the L³ law of the largest size timed.
+
+| one evaluation | 32 × 81 (L = 9,185) | 32 × 101 (L = 11,425) |
+|---|---|---|
+| arb residual, 192 bits | 0.15 s | 0.22 s |
+| one product J u (two arb residuals) | 0.35 s | 0.48 s |
+| double-double triangular solves (one preconditioner application) | 0.073 s | 0.103 s |
+| f64 Jacobian | 6.8 s | 12.2 s |
+| f64 LU | 2.5 s | 4.3 s |
+| dense double-double LU (multidouble `dd_solve`, about 2.8×10⁻¹⁰ s/L³) | 223 s (estimate) | 420 s (estimate) |
+| dense arb LU at 192 bits (`arb_mat.solve`, about 3.9×10⁻⁹ s/L³) | 50 min (estimate) | 98 min (estimate) |
+
+The products dominate a Newton step. From D = 15 to 30, a step took 13 to 18 s on 32 × 81 and 19 to 35 s on 32 × 101,
+and a step of 1/2 in D took 1.4 to 2.3 min and 2.3 to 4.3 min (`rt_grids.py --table`, `accept_grids.log`). The whole
+continuation took 70 min on 32 × 81 and 117 min on 32 × 101, of which preconditioner rebuilds were 14 and 30 min.
+
+The control is the backward error of the double-double solves against the factors they apply,
+|UᵀLᵀPᵀx − b|/(|Uᵀ||Lᵀ||x| + |b|). It is 3.5×10⁻³⁶ and 2.9×10⁻³⁷, against a criterion of 10⁻²⁶. `--mutate=perturb`
+changes one pivot by 10⁻¹⁰ relative after the solve, and one entry of the dd_solve matrix by 10⁻¹⁰. It gives 1.2×10⁻¹⁷
+and 6.2×10⁻¹² and exits 1 (`mp_cost2_mutate.log`, `mp_cost3_mutate.log`). The first version of the check compared with
+the f64 Jacobian itself and failed with 2.5×10⁻¹⁴ (`controls/mp_cost_32x81.log`). That residual is the factorization's
+E x, not the solve's error, so the check was wrong and the solve was not.
+
+### 9.6 Discrepancies with the text above (reported, not fixed)
+
+- **The cost argument of 5(3) and 5b.** Both price the RT Newton by a dense LU in extended precision, hours per step
+  at EEG's L. The verdict rests partly on that, "on 14 to 24 times our unknowns in a dense LU". The solve here factors
+  only in f64 and needs 13 to 35 s per Newton step at L near 10⁴ up to D = 30. What still grows with D is the number
+  of GMRES products, which tracks the weak directions, and the Chebyshev resolution that holds Δ: N = 81 stops holding
+  10⁻¹⁰ near D = 20. The coordinator decides whether the verdict changes.
+- **The LU pivot ratio is not κ.** The ratio was 5.5×10¹² to 1.4×10¹⁷ along the runs. The f64 LU cannot resolve
+  pivots below its rounding, so the ratio saturates near 10¹⁶ to 10¹⁷. κ on the resolving grids past D = 10 was not
+  measured.
+- **hp's stated error is conservative here.** The rows give 10⁻¹⁶ (`check`), and the 32 × 121 values agree with them
+  to 2×10⁻²², 2×10⁻²⁰ and 5×10⁻¹⁸ at the three D. At D = 29.98 the 5.3×10⁻¹⁸ is the size of hp's own estimate of its
+  Δ error from the Newton residual there (dDelta_est 5.4×10⁻¹⁸ in `hp/data/delta_dd.csv`).
+
+### 9.7 What this means for #106
+
+#106 asks for Δ at EEG's resolution (40 Fourier and 79 Chebyshev points, L = 11,201) and at N = 121 (L = 17,081 at
+N_t = 40), at D = 20, 40 and 60.
+
+- The solver carries over unchanged, for example `rt_run.py --solver mp --grids 40x79`. The in-place LU holds one copy
+  of the f64 Jacobian, 1.0 GB at L = 11,201 and 2.3 GB at L = 17,081, and both fit this Mac.
+- At about 2 more products per unit of D, the 32 × 101 count of 50 at D = 30 reaches the cap of 80 near D = 45. #106
+  should raise `--max_products`, since FGMRES without restart keeps every vector.
+- A step of 1/2 in D took 2 to 4 min at L = 11,425 from D = 20 to 30. From D = 30 to 60 that is 60 steps per grid,
+  and each costs more as the products grow. A double-double product in place of the two arb residuals would cut the
+  dominant cost (Recommended tasks of #105).
+- The truncation of about 80 Chebyshev points is measured here in collocation: 1.1×10⁻¹² at D = 10, 1.4×10⁻¹⁰ at 20,
+  1.2×10⁻⁹ at 30. EEG's 40 × 80 truncates in coefficient space, so their error need not be the same, but the scale is
+  set. Growing ninefold per 10 units of D, which is an extrapolation and not a measurement, it would reach EEG's
+  departure from ours (5×10⁻⁷ at D = 60–100, `hp/data/delta_published_compare.csv`) between D = 50 and 60. #106
+  measures this at their grid.
+
+### 9.8 Proposed text for the README
+
+For the coordinator, after the RT sentence of "The large-D wall" (section 7):
+
+> With a multiprecision Jacobian solve (f64 LU, flexible GMRES in arb), the RT prototype reproduces our Δ from D = 10
+> to 30 on a 32 × 101 grid to 3×10⁻¹⁶, and on 32 × 121 to 2×10⁻²², 2×10⁻²⁰ and 5×10⁻¹⁸ at D = 15, 20 and 30. It is an
+> independent check by another gauge and discretization ([notes/RT_FORMULATION.md](notes/RT_FORMULATION.md) section 9).
+
+### 9.9 Reproduction
+
+From the repository root, with the raw-data repository cloned beside it (RAW = `../choptuik-large-d-raw`). The
+scripts need python-flint and multidouble's Python package with `dd_dot`, which `hp/build.sh` installs. On the Mac use
+`/Users/nathan/venv-qd/bin/python` with `MULTIDOUBLE_SITE=/Users/nathan/Source/venv-anm/lib/python3.13/site-packages`.
+Each command exits non-zero when its check fails.
+
+```
+python3 solver/rt/rt_mpsolve.py --selftest                   # --mutate=f64apply and --mutate=lowprec must exit 1
+python3 solver/rt/rt_mpsolve.py --selftest --inner gcr --precond lu_f64        # a variant of 9.2 (exits 1)
+python3 solver/rt/rt_run.py --start RAW/I91-mac/accept/accept_D10.0000_48x81.npz --grids 32x101 --solver mp \
+    --tol 1e-10 --out OUT --tag d10                           # 9.3: D = 10 on 32x101
+python3 solver/rt/rt_run.py --start OUT/d10_D10.0000_32x101.npz --D_start 12 --grids 32x101 --solver mp \
+    --tol 1e-10 --out OUT --tag pilot12                       # 9.3: the pilot
+python3 solver/rt/rt_run.py --start RAW/I91-mac/accept/accept_D10.0000_48x81.npz --grids 32x101 --solver mp \
+    --D_to 30 --D_extra 20.043653,29.984746 --check_D 15,20.043653,29.984746 --tol 1e-10 --out OUT \
+    --tag cont_32x101                                         # 9.4; with --grids 32x81 it exits 1
+python3 solver/rt/rt_run.py --start RAW/I105-mac/cont/cont_32x81_D15.0000_32x81.npz --grids 32x81 --solver mp \
+    --tol 1e-10 --mutate=coef --out OUT --tag coef            # must exit 1, Delta moved by 3.75e-4
+python3 solver/rt/rt_run.py --start RAW/I105-mac/cont/cont_32x101_D15.0000_32x101.npz --grids 32x121 --solver mp \
+    --tol 1e-10 --out OUT --tag res                           # 9.4 controls, also --grids 48x101
+python3 solver/rt/rt_grids.py RAW/I105-mac/cont/cont_32x81.jsonl RAW/I105-mac/cont/cont_32x101.jsonl --table \
+    --extra RAW/I105-mac/controls/res_32x121_D15.0000.jsonl  # the tables of 9.4 (exits 1)
+python3 solver/rt/rt_grids.py RAW/I105-mac/controls/res_32x121_all.jsonl RAW/I105-mac/cont/cont_32x101.jsonl
+                                                              # exits 0; with --mutate=shift it must exit 1
+python3 solver/rt/rt_mp_cost.py OUT.jsonl --state RAW/I105-mac/cont/cont_32x81_D15.0000_32x81.npz --grid 32x81
+                                                              # 9.5; --mutate=perturb must exit 1
+```
