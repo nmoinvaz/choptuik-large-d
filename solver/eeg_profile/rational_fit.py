@@ -511,6 +511,26 @@ def main():
                         (", with the A-series tail estimate" if a.tail else "") +
                         (f", K cut at {a.kcut}" if a.kcut else "") + (f", mutation {a.mutate}" if a.mutate else ""))
             report_poles(res, 4)
+            # per-harmonic errors of Eq. (16), its one-zero extension and the smallest families that reach the target
+            sel = [(0, 1, "pade"), (0, 1, "ls"), (1, 1, "pade"), (1, 1, "ls")]
+            for meth in ("ls", "minimax"):
+                n, hit = smallest(res, meth)
+                sel += [(L, N, meth) for L, N in hit]
+            print("\nper-harmonic e_k = |m_k/c_k - 1| (nu = 1 .. 25) and the largest modulus error ||m_k|/|c_k| - 1||, "
+                  "nu <= 19:")
+            for key in sel:
+                if key not in res:
+                    continue
+                v = res[key]
+                m, _ = expand(v["p"], v["q"], len(c))
+                em = max(abs(abs(m[k]) / abs(c[k]) - 1) for k in range(NFIT))
+                print(f"  [{key[0]}/{key[1]}] {key[2]:7s} " + " ".join(f"{float(x):.1e}" for x in v["e"]) +
+                      f"   modulus {float(em):.2e}")
+            hitk = [key for key, v in res.items() if v["emax"] <= TARGET and key[1] > 0]
+            if hitk:
+                tt = [res[key]["pz"][0][0][0] for key in hitk]
+                print(f"nearest pole over the {len(hitk)} fits that reach 1e-6: Re {min(t.real for t in tt):.5f} .. "
+                      f"{max(t.real for t in tt):.5f}, Im {min(t.imag for t in tt):.5f} .. {max(t.imag for t in tt):.5f}")
             # out of sample: nu = 21..25 against the data's remainder estimate
             print("\nout of sample, e_k at nu = 21, 23, 25 (A-series remainder estimate of the data: " +
                   ", ".join(f"{float(trunc[nu]):.1e}" for nu in (21, 23, 25)) + "):")
