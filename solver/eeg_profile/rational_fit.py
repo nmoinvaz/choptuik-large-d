@@ -528,7 +528,7 @@ def main():
                 m, _ = expand(v["p"], v["q"], len(c))
                 em = max(abs(abs(m[k]) / abs(c[k]) - 1) for k in range(NFIT))
                 print(f"  [{key[0]}/{key[1]}] {key[2]:7s} " + " ".join(f"{float(x):.1e}" for x in v["e"]) +
-                      f"   modulus {float(em):.2e}")
+                      f"   modulus {float(em):.2e}   arg p_0 {float(mp.arg(v['p'][0])):+.1e}")
             ph = max(abs(mp.arg(v["p"][0])) for v in res.values())
             print(f"largest |arg p_0| over all {len(res)} fits: {float(ph):.1e}")
             hitk = [key for key, v in res.items() if v["emax"] <= TARGET and key[1] > 0]
